@@ -1113,3 +1113,5 @@ v- Fixed some bugreport stuff
   want say +k
 - Fixed some return values, can't gline masks with a ! in them anymore
 - ARGH
+- Recoded the module system somewhat, events are now 'stable' meaning if a module doesn't unload an 
+  event the IRCd will not crash. Also fixed a crash involving delayed unloads and cleaned up notices

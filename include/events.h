@@ -18,48 +18,4 @@
  *
  *   $Id$
  */
-
-#define EVENT(x) void (x) (void *data)
-
-typedef struct _event Event;
-typedef struct _eventinfo EventInfo;
-
-struct _event {
-	Event   *prev, *next;
-	char	*name;
-	time_t	every;
-	long	howmany;
-	vFP		event;
-	void	*data;
-	time_t	last;
-};
-
-#define EMOD_EVERY 0x0001
-#define EMOD_HOWMANY 0x0002
-#define EMOD_NAME 0x0004
-#define EMOD_EVENT 0x0008
-#define EMOD_DATA 0x0010
-
-struct _eventinfo {
-	int flags;
-	long howmany;
-	time_t every;
-	char *name;
-	vFP event;
-	void *data;
-};
-
-Event	*EventAdd(char *name, long every, long howmany,
-		  vFP event, void *data);
-Event	*EventDel(Event *event);
-
-Event	*EventFind(char *name);
-
-int 	EventMod(Event *event, EventInfo *mods);
-
-void	DoEvents(void);
-
-void	EventStatus(aClient *sptr);
-
-void	SetupEvents(void);
-
+#include "modules.h"

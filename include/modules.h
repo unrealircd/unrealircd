@@ -18,11 +18,14 @@
  *
  *   $Id$
  */
-
+#ifndef MODULES_H
+#define MODULES_H
 #define MOD_VERSION	"3.2-b5-1"
 #define MOD_WE_SUPPORT  "3.2-b5*"
 #define MAXHOOKTYPES	20
-
+typedef void			(*vFP)();	/* Void function pointer */
+typedef int			(*iFP)();	/* Integer function pointer */
+typedef char			(*cFP)();	/* char * function pointer */
 #if defined(_WIN32)
 #define DLLFUNC	_declspec(dllexport)
 #define irc_dlopen(x,y) LoadLibrary(x)
@@ -42,15 +45,11 @@
 #define DLLFUNC 
 #endif
 
-typedef void			(*vFP)();	/* Void function pointer */
-typedef int			(*iFP)();	/* Integer function pointer */
-typedef char			(*cFP)();	/* char * function pointer */
+#define EVENT(x) void (x) (void *data)
 
-/*
- * For resolving symbols 
- * Look further down for definition of the structure
- */
 typedef struct _mod_symboltable Mod_SymbolDepTable;
+typedef struct _event Event;
+typedef struct _eventinfo EventInfo;
 
 /*
  * Module header that every module must include, with the name of
@@ -76,6 +75,20 @@ typedef struct _ModuleChild
 	Module *child; /* Aww. aint it cute? */
 } ModuleChild;
 
+#define MOBJ_EVENT   0x0001
+#define MOBJ_HOOK    0x0002
+#define MOBJ_COMMAND 0x0004
+
+typedef struct _ModuleObject {
+	struct _ModuleObject *prev, *next;
+	short type;
+	union {
+		Event *event;
+		Hook *hook;
+		aCommand *command;
+	} object;
+} ModuleObject;
+
 /*
  * What we use to keep track internally of the modules
 */
@@ -93,9 +106,8 @@ struct _Module
 #endif	
 	unsigned char flags;    /* 8-bits for flags .. */
 	ModuleChild *children;
+	ModuleObject *objects;
 };
-
-
 /*
  * Symbol table
 */
@@ -118,6 +130,42 @@ struct _mod_symboltable
 #else
 #define MOD_Dep(name, container,module) {(void *)&name, (vFP *) &container}
 #endif
+/* Event structs */
+struct _event {
+	Event   *prev, *next;
+	char    *name;
+	time_t  every;
+	long    howmany;
+	vFP	event;
+	void    *data;
+	time_t  last;
+	Module *owner;
+};
+
+#define EMOD_EVERY 0x0001
+#define EMOD_HOWMANY 0x0002
+#define EMOD_NAME 0x0004
+#define EMOD_EVENT 0x0008
+#define EMOD_DATA 0x0010
+
+struct _eventinfo {
+	int flags;
+	long howmany;
+	time_t every;
+	char *name;
+	vFP event;
+	void *data;
+};
+
+#define EventAdd(name, every, howmany, event, data) EventAddEx(NULL, name, every, howmany, event, data)
+Event   *EventAddEx(Module *, char *name, long every, long howmany,
+                  vFP event, void *data);
+Event   *EventDel(Event *event);
+Event   *EventFind(char *name);
+int     EventMod(Event *event, EventInfo *mods);
+void    DoEvents(void);
+void    EventStatus(aClient *sptr);
+void    SetupEvents(void);
 
 
 extern Hook		*Hooks[MAXHOOKTYPES];
@@ -169,4 +217,4 @@ void	HookDelEx(int hooktype, int (*intfunc)(), void (*voidfunc)());
 #define MOD_SUCCESS 0
 #define MOD_FAILED -1
 #define MOD_DELAY 2
-
+#endif

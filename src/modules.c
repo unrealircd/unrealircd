@@ -98,7 +98,7 @@ char  *Module_Load (char *path_, int load)
 	char 		*path;
 	ModuleHeader    *mod_header;
 	int		ret = 0;
-	Module          *mod = NULL;
+	Module          *mod = NULL, **Mod_Handle = NULL;
 	Debug((DEBUG_DEBUG, "Attempting to load module from %s",
 	       path_));
 	path = path_;
@@ -166,6 +166,9 @@ char  *Module_Load (char *path_, int load)
 			Module_free(mod);
 			return ("Dependancy problem");
 		}
+		irc_dlsym(Mod, "Mod_Handle", Mod_Handle);
+		if (Mod_Handle)
+			*Mod_Handle = mod;
 		if ((ret = (*Mod_Init)(load)) < MOD_SUCCESS)
 		{
 			ircsprintf(errorbuf, "Mod_Init returned %i",
@@ -239,16 +242,19 @@ int    Module_free(Module *mod)
 {
 	Module *p;
 	ModuleChild *cp;
+	ModuleObject *objs, *next;
 	/* Do not kill parent if children still alive */
 
-	if (mod->children)
-        {
-		for (cp = mod->children; cp; cp = cp->next)
-		{
-			sendto_realops("Unloading child module %s",
-				      cp->child->header->name);
-			Module_Unload(cp->child->header->name, 0);
-		}
+	for (cp = mod->children; cp; cp = cp->next)
+	{
+		sendto_realops("Unloading child module %s",
+			      cp->child->header->name);
+		Module_Unload(cp->child->header->name, 0);
+	}
+	for (objs = mod->objects; objs; objs = next) {
+		next = objs->next;
+		if (objs->type == MOBJ_EVENT) 
+			EventDel(objs->object.event);
 	}
 	for (p = Modules; p; p = p->next)
 	{
@@ -618,21 +624,9 @@ void	HookDelEx(int hooktype, int (*func)(), void (*vfunc)())
 
 EVENT(e_unload_module_delayed)
 {
-	char	*name = (char *) data;
+	char	*name = strdup(data);
 	int	i; 
-	sendto_realops("Delayed unload of module %s in progress",
-		name);
-	
 	i = Module_Unload(name, 0);
-	if (i == 2)
-	{
-		sendto_realops("Delayed unload of %s, again",
-			name);
-	}
-        if (i == -2)
-	{
-		
-	}
 	if (i == -1)
 	{
 		sendto_realops("Failed to unload '%s'", name);
@@ -641,6 +635,7 @@ EVENT(e_unload_module_delayed)
 	{
 		sendto_realops("Unloaded module %s", name);
 	}
+	free(name);
 	return;
 }
 

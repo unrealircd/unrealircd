@@ -66,7 +66,7 @@ extern struct SOCKADDR_IN	Scan_endpoint;
 void	scan_socks_scan(Scan_AddrStruct *sr);
 void	scan_socks4_scan(Scan_AddrStruct *sr);
 void	scan_socks5_scan(Scan_AddrStruct *sr);
-
+Module *Mod_Handle;
 static Mod_SymbolDepTable modsymdep[] = 
 {
 	MOD_Dep(Eadd_scan, xEadd_scan, "src/modules/scan.so"),

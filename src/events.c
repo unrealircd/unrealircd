@@ -38,6 +38,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "modules.h"
 
 ID_Copyright("(C) Carsten Munk 2001");
 
@@ -50,11 +51,10 @@ MUTEX			sys_EventLock;
 Event *events = NULL;
 
 
-Event	*EventAdd(char *name, long every, long howmany,
+Event	*EventAddEx(Module *module, char *name, long every, long howmany,
 		  vFP event, void *data)
 {
 	Event *newevent;
-
 #ifndef HAVE_NO_THREADS
 	IRCMutexLock(sys_EventLock);
 #endif
@@ -75,7 +75,14 @@ Event	*EventAdd(char *name, long every, long howmany,
 	newevent->data = data;
 	/* We don't want a quick execution */
 	newevent->last = TStime();
+	newevent->owner = module;
 	AddListItem(newevent,events);
+	if (module) {
+		ModuleObject *eventobj = (ModuleObject *)MyMallocEx(sizeof(ModuleObject));
+		eventobj->object.event = newevent;
+		eventobj->type = MOBJ_EVENT;
+		AddListItem(eventobj, module->objects);
+	}
 #ifndef HAVE_NO_THREADS
 	IRCMutexUnlock(sys_EventLock);
 #endif
@@ -86,7 +93,7 @@ Event	*EventAdd(char *name, long every, long howmany,
 Event	*EventDel(Event *event)
 {
 	Event *p, *q;
-	
+	Module *module;
 	for (p = events; p; p = p->next)
 	{
 		if (p == event)
@@ -94,6 +101,15 @@ Event	*EventDel(Event *event)
 			q = p->next;
 			MyFree(p->name);
 			DelListItem(p, events);
+			if (p->owner) {
+				ModuleObject *eventobjs;
+				for (eventobjs = p->owner->objects; eventobjs; eventobjs = eventobjs->next) {
+					if (eventobjs->type == MOBJ_EVENT && eventobjs->object.event == p) {
+						DelListItem(eventobjs, p->owner->objects);
+						break;
+					}
+				}
+			}
 			MyFree(p);
 			return q;		
 		}
@@ -195,11 +211,11 @@ void	SetupEvents(void)
 	IRCCreateMutex(sys_EventLock);
 #endif
 	/* Start events */
-	EventAdd("tklexpire", 5, 0, tkl_check_expire, NULL);
-	EventAdd("tunefile", 300, 0, save_tunefile, NULL);
-	EventAdd("garbage", GARBAGE_COLLECT_EVERY, 0, garbage_collect, NULL);
-	EventAdd("loop", 0, 0, loop_event, NULL);
+	EventAddEx(NULL, "tklexpire", 5, 0, tkl_check_expire, NULL);
+	EventAddEx(NULL, "tunefile", 300, 0, save_tunefile, NULL);
+	EventAddEx(NULL, "garbage", GARBAGE_COLLECT_EVERY, 0, garbage_collect, NULL);
+	EventAddEx(NULL, "loop", 0, 0, loop_event, NULL);
 #ifndef NO_FDLIST
-	EventAdd("fdlistcheck", 1, 0, e_check_fdlists, NULL);
+	EventAddEx(NULL, "fdlistcheck", 1, 0, e_check_fdlists, NULL);
 #endif
 }

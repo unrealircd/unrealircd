@@ -51,7 +51,8 @@
 #include "version.h"
 #endif
 #include "modules/scan.h"
-
+/* IRCd will fill with a pointer to this module */
+Module *Mod_Handle = NULL;
 struct SOCKADDR_IN Scan_endpoint;
 
 static Scan_AddrStruct *Scannings = NULL;
@@ -110,7 +111,7 @@ int    m_scan_Load(int module_load)
 		Scan_endpoint.SIN_FAMILY = AFINET;
 	}
 
-	Scannings_clean = EventAdd("e_scannings_clean", 0, 0, e_scannings_clean, NULL);
+	Scannings_clean = EventAddEx(Mod_Handle, "e_scannings_clean", 0, 0, e_scannings_clean, NULL);
 	return MOD_SUCCESS;
 }
 
@@ -127,8 +128,7 @@ int	m_scan_Unload(void)
 	IRCMutexLock(Scannings_lock);
 	if (Scannings)	
 	{
-		sendto_realops("scan: some scannings still in progress, delaying unload");
-		EventAdd("scan_unload", 
+		EventAddEx(Mod_Handle, "scan_unload", 
 			2, /* Should be enough */
 			1,
 			e_unload_module_delayed,
@@ -246,7 +246,7 @@ void	Eadd_scan(struct IN_ADDR *in, char *reason)
 	Scan_Result *sr = (Scan_Result *) MyMalloc(sizeof(Scan_Result));
 	sr->in = *in;
 	strcpy(sr->reason, reason);
-	EventAdd("scan_ban", 0, 1, e_scan_ban, (void *)sr);
+	EventAddEx(Mod_Handle, "scan_ban", 0, 1, e_scan_ban, (void *)sr);
 	return;
 }
 

@@ -55,7 +55,7 @@ extern int LRV;
 #endif
 
 
-
+Module *Mod_Handle;
 DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 EVENT(lcf_check);
 EVENT(htm_calc);
@@ -97,8 +97,8 @@ int    m_htm_Init(int module_load)
 	*/
 	add_Command(MSG_HTM, TOK_HTM, m_htm, MAXPARA);
 #ifndef NO_FDLIST
-	e_lcf = EventAdd("lcf", LCF, 0, lcf_check, NULL);
-	e_htmcalc = EventAdd("htmcalc", 1, 0, htm_calc, NULL);
+	e_lcf = EventAddEx(Mod_Handle, "lcf", LCF, 0, lcf_check, NULL);
+	e_htmcalc = EventAddEx(Mod_Handle, "htmcalc", 1, 0, htm_calc, NULL);
 #endif
 	return MOD_SUCCESS;
 }
