@@ -850,7 +850,7 @@ ConfigEntry		*config_find_entry(ConfigEntry *ce, char *name)
 	ConfigEntry *cep;
 	
 	for (cep = ce; cep; cep = cep->ce_next)
-		if (!strcmp(cep->ce_varname, name))
+		if (cep->ce_varname && !strcmp(cep->ce_varname, name))
 			break;
 	return cep;
 }
@@ -924,7 +924,6 @@ void config_progress(char *format, ...)
 
 int	init_conf(char *rootconf, int rehash)
 {
-	config_status("Fair warning to people using this release: READ CHANGES FILE");
 	if (conf)
 	{
 		config_error("%s:%i - Someone forgot to clean up", __FILE__, __LINE__);
@@ -1647,6 +1646,80 @@ int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 	long	    l;
 	int	    errors = 0;
+	
+	if (!(cep = config_find_entry(ce->ce_entries, "name")))
+	{
+		config_error("%s:%i: me::name missing",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	}
+	else
+	{
+		if (!cep->ce_vardata)
+		{
+			config_error("%s:%i: me::name without contents",
+				cep->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			errors++;
+		}
+		else
+		{
+			if (!strchr(cep->ce_vardata, '.'))
+			{	
+				config_error("%s:%i: illegal me::name, must be fully qualified hostname",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
+		}
+	}
+	if (!(cep = config_find_entry(ce->ce_entries, "info")))
+	{
+		config_error("%s:%i: me::info missing",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	}
+	else
+	{
+		if (!cep->ce_vardata)
+		{
+			config_error("%s:%i: me::info without contents",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			errors++;
+		}
+		else
+		if (strlen(cep->ce_vardata) > (REALLEN-1))
+		{
+			config_error("%s:%i: too long me::info, must be max. %i characters",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, REALLEN-1);
+			errors++;
+		
+		}
+	}
+	if (!(cep = config_find_entry(ce->ce_entries, "numeric")))
+	{
+		config_error("%s:%i: me::numeric missing",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	}
+	else
+	{
+		if (!cep->ce_vardata)
+		{
+			config_error("%s:%i: me::name without contents",
+				cep->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			errors++;
+		}
+		else
+		{
+			l = atol(cep->ce_vardata);
+			if ((l < 0) && (l > 254))
+			{
+				config_error("%s:%i: illegal me::numeric error (must be between 0 and 254)",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum);
+				errors++;
+			}
+		}
+	}
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!cep->ce_varname)
@@ -1667,28 +1740,11 @@ int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 			continue;
 		}
 		if (!strcmp(cep->ce_varname, "name"))
-		{
-			if (!strchr(cep->ce_vardata, '.'))
-			{
-				config_error("%s:%i: illegal me::name, must be fully qualified hostname",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-				errors++; continue;
-			}
-		} else
+		{} else
 		if (!strcmp(cep->ce_varname, "info"))
-		{
-		} else
+		{} else
 		if (!strcmp(cep->ce_varname, "numeric"))
-		{
-			l = atol(cep->ce_vardata);
-			if ((l < 0) && (l > 254))
-			{
-				config_error("%s:%i: illegal me::numeric error (must be between 0 and 254)",
-					cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum);
-				errors++; continue;
-			}
-		}
+		{}
 		else
 		{
 			config_error("%s:%i: unknown directive me::%s",
@@ -1731,83 +1787,67 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 	{
 		isnew = 0;
 	}
-
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	
+	cep = config_entry_find(ce->ce_entries, "password");
+	oper->auth = Auth_ConvertConf2AuthStruct(cep);
+	cep = config_entry_find(ce->ce_entries, "class");
+	oper->class = Find_class(cep->ce_vardata);
+	if (!oper->class)
 	{
-		if (!strcmp(cep->ce_varname, "password"))
-		{
-			oper->auth = Auth_ConvertConf2AuthStruct(cep);
-			continue;
-		}
-		if (!cep->ce_entries)
-		{
-			if (!strcmp(cep->ce_varname, "class"))
-			{
-				oper->class = Find_class(cep->ce_vardata);
-				if (!oper->class)
-				{
-					config_status("%s:%i: illegal oper::class, unknown class '%s' using default of class 'default'",
-						cep->ce_fileptr->cf_filename,
-						cep->ce_varlinenum,
-						cep->ce_vardata);
-					oper->class = default_class;
-				}
-			}
-			else if (!strcmp(cep->ce_varname, "swhois")) {
-				ircstrdup(oper->swhois, cep->ce_vardata);
-			}
-			else if (!strcmp(cep->ce_varname, "snomask")) {
-					ircstrdup(oper->snomask, cep->ce_vardata);
-			}
-			else if (!strcmp(cep->ce_varname, "flags"))
-			{
-				char *m = "*";
-				int *i, flag;
+		config_status("%s:%i: illegal oper::class, unknown class '%s' using default of class 'default'",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum,
+				cep->ce_vardata);
+		oper->class = default_class;
+	}
+	
+	cep = config_find_entry(ce->ce_entries, "flags");
+	if (!cep->ce_entries)
+	{
+		char *m = "*";
+		int *i, flag;
 
-					for (m = (*cep->ce_vardata) ? cep->ce_vardata : m; *m; m++) {
-						for (i = _OldOperFlags; (flag = *i); i += 2)
-							if (*m == (char)(*(i + 1))) {
-								oper->oflags |= flag;
-								break;
-							}
-				}
+		for (m = (*cep->ce_vardata) ? cep->ce_vardata : m; *m; m++) {
+			for (i = _OldOperFlags; (flag = *i); i += 2)
+					if (*m == (char)(*(i + 1))) {
+						oper->oflags |= flag;
+						break;
+					}
 			}
 		}
-		else
+	}
+	else
+	{
+		for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 		{
-			/* Section */
-			if (!strcmp(cep->ce_varname, "flags"))
+			/* this should have been olp ;) -Stskeeps */
+			for (ofp = _OperFlags; ofp->name; ofp++)
 			{
-				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+				if (!strcmp(ofp->name, cepp->ce_varname))
 				{
-					/* this should have been olp ;) -Stskeeps */
-					for (ofp = _OperFlags; ofp->name; ofp++)
-					{
-						if (!strcmp(ofp->name, cepp->ce_varname))
-						{
-							oper->oflags |= ofp->flag;
-							break;
-						}
-					}
+					oper->oflags |= ofp->flag;
+					break;
 				}
-				continue;
-			}
-			else
-			if (!strcmp(cep->ce_varname, "from"))
-			{
-				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
-				{
-					if (!strcmp(cepp->ce_varname, "userhost"))
-					{
-						from = MyMallocEx(sizeof(ConfigItem_oper_from));
-						ircstrdup(from->name, cepp->ce_vardata);
-						AddListItem(from, oper->from);
-					}
-				}
-				continue;
 			}
 		}
-
+	}
+	if ((cep = config_find_entry(ce->ce_entries, "swhois"))
+	{
+		ircstrdup(oper->swhois, cep->ce_vardata);
+	}
+	if ((cep = config_find_entry(ce->ce_entries, "snomask"))
+	{
+		ircstrdup(oper->snomask, cep->ce_vardata);
+	}
+	cep = config_entry_find(ce->ce_entries, "from");
+	for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+	{
+		if (!strcmp(cepp->ce_varname, "userhost"))
+		{
+			from = MyMallocEx(sizeof(ConfigItem_oper_from));
+			ircstrdup(from->name, cepp->ce_vardata);
+			AddListItem(from, oper->from);
+		}
 	}
 	if (isnew)
 		AddListItem(oper, conf_oper);
@@ -1829,8 +1869,6 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		errors++;
 	}
-
-
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!cep->ce_varname)
@@ -1841,6 +1879,12 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 		}
 		if (!strcmp(cep->ce_varname, "password"))
 		{
+			if (!cep->ce_vardata)
+			{
+				config_error("%s:%i: oper::password without contents",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
 			/* should have some auth check if ok .. */
 			continue;
 		}
@@ -1944,6 +1988,24 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 		}
 
 	}
+	if (!config_find_entry(ce->ce_entries, "password"))
+	{
+		config_error("%s:%i: oper::password missing", ce->ce_fileptr->cf_filename,
+			cep->ce_varlinenum);
+		errors++;
+	}	
+	if (!config_find_entry(ce->ce_entries, "from"))
+	{
+		config_error("%s:%i: oper::from missing", ce->ce_fileptr->cf_filename,
+			cep->ce_varlinenum);
+		errors++;
+	}	
+	if (!config_find_entry(ce->ce_entries, "class"))
+	{
+		config_error("%s:%i: oper::class missing", ce->ce_fileptr->cf_filename,
+			cep->ce_varlinenum);
+		errors++;
+	}	
 	return (errors == 0 ? 1 : -1);
 	
 }
@@ -1967,24 +2029,15 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 	{
 		isnew = 0;
 	}
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	cep = config_find_entry(ce->ce_entries, "pingfreq");
+	class->pingfreq = atol(cep->ce_vardata);
+	cep = config_find_entry(ce->ce_entries, "maxclients");
+	class->maxclients = atol(cep->ce_vardata);
+	cep = config_find_entry(ce->ce_entries, "sendq");
+	class->sendq = atol(cep->ce_vardata);
+	if ((cep = config_entry(ce->ce_entries, "connfreq")))
 	{
-		if (!strcmp(cep->ce_varname, "pingfreq"))
-		{
-			class->pingfreq = atol(cep->ce_vardata);
-		} else
-		if (!strcmp(cep->ce_varname, "maxclients"))
-		{
-			class->maxclients = atol(cep->ce_vardata);
-		} else
-		if (!strcmp(cep->ce_varname, "connfreq"))
-		{
-			class->connfreq = atol(cep->ce_vardata);
-		} else
-		if (!strcmp(cep->ce_varname, "sendq"))
-		{
-			class->sendq = atol(cep->ce_vardata);
-		}
+		class->connfreq = atol(cep->ce_vardata);
 	}
 	if (isnew) 
 		AddListItem(class, conf_class);
@@ -2017,44 +2070,13 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 			errors++; continue;
 		}
 		if (!strcmp(cep->ce_varname, "pingfreq"))
-		{
-			l = atol(cep->ce_vardata);
-			if (!l)
-			{
-				config_error("%s:%i: class::pingfreq with illegal value");
-				errors++; continue;			
-			}
-		} else
+		{} else
 		if (!strcmp(cep->ce_varname, "maxclients"))
-		{
-			l = atol(cep->ce_vardata);
-			if (!l)
-			{
-				config_error("%s:%i: class::maxclients with illegal value",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-				errors++; continue;
-			}
-		} else
+		{} else
 		if (!strcmp(cep->ce_varname, "connfreq"))
-		{
-			l = atol(cep->ce_vardata);
-			if (l < 10)
-			{
-				config_error("%s:%i: class::connfreq with illegal value (<10)",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-				errors++; continue;
-			}
-		} else
+		{} else
 		if (!strcmp(cep->ce_varname, "sendq"))
-		{
-			l = atol(cep->ce_vardata);
-			if (!l)
-			{
-				config_error("%s:%i: class::sendq with illegal value",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-				errors++; continue;
-			}
-		}
+		{}
 		else
 		{
 			config_error("%s:%i: unknown directive class::%s",
@@ -2063,6 +2085,65 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 			errors++; continue;
 		}
 	}
+	if ((cep = config_find_entry(ce->entries, "pingfreq")))
+	{
+		l = atol(cep->ce_vardata);
+		if (l < 1)
+		{
+			config_error("%s:%i: class::pingfreq with illegal value",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			errors++;
+		}
+	}
+	else
+	{
+		config_error("%s:%i: class::pingfreq missing",
+			ce->ce_fileptr->cf_filename, cep->ce_varlinenum);
+		errors++;
+	}
+	if ((cep = config_find_entry(ce->entries, "maxclients")))
+	{
+		l = atol(cep->ce_vardata);
+		if (!l)
+		{
+			config_error("%s:%i: class::maxclients with illegal value",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			errors++;
+		}
+	}
+	else
+	{
+		config_error("%s:%i: class::maxclients missing",
+			ce->ce_fileptr->cf_filename, cep->ce_varlinenum);
+		errors++;
+	}
+	if ((cep = config_find_entry(ce->entries, "sendq")))
+	{
+		l = atol(cep->ce_vardata);
+		if (!l)
+		{
+			config_error("%s:%i: class::sendq with illegal value",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			errors++;
+		}
+	}
+	else
+	{
+		config_error("%s:%i: class::sendq missing",
+			ce->ce_fileptr->cf_filename, cep->ce_varlinenum);
+		errors++;
+	}
+	if ((cep = config_find_entry(ce->entries, "connfreq")))
+	{
+		l = atol(cep->ce_vardata);
+		if (l < 10)
+		{
+			config_error("%s:%i: class::connfreq with illegal value (<10)",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			errors++;
+		}
+	}
+	
 	return (errors == 0 ? 1 : -1);
 }
 
@@ -2114,8 +2195,7 @@ int     _test_drpass(ConfigFile *conf, ConfigEntry *ce)
 			errors++; continue;
 		}
 		if (!strcmp(cep->ce_varname, "restart"))
-		{
-		}
+		{}
 		else if (!strcmp(cep->ce_varname, "die"))
 		{
 		}
@@ -2177,8 +2257,9 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 	ConfigItem_tld *ca;
 
-	ca = MyMallocEx(sizeof(ConfigItem_tld));
-        for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	ca = MyMallocEx(sizeof(ConfigItem_tld)); 
+     cep = config_find_entry(ce->ce_entries, "mask");
+     for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!cep->ce_varname)
 		{
@@ -2670,7 +2751,7 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else if (!strcmp(ce->ce_vardata, "tkl")) {
 		cep2 = config_find_entry(ce->ce_entries, "mask");
-		cep3 = config_find_entry(ce->ce_entries, "type");
+		cep3 = config_find_entry(ce->ce_entries, "mask");
 		ca = MyMallocEx(sizeof(ConfigItem_except));
 		ca->mask = strdup(cep2->ce_vardata);
 		if (!strcmp(cep3->ce_vardata, "gline"))
@@ -2790,16 +2871,16 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 			return -1;
 		}
-		if (!strcmp(cep->ce_vardata, "gline")) {}
-		else if (!strcmp(cep->ce_vardata, "gzline")){}
-		else if (!strcmp(cep->ce_vardata, "shun")) {}
-		else if (!strcmp(cep->ce_vardata, "tkline")) {}
-		else if (!strcmp(cep->ce_vardata, "tzline")) {}
+		if (!strcmp(cep3->ce_vardata, "gline")) {}
+		else if (!strcmp(cep3->ce_vardata, "gzline")){}
+		else if (!strcmp(cep3->ce_vardata, "shun")) {}
+		else if (!strcmp(cep3->ce_vardata, "tkline")) {}
+		else if (!strcmp(cep3->ce_vardata, "tzline")) {}
 		else 
 		{
 			config_error("%s:%i: unknown except tkl type %s",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				cep->ce_vardata);
+				cep3->ce_fileptr->cf_filename, cep3->ce_varlinenum,
+				cep3->ce_vardata);
 			return -1;
 
 		}
