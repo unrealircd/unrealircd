@@ -26,7 +26,7 @@
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2.2-CVS </font><br>
-  <b>Letztes Dokumentation Update:</b>         2004-12-01</div>
+  <b>Letztes Dokumentation Update:</b>          2001-1-29</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b>  McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
 <b>Dokumentation</b><b>:</b> CKnight^ / Syzop<br>
@@ -819,6 +819,12 @@ gesetzt:<br>
   </tr>
   <tr>
     <td width="74"></td>
+    <td width="123">t</td>
+    <td colspan="2" width="127">topic</td>
+    <td width="621">Setzen eines Topics</td>
+  </tr>
+  <tr>
+    <td width="74"></td>
     <td width="123">u</td>
     <td colspan="2" width="127">user</td>
     <td width="621">bannt User, geprüft wird auf nick!user@host:realname</td>
@@ -1062,7 +1068,7 @@ numeric &lt;Server-Nummer&gt;;<br>
 (nicht dessen Internetadresse!), 
   <b>info</b>  eine kurze Info Zeile zur Beschreibung des Servers und <b>numeric</b> 
  bedeutet eine Zahl zur Identifikation des Servers. Hierbei muss es sich um einen
-Wert zwischen 1 und 255 handeln, der EINMALIG im Netzwerk ist, es darf also KEIN
+Wert zwischen 1 und 254 handeln, der EINMALIG im Netzwerk ist, es darf also KEIN
 Server im Netzwerk denselben numeric Wert haben.</p>
 <p>Beispiel:
 <pre>me {
@@ -2958,7 +2964,7 @@ Wird z.B. der Wert 10 festgelegt, dann wird +f [5j]:15 in [5j#i10]:15
 umgewandelt. Default ist keine Abschaltzeit.</p> 
 <p><b>set::modef-max-unsettime &lt;value&gt;</b><br>
 Maximalwert in Minuten für eine Modus +f Abschaltzeit (z.B. in +f [5j#i&lt;TIME&gt;]:15).
-Der Wert kann zwischen 0 und 255 liegen und Default ist 60 (= 1 Stunde).</p> 
+Der Wert kann zwischen 0 und 254 liegen und Default ist 60 (= 1 Stunde).</p> 
 <p><b>set::ban-version-tkl-time &lt;value&gt;</b><br>
 Definiert man in 'ban version' eine Aktion, wie zline/gline/etc, dann kann man
 hier die Dauer des Banns auf die IP in Sekunden angeben. Default ist 86400 (1
@@ -3835,10 +3841,10 @@ Befehlsliste</a></b></font></p><div class="desc">
       d - denylinkauto - Anzeige der Liste geblockter Links (deny link (auto)<br>
       D - denylinkall - Anzeige der Liste geblockter Links (deny link (all)<br>
       e - exceptthrottle - Anzeige der Ausnahmen bei throttle block<br>
-      E - exceptban - Anzeige der Ausnahmen von Banns<br>
+      E - exceptban - Anzeige der Ausnahmen von Banns und der TKL Liste<br>
       f - spamfilter - Anzeige der Spamfilter Liste<br>
       F - denydcc - Anzeige der Liste geblockter DCCs<br>
-      G - gline - Anzeige der Liste von glines<br>
+      G - gline - Anzeige der Liste von glines und gzlines<br>
       &nbsp; Erweiterte Flags: [+/-mrs] [mask] [reason] [setby]<br>
       &nbsp;&nbsp;&nbsp; m Liefert glines, die zur angegebenen Maske
       passen/nicht passen<br>
@@ -3854,6 +3860,11 @@ Befehlsliste</a></b></font></p><div class="desc">
       M - command - Anzeige, wie oft jeder Befehl benutzt wurde<br>
       n - banrealname - Liste von Banns auf Realname<br>
       O - oper - Liste der Opers<br>
+      P - port - Liste verwendeter Ports<br>
+      q - sqline - Anzeige der SQLINE Liste<br>
+      Q - bannick - Anzeige der Liste gebannter Nicks<br>
+      r - chanrestrict - Anzeige der Liste verbotener Channels<br>
+      R - usage - Zeigt Benutzungs Informationen an<br>
       S - set - Liste der Einträge im set Block<br>
       s - shun - Liste der Shuns<br>
       &nbsp; Erweiterte Flags: [+/-mrs] [mask] [reason] [setby]<br>
@@ -3863,11 +3874,6 @@ Befehlsliste</a></b></font></p><div class="desc">
     r&nbsp; Liefert shuns, die zum angegebenen Grund passen/nicht passen<br>
       &nbsp;&nbsp;&nbsp;
     s&nbsp; Return shuns, die von angegebenem Namen gesetzt/nicht gesetzt wurden<br>
-      P - port - Liste verwendeter Ports<br>
-      q - sqline - Anzeige der SQLINE Liste<br>
-      Q - bannick - Anzeige der Liste gebannter Nicks<br>
-      r - chanrestrict - Anzeige der Liste verbotener Channels<br>
-      R - usage - Zeigt Benutzungs Informationen an<br>
       t - tld - Zeigt die tld Block Liste an<br>
       T - traffic - Zeigt Traffic Informationen an<br>
       u - uptime - Gibt an, wielange der Server schon up ist und wie viele User
