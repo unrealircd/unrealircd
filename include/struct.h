@@ -175,6 +175,16 @@ typedef unsigned int  u_int32_t; /* XXX Hope this works! */
 #define	SetLog(x)		((x)->status = STAT_LOG)
 #define	SetService(x)		((x)->status = STAT_SERVICE)
 
+/* opt.. */
+#define OPT_SJOIN	0x0001
+#define OPT_NOT_SJOIN	0x0002
+#define OPT_NICKv2	0x0004
+#define OPT_NOT_NICKv2	0x0008
+#define OPT_SJOIN2	0x0010
+#define OPT_NOT_SJOIN2	0x0020
+#define OPT_UMODE2	0x0040
+#define OPT_NOT_UMODE2	0x0080
+
 #define	FLAGS_PINGSENT   0x0001	/* Unreplied ping sent */
 #define	FLAGS_DEADSOCKET 0x0002	/* Local socket is dead--Exiting soon */
 #define	FLAGS_KILLED     0x0004	/* Prevents "QUIT" from being sent for this */

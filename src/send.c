@@ -555,6 +555,93 @@ void sendto_serv_butone_token(aClient *one, char *prefix, char *command,
 }
 
 /*
+ * sendto_server_butone_token_opt
+ *
+ * Send a message to all connected servers except the client 'one'.
+ * with capab to tokenize, opt
+ */
+
+void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *command,
+    char *token, char *pattern, ...)
+{
+	va_list vl;
+	int  i;
+	aClient *cptr;
+#ifndef NO_FDLIST
+	int  j;
+#endif
+	char	*p;
+	static char tcmd[1024];
+	static char ccmd[1024];
+	static char buff[1024];
+	static char pref[100];
+
+	va_start(vl, pattern);
+	
+	pref[0] = '\0';
+	if (strchr(prefix, '.'))
+		ircsprintf(pref, "@%s", find_server_aln(prefix));
+
+	strcpy(tcmd, token);
+	strcpy(ccmd, command);
+	strcat(tcmd, " ");
+	strcat(ccmd, " ");
+	ircvsprintf(buff, pattern, vl);
+	strcat(tcmd, buff);
+	strcat(ccmd, buff);
+
+#ifdef NO_FDLIST
+	for (i = 0; i <= highest_fd; i++)
+#else
+	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry;
+	    i = serv_fdlist.entry[++j])
+#endif
+	{
+		if (!(cptr = local[i]) || (one && cptr == one->from))
+			continue;
+#ifdef NO_FDLIST
+		if (IsServer(cptr))
+#endif
+		
+		if ((opt & OPT_NOT_SJOIN) && SupportSJOIN(cptr))
+			continue;
+		if ((opt & OPT_NOT_NICKv2) && SupportNICKv2(cptr))
+			continue;
+		if ((opt & OPT_NOT_SJOIN2) && SupportSJOIN2(cptr))
+			continue;
+		if ((opt & OPT_NOT_UMODE2) && SupportUMODE2(cptr))
+			continue;
+		if ((opt & OPT_NICKv2) && !SupportNICKv2(cptr))
+			continue;
+		if ((opt & OPT_SJOIN) && !SupportSJOIN(cptr))
+			continue;
+		if ((opt & OPT_SJOIN2) && !SupportSJOIN2(cptr))
+			continue;
+		if ((opt & OPT_UMODE2) && !SupportUMODE2(cptr))
+			continue;
+		
+		if (IsToken(cptr))
+			{
+				if ((pref[0] != '\0') && SupportALN(cptr))
+					sendto_one(cptr, "%s %s", pref, tcmd);
+				else
+					sendto_one(cptr, ":%s %s", prefix,
+					    tcmd);
+			}
+			else
+			{
+				if ((pref[0] != '\0') && SupportALN(cptr))
+					sendto_one(cptr, "%s %s", pref, ccmd);
+				else
+					sendto_one(cptr, ":%s %s", prefix,
+					    ccmd);
+			}
+	}
+	va_end(vl);
+	return;
+}
+
+/*
  * sendto_serv_butone_quit
  *
  * Send a message to all connected servers except the client 'one'.
