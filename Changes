@@ -189,4 +189,4 @@
 - Some more rehash stuff
 - Fixed check_pings problem (crash)
 - Fixed negative timestamps problem (crash)
- 
+- Made a bunch of /stats flags work with newconf

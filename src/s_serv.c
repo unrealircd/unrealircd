@@ -2235,212 +2235,10 @@ int  m_watch(cptr, sptr, parc, parv)
 **              C = Report C and N configuration lines
 */
 /*
-** m_stats/stats_conf
-**    Report N/C-configuration lines from this server. This could
-**    report other configuration lines too, but converting the
-**    status back to "char" is a bit akward--not worth the code
-**    it needs...
-**
 **    Note:   The info is reported in the order the server uses
 **            it--not reversed as in ircd.conf!
 */
 
-static void report_sqlined_nicks(sptr)
-	aClient *sptr;
-{
-	char *nickmask, *reason;
-
-/*	for (tmp = sqline; tmp; tmp = tmp->next)
-	{
-		if (tmp->status != CONF_ILLEGAL)
-		{
-			nickmask = BadPtr(tmp->sqline) ? "<NULL>" : tmp->sqline;
-			reason = BadPtr(tmp->reason) ? "<NULL>" : tmp->reason;
-			sendto_one(sptr, rpl_str(RPL_SQLINE_NICK), me.name,
-			    sptr->name, nickmask, reason);
-		}
-	}
-	*/
-}
-
-static void report_configured_links(sptr, mask)
-	aClient *sptr;
-	int  mask;
-{
-	static char null[] = "<NULL>";
-	aConfItem *tmp;
-	int *p, port, tmpmask, options;
-	char c, *host, *pass, *name, optbuf[5];
-	tmpmask = (mask == CONF_MISSING) ? CONF_CONNECT_SERVER : mask;
-#ifdef OLD
-	for (tmp = conf; tmp; tmp = tmp->next)
-		if (tmp->status & tmpmask)
-		{
-			for (p = &report_array[0][0]; *p; p += 3)
-				if (*p == tmp->status)
-					break;
-			if (!*p)
-				continue;
-			c = (char)*(p + 2);
-			host = BadPtr(tmp->host) ? null : tmp->host;
-			pass = BadPtr(tmp->passwd) ? null : tmp->passwd;
-			name = BadPtr(tmp->name) ? null : tmp->name;
-			port = (int)tmp->port;
-			options = tmp->options;
-			/*
-			 * On K line the passwd contents can be
-			 * displayed on STATS reply.    -Vesa
-			 */
-			/* Same with Z-lines and q/Q-lines -- Barubary */
-			if ((tmp->status == CONF_KILL) || (tmp->status &
-			    CONF_QUARANTINE) || (tmp->status & CONF_EXCEPT)
-			    || (tmp->status == CONF_ZAP))
-			{
-/* These mods are to tell the difference between the different kinds
- * of klines.  the only effect it has is in the display.  --Russell
- */
-/* Now translates spaces to _'s to show comments in klines -- Barubary */
-				char *temp;
-				if (!pass)
-					strcpy(buf, "<NULL>");
-				else
-				{
-					strcpy(buf, pass);
-					for (temp = buf; *temp; temp++)
-						if (*temp == ' ')
-							*temp = '_';
-				}
-				/* semicolon intentional -- Barubary */
-				if (tmp->status == CONF_QUARANTINED_NICK);
-				/* Hide password for servers -- Barubary */
-				else if (tmp->status & CONF_QUARANTINE)
-					strcpy(buf, "*");
-				else
-				{
-/* This wasn't documented before - comments aren't displayed for akills
-   because they are all the same. -- Barubary */
-					if (tmp->tmpconf == KLINE_AKILL)
-						strcpy(buf, "*");
-
-					/*                Show comments in E:Lines..
-					   if (tmp->tmpconf == KLINE_EXCEPT)
-					   strcpy(buf, "*");
-					 */
-					/* KLINE_PERM == 0 - watch out when doing
-					   Z-lines. -- Barubary */
-					if (tmp->status != CONF_ZAP)
-					{
-						if (tmp->tmpconf == KLINE_PERM)
-							c = 'K';
-						if (tmp->tmpconf == KLINE_TEMP)
-							c = 'k';
-						if (tmp->tmpconf == KLINE_AKILL)
-							c = 'A';
-						if (tmp->tmpconf ==
-						    KLINE_EXCEPT) c = 'E';
-					}
-					else
-					{
-						if (tmp->tmpconf == KLINE_PERM)
-							c = 'Z';
-						if (tmp->tmpconf == KLINE_TEMP)
-							c = 'z';
-						if (tmp->tmpconf == KLINE_AKILL)
-							c = 'S';
-						if (tmp->tmpconf ==
-						    KLINE_EXCEPT) c = 'e';
-					}
-				}
-				sendto_one(sptr, rpl_str(p[1]), me.name,
-				    sptr->name, c, host,
-				    buf, name, port, get_conf_class(tmp));
-			}
-			else if (mask & CONF_OPS)
-			{
-				sendto_one(sptr, rpl_str(p[1]), me.name,
-				    sptr->name, c, host, name, oflagstr(port),
-				    get_conf_class(tmp));
-			}
-
-			/* connect rules are classless */
-			else if (tmp->status & CONF_CRULE)
-				sendto_one(sptr, rpl_str(p[1]), me.name,
-				    sptr->name, c, host, name);
-			/* Only display on X if server is missing */
-			else if (mask == CONF_MISSING)
-			{
-				if (!find_server_quick(name))
-					sendto_one(sptr,
-					    rpl_str(RPL_STATSXLINE), me.name,
-					    sptr->name, name, port);
-			}
-			else if (mask == CONF_TLINE)
-			{
-				sendto_one(sptr, rpl_str(RPL_STATSTLINE),
-				    me.name, sptr->name, host, pass, name);
-			}
-			else if (mask == CONF_SOCKSEXCEPT)
-			{
-				sendto_one(sptr, rpl_str(RPL_STATSELINE),
-				    me.name, sptr->name, host, pass, name);
-			}
-			else if (mask == CONF_NLINE)
-			{
-				sendto_one(sptr, rpl_str(RPL_STATSNLINE),
-				    me.name, sptr->name, host, pass);
-			}
-			else if (mask == CONF_VERSION)
-				sendto_one(sptr, rpl_str(RPL_STATSVLINE),
-				    me.name, sptr->name, host, pass, name);
-/*			else if (mask == CONF_EXCEPT)
-			{
-				ppx = MyMalloc(strlen(tmp->passwd) + 1);
-				strcpy(ppx, tmp->passwd);
-				for (pp = ppx; *pp != '\0'; pp++) {
-					if (*pp == ' ')
-						*pp = '_';
-				}
-				sendto_one(sptr, rpl_str(RPL_STATSKLINE), me.name,
-					sptr->name, "E", host, ppx, name, 0,0, -1);
-				MyFree(ppx);
-			} */
-			else
-			{
-				if (!IsOper(sptr)
-				    && (mask & CONF_NOCONNECT_SERVER
-				    || mask & CONF_CONNECT_SERVER))
-					sendto_one(sptr, rpl_str(p[1]), me.name,
-					    sptr->name, c, "*", name, port,
-					    get_conf_class(tmp), "*");
-				else
-				{
-					int  cnt = 0;
-					if (options)
-					{
-						if (options & CONNECT_SSL)
-						{
-							optbuf[cnt] = 'S';
-							cnt++;
-						}
-						if (options & CONNECT_ZIP)
-						{
-							optbuf[cnt] = 'Z';
-							cnt++;
-						}
-						optbuf[cnt] = '\0';
-					}
-
-					sendto_one(sptr, rpl_str(p[1]), me.name,
-					    sptr->name, c, host, name, port,
-					    get_conf_class(tmp),
-					    options ? optbuf : "*");
-					optbuf[0] = '\0';
-				}
-			}
-		}
-#endif
-	return;
-}
 
 
 char *get_cptr_status(aClient *acptr)
@@ -2676,11 +2474,17 @@ int  m_stats(cptr, sptr, parc, parv)
 		  break;
 	  case 'I':
 	  case 'i':
-		  report_configured_links(sptr, CONF_CLIENT);
 		  break;
 	  case 'E':
-		  report_configured_links(sptr, CONF_EXCEPT);
+	  {
+		  ConfigItem_except *excepts;
+		  for (excepts = conf_except; excepts; excepts = (ConfigItem_except *) excepts->next) {
+			if (excepts->flag.type == 1)
+				sendto_one(sptr, rpl_str(RPL_STATSKLINE), me.name,
+				    parv[0], "E", excepts->mask, "");
+		  }
 		  break;
+	  }
 	  case 'e':
 	  {
 		  ConfigItem_except *excepts;
@@ -2695,9 +2499,42 @@ int  m_stats(cptr, sptr, parc, parv)
 	  }
 	  case 'K':
 	  case 'k':
-		  report_configured_links(sptr,
-		      CONF_KILL | CONF_ZAP | CONF_EXCEPT);
+	  {
+		  ConfigItem_ban *bans;
+		  ConfigItem_except *excepts;
+		  char type[2];
+  		  for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) {
+			  if (bans->flag.type == CONF_BAN_USER) {
+				if (bans->flag.type2 == CONF_BAN_TYPE_CONF)
+					  type[0] = 'K';
+				else if (bans->flag.type2 == CONF_BAN_TYPE_AKILL)
+					  type[0] = 'A';
+				else if (bans->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
+					  type[0] = 'k';
+				type[1] = '\0';
+	  			sendto_one(sptr, rpl_str(RPL_STATSKLINE),
+			 	    me.name, parv[0], type, bans->mask, bans->reason);
+			  }
+			  else if (bans->flag.type == CONF_BAN_IP) {
+				if (bans->flag.type2 == CONF_BAN_TYPE_CONF)
+					type[0] = 'Z';
+				else if (bans->flag.type2 == CONF_BAN_TYPE_AKILL)
+					type[0] = 'S';
+				else if (bans->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
+					type[0] = 'z';
+				type[1] = '\0';
+				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
+				    me.name, parv[0], type, bans->mask, bans->reason);
+			  }
+
+		  }
+		  for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) {
+			  if (excepts->flag.type == 1)
+				 sendto_one(sptr, rpl_str(RPL_STATSKLINE),
+				     me.name, parv[0], "E", excepts->mask, "");
+		  }	
 		  break;
+	  }
 	  case 'M':
 	  case 'm':
 		  for (mptr = msgtab; mptr->cmd; mptr++)
@@ -2716,39 +2553,51 @@ int  m_stats(cptr, sptr, parc, parv)
 				      mptr->rticks / CLOCKS_PER_SEC);
 #endif
 		  break;
-	  case 'n':
-		  report_configured_links(sptr, CONF_NLINE);
+	  case 'n': 
+	  {
+		  ConfigItem_ban *bans;
+
+		  for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) {
+			  if (bans->flag.type == CONF_BAN_REALNAME)
+				sendto_one(sptr, rpl_str(RPL_STATSNLINE),
+				    me.name, parv[0], bans->mask, bans->reason);
+		  }
 		  break;
+	  }
 	  case 'N':
 		  if (IsOper(sptr))
 			  report_network(sptr);
 		  break;
 	  case 'o':
 	  case 'O':
-/*			if (SHOWOPERS == 1) {
-				if(IsOper(sptr)) {
-					report_configured_links(sptr, CONF_OPS);
-					break;
-				}
-			}
-			 	else
-			if (SHOWOPERS == 0) {
-				report_configured_links(sptr, CONF_OPS);			
-*/
 		  if (SHOWOPERS == 0 && (IsOper(sptr)))
 		  {
-			  report_configured_links(sptr, CONF_OPS);
 			  break;
 		  }
 		  if (SHOWOPERS == 1)
-			  report_configured_links(sptr, CONF_OPS);
 		  break;
 	  case 'Q':
-		  report_configured_links(sptr, CONF_QUARANTINE);
+	  {
+		  ConfigItem_ban *bans;
+
+		  for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) {
+			  if (bans->flag.type == CONF_BAN_NICK && bans->flag.type2 != CONF_BAN_TYPE_AKILL)
+				sendto_one(sptr, rpl_str(RPL_STATSQLINE),
+				    me.name, parv[0],  bans->reason, bans->mask);
+		  }
+	  }
 		  break;
 	  case 'q':
-		  report_sqlined_nicks(sptr);
+	  {
+		  ConfigItem_ban *bans;
+
+		  for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) {
+			  if (bans->flag.type == CONF_BAN_NICK && bans->flag.type2 == CONF_BAN_TYPE_AKILL)
+				sendto_one(sptr, rpl_str(RPL_SQLINE_NICK),
+				    me.name, parv[0], bans->mask, bans->reason);
+		  }
 		  break;
+	  }
 	  case 'R':
 #ifdef DEBUGMODE
 		  send_usage(sptr, parv[0]);
@@ -2770,10 +2619,8 @@ int  m_stats(cptr, sptr, parc, parv)
 			  report_dynconf(sptr);
 		  break;
 	  case 'D':
-		  report_configured_links(sptr, CONF_CRULEALL);
 		  break;
 	  case 'd':
-		  report_configured_links(sptr, CONF_CRULE);
 		  break;
 	  case 'r':
 		  cr_report(sptr);
@@ -2816,10 +2663,8 @@ int  m_stats(cptr, sptr, parc, parv)
 		  break;
 	  }
 	  case 'v':
-		  report_configured_links(sptr, CONF_VERSION);
 		  break;
 	  case 'V':
-		  vhost_report(sptr);
 		  break;
 	  case 'W':
 	  case 'w':
@@ -2827,11 +2672,9 @@ int  m_stats(cptr, sptr, parc, parv)
 		  break;
 	  case 'X':
 	  case 'x':
-		  report_configured_links(sptr, CONF_MISSING);
 		  break;
 	  case 'Y':
 	  case 'y':
-//		  report_classes(sptr);
 		  break;
 	  case 'Z':
 	  case 'z':
