@@ -1769,3 +1769,7 @@ seen. gmtime warning still there
 - Added some bugfixes for IPv6 and others by Syzop
 - Fixed a bug where leaving out the parameter to a password config entry would cause a
   crash, reported by AngryWolf (#0000623)
+- Adding throttling, read config.h for more info. For the uneducated,
+  throttling is to reconnect way too fast repeatedly. Thanks to [Real] for
+  the idea
+ 

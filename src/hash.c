@@ -729,4 +729,98 @@ int   hash_del_watch_list(aClient *cptr)
 	return 0;
 }
 
+/*
+ * Throttling
+ * -by Stskeeps
+*/
 
+#ifdef THROTTLING
+
+struct	ThrottlingBucket	*ThrottlingHash[THROTTLING_HASH_SIZE+1];
+
+void	init_throttling_hash()
+{
+	bzero(ThrottlingHash, sizeof(ThrottlingHash));	
+	EventAddEx(NULL, "bucketcleaning", THROTTLING_PERIOD/2, 0,
+		e_clean_out_throttling_buckets, NULL);		
+}
+
+int	hash_throttling(struct IN_ADDR *in)
+{
+#ifndef INET6
+	return ((int)in->s_addr % THROTTLING_HASH_SIZE); 
+#else
+	/* FIXME: This way it will work until we find a way to do it.  */ 
+	return 0;
+#endif
+}
+
+struct	ThrottlingBucket	*find_throttling_bucket(struct IN_ADDR *in)
+{
+	int			hash = 0;
+	struct ThrottlingBucket *p;
+	hash = hash_throttling(in);
+	
+	for (p = ThrottlingHash[hash]; p; p = p->next)
+	{
+		if (bcmp(in, &p->in, sizeof(struct IN_ADDR)) == 0)
+			return(p);
+	}
+	return NULL;
+}
+
+void	add_throttling_bucket(struct IN_ADDR *in)
+{
+	int	hash;
+	struct	ThrottlingBucket	*n;
+	
+	n = malloc(sizeof(struct ThrottlingBucket));	
+	n->next = n->prev = NULL; 
+	bcopy(in, &n->in, sizeof(struct IN_ADDR));
+	n->since = TStime();
+	hash = hash_throttling(in);
+	AddListItem(n, ThrottlingHash[hash]);
+	return;
+}
+
+void	del_throttling_bucket(struct ThrottlingBucket *bucket)
+{
+	int	hash;
+	struct ThrottlingBucket 	*n;
+	hash = hash_throttling(&bucket->in);
+	
+	DelListItem(n, ThrottlingHash[hash]);
+	return;
+}
+
+int	throttle_can_connect(struct IN_ADDR *in)
+{
+	if (!find_throttling_bucket(in))
+		return 1;
+	else
+		return 0;
+}
+
+EVENT(e_clean_out_throttling_buckets)
+{
+	struct ThrottlingBucket *n;
+	int	i;
+	struct ThrottlingBucket z = { NULL, NULL, 0};
+		
+	for (i = 0; i < THROTTLING_HASH_SIZE; i++)
+		for (n = ThrottlingHash[i]; n; n = n->next)
+			if (TStime() - n->since > THROTTLING_PERIOD)
+			{
+				if (n->prev)
+					n->prev->next = n->next;
+				else
+					ThrottlingHash[i] = n->next;
+				if (n->next)
+					n->next->prev = n->prev;	
+				z.next = n->next;
+				n = &z;
+			}
+	return;
+}
+
+#endif

@@ -136,6 +136,14 @@
 #undef OPEROVERRIDE_VERIFY
 
 /*
+ * THROTTLING
+ *   This will only allow 1 connection per ip in THROTTLING_PERIOD time
+ *   this will be adaptable using conf later
+*/
+#undef THROTTLING
+#define THROTTLING_PERIOD 15
+
+/*
  * NAZIISH_CHBAN_HANDLING (formerly ANNOYING_BAN_THING)
  *   Reject bans that are matched by existing bans, causes chanserv
  *   To flood-kick an akicked user if their akick is matched by another

@@ -1208,7 +1208,7 @@ add_con_refuse:
 					ircsprintf(zlinebuf,
 						"ERROR :Closing Link: [%s] (Too many unknown connections from your IP)"
 						"\r\n",
-						inetntoa((char *)&acptr->ip));
+						Inet_ia2p(&acptr->ip));
 					set_non_blocking(fd, acptr);
 					set_sock_opts(fd, acptr);
 					send(fd, zlinebuf, strlen(zlinebuf), 0);
@@ -1223,7 +1223,7 @@ add_con_refuse:
 				ircsprintf(zlinebuf,
 					"ERROR :Closing Link: [%s] (You are not welcome on "
 					"this server: %s. Email %s for more information.)\r\n",
-					inetntoa((char *)&acptr->ip),
+					Inet_ia2p(&acptr->ip),
 					bconf->reason ? bconf->reason : "no reason",
 					KLINE_ADDRESS);
 				set_non_blocking(fd, acptr);
@@ -1239,6 +1239,22 @@ add_con_refuse:
 			send(fd, zlinebuf, strlen(zlinebuf), 0);
 			goto add_con_refuse;
 		}
+#ifdef THROTTLING
+		else if (!throttle_can_connect(&acptr->ip))
+		{
+			ircsprintf(zlinebuf,
+				"ERROR :Closing Link: [%s] (Throttling: Reconnecting too fast) -"
+					"Email %s for more information.)\r\n",
+					Inet_ia2p(&acptr->ip),
+					KLINE_ADDRESS);
+			set_non_blocking(fd, acptr);
+			set_sock_opts(fd, acptr);
+			send(fd, zlinebuf, strlen(zlinebuf), 0);
+			goto add_con_refuse;
+		}
+		else
+			add_throttling_bucket(&acptr->ip);
+#endif
 		acptr->port = ntohs(addr.SIN_PORT);
 	}
 
