@@ -607,3 +607,16 @@
 - Fixed a small doc bug regarding shun in spamfilter, reported by KnuX (#0002338).
 - Added greek docs, translator: GSF.
 - Some help.conf/005.txt updates, reported by Ron2K (#0002354).
+- No longer cutoff nick upon illegal character -- just reject the whole nick. The nick is
+  still cutoff if the nick is too long. Basically this is the same way as Hybrid does it
+  so it should work ok :).
+- Added nick character system. This allows you to choose which (additional) characters
+  to allow in nicks via set::allowed-nickchars. See unreal32docs.html -> section 3.16
+  for a list of available languages and more info on how to use it.
+  Current list: dutch, french, german, italian, spanish, euro-west, chinese-trad,
+  chinese-simp, chinese-ja, chinese.
+  If you wonder why your language is not yet included or why a certain mistake is present,
+  then please understand that we are most likely not experienced (at all) in your language.
+  If you are a native of your language (or know the language well), and your language
+  is not included yet or you have some corrections, then contact syzop@vulnscan.org or
+  report it as a bug on http://bugs.unrealircd.org/

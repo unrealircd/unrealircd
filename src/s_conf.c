@@ -331,6 +331,11 @@ extern void add_entropy_configfile(struct stat st, char *buf);
 extern void unload_all_unused_snomasks();
 extern void unload_all_unused_umodes();
 
+extern int charsys_test_language(char *name);
+extern void charsys_add_language(char *name);
+extern void charsys_reset_pretest(void);
+int charsys_postconftest(void);
+
 /* Stuff we only need here for spamfilter, so not in h.h... */
 extern aTKline *tklines[TKLISTLEN];
 extern inline int tkl_hash(char c);
@@ -1595,7 +1600,9 @@ int	init_conf(char *rootconf, int rehash)
 	config_setdefaultsettings(&tempiConf);
 	if (load_conf(rootconf) > 0)
 	{
-		if ((config_test() < 0) || (callbacks_check() < 0) || (efunctions_check() < 0))
+		charsys_reset_pretest();
+		if ((config_test() < 0) || (callbacks_check() < 0) || (efunctions_check() < 0) ||
+		    (charsys_postconftest() < 0))
 		{
 			config_error("IRCd configuration failed to pass testing");
 #ifdef _WIN32
@@ -1647,6 +1654,7 @@ int	init_conf(char *rootconf, int rehash)
 			l_commands_Init(&ModCoreInfo);
 		}
 #endif
+		charsys_reset();
 		if (config_run() < 0)
 		{
 			config_error("Bad case of config errors. Server will now die. This really shouldn't happen");
@@ -6400,6 +6408,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			else
 				tempiConf.userhost_allowed = UHALLOW_REJOIN;
 		}
+		else if (!strcmp(cep->ce_varname, "allowed-nickchars")) {
+			for (cepp = cep->ce_entries; cepp; cepp=cepp->ce_next)
+				charsys_add_language(cepp->ce_varname);
+		}
 		else if (!strcmp(cep->ce_varname, "channel-command-prefix")) {
 			ircstrdup(tempiConf.channel_command_prefix, cep->ce_vardata);
 		}
@@ -6912,6 +6924,25 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_varlinenum);
 				errors++;
 				continue;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "allowed-nickchars")) {
+			if (cep->ce_vardata)
+			{
+				config_error("%s:%i: set::allow-nickchars: please use 'allowed-nickchars { name; };' "
+				             "and not 'allowed-nickchars name;'",
+				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+				continue;
+			}
+			for (cepp = cep->ce_entries; cepp; cepp=cepp->ce_next)
+			{
+				if (!charsys_test_language(cepp->ce_varname))
+				{
+					config_error("%s:%i: set::allow-nickchars: Unknown (sub)language '%s'",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cepp->ce_varname);
+					errors++;
+				}
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "anti-spam-quit-message-time")) {

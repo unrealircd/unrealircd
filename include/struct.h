@@ -1636,7 +1636,8 @@ struct liststruct {
 
 #define	BadPtr(x) (!(x) || (*(x) == '\0'))
 
-#define	isvalid(c) (((c) >= 'A' && (c) <= '~') || isdigit(c) || (c) == '-')
+/** Is valid character in nick? [not for external usage, use do_check_nickname instead!] */
+#define isvalid(c)   (char_atribs[(u_char)(c)]&ALLOWN)
 
 /* remote fds are set to -256, else its a local fd (a local fd
  * can get -1 or -2 in case it has been closed). -- Syzop

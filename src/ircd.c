@@ -1006,6 +1006,7 @@ int InitwIRCD(int argc, char *argv[])
 	bzero((char *)&me, sizeof(me));
 	bzero(&StatsZ, sizeof(StatsZ));
 	setup_signals();
+	charsys_reset();
 	init_ircstats();
 #ifdef USE_LIBCURL
 	url_init();

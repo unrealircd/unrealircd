@@ -184,6 +184,7 @@ extern MODVAR unsigned char char_atribs[];
 #define DIGIT 16
 #define SPACE 32
 #define ALLOW 64
+#define ALLOWN 128
 
 #ifndef KLINE_TEMP
 #define KLINE_PERM 0

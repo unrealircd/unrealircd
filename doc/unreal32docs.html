@@ -69,7 +69,8 @@ English | <a href="unreal32docs.de.html">German</a> |
   -- 3.13. <a href="#feature_bantypes">Ban types</a><br>
   -- 3.14. <a href="#feature_spamfilter">Spamfilter</a><br>
   -- 3.15. <a href="#feature_cidr">CIDR</a><br>
-  -- 3.16. <a href="#feature_other">Other features</a><br>
+  -- 3.16. <a href="#feature_nickchars">Nick Character Sets</a><br>
+  -- 3.17. <a href="#feature_other">Other features</a><br>
   4. <a href="#configuringyourunrealircdconf">Configuring your unrealircd.conf 
   file</a><br>
   ---4.1. <a href="#configurationfileexplained">Configuration file explained</a><br>
@@ -558,7 +559,34 @@ and except tkl::mask (for gzline, gline, and shun). Additionally, CIDR can be us
 127.0.0.0/8 (matches 127.0.0.0 - 127.255.255.255), and fe80:0:0:123::/64 (matches 
 fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p></div>
 
-<p><font size="+2"><b>3.16 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
+<p><font size="+2"><b>3.16 - Nick Character Sets</b></font><a name="feature_nickchars"></a></p><div class="desc">
+<p>UnrealIRCd has now the ability to specify which charsets/languages should be allowed
+in nicknames. You do this in <b>set::allowed-nickchars</b>.<br>
+A table of all possible choices:<br>
+<table border="1">
+<tr><td><b>Name:</b></td><td><b>Description:</b></td><td><b>Character set/encoding:</b></td></tr>
+<tr><td>dutch</td><td>Dutch characters</td><td>latin1</td></tr>
+<tr><td>french</td><td>French characters: accents, ..</td><td>latin1</td></tr>
+<tr><td>german</td><td>German characters: umlauts, eszet, ..</td><td>latin1</td></tr>
+<tr><td>italian</td><td>Italian characters: accents, ..</td><td>latin1</td></tr>
+<tr><td>spanish</td><td>Spanish characters</td><td>latin1</td></tr>
+<tr><td><b>euro-west</b></td><td>dutch, french, german, spanish, italian</td><td>latin1</td></tr>
+<tr><td>chinese-simp</td><td>Simplified Chinese</td><td>Multibyte: GBK/GB2312</td></tr>
+<tr><td>chinese-trad</td><td>Tradditional Chinese</td><td>Multibyte: GBK</td></tr>
+<tr><td>chinese-ja</td><td>Japanese-alike Chinese</td><td>Multibyte: GBK</td></tr>
+<tr><td><b>chinese</b></td><td>chinese-*</td><td>Multibyte: GBK</td></tr>
+</table>
+Please note that some combinations are not allowed (especially multi-region), 
+such as (one of) euro-west and chinese-*, because they can cause display conflicts.
+UnrealIRCd will print out an error if you try to do so.<br><br>
+
+Example 1, for people of western europe:<br>
+<pre>set { allowed-nickchars { euro-west; }; };</pre>
+Example 2, if you have mainly chinese users:<br>
+<pre>set { allowed-nickchars { chinese-simp; chinese-trad; }; };</pre>
+</p></div>
+
+<p><font size="+2"><b>3.17 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
 <p>UnrealIRCd has a lot of features so not everything is covered here... You'll find that out by yourself.</p></div>
 
 <p> </p>
@@ -2152,6 +2180,8 @@ set {
   Specifies the prefix characters for services "in channel commands". Messages starting with 
   any of the specified characters will still be sent even if the client is +d. The default 
   value is "`".</p>
+<p><font class="set">set::allowed-nickchars { &lt;list&gt; };</font><br>
+  Character sets / languages to allow in nicks, see <a href="#feature_nickchars">Nick Character Sets</a>.</p>
 <p><font class="set">set::allow-userhost-change [never|always|not-on-channels|force-rejoin]</font><br>
   Specifies what happens when the user@host changes (+x/-x/chghost/chgident/setident/vhost/etc).<br>
   <i>never</i> disables all the commands, <i>always</i> does always allow it even when in channels 

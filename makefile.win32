@@ -133,7 +133,7 @@ EXP_OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/HELP.OBJ SRC/S_MISC.OBJ SRC/MATCH.OBJ SRC/CRULE.OBJ \
  SRC/S_DEBUG.OBJ  SRC/SUPPORT.OBJ SRC/LIST.OBJ \
  SRC/S_ERR.OBJ SRC/PACKET.OBJ SRC/S_BSD.OBJ \
- SRC/S_SERV.OBJ SRC/S_USER.OBJ \
+ SRC/S_SERV.OBJ SRC/S_USER.OBJ SRC/CHARSYS.OBJ \
  SRC/VERSION.OBJ SRC/RES_INIT.OBJ SRC/RES_COMP.OBJ SRC/RES_MKQUERY.OBJ SRC/RES_SKIPNAME.OBJ \
  SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ \
  SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ \
@@ -351,6 +351,10 @@ src/s_svs.obj: src/s_svs.c $(INCLUDES)
 src/s_user.obj: src/s_user.c $(INCLUDES) ./include/dbuf.h \
                 ./include/channel.h ./include/whowas.h
         $(CC) $(CFLAGS) src/s_user.c
+
+src/charsys.obj: src/charsys.c $(INCLUDES) ./include/dbuf.h \
+                ./include/channel.h ./include/whowas.h
+        $(CC) $(CFLAGS) src/charsys.c
 
 src/s_extra.obj: src/s_extra.c $(INCLUDES) ./include/dbuf.h \
                 ./include/channel.h ./include/whowas.h

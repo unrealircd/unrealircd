@@ -746,3 +746,7 @@ void cmodej_delentry(aJFlood *e);
 void cmodej_deluserentries(aClient *cptr);
 void cmodej_delchannelentries(aChannel *chptr);
 #endif
+extern void charsys_reset(void);
+extern void charsys_addmultibyterange(char s1, char e1, char s2, char e2);
+extern void charsys_addallowed(char *s);
+extern void charsys_reset(void);
