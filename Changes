@@ -278,3 +278,5 @@
 - Implemented a new modules Makefile written by fez (#0001930).
 - Added oper::modes to specify modes to be set for a particular oper (overrides 
   set::modes-on-oper), suggested by parker182 (#0001899).
+- doc/example.conf now simply refers to unreal32docs.html for oper flags (#0001973)
+  reported by vonitsanet and AngryWolf.
