@@ -615,3 +615,4 @@ seen. gmtime warning still there
 - Added ./Config option to enable IPv6 (and made a configure check to make sure we can)
 - Made glob() use GLOB_LIMIT on OpenBSD 2.9 to help prevent a DoS
 - Fixed a bug allowing channek keys to have spaces
+- Cleaned up some thread porting code

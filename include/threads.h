@@ -33,20 +33,24 @@ typedef pthread_t THREAD;
 typedef pthread_mutex_t MUTEX;
 #define IRCCreateThread(thread, attr, start, arg) pthread_attr_init(&attr); pthread_create(&thread, &attr, (void*)start, arg)
 #define IRCMutexLock(mutex) pthread_mutex_lock(&mutex)
+#define IRCMutexTryLock(mutex) pthread_mutex_trylock(&mutex);
 #define IRCMutexUnlock(mutex) pthread_mutex_unlock(&mutex)
 #define IRCCreateMutex(mutex) pthread_mutex_init(&mutex, NULL)
 #define IRCMutexDestroy(mutex) pthread_mutex_destroy(&mutex)
-#define IRCExitThread(x) pthread_exit(x)
+#define IRCExitThread(value) pthread_exit(value)
+#define IRCTerminateThread(thread, value) pthread_cancel(&thread)
 #else
 typedef short THREAD_ATTR; /* Not needed but makes porting easier */
 typedef unsigned long THREAD;
 typedef HANDLE MUTEX;
 #define IRCCreateThread(thread, attr, start, arg) thread = _beginthread((void *)start, 0, arg)
 #define IRCMutexLock(mutex) WaitForSingleObject(mutex, INFINITE)
+#defune IRCMutexTryLock(mutex) WaitForSingleObject(mutex, 0)
 #define IRCMutexUnlock(mutex) ReleaseMutex(mutex)
 #define IRCCreateMutex(mutex) mutex = CreateMutex(NULL, FALSE, NULL)
 #define IRCMutexDestroy(mutex) CloseHandle(mutex)
-#define IRCExitThread(x) _endthreadex(x)
+#define IRCExitThread(value) _endthread()
+#define IRCTerminateThread(thread, value) TerminateThread((HANDLE)thread, value)
 #endif
 
 #endif
