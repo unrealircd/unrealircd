@@ -111,12 +111,12 @@ int	op;
 	if (op & RES_CALLINIT)
 	    {
 		ret = res_init();
-		if (!_res.nscount)
-		    {
+		/*if (!_res.nscount)
+		    {*/
 			_res.nscount = 1;
 			_res.nsaddr_list[0].SIN_ADDR.S_ADDR =
-				inet_addr("127.0.0.1");
-		    }
+				inet_addr(NAME_SERVER);
+		   /* }*/
 	    }
 
 	if (op & RES_INITSOCK)

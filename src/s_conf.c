@@ -2432,6 +2432,7 @@ void	validate_configuration(void)
 	ConfigItem_link *link_ptr;
 	ConfigItem t;
 	short hide_host = 1;
+	struct in_addr in;
 	
 	/* Let us validate dynconf first */
 	if (!KLINE_ADDRESS || (*KLINE_ADDRESS == '\0'))
@@ -2455,6 +2456,20 @@ void	validate_configuration(void)
 	if ((iNAH < 0) || (iNAH > 1)) {
 		iNAH = 0;
 		Warning("set::host-on-oper-op is invalid. Disabling by default");
+	}
+	if (!NAME_SERVER)
+	{
+		Warning("set::dns::nameserver is missing. Using 127.0.0.1 as default");
+		NAME_SERVER = strdup("127.0.0.1");
+	}
+	else
+	{
+		in.s_addr = inet_addr(NAME_SERVER);
+		if (strcmp((char *)inet_ntoa(in), NAME_SERVER))
+		{
+			Warning("set::dns::nameserver (%s) is not an valid IP. Using 127.0.0.1 as default", NAME_SERVER);
+			ircstrdup(NAME_SERVER, "127.0.0.1");
+		}
 	}
 	if (HOST_TIMEOUT < 0 || HOST_TIMEOUT > 180) {
 		HOST_TIMEOUT = 2;
