@@ -1579,3 +1579,4 @@ seen. gmtime warning still there
   requested reported by aproxity (#0000304)
 - Fixed a bug where /who +c #chan would let you see users in a +s channel
 - Added Nugget's setuid patch
+- Made the IRC_UID stuff more proper..

@@ -359,10 +359,12 @@
  * If you start the server as root but wish to have it run as another user,
  * define IRC_UID to that UID.  This should only be defined if you are running
  * as root and even then perhaps not.
+ * use #define IRC_UID <uid>
+ * and #define IRC_GID <gid>
  */
  
-#undef	IRC_UID 72
-#undef	IRC_GID 72
+#undef	IRC_UID
+#undef	IRC_GID 
 
 /*
  * CLIENT_FLOOD
