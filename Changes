@@ -2578,3 +2578,4 @@ seen. gmtime warning still there
 - Made the cloak mismatch msg during linking a bit more scary.
 - Added comment to 'Install as a service' option in installer to help n00bs a bit.
 - Made win32 work again (broke it by /module patch 30 minutes ago).
+- Fixed a snomask issue reported by Magnet (#0001354).

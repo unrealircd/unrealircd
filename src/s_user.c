@@ -2387,6 +2387,14 @@ CMD_FUNC(m_umode)
 		  case 'o':
 			  if(sptr->from->flags & FLAGS_QUARANTINE)
 				break;
+			  /* A local user trying to set himself +o is denied here.
+			   * A while later (outside this loop) it is handled as well (and +C, +N, etc too)
+			   * but we need to take care here too because it might cause problems
+			   * since otherwise all IsOper()/IsAnOper() calls cannot be trusted,
+			   * that's just asking for bugs! -- Syzop.
+			   */
+			  if (MyClient(sptr) && (what == MODE_ADD)) /* Someone setting himself +o? Deny it. */
+			    break;
 			  goto def;
 		  case 'x':
 			  switch (UHOST_ALLOWED)
