@@ -1906,3 +1906,4 @@ seen. gmtime warning still there
 - Allow coadmins to use /rehash -flags. Suggested by kyotou
 - Added channel mode +M. Can't talk unless you are using a registered nick. Suggested by 
   CaliMonk
+- Fixed compile warning in ssl.c.

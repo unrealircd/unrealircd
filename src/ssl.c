@@ -25,6 +25,7 @@
 #include "h.h"
 #include "proto.h"
 #include "sys.h"
+#include <string.h>
 #ifdef _WIN32
 #include <windows.h>
 
