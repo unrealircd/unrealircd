@@ -564,3 +564,4 @@
 - Added some portability stuff
 - Fixed some empty-line/missing parameter stuff in dccdeny, vhost, 
   and dynconf, chrestrict
+- Made vhost strip too long vhosts

@@ -605,7 +605,10 @@ int  vhost_add(vhost, login, password, usermask, hostmask)
 	aVhost *fl;
 
 	fl = (aVhost *) MyMalloc(sizeof(aVhost));
-
+	if (strlen(vhost) > (HOSTLEN - 4))
+	{
+		*(vhost + (HOSTLEN - 4)) = '\0';
+	}
 	AllocCpy(fl->virthost, vhost);
 	AllocCpy(fl->usermask, usermask);
 	AllocCpy(fl->hostmask, hostmask);
@@ -683,9 +686,17 @@ int  vhost_loadconf(void)
 			if (!y)
 				continue;
 			login = strtok(NULL, " ");
+			if (!login)
+				continue;
 			password = strtok(NULL, " ");
+			if (!password)
+				continue;
 			mask = strtok(NULL, "");
+			if (!mask)
+				continue;
 			usermask = strtok(mask, "@");
+			if (!usermask)
+				continue;
 			hostmask = strtok(NULL, " ");
 			if (!hostmask)
 				continue;
