@@ -7,7 +7,6 @@
 #ifndef __versioninclude
 #define __versioninclude 1
 
-#include "relinfo.h"
 /* 
  * Mark of settings
  */
