@@ -964,3 +964,5 @@ seen. gmtime warning still there
 - can_gkline/t and can_gzline/Z flags added, docs not modded yet
 - Added snomask +n (nick change notices) I personally hate it, but people wanted it...
 - Added oper::snomask to allow you to specify a default snomask for an oper
+- Added snomask +q (Qline notice), triggered when a nick is being denied from a user due to
+  a Q:line.

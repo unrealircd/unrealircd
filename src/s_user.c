@@ -71,6 +71,7 @@ int sno_mask[] = {
 	SNO_EYES, 'e',
 	SNO_TKL, 'G',
 	SNO_NICKCHANGE, 'n',
+	SNO_QLINE, 'q',
 	0, 0
 };
 
@@ -1143,14 +1144,14 @@ int  m_nick(cptr, sptr, parc, parv)
 			    (aClient *)find_server_b64_or_real(sptr->user ==
 			    NULL ? (char *)parv[6] : (char *)sptr->user->
 			    server);
-			sendto_realops("Q:lined nick %s from %s on %s", nick,
+			sendto_snomask(SNO_QLINE, "Q:lined nick %s from %s on %s", nick,
 			    (*sptr->name != 0
 			    && !IsServer(sptr) ? sptr->name : "<unregistered>"),
 			    acptrs ? acptrs->name : "unknown server");
 		}
 		else
 		{
-			sendto_realops("Q:lined nick %s from %s on %s",
+			sendto_snomask(SNO_QLINE, "Q:lined nick %s from %s on %s",
 			    nick,
 			    *sptr->name ? sptr->name : "<unregistered>",
 			    me.name);
@@ -1165,7 +1166,7 @@ int  m_nick(cptr, sptr, parc, parv)
 				    nick,
 				    BadPtr(aconf->reason) ? "reason unspecified"
 				    : aconf->reason);
-			sendto_realops("Forbidding Q-lined nick %s from %s.",
+			sendto_snomask(SNO_QLINE, "Forbidding Q-lined nick %s from %s.",
 			    nick, get_client_name(cptr, FALSE));
 			return 0;	/* NICK message ignored */
 		}
@@ -2022,6 +2023,8 @@ void set_snomask(aClient *sptr, char *snomask) {
 			sptr->user->snomask &= ~SNO_TKL;
 		if (sptr->user->snomask & SNO_NICKCHANGE)
 			sptr->user->snomask &= ~SNO_NICKCHANGE;
+		if (sptr->user->snomask & SNO_QLINE)
+			sptr->user->snomask &= ~SNO_QLINE;
 	}
 }
 
@@ -2208,6 +2211,8 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sptr->user->snomask &= ~SNO_TKL;
 		if (sptr->user->snomask & SNO_NICKCHANGE)
 			sptr->user->snomask &= ~SNO_NICKCHANGE;
+		if (sptr->user->snomask & SNO_QLINE)
+			sptr->user->snomask &= ~SNO_QLINE;
 
 	}
 
@@ -2336,6 +2341,8 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sptr->user->snomask &= ~SNO_TKL;
 		if (sptr->user->snomask & SNO_NICKCHANGE)
 			sptr->user->snomask &= ~SNO_NICKCHANGE;
+		if (sptr->user->snomask & SNO_QLINE)
+			sptr->user->snomask &= ~SNO_QLINE;
 	}
 	if (!(setflags & UMODE_OPER) && IsOper(sptr))
 		IRCstats.operators++;
