@@ -370,3 +370,4 @@
 - allow { } now supports encrypted passwords -Syzop
 - Made static linking a little more possible
 - Made /kick not core on users kicking servers. (WTF?)
+- Fixed a problem with users opping servers.. Found by Morbid

@@ -1726,6 +1726,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 		  retval = 1;
 		  if (!(who = find_chasing(cptr, param, &chasing)))
 			  break;
+		  if (!who->user)
+		  	break;
    		  /* codemastr: your patch is a good idea here, but look at the
    		     member->flags stuff longer down. this caused segfaults */
    		  if (!(membership = find_membership_link(who->user->channel, chptr)))
