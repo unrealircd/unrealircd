@@ -72,7 +72,7 @@ Source: ".\encpem.bat"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\ssl.cnf"; DestDir: "{app}"; Flags: ignoreversion
 #endif
 #ifdef USE_ZIP
-Source: "c:\dev\zlib\dll32\zlib.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\dev\zlib\dll32\zlibwapi.dll"; DestDir: "{app}"; Flags: ignoreversion
 #endif
 #ifdef USE_CURL
 Source: "c:\dev\curl\lib\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion

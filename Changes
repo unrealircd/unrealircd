@@ -3073,3 +3073,4 @@ seen. gmtime warning still there
 - Applied the above patch to the win32 TRE dll/lib files.
 - Fixed a problem with vhost::swhois not being displayed remotely (#0001702) reported by 
   medice.
+- Windows: Updated makefile/unrealinst.iss/zip.h to use zlib 1.2.1.
