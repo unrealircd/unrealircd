@@ -703,3 +703,25 @@ void initstats(void)
 	bzero((char *)&ircst, sizeof(ircst));
 }
 
+void verify_opercount(aClient *orig, char *tag)
+{
+int counted = 0;
+aClient *acptr;
+char text[2048];
+
+	for (acptr = client; acptr; acptr = acptr->next)
+	{
+		if (IsAnOper(acptr) && !IsHideOper(acptr))
+			counted++;
+	}
+	if (counted == IRCstats.operators)
+		return;
+	sprintf(text, "[BUG] operator count bug! value in /lusers is '%d', we counted '%d', "
+	               "user='%s', userserver='%s', tag=%s. "
+	               "please report to UnrealIRCd team at http://bugs.unrealircd.org/",
+	               IRCstats.operators, counted, orig->name ? orig->name : "<null>",
+	               orig->srvptr ? orig->srvptr->name : "<null>", tag ? tag : "<null>");
+	sendto_realops("%s", text);
+	ircd_log(LOG_ERROR, "%s", text);
+	IRCstats.operators = counted;
+}

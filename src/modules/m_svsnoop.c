@@ -123,6 +123,7 @@ int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[])
                                         if (IsAnOper(acptr))
                                         {
                                                 IRCstats.operators--;
+                                                VERIFY_OPERCOUNT(acptr, "svsnoop");
                                                 delfrom_fdlist(acptr->slot, &oper_fdlist);
                                         }
                                         acptr->umodes &=

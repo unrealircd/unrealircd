@@ -360,6 +360,7 @@ int  m_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
                                       && (acptr->umodes & UMODE_OPER))
                                   {
                                           IRCstats.operators--;
+                                          VERIFY_OPERCOUNT(acptr, "svsmode1");
 #ifndef NO_FDLIST
 					  if (MyClient(acptr))
 	                                          delfrom_fdlist(acptr->slot, &oper_fdlist);
@@ -368,7 +369,10 @@ int  m_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
                                   goto setmodex;
 			  case 'H':
 				  if (what == MODE_ADD && !(acptr->umodes & UMODE_HIDEOPER))
+				  {
 					IRCstats.operators--;
+					VERIFY_OPERCOUNT(acptr, "svsmode2");
+				  }
 				  if (what == MODE_DEL && (acptr->umodes & UMODE_HIDEOPER))
 					IRCstats.operators++;
 				  goto setmodex;
@@ -498,6 +502,7 @@ int  m_svs2mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
                                       && (acptr->umodes & UMODE_OPER))
                                   {
                                           IRCstats.operators--;
+                                          VERIFY_OPERCOUNT(acptr, "svsmode3");
 #ifndef NO_FDLIST
 					  if (MyClient(acptr))
 	                                          delfrom_fdlist(acptr->slot, &oper_fdlist);
@@ -506,7 +511,10 @@ int  m_svs2mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				  goto setmodey;
 			  case 'H':
 				  if (what == MODE_ADD && !(acptr->umodes & UMODE_HIDEOPER))
+				  {
 					IRCstats.operators--;
+					VERIFY_OPERCOUNT(acptr, "svsmode4");
+				  }
 				  if (what == MODE_DEL && (acptr->umodes & UMODE_HIDEOPER))
 					IRCstats.operators++;
 				  goto setmodey;

@@ -180,7 +180,10 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
         {
                 fLag = acptr->umodes;
                 if (IsOper(acptr) && !IsHideOper(acptr))
+                {
                         IRCstats.operators--;
+                        VERIFY_OPERCOUNT(acptr, "svso");
+                }
                 if (IsAnOper(acptr))
                         delfrom_fdlist(acptr->slot, &oper_fdlist);
                 acptr->umodes &=

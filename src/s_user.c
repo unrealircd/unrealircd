@@ -2587,10 +2587,16 @@ CMD_FUNC(m_umode)
 	if (!(setflags & UMODE_OPER) && IsOper(sptr))
 		IRCstats.operators++;
 	if ((setflags & UMODE_OPER) && !IsOper(sptr))
+	{
 		IRCstats.operators--;
+		VERIFY_OPERCOUNT(sptr, "umode1");
+	}
 	/* FIXME: This breaks something */
 	if (!(setflags & UMODE_HIDEOPER) && IsHideOper(sptr))
+	{
 		IRCstats.operators--;
+		VERIFY_OPERCOUNT(sptr, "umode2");
+	}
 	if ((setflags & UMODE_HIDEOPER) && !IsHideOper(sptr))
 		IRCstats.operators++;
 	if (!(setflags & UMODE_INVISIBLE) && IsInvisible(sptr))

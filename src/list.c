@@ -275,7 +275,10 @@ void remove_client_from_list(aClient *cptr)
 			IRCstats.invisible--;
 		}
 		if (IsOper(cptr) && !IsHideOper(cptr))
+		{
 			IRCstats.operators--;
+			VERIFY_OPERCOUNT(cptr, "rmvlist");
+		}
 		IRCstats.clients--;
 		if (cptr->srvptr && cptr->srvptr->serv)
 			cptr->srvptr->serv->users--;

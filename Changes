@@ -2400,3 +2400,4 @@ seen. gmtime warning still there
 - Badwords filtering is now only done for local clients, previously every server was filtering
   the message. This will reduce CPU usage, especially at hubs (#0001022).
 - Will now strip/block color codes in quits if any channel the user is in has mode +S/+c.
+- Temporarely added trace code for hunting down negative operator counts (#0001155).
