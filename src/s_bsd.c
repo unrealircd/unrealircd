@@ -1230,32 +1230,7 @@ add_con_refuse:
 			}
 		}
 
-		for (bconf = conf_ban; bconf; bconf = (ConfigItem_ban *)bconf->next) {
-			if (bconf->flag.type == CONF_BAN_IP) {
-				if (bconf->masktype == HM_HOST) {
-					if (!match(bconf->mask, acptr->sockhost))
-						break;
-					continue;
-				}
-				if (bconf->masktype == HM_IPV4) {
-					struct IN_ADDR in;
-					in.S_ADDR = inet_addr(acptr->sockhost);
-					if (!match_ipv4(&in,&bconf->netmask,bconf->bits))
-						break;
-					continue;
-				}
-#ifdef INET6
-				if (bconf->masktype == HM_IPV6) {
-					struct IN_ADDR in;
-					in.S_ADDR = inet_addr(acptr->sockhost);
-					if (!match_ipv6(&in,&bconf->netmask,bconf->bits))
-						break;
-					continue;
-				}
-#endif
-			}
-		}
-/*		if ((bconf = Find_ban(acptr->sockhost, CONF_BAN_IP))) */
+		if ((bconf = Find_ban(acptr->sockhost, CONF_BAN_IP))) 
 		if (bconf)
 		{
 			ircsprintf(zlinebuf,

@@ -947,3 +947,4 @@ seen. gmtime warning still there
   so the names are more standard.
 - Added host54.net to /credits
 - Fixed a FSU Pthreads bug that caused it not to work on Slackware (help from Frank Mueller)
+- Started some work on CIDR support (added some functions from hybrid7)
