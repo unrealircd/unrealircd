@@ -1,6 +1,6 @@
-; dlltool --output-def wircd.def.in --export-all-symbols SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ SRC/S_CONF.OBJ SRC/FDLIST.OBJ SRC/DBUF.OBJ SRC/CLOAK.OBJ SRC/HASH.OBJ SRC/PARSE.OBJ SRC/IRCD.OBJ SRC/S_NUMERIC.OBJ SRC/WHOWAS.OBJ SRC/S_AUTH.OBJ SRC/HELP.OBJ SRC/S_MISC.OBJ SRC/MATCH.OBJ SRC/CRULE.OBJ SRC/S_DEBUG.OBJ SRC/SUPPORT.OBJ SRC/LIST.OBJ SRC/S_ERR.OBJ SRC/PACKET.OBJ SRC/S_BSD.OBJ SRC/S_SERV.OBJ SRC/S_USER.OBJ SRC/VERSION.OBJ SRC/RES_INIT.OBJ SRC/RES_COMP.OBJ SRC/RES_MKQUERY.OBJ SRC/RES_SKIPNAME.OBJ SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/MD5.OBJ SRC/EXTBANS.OBJ
+; dlltool --output-def wircd.def.in --export-all-symbols SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ SRC/S_CONF.OBJ SRC/FDLIST.OBJ SRC/DBUF.OBJ SRC/CLOAK.OBJ SRC/HASH.OBJ SRC/PARSE.OBJ SRC/IRCD.OBJ SRC/S_NUMERIC.OBJ SRC/WHOWAS.OBJ SRC/S_AUTH.OBJ SRC/HELP.OBJ SRC/S_MISC.OBJ SRC/MATCH.OBJ SRC/CRULE.OBJ SRC/S_DEBUG.OBJ SRC/SUPPORT.OBJ SRC/LIST.OBJ SRC/S_ERR.OBJ SRC/PACKET.OBJ SRC/S_BSD.OBJ SRC/S_SERV.OBJ SRC/S_USER.OBJ SRC/VERSION.OBJ SRC/RES_INIT.OBJ SRC/RES_COMP.OBJ SRC/RES_MKQUERY.OBJ SRC/RES_SKIPNAME.OBJ SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/MD5.OBJ SRC/API-ISUPPORT.OBJ SRC/API-COMMAND.OBJ SRC/EXTBANS.OBJ
 EXPORTS
-	find_CommandEx
+	fast_badword_match
 	AllUmodes
 	AllowClient
 	AuthTypes
@@ -74,6 +74,8 @@ EXPORTS
 	IsupportDel
 	IsupportFind
 	IsupportSetValue
+	IsupportStrings
+	Isupports
 	LCF
 	LRV
 	LastSlot
@@ -282,6 +284,7 @@ EXPORTS
 	close_connection
 	close_connections
 	close_listeners
+	cmdstr
 	cmodestring
 	collapse
 	completed_connection
@@ -340,6 +343,7 @@ EXPORTS
 	count_watch_memory
 	count_whowas_memory
 	create_snomask
+	create_tkl_except
 	creation
 	cres_mem
 	crule__andor
@@ -385,6 +389,7 @@ EXPORTS
 	default_fdlist
 	del_Command
 	del_ListItem
+	del_async_connects
 	del_banid
 	del_dccallow
 	del_exbanid
@@ -437,9 +442,9 @@ EXPORTS
 	extcmode_init
 	extended_operoverride
 	extraflags
-	fast_badword_match
 	fast_badword_replace
 	find_Command
+	find_CommandEx
 	find_Command_simple
 	find_by_hash
 	find_chasing
@@ -461,6 +466,7 @@ EXPORTS
 	find_server_quick_straight
 	find_server_quickx
 	find_shun
+	find_spamfilter_user
 	find_str_match_link
 	find_throttling_bucket
 	find_tkline_match
@@ -511,6 +517,7 @@ EXPORTS
 	get_sockhost
 	gethost_byaddr
 	gethost_byname
+	gethost_byname_revquery
 	getrandom16
 	getrandom32
 	getrandom8
@@ -585,6 +592,7 @@ EXPORTS
 	is_chanprot
 	is_half_op
 	is_skochanop
+	isupport_init
 	join_channel
 	last_allinuse
 	last_garbage_collect
@@ -636,6 +644,7 @@ EXPORTS
 	make_cmodestr
 	make_extbanstr
 	make_extcmodestr
+	make_isupportstrings
 	make_link
 	make_member
 	make_membership
