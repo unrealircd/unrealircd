@@ -623,3 +623,4 @@ seen. gmtime warning still there
 - Changed the way modules work. We're now at MOD_VERSION 2
 - Changed ALL MODULES to version 2
 - Commited the +k fix to +L
+- Made version.c depend on ../Changes

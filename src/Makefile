@@ -75,7 +75,7 @@ mods:
 	fi
 	cd modules; make $(MAKEARGS) all
 
-version.c: version.c.SH
+version.c: version.c.SH ../Changes
 	$(SHELL) version.c.SH
 
 version.o: version.c ../include/version.h
