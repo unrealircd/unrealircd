@@ -651,13 +651,41 @@ m_nick(sptr,cptr,2,param);
 
 int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	int  x;
+	int  x = HUNTED_NOSUCH;
+	char *command, *param;
 	if (!IsOper(sptr))
 		return 0;
 
 #ifndef NO_FDLIST
 
-	if (!parv[1] || !MyClient(sptr))
+	switch(parc) {
+		case 1:
+			break;
+		case 2:
+			x = hunt_server(cptr, sptr, ":%s HTM %s", 1, parc, parv);
+			break;
+		case 3:
+			x = hunt_server(cptr, sptr, ":%s HTM %s %s", 1, parc, parv);
+			break;
+		default:
+			x = hunt_server(cptr, sptr, ":%s HTM %s %s %s", 1, parc, parv);
+	}
+
+	switch (x) {
+		case HUNTED_NOSUCH:
+			command = (parv[1]);
+			param = (parv[2]);
+			break;
+		case HUNTED_ISME:
+			command = (parv[2]);
+			param = (parv[3]);
+			break;
+		default:
+			return 0;
+	}
+
+
+	if (!command)
 	{
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** Current incoming rate: %0.2f kb/s",
@@ -684,6 +712,7 @@ int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	else
 	{
+#if 0
 		char *command = parv[1];
 
 		if (strchr(command, '.'))
@@ -693,6 +722,7 @@ int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    parv)) != HUNTED_ISME)
 				return 0;
 		}
+#endif
 		if (!stricmp(command, "ON"))
 		{
 			lifesux = 1;
@@ -721,13 +751,13 @@ int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		}
 		else if (!stricmp(command, "TO"))
 		{
-			if (!parv[2])
+			if (!param)
 				sendto_one(sptr,
 				    ":%s NOTICE %s :You must specify an integer value",
 				    me.name, parv[0]);
 			else
 			{
-				int  new_val = atoi(parv[2]);
+				int  new_val = atoi(param);
 				if (new_val < 10)
 					sendto_one(sptr,
 					    ":%s NOTICE %s :New value must be > 10",

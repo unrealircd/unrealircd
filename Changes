@@ -639,4 +639,4 @@ seen. gmtime warning still there
 - Fixed a major scan bug caused by stskeeps(TM) lazy-coding
 - Hmm .. minor s_bsd.c read_message fix
 - Some /info stuff, updated docs, .CHANGES.NEW, .RELEASENOTES
-
+- /htm fix by Griever
