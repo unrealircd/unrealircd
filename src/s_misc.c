@@ -353,35 +353,6 @@ void get_sockhost(aClient *cptr, char *host)
 }
 
 /*
- * Return wildcard name of my server name according to given config entry
- * --Jto
- */
-/*
-char *my_name_for_link(char *name, aConfItem *aconf)
-{
-	static char namebuf[HOSTLEN];
-	int  count = aconf->port;
-	char *start = name;
-
-	if (count <= 0 || count > 5)
-		return start;
-
-	while (count-- && name)
-	{
-		name++;
-		name = (char *)index(name, '.');
-	}
-	if (!name)
-		return start;
-
-	namebuf[0] = '*';
-	(void)strncpy(&namebuf[1], name, HOSTLEN - 1);
-	namebuf[HOSTLEN - 1] = '\0';
-
-	return namebuf;
-}
-*/
-/*
 ** exit_client
 **	This is old "m_bye". Name  changed, because this is not a
 **	protocol function, but a general server utility function.

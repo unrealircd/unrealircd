@@ -1217,4 +1217,4 @@ seen. gmtime warning still there
 - Removed all remnants of PROTO()
 - Removed src/cio_main.c, src/cio_init.c, include/cio.h, include/ciofunc.h extremely old unused code
 - Win32 fix with u_int16_t
-
+- Removed my_name_for_link (unused)

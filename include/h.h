@@ -305,7 +305,6 @@ extern int check_registered(aClient *);
 extern int check_registered_user(aClient *);
 extern char *get_client_name(aClient *, int);
 extern char *get_client_host(aClient *);
-extern char *my_name_for_link(char *, aConfItem *);
 extern char *myctime(time_t), *date(time_t);
 extern int exit_client(aClient *, aClient *, aClient *, char *);
 extern void initstats(), tstats(aClient *, char *);
