@@ -302,13 +302,17 @@ CMD_FUNC(m_kick)
 					    !(lp->flags & (CHFL_CHANOP|CHFL_CHANPROT|CHFL_CHANOWNER)))
 					{
 						/* Send it only to chanops & victim */
-						sendto_chanops_butone(who, chptr, ":%s!%s@%s KICK %s %s :%s",
-							sptr->name, sptr->user->username, GetHost(sptr),
-							chptr->chname, who->name, comment);
-						if (MyClient(who))
-							sendto_one(who, ":%s!%s@%s KICK %s %s :%s",
+						if (IsPerson(sptr))
+							sendto_chanops_butone(who, chptr, ":%s!%s@%s KICK %s %s :%s",
 								sptr->name, sptr->user->username, GetHost(sptr),
 								chptr->chname, who->name, comment);
+						else
+							sendto_chanops_butone(who, chptr, ":%s KICK %s %s :%s",
+								sptr->name, chptr->chname, who->name, comment);
+						
+						if (MyClient(who))
+							sendto_prefix_one(who, sptr, ":%s KICK %s %s :%s",
+								sptr->name, chptr->chname, who->name, comment);
 					} else {
 						/* NORMAL */
 						sendto_channel_butserv(chptr,
