@@ -351,4 +351,5 @@
 - Added Hooks, only one working now is HOOKTYPE_LOCAL_QUIT 
 - Added log flag kline (accidentily forgot it)
 - Added #define HOOKTYPE_LOCAL_NICKCHANGE
-
+- Made MyMalloc be MyMallocEx in codemastr's log {} code. Fixes junk pointer
+  problem - discovered by sts/Morbid

@@ -2782,7 +2782,7 @@ void	validate_configuration(void)
 	}
 	/* No log? No problem! Make a simple default one */
 	if (!conf_log) {
-		log_ptr = MyMalloc(sizeof(ConfigItem_log));
+		log_ptr = MyMallocEx(sizeof(ConfigItem_log));
 		ircstrdup(log_ptr->file, "ircd.log");
 		log_ptr->flags |= LOG_ERROR|LOG_KLINE|LOG_TKL;
 		add_ConfigItem((ConfigItem *)log_ptr, (ConfigItem **) &conf_log);	
