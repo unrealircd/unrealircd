@@ -242,7 +242,7 @@ DLLFUNC CMD_FUNC(m_invite)
 	if (over && MyConnect(acptr)) {
         	if ((chptr->mode.mode & MODE_ONLYSECURE) && !IsSecure(acptr))
 	        {
-                        sendto_snomask(SNO_EYES,
+                        sendto_snomask_global(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +z).",
                           sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
 
@@ -257,7 +257,7 @@ DLLFUNC CMD_FUNC(m_invite)
 	        }
 	        else if (is_banned(sptr, chptr, BANCHK_JOIN))
         	{
-                        sendto_snomask(SNO_EYES,
+                        sendto_snomask_global(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +b).",
                           sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
 
@@ -268,7 +268,7 @@ DLLFUNC CMD_FUNC(m_invite)
 	        }
         	else if (chptr->mode.mode & MODE_INVITEONLY)
 	        {
-                        sendto_snomask(SNO_EYES,
+                        sendto_snomask_global(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +i).",
                           sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
 
@@ -279,7 +279,7 @@ DLLFUNC CMD_FUNC(m_invite)
 	        }
         	else if (chptr->mode.limit)
 	        {
-                        sendto_snomask(SNO_EYES,
+                        sendto_snomask_global(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +l).",
                           sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
 
@@ -290,7 +290,7 @@ DLLFUNC CMD_FUNC(m_invite)
 		}
         	else if (chptr->mode.mode & MODE_RGSTRONLY)
 	        {
-                        sendto_snomask(SNO_EYES,
+                        sendto_snomask_global(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +R).",
                           sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
 
@@ -301,7 +301,7 @@ DLLFUNC CMD_FUNC(m_invite)
 	        }
         	else if (*chptr->mode.key)
 	        {
-                        sendto_snomask(SNO_EYES,
+                        sendto_snomask_global(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +k).",
                           sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
 

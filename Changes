@@ -494,3 +494,6 @@
   (eg: +i/+k), reported by tabrisnet (#0001487).
 - help.conf: Fixed a typo, updated *CMDS indexes a bit, reported crazy (#0002208),
   added long flags to OFLAGS.
+- OperOverride INVITE notices are now also global (if you have the eyes snomask set) (#2212).
+- Module coders: New function: sendto_snomask_global().
+- Speedup sendto_snomask/sendto_connectnotice/sendto_fconnectnotice code.

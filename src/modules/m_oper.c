@@ -306,16 +306,11 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		}
 
 
-		if (announce != NULL) {
-			sendto_snomask(SNO_OPER, 
+		if (announce != NULL)
+			sendto_snomask_global(SNO_OPER,
 			    "%s (%s@%s) [%s] %s",
 			    parv[0], sptr->user->username, GetHost(sptr),
 			    parv[1], announce);
-			sendto_serv_butone_token(NULL, me.name, MSG_SENDSNO, TOK_SENDSNO, 
-			    "o :%s (%s@%s) [%s] %s",
-			    parv[0], sptr->user->username,
-			    GetHost(sptr), parv[1], announce);
-		} 
 		if (aconf->snomask)
 			set_snomask(sptr, aconf->snomask);
 		else
