@@ -1120,8 +1120,6 @@ int	config_post_test()
 		Error("set::cloak-keys missing");
 	if (!requiredstuff.settings.hlpchan)
 		Error("set::help-channel missing");
-	if (!requiredstuff.settings.hlpchan)
-		Error("set::help-channel missing");
 	if (!requiredstuff.settings.hidhost)
 		Error("set::hiddenhost-prefix missing");
 	return (errors > 0 ? -1 : 1);	

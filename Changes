@@ -1667,3 +1667,4 @@ seen. gmtime warning still there
   oper-override.
 - Fixed a bug in SVSO where the t and Z flags could not be removed.
 - Updated .RELEASE.NOTES to include can_override
+- Fixed a bug where if set::help-channel was missing it was reported twice.
