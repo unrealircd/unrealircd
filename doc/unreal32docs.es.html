@@ -34,7 +34,7 @@ Spanish |
   <b>Programadores:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contribuciones:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentaci&oacute;n:</b> CKnight^ / Syzop<br>
-  <b>Traducci&oacute;n al español:</b> Trocotronic (irc.rallados.net)<br>
+  <b>Traducci&oacute;n al espa&ntilde;ol:</b> Trocotronic (irc.rallados.net)<br>
 <p>Debido a la crecida de la complejidad de UnrealIRCd3.2, hemos cambiado una documentaci&oacute;n m&aacute;s detallada para una m&aacute;s f&aacute;cil navegaci&oacute;n. Para ver esta documentaci&oacute;n debe tener un navegador compatible. Tiene un listado debajo. Los documentos actualizados est&aacute;n disponibles en <a href="http://www.vulnscan.org/UnrealIrcd/unreal32docs.html">http://www.vulnscan.org/UnrealIrcd/unreal32docs.html</a>
   y una FAQ en <a href="http://www.vulnscan.org/UnrealIrcd/faq/" TARGET="_blank">http://www.vulnscan.org/UnrealIrcd/faq/</a>.
 </p>
@@ -425,11 +425,11 @@ El viejo modo +f  todav&iacute;a est&aacute; disponible como 't', +f 10:6 pasa a
 30 knocks en 15 segundos, si se supera el l&iacute;mite se pone el modo +K durante 10 minutos <br>
 Especialmente, quitar los modos es importante. Imag&iacute;nese un canal sin operadores, el modo estar&iacute;a durante 15 minutos, en el que la gente no podr&iacute;a hablar, dependiendo del tipo de flood.
 <b>Modo de canal j</b><br>
-El modo +f incluye una característica para prevenir el flood de joins. Sin embargo, este aspecto es "global".
-Por ejemplo, si está puesto a 5:10 y 5 usuarios <u>diferentes</u> entran en 10 segundos, saltará la protección de flood.
-El modo de canal actúa de forma distinta. Lo hace partiendo de un sólo usuario. Más que proteger del flood de entradas, 
-protege contra el flood de entrada-salida. El modo coge el parámetro del patrón X:Y, donde X corresponde al número de entradas e Y al número de segundos. 
-Si un usuario excede este límite, se le prohibe la entrada al canal.</p></div>
+El modo +f incluye una caracter&iacute;stica para prevenir el flood de joins. Sin embargo, este aspecto es "global".
+Por ejemplo, si est&aacute; puesto a 5:10 y 5 usuarios <u>diferentes</u> entran en 10 segundos, saltar&aacute; la protecci&oacute;n de flood.
+El modo de canal act&uacute;a de forma distinta. Lo hace partiendo de un s&oacute;lo usuario. M&aacute;s que proteger del flood de entradas, 
+protege contra el flood de entrada-salida. El modo coge el par&aacute;metro del patr&oacute;n X:Y, donde X corresponde al n&uacute;mero de entradas e Y al n&uacute;mero de segundos. 
+Si un usuario excede este l&iacute;mite, se le prohibe la entrada al canal.</p></div>
 
 <p><font size="+2"><b>3.13 - Tipos de ban</b></font><a name="feature_bantypes"></a></p>
 <div class="desc">
@@ -604,42 +604,42 @@ fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p>
 </div>
 <p><font size="+2"><b>3.16 - Configuraci&oacute;n de caracteres para nicks </b></font><a name="feature_nickchars"></a></p>
 <div class="desc">
-<p>UnrealIRCd ahora tiene la habilidad de permitir qué juegos de caracteres o lenguajes pueden permitirse
+<p>UnrealIRCd ahora tiene la habilidad de permitir qu&eacute; juegos de caracteres o lenguajes pueden permitirse
 en los nicks. Se especifica en <b>set::allowed-nickchars</b>.<br>
-Aquí tiene una tabla con todas las posibilidades:<br>
+Aqu&iacute; tiene una tabla con todas las posibilidades:<br>
 <table border="1">
 <tr><td><b>Nombre:</b></td><td><b>Descripci&oacute;n:</b></td><td><b>Juego de caracteres:</b></td></tr>
 <tr><td>catalan</td><td>Caracteres catalanes</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>dutch</td><td>Caracteres daneses</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>french</td><td>Caracteres franceses</td><td>iso8859-1 (latin1)</td></tr>
-<tr><td>swiss-german</td><td>Caracteres suizo-germánicos (no es-zett)</td><td>iso8859-1 (latin1)</td></tr>
-<tr><td>icelandic</td><td>Caracteres islándios</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>swiss-german</td><td>Caracteres suizo-germ&aacute;nicos (no es-zett)</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>icelandic</td><td>Caracteres isl&aacute;ndios</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>german</td><td>Caracteres alemanes</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>italian</td><td>Caracteres italianos</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>spanish</td><td>Caracteres castellanos</td><td>iso8859-1 (latin1)</td></tr>
-<tr><td>swedish</td><td>Caracteres suízos</td><td>iso8859-1 (latin1)</td></tr>
-<tr><td><b>latin1</b></td><td>danés, francés, alemán, suizo-germánic, castellano, suízo, catalán, italiano</td><td>iso8859-1 (latin1)</td></tr>
-<tr><td>hungarian</td><td>Caracteres húngaros</td><td>iso8859-2 (latin2), windows-1250	</td></tr>
+<tr><td>swedish</td><td>Caracteres su&iacute;zos</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td><b>latin1</b></td><td>dan&eacute;s, franc&eacute;s, alem&aacute;n, suizo-germ&aacute;nic, castellano, su&iacute;zo, catal&aacute;n, italiano</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>hungarian</td><td>Caracteres h&uacute;ngaros</td><td>iso8859-2 (latin2), windows-1250	</td></tr>
 <tr><td>polish</td><td>Caracteres polacos, variante windows</td><td>windows-1250</td></tr>
-<tr><td><b>latin2</b></td><td>húngaro, polaco, rumano</td><td>iso8859-2 (latin2)</td></tr>
+<tr><td><b>latin2</b></td><td>h&uacute;ngaro, polaco, rumano</td><td>iso8859-2 (latin2)</td></tr>
 <tr><td>polish-w1250</td><td>Caracteres polcaos, variante windows</td><td>windows-1250 (cp1250)</td></tr>
 <tr><td>slovak-w1250</td><td>Caracteres eslovacos, variante windows</td><td>windows-1250</td></tr>
 <tr><td>czech-w1250</td><td>Caracteres checos, variante windows</td><td>windows-1250</td></tr>
-<tr><td><b>windows-1250</b></td><td>polish-w1250, slovak-w1250, czech-w1250, húngaro, rumano</td><td>windows-1250</td></tr>
+<tr><td><b>windows-1250</b></td><td>polish-w1250, slovak-w1250, czech-w1250, h&uacute;ngaro, rumano</td><td>windows-1250</td></tr>
 <tr><td>greek</td><td>Caracteres griegos</td><td>iso8859-7</td></tr>
 <tr><td>turkish</td><td>Caracteres turcos</td><td>iso8859-9</td></tr>
 <tr><td>russian-w1251</td><td>Caracteres rusos</td><td>windows-1251</td></tr>
 <tr><td>hebrew</td><td>Caracteres hebreos</td><td>iso8859-8-I/windows-1255</td></tr>
 <tr><td>chinese-simp</td><td>Chino simple</td><td>Multibyte: GBK/GB2312</td></tr>
 <tr><td>chinese-trad</td><td>Chino tradicional</td><td>Multibyte: GBK</td></tr>
-<tr><td>chinese-ja</td><td>Japonés Hiragana/Pinyin</td><td>Multibyte: GBK</td></tr>
+<tr><td>chinese-ja</td><td>Japon&eacute;s Hiragana/Pinyin</td><td>Multibyte: GBK</td></tr>
 <tr><td><b>chinese</b></td><td>chino-*</td><td>Multibyte: GBK</td></tr>
 <tr><td><b>gbk</b></td><td>chino-*</td><td>Multibyte: GBK</td></tr>
 </table>
 Note que algunas combinaciones pueden causar problemas. 
 Por ejemplo, combinando latin* y chinese-* pueden no ser procesados 
-por el programa y emitirán un error. 
-Mezclando otros lenguajes pueden mostrar problemas, así que Unreal le notificará una advertencia si mezcla 
+por el programa y emitir&aacute;n un error. 
+Mezclando otros lenguajes pueden mostrar problemas, as&iacute; que Unreal le notificar&aacute; una advertencia si mezcla 
 latin1/latin2/greek.<br><br>
 
 Ejemplo 1, para gente del oeste de europa:<br>
@@ -2255,7 +2255,7 @@ set {
   </tr>
   <tr> 
     <td><div align="center">f [&lt;n&uacute;mero&gt;&lt;tipo&gt;]:&lt;segs&gt;</div></td>
-    <td>Protección flood canal. Vea <a href="#feature_antiflood">secci&oacute;n 3.12</a>
+    <td>Protecci&oacute;n flood canal. Vea <a href="#feature_antiflood">secci&oacute;n 3.12</a>
 	para una descripci&oacute;n detallada.</td>
   </tr>
   <tr> 
