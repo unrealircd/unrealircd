@@ -212,7 +212,7 @@ extern void get_sockhost(aClient *, char *);
 #ifndef _WIN32
 extern char *strerror(int);
 #else
-extern char *sock_strerror(int);
+extern __declspec(dllexport) char *sock_strerror(int);
 #endif
 extern int dgets(int, char *, int);
 extern char *inetntoa(char *);

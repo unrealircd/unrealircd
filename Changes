@@ -3218,3 +3218,6 @@ This is the 3.2 fixes branch.
   All caused by missing "MODVAR"s. Reported by Troco (#0001841).
 - Fixed SSL problem caused by a fix of 2 days ago. Reported by Fury (#0001842).
 - And one more.
+- Made socket errors correctly reported under Win32. Thanks to Microsoft for deciding 
+  that having a way to get a socket error string was unnecessary.
+- Fixed a NICKIP bug regarding passing along IPs (#0001846) reported by Troco

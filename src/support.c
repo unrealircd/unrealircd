@@ -1844,6 +1844,9 @@ char	*encode_ip(u_char *ip)
 	struct in_addr ia; /* For IPv4 */
 	u_char ia6[16]; /* For IPv6 */
 
+	if (!ip)
+		return "*";
+
 	if (strchr(ip, ':'))
 	{
 		inet_pton(AF_INET6, ip, ia6);
@@ -2260,17 +2263,95 @@ inet_pton6(const char *src, unsigned char *dst)
 }
 #endif /* !HAVE_INET_PTON */
 
+
 #ifdef _WIN32
+/* Microsoft makes things nice and fun for us! */
+struct u_WSA_errors {
+	int error_code;
+	char *error_string;
+};
+
+/* Must be sorted ascending by error code */
+struct u_WSA_errors WSAErrors[] = {
+ { WSAEINTR,              "Interrupted system call" },
+ { WSAEBADF,              "Bad file number" },
+ { WSAEACCES,             "Permission denied" },
+ { WSAEFAULT,             "Bad address" },
+ { WSAEINVAL,             "Invalid argument" },
+ { WSAEMFILE,             "Too many open sockets" },
+ { WSAEWOULDBLOCK,        "Operation would block" },
+ { WSAEINPROGRESS,        "Operation now in progress" },
+ { WSAEALREADY,           "Operation already in progress" },
+ { WSAENOTSOCK,           "Socket operation on non-socket" },
+ { WSAEDESTADDRREQ,       "Destination address required" },
+ { WSAEMSGSIZE,           "Message too long" },
+ { WSAEPROTOTYPE,         "Protocol wrong type for socket" },
+ { WSAENOPROTOOPT,        "Bad protocol option" },
+ { WSAEPROTONOSUPPORT,    "Protocol not supported" },
+ { WSAESOCKTNOSUPPORT,    "Socket type not supported" },
+ { WSAEOPNOTSUPP,         "Operation not supported on socket" },
+ { WSAEPFNOSUPPORT,       "Protocol family not supported" },
+ { WSAEAFNOSUPPORT,       "Address family not supported" },
+ { WSAEADDRINUSE,         "Address already in use" },
+ { WSAEADDRNOTAVAIL,      "Can't assign requested address" },
+ { WSAENETDOWN,           "Network is down" },
+ { WSAENETUNREACH,        "Network is unreachable" },
+ { WSAENETRESET,          "Net connection reset" },
+ { WSAECONNABORTED,       "Software caused connection abort" },
+ { WSAECONNRESET,         "Connection reset by peer" },
+ { WSAENOBUFS,            "No buffer space available" },
+ { WSAEISCONN,            "Socket is already connected" },
+ { WSAENOTCONN,           "Socket is not connected" },
+ { WSAESHUTDOWN,          "Can't send after socket shutdown" },
+ { WSAETOOMANYREFS,       "Too many references, can't splice" },
+ { WSAETIMEDOUT,          "Connection timed out" },
+ { WSAECONNREFUSED,       "Connection refused" },
+ { WSAELOOP,              "Too many levels of symbolic links" },
+ { WSAENAMETOOLONG,       "File name too long" },
+ { WSAEHOSTDOWN,          "Host is down" },
+ { WSAEHOSTUNREACH,       "No route to host" },
+ { WSAENOTEMPTY,          "Directory not empty" },
+ { WSAEPROCLIM,           "Too many processes" },
+ { WSAEUSERS,             "Too many users" },
+ { WSAEDQUOT,             "Disc quota exceeded" },
+ { WSAESTALE,             "Stale NFS file handle" },
+ { WSAEREMOTE,            "Too many levels of remote in path" },
+ { WSASYSNOTREADY,        "Network subsystem is unavailable" },
+ { WSAVERNOTSUPPORTED,    "Winsock version not supported" },
+ { WSANOTINITIALISED,     "Winsock not yet initialized" },
+ { WSAHOST_NOT_FOUND,     "Host not found" },
+ { WSATRY_AGAIN,          "Non-authoritative host not found" },
+ { WSANO_RECOVERY,        "Non-recoverable errors" },
+ { WSANO_DATA,            "Valid name, no data record of requested type" },
+ { WSAEDISCON,            "Graceful disconnect in progress" },
+ { WSASYSCALLFAILURE,     "System call failure" },
+ { 0,NULL}
+};
+
 char *sock_strerror(int error)
 {
-	static char buf[1024];
-	static HMODULE hSock = NULL;
-	if (!hSock)
-		hSock = LoadLibraryEx("wsock32.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
-
-	FormatMessage(FORMAT_MESSAGE_IGNORE_INSERTS|FORMAT_MESSAGE_FROM_HMODULE,
-		hSock, error, 0, buf, 1024, NULL);
+	int start = 0;
+	int stop = sizeof(WSAErrors)/sizeof(WSAErrors[0])-1;
+	int mid;
 	
-	return buf;
+	if (!error) /* strerror compatibility */
+		return NULL;
+
+	/* Microsoft decided not to use sequential numbers for the error codes,
+	 * so we can't just use the array index for the code. But, at least
+	 * use a binary search to make it as fast as possible. 
+	 */
+	while (start <= stop)
+	{
+		mid = (start+stop)/2;
+		if (WSAErrors[mid].error_code > error)
+			stop = mid-1;
+		
+		else if (WSAErrors[mid].error_code < error)
+			start = mid+1;
+		else
+			return WSAErrors[mid].error_string;	
+	}
+	return NULL;
 }
 #endif
