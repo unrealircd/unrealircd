@@ -175,6 +175,22 @@ void ban_flooder(aClient *cptr)
 }
 
 /*
+ * This routine adds fake lag if needed.
+ */
+inline void parse_addlag(aClient *cptr, int cmdbytes)
+{
+	if (!IsServer(cptr) && 
+#ifdef FAKE_LAG_FOR_LOCOPS	
+	!IsAnOper(cptr))
+#else
+	!IsOper(cptr))
+#endif		
+	{
+		cptr->since += (1 + cmdbytes/90);
+	}		
+}
+
+/*
  * parse a buffer.
  *
  * NOTE: parse() should not be called recusively by any other fucntions!
@@ -312,6 +328,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 	else
 	{
 		int flags = 0;
+		int bytes = bufend - ch;
 		if (s)
 			*s++ = '\0';
 		if (!IsRegistered(from))
@@ -341,6 +358,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 			if (!IsRegistered(cptr) && stricmp(ch, "NOTICE")) {
 				sendto_one(from, ":%s %d %s :You have not registered",
 				    me.name, ERR_NOTREGISTERED, ch);
+				parse_addlag(cptr, bytes);
 				return -1;
 			}
 			if (IsShunned(cptr))
@@ -355,6 +373,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 					    from->name, ch);
 				Debug((DEBUG_ERROR, "Unknown (%s) from %s",
 				    ch, get_client_name(cptr, TRUE)));
+				parse_addlag(cptr, bytes);
 			}
 			ircstp->is_unco++;
 			return (-1);
@@ -370,23 +389,9 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 			return -1;
 		}
 		paramcount = cmptr->parameters;
-		i = bufend - ch;	/* Is this right? -Donwulff */
-		cmptr->bytes += i;
-		/* Changed this whole lag generating crap .. 
-		 * We only generate fake lag in HTM ..
-		 * --Stskeeps
-		*/
-		if (!IsServer(cptr) && 
-#ifdef FAKE_LAG_FOR_LOCOPS	
-		!IsAnOper(cptr)
-#else
-		!IsOper(cptr)
-#endif		
-		&& !(cmptr->flags & M_NOLAG))
-		{
-			cptr->since += (1 + i /90);
-			
-		}		
+		cmptr->bytes += bytes;
+		if (!(cmptr->flags & M_NOLAG))
+			parse_addlag(cptr, bytes);
 	}
 	/*
 	   ** Must the following loop really be so devious? On
