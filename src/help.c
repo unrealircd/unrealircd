@@ -1669,11 +1669,8 @@ int  parse_help(sptr, name, help)
 	else if (!myncmp(help, "COMMANDS", 8))
 	{
 		HDR("***** Full Command List *****");
-		SND("Full command list, in the format: Command Token");
-		/* Send the command list (with tokens)
-		   * -Wizzu
-		 */
-		/* Replace with CommandHash code. FIXME*/
+		HLP("Use /stats M for this");
+		
 	}
 
 	else          /* When no argument is specified .. - hAtbLaDe */
