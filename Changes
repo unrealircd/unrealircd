@@ -2042,4 +2042,8 @@ seen. gmtime warning still there
 - Improved throttle hashing (both IPv4 and IPv6).
 - Changed throttling so it now bans after M connects in N seconds rather than 2 connects in N 
   seconds. (set::throttle::connections).
-- Updated channelmode +f "algoritm", much better now. Reported by JimmyZ, Rocko, and others.
+- Updated channelmode +f "algorithm", much better now. Reported by JimmyZ, Rocko, and others.
+- Added badword::action <replace|block>. (replace is default). If you specify block, instead
+  of replacing the word with "<censored>" it will block the message from ever being sent. 
+  (#0000557) suggested by paranomix
+- Made /stats b output badword quit {} (#0000883) reported by AngryWolf

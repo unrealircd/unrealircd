@@ -156,6 +156,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 		"You are banned",
 		"CTCPs are not permitted in this channel",
 		"You must have a registered nick (+r) to talk on this channel",
+		"Swearing is not permitted in this channel",
 		NULL
 	};
 
@@ -299,6 +300,9 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 
 			if (!is_silenced(sptr, acptr))
 			{
+#ifdef STRIPBADWORDS
+				int blocked = 0;
+#endif
 				char *newcmd = cmd, *text;
 				Hook *tmphook;
 				
@@ -312,7 +316,16 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 
 #ifdef STRIPBADWORDS
 				if (!(IsULine(acptr) || IsULine(sptr)) && IsFilteringWords(acptr))
-					text = stripbadwords_message(parv[2]);
+				{
+					text = stripbadwords_message(parv[2], &blocked);
+					if (blocked)
+					{
+						if (!notice && MyClient(sptr))
+							sendto_one(sptr, rpl_str(ERR_NOSWEAR),
+								me.name, parv[0], acptr->name);
+						continue;
+					}
+				}
 				else
 #endif
 					text = parv[2];
@@ -357,6 +370,9 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 			    !IsULine(sptr) ? can_send(sptr, chptr, parv[2]) : 0;
 			if (!cansend)
 			{
+#ifdef STRIPBADWORDS
+				int blocked = 0;
+#endif
 				Hook *tmphook;
 				/*if (chptr->mode.mode & MODE_FLOODLIMIT) */
 				/* When we do it this way it appears to work? */
@@ -371,12 +387,28 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				    (char *)StripColors(parv[2]) : parv[2]);
 #ifdef STRIPBADWORDS
  #ifdef STRIPBADWORDS_CHAN_ALWAYS
-				text = stripbadwords_channel(text);
+				text = stripbadwords_channel(text,& blocked);
+				if (blocked)
+				{
+					if (!notice)
+						sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
+						    me.name, parv[0], parv[0],
+						    err_cantsend[6], p2);
+					continue;
+				}
  #else
-				text =
-				    (char *)(chptr->
-				    mode.mode & MODE_STRIPBADWORDS ? (char
-				    *)stripbadwords_channel(text) : text);
+				if (chptr->mode.mode & MODE_STRIPBADWORDS)
+				{
+					text = stripbadwords_channel(text, &blocked);
+					if (blocked)
+					{
+						if (!notice)
+							sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
+							    me.name, parv[0], parv[0],
+							    err_cantsend[6], p2);
+						continue;
+					}
+				}
  #endif
 #endif
 				for (tmphook = Hooks[HOOKTYPE_CHANMSG]; tmphook; tmphook = tmphook->next) {

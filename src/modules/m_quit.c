@@ -125,6 +125,9 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (!IsServer(cptr))
 	{
+#ifdef STRIPBADWORDS
+		int blocked = 0;
+#endif
 		char *s = comment;
 		if (STATIC_QUIT)
 		{
@@ -134,7 +137,9 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			s = ircsprintf(comment, "%s ",
 		    		BadPtr(prefix_quit) ? "Quit:" : prefix_quit);
 #ifdef STRIPBADWORDS
-		ocomment = (char *)stripbadwords_quit(ocomment);
+		ocomment = (char *)stripbadwords_quit(ocomment, &blocked);
+		if (blocked)
+			ocomment = parv[0];
 #endif
 		if (!IsAnOper(sptr) && ANTI_SPAM_QUIT_MSG_TIME)
 			if (sptr->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())

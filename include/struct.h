@@ -1062,6 +1062,9 @@ struct _configitem_ban {
 #define BADW_TYPE_REGEX   0x8
 #endif
 
+#define BADWORD_REPLACE 1
+#define BADWORD_BLOCK 2
+
 struct _configitem_badword {
 	ConfigItem      *prev, *next;
 	ConfigFlag	flag;
@@ -1069,6 +1072,7 @@ struct _configitem_badword {
 #ifdef FAST_BADWORD_REPLACE
 	unsigned short	type;
 #endif
+	char		action;
 	regex_t 	expr;
 };
 

@@ -21,7 +21,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 Beta15<br>
-  <b>Last doc update:</b> 2003-04-12 </div>
+  <b>Last doc update:</b> 2003-04-13 </div>
   <b>Head Coders:</b> Stskeeps / codemastr / Luke / McSkaf / Syzop<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -1390,6 +1390,7 @@ vhost {
 badword &lt;type&gt; {
 	word &lt;text-to-match&gt;;
 	replace &lt;replace-with&gt;;
+	action &lt;<replace|block>&gt;;
 };</pre></p>
 <p>The badword block allows you to manipulate the list used for user and channel 
   mode +G to strip "badwords". The badword:: specifies the type, valid 
@@ -1397,7 +1398,10 @@ badword &lt;type&gt; {
   is for the user +G list, and quit is for quit message censoring. The badword::word
   can be a simple word or a regular expression we should search for. The 
   badword::replace is what we should replace this match with. If badword::replace 
-  is left out, the word is replaced with &lt;censored&gt;.</p>
+  is left out, the word is replaced with &lt;censored&gt;. The badword::action defines
+  what action should be taken if this badword is found. If you specify replace, then the
+  badword is replaced, if you specify block, then the entire message is blocked. If you do
+  not specify a badword::action, replace is assumed.</p>
 <p>Example:<br>
 <pre>
 badword channel {

@@ -4241,12 +4241,25 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_badword *ca;
 	char *tmp;
 	short regex = 0;
+	int regflags = 0;
 #ifdef FAST_BADWORD_REPLACE
 	int ast_l = 0, ast_r = 0;
 #endif
 
 	ca = MyMallocEx(sizeof(ConfigItem_badword));
-
+	ca->action = BADWORD_REPLACE;
+	regflags = REG_ICASE;
+	if (cep = config_find_entry(ce->ce_entries, "action"))
+	{
+		if (!strcmp(cep->ce_vardata, "block"))
+		{
+			ca->action = BADWORD_BLOCK;
+			/* If it is set to just block, then we don't need to worry about
+			 * replacements 
+			 */
+			regflags |= REG_NOSUB;
+		}
+	}
 	cep = config_find_entry(ce->ce_entries, "word");
 #ifdef FAST_BADWORD_REPLACE
 	/* The fast badwords routine can do: "blah" "*blah" "blah*" and "*blah*",
@@ -4269,16 +4282,26 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 	if (regex) {
 		ca->type = BADW_TYPE_REGEX;
 		ircstrdup(ca->word, cep->ce_vardata);
-		regcomp(&ca->expr, ca->word, REG_ICASE);
+		regcomp(&ca->expr, ca->word, regflags);
 	} else {
 		char *tmpw;
 		ca->type = BADW_TYPE_FAST;
-		ca->word = tmpw = MyMalloc(strlen(cep->ce_vardata) - ast_l - ast_r + 1);
-		/* Copy except for asterisks */
-		for (tmp = cep->ce_vardata; *tmp; tmp++)
-			if (*tmp != '*')
-				*tmpw++ = *tmp;
-		*tmpw = '\0';
+		if (ca->action == BADWORD_BLOCK)
+		{
+			/* If it is set to block, we'll just use a match() or an
+			 * our_strcasestr as necessary 
+			 */
+			ircstrdup(ca->word, cep->ce_vardata);
+		}
+		else
+		{
+			ca->word = tmpw = MyMalloc(strlen(cep->ce_vardata) - ast_l - ast_r + 1);
+			/* Copy except for asterisks */
+			for (tmp = cep->ce_vardata; *tmp; tmp++)
+				if (*tmp != '*')
+					*tmpw++ = *tmp;
+			*tmpw = '\0';
+		}
 		if (ast_l)
 			ca->type |= BADW_TYPE_FAST_L;
 		if (ast_r)
@@ -4301,7 +4324,7 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 	/* Yes this is called twice, once in test, and once here, but it is still MUCH
 	   faster than calling it each time a message is received like before. -- codemastr
 	 */
-	regcomp(&ca->expr, ca->word, REG_ICASE);
+	regcomp(&ca->expr, ca->word, regflags);
 #endif
 	if ((cep = config_find_entry(ce->ce_entries, "replace"))) {
 		ircstrdup(ca->replace, cep->ce_vardata);
@@ -4408,8 +4431,32 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce) {
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			errors++; continue;
 		}
-		if (!stricmp(cep->ce_varname, "word")) {}
-		else if (!strcmp(cep->ce_varname, "replace")) {}
+		if (!stricmp(cep->ce_varname, "word"))
+			;
+		else if (!strcmp(cep->ce_varname, "replace"))
+			;
+		else if (!strcmp(cep->ce_varname, "action"))
+		{
+			if (!strcmp(cep->ce_vardata, "replace"))
+				;
+			else if (!strcmp(cep->ce_vardata, "block"))
+			{
+				if (replace)
+				{
+					config_error("%s:%i: badword::action is block but badword::replace exists",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+					errors++;
+					continue;
+				}
+			}
+			else
+			{
+				config_error("%s:%i: unknown action %s",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, 
+					cep->ce_vardata);
+				errors++;
+			}
+		}
 		else
 		{
 			config_error("%s:%i: unknown directive badword::%s",

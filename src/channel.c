@@ -738,7 +738,7 @@ int  is_chanprot(aClient *cptr, aChannel *chptr)
 #define CANNOT_SEND_BAN 4
 #define CANNOT_SEND_NOCTCP 5
 #define CANNOT_SEND_MODREG 6
-
+#define CANNOT_SEND_SWEAR 7 /* This isn't actually used here */
 int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
 {
 	Membership *lp;
@@ -3212,6 +3212,9 @@ CMD_FUNC(m_part)
 			    comment);
 
 		if (!IsAnOper(sptr) && !is_chanownprotop(sptr, chptr)) {
+#ifdef STRIPBADWORDS
+			int blocked = 0;
+#endif
 			if ((chptr->mode.mode & MODE_NOCOLOR) && comment) {
 				if (strchr((char *)comment, 3) || strchr((char *)comment, 27)) {
 					comment = NULL;
@@ -3231,12 +3234,20 @@ CMD_FUNC(m_part)
 #ifdef STRIPBADWORDS
  #ifdef STRIPBADWORDS_CHAN_ALWAYS
 			if (comment)
-				comment = (char *)stripbadwords_channel(comment);
-			parc = 3;
+			{
+				comment = (char *)stripbadwords_channel(comment, &blocked);
+				if (blocked)
+					parc = 2;
+				else
+					parc = 3;
+			}
  #else
 			if ((chptr->mode.mode & MODE_STRIPBADWORDS) && comment) {
-				comment = (char *)stripbadwords_channel(comment);
-				parc = 3;
+				comment = (char *)stripbadwords_channel(comment, &blocked);
+				if (blocked)
+					parc = 2;
+				else
+					parc = 3;
 			}
  #endif
 #endif
