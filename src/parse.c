@@ -530,12 +530,8 @@ int  parse(cptr, buffer, bufend, mptr)
 
 	mptr->count++;
 	if (IsRegisteredUser(cptr) &&
-#ifdef	IDLE_FROM_MSG
 	    mptr->func == m_private)
-#else
-	    mptr->func != m_ping && mptr->func != m_pong)
-#endif
-	    from->user->last = TStime();
+	    	from->user->last = TStime();
 
 #ifndef DEBUGMODE
 	return (*mptr->func) (cptr, from, i, para);

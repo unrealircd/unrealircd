@@ -153,19 +153,6 @@
 #define HOSTILENAME	/* */
 
 /*
- * Define this to prevent mixed case userids that clonebots use. However
- * this affects the servers running telclients WLD* FIN*  etc.
- */
-#undef	DISALLOW_MIXED_CASE
-
-/*
- * Define this if you wish to ignore the case of the first character of
- * the user id when disallowing mixed case. This allows PC users to
- * enter the more intuitive first name with the first letter capitalised
- */
-#define	IGNORE_CASE_FIRST_CHAR
-
-/*
 ** Nick flood limit
 ** Minimum time between nick changes.
 ** (The first two changes are allowed quickly after another however).
@@ -290,13 +277,6 @@
  */
 #define	SHOW_INVISIBLE_LUSERS
 
-
-/* OPER_* defines
- *
- * See ./docs/example.conf for examples of how to restrict access for
- * your IRC Operators
- */
-
 /* MAXIMUM LINKS
  *
  * This define is useful for leaf nodes and gateways. It keeps you from
@@ -336,13 +316,6 @@
  *       O-lines. So don't use this unless you're debugging.
  */
 #define	CMDLINE_CONFIG /* allow conf-file to be specified on command line */
-
-/*
- * To use m4 as a preprocessor on the ircd.conf file, define M4_PREPROC.
- * The server will then call m4 each time it reads the ircd.conf file,
- * reading m4 output as the server's ircd.conf file.
- */
-#undef	M4_PREPROC
 
 /*
  * If you wish to have the server send 'vital' messages about server

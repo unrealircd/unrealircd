@@ -61,9 +61,6 @@ char serveropts[] = {
 #ifdef	LEAST_IDLE
 	'L',
 #endif
-#ifdef	IDLE_FROM_MSG
-	'M',
-#endif
 #ifdef	CRYPT_OPER_PASSWORD
 	'p',
 #endif

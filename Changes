@@ -387,3 +387,5 @@
   up in ircd.log as well
 - Fixed a wrongly outputted message (in hash collision detect)
 - Removed aHush, not in use
+- Removed DISALLOW_MIXED_CASE and IGNORE_FIRST_CHAR, waste of space
+- Made IDLE_FROM_MSG stock define
