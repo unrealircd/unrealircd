@@ -151,7 +151,7 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
         if (parc < 3)
                 return 0;
 
-        if (!(acptr = find_client(parv[1], (aClient *)NULL)))
+        if (!(acptr = find_person(parv[1], (aClient *)NULL)))
                 return 0;
 
         if (!MyClient(acptr))

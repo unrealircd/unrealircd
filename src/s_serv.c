@@ -3456,7 +3456,7 @@ CMD_FUNC(m_svskill)
 		return -1;
 
 
-	if (!(acptr = find_client(parv[1], NULL)))
+	if (!(acptr = find_person(parv[1], NULL)))
 		return 0;
 
 	sendto_serv_butone_token(cptr, parv[0],

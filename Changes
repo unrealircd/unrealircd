@@ -2131,3 +2131,4 @@ seen. gmtime warning still there
   flag_del
 - Fixed a local /kill bug during connection phase, reported by Gilou (#0000952).
 - Fixed ripemd-160 vs ripemd160 confusion, reported by thelight (#0000949).
+- Little find_client() audit.
