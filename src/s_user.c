@@ -398,7 +398,7 @@ int  hunt_server_token(aClient *cptr, aClient *sptr, char *command, char *token,
 			return HUNTED_ISME;
 		if (match(acptr->name, parv[server]))
 			parv[server] = acptr->name;
-		if (IsToken(acptr)) {
+		if (IsToken(acptr->from) {
 			sprintf(buff, ":%s %s ", parv[0], token);
 			strcat(buff, params);
 			sendto_one(acptr, buff, parv[1], parv[2],

@@ -1174,3 +1174,4 @@ v- Fixed some bugreport stuff
   UnlockEventSystem(). In EVENT() functions, the system _is_ locked.
   This might fix the double recursion mutex problem we got.
 - More -Wall cleanups
+- Fixed hunt_server_token (use IsToken on acptr->from, not acptr)
