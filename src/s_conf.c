@@ -451,6 +451,14 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 				for(;*lastce;lastce = &((*lastce)->ce_next))
 					continue;
 				break;
+			case '#':
+				ptr++;
+				while(*ptr && (*ptr != '\n'))
+					 ptr++;
+				if (!*ptr)
+					break;
+				ptr--;
+				continue;
 			case '/':
 				if (*(ptr+1) == '/')
 				{
@@ -537,20 +545,10 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 				break;
 			case '\n':
 				linenumber++;
-				if (*(ptr+1) == '#')
-				{
-					ptr += 2;
-					while(*ptr && (*ptr != '\n'))
-						ptr++;
-					if (*ptr == '\n')
-					{
-						ptr--;
-						continue;
-					}
-				}
 				/* fall through */
 			case '\t':
 			case ' ':
+			case '=':
 			case '\r':
 				break;
 			default:
@@ -564,7 +562,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 				start = ptr;
 				for(;*ptr;ptr++)
 				{
-					if ((*ptr == ' ') || (*ptr == '\t') || (*ptr == '\n') || (*ptr == ';'))
+					if ((*ptr == ' ') || (*ptr == '=') || (*ptr == '\t') || (*ptr == '\n') || (*ptr == ';'))
 						break;
 				}
 				if (!*ptr)

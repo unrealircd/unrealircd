@@ -390,4 +390,8 @@
 - Found a way to do +x IPv4 cloaking right. 
 - Added set::cloak-keys { longvalue; longvalue; longvalue; }; for the cipher
 - Fixed a NETINFO parameter problem - solves the new NETINFO format
- 
+- Made a little hack to newconf to allow varname=value; to try and keep it some what similar
+  to the new config files of other IRCds. NOTE: the = is completely optional, it is allowed
+  but not required
+- # comments can be used anywhere in a line now (just like // comments) for compatibility with other
+  IRCds
