@@ -3179,3 +3179,6 @@ This is the 3.2 fixes branch.
 - German doc updates (week 20).
 - Added optional parameter to SVSJOIN to deal with channel keys. Reported by 
   DukePyrolator (#0001822).
+- Added zlib+SSL version check on boot to make sure the runtime version is the same
+  as the 'compiled for' (header) version. If they mismatch, UnrealIRCd could crash,
+  so a big warning is posted if it happends.

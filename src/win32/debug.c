@@ -185,12 +185,12 @@ LONG __stdcall ExceptionFilter(EXCEPTION_POINTERS *e) {
 	sprintf(file, "wircd.%d.core", getpid());
 	fd = fopen(file, "w");
 	GlobalMemoryStatus(&memStats);
-	fprintf(fd, "Generated at %s\n%s (%d.%d.%d)\n%s[%s%s] (%s)\n-----------------\nMemory Information:\n"
+	fprintf(fd, "Generated at %s\n%s (%d.%d.%d)\n%s[%s%s%s] (%s)\n-----------------\nMemory Information:\n"
 	"\tPhysical: (Available:%ldMB/Total:%ldMB)\n\tVirtual: (Available:%ldMB/Total:%ldMB)\n"
 	"-----------------\nException:\n\t%s\n-----------------\nBackup Buffer:\n\t%s\n"
 	"-----------------\nRegisters:\n%s-----------------\nStack Trace:\n%s", asctime(gmtime(&timet)),
 	OSName, VerInfo.dwMajorVersion, VerInfo.dwMinorVersion, VerInfo.dwBuildNumber, 
-	IRCDTOTALVERSION, serveropts, extraflags ? extraflags : "", 
+	IRCDTOTALVERSION, serveropts, extraflags ? extraflags : "", tainted ? "3" : "",
 	buildid, memStats.dwAvailPhys/1048576, memStats.dwTotalPhys/1048576, 
 	memStats.dwAvailVirtual/1048576, memStats.dwTotalVirtual/1048576, 
 	GetException(e->ExceptionRecord->ExceptionCode), backupbuf, 

@@ -28,5 +28,5 @@ e              SSL supported
 O              OperOverride enabled
 o              OperOverride without verify
 Z              Zip links supported
-3              3rd party modules (were) loaded
+3              3rd party modules (were) loaded or unreal is any other way 'tainted' (eg: bad libs)
 E              Extended channel modes supported

@@ -803,6 +803,47 @@ EVENT(e_check_fdlists)
 
 #endif
 
+static void do_version_check()
+{
+const char *compiledfor, *runtime;
+int error = 0;
+
+#ifdef USE_SSL
+	compiledfor = OPENSSL_VERSION_TEXT;
+	runtime = SSLeay_version(SSLEAY_VERSION);
+	if (strcasecmp(compiledfor, runtime))
+	{
+#ifndef _WIN32
+		fprintf(stderr, "[!!!] OpenSSL version mismatch: compiled for '%s', library is '%s'\n",
+			compiledfor, runtime);
+#endif
+		error=1;
+	}
+#endif
+#ifdef ZIP_LINKS
+	runtime = zlibVersion();
+	compiledfor = ZLIB_VERSION;
+	if (strcasecmp(compiledfor, runtime))
+	{
+#ifndef _WIN32
+		fprintf(stderr, "[!!!] Zlib version mismatch: compiled for '%s', library is '%s'\n",
+			compiledfor, runtime);
+#endif
+		error = 1;
+	}
+#endif
+	if (error)
+	{
+#ifndef _WIN32
+		fprintf(stderr, "[!!!] Header<->library mismatches can make UnrealIRCd *CRASH*! "
+		                "Make sure you don't have multiple versions of openssl or zlib installed (eg: "
+		                "one in /usr and one in /usr/local). And, if you recently upgraded them, "
+		                "be sure to recompile Unreal.\n");
+#endif
+		tainted = 1;
+	}
+}
+
 extern time_t TSoffset;
 
 #ifndef _WIN32
@@ -1073,6 +1114,8 @@ int InitwIRCD(int argc, char *argv[])
 			  break;
 		}
 	}
+
+	do_version_check();
 
 #ifndef	CHROOTDIR
 	if (chdir(dpath)) {
