@@ -524,7 +524,8 @@
 /*
  * Enable zipped links? [EXPERIMENTAL]
  */
-#undef ZIP_LINKS
+/* #undef ZIP_LINKS */
+
 /* If you use ziplinks, you can define the compression level here,
  * higher=better compressed but more CPU time, can be 1-9, but 1-4 is suggested.
  */

@@ -1840,3 +1840,4 @@ seen. gmtime warning still there
 - Fixed whois: "a Services Operator" -> "a Services Administrator".
 - Fix for error msgs flood at (at least) Linux 2.4.x and FreeBSD ("Transport endpoint is not connected"
   and "Socket is not connected"). (#0000677)
+- Added makefiles to compile with zip links @ windows (zlib needed).
