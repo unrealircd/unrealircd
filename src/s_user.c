@@ -228,6 +228,54 @@ unsigned char *StripColors(unsigned char *text) {
 	return new_str;
 }
 
+/* strip color, bold, underline, and reverse codes from a string */
+const char *StripControlCodes(unsigned char *text) 
+{
+	int nc = 0, col = 0, i = 0, len = strlen(text);
+	static unsigned char new_str[4096];
+	while (len > 0) 
+	{
+		if ( col && ((isdigit(*text) && nc < 2) || (*text == ',' && nc < 3)))
+		{
+			nc++;
+			if (*text == ',')
+				nc = 0;
+		}
+		else 
+		{
+			if (col)
+				col = 0;
+			switch (*text)
+			{
+			case 3:
+				/* color */
+				col = 1;
+				nc = 0;
+				break;
+			case 2:
+				/* bold */
+				break;
+			case 31:
+				/* underline */
+				break;
+			case 22:
+				/* reverse */
+				break;
+			case 15:
+				/* plain */
+				break;
+			default:
+				new_str[i] = *text;
+				i++;
+				break;
+			}
+		}
+		text++;
+		len--;
+	}
+	new_str[i] = 0;
+	return new_str;
+}
 
 char umodestring[UMODETABLESZ+1];
 

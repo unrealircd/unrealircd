@@ -307,6 +307,7 @@ extern int  check_for_target_limit(aClient *sptr, void *target, const char *name
 extern char *stripbadwords_message(char *str);
 extern char *stripbadwords_channel(char *str);
 extern unsigned char *StripColors(unsigned char *);
+extern const char *StripControlCodes(unsigned char *text);
 extern char *canonize(char *buffer);
 extern int webtv_parse(aClient *sptr, char *string);
 extern ConfigItem_deny_dcc *dcc_isforbidden(aClient *cptr, aClient *sptr, aClient *target, char *filename);
