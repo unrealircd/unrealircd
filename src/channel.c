@@ -4831,6 +4831,12 @@ int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			}
 			if (acptr->from != sptr->from)
 			{
+				if (IsMember(acptr, chptr))
+				{
+					/* Nick collision, don't kick or it desynchs -Griever*/
+					continue;
+				}
+			
 				sendto_one(sptr,
 				    ":%s KICK %s %s :Fake direction",
 				    me.name, chptr->chname,

@@ -607,3 +607,4 @@ seen. gmtime warning still there
 - Fixed a bug where configure would pick both -ldescrypt and -lcrypt
 - Fixed /stats to work fully with newconf
 - Added mod_depend checking, see scan_socks.c for example
+- Added in Griever's SJOIN fix
