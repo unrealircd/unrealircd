@@ -143,12 +143,14 @@ CMD_FUNC(m_version)
 		    serveropts, extraflags ? extraflags : "",
 		    tainted ? "3" : "",
 		    (IsAnOper(sptr) ? MYOSNAME : "*"), UnrealProtocol);
-		if (MyClient(sptr))
-			sendto_one(sptr, rpl_str(RPL_PROTOCTL), me.name,
-			    sptr->name, PROTOCTL_PARAMETERS);
-		else 
-			sendto_one(sptr, rpl_str(RPL_REMOTEPROTOCTL), me.name,
-				sptr->name, PROTOCTL_PARAMETERS);
+		if (MyClient(sptr)) {
+			sendto_one(sptr, ":%s 005 %s " PROTOCTL_CLIENT_1, me.name, sptr->name, PROTOCTL_PARAMETERS_1);
+			sendto_one(sptr, ":%s 005 %s " PROTOCTL_CLIENT_2, me.name, sptr->name, PROTOCTL_PARAMETERS_2);
+		}
+		else {
+			sendto_one(sptr, ":%s 105 %s " PROTOCTL_CLIENT_1, me.name, sptr->name, PROTOCTL_PARAMETERS_1);
+			sendto_one(sptr, ":%s 105 %s " PROTOCTL_CLIENT_2, me.name, sptr->name, PROTOCTL_PARAMETERS_2);
+		}
 	}
 	return 0;
 }

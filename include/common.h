@@ -249,21 +249,49 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 		" NETWORK=%s" \
 		" :are supported by this server"
 
-#define PROTOCTL_PARAMETERS MAXWATCH, \
-                            MAXSILES, \
-                            MAXMODEPARAMS, \
-                            MAXCHANNELSPERUSER, \
-                            MAXBANS, \
-                            NICKLEN, \
-                            TOPICLEN, \
-                            TOPICLEN, \
-                            "#",      \
-                            "(ohv)@%+", \
-                            "ohvbeqa", \
-                            "k", \
-			    "lfL", \
-			    "psmntirRcOAQKVHGCuzN", \
-			    ircnet005
+
+#define PROTOCTL_CLIENT_1         \
+		"MAP"             \
+		" KNOCK"          \
+		" SAFELIST"       \
+		" HCN"	          \
+		" MAXCHANNELS=%i" \
+		" MAXBANS=%i"     \
+		" NICKLEN=%i"     \
+		" TOPICLEN=%i"    \
+		" KICKLEN=%i"     \
+		" MAXTARGETS=%i"  \
+		" :are supported by this server"
+#define PROTOCTL_PARAMETERS_1	  \
+		MAXCHANNELSPERUSER, \
+		MAXBANS, \
+		NICKLEN, \
+		TOPICLEN, \
+		TOPICLEN, \
+		MAXTARGETS
+
+#define PROTOCTL_CLIENT_2	  \
+		"WALLCHOPS"	  \
+		" WATCH=%i"	  \
+		" SILENCE=%i"	  \
+		" MODES=%i"	  \
+		" CHANTYPES=%s"   \
+		" PREFIX=%s"      \
+		" CHANMODES=%s,%s,%s,%s" \
+		" NETWORK=%s" 	  \
+		" :are supported by this server"
+
+#define PROTOCTL_PARAMETERS_2	  \
+		 MAXWATCH, \
+                 MAXSILES, \
+                 MAXMODEPARAMS, \
+                 "#",      \
+                 "(ohv)@%+", \
+                 "ohvbeqa", \
+                 "k", \
+		 "lfL", \
+		 "psmntirRcOAQKVHGCuzN", \
+		 ircnet005
 			    
 /* Server-Server PROTOCTL -Stskeeps */
 #define PROTOCTL_SERVER "NOQUIT" \

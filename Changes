@@ -1330,3 +1330,5 @@ seen. gmtime warning still there
 - Fixed a win32 bug where the tray config menu didn't contain anything, reported by Jens (#0000127)
 - Fixed a /who bug where + wasn't shown for voices, reported by Wcc (#0000202)
 - Included larne's /who patch, adding a multitude of symbols? :P
+- Split 005 and 105 up in order to conform to the RFC1459 limit of 15 parameters per
+  command

@@ -928,8 +928,8 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 				    me.name, parv[0],
 				    me.name, version, umodestring, cmodestring);
 			
-		sendto_one(sptr, rpl_str(RPL_PROTOCTL), me.name, nick,
-		    PROTOCTL_PARAMETERS);
+		sendto_one(sptr, ":%s 005 %s " PROTOCTL_CLIENT_1, me.name, nick, PROTOCTL_PARAMETERS_1);
+		sendto_one(sptr, ":%s 005 %s " PROTOCTL_CLIENT_2, me.name, nick, PROTOCTL_PARAMETERS_2);
 #ifdef USE_SSL
 		if (sptr->flags & FLAGS_SSL)
 			if (sptr->ssl)
