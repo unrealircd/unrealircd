@@ -36,7 +36,7 @@
 #include <process.h>
 #include <io.h>
 #endif
-#include "dynconf.h"
+//#include "dynconf.h"
 #include "ircsprintf.h"
 #include "config.h"
 #ifdef	PARAMH

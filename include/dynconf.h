@@ -52,9 +52,13 @@ enum UHAllowed { UHALLOW_ALWAYS, UHALLOW_NOCHANS, UHALLOW_REJOIN, UHALLOW_NEVER 
 
 struct ChMode {
         long mode;
+#ifdef NEWCHFLOODPROT
+		ChanFloodProt	floodprot;
+#else
         unsigned short  msgs;
         unsigned short  per; 
         unsigned char   kmode;
+#endif
 };
 
 typedef struct _OperStat {

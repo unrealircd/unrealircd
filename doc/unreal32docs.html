@@ -55,7 +55,7 @@
   -- 3.9. <a href="#feature_ipv6">IPv6</a><br>
   -- 3.10. <a href="#feature_ziplinks">Zip links</a><br>
   -- 3.11. <a href="#feature_dyndns">Dynamic DNS/IP linking support</a><br>
-  -- 3.12. <a href="#feature_throttling">Throttling</a><br>
+  -- 3.12. <a href="#feature_antiflood">Anti-flood features</a><br>
   -- 3.13. <a href="#feature_other">Other features</a><br>
   4. <a href="#configuringyourunrealircdconf">Configuring your unrealircd.conf 
   file</a><br>
@@ -295,9 +295,63 @@ Windows:<br>
    If you are linking two dynamic DNS hosts, then set link::options::nodnscache and link::options::nohostcheck. 
 </p></div>
 
-<p><font size="+2"><b>3.12 - Throttling</b></font><a name="feature_throttling"></a></p><div class="desc">
-<p>Throttling is a method that allows you to limit how fast a user can disconnect and then reconnect to your server. 
-   You can config it in your set::throttle block to allow X connections in YY seconds from the same IP.</p></div>
+<p><font size="+2"><b>3.12 - Anti-Flood features</b></font><a name="feature_antiflood"></a></p><div class="desc">
+<p>
+<b>Throttling</b><br>
+Throttling is a method that allows you to limit how fast a user can disconnect and then reconnect to your server. 
+ You can config it in your set::throttle block to allow X connections in YY seconds from the same IP.<br>
+<b>Channel modes</b><br>
+There are also some channel modes which can be very effective against floods. To name a few:<br>
+<b>K</b> = no /knock, <b>N</b> = no nickchanges, <b>C</b> = no CTCPs, <b>M</b> = only registered users can talk.<br>
+As of beta18 there's also a much more advanced channelmode +f...<br>
+<b>Channel mode f</b><br>
+Instead of using scripts and bots to protect against channel floods it is now build into the ircd.<br>
+This is an example +f mode: <i>*** Blah sets mode: +f [10j]:15</i><br>
+This means 10 joins per 15 seconds are allowed in the channel, if the limit is hit, the channel will be set +i automatically.<br>
+The following floodtypes are available:<br>
+<table border=0 cellpadding=1 cellspacing=0>
+<tr><td>c</td><td>CTCPs</td><td>auto +C</td></tr>
+<tr><td>j</td><td>joins</td><td>auto +i</td></tr>
+<tr><td>k</td><td>knocks</td><td>auto +K <font size=-1>(counted for local clients only)</font></td></tr>
+<tr><td>m</td><td>messages/notices</td><td>auto +m</td></tr>
+<tr><td>n</td><td>nickchanges</td><td>auto +N</td></tr>
+<tr><td>t</td><td>text</td><td>per-user messages/notices like the old +f. Will kick or ban the user.</td></tr>
+</table>
+<p />
+Example:
+<pre>
+<font color=green>*** ChanOp sets mode: +f [20j,50m,7n]:15</font>
+&lt;ChanOp&gt; lalala
+<font color=green>*** Evil1 (~fdsdsfddf@Clk-17B4D84B.blah.net) has joined #test
+*** Evil2 (~jcvibhcih@Clk-3472A942.xx.someispcom) has joined #test
+*** Evil3 (~toijhlihs@Clk-38D374A3.aol.com) has joined #test
+*** Evil4 (~eihjifihi@Clk-5387B42F.dfdfd.blablalba.be) has joined #test</font>
+-- snip XX lines --
+<font color=green>*** Evil21 (~jiovoihew@Clk-48D826C3.e.something.org) has joined #test</font>
+<font color=brown>-server1.test.net:#test *** Channel joinflood detected (limit is 20 per 15 seconds), putting +i</font>
+<font color=green>*** server1.test.net sets mode: +i</font>
+&lt;Evil2&gt; fsdjfdshfdkjfdkjfdsgdskjgsdjgsdsdfsfdujsflkhsfdl
+&lt;Evil12&gt; fsdjfdshfdkjfdkjfdsgdskjgsdjgsdsdfsfdujsflkhsfdl
+&lt;Evil15&gt; fsdjfdshfdkjfdkjfdsgdskjgsdjgsdsdfsfdujsflkhsfdl
+&lt;Evil10&gt; fsdjfdshfdkjfdkjfdsgdskjgsdjgsdsdfsfdujsflkhsfdl
+&lt;Evil8&gt; fsdjfdshfdkjfdkjfdsgdskjgsdjgsdsdfsfdujsflkhsfdl
+-- snip XX lines --
+<font color=brown>-server1.test.net:#test *** Channel msg/noticeflood detected (limit is 50 per 15 seconds), putting +m</font>
+<font color=green>*** server1.test.net sets mode: +m</font>
+<font color=green>*** Evil1 is now known as Hmmm1</font>
+<font color=green>*** Evil2 is now known as Hmmm2</font>
+<font color=green>*** Evil3 is now known as Hmmm3</font>
+<font color=green>*** Evil4 is now known as Hmmm4</font>
+<font color=green>*** Evil5 is now known as Hmmm5</font>
+<font color=green>*** Evil6 is now known as Hmmm6</font>
+<font color=green>*** Evil7 is now known as Hmmm7</font>
+<font color=green>*** Evil8 is now known as Hmmm8</font>
+<font color=brown>-server1.test.net:#test *** Channel nickflood detected (limit is 7 per 15 seconds), putting +N</font>
+<font color=green>*** server1.test.net sets mode: +N</font>
+</pre>
+The old +f mode (msgflood per-user) is also still available as 't', +f 10:6 is now called +f [10t]:6 and 
++f *20:10 is now +f [20t#b]:10. Currently the ircd will automatically convert old +f mode types to new ones.<br>
+</p></div>
 
 <p><font size="+2"><b>3.13 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
 <p>UnrealIRCd has a lot of features so not everything is covered here... You'll find that out by yourself.</p></div>

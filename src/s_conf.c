@@ -612,6 +612,112 @@ void set_channelmodes(char *modes, struct ChMode *store)
 		{
 			case 'f':
 			{
+#ifdef NEWCHFLOODPROT
+				/* TODO */
+				ChanFloodProt newf;
+				
+				memset(&newf, 0, sizeof(newf));
+				if (!param)
+					break;
+				if (param[0] != '[')
+				{
+					config_status("set::modes-on-join: please use the new +f format: '10:5' becomes '[10t]:5' "
+					              "and '*10:5' becomes '[10t#b]:5'.");
+				} else
+				{
+					char xbuf[256], c, a, *p, *p2, *x = xbuf+1;
+					int v, i;
+					unsigned short warnings = 0, breakit;
+					
+					/* '['<number><1 letter>[optional: '#'+1 letter],[next..]']'':'<number> */
+					strlcpy(xbuf, param, sizeof(xbuf));
+					p2 = strchr(xbuf+1, ']');
+					if (!p2)
+						break;
+					*p2 = '\0';
+					if (*(p2+1) != ':')
+						break;
+					breakit = 0;
+					for (x = strtok(xbuf+1, ","); x; x = strtok(NULL, ","))
+					{
+						/* <number><1 letter>[optional: '#'+1 letter] */
+						p = x;
+						while(isdigit(*p)) { p++; }
+						if ((*p == '\0') ||
+						    !((*p == 'c') || (*p == 'j') || (*p == 'k') ||
+						    (*p == 'm') || (*p == 'n') || (*p == 't')))
+							break;
+						c = *p;
+						*p = '\0';
+						v = atoi(x);
+						if ((v < 1) || (v > 999)) /* out of range... */
+							break;
+						p++;
+						a = '\0';
+						if (*p != '\0')
+						{
+							if (*p == '#')
+							{
+								p++;
+								a = *p;
+							}
+						}
+						switch(c)
+						{
+							case 'c':
+								newf.l[FLD_CTCP] = v;
+								break;
+							case 'j':
+								newf.l[FLD_JOIN] = v;
+								break;
+							case 'k':
+								newf.l[FLD_KNOCK] = v;
+								break;
+							case 'm':
+								newf.l[FLD_MSG] = v;
+								break;
+							case 'n':
+								newf.l[FLD_NICK] = v;
+								break;
+							case 't':
+								newf.l[FLD_TEXT] = v;
+								if (a == 'b')
+									newf.a[FLD_TEXT] = 'b';
+								break;
+							default:
+								breakit=1;
+								break;
+						}
+						if (breakit)
+							break;
+					} /* for strtok.. */
+					if (breakit)
+						break;
+					/* parse 'per' */
+					p2++;
+					if (*p2 != ':')
+						break;
+					p2++;
+					if (!*p2)
+						break;
+					v = atoi(p2);
+					if ((v < 1) || (v > 999)) /* 'per' out of range */
+						break;
+					newf.per = v;
+					/* Is anything turned on? (to stop things like '+f []:15' */
+					breakit = 1;
+					for (v=0; v < NUMFLD; v++)
+						if (newf.l[v])
+							breakit=0;
+					if (breakit)
+						break;
+					
+					/* w00t, we passed... */
+					memcpy(&store->floodprot, &newf, sizeof(newf));
+					store->mode |= MODE_FLOODLIMIT;
+					break;
+				}
+#else
 				char kmode = 0;
 				char *xp;
 				int msgs=0, per=0;
@@ -647,6 +753,7 @@ void set_channelmodes(char *modes, struct ChMode *store)
 				store->per = per;
 				store->kmode = kmode; 					     
 				store->mode |= MODE_FLOODLIMIT;
+#endif
 				break;
 			}
 			default:
@@ -671,11 +778,19 @@ void chmode_str(struct ChMode modes, char *mbuf, char *pbuf)
 				*mbuf++ = tab->flag;
 		}
 	}
+#ifdef NEWCHFLOODPROT
+	if (modes.floodprot.per)
+	{
+		*mbuf++ = 'f';
+		sprintf(pbuf, "%s", channel_modef_string(&modes.floodprot));
+	}
+#else
 	if (modes.per)
 	{
 		*mbuf++ = 'f';
 		sprintf(pbuf, "%s%d:%d", modes.kmode ? "*" : "", modes.msgs, modes.per);
 	}
+#endif
 	*mbuf++=0;
 }
 

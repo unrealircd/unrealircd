@@ -524,6 +524,7 @@ extern long xbase64dec(char *b64);
 extern aClient *find_server_b64_or_real(char *name);
 extern aClient *find_server_by_base64(char *b64);
 extern int is_chanownprotop(aClient *cptr, aChannel *chptr);
+extern int is_skochanop(aClient *cptr, aChannel *chptr);
 extern char *make_virthost(char *curr, char *new, int mode);
 extern int  channel_canjoin(aClient *sptr, char *name);
 extern char *collapse(char *pattern);
@@ -594,3 +595,6 @@ extern CmodeParam *extcmode_duplicate_paramlist(CmodeParam *);
 extern void extcmode_free_paramlist(CmodeParam *);
 #endif
 extern CMD_FUNC(m_eos);
+extern int do_chanflood(ChanFloodProt *, int);
+extern void do_chanflood_action(aChannel *, int, char *, char, long);
+extern char *channel_modef_string(ChanFloodProt *);

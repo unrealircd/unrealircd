@@ -1177,7 +1177,7 @@ CMD_FUNC(m_nick)
 	Membership *mp;
 	time_t lastnick = (time_t) 0;
 	int  differ = 1, update_watch = 1;
-
+	unsigned char newusr = 0;
 	/*
 	 * If the user didn't specify a nickname, complain
 	 */
@@ -1782,7 +1782,7 @@ CMD_FUNC(m_nick)
 			    sptr->user->username, NULL, NULL) == FLUSH_BUFFER)
 				return FLUSH_BUFFER;
 			update_watch = 0;
-
+			newusr = 1;
 		}
 	}
 	/*
@@ -1809,6 +1809,20 @@ CMD_FUNC(m_nick)
 	else if (IsPerson(sptr) && update_watch)
 		hash_check_watch(sptr, RPL_LOGON);
 
+#ifdef NEWCHFLOODPROT
+	if (sptr->user && !newusr)
+	{
+		for (mp = sptr->user->channel; mp; mp = mp->next)
+		{
+			aChannel *chptr = mp->chptr;
+			if (chptr && !(mp->flags & (CHFL_CHANOP|CHFL_VOICE|CHFL_CHANOWNER|CHFL_HALFOP|CHFL_CHANPROT)) &&
+			    chptr->mode.floodprot && do_chanflood(chptr->mode.floodprot, FLD_NICK) && MyClient(sptr))
+			{
+				do_chanflood_action(chptr, FLD_NICK, "nick", 'N', MODE_NONICKCHANGE);
+			}
+		}	
+	}
+#endif
 	return 0;
 }
 

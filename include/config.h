@@ -495,6 +495,12 @@
  */
 #undef EXTCMODE
 
+/*
+ * New channelmode +f system which allows flood control for:
+ * msgs, joins, ctcps, nickchanges and /knock.
+ */
+#define NEWCHFLOODPROT
+
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #define MOTD MPATH
 #define RULES RPATH

@@ -755,6 +755,18 @@ int is_chanownprotop(aClient *cptr, aChannel *chptr) {
 	return 0;
 }
 
+int is_skochanop(aClient *cptr, aChannel *chptr) {
+	Membership *lp;
+		
+	if (IsServer(cptr))
+		return 1;
+	if (chptr)
+		if ((lp = find_membership_link(cptr->user->channel, chptr)))
+			if (lp->flags & (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP|CHFL_HALFOP))
+				return 1;
+	return 0;
+}
+
 int  is_chanprot(aClient *cptr, aChannel *chptr)
 {
 	Membership *lp;
@@ -828,6 +840,50 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
 	return 0;
 }
 
+/* [just a helper for channel_modef_string()] */
+static inline char *chmodefstrhelper(char *buf, char t, unsigned short l, unsigned char a)
+{
+char *p;
+	ircsprintf(buf, "%hd", l);
+	p = buf + strlen(buf);
+	*p++ = t;
+	if (a)
+	{
+		*p++ = '#';
+		*p++ = a;
+	}
+	*p++ = ',';
+	return p;
+}
+
+/** returns the channelmode +f string (ie: '[5k,40j]:10') */
+char *channel_modef_string(ChanFloodProt *x)
+{
+static char retbuf[512]; /* overkill :p */
+char *p = retbuf;
+	*p++ = '[';
+
+	/* (alphabetized) */
+	if (x->l[FLD_CTCP])
+		p = chmodefstrhelper(p, 'c', x->l[FLD_CTCP], x->a[FLD_CTCP]);
+	if (x->l[FLD_JOIN])
+		p = chmodefstrhelper(p, 'j', x->l[FLD_JOIN], x->a[FLD_JOIN]);
+	if (x->l[FLD_KNOCK])
+		p = chmodefstrhelper(p, 'k', x->l[FLD_KNOCK], x->a[FLD_KNOCK]);
+	if (x->l[FLD_MSG])
+		p = chmodefstrhelper(p, 'm', x->l[FLD_MSG], x->a[FLD_MSG]);
+	if (x->l[FLD_NICK])
+		p = chmodefstrhelper(p, 'n', x->l[FLD_NICK], x->a[FLD_NICK]);
+	if (x->l[FLD_TEXT])
+		p = chmodefstrhelper(p, 't', x->l[FLD_TEXT], x->a[FLD_TEXT]);
+
+	if (*(p - 1) == ',')
+		p--;
+	*p++ = ']';
+	ircsprintf(p, ":%hd", x->per);
+	return retbuf;
+}
+
 /*
  * write the "simple" list of channel modes for channel chptr onto buffer mbuf
  * with the parameters in pbuf.
@@ -887,22 +943,28 @@ void channel_modes(aClient *cptr, char *mbuf, char *pbuf, aChannel *chptr)
 		}
 	}
 	/* if we add more parameter modes, add a space to the strings here --Stskeeps */
+#ifdef NEWCHFLOODPROT
+	if (chptr->mode.floodprot)
+#else
 	if (chptr->mode.per)
+#endif
 	{
 		*mbuf++ = 'f';
 		if (IsMember(cptr, chptr) || IsServer(cptr)
 		    || IsULine(cptr))
 		{
+#ifdef NEWCHFLOODPROT
+			ircsprintf(bcbuf, "%s ", channel_modef_string(chptr->mode.floodprot));
+#else
 			if (chptr->mode.kmode == 1)
-				ircsprintf(bcbuf, "*%i:%i ", chptr->mode.msgs,
-				    chptr->mode.per);
+				ircsprintf(bcbuf, "*%i:%i ", chptr->mode.msgs, chptr->mode.per);
 			else
-				ircsprintf(bcbuf, "%i:%i ", chptr->mode.msgs,
-				    chptr->mode.per);
+				ircsprintf(bcbuf, "%i:%i ", chptr->mode.msgs, chptr->mode.per);
+#endif
 			(void)strcat(pbuf, bcbuf);
 		}
-
 	}
+
 #ifdef EXTCMODE
 	for (i=0; i <= Channelmode_highest; i++)
 	{
@@ -1824,7 +1886,35 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  chptr->mode.mode |= modetype;
 		  }
 		  else
+		  {
 			  chptr->mode.mode &= ~modetype;
+#ifdef NEWCHFLOODPROT
+			  /* reset joinflood on -i, reset msgflood on -m, etc.. */
+			  if (chptr->mode.floodprot)
+			  {
+				switch(modetype)
+				{
+				case MODE_NOCTCP:
+					chptr->mode.floodprot->c[FLD_CTCP] = 0;
+					break;
+				case MODE_NONICKCHANGE:
+					chptr->mode.floodprot->c[FLD_NICK] = 0;
+					break;
+				case MODE_MODERATED:
+					chptr->mode.floodprot->c[FLD_MSG] = 0;
+					break;
+				case MODE_NOKNOCK:
+					chptr->mode.floodprot->c[FLD_KNOCK] = 0;
+					break;
+				case MODE_INVITEONLY:
+					chptr->mode.floodprot->c[FLD_JOIN] = 0;
+					break;
+				default:
+					break;
+				}
+			  }
+#endif
+		  }
 		  break;
 
 /* do pro-opping here (popping) */
@@ -2195,6 +2285,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  }
 		  if (retval == 0)	/* you can't break a case from loop */
 			  break;
+#ifndef NEWCHFLOODPROT
 		  if (what == MODE_ADD)
 		  {
 			  if (!bounce)	/* don't do the mode at all. */
@@ -2281,6 +2372,239 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  }
 			  retval = 0;
 		  }
+#else
+		/* NEW */
+		if (what == MODE_ADD)
+		{
+			if (!bounce)	/* don't do the mode at all. */
+			{
+				ChanFloodProt newf;
+				memset(&newf, 0, sizeof(newf));
+
+				if (!param || *pcount >= MAXMODEPARAMS)
+				{
+					retval = 0;
+					break;
+				}
+
+				/* old +f was like +f 10:5 or +f *10:5
+				 * new is +f [5c,30j,10t#b]:15
+				 * +f 10:5  --> +f [10t]:5
+				 * +f *10:5 --> +f [10t#b]:5
+				 */
+				if (param[0] != '[')
+				{
+					/* <<OLD +f>> */
+				  /* like 1:1 and if its less than 3 chars then ahem.. */
+				  if (strlen(param) < 3)
+				  {
+					  break;
+				  }
+				  /* may not contain other chars 
+				     than 0123456789: & NULL */
+				  hascolon = 0;
+				  for (xp = param; *xp; xp++)
+				  {
+					  if (*xp == ':')
+						hascolon++;
+					  /* fast alpha check */
+					  if (((*xp < '0') || (*xp > '9'))
+					      && (*xp != ':')
+					      && (*xp != '*'))
+						goto break_flood;
+					  /* uh oh, not the first char */
+					  if (*xp == '*' && (xp != param))
+						goto break_flood;
+				  }
+				  /* We can avoid 2 strchr() and a strrchr() like this
+				   * it should be much faster. -- codemastr
+				   */
+				  if (hascolon != 1)
+					break;
+				  if (*param == '*')
+				  {
+					  xzi = 1;
+					  //                      chptr->mode.kmode = 1;
+				  }
+				  else
+				  {
+					  xzi = 0;
+
+					  //                   chptr->mode.kmode = 0;
+				  }
+				  xp = index(param, ':');
+				  *xp = '\0';
+				  xxi =
+				      atoi((*param ==
+				      '*' ? (param + 1) : param));
+				  xp++;
+				  xyi = atoi(xp);
+				  if (xxi > 500 || xyi > 500)
+					break;
+				  xp--;
+				  *xp = ':';
+				  if ((xxi == 0) || (xyi == 0))
+					  break;
+
+				  /* ok, we passed */
+				  newf.l[FLD_TEXT] = xxi;
+				  newf.per = xyi;
+				  if (xzi == 1)
+				      newf.a[FLD_TEXT] = 'b';
+				} else {
+					/* NEW +F */
+					char xbuf[256], c, a, *p, *p2, *x = xbuf+1;
+					int v, i;
+					unsigned short warnings = 0, breakit;
+
+					/* '['<number><1 letter>[optional: '#'+1 letter],[next..]']'':'<number> */
+					strlcpy(xbuf, param, sizeof(xbuf));
+					p2 = strchr(xbuf+1, ']');
+					if (!p2)
+					{
+						if (MyClient(cptr))
+							sendto_one(cptr, ":%s NOTICE %s :bad syntax for channelmode +f", me.name, cptr->name);
+						break;
+					}
+					*p2 = '\0';
+					if (*(p2+1) != ':')
+					{
+						if (MyClient(cptr))
+							sendto_one(cptr, ":%s NOTICE %s :bad syntax for channelmode +f", me.name, cptr->name);
+						break;
+					}
+					breakit = 0;
+					for (x = strtok(xbuf+1, ","); x; x = strtok(NULL, ","))
+					{
+						/* <number><1 letter>[optional: '#'+1 letter] */
+						p = x;
+						while(isdigit(*p)) { p++; }
+						if ((*p == '\0') ||
+						    !((*p == 'c') || (*p == 'j') || (*p == 'k') ||
+						      (*p == 'm') || (*p == 'n') || (*p == 't')))
+						{
+							if (MyClient(cptr) && *p && (warnings++ < 3))
+								sendto_one(cptr, ":%s NOTICE %s :warning: channelmode +f: floodtype '%c' unknown, ignored.",
+									me.name, cptr->name, *p);
+							continue; /* continue instead of break for forward compatability. */
+						}
+						c = *p;
+						*p = '\0';
+						v = atoi(x);
+						if ((v < 1) || (v > 999)) /* out of range... */
+						{
+							if (MyClient(cptr))
+							{
+								sendto_one(cptr, ":%s NOTICE %s :channelmode +f: floodtype '%c', value should be 1-999",
+									me.name, cptr->name, c);
+								breakit = 1;
+								break;
+							} else
+								continue; /* just ignore for remote servers */
+						}
+						p++;
+						a = '\0';
+						if (*p != '\0')
+						{
+							if (*p == '#')
+							{
+								p++;
+								a = *p;
+							}
+						}
+
+						switch(c)
+						{
+							case 'c':
+								newf.l[FLD_CTCP] = v;
+								break;
+							case 'j':
+								newf.l[FLD_JOIN] = v;
+								break;
+							case 'k':
+								newf.l[FLD_KNOCK] = v;
+								break;
+							case 'm':
+								newf.l[FLD_MSG] = v;
+								break;
+							case 'n':
+								newf.l[FLD_NICK] = v;
+								break;
+							case 't':
+								newf.l[FLD_TEXT] = v;
+								if (a == 'b')
+									newf.a[FLD_TEXT] = 'b';
+								break;
+							default:
+								breakit=1;
+								break;
+						}
+						if (breakit)
+							break;
+					} /* for */
+					if (breakit)
+						break;
+					/* parse 'per' */
+					p2++;
+					if (*p2 != ':')
+					{
+						if (MyClient(cptr))
+							sendto_one(cptr, ":%s NOTICE %s :bad syntax for channelmode +f", me.name, cptr->name);
+						break;
+					}
+					p2++;
+					if (!*p2)
+					{
+						if (MyClient(cptr))
+							sendto_one(cptr, ":%s NOTICE %s :bad syntax for channelmode +f", me.name, cptr->name);
+						break;
+					}
+					v = atoi(p2);
+					if ((v < 1) || (v > 999)) /* 'per' out of range */
+					{
+						if (MyClient(cptr))
+							sendto_one(cptr, ":%s NOTICE %s :error: channelmode +f: time range should be 1-999",
+								me.name, cptr->name);
+						break;
+					}
+					newf.per = v;
+					
+					/* Is anything turned on? (to stop things like '+f []:15' */
+					breakit = 1;
+					for (v=0; v < NUMFLD; v++)
+						if (newf.l[v])
+							breakit=0;
+					if (breakit)
+						break;
+					
+				} /* if param[0] == '[' */ 
+
+				if (chptr->mode.floodprot &&
+				    !memcmp(chptr->mode.floodprot, &newf, sizeof(ChanFloodProt)))
+					break; /* They are identical */
+
+				/* Good.. store the mode (and alloc if needed) */
+				if (!chptr->mode.floodprot)
+					chptr->mode.floodprot = MyMalloc(sizeof(ChanFloodProt));
+				memcpy(chptr->mode.floodprot, &newf, sizeof(ChanFloodProt));
+			} /* !bounce */
+			ircsprintf(tmpbuf, channel_modef_string(chptr->mode.floodprot));
+			tmpstr = tmpbuf;
+			retval = 1;
+		} else
+		{ /* MODE_DEL */
+			if (!chptr->mode.floodprot)
+				break; /* no change */
+			ircsprintf(tmpbuf, channel_modef_string(chptr->mode.floodprot));
+			tmpstr = tmpbuf;
+			if (!bounce)
+			{
+				free(chptr->mode.floodprot);
+				chptr->mode.floodprot = NULL;
+			}
+			retval = 0; /* ??? copied from previous +f code. */
+		}
+#endif
 
 		  (void)ircsprintf(pvar[*pcount], "%cf%s",
 		      what == MODE_ADD ? '+' : '-', tmpstr);
@@ -3263,9 +3587,17 @@ CMD_FUNC(do_join)
 			if (chptr->users == 1 && MODES_ON_JOIN)
 			{
 				chptr->mode.mode = MODES_ON_JOIN;
+#ifdef NEWCHFLOODPROT
+				if (iConf.modes_on_join.floodprot.per)
+				{
+					chptr->mode.floodprot = MyMalloc(sizeof(ChanFloodProt));
+					memcpy(chptr->mode.floodprot, &iConf.modes_on_join.floodprot, sizeof(ChanFloodProt));
+				}
+#else
 				chptr->mode.kmode = iConf.modes_on_join.kmode;
 				chptr->mode.per = iConf.modes_on_join.per;
 				chptr->mode.msgs = iConf.modes_on_join.msgs;
+#endif
 				*modebuf = *parabuf = 0;
 				channel_modes(sptr, modebuf, parabuf, chptr);
 				/* This should probably be in the SJOIN stuff */
@@ -3278,6 +3610,21 @@ CMD_FUNC(do_join)
 			(void)m_names(cptr, sptr, 2, parv);
 		}
 
+#ifdef NEWCHFLOODPROT
+		/* I'll explain this only once:
+		 * 1. if channel is +f
+		 * 2. local client OR synced server
+		 * 3. then, increase floodcounter
+		 * 4. if we reached the limit AND only if source was a local client.. do the action (+i).
+		 * Nr 4 is done because otherwise you would have a noticeflood with 'joinflood detected'
+		 * from all servers.
+		 */
+		if (chptr->mode.floodprot && (MyClient(sptr) || sptr->serv->flags.synced) && 
+		    do_chanflood(chptr->mode.floodprot, FLD_JOIN) && MyClient(sptr))
+		{
+			do_chanflood_action(chptr, FLD_JOIN, "join", 'i', MODE_INVITEONLY);
+		}
+#endif
 	}
 
 	RET(0)
@@ -4186,6 +4533,7 @@ int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
 {
 	Membership *lp;
 	MembershipL *lp2;
+	int c_limit, t_limit, banthem;
 
 	if (!MyClient(sptr))
 		return 0;
@@ -4196,18 +4544,29 @@ int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
 
 	if (!(lp = find_membership_link(sptr->user->channel, chptr)))
 		return 0;
-	
-	if ((chptr->mode.msgs < 1) || (chptr->mode.per < 1))
-		return 0;
 
 	lp2 = (MembershipL *) lp;
+
+#ifdef NEWCHFLOODPROT
+	if (!chptr->mode.floodprot || !chptr->mode.floodprot->l[FLD_TEXT])
+		return 0;
+	c_limit = chptr->mode.floodprot->l[FLD_TEXT];
+	t_limit = chptr->mode.floodprot->per;
+	banthem = (chptr->mode.floodprot->a[FLD_TEXT] == 'b') ? 1 : 0;
+#else
+	if ((chptr->mode.msgs < 1) || (chptr->mode.per < 1))
+		return 0;
+	c_limit = chptr->mode.msgs;
+	t_limit = chptr->mode.per;
+	banthem = chptr->mode.kmode;
+#endif
 	/* if current - firstmsgtime >= mode.per, then reset,
 	 * if nummsg > mode.msgs then kick/ban
 	 */
 	Debug((DEBUG_ERROR, "Checking for flood +f: firstmsg=%d (%ds ago), new nmsgs: %d, limit is: %d:%d",
 		lp2->flood.firstmsg, TStime() - lp2->flood.firstmsg, lp2->flood.nmsg + 1,
-		chptr->mode.msgs, chptr->mode.per));
-	if ((TStime() - lp2->flood.firstmsg) >= chptr->mode.per)
+		c_limit, t_limit));
+	if ((TStime() - lp2->flood.firstmsg) >= t_limit)
 	{
 		/* reset */
 		lp2->flood.firstmsg = TStime();
@@ -4218,13 +4577,13 @@ int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
 	/* increase msgs */
 	lp2->flood.nmsg++;
 
-	if ((lp2->flood.nmsg) > chptr->mode.msgs)
+	if ((lp2->flood.nmsg) > c_limit)
 	{
 		char comment[1024], mask[1024];
 		ircsprintf(comment,
 		    "Flooding (Limit is %i lines per %i seconds)",
-		    chptr->mode.msgs, chptr->mode.per);
-		if (chptr->mode.kmode == 1)
+		    c_limit, t_limit);
+		if (banthem)
 		{		/* ban. */
 			ircsprintf(mask, "*!*@%s", GetHost(sptr));
 			add_banid(&me, chptr, mask);
@@ -4753,6 +5112,11 @@ CMD_FUNC(m_knock)
 
 	sendto_one(sptr, ":%s %s %s :Knocked on %s", me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE",
 	    sptr->name, chptr->chname);
+
+#ifdef NEWCHFLOODPROT
+	if (chptr->mode.floodprot && do_chanflood(chptr->mode.floodprot, FLD_KNOCK) && MyClient(sptr))
+		do_chanflood_action(chptr, FLD_KNOCK, "knock", 'K', MODE_NOKNOCK);
+#endif
 	return 0;
 }
 
@@ -5139,6 +5503,10 @@ CMD_FUNC(m_sjoin)
 				sendto_channel_butserv(chptr, acptr,
 				    ":%s JOIN :%s", nick,
 				    chptr->chname);
+#ifdef NEWCHFLOODPROT
+				if (chptr->mode.floodprot && sptr->serv->flags.synced)
+			        do_chanflood(chptr->mode.floodprot, FLD_JOIN);
+#endif
 			}
 			sendto_serv_butone_sjoin(cptr, ":%s JOIN %s",
 			    nick, chptr->chname);
@@ -5213,6 +5581,13 @@ CMD_FUNC(m_sjoin)
 		oldmode.extmodeparam = NULL;
 		oldmode.extmodeparam = extcmode_duplicate_paramlist(chptr->mode.extmodeparam);
 #endif
+#ifdef NEWCHFLOODPROT
+		if (chptr->mode.floodprot)
+		{
+			oldmode.floodprot = MyMalloc(sizeof(ChanFloodProt));
+			memcpy(oldmode.floodprot, chptr->mode.floodprot, sizeof(ChanFloodProt));
+		}
+#endif
 		/* merge the modes */
 		strlcpy(modebuf, parv[3], sizeof modebuf);
 		parabuf[0] = '\0';
@@ -5245,6 +5620,13 @@ CMD_FUNC(m_sjoin)
 		{
 			Addit('L', oldmode.link);
 		}
+#ifdef NEWCHFLOODPROT
+		if (oldmode.floodprot && !chptr->mode.floodprot)
+		{
+			char *x = channel_modef_string(oldmode.floodprot);
+			Addit('f', x);
+		}
+#else
 		if ((oldmode.msgs || oldmode.per || oldmode.kmode)
 		    && ((chptr->mode.msgs == 0) && (chptr->mode.per == 0)
 		    && (chptr->mode.kmode == 0)))
@@ -5254,6 +5636,8 @@ CMD_FUNC(m_sjoin)
 			    oldmode.msgs, oldmode.per);
 			Addit('f', modeback);
 		}
+#endif
+
 #ifdef EXTCMODE
 		/* First, check if we have something they don't have..
 		 * note that: oldmode.* = us, chptr->mode.* = them.
@@ -5313,6 +5697,13 @@ CMD_FUNC(m_sjoin)
 		{
 			Addit('L', chptr->mode.link);
 		}
+#ifdef NEWCHFLOODPROT
+		if (chptr->mode.floodprot && !oldmode.floodprot)
+		{
+			char *x = channel_modef_string(chptr->mode.floodprot);
+			Addit('f', x);
+		}
+#else
 		if (!(oldmode.msgs || oldmode.per || oldmode.kmode)
 		    && (chptr->mode.msgs || chptr->mode.per
 		    || chptr->mode.kmode))
@@ -5321,8 +5712,9 @@ CMD_FUNC(m_sjoin)
 			    (chptr->mode.kmode == 1 ? "*" : ""),
 			    chptr->mode.msgs, chptr->mode.per);
 			Addit('f', modeback);
-
 		}
+#endif
+
 #ifdef EXTCMODE
 		/* Now, check if they have something we don't have..
 		 * note that: oldmode.* = us, chptr->mode.* = them.
@@ -5386,6 +5778,20 @@ CMD_FUNC(m_sjoin)
 		/* 
 		 * run a max on each?
 		 */
+#ifdef NEWCHFLOODPROT
+		if (chptr->mode.floodprot && oldmode.floodprot)
+		{
+			char *x;
+			int i;
+			chptr->mode.floodprot->per = MAX(chptr->mode.floodprot->per, oldmode.floodprot->per);
+			for (i=0; i < NUMFLD; i++)
+				chptr->mode.floodprot->l[i] = MAX(chptr->mode.floodprot->l[i], oldmode.floodprot->l[i]);
+			for (i=0; i < NUMFLD; i++)
+				chptr->mode.floodprot->a[i] = MAX(chptr->mode.floodprot->a[i], oldmode.floodprot->a[i]);
+			x = channel_modef_string(chptr->mode.floodprot);
+			Addit('f', x);
+		}
+#else
 		if ((oldmode.kmode != chptr->mode.kmode)
 		    || (oldmode.msgs != chptr->mode.msgs)
 		    || (oldmode.per != chptr->mode.per))
@@ -5404,6 +5810,7 @@ CMD_FUNC(m_sjoin)
 				Addit('f', modeback);
 			}
 		}
+#endif
 
 #ifdef EXTCMODE
 		/* Now, check for any param differences in extended channel modes..
@@ -5463,6 +5870,14 @@ CMD_FUNC(m_sjoin)
 		/* free the oldmode.* crap :( */
 		extcmode_free_paramlist(oldmode.extmodeparam);
 		oldmode.extmodeparam = NULL; /* just to be sure ;) */
+#endif
+#ifdef NEWCHFLOODPROT
+		/* and the oldmode.floodprot struct too... :/ */
+		if (oldmode.floodprot)
+		{
+			free(oldmode.floodprot);
+			oldmode.floodprot = NULL;
+		}
 #endif
 	}
 
@@ -5978,3 +6393,50 @@ char flagbuf[8]; /* For holding "qohva" and "*~@%+" */
 		}
 	}
 }
+
+#ifdef NEWCHFLOODPROT
+int do_chanflood(ChanFloodProt *chp, int what)
+{
+
+	if (!chp || !chp->l[what]) /* no +f or not restricted */
+		return 0;
+	if (TStime() - chp->t[what] >= chp->per)
+	{
+		chp->t[what] = TStime();
+		chp->c[what] = 1;
+	} else
+	{
+		chp->c[what]++;
+		if ((chp->c[what] > chp->l[what]) &&
+		    (TStime() - chp->t[what] < chp->per))
+		{
+			/* reset it too (makes it easier for chanops to handle the situation) */
+			/*
+			 *XXchp->t[what] = TStime();
+			 *XXchp->c[what] = 1;
+			 * 
+			 * BAD.. there are some situations where we might 'miss' a flood
+			 * because of this. The reset has been moved to -i,-m,-N,-C,etc.
+			*/
+			return 1; /* flood detected! */
+		}
+	}
+	return 0;
+}
+
+void do_chanflood_action(aChannel *chptr, int what, char *text, char m, long modeflag)
+{
+	if (!(chptr->mode.mode & modeflag))
+	{
+		char comment[1024];
+		ircsprintf(comment, "*** Channel %sflood detected (limit is %d per %d seconds), setting mode +%c",
+			text, chptr->mode.floodprot->l[what], chptr->mode.floodprot->per, m);
+		sendto_channelprefix_butone_tok(NULL, &me, chptr,
+			PREFIX_HALFOP|PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+			MSG_NOTICE, TOK_NOTICE, chptr->chname, comment);
+		sendto_serv_butone(&me, ":%s MODE %s +%c 0", me.name, chptr->chname, m);
+		sendto_channel_butserv(chptr, &me, ":%s MODE %s +%c", me.name, chptr->chname, m);
+		chptr->mode.mode |= modeflag;
+	}
+}
+#endif

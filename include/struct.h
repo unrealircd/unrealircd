@@ -122,6 +122,7 @@ typedef struct Server aServer;
 typedef struct SLink Link;
 typedef struct SBan Ban;
 typedef struct SMode Mode;
+typedef struct SChanFloodProt ChanFloodProt;
 typedef struct ListOptions LOpts;
 typedef struct FloodOpt aFloodOpt;
 typedef struct MotdItem aMotd;
@@ -1236,6 +1237,24 @@ struct ListOptions {
 #define EXTCMODETABLESZ 32
 #endif /* EXTCMODE */
 
+/* this can be like ~60-90 bytes, therefore it's in a seperate struct */
+#define FLD_CTCP	0 /* c */
+#define FLD_JOIN	1 /* j */
+#define FLD_KNOCK	2 /* k */
+#define FLD_MSG		3 /* m */
+#define FLD_NICK	4 /* n */
+#define FLD_TEXT	5 /* t */
+
+#define NUMFLD	6 /* 6 flood types */
+
+struct SChanFloodProt {
+	unsigned short	per; /* setting: per <XX> seconds */
+	time_t			t[NUMFLD]; /* runtime: timers */
+	unsigned short	c[NUMFLD]; /* runtime: counters */
+	unsigned short	l[NUMFLD]; /* setting: limit */
+	unsigned char	a[NUMFLD]; /* setting: action */
+};
+
 /* mode structure for channels */
 struct SMode {
 	long mode;
@@ -1246,10 +1265,14 @@ struct SMode {
 	int  limit;
 	char key[KEYLEN + 1];
 	char link[LINKLEN + 1];
+#ifdef NEWCHFLOODPROT
+	ChanFloodProt *floodprot;
+#else
 	/* x:y */
 	unsigned short  msgs;		/* x */
 	unsigned short  per;		/* y */
 	unsigned char	 kmode;	/* mode  0 = kick  1 = ban */
+#endif
 };
 
 /* Used for notify-hash buckets... -Donwulff */
@@ -1542,3 +1565,4 @@ int	throttle_can_connect(struct IN_ADDR *in);
 
 #endif /* __struct_include__ */
 
+#include "dynconf.h"
