@@ -1699,3 +1699,4 @@ seen. gmtime warning still there
 - Fixed some logical module rehash issues
 - Made config actually add listeners when rehashing (...) also you can now
   change listener flags using /rehash
+- Changed .SICI to point to cacert.org instead (patch by evilbunny)
