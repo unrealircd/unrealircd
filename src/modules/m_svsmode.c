@@ -115,7 +115,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	
 	int i = 4;
 
-
+	*parabuf = '\0';
 	modebuf[0] = 0;
 	if(!(chptr = find_channel(parv[1], NULL)))
 		return 0;
