@@ -1453,3 +1453,5 @@ seen. gmtime warning still there
   on Linux FSU Pthread installs. (When we got a better way, we will have full doug lea malloc..)
 - Made OPEROVERRIDE_VERIFY default undeffed
 - SSL fixes to deal with not allowing SSLv2
+*** beta11 released ***
+- Removed src/s_unreal.c contained 2 functions, 1 never used, 1 used once

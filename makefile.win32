@@ -31,7 +31,7 @@ OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/S_DEBUG.OBJ  SRC/SUPPORT.OBJ SRC/LIST.OBJ \
  SRC/S_ERR.OBJ SRC/PACKET.OBJ SRC/S_BSD.OBJ \
  SRC/S_SERV.OBJ SRC/S_USER.OBJ SRC/WIN32GUI.OBJ \
- SRC/VERSION.OBJ SRC/S_UNREAL.OBJ SRC/RES_INIT.OBJ \
+ SRC/VERSION.OBJ SRC/RES_INIT.OBJ \
  SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ \
  SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ \
  SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ \
@@ -175,10 +175,6 @@ src/s_user.obj: src/s_user.c $(INCLUDES) ./include/dbuf.h \
 src/s_extra.obj: src/s_extra.c $(INCLUDES) ./include/dbuf.h \
                 ./include/channel.h ./include/whowas.h
         $(CC) $(CFLAGS) src/s_extra.c
-
-src/s_unreal.obj: src/s_unreal.c $(INCLUDES) ./include/dbuf.h \
-                ./include/channel.h ./include/whowas.h
-        $(CC) $(CFLAGS) src/s_unreal.c
 
 src/s_serv.obj: src/s_serv.c $(INCLUDES) ./include/dbuf.h ./include/whowas.h
         $(CC) $(CFLAGS) src/s_serv.c

@@ -27,7 +27,7 @@ OBJS=auth.o aln.o badwords.o channel.o cloak.o crule.o dbuf.o \
 	res_init.o res_comp.o res_mkquery.o res_skipname.o s_auth.o \
 	s_bsd.o s_conf.o s_debug.o s_err.o s_extra.o s_kline.o \
 	s_misc.o s_numeric.o s_serv.o s_svs.o $(STRTOUL) socket.o \
-	ssl.o s_unreal.o s_user.o scache.o send.o support.o umodes.o \
+	ssl.o s_user.o scache.o send.o support.o umodes.o \
 	version.o webtv.o whowas.o zip.o cidr.o
 
 SRC=$(OBJS:%.o=%.c)
@@ -217,10 +217,6 @@ s_extra.o: s_extra.c $(INCLUDES) \
 s_kline.o: s_kline.c $(INCLUDES) \
 	  s_numeric.c ../include/dbuf.h ../include/channel.h ../include/whowas.h
 	$(CC) $(CFLAGS) -c s_kline.c
-
-s_unreal.o: s_unreal.c $(INCLUDES) \
-	  s_numeric.c ../include/dbuf.h ../include/channel.h ../include/whowas.h
-	$(CC) $(CFLAGS) -c s_unreal.c
 
 s_serv.o: s_serv.c $(INCLUDES) \
 	  ../include/dbuf.h ../include/whowas.h

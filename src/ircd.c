@@ -76,6 +76,7 @@ ID_Notes("2.48 3/9/94");
 #ifdef __FreeBSD__
 char *malloc_options = "h" MALLOC_FLAGS_EXTRA;
 #endif
+time_t TSoffset = 0;
 
 /* Added DrBin */
 #ifndef BIG_SECURITY_HOLE

@@ -4319,4 +4319,21 @@ int  localdie(void)
 	(void)s_die();
 	return 0;
 }
+
+aClient *find_match_server(char *mask)
+{
+	aClient *acptr;
+
+	if (BadPtr(mask))
+		return NULL;
+	for (acptr = client, collapse(mask); acptr; acptr = acptr->next)
+	{
+		if (!IsServer(acptr) && !IsMe(acptr))
+			continue;
+		if (!match(mask, acptr->name))
+			break;
+		continue;
+	}
+	return acptr;
+}
 #endif
