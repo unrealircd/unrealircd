@@ -1824,6 +1824,11 @@ CMD_FUNC(m_nick)
 		}	
 	}
 #endif
+	if (newusr && !MyClient(sptr) && IsPerson(sptr))
+	{
+		RunHook(HOOKTYPE_REMOTE_CONNECT, sptr);
+	}
+
 	return 0;
 }
 
@@ -2049,6 +2054,7 @@ CMD_FUNC(m_pass)
 		    me.name, parv[0]);
 		return 0;
 	}
+
 	PassLen = strlen(password);
 	if (cptr->passwd)
 		MyFree(cptr->passwd);
@@ -2056,6 +2062,9 @@ CMD_FUNC(m_pass)
 		PassLen = PASSWDLEN;
 	cptr->passwd = MyMalloc(PassLen + 1);
 	strncpyzt(cptr->passwd, password, PassLen + 1);
+
+	/* note: the original non-truncated password is supplied as 2nd parameter. */
+	RunHookReturnInt2(HOOKTYPE_LOCAL_PASS, sptr, password, !=0);
 	return 0;
 }
 

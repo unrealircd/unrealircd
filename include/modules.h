@@ -403,6 +403,15 @@ void HooktypeDel(Hooktype *hooktype, Module *module);
   if (retval retchk) return retval; \
  } \
 }
+#define RunHookReturnInt2(hooktype,x,y,retchk) \
+{ \
+ int retval; \
+ for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) \
+ { \
+  retval = (*(global_i->func.intfunc))(x,y); \
+  if (retval retchk) return retval; \
+ } \
+}
 
 #define RunHookReturnVoid(hooktype,x,ret) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) if((*(global_i->func.intfunc))(x) ret) return
 #define RunHook2(hooktype,x,y) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*(global_i->func.intfunc))(x,y)
@@ -440,6 +449,8 @@ int CommandExists(char *name);
 #define HOOKTYPE_LOCAL_TOPIC 22
 #define HOOKTYPE_LOCAL_OPER 23
 #define HOOKTYPE_UNKUSER_QUIT 24
+#define HOOKTYPE_LOCAL_PASS 25
+#define HOOKTYPE_REMOTE_CONNECT 26
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000
