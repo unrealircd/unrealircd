@@ -1223,3 +1223,4 @@ seen. gmtime warning still there
 - Fixed a IPv6 problem reported by Zerwas
 - Fixed -Wall warnings for TStime
 - Compile fix for TS2ts 
+- Small release tricks
