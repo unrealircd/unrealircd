@@ -64,7 +64,6 @@ aMotd *read_motd(char *filename);
 aMotd *read_rules(char *filename);
 aMotd *read_svsmotd(char *filename);
 aMotd *read_botmotd(char *filename);
-void read_tlines(void);
 
 /*
 ** m_functions execute protocol messages on this server:
@@ -2602,8 +2601,14 @@ int  m_stats(cptr, sptr, parc, parv)
 		  cr_report(sptr);
 		  break;
 	  case 't':
-		  report_configured_links(sptr, CONF_TLINE);
+	  {
+		  ConfigItem_tld *tld;
+		  for (tld = conf_tld; tld; tld = (ConfigItem_tld *)tld->next) {
+			sendto_one(sptr, rpl_str(RPL_STATSTLINE), me.name, parv[0], tld->mask,
+  			    tld->motd_file, tld->rules_file);
+		  }
 		  break;
+	  }
 	  case 'T':		/* /stats T not t:lines .. */
 		  tstats(sptr, parv[0]);
 		  break;
@@ -3729,7 +3734,6 @@ int  m_rehash(cptr, sptr, parc, parv)
 				    sptr->name);
 				motd = (aMotd *) read_motd(MPATH);
 				rules = (aMotd *) read_rules(RPATH);
-				read_tlines();
 				return 0;
 			}
 			if (!strnicmp("-vhos", parv[1], 5))
@@ -3887,7 +3891,6 @@ int  m_rehash(cptr, sptr, parc, parv)
 						    (aMotd *) read_motd(MPATH);
 						rules =
 						    (aMotd *) read_rules(RPATH);
-						read_tlines();
 						return 0;
 					}
 					if (!strnicmp("-vhos", parv[2], 5))
@@ -4320,60 +4323,6 @@ int  m_opermotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	return 0;
 }
 
-/* read_tlines 
- * Read info from T:lines into trecords which include the file 
- * timestamp, the hostmask, and the contents of the motd file 
- * -Ghostwolf 7sep97
- * Modified for Unreal and to support RULES by codemastr
- */
-void read_tlines()
-{
-	aConfItem *tmp;
-	aTrecord *temp, *last = NULL;	/* Init. to avoid compiler warning */
-	aMotd *amotd, *arules;
-
-	/* Free the old trecords and the associated motd contents first */
-	while (tdata)
-	{
-		last = tdata->next;
-		while (tdata->tmotd)
-		{
-			amotd = tdata->tmotd->next;
-			MyFree(tdata->tmotd->line);
-			MyFree(tdata->tmotd);
-			tdata->tmotd = amotd;
-		}
-		/* Clear rules too */
-		while (tdata->trules)
-		{
-			arules = tdata->trules->next;
-			MyFree(tdata->trules->line);
-			MyFree(tdata->trules);
-			tdata->trules = arules;
-		}
-
-		MyFree(tdata);
-		tdata = last;
-	}
-
-	for (tmp = conf; tmp; tmp = tmp->next)
-		if (tmp->status == CONF_TLINE && tmp->host && tmp->passwd)
-		{
-			temp = (aTrecord *) MyMalloc(sizeof(aTrecord));
-			if (!temp)
-				outofmemory();
-			temp->hostmask = tmp->host;
-			temp->tmotd = read_motd(tmp->passwd);
-			temp->trules = read_rules(tmp->name);
-			temp->tmotd_tm = motd_tm;
-			temp->next = NULL;
-			if (!tdata)
-				tdata = temp;
-			else
-				last->next = temp;
-			last = temp;
-		}
-}
 
 
 /* 

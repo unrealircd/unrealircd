@@ -1102,7 +1102,6 @@ int  InitwIRCD(argc, argv)
 	opermotd = (aMotd *) read_opermotd(OPATH);
 	motd = (aMotd *) read_motd(MPATH);
 	svsmotd = (aMotd *) read_svsmotd(VPATH);
-	read_tlines();
 	(void)get_my_name(&me, me.sockhost, sizeof(me.sockhost) - 1);
 	if (me.name[0] == '\0')
 		strncpyzt(me.name, me.sockhost, sizeof(me.name));
