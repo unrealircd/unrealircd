@@ -712,3 +712,4 @@ seen. gmtime warning still there
 - Added correct uptime to web interface
 - Patched in zogg's scan_socks patch, second edition
 - Added in Ossie's example.conf v2
+- Major changes to the win32 editor

@@ -17,15 +17,13 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#define OEMRESOURCE
-//#define _WIN32_IE 0x0500
-
 #ifndef IRCDTOTALVERSION
 #define IRCDTOTALVERSION BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9
 #endif
 
 #define WIN32_VERSION BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH9
 #include <windows.h>
+#include <windowsx.h>
 #include "resource.h"
 #include "version.h"
 #include "setup.h"
@@ -42,8 +40,9 @@
 #include <errno.h>
 #include "h.h"
 #include <richedit.h>
+#include <commdlg.h>
 
-#define MIRC_COLORS "{\\colortbl ;\\red255\\green255\\blue255;\\red0\\green0\\blue128;\\red0\\green128\\blue0;\\red255\\green0\\blue0;\\red128\\green0\\blue0;\\red128\\green0\\blue128;\\red255\\green128\\blue0;\\red255\\green255\\blue0;\\red0\\green255\\blue0;\\red0\\green128\\blue128;\\red0\\green255\\blue255;\\red0\\green0\\blue255;\\red255\\green0\\blue255;\\red128\\green128\\blue128;\\red192\\green192\\blue192;\\red0\\green0\\blue0;}"
+#define MIRC_COLORS "{\\colortbl ;\\red255\\green255\\blue255;\\red0\\green0\\blue127;\\red0\\green147\\blue0;\\red255\\green0\\blue0;\\red147\\green0\\blue0;\\red128\\green0\\blue128;\\red255\\green128\\blue0;\\red255\\green255\\blue0;\\red0\\green255\\blue0;\\red0\\green128\\blue128;\\red0\\green255\\blue255;\\red0\\green0\\blue252;\\red255\\green0\\blue255;\\red128\\green128\\blue128;\\red192\\green192\\blue192;\\red0\\green0\\blue0;}"
 
 /* Comments:
  * 
@@ -66,8 +65,13 @@ LRESULT CALLBACK BotMotdDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK RulesDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK StatusDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK ConfigErrorDLG(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK ColorDLG(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK FromVarDLG(HWND, UINT, WPARAM, LPARAM, char *, char **);
+LRESULT CALLBACK FromFileDLG(HWND, UINT, WPARAM, LPARAM, char *, char *);
+
 extern  void      SocketLoop(void *dummy), rehash(aClient *, aClient *, int);
-static char *ParseCodes(char *);
+int CountRTFSize(char *);
+void IRCToRTF(char *, char *);
 HINSTANCE hInst;
 NOTIFYICONDATA SysTray;
 void CleanUp(void);
@@ -84,11 +88,13 @@ void CleanUpSegv(int sig)
 {
 	Shell_NotifyIcon(NIM_DELETE ,&SysTray);
 }
-HWND hwIRCDWnd=NULL/* hwnd=NULL*/;
+HWND hwIRCDWnd=NULL;
 HWND hwTreeView;
+HWND hWndMod;
 HANDLE hMainThread = 0;
 UINT WM_TASKBARCREATED;
 FARPROC lpfnOldWndProc;
+HMENU hContext;
 
 void TaskBarCreated() {
 	HICON hIcon;
@@ -104,12 +110,246 @@ void TaskBarCreated() {
 	Shell_NotifyIcon(NIM_ADD ,&SysTray);
 }
 
-LRESULT ECSubClassFunc(HWND hWnd,UINT Message,WPARAM wParam,LPARAM lParam)
-{
-   if (Message == WM_GETDLGCODE)
-       return DLGC_WANTALLKEYS;
 
-   return CallWindowProc((WNDPROC)lpfnOldWndProc, hWnd, Message, wParam, lParam);
+LRESULT RESubClassFunc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) {
+	POINT p;
+	RECT r;
+	DWORD start, end;
+	char string[500];
+
+	if (Message == WM_GETDLGCODE)
+	   return DLGC_WANTALLKEYS;
+
+	
+	if (Message == WM_CONTEXTMENU) {
+		p.x = GET_X_LPARAM(lParam);
+		p.y = GET_Y_LPARAM(lParam);
+		if (GET_X_LPARAM(lParam) == -1 && GET_Y_LPARAM(lParam) == -1) {
+			GetClientRect(hWnd, &r);
+			p.x = (int)((r.left + r.right)/2);
+			p.y = (int)((r.top + r.bottom)/2);
+			ClientToScreen(hWnd,&p);
+		}
+		if (!SendMessage(hWnd, EM_CANUNDO, 0, 0)) 
+			EnableMenuItem(hContext, IDM_UNDO, MF_BYCOMMAND|MF_GRAYED);
+		else
+			EnableMenuItem(hContext, IDM_UNDO, MF_BYCOMMAND|MF_ENABLED);
+		if (!SendMessage(hWnd, EM_CANPASTE, 0, 0)) 
+			EnableMenuItem(hContext, IDM_PASTE, MF_BYCOMMAND|MF_GRAYED);
+		else
+			EnableMenuItem(hContext, IDM_PASTE, MF_BYCOMMAND|MF_ENABLED);
+		if (GetWindowLong(hWnd, GWL_STYLE) & ES_READONLY) {
+			EnableMenuItem(hContext, IDM_CUT, MF_BYCOMMAND|MF_GRAYED);
+			EnableMenuItem(hContext, IDM_DELETE, MF_BYCOMMAND|MF_GRAYED);
+		}
+		else {
+			EnableMenuItem(hContext, IDM_CUT, MF_BYCOMMAND|MF_ENABLED);
+			EnableMenuItem(hContext, IDM_DELETE, MF_BYCOMMAND|MF_ENABLED);
+		}
+		SendMessage(hWnd, EM_GETSEL, (WPARAM)&start, (LPARAM)&end);
+		if (start == end) 
+			EnableMenuItem(hContext, IDM_COPY, MF_BYCOMMAND|MF_GRAYED);
+		else
+			EnableMenuItem(hContext, IDM_COPY, MF_BYCOMMAND|MF_ENABLED);
+			TrackPopupMenu(hContext,TPM_LEFTALIGN|TPM_RIGHTBUTTON,p.x,p.y,0,GetParent(hWnd),NULL);
+			return 0;
+	}
+
+	return CallWindowProc((WNDPROC)lpfnOldWndProc, hWnd, Message, wParam, lParam);
+}
+
+/* Somewhat respectable RTF to IRC parser
+ * (c) 2001 codemastr
+ */
+
+DWORD CALLBACK RTFToIRC(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb) {
+	int fd = (int)dwCookie;
+	int fd2;
+	char *buffer = (char *)malloc(cb);
+	int i = 0, j = 0, k = 0, start = 0, end = 0;
+	int incolor = 0, bold = 0, uline = 0;
+	char cmd[15], value[500], color[25], colorbuf[4];
+	char colors[16];
+	fd2 = open("temp.txt", _O_TRUNC|_O_CREAT|_O_WRONLY|_O_BINARY,_S_IWRITE);
+	write(fd2, pbBuff, cb);
+	close(fd2);
+	pbBuff++;
+	bzero(buffer, cb);
+	for (; *pbBuff; pbBuff++) {
+		if (*pbBuff == '\r' || *pbBuff == '\n')
+			continue;
+		if (*pbBuff == '{' || *pbBuff == '}')
+			continue;
+		if (*pbBuff == '\\') {
+			pbBuff++;
+			if (*pbBuff == '\\') {
+				buffer[i] = '\\';
+				i++;
+				continue;
+			}
+			if (*pbBuff == '{') {
+				buffer[i] = '{';
+				i++;
+				continue;
+			}
+			if (*pbBuff == '}') {
+				buffer[i] = '}';
+				i++;
+				continue;
+			}
+
+			value[0] = cmd[0] = 0;
+			for (j = k = start = end = 0;
+				*pbBuff && *pbBuff != '\\' && *pbBuff != '\r' && *pbBuff != '\n';
+				pbBuff++) {
+					if (*pbBuff == '{') {
+						start++;
+						pbBuff++;
+						for (; *pbBuff; pbBuff++) {
+							if (*pbBuff == '{')
+								start++;
+							if (*pbBuff == '}') {
+								end++;
+								if (start == end) {
+									pbBuff++;
+									break;
+								}
+							}
+							value[k] = *pbBuff;
+							k++;
+						}
+						break;
+					}
+				if (*pbBuff == ' ') {
+					pbBuff++;
+					break;
+				}
+
+					cmd[j] = *pbBuff;
+					j++;
+			}
+				cmd[j] = 0;
+				value[k] = 0;
+				if (!strcmp(cmd, "par")) {
+					if (bold) 
+						buffer[i++] = '\2';
+					if (uline)
+						buffer[i++] = '\37';
+					if (incolor)
+						buffer[i++] = '\3';
+					buffer[i++] = '\r';
+					buffer[i++] = '\n';
+					if (bold)
+						buffer[i++] = '\2';
+					if (uline)
+						buffer[i++] = '\37';
+					if (incolor) {
+						strcat(buffer, colorbuf);
+						i += strlen(colorbuf);
+					}
+				}
+				else if (!strcmp(cmd, "tab"))
+					buffer[i++] = '\t';
+				else if (!strcmp(cmd, "b")) {
+					bold = 1;
+					buffer[i++] = '\2';
+				}
+				else if (!strcmp(cmd, "b0")) {
+					bold = 0;
+					buffer[i++] = '\2';
+				}
+
+				else if (!strcmp(cmd, "ul")) { 
+					uline = 1;
+					buffer[i++] = '\37';
+				}
+				else if (!strcmp(cmd, "ulnone")) {
+					uline = 0;
+					buffer[i++] = '\37';
+				}
+				else if (!strcmp(cmd, "colortbl")) {
+					int l = 0, m = 0;
+					color[0] = 0;
+					pbBuff++;
+					for (; *pbBuff && *pbBuff != '}'; pbBuff++) {
+						if (*pbBuff != ';') {
+							color[l] = *pbBuff;
+							l++;
+						}
+						else {
+							color[l] = 0;
+							l = 0;
+							m++;
+							if (!strcmp(color, "\\red255\\green255\\blue255"))
+								colors[m] = 0;
+							else if (!strcmp(color, "\\red0\\green0\\blue0"))
+								colors[m] = 1;
+							else if (!strcmp(color, "\\red0\\green0\\blue127"))
+								colors[m] = 2;
+							else if (!strcmp(color, "\\red0\\green147\\blue0"))
+								colors[m] = 3;
+							else if (!strcmp(color, "\\red255\\green0\\blue0"))
+								colors[m] = 4;
+							else if (!strcmp(color, "\\red127\\green0\\blue0"))
+								colors[m] = 5;
+							else if (!strcmp(color, "\\red156\\green0\\blue156"))
+								colors[m] = 6;
+							else if (!strcmp(color, "\\red252\\green127\\blue0"))
+								colors[m] = 7;
+							else if (!strcmp(color, "\\red255\\green255\\blue0"))
+								colors[m] = 8;
+							else if (!strcmp(color, "\\red0\\green252\\blue0"))
+								colors[m] = 9;
+							else if (!strcmp(color, "\\red0\\green147\\blue147"))
+								colors[m] = 10;
+							else if (!strcmp(color, "\\red0\\green255\\blue255"))
+								colors[m] = 11;
+							else if (!strcmp(color, "\\red0\\green0\\blue252"))
+								colors[m] = 12;
+							else if (!strcmp(color, "\\red255\\green0\\blue255"))
+								colors[m] = 13;
+							else if (!strcmp(color, "\\red127\\green127\\blue127"))
+								colors[m] = 14;
+							else if (!strcmp(color, "\\red210\\green210\\blue210")) 
+								colors[m] = 15;
+						}
+					}
+					pbBuff++;
+				}
+				else if (!strcmp(cmd, "f1")) {
+					write(fd, buffer, i);
+					close(fd);
+					return 0;
+				}
+				else if (!strcmp(cmd, "cf0")) {
+					incolor = 0;
+					buffer[i++] = '\3';
+					colorbuf[0] = 0;
+				}
+				else if (!strncmp(cmd, "cf", 2)) {
+					char number[3];
+					int num = 0;
+					incolor = 1;
+					strcpy(number, &cmd[2]);
+					num = atoi(number);
+					buffer[i++] = '\3';
+					sprintf(number, "%d", colors[num]);
+					sprintf(colorbuf, "\3%s", number);
+					strcat(buffer, number);
+					i += strlen(number);
+				}
+				pbBuff--;
+				continue;
+		}
+		else {
+			buffer[i] = *pbBuff;
+			i++;
+		}
+	}
+	write(fd, buffer, i);
+	close(fd);
+
+	return 0;
 }
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -119,17 +359,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	HWND hWnd;
 	WSADATA WSAData;
 	HICON hIcon;
-	char regbuf[128];
 
 	WM_TASKBARCREATED = RegisterWindowMessage("TaskbarCreated");
-
 	atexit(CleanUp);
 	if(!LoadLibrary("riched20.dll"))
 		LoadLibrary("riched32.dll");
 	InitStackTraceLibrary();
     if (WSAStartup(MAKEWORD(1, 1), &WSAData) != 0)
     {
-        MessageBox(NULL, "UnrealIRCD/32 Initalization Error", "Unable to initialize WinSock", MB_OK);
+        MessageBox(NULL, "Unable to initialize WinSock", "UnrealIRCD Initalization Error", MB_OK);
         return FALSE;
     }
 	hInst = hInstance; 
@@ -141,15 +379,19 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 	if (InitwIRCD(__argc, __argv) != 1)
 	{
-		MessageBox(NULL,"UnrealIRCd has failed to initialize in InitwIRCD()","Error:",MB_OK);
+		MessageBox(NULL, "UnrealIRCd has failed to initialize in InitwIRCD()", "UnrealIRCD Initalization Error" ,MB_OK);
 		return FALSE;
 	}
 
-	hMainThread = (HANDLE) _beginthread(SocketLoop, 0, NULL);
+	hMainThread = (HANDLE)_beginthread(SocketLoop, 0, NULL);
 	while (GetMessage(&msg, NULL, 0, 0))
     {
-		TranslateMessage(&msg);
-        DispatchMessage(&msg);
+		if (hWndMod == msg.hwnd) 
+			MessageBox(NULL, "yea", "yea", MB_OK);
+		if (hWndMod == NULL || !IsDialogMessage(hWndMod, &msg)) {
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
     }
 	return FALSE;
 
@@ -174,6 +416,7 @@ static HMENU hRehash, hAbout, hConfig, hTray;
 			{
 			case WM_INITDIALOG: {
 				hCursor = LoadCursor(hInst, MAKEINTRESOURCE(CUR_HAND));
+				hContext = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_CONTEXT)),0);
 				/* Rehash popup menu */
 				hRehash = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(MENU_REHASH)),0);
 				/* About popup menu */
@@ -369,97 +612,71 @@ static HMENU hRehash, hAbout, hConfig, hTray;
 }
 
 LRESULT CALLBACK LicenseDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
-	switch (message) {
-		case WM_INITDIALOG: {
-			char	String[16384], **s = gnulicense;
-			SetWindowText(hDlg, "UnrealIRCd License");
-			String[0] = 0;
-			sprintf(String, "{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0\\fmodern\\fprq1\\"
-				"fcharset0 Fixedsys;} {\\f1\\fnil\\fcharset0 Times New Roman;}}\r\n"
-				MIRC_COLORS
-				"\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20");
-			while (*s)
-			    {
-				strcat(String, ParseCodes(*s++));
-				if (*s)
-					strcat(String, "\\par\r\n");
-			    }
-			strcat(String, "\\f1\\par\r\n}");
-			SetDlgItemText(hDlg, IDC_TEXT, String);
-			
-			return (TRUE);
-			}
-		case WM_COMMAND:
-			if (LOWORD(wParam) == IDOK)
-				EndDialog(hDlg, TRUE);
-			break;
-		case WM_CLOSE:
-			EndDialog(hDlg, TRUE);
-			break;
-		case WM_DESTROY:
-			break;
-		}
-	return (FALSE);
+	return FromVarDLG(hDlg, message, wParam, lParam, "UnrealIRCd License", gnulicense);
 }
 
 LRESULT CALLBACK CreditsDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
-	switch (message) {
-		case WM_INITDIALOG: {
-			char	String[16384], **s = unrealcredits;
-			SetWindowText(hDlg, "UnrealIRCd Credits");
-			sprintf(String, "{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0\\fmodern\\fprq1\\"
-				"fcharset0 Fixedsys;} {\\f1\\fnil\\fcharset0 Times New Roman;}}\r\n"
-				MIRC_COLORS
-				"\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20");
-			while (*s)
-			    {
-				strcat(String, ParseCodes(*s++));
-				if (*s)
-					strcat(String, "\\par\r\n");
-			    }
-			strcat(String, "\\f1\\par\r\n}");
-			SetDlgItemText(hDlg, IDC_TEXT, String);
-			return (TRUE);
-			}
-		case WM_COMMAND:
-			if (LOWORD(wParam) == IDOK)
-				EndDialog(hDlg, TRUE);
-			break;
-		case WM_CLOSE:
-			EndDialog(hDlg, TRUE);
-			break;
-		case WM_DESTROY:
-			break;
-		}
-	return (FALSE);
+	return FromVarDLG(hDlg, message, wParam, lParam, "UnrealIRCd Credits", unrealcredits);
 }
 
 LRESULT CALLBACK DalDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
+	return FromVarDLG(hDlg, message, wParam, lParam, "UnrealIRCd DALnet Credits", dalinfotext);
+}
+
+LRESULT CALLBACK FromVarDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam, char *title, char **s) {
+	HWND hWnd;
 	switch (message) {
 		case WM_INITDIALOG: {
-			char	String[16384], **s = dalinfotext;
-			SetWindowText(hDlg, "UnrealIRCd DALnet Credits");
-			String[0] = 0;
-			sprintf(String, "{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0\\fmodern\\fprq1\\"
-				"fcharset0 Fixedsys;} {\\f1\\fnil\\fcharset0 Times New Roman;}}\r\n"
-				MIRC_COLORS
-				"\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20");
-			while (*s)
-			    {
-				strcat(String, ParseCodes(*s++));
+			char	String[16384];
+			char *RTFString;
+			SetWindowText(hDlg, title);
+			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_TEXT), GWL_WNDPROC, (DWORD)RESubClassFunc);
+			while (*s) {
+				strcat(String, *s++);
 				if (*s)
-					strcat(String, "\\par\r\n");
+					strcat(String, "\r\n");
 			    }
-			strcat(String, "\\f1\\par\r\n}");
-			SetDlgItemText(hDlg, IDC_TEXT, String);
-			
+			RTFString = malloc(CountRTFSize(String)+1);
+			IRCToRTF(String,RTFString);
+
+			SetDlgItemText(hDlg, IDC_TEXT, RTFString);
+			free(RTFString);	
 
 			return (TRUE);
 			}
-		case WM_COMMAND:
-			if (LOWORD(wParam) == IDOK)
-				EndDialog(hDlg, TRUE);
+
+		case WM_COMMAND: {
+			hWnd = GetDlgItem(hDlg, IDC_TEXT);
+		if (LOWORD(wParam) == IDOK)
+				return EndDialog(hDlg, TRUE);
+		if (LOWORD(wParam) == IDM_COPY) {
+			SendMessage(hWnd, WM_COPY, 0, 0);
+			return 0;
+		}
+		if (LOWORD(wParam) == IDM_SELECTALL) {
+			SendMessage(hWnd, EM_SETSEL, 0, -1);
+			return 0;
+		}
+		if (LOWORD(wParam) == IDM_PASTE) {
+			SendMessage(hWnd, WM_PASTE, 0, 0);
+			return 0;
+		}
+		if (LOWORD(wParam) == IDM_CUT) {
+			SendMessage(hWnd, WM_CUT, 0, 0);
+			return 0;
+		}
+		if (LOWORD(wParam) == IDM_UNDO) {
+			SendMessage(hWnd, EM_UNDO, 0, 0);
+			return 0;
+		}
+		if (LOWORD(wParam) == IDM_DELETE) {
+			SendMessage(hWnd, WM_CLEAR, 0, 0);
+			return 0;
+		}
+
+
 			break;
+		}
 		case WM_CLOSE:
 			EndDialog(hDlg, TRUE);
 			break;
@@ -468,6 +685,7 @@ LRESULT CALLBACK DalDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 		}
 	return (FALSE);
 }
+
 
 LRESULT CALLBACK HelpDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 	static HBRUSH hBrush;
@@ -485,38 +703,26 @@ LRESULT CALLBACK HelpDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
 		case WM_CTLCOLORSTATIC: 
 			if ((GetDlgItem(hDlg, IDC_URL) == (HWND)lParam) 
 				|| (GetDlgItem(hDlg, IDC_EMAIL) == (HWND)lParam)) {
-			SetBkColor((HDC)wParam, GetSysColor(COLOR_3DFACE));
-			SetTextColor((HDC)wParam, RGB(0,0,255));
+				SetBkMode((HDC)wParam, TRANSPARENT);
+				SetTextColor((HDC)wParam, RGB(0,0,255));
 			return (DWORD)hBrush;
 			}
 			break;
 		/* Ugly code to make it change the cursor over a link */
 		case WM_MOUSEMOVE: {
-			POINT p, p2, p3;
+			POINT p;
 			RECT r;
 			p.x = LOWORD(lParam);
 			p.y = HIWORD(lParam);
 			GetClientRect(GetDlgItem(hDlg, IDC_URL),&r);
-			p2.x = r.left;
-			p2.y = r.top;
-			p3.x = r.right;
-			p3.y = r.bottom;
-			MapWindowPoints(GetDlgItem(hDlg, IDC_URL),hDlg, &p2, 1);
-			MapWindowPoints(GetDlgItem(hDlg, IDC_URL),hDlg, &p3, 1);
-
-			if ((p.x >= p2.x) && (p.x <= p3.x) && (p.y <= p3.y) && (p.y >= p2.y)) {
+			MapWindowPoints(GetDlgItem(hDlg, IDC_URL),hDlg, &r, 2);
+			if ((p.x >= r.left) && (p.x <= r.right) && (p.y <= r.bottom) && (p.y >= r.top)) {
 				SetCursor(hCursor);
 				return 0;
 			}
 			GetClientRect(GetDlgItem(hDlg, IDC_EMAIL),&r);
-			p2.x = r.left;
-			p2.y = r.top;
-			p3.x = r.right;
-			p3.y = r.bottom;
-			MapWindowPoints(GetDlgItem(hDlg, IDC_EMAIL),hDlg, &p2, 1);
-			MapWindowPoints(GetDlgItem(hDlg, IDC_EMAIL),hDlg, &p3, 1);
-
-			if ((p.x >= p2.x) && (p.x <= p3.x) && (p.y <= p3.y) && (p.y >= p2.y)) {
+			MapWindowPoints(GetDlgItem(hDlg, IDC_EMAIL),hDlg, &r, 2);
+			if ((p.x >= r.left) && (p.x <= r.right) && (p.y <= r.bottom) && (p.y >= r.top)) {
 				SetCursor(hCursor);
 				return 0;
 			}
@@ -525,33 +731,21 @@ LRESULT CALLBACK HelpDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
 		}
 		/* Ugly code to simulate a link by opening the browser/email program */
 		case WM_LBUTTONDOWN: {
-			POINT p, p2, p3;
+			POINT p;
 			RECT r;
 			p.x = LOWORD(lParam);
 			p.y = HIWORD(lParam);
 			GetClientRect(GetDlgItem(hDlg, IDC_URL),&r);
-			p2.x = r.left;
-			p2.y = r.top;
-			p3.x = r.right;
-			p3.y = r.bottom;
-			MapWindowPoints(GetDlgItem(hDlg, IDC_URL),hDlg, &p2, 1);
-			MapWindowPoints(GetDlgItem(hDlg, IDC_URL),hDlg, &p3, 1);
-
-			if ((p.x >= p2.x) && (p.x <= p3.x) && (p.y <= p3.y) && (p.y >= p2.y)) {
+			MapWindowPoints(GetDlgItem(hDlg, IDC_URL),hDlg, &r, 2);
+			if ((p.x >= r.left) && (p.x <= r.right) && (p.y <= r.bottom) && (p.y >= r.top)) {
 				ShellExecute(NULL, "open", "http://www.unrealircd.com", NULL, NULL,
 					SW_MAXIMIZE);
 				EndDialog(hDlg, TRUE);
 				return 0;
 			}
 			GetClientRect(GetDlgItem(hDlg, IDC_EMAIL),&r);
-			p2.x = r.left;
-			p2.y = r.top;
-			p3.x = r.right;
-			p3.y = r.bottom;
-			MapWindowPoints(GetDlgItem(hDlg, IDC_EMAIL),hDlg, &p2, 1);
-			MapWindowPoints(GetDlgItem(hDlg, IDC_EMAIL),hDlg, &p3, 1);
-
-			if ((p.x >= p2.x) && (p.x <= p3.x) && (p.y <= p3.y) && (p.y >= p2.y)) {
+			MapWindowPoints(GetDlgItem(hDlg, IDC_EMAIL),hDlg, &r, 2);
+			if ((p.x >= r.left) && (p.x <= r.right) && (p.y <= r.bottom) && (p.y >= r.top)) {
 				ShellExecute(NULL, "open", "mailto:unreal-dev@lists.sourceforge.net", NULL,
 					NULL, SW_MAXIMIZE);
 				EndDialog(hDlg, TRUE);
@@ -577,238 +771,251 @@ LRESULT CALLBACK HelpDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
 }
 
 LRESULT CALLBACK ConfigDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
-	switch (message) {
-		case WM_INITDIALOG: {
-			int fd,len;
-			char *buffer = '\0';
-			struct stat sb;
-			SetWindowText(hDlg, "UnrealIRCd Configuration File");
-			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_TEXT), GWL_WNDPROC, (DWORD)ECSubClassFunc);
-
-			if ((fd = open(CPATH, _O_RDONLY|_O_BINARY)) != -1) {
-				fstat(fd,&sb);
-				/* Only allocate the amount we need */
-				buffer = (char *)malloc(sb.st_size+1);
-				buffer[0] = 0;
-				len = read(fd, buffer, sb.st_size);
-				buffer[len] = 0;
-				SetDlgItemText(hDlg, IDC_TEXT, buffer);
-				close(fd);
-				free(buffer);
-			}
-			return (TRUE);
-			}
-		case WM_COMMAND:
-			if (LOWORD(wParam) == IDCANCEL)
-				EndDialog(hDlg, TRUE);
-			if (LOWORD(wParam) == IDOK) {
-				int fd, len;
-				char *buffer = '\0';
-				len = SendMessage(GetDlgItem(hDlg, IDC_TEXT), WM_GETTEXTLENGTH, 0, 0);
-				len++;
-				/* Again, only allocate the amount we need */
-				buffer = (char *)malloc(len);
-				GetDlgItemText(hDlg, IDC_TEXT, buffer, len);
-				fd = open(CPATH, _O_TRUNC|_O_CREAT|_O_WRONLY|_O_BINARY,_S_IWRITE);
-				write(fd, buffer, len);
-				close(fd);
-				free(buffer);
-				EndDialog(hDlg, TRUE);
-			}
-
-			break;
-		case WM_CLOSE:
-			EndDialog(hDlg, TRUE);
-			break;
-		}
-	return (FALSE);
+	return FromFileDLG(hDlg, message, wParam, lParam, "UnrealIRCd Configuration File", CPATH);
 }
 
 LRESULT CALLBACK MotdDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
-	static struct stat sb;
-	switch (message) {
-		case WM_INITDIALOG: {
-			int fd,len;
-			char *buffer = '\0';
-			SetWindowText(hDlg, "UnrealIRCd MOTD File");
-			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_TEXT), GWL_WNDPROC, (DWORD)ECSubClassFunc);
-			if ((fd = open(MPATH, _O_RDONLY|_O_BINARY)) != -1) {
-				fstat(fd,&sb);
-				/* Only allocate the amount we need */
-				buffer = (char *)malloc(sb.st_size+1);
-				buffer[0] = 0;
-				len = read(fd, buffer, sb.st_size);
-				buffer[len] = 0;
-				SetDlgItemText(hDlg, IDC_TEXT, buffer);
-				close(fd);
-				free(buffer);
-			}
-			return (TRUE);
-			}
-		case WM_COMMAND:
-			if (LOWORD(wParam) == IDCANCEL)
-				EndDialog(hDlg, TRUE);
-			if (LOWORD(wParam) == IDOK) {
-				int fd, len;
-				char *buffer = '\0';
-				len = SendMessage(GetDlgItem(hDlg, IDC_TEXT), WM_GETTEXTLENGTH, 0, 0);
-				len++;
-				/* Again, only allocate the amount we need */
-				buffer = (char *)malloc(len);
-				GetDlgItemText(hDlg, IDC_TEXT, buffer, len);
-				fd = open(MPATH, _O_TRUNC|_O_CREAT|_O_WRONLY|_O_BINARY,_S_IWRITE);
-				write(fd, buffer, len);
-				close(fd);
-				free(buffer);
-				EndDialog(hDlg, TRUE);
-			}
-
-			break;
-		case WM_CLOSE:
-			EndDialog(hDlg, TRUE);
-			break;
-		}
-	return (FALSE);
+	return FromFileDLG(hDlg, message, wParam, lParam, "UnrealIRCd MOTD File", MPATH);
 }
 
 LRESULT CALLBACK OperMotdDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
-	static struct stat sb;
-	switch (message) {
-		case WM_INITDIALOG: {
-			int fd,len;
-			char *buffer = '\0';
-			SetWindowText(hDlg, "UnrealIRCd OperMOTD File");
-			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_TEXT), GWL_WNDPROC, (DWORD)ECSubClassFunc);
-			if ((fd = open(OPATH, _O_RDONLY|_O_BINARY)) != -1) {
-				fstat(fd,&sb);
-				/* Only allocate the amount we need */
-				buffer = (char *)malloc(sb.st_size+1);
-				buffer[0] = 0;
-				len = read(fd, buffer, sb.st_size);
-				buffer[len] = 0;
-				SetDlgItemText(hDlg, IDC_TEXT, buffer);
-				close(fd);
-				free(buffer);
-			}
-			return (TRUE);
-			}
-		case WM_COMMAND:
-			if (LOWORD(wParam) == IDCANCEL)
-				EndDialog(hDlg, TRUE);
-			if (LOWORD(wParam) == IDOK) {
-				int fd, len;
-				char *buffer = '\0';
-				len = SendMessage(GetDlgItem(hDlg, IDC_TEXT), WM_GETTEXTLENGTH, 0, 0);
-				len++;
-				/* Again, only allocate the amount we need */
-				buffer = (char *)malloc(len);
-				GetDlgItemText(hDlg, IDC_TEXT, buffer, len);
-				fd = open(OPATH, _O_TRUNC|_O_CREAT|_O_WRONLY|_O_BINARY,_S_IWRITE);
-				write(fd, buffer, len);
-				close(fd);
-				free(buffer);
-				EndDialog(hDlg, TRUE);
-			}
-
-			break;
-		case WM_CLOSE:
-			EndDialog(hDlg, TRUE);
-			break;
-		}
-	return (FALSE);
+	return FromFileDLG(hDlg, message, wParam, lParam, "UnrealIRCd OperMOTD File", OPATH);
 }
 
 LRESULT CALLBACK BotMotdDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
-	static struct stat sb;
-	switch (message) {
-		case WM_INITDIALOG: {
-			int fd,len;
-			char *buffer = '\0';
-			SetWindowText(hDlg, "UnrealIRCd BotMOTD File");
-			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_TEXT), GWL_WNDPROC, (DWORD)ECSubClassFunc);
-			if ((fd = open(BPATH, _O_RDONLY|_O_BINARY)) != -1) {
-				fstat(fd,&sb);
-				/* Only allocate the amount we need */
-				buffer = (char *)malloc(sb.st_size+1);
-				buffer[0] = 0;
-				len = read(fd, buffer, sb.st_size);
-				buffer[len] = 0;
-				SetDlgItemText(hDlg, IDC_TEXT, buffer);
-				close(fd);
-				free(buffer);
-			}
-			return (TRUE);
-			}
-		case WM_COMMAND:
-			if (LOWORD(wParam) == IDCANCEL)
-				EndDialog(hDlg, TRUE);
-			if (LOWORD(wParam) == IDOK) {
-				int fd, len;
-				char *buffer = '\0';
-				len = SendMessage(GetDlgItem(hDlg, IDC_TEXT), WM_GETTEXTLENGTH, 0, 0);
-				len++;
-				/* Again, only allocate the amount we need */
-				buffer = (char *)malloc(len);
-				GetDlgItemText(hDlg, IDC_TEXT, buffer, len);
-				fd = open(BPATH, _O_TRUNC|_O_CREAT|_O_WRONLY|_O_BINARY,_S_IWRITE);
-				write(fd, buffer, len);
-				close(fd);
-				free(buffer);
-				EndDialog(hDlg, TRUE);
-			}
-
-			break;
-		case WM_CLOSE:
-			EndDialog(hDlg, TRUE);
-			break;
-		}
-	return (FALSE);
+	return FromFileDLG(hDlg, message, wParam, lParam, "UnrealIRCd BotMOTD File", BPATH);
 }
 
 LRESULT CALLBACK RulesDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
-	static struct stat sb;
+	return FromFileDLG(hDlg, message, wParam, lParam, "UnrealIRCd Rules File", RPATH);
+}
+
+LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam, char *title, char *file) {
+	HWND hWnd;
+	CHARFORMAT2 chars;
+	static HFONT hFont, hFont2, hFont3;
+	static HBRUSH hBrush;
+	static FINDREPLACE find;
 	switch (message) {
 		case WM_INITDIALOG: {
 			int fd,len;
-			char *buffer = '\0';
-			SetWindowText(hDlg, "UnrealIRCd Rules File");
-			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_TEXT), GWL_WNDPROC, (DWORD)ECSubClassFunc);
-			if ((fd = open(RPATH, _O_RDONLY|_O_BINARY)) != -1) {
+			char *buffer = '\0', *string = '\0';
+			struct stat sb;
+			SetWindowText(hDlg, title);
+			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_TEXT), GWL_WNDPROC, (DWORD)RESubClassFunc);
+			hFont = CreateFont(8,0,0,0,FW_HEAVY,0,0,0,ANSI_CHARSET,0,0,PROOF_QUALITY,0,"MS Sans Serif");
+			hFont2 = CreateFont(8,0,0,0,FW_BOLD,0,1,0,ANSI_CHARSET,0,0,PROOF_QUALITY,0,"MS Sans Serif");
+			hFont3 = CreateFont(8,0,0,0,FW_BOLD,0,0,0,ANSI_CHARSET,0,0,PROOF_QUALITY,0,"MS Sans Serif");
+			hBrush = GetSysColorBrush(COLOR_BTNFACE);
+			SendMessage(GetDlgItem(hDlg, IDC_BOLD), WM_SETFONT, (WPARAM)hFont,TRUE);
+			SendMessage(GetDlgItem(hDlg, IDC_UNDERLINE), WM_SETFONT, (WPARAM)hFont2,TRUE);
+			SendMessage(GetDlgItem(hDlg, IDC_COLOR), WM_SETFONT, (WPARAM)hFont3,TRUE);
+			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_SETEVENTMASK, 0, (LPARAM)ENM_SELCHANGE);
+			if ((fd = open(file, _O_RDONLY|_O_BINARY)) != -1) {
 				fstat(fd,&sb);
 				/* Only allocate the amount we need */
 				buffer = (char *)malloc(sb.st_size+1);
 				buffer[0] = 0;
 				len = read(fd, buffer, sb.st_size);
 				buffer[len] = 0;
-				SetDlgItemText(hDlg, IDC_TEXT, buffer);
+				len = CountRTFSize(buffer)+1;
+				string = (char *)malloc(len);
+				bzero(string,len);
+				IRCToRTF(buffer,string);
+				SetDlgItemText(hDlg, IDC_TEXT, string);
 				close(fd);
 				free(buffer);
+				free(string);
 			}
 			return (TRUE);
 			}
+		case WM_NOTIFY:
+			if (((NMHDR *)lParam)->code == EN_SELCHANGE) {
+				chars.cbSize = sizeof(CHARFORMAT2);
+				SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_GETCHARFORMAT, (WPARAM)SCF_SELECTION, (LPARAM)&chars);
+				if (chars.dwMask & CFM_BOLD && chars.dwEffects & CFE_BOLD)
+					CheckDlgButton(hDlg, IDC_BOLD, BST_CHECKED);
+				else
+					CheckDlgButton(hDlg, IDC_BOLD, BST_UNCHECKED);
+				if (chars.dwMask & CFM_UNDERLINE && chars.dwEffects & CFE_UNDERLINE)
+					CheckDlgButton(hDlg, IDC_UNDERLINE, BST_CHECKED);
+				else
+					CheckDlgButton(hDlg, IDC_UNDERLINE, BST_UNCHECKED);
+				return (TRUE);
+			}
+		case WM_DRAWITEM: {
+			LPDRAWITEMSTRUCT lpdis = (LPDRAWITEMSTRUCT)lParam;
+
+			if (wParam == IDC_COLOR) {
+				RECT focus, caption;
+				char text[5];
+				COLORREF oldcolor, oldbg;
+				GetWindowText(GetDlgItem(hDlg, IDC_COLOR), text, 5);
+				DrawFrameControl(lpdis->hDC, &lpdis->rcItem, DFC_BUTTON, DFCS_BUTTONPUSH);
+				oldcolor = SetTextColor(lpdis->hDC, RGB(0,0,255));
+				SetBkMode(lpdis->hDC, TRANSPARENT);
+				DrawText(lpdis->hDC, text, strlen(text), &lpdis->rcItem, DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+				SetTextColor(lpdis->hDC, oldcolor);
+				if (lpdis->itemState & ODS_FOCUS) {
+					if (lpdis->itemState & ODS_SELECTED) {
+						DrawFrameControl(lpdis->hDC, &lpdis->rcItem, DFC_BUTTON, DFCS_BUTTONPUSH|DFCS_PUSHED);
+						CopyRect(&caption, &lpdis->rcItem);
+						caption.left += 1;
+						caption.top += 1;
+						oldcolor = SetTextColor(lpdis->hDC, RGB(0,0,255));
+						SetBkMode(lpdis->hDC, TRANSPARENT);
+						DrawText(lpdis->hDC, text, strlen(text), &caption, DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+						SetTextColor(lpdis->hDC, oldcolor);
+					}
+					CopyRect(&focus, &lpdis->rcItem);
+					focus.left += 2;
+					focus.right -= 2;
+					focus.top += 2;
+					focus.bottom -= 2;
+					DrawFocusRect(lpdis->hDC, &focus);
+				}
+				else if (lpdis->itemState & ODS_DISABLED) 
+					DrawFrameControl(lpdis->hDC, &lpdis->rcItem, DFC_BUTTON, DFCS_BUTTONPUSH|DFCS_INACTIVE);
+
+				return TRUE;
+			}
+		}
+
 		case WM_COMMAND:
-			if (LOWORD(wParam) == IDCANCEL)
-				EndDialog(hDlg, TRUE);
-			if (LOWORD(wParam) == IDOK) {
-				int fd, len;
-				char *buffer = '\0';
-				len = SendMessage(GetDlgItem(hDlg, IDC_TEXT), WM_GETTEXTLENGTH, 0, 0);
-				len++;
-				/* Again, only allocate the amount we need */
-				buffer = (char *)malloc(len);
-				GetDlgItemText(hDlg, IDC_TEXT, buffer, len);
-				fd = open(RPATH, _O_TRUNC|_O_CREAT|_O_WRONLY|_O_BINARY,_S_IWRITE);
-				write(fd, buffer, len);
-				close(fd);
-				free(buffer);
+			if (HIWORD(wParam) == BN_CLICKED && LOWORD(wParam) == IDC_BOLD) {
+				hWnd = GetDlgItem(hDlg, IDC_TEXT);
+				if (IsDlgButtonChecked(hDlg,IDC_BOLD) == BST_CHECKED) {
+					
+					chars.cbSize = sizeof(CHARFORMAT2);
+					chars.dwMask = CFM_BOLD;
+					chars.dwEffects = CFE_BOLD;
+					SendMessage(hWnd, EM_SETCHARFORMAT, (WPARAM)SCF_SELECTION, (LPARAM)&chars);
+					SendMessage(hWnd, EM_HIDESELECTION, 0, 0);
+					SetFocus(hWnd);
+				}
+				else {
+					chars.cbSize = sizeof(CHARFORMAT2);
+					chars.dwMask = CFM_BOLD;
+					SendMessage(hWnd, EM_SETCHARFORMAT, (WPARAM)SCF_SELECTION, (LPARAM)&chars);
+					SendMessage(hWnd, EM_HIDESELECTION, 0, 0);
+					SetFocus(hWnd);
+				}
+				break;
+
+			}
+			else if (HIWORD(wParam) == BN_CLICKED && LOWORD(wParam) == IDC_UNDERLINE) {
+				hWnd = GetDlgItem(hDlg, IDC_TEXT);
+				if (IsDlgButtonChecked(hDlg,IDC_UNDERLINE) == BST_CHECKED) {
+					chars.cbSize = sizeof(CHARFORMAT2);
+					chars.dwMask = CFM_UNDERLINETYPE;
+					chars.bUnderlineType = CFU_UNDERLINE;
+					SendMessage(hWnd, EM_SETCHARFORMAT, (WPARAM)SCF_SELECTION, (LPARAM)&chars);
+					SendMessage(hWnd, EM_HIDESELECTION, 0, 0);
+					SetFocus(hWnd);
+				}
+				else {
+					chars.cbSize = sizeof(CHARFORMAT2);
+					chars.dwMask = CFM_UNDERLINETYPE;
+					chars.bUnderlineType = CFU_UNDERLINENONE;
+					SendMessage(hWnd, EM_SETCHARFORMAT, (WPARAM)SCF_SELECTION, (LPARAM)&chars);
+					SendMessage(hWnd, EM_HIDESELECTION, 0, 0);
+					SetFocus(hWnd);
+				}
+				break;
+
+			}
+			if (LOWORD(wParam) == IDC_COLOR) 
+				DialogBoxParam(hInst, "Color", hDlg, (DLGPROC)ColorDLG, (LPARAM)WM_USER+10);
+			if (LOWORD(wParam) == IDCANCEL) {
+				char text[256];
+				int ans;
+				if (SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_GETMODIFY, 0, 0) != 0) {
+					sprintf(text, "The text in the %s file has changed.\r\n\r\nDo you want to save the changes?", file);
+					ans = MessageBox(hDlg, text, "UnrealIRCd", MB_YESNOCANCEL|MB_ICONWARNING);
+					if (ans == IDNO)
+						EndDialog(hDlg, TRUE);
+					if (ans == IDCANCEL)
+						break;
+					if (ans == IDYES)
+						SendMessage(hDlg, WM_COMMAND, MAKEWPARAM(IDOK,0), 0);
+				}
 				EndDialog(hDlg, TRUE);
 			}
+		if (LOWORD(wParam) == IDOK) {
+			int fd;
+			EDITSTREAM edit;
+			fd = open(file, _O_TRUNC|_O_CREAT|_O_WRONLY|_O_BINARY,_S_IWRITE);
+			edit.dwCookie = (DWORD)fd;
+			edit.pfnCallback = RTFToIRC;
+			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_SETSEL, -1, -1);
+			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_STREAMOUT, (WPARAM)SF_RTF|SFF_PLAINRTF, (LPARAM)&edit);
+			close(fd);
+			EndDialog(hDlg, TRUE);
+		}
+		hWnd = GetDlgItem(hDlg, IDC_TEXT);
+		if (LOWORD(wParam) == IDOK)
+			return EndDialog(hDlg, TRUE);
+		if (LOWORD(wParam) == IDM_COPY) {
+			SendMessage(hWnd, WM_COPY, 0, 0);
+			return 0;
+		}
+
+		if (LOWORD(wParam) == IDM_SELECTALL) {
+			SendMessage(hWnd, EM_SETSEL, 0, -1);
+			return 0;
+		}
+		if (LOWORD(wParam) == IDM_PASTE) {
+			SendMessage(hWnd, WM_PASTE, 0, 0);
+			return 0;
+		}
+		if (LOWORD(wParam) == IDM_CUT) {
+			SendMessage(hWnd, WM_CUT, 0, 0);
+			return 0;
+		}
+		if (LOWORD(wParam) == IDM_UNDO) {
+			SendMessage(hWnd, EM_UNDO, 0, 0);
+			return 0;
+		}
+		if (LOWORD(wParam) == IDM_DELETE) {
+			SendMessage(hWnd, WM_CLEAR, 0, 0);
+			return 0;
+		}
 
 			break;
-		case WM_CLOSE:
-			EndDialog(hDlg, TRUE);
+		case WM_USER+10: {
+			HWND hWnd = GetDlgItem(hDlg, IDC_TEXT);
+			EndDialog((HWND)lParam, TRUE);
+			chars.cbSize = sizeof(CHARFORMAT2);
+			chars.dwMask = CFM_COLOR;
+			chars.crTextColor = (COLORREF)wParam;
+			SendMessage(hWnd, EM_SETCHARFORMAT, (WPARAM)SCF_SELECTION, (LPARAM)&chars);
+			SendMessage(hWnd, EM_HIDESELECTION, 0, 0);
+			SetFocus(hWnd);
 			break;
 		}
+	
+		case WM_CLOSE: {
+			char text[256];
+			int ans;
+			if (SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_GETMODIFY, 0, 0) != 0) {
+				sprintf(text, "The text in the %s file has changed.\r\n\r\nDo you want to save the changes?", file);
+				ans = MessageBox(hDlg, text, "UnrealIRCd", MB_YESNOCANCEL|MB_ICONWARNING);
+				if (ans == IDNO)
+					EndDialog(hDlg, TRUE);
+				if (ans == IDCANCEL)
+					return TRUE;
+				if (ans == IDYES)
+					SendMessage(hDlg, WM_COMMAND, MAKEWPARAM(IDOK,0), 0);
+			}
+		}
+		case WM_DESTROY:
+			DeleteObject(hFont);
+			DeleteObject(hFont2);
+			DeleteObject(hFont3);
+			DeleteObject(hBrush);
+			break;
+		}
+
 	return (FALSE);
 }
 
@@ -819,7 +1026,6 @@ LRESULT CALLBACK StatusDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 				win_map(&me, hwTreeView, 0);
 				SetDlgItemInt(hDlg, IDC_CLIENTS, IRCstats.clients, FALSE);
 				SetDlgItemInt(hDlg, IDC_SERVERS, IRCstats.servers, FALSE);
-				SetDlgItemInt(hDlg, IDC_INVISO, IRCstats.invisible, FALSE);
 				SetDlgItemInt(hDlg, IDC_INVISO, IRCstats.invisible, FALSE);
 				SetDlgItemInt(hDlg, IDC_UNKNOWN, IRCstats.unknown, FALSE);
 				SetDlgItemInt(hDlg, IDC_OPERS, IRCstats.operators, FALSE);
@@ -867,143 +1073,334 @@ LRESULT CALLBACK StatusDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 	return (FALSE);
 }
 
-
-
-/* Parse bold and underline codes, also change { and } to RTF safe \{ and \}
- * (c) 2001 codemastr & McSkaf
- */
-
-static char *ParseCodes(char *buffer)
-{
-	static char tmp[512], out[512];
-	int  i = 0, j = 0, hascomma = 0, bold = 0, underline = 0, reverse = 0, firstcolordigit;
-
-	bzero((char *)out, sizeof(out));
-	memcpy(tmp, buffer, 512);
-
-	while (tmp[i])
-	{
-		if (tmp[i] == '\3') {
-			i++;
-			if (!isdigit(tmp[i])) {
-				j += 14;
-				strcat(out,"\\cf");
-				strcat(out,"\\highlight1");
-				continue;
+LRESULT CALLBACK ColorDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
+	static HBRUSH hBrushWhite, hBrushBlack, hBrushDarkBlue, hBrushDarkGreen, hBrushRed,
+		hBrushDarkRed, hBrushPurple, hBrushOrange, hBrushYellow, hBrushGreen, hBrushVDarkGreen,
+		hBrushLightBlue, hBrushBlue, hBrushPink, hBrushDarkGray, hBrushGray;
+	static UINT ResultMsg=0;
+	switch (message) {
+	case WM_INITDIALOG:
+		hBrushWhite = CreateSolidBrush(RGB(255,255,255));
+		hBrushBlack = CreateSolidBrush(RGB(0,0,0));
+		hBrushDarkBlue = CreateSolidBrush(RGB(0,0,127));
+		hBrushDarkGreen = CreateSolidBrush(RGB(0,147,0));
+		hBrushRed = CreateSolidBrush(RGB(255,0,0));
+		hBrushDarkRed = CreateSolidBrush(RGB(127,0,0));
+		hBrushPurple = CreateSolidBrush(RGB(156,0,156));
+		hBrushOrange = CreateSolidBrush(RGB(252,127,0));
+		hBrushYellow = CreateSolidBrush(RGB(255,255,0));
+		hBrushGreen = CreateSolidBrush(RGB(0,252,0));
+		hBrushVDarkGreen = CreateSolidBrush(RGB(0,147,147));
+		hBrushLightBlue = CreateSolidBrush(RGB(0,255,255));
+		hBrushBlue = CreateSolidBrush(RGB(0,0,252));
+		hBrushPink = CreateSolidBrush(RGB(255,0,255));
+		hBrushDarkGray = CreateSolidBrush(RGB(127,127,127));
+		hBrushGray = CreateSolidBrush(RGB(210,210,210));
+		ResultMsg = (UINT)lParam;
+		SetFocus(NULL);
+		return (TRUE);
+	case WM_DRAWITEM: {
+		UINT state = (UINT)wParam;
+		LPDRAWITEMSTRUCT lpdis = (LPDRAWITEMSTRUCT)lParam;
+		if (wParam == IDC_WHITE) {
+			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushWhite);
+			return TRUE;
 			}
-			strcat(out,"\\cf");
-			j += 3;
-			firstcolordigit = 1;
-			while (isdigit(tmp[i]))
-			{
-				if (firstcolordigit)
-				{
-					// need to reverse black and white color numbers
-					// mirc uses 0=white, 1=black but rtf is just the opposite
-					if (tmp[i] == '0')
-						tmp[i] = '1';
-					else if (tmp[i] == '1' && !isdigit(tmp[i+1]))
-						tmp[i] = '0';
-				}
-				firstcolordigit = 0;
-				out[j++] = tmp[i++];
-			}
-			// look for background color
-			if (tmp[i] == ',')
-			{
-				// prepare for background color
-				strcat(out, "\\highlight");
-				j += 10;
-				++i;
-				firstcolordigit = 1;
-				while (isdigit(tmp[i]))
-				{
-					if (firstcolordigit)
-					{
-						// need to reverse black and white color numbers
-						// mirc uses 0=white, 1=black but for background colors 
-						// rtf uses 0=off (white), 1=white so our color table
-						// specifies color number 16 as black.
-						if (tmp[i] == '0')	// white
-							tmp[i] = '1';
-						else if (tmp[i] == '1' && !isdigit(tmp[i+1]))  // black
-						{
-							tmp[i] = '6';
-							out[j++] = '1';
-						}
-					}
-					firstcolordigit = 0;
-					out[j++] = tmp[i++];
-				}
-			}
-			out[j++] = ' ';
-			continue;
+		if (wParam == IDC_BLACK) {
+			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushBlack);
+			return TRUE;
 		}
-
-		if (tmp[i] == '\022') {
-			reverse = ~reverse;
-			if (reverse) {
-				strcat(out, "\\cf1\\highlight16 ");
-				j += 17;
-			}
-			else {
-				strcat(out, "\\cf0\\highlight0 ");
-				j += 16;
-			}
-			++i;
-			continue;
+		if (wParam == IDC_DARKBLUE) {
+			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushDarkBlue);
+			return TRUE;
 		}
-
-
-		if (tmp[i] == '\037' || tmp[i] == '\031') {
-			if (!underline) {
-				strcat(out,"\\ul ");
-				j += 4;
-				underline = 1;
-			}
-			else if (underline) {
-				strcat(out, "\\ulnone ");
-				j += 8;
-				underline = 0;
-			}
-			i++;
-			continue;
+		if (wParam == IDC_DARKGREEN) {
+			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushDarkGreen);
+			return TRUE;
 		}
-		if (tmp[i] == '\2') {
-			if (!bold) {
-				strcat(out, "\\b ");
-				j += 3;
-				bold = 1;
-			}
-			else if (bold) {
-				strcat(out, "\\b0 ");
-				j += 4;
-				bold = 0;
-			}
-			i++;
-			continue;
+		if (wParam == IDC_RED) {
+			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushRed);
+			return TRUE;
 		}
-		if (tmp[i] == '{') {
-			strcat(out,"\\{");
-			j += 2;
-			i++;
-			continue;
+		if (wParam == IDC_DARKRED) {
+			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushDarkRed);
+			return TRUE;
 		}
-		if (tmp[i] == '}') {
-			strcat(out,"\\}");
-			j += 2;
-			i++;
-			continue;
+		if (wParam == IDC_PURPLE) {
+			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushPurple);
+			return TRUE;
 		}
-
-		out[j] = tmp[i];
-		i++;
-		j++;
+		if (wParam == IDC_ORANGE) {
+			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushOrange);
+			return TRUE;
+		}
+		if (wParam == IDC_YELLOW) {
+			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushYellow);
+			return TRUE;
+		}
+		if (wParam == IDC_GREEN) {
+			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushGreen);
+			return TRUE;
+		}
+		if (wParam == IDC_VDARKGREEN) {
+			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushVDarkGreen);
+			return TRUE;
+		}
+		if (wParam == IDC_LIGHTBLUE) {
+			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushLightBlue);
+			return TRUE;
+		}
+		if (wParam == IDC_BLUE) {
+			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushBlue);
+			return TRUE;
+		}
+		if (wParam == IDC_PINK) {
+			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushPink);
+			return TRUE;
+		}
+		if (wParam == IDC_DARKGRAY) {
+			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushDarkGray);
+			return TRUE;
+		}
+		if (wParam == IDC_GRAY) {
+			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushGray);
+			return TRUE;
+		}
+		}
+	case WM_COMMAND: {
+		COLORREF clrref;
+		if (LOWORD(wParam) == IDC_WHITE) 
+			clrref = RGB(255,255,255);
+		else if (LOWORD(wParam) == IDC_BLACK)
+			clrref = RGB(0,0,0);
+		else if (LOWORD(wParam) == IDC_DARKBLUE)
+			clrref = RGB(0,0,127);
+		else if (LOWORD(wParam) == IDC_DARKGREEN)
+			clrref = RGB(0,147,0);
+		else if (LOWORD(wParam) == IDC_RED)
+			clrref = RGB(255,0,0);
+		else if (LOWORD(wParam) == IDC_DARKRED)
+			clrref = RGB(127,0,0);
+		else if (LOWORD(wParam) == IDC_PURPLE)
+			clrref = RGB(156,0,156);
+		else if (LOWORD(wParam) == IDC_ORANGE)
+			clrref = RGB(252,127,0);
+		else if (LOWORD(wParam) == IDC_YELLOW)
+			clrref = RGB(255,255,0);
+		else if (LOWORD(wParam) == IDC_GREEN)
+			clrref = RGB(0,252,0);
+		else if (LOWORD(wParam) == IDC_VDARKGREEN)
+			clrref = RGB(0,147,147);
+		else if (LOWORD(wParam) == IDC_LIGHTBLUE)
+			clrref = RGB(0,255,255);
+		else if (LOWORD(wParam) == IDC_BLUE)
+			clrref = RGB(0,0,252);
+		else if (LOWORD(wParam) == IDC_PINK)
+			clrref = RGB(255,0,255);
+		else if (LOWORD(wParam) == IDC_DARKGRAY)
+			clrref = RGB(127,127,127);
+		else if (LOWORD(wParam) == IDC_GRAY)
+			clrref = RGB(210,210,210);
+		SendMessage(GetParent(hDlg), ResultMsg, (WPARAM)clrref, (LPARAM)hDlg);
 	}
-	return out;
 
+		break;
+	case WM_CLOSE:
+		EndDialog(hDlg, TRUE);
+	case WM_DESTROY:
+		DeleteObject(hBrushWhite);
+		DeleteObject(hBrushBlack);
+		DeleteObject(hBrushDarkBlue);
+		DeleteObject(hBrushDarkGreen);
+		DeleteObject(hBrushRed);
+		DeleteObject(hBrushDarkRed);
+		DeleteObject(hBrushPurple);
+		DeleteObject(hBrushOrange);
+		DeleteObject(hBrushYellow);
+		DeleteObject(hBrushGreen);
+		DeleteObject(hBrushVDarkGreen);
+		DeleteObject(hBrushLightBlue);
+		DeleteObject(hBrushBlue);
+		DeleteObject(hBrushPink);
+		DeleteObject(hBrushDarkGray);
+		DeleteObject(hBrushGray);
+		break;
+	}
+
+	return (FALSE);
 }
 
+
+/* find how big a buffer expansion we need for RTF transformation */
+int CountRTFSize(char *buffer) {
+	int size;
+	short bold = 0, uline = 0, reverse = 0;
+	char *buf = buffer;
+
+	for (; *buf; buf++) {
+		if (*buf == '{' || *buf == '}' || *buf == '\\') {
+			size++;
+			continue;
+		}
+		if (*buf == '\r') {
+			buf++;
+			if (*buf == '\n')
+				size += 4;
+		}
+		if (*buf == '\2') {
+			if (bold) 
+				size += 3;
+			else  
+				size += 2;
+			bold = ~bold;
+		}
+		if (*buf == '\3') {
+			char color[3];
+			int number;
+			size += 3;
+			if (!isdigit(*(buf+1)))
+				size += 12;
+			if (isdigit(*(buf+1))) {
+				color[0] = *(++buf);
+				color[1] = 0;
+				if (isdigit(*(buf+1)))
+					color[1] = *(++buf);
+				color[2] = 0;
+				number = atoi(color);
+				if (number > 15 && number != 99)
+					number %= 16;
+				if (number > 9)
+					size += 2;
+				else
+					size++;
+			}
+		}
+
+		if (*buf == '\37') {
+			if (uline)
+				size += 7;
+			else
+				size += 3;
+			uline = ~uline;
+		}
+		if (*buf == '\17') {
+			if (uline)
+				size += 7;
+			if (bold)
+				size += 3;
+			uline = bold = 0;
+		}
+	}
+	return (size+535);
+}
+
+void IRCToRTF(char *buffer, char *string) {
+	char *tmp = buffer;
+	int i = 0;
+	short bold = 0, uline = 0;
+	sprintf(string, "{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0\\fmodern\\fprq1\\"
+		"fcharset0 Fixedsys;} {\\f1\\fnil\\fcharset0 Times New Roman;}}\r\n"
+		MIRC_COLORS
+		"\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20");
+	i = 525;
+	for (tmp; *tmp; tmp++, i++) {
+		if (*tmp == '{') {
+			strcat(string, "\\{");
+			i++;
+			continue;
+		}
+		if (*tmp == '}') {
+			strcat(string, "\\}");
+			i++;
+			continue;
+		}
+		if (*tmp == '\\') {
+			strcat(string, "\\\\");
+			i++;
+			continue;
+		}
+		if (*tmp == '\r') {
+			tmp++;
+			if (*tmp == '\n') {
+				strcat(string, "\\par\r\n");
+				i += 5;
+				continue;
+			}
+		}
+		if (*tmp == '\2') {
+			if (bold) {
+				strcat(string, "\\b0 ");
+				i += 3;
+			}
+			else {
+				strcat(string, "\\b ");
+				i += 2;
+			}
+			bold = ~bold;
+			continue;
+		}
+		if (*tmp == '\3') {
+			char color[3];
+			int number;
+			strcat(string, "\\cf");
+			i += 3;
+			if (!isdigit(*(tmp+1))) {
+				strcat(string, "0\\highlight0");
+				i += 12;
+			}
+			else {
+				color[0] = *(++tmp);
+				color[1] = 0;
+				if (isdigit(*(tmp+1)))
+					color[1] = *(++tmp);
+				color[2] = 0;
+				number = atoi(color);
+				if (number == 99 || number == 1) {
+					strcat(string, "16");
+					i += 2;
+				}
+				else if (number == 0) {
+					string[i] = '1';
+					i++;
+				}
+				else {
+					number %= 16;
+					_itoa(number, color, 10);
+					strcat(string, color);
+					i += strlen(color);
+				}
+			}
+			string[i] = ' ';
+			continue;
+		}
+		if (*tmp == '\37') {
+			if (uline) {
+				strcat(string, "\\ulnone ");
+				i += 7;
+			}
+			else {
+				strcat(string, "\\ul ");
+				i += 3;
+			}
+			uline = ~uline;
+			continue;
+		}
+		if (*tmp == '\17') {
+			if (uline) {
+				strcat(string, "\\ulnone ");
+				i += 7;
+			}
+			if (bold) {
+				strcat(string, "\\b0 ");
+				i += 3;
+			}
+			uline = bold = 0;
+		}
+		string[i] = *tmp;
+	}
+	strcat(string, "\\f1\\par\r\n}");
+	return;
+}
 
 /* This was made by DrBin but I cleaned it up a bunch to make it work better */
 
