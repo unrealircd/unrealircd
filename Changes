@@ -613,4 +613,4 @@ seen. gmtime warning still there
 - Added configure check for glob.h
 - Added the ability to use file globs in loadmodule and include (only if your system has glob)
 - Added ./Config option to enable IPv6 (and made a configure check to make sure we can)
-
+- Made glob() use GLOB_LIMIT on OpenBSD 2.9 to help prevent a DoS

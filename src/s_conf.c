@@ -924,7 +924,11 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 	chmod(ce->ce_vardata, DEFAULT_PERMISSIONS);
 #endif
 #ifdef GLOBH
+#if defined(__OpenBSD__) && defined(GLOB_LIMIT)
+	glob(ce->ce_vardata, GLOB_NOSORT|GLOB_NOCHECK|GLOB_LIMIT, NULL, &files);
+#else
 	glob(ce->ce_vardata, GLOB_NOSORT|GLOB_NOCHECK, NULL, &files);
+#endif
 	if (!files.gl_pathc) {
 		globfree(&files);
 		config_error("%s:%i: include %s: invalid file given",
@@ -1157,7 +1161,11 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 		return -1;
 	}
 #ifdef GLOBH
+#if defined(__OpenBSD__) && defined(GLOB_LIMIT)
+	glob(ce->ce_vardata, GLOB_NOSORT|GLOB_NOCHECK|GLOB_LIMIT, NULL, &files);
+#else
 	glob(ce->ce_vardata, GLOB_NOSORT|GLOB_NOCHECK, NULL, &files);
+#endif
 	if (!files.gl_pathc) {
 		globfree(&files);
 		config_error("%s:%i: loadmodule %s: failed to load",
