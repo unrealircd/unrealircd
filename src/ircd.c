@@ -900,9 +900,6 @@ int  InitwIRCD(argc, argv)
 			  }
 			  strncpyzt(me.name, p, sizeof(me.name));
 			  break;
-		  case 'H':
-			  unrealmanual();
-			  exit(0);
 #endif
 #ifndef _WIN32
 		  case 'P': {

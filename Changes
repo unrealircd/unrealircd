@@ -992,3 +992,4 @@ seen. gmtime warning still there
   far. Problems, unloading, (delay), tkl doesn't always sweep it all, 
 - Some scan unloading stuff
 - FIXED THE GOD DAMNED WHOIS BUG THAT I REPORTED *MONTHS* AGO! -Griev
+- Added a new dynamic help system that allows you to add and modify /helpop items

@@ -530,7 +530,7 @@ ban nick { mask "Status"; reason "Bug in mIRC"; };
  */
 include "badwords.channel.conf";
 include "badwords.message.conf";
-
+include "help.conf";
 /*
  * Some modules;
 */

@@ -104,6 +104,7 @@ int	_conf_allow_channel	(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_loadmodule	(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_log		(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_alias		(ConfigFile *conf, ConfigEntry *ce);
+int     _conf_help              (ConfigFile *conf, ConfigEntry *ce);
 aMotd *Find_file(char *, short);
 
 extern int conf_debuglevel;
@@ -131,6 +132,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "loadmodule",		_conf_loadmodule },
 	{ "log",		_conf_log },
 	{ "alias",		_conf_alias },
+	{ "help",		_conf_help },
 	{ NULL, 		NULL  }
 };
 
@@ -268,6 +270,7 @@ ConfigItem_unknown	*conf_unknown = NULL;
 ConfigItem_unknown_ext  *conf_unknown_set = NULL;
 ConfigItem_alias	*conf_alias = NULL;
 ConfigItem_include	*conf_include = NULL;
+ConfigItem_help		*conf_help = NULL;
 #ifdef STRIPBADWORDS
 ConfigItem_badword	*conf_badword_channel = NULL;
 ConfigItem_badword      *conf_badword_message = NULL;
@@ -2800,6 +2803,43 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 		AddListItem(alias, conf_alias);
 }
 
+int	_conf_help(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigItem_help *help = NULL;
+	ConfigEntry 	    	*cep;
+	aMotd *last, *temp;
+
+	if (!ce->ce_entries) {
+		config_status("%s:%i: help entry without text",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return 0;
+	}
+	if (Find_Help(ce->ce_vardata)) {
+		config_status("%s:%i: help for %s already exists",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata ? ce->ce_vardata : "index");
+		return 0;
+	}
+	help = MyMalloc(sizeof(ConfigItem_help));
+	if (!ce->ce_vardata)
+		help->command = NULL;
+	else
+		help->command = strdup(ce->ce_vardata);
+	help->text = NULL;
+		
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		temp = MyMalloc(sizeof(aMotd));
+		temp->line = strdup(cep->ce_varname);
+		temp->next = NULL;
+		if (!help->text)
+			help->text = temp;
+		else
+			last->next = temp;
+		last = temp;
+	}
+	AddListItem(help, conf_help);
+}
+
 
 /*
  * Report functions
@@ -3318,6 +3358,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	ConfigItem_log			*log_ptr;
 	ConfigItem_alias		*alias_ptr;
 	ConfigItem_include		*include_ptr;
+	ConfigItem_help			*help_ptr;
 	ListStruct 	t;
 
 
@@ -3574,6 +3615,20 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		MyFree(include_ptr);
 		include_ptr = (ConfigItem_include *)&t;
 	}
+	for (help_ptr = conf_help; help_ptr; help_ptr = (ConfigItem_help *)help_ptr->next) {
+		aMotd *text;
+		ircfree(help_ptr->command);
+		while (help_ptr->text) {
+			text = help_ptr->text->next;
+			ircfree(help_ptr->text->line);
+			ircfree(help_ptr->text);
+			help_ptr->text = text;
+		}
+		t.next = DelListItem(help_ptr, conf_help);
+		MyFree(help_ptr);
+		help_ptr = (ConfigItem_help *)&t;
+	}
+
 	/* rehash_modules */
 	init_conf2(configfile);
 	module_loadall(0);

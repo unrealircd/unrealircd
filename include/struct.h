@@ -96,6 +96,7 @@ typedef struct _configitem_unknown_ext ConfigItem_unknown_ext;
 typedef struct _configitem_alias ConfigItem_alias;
 typedef struct _configitem_alias_format ConfigItem_alias_format;
 typedef struct _configitem_include ConfigItem_include;
+typedef struct _configitem_help ConfigItem_help;
 typedef struct liststruct ListStruct;
 
 typedef struct Watch aWatch;
@@ -1063,6 +1064,13 @@ struct _configitem_include {
 	ConfigItem *prev, *next;
 	ConfigFlag flag;
 	char *file;
+};
+
+struct _configitem_help {
+	ConfigItem *prev, *next;
+	ConfigFlag flag;
+	char *command;
+	aMotd *text;
 };
 
 struct _irchook {
