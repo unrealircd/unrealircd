@@ -242,9 +242,11 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					if (access & CHFL_CHANOWNER)
 						*(buf + len++) = '~';
 					else if (access & CHFL_CHANPROT)
+
 						*(buf + len++) = '&';
+					else
 #endif
-					else if (access & CHFL_CHANOP)
+					if (access & CHFL_CHANOP)
 						*(buf + len++) = '@';
 					else if (access & CHFL_HALFOP)
 						*(buf + len++) = '%';

@@ -262,3 +262,4 @@
 - Added src/win32/win32.c for generic win32 helper functions
 - Renamed src/win32/win32gui.c to src/win32/gui.c
 - Reorganized much of the Windows code
+- Fixed a whois bug when PREFIX_AQ is undefined, reported by Shaun
