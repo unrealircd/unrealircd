@@ -3217,3 +3217,4 @@ This is the 3.2 fixes branch.
 - Fixed some other win32 crashes due to modulizing: WHOWAS, STATS [some], SVSMOTD.
   All caused by missing "MODVAR"s. Reported by Troco (#0001841).
 - Fixed SSL problem caused by a fix of 2 days ago. Reported by Fury (#0001842).
+- And one more.

@@ -164,7 +164,7 @@ static char *our_mod_version()
 {
 static char retbuf[128];
 	strlcpy(retbuf, version, sizeof(retbuf));
-#ifdef USE_SSL
+#if defined(USE_SSL) && !defined(_WIN32)
 	strlcat(retbuf, "/SSL", sizeof(retbuf));
 #endif
 	return retbuf;
