@@ -2981,3 +2981,5 @@ seen. gmtime warning still there
   cause a crash, reported by Joolz (#0001587).
 - Made numerics 518-520 a bit more clear by mentioning the channelname in it.
   Suggested by Zell (#0001589).
+- Fixed a bug reported by Joolz that would cause problems when deleting a remote
+  included file from a server (#0001587).

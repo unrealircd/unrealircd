@@ -7283,13 +7283,6 @@ static void conf_download_complete(char *url, char *file, char *errorbuf, int ca
 		remove(file);
 		return;
 	}
-	if (!file && !cached)
-	{
-		config_error("Error downloading %s: %s", url, errorbuf);
-		loop.ircd_rehashing = 0;
-		unload_notloaded_includes();
-		return;
-	}
 	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
 	{
 		if (!(inc->flag.type & INCLUDE_REMOTE))
@@ -7299,20 +7292,25 @@ static void conf_download_complete(char *url, char *file, char *errorbuf, int ca
 		if (!stricmp(url, inc->url))
 		{
 			inc->flag.type &= ~INCLUDE_DLQUEUED;
+			if (!file && !cached)
+				inc->errorbuf = strdup(errorbuf);
 			break;
 		}
 	}
-	if (cached)
+	if (!inc->errorbuf)
 	{
-		char *urlfile = url_getfilename(url);
-		char *file = unreal_getfilename(urlfile);
-		char *tmp = unreal_mktemp("tmp", file);
-		unreal_copyfile(inc->file, tmp);
-		add_remote_include(tmp, url);
-		free(urlfile);
+		if (cached)
+		{
+			char *urlfile = url_getfilename(url);
+			char *file = unreal_getfilename(urlfile);
+			char *tmp = unreal_mktemp("tmp", file);
+			unreal_copyfile(inc->file, tmp);
+			add_remote_include(tmp, url);
+			free(urlfile);
+		}
+		else
+			add_remote_include(file, url);
 	}
-	else
-		add_remote_include(file, url);
 	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
 	{
 		if (inc->flag.type & INCLUDE_DLQUEUED)
@@ -7418,7 +7416,7 @@ void	listen_cleanup()
 }
 
 #ifdef USE_LIBCURL
-char *find_remote_include(char *url)
+char *find_remote_include(char *url, char **errorbuf)
 {
 	ConfigItem_include *inc;
 	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
@@ -7428,7 +7426,10 @@ char *find_remote_include(char *url)
 		if (!(inc->flag.type & INCLUDE_REMOTE))
 			continue;
 		if (!stricmp(url, inc->url))
+		{
+			*errorbuf = inc->errorbuf;
 			return inc->file;
+		}
 	}
 	return NULL;
 }
@@ -7450,7 +7451,8 @@ char *find_loaded_remote_include(char *url)
 
 int remote_include(ConfigEntry *ce)
 {
-	char *file = find_remote_include(ce->ce_vardata);
+	char *errorbuf;
+	char *file = find_remote_include(ce->ce_vardata, &errorbuf);
 	int ret;
 	if (!loop.ircd_rehashing || (loop.ircd_rehashing && !file))
 	{
@@ -7475,6 +7477,13 @@ int remote_include(ConfigEntry *ce)
 	}
 	else
 	{
+		if (errorbuf)
+		{
+			config_error("%s:%i: include: error downloading '%s': %s",
+                                ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+                                ce->ce_vardata, errorbuf);
+			return -1;
+		}
 		if (config_verbose > 0)
 			config_status("Loading %s from download", ce->ce_vardata);
 		if ((ret = load_conf(file)) >= 0)
@@ -7540,6 +7549,8 @@ void unload_notloaded_includes(void)
 			{
 				remove(inc->file);
 				free(inc->url);
+				if (inc->errorbuf)
+					free(inc->errorbuf);
 			}
 #endif
 			free(inc->file);
@@ -7563,6 +7574,8 @@ void unload_loaded_includes(void)
 		{
 			remove(inc->file);
 			free(inc->url);
+			if (inc->errorbuf)
+				free(inc->errorbuf);
 		}
 #endif
 		free(inc->file);

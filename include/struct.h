@@ -1243,6 +1243,7 @@ struct _configitem_include {
 	char *file;
 #ifdef USE_LIBCURL
 	char *url;
+	char *errorbuf;
 #endif
 };
 
