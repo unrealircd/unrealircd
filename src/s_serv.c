@@ -2601,7 +2601,7 @@ CMD_FUNC(m_help)
 				parse_help(sptr, parv[0], NULL);
 				sendto_one(sptr,
 					":%s NOTICE %s :*** NOTE: As a helpop you have to prefix your text with ? to query the help system, like: /helpop ?usercmds",
-					&me.name, sptr->name);
+					me.name, sptr->name);
 			}
 			return 0;
 		}
