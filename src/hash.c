@@ -793,10 +793,9 @@ void	add_throttling_bucket(struct IN_ADDR *in)
 void	del_throttling_bucket(struct ThrottlingBucket *bucket)
 {
 	int	hash;
-	struct ThrottlingBucket 	*n;
 	hash = hash_throttling(&bucket->in);
-	DelListItem(n, ThrottlingHash[hash]);
-	MyFree(n);
+	DelListItem(bucket, ThrottlingHash[hash]);
+	MyFree(bucket);
 	return;
 }
 
