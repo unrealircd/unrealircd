@@ -875,7 +875,7 @@ int	init_conf2(char *filename)
 		if (!includes) {
 			includes = MyMalloc(sizeof(ConfigItem_include));
 			includes->file = strdup(filename);
-			DelListItem(includes, conf_include);
+			AddListItem(includes, conf_include);
 		}
 		return i;
 	}
