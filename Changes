@@ -917,3 +917,5 @@ seen. gmtime warning still there
 - Made ./unreal restart (to restart Unreal) and made the pid file location more accurate
 - Added support for PS_STRINGS and pstat to change the progrma name (couldn't test since I don't have an OS
   that uses them)
+- Fixed a win32 bug where pasting text into the editor would not
+  show up in the correct font

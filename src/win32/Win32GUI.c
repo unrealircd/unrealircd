@@ -875,6 +875,10 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			SendMessage(GetDlgItem(hDlg, IDC_UNDERLINE), WM_SETFONT, (WPARAM)hFont2,TRUE);
 			SendMessage(GetDlgItem(hDlg, IDC_COLOR), WM_SETFONT, (WPARAM)hFont3,TRUE);
 			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_SETEVENTMASK, 0, (LPARAM)ENM_SELCHANGE);
+			chars.cbSize = sizeof(CHARFORMAT2);
+			chars.dwMask = CFM_FACE;
+			strcpy(chars.szFaceName,"Fixedsys");
+			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_SETCHARFORMAT, (WPARAM)SCF_ALL, (LPARAM)&chars);
 			if ((fd = open(file, _O_RDONLY|_O_BINARY)) != -1) {
 				fstat(fd,&sb);
 				/* Only allocate the amount we need */
