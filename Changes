@@ -3320,3 +3320,4 @@ This is the 3.2 fixes branch.
   did a /rehash). Original bug was reported by sh0 (#0001872).
 - spamfilter.conf: Added sig for a mIRC decode worm, submitted by nexus.
 - Some release notes updates.
+- Changed version to 3.2.1-pre1 and updated protocol # to 2304.
