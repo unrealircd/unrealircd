@@ -2937,3 +2937,4 @@ seen. gmtime warning still there
 - Added /tempshun, temporary shuns the current session of specified nick
   (just like the 'tempshun' in spamfilter and ban version). Suggested by
   Cnils (#0001526). [docs/help.conf will be updated later]
+- Updated docs on tempshun and new spamfilter features.

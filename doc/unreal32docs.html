@@ -443,16 +443,28 @@ Modules can also add other extended ban types.<br>
    the badwords system but has several advantages.</p>
 <p>Spamfilters are added via the /spamfilter command which uses the following syntax:<br>
    <b>/spamfilter [add|del|remove|+|-] [type] [action] [tkltime] [reason] [regex]</b><br>
-   <i>[type]</i> specifies the target type, you can specify multiple targets:
-   'c' channel msg, 'p' private msg, 'n' private notice, 'N' channel notice, 'P' part msg, 'q' quit msg, 'd' dcc<br>
-   <i>[action]</i> specifies the action to be taken (only 1 action can be specified): 
-          'kill', 'tempshun' (only shun current session), 'shun', 
-          'kline', 'gline', 'zline', 'gzline', 'block' (blocks only)<br>
-   <i>[tkltime]</i> The duration of the *line added by the filter, use '-' to use the default or to skip 
-   (eg: if action = 'block')<br>
-   <i>[reason]</i> Block or *line reason.. you CANNOT use spaces in this, but underscores ('_') will be translated
-into spaces at runtime. Again, use '-' to use the default.<br>
-   <i>[regex]</i> this is the actual regex or 'bad word' where we should block on and perform the action at<br>
+   <table border=0>
+   <tr valign="top"><td><b>[type]</b></td><td> specifies the target type, you can specify multiple targets:
+   'c' channel msg, 'p' private msg, 'n' private notice, 'N' channel notice, 'P' part msg, 'q' quit msg, 'd' dcc</td></tr>
+   <tr valign="top"><td><b>[action]</b></td><td> specifies the action to be taken (only 1 action can be specified)<br>
+<table>
+<tr><td>kill</td><td>kills the user</td></tr>
+<tr><td>tempshun</td><td>shuns the current session of the user (if [s]he reconnects the shun is gone)</td></tr>
+<tr><td>shun</td><td>puts a shun on the host</td></tr>
+<tr><td>kline</td><td>puts a kline on the host</td></tr>
+<tr><td>gline</td><td>puts a gline on the host</td></tr>
+<tr><td>zline</td><td>puts a zline on the host</td></tr>
+<tr><td>gzline</td><td>puts a gzline (global zline) on the host</td></tr>
+<tr><td>block</td><td>block the message only</td></tr>
+<tr><td>dccblock</td><td>mark the user so (s)he's unable to send any DCCs</td></tr>
+<tr><td>viruschan</td><td>part all channels and join set::spamfilter::virus-help-channel</td></tr>
+</table></tr></td>
+   <tr valign="top"><td><b>[tkltime]</b></td><td> The duration of the *line added by the filter, use '-' to use the default or to skip 
+   (eg: if action = 'block')</td></tr>
+   <tr valign="top"><td><b>[reason]</b></td><td> Block or *line reason.. you CANNOT use spaces in this, but underscores ('_') will be translated
+into spaces at runtime. Again, use '-' to use the default.</td></tr>
+   <tr valign="top"><td><b>[regex]</b></td><td> this is the actual regex or 'bad word' where we should block on and perform the action at</td></tr>
+   </table>
    <br>
    Here's an example: <i>/spamfilter add pc gline - - Come watch me on my webcam</i><br>
    If the text <i>come watch me on my webcam</i> is found in either a private msg or a channel msg 
@@ -473,6 +485,7 @@ into spaces at runtime. Again, use '-' to use the default.<br>
 </p>
 <p><b>set::spamfilter::ban-time</b> allows you to modify the default ban time for *lines added by spamfilter (default: 1 day)<br>
    <b>set::spamfilter::ban-reason</b> allows you to specify a default reason for the *lines (default: 'Spam/advertising')<br>
+   <b>set::spamfilter::virus-help-channel</b> allows you to specify the channel to join for action 'viruschan' (default: #help)<br>
 </p></div>
 
 <p><font size="+2"><b>3.15 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
@@ -2130,6 +2143,8 @@ set {
   Same as above but for *lines added by spamfilter</p>
  <p><font class="set">set::spamfilter::ban-reason &lt;reason&gt;</font><br>
   Reason to be used for *lines added by spamfilter</p>
+ <p><font class="set">set::spamfilter::virus-help-channel &lt;channel&gt;</font><br>
+  The channel to use for the 'viruschan' action in spamfilter</p>
 <p></p> </div>
 <p><b><font size="+2">5 &#8211; Additional Files<a name="addtlfiles"></a>
   </font></b></p><div class="desc">
