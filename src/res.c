@@ -267,6 +267,7 @@ time_t timeout_query_list(time_t now)
 #else
 		if (now >= tout && !rptr->locked)
 #endif
+		{
 			if (--rptr->retries <= 0)
 			{
 #ifdef DEBUGMODE
@@ -306,6 +307,7 @@ time_t timeout_query_list(time_t now)
 				    rptr->cinfo.value.cptr));
 #endif
 			}
+		}
 		if (!next || tout < next)
 			next = tout;
 	}

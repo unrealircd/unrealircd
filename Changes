@@ -1199,3 +1199,4 @@ v- Fixed some bugreport stuff
   from MyMalloc!
 - Clean compile under -Wunused
 - Clean compile under -Wformat
+- Clean compile under -Wparentheses

@@ -508,7 +508,7 @@ void count_memory(aClient *cptr, char *nick)
 	    me.name, RPL_STATSDEBUG, nick, dbufblocks, db);
 
 	link = freelink;
-	while (link = link->next)
+	while ((link = link->next))
 		fl++;
 	fl++;
 	sendto_one(cptr, ":%s %d %s :Link blocks free %d(%d) total %d(%d)",

@@ -545,8 +545,8 @@ extern TS check_pings(TS currenttime, int check_kills)
 
 		if (check_kills && !killflag && IsPerson(cptr))
 		{
-			if (bconf =
-			    Find_ban(inetntoa((char *)&cptr->ip), CONF_BAN_IP))
+			if ((bconf =
+			    Find_ban(inetntoa((char *)&cptr->ip), CONF_BAN_IP)))
 			{
 				killflag = 1;
 			} 
@@ -847,6 +847,7 @@ int  InitwIRCD(int argc, char *argv[])
 		char *p = argv[0] + 1;
 		int  flag = *p++;
 		if (flag == '\0' || *p == '\0')
+		{
 			if (argc > 1 && argv[1][0] != '-')
 			{
 				p = *++argv;
@@ -854,6 +855,7 @@ int  InitwIRCD(int argc, char *argv[])
 			}
 			else
 				p = "";
+		}
 		switch (flag)
 		{
 #ifndef _WIN32
