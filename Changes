@@ -3039,3 +3039,5 @@ seen. gmtime warning still there
   Z3l3zT (#0001648).
 - Added spamfilters for the Nkie worm
 - Fixed a little sqline recode memory leak
+- Fixed /spamfilter removal problem... often the wrong entry was removed [!] or
+  nothing was removed at all. Reported by MiNdErAsR, RealCFC and others (#0001669).
