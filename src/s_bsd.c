@@ -2893,7 +2893,8 @@ Chat on\n\r");
 		sendto_one(who, wrerr, who->name);
 		return;
 	}
-	(void)ircsprintf(line, "ircd: Channel %s, by %s@%s (%s) %s\n\r",
+/*	(void)ircsprintf(line, "ircd: Channel %s, by %s@%s (%s) %s\n\r", */
+	(void)snprintf(line, sizeof(line), "ircd: Channel %s, by %s@%s (%s) %s\n\r",
 	    chname, who->user->username, who->user->host, who->name, who->info);
 	if (write(fd, line, strlen(line)) != strlen(line))
 	{
