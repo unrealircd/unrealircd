@@ -147,6 +147,12 @@ int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 	return 0;
 }
 
+static int ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
+{
+	return 1;
+}
+
+
 void init_ctx_server(void)
 {
 	ctx_server = SSL_CTX_new(SSLv23_server_method());
@@ -157,6 +163,8 @@ void init_ctx_server(void)
 	}
 	SSL_CTX_set_default_passwd_cb(ctx_server, ssl_pem_passwd_cb);
 	SSL_CTX_set_options(ctx_server, SSL_OP_NO_SSLv2);
+	SSL_CTX_set_verify(ctx_server, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, ssl_verify_callback);
+
 	if (SSL_CTX_use_certificate_file(ctx_server, SSL_SERVER_CERT_PEM, SSL_FILETYPE_PEM) <= 0)
 	{
 		ircd_log(LOG_ERROR, "Failed to load SSL certificate %s", SSL_SERVER_CERT_PEM);
@@ -174,6 +182,7 @@ void init_ctx_server(void)
 		exit(5);
 	}
 }
+
 
 void init_ctx_client(void)
 {

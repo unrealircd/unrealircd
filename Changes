@@ -1587,3 +1587,5 @@ seen. gmtime warning still there
   you send commands like JOIN from a server directly
 - Made channel keys be case sensitive
 - Fixed a bug with /who -h in some cases, found by Zer0, fixed by butter (#0000361)
+- Changed auth method sslpubkey into sslclientcert, which means it will check the X509 certificate of the
+  user using X509_cmp. Also needing is some policy/conf setting to adjust if to reject invalid client certificates or whatever..
