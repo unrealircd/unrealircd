@@ -2809,13 +2809,12 @@ int  del_silence(aClient *sptr, char *mask)
 int add_silence(aClient *sptr, char *mask, int senderr)
 {
 	Link *lp;
-	int  cnt = 0, len = 0;
+	int  cnt = 0;
 
 	for (lp = sptr->user->silence; lp; lp = lp->next)
 	{
-		len += strlen(lp->value.cp);
 		if (MyClient(sptr))
-			if ((len > MAXSILELENGTH) || (++cnt >= MAXSILES))
+			if ((strlen(lp->value.cp) > MAXSILELENGTH) || (++cnt >= SILENCE_LIMIT))
 			{
 				if (senderr)
 					sendto_one(sptr, err_str(ERR_SILELISTFULL), me.name, sptr->name, mask);

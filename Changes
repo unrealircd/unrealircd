@@ -2734,3 +2734,5 @@ seen. gmtime warning still there
 - Added HOOKTYPE_PRE_LOCAL_QUIT to allow changing quit messages. Suggested by penna22
   (#0001424)
 - Updated some /stats docs, reported by AngryWolf (#0001283)
+- Added set::silence-limit to allow specifying how many entries may be in the SILENCE list
+  also upped the default value to 15. Suggested by tabrisnet (#0001486)

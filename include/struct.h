@@ -165,8 +165,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	MAXKILLS	20
 #define	MAXBANS		60
 #define	MAXBANLENGTH	1024
-#define	MAXSILES	5
-#define	MAXSILELENGTH	128
+#define	MAXSILELENGTH	NICKLEN+USERLEN+HOSTLEN+10
 #define UMODETABLESZ (sizeof(long) * 8)
 /*
  * Watch it - Don't change this unless you also change the ERR_TOOMANYWATCH

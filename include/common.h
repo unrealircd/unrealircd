@@ -287,7 +287,7 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 
 #define PROTOCTL_PARAMETERS_2	  \
 		MAXWATCH, \
-		MAXSILES, \
+		SILENCE_LIMIT, \
 		MAXMODEPARAMS, \
 		"#", \
 		CHPFIX, \

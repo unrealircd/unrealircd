@@ -21,7 +21,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 Beta19-CVS<br>
-  <b>Last doc update:</b> 2004-01-17</div>
+  <b>Last doc update:</b> 2004-01-18</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke / McSkaf<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -1864,6 +1864,9 @@ set {
 <p><font class="set">set::who-limit &lt;limit&gt;;</font><br>
   Sets the limit for the maximum number of matches that will be returned for a /who.
   If this option is left out, no limit is enforced.</p>
+<p><font class="set">set::silence-limit &lt;limit&gt;;</font<br>
+  Sets the limit on the maximum SILENCE list entries. If this directive is not specified,
+  a limit of 15 is set.</p>
 <p><font class="set">set::oper-only-stats &lt;stats-list&gt;;</font><br>
   Specifies a list of stats flags with no separators that defines stats flags 
   only opers can use. Leave this value out to allow users to use all flags, or 

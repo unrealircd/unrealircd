@@ -5221,6 +5221,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "who-limit")) {
 			tempiConf.who_limit = atol(cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "silence-limit")) {
+			tempiConf.silence_limit = atol(cep->ce_vardata);
+		}
 		else if (!strcmp(cep->ce_varname, "auto-join")) {
 			ircstrdup(tempiConf.auto_join_chans, cep->ce_vardata);
 		}
@@ -5640,6 +5643,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			CheckNull(cep);
 		}
 		else if (!strcmp(cep->ce_varname, "who-limit")) {
+			CheckNull(cep);
+		}
+		else if (!strcmp(cep->ce_varname, "silence-limit")) {
 			CheckNull(cep);
 		}
 		else if (!strcmp(cep->ce_varname, "auto-join")) {

@@ -1213,6 +1213,8 @@ int stats_set(aClient *sptr, char *para)
 		RPL_TEXT, sptr->name, STATIC_PART ? STATIC_PART : "<none>");	
 	sendto_one(sptr, ":%s %i %s :who-limit: %d", me.name, RPL_TEXT,
 		sptr->name, WHOLIMIT);
+	sendto_one(sptr, ":%s %i %s :silence-limit: %d", me.name, RPL_TEXT,
+		sptr->name, SILENCE_LIMIT);
 	sendto_one(sptr, ":%s %i %s :dns::timeout: %s", me.name, RPL_TEXT,
 	    sptr->name, pretty_time_val(HOST_TIMEOUT));
 	sendto_one(sptr, ":%s %i %s :dns::retries: %d", me.name, RPL_TEXT,
