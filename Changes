@@ -30,3 +30,4 @@
 - Fixed some points of confusion of possible cptr->passwd bug in
   m_server_estab, reported and fixed by Kanzen_Greiver
 - Fixed some more points of ->passwd bugs
+- Made it so you don't get a +W notice if you /who or /whois yourself reported by Ron885

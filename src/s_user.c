@@ -2462,7 +2462,7 @@ static void do_who(sptr, acptr, repchan)
 	else if (repchan && has_voice(acptr, repchan))
 		status[i++] = '+';
 	status[i] = '\0';
-	if (IsWhois(acptr) && channelwho == 0)
+	if (IsWhois(acptr) && channelwho == 0 && sptr != acptr)
 	{
 		sendto_one(acptr,
 		    ":%s NOTICE %s :*** %s either did a /who or a specific /who on you",
@@ -2779,7 +2779,7 @@ int  m_whois(cptr, sptr, parc, parv)
 			if (!IsPerson(acptr))
 				continue;
 
-			if (IsWhois(acptr))
+			if (IsWhois(acptr) && sptr != acptr)
 			{
 				sendto_one(acptr,
 				    ":%s NOTICE %s :*** %s (%s@%s) did a /whois on you.",
