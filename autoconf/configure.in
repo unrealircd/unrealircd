@@ -8,6 +8,7 @@ fi
 AC_CONFIG_HEADER(include/setup.h)
 AC_PROG_CC
 if test "$ac_cv_prog_gcc" = "yes"; then
+CFLAGS="$CFLAGS -funsigned-char"
 AC_CACHE_CHECK(if you have gcc 3.0 or higher, ac_cv_gcc3, [
 if test -z "`gcc -v 2>&1 |grep 'gcc version 3.'`"; then
 ac_cv_gcc3="no"

@@ -1582,3 +1582,4 @@ seen. gmtime warning still there
 - Made the IRC_UID stuff more proper..
 - Removed some old debug code from the win32 debugger
 - Compile warning cleanups
+- Made the win32 version default to unsigned chars, and the linux version do the same under gcc

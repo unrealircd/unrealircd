@@ -1970,6 +1970,7 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 if test "$ac_cv_c_compiler_gnu" = "yes"; then
+CFLAGS="$CFLAGS -funsigned-char"
 echo "$as_me:$LINENO: checking if you have gcc 3.0 or higher" >&5
 echo $ECHO_N "checking if you have gcc 3.0 or higher... $ECHO_C" >&6
 if test "${ac_cv_gcc3+set}" = set; then
