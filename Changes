@@ -595,4 +595,4 @@ seen. gmtime warning still there
   questions, just run with data in config.settings)
 - Some more more configure.in fixes, regarding -export-dynamic, and buffer
   pools, and some illegal if test $var = othervar
-
+- Fixed a configure.in error with IRCDLOBS
