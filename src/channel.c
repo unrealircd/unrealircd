@@ -2012,7 +2012,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				if (!is_halfop(cptr, chptr)) /* htrig will take care of halfop override notices */
 				   opermode = 1;
 			  }
-			  else
+			  else if (MyClient(cptr))
 			  {
 				  sendto_one(cptr, err_str(ERR_ONLYSERVERSCANCHANGE),
 				      me.name, cptr->name, chptr->chname);
@@ -2028,7 +2028,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				if (!is_halfop(cptr, chptr)) /* htrig will take care of halfop override notices */
 				   opermode = 1;
 			  }
-			  else
+			  else if (MyClient(cptr))
 			  {
 				  sendto_one(cptr,
 				      ":%s %s %s :*** Channel admins (+a) can only be set by the channel owner",
@@ -2111,8 +2111,10 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				      ":%s %s %s :*** You cannot %s %s in %s, (s)he is the channel owner (+q).",
 				      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name, xxx,
 				      member->cptr->name, chptr->chname);
-			  }
-			  break;
+				  break;
+			  } else
+			  if (IsOper(cptr))
+			      opermode = 1;
 		  }
 		  if (is_chanprot(member->cptr, chptr)
 		      && member->cptr != cptr
@@ -2125,8 +2127,10 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				      ":%s %s %s :*** You cannot %s %s in %s, (s)he is a channel admin (+a).",
 				      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name, xxx,
 				      member->cptr->name, chptr->chname);
-			  }
-			  break;
+				  break;
+			  } else
+			  if (IsOper(cptr))
+			      opermode = 1;
 		  }
 		breaktherules:
 		  tmp = member->flags;
