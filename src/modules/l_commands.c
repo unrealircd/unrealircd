@@ -50,9 +50,13 @@
 
 /* Place includes here */
 /* replace this with a common name of your module */
+#ifdef DYNAMIC_LINKING
+ModuleInfo mod_header
+#else
 ModuleInfo l_commands_info
+#endif
   = {
-  	1,
+  	2,
 	"commands",	/* Name of module */
 	"$Id$", /* Version */
 	"Wrapper library for m_ commands", /* Short description of module */
@@ -66,17 +70,11 @@ ModuleInfo l_commands_info
 */
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_init(void)
+DLLFUNC int	mod_init(int module_load)
 #else
-void    l_commands_init(void)
+int    l_commands_init(int module_load)
 #endif
 {
-	/* extern variable to export l_commands_info to temporary
-           ModuleInfo *modulebuffer;
-	   the module_load() will use this to add to the modules linked 
-	   list
-	*/
-	module_buffer = &l_commands_info;
 	/*
 	 * We call our add_Command crap here
 	*/
@@ -89,7 +87,6 @@ void    l_commands_init(void)
 	m_svsmode_init();
 	m_swhois_init();
 	m_svsmotd_init();
-	module_buffer = &l_commands_info;
 }
 
 #ifdef DYNAMIC_LINKING

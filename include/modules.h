@@ -19,7 +19,7 @@
  *   $Id$
  */
 
-#define MOD_VERSION	1
+#define MOD_VERSION	2
 #define MAXMODULES	50
 #define MAXHOOKTYPES	20
 

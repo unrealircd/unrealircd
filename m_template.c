@@ -52,7 +52,12 @@ DLLFUNC int m_%COMMAND%(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define TOK_%UCOMMAND% 	"%TOKEN%"	
 
 
+#ifndef DYNAMIC_LINKING
 ModuleInfo m_%COMMAND%_info
+#else
+#define m_%COMMAND%_info mod_header
+ModuleInfo mod_header
+#endif
   = {
   	1,
 	"test",
@@ -63,19 +68,18 @@ ModuleInfo m_%COMMAND%_info
     };
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_init(void)
+DLLFUNC int	mod_init(int module_load)
 #else
-void    m_%COMMAND%_init(void)
+int    m_%COMMAND%_init(int module_load)
 #endif
 {
-	module_buffer = &m_%COMMAND%_info;
 	add_Command(MSG_%UCOMMAND%, TOK_%UCOMMAND%, m_%COMMAND%, %MAXPARA%);
 }
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_load(void)
+DLLFUNC int	mod_load(int module_load)
 #else
-void    m_%COMMAND%_load(void)
+int    m_%COMMAND%_load(int module_load)
 #endif
 {
 }

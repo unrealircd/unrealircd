@@ -51,7 +51,6 @@ Hook	   *Hooks[MAXHOOKTYPES];
 Hook 	   *global_i = NULL;
 int  modules_loaded = 0;
 
-ModuleInfo *module_buffer;
 void module_init(void)
 {
 	bzero(Modules, sizeof(Modules));
@@ -67,16 +66,69 @@ int  load_module(char *module)
 #else
 	void *Mod;
 #endif
-	void (*mod_init) ();
-	void (*mod_load) ();
+	int (*mod_init) ();
+	int (*mod_load) ();
 	void (*mod_unload) ();
 	MSymbolTable *mod_dep;
+	ModuleInfo *mod_header;
 	int  i;
 
-	module_buffer = NULL;
 	if (Mod = irc_dlopen(module, RTLD_NOW))
 	{
 		/* Succeed loading module */
+		/* We check header */
+		mod_header = irc_dlsym(Mod, "mod_header");
+		if (!mod_header) 
+			mod_header = irc_dlsym(Mod, "_mod_header");
+		if (!mod_header)
+		{
+			config_progress("%s: cannot load, no module header",
+				module);
+			irc_dlclose(Mod);
+			return -1;
+		}
+		if (mod_header->mversion != MOD_VERSION)
+		{
+			config_progress
+			    ("Failed to load module %s: mversion is %i, not %i as we require",
+			    module, mod_header->mversion, MOD_VERSION);
+			irc_dlclose(Mod);
+			return -1;
+		}
+		if (!mod_header->name || !mod_header->version
+		    || !mod_header->description)
+		{
+			config_progress
+			    ("Failed to load module %s: name/version/description missing",
+			    module);
+			irc_dlclose(Mod);
+			return -1;
+		}
+		for (i = 0; i < MAXMODULES; i++)
+			if (Modules[i] && !strcmp(Modules[i]->name, mod_header->name))
+			{
+				/* We will unload it without notice, its a duplicate */
+				irc_dlclose(Mod);
+				return 1;
+			}
+		for (i = 0; i < MAXMODULES; i++)
+		{
+			if (!Modules[i])
+			{
+				Modules[i] = mod_header;
+				modules_loaded++;
+				break;
+			}
+		}
+		if (i == MAXMODULES)
+		{
+			config_progress
+			    ("Failed to load module %s: Too many modules loaded");
+			Modules[i] = NULL;
+			irc_dlclose(Mod);
+			return -1;
+		}
+		
 		/* Locate mod_depend */
 		mod_dep =  irc_dlsym(Mod, "mod_depend");
 		if (!mod_dep)
@@ -87,6 +139,7 @@ int  load_module(char *module)
 			{
 				config_progress("%s: cannot load, missing dependancy",
 					module);
+				Modules[i] = NULL;
 				irc_dlclose(Mod);
 				return -1;
 			}	
@@ -102,36 +155,10 @@ int  load_module(char *module)
 				config_progress
 				    ("Failed to load module %s: Could not locate mod_init",
 				    module);
+				Modules[i] = NULL;
 				irc_dlclose(Mod);
 				return -1;
 			}
-		}
-		/* Run mod_init */
-		(*mod_init) ();
-		if (!module_buffer)
-		{
-			config_progress
-			    ("Failed to load module %s: mod_init did not set module_buffer",
-			    module);
-			irc_dlclose(Mod);
-			return -1;
-		}
-		if (module_buffer->mversion != MOD_VERSION)
-		{
-			config_progress
-			    ("Failed to load module %s: mversion is %i, not %i as we require",
-			    module, module_buffer->mversion, MOD_VERSION);
-			irc_dlclose(Mod);
-			return -1;
-		}
-		if (!module_buffer->name || !module_buffer->version
-		    || !module_buffer->description)
-		{
-			config_progress
-			    ("Failed to load module %s: name/version/description missing",
-			    module);
-			irc_dlclose(Mod);
-			return -1;
 		}
 		mod_unload = irc_dlsym(Mod, "mod_unload");
 		if (!mod_unload)
@@ -142,51 +169,46 @@ int  load_module(char *module)
 				config_progress
 				    ("Failed to load module %s: Could not locate mod_unload",
 				    module);
+				Modules[i] = NULL;
 				irc_dlclose(Mod);
 				return -1;
 			}
 		}
 		
-		module_buffer->dll = Mod;
-		module_buffer->unload = mod_unload;
+		mod_header->dll = Mod;
+		mod_header->unload = mod_unload;
 
 		mod_unload = irc_dlsym(Mod, "mod_load");
-		if (!mod_unload)
+		if (!mod_load)
 		{
-			mod_unload = irc_dlsym(Mod, "_mod_load");
+			mod_load = irc_dlsym(Mod, "_mod_load");
 		}
-		if (mod_unload)
+		if ((*mod_init)() < 0)
+		{
+			config_progress
+			    ("Failed to load module %s: mod_init failed",
+			    module);
+			Modules[i] = NULL;
+			irc_dlclose(Mod);
+			return -1;
+			
+		}
+		if (mod_load)
 		{
 			/* if ircd is booted, load it */
 			if (loop.ircd_booted)
-				(*mod_unload)();
-		}
-		for (i = 0; i < MAXMODULES; i++)
-			if (Modules[i] && !strcmp(Modules[i]->name, module_buffer->name))
 			{
-				/* We will unload it without notice, its a duplicate */
-				sendto_umode(UMODE_JUNK, "Ignoring load of module %s, duplicate names", module_buffer->name);
-				(*module_buffer->unload)();
-				irc_dlclose(Mod);
-				return 1;
+				if ((*mod_load)() < 0)
+				{
+					config_progress
+					    ("Failed to load module %s: mod_load failed",
+					    module);
+					Modules[i] = NULL;
+					irc_dlclose(Mod);
+					return -1;
+						
+				}
 			}
-		
-		for (i = 0; i < MAXMODULES; i++)
-		{
-			if (!Modules[i])
-			{
-				Modules[i] = module_buffer;
-				modules_loaded++;
-				break;
-			}
-		}
-		if (i == MAXMODULES)
-		{
-			config_progress
-			    ("Failed to load module %s: Too many modules loaded");
-			(*module_buffer->unload)();
-			irc_dlclose(Mod);
-			return -1;
 		}
 		return 1;
 	}
@@ -206,6 +228,26 @@ int  load_module(char *module)
 #endif
 }
 
+void    unload_all_modules(void)
+{
+#ifndef STATIC_LINKING
+	int	i;
+	
+	for (i = 0; i < MAXMODULES; i++)
+		if (Modules[i])
+		{
+	
+			/* Call unload */
+			(*Modules[i]->unload)();
+	
+			irc_dlclose(Modules[i]->dll);
+		
+			Modules[i] = NULL;
+			modules_loaded--;
+	}
+#endif
+	return;
+}
 
 int	unload_module(char *name)
 {

@@ -48,8 +48,12 @@
 #define	TOK_SETIDENT	"AD"	/* good old BASIC ;P */
 
 DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-
+#ifndef DYNAMIC_LINKING
 ModuleInfo m_setident_info
+#else
+#define m_setident_info mod_header
+ModuleInfo mod_header
+#endif
   = {
   	1,
 	"setident",	/* Name of module */
@@ -65,17 +69,11 @@ ModuleInfo m_setident_info
 */
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_init(void)
+DLLFUNC int	mod_init(int module_load)
 #else
-void    m_setident_init(void)
+int    m_setident_init(int module_load)
 #endif
 {
-	/* extern variable to export m_setident_info to temporary
-           ModuleInfo *modulebuffer;
-	   the module_load() will use this to add to the modules linked 
-	   list
-	*/
-	module_buffer = &m_setident_info;
 	/*
 	 * We call our add_Command crap here
 	*/

@@ -68,7 +68,6 @@ DLLFUNC void	mod_init(void)
 void    m_swhois_init(void)
 #endif
 {
-	module_buffer = &m_swhois_info;
 	add_Command(MSG_SWHOIS, TOK_SWHOIS, m_swhois, MAXPARA);
 }
 

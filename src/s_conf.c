@@ -3347,6 +3347,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		MyFree(log_ptr);
 		log_ptr = (ConfigItem_log *)&t;
 	}
+	/* rehash_modules */
 	init_conf2(configfile);
 	/* Clean up listen records */
 	close_listeners();

@@ -52,10 +52,14 @@ DLLFUNC int m_svsmotd(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_SVSMOTD 	"SVSMOTD"	
 #define TOK_SVSMOTD 	"AS"	
 
-
+#ifndef DYNAMIC_LINKING
 ModuleInfo m_svsmotd_info
+#else
+#define m_svsmotd_info mod_header
+ModuleInfo mod_header
+#endif
   = {
-  	1,
+  	2,
 	"test",
 	"$Id$",
 	"command /svsmotd", 
@@ -64,19 +68,18 @@ ModuleInfo m_svsmotd_info
     };
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_init(void)
+DLLFUNC int	mod_init(int module_load)
 #else
-void    m_svsmotd_init(void)
+int    m_svsmotd_init(int module_load)
 #endif
 {
-	module_buffer = &m_svsmotd_info;
 	add_Command(MSG_SVSMOTD, TOK_SVSMOTD, m_svsmotd, MAXPARA);
 }
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_load(void)
+DLLFUNC int	mod_load(int module_load)
 #else
-void    m_svsmotd_load(void)
+int    m_svsmotd_load(int module_load)
 #endif
 {
 }

@@ -50,10 +50,14 @@ DLLFUNC int m_setname(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_SETNAME 	"SETNAME"	/* setname */
 #define TOK_SETNAME 	"AE"	
 
-
+#ifndef DYNAMIC_LINKING
 ModuleInfo m_setname_info
+#else
+#define m_setname_info mod_header
+ModuleInfo mod_header
+#endif
   = {
-  	1,
+  	2,
 	"setname",	/* Name of module */
 	"$Id$", /* Version */
 	"command /setname", /* Short description of module */
@@ -67,17 +71,11 @@ ModuleInfo m_setname_info
 */
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_init(void)
+DLLFUNC int	mod_init(int module_load)
 #else
-void    m_setname_init(void)
+int    m_setname_init(int module_load)
 #endif
 {
-	/* extern variable to export m_setname_info to temporary
-           ModuleInfo *modulebuffer;
-	   the module_load() will use this to add to the modules linked 
-	   list
-	*/
-	module_buffer = &m_setname_info;
 	/*
 	 * We call our add_Command crap here
 	*/

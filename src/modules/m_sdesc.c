@@ -50,10 +50,14 @@ DLLFUNC int m_sdesc(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_SDESC 	"SDESC"	/* sdesc */
 #define TOK_SDESC 	"AG"	/* 127 4ever !;) */
 
-
+#ifndef DYNAMIC_LINKING
 ModuleInfo m_sdesc_info
+#else
+#define m_sdesc_info mod_header
+ModuleInfo mod_header
+#endif
   = {
-  	1,
+  	2,
 	"sdesc",	/* Name of module */
 	"$Id$", /* Version */
 	"command /sdesc", /* Short description of module */
@@ -67,17 +71,11 @@ ModuleInfo m_sdesc_info
 */
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_init(void)
+DLLFUNC int	mod_init(int module_load)
 #else
-void    m_sdesc_init(void)
+int    m_sdesc_init(int module_load)
 #endif
 {
-	/* extern variable to export m_sdesc_info to temporary
-           ModuleInfo *modulebuffer;
-	   the module_load() will use this to add to the modules linked 
-	   list
-	*/
-	module_buffer = &m_sdesc_info;
 	/*
 	 * We call our add_Command crap here
 	*/

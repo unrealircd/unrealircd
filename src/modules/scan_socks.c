@@ -63,10 +63,13 @@
 iFP			xVS_add = NULL;
 ConfigItem_blackhole	*blackh_conf = NULL;
 void	scan_socks_scan(HStruct *h);
-
+#ifndef DYNAMIC_LINKING
 ModuleInfo scan_socks_info
+#else
+ModuleInfo mod_header
+#endif
   = {
-  	1,
+  	2,
 	"scan_socks",	/* Name of module */
 	"$Id$", /* Version */
 	"scanning API: socks", /* Short description of module */
@@ -97,18 +100,11 @@ MSymbolTable mod_depend[] = {
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_init(void)
+DLLFUNC int	mod_init(int module_load)
 #else
-void    scan_socks_init(void)
+int    scan_socks_init(int module_load)
 #endif
 {
-	/* extern variable to export scan_socks_info to temporary
-           ModuleInfo *modulebuffer;
-	   the module_load() will use this to add to the modules linked 
-	   list
-	*/
-	module_buffer = &scan_socks_info;
-	
 	/*
 	 * Add scanning hooks
 	*/
@@ -117,9 +113,9 @@ void    scan_socks_init(void)
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_load(void)
+DLLFUNC int	mod_load(int module_load)
 #else
-void    scan_socks_load(void)
+int    scan_socks_load(int module_load)
 #endif
 {
 }

@@ -69,9 +69,14 @@ DLLFUNC EVENT		(VS_Ban);
 DLLFUNC int			h_scan_info(aClient *sptr);
 DLLFUNC int			m_scan(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
+#ifndef DYNAMIC_LINKING
 ModuleInfo m_scan_info
+#else
+#define m_scan_info module_header
+ModuleInfo module_header
+#endif
   = {
-  	1,
+  	2,
 	"scan",	/* Name of module */
 	"$Id$", /* Version */
 	"Scanning API", /* Short description of module */
@@ -86,17 +91,11 @@ ModuleInfo m_scan_info
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_init(void)
+DLLFUNC int	mod_init(int module_load)
 #else
-void    m_scan_init(void)
+int    m_scan_init(int module_load)
 #endif
 {
-	/* extern variable to export m_dummy_info to temporary
-           ModuleInfo *modulebuffer;
-	   the module_load() will use this to add to the modules linked 
-	   list
-	*/
-	module_buffer = &m_scan_info;
 	add_Hook(HOOKTYPE_LOCAL_CONNECT, h_scan_connect);
 	add_Hook(HOOKTYPE_SCAN_INFO, h_scan_info);
 	bzero(Hosts, sizeof(Hosts));

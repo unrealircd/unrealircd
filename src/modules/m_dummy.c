@@ -34,10 +34,13 @@ DLLFUNC int m_dummy(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_DUMMY 	"DUMMY"	/* dummy */
 #define TOK_DUMMY 	"DU"	/* 127 4ever !;) */
 
-
+#ifndef STATIC_LINKING
+ModuleInfo mod_header
+#else
 ModuleInfo m_dummy_info
+#endif
   = {
-  	1,
+  	2,
 	"dummy",	/* Name of module */
 	"$Id$", /* Version */
 	"command /dummy", /* Short description of module */
@@ -45,24 +48,18 @@ ModuleInfo m_dummy_info
 	NULL 
     };
 
-/*
- * The purpose of these ifdefs, are that we can "static" link the ircd if we
+
+/* The purpose of these ifdefs, are that we can "static" link the ircd if we
  * want to
 */
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_init(void)
+DLLFUNC int	mod_init(int module_load)
 #else
-void    m_dummy_init(void)
+int    m_dummy_init(int module_load)
 #endif
 {
-	/* extern variable to export m_dummy_info to temporary
-           ModuleInfo *modulebuffer;
-	   the module_load() will use this to add to the modules linked 
-	   list
-	*/
-	module_buffer = &m_dummy_info;
 	/*
 	 * We call our add_Command crap here
 	*/
@@ -71,9 +68,9 @@ void    m_dummy_init(void)
 
 /* Is first run when server is 100% ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_load(void)
+DLLFUNC int	mod_load(int module_load)
 #else
-void    m_dummy_load(void)
+int    m_dummy_load(int module_load)
 #endif
 {
 }

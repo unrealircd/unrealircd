@@ -70,13 +70,12 @@ exit(0);
 }
 ], ac_cv_ip6=yes, ac_cv_ip6=no)
 ])
-
-])
 if test "$ac_cv_ip6" = "no"; then
 AC_MSG_WARN(Your system does not support IPv6 so it will not be enabled)
 else
 AC_DEFINE(INET6)
 fi
+])
 AC_CHECK_HEADER(sys/param.h,AC_DEFINE(PARAMH))
 AC_CHECK_HEADER(stdlib.h,AC_DEFINE(STDLIBH))
 AC_CHECK_HEADER(stddef.h,AC_DEFINE(STDDEFH))

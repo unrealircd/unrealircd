@@ -56,9 +56,14 @@ extern int user_modes[];
 #define MSG_SVS2MODE    "SVS2MODE"
 #define TOK_SVS2MODE	"v"
 
+#ifndef DYNAMIC_LINKING
 ModuleInfo m_svsmode_info
+#else
+#define m_svsmode_info mod_header
+ModuleInfo mod_header
+#endif
   = {
-  	1,
+  	2,
 	"test",
 	"$Id$",
 	"command /svsmode and svs2mode", 
@@ -67,20 +72,19 @@ ModuleInfo m_svsmode_info
     };
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_init(void)
+DLLFUNC int	mod_init(int module_load)
 #else
-void    m_svsmode_init(void)
+int    m_svsmode_init(int module_load)
 #endif
 {
-	module_buffer = &m_svsmode_info;
 	add_Command(MSG_SVSMODE, TOK_SVSMODE, m_svsmode, MAXPARA);
 	add_Command(MSG_SVS2MODE, TOK_SVS2MODE, m_svs2mode, MAXPARA);
 }
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_load(void)
+DLLFUNC int	mod_load(int module_load)
 #else
-void    m_svsmode_load(void)
+int m_svsmode_load(int module_load)
 #endif
 {
 }

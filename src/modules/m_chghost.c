@@ -48,10 +48,14 @@
 #define TOK_CHGHOST 	"AL"
 
 DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-
+#ifndef DYNAMIC_LINKING
 ModuleInfo m_chghost_info
+#else
+#define m_chghost_info mod_header
+ModuleInfo mod_header
+#endif
   = {
-  	1,
+  	2,
 	"chghost",	/* Name of module */
 	"$Id$", /* Version */
 	"/chghost", /* Short description of module */
@@ -65,17 +69,11 @@ ModuleInfo m_chghost_info
 */
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_init(void)
+DLLFUNC int	mod_init(int module_load)
 #else
-void    m_chghost_init(void)
+int    m_chghost_init(int module_load)
 #endif
 {
-	/* extern variable to export m_chghost_info to temporary
-           ModuleInfo *modulebuffer;
-	   the module_load() will use this to add to the modules linked 
-	   list
-	*/
-	module_buffer = &m_chghost_info;
 	/*
 	 * We call our add_Command crap here
 	*/

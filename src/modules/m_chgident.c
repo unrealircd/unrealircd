@@ -49,9 +49,14 @@
 
 DLLFUNC int m_chgident(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
+#ifndef DYNAMIC_LINKING
 ModuleInfo m_chgident_info
+#else
+#define m_chgident_info mod_header
+ModuleInfo mod_header
+#endif
   = {
-  	1,
+  	2,
 	"chgident",	/* Name of module */
 	"$Id$", /* Version */
 	"/chgident", /* Short description of module */
@@ -65,9 +70,9 @@ ModuleInfo m_chgident_info
 */
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_init(void)
+DLLFUNC int	mod_init(int module_load)
 #else
-void    m_chgident_init(void)
+int   m_chgident_init(int module_load)
 #endif
 {
 	/* extern variable to export m_chgident_info to temporary
@@ -75,7 +80,6 @@ void    m_chgident_init(void)
 	   the module_load() will use this to add to the modules linked 
 	   list
 	*/
-	module_buffer = &m_chgident_info;
 	/*
 	 * We call our add_Command crap here
 	*/

@@ -613,8 +613,12 @@ seen. gmtime warning still there
 - Added configure check for glob.h
 - Added the ability to use file globs in loadmodule and include (only if your system has glob)
 - Added ./Config option to enable IPv6 (and made a configure check to make sure we can)
-- Made glob() use GLOB_LIMIT on OpenBSD 2.9 to help prevent a DoS
+- Fixed autoconf/Makefile screwup caused by codemastr
+- Fixed a problem with IPv6 always enabled (could you check this fix, code?)
 - Fixed a bug allowing channek keys to have spaces
 - Cleaned up some thread porting code
 - Added a new versioning system to allow easy tracking of bugs
+- Made glob() use GLOB_LIMIT on OpenBSD 2.9 to help prevent a DoS
 - Fixed makeconf
+- Changed the way modules work. We're now at MOD_VERSION 2
+- Changed ALL MODULES to version 2
