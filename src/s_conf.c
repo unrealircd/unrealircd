@@ -1217,23 +1217,6 @@ ConfigItem_ban 	*Find_banEx(char *host, short type, short type2)
 	return NULL;
 }
 
-aMotd *Find_file(char *file, short type) {
-	ConfigItem_tld *tlds;
-
-	for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *)tlds->next) {
-		if (type == 0) {
-			if (!strcmp(file, tlds->motd_file))
-				return tlds->motd;
-		}
-		else {
-			if (!strcmp(file, tlds->rules_file))
-				return tlds->rules;
-		}
-	}
-	return NULL;
-}
-
-
 int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 {
 	ConfigItem_allow *aconf;
@@ -1788,9 +1771,9 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 		isnew = 0;
 	}
 	
-	cep = config_entry_find(ce->ce_entries, "password");
+	cep = config_find_entry(ce->ce_entries, "password");
 	oper->auth = Auth_ConvertConf2AuthStruct(cep);
-	cep = config_entry_find(ce->ce_entries, "class");
+	cep = config_find_entry(ce->ce_entries, "class");
 	oper->class = Find_class(cep->ce_vardata);
 	if (!oper->class)
 	{
@@ -1809,11 +1792,10 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 
 		for (m = (*cep->ce_vardata) ? cep->ce_vardata : m; *m; m++) {
 			for (i = _OldOperFlags; (flag = *i); i += 2)
-					if (*m == (char)(*(i + 1))) {
-						oper->oflags |= flag;
-						break;
-					}
-			}
+				if (*m == (char)(*(i + 1))) {
+					oper->oflags |= flag;
+					break;
+				}
 		}
 	}
 	else
@@ -1831,15 +1813,15 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 	}
-	if ((cep = config_find_entry(ce->ce_entries, "swhois"))
+	if ((cep = config_find_entry(ce->ce_entries, "swhois")))
 	{
 		ircstrdup(oper->swhois, cep->ce_vardata);
 	}
-	if ((cep = config_find_entry(ce->ce_entries, "snomask"))
+	if ((cep = config_find_entry(ce->ce_entries, "snomask")))
 	{
 		ircstrdup(oper->snomask, cep->ce_vardata);
 	}
-	cep = config_entry_find(ce->ce_entries, "from");
+	cep = config_find_entry(ce->ce_entries, "from");
 	for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 	{
 		if (!strcmp(cepp->ce_varname, "userhost"))
@@ -2035,7 +2017,7 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 	class->maxclients = atol(cep->ce_vardata);
 	cep = config_find_entry(ce->ce_entries, "sendq");
 	class->sendq = atol(cep->ce_vardata);
-	if ((cep = config_entry(ce->ce_entries, "connfreq")))
+	if ((cep = config_find_entry(ce->ce_entries, "connfreq")))
 	{
 		class->connfreq = atol(cep->ce_vardata);
 	}
@@ -2085,7 +2067,7 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 			errors++; continue;
 		}
 	}
-	if ((cep = config_find_entry(ce->entries, "pingfreq")))
+	if ((cep = config_find_entry(ce->ce_entries, "pingfreq")))
 	{
 		l = atol(cep->ce_vardata);
 		if (l < 1)
@@ -2101,7 +2083,7 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_fileptr->cf_filename, cep->ce_varlinenum);
 		errors++;
 	}
-	if ((cep = config_find_entry(ce->entries, "maxclients")))
+	if ((cep = config_find_entry(ce->ce_entries, "maxclients")))
 	{
 		l = atol(cep->ce_vardata);
 		if (!l)
@@ -2117,7 +2099,7 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_fileptr->cf_filename, cep->ce_varlinenum);
 		errors++;
 	}
-	if ((cep = config_find_entry(ce->entries, "sendq")))
+	if ((cep = config_find_entry(ce->ce_entries, "sendq")))
 	{
 		l = atol(cep->ce_vardata);
 		if (!l)
@@ -2133,7 +2115,7 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_fileptr->cf_filename, cep->ce_varlinenum);
 		errors++;
 	}
-	if ((cep = config_find_entry(ce->entries, "connfreq")))
+	if ((cep = config_find_entry(ce->ce_entries, "connfreq")))
 	{
 		l = atol(cep->ce_vardata);
 		if (l < 10)
@@ -2257,53 +2239,21 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 	ConfigItem_tld *ca;
 
-	ca = MyMallocEx(sizeof(ConfigItem_tld)); 
-     cep = config_find_entry(ce->ce_entries, "mask");
-     for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	ca = MyMallocEx(sizeof(ConfigItem_tld)); cep =
+	config_find_entry(ce->ce_entries, "mask");
+	ca->mask = strdup(cep->ce_vardata);
+	cep = config_find_entry(ce->ce_entries, "motd");
+	ca->motd = read_motd(cep->ce_vardata); 
+	ca->motd_file = strdup(cep->ce_vardata);
+	ca->motd_tm = motd_tm;
+	cep = config_find_entry(ce->ce_entries, "rules");
+	ca->rules = read_rules(cep->ce_vardata);
+	ca->rules_file = strdup(cep->ce_vardata);
+	
+	if ((cep = config_find_entry(ce->ce_entries, "channel")))
 	{
-		if (!cep->ce_varname)
-		{
-			config_status("%s:%i: blank tld item",
-				cep->ce_fileptr->cf_filename,
-				cep->ce_varlinenum);
-			continue;
-		}
-		if (!cep->ce_vardata)
-		{
-			config_status("%s:%i: missing parameter in tld::%s",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				cep->ce_varname);
-			continue;
-		}
-
-		if (!strcmp(cep->ce_varname, "mask")) {
-			ca->mask = strdup(cep->ce_vardata);
-		}
-		else if (!strcmp(cep->ce_varname, "motd")) {
-			if (!(ca->motd = Find_file(cep->ce_vardata,0)))
-				ca->motd = read_motd(cep->ce_vardata);
-			else
-				ca->flag.motdptr = 1;
-			ca->motd_file = strdup(cep->ce_vardata);
-			ca->motd_tm = motd_tm;
-		}
-		else if (!strcmp(cep->ce_varname, "rules")) {
-			if (!(ca->rules = Find_file(cep->ce_vardata,1)))
-				ca->rules = read_rules(cep->ce_vardata);
-			else
-				ca->flag.rulesptr = 1;
-			ca->rules_file = strdup(cep->ce_vardata);
-		}
-		else if (!strcmp(cep->ce_varname, "channel")) {
-			ca->channel = strdup(cep->ce_vardata);
-		}
-		else
-		{
-			config_status("%s:%i: unknown directive tld::%s",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				cep->ce_varname);
-		}
-	}
+		ca->channel = strdup(cep->ce_vardata);
+	}	
 	AddListItem(ca, conf_tld);
 	return 1;
 }
@@ -2312,7 +2262,7 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
 	int	    errors = 0;
-	
+	int	    fd = -1;
         for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!cep->ce_varname)
@@ -2329,7 +2279,6 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 				cep->ce_varname);
 			errors++; continue;
 		}
-
 		if (!strcmp(cep->ce_varname, "mask")) {
 		}
 		else if (!strcmp(cep->ce_varname, "motd")) {
@@ -2346,6 +2295,54 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 			errors++; continue;
 		}
 	}
+	if (errors)
+		return -1;
+
+	if (!(cep = config_find_entry(ce->ce_entries, "mask")))
+	{
+		config_error("%s:%i: tld::mask missing",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	}
+	if (!(cep = config_find_entry(ce->ce_entries, "motd")))
+	{
+		config_error("%s:%i: tld::motd missing",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	}
+	else
+	{
+		if (((fd = open(cep->ce_vardata, O_RDONLY)) == -1))
+		{
+			config_error("%s:%i: tld::motd: %s: %s",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				cep->ce_vardata, strerror(errno));
+			errors++;
+		}
+		else
+			close(fd);
+		
+	}
+	
+	if (!(cep = config_find_entry(ce->ce_entries, "rules")))
+	{
+		config_error("%s:%i: tld::rules missing",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	}
+	else
+	{
+		if (((fd = open(cep->ce_vardata, O_RDONLY)) == -1))
+		{
+			config_error("%s:%i: tld::rules: %s: %s",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				cep->ce_vardata, strerror(errno));
+			errors++;
+		}
+		else
+			close(fd);
+	}
+	
 	return (errors == 0 ? 1 : -1);
 }
 
@@ -2751,7 +2748,7 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else if (!strcmp(ce->ce_vardata, "tkl")) {
 		cep2 = config_find_entry(ce->ce_entries, "mask");
-		cep3 = config_find_entry(ce->ce_entries, "mask");
+		cep3 = config_find_entry(ce->ce_entries, "type");
 		ca = MyMallocEx(sizeof(ConfigItem_except));
 		ca->mask = strdup(cep2->ce_vardata);
 		if (!strcmp(cep3->ce_vardata, "gline"))

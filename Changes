@@ -1636,3 +1636,5 @@ seen. gmtime warning still there
 - Removed src/win32/unrealinstssl.iss and merged it into unrealinst.iss, add #define
   USE_SSL to the file to build an SSL package
 - Added additional NT Service options to the win32 installer
+- Made CLIENT_FLOOD more customizable
+- Fixed some conf3 compile errors and block-modded _*_tld

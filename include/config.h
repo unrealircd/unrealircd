@@ -601,13 +601,9 @@ error You stuffed up config.h signals
 # define stricmp strcasecmp
 # define strnicmp strncasecmp
 #if defined(CLIENT_FLOOD)
-#  if	(CLIENT_FLOOD > 8000)
-#    define CLIENT_FLOOD 8000
-#  else
 #    if (CLIENT_FLOOD < 512)
      error CLIENT_FLOOD needs redefining.
 #    endif
-#  endif
 #else
      error CLIENT_FLOOD undefined
 #endif
