@@ -131,7 +131,7 @@ int  m_mkpasswd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if ((type = Auth_FindType(parv[1])) == -1)
 	{
 		sendto_one(sptr, 
-			":%s NOTICE %s :*** %s is not a enabled authentication method",
+			":%s NOTICE %s :*** %s is not an enabled authentication method",
 				me.name, sptr->name, parv[1]);
 		return 0;
 	}

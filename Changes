@@ -1232,3 +1232,6 @@ seen. gmtime warning still there
 - Fixed a listen::options::serversonly bug reported by swissSolaris (#0000084)
 - Fixed leftovers of non- char *configfile compliance. Thanks to ace and
   various other people ..
+- Fixed a /mkpasswd typo and added the updated /mkpasswd syntax to doc/unrealircd.doc, both
+  reported by peck
+
