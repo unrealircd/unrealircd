@@ -1046,3 +1046,5 @@ seen. gmtime warning still there
 - Fixed a bug under WinXP in the editor
 - Someone removed tkl and opermotd from the command hash (breaks both commands)
 - Made validate_configuration be called on /rehash, reported by Mick
+- Fixed a /chgname bug reported by rob where you had to prefix
+  the name with a : to set a realname with spaces.
