@@ -1360,6 +1360,12 @@ void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv
 					chptr->chname, chptr->creationtime, sendts);			
 					*/
 				chptr->creationtime = sendts;
+#if 0
+				if (sendts < 750000)
+					sendto_realops(
+						"Warning! Possible desynch: MODE for channel %s ('%s %s') has fishy timestamp (%ld) (from %s/%s)"
+						chptr->chname, modebuf, parabuf, sendts, cptr->name, sptr->name);
+#endif
 				/* new chan or our timestamp is wrong */
 				/* now works for double-bounce prevention */
 
@@ -1432,6 +1438,10 @@ void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv
 		    modebuf, parabuf);
 	/* tell them it's not a timestamp, in case the last param
 	   ** is a number. */
+
+	if (MyConnect(sptr))
+		RunHook7(HOOKTYPE_LOCAL_CHANMODE, cptr, sptr, chptr, modebuf, parabuf, sendts, samode);
+
 }
 /* make_mode_str -- written by binary
  *	Reconstructs the mode string, to make it look clean.  mode_buf will
@@ -2805,6 +2815,8 @@ CMD_FUNC(do_join)
 				sendto_channel_butserv(chptr, sptr,
 				    PartFmt2, parv[0], chptr->chname,
 				    "Left all channels");
+				if (MyConnect(sptr))
+					RunHook4(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, "Left all channels");
 				remove_user_from_channel(sptr, chptr);
 			}
 			sendto_serv_butone_token(cptr, parv[0],
@@ -3108,6 +3120,9 @@ CMD_FUNC(m_part)
 			
 		}
 
+		if (MyConnect(sptr))
+			RunHook4(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, comment);
+
 		if (1)
 		{
 			if ((chptr->mode.mode & MODE_AUDITORIUM) && !is_chanownprotop(sptr, chptr))
@@ -3328,6 +3343,17 @@ CMD_FUNC(m_kick)
 				continue;
 
 			      attack:
+				if (MyConnect(sptr)) {
+					int breakit = 0;
+					for (global_i = Hooks[HOOKTYPE_LOCAL_KICK]; global_i; global_i = global_i->next) {
+						if((*(global_i->func.intfunc))(cptr,sptr,who,chptr,comment) > 0) {
+							breakit = 1;
+							break;
+						}
+					}
+					if (breakit)
+						continue;
+				}
 				if (lp)
 					sendto_channel_butserv(chptr,
 					    sptr, ":%s KICK %s %s :%s",
@@ -3510,7 +3536,16 @@ CMD_FUNC(m_topic)
 #endif
 				}
 			}				
-					
+			/* ready to set... */
+			if (MyClient(sptr))
+			{
+				Hook *tmphook;
+				for (tmphook = Hooks[HOOKTYPE_LOCAL_TOPIC]; tmphook; tmphook = tmphook->next) {
+					topic = (*(tmphook->func.pcharfunc))(cptr, sptr, chptr, topic);
+					if (!topic)
+						return 0;
+				}
+			}					
 			/* setting a topic */
 			topiClen = strlen(topic);
 #ifndef TOPIC_NICK_IS_NUHOST

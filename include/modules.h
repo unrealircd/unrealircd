@@ -269,7 +269,11 @@ void HooktypeDel(Hooktype *hooktype, Module *module);
 
 #define RunHookReturnVoid(hooktype,x,ret) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) if((*(global_i->func.intfunc))(x) ret) return
 #define RunHook2(hooktype,x,y) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*(global_i->func.intfunc))(x,y)
-
+#define RunHook3(hooktype,a,b,c) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*(global_i->func.intfunc))(a,b,c)
+#define RunHook4(hooktype,a,b,c,d) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*(global_i->func.intfunc))(a,b,c,d)
+#define RunHook5(hooktype,a,b,c,d,e) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*(global_i->func.intfunc))(a,b,c,d,e)
+#define RunHook6(hooktype,a,b,c,d,e,f) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*(global_i->func.intfunc))(a,b,c,d,e,f)
+#define RunHook7(hooktype,a,b,c,d,e,f,g) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*(global_i->func.intfunc))(a,b,c,d,e,f,g)
 
 Command *CommandAdd(Module *module, char *cmd, char *tok, int (*func)(), unsigned char params, int flags);
 void CommandDel(Command *command);
@@ -293,7 +297,10 @@ int CommandExists(char *name);
 #define HOOKTYPE_CONFIGRUN 16
 #define HOOKTYPE_USERMSG 17
 #define HOOKTYPE_CHANMSG 18
-
+#define HOOKTYPE_LOCAL_PART 19
+#define HOOKTYPE_LOCAL_KICK 20
+#define HOOKTYPE_LOCAL_CHANMODE 21
+#define HOOKTYPE_LOCAL_TOPIC 22
 /* Module flags */
 #define MODFLAG_NONE	0x0000
 #define MODFLAG_LOADED	0x0001 /* Fully loaded */

@@ -618,7 +618,7 @@ static int do_query_number(Link *lp, struct IN_ADDR *numb, ResRQ *rptr)
 	else
 	{
 		(void)ircsprintf(ipbuf,
-		    "%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.ip6.int.",
+		    "%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.ip6.%s.",
 		    (u_int)(cp[15] & 0xf), (u_int)(cp[15] >> 4),
 		    (u_int)(cp[14] & 0xf), (u_int)(cp[14] >> 4),
 		    (u_int)(cp[13] & 0xf), (u_int)(cp[13] >> 4),
@@ -634,7 +634,13 @@ static int do_query_number(Link *lp, struct IN_ADDR *numb, ResRQ *rptr)
 		    (u_int)(cp[3] & 0xf), (u_int)(cp[3] >> 4),
 		    (u_int)(cp[2] & 0xf), (u_int)(cp[2] >> 4),
 		    (u_int)(cp[1] & 0xf), (u_int)(cp[1] >> 4),
-		    (u_int)(cp[0] & 0xf), (u_int)(cp[0] >> 4));
+		    (u_int)(cp[0] & 0xf), (u_int)(cp[0] >> 4),
+#ifdef SIXBONE_HACK
+		    (cp[0] == 0x3f && cp[1] == 0xfe) ? "int" : "arpa"
+#else
+		    "arpa"
+#endif
+		    );
 	}
 #else
 	cp = (u_char *)&numb->s_addr;

@@ -2192,3 +2192,7 @@ seen. gmtime warning still there
   1 and the channel was new.
 - Made it so a permanent /kline no longer says "Permanent Timed K:line" which can be confusing
   (#0000997) reported by AngryWolf
+- Module coders: new hooks: part, kick, chanmode, topic. changed: quit (added 'comment' param).
+- Enlarged REPORT_* vars a bit.
+- IPv6: UnrealIRCd can now lookup ip6.arpa addresses too (original IRCnet patch modified for
+  UnrealIRCd by Onliner).

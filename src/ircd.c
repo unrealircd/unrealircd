@@ -95,9 +95,9 @@ MemoryInfo StatsZ;
 
 int  R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns, R_do_id, R_fin_id, R_fail_id;
 
-char REPORT_DO_DNS[128], REPORT_FIN_DNS[128], REPORT_FIN_DNSC[128],
-    REPORT_FAIL_DNS[128], REPORT_DO_ID[128], REPORT_FIN_ID[128],
-    REPORT_FAIL_ID[128];
+char REPORT_DO_DNS[256], REPORT_FIN_DNS[256], REPORT_FIN_DNSC[256],
+    REPORT_FAIL_DNS[256], REPORT_DO_ID[256], REPORT_FIN_ID[256],
+    REPORT_FAIL_ID[256];
 extern ircstats IRCstats;
 aClient me;			/* That's me */
 char *me_hash;
