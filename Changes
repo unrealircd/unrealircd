@@ -815,3 +815,4 @@ seen. gmtime warning still there
 - Moved SHOWCONNECTINFO define to set::options::show-connect-info
 - Added support for nested comments in the configuration file (by chasm)
 - Added chasm to /info
+- Started work on usermode +V (WebTV mode)

@@ -89,6 +89,7 @@ int user_modes[] = { UMODE_OPER, 'o',
 	UMODE_DEAF, 'd',
 	UMODE_VICTIM, 'v',
 	UMODE_SETHOST, 't',
+	UMODE_WEBTV, 'V',
 #ifdef STRIPBADWORDS
 	UMODE_STRIPBADWORDS, 'G',
 #endif
@@ -1814,13 +1815,13 @@ static int m_message(cptr, sptr, parc, parv, notice)
 		return -1;
 	}
 
-	if (WEBTV_SUPPORT == 1)
+/*	if (WEBTV_SUPPORT == 1)
 	{
 		if (*parv[2] != '\1')
 		{
 			cmd = MSG_PRIVATE;
 		}
-	}
+	}*/
 	if (MyConnect(sptr))
 		parv[1] = canonize(parv[1]);
 
@@ -1922,6 +1923,9 @@ static int m_message(cptr, sptr, parc, parv, notice)
 
 			if (!is_silenced(sptr, acptr))
 			{
+				char *newcmd = cmd;
+				if (notice && IsWebTV(acptr) && *parv[2] != '\1')
+					newcmd = MSG_PRIVATE;
 				if (!notice && MyConnect(sptr) &&
 				    acptr->user && acptr->user->away)
 					sendto_one(sptr, rpl_str(RPL_AWAY),
@@ -1931,12 +1935,12 @@ static int m_message(cptr, sptr, parc, parv, notice)
 				if (!(IsULine(acptr) || IsULine(sptr)) &&
 				    IsFilteringWords(acptr))
 					sendto_message_one(acptr, sptr,
-					    parv[0], cmd, nick,
+					    parv[0], newcmd, nick,
 					    stripbadwords_message(parv[2]));
 				else
 #endif
 					sendto_message_one(acptr,
-					    sptr, parv[0], cmd, nick, parv[2]);
+					    sptr, parv[0], newcmd, nick, parv[2]);
 			}
 			continue;
 		}
