@@ -1537,3 +1537,4 @@ seen. gmtime warning still there
 - win32 install script changes to deal with version switchover
 - Added src/win32/gplplusssl.rtf for ssl-install script to show during
   install in license - GPL + the notes from openssl
+- Made minor changes to help.conf
