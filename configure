@@ -10273,24 +10273,13 @@ rm -f core core.* *.core conftest$ac_exeext conftest.$ac_objext conftest.$ac_ext
 fi
 
 case "${host_cpu}-${host_os}" in
-SunOS*5.*)
-CFLAGS="$CFLAGS -DSOL20"
+*SunOS*)
+CFLAGS="$CFLAGS -D_SOLARIS"
+IRCDLIBS="$IRCDLIBS -lresolv "
 ;;
 *solaris*)
 CFLAGS="$CFLAGS -D_SOLARIS"
 IRCDLIBS="$IRCDLIBS -lresolv "
-;;
-*AmigaOS*68020*)
-CFLAGS="$CFLAGS -D_AMIGA -m68020"
-;;
-*AmigaOS*68030*)
-CFLAGS="$CFLAGS -D_AMIGA -m68030"
-;;
-*AmigaOS*68040*)
-CFLAGS="$CFLAGS -D_AMIGA -m68040"
-;;
-*AmigaOS*68060*)
-CFLAGS="$CFLAGS -D_AMIGA -m68060"
 ;;
 esac
 ac_config_files="$ac_config_files Makefile src/modules/Makefile unreal"

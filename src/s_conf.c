@@ -1553,6 +1553,7 @@ void	config_rehash()
 	for (deny_channel_ptr = conf_deny_channel; deny_channel_ptr; deny_channel_ptr = (ConfigItem_deny_channel *) next)
 	{
 		next = (ListStruct *)deny_channel_ptr->next;
+		ircfree(deny_channel_ptr->redirect);
 		ircfree(deny_channel_ptr->channel);
 		ircfree(deny_channel_ptr->reason);
 		DelListItem(deny_channel_ptr, conf_deny_channel);
@@ -6160,6 +6161,10 @@ int	_conf_deny_channel(ConfigFile *conf, ConfigEntry *ce)
 		{
 			ircstrdup(deny->channel, cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "redirect"))
+		{
+			ircstrdup(deny->redirect, cep->ce_vardata);
+		}
 		else if (!strcmp(cep->ce_varname, "reason"))
 		{
 			ircstrdup(deny->reason, cep->ce_vardata);
@@ -6293,9 +6298,11 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 				errors++; continue;
 			}
 			if (!strcmp(cep->ce_varname, "channel"))
-			;
+				;
+			else if (!strcmp(cep->ce_varname, "redirect"))
+				;
 			else if (!strcmp(cep->ce_varname, "reason"))
-			;
+				;
 			else 
 			{
 				config_error("%s:%i: unknown directive deny::%s",

@@ -21,7 +21,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 Beta16<br>
-  <b>Last doc update:</b> 2003-05-12 </div>
+  <b>Last doc update:</b> 2003-05-14 </div>
   <b>Head Coders:</b> Stskeeps / codemastr / Luke / McSkaf / Syzop<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -1252,18 +1252,28 @@ deny link {
 deny channel {
 	channel "&lt;channel-mask&gt;";
 	reason &lt;reason-for-ban&gt;;
+	redirect "&lt;channel-name&gt;";
 };</pre></p>
 <p> </p>
 <p>The deny channel block allows you to disallow users from joining specific channels. 
   The deny::channel directive specifies a wildcard mask of channels the users 
   may not join, and the deny::reason specifies the reason why the channel may 
-  not be joined.</p>
+  not be joined. Additionally, you may specify a deny::redirect. If this is specified,
+  when a user tries to join a channel that matches deny::channel, he/she will be redirected
+  to deny::redirect.</p>
 <p>Example</p>
 <pre>
 deny channel {
 	channel "#unrealsucks";
 	reason "No it don't!";
+};
+
+deny channel {
+	channel "#operhelp";
+	reason "Our network help channel is #help, not #operhelp";
+	redirect "#help";
 };</pre></p>
+
 <p></p></div>
 <p><font class="block_section">4.26 - </font><font class="block_name">Allow Channel Block</font>
    <font class="block_optional">OPTIONAL</font><a name="allowchannelblock"></a>

@@ -1101,7 +1101,7 @@ struct _configitem_deny_version {
 struct _configitem_deny_channel {
 	ConfigItem		*prev, *next;
 	ConfigFlag		flag;
-	char			*channel, *reason;
+	char			*channel, *reason, *redirect;
 };
 
 struct _configitem_allow_channel {

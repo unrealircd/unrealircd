@@ -2833,8 +2833,27 @@ CMD_FUNC(do_join)
 /* RESTRICTCHAN */
 			if (conf_deny_channel)
 			{
-				if (channel_canjoin(sptr, name) != 1)
-					RET(0)
+				if (!IsOper(sptr) && !IsULine(sptr))
+				{
+					ConfigItem_deny_channel *d;
+					if ((d = Find_channel_allowed(name)))
+					{
+						if (d->reason)
+							sendto_one(sptr, 
+							":%s NOTICE %s :*** Can not join %s: %s",
+							me.name, sptr->name, name, d->reason);
+						if (d->redirect)
+						{
+							sendto_one(sptr,
+							":%s NOTICE %s :*** Redirecting you to %s",
+							me.name, sptr->name, d->redirect);
+							parv[0] = sptr->name;
+							parv[1] = d->redirect;
+							do_join(cptr, sptr, 2, parv);
+						}
+						continue;
+					}
+				}
 			}
 		}
 
