@@ -617,3 +617,4 @@ seen. gmtime warning still there
 - Fixed a bug allowing channek keys to have spaces
 - Cleaned up some thread porting code
 - Added a new versioning system to allow easy tracking of bugs
+- Fixed makeconf

@@ -56,8 +56,8 @@ fi
 
 # If Settings exist, load the info, otherwise tell them to run Config.
 
-if [ -r Settings ]; then
-	. Settings
+if [ -r "config.settings" ]; then
+	. config.settings
 else
 	echo "Hmm, you need to run Config first!"
 	echo "Type ./Config"
@@ -65,10 +65,9 @@ else
 	echo "you ran it from."
 	exit 1
 fi
-
 # we use a modified mkpasswd credit to Nelson Minar (minar@reed.edu)
 # for creating the original mkpasswd
-if test $CRYPT_OPER_PASSWORD != "" || test $CRYPT_LINK_PASSWORD != "" || test $CRYPT_XLINE_PASSWORD != "" ; then
+if test "x$CRYPT_OPER_PASSWORD" != "x" -o "x$CRYPT_LINK_PASSWORD" != "x" -o "x$CRYPT_XLINE_PASSWORD" != "x" ; then
 		cat > crypter.tmp.c << __EOF__
 			#include <stdlib.h>
 			#include <stdio.h>
