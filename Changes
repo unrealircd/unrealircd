@@ -408,3 +408,4 @@
 - Removed , support from /topic (not needed)
 - Removed count_channels (not in use)
 - Made a major is_banned speed up
+- Redid K:line and n:line checking to be alot faster

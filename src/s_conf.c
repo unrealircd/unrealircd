@@ -368,24 +368,24 @@ aConfItem *find_tline(char *host)
 
 int  find_nline(aClient *cptr)
 {
-	aConfItem *aconf;
-	for (aconf = conf; aconf; aconf = aconf->next)
-		if ((aconf->status == CONF_EXCEPT) &&
-		    aconf->host && aconf->name
-		    && (match(aconf->host, cptr->sockhost) == 0)
-		    && (!cptr->user->username
-		    || match(aconf->name, cptr->user->username) == 0))
-			break;
+	aConfItem *aconf, *aconf2;
 
-	if (aconf)
-		return 0;
+	/* Only check for an E:line if an n:line was found */
 
-	for (aconf = conf; aconf; aconf = aconf->next)
+		for (aconf = conf; aconf; aconf = aconf->next)
 	{
 		if (aconf->status & CONF_NLINE
-		    && (match(aconf->host, cptr->info) == 0))
+		&& (match(aconf->host, cptr->info) == 0)) {
+			for (aconf2 = conf; aconf2; aconf2 = aconf2->next)
+		if ((aconf2->status == CONF_EXCEPT) &&
+		    aconf2->host && aconf2->name
+		    && (match(aconf2->host, cptr->sockhost) == 0)
+		    && (!cptr->user->username
+		    || match(aconf2->name, cptr->user->username) == 0))
+			return 0;
 			break;
 	}
+		}
 	if (aconf)
 	{
 		if (BadPtr(aconf->passwd))
@@ -1587,7 +1587,7 @@ int  find_kill(cptr)
 	aClient *cptr;
 {
 	char reply[256], *host, *name;
-	aConfItem *tmp;
+	aConfItem *tmp, *tmp2;
 
 	if (!cptr->user)
 		return 0;
@@ -1601,28 +1601,25 @@ int  find_kill(cptr)
 
 	reply[0] = '\0';
 
-	for (tmp = conf; tmp; tmp = tmp->next)
-		if ((tmp->status == CONF_EXCEPT) && tmp->host && tmp->name &&
-		    (match(tmp->host, host) == 0) &&
-		    (!name || match(tmp->name, name) == 0) &&
-		    (!tmp->port || (tmp->port == cptr->acpt->port)))
-			break;
-
-	if (tmp)
-	{
-		/* This is an E:Line */
-		return 0;
-	}
+	/* Only search for E:lines if a K:line was found -- codemastr */
 
 	for (tmp = conf; tmp; tmp = tmp->next)
 		if ((tmp->status == CONF_KILL) && tmp->host && tmp->name &&
 		    (match(tmp->host, host) == 0) &&
 		    (!name || match(tmp->name, name) == 0) &&
-		    (!tmp->port || (tmp->port == cptr->acpt->port)))
+			(!tmp->port || (tmp->port == cptr->acpt->port))) {
+		for (tmp2 = conf; tmp2; tmp2 = tmp2->next)
+		if ((tmp2->status == CONF_EXCEPT) && tmp2->host && tmp2->name &&
+		    (match(tmp2->host, host) == 0) &&
+		    (!name || match(tmp2->name, name) == 0) &&
+		    (!tmp2->port || (tmp2->port == cptr->acpt->port)))
+			return 0;
+
 			if (BadPtr(tmp->passwd))
 				break;
 			else if (is_comment(tmp->passwd))
 				break;
+		}
 
 	if (reply[0])
 		sendto_one(cptr, reply,
