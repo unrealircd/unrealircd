@@ -244,7 +244,8 @@ CFLAGS="$save_CFLAGS"
 if test "$ac_cv_thread_multi" = "yes"; then
 AC_MSG_RESULT(Ok we'll install FSU Pthreads)
 cd extras
-tar xfz pthreads.tar.gz
+gunzip -d pthreads.tar.gz
+tar xf pthreads.tar
 cd threads/src
 ./configure
 cd ../../../

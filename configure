@@ -4252,7 +4252,8 @@ echo "$ac_t""$ac_cv_thread_multi" 1>&6
 if test "$ac_cv_thread_multi" = "yes"; then
 echo "$ac_t""Ok we'll install FSU Pthreads" 1>&6
 cd extras
-tar xfz pthreads.tar.gz
+gunzip -d pthreads.tar.gz
+tar xf pthreads.tar
 cd threads/src
 ./configure
 cd ../../../
@@ -4286,12 +4287,12 @@ CC="$PTHREAD_CC"
 CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
 IRCDLIBS="$IRCDLIBS $PTHREAD_LIBS"
 echo $ac_n "checking if FD_SETSIZE is large enough to allow $ac_fd file descriptors""... $ac_c" 1>&6
-echo "configure:4290: checking if FD_SETSIZE is large enough to allow $ac_fd file descriptors" >&5
+echo "configure:4291: checking if FD_SETSIZE is large enough to allow $ac_fd file descriptors" >&5
 if test "$cross_compiling" = yes; then
     { echo "configure: error: can not run test program while cross compiling" 1>&2; exit 1; }
 else
   cat > conftest.$ac_ext <<EOF
-#line 4295 "configure"
+#line 4296 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -4303,7 +4304,7 @@ exit(1);
 }
 
 EOF
-if { (eval echo configure:4307: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:4308: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   echo "$ac_t""yes" 1>&6
 else
