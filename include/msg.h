@@ -362,6 +362,10 @@ extern int m_chgname(), m_shun(), m_post();
 #ifdef CRYPTOIRCD
 extern int m_crypto();
 #endif
+#ifdef GUEST
+extern int m_guest();
+#endif
+
 
 #ifdef MSGTAB
 struct Message *msgmap[256];

@@ -63,7 +63,7 @@ extern char zlinebuf[];
 int  tkl_add_line(type, usermask, hostmask, reason, setby, expire_at, set_at)
 	int  type;
 	char *usermask, *hostmask, *reason, *setby;
-	time_t expire_at, set_at;
+	TS   expire_at, set_at;
 {
 	aTKline *nl;
 
@@ -126,7 +126,7 @@ aTKline *tkl_expire(aTKline * tmp)
 	char whattype[512];
 	long i, i1;
 	char *chost, *cname, *cip;
-	int is_ip;
+	int  is_ip;
 	aClient *acptr;
 	if (!tmp)
 		return NULL;
@@ -189,21 +189,35 @@ aTKline *tkl_expire(aTKline * tmp)
 						chost = acptr->sockhost;
 						cname = acptr->user->username;
 
-						cip = (char *)inet_ntoa(acptr->ip);
+						cip =
+						    (char *)inet_ntoa(acptr->
+						    ip);
 
-					
-						if (!(*tmp->hostmask < '0') && (*tmp->hostmask > '9'))
+
+						if (!(*tmp->hostmask < '0')
+						    && (*tmp->hostmask > '9'))
 							is_ip = 1;
 						else
 							is_ip = 0;
 
-						if (is_ip == 0 ? (!match(tmp->hostmask, chost)
-						    && !match(tmp->usermask, cname)) : (!match(tmp->hostmask,
-		    					chost) || !match(tmp->hostmask, cip))
-						    && !match(tmp->usermask, cname))
+						if (is_ip ==
+						    0 ? (!match(tmp->hostmask,
+						    chost)
+						    && !match(tmp->usermask,
+						    cname)) : (!match(tmp->
+						    hostmask, chost)
+						    || !match(tmp->hostmask,
+						    cip))
+						    && !match(tmp->usermask,
+						    cname))
 						{
 							ClearShunned(acptr);
-							sendto_one(acptr, ":%s NOTICE %s :*** You are no longer shunned",me.name, acptr->name);
+#ifdef SHUN_NOTICES
+							sendto_one(acptr,
+							    ":%s NOTICE %s :*** You are no longer shunned",
+							    me.name,
+							    acptr->name);
+#endif
 						}
 					}
 			}
@@ -217,7 +231,7 @@ aTKline *tkl_expire(aTKline * tmp)
 void tkl_check_expire(void)
 {
 	aTKline *gp, t;
-	time_t nowtime;
+	TS   nowtime;
 
 	nowtime = TStime();
 
@@ -244,7 +258,7 @@ int  find_tkline_match(cptr, xx)
 {
 	aTKline *lp;
 	char *chost, *cname, *cip;
-	time_t nowtime;
+	TS   nowtime;
 	int  is_ip;
 	char msge[1024];
 	char gmt2[256];
@@ -268,38 +282,68 @@ int  find_tkline_match(cptr, xx)
 			is_ip = 0;
 
 		if (xx != 2 ? is_ip == 0 ? (!match(lp->hostmask, chost)
-				&& !match(lp->usermask, cname)) :
-				(!match(lp->hostmask, chost) || !match(lp->hostmask, cip))
-				: !match(lp->hostmask, chost))
+		    && !match(lp->usermask, cname)) :
+		    (!match(lp->hostmask, chost) || !match(lp->hostmask, cip))
+		    : !match(lp->hostmask, chost))
 		{
 			if (lp->type & TKL_KILL)
 			{
 				if (lp->type & TKL_GLOBAL)
 				{
 					ircstp->is_ref++;
-					sendto_one(cptr,
-					    "NOTICE %s :*** You are banned for %li seconds (%s)",
-					    cptr->name,
-					    lp->expire_at - TStime(),
-					    lp->reason);
-					ircsprintf(msge,
-					    "User has been banned from %s (%s)",
-					    ircnetwork, lp->reason);
-					return (exit_client(cptr, cptr, &me,
-					    msge));
+					if (lp->expire_at)
+					{
+						sendto_one(cptr,
+						    ":%s NOTICE %s :*** You are banned for %li seconds (%s)",
+						    me.name, cptr->name,
+						    lp->expire_at - TStime(),
+						    lp->reason);
+						ircsprintf(msge,
+						    "User has been banned from %s (%s)",
+						    ircnetwork, lp->reason);
+						return (exit_client(cptr, cptr, &me,
+						    msge));
+					}
+					else
+					{
+						sendto_one(cptr, 
+							":%s NOTICE %s :*** You have been banned permanently (%s)",
+							me.name, cptr->name,
+							lp->reason);
+						ircsprintf(msge, 
+							"User has been permanently banned from %s (%s)",
+							ircnetwork, lp->reason);
+						return(exit_client(cptr, cptr, &me, msge));
+					}
 				}
 				else
 				{
 					ircstp->is_ref++;
-					sendto_one(cptr,
-					    "NOTICE %s :*** You are banned for %li seconds (%s)",
-					    cptr->name,
-					    lp->expire_at - TStime(),
-					    lp->reason);
-					ircsprintf(msge, "User has banned (%s)",
-					    me.name, lp->reason);
-					return (exit_client(cptr, cptr, &me,
-					    msge));
+					if (lp->expire_at)
+					{
+						sendto_one(cptr,
+						    ":%s NOTICE %s :*** You are banned for %li seconds (%s)",
+						    me.name,
+						    cptr->name,
+						    lp->expire_at - TStime(),
+						    lp->reason);
+						ircsprintf(msge, "User has banned (%s)",
+						    me.name, lp->reason);
+						return (exit_client(cptr, cptr, &me,
+						    msge));
+					}
+					else
+					{
+						sendto_one(cptr,
+						    ":%s NOTICE %s :*** You have been permanently banned (%s)",
+						    me.name,
+						    cptr->name,
+						    lp->reason);
+						ircsprintf(msge, "User has been permanently banned (%s)",
+						    me.name, lp->reason);
+						return (exit_client(cptr, cptr, &me,
+						    msge));
+					}
 				}
 			}
 			else if (lp->type & (TKL_ZAP))
@@ -324,22 +368,29 @@ int  find_tkline_match(cptr, xx)
 					return -1;
 				SetShunned(cptr);
 #ifndef __OpenBSD__
-				strncpy(gmt2, asctime(gmtime((clock_t *) &lp->expire_at)),
-	      		            sizeof(gmt2));
+				strncpy(gmt2,
+				    asctime(gmtime((clock_t *) & lp->
+				    expire_at)), sizeof(gmt2));
 
 #else
-				strncpy(gmt2, asctime(gmtime((time_t *) &lp->expire_at)),
-	      		            sizeof(gmt2));
+				strncpy(gmt2,
+				    asctime(gmtime((TS *)&lp->expire_at)),
+				    sizeof(gmt2));
 
-#endif		
-	           		gmt2[strlen(gmt2) - 1] = '\0';
+#endif
+				gmt2[strlen(gmt2) - 1] = '\0';
+#ifdef SHUN_NOTICES
 				if (lp->expire_at)
-					sendto_one(cptr, ":%s NOTICE %s :*** You have been shunned by %s until %s (Reason: %s)", 
-						me.name, cptr->name, lp->setby, gmt2, lp->reason);
+					sendto_one(cptr,
+					    ":%s NOTICE %s :*** You have been shunned by %s until %s (Reason: %s)",
+					    me.name, cptr->name, lp->setby,
+					    gmt2, lp->reason);
 				else
-					sendto_one(cptr, ":%s NOTICE %s :*** You have been shunned permanently by %s (Reason: %s)", 
-						me.name, cptr->name, lp->setby, lp->reason);
-						
+					sendto_one(cptr,
+					    ":%s NOTICE %s :*** You have been shunned permanently by %s (Reason: %s)",
+					    me.name, cptr->name, lp->setby,
+					    lp->reason);
+#endif
 				return -1;
 			}
 		}
@@ -372,7 +423,7 @@ void tkl_stats(cptr)
 	aClient *cptr;
 {
 	aTKline *tk;
-	time_t curtime;
+	TS   curtime;
 
 	/*
 	   We output in this row:
@@ -388,36 +439,41 @@ void tkl_stats(cptr)
 		{
 			sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.name,
 			    cptr->name, 'G', tk->usermask, tk->hostmask,
-			 (tk->expire_at != 0) ? (tk->expire_at - curtime) : 0, (curtime - tk->set_at),
-			    tk->setby, tk->reason);
+			    (tk->expire_at !=
+			    0) ? (tk->expire_at - curtime) : 0,
+			    (curtime - tk->set_at), tk->setby, tk->reason);
 		}
 		if (tk->type == (TKL_ZAP | TKL_GLOBAL))
 		{
 			sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.name,
 			    cptr->name, 'Z', tk->usermask, tk->hostmask,
-			(tk->expire_at != 0) ? (tk->expire_at - curtime) : 0, (curtime - tk->set_at),
-			    tk->setby, tk->reason);
+			    (tk->expire_at !=
+			    0) ? (tk->expire_at - curtime) : 0,
+			    (curtime - tk->set_at), tk->setby, tk->reason);
 		}
 		if (tk->type == (TKL_SHUN | TKL_GLOBAL))
 		{
 			sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.name,
 			    cptr->name, 's', tk->usermask, tk->hostmask,
-			(tk->expire_at != 0) ? (tk->expire_at - curtime) : 0, (curtime - tk->set_at),
-			    tk->setby, tk->reason);
+			    (tk->expire_at !=
+			    0) ? (tk->expire_at - curtime) : 0,
+			    (curtime - tk->set_at), tk->setby, tk->reason);
 		}
 		if (tk->type == (TKL_KILL))
 		{
 			sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.name,
 			    cptr->name, 'K', tk->usermask, tk->hostmask,
-			(tk->expire_at != 0) ? (tk->expire_at - curtime) : 0, (curtime - tk->set_at),
-			    tk->setby, tk->reason);
+			    (tk->expire_at !=
+			    0) ? (tk->expire_at - curtime) : 0,
+			    (curtime - tk->set_at), tk->setby, tk->reason);
 		}
 		if (tk->type == (TKL_ZAP))
 		{
 			sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.name,
 			    cptr->name, 'z', tk->usermask, tk->hostmask,
-			 (tk->expire_at != 0) ? (tk->expire_at - curtime) : 0, (curtime - tk->set_at),
-			    tk->setby, tk->reason);
+			    (tk->expire_at !=
+			    0) ? (tk->expire_at - curtime) : 0,
+			    (curtime - tk->set_at), tk->setby, tk->reason);
 		}
 	}
 
@@ -432,26 +488,18 @@ void tkl_synch(aClient *sptr)
 	{
 		if (tk->type & TKL_GLOBAL)
 		{
-			if ((tk->type & TKL_KILL) && !SupportSJOIN(sptr))
-				sendto_one(sptr,
-				    ":%s GLINE %s@%s %li %li %s :%s", me.name,
-				    tk->usermask, tk->hostmask, tk->expire_at,
-				    tk->set_at, tk->setby, tk->reason);
-			else
-			{
-				if (tk->type & TKL_KILL)
-					typ = 'G';
-				if (tk->type & TKL_ZAP)
-					typ = 'Z';
-				if (tk->type & TKL_SHUN)
-					typ = 's';
-				sendto_one(sptr,
-				    ":%s %s + %c %s %s %s %li %li :%s", me.name,
-				    IsToken(sptr) ? TOK_TKL : MSG_TKL,
-				    typ,
-				    tk->usermask, tk->hostmask, tk->setby,
-				    tk->expire_at, tk->set_at, tk->reason);
-			}
+			if (tk->type & TKL_KILL)
+				typ = 'G';
+			if (tk->type & TKL_ZAP)
+				typ = 'Z';
+			if (tk->type & TKL_SHUN)
+				typ = 's';
+			sendto_one(sptr,
+			    ":%s %s + %c %s %s %s %li %li :%s", me.name,
+			    IsToken(sptr) ? TOK_TKL : MSG_TKL,
+			    typ,
+			    tk->usermask, tk->hostmask, tk->setby,
+			    tk->expire_at, tk->set_at, tk->reason);
 		}
 	}
 }
@@ -478,7 +526,7 @@ int  m_tkl(cptr, sptr, parc, parv)
 	int  found = 0;
 	char gmt[256], gmt2[256];
 	char txt[256];
-	time_t expiry_1, setat_1;
+	TS   expiry_1, setat_1;
 
 
 	if (!IsServer(sptr) && !IsOper(sptr) && !IsMe(sptr))
@@ -507,8 +555,9 @@ int  m_tkl(cptr, sptr, parc, parv)
 		  else if (parv[2][0] == 'k')
 			  type = TKL_KILL;
 		  else if (parv[2][0] == 's')
-		  	type = TKL_SHUN |TKL_GLOBAL;
-		  else return 0;
+			  type = TKL_SHUN | TKL_GLOBAL;
+		  else
+			  return 0;
 
 		  found = 0;
 		  for (tk = tklines; tk; tk = tk->next)
@@ -536,18 +585,16 @@ int  m_tkl(cptr, sptr, parc, parv)
 
 #ifndef __OpenBSD__
 		  strncpy(gmt, asctime(gmtime((clock_t *) & setat_1)),
-		   sizeof(gmt));
+		      sizeof(gmt));
 #else
-		  strncpy(gmt, asctime(gmtime((time_t *)& setat_1)),
-		   sizeof(gmt));
+		  strncpy(gmt, asctime(gmtime((TS *)&setat_1)), sizeof(gmt));
 #endif
-		
+
 #ifndef __OpenBSD__
 		  strncpy(gmt2, asctime(gmtime((clock_t *) & expiry_1)),
 		      sizeof(gmt2));
 #else
-		  strncpy(gmt2, asctime(gmtime((time_t *) & expiry_1)),
-		      sizeof(gmt2));
+		  strncpy(gmt2, asctime(gmtime((TS *)&expiry_1)), sizeof(gmt2));
 #endif
 		  gmt[strlen(gmt) - 1] = '\0';
 		  gmt2[strlen(gmt2) - 1] = '\0';
@@ -566,40 +613,39 @@ int  m_tkl(cptr, sptr, parc, parv)
 		    case TKL_ZAP | TKL_GLOBAL:
 			    strcpy(txt, "Global Z:line");
 			    break;
-		     case TKL_SHUN | TKL_GLOBAL:
-		     	strcpy(txt, "Shun");
-		     	break;
+		    case TKL_SHUN | TKL_GLOBAL:
+			    strcpy(txt, "Shun");
+			    break;
 		    default:
 			    strcpy(txt, "Unknown *:Line");
 		  }
-		if (expiry_1 != 0) {
-		  sendto_umode(UMODE_EYES,
-		      "*** %s added for %s@%s on %s GMT (from %s to expire at %s GMT: %s)",
-		      txt, parv[3], parv[4], gmt, parv[5], gmt2, parv[8]);
-		  ircd_log
-		      ("%s added for %s@%s on %s GMT (from %s to expire at %s GMT: %s)",
-		      txt, parv[3], parv[4], gmt, parv[5], gmt2, parv[8]);
-		}
-		else {
-		sendto_umode(UMODE_EYES,
-			"*** Permanent %s added for %s@%s on %s GMT (from %s: %s)", txt, parv[3], parv[4],
-			gmt, parv[5], parv[8]);
-		ircd_log
-			("Permanent %s added for %s@%s on %s GMT (from %s: %s)", txt, parv[3], parv[4],
-                        gmt, parv[5], parv[8]);
-		}
+		  if (expiry_1 != 0)
+		  {
+			  sendto_umode(UMODE_EYES,
+			      "*** %s added for %s@%s on %s GMT (from %s to expire at %s GMT: %s)",
+			      txt, parv[3], parv[4], gmt, parv[5], gmt2,
+			      parv[8]);
+			  ircd_log
+			      ("%s added for %s@%s on %s GMT (from %s to expire at %s GMT: %s)",
+			      txt, parv[3], parv[4], gmt, parv[5], gmt2,
+			      parv[8]);
+		  }
+		  else
+		  {
+			  sendto_umode(UMODE_EYES,
+			      "*** Permanent %s added for %s@%s on %s GMT (from %s: %s)",
+			      txt, parv[3], parv[4], gmt, parv[5], parv[8]);
+			  ircd_log
+			      ("Permanent %s added for %s@%s on %s GMT (from %s: %s)",
+			      txt, parv[3], parv[4], gmt, parv[5], parv[8]);
+		  }
 		  tkl_sweep();
 		  if (type & TKL_GLOBAL)
 		  {
-			  sendto_serv_sjoin(cptr,
+			  sendto_serv_butone(cptr,
 			      ":%s TKL %s %s %s %s %s %s %s :%s", sptr->name,
 			      parv[1], parv[2], parv[3], parv[4], parv[5],
 			      parv[6], parv[7], parv[8]);
-			  if (type & TKL_KILL)
-				  sendto_serv_butone_sjoin(cptr,
-				      ":%s GLINE %s@%s %s %s %s :%s", me.name,
-				      parv[3], parv[4], parv[6], parv[7],
-				      parv[5], parv[8]);
 		  }
 		  return 0;
 	  }
@@ -615,8 +661,9 @@ int  m_tkl(cptr, sptr, parc, parv)
 		  else if (*parv[2] == 'k')
 			  type = TKL_KILL;
 		  else if (*parv[2] == 's')
-		  	type = TKL_SHUN | TKL_GLOBAL;
-		  else  return 0;
+			  type = TKL_SHUN | TKL_GLOBAL;
+		  else
+			  return 0;
 
 		  switch (type)
 		  {
@@ -633,7 +680,7 @@ int  m_tkl(cptr, sptr, parc, parv)
 			    strcpy(txt, "Global Z:line");
 			    break;
 		    case TKL_SHUN | TKL_GLOBAL:
-		    	    strcpy(txt, "Shun");
+			    strcpy(txt, "Shun");
 			    break;
 		    default:
 			    strcpy(txt, "Unknown *:Line");
@@ -653,8 +700,8 @@ int  m_tkl(cptr, sptr, parc, parv)
 					      tk->set_at)), sizeof(gmt));
 #else
 					  strncpy(gmt,
-					      asctime(gmtime((time_t *) &
-					      tk->set_at)), sizeof(gmt));
+					      asctime(gmtime((TS *)&tk->
+					      set_at)), sizeof(gmt));
 #endif
 					  gmt[strlen(gmt) - 1] = '\0';
 					  sendto_umode(UMODE_EYES,
@@ -663,16 +710,11 @@ int  m_tkl(cptr, sptr, parc, parv)
 					      tk->hostmask, gmt, tk->reason);
 					  tkl_del_line(tk);
 					  if (type & TKL_GLOBAL)
-						  sendto_serv_sjoin(cptr,
+						  sendto_serv_butone(cptr,
 						      ":%s TKL %s %s %s %s %s",
 						      sptr->name, parv[1],
 						      parv[2], parv[3], parv[4],
 						      parv[5]);
-					  if (type & (TKL_GLOBAL | TKL_KILL))
-						  sendto_serv_butone_sjoin(cptr,
-						      ":%s REMGLINE %s@%s",
-						      me.name, parv[3],
-						      parv[4]);
 					  break;
 				  }
 			  }
@@ -699,7 +741,7 @@ int  m_tkl(cptr, sptr, parc, parv)
 int  m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aTKline *tk;
-	time_t secs;
+	TS   secs;
 	int  whattodo = 0;	/* 0 = add  1 = del */
 	int  found = 0;
 	int  i;
@@ -726,15 +768,6 @@ int  m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (IsServer(sptr))
 	{
-		tkllayer[1] = "+";
-		tkllayer[2] = "G";
-		tkllayer[3] = strtok(parv[1], "@");
-		tkllayer[4] = strtok(NULL, "@");
-		tkllayer[5] = parv[4];
-		tkllayer[6] = parv[2];
-		tkllayer[7] = parv[3];
-		tkllayer[8] = parv[5];
-		m_tkl(&me, &me, 9, tkllayer);
 		return;
 	}
 	if (!IsOper(sptr))
@@ -867,9 +900,9 @@ int  m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (whattodo == 0)
 	{
 		if (secs == 0)
-		ircsprintf(mo, "%li", secs);
+			ircsprintf(mo, "%li", secs);
 		else
-		ircsprintf(mo, "%li", secs + TStime());
+			ircsprintf(mo, "%li", secs + TStime());
 		ircsprintf(mo2, "%li", TStime());
 		tkllayer[6] = mo;
 		tkllayer[7] = mo2;
@@ -898,10 +931,11 @@ int  m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 int  m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aTKline *tk;
-	time_t secs;
+	TS   secs;
 	int  whattodo = 0;	/* 0 = add  1 = del */
 	int  found = 0;
 	int  i;
+	int  quiet = 0;
 	aClient *acptr;
 	char *mask = NULL;
 	char mo[1024], mo2[1024], mo3[512];
@@ -959,6 +993,11 @@ int  m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			return;
 		}
 		whattodo = 0;
+		if (*(mask + 1) == '!')
+		{
+			quiet = 1;
+			mask++;
+		}
 		mask++;
 	}
 	if (whattodo == 0)
@@ -985,15 +1024,15 @@ int  m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				mask = mo3;
 				goto mm;
 			}
-		}		
+		}
 
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** [Shun error] Please use a user@host mask or an existing nickname.",
 		    me.name, sptr->name);
 		return 0;
 	}
-	
-	mm:
+
+      mm:
 	if (whattodo == 1)
 		goto nochecks;
 	if (p)
@@ -1066,10 +1105,10 @@ int  m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	    (IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost));
 	if (whattodo == 0)
 	{
-		if (secs ==0)
-		ircsprintf(mo, "%li", secs);
+		if (secs == 0)
+			ircsprintf(mo, "%li", secs);
 		else
-		ircsprintf(mo, "%li", secs + TStime());
+			ircsprintf(mo, "%li", secs + TStime());
 		ircsprintf(mo2, "%li", TStime());
 		tkllayer[6] = mo;
 		tkllayer[7] = mo2;
@@ -1084,4 +1123,3 @@ int  m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	}
 }
-

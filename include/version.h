@@ -36,11 +36,10 @@
 #define PATCH6  		""
 #define PATCH7  		""
 #define PATCH8  		COMPILEINFO
-#define PATCH9  		""
-#ifndef _WIN32
-#define BASE_VERSION "Unreal"
+#ifdef _WIN32
+#define PATCH9  		"+win32"
 #else
-#define BASE_VERSION "UnrealIRCd/32 v"
+#define PATCH9  		""
 #endif
 /* release header */
 #define Rh BASE_VERSION

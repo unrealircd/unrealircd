@@ -271,6 +271,8 @@ int  dcc_loadconf(void)
 		if (buf[0] == '#' || buf[0] == '/' || buf[0] == '\0')
 			continue;
 		iCstrip(buf);
+		if (buf[0] == '#' || buf[0] == '/' || buf[0] == '\0')
+			continue;
 		x = strtok(buf, " ");
 		if (strcmp("deny", x) == 0)
 		{
@@ -526,6 +528,8 @@ int  cr_loadconf(void)
 		if (buf[0] == '#' || buf[0] == '/' || buf[0] == '\0')
 			continue;
 		iCstrip(buf);
+		if (buf[0] == '#' || buf[0] == '/' || buf[0] == '\0')
+			continue;
 		x = strtok(buf, " ");
 		if (strcmp("allow", x) == 0)
 		{
@@ -601,7 +605,10 @@ int  vhost_add(vhost, login, password, usermask, hostmask)
 	aVhost *fl;
 
 	fl = (aVhost *) MyMalloc(sizeof(aVhost));
-
+	if (strlen(vhost) > (HOSTLEN - 4))
+	{
+		*(vhost + (HOSTLEN - 4)) = '\0';
+	}
 	AllocCpy(fl->virthost, vhost);
 	AllocCpy(fl->usermask, usermask);
 	AllocCpy(fl->hostmask, hostmask);
@@ -668,9 +675,10 @@ int  vhost_loadconf(void)
 	while (fgets(buf, 2048, f))
 	{
 		if (buf[0] == '#' || buf[0] == '/' || buf[0] == '\0')
-
 			continue;
 		iCstrip(buf);
+		if (buf[0] == '#' || buf[0] == '/' || buf[0] == '\0')
+			continue;
 		x = strtok(buf, " ");
 		if (strcmp("vhost", x) == 0)
 		{
@@ -678,9 +686,17 @@ int  vhost_loadconf(void)
 			if (!y)
 				continue;
 			login = strtok(NULL, " ");
+			if (!login)
+				continue;
 			password = strtok(NULL, " ");
+			if (!password)
+				continue;
 			mask = strtok(NULL, "");
+			if (!mask)
+				continue;
 			usermask = strtok(mask, "@");
+			if (!usermask)
+				continue;
 			hostmask = strtok(NULL, " ");
 			if (!hostmask)
 				continue;
@@ -753,13 +769,17 @@ int  m_vhost(cptr, sptr, parc, parv)
 				if (!strcmp(p->password, pwd))
 				{
 					/* let's vhost him .. */
+					if (sptr->user->virthost)
+						MyFree(sptr->user->virthost);
+					
+					sptr->user->virthost = MyMalloc(strlen(p->virthost) + 1);
 					strcpy(sptr->user->virthost,
 					    p->virthost);
 					sptr->umodes |= UMODE_HIDE;
 					sptr->umodes |= UMODE_SETHOST;
-					sendto_serv_butone(cptr,
-					    ":%s SETHOST %s", sptr->name,
-					    p->virthost);
+					sendto_serv_butone_token(cptr, sptr->name,
+						MSG_SETHOST, TOK_SETHOST,
+						"%s", p->virthost);
 					sendto_one(sptr, ":%s MODE %s :+tx",
 					    sptr->name, sptr->name);
 					sendto_one(sptr,
@@ -780,7 +800,7 @@ int  m_vhost(cptr, sptr, parc, parv)
 					    sptr->user->username,
 					    sptr->user->realhost);
 					sendto_one(sptr,
-					    ":%s NOTICE %s :*** [\2vhost\2] Login for %s faied - password incorrect",
+					    ":%s NOTICE %s :*** [\2vhost\2] Login for %s failed - password incorrect",
 					    me.name, sptr->name, user);
 					return 0;
 				}

@@ -93,6 +93,10 @@
  */
 #define ADMINCHAT 1
 
+/*
+  If you want SHUN_NOTICES, define this 
+*/
+#undef SHUN_NOTICES
 
 /*
   Remote rehash

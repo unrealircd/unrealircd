@@ -843,6 +843,8 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 	}
 	SetClient(sptr);
 	IRCstats.clients++;
+	if (sptr->srvptr && sptr->srvptr->serv)
+		sptr->srvptr->serv->users++;
 	user->virthost =
 	    (char *)make_virthost(user->realhost, user->virthost, 1);
 	if (MyConnect(sptr))
@@ -922,6 +924,10 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		if ((find_uline(cptr->confs, sptr->user->server)))
 			sptr->flags |= FLAGS_ULINE;
 	}
+	if (sptr->umodes & UMODE_INVISIBLE)
+	{
+		IRCstats.invisible++;
+	}
 
 	if (virthost && umode)
 	{
@@ -940,6 +946,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			ircsprintf(sptr->user->virthost, virthost);
 		}
 	}
+	
 	hash_check_notify(sptr, RPL_LOGON);	/* Uglier hack */
 	send_umode(NULL, sptr, 0, SEND_UMODES, buf);
 	/* NICKv2 Servers ! */
@@ -960,7 +967,8 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			sendto_one(nsptr, ":%s PRIVMSG %s@%s :IDENTIFY %s",
 			    sptr->name, NickServ, SERVICES_NAME, sptr->passwd);
 		/* Force the user to join the given chans -- codemastr */
-		sendto_one(cptr,":%s MODE %s :%s", cptr->name, cptr->name, buf);
+		if (buf[1] != '\0')
+			sendto_one(cptr,":%s MODE %s :%s", cptr->name, cptr->name, buf);
 		
 		if (strcmp(AUTO_JOIN_CHANS, "0"))
 		{
@@ -1150,6 +1158,12 @@ int  m_nick(cptr, sptr, parc, parv)
 	{
 		if (MyConnect(sptr))
 		{
+#ifdef GUEST
+			if (IsUnknown(sptr)) {
+				m_guest(cptr, sptr, parc, parv);
+				return 0;
+    			}
+#endif
 			sendto_one(sptr, err_str(ERR_NICKNAMEINUSE), me.name,
 			    BadPtr(parv[0]) ? "*" : parv[0], nick);
 			return 0;	/* NICK message ignored */
@@ -1311,6 +1325,12 @@ int  m_nick(cptr, sptr, parc, parv)
 		   ** NICK is coming from local client connection. Just
 		   ** send error reply and ignore the command.
 		 */
+#ifdef GUEST
+		if (IsUnknown(sptr)) {
+			m_guest(cptr, sptr, parc, parv);
+			return 0;
+		}
+#endif
 		sendto_one(sptr, err_str(ERR_NICKNAMEINUSE),
 		    /* parv[0] is empty when connecting */
 		    me.name, BadPtr(parv[0]) ? "*" : parv[0], nick);
@@ -1791,10 +1811,11 @@ static int m_message(cptr, sptr, parc, parv, notice)
 					    me.name, parv[0], acptr->name,
 					    acptr->user->away);
 #ifdef STRIPBADWORDS
-				if (IsFilteringWords(acptr))
-					sendto_prefix_one(acptr, sptr,
-					    ":%s %s %s :%s", parv[0], cmd, nick,
-					    stripbadwords_message(parv[2]));
+				if (!(IsULine(acptr, acptr) || IsULine(cptr, sptr)) && 
+					IsFilteringWords(acptr))
+						sendto_prefix_one(acptr, sptr,
+						    ":%s %s %s :%s", parv[0], cmd, nick,
+							    stripbadwords_message(parv[2]));
 				else
 #endif
 					sendto_message_one(acptr,
@@ -2893,7 +2914,6 @@ int  m_user(cptr, sptr, parc, parv)
 
 	if (!IsServer(cptr))
 	{
-		sptr->umodes |= (UFLAGS & atoi(host));
 		if (MODE_I == 1)
 		{
 			sptr->umodes |= UMODE_INVISIBLE;
@@ -2905,15 +2925,11 @@ int  m_user(cptr, sptr, parc, parv)
 		}
 		if (MODE_STRIPWORDS == 1)
 		{
-			sptr->umodes |= MODE_STRIPWORDS;
+			sptr->umodes |= UMODE_STRIPBADWORDS;
 		}
 	}
 
 
-	if (sptr->umodes & UMODE_INVISIBLE)
-	{
-		IRCstats.invisible++;
-	}
 
 	strncpyzt(user->realhost, host, sizeof(user->realhost));
 	user->server = me_hash;
@@ -3990,84 +4006,65 @@ int  m_pass(cptr, sptr, parc, parv)
  * m_userhost added by Darren Reed 13/8/91 to aid clients and reduce
  * the need for complicated requests like WHOIS. It returns user/host
  * information only (no spurious AWAY labels or channels).
+ * Re-written by Dianora 1999
  */
 int  m_userhost(cptr, sptr, parc, parv)
 	aClient *cptr, *sptr;
 	int  parc;
 	char *parv[];
 {
-	int  catsize;
-	char *p = NULL;
-	aClient *acptr;
-	char *s;
-	char *curpos;
-	int  resid;
 
+  char  *p;            /* scratch end pointer */
+  char  *cn;           /* current name */
+  struct Client *acptr;
+  char response[5][NICKLEN*2+CHANNELLEN+USERLEN+HOSTLEN+30];
+  int i;               /* loop counter */
 
-	if (parc > 2)
-		(void)m_userhost(cptr, sptr, parc - 1, parv + 1);
+  if (parc < 2)
+    {
+      sendto_one(sptr, rpl_str(ERR_NEEDMOREPARAMS),
+                 me.name, parv[0], "USERHOST");
+      return 0;
+    }
 
-	if (parc < 2)
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "USERHOST");
-		return 0;
-	}
+  /* The idea is to build up the response string out of pieces
+   * none of this strlen() nonsense.
+   * 5 * (NICKLEN*2+CHANNELLEN+USERLEN+HOSTLEN+30) is still << sizeof(buf)
+   * and our ircsprintf() truncates it to fit anyway. There is
+   * no danger of an overflow here. -Dianora
+   */
+  response[0][0] = response[1][0] = response[2][0] =
+    response[3][0] = response[4][0] = '\0';
 
-	/*
-	 * use curpos to keep track of where we are in the output buffer,
-	 * and use resid to keep track of the remaining space in the
-	 * buffer
-	 */
-	curpos = buf;
-	curpos += sprintf(curpos, rpl_str(RPL_USERHOST), me.name, parv[0]);
-	resid = sizeof(buf) - (curpos - buf) - 1;	/* remaining space */
+  cn = parv[1];
 
-	/*
-	 * for each user found, print an entry if it fits.
-	 */
-	for (s = strtoken(&p, parv[1], " "); s;
-	    s = strtoken(&p, (char *)NULL, " "))
-		if ((acptr = find_person(s, NULL)))
-		{
-			catsize = strlen(acptr->name)
-			    + (IsAnOper(acptr) ? 1 : 0)
-			    + 3
-			    + strlen(acptr->user->username)
-			    + strlen(acptr->user->realhost) + 1;
-			if (catsize <= resid)
-			{
-				curpos += sprintf(curpos, "%s%s=%c%s@%s ",
-				    acptr->name,
-				    IsAnOper(acptr) ? "*" : "",
-				    (acptr->user->away) ? '-' : '+',
-				    acptr->user->username,
-				    ((IsOper(sptr) || acptr == sptr) ?
-				    acptr->user->realhost :
-				    (IsHidden(acptr) ? acptr->user->
-				    virthost : acptr->user->realhost)));
-				if (IsWhois(acptr) && IsOper(sptr))
-				{
-/*
-					sendto_one(acptr,
-					    ":%s NOTICE %s :*** %s did a /userhost on you.",
-					    me.name, sptr->name, sptr->name);
-*/
-				}
-				resid -= catsize;
-			}
-		}
+  for(i=0; (i < 5) && cn; i++ )
+    {
+      if((p = strchr(cn, ' ')))
+        *p = '\0';
 
-	/*
-	 * because of some trickery here, we might have the string end in
-	 * "...:" or "foo " (note the trailing space)
-	 * If we have a trailing space, nuke it here.
-	 */
-	curpos--;
-	if (*curpos != ':')
-		*curpos = '\0';
-	sendto_one(sptr, "%s", buf);
-	return 0;
+      if ((acptr = find_person(cn, NULL)))
+        {
+          ircsprintf(response[i], "%s%s=%c%s@%s",
+                     acptr->name,
+                     IsAnOper(acptr) ? "*" : "",
+                     (acptr->user->away) ? '-' : '+',
+                     acptr->username,
+   			((acptr != sptr) && !IsOper(sptr) 
+   			  && IsHidden(acptr) ? acptr->user->virthost : 
+   			  acptr->user->realhost));
+        }
+      if(p)
+        p++;
+      cn = p;
+    }
+
+  ircsprintf(buf, "%s%s %s %s %s %s",
+    rpl_str(RPL_USERHOST),
+    response[0], response[1], response[2], response[3], response[4] );
+  sendto_one(sptr, buf, me.name, parv[0]);
+
+  return 0;
 }
 
 /*
@@ -4437,10 +4434,13 @@ int  m_umode(cptr, sptr, parc, parv)
 		                         
 	}
 	if (!(setflags & UMODE_INVISIBLE) && IsInvisible(sptr))
+	{
 		IRCstats.invisible++;
+	}
 	if ((setflags & UMODE_INVISIBLE) && !IsInvisible(sptr))
+	{
 		IRCstats.invisible--;
-
+	}
 	/*
 	 * compare new flags with old flags and send string which
 	 * will cause servers to update correctly.
@@ -4539,9 +4539,13 @@ int  m_svs2mode(cptr, sptr, parc, parv)
 				  break;
 			  case 'i':
 				  if (what == MODE_ADD)
+				  {
 					  IRCstats.invisible++;
+				  }
 				  if (what == MODE_DEL)
+				  {
 					  IRCstats.invisible--;
+				  }
 			  	  goto setmodey;
 			  case 'o':
 				  if (what == MODE_ADD)
@@ -4632,15 +4636,21 @@ int  m_svsmode(cptr, sptr, parc, parv)
 				  break;
 			  case 'i':
 				  if (what == MODE_ADD)
+				  {
 					  IRCstats.invisible++;
+				  }
 				  if (what == MODE_DEL)
+				  {
+
 					  IRCstats.invisible--;
+			          }
 			  	  goto setmodex;
 			  case 'o':
 				  if (what == MODE_ADD)
 					  IRCstats.operators++;
 				  if (what == MODE_DEL)
 					  IRCstats.operators--;
+				  goto setmodex;
 			  case 'd':
 				  if (parv[3] && isdigit(*parv[3]))
 				  {

@@ -581,32 +581,3 @@ char *inetntop(af, in, out, the_size)
 	return out;
 }
 #endif
-
-extern int Rha;
-/*
- * Disconnect all users connected to local server incase of /restart slow 
- * (development tool to test load conditions, should be turned off in releases)
-*/
-int	rh(void)
-{
-	int	fd;
-	return 0;	
-	/* test if this is an development release, just for security - 
-	   we test if there is a Unreal*l, as it would be Unreal3.1-Silverheart(devel)
-	
-	   should really be an define, but i need it to be !DEVELOP as well,
-	   for testing phases at irc.ircsystems.net
-	   
-	*/
-	if (!is_enabled("Unreal*l*", Rh VERSIONONLY))
-		return 0;
-		
-	
-	for (fd = 0; fd < MAXCONNECTIONS; fd++)
-	{
-		close(fd);
-	}
-
-	Rha = 1;			
-	save_tunefile();
-}

@@ -55,6 +55,11 @@ static inline unsigned long base64_to_int(char *);
 
 static Link *servers = NULL;
 
+Link *return_servers(void) 
+{
+	return(servers);
+}
+
 char *base64enc(unsigned long i)
 {
 	return int_to_base64(i);

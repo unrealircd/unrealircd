@@ -56,6 +56,8 @@
 
 #define BMAGIC 0x4675636B596F754661736369737473
 
+#define BASE_VERSION "Unreal"
+
 #ifndef NULL
 #define NULL 0
 #endif
@@ -84,6 +86,8 @@ void free();
 #endif
 #endif
 
+
+#define TS time_t
 
 extern int match PROTO((char *, char *));
 #define mycmp(a,b) \
@@ -115,7 +119,7 @@ extern int inet_netof PROTO((struct IN_ADDR));
 #endif
 
 int  global_count, max_global_count;
-extern char *myctime PROTO((time_t));
+extern char *myctime PROTO((TS));
 extern char *strtoken PROTO((char **, char *, char *));
 
 #define PRECISE_CHECK
@@ -225,7 +229,7 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 		" CHANTYPES=%s"    \
 		" PREFIX=%s"     \
 		" :are supported by this server"
-		
+
 #define PROTOCTL_PARAMETERS MAXWATCH, \
                             MAXSILES, \
                             MAXMODEPARAMS, \
@@ -235,7 +239,7 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
                             TOPICLEN, \
                             TOPICLEN, \
                             "#",      \
-                            "(ohv)@%+"       
+                            "(ohv)@%+"
 
 /* Server-Server PROTOCTL -Stskeeps */
 #define PROTOCTL_SERVER "NOQUIT TOKEN NICKv2 SJOIN SJOIN2 UMODE2 VL SJ3 NS" ZIPSTUFF
@@ -257,6 +261,30 @@ extern int lu_noninv, lu_inv, lu_serv, lu_oper,
     lu_unknown, lu_channel, lu_lu, lu_lulocal, lu_lserv,
     lu_clu, lu_mlu, lu_cglobalu, lu_mglobalu;
 
-time_t now;
+TS   now;
+
+#if defined(__STDC__)
+#define __const         const
+#define __signed        signed
+#define __volatile      volatile
+#ifndef __GNUC__
+#define __inline
+#endif
+
+#else
+#ifndef __GNUC__
+#define __const
+#define __inline
+#define __signed
+#define __volatile
+#ifndef NO_ANSI_KEYWORDS
+#define const                           /* delete ANSI C keywords */
+#define inline
+#define signed
+#define volatile
+#endif
+#endif
+#endif
+
 
 #endif /* __common_include__ */

@@ -8,11 +8,18 @@
 #
 # NO WARRANTY IS INCLUDED
 CURRENT_VERSION="Unreal3.1-Silverheart"
+WHATYAWANT="wget"
 clear
 cat .UPDATE
 cd src
 rm update.sh
-wget http://unreal.tspre.org/update.sh
+read $WHATYAWANT
+if [ "$WHATYWANT" == "wget" ] ; then
+	wget http://unreal.tspre.org/update.sh
+else
+	lynx -source http://unreal.tspre.org/update.sh > update.sh
+fi
+
 chmod +x update.sh
 export CURRENT_VERSION
 ./update.sh

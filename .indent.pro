@@ -17,6 +17,7 @@
 --declaration-indentation5
 -T size_t
 -T aClass
+-T TS
 -T aClient
 -T aServer
 -T anUser

