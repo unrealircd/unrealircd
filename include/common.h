@@ -257,6 +257,7 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 		" PREFIX=%s"      \
 		" CHANMODES=%s,%s,%s,%s" \
 		" NETWORK=%s" 	  \
+		" CASEMAPPING=%s" \
 		" :are supported by this server"
 
 #define PROTOCTL_PARAMETERS_2	  \
@@ -269,7 +270,8 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
                  "kfL", \
 		 "l", \
 		 "psmntirRcOAQKVGCuzNSM", \
-		 ircnet005
+		 ircnet005, \
+		 "ascii"
 			    
 /* Server-Server PROTOCTL -Stskeeps */
 #define PROTOCTL_SERVER "NOQUIT" \
