@@ -122,6 +122,21 @@ Konfigurationsdatei</a><br>
 ---8.8. <a href="#secantiexpolit"> Schutz gegen Exploits</a><br>
 ---8.9. <a href="#secsummary"> Zusammenfassung</a><br>
 9. <a href="#faq">Frequently Asked Questions (FAQ)</a><br> 
+ A. <a href="#regex">Reguläre Ausdrücke</a> 
+<br>
+---A.1. <a href="#regexlit">Literale</a><br>
+---A.2. <a href="#regexdot">Punkt Operator</a> 
+<br>
+---A.3. <a href="#regexrep">Wiederholungs Operatoren</a><br>
+---A.4. <a href="#regexbracket"> Bracket Ausdrücke</a> 
+</p>
+<p><br>
+---A.5. Assertions<br>
+---A.6. Alternation<br>
+---A.7. Subexpressions<br>
+---A.8. Back References<br>
+---A.9. Case Sensitivity<br>
+<br>
 </p>
 <p><b><font size="+2"><a name="IntroductionNotes">1.0 &#8211; Einführung &amp;
 Anmerkungen</a>&nbsp;</font></b><br>
@@ -4067,14 +4082,140 @@ Datei</a></b></font></p>
   niemals 100% sicher sein. Anwender und Entwickler haben jedes Sicherheitsloch
   zu finden und zu fixen, währen der Angreifer lediglich 1 Server mit 1
   Sicherheitsloch finden muss. Alles, was hier erklärt wurde, hilft jedoch, die
-  Risiken zu minimieren. Man sollte sich die Zeit nehmen, das netzwerk sicher zu
-  machen und die eigenen Opers zum Sicherheitsbewußtsein anzuleiten. Viele
+  Risiken zu minimieren. Man sollte sich die Zeit nehmen, das Netzwerk sicher zu
+  machen und die eigenen Opers zum Sicherheitsbewustsein anzuleiten. Viele
   Menschen kümmern sich so lange nicht um Sicherheit, bis sie gehackt wurden.
   Man sollte versuchen, dies zu vermeiden :).</div>
 <p>&nbsp;</p>
 <p><font size="+2"><b><a name="faq">9 &#8211; Frequently Asked Questions (FAQ)</a></b></font></p>
 <div class="desc"><p>Die FAQ kann man online <a href="http://www.vulnscan.org/UnrealIrcd/faq/" TARGET="_blank">hier</a>
   lesen .</p></div>
-<p></p>
+<p>&nbsp;</p>
+<p><font size="+2"><b><a name="regex"> A. Reguläre Ausdrücke</a></b></font></p>
+<p>&nbsp;
+<div class="desc" style="width: 876; height: 124"><p>Vorbemerkung (zitiert aus
+  wikipedia.org): Reguläre Ausdrücke (Abk. RegExp oder Regex, engl. regular expression) bilden eine Familie von kompakten, leistungsfähigen formalen Sprachen mit denen sich (Unter-)Mengen von Zeichenketten beschreiben lassen. Diese Sprachen werden von vielen Texteditoren und Hilfsprogrammen (hauptsächlich unter Unix) verwendet, um bestimmte Muster zu suchen und dann durch etwas anderes zu ersetzen oder eine Aktion auszuführen.</p><p>Reguläre
+  Ausdrücke werden innerhalb der Dokumentation von Unreal an vielen Stellen
+  benutzt, einschließlich Spamfilter, Badwords und Aliases. Es handelt sich
+  hierbei um ein mächtiges Werkzeug zum Vergleich von Zeichen. Sie werden oft
+  als &quot;regexp&quot; oder &quot;regex&quot; bezeichnet. Unreal benutzt die 'regular expression'
+  Bibliothek von TRE für die verwendeten regex. Diese Bibliothek unterstützt
+  einige sehr komplexe und fortgeschrittene Ausdrücke, die möglicherweise
+  verwirrend sein können. Die nachfolgenden Informationen sollen dabei helfen
+  zu verstehen, wie regexp arbeitet. Wer sich für weitergehende und
+  detaillierte Informationen zu dem Thema interessiert, sei auf die <a href="http://www.laurikari.net/tre/syntax.html">Hompage
+  von TRE</a> verwiesen. Eine gute deutsche Beschreibung des Themas findet man
+  auch bei <a href="http://de.wikipedia.org/wiki/RegulÃ¤rer_Ausdruck">wikipedia.org</a>.</p><p>&nbsp;</p></div>
+&nbsp;<p>
+<font size="+2"><b><a name="regexlit">A.1. Literale</a></b></font></p>
+<p><div class="desc"><p>Literale sind die am häufigsten benutzte Komponente in
+  einem regexp. Grundsätzlich handelt es sich hierbei um Zeichen, die als Text
+  behandelt werden. Beispielsweise besteht das Muster "test" aus den vier
+  Literalen "t," "e," "s," und "t." In Unreal werden Litarale als case
+  insensitive (Groß- oder Kleinschreibung ist egal) behandelt, so so dass der
+  eben beschriebene Ausdruck sowohl auf "test" als auch auf &quot;TEST&quot;
+  passt. Jedes Zeichen, bei dem es sich nicht um ein &quot;meta Zeichen&quot; (wird
+  in nachfolgenden Absätzen erläutert) handelt, wird als ein Literal behandelt.
+  Ebenso kann man explitit Zeichen als Literale definieren, indem man einen
+  Backslash ('\') voranstellt. Ein Beispiel: Ein Punkt ('.') ist an sich ein
+  Sonderzeichen, ein &quot;meta Zeichen&quot;. Soll jedoch nur auf das Vorkommen
+  eines Punktes in einem Text geprüft werden, der Punkt also als Literal
+  behandelt werden, so wird dem Punkt einfach ein \ vorangestellt. Man kann auch
+  auf Zeichen prüfen, die nicht einfach geschrieben werden können, wie z.B.
+  ASCII Zeichen 3 (Farbe). Muss z.B. für den Umgang mit einem IRC Client dieses
+  Zeichen definiert werden, kann als spezielle Zeichenfolge \x benutzt werden.
+  Die Definition von '\x3' wird dann als ASCII Zeichen 3 interpretiert. Die
+  Nummer nach dem x ist hexadezimal, angegeben werden können Werte von \x0 bis
+  \xFF.</p></div>
+&nbsp;
+<p><font size="+2"><b><a name="regexdot">A.2. Punkt Operator</a></b></font></p>
+<p><div class="desc"><p>Der Punkt (.) Operator wird als &quot;irgend ein
+  Zeichen&quot; benutzt&quot;. Er passt auf ein einzelnes Zeichen mit irgend
+  einem Wert. Zum Beispiel passt regex &quot;a.c&quot; auf &quot;abc,&quot;
+  &quot;adc,&quot; usw. Dagegen wird er nicht auf &quot;abd&quot; passen, weil
+  die Zeichen "a" und "c" exakt übereinstimmen müssen.</p></div>
+&nbsp;
+<p><a name="regexrep"><font size="+2"><b>A.3. Wiederholungs Operatoren</b></font></a></p>
+<p><div class="desc"><p>Einer der häufigsten Fehler, den Menschen im
+  Zusammenhang mit regex machen, ist die Annahme, dass die Ausdrücke ähnlich
+  wie Wildcards ('*', '?') funktionieren. Zwar haben diese Zeichen in regex eine
+  ähnliche Bedeutung wie als Wildcards, aber sie sind doch nicht exakt
+  dasselbe. Ausserdem&nbsp; unterstützen reguläre Ausdrücke andere und
+  fritschrittlichere Methoden der Behandlung von Wiederholungen.</p><p>Der
+  einfachste Wiederholungs Operator ist das '?'. Dieser Operator prüft auf
+  Übereinstimmung mit 0 oder 1 der vorhergehenden Zeichen. Dieses
+  &quot;vorhergehende Zeichen&quot; ist auch der Punkt, worin sich das '?' in
+  einer regex von einer Wildcard unterscheidet. In Wildcards bedeutet die Angabe
+  von "a?c" eine Übereinstimmung mit einem "a", gefolgt von irgend einem (oder
+  keinem) anderen Zeichen, gefolgt von einem "c." In Regex hat dies eine andere
+  Bedeutung. Es wird auf Übereinstimmung geprüft mit 0 oder einem
+  &quot;a&quot;, gefolgt von dem Buchstaben &quot;c&quot;.&nbsp; Damit
+  kann&nbsp; durch das ? angegeben werden, wie viele &quot;a&quot; vorhanden
+  sein dürfen. Soll das ? in einer Wildcard emuliert werden, wird der Punkt
+  Operator verwendet. Der Ausdruck "a.?c" ist gleichbedeutend mit der zuvor
+  beschrieben Wildcard. Geprüft wird auf Übereinstimmung mit einem
+  &quot;a&quot;, gefolgt von irgend einem oder keinen anderen Zeichen (das ?
+  modifiziert den .), gefolgt von einem "c."</p><p>Der nächste
+  Wiederholungsoperator ist der *. Auch dieser ist wieder ähnlich zum Wildcard
+  Zeichen. Geprüft wird die Übereinstimmung mit 0 oder mehr der voranstehenden
+  Zeichen. Zu beachten ist, dass dieses &quot;vornstehende Zeichen&quot; das
+  charakteristische für diese Wiederholungs Operatoren ist. Regex "a*c" passt
+  auf 0 oder mehrere a's denen ein &quot;c&quot; folgt. Z.B. passt "aaaaaac",
+  aber nicht &quot;aaaaabc&quot;. Auch hier kann man, damit das Ganze wie
+  Wildcards funktioniert,&nbsp; "a.*c" verwenden.&nbsp;</p><p>Der + Opperator
+  ist dem * sehr ähnlich. Allerdings passt er auf&nbsp; 1 mal oder mehr, statt
+  0 mal oder mehr. Damit wird z.B.&nbsp; "a*c" auf &quot;c&quot; passen,&nbsp; (0 a's
+  gefolgt von einem&nbsp; c), ein&nbsp; "a+c" dagegen nicht. Das "a+" gibt an,
+  dass es &quot;mindestens&quot; 1 a geben muss. Daher passt "c" nicht, aber "ac"
+  und "aaaaaaaaac" passen sehr wohl.</p><p>Der qualifizierteste Wiederholungs
+  Operator ist als "boundary&quot; (Begrenzung) bekannt&nbsp; Eine
+  Grenzbedingung gestattet es, konkret zu definieren, wie viele der
+  vorangegstellten zeichen vorhanden sein müssen. Man kann z.B. festlegen, dass
+  exakt 8 a's erforderlich sind, oder mindestens 8 a's oder zwischen 3 bis 5 a's.
+  Mit der Angabe einer Grenzbedingung sind all diese Varaiationen möglich. Die
+  einfache Syntax hierbei ist {M,N},&nbsp; wobei M die untere Grenze und N die
+  obere Grenze ist. Um beispielsweise auf 3 bis 5 a's zu prüfen, wäre
+  anzugeben: "a{3,5}". Allerdings muss man nicht beide Zahlen angeben. Ein "a{8}"
+  bedeutet, dass es exakt 8 a's sein müssen. Die Angabe "a{8}" ist also
+  gleichbedeutend mit "aaaaaaaa." Um das &quot;mindestens&quot; Beispiel zu
+  schreiben, erstellt man eine Grenze nur mit unterem Grenzwert. Dies würde
+  dann so aussehen: "a{8,}".</p><p>Per Default arbeiten die Wiederholungs
+  Operatoren so, dass versucht wird, so viele Zeichen wie möglich auf
+  Übereinstimmung zu prüfen. Man spricht hier von &quot;greedy&quot; (=
+  gierig)&nbsp; Nachfolgendes Beispiel soll dies beschreiben.<br>
+  <br>
+  Angenommen, es existiere der folgende Text:<br>
+  HELLO<br>
+  Und der folgende Regex:<br>
+  .+L<br>
+  <br>
+  In diesem Beispiel könnte man annehmen, dass .+ auf &quot;HE&quot; passt,
+  dies ist jedoch nicht korrekt. Da der Operator + &quot;greedy&quot; ist, passt
+  er auf &quot;HEL&quot;. Der grund hierführ ist, dass die größte
+  Textportion, auf die der Eingangstext passen soll, solange noch die gesamte
+  Bedingung passt. Im Beispiel wird&nbsp; "HEL" gewählt, weil die weitere
+  Bedingung ist, dass das Zeichen nach dem Text ein &quot;L&quot; sein muss.
+  Solange der Text &quot;HELLO&quot; lautet, folgt hinter &quot;HEL&quot; ein
+  &quot;L&quot; und daher passt dies. Manchmal kann es sinnvoll sein, einen
+  Operator nicht-&quot;greedy&quot; zu machen. Dies geschieht dadurch, dass man
+  ein ? hinter den Wiederholungs Operator setzt. Wird ein&nbsp; ".+?L" gesetzt,
+  passt das .+? nun auf&nbsp; "HE" eher als auf "HEL". Das ? kann hinter alle
+  Wiederholungs Operatoren gesetzt werden: ??, *?, +?, {M,N}?.</p></div>
+<br>
+<font size="+2"><b><a name="regexbracket">A.4. Bracket Ausdrücke</a></b></font>
+<p>&nbsp;</p>
+<p>
+---A.5. Assertions</p>
+<p><br>
+---A.6. Alternation</p>
+<p><br>
+---A.7. Subexpressions</p>
+<p><br>
+---A.8. Back References</p>
+<p><br>
+---A.9. Case Sensitivity</p>
+<p><br>
+<br>
+</p>
 </body>
 </html>
