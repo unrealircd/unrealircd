@@ -1572,3 +1572,5 @@ seen. gmtime warning still there
 - Added the oper login the user has /oper'ed to in the 'is now an operator'
   notice. Suggested by havlaz (#0000287)
 - Fixed a bug where aliases {} didn't use tokens reported by havlaz (#0000288)
+- Fixed a win32 editor bug when using chars with an ASCII code > 128, reported by XircNet
+  (#0000298)
