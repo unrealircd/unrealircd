@@ -122,6 +122,11 @@
 #define STRIPBADWORDS
 
 /*
+ * Always strip badwords in channels? (channel does not have to be +G)
+*/
+#undef STRIPBADWORDS_CHAN_ALWAYS
+
+/*
  * NO_OPEROVERRIDE
  *   This will disable OperMode, OperTopic and Banwalks
 */

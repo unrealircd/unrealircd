@@ -347,10 +347,14 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				    (chptr->mode.mode & MODE_STRIP ?
 				    (char *)StripColors(parv[2]) : parv[2]);
 #ifdef STRIPBADWORDS
+ #ifdef STRIPBADWORDS_CHAN_ALWAYS
+				text = stripbadwords_channel(text);
+ #else
 				text =
 				    (char *)(chptr->
 				    mode.mode & MODE_STRIPBADWORDS ? (char
 				    *)stripbadwords_channel(text) : text);
+ #endif
 #endif
 				sendto_channelprefix_butone_tok(cptr,
 				    sptr, chptr,

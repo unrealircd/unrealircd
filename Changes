@@ -1835,3 +1835,5 @@ seen. gmtime warning still there
   link::options::zip on both sides) -- Syzop.
 - Removed unnecessary #ifdef blocks added by previous ZIP_LINKS patch
 - Fixed some minor sending-1-byte-too-much bugs
+- Made a STRIPBADWORDS_CHAN_ALWAYS option in include/config.h, if you define it badwords will
+  always be stripped from all channels (regardless whether +G has been set or not) [default=disabled].
