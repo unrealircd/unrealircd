@@ -728,15 +728,16 @@ int  m_server(cptr, sptr, parc, parv)
 		 * access through another path -- multiple paths not accepted
 		 * currently, kill this link immeatedly!!
 		 */
-		sendto_one(cptr, "ERROR :Server %s already exists from %s",
-				host, acptr->from->name);
-		sendto_ops
-		    ("Link %s cancelled, server %s already exists from %s",
-		    get_client_name(acptr, TRUE), host,
-		    (acptr->from ? acptr->from->name : "<nobody>"));
-		return exit_client(acptr, acptr, acptr, "Server Exists");
+		acptr = acptr->from;
+                ocptr = (cptr->firsttime > acptr->firsttime) ? acptr : cptr;
+                acptr = (cptr->firsttime > acptr->firsttime) ? cptr : acptr;
+                sendto_one(acptr,"ERROR :Server %s already exists from %s",
+                           host,
+                           (ocptr->from ? ocptr->from->name : "<nobody>"));
+                sendto_ops("Link %s cancelled, server %s already exists from %s$                           get_client_name(acptr, TRUE), host,
+                           (ocptr->from ? ocptr->from->name : "<nobody>"));
+                return exit_client(acptr, acptr, acptr, "Server Exists");       
 	}
-
 /*	if ((acptr = find_client(host, NULL)))
 	{
 		sendto_one(cptr, "ERROR :Nickname %s already exists!", host);
