@@ -70,6 +70,10 @@ EXPORTS
 	Inet_si2pB
 	Init_all_testing_modules
 	InitwIRCD
+	IsupportAdd
+	IsupportDel
+	IsupportFind
+	IsupportSetValue
 	LCF
 	LRV
 	LastSlot
@@ -122,6 +126,7 @@ EXPORTS
 	SNO_JUNK
 	SNO_KILLS
 	SNO_NICKCHANGE
+	SNO_OPER
 	SNO_QLINE
 	SNO_SNOTICE
 	SNO_SPAMF

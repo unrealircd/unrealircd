@@ -327,7 +327,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
  * -DuffJ
  */
 
-#define SNO_DEFOPER "+kscfvGq"
+#define SNO_DEFOPER "+kscfvGqo"
 #define SNO_DEFUSER "+ks"
 
 #define SEND_UMODES (SendUmodes)
