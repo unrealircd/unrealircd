@@ -25,14 +25,14 @@
      /**/
 #define COMPILEINFO DEBUGMODESET DEBUGSET
 /*
- * Version Unreal3.1.5.1-Valek
+ * Version Unreal3.1.6-Noon
  */
 #define UnrealProtocol 		2302
 #define PATCH1  		"3"
 #define PATCH2  		".1"
-#define PATCH3  		".5"
-#define PATCH4  		".1"
-#define PATCH5  		"-Valek"
+#define PATCH3  		".6"
+#define PATCH4  		"-Noon"
+#define PATCH5  		"[beta1]"
 #define PATCH6  		""
 #define PATCH7  		""
 #define PATCH8  		COMPILEINFO

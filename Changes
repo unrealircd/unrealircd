@@ -780,3 +780,20 @@ probably isn't a good thing
 ===================================
 
 *** Unreal 3.1.5.1 Released ***
+
+[ Unreal 3.1.6 ]
+--------------------------------------------------
+No comment.
+--------------------------------------------------
+
+Initial release prep, changing version numbers in cvs
+(again).
+===================================
+
+Fixed /botserv bug, reported by SciFi
+--Luke
+===================================
+
+Unbroke +A channels and bans. :-/
+--Luke
+===================================
