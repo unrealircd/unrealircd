@@ -1595,6 +1595,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		   - this allows halfops to do +b +e +v and so on */
 		if (Halfop_mode(modetype) == FALSE)
 		{
+			int eaten = 0;
 			while (tab->mode != 0x0)
 			{
 				if (tab->mode == modetype)
@@ -1602,10 +1603,12 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 					sendto_one(cptr,
 					    err_str(ERR_NOTFORHALFOPS), me.name,
 					    cptr->name, tab->flag);
+					eaten = tab->parameters;
+					break;
 				}
 				tab++;
 			}
-			return (0);
+			return eaten;
 		}
 	}
 	switch (modetype)

@@ -1817,3 +1817,4 @@ seen. gmtime warning still there
 - Fixed minor bug in resolving of IPv4 names if IPv6 is enabled (#0000659).
 - Temporarely added user-already-in-chan check in m_sjoin to help tracing user-twice-in-chan bug
   which has been reported by two users (#0000594).
+- Fixed halfop bug, ex: /mode -o+b user *!*@blah.com will get +b user!*@*. (#0000653)
