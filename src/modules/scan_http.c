@@ -147,7 +147,6 @@ int	scan_http_Unload(int module_unload)
 void 	scan_http_scan(Scan_AddrStruct *h)
 {
 	THREAD	thread[3];
-	THREAD_ATTR thread_attr;
 	HSStruct *p = NULL;
 	
 	IRCMutexLock((h->lock));
@@ -156,19 +155,19 @@ void 	scan_http_scan(Scan_AddrStruct *h)
 	p = MyMalloc(sizeof(HSStruct));
 	p->hs = h;
 	p->port = 3128;
-	IRCCreateThread(thread[0], thread_attr, scan_http_scan_port, p);
+	IRCCreateThread(thread[0], scan_http_scan_port, p);
 	/* Then we take 8080 .. */
 	h->refcnt++;
 	p = MyMalloc(sizeof(HSStruct));
 	p->hs = h;
 	p->port = 8080;
-	IRCCreateThread(thread[1], thread_attr, scan_http_scan_port, p);
+	IRCCreateThread(thread[1], scan_http_scan_port, p);
 	/* And then we try to infect them with Code Red .. */
 	h->refcnt++;
 	p = MyMalloc(sizeof(HSStruct));
 	p->hs = h;
 	p->port = 80;
-	IRCCreateThread(thread[2], thread_attr, scan_http_scan_port, p);
+	IRCCreateThread(thread[2], scan_http_scan_port, p);
 	IRCMutexUnlock((h->lock));
 	IRCJoinThread(thread[0], NULL);		
 	IRCJoinThread(thread[1], NULL);		

@@ -159,9 +159,8 @@ int	httpd_Unload(int module_unload)
 void	httpd_setup_acceptthread(void)
 {
 	THREAD	thread;
-	THREAD_ATTR thread_attr;
 	
-	IRCCreateThread(thread, thread_attr, httpd_acceptthread, NULL);
+	IRCCreateThread(thread, httpd_acceptthread, NULL);
 	return;
 }
 
@@ -172,7 +171,6 @@ void	httpd_acceptthread(void	*p)
 	int		retval;
 	SOCKET		callerfd = -1; 
 	THREAD		thread;
-	THREAD_ATTR	thread_attr;
 	HTTPd_Request	*req = NULL;
 	
 	tv.tv_sec = 10;
@@ -190,7 +188,7 @@ void	httpd_acceptthread(void	*p)
 				req = (HTTPd_Request *) MyMallocEx(sizeof(HTTPd_Request));
 				req->fd = callerfd;
 				set_sock_opts(callerfd, NULL);
-				IRCCreateThread(thread, thread_attr,
+				IRCCreateThread(thread, 
 					 httpd_socketthread, (void *)req);
 				req = NULL;
 			}

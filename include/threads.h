@@ -33,10 +33,9 @@
 #endif
 #if !defined(_WIN32) || defined(USE_PTHREADS)
 #include <pthread.h>
-typedef pthread_attr_t THREAD_ATTR;
 typedef pthread_t THREAD;
 typedef pthread_mutex_t MUTEX;
-#define IRCCreateThread(thread, attr, start, arg) TDebug(CreateThread); pthread_attr_init(&attr); pthread_create(&thread, &attr, (void*)start, arg)
+#define IRCCreateThread(thread, start, arg) TDebug(CreateThread); pthread_create(&thread, NULL, (void*)start, arg)
 #define IRCMutexLock(mutex) TDebug(MutexLock); pthread_mutex_lock(&mutex)
 #define IRCMutexTryLock(mutex) TDebug(MutexTryLock); pthread_mutex_trylock(&mutex);
 #define IRCMutexUnlock(mutex) TDebug(MutexUnlcok); pthread_mutex_unlock(&mutex)
@@ -49,10 +48,9 @@ typedef pthread_mutex_t MUTEX;
 #define IRCThreadSelf() pthread_self()
 #define IRCThreadEqual(thread1, thread2) pthread_equal(thread1,thread2)
 #else
-typedef short THREAD_ATTR; /* Not needed but makes porting easier */
 typedef unsigned long THREAD;
 typedef HANDLE MUTEX;
-#define IRCCreateThread(thread, attr, start, arg) thread = _beginthread((void *)start, 0, arg)
+#define IRCCreateThread(thread, start, arg) thread = _beginthread((void *)start, 0, arg)
 #define IRCMutexLock(mutex) WaitForSingleObject(mutex, INFINITE)
 #define IRCMutexTryLock(mutex) WaitForSingleObject(mutex, 0)
 #define IRCMutexUnlock(mutex) ReleaseMutex(mutex)

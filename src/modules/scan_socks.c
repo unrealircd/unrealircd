@@ -143,12 +143,11 @@ int	scan_socks_Unload(int module_unload)
 void scan_socks_scan(Scan_AddrStruct *h)
 {
 	THREAD thread[2];
-	THREAD_ATTR thread_attr;
 	IRCMutexLock((h->lock));
 	h->refcnt++;
-	IRCCreateThread(thread[0], thread_attr, scan_socks4_scan, h);
+	IRCCreateThread(thread[0], scan_socks4_scan, h);
 	h->refcnt++;
-	IRCCreateThread(thread[1], thread_attr, scan_socks5_scan, h);
+	IRCCreateThread(thread[1], scan_socks5_scan, h);
 	IRCMutexUnlock((h->lock));
 	IRCJoinThread(thread[0], NULL);
 	IRCJoinThread(thread[1], NULL);

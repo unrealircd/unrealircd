@@ -1275,3 +1275,4 @@ seen. gmtime warning still there
 - Updated credits
 - Memory leak fixes with scanners
 - Some fixes with connect(). Knowing my luck this will fuck up to hell
+- Fixed another memory leak with the scanners

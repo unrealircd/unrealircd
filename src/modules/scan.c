@@ -286,7 +286,6 @@ DLLFUNC int h_scan_connect(aClient *sptr)
 	Scan_AddrStruct *sr = NULL;
 	Hook		*hook = NULL;
 	THREAD		thread;
-	THREAD_ATTR	thread_attr;
 	
 	if (Find_except(Inet_ia2p(&sptr->ip), 0))
 		return 0;
@@ -307,7 +306,7 @@ DLLFUNC int h_scan_connect(aClient *sptr)
 	{
 		IRCMutexLock(sr->lock);
 		sr->refcnt++;
-		IRCCreateThread(thread, thread_attr, (hook->func.voidfunc), sr);
+		IRCCreateThread(thread, (hook->func.voidfunc), sr);
 		IRCMutexUnlock(sr->lock);
 	}
 	return 1;
