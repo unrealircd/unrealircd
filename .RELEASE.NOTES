@@ -1,5 +1,5 @@
 
-Unreal3.2-beta15 Release Notes
+Unreal3.2-beta16 Release Notes
 ======================================
 
 ==[ GENERAL INFORMATION ]==
@@ -9,46 +9,58 @@ Unreal3.2-beta15 Release Notes
 * Report bugs at http://bugs.unrealircd.org/
 
 == [NEW FEATURES (see unreal32docs.html for more information) ]==
-* link::options::zip: ZIP links (compressed links), can save ~60-70% bandwidth if enabled.
-* set::allow-userhost-change to control user@host changes (+x/chghost/chgident/vhost/etc),
-  can be: always, never, not-on-channels or force-rejoin.
-* class::recvq for better floodcontrol (old CLIENT_FLOOD in config.h).
-* link::options::nodnscache: usefull for "dynamic hosts" like dyndns.org.
-* set::snomask-on-connect
-* set::restrict-usermodes: deny users to set/unset specified usermodes.
-* Channel mode +M: Can't talk unless you are using a registered nick.
-* set::options::dont-resolve: don't resolve hosts of incomming clients.
+* throttling has been improved and is now considered stable. You can configure it in
+  the set::throttle block. It allows you to config max. X connections in Y seconds.
+* ban version { }: bans users based on CTCP VERSION (tested on connect).
+* usermode +p: hide channels in whois
+* set::modes-on-join: channel modes that are set when a new channel is created
+* set::restrict-channelmodes: deny users to set/unset specified channelmodes
+* badword::action <replace|block>, "block" prevents the message from being sent (default=replace).
+* added aliases/anope.conf
+* IP bans like *!*@194.109.*
+* tld::options::ssl: for specific rules/motd's for SSL users
+* link::options::nohostcheck: makes Unreal not to check the incomming host/IP (useful for dyndns)
+* allow::options::ssl: for SSL based allow blocks
+* allow::options::nopasscont: support for putting a user in different class if a password is given.
+* added anti-away-flood based on bahamut, disabled by default (set::anti-flood::away-*).
+* Added set::anti-flood::unknown-flood-bantime and set::anti-flood::unknown-flood-amount
+  so you can config the "flood from unknown connection" thresholds / ban duration.
 
 ==[ UPDATED ]==
-* Speed: badwords (+G) replace routine >100x faster (non-regex)
-* Speed: aliases much faster
-* unreal32docs.html has been improved a lot, also added a FAQ.
-* More detailed error message when linking of a server fails.
+* documentation and text fixes
+* channelmode +f (flood) algoritm is now much better
 
 ==[ MAJOR BUGS FIXED ]==
 * Security fixes
-* Resolver bugfixes: 10s stall, ipv6, cache timeouts
-* SSL session cache bug causing users unable to connect ("protocol error",
-  "peer suddenly disconnected", etc)
-* Win32 "everyone with coadmin host"
-* IPv6
-* Throttling
-* Error message floods on FreeBSD and Linux 2.4.x
-* Most known non-win32 crash bugs
-* Win32 GUI
-* Some memory leaks
-* /who fixes
-* Multiple channelmode +u fixes
-* Multiple ident fixes
-* /rehash bug causing a "stall" (server no longer responding)
+* fixed major "messages being lost" bug which could cause: ziplink corruption,
+  duplicate user entry in sjoin, etc which would happen if BUFFERPOOL was too small.
+* /who: there was a bug in the new /who system which could make it crash (oper only)
+* "proxyscan on quit" bug introduced in beta15
+* /list: opers couldn't see +s channels
+* a set::allow-userhost-change force-rejoin crash
+* compile error on redhat 9 with SSL enabled
+* multiple throttling fixes
+* out of bounds config parser reads, could make it crash on start or /rehash.
+* fast badword replace crash
+* sqline: a crash and a unable-to-remove-sqline bug
+* cloaking bug
+* auditted servernotices which are sent to normal users: some are now sent to opers only,
+  some have now "sensitive information" (like IP/host) removed.
+* wrong hub/leaf settings ("non-hub introduced leaf") could cause a crash
+* Far connects (+s +F) hides connects from U-lined servers again
+* usermode +S was accidently changed to a local usermode in beta15
+* minor badwords /rehash memleak
 
 ==[ REMOVED ]==
-* Invisibility (usermode +I) has been removed.
+* not removed, but CMDLINE_CONFIG(-f) is now disabled by default
 
-==[ MORE INFO ]==
-See Changelog
+==[ ADDITIONAL INFO ]==
+* Sorry, better +a/+q support and giving +a/+q a symbol in nicklist (like @ for +o)
+  has been postponed to beta17.
+* See Changelog
 
-==[ OLD RELEASE NOTES ]==
+============================= (old release notes below) ==============================
+
 * Unreal3.2 is a lot different than Unreal3.1.1. Forget all you have
   learned about setting up Unreal3.1.1 - this is a lot different. We have got
   a new configuration format that integrates all the former config files,
