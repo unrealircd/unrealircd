@@ -103,7 +103,7 @@ void    blackhole_load(void)
 	if (!blackhole_conf.ip || !blackhole_conf.port)
 	{
 		config_error("set::blackhole: missing ip/port mask");
-		return 0;
+		return;
 	}
 	if (blackhole_stop == 1)
 	{
@@ -220,7 +220,7 @@ DLLFUNC void blackhole(void *p)
 		CLOSE_SOCK(callerfd);
 	}
 	end:
-	CLOSE_SOCK(blackholefd)
+	CLOSE_SOCK(blackholefd);
 	blackhole_stop = 0;
 	IRCExitThread(NULL);	
 }

@@ -20,59 +20,57 @@
 #*/
 
 R_MODULES=m_sethost.so m_chghost.so m_chgident.so m_setname.so \
-		m_setident.so m_sdesc.so scan.so scan_socks.so \
-		blackhole.so
+		m_setident.so m_sdesc.so scan.so scan_socks.so blackhole.so
 
 COMMANDS=m_sethost.c m_chghost.c m_chgident.c m_setname.c m_setident.c \
          m_sdesc.c
 
 MODULES=commands.so $(R_MODULES)
-
-PTHREAD=-kthread
+MODULEFLAGS=@MODULEFLAGS@
 
 all: build
 
 build: $(MODULES)
 
 commands.so: l_commands.c $(COMMANDS) $(INCLUDES)
-	$(CC) $(CFLAGS) -fPIC -DPIC -shared -o commands.so l_commands.c \
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -o commands.so l_commands.c \
 	$(COMMANDS)
 
 m_sethost.so: m_sethost.c $(INCLUDES)
-	$(CC) $(CFLAGS) -fPIC -DPIC -shared -DDYNAMIC_LINKING \
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_sethost.so m_sethost.c
 
 m_chghost.so: m_chghost.c $(INCLUDES)
-	$(CC) $(CFLAGS) -fPIC -DPIC -shared -DDYNAMIC_LINKING \
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		 -o m_chghost.so m_chghost.c
 
 m_chgident.so: m_chgident.c $(INCLUDES)
-	$(CC) $(CFLAGS) -fPIC -DPIC -shared -DDYNAMIC_LINKING \
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		 -o m_chgident.so m_chgident.c
 
 m_setident.so: m_setident.c $(INCLUDES)
-	$(CC) $(CFLAGS) -fPIC -DPIC -shared -DDYNAMIC_LINKING \
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		 -o m_setident.so m_setident.c
 
 m_setname.so: m_setname.c $(INCLUDES)
-	$(CC) $(CFLAGS) -fPIC -DPIC -shared -DDYNAMIC_LINKING \
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		 -o m_setname.so m_setname.c
 
 m_sdesc.so: m_sdesc.c $(INCLUDES)
-	$(CC) $(CFLAGS) -fPIC -DPIC -shared -DDYNAMIC_LINKING \
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		 -o m_sdesc.so m_sdesc.c
 
 
 scan.so: scan.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(PTHREAD) -fPIC -DPIC -shared -DDYNAMIC_LINKING \
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		 -o scan.so scan.c
 
 scan_socks.so: scan_socks.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(PTHREAD) -fPIC -DPIC -shared -DDYNAMIC_LINKING \
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		 -o scan_socks.so scan_socks.c
 
 blackhole.so: blackhole.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(PTHREAD) -fPIC -DPIC -shared -DDYNAMIC_LINKING \
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		 -o blackhole.so blackhole.c
 
 clean:

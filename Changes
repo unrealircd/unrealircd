@@ -577,3 +577,4 @@ seen. gmtime warning still there
 - Fixed a quarantine bug
 - Added NETWORK= numeric 005 token for mIRC 5.91
 - Fixed some scan-socks and blackhole fuckups
+- Added ./configure, autoconf generated configure script, (still need to update ./Config)

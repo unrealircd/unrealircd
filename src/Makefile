@@ -43,7 +43,7 @@ MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 
 MAKE = make $(MAKEARGS)
 
-INCLUDES = ../include/struct.h ../include/config.h ../include/settings.h \
+INCLUDES = ../include/struct.h ../include/config.h \
 	../include/sys.h ../include/common.h ../include/version.h \
 	../include/h.h ../include/numeric.h ../include/msg.h \
 	../include/dynconf.h ../include/modules.h

@@ -686,16 +686,15 @@ error You stuffed up config.h signals
 #endif
 /* use cflag longmodes */
 #define USE_LONGMODE
-#define Reg1 register
-#define Reg2 register
-#define Reg3 register
-#define Reg4 register
-#define Reg5 register
-#define Reg6 register
-#define Reg7 register
-#define Reg8 register
-#define Reg9 register
-#define Reg10 register
+#ifdef NEED_BCMP
+#define bcmp memcmp
+#endif
+#ifdef NEED_BCOPY
+#define bcopy(a,b,c) memcpy(b,a,c)
+#endif
+#ifdef NEED_BZERO
+#define bzero(a,b) memset(a,0,b)
+#endif
 #if defined(AIX) && defined(_XOPEN_SOURCE_EXTENDED) && _XOPEN_SOURCE_EXTENDED
 # define SOCK_LEN_TYPE size_t
 #else

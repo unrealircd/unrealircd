@@ -1,0 +1,305 @@
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(crypt/mkpasswd.c)
+AC_CONFIG_HEADER(include/setup.h)
+AC_PROG_CC
+AC_PATH_PROG(RM,rm)
+AC_PATH_PROG(CP,cp)
+AC_PATH_PROG(TOUCH,touch)
+AC_PATH_PROG(OPENSSLPATH,openssl)
+dnl Checks for libraries.
+AC_CHECK_LIB(descrypt, crypt, IRCDLIBS="$IRCDLIBS-ldescrypt " MKPASSWDLIBS="-ldescrypt",
+AC_CHECK_LIB(crypt, crypt,IRCDLIBS="$IRCDLIBS-lcrypt " MKPASSWDLIBS="-lcrypt"))
+AC_CHECK_LIB(socket, socket,IRCDLIBS="$IRCDLIBS-lsocket ")
+AC_CHECK_LIB(dl, dlopen,IRCDLOBS="$IRCDLIBS-ldl ")
+AC_SUBST(IRCDLIBS)
+AC_SUBST(MKPASSWDLIBS)
+AC_DEFUN(AC_INSTALL_REGEX,
+[
+AC_MSG_RESULT(Ok we'll install regex)
+cd extras/regex
+./configure
+make
+cd ../..
+REGEX="../extras/regex/regex.o"
+])
+
+openssl=no
+AC_DEFUN(AC_ENABLE_SSL, 
+[
+if test $openssl = yes; then
+AC_DEFINE(USE_SSL)
+CRYPTOLIB="-lcrypto"
+if [ ! -f server.req.pem ]; then
+export OPENSSLPATH
+make pem
+cat .SICI
+read cc
+fi
+else
+AC_WARN(SSL support could not be enabled because openssl/ssl.h could not be found)
+fi
+])
+dnl module checking based on Hyb7's module checking code
+AC_DEFUN(AC_ENABLE_DYN,
+[
+AC_CHECK_FUNC(dlopen,, AC_CHECK_LIB(dl, dlopen,,AC_MSG_WARN(Dynamic linking is not enabled because dlopen was not found) AC_DEFINE(STATIC_LINKING)))
+hold_cflags=$CFLAGS
+CFLAGS="$CFLAGS -export-dynamic"
+AC_CACHE_CHECK(if we need the -export-dynamic flag, ac_cv_export_dynamic, [
+AC_TRY_LINK(, [int i];, ac_cv_export_dynamic=yes, ac_cv_export_dynamic=no)])
+if test $ac_cv_export_dynamic=no; then
+CFLAGS=$hold_cflags
+fi
+if test $ac_cv_export_dynamic=yes; then
+CFLAGS="$CFLAGS -export-dynamic"
+fi
+
+AC_CACHE_CHECK(for compiler option to produce PIC,ac_cv_pic,[
+if test "$ac_cv_prog_gcc" = "yes"; then
+	ac_cv_pic="-fPIC -DPIC -shared"
+else
+case `uname -s` in
+	SunOS*[)]
+	ac_cv_pic="-KPIC -DPIC -G"
+	;;
+esac
+fi
+])
+MODULEFLAGS="$ac_cv_pic"
+AC_DEFINE(DYNAMIC_LINKING)
+])
+AC_CHECK_HEADER(sys/param.h,AC_DEFINE(PARAMH))
+AC_CHECK_HEADER(stdlib.h,AC_DEFINE(STDLIBH))
+AC_CHECK_HEADER(stddef.h,AC_DEFINE(STDDEFH))
+AC_CHECK_HEADER(sys/syslog.h,AC_DEFINE(SYSSYSLOGH))
+AC_CHECK_HEADER(unistd.h,AC_DEFINE(UNISTDH))
+AC_CHECK_HEADER(string.h,AC_DEFINE(STRINGH))
+AC_CHECK_HEADER(strings.h,AC_DEFINE(STRINGSH))
+AC_CHECK_HEADER(regex.h,AC_DEFINE(HAVE_REGEX),AC_INSTALL_REGEX)
+AC_CHECK_HEADER(openssl/ssl.h,openssl=yes)
+AC_CHECK_HEADER(malloc.h,AC_DEFINE(MALLOCH,<malloc.h>))
+AC_CHECK_HEADER(sys/rusage.h,AC_DEFINE(RUSAGEH))
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_C_INLINE
+AC_TYPE_SIZE_T
+AC_HEADER_TIME
+AC_STRUCT_TM
+AC_TYPE_UID_T
+AC_CACHE_CHECK([for u_int32_t], ac_cv_u_int32_t, [
+AC_TRY_COMPILE(,[
+#include <sys/types.h>
+int main() {
+u_int32_t test;
+exit(0);
+}
+], ac_cv_u_int32_t=yes,ac_cv_u_int32_t=no)
+])      
+if test $ac_cv_u_int32_t=no; then
+NEED_UINT32_T="-DNEED_U_INT32_T"
+fi
+AC_CACHE_CHECK(what kind of nonblocking sockets you have, ac_cv_nonblocking,[
+AC_TRY_RUN([
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/file.h>
+#include <signal.h>
+alarmed() {
+exit(1);
+}
+int main() {
+#ifdef O_NONBLOCK
+char b[12], x[32];
+int f, l = sizeof(x);
+f = socket(AF_INET, SOCK_DGRAM, 0);
+if (f >= 0 && !(fcntl(f, F_SETFL, O_NONBLOCK))) {
+signal(SIGALRM, alarmed);
+alarm(3);
+recvfrom(f, b, 12, 0, (struct sockaddr *)x, &l);
+alarm(0);
+exit(0);
+}
+#endif
+exit(1);
+}
+],ac_cv_nonblocking=O_NONBLOCK,[
+AC_TRY_RUN([
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/file.h>
+#include <signal.h>
+alarmed() {
+exit(0);
+}
+int main() {
+#ifdef O_NDELAY
+char b[12], x[32];
+int f, l = sizeof(x);
+f = socket(AF_INET, SOCK_DGRAM, 0);
+if (f >= 0 && !(fcntl(f, F_SETFL, O_NDELAY))) {
+signal(SIGALRM, alarmed);
+alarm(3);
+recvfrom(f, b, 12, 0, (struct sockaddr *)x, &l);
+alarm(0);
+exit(0);
+}
+#endif
+exit(1);
+}],ac_cv_nonblocking=O_NDELAY,[
+AC_TRY_RUN([
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/file.h>
+#include <signal.h>
+alarmed() {
+exit(1);
+}
+int main() {
+#ifdef FIONBIO
+char b[12], x[32];
+int f, l = sizeof(x);
+f = socket(AF_INET, SOCK_DGRAM, 0);
+if (f >= 0 && !(fcntl(f, F_SETFL, FIONBIO))) {
+signal(SIGALRM, alarmed);
+alarm(3);
+recvfrom(f, b, 12, 0, (struct sockaddr *)x, &l);
+alarm(0);
+exit(0);
+}
+#endif
+exit(1);
+], ac_cv_nonblocking=FIONBIO,ac_cv_nonblocking=none)])])])
+if test $ac_cv_nonblocking=O_NONBLOCK; then
+AC_DEFINE(NBLOCK_POSIX)
+elif test $ac_cv_nonblocking=O_NDELAY; then
+AC_DEFINE(NBLOCK_BSD)
+elif test $ac_cv_nonblocking=FIONBIO; then
+AC_DEFINE(NBLOCK_SYSV)
+fi
+dnl Checks for library functions.
+AC_PROG_GCC_TRADITIONAL
+AC_FUNC_SETPGRP
+AC_FUNC_SETVBUF_REVERSED
+AC_CACHE_CHECK(if we can set the core size to unlimited, ac_cv_force_core,[
+AC_TRY_RUN([
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <unistd.h>
+int main() {
+struct rlimit corelim;
+corelim.rlim_cur = corelim.rlim_max = RLIM_INFINITY;
+if (setrlimit(RLIMIT_CORE, &corelim))
+exit(1);
+exit(0);
+}
+],ac_cv_force_core=yes,ac_cv_force_core=no)
+])
+if test $ac_cv_force_core=yes; then
+AC_DEFINE(FORCE_CORE)
+fi
+AC_FUNC_VPRINTF
+AC_CHECK_FUNCS(gettimeofday,AC_DEFINE(GETTIMEOFDAY),[AC_CHECK_FUNCS(lrand48,AC_DEFINE(LRADN48))])
+AC_CHECK_FUNCS(getrusage,AC_DEFINE(GETRUSAGE_2),[AC_CHECK_FUNCS(times,AC_DEFINE(TIMES_2))])
+AC_CACHE_CHECK(what type of signals you have, ac_cv_sigtype, [
+AC_TRY_RUN([
+#include <signal.h>
+int main() {
+sigaction(SIGTERM, (struct sigaction *)0L, (struct sigaction *)0L);
+}
+], ac_cv_sigtype=POSIX, [
+AC_TRY_RUN([
+#include <signal.h>
+int	calls = 0;
+void	handler()
+{
+if (calls)
+return;
+calls++;
+kill(getpid(), SIGTERM);
+sleep(1);
+}
+
+int main() {
+signal(SIGTERM, handler);
+kill(getpid(), SIGTERM);
+exit(0);
+}
+], ac_cv_sigtype=BSD,ac_cv_sigtype=SYSV)])])
+
+if test $ac_cv_sigtype=POSIX; then
+AC_DEFINE(POSIX_SIGNALS)
+elif test $ac_cv_sigtype=BSD; then
+AC_DEFINE(BSD_RELIABLE_SIGNALS)
+else
+AC_DEFINE(SYSV_UNRELIABLE_SIGNALS)
+fi 
+AC_CHECK_FUNCS(strtoken,,AC_DEFINE(NEED_STRTOKEN))
+AC_CHECK_FUNCS(strtok,,AC_DEFINE(NEED_STRTOK))
+AC_CHECK_FUNCS(strerror,,AC_DEFINE(NEED_STRERROR))
+AC_CHECK_FUNCS(index,,AC_DEFINE(NOINDEX))
+AC_CHECK_FUNCS(strtoul,,STRTOUL="strtoul.o")
+AC_CHECK_FUNCS(bcopy,,AC_DEFINE(NEED_BCOPY))
+AC_CHECK_FUNCS(bcmp,,AC_DEFINE(NEED_BCMP))
+AC_CHECK_FUNCS(bzero,,AC_DEFINE(NEED_BZERO))
+AC_CHECK_FUNCS(strcasecmp,AC_DEFINE(GOT_STRCASECMP))
+AC_CHECK_FUNCS(inet_addr,,AC_DEFINE(NEED_INET_ADDR))
+AC_CHECK_FUNCS(inet_ntoa,,AC_DEFINE(NEED_INET_NTOA))
+AC_CHECK_FUNCS(inet_netof,,AC_DEFINE(NEED_INET_NETOF))
+AC_SUBST(REGEX)
+AC_SUBST(STRTOUL)
+AC_SUBST(MODULEFLAGS)
+AC_SUBST(NEED_U_INT32_T)
+AC_SUBST(CRYPTOLIB)
+AC_ARG_WITH(crypt-oper, [ --with-crypt-oper     Specify whether oper passwords should be crypted],
+AC_DEFINE(CRYPT_OPER_PASSWORD))
+AC_ARG_WITH(crypt-oper, [ --with-crypt-iline     Specify whether allow passwords should be crypted],
+AC_DEFINE(CRYPT_ILINE_PASSWORD))
+AC_ARG_WITH(crypt-oper, [ --with-crypt-link     Specify whether link passwords should be crypted],
+AC_DEFINE(CRYPT_LINK_PASSWORD))
+AC_ARG_WITH(crypt-xline, [ --with-crypt-xline     Specify whether die/restart  passwords should be
+crypted], AC_DEFINE(CRYPT_XLINE_PASSWORD))
+AC_ARG_WITH(listen, [ --with-listen=backlog     Specify the listen backlog value],
+AC_DEFINE_UNQUOTED(LISTEN_SIZE,$withval),AC_DEFINE(LISTEN_SIZE,5))
+AC_ARG_WITH(nick-history, [ --with-nick-history=length     Specify the length of the nickname history],
+AC_DEFINE_UNQUOTED(NICKNAMEHISTORYLENGTH,$withval), AC_DEFINE(NICKNAMEHISTORYLENGTH,2000))
+AC_ARG_WITH(sendq, [ --with-sendq=maxsendq     Specify the max sendq for the server],
+AC_DEFINE_UNQUOTED(MAXSENDQLENGTH,$withval),AC_DEFINE(MAXSENDQLENGTH,3000000))
+AC_ARG_WITH(bufferpool, [ --with-bufferpool=size     Specify the size of the buffer pool],
+AC_DEFINE_UNQUOTED(BUFFERPOOL,$withval),AC_DEFINE(BUFFERPOOL,[(9 * MAXSENDQLENGTH)]))
+
+AC_ARG_WITH(hostname, [ --with-hostname=host     Specify the local hostname of the server], AC_DEFINE_UNQUOTED(DOMAINNAME,"$withval"),AC_DEFINE_UNQUOTED(DOMAINNAME,"`hostname`"))
+AC_DEFINE_UNQUOTED(MYOSNAME,"`uname -a`")
+AC_ARG_WITH(permissions, [ --with-permissions=permissions     Specify the default permissions for
+configuration files], AC_DEFINE_UNQUOTED(DEFAULT_PERMISSIONS,$withval), AC_DEFINE(DEFAULT_PERMISSIONS, 0600)) 
+AC_ARG_WITH(dpath, [ --with-dpath=path     Specify the path where configuration files are stored],
+AC_DEFINE_UNQUOTED(DPATH, "$withval"), AC_DEFINE_UNQUOTED(DPATH, "`pwd`"))
+AC_ARG_WITH(fd-setsize, [ --with-fd-setsize=size     Specify the max file descriptors to use],
+ac_fd=$withval, ac_fd=1024)
+AC_ARG_WITH(spath, [ --with-spath     Specify the location of the executable],
+AC_DEFINE_UNQUOTED(SPATH,"$withval"),AC_DEFINE_UNQUOTED(SPATH,"`pwd`/src/ircd"))
+AC_ARG_ENABLE(nospoof, [ --enable-nospoof     Enable spoofing protection], AC_DEFINE(NOSPOOF))
+AC_ARG_ENABLE(hub, [ --enable-hub     Compile as a hub server], AC_DEFINE(HUB))
+AC_ARG_ENABLE(ssl, [ --enable-ssl     Enable client and server SSL connections ], AC_ENABLE_SSL)
+AC_ARG_ENABLE(dynamic-linking, [ --enable-dynamic-linking     Make the IRCd dynamically link shared objects rather than statically ], AC_ENABLE_DYN, AC_DEFINE(STATIC_LINKING))
+ACX_PTHREAD
+CC="$PTHREAD_CC"
+CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+IRCDLIBS="$IRCDLIBS $PTHREAD_LIBS"
+AC_MSG_CHECKING(if FD_SETSIZE is large enough to allow $ac_fd file descriptors)
+AC_TRY_RUN([
+#include <sys/types.h>
+#include <sys/time.h>
+int main() {
+if (FD_SETSIZE >= $ac_fd)
+exit(0);
+exit(1);
+}
+], AC_MSG_RESULT(yes), FD_SETSIZE="-DFD_SETSIZE=$ac_fd" AC_MSG_RESULT(no))
+AC_SUBST(FD_SETSIZE)
+AC_OUTPUT(Makefile src/modules/Makefile crypt/Makefile)
