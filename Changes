@@ -2608,3 +2608,4 @@ seen. gmtime warning still there
 - example.conf: added +i in modes-on-connect.
 - Temporarely added fdlist debugcode, please report any bugreports it gives,
   it would especially be helpful if you know _what_ triggered the error :).
+- '/rehash <server>' didn't reload motds&rules files, reported by w00t (#0001409).

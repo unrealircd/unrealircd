@@ -2858,6 +2858,15 @@ ConfigItem_tld *tlds;
 	}
 }
 
+static void reread_motdsandrules()
+{
+	motd = (aMotd *) read_file_ex(MPATH, &motd, &motd_tm);
+	rules = (aMotd *) read_file(RPATH, &rules);
+	smotd = (aMotd *) read_file_ex(SMPATH, &smotd, &smotd_tm);
+	botmotd = (aMotd *) read_file(BPATH, &botmotd);
+	opermotd = (aMotd *) read_file(OPATH, &opermotd);
+}
+
 /*
 ** m_rehash
 ** remote rehash by binary
@@ -2912,6 +2921,7 @@ CMD_FUNC(m_rehash)
 			sendto_ops
 			    ("%s is remotely rehashing server config file",
 			    parv[0]);
+			reread_motdsandrules();
 			return rehash(cptr, sptr,
 			    (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
 		}
@@ -2991,12 +3001,8 @@ CMD_FUNC(m_rehash)
 	else
 		sendto_ops("%s is rehashing server config file", parv[0]);
 
-	/* Normal rehash, rehash main motd&rules too, just like the on in the tld block will :p */
-	motd = (aMotd *) read_file_ex(MPATH, &motd, &motd_tm);
-	rules = (aMotd *) read_file(RPATH, &rules);
-	smotd = (aMotd *) read_file_ex(SMPATH, &smotd, &smotd_tm);
-	botmotd = (aMotd *) read_file(BPATH, &botmotd);
-	opermotd = (aMotd *) read_file(OPATH, &opermotd);
+	/* Normal rehash, rehash motds&rules too, just like the on in the tld block will :p */
+	reread_motdsandrules();
 	if (cptr == sptr)
 		sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], configfile);
 	return rehash(cptr, sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
