@@ -135,9 +135,7 @@ int match_ipv4(struct IN_ADDR *addr, struct IN_ADDR *mask, int b);
 #ifdef INET6
 int match_ipv6(struct IN_ADDR *addr, struct IN_ADDR *mask, int b);
 #endif
-aMotd *read_motd(char *filename);
-aMotd *read_rules(char *filename);
-extern struct tm *motd_tm;
+extern struct tm motd_tm;
 extern Link	*Servers;
 void add_ListItem(ListStruct *, ListStruct **);
 ListStruct *del_ListItem(ListStruct *, ListStruct **);
@@ -547,7 +545,9 @@ extern char *pretty_time_val(long);
 extern int        init_conf(char *filename, int rehash);
 extern void       validate_configuration(void);
 extern void       run_configuration(void);
+extern void rehash_motdrules();
 extern aMotd *read_file(char *filename, aMotd **list);
+extern aMotd *read_file_ex(char *filename, aMotd **list, struct tm *);
 CMD_FUNC(m_server_remote);
 extern void send_proto(aClient *, ConfigItem_link *);
 extern char *xbase64enc(long i);

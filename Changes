@@ -2201,3 +2201,4 @@ seen. gmtime warning still there
 - Fixed some ./Config problems on Solaris with IPv6, SSL, and some other misc. things 
   (#0001004) reported by lion.
 - Changed the /whois "secret channel" flag from '~' to '?'
+- Fixed some MOTD problems: remote MOTD gone after rehash (#0001007) and motd time, etc...

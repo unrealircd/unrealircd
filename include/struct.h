@@ -1001,7 +1001,7 @@ struct _configitem_tld {
 	ConfigItem 	*prev, *next;
 	ConfigFlag_tld 	flag;
 	char 		*mask, *motd_file, *rules_file, *channel;
-	struct tm	*motd_tm;
+	struct tm	motd_tm;
 	aMotd		*rules, *motd;
 	u_short		options;
 };

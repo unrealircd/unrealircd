@@ -1134,9 +1134,9 @@ int InitwIRCD(int argc, char *argv[])
 	conf_listen->listener = &me;
 	run_configuration();
 	botmotd = (aMotd *) read_file(BPATH, &botmotd);
-	rules = (aMotd *) read_rules(RPATH);
+	rules = (aMotd *) read_file(RPATH, NULL);
 	opermotd = (aMotd *) read_file(OPATH, &opermotd);
-	motd = (aMotd *) read_motd(MPATH);
+	motd = (aMotd *) read_file_ex(MPATH, NULL, &motd_tm);
 	svsmotd = (aMotd *) read_file(VPATH, &svsmotd);
 	strncpy(me.sockhost, conf_listen->ip, sizeof(me.sockhost) - 1);
 	if (me.name[0] == '\0')

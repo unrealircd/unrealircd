@@ -57,10 +57,9 @@ aMotd *rules;
 aMotd *motd;
 aMotd *svsmotd;
 aMotd *botmotd;
-struct tm *motd_tm;
+struct tm motd_tm;
 aMotd *read_file(char *filename, aMotd **list);
-aMotd *read_motd(char *filename);
-aMotd *read_rules(char *filename);
+aMotd *read_file_ex(char *filename, aMotd **list, struct tm *);
 extern aMotd *Find_file(char *, short);
 /*
 ** m_functions execute protocol messages on this server:
@@ -3527,6 +3526,19 @@ CMD_FUNC(m_admin)
 	return 0;
 }
 
+/** Rehash motd and rule files (MPATH/RPATH and all tld entries). */
+void rehash_motdrules()
+{
+ConfigItem_tld *tlds;
+
+	motd = (aMotd *) read_file_ex(MPATH, &motd, &motd_tm);
+	rules = (aMotd *) read_file(RPATH, &rules);
+	for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *) tlds->next)
+	{
+		tlds->motd = read_file_ex(tlds->motd_file, &tlds->motd, &tlds->motd_tm);
+		tlds->rules = read_file(tlds->rules_file, &tlds->rules);
+	}
+}
 
 /*
 ** m_rehash
@@ -3609,30 +3621,7 @@ CMD_FUNC(m_rehash)
 					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing everything", me.name, sptr->name);
 				opermotd = (aMotd *) read_file(OPATH, &opermotd);
 				botmotd = (aMotd *) read_file(BPATH, &botmotd);
-				motd = (aMotd *) read_motd(MPATH);
-				rules = (aMotd *) read_rules(RPATH);
-                                for (tlds = conf_tld; tlds;
-                                    tlds = (ConfigItem_tld *) tlds->next)
-                                {
-                                        while (tlds->motd)
-                                        {
-                                                amotd = tlds->motd->next;
-                                                MyFree(tlds->motd->line);
-                                                MyFree(tlds->motd);
-                                                tlds->motd = amotd;
-                                        }
-                                        tlds->motd = read_motd(tlds->motd_file);
-                                        while (tlds->rules)
-                                        {
-                                                amotd = tlds->rules->next;
-                                                MyFree(tlds->rules->line);
-                                                MyFree(tlds->rules);
-                                                tlds->rules = amotd;
-                                        }
-                                        tlds->rules =
-                                            read_rules(tlds->rules_file);
-                                }
-
+				rehash_motdrules();
 				return 0;
 			}
 			if (!strnicmp("-gar", parv[1], 4))
@@ -3665,40 +3654,13 @@ CMD_FUNC(m_rehash)
 			if (!strnicmp("-motd", parv[1], 5)
 			    || !strnicmp("-rules", parv[1], 6))
 			{
-				ConfigItem_tld *tlds;
-				aMotd *amotd;
 				sendto_ops
 				    ("%sRehashing all MOTDs and RULES on request of %s",
 				    cptr != sptr ? "Remotely " : "",
 				    sptr->name);
 				if (cptr != sptr)
 					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing all MOTDs and RULES", me.name, sptr->name);
-				motd = (aMotd *) read_motd(MPATH);
-				rules = (aMotd *) read_rules(RPATH);
-				for (tlds = conf_tld; tlds;
-				    tlds = (ConfigItem_tld *) tlds->next)
-				{
-					if (!tlds->flag.motdptr) {
-						while (tlds->motd)
-						{
-							amotd = tlds->motd->next;
-							MyFree(tlds->motd->line);
-							MyFree(tlds->motd);
-							tlds->motd = amotd;
-						}
-					}
-					tlds->motd = read_motd(tlds->motd_file);
-					if (!tlds->flag.rulesptr) {
-						while (tlds->rules)
-						{
-							amotd = tlds->rules->next;
-							MyFree(tlds->rules->line);
-							MyFree(tlds->rules);
-							tlds->rules = amotd;
-						}
-					}
-					tlds->rules = read_rules(tlds->rules_file);
-				}
+				rehash_motdrules();
 				return 0;
 			}
 			/* didn't match / fall trough... should we continue?? */
@@ -3711,6 +3673,10 @@ CMD_FUNC(m_rehash)
 	}
 	else
 		sendto_ops("%s is rehashing server config file", parv[0]);
+
+	/* Normal rehash, rehash main motd&rules too, just like the on in the tld block will :p */
+	motd = (aMotd *) read_file_ex(MPATH, &motd, &motd_tm);
+	rules = (aMotd *) read_file(RPATH, &rules);
 
 	if (cptr == sptr)
 		sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], configfile);
@@ -4009,7 +3975,7 @@ CMD_FUNC(m_motd)
 {
 	ConfigItem_tld *ptr;
 	aMotd *temp, *temp2;
-	struct tm *tm = motd_tm;
+	struct tm *tm = &motd_tm;
 	int  svsnofile = 0;
 	char userhost[HOSTLEN + USERLEN + 6];
 
@@ -4031,7 +3997,7 @@ HUNTED_ISME)
 	if (ptr)
 	{
 		temp = ptr->motd;
-		tm = ptr->motd_tm;
+		tm = &ptr->motd_tm;
 	}
 	else
 		temp = motd;
@@ -4107,123 +4073,28 @@ CMD_FUNC(m_opermotd)
 
 /*
  * A merge from ircu and bahamut, and some extra stuff added by codemastr
- */
-
-aMotd *read_rules(char *filename)
-{
-	int  fd = open(filename, O_RDONLY);
-	aMotd *temp, *newmotd, *last, *old;
-	char line[82];
-	char *tmp;
-	int  i;
-
-	if (fd == -1)
-		return NULL;
-/* If it is the default RULES, clear it -- codemastr */
-	if (!stricmp(filename, RPATH))
-	{
-		while (rules)
-		{
-			old = rules->next;
-			MyFree(rules->line);
-			MyFree(rules);
-			rules = old;
-		}
-	}
-
-
-	(void)dgets(-1, NULL, 0);	/* make sure buffer is at empty pos */
-
-	newmotd = last = NULL;
-	while ((i = dgets(fd, line, sizeof(line) - 1)) > 0)
-	{
-		line[i] = '\0';
-		if ((tmp = (char *)strchr(line, '\n')))
-			*tmp = '\0';
-		if ((tmp = (char *)strchr(line, '\r')))
-			*tmp = '\0';
-		temp = (aMotd *) MyMalloc(sizeof(aMotd));
-		if (!temp)
-			outofmemory();
-		AllocCpy(temp->line, line);
-		temp->next = NULL;
-		if (!newmotd)
-			newmotd = temp;
-		else
-			last->next = temp;
-		last = temp;
-	}
-	close(fd);
-	return newmotd;
-}
-
-
-/*
- * A merge from ircu and bahamut, and some extra stuff added by codemastr
- */
-
-aMotd *read_motd(char *filename)
-{
-	int  fd = open(filename, O_RDONLY);
-	aMotd *temp, *newmotd, *last, *old;
-	struct stat sb;
-	char line[82];
-	char *tmp;
-	int  i;
-	if (fd == -1)
-		return NULL;
-
-	fstat(fd, &sb);
-
-	/* If it is the default MOTD, clear it -- codemastr */
-	if (!stricmp(filename, MPATH))
-	{
-		while (motd)
-		{
-			old = motd->next;
-			MyFree(motd->line);
-			MyFree(motd);
-			motd = old;
-		}
-		/* We also wanna set it's last changed value -- codemastr */
-		motd_tm = localtime(&sb.st_mtime);
-	}
-
-
-	(void)dgets(-1, NULL, 0);	/* make sure buffer is at empty pos */
-
-	newmotd = last = NULL;
-	while ((i = dgets(fd, line, 81)) > 0)
-	{
-		line[i] = '\0';
-		if ((tmp = (char *)strchr(line, '\n')))
-			*tmp = '\0';
-		if ((tmp = (char *)strchr(line, '\r')))
-			*tmp = '\0';
-		temp = (aMotd *) MyMalloc(sizeof(aMotd));
-		if (!temp)
-			outofmemory();
-		AllocCpy(temp->line, line);
-		temp->next = NULL;
-		if (!newmotd)
-			newmotd = temp;
-		else
-			last->next = temp;
-		last = temp;
-	}
-	close(fd);
-	return newmotd;
-
-}
-
-
-/*
- * A merge from ircu and bahamut, and some extra stuff added by codemastr
  * we can now use 1 function for multiple files -- codemastr
+ * Merged read_motd/read_rules stuff into this -- Syzop
  */
 
+/** Read motd-like file, used for rules/motd/botmotd/opermotd/etc.
+ * @param filename Filename of file to read.
+ * @param list Reference to motd pointer (used for freeing if needed, can be NULL)
+ * @returns Pointer to MOTD or NULL if reading failed.
+ */
 aMotd *read_file(char *filename, aMotd **list)
 {
+	return read_file_ex(filename, list, NULL);
+}
+
+/** Read motd-like file, used for rules/motd/botmotd/opermotd/etc.
+ * @param filename Filename of file to read.
+ * @param list Reference to motd pointer (used for freeing if needed, NULL allowed)
+ * @param t Pointer to struct tm to store filedatetime info in (NULL allowed)
+ * @returns Pointer to MOTD or NULL if reading failed.
+ */
+aMotd *read_file_ex(char *filename, aMotd **list, struct tm *t)
+{
 
 	int  fd = open(filename, O_RDONLY);
 	aMotd *temp, *newmotd, *last, *old;
@@ -4234,12 +4105,29 @@ aMotd *read_file(char *filename, aMotd **list)
 	if (fd == -1)
 		return NULL;
 
-	while (*list)
+	if (list)
 	{
-		old = (*list)->next;
-		MyFree((*list)->line);
-		MyFree(*list);
-		*list  = old;
+		while (*list)
+		{
+			old = (*list)->next;
+			MyFree((*list)->line);
+			MyFree(*list);
+			*list  = old;
+		}
+	}
+
+	if (t)
+	{
+		struct tm *ttmp;
+		struct stat sb;
+		if (!fstat(fd, &sb))
+		{
+			ttmp = localtime(&sb.st_mtime);
+			memcpy(t, ttmp, sizeof(struct tm));
+		} else {
+			/* Sure, fstat() shouldn't fail, but... */
+			memset(t, 0, sizeof(struct tm));
+		}
 	}
 
 	(void)dgets(-1, NULL, 0);	/* make sure buffer is at empty pos */

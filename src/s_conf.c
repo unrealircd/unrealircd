@@ -3137,12 +3137,11 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 	cep = config_find_entry(ce->ce_entries, "mask");
 	ca->mask = strdup(cep->ce_vardata);
 	cep = config_find_entry(ce->ce_entries, "motd");
-	ca->motd = read_motd(cep->ce_vardata); 
 	ca->motd_file = strdup(cep->ce_vardata);
-	ca->motd_tm = motd_tm;
+	ca->motd = read_file_ex(cep->ce_vardata, NULL, &ca->motd_tm);
 	cep = config_find_entry(ce->ce_entries, "rules");
-	ca->rules = read_rules(cep->ce_vardata);
 	ca->rules_file = strdup(cep->ce_vardata);
+	ca->rules = read_file(cep->ce_vardata, NULL);
 	cep = config_find_entry(ce->ce_entries, "options");
 	if (cep)
 	{

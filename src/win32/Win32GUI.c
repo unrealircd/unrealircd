@@ -819,31 +819,7 @@ static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 						ConfigItem_tld *tlds;
 						aMotd *amotd;
 						MessageBox(NULL, "Rehashing all MOTD and Rules files", "Rehashing", MB_OK);
-						motd = (aMotd *) read_motd(MPATH);
-						rules = (aMotd *) read_rules(RPATH);
-						for (tlds = conf_tld; tlds;
-						    tlds = (ConfigItem_tld *) tlds->next) {
-							if (!tlds->flag.motdptr) {
-								while (tlds->motd)
-								{
-									amotd = tlds->motd->next;
-									MyFree(tlds->motd->line);
-									MyFree(tlds->motd);
-									tlds->motd = amotd;
-								}
-							}
-							tlds->motd = read_motd(tlds->motd_file);
-							if (!tlds->flag.rulesptr) {
-								while (tlds->rules)
-								{
-									amotd = tlds->rules->next;
-									MyFree(tlds->rules->line);
-									MyFree(tlds->rules);
-									tlds->rules = amotd;
-								}
-							}
-							tlds->rules = read_rules(tlds->rules_file);
-						}
+						rehash_motdrules();
 						sendto_realops("Rehashing all MOTD and Rules files via the console");
 						break;
 					}
