@@ -23,12 +23,13 @@
 #
 
 IRCDCONF = ../ircd.conf
+LIBS=-lcrypt
 
 all: mkpasswd
 crypt: install
 
 mkpasswd: mkpasswd.c
-	cc -lcrypt -O mkpasswd.c -o mkpasswd
+	cc ${LIBS} -O mkpasswd.c -o mkpasswd
 
 install:
 	crypter ${IRCDCONF}
