@@ -5131,7 +5131,7 @@ void send_channel_modes_sjoin3(cptr, chptr)
 		else
 	if (nopara)
 	{
-		ircsprintf(buf, "%s %ld %s %s",
+		ircsprintf(buf, "%s %ld %s %s :",
 		    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
 		    chptr->creationtime, chptr->chname, modebuf);
 
@@ -5139,7 +5139,7 @@ void send_channel_modes_sjoin3(cptr, chptr)
 		else
 	if (!nopara && !nomode)
 	{
-		ircsprintf(buf, "%s %ld %s %s %s",
+		ircsprintf(buf, "%s %ld %s %s %s :",
 			    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
 		    chptr->creationtime, chptr->chname, modebuf, parabuf);
 	}
