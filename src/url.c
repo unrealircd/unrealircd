@@ -316,10 +316,11 @@ void url_do_transfers_async(void)
 			char *url;
 			long code;
 			long last_mod;
-			curl_easy_getinfo(msg->easy_handle, CURLINFO_RESPONSE_CODE, &code);
-			curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, (char*)&handle);
-			curl_easy_getinfo(msg->easy_handle, CURLINFO_EFFECTIVE_URL, &url);
-			curl_easy_getinfo(msg->easy_handle, CURLINFO_FILETIME, &last_mod);
+			CURL *easyhand = msg->easy_handle;
+			curl_easy_getinfo(easyhand, CURLINFO_RESPONSE_CODE, &code);
+			curl_easy_getinfo(easyhand, CURLINFO_PRIVATE, (char*)&handle);
+			curl_easy_getinfo(easyhand, CURLINFO_EFFECTIVE_URL, &url);
+			curl_easy_getinfo(easyhand, CURLINFO_FILETIME, &last_mod);
 			fclose(handle->fd);
 #if defined(IRC_UID) && defined(IRC_GID)
 			if (!loop.ircd_booted)
@@ -347,8 +348,12 @@ void url_do_transfers_async(void)
 				remove(handle->filename);
 			}
 			free(handle);
-			curl_multi_remove_handle(multihandle, msg->easy_handle);
-			curl_easy_cleanup(msg->easy_handle);
+			curl_multi_remove_handle(multihandle, easyhand);
+			/* NOTE: after curl_multi_remove_handle() you cannot use
+			 * 'msg' anymore because it has freed by curl (as of v7.11.0),
+			 * therefore 'easyhand' is used... fun! -- Syzop
+			 */
+			curl_easy_cleanup(easyhand);
 		}
 	}
 }
