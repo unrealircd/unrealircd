@@ -66,6 +66,29 @@ else
 	exit 1
 fi
 
+# we use a modified mkpasswd credit to Nelson Minar (minar@reed.edu)
+# for creating the original mkpasswd
+if test $CRYPT_OPER_PASSWORD != "" || test $CRYPT_LINK_PASSWORD != "" || test $CRYPT_XLINE_PASSWORD != "" ; then
+		cat > crypter.tmp.c << __EOF__
+			#include <stdlib.h>
+			#include <stdio.h>
+			int main(int argc, char *argv[])
+			{
+				static char saltChars[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./";
+				char salt[3];
+				char *plaintext;
+				srandom(time(0));
+				salt[0] = saltChars[random() % 64];
+				salt[1] = saltChars[random() % 64];
+				salt[2] = 0;
+				plaintext = argv[1];
+				printf("%s", crypt(plaintext, salt));
+			}
+__EOF__
+		cc crypter.tmp.c -o crypter.tmp -lcrypt
+		rm crypter.tmp.c		
+fi
+
 CONF=$IRCDCONF
 
 if [ -r "$CONF" ]; then
@@ -231,44 +254,18 @@ read cc
 if [ ! -z "$cc" ]; then
 	FLAGS="$cc"
 fi
-
-        echo " "
-        ENCRYPT=""
-        ENCRYPT="bad"
-        while [ "$ENCRYPT" = "bad" ]; do
-                echo "Do you use encrypted oper passwords?"
-                echo $n " [Yes] -> $c"
-                read cc
-                if [ -z "$cc" ]; then
-                        cc="Yes"
-                fi
-                case "$cc" in
-                        [Yy]*)
-                                ENCRYPT="Yes"
-                                ;;
-                        [Nn]*)
-                                ENCRYPT="No"
-                                ;;
-                        *)
-                                echo "Please specify yes or no."
-                                ENCRYPT="bad"
-                                ;;
-                esac
-        done
-
-if [ "$ENCRYPT" = "Yes" ] ; then
-echo "Compile the file called mkpasswd.c in the 'crypt' directory"
-echo "Then run it (./mkpasswd) and input the passwd to be encrypted"
-echo "Then copy the output into the passwd slot in the O:line"
-echo "NOTE: You can encrypt on irc via /mkpasswd <passwd>"
-fi
+#Don't ask if they use encrypted oper passes, we can tell if they do
 
 echo " "
 echo "What will your /oper password be? (ie: snoopy67)"
 echo $n " [$OPERPASS] -> $c"
 read cc
 if [ ! -z "$cc" ]; then
-	OPERPASS="$cc"
+		OPERPASS="$cc"
+fi
+
+if [ "$CRYPT_OPER_PASSWORD" != "" ]; then
+	OPERPASS=`./crypter.tmp $OPERPASS`
 fi
 
 echo " "
@@ -287,14 +284,21 @@ if [ ! -z "$cc" ]; then
         DIEPASS="$cc"
 fi
 
+if [ "$CRYPT_XLINE_PASSWORD" != "" ]; then
+	DIEPASS=`./crypter.tmp $cc`
+fi
+
 echo " "
 echo "What do you want your restart password to be?"
 echo $n " [$RESTARTPASS] -> $c"
 read cc
 if [ ! -z "$cc" ]; then
-        RESTARTPASS="$cc"
+else
+	        RESTARTPASS="$cc"
 fi
-
+if [ "$CRYPT_XLINE_PASSWORD" != "" ]; then
+	RESTARTPASS=`./crypter.tmp $cc`
+fi
 echo " "
 echo "If your running services, or linking to a network that has"
 echo "services, please state the services servername."
@@ -313,43 +317,70 @@ elif [ ! -z "$cc" ]; then
 fi
 
 cat > $CONF << __EOF__
-########################
-#
-# Filename:  $IRCDCONF
-#  Created:  $DATE - $TIME
-#
-########################
+/*
+ *
+ * Filename:  $IRCDCONF
+ * Created:  $DATE - $TIME
+ *
+ */
 
-############ Server Info ############
-M:$SERVNAME:$VIRTUAL:$COMMENT:$PORT:$NUMERIC
-#####################################
+/* Server Info */
+me {
+	name $SERVNAME;
+	info "$COMMENT";
+__EOF__
+if [ $NUMERIC != "" ]; then
+	echo "	numeric $NUMERIC;" >> $CONF
+fi
+cat >> $CONF << __EOF__
+};
 
-############ Administrator Information #############
-A:$ADMIN:$ADMNICK:$ADMADDR
-####################################################
+/* Admin Info */
+admin {
+	"$ADMIN";
+	"$ADMNICK";
+	"$ADMADDR";
+};
 
-############ Y-lines #############
-# Client Y:lines
-Y:1:90:0:245:100000
-# Server Y:lines
-Y:50:300:600:1:1000000
-##################################
+/* Classes */
+class clients {
+	pingfreq 90;
+	maxclients 245;
+	sendq 100000;
+};
 
-############ I/Access Lines #############
-I:*@*::*@*::1
-#########################################
+class servers {
+	pingfreq 300;
+	connfreq 600;
+	maxclients 5;
+	sendq 1000000;
+};
 
-############ X:LINE Die/Restart Password ############
-X:$DIEPASS:$RESTARTPASS
-#####################################################
+/* Allow info */
+allow {
+	ip "*@*";
+	hostmask "*@*";
+	class clients;
+};
 
-## O-line (O:hostmask:password:opername:flags:1) ##
-O:$OPERADDR:$OPERPASS:$OPERNAME:$FLAGS:1
-###################################################
+/* Die/Restart Password */
+drpass {
+	die "$DIEPASS";
+	restart "$RESTARTPASS";
+};
+
+oper $OPERNAME {
+	from {
+		userhost $OPERADDR;
+	};
+	password "$OPERPASS";
+	flags $FLAGS;
+	class clients;
+};
 
 __EOF__
 
-
+echo "/* Links */" >> $CONF
 echo " "
 echo "   Would you like to configure any servers for linking?"
 echo "Type the servername, or type 'done' when finished."
@@ -376,7 +407,10 @@ while [ "$cc" != "done" ]; do
 	echo $n " [$LINKPASS] -> $c"
 	read CLP
 	if [ -z "$CLP" ]; then
-		CLP="$LINKPASS"
+			CLP="$LINKPASS"
+	fi
+	if [ "$CRYPT_LINK_PASSWORD" != "" ]; then
+		CLP=`./crypter.tmp $cc`
 	fi
 
 	echo " "
@@ -394,10 +428,10 @@ while [ "$cc" != "done" ]; do
 			[Yy]*)
 				AUTOCONN="yes"
 				echo "What port should we autoconnect to?"
-				echo $n " [7029] -> $c"
+				echo $n " [$PORT] -> $c"
 				read AUTOPORT
 				if [ -z "$AUTOPORT" ]; then
-					AUTOPORT="7029"
+					AUTOPORT="$PORT"
 				fi
 				;;
 			[Nn]*)
@@ -434,19 +468,38 @@ while [ "$cc" != "done" ]; do
 		esac
 	done
 
-	if [ "$HUB" = "Yes" ]; then
-		echo "############ HUB LINES #############" >> $CONF
-		echo "H:*:*:$THESERV" >> $CONF
-		echo "####################################" >> $CONF
-		echo "" >> $CONF
+	echo "link $THESERV {" >> $CONF
+	USER=`echo $SHOST |sed -e 's/\(.*\)@.*/\1/'`
+	HOST=`echo $SHOST |sed -e 's/.*@\(.*\)/\1/'`
+	if [ "$USER" = "$SHOST" ]; then
+		echo "	username *;" >> $CONF
+		echo "	hostname $SHOST;" >> $CONF
+	else
+		echo "	username $USER;" >> $CONF
+		echo "	hostname $HOST;" >> $CONF
 	fi
-
-        echo "############ C/N LINES #############" >> $CONF
-        echo "C:$SHOST:$CLP:$THESERV:$AUTOPORT:50" >> $CONF
-        echo "N:$SHOST:$CLP:$THESERV::50" >> $CONF
-        echo "####################################" >> $CONF
-	echo "" >> $CONF
-
+		
+	echo "	bind-ip *;" >> $CONF
+	if [ "$AUTOPORT" != "" ]; then
+		echo "	port $AUTOPORT;" >> $CONF
+	else
+		echo "	port $PORT;" >> $CONF
+	fi
+	echo "	password-connect \"$CLP\";" >> $CONF
+	echo "	password-receive \"$CLP\";" >> $CONF
+	echo "	class servers;" >> $CONF
+	if [ "$HUB" = "Yes" ]; then
+		echo "	hub *;" >> $CONF
+	else
+		echo "	leaf *;" >> $CONF
+	fi
+	if [ "$AUTOCONN" != "no" ]; then
+		echo "	options {" >> $CONF
+		echo "		autoconnect;" >> $CONF
+		echo "	};" >> $CONF
+	fi
+	echo "};" >> $CONF
+	echo " " >> $CONF
 	echo " "
 	echo "Type the servername, or type 'done' when finished."
 	echo $n " [done] -> $c"
@@ -457,24 +510,25 @@ while [ "$cc" != "done" ]; do
 done
 
 cat >> $CONF << __EOF__
-############ Uline for Services ############
-U:$SERVICES:*:*
-############################################
+/* Ulines */
+ulines {
+	$SERVICES;
+};
 
-############ Q-Lined NickNames ############
-Q::Reserved for services:*C*h*a*n*S*e*r*v*
-Q::Reserved for services:*N*i*c*k*S*e*r*v*
-Q::Reserved for services:*M*e*m*o*S*e*r*v*
-Q::Reserved for services:*H*e*l*p*S*e*r*v*
-Q::Reserved for services:*O*p*e*r*S*e*r*v*
-Q::Reserved for services:*I*n*f*o*S*e*r*v*
-Q::Reserved for Administrator:*Admin*
-Q::Reserved for ircops:*IRC*op*
-Q::Reserved for ircops:*Oper*
-Q::Bug in mIRC:Status
-###########################################
+/* Banned nick names */
+ban nickname { mask "*C*h*a*n*S*e*r*v*"; reason "Reserved for services"; };
+ban nickname { mask "*N*i*c*k*S*e*r*v*"; reason "Reserved for services"; };
+ban nickname { mask "*M*e*m*o*S*e*r*v*"; reason "Reserved for services"; };
+ban nickname { mask "*H*e*l*p*S*e*r*v*"; reason "Reserved for services"; };
+ban nickname { mask "*O*p*e*r*S*e*r*v*"; reason "Reserved for services"; };
+ban nickname { mask "*I*n*f*o*S*e*r*v*"; reason "Reserved for services"; };
+ban nickname { mask "*Admin*"; reason "Reserved for Administrator"; };
+ban nickname { mask "*IRC*op*"; reason "Reserved for ircops"; };
+ban nickname { mask "*Oper*"; reason "Reserved for ircops"; };
+ban nickname { mask "Status"; reason "Bug in mIRC"; };
 
-############ PORT LINES #############
+/* Ports */
+listen $VIRTUAL:$PORT;
 __EOF__
 
 cc="blank"
@@ -489,26 +543,24 @@ while [ "$cc" != "done" ]; do
 		cc="$OPRT"
 	fi
 	if [ "$cc" = "default" ]; then
-		echo "P:$VIRTUAL:*:*:6660" >> $CONF
-		echo "P:$VIRTUAL:*:*:6661" >> $CONF
-		echo "P:$VIRTUAL:*:*:6662" >> $CONF
-		echo "P:$VIRTUAL:*:*:6663" >> $CONF
-		echo "P:$VIRTUAL:*:*:6664" >> $CONF
-                echo "P:$VIRTUAL:*:*:6665" >> $CONF
-                echo "P:$VIRTUAL:*:*:6666" >> $CONF
-                echo "P:$VIRTUAL:*:*:6668" >> $CONF
-                echo "P:$VIRTUAL:*:*:6669" >> $CONF
-                echo "P:$VIRTUAL:*:*:7000" >> $CONF
-		echo "P:$VIRTUAL:*:*:7029" >> $CONF
-		echo "#####################################" >> $CONF
+		echo "listen $VIRTUAL:6660;" >> $CONF
+		echo "listen $VIRTUAL:6661;" >> $CONF
+		echo "listen $VIRTUAL:6662;" >> $CONF
+		echo "listen $VIRTUAL:6663;" >> $CONF
+		echo "listen $VIRTUAL:6664;" >> $CONF
+                echo "listen $VIRTUAL:6665;" >> $CONF
+                echo "listen $VIRTUAL:6666;" >> $CONF
+                echo "listen $VIRTUAL:6668;" >> $CONF
+                echo "listen $VIRTUAL:6669;" >> $CONF
+                echo "listen $VIRTUAL:7000;" >> $CONF
 		cc="done"
 	fi
 	if [ "$cc" != "done" ]; then
 		if [ $cc = "$PORT" ]; then
-			echo "  No, $PORT is already defined in the M:line,"
+			echo "  No, $PORT is already in use"
 			echo "please use a port other than $PORT."
 		else
-			echo "P:$VIRTUAL:*:*:$cc" >> $CONF
+			echo "listen $VIRTUAL:$cc;" >> $CONF
 		fi
 	fi
 	case "$OPRT" in
@@ -548,6 +600,7 @@ Make sure you double check for errors in $IRCDCONF. We recommend that
 you take a look at your $IRCDCONF right now. Thanks for using UnrealIRCd
 
 __EOF__
+		rm crypter.tmp
 		echo "Have a nice day."
 		echo ""
 		exit 1
