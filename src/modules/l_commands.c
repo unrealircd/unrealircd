@@ -120,6 +120,7 @@ int    l_commands_Init(int module_load)
 	m_unkline_Init(module_load);
 	m_sqline_Init(module_load);
 	m_unsqline_Init(module_load);
+	m_tkl_Init(module_load);
 #ifdef GUEST
 	m_guest_Init(module_load);
 #endif
@@ -174,6 +175,7 @@ int    l_commands_Load(int module_load)
 	m_unzline_Load(module_load);
 	m_kline_Load(module_load);
 	m_unkline_Load(module_load);
+	m_tkl_Load(module_load);
 	m_sqline_Load(module_load);
 	m_unsqline_Load(module_load);
 #ifdef GUEST

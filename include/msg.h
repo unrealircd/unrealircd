@@ -317,7 +317,7 @@ extern int m_service(), m_userhost(), m_ison(), m_watch();
 extern int m_service(), m_servset(), m_servlist(), m_squery();
 extern int m_rehash(), m_restart(), m_die(), m_dns(), m_hash();
 
-extern int m_gline(), m_remgline(), m_map(), m_svs2mode(), m_admins(),
+extern int m_remgline(), m_map(), m_svs2mode(), m_admins(),
 m_dalinfo();
 extern int m_addline(), m_rules(), m_mkpasswd();
 extern int m_sethost(), m_nachat(), m_techat(), m_setident(), m_setname();

@@ -996,3 +996,4 @@ seen. gmtime warning still there
 - Made N also give you OaA, since its what most people use it for *sigh*
 - A and a give you O, set::modes-on-oper
 - Made link::hubmask and link::leafmask actually work properly
+- Big mods to TKL, oper commands split into module, testing

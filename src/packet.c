@@ -183,7 +183,6 @@ void	init_CommandHash(void)
 	add_Command(MSG_DIE, TOK_DIE, m_die, MAXPARA);
 	add_Command(MSG_RULES, TOK_RULES, m_rules, MAXPARA);
 	add_Command(MSG_MAP, TOK_MAP, m_map, MAXPARA);
-	add_Command(MSG_GLINE, TOK_GLINE, m_gline, MAXPARA);
 	add_Command(MSG_DALINFO, TOK_DALINFO, m_dalinfo, MAXPARA);
 	add_Command(MSG_ADDLINE, TOK_ADDLINE, m_addline, 1);
 	add_Command(MSG_KNOCK, TOK_KNOCK, m_knock, 2);
