@@ -2705,7 +2705,7 @@ int  del_silence(aClient *sptr, char *mask)
 	return -1;
 }
 
-static int add_silence(aClient *sptr, char *mask)
+int add_silence(aClient *sptr, char *mask, int senderr)
 {
 	Link *lp;
 	int  cnt = 0, len = 0;
@@ -2716,8 +2716,8 @@ static int add_silence(aClient *sptr, char *mask)
 		if (MyClient(sptr))
 			if ((len > MAXSILELENGTH) || (++cnt >= MAXSILES))
 			{
-				sendto_one(sptr, err_str(ERR_SILELISTFULL),
-				    me.name, sptr->name, mask);
+				if (senderr)
+					sendto_one(sptr, err_str(ERR_SILELISTFULL), me.name, sptr->name, mask);
 				return -1;
 			}
 			else
@@ -2784,7 +2784,7 @@ CMD_FUNC(m_silence)
 			c = '+';
 		cp = pretty_mask(cp);
 		if ((c == '-' && !del_silence(sptr, cp)) ||
-		    (c != '-' && !add_silence(sptr, cp)))
+		    (c != '-' && !add_silence(sptr, cp, 1)))
 		{
 			sendto_prefix_one(sptr, sptr, ":%s SILENCE %c%s",
 			    parv[0], c, cp);
@@ -2809,7 +2809,7 @@ CMD_FUNC(m_silence)
 		}
 		else
 		{
-			(void)add_silence(sptr, parv[2]);
+			(void)add_silence(sptr, parv[2], 1);
 			if (!MyClient(acptr))
 				sendto_one(acptr, ":%s SILENCE %s :%s",
 				    parv[0], parv[1], parv[2]);

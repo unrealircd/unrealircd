@@ -180,6 +180,7 @@ extern void set_snomask(aClient *sptr, char *snomask);
 extern char *get_sno_str(aClient *sptr);
 /* for services */
 extern void del_invite(aClient *, aChannel *);
+extern int add_silence(aClient *, char *, int);
 extern int del_silence(aClient *, char *);
 extern void send_user_joins(aClient *, aClient *);
 extern void clean_channelname(char *);
