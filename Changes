@@ -340,3 +340,5 @@
 - Another IRCstats.unknown fix. Hope this works (hacked from undernet code)
 - NETINFO protocol 0 is accepted as valid protocool (for services etc)
 - /stats s is now avail only for opers in mainstream
+- Took out "nick did a /userhost on you"
+- Reduced hashtable size
