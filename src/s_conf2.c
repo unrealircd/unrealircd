@@ -48,7 +48,7 @@ extern char *my_itoa(long i);
 /*
  * TODO:
  *  - deny version {} (V:lines)
- *  - allow {} connfreq (Y:lines)
+ *  - deny connect (D:d lines)
 */
 #define ircstrdup(x,y) if (x) MyFree(x); if (!y) x = NULL; else x = strdup(y)
 #define ircfree(x) if (x) MyFree(x); x = NULL
