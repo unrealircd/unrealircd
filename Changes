@@ -2895,3 +2895,6 @@ seen. gmtime warning still there
   chanmode +T could not be set by a globop w/can_override and non-+hoaq.
 - Added some set::throttle::* checking if insane values were supplied.
   Reported by Troco (#0001555).
+- Added support for single-target specifiction like spamfilter { regex "blah";
+  action kill; target private; }; previously it didn't warn/error on this
+  but it didn't work either.

@@ -4675,8 +4675,13 @@ int _conf_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 	nl->reason = strdup(word);
 
 	cep = config_find_entry(ce->ce_entries, "target");
-	for (cep = cep->ce_entries; cep; cep = cep->ce_next)
-		target |= spamfilter_getconftargets(cep->ce_varname);
+	if (cep->ce_vardata)
+		target = spamfilter_getconftargets(cep->ce_vardata);
+	else {
+		for (cep = cep->ce_entries; cep; cep = cep->ce_next)
+			target |= spamfilter_getconftargets(cep->ce_varname);
+	}
+
 	strncpyzt(nl->usermask, spamfilter_target_inttostring(target), sizeof(nl->usermask));
 	nl->subtype = target;
 
@@ -4746,6 +4751,13 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		errors++;
 	} else if (cep->ce_vardata) {
+		if (!spamfilter_getconftargets(cep->ce_vardata))
+		{
+			config_error("%s:%i: unknown spamfiler target type '%s'",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
+			errors++;
+		}
+	} else if (cep->ce_entries) {
 		for (cep = cep->ce_entries; cep; cep = cep->ce_next)
 		{
 			if (!cep->ce_varname)
@@ -4761,6 +4773,10 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 			}
 		}
+	} else {
+		config_error("%s:%i: empty spamfilter::target block",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
 	}
 
 	if (!(cep = config_find_entry(ce->ce_entries, "action")))
