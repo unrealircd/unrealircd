@@ -2896,7 +2896,12 @@ CMD_FUNC(do_join)
 				}
 			}
 			if (breakit)
+			{
+				/* Rejected... if we just created a new chan we should destroy it too. -- Syzop */
+				if (!chptr->users)
+					sub1_from_channel(chptr);
 				continue;
+			}
 		}
 
 		/*

@@ -2188,3 +2188,5 @@ seen. gmtime warning still there
   reported by _loco_ (#0000991).
 - Fixed a bug in the win32 editor reported by ChAoS^TiGeR
 - Fixed /map bug that permitted trivial finding of U-lined servers
+- Fixed bug in HOOKTYPE_LOCAL_JOIN which could cause 0-member-channels if a hook returned
+  1 and the channel was new.
