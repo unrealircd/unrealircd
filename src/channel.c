@@ -1853,9 +1853,13 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, u_
 			  break;
 		  if (what == MODE_ADD)
 		  {
-			  if (!bounce)	/* don't do the mode at all. */
+			  if (!bounce) {	/* don't do the mode at all. */
+				  char *tmp;
+				  if ((tmp = strchr(param, ' ')))
+					*tmp = '\0';
 				  strncpyzt(chptr->mode.key, param,
 				      sizeof(chptr->mode.key));
+			  }
 			  tmpstr = param;
 		  }
 		  else
