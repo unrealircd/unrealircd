@@ -750,3 +750,4 @@
 - Added some network files and even more network files
 - Fixed some copyright stuff in ssl.c
 - Fixed a /map problem
+- Updated doc/conf.doc and doc/example.conf
