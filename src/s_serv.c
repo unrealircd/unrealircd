@@ -2079,6 +2079,8 @@ int  m_stats(cptr, sptr, parc, parv)
 
 	switch (stat)
 	{
+	  case 'b':	badwords_stats();
+	  		break;
 	  case 'L':
 	  case 'l':
 		  /*

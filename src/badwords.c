@@ -17,6 +17,9 @@
 
 #include <unistd.h>
 #include "config.h"
+#include "struct.h"
+#include "common.h"
+#include "h.h"
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 
@@ -30,6 +33,10 @@ static int message_wordlist;
  * the loadbadwords() function.  It's primary use is to filter swearing
  * in both private and public messages
  */
+
+void	badwords_stats(aClient *sptr)
+{
+}
 
 char *stripbadwords_channel(char *str)
 {
@@ -157,9 +164,15 @@ int  loadbadwords_channel(char *wordfile)
 		    || (ptr = strchr(buf, '\n')) != NULL)
 			*ptr = '\0';
 		if (buf[0] == '\0')
+		{
+			i--;
 			continue;
+		}
 		if (buf[0] == '#')
+		{
+			i--;
 			continue;
+		}
 		for (j = 0, isregex = 0; j < strlen(buf); j++)
 		{
 			if ((int)buf[j] < 65 || (int)buf[j] > 123)
@@ -214,9 +227,15 @@ int  loadbadwords_message(char *wordfile)
 		    || (ptr = strchr(buf, '\n')) != NULL)
 			*ptr = '\0';
 		if (buf[0] == '\0')
+		{
+			i--;
 			continue;
+		}
 		if (buf[0] == '#')
+		{
+			i--;
 			continue;
+		}
 
 		for (j = 0, isregex = 0; j < strlen(buf); j++)
 		{

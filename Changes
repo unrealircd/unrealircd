@@ -378,3 +378,5 @@
 - Made so auditorium mode shows users to @'s 
 - Fixed a bug where /chgident would overflow into the *real* host if it where greater than USERLEN
   because _someone_ aka sts told it to check against HOSTLEN rather than USERLEN... reported by wshs
+- Fixed a bug in badwords not loading words correctly, and upped word limit
+  to 50
