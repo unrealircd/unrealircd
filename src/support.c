@@ -1755,6 +1755,7 @@ int unreal_copyfile(char *src, char *dest)
 {
 	char buf[2048];
 	time_t mtime;
+	int srcfd, destfd, len;
 
 #ifndef _WIN32
 	/* Try a hardlink first... */
@@ -1765,12 +1766,10 @@ int unreal_copyfile(char *src, char *dest)
 	mtime = unreal_getfilemodtime(src);
 
 #ifndef _WIN32
-	int srcfd = open(src, O_RDONLY);
+	srcfd = open(src, O_RDONLY);
 #else
-	int srcfd = open(src, _O_RDONLY|_O_BINARY);
+	srcfd = open(src, _O_RDONLY|_O_BINARY);
 #endif
-	int destfd;
-	int len;
 
 	if (srcfd < 0)
 		return 0;
