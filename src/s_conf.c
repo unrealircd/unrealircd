@@ -6778,7 +6778,7 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 		*(cSlash+1)=0;
 	}
 	hFind = FindFirstFile(ce->ce_vardata, &FindData);
-	if (!FindData.cFileName) {
+	if (!FindData.cFileName || hFind == INVALID_HANDLE_VALUE) {
 		config_status("%s:%i: loadmodule %s: failed to load",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 			ce->ce_vardata);
@@ -6793,7 +6793,7 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 		if ((ret = Module_Create(path))) {
 			config_status("%s:%i: loadmodule %s: failed to load: %s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-				FindData.cFileName, ret);
+				path, ret);
 			free(path);
 			return -1;
 		}

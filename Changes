@@ -244,3 +244,5 @@
 - Changed version to 3.2.1
 - Moved the 3.2 changes to Changes.old
 ** 3.2.1 release **
+- Fixed a win32 module problem where file not found errors would display random characters,
+  reported by STING
