@@ -1,0 +1,29 @@
+ver^2.2
+#
+# SpamNet (irc.spamnet.org) Network Configuration File
+# --------------------------------------------------
+#  Added-at:     29 July 2000 00:00 GMT
+#  Author:       cij (Brian Rogers)
+#  E-Mail:       n1uro@n1uro.com
+# -----------------------------------------
+#
+
+Network >..........: SpamNet
+Set ircnetwork ....: SpamNet
+Set defserv .......: irc.spamnet.org
+Set SERVICES_NAME .: services.spamnet.org
+Set oper_host .....: ircop.spamnet.org
+Set admin_host ....: admin.spamnet.org
+Set locop_host ....: locop.spamnet.org
+Set sadmin_host ...: csops.spamnet.org
+Set netadmin_host .: netadmin.spamnet.org
+Set coadmin_host ..: coadmin.spamnet.org
+Set techadmin_host : techadmin.spamnet.org
+Set hidden_host ...: SpamNet
+Set netdomain .....: spamnet.org
+Set helpchan ......: #SpamNet
+Set STATS_SERVER ..: services.spamnet.org
+Set HUB ...........: 1
+Set iNAH ..........: 1
+Set net_quit ......: SpamNet
+
