@@ -3318,3 +3318,5 @@ This is the 3.2 fixes branch.
   to sptr->serv->class. Both caused problems when someone did a /rehash when a server
   was in the process of connecting (so it might also happen when connfreq was hit and you
   did a /rehash). Original bug was reported by sh0 (#0001872).
+- spamfilter.conf: Added sig for a mIRC decode worm, submitted by nexus.
+- Some release notes updates.
