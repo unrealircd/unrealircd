@@ -50,8 +50,6 @@ DLLFUNC int m_swhois(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_SWHOIS 	"SWHOIS"	
 #define TOK_SWHOIS 	"BA"	
 
-#ifndef STATIC_LINKING
-
 #ifndef DYNAMIC_LINKING
 ModuleInfo m_swhois_info
 #else
