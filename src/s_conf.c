@@ -7644,7 +7644,10 @@ void add_remote_include(char *file, char *url, int flags, char *errorbuf)
 		if (!(inc->flag.type & INCLUDE_NOTLOADED))
 			continue;
 		if (!stricmp(url, inc->url))
+		{
+			inc->flag.type |= flags;
 			return;
+		}
 	}
 
 	inc = MyMallocEx(sizeof(ConfigItem_include));

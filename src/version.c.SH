@@ -106,7 +106,7 @@ char *unrealcredits[] =
 	"- Donating a FreeBSD box to the Unreal project to host some stuff",
 	"KIREnet.com - http://www.kirenet.com",
 	"- Donating hosting for the above box on their line :)",
-	"Digital Intensity Webhosting - http://www.digital-intensity.net"
+	"Digital Intensity Webhosting - http://www.digital-intensity.net",
 	"- Donating hosting for the Unreal forums",
 	" ",
 	"Thanks go to all current mirror & DNS hosters. We really value",
