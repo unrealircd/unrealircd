@@ -457,21 +457,31 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 			delfrom_fdlist(sptr->slot, &serv_fdlist);
 #endif
 		if (sptr->class)
+		{
 			sptr->class->clients--;
+			if ((sptr->class->flag.temporary) && !sptr->class->clients && !sptr->class->xrefcount)
+			{
+				delete_classblock(sptr->class);
+				sptr->class = NULL;
+			}
+		}
 		if (IsClient(sptr))
 			IRCstats.me_clients--;
-		if (IsServer(sptr))
+		if (sptr->serv && sptr->serv->conf)
 		{
-			IRCstats.me_servers--;
 			sptr->serv->conf->refcount--;
+			Debug((DEBUG_ERROR, "reference count for %s (%s) is now %d",
+				sptr->name, sptr->serv->conf->servername, sptr->serv->conf->refcount));
 			if (!sptr->serv->conf->refcount
 			  && sptr->serv->conf->flag.temporary)
 			{
-				/* Due for deletion */
-				DelListItem(sptr->serv->conf, conf_link);
-				link_cleanup(sptr->serv->conf);
-				MyFree(sptr->serv->conf);
+				Debug((DEBUG_ERROR, "deleting temporary block %s", sptr->serv->conf->servername));
+				delete_linkblock(sptr->serv->conf);
 			}
+		}
+		if (IsServer(sptr))
+		{
+			IRCstats.me_servers--;
 			ircd_log(LOG_SERVER, "SQUIT %s (%s)", sptr->name, comment);
 		}
 

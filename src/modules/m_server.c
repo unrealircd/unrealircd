@@ -593,6 +593,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	aClient		*acptr;
 	int		i;
 	char buf[BUFSIZE];
+	int incoming = IsUnknown(cptr) ? 1 : 0;
 
 	ircd_log(LOG_SERVER, "SERVER %s", cptr->name);
 
@@ -601,7 +602,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 		MyFree(cptr->passwd);
 		cptr->passwd = NULL;
 	}
-	if (IsUnknown(cptr))
+	if (incoming)
 	{
 		/* If this is an incomming connection, then we have just received
 		 * their stuff and now send our stuff back.
@@ -684,7 +685,12 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	cptr->srvptr = &me;
 	cptr->serv->numeric = numeric;
 	cptr->serv->conf = aconf;
-	cptr->serv->conf->refcount++;
+	if (incoming)
+	{
+		cptr->serv->conf->refcount++;
+		Debug((DEBUG_ERROR, "reference count for %s (%s) is now %d",
+			cptr->name, cptr->serv->conf->servername, cptr->serv->conf->refcount));
+	}
 	cptr->serv->conf->class->clients++;
 	cptr->class = cptr->serv->conf->class;
 	add_server_to_table(cptr);

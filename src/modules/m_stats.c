@@ -502,7 +502,7 @@ int stats_links(aClient *sptr, char *para)
 	ConfigItem_link *link_p;
 	for (link_p = conf_link; link_p; link_p = (ConfigItem_link *) link_p->next)
 	{
-		sendto_one(sptr, ":%s 213 %s C %s@%s * %s %i %s %s%s%s%s%s",
+		sendto_one(sptr, ":%s 213 %s C %s@%s * %s %i %s %s%s%s%s%s%s",
 			me.name, sptr->name, IsOper(sptr) ? link_p->username : "*",
 			IsOper(sptr) ? link_p->hostname : "*", link_p->servername,
 			link_p->port,
@@ -511,7 +511,11 @@ int stats_links(aClient *sptr, char *para)
 			(link_p->options & CONNECT_SSL) ? "S" : "",
 			(link_p->options & CONNECT_ZIP) ? "z" : "",
 			(link_p->options & CONNECT_NODNSCACHE) ? "d" : "",
-			(link_p->options & CONNECT_NOHOSTCHECK) ? "h" : "");
+			(link_p->options & CONNECT_NOHOSTCHECK) ? "h" : "",
+			(link_p->flag.temporary == 1) ? "T" : "");
+#ifdef DEBUGMODE
+		sendnotice(sptr, "%s has refcount %d", link_p->servername, link_p->refcount);
+#endif
 		if (link_p->hubmask)
 			sendto_one(sptr, ":%s 244 %s H %s * %s",
 				me.name, sptr->name, link_p->hubmask,
@@ -1420,6 +1424,10 @@ int stats_class(aClient *sptr, char *para)
 		sendto_one(sptr, rpl_str(RPL_STATSYLINE),
 			me.name, sptr->name, classes->name, classes->pingfreq, classes->connfreq,
 			classes->maxclients, classes->sendq, classes->recvq ? classes->recvq : CLIENT_FLOOD);
+#ifdef DEBUGMODE
+		sendnotice(sptr, "class '%s' has clients=%d, xrefcount=%d",
+			classes->name, classes->clients, classes->xrefcount);
+#endif
 	}
 	return 0;
 }

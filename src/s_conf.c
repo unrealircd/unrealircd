@@ -1702,6 +1702,21 @@ void	config_rehash()
 		DelListItem(oper_ptr, conf_oper);
 		MyFree(oper_ptr);
 	}
+	for (link_ptr = conf_link; link_ptr; link_ptr = (ConfigItem_link *) next)
+	{
+		next = (ListStruct *)link_ptr->next;
+		if (link_ptr->refcount == 0)
+		{
+			Debug((DEBUG_ERROR, "s_conf: deleting block %s (refcount 0)", link_ptr->servername));
+			delete_linkblock(link_ptr);
+		}
+		else
+		{
+			Debug((DEBUG_ERROR, "s_conf: marking block %s (refcount %d) as temporary",
+				link_ptr->servername, link_ptr->refcount));
+			link_ptr->flag.temporary = 1;
+		}
+	}
 	for (class_ptr = conf_class; class_ptr; class_ptr = (ConfigItem_class *) next)
 	{
 		next = (ListStruct *)class_ptr->next;
@@ -1709,11 +1724,9 @@ void	config_rehash()
 			continue;
 		class_ptr->flag.temporary = 1;
 		/* We'll wipe it out when it has no clients */
-		if (!class_ptr->clients)
+		if (!class_ptr->clients && !class_ptr->xrefcount)
 		{
-			ircfree(class_ptr->name);
-			DelListItem(class_ptr, conf_class);
-			MyFree(class_ptr);
+			delete_classblock(class_ptr);
 		}
 	}
 	for (uline_ptr = conf_ulines; uline_ptr; uline_ptr = (ConfigItem_ulines *) next)
@@ -1755,20 +1768,6 @@ void	config_rehash()
 				MyFree(ban_ptr->netmask);
 			DelListItem(ban_ptr, conf_ban);
 			MyFree(ban_ptr);
-		}
-	}
-	for (link_ptr = conf_link; link_ptr; link_ptr = (ConfigItem_link *) next)
-	{
-		next = (ListStruct *)link_ptr->next;
-		if (link_ptr->refcount == 0)
-		{
-			link_cleanup(link_ptr);
-			DelListItem(link_ptr, conf_link);
-			MyFree(link_ptr);
-		}
-		else
-		{
-			link_ptr->flag.temporary = 1;
 		}
 	}
 	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *)listen_ptr->next)
@@ -5298,6 +5297,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 			cep->ce_vardata);
 		link->class = default_class;
 	}
+	link->class->xrefcount++;
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "options"))
@@ -7692,6 +7692,34 @@ void	link_cleanup(ConfigItem_link *link_ptr)
 	link_ptr->recvauth = NULL;
 }
 
+void delete_linkblock(ConfigItem_link *link_ptr)
+{
+	Debug((DEBUG_ERROR, "delete_linkblock: deleting %s, refcount=%d",
+		link_ptr->servername, link_ptr->refcount));
+	if (link_ptr->class)
+	{
+		link_ptr->class->xrefcount--;
+		/* Perhaps the class is temporary too and we need to free it... */
+		if (link_ptr->class->flag.temporary && 
+		    !link_ptr->class->clients && !link_ptr->class->xrefcount)
+		{
+			delete_classblock(link_ptr->class);
+			link_ptr->class = NULL;
+		}
+	}
+	link_cleanup(link_ptr);
+	DelListItem(link_ptr, conf_link);
+	MyFree(link_ptr);
+}
+
+void delete_classblock(ConfigItem_class *class_ptr)
+{
+	Debug((DEBUG_ERROR, "delete_classblock: deleting %s, clients=%d, xrefcount=%d",
+		class_ptr->name, class_ptr->clients, class_ptr->xrefcount));
+	ircfree(class_ptr->name);
+	DelListItem(class_ptr, conf_class);
+	MyFree(class_ptr);
+}
 
 void	listen_cleanup()
 {

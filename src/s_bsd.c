@@ -2445,6 +2445,9 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	 */
 	(void)make_server(cptr);
 	cptr->serv->conf = aconf;
+	cptr->serv->conf->refcount++;
+	Debug((DEBUG_ERROR, "reference count for %s (%s) is now %d",
+		cptr->name, cptr->serv->conf->servername, cptr->serv->conf->refcount));
 	if (by && IsPerson(by))
 	{
 		(void)strlcpy(cptr->serv->by, by->name, sizeof cptr->serv->by);

@@ -1060,6 +1060,9 @@ struct _configitem_class {
 	ConfigFlag flag;
 	char	   *name;
 	int	   pingfreq, connfreq, maxclients, sendq, recvq, clients;
+	int xrefcount; /* EXTRA reference count, 'clients' also acts as a reference count but
+	                * link blocks also refer to classes so a 2nd ref. count was needed.
+	                */
 };
 
 struct _configflag_allow {

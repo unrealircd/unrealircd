@@ -3313,3 +3313,8 @@ This is the 3.2 fixes branch.
   the correct path (#0001898) reported by AngryWolf
 - Updated HOOKTYPE_TKL_ADD/HOOKTYPE_TKL_DEL to cptr, sptr, tk, parc, parv, else it was
   impossible to tell *who* removed a *line. Again, parc/parv are 0/NULL for expires.
+- Fixed "quickly-rehashing + autoconnect linkblocks = crash"-bug. This involved fixing
+  multiple reference count bugs, one related to sptr->serv->conf, and another one related
+  to sptr->serv->class. Both caused problems when someone did a /rehash when a server
+  was in the process of connecting (so it might also happen when connfreq was hit and you
+  did a /rehash). Original bug was reported by sh0 (#0001872).
