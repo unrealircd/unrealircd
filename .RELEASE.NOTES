@@ -12,7 +12,7 @@ Unreal3.2-beta16 Release Notes
 * throttling has been improved and is now considered stable. You can configure it in
   the set::throttle block. It allows you to config max. X connections in Y seconds.
 * ban version { }: bans users based on CTCP VERSION (tested on connect).
-* usermode +p: hide channels in whois
+* usermode +p: hide channels in whois and who
 * set::modes-on-join: channel modes that are set when a new channel is created
 * set::restrict-channelmodes: deny users to set/unset specified channelmodes
 * badword::action <replace|block>, "block" prevents the message from being sent (default=replace).
@@ -28,7 +28,7 @@ Unreal3.2-beta16 Release Notes
 
 ==[ UPDATED ]==
 * documentation and text fixes
-* channelmode +f (flood) algoritm is now much better
+* channelmode +f (flood) algorithm is now much better
 
 ==[ MAJOR BUGS FIXED ]==
 * Security fixes
@@ -50,6 +50,7 @@ Unreal3.2-beta16 Release Notes
 * Far connects (+s +F) hides connects from U-lined servers again
 * usermode +S was accidently changed to a local usermode in beta15
 * minor badwords /rehash memleak
+* random ziplink crashes
 
 ==[ REMOVED ]==
 * not removed, but CMDLINE_CONFIG(-f) is now disabled by default

@@ -2089,3 +2089,4 @@ seen. gmtime warning still there
 - Fixed a bug with ban version {} where some clients didn't like the request we were sending.
 - Usermode +q can now be set by services admins, as stated in docs (#0000923).
 - Preparing beta16: release notes ready, version updated in docs/text (except version.h).
+- Changed version to beta16
