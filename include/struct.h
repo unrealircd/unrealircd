@@ -88,6 +88,7 @@ typedef struct _configitem_deny_version ConfigItem_deny_version;
 typedef struct _configitem_log ConfigItem_log;
 typedef struct _configitem_unknown ConfigItem_unknown;
 typedef struct _configitem_unknown_ext ConfigItem_unknown_ext;
+typedef struct _configitem_alias ConfigItem_alias;
 
 typedef struct Watch aWatch;
 typedef struct Client aClient;
@@ -679,6 +680,8 @@ struct Server {
 #define M_SERVER 0x0004
 #define M_SHUN 0x0008
 #define M_NOLAG 0x0010
+#define M_ALIAS 0x0020
+
 struct Command {
 	aCommand		*next;
 	aCommand		*prev;
@@ -1048,6 +1051,17 @@ struct _configitem_unknown_ext {
 	ConfigFile      *ce_fileptr;
 	int             ce_varlinenum;
 	ConfigEntry     *ce_entries;
+};
+
+#define ALIAS_SERVICES 1
+#define ALIAS_STATS 2
+#define ALIAS_NORMAL 3
+
+struct _configitem_alias {
+	ConfigFlag flag;
+	ConfigItem *prev, *next;
+	char *alias, *nick;
+	short type;
 };
 
 struct _irchook {

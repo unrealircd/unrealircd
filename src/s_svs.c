@@ -1090,3 +1090,42 @@ int m_unsqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	return 0;
 }
 
+int m_alias(aClient *sptr, aClient *cptr, int parc, char *parv[], char *cmd) {
+	ConfigItem_alias *alias;
+	aClient *acptr;
+	if (parc < 2 || *parv[1] == '\0') {
+		sendto_one(sptr, err_str(ERR_NOTEXTTOSEND), me.name, parv[0]);
+		return -1;
+	}
+	if (!(alias = Find_alias(cmd))) {
+		sendto_one(sptr, ":%s %d %s %s :Unknown command",
+			me.name, ERR_UNKNOWNCOMMAND, parv[0], cmd);
+		return 0;
+	}
+
+	if (alias->type == ALIAS_SERVICES) {
+		if (SERVICES_NAME && (acptr = find_person(alias->nick, NULL)))
+			sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", parv[0],
+				alias->nick, SERVICES_NAME, parv[1]);
+		else
+			sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name,
+				parv[0], alias->nick);
+	}
+	else if (alias->type == ALIAS_STATS) {
+		if (STATS_SERVER && (acptr = find_person(alias->nick, NULL)))
+			sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", parv[0],
+				alias->nick, STATS_SERVER, parv[1]);
+		else
+			sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name,
+				parv[0], alias->nick);
+	}
+	else if (alias->type == ALIAS_NORMAL) {
+		if ((acptr = find_person(alias->nick, NULL)))
+			sendto_one(acptr, ":%s PRIVMSG %s :%s", parv[0],
+				alias->nick, parv[1]);
+		else
+			sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name,
+				parv[0], alias->nick);
+	}			
+	return 0;
+}

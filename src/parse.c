@@ -444,10 +444,16 @@ int  parse(cptr, buffer, bufend)
 		from->user->last = TStime();
 
 #ifndef DEBUGMODE
-	return (*cmptr->func) (cptr, from, i, para);
+	if (cmptr->flags & M_ALIAS)
+		return (*cmptr->func) (cptr, from, i, para, cmptr->cmd);
+	else
+		return (*cmptr->func) (cptr, from, i, para);
 #else
 	then = clock();
-	retval = (*cmptr->func) (cptr, from, i, para);
+	if (cmptr->flags & M_ALIAS)
+		retval = (*cmptr->func) (cptr, from, i, para, cmptr->cmd);
+	else 
+		retval = (*cmptr->func) (cptr, from, i, para);
 	if (retval != FLUSH_BUFFER)
 	{
 		ticks = (clock() - then);

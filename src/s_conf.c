@@ -103,6 +103,7 @@ int     _conf_deny_version      (ConfigFile *conf, ConfigEntry *ce);
 int	_conf_allow_channel	(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_loadmodule	(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_log		(ConfigFile *conf, ConfigEntry *ce);
+int	_conf_alias		(ConfigFile *conf, ConfigEntry *ce);
 aMotd *Find_file(char *, short);
 
 extern int conf_debuglevel;
@@ -129,6 +130,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "deny",		_conf_deny },
 	{ "loadmodule",		_conf_loadmodule },
 	{ "log",		_conf_log },
+	{ "alias",		_conf_alias },
 	{ NULL, 		NULL  }
 };
 
@@ -268,6 +270,7 @@ ConfigItem_deny_version *conf_deny_version = NULL;
 ConfigItem_log		*conf_log = NULL;
 ConfigItem_unknown	*conf_unknown = NULL;
 ConfigItem_unknown_ext  *conf_unknown_set = NULL;
+ConfigItem_alias	*conf_alias = NULL;
 #ifdef STRIPBADWORDS
 ConfigItem_badword	*conf_badword_channel = NULL;
 ConfigItem_badword      *conf_badword_message = NULL;
@@ -2660,6 +2663,58 @@ int	_conf_log(ConfigFile *conf, ConfigEntry *ce)
 	add_ConfigItem((ConfigItem *)log, (ConfigItem **) &conf_log);
 }
 
+int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigItem_alias *alias = NULL;
+	ConfigEntry 	    	*cep, *cepp;
+	aCommand *cmptr;
+
+	if (!ce->ce_vardata)
+	{
+		config_status("%s:%i: alias without name",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}
+	if ((cmptr = find_Command(ce->ce_vardata, 0, M_ALIAS)))
+		del_Command(ce->ce_vardata, NULL, cmptr->func);
+	else if (find_Command(ce->ce_vardata, 0, 0)) {
+		config_status("%s:%i: %s is an existing command, can not add alias",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+		return -1;
+	}
+	if ((alias = Find_alias(ce->ce_vardata)))
+		del_ConfigItem((ConfigItem *)alias, (ConfigItem **)&conf_alias);
+	alias = MyMallocEx(sizeof(ConfigItem_alias));
+	ircstrdup(alias->alias, ce->ce_vardata);
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname)
+		{
+			config_status("%s:%i: blank alias item",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum);
+			continue;
+		}
+		if (!strcmp(cep->ce_varname, "nick")) 
+			ircstrdup(alias->nick, cep->ce_vardata);
+		if (!strcmp(cep->ce_varname, "type")) {
+			if (!strcmp(cep->ce_vardata, "services"))
+				alias->type = ALIAS_SERVICES;
+			else if (!strcmp(cep->ce_vardata, "stats"))
+				alias->type = ALIAS_STATS;
+			else if (!strcmp(cep->ce_vardata, "normal"))
+				alias->type = ALIAS_NORMAL;
+			else {
+				continue;
+			}
+		}
+			
+	}
+		add_CommandX(alias->alias, NULL, m_alias, 1, M_USER|M_ALIAS);
+		add_ConfigItem((ConfigItem *)alias, (ConfigItem **) &conf_alias);
+}
+
+
 /*
  * Report functions
 */
@@ -2841,6 +2896,7 @@ void	validate_configuration(void)
 	ConfigItem_link *link_ptr;
 	ConfigItem_vhost *vhost_ptr;
 	ConfigItem_log *log_ptr;
+	ConfigItem_alias *alias_ptr;
 	ConfigItem t;
 	short hide_host = 1;
 	char *s;
@@ -3168,6 +3224,56 @@ void	validate_configuration(void)
 		add_ConfigItem((ConfigItem *)log_ptr, (ConfigItem **) &conf_log);
 		Warning("No log {} found using ircd.log as default");
 	}
+	if (!conf_alias) {
+		alias_ptr = MyMallocEx(sizeof(ConfigItem_alias));
+		ircstrdup(alias_ptr->alias, "NickServ");
+		ircstrdup(alias_ptr->nick, "NickServ");
+		alias_ptr->type = ALIAS_SERVICES;
+		add_ConfigItem((ConfigItem *)alias_ptr, (ConfigItem **) &conf_alias);
+		add_CommandX("NickServ", NULL, m_alias, 1, M_USER|M_ALIAS);
+		alias_ptr = MyMallocEx(sizeof(ConfigItem_alias));
+		ircstrdup(alias_ptr->alias, "ChanServ");
+		ircstrdup(alias_ptr->nick, "ChanServ");
+		alias_ptr->type = ALIAS_SERVICES;
+		add_ConfigItem((ConfigItem *)alias_ptr, (ConfigItem **) &conf_alias);
+		add_CommandX("ChanServ", NULL, m_alias, 1, M_USER|M_ALIAS);
+		alias_ptr = MyMallocEx(sizeof(ConfigItem_alias));
+		ircstrdup(alias_ptr->alias, "MemoServ");
+		ircstrdup(alias_ptr->nick, "MemoServ");
+		alias_ptr->type = ALIAS_SERVICES;
+		add_ConfigItem((ConfigItem *)alias_ptr, (ConfigItem **) &conf_alias);
+		add_CommandX("MemoServ", NULL, m_alias, 1, M_USER|M_ALIAS);
+		alias_ptr = MyMallocEx(sizeof(ConfigItem_alias));
+		ircstrdup(alias_ptr->alias, "OperServ");
+		ircstrdup(alias_ptr->nick, "OperServ");
+		alias_ptr->type = ALIAS_SERVICES;
+		add_ConfigItem((ConfigItem *)alias_ptr, (ConfigItem **) &conf_alias);
+		add_CommandX("OperServ", NULL, m_alias, 1, M_USER|M_ALIAS);
+		alias_ptr = MyMallocEx(sizeof(ConfigItem_alias));
+		ircstrdup(alias_ptr->alias, "HelpServ");
+		ircstrdup(alias_ptr->nick, "HelpServ");
+		alias_ptr->type = ALIAS_SERVICES;
+		add_ConfigItem((ConfigItem *)alias_ptr, (ConfigItem **) &conf_alias);
+		add_CommandX("HelpServ", NULL, m_alias, 1, M_USER|M_ALIAS);
+		alias_ptr = MyMallocEx(sizeof(ConfigItem_alias));
+		ircstrdup(alias_ptr->alias, "StatServ");
+		ircstrdup(alias_ptr->nick, "StatServ");
+		alias_ptr->type = ALIAS_STATS;
+		add_ConfigItem((ConfigItem *)alias_ptr, (ConfigItem **) &conf_alias);
+		add_CommandX("StatServ", NULL, m_alias, 1, M_USER|M_ALIAS);
+		Warning("No alias{}'s found, using default of NickServ, ChanServ, MemoServ, OperServ, HelpServ, StatServ");
+	}
+	else {
+		for (alias_ptr = conf_alias; alias_ptr; alias_ptr = (ConfigItem_alias *)alias_ptr->next) {
+			if (!BadPtr(alias_ptr->nick))
+				ircstrdup(alias_ptr->nick, alias_ptr->alias);
+			if (alias_ptr->type != ALIAS_SERVICES && alias_ptr->type != ALIAS_STATS && alias_ptr->type != ALIAS_NORMAL) {
+				alias_ptr->type = ALIAS_SERVICES;
+				Warning("Invalid alias type, using default of 'services'");
+			}
+		}
+	}
+		
 #ifdef _WIN32
 	if (config_error_flag)
 		win_log("Errors in configuration, terminating program.");
@@ -3203,6 +3309,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	ConfigItem_admin		*admin_ptr;
 	ConfigItem_deny_version		*deny_version_ptr;
 	ConfigItem_log			*log_ptr;
+	ConfigItem_alias		*alias_ptr;
 	ConfigItem 	t;
 
 
@@ -3429,6 +3536,15 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		MyFree(log_ptr);
 		log_ptr = (ConfigItem_log *)&t;
 	}
+	for (alias_ptr = conf_alias; alias_ptr; alias_ptr = (ConfigItem_alias *)alias_ptr->next) {
+		aCommand *cmptr = find_Command(alias_ptr->alias, 0, 0);
+		ircfree(alias_ptr->nick);
+		del_Command(alias_ptr->alias, NULL, cmptr->func);
+		ircfree(alias_ptr->alias);
+		t.next = del_ConfigItem((ConfigItem *)alias_ptr, (ConfigItem **)&conf_alias);
+		MyFree(alias_ptr);
+		alias_ptr = (ConfigItem_alias *)&t;
+	}
 	/* rehash_modules */
 	init_conf2(configfile);
 	module_loadall(0);
@@ -3457,6 +3573,19 @@ ConfigItem_deny_dcc	*Find_deny_dcc(char *name)
 	{
 		if (!match(name, p->filename))
 			return (p);
+	}
+	return NULL;
+}
+
+ConfigItem_alias *Find_alias(char *name) {
+	ConfigItem_alias *alias;
+
+	if (!name)
+		return NULL;
+
+	for (alias = conf_alias; alias; alias = (ConfigItem_alias *)alias->next) {
+		if (!stricmp(alias->alias, name))
+			return alias;
 	}
 	return NULL;
 }

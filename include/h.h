@@ -93,6 +93,7 @@ extern ConfigItem_deny_version	*conf_deny_version;
 extern ConfigItem_log		*conf_log;
 extern ConfigItem_unknown	*conf_unknown;
 extern ConfigItem_unknown_ext   *conf_unknown_set;
+extern ConfigItem_alias		*conf_alias;
 extern void clear_unknown();
 EVENT(tkl_check_expire);
 
@@ -108,6 +109,7 @@ ConfigItem_ban 		*Find_ban(char *host, short type);
 ConfigItem_ban 		*Find_banEx(char *host, short type, short type2);
 ConfigItem_vhost	*Find_vhost(char *name);
 ConfigItem_deny_channel *Find_channel_allowed(char *name);
+ConfigItem_alias	*Find_alias(char *name);
 int			AllowClient(aClient *cptr, struct hostent *hp, char *sockhost);
 
 
