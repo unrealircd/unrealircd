@@ -3276,3 +3276,5 @@ This is the 3.2 fixes branch.
   - Imported the latest CIDR functions from Hybrid 7.0.1 (and fixed numerous bugs)
   - Implemented CIDR support for ban ip, ban user, allow, except ban/tkl/throttle, and TKL
   - Note: This needs testing
+- To be able to use /ADDLINE you now need the (new) 'can_addline' operflag (oper::flags),
+  reason for this is that it's such a powerful/dangerous command.

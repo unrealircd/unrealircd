@@ -204,12 +204,14 @@ static int _OldOperFlags[] = {
 	OFLAG_OVERRIDE, 'v',
 	OFLAG_UMODEQ, 'q',
 	OFLAG_DCCDENY, 'd',
+	OFLAG_ADDLINE, 'X',
 	0, 0
 };
 
 /* This MUST be alphabetized */
 static OperFlag _OperFlags[] = {
 	{ OFLAG_ADMIN_,		"admin"},
+	{ OFLAG_ADDLINE,	"can_addline"},
 	{ OFLAG_DCCDENY,	"can_dccdeny"},
 	{ OFLAG_DIE,		"can_die" },
 	{ OFLAG_TKL,		"can_gkline"},
