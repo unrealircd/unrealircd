@@ -919,3 +919,4 @@ seen. gmtime warning still there
   that uses them)
 - Fixed a win32 bug where pasting text into the editor would not
   show up in the correct font
+- Added hscroll bars to the win32 editor (if needed)
