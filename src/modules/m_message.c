@@ -205,7 +205,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				continue;
 			}
 			/* Umode +R (idea from Bahamut) */
-			if (IsRegNickMsg(acptr) && !IsRegNick(sptr) && !IsULine(sptr) && !IsOper(sptr)) {
+			if (IsRegNickMsg(acptr) && !IsRegNick(sptr) && !IsULine(sptr) && !IsOper(sptr) && !IsServer(sptr)) {
 				sendto_one(sptr, err_str(ERR_NONONREG), me.name, parv[0],
 					acptr->name);
 				return 0;
