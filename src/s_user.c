@@ -3427,7 +3427,6 @@ int  m_kill(cptr, sptr, parc, parv)
 			syslog(LOG_DEBUG, "KILL From %s For %s Path %s!%s",
 			    parv[0], acptr->name, inpath, path);
 #endif
-#ifdef KILL_LOGGING
 		/*
 		 * By otherguy
 		*/
@@ -3438,7 +3437,6 @@ int  m_kill(cptr, sptr, parc, parv)
                             parv[0],
                             inpath, 
                             path);
-#endif
 		/*
 		   ** And pass on the message to other servers. Note, that if KILL
 		   ** was changed, the message has to be sent to all links, also
