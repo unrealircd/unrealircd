@@ -201,11 +201,11 @@ void download_file_async(char *url, time_t cachetime, vFP callback)
 		char *filename = unreal_getfilename(file);
         	char *tmp = unreal_mktemp("tmp", filename ? filename : "download.conf");
 		FileHandle *handle = malloc(sizeof(FileHandle));
-		if (file)
-			free(file);
 		handle->fd = fopen(tmp, "wb");
 		handle->callback = callback;
 		strcpy(handle->filename, tmp);
+		if (file)
+			free(file);
 		curl_easy_setopt(curl, CURLOPT_URL, url);
                 curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download);
                 curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)handle->fd);

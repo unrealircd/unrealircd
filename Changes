@@ -2682,3 +2682,5 @@ seen. gmtime warning still there
 - Made the tmp/ directory cleaned up better
 - Added some additional warnings for insane large values for allow::maxperip, and class::*
   stuff. Reported by Erik_Rana (#0001463).
+- Fixed a bug with /rehash and cached remote includes reported by mustapha88
+

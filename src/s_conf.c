@@ -6959,10 +6959,11 @@ static void conf_download_complete(char *url, char *file, char *errorbuf, int ca
 	if (cached)
 	{
 		char *urlfile = url_getfilename(url);
-		char *tmp = unreal_mktemp("tmp", urlfile);
-		free(urlfile);
+		char *file = unreal_getfilename(urlfile);
+		char *tmp = unreal_mktemp("tmp", file);
 		unreal_copyfile(inc->file, tmp);
 		add_remote_include(tmp, url);
+		free(urlfile);
 	}
 	else
 		add_remote_include(file, url);
