@@ -2520,8 +2520,8 @@ int  m_stats(cptr, sptr, parc, parv)
 		  for (link_p = conf_link; link_p; link_p = (ConfigItem_link *) link_p->next)
 		  {
 			sendto_one(sptr, ":%s 213 %s C %s@%s * %s %i %s %s%s%s",
-				me.name, sptr->name, link_p->username,
-				link_p->hostname, link_p->servername,
+				me.name, sptr->name, IsOper(sptr) ? link_p->username : "*",
+				IsOper(sptr) ? link_p->hostname : "*", link_p->servername,
 				link_p->port,
 				link_p->class->name,
 				(link_p->options & CONNECT_AUTO) ? "a" : "",

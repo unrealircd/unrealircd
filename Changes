@@ -385,3 +385,4 @@
 - Make users that send a forbidden file get auto blocked from sending other
   files. sptr->flags & FLAGS_DCCBLOCKED.
 - Readded timestamp to log, accidentily got removed
+- Made it so /stats C doesn't show the user@host of servers to non-opers
