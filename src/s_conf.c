@@ -2911,7 +2911,9 @@ int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
 
-	conf_me = MyMallocEx(sizeof(ConfigItem_me));
+	if (!conf_me)
+		conf_me = MyMallocEx(sizeof(ConfigItem_me));
+
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "name"))

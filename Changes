@@ -442,6 +442,6 @@
 - Added the ability to specify a botmotd and opermotd in a tld {} (#0000176) suggested by
   swissSolaris.
 - Fixed crashbug on /rehash due to config rewrite, also made DEBUGMODE working again.
-  Probably more fixes to come (small or not)...
 - Removed an excess space from the SAMODE notice when a mode without a parameter was set
   (#0002134) reported by Bugz.
+- Fixed small memory leak on /rehash (post-3.2.2).
