@@ -52,6 +52,7 @@ extern char *my_itoa(long i);
 */
 #define ircstrdup(x,y) if (x) MyFree(x); if (!y) x = NULL; else x = strdup(y)
 #define ircfree(x) if (x) MyFree(x); x = NULL
+#define ircabs(x) (x < 0) ? -x : x
 
 typedef struct _confcommand ConfigCommand;
 struct	_confcommand
@@ -2069,9 +2070,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				return 0;
 			}
 			/* i == 3 SHOULD make this true .. */
-			CLOAK_KEY1 = atol(cep->ce_entries->ce_varname);
-			CLOAK_KEY2 = atol(cep->ce_entries->ce_next->ce_varname);
-			CLOAK_KEY3 = atol(cep->ce_entries->ce_next->ce_next->ce_varname);
+			CLOAK_KEY1 = ircabs(atol(cep->ce_entries->ce_varname));
+			CLOAK_KEY2 = ircabs(atol(cep->ce_entries->ce_next->ce_varname));
+			CLOAK_KEY3 = ircabs(atol(cep->ce_entries->ce_next->ce_next->ce_varname));
 			ircsprintf(temp, "%li.%li.%li", CLOAK_KEY1,
 				CLOAK_KEY2, CLOAK_KEY3);
 			CLOAK_KEYCRC = (long) crc32(temp, strlen(temp));

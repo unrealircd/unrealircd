@@ -404,3 +404,4 @@
 - Replaced FNAME_USERLOG with log {} flag connects (logs user connects and disconnects)
 - added temporary define #define OLD_CLOAK
 - Fixed up some codemastr(TM) coding regarding M_*
+- Implimented a cloak fix based on code by Zogg (just used a #define ircabs rather than abs())
