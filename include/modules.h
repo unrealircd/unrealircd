@@ -210,7 +210,10 @@ extern Hooktype		Hooktypes[MAXCUSTOMHOOKS];
 extern Hook		*global_i;
 
 void    Module_Init(void);
-char    *Module_Load(char *path, int load);
+char    *Module_Create(char *path);
+void    Init_all_testing_modules(void);
+void    Unload_all_loaded_modules(void);
+void    Unload_all_testing_modules(void);
 int     Module_Unload(char *name, int unload);
 vFP     Module_Sym(char *name);
 vFP     Module_SymX(char *name, Module **mptr);
@@ -248,7 +251,7 @@ void CommandDel(Command *command);
 #define HOOKTYPE_LOCAL_NICKCHANGE 2
 #define HOOKTYPE_LOCAL_CONNECT 3
 #define HOOKTYPE_SCAN_INFO 5    /* Taken care of in scan.c */
-#define HOOKTYPE_CONFIG_UNKNOWN 6
+#define HOOKTYPE_CONFIGPOSTTEST 6
 #define HOOKTYPE_REHASH 7
 #define HOOKTYPE_PRE_LOCAL_CONNECT 8
 #define HOOKTYPE_HTTPD_URL 9
@@ -257,12 +260,25 @@ void CommandDel(Command *command);
 #define HOOKTYPE_SERVER_QUIT 12
 #define HOOKTYPE_STATS 13
 #define HOOKTYPE_LOCAL_JOIN 14
+#define HOOKTYPE_CONFIGTEST 15
+#define HOOKTYPE_CONFIGRUN 16
 /* Module flags */
 #define MODFLAG_NONE	0x0000
-#define MODFLAG_LOADED	0x0001 /* (mod_load has been called and suceeded) */
+#define MODFLAG_LOADED	0x0001 /* Fully loaded */
+#define MODFLAG_TESTING 0x0002 /* Not yet initialized */
+#define MODFLAG_INIT	0x0004 /* Initialized */
+#define MODFLAG_DELAYED 0x0008 /* Delayed unload */
 
 /* Module function return values */
 #define MOD_SUCCESS 0
 #define MOD_FAILED -1
 #define MOD_DELAY 2
+
+#define CONFIG_MAIN 1
+#define CONFIG_SET 2
+#define CONFIG_BAN 3
+#define CONFIG_EXCEPT 4
+#define CONFIG_DENY 5
+#define CONFIG_ALLOW 6
+
 #endif

@@ -1,4 +1,4 @@
-/*   Unreal Internet Relay Chat Daemon, src/channel.c
+/* Unreal Internet Relay Chat Daemon, src/channel.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Co Center
  *
@@ -237,27 +237,30 @@ Member	*make_member(void)
 
 	if (freemember == NULL)
 	{
-		for (i = 1; i <= (4072/sizeof(Member)); i++)		
+		for (i = 1; i <= (4072/sizeof(Member)); ++i)		
 		{
 			lp = (Member *)MyMalloc(sizeof(Member));
+			lp->cptr = NULL;
+			lp->flags = 0;
 			lp->next = freemember;
 			freemember = lp;
 		}
-		lp = freemember;
-		freemember = lp->next;
 	}
-	else
-	{
-		lp = freemember;
-		freemember = freemember->next;
-	}
+	lp = freemember;
+	freemember = freemember->next;
+	lp->next = NULL;
 	return lp;
 }
 
 void	free_member(Member *lp)
 {
-	lp->next = freemember;
-	freemember = lp;
+	if (lp)
+	{
+		lp->next = freemember;
+		lp->cptr = NULL;
+		lp->flags = 0;
+		freemember = lp;
+	}
 }
 
 /* 
@@ -321,15 +324,18 @@ Membership	*make_membership(int local)
 
 void	free_membership(Membership *lp, int local)
 {
-	if (!local)
+	if (lp)
 	{
-		lp->next = freemembership;
-		freemembership = lp;
-	}
-	else
-	{
-		lp->next = (Membership *) freemembershipL;
-		freemembershipL = (MembershipL *) lp;
+		if (!local)
+		{
+			lp->next = freemembership;
+			freemembership = lp;
+		}
+		else
+		{
+			lp->next = (Membership *) freemembershipL;
+			freemembershipL = (MembershipL *) lp;
+		}
 	}
 }
 
@@ -601,6 +607,7 @@ void remove_user_from_channel(aClient *sptr, aChannel *chptr)
 	Member *tmp; Membership *tmp2;
 	Member *lp = chptr->members;
 
+	/* find 1st entry in list that is not user */
 	for (; lp && (lp->cptr == sptr); lp = lp->next);
 	for (;;)
 	{
@@ -611,8 +618,7 @@ void remove_user_from_channel(aClient *sptr, aChannel *chptr)
 				free_member(tmp);
 				break;
 			}
-		for (curr2 = &sptr->user->channel; (tmp2 = *curr2);
-		    curr2 = &tmp2->next)
+		for (curr2 = &sptr->user->channel; (tmp2 = *curr2); curr2 = &tmp2->next)
 			if (tmp2->chptr == chptr)
 			{
 				*curr2 = tmp2->next;
@@ -1222,7 +1228,8 @@ CMD_FUNC(m_mode)
 
 #ifndef NO_OPEROVERRIDE
         if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr)
-            && !is_half_op(sptr, chptr) && IsOper(sptr))
+            && !is_half_op(sptr, chptr) && (MyClient(sptr) ? (IsOper(sptr) &&
+	    OPCanOverride(sptr)) : IsOper(sptr)))
         {
                 sendts = 0;
                 opermode = 1;
@@ -1230,7 +1237,8 @@ CMD_FUNC(m_mode)
         }
 
         if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr)
-            && is_half_op(sptr, chptr) && IsOper(sptr))
+            && is_half_op(sptr, chptr) && (MyClient(sptr) ? (IsOper(sptr) &&
+	    OPCanOverride(sptr)) : IsOper(sptr)))
         {
                 opermode = 2;
                 goto aftercheck;
@@ -1395,6 +1403,9 @@ void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv
 	}
 #endif
 
+	/* Should stop null modes */
+	if (*(modebuf + 1) == '\0')
+		return;
 	if (IsPerson(sptr) && samode && MyClient(sptr))
 	{
 		sendto_serv_butone_token(NULL, me.name, MSG_GLOBOPS,
@@ -1406,9 +1417,7 @@ void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv
 		sptr = &me;
 		sendts = 0;
 	}
-	/* Should stop null modes */
-	if (*(modebuf + 1) == '\0')
-		return;
+
 	
 	sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
 	    sptr->name, chptr->chname, modebuf, parabuf);
@@ -2416,7 +2425,7 @@ static int can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, ch
         if ((chptr->mode.mode & MODE_RGSTRONLY) && !IsARegNick(sptr))
                 return (ERR_NEEDREGGEDNICK);
 
-        if (*chptr->mode.key && (BadPtr(key) || mycmp(chptr->mode.key, key)))
+        if (*chptr->mode.key && (BadPtr(key) || strcmp(chptr->mode.key, key)))
                 return (ERR_BADCHANNELKEY);
 
         if ((chptr->mode.mode & MODE_INVITEONLY))
@@ -2894,7 +2903,9 @@ CMD_FUNC(m_join)
 	char *p = NULL, *p2 = NULL;
 
 	bouncedtimes = 0;
-
+	if (IsServer(sptr))
+		return 0;
+		
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
@@ -3395,7 +3406,7 @@ CMD_FUNC(m_kick)
 			continue;
 		if (!IsServer(cptr)
 #ifndef NO_OPEROVERRIDE
-		    && !IsOper(sptr)
+		    && (!IsOper(sptr) || !(MyClient(sptr) && OPCanOverride(sptr)))
 #endif
 		    && !IsULine(sptr) && !is_chan_op(sptr, chptr)
 		    && !is_halfop(sptr, chptr))
@@ -3452,9 +3463,9 @@ CMD_FUNC(m_kick)
 						    chptr->chname, who->name, comment);
 						goto attack;
 					}	/* is_chan_op */
-				if (is_chanprot(who, chptr)
+				if ((is_chanprot(who, chptr)
 				    || is_chanowner(who, chptr)
-				    || IsServices(who)) {
+				    || IsServices(who)) && !is_chanowner(sptr, chptr)) {
 					if (IsNetAdmin(sptr))
 					{	/* IRCop kicking owner/prot */
 						sendto_snomask(SNO_EYES,
@@ -3676,10 +3687,12 @@ CMD_FUNC(m_topic)
 		    || IsULine(sptr) || is_halfop(sptr, chptr)) && topic)
 		{
 			/* setting a topic */
-			if (IsOper(sptr) && !(is_halfop(sptr, chptr)
-			    || IsULine(sptr)
-			    || is_chan_op(sptr, chptr))
-			    && (chptr->mode.mode & MODE_TOPICLIMIT))
+			if ((MyClient(sptr) ? (IsOper(sptr) &&
+			     OPCanOverride(sptr)) : IsOper(sptr)) && 
+			     !(is_halfop(sptr, chptr)
+			     || IsULine(sptr)
+			     || is_chan_op(sptr, chptr))
+			     && (chptr->mode.mode & MODE_TOPICLIMIT))
 			{
 #ifdef NO_OPEROVERRIDE
 				return 0;
@@ -3779,7 +3792,8 @@ CMD_FUNC(m_invite)
         if (chptr->mode.mode & MODE_NOINVITE && !IsULine(sptr))
         {
 #ifndef NO_OPEROVERRIDE
-                if (IsOper(sptr) && sptr == acptr)
+                if ((MyClient(sptr) ? (IsOper(sptr) && OPCanOverride(sptr)) :
+		    IsOper(sptr)) && sptr == acptr)
                         over = 1;
                 else {
 #endif
@@ -3794,7 +3808,8 @@ CMD_FUNC(m_invite)
         if (!IsMember(sptr, chptr) && !IsULine(sptr))
         {
 #ifndef NO_OPEROVERRIDE
-                if (IsOper(sptr) && sptr == acptr)
+                if ((MyClient(sptr) ? (IsOper(sptr) && OPCanOverride(sptr)) :
+		    IsOper(sptr)) && sptr == acptr)
                         over = 1;
                 else {
 #endif
@@ -3818,7 +3833,8 @@ CMD_FUNC(m_invite)
                 if (!is_chan_op(sptr, chptr) && !IsULine(sptr))
                 {
 #ifndef NO_OPEROVERRIDE
-                        if (IsOper(sptr) && sptr == acptr)
+                if ((MyClient(sptr) ? (IsOper(sptr) && OPCanOverride(sptr)) :
+		    IsOper(sptr)) && sptr == acptr)
                                 over = 1;
                         else {
 #endif
@@ -3832,7 +3848,8 @@ CMD_FUNC(m_invite)
                 else if (!IsMember(sptr, chptr) && !IsULine(sptr))
                 {
 #ifndef NO_OPEROVERRIDE
-                        if (IsOper(sptr) && sptr == acptr)
+                if ((MyClient(sptr) ? (IsOper(sptr) && OPCanOverride(sptr)) :
+		    IsOper(sptr)) && sptr == acptr)
                                 over = 1;
                         else {
 #endif
@@ -3914,11 +3931,11 @@ CMD_FUNC(m_invite)
 #endif
 		    )) {
 		        if (over == 1)
-                		sendto_channelops_butone(NULL, &me, chptr,
+                		sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP,
 		                  ":%s NOTICE @%s :OperOverride -- %s invited him/herself into the channel.",
                 		  me.name, chptr->chname, sptr->name);
 		        else if (over == 0)
-		                sendto_channelops_butone(NULL, &me, chptr,
+		                sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP,
                 		  ":%s NOTICE @%s :%s invited %s into the channel.",
 		                  me.name, chptr->chname, sptr->name, acptr->name);
 
@@ -3930,9 +3947,6 @@ CMD_FUNC(m_invite)
 
         return 0;
 }
-
-
-
 
 /*
  * The function which sends the actual channel list back to the user.
@@ -4568,6 +4582,9 @@ CMD_FUNC(m_knock)
 {
 	aChannel *chptr;
 
+	if (IsServer(sptr))
+		return 0;
+
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
@@ -4638,7 +4655,7 @@ CMD_FUNC(m_knock)
 		return 0;
 	}
 
-	sendto_channelops_butone(NULL, &me, chptr,
+	sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP,
 	    ":%s NOTICE @%s :[Knock] by %s!%s@%s (%s) ",
 	    me.name, chptr->chname, sptr->name,
 	    sptr->user->username,
@@ -4765,7 +4782,7 @@ CMD_FUNC(m_sjoin)
 	Member *lp;
 	Membership *lp2;
 	aParv *ap;
-	int  ts, oldts, pcount, x, y, z, i, f;
+	int  ts, oldts, pcount, i, f;
 	unsigned short b=0,c;
 	Mode oldmode;
 	char *t, *bp, *tp, *p = NULL;

@@ -50,7 +50,6 @@ char *stripbadwords_channel(char *str)
 	char *ptr;
 	int  errorcode, matchlen, stringlen;
 	ConfigItem_badword *this_word;
-	size_t n;
 	if (!conf_badword_channel)
 		return str;
 
@@ -111,7 +110,6 @@ char *stripbadwords_message(char *str)
 	char *ptr;
 	int  errorcode, matchlen, stringlen;
 	ConfigItem_badword *this_word;
-	size_t n;
 	if (!conf_badword_message)
 		return str;
 

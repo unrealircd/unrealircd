@@ -78,14 +78,6 @@ char *malloc_options = "h" MALLOC_FLAGS_EXTRA;
 #endif
 time_t TSoffset = 0;
 
-/* Added DrBin */
-#ifndef BIG_SECURITY_HOLE
-int  un_uid = 99;
-int  un_gid = 99;
-#endif
-/* End */
-
-
 #ifndef _WIN32
 extern char unreallogo[];
 #endif
@@ -484,7 +476,6 @@ extern TS check_pings(TS currenttime)
 	int  i = 0;
 	char banbuf[1024];
 	int  ping = 0;
-	TS   oldest = 0;
 
 	for (i = 0; i <= LastSlot; i++) {
 		/*
@@ -585,15 +576,23 @@ extern TS check_pings(TS currenttime)
 		Debug((DEBUG_DEBUG, "c(%s)=%d p %d k %d a %d", cptr->name,
 		    cptr->status, ping, killflag,
 		    currenttime - cptr->lasttime));
-		if (ping < (currenttime - cptr->lasttime)) {
-			if (((cptr->flags & FLAGS_PINGSENT)
-			    && ((currenttime - cptr->lasttime) >= (2 * ping)))
-			    || ((!IsRegistered(cptr)
-			    && (currenttime - cptr->since) >= ping)))
+		
+		/* If ping is less than or equal to the last time we received a command from them */
+		if (ping <= (currenttime - cptr->lasttime))
+		{
+			if (
+				/* If we have sent a ping */
+				((cptr->flags & FLAGS_PINGSENT)
+				/* And they had 2x ping frequency to respond */
+				&& ((currenttime - cptr->lasttime) >= (2 * ping)))
+				|| 
+				/* Or isn't registered and time spent is larger than ping .. */
+				(!IsRegistered(cptr) && (currenttime - cptr->since >= ping))
+				)
 			{
-				if (!IsRegistered(cptr) &&
-				    (DoingDNS(cptr) || DoingAuth(cptr)
-				    )) {
+				/* if it's registered and doing dns/auth, timeout */
+				if (!IsRegistered(cptr) && (DoingDNS(cptr) || DoingAuth(cptr)))
+				{
 					if (cptr->authfd >= 0) {
 						CLOSE_SOCK(cptr->authfd);
 						--OpenFiles;
@@ -621,7 +620,11 @@ extern TS check_pings(TS currenttime)
 					continue;
 				}
 				if (IsServer(cptr) || IsConnecting(cptr) ||
-				    IsHandshake(cptr)) {
+				    IsHandshake(cptr)
+#ifdef USE_SSL
+					|| IsSSLConnectHandshake(cptr)
+#endif	    
+				    ) {
 					sendto_realops
 					    ("No response from %s, closing link",
 					    get_client_name(cptr, FALSE));
@@ -630,9 +633,16 @@ extern TS check_pings(TS currenttime)
 					    me.name, get_client_name(cptr,
 					    FALSE));
 				}
+#ifdef USE_SSL
+				if (IsSSLAcceptHandshake(cptr))
+					Debug((DEBUG_DEBUG, "ssl accept handshake timeout: %s (%li-%li > %li)", cptr->sockhost,
+						currenttime, cptr->since, ping));
+#endif
 				exit_client(cptr, cptr, &me, "Ping timeout");
 				continue;
-			} else if (IsRegistered(cptr) &&
+				
+			}
+			else if (IsRegistered(cptr) &&
 			    ((cptr->flags & FLAGS_PINGSENT) == 0)) {
 				/*
 				 * if we havent PINGed the connection and we havent
@@ -658,7 +668,7 @@ extern TS check_pings(TS currenttime)
 			|| (IsSSLAcceptHandshake(cptr) || IsSSLConnectHandshake(cptr))
 #endif		
 		)
-			if (cptr->firsttime ? ((TStime() - cptr->firsttime) >
+			if (cptr->firsttime ? ((currenttime - cptr->firsttime) >
 			    100) : 0)
 				(void)exit_client(cptr, cptr, &me,
 				    "Connection Timed Out");
@@ -948,7 +958,7 @@ int InitwIRCD(int argc, char *argv[])
 			  exit(0);
 		  }
 		  case 'C':
-			  conf_debuglevel = atoi(p);
+			  config_verbose = atoi(p);
 			  break;
 		  case 'x':
 #ifdef	DEBUGMODE
@@ -993,58 +1003,6 @@ int InitwIRCD(int argc, char *argv[])
 	}
 #endif
 
-#if !defined(IRC_UID) && !defined(_WIN32)
-	if ((uid != euid) && !euid) {
-		(void)fprintf(stderr,
-		    "ERROR: do not run ircd setuid root. Make it setuid a\
- normal user.\n");
-		exit(-1);
-	}
-#endif
-
-#if (!defined(CHROOTDIR) || (defined(IRC_UID) && defined(IRC_GID))) \
-    && !defined(_WIN32)
-# ifndef	AIX
-	(void)setuid((uid_t) uid);
-	(void)setuid((uid_t) euid);
-# endif
-/*
- * Modified 13/2000 DrBin
- * We need to have better controll over running as root ... see config.h
- */
-	if ((int)getuid() == 0) {
-#ifndef BIG_SECURITY_HOLE
-		if ((IRC_UID == 0) || (IRC_GID == 0)) {
-			(void)fprintf(stderr,
-			    "ERROR: SETUID and SETGID have not been set properly"
-			    "\nPlease read your documentation\n(HINT:SETUID or SETGID can not be 0)\n");
-			exit(-1);
-		} else {
-			/*
-			 * run as a specified user 
-			 */
-
-			(void)fprintf(stderr,
-			    "WARNING: ircd invoked as root\n");
-			(void)fprintf(stderr, "         changing to uid %d\n",
-			    IRC_UID);
-			(void)fprintf(stderr, "         changing to gid %d\n",
-			    IRC_GID);
-			(void)setgid(IRC_GID);
-			(void)setuid(IRC_UID);
-		}
-#else
-		/*
-		 * check for setuid root as usual 
-		 */
-		(void)fprintf(stderr,
-		    "ERROR: do not run ircd setuid root. Make it setuid a\
- normal user.\n");
-		exit(-1);
-# endif
-	}
-#endif				/*CHROOTDIR/UID/GID/_WIN32 */
-
 #ifndef _WIN32
 	/*
 	 * didn't set debuglevel 
@@ -1088,7 +1046,7 @@ int InitwIRCD(int argc, char *argv[])
 		ModCoreInfo.size = sizeof(ModuleInfo);
 		ModCoreInfo.module_load = 0;
 		ModCoreInfo.handle = NULL;
-		l_commands_Init(&ModCoreInfo);
+		l_commands_Test(&ModCoreInfo);
 	}
 #endif
 	/*
@@ -1102,12 +1060,21 @@ int InitwIRCD(int argc, char *argv[])
 	default_class->sendq = MAXSENDQLENGTH;
 	default_class->name = "default";
 	AddListItem(default_class, conf_class);
-	init_conf2(configfile);
-	validate_configuration();
+	if (init_conf(configfile, 0) < 0)
+	{
+		exit(-1);
+	}
 	booted = TRUE;
 	load_tunefile();
 	make_umodestr();
 	make_cmodestr();
+	if (!find_Command_simple("AWAY") || !find_Command_simple("KILL") ||
+		!find_Command_simple("OPER") || !find_Command_simple("PING"))
+	{
+		config_error("Someone forgot to load modules with proper commands in them. READ THE DOCUMENTATION");
+		exit(-4);
+	}
+
 #ifdef USE_SSL
 #ifndef _WIN32
 	fprintf(stderr, "* Initializing SSL.\n");
@@ -1163,6 +1130,7 @@ int InitwIRCD(int argc, char *argv[])
 		exit(1);
 	conf_listen->options |= LISTENER_BOUND;
 	me.umodes = conf_listen->options;
+	conf_listen->listener = &me;
 	run_configuration();
 	botmotd = (aMotd *) read_file(BPATH, &botmotd);
 	rules = (aMotd *) read_rules(RPATH);
@@ -1209,6 +1177,38 @@ int InitwIRCD(int argc, char *argv[])
 	R_fin_id = strlen(REPORT_FIN_ID);
 	R_fail_id = strlen(REPORT_FAIL_ID);
 	write_pidfile();
+
+#if !defined(IRC_UID) && !defined(_WIN32)
+	if ((uid != euid) && !euid) {
+		(void)fprintf(stderr,
+		    "ERROR: do not run ircd setuid root. Make it setuid a normal user.\n");
+		exit(-1);
+	}
+#endif
+
+#if defined(IRC_UID) && defined(IRC_GID)
+	if ((int)getuid() == 0) {
+		if ((IRC_UID == 0) || (IRC_GID == 0)) {
+			(void)fprintf(stderr,
+			    "ERROR: SETUID and SETGID have not been set properly"
+			    "\nPlease read your documentation\n(HINT:SETUID or SETGID can not be 0)\n");
+			exit(-1);
+		} else {
+			/*
+			 * run as a specified user 
+			 */
+
+			(void)fprintf(stderr,
+			    "WARNING: ircd invoked as root\n");
+			(void)fprintf(stderr, "         changing to uid %d\n",
+			    IRC_UID);
+			(void)fprintf(stderr, "         changing to gid %d\n",
+			    IRC_GID);
+			(void)setgid(IRC_GID);
+			(void)setuid(IRC_UID);
+		}
+	}
+#endif
 	Debug((DEBUG_NOTICE, "Server ready..."));
 	SetupEvents();
 	loop.do_bancheck = 0;

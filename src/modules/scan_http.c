@@ -150,36 +150,43 @@ int	scan_http_Unload(int module_unload)
 void 	scan_http_scan(Scan_AddrStruct *h)
 {
 	THREAD	thread[3];
+	unsigned id[3];
+	/* note: on windows dwRc holds the thread return code.  on unix
+	** its a void pointer
+	*/
+	u_int32_t dwRc[3];
 	HSStruct *p = NULL;
 	
 	IRCMutexLock((h->lock));
+
 	/* First we take 3128 .. */
 	h->refcnt++;
 	p = MyMalloc(sizeof(HSStruct));
 	p->hs = h;
 	p->port = 3128;
-	IRCCreateThread(thread[0], scan_http_scan_port, p);
+	IRCCreateThreadEx(thread[0], scan_http_scan_port, p, &id[0]);
 	/* Then we take 8080 .. */
 	h->refcnt++;
 	p = MyMalloc(sizeof(HSStruct));
 	p->hs = h;
 	p->port = 8080;
-	IRCCreateThread(thread[1], scan_http_scan_port, p);
+	IRCCreateThreadEx(thread[1], scan_http_scan_port, p, &id[1]);
 	/* And then we try to infect them with Code Red .. */
 	h->refcnt++;
 	p = MyMalloc(sizeof(HSStruct));
 	p->hs = h;
 	p->port = 80;
-	IRCCreateThread(thread[2], scan_http_scan_port, p);
+	IRCCreateThreadEx(thread[2], scan_http_scan_port, p, &id[2]);
+	
 	IRCMutexUnlock((h->lock));
-	IRCJoinThread(thread[0], NULL);		
-	IRCJoinThread(thread[1], NULL);		
-	IRCJoinThread(thread[2], NULL);	
+
+	IRCJoinThread(thread[0], &dwRc[0]);		
+	IRCJoinThread(thread[1], &dwRc[1]);		
+	IRCJoinThread(thread[2], &dwRc[2]);	
 	IRCMutexLock((h->lock));
 	h->refcnt--;
 	IRCMutexUnlock((h->lock));
 	IRCDetachThread(IRCThreadSelf());
-	IRCExitThread(NULL);
 	return;
 }
 
@@ -194,9 +201,9 @@ void	scan_http_scan_port(HSStruct *z)
 	struct			SOCKADDR_IN bin;
 	SOCKET			fd;
 	unsigned char		httpbuf[160];
-	fd_set			rfds;
+	fd_set			rfds, efds;
+	int  err, len = sizeof(err);
 	struct timeval  	tv;
-	int			len;
 
 	IRCMutexLock((h->lock));
 #ifndef INET6
@@ -251,26 +258,43 @@ void	scan_http_scan_port(HSStruct *z)
          * -Zogg
 	 */
 	set_non_blocking(fd, NULL);
-	if ((retval = connect(fd, (struct sockaddr *)&sin,
-                sizeof(sin))) == -1 && !(ERRNO == P_EINPROGRESS))
+	if ((retval = connect(fd, (struct sockaddr *)&sin, sizeof(sin))) == -1 && (ERRNO != P_EWORKING))
 	{
 		/* we have no socks server! */
 		CLOSE_SOCK(fd);	
 		goto exituniverse;
-		return;
 	}
 	
-	/* We wait for write-ready */
+	/* We wait for connection to complete */
 	tv.tv_sec = *xScan_TimeOut;
 	tv.tv_usec = 0;
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);
-	if (!select(fd + 1, NULL, &rfds, NULL, &tv))
+	FD_ZERO(&efds);
+	FD_SET(fd, &efds);
+	if (select(fd + 1, NULL, &rfds, &efds, &tv) <= 0)
 	{
+		/* timeout or error */
 		CLOSE_SOCK(fd);
 		goto exituniverse;
 	}
-				
+	/* did connection fail on windows? */
+	if (FD_ISSET(fd, &efds))
+	{
+		err = ERRNO;
+		CLOSE_SOCK(fd);
+		goto exituniverse;
+	}
+#ifdef	SO_ERROR
+	/* did connection fail on unix? */
+	if (!getsockopt(fd, SOL_SOCKET, SO_ERROR, (OPT_TYPE *)&err, &len))
+		if (err)
+		{
+			/* connection failed */
+			CLOSE_SOCK(fd);
+			goto exituniverse;
+		}
+#endif
 	bzero(httpbuf, sizeof(httpbuf));
 	snprintf(httpbuf, sizeof httpbuf, "CONNECT %s:%i HTTP/1.1\n\n",
 		Inet_ia2p(&xScan_endpoint->SIN_ADDR), ntohs(xScan_endpoint->SIN_PORT));
@@ -279,7 +303,7 @@ void	scan_http_scan_port(HSStruct *z)
 		CLOSE_SOCK(fd);
 		goto exituniverse;
 	}
-	/* Now we wait for data. 10 secs ought to be enough  */
+	/* Now we wait for data. Duration is set::scan::timeout */
 	tv.tv_sec = *xScan_TimeOut;
 	tv.tv_usec = 0;
 	FD_ZERO(&rfds);
@@ -309,6 +333,5 @@ exituniverse:
 	IRCMutexLock((h->lock));
 	h->refcnt--;
 	IRCMutexUnlock((h->lock));
-	IRCExitThread(NULL);
 	return;
 }

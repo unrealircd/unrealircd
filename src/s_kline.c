@@ -536,11 +536,10 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  tkl_add_line(type, parv[3], parv[4], parv[8], parv[5],
 		      expiry_1, setat_1);
 
-		  strncpy(gmt, asctime(gmtime((TS *)&setat_1)), sizeof(gmt));
-		  strncpy(gmt2, asctime(gmtime((TS *)&expiry_1)), sizeof(gmt2));
-		  gmt[strlen(gmt) - 1] = '\0';
-		  gmt2[strlen(gmt2) - 1] = '\0';
-
+		  strncpyzt(gmt, asctime(gmtime((TS *)&setat_1)), sizeof(gmt));
+		  strncpyzt(gmt2, asctime(gmtime((TS *)&expiry_1)), sizeof(gmt2));
+		  iCstrip(gmt);
+		  iCstrip(gmt2);
 		  switch (type)
 		  {
 		    case TKL_KILL:
@@ -637,10 +636,10 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				  if (!strcmp(tk->hostmask, parv[4])
 				      && !strcmp(tk->usermask, parv[3]))
 				  {
-					  strncpy(gmt,
+					  strncpyzt(gmt,
 					      asctime(gmtime((TS *)&tk->
 					      set_at)), sizeof(gmt));
-					  gmt[strlen(gmt) - 1] = '\0';
+					  iCstrip(gmt);
 					  sendto_snomask(SNO_TKL,
 					      "%s removed %s %s@%s (set at %s - reason: %s)",
 					      parv[5], txt, tk->usermask,

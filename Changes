@@ -20,7 +20,7 @@
  *                              
  */                             
                                 
-[ Unreal3.2-Selene ]
+[ Unreal3.2 ]
 - Fixed a _serious_ bug in SERVER command, reported by Valen, Forrester,
   M0rpheus, JK, and Hiten.
 - Fixed /botserv problem
@@ -1554,3 +1554,168 @@ seen. gmtime warning still there
 - Made so every join is a SJOIN to prevent TS0 problems. Read config.h to disable this if it causes problems
 - Added set::static-quit to unreal32docs.html
 - Updated docs to include ripemd-160 encryption option
+** beta12 released **
+- Fixed problem where SSL handshakes weren't unknown--'ed on remove reported
+  by Alzirr
+- Compile fix regarding above fix
+- Added vhost::swhois requested by FrostByghte (#0000171)
+- Fixed a win32 password encryption bug when in NT service mode reported by simonbell
+  (#0000285)
+- Fixed a problem with set::ssl::certificate and set::ssl::key that used
+  ->ce_varname instead of ->ce_vardata. Found by badSol
+- Added a newline in dynconf.h
+- SSL debugging stuff
+- Added some more debugging stuff, made check_pings a little more readable 
+- More SSL debugging stuff..
+- A minor fix in SSL_is_inited stuff in s_bsd
+- Fixed a bug with installing unreal as a services under NT4 reported by peter (#0000295)
+- Added the oper login the user has /oper'ed to in the 'is now an operator'
+  notice. Suggested by havlaz (#0000287)
+- Fixed a bug where aliases {} didn't use tokens reported by havlaz (#0000288)
+- Fixed a win32 editor bug when using chars with an ASCII code > 128, reported by XircNet
+  (#0000298)
+- Fixed a bug in TKL found by DerAlSem where it was possible to add a line for *@* (#0000307)
+- Fixed a /who bug where /who +c #chan wouldn't display the name of the channel
+  requested reported by aproxity (#0000304)
+- Fixed a bug where /who +c #chan would let you see users in a +s channel
+- Added Nugget's setuid patch
+- Made the IRC_UID stuff more proper..
+- Removed some old debug code from the win32 debugger
+- Compile warning cleanups
+- Made the win32 version default to unsigned chars, and the linux version do the same under gcc
+- Added Syzop's various zero-terminate patches and fixes for crashes when
+  you send commands like JOIN from a server directly
+- Made channel keys be case sensitive
+- Fixed a bug with /who -h in some cases, found by Zer0, fixed by butter (#0000361)
+- Changed auth method sslpubkey into sslclientcert, which means it will check the X509 certificate of the
+  user using X509_cmp. Also needing is some policy/conf setting to adjust if to reject invalid client certificates or whatever..
+- Added set::ssl::options, with three options:
+    fail-if-no-clientcert   - If SSL client connects and doesn't provide a client certificate, abort connection immediately
+    verify-certificate      - Check the certificate's validity using X509 methods, check if we trust CA's, etc. 
+                              It however does slip self signed certificates through UNLESS
+    no-self-signed          - Don't allow self-signed certificates through (requires verify-certificate)
+- Made conf parser mention if we make a link->options with CONNECT_SSL if we don't support SSL (and remove the CONNECT_SSL flag)
+- Made conf parser mention if we make a SSL listener and we don't support SSL
+- Added set::ssl::trusted-ca-file, if enabled, it will point the SSL stuff to use that file as trusted CA's (for verify-certificate)
+- Made conf _not_ bitch that it doesn't know set::ssl
+- Removed some leftover client certificate stuff
+- Fixed bug #0000372 reported by MorPheus where Killed (<everything-but-the-first-char-in-killer-letter-got-shown> (reason))
+- Fixed bug #0000377 reported by MorPheus where IPs of servers were shown in nick collision notices
+- Fixed bug #0000371 reported by havlaz about an extra \n slipped in with the TKL notice
+- Fixed bug with all TKL commands not accepting nicks anymore (#0000370 reported by Ravage)
+- Fixed bug #0000342 reported by James LiGate about tokens leaking through from clients
+- Removed some IPv6 resolver specifics that seemed illogical (reference to Jollino's IPv6 crashes)
+- Fixed crash bug in m_tkl_line found by Keeper
+- Fixed another m_tkl_line bug found by Keeper
+- Fixed an samode bug reported by mcskaf (#0000403)
+- Added the ability to /lusers server.name to get the lusers reply of another server
+  suggested by tony0man (#0000373)
+- Fixed a bug where /htm would report "no such server" when used locally, reported by
+  jollino (#0000343)
+- Possibly fixed some crash bugs in scan_socks and scan_http in Win32 reported by
+  UrLoverGuy13 and Xose (#0000389)
+- Documentation - Updatet sec2.0 - list of Supported OS's for Win32 Version
+- Documentation - Updated sec1.1 - Instructed to use bugs.unrealircd.org to report problems with docs
+- Documentation - Updated misc hyperlinks - doc/unreal32docs.html
+- Documentation - Updated sec3.31 - Added better description to the format we present set:: settings 
+- Documentation - Updated sec3.31 - Added more details to set directives
+- Documentation - Updated sec3.25 - Added option vhost::swhois to section 3.25 Vhost block
+- Documentation - Replaced text vair {} with <> to prevent confusion.
+- Documentation - Documented that lusers now supports remote servers
+- Documentation - Corrected vhost::from example as reported by joolz (#0000329 )
+- Documentation - Corrected set::scan:messages, currently listed as set::messages - as reported by joolz (#0000329) 
+- Documentation - Added channel mode t & description as reported by stfcs (#0000315) 
+- example.conf - Corrected incorrect set::services-services statment in alias block - reported by mcskaf (#0000401)
+- Documentation - Corrected Spelling mistake in HTM mode - Reported by CoNfOuNd (#0000387)
+- Documentation - Added coadmin to table of oper types - Reported by FrostByghte (#0000359)
+- Documentation - Corrected several HTML formating problems
+- Commited first 20% of conf3, if anyone runs devel, DO NOT, it is BROKEN and will most likely NOT FUNCTION
+  and it WILL burn, DIE, and WILL NOT WORK
+- Fixed conf3 bug with _conf_except tkl
+- /kline and /zline now use TKL
+- Removed src/win32/unrealinstssl.iss and merged it into unrealinst.iss, add #define
+  USE_SSL to the file to build an SSL package
+- Added additional NT Service options to the win32 installer
+- Made CLIENT_FLOOD more customizable
+- Fixed some conf3 compile errors and block-modded _*_tld
+- Fixed stats bug reported by RaYmAn
+- Added a patch by McSkaf that will hopefully fix the win32 resolver crashes
+- Converted badword to conf3
+- Fixed some win32 problems with conf3
+- Fixed a problem in config testing with conf3
+- Modified the main conf3 searching routine to use a binary search, this should speed up
+  config processing somewhat
+- Converted the config flag parsing systems to use a binary search
+- Conf3 cleanups
+- Converted help and log to conf3
+- Fixed a configure script bug involving gcc3 (#0000398, #0000412, #0000433) found and 
+  fixed by mister
+- Fixed alphabeticalising of named oper flags, added _conf/test_link
+- Finished up conf3, still needing some directives added but it sortof works. Rehash doesn't yet. 
+-  Fixed some idiotic lack of src/modules/Makefile.in changes for the sake of commands.so when 
+  /zline /kline etc was moved to a module
+- Converted _conf_alias to conf3, in the process changed the format to be slightly more
+  stable. See aliases/aliases.conf for the format changes
+- Numerous Sts-coded-conf3-while-sick bugs
+- Added SVSLUSERS, allows changing of local/global max users. This is designed so services
+  can make sure all servers report the same global max and that a local max can be adjusted
+  if for example a clone flood occurs. It is NOT designed to make the max count higher than
+  you actually have.
+- Fixed a bug in the win32 debugger where the contents of the core file were not written
+  until ok was clicked. Reported by Simon Bell.
+- Added an operflag can_override (v) only opers with this flag are allowed to use
+  oper-override.
+- Fixed a bug in SVSO where the t and Z flags could not be removed.
+- Updated .RELEASE.NOTES to include can_override
+- Fixed a bug where if set::help-channel was missing it was reported twice.
+- Made modules able to have configuration directives in conf3. The system to do this is 
+  completely new and works differently. All remnants of the old system have been removed.
+- Changed the module config system slightly to be able to detect more errors.
+- /rehash for conf3 (that works) :)
+- Fixed win32 compile error with default: ;
+- Fixed several conf3 errors
+- Converted deny {} to conf3, in the process added some extra crule functions to help
+  report errors better
+- Fixed sendto_ routines to use slot number as index into sentalong array
+- Fixed a conf3 bug
+- Made alias {}'s get rehashed
+- Made modules correctly rehash, this involves adding a Mod_Test function to modules that
+  need to perform configuration tests. This is currently only implimented for dynamic linking
+- Made the same system work under static linking. This (barring any bugs) should be the
+  completion of conf3. :)
+- Fixed a bug where chmode +q users could not kick chmode +a users. (#0000459) reported by
+  jollino.
+- Fixed serious bug in /who that caused the server to lock up (there's a ID
+  for this, could someone find it). Beta13 SHOULD be a LOT nearer now
+- Small typo in config validation found by ins4ne
+- Changed the way return values work in conf3 to better report the number of errors that
+  occurred.
+- Cleaned up some module code, also removed /module load|unload (just use /rehash)
+- Removed makeconf
+- Fixed errors in doc/example.conf and makenet
+- Fixed set::scan::bind-ip and set::scan::ban-time typos in unreal32docs.html
+- Changed set::scan:ban-time to set::scan::bantime and added set::scan::timeout in 
+  unreal32docs.html
+- Fixed some logical module rehash issues
+- Made config actually add listeners when rehashing (...) also you can now
+  change listener flags using /rehash
+- Changed .SICI to point to cacert.org instead (patch by evilbunny)
+- Fixed an oper count bug with SVS2MODE reported by confused (#0000490)
+- Removed m_kline.c and m_zline.c these are now implimented as part of m_tkl.c
+- Implemented a patch by poisoner to log vhosts in connect/disconnect logging (#0000487)
+- Made some changes to the thread API to fix some win32 crashes
+- Changed resolver code to use IRCMutex macros.
+- Documentation updates (some reported by poisoner) (#0000493)
+- Fixed some problems with /kline when removing a K:line
+- Updated docs some more
+- Fixed a makefile.win32.ssl problem reported by WeeD
+- Changed version to beta13, updated docs
+- Check for connect() success/failure in scanners on all OSs.
+- Documentation updates
+- Added back the commands check that didn't get added in conf3 (lamers
+  beware)
+- Fixed a typo in the module system
+- Fixed exception in scanner on Windows
+- Changed base version name to Unreal3.2, instead of Unreal3.2-Selene
+- Made McSkaf part of core coder team
+*** beta13 released ***

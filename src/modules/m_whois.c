@@ -139,7 +139,8 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	char *p = NULL;
 	int  found, len, mlen;
 
-
+	if (IsServer(sptr))	
+		return 0;
 
 	if (parc < 2)
 	{

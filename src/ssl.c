@@ -23,6 +23,7 @@
 #include "common.h"
 #include "struct.h"
 #include "h.h"
+#include "proto.h"
 #include "sys.h"
 #ifdef _WIN32
 #include <windows.h>
@@ -48,9 +49,9 @@ typedef struct {
 	char **buffer;
 } StreamIO;
 
-static StreamIO *streamp;
 #define CHK_SSL(err) if ((err)==-1) { ERR_print_errors_fp(stderr); }
 #ifdef _WIN32
+static StreamIO *streamp;
 LRESULT SSLPassDLG(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam) {
 	StreamIO *stream;
 	switch (Message) {
@@ -76,6 +77,40 @@ LRESULT SSLPassDLG(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam) {
 	}
 }
 #endif				
+
+char *ssl_error_str(int err)
+{
+     char *ssl_errstr = NULL;
+     switch(err) {
+    	case SSL_ERROR_NONE:
+	    ssl_errstr = "SSL: No error";
+	    break;
+	case SSL_ERROR_SSL:
+	    ssl_errstr = "Internal OpenSSL error or protocol error";
+	    break;
+	case SSL_ERROR_WANT_READ:
+	    ssl_errstr = "OpenSSL functions requested a read()";
+	    break;
+	case SSL_ERROR_WANT_WRITE:
+	    ssl_errstr = "OpenSSL functions requested a write()";
+	    break;
+	case SSL_ERROR_WANT_X509_LOOKUP:
+	    ssl_errstr = "OpenSSL requested a X509 lookup which didn`t arrive";
+	    break;
+	case SSL_ERROR_SYSCALL:
+	    ssl_errstr = "Underlying syscall error";
+	    break;
+	case SSL_ERROR_ZERO_RETURN:
+	    ssl_errstr = "Underlying socket operation returned zero";
+	    break;
+	case SSL_ERROR_WANT_CONNECT:
+	    ssl_errstr = "OpenSSL functions wanted a connect()";
+	    break;
+	default:
+	    ssl_errstr = "Unknown OpenSSL error (huh?)";
+     }
+     return (ssl_errstr);
+}
 				
 				
 int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
@@ -90,8 +125,7 @@ int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 #endif
 	if (before)
 	{
-		strncpy(buf, (char *)beforebuf, size);
-		buf[size - 1] = '\0';
+		strncpyzt(buf, (char *)beforebuf, size);
 		return (strlen(buf));
 	}
 #ifndef _WIN32
@@ -105,15 +139,35 @@ int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 #endif
 	if (pass)
 	{
-		strncpy(buf, (char *)pass, size);
-		strncpy(beforebuf, (char *)pass, sizeof(beforebuf));
-		beforebuf[sizeof(beforebuf) - 1] = '\0';
-		buf[size - 1] = '\0';
+		strncpyzt(buf, (char *)pass, size);
+		strncpyzt(beforebuf, (char *)pass, sizeof(beforebuf));
 		before = 1;
 		return (strlen(buf));
 	}
 	return 0;
 }
+
+static int ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
+{
+	int verify_err = 0;
+
+	verify_err = X509_STORE_CTX_get_error(ctx);
+	ircd_log(LOG_ERROR, "%i", verify_err);	
+	if (preverify_ok)
+		return 1;
+	if (iConf.ssl_options & SSLFLAG_VERIFYCERT)
+	{
+		if (verify_err == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT)
+			if (!(iConf.ssl_options & SSLFLAG_DONOTACCEPTSELFSIGNED))
+			{
+				return 1;
+			}
+		return preverify_ok;
+	}
+	else
+		return 1;
+}
+
 
 void init_ctx_server(void)
 {
@@ -125,6 +179,9 @@ void init_ctx_server(void)
 	}
 	SSL_CTX_set_default_passwd_cb(ctx_server, ssl_pem_passwd_cb);
 	SSL_CTX_set_options(ctx_server, SSL_OP_NO_SSLv2);
+	SSL_CTX_set_verify(ctx_server, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE
+			| (iConf.ssl_options & SSLFLAG_FAILIFNOCERT ? SSL_VERIFY_FAIL_IF_NO_PEER_CERT : 0), ssl_verify_callback);
+
 	if (SSL_CTX_use_certificate_file(ctx_server, SSL_SERVER_CERT_PEM, SSL_FILETYPE_PEM) <= 0)
 	{
 		ircd_log(LOG_ERROR, "Failed to load SSL certificate %s", SSL_SERVER_CERT_PEM);
@@ -141,7 +198,16 @@ void init_ctx_server(void)
 		ircd_log(LOG_ERROR, "Failed to check SSL private key");
 		exit(5);
 	}
+	if (iConf.trusted_ca_file)
+	{
+		if (!SSL_CTX_load_verify_locations(ctx_server, iConf.trusted_ca_file, NULL))
+		{
+			ircd_log(LOG_ERROR, "Failed to load Trusted CA's from %s", iConf.trusted_ca_file);
+			exit(6);
+		}
+	}
 }
+
 
 void init_ctx_client(void)
 {
@@ -199,8 +265,9 @@ void init_ssl(void)
 
 int  ssl_handshake(aClient *cptr)
 {
+#ifdef NO_CERTCHECKING
 	char *str;
-	int  err;
+#endif
 
 	cptr->ssl = SSL_new(ctx_server);
 	CHK_NULL(cptr->ssl);
@@ -220,44 +287,6 @@ int  ssl_handshake(aClient *cptr)
 		cptr->ssl = NULL;
 		return -1;
 	}
-
-	/* Get client's certificate (note: beware of dynamic
-	 * allocation) - opt */
-        /* We do not do this -Stskeeps */
-
-#ifdef NO_CERTCHECKING
-	cptr->client_cert =
-	    (struct X509 *)SSL_get_peer_certificate((SSL *) cptr->ssl);
-
-	if (cptr->client_cert != NULL)
-	{
-		// log (L_DEBUG,"Client certificate:\n");
-
-		str =
-		    X509_NAME_oneline(X509_get_subject_name((X509 *) cptr->
-		    client_cert), 0, 0);
-		CHK_NULL(str);
-		// log (L_DEBUG, "\t subject: %s\n", str);
-		free(str);
-
-		str =
-		    X509_NAME_oneline(X509_get_issuer_name((X509 *) cptr->
-		    client_cert), 0, 0);
-		CHK_NULL(str);
-		// log (L_DEBUG, "\t issuer: %s\n", str);
-		free(str);
-
-		/* We could do all sorts of certificate
-		 * verification stuff here before
-		 *        deallocating the certificate. */
-
-		X509_free((X509 *) cptr->client_cert);
-	}
-	else
-	{
-		// log (L_DEBUG, "Client does not have certificate.\n");
-	}
-#endif
 	return 0;
 
 }
@@ -401,16 +430,16 @@ int ircd_SSL_write(aClient *acptr, const void *buf, int sz)
                if(ERRNO == EAGAIN)
                    return -1;
            default:
+		Debug((DEBUG_ERROR, "ircd_SSL_write: returning fatal_ssl_error for %s", acptr->name));
 		return fatal_ssl_error(ssl_err, SAFE_SSL_WRITE, acptr);
        }
     }
+    Debug((DEBUG_ERROR, "ircd_SSL_write for %s (%p, %i): success", acptr->name, buf, sz));
     return len;
 }
 
 int ircd_SSL_client_handshake(aClient *acptr)
 {
-	int ssl_err;
-	
 	acptr->ssl = SSL_new(ctx_client);
 	if (!acptr->ssl)
 	{
@@ -438,9 +467,11 @@ int ircd_SSL_client_handshake(aClient *acptr)
 		case -1: 
 			return -1;
 		case 0: 
+			Debug((DEBUG_DEBUG, "SetSSLConnectHandshake(%s)", get_client_name(acptr, TRUE)));
 			SetSSLConnectHandshake(acptr);
 			return 0;
 		case 1: 
+			Debug((DEBUG_DEBUG, "SSL_init_finished should finish this job (%s)", get_client_name(acptr, TRUE)));
 			/* SSL_init_finished in s_bsd will finish the job */
 			return 1;
 		default:
@@ -460,6 +491,7 @@ int ircd_SSL_accept(aClient *acptr, int fd) {
 			|| ERRNO == P_EAGAIN)
 	    case SSL_ERROR_WANT_READ:
 	    case SSL_ERROR_WANT_WRITE:
+		    Debug((DEBUG_DEBUG, "ircd_SSL_accept(%s), - %s", get_client_name(acptr, TRUE), ssl_error_str(ssl_err)));
 		    /* handshake will be completed later . . */
 		    return 1;
 	    default:
@@ -482,8 +514,11 @@ int ircd_SSL_connect(aClient *acptr) {
 			|| ERRNO == P_EAGAIN)
 	    case SSL_ERROR_WANT_READ:
 	    case SSL_ERROR_WANT_WRITE:
+	    	 {
+		    Debug((DEBUG_DEBUG, "ircd_SSL_connect(%s), - %s", get_client_name(acptr, TRUE), ssl_error_str(ssl_err)));
 		    /* handshake will be completed later . . */
 		    return 0;
+	         }
 	    default:
 		return fatal_ssl_error(ssl_err, SAFE_SSL_CONNECT, acptr);
 		
@@ -510,7 +545,6 @@ static int fatal_ssl_error(int ssl_error, int where, aClient *sptr)
 {
     /* don`t alter ERRNO */
     int errtmp = ERRNO;
-    char *errstr = (char *)strerror(errtmp);
     char *ssl_errstr, *ssl_func;
 
     switch(where) {

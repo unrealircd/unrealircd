@@ -1671,3 +1671,12 @@ int b64_decode(char const *src, unsigned char *target, size_t targsize)
 
 	return (tarindex);
 }
+
+void	*MyMallocEx(size_t size)
+{
+	void *p = MyMalloc(size);
+
+	bzero(p, size);
+	return (p);
+}
+

@@ -8,11 +8,11 @@ RC=rc
 DEBUG=1
 FD_SETSIZE=/D SCAN_API=1 /D FD_SETSIZE=16384
 !IFNDEF DEBUG 
-CFLAGS=/MT /O2 /G5 /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D STATIC_LINKING /D _WIN32GUI /D NOSPOOF=1 /c
+CFLAGS=/MT /J /O2 /G5 /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D STATIC_LINKING /D _WIN32GUI /D NOSPOOF=1 /c
 LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib advapi32.lib dbghelp.lib \
  oldnames.lib libcmt.lib comctl32.lib comdlg32.lib /nodefaultlib /nologo /out:WIRCD.EXE
 !ELSE
-CFLAGS=  /MTd /Zi /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D STATIC_LINKING /D _WIN32GUI /D NOSPOOF=1 /c
+CFLAGS=/MTd /J /Zi /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D STATIC_LINKING /D _WIN32GUI /D NOSPOOF=1 /c
 LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib dbghelp.lib\
  oldnames.lib libcmt.lib comctl32.lib comdlg32.lib \
  advapi32.lib /nodefaultlib /nologo /debug /debugtype:BOTH /OUT:WIRCD.EXE 
@@ -42,12 +42,13 @@ MOD_FILES=SRC/L_COMMANDS.OBJ SRC/M_CHGHOST.OBJ SRC/M_SDESC.OBJ SRC/M_SETIDENT.OB
  SRC/M_SVSNLINE.OBJ SRC/M_WHO.OBJ SRC/M_SWHOIS.OBJ SRC/M_SVSMODE.OBJ \
  SRC/M_AWAY.OBJ SRC/M_SVSNOOP.OBJ SRC/M_MKPASSWD.OBJ SRC/M_SVSO.OBJ SRC/M_SVSNICK.OBJ \
  SRC/M_ADMINCHAT.OBJ SRC/M_AKILL.OBJ SRC/M_CHGNAME.OBJ SRC/M_GUEST.OBJ SRC/M_HTM.OBJ \
- SRC/M_KLINE.OBJ SRC/M_LAG.OBJ SRC/M_MESSAGE.OBJ SRC/M_NACHAT.OBJ SRC/M_OPER.OBJ \
+ SRC/M_LAG.OBJ SRC/M_MESSAGE.OBJ SRC/M_NACHAT.OBJ SRC/M_OPER.OBJ \
  SRC/M_PINGPONG.OBJ SRC/M_QUIT.OBJ SRC/M_RAKILL.OBJ SRC/M_RPING.OBJ SRC/M_SENDUMODE.OBJ \
  SRC/M_SQLINE.OBJ SRC/M_KILL.OBJ SRC/M_TSCTL.OBJ SRC/M_UNKLINE.OBJ \
- SRC/M_UNSQLINE.OBJ SRC/M_UNZLINE.OBJ SRC/M_WHOIS.OBJ SRC/M_ZLINE.OBJ \
+ SRC/M_UNSQLINE.OBJ SRC/M_UNZLINE.OBJ SRC/M_WHOIS.OBJ \
  SRC/SCAN.OBJ SRC/SCAN_SOCKS.OBJ SRC/SCAN_HTTP.OBJ SRC/M_TKL.OBJ SRC/M_VHOST.OBJ \
- SRC/M_CYCLE.OBJ SRC/M_SVSJOIN.OBJ SRC/M_SVSPART.OBJ SRC/INVISIBILITY.OBJ
+ SRC/M_CYCLE.OBJ SRC/M_SVSJOIN.OBJ SRC/M_SVSPART.OBJ SRC/M_SVSLUSERS.OBJ \
+ SRC/INVISIBILITY.OBJ
 
 ALL: CONF UNREAL.EXE WIRCD.EXE
 
@@ -302,9 +303,6 @@ src/m_htm.obj: src/modules/m_htm.c $(INCLUDES)
 src/m_kill.obj: src/modules/m_kill.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/modules/m_kill.c
 
-src/m_kline.obj: src/modules/m_kline.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/modules/m_kline.c
-
 src/m_lag.obj: src/modules/m_lag.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/modules/m_lag.c
 
@@ -350,9 +348,6 @@ src/m_unzline.obj: src/modules/m_unzline.c $(INCLUDES)
 src/m_whois.obj: src/modules/m_whois.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/modules/m_whois.c
 
-src/m_zline.obj: src/modules/m_zline.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/modules/m_zline.c
-
 src/m_vhost.obj: src/modules/m_vhost.c $(INCLUDES)
         $(CC) $(CFLAGS) src/modules/m_vhost.c
 
@@ -364,6 +359,9 @@ src/m_svsjoin.obj: src/modules/m_svsjoin.c $(INCLUDES)
 
 src/m_svspart.obj: src/modules/m_svspart.c $(INCLUDES)
         $(CC) $(CFLAGS) src/modules/m_svspart.c
+
+src/m_svslusers.obj: src/modules/m_svslusers.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_svslusers.c
 
 src/scan.obj: src/modules/scan.c $(INCLUDES)
         $(CC) $(CFLAGS) src/modules/scan.c

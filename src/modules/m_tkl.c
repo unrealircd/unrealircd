@@ -41,8 +41,8 @@ DLLFUNC int m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], cha
 #define MSG_SHUN "SHUN"
 #define TOK_SHUN "BL"
 #define MSG_GZLINE "GZLINE"
-#define MSG_TKLINE "TKLINE"
-#define MSG_TZLINE "TZLINE"
+#define MSG_KLINE "KLINE"
+#define MSG_ZLINE "ZLINE"
 #define TOK_NONE ""
 
 #ifndef DYNAMIC_LINKING
@@ -76,8 +76,8 @@ int    m_tkl_Init(ModuleInfo *modinfo)
 	*/
 	add_Command(MSG_GLINE, TOK_GLINE, m_gline, 3);
 	add_Command(MSG_SHUN, TOK_SHUN, m_shun, 3);
-	add_Command(MSG_TZLINE, TOK_NONE, m_tzline, 3);
-	add_Command(MSG_TKLINE, TOK_NONE, m_tkline, 3);
+	add_Command(MSG_ZLINE, TOK_NONE, m_tzline, 3);
+	add_Command(MSG_KLINE, TOK_NONE, m_tkline, 3);
 	add_Command(MSG_GZLINE, TOK_NONE, m_gzline, 3);
 	return MOD_SUCCESS;
 }
@@ -102,9 +102,9 @@ int	m_tkl_Unload(int module_unload)
 {
 	if ((del_Command(MSG_GLINE, TOK_GLINE, m_gline) < 0) ||
 	    (del_Command(MSG_SHUN, TOK_SHUN, m_shun) < 0 ) ||
-	    (del_Command(MSG_TZLINE, TOK_NONE, m_tzline) < 0) ||
+	    (del_Command(MSG_ZLINE, TOK_NONE, m_tzline) < 0) ||
 	    (del_Command(MSG_GZLINE, TOK_NONE, m_gzline) < 0) ||
-	    (del_Command(MSG_TKLINE, TOK_NONE, m_tkline) < 0))
+	    (del_Command(MSG_KLINE, TOK_NONE, m_tkline) < 0))
 
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
@@ -206,7 +206,11 @@ DLLFUNC int m_tkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		tkl_stats(sptr);
 		return 0;
 	}
-
+	if (!OPCanUnKline(sptr) && *parv[1] == '-')
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		return 0;
+	}
 	return m_tkl_line(cptr, sptr, parc, parv, "k");
 
 }
@@ -249,6 +253,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 	TS   secs;
 	int  whattodo = 0;	/* 0 = add  1 = del */
 	int  i;
+	aClient *acptr = NULL;
 	char *mask = NULL;
 	char mo[1024], mo2[1024];
 	char *p, *usermask, *hostmask;
@@ -291,8 +296,34 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 
 	/* Check if its a hostmask and legal .. */
 	p = strchr(mask, '@');
-
-	if (p && !whattodo)
+	if (p) {
+		usermask = strtok(mask, "@");
+		hostmask = strtok(NULL, "");
+		if (BadPtr(hostmask)) {
+			if (BadPtr(usermask)) {
+				return 0;
+			}
+			hostmask = usermask;
+			usermask = "*";
+		}
+		p = hostmask-1;
+	}
+	else
+	{
+		/* It's seemingly a nick .. let's see if we can find the user */
+		if ((acptr = find_client(mask, NULL)) && IsPerson(acptr))
+		{
+			usermask = "*";
+			hostmask = acptr->user->realhost;
+			p = hostmask - 1;
+		}
+		else
+		{
+			sendto_one(sptr, rpl_str(ERR_NOSUCHNICK), me.name, sptr->name, mask);
+			return 0;
+		}
+	}	
+	if (!whattodo)
 	{
 		p++;
 		i = 0;
@@ -311,15 +342,6 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 		}
 	}
 
-	usermask = strtok(mask, "@");
-	hostmask = strtok(NULL, "");
-	if (BadPtr(hostmask)) {
-		if (BadPtr(usermask)) {
-			return 0;
-		}
-		hostmask = usermask;
-		usermask = "*";
-	}
 	tkl_check_expire(NULL);
 
 	secs = 0;

@@ -88,6 +88,8 @@ Module *Module_Find(char *name)
 	
 	for (p = Modules; p; p = p->next)
 	{
+		if (!(p->flags & MODFLAG_TESTING) || (p->flags & MODFLAG_DELAYED))
+			continue;
 		if (!strcmp(p->header->name, name))
 		{
 			return (p);
@@ -100,7 +102,7 @@ Module *Module_Find(char *name)
 /*
  * Returns an error if insucessful .. yes NULL is OK! 
 */
-char  *Module_Load (char *path_, int load)
+char  *Module_Create(char *path_)
 {
 #ifndef STATIC_LINKING
 #ifdef _WIN32
@@ -108,6 +110,7 @@ char  *Module_Load (char *path_, int load)
 #else /* _WIN32 */
 	void   		*Mod;
 #endif /* _WIN32 */
+	int		(*Mod_Test)();
 	int		(*Mod_Init)();
 	int             (*Mod_Load)();
 	int             (*Mod_Unload)();
@@ -189,49 +192,33 @@ char  *Module_Load (char *path_, int load)
 		irc_dlsym(Mod, "Mod_Handle", Mod_Handle);
 		if (Mod_Handle)
 			*Mod_Handle = mod;
-		if (betaversion >= 8) {
-			modinfo.size = sizeof(ModuleInfo);
-			modinfo.module_load = load;
-			modinfo.handle = mod;
-			if ((ret = (*Mod_Init)(&modinfo)) < MOD_SUCCESS) {
-				ircsprintf(errorbuf, "Mod_Init returned %i",
-					   ret);
-				/* We EXPECT the module to have cleaned up it's mess */
-		        	Module_free(mod);
-				return (errorbuf);
-			}
-		}
-		else {
-			if ((ret = (*Mod_Init)(load)) < MOD_SUCCESS)
-			{
-				ircsprintf(errorbuf, "Mod_Init returned %i",
-					   ret);
-				/* We EXPECT the module to have cleaned up it's mess */
-			        Module_free(mod);
-				return (errorbuf);
-			}
-		}
-		
-		if (load)
+		irc_dlsym(Mod, "Mod_Test", Mod_Test);
+		if (Mod_Test)
 		{
-			irc_dlsym(Mod, "Mod_Load", Mod_Load);
-			if (!Mod_Load)
-			{
-				/* We cannot do delayed unloading if this happens */
-				(*Mod_Unload)();
-				Module_free(mod);
-				return ("Unable to locate Mod_Load"); 
+			if (betaversion >= 8) {
+				modinfo.size = sizeof(ModuleInfo);
+				modinfo.module_load = 0;
+				modinfo.handle = mod;
+				if ((ret = (*Mod_Test)(&modinfo)) < MOD_SUCCESS) {
+					ircsprintf(errorbuf, "Mod_Test returned %i",
+						   ret);
+					/* We EXPECT the module to have cleaned up it's mess */
+		        		Module_free(mod);
+					return (errorbuf);
+				}
 			}
-			if ((ret = (*Mod_Load)(load)) < MOD_SUCCESS)
-			{
-				ircsprintf(errorbuf, "Mod_Load returned %i",
-					  ret);
-				(*Mod_Unload)();
-				Module_free(mod);
-				return (errorbuf);
+			else {
+				if ((ret = (*Mod_Test)(0)) < MOD_SUCCESS)
+				{
+					ircsprintf(errorbuf, "Mod_Test returned %i",
+						   ret);
+					/* We EXPECT the module to have cleaned up it's mess */
+				        Module_free(mod);
+					return (errorbuf);
+				}
 			}
-			mod->flags |= MODFLAG_LOADED;
 		}
+		mod->flags = MODFLAG_TESTING;		
 		AddListItem(mod, Modules);
 		return NULL;
 	}
@@ -250,6 +237,16 @@ char  *Module_Load (char *path_, int load)
 	
 }
 
+void Module_DelayChildren(Module *m)
+{
+	ModuleChild *c;
+	for (c = m->children; c; c = c->next)
+	{
+		c->child->flags |= MODFLAG_DELAYED;
+		Module_DelayChildren(c->child);
+	}
+}
+
 Module *Module_make(ModuleHeader *header, 
 #ifdef _WIN32
        HMODULE mod
@@ -266,6 +263,136 @@ Module *Module_make(ModuleHeader *header,
 	modp->flags = MODFLAG_NONE;
 	modp->children = NULL;
 	return (modp);
+}
+
+void Init_all_testing_modules(void)
+{
+	
+	Module *mi, *next;
+	int betaversion, tag, ret;
+	iFP Mod_Init;
+	ModuleInfo modinfo;
+	for (mi = Modules; mi; mi = next)
+	{
+		next = mi->next;
+		if (!(mi->flags & MODFLAG_TESTING))
+			continue;
+		irc_dlsym(mi->dll, "Mod_Init", Mod_Init);
+		sscanf(mi->header->modversion, "3.2-b%d-%d", &betaversion, &tag);
+		if (betaversion >= 8) {
+			modinfo.size = sizeof(ModuleInfo);
+			modinfo.module_load = 0;
+			modinfo.handle = mi;
+			if ((ret = (*Mod_Init)(&modinfo)) < MOD_SUCCESS) {
+				config_error("Error loading %s: Mod_Init returned %i",
+					mi->header->name, ret);
+		        	Module_free(mi);
+				continue;
+			}
+		}
+		else {
+			if ((ret = (*Mod_Init)(0)) < MOD_SUCCESS)
+			{
+				config_error("Error loading %s: Mod_Init returned %i",
+					mi->header->name, ret);
+			        Module_free(mi);
+				continue;
+			}
+		}		
+		mi->flags = MODFLAG_INIT;
+	}
+}	
+
+void Unload_all_loaded_modules(void)
+{
+	Module *mi, *next;
+	ModuleChild *child, *childnext;
+	ModuleObject *objs, *objnext;
+	iFP Mod_Unload;
+	int ret;
+
+	for (mi = Modules; mi; mi = next)
+	{
+		next = mi->next;
+		if (!(mi->flags & MODFLAG_LOADED) || (mi->flags & MODFLAG_DELAYED))
+			continue;
+		irc_dlsym(mi->dll, "Mod_Unload", Mod_Unload);
+		if (Mod_Unload)
+		{
+			ret = (*Mod_Unload)(0);
+			if (ret == MOD_DELAY)
+			{
+				mi->flags |= MODFLAG_DELAYED;
+				Module_DelayChildren(mi);
+			}
+		}
+		for (objs = mi->objects; objs; objs = objnext) {
+			objnext = objs->next;
+			if (objs->type == MOBJ_EVENT) {
+				LockEventSystem();
+				EventDel(objs->object.event);
+				UnlockEventSystem();
+			}
+			else if (objs->type == MOBJ_HOOK) {
+				HookDel(objs->object.hook);
+			}
+			else if (objs->type == MOBJ_COMMAND) {
+				CommandDel(objs->object.command);
+			}
+			else if (objs->type == MOBJ_HOOKTYPE) {
+				HooktypeDel(objs->object.hooktype, mi);
+			}
+		}
+		for (child = mi->children; child; child = childnext)
+		{
+			childnext = child->next;
+			DelListItem(child,mi->children);
+			MyFree(child);
+		}
+		DelListItem(mi,Modules);
+		irc_dlclose(mi->dll);
+		MyFree(mi);
+	}
+}
+
+void Unload_all_testing_modules(void)
+{
+	Module *mi, *next;
+	ModuleChild *child, *childnext;
+	ModuleObject *objs, *objnext;
+
+	for (mi = Modules; mi; mi = next)
+	{
+		next = mi->next;
+		if (!(mi->flags & MODFLAG_TESTING))
+			continue;
+		for (objs = mi->objects; objs; objs = objnext) {
+			objnext = objs->next;
+			if (objs->type == MOBJ_EVENT) {
+				LockEventSystem();
+				EventDel(objs->object.event);
+				UnlockEventSystem();
+			}
+			else if (objs->type == MOBJ_HOOK) {
+				HookDel(objs->object.hook);
+			}
+			else if (objs->type == MOBJ_COMMAND) {
+				CommandDel(objs->object.command);
+			}
+			else if (objs->type == MOBJ_HOOKTYPE) {
+				HooktypeDel(objs->object.hooktype, mi);
+			}
+		}
+		for (child = mi->children; child; child = childnext)
+		{
+			childnext = child->next;
+			DelListItem(child,mi->children);
+			MyFree(child);
+		}
+		DelListItem(mi,Modules);
+		irc_dlclose(mi->dll);
+		MyFree(mi);
+	}
 }
 
 /* 
@@ -353,6 +480,8 @@ int     Module_Unload(char *name, int unload)
 	ret = (*Mod_Unload)(unload);
 	if (ret == MOD_DELAY)
 	{
+		m->flags |= MODFLAG_DELAYED;
+		Module_DelayChildren(m);
 		return 2;
 	}
 	if (ret == MOD_FAILED)
@@ -375,18 +504,11 @@ vFP Module_SymEx(
 {
 #ifndef STATIC_LINKING
 	vFP	fp;
-	char	buf[512];
 
 	if (!name)
 		return NULL;
 	
-	ircsprintf(buf, "_%s", name);
-
-	/* Run through all modules and check for symbols */
 	irc_dlsym(mod, name, fp);
-	if (fp)
-		return (fp);
-	irc_dlsym(mod, buf, fp);
 	if (fp)
 		return (fp);
 	return NULL;
@@ -398,21 +520,17 @@ vFP Module_Sym(char *name)
 {
 #ifndef STATIC_LINKING
 	vFP	fp;
-	char	buf[512];
 	Module *mi;
 	
 	if (!name)
 		return NULL;
-	
-	ircsprintf(buf, "_%s", name);
 
 	/* Run through all modules and check for symbols */
 	for (mi = Modules; mi; mi = mi->next)
 	{
+		if (!(mi->flags & MODFLAG_TESTING) || (mi->flags & MODFLAG_DELAYED))
+			continue;
 		irc_dlsym(mi->dll, name, fp);
-		if (fp)
-			return (fp);
-		irc_dlsym(mi->dll, buf, fp);
 		if (fp)
 			return (fp);
 	}
@@ -424,24 +542,17 @@ vFP Module_SymX(char *name, Module **mptr)
 {
 #ifndef STATIC_LINKING
 	vFP	fp;
-	char	buf[512];
 	Module *mi;
 	
 	if (!name)
 		return NULL;
 	
-	ircsprintf(buf, "_%s", name);
-
 	/* Run through all modules and check for symbols */
 	for (mi = Modules; mi; mi = mi->next)
 	{
+		if (!(mi->flags & MODFLAG_TESTING) || (mi->flags & MODFLAG_DELAYED))
+			continue;
 		irc_dlsym(mi->dll, name, fp);
-		if (fp)
-		{
-			*mptr = mi;
-			return (fp);
-		}
-		irc_dlsym(mi->dll, buf, fp);
 		if (fp)
 		{
 			*mptr = mi;
@@ -488,7 +599,7 @@ void	module_loadall(int module_load)
 		}
 		else
 		{
-			mi->flags |= MODFLAG_LOADED;
+			mi->flags = MODFLAG_LOADED;
 		}
 		
 	}
@@ -537,7 +648,7 @@ int	Module_Depend_Resolve(Module *p)
 		if (!*(d->pointer))
 		{
 			config_progress("Unable to resolve symbol %s, attempting to load %s to find it", d->symbol, d->module);
-			Module_Load(d->module,0);
+			Module_Create(d->module);
 			*(d->pointer) = Module_SymX(d->symbol, &parental);
 			if (!*(d->pointer)) {
 				config_progress("module dependancy error: cannot resolve symbol %s",
@@ -572,71 +683,19 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
-	if (parc < 2)
+	if (!Modules)
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "MODULE");
-		return 0;
+		sendto_one(sptr, ":%s NOTICE %s :*** No modules loaded", me.name, sptr->name);
+		return 1;
 	}
-	if (!match(parv[1], "load"))
+	for (mi = Modules; mi; mi = mi->next)
 	{
-		if (parc < 3)
-		{
-			sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-			    me.name, parv[0], "MODULE LOAD");
-			return 0;
-		}
-		if (!(ret = Module_Load(parv[2], 1)))
-		{
-			sendto_realops("Loaded module %s", parv[2]);
-			return 0;
-		}
-		else
-		{
-			sendto_realops("Module load of %s failed: %s",
-				parv[2], ret);
-		}
-	}
-	else
-	if (!match(parv[1], "unload"))
-	{
-		if (parc < 3)
-		{
-			sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-			    me.name, parv[0], "MODULE UNLOAD");
-			return 0;
-		}
-		sendto_realops("Trying to unload module %s", parv[2]);
-		i = Module_Unload(parv[2], 0);
-		{
-			if (i == 1)
-				sendto_realops("Unloaded module %s", parv[2]);
-			else if (i == 2)
-				sendto_realops("Delaying module unload of %s",
-					parv[2]);
-			else if (i == -1)
-				sendto_realops("Couldn't unload module %s",	
-					parv[2]);
-		}
-	}		
-	else
-	if (!match(parv[1], "status"))
-	{
-		if (!Modules)
-		{
-			sendto_one(sptr, ":%s NOTICE %s :*** No modules loaded", me.name, sptr->name);
-			return 1;
-		}
-		for (mi = Modules; mi; mi = mi->next)
-		{
-			sendto_one(sptr, ":%s NOTICE %s :*** %s - %s (%s)", me.name, sptr->name,
-				mi->header->name, mi->header->version, mi->header->description);	
-		}
-	}
-	else
-	{
-		sendto_one(sptr, ":%s NOTICE %s :*** Syntax: /module load|unload|status",
-			me.name, sptr->name);
+		char delayed[32];
+		if (mi->flags & MODFLAG_DELAYED)
+			strcpy(delayed, "[Unloading]");
+		sendto_one(sptr, ":%s NOTICE %s :*** %s - %s (%s) %s", me.name, sptr->name,
+			mi->header->name, mi->header->version, mi->header->description,
+			(mi->flags & MODFLAG_DELAYED) ? delayed : "");	
 	}
 	return 1;
 }
@@ -796,3 +855,4 @@ void	unload_all_modules(void)
 			(*Mod_Unload)(0);
 	}
 }
+

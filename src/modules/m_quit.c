@@ -121,7 +121,7 @@ int	m_quit_Unload(int module_unload)
 DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *ocomment = (parc > 1 && parv[1]) ? parv[1] : parv[0];
-	static char comment[TOPICLEN];
+	static char comment[TOPICLEN + 1];
 
 	if (!IsServer(cptr))
 	{

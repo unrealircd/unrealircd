@@ -73,18 +73,18 @@ LRESULT CALLBACK HelpDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK StatusDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK ConfigErrorDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK ColorDLG(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK FromVarDLG(HWND, UINT, WPARAM, LPARAM, char *, char **);
+LRESULT CALLBACK FromVarDLG(HWND, UINT, WPARAM, LPARAM, unsigned char *, unsigned char **);
 LRESULT CALLBACK FromFileReadDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK FromFileDLG(HWND, UINT, WPARAM, LPARAM);
 
 typedef struct {
 	int *size;
-	char **buffer;
+	unsigned char **buffer;
 } StreamIO;
 
 extern  void      SocketLoop(void *dummy);
-int CountRTFSize(char *);
-void IRCToRTF(char *, char *);
+int CountRTFSize(unsigned char *);
+void IRCToRTF(unsigned char *, unsigned char *);
 HINSTANCE hInst;
 NOTIFYICONDATA SysTray;
 void CleanUp(void);
@@ -92,7 +92,7 @@ HTREEITEM AddItemToTree(HWND, LPSTR, int, short);
 void win_map(aClient *, HWND, short);
 extern Link *Servers;
 extern ircstats IRCstats;
-char *errors = NULL, *RTFBuf = NULL;
+unsigned char *errors = NULL, *RTFBuf = NULL;
 extern aMotd *botmotd, *opermotd, *motd, *rules;
 extern VOID WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv);
 extern BOOL IsService;
@@ -143,7 +143,7 @@ LRESULT RESubClassFunc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) {
 	POINT p;
 	RECT r;
 	DWORD start, end;
-	char string[500];
+	unsigned char string[500];
 
 	if (Message == WM_GETDLGCODE)
 	   return DLGC_WANTALLKEYS;
@@ -191,11 +191,11 @@ LRESULT RESubClassFunc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) {
  */
 typedef struct colorlist {
 	struct colorlist *prev,*next;
-	char *color;
+	unsigned char *color;
 } ColorList;
 
 ColorList *TextColors = NULL;
-void AddColor(char *color) {
+void AddColor(unsigned char *color) {
 	ColorList *clist;
 
 	clist = MyMallocEx(sizeof(ColorList));
@@ -248,7 +248,7 @@ DWORD CALLBACK SplitIt(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb) {
 }
 
 DWORD CALLBACK BufferIt(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb) {
-	char *buf2;
+	unsigned char *buf2;
 	static long size = 0;
 	if (!RTFBuf)
 		size = 0;
@@ -270,12 +270,12 @@ DWORD CALLBACK BufferIt(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb) {
 	return 0;
 }
 
-DWORD CALLBACK RTFToIRC(int fd, char *pbBuff, long cb) {
-	char *buffer = (char *)malloc(cb);
+DWORD CALLBACK RTFToIRC(int fd, unsigned char *pbBuff, long cb) {
+	unsigned char *buffer = malloc(cb);
 	int i = 0, j = 0, k = 0, start = 0, end = 0;
 	int incolor = 0, bold = 0, uline = 0;
-	char cmd[15], value[500], color[25], colorbuf[4];
-	char colors[16];
+	unsigned char cmd[15], value[500], color[25], colorbuf[4];
+	unsigned char colors[16];
 	pbBuff++;
 	TextColors = NULL;
 	bzero(buffer, cb);
@@ -301,7 +301,16 @@ DWORD CALLBACK RTFToIRC(int fd, char *pbBuff, long cb) {
 				i++;
 				continue;
 			}
-
+			if (*pbBuff == '\'') {
+				unsigned char ltr, ultr[3];
+				ultr[0] = *++pbBuff;
+				ultr[1] = *++pbBuff;
+				ultr[2] = 0;
+				ltr = strtoul(ultr,NULL,16);
+				buffer[i] = ltr;
+				i++;
+				continue;
+			}
 			value[0] = cmd[0] = 0;
 			for (j = k = start = end = 0;
 				*pbBuff && *pbBuff != '\\' && *pbBuff != '\r' && *pbBuff != '\n';
@@ -432,7 +441,7 @@ DWORD CALLBACK RTFToIRC(int fd, char *pbBuff, long cb) {
 					DelNewestColor();
 				}
 				else if (!strncmp(cmd, "cf", 2)) {
-					char number[3];
+					unsigned char number[3];
 					int num = 0;
 					incolor = 1;
 					strcpy(number, &cmd[2]);
@@ -460,7 +469,7 @@ DWORD CALLBACK RTFToIRC(int fd, char *pbBuff, long cb) {
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	MSG msg;
-	char *s;
+	unsigned char *s;
 	HWND hWnd;
 	WSADATA WSAData;
 	HICON hIcon;
@@ -559,9 +568,9 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 static HCURSOR hCursor;
 static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 
-	char *argv[3];
+	unsigned char *argv[3];
 	aClient *paClient;
-	char *msg;
+	unsigned char *msg;
 	POINT p;
 
 	if (message == WM_TASKBARCREATED){
@@ -761,7 +770,7 @@ static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 			}
 			case WM_COMMAND: {
 				if (LOWORD(wParam) >= 60000 && HIWORD(wParam) == 0 && !lParam) {
-					char path[MAX_PATH];
+					unsigned char path[MAX_PATH];
 					if (GetMenuString(hLogs, LOWORD(wParam), path, MAX_PATH, MF_BYCOMMAND))
 						DialogBoxParam(hInst, "FromVar", hDlg,
 (DLGPROC)FromFileReadDLG, (LPARAM)path);
@@ -896,14 +905,14 @@ LRESULT CALLBACK DalDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 	return FromVarDLG(hDlg, message, wParam, lParam, "UnrealIRCd DALnet Credits", dalinfotext);
 }
 
-LRESULT CALLBACK FromVarDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam, char
-*title, char **s) {
+LRESULT CALLBACK FromVarDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam,
+unsigned char *title, unsigned char **s) {
 	HWND hWnd;
 	switch (message) {
 		case WM_INITDIALOG: {
-			char	String[16384];
+			unsigned char	String[16384];
 			int size;
-			char *RTFString;
+			unsigned char *RTFString;
 			StreamIO *stream = malloc(sizeof(StreamIO));
 			EDITSTREAM edit;
 			SetWindowText(hDlg, title);
@@ -978,24 +987,24 @@ LRESULT CALLBACK FromFileReadDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 	switch (message) {
 		case WM_INITDIALOG: {
 			int fd,len;
-			char *buffer = '\0', *string = '\0';
+			unsigned char *buffer = '\0', *string = '\0';
 			EDITSTREAM edit;
 			StreamIO *stream = malloc(sizeof(StreamIO));
-			char szText[256];
+			unsigned char szText[256];
 			struct stat sb;
 			HWND hWnd = GetDlgItem(hDlg, IDC_TEXT), hTip;
-			wsprintf(szText, "UnrealIRCd Viewer - %s", (char *)lParam);
+			wsprintf(szText, "UnrealIRCd Viewer - %s", (unsigned char *)lParam);
 			SetWindowText(hDlg, szText);
 			lpfnOldWndProc = (FARPROC)SetWindowLong(hWnd, GWL_WNDPROC, (DWORD)RESubClassFunc);
-			if ((fd = open((char *)lParam, _O_RDONLY|_O_BINARY)) != -1) {
+			if ((fd = open((unsigned char *)lParam, _O_RDONLY|_O_BINARY)) != -1) {
 				fstat(fd,&sb);
 				/* Only allocate the amount we need */
-				buffer = (char *)malloc(sb.st_size+1);
+				buffer = malloc(sb.st_size+1);
 				buffer[0] = 0;
 				len = read(fd, buffer, sb.st_size);
 				buffer[len] = 0;
 				len = CountRTFSize(buffer)+1;
-				string = (char *)malloc(len);
+				string = malloc(len);
 				bzero(string,len);
 				IRCToRTF(buffer,string);
 				RTFBuf = string;
@@ -1071,7 +1080,7 @@ LRESULT CALLBACK HelpDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
 
 		case WM_DRAWITEM: {
 			LPDRAWITEMSTRUCT lpdis = (LPDRAWITEMSTRUCT)lParam;
-			char text[500];
+			unsigned char text[500];
 			COLORREF oldtext;
 			RECT focus;
 			GetWindowText(lpdis->hwndItem, text, 500);
@@ -1191,19 +1200,19 @@ LRESULT CALLBACK GotoDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
 LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 	HWND hWnd;
 	static FINDREPLACE find;
-	static char *file;
+	static unsigned char *file;
 	static HWND hTool, hClip, hStatus;
 	CHARFORMAT2 chars;
 	switch (message) {
 		case WM_INITDIALOG: {
 			int fd,len;
-			char *buffer = '\0', *string = '\0';
+			unsigned char *buffer = '\0', *string = '\0';
 			EDITSTREAM edit;
 			StreamIO *stream = malloc(sizeof(StreamIO));
-			char szText[256];
+			unsigned char szText[256];
 			struct stat sb;
 			HWND hWnd = GetDlgItem(hDlg, IDC_TEXT), hTip;
-			file = (char *)lParam;
+			file = (unsigned char *)lParam;
 			if (file)
 				wsprintf(szText, "UnrealIRCd Editor - %s", file);
 			else 
@@ -1220,12 +1229,12 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			if ((fd = open(file, _O_RDONLY|_O_BINARY)) != -1) {
 				fstat(fd,&sb);
 				/* Only allocate the amount we need */
-				buffer = (char *)malloc(sb.st_size+1);
+				buffer = malloc(sb.st_size+1);
 				buffer[0] = 0;
 				len = read(fd, buffer, sb.st_size);
 				buffer[len] = 0;
 				len = CountRTFSize(buffer)+1;
-				string = (char *)malloc(len);
+				string = malloc(len);
 				bzero(string,len);
 				IRCToRTF(buffer,string);
 				RTFBuf = string;
@@ -1260,7 +1269,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				HWND hWnd = GetDlgItem(hDlg, IDC_TEXT);
 				DWORD start, end, currline;
 				static DWORD prevline = 0;
-				char buffer[512];
+				unsigned char buffer[512];
 				chars.cbSize = sizeof(CHARFORMAT2);
 				SendMessage(hWnd, EM_GETCHARFORMAT, (WPARAM)SCF_SELECTION, (LPARAM)&chars);
 				if (chars.dwMask & CFM_BOLD && chars.dwEffects & CFE_BOLD)
@@ -1418,7 +1427,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			EDITSTREAM edit;
 			OPENFILENAME lpopen;
 			if (!file) {
-				char path[MAX_PATH];
+				unsigned char path[MAX_PATH];
 				path[0] = '\0';
 				bzero(&lpopen, sizeof(OPENFILENAME));
 				lpopen.lStructSize = sizeof(OPENFILENAME);
@@ -1450,7 +1459,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			return 0;
 		}
 		if (LOWORD(wParam) == IDM_NEW) {
-			char text[1024];
+			unsigned char text[1024];
 			BOOL newfile = FALSE;
 			int ans;
 			if (SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_GETMODIFY, 0, 0) != 0) {
@@ -1468,7 +1477,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			else
 				newfile = TRUE;
 			if (newfile == TRUE) {
-				char szText[256];
+				unsigned char szText[256];
 				file = NULL;
 				strcpy(szText, "UnrealIRCd Editor - New File");
 				SetWindowText(hDlg, szText);
@@ -1503,7 +1512,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			SendMessage(hClip, WM_DRAWCLIPBOARD, wParam, lParam);
 			break;
 		case WM_CLOSE: {
-			char text[256];
+			unsigned char text[256];
 			int ans;
 			if (SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_GETMODIFY, 0, 0) != 0) {
 				sprintf(text, "The text in the %s file has changed.\r\n\r\nDo you want to save the changes?", file ? file : "new");
@@ -1728,10 +1737,10 @@ LRESULT CALLBACK ColorDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 
 /* find how big a buffer expansion we need for RTF transformation */
-int CountRTFSize(char *buffer) {
+int CountRTFSize(unsigned char *buffer) {
 	int size = 0;
 	short bold = 0, uline = 0, reverse = 0;
-	char *buf = buffer;
+	unsigned char *buf = buffer;
 
 	for (; *buf; buf++, size++) {
 		if (*buf == '{' || *buf == '}' || *buf == '\\') {
@@ -1751,7 +1760,7 @@ int CountRTFSize(char *buffer) {
 			bold = ~bold;
 		}
 		if (*buf == '\3') {
-			char color[3];
+			unsigned char color[3];
 			int number;
 			size += 3;
 			if (!isdigit(*(buf+1)))
@@ -1790,8 +1799,8 @@ int CountRTFSize(char *buffer) {
 	return (size+494);
 }
 
-void IRCToRTF(char *buffer, char *string) {
-	char *tmp = buffer;
+void IRCToRTF(unsigned char *buffer, unsigned char *string) {
+	unsigned char *tmp = buffer;
 	int i = 0;
 	short bold = 0, uline = 0;
 	sprintf(string, "{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0\\fmodern\\fprq1\\"
@@ -1836,7 +1845,7 @@ void IRCToRTF(char *buffer, char *string) {
 			continue;
 		}
 		if (*tmp == '\3') {
-			char color[3];
+			unsigned char color[3];
 			int number;
 			strcat(string, "\\cf");
 			i += 3;
@@ -1955,10 +1964,10 @@ void win_map(aClient *server, HWND hwTreeView, short remap)
 }
 
 /* ugly stuff, but hey it works -- codemastr */
-void win_log(char *format, ...) {
+void win_log(unsigned char *format, ...) {
         va_list ap;
-        char buf[2048];
-		char *buf2;
+        unsigned char buf[2048];
+		unsigned char *buf2;
         va_start(ap, format);
         ircvsprintf(buf, format, ap);
 	if (!IsService) {

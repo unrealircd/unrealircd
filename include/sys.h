@@ -141,11 +141,6 @@ extern char OSName[256];
 #ifdef INET6
 
 # define AND16(x) ((x)[0]&(x)[1]&(x)[2]&(x)[3]&(x)[4]&(x)[5]&(x)[6]&(x)[7]&(x)[8]&(x)[9]&(x)[10]&(x)[11]&(x)[12]&(x)[13]&(x)[14]&(x)[15])
-static unsigned char minus_one[] =
-    { 255, 255, 255, 255, 255, 255, 255, 255, 255,
-	255, 255, 255, 255, 255, 255, 255, 0
-};
-
 # define WHOSTENTP(x) ((x)[0]|(x)[1]|(x)[2]|(x)[3]|(x)[4]|(x)[5]|(x)[6]|(x)[7]|(x)[8]|(x)[9]|(x)[10]|(x)[11]|(x)[12]|(x)[13]|(x)[14]|(x)[15])
 
 # define	AFINET		AF_INET6
@@ -212,6 +207,7 @@ static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 #define P_EWOULDBLOCK   EWOULDBLOCK
 #define P_EAGAIN        EAGAIN
 #define P_EINPROGRESS   EINPROGRESS
+#define P_EWORKING		EINPROGRESS
 #define P_EINTR         EINTR
 #define P_ETIMEDOUT     ETIMEDOUT
 #define P_ENOTSOCK	ENOTSOCK
@@ -232,6 +228,7 @@ static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 #define P_EWOULDBLOCK   WSAEWOULDBLOCK
 #define P_EAGAIN        WSAEWOULDBLOCK
 #define P_EINPROGRESS   WSAEINPROGRESS
+#define P_EWORKING		WSAEWOULDBLOCK
 #define P_EINTR         WSAEINTR
 #define P_ETIMEDOUT     WSAETIMEDOUT
 #define P_ENOTSOCK	WSAENOTSOCK

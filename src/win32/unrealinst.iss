@@ -1,17 +1,26 @@
 ; UnrealIRCd Win32 Installation Script for My Inno Setup Extensions
+; Requires ISX 3.0.4 to work
+
+; #define USE_SSL
+; Uncomment the above line to package an SSL build
+
 
 [Setup]
 AppName=UnrealIRCd
-AppVerName=UnrealIRCd3.2-beta12
+AppVerName=UnrealIRCd3.2-beta13
 AppPublisher=UnrealIRCd Team
 AppPublisherURL=http://www.unrealircd.com
 AppSupportURL=http://www.unrealircd.com
 AppUpdatesURL=http://www.unrealircd.com
-AppMutex=UnrealMutex
+AppMutex=UnrealMutex,Global\UnrealMutex
 DefaultDirName={pf}\Unreal3.2
 DefaultGroupName=UnrealIRCd
 AllowNoIcons=yes
+#ifndef USE_SSL
 LicenseFile=.\gpl.rtf
+#else
+LicenseFile=.\gplplusssl.rtf
+#endif
 Compression=bzip/9
 MinVersion=4.0.1111,4.0.1381
 OutputDir=../../
@@ -19,7 +28,14 @@ OutputDir=../../
 [Tasks]
 Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"
 Name: "quicklaunchicon"; Description: "Create a &Quick Launch icon"; GroupDescription: "Additional icons:"; Flags: unchecked
-Name: "installservice"; Description: "Install &Service"; GroupDescription: "Service support:"; MinVersion: 0,4.0
+Name: "installservice"; Description: "Install as a &service"; GroupDescription: "Service support:"; MinVersion: 0,4.0
+Name: "installservice/startboot"; Description: "S&tart UnrealIRCd when Windows starts"; GroupDescription: "Service support:"; MinVersion: 0,4.0; Flags: exclusive
+Name: "installservice/startdemand"; Description: "Start UnrealIRCd on &request"; GroupDescription: "Service support:"; MinVersion: 0,4.0; Flags: exclusive
+Name: "installservice/crashrestart"; Description: "Restart UnrealIRCd if it &crashes"; GroupDescription: "Service support:"; MinVersion: 0,5.0;
+#ifdef USE_SSL
+Name: "makecert"; Description: "&Create certificate"; GroupDescription: "SSL options:";
+Name: "enccert"; Description: "&Encrypt certificate"; GroupDescription: "SSL options:";
+#endif
 
 [Files]
 Source: "..\..\wircd.exe"; DestDir: "{app}"; CopyMode: alwaysoverwrite
@@ -30,9 +46,9 @@ Source: "..\..\.RELEASE.NOTES"; DestDir: "{app}"; DestName: "RELEASE.NOTES.txt";
 Source: "..\..\.SICI"; DestDir: "{app}"; DestName: "SICI.txt"; CopyMode: alwaysoverwrite
 Source: "..\..\badwords.channel.conf"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\..\badwords.message.conf"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\..\Changes"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\..\Changes.old"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\..\Donation"; DestDir: "{app}"; CopyMode: alwaysoverwrite
+Source: "..\..\Changes"; DestDir: "{app}"; DestName: "Changes.txt"; CopyMode: alwaysoverwrite
+Source: "..\..\Changes.old"; DestDir: "{app}"; DestName: "Changes.old.txt"; CopyMode: alwaysoverwrite
+Source: "..\..\Donation"; DestDir: "{app}"; DestName: "Donation.txt"; CopyMode: alwaysoverwrite
 Source: ".\gnu_regex.dll"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\..\help.conf"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; CopyMode: alwaysoverwrite
@@ -41,6 +57,14 @@ Source: "..\..\doc\*.*"; DestDir: "{app}\doc"; CopyMode: alwaysoverwrite
 Source: "..\..\aliases\*"; DestDir: "{app}\aliases"; CopyMode: alwaysoverwrite
 Source: "..\..\networks\*"; DestDir: "{app}\networks"; CopyMode: alwaysoverwrite
 Source: "..\..\unreal.exe"; DestDir: "{app}"; CopyMode: alwaysoverwrite; MinVersion: 0,4.0
+#ifdef USE_SSL
+Source: "c:\openssl\bin\openssl.exe"; DestDir: "{app}"; CopyMode: alwaysoverwrite
+Source: "c:\openssl\bin\ssleay32.dll"; DestDir: "{app}"; CopyMode: alwaysoverwrite
+Source: "c:\openssl\bin\libeay32.dll"; DestDir: "{app}"; CopyMode: alwaysoverwrite
+Source: ".\makecert.bat"; DestDir: "{app}"; CopyMode: alwaysoverwrite
+Source: ".\encpem.bat"; DestDir: "{app}"; CopyMode: alwaysoverwrite
+Source: "..\ssl.cnf"; DestDir: "{app}"; CopyMode: alwaysoverwrite
+#endif
 Source: isxdl.dll; DestDir: {tmp}; CopyMode: dontcopy
 
 [UninstallDelete]
@@ -52,7 +76,6 @@ external 'isxdl_Download@files:isxdl.dll stdcall';
 function isxdl_SetOption(Option, Value: PChar): Integer;
 external 'isxdl_SetOption@files:isxdl.dll stdcall';
 const url = 'http://www.unrealircd.com/downloads/DbgHelp.Dll';
-
 function NextButtonClick(CurPage: Integer): Boolean;
 var
 dbghelp,tmp,output: String;
@@ -79,6 +102,7 @@ begin
   end;
   Result := true;
 end;
+
 procedure DeInitializeSetup();
 var
 input,output: String;
@@ -91,6 +115,10 @@ end;
 [Icons]
 Name: "{group}\UnrealIRCd"; Filename: "{app}\wircd.exe"; WorkingDir: "{app}"
 Name: "{group}\Uninstall UnrealIRCd"; Filename: "{uninstallexe}"; WorkingDir: "{app}"
+#ifdef USE_SSL
+Name: "{group}\Make Certificate"; Filename: "{app}\makecert.bat"; WorkingDir: "{app}"
+Name: "{group}\Encrypt Certificate"; Filename: "{app}\encpem.bat"; WorkingDir: "{app}"
+#endif
 Name: "{group}\Documentation"; Filename: "{app}\doc\unreal32docs.html"; WorkingDir: "{app}"
 Name: "{userdesktop}\UnrealIRCd"; Filename: "{app}\wircd.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\UnrealIRCd"; Filename: "{app}\wircd.exe"; WorkingDir: "{app}"; Tasks: quicklaunchicon
@@ -99,8 +127,15 @@ Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\UnrealIRCd"; Filen
 Filename: "notepad"; Description: "View example.conf"; Parameters: "{app}\doc\example.conf"; Flags: postinstall skipifsilent shellexec runmaximized
 Filename: "{app}\doc\unreal32docs.html"; Description: "View UnrealIRCd documentation"; Parameters: ""; Flags: postinstall skipifsilent shellexec runmaximized
 Filename: "notepad"; Description: "View Release Notes"; Parameters: "{app}\RELEASE.NOTES.txt"; Flags: postinstall skipifsilent shellexec runmaximized
-Filename: "notepad"; Description: "View Changes"; Parameters: "{app}\Changes"; Flags: postinstall skipifsilent shellexec runmaximized
+Filename: "notepad"; Description: "View Changes"; Parameters: "{app}\Changes.txt"; Flags: postinstall skipifsilent shellexec runmaximized
 Filename: "{app}\unreal.exe"; Parameters: "install"; Flags: runminimized nowait; Tasks: installservice
+Filename: "{app}\unreal.exe"; Parameters: "config startup manual"; Flags: runminimized nowait; Tasks: installservice/startdemand
+Filename: "{app}\unreal.exe"; Parameters: "config startup auto"; Flags: runminimized nowait; Tasks: installservice/startboot
+Filename: "{app}\unreal.exe"; Parameters: "config crashrestart 2"; Flags: runminimized nowait; Tasks: installservice/crashrestart
+#ifdef USE_SSL
+Filename: "{app}\makecert.bat"; Tasks: makecert
+Filename: "{app}\encpem.bat"; WorkingDir: "{app}"; Tasks: enccert
+#endif
 
 [UninstallRun]
 Filename: "{app}\unreal.exe"; Parameters: "uninstall"; Flags: runminimized; RunOnceID: "DelService"; Tasks: installservice

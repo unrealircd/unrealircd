@@ -53,6 +53,13 @@ static char sendbuf[2048];
 static char tcmd[1024];
 static char ccmd[1024];
 
+/* this array is used to ensure we send a msg only once to a remote 
+** server.  like, when we are sending a message to all channel members
+** send the message to those that are directly connected to us and once 
+** to each server that has these members.  the servers then forward the
+** message to other servers and to those channel members that are directly
+** connected to them
+*/
 static int sentalong[MAXCONNECTIONS];
 
 void vsendto_prefix_one(struct Client *to, struct Client *from,
@@ -297,13 +304,12 @@ void sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr,
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
 		acptr = lp->cptr;
-		/* ...was the one I should skip */
-		if (acptr->from == one || (IsDeaf(acptr)
-		    && !(sendanyways == 1)))
+		/* skip the one and deaf clients (unless sendanyways is set) */
+		if (acptr->from == one || (IsDeaf(acptr) && !(sendanyways == 1)))
 			continue;
 		if (MyConnect(acptr))	/* (It is always a client) */
 			vsendto_prefix_one(acptr, from, pattern, vl);
-		else if (sentalong[(i = acptr->from->fd)] != sentalong_marker)
+		else if (sentalong[(i = acptr->from->slot)] != sentalong_marker)
 		{
 			sentalong[i] = sentalong_marker;
 			/*
@@ -325,24 +331,24 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 	int  i;
 
 	va_start(vl, pattern);
-	for (i = 0; i < MAXCONNECTIONS; i++)
-		sentalong[i] = 0;
+
+	++sentalong_marker;
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
 		acptr = lp->cptr;
 		if (acptr->from == one)
 			continue;	/* ...was the one I should skip
 					   or user not not a channel op */
-                if ((prefix & 0x1) && (lp->flags & CHFL_HALFOP))
-                	goto good;
-		if ((prefix & 0x2) && (lp->flags & CHFL_VOICE))
+        if ((prefix & PREFIX_HALFOP) && (lp->flags & CHFL_HALFOP))
 			goto good;
-		if ((prefix & 0x4) && (lp->flags & CHFL_CHANOP))
+		if ((prefix & PREFIX_VOICE) && (lp->flags & CHFL_VOICE))
 			goto good;
-			continue;
+		if ((prefix & PREFIX_OP) && (lp->flags & CHFL_CHANOP))
+			goto good;
+		continue;
+		
 		good:
-
-		i = acptr->from->fd;
+		i = acptr->from->slot;
 		if (MyConnect(acptr) && IsRegisteredUser(acptr))
 		{
 #ifdef SECURECHANMSGSONLYGOTOSECURE
@@ -351,22 +357,21 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 					continue;
 #endif
 			vsendto_prefix_one(acptr, from, pattern, vl);
-			sentalong[i] = 1;
+			sentalong[i] = sentalong_marker;
 		}
 		else
 		{
 			/* Now check whether a message has been sent to this
 			 * remote link already */
-			if (sentalong[i] == 0)
+			if (sentalong[i] != sentalong_marker)
 			{
 #ifdef SECURECHANMSGSONLYGOTOSECURE
 				if (chptr->mode.mode & MODE_ONLYSECURE)
 					if (!IsSecure(acptr->from))
 						continue;
 #endif
-
 				vsendto_prefix_one(acptr, from, pattern, vl);
-				sentalong[i] = 1;
+				sentalong[i] = sentalong_marker;
 			}
 		}
 	}
@@ -384,51 +389,45 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 
 	sprintf(tcmd, ":%s %s %s :%s", from->name, tok, nick, text);
 	sprintf(ccmd, ":%s %s %s :%s", from->name, cmd, nick, text);
-	for (i = 0; i < MAXCONNECTIONS; i++)
-		sentalong[i] = 0;
+
+	++sentalong_marker;
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
 		acptr = lp->cptr;
 		if (acptr->from == one)
 			continue;	/* ...was the one I should skip
 					   or user not not a channel op */
-                if (prefix == 0)
-                	goto good;
-                if ((prefix & 0x1) && (lp->flags & CHFL_HALFOP))
-                	goto good;
-		if ((prefix & 0x2) && (lp->flags & CHFL_VOICE))
+        if (prefix == PREFIX_ALL)
+           	goto good;
+        if ((prefix & PREFIX_HALFOP) && (lp->flags & CHFL_HALFOP))
 			goto good;
-		if ((prefix & 0x4) && (lp->flags & CHFL_CHANOP))
+		if ((prefix & PREFIX_VOICE) && (lp->flags & CHFL_VOICE))
 			goto good;
-			continue;
+		if ((prefix & PREFIX_OP) && (lp->flags & CHFL_CHANOP))
+			goto good;
+		continue;
+		
 		good:
-
-		i = acptr->from->fd;
-
+		i = acptr->from->slot;
+		if (IsDeaf(acptr) && !sendanyways)
+			continue;
 		if (MyConnect(acptr) && IsRegisteredUser(acptr))
 		{
-			if (IsDeaf(acptr))
-				if (!sendanyways)
-					continue;
 			sendto_prefix_one(acptr, from, ":%s %s %s :%s",
 				from->name, cmd, nick, text);
-			sentalong[i] = 1;
+			sentalong[i] = sentalong_marker;
 		}
 		else
 		{
-			if (IsDeaf(acptr))
-				if (!sendanyways)
-					continue;
 			/* Now check whether a message has been sent to this
 			 * remote link already */
-			if (sentalong[i] == 0)
+			if (sentalong[i] != sentalong_marker)
 			{
-
 				if (IsToken(acptr->from))
 					sendto_one(acptr, "%s", tcmd);
 				else
 					sendto_one(acptr, "%s", ccmd);
-				sentalong[i] = 1;
+				sentalong[i] = sentalong_marker;
 			}
 		}
 	}
@@ -458,148 +457,7 @@ void sendto_chanops_butone(aClient *one, aChannel *chptr, char *pattern, ...)
 			vsendto_one(acptr, pattern, vl);
 		}
 	}
-
-}
-
-/*
- * sendto_channelops_butone Added 1 Sep 1996 by Cabal95.
- *   Send a message to all OPs in channel chptr that
- *   are directly on this server and sends the message
- *   on to the next server if it has any OPs.
- *
- *   All servers must have this functional ability
- *    or one without will send back an error message. -- Cabal95
- */
-void sendto_channelops_butone(aClient *one, aClient *from, aChannel *chptr,
-    char *pattern, ...)
-{
-	va_list vl;
-	Member *lp;
-	aClient *acptr;
-	int  i;
-
-	va_start(vl, pattern);
-	for (i = 0; i < MAXCONNECTIONS; i++)
-		sentalong[i] = 0;
-	for (lp = chptr->members; lp; lp = lp->next)
-	{
-		acptr = lp->cptr;
-		if (acptr->from == one || !(lp->flags & CHFL_CHANOP))
-			continue;	/* ...was the one I should skip
-					   or user not not a channel op */
-		i = acptr->from->fd;
-		if (MyConnect(acptr) && IsRegisteredUser(acptr))
-		{
-			vsendto_prefix_one(acptr, from, pattern, vl);
-			sentalong[i] = 1;
-		}
-		else
-		{
-			/* Now check whether a message has been sent to this
-			 * remote link already */
-			if (sentalong[i] == 0)
-			{
-				vsendto_prefix_one(acptr, from, pattern, vl);
-				sentalong[i] = 1;
-			}
-		}
-	}
 	va_end(vl);
-	return;
-}
-
-/*
- * sendto_channelvoice_butone
- * direct port of Cabal95's sendto_channelops_butone
- * to allow for /notice @+#channel messages
- * not exactly the most adventurous coding (made heavy use of copy-paste) <G>
- * but it's needed to avoid mass-msg trigger in script vnotices
- * -DuffJ
- */
-
-void sendto_channelvoice_butone(aClient *one, aClient *from, aChannel *chptr,
-    char *pattern, ...)
-{
-	va_list vl;
-	Member *lp;
-	aClient *acptr;
-	int  i;
-
-	va_start(vl, pattern);
-	for (i = 0; i < MAXCONNECTIONS; i++)
-		sentalong[i] = 0;
-	for (lp = chptr->members; lp; lp = lp->next)
-	{
-		acptr = lp->cptr;
-		if (acptr->from == one || !(lp->flags & CHFL_VOICE))
-			continue;	/* ...was the one I should skip
-					   or user not (a channel voice or op) */
-		i = acptr->from->fd;
-		if (MyConnect(acptr) && IsRegisteredUser(acptr))
-		{
-			vsendto_prefix_one(acptr, from, pattern, vl);
-			sentalong[i] = 1;
-		}
-		else
-		{
-			/* Now check whether a message has been sent to this
-			 * remote link already */
-			if (sentalong[i] == 0)
-			{
-				vsendto_prefix_one(acptr, from, pattern, vl);
-				sentalong[i] = 1;
-			}
-		}
-	}
-	va_end(vl);
-	return;
-}
-
-/*
- * sendto_channelhalfop_butone
- * direct port of Cabal95's sendto_channelops_butone
- * to allow for /notice @+#channel messages
- * not exactly the most adventurous coding (made heavy use of copy-paste) <G>
- * but it's needed to avoid mass-msg trigger in script hnotices
- * -Stskeeps
- */
-
-void sendto_channelhalfop_butone(aClient *one, aClient *from, aChannel *chptr,
-    char *pattern, ...)
-{
-	va_list vl;
-	Member *lp;
-	aClient *acptr;
-	int  i;
-
-	va_start(vl, pattern);
-	for (i = 0; i < MAXCONNECTIONS; i++)
-		sentalong[i] = 0;
-	for (lp = chptr->members; lp; lp = lp->next)
-	{
-		acptr = lp->cptr;
-		if (acptr->from == one || !(lp->flags & CHFL_HALFOP))
-			continue;	/* ...was the one I should skip
-					   or user not (a channel halfop or op) */
-		i = acptr->from->fd;
-		if (MyConnect(acptr) && IsRegisteredUser(acptr))
-		{
-			vsendto_prefix_one(acptr, from, pattern, vl);
-			sentalong[i] = 1;
-		}
-		else
-		{
-			/* Now check whether a message has been sent to this
-			 * remote link already */
-			if (sentalong[i] == 0)
-			{
-				vsendto_prefix_one(acptr, from, pattern, vl);
-				sentalong[i] = 1;
-			}
-		}
-	}
-	va_end(vl);
-	return;
 }
 
 /*
@@ -1050,7 +908,7 @@ void sendto_serv_nickv2_token(aClient *one, char *pattern, char *tokpattern,
 /*
  * sendto_common_channels()
  *
- * Sends a message to all people (inclusing user) on local server who are
+ * Sends a message to all people (including user) on local server who are
  * in same channel with user.
  */
 void sendto_common_channels(aClient *user, char *pattern, ...)
@@ -1062,19 +920,18 @@ void sendto_common_channels(aClient *user, char *pattern, ...)
 	aClient *cptr;
 
 	va_start(vl, pattern);
-	memset((char *)sentalong, '\0', sizeof(sentalong));
+
+	++sentalong_marker;
 	if (user->fd >= 0)
-		sentalong[user->fd] = 1;
+		sentalong[user->slot] = sentalong_marker;
 	if (user->user)
-		for (channels = user->user->channel; channels;
-		    channels = channels->next)
-			for (users = channels->chptr->members; users;
-			    users = users->next)
+		for (channels = user->user->channel; channels; channels = channels->next)
+			for (users = channels->chptr->members; users; users = users->next)
 			{
 				cptr = users->cptr;
-				if (!MyConnect(cptr) || sentalong[cptr->fd])
+				if (!MyConnect(cptr) || sentalong[cptr->slot] == sentalong_marker)
 					continue;
-				sentalong[cptr->fd]++;
+				sentalong[cptr->slot] = sentalong_marker;
 				vsendto_prefix_one(cptr, user, pattern, vl);
 			}
 	if (MyConnect(user))
@@ -1455,18 +1312,18 @@ void sendto_ops_butone(aClient *one, aClient *from, char *pattern, ...)
 	aClient *cptr;
 
 	va_start(vl, pattern);
-	for (i = 0; i <= LastSlot; i++)
-		sentalong[i] = 0;
+
+	++sentalong_marker;
 	for (cptr = client; cptr; cptr = cptr->next)
 	{
 		if (!SendWallops(cptr))
 			continue;
 		i = cptr->from->slot;	/* find connection oper is on */
-		if (sentalong[i])	/* sent message along it already ? */
+		if (sentalong[i] == sentalong_marker)	/* sent message along it already ? */
 			continue;
 		if (cptr->from == one)
 			continue;	/* ...was the one I should skip */
-		sentalong[i] = 1;
+		sentalong[i] = sentalong_marker;
 		vsendto_prefix_one(cptr->from, from, pattern, vl);
 	}
 	va_end(vl);
@@ -1487,18 +1344,18 @@ void sendto_opers_butone(aClient *one, aClient *from, char *pattern, ...)
 	aClient *cptr;
 
 	va_start(vl, pattern);
-	for (i = 0; i <= LastSlot; i++)
-		sentalong[i] = 0;
+
+	++sentalong_marker;
 	for (cptr = client; cptr; cptr = cptr->next)
 	{
 		if (!IsAnOper(cptr))
 			continue;
 		i = cptr->from->slot;	/* find connection oper is on */
-		if (sentalong[i])	/* sent message along it already ? */
+		if (sentalong[i] == sentalong_marker)	/* sent message along it already ? */
 			continue;
 		if (cptr->from == one)
 			continue;	/* ...was the one I should skip */
-		sentalong[i] = 1;
+		sentalong[i] = sentalong_marker;
 		vsendto_prefix_one(cptr->from, from, pattern, vl);
 	}
 	va_end(vl);
@@ -1516,18 +1373,18 @@ void sendto_ops_butme(aClient *from, char *pattern, ...)
 	aClient *cptr;
 
 	va_start(vl, pattern);
-	for (i = 0; i <= LastSlot; i++)
-		sentalong[i] = 0;
+
+	++sentalong_marker;
 	for (cptr = client; cptr; cptr = cptr->next)
 	{
 		if (!SendWallops(cptr))
 			continue;
 		i = cptr->from->slot;	/* find connection oper is on */
-		if (sentalong[i])	/* sent message along it already ? */
+		if (sentalong[i] == sentalong_marker)	/* sent message along it already ? */
 			continue;
 		if (!strcmp(cptr->user->server, me.name))	/* a locop */
 			continue;
-		sentalong[i] = 1;
+		sentalong[i] = sentalong_marker;
 		vsendto_prefix_one(cptr->from, from, pattern, vl);
 	}
 	va_end(vl);
@@ -1780,20 +1637,20 @@ void sendto_channels_inviso_join(aClient *user)
        	Member *users;
         aClient *cptr;
 
-        memset((char *)sentalong, '\0', sizeof(sentalong));
-        if (user->fd >= 0)
-                sentalong[user->fd] = 1;
+		++sentalong_marker;
+		if (user->fd >= 0)
+			sentalong[user->slot] = sentalong_marker;
         if (user->user)
-                for (channels = user->user->channel; channels; channels = channels->next)
-                        for (users = channels->chptr->members; users; users = users->next)
-			{
-                                cptr = users->cptr;
-                                if (!MyConnect(cptr) || IsNetAdmin(cptr) || sentalong[cptr->fd] || cptr == user)
-                                        continue;
-                                sentalong[cptr->fd]++;
-                                sendto_one(cptr, ":%s!%s@%s JOIN :%s", user->name, user->user->username,
-				(IsHidden(user) ? user->user->virthost : user->user->realhost), channels->chptr->chname);
-			}
+			for (channels = user->user->channel; channels; channels = channels->next)
+				for (users = channels->chptr->members; users; users = users->next)
+				{
+					cptr = users->cptr;
+                    if (!MyConnect(cptr) || IsNetAdmin(cptr) || sentalong[cptr->slot] == sentalong_marker || cptr == user)
+						continue;
+                    sentalong[cptr->slot] = sentalong_marker;
+                    sendto_one(cptr, ":%s!%s@%s JOIN :%s", user->name, user->user->username,
+		               (IsHidden(user) ? user->user->virthost : user->user->realhost), channels->chptr->chname);
+				}
 	return;
 }
 
@@ -1803,42 +1660,42 @@ void sendto_channels_inviso_part(aClient *user)
         Member *users;
         aClient *cptr;
 
-        memset((char *)sentalong, '\0', sizeof(sentalong));
-        if (user->fd >= 0)
-                sentalong[user->fd] = 1;
+		++sentalong_marker;
+		if (user->fd >= 0)
+			sentalong[user->slot] = sentalong_marker;
         if (user->user)
-                for (channels = user->user->channel; channels; channels = channels->next)
-                        for (users = channels->chptr->members; users; users = users->next)
-			{
-                                cptr = users->cptr;
-                                if (!MyConnect(cptr) || IsNetAdmin(cptr) || sentalong[cptr->fd] || cptr == user)
-                                        continue;
-                                sentalong[cptr->fd]++;
-                		sendto_one(cptr, ":%s!%s@%s PART :%s", user->name, user->user->username, (IsHidden(user) ? user->user->virthost : user->user->realhost), channels->chptr->chname);
-			}
+			for (channels = user->user->channel; channels; channels = channels->next)
+				for (users = channels->chptr->members; users; users = users->next)
+				{
+					cptr = users->cptr;
+                    if (!MyConnect(cptr) || IsNetAdmin(cptr) || sentalong[cptr->slot] == sentalong_marker || cptr == user)
+						continue;
+                    sentalong[cptr->slot] = sentalong_marker;
+                	sendto_one(cptr, ":%s!%s@%s PART :%s", user->name, user->user->username, (IsHidden(user) ? user->user->virthost : user->user->realhost), channels->chptr->chname);
+				}
 	return;
 }
 
 void sendto_channel_ntadmins(aClient *from, aChannel *chptr, char *pattern, ...)
 {
-        va_list vl;
-        Member *lp;
-        aClient *acptr;
-        int  i;
+	va_list vl;
+    Member *lp;
+    aClient *acptr;
+    int  i;
 
-        va_start(vl, pattern);
-        ++sentalong_marker;
-        for (lp = chptr->members; lp; lp = lp->next)
+    va_start(vl, pattern);
+    ++sentalong_marker;
+    for (lp = chptr->members; lp; lp = lp->next)
 	{
-                acptr = lp->cptr;
-                if (acptr->from == from || !IsNetAdmin(acptr) || (IsDeaf(acptr) && !(sendanyways == 1)))
-                        continue;
-                if (MyConnect(acptr))   /* (It is always a client) */
-                        vsendto_prefix_one(acptr, from, pattern, vl);
-                else if (sentalong[(i = acptr->from->fd)] != sentalong_marker)
+		acptr = lp->cptr;
+        if (acptr->from == from || !IsNetAdmin(acptr) || (IsDeaf(acptr) && !(sendanyways == 1)))
+			continue;
+        if (MyConnect(acptr))   /* (It is always a client) */
+			vsendto_prefix_one(acptr, from, pattern, vl);
+        else if (sentalong[(i = acptr->from->slot)] != sentalong_marker)
 		{
-                        sentalong[i] = sentalong_marker;
-                        vsendto_prefix_one(acptr, from, pattern, vl);
+			sentalong[i] = sentalong_marker;
+            vsendto_prefix_one(acptr, from, pattern, vl);
 		}
 	}
 	va_end(vl);

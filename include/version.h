@@ -24,13 +24,13 @@
      /**/
 #define COMPILEINFO DEBUGMODESET DEBUGSET
 /*
- * Version Unreal3.2-Selene
+ * Version Unreal3.2
  */
 #define UnrealProtocol 		2303
 #define PATCH1  		"3"
 #define PATCH2  		".2"
-#define PATCH3  		"-Selene"
-#define PATCH4  		"[beta12]"
+#define PATCH3  		"-beta13"
+#define PATCH4  		""
 #define PATCH5  		""
 #define PATCH6  		""
 #define PATCH7  		""

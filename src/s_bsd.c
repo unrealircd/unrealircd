@@ -80,7 +80,12 @@ Computing Center and Jarkko Oikarinen";
 int  rr;
 
 #endif
-
+#ifdef INET6
+static unsigned char minus_one[] =
+    { 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 0
+};
+#endif
 
 #ifndef IN_LOOPBACKNET
 #define IN_LOOPBACKNET	0x7f
@@ -465,6 +470,7 @@ int add_listener2(ConfigItem_listen *conf)
 	{	
 		cptr->umodes |= LISTENER_BOUND;
 		conf->options |= LISTENER_BOUND;
+		conf->listener = cptr;
 		set_non_blocking(cptr->fd, cptr);
 		return 1;
 	}
@@ -542,7 +548,11 @@ void init_sys(void)
 	limit.rlim_cur = limit.rlim_max;	/* make soft limit the max */
 	if (setrlimit(RLIMIT_FD_MAX, &limit) == -1)
 	{
+#ifndef LONG_LONG_RLIM_T
 		(void)fprintf(stderr, "error setting max fd's to %ld\n",
+#else
+		(void)fprintf(stderr, "error setting max fd's to %lld\n",
+#endif
 		    limit.rlim_cur);
 		exit(-1);
 	}
@@ -1147,7 +1157,6 @@ void set_non_blocking(int fd, aClient *cptr)
  */
 aClient *add_connection(aClient *cptr, int fd)
 {
-	Link	lin;
 	aClient *acptr;
 	ConfigItem_ban *bconf;
 	int i, j;
@@ -1254,6 +1263,7 @@ add_con_refuse:
 	if (cptr->umodes & LISTENER_SSL)
 	{
 		SetSSLAcceptHandshake(acptr);
+		Debug((DEBUG_DEBUG, "Starting SSL accept handshake for %s", acptr->sockhost));
 		if ((acptr->ssl = SSL_new(ctx_server)) == NULL)
 		{
 			goto add_con_refuse;
@@ -1262,6 +1272,7 @@ add_con_refuse:
 		SSL_set_fd(acptr->ssl, fd);
 		SSL_set_nonblocking(acptr->ssl);
 		if (!ircd_SSL_accept(acptr, fd)) {
+			Debug((DEBUG_DEBUG, "Failed SSL accept handshake in instance 1: %s", acptr->sockhost));
 			SSL_set_shutdown(acptr->ssl, SSL_RECEIVED_SHUTDOWN);
 			SSL_smart_shutdown(acptr->ssl);
   	                SSL_free(acptr->ssl);
@@ -1804,15 +1815,17 @@ int  read_message(time_t delay, fdlist *listp)
 			   ** ...room for writing, empty some queue then...
 			 */
 			ClearBlocked(cptr);
-			if (IsConnecting(cptr))
+			if (IsConnecting(cptr)) {
 #ifdef USE_SSL
 				if ((cptr->serv) && (cptr->serv->conf->options & CONNECT_SSL))
 				{
+					Debug((DEBUG_DEBUG, "ircd_SSL_client_handshake(%s)", cptr->name));
 					write_err = ircd_SSL_client_handshake(cptr);
 				}
 				else
 #endif
 					write_err = completed_connection(cptr);
+			}
 			if (!write_err)
 			{
 				if (DoList(cptr) && IsSendable(cptr))
@@ -1854,12 +1867,18 @@ deadsocket:
 					length = -1;
 				}
 			}
-			else
+			if (SSL_is_init_finished(cptr->ssl))
 			{
 				if (IsSSLAcceptHandshake(cptr))
+				{
+					Debug((DEBUG_ERROR, "ssl: start_of_normal_client_handshake(%s)", cptr->sockhost));
 					start_of_normal_client_handshake(cptr);
+				}
 				else
+				{
+					Debug((DEBUG_ERROR, "ssl: completed_connection", cptr->name));
 					completed_connection(cptr);
+				}
 
 			}
 		}

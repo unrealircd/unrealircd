@@ -80,6 +80,9 @@ int oper_access[] = {
 	OFLAG_WHOIS, 'W',
 	OFLAG_HIDE, 'H',
 	OFLAG_INVISIBLE, '^',
+	OFLAG_TKL, 't',
+	OFLAG_GZL, 'Z',
+	OFLAG_OVERRIDE, 'v',
 	0, 0
 };
 
@@ -236,7 +239,8 @@ int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd) {
 
 	if (alias->type == ALIAS_SERVICES) {
 		if (SERVICES_NAME && (acptr = find_person(alias->nick, NULL)))
-			sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", parv[0],
+			sendto_one(acptr, ":%s %s %s@%s :%s", parv[0],
+				IsToken(acptr->from) ? TOK_PRIVATE : MSG_PRIVATE, 
 				alias->nick, SERVICES_NAME, parv[1]);
 		else
 			sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name,
@@ -244,7 +248,8 @@ int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd) {
 	}
 	else if (alias->type == ALIAS_STATS) {
 		if (STATS_SERVER && (acptr = find_person(alias->nick, NULL)))
-			sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", parv[0],
+			sendto_one(acptr, ":%s %s %s@%s :%s", parv[0],
+				IsToken(acptr->from) ? TOK_PRIVATE : MSG_PRIVATE, 
 				alias->nick, STATS_SERVER, parv[1]);
 		else
 			sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name,
@@ -257,7 +262,8 @@ int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd) {
 					sptr->user->username, IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost,
 					alias->nick, parv[1]);
 			else
-				sendto_one(acptr, ":%s PRIVMSG %s :%s", parv[0],
+				sendto_one(acptr, ":%s %s %s :%s", parv[0],
+					IsToken(acptr->from) ? TOK_PRIVATE : MSG_PRIVATE, 
 					alias->nick, parv[1]);
 		}
 		else
@@ -318,7 +324,7 @@ int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd) {
 				xparv[0] = parv[0];
 				xparv[1] = output;
 				xparv[2] = NULL;
-				m_alias(cptr, sptr, 2, xparv, format->alias->alias);
+				m_alias(cptr, sptr, 2, xparv, format->nick);
 				regfree(&pcomp);
 				free(current);
 				break;

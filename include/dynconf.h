@@ -76,6 +76,8 @@ struct zConfiguration {
 #ifdef USE_SSL
 	char *x_server_cert_pem;
 	char *x_server_key_pem;
+	char *trusted_ca_file;
+	long ssl_options;
 #endif
 	aNetwork network;
 };
@@ -130,3 +132,4 @@ extern aConfiguration iConf;
 #define CLOAK_KEY3			iConf.network.key3
 #define CLOAK_KEYCRC			iConf.network.keycrc
 #define STATIC_QUIT			iConf.static_quit
+

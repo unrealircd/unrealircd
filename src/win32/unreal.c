@@ -21,7 +21,8 @@
 #include <string.h>
 #include <stdio.h>
 static 	OSVERSIONINFO VerInfo;
-
+HMODULE hAdvapi;
+BOOL (*uChangeServiceConfig2)();
 #define IRCD_SERVICE_CONTROL_REHASH 128
 void show_usage() {
 	fprintf(stderr, "unreal start|stop|rehash|restart|install|uninstall|config <option> <value>");
@@ -44,7 +45,9 @@ int main(int argc, char *argv[]) {
 	if (argc < 2) {
 		show_usage();
 		return -1;
-		}
+	}
+	hAdvapi = LoadLibrary("advapi32.dll");
+	(FARPROC)uChangeServiceConfig2 = GetProcAddress(hAdvapi, "ChangeServiceConfig2A");
 	if (!stricmp(argv[1], "install")) {
 		SC_HANDLE hService, hSCManager;
 		char path[MAX_PATH+1];
@@ -71,7 +74,7 @@ int main(int argc, char *argv[]) {
 		if (VerInfo.dwMajorVersion == 5) {
 			SERVICE_DESCRIPTION info;
 			info.lpDescription = "Internet Relay Chat Server. Allows users to chat with eachother via an IRC client.";
-			ChangeServiceConfig2(hService, SERVICE_CONFIG_DESCRIPTION, &info);
+			uChangeServiceConfig2(hService, SERVICE_CONFIG_DESCRIPTION, &info);
 		}
 		CloseServiceHandle(hService);
 		CloseServiceHandle(hSCManager);
@@ -155,7 +158,7 @@ int main(int argc, char *argv[]) {
 				hAction.Type = SC_ACTION_RESTART;
 				hAction.Delay = atoi(argv[3])*60000;
 				hFailActions.lpsaActions = &hAction;
-				if (ChangeServiceConfig2(hService, SERVICE_CONFIG_FAILURE_ACTIONS, 	
+				if (uChangeServiceConfig2(hService, SERVICE_CONFIG_FAILURE_ACTIONS, 	
 						     &hFailActions))
 					printf("UnrealIRCd NT Service configuration changed");
 				else
@@ -166,7 +169,7 @@ int main(int argc, char *argv[]) {
 				hFailActions.cActions = 0;
 				hAction.Type = SC_ACTION_NONE;
 				hFailActions.lpsaActions = &hAction;
-				if (ChangeServiceConfig2(hService, SERVICE_CONFIG_FAILURE_ACTIONS,
+				if (uChangeServiceConfig2(hService, SERVICE_CONFIG_FAILURE_ACTIONS,
 						     &hFailActions)) 
 					printf("UnrealIRCd NT Service configuration changed");
 				else

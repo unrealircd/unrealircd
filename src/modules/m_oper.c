@@ -158,6 +158,9 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 	int i = 0, j = 0;
 	char* announce = 0;
 
+	if (IsServer(sptr))
+		return 0;
+
 	if (parc < 3) {
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
 		    me.name, parv[0], "OPER");
@@ -264,15 +267,15 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 
 		if (announce != NULL) {
 			sendto_ops
-			    ("%s (%s@%s) %s",
+			    ("%s (%s@%s) [%s] %s",
 			    parv[0], sptr->user->username,
 			    IsHidden(sptr) ? sptr->user->virthost : sptr->
-			    user->realhost, announce);
+			    user->realhost, parv[1], announce);
 				sendto_serv_butone(&me,
-				    ":%s GLOBOPS :%s (%s@%s) %s",
+				    ":%s GLOBOPS :%s (%s@%s) [%s] %s",
 				    me.name, parv[0], sptr->user->username,
 				    IsHidden(sptr) ? sptr->
-				    user->virthost : sptr->user->realhost, announce);
+				    user->virthost : sptr->user->realhost, parv[1], announce);
 
 		} 
 		if (!aconf->snomask)
@@ -304,11 +307,6 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 			};
 			(void)m_join(cptr, sptr, 3, chans);
 		}
-
-#if defined(USE_SYSLOG) && defined(SYSLOG_OPER)
-		syslog(LOG_INFO, "OPER (%s) by (%s!%s@%s)",
-		    name, parv[0], sptr->user->username, sptr->sockhost);
-#endif
 		ircd_log(LOG_OPER, "OPER (%s) by (%s!%s@%s)", name, parv[0], sptr->user->username,
 			sptr->sockhost);
 

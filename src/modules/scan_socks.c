@@ -146,19 +146,21 @@ int	scan_socks_Unload(int module_unload)
 void scan_socks_scan(Scan_AddrStruct *h)
 {
 	THREAD thread[2];
+	unsigned id[2];
+	u_int32_t dwRc[2];
+	
 	IRCMutexLock((h->lock));
 	h->refcnt++;
-	IRCCreateThread(thread[0], scan_socks4_scan, h);
+	IRCCreateThreadEx(thread[0], scan_socks4_scan, h, &id[0]);
 	h->refcnt++;
-	IRCCreateThread(thread[1], scan_socks5_scan, h);
+	IRCCreateThreadEx(thread[1], scan_socks5_scan, h, &id[1]);
 	IRCMutexUnlock((h->lock));
-	IRCJoinThread(thread[0], NULL);
-	IRCJoinThread(thread[1], NULL);
+	IRCJoinThread(thread[0], &dwRc[0]);
+	IRCJoinThread(thread[1], &dwRc[1]);
 	IRCMutexLock((h->lock));
 	h->refcnt--;
 	IRCMutexUnlock((h->lock));
 	IRCDetachThread(IRCThreadSelf());
-	IRCExitThread(NULL);
 	return;
 }
 	
@@ -175,9 +177,9 @@ void	scan_socks4_scan(Scan_AddrStruct *h)
 	SOCKET			fd;
 	unsigned char		socksbuf[10];
 	unsigned long   	theip;
-	fd_set			rfds;
+	fd_set			rfds, efds;
 	struct timeval  	tv;
-	int			len;
+	int  err, len = sizeof(err);
 	/* Get host */
 
 	IRCMutexLock((h->lock));
@@ -232,8 +234,7 @@ void	scan_socks4_scan(Scan_AddrStruct *h)
          * -Zogg
 	 */
 	set_non_blocking(fd, NULL);
-	if ((retval = connect(fd, (struct sockaddr *)&sin,
-                sizeof(sin))) == -1 && !(ERRNO == P_EINPROGRESS))
+	if ((retval = connect(fd, (struct sockaddr *)&sin, sizeof(sin))) == -1 && !(ERRNO == P_EWORKING))
 	{
 		/* we have no socks server! */
 		CLOSE_SOCK(fd);	
@@ -241,16 +242,35 @@ void	scan_socks4_scan(Scan_AddrStruct *h)
 		return;
 	}
 	
-	/* We wait for write-ready */
+	/* We wait for connection to complete */
 	tv.tv_sec = *xScan_TimeOut;
 	tv.tv_usec = 0;
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);
-	if (!select(fd + 1, NULL, &rfds, NULL, &tv))
+	FD_ZERO(&efds);
+	FD_SET(fd, &efds);
+	if (select(fd + 1, NULL, &rfds, &efds, &tv) <= 0)
 	{
 		CLOSE_SOCK(fd);
 		goto exituniverse;
 	}
+	/* did connection fail on windows? */
+	if (FD_ISSET(fd, &efds))
+	{
+		err = ERRNO;
+		CLOSE_SOCK(fd);
+		goto exituniverse;
+	}
+#ifdef	SO_ERROR
+	/* did connection fail on unix? */
+	if (!getsockopt(fd, SOL_SOCKET, SO_ERROR, (OPT_TYPE *)&err, &len))
+		if (err)
+		{
+			/* connection failed */
+			CLOSE_SOCK(fd);
+			goto exituniverse;
+		}
+#endif
 #ifdef INET6
 	ia4.s_addr = inet_aton((char *)Inet_ia2p(&xScan_endpoint->SIN_ADDR));
 #else
@@ -304,7 +324,6 @@ exituniverse:
 	h->refcnt--;
 	IRCMutexUnlock((h->lock));
 	/* We get joined, we need no steekin Detach */
-	IRCExitThread(NULL);
 	return;
 }
 
@@ -317,10 +336,10 @@ void	scan_socks5_scan(Scan_AddrStruct *h)
 	struct			SOCKADDR_IN sin;
 	struct			in_addr ia4;
 	SOCKET			fd;
-	unsigned long   	theip;
-	fd_set			rfds;
+	unsigned long   theip;
+	fd_set			rfds, efds;
 	struct timeval  	tv;
-	int			len;
+	int  err, len = sizeof(err);
 	unsigned char		socksbuf[10];
 	/* Get host */
 	IRCMutexLock((h->lock));
@@ -368,26 +387,42 @@ void	scan_socks5_scan(Scan_AddrStruct *h)
          * -Zogg
 	 */
 	set_non_blocking(fd, NULL);
-	if ((retval = connect(fd, (struct sockaddr *)&sin,
-                sizeof(sin))) == -1 && 
-		 !(ERRNO == P_EINPROGRESS))
+	if ((retval = connect(fd, (struct sockaddr *)&sin, sizeof(sin))) == -1 && !(ERRNO == P_EWORKING))
 	{
 		/* we have no socks server! */
 		CLOSE_SOCK(fd);	
 		goto exituniverse;
-		return;
 	}
 	
-	/* We wait for write-ready */
+	/* We wait for connection to complete */
 	tv.tv_sec = *xScan_TimeOut;
 	tv.tv_usec = 0;
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);
-	if (!select(fd + 1, NULL, &rfds, NULL, &tv))
+	FD_ZERO(&efds);
+	FD_SET(fd, &efds);
+	if (select(fd + 1, NULL, &rfds, &efds, &tv) <= 0)
 	{
 		CLOSE_SOCK(fd);
 		goto exituniverse;
 	}
+	/* did connection fail on windows? */
+	if (FD_ISSET(fd, &efds))
+	{
+		err = ERRNO;
+		CLOSE_SOCK(fd);
+		goto exituniverse;
+	}
+#ifdef	SO_ERROR
+	/* did connection fail on unix? */
+	if (!getsockopt(fd, SOL_SOCKET, SO_ERROR, (OPT_TYPE *)&err, &len))
+		if (err)
+		{
+			/* connection failed */
+			CLOSE_SOCK(fd);
+			goto exituniverse;
+		}
+#endif
 #ifdef INET6
 	ia4.s_addr = inet_aton((char *)Inet_ia2p(&xScan_endpoint->SIN_ADDR));
 #else
@@ -467,7 +502,6 @@ exituniverse:
 	h->refcnt--;
 	IRCMutexUnlock(h->lock);
 	/* We need no steekin detach */
-	IRCExitThread(NULL);
 	return;
 }
 

@@ -93,8 +93,6 @@ extern ConfigItem_deny_link	*conf_deny_link;
 extern ConfigItem_allow_channel *conf_allow_channel;
 extern ConfigItem_deny_version	*conf_deny_version;
 extern ConfigItem_log		*conf_log;
-extern ConfigItem_unknown	*conf_unknown;
-extern ConfigItem_unknown_ext   *conf_unknown_set;
 extern ConfigItem_alias		*conf_alias;
 extern ConfigItem_include	*conf_include;
 extern ConfigItem_help		*conf_help;
@@ -107,6 +105,7 @@ extern long set_usermode(char *umode);
 extern char *get_modestr(long umodes);
 extern void tkl_stats(aClient *cptr);
 extern void                    config_error(char *format, ...);
+extern int			config_verbose;
 extern void config_progress(char *format, ...);
 extern void       ipport_seperate(char *string, char **ip, char **port);
 ConfigItem_class	*Find_class(char *name);
@@ -271,14 +270,16 @@ extern void sendto_channels_inviso_part(aClient *user);
 extern void sendto_channels_inviso_join(aClient *user);
 extern void    sendto_message_one(aClient *to, aClient *from, char *sender,
     char *cmd, char *nick, char *msg);
+#define PREFIX_ALL		0
+#define PREFIX_HALFOP	0x1
+#define PREFIX_VOICE	0x2
+#define PREFIX_OP		0x4
+extern void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
+    int prefix, char *pattern, ...);
 extern void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chptr,
     int prefix, char *cmd, char *tok, char *nick, char *text);
 extern void sendto_channel_butone(aClient *, aClient *, aChannel *, char *,
     ...);
-extern void sendto_channelops_butone(aClient *, aClient *, aChannel *,
-    char *, ...);
-extern void sendto_channelvoice_butone(aClient *, aClient *, aChannel *,
-    char *, ...);
 extern void sendto_serv_butone(aClient *, char *, ...);
 extern void sendto_serv_butone_quit(aClient *, char *, ...);
 extern void sendto_serv_butone_sjoin(aClient *, char *, ...);
@@ -467,6 +468,8 @@ extern void    add_CommandX(char *cmd, char *token, int (*func)(), unsigned char
 
 /* CRULE */
 char *crule_parse(char *);
+int crule_test(char *);
+char *crule_errstring(int);
 int crule_eval(char *);
 void crule_free(char **);
 
@@ -486,9 +489,11 @@ extern int b64_decode(char const *src, unsigned char *target, size_t targsize);
 
 extern int		Auth_FindType(char *type);
 extern anAuthStruct	*Auth_ConvertConf2AuthStruct(ConfigEntry *ce);
-extern void	Auth_DeleteAuthStruct(anAuthStruct *as);
-extern int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para);
-extern char   *Auth_Make(short type, char *para);
+extern void		Auth_DeleteAuthStruct(anAuthStruct *as);
+extern int		Auth_Check(aClient *cptr, anAuthStruct *as, char *para);
+extern char   		*Auth_Make(short type, char *para);
+extern int   		Auth_CheckError(ConfigEntry *ce);
+
 extern long xbase64dec(char *b64);
 extern aClient *find_server_b64_or_real(char *name);
 extern aClient *find_server_by_base64(char *b64);
@@ -519,7 +524,7 @@ extern u_long cres_mem(aClient *sptr, char *nick);
 extern void      flag_add(char *ch);
 extern void      flag_del(char ch);
 extern void init_dynconf(void);
-extern int        init_conf2(char *filename);
+extern int        init_conf(char *filename, int rehash);
 extern void       validate_configuration(void);
 extern void       run_configuration(void);
 extern aMotd *read_file(char *filename, aMotd **list);
@@ -532,5 +537,11 @@ extern void set_sock_opts(int fd, aClient *cptr);
 extern void iCstrip(char *line);
 extern time_t rfc2time(char *s);
 extern char *rfctime(time_t t, char *buf);
+extern void *MyMallocEx(size_t size);
+#ifdef USE_SSL
+char  *ssl_get_cipher(SSL *ssl);
+#endif
+long config_checkval(char *value, unsigned short flags);
+void config_status(char *format, ...);
 #define EVENT_DRUGS BASE_VERSION
 

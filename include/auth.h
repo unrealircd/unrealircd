@@ -28,13 +28,13 @@ typedef	struct {
 #define AUTHTYPE_UNIXCRYPT  1
 #define AUTHTYPE_MD5        2
 #define AUTHTYPE_SHA1	    3 
-#define AUTHTYPE_SSL_PUBKEY 4
+#define AUTHTYPE_SSL_CLIENTCERT 4
 #define AUTHTYPE_RIPEMD160  5
 
 #ifdef USE_SSL
 #define AUTHENABLE_MD5
 #define AUTHENABLE_SHA1
-#define AUTHENABLE_SSL_PUBKEY
+#define AUTHENABLE_SSL_CLIENTCERT
 #define AUTHENABLE_RIPEMD160
 /* OpenSSL provides a crypt() */
 #ifndef AUTHENABLE_UNIXCRYPT
