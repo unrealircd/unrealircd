@@ -292,7 +292,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 
 	/* Check if its a hostmask and legal .. */
 	p = strchr(mask, '@');
-	if (!p) {
+	if (p) {
 		usermask = strtok(mask, "@");
 		hostmask = strtok(NULL, "");
 		if (BadPtr(hostmask)) {
