@@ -1099,11 +1099,11 @@ int  InitwIRCD(argc, argv)
 	me.umodes = conf_listen->options;
 	ircd_log("* Bound to %s:%i\n", conf_listen->ip, conf_listen->port);
 	run_configuration();
-	botmotd = (aMotd *) read_botmotd(BPATH);
+	botmotd = (aMotd *) read_file(BPATH, &botmotd);
 	rules = (aMotd *) read_rules(RPATH);
-	opermotd = (aMotd *) read_opermotd(OPATH);
+	opermotd = (aMotd *) read_file(OPATH, &opermotd);
 	motd = (aMotd *) read_motd(MPATH);
-	svsmotd = (aMotd *) read_svsmotd(VPATH);
+	svsmotd = (aMotd *) read_file(VPATH, &svsmotd);
 	(void)get_my_name(&me, me.sockhost, sizeof(me.sockhost) - 1);
 	if (me.name[0] == '\0')
 		strncpyzt(me.name, me.sockhost, sizeof(me.name));

@@ -59,11 +59,9 @@ aMotd *svsmotd;
 aMotd *botmotd;
 aTrecord *tdata;
 struct tm *motd_tm;
-aMotd *read_opermotd(char *filename);
+aMotd *read_file(char *filename, aMotd **list);
 aMotd *read_motd(char *filename);
 aMotd *read_rules(char *filename);
-aMotd *read_svsmotd(char *filename);
-aMotd *read_botmotd(char *filename);
 
 /*
 ** m_functions execute protocol messages on this server:
@@ -3407,7 +3405,7 @@ int  m_svsmotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	fclose(conf);
 	/* We editted it, so rehash it -- codemastr */
-	read_svsmotd(VPATH);
+	svsmotd = read_file(VPATH, &svsmotd);
 	return 1;
 }
 
@@ -3818,7 +3816,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 				    ("%sRehashing OperMOTD on request of %s",
 				    cptr != sptr ? "Remotely " : "",
 				    sptr->name);
-				opermotd = (aMotd *) read_opermotd(OPATH);
+				opermotd = (aMotd *) read_file(OPATH, &opermotd);
 				return 0;
 			}
 			if (!_match("-b*motd", parv[1]))
@@ -3829,7 +3827,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 				    ("%sRehashing BotMOTD on request of %s",
 				    cptr != sptr ? "Remotely " : "",
 				    sptr->name);
-				botmotd = (aMotd *) read_botmotd(BPATH);
+				botmotd = (aMotd *) read_file(BPATH, &botmotd);
 				return 0;
 			}
 			if (!strnicmp("-motd", parv[1], 5)
@@ -4294,56 +4292,6 @@ int  m_opermotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	return 0;
 }
 
-
-
-/* 
- * A merge from ircu and bahamut, and some extra stuff added by codemastr 
- */
-
-aMotd *read_svsmotd(char *filename)
-{
-	int  fd = open(filename, O_RDONLY);
-	aMotd *temp, *newmotd, *last, *old;
-	char line[82];
-	char *tmp;
-	int  i;
-
-	if (fd == -1)
-		return NULL;
-
-	while (svsmotd)
-	{
-		old = svsmotd->next;
-		MyFree(svsmotd->line);
-		MyFree(svsmotd);
-		svsmotd = old;
-	}
-
-	newmotd = last = NULL;
-	(void)dgets(-1, NULL, 0);	/* make sure buffer is at empty pos */
-
-	while ((i = dgets(fd, line, sizeof(line) - 1)) > 0)
-	{
-		line[i] = '\0';
-		if ((tmp = (char *)strchr(line, '\n')))
-			*tmp = '\0';
-		if ((tmp = (char *)strchr(line, '\r')))
-			*tmp = '\0';
-		temp = (aMotd *) MyMalloc(sizeof(aMotd));
-		if (!temp)
-			outofmemory();
-		AllocCpy(temp->line, line);
-		temp->next = NULL;
-		if (!newmotd)
-			newmotd = temp;
-		else
-			last->next = temp;
-		last = temp;
-	}
-	close(fd);
-	return newmotd;
-}
-
 /* 
  * A merge from ircu and bahamut, and some extra stuff added by codemastr 
  */
@@ -4458,9 +4406,10 @@ aMotd *read_motd(char *filename)
 
 /* 
  * A merge from ircu and bahamut, and some extra stuff added by codemastr 
+ * we can now use 1 function for multiple files -- codemastr
  */
 
-aMotd *read_opermotd(char *filename)
+aMotd *read_file(char *filename, aMotd **list)
 {
 
 	int  fd = open(filename, O_RDONLY);
@@ -4472,12 +4421,12 @@ aMotd *read_opermotd(char *filename)
 	if (fd == -1)
 		return NULL;
 
-	while (opermotd)
+	while (*list)
 	{
-		old = opermotd->next;
-		MyFree(opermotd->line);
-		MyFree(opermotd);
-		opermotd = old;
+		old = (*list)->next;
+		MyFree((*list)->line);
+		MyFree(*list);
+		*list  = old;
 	}
 
 	(void)dgets(-1, NULL, 0);	/* make sure buffer is at empty pos */
@@ -4504,56 +4453,6 @@ aMotd *read_opermotd(char *filename)
 	close(fd);
 	return newmotd;
 
-}
-
-
-/* 
- * A merge from ircu and bahamut, and some extra stuff added by codemastr 
- */
-
-aMotd *read_botmotd(char *filename)
-{
-	int  fd = open(filename, O_RDONLY);
-	aMotd *temp, *newmotd, *last, *old;
-	char line[82];
-	char *tmp;
-	int  i;
-
-	if (fd == -1)
-		return NULL;
-
-	while (botmotd)
-	{
-		old = botmotd->next;
-
-		MyFree(botmotd->line);
-		MyFree(botmotd);
-		botmotd = old;
-	}
-
-	(void)dgets(-1, NULL, 0);	/* make sure buffer is at empty pos */
-
-	newmotd = last = NULL;
-	while ((i = dgets(fd, line, 81)) > 0)
-	{
-		line[i] = '\0';
-		if ((tmp = (char *)strchr(line, '\n')))
-			*tmp = '\0';
-		if ((tmp = (char *)strchr(line, '\r')))
-			*tmp = '\0';
-		temp = (aMotd *) MyMalloc(sizeof(aMotd));
-		if (!temp)
-			outofmemory();
-		AllocCpy(temp->line, line);
-		temp->next = NULL;
-		if (!newmotd)
-			newmotd = temp;
-		else
-			last->next = temp;
-		last = temp;
-	}
-	close(fd);
-	return newmotd;
 }
 
 /*

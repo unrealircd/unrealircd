@@ -230,3 +230,5 @@
 - Fixed a crash in /stats k regarding temporary K:lines
 - Fixed a missing " in validate_conf
 - Replaced a few strlen()s with sizeof(), should make the IRCd start a bit faster
+- Fixed a svsmotd bug (from 3.1) prevented adding lines to the svsmotd
+- Recoded some dynamic motd stuff. Now uses 1 function.
