@@ -479,6 +479,7 @@ int add_listener2(ConfigItem_listen *conf)
 	if (cptr->fd >= 0)
 	{
 		set_non_blocking(cptr->fd, cptr);
+		cptr->umodes |= LISTENER_BOUND;
 		return 1;
 	}
 	else
