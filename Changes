@@ -1633,3 +1633,5 @@ seen. gmtime warning still there
   and it WILL burn, DIE, and WILL NOT WORK
 - Fixed conf3 bug with _conf_except tkl
 - /kline and /zline now use TKL
+- Removed src/win32/unrealinstssl.iss and merged it into unrealinst.iss, add #define
+  USE_SSL to the file to build an SSL package
