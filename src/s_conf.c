@@ -349,7 +349,7 @@ long conf_size(char *value) {
 	if (!buf)
 		return 0;
 
-	numbuf = malloc(strlen(value));
+	numbuf = MyMalloc(strlen(value));
 	for (i = 0;*buf; *buf++) {
 		if (isdigit(*buf)) {
 			numbuf[i++] = *buf;
@@ -492,7 +492,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 	ConfigFile	*curcf;
 	ConfigFile	*lastcf;
 
-	lastcf = curcf = (ConfigFile *)malloc(sizeof(ConfigFile));
+	lastcf = curcf = MyMalloc(sizeof(ConfigFile));
 	memset(curcf, 0, sizeof(ConfigFile));
 	curcf->cf_filename = strdup(filename);
 	lastce = &(curcf->cf_entries);
@@ -647,16 +647,16 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					}
 					else
 					{
-						curce->ce_vardata = (char *)malloc(ptr-start+1);
+						curce->ce_vardata = MyMalloc(ptr-start+1);
 						strncpy(curce->ce_vardata, start, ptr-start);
 						curce->ce_vardata[ptr-start] = '\0';
 					}
 				}
 				else
 				{
-					curce = (ConfigEntry *)malloc(sizeof(ConfigEntry));
+					curce = MyMalloc(sizeof(ConfigEntry));
 					memset(curce, 0, sizeof(ConfigEntry));
-					curce->ce_varname = (char *)malloc((ptr-start)+1);
+					curce->ce_varname = MyMalloc((ptr-start)+1);
 					strncpy(curce->ce_varname, start, ptr-start);
 					curce->ce_varname[ptr-start] = '\0';
 					curce->ce_varlinenum = linenumber;
@@ -710,16 +710,16 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					}
 					else
 					{
-						curce->ce_vardata = (char *)malloc(ptr-start+1);
+						curce->ce_vardata = MyMalloc(ptr-start+1);
 						strncpy(curce->ce_vardata, start, ptr-start);
 						curce->ce_vardata[ptr-start] = '\0';
 					}
 				}
 				else
 				{
-					curce = (ConfigEntry *)malloc(sizeof(ConfigEntry));
+					curce = MyMalloc(sizeof(ConfigEntry));
 					memset(curce, 0, sizeof(ConfigEntry));
-					curce->ce_varname = (char *)malloc((ptr-start)+1);
+					curce->ce_varname = MyMalloc((ptr-start)+1);
 					strncpy(curce->ce_varname, start, ptr-start);
 					curce->ce_varname[ptr-start] = '\0';
 					curce->ce_varlinenum = linenumber;
@@ -811,7 +811,7 @@ ConfigFile *config_load(char *filename)
 		close(fd);
 		return NULL;
 	}
-	buf = (char *)malloc(sb.st_size+1);
+	buf = MyMalloc(sb.st_size+1);
 	if (buf == NULL)
 	{
 		config_error("Out of memory trying to load \"%s\"\n", filename);
@@ -923,7 +923,7 @@ int	ConfigCmd(ConfigFile *cf, ConfigEntry *ce, ConfigCommand *cc)
 		}
 		if (!ccp->name)
 		{
-			ConfigItem_unknown *ca = (ConfigItem_unknown *)malloc(sizeof(ConfigItem_unknown));
+			ConfigItem_unknown *ca = MyMalloc(sizeof(ConfigItem_unknown));
 			ca->ce = cep;			
 			/* Add to the unknown list */
 			DelListItem(ca, conf_unknown);
@@ -999,7 +999,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 		return -1;
 	}
 	if (cPath) {
-		path = malloc(strlen(cPath) + strlen(FindData.cFileName)+1);
+		path = MyMalloc(strlen(cPath) + strlen(FindData.cFileName)+1);
 		strcpy(path,cPath);
 		strcat(path,FindData.cFileName);
 		init_conf2(path);
@@ -1009,7 +1009,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 		init_conf2(FindData.cFileName);
 	while (FindNextFile(hFind, &FindData) != 0) {
 		if (cPath) {
-			path = malloc(strlen(cPath) + strlen(FindData.cFileName)+1);
+			path = MyMalloc(strlen(cPath) + strlen(FindData.cFileName)+1);
 			strcpy(path,cPath);
 			strcat(path,FindData.cFileName);
 			init_conf2(path);
@@ -1093,7 +1093,7 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 
 	if (!(class = Find_class(ce->ce_vardata)))
 	{
-		class = (ConfigItem_class *) MyMallocEx(sizeof(ConfigItem_class));
+		class = MyMallocEx(sizeof(ConfigItem_class));
 		ircstrdup(class->name, ce->ce_vardata);
 		isnew = 1;
 	}
@@ -1178,7 +1178,7 @@ int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
 
 	if (!conf_me)
 	{
-		conf_me = (ConfigItem_me *) MyMallocEx(sizeof(ConfigItem_me));
+		conf_me = MyMallocEx(sizeof(ConfigItem_me));
 	}
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -1204,7 +1204,7 @@ int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
 			ircstrdup(conf_me->name, cep->ce_vardata);
 			if (!strchr(conf_me->name, '.'))
 			{
-				fixedname = malloc(strlen(conf_me->name)+5);
+				fixedname = MyMalloc(strlen(conf_me->name)+5);
 				ircsprintf(fixedname, "irc.%s.com", conf_me->name);
 				config_status("%s:%i: illegal me::name, missing ., using default of %s",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, fixedname);
@@ -1330,7 +1330,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 
 	if (!(oper = Find_oper(ce->ce_vardata)))
 	{
-		oper = (ConfigItem_oper *) MyMallocEx(sizeof(ConfigItem_oper));
+		oper =  MyMallocEx(sizeof(ConfigItem_oper));
 		oper->name = strdup(ce->ce_vardata);
 		isnew = 1;
 	}
@@ -1456,7 +1456,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 					}
 					if (!strcmp(cepp->ce_varname, "userhost"))
 					{
-						from = (ConfigItem_oper_from *)MyMallocEx(sizeof(ConfigItem_oper_from));
+						from = MyMallocEx(sizeof(ConfigItem_oper_from));
 						ircstrdup(from->name, cepp->ce_vardata);
 						AddListItem(from, oper->from);
 					}
@@ -1491,7 +1491,7 @@ int     _conf_drpass(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 
 	if (!conf_drpass) {
-		conf_drpass = (ConfigItem_drpass *) MyMallocEx(sizeof(ConfigItem_drpass));
+		conf_drpass =  MyMallocEx(sizeof(ConfigItem_drpass));
 	}
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -1638,7 +1638,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	}
 	if (!(listen = Find_listen(ip, iport)))
 	{
-		listen = (ConfigItem_listen *) MyMallocEx(sizeof(ConfigItem_listen));
+		listen = MyMallocEx(sizeof(ConfigItem_listen));
 		listen->ip = strdup(ip);
 		listen->port = iport;
 		isnew = 1;
@@ -1726,14 +1726,14 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else
 		{
-			ConfigItem_unknown *ca2 = malloc(sizeof(ConfigItem_unknown));
+			ConfigItem_unknown *ca2 = MyMalloc(sizeof(ConfigItem_unknown));
 			ca2->ce = ce;
 			AddListItem(ca2, conf_unknown);
 			return -1;
 		}
 	}
 
-	allow = (ConfigItem_allow *) MyMallocEx(sizeof(ConfigItem_allow));
+	allow =  MyMallocEx(sizeof(ConfigItem_allow));
 	isnew = 1;
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -1851,7 +1851,7 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_vhost *vhost;
 	unsigned char isnew = 0;
 	ConfigItem_oper_from *from;
-	vhost = (ConfigItem_vhost *) MyMallocEx(sizeof(ConfigItem_vhost));
+	vhost = MyMallocEx(sizeof(ConfigItem_vhost));
 	isnew = 1;
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -1893,7 +1893,7 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 					}
 					if (!strcmp(cepp->ce_varname, "userhost"))
 					{
-						from = (ConfigItem_oper_from *)MyMallocEx(sizeof(ConfigItem_oper_from));
+						from = MyMallocEx(sizeof(ConfigItem_oper_from));
 						ircstrdup(from->name, cepp->ce_vardata);
 						AddListItem(from, vhost->from);
 					}
@@ -1943,7 +1943,7 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_except *ca;
 	unsigned char isnew = 0;
 
-	ca = (ConfigItem_except *) MyMallocEx(sizeof(ConfigItem_except));
+	ca = MyMallocEx(sizeof(ConfigItem_except));
 	isnew = 1;
 
 	if (!ce->ce_vardata)
@@ -2015,7 +2015,7 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 		AddListItem(ca, conf_except);
 	}
 	else {
-		ConfigItem_unknown *ca2 = malloc(sizeof(ConfigItem_unknown));
+		ConfigItem_unknown *ca2 = MyMalloc(sizeof(ConfigItem_unknown));
 		MyFree(ca);
 		ca2->ce = ce;
 		AddListItem(ca2, conf_unknown);
@@ -2030,7 +2030,7 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_ban *ca;
 	unsigned char isnew = 0;
 
-	ca = (ConfigItem_ban *) MyMallocEx(sizeof(ConfigItem_ban));
+	ca = MyMallocEx(sizeof(ConfigItem_ban));
 	isnew = 1;
 
 	if (!ce->ce_vardata)
@@ -2051,7 +2051,7 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 		ca->flag.type = CONF_BAN_REALNAME;
 	else
 	{
-		ConfigItem_unknown *ca2 = malloc(sizeof(ConfigItem_unknown));
+		ConfigItem_unknown *ca2 = MyMalloc(sizeof(ConfigItem_unknown));
 		MyFree(ca);
 		ca2->ce = ce;
 		AddListItem(ca2, conf_unknown);
@@ -2410,7 +2410,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else
 		{
-			ConfigItem_unknown_ext *ca2 = malloc(sizeof(ConfigItem_unknown_ext));
+			ConfigItem_unknown_ext *ca2 = MyMalloc(sizeof(ConfigItem_unknown_ext));
 			ca2->ce_fileptr = cep->ce_fileptr;
 			ca2->ce_varlinenum = cep->ce_varlinenum;
 			ca2->ce_vardata = cep->ce_vardata;
@@ -2510,7 +2510,7 @@ int	_conf_deny(ConfigFile *conf, ConfigEntry *ce)
 		_conf_deny_version(conf, ce);
 	else
 	{
-		ConfigItem_unknown *ca2 = malloc(sizeof(ConfigItem_unknown));
+		ConfigItem_unknown *ca2 = MyMalloc(sizeof(ConfigItem_unknown));
 		ca2->ce = ce;
 		AddListItem(ca2, conf_unknown);
 		return -1;
@@ -3154,7 +3154,7 @@ void	validate_configuration(void)
 		if (!oper_ptr->from) {
 			Warning("oper %s: does not have a from record, using (unsafe) default of *@*",
 				oper_ptr->name);
-			oper_from = (ConfigItem_oper_from *)MyMallocEx(sizeof(ConfigItem_oper_from));
+			oper_from = MyMallocEx(sizeof(ConfigItem_oper_from));
 			ircstrdup(oper_from->name, "*@*");
 			AddListItem(oper_from, oper_ptr->from);	
 		}

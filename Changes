@@ -1195,3 +1195,5 @@ v- Fixed some bugreport stuff
 - Fixed a typo in the docs found by TheEggMan
 - Fixed a m_htm.c problem
 - Updated supporters list in /credits
+- Fixed s_conf.c so a) It uses MyMalloc b) It doesn't cast the return
+  from MyMalloc!
