@@ -2145,3 +2145,5 @@ seen. gmtime warning still there
   cloak keys. Useful for services that rely on VHP.
 - Misc /whois and webtv whois fixes
 - Added CASEMAPPING=ascii as per request
+- /WHO code cleanup + partial recode + bugfixes
+- Updated example.conf about U-lines since many people set them wrong.
