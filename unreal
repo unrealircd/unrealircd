@@ -1,0 +1,17 @@
+#!/bin/sh
+
+if [ "$1" = "start" ] ; then
+	echo "Starting UnrealIRCd"
+	./ircd
+
+elif [ "$1" = "stop" ] ; then
+	echo "Stopping UnrealIRCd"
+	kill -9 `cat ircd.pid`
+
+elif [ "$1" = "rehash" ] ; then
+	echo "Rehashing UnrealIRCd"
+	kill -9 `cat ircd.pid`
+
+else
+	echo "Usage: unreal start|stop|rehash"
+fi

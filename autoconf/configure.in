@@ -19,6 +19,7 @@ AC_PATH_PROG(RM,rm)
 AC_PATH_PROG(CP,cp)
 AC_PATH_PROG(TOUCH,touch)
 AC_PATH_PROG(OPENSSLPATH,openssl)
+AC_PATH_PROG(INSTALL,install)
 dnl Checks for libraries.
 AC_CHECK_LIB(descrypt, crypt, IRCDLIBS="$IRCDLIBS-ldescrypt " MKPASSWDLIBS="-ldescrypt",
 AC_CHECK_LIB(crypt, crypt,IRCDLIBS="$IRCDLIBS-lcrypt " MKPASSWDLIBS="-lcrypt"))
@@ -300,19 +301,20 @@ AC_DEFINE_UNQUOTED(MYOSNAME,"`uname -a`")
 AC_ARG_WITH(permissions, [ --with-permissions=permissions     Specify the default permissions for
 configuration files], AC_DEFINE_UNQUOTED(DEFAULT_PERMISSIONS,$withval), AC_DEFINE(DEFAULT_PERMISSIONS, 0600)) 
 AC_ARG_WITH(dpath, [ --with-dpath=path     Specify the path where configuration files are stored],
-AC_DEFINE_UNQUOTED(DPATH, "$withval"), AC_DEFINE_UNQUOTED(DPATH, "`pwd`"))
+AC_DEFINE_UNQUOTED(DPATH, "$withval") IRCDDIR="$withval", AC_DEFINE_UNQUOTED(DPATH,"`pwd`") IRCDDIR="`pwd`")
 AC_ARG_WITH(fd-setsize, [ --with-fd-setsize=size     Specify the max file descriptors to use],
 ac_fd=$withval, ac_fd=1024)
 AC_DEFINE_UNQUOTED(MAXCONNECTIONS, $ac_fd)
 AC_ARG_WITH(spath, [ --with-spath     Specify the location of the executable],
-AC_DEFINE_UNQUOTED(SPATH,"$withval"),AC_DEFINE_UNQUOTED(SPATH,"`pwd`/src/ircd"))
+AC_DEFINE_UNQUOTED(SPATH,"$withval") BINDIR="$withval",AC_DEFINE_UNQUOTED(SPATH,"`pwd`/src/ircd") BINDIR="`pwd`/src/ircd")
 AC_ARG_ENABLE(nospoof, [ --enable-nospoof     Enable spoofing protection], AC_DEFINE(NOSPOOF))
 AC_ARG_ENABLE(hub, [ --enable-hub     Compile as a hub server], AC_DEFINE(HUB))
 AC_ARG_ENABLE(ssl, [ --enable-ssl     Enable client and server SSL connections ], AC_ENABLE_SSL)
 AC_ARG_ENABLE(dynamic-linking, [ --enable-dynamic-linking     Make the IRCd dynamically link shared objects rather than statically ], AC_ENABLE_DYN, AC_DEFINE(STATIC_LINKING))
 AC_ARG_ENABLE(inet6, [ --enable-inet6     Make the IRCd support IPv6 ], AC_ENABLE_INET6)
 AC_ARG_ENABLE(standardthreads, [ --enable-standardthreads     Use standard threads ], USESTDTHREAD="1")
-
+AC_SUBST(IRCDDIR)
+AC_SUBST(BINDIR)
 ACX_PTHREAD
 CC="$PTHREAD_CC"
 CFLAGS="$CFLAGS $PTHREAD_CFLAGS"

@@ -892,3 +892,5 @@ seen. gmtime warning still there
 - Fixed a typo in makenet found by 'Eternal Bliss'
 - Updated module dependancies to allow a module to load the module containing the symbol
 - Fixed a win32 bug where the editor would cut off text, reported by Inter
+- Added make install to copy files for you when you install unreal
+- Replaced killircd, ircd, and rehash with ./unreal start|stop|rehash
