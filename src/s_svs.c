@@ -1023,6 +1023,7 @@ int m_sqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	ConfigItem_ban	*bconf;
 	/* So we do not make double entries */
 	int		addit = 0;
+
 	if (!IsServer(sptr) || parc < 2)
 		return 0;
 
@@ -1042,10 +1043,13 @@ int m_sqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			MyFree(bconf->reason);
 		bconf->mask = NULL;
 		bconf->reason = NULL;
-		addit = 1;
+		addit = 0;
 	}
 	else
+	{
 		bconf = (ConfigItem_ban *) MyMallocEx(sizeof(ConfigItem_ban));
+		addit = 1;
+	}
 	if (parv[2])
 		DupString(bconf->reason, parv[2]);
 	if (parv[1])
@@ -1053,7 +1057,7 @@ int m_sqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		
 	/* CONF_BAN_NICK && CONF_BAN_TYPE_AKILL == SQLINE */
 	bconf->flag.type2 = CONF_BAN_TYPE_AKILL;
-	if (addit != 1)
+	if (addit == 1)
 		add_ConfigItem((ConfigItem *) bconf, (ConfigItem **) &conf_ban);
 
 }

@@ -723,3 +723,4 @@ seen. gmtime warning still there
 - Made CR compatilbity actually work, it autojoins now :)
 - Started updating network files (remove all the obsolete ones)
 - Fixed SQLINE problem 
+- More SQLINE fixes.. does it work now?
