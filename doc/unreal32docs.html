@@ -565,25 +565,33 @@ in nicknames. You do this in <b>set::allowed-nickchars</b>.<br>
 A table of all possible choices:<br>
 <table border="1">
 <tr><td><b>Name:</b></td><td><b>Description:</b></td><td><b>Character set/encoding:</b></td></tr>
-<tr><td>dutch</td><td>Dutch characters</td><td>latin1</td></tr>
-<tr><td>french</td><td>French characters</td><td>latin1</td></tr>
-<tr><td>german</td><td>German characters</td><td>latin1</td></tr>
-<tr><td>italian</td><td>Italian characters</td><td>latin1</td></tr>
-<tr><td>spanish</td><td>Spanish characters</td><td>latin1</td></tr>
-<tr><td>swedish</td><td>Swedish characters</td><td>latin1</td></tr>
-<tr><td><b>euro-west</b></td><td>dutch, french, german, spanish, italian, swedish</td><td>latin1</td></tr>
+<tr><td>catalan</td><td>Catalan characters</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>dutch</td><td>Dutch characters</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>french</td><td>French characters</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>german</td><td>German characters</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>italian</td><td>Italian characters</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>spanish</td><td>Spanish characters</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>swedish</td><td>Swedish characters</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td><b>latin1</b></td><td>dutch, french, german, spanish, italian, swedish</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>hungarian</td><td>Hungarian characters</td><td>iso8859-2 (latin2)</td></tr>
+<tr><td><b>latin2</b></td><td>hungarian</td><td>iso8859-2 (latin2)</td></tr>
+<tr><td>greek</td><td>Greek characters</td><td>iso8859-7</td></tr>
+<tr><td><b>latin7</b></td><td>greek</td><td>iso8859-7</td></tr>
 <tr><td>chinese-simp</td><td>Simplified Chinese</td><td>Multibyte: GBK/GB2312</td></tr>
 <tr><td>chinese-trad</td><td>Tradditional Chinese</td><td>Multibyte: GBK</td></tr>
-<tr><td>chinese-ja</td><td>Japanese-alike Chinese</td><td>Multibyte: GBK</td></tr>
+<tr><td>chinese-ja</td><td>Japanese Hiragana/Pinyin</td><td>Multibyte: GBK</td></tr>
 <tr><td><b>chinese</b></td><td>chinese-*</td><td>Multibyte: GBK</td></tr>
+<tr><td><b>gbk</b></td><td>chinese-*</td><td>Multibyte: GBK</td></tr>
 </table>
-Please note that some combinations are not allowed (especially multi-region), 
-such as (one of) euro-west and chinese-*, because they can cause display conflicts.
-UnrealIRCd will print out an error if you try to do so.<br><br>
+Please note that some combinations can cause problems. 
+For example, combining latin* and chinese-* can not be properly handled by 
+the IRCd and Unreal will print an error. 
+Mixing of other charsets might cause display problems, so Unreal will print out 
+a warning if you try to mix latin1/latin2/latin7.<br><br>
 
 Example 1, for people of western europe:<br>
-<pre>set { allowed-nickchars { euro-west; }; };</pre>
-Example 2, if you have mainly chinese users:<br>
+<pre>set { allowed-nickchars { latin1; }; };</pre>
+Example 2, if you have mainly chinese users and want to allow "normal" chinese characters:<br>
 <pre>set { allowed-nickchars { chinese-simp; chinese-trad; }; };</pre>
 </p></div>
 

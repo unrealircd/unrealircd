@@ -622,3 +622,11 @@
   report it as a bug on http://bugs.unrealircd.org/
 - Added swedish support for nicks, supplied by Tank.
 - Various updates to unreal32docs from Ron2K (#0002354).
+- set::allowed-nickchars:
+  - Renamed 'euro-west' to 'latin1' since that's more descriptive/fair ;)
+  - Added 'hungarian' [supplied by AngryWolf]
+  - Added category 'latin2': just Hungarian for now
+  - Added 'catalan' [supplied by Trocotronic]
+  - Added 'greek' [supplied by GSF]
+  - Added category 'latin7': alias for 'greek'
+  - Added category 'gbk': alias for 'chinese'

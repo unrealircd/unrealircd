@@ -70,8 +70,11 @@ static int do_nick_name_standard(char *nick);
  */
 static int langav;
 /* bitmasks: */
-#define LANGAV_ASCII	1 /* 8 bit ascii */
-#define LANGAV_GBK		2 /* (Chinese) GBK encoding */
+#define LANGAV_ASCII	0x0001 /* 8 bit ascii */
+#define LANGAV_LATIN1	0x0002 /* latin1 (western europe) */
+#define LANGAV_LATIN2	0x0004 /* latin2 (eastern europe, eg: hungarian) */
+#define LANGAV_LATIN7	0x0008 /* latin7 (greek) */
+#define LANGAV_GBK		0x1000 /* (Chinese) GBK encoding */
 
 /** Called on boot and just before config run */
 void charsys_reset(void)
@@ -202,6 +205,7 @@ int firstmbchar = 0;
  */
 int charsys_postconftest(void)
 {
+int x=0;
 	if ((langav & LANGAV_ASCII) && (langav & LANGAV_GBK))
 	{
 		config_error("ERROR: set::accept-language specifies incorrect combination "
@@ -209,31 +213,56 @@ int charsys_postconftest(void)
 		             "cannot be mixed with chinese/..");
 		return -1;
 	}
+	if (langav & LANGAV_LATIN1)
+		x++;
+	if (langav & LANGAV_LATIN2)
+		x++;
+	if (langav & LANGAV_LATIN7)
+		x++;	
+	if (x > 1)
+	{
+		config_status("WARNING: set::accept-language: "
+		            "Mixing of charsets (eg: latin1+latin2+latin7) can cause display problems");
+	}
 	return 1;
 }
 
 /** Check if language is available. */
 int charsys_test_language(char *name)
 {
-	if (!strcmp(name, "euro-west") || !strcmp(name, "german") ||
+	if (!strcmp(name, "latin1") || !strcmp(name, "german") ||
 	    !strcmp(name, "dutch") || !strcmp(name, "swedish") ||
-	    !strcmp(name, "french") || !strcmp(name, "spanish"))
+	    !strcmp(name, "french") || !strcmp(name, "spanish") ||
+	    !strcmp(name, "catalan"))
 	{
-		langav |= LANGAV_ASCII;
-		return 1;
-	}
-	if (!strcmp(name, "chinese") || !strcmp(name, "chinese-trad") ||
-	    !strcmp(name, "chinese-simp") || !strcmp(name, "chinese-ja"))
+		langav |= (LANGAV_ASCII|LANGAV_LATIN1);
+	} else
+	if (!strcmp(name, "latin2") || !strcmp(name, "hungarian"))
+	{
+		langav |= (LANGAV_ASCII|LANGAV_LATIN2);
+	} else
+	if (!strcmp(name, "latin7") || !strcmp(name, "greek"))
+	{
+		langav |= (LANGAV_ASCII|LANGAV_LATIN7);
+	} else
+	if (!strcmp(name, "chinese") || !strcmp(name, "gbk") ||
+	    !strcmp(name, "chinese-trad") || !strcmp(name, "chinese-simp") ||
+	    !strcmp(name, "chinese-ja"))
 	{
 		langav |= LANGAV_GBK;
-		return 1;
-	}
-	return 0;
+	} else
+	if (!strcmp(name, "euro-west"))
+	{
+		config_error("set::accept-language: ERROR: 'euro-west' got renamed to 'latin1'");
+		return 0;
+	} else
+		return 0;
+	return 1;
 }
 
 void charsys_add_language(char *name)
 {
-char euro_west=0, chinese=0;
+char latin1=0, latin2=0, chinese=0;
 
 	/** Note: there could well be some characters missing in the lists below.
 	 *        While I've seen other altnernatives that just allow pretty much
@@ -245,30 +274,32 @@ char euro_west=0, chinese=0;
 	 */
 
 	/* GROUPS */
-	if (!strcmp(name, "euro-west"))
-		euro_west = 1;
-	if (!strcmp(name, "chinese"))
+	if (!strcmp(name, "latin1"))
+		latin1 = 1;
+	if (!strcmp(name, "latin2"))
+		latin2 = 1;
+	if (!strcmp(name, "chinese") || !strcmp(name, "gbk"))
 		chinese = 1;
 	
 	/* INDIVIDUAL CHARSETS */
 
-	if (euro_west || !strcmp(name, "german"))
+	if (latin1 || !strcmp(name, "german"))
 	{
 		/* a", A", e', o", O", u", U" and es-zett */
 		charsys_addallowed("äÄéöÖüÜß");
 	}
-	if (euro_west || !strcmp(name, "dutch"))
+	if (latin1 || !strcmp(name, "dutch"))
 	{
 		/* Ok, even though I'm Dutch myself, I've trouble getting
 		 * a proper list of this ;). I think I got them all now, but
 		 * I did not include "borrow-words" like words we use in Dutch
 		 * that are literal French. So if you really want to use them all,
-		 * I suggest you to use just euro-west :P.
+		 * I suggest you to use just latin1 :P.
 		 */
 		/* e', e", o", i", u", e`. */
 		charsys_addallowed("éëöïüè");
 	}
-	if (euro_west || !strcmp(name, "french"))
+	if (latin1 || !strcmp(name, "french"))
 	{
 		/* A`, A^, a`, a^, weird-C, weird-c, E`, E', E^, E", e`, e', e^, e",
 		 * I^, I", i^, i", O^, o^, U`, U^, U", u`, u", u`, y" [not in that order, sry]
@@ -277,21 +308,39 @@ char euro_west=0, chinese=0;
 		 */
 		charsys_addallowed("ÀÂàâÇçÈÉÊËèéêëÎÏîïÔôÙÛÜùûüÿ");
 	}
-	if (euro_west || !strcmp(name, "spanish"))
+	if (latin1 || !strcmp(name, "spanish"))
 	{
 		/* a', A', e', E', i', I', o', O', u', U', u", U", n~, N~ */
 		charsys_addallowed("áÁéÉíÍóÓúÚüÜñÑ");
 	}
-	if (euro_west || !strcmp(name, "italian"))
+	if (latin1 || !strcmp(name, "italian"))
 	{
 		/* A`, E`, E', I`, I', O`, O', U`, U', a`, e`, e', i`, i', o`, o', u`, u' */
 		charsys_addallowed("ÀÈÉÌÍÒÓÙÚàèéìíòóùú");
 	}
-	if (euro_west || !strcmp(name, "swedish"))
+	if (latin1 || !strcmp(name, "catalan"))
+	{
+		/* supplied by Trocotronic */
+		/* a`, A`, a', A', e`, E`, e', E', i', I', o`, O`, o', O', u', U', i", I", u", U" */
+		charsys_addallowed("àÀáÁèÈéÉíÍòÒóÓúÚïÏüÜ");
+	}
+	if (latin1 || !strcmp(name, "swedish"))
 	{
 		/* supplied by Tank */
 		/* ao, Ao, a", A", o", O" */ 
 		charsys_addallowed("åÅäÄöÖ");
+	}
+	if (latin2 || !strcmp(name, "hungarian"))
+	{
+		/* supplied by AngryWolf */
+		/* a', e', i', o', o", o~, u', u", u~, A', E', I', O', O", O~, U', U", U~ */
+		charsys_addallowed("áéíóöõúüûÁÉÍÓÖÕÚÜÛ");
+	}
+	if (!strcmp(name, "latin7") || !strcmp(name, "greek"))
+	{
+		/* supplied by GSF */
+		/* ranges from rfc1947 / iso 8859-7 */
+		charsys_addallowed("¶¸¹º¼¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏĞÑÓÔÕÖ×ØÙÚÛÜİŞßàáâãäåæçèéêëìíîïğñòóô");
 	}
 	if (chinese || !strcmp(name, "chinese-ja"))
 	{
