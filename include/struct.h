@@ -946,7 +946,7 @@ struct Message {
 	short  parameters;
 	/* bit 0 set means that this command is allowed to be used
 	 * only on the average of once per 2 seconds -SRB */
-	u_char token[2];	/* Cheat for tokenized value */
+	u_char token[3];	/* Cheat for tokenized value */
 	unsigned long bytes;
 #ifdef DEBUGMODE
 	unsigned long lticks;
