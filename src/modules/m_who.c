@@ -162,8 +162,6 @@ int build_searchopts(aClient *sptr, int parc, char *parv[])
 		"               wildcards accepted",
 	        "Flag m <usermodes>: user has <usermodes> set on them,",
 		"                    only o/A/a for nonopers",
-		"Flag n <nick>: user has string <nick> in their nickname,",
-		"               wildcards accepted",
 		"Flag s <server>: user is on server <server>,",
 		"                 wildcards not accepted",
 		"Flag u <user>: user has string <user> in their username,",
@@ -315,16 +313,6 @@ int build_searchopts(aClient *sptr, int parc, char *parv[])
 			  wsopts.umode_plus = change;
 			  if (wsopts.umodes)
 				  wsopts.check_umode = 1;
-			  args++;
-			  break;
-		  case 'n':
-			  if (parv[args] == NULL) {
-				  sendto_one(sptr, getreply(ERR_WHOSYNTAX),
-				      me.name, sptr->name);
-				  return 0;
-			  }
-			  wsopts.nick = parv[args];
-			  wsopts.nick_plus = change;
 			  args++;
 			  break;
 		  case 's':
@@ -696,39 +684,6 @@ DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				    status, WHO_HOPCOUNT(sptr, ac), ac->info);
 				shown++;
 			}
-		}
-	} else {
-		for (ac = client; ac; ac = ac->next) {
-			if (!chk_who(sptr, ac, showall))
-				continue;
-			/*
-			 * wow, they passed it all, give them the reply...
-			 * * IF they haven't reached the max, or they're an oper 
-			 */
-			if (shown == MAXWHOREPLIES && !IsAnOper(sptr)) {
-				sendto_one(sptr, getreply(ERR_WHOLIMEXCEED),
-				    me.name, sptr->name, MAXWHOREPLIES);
-				break;	/* break out of loop so we can send end of who */
-			}
-			status[i++] =
-			    (ac->user->away == NULL ? 'H' : 'G');
-			status[i++] =
-			    (IsAnOper(ac) ? '*' : ((IsInvisible(ac)
-			    && IsOper(sptr)) ? '%' : 0));
-			if (IsARegNick(ac))
-				status[i++] = 'r';
-			status[i++ ] = 0;
-
-			sendto_one(sptr, getreply(RPL_WHOREPLY), me.name,
-			    sptr->name,
-			    wsopts.show_chan ? first_visible_channel(ac,
-			    sptr) : "*", ac->user->username, 
-			    IsHidden(ac) ? ac->user->virthost :
-				    ac->user->realhost,
-
-			    ac->user->server, ac->name, status,
-			    WHO_HOPCOUNT(sptr, ac), ac->info);
-			shown++;
 		}
 	}
 	sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, sptr->name,
