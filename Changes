@@ -366,3 +366,4 @@
 - Fixed a problem with +u for some clients that have a strict interpretation of the RFC.
 - Added TRE 0.7.0, fixes #0001952 reported by Praetorian
 - Fixed an (unimportant) cloak typo / made it a few nanosec faster. Reported by Martin Brulisauer.
+- Fixed resolver not working in FreeBSD jail, reported & patch provided by urkel (#0002097).

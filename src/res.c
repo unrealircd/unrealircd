@@ -130,13 +130,23 @@ int init_resolver(int op)
 	if (op & RES_INITSOCK)
 	{
 		int  on = 0;
-
+		struct sockaddr_in sa; /* TODO: IPv6 */
+		
 #ifdef INET6
 		/* still IPv4 */
 		ret = resfd = socket(AF_INET, SOCK_DGRAM, 0);
 #else
 		ret = resfd = socket(AF_INET, SOCK_DGRAM, 0);
 #endif
+
+		/* TODO: IPv6 */
+		/* for FreeBSD jail we need to bind() explicitly.. */
+		bzero(&sa, sizeof(sa));
+		sa.sin_family = AF_INET;
+		sa.sin_port = 0;
+		sa.sin_addr.s_addr = INADDR_ANY;
+		bind(resfd, (struct sockaddr *) &sa, sizeof(sa));
+
 		(void)setsockopt(ret, SOL_SOCKET, SO_BROADCAST, &on, on);
 	}
 #ifdef DEBUGMODE
