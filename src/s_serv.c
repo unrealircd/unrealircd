@@ -1090,7 +1090,7 @@ int  m_server_estab(cptr)
 	/* use first two chars of the password they send in as salt */
 
 	/* passwd may be NULL. Head it off at the pass... */
-	if (*cptr->passwd)
+	if (cptr->passwd && *cptr->passwd)
 	{
 		char salt[3];
 		extern char *crypt();
@@ -1105,7 +1105,7 @@ int  m_server_estab(cptr)
 #else
 	encr = cptr->passwd;
 #endif /* CRYPT_LINK_PASSWORD */
-	if (*aconf->passwd && !StrEq(aconf->passwd, encr))
+	if (*aconf->passwd && encr && !StrEq(aconf->passwd, encr))
 	{
 		ircstp->is_ref++;
 		sendto_one(cptr, "ERROR :No Access (passwd mismatch) %s",
@@ -1114,7 +1114,10 @@ int  m_server_estab(cptr)
 		return exit_client(cptr, cptr, cptr, "Bad Password");
 	}
 	if (cptr->passwd)
-	MyFree(cptr->passwd);
+	{
+		MyFree(cptr->passwd);
+		cptr->passwd = NULL;
+	}
 #ifndef	HUB
 	for (i = 0; i <= highest_fd; i++)
 		if (local[i] && IsServer(local[i]))

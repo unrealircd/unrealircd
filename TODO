@@ -105,4 +105,7 @@ InTe[_:#roxnet> -oxygen.phrozen.org- *** Global -- from Irc.LinuxFreakz.Net:
         Users can check if they are talking to the right person, NickServ databases
         no longer needs to have passwords, just use RSA keys
 
-	
+* stskeeps - Sun 17 Dec 2000 - 1 - [ General ]
+          
+         P:ip:W:*:port
+           UnrealHTTPD!
