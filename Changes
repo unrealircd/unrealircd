@@ -502,4 +502,4 @@ seen. gmtime warning still there
 - Applied McSkaf's winlocal patch II, only changed Debug() and removed
   DEBUGMODE from config.h. Still cores, but we might be closer to a
   solution. Broken code, do not use devel right now
-
+- Fixed to winlocal by McSkaf

@@ -1689,7 +1689,7 @@ int  read_message(delay, listp)
 	if (!listp)
 	{
 		listp = &default_fdlist;
-		listp->last_entry = LastSlot;
+		listp->last_entry = LastSlot == -1 ? LastSlot : LastSlot + 1;
 	}
 #endif
 
@@ -1705,7 +1705,7 @@ int  read_message(delay, listp)
 #ifdef NO_FDLIST
 		for (i = LastSlot; i >= 0; i--)
 #else
-		for (i = listp->entry[j = 0]; j <= listp->last_entry; i = listp->entry[++j])
+		for (i = listp->entry[j = 1]; j <= listp->last_entry; i = listp->entry[++j])
 #endif
 		{
 			if (!(cptr = local[i]))
@@ -1822,7 +1822,7 @@ int  read_message(delay, listp)
 #ifdef NO_FDLIST
 	for (i = LastSlot; (auth > 0) && (i >= 0); i--)
 #else
-	for (i = listp->entry[j = 0]; j <= listp->last_entry; i = listp->entry[++j])
+	for (i = listp->entry[j = 1]; j <= listp->last_entry; i = listp->entry[++j])
 #endif
 	{
 		if (!(cptr = local[i]))
@@ -2017,7 +2017,7 @@ deadsocket:
 			flush_connections(cptr);
 		if ((length != FLUSH_BUFFER) && IsDead(cptr))
 			goto deadsocket;
-		if (!FD_ISSET(cptr->fd, &read_set) && length > 0)
+		if ((length > 0) && !FD_ISSET(cptr->fd, &read_set) && length > 0)
 			continue;
 		nfds--;
 		readcalls++;
@@ -2135,7 +2135,7 @@ int  read_message(delay, listp)
 	if (!listp)
 	{
 		listp = &default_fdlist;
-		listp->last_entry = LastSlot;
+		listp->last_entry = LastSlot == -1 ? LastSlot : LastSlot + 1;
 	}
 
 	for (res = 0;;)
