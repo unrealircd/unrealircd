@@ -255,3 +255,5 @@
   global variable. Done on request on Great Master codemastr.
 - Made crule.c use the server list rather than the whole client list for checking (faster)
 - Sped up some channel stuff a lot using a bahamut type user search
+- Added CommandHash optimation .. this is not done 100% yet. uses msgtab as
+  reference

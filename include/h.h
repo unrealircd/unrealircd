@@ -388,6 +388,18 @@ extern char *inetntop(int af, const void *in, char *local_dummy,
     size_t the_size);
 #endif
 
+/*
+ * CommandHash -Stskeeps
+*/
+extern aCommand *CommandHash[256];
+void	init_CommandHash(void);
+void	add_Command_backend(char *cmd, int (*func)(), unsigned char parameters, unsigned char token);
+void	add_Command(char *cmd, char *token, int (*func)(), unsigned char parameters);
+void	add_Command_to_list(aCommand *item, aCommand **list);
+aCommand *del_Command_from_list(aCommand *item, aCommand **list);
+
+
+/* CRULE */
 char *crule_parse PROTO((char *));
 int crule_eval PROTO((char *));
 void crule_free PROTO((char **));

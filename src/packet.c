@@ -29,6 +29,9 @@ ID_Copyright
     ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
 ID_Notes("2.12 1/30/94");
 
+aCommand	*CommandHash[256]; 
+
+
 /*
  * inittoken
  * Cheat here, blah. Build the lookup tables from msgtab's,
@@ -37,6 +40,7 @@ ID_Notes("2.12 1/30/94");
  */
 void inittoken(void)
 {
+	aCommand *p;
 	int  loopy;
 	int  final;
 
@@ -48,9 +52,12 @@ void inittoken(void)
 		msgmap[loopy] = &msgtab[final];
 	/* Build references to existing commands */
 	for (loopy = 0; msgtab[loopy].cmd; loopy++)
+	{
 		msgmap[msgtab[loopy].token[0]] = &msgtab[loopy];
+		add_Command(msgtab[loopy].cmd, msgtab[loopy].token,
+		       msgtab[loopy].func, msgtab[loopy].parameters);
+	}
 }
-
 /*
 ** dopacket
 **	cptr - pointer to client structure for which the buffer data
@@ -141,3 +148,62 @@ int  dopacket(cptr, buffer, length)
 	cptr->count = ch1 - cptr->buffer;
 	return 0;
 }
+
+void	init_CommandHash(void)
+{
+	bzero(CommandHash, sizeof(CommandHash));
+}
+
+void	add_Command_backend(char *cmd, int (*func)(), unsigned char parameters, unsigned char token)
+{
+	aCommand	*newcmd = (aCommand *) MyMalloc(sizeof(aCommand));
+	
+	bzero(newcmd, sizeof(aCommand));
+	
+	newcmd->cmd = (char *) strdup(cmd);
+	newcmd->parameters = parameters;
+	newcmd->token = token;
+	newcmd->func = func;
+	
+	/* Add in hash with hash value = first byte */
+	add_Command_to_list(newcmd, &CommandHash[toupper(*cmd)]);
+}
+
+void	add_Command(char *cmd, char *token, int (*func)(), unsigned char parameters)
+{
+	add_Command_backend(cmd, func, parameters, 0);
+	add_Command_backend(token, func, parameters, 1);
+}
+
+void	add_Command_to_list(aCommand *item, aCommand **list)
+{
+	item->next = *list;
+	item->prev = NULL;
+	if (*list)
+		(*list)->prev = item;
+	*list = item;
+}
+
+aCommand *del_Command_from_list(aCommand *item, aCommand **list)
+{
+	aCommand *p, *q;
+	
+	for (p = *list; p; p = p->next)
+	{
+		if (p == item)
+		{
+			q = p->next;
+			if (p->prev)
+				p->prev->next = p->next;
+			else
+				*list = p->next;
+				
+			if (p->next)
+				p->next->prev = p->prev;
+			return q;		
+		}
+	}
+	return NULL;
+}
+
+

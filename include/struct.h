@@ -104,7 +104,7 @@ typedef struct FloodOpt aFloodOpt;
 typedef struct ircstatsx ircstats;
 typedef struct MotdItem aMotd;
 typedef struct trecord aTrecord;
-
+typedef struct Command aCommand;
 #ifdef NEED_U_INT32_T
 typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #endif
@@ -726,6 +726,21 @@ struct Server {
 	long		 users;
 #ifdef	LIST_DEBUG
 	aClient *bcptr;
+#endif
+};
+
+struct Command {
+	aCommand		*next;
+	aCommand		*prev;
+	char 			*cmd;
+	int			(*func) ();
+	unsigned int    	count;
+	unsigned		parameters : 5;
+	unsigned		token : 1;
+	unsigned long   	bytes;
+#ifdef DEBUGMODE
+	unsigned long 		lticks;
+	unsigned long 		rticks;
 #endif
 };
 
