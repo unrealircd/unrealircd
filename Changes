@@ -596,3 +596,4 @@
 - Fixed *some* -Wall warnings (still alot left to fix)
 - Fixed some more -Wall warnings
 - ./update now checks when you specify wget if it exists, if not it tries lynx
+- Cached MOTDs are now dynamically allocated (saves alot of memory)

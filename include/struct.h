@@ -570,7 +570,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	TERMCAP_TERM	2
 
 struct MotdItem {
-	char line[82];
+	char *line;
 	struct MotdItem *next;
 };
 

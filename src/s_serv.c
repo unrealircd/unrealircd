@@ -25,7 +25,7 @@
 static char sccsid[] =
     "@(#)s_serv.c	2.55 2/7/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen";
 #endif
-
+#define AllocCpy(x,y) x  = (char *) MyMalloc(strlen(y) + 1); strcpy(x,y)
 
 #include "struct.h"
 #include "common.h"
@@ -4171,6 +4171,7 @@ void read_tlines()
 		while (tdata->tmotd)
 		{
 			amotd = tdata->tmotd->next;
+			MyFree(tdata->tmotd->line);
 			MyFree(tdata->tmotd);
 			tdata->tmotd = amotd;
 		}
@@ -4178,6 +4179,7 @@ void read_tlines()
 		while (tdata->trules)
 		{
 			arules = tdata->trules->next;
+			MyFree(tdata->trules->line);
 			MyFree(tdata->trules);
 			tdata->trules = arules;
 		}
@@ -4224,6 +4226,7 @@ aMotd *read_svsmotd(char *filename)
 	while (svsmotd)
 	{
 		old = svsmotd->next;
+		MyFree(svsmotd->line);
 		MyFree(svsmotd);
 		svsmotd = old;
 	}
@@ -4241,7 +4244,7 @@ aMotd *read_svsmotd(char *filename)
 		temp = (aMotd *) MyMalloc(sizeof(aMotd));
 		if (!temp)
 			outofmemory();
-		strcpy(temp->line, line);
+		AllocCpy(temp->line, line);
 		temp->next = NULL;
 		if (!newmotd)
 			newmotd = temp;
@@ -4273,6 +4276,7 @@ aMotd *read_rules(char *filename)
 		while (rules)
 		{
 			old = rules->next;
+			MyFree(rules->line);
 			MyFree(rules);
 			rules = old;
 		}
@@ -4292,7 +4296,7 @@ aMotd *read_rules(char *filename)
 		temp = (aMotd *) MyMalloc(sizeof(aMotd));
 		if (!temp)
 			outofmemory();
-		strcpy(temp->line, line);
+		AllocCpy(temp->line, line);
 		temp->next = NULL;
 		if (!newmotd)
 			newmotd = temp;
@@ -4310,7 +4314,7 @@ aMotd *read_rules(char *filename)
  */
 
 aMotd *read_motd(char *filename)
-{
+{ 
 	int  fd = open(filename, O_RDONLY);
 	aMotd *temp, *newmotd, *last, *old;
 	struct stat sb;
@@ -4328,8 +4332,9 @@ aMotd *read_motd(char *filename)
 		while (motd)
 		{
 			old = motd->next;
+			MyFree(motd->line);
 			MyFree(motd);
-			motd = old;
+		motd = old;
 		}
 		/* We also wanna set it's last changed value -- codemastr */
 		motd_tm = localtime(&sb.st_mtime);
@@ -4349,7 +4354,7 @@ aMotd *read_motd(char *filename)
 		temp = (aMotd *) MyMalloc(sizeof(aMotd));
 		if (!temp)
 			outofmemory();
-		strcpy(temp->line, line);
+		AllocCpy(temp->line, line);
 		temp->next = NULL;
 		if (!newmotd)
 			newmotd = temp;
@@ -4359,6 +4364,7 @@ aMotd *read_motd(char *filename)
 	}
 	close(fd);
 	return newmotd;
+
 }
 
 
@@ -4368,6 +4374,7 @@ aMotd *read_motd(char *filename)
 
 aMotd *read_opermotd(char *filename)
 {
+
 	int  fd = open(filename, O_RDONLY);
 	aMotd *temp, *newmotd, *last, *old;
 	char line[82];
@@ -4380,6 +4387,7 @@ aMotd *read_opermotd(char *filename)
 	while (opermotd)
 	{
 		old = opermotd->next;
+		MyFree(opermotd->line);
 		MyFree(opermotd);
 		opermotd = old;
 	}
@@ -4397,7 +4405,7 @@ aMotd *read_opermotd(char *filename)
 		temp = (aMotd *) MyMalloc(sizeof(aMotd));
 		if (!temp)
 			outofmemory();
-		strcpy(temp->line, line);
+		AllocCpy(temp->line, line);
 		temp->next = NULL;
 		if (!newmotd)
 			newmotd = temp;
@@ -4407,6 +4415,7 @@ aMotd *read_opermotd(char *filename)
 	}
 	close(fd);
 	return newmotd;
+
 }
 
 
@@ -4428,6 +4437,8 @@ aMotd *read_botmotd(char *filename)
 	while (botmotd)
 	{
 		old = botmotd->next;
+		
+		MyFree(botmotd->line);
 		MyFree(botmotd);
 		botmotd = old;
 	}
@@ -4445,7 +4456,7 @@ aMotd *read_botmotd(char *filename)
 		temp = (aMotd *) MyMalloc(sizeof(aMotd));
 		if (!temp)
 			outofmemory();
-		strcpy(temp->line, line);
+		AllocCpy(temp->line, line);
 		temp->next = NULL;
 		if (!newmotd)
 			newmotd = temp;
