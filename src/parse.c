@@ -237,6 +237,8 @@ int  parse(cptr, buffer, bufend, mptr)
 	{
 		if (*ch == '@')
 			nsprefix = 1;
+		else
+			nsprefix = 0;
 		/*
 		   ** Copy the prefix to 'sender' assuming it terminates
 		   ** with SPACE (or NULL, which is an error, though).
