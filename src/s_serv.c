@@ -817,7 +817,7 @@ int  m_server(cptr, sptr, parc, parv)
 			    "Colliding server numeric (choose another in the M:line)");
 		}
 
-		acptr = make_client(cptr, find_server(parv[0], NULL));
+		acptr = make_client(cptr, find_server_quick(parv[0]));
 		(void)make_server(acptr);
 		acptr->serv->numeric = numeric;
 		acptr->hopcount = hop;
@@ -2263,7 +2263,7 @@ static void report_configured_links(sptr, mask)
 			/* Only display on X if server is missing */
 			else if (mask == CONF_MISSING)
 			{
-				if (!find_server(name, NULL))
+				if (!find_server_quick(name))
 					sendto_one(sptr,
 					    rpl_str(RPL_STATSXLINE), me.name,
 					    sptr->name, name, port);
@@ -2979,7 +2979,7 @@ int  m_connect(cptr, sptr, parc, parv)
 		return -1;
 	}
 
-	if ((acptr = find_server(parv[1], NULL)))
+	if ((acptr = find_server_quick(parv[1])))
 	{
 		sendto_one(sptr, ":%s NOTICE %s :Connect: Server %s %s %s.",
 		    me.name, parv[0], parv[1], "already exists from",

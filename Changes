@@ -522,3 +522,5 @@
 - Fixed a netsplit bug
 - Changed some find_server(name, NULL) to find_server_quick to speed up
   lookup of servers
+- Made find_server_quick a prototype, and made some work more quicker as
+  well

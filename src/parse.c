@@ -270,7 +270,7 @@ int  parse(cptr, buffer, bufend, mptr)
 			{
 				from = find_client(sender, (aClient *)NULL);
 				if (!from || match(from->name, sender))
-					from = find_server(sender, (aClient *)NULL);
+					from = find_server_quick(sender);
 				else if (!from && index(sender, '@'))
 					from = find_nickserv(sender, (aClient *)NULL);
 				para[0] = sender;

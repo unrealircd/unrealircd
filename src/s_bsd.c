@@ -2506,7 +2506,7 @@ int  connect_server(aconf, by, hp)
 	Debug((DEBUG_NOTICE, "Connect to %s[%s] @%s",
 	    aconf->name, aconf->host, inetntoa((char *)&aconf->ipnum)));
 
-	if ((c2ptr = find_server(aconf->name, NULL)))
+	if ((c2ptr = find_server_quick(aconf->name)))
 	{
 		sendto_ops("Server %s already present from %s",
 		    aconf->name, get_client_name(c2ptr, TRUE));
