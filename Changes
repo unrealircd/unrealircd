@@ -1086,3 +1086,4 @@ seen. gmtime warning still there
   and current line number display)
 - Fixed yet another serious sts bug, we have to release beta6 soon :P~
 - Fixed check_for_target_limit, should be more lenient now
+- Sts is going for a record here, fixed ANOTHER auth bug in the SAME function

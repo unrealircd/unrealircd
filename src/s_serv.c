@@ -566,7 +566,7 @@ int  m_server(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	char *servername = NULL;	/* Pointer for servername */
-	char *password = NULL;
+ /*	char *password = NULL; */
 	char *ch = NULL;	/* */
 	char *inpath = get_client_name(cptr, TRUE);
 	aClient *acptr = NULL, *ocptr = NULL;
@@ -658,7 +658,7 @@ int  m_server(cptr, sptr, parc, parv)
 			    "Link denied (No matching link configuration)");
 		}
 		/* Now for checking passwords */
-		if (Auth_Check(cptr, aconf->recvauth, password) == -1)
+		if (Auth_Check(cptr, aconf->recvauth, cptr->passwd) == -1)
 		{
 			sendto_one(cptr,
 			    "ERROR :Link denied (Authentication failed) %s",
