@@ -1291,3 +1291,4 @@ seen. gmtime warning still there
   funny bugs.
 - Fixed a number of bugs in the upper patch. 
 - Fixed an OpenBSD bug reported by RaYmAn, k0adh, and numerous others (#0000104)
+- Credits changes
