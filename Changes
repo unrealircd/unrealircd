@@ -1813,3 +1813,4 @@ seen. gmtime warning still there
 - Cleanup of m_userhost
 - Added a much faster (>100x) badwords replace routine, currently disabled until it's
   100% finished and more testing has been done.
+- Cleanups in badwords.c.

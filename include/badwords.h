@@ -17,6 +17,4 @@
 #define PATTERN		"\\w*%s\\w*"
 #define REPLACEWORD	"<censored>"
 
-char *stripbadwords(char *, int);
-
 #endif

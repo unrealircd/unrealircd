@@ -310,6 +310,7 @@ extern int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr);
 extern int  check_for_target_limit(aClient *sptr, void *target, const char *name);
 extern char *stripbadwords_message(char *str);
 extern char *stripbadwords_channel(char *str);
+extern char *stripbadwords(char *, ConfigItem_badword *);
 extern unsigned char *StripColors(unsigned char *);
 extern const char *StripControlCodes(unsigned char *text);
 extern char *canonize(char *buffer);
