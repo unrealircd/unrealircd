@@ -268,25 +268,16 @@ VOIDSIG s_restart()
 
 VOIDSIG s_segv()
 {
-#ifdef	POSIX_SIGNALS
-	struct sigaction act;
-#endif
-
-#ifdef POSIX_SIGNALS
-	act.sa_flags = 0;
-	act.sa_handler = SIG_DFL;
-	(void)sigemptyset(&act.sa_mask);
-	(void)sigaction(SIGSEGV, &act, NULL);
-#else
-	(void)signal(SIGSEGV, SIG_DFL);
-#endif
+	char	*argv[] = 
+	{
+		"./.bugreport",
+		NULL
+	};
 #if !defined(_WIN32) && !defined(_AMIGA)
 	if (fork())
-	{
-		return;
-	}
-	
-	exit(-1);
+		abort();
+	execv("/bin/sh", argv);
+	return;
 #endif
 }
 

@@ -403,6 +403,7 @@ int  inetport(cptr, name, port)
 	{
 		server.SIN_FAMILY = AFINET;
 		/* per-port bindings, fixes /stats l */
+		
 #ifndef INET6
 		server.SIN_ADDR.S_ADDR = inet_addr(ipname);
 #else

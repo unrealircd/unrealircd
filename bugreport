@@ -1,4 +1,5 @@
 #!/bin/sh
+sleep 3
 DATE=`date +%Y%m%d-%H%M%S`
 HOSTNAME=`hostname` 
 USERNAME=`whoami`
@@ -13,7 +14,9 @@ echo "Operating system:" >> $BUGREPORT
 ls -l *core* >> $BUGREPORT
 uname -a >> $BUGREPORT
 gdb -x .bugreport.gdb src/ircd *core* >> $BUGREPORT 2>&1
-more $BUGREPORT
+
+exit 0
+
 cat |sendmail -t << __EOF__&
 To: bugs-unreal@tspre.org
 From: autobugreport@unrealircd.com
