@@ -684,3 +684,4 @@ extern fdlist default_fdlist, busycli_fdlist, serv_fdlist, oper_fdlist;
 extern void DCCdeny_add(char *filename, char *reason, int type);
 extern void DCCdeny_del(ConfigItem_deny_dcc *deny);
 extern void dcc_wipe_services(void);
+extern void reread_motdsandrules();
