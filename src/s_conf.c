@@ -2151,8 +2151,10 @@ void report_dynconf(aClient *sptr)
 	    sptr->name, HOST_RETRIES);
 	sendto_one(sptr, ":%s %i %s :dns::nameserver: %s", me.name, RPL_TEXT,
 	    sptr->name, NAME_SERVER);
+#ifdef THROTTLING
 	sendto_one(sptr, ":%s %i %s :throttle::period: %s", me.name, RPL_TEXT,
 			sptr->name, pretty_time_val(THROTTLING_PERIOD ? THROTTLING_PERIOD : 15));
+#endif
 }
 
 /* Report the network file info -codemastr */
