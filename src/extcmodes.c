@@ -120,6 +120,12 @@ Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode)
 	{
 		if (!Channelmode_Table[i].flag)
 			break;
+		else if (Channelmode_Table[i].flag == req.flag)
+		{
+			if (reserved)
+				reserved->errorcode = MODERR_EXISTS;
+			return NULL;
+		}
 		i++;
 	}
 	if (i == EXTCMODETABLESZ)
