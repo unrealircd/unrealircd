@@ -569,4 +569,4 @@
   MODE (2300), WATCH (250), JOIN (600), PART (250), MOTD (100), OPERMOTD (100),
   BOTMOTD (100), LUSERS (100). More will follow soon (probably including more subfunctions
   related to existing commands).
-- win32 makefile updates for above & more
+- win32 makefile updates for above & more...
