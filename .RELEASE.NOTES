@@ -98,6 +98,7 @@ Unreal3.2.3-pre1 Release Notes
   will get desynch issues.
 - Fixed several /SAMODE bugs as well, regarding non-netadmins, being halfop'ed, etc.
 - /GZLINE [nick] was placing a *line on *@host instead of *@IP, fixed.
+- alias::format in combination with ::type 'command' caused a crash
 
 ==[ REMOVED ]==
 - NAZIISH_CHBAN_HANDLING (did not work at all)
