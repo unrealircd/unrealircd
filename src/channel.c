@@ -1,4 +1,3 @@
-
 /*
  *   Unreal Internet Relay Chat Daemon, src/channel.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
@@ -3687,6 +3686,9 @@ void send_list(aClient *cptr, int numsend)
 	aChannel *chptr;
 	LOpts *lopt = cptr->lopt;
 	int  hashnum;
+#ifdef LIST_SHOW_MODES
+char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
+#endif
 
 	for (hashnum = lopt->starthash; hashnum < CH_MAX; hashnum++)
 	{
@@ -3728,6 +3730,14 @@ void send_list(aClient *cptr, int numsend)
 				    !find_str_match_link(&
 				    (lopt->yeslist), chptr->topic)))
 					continue;
+#ifdef LIST_SHOW_MODES
+				mode_buf[0] = '[';
+				channel_modes(cptr, &mode_buf[1], parabuf, chptr);
+				if (mode_buf[2] == '\0')
+					mode_buf[0] = '\0';
+				else
+					strcat(mode_buf, "]");
+#endif
 				if (!IsAnOper(cptr))
 					sendto_one(cptr,
 					    rpl_str(RPL_LIST), me.name,
@@ -3735,6 +3745,10 @@ void send_list(aClient *cptr, int numsend)
 					    ShowChannel(cptr,
 					    chptr) ? chptr->chname :
 					    "*", chptr->users,
+#ifdef LIST_SHOW_MODES
+					    ShowChannel(cptr, chptr) ?
+					    mode_buf : "",
+#endif
 					    ShowChannel(cptr,
 					    chptr) ? (chptr->topic ?
 					    chptr->topic : "") : "");
@@ -3743,6 +3757,9 @@ void send_list(aClient *cptr, int numsend)
 					    rpl_str(RPL_LIST), me.name,
 					    cptr->name, chptr->chname,
 					    chptr->users,
+#ifdef LIST_SHOW_MODES
+					    mode_buf,
+#endif					    
 					    (chptr->topic ? chptr->topic : ""));
 				numsend--;
 			}
@@ -3864,6 +3881,9 @@ int  m_list(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	TS   chantimemin, chantimemax;
 	TS   topictimemin, topictimemax;
 	Link *yeslist = NULL, *nolist = NULL;
+#ifdef LIST_SHOW_MODES
+	char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
+#endif
 
 	static char *usage[] = {
 		"   Usage: /LIST <options>",
@@ -4036,15 +4056,28 @@ int  m_list(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			  else	/* Just a normal channel */
 			  {
 				  chptr = find_channel(name, NullChn);
-				  if (chptr && ShowChannel(sptr, chptr))
+				  if (chptr && ShowChannel(sptr, chptr)) {
+#ifdef LIST_SHOW_MODES
+					mode_buf[0] = '[';
+					channel_modes(sptr, &mode_buf[1], parabuf, chptr);
+					if (mode_buf[2] == '\0')
+						mode_buf[0] = '\0';
+					else
+						strcat(mode_buf, "]");
+#endif
 					  sendto_one(sptr,
 					      rpl_str(RPL_LIST),
 					      me.name, parv[0],
 					      ShowChannel(sptr,
 					      chptr) ? name : "*",
 					      chptr->users,
+#ifdef LIST_SHOW_MODES
+					      ShowChannel(sptr, chptr) ?
+					      mode_buf : "",
+#endif
 					      (chptr->topic ? chptr->topic :
 					      ""));
+}
 			  }
 		}		/* switch */
 	}			/* while */

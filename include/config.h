@@ -52,7 +52,6 @@
     * Define this if you're testing/debugging/programming.
   */
 #undef DEBUG
-
 /* Type of host. These should be made redundant somehow. -avalon */
 
 /*	BSD			Nothing Needed 4.{2,3} BSD, SunOS 3.x, 4.x */

@@ -355,7 +355,11 @@ static char *replies[] = {
 /* 319    RPL_WHOISCHANNELS */ ":%s 319 %s %s :%s",
 /* 320    RPL_WHOISSPECIAL */ ":%s 320 %s %s :%s",
 /* 321    RPL_LISTSTART */ ":%s 321 %s Channel :Users  Name",
+#ifndef LIST_SHOW_MODES
 /* 322    RPL_LIST */ ":%s 322 %s %s %d :%s",
+#else
+/* 322    RPL_LIST */ ":%s 322 %s %s %d :%s %s",
+#endif
 /* 323    RPL_LISTEND */ ":%s 323 %s :End of /LIST",
 /* 324    RPL_CHANNELMODEIS */ ":%s 324 %s %s %s %s",
 /* 325 */ NULL,

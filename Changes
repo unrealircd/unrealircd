@@ -622,3 +622,4 @@
   - Net/TechAdmins can now see +I users in /names
 - Fixed a typo in s_err.c reported by TRON
 - Fixed more -Wall warnings
+- Added #define LIST_SHOW_MODES to show channel modes in a /list (NOTE: only shows modes, not params)
