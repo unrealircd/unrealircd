@@ -139,7 +139,7 @@ DLLFUNC int h_defizzer_connect(aClient *sptr)
 		free(infobackup);
 		return 0;
 	}		
-	snprintf(user, sizeof(user), "~%s%s", s2, s1);
+	snprintf(user, sizeof(user), "%s%s%s", (IDENT_CHECK ? "~" : ""), s2, s1);
 	free(infobackup);	
 	if (!strcmp(user, sptr->user->username))
 	{
