@@ -131,4 +131,4 @@ TKLEXT        This allows 10 instead of 8 parameters in TKL's for spamfilter, se
 
 NICKIP        This token indicates that a (standard) base64 encoded IP address is included
               in the NICK command. The IP is in binary network byte order formated and
-              encoded using the standard base64 algorithm.  
+              encoded using the standard base64 algorithm. '*' is used if no IP is available.
