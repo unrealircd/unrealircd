@@ -1,0 +1,15 @@
+Some notes to remember:
+-----------------------
+* Don't EVER try to link it to incompatible IRCds (this does not
+  include services). It is *INCOMPATIBLE*. Please HEED this warning!!!
+
+* If you need any help you can email me at stskeeps@tspre.org
+
+* Please read the Changes file about release notes
+
+* Bugs? Read Unreal.nfo
+
+* Unreal IRCd is not meant to be a simple IRCd, rather an advanced
+  IRCd, please read the documentation before asking questions
+  
+[ $Id$ ]

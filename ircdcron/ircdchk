@@ -1,0 +1,49 @@
+#!/bin/sh
+#
+# UnrealIRCD Crontab v2.1
+# $Id$
+#
+# This is a script suitable for use in a crontab.  It checks to make sure
+# your ircd is running.  YOU NEED A SEPARATE CRON JOB FOR EACH IRCD.  If your
+# ircd isn't found, it'll try to start it back up.
+#
+# You'll need to edit this script for your ircd.
+#
+# To check for your ircd every 10 minutes, put the following line in your
+# crontab:
+#    0,10,20,30,40,50 * * * *   /home/mydir/ircdchk
+# And if you don't want to get email from crontab when it checks you ircd,
+# put the following in your crontab:
+#    0,10,20,30,40,50 * * * *   /home/mydir/ircdchk >/dev/null 2>&1
+#
+# change this to the mail address to mail output to:
+MAIL=me
+# change this to the directory you run your ircd from:
+dir="../"
+
+# change this to the name of your ircd's file in that directory:
+ircdexe="ircd"
+
+# I wouldn't touch this if I were you.
+ircdname="ircd.pid"
+
+########## you probably don't need to change anything below here ##########
+
+cd $dir
+if test -r $ircdname; then
+  # there is a pid file -- is it current?
+  ircdpid=`cat $ircdname`
+  if `kill -CHLD $ircdpid >/dev/null 2>&1`; then
+    # it's still going
+    # back out quietly
+    exit 0
+  fi
+  echo "UnrealIRCd Crontab notice:"
+  echo ""
+  echo "Stale $ircdname file (erasing it)"
+  rm -f $ircdname
+fi
+echo ""
+echo "Couldn't find the ircd running.  Reloading it..."
+echo ""
+./$ircdexe

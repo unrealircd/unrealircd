@@ -1,0 +1,49 @@
+===============================================
+=            UnrealIRCd v3.0                  =
+===============================================
+ Was brought to you by:
+  * Stskeeps  <stskeeps@tspre.org>
+  * codemastr <codemastr@tspre.org>
+  
+ Precenses on the Internet:
+  * http://unreal.tspre.org or http://unreal.sourceforge.net
+  * ftp://unreal.sourceforge.net/pub/unreal
+  * ftp://ftp.shadow-realm.org/pub/ircd/UnrealIRCd
+ 
+ CVS Repository:
+  * Alpha versions (or beta)
+  ==========================  
+cvs -z9 -d :pserver:anonymous@cvs.unreal.sourceforge.net:/cvsroot/unreal login
+    (just press enter when it asks for password)
+cvs -z9 -d :pserver:anonymous@cvs.unreal.sourgeforge.net:/cvsroot/unreal co alpha
+
+  * To get support
+  ================
+    * IRC: /server irc.flirt.org 6667 - /join #unrealircd
+    * Mailing list: unreal-support@lists.sourceforge.net (for support)
+  
+  * Got a bug to report? 
+  ====================== 
+    * If the server crashes and dumps core do this:
+       * Go into the Unreal directory and type this:
+           gdb src/ircd core.filename
+         where core.filename is the filename in the dumping core message
+         if it loads gdb, (not saying "command not found" etc), type "bt" in
+         the program (type "quit" to get out again)
+        
+         The output coming out there please mail it to 
+         unreal-dev@lists.sourceforge.net, along with OS type,
+         what "uname -a" says, any clues what it is, if you did anything etc
+         etc. Please keep the core dump files if we ask you to mail us them 
+         if needed
+
+    * If you experince any wierdnesses (that doesnt crash the server)
+      please mail unreal-dev@lists.sourceforge.net with any clues on what
+      you did, what you experinced etc.
+
+  * Got a suggestion?
+  ===================
+    * Mail it to unreal-dev@lists.sourceforge.net :) or catch one from
+      the Unreal team online on IRC:)
+
+ 

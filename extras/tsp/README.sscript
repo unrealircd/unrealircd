@@ -1,0 +1,40 @@
+
+
+                    Socket Script C library
+                    -----------------------
+
+Home page:
+http://www.linsupport.com
+
+This is a simple library that provides usefull functions for C 
+networking applications. It's based on the Socket Script scripting
+language, but meant for C programmers. These functions are really
+shortcuts to C functions, meant to make their use simple.
+
+This can create a static lib: libsscript.a
+
+To compile:
+
+make
+
+Then to install it:
+
+make install
+
+
+(C) Copyright 1998-2000 Patrick Lambert <drow@post.com>
+
+This library is under the LGPL license which means:
+
+1- You can copy and use this program freely.
+
+2- You may not claim that you wrote it.
+
+3- If you want to include parts of this software in your own product,
+you can do so if that product stays under free software and if all
+copyright notices in source and documentation, as well as the no warranty
+comment, remains.
+
+4- This program is distributed without ANY WARRANTY, without even
+the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.

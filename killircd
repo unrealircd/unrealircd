@@ -1,0 +1,29 @@
+#!/bin/sh
+# Kill Script v2.0
+# Created by Potvin
+# $Id$
+DIR=`pwd`
+DATE=`date +"%a, %b %e %Y"`
+TIME=`date +"%H:%M:%S %Z"`
+IRCDPID="ircd.pid"
+
+if [ ! -r $IRCDPID ]; then
+clear
+echo "|--------------------------------------------|"
+echo "|              **** ERROR ****               |"
+echo "|             Possible problems:             |"
+echo "| (1) $IRCDPID not found                     |"
+echo "| (2) The IRCd is not running                |"
+echo "|--------------------------------------------|"
+else
+PID=`cat $IRCDPID`
+kill -9 $PID >/dev/null 2>&1
+rm -f $IRCDPID
+echo "|----------------------------------------"
+echo "| UnrealIRCD successfully shutdown."
+echo "| Directory: $DIR"
+echo "| Date: $DATE"
+echo "| Time: $TIME"
+echo "| Process ID: $PID"
+echo "|----------------------------------------"
+fi

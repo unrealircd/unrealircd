@@ -1,0 +1,58 @@
+ver^2.2
+# These two specify the name of the IRC network, set the same in both fields
+Network >..........: StarSpace
+Set ircnetwork ....: StarSpace
+
+# This is where your DNS pool is (like irc.dal.net)
+Set defserv .......: IRC.StarSpace.Net
+
+# This is the name of your Services Server
+Set SERVICES_NAME .: Services.StarSpace.Net
+
+# This is the virtual hostname IRCops will get if iNAH option is enabled
+# on oper up
+Set oper_host .....: Global.StarSpace.Net
+
+# This is the virtual hostname Server Admins will get if iNAH option is enabled
+# on oper up
+Set admin_host ....: Admin.StarSpace.Net
+
+# This is the virtual hostname Local IRCops will get if iNAH option is enabled
+# on oper up
+
+Set locop_host ....: Local.StarSpace.Net
+
+# This is the virtual hostname Services Operators/Admins will get
+# if iNAH option is enabled on oper up
+
+Set sadmin_host ...: ServOp.StarSpace.Net
+
+# This is the virtual hostname NetAdmins will get
+# if iNAH option is enabled on oper up
+
+Set netadmin_host .: NetAdmin.StarSpace.Net
+
+# This is the virtual hostname CoAdmins will get
+# if iNAH option is enabled on oper up
+Set coadmin_host ..: CoAdmin.StarSpace.Net
+
+
+# This is the virtual hostname TechAdmins will get
+# if iNAH option is enabled on oper up
+Set techadmin_host : TechAdmin.StarSpace.Net
+
+# This is the prefix of the hidden host (cloaking) hostname
+Set hidden_host ...: starspace
+# This is the domain of the IRC network
+Set netdomain .....: StarSpace.Net
+# This is where people can go for help
+Set helpchan ......: #OperHelp
+# This is the name of the stats server
+Set STATS_SERVER ..: Stats.StarSpace.Net
+# -- Not in use--
+Set HUB ...........: 1
+# This enables the auto-setting of f.x @netadmin.network.net 
+# on oper up
+Set iNAH ..........: 1
+# -- Not in use but still here --
+Set net_quit ......: SS

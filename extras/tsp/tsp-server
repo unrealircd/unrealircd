@@ -1,0 +1,2 @@
+#!/bin/sh
+./tsp-skin 6100 ./tsp-server-run &

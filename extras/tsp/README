@@ -1,0 +1,26 @@
+
+how to use tsp-client:
+
+first make it "make"
+
+then run it like this:
+$ ./tsp-client <tsp server> <port>
+
+do this a couple of times
+if the answers come within 1 second count its right
+then take the most common time difference count and do in UnrealIRCd like
+this:
+
+/quote tsctl offset + <difference count>
+
+then your server is time synched
+
+current tsp servers online:
+
+server           port
+-----------------------------
+irc.flirt.org    6100
+
+
+if you want to make your own TSP server (must be a box using NTP)
+run ./tsp-server, it will then start running on port 6100

@@ -1,0 +1,4 @@
+#!/bin/sh
+# $Id$
+
+lynx http://unreal.sourceforge.net/register.html

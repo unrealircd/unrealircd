@@ -1,0 +1,34 @@
+
+For starters, not a lot is new.  What is ?
+
+	* STATS o and STATS h added;
+
+	* most STATS options are no longer oper-only;
+
+	* privacy fixes to all of WHO, WHOIS, TRACE and STATS;
+
+	* more options in the ircd.conf file;
+
+	* non-debilitating DNS/ident use (DNS routines written specifically
+	  for ircd which indludes small local cache);
+
+	* less bugs;
+
+	* easier to compile;
+
+	* heaps and heaps of new numerics;
+
+	* more problems for old clients that do stupid things;
+
+	* more numeric replies which replace old NOTICE's;
+
+	* compulsory ident checks and optional result usage;
+
+	* sendQ can now be class dependant;
+
+	* server handles client flooding better;
+
+	* for more information on changes, bug fixes during development, see
+	  ircd/ChangeLog and common/ChangeLog
+
+[ $Id$ ]

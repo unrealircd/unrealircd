@@ -1,0 +1,85 @@
+#!/bin/sh
+# IRC - Internet Relay Chat, ircd/buildm4
+# Copyright (C) 1993 Darren Reed
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 1, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#
+# - $Id$
+#
+# If only this was a perl script...*sigh*
+#
+IRCDDIR=$1
+M4=$IRCDDIR/ircd.m4
+/bin/rm -f $M4
+egrep "^#def[^P]*VERSION" ../include/version.h | \
+sed -e 's/[^\"]*\"\([^\"]*\)\"/define(VERSION,\1)/' >>$M4
+DEBUG=`egrep "^#define[		]*DEBUGMODE" ../include/config.h`
+if [ -n "$DEBUG" ] ; then
+	echo "define(DEBUGMODE,1)" >>$M4
+else
+	echo "undefine(DEBUGMODE)" >>$M4
+fi
+echo -n "define(HOSTNAME," >> $M4
+echo "`hostname`" | sed -e 's/\([a-zA-Z0-9\-]*\).*/\1)/' >> $M4
+echo "define(USER,$USER)" >>$M4
+echo -n 'define(PORT,' >>$M4
+PORT=`egrep '^#define[ 	]*PORT[ 	]*[0-9]*' ../include/config.h`
+echo "$PORT" | sed -e 's/[^0-9]*\([0-9]*\).*/\1)/' >> $M4
+echo -n 'define(PFREQ,' >>$M4
+PING=`egrep '^#define[ 	]*PINGFREQUENCY[ 	]*[0-9]*' ../include/config.h`
+echo "$PING" | sed -e 's/[^0-9]*\([0-9]*\).*/\1)/' >> $M4
+echo -n 'define(CFREQ,' >>$M4
+CONT=`egrep '^#define[ 	]*CONNECTFREQUENCY[ 	]*[0-9]*' ../include/config.h`
+echo "$CONT" | sed -e 's/[^0-9]*\([0-9]*\).*/\1)/' >> $M4
+echo -n "define(MAXSENDQ," >>$M4
+MAXQ=`egrep '^#define[ 	]*MAXSENDQLENGTH[ 	]*[0-9]*' ../include/config.h`
+echo "$MAXQ" | sed -e 's/[^0-9]*\([0-9]*\).*/\1)/' >> $M4
+echo -n "define(MAXLINKS," >>$M4
+MAXL=`egrep '^#define[ 	]*MAXIMUM_LINKS[ 	]*[0-9]* | head -1' \
+../include/config.h`
+echo "$MAXL" | sed -e 's/[^0-9]*\([0-9]*\).*/\1)/' >> $M4
+DOM=`egrep '^domain' /etc/resolv.conf | \
+sed -e 's/^domain[ 	]*\([a-zA-Z\-\.0-9]*\).*/\1/'`
+echo "define(DOMAIN,$DOM)" >> $M4
+
+cat >>$M4 <<_EOF_
+define(CL,\`ifelse(len(\$1),0,0,\$1)')
+define(HOST,\$1)
+define(HOSTM,\$1)
+define(ID,*@\$1)
+define(PASS,\$1)
+define(PING,\`ifelse(len(\$1),0,PFREQ,\$1)')
+define(APORT,\`ifelse(len(\$1),0,PORT,\$1)')
+define(FREQ,\`ifelse(len(\$1),0,CFREQ,\$1)')
+define(SENDQ,\`ifelse(len(\$1),0,MAXSENDQ,\$1)')
+define(MAX,\`ifelse(len(\$1),0,MAXLINKS,\$1)')
+define(CPORT,\$1)
+define(SERV,\$1)
+define(ADMIN,A:\$1:\$2:\$3:\$4:\$5)
+define(ALLOW,N:\`HOST(\$1)':\`PASS(\$2)':\`SERV(\$3)':\`HOSTM(\$4)':\`CL(\$5)')
+define(BAN,K:\$1:\$2:\$3)
+define(CLASS,Y:\$1:\`PING(\$2)':\$3:\`MAX(\$4)':\`SENDQ(\$5)')
+define(CLIENT,I:\`HOST(\$1)':\`PASS(\$2)':\`ifelse(len(HOST(\$3)),0,\$1,\$3)':\
+\`APORT(\$4)':\`CL(\$5)')
+define(CONNECT,C:\`HOST(\$1)':\`PASS(\$2)':\`SERV(\$3)':\
+\`CPORT(\$4)':\`CL(\$5)')
+define(ME,M:\$1:\$2:\$3:\$4:\$5)
+define(HUB,H:\`ifelse(len(\$2),0,*,\$2)':*:\$1)
+define(LEAF,L:\`ifelse(len(\$2),0,*,\$2)':*:\$1:1)
+define(SERVER,\`
+CONNECT(\$1,\$2,\$3,\$5,\$6)
+ALLOW(\$1,\$2,\$3,\$4,\$6)
+')
+_EOF_

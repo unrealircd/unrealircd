@@ -1,0 +1,1 @@
+0,10,20,30,40,50 * * * *   /home/mydir-to/ircdcron/ircdchk >/dev/null 2>&1

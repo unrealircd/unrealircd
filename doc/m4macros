@@ -1,0 +1,47 @@
+[ $Id$ ]
+The following macros are included in "ircd.m4" for use with the m4 text
+preprocessor.  "ircd.m4" is parsed before the IRC server conf file so they
+are all available for use with that.
+
+NOTE:  The "ircd.m4" file is *ONLY* created by a "make install".
+
+VERSION - current version string as in patchlevel.h
+DEBUGMODE - if DEBUGMODE is define in config.h, is also defined for m4.
+HOSTNAME - taken from hostname(1)
+USER - username of person doing the "make install"
+PORT - default port number as in config.h
+PFREQ - default ping frequency as in config.h
+CFREQ - default connect frequency as in config.h
+MAXSENDQ - default max sendq as in config.h
+CL - use this to wrap a class number
+HOST - use this to wrap a hostname
+HOSTM - use this to wrap the hostmask number in N-lines
+ID - when wrapping the host field in an I-line, causes ident string return
+     to be used instead of user supplised username.
+PASS - use this to wrap passwords in C/N/I/O lines
+PING - use this to wrap the ping value in Y-lines
+APORT - use this to wrap the port number in I-lines
+CPORT - use this to wrap the port number in C-lines
+SERV - use this to wrap server names
+
+You might use some of these as
+C:foo.bar.edu:PASS(boo):foo.bar.edu:APORT(6667)
+I:ID(128.250.*)::ID(*.mu.oz.au):CPORT(6667)
+
+In addition to these (rather weak macros), some more complete ones are
+defined which already perform the above.
+
+ADMIN - provide fields to it as you would an A-line
+ALLOW - provide fields to it as you would an N-line
+BAN - provide fields to it as you would an K-line
+CLASS - provide fields to it as you would an Y-line
+CLIENT - provide fields to it as you would an I-line
+CONNECT - provide fields to it as you would an C-line
+ME - provide fields to it as you would an M-line
+HUB - first parameter is server you want to hub, second is optional and is
+      a mask against which other servers introduced must match against.
+LEAF - works like HUB, except that the mask is matched against server names
+       to check if the link should be dropped.
+SERVER - uses 6 fields, the first 4 as are found in an N-line, the last two
+         should be as you would use in a C-line.  It expands out to provide
+         both a C and N line.

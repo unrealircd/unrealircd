@@ -1,0 +1,30 @@
+ver^2.2
+#
+# ROXnet (irc.rox.za.net) Network Configuration File
+# --------------------------------------------------
+#  Added-at:     14 July 1999 00:00 GMT
+#  Author:       Stskeeps (Carsten Munk)
+#  E-Mail:       stskeeps@roxnet.org
+#  $Id$
+# -----------------------------------------
+#
+
+Network >..........: ROXnet
+Set ircnetwork ....: ROXnet
+Set defserv .......: irc.roxnet.org
+Set SERVICES_NAME .: services.roxnet.org
+Set oper_host .....: ircop.roxnet.org
+Set admin_host ....: admin.roxnet.org
+Set locop_host ....: locop.roxnet.org
+Set sadmin_host ...: csops.roxnet.org
+Set netadmin_host .: netadmin.roxnet.org
+Set coadmin_host ..: coadmin.roxnet.org
+Set techadmin_host : techadmin.roxnet.org
+Set hidden_host ...: rox
+Set netdomain .....: roxnet.org
+Set helpchan ......: #ROXnet
+Set STATS_SERVER ..: stats.roxnet.org
+Set HUB ...........: 1
+Set iNAH ..........: 0
+Set net_quit ......: Rox
+

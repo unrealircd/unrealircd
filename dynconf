@@ -1,0 +1,21 @@
+                    [ $Id$ ]
+             Dynamic Configuration Guide
+
+Okay first you have to go edit the file "unrealircd.conf" in 
+the directory "networks/". In that file you see a field with
+name "Include" .. if you want to create your own network file
+(IRC network specification) you have to write like 
+"networks/<irc network>.network" like "networks/myircnetwork.network"
+
+If there is already a network file you can just put in the path
+like : "networks/dragonwings.org"
+
+If you want to create your own network file 
+copy the file "template.network" to the name you want to use for 
+your network file and edit it.
+
+If you experince any problems email me at stskeeps@tspre.org
+or try msg me at /server irc.global-irc.net : #UnrealIRCd
+My nick is mostly Stskeeps or Techie (or Nightwalker if i had a bad night:P)
+
+--Stskeeps

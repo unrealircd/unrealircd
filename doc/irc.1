@@ -1,0 +1,82 @@
+.\" $Id$
+.TH IRC 1 "7 October 1990"
+.SH NAME
+irc \- User Interface to Internet Relay Chat Protocol
+.SH SYNOPSIS
+\fBirc\fP [\fB-p\fP \fIportnum\fP] [\fB-c\fP \fIchannel\fP] [ \fInickname\fP [ \fIserver\fP ]]
+.SH DESCRIPTION
+.LP
+\fBIrc\fP is a user interface to the Internet Relay Chat, a CB-like
+interactive discussion environment.  It is structured into \fIchannels\fP,
+which are public discussion forums, and also allows for private intercommunication.
+Each participant has a \fInickname\fP, which is the one specified in the command
+line or else his login name.
+.LP
+Once invoked, \fBirc\fP connects as a client to the specified server,
+\fIserver\fP or to the default one (see below).  The screen splits into a dialogue
+window (the major part
+of the screen) and a command line, from which messages can be sent and
+commands given to control irc.
+.SH COMMAND SYNTAX
+The syntax of irc commands is of the form \fB/COMMAND\fP.  The most notable
+ones are listed below.  For an uptodate list, use the \fBHELP\fP command
+of \fBirc\fP.  Case is ignored.
+.IP "\fB/ADMIN\fR [\fIserver\fP]"
+Prints administrative information about an IRC \fIserver\fP.
+.IP "\fB/AWAY\fP [\fImessage\fP]"
+Mark yourself as being away (with an automatic reply \fImessage\fP
+if specified)
+.IP "\fB/BYE\fR, \fB/EXIT\fR, \fB/QUIT\fR"
+Terminate the session
+.IP "\fB/CHANNEL\fR [\fIchannel\fP]"
+Join another \fIchannel\fP
+.IP "\fB/CLEAR\fR"
+Clear the screen
+.IP "\fB/HELP\fR [\fIcommand\fP]"
+Display a brief description of the \fIcommand\fP (or list all commands, if none
+specified).
+.IP "\fB/SUMMON\fR \fIuser\fP"
+Allows to summon a \fIuser\fP specified as a full Internet address, i.e.,
+\fIlogin@host.domain\fP, to an IRC dialogue session (in much the same
+way as the talk(1) command).  It is usable ONLY if the irc daemon runs on
+the target machine (host.domain).
+.IP "\fB/TOPIC\fR \fItopic\fP"
+Sets the \fItopic\fP for the current channel
+.IP "\fB/WHO\fR [\fIchannel\fP|*]"
+Lists all users of IRC if no argument, of the specified \fIchannel\fP or of the
+current channel (*).
+.SH ARGUMENTS
+.IP "\fB-p\fP \fIportnum\fP"
+TCP/IP "port number.  Default is 6667 and this option should seldom if ever"
+be used.
+.IP "\fB-c\fP \fIchannel\fP"
+\fIChannel\fP number to join upon beginning of the session.  Default is no channel.
+.IP "\fInickname\fP"
+\fINickname\fP used in the session (can be changed with the \fB/NICK\fP command).
+Default is user login name.
+.IP "\fIserver\fP"
+\fIServer\fP to connect to.  Default is specified in the irc system configuration
+file, and can be superseded with the environment variable IRCSERVER.
+.SH EXAMPLE
+.RS
+.nf
+tolmoon% \fBirc -p6667 Wizard tolsun\fP
+.fi
+.RE
+.LP
+connects you to irc server in host tolsun (port 6667) with nickname Wizard
+.SH COPYRIGHT
+Copyright (c) 1988 University of Oulu, Computing Center, Finland.
+.nf
+Copyright (c) 1988,1989,1990 Jarkko Oikarinen
+.nf
+All rights reserved.
+For full COPYRIGHT see LICENSE file with IRC package.
+.SH "SEE ALSO"
+ircd(8)
+.SH BUGS
+What bugs ?
+.SH AUTHOR
+Jarkko Oikarinen <jto@tolsun.oulu.fi>
+.nf
+Manual page updated by Michel Fingerhut <Michel.Fingerhut@ircam.fr>

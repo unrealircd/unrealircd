@@ -1,0 +1,241 @@
+Internet Relay Chat Operator Etiquette Guide (May, 1992)
+[ $Id$ ]
+
+Welcome! You've either been selected to be an IRC Operator or you have set
+up your server and thus have taken on the dual task of IRC Server
+Administrator and IRC Operator. Your future days will be filled with hours
+of fun chatting on IRC, and then wondering why everyone you talked to went
+away, because the links had apparently broken. 
+
+Linking:
+========
+
+You will be assigned links from the IRC Routing Coordinators. Please
+use these links and these links ONLY. The links have been designed to
+maximize efficiency and make delays in chatting minimal. You will
+usually be given two links, one to each regional backbone site.
+Connect to the primary site first and then to the secondary site. You
+should not need to connect to any other sites. You will be informed if
+this policy changes.
+
+Kills 
+=====
+
+/kill is a special operator command. You should use it with
+care, and only if absolutely needed. The format is as follows:
+/kill NICKNAME comment. Comment can be a phrase of almost any length
+(within reason) and should be used for specifying the reason of the kill.
+Example: /kill Trillian She's a Ghost
+IRC Ghosts are created after a net split has occured and the net has yet to
+relink. 
+
+/wallops PHRASE This is used to talk to those users who have their
+user mode set to +w. /wallops used to be a way for operators to talk
+about important matters in linking etc., but it has little use
+nowadays. 
+
+/TRACE command /TRACE is useful to know what servers are connected to
+what. Sometimes /trace can be confusing, especially if you are using
+it for the first time.  Here is an example of a trace from
+stekt1.oulu.fi to cdc835.cdc.polimi.it.
+
+/TRACE cdc835.cdc.polimi.it
+
+*** Link stekt1.oulu.fi<2.7.2> ==> cdc835.cdc.polimi.it
+*** Link rieska.oulu.fi<2.7.1>e ==> cdc835.cdc.polimi.it
+*** Link nic.funet.fi<2.7.1>e ==> cdc835.cdc.polimi.it
+*** Link ircserver.et.tudelft.nl<2.7.1>e ==> cdc835.cdc.polimi.it
+*** Link vesuv.unisg.ch<2.7.1>e ==> cdc835.cdc.polimi.it
+*** Link apollo.di.unipi.it<2.7.1>e ==> cdc835.cdc.polimi.it
+*** Oper Class[10] ==> Allanon[cdc835.cdc.polimi.it]  
+*** User Class[11] ==> Lupandy[plus2.usr.dsi.unimi.it]  
+*** Serv Class[3] ==> apollo.di.unipi.it[131.114.4.36] 132S 445C
+*** User Class[11] ==> Punk[pluto.sm.dsi.unimi.it]  
+*** User Class[11] ==> TheEdge[pluto.sm.dsi.unimi.it]  
+*** User Class[10] ==> Mork[cdc835.cdc.polimi.it]  
+*** User Class[11] ==> Lollo[c700-2.sm.dsi.unimi.it]  
+*** User Class[11] ==> Attila[hp2.sm.dsi.unimi.it]  
+*** Class 0  Entries linked 1
+*** Class 11 Entries linked 5
+*** Class 10 Entries linked 2
+*** Class 3  Entries linked 1
+
+From this output you can see that the route goes first to
+rieska.oulu.fi (running version 2.7.1e), then nic.funet.fi,
+ircserver.et.tudelft.nl, vesuv.unisg.ch, and apollo.di.unipi.it, after
+which cdc835 is the next server. Then we see the connections on
+cdc835: One operator (Allanon) and 6 users are on line. The class of
+each connection is given. There is only one server connected to cdc835
+at the moment, and that server is apollo.di.unipi.it (cdc835 is said
+to be a "leaf" server at the moment). The numbers 132S 445C in the end
+of line tell us, that there are 132 servers and 445 clients connected
+to the servers from apollo onwards.  Finally we see a grand total of
+connections in each connection class. 
+
+
+/SQUIT server {comment}
+   /squit isolates a specified server from the next closest server, when
+you look at it along the trace path starting from your server. 
+This is usually used in conjunction with CONNECT (explained later) to
+reroute traffic. This will be described in detail in the section
+"routing", preceding CONNECT.
+
+   Usage (and examples): 
+
+      /squit E
+
+     If the network looks like this initially (and you are on server A)
+
+ 
+          A <---> B <---> C <---> D
+                          ^
+                          |
+                          v
+                  G <---> E <---> F <---> ... (rest of the net)
+                          
+
+    Then after issuing the previous /squit the network would look like this:
+
+          A <---> B <---> C <---> D
+                          
+                          
+                  G <---> E <---> F <---> ...
+
+
+    /squit E {comment}
+
+	It usually helps to give a reason why you are sending a
+	SQUIT for a server. This can be accomplished by sending
+	the command "/squit server This link is making the US route
+	through Finland". The SQUIT will then be sent out, and the 
+	server sending the squit will WALLOP sending the comment
+	so all operators can see it. 
+
+/CONNECT server {portnum server2}
+   /connect is used to establish a link between two servers. These
+connections must be authorized by each server's ircd.conf file, but
+any operator can issue a CONNECT between authorized servers. This
+command is most often used in conjunction with SQUIT to reroute
+traffic. 
+   If only one argument is given, this command causes the server you
+are on to attempt to connect to the server specified. For example,
+"/connect B" (in the previous example) would cause your server (A) to
+connect to B. 
+   Suppose you wanted to reconnect server F to server E? You cannot
+contact server F since it is no longer part of your network. However,
+you can tell server E to connect to it. A remote CONNECT can be issued
+to server E. 
+
+   Examples (assume you are on server A):
+
+   /connect B
+
+   If the network initially looks like this:
+
+         A      B <---> ... (rest of network)
+
+   Then afterwards (if the connection succeeds) the network will look
+   like this:
+
+        A <---> B <---> ... 
+
+
+   In the example where you wanted to reconnect server E to F, the
+   following syntax would be appropriate (note: we are assuming that
+   F's irc socket port is 6667, which is the default)
+
+   /connect F 6667 E
+
+   If the network initially looks like this:
+
+         A <---> B <---> C <---> D
+                         ^
+                         |
+                         v
+                 G <---> E      F <---> ... 
+
+   Then after your CONNECT request the network topology will look like this:
+
+         A <---> B <---> C <---> D
+                         ^
+                         |
+                         v
+                 G <---> E <---> F <---> ... 
+
+    Be careful when connecting servers that you know which command to
+    use! If you simply issued "/connect F" from your server, the
+    network would look like this:
+
+
+    ... <---> F <--->  A <---> B <---> C <---> D
+                                       ^
+                                       |
+                                       v
+                               G <---> E 
+
+    which for various reasons (discussed below) might be very
+    undesirable. 
+
+Routing
+=======
+
+   When and how should you do rerouting? This depends on where your
+server is topologically located and whether you route traffic. If you
+are a leaf node (i.e. only connect to one server at a time) then
+chances are you won't need to do any routing at all.  Your ircd.conf
+file should be written to connect to the best possible servers first
+before trying alternates. At the most, you may decide to squit an
+alternate server and connect to your primary if/when it goes back up.
+This only involves local squits, however.
+
+   If you are operating a backbone site, you may find yourself
+rerouting things quite often. If the servers badger.ugcs.caltech.edu
+(Pasadena, CA), irc.mit.edu (Boston, MA), minnie.cc.utexas.edu
+(Austin, TX) and ucsu.colorado.edu (Boulder, CO) were routing traffic
+in the following way:
+
+    ... <---> minnie <---> badger <---> bucsd <---> ucsu <---> ...
+
+It would make sense to either squit ucsu and reconnect it to minnie,
+or disconnect minnie from badger and connect to ucsu, because
+topologically (and geographically) ucsu and minnie are rather close.
+There are occasions when US traffic for some reasons winds up being
+routed through Australia. This is another case where traffic should
+definitely be rerouted. However, there are sometimes occasions when
+routing is going through "backdoor" methods. If you see something
+totally outrageous (like the east coast and the west coast being
+connected by eff.org) please ask for example on channel #twilight_zone
+before you send any squits, because chances are, it's like that for a
+reason.
+
+   Of course, any operator can remotely squit or connect servers, so
+if you see a problem and you're sure you know how to fix it, it's a
+good idea to do so. If the operator of a server which is is being
+routed poorly is online, it's probably best to contact him/her first,
+though.
+
+   Chances are that hub operators will be more familiar with the
+general topology of the network and which servers connect to which
+(which is why most of the manual routing is left to them), so if you
+have any problems, talk to the other operators on operator channels
+(#twilight_zone, #eu-opers etc.) That's what they are there for!
+   Also, be aware that servers will notify all the operators online of
+remote SQUITs and CONNECTs via WALLOPS.
+
+Please let us know if there should be any additions to this guide. Again,
+this is not MANDATORY, this is just a GUIDE. Please conduct yourself as 
+an IRC Operator would...you are looked upon for assistance, both emotional
+and mental. 
+
+Helen Rose		Christopher Davis	Noah Friedman
+<hrose@cs.bu.edu>	<ckd@cs.bu.edu>		<friedman@ai.mit.edu>
+
+January, 1991
+
+
+Updated by
+
+Mauri Haikola
+<mjh@stekt.oulu.fi>
+
+May, 1992

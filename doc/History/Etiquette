@@ -1,0 +1,86 @@
+/************************************************************************
+ *   IRC - Internet Relay Chat, doc/etiquette
+ *   Copyright (C) 1990, Lea Viljanen and Ari Husa
+ *
+ *   This program is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation; either version 1, or (at your option)
+ *   any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program; if not, write to the Free Software
+ *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ * $Id$
+ */
+
+HOW TO BEHAVE ON IRC
+
+Authors:      Lea Viljanen (LadyBug)  viljanen@kreeta.helsinki.fi
+              Ari Husa     (luru)     so-luru@tolsun.oulu.fi 
+
+
+1) Language
+
+   The most widely understood and spoken language on IRC is English. 
+However! As IRC is used in many different countries, English is by
+no means the only language. If you want to speak some other language
+than English (for example with your friends), go to a separate channel
+and set the topic (with /topic) to indicate that. For example
+   /topic Finnish only!
+would mean that this channel would be reserved for Finnish discussion.
+On the other hand, you should check the topic (with /list command) 
+before you move to a channel to see if there are any restrictions about 
+language.
+   On a channel not restricted by /topic, please speak a language
+everybody can understand. If you want to do otherwise, change channels
+and set the topic accordingly.
+
+
+2) Hello/Goodbye
+
+   It's not necessary to greet everybody on a channel personally.
+Usually one "Hello" or equivalent is enough. And don't expect everybody
+to greet you back. On a channel with 20 people that would mean one
+screenful of hellos. It's sensible not to greet, in order not to be rude
+to the rest of the channel. If you must say hello, do it with a private /msg.
+The same applies to goodbyes.
+
+
+3) Discussion
+
+   When you come to a new channel it's advised you to listen
+for a while to get an impression of what's discussed. Please feel free
+to join in, but do not try to force your topic into the discussion
+if that doesn't come naturally.
+
+
+4) {}|[]\
+
+   IRC has quite a lot of people from Scandinavian countries,
+the above characters are letters in their alphabet. This 
+has been explained on IRC about a thousand and one times, so
+read the following, do not ask it on IRC:
+
+   {     is an A with 2 dots over it
+   }     is an A with a small circle above it
+   |     is either an O with 2 dots over it or an O with a dash (/) through it
+   [, ], and \ are the preceding three letters in upper case.
+
+   There are a lot of people from Japan as well, who use Kanji characters
+which may look quite exotic as well. As I don't know Kanji I don't
+even try to explain any of the characters.
+
+5) ATTENTION!
+
+   Remember, people on IRC form their opinions about you only by 
+your actions, writings and comments on IRC. So think before you type.
+Do not "dump" to a channel or user (send large amounts of unwanted
+information). This is likely to get you /kicked off the channel or
+/killed off from irc. Dumping causes network 'burbs', connections going
+down because servers cannot handle the large amount of traffic any more.

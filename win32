@@ -1,0 +1,9 @@
+To do win32 compiling
+- Copy include/win32/setup.h to include/
+- Copy makefile.win32 to Makefile
+- Modify makefile to suit you
+- Modify config.h to suit you 
+- Make settings.h to suit you
+you'll need to unzip src/wircd/unrealircd.bmp.gz as well using winzip
+
+UnrealIRCd is not absolute to compile on Win32 yet
