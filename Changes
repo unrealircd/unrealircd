@@ -745,3 +745,4 @@
 - Fixed the Stskeeps "mass G:line on /rehash" (tm) bug
 - Removed last point of confusion in ALN/NS
 - Removed CRYPTOIRCD (replaced by SSL)
+- Added support for some more SJB64 stuff

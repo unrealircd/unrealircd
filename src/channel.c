@@ -3478,7 +3478,7 @@ int  m_topic(cptr, sptr, parc, parv)
 		if (parc > 4)
 		{
 			tnick = parv[2];
-			ttime = (*parv[3] == '!' ? xbase64dec(parv[3] + 1) : atol(parv[3]));
+			ttime = TS2ts(parv[3]);
 			topic = parv[4];
 
 		}

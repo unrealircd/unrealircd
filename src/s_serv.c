@@ -1599,7 +1599,7 @@ int  m_netinfo(cptr, sptr, parc, parv)
 	}
 	/* is a long therefore not ATOI */
 	lmax = atol(parv[1]);
-	endsync = atol(parv[2]);
+	endsync = TS2ts(parv[2]);
 	protocol = atol(parv[3]);
 
 	/* max global count != max_global_count --sts */
