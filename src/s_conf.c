@@ -2224,12 +2224,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "hiddenhost-prefix")) {
 			ircstrdup(hidden_host, cep->ce_vardata);
 		}
-		else if (!strcmp(cep->ce_varname, "www-site")) {
-			ircstrdup(www_site, cep->ce_vardata);
-		}
-		else if (!strcmp(cep->ce_varname, "ftp-site")) {
-			ircstrdup(ftp_site, cep->ce_vardata);
-		}
 		else if (!strcmp(cep->ce_varname, "prefix-quit")) {
 			if (!strcmp(cep->ce_vardata, "no"))
 			{

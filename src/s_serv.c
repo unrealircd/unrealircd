@@ -134,11 +134,6 @@ int  m_version(cptr, sptr, parc, parv)
 	extern char serveropts[];
 	char *x;
 
-	if (TRUEHUB == 1)
-		x = "(H)";
-	else
-		x = "";
-
 	if (hunt_server(cptr, sptr, ":%s VERSION :%s", 1, parc,
 	    parv) == HUNTED_ISME)
 	{
@@ -1855,17 +1850,6 @@ int  m_netinfo(cptr, sptr, parc, parv)
 		sendto_realops
 		    ("Link %s is using a too old UnProtocol - (parc < 3)",
 		    cptr->name);
-		if (KILLDIFF == 1)
-		{
-			sendto_realops
-			    ("Dropped link %s - unProtocol 2090 is not compatible with unProtocol %li",
-			    cptr->name, UnrealProtocol);
-			sendto_one(cptr,
-			    "ERROR :unProtocol 2090 is not compatible with unProtocol %li",
-			    UnrealProtocol);
-			return exit_client(cptr, cptr, cptr,
-			    "Link using unProtocol 2090");
-		}
 		return 0;
 	}
 	if (parc < 9)
