@@ -95,6 +95,7 @@ int     _conf_deny_link         (ConfigFile *conf, ConfigEntry *ce);
 int	_conf_deny_channel	(ConfigFile *conf, ConfigEntry *ce);
 int     _conf_deny_version      (ConfigFile *conf, ConfigEntry *ce);
 int	_conf_allow_channel	(ConfigFile *conf, ConfigEntry *ce);
+int	_conf_loadmodule	(ConfigFile *conf, ConfigEntry *ce);
 
 extern int conf_debuglevel;
 
@@ -118,6 +119,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "badword",		_conf_badword },
 #endif
 	{ "deny",		_conf_deny },
+	{ "loadmodule",		_conf_loadmodule },
 	{ NULL, 		NULL  }
 };
 
@@ -337,7 +339,7 @@ static void config_status(char *format, ...)
 	sendto_realops("warning: %s", buffer);
 }
 
-static void config_progress(char *format, ...)
+void config_progress(char *format, ...)
 {
 	va_list		ap;
 	char		buffer[1024];
@@ -1001,6 +1003,23 @@ int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
 	}
 }
 
+int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
+{
+	if (!ce->ce_vardata)
+	{
+		config_error("%s:%i: loadmodule without filename",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}	
+	if (load_module(ce->ce_vardata) != 1)
+	{
+		config_error("%s:%i: loadmodule %s: failed to load",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			ce->ce_vardata);
+		return -1;
+	}
+	return 1;
+}
 /*
  * The oper {} block parser
 */

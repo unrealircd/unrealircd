@@ -312,3 +312,5 @@
 - Added Modules, using dlopen() and LoadLibrary for *nix/win32. 
 - Added /module load <path.to.so>, /module status (list modules), 
   /module unload <modulename>
+- Added loadmodule "filename.so"; and made the modules
+  unable to get loaded twice with same name.

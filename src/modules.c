@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <string.h>
 #ifdef _WIN32
+
 #include <io.h>
 #endif
 #include <fcntl.h>
@@ -70,7 +71,7 @@ int  load_module(char *module)
 			mod_init = irc_dlsym(Mod, "_mod_init");
 			if (!mod_init)
 			{
-				sendto_realops
+				config_progress
 				    ("Failed to load module %s: Could not locate mod_init",
 				    module);
 				irc_dlclose(Mod);
@@ -81,7 +82,7 @@ int  load_module(char *module)
 		(*mod_init) ();
 		if (!module_buffer)
 		{
-			sendto_realops
+			config_progress
 			    ("Failed to load module %s: mod_init did not set module_buffer",
 			    module);
 			irc_dlclose(Mod);
@@ -89,7 +90,7 @@ int  load_module(char *module)
 		}
 		if (module_buffer->mversion != MOD_VERSION)
 		{
-			sendto_realops
+			config_progress
 			    ("Failed to load module %s: mversion is %i, not %i as we require",
 			    module, module_buffer->mversion, MOD_VERSION);
 			irc_dlclose(Mod);
@@ -98,7 +99,7 @@ int  load_module(char *module)
 		if (!module_buffer->name || !module_buffer->version
 		    || !module_buffer->description)
 		{
-			sendto_realops
+			config_progress
 			    ("Failed to load module %s: name/version/description missing",
 			    module);
 			irc_dlclose(Mod);
@@ -110,7 +111,7 @@ int  load_module(char *module)
 			mod_unload = irc_dlsym(Mod, "_mod_unload");
 			if (!mod_unload)
 			{
-				sendto_realops
+				config_progress
 				    ("Failed to load module %s: Could not locate mod_unload",
 				    module);
 				irc_dlclose(Mod);
@@ -119,6 +120,16 @@ int  load_module(char *module)
 		}
 		module_buffer->dll = Mod;
 		module_buffer->unload = mod_unload;
+		for (i = 0; i < MAXMODULES; i++)
+			if (Modules[i] && !strcmp(Modules[i]->name, module_buffer->name))
+			{
+				/* We will unload it without notice, its a duplicate */
+				sendto_umode(UMODE_JUNK, "Ignoring load of module %s, duplicate names", module_buffer->name);
+				(*module_buffer->unload)();
+				irc_dlclose(Mod);
+				return 1;
+			}
+		
 		for (i = 0; i <= MAXMODULES; i++)
 		{
 			if (!Modules[i])
@@ -130,7 +141,7 @@ int  load_module(char *module)
 		}
 		if (i == MAXMODULES)
 		{
-			sendto_realops
+			config_progress
 			    ("Failed to load module %s: Too many modules loaded");
 			irc_dlclose(Mod);
 			return -1;
@@ -143,7 +154,7 @@ int  load_module(char *module)
 
 		if (err)
 		{
-			sendto_realops("Failed to load module %s: %s",
+			config_progress("Failed to load module %s: %s",
 			    module, err);
 		}
 		return -1;
