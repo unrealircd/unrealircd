@@ -2621,3 +2621,4 @@ seen. gmtime warning still there
   internal: added ugly macro CHANOPPFX which is "~&@" if prefix_aq, else "@".
 - Added error checking/error messages to new module reloading system, to catch errors like
   insufficient hd space, permission denied, etc..
+- Made it compile at windows again

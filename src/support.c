@@ -1691,6 +1691,7 @@ void	*MyMallocEx(size_t size)
  */
 char *unreal_mktemp(char *dir, char *suffix)
 {
+#ifndef _WIN32
 FILE *fd;
 unsigned int i;
 static char tempbuf[PATH_MAX+1];
@@ -1706,6 +1707,9 @@ static char tempbuf[PATH_MAX+1];
 	config_error("Unable to create temporarely file in directory '%s': %s",
 		dir, strerror(ERRNO)); /* eg: permission denied :p */
 	return NULL;
+#else
+	return NULL;
+#endif
 }
 
 /* Returns the filename portion of the given path
@@ -1737,6 +1741,7 @@ char *unreal_getfilename(char *path)
  */
 int unreal_copyfile(char *src, char *dest)
 {
+#ifndef _WIN32
 	char buf[2048];
 	int srcfd = open(src, O_RDONLY);
 	int destfd;
@@ -1775,4 +1780,7 @@ fail:
 	close(destfd);
 	unlink(dest); /* make sure our corrupt file isn't used */
 	return 0;
+#else
+	return 0;
+#endif
 }

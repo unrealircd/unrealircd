@@ -42,7 +42,9 @@
 #include <dlfcn.h>
 #endif
 #include <fcntl.h>
+#ifndef _WIN32
 #include <dirent.h>
+#endif
 #include "h.h"
 #include "proto.h"
 #ifndef RTLD_NOW
