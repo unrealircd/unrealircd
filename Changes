@@ -503,3 +503,4 @@
   to send to normal users w/the snomask set.
 - Fixed dcc filtering a bit more.
 - Made usermode 'g' operonly since it didn't do much, reported by DukePyrolator (#0002024).
+- Fixed tkl except { } not working (post-3.2.2).

@@ -4632,7 +4632,7 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 				type = cep;
 		}
 		if (type->ce_vardata)
-			create_tkl_except(type->ce_vardata, type->ce_vardata);
+			create_tkl_except(mask->ce_vardata, type->ce_vardata);
 		else
 		{
 			ConfigEntry *cepp;
