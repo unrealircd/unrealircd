@@ -1053,3 +1053,4 @@ seen. gmtime warning still there
 - Added mutex.c for our mutexes
 - Fixed makenet so techadmin-host is gone
 - Removed set::hosts::techadmin from all network files
+- doh, missing a ! in m_tkl.c that allows us to gline *@*
