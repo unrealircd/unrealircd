@@ -746,3 +746,4 @@
   reported by SolutechUK and psadi (#0002386).
 - Fixed various (major) problems that the '-h yourself' caused, reported by Trocotronic
   (#0002387).
+- Fix for above, also reported by Trocotronic.

@@ -1859,7 +1859,7 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 		checkrestr = 1;
 
 	/* Set access to the status we have */
-	my_access = get_access(cptr, chptr);
+	my_access = IsPerson(cptr) ? get_access(cptr, chptr) : 0;
 
 	for (curchr = parv[0]; *curchr; curchr++)
 	{
