@@ -936,7 +936,7 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					if (!tk->expire_at || !expiry_1)
 			 			tk->expire_at = 0;
 			 		else
-			 			tk->expire_at = MIN(tk->expire_at, expiry_1);
+			 			tk->expire_at = MAX(tk->expire_at, expiry_1);
 			 		if (strcmp(tk->reason, reason) < 0)
 			 		{
 			 			MyFree(tk->reason);
@@ -953,12 +953,12 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 							*tk->usermask = 'H';
 
 						if (!(*tk->usermask) == 'H')
-					 		sendto_snomask(SNO_JUNK, "tkl update for %s/reason='%s'/by=%s/set=%ld/expire=%ld",
-					 			tk->hostmask, tk->reason, tk->setby, tk->set_at, tk->expire_at);
+					 		sendto_snomask(SNO_JUNK, "tkl update for %s/reason='%s'/by=%s/set=%ld/expire=%ld [causedby: %s]",
+					 			tk->hostmask, tk->reason, tk->setby, tk->set_at, tk->expire_at, sptr->name);
 					}
 					else
-				 		sendto_snomask(SNO_JUNK, "tkl update for %s@%s/reason='%s'/by=%s/set=%ld/expire=%ld",
-				 			tk->usermask, tk->hostmask, tk->reason, tk->setby, tk->set_at, tk->expire_at);
+				 		sendto_snomask(SNO_JUNK, "tkl update for %s@%s/reason='%s'/by=%s/set=%ld/expire=%ld [causedby: %s]",
+				 			tk->usermask, tk->hostmask, tk->reason, tk->setby, tk->set_at, tk->expire_at, sptr->name);
 				 	if ((parc == 11) && (type & TKL_SPAMF))
 					{
 						/* I decided to only send updates to OPT_TKLEXT in this case,

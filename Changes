@@ -2964,3 +2964,6 @@ seen. gmtime warning still there
 - Lol, I made /connect dissapear during modulizing ;).
 - Added a warning if your listen portrange affects >100 ports
   (eg for idiots doing 6667-7000 which uses 333 sockets).
+- Added some extra debugging for tkl update notice...
+- Fixed a problem in 'tkl update': lowest expire time won instead of
+  highest. Reported by Malcolm.
