@@ -3076,3 +3076,4 @@ seen. gmtime warning still there
 - Windows: Updated makefile/unrealinst.iss/zip.h to use zlib 1.2.1.
 - Updated credits
 - German doc updates (spelling+synch).
+- Updated /credits a bit more
