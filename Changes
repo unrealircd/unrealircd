@@ -904,3 +904,4 @@ seen. gmtime warning still there
 - Added some setproctitle(.., me.name) for extra l33tness :P~
 - Changed the setproctitle check to also check in -lutil (some OSes have it there)
 - Added aliases/auspice.conf, and added a /register command to aliases/aliases.conf
+- Fixed a win32 typo in the .rc
