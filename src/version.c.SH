@@ -70,7 +70,7 @@ char *unrealcredits[] =
 	"not forgotten.",
 	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=",
 	"The UnrealIRCd Team would like to thank:",
-	" "
+	" ",
 	"Nutcais - Phil Hawkins",
 	"- the original shell for Unreal development, useful comments,",
 	"  and supporting the project all through its life. Thanks for",

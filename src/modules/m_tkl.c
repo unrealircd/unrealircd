@@ -557,11 +557,6 @@ char reason[512];
 		sendto_one(sptr, ":%s NOTICE %s :Invalid 'action' field (%s)", me.name, sptr->name, parv[3]);
 		return spamfilter_usage(sptr);
 	}
-	if ((action == BAN_ACT_DCCBLOCK) && (targets != SPAMF_DCC))
-	{
-		sendnotice(sptr, "action 'dccblock' is incompatible with non-dcc target(s) '%s'", targetbuf);
-		return 0;
-	}
 	actionbuf[0] = banact_valtochar(action);
 	actionbuf[1] = '\0';
 	

@@ -413,3 +413,5 @@
 ** 3.2.2 release **
 - Fixed a typo in the makefile for USERIP
 - Made the WATCH command work for WebTV users (#0002121) suggested by White_Magic.
+- Some text updates... docs: now 3.2.2-CVS, lso got rid of double version to avoid
+  confusion. credits: fixed typo.
