@@ -161,9 +161,9 @@ void	init_CommandHash(void)
 	add_Command(MSG_STATS, TOK_STATS, m_stats, MAXPARA);
 	add_Command(MSG_LINKS, TOK_LINKS, m_links, MAXPARA);
 	add_CommandX(MSG_ADMIN, TOK_ADMIN, m_admin, MAXPARA, M_UNREGISTERED|M_USER);
-	add_Command(MSG_SUMMON, TOK_SUMMON, m_summon, 1);
-	add_Command(MSG_USERS, TOK_USERS, m_users, MAXPARA);
-	add_Command(MSG_SAMODE, TOK_SAMODE, m_samode, MAXPARA);
+	add_Command(MSG_SUMMON, NULL, m_summon, 1);
+	add_Command(MSG_USERS, NULL, m_users, MAXPARA);
+	add_Command(MSG_SAMODE, NULL, m_samode, MAXPARA);
 	add_Command(MSG_SVSKILL, TOK_SVSKILL, m_svskill, MAXPARA);
 	add_Command(MSG_HELP, TOK_HELP, m_help, 1);
 	add_Command(MSG_HELPOP, TOK_HELP, m_help, 1);
@@ -241,7 +241,8 @@ void	add_Command_backend(char *cmd, int (*func)(), unsigned char parameters, uns
 void	add_Command(char *cmd, char *token, int (*func)(), unsigned char parameters)
 {
 	add_Command_backend(cmd, func, parameters, 0, 0);
-	add_Command_backend(token, func, parameters, 1, 0);
+	if (token)
+		add_Command_backend(token, func, parameters, 1, 0);
 }
 
 void    add_CommandX(char *cmd, char *token, int (*func)(), unsigned char parameters, int flags) 

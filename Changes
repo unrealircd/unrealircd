@@ -873,3 +873,5 @@ seen. gmtime warning still there
 - Fixed a win32 bug where the http scanner didn't get loaded
 - Hopefully fixed the weird Z:line bug on win32?
 - Fixed the Z:line bug (caused by stskeeps-on-crack coding) reported by Power2All
+- Removed the tokens for /users, /summon, and /samode (these never come from a server so they don't need
+  it)
