@@ -117,7 +117,7 @@ int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 
 void init_ctx_server(void)
 {
-	ctx_server = SSL_CTX_new(SSLv23_server_method());
+	ctx_server = SSL_CTX_new(SSLv3_server_method());
 	if (!ctx_server)
 	{
 		ircd_log(LOG_ERROR, "Failed to do SSL CTX new");
@@ -340,19 +340,25 @@ int ircd_SSL_read(aClient *acptr, void *buf, int sz)
     {
        switch(ssl_err = SSL_get_error((SSL *)acptr->ssl, len)) {
            case SSL_ERROR_SYSCALL:
-               if (errno == EWOULDBLOCK || errno == EAGAIN ||
-                       errno == EINTR) {
+               if (ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN ||
+                       ERRNO == P_EINTR) {
            case SSL_ERROR_WANT_READ:
-                   errno = EWOULDBLOCK;
-                   return 0;
+                   SET_ERRNO(P_EWOULDBLOCK);
+		   Debug((DEBUG_ERROR, "ircd_SSL_read: returning EWOULDBLOCK and 0 for %s - %s", acptr->name,
+			ssl_err == SSL_ERROR_WANT_READ ? "SSL_ERROR_WANT_READ" : "SSL_ERROR_SYSCALL"		   
+		   ));
+                   return -1;
                }
            case SSL_ERROR_SSL:
-               if(errno == EAGAIN)
-                   return 0;
+               if(ERRNO == EAGAIN)
+                   return -1;
            default:
+           	Debug((DEBUG_ERROR, "ircd_SSL_read: returning fatal_ssl_error for %s",
+           	 acptr->name));
 		return fatal_ssl_error(ssl_err, SAFE_SSL_READ, acptr);        
        }
     }
+    Debug((DEBUG_ERROR, "ircd_SSL_read for %s (%p, %i): success", acptr->name, buf, sz));
     return len;
 }
 int ircd_SSL_write(aClient *acptr, const void *buf, int sz)
@@ -364,19 +370,19 @@ int ircd_SSL_write(aClient *acptr, const void *buf, int sz)
     {
        switch(ssl_err = SSL_get_error((SSL *)acptr->ssl, len)) {
            case SSL_ERROR_SYSCALL:
-               if (errno == EWOULDBLOCK || errno == EAGAIN ||
-                       errno == EINTR)
+               if (ERRNO == EWOULDBLOCK || ERRNO == EAGAIN ||
+                       ERRNO == EINTR)
 		{
-			errno = EWOULDBLOCK;
-			return 0;
+			SET_ERRNO(P_EWOULDBLOCK);
+			return -1;
 		}
-		return 0;
+		return -1;
           case SSL_ERROR_WANT_WRITE:
-                   errno = EWOULDBLOCK;
-                   return 0;
+                   SET_ERRNO(P_EWOULDBLOCK);
+                   return -1;
            case SSL_ERROR_SSL:
-               if(errno == EAGAIN)
-                   return 0;
+               if(ERRNO == EAGAIN)
+                   return -1;
            default:
 		return fatal_ssl_error(ssl_err, SAFE_SSL_WRITE, acptr);
        }
@@ -430,8 +436,8 @@ int ircd_SSL_accept(aClient *acptr, int fd) {
     if((ssl_err = SSL_accept((SSL *)acptr->ssl)) <= 0) {
 	switch(ssl_err = SSL_get_error((SSL *)acptr->ssl, ssl_err)) {
 	    case SSL_ERROR_SYSCALL:
-		if (errno == EINTR || errno == EWOULDBLOCK
-			|| errno == EAGAIN)
+		if (ERRNO == P_EINTR || ERRNO == P_EWOULDBLOCK
+			|| ERRNO == P_EAGAIN)
 	    case SSL_ERROR_WANT_READ:
 	    case SSL_ERROR_WANT_WRITE:
 		    /* handshake will be completed later . . */
@@ -453,8 +459,8 @@ int ircd_SSL_connect(aClient *acptr) {
     if((ssl_err = SSL_connect((SSL *)acptr->ssl)) <= 0) {
 	switch(ssl_err = SSL_get_error((SSL *)acptr->ssl, ssl_err)) {
 	    case SSL_ERROR_SYSCALL:
-		if (errno == EINTR || errno == EWOULDBLOCK
-			|| errno == EAGAIN)
+		if (ERRNO == P_EINTR || ERRNO == P_EWOULDBLOCK
+			|| ERRNO == P_EAGAIN)
 	    case SSL_ERROR_WANT_READ:
 	    case SSL_ERROR_WANT_WRITE:
 		    /* handshake will be completed later . . */
@@ -483,8 +489,8 @@ int SSL_smart_shutdown(SSL *ssl) {
 
 static int fatal_ssl_error(int ssl_error, int where, aClient *sptr)
 {
-    /* don`t alter errno */
-    int errtmp = errno;
+    /* don`t alter ERRNO */
+    int errtmp = ERRNO;
     char *errstr = (char *)strerror(errtmp);
     char *ssl_errstr, *ssl_func;
 
@@ -500,13 +506,14 @@ static int fatal_ssl_error(int ssl_error, int where, aClient *sptr)
 	    break;
 	case SAFE_SSL_CONNECT:
 	    ssl_func = "SSL_connect()";
+	    break;
 	default:
 	    ssl_func = "undefined SSL func";
     }
 
     switch(ssl_error) {
     	case SSL_ERROR_NONE:
-	    ssl_errstr = "No error";
+	    ssl_errstr = "SSL: No error";
 	    break;
 	case SSL_ERROR_SSL:
 	    ssl_errstr = "Internal OpenSSL error or protocol error";
@@ -538,7 +545,7 @@ static int fatal_ssl_error(int ssl_error, int where, aClient *sptr)
      * the only way to do it.
      * IRC protocol wasn`t SSL enabled .. --vejeta
      */
-    errno = errtmp ? errtmp : EIO; /* Stick a generic I/O error */
+    SET_ERRNO(errtmp ? errtmp : P_EIO); /* Stick a generic I/O error */
     sptr->flags |= FLAGS_DEADSOCKET;
     return -1;
 }

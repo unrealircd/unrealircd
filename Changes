@@ -1423,3 +1423,7 @@ seen. gmtime warning still there
 - Implemented new operoverride system
 - Fixed some compile errors found by Zerwas and fixed some implementation problems of 
   the not able to set +z when there's non +z users (ULines not counted) in channel
+- Fixed some SSL errors. read() returns -1 on error, so ircd_SSL_write and
+  ircd_SSL_read must emulate the same. codemastr: could you check what the
+  win32 equiviant of EIO is? I don't think my WSAEIO or whatever I called it
+  in sys.h is correct.

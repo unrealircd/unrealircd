@@ -1477,7 +1477,7 @@ static int read_packet(aClient *cptr)
 		/*
 		 * If not ready, fake it so it isnt closed
 		 */
-	    if (length < 0 && ((ERRNO == P_EWOULDBLOCK) || ERRNO == P_EAGAIN)))
+	        if (length < 0 && ((ERRNO == P_EWOULDBLOCK) || ERRNO == P_EAGAIN)))
 			return 1;
 		if (length <= 0)
 			return length;
