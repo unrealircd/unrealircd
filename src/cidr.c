@@ -270,6 +270,5 @@ match_ipv4(struct IN_ADDR *addr, struct IN_ADDR *mask, int bits)
   return 0;
 }
 
-int match_ip(struct IN_ADDR *addr, struct IN_ADDR *mask, int bits, int type) {
 
 

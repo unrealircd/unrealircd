@@ -213,10 +213,10 @@ src/auth.obj: src/auth.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/auth.c
 
 src/cidr.obj: src/cidr.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/cidr.obj
+	$(CC) $(CFLAGS) src/cidr.c
 
 src/ssl.obj: src/ssl.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/ssl.obj
+	$(CC) $(CFLAGS) src/ssl.c
 
 src/l_commands.obj: src/modules/l_commands.c $(INCLUDES)
         $(CC) $(CFLAGS) src/modules/l_commands.c
