@@ -1182,7 +1182,7 @@ CMD_FUNC(m_nick)
 	char nick[NICKLEN + 2], *s;
 	Membership *mp;
 	time_t lastnick = (time_t) 0;
-	int  differ = 1;
+	int  differ = 1, update_watch = 1;
 
 	/*
 	 * If the user didn't specify a nickname, complain
@@ -1762,12 +1762,13 @@ CMD_FUNC(m_nick)
 			if (register_user(cptr, sptr, nick,
 			    sptr->user->username, NULL, NULL) == FLUSH_BUFFER)
 				return FLUSH_BUFFER;
+			update_watch = 0;
 		}
 	}
 	/*
 	 *  Finally set new nick name.
 	 */
-	if (sptr->name[0])
+	if (update_watch && sptr->name[0])
 	{
 		(void)del_from_client_hash_table(sptr->name, sptr);
 		if (IsPerson(sptr))
@@ -1785,7 +1786,7 @@ CMD_FUNC(m_nick)
 			    sptr->user->server, sptr->name,
 			    sptr->user->username, sptr->user->realhost);
 	}
-	else if (IsPerson(sptr))
+	else if (IsPerson(sptr) && update_watch)
 		hash_check_watch(sptr, RPL_LOGON);
 
 	return 0;
