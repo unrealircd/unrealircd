@@ -304,7 +304,6 @@ exituniverse:
 	h->refcnt--;
 	IRCMutexUnlock((h->lock));
 	/* We get joined, we need no steekin Detach */
-	IRCExitThread(NULL);
 	return;
 }
 
@@ -467,7 +466,6 @@ exituniverse:
 	h->refcnt--;
 	IRCMutexUnlock(h->lock);
 	/* We need no steekin detach */
-	IRCExitThread(NULL);
 	return;
 }
 

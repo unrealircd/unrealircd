@@ -1612,3 +1612,5 @@ seen. gmtime warning still there
   suggested by tony0man (#0000373)
 - Fixed a bug where /htm would report "no such server" when used locally, reported by
   jollino (#0000343)
+- Possibly fixed some crash bugs in scan_socks and scan_http in Win32 reported by
+  UrLoverGuy13 and Xose (#0000389)

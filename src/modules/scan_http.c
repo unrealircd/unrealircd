@@ -309,6 +309,5 @@ exituniverse:
 	IRCMutexLock((h->lock));
 	h->refcnt--;
 	IRCMutexUnlock((h->lock));
-	IRCExitThread(NULL);
 	return;
 }
