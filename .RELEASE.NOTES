@@ -39,6 +39,7 @@ Unreal3.2.1-almost-3.2.2-but-not-yet-!!!!!! Release Notes
 - Module coders: HOOKTYPE_REMOTE_JOIN, HOOKTYPE_REMOTE_PART, HOOKTYPE_REMOTE_KICK
 
 ==[ MAJOR BUGS FIXED ]==
+- Memory corruption bug in qlines
 - Crash on first connect if compiled with SSL enabled on: Mac OS X, Sun
   Solaris, Opteron w/Linux, and perhaps others (non-i386).
 - (quickly) rehashing + autoconnect link blocks could cause a crash
