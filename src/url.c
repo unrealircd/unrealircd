@@ -332,10 +332,9 @@ void url_do_transfers_async(void)
 				remove(handle->filename);
 			}
 			free(handle);
+			curl_multi_remove_handle(multihandle, msg->easy_handle);
 			curl_easy_cleanup(msg->easy_handle);
-
 		}
-
 	}
 }
 

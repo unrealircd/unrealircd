@@ -2905,3 +2905,5 @@ seen. gmtime warning still there
 - Made allow::options::noident work correctly (#0001416) reported by Zifnab
 - Made some files include limits.h to find PATH_MAX on Solaris (#0001561)
   reported by lunytune
+- Made a change to the remote include code to deal with a random memory corruption
+  issue (#0001558) reported by hybridz.
