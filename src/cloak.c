@@ -33,6 +33,13 @@ static char sccxid[] = "@(#)cloak.c		9.00 7/12/99 UnrealIRCd";
 #include <string.h>
 #include "h.h"
 
+#undef KEY
+#undef KEY2
+#undef KEY3
+#define KEY CLOAK_KEY1
+#define KEY2 CLOAK_KEY2
+#define KEY3 CLOAK_KEY3
+
 #define POW_8 256L
 #define POW_16 65536L
 #define POW_32 4294967296L
@@ -154,16 +161,23 @@ unsigned long crc32(const unsigned char *s, unsigned int len)
   return crc32val;
 }
 
-char *hidehost(char *host)
+char *hidehost(char *rhost)
 {
 	static char	cloaked[512];
 	static char	h1[512];
 	static char	h2[4][4];
 	static char	h3[300];
+	char		*host;
 	unsigned long		l[8];
 	int		i;
-	char		*p;
+	char		*p, *q;
 
+	host = malloc(strlen(rhost)+1);
+	q = host;
+	for (p = rhost; *p; p++, q++) {
+		*q = tolower(*p);
+	}
+	*q = '\0';
 	/* Find out what kind of host we're dealing with here */
 	/* IPv6 ? */	
 	if (strchr(host, ':'))
@@ -191,11 +205,17 @@ char *hidehost(char *host)
 		l[2] = crc32(host, strlen(host));
 		for (i = 0; i <= 2; i++)
 		{
-			l[i] = ((l[i] + CLOAK_KEY2) ^ CLOAK_KEY1) + CLOAK_KEY3;
-		        l[i] <<= 2; l[i] >>= 2;
+#ifdef COMPAT_BETA4_KEYS
+		        l[i] = ((l[i] + KEY2) ^ KEY) ^ KEY3;
+#else
+			l[i] = ((l[i] + KEY2) ^ KEY) + KEY3;
+#endif
+
+			l[i] &= 0x3FFFFFFF;
 	        }
 		ircsprintf(cloaked, "%lx:%lx:%lx:IP",
 			l[2], l[1], l[0]);
+		free(host);
 		return cloaked;
 	}
 	/* Is this a IPv4 IP? */
@@ -209,21 +229,32 @@ char *hidehost(char *host)
 	if (!(*p))
 	{	
 		/* Do IPv4 cloaking here */
-		strcpy(h1, host);
+		strncpyzt(h1, host, sizeof h1);
 		i = 0;
 		for (i = 0, p = strtok(h1, "."); p && (i <= 3); p = strtok(NULL, "."), i++)
 		{
 			strncpy(h2[i], p, 4);			
 		}
+#ifndef COMPAT_BETA4_KEYS
 		ircsprintf(h3, "%s.%s", h2[0], h2[1]);
-		l[0] = ((crc32(h3, strlen(h3)) + CLOAK_KEY2) ^ CLOAK_KEY1) ^ CLOAK_KEY3;
-		ircsprintf(h3, "%s.%s.%s", h2[0], h2[1], h2[2]);
-		l[1] = ((CLOAK_KEY2 + crc32(h3, strlen(h3))) ^ CLOAK_KEY3) ^ CLOAK_KEY1;
+		l[0] = ((crc32(h3, strlen(h3)) + KEY) ^ KEY2) + KEY3;
+		ircsprintf(h3, "%s.%s.%s", h2[0], h2[1], h2[2]);		
+		l[1] = ((KEY2 ^ crc32(h3, strlen(h3))) + KEY3) ^ KEY;
 		l[4] = crc32(host, strlen(host));
-		l[2] = ((l[4] + CLOAK_KEY1) ^ CLOAK_KEY3)^ CLOAK_KEY2;
-		l[2] <<= 2; l[2] >>= 2;
-		l[0] <<= 1; l[0] >>= 1;
-		ircsprintf(cloaked, "%lX.%lX.%lX.IP", l[2], l[1], l[0]);
+		l[2] = ((l[4] + KEY3) ^ KEY) + KEY2;
+#else
+		ircsprintf(h3, "%s.%s", h2[0], h2[1]);
+		l[0] = ((crc32(h3, strlen(h3)) + KEY2) ^ KEY) ^ KEY3;
+		ircsprintf(h3, "%s.%s.%s", h2[0], h2[1], h2[2]);
+		l[1] = ((KEY2 + crc32(h3, strlen(h3))) ^ KEY3) ^ KEY;
+		l[4] = crc32(host, strlen(host));
+		l[2] = ((l[4] + KEY) ^ KEY3)^ KEY2;
+#endif
+		l[2] &= 0x3FFFFFFF;
+		l[0] &= 0x7FFFFFFF;
+		l[1] &= 0xFFFFFFFF;
+		snprintf(cloaked, sizeof cloaked, "%lX.%lX.%lX.IP", l[2], l[1], l[0]);
+		free(host);
 		return cloaked;
 	}
 	else
@@ -240,19 +271,23 @@ char *hidehost(char *host)
 					break;
 			}
 		}
-		l[0] = ((crc32(host, strlen(host)) ^ CLOAK_KEY2) + CLOAK_KEY1) ^ CLOAK_KEY3;
-		l[0] <<= 2; 
-		l[0] >>= 2; 
+#ifdef COMPAT_BETA4_KEYS
+		l[0] = ((crc32(host, strlen(host)) + KEY2) ^ KEY)^ KEY3;
+#else
+		l[0] = ((crc32(host, strlen(host)) ^ KEY2) + KEY) ^ KEY3;
+#endif
+		l[0] &= 0x3FFFFFFF;
 		p++;
 		if (*p)
-			sprintf(cloaked, "%s-%lX.%s", hidden_host,
+			snprintf(cloaked, sizeof cloaked, "%s-%lX.%s", hidden_host,
 				l[0], p);
 		else
-			sprintf(cloaked, "%s-%lX", hidden_host, l[0]);
-			
+			snprintf(cloaked, sizeof cloaked, "%s-%lX", hidden_host, l[0]);
+		free(host);	
 		return cloaked;
 	}
 	/* Couldn't cloak, -WTF? */
+	free(host);
 	return NULL;
 }
 
