@@ -511,3 +511,4 @@ seen. gmtime warning still there
 - Fixed DEBUGMODE under win32
 - Fixed /trace problem with slots (idea from ircu2.10.01+winnt)
 - Fixed listener problem, reported by McSkaf
+- Minor Win32 bug fix

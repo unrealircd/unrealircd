@@ -2668,9 +2668,11 @@ void	validate_configuration(void)
          * anything -- codemastr
 	 */
 #ifdef _WIN32
-	if (config_error_flag)
+	if (config_error_flag) {
 		win_log("Errors in configuration, terminating program.");
-	win_error();
+		win_error();
+		exit(5);
+	}
 #endif
 	if (config_error_flag)
 	{
