@@ -2240,7 +2240,6 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  break;
 		  }
 
-		linkok:
 		  if (!chptr->mode.limit && what == MODE_ADD)
 		  {
 			  sendto_one(cptr,
@@ -2248,6 +2247,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			      me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
 			  break;
 		  }
+		linkok:
 		  retval = 1;
 		  for (x = 0; x < *pcount; x++)
 		  {
