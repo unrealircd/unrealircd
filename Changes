@@ -2252,3 +2252,4 @@ seen. gmtime warning still there
   problems when a number follows directly after the color code. 
 - Added support for editting short motds in the win32 editor.
 - Added a goto button on the win32 editor toolbar.
+- Made the win32 editor window maximizable.

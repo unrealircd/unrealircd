@@ -1,6 +1,6 @@
 /************************************************************************
  *   IRC - Internet Relay Chat, Win32GUI.c
- *   Copyright (C) 2000-2002 David Flynn (DrBin) & Dominick Meglio (codemastr)
+ *   Copyright (C) 2000-2003 David Flynn (DrBin) & Dominick Meglio (codemastr)
  *   
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -1202,7 +1202,7 @@ HWND DrawToolbar(HWND hwndParent, UINT iID) {
 		{ 2, IDC_COLOR, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0L, 0},
 		{ 3, IDC_BGCOLOR, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0L, 0},
 		{ 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, {0}, 0L, 0},
-		{ 4, IDC_GOTO, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0L, 0}
+		{ 4, IDC_GOTO, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0L, 0},
 	};
 	hTool = CreateToolbarEx(hwndParent, WS_VISIBLE|WS_CHILD|TBSTYLE_FLAT|TBSTYLE_TOOLTIPS, 
 				IDC_TOOLBAR, 0, HINST_COMMCTRL, IDB_STD_SMALL_COLOR,
@@ -1261,6 +1261,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 	static FINDREPLACE find;
 	static unsigned char *file;
 	static HWND hTool, hClip, hStatus;
+	static RECT rOld;
 	CHARFORMAT2 chars;
 	switch (message) {
 		case WM_INITDIALOG: {
@@ -1322,6 +1323,34 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			}
 			return (TRUE);
 			}
+		case WM_WINDOWPOSCHANGING:
+		{
+			GetClientRect(hDlg, &rOld);
+			return FALSE;
+		}
+		case WM_SIZE:
+		{
+			DWORD new_width = LOWORD(lParam);
+			DWORD new_height = HIWORD(lParam);
+			HWND hRich = GetDlgItem(hDlg, IDC_TEXT);
+			RECT rOldRich;
+			DWORD old_width, old_height;
+			DWORD old_rich_width, old_rich_height;
+			SendMessage(hStatus, WM_SIZE, 0, 0);
+			SendMessage(hTool, TB_AUTOSIZE, 0, 0);
+			old_width = rOld.right-rOld.left;
+			old_height = rOld.bottom-rOld.top;
+			new_width = new_width - old_width;
+			new_height = new_height - old_height;
+			GetWindowRect(hRich, &rOldRich);
+			old_rich_width = rOldRich.right-rOldRich.left;
+			old_rich_height = rOldRich.bottom-rOldRich.top;
+			SetWindowPos(hRich, NULL, 0, 0, old_rich_width+new_width, 
+				old_rich_height+new_height,
+				SWP_NOMOVE|SWP_NOREPOSITION|SWP_NOZORDER);
+			bzero(&rOld, sizeof(RECT));
+			return FALSE;
+		}
 		case WM_NOTIFY:
 			switch (((NMHDR *)lParam)->code) {
 				case EN_SELCHANGE: {
