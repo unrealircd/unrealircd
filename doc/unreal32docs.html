@@ -21,7 +21,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 Beta15<br>
-  <b>Last doc update:</b> 2003-04-15 </div>
+  <b>Last doc update:</b> 2003-04-16 </div>
   <b>Head Coders:</b> Stskeeps / codemastr / Luke / McSkaf / Syzop<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -93,9 +93,10 @@
   ---4.32. <a href="#aliasblock">Alias Block</a><br>
   ---4.33. <a href="#helpblock">Help Block</a><br>
   ---4.34. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
-  5. <a href="#userchannelmodes">User & Channel Modes</a><br>
-  6. <a href="#useropercommands">User & Oper Commands</a><br>
-  7. <a href="#faq">Frequently Asked Questions (FAQ)</a><br> 
+  5. <a href="#addtlfiles">Additional Files</a><br>
+  6. <a href="#userchannelmodes">User & Channel Modes</a><br>
+  7. <a href="#useropercommands">User & Oper Commands</a><br>
+  8. <a href="#faq">Frequently Asked Questions (FAQ)</a><br> 
 </p>
 <p><b><font size="+2">1.0 &#8211;Introduction & Notes <a name="IntroductionNotes"></a></font></b><br>
 </p><div class="desc">
@@ -1770,7 +1771,26 @@ set {
   Specifies the amount of time in which the set::anti-flood::away-count of /aways must be
   executed for flood protection to be triggered. This requires NO_FLOOD_AWAY to be defined.</p>
 <p></p> </div>
-<p><b><font size="+2">5 &#8211; User & Channel Modes<a name="userchannelmodes"></a>
+<p><b><font size="+2">7 &#8211; Additional Files<a name="addtlfiles"></a>
+  </font></b></p><div class="desc">
+  In addition to the configuration files, Unreal has a few other files, such as MOTD, OperMOTD, 
+  BotMOTD, and Rules. Listed below are the names of these files and their uses.
+<table width="83%" border="1">
+  <tr>
+    <td>ircd.motd</td><td>Displayed when a /motd is executed and when a user connects</td> 
+  </tr>
+  <tr>
+    <td>ircd.rules</td><td>Displayed when a /rules is executed</td>
+  </tr>
+  <tr>
+    <td>oper.motd</td><td>Displayed when a /opermotd is executed or when you /oper up</td>
+  </tr>
+  <tr>
+    <td>bot.motd</td><td>Displayed when a /botmotd is executed</td>
+  </tr>
+</table>
+<p></p></div>
+<p><b><font size="+2">6 &#8211; User & Channel Modes<a name="userchannelmodes"></a>
   </font></b></p><div class="desc">
 <table width="83%" border="1">
   <tr> 
@@ -2016,7 +2036,7 @@ set {
   </tr>
 </table>
 <p></p></div>
-<p><font size="+2"><b>6 &#8211; User & Oper Commands Table<a name="useropercommands" id="useropercommands"></a></b></font></p><div class="desc">
+<p><font size="+2"><b>7 &#8211; User & Oper Commands Table<a name="useropercommands" id="useropercommands"></a></b></font></p><div class="desc">
 <p>NOTE: the /helpop documentation is more up to date, use <i>/helpop command</i> (or <i>/helpop ?command</i> if you are oper) 
 to get more information on a command.</p>
 
@@ -2532,7 +2552,7 @@ to get more information on a command.</p>
 </table>
 
 <p></p></div>
-<p><font size="+2"><b>7 &#8211; Frequently Asked Questions (FAQ)<a name="faq"></a></b></font></p>
+<p><font size="+2"><b>8 &#8211; Frequently Asked Questions (FAQ)<a name="faq"></a></b></font></p>
 <div class="desc"><p>The FAQ is available online <a href="http://www.vulnscan.org/UnrealIrcd/faq/" TARGET="_blank">here</a></p></div>
 <p></p>
 </body>

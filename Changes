@@ -2067,3 +2067,5 @@ seen. gmtime warning still there
   reported by AngryWolf
 - Made it so /msg nick@server and /notice nick@server use tokens if the server supports it
   (#0000895) reported by Troco
+- Added some information to the docs listing the file names for motd, rules, etc. (#0000519)
+  suggested a LONG time ago by Jaw959
