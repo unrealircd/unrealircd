@@ -2560,3 +2560,4 @@ seen. gmtime warning still there
 - (Internal) Moved most valid-host checking into 1 function, valid_host(),
   which checks for invalid characters.
 - Added hostname check for me::name since this could cause mysterious trouble.
+- Removed references to tkline/tzline from help.conf. Reported by penna22 (#0001340)
