@@ -1672,6 +1672,7 @@ link &lt;nombre-servidor&gt; {
 	leaf &lt;leaf-mask&gt;;
 	leafdepth &lt;profundidad&gt;;
 	class &lt;clase&gt;;
+ciphers &lt;ssl-ciphers&gt;;
 	options {
 		&lt;opci&oacute;n&gt;;
 		&lt;opci&oacute;n&gt;;
@@ -1721,6 +1722,8 @@ link &lt;nombre-servidor&gt; {
   Es la clase a la se relacionar&aacute; este servidor, generalmente la clase server.</p>
 <p><b>compression-level</b> (opcional)<br>
   Especifica el nivel de compresi&oacute;n (1-9) si se especifica el par&aacute;metro link::options::zip.</p>
+<p><b>ciphers</b> (opcional)<br>
+  Especifica los &quot;ciphers&quot; ssl para este enlace. Para obtener una lista de los &quot;ciphers&quot; disponibles, use el comando 'openssl ciphers. Deben especificarse separados por ':'. </p>
 <p><b>bloque options </b><br>
   Algunas de las opciones son:<br>
 <table border="0">
