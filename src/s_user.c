@@ -768,7 +768,6 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			strncpyzt(user->realhost, sptr->sockhost, HOSTLEN + 1);
 		strncpyzt(user->realhost, user->realhost,
 		    sizeof(user->realhost));
-	//	aconf = sptr->confs->value.aconf;
 		/*
 		 * I do not consider *, ~ or ! 'hostile' in usernames,
 		 * as it is easy to differentiate them (Use \*, \? and \\)

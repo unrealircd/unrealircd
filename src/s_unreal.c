@@ -74,7 +74,7 @@ int  m_sethost(cptr, sptr, parc, parv)
 {
 	char *vhost, *s;
 #ifndef DISABLE_USERMOD
-	int  permit = 0;	// 0 = opers(glob/locop) 1 = global oper 2 = not MY clients.. 
+	int  permit = 0;	/* 0 = opers(glob/locop) 1 = global oper 2 = not MY clients.. */
 #else
 	int  permit = 2;
 #endif
@@ -581,9 +581,6 @@ int  m_setname(cptr, sptr, parc, parv)
 		    me.name, parv[0], parv[1]);
 
 	return 0;
-
-//      sendto_serv_butone(cptr, ":%s SETNAME %s", parv[0], parv[1]);
-	return 0;
 }
 
 /* m_sdesc - 15/05/1999 - Stskeeps
@@ -720,8 +717,6 @@ int  m_techat(cptr, sptr, parc, parv)
 #ifdef ADMINCHAT
 	sendto_umode(UMODE_TECHADMIN, "*** Te-chat -- from %s: %s",
 	    parv[0], message);
-//        sendto_techat("from %s: %s", parv[0], message);
-//              sendto_achat(1,"from %s: %s", parv[0], message);
 #endif
 	return 0;
 }

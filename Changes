@@ -191,3 +191,10 @@
 - Fixed negative timestamps problem (crash)
 - Fixed a problem with cptr->class counting for servers
 - Made a bunch of /stats flags work with newconf
+- Added some MALLOCD (mini debug malloc by stskeeps..)
+- Removed some C++ comments
+- Made close_listeners work correctly again
+- Removed some old check_* mammut code
+- Fixed a bunch of possible bugs in newconf
+- Added sendto_realops logging of config errors
+- Made /rehash work .. sortof. Fixed some crash bugs

@@ -3731,9 +3731,9 @@ int  m_rehash(cptr, sptr, parc, parv)
 			sendto_ops
 			    ("%s is remotely rehashing server config file",
 			    parv[0]);
-/*			return rehash(cptr, sptr,
+			return rehash(cptr, sptr,
 			    (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
-*/		}
+		}
 		parv[1] = parv[2];
 	}
 	else
@@ -3895,7 +3895,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 #ifdef USE_SYSLOG
 	syslog(LOG_INFO, "REHASH From %s\n", get_client_name(sptr, FALSE));
 #endif
-//	return rehash(cptr, sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
+	return rehash(cptr, sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
 }
 
 /*

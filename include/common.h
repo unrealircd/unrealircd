@@ -193,9 +193,24 @@ extern unsigned char char_atribs[];
 #define ispunct(c) (!(char_atribs[(u_char)(c)]&(CNTRL|ALPHA|DIGIT)))
 #endif
 
+#ifndef MALLOCD
+#define MyFree free
 #define MyMalloc malloc
 #define MyRealloc realloc
-#define MyFree free
+#else
+#define MyFree(x) ircd_log("%s:%i: free %02x", __FILE__, __LINE__, x); free(x)
+#define MyMalloc(x) StsMalloc(x, __FILE__, __LINE__)
+#define MyRealloc realloc
+static char *StsMalloc(size_t size, char *file, long line)
+{
+	void *x;
+	
+	x = malloc(size);
+	ircd_log("%s:%i: malloc %02x", file, line, x);	
+	return x;
+}
+
+#endif
 
 extern void flush_connections();
 extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );

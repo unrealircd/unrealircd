@@ -42,6 +42,7 @@
 #include "h.h"
 
 extern char *my_itoa(long i);
+
 /*
  * TODO:
  *  - allow channel {} (chrestrict)
@@ -55,7 +56,7 @@ extern char *my_itoa(long i);
 */
 #define ircdupstr(x,y) if (x) MyFree(x); x = strdup(y)
 #define ircstrdup ircdupstr
-#define ircfree(x) if (x) MyFree(x)
+#define ircfree(x) if (x) MyFree(x); x = NULL
 
 typedef struct _confcommand ConfigCommand;
 struct	_confcommand
@@ -258,6 +259,7 @@ static void config_error(char *format, ...)
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
 	fprintf(stderr, "[error] %s\n", buffer);
+	sendto_realops("error: %s", buffer);
 }
 
 /* Like above */
@@ -273,6 +275,7 @@ static void config_status(char *format, ...)
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
 	fprintf(stderr, "* %s\n", buffer);
+	sendto_realops("warning: %s", buffer);
 }
 /* This is the internal parser, made by Chris Behrens & Fred Jacobs */
 static ConfigFile *config_parse(char *filename, char *confdata)
@@ -334,6 +337,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 						filename, linenumber);
 					config_entry_free(curce);
 					config_free(curcf);
+					
 					return NULL;
 				}
 				else if (!cursection)
@@ -427,7 +431,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 				{
 					curce = (ConfigEntry *)malloc(sizeof(ConfigEntry));
 					memset(curce, 0, sizeof(ConfigEntry));
-					curce->ce_varname = (char *)malloc(ptr-start+1);
+					curce->ce_varname = (char *)malloc((ptr-start)+1);
 					strncpy(curce->ce_varname, start, ptr-start);
 					curce->ce_varname[ptr-start] = '\0';
 					curce->ce_varlinenum = linenumber;
@@ -501,7 +505,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 				{
 					curce = (ConfigEntry *)malloc(sizeof(ConfigEntry));
 					memset(curce, 0, sizeof(ConfigEntry));
-					curce->ce_varname = (char *)malloc(ptr-start+1);
+					curce->ce_varname = (char *)malloc((ptr-start)+1);
 					strncpy(curce->ce_varname, start, ptr-start);
 					curce->ce_varname[ptr-start] = '\0';
 					curce->ce_varlinenum = linenumber;
@@ -605,6 +609,7 @@ ConfigFile *config_load(char *filename)
 		close(fd);
 		return NULL;
 	}
+	/* Just me or could this cause memory corrupted when ret <0 ? */
 	buf[ret] = '\0';
 	close(fd);
 	cfptr = config_parse(filename, buf);
@@ -870,8 +875,7 @@ int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
 		}
 		if (!strcmp(cep->ce_varname, "name"))
 		{
-			if (conf_me->name)
-				MyFree(conf_me->name);
+			ircfree(conf_me->name);
 			ircstrdup(conf_me->name, cep->ce_vardata);
 			if (!strchr(conf_me->name, '.'))
 			{
@@ -881,8 +885,7 @@ int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
 		} else
 		if (!strcmp(cep->ce_varname, "info"))
 		{
-			if (conf_me->info)
-				MyFree(conf_me->info);
+			ircfree(conf_me->info);
 			conf_me->info = strdup(cep->ce_vardata);
 		} else
 		if (!strcmp(cep->ce_varname, "numeric"))
@@ -1096,15 +1099,13 @@ int     _conf_drpass(ConfigFile *conf, ConfigEntry *ce)
 		}
 		if (!strcmp(cep->ce_varname, "restart"))
 		{
-			if (conf_drpass->restart)
-				MyFree(conf_drpass->restart);
+			ircfree(conf_drpass->restart);
 			conf_drpass->restart = strdup(cep->ce_vardata);
 			ircstrdup(conf_drpass->restart, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "die"))
 		{
-			if (conf_drpass->die)
-				MyFree(conf_drpass->die);
+			ircfree(conf_drpass->die);
 			conf_drpass->die = strdup(cep->ce_vardata);
 		}
 		else 
@@ -1960,15 +1961,28 @@ int     rehash(cptr, sptr, sig)
         aClient *cptr, *sptr;
         int  sig;
 {
-	ConfigItem_oper	*oper_ptr;
-	ConfigItem_class *class_ptr;
-	ConfigItem_ulines *uline_ptr;
-	ConfigItem_allow *allow_ptr;
-	ConfigItem_except *except_ptr;
-	ConfigItem_ban *ban_ptr;
-	ConfigItem_link *link_ptr;
+	ConfigItem_oper		*oper_ptr;
+	ConfigItem_class 	*class_ptr;
+	ConfigItem_ulines 	*uline_ptr;
+	ConfigItem_allow 	*allow_ptr;
+	ConfigItem_except 	*except_ptr;
+	ConfigItem_ban 		*ban_ptr;
+	ConfigItem_link 	*link_ptr;
+	ConfigItem_listen 	*listen_ptr;
 	ConfigItem 	t;
 
+	
+	flush_connections(me.fd);
+	if (sig == 1)
+	{
+		sendto_ops("Got signal SIGHUP, reloading ircd conf. file");
+#ifdef	ULTRIX
+		if (fork() > 0)
+			exit(0);
+		write_pidfile();
+#endif
+	}
+	
 	/* wipe the fckers out ..*/
 	for (oper_ptr = conf_oper; oper_ptr; oper_ptr = (ConfigItem_oper *) oper_ptr->next)
 	{	
@@ -1978,7 +1992,7 @@ int     rehash(cptr, sptr, sig)
 		ircfree(oper_ptr->password);
 		for (oper_from = (ConfigItem_oper_from *) oper_ptr->from; oper_from; oper_from = (ConfigItem_oper_from *) oper_from->next)
 		{
-			ircfree(oper_ptr->name);
+			ircfree(oper_from->name);
 			t.next = del_ConfigItem((ConfigItem *)oper_ptr, (ConfigItem **)&oper_ptr->from);
 			MyFree(oper_from);
 			oper_from = (ConfigItem_oper_from *) &t;
@@ -1994,7 +2008,7 @@ int     rehash(cptr, sptr, sig)
 		if (!class_ptr->clients)
 		{
 			ircfree(class_ptr->name);
-			t.next = del_ConfigItem((ConfigItem *) class_ptr, (ConfigItem **)conf_class);
+			t.next = del_ConfigItem((ConfigItem *) class_ptr, (ConfigItem **)&conf_class);
 			MyFree(class_ptr);
 			class_ptr = (ConfigItem_class *) &t;			
 		}
@@ -2003,7 +2017,7 @@ int     rehash(cptr, sptr, sig)
 	{
 		/* We'll wipe it out when it has no clients */
 		ircfree(uline_ptr->servername);
-		t.next = del_ConfigItem((ConfigItem *) uline_ptr, (ConfigItem **)conf_ulines);
+		t.next = del_ConfigItem((ConfigItem *) uline_ptr, (ConfigItem **)&conf_ulines);
 		MyFree(uline_ptr);
 		uline_ptr = (ConfigItem_ulines *) &t;			
 	}
@@ -2012,14 +2026,14 @@ int     rehash(cptr, sptr, sig)
 		ircfree(allow_ptr->ip);
 		ircfree(allow_ptr->hostname);
 		ircfree(allow_ptr->password);
-		t.next = del_ConfigItem((ConfigItem *) allow_ptr, (ConfigItem **)conf_allow);
+		t.next = del_ConfigItem((ConfigItem *) allow_ptr, (ConfigItem **) &conf_allow);
 		MyFree(allow_ptr);
 		allow_ptr = (ConfigItem_allow *) &t;			
 	}
 	for (except_ptr = conf_except; except_ptr; except_ptr = (ConfigItem_except *) except_ptr->next)
 	{
 		ircfree(except_ptr->mask);
-		t.next = del_ConfigItem((ConfigItem *) except_ptr, (ConfigItem **)conf_except);
+		t.next = del_ConfigItem((ConfigItem *) except_ptr, (ConfigItem **)&conf_except);
 		MyFree(except_ptr);
 		except_ptr = (ConfigItem_except *) &t;			
 	}
@@ -2029,7 +2043,7 @@ int     rehash(cptr, sptr, sig)
 		{
 			ircfree(ban_ptr->mask);
 			ircfree(ban_ptr->reason);
-			t.next = del_ConfigItem((ConfigItem *) ban_ptr, (ConfigItem **)conf_ban);
+			t.next = del_ConfigItem((ConfigItem *) ban_ptr, (ConfigItem **)&conf_ban);
 			MyFree(ban_ptr);
 			ban_ptr = (ConfigItem_ban *) &t;
 		}
@@ -2046,7 +2060,7 @@ int     rehash(cptr, sptr, sig)
 			ircfree(link_ptr->leafmask);
 			ircfree(link_ptr->connpwd);
 			ircfree(link_ptr->recvpwd);
-			t.next = del_ConfigItem((ConfigItem *) link_ptr, (ConfigItem **)conf_link);
+			t.next = del_ConfigItem((ConfigItem *) link_ptr, (ConfigItem **)&conf_link);
 			MyFree(link_ptr);
 			link_ptr = (ConfigItem_link *) &t;
 		}
@@ -2055,7 +2069,33 @@ int     rehash(cptr, sptr, sig)
 			link_ptr->flag.temporary = 1;
 		}
 	}
-	
+	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *)listen_ptr->next)
+	{
+		listen_ptr->flag.temporary = 1;
+	}
+	/* This space is for codemastr's upcoming tld & vhost removal code. */
+	if (conf_drpass)
+	{
+		ircfree(conf_drpass->restart);
+		ircfree(conf_drpass->die);
+		ircfree(conf_drpass);
+	}
+	init_conf2("unrealircd.conf");
+	/* Clean up listen records */
+	close_listeners();
+	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *)listen_ptr->next)
+	{
+		if (listen_ptr->flag.temporary)
+		{
+			ircfree(listen_ptr->ip);
+			t.next = del_ConfigItem((ConfigItem *) listen_ptr, (ConfigItem **)&conf_listen);
+			MyFree(listen_ptr);
+			listen_ptr = (ConfigItem_listen *) &t;
+						
+		}
+	} 
+	check_pings(TStime(), 1);
+	sendto_realops("Completed rehash");
 }
 
 

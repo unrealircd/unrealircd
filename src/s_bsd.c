@@ -502,10 +502,9 @@ int add_listener2(ConfigItem_listen *conf)
 
 void close_listeners()
 {
-#ifdef OLD
 	aClient *cptr;
 	int  i;
-	aConfItem *aconf;
+	ConfigItem_listen *aconf;
 
 	/*
 	 * close all 'extra' listening ports we have
@@ -516,14 +515,13 @@ void close_listeners()
 			continue;
 		if (!IsMe(cptr) || cptr == &me || !IsListening(cptr))
 			continue;
-		aconf = cptr->confs->value.aconf;
+		aconf = (ConfigItem_listen *) cptr->class;
 
-		if (IsIllegal(aconf) && aconf->clients == 0)
+		if (aconf->flag.temporary && (aconf->clients == 0))
 		{
 			close_connection(cptr);
 		}
 	}
-#endif
 }
 
 /*
@@ -785,235 +783,6 @@ int  check_client(cptr)
 	}
 	return 0;
 }
-
-#define	CFLAG	CONF_CONNECT_SERVER
-#define	NFLAG	CONF_NOCONNECT_SERVER
-/*
- * check_server_init(), check_server()
- *	check access for a server given its name (passed in cptr struct).
- *	Must check for all C/N lines which have a name which matches the
- *	name given and a host which matches. A host alias which is the
- *	same as the server name is also acceptable in the host field of a
- *	C/N line.
- *  0 = Success
- * -1 = Access denied
- * -2 = Bad socket.
- */
-int  check_server_init(cptr)
-	aClient *cptr;
-{
-#ifdef OLD
-	char *name;
-	aConfItem *c_conf = NULL, *n_conf = NULL;
-	struct hostent *hp = NULL;
-	Link *lp;
-
-	name = cptr->name;
-	Debug((DEBUG_DNS, "sv_cl: check access for %s[%s]",
-	    name, cptr->sockhost));
-
-	if (IsUnknown(cptr) && !attach_confs(cptr, name, CFLAG | NFLAG))
-	{
-		Debug((DEBUG_DNS, "No C/N lines for %s", name));
-		return -1;
-	}
-	lp = cptr->confs;
-	/*
-	 * We initiated this connection so the client should have a C and N
-	 * line already attached after passing through the connec_server()
-	 * function earlier.
-	 */
-	if (IsConnecting(cptr) || IsHandshake(cptr))
-	{
-		c_conf = find_conf(lp, name, CFLAG);
-		n_conf = find_conf(lp, name, NFLAG);
-		if (!c_conf || !n_conf)
-		{
-			sendto_ops("Connecting Error: %s[%s]", name,
-			    cptr->sockhost);
-			det_confs_butmask(cptr, 0);
-			return -1;
-		}
-	}
-
-	/*
-	   ** If the servername is a hostname, either an alias (CNAME) or
-	   ** real name, then check with it as the host. Use gethostbyname()
-	   ** to check for servername as hostname.
-	 */
-	if (!cptr->hostp)
-	{
-		aConfItem *aconf;
-
-		aconf = count_cnlines(lp);
-		if (aconf)
-		{
-			char *s;
-			Link lin;
-
-			/*
-			   ** Do a lookup for the CONF line *only* and not
-			   ** the server connection else we get stuck in a
-			   ** nasty state since it takes a SERVER message to
-			   ** get us here and we cant interrupt that very
-			   ** well.
-			 */
-			ClearAccess(cptr);
-			lin.value.aconf = aconf;
-			lin.flags = ASYNC_CONF;
-			nextdnscheck = 1;
-			if ((s = index(aconf->host, '@')))
-				s++;
-			else
-				s = aconf->host;
-			Debug((DEBUG_DNS, "sv_ci:cache lookup (%s)", s));
-#ifndef NEWDNS
-			hp = gethost_byname(s, &lin);
-#else /*NEWDNS*/
-			hp = newdns_checkcachename(s);
-#endif /*NEWDNS*/
-		}
-	}
-//	return check_server(cptr, hp, c_conf, n_conf, 0);
-#endif
-}
-#ifdef OLD
-int  check_server(cptr, hp, c_conf, n_conf, estab)
-	aClient *cptr;
-	aConfItem *n_conf, *c_conf;
-	struct hostent *hp;
-	int  estab;
-{
-	char *name;
-	char abuff[HOSTLEN + USERLEN + 2];
-	char sockname[HOSTLEN + 1], fullname[HOSTLEN + 1];
-	Link *lp = cptr->confs;
-	int  i;
-
-	ClearAccess(cptr);
-	if (check_init(cptr, sockname))
-		return -2;
-
-      check_serverback:
-	if (hp)
-	{
-		for (i = 0; hp->h_addr_list[i]; i++)
-			if (!bcmp(hp->h_addr_list[i], (char *)&cptr->ip,
-			    sizeof(struct IN_ADDR)))
-				break;
-		if (!hp->h_addr_list[i])
-		{
-			sendto_ops("IP# Mismatch: %s != %s[%08x]",
-			    inetntoa((char *)&cptr->ip), hp->h_name,
-			    *((unsigned long *)hp->h_addr));
-			hp = NULL;
-		}
-	}
-	else if (cptr->hostp)
-	{
-		hp = cptr->hostp;
-		goto check_serverback;
-	}
-
-	if (hp)
-		/*
-		 * if we are missing a C or N line from above, search for
-		 * it under all known hostnames we have for this ip#.
-		 */
-		for (i = 0, name = hp->h_name; name; name = hp->h_aliases[i++])
-		{
-			strncpyzt(fullname, name, sizeof(fullname));
-			add_local_domain(fullname, HOSTLEN - strlen(fullname));
-			Debug((DEBUG_DNS, "sv_cl: gethostbyaddr: %s->%s",
-			    sockname, fullname));
-			(void)ircsprintf(abuff, "%s@%s",
-			    cptr->username, fullname);
-			if (!c_conf)
-				c_conf = find_conf_host(lp, abuff, CFLAG);
-			if (!n_conf)
-				n_conf = find_conf_host(lp, abuff, NFLAG);
-			if (c_conf && n_conf)
-			{
-				get_sockhost(cptr, fullname);
-				break;
-			}
-		}
-	name = cptr->name;
-
-	/*
-	 * Check for C and N lines with the hostname portion the ip number
-	 * of the host the server runs on. This also checks the case where
-	 * there is a server connecting from 'localhost'.
-	 */
-	if (IsUnknown(cptr) && (!c_conf || !n_conf))
-	{
-		(void)ircsprintf(abuff, "%s@%s", cptr->username, sockname);
-		if (!c_conf)
-			c_conf = find_conf_host(lp, abuff, CFLAG);
-		if (!n_conf)
-			n_conf = find_conf_host(lp, abuff, NFLAG);
-	}
-	/*
-	 * Attach by IP# only if all other checks have failed.
-	 * It is quite possible to get here with the strange things that can
-	 * happen when using DNS in the way the irc server does. -avalon
-	 */
-	if (!hp)
-	{
-		if (!c_conf)
-			c_conf = find_conf_ip(lp, (char *)&cptr->ip,
-			    cptr->username, CFLAG);
-		if (!n_conf)
-			n_conf = find_conf_ip(lp, (char *)&cptr->ip,
-			    cptr->username, NFLAG);
-	}
-	else
-		for (i = 0; hp->h_addr_list[i]; i++)
-		{
-			if (!c_conf)
-				c_conf = find_conf_ip(lp, hp->h_addr_list[i],
-				    cptr->username, CFLAG);
-			if (!n_conf)
-				n_conf = find_conf_ip(lp, hp->h_addr_list[i],
-				    cptr->username, NFLAG);
-		}
-	/*
-	 * detach all conf lines that got attached by attach_confs()
-	 */
-	det_confs_butmask(cptr, 0);
-	/*
-	 * if no C or no N lines, then deny access
-	 */
-	if (!c_conf || !n_conf)
-	{
-		get_sockhost(cptr, sockname);
-		Debug((DEBUG_DNS, "sv_cl: access denied: %s[%s@%s] c %x n %x",
-		    name, cptr->username, cptr->sockhost, c_conf, n_conf));
-		return -1;
-	}
-	/*
-	 * attach the C and N lines to the client structure for later use.
-	 */
-	(void)attach_conf(cptr, n_conf);
-	(void)attach_conf(cptr, c_conf);
-	(void)attach_confs(cptr, name, CONF_HUB | CONF_LEAF | CONF_UWORLD);
-#ifdef INET6
-	if ((AND16(c_conf->ipnum.s6_addr) == 255))
-#else
-	if (c_conf->ipnum.S_ADDR == -1)
-#endif
-		bcopy((char *)&cptr->ip, (char *)&c_conf->ipnum,
-		    sizeof(struct IN_ADDR));
-	get_sockhost(cptr, c_conf->host);
-
-	Debug((DEBUG_DNS, "sv_cl: access ok: %s[%s]", name, cptr->sockhost));
-	if (estab)
-		return m_server_estab(cptr);
-	return 0;
-}
-#endif
-#undef	CFLAG
-#undef	NFLAG
 
 /*
 ** completed_connection
