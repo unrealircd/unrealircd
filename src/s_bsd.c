@@ -2418,7 +2418,7 @@ static struct SOCKADDR *connect_inet(aconf, cptr, lenp)
 	server.SIN_PORT = 0;
 	server.SIN_ADDR = me.ip;
 	server.SIN_FAMILY = AFINET;
-	if (strcmp("*", aconf->bindip))
+	if (aconf->bindip && strcmp("*", aconf->bindip))
 	{
 #ifndef INET6
 		server.SIN_ADDR.S_ADDR = inet_addr(aconf->bindip);	
