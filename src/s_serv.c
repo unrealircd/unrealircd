@@ -1048,6 +1048,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	cptr->flags |= FLAGS_TS8;
 	nextping = TStime();
 	(void)find_or_add(cptr->name);
+#ifdef USE_SSL
 	if (IsSecure(cptr))
 	{
 		sendto_serv_butone(&me, ":%s SMO o :(\2link\2) Secure link %s -> %s established (%s)",
@@ -1056,6 +1057,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 			me.name, inpath, (char *) ssl_get_cipher((SSL *)cptr->ssl));
 	}
 	else
+#endif
 	{
 		sendto_serv_butone(&me, ":%s SMO o :(\2link\2) Link %s -> %s established",
 			me.name, me.name, inpath);
