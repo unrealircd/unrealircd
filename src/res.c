@@ -41,7 +41,7 @@ static char rcsid[] = "@(#)$Id$";
 #ifdef _WIN32
 #define HE(x) (x)->he
 #else
-#define HE(x) &((x)->he)
+#define HE(x) (&((x)->he))
 #endif
 static char hostbuf[HOSTLEN + 1 + 100];	/* +100 for INET6 */
 static char dot[] = ".";
@@ -1176,7 +1176,7 @@ static aCache *add_to_cache(ocp)
 	ocp->hname_next = hashtable[hashv].name_list;
 	hashtable[hashv].name_list = ocp;
 
-	hashv = hash_number((u_char *)HE(ocp)->he.h_addr);
+	hashv = hash_number((u_char *)HE(ocp)->h_addr);
 	ocp->hnum_next = hashtable[hashv].num_list;
 	hashtable[hashv].num_list = ocp;
 
@@ -1240,6 +1240,7 @@ static void update_list(rptr, cachep)
 	*cpp = cp->list_next;
 	cp->list_next = cachetop;
 	cachetop = cp;
+#ifndef _WIN32
 	if (!rptr)
 		return;
 
@@ -1259,12 +1260,12 @@ static void update_list(rptr, cachep)
 	    s = HE(rptr)->h_aliases[i++])
 	{
 		for (j = 0, t = HE(cp)->h_name; t && j < MAXALIASES;
-		    t = HE(cp)->.h_aliases[j++])
+		    t = HE(cp)->h_aliases[j++])
 			if (!mycmp(t, s))
 				break;
 		if (!t && j < MAXALIASES - 1)
 		{
-			base = HE(cp).h_aliases;
+			base = HE(cp)->h_aliases;
 
 			addrcount++;
 			base = (char **)MyRealloc((char *)base,
@@ -1318,7 +1319,7 @@ static void update_list(rptr, cachep)
 		{
 			struct IN_ADDR **ab;
 
-			ab = (struct IN_ADDR **)HE(cp).h_addr_list;
+			ab = (struct IN_ADDR **)HE(cp)->h_addr_list;
 			addrcount++;
 			t = (char *)MyRealloc((char *)*ab,
 			    addrcount * sizeof(struct IN_ADDR));
@@ -1339,6 +1340,7 @@ static void update_list(rptr, cachep)
 			bcopy(s, (char *)*--ab, sizeof(struct IN_ADDR));
 		}
 	}
+#endif
 	return;
 }
 
@@ -1554,7 +1556,7 @@ static aCache *make_cache(rptr)
 	else
 		cp->ttl = rptr->ttl;
 	cp->expireat = TStime() + cp->ttl;
-	rptr->he.h_name = NULL;
+	HE(rptr)->h_name = NULL;
 #ifdef DEBUG
 	Debug((DEBUG_INFO, "make_cache:made cache %#x", cp));
 #endif
@@ -1797,7 +1799,11 @@ u_long cres_mem(sptr, nick)
 	for (; c; c = c->list_next)
 	{
 		sm += sizeof(*c);
+#ifndef _WIN32
 		h = &c->he;
+#else
+		h = c->he;
+#endif
 #ifdef INET6
 		for (i = 0; h->h_addr_list[i]; i++)
 #else

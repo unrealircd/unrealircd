@@ -261,6 +261,7 @@ int ircd_res_init()
 #ifdef	NEXT
 	if (ircd_netinfo_res_init(&haveenv, &havesearch) == 0)
 #endif
+#ifndef _WIN32
 		if ((fp = fopen(IRC_RESCONF, "r")) != NULL)
 		{
 			/* read the config file */
@@ -458,6 +459,7 @@ int ircd_res_init()
 #endif
 			(void)fclose(fp);
 		}
+#endif		
 	if (ircd_res.defdname[0] == 0 &&
 	    gethostname(buf, sizeof(ircd_res.defdname) - 1) == 0 &&
 	    (cp = strchr(buf, '.')) != NULL)

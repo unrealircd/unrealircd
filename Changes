@@ -420,3 +420,4 @@
 - Added irc2.10.3's resolver. Fixes debian-woody-libresolv problems..
   Still some fixes to be done
 - More res.c fixes ..
+- Final res.c fixes 
