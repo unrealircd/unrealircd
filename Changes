@@ -3069,3 +3069,4 @@ seen. gmtime warning still there
 - spamfilter.conf: added signature for LOI trojan.
 - Added german translation of unreal32docs (doc/unreal32docs.de.html), translated
   by Stylus740 which will also maintain it.
+- Patched TRE 0.6.6 to fix known crashbug (#0001684), testing is welcomed.
