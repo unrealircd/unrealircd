@@ -1855,7 +1855,7 @@ static int m_message(cptr, sptr, parc, parv, notice)
 		{
 			parse(sptr, parv[2],
 			    (parv[2] + strlen(parv[2])), msgtab);
-			continue;
+			break;
 		}
 		if (!strcasecmp(nick, "irc") && MyClient(sptr))
 		{
@@ -1863,7 +1863,7 @@ static int m_message(cptr, sptr, parc, parv, notice)
 			{
 				parse(sptr, parv[2], (parv[2] + strlen(parv[2])), msgtab);
 			}
-			continue;
+			break;
 		}
 		if (*nick != '#' && (acptr = find_person(nick, NULL)))
 		{

@@ -847,3 +847,6 @@ Small m_topic bug resolved
 --Luke
 ===================================
 
+Backported m_message fix from 3.2, fixed by Syzop, reported by Ashkrynt
+-Stskeeps
+===================================
