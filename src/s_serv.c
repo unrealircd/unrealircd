@@ -2108,8 +2108,8 @@ static void report_configured_links(sptr, mask)
 {
 	static char null[] = "<NULL>";
 	aConfItem *tmp;
-	int *p, port, tmpmask;
-	char c, *host, *pass, *name;
+	int *p, port, tmpmask, options;
+	char c, *host, *pass, *name, optbuf[5];
 	tmpmask = (mask == CONF_MISSING) ? CONF_CONNECT_SERVER : mask;
 
 	for (tmp = conf; tmp; tmp = tmp->next)
@@ -2125,6 +2125,7 @@ static void report_configured_links(sptr, mask)
 			pass = BadPtr(tmp->passwd) ? null : tmp->passwd;
 			name = BadPtr(tmp->name) ? null : tmp->name;
 			port = (int)tmp->port;
+			options = tmp->options;
 			/*
 			 * On K line the passwd contents can be
 			 * displayed on STATS reply.    -Vesa
@@ -2249,11 +2250,26 @@ static void report_configured_links(sptr, mask)
 				    || mask & CONF_CONNECT_SERVER))
 					sendto_one(sptr, rpl_str(p[1]), me.name,
 					    sptr->name, c, "*", name, port,
-					    get_conf_class(tmp));
-				else
+					    get_conf_class(tmp), "*");
+				else {
+					int cnt = 0;
+					if (options) {
+						if (options & CONNECT_SSL) {
+							optbuf[cnt] = 'S';
+							cnt++;
+						}
+						if (options & CONNECT_ZIP) {
+							optbuf[cnt] = 'Z';
+							cnt++;
+						}
+						optbuf[cnt] = '\0';
+					}
+						
 					sendto_one(sptr, rpl_str(p[1]), me.name,
 					    sptr->name, c, host, name, port,
-					    get_conf_class(tmp));
+					    get_conf_class(tmp), options ? optbuf : "*");
+					optbuf[0] = '\0';
+					}
 			}
 		}
 	return;

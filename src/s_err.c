@@ -246,8 +246,8 @@ static char *replies[] = {
 #else
 /* 212    RPL_STATSCOMMANDS */ ":%s 212 %s %s %u %u",
 #endif
-/* 213    RPL_STATSCLINE */ ":%s 213 %s %c %s * %s %d %d",
-/* 214    RPL_STATSOLDNLINE */ ":%s 214 %s %c %s * %s %d %d",
+/* 213    RPL_STATSCLINE */ ":%s 213 %s %c %s * %s %d %d %s",
+/* 214    RPL_STATSOLDNLINE */ ":%s 214 %s %c %s * %s %d %d %s",
 /* 215    RPL_STATSILINE */ ":%s 215 %s %c %s * %s %d %d",
 /* 216    RPL_STATSKLINE */ ":%s 216 %s %c %s %s %s %d %d",
 /* 217    RPL_STATSQLINE */ ":%s 217 %s %c %s %s %s %d %d",
