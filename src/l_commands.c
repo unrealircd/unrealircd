@@ -84,7 +84,7 @@ void    l_commands_init(void)
 #ifdef DYNAMIC_LINKING
 DLLFUNC void	mod_unload(void)
 #else
-void	_l_commands_unload(void)
+void	l_commands_unload(void)
 #endif
 {
 	modulename_unload();	

@@ -182,6 +182,10 @@
  */
 #undef	COMMENT_IS_FILE
 
+/*
+ * MAXUNKNOWNCONNECTIONSPERIP
+*/
+#define MAXUNKNOWNCONNECTIONSPERIP 3
 
 /* Do these work? I dunno... */
 

@@ -1192,8 +1192,9 @@ aClient *add_connection(cptr, fd)
 	Link lin;
 	aClient *acptr;
 	ConfigItem_ban *bconf;
+	int i, j;
 	acptr = make_client(NULL, &me);
-
+	
 	/* Removed preliminary access check. Full check is performed in
 	 * m_server and m_user instead. Also connection time out help to
 	 * get rid of unwanted connections.
@@ -1236,9 +1237,28 @@ aClient *add_connection(cptr, fd)
 #endif
 		bcopy((char *)&addr.SIN_ADDR, (char *)&acptr->ip,
 		    sizeof(struct IN_ADDR));
-		/* Check for zaps -- Barubary */
-		
-		if (bconf = Find_ban(inetntoa((char *)&acptr->ip), CONF_BAN_IP))
+		j = 1;
+		for (i = highest_fd; i >= 0; i--)
+		{
+			if (local[i] && IsUnknown(local[i]) &&
+				local[i]->ip.S_ADDR == acptr->ip.S_ADDR)
+			{
+				j++;
+					if (j > MAXUNKNOWNCONNECTIONSPERIP)
+					{
+						ircsprintf(zlinebuf,
+							"ERROR :Closing Link: [%s] (Too many unknown connections from your IP)"
+							"\r\n",
+							inetntoa((char *)&acptr->ip));
+						set_non_blocking(fd, acptr);
+						set_sock_opts(fd, acptr);
+						send(fd, zlinebuf, strlen(zlinebuf), 0);
+						goto add_con_refuse;
+					}			
+			}	
+		}
+				
+		if ((bconf = Find_ban(inetntoa((char *)&acptr->ip), CONF_BAN_IP)))
 		{
 			ircsprintf(zlinebuf,
 				"ERROR :Closing Link: [%s] (You are not welcome on "
