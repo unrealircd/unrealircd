@@ -734,6 +734,9 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 
 		if ((i = check_client(sptr)))
 		{
+			if (i == -5)
+				return i;
+				
 			sendto_umode(UMODE_OPER | UMODE_CLIENT,
 			    "*** Notice -- %s from %s.",
 			    i == -3 ? "Too many connections" :
@@ -1051,10 +1054,11 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 	 */
 	if (MyConnect(sptr))
 	{
-	if (sptr->passwd) 
 		if (sptr->passwd && (nsptr = find_person(NickServ, NULL)))
-			sendto_one(nsptr, ":%s PRIVMSG %s@%s :IDENTIFY %s",
-			    sptr->name, NickServ, SERVICES_NAME, sptr->passwd);
+				sendto_one(nsptr, ":%s %s %s@%s :IDENTIFY %s",
+				    sptr->name,
+				    (IsToken(nsptr->from) ? TOK_PRIVATE : MSG_PRIVATE, 
+				     NickServ, SERVICES_NAME, sptr->passwd);
 		/* Force the user to join the given chans -- codemastr */
 		if (buf[1] != '\0')
 			sendto_one(cptr,":%s MODE %s :%s", cptr->name, cptr->name, buf);

@@ -2142,7 +2142,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 		if (index(uhost, '@'))
 			cptr->flags |= FLAGS_DOID;
 		get_sockhost(cptr, uhost);
-
+		/* FIXME */
 		if (aconf->password && !strcmp(aconf->password, "ONE"))
 		{
 			for (i = highest_fd; i >= 0; i--)
@@ -2150,7 +2150,24 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 				    local[i]->ip.S_ADDR == cptr->ip.S_ADDR)
 					return -1;	/* Already got one with that ip# */
 		}
-
+		/* TODO: I:line pwds */
+		/* if no password, and no password given, ok */
+		if (!aconf->password && !cptr->passwd)
+			goto goforit;
+		/* password does not match  */
+		if ((aconf->password && !cptr->passwd)
+		   || (aconf->password && cptr->passwd && strcmp(aconf->password, cptr->passwd)))
+		{
+			exit_client(cptr, cptr, &me,
+				"Password mismatch");
+			return -5;
+		}
+		goforit:
+		if (aconf->password && cptr->passwd)
+		{
+			MyFree(cptr->passwd);
+			cptr->passwd = NULL;
+		}			
 		cptr->class = aconf->class;
 		return 0;
 	}

@@ -139,3 +139,4 @@
 - Made ban nick {} work
 - Added the first (sorta) working version of the config converter
 - updconf now makes use of from {} in oper {} to eliminate duplicate O:lines
+- Made allow {} passwords work (AllowClient) - TODO: I:line encryptions
