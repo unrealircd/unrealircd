@@ -4356,6 +4356,15 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 		if (Auth_CheckError(cep) < 0)
 			errors++;
 	}
+	if ((cep = config_find_entry(ce->ce_entries, "password-connect")))
+	{
+		if (cep->ce_entries)
+		{
+			config_error("%s:%i: link::password-connect can not be encrypted",
+				     ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			errors++;
+		}
+	}
 	if (errors > 0)
 		return errors;
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)

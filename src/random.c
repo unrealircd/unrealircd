@@ -109,11 +109,11 @@ void add_entropy_configfile(struct stat st, char *buf)
  */
 void init_random()
 {
-unsigned int seed;
+unsigned int seed, egd = 0;
 time_t now = TStime();
 #ifndef _WIN32
 struct timeval nowt;
-unsigned int xrnd = 0, egd = 0;
+unsigned int xrnd = 0;
 int fd, n;
 #else
 MEMORYSTATUS mstat;

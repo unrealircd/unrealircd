@@ -1760,3 +1760,6 @@ seen. gmtime warning still there
 - Fixed whole bunch of users in empty channel bug (probably)
 - Added a patch by Syzop to increase the "randomness" of well... the random numbers
 - Fixed a bug in the empty channel fix
+- Fixed a bug in the random patch under win32
+- Added a suggestion by AngryWolf to generate an error if a link::password-connect
+  is specified as encrypted. (#0000597)
