@@ -744,3 +744,5 @@
 - Fixed a bug where /SAJOIN user 0 caused a desynch, reported by trystanscott (#0002384).
 - Merged NICKCHARS= in PROTOCTL for now, since a seperate one is not (yet!) needed,
   reported by SolutechUK and psadi (#0002386).
+- Fixed various (major) problems that the '-h yourself' caused, reported by Trocotronic
+  (#0002387).

@@ -56,7 +56,7 @@ DLLFUNC CMD_FUNC(_m_umode);
 static void bounce_mode(aChannel *, aClient *, int, char **);
 int do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
     u_int what, aClient *cptr,
-     u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char bounce);
+     u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char bounce, long my_access);
 int do_extmode_char(aChannel *chptr, int modeindex, char *param, u_int what,
                     aClient *cptr, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3],
                     char bounce);
@@ -705,9 +705,15 @@ void make_mode_str(aChannel *chptr, long oldm, long oldl, int pcount,
 
 #define REQUIRE_PARAMETER() { if (!param || *pcount >= MAXMODEPARAMS) { retval = 0; break; } retval = 1; }
 
+#ifdef PREFIX_AQ
+#define is_xchanop(x) ((x & (CHFL_CHANOP|CHFL_CHANPROT|CHFL_CHANOWNER)))
+#else
+#define is_xchanop(x) ((x & CHFL_CHANOP))
+#endif
+
 int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param, 
 	u_int what, aClient *cptr,
-	 u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char bounce)
+	 u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char bounce, long my_access)
 {
 	aCtab *tab = &cFlagTab[0];
 
@@ -724,7 +730,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	char *xp;
 	int  notsecure;
 	chasing = 0;
-	if (is_half_op(cptr, chptr) && !is_chan_op(cptr, chptr) && !IsULine(cptr)
+
+	if ((my_access & CHFL_HALFOP) && !is_xchanop(my_access) && !IsULine(cptr)
 	    && !op_can_override(cptr) && !samode_in_progress)
 	{
 		if (MyClient(cptr) && (modetype == MODE_HALFOP) && (what == MODE_DEL) &&
@@ -1839,6 +1846,7 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 	int extm = 1000000; /* (default value not used but stops gcc from complaining) */
 	Cmode_t oldem;
 #endif
+	long my_access;
 	paracount = 1;
 	*pcount = 0;
 
@@ -1849,6 +1857,9 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 #endif
 	if (RESTRICT_CHANNELMODES && MyClient(cptr) && !IsAnOper(cptr) && !IsServer(cptr)) /* "cache" this */
 		checkrestr = 1;
+
+	/* Set access to the status we have */
+	my_access = get_access(cptr, chptr);
 
 	for (curchr = parv[0]; *curchr; curchr++)
 	{
@@ -1953,7 +1964,7 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 			  paracount +=
 			      do_mode_char(chptr, modetype, *curchr,
 			      parv[paracount], what, cptr, pcount, pvar,
-			      bounce);
+			      bounce, my_access);
 			}
 #ifdef EXTCMODE
 			else if (found == 2)
