@@ -1882,7 +1882,7 @@ static int m_message(cptr, sptr, parc, parv, notice)
 				/* Most likely a DCC send .. */
 				if (!myncmp(ctcp, "DCC SEND ", 9))
 				{
-					aFline *fl;
+					ConfigItem_deny_dcc *fl;
 					char *end, file[BUFSIZE];
 					int  size_string = 0;
 
@@ -1903,7 +1903,7 @@ static int m_message(cptr, sptr, parc, parv, notice)
 					file[size_string] = '\0';
 
 					if ((fl =
-					    (aFline *) dcc_isforbidden(cptr,
+					    (ConfigItem_deny_dcc *) dcc_isforbidden(cptr,
 					    sptr, acptr, file)))
 					{
 						sendto_one(sptr,

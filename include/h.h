@@ -64,8 +64,10 @@ extern ConfigItem_except	*conf_except;
 extern ConfigItem_vhost		*conf_vhost;
 extern ConfigItem_link		*conf_link;
 extern ConfigItem_ban		*conf_ban;
+extern ConfigItem_deny_dcc	*conf_deny_dcc;
 
 ConfigItem_class	*Find_class(char *name);
+ConfigItem_deny_dcc	*Find_deny_dcc(char *name);
 ConfigItem_oper		*Find_oper(char *name);
 ConfigItem_listen	*Find_listen(char *ipmask, int port);
 ConfigItem_ulines	*Find_uline(char *host);

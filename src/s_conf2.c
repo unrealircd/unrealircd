@@ -54,7 +54,7 @@ extern char *my_itoa(long i);
  *  - badword { }
  *  - converter
 */
-#define ircdupstr(x,y) if (x) MyFree(x); x = strdup(y)
+#define ircdupstr(x,y) if (x) MyFree(x); if (!y) x = NULL; else x = strdup(y)
 #define ircstrdup ircdupstr
 #define ircfree(x) if (x) MyFree(x); x = NULL
 
@@ -91,6 +91,8 @@ int	_conf_vhost		(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_link		(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_ban		(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_set		(ConfigFile *conf, ConfigEntry *ce);
+int	_conf_deny		(ConfigFile *conf, ConfigEntry *ce);
+int	_conf_deny_dcc		(ConfigFile *conf, ConfigEntry *ce);
 
 extern int conf_debuglevel;
 
@@ -110,6 +112,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "link", 		_conf_link },	
 	{ "ban", 		_conf_ban },
 	{ "set",		_conf_set },
+	{ "deny",		_conf_deny },
 	{ NULL, 		NULL  }
 };
 
@@ -190,6 +193,8 @@ ConfigItem_except	*conf_except = NULL;
 ConfigItem_vhost	*conf_vhost = NULL;
 ConfigItem_link		*conf_link = NULL;
 ConfigItem_ban		*conf_ban = NULL;
+ConfigItem_deny_dcc     *conf_deny_dcc = NULL;
+
 /*
  * MyMalloc with the only difference that it clears the memory too
  * -Stskeeps
@@ -1838,8 +1843,72 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 	} 
 }
+/* deny {} function */
+int	_conf_deny(ConfigFile *conf, ConfigEntry *ce)
+{
+	if (!ce->ce_vardata)
+	{
+		config_error("%s:%i: deny without type",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}
+	if (!strcmp(ce->ce_vardata, "dcc"))
+		_conf_deny_dcc(conf, ce);
+	else
+	{
+		config_status("%s:%i: deny with unknown type",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}
+	return -1;
+}
 
-
+int	_conf_deny_dcc(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigItem_deny_dcc 	*deny = NULL;
+	ConfigEntry 	    	*cep;
+	
+	deny = MyMallocEx(sizeof(ConfigItem_deny_dcc));
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname || !cep->ce_vardata)
+		{
+			config_error("%s:%i: blank deny dcc item",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum);
+			continue;	
+		}
+		if (!strcmp(cep->ce_varname, "filename"))
+		{
+			ircstrdup(deny->filename, cep->ce_vardata);	
+		}
+		else if (!strcmp(cep->ce_varname, "reason"))
+		{
+			ircstrdup(deny->reason, cep->ce_vardata);
+		}
+		else
+		{
+			config_status("%s:%i: unknown directive deny dcc::%s",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum, cep->ce_varname);
+		}
+	}	
+	if (!deny->filename || !deny->reason)
+	{
+		config_status("%s:%i: deny dcc {} without filename/reason, ignoring",
+			cep->ce_fileptr->cf_filename,
+			cep->ce_varlinenum);
+		ircfree(deny->filename);
+		ircfree(deny->reason);
+		ircfree(deny);
+		return -1;
+	}
+	else
+	{
+		add_ConfigItem((ConfigItem *)deny, (ConfigItem **)&conf_deny_dcc);
+		return 0;
+	}
+}
 /*
  * Report functions
 */
@@ -2027,11 +2096,11 @@ void	validate_configuration(void)
 	if (KLINE_ADDRESS) 
 		if (!strchr(KLINE_ADDRESS, '@') && !strchr(KLINE_ADDRESS, ':'))
 		{
-			strcat(errormsg,
+			Error
 			    "set::kline-address is not an e-mail or an URL");
 		}
 		else if (!match("*@unrealircd.com", KLINE_ADDRESS) || !match("*@unrealircd.org",KLINE_ADDRESS) || !match("unreal-*@lists.sourceforge.net",KLINE_ADDRESS)) 
-			strcat(errormsg,
+			Error(
 			   "set::kline-address may not be an UnrealIRCd Team address");
 	
 #endif
@@ -2344,6 +2413,20 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
  * Lookup functions
  * -Stskeeps
 */
+ConfigItem_deny_dcc	*Find_deny_dcc(char *name)
+{
+	ConfigItem_deny_dcc	*p;
+	
+	if (!name)
+		return NULL;
+		
+	for (p = conf_deny_dcc; p; p = (ConfigItem_deny_dcc *) p->next)
+	{
+		if (!match(name, p->filename))
+			return (p);
+	}
+	return NULL;
+}
 
 ConfigItem_class	*Find_class(char *name)
 {

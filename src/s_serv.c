@@ -3780,22 +3780,16 @@ int  m_rehash(cptr, sptr, parc, parv)
 		{
 			if (!strnicmp("-dcc", parv[1], 4))
 			{
-				sendto_ops
-				    ("%sRehashing dccdeny.conf on request of %s",
-				    cptr != sptr ? "Remotely " : "",
-				    sptr->name);
-				dcc_rehash();
+				sendto_one
+				    (":%s NOTICE %s :*** DCCdeny rehash is now done in the main /rehash",
+				   	me.name, sptr->name);
 				return 0;
 			}
 			if (!strnicmp("-dyn", parv[1], 4))
 			{
-				if (!IsAdmin(sptr))
-					return 0;
-				sendto_ops
-				    ("%sRehashing dynamic configuration on request of %s",
-				    cptr != sptr ? "Remotely " : "",
-				    sptr->name);
-				load_conf(ZCONF, 1);
+				sendto_one
+				    (":%s NOTICE %s :*** Dynconf rehash is now done in the main /rehash",
+				   	me.name, sptr->name);
 				return 0;
 			}
 			if (!strnicmp("-gar", parv[1], 4))

@@ -59,13 +59,13 @@ char *cannotjoin_msg = NULL;
 
 /* ircd.dcc configuration */
 
-aFline *dcc_isforbidden(cptr, sptr, target, filename)
+ConfigItem_deny_dcc *dcc_isforbidden(cptr, sptr, target, filename)
 	aClient *cptr, *sptr, *target;
 	char *filename;
 {
-	aFline *p;
+	ConfigItem_deny_dcc *p;
 
-	if (!flines || !target || !filename)
+	if (!conf_deny_dcc || !target || !filename)
 		return NULL;
 
 	if (IsOper(sptr) || IsULine(sptr))
@@ -77,9 +77,9 @@ aFline *dcc_isforbidden(cptr, sptr, target, filename)
 	{
 		return NULL;
 	}
-	for (p = flines; p; p = p->next)
+	for (p = conf_deny_dcc; p; p = (ConfigItem_deny_dcc *) p->next)
 	{
-		if (!match(p->mask, filename))
+		if (!match(p->filename, filename))
 		{
 			return p;
 		}
@@ -89,201 +89,60 @@ aFline *dcc_isforbidden(cptr, sptr, target, filename)
 	return NULL;
 }
 
-int  dcc_add_fline(mask, reason, type)
-	char *mask, *reason;
-	int  type;
-{
-	aFline *fl;
-
-	fl = (aFline *) MyMalloc(sizeof(aFline));
-
-	AllocCpy(fl->mask, mask);
-	AllocCpy(fl->reason, reason);
-	fl->type = type;
-	fl->next = flines;
-	fl->prev = NULL;
-	if (flines)
-		flines->prev = fl;
-	flines = fl;
-}
-
-aFline *dcc_del_fline(fl)
-	aFline *fl;
-{
-	aFline *p, *q;
-	for (p = flines; p; p = p->next)
-	{
-		if (p == fl)
-		{
-			q = p->next;
-			MyFree((char *)p->mask);
-			MyFree((char *)p->reason);
-			/* chain1 to chain3 */
-			if (p->prev)
-			{
-				p->prev->next = p->next;
-			}
-			else
-			{
-				flines = p->next;
-			}
-			if (p->next)
-			{
-				p->next->prev = p->prev;
-			}
-			MyFree((aFline *) p);
-			return q;
-		}
-	}
-	return NULL;
-}
-
-void dcc_wipe_all(void)
-{
-	aFline *p, q;
-
-	for (p = flines; p; p = p->next)
-	{
-		q.next = dcc_del_fline(p);
-		p = &q;
-	}
-}
-
-int  dcc_del_wild_match(mask)
-	char *mask;
-{
-	aFline *p;
-	int  found = 0;
-
-	for (p = flines; p; p = p->next)
-	{
-		if (!match(mask, p->mask) && p->type == 2)
-		{
-			found = 1;
-			dcc_del_fline(p);
-		}
-	}
-	return found;
-}
-
-aFline *dcc_find(mask)
-	char *mask;
-{
-	aFline *p;
-
-	for (p = flines; p; p = p->next)
-	{
-		if (!strcmp(p->mask, mask))
-			return (p);
-	}
-	return NULL;
-}
-
 void dcc_sync(aClient *sptr)
 {
-	aFline *p;
-	for (p = flines; p; p = p->next)
+	ConfigItem_deny_dcc *p;
+	for (p = conf_deny_dcc; p; p = (ConfigItem_deny_dcc *) p->next)
 	{
-		if (p->type == 1)
+		if (p->flag.type2 == CONF_BAN_TYPE_AKILL)
 			sendto_one(sptr, ":%s %s + %s :%s", me.name,
 			    (IsToken(sptr) ? TOK_SVSFLINE : MSG_SVSFLINE),
-			    p->mask, p->reason);
-	}
-}
-
-void dcc_rehash(void)
-{
-	aFline *p, q;
-
-	for (p = flines; p; p = p->next)
-	{
-		if ((p->type == 0) || (p->type == 2))
-		{
-			q.next = dcc_del_fline(p);
-			p = &q;
-		}
-	}
-	dcc_loadconf();
-}
-
-void dcc_wipe_services(void)
-{
-	aFline *p, q;
-
-	for (p = flines; p; p = p->next)
-	{
-		if ((p->type == 1))
-		{
-			q.next = dcc_del_fline(p);
-			p = &q;
-		}
+			    p->filename, p->reason);
 	}
 }
 
 void report_flines(sptr)
 	aClient *sptr;
 {
-	aFline *tmp;
+	ConfigItem_deny_dcc *tmp;
 	char *filemask, *reason;
 	char a;
 
-	if (flines)
+	for (tmp = conf_deny_dcc; tmp; tmp = (ConfigItem_deny_dcc *) tmp->next)
 	{
-	}
-	for (tmp = flines; tmp; tmp = tmp->next)
-	{
-		filemask = BadPtr(tmp->mask) ? "<NULL>" : tmp->mask;
+		filemask = BadPtr(tmp->filename) ? "<NULL>" : tmp->filename;
 		reason = BadPtr(tmp->reason) ? "<NULL>" : tmp->reason;
-		if (tmp->type == 0)
+		if (tmp->flag.type2 == CONF_BAN_TYPE_CONF)
 			a = 'c';
-		if (tmp->type == 1)
+		if (tmp->flag.type2 == CONF_BAN_TYPE_AKILL)
 			a = 's';
-		if (tmp->type == 2)
+		if (tmp->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
 			a = 'o';
 		sendto_one(sptr, ":%s %i %s :%c %s %s", me.name, RPL_TEXT,
 		    sptr->name, a, filemask, reason);
-// sendto_one(sptr, ":%s NOTICE %s :*** (dcc) [%c] %-22s %s", me.name, sptr->name, a, filemask, reason);
 	}
 
 }
 
-/* 
-   dccdeny.conf
-   ------------
-# DMSetup trojan
-deny dmsetup.exe - Possible infected file. Please join #nohack for more information
-
-*/
-int  dcc_loadconf(void)
+void	DCCdeny_add(char *filename, char *reason, int type)
 {
-	char buf[2048];
-	char *x, *y, *z;
-	FILE *f;
+	ConfigItem_deny_dcc *deny = NULL;
+	
+	deny = (ConfigItem_deny_dcc *) MyMallocEx(sizeof(ConfigItem_deny_dcc));
+	deny->filename = strdup(filename);
+	deny->reason = strdup(reason);
+	deny->flag.type2 = type;
+	add_ConfigItem((ConfigItem *)deny, (ConfigItem **)&conf_deny_dcc);
+}
 
-	f = fopen(IRCD_DCCDENY, "r");
-	if (!f)
-		return -1;
-
-	while (fgets(buf, 2048, f))
-	{
-		if (buf[0] == '#' || buf[0] == '/' || buf[0] == '\0')
-			continue;
-		iCstrip(buf);
-		if (buf[0] == '#' || buf[0] == '/' || buf[0] == '\0')
-			continue;
-		x = strtok(buf, " ");
-		if (strcmp("deny", x) == 0)
-		{
-			y = strtok(NULL, " ");
-			z = strtok(NULL, "");
-			if (!z)
-				continue;
-			if (!dcc_find(y))
-				dcc_add_fline(y, z, 0);
-		}
-	}
-	fclose(f);
-	return 0;
+void	DCCdeny_del(ConfigItem_deny_dcc *deny)
+{
+	del_ConfigItem((ConfigItem *)deny, (ConfigItem **)&conf_deny_dcc);
+	if (deny->filename)
+		MyFree(deny->filename);
+	if (deny->reason)
+		MyFree(deny->reason);
+	MyFree(deny);
 }
 
 /* Add a temporary dccdeny line
@@ -299,6 +158,7 @@ int  m_dccdeny(cptr, sptr, parc, parv)
 	int  parc;
 	char *parv[];
 {
+	ConfigItem_deny_dcc	*deny;
 	if (!MyClient(sptr))
 		return 0;
 
@@ -321,14 +181,15 @@ int  m_dccdeny(cptr, sptr, parc, parv)
 		    "DCCDENY");
 		return 0;
 	}
-	if (!dcc_find(parv[1]))
+	if (!Find_deny_dcc(parv[1]))
 	{
 		sendto_ops("%s added a temp dccdeny for %s (%s)", parv[0],
 		    parv[1], parv[2]);
-		dcc_add_fline(parv[1], parv[2], 2);
+		DCCdeny_add(parv[1], parv[2], CONF_BAN_TYPE_TEMPORARY);		
+		return 0;
 	}
 	else
-		sendto_one(sptr, "NOTICE %s :%s already has a dccdeny", parv[0],
+		sendto_one(sptr, "NOTICE %s :*** %s already has a dccdeny", parv[0],
 		    parv[1]);
 }
 
@@ -342,7 +203,7 @@ int  m_undccdeny(cptr, sptr, parc, parv)
 	int  parc;
 	char *parv[];
 {
-	aFline *p;
+	ConfigItem_deny_dcc *p;
 	if (!MyClient(sptr))
 		return 0;
 
@@ -366,21 +227,24 @@ int  m_undccdeny(cptr, sptr, parc, parv)
 		return 0;
 	}
 /* If we find an exact match even if it is a wild card only remove the exact match -- codemastr */
-	if ((p = dcc_find(parv[1])) && p->type == 2)
+	if ((p = Find_deny_dcc(parv[1])) && p->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
 	{
 		sendto_ops("%s removed a temp dccdeny for %s", parv[0],
 		    parv[1]);
-		dcc_del_fline(p);
+		DCCdeny_del(p);
+		return 1;
 	}
 /* Next search using the wild card -- codemastr */
+/* Uncommented by Stskeeps:
 	else if (dcc_del_wild_match(parv[1]) == 1)
 		sendto_ops
 		    ("%s removed a temp dccdeny for all dccdenys matching %s",
 		    parv[0], parv[1]);
+*/
 /* If still no match, give an error */
 	else
 		sendto_one(sptr,
-		    "NOTICE %s :Unable to find a temp dccdeny matching %s",
+		    "NOTICE %s :*** Unable to find a temp dccdeny matching %s",
 		    parv[0], parv[1]);
 
 }
@@ -401,8 +265,8 @@ int  m_svsfline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	  {
 		  if (parc < 4)
 			  return 0;
-		  if (!dcc_find(parv[2]))
-			  dcc_add_fline(parv[2], parv[3], 1);
+		  if (!Find_deny_dcc(parv[2]))
+			  DCCdeny_add(parv[2], parv[3], CONF_BAN_TYPE_AKILL);
 		  if (IsULine(sptr))
 			  sendto_serv_butone(cptr, ":%s %s + %s :%s",
 			      sptr->name,
@@ -416,7 +280,8 @@ int  m_svsfline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			  return 0;
 		  if (parc < 3)
 			  return 0;
-		  dcc_del_fline(dcc_find(parv[2]));
+		  
+		  DCCdeny_del(Find_deny_dcc(parv[2]));
 		  sendto_serv_butone(cptr, ":%s %s - %s",
 		      sptr->name, (IsToken(cptr) ? TOK_SVSFLINE : MSG_SVSFLINE),
 		      parv[2]);
@@ -426,7 +291,9 @@ int  m_svsfline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	  {
 		  if (!IsULine(sptr))
 			  return 0;
+		  /* FIXME
 		  dcc_wipe_services();
+		  */
 		  sendto_serv_butone(cptr, ":%s %s *", sptr->name,
 		      (IsToken(cptr) ? TOK_SVSFLINE : MSG_SVSFLINE));
 		  break;

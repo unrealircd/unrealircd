@@ -1057,10 +1057,6 @@ int  InitwIRCD(argc, argv)
 	}
 #endif
 	booted = TRUE;
-	if (dcc_loadconf() == 0)
-	{
-		fprintf(stderr, "* Loaded DCC deny configuration file ..\n");
-	}
 	if (cr_loadconf() == 0)
 	{
 		fprintf(stderr,

@@ -85,6 +85,7 @@ typedef struct _configitem_vhost ConfigItem_vhost;
 typedef struct _configitem_except ConfigItem_except;
 typedef struct _configitem_link	ConfigItem_link;
 typedef struct _configitem_ban ConfigItem_ban;
+typedef struct _configitem_deny_dcc ConfigItem_deny_dcc;
 
 typedef struct Notify aNotify;
 typedef struct Client aClient;
@@ -937,6 +938,7 @@ struct _configflag_ban
 	unsigned	type2	  : 2;
 };
 
+
 #define CONF_BAN_NICK		1
 #define CONF_BAN_IP		2
 #define CONF_BAN_SERVER		3
@@ -1091,6 +1093,14 @@ struct _configitem_ban {
 	ConfigItem		*prev;
 	ConfigItem		*next;
 	char			*mask;
+	char			*reason;
+};
+
+struct _configitem_deny_dcc {
+	ConfigFlag_ban		flag;
+	ConfigItem		*prev;
+	ConfigItem		*next;
+	char			*filename;
 	char			*reason;
 };
 

@@ -211,3 +211,7 @@
 - Made tld {} get rehashed
 - Made listen/allow get validated
 - Finished up validate_conf()
+- Finished up deny dcc {}.
+   TODOs: dcc_del_wild_match doesn't work. dcc_wipe_services() either
+          
+  
