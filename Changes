@@ -969,3 +969,4 @@ seen. gmtime warning still there
 - Added HOOKTYPE_SERVER_CONNECT and HOOKTYPE_SERVER_QUIT for when servers connect and
   disconnect respectively
 - Added module v3 code. Needs testing, and NO MODULES DOES NOT COMPILE
+- Fixed a win32 movude v3 bug

@@ -1289,7 +1289,7 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 	if ((ret = Module_Load(FindData.cFileName,0))) {
 			config_status("%s:%i: loadmodule %s: failed to load: %s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-				FindData.cFileName), ret);
+				FindData.cFileName, ret);
 	}
 	while (FindNextFile(hFind, &FindData) != 0) {
 		if (((ret = Module_Load(FindData.cFileName,0)))) 
