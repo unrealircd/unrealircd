@@ -662,3 +662,5 @@ seen. gmtime warning still there
 - Fixed an SVSFLINE bug when removing an unknown dccdeny
 - Made win32 compile and work ..
 - Made scan_socks & scan work under win32. Only bug is a \1 IP in /quote scan (?)
+- Added set { blackhole "insideip:port" { "outsideip"; }; }; (useful if
+  being behind firewall)
