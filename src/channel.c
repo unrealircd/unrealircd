@@ -3852,48 +3852,44 @@ CMD_FUNC(m_invite)
             )))
                return 0;
 
-        if (is_banned(acptr, sptr, chptr))
-        {
-                if (over)
+	if (over) {
+	        if (is_banned(acptr, sptr, chptr))
+        	{
                         sendto_snomask(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +b).",
                           sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
-        }
-        else if (chptr->mode.mode & MODE_INVITEONLY)
-        {
-                if (over)
+	        }
+        	else if (chptr->mode.mode & MODE_INVITEONLY)
+	        {
                         sendto_snomask(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +i).",
                           sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
-        }
-        else if (chptr->mode.limit)
-        {
-                if (over)
+	        }
+        	else if (chptr->mode.limit)
+	        {
                         sendto_snomask(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +l).",
                           sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
-        }
-        else if (chptr->mode.mode & MODE_RGSTRONLY)
-        {
-                if (over)
+	        }
+        	else if (chptr->mode.mode & MODE_RGSTRONLY)
+	        {
                         sendto_snomask(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +R).",
                           sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
-        }
-        else if (*chptr->mode.key)
-        {
-                if (over)
+	        }
+        	else if (*chptr->mode.key)
+	        {
                         sendto_snomask(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +k).",
                           sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
-        }
+	        }
 #ifdef OPEROVERRIDE_VERIFY
-        else if (chptr->mode.mode & MODE_SECRET || chptr->mode.mode & MODE_PRIVATE)
-               over = -1;
+        	else if (chptr->mode.mode & MODE_SECRET || chptr->mode.mode & MODE_PRIVATE)
+	               over = -1;
 #endif
-        else
-                return 0;
-
+        	else
+                	return 0;
+	}
         if (over == 1)
                 sendto_channelops_butone(NULL, &me, chptr,
                   ":%s NOTICE @%s :OperOverride -- %s invited him/herself into the channel.",

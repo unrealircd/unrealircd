@@ -1471,3 +1471,5 @@ seen. gmtime warning still there
 - Module load fix for a minor fuckup in SQLINE/UNSQLINE
 - Fixed a long existing bug where when MAXCONNECTIONS is too high it was displayed as set
   to 0
+- Fixed the bug where /invite doesn't work (TEST BEFORE COMMIT!) reported by havlaz
+  (#0000255)
