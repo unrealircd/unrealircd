@@ -300,3 +300,4 @@
 - Fixed a typo in makeconf
 - Made /whois not return channels for services
 - Made makeconf use "ban nick" instead of "ban nickname"
+- Fixed ssl_client_handshake bug reported by IpAddress

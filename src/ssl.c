@@ -190,7 +190,7 @@ int  ssl_client_handshake(aClient *cptr)
 		sendto_realops("Couldn't SSL_connect");
 		return -2;
 	}
-	set_non_blocking(cptr);
+	set_non_blocking(cptr->fd, cptr);
 	cptr->flags |= FLAGS_SSL;
 	return 1;
 }
