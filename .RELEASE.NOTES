@@ -43,5 +43,8 @@ Unreal3.2 Release Notes
 - Windows: now using new Inno Setup which made the installer 300k smaller
 - Docs, help.conf and other text updates.
 
+==[ COMMING UP ]==
+- You can expect module support on windows in a nearby release.
+
 ==[ ADDITIONAL INFO ]==
 * See Changelog

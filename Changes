@@ -3110,3 +3110,4 @@ seen. gmtime warning still there
 ** internal pre2 release **
 - Added temporary fix for include "http://www.blah.com/"; crashbug...although I doubt
   many people would use it. Reported by Angrywolf (#0001757).
+- Some doc/release notes updates on win module support.
