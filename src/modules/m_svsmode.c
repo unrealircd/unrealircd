@@ -355,6 +355,12 @@ int  m_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
                                       && (acptr->umodes & UMODE_OPER))
                                           IRCstats.operators--;
                                   goto setmodex;
+			  case 'H':
+				  if (what == MODE_ADD && !(acptr->umodes & UMODE_HIDEOPER))
+					IRCstats.operators--;
+				  if (what == MODE_DEL && (acptr->umodes & UMODE_HIDEOPER))
+					IRCstats.operators++;
+				  goto setmodex;
                           case 'd':
                                   if (parv[3] && isdigit(*parv[3]))
                                   {
@@ -474,6 +480,12 @@ int  m_svs2mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
                                   if (what == MODE_DEL
                                       && (acptr->umodes & UMODE_OPER))
                                           IRCstats.operators--;
+			  case 'H':
+				  if (what == MODE_ADD && !(acptr->umodes & UMODE_HIDEOPER))
+					IRCstats.operators--;
+				  if (what == MODE_DEL && (acptr->umodes & UMODE_HIDEOPER))
+					IRCstats.operators++;
+				  goto setmodey;
                           default:
                                 setmodey:
                                   for (i = 0; i <= Usermode_highest; i++)
