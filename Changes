@@ -1574,3 +1574,4 @@ seen. gmtime warning still there
 - Fixed a bug where aliases {} didn't use tokens reported by havlaz (#0000288)
 - Fixed a win32 editor bug when using chars with an ASCII code > 128, reported by XircNet
   (#0000298)
+- Fixed a bug in TKL found by DerAlSem where it was possible to add a line for *@* (#0000307)

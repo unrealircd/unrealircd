@@ -291,8 +291,19 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 
 	/* Check if its a hostmask and legal .. */
 	p = strchr(mask, '@');
-
-	if (p && !whattodo)
+	if (!p) {
+		usermask = strtok(mask, "@");
+		hostmask = strtok(NULL, "");
+		if (BadPtr(hostmask)) {
+			if (BadPtr(usermask)) {
+				return 0;
+			}
+			hostmask = usermask;
+			usermask = "*";
+		}
+		p = hostmask-1;
+	}	
+	if (!whattodo)
 	{
 		p++;
 		i = 0;
@@ -310,16 +321,9 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 			return 0;
 		}
 	}
-
 	usermask = strtok(mask, "@");
 	hostmask = strtok(NULL, "");
-	if (BadPtr(hostmask)) {
-		if (BadPtr(usermask)) {
-			return 0;
-		}
-		hostmask = usermask;
-		usermask = "*";
-	}
+
 	tkl_check_expire(NULL);
 
 	secs = 0;
