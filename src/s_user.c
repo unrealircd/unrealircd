@@ -33,7 +33,6 @@ Computing Center and Jarkko Oikarinen";
 #include "numeric.h"
 #include "msg.h"
 #include "channel.h"
-#include "userload.h"
 #include <time.h>
 #include <sys/stat.h>
 #include <stdio.h>

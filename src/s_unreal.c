@@ -26,7 +26,6 @@
 #include "numeric.h"
 #include "msg.h"
 #include "channel.h"
-#include "userload.h"
 #include "version.h"
 #include <time.h>
 #ifdef _WIN32

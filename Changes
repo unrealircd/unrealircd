@@ -643,3 +643,4 @@ seen. gmtime warning still there
 - Fixed a bunch of warnings reported by Red Hat 7
 - Random cosmetic fixes
 - Updated the stats help list for newconf
+- Removed include/userload.h (not used)
