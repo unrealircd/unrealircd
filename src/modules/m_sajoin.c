@@ -172,14 +172,14 @@ DLLFUNC CMD_FUNC(m_sajoin)
 				{
 					chptr = lp->chptr;
 					sendto_channel_butserv(chptr, acptr,
-					    ":%s PART %s :%s", parv[0], chptr->chname,
+					    ":%s PART %s :%s", acptr->name, chptr->chname,
 					    "Left all channels");
 					if (MyConnect(acptr))
 						RunHook4(HOOKTYPE_LOCAL_PART, acptr, acptr, chptr,
 							 "Left all channels");
 					remove_user_from_channel(acptr, chptr);
 				}
-				sendto_serv_butone_token(acptr, parv[0],
+				sendto_serv_butone_token(acptr, acptr->name,
 				    MSG_JOIN, TOK_JOIN, "0");
 				strcpy(jbuf, "0");
 				i = 1;

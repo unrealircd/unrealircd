@@ -741,3 +741,4 @@
 ** internal 3.2.3-pre1 release **
 - Fixed a bug with /invite with no parameters (accidentily broken when +I was added)
   (#0002383) reported by trystanscott.
+- Fixed a bug where /SAJOIN user 0 caused a desynch, reported by trystanscott (#0002384).
