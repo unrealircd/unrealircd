@@ -2265,3 +2265,5 @@ seen. gmtime warning still there
 - Updated help.conf and unreal32docs.html (#0001111) reported by SciFi, AngryWolf, and Zerwas.
 - Cleaned up some code for /die under Windows
 - Fixed ircd.c compile error discovered by Ravage
+- Made unreal work with Linux under PPC (#0001105,#0000929) reported by drevlan and Cruiser
+  and thanks to drevlan for donating a linux ppc shell to help track down the problem

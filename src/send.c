@@ -360,7 +360,13 @@ void sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr,
 			/*
 			 * Burst messages comes here..
 			 */
+#ifdef LINUX_PPC
+			va_start(vl, pattern);
+#endif
 			vsendto_prefix_one(acptr, from, pattern, vl);
+#ifdef LINUX_PPC
+			va_end(vl);
+#endif
 		}
 	}
 	va_end(vl);
@@ -407,7 +413,13 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 				if (!IsSecure(acptr))
 					continue;
 #endif
+#ifdef LINUX_PPC
+			va_start(vl, pattern);
+#endif
 			vsendto_prefix_one(acptr, from, pattern, vl);
+#ifdef LINUX_PPC
+			va_end(vl);
+#endif
 			sentalong[i] = sentalong_marker;
 		}
 		else
@@ -421,10 +433,19 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 					if (!IsSecure(acptr->from))
 						continue;
 #endif
+#ifdef LINUX_PPC
+				va_start(vl, pattern);
+#endif
 				vsendto_prefix_one(acptr, from, pattern, vl);
+#ifdef LINUX_PPC
+				va_end(vl);
+#endif
 				sentalong[i] = sentalong_marker;
 			}
 		}
+#ifdef LINUX_PPC
+		va_end(vl);
+#endif
 	}
 	va_end(vl);
 	return;
@@ -512,7 +533,13 @@ void sendto_chanops_butone(aClient *one, aChannel *chptr, char *pattern, ...)
 					   or user not not a channel op */
 		if (MyConnect(acptr) && IsRegisteredUser(acptr))
 		{
+#ifdef LINUX_PPC
+			va_start(vl, pattern);
+#endif
 			vsendto_one(acptr, pattern, vl);
+#ifdef LINUX_PPC
+			va_end(vl);
+#endif
 		}
 	}
 	va_end(vl);
@@ -541,10 +568,17 @@ void sendto_serv_butone(aClient *one, char *pattern, ...)
 	{
 		if (!(cptr = local[i]) || (one && cptr == one->from))
 			continue;
+#ifdef LINUX_PPC
+		va_start(vl, pattern);
+#endif
+
 #ifdef NO_FDLIST
 		if (IsServer(cptr))
 #endif
 			vsendto_one(cptr, pattern, vl);
+#ifdef LINUX_PPC
+		va_end(vl);
+#endif
 	}
 	va_end(vl);
 	return;
@@ -769,12 +803,19 @@ void sendto_serv_butone_quit(aClient *one, char *pattern, ...)
 	{
 		if (!(cptr = local[i]) || (one && cptr == one->from))
 			continue;
+#ifdef LINUX_PPC
+		va_start(vl, pattern);
+#endif
+
 #ifdef NO_FDLIST
 		if (IsServer(cptr) && !DontSendQuit(cptr))
 #else
 		if (!DontSendQuit(cptr))
 #endif
 			vsendto_one(cptr, pattern, vl);
+#ifdef LINUX_PPC
+		va_end(vl);
+#endif
 	}
 	va_end(vl);
 	return;
@@ -803,12 +844,19 @@ void sendto_serv_butone_sjoin(aClient *one, char *pattern, ...)
 	{
 		if (!(cptr = local[i]) || (one && cptr == one->from))
 			continue;
+#ifdef LINUX_PPC
+		va_start(vl, pattern);
+#endif
+
 #ifdef NO_FDLIST
 		if (IsServer(cptr) && !SupportSJOIN(cptr))
 #else
 		if (!SupportSJOIN(cptr))
 #endif
 			vsendto_one(cptr, pattern, vl);
+#ifdef LINUX_PPC
+		va_end(vl);
+#endif
 	}
 	va_end(vl);
 	return;
@@ -838,12 +886,19 @@ void sendto_serv_sjoin(aClient *one, char *pattern, ...)
 	{
 		if (!(cptr = local[i]) || (one && cptr == one->from))
 			continue;
+#ifdef LINUX_PPC
+		va_start(vl, pattern);
+#endif
+
 #ifdef NO_FDLIST
 		if (IsServer(cptr) && SupportSJOIN(cptr))
 #else
 		if (SupportSJOIN(cptr))
 #endif
 			vsendto_one(cptr, pattern, vl);
+#ifdef LINUX_PPC
+		va_end(vl);
+#endif
 	}
 	va_end(vl);
 	return;
@@ -873,12 +928,19 @@ void sendto_serv_butone_nickv2(aClient *one, char *pattern, ...)
 	{
 		if (!(cptr = local[i]) || (one && cptr == one->from))
 			continue;
+#ifdef LINUX_PPC
+		va_start(vl, pattern);
+#endif
+
 #ifdef NO_FDLIST
 		if (IsServer(cptr) && !SupportNICKv2(cptr))
 #else
 		if (!SupportNICKv2(cptr))
 #endif
 			vsendto_one(cptr, pattern, vl);
+#ifdef LINUX_PPC
+		va_end(vl);
+#endif
 	}
 	va_end(vl);
 	return;
@@ -908,12 +970,19 @@ void sendto_serv_nickv2(aClient *one, char *pattern, ...)
 	{
 		if (!(cptr = local[i]) || (one && cptr == one->from))
 			continue;
+#ifdef LINUX_PPC
+		va_start(vl, pattern);
+#endif
+
 #ifdef NO_FDLIST
 		if (IsServer(cptr) && SupportNICKv2(cptr))
 #else
 		if (SupportNICKv2(cptr))
 #endif
 			vsendto_one(cptr, pattern, vl);
+#ifdef LINUX_PPC
+		va_end(vl);
+#endif
 	}
 	va_end(vl);
 	return;
@@ -945,6 +1014,10 @@ void sendto_serv_nickv2_token(aClient *one, char *pattern, char *tokpattern,
 	{
 		if (!(cptr = local[i]) || (one && cptr == one->from))
 			continue;
+#ifdef LINUX_PPC
+		va_start(vl, tokpattern);
+#endif
+
 #ifdef NO_FDLIST
 		if (IsServer(cptr) && SupportNICKv2(cptr) && !IsToken(cptr))
 #else
@@ -958,6 +1031,9 @@ void sendto_serv_nickv2_token(aClient *one, char *pattern, char *tokpattern,
 		if (SupportNICKv2(cptr) && IsToken(cptr))
 #endif
 			vsendto_one(cptr, tokpattern, vl);
+#ifdef LINUX_PPC
+		va_end(vl);
+#endif
 	}
 	va_end(vl);
 	return;
@@ -993,10 +1069,21 @@ void sendto_common_channels(aClient *user, char *pattern, ...)
 				    !(is_chanownprotop(user, channels->chptr) || is_chanownprotop(cptr, channels->chptr)))
 					continue;
 				sentalong[cptr->slot] = sentalong_marker;
+#ifdef LINUX_PPC
+				va_start(vl, pattern);
+#endif
 				vsendto_prefix_one(cptr, user, pattern, vl);
+#ifdef LINUX_PPC
+				va_end(vl);
+#endif
 			}
 	if (MyConnect(user))
+	{
+#ifdef LINUX_PPC
+		va_start(vl, pattern);
+#endif
 		vsendto_prefix_one(user, user, pattern, vl);
+	}
 	va_end(vl);
 	return;
 }
@@ -1006,6 +1093,8 @@ void sendto_common_channels(aClient *user, char *pattern, ...)
  * Send a message to all members of a channel that are connected to this
  * server.
  */
+
+//STOPPED HERE
 void sendto_channel_butserv(aChannel *chptr, aClient *from, char *pattern, ...)
 {
 	va_list vl;
@@ -1014,7 +1103,15 @@ void sendto_channel_butserv(aChannel *chptr, aClient *from, char *pattern, ...)
 
 	for (va_start(vl, pattern), lp = chptr->members; lp; lp = lp->next)
 		if (MyConnect(acptr = lp->cptr))
+		{
+#ifdef LINUX_PPC
+			va_start(vl, pattern);
+#endif
 			vsendto_prefix_one(acptr, from, pattern, vl);
+#ifdef LINUX_PPC
+			va_end(vl);
+#endif
+		}
 	va_end(vl);
 	return;
 }
@@ -1030,7 +1127,15 @@ void sendto_channel_butserv_butone(aChannel *chptr, aClient *from, aClient *one,
 		if (lp->cptr == one)
 			continue;
 		if (MyConnect(acptr = lp->cptr))
+		{
+#ifdef LINUX_PPC
+			va_start(vl, pattern);
+#endif
 			vsendto_prefix_one(acptr, from, pattern, vl);
+#ifdef LINUX_PPC
+			va_end(vl);
+#endif
+		}
 	}
 	va_end(vl);
 	return;
@@ -1091,7 +1196,13 @@ void sendto_match_servs(aChannel *chptr, aClient *from, char *format, ...)
 			continue;
 		if (!BadPtr(mask) && IsServer(cptr) && match(mask, cptr->name))
 			continue;
+#ifdef LINUX_PPC
+		va_start(vl, format);
+#endif
 		vsendto_one(cptr, format, vl);
+#ifdef LINUX_PPC
+		va_end(vl);
+#endif
 	}
 	va_end(vl);
 }
@@ -1145,7 +1256,13 @@ void sendto_match_butone(aClient *one, aClient *from, char *mask, int what,
 		else if (!cansendlocal || (!(IsRegisteredUser(cptr) &&
 		    match_it(cptr, mask, what))))
 			continue;
+#ifdef LINUX_PPC
+		va_start(vl, pattern);
+#endif
 		vsendto_prefix_one(cptr, from, pattern, vl);
+#ifdef LINUX_PPC
+		va_end(vl);
+#endif
 	}
 	va_end(vl);
 	return;
@@ -1166,7 +1283,15 @@ void sendto_all_butone(aClient *one, aClient *from, char *pattern, ...)
 
 	for (va_start(vl, pattern), i = 0; i <= LastSlot; i++)
 		if ((cptr = local[i]) && !IsMe(cptr) && one != cptr)
+		{
+#ifdef LINUX_PPC
+			va_start(vl, pattern);
+#endif
 			vsendto_prefix_one(cptr, from, pattern, vl);
+#ifdef LINUX_PPC
+			va_end(vl);
+#endif
+		}
 	va_end(vl);
 	return;
 }
@@ -1189,7 +1314,13 @@ void sendto_ops(char *pattern, ...)
 		{
 			(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ", me.name, cptr->name);
 			(void)strncat(nbuf, pattern, sizeof(nbuf) - strlen(nbuf));
+#ifdef LINUX_PPC
+			va_start(vl, pattern);
+#endif
 			vsendto_one(cptr, nbuf, vl);
+#ifdef LINUX_PPC
+			va_end(vl);
+#endif
 		}
 	va_end(vl);
 	return;
@@ -1216,7 +1347,13 @@ void sendto_failops(char *pattern, ...)
 			    me.name, cptr->name);
 			(void)strncat(nbuf, pattern,
 			    sizeof(nbuf) - strlen(nbuf));
+#ifdef LINUX_PPC
+			va_start(vl, pattern);
+#endif
 			vsendto_one(cptr, nbuf, vl);
+#ifdef LINUX_PPC
+			va_end(vl);
+#endif
 		}
 	va_end(vl);
 	return;
@@ -1241,7 +1378,13 @@ void sendto_umode(int umodes, char *pattern, ...)
 			    me.name, cptr->name);
 			(void)strncat(nbuf, pattern,
 			    sizeof(nbuf) - strlen(nbuf));
+#ifdef LINUX_PPC
+			va_start(vl, pattern);
+#endif
 			vsendto_one(cptr, nbuf, vl);
+#ifdef LINUX_PPC
+			va_end(vl);
+#endif
 		}
 	va_end(vl);
 	return;
@@ -1265,7 +1408,13 @@ void sendto_snomask(int snomask, char *pattern, ...)
 			    me.name, cptr->name);
 			(void)strncat(nbuf, pattern,
 			    sizeof(nbuf) - strlen(nbuf));
+#ifdef LINUX_PPC
+			va_start(vl, pattern);
+#endif
 			vsendto_one(cptr, nbuf, vl);
+#ifdef LINUX_PPC
+			va_end(vl);
+#endif
 		}
 	va_end(vl);
 	return;
@@ -1292,7 +1441,13 @@ void sendto_failops_whoare_opers(char *pattern, ...)
 			    me.name, cptr->name);
 			(void)strncat(nbuf, pattern,
 			    sizeof(nbuf) - strlen(nbuf));
+#ifdef LINUX_PPC
+			va_start(vl, pattern);
+#endif
 			vsendto_one(cptr, nbuf, vl);
+#ifdef LINUX_PPC
+			va_end(vl);
+#endif
 		}
 	va_end(vl);
 	return;
@@ -1318,7 +1473,13 @@ void sendto_locfailops(char *pattern, ...)
 			    me.name, cptr->name);
 			(void)strncat(nbuf, pattern,
 			    sizeof(nbuf) - strlen(nbuf));
+#ifdef LINUX_PPC
+			va_start(vl, pattern);
+#endif
 			vsendto_one(cptr, nbuf, vl);
+#ifdef LINUX_PPC
+			va_end(vl);
+#endif
 		}
 	va_end(vl);
 	return;
@@ -1344,7 +1505,13 @@ void sendto_opers(char *pattern, ...)
 			    me.name, cptr->name);
 			(void)strncat(nbuf, pattern,
 			    sizeof(nbuf) - strlen(nbuf));
+#ifdef LINUX_PPC
+			va_start(vl, pattern);
+#endif
 			vsendto_one(cptr, nbuf, vl);
+#ifdef LINUX_PPC
+			va_end(vl);
+#endif
 		}
 	va_end(vl);
 	return;
@@ -1374,7 +1541,13 @@ void sendto_ops_butone(aClient *one, aClient *from, char *pattern, ...)
 		if (cptr->from == one)
 			continue;	/* ...was the one I should skip */
 		sentalong[i] = sentalong_marker;
+#ifdef LINUX_PPC
+		va_start(vl, pattern);
+#endif
 		vsendto_prefix_one(cptr->from, from, pattern, vl);
+#ifdef LINUX_PPC
+		va_end(vl);
+#endif
 	}
 	va_end(vl);
 	return;
@@ -1406,7 +1579,13 @@ void sendto_opers_butone(aClient *one, aClient *from, char *pattern, ...)
 		if (cptr->from == one)
 			continue;	/* ...was the one I should skip */
 		sentalong[i] = sentalong_marker;
+#ifdef LINUX_PPC
+		va_start(vl, pattern);
+#endif
 		vsendto_prefix_one(cptr->from, from, pattern, vl);
+#ifdef LINUX_PPC
+		va_end(vl);
+#endif
 	}
 	va_end(vl);
 	return;
@@ -1435,7 +1614,13 @@ void sendto_ops_butme(aClient *from, char *pattern, ...)
 		if (!strcmp(cptr->user->server, me.name))	/* a locop */
 			continue;
 		sentalong[i] = sentalong_marker;
+#ifdef LINUX_PPC
+		va_start(vl, pattern);
+#endif
 		vsendto_prefix_one(cptr->from, from, pattern, vl);
+#ifdef LINUX_PPC
+		va_end(vl);
+#endif
 	}
 	va_end(vl);
 	return;
@@ -1541,7 +1726,13 @@ void sendto_realops(char *pattern, ...)
 			    me.name, cptr->name);
 			(void)strncat(nbuf, pattern,
 			    sizeof(nbuf) - strlen(nbuf));
+#ifdef LINUX_PPC
+			va_start(vl, pattern);
+#endif
 			vsendto_one(cptr, nbuf, vl);
+#ifdef LINUX_PPC
+			va_end(vl);
+#endif
 		}
 	va_end(vl);
 	return;
