@@ -202,8 +202,7 @@ long set_usermode(char *umode)
 
 unsigned char *StripColors(unsigned char *text) {
 	int nc = 0, col = 0, i = 0, len = strlen(text);
-	unsigned char *new_str = malloc(len + 2);
-
+	static unsigned char new_str[4096];
 	while (len > 0) {
 		if ((col && isdigit(*text) && nc < 2) || (col && *text == ',' && nc < 3)) {
 			nc++;

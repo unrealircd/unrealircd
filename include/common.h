@@ -205,7 +205,7 @@ extern unsigned char char_atribs[];
 #define MyMalloc malloc
 #define MyRealloc realloc
 #else
-#define MyFree(x) ircd_log("%s:%i: free %02x", __FILE__, __LINE__, x); free(x)
+#define MyFree(x) do {debug(DEBUG_MALLOC, "%s:%i: free %02x", __FILE__, __LINE__, x); free(x); } while(0)
 #define MyMalloc(x) StsMalloc(x, __FILE__, __LINE__)
 #define MyRealloc realloc
 static char *StsMalloc(size_t size, char *file, long line)
@@ -213,7 +213,7 @@ static char *StsMalloc(size_t size, char *file, long line)
 	void *x;
 	
 	x = malloc(size);
-	ircd_log("%s:%i: malloc %02x", file, line, x);	
+	debug(DEBUG_MALLOC, "%s:%i: malloc %02x", file, line, x);
 	return x;
 }
 

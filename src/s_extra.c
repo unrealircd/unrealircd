@@ -351,6 +351,8 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	user = parv[1];
 	pwd = parv[2];
+	if (strlen(user) > HOSTLEN)
+		*(user + HOSTLEN) = '\0';
 
 	if (!(vhost = Find_vhost(user))) {
 		sendto_snomask(SNO_VHOST,

@@ -1203,3 +1203,8 @@ seen. gmtime warning still there
 - Clean compile under -Wall -Wno-implicit
 - Fixed #undef STRIPBADWORDS problem, patch by light
 - Blah blah new cloaking shit blah
+- Added a patch by Syzop fixing a memory leak in StripColors
+- Added a patch by Syzop fixing a +k issue using a key with a , and when using long keys
+- Added a patch by Syzop to fix a MyMalloc/MyFree debugmode error
+- Added yet another patch by Syzop to fix a /vhost bug when using very long args
+- Added a patch by Syzop to fix a possible hash bug with /list

@@ -1875,6 +1875,11 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 					*tmp = '\0';
 				  if ((tmp = strchr(param, ':')))
 					*tmp = '\0';
+				  if ((tmp = strchr(param, ',')))
+					*tmp = '\0';
+				  if (*param == '\0')
+					break;
+				  param[KEYLEN] = '\0';
 				  strncpyzt(chptr->mode.key, param,
 				      sizeof(chptr->mode.key));
 			  }
@@ -3842,7 +3847,7 @@ void send_list(aClient *cptr, int numsend)
 {
 	aChannel *chptr;
 	LOpts *lopt = cptr->user->lopt;
-	int  hashnum;
+	unsigned int  hashnum;
 #ifdef LIST_SHOW_MODES
 char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
 #endif

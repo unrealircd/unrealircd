@@ -1123,7 +1123,7 @@ struct stats {
 struct ListOptions {
 	LOpts *next;
 	Link *yeslist, *nolist;
-	int  starthash;
+	unsigned int  starthash;
 	short int showall;
 	unsigned short usermin;
 	int  usermax;
