@@ -67,6 +67,40 @@ static ConfigFile *config_parse(char *filename, char *confdata);
 static void config_entry_free(ConfigEntry *ceptr);
 int	ConfigParse(ConfigFile *cfptr);
 
+
+ConfigItem_me	*conf_me = NULL;
+
+void	add_ConfigItem(ConfigItem *item, ConfigItem **list)
+{
+	item->next = *list;
+	item->prev = NULL;
+	if (*list)
+		(*list)->prev = item;
+	*list = item;
+}
+
+ConfigItem *del_ConfigItem(ConfigItem *item, ConfigItem **list)
+{
+	ConfigItem *p, *q;
+	
+	for (p = *list; p; p = p->next)
+	{
+		if (p == item)
+		{
+			q = p->next;
+			if (p->prev)
+				p->prev->next = p->next;
+			else
+				*list = p->next;
+				
+			if (p->next)
+				p->next->prev = p->prev;
+			return q;		
+		}
+	}
+	return NULL;
+}
+
 static void config_error(char *format, ...)
 {
 	va_list		ap;

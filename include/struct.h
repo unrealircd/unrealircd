@@ -64,8 +64,15 @@ typedef struct t_vhost aVhost;
 typedef struct SqlineItem aSqlineItem;
 typedef struct aloopStruct LoopStruct;
 typedef struct ConfItem aConfItem;
+/* New Config Stuff */
 typedef struct _configentry ConfigEntry;
 typedef struct _configfile ConfigFile;
+typedef struct _configitem ConfigItem;
+typedef struct _configitem_me ConfigItem_me;
+typedef struct _configitem_admin ConfigItem_admin;
+typedef struct _configitem_class ConfigItem_class;
+typedef struct _configitem_oper ConfigItem_oper;
+
 typedef struct Notify aNotify;
 typedef struct Client aClient;
 typedef struct Channel aChannel;
@@ -900,6 +907,58 @@ struct _configentry
 };
 
 
+struct _configitem {
+	long	   flags;
+	ConfigItem *prev;
+	ConfigItem *next;
+};
+
+struct _confitem_me {
+	long	   flags;
+	ConfigItem *prev;
+	ConfigItem *next;
+
+	char	   *name;
+	char	   *info;
+	short	   numeric;
+};
+
+struct _confitem_admin {
+	long	   flags;
+	ConfigItem *prev;
+	ConfigItem *next;
+	char	   *line; 
+};
+
+struct _confitem_class {
+	long	   flags;
+	ConfigItem *prev;
+	ConfigItem *next;
+	char	   *name;
+	int	   pingfreq;
+	int	   maxclients;
+	int	   sendq;
+};
+
+struct _confitem_allow {
+	long	         flags;
+	ConfigItem       *prev;
+	ConfigItem       *next;
+	char	         *ip;
+	char	   	 *hostname;
+	ConfigItem_class *class;
+};
+
+struct _confitem_oper {
+	long	         flags;
+	ConfigItem       *prev;
+	ConfigItem       *next;
+	ConfigItem	 *from;
+	long		 oflags;
+	char		 *password;
+};
+
+
 /*
  * statistics structures
  */
@@ -1190,8 +1249,8 @@ extern char *gnulicense[];
 
 #define	FLUSH_BUFFER	-2
 #define	COMMA		","
+
 #ifdef USE_SSL
 #include "ssl.h"
 #endif
-
 #endif /* __struct_include__ */
