@@ -436,6 +436,7 @@ void get_res_from_reg_nt()
 
 int ircd_res_init(void)
 {
+	static int initialized = 0;
 #ifndef _WIN32
 	register FILE *fp;
 #endif
@@ -452,6 +453,11 @@ int ircd_res_init(void)
 #ifndef RFC1535
 	int  dots;
 #endif
+
+	/* If already initialized, do nothing... */
+	if (initialized)
+		return 0;
+	initialized = 1;
 
 	/*
 	 * These three fields used to be statically initialized.  This made
