@@ -2514,7 +2514,6 @@ seen. gmtime warning still there
   Suggested by brentos. Note that we won't support /quit, or any other command, just this.
 - Module coders: Moved call to HOOKTYPE_LOCAL_JOIN down to where the JOIN, NAMES, etc
   are already sent... this seems to make more sense since we have a prejoin hook now.
-- Moved it a bit too far (outside the loop), should be fixed now.
 - Fixed bug where color quits were stripped when they shouldn't be >:).
 - Added 'action' field to ban version { } which can be: kill: kills the user (default),
   tempshun: shun the specific connection only, kline/zline/gline/gzline/shun: place
@@ -2522,3 +2521,10 @@ seen. gmtime warning still there
   It's up to the admin to take a good decision, sometimes zlines are best (=won't use
   much sockets but will reconnect quite quickly), sometimes tempshun (=will use 1 socket
   but generates nearly no network traffic), sometimes klines/glines, etc..
+- Added sendto_umode_raw, sends to umodes, but not as a NOTICE
+- Added hook HOOKTYPE_CHANNEL_CREATE (cptr(user creating channel), chptr
+  (channel that has gotten created)
+- Added hook HOOKTYPE_CHANNEL_DESTROY (chptr (channel getting destroyed))
+- Fixed bug where unregistered quits would in extreme cases crash the server
+- Moved it a bit too far (outside the loop), should be fixed now.
+

@@ -464,6 +464,8 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define HOOKTYPE_PRE_LOCAL_KICK 29
 #define HOOKTYPE_PRE_LOCAL_TOPIC 30
 #define HOOKTYPE_REMOTE_NICKCHANGE 31
+#define HOOKTYPE_CHANNEL_CREATE 32
+#define HOOKTYPE_CHANNEL_DESTROY 33
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000

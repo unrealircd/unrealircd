@@ -120,7 +120,7 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				ocomment = parv[0];
 
 		/* Strip color codes if any channel is +S, use nick as reason if +c. */
-		if (strchr(ocomment, '\003'))
+		if (IsPerson(sptr) && (strchr(ocomment, '\003')))
 		{
 			unsigned char filtertype = 0; /* 1=filter, 2=block, highest wins. */
 			for (lp = sptr->user->channel; lp; lp = lp->next)

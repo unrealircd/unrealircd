@@ -1397,8 +1397,30 @@ void sendto_umode(int umodes, char *pattern, ...)
 	va_end(vl);
 	return;
 }
+
 /*
- * sendto_umode
+ * sendto_umode_raw
+ *
+ *  Send to specified umode , raw, not a notice
+ */
+void sendto_umode_raw(int umodes, char *pattern, ...)
+{
+	va_list vl;
+	aClient *cptr;
+	int  i;
+	va_start(vl, pattern);
+	for (i = 0; i <= LastSlot; i++)
+		if ((cptr = local[i]) && IsPerson(cptr) && (cptr->umodes & umodes) == umodes)
+		{
+			va_start(vl, pattern);
+			vsendto_one(cptr, pattern, vl);
+			va_end(vl);
+		}
+	va_end(vl);
+	return;
+}
+/*
+ * sendto_snomask
  *
  *  Send to specified umode
  */

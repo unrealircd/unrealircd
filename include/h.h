@@ -308,6 +308,7 @@ extern void sendto_failops_whoare_opers(char *, ...);
 extern void sendto_failops(char *, ...);
 extern void sendto_opers(char *, ...);
 extern void sendto_umode(int, char *, ...);
+extern void sendto_umode_raw(int, char *, ...);
 extern void sendto_snomask(int snomask, char *pattern, ...);
 extern int writecalls, writeb[];
 extern int deliver_it(aClient *, char *, int);
