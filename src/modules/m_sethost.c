@@ -185,7 +185,7 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 
-	if (!strcmp(GetHost(sptr), vhost))
+	if (MyClient(sptr) && !strcmp(GetHost(sptr), vhost))
 	{
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** /SetHost Error: requested host is same as current host.",

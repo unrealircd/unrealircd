@@ -2767,3 +2767,5 @@ seen. gmtime warning still there
 - win32 compile fix (typo)
 - added set::spamfilter::* to docs
 - updated /stats help and docs on '/stats f'
+- Fixed '/SetHost Error' flood from all servers in some circumstances like re-opering,
+  reported by blotter45 (#0001400).
