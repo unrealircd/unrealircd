@@ -93,7 +93,6 @@ extern	int	can_send PROTO((aClient *, aChannel *, char *));
 extern	int	is_chan_op PROTO((aClient *, aChannel *));
 extern	int	has_voice PROTO((aClient *, aChannel *));
 extern	int	is_chanowner PROTO((aClient *, aChannel *));
-extern	int	count_channels PROTO((aClient *));
 extern  Ban	*is_banned PROTO((aClient *, aClient *, aChannel *));
 extern	int	parse_help PROTO((aClient *, char *, char *));
 

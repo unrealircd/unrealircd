@@ -406,3 +406,4 @@
 - Editted Config to ask about encrypted restart/die passwords
 - Made it so you can *view* a channel topic using /topic #channel without being a member
 - Removed , support from /topic (not needed)
+- Removed count_channels (not in use)

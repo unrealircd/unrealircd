@@ -3293,25 +3293,6 @@ int  m_kick(cptr, sptr, parc, parv)
 }
 
 
-int  count_channels(sptr)
-	aClient *sptr;
-{
-	aChannel *chptr;
-	int  count = 0;
-
-	for (chptr = channel; chptr; chptr = chptr->nextch)
-#ifdef	SHOW_INVISIBLE_LUSERS
-		if (SecretChannel(chptr))
-		{
-			if (IsAnOper(sptr))
-				count++;
-		}
-		else
-#endif
-			count++;
-	return (count);
-}
-
 /*
 ** m_topic
 **	parv[0] = sender prefix
