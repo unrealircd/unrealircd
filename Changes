@@ -3115,3 +3115,4 @@ seen. gmtime warning still there
 This is the 3.2 fixes branch.
 - Replaced tre.dll/tre.lib, previous versions caused a crash (eg: if you included
   spamfilter.conf).
+- Fixed a problem when compiling with GUEST enabled. Reported by dvzion (#0001758)
