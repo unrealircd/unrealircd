@@ -1198,8 +1198,12 @@ int  m_server_estab(cptr)
 	cptr->srvptr = &me;
 	cptr->serv->nline = aconf;
 
-	if (numeric_collides(atoi(num)))
+	if (num && numeric_collides(atoi(num)))
 	{
+		sendto_serv_butone(&me,
+		    ":%s GLOBOPS :Cancelling link %s, colliding numeric", me.name, 
+		    inpath);
+		sendto_locfailops("Cancelling link %s, colliding numeric", inpath);
 		return exit_client(cptr, cptr, cptr,
 		    "Colliding server numeric (choose another in the M:line)");
 	}
