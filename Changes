@@ -3158,3 +3158,4 @@ This is the 3.2 fixes branch.
 - Compile fixes for win32 modules with ssl/zip/curl
 - Changed 'Services operator' in /whois (back) to 'Services administrator', this was
   requested by many people and seems to be the best after all (#0001634).
+- Local opers can now also join +O (operonly) channels (#0001694).

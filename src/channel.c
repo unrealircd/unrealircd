@@ -3276,38 +3276,37 @@ Link *lp;
 
 int can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[])
 {
-        Link *lp;
-	Ban *banned;
+Link *lp;
+Ban *banned;
 
-		if ((chptr->mode.mode & MODE_ONLYSECURE) && !(sptr->umodes & UMODE_SECURE))
-		{
-			if (!extended_operoverride(sptr, chptr, key, MODE_ONLYSECURE, 'z'))
-				return (ERR_SECUREONLYCHAN);
-			else
-				return 0;
-		}
+	if ((chptr->mode.mode & MODE_ONLYSECURE) && !(sptr->umodes & UMODE_SECURE))
+	{
+		if (!extended_operoverride(sptr, chptr, key, MODE_ONLYSECURE, 'z'))
+			return (ERR_SECUREONLYCHAN);
+		else
+			return 0;
+	}
 
-        if ((chptr->mode.mode & MODE_OPERONLY) && !IsOper(sptr))
-                return (ERR_OPERONLY);
+	if ((chptr->mode.mode & MODE_OPERONLY) && !IsAnOper(sptr))
+		return (ERR_OPERONLY);
 
-        if ((chptr->mode.mode & MODE_ADMONLY) && !IsSkoAdmin(sptr))
-                return (ERR_ADMONLY);
+	if ((chptr->mode.mode & MODE_ADMONLY) && !IsSkoAdmin(sptr))
+		return (ERR_ADMONLY);
 
 	/* Admin, Coadmin, Netadmin, and SAdmin can still walk +b in +O */
 	banned = is_banned(sptr, chptr, BANCHK_JOIN);
-        if (IsOper(sptr) && !IsAdmin(sptr) && !IsCoAdmin(sptr) && !IsNetAdmin(sptr)
-	    && !IsSAdmin(sptr) && banned
-            && (chptr->mode.mode & MODE_OPERONLY))
-                return (ERR_BANNEDFROMCHAN);
+	if (banned && (chptr->mode.mode & MODE_OPERONLY) &&
+	    IsAnOper(sptr) && !IsSkoAdmin(sptr) && !IsCoAdmin(sptr))
+		return (ERR_BANNEDFROMCHAN);
 
 	/* Only NetAdmin/SAdmin can walk +b in +A */
-	if (IsOper(sptr) && !IsNetAdmin(sptr) && !IsSAdmin(sptr)
-	    && banned && (chptr->mode.mode & MODE_ADMONLY))
-	    	return (ERR_BANNEDFROMCHAN);
+	if (banned && (chptr->mode.mode & MODE_ADMONLY) &&
+	    IsAnOper(sptr) && !IsNetAdmin(sptr) && !IsSAdmin(sptr))
+		return (ERR_BANNEDFROMCHAN);
 
-        for (lp = sptr->user->invited; lp; lp = lp->next)
-                if (lp->value.chptr == chptr)
-                        return 0;
+	for (lp = sptr->user->invited; lp; lp = lp->next)
+		if (lp->value.chptr == chptr)
+			return 0;
 
         if ((chptr->mode.limit && chptr->users >= chptr->mode.limit))
         {
