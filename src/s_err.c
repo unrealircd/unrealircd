@@ -486,11 +486,7 @@ static char *replies[] = {
 /* 443    ERR_USERONCHANNEL */ ":%s 443 %s %s %s :is already on channel",
 /* 444    ERR_NOLOGIN */ ":%s 444 %s %s :User not logged in",
 /* 445    ERR_SUMMONDISABLED */ ":%s 447 %s :SUMMON has been disabled",
-#ifndef	ENABLE_USERS
 /* 446    ERR_USERSDISABLED */ ":%s 446 %s :USERS has been disabled",
-#else
-/* 446 */ NULL,
-#endif
 /* 447 */ NULL,
 /* 448 */ NULL,
 /* 449 */ NULL,

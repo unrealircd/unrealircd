@@ -40,9 +40,7 @@ static char sccsid[] =
 #endif
 #include <sys/stat.h>
 #include <fcntl.h>
-#ifndef _WIN32
-#include <utmp.h>
-#else
+#ifdef _WIN32
 #include <io.h>
 #endif
 #include <time.h>
@@ -2525,49 +2523,28 @@ int  m_stats(cptr, sptr, parc, parv)
 }
 
 /*
+** m_summon
+** parv[0] = sender prefix
+*/
+int m_summon(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
+	/* /summon is old and out dated, we just return an error as
+         * required by RFC1459 -- codemastr
+	 */
+	sendto_one(sptr, err_str(ERR_SUMMONDISABLED), me.name, parv[0]);
+	return 0;
+}
+
+/*
 ** m_users
 **	parv[0] = sender prefix
 **	parv[1] = servername
 */
-int  m_users(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_users(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-#ifdef ENABLE_USERS
-	char namebuf[10], linebuf[10], hostbuf[17];
-	int  fd, flag = 0;
-#endif
-
-	if (hunt_server(cptr, sptr, ":%s USERS :%s", 1, parc,
-	    parv) == HUNTED_ISME)
-	{
-#ifdef ENABLE_USERS
-		if ((fd = utmp_open()) == -1)
-		{
-			sendto_one(sptr, err_str(ERR_FILEERROR),
-			    me.name, parv[0], "open", UTMP);
-			return 0;
-		}
-
-		sendto_one(sptr, rpl_str(RPL_USERSSTART), me.name, parv[0]);
-		while (utmp_read(fd, namebuf, linebuf,
-		    hostbuf, sizeof(hostbuf)) == 0)
-		{
-			flag = 1;
-			sendto_one(sptr, rpl_str(RPL_USERS), me.name, parv[0],
-			    namebuf, linebuf, hostbuf);
-		}
-		if (flag == 0)
-			sendto_one(sptr, rpl_str(RPL_NOUSERS),
-			    me.name, parv[0]);
-
-		sendto_one(sptr, rpl_str(RPL_ENDOFUSERS), me.name, parv[0]);
-		(void)utmp_close(fd);
-#else
-		sendto_one(sptr, err_str(ERR_USERSDISABLED), me.name, parv[0]);
-#endif
-	}
+	/* /users is out of date, just return an error as  required by
+	 * RFC1459 -- codemastr
+	 */
+	sendto_one(sptr, err_str(ERR_USERSDISABLED), me.name, parv[0]);
 	return 0;
 }
 

@@ -50,7 +50,6 @@ Computing Center and Jarkko Oikarinen";
 #include <sys/socket.h>
 #include <sys/file.h>
 #include <sys/ioctl.h>
-#include <utmp.h>
 #include <sys/resource.h>
 #else
 #include <io.h>

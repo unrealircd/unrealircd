@@ -412,6 +412,7 @@ struct Message msgtab[] = {
 	{MSG_STATS, m_stats, 0, MAXPARA, TOK_STATS, 0L},
 	{MSG_LINKS, m_links, 0, MAXPARA, TOK_LINKS, 0L},
 	{MSG_ADMIN, m_admin, 0, MAXPARA, TOK_ADMIN, 0L},
+	{MSG_SUMMON, m_summon, 0, 1, TOK_SUMMON, 0L},
 	{MSG_USERS, m_users, 0, MAXPARA, TOK_USERS, 0L},
 	{MSG_SAMODE, m_samode, 0, MAXPARA, TOK_SAMODE, 0L},
 	{MSG_SVSKILL, m_svskill, 0, MAXPARA, TOK_SVSKILL, 0L},

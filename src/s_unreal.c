@@ -34,9 +34,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifndef _WIN32
-#include <utmp.h>
-#else
+#ifdef _WIN32
 #include <io.h>
 #endif
 #include <fcntl.h>

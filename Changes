@@ -601,3 +601,6 @@
 - Fixed a NOTICE crash bug, reported by EJ
 - Removed a excessive va_end in send.c
 - Fixed a bug when running the ircd with -h
+- Readded /summon to return ERR_SUMMONDISABLED (required by RFC1459)
+- Made /users return ERR_USERSDISABLED (required by RFC1459)
+- Removed all utmp calls

@@ -1164,7 +1164,6 @@ extern char *gnulicense[];
 /* misc defines */
 
 #define	FLUSH_BUFFER	-2
-#define	UTMP		"/etc/utmp"
 #define	COMMA		","
 
 #endif /* __struct_include__ */
