@@ -540,3 +540,4 @@
   [this description will be updated after testing]
 - Fixed a bug related to the sajoin recode regarding notices displayed (#0002293) reported
   by Troco.
+- Reworded a cloak-key error message to make it clearer (#0002297) reported by Bugz.
