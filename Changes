@@ -2148,3 +2148,4 @@ seen. gmtime warning still there
 - /WHO code cleanup + partial recode + bugfixes
 - Updated example.conf about U-lines since many people set them wrong.
 - Fixed numeric checking.
+- Moved /stats zip from NOTICE to RPL_TEXT, updated stats documentation.

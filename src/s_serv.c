@@ -2604,7 +2604,7 @@ CMD_FUNC(m_stats)
 				return 0;
 			}
 #ifndef ZIP_LINKS
-			sendto_one(sptr, ":%s NOTICE %s :Sorry this server doesn't support zip links", me.name, parv[0]);
+			sendto_one(sptr, ":%s %i %s :Sorry this server doesn't support zip links", me.name, RPL_TEXT, parv[0]);
 #else
 			for (i=0; i <= LastSlot; i++)
 			{
@@ -2615,15 +2615,15 @@ CMD_FUNC(m_stats)
 				if (acptr->zip->in->total_out && acptr->zip->out->total_in)
 				{
 				  sendto_one(sptr,
-				    ":%s NOTICE %s :Zipstats for link to %s (compresslevel %d): decompressed (in): %01lu/%01lu (%3.1f%%), compressed (out): %01lu/%01lu (%3.1f%%)",
-				    me.name, parv[0], get_client_name(acptr, TRUE),
+				    ":%s %i %s :Zipstats for link to %s (compresslevel %d): decompressed (in): %01lu/%01lu (%3.1f%%), compressed (out): %01lu/%01lu (%3.1f%%)",
+				    me.name, RPL_TEXT, parv[0], get_client_name(acptr, TRUE),
 				    acptr->serv->conf->compression_level ? acptr->serv->conf->compression_level : ZIP_DEFAULT_LEVEL,
 				    acptr->zip->in->total_in, acptr->zip->in->total_out,
 				    (100.0*(float)acptr->zip->in->total_in) /(float)acptr->zip->in->total_out,
 				    acptr->zip->out->total_in, acptr->zip->out->total_out,
 				    (100.0*(float)acptr->zip->out->total_out) /(float)acptr->zip->out->total_in);
 				} else {
-					sendto_one(sptr, ":%s NOTICE %s :Zipstats for link to %s: unavailable", me.name, parv[0]);
+					sendto_one(sptr, ":%s %i %s :Zipstats for link to %s: unavailable", me.name, RPL_TEXT, parv[0]);
 				}
 			}
 #endif
@@ -2707,6 +2707,10 @@ CMD_FUNC(m_stats)
 		      "Y - Send the class block list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "Z - Send memory usage information");
+#ifdef ZIP_LINKS
+		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
+		      "zip - Send compression information about ziplinked servers");
+#endif
 		  stat = '*';
 		  break;
 	}
