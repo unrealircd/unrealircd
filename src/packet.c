@@ -43,6 +43,8 @@ aCommand	*CommandHash[256];
 **	with cptr of "local" variation, which contains all the
 **	necessary fields (buffer etc..)
 */
+void    add_CommandX(char *cmd, char *token, int (*func)(), unsigned char parameters, int flags) ;
+
 int  dopacket(cptr, buffer, length)
 	aClient *cptr;
 	char *buffer;
@@ -134,15 +136,15 @@ void	init_CommandHash(void)
 	add_Command(MSG_PRIVATE, TOK_PRIVATE, m_private, MAXPARA);
 	add_Command(MSG_NOTICE, TOK_NOTICE, m_notice, MAXPARA);
 	add_Command(MSG_MODE, TOK_MODE, m_mode, MAXPARA);
-	add_Command(MSG_NICK, TOK_NICK, m_nick, MAXPARA);
-	add_Command(MSG_JOIN, TOK_JOIN, m_join, MAXPARA);
+	add_CommandX(MSG_NICK, TOK_NICK, m_nick, MAXPARA, M_UNREGISTERED);
+	add_CommandX(MSG_JOIN, TOK_JOIN, m_join, MAXPARA, M_USER);
 	add_Command(MSG_PING, TOK_PING, m_ping, MAXPARA);
 	add_Command(MSG_WHOIS, TOK_WHOIS, m_whois, MAXPARA);
 	add_Command(MSG_ISON, TOK_ISON, m_ison, 1);
-	add_Command(MSG_USER, TOK_USER, m_user, MAXPARA);
-	add_Command(MSG_PONG, TOK_PONG, m_pong, MAXPARA);
-	add_Command(MSG_PART, TOK_PART, m_part, MAXPARA);
-	add_Command(MSG_QUIT, TOK_QUIT, m_quit, MAXPARA);
+	add_CommandX(MSG_USER, TOK_USER, m_user, MAXPARA, M_UNREGISTERED);
+	add_CommandX(MSG_PONG, TOK_PONG, m_pong, MAXPARA, M_UNREGISTERED);
+	add_CommandX(MSG_PART, TOK_PART, m_part, MAXPARA, M_USER);
+	add_CommandX(MSG_QUIT, TOK_QUIT, m_quit, MAXPARA, M_UNREGISTERED);
 	add_Command(MSG_WATCH, TOK_WATCH, m_watch, 1);
 	add_Command(MSG_USERHOST, TOK_USERHOST, m_userhost, 1);
 	add_Command(MSG_SVSNICK, TOK_SVSNICK, m_svsnick, MAXPARA);
@@ -154,25 +156,25 @@ void	init_CommandHash(void)
 	add_Command(MSG_INVITE, TOK_INVITE, m_invite, MAXPARA);
 	add_Command(MSG_KICK, TOK_KICK, m_kick, MAXPARA);
 	add_Command(MSG_WALLOPS, TOK_WALLOPS, m_wallops, 1);
-	add_Command(MSG_ERROR, TOK_ERROR, m_error, MAXPARA);
+	add_CommandX(MSG_ERROR, TOK_ERROR, m_error, MAXPARA, M_UNREGISTERED);
 	add_Command(MSG_KILL, TOK_KILL, m_kill, MAXPARA);
-	add_Command(MSG_PROTOCTL, TOK_PROTOCTL, m_protoctl, MAXPARA);
+	add_CommandX(MSG_PROTOCTL, TOK_PROTOCTL, m_protoctl, MAXPARA, M_UNREGISTERED);
 	add_Command(MSG_AWAY, TOK_AWAY, m_away, MAXPARA);
-	add_Command(MSG_SERVER, TOK_SERVER, m_server, MAXPARA);
+	add_CommandX(MSG_SERVER, TOK_SERVER, m_server, MAXPARA, M_UNREGISTERED);
 	add_Command(MSG_SQUIT, TOK_SQUIT, m_squit, MAXPARA);
 	add_Command(MSG_WHO, TOK_WHO, m_who, MAXPARA);
 	add_Command(MSG_WHOWAS, TOK_WHOWAS, m_whowas, MAXPARA);
 	add_Command(MSG_LIST, TOK_LIST, m_list, MAXPARA);
 	add_Command(MSG_NAMES, TOK_NAMES, m_names, MAXPARA);
 	add_Command(MSG_TRACE, TOK_TRACE, m_trace, MAXPARA);
-	add_Command(MSG_PASS, TOK_PASS, m_pass, MAXPARA);
+	add_CommandX(MSG_PASS, TOK_PASS, m_pass, MAXPARA, M_UNREGISTERED);
 	add_Command(MSG_TIME, TOK_TIME, m_time, MAXPARA);
 	add_Command(MSG_OPER, TOK_OPER, m_oper, MAXPARA);
 	add_Command(MSG_CONNECT, TOK_CONNECT, m_connect, MAXPARA);
-	add_Command(MSG_VERSION, TOK_VERSION, m_version, MAXPARA);
+	add_CommandX(MSG_VERSION, TOK_VERSION, m_version, MAXPARA, M_UNREGISTERED);
 	add_Command(MSG_STATS, TOK_STATS, m_stats, MAXPARA);
 	add_Command(MSG_LINKS, TOK_LINKS, m_links, MAXPARA);
-	add_Command(MSG_ADMIN, TOK_ADMIN, m_admin, MAXPARA);
+	add_CommandX(MSG_ADMIN, TOK_ADMIN, m_admin, MAXPARA, M_UNREGISTERED);
 	add_Command(MSG_SUMMON, TOK_SUMMON, m_summon, 1);
 	add_Command(MSG_USERS, TOK_USERS, m_users, MAXPARA);
 	add_Command(MSG_SAMODE, TOK_SAMODE, m_samode, MAXPARA);
@@ -279,7 +281,7 @@ void	init_CommandHash(void)
 #endif
 }
 
-void	add_Command_backend(char *cmd, int (*func)(), unsigned char parameters, unsigned char token)
+void	add_Command_backend(char *cmd, int (*func)(), unsigned char parameters, unsigned char token, int flags)
 {
 	aCommand	*newcmd = (aCommand *) MyMalloc(sizeof(aCommand));
 	
@@ -289,6 +291,7 @@ void	add_Command_backend(char *cmd, int (*func)(), unsigned char parameters, uns
 	newcmd->parameters = parameters;
 	newcmd->token = token;
 	newcmd->func = func;
+	newcmd->flags = flags;
 	
 	/* Add in hash with hash value = first byte */
 	add_Command_to_list(newcmd, &CommandHash[toupper(*cmd)]);
@@ -296,8 +299,14 @@ void	add_Command_backend(char *cmd, int (*func)(), unsigned char parameters, uns
 
 void	add_Command(char *cmd, char *token, int (*func)(), unsigned char parameters)
 {
-	add_Command_backend(cmd, func, parameters, 0);
-	add_Command_backend(token, func, parameters, 1);
+	add_Command_backend(cmd, func, parameters, 0, 0);
+	add_Command_backend(token, func, parameters, 1, 0);
+}
+
+void    add_CommandX(char *cmd, char *token, int (*func)(), unsigned char parameters, int flags) 
+{
+	add_Command_backend(cmd, func, parameters, 0, flags);
+	add_Command_backend(token, func, parameters, 1, flags);
 }
 
 void	add_Command_to_list(aCommand *item, aCommand **list)
@@ -377,11 +386,19 @@ int del_Command(char *cmd, char *token, int (*func)())
 	return i;	
 }
 
-inline aCommand *find_Command(char *cmd, int token)
+inline aCommand *find_Command(char *cmd, short token, int flags)
 {
 	aCommand	*p;
 	
-	for (p = CommandHash[toupper(*cmd)]; p; p = p->next)
+	for (p = CommandHash[toupper(*cmd)]; p; p = p->next) {
+		if (p->flags != 0) {
+		if ((flags & M_UNREGISTERED) && !(p->flags & M_UNREGISTERED))
+			continue;
+		if ((flags & M_USER) && !(p->flags & M_USER))
+			continue;
+		if ((flags & M_SERVER) && !(p->flags & M_SERVER))
+			continue;
+		}
 		if (p->token && token)
 		{
 			if (!strcmp(p->cmd, cmd))
@@ -390,5 +407,6 @@ inline aCommand *find_Command(char *cmd, int token)
 		else
 			if (!match(p->cmd, cmd))
 				return (p);
+	}
 	return NULL;
 }

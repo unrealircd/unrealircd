@@ -339,3 +339,4 @@
 - Changed license of m_dummy.c (dummy module, skeleton), so people can do
   closed source modules.
 - Moved m_setname to a .so
+- Started work on the new improved command hashing system

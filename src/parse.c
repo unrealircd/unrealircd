@@ -324,10 +324,16 @@ int  parse(cptr, buffer, bufend)
 	}
 	else
 	{
+		int flags = 0;
 		if (s)
 			*s++ = '\0';
-		
-		cmptr = find_Command(ch, IsServer(cptr) ? 1 : 0);
+		if (!IsRegistered(cptr))
+			flags |= M_UNREGISTERED;
+		if (IsPerson(cptr))
+			flags |= M_USER;
+		if (IsServer(cptr))
+			flags |= M_SERVER;
+		cmptr = find_Command(ch, IsServer(cptr) ? 1 : 0, flags);
 
 		if (!cmptr)
 		{
@@ -342,6 +348,11 @@ int  parse(cptr, buffer, bufend)
 			   ** Hm, when is the buffer empty -- if a command
 			   ** code has been found ?? -Armin
 			 */
+			if (!IsRegistered(cptr)) {
+				sendto_one(from, ":%s %d %s :You have not registered",
+				    me.name, ERR_NOTREGISTERED, ch);
+				return -1;
+			}
 			if (buffer[0] != '\0')
 			{
 				if (IsPerson(from))
@@ -422,7 +433,7 @@ int  parse(cptr, buffer, bufend)
 		    && (cmptr->func != m_pong))
 			return -4;
 
-	if ((!IsRegistered(cptr)) &&
+/*	if ((!IsRegistered(cptr)) &&
 	    (((cmptr->func != m_user) && (cmptr->func != m_nick) &&
 	    (cmptr->func != m_server) && (cmptr->func != m_pong) &&
 	    (cmptr->func != m_pass) && (cmptr->func != m_quit) &&
@@ -430,11 +441,8 @@ int  parse(cptr, buffer, bufend)
 	    (cmptr->func != m_admin) && (cmptr->func != m_version)
 	    )))
 	{
-		sendto_one(from, ":%s %d %s :You have not registered",
-		    me.name, ERR_NOTREGISTERED, ch);
-		return -1;
 	}
-
+*/
 	cmptr->count++;
 	if (IsRegisteredUser(cptr) && cmptr->func == m_private)
 		from->user->last = TStime();

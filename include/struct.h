@@ -722,11 +722,16 @@ struct Server {
 #endif
 };
 
+#define M_UNREGISTERED 0x0001
+#define M_USER 0x0002
+#define M_SERVER 0x0004
+
 struct Command {
 	aCommand		*next;
 	aCommand		*prev;
 	char 			*cmd;
 	int			(*func) ();
+	int			flags;
 	unsigned int    	count;
 	unsigned		parameters : 5;
 	unsigned		token : 1;
