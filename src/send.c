@@ -203,6 +203,8 @@ void vsendto_one(aClient *to, char *pattern, va_list vl)
 void sendbufto_one(aClient *to)
 {
 	int  len;
+	char *s;
+	int  i;
 
 	Debug((DEBUG_ERROR, "Sending [%s] to %s", sendbuf, to->name));
 
@@ -241,7 +243,15 @@ void sendbufto_one(aClient *to)
 		sendto_ops("Trying to send [%s] to myself!", tmp_sendbuf);
 		return;
 	}
-
+#ifdef CRYPTOIRCD	
+	if (IsSecure(to))
+	{
+		s = (char *) ep_encrypt(to, sendbuf, &len);
+		bcopy(s, sendbuf, len);
+	 	for (i = 0; i<=len; i++)
+	 		Debug((DEBUG_ERROR,"%hd", sendbuf[i]));
+	}
+#endif
 	if (DBufLength(&to->sendQ) > get_sendq(to))
 	{
 		if (IsServer(to))

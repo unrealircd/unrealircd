@@ -146,3 +146,59 @@ int  dopacket(cptr, buffer, length)
 	cptr->count = ch1 - cptr->buffer;
 	return 0;
 }
+
+#ifdef CRYPTOIRCD
+char	*ep_encrypt(aClient *cptr, char *string, int *len)
+{
+	static unsigned char	cryptobuffer[8192];
+	char		ivec[9];
+	int		length;
+	char		*c;
+	int		num;
+
+	if (!cptr->cryptinfo)
+		return string;
+		
+	bzero(cryptobuffer, sizeof(cryptobuffer));
+	bzero(ivec, sizeof(ivec));
+	num = 0;
+	
+	if ((c = (char *)strchr(string, '\n')))
+		*c = '\0';
+	if ((c = (char *)strchr(string, '\r')))
+		*c = '\0';	
+	
+	length = strlen(string) + 1;
+	cryptobuffer[0] = (unsigned char) length / 256;
+	cryptobuffer[1] = (unsigned char) length - (cryptobuffer[0] * 256);
+	
+	if (cptr->cryptinfo->method == METHOD_BLOWFISH)
+	{
+		BF_cfb64_encrypt(string, &cryptobuffer[2], length, cptr->cryptinfo->key, ivec, &num, BF_ENCRYPT);
+		*len = length + 2;
+		return (cryptobuffer);
+	}
+}
+
+char 	*ep_decrypt(aClient *cptr, char *string)
+{
+	static char	decryptbuffer[8192];
+	int	num;
+	char	ivec[9];
+	int	length;
+	
+	if (!cptr->cryptinfo)
+		return string;
+	
+	bzero(decryptbuffer, sizeof(decryptbuffer));
+	bzero(ivec, sizeof(ivec));
+	num = 0;
+	length = (*(string) * 256) + (*(string + 1));
+	
+	if (cptr->cryptinfo->method == METHOD_BLOWFISH)
+	{
+		BF_cfb64_encrypt(string + 2, decryptbuffer, length, cptr->cryptinfo->key, ivec, &num, BF_DECRYPT);
+		return (decryptbuffer);		
+	}	
+}
+#endif

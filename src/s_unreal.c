@@ -1529,12 +1529,14 @@ int  m_crypto(cptr, sptr, parc, parv)
 	
 	if (method == METHOD_BLOWFISH)
 	{
-		cptr->cryptinfo = (aCryptInfo *) MyMalloc(sizeof(aCryptInfo));
-		cptr->cryptinfo->method = method;
-		cptr->cryptinfo->key = (void *) MyMalloc(sizeof(BF_KEY));
-		BF_set_key(cptr->cryptinfo->key, strlen(parv[2]), parv[2]);
+		sptr->cryptinfo = (aCryptInfo *) MyMalloc(sizeof(aCryptInfo));
+		sptr->cryptinfo->method = method;
+		sptr->cryptinfo->key = (void *) MyMalloc(sizeof(BF_KEY));
+		BF_set_key(sptr->cryptinfo->key, strlen(parv[2]), parv[2]);
 		sendto_one(sptr, "CRYPTO ON BLOWFISH");
 		SetSecure(sptr);
+		for (method = 1; method <= 30; method++)
+			sendto_one(sptr, ":%s NOTICE %s :moooooooooooooooooooooooooooooooooooooooooooo %i", me.name, sptr->name, method);
 		return 0;
 	}
 	sendto_one(sptr, "CRYPTO ERROR :No such method %s", parv[1]);
