@@ -2599,3 +2599,5 @@ seen. gmtime warning still there
 - Changed version to beta19
 - A last-minute fix, lalala...
 *** beta19 release ***
+- Changed the HOOKTYPE_REHASHFLAG syntax to (aClient *cptr, aClient *sptr, char *flag)
+  requested by AngryWolf (#0001365)

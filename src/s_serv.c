@@ -2938,7 +2938,7 @@ CMD_FUNC(m_rehash)
 				opermotd = (aMotd *) read_file(OPATH, &opermotd);
 				botmotd = (aMotd *) read_file(BPATH, &botmotd);
 				rehash_motdrules();
-				RunHook(HOOKTYPE_REHASHFLAG, parv[1]);
+				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
 				return 0;
 			}
 			if (!strnicmp("-gar", parv[1], 4))
