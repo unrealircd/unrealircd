@@ -809,11 +809,12 @@ int InitwIRCD(int argc, char *argv[])
 #ifdef	CHROOTDIR
 	if (chdir(dpath)) {
 		perror("chdir");
+		fprintf(stderr, "ERROR: Unable to change to directory '%s'\n", dpath);
 		exit(-1);
 	}
 	ircd_res_init();
 	if (chroot(DPATH)) {
-		(void)fprintf(stderr, "ERROR:  Cannot chdir/chroot\n");
+		(void)fprintf(stderr, "ERROR:  Cannot (chdir/)chroot to directory '%s'\n", dpath);
 		exit(5);
 	}
 #endif	 /*CHROOTDIR*/
@@ -995,6 +996,7 @@ int InitwIRCD(int argc, char *argv[])
 	if (chdir(dpath)) {
 # ifndef _WIN32
 		perror("chdir");
+		fprintf(stderr, "ERROR: Unable to change to directory '%s'\n", dpath);
 # else
 		if (!IsService) {
 			MessageBox(NULL, strerror(GetLastError()),

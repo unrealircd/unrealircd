@@ -882,8 +882,7 @@ errlink:
 	}
 	else
 	{
-		m_server_remote(cptr, sptr, parc, parv);
-		return 0;
+		return m_server_remote(cptr, sptr, parc, parv);
 	}
 	return 0;
 }
@@ -915,8 +914,17 @@ CMD_FUNC(m_server_remote)
 		    ("Link %s cancelled, server %s already exists from %s",
 		    get_client_name(acptr, TRUE), servername,
 		    (ocptr->from ? ocptr->from->name : "<nobody>"));
-		return exit_client(acptr, acptr, acptr,
-		    "Server Exists");
+		if (acptr == cptr) {
+			return exit_client(acptr, acptr, acptr, "Server Exists");
+		} else {
+			/* AFAIK this can cause crashes if this happends remotely because
+			 * we will still receive msgs for some time because of lag.
+			 * Two possible solutions: unlink the directly connected server (cptr)
+			 * and/or fix all those commands which blindly trust server input. -- Syzop
+			 */
+			exit_client(acptr, acptr, acptr, "Server Exists");
+			return 0;
+		}
 	}
 	if ((bconf = Find_ban(servername, CONF_BAN_SERVER)))
 	{

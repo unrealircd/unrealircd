@@ -2060,3 +2060,5 @@ seen. gmtime warning still there
 - Fixed a ban version {} bug where it would version remote clients
 - Added aliases/anope.conf (For Anope IRC Services)
 - Updated some documentation
+- Minor error msg improvements
+- Fixed a bug with wrong hub/leaf settings ("non-hub introduced leaf") causing a crash (#0000732).

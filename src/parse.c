@@ -233,7 +233,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 		sendto_snomask(SNO_FLOOD, "Flood from unknown connection %s detected",
 			cptr->sockhost);
 		ban_flooder(cptr);
-		return 0;
+		return FLUSH_BUFFER;
 	}
 
 	/* this call is a bit obsolete? - takes up CPU */
