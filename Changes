@@ -668,3 +668,4 @@
 - Fixed a linking bug (where did that come from)
 - Fixed bug where duplicate numerics could occur
 - Fixed the hashing bug (thank you ROXnet ...)
+- Fixed a wierd channel message bug

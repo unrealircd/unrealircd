@@ -1836,8 +1836,8 @@ static int m_message(cptr, sptr, parc, parv, notice)
 #ifdef STRIPBADWORDS
 				if (!(IsULine(acptr) || IsULine(sptr)) && 
 					IsFilteringWords(acptr))
-						sendto_prefix_one(acptr, sptr,
-						    ":%s %s %s :%s", parv[0], cmd, nick,
+						sendto_message_one(acptr, sptr,
+						    parv[0], cmd, nick, 
 							    stripbadwords_message(parv[2]));
 				else
 #endif
