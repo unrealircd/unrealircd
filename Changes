@@ -738,5 +738,8 @@
   some potvin stuff
 - Added so blocking is only effective when SSL_connect()'ing
 - Fixed a couple of SJOIN/Link problems detected by Curt|s
+- Changed some stuff with SSL, you may want to seperate server.pem into
+  server.key.pem and server.cert.pem (or "rm Makefile" and "./Config")
+- Fixed a couple of SJOIN/Link problems detected by Curt|s
 - Made /stats C show SSL/Zip flags
 - Fixed the Stskeeps "mass G:line on /rehash" (tm) bug

@@ -214,7 +214,12 @@ install: all
 	@echo "Now install by hand; make install is broken."
 
 pem:	src/ssl.cnf
-	$(OPENSSLPATH) req -new -x509 -days 365 -nodes \
-                -config src/ssl.cnf -out server.pem -keyout server.pem
+	@echo "Generating certificate request .. "
+	$(OPENSSLPATH) req -new -config src/ssl.cnf -out server.req.pem \
+              -keyout server.key.pem -nodes
+	@echo "Generating self-signed certificate .. "
+	$(OPENSSLPATH) req -x509 -days 365 -in server.req.pem \
+               -key server.key.pem -out server.cert.pem
+	@echo "Generating fingerprint .."
 	$(OPENSSLPATH) x509 -subject -dates -fingerprint -noout \
-		-in server.pem
+		-in server.cert.pem
