@@ -1333,7 +1333,6 @@ void	config_rehash()
 		DelListItem(log_ptr, conf_log);
 		MyFree(log_ptr);
 	}
-/* FIX
 	for (alias_ptr = conf_alias; alias_ptr; alias_ptr = (ConfigItem_alias *)next) {
 		aCommand *cmptr = find_Command(alias_ptr->alias, 0, 0);
 		ConfigItem_alias_format *fmt;
@@ -1346,6 +1345,7 @@ void	config_rehash()
 			{
 				next2 = (ListStruct *)fmt->next;
 				ircfree(fmt->format);
+				ircfree(fmt->nick);
 				ircfree(fmt->parameters);
 				DelListItem(fmt, alias_ptr->format);
 				MyFree(fmt);
@@ -1354,7 +1354,6 @@ void	config_rehash()
 		DelListItem(alias_ptr, conf_alias);
 		MyFree(alias_ptr);
 	}
-	*/
 	for (include_ptr = conf_include; include_ptr; include_ptr = (ConfigItem_include *)next)
 	{
 		next = (ListStruct *)include_ptr->next;	 

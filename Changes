@@ -1678,3 +1678,4 @@ seen. gmtime warning still there
   report errors better
 - Fixed sendto_ routines to use slot number as index into sentalong array
 - Fixed a conf3 bug
+- Made alias {}'s get rehashed
