@@ -66,7 +66,6 @@ aChannel *channel = NullChn;
 extern aCRline *crlines;
 extern char *cannotjoin_msg;
 extern ircstats IRCstats;
-// #define is_zombie(x,y) 0
 
 #ifndef NO_FDLIST
 extern int lifesux;
@@ -81,9 +80,6 @@ static void channel_modes PROTO((aClient *, char *, char *, aChannel *));
 static int check_channelmask PROTO((aClient *, aClient *, char *));
 static int del_banid PROTO((aChannel *, char *));
 static int find_banid PROTO((aChannel *, char *));
-//static  int     have_ops PROTO((aChannel *));
-//static        int     number_of_zombies PROTO((aChannel *));
-//static  int     is_deopped PROTO((aClient *, aChannel *));
 static void set_mode PROTO((aChannel *, aClient *, int, char **, u_int *,
     char[MAXMODEPARAMS][MODEBUFLEN + 3], int));
 static void make_mode_str PROTO((aChannel *, long, long, int,
@@ -149,6 +145,7 @@ aCtab cFlagTab[] = {
 	{MODE_STRIPBADWORDS, 'G', 0},	/* no badwords */
 #endif
 	{MODE_NOCTCP,	     'C', 0},   /* no CTCPs */
+	{MODE_AUDITORIUM,    'u', 0},
 	{0x0, 0x0, 0x0}
 };
 #endif
@@ -1146,6 +1143,7 @@ int  m_mode(cptr, sptr, parc, parv)
 	}
 	opermode = 0;
 	/* opermode stuff --sts */
+#ifndef NO_OPEROVERRIDE
 	if (IsPerson(sptr) && !IsULine(cptr, sptr) && !is_chan_op(sptr, chptr))
 		if (IsOper(sptr))
 		{
@@ -1153,6 +1151,7 @@ int  m_mode(cptr, sptr, parc, parv)
 			opermode = 1;
 			goto aftercheck;
 		}
+#endif
 /*-------*/
 
 
@@ -1317,6 +1316,7 @@ void do_mode(chptr, cptr, sptr, parc, parv, sendts, samode)
 		return;		/* nothing to send */
 	}
 	/* opermode for twimodesystem --sts */
+#ifndef NO_OPEROVERRIDE
 	if (opermode == 1)
 	{
 		if (MyClient(sptr))
@@ -1325,6 +1325,7 @@ void do_mode(chptr, cptr, sptr, parc, parv, sendts, samode)
 			    sptr->name, chptr->chname, mode_buf, parabuf);
 		sendts = 0;
 	}
+#endif
 
 	if (IsPerson(sptr) && samode && MyClient(sptr))
 	{
@@ -1532,6 +1533,17 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 	}
 	switch (modetype)
 	{
+	  case MODE_AUDITORIUM:
+		  if (IsULine(cptr, cptr) || IsServer(cptr))
+			  goto auditorium_ok;
+                  if (!IsNetAdmin(cptr) && !IsTechAdmin(cptr) && !is_chanowner(cptr,chptr))
+                  {
+                  	sendto_one(cptr, ":%s NOTICE %s :*** Channel mode +u can only be set by the channel owner", me.name, cptr->name);
+                        break;
+                  }
+                  
+		  auditorium_ok:
+		  goto setthephuckingmode;
 	  case MODE_OPERONLY:
 		  if (!IsAnOper(cptr) && !IsServer(cptr)
 		      && !IsULine(cptr, cptr))
@@ -1829,7 +1841,14 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		  {
 			  goto linkok;
 		  }
-		linkok:
+              
+                  if (!IsNetAdmin(cptr) && !IsTechAdmin(cptr) && !is_chanowner(cptr,chptr))
+                  {
+                  	sendto_one(cptr, ":%s NOTICE %s :*** Channel mode +L can only be set by the channel owner", me.name, cptr->name);
+                        break;
+                  }
+                  
+		  linkok:
 		  if (!chptr->mode.limit && what == MODE_ADD)
 		  {
 			  sendto_one(cptr,
@@ -2192,7 +2211,12 @@ static int can_join(cptr, sptr, chptr, key, link, parv)
 	char *parv[];
 {
 	Link *lp;
+#ifndef NO_OPEROVERRIDE
 	int  ib = 1;
+#else
+	int  ib = 0;
+#endif
+
 
 	/* 0 = noone 1 = IRCops 2 = Net Admins 3 =Net/Tech admins  (override) */
 
@@ -3418,6 +3442,9 @@ int  m_topic(cptr, sptr, parc, parv)
 			    || is_chan_op(sptr, chptr))
 			    && (chptr->mode.mode & MODE_TOPICLIMIT))
 			{
+#ifdef NO_OPEROVERRIDE
+				continue;
+#endif
 				sendto_umode(UMODE_EYES,
 				    "*** OperTopic [IRCop: %s] - [Channel: %s] - [Topic: %s]",
 				    sptr->name, chptr->chname, topic);
@@ -4072,6 +4099,10 @@ int  m_names(cptr, sptr, parc, parv)
 			continue;
 		if (IsHiding(acptr))
 			continue;
+		if (chptr->mode.mode & MODE_AUDITORIUM)
+			if (!(cm->flags & CHFL_CHANOP))
+				continue;
+				
 		if (cm->flags & CHFL_CHANOP)
 			buf[idx++] = '@';
 		else if (cm->flags & CHFL_HALFOP)

@@ -2309,6 +2309,11 @@ static void do_who(sptr, acptr, repchan)
 	char status[5];
 	int  i = 0;
 
+	/* auditoriums only show @'s */
+	if (repchan && (repchan->mode.mode & MODE_AUDITORIUM) &&
+		!is_chan_op(acptr, repchan))
+			return;
+			
 	if (acptr->user->away)
 		status[i++] = 'G';
 	else

@@ -103,6 +103,13 @@
   Stripbadwords patch
 */
 #define STRIPBADWORDS
+
+/*
+  NO_OPEROVERRIDE
+    This will disable OperMode, OperTopic and Banwalks
+*/
+#undef NO_OPEROVERRIDE
+
 /* 
   Ident checking
   #define this to disable ident checking

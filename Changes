@@ -359,3 +359,6 @@
 - Fixed (by DrBin) Shun and Gline bug, where they replaced eachothers ->type
   .... Learn that (= != ==) /me looks at Sts
 - You can now specify 0 as the time for any TKL (ex Glines, Shun) for it to be perm
+- Fixed a +L bug, (3.1 only) where any op could set +L
+- Added channel mode +u, "Auditorium". Makes /names and /who #channel only
+  show @'s
