@@ -5,7 +5,7 @@
 ; Uncomment the above line to package an SSL build
 #define USE_ZIP
 ; Uncomment the above line to package with ZIP support
-; #define USE_CURL
+#define USE_CURL
 ; Uncomment the above line to package with libcurl support
 
 
@@ -92,7 +92,7 @@ external 'isxdl_Download@files:isxdl.dll stdcall';
 function isxdl_SetOption(Option, Value: PChar): Integer;
 external 'isxdl_SetOption@files:isxdl.dll stdcall';
 const dbgurl = 'http://www.unrealircd.com/downloads/DbgHelp.Dll';
-const crturl = 'http://www.unrealircd.com/downloads/msvcr70d.dll';
+const crturl = 'http://www.unrealircd.com/downloads/msvcr70.dll';
 var didDbgDl,didCrtDl: Boolean;
 
 function NextButtonClick(CurPage: Integer): Boolean;
@@ -106,20 +106,20 @@ begin
     if ((CurPage = wpReady)) then begin
       dbghelp := ExpandConstant('{sys}\DbgHelp.Dll');
       output := ExpandConstant('{app}\DbgHelp.Dll');
-      msvcrt := ExpandConstant('{sys}\msvcr70d.Dll');
+      msvcrt := ExpandConstant('{sys}\msvcr70.Dll');
       GetVersionNumbersString(dbghelp,m);
     if (NOT FileExists(msvcrt)) then begin
       answer := MsgBox('Unreal requires the MS C Runtime 7.0 in order to run, do you wish to install it now?', mbConfirmation, MB_YESNO);
       if answer = IDYES then begin
-        tmp := ExpandConstant('{tmp}\msvcr70d.Dll');
-        isxdl_SetOption('title', 'Downloading msvcr70d.dll');
+        tmp := ExpandConstant('{tmp}\msvcr70.Dll');
+        isxdl_SetOption('title', 'Downloading msvcr70.dll');
         hWnd := StrToInt(ExpandConstant('{wizardhwnd}'));
         if isxdl_Download(hWnd, crturl, tmp) = 0 then begin
-          MsgBox('Download and installation of msvcr70d.dll failed, the file must be manually installed. The file can be downloaded at http://www.unrealircd.com/downloads/mscvr70.dll', mbInformation, MB_OK);
+          MsgBox('Download and installation of msvcr70.dll failed, the file must be manually installed. The file can be downloaded at http://www.unrealircd.com/downloads/mscvr70.dll', mbInformation, MB_OK);
         end else
           didCrtDl := true;
       end else
-        MsgBox('In order for Unreal to properly function, you must manually install msvcr70d.dll. The dll can be downloaded from http://www.unrealircd.com/downloads/msvcr70d.dll', mbInformation, MB_OK);
+        MsgBox('In order for Unreal to properly function, you must manually install msvcr70.dll. The dll can be downloaded from http://www.unrealircd.com/downloads/msvcr70.dll', mbInformation, MB_OK);
     end;
     if (NOT FileExists(output)) then begin
           if (NOT FileExists(dbghelp)) then
@@ -153,8 +153,8 @@ begin
       FileCopy(input, output, true);
     end;
     if (didCrtDl) then begin
-      input := ExpandConstant('{tmp}\msvcr70d.dll');
-      output := ExpandConstant('{sys}\msvcr70d.dll');
+      input := ExpandConstant('{tmp}\msvcr70.dll');
+      output := ExpandConstant('{sys}\msvcr70.dll');
       FileCopy(input, output, true);
     end;
   end;
