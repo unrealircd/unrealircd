@@ -1724,7 +1724,6 @@ CMD_FUNC(m_nick)
 		    me.name, nick, sptr->nospoof, sptr->nospoof);
 		sendto_one(sptr, "PING :%X", sptr->nospoof);
 #endif /* NOSPOOF */
-
 #ifdef CONTACT_EMAIL
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** If you need assistance with a"
@@ -1762,11 +1761,15 @@ CMD_FUNC(m_nick)
 			   ** may reject the client and call exit_client for it
 			   ** --must test this and exit m_nick too!!!
 			 */
+			if (USE_BAN_VERSION)
+				sendto_one(sptr, ":IRC PRIVMSG %s :\1VERSION\1",
+					nick);
 			sptr->lastnick = TStime();	/* Always local client */
 			if (register_user(cptr, sptr, nick,
 			    sptr->user->username, NULL, NULL) == FLUSH_BUFFER)
 				return FLUSH_BUFFER;
 			update_watch = 0;
+
 		}
 	}
 	/*
@@ -1978,6 +1981,10 @@ CMD_FUNC(m_user)
 	if (sptr->name[0] && (IsServer(cptr) ? 1 : IsNotSpoof(sptr)))
 		/* NICK and no-spoof already received, now we have USER... */
 	{
+		if (USE_BAN_VERSION)
+			sendto_one(sptr, ":IRC PRIVMSG %s :\1VERSION\1",
+				sptr->name);
+
 		return(
 		    register_user(cptr, sptr, sptr->name, username, umodex,
 		    virthost));

@@ -1239,6 +1239,7 @@ void	config_rehash()
 	ConfigItem_help			*help_ptr;
 	ListStruct 	*next, *next2;
 
+	USE_BAN_VERSION = 0;
 	/* clean out stuff that we don't use */	
 	for (admin_ptr = conf_admin; admin_ptr; admin_ptr = (ConfigItem_admin *)next)
 	{
@@ -4650,6 +4651,11 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 		ca->flag.type = CONF_BAN_USER;
 	else if (!strcmp(ce->ce_vardata, "realname"))
 		ca->flag.type = CONF_BAN_REALNAME;
+	else if (!strcmp(ce->ce_vardata, "version"))
+	{
+		ca->flag.type = CONF_BAN_VERSION;
+		tempiConf.use_ban_version = 1;
+	}
 	else {
 		int value;
 		for (global_i = Hooks[HOOKTYPE_CONFIGRUN]; global_i;
@@ -4690,6 +4696,8 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 	else if (!strcmp(ce->ce_vardata, "user"))
 	{}
 	else if (!strcmp(ce->ce_vardata, "realname"))
+	{}
+	else if (!strcmp(ce->ce_vardata, "version"))
 	{}
 	else
 	{

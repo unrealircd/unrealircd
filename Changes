@@ -1980,3 +1980,6 @@ seen. gmtime warning still there
 - Minor /die and /restart code cleanups
 - Added channel mode +M to 005 (#0000803) reported by jollino
 - Fixed a bug where +x would make hosts lowercase (#0000810) reported by rayman
+- Implemented a ban version {} (bans users based on CTCP VERSION). It works by sending out
+  a CTCP VERSION when a user connects then checking the reply. If you don't use any 
+  ban version{}'s then no version request is sent so users are not inconvenienced.

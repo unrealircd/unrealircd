@@ -62,6 +62,7 @@ struct zConfiguration {
 	unsigned fail_oper_warn:1;
 	unsigned show_connect_info:1;
 	unsigned dont_resolve:1;
+	unsigned use_ban_version:1;
 	unsigned use_egd;
 	long host_timeout;
 	int  host_retries;
@@ -150,3 +151,4 @@ extern aConfiguration iConf;
 #ifdef THROTTLING
 #define THROTTLING_PERIOD		iConf.throttle_period
 #endif
+#define USE_BAN_VERSION			iConf.use_ban_version

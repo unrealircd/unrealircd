@@ -49,10 +49,15 @@ struct zMessage {
 
 
 int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+/* This really has nothing to do with WebTV yet, but eventually it will, so I figured
+ * it's easiest to put it here so why not? -- codemastr
+ */
+int	ban_version(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 aMessage	webtv_cmds[] = 
 {
 	{"WHOIS", w_whois, 15},
+	{"\1VERSION", ban_version, 1},
 	{NULL, 0, 15}
 };
 
@@ -378,5 +383,18 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	sendto_one(sptr, ":IRC PRIVMSG %s :End of whois information for %s",
 		sptr->name, parv[1]);
 
+	return 0;
+}
+int	ban_version(aClient *cptr, aClient *sptr, int parc, char *parv[])
+{	
+	int len;
+	ConfigItem_ban *ban;
+	if (parc < 2)
+		return 0;
+	len = strlen(parv[1]);
+	if (parv[1][len-1] == '\1')
+		parv[1][len-1] = '\0';
+	if ((ban = Find_ban(parv[1], CONF_BAN_VERSION)))
+		return exit_client(cptr, sptr, sptr, ban->reason);
 	return 0;
 }
