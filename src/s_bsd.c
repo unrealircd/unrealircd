@@ -426,6 +426,19 @@ int  inetport(aClient *cptr, char *name, int port)
 				ipname, port);
 			strlcat(backupbuf, " - %s:%s", sizeof backupbuf);
 			report_error(backupbuf, cptr);
+#if !defined(_WIN32) && defined(INET6)
+			/* Check if ipv4-over-ipv6 (::ffff:a.b.c.d, RFC2553
+			 * section 3.7) is disabled, like at newer FreeBSD's. -- Syzop
+			 */
+			if (!strncasecmp(ipname, "::ffff:", 7))
+			{
+				ircd_log(LOG_ERROR, "You are trying to bind to an IPv4 address, "
+				                    "make sure the address exists at your machine. "
+				                    "If you are using *BSD you might need to "
+				                    "enable ipv6_ipv4mapping in /etc/rc.conf "
+				                    "and/or via sysctl.");
+			}
+#endif
 			CLOSE_SOCK(cptr->fd);
 			cptr->fd = -1;
 			--OpenFiles;

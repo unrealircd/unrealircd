@@ -2232,3 +2232,5 @@ seen. gmtime warning still there
 - Modified './update', now points to docs until we have a new update thingy.
 - Fixed bug with /list and '?' wildcard, reported by maGGus.
 - Fixed a few fdlist bugs in SVSMODE/SVS2MODE found by Aither.
+- IPv6: added warning if a ::ffff:a.b.c.d type addr doesn't work since this "feature"
+  is disabled by default at newer *BSD versions. Also improved another warning.
