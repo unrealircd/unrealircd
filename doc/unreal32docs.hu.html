@@ -577,13 +577,18 @@ Egy táblázat az összes választási lehetõségrõl:<br>
 <tr><td>italian</td><td>Olasz karakterek</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>spanish</td><td>Spanyol karakterek</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>swedish</td><td>Svéd karakterek</td><td>iso8859-1 (latin1)</td></tr>
-<tr><td><b>latin1</b></td><td>Holland, francia, német, svájci német, spanyol, izlandi, olasz, svéd</td><td>iso8859-1 (latin1)</td></tr>
-<tr><td>hungarian</td><td>Magyar karakterek</td><td>iso8859-2 (latin2)</td></tr>
+<tr><td><b>latin1</b></td><td>catalan, dutch, french, german, swiss-german, spanish, icelandic, italian, swedish</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>hungarian</td><td>Magyar karakterek</td><td>iso8859-2 (latin2), windows-1250</td></tr>
 <tr><td>polish</td><td>Lengyel karakterek</td><td>iso8859-2 (latin2)</td></tr>
-<tr><td><b>latin2</b></td><td>Magyar, lengyel</td><td>iso8859-2 (latin2)</td></tr>
-<tr><td>polish-w1250</td><td>Lengyel karakterek, Windows-os változat (sajnos gyakoribb, mint az iso)</td><td>windows-1250 (cp1250)</td></tr>
+<tr><td>romanian</td><td>Román karakterek</td><td>iso8859-2 (latin2), windows-1250, iso8859-16</td></tr>
+<tr><td><b>latin2</b></td><td>hungarian, polish, romanian</td><td>iso8859-2 (latin2)</td></tr>
+<tr><td>polish-w1250</td><td>Lengyel karakterek, windowsos változat (sajnos gyakoribb, mint az iso)</td><td>windows-1250</td></tr>
+<tr><td>slovak-w1250</td><td>Szlovák karakterek, windowsos változat</td><td>windows-1250</td></tr>
+<tr><td>czech-w1250</td><td>Cseh karakterek, windowsos változat</td><td>windows-1250</td></tr>
+<tr><td><b>windows-1250</b></td><td>polish-w1250, slovak-w1250, czech-w1250, hungarian, romanian</td><td>windows-1250</td></tr>
 <tr><td>greek</td><td>Görög karakterek</td><td>iso8859-7</td></tr>
 <tr><td>turkish</td><td>Török karakterek</td><td>iso8859-9</td></tr>
+<tr><td>russian-w1251</td><td>Orosz karakterek</td><td>windows-1251</td></tr>
 <tr><td>hebrew</td><td>Héber karakterek</td><td>iso8859-8-I/windows-1255</td></tr>
 <tr><td>chinese-simp</td><td>Egyszerûsített kínai</td><td>Több-bájtos: GBK/GB2312</td></tr>
 <tr><td>chinese-trad</td><td>Hagyományos kínai</td><td>Több-bájtos: GBK</td></tr>
@@ -2255,7 +2260,7 @@ set {
 <p><font class="set">set::stats-server &lt;szervernév&gt;;</font><br>
   Beállítja azon szerver nevét, ahol a statisztikai bot tartozkodik. Ha nem fut statisztikai szerver,
   ez az érték kihagyható.</p>
-<p><font class="set">set::help-channel &lt;network-help-channel&gt;;</font><br>
+<p><font class="set">set::help-channel &lt;hálózati-segélycsatorna&gt;;</font><br>
   Beállítja e hálózat segélycsatornájának nevét.</p>
 <p><font class="set">set::cloak-keys { &quot;kulcs1&quot;; &quot;kulcs2&quot;; &quot;kulcs3&quot;; };</font><br>
   Beállítja a +x gazdanevek generálásához használandó kulcsokat. Ezeknek a kulcsoknak a hálózat minden
