@@ -167,12 +167,17 @@ void	scan_socks_scan(HStruct *h)
 	/* We do this non-blocking to prevent a hang of the entire ircd with newer
 	 * versions of glibc.  Don't you just love new "features?"
 	 * Passing null to this is probably bad, a better method is needed. 
-	 * Maybe a version of set_non_blocking that doesn't send error messages? */
+	 * Maybe a version of set_non_blocking that doesn't send error messages? 
+	 * -Zogg
+	 * 
+	 * set_non_blocking(fd,cptr)
+	 * when cptr == NULL, it doesnt error - changed some months ago
+	 * also, don't we need a select loop to make this better?
+	 */
 	set_non_blocking(fd, NULL);
 	if ((retval = connect(fd, (struct sockaddr *)&sin,
 		sizeof(sin))) == -1 && errno != EINPROGRESS)
 	{
-		printf("%i", ERRNO);
 		/* we have no socks server! */
 		CLOSE_SOCK(fd);	
 		goto exituniverse;
