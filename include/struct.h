@@ -953,6 +953,7 @@ struct _configflag_ban
 
 #define CONF_BAN_TYPE_CONF	0
 #define CONF_BAN_TYPE_AKILL	1
+#define CONF_BAN_TYPE_TEMPORARY 2
 
 
 struct _configitem {

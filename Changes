@@ -163,3 +163,9 @@
   FIX: *@* detection
 - Fixed a check_pings problem with usernames
 - ban ip {} works 100% now
+- Made /stats C work and /stats H. Intregrated into one.
+- Made /zline, /unzline work. 
+- Added CONF_BAN_TYPE_TEMPORARY
+- Fixed a ban ip {} bug in check_pings
+- Removed some waste of oldconf
+- Moved advanced_check to s_svs.c

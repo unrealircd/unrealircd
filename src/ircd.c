@@ -545,7 +545,7 @@ extern TS check_pings(TS currenttime, int check_kills)
 
 		if (check_kills && !killflag && IsPerson(cptr))
 		{
-			if (bconf = Find_ban(cptr->sockhost, CONF_BAN_IP))
+			if (bconf = Find_ban(inetntoa((char *)&cptr->ip), CONF_BAN_IP))
 			{
 				killflag = 1;
 				goto nextstep;

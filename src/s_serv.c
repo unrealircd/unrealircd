@@ -2201,7 +2201,6 @@ int  m_watch(cptr, sptr, parc, parv)
 
 /*
 ** m_stats
-
 **	parv[0] = sender prefix
 **	parv[1] = statistics selector (defaults to Message frequency)
 **	parv[2] = server name (current server defaulted, if omitted)
@@ -2221,49 +2220,6 @@ int  m_watch(cptr, sptr, parc, parv)
 **    Note:   The info is reported in the order the server uses
 **            it--not reversed as in ircd.conf!
 */
-
-static int report_array[][3] = {
-	{
-	    CONF_CONNECT_SERVER, RPL_STATSCLINE, 'C'},
-	{
-	    CONF_NOCONNECT_SERVER, RPL_STATSOLDNLINE, 'N'},
-	{
-	    CONF_NLINE, RPL_STATSNLINE, 'n'},
-	{
-	    CONF_CLIENT, RPL_STATSILINE, 'I'},
-	{
-	    CONF_KILL, RPL_STATSKLINE, 'K'},
-	{
-	    CONF_EXCEPT, RPL_STATSKLINE, 'E'},
-	{
-	    CONF_ZAP, RPL_STATSKLINE, 'Z'},
-	{
-	    CONF_QUARANTINED_NICK, RPL_STATSQLINE, 'Q'},
-	{
-	    CONF_LEAF, RPL_STATSLLINE, 'L'},
-	{
-	    CONF_OPERATOR, RPL_STATSOLINE, 'O'},
-	{
-	    CONF_HUB, RPL_STATSHLINE, 'H'},
-	{
-	    CONF_LOCOP, RPL_STATSOLINE, 'o'},
-	{
-	    CONF_CRULEALL, RPL_STATSDLINE, 'D'},
-	{
-	    CONF_CRULEAUTO, RPL_STATSDLINE, 'd'},
-	{
-	    CONF_UWORLD, RPL_STATSULINE, 'U'},
-	{
-	    CONF_MISSING, RPL_STATSXLINE, 'X'},
-	{
-	    CONF_TLINE, RPL_STATSTLINE, 't'},
-	{
-	    CONF_SOCKSEXCEPT, RPL_STATSELINE, 'e'},
-	{
-	    CONF_VERSION, RPL_STATSVLINE, 'V'},
-	{
-	    0, 0}
-};
 
 static void report_sqlined_nicks(sptr)
 	aClient *sptr;
@@ -2530,6 +2486,7 @@ int  m_stats(cptr, sptr, parc, parv)
 	static char Lformat[] = ":%s %d %s %s%s %u %u %u %u %u %u %s";
 	char pbuf[96];		/* Should be enough for to ints */
 #endif
+	ConfigItem_link *link_p;
 	struct Message *mptr;
 	aClient *acptr;
 	char stat = parc > 1 ? parv[1][0] : '\0';
@@ -2658,8 +2615,32 @@ int  m_stats(cptr, sptr, parc, parv)
 		  break;
 	  case 'C':
 	  case 'c':
-		  report_configured_links(sptr, CONF_CONNECT_SERVER |
-		      CONF_NOCONNECT_SERVER);
+	  case 'H':
+	  case 'h':	  
+		  for (link_p = conf_link; link_p; link_p = (ConfigItem_link *) link_p->next)
+		  {
+			sendto_one(sptr, ":%s 213 %s C %s@%s * %s %i %s %s%s%s",
+				me.name, sptr->name, link_p->username,
+				link_p->hostname, link_p->servername,
+				link_p->port,
+				link_p->class->name,
+				(link_p->options & 0x1) ? "a" : "",
+				(link_p->options & 0x2) ? "S" : "",
+				(link_p->options & 0x4) ? "z" : "");
+			if (link_p->hubmask)
+			{
+				sendto_one(sptr, ":%s 244 %s H %s * %s",
+					me.name, sptr->name, link_p->hubmask,
+					link_p->servername);
+			}
+			else
+			if (link_p->leafmask)
+			{
+				sendto_one(sptr, ":%s 241 %s L %s * %s %d",
+					me.name, sptr->name,
+					link_p->leafmask, link_p->leafdepth);
+			}
+		  }
 		  break;
 	  case 'f':
 	  case 'F':
@@ -2669,10 +2650,6 @@ int  m_stats(cptr, sptr, parc, parv)
 	  case 'G':
 	  case 'g':
 		  tkl_stats(sptr);
-		  break;
-	  case 'H':
-	  case 'h':
-		  report_configured_links(sptr, CONF_HUB | CONF_LEAF);
 		  break;
 	  case 'I':
 	  case 'i':
