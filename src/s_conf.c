@@ -1523,6 +1523,10 @@ int  initconf(opt)
 		if (aconf->status == CONF_ME)
 		{
 			strncpyzt(me.info, aconf->name, sizeof(me.info));
+			if (me.name[0] == '\0' && !strchr(aconf->host, '.')) {
+				ircd_log("ERROR: Invalid Server Name %s, Reason: Servername must contain at least one \".\"\n",aconf->host);
+				exit(-1);
+			}
 			if (me.name[0] == '\0' && aconf->host[0])
 				strncpyzt(me.name, aconf->host,
 				    sizeof(me.name));

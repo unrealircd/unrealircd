@@ -513,3 +513,6 @@
 - Fixed a SJ3 bug with ban syncing to SJ2 servers
 - Fixed some cloak bugs(???)
 - Made it so you can /knock without a reason, and a few /knock cleanups
+- Made it so if the server name specified in the M:line does not contain a "."
+  the ircd logs it to ircd.log and dies
+- Updated ./ircd to also say to look at ircd.log
