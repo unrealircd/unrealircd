@@ -2841,3 +2841,4 @@ seen. gmtime warning still there
   so I cannot talk about everything in it, but I tried to mention the main risks and
   what you can do about it in a (hopefully) simple and understandable language ;).
 - Fixed a snomask bug reported by Cat / HERZ (#0001531).
+- Started using the umode->allowed stuff a bit ourselves, just to be sure.

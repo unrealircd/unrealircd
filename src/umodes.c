@@ -119,30 +119,37 @@ void	umode_init(void)
 	Snomask_highest = 0;
 
 	/* Set up modes */
+	/* 2004-02-11: note: TODO: 'umode_allow_opers' is in most cases
+	 * not completely correct since even opers shouldn't be allowed
+	 * to set most of these flags (eg locop trying to set +N),
+	 * it is currently handled by the m_umode() routine however,
+	 * but it would be better if we get rid of that and switch
+	 * completely to this umode->allowed system :). -- Syzop.
+	 */
 	UmodeAdd(NULL, 'i', UMODE_GLOBAL, NULL, &UMODE_INVISIBLE);
-	UmodeAdd(NULL, 'o', UMODE_GLOBAL, NULL, &UMODE_OPER);
+	UmodeAdd(NULL, 'o', UMODE_GLOBAL, umode_allow_opers, &UMODE_OPER);
 	UmodeAdd(NULL, 'w', UMODE_GLOBAL, NULL, &UMODE_WALLOP);
 	UmodeAdd(NULL, 'g', UMODE_GLOBAL, NULL, &UMODE_FAILOP);
 	UmodeAdd(NULL, 'h', UMODE_GLOBAL, NULL, &UMODE_HELPOP);
 	UmodeAdd(NULL, 'r', UMODE_GLOBAL, NULL, &UMODE_REGNICK);
-	UmodeAdd(NULL, 'a', UMODE_GLOBAL, NULL, &UMODE_SADMIN);
-	UmodeAdd(NULL, 'A', UMODE_GLOBAL, NULL, &UMODE_ADMIN);
+	UmodeAdd(NULL, 'a', UMODE_GLOBAL, umode_allow_opers, &UMODE_SADMIN);
+	UmodeAdd(NULL, 'A', UMODE_GLOBAL, umode_allow_opers, &UMODE_ADMIN);
 	UmodeAdd(NULL, 's', UMODE_LOCAL, NULL, &UMODE_SERVNOTICE);
-	UmodeAdd(NULL, 'O', UMODE_LOCAL, NULL, &UMODE_LOCOP);
+	UmodeAdd(NULL, 'O', UMODE_LOCAL, umode_allow_opers, &UMODE_LOCOP);
 	UmodeAdd(NULL, 'R', UMODE_GLOBAL, NULL, &UMODE_RGSTRONLY);
 	UmodeAdd(NULL, 'T', UMODE_GLOBAL, NULL, &UMODE_NOCTCP);
 	UmodeAdd(NULL, 'V', UMODE_GLOBAL, NULL, &UMODE_WEBTV);
-	UmodeAdd(NULL, 'S', UMODE_GLOBAL, NULL, &UMODE_SERVICES);
+	UmodeAdd(NULL, 'S', UMODE_GLOBAL, umode_allow_opers, &UMODE_SERVICES);
 	UmodeAdd(NULL, 'x', UMODE_GLOBAL, NULL, &UMODE_HIDE);
-	UmodeAdd(NULL, 'N', UMODE_GLOBAL, NULL, &UMODE_NETADMIN);
-	UmodeAdd(NULL, 'C', UMODE_GLOBAL, NULL, &UMODE_COADMIN);
+	UmodeAdd(NULL, 'N', UMODE_GLOBAL, umode_allow_opers, &UMODE_NETADMIN);
+	UmodeAdd(NULL, 'C', UMODE_GLOBAL, umode_allow_opers, &UMODE_COADMIN);
 	UmodeAdd(NULL, 'W', UMODE_GLOBAL, NULL, &UMODE_WHOIS);
-	UmodeAdd(NULL, 'q', UMODE_GLOBAL, NULL, &UMODE_KIX);
+	UmodeAdd(NULL, 'q', UMODE_GLOBAL, umode_allow_opers, &UMODE_KIX);
 	UmodeAdd(NULL, 'B', UMODE_GLOBAL, NULL, &UMODE_BOT);
 	UmodeAdd(NULL, 'z', UMODE_GLOBAL, NULL, &UMODE_SECURE);
 	UmodeAdd(NULL, 'v', UMODE_GLOBAL, NULL, &UMODE_VICTIM);
 	UmodeAdd(NULL, 'd', UMODE_GLOBAL, NULL, &UMODE_DEAF);
-	UmodeAdd(NULL, 'H', UMODE_GLOBAL, NULL, &UMODE_HIDEOPER);
+	UmodeAdd(NULL, 'H', UMODE_GLOBAL, umode_allow_opers, &UMODE_HIDEOPER);
 	UmodeAdd(NULL, 't', UMODE_GLOBAL, NULL, &UMODE_SETHOST);
 	UmodeAdd(NULL, 'G', UMODE_GLOBAL, NULL, &UMODE_STRIPBADWORDS);
 	UmodeAdd(NULL, 'p', UMODE_GLOBAL, NULL, &UMODE_HIDEWHOIS);
