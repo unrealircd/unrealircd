@@ -692,3 +692,4 @@ seen. gmtime warning still there
 - Fixed some CHINESE_NICK stuff
 - Fixed an sdesc bug reported by Alzirr
 - Fixed a little gcc 3.0 bug with Unreal
+- Fixed *** nick has quit (no Days come, days go), by defaulting to "Quit: "

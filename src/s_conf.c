@@ -2171,6 +2171,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			ircstrdup(ftp_site, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "prefix-quit")) {
+			if (!strcmp(cep->ce_vardata, "no"))
+			{
+				ircstrdup(prefix_quit, "Quit: ");
+			}
 			ircstrdup(prefix_quit, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "hosts")) {
