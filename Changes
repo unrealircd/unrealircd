@@ -137,3 +137,4 @@
 - Made +c show class names in connect
 - Fixed a minor problem with ban {} and oper {}
 - Made ban nick {} work
+- Added the first (sorta) working version of the config converter
