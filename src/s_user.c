@@ -2894,7 +2894,13 @@ int  m_whois(cptr, sptr, parc, parv)
 			mlen = strlen(me.name) + strlen(parv[0]) + 6 +
 			    strlen(name);
 
-			if (!IsServices(acptr) || (IsServices(acptr) && IsNetAdmin(sptr)))
+#ifdef ENABLE_INVISOPER
+			if (!IsServices(acptr) && !IsHiding(acptr) ||
+			    ((IsServices(acptr) || IsHiding(acptr)) && IsNetAdmin(sptr))
+			   )
+#else
+			if (!IsServices(acptr) || IsServices(acptr) && IsNetAdmin(sptr))
+#endif
 			{
 				for (len = 0, *buf = '\0', lp = user->channel; lp;
 				    lp = lp->next)

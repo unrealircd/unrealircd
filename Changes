@@ -683,3 +683,7 @@ field in topics
 Fixed broken /who
 --Luke
 ===================================
+
+Fixed bug with /whois and +I
+--Luke
+===================================
