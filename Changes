@@ -519,3 +519,4 @@ seen. gmtime warning still there
 - Possible fixed fdlist problem with default_fdlist
 - Added some numeric checking in m_server*
 - Made possible speedup of fdlist checking in s_bsd.c
+- Updated makefile.win32 for events.c
