@@ -1,5 +1,4 @@
-/************************************************************************
-/************************************************************************
+/*
  *   Unreal Internet Relay Chat Daemon, src/s_err.c
  *   Copyright (C) 1992 Darren Reed
  *
@@ -1067,6 +1066,3 @@ char *getreply(int numeric) {
 	else
           return(replies[numeric]);
 }
-
-/* this was the old RPL_MYINFO line .... 
-   RPL_MYINFO, "%s %s oiwsghOkcSNfraAbexTCWq biklmnopstvRzqxOAqa", */

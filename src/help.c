@@ -96,7 +96,8 @@ int  parse_help(sptr, name, help)
 	}
 	else if (!myncmp(help, "ABOUT", 8))
 	{
-		SND("Type /info for UnrealIRCd information   -- Carsten Munk / Techie .. =)");
+		SND
+		    ("Type /info for UnrealIRCd information   -- Carsten Munk / Techie .. =)");
 	}
 	else if (!myncmp(help, "WATCH", 8))
 	{

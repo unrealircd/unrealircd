@@ -1,3 +1,4 @@
+
 #include <windows.h>
 #include "Cio.h"
 #include "CioFunc.h"
@@ -11,22 +12,23 @@ ID_CVS("$Id$");
 //
 BOOL Cio_Init(HINSTANCE hInstance)
 {
-    WNDCLASS  wc;
+	WNDCLASS wc;
 
-    // Fill in window class structure with parameters that describe
-    // the main window.
-    wc.style         = CS_HREDRAW | CS_VREDRAW;
-    wc.lpfnWndProc   = (WNDPROC)Cio_WndProc;
-    wc.cbClsExtra    = 0;
-    wc.cbWndExtra    = 4;
-    wc.hInstance     = hInstance;
-    wc.hIcon         = NULL;
-    wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE);
-	wc.lpszMenuName  = NULL;
-    wc.lpszClassName = CIOCLASS;
+	// Fill in window class structure with parameters that describe
+	// the main window.
+	wc.style = CS_HREDRAW | CS_VREDRAW;
+	wc.lpfnWndProc = (WNDPROC) Cio_WndProc;
+	wc.cbClsExtra = 0;
+	wc.cbWndExtra = 4;
+	wc.hInstance = hInstance;
+	wc.hIcon = NULL;
+	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wc.hbrBackground = (HBRUSH) (COLOR_BTNFACE);
+	wc.lpszMenuName = NULL;
+	wc.lpszClassName = CIOCLASS;
 
-    if ( !RegisterClass(&wc) ) return FALSE;
+	if (!RegisterClass(&wc))
+		return FALSE;
 
-    return TRUE;
+	return TRUE;
 }

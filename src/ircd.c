@@ -101,7 +101,7 @@ char REPORT_DO_SOCKS[128], REPORT_NO_SOCKS[128], REPORT_GOOD_SOCKS[128];
 #endif
 #endif
 aClient me;			/* That's me */
-char	*me_hash;
+char *me_hash;
 aClient *client = &me;		/* Pointer to beginning of Client list */
 extern char backupbuf[8192];
 
@@ -811,9 +811,12 @@ int  InitwIRCD(argc, argv)
 			  (void)printf("sizeof(aConfItem) == %u\n", sizeof(aConfItem));
 			  (void)printf("sizeof(aVhost) == %u\n", sizeof(aVhost));
 			  (void)printf("sizeof(aTKline) == %u\n", sizeof(aTKline));
-			  (void)printf("sizeof(struct ircstatsx) == %u\n", sizeof(struct ircstatsx));
-			  (void)printf("aClient remote == %u\n", CLIENT_REMOTE_SIZE);
 			  
+			      (void)printf("sizeof(struct ircstatsx) == %u\n",
+			      sizeof(struct ircstatsx));
+			  (void)printf("aClient remote == %u\n",
+			      CLIENT_REMOTE_SIZE);
+
 			  exit(0);
 			  break;
 #ifndef _WIN32
@@ -1170,7 +1173,7 @@ void SocketLoop(void *dummy)
 			}
 			if (do_garbage_collect == 1)
 				do_garbage_collect = 0;
-				
+
 			last_garbage_collect = now;
 		}
 		/*

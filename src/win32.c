@@ -1,4 +1,5 @@
 /************************************************************************
+/************************************************************************
  *   IRC - Internet Relay Chat, win32.c
  *   Copyright (C) 1996 Daniel Hazelbaker
  *
@@ -903,3 +904,4 @@ int	SetDebugLevel(HWND hWnd, int NewLevel)
 }
 
 
+ 

@@ -34,7 +34,7 @@ static int message_wordlist;
  * in both private and public messages
  */
 
-void	badwords_stats(aClient *sptr)
+void badwords_stats(aClient *sptr)
 {
 }
 

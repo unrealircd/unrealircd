@@ -1,4 +1,5 @@
 /************************************************************************
+/************************************************************************
  *   IRC - Internet Relay Chat, s_unreal.c
  *   (C) 1999 Carsten Munk (Techie/Stskeeps) <cmunk@toybox.flirt.org>
  *
@@ -1604,4 +1605,4 @@ int  m_crypto(cptr, sptr, parc, parv)
 	}
 	sendto_one(sptr, "CRYPTO ERROR :No such method/command %s", parv[1]);
 }
-#endif
+#endif 

@@ -1,4 +1,5 @@
 /*
+/*
  *   Unreal Internet Relay Chat Daemon, src/s_user.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center

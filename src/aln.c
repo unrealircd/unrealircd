@@ -54,35 +54,35 @@ static inline char *int_to_base64(unsigned long);
 static inline unsigned long base64_to_int(char *);
 
 
-static Link	*servers = NULL;
+static Link *servers = NULL;
 
 char *base64enc(unsigned long i)
 {
-   return int_to_base64(i);
+	return int_to_base64(i);
 }
 
 unsigned long base64dec(char *b64)
 {
-   return base64_to_int(b64);
+	return base64_to_int(b64);
 }
 
-int	numeric_collides(unsigned long numeric)
+int  numeric_collides(unsigned long numeric)
 {
 	Link *lp;
-	
+
 	if (!numeric)
 		return 0;
-	
+
 	for (lp = servers; lp; lp = lp->next)
 		if (numeric == lp->value.cptr->serv->numeric)
 			return 1;
 	return 0;
 }
 
-void	add_server_to_table(aClient *what)
+void add_server_to_table(aClient *what)
 {
-	Link	*ptr;
-	
+	Link *ptr;
+
 	if (IsServer(what) || IsMe(what))
 	{
 		ptr = make_link();
@@ -94,12 +94,12 @@ void	add_server_to_table(aClient *what)
 	}
 }
 
-void	remove_server_from_table(aClient *what)
+void remove_server_from_table(aClient *what)
 {
 	Link **curr;
 	Link *tmp;
 	Link *lp = servers;
-	
+
 	for (; lp && (lp->value.cptr == what); lp = lp->next);
 	for (;;)
 	{
@@ -118,94 +118,98 @@ void	remove_server_from_table(aClient *what)
 aClient *find_server_by_numeric(unsigned long value)
 {
 	Link *lp;
-	
+
 	for (lp = servers; lp; lp = lp->next)
 		if (lp->value.cptr->serv->numeric == value)
 			return (lp->value.cptr);
 	return NULL;
 }
 
-aClient	*find_server_by_base64(char *b64)
+aClient *find_server_by_base64(char *b64)
 {
 	return find_server_by_numeric(base64dec(b64));
 }
 
-char	*find_server_id(aClient *which)
+char *find_server_id(aClient *which)
 {
-	return (base64enc(which->serv->numeric));	
+	return (base64enc(which->serv->numeric));
 }
 
 /* ':' and '#' and '&' and '+' and '@' must never be in this table. */
 /* these tables must NEVER CHANGE! >) */
-char int6_to_base64_map[] =
-{  
-   '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
-   'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
-   'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
-   'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '{', '}'
+char int6_to_base64_map[] = {
+	'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D',
+	    'E', 'F',
+	'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+	    'U', 'V',
+	'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+	    'k', 'l',
+	'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+	    '{', '}'
 };
 
-char base64_to_int6_map[] = 
-{
-   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
-   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
-   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
-    0,  1,  2,  3,  4,  5,  6,  7,  8,  9, -1, -1, -1, -1, -1, -1, 
-   -1, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 
-   25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, -1, -1, -1, -1, -1, 
-   -1, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 
-   51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, -1, 63, -1, -1, 
-   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
-   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
-   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
-   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
-   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
-   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
-   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
-   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
-};    
+char base64_to_int6_map[] = {
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -1, -1, -1, -1, -1, -1,
+	-1, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+	25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, -1, -1, -1, -1, -1,
+	-1, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50,
+	51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, -1, 63, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+};
 
 static inline char *int_to_base64(unsigned long val)
 {
-   /* 32/6 == max 6 bytes for representation, 
-    * +1 for the null, +1 for byte boundaries 
-    */
-   static char base64buf[8];
-   unsigned long i = 7;
+	/* 32/6 == max 6 bytes for representation, 
+	 * +1 for the null, +1 for byte boundaries 
+	 */
+	static char base64buf[8];
+	unsigned long i = 7;
 
-   base64buf[i] = '\0';
+	base64buf[i] = '\0';
 
-   do
-   {
-      base64buf[--i] = int6_to_base64_map[val & 63];
-   } while (val >>= 6);
+	do
+	{
+		base64buf[--i] = int6_to_base64_map[val & 63];
+	}
+	while (val >>= 6);
 
-   return base64buf + i;
+	return base64buf + i;
 }
 
 static inline unsigned long base64_to_int(char *b64)
 {
-   unsigned int v = base64_to_int6_map[(u_char)*b64++];
+	unsigned int v = base64_to_int6_map[(u_char)*b64++];
 
-   while(*b64)
-   {
-      v <<= 6;
-      v += base64_to_int6_map[(u_char)*b64++];
-   }
+	while (*b64)
+	{
+		v <<= 6;
+		v += base64_to_int6_map[(u_char)*b64++];
+	}
 
-   return v;
+	return v;
 }
 
 
-void	ns_stats(aClient *cptr)
+void ns_stats(aClient *cptr)
 {
-	Link	*lp;
+	Link *lp;
 	aClient *sptr;
 	for (lp = servers; lp; lp = lp->next)
 	{
 		sptr = lp->value.cptr;
-		sendto_one(cptr, ":%s NOTICE %s :*** server=%s numeric=%i b64=%s",
-			me.name, cptr->name, sptr->name, sptr->serv->numeric,
-			find_server_id(sptr));
-	}		
+		sendto_one(cptr,
+		    ":%s NOTICE %s :*** server=%s numeric=%i b64=%s", me.name,
+		    cptr->name, sptr->name, sptr->serv->numeric,
+		    find_server_id(sptr));
+	}
 }

@@ -171,9 +171,9 @@ aClient *find_person(name, cptr)
 }
 
 
-void	ban_flooder(aClient *cptr)
+void ban_flooder(aClient *cptr)
 {
-	char	hostip[128], mo[100], mo2[100];
+	char hostip[128], mo[100], mo2[100];
 	char *tkllayer[9] = {
 		me.name,	/*0  server.name */
 		"+",		/*1  +|- */
@@ -185,10 +185,10 @@ void	ban_flooder(aClient *cptr)
 		NULL,		/*7  set_at */
 		NULL		/*8  reason */
 	};
-	
-	strcpy(hostip, (char *)inetntoa((char *) &cptr->ip));
+
+	strcpy(hostip, (char *)inetntoa((char *)&cptr->ip));
 	exit_client(cptr, cptr, &me, "Flooding");
-	
+
 	tkllayer[4] = hostip;
 	tkllayer[5] = me.name;
 	ircsprintf(mo, "%li", 600 + TStime());
@@ -200,7 +200,7 @@ void	ban_flooder(aClient *cptr)
 	return;
 }
 
-int	Rha = 0;
+int  Rha = 0;
 
 /*
  * parse a buffer.
@@ -230,15 +230,16 @@ int  parse(cptr, buffer, bufend, mptr)
 #ifdef RAWDEBUG
 	sendto_ops("Debug: parse(): %s", buffer);
 #endif
-	
+
 	if ((cptr->receiveK >= 4) && IsUnknown(cptr))
 	{
-		sendto_realops("Flood from unknown connection %s detected", cptr->sockhost);
+		sendto_realops("Flood from unknown connection %s detected",
+		    cptr->sockhost);
 		ban_flooder(cptr);
 		return 0;
 	}
-	
-	/* this call is a bit obsolete? - takes up CPU*/
+
+	/* this call is a bit obsolete? - takes up CPU */
 	backupbuf[0] = '\0';
 	strcpy(backupbuf, buffer);
 	s = sender;
@@ -283,7 +284,7 @@ int  parse(cptr, buffer, bufend, mptr)
 			 * (old IRC just let it through as if the
 			 * prefix just wasn't there...) --msa
 			 */
-			 
+
 			/* debugging tool */
 			if (Rha == 1)
 				from = NULL;
@@ -469,9 +470,9 @@ int  parse(cptr, buffer, bufend, mptr)
 	 * unregistered users. -Studded */
 	if (IsShunned(cptr) && IsRegistered(cptr))
 		if ((mptr->func != m_admin) && (mptr->func != m_quit)
-			&& (mptr->func != m_pong))
+		    && (mptr->func != m_pong))
 			return -4;
-			
+
 	if ((!IsRegistered(cptr)) &&
 	    (((mptr->func != m_user) && (mptr->func != m_nick) &&
 	    (mptr->func != m_server) && (mptr->func != m_pong) &&
@@ -492,9 +493,8 @@ int  parse(cptr, buffer, bufend, mptr)
 	}
 
 	mptr->count++;
-	if (IsRegisteredUser(cptr) &&
-	    mptr->func == m_private)
-	    	from->user->last = TStime();
+	if (IsRegisteredUser(cptr) && mptr->func == m_private)
+		from->user->last = TStime();
 
 #ifndef DEBUGMODE
 	return (*mptr->func) (cptr, from, i, para);
@@ -700,6 +700,5 @@ static void remove_unknown(cptr, sender)
 		    get_client_name(cptr, FALSE));
 	else
 		sendto_one(cptr, ":%s SQUIT %s :(Unknown from %s)",
-		    me.name, sender,
-		    get_client_name(cptr, FALSE));
+		    me.name, sender, get_client_name(cptr, FALSE));
 }
