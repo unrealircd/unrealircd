@@ -726,3 +726,12 @@ in order to be able to override!
 ------------------------------------------------------
 Beta3 Released
 ------------------------------------------------------
+
+Fixed problem with topics screwing up services
+--Luke
+===================================
+
+Fixed semantics with operoverride_verify and +s/+p
+channels.
+--Luke
+===================================

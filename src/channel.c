@@ -2361,7 +2361,8 @@ static int can_join(cptr, sptr, chptr, key, link, parv)
 
 #ifndef NO_OPEROVERRIDE
 #ifdef OPEROVERRIDE_VERIFY
-        if (IsOper(sptr) && (chptr->mode.mode & MODE_SECRET ||
+        if (IsOper(sptr) && OPCanOver(sptr) &&
+	    (chptr->mode.mode & MODE_SECRET ||
             chptr->mode.mode & MODE_PRIVATE))
                 return (ERR_OPERSPVERIFY);
 #endif
@@ -3565,7 +3566,7 @@ int  m_topic(cptr, sptr, parc, parv)
 			    me.name, parv[0], name);
 			return 0;
 		}
-		if (parc >= 2)
+		if (parc > 2 || SecretChannel(chptr))
 		{
 			if (!IsMember(sptr, chptr) && !IsServer(sptr)
 			    && !IsULine(sptr)
@@ -3620,7 +3621,7 @@ int  m_topic(cptr, sptr, parc, parv)
 					topiClen = TOPICLEN;
 
 				if (nicKlen > (NICKLEN+USERLEN+HOSTLEN+4))
-					nicKlen = NICKLEN+USERLEN+HOSTLEN+4;
+					nicKlen = NICKLEN+USERLEN+HOSTLEN+5;
 
 				chptr->topic = MyMalloc(topiClen + 1);
 				strncpyzt(chptr->topic, topic, topiClen + 1);
@@ -3646,13 +3647,13 @@ int  m_topic(cptr, sptr, parc, parv)
 		}
 #ifdef NO_OPEROVERRIDE
 		else if (((chptr->mode.mode & MODE_TOPICLIMIT) == 0 ||
-		    is_chan_op(sptr, chptr))
-		    || IsULine(sptr) || (is_halfop(sptr, chptr) && topic))
+		    (is_chan_op(sptr, chptr))
+		    || IsULine(sptr) || is_halfop(sptr, chptr)) && topic)
 		{
 #else
 		else if (((chptr->mode.mode & MODE_TOPICLIMIT) == 0 ||
-		    is_chan_op(sptr, chptr)) || OPCanOver(sptr) 
-		    || IsULine(sptr) || (is_halfop(sptr, chptr) && topic))
+		    (is_chan_op(sptr, chptr)) || OPCanOver(sptr) 
+		    || IsULine(sptr) || is_halfop(sptr, chptr)) && topic)
 		{
 			if (OPCanOver(sptr) && !(is_halfop(sptr, chptr)
 			    || IsULine(sptr)
@@ -3948,7 +3949,10 @@ void send_list(aClient *cptr, int numsend)
 			{
 				if (SecretChannel(chptr)
 				    && !IsMember(cptr, chptr)
-				    && !IsAnOper(cptr))
+#ifndef NO_OPEROVERRIDE
+				    && !OPCanOver(cptr)
+#endif
+				    )
 					continue;
 
 				if ((!lopt->showall)
@@ -3991,7 +3995,7 @@ void send_list(aClient *cptr, int numsend)
 				else
 					strcat(modebuf, "]");
 #endif
-				if (!IsAnOper(cptr))
+				if (!OPCanOver(cptr))
 					sendto_one(cptr,
 					    rpl_str(RPL_LIST), me.name,
 					    cptr->name,
