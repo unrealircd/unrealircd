@@ -103,7 +103,7 @@ case "${host_cpu}-${host_os}" in
         ;;
 esac
 result=none
-if test $acx_pthread_ok = no; then
+if test "$acx_pthread_ok" = "no"; then
 AC_CACHE_CHECK(what flags pthreads needs,ac_cv_pthreadflag,[
 dnl AC_MSG_CHECKING([what flags pthreads needs])
 for flag in $acx_pthread_flags; do
@@ -147,7 +147,7 @@ for flag in $acx_pthread_flags; do
         LIBS="$save_LIBS"
         CFLAGS="$save_CFLAGS"
 
-        if test $acx_pthread_ok = yes; then
+        if test "$acx_pthread_ok" = "yes"; then
 dnl		AC_MSG_RESULT($result)
 		ac_cv_pthreadflag=$result
                 break;
@@ -182,18 +182,18 @@ esac
         AC_TRY_LINK([#include <pthread.h>],
                     [int attr=PTHREAD_CREATE_JOINABLE;],
                     ac_cv_pthreadjoin=PTHREAD_CREATE_JOINABLE, ac_cv_pthreadjoin=unknown)
-        if test $ac_cv_pthreadjoin = unknown; then
+        if test "$ac_cv_pthreadjoin" = "unknown"; then
                 AC_TRY_LINK([#include <pthread.h>],
                             [int attr=PTHREAD_CREATE_UNDETACHED;],
                             ac_cv_pthreadjoin=PTHREAD_CREATE_UNDETACHED, ac_cv_pthreadjoin=unknown)
         fi
 	])
-        if test $ac_cv_pthreadjoin != PTHREAD_CREATE_JOINABLE; then
+        if test "$ac_cv_pthreadjoin" != "PTHREAD_CREATE_JOINABLE"; then
                 AC_DEFINE(PTHREAD_CREATE_JOINABLE, $ac_cv_pthreadjoin,
                           [Define to the necessary symbol if this constant
                            uses a non-standard name on your system.])
         fi
-        if test $ac_cv_pthreadjoin = unknown; then
+        if test "$ac_cv_pthreadjoin" = "unknown"; then
                 AC_MSG_WARN([we do not know how to create joinable pthreads])
         fi
 
@@ -204,7 +204,7 @@ esac
                 *solaris* | alpha*-osf*) ac_cv_pthreadspecial="-D_REENTRANT";;
         esac
 	])
-        if test $ac_cv_pthreadspecial != no; then
+        if test "$ac_cv_pthreadspecial" != "no"; then
                 PTHREAD_CFLAGS="$ac_cv_pthreadspecial $PTHREAD_CFLAGS"
         fi
 

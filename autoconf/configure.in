@@ -41,12 +41,8 @@ hold_cflags=$CFLAGS
 CFLAGS="$CFLAGS -export-dynamic"
 AC_CACHE_CHECK(if we need the -export-dynamic flag, ac_cv_export_dynamic, [
 AC_TRY_LINK(, [int i];, ac_cv_export_dynamic=yes, ac_cv_export_dynamic=no)])
-if test $ac_cv_export_dynamic=no; then
-echo "normal"
+if test "$ac_cv_export_dynamic" = "no"; then
 CFLAGS=$hold_cflags
-elif test $ac_cv_export_dynamic=yes; then
-echo "yes"
-CFLAGS="$CFLAGS -export-dynamic"
 fi
 
 AC_CACHE_CHECK(for compiler option to produce PIC,ac_cv_pic,[
@@ -90,7 +86,7 @@ exit(0);
 }
 ], ac_cv_u_int32_t=yes,ac_cv_u_int32_t=no)
 ])      
-if test $ac_cv_u_int32_t=no; then
+if test "$ac_cv_u_int32_t" = "no"; then
 NEED_UINT32_T="-DNEED_U_INT32_T"
 fi
 AC_CACHE_CHECK(what kind of nonblocking sockets you have, ac_cv_nonblocking,[
@@ -170,11 +166,11 @@ exit(0);
 #endif
 exit(1);
 ], ac_cv_nonblocking=FIONBIO,ac_cv_nonblocking=none)])])])
-if test $ac_cv_nonblocking=O_NONBLOCK; then
+if test "$ac_cv_nonblocking" = "O_NONBLOCK"; then
 AC_DEFINE(NBLOCK_POSIX)
-elif test $ac_cv_nonblocking=O_NDELAY; then
+elif test "$ac_cv_nonblocking" = "O_NDELAY"; then
 AC_DEFINE(NBLOCK_BSD)
-elif test $ac_cv_nonblocking=FIONBIO; then
+elif test "$ac_cv_nonblocking" = "FIONBIO"; then
 AC_DEFINE(NBLOCK_SYSV)
 fi
 dnl Checks for library functions.
@@ -195,7 +191,7 @@ exit(0);
 }
 ],ac_cv_force_core=yes,ac_cv_force_core=no)
 ])
-if test $ac_cv_force_core=yes; then
+if test "$ac_cv_force_core" = "yes"; then
 AC_DEFINE(FORCE_CORE)
 fi
 AC_FUNC_VPRINTF
@@ -227,9 +223,9 @@ exit(0);
 }
 ], ac_cv_sigtype=BSD,ac_cv_sigtype=SYSV)])])
 
-if test $ac_cv_sigtype=POSIX; then
+if test "$ac_cv_sigtype" = "POSIX"; then
 AC_DEFINE(POSIX_SIGNALS)
-elif test $ac_cv_sigtype=BSD; then
+elif test "$ac_cv_sigtype" = "BSD"; then
 AC_DEFINE(BSD_RELIABLE_SIGNALS)
 else
 AC_DEFINE(SYSV_UNRELIABLE_SIGNALS)
