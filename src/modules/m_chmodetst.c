@@ -45,18 +45,17 @@ ModuleHeader Mod_Header
 	NULL,
     };
 
-ExtCMode EXTCMODE_TEST = 0L; /* Just for testing */
-ExtCMode EXTCMODE_TEST2 = 0L; /* Just for testing */
+Cmode_t EXTCMODE_TEST = 0L; /* Just for testing */
+Cmode_t EXTCMODE_TEST2 = 0L; /* Just for testing */
 
 int modey_is_ok(aClient *sptr, aChannel *chptr, char *para, int checkt, int what);
-aExtCMtableParam * modey_put_param(aExtCMtableParam *lst, char *para);
-char *modey_get_param(aExtCMtableParam *lst);
+CmodeParam * modey_put_param(CmodeParam *lst, char *para);
+char *modey_get_param(CmodeParam *lst);
 char *modey_conv_param(char *param);
-aExtCMtableParam * modey_free_param(aExtCMtableParam *lst);
-aExtCMtableParam *modey_dup_struct(aExtCMtableParam *src);
-int modey_sjoin_check(aChannel *chptr, aExtCMtableParam *ourx, aExtCMtableParam *theirx);
-aExtCMtableParam *modey_dup_struct(aExtCMtableParam *src);
-int modey_sjoin_check(aChannel *chptr, aExtCMtableParam *ourx, aExtCMtableParam *theirx);
+void modey_free_param(CmodeParam *lst);
+CmodeParam *modey_dup_struct(CmodeParam *src);
+int modey_sjoin_check(aChannel *chptr, CmodeParam *ourx, CmodeParam *theirx);
+CmodeParam *modey_dup_struct(CmodeParam *src);
 
 typedef struct {
 	EXTCM_PAR_HEADER
@@ -67,6 +66,7 @@ typedef struct {
  * want to
 */
 
+Cmode *ModeTest = NULL, *ModeTest2 = NULL;
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
@@ -74,7 +74,7 @@ DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
 int    m_dummy_Init(ModuleInfo *modinfo)
 #endif
 {
-aExtCMtable req;
+	CmodeInfo req;
 	ircd_log(LOG_ERROR, "debug: mod_init called from chmodetst module");
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM);
 	sendto_realops("chmodetst loading...");
@@ -84,7 +84,7 @@ aExtCMtable req;
 	req.paracount = 0;
 	req.is_ok = extcmode_default_requirechop;
 	req.flag = 'w';
-	EXTCMODE_TEST = extcmode_get(&req);
+	ModeTest = CmodeAdd(modinfo->handle, req, &EXTCMODE_TEST);
 	/* +y doesn't do anything except that you can set/unset it with a
 	 * numeric parameter (1-100)
 	 */
@@ -98,7 +98,7 @@ aExtCMtable req;
 	req.sjoin_check = modey_sjoin_check;
 	req.dup_struct = modey_dup_struct;
 	req.flag = 'y';
-	EXTCMODE_TEST2 = extcmode_get(&req);
+	ModeTest2 = CmodeAdd(modinfo->handle, req, &EXTCMODE_TEST2);
 	return MOD_SUCCESS;
 }
 
@@ -154,30 +154,26 @@ short t;
 	return 0;
 }
 
-aExtCMtableParam * modey_put_param(aExtCMtableParam *lst, char *para)
+CmodeParam * modey_put_param(CmodeParam *ypara, char *para)
 {
-aModewentry *r;
+	aModewentry *r = (aModewentry *)ypara;
 
-	r = (aModewentry *)extcmode_get_struct(lst, 'y');
-	Debug((DEBUG_DEBUG, "modey_put_param: get_struct returned 0x%x", r));
 	if (!r)
 	{
 		/* Need to create one */
 		r = (aModewentry *)malloc(sizeof(aModewentry));
 		memset(r, 0, sizeof(aModewentry));
 		r->flag = 'y';
-		AddListItem(r, lst);
 	}
 	r->val = (short)atoi(para);
-	return lst;
+	return (CmodeParam *)r;
 }
 
-char *modey_get_param(aExtCMtableParam *lst)
+char *modey_get_param(CmodeParam *ypara)
 {
-aModewentry *r;
-static char tmpret[16];
+	aModewentry *r = (aModewentry *)ypara;
+	static char tmpret[16];
 
-	r = (aModewentry *)extcmode_get_struct(lst, 'y');
 	if (!r)
 		return NULL;
 	sprintf(tmpret, "%hu", r->val);
@@ -194,28 +190,20 @@ static char tmpret2[16];
 	return tmpret2;
 }
 
-aExtCMtableParam * modey_free_param(aExtCMtableParam *lst)
+void modey_free_param(CmodeParam *ypara)
 {
-aModewentry *r;
-	r = (aModewentry *)extcmode_get_struct(lst, 'y');
-	Debug((DEBUG_DEBUG, "modey_free_param: lst=0x%x, r=0x%x", lst, r));
-	if (r)
-	{
-		DelListItem(r, lst);
-		free(r);
-	}
-	Debug((DEBUG_DEBUG, "modey_free_param: returning 0x%x", lst));
-	return lst;
+	aModewentry *r = (aModewentry *)ypara;
+	free(r);
 }
 
-aExtCMtableParam *modey_dup_struct(aExtCMtableParam *src)
+CmodeParam *modey_dup_struct(CmodeParam *src)
 {
-aModewentry *n = (aModewentry *)malloc(sizeof(aModewentry));
+	aModewentry *n = (aModewentry *)malloc(sizeof(aModewentry));
 	memcpy(n, src, sizeof(aModewentry));
-	return (aExtCMtableParam *)n;
+	return (CmodeParam *)n;
 }
 
-int modey_sjoin_check(aChannel *chptr, aExtCMtableParam *ourx, aExtCMtableParam *theirx)
+int modey_sjoin_check(aChannel *chptr, CmodeParam *ourx, CmodeParam *theirx)
 {
 aModewentry *our = (aModewentry *)ourx;
 aModewentry *their = (aModewentry *)theirx;

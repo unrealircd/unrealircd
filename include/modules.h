@@ -113,6 +113,109 @@ typedef struct {
         Module *owner;
 } Snomask;
 
+#ifdef EXTCMODE
+#define EXCHK_ACCESS		0 /* Check access */
+#define EXCHK_ACCESS_ERR	1 /* Check access and send error if needed */
+#define EXCHK_PARAM			2 /* Check parameter and send error if needed */
+
+#define EXSJ_SAME			0 /* Parameters are the same */
+#define EXSJ_WEWON			1 /* We won! w00t */
+#define EXSJ_THEYWON		2 /* They won :( */
+
+/** Extended channel mode table.
+ * This table contains all extended channelmode info like the flag, mode, their
+ * functions, etc..
+ */
+typedef unsigned long Cmode_t;
+
+#define EXTCM_PAR_HEADER struct _CmodeParam *prev, *next; char flag;
+
+typedef struct _CmodeParam {
+	EXTCM_PAR_HEADER
+	/** other fields are placed after this header in your own paramstruct */
+} CmodeParam;
+
+typedef struct {
+	/** mode character (like 'Z') */
+	char		flag;
+
+	/** unique flag (like 0x10) */
+	Cmode_t		mode;
+
+	/** # of paramters (1 or 0) */
+	int			paracount;
+
+	/** access and parameter checking.
+	 * aClient *: the client
+	 * aChannel *: the channel
+	 * para *: the parameter (NULL for paramless modes)
+	 * int: check type (see EXCHK_*)
+	 * int: what (MODE_ADD or MODE_DEL)
+	 * return value: 1=ok, 0=bad
+	 */
+	int			(*is_ok)(aClient *,aChannel *, char *para, int, int);
+
+	/** NOTE: The routines below are NULL for paramless modes */
+	
+	/** Store parameter in memory for channel.
+	 * aExtCMtableParam *: the list (usually chptr->mode.extmodeparams).
+	 * char *: the parameter.
+	 * return value: the head of the list, RTFS if you wonder why.
+	 * design notes: only alloc a new paramstruct if you need to, search for
+	 * any current one first (like in case of mode +y 5 and then +y 6 later without -y).
+	 */
+	CmodeParam *		(*put_param)(CmodeParam *, char *);
+
+	/** Get readable string version" of the stored parameter.
+	 * aExtCMtableParam *: the list (usually chptr->mode.extmodeparams).
+	 * return value: a pointer to the string (temp. storage)
+	 */
+	char *		(*get_param)(CmodeParam *);
+
+	/** Convert input parameter to output.
+	 * Like +l "1aaa" becomes "1".
+	 * char *: the input parameter.
+	 * return value: pointer to output string (temp. storage)
+	 */
+	char *		(*conv_param)(char *);
+
+	/** free and remove parameter from list.
+	 * aExtCMtableParam *: the list (usually chptr->mode.extmodeparams).
+	 */
+	void		(*free_param)(CmodeParam *);
+
+	/** duplicate a struct and return a pointer to duplicate.
+	 * This is usually just a malloc + memcpy.
+	 * aExtCMtableParam *: source struct itself (no list).
+	 * return value: pointer to newly allocated struct.
+	 */
+	CmodeParam *	(*dup_struct)(CmodeParam *);
+
+	/** Compares 2 parameters and decides who wins the sjoin fight.
+	 * When syncing channel modes (m_sjoin) a parameter conflict may occur, things like
+	 * +l 5 vs +l 10. This function should determinate who wins the fight, this decision
+	 * should of course not be random but the same at every server on the net.
+	 * examples of such comparisons are "highest wins" (+l) and a strcmp() check (+k/+L).
+	 * aChannel *: channel the fight is about.
+	 * aExtCMtableParam *: our parameter
+	 * aExtCMtableParam *: their parameter
+	 */
+	int			(*sjoin_check)(aChannel *, CmodeParam *, CmodeParam *);
+} Cmode;
+
+typedef struct {
+	char		flag;
+	int		paracount;
+	int		(*is_ok)(aClient *,aChannel *, char *para, int, int);
+	CmodeParam *	(*put_param)(CmodeParam *, char *);
+	char *		(*get_param)(CmodeParam *);
+	char *		(*conv_param)(char *);
+	void		(*free_param)(CmodeParam *);
+	CmodeParam *	(*dup_struct)(CmodeParam *);
+	int		(*sjoin_check)(aChannel *, CmodeParam *, CmodeParam *);
+} CmodeInfo;
+#endif
+
 typedef struct _command {
 	struct _command *prev, *next;
 	aCommand *cmd, *tok;

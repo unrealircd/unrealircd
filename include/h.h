@@ -586,12 +586,11 @@ extern char extchmstr[4][64];
 #ifdef EXTCMODE
 extern int extcmode_default_requirechop(aClient *, aChannel *, char *, int, int);
 extern int extcmode_default_requirehalfop(aClient *, aChannel *, char *, int, int);
-extern int extcmode_delete(char);
-extern ExtCMode extcmode_get(aExtCMtable *);
+extern Cmode_t extcmode_get(Cmode *);
 extern void extcmode_init(void);
-extern aExtCMtableParam *extcmode_get_struct(aExtCMtableParam *, char);
+extern CmodeParam *extcmode_get_struct(CmodeParam *, char);
 extern void make_extcmodestr();
-extern aExtCMtableParam *extcmode_duplicate_paramlist(aExtCMtableParam *);
-extern void extcmode_free_paramlist(aExtCMtableParam *);
+extern CmodeParam *extcmode_duplicate_paramlist(CmodeParam *);
+extern void extcmode_free_paramlist(CmodeParam *);
 #endif
 extern CMD_FUNC(m_eos);

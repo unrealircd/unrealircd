@@ -2360,3 +2360,5 @@ seen. gmtime warning still there
   exist in the Windows version. There may be some problems with the resolver that still
   need to be worked out, however it should be much more stable than before. Some of this
   code is based on the ircu Windows NT port by run.
+- Fixed a problem with /quote dns i
+- Rewrote a whole bunch of stuff in the extcmode code

@@ -50,8 +50,8 @@ extern void make_cmodestr(void);
 
 char extchmstr[4][64];
 
-aExtCMtable *ExtCMode_Table = NULL;
-unsigned short ExtCMode_highest = 0;
+Cmode *Channelmode_Table = NULL;
+unsigned short Channelmode_highest = 0;
 
 void make_extcmodestr()
 {
@@ -68,16 +68,16 @@ int i;
 
 	/* type 3: 1 param to set, 0 params to unset */
 	p = extchmstr[2];
-	for (i=0; i <= ExtCMode_highest; i++)
-		if (ExtCMode_Table[i].paracount && ExtCMode_Table[i].flag)
-			*p++ = ExtCMode_Table[i].flag;
+	for (i=0; i <= Channelmode_highest; i++)
+		if (Channelmode_Table[i].paracount && Channelmode_Table[i].flag)
+			*p++ = Channelmode_Table[i].flag;
 	*p = '\0';
 	
 	/* type 4: paramless modes */
 	p = extchmstr[3];
-	for (i=0; i <= ExtCMode_highest; i++)
-		if (!ExtCMode_Table[i].paracount && ExtCMode_Table[i].flag)
-			*p++ = ExtCMode_Table[i].flag;
+	for (i=0; i <= Channelmode_highest; i++)
+		if (!Channelmode_Table[i].paracount && Channelmode_Table[i].flag)
+			*p++ = Channelmode_Table[i].flag;
 	*p = '\0';
 	printf("dect: %s/%s/%s/%s\n", extchmstr[0], extchmstr[1], extchmstr[2], extchmstr[3]);
 }
@@ -85,73 +85,64 @@ int i;
 
 void	extcmode_init(void)
 {
-	ExtCMode val = 1;
+	Cmode_t val = 1;
 	int	i;
-	ExtCMode_Table = (aExtCMtable *)MyMalloc(sizeof(aExtCMtable) * EXTCMODETABLESZ);
-	bzero(ExtCMode_Table, sizeof(aExtCMtable) * EXTCMODETABLESZ);
+	Channelmode_Table = (Cmode *)MyMalloc(sizeof(Cmode) * EXTCMODETABLESZ);
+	bzero(Channelmode_Table, sizeof(Cmode) * EXTCMODETABLESZ);
 	for (i = 0; i < EXTCMODETABLESZ; i++)
 	{
-		ExtCMode_Table[i].mode = val;
+		Channelmode_Table[i].mode = val;
 		val *= 2;
 	}
-	ExtCMode_highest = 0;
+	Channelmode_highest = 0;
 	memset(&extchmstr, 0, sizeof(extchmstr));
 }
 
-ExtCMode	extcmode_get(aExtCMtable *req)
+Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode)
 {
-	short	 i = 0, j = 0;
-	ExtCMode tmp;
-	
+	short i = 0, j = 0;
+
 	while (i < EXTCMODETABLESZ)
 	{
-		if (!ExtCMode_Table[i].flag)
+		if (!Channelmode_Table[i].flag)
 			break;
 		i++;
 	}
 	if (i == EXTCMODETABLESZ)
 	{
-		Debug((DEBUG_DEBUG, "extcmode_get failed, no space"));
-		return 0;
+		Debug((DEBUG_DEBUG, "CmodeAdd failed, no space"));
+		return NULL;
 	}
-
-	tmp = ExtCMode_Table[i].mode;
-	memcpy(&ExtCMode_Table[i], req, sizeof(aExtCMtable));
-	ExtCMode_Table[i].mode = tmp;
-	Debug((DEBUG_DEBUG, "extcmode_get(flag = '%c') returning %04x",
-		req->flag, ExtCMode_Table[i].mode));
+	*mode = Channelmode_Table[i].mode;
 	/* Update extended channel mode table highest */
+	Channelmode_Table[i].flag = req.flag;
+	Channelmode_Table[i].paracount = req.paracount;
+	Channelmode_Table[i].is_ok = req.is_ok;
+	Channelmode_Table[i].put_param = req.put_param;
+	Channelmode_Table[i].get_param = req.get_param;
+	Channelmode_Table[i].conv_param = req.conv_param;
+	Channelmode_Table[i].free_param = req.free_param;
+	Channelmode_Table[i].dup_struct = req.dup_struct;
+	Channelmode_Table[i].sjoin_check = req.sjoin_check;
 	for (j = 0; j < EXTCMODETABLESZ; j++)
-		if (ExtCMode_Table[j].flag)
-			if (j > ExtCMode_highest)
-				ExtCMode_highest = j;
+		if (Channelmode_Table[j].flag)
+			if (j > Channelmode_highest)
+				Channelmode_highest = j;
 	make_cmodestr();
 	make_extcmodestr();
-	return (ExtCMode_Table[i].mode);
+	return &(Channelmode_Table[i]);
 }
 
-
-int	extcmode_delete(char ch)
+void CmodeDel(Cmode *cmode)
 {
-	int i = 0;
-	Debug((DEBUG_DEBUG, "extcmode_delete %c", ch));
-	
-	/* TODO: remove from all channels */
-	
-	while (i < EXTCMODETABLESZ)
-	{
-		if (ExtCMode_Table[i].flag == ch)
-		{
-			ExtCMode_Table[i].flag = '\0';
-			return 1;
-		}	
-		i++;
-	}
-	return -1;
+	/* TODO: remove from all channel */
+	if (cmode)
+		cmode->flag = '\0';
+	/* Not unloadable, so module object support is not needed (yet) */
 }
 
 /** searches in chptr extmode parameters and returns entry or NULL. */
-aExtCMtableParam *extcmode_get_struct(aExtCMtableParam *p, char ch)
+CmodeParam *extcmode_get_struct(CmodeParam *p, char ch)
 {
 
 	while(p)
@@ -164,20 +155,20 @@ aExtCMtableParam *extcmode_get_struct(aExtCMtableParam *p, char ch)
 }
 
 /* bit inefficient :/ */
-aExtCMtableParam *extcmode_duplicate_paramlist(aExtCMtableParam *lst)
+CmodeParam *extcmode_duplicate_paramlist(CmodeParam *lst)
 {
-int i;
-aExtCMtable *tbl;
-aExtCMtableParam *head = NULL, *n;
+	int i;
+	Cmode *tbl;
+	CmodeParam *head = NULL, *n;
 
 	while(lst)
 	{
 		tbl = NULL;
-		for (i=0; i <= ExtCMode_highest; i++)
+		for (i=0; i <= Channelmode_highest; i++)
 		{
-			if (ExtCMode_Table[i].flag == lst->flag)
+			if (Channelmode_Table[i].flag == lst->flag)
 			{
-				tbl = &ExtCMode_Table[i]; /* & ? */
+				tbl = &Channelmode_Table[i]; /* & ? */
 				break;
 			}
 		}
@@ -193,10 +184,10 @@ aExtCMtableParam *head = NULL, *n;
 	return head;
 }
 
-void extcmode_free_paramlist(aExtCMtableParam *lst)
+void extcmode_free_paramlist(CmodeParam *lst)
 {
-aExtCMtableParam *n; /* prolly not needed but I'm afraid of aliasing and stuff :p */
-
+	CmodeParam *n; /* prolly not needed but I'm afraid of aliasing and stuff :p */
+	/* TODO: Don't we need to like... free something? */
 	while(lst)
 	{
 		n = lst;

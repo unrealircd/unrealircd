@@ -749,12 +749,21 @@ extern short	 Usermode_highest;
 extern Snomask *Snomask_Table;
 extern short Snomask_highest;
 
+#ifdef EXTCMODE
+extern Cmode *Channelmode_Table;
+extern unsigned short Channelmode_highest;
+#endif
+
 extern Umode *UmodeAdd(Module *module, char ch, int options, int (*allowed)(aClient *sptr), long *mode);
 extern void UmodeDel(Umode *umode);
 
 extern Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(aClient *sptr), long *mode);
 extern void SnomaskDel(Snomask *sno);
 
+#ifdef EXTCMODE
+extern Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode);
+extern void CmodeDel(Cmode *cmode);
+#endif
 
 #define LISTENER_NORMAL		0x000001
 #define LISTENER_CLIENTSONLY	0x000002
@@ -1224,116 +1233,15 @@ struct ListOptions {
 };
 
 #ifdef EXTCMODE
-
 #define EXTCMODETABLESZ 32
-typedef unsigned long ExtCMode;
-
-/** These define's are used for the aExtCMtable->is_ok() routines.
- * (these 3 type of checks are seperated because of operoverride and stuff)
- */
-
-#define EXCHK_ACCESS		0 /* Check access */
-#define EXCHK_ACCESS_ERR	1 /* Check access and send error if needed */
-#define EXCHK_PARAM			2 /* Check parameter and send error if needed */
-
-#define EXSJ_SAME			0 /* Parameters are the same */
-#define EXSJ_WEWON			1 /* We won! w00t */
-#define EXSJ_THEYWON		2 /* They won :( */
-
-typedef struct ExtCMtable aExtCMtable;
-typedef struct ExtCMtableParam aExtCMtableParam;
-
-/** Extended channel mode table.
- * This table contains all extended channelmode info like the flag, mode, their
- * functions, etc..
- */
-struct ExtCMtable {
-	/** mode character (like 'Z') */
-	char		flag;
-
-	/** unique flag (like 0x10) */
-	ExtCMode	mode;
-
-	/** # of paramters (1 or 0) */
-	int			paracount;
-
-	/** access and parameter checking.
-	 * aClient *: the client
-	 * aChannel *: the channel
-	 * para *: the parameter (NULL for paramless modes)
-	 * int: check type (see EXCHK_*)
-	 * int: what (MODE_ADD or MODE_DEL)
-	 * return value: 1=ok, 0=bad
-	 */
-	int			(*is_ok)(aClient *,aChannel *, char *para, int, int);
-
-	/** NOTE: The routines below are NULL for paramless modes */
-	
-	/** Store parameter in memory for channel.
-	 * aExtCMtableParam *: the list (usually chptr->mode.extmodeparams).
-	 * char *: the parameter.
-	 * return value: the head of the list, RTFS if you wonder why.
-	 * design notes: only alloc a new paramstruct if you need to, search for
-	 * any current one first (like in case of mode +y 5 and then +y 6 later without -y).
-	 */
-	aExtCMtableParam *		(*put_param)(aExtCMtableParam *, char *);
-
-	/** Get readable string version" of the stored parameter.
-	 * aExtCMtableParam *: the list (usually chptr->mode.extmodeparams).
-	 * return value: a pointer to the string (temp. storage)
-	 */
-	char *		(*get_param)(aExtCMtableParam *);
-
-	/** Convert input parameter to output.
-	 * Like +l "1aaa" becomes "1".
-	 * char *: the input parameter.
-	 * return value: pointer to output string (temp. storage)
-	 */
-	char *		(*conv_param)(char *);
-
-	/** free and remove parameter from list.
-	 * aExtCMtableParam *: the list (usually chptr->mode.extmodeparams).
-	 * return value: the head of the list, RTFS if you wonder why.
-	 */
-	aExtCMtableParam *		(*free_param)(aExtCMtableParam *);
-
-	/** duplicate a struct and return a pointer to duplicate.
-	 * This is usually just a malloc + memcpy.
-	 * aExtCMtableParam *: source struct itself (no list).
-	 * return value: pointer to newly allocated struct.
-	 */
-	aExtCMtableParam *	(*dup_struct)(aExtCMtableParam *);
-
-	/** Compares 2 parameters and decides who wins the sjoin fight.
-	 * When syncing channel modes (m_sjoin) a parameter conflict may occur, things like
-	 * +l 5 vs +l 10. This function should determinate who wins the fight, this decision
-	 * should of course not be random but the same at every server on the net.
-	 * examples of such comparisons are "highest wins" (+l) and a strcmp() check (+k/+L).
-	 * aChannel *: channel the fight is about.
-	 * aExtCMtableParam *: our parameter
-	 * aExtCMtableParam *: their parameter
-	 */
-	int			(*sjoin_check)(aChannel *, aExtCMtableParam *, aExtCMtableParam *);
-};
-
-extern aExtCMtable *ExtCMode_Table;
-extern unsigned short ExtCMode_highest;
-
-#define EXTCM_PAR_HEADER aExtCMtableParam *prev, *next; char flag;
-
-struct ExtCMtableParam {
-	EXTCM_PAR_HEADER
-	/** other fields are placed after this header in your own paramstruct */
-};
-
 #endif /* EXTCMODE */
 
 /* mode structure for channels */
 struct SMode {
 	long mode;
 #ifdef EXTCMODE
-	ExtCMode extmode;
-	aExtCMtableParam *extmodeparam;
+	Cmode_t extmode;
+	CmodeParam *extmodeparam;
 #endif
 	int  limit;
 	char key[KEYLEN + 1];

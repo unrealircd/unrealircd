@@ -84,7 +84,7 @@ void set_mode(aChannel *, aClient *, int, char **, u_int *,
     char[MAXMODEPARAMS][MODEBUFLEN + 3], int);
 
 #ifdef EXTCMODE
-void make_mode_str(aChannel *, long, ExtCMode, long, int,
+void make_mode_str(aChannel *, long, Cmode_t, long, int,
     char[MAXMODEPARAMS][MODEBUFLEN + 3], char *, char *, char);
 #else
 void make_mode_str(aChannel *, long, long, int,
@@ -184,9 +184,9 @@ void make_cmodestr(void)
 		tab++;
 	}
 #ifdef EXTCMODE
-	for (i=0; i <= ExtCMode_highest; i++)
-		if (ExtCMode_Table[i].flag)
-			*p++ = ExtCMode_Table[i].flag;
+	for (i=0; i <= Channelmode_highest; i++)
+		if (Channelmode_Table[i].flag)
+			*p++ = Channelmode_Table[i].flag;
 #endif
 	*p = '\0';
 }
@@ -850,11 +850,11 @@ void channel_modes(aClient *cptr, char *mbuf, char *pbuf, aChannel *chptr)
 		tab++;
 	}
 #ifdef EXTCMODE
-	for (i=0; i <= ExtCMode_highest; i++)
+	for (i=0; i <= Channelmode_highest; i++)
 	{
-		if (ExtCMode_Table[i].flag && !ExtCMode_Table[i].paracount &&
-		    (chptr->mode.extmode & ExtCMode_Table[i].mode))
-			*mbuf++ = ExtCMode_Table[i].flag;
+		if (Channelmode_Table[i].flag && !Channelmode_Table[i].paracount &&
+		    (chptr->mode.extmode & Channelmode_Table[i].mode))
+			*mbuf++ = Channelmode_Table[i].flag;
 	}
 #endif
 	if (chptr->mode.limit)
@@ -904,13 +904,13 @@ void channel_modes(aClient *cptr, char *mbuf, char *pbuf, aChannel *chptr)
 
 	}
 #ifdef EXTCMODE
-	for (i=0; i <= ExtCMode_highest; i++)
+	for (i=0; i <= Channelmode_highest; i++)
 	{
-		if (ExtCMode_Table[i].flag && ExtCMode_Table[i].paracount &&
-		    (chptr->mode.extmode & ExtCMode_Table[i].mode))
+		if (Channelmode_Table[i].flag && Channelmode_Table[i].paracount &&
+		    (chptr->mode.extmode & Channelmode_Table[i].mode))
 		{
-			*mbuf++ = ExtCMode_Table[i].flag;
-			strcat(pbuf, ExtCMode_Table[i].get_param(chptr->mode.extmodeparam));
+			*mbuf++ = Channelmode_Table[i].flag;
+			strcat(pbuf, Channelmode_Table[i].get_param(extcmode_get_struct(chptr->mode.extmodeparam, Channelmode_Table[i].flag)));
 			strcat(pbuf, " ");
 		}
 	}
@@ -1481,7 +1481,7 @@ void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv
  *  If bounce is set to 1, it will make the string it needs for a bounce.
  */
 #ifdef EXTCMODE
-void make_mode_str(aChannel *chptr, long oldm, ExtCMode oldem, long oldl, int pcount, 
+void make_mode_str(aChannel *chptr, long oldm, Cmode_t oldem, long oldl, int pcount, 
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf, char bounce)
 #else
 void make_mode_str(aChannel *chptr, long oldm, long oldl, int pcount, 
@@ -1523,20 +1523,20 @@ void make_mode_str(aChannel *chptr, long oldm, long oldl, int pcount,
 	}
 #ifdef EXTCMODE
 	/* + paramless extmodes... */
-	for (i=0; i <= ExtCMode_highest; i++)
+	for (i=0; i <= Channelmode_highest; i++)
 	{
-		if (!ExtCMode_Table[i].flag || ExtCMode_Table[i].paracount)
+		if (!Channelmode_Table[i].flag || Channelmode_Table[i].paracount)
 			continue;
 		/* have it now and didn't have it before? */
-		if ((chptr->mode.extmode & ExtCMode_Table[i].mode) &&
-		    !(oldem & ExtCMode_Table[i].mode))
+		if ((chptr->mode.extmode & Channelmode_Table[i].mode) &&
+		    !(oldem & Channelmode_Table[i].mode))
 		{
 			if (what != MODE_ADD)
 			{
 				*x++ = bounce ? '-' : '+';
 				what = MODE_ADD;
 			}
-			*x++ = ExtCMode_Table[i].flag;
+			*x++ = Channelmode_Table[i].flag;
 		}
 	}
 #endif
@@ -1565,20 +1565,20 @@ void make_mode_str(aChannel *chptr, long oldm, long oldl, int pcount,
 	/* - extmodes (both "param modes" and paramless don't have
 	 * any params when unsetting...
 	 */
-	for (i=0; i <= ExtCMode_highest; i++)
+	for (i=0; i <= Channelmode_highest; i++)
 	{
-		if (!ExtCMode_Table[i].flag /* || ExtCMode_Table[i].paracount */)
+		if (!Channelmode_Table[i].flag /* || Channelmode_Table[i].paracount */)
 			continue;
 		/* don't have it now and did have it before */
-		if (!(chptr->mode.extmode & ExtCMode_Table[i].mode) &&
-		    (oldem & ExtCMode_Table[i].mode))
+		if (!(chptr->mode.extmode & Channelmode_Table[i].mode) &&
+		    (oldem & Channelmode_Table[i].mode))
 		{
 			if (what != MODE_DEL)
 			{
 				*x++ = bounce ? '+' : '-';
 				what = MODE_DEL;
 			}
-			*x++ = ExtCMode_Table[i].flag;
+			*x++ = Channelmode_Table[i].flag;
 		}
 	}
 #endif
@@ -2300,7 +2300,7 @@ int do_extmode_char(aChannel *chptr, int modeindex, char *param, u_int what,
                     aClient *cptr, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3],
                     char bounce)
 {
-int paracnt = (what == MODE_ADD) ? ExtCMode_Table[modeindex].paracount : 0;
+int paracnt = (what == MODE_ADD) ? Channelmode_Table[modeindex].paracount : 0;
 int x;
 
 	/* Expected a param and it isn't there? */
@@ -2311,13 +2311,13 @@ int x;
 #ifndef NO_OPER_OVERRIDE
 	    !IsSkoAdmin(cptr) &&
 #endif
-	    (ExtCMode_Table[modeindex].is_ok(cptr, chptr, param, EXCHK_ACCESS_ERR, what) == FALSE))
+	    (Channelmode_Table[modeindex].is_ok(cptr, chptr, param, EXCHK_ACCESS_ERR, what) == FALSE))
 		return paracnt; /* Denied & error msg sent */
 
 	/* Check for multiple changes in 1 command (like +y-y+y 1 2, or +yy 1 2). */
 	for (x = 0; x < *pcount; x++)
 	{
-		if (pvar[x][1] == ExtCMode_Table[modeindex].flag)
+		if (pvar[x][1] == Channelmode_Table[modeindex].flag)
 		{
 			/* this is different than the old chanmode system, coz:
 			 * "mode #chan +kkL #a #b #c" will get "+kL #a #b" which is wrong :p.
@@ -2328,29 +2328,29 @@ int x;
 	}
 
 	/* w00t... a parameter mode */
-	if (ExtCMode_Table[modeindex].paracount)
+	if (Channelmode_Table[modeindex].paracount)
 	{
 		if (what == MODE_DEL)
 		{
-			if (!(chptr->mode.extmode & ExtCMode_Table[modeindex].mode))
+			if (!(chptr->mode.extmode & Channelmode_Table[modeindex].mode))
 				return paracnt; /* There's nothing to remove! [TODO: -> 0] */
 			/* del means any parameter is ok, the one-who-is-set will be used */
-			ircsprintf(pvar[*pcount], "-%c", ExtCMode_Table[modeindex].flag);
+			ircsprintf(pvar[*pcount], "-%c", Channelmode_Table[modeindex].flag);
 		} else {
 			/* add: is the parameter ok? */
-			if (ExtCMode_Table[modeindex].is_ok(cptr, chptr, param, EXCHK_PARAM, what) == FALSE)
+			if (Channelmode_Table[modeindex].is_ok(cptr, chptr, param, EXCHK_PARAM, what) == FALSE)
 				return paracnt;
 			/* is it already set at the same value? if so, ignore it. */
-			if (chptr->mode.extmode & ExtCMode_Table[modeindex].mode)
+			if (chptr->mode.extmode & Channelmode_Table[modeindex].mode)
 			{
 				char *p, *p2;
-				p = ExtCMode_Table[modeindex].get_param(chptr->mode.extmodeparam);
-				p2 = ExtCMode_Table[modeindex].conv_param(param);
+				p = Channelmode_Table[modeindex].get_param(extcmode_get_struct(chptr->mode.extmodeparam,Channelmode_Table[modeindex].flag));
+				p2 = Channelmode_Table[modeindex].conv_param(param);
 				if (p && p2 && !strcmp(p, p2))
 					return paracnt; /* ignore... */
 			}
 				ircsprintf(pvar[*pcount], "+%c%s",
-					ExtCMode_Table[modeindex].flag, ExtCMode_Table[modeindex].conv_param(param));
+					Channelmode_Table[modeindex].flag, Channelmode_Table[modeindex].conv_param(param));
 			(*pcount)++;
 		}
 	}
@@ -2360,14 +2360,27 @@ int x;
 	
 	if (what == MODE_ADD)
 	{	/* + */
-		chptr->mode.extmode |= ExtCMode_Table[modeindex].mode;
-		if (ExtCMode_Table[modeindex].paracount)
-			chptr->mode.extmodeparam = ExtCMode_Table[modeindex].put_param(chptr->mode.extmodeparam, param);
+		chptr->mode.extmode |= Channelmode_Table[modeindex].mode;
+		if (Channelmode_Table[modeindex].paracount)
+		{
+			CmodeParam *p = extcmode_get_struct(chptr->mode.extmodeparam, Channelmode_Table[modeindex].flag);
+			CmodeParam *r;
+			r = Channelmode_Table[modeindex].put_param(p, param);
+			if (r != p)
+				AddListItem(r, chptr->mode.extmodeparam);
+		}
 	} else
 	{	/* - */
-		chptr->mode.extmode &= ~(ExtCMode_Table[modeindex].mode);
-		if (ExtCMode_Table[modeindex].paracount)
-			chptr->mode.extmodeparam = ExtCMode_Table[modeindex].free_param(chptr->mode.extmodeparam);
+		chptr->mode.extmode &= ~(Channelmode_Table[modeindex].mode);
+		if (Channelmode_Table[modeindex].paracount)
+		{
+			CmodeParam *p = extcmode_get_struct(chptr->mode.extmodeparam, Channelmode_Table[modeindex].flag);
+			if (p)
+			{
+				DelListItem(p, chptr->mode.extmodeparam);
+				Channelmode_Table[modeindex].free_param(p);
+			}
+		}
 	}
 	return paracnt;
 }
@@ -2421,7 +2434,7 @@ void set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pco
 	int checkrestr = 0, warnrestr = 1;
 #ifdef EXTCMODE
 	int extm;
-	ExtCMode oldem;
+	Cmode_t oldem;
 #endif
 	paracount = 1;
 	*pcount = 0;
@@ -2472,9 +2485,9 @@ void set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pco
 			  } else {
 #ifdef EXTCMODE
 					/* Maybe in extmodes */
-					for (extm=0; extm <= ExtCMode_highest; extm++)
+					for (extm=0; extm <= Channelmode_highest; extm++)
 					{
-						if (ExtCMode_Table[extm].flag == *curchr)
+						if (Channelmode_Table[extm].flag == *curchr)
 						{
 							found = 2;
 							break;
@@ -2517,7 +2530,7 @@ void set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pco
 #ifdef EXTCMODE
 				else if (found == 2) {
 					/* Extended mode */
-					if ((ExtCMode_Table[extm].is_ok(cptr, chptr, parv[paracount], EXCHK_ACCESS, what) == FALSE) &&
+					if ((Channelmode_Table[extm].is_ok(cptr, chptr, parv[paracount], EXCHK_ACCESS, what) == FALSE) &&
 					    (opermode == 2) && (htrig != 1))
 					{
 						opermode = 0;
@@ -2930,6 +2943,9 @@ void sub1_from_channel(aChannel *chptr)
 			MyFree(ban->who);
 			free_ban(ban);
 		}
+#ifdef EXTCMODE
+		/* TODO: free extcmode params */
+#endif
 		if (chptr->topic)
 			MyFree(chptr->topic);
 		if (chptr->topic_nick)
@@ -5242,18 +5258,18 @@ CMD_FUNC(m_sjoin)
 		/* First, check if we have something they don't have..
 		 * note that: oldmode.* = us, chptr->mode.* = them.
 		 */
-		for (i=0; i <= ExtCMode_highest; i++)
+		for (i=0; i <= Channelmode_highest; i++)
 		{
-			if ((ExtCMode_Table[i].flag) &&
-			    (oldmode.extmode & ExtCMode_Table[i].mode) &&
-			    !(chptr->mode.extmode & ExtCMode_Table[i].mode))
+			if ((Channelmode_Table[i].flag) &&
+			    (oldmode.extmode & Channelmode_Table[i].mode) &&
+			    !(chptr->mode.extmode & Channelmode_Table[i].mode))
 			{
-				if (ExtCMode_Table[i].paracount)
+				if (Channelmode_Table[i].paracount)
 				{
-					char *parax = ExtCMode_Table[i].get_param(oldmode.extmodeparam);
-					Addit(ExtCMode_Table[i].flag, parax);
+					char *parax = Channelmode_Table[i].get_param(extcmode_get_struct(oldmode.extmodeparam, Channelmode_Table[i].flag));
+					Addit(Channelmode_Table[i].flag, parax);
 				} else {
-					Addsingle(ExtCMode_Table[i].flag);
+					Addsingle(Channelmode_Table[i].flag);
 				}
 			}
 		}
@@ -5311,18 +5327,18 @@ CMD_FUNC(m_sjoin)
 		/* Now, check if they have something we don't have..
 		 * note that: oldmode.* = us, chptr->mode.* = them.
 		 */
-		for (i=0; i <= ExtCMode_highest; i++)
+		for (i=0; i <= Channelmode_highest; i++)
 		{
-			if ((ExtCMode_Table[i].flag) &&
-			    !(oldmode.extmode & ExtCMode_Table[i].mode) &&
-			    (chptr->mode.extmode & ExtCMode_Table[i].mode))
+			if ((Channelmode_Table[i].flag) &&
+			    !(oldmode.extmode & Channelmode_Table[i].mode) &&
+			    (chptr->mode.extmode & Channelmode_Table[i].mode))
 			{
-				if (ExtCMode_Table[i].paracount)
+				if (Channelmode_Table[i].paracount)
 				{
-					char *parax = ExtCMode_Table[i].get_param(chptr->mode.extmodeparam);
-					Addit(ExtCMode_Table[i].flag, parax);
+					char *parax = Channelmode_Table[i].get_param(extcmode_get_struct(chptr->mode.extmodeparam,Channelmode_Table[i].flag));
+					Addit(Channelmode_Table[i].flag, parax);
 				} else {
-					Addsingle(ExtCMode_Table[i].flag);
+					Addsingle(Channelmode_Table[i].flag);
 				}
 			}
 		}
@@ -5394,26 +5410,32 @@ CMD_FUNC(m_sjoin)
 		 * note that: oldmode.* = us, chptr->mode.* = them.
 		 * if we win: copy oldmode to chptr mode, if they win: send the mode
 		 */
-		for (i=0; i <= ExtCMode_highest; i++)
+		for (i=0; i <= Channelmode_highest; i++)
 		{
-			if (ExtCMode_Table[i].flag && ExtCMode_Table[i].paracount &&
-			    (oldmode.extmode & ExtCMode_Table[i].mode) &&
-			    (chptr->mode.extmode & ExtCMode_Table[i].mode))
+			if (Channelmode_Table[i].flag && Channelmode_Table[i].paracount &&
+			    (oldmode.extmode & Channelmode_Table[i].mode) &&
+			    (chptr->mode.extmode & Channelmode_Table[i].mode))
 			{
 				int r;
 				char *parax;
-				r = ExtCMode_Table[i].sjoin_check(chptr, oldmode.extmodeparam, chptr->mode.extmodeparam);
+				r = Channelmode_Table[i].sjoin_check(chptr, extcmode_get_struct(oldmode.extmodeparam,Channelmode_Table[i].flag), extcmode_get_struct(chptr->mode.extmodeparam, Channelmode_Table[i].flag));
 				switch (r)
 				{
 					case EXSJ_WEWON:
-						parax = ExtCMode_Table[i].get_param(oldmode.extmodeparam);
+					{
+						CmodeParam *p = extcmode_get_struct(oldmode.extmodeparam, Channelmode_Table[i].flag);
+						CmodeParam *r;
+						parax = Channelmode_Table[i].get_param(p);
 						Debug((DEBUG_DEBUG, "sjoin: we won: '%s'", parax));
-						chptr->mode.extmodeparam = ExtCMode_Table[i].put_param(oldmode.extmodeparam, parax);
+						r = Channelmode_Table[i].put_param(p, parax);
+						if (r != p)
+							AddListItem(r, chptr->mode.extmodeparam);
 						break;
+					}
 					case EXSJ_THEYWON:
-						parax = ExtCMode_Table[i].get_param(chptr->mode.extmodeparam);
+						parax = Channelmode_Table[i].get_param(extcmode_get_struct(chptr->mode.extmodeparam,Channelmode_Table[i].flag));
 						Debug((DEBUG_DEBUG, "sjoin: they won: '%s'", parax));
-						Addit(ExtCMode_Table[i].flag, parax);
+						Addit(Channelmode_Table[i].flag, parax);
 						break;
 					case EXSJ_SAME:
 						Debug((DEBUG_DEBUG, "sjoin: equal"));

@@ -493,7 +493,7 @@
  * 32 possible modes which can also be used in modules.
  * This is currently considered experimental however.
  */
-#undef EXTCMODE
+#define EXTCMODE
 
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #define MOTD MPATH

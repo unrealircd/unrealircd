@@ -1668,7 +1668,7 @@ int m_dns(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_one(sptr, "NOTICE %s :Nameserver list has %d server(s):", sptr->name, ircd_res.nscount);
 		for (i = 0; i < ircd_res.nscount; i++)
 			sendto_one(sptr, "NOTICE %s :%d. %s",
-				sptr->name, i, Inet_ia2pNB(&ircd_res.nsaddr_list[i].sin_addr, 0));
+				sptr->name, i, inet_ntoa(ircd_res.nsaddr_list[i].sin_addr));
 		sendto_one(sptr, "NOTICE %s :retrans=%d s, retry=%d times", sptr->name, ircd_res.retrans, ircd_res.retry);
 		sendto_one(sptr, "NOTICE %s :Default domain name: %s", sptr->name, ircd_res.defdname);
 		sendto_one(sptr, "NOTICE %s :End of info.", sptr->name);
