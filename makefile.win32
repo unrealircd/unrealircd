@@ -9,11 +9,11 @@ DEBUG=1
 FD_SETSIZE=/D SCAN_API=1 /D FD_SETSIZE=16384
 !IFNDEF DEBUG 
 CFLAGS=/MT /O2 /G5 /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D STATIC_LINKING /D _WIN32GUI /D NOSPOOF=1 /c
-LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib advapi32.lib \
+LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib advapi32.lib dbghelp.lib \
  oldnames.lib libcmt.lib comctl32.lib comdlg32.lib /nodefaultlib /nologo /out:WIRCD.EXE
 !ELSE
 CFLAGS=  /MTd /Zi /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D STATIC_LINKING /D _WIN32GUI /D NOSPOOF=1 /c
-LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib \
+LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib dbghelp.lib\
  oldnames.lib libcmt.lib comctl32.lib comdlg32.lib \
  advapi32.lib /nodefaultlib /nologo /debug /debugtype:BOTH /OUT:WIRCD.EXE 
 !ENDIF
@@ -35,7 +35,7 @@ OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ \
  SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ \
  SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ \
- SRC/SERVICE.OBJ
+ SRC/SERVICE.OBJ SRC/DEBUG.OBJ
 
 MOD_FILES=SRC/L_COMMANDS.OBJ SRC/M_CHGHOST.OBJ SRC/M_SDESC.OBJ SRC/M_SETIDENT.OBJ \
  SRC/M_SETNAME.OBJ SRC/M_SETHOST.OBJ SRC/M_CHGIDENT.OBJ SRC/M_SVSMOTD.OBJ \
@@ -69,7 +69,7 @@ CONF:
 	
 
 ./WIRCD.EXE: $(OBJ_FILES) $(MOD_FILES) SRC/win32/WIN32.RES
-        $(LINK) $(LFLAGS) $(OBJ_FILES) $(MOD_FILES) SRC/win32/WIN32.RES SRC/WIN32/GNU_REGEX.LIB SRC/WIN32/DEBUG/STACKTRACE.LIB /MAPINFO:LINES /MAP
+        $(LINK) $(LFLAGS) $(OBJ_FILES) $(MOD_FILES) SRC/win32/WIN32.RES SRC/WIN32/GNU_REGEX.LIB  /MAPINFO:LINES /MAP
 	-@erase src\win32\win32.res
 !IFNDEF DEBUG
  @echo Non Debug version built 
@@ -203,6 +203,9 @@ src/service.obj: src/win32/service.c $(INCLUDES)
 
 src/unreal.obj: src/win32/unreal.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/win32/unreal.c
+
+src/debug.obj: src/win32/debug.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/win32/debug.c
 
 src/res_comp.obj: src/res_comp.c $(INCLUDES)
         $(CC) $(CFLAGS) src/res_comp.c

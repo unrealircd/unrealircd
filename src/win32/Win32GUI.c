@@ -520,7 +520,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	atexit(CleanUp);
 	if(!LoadLibrary("riched20.dll"))
 		LoadLibrary("riched32.dll");
-	InitStackTraceLibrary();
+	InitDebug();
 
 	if (WSAStartup(MAKEWORD(1, 1), &WSAData) != 0)
     	{

@@ -36,12 +36,53 @@ Source: "..\..\Donation"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: ".\gnu_regex.dll"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\..\help.conf"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\..\LICENSE"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: ".\debug\StackTrace.dll"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\..\Unreal.nfo"; DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\..\doc\*.*"; DestDir: "{app}\doc"; CopyMode: alwaysoverwrite
 Source: "..\..\aliases\*"; DestDir: "{app}\aliases"; CopyMode: alwaysoverwrite
 Source: "..\..\networks\*"; DestDir: "{app}\networks"; CopyMode: alwaysoverwrite
 Source: "..\..\unreal.exe"; DestDir: "{app}"; CopyMode: alwaysoverwrite; MinVersion: 0,4.0
+Source: isxdl.dll; DestDir: {tmp}; CopyMode: dontcopy
+
+[Code]
+function isxdl_Download(hWnd: Integer; URL, Filename: PChar): Integer;
+external 'isxdl_Download@files:isxdl.dll stdcall';
+function isxdl_SetOption(Option, Value: PChar): Integer;
+external 'isxdl_SetOption@files:isxdl.dll stdcall';
+const url = 'http://www.unrealircd.com/downloads/DbgHelp.Dll';
+
+function NextButtonClick(CurPage: Integer): Boolean;
+var
+dbghelp,tmp,output: String;
+m: String;
+hWnd,answer: Integer;
+begin
+  dbghelp := ExpandConstant('{sys}\DbgHelp.Dll');
+  output := ExpandConstant('{app}\DbgHelp.Dll');
+  GetVersionNumbersString(dbghelp,m);
+  if ((CurPage = wpReady) AND NOT FileExists(output)) then begin
+    if StrToInt(m[1]) < 5 then begin
+     answer := MsgBox('DbgHelp.dll version 5.0 or higher is required to install Unreal, do you wish to install it now?', mbConfirmation, MB_YESNO);
+     if answer = IDYES then begin
+      tmp := ExpandConstant('{tmp}\dbghelp.dll');
+      isxdl_SetOption('title', 'Downloading DbgHelp.dll');
+      hWnd := StrToInt(ExpandConstant('{wizardhwnd}'));
+      if isxdl_Download(hWnd, url, tmp) = 0 then
+         MsgBox('Download and installation of DbgHelp.Dll failed, the file must be manually installed. The file can be downloaded at http://www.unrealircd.com/downloads/DbgHelp.Dll', mbInformation, MB_OK);
+     end else
+       MsgBox('In order for Unreal to properly function you must manually install this dll. The dll can be downloaded from http://www.unrealircd.com/downloads/DbgHelp.Dll', mbInformation, MB_OK);
+    end;
+  end;
+  Result := true;
+end;
+procedure DeInitializeSetup();
+var
+input,output: String;
+begin
+  input := ExpandConstant('{tmp}\dbghelp.dll');
+  output := ExpandConstant('{app}\dbghelp.dll');
+  FileCopy(input, output, true);
+end;
+
 [Icons]
 Name: "{group}\UnrealIRCd"; Filename: "{app}\wircd.exe"
 Name: "{group}\Uninstall UnrealIRCd"; Filename: "{uninstallexe}"
