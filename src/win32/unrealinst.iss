@@ -91,28 +91,35 @@ external 'isxdl_Download@files:isxdl.dll stdcall';
 function isxdl_SetOption(Option, Value: PChar): Integer;
 external 'isxdl_SetOption@files:isxdl.dll stdcall';
 const url = 'http://www.unrealircd.com/downloads/DbgHelp.Dll';
+var didDl: Boolean;
+
 function NextButtonClick(CurPage: Integer): Boolean;
 var
 dbghelp,tmp,output: String;
 m: String;
 hWnd,answer: Integer;
 begin
-  dbghelp := ExpandConstant('{sys}\DbgHelp.Dll');
-  output := ExpandConstant('{app}\DbgHelp.Dll');
-  GetVersionNumbersString(dbghelp,m);
-  if ((CurPage = wpReady) AND NOT FileExists(output)) then begin
-    if (NOT FileExists(dbghelp)) then
-      m := StringOfChar('0',1);
-    if (StrToInt(m[1]) < 5) then begin
-     answer := MsgBox('DbgHelp.dll version 5.0 or higher is required to install Unreal, do you wish to install it now?', mbConfirmation, MB_YESNO);
-     if answer = IDYES then begin
-      tmp := ExpandConstant('{tmp}\dbghelp.dll');
-      isxdl_SetOption('title', 'Downloading DbgHelp.dll');
-      hWnd := StrToInt(ExpandConstant('{wizardhwnd}'));
-      if isxdl_Download(hWnd, url, tmp) = 0 then
-         MsgBox('Download and installation of DbgHelp.Dll failed, the file must be manually installed. The file can be downloaded at http://www.unrealircd.com/downloads/DbgHelp.Dll', mbInformation, MB_OK);
-     end else
-       MsgBox('In order for Unreal to properly function you must manually install this dll. The dll can be downloaded from http://www.unrealircd.com/downloads/DbgHelp.Dll', mbInformation, MB_OK);
+
+    if ((CurPage = wpReady)) then begin
+      dbghelp := ExpandConstant('{sys}\DbgHelp.Dll');
+      output := ExpandConstant('{app}\DbgHelp.Dll');
+      GetVersionNumbersString(dbghelp,m);
+    if (NOT FileExists(output)) then begin
+          if (NOT FileExists(dbghelp)) then
+        m := StringOfChar('0',1);
+      if (StrToInt(m[1]) < 5) then begin
+        answer := MsgBox('DbgHelp.dll version 5.0 or higher is required to install Unreal, do you wish to install it now?', mbConfirmation, MB_YESNO);
+        if answer = IDYES then begin
+          tmp := ExpandConstant('{tmp}\dbghelp.dll');
+          isxdl_SetOption('title', 'Downloading DbgHelp.dll');
+          hWnd := StrToInt(ExpandConstant('{wizardhwnd}'));
+          if isxdl_Download(hWnd, url, tmp) = 0 then begin
+            MsgBox('Download and installation of DbgHelp.Dll failed, the file must be manually installed. The file can be downloaded at http://www.unrealircd.com/downloads/DbgHelp.Dll', mbInformation, MB_OK);
+          end else
+            didDl := true;
+        end else
+        MsgBox('In order for Unreal to properly function you must manually install this dll. The dll can be downloaded from http://www.unrealircd.com/downloads/DbgHelp.Dll', mbInformation, MB_OK);
+      end;
     end;
   end;
   Result := true;
@@ -122,9 +129,11 @@ procedure DeInitializeSetup();
 var
 input,output: String;
 begin
-  input := ExpandConstant('{tmp}\dbghelp.dll');
-  output := ExpandConstant('{app}\dbghelp.dll');
-  FileCopy(input, output, true);
+  if (didDl) then begin
+    input := ExpandConstant('{tmp}\dbghelp.dll');
+    output := ExpandConstant('{app}\dbghelp.dll');
+    FileCopy(input, output, true);
+  end;
 end;
 
 [Icons]

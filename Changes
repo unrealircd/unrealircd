@@ -3055,3 +3055,5 @@ seen. gmtime warning still there
   systems
 - Fixed a problem where the win32 GUI's "rehash all" option did not reload motd/rules
   (#0001678) reported by w00t
+- Made some changes to the win32 setup script to make it work with the latest version
+  of Inno Setup (4.2.0)
