@@ -586,3 +586,4 @@ seen. gmtime warning still there
 - Made CRYPTOIRCD get cached in config.cache
 - Fixed generation of certs, moved from configure.in to Config
 - Fixed lack of -lssl
+- Fixed the keywalk bug reported by BaTmAn (?)

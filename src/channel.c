@@ -2392,9 +2392,10 @@ void over_notice(aClient *cptr, aClient *sptr, aChannel *chptr, char *key)
 	if (is_banned(cptr, sptr, chptr) && IsOper(sptr) && !IsULine(sptr))
 	{
 		sendto_umode(UMODE_EYES, "*** Banwalk [IRCop: %s] [Channel: %s]",sptr->name,chptr->chname);
-	} else if (*chptr->mode.key && (BadPtr(key) || mycmp(chptr->mode.key, key))) {
+	} else if (IsOper(sptr) && !IsULine(sptr) && *chptr->mode.key && (BadPtr(key) || 
+            mycmp(chptr->mode.key, key))) {
 		sendto_umode(UMODE_EYES, "*** Keywalk [IRCop: %s] [Channel: %s]",sptr->name,chptr->chname);
-	} else if ((chptr->mode.mode & MODE_INVITEONLY) && !lp) {
+	} else if (IsOper(sptr) && !IsULine(sptr) && (chptr->mode.mode & MODE_INVITEONLY) && !lp) {
 		sendto_umode(UMODE_EYES, "*** Invitewalk [IRCop: %s] [Channel: %s]",sptr->name,chptr->chname);
 	}
 
