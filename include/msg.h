@@ -306,7 +306,8 @@
 #define MSG_CHGNAME	"CHGNAME"
 #define MSG_SVSNAME	"SVSNAME"
 #define TOK_CHGNAME	"BK"
-
+#define MSG_SHUN	"SHUN"
+#define TOK_SHUN	"BL"
 #define MAXPARA    	15 
 
 extern int m_private(), m_topic(), m_join(), m_part(), m_mode(), m_svsmode();
@@ -343,7 +344,7 @@ extern int m_svsjoin(), m_sajoin(), m_svspart(), m_sapart();
 extern int m_chgident(), m_swhois(), m_svso(), m_svsfline();
 extern int m_tkl(), m_vhost(), m_botmotd(), m_sjoin(), m_htm();
 extern int m_umode2(), m_dccdeny(), m_undccdeny();
-extern int m_chgname();
+extern int m_chgname(), m_shun();
 
 #ifdef MSGTAB
 struct Message *msgmap[256];
@@ -478,6 +479,7 @@ struct Message msgtab[] = {
   { MSG_UNDCCDENY,m_undccdeny, 0, MAXPARA,       1, TOK_UNDCCDENY,0L },
   { MSG_CHGNAME, m_chgname, 0, MAXPARA, 1, TOK_CHGNAME, 0L},
   { MSG_SVSNAME, m_chgname, 0, MAXPARA, 1, TOK_CHGNAME, 0L},
+  { MSG_SHUN, m_shun, 0, MAXPARA, 1, TOK_SHUN, 0L},
   { (char *) 0, (int (*)()) 0 , 0, 0, 0, 0, 0L}
 };
 

@@ -200,7 +200,7 @@ typedef unsigned int  u_int32_t; /* XXX Hope this works! */
 #define FLAGS_WRSOCKS   0x1000000
 #define FLAGS_GOTSOCKS  0x2000000
 #endif
-#define FLAGS_HUSHED    0x4000000
+#define FLAGS_SHUNNED    0x4000000
 #define FLAGS_MAP       0x80000000 /* Show this entry in /map */
 
 /* Dec 26th, 1997 - added flags2 when I ran out of room in flags -DuffJ 
@@ -300,9 +300,9 @@ typedef unsigned int  u_int32_t; /* XXX Hope this works! */
 #define GotNetInfo(x) 		((x)->flags & FLAGS_NETINFO)
 #define SetNetInfo(x)		((x)->flags |= FLAGS_NETINFO)
 
-#define IsHushed(x)		((x)->flags & FLAGS_HUSHED)
-#define SetHushed(x)		((x)->flags |= FLAGS_HUSHED)
-#define ClearHushed(x)		((x)->flags &= ~FLAGS_HUSHED)
+#define IsShunned(x)		((x)->flags & FLAGS_SHUNNED)
+#define SetShunned(x)		((x)->flags |= FLAGS_SHUNNED)
+#define ClearShunned(x)		((x)->flags &= ~FLAGS_SHUNNED)
 
 #define IsHybNotice(x)		((x)->flags & FLAGS_HYBNOTICE)
 #define SetHybNotice(x)         ((x)->flags |= FLAGS_HYBNOTICE)
@@ -697,6 +697,7 @@ struct t_hush {
 #define TKL_KILL	0x0001
 #define TKL_ZAP		0x0002
 #define TKL_GLOBAL	0x0004
+#define TKL_SHUN	0x0008
 
 
 struct	t_kline {

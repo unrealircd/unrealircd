@@ -266,7 +266,7 @@ int  parse(cptr, buffer, bufend, mptr)
 		ban_flooder(cptr);
 		return 0;
 	}
-
+	
 	/* this call is a bit obsolete? - takes up CPU*/
 	backupbuf[0] = '\0';
 	strcpy(backupbuf, buffer);
@@ -501,6 +501,10 @@ int  parse(cptr, buffer, bufend, mptr)
 	/* There is code in s_serv.c for ADMIN and VERSION and
 	 * in s_user.c for NOTICE to limit commands by 
 	 * unregistered users. -Studded */
+	if (IsShunned(cptr) && IsRegistered(cptr))
+		if ((mptr->func != m_admin) && (mptr->func != m_quit))
+			return -4;
+			
 	if ((!IsRegistered(cptr)) &&
 	    (((mptr->func != m_user) && (mptr->func != m_nick) &&
 	    (mptr->func != m_server) && (mptr->func != m_pong) &&

@@ -796,61 +796,6 @@ int  m_vhost(cptr, sptr, parc, parv)
 	return 0;
 }
 
-/* hush */
-#ifdef MOO
-int  hush_add(vhost, login, password, usermask, hostmask)
-	char *vhost, *login, *password, *usermask, *hostmask;
-{
-	aHush *fl;
-
-	fl = (aHush *) MyMalloc(sizeof(aHush));
-
-	AllocCpy(fl->virthost, vhost);
-	AllocCpy(fl->usermask, usermask);
-	AllocCpy(fl->hostmask, hostmask);
-	AllocCpy(fl->login, login);
-	AllocCpy(fl->password, password);
-	fl->next = vhosts;
-	fl->prev = NULL;
-	if (vhosts)
-		vhosts->prev = fl;
-	vhosts = fl;
-}
-
-aVhost *vhost_del(fl)
-	aVhost *fl;
-{
-	aVhost *p, *q;
-	for (p = vhosts; p; p = p->next)
-	{
-		if (p == fl)
-		{
-			q = p->next;
-			MyFree((char *)(fl->virthost));
-			MyFree((char *)(fl->usermask));
-			MyFree((char *)(fl->hostmask));
-			MyFree((char *)(fl->login));
-			MyFree((char *)(fl->password));
-			/* chain1 to chain3 */
-			if (p->prev)
-			{
-				p->prev->next = p->next;
-			}
-			else
-			{
-				vhosts = p->next;
-			}
-			if (p->next)
-			{
-				p->next->prev = p->prev;
-			}
-			MyFree((aVhost *) p);
-			return q;
-		}
-	}
-	return NULL;
-}
-#endif
 /* irc logs.. */
 void ircd_log(char *format, ...)
 {

@@ -1,7 +1,6 @@
-/************************************************************************
-/************************************************************************
+/*
  *   Unreal Internet Relay Chat Daemon, src/s_kline.c
- *   (C) 1999 Carsten Munk (Techie/Stskeeps) <cmunk@toybox.flirt.org>
+ *   (C) 1999-2000 Carsten Munk (Techie/Stskeeps) <cmunk@toybox.flirt.org>
  *   File to take care of dynamic K:/G:/Z: lines
  *
  *
@@ -125,7 +124,10 @@ aTKline *tkl_del_line(tkl)
 aTKline *tkl_expire(aTKline * tmp)
 {
 	char whattype[512];
-
+	long i, i1;
+	char *chost, *cname, *cip;
+	int is_ip;
+	aClient *acptr;
 	if (!tmp)
 		return NULL;
 
@@ -149,6 +151,8 @@ aTKline *tkl_expire(aTKline * tmp)
 		{
 			strcpy(whattype, "Global Z:Line");
 		}
+		else if (tmp->type & TKL_SHUN)
+			strcpy(whattype, "Shun");
 	}
 	else
 	{
@@ -160,6 +164,8 @@ aTKline *tkl_expire(aTKline * tmp)
 		{
 			strcpy(whattype, "Timed Z:Line");
 		}
+		else if (tmp->type & TKL_SHUN)
+			strcpy(whattype, "Local Shun");
 	}
 	sendto_umode(UMODE_EYES,
 	    "*** Expiring %s (%s@%s) made by %s (Reason: %s) set %li seconds ago",
@@ -170,6 +176,40 @@ aTKline *tkl_expire(aTKline * tmp)
 	    ("Expiring %s (%s@%s) made by %s (Reason: %s) set %li seconds ago",
 	    whattype, tmp->usermask, tmp->hostmask, tmp->setby, tmp->reason,
 	    TStime() - tmp->set_at);
+
+	if (tmp->type & TKL_SHUN)
+	{
+		for (i1 = 0; i1 <= 5; i1++)
+		{
+			for (i = 0; i <= (MAXCONNECTIONS - 1); i++)
+			{
+				if (acptr = local[i])
+					if (MyClient(acptr) && IsShunned(acptr))
+					{
+						chost = acptr->sockhost;
+						cname = acptr->user->username;
+
+						cip = (char *)inet_ntoa(acptr->ip);
+
+					
+						if (!(*tmp->hostmask < '0') && (*tmp->hostmask > '9'))
+							is_ip = 1;
+						else
+							is_ip = 0;
+
+						if (is_ip == 0 ? (!match(tmp->hostmask, chost)
+						    && !match(tmp->usermask, cname)) : (!match(tmp->hostmask,
+		    					chost) || !match(tmp->hostmask, cip))
+						    && !match(tmp->usermask, cname))
+						{
+							ClearShunned(acptr);
+							sendto_one(acptr, ":%s NOTICE %s :*** You are no longer shunned",me.name, acptr->name);
+						}
+					}
+			}
+		}
+	}
+
 
 	return (tkl_del_line(tmp));
 }
@@ -207,6 +247,7 @@ int  find_tkline_match(cptr, xx)
 	time_t nowtime;
 	int  is_ip;
 	char msge[1024];
+	char gmt2[256];
 
 	if (IsServer(cptr) || IsMe(cptr))
 		return -1;
@@ -231,11 +272,12 @@ int  find_tkline_match(cptr, xx)
 		    chost) || !match(lp->hostmask, cip))
 		    && !match(lp->usermask, cname))
 		{
-			ircstp->is_ref++;
+			
 			if ((lp->type & (TKL_KILL)) && (xx != 2))
 			{
 				if (lp->type & TKL_GLOBAL)
 				{
+					ircstp->is_ref++;
 					sendto_one(cptr,
 					    "NOTICE %s :*** You are banned for %li seconds (%s)",
 					    cptr->name,
@@ -249,6 +291,7 @@ int  find_tkline_match(cptr, xx)
 				}
 				else
 				{
+					ircstp->is_ref++;
 					sendto_one(cptr,
 					    "NOTICE %s :*** You are banned for %li seconds (%s)",
 					    cptr->name,
@@ -262,6 +305,7 @@ int  find_tkline_match(cptr, xx)
 			}
 			else if (lp->type & (TKL_ZAP))
 			{
+				ircstp->is_ref++;
 				ircsprintf(msge,
 				    "ERROR :Closing Link: [%s] Z:Lined (%s)\r\n",
 #ifndef INET6
@@ -272,6 +316,18 @@ int  find_tkline_match(cptr, xx)
 #endif
 				strcpy(zlinebuf, msge);
 				return (1);
+			}
+			else if (lp->type & (TKL_SHUN))
+			{
+				if (IsShunned(cptr))
+					return -1;
+				SetShunned(cptr);
+				strncpy(gmt2, asctime(gmtime((clock_t *) &lp->expire_at)),
+				      sizeof(gmt2));
+	           		gmt2[strlen(gmt2) - 1] = '\0';
+				sendto_one(cptr, ":%s NOTICE %s :*** You have been shunned by %s until %s (Reason: %s)", 
+					me.name, cptr->name, lp->setby, gmt2, lp->reason);
+				return -1;
 			}
 		}
 	}
@@ -297,6 +353,7 @@ int  tkl_sweep()
 	}
 	return 1;
 }
+
 
 void tkl_stats(cptr)
 	aClient *cptr;
@@ -334,6 +391,16 @@ void tkl_stats(cptr)
 	}
 	for (tk = tklines; tk; tk = tk->next)
 	{
+		if (tk->type == (TKL_SHUN | TKL_GLOBAL))
+		{
+			sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.name,
+			    cptr->name, 's', tk->usermask, tk->hostmask,
+			    (tk->expire_at - curtime), (curtime - tk->set_at),
+			    tk->setby, tk->reason);
+		}
+	}
+	for (tk = tklines; tk; tk = tk->next)
+	{
 		if (tk->type == (TKL_KILL))
 		{
 			sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.name,
@@ -358,7 +425,7 @@ void tkl_stats(cptr)
 void tkl_synch(aClient *sptr)
 {
 	aTKline *tk;
-
+	char typ;
 
 	for (tk = tklines; tk; tk = tk->next)
 	{
@@ -370,12 +437,20 @@ void tkl_synch(aClient *sptr)
 				    tk->usermask, tk->hostmask, tk->expire_at,
 				    tk->set_at, tk->setby, tk->reason);
 			else
+			{
+				if (tk->type & TKL_KILL)
+					typ = 'G';
+				if (tk->type & TKL_ZAP)
+					typ = 'Z';
+				if (tk->type & TKL_SHUN)
+					typ = 's';
 				sendto_one(sptr,
-				    ":%s %s + %s %s %s %s %li %li :%s", me.name,
+				    ":%s %s + %c %s %s %s %li %li :%s", me.name,
 				    IsToken(sptr) ? TOK_TKL : MSG_TKL,
-				    (tk->type & TKL_KILL ? "G" : "Z"),
+				    typ,
 				    tk->usermask, tk->hostmask, tk->setby,
 				    tk->expire_at, tk->set_at, tk->reason);
+			}
 		}
 	}
 }
@@ -430,8 +505,9 @@ int  m_tkl(cptr, sptr, parc, parv)
 			  type = TKL_ZAP;
 		  else if (parv[2][0] == 'k')
 			  type = TKL_KILL;
-		  else
-			  return 0;
+		  else if (parv[2][0] == 's')
+		  	type = TKL_SHUN |TKL_GLOBAL;
+		  else return 0;
 
 		  found = 0;
 		  for (tk = tklines; tk; tk = tk->next)
@@ -479,6 +555,9 @@ int  m_tkl(cptr, sptr, parc, parv)
 		    case TKL_ZAP | TKL_GLOBAL:
 			    strcpy(txt, "Global Z:line");
 			    break;
+		     case TKL_SHUN | TKL_GLOBAL:
+		     	strcpy(txt, "Shun");
+		     	break;
 		    default:
 			    strcpy(txt, "Unknown *:Line");
 		  }
@@ -515,8 +594,9 @@ int  m_tkl(cptr, sptr, parc, parv)
 			  type = TKL_ZAP;
 		  else if (*parv[2] == 'k')
 			  type = TKL_KILL;
-		  else
-			  return 0;
+		  else if (*parv[2] == 's')
+		  	type = TKL_SHUN | TKL_GLOBAL;
+		  else  return 0;
 
 		  switch (type)
 		  {
@@ -532,6 +612,9 @@ int  m_tkl(cptr, sptr, parc, parv)
 		    case TKL_ZAP | TKL_GLOBAL:
 			    strcpy(txt, "Global Z:line");
 			    break;
+		    case TKL_SHUN | TKL_GLOBAL:
+		    	    strcpy(txt, "Shun");
+		    break;
 		    default:
 			    strcpy(txt, "Unknown *:Line");
 		  }
@@ -772,3 +855,187 @@ int  m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	}
 }
+
+/*
+** m_shun (oper function - /TKL takes care of distribution)
+** /gline [+|-]u@h mask time :reason
+**
+** parv[0] = sender
+** parv[1] = [+|-]u@h mask
+** parv[2] = for how long
+** parv[3] = reason
+*/
+
+int  m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
+{
+	aTKline *tk;
+	time_t secs;
+	int  whattodo = 0;	/* 0 = add  1 = del */
+	int  found = 0;
+	int  i;
+	char *mask = NULL;
+	char mo[1024], mo2[1024];
+	char *p, *usermask, *hostmask;
+	char *tkllayer[9] = {
+		me.name,	/*0  server.name */
+		NULL,		/*1  +|- */
+		"s",		/*2  s   */
+		NULL,		/*3  user */
+		NULL,		/*4  host */
+		NULL,		/*5  setby */
+		NULL,		/*6  expire_at */
+		NULL,		/*7  set_at */
+		NULL		/*8  reason */
+	};
+
+	if (parc == 1)
+	{
+		tkl_stats(sptr);
+		return 0;
+	}
+
+	if (!IsOper(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+		    sptr->name);
+		return 0;
+	}
+
+	if (parc < 2)
+	{
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+		    me.name, sptr->name, "SHUN");
+		return;
+	}
+
+	mask = parv[1];
+	if (*mask == '-')
+	{
+		if (parc < 2)
+		{
+			sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+			    me.name, sptr->name, "SHUN");
+			return;
+		}
+		whattodo = 1;
+		mask++;
+	}
+	else if (*mask == '+')
+	{
+		if (parc < 4)
+		{
+			sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+			    me.name, sptr->name, "SHUN");
+			return;
+		}
+		whattodo = 0;
+		mask++;
+	}
+	if (whattodo == 0)
+	{
+		if (parc < 4)
+		{
+			sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+			    me.name, sptr->name, "SHUN");
+			return;
+		}
+	}
+
+	/* Check if its a hostmask and legal .. */
+	p = strchr(mask, '@');
+	if (!p || (p == mask))
+	{
+		sendto_one(sptr,
+		    ":%s NOTICE %s :*** [Shun error] Please use a user@host mask.",
+		    me.name, sptr->name);
+		return 0;
+	}
+
+	if (whattodo == 1)
+		goto nochecks;
+	if (p)
+	{
+		p++;
+		i = 0;
+		while (*p)
+		{
+			if (*p != '*' && *p != '.')
+				i++;
+			p++;
+		}
+		if (i < 4)
+		{
+			sendto_one(sptr,
+			    ":%s NOTICE %s :*** [Shun error] Too broad mask",
+			    me.name, sptr->name);
+			return 0;
+		}
+	}
+
+      nochecks:
+	usermask = strtok(mask, "@");
+	hostmask = strtok(NULL, "@");
+	tkl_check_expire();
+
+	for (tk = tklines; tk; tk = tk->next)
+	{
+		if (tk->type = (TKL_GLOBAL | TKL_SHUN))
+		{
+			if (!match(tk->hostmask, usermask)
+			    && !match(tk->usermask, hostmask))
+			{
+				found = 1;
+				break;
+			}
+		}
+	}
+
+	if ((found == 1) && whattodo == 0)
+	{
+		sendto_one(sptr,
+		    ":%s NOTICE %s :*** [Shun error] Match already exists!",
+		    me.name, sptr->name);
+		return 0;
+	}
+	if ((found == 1) && whattodo == 1)
+	{
+		sendto_one(sptr,
+		    ":%s NOTICE %s :*** [Shun error] No such Shun", me.name,
+		    sptr->name);
+		return 0;
+	}
+	if (whattodo == 0)
+	{
+		secs = atol(parv[2]);
+		if (secs < 1)
+		{
+			sendto_one(sptr,
+			    ":%s NOTICE %s :*** [Shun error] Please specify a positive value for time",
+			    me.name, sptr->name);
+			return 0;
+		}
+	}
+	tkllayer[1] = whattodo == 0 ? "+" : "-";
+	tkllayer[3] = usermask;
+	tkllayer[4] = hostmask;
+	tkllayer[5] =
+	    make_nick_user_host(sptr->name, sptr->user->username,
+	    (IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost));
+	if (whattodo == 0)
+	{
+		ircsprintf(mo, "%li", secs + TStime());
+		ircsprintf(mo2, "%li", TStime());
+		tkllayer[6] = mo;
+		tkllayer[7] = mo2;
+		tkllayer[8] = parv[3];
+		/* call the tkl layer .. */
+		m_tkl(&me, &me, 9, tkllayer);
+	}
+	else
+	{
+		/* call the tkl layer .. */
+		m_tkl(&me, &me, 6, tkllayer);
+
+	}
+}
+

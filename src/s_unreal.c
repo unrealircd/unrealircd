@@ -1285,12 +1285,6 @@ int  m_svso(cptr, sptr, parc, parv)
 	}
 }
 
-int  m_shun(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
-{
-}
 
 int  m_htm(cptr, sptr, parc, parv)
 	aClient *cptr, *sptr;

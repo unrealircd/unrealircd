@@ -326,3 +326,5 @@ k/*
 - Fixed /stats C not showing N:lines, reported by auspice
 - Fixed codemastr (possible) fucked up the shell ircd script with
   overwriting it ...
+- Created /shun, /gline style. /shun +user@host time reason /shun -user@host
+  will extend it so you can /shun +nick later
