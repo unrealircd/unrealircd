@@ -1388,3 +1388,4 @@ seen. gmtime warning still there
   version 5.0 or newer. Included natively on Win2k/XP and available as redistributable for
   other versions. Also removes StackTrace
 - Added src/win32/gpl.rtf (used for installer) made installer download dbghelp.dll if needed
+- Added an installer script to generate the Win32 SSL version
