@@ -42,26 +42,15 @@
 
 ID_Copyright("(C) Carsten Munk 2001");
 
-#ifndef HAVE_NO_THREADS
-#include "threads.h"
-MUTEX			sys_EventLock;
-#endif
-
 
 Event *events = NULL;
 
 void	LockEventSystem(void)
 {
-#ifndef HAVE_NO_THREADS
-	IRCMutexLock(sys_EventLock);
-#endif
 }
 
 void	UnlockEventSystem(void)
 {
-#ifndef HAVE_NO_THREADS
-	IRCMutexUnlock(sys_EventLock);
-#endif
 }
 
 
@@ -203,9 +192,6 @@ void	EventStatus(aClient *sptr)
 
 void	SetupEvents(void)
 {
-#ifndef HAVE_NO_THREADS
-	IRCCreateMutex(sys_EventLock);
-#endif
 	LockEventSystem();
 
 	/* Start events */

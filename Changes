@@ -2091,3 +2091,17 @@ seen. gmtime warning still there
 - Preparing beta16: release notes ready, version updated in docs/text (except version.h).
 - Changed version to beta16
 - Various docs typo fixes, some reported by AngryWolf (#0000913)
+- Mm, let's see what this checkin brings: 
+  * Removed thread questions from Config, and autoconf code from
+    configure.in, leaving in the old macros though, but inactive
+    --enable-standardthreads is dead as of now
+  * Undefined HOOKTYPE_SCAN_INFO
+  * Removed CONF_EXCEPT_SCAN
+  * Removed locking in events, Lock/UnlockEventSystem still active for other
+    possible uses.
+  * Removed scanners, web server module
+  * Removed except scan {}
+  * Removed SCAN_API stuff from l_commands.c, win32 makefiles, etc
+  * Removed basically any mentions of threads in source tree, excepting
+    threads.h which Resolver uses on win32
+  * Documentation changes not done yet

@@ -3804,20 +3804,6 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 	}
-	else if (!strcmp(ce->ce_vardata, "scan")) {
-		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
-		{
-			if (!strcmp(cep->ce_varname, "mask")) {
-				ca = MyMallocEx(sizeof(ConfigItem_except));
-				ca->mask = strdup(cep->ce_vardata);
-				ca->flag.type = CONF_EXCEPT_SCAN;
-				AddListItem(ca, conf_except);
-			}
-			else {
-			}
-		}
-
-	}
 #ifdef THROTTLING
 	else if (!strcmp(ce->ce_vardata, "throttle")) {
 		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -3899,35 +3885,6 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 			else
 			{
 				config_error("%s:%i: unknown except ban directive %s",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
-				errors++;
-				continue;
-			}
-		}
-		return errors;
-	}
-	else if (!strcmp(ce->ce_vardata, "scan")) {
-		if (!config_find_entry(ce->ce_entries, "mask"))
-		{
-			config_error("%s:%i: except scan without mask item",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-			return 1;
-		}
-		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
-		{
-			if (!cep->ce_vardata)
-			{
-				config_error("%s:%i: except scan item without contents",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-				errors++;
-				continue;
-			}
-			if (!strcmp(cep->ce_varname, "mask"))
-			{
-			}
-			else
-			{
-				config_error("%s:%i: unknown except scan directive %s",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
 				errors++;
 				continue;
