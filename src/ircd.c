@@ -85,10 +85,10 @@ int  un_gid = 99;
 #ifndef _WIN32
 extern char unreallogo[];
 #endif
-int SVSNOOP = 0;
+int  SVSNOOP = 0;
 extern char *buildid;
 time_t timeofday = 0;
-int tainted = 0;
+int  tainted = 0;
 LoopStruct loop;
 extern aMotd *opermotd;
 extern aMotd *svsmotd;
@@ -207,7 +207,7 @@ VOIDSIG s_monitor(void)
 VOIDSIG s_die()
 {
 #ifdef _WIN32
-	int i;
+	int  i;
 	aClient *cptr;
 #endif
 	unload_all_modules();
@@ -244,7 +244,8 @@ VOIDSIG s_rehash()
 #endif
 }
 
-void restart(char *mesg) {
+void restart(char *mesg)
+{
 	server_reboot(mesg);
 }
 
@@ -252,9 +253,10 @@ VOIDSIG s_restart()
 {
 	static int restarting = 0;
 
-	if (restarting == 0)
-	{
-		/* Send (or attempt to) a dying scream to oper if present */
+	if (restarting == 0) {
+		/*
+		 * Send (or attempt to) a dying scream to oper if present 
+		 */
 
 		restarting = 1;
 		server_reboot("SIGINT");
@@ -264,8 +266,7 @@ VOIDSIG s_restart()
 
 VOIDSIG s_segv(void)
 {
-	char	*argv[] = 
-	{
+	char *argv[] = {
 		"./.bugreport",
 		NULL
 	};
@@ -309,7 +310,7 @@ VOIDSIG dummy()
 #endif
 }
 
-#endif /* _WIN32 */
+#endif				/* _WIN32 */
 
 
 void server_reboot(char *mesg)
@@ -328,8 +329,8 @@ void server_reboot(char *mesg)
 			(void)send_queued(cptr);
 #endif
 	/*
-	   ** fd 0 must be 'preserved' if either the -d or -i options have
-	   ** been passed to us before restarting.
+	 * ** fd 0 must be 'preserved' if either the -d or -i options have
+	 * ** been passed to us before restarting.
 	 */
 #ifdef HAVE_SYSLOG
 	(void)closelog();
@@ -362,9 +363,8 @@ char *areason;
 
 EVENT(loop_event)
 {
-	if (loop.do_garbage_collect == 1)
-	{
-		garbage_collect(NULL);			
+	if (loop.do_garbage_collect == 1) {
+		garbage_collect(NULL);
 	}
 }
 
@@ -374,26 +374,21 @@ EVENT(garbage_collect)
 	extern Link *freelink;
 	Link p;
 	int  ii;
-	
+
 	if (loop.do_garbage_collect == 1)
 		sendto_realops("Doing garbage collection ..");
-	if (freelinks > HOW_MANY_FREELINKS_ALLOWED)
-	{
+	if (freelinks > HOW_MANY_FREELINKS_ALLOWED) {
 		ii = freelinks;
-		while (freelink
-			   && (freelinks > HOW_MANY_FREELINKS_ALLOWED))
-		{
+		while (freelink && (freelinks > HOW_MANY_FREELINKS_ALLOWED)) {
 			freelinks--;
 			p.next = freelink;
 			freelink = freelink->next;
 			MyFree(p.next);
 		}
-		if (loop.do_garbage_collect == 1)
-		{
+		if (loop.do_garbage_collect == 1) {
 			loop.do_garbage_collect = 0;
 			sendto_realops
-			   ("Cleaned up %i garbage blocks",
-					    (ii - freelinks));
+			    ("Cleaned up %i garbage blocks", (ii - freelinks));
 		}
 	}
 	if (loop.do_garbage_collect == 1)
@@ -420,23 +415,23 @@ static TS try_connections(TS currenttime)
 	connecting = FALSE;
 	Debug((DEBUG_NOTICE, "Connection check at   : %s",
 	    myctime(currenttime)));
-	for (aconf = conf_link; aconf; aconf = (ConfigItem_link *) aconf->next)
-	{
-		/* Also when already connecting! (update holdtimes) --SRB */
+	for (aconf = conf_link; aconf; aconf = (ConfigItem_link *) aconf->next) {
+		/*
+		 * Also when already connecting! (update holdtimes) --SRB 
+		 */
 		if (!(aconf->options & CONNECT_AUTO))
 			continue;
 
 		cltmp = aconf->class;
 		/*
-		   ** Skip this entry if the use of it is still on hold until
-		   ** future. Otherwise handle this entry (and set it on hold
-		   ** until next time). Will reset only hold times, if already
-		   ** made one successfull connection... [this algorithm is
-		   ** a bit fuzzy... -- msa >;) ]
+		 * ** Skip this entry if the use of it is still on hold until
+		 * ** future. Otherwise handle this entry (and set it on hold
+		 * ** until next time). Will reset only hold times, if already
+		 * ** made one successfull connection... [this algorithm is
+		 * ** a bit fuzzy... -- msa >;) ]
 		 */
 
-		if ((aconf->hold > currenttime))
-		{
+		if ((aconf->hold > currenttime)) {
 			if ((next > aconf->hold) || (next == 0))
 				next = aconf->hold;
 			continue;
@@ -445,14 +440,15 @@ static TS try_connections(TS currenttime)
 		confrq = cltmp->connfreq;
 		aconf->hold = currenttime + confrq;
 		/*
-		   ** Found a CONNECT config with port specified, scan clients
-		   ** and see if this server is already connected?
+		 * ** Found a CONNECT config with port specified, scan clients
+		 * ** and see if this server is already connected?
 		 */
 		cptr = find_name(aconf->servername, (aClient *)NULL);
 
-		if (!cptr && (cltmp->clients < cltmp->maxclients))
-		{
-			/* Check connect rules to see if we're allowed to try */
+		if (!cptr && (cltmp->clients < cltmp->maxclients)) {
+			/*
+			 * Check connect rules to see if we're allowed to try 
+			 */
 			for (deny = conf_deny_link; deny;
 			    deny = (ConfigItem_deny_link *) deny->next)
 				if (!match(deny->mask, aconf->servername)
@@ -461,7 +457,8 @@ static TS try_connections(TS currenttime)
 
 			if (connect_server(aconf, (aClient *)NULL,
 			    (struct hostent *)NULL) == 0)
-				sendto_realops("Connection to %s[%s] activated.",
+				sendto_realops
+				    ("Connection to %s[%s] activated.",
 				    aconf->servername, aconf->hostname);
 
 		}
@@ -483,117 +480,121 @@ extern TS check_pings(TS currenttime)
 {
 	aClient *cptr = NULL;
 	ConfigItem_ban *bconf = NULL;
-	char	killflag = 0;
-	int 	i = 0;
-	char	banbuf[1024];
-	TS	ping;
-	TS   	oldest = 0;
+	char killflag = 0;
+	int  i = 0;
+	char banbuf[1024];
+	int  ping = 0;
+	TS   oldest = 0;
 
-	for (i = 0; i <= LastSlot; i++)
-	{
-		/* If something we should not touch .. */
+	for (i = 0; i <= LastSlot; i++) {
+		/*
+		 * If something we should not touch .. 
+		 */
 		if (!(cptr = local[i]) || IsMe(cptr) || IsLog(cptr))
 			continue;
 
 		/*
-		   ** Note: No need to notify opers here. It's
-		   ** already done when "FLAGS_DEADSOCKET" is set.
+		 * ** Note: No need to notify opers here. It's
+		 * ** already done when "FLAGS_DEADSOCKET" is set.
 		 */
-		if (cptr->flags & FLAGS_DEADSOCKET)
-		{
+		if (cptr->flags & FLAGS_DEADSOCKET) {
 			(void)exit_client(cptr, cptr, &me, "Dead socket");
 			continue;
 		}
-		ping = 0;
 		killflag = 0;
 		/*
 		 * Check if user is banned
-		*/	
-		if (loop.do_bancheck)
-		{	
-			if (find_tkline_match(cptr, 0) < 0)
-			{
-				/* Client exited */
+		 */
+		if (loop.do_bancheck) {
+			if (find_tkline_match(cptr, 0) < 0) {
+				/*
+				 * Client exited 
+				 */
 				continue;
 			}
-			if (!killflag && IsPerson(cptr))
-			{
-				/* 
+			if (!killflag && IsPerson(cptr)) {
+				/*
 				 * If it's a user, we check for CONF_BAN_USER
-				*/
+				 */
 				bconf =
 				    Find_ban(make_user_host(cptr->
-					    user ? cptr->user->username : cptr->
-					    username,
-					    cptr->user ? cptr->user->realhost : cptr->
-						    sockhost), CONF_BAN_USER);
+				    user ? cptr->user->username : cptr->
+				    username,
+				    cptr->user ? cptr->user->realhost : cptr->
+				    sockhost), CONF_BAN_USER);
 				if (bconf)
 					killflag++;
-			
-				if (!killflag && !IsAnOper(cptr) && 
-					(bconf = Find_ban(cptr->info, CONF_BAN_REALNAME)))
-				{
+
+				if (!killflag && !IsAnOper(cptr) &&
+				    (bconf =
+				    Find_ban(cptr->info, CONF_BAN_REALNAME))) {
 					killflag++;
 				}
 
 			}
-			/* If no cookie, we search for Z:lines*/
+			/*
+			 * If no cookie, we search for Z:lines
+			 */
 			if (!killflag)
 				if ((bconf =
-					Find_ban(Inet_ia2p(&cptr->ip), CONF_BAN_IP)))
+				    Find_ban(Inet_ia2p(&cptr->ip),
+				    CONF_BAN_IP)))
 					killflag++;
-			if (killflag)
-			{
+			if (killflag) {
 				if (IsPerson(cptr))
 					sendto_realops("Ban active for %s (%s)",
-						get_client_name(cptr, FALSE),
-						bconf->reason ? bconf->reason  : "no reason");
-			
+					    get_client_name(cptr, FALSE),
+					    bconf->reason ? bconf->
+					    reason : "no reason");
+
 				if (IsServer(cptr))
-					sendto_realops("Ban active for server %s (%s)",
-						get_client_name(cptr, FALSE),
-						bconf->reason ? bconf->reason : "no reason");
-				if (bconf->reason)
-				{
+					sendto_realops
+					    ("Ban active for server %s (%s)",
+					    get_client_name(cptr, FALSE),
+					    bconf->reason ? bconf->
+					    reason : "no reason");
+				if (bconf->reason) {
 					if (IsPerson(cptr))
-						snprintf(banbuf, sizeof banbuf - 1, "User has been banned (%s)",
-							bconf->reason);
-					snprintf(banbuf, sizeof banbuf - 1, "Banned (%s)",
-						bconf->reason);
-					(void)exit_client(cptr, cptr, &me, banbuf);
-				}
-				else
-				{	
+						snprintf(banbuf,
+						    sizeof banbuf - 1,
+						    "User has been banned (%s)",
+						    bconf->reason);
+					snprintf(banbuf, sizeof banbuf - 1,
+					    "Banned (%s)", bconf->reason);
+					(void)exit_client(cptr, cptr, &me,
+					    banbuf);
+				} else {
 					if (IsPerson(cptr))
-						(void)exit_client(cptr, cptr, &me, "User has been banned");
+						(void)exit_client(cptr, cptr,
+						    &me,
+						    "User has been banned");
 					else
-						(void)exit_client(cptr, cptr, &me, "Banned");
+						(void)exit_client(cptr, cptr,
+						    &me, "Banned");
 				}
 				continue;
 			}
-		
+
 		}
-		/* We go into ping phase */
-		ping = 
+		/*
+		 * We go into ping phase 
+		 */
+		ping =
 		    IsRegistered(cptr) ? (cptr->class ? cptr->
 		    class->pingfreq : CONNECTTIMEOUT) : CONNECTTIMEOUT;
 		Debug((DEBUG_DEBUG, "c(%s)=%d p %d k %d a %d", cptr->name,
 		    cptr->status, ping, killflag,
 		    currenttime - cptr->lasttime));
-		if (ping < (currenttime - cptr->lasttime))
-		{
+		if (ping < (currenttime - cptr->lasttime)) {
 			if (((cptr->flags & FLAGS_PINGSENT)
 			    && ((currenttime - cptr->lasttime) >= (2 * ping)))
 			    || ((!IsRegistered(cptr)
 			    && (currenttime - cptr->since) >= ping)))
-
 			{
 				if (!IsRegistered(cptr) &&
 				    (DoingDNS(cptr) || DoingAuth(cptr)
-				    ))
-				{
-					if (cptr->authfd >= 0)
-					{
+				    )) {
+					if (cptr->authfd >= 0) {
 						CLOSE_SOCK(cptr->authfd);
 						--OpenFiles;
 						cptr->authfd = -1;
@@ -612,7 +613,7 @@ extern TS check_pings(TS currenttime)
 					    "DNS/AUTH timeout %s",
 					    get_client_name(cptr, TRUE)));
 					del_queries((char *)cptr);
-					    ClearAuth(cptr);
+					ClearAuth(cptr);
 					ClearDNS(cptr);
 					SetAccess(cptr);
 					cptr->firsttime = currenttime;
@@ -620,8 +621,7 @@ extern TS check_pings(TS currenttime)
 					continue;
 				}
 				if (IsServer(cptr) || IsConnecting(cptr) ||
-				    IsHandshake(cptr))
-				{
+				    IsHandshake(cptr)) {
 					sendto_realops
 					    ("No response from %s, closing link",
 					    get_client_name(cptr, FALSE));
@@ -632,24 +632,23 @@ extern TS check_pings(TS currenttime)
 				}
 				exit_client(cptr, cptr, &me, "Ping timeout");
 				continue;
-			}
-			else if (IsRegistered(cptr) &&
-			    ((cptr->flags & FLAGS_PINGSENT) == 0))
-			{
+			} else if (IsRegistered(cptr) &&
+			    ((cptr->flags & FLAGS_PINGSENT) == 0)) {
 				/*
 				 * if we havent PINGed the connection and we havent
 				 * heard from it in a while, PING it to make sure
 				 * it is still alive.
 				 */
 				cptr->flags |= FLAGS_PINGSENT;
-				/* not nice but does the job */
+				/*
+				 * not nice but does the job 
+				 */
 				cptr->lasttime = currenttime - ping;
 				sendto_one(cptr, "%s :%s",
 				    IsToken(cptr) ? TOK_PING : MSG_PING,
 				    me.name);
 			}
 		}
-
 		/*
 		 * Check UNKNOWN connections - if they have been in this state
 		 * for > 100s, close them.
@@ -660,27 +659,27 @@ extern TS check_pings(TS currenttime)
 				(void)exit_client(cptr, cptr, &me,
 				    "Connection Timed Out");
 	}
-	/* EXPLANATION
-	 * on a server with a large volume of clients, at any given point
-	 * there may be a client which needs to be pinged the next second,
-	 * or even right away (a second may have passed while running
-	 * check_pings). Preserving CPU time is more important than
-	 * pinging clients out at exact times, IMO. Therefore, I am going to make
-	 * check_pings always return currenttime + 9. This means that it may take
-	 * a user up to 9 seconds more than pingfreq to timeout. Oh well.
-	 * Plus, the number is 9 to 'stagger' our check_pings calls out over
-	 * time, to avoid doing it and the other tasks ircd does at the same time
-	 * all the time (which are usually done on intervals of 5 seconds or so). 
-	 * - lucas
-	 *
+	/*
+	 * EXPLANATION
+	 * * on a server with a large volume of clients, at any given point
+	 * * there may be a client which needs to be pinged the next second,
+	 * * or even right away (a second may have passed while running
+	 * * check_pings). Preserving CPU time is more important than
+	 * * pinging clients out at exact times, IMO. Therefore, I am going to make
+	 * * check_pings always return currenttime + 9. This means that it may take
+	 * * a user up to 9 seconds more than pingfreq to timeout. Oh well.
+	 * * Plus, the number is 9 to 'stagger' our check_pings calls out over
+	 * * time, to avoid doing it and the other tasks ircd does at the same time
+	 * * all the time (which are usually done on intervals of 5 seconds or so). 
+	 * * - lucas
+	 * *
 	 */
 	if (loop.do_bancheck)
 		loop.do_bancheck = 0;
-	oldest = currenttime + 9;
 	Debug((DEBUG_NOTICE, "Next check_ping() call at: %s, %d %d %d",
-	    myctime(oldest), ping, oldest, currenttime));
+	    myctime(currenttime+9), ping, currenttime+9, currenttime));
 
-	return oldest;
+	return currenttime + 9;
 }
 
 /*
@@ -697,7 +696,8 @@ static int bad_command(void)
 #define CMDLINE_CFG ""
 #endif
 	(void)printf
-	    ("Usage: ircd %s[-h servername] [-p portnumber] [-x loglevel] [-t] [-H]\n",CMDLINE_CFG);
+	    ("Usage: ircd %s[-h servername] [-p portnumber] [-x loglevel] [-t] [-H]\n",
+	    CMDLINE_CFG);
 	(void)printf("Server not started\n\n");
 #else
 	MessageBox(NULL,
@@ -711,19 +711,17 @@ char chess[] = {
 	85, 110, 114, 101, 97, 108, 0
 };
 #ifndef NO_FDLIST
-inline TS   check_fdlists(TS now)
+inline TS check_fdlists(TS now)
 {
 	aClient *cptr;
 	int  pri;		/* temp. for priority */
 	int  i, j;
 	j = 0;
-	for (i = LastSlot; i >= 0; i--)
-	{
+	for (i = LastSlot; i >= 0; i--) {
 		if (!(cptr = local[i]))
 			continue;
 		if (IsServer(cptr) || IsListening(cptr)
-		    || IsOper(cptr) || DoingAuth(cptr))
-		{
+		    || IsOper(cptr) || DoingAuth(cptr)) {
 			busycli_fdlist.entry[++j] = i;
 			continue;
 		}
@@ -744,6 +742,7 @@ inline TS   check_fdlists(TS now)
 	busycli_fdlist.last_entry = j;	/* rest of the fdlist is garbage */
 	return (now + FDLISTCHKFREQ + lifesux * FDLISTCHKFREQ);
 }
+
 EVENT(e_check_fdlists)
 {
 	check_fdlists(TStime());
@@ -754,9 +753,9 @@ EVENT(e_check_fdlists)
 extern time_t TSoffset;
 
 #ifndef _WIN32
-int  main(int argc, char *argv[])
+int main(int argc, char *argv[])
 #else
-int  InitwIRCD(int argc, char *argv[])
+int InitwIRCD(int argc, char *argv[])
 #endif
 {
 #ifdef _WIN32
@@ -787,14 +786,12 @@ int  InitwIRCD(int argc, char *argv[])
 # endif
 #endif
 #ifdef	CHROOTDIR
-	if (chdir(dpath))
-	{
+	if (chdir(dpath)) {
 		perror("chdir");
 		exit(-1);
 	}
 	ircd_res_init();
-	if (chroot(DPATH))
-	{
+	if (chroot(DPATH)) {
 		(void)fprintf(stderr, "ERROR:  Cannot chdir/chroot\n");
 		exit(5);
 	}
@@ -816,27 +813,22 @@ int  InitwIRCD(int argc, char *argv[])
 		printf("unlimit core size failed; errno = %d\n", errno);
 #endif
 	/*
-	   ** All command line parameters have the syntax "-fstring"
-	   ** or "-f string" (e.g. the space is optional). String may
-	   ** be empty. Flag characters cannot be concatenated (like
-	   ** "-fxyz"), it would conflict with the form "-fstring".
+	 * ** All command line parameters have the syntax "-fstring"
+	 * ** or "-f string" (e.g. the space is optional). String may
+	 * ** be empty. Flag characters cannot be concatenated (like
+	 * ** "-fxyz"), it would conflict with the form "-fstring".
 	 */
-	while (--argc > 0 && (*++argv)[0] == '-')
-	{
+	while (--argc > 0 && (*++argv)[0] == '-') {
 		char *p = argv[0] + 1;
 		int  flag = *p++;
-		if (flag == '\0' || *p == '\0')
-		{
-			if (argc > 1 && argv[1][0] != '-')
-			{
+		if (flag == '\0' || *p == '\0') {
+			if (argc > 1 && argv[1][0] != '-') {
 				p = *++argv;
 				argc -= 1;
-			}
-			else
+			} else
 				p = "";
 		}
-		switch (flag)
-		{
+		switch (flag) {
 #ifndef _WIN32
 		  case 'a':
 			  bootopt |= BOOT_AUTODIE;
@@ -865,42 +857,43 @@ int  InitwIRCD(int argc, char *argv[])
 			  break;
 #endif
 		  case 'h':
-			  if (!strchr(p, '.'))
-			  {
+			  if (!strchr(p, '.')) {
 
 				  (void)printf
 				      ("ERROR: %s is not valid: Server names must contain at least 1 \".\"\n",
-				      p); exit(1);
+				      p);
+				  exit(1);
 			  }
 			  strncpyzt(me.name, p, sizeof(me.name));
 			  break;
 #endif
 #ifndef _WIN32
-		  case 'P': {
+		  case 'P':{
 			  short type;
 			  char *result;
 			  srandom(TStime());
 			  if ((type = Auth_FindType(p)) == -1) {
-				printf("No such auth type %s\n", p);
-				exit(0);
+				  printf("No such auth type %s\n", p);
+				  exit(0);
 			  }
 			  p = *++argv;
 			  argc--;
 			  if (!(result = Auth_Make(type, p))) {
-				printf("Authentication failed\n");
-				exit(0);
+				  printf("Authentication failed\n");
+				  exit(0);
 			  }
 			  printf("Encrypted password is: %s\n", result);
 			  exit(0);
 		  }
-#endif			
-			
+#endif
+
 		  case 'p':
 			  if ((portarg = atoi(p)) > 0)
 				  portnum = portarg;
 			  break;
 		  case 's':
-			  (void)printf("sizeof(aClient) == %u\n", sizeof(aClient));
+			  (void)printf("sizeof(aClient) == %u\n",
+			      sizeof(aClient));
 			  (void)printf("sizeof(aChannel) == %u\n",
 			      sizeof(aChannel));
 			  (void)printf("sizeof(aServer) == %u\n",
@@ -913,7 +906,8 @@ int  InitwIRCD(int argc, char *argv[])
 			  (void)printf("sizeof(struct ircstatsx) == %u\n",
 			      sizeof(struct ircstatsx));
 			  (void)printf("aClient remote == %u\n",
-			      CLIENT_REMOTE_SIZE); exit(0);
+			      CLIENT_REMOTE_SIZE);
+			  exit(0);
 			  break;
 #ifndef _WIN32
 		  case 't':
@@ -928,19 +922,19 @@ int  InitwIRCD(int argc, char *argv[])
 			      "UnrealIRCD/Win32 version", MB_OK);
 #endif
 			  exit(0);
-		case 'W': {
-			struct IN_ADDR bah;
-			int bit;
-			parse_netmask("255.255.255.255/8", &bah, &bit);
-			printf("%s - %d\n",Inet_ia2p(&bah), bit);
-			flag_add("m");
-			flag_del('m');
-			flag_add("n");
-			flag_add("m");
-			flag_del('m');
-			printf("%s\n", extraflags);
-			exit(0);
-		}
+		  case 'W':{
+			  struct IN_ADDR bah;
+			  int  bit;
+			  parse_netmask("255.255.255.255/8", &bah, &bit);
+			  printf("%s - %d\n", Inet_ia2p(&bah), bit);
+			  flag_add("m");
+			  flag_del('m');
+			  flag_add("n");
+			  flag_add("m");
+			  flag_del('m');
+			  printf("%s\n", extraflags);
+			  exit(0);
+		  }
 		  case 'C':
 			  conf_debuglevel = atoi(p);
 			  break;
@@ -972,8 +966,7 @@ int  InitwIRCD(int argc, char *argv[])
 	}
 
 #ifndef	CHROOT
-	if (chdir(dpath))
-	{
+	if (chdir(dpath)) {
 # ifndef _WIN32
 		perror("chdir");
 # else
@@ -985,8 +978,7 @@ int  InitwIRCD(int argc, char *argv[])
 #endif
 
 #if !defined(IRC_UID) && !defined(_WIN32)
-	if ((uid != euid) && !euid)
-	{
+	if ((uid != euid) && !euid) {
 		(void)fprintf(stderr,
 		    "ERROR: do not run ircd setuid root. Make it setuid a\
  normal user.\n");
@@ -1004,40 +996,47 @@ int  InitwIRCD(int argc, char *argv[])
  * Modified 13/2000 DrBin
  * We need to have better controll over running as root ... see config.h
  */
-	if ((int)getuid() == 0)
-	{
+	if ((int)getuid() == 0) {
 #ifndef BIG_SECURITY_HOLE
-		if ((IRC_UID == 0) || (IRC_GID == 0))
-		{
-			(void)fprintf(stderr, "ERROR: SETUID and SETGID have not been set properly"
+		if ((IRC_UID == 0) || (IRC_GID == 0)) {
+			(void)fprintf(stderr,
+			    "ERROR: SETUID and SETGID have not been set properly"
 			    "\nPlease read your documentation\n(HINT:SETUID or SETGID can not be 0)\n");
 			exit(-1);
-		}
-		else
-		{
-			/* run as a specified user */
+		} else {
+			/*
+			 * run as a specified user 
+			 */
 
-			(void)fprintf(stderr, "WARNING: ircd invoked as root\n");
-                        (void)fprintf(stderr, "         changing to uid %d\n", IRC_UID);
-			(void)fprintf(stderr, "         changing to gid %d\n", IRC_GID);
+			(void)fprintf(stderr,
+			    "WARNING: ircd invoked as root\n");
+			(void)fprintf(stderr, "         changing to uid %d\n",
+			    IRC_UID);
+			(void)fprintf(stderr, "         changing to gid %d\n",
+			    IRC_GID);
 			(void)setgid(IRC_GID);
-                        (void)setuid(IRC_UID);
+			(void)setuid(IRC_UID);
 		}
 #else
-		/* check for setuid root as usual */
+		/*
+		 * check for setuid root as usual 
+		 */
 		(void)fprintf(stderr,
 		    "ERROR: do not run ircd setuid root. Make it setuid a\
  normal user.\n");
 		exit(-1);
 # endif
 	}
-#endif /*CHROOTDIR/UID/GID/_WIN32 */
+#endif				/*CHROOTDIR/UID/GID/_WIN32 */
 
 #ifndef _WIN32
-	/* didn't set debuglevel */
-	/* but asked for debugging output to tty */
-	if ((debuglevel < 0) && (bootopt & BOOT_TTY))
-	{
+	/*
+	 * didn't set debuglevel 
+	 */
+	/*
+	 * but asked for debugging output to tty 
+	 */
+	if ((debuglevel < 0) && (bootopt & BOOT_TTY)) {
 		(void)fprintf(stderr,
 		    "you specified -t without -x. use -x <n>\n");
 		exit(-1);
@@ -1061,20 +1060,23 @@ int  InitwIRCD(int argc, char *argv[])
 	booted = FALSE;
 /* Hack to stop people from being able to read the config file */
 #if !defined(_WIN32) && !defined(_AMIGA) && DEFAULT_PERMISSIONS != 0
-	chmod(CPATH,DEFAULT_PERMISSIONS);
+	chmod(CPATH, DEFAULT_PERMISSIONS);
 #endif
 	init_dynconf();
-#ifdef STATIC_LINKING	
+#ifdef STATIC_LINKING
 	{
 		ModuleInfo ModCoreInfo;
 		ModCoreInfo.size = sizeof(ModuleInfo);
 		ModCoreInfo.module_load = 0;
 		ModCoreInfo.handle = NULL;
-	        l_commands_Init(&ModCoreInfo);
+		l_commands_Init(&ModCoreInfo);
 	}
 #endif
-	/* Add default class */
-	default_class = (ConfigItem_class *) MyMallocEx(sizeof(ConfigItem_class));
+	/*
+	 * Add default class 
+	 */
+	default_class =
+	    (ConfigItem_class *) MyMallocEx(sizeof(ConfigItem_class));
 	default_class->flag.permanent = 1;
 	default_class->pingfreq = PINGFREQUENCY;
 	default_class->maxclients = 100;
@@ -1119,10 +1121,14 @@ int  InitwIRCD(int argc, char *argv[])
 #ifdef HAVE_SYSLOG
 	openlog("ircd", LOG_PID | LOG_NDELAY, LOG_DAEMON);
 #endif
-	/* Put in our info */
+	/*
+	 * Put in our info 
+	 */
 	strncpyzt(me.info, conf_me->info, sizeof(me.info));
 	strncpyzt(me.name, conf_me->name, sizeof(me.name));
-	/* We accept the first listen record */
+	/*
+	 * We accept the first listen record 
+	 */
 	portnum = conf_listen->port;
 /*
  *      This is completely unneeded-Sts
@@ -1149,7 +1155,9 @@ int  InitwIRCD(int argc, char *argv[])
 	me.user = NULL;
 	me.from = &me;
 	me.class = (ConfigItem_class *) conf_listen;
-	/* This listener will never go away */
+	/*
+	 * This listener will never go away 
+	 */
 	conf_listen->clients++;
 	me_hash = find_or_add(me.name);
 	me.serv->up = me_hash;
@@ -1180,6 +1188,7 @@ int  InitwIRCD(int argc, char *argv[])
 	write_pidfile();
 	Debug((DEBUG_NOTICE, "Server ready..."));
 	SetupEvents();
+	loop.do_bancheck = 0;
 	loop.ircd_booted = 1;
 #if defined(HAVE_SETPROCTITLE)
 	setproctitle("%s", me.name);
@@ -1192,7 +1201,7 @@ int  InitwIRCD(int argc, char *argv[])
 #endif
 	module_loadall(0);
 #ifdef STATIC_LINKING
-        l_commands_Load(0);
+	l_commands_Load(0);
 #endif
 
 #ifndef NO_FDLIST
@@ -1212,12 +1221,13 @@ void SocketLoop(void *dummy)
 #ifndef NO_FDLIST
 	TS   nextfdlistcheck = 0;	/*end of priority code */
 #endif
-	
+
 	while (1)
 #else
-	/* Forever drunk .. forever drunk ..
-	 * (Sorry Alphaville.)
-	*/
+	/*
+	 * Forever drunk .. forever drunk ..
+	 * * (Sorry Alphaville.)
+	 */
 	for (;;)
 #endif
 	{
@@ -1225,17 +1235,17 @@ void SocketLoop(void *dummy)
 
 		oldtimeofday = timeofday;
 		timeofday = time(NULL) + TSoffset;
-		if (timeofday - oldtimeofday < 0)
-		{
-			sendto_realops("Time running backwards! %i-%i<0", timeofday, oldtimeofday);
+		if (timeofday - oldtimeofday < 0) {
+			sendto_realops("Time running backwards! %i-%i<0",
+			    timeofday, oldtimeofday);
 		}
 		LockEventSystem();
 		DoEvents();
 		UnlockEventSystem();
 		/*
-		   ** Run through the hashes and check lusers every
-		   ** second
-		   ** also check for expiring glines
+		 * ** Run through the hashes and check lusers every
+		 * ** second
+		 * ** also check for expiring glines
 		 */
 
 #ifndef NO_FDLIST
@@ -1247,26 +1257,26 @@ void SocketLoop(void *dummy)
 		if (IRCstats.me_clients > IRCstats.me_max)
 			IRCstats.me_max = IRCstats.me_clients;
 		/*
-		   ** We only want to connect if a connection is due,
-		   ** not every time through.  Note, if there are no
-		   ** active C lines, this call to Tryconnections is
-		   ** made once only; it will return 0. - avalon
+		 * ** We only want to connect if a connection is due,
+		 * ** not every time through.  Note, if there are no
+		 * ** active C lines, this call to Tryconnections is
+		 * ** made once only; it will return 0. - avalon
 		 */
 		if (nextconnect && timeofday >= nextconnect)
 			nextconnect = try_connections(timeofday);
 		/*
-		   ** DNS checks. One to timeout queries, one for cache expiries.
+		 * ** DNS checks. One to timeout queries, one for cache expiries.
 		 */
 		if (timeofday >= nextdnscheck)
 			nextdnscheck = timeout_query_list(timeofday);
 		if (timeofday >= nextexpire)
 			nextexpire = expire_cache(timeofday);
-		    /*
-		       ** take the smaller of the two 'timed' event times as
-		       ** the time of next event (stops us being late :) - avalon
-		       ** WARNING - nextconnect can return 0!
-		     */
-		    if (nextconnect)
+		/*
+		 * ** take the smaller of the two 'timed' event times as
+		 * ** the time of next event (stops us being late :) - avalon
+		 * ** WARNING - nextconnect can return 0!
+		 */
+		if (nextconnect)
 			delay = MIN(nextping, nextconnect);
 		else
 			delay = nextping;
@@ -1274,13 +1284,13 @@ void SocketLoop(void *dummy)
 		delay = MIN(nextexpire, delay);
 		delay -= timeofday;
 		/*
-		   ** Adjust delay to something reasonable [ad hoc values]
-		   ** (one might think something more clever here... --msa)
-		   ** We don't really need to check that often and as long
-		   ** as we don't delay too long, everything should be ok.
-		   ** waiting too long can cause things to timeout...
-		   ** i.e. PINGS -> a disconnection :(
-		   ** - avalon
+		 * ** Adjust delay to something reasonable [ad hoc values]
+		 * ** (one might think something more clever here... --msa)
+		 * ** We don't really need to check that often and as long
+		 * ** as we don't delay too long, everything should be ok.
+		 * ** waiting too long can cause things to timeout...
+		 * ** i.e. PINGS -> a disconnection :(
+		 * ** - avalon
 		 */
 		if (delay < 1)
 			delay = 1;
@@ -1291,59 +1301,59 @@ void SocketLoop(void *dummy)
 #else
 		(void)read_message(0, &serv_fdlist);	/* servers */
 		(void)read_message(1, &busycli_fdlist);	/* busy clients */
-		if (lifesux)
-		{
+		if (lifesux) {
 			static time_t alllasttime = 0;
 
 			(void)read_message(1, &serv_fdlist);
-			/* read servs more often */
-			if (lifesux > 9)	/* life really sucks */
-			{
+			/*
+			 * read servs more often 
+			 */
+			if (lifesux > 9) {	/* life really sucks */
 				(void)read_message(1, &busycli_fdlist);
 				(void)read_message(1, &serv_fdlist);
 			}
 			flush_fdlist_connections(&serv_fdlist);
 			timeofday = time(NULL) + TSoffset;
-			if ((alllasttime + (lifesux + 1)) > timeofday)
-			{
+			if ((alllasttime + (lifesux + 1)) > timeofday) {
 				read_message(delay, NULL);	/*  check everything */
 				alllasttime = timeofday;
 			}
-		}
-		else
-		{
+		} else {
 			read_message(delay, NULL);	/*  check everything */
 		}
 
 #endif
-		/*Debug((DEBUG_DEBUG, "Got message(s)")); */
 		/*
-		   ** ...perhaps should not do these loops every time,
-		   ** but only if there is some chance of something
-		   ** happening (but, note that conf->hold times may
-		   ** be changed elsewhere--so precomputed next event
-		   ** time might be too far away... (similarly with
-		   ** ping times) --msa
+		 * Debug((DEBUG_DEBUG, "Got message(s)")); 
+		 */
+		/*
+		 * ** ...perhaps should not do these loops every time,
+		 * ** but only if there is some chance of something
+		 * ** happening (but, note that conf->hold times may
+		 * ** be changed elsewhere--so precomputed next event
+		 * ** time might be too far away... (similarly with
+		 * ** ping times) --msa
 		 */
 #ifdef NO_FDLIST
-		if ((timeofday >= nextping) || (loop.do_bancheck))
+		if (timeofday >= nextping || loop.do_bancheck)
 #else
-		if ((timeofday >= nextping && !lifesux) || (loop.do_bancheck))
+		if ((timeofday >= nextping && !lifesux) || loop.do_bancheck)
 #endif
 			nextping = check_pings(timeofday);
-		if (dorehash)
-		{
+		if (dorehash) {
 			(void)rehash(&me, &me, 1);
 			dorehash = 0;
 		}
 		/*
-		   ** Flush output buffers on all connections timeofday if they
-		   ** have data in them (or at least try to flush)
-		   ** -avalon
+		 * ** Flush output buffers on all connections timeofday if they
+		 * ** have data in them (or at least try to flush)
+		 * ** -avalon
 		 */
 
 #ifndef NO_FDLIST
-		/* check which clients are active */
+		/*
+		 * check which clients are active 
+		 */
 		if (timeofday > nextfdlistcheck)
 			nextfdlistcheck = check_fdlists(timeofday);
 #endif
@@ -1366,33 +1376,32 @@ static void open_debugfile(void)
 #ifdef	DEBUGMODE
 	int  fd;
 	aClient *cptr;
-	if (debuglevel >= 0)
-	{
+	if (debuglevel >= 0) {
 		cptr = make_client(NULL, NULL);
 		cptr->fd = 2;
 		SetLog(cptr);
 		cptr->port = debuglevel;
 		cptr->flags = 0;
 		cptr->listener = cptr;
-		/* local[2] = cptr;  winlocal */
-		(void)strlcpy(cptr->sockhost, me.sockhost, sizeof cptr->sockhost);
+		/*
+		 * local[2] = cptr;  winlocal 
+		 */
+		(void)strlcpy(cptr->sockhost, me.sockhost,
+		    sizeof cptr->sockhost);
 # ifndef _WIN32
 		(void)printf("isatty = %d ttyname = %#x\n",
 		    isatty(2), (u_int)ttyname(2));
-		if (!(bootopt & BOOT_TTY))	/* leave debugging output on fd 2 */
-		{
+		if (!(bootopt & BOOT_TTY)) {	/* leave debugging output on fd 2 */
 			(void)truncate(LOGFILE, 0);
 			if ((fd = open(LOGFILE, O_WRONLY | O_CREAT, 0600)) < 0)
 				if ((fd = open("/dev/null", O_WRONLY)) < 0)
 					exit(-1);
-			if (fd != 2)
-			{
+			if (fd != 2) {
 				(void)dup2(fd, 2);
 				(void)close(fd);
 			}
 			strncpyzt(cptr->name, LOGFILE, sizeof(cptr->name));
-		}
-		else if (isatty(2) && ttyname(2))
+		} else if (isatty(2) && ttyname(2))
 			strncpyzt(cptr->name, ttyname(2), sizeof(cptr->name));
 		else
 # endif
@@ -1400,11 +1409,12 @@ static void open_debugfile(void)
 		Debug((DEBUG_FATAL,
 		    "Debug: File <%s> Level: %d at %s", cptr->name,
 		    cptr->port, myctime(time(NULL))));
-	}
-	else
-		/* local[2] = NULL; winlocal */
+	} else
+		/*
+		 * local[2] = NULL; winlocal 
+		 */
 #endif
-	return;
+		return;
 }
 
 static void setup_signals()
@@ -1460,13 +1470,13 @@ static void setup_signals()
 #endif
 #ifdef RESTARTING_SYSTEMCALLS
 	/*
-	   ** At least on Apollo sr10.1 it seems continuing system calls
-	   ** after signal is the default. The following 'siginterrupt'
-	   ** should change that default to interrupting calls.
+	 * ** At least on Apollo sr10.1 it seems continuing system calls
+	 * ** after signal is the default. The following 'siginterrupt'
+	 * ** should change that default to interrupting calls.
 	 */
 	(void)siginterrupt(SIGALRM, 1);
 #endif
 #else
-	(void)signal(SIGSEGV,CleanUpSegv);
+	(void)signal(SIGSEGV, CleanUpSegv);
 #endif
 }

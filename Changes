@@ -1289,3 +1289,4 @@ seen. gmtime warning still there
 - Rewrote check_pings and the whole way banning people are handled. Do loop.do_bancheck = 1
    to provoke a bans check. This possibly fixes #00001702, #0000137 and other
   funny bugs.
+- Fixed a number of bugs in the upper patch. 
