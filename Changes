@@ -1821,3 +1821,4 @@ seen. gmtime warning still there
 - Blah... forgot to remove some debugging code in badwords.c (new fast replace system).
 - Fixed yet another bug in new badwords replace system (should be almost finished now! ;P).
 - Optimization: channel msg routine now 10-30% faster.
+- Fixed 2-bans-needed-trick. (#0000626)

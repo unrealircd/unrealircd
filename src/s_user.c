@@ -2478,6 +2478,9 @@ CMD_FUNC(m_umode)
 		sendto_serv_butone_token_opt(cptr, OPT_VHP, sptr->name,
 			MSG_SETHOST, TOK_SETHOST, "%s", sptr->user->virthost);
 	}
+
+/* Disabled because we use this for checking bans against virthosts -- Syzop */
+#if 0
 	if (!IsHidden(sptr) && (setflags & UMODE_HIDE))
 	{
 			if (sptr->user->virthost)
@@ -2486,6 +2489,7 @@ CMD_FUNC(m_umode)
 				sptr->user->virthost = NULL;
 			}
 	}
+#endif
 	/*
 	 * If I understand what this code is doing correctly...
 	 *   If the user WAS an operator and has now set themselves -o/-O
