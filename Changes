@@ -458,3 +458,7 @@
 - Made typing /kline, /shun, /zline, and /gzline correctly report the correct /stats flag,
   and these commands now produce the same output as the respective /stats flag they emulate
   (#0002149) reported by Snake
+- Renamed some calls from report_error() to report_baderror() since otherwise the errors are
+  hardly ever seen (unless you have +s +j set). For example a bad link::bind-ip only caused
+  "Couldn't connect to xxxxxx" without any meaningful error message. Additionally, errors
+  sent to report_baderror() are now logged.
