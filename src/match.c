@@ -41,7 +41,7 @@ u_char touppertab[], tolowertab[];
  * match()
  *  written by binary
  */
-static inline int match2(char *mask, char *name)
+static inline int match2(const char *mask, const char *name)
 {
 	u_char *m;		/* why didn't the old one use registers */
 	u_char *n;		/* because registers suck -- codemastr */
@@ -230,7 +230,7 @@ char *collapse(char *pattern)
  *		<0, if s1 lexicographically less than s2
  *		>0, if s1 lexicographically greater than s2
  */
-int  smycmp(char *s1, char *s2)
+int  smycmp(const char *s1, const char *s2)
 {
 	u_char *str1;
 	u_char *str2;
@@ -250,7 +250,7 @@ int  smycmp(char *s1, char *s2)
 }
 
 
-int  myncmp(char *str1, char *str2, int n)
+int  myncmp(const char *str1, const char *str2, int n)
 {
 	u_char *s1;
 	u_char *s2;
@@ -411,13 +411,13 @@ u_char char_atribs[] = {
 };
 
 /* Old match() */
-int _match(char *mask, char *name) {
+int _match(const char *mask, const char *name) {
 	return match2(mask,name);
 }
 
 
 /* Old match() plus some optimizations from bahamut */
-int match(char *mask, char *name) {
+int match(const char *mask, const char *name) {
 	if (mask[0] == '*' && mask[1] == '!') {
 		mask += 2;
 		while (*name != '!' && *name)
