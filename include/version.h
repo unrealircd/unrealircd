@@ -31,7 +31,7 @@
 #define PATCH1  		"3"
 #define PATCH2  		".2"
 #define PATCH3  		"-Selene"
-#define PATCH4  		"[DEVEL]"
+#define PATCH4  		"[beta1]"
 #define PATCH5  		""
 #define PATCH6  		""
 #define PATCH7  		""

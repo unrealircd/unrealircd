@@ -685,3 +685,4 @@ seen. gmtime warning still there
 - Removed the redefining stuff in s_conf.c
 - Documentation (example.conf from Osiris)
 - Documentation bug fix
+- Changed version to -beta1
