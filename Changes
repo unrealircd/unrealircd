@@ -289,3 +289,5 @@
 - Made NAME_SERVER (set::dns::nameserver work). The IRCd no longer
   uses /etc/resolv.conf as reference.
 - Updated most of /stats S for newconf
+- You can now specify oper flags using the old method:
+	(new method) flags { flags here }; (old method) flags flags_here;

@@ -121,6 +121,39 @@ static ConfigCommand _ConfigCommands[] = {
 	{ NULL, 		NULL  }
 };
 
+static int _OldOperFlags[] = {
+	OFLAG_LOCAL, 'o',
+	OFLAG_GLOBAL, 'O',
+	OFLAG_REHASH, 'r',
+	OFLAG_EYES, 'e',
+	OFLAG_DIE, 'D',
+	OFLAG_RESTART, 'R',
+	OFLAG_HELPOP, 'h',
+	OFLAG_GLOBOP, 'g',
+	OFLAG_WALLOP, 'w',
+	OFLAG_LOCOP, 'l',
+	OFLAG_LROUTE, 'c',
+	OFLAG_GROUTE, 'L',
+	OFLAG_LKILL, 'k',
+	OFLAG_GKILL, 'K',
+	OFLAG_KLINE, 'b',
+	OFLAG_UNKLINE, 'B',
+	OFLAG_LNOTICE, 'n',
+	OFLAG_GNOTICE, 'G',
+	OFLAG_ADMIN, 'A',
+	OFLAG_SADMIN, 'a',
+	OFLAG_NETADMIN, 'N',
+	OFLAG_COADMIN, 'C',
+	OFLAG_TECHADMIN, 'T',
+	OFLAG_UMODEC, 'u',
+	OFLAG_UMODEF, 'f',
+	OFLAG_ZLINE, 'z',
+	OFLAG_WHOIS, 'W',
+	OFLAG_HIDE, 'H',
+	OFLAG_INVISIBLE, '^',
+	0, 0
+};
+
 static OperFlag _OperFlags[] = {
 	{ OFLAG_LOCAL,		"local" },
 	{ OFLAG_GLOBAL,		"global" },
@@ -1041,7 +1074,22 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 						cep->ce_fileptr->cf_filename,
 						cep->ce_varlinenum);
 				}
-			} else
+			} 
+			else if (!strcmp(cep->ce_varname, "flags")) 
+			{
+				char *m = "*";
+				int *i, flag;
+			
+					for (m = (*cep->ce_vardata) ? cep->ce_vardata : m; *m; m++) {
+						for (i = _OldOperFlags; (flag = *i); i += 2)
+							if (*m == (char)(*(i + 1))) {
+								oper->oflags |= flag;
+								break;
+							}
+				}
+			}
+
+			else
 			{
 				config_status("%s:%i: unknown directive oper::%s",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
