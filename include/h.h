@@ -121,7 +121,7 @@ ConfigItem_oper		*Find_oper(char *name);
 ConfigItem_listen	*Find_listen(char *ipmask, int port);
 ConfigItem_ulines	*Find_uline(char *host);
 ConfigItem_except	*Find_except(char *host, short type);
-ConfigItem_tld		*Find_tld(char *host);
+ConfigItem_tld		*Find_tld(aClient *cptr, char *host);
 ConfigItem_link		*Find_link(char *username, char *hostname, char *ip, char *servername);
 ConfigItem_ban 		*Find_ban(char *host, short type);
 ConfigItem_ban 		*Find_banEx(char *host, short type, short type2);

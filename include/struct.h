@@ -988,12 +988,16 @@ struct _configitem_ulines {
 	char 		 *servername;
 };
 
+#define TLD_SSL		0x1
+#define TLD_REMOTE	0x2
+
 struct _configitem_tld {
 	ConfigItem 	*prev, *next;
 	ConfigFlag_tld 	flag;
 	char 		*mask, *motd_file, *rules_file, *channel;
 	struct tm	*motd_tm;
 	aMotd		*rules, *motd;
+	u_short		options;
 };
 
 struct _configitem_listen {

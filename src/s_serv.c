@@ -3963,11 +3963,7 @@ HUNTED_ISME)
 	}
 #endif
 	strlcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost), sizeof userhost);
-	for (ptr = conf_tld; ptr; ptr = (ConfigItem_tld *) ptr->next)
-	{
-		if (!match(ptr->mask, userhost))
-			break;
-	}
+	ptr = Find_tld(sptr, userhost);
 
 	if (ptr)
 	{
@@ -4258,11 +4254,7 @@ CMD_FUNC(m_rules)
 	}
 #endif
 	strlcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost), sizeof userhost);
-	for (ptr = conf_tld; ptr; ptr = (ConfigItem_tld *) ptr->next)
-	{
-		if (!match(ptr->mask, userhost))
-			break;
-	}
+	ptr = Find_tld(sptr, userhost);
 
 	if (ptr)
 	{

@@ -21,7 +21,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 Beta15<br>
-  <b>Last doc update:</b> 2003-04-06 </div>
+  <b>Last doc update:</b> 2003-04-11 </div>
   <b>Head Coders:</b> Stskeeps / codemastr / Luke / McSkaf / Syzop<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -1009,14 +1009,20 @@ tld {
 	motd &lt;motd-file&gt;;
 	rules &lt;rules-file&gt;;
 	channel &lt;channel-name&gt;;
+	options {
+		ssl;
+	}
 };</pre></p>
 <p>The tld block allows you to specify a motd, rules, and channel for a user based 
   on their host. This is useful if you want different motds for different languages. 
-  The tld::mask is a user@host mask that the user's username and hostname must 
-  match. The tld::motd and tld::rules specify the motd and rules file, respectively, 
-  to be displayed to this hostmask. Lastly the tld::channel is optional, it allows 
+  The <b>tld::mask</b> is a user@host mask that the user's username and hostname must 
+  match. The <b>tld::motd</b> and <b>tld::rules</b> specify the motd and rules file, respectively, 
+  to be displayed to this hostmask. <b>tld::channel</b> is optional, it allows 
   you to specify a channel that this user will be forced to join on connect. If 
-  this exists it will override the default auto join channel.</p>
+  this exists it will override the default auto join channel.
+  The <b>tld::options</b> block allows you to define additional requirements,
+  currently only tld::options::ssl exists.</p>
+<p>TLD entries are matches upside down</p>
 <p>Example:<br>
 <pre>
 tld {

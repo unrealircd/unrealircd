@@ -1920,16 +1920,22 @@ ConfigItem_except *Find_except(char *host, short type) {
 	return NULL;
 }
 
-ConfigItem_tld *Find_tld(char *host) {
+ConfigItem_tld *Find_tld(aClient *cptr, char *uhost) {
 	ConfigItem_tld *tld;
 
-	if (!host)
+	if (!uhost || !cptr)
 		return NULL;
 
 	for(tld = conf_tld; tld; tld = (ConfigItem_tld *) tld->next)
 	{
-		if (!match(tld->mask, host))
+		if (!match(tld->mask, uhost))
+		{
+			if ((tld->options & TLD_SSL) && !IsSecure(cptr))
+				continue;
+			if ((tld->options & TLD_REMOTE) && MyClient(cptr))
+				continue;
 			return tld;
+		}
 	}
 	return NULL;
 }
@@ -3095,8 +3101,8 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 	ConfigItem_tld *ca;
 
-	ca = MyMallocEx(sizeof(ConfigItem_tld)); cep =
-	config_find_entry(ce->ce_entries, "mask");
+	ca = MyMallocEx(sizeof(ConfigItem_tld));
+	cep = config_find_entry(ce->ce_entries, "mask");
 	ca->mask = strdup(cep->ce_vardata);
 	cep = config_find_entry(ce->ce_entries, "motd");
 	ca->motd = read_motd(cep->ce_vardata); 
@@ -3105,7 +3111,17 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 	cep = config_find_entry(ce->ce_entries, "rules");
 	ca->rules = read_rules(cep->ce_vardata);
 	ca->rules_file = strdup(cep->ce_vardata);
-	
+	cep = config_find_entry(ce->ce_entries, "options");
+	if (cep)
+	{
+		for (cep = cep->ce_entries; cep; cep = cep->ce_next)
+		{
+			if (!strcmp(cep->ce_varname, "ssl"))
+				ca->options |= TLD_SSL;
+			else if (!strcmp(cep->ce_varname, "remote"))
+				ca->options |= TLD_REMOTE;
+		}
+	}	
 	if ((cep = config_find_entry(ce->ce_entries, "channel")))
 		ca->channel = strdup(cep->ce_vardata);
 	AddListItem(ca, conf_tld);
@@ -3126,7 +3142,7 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 				cep->ce_varlinenum);
 			errors++; continue;
 		}
-		if (!cep->ce_vardata)
+		if (!cep->ce_vardata && strcmp(cep->ce_varname, "options"))
 		{
 			config_error("%s:%i: missing parameter in tld::%s",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
@@ -3140,6 +3156,23 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "rules")) {
 		}
 		else if (!strcmp(cep->ce_varname, "channel")) {
+		}
+		else if (!strcmp(cep->ce_varname, "options")) {
+			ConfigEntry *cep2;
+			for (cep2 = cep->ce_entries; cep2; cep2 = cep2->ce_next)
+			{
+				if (!strcmp(cep2->ce_varname, "ssl")) {
+				}
+				else if (!strcmp(cep2->ce_varname, "remote")) {
+				}
+				else
+				{
+					config_error("%s:%i: unknown option tld::options::%s",
+						cep2->ce_fileptr->cf_filename, cep2->ce_varlinenum,
+						cep2->ce_varname);
+					errors++;
+				}
+			}
 		}
 		else
 		{
