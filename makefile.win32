@@ -44,7 +44,7 @@ MOD_FILES=SRC/L_COMMANDS.OBJ SRC/M_CHGHOST.OBJ SRC/M_SDESC.OBJ SRC/M_SETIDENT.OB
  SRC/M_PINGPONG.OBJ SRC/M_QUIT.OBJ SRC/M_RAKILL.OBJ SRC/M_RPING.OBJ SRC/M_SENDUMODE.OBJ \
  SRC/M_SQLINE.OBJ SRC/M_KILL.OBJ SRC/M_TSCTL.OBJ SRC/M_UNKLINE.OBJ \
  SRC/M_UNSQLINE.OBJ SRC/M_UNZLINE.OBJ SRC/M_WHOIS.OBJ SRC/M_ZLINE.OBJ \
- SRC/SCAN.OBJ SRC/SCAN_SOCKS.OBJ SRC/SCAN_HTTP.OBJ SRC/M_TKL.OBJ
+ SRC/SCAN.OBJ SRC/SCAN_SOCKS.OBJ SRC/SCAN_HTTP.OBJ SRC/M_TKL.OBJ SRC/INVISIBILITY.OBJ
 
 
 ALL: CONF WIRCD.EXE
@@ -353,6 +353,9 @@ src/scan_socks.obj: src/modules/scan_socks.c $(INCLUDES)
 
 src/scan_http.obj: src/modules/scan_http.c $(INCLUDES)
         $(CC) $(CFLAGS) src/modules/scan_http.c
+
+src/invisibility.obj: src/modules/invisibility.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/invisibility.c
 
 src/win32/win32.res: src/win32/win32gui.rc
         $(RC) /l 0x409 /fosrc/win32/win32.res /i ./include /i ./src \

@@ -53,14 +53,14 @@ ModuleHeader Mod_Header
 	"invisibility",
 	"$Id$",
 	"+I mode", 
-	"3.2-b5",
+	"3.2-b8-1",
 	NULL 
     };
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(int module_load)
+DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
 #else
-int    invisibility_Init(int module_load)
+int    invisibility_Init(ModuleInfo *modinfo)
 #endif
 {
 	UMODE_HIDING = umode_get('I');	
