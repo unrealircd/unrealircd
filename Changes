@@ -402,3 +402,4 @@
   Gilou and Trankill for making me able to trace this issue down (#0002032).
 - Fixed qline notices again: now gives msg #1 for local qlined-nick attempts, and
   another msg in case of a remote client (eg: oper) using a qlined nick.
+- Added some future SJOIN skip stuff.

@@ -379,7 +379,7 @@ CMD_FUNC(m_sjoin)
 		while (
 		    (*tp == '@') || (*tp == '+') || (*tp == '%')
 		    || (*tp == '*') || (*tp == '~') || (*tp == '&')
-		    || (*tp == '"'))
+		    || (*tp == '"') || (*tp == '\''))
 		{
 			switch (*(tp++))
 			{
@@ -405,6 +405,8 @@ CMD_FUNC(m_sjoin)
 				  modeflags |= CHFL_EXCEPT;
 				  goto getnick;
 				  break;
+			  case '\'': /* future: invex chanmode (+I) */
+			  	  goto docontinue;
 			}
 		}
 	     getnick:
@@ -518,6 +520,8 @@ CMD_FUNC(m_sjoin)
 				}
 			}
 		}
+docontinue:
+		continue;
 	}
 
 	if (modebuf[1])
