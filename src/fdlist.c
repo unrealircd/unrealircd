@@ -149,6 +149,9 @@ EVENT(htm_calc)
 	if (last == 0)
 		last = TStime();
 	
+	if (timeofday - last == 0)
+		return;
+		
 	currentrate =
 		   ((float)(me.receiveK -
 		    lastrecvK)) / ((float)(timeofday - last));
