@@ -1,0 +1,531 @@
+Fri Jan  2 16:14:37 2004  Ville Laurikari  <vl@iki.fi>
+
+	* lib/tre-match-backtrack.c (tre_tnfa_run_backtrack): Fixed to
+	compile if TRE_DEBUG is defined but TRE_WCHAR is not.  Thanks to
+	Dominick Meglio for pointing this out.
+
+Fri Jan  2 09:53:02 2004  Ville Laurikari  <vl@iki.fi>
+
+	* lib/tre-compile.c (tre_copy_ast): Bugfix.  Did not recurse when
+	handling an iteration node, and everything under the node was not
+	genuinely copied but only referenced.  This caused things like
+	"(a+){5}" not to work correctly; this example was basically
+	equivalent to "a*" but in a very very slow way.
+
+Mon Dec 22 10:31:16 2003  Ville Laurikari  <vl@iki.fi>
+
+	* Released tre-0.6.3.
+
+Sun Dec 14 11:22:58 2003  Ville Laurikari  <vl@iki.fi>
+
+	* Bugfix.  Back references did not work if REG_NOSUB was used when
+	compiling the regexp.
+
+Tue Dec  2 16:06:37 2003  Ville Laurikari  <vl@iki.fi>
+
+	* Small fixes and changes here and there to avoid compiler
+	warnings.
+
+	* lib/tre-match-backtrack.c (tre_tnfa_run_backtrack): Fixed to
+	compile if TRE_WCHAR is not defined.
+
+	* lib/tre-mem.c (tre_mem_alloc_impl): Bugfix.  When a new block was
+	allocated with malloc() the next tre_mem_alloc() returned a
+	possibly unaligned pointer.
+	
+Sun Nov 23 21:52:58 2003  Ville Laurikari  <vl@iki.fi>
+
+	* Released tre-0.6.2.
+
+Sun Nov 23 18:40:57 2003  Ville Laurikari  <vl@iki.fi>
+
+	* lib/tre-match-backtrack.c (tre_tnfa_run_backtrack): Bugfix.
+	If the TNFA has a loop with an empty back reference, the matcher
+	went to an infinite loop.   This happened e.g. with the regexp
+	"()(\1)*".
+
+	* lib/regexec.c (tre_match_approx): Fixed to return error if the
+	regexp has back references.
+
+	* lib/tre-compile.c (tre_parse): Bugfix in parsing empty
+	expressions and missing closing parentheses.
+
+Sun Nov 16 20:27:17 2003  Ville Laurikari  <vl@iki.fi>
+
+	* lib/tre-match-approx.c (tre_tnfa_run_approx): Fixed a bug which
+	caused non-optimal matches to be returned in some cases.
+
+	* tests/retest.c: Added a couple of tests.
+	
+Sat Nov 15 15:21:23 2003  Ville Laurikari  <vl@iki.fi>
+
+	* lib/tre-compile.c (tre_expand_ast): Fixed to handle nested
+	repeats correctly.
+
+Wed Nov 12 21:45:44 2003  Ville Laurikari  <vl@iki.fi>
+
+	* lib/tre-compile.c: Fixed to compile if REG_LITERAL is not
+	defined.
+
+	* lib/tre-match-backtrack.c: Fixed to compile without wide
+	character support.
+
+Thu Nov  6 22:23:03 2003  Ville Laurikari  <vl@iki.fi>
+
+	* lib/tre-match-parallel.c: Bugfix.  If pmatch[] was null, the
+	matcher loop referred past an array, sometimes crashing.
+	
+Mon Nov  3 17:41:37 2003  Ville Laurikari  <vl@iki.fi>
+
+	* Released tre-0.6.0.
+
+Sun Nov  2 20:27:37 2003  Ville Laurikari  <vl@iki.fi>
+
+	* lib/tre-compile.c (tre_parse): Implemented support for
+	REG_LITERAL.  If REG_LITERAL is used, the entire regexp is
+	interpreted as a literal word.
+
+Tue Oct 14 21:20:35 2003  Ville Laurikari  <vl@iki.fi>
+
+	* lib/tre-compile.c: Changed the parser to use a context object
+	which contains all parse state instead of passing each state
+	variable separately.  Fixed bug that caused `have_backrefs' to be
+	reset if macros were used (this caused the wrong matcher to be
+	used and back references not to work).
+
+Mon Sep 29 21:43:35 2003  Ville Laurikari  <vl@iki.fi>
+
+	* Added a "tre_" prefix to all functions that did not yet have it.
+
+	* lib/tre-compile.c: Separated regexp compilation from regcomp.c
+	to this file.  Now all actual functionality is implemeted in
+	lib/tre-*.c, and lib/reg*.c have the POSIX API wrappers.
+
+	* Implemented new syntax to control approximate matching
+	parameters dynamically during matching.  Thanks to Bill Yerazunis
+	for the suggestions!
+
+Wed Sep  3 19:41:40 2003  Ville Laurikari  <vl@iki.fi>
+
+	* lib/tre-match-backtrack.c (tre_tnfa_run_backtrack): Bugfix.  Now
+	matching back references works correctly in wide character mode.
+
+Thu Jul  3 19:47:33 2003  Ville Laurikari  <vl@iki.fi>
+
+	* configure.ac: Made --disable-system-abi the default.
+
+	* configure.ac: alloca() is no longer required.  Unless
+	--without-alloca is specified, alloca() will be used if found.
+
+Fri May 15 09:39:34 2003  Ville Laurikari  <vl@iki.fi>
+
+	* tre/tre-match-approx.c (tre_tnfa_run_approx): Bugfix in handling
+	insertions.  If an insertion was found that had better cost than a
+	previous path, the tag values were not copied resulting in
+	incorrect match and submatch positions being reported.
+
+Wed May 14 21:14:47 2003  Ville Laurikari  <vl@iki.fi>
+
+	* Released tre-0.5.3.
+
+Wed May 14 20:11:43 2003  Ville Laurikari  <vl@iki.fi>
+
+	* tre/tre-mem.c (tre_mem_alloc_impl): Bugfix.  The returned
+	pointer was not always properly aligned.
+
+Tue May 13 19:55:30 2003  Ville Laurikari  <vl@iki.fi>
+
+	* configure.ac, lib/regex.h, lib/tre-internal.h: Fixed to compile
+	if --disable-system-abi is used.
+
+	* lib/Makefile.am: Fixed to use $(LTLIBINTL), so gettext is found
+	on systems where it is not in libc (e.g. FreeBSD has it in
+	libintl).
+
+	Thanks to Dominick Meglio <codemstr@ptdprolog.net> for the above!
+	
+Thu May  8 21:23:30 2003  Ville Laurikari  <vl@iki.fi>
+
+	* win32/config.h, win32/tre-config.h: Updated and fixed
+	compilation errors on Windows.  Enabled wide character and
+	multibyte support.
+
+	* win32/tre.dsp, win32/retest.dsp: Link against msvcprt.lib to get
+	wide character functions.
+
+	* src/retest.c: Don't try to call setlocale() on Windows (it seems
+	to crash).
+
+	* lib/regcomp.c (parse_re): Fixed bugs in the regexp parser when
+	wide character support is not used.  Also fixed some references
+	past the end of the input string.
+
+	* lib/regex.h: regcomp, regexec, regerror, and regfree weren't
+	defined if TRE_WCHAR was not defined.  Fixed.
+	
+Tue Apr 15 22:37:48 2003  Ville Laurikari  <vl@iki.fi>
+
+	* lib/tre-match-approx.c (tre_tnfa_run_approx): Fixed bugs.  A
+	match starting earlier was sometimes preferred over a match with a
+	smaller cost, and insertions were not handled correctly.
+
+	* src/agrep.c: Implemented the -B (best match) mode.  It scans the
+	input files twice; first to find out what is the cost of the best
+	matching record(s), and another time to output all records that
+	match with that cost.
+
+	* test/test-approx.c: Added some simple test cases.
+	
+Sun Apr 13 13:53:00 2003  Ville Laurikari  <vl@iki.fi>
+
+	* doc/tre-api.html, doc/tre-syntax.html: Beginnings of
+	API and regexp syntax documentation.
+
+	* lib/tre-mem.c: Changed to allocate blocks bigger than
+	TRE_MEM_BLOCK_SIZE if the requested amount is large.  This fixes
+	REG_ESPACE problems when trying to compile large regexps,
+	especially ones with a lot of "|".
+
+	* Released tre-0.5.2.
+
+Mon Apr  7 18:39:05 2003  Ville Laurikari  <vl@iki.fi>
+
+	* lib/regcomp.c, lib/tre-match-parallel.c: Added support for
+	non-greedy repetition operators "*?", "+?", "??", and "{m,n}?".
+	They work similarly to the ones in Perl.
+
+	* tests/retest.c: Added tests for minimal repetition operators.
+	
+	* tre.pc.in: Added pkgconfig file.
+
+Tue Apr  1 20:20:37 2003  Ville Laurikari  <vl@iki.fi>
+
+	* lib/tre-match-parallel.c, lib/tre-match-approx.c: Fixed
+	alignment bugs when allocating pointers from a buffer.
+
+Sat Mar 15 20:35:11 2003  Ville Laurikari  <vl@iki.fi>
+
+	* lib/regcomp.c (parse_re): Fixed to allow the empty regexp.
+	These were already allowed inside parentheses (e.g. "(a|)"), but
+	e.g. "a|" caused REG_EPAREN to be returned.  Now "", "a|", "|a",
+	"*", "?", etc. work as expected.
+
+Thu Mar 13 19:49:20 2003  Ville Laurikari  <vl@iki.fi>
+
+	* lib/tre-match-backtrack.c: Bugfix.  Stopped too early when
+	scanning asciiz strings.
+
+	* configure.in: System ABI support: added checks for absolute path
+	to regex.h and a field in the system defined regex_t suitable for
+	storing a pointer to a TNFA.  TRE is now configured by default to
+	be compatible with the system regex ABI, unless
+	--disable-system-abi is used.
+
+	* lib/regex.h, lib/tre-config.h.in: System ABI support: if
+	TRE_USE_SYSTEM_REGEX_H if defined, include system regex.h instead
+	of defining everything here. 
+
+	* lib/regcomp.c, lib/regexec.c, lib/tre-config.h.in:
+	System ABI support: use the configured field in regex_t struct for
+	getting and setting the pointer to the TFNA.
+
+Thu Feb 27 19:32:43 2003  Ville Laurikari  <vl@iki.fi>
+
+	* lib/tre-match-*.[ch]: Fixed several references past the end of
+	the input string.
+
+	* lib/tre-match-approx.c: Fixed bugs in submatch tracking.
+
+	* configure.in: Added flag --disable-agrep to disable building and
+	installing agrep.
+	
+	* Released tre-0.5.1.
+	
+Sun Feb 23 14:43:06 2003  Ville Laurikari  <vl@iki.fi>
+
+	* Released tre-0.5.0.
+
+Fri Feb 21 19:10:30 2003  Ville Laurikari  <vl@iki.fi>
+
+	* win32/: New directory, contains project and workspace files for
+	compiling TRE and `retest' for Windows with MS Visual C++.
+	Original version contributed by Aymeric Moizard <jack@atosc.org>,
+	thank you!
+
+Sun Feb 16 12:55:13 2003  Ville Laurikari  <vl@iki.fi>
+
+	* lib/regcomp.c: Rewrote code that adds tags in the AST for
+	submatch addressing.  Changes include:
+	  - Submatch boundaries now all have a tag with offset zero.  This
+	    makes it possible to get correct submatches for approximate
+	    matches.
+	  - Removed marker and boundary tags.  Now nested submatches are
+	    tracked and that information is used to reset submatches from
+	    old repetitions.
+	  - Bounded iterations are now expanded after adding tags instead
+	    of at parse time.  This makes the code a lot cleaner.
+	  
+	* lib/regexec.c, lib/tre-internal.h: Related changes (no more
+	marker and boundary tags).
+
+	* tests/test-approx.c: Small test program for approximate
+	matcher.
+
+Mon Jan 13 20:28:52 2003  Ville Laurikari  <vl@iki.fi>
+
+	* lib/tre-match-approx.c: Now returns submatches of approximate
+	matches in the `pmatch[]' array of the `regamatch_t' struct.
+
+Sun Jan 12 13:52:37 2003  Ville Laurikari  <vl@iki.fi>
+
+	* lib/regexec.c, lib/regex.h: Changed API of approximate matching
+	functions.  This API is easier to extend without having to change
+	the applications using the API at all.
+
+	* src/agrep.c: New command line option --show-cost (-s) to prefix
+	the cost of the match found to each output line.
+
+	* tests/retest.c: Added tests for back referencing.
+
+	* lib/*: Rearranged stuff.  Split all three matchers (parallel,
+	approximate, backtracking) into separate files.  Put tre-mem into
+	its own files.
+
+Mon Jan  6 21:18:12 2003  Ville Laurikari  <vl@iki.fi>
+
+	* utils/autogen.sh: Fixed (must run aclocal before automake).
+
+	* m4/vl_check_sign.m4, m4/vl_decl_wchar_max.m4, configure.in:
+	Updated for new autoconf style (AC_TRY_COMPILE ->
+	AC_COMPILE_IFELSE, AC_ERROR -> AC_MSG_ERROR, etc.)
+
+	* lib/regcomp.c, lib/regexec.c, lib/regexec-bt.c, lib/tre.h:
+	Implemented support for back references.  A backtracking routine
+	implemented in `regex-bt.c' is used instead of the parallel
+	matcher if back references are used is the regexp.
+
+Fri Nov 29 20:57:52 2002  Ville Laurikari  <vl@iki.fi>
+
+	* configure.in: New options --disable-wchar and
+	--disable-multibyte that disable wchar_t support (and requirement)
+	and multibyte character support, respectively.
+
+	* lib/regcomp.c, lib/regex.h, lib/regexec.c, lib/tre.h: Related
+	changes.
+
+Sun Oct 20 21:55:56 2002  Ville Laurikari  <vl@iki.fi>
+
+	* configure.in: Check getopt_long support.
+
+	* lib/regcomp.c (ast_compute_tag_info): Merged into ast_add_tags
+	and removed this function.
+	
+	* lib/regcomp.c (ast_add_tags, parse_re, parse_bound): Bugfixes.
+	Range repetition did not work correctly when applied to a 
+	parenthesized subexpression.  For example, "a{5,6}" worked correctly,
+	but "(a|b){5,6}" did not.
+
+Sun Oct 20 20:27:24 2002  Ville Laurikari  <vl@iki.fi>
+
+	* Changed the name of the package from "libtre" to just "TRE".
+	
+	* lib/regexec.c (tnfa_execute_approx): Implemented approximate
+	regexp matching.
+
+	* lib/regex.h (regaexec, reganexec, regawexec, regawnexec):
+	Added approximate matching API.
+
+	* src/agrep.c: First version of agrep (approximate grep).  Uses
+	the new approximate matching feature in the matcher library.
+
+	* lib/regexec.c (tnfa_execute): Added a loop to quickly skip over
+	characters that cannot possibly be the first character of a
+	match.
+	
+	* lib/regcomp.c (regwncomp): Related changes.
+	
+Sat Aug  3 23:42:29 2002  Ville Laurikari  <vl@iki.fi>
+
+	* Moved the library part from src/ to lib/, and changed the name of
+	macros/ to m4/.
+
+	* lib/regex.c: Split into `regcomp.c', `regexec.c', and
+	`regerror.c'.
+
+	* lib/regerror.c, lib/regex.h: Threw away regwerror() since it was
+	pretty useless.
+
+	* lib/regerror.c: Internationalized.  The error messages returned
+	by regerror() are now localized through gettext() if found.
+	Note that libintl is *not* included in the TRE package.
+
+	* po/fi.po: Finnish translation.
+	
+	* lib/regcomp.c (parse_re): Fixed bugs (there were references to
+	before the start of the regexp string).
+
+	* lib/regcomp.c (parse_re): Fixed bugs in parsing BREs.
+
+	* tests/retest.c: Added test cases for the BRE stuff I fixed.
+
+	* lib/regexec.c (tnfa_execute): Fixed to work when the length of
+	the input string is given (e.g. with regnexec()).
+	
+Sun Jul 28 00:19:04 2002  Ville Laurikari  <vl@iki.fi>
+
+	* lib/Makefile.am: Changed to install the header file `regex.h' to
+	$(includedir)/tre to avoid accidental inclusion with
+	"#include <regex.h>".
+
+Mon Jun 24 19:34:50 2002  Ville Laurikari  <vl@iki.fi>
+
+	* src/regex.c (ast_compute_nfl): Bugfix, did not mark an iteration
+	node as nullable if the minimum number of iterations was above
+	zero and the child was nullable.  As a result, e.g. "(a*)+" did not
+	match the empty string.
+
+	* src/regex.c (ast_compute_tag_info): Bugfix, the tree was
+	traversed in the wrong order resulting in incorrect num_tags
+	counts for nodes in some cases.  The results ranged from missing
+	submatches to segfaults. 
+
+	* src/regex.c (make_transitions): Bugfix, if a transition between
+	two states was already handled then the code aborted the loop when
+	it should have just skipped to the next iteration.  The result was
+	that sometimes some transitions were not added to the NFA and
+	matches were not found.
+
+	* src/regex.c (parse_bracket_items): Bugfix, referred one or two
+	characters past the end of the string in several places.  E.g.
+	compiling the regex "[a-" could cause a segfault.   
+
+	* src/regex.c (fill_pmatch): Bugfix.  If the marker boundary tag
+	number is bigger than tnfa->num_tags, the marker boundary tag
+	does not exist (or rather it does, but is the same as the match
+	end point).  The code here still used marker_boundary even if it
+	was bigger than num_tags, causing either segfaults, missing
+	submatches, or no symptoms.
+
+	* src/regex.c (tnfa_execute): Bugfix.  When matches were found,
+	the first tag value was checked to be smaller than for the
+	previous match.  Firstly, this was a redundant and useless check.
+	Secondly, it caused a segfault if REG_NOSUB was used when
+	compiling the regexp since there are no tags in that case and the
+	array is NULL.
+	
+	* tests/retest.c: Added tests for all of the above.  Thanks to
+	Glenn Fowler for running into the bugs and providing the test
+	cases.
+
+	* Released libtre-0.3.2.
+
+Wed Mar 27 21:48:48 2002  Ville Laurikari  <vl@iki.fi>
+
+	* src/regex.c: Added support for new zero-width assertions \b, \B,
+	\<, and \>.  Fixed a bug in ^ and $.
+
+	* src/regex.c (parse_bound): Bugfix, had forgotten to handle
+	boundaries of the form "{12,}" altogether.
+
+	* src/regex.c (ast_add_tags): Bugfix, set the direction of the
+	current tag to MAXIMIZE at ADDTAGS_POST_CATENATION, but should not
+	have.
+
+	* src/regex.c (parse_re): A `)' is now interpreted as an ordinary
+	character in the absence of a matched `('.
+
+	* src/regex.c (regwncomp): Bugfix, did not set preg->re_nsub to
+	the number of parenthesized subexpressions.
+
+	* tests/retest.c: Added tests for all of the above.
+
+	* src/regex.c: Fixed to be completely thread safe.  A single
+	compiled regexp can now be used simultaneously in several
+	contexts, e.g. in main() and a signal handler, or multiple
+	threads.
+	
+Wed Mar 20 19:50:37 2002  Ville Laurikari  <vl@iki.fi>
+
+	* src/regex.c: Added support for Perl-compatible syntax
+	extensions: \t, \n, \r, \f, \a, \e, \w, \W, \s, \S, \d, \D.
+
+	* src/regex.c: Now expands character classes when using 8 bit
+	character sets so that iswctype() calls are avoided during
+	matching.
+
+Sun Mar  3 17:50:14 2002  Ville Laurikari  <vl@iki.fi>
+
+	* macros/*: Updated all macros (they were renamed from AC_* to
+	VL_*).
+
+	* macros/vl_check_sign.m4, macros/vl_decl_wchar_max.m4: Added.
+
+	* src/regex.c: Memory management cleanups.  Much of the small
+	memory blocks, like AST nodes, are now allocated in large blocks
+	instead of one by one using the `tre_mem_t' allocator.  This got
+	rid of hundreds of lines of confusing memory management code.
+	
+Sat Feb 16 23:47:01 2002  Ville Laurikari  <vl@iki.fi>
+
+	* macros/ac_prog_cc_warnings.m4: Updated to version 1.3.
+
+	* macros/ac_decl_wchar_max.m4: Added this macro for checking
+	whether WCHAR_MAX is defined, and defining it if it isn't.
+
+	* configure.in: Added some checks for wide character stuff.
+
+	* src/regex.c: Added `tre_' prefix to all local type names to
+	avoid conflicts.
+	
+Mon Feb 11 21:48:03 2002  Ville Laurikari  <vl@iki.fi>
+
+	* src/regex.c (parse_bound, parse_re): Enabled support for
+	bound expressions.  The iterated atom is duplicated by parsing it
+	many times -- this seemed to be the simplest way to do it.
+
+	* src/Makefile.am: Changed library name from `libregx' to
+	`libtre'.
+
+	* tests/retest.c: Added tests for bound expressions.
+	
+Sun Feb 10 18:47:23 2002  Ville Laurikari  <vl@iki.fi>
+
+	* src/regex.c (set_union): Bugfix, had `set1[s2].neg_classes' where
+	should have been `set2[s2].neg_classes' (this caused crashes).
+
+	* src/regex.c (ast_to_efree_tnfa): Bugfix, didn't check for
+	infinite maximum iteration count before making transitions for
+	them.
+
+	* src/regex.c: Added interfaces regncomp() and regwncomp() which
+	look only at the first `n' characters of the regexp pattern.  Null
+	characters are allowed in the regexps when using these functions.
+	
+Sat Feb  9 22:39:08 2002  Ville Laurikari  <vl@iki.fi>
+
+	* src/regex.c: Added wide character interface: regwcomp(),
+	regwexec(), and regwerror().  They work exactly like regcomp(),
+	regexec() and regerror() except that the strings are
+	`wchar_t *'.  Also added support for multibyte character sets.
+	Fixed a lot of bugs (memory leaks, crashes) here and there.
+
+	* tests/retest.c: Added tests for multibyte character sets and
+	regcomp() error reporting.
+
+	* tests/randtest.c: Makes random strings and tries to compile them
+	with regcomp().  This can be used to find memory leaks and crashes
+	in the regexp compiler.
+	
+Sun Jan 27 21:42:06 2002  Ville Laurikari  <vl@iki.fi>
+
+	* src/regex.c: Added support for bracket expressions
+        (e.g. "[abc]").  Multicharacter collating elements are not
+	supported, neither are equivalence classes.
+
+	* test: Renamed this directory to `tests'.
+
+Sun Dec  2 20:20:12 2001  Ville Laurikari  <vl@iki.fi>
+
+	* First public release.
+	
+
