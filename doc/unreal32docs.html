@@ -320,7 +320,7 @@ The following floodtypes are available:<br>
 <tr><td>n</td><td>nickchanges</td><td>auto +N</td><td>&nbsp;</td><td>&nbsp;</td></tr>
 <tr><td>t</td><td>text</td><td>kick</td><td>b</td><td>per-user messages/notices like the old +f. Will kick or ban the user.</td></tr>
 </table>
-<p />
+<p />&nbsp;
 Example:
 <pre>
 <font color=green>*** ChanOp sets mode: +f [20j,50m,7n]:15</font>
@@ -1659,10 +1659,10 @@ official-channels {
   file. On single server networks, rather than have 3 files, on single server 
   networks, you can just include the set statements in the unrealircd.conf, on 
   multi-server networks, i recommend still using a networks file.</p>
-<p>Now, if your server is on a network, chances are you will all basically use 
-  the same Set settings. Therefore it makes more sense to have a network file, 
-  which is loaded with a include:: directive. Below you will find all of the set 
-  directives available.</p>
+  <p>Now, if your server is on a network, chances are you will all basically use 
+    the same Set settings. Therefore it makes more sense to have a network file, 
+    which is loaded with a include:: directive. Refer to section <a href="#includedirective">4.9</a>. 
+    Below you will find all of the set directives available.</p>
 <p>In this doc we refer to settings / directives in the &lt;block-name&gt;::&lt;block-directive&gt; 
   format. This format is NOT the format that it can be entered into the configuration 
   file. IT MUST be converted to the format listed below. It is presented in the 
@@ -1875,7 +1875,7 @@ set {
   In addition to the configuration files, Unreal has a few other files, such as MOTD, OperMOTD, 
   BotMOTD, and Rules. Listed below are the names of these files and their uses.<br>
   Note that the motd files (all types) and rules files can also be specified in a tld block, 
-  these are just the files used by default (and for remote MOTD/RULES's).<p />
+  these are just the files used by default (and for remote MOTD/RULES's).<p />&nbsp;
 <table width="83%" border="1">
   <tr>
     <td>ircd.motd</td><td>Displayed when a /motd is executed and (if ircd.smotd is not present) when a user connects</td> 
