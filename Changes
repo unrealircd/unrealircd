@@ -162,3 +162,4 @@
 - Made /rakill and /akill work again :). Added banflag.type2
   FIX: *@* detection
 - Fixed a check_pings problem with usernames
+- ban ip {} works 100% now

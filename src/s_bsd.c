@@ -1419,6 +1419,7 @@ aClient *add_connection(cptr, fd)
 {
 	Link lin;
 	aClient *acptr;
+	ConfigItem_ban *bconf;
 	acptr = make_client(NULL, &me);
 
 	/* Removed preliminary access check. Full check is performed in
@@ -1464,16 +1465,21 @@ aClient *add_connection(cptr, fd)
 		bcopy((char *)&addr.SIN_ADDR, (char *)&acptr->ip,
 		    sizeof(struct IN_ADDR));
 		/* Check for zaps -- Barubary */
-#ifdef OLD
-		if (find_zap(acptr, 0))
+		
+		if (bconf = Find_ban(inetntoa((char *)&acptr->ip), CONF_BAN_IP))
 		{
+			ircsprintf(zlinebuf,
+				"ERROR :Closing Link: [%s] (You are not welcome on "
+				"this server: %s. Email %s for more information.)\r\n",
+				inetntoa((char *)&acptr->ip),
+				bconf->reason ? bconf->reason : "no reason",
+				KLINE_ADDRESS);
 			set_non_blocking(fd, acptr);
 			set_sock_opts(fd, acptr);
 			send(fd, zlinebuf, strlen(zlinebuf), 0);
 			goto add_con_refuse;
 		}
 		else
-#endif
 		 if (find_tkline_match_zap(acptr) != -1)
 		{
 			set_non_blocking(fd, acptr);
@@ -1482,28 +1488,6 @@ aClient *add_connection(cptr, fd)
 			goto add_con_refuse;
 		}
 		acptr->port = ntohs(addr.SIN_PORT);
-#if 0
-		/*
-		 * Some genious along the lines of ircd took out the code
-		 * where ircd loads the IP mask from the P:Lines, so this
-		 * is useless untill that's added back. :)
-		 */
-		/*
-		 * Check that this socket (client) is allowed to accept
-		 * connections from this IP#.
-		 */
-		for (s = (char *)&cptr->ip, t = (char *)&acptr->ip, len = 4;
-		    len > 0; len--, s++, t++)
-		{
-			if (!*s)
-				continue;
-			if (*s != *t)
-				break;
-		}
-
-		if (len)
-			goto add_con_refuse;
-#endif
 #ifdef SHOWCONNECTINFO
 		/* Start of the very first DNS check */
 		if (!(cptr->umodes & LISTENER_SSL))	
