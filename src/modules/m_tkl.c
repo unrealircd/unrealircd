@@ -68,7 +68,7 @@ DLLFUNC int MOD_INIT(m_tkl)(ModuleInfo *modinfo)
 	add_Command(MSG_ZLINE, TOK_NONE, m_tzline, 3);
 	add_Command(MSG_KLINE, TOK_NONE, m_tkline, 3);
 	add_Command(MSG_GZLINE, TOK_NONE, m_gzline, 3);
-/*	add_Command(MSG_SPAMFILTER, TOK_NONE, m_spamfilter, 5); Work in progress --- Syzop */
+	add_Command(MSG_SPAMFILTER, TOK_NONE, m_spamfilter, 4);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -398,19 +398,18 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 
 int spamfilter_usage(aClient *sptr)
 {
-	/* TODO! */
-	sendto_one(sptr, ":%s NOTICE %s :No! that's wrong!!!", me.name, sptr->name);
+	sendnotice(sptr, "Use: /spamfilter [add|del|remove|+|-] [type] [action] [regex]");
+	sendnotice(sptr, "See '/helpop ?spamfilter' for more information.");
 	return 0;
 }
 
 DLLFUNC int m_spamfilter(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-TS   secs;
 int  whattodo = 0;	/* 0 = add  1 = del */
 int  i;
 aClient *acptr = NULL;
 char *mask = NULL;
-char mo[1024], mo2[1024];
+char mo2[1024];
 char *p, *usermask, *hostmask;
 char *tkllayer[9] = {
 	me.name,	/*0  server.name */
@@ -420,7 +419,7 @@ char *tkllayer[9] = {
 	NULL,		/*4  hostmask (action) */
 	NULL,		/*5  setby */
 	"0",		/*6  expire_at */
-	NULL,		/*7  set_at */
+	"0",		/*7  set_at */
 	""	/*8  regex */
 };
 struct tm *t;
@@ -432,14 +431,15 @@ char targetbuf[64], actionbuf[2];
 
 	if (!OPCanTKL(sptr) || !IsOper(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-		sptr->name);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
 
 	if (parc == 1)
 	{
-		/* TODO: stats */
+		tkl_stats(sptr, TKL_SPAMF, NULL);
+		tkl_stats(sptr, TKL_SPAMF|TKL_GLOBAL, NULL);
+		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'F');
 		return 0;
 	}
 	if ((parc < 5) || BadPtr(parv[4]))
@@ -460,13 +460,10 @@ char targetbuf[64], actionbuf[2];
 		return spamfilter_usage(sptr);
 	}
 
-	targets = spamfilter_gettargets(parv[2]);
-	/* very limited 'type' checking, TODO ? */
+	targets = spamfilter_gettargets(parv[2], sptr);
 	if (!targets)
-	{
-		sendto_one(sptr, ":%s NOTICE %s :Invalid 'type' field (%s)", me.name, sptr->name, parv[4]);
 		return spamfilter_usage(sptr);
-	}
+
 	strncpyzt(targetbuf, spamfilter_target_inttostring(targets), sizeof(targetbuf));
 
 	action = banact_stringtoval(parv[3]);
@@ -493,34 +490,15 @@ char targetbuf[64], actionbuf[2];
 	tkllayer[5] = make_nick_user_host(sptr->name, sptr->user->username, GetHost(sptr));
 	tkllayer[8] = parv[4];
 	
-	/* XXXX TODO!!: get rid of 'secs' and all temporarely spamfilter crap! everywhere! -- Syzop */
-	
 	if (whattodo == 0)
 	{
-		if (secs == 0)
-			ircsprintf(mo, "%li", secs); /* "0" */
-		else
-			ircsprintf(mo, "%li", secs + TStime());
 		ircsprintf(mo2, "%li", TStime());
-		tkllayer[6] = mo;
 		tkllayer[7] = mo2;
-		/* Blerghhh... */
-		i = atol(mo);
-		t = gmtime((TS *)&i);
-		if (!t)
-		{
-			sendto_one(sptr,
-				":%s NOTICE %s :*** [error] The time you specified is out of range",
-				me.name, sptr->name);
-			return 0;
-		}
-		/* call the tkl layer .. */
 		m_tkl(&me, &me, 9, tkllayer);
 	}
 	else
 	{
-		/* call the tkl layer .. */
-		m_tkl(&me, &me, 6, tkllayer);
+		m_tkl(&me, &me, 9, tkllayer);
 	}
 
 	return 0;

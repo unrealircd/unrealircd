@@ -34,7 +34,6 @@ extern int tainted;
 extern char *getreply(int);
 #define rpl_str(x) getreply(x)
 #define err_str(x) getreply(x)
-
 extern Member *freemember;
 extern Membership *freemembership;
 extern MembershipL *freemembershipL;
@@ -311,6 +310,7 @@ extern void sendto_opers(char *, ...) __attribute__((format(printf,1,2)));
 extern void sendto_umode(int, char *, ...) __attribute__((format(printf,2,3)));
 extern void sendto_umode_raw(int, char *, ...) __attribute__((format(printf,2,3)));
 extern void sendto_snomask(int snomask, char *pattern, ...) __attribute__((format(printf,2,3)));
+extern void sendnotice(aClient *to, char *pattern, ...) __attribute__((format(printf,2,3)));
 extern int writecalls, writeb[];
 extern int deliver_it(aClient *, char *, int);
 extern int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr);
@@ -647,6 +647,9 @@ extern int banact_stringtoval(char *s);
 extern char *banact_valtostring(int val);
 extern int banact_chartoval(char c);
 extern char banact_valtochar(int val);
-extern int spamfilter_gettargets(char *s);
+extern int spamfilter_gettargets(char *s, aClient *sptr);
 extern char *spamfilter_target_inttostring(int v);
 extern Spamfilter *unreal_buildspamfilter(char *s);
+extern int dospamfilter(aClient *sptr, char *str, int type);
+extern char *our_strcasestr(char *haystack, char *needle);
+extern int spamfilter_getconftargets(char *s);

@@ -59,7 +59,8 @@
   -- 3.11. <a href="#feature_dyndns">Dynamic DNS/IP linking support</a><br>
   -- 3.12. <a href="#feature_antiflood">Anti-flood features</a><br>
   -- 3.13. <a href="#feature_bantypes">Ban types</a><br>
-  -- 3.14. <a href="#feature_other">Other features</a><br>
+  -- 3.14. <a href="#feature_spamfilter">Spamfilter</a><br>
+  -- 3.15. <a href="#feature_other">Other features</a><br>
   4. <a href="#configuringyourunrealircdconf">Configuring your unrealircd.conf 
   file</a><br>
   ---4.1. <a href="#configurationfileexplained">Configuration file explained</a><br>
@@ -95,7 +96,8 @@
   ---4.31. <a href="#aliasblock">Alias Block</a><br>
   ---4.32. <a href="#helpblock">Help Block</a><br>
   ---4.33. <a href="#officialchannels">Official Channels Block</a><br>
-  ---4.34. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
+  ---4.34. <a href="#spamfilter">Spamfilter Block</a><br>
+  ---4.35. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
   5. <a href="#addtlfiles">Additional Files</a><br>
   6. <a href="#userchannelmodes">User & Channel Modes</a><br>
   7. <a href="#useropercommands">User & Oper Commands</a><br>
@@ -425,7 +427,33 @@ These bantypes are also supported in the channel exception list (+e).<br>
 Modules can also add other extended ban types.<br>
 </p></div>
 
-<p><font size="+2"><b>3.14 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
+<p><font size="+2"><b>3.14 - Spamfilter</b></font><a name="feature_spamfilter"></a></p><div class="desc">
+<p>Spamfilter is a new system to fight spam, advertising, worms and other things. It works a bit like
+   the badwords system but has several advantages.</p>
+<p>Spamfilters are added via the /spamfilter command which uses the following syntax:<br>
+   <b>/spamfilter [add|del|remove|+|-] [type] [action] [regex]</b><br>
+   <i>[type]</i> specifies the target type, you can specify multiple targets:
+   'c' channel msg, 'p' private msg, 'n' private notice, 'N' channel notice, 'P' part msg, 'q' quit msg, 'd' dcc<br>
+   <i>[action]</i> specifies the action to be taken (only 1 action can be specified): 
+          'kill', 'tempshun' (only shun current session), 'shun', 
+          'kline', 'gline', 'zline', 'gzline', 'block' (blocks only)<br>
+   <i>[regex]</i> this is the actual regex or 'bad word' where we should block on and perform the action at<br>
+   <br>
+   Here's an example: <i>/spamfilter add pc gline *Come watch me on my webcam*</i><br>
+   If the text <i>come watch me on my webcam</i> is found in either a private msg or a channel msg 
+   then the message will be blocked and a gline will be added immediately.<br>
+   <br>
+   Spamfilters added with /spamfilter are network-wide. They work regardless of whether the user/channel
+   has mode +G set, only opers and ulines (services) are exempted from filtering.
+</p>
+<p>You can also add spamfilters in the config file but these will be local spamfilters (not 
+   network-wide). The syntax of these spamfilter { } blocks are explained <a href="#spamfilter">here</a><br>
+</p>
+<p><b>set::spamfilter::ban-time</b> allows you to modify the default ban time for *lines added by spamfilter (default: 1 day)<br>
+   <b>set::spamfilter::ban-reason</b> allows you to specify a reason for the *lines (default: 'Spam/advertising')<br>
+</p></div>
+
+<p><font size="+2"><b>3.15 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
 <p>UnrealIRCd has a lot of features so not everything is covered here... You'll find that out by yourself.</p></div>
 
 <p> </p>
@@ -1767,7 +1795,36 @@ official-channels {
 };</pre></p>
 </div>
 
-<p><font class="block_section">4.34 - </font><font class="block_name">Set Block</font>
+<p><font class="block_section">4.34 - </font><font class="block_name">Spamfilter Block</font>
+   <font class="block_optional">OPTIONAL</font><a name="spamfilter"></a>
+</p><div class="desc">
+<p>
+The spamfilter block allows you to add local spamfilters (not network-wide).<br>
+See <a href="#feature_spamfilter">Features - Spamfilter</a> for more information about spamfilters.<br>
+</p>
+<p>Syntax:<br>
+<pre>
+spamfilter {
+	word &lt;word&gt;;
+	target { &lt;target(s)&gt; };
+	action &lt;action&gt;;
+};</pre></p>
+<p><b>word</b> is the word/regex to match on.<br>
+   <b>target</b> specifies the targets, possible targets are: channel, private, private-notice, channel-notice, 
+   part, quit, dcc.<br>
+   <b>action</b> specifies the action to be taken, possible values are: kill, tempshun, shun, kline, gline, zline, gzline, block<br>
+</p>
+
+<p>Example:<br>
+<pre>
+spamfilter {
+	word "*Come watch me on my webcam*";
+	target { private; channel; };
+	action gline;
+};</pre></p>
+</div>
+
+<p><font class="block_section">4.35 - </font><font class="block_name">Set Block</font>
    <font class="block_required">REQUIRED</font> <font class="block_old">(Previously known as unrealircd.conf/networks file)</font><a name="setblock"></a>
 </p><div class="desc">
 <p>The set file is what use to be our networks/unrealircd.conf and our networks 

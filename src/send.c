@@ -1896,3 +1896,17 @@ void	sendto_message_one(aClient *to, aClient *from, char *sender,
                          sender, cmd, nick, msg);
 }
 
+void sendnotice(aClient *to, char *pattern, ...)
+{
+static char realpattern[1024];
+va_list vl;
+
+	if (!IsWebTV(to))
+		ircsprintf(realpattern, ":%s NOTICE %s :%s", me.name, to->name, pattern);
+	else
+		ircsprintf(realpattern, ":%s PRIVMSG %s :%s", me.name, to->name, pattern);
+
+	va_start(vl, pattern);
+	vsendto_one(to, realpattern, vl);
+	va_end(vl);
+}

@@ -2750,3 +2750,17 @@ seen. gmtime warning still there
 - Module coders: added HOOKTYPE_REMOTE_CHANMODE
 - Fixed a bug with HOOKTYPE_CONFIGTEST not being called for permanent modules, found by
   AngryWolf
+- Updated PRIVMSG/NOTICE paramcount so '/msg IRC NOTICE #chan hi all' works (no ':').
+- Made it so *lines via place_host_ban() take effect immediately (eg for spamfilter,
+  ban version, flood from unknown connection), there was a small delay before.
+- Added spamfilter system. This is an attempt to fight spam, advertising, worms, etc..
+  It's much like badwords but allows you to choose multiple targets (eg: private,
+  channel, notice, etc) and various actions (eg: block, kline, gline, kill, etc).
+  You can use the /spamfilter command to add network-wide spamfilters, but you
+  can also use spamfilter { } config blocks to create local spamfilters.
+  Additionally, set::spamfilter::ban-time (duration of *lines added by spamfilter)
+  and set::spamfilter::ban-reason (*line reason if banned) are added.
+  See the documentation for more information (section 3.14).
+  This system needs some additional testing, I'm sure there will be bugs ;).
+- Fixed a problem with /stats [G|s] extended flags parsing.
+- internal: added sendnotice()

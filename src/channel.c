@@ -3961,7 +3961,8 @@ CMD_FUNC(m_part)
 	char *p = NULL, *name;
 	char *commentx = (parc > 2 && parv[2]) ? parv[2] : NULL;
 	char *comment;
-
+	int n;
+	
 	if (parc < 2 || parv[1][0] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
@@ -3979,6 +3980,14 @@ CMD_FUNC(m_part)
 				commentx = NULL;
 			else
 				commentx = STATIC_PART;
+		}
+		if (commentx)
+		{
+			n = dospamfilter(sptr, commentx, SPAMF_PART);
+			if (n == FLUSH_BUFFER)
+				return n;
+			if (n < 0)
+				commentx = NULL;
 		}
 	}
 
@@ -4158,7 +4167,7 @@ CMD_FUNC(m_kick)
 
 	for (; (name = strtoken(&p, parv[1], ",")); parv[1] = NULL)
 	{
-		long sptr_flags;
+		long sptr_flags = 0;
 		chptr = get_channel(sptr, name, !CREATE);
 		if (!chptr)
 		{

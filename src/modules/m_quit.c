@@ -102,6 +102,7 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #ifdef STRIPBADWORDS
 		int blocked = 0;
 #endif
+		int n;
 		char *s = comment;
 		Hook *tmphook;
 		if (STATIC_QUIT)
@@ -115,6 +116,12 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (blocked)
 			ocomment = parv[0];
 #endif
+		n = dospamfilter(sptr, ocomment, SPAMF_QUIT);
+		if (n == FLUSH_BUFFER)
+			return n;
+		if (n < 0)
+			ocomment = parv[0];
+		
 		if (!IsAnOper(sptr) && ANTI_SPAM_QUIT_MSG_TIME)
 			if (sptr->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
 				ocomment = parv[0];

@@ -106,6 +106,7 @@ static int	_conf_log		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_alias		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_help		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_offchans		(ConfigFile *conf, ConfigEntry *ce);
+static int	_conf_spamfilter	(ConfigFile *conf, ConfigEntry *ce);
 
 /* 
  * Validation commands 
@@ -140,6 +141,7 @@ static int	_test_log		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_alias		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_help		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_offchans		(ConfigFile *conf, ConfigEntry *ce);
+static int	_test_spamfilter	(ConfigFile *conf, ConfigEntry *ce);
  
 /* This MUST be alphabetized */
 static ConfigCommand _ConfigCommands[] = {
@@ -164,6 +166,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "official-channels", 		_conf_offchans,		_test_offchans	},
 	{ "oper", 		_conf_oper,		_test_oper	},
 	{ "set",		_conf_set,		_test_set	},
+	{ "spamfilter",	_conf_spamfilter,	_test_spamfilter	},
 	{ "tld",		_conf_tld,		_test_tld	},
 	{ "ulines",		_conf_ulines,		_test_ulines	},
 	{ "vhost", 		_conf_vhost,		_test_vhost	},
@@ -334,6 +337,12 @@ extern char modebuf[MAXMODEPARAMS*2+1], parabuf[504];
 extern void add_entropy_configfile(struct stat st, char *buf);
 extern void unload_all_unused_snomasks();
 extern void unload_all_unused_umodes();
+
+/* Stuff we only need here for spamfilter, so not in h.h... */
+extern aTKline *tklines[TKLISTLEN];
+extern inline int tkl_hash(char c);
+extern aTKline *tkl_del_line(aTKline *tkl);
+
 /*
  * Config parser (IRCd)
 */
@@ -1333,6 +1342,7 @@ void	free_iConf(aConfiguration *i)
 	ircfree(i->network.x_prefix_quit);
 	ircfree(i->network.x_helpchan);
 	ircfree(i->network.x_stats_server);
+	ircfree(i->spamfilter_ban_reason);
 }
 
 int	config_test();
@@ -1353,6 +1363,8 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->modef_max_unsettime = 60; /* 1 hour seems enough :p */
 #endif
 	i->ban_version_tkl_time = 86400; /* 1d */
+	i->spamfilter_ban_time = 86400; /* 1d */
+	i->spamfilter_ban_reason = strdup("Spam/advertising");
 }
 
 /* needed for set::options::allow-part-if-shunned,
@@ -1536,6 +1548,7 @@ void	config_rehash()
 	ConfigItem_offchans		*of_ptr;
 	OperStat 			*os_ptr;
 	ListStruct 	*next, *next2;
+	aTKline *tk, *tk_next;
 
 	USE_BAN_VERSION = 0;
 	/* clean out stuff that we don't use */	
@@ -1718,6 +1731,15 @@ void	config_rehash()
 		MyFree(badword_ptr);
 	}
 #endif
+	/* Clean up local spamfilter entries... */
+	for (tk = tklines[tkl_hash('f')]; tk; tk = tk_next)
+	{
+		if (tk->type == TKL_SPAMF)
+			tk_next = tkl_del_line(tk);
+		else /* global spamfilter.. don't touch! */
+			tk_next = tk->next;
+	}
+
 	for (deny_dcc_ptr = conf_deny_dcc; deny_dcc_ptr; deny_dcc_ptr = (ConfigItem_deny_dcc *)next)
 	{
 		next = (ListStruct *)deny_dcc_ptr->next;
@@ -4639,6 +4661,127 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce) {
 }
 #endif
 
+int _conf_spamfilter(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	aTKline *nl = MyMallocEx(sizeof(aTKline));;
+	int target = 0, action = 0;
+	char *word;
+	
+	cep = config_find_entry(ce->ce_entries, "word");
+	word = cep->ce_vardata;
+		
+	nl->type = TKL_SPAMF;
+	nl->expire_at = 0;
+	nl->set_at = TStime();
+	nl->reason = strdup(word);
+
+	cep = config_find_entry(ce->ce_entries, "target");
+	for (cep = cep->ce_entries; cep; cep = cep->ce_next)
+		target |= spamfilter_getconftargets(cep->ce_varname);
+	strncpyzt(nl->usermask, spamfilter_target_inttostring(target), sizeof(nl->usermask));
+	nl->subtype = target;
+
+	cep = config_find_entry(ce->ce_entries, "action");
+	action = banact_stringtoval(cep->ce_vardata);
+	nl->hostmask = strdup(cep->ce_vardata);
+	nl->setby = strdup(BadPtr(me.name) ? "~server~" : me.name); /* Hmm! */
+	
+	nl->spamf = unreal_buildspamfilter(word);
+	nl->spamf->action = action;
+	
+	AddListItem(nl, tklines[tkl_hash('f')]);
+	return 1;
+}
+
+int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	int errors = 0;
+	int got = 0;
+	
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname)
+		{
+			config_error("%s:%i: blank spamfiler item",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			errors++; continue;
+		}
+		if (!strcmp(cep->ce_varname, "target"))
+			continue;
+		if (!cep->ce_vardata)
+		{
+			config_error("%s:%i: spamfilter::%s without value",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+			errors++; continue;
+		}
+		if (!strcmp(cep->ce_varname, "word") || !strcmp(cep->ce_varname, "action"))
+			continue;
+		
+		config_error("%s:%i: unknown directive spamfilter::%s",
+			cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+		errors++;
+	}
+
+	if (!(cep = config_find_entry(ce->ce_entries, "word")))
+	{
+		config_error("%s:%i: spamfilter::word missing",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	} else if (cep->ce_vardata) {
+		/* Check if it's a valid one */
+		char *errbuf = unreal_checkregex(cep->ce_vardata);
+		if (errbuf)
+		{
+			config_error("%s:%i: spamfilter::word contains an invalid regex: %s",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum,
+				errbuf);
+			errors++;
+		}
+	}
+
+	if (!(cep = config_find_entry(ce->ce_entries, "target")))
+	{
+		config_error("%s:%i: spamfilter::target missing",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	} else if (cep->ce_vardata) {
+		for (cep = cep->ce_entries; cep; cep = cep->ce_next)
+		{
+			if (!cep->ce_varname)
+			{
+				config_error("%s:%i: blank spamfiler::target item",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++; continue; /* I don't understand how this would be possible, but.. */
+			}
+			if (!spamfilter_getconftargets(cep->ce_varname))
+			{
+				config_error("%s:%i: unknown spamfiler target type '%s'",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+				errors++;
+			}
+		}
+	}
+
+	if (!(cep = config_find_entry(ce->ce_entries, "action")))
+	{
+		config_error("%s:%i: spamfilter::action missing",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	} else if (cep->ce_vardata) {
+		if (!banact_stringtoval(cep->ce_vardata))
+		{
+			config_error("%s:%i: spamfilter::action has unknown action type '%s'",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, cep->ce_vardata);
+			errors++;
+		}
+	}
+
+	return errors;
+}
+
 int     _conf_help(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
@@ -5455,6 +5598,16 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					tempiConf.ident_read_timeout = config_checkval(cepp->ce_vardata,CFG_TIME);
 			}
 		}
+		else if (!strcmp(cep->ce_varname, "spamfilter"))
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!strcmp(cepp->ce_varname, "ban-time"))
+					tempiConf.spamfilter_ban_time = config_checkval(cepp->ce_vardata,CFG_TIME);
+				if (!strcmp(cepp->ce_varname, "ban-reason"))
+					ircstrdup(tempiConf.spamfilter_ban_reason, cepp->ce_vardata);
+			}
+		}
 		else if (!strcmp(cep->ce_varname, "default-bantime"))
 		{
 			tempiConf.default_bantime = config_checkval(cep->ce_vardata,CFG_TIME);
@@ -6019,6 +6172,32 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					}
 				} else {
 					config_error("%s:%i: unknown directive set::ident::%s",
+						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, cepp->ce_varname);
+					errors++;
+					continue;
+				}
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "spamfilter")) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				CheckNull(cepp);
+				if (!strcmp(cepp->ce_varname, "ban-time"))
+				{
+					long x;
+					x = config_checkval(cepp->ce_vardata,CFG_TIME);
+					if ((x < 0) > (x > 2000000000))
+					{
+						config_error("%s:%i: set::spamfilter:ban-time: value '%ld' out of range",
+							cep->ce_fileptr->cf_filename, cep->ce_varlinenum, x);
+						errors++;
+						continue;
+					}
+				} else
+				if (!strcmp(cepp->ce_varname, "ban-reason"))
+				{ }
+				else {
+					config_error("%s:%i: unknown directive set::spamfilter::%s",
 						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, cepp->ce_varname);
 					errors++;
 					continue;

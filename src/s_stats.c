@@ -54,6 +54,7 @@ int stats_notlink(aClient *, char *);
 int stats_class(aClient *, char *);
 int stats_zip(aClient *, char *);
 int stats_officialchannels(aClient *, char *);
+int stats_spamfilter(aClient *, char *);
 
 #define SERVER_AS_PARA 0x1
 #define FLAGS_AS_PARA 0x2
@@ -99,7 +100,7 @@ struct statstab StatsTable[] = {
 	{ 'c', "link", 		stats_links,		0 		},
 	{ 'd', "denylinkauto",	stats_denylinkauto,	0 		},
 	{ 'e', "exceptthrottle",stats_exceptthrottle,	0		},
-	{ 'f', "denydcc",	stats_denydcc,		0		},	
+	{ 'f', "spamfilter",	stats_spamfilter,		FLAGS_AS_PARA		},	
 	{ 'g', "gline",		stats_gline,		FLAGS_AS_PARA	},
 	{ 'h', "link", 		stats_links,		0 		},
 	{ 'j', "officialchans", stats_officialchannels, 0 },
@@ -474,6 +475,13 @@ int stats_gline(aClient *sptr, char *para)
 {
 	tkl_stats(sptr, TKL_GLOBAL|TKL_KILL, para);
 	tkl_stats(sptr, TKL_GLOBAL|TKL_ZAP, para);
+	return 0;
+}
+
+int stats_spamfilter(aClient *sptr, char *para)
+{
+	tkl_stats(sptr, TKL_SPAMF, para);
+	tkl_stats(sptr, TKL_GLOBAL|TKL_SPAMF, para);
 	return 0;
 }
 
@@ -1252,6 +1260,10 @@ int stats_set(aClient *sptr, char *para)
 	sendto_one(sptr, ":%s %i %s :modef-max-unsettime: %hd", me.name, RPL_TEXT,
 			sptr->name, (unsigned short)MODEF_MAX_UNSETTIME);
 #endif
+	sendto_one(sptr, ":%s %i %s :spamfilter::ban-time: %s", me.name, RPL_TEXT,
+		sptr->name, pretty_time_val(SPAMFILTER_BAN_TIME));
+	sendto_one(sptr, ":%s %i %s :spamfilter::ban-reason: %s", me.name, RPL_TEXT,
+		sptr->name, SPAMFILTER_BAN_REASON);
 	sendto_one(sptr, ":%s %i %s :hosts::global: %s", me.name, RPL_TEXT,
 	    sptr->name, oper_host);
 	sendto_one(sptr, ":%s %i %s :hosts::admin: %s", me.name, RPL_TEXT,

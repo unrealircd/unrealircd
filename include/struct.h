@@ -731,11 +731,13 @@ struct Server {
 #define TKL_QUIET	0x0010
 #define TKL_SPAMF	0x0020
 
-#define SPAMF_CHANMSG	0x0001
-#define SPAMF_USERMSG	0x0002
-#define SPAMF_PART		0x0004
-#define SPAMF_QUIT		0x0008
-#define SPAMF_DCC		0x0010
+#define SPAMF_CHANMSG		0x0001 /* c */
+#define SPAMF_USERMSG		0x0002 /* p */
+#define SPAMF_USERNOTICE	0x0004 /* n */
+#define SPAMF_CHANNOTICE	0x0008 /* N */
+#define SPAMF_PART			0x0010 /* P */
+#define SPAMF_QUIT			0x0020 /* q */
+#define SPAMF_DCC			0x0040 /* d */
 
 struct _spamfilter {
 	unsigned short type; /* see BADW_TYPE* */
@@ -953,14 +955,14 @@ struct _configflag_tld
 #define CONF_BAN_TYPE_AKILL	1
 #define CONF_BAN_TYPE_TEMPORARY 2
 
-#define BAN_ACT_KILL		0
-#define BAN_ACT_TEMPSHUN	1
-#define BAN_ACT_SHUN		2
-#define BAN_ACT_KLINE		3
-#define BAN_ACT_ZLINE		4
-#define BAN_ACT_GLINE		5
-#define BAN_ACT_GZLINE		6
-#define BAN_ACT_BLOCK		7 /* for spamfilter only */
+#define BAN_ACT_KILL		1
+#define BAN_ACT_TEMPSHUN	2
+#define BAN_ACT_SHUN		3
+#define BAN_ACT_KLINE		4
+#define BAN_ACT_ZLINE		5
+#define BAN_ACT_GLINE		6
+#define BAN_ACT_GZLINE		7
+#define BAN_ACT_BLOCK		8 /* for spamfilter only */
 
 #define CRULE_ALL		0
 #define CRULE_AUTO		1

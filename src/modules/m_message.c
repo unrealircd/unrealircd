@@ -70,8 +70,8 @@ DLLFUNC int MOD_INIT(m_message)(ModuleInfo *modinfo)
 	/*
 	 * We call our add_Command crap here
 	*/
-	add_CommandX(MSG_PRIVATE, TOK_PRIVATE, m_private, MAXPARA, M_USER|M_SERVER|M_RESETIDLE);
-	add_Command(MSG_NOTICE, TOK_NOTICE, m_notice, MAXPARA);
+	add_CommandX(MSG_PRIVATE, TOK_PRIVATE, m_private, 2, M_USER|M_SERVER|M_RESETIDLE);
+	add_Command(MSG_NOTICE, TOK_NOTICE, m_notice, 2);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 	
@@ -221,7 +221,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				{
 					ConfigItem_deny_dcc *fl;
 					char *end, file[BUFSIZE];
-					int  size_string = 0;
+					int  size_string = 0, n;
 
 					if (sptr->flags & FLAGS_DCCBLOCK)
 					{
@@ -246,6 +246,12 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 
 					strncpy(file, ctcp, size_string);
 					file[size_string] = '\0';
+
+					n = dospamfilter(sptr, file, SPAMF_DCC);
+					if (n == FLUSH_BUFFER)
+						return n;
+					if (n < 0)
+						continue;
 
 					if ((fl =
 					    (ConfigItem_deny_dcc *)
@@ -310,6 +316,15 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 #endif
 					text = parv[2];
 
+				if (MyClient(sptr))
+				{
+					int n = dospamfilter(sptr, text, newcmd == MSG_NOTICE ? SPAMF_USERNOTICE : SPAMF_USERMSG);
+					if (n == FLUSH_BUFFER)
+						return FLUSH_BUFFER;
+					if (n < 0)
+						continue;
+				}
+
 				for (tmphook = Hooks[HOOKTYPE_USERMSG]; tmphook; tmphook = tmphook->next) {
 					text = (*(tmphook->func.pcharfunc))(cptr, sptr, acptr, text, (int)(newcmd == MSG_NOTICE ? 1 : 0) );
 					if (!text)
@@ -317,7 +332,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				}
 				if (!text)
 					continue;
-					
+				
 				sendto_message_one(acptr,
 				    sptr, parv[0], newcmd, nick, text);
 			}
@@ -423,6 +438,16 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
  #endif
 				}
 #endif
+
+				if (MyClient(sptr))
+				{
+					int n = dospamfilter(sptr, text, notice ? SPAMF_CHANNOTICE : SPAMF_CHANMSG);
+					if (n == FLUSH_BUFFER)
+						return FLUSH_BUFFER;
+					if (n < 0)
+						continue;
+				}
+
 				for (tmphook = Hooks[HOOKTYPE_CHANMSG]; tmphook; tmphook = tmphook->next) {
 					text = (*(tmphook->func.pcharfunc))(cptr, sptr, chptr, text, notice);
 					if (!text)

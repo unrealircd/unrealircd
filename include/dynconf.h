@@ -131,6 +131,8 @@ struct zConfiguration {
 	unsigned char modef_max_unsettime;
 #endif
 	long ban_version_tkl_time;
+	long spamfilter_ban_time;
+	char *spamfilter_ban_reason;
 	aNetwork network;
 };
 
@@ -225,3 +227,6 @@ extern aConfiguration iConf;
 
 #define BAN_VERSION_TKL_TIME	iConf.ban_version_tkl_time
 #define SILENCE_LIMIT (iConf.silence_limit ? iConf.silence_limit : 15)
+
+#define SPAMFILTER_BAN_TIME		iConf.spamfilter_ban_time
+#define SPAMFILTER_BAN_REASON	iConf.spamfilter_ban_reason

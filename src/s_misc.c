@@ -842,7 +842,7 @@ Spamfilter *unreal_buildspamfilter(char *s)
 {
 Spamfilter *e = MyMallocEx(sizeof(Spamfilter));
 char *tmp;
-char regex;
+char regex = 0;
 #ifdef FAST_BADWORD_REPLACE
 int ast_l = 0, ast_r = 0;
 
@@ -911,6 +911,7 @@ int banact_chartoval(char c)
 		case 'z': return BAN_ACT_ZLINE;
 		case 'g': return BAN_ACT_GLINE; 
 		case 'Z': return BAN_ACT_GZLINE; 
+		case 'b': return BAN_ACT_BLOCK;
 		default: return 0;
 	}
 	return 0; /* NOTREACHED */
@@ -927,6 +928,7 @@ char banact_valtochar(int val)
 		case BAN_ACT_ZLINE: return 'z';
 		case BAN_ACT_GLINE: return 'g';
 		case BAN_ACT_GZLINE: return 'Z';
+		case BAN_ACT_BLOCK: return 'b';
 		default: return '\0';
 	}
 	return '\0'; /* NOTREACHED */
@@ -943,29 +945,15 @@ char *banact_valtostring(int val)
 		case BAN_ACT_ZLINE: return "zline";
 		case BAN_ACT_GLINE: return "gline";
 		case BAN_ACT_GZLINE: return "gzline";
+		case BAN_ACT_BLOCK: return "block";
 		default: return "UNKNOWN";
 	}
 	return "UNKNOWN"; /* NOTREACHED */
 }
 
-int spamfilter_gettarghelper(char *s)
-{
-	if (!strcmp(s, "channel"))
-		return SPAMF_CHANMSG;
-	if (!strcmp(s, "private"))
-		return SPAMF_USERMSG;
-	if (!strcmp(s, "part"))
-		return SPAMF_PART;
-	if (!strcmp(s, "quit"))
-		return SPAMF_QUIT;
-	if (!strcmp(s, "dcc"))
-		return SPAMF_DCC;
-	return 0;
-}
-
 /** Extract target flags from string 's'.
  */
-int spamfilter_gettargets(char *s)
+int spamfilter_gettargets(char *s, aClient *sptr)
 {
 int flags = 0;
 
@@ -974,14 +962,43 @@ int flags = 0;
 		switch (*s)
 		{
 			case 'c': flags |= SPAMF_CHANMSG; break;
-			case 'u': flags |= SPAMF_USERMSG; break;
-			case 'p': flags |= SPAMF_PART; break;
+			case 'p': flags |= SPAMF_USERMSG; break;
+			case 'n': flags |= SPAMF_USERNOTICE; break;
+			case 'N': flags |= SPAMF_CHANNOTICE; break;
+			case 'P': flags |= SPAMF_PART; break;
 			case 'q': flags |= SPAMF_QUIT; break;
 			case 'd': flags |= SPAMF_DCC; break;
-			default: break;
+			default:
+				if (sptr)
+				{
+					sendto_one(sptr, ":%s NOTICE %s :Unknown target type '%c'",
+						me.name, sptr->name, *s);
+					return 0;
+				}
+			break;
 		}
 	}
 	return flags;
+}
+
+int spamfilter_getconftargets(char *s)
+{
+int flags = 0;
+	if (!strcmp(s, "channel"))
+		return SPAMF_CHANMSG;
+	if (!strcmp(s, "private"))
+		return SPAMF_USERMSG;
+	if (!strcmp(s, "private-notice"))
+		return SPAMF_USERNOTICE;
+	if (!strcmp(s, "channel-notice"))
+		return SPAMF_CHANNOTICE;
+	if (!strcmp(s, "part"))
+		return SPAMF_PART;
+	if (!strcmp(s, "quit"))
+		return SPAMF_QUIT;
+	if (!strcmp(s, "dcc"))
+		return SPAMF_DCC;
+	return 0;
 }
 
 char *spamfilter_target_inttostring(int v)
@@ -992,9 +1009,13 @@ char *p = buf;
 	if (v & SPAMF_CHANMSG)
 		*p++ = 'c';
 	if (v & SPAMF_USERMSG)
-		*p++ = 'u';
-	if (v & SPAMF_PART)
 		*p++ = 'p';
+	if (v & SPAMF_USERNOTICE)
+		*p++ = 'n';
+	if (v & SPAMF_CHANNOTICE)
+		*p++ = 'N';
+	if (v & SPAMF_PART)
+		*p++ = 'P';
 	if (v & SPAMF_QUIT)
 		*p++ = 'q';
 	if (v & SPAMF_DCC)
