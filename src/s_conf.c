@@ -3268,8 +3268,9 @@ void	validate_configuration(void)
 	}
 	else {
 		for (alias_ptr = conf_alias; alias_ptr; alias_ptr = (ConfigItem_alias *)alias_ptr->next) {
-			if (BadPtr(alias_ptr->nick))
-				ircstrdup(alias_ptr->nick, alias_ptr->alias);
+			if (BadPtr(alias_ptr->nick)) {
+				ircstrdup(alias_ptr->nick, alias_ptr->alias); 
+			}
 			if (alias_ptr->type != ALIAS_SERVICES && alias_ptr->type != ALIAS_STATS && alias_ptr->type != ALIAS_NORMAL) {
 				alias_ptr->type = ALIAS_SERVICES;
 				Warning("Invalid alias type, using default of 'services'");

@@ -811,3 +811,4 @@ seen. gmtime warning still there
 - Fixed another alias {} bug
 - Added Bahamut usermode +R (only accept private messages from +r users)
 - Moved FAILOPER_WARN define to set::options::fail-oper-warn
+- Fixed an alias {} bug found by James-Bond
