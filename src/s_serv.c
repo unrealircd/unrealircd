@@ -2493,7 +2493,7 @@ int  m_stats(cptr, sptr, parc, parv)
 #else
 				      pbuf);
 #endif
-				  if (!IsServer(acptr) && IsAnOper(acptr))
+				  if (!IsServer(acptr) && !IsMe(acptr) && IsAnOper(acptr))
 					  sendto_one(acptr,
 					      ":%s NOTICE %s :*** %s did a /stats L on you! IP may have been shown",
 					      me.name, acptr->name, sptr->name);

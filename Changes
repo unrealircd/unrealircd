@@ -497,3 +497,4 @@ seen. gmtime warning still there
 - Added code to make the config parser try and stay alive when an error is encountered
 - Added events code and converted some stuff to events
 - Converted htmcalc/lcf to events
+- Fixed /stats L bug found by larne
