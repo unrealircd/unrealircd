@@ -2048,7 +2048,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 					*tmp = '\0';
 				  if ((tmp = strchr(param, ':')))
 					*tmp = '\0';
-
+				  if (strlen(param) > CHANNELLEN)
+				    param[CHANNELLEN] = '\0';
 
 				  strncpyzt(chptr->mode.link, param,
 				      sizeof(chptr->mode.link));
