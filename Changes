@@ -2554,3 +2554,6 @@ seen. gmtime warning still there
 - Added insane OperOverride system for joining +z channels (#0001189).
   This seems better than just allowing the insecure oper trough +z.
 - Fixed a UMODE2 bug.
+- Made it so chanmode +f flood detection doesn't apply to u-lined servers. This was
+  already indirectly the case because services don't support the EOS command, but
+  now some (homemade) services do :p. Reported by Troco (#0001337).

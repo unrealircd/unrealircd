@@ -1821,7 +1821,7 @@ CMD_FUNC(m_nick)
 		hash_check_watch(sptr, RPL_LOGON);
 
 #ifdef NEWCHFLOODPROT
-	if (sptr->user && !newusr)
+	if (sptr->user && !newusr && !IsULine(sptr))
 	{
 		for (mp = sptr->user->channel; mp; mp = mp->next)
 		{

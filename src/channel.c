@@ -3792,7 +3792,7 @@ CMD_FUNC(do_join)
 		 * from all servers.
 		 */
 		if (chptr->mode.floodprot && (MyClient(sptr) || sptr->srvptr->serv->flags.synced) && 
-		    do_chanflood(chptr->mode.floodprot, FLD_JOIN) && MyClient(sptr))
+		    !IsULine(sptr) && do_chanflood(chptr->mode.floodprot, FLD_JOIN) && MyClient(sptr))
 		{
 			do_chanflood_action(chptr, FLD_JOIN, "join");
 		}
@@ -5345,7 +5345,8 @@ CMD_FUNC(m_knock)
 	    sptr->name, chptr->chname);
 
 #ifdef NEWCHFLOODPROT
-	if (chptr->mode.floodprot && do_chanflood(chptr->mode.floodprot, FLD_KNOCK) && MyClient(sptr))
+	if (chptr->mode.floodprot && !IsULine(sptr) &&
+	    do_chanflood(chptr->mode.floodprot, FLD_KNOCK) && MyClient(sptr))
 		do_chanflood_action(chptr, FLD_KNOCK, "knock");
 #endif
 	return 0;
@@ -5752,7 +5753,7 @@ CMD_FUNC(m_sjoin)
 				} else
 					sendto_channel_butserv(chptr, acptr, ":%s JOIN :%s", nick, chptr->chname);
 #ifdef NEWCHFLOODPROT
-				if (chptr->mode.floodprot && sptr->serv->flags.synced)
+				if (chptr->mode.floodprot && sptr->serv->flags.synced && !IsULine(sptr))
 			        do_chanflood(chptr->mode.floodprot, FLD_JOIN);
 #endif
 			}
