@@ -403,7 +403,7 @@ Sites im Internet um das zu lernen. Nicht bei Unreal nachfragen, es hat nichts
 mit dem UnrealIRCd zu tun. (mIRC und XChat öffnen ein Popup Fenster und fragen
 nach, ob ein Zertifikat erlaubt oder zurückgewiesen wird und das ist gut!)</p></div>
 <p><font size="+2"><b><a name="feature_ipv6">3.9 - IPv6</a></b></font></p><div class="desc">
-<p>UnrealIRCd unterstützt&nbsp; IPv6, seit beta15 stabil zu sein scheint.<br>
+<p>UnrealIRCd unterstützt&nbsp; IPv6, dass seit beta15 stabil zu sein scheint.<br>
 Das Betriebssystem muss IPv6 unterstützen und es ist erforderlich, IPv6
 Unterstützung in UnrealIRCD zu aktivieren (die entsprechende Frage bei ./config
 mit &quot;yes&quot; beantworten).&nbsp;</p>
@@ -1007,7 +1007,7 @@ Hier eine Liste der möglichen Einstellungen:<br>
 <tr><td width="98">dutch</td> <td width="494">	Niederländische Zeichen</td> <td width="254">	iso8859-1 (latin1)</td></tr>
 <tr><td width="98">french</td> <td width="494">	Französische Zeichen</td> <td width="254">	iso8859-1 (latin1)</td></tr>
 <tr><td width="98">german</td> <td width="494">	Deutsche Zeichen	</td> <td width="254">iso8859-1 (latin1)</td></tr>
-<tr><td width="98">swiss-german</td> <td width="494">	Scheiz-Deutsche Zeichen
+<tr><td width="98">swiss-german</td> <td width="494">	Schweiz-Deutsche Zeichen
     (kein 'ß')</td> <td width="254">	iso8859-1 (latin1)</td></tr>
 <tr><td width="98">icelandic	</td> <td width="494">Isländische Zeichen</td> <td width="254">	iso8859-1 (latin1)</td></tr>
 <tr><td width="98">italian</td> <td width="494">	Italienische Zeichen</td> <td width="254">	iso8859-1 (latin1)</td></tr>
@@ -1142,7 +1142,7 @@ numeric &lt;Server-Nummer&gt;;<br>
 (nicht dessen Internetadresse!), 
   <b>info</b>  eine kurze Info Zeile zur Beschreibung des Servers und <b>numeric</b> 
  bedeutet eine Zahl zur Identifikation des Servers. Hierbei muss es sich um einen
-Wert zwischen 1 und 254 handeln, der EINMALIG im Netzwerk ist, es darf also KEIN
+Wert zwischen 0 und 254 handeln, der EINMALIG im Netzwerk ist, es darf also KEIN
 Server im Netzwerk denselben numeric Wert haben.</p>
 <p>Beispiel:
 <pre>me {
@@ -1255,7 +1255,7 @@ Die Zugangskontrolle arbeitet folgendermaßen: Es müssen entweder IPs
 übereinstimmen ODER Hosts. Einträge von &quot;hostname *@*;&quot; und &quot;ip
 *@1.2.3.4;&quot; stimmen also mit allem überein und gestatten einen
 universellen Zugang. Allow Blöcke in der unrealircd.conf werden von <b>unten
-nach oben</b> ausgewertet, deswegen müssen spezielle Host/IP Böcke NACH den
+nach oben</b> ausgewertet, deswegen müssen spezielle Host/IP Blöcke NACH den
 allgemeinen *@* Allow Blöcken aufgeführt werden. Soll ein Block
 ausschliesslich für eine IP gelten, so ist das Feld &quot;hostname&quot; auf
 irgendeinen ungültigen Wert zu setzen, wie z.B. &quot;hostname NOBODY;&quot;.
@@ -1285,8 +1285,8 @@ Wenn ein redirect-server angegeben ist, kann hier der Port eingetragen werden.
 Ohne Eintrag wird 6667 als Default angenommen.</p>
 <p><b>options block</b> (optional)<br>
 Gültige Optionen sind:<br>
-&nbsp;&nbsp;&nbsp;<b>useip</b>  immer nur IP stat Hostnamen anzeigen<br>
-&nbsp;&nbsp;&nbsp;<b>noident</b>  kein ident verwendensondern den vom Client
+&nbsp;&nbsp;&nbsp;<b>useip</b>  immer nur IP statt Hostnamen anzeigen<br>
+&nbsp;&nbsp;&nbsp;<b>noident</b>  kein ident verwenden, sondern den vom Client
 übergebenen Usernamen<br>
 &nbsp;&nbsp;&nbsp;<b>ssl</b>  Übereinstimmung ist nur gegeben, wenn der User
 via SSL verbindet<br>
@@ -1501,7 +1501,7 @@ Form (wie z.B.: &quot;services-admin&quot;) verwenden möchte, benutzt man die
   <tr> 
     <td width="74"><div align="center">B</div></td>
     <td width="103"><div align="center">can_unkline</div></td>
-    <td width="529">Kann&nbsp; mit /kline -u@h K-Line löschen</td>
+    <td width="529">Kann mit /kline -u@h K-Line löschen</td>
   </tr>
   <tr> 
     <td width="74"><div align="center">n</div></td>
@@ -1558,7 +1558,7 @@ Form (wie z.B.: &quot;services-admin&quot;) verwenden möchte, benutzt man die
   <tr> 
     <td width="74" align="center">d</td>
     <td width="103" align="center">can_dccdeny</td>
-    <td width="529">Kann /dccdny und /undccdny benutzen</td>
+    <td width="529">Kann /dccdeny und /undccdeny benutzen</td>
   </tr>
 </table>
 <p>Bestimmte Flags setzen andere Flags per Default:</p>
@@ -1586,10 +1586,10 @@ Form (wie z.B.: &quot;services-admin&quot;) verwenden möchte, benutzt man die
   </tr>
   <tr> 
     <td>can_globops</td>
-    <td>can_glopops</td>
-    <td>can_glopops</td>
-    <td>can_glopops</td>
-    <td>can_glopops</td>
+    <td>can_globops</td>
+    <td>can_globops</td>
+    <td>can_globops</td>
+    <td>can_globops</td>
   </tr>
   <tr> 
     <td>can_wallops</td>
@@ -2898,8 +2898,8 @@ nicht angezeigt.</p>
 Wenn dies eingestellt ist, werden alle Server bei /map und /links als direkt
 gelinkt angezeigt. Dadurch kann man nicht mehr erkennen, welcher Server mit
 welchem gelinkt ist. Das ist eine kleine Hilfe gegen (D)DoS Attacken, weil
-potentielle Angreifer jetzt nicht mehr länger mögliche
-&quot;Schwachpunkte&quot; erkennen können.</p>
+potentielle Angreifer jetzt keine möglichen
+&quot;Schwachpunkte&quot; mehr erkennen können.</p>
 <p><font class="set">set::options::show-opermotd;</font><br>
 Falls eingestellt wird die opermotd den Usern angezeigt, die erfolgreich /oper
 benutzen.</p>
@@ -2926,7 +2926,7 @@ snomask gesendet.</p>
 benutzen.</p>
 <p><font class="set">set::options::fail-oper-warn;</font><font class="set"><br>
 </font>Falls gesetzt, wird ein User benachrichtigt, dass ein fehlgeschlagener
-Oper Zugriff geloggt wurde.&lt;/p></p>
+Oper Zugriff geloggt wurde.</p>
 <p><font class="set">set::dns::timeout &lt;timevalue&gt;;</font><br>
 Ein Wert, der angibt, innerhalb welcher Zeit ein DNS Server zu antworten hat, bevor
 &quot;timeout&quot; gemeldet wird. Der Zeitwert ist ein numerischer String, in
@@ -3135,7 +3135,7 @@ möglich. Beispiel: except "#help,#spamreport"</p> </div>
   <tr> 
     <td width="136"><div align="center">G</div></td>
     <td width="647">'G rated'. Es werden Worte im Badword Block überprüft und
-      bei Vorhandensein durch die dort angegebenen Worte esetzt</td>
+      bei Vorhandensein durch die dort angegebenen Worte esetzt.</td>
   </tr>
   <tr> 
     <td width="136"><div align="center">h &lt;nick&gt;</div></td>
@@ -3421,7 +3421,7 @@ Befehlsliste</a></b></font></p><div class="desc">
   </tr>
   <tr> 
     <td height="57" width="267">join &lt;channel1,channel2, ...&gt;</td>
-    <td width="486" height="57">Damit betritt man einen Channell. Durch den
+    <td width="486" height="57">Damit betritt man einen Channel. Durch den
       Befehl /join #channel1, #channel2, #channel3 kann man mehr als einen
       Channel gleichzeitig aufschalten. Der Befehl /join 0 bewirkt, dass Channels
       verlassen werden.</td>
@@ -3733,7 +3733,7 @@ Befehlsliste</a></b></font></p><div class="desc">
       neu ein). Indem man den Server Namen angibt, kann man die Config Datei
       dieses Servers remote rehashen. Ebenso sind einige Flags möglich:<br>
       -all - Rehasht sämtliche Config Dateien<br>
-      -motd - Rehasht all MOTD und RULES Dateien (incl. tld {})<br>
+      -motd - Rehasht alle MOTD und RULES Dateien (incl. tld {})<br>
       -opermotd - Rehasht die OPERMOTD<br>
       -botmotd - Rehasht die BOTMOTD<br>
       -garbage - Bewirkt Garbage Collection (Garbage Collection ist eine Methode,
@@ -3996,7 +3996,7 @@ Befehlsliste</a></b></font></p><div class="desc">
   Risiken und deren Bedeutung zu erhalten. Man kann diesen Abschnitt auch als
   &quot;Checkliste&quot; benutzen, um die Netzwerk Konfiguration zu überprüfen
   und sie sicherer zu machen.
-  </p><p>Die Liste ist na Popularität/Risiko und Level der am meisten
+  </p><p>Die Liste ist nach Popularität/Risiko und Level der am meisten
   verwendeten Methoden bei Attacken geordnet:<br>
   </p></div>
 <p><font size="+2"><b><a name="secpassword">8.1 Passworte</a></b></font></p>
@@ -4012,7 +4012,7 @@ Befehlsliste</a></b></font></p><div class="desc">
   einen Bug im UnrealIRCd. Läßt man z.B.&nbsp; http, dns, smtp und ftp servers
   im selben System laufen, wie den IRCd, so ist das Risiko bedeutend höher.
   Wenn man ein Multi-User System benutzt (z.B. man hat eine Shell gemietet),
-  riskiert mal lokale Exploits und schlechte/unsichere
+  riskiert man lokale Exploits und schlechte/unsichere
   Berechtigungseinstellungen (siehe nächsten Absatz). Dieses Risiko ist recht
   hoch und man sollte deswegen vorsichtig bei der Auswahl des Shell Providers
   sein.</div>
@@ -4313,7 +4313,7 @@ Datei</a></b></font></p>
   und deinen Endwert definiert und dazwischen ein '-'. Daher ist ein einfacher
   Weg, um auf eine Ziffer zu testen die Angaben von "[0-9]". Auf demselben Weg
   kann auch auf Buchstaben getestet werden oder auch jeden anderen Bereich von
-  ASCII Werten. Um auf einen Buchstaben zu prüfe, gibt man also an: "[a-z]".
+  ASCII Werten. Um auf einen Buchstaben zu prüfen, gibt man also an: "[a-z]".
   Und da Unreal 'case insensitive' ist, also nicht zwischen Groß- und
   Kleinbuchstaben unterschieden wird, passt dies auf alle Buchstaben. Man kann
   auch mehrere Bereiche innerhalb eines Ausdrucks angeben. Um auf eine Ziffer
@@ -4443,7 +4443,7 @@ Datei</a></b></font></p>
   auszudrücken. Der Operator für die Alternation ist der senkrechte Strich&nbsp;
   (' |'). Will man z.B. &quot;a oder b&quot; ausdrücken, würde man &quot;a|b&quot;
   definieren. Bei normalen Buchstaben könnte dies auch durch Klammer Ausdruck
-  festgelegt werden, aber Alternation kann auch in Unterausdrücken (sihe weiter
+  festgelegt werden, aber Alternation kann auch in Unterausdrücken (siehe weiter
   unten) benutzt werden.</p></div>
 <p>&nbsp;</p>
 <p><font size="+2"><b><a name="regexsub">A.7. Unterausdrücke</a></b></font></p>
