@@ -111,20 +111,29 @@ Event	*EventFind(char *name)
 	return NULL;
 }
 
-void	EventModEvery(Event *event, long every)
-{
-	Event *eventptr;
-
+int EventMod(Event *event, EventInfo *mods) {
 #ifndef HAVE_NO_THREADS
 	IRCMutexLock(sys_EventLock);
 #endif
-	if (event)
-		event->every = every;
+	if (!event || !mods)
+		return -1;
 
+	if (mods->flags & EMOD_EVERY)
+		event->every = mods->every;
+	if (mods->flags & EMOD_HOWMANY)
+		event->howmany = mods->howmany;
+	if (mods->flags & EMOD_NAME) {
+		free(event->name);
+		event->name = strdup(mods->name);
+	}
+	if (mods->flags & EMOD_EVENT)
+		event->event = mods->event;
+	if (mods->flags & EMOD_DATA)
+		event->data = mods->data;
 #ifndef HAVE_NO_THREADS
 	IRCMutexUnlock(sys_EventLock);
 #endif
-
+	return 0;
 }
 
 inline void	DoEvents(void)

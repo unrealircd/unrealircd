@@ -1181,8 +1181,7 @@ static int hash_number(ip)
 	return (hashv);
 }
 
-static int hash_name(name)
-	register char *name;
+static int hash_name(char *name)
 {
 	u_int hashv = 0;
 

@@ -1104,3 +1104,6 @@ v- Fixed some bugreport stuff
 - Lots of commands were using MAXPARA when they shouldnt have been
 - passworded allow{} in example.conf doesnt match anyone anymore
 - Fixed oper{} locop stuff
+- Added can_gzline to doc/conf.doc
+- Replaced EventModEvery with EventMod (allows broader modification)
+- Maybe (but I doubt it) fixed bug #0000040 (Win32 resolver crash) reported by Kyver

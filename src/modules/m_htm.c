@@ -215,6 +215,7 @@ DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #endif
 		if (!stricmp(command, "ON"))
 		{
+			EventInfo mod;
 			lifesux = 1;
 			sendto_one(sptr,
 			    ":%s NOTICE %s :High traffic mode is now ON.",
@@ -224,13 +225,18 @@ DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    parv[0], sptr->user->username,
 			    sptr->user->realhost);
 			LCF = 60;	/* 60 seconds */
-			EventModEvery(e_lcf, LCF);
+			mod.flags = EMOD_EVERY;
+			mod.every = LCF;
+			EventMod(e_lcf, &mod);
 		}
 		else if (!stricmp(command, "OFF"))
 		{
+			EventInfo mod;
 			lifesux = 0;
 			LCF = LOADCFREQ;
-			EventModEvery(e_lcf, LCF);
+			mod.flags = EMOD_EVERY;
+			mod.every = LCF;
+			EventMod(e_lcf, &mod);
 			sendto_one(sptr,
 			    ":%s NOTICE %s :High traffic mode is now OFF.",
 			    me.name, parv[0]);
@@ -320,9 +326,12 @@ EVENT(lcf_check)
 						   currentrate2);}
 			else
 			{
+				EventInfo mod;
 				lifesux++;	/* Ok, life really sucks! */
 				LCF += 2;	/* wait even longer */
-				EventModEvery(e_lcf, LCF);
+				mod.flags = EMOD_EVERY;
+				mod.every = LCF;
+				EventMod(e_lcf, &mod);
 				if (noisy_htm)
 					sendto_realops
 					    ("Still high-traffic mode %d%s (%d delay): %0.2f kb/s",
@@ -334,12 +343,15 @@ EVENT(lcf_check)
 				 * Bad Things(tm) tend to happen with HTM on too long -epi */
 				if (lifesux > 15)
 				{
+					EventInfo mod;
 					if (noisy_htm)
 						sendto_realops
 						    ("Resetting HTM and raising limit to: %dk/s\n",
 						    LRV + 5);
 					LCF = LOADCFREQ;
-					EventModEvery(e_lcf, LCF);
+					mod.flags = EMOD_EVERY;
+					mod.every = LCF;
+					EventMod(e_lcf, &mod);
 					lifesux = 0;
 					LRV += 5;
 				}
@@ -347,8 +359,11 @@ EVENT(lcf_check)
 		}
 		else
 		{
+			EventInfo mod;
 			LCF = LOADCFREQ;
-			EventModEvery(e_lcf, LCF);
+			mod.flags = EMOD_EVERY;
+			mod.every = LCF;
+			EventMod(e_lcf, &mod);
 			if (lifesux)
 			{
 				lifesux = 0;

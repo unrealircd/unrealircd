@@ -310,7 +310,11 @@ extern void add_client_to_list(aClient *);
 extern void checklist();
 extern void remove_client_from_list(aClient *);
 extern void initlists();
+#ifndef _WIN32
 extern struct hostent *get_res(char *);
+#else
+extern struct hostent *get_res(char *, long);
+#endif
 extern struct hostent *gethost_byaddr(char *, Link *);
 extern struct hostent *gethost_byname(char *, Link *);
 extern void flush_cache();

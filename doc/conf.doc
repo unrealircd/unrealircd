@@ -213,6 +213,7 @@ K	can_globalkill		Can /kill global users
 b	can_kline		Can use /kline
 B	can_unkline		Can use /unkline
 t	can_gkline		Can use /gline
+Z	can_gzline		Can use /gzline
 n	can_localnotice		Can send local server notices
 G	can_globalnotice	Can send global server notices
 z	can_zline		Can use /zline
