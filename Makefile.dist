@@ -174,7 +174,7 @@ clean:
 cleandir: clean
 	rm -rf include/networks.h include/setup.h include/settings.h Makefile Settings
 
-makex: fromdos
+makex:
 	chmod +x Config newnet bsdinstall ircd ircdcron/ircdchk killircd
 	chmod +x makeconf rehash ircdreg
 
@@ -186,7 +186,7 @@ fromdos: cleandir
 	$(FROMDOS) -dv crypt/*
 	$(FROMDOS) -dv ircdcron/*
 makedist: makex
-	echo "Making UnrealIRCd compatible IRCd Dist."
+	echo "Stamping.."
 
 stamp: makedist
 	echo "/* Auto created release stamping */" > include/stamp.h
