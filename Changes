@@ -1020,3 +1020,4 @@ seen. gmtime warning still there
 - Credits fixes
 - Final release cleanups
 - Updated /info
+- Added back good old error reporting in ./unreal start
