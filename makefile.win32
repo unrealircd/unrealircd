@@ -116,9 +116,11 @@ LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib advapi32.lib \
  dbghelp.lib oldnames.lib libcmt.lib comctl32.lib comdlg32.lib $(ZLIB_LIB) $(ZIPLIB) \
  $(OPENSSL_LIB) $(SSLLIBS) $(LIBCURL_LIB) $(CURLLIB) /def:wircd.def /implib:wircd.lib \
  /nodefaultlib /nologo $(DBGLFLAG) /out:WIRCD.EXE
-MODCFLAGS=$(MODDBGCFLAG) /Fesrc/modules/ /Fosrc/modules/ /nologo /I ./INCLUDE \
- /D DYNAMIC_LINKING /D NOSPOOF /D MODULE_COMPILE
-MODLFLAGS=/link /def:src/modules/module.def wircd.lib 
+MODCFLAGS=$(MODDBGCFLAG) $(SSLCFLAGS) $(ZIPCFLAGS) $(CURLCFLAGS) /Fesrc/modules/ \
+ /Fosrc/modules/ /nologo $(LIBCURL_INC) $(ZLIB_INC) $(OPENSSL_INC) /I ./INCLUDE /D \
+ DYNAMIC_LINKING /D NOSPOOF /D MODULE_COMPILE
+MODLFLAGS=/link /def:src/modules/module.def wircd.lib $(OPENSSL_LIB) $(SSLLIBS) \
+ $(ZLIB_LIB) $(ZIPLIB) $(LIBCURL_LIB) $(CURLLIB)
 
 INCLUDES=./include/struct.h ./include/config.h ./include/sys.h \
  ./include/common.h ./include/version.h ./include/h.h ./include/numeric.h \
@@ -438,8 +440,10 @@ SYMBOLFILE:
 MODULES: $(DLL_FILES)
 
 src/modules/commands.dll: $(MOD_FILES) $(INCLUDES)
-	$(CC) /LDd /nologo /Fosrc/modules/ /I ./INCLUDE /D NOSPOOF /D MODULE_COMPILE \
-	      $(MOD_FILES) $(MODLFLAGS) /OUT:src/modules/commands.dll
+	$(CC) $(MODDBGCFLAG) $(LIBCURL_INC) $(ZLIB_INC) $(OPENSSL_INC) /nologo \
+	      $(SSLCFLAGS) $(ZIPCFLAGS) $(CURLCFLAGS) /Fosrc/modules/ \
+	      /I ./INCLUDE /D NOSPOOF /D MODULE_COMPILE $(MOD_FILES) \
+	      $(MODLFLAGS) /OUT:src/modules/commands.dll
 
 src/modules/m_chghost.dll: src/modules/m_chghost.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/m_chghost.c $(MODLFLAGS)

@@ -3155,3 +3155,4 @@ This is the 3.2 fixes branch.
   - Module coders can code 3rd party cloak modules that use other algorithms or cloak
     in a different way (have a look at src/modules/cloak.c).
 - spamfilter: Added Bloodhound.Exploit.6 sig
+- Compile fixes for win32 modules with ssl/zip/curl

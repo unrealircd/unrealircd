@@ -32,4 +32,12 @@ typedef char                    (*cFP)();       /* char * function pointer */
  #endif
 #endif
 
+#ifndef MODFUNC
+ #ifdef _WIN32
+  #define MODFUNC __declspec(dllexport)
+ #else
+  #define MODFUNC
+ #endif
+#endif
+
 #endif
