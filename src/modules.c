@@ -158,6 +158,16 @@ Module *Module_Find(char *name)
 	
 }
 
+static char *our_mod_version()
+{
+static char retbuf[128];
+	strlcpy(retbuf, version, sizeof(retbuf));
+#ifdef USE_SSL
+	strlcat(retbuf, "/SSL", sizeof(retbuf));
+#endif
+	return retbuf;
+}
+
 /*
  * Returns an error if insucessful .. yes NULL is OK! 
 */
@@ -181,6 +191,7 @@ char  *Module_Create(char *path_)
 	Module          *mod = NULL, **Mod_Handle = NULL;
 	int *x;
 	int betaversion,tag;
+	char *expectedmodversion = our_mod_version();
 	Debug((DEBUG_DEBUG, "Attempting to load module from %s",
 	       path_));
 	path = path_;
@@ -200,11 +211,11 @@ char  *Module_Create(char *path_)
 	{
 		/* We have engaged the borg cube. Scan for lifesigns. */
 		irc_dlsym(Mod, "Mod_Version", Mod_Version);
-		if (Mod_Version && strcmp(version, Mod_Version))
+		if (Mod_Version && strcmp(Mod_Version, expectedmodversion))
 		{
 			snprintf(errorbuf, sizeof(errorbuf),
 			         "Module was compiled for '%s', we are '%s', please recompile the module",
-			         Mod_Version, version);
+			         Mod_Version, expectedmodversion);
 			irc_dlclose(Mod);
 			remove(tmppath);
 			return errorbuf;
