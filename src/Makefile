@@ -60,7 +60,7 @@ version.o: version.c ../include/version.h
 
 ircd: $(OBJS) 
 #	$(CC) $(CFLAGS) $(CRYPTOLIB) -o ircd $(OBJS) $(LDFLAGS) $(IRCDLIBS) -lssl
-	$(CC) $(CFLAGS) -o ircd $(CRYPTOLIB) $(OBJS) $(LDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
+	$(CC) $(CFLAGS) $(CRYPTOINCLUDES) -o ircd $(CRYPTOLIB) $(OBJS) $(LDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
 	chmod $(IRCDMODE) ircd
 
 chkconf: ../include/struct.h ../include/config.h ../include/settings.h ../include/sys.h \

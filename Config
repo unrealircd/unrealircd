@@ -44,6 +44,7 @@ GETTIMEOFDAY=undef
 LRAND48=undef
 STRTOUL=undef
 OPENSSL=""
+OPENSSL_OTHERPLACE=""
 REGEXP=""
 NEEDSKIPNAME=""
 CRYPTOLIB=""
@@ -510,7 +511,15 @@ if [ -r /usr/include/openssl/ssl.h ] ; then
 	OPENSSL=define
 	echo 'found!'
 else
-	echo 'not found (you will not be able to do secure connections)'
+	echo 'not found (you will not be able to do secure connections, i think'
+	echo $n "..Trying to see if its in /usr/local/ssl/include/openssl/ssl.h .. $c"
+	if [ -r /usr/local/ssl/include/openssl/ssl.h ] ; then
+		OPENSSL=define
+		OPENSSL_OTHERPLACE=define
+		echo 'found!'
+	else
+		echo 'not found.'
+	fi	
 fi
 
 echo $n "...Looking for /usr/include/regex.h...$c"
@@ -1762,6 +1771,18 @@ if [ -n "$CRYPTOIRCD" ] ; then
 else
     $RM -f Makefile.tmp
     sed -e "s@^OPENSSLPATH=\(.*\)@OPENSSLPATH=@" Makefile > Makefile.tmp
+    cp Makefile.tmp Makefile
+    $RM -f Makefile.tmp
+fi
+
+if [ -n "$OPENSSL_OTHERPLACE" ] ; then
+       $RM -f Makefile.tmp
+       sed -e "s@^OPENSSLINCLUDE=\(.*\)@OPENSSLINCLUDE=-I/usr/local/ssl/include/openssl@" Makefile > Makefile.tmp
+       cp Makefile.tmp Makefile
+       $RM -f Makefile.tmp
+else
+    $RM -f Makefile.tmp
+    sed -e "s@^OPENSSLINCLUDE=\(.*\)@OPENSSLINCLUDE=@" Makefile > Makefile.tmp
     cp Makefile.tmp Makefile
     $RM -f Makefile.tmp
 fi
