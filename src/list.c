@@ -149,7 +149,7 @@ aClient *make_client(aClient *from, aClient *servr)
 
 void free_client(aClient *cptr)
 {
-	if (MyClient(cptr))
+	if (MyConnect(cptr))
 	{
 		if (cptr->passwd)
 			MyFree((char *)cptr->passwd);

@@ -1873,3 +1873,4 @@ seen. gmtime warning still there
   outgoing server connections, you could for example enable this if you are linking two servers
   with an often changing host (like dyndns.org).
 - Documentation updates for nodnscache.
+- Fixed minor memleak with zip links.
