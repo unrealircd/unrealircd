@@ -870,3 +870,4 @@ seen. gmtime warning still there
 - Final changes to prepare for beta3
 - Fixed some bugreport stuff
 - Fixed codemastr-on-crack bug regarding oflag
+- Fixed a win32 bug where the http scanner didn't get loaded
