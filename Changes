@@ -292,3 +292,4 @@
 - You can now specify oper flags using the old method:
 	(new method) flags { flags here }; (old method) flags flags_here;
 - Removed a lot of vars and stuff from the old config, also made some cleanups to reduce source size
+- Made del_Command(). 

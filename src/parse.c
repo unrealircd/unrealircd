@@ -184,22 +184,6 @@ void ban_flooder(aClient *cptr)
 	return;
 }
 
-inline aCommand *find_Command(char *cmd, int token)
-{
-	aCommand	*p;
-	
-	for (p = CommandHash[toupper(*cmd)]; p; p = p->next)
-		if (p->token && token)
-		{
-			if (!strcmp(p->cmd, cmd))
-				return (p);
-		}
-		else
-			if (!match(p->cmd, cmd))
-				return (p);
-	return NULL;
-}
-
 /*
  * parse a buffer.
  *

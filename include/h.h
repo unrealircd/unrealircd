@@ -130,6 +130,7 @@ extern int R_do_socks, R_good_socks, R_no_socks;
 #endif
 
 #endif
+extern inline aCommand *find_Command(char *cmd, int token);
 extern aChannel *find_channel PROTO((char *, aChannel *));
 extern Member *find_member_link PROTO((Member *, aClient *));
 extern void remove_user_from_channel PROTO((aClient *, aChannel *));
@@ -403,7 +404,7 @@ void	add_Command_backend(char *cmd, int (*func)(), unsigned char parameters, uns
 void	add_Command(char *cmd, char *token, int (*func)(), unsigned char parameters);
 void	add_Command_to_list(aCommand *item, aCommand **list);
 aCommand *del_Command_from_list(aCommand *item, aCommand **list);
-
+int	del_Command(char *cmd, char *token, int (*func)());
 
 /* CRULE */
 char *crule_parse PROTO((char *));

@@ -339,3 +339,64 @@ aCommand *del_Command_from_list(aCommand *item, aCommand **list)
 	return NULL;
 }
 
+inline aCommand *find_CommandEx(char *cmd, int (*func)(), int token)
+{
+	aCommand *p;
+	
+	for (p = CommandHash[toupper(*cmd)]; p; p = p->next)
+		if (p->token && token)
+		{
+			if (!strcmp(p->cmd, cmd))
+				if (p->func == func)
+					return (p);
+		}
+		else
+			if (!match(p->cmd, cmd))
+				if (p->func == func)
+					return (p);
+	return NULL;
+	
+}
+
+int del_Command(char *cmd, char *token, int (*func)())
+{
+	aCommand *p;
+	int	i = 0;
+	p = find_CommandEx(cmd, func, 0);
+	if (!p)
+		i--;
+	else
+	{
+		del_Command_from_list(p, &CommandHash[toupper(*cmd)]);
+		if (p->cmd)
+			MyFree(p->cmd);
+		MyFree(p);
+	}
+	p = find_CommandEx(token, func, 1);
+	if (!p)
+		i--;
+	else
+	{
+		del_Command_from_list(p, &CommandHash[toupper(*token)]);
+		if (p->cmd)
+			MyFree(p->cmd);
+		MyFree(p);
+	}
+	return i;	
+}
+
+inline aCommand *find_Command(char *cmd, int token)
+{
+	aCommand	*p;
+	
+	for (p = CommandHash[toupper(*cmd)]; p; p = p->next)
+		if (p->token && token)
+		{
+			if (!strcmp(p->cmd, cmd))
+				return (p);
+		}
+		else
+			if (!match(p->cmd, cmd))
+				return (p);
+	return NULL;
+}
