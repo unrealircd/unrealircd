@@ -236,6 +236,16 @@ DLLFUNC CMD_FUNC(m_nick)
 		    "Reserved for internal IRCd purposes");
 		return 0;
 	}
+	if (MyClient(sptr)) /* local client changin nick afterwards.. */
+	{
+		char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64];
+		int xx;
+		ircsprintf(spamfilter_user, "%s!%s@%s:%s",
+			nick, sptr->user->username, sptr->user->realhost, sptr->info);
+		xx = dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL);
+		if (xx < 0)
+			return xx;
+	}
 	if (!IsULine(sptr) && (tklban = find_qline(sptr, nick, &ishold)))
 	{
 		if (IsServer(sptr) && !ishold) /* server introducing new client */
