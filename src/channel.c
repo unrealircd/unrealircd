@@ -1425,27 +1425,6 @@ void make_mode_str(chptr, oldm, oldl, pcount, pvar, mode_buf, parabuf, bounce)
 	}
 
 	*x = '\0';
-	/* reconstruct bkov chain */
-	for (cnt = 0; cnt < pcount; cnt++)
-	{
-		if ((*(pvar[cnt]) == '+') && what != MODE_ADD)
-		{
-			*x++ = bounce ? '-' : '+';
-			what = MODE_ADD;
-		}
-		if ((*(pvar[cnt]) == '-') && what != MODE_DEL)
-		{
-			*x++ = bounce ? '+' : '-';
-			what = MODE_DEL;
-		}
-		*x++ = *(pvar[cnt] + 1);
-		tmpstr = &pvar[cnt][2];
-		strncat(parabuf, tmpstr, MODEBUFLEN - 1);
-		parabuf[MODEBUFLEN - 1] = '\0';
-		z = strlen(parabuf);
-		parabuf[z] = ' ';	/* add a space */
-		parabuf[z + 1] = '\0';
-	}
 	/* user limit */
 	if (chptr->mode.limit != oldl)
 	{
@@ -1473,6 +1452,27 @@ void make_mode_str(chptr, oldm, oldl, pcount, pvar, mode_buf, parabuf, bounce)
 				chptr->mode.limit = oldl;	/* set it back */
 			ircsprintf(parabuf, "%s%d", parabuf, chptr->mode.limit);
 		}
+	}
+	/* reconstruct bkov chain */
+	for (cnt = 0; cnt < pcount; cnt++)
+	{
+		if ((*(pvar[cnt]) == '+') && what != MODE_ADD)
+		{
+			*x++ = bounce ? '-' : '+';
+			what = MODE_ADD;
+		}
+		if ((*(pvar[cnt]) == '-') && what != MODE_DEL)
+		{
+			*x++ = bounce ? '+' : '-';
+			what = MODE_DEL;
+		}
+		*x++ = *(pvar[cnt] + 1);
+		tmpstr = &pvar[cnt][2];
+		strncat(parabuf, tmpstr, MODEBUFLEN - 1);
+		parabuf[MODEBUFLEN - 1] = '\0';
+		z = strlen(parabuf);
+		parabuf[z] = ' ';	/* add a space */
+		parabuf[z + 1] = '\0';
 	}
 	if (bounce)
 		chptr->mode.mode = oldm;
