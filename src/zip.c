@@ -79,7 +79,7 @@ static  char    zipbuf[ZIP_BUFFER_SIZE];
 **      Initialize compression structures for a server.
 **      If failed, zip_free() has to be called.
 */
-int     zip_init(aClient *cptr)
+int     zip_init(aClient *cptr, int compressionlevel)
 {
   cptr->zip  = (aZdata *) MyMalloc(sizeof(aZdata));
   cptr->zip->incount = 0;
@@ -105,7 +105,7 @@ int     zip_init(aClient *cptr)
   cptr->zip->out->zalloc = NULL;
   cptr->zip->out->zfree = NULL;
   cptr->zip->out->data_type = Z_ASCII;
-  if (deflateInit(cptr->zip->out, ZIP_LEVEL) != Z_OK)
+  if (deflateInit(cptr->zip->out, compressionlevel) != Z_OK)
     return -1;
 
   return 0;

@@ -4403,6 +4403,12 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 			link->ciphers = strdup(cep->ce_vardata);
 		}
 #endif
+#ifdef ZIP_LINKS
+		else if (!strcmp(cep->ce_varname, "compression-level"))
+		{
+			link->compression_level = atoi(cep->ce_vardata);
+		}
+#endif
 	}
 	AddListItem(link, conf_link);
 	return 0;
@@ -4425,7 +4431,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 				"port", "password-receive",
 				"password-connect", "class",
 				"hub", "leaf", 
-				"leafdepth", "ciphers", 
+				"leafdepth", "ciphers", "compression-level",
 				NULL
 			};
 	if (!ce->ce_vardata)
@@ -4476,6 +4482,25 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 			errors++;
 		}
 	}
+#ifdef ZIP_LINKS
+		if ((cep = config_find_entry(ce->ce_entries, "compression-level")))
+		{
+			if (!cep->ce_vardata)
+			{
+				config_error("%s:%i: link::%s without contents",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, cep->ce_varname);
+				errors++;
+			} else {
+				if ((atoi(cep->ce_vardata) < 1) || (atoi(cep->ce_vardata) > 9))
+				{
+					config_error("%s:%i: compression-level should be in range 1..9",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+					errors++;
+				}
+			}
+		}
+#endif
 	if (errors > 0)
 		return errors;
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)

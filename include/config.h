@@ -522,11 +522,6 @@
  */
 #define FAST_BADWORD_REPLACE
 
-/* If you use ziplinks, you can define the compression level here,
- * higher=better compressed but more CPU time, can be 1-9, but 1-4 is suggested.
- */
-#define ZIP_LEVEL 2
-
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #define MOTD MPATH
 #define RULES RPATH

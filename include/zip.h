@@ -46,10 +46,12 @@ struct Zdata {
 	int first; /* First message? */
 };
 
+#define ZIP_DEFAULT_LEVEL 2
+
 #endif /* ZIP_LINKS */
 
 
-extern int zip_init(struct Client *);
+extern int zip_init(struct Client *, int);
 extern void zip_free(struct Client *);
 extern char *unzip_packet(struct Client *, char *, int *);
 extern char *zip_buffer(struct Client *, char *, int *, int);

@@ -1019,6 +1019,9 @@ struct _configitem_link {
 #ifdef USE_SSL
 	char		*ciphers;
 #endif
+#ifdef ZIP_LINKS
+	int compression_level;
+#endif
 };
 
 struct _configitem_except {
@@ -1495,7 +1498,6 @@ void	del_throttling_bucket(struct ThrottlingBucket *bucket);
 int	throttle_can_connect(struct IN_ADDR *in);
 
 #endif
-
 
 #endif /* __struct_include__ */
 

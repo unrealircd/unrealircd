@@ -1070,7 +1070,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	{
 		if (cptr->proto & PROTO_ZIP)
 		{
-			if (zip_init(cptr) == -1)
+			if (zip_init(cptr, aconf->compression_level ? aconf->compression_level : ZIP_DEFAULT_LEVEL) == -1)
 			{
 				zip_free(cptr);
 				sendto_realops("Unable to setup compressed link for %s", get_client_name(cptr, TRUE));
@@ -2556,8 +2556,9 @@ CMD_FUNC(m_stats)
 				if (acptr->zip->in->total_out && acptr->zip->out->total_in)
 				{
 				  sendto_one(sptr,
-				    ":%s NOTICE %s :Zipstats for link to %s: decompressed (in): %01lu/%01lu (%3.1f%%), compressed (out): %01lu/%01lu (%3.1f%%)",
+				    ":%s NOTICE %s :Zipstats for link to %s (compresslevel %d): decompressed (in): %01lu/%01lu (%3.1f%%), compressed (out): %01lu/%01lu (%3.1f%%)",
 				    me.name, parv[0], get_client_name(acptr, TRUE),
+				    acptr->serv->conf->compression_level ? acptr->serv->conf->compression_level : ZIP_DEFAULT_LEVEL,
 				    acptr->zip->in->total_in, acptr->zip->in->total_out,
 				    (100.0*(float)acptr->zip->in->total_in) /(float)acptr->zip->in->total_out,
 				    acptr->zip->out->total_in, acptr->zip->out->total_out,

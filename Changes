@@ -1910,3 +1910,4 @@ seen. gmtime warning still there
 - Updated docs, removed umode +I and cmode +H and added cmode +M
 - Removed some left over +I code
 - Added set::restrict-usermodes to /stats S (reported by AngryWolf)
+- Zip links: Added link::compression-level so you can set the compression level per link.
