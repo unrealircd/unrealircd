@@ -695,3 +695,8 @@ Fixed exempt propagation bug
 ------------------------------------------------------
 Beta2 Released
 ------------------------------------------------------
+
+Fixed m_who bug displaying channels
+when it isn't supposed to, thanks to frozen
+--Luke
+===================================

@@ -2677,12 +2677,18 @@ int  m_who(cptr, sptr, parc, parv)
 #endif
 			for (lp = acptr->user->channel; lp; lp = lp->next)
 			{
+				/* sptr not a member
+				 * not whoing oneself & acptr invisible
+				 */
 				if (!IsMember(sptr, lp->value.chptr) &&
 				    (acptr != sptr && IsInvisible(acptr)))
 				    continue;
 
+				/* sptr is a member OR
+				 * acptr not invisible, and channel not +s/+p
+				 */
 				if (IsMember(sptr, lp->value.chptr) ||
-				    !IsInvisible(acptr) && ShowChannel(sptr, lp->value.chptr))
+				    !IsInvisible(acptr) && PubChannel(lp->value.chptr))
 				{
 					g2g = 1;
 					ch2ptr = lp->value.chptr;
