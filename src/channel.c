@@ -5048,7 +5048,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	}
 	strcpy(paraback, "");
 	ap = mp2parv("*", parv[4]);
-	for (i = 2; i < ap->parc; i++)
+	for (i = 1; i < ap->parc; i++)
 	{
 		strcat(paraback, ap->parv[i]);
 		strcat(paraback, " ");

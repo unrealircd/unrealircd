@@ -753,13 +753,17 @@ int  m_vhost(cptr, sptr, parc, parv)
 				if (!strcmp(p->password, pwd))
 				{
 					/* let's vhost him .. */
+					if (sptr->user->virthost)
+						MyFree(sptr->user->virthost);
+					
+					sptr->user->virthost = MyMalloc(strlen(p->virthost) + 1);
 					strcpy(sptr->user->virthost,
 					    p->virthost);
 					sptr->umodes |= UMODE_HIDE;
 					sptr->umodes |= UMODE_SETHOST;
-					sendto_serv_butone(cptr,
-					    ":%s SETHOST %s", sptr->name,
-					    p->virthost);
+					sendto_serv_butone_token(cptr, sptr->name,
+						MSG_SETHOST, TOK_SETHOST,
+						"%s", p->virthost);
 					sendto_one(sptr, ":%s MODE %s :+tx",
 					    sptr->name, sptr->name);
 					sendto_one(sptr,

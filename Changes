@@ -546,4 +546,4 @@
 - Some crazy time_t -> TS stuff, will save us some time in 2038
 - Fixed the "/mode #blah +Cplkf 1 moo 5:5" ( mode/#blah [+pClkf 1moo 5:5] 
   problem
-   
+- Hopefully fixed the +x problem
