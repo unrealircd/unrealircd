@@ -229,3 +229,4 @@
 - Fixed a /kline and /unkline buffer overflow, reported by [-Th3Dud3-]
 - Fixed a crash in /stats k regarding temporary K:lines
 - Fixed a missing " in validate_conf
+- Replaced a few strlen()s with sizeof(), should make the IRCd start a bit faster

@@ -1144,17 +1144,17 @@ int  InitwIRCD(argc, argv)
 	(void)ircsprintf(REPORT_NO_SOCKS, ":%s %s", me.name, BREPORT_NO_SOCKS);
 	(void)ircsprintf(REPORT_GOOD_SOCKS, ":%s %s", me.name, BREPORT_GOOD_SOCKS);
 #endif
-	R_do_dns = strlen(REPORT_DO_DNS);
-	R_fin_dns = strlen(REPORT_FIN_DNS);
-	R_fin_dnsc = strlen(REPORT_FIN_DNSC);
-	R_fail_dns = strlen(REPORT_FAIL_DNS);
-	R_do_id = strlen(REPORT_DO_ID);
-	R_fin_id = strlen(REPORT_FIN_ID);
-	R_fail_id = strlen(REPORT_FAIL_ID);
+	R_do_dns = sizeof(REPORT_DO_DNS)-1;
+	R_fin_dns = sizeof(REPORT_FIN_DNS)-1;
+	R_fin_dnsc = sizeof(REPORT_FIN_DNSC)-1;
+	R_fail_dns = sizeof(REPORT_FAIL_DNS)-1;
+	R_do_id = sizeof(REPORT_DO_ID)-1;
+	R_fin_id = sizeof(REPORT_FIN_ID)-1;
+	R_fail_id = sizeof(REPORT_FAIL_ID)-1;
 #ifdef SOCKSPORT
-	R_do_socks = strlen(REPORT_DO_SOCKS);
-	R_no_socks = strlen(REPORT_NO_SOCKS);
-	R_good_socks = strlen(REPORT_GOOD_SOCKS);
+	R_do_socks = sizeof(REPORT_DO_SOCKS)-1;
+	R_no_socks = sizeof(REPORT_NO_SOCKS)-1;
+	R_good_socks = sizeof(REPORT_GOOD_SOCKS)-1;
 #endif /* SOCKSPORT */
 #endif
 #ifdef SOCKSPORT
