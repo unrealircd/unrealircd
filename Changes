@@ -640,3 +640,9 @@
 - #define SHOW_SECRET now allows all ircops to see +s channels in /whois.  If not defined, only net/tech admins can.
 - Added #define CENSOR_QUIT, for WaveRide
 - Fixed hashing bug that caused the server to crash on exit
+- Made find_server_b64_or_real be a little faster, possible fixing bug
+- Made /stats s checking check for sanity or insanity (ignore them for 0
+  numerics)
+- Fixed SJOIN (mp2parv) bug, that caused insane desynchs
+- Changed Cannot find server message to be to sendto_realops
+- Fixed a warning in CENSOR_QUIT

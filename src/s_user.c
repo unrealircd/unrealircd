@@ -1135,7 +1135,7 @@ int  m_nick(cptr, sptr, parc, parv)
 	    (parc > 7 && (!(serv = (aClient *)find_server_b64_or_real(parv[6], NULL)) ||
 	    serv->from != cptr->from)))
 	{
-		sendto_ops("Cannot find server (%s)", backupbuf);
+		sendto_realops("Cannot find server (%s)", backupbuf);
 		return 0;
 	}
 	/*
@@ -2973,7 +2973,7 @@ int  m_quit(cptr, sptr, parc, parv)
 	{
 		ircsprintf(comment, "Quit: ");
 #ifdef CENSOR_QUIT
-		ocomment = stripbadwords_channel(ocomment);
+		ocomment = (char *) stripbadwords_channel(ocomment);
 #endif
 		strncpy(comment + 6, ocomment, TOPICLEN - 7);
 		comment[TOPICLEN] = '\0';

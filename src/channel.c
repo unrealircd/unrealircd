@@ -4406,15 +4406,18 @@ aParv pparv;
 aParv *mp2parv(char *xmbuf, char *parmbuf)
 {
 	int  c;
-	char *p;
+	char *p, *s;
+
 	pparv.parv[0] = xmbuf;
 	c = 1;
-	for (p = (char *)strtok((char *)parmbuf, " "); p;
-	    p = (char *)strtok((char *)NULL, " "))
+	
+	for (s = (char *)strtoken(&p, parmbuf, " "); s;
+		s = (char *)strtoken(&p, NULL, " "))
 	{
-		c++;
-		pparv.parv[c - 1] = p;
-	} pparv.parc = c;
+		pparv.parv[c] = s;
+		c++; /* in my dreams */
+	}
+	pparv.parv[c] = NULL;
 	return (&pparv);
 }
 
@@ -4880,6 +4883,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 				goto nextnick;
 			if (nick[0] == '\0')
 				goto nextnick;
+			Debug((DEBUG_DEBUG, "Got nick: %s", nick));
 			if (!(modeflags & CHFL_BAN)
 			    && !(modeflags & CHFL_EXCEPT))
 			{

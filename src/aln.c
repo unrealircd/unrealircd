@@ -165,14 +165,16 @@ aClient *find_server_quickx(char *name, aClient *cptr)
 aClient *find_server_b64_or_real(char *name)
 {
 	Link *lp;
-
+	int  namebase64;
+	
 	if (!name)
 		return NULL;
-		
-	if (strlen(name) < 4)
+	
+	namebase64 = base64dec(name);	
+	if (namebase64 < 257)
 	{
 		for (lp = servers; lp; lp = lp->next)
-			if (!strcmp(base64enc(lp->value.cptr->serv->numeric), name))
+			if (lp->value.cptr->serv->numeric == namebase64)
 				return (lp->value.cptr);
 	}
 		else
@@ -259,9 +261,9 @@ void ns_stats(aClient *cptr)
 	{
 		sptr = lp->value.cptr;
 		sendto_one(cptr,
-		    ":%s NOTICE %s :*** server=%s numeric=%i b64=%s", me.name,
+		    ":%s NOTICE %s :*** server=%s numeric=%i b64=%s [%s]", me.name,
 		    cptr->name, sptr->name, sptr->serv->numeric,
-		    find_server_id(sptr));
+		    find_server_id(sptr), find_server_b64_or_real(find_server_id(sptr)) == sptr ? "SANE" : "INSANE");
 	}
 }
 
