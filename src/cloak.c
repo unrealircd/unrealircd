@@ -288,10 +288,8 @@ char *make_virthost(char *curr, char *new, int mode)
 		strncpyzt(new, mask, HOSTLEN);	/* */
 		return NULL;
 	}
-	i = strlen(mask) + 1;
 	if (new)
 		MyFree(new);
-	x = MyMalloc(i);
-	strcpy(x, mask);
+	x = strdup(mask);
 	return x;
 }

@@ -81,10 +81,12 @@ void iNAH_host(aClient *sptr, char *host)
 {
 	if (!sptr->user)
 		return;
-	if (IsHidden(sptr) && sptr->user->virthost)
+	if (sptr->user->virthost)
+	{
 		MyFree(sptr->user->virthost);
-	sptr->user->virthost = MyMalloc(strlen(host) + 1);
-	ircsprintf(sptr->user->virthost, "%s", host);
+		sptr->user->virthost = NULL;
+	}
+	sptr->user->virthost = strdup(host);
 	if (MyConnect(sptr))
 		sendto_serv_butone_token(&me, sptr->name, MSG_SETHOST,
 		    TOK_SETHOST, "%s", sptr->user->virthost);
@@ -1003,9 +1005,12 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 		if (virthost && *virthost != '*')
 		{
 			if (sptr->user->virthost)
+			{
 				MyFree(sptr->user->virthost);
-			sptr->user->virthost = MyMalloc(strlen(virthost) + 1);
-			ircsprintf(sptr->user->virthost, virthost);
+				sptr->user->virthost = NULL;
+			}
+			/* Here pig.. yeah you .. -Stskeeps */
+			sptr->user->virthost = strdup(virthost);
 		}
 	}
 
@@ -1872,12 +1877,9 @@ CMD_FUNC(m_user)
 	if (sptr->name[0] && (IsServer(cptr) ? 1 : IsNotSpoof(sptr)))
 		/* NICK and no-spoof already received, now we have USER... */
 	{
-		int  xx;
-
-		xx =
+		return(
 		    register_user(cptr, sptr, sptr->name, username, umodex,
-		    virthost);
-		return xx;
+		    virthost));
 	}
 	else
 		strncpyzt(sptr->user->username, username, USERLEN + 1);
@@ -2342,9 +2344,21 @@ CMD_FUNC(m_umode)
 
 	if (IsHidden(sptr) && !(setflags & UMODE_HIDE))
 	{
-		sptr->user->virthost =
-		    (char *)make_virthost(sptr->user->realhost,
+		if (sptr->user->virthost)
+		{
+			MyFree(sptr->user->virthost);
+			sptr->user->virthost = NULL;
+		}
+		sptr->user->virthost = (char *)make_virthost(sptr->user->realhost,
 		    sptr->user->virthost, 1);
+	}
+	if (!IsHidden(sptr) && (setflags & UMODE_HIDE))
+	{
+			if (sptr->user->virthost)
+			{
+				MyFree(sptr->user->virthost);
+				sptr->user->virthost = NULL;
+			}
 	}
 	/*
 	 * If I understand what this code is doing correctly...

@@ -533,17 +533,21 @@ extern Ban *is_banned(aClient *cptr, aClient *sptr, aChannel *chptr)
 	if (!IsPerson(cptr))
 		return NULL;
 
-	if (strcmp(cptr->user->realhost, cptr->user->virthost))
-		dovirt = 1;
+	if (cptr->user->virthost)
+		if (strcmp(cptr->user->realhost, cptr->user->virthost))
+			dovirt = 1;
 
 	s = make_nick_user_host(cptr->name, cptr->user->username,
 	    cptr->user->realhost);
 	strcpy(realhost, s);
 
-	s = make_nick_user_host(cptr->name, cptr->user->username,
+	if (dovirt)
+	{
+		s = make_nick_user_host(cptr->name, cptr->user->username,
 	    cptr->user->virthost);
-	strcpy(virthost, s);
-/* We now check +b first, if a +b is found we then see if there is a +e.
+		strcpy(virthost, s);
+	}
+		/* We now check +b first, if a +b is found we then see if there is a +e.
  * If a +e was found we return NULL, if not, we return the ban.
  */
 	for (tmp = chptr->banlist; tmp; tmp = tmp->next)

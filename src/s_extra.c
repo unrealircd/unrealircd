@@ -383,7 +383,10 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		char olduser[USERLEN+1];
 		if (sptr->user->virthost)
+		{
 			MyFree(sptr->user->virthost);
+			sptr->user->virthost = NULL;
+		}
 		len = strlen(vhost->virthost);
 		length =  len > HOSTLEN ? HOSTLEN : len;
 		sptr->user->virthost = MyMalloc(length + 1);
