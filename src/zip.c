@@ -116,18 +116,24 @@ int     zip_init(aClient *cptr)
 */
 void    zip_free(aClient *cptr)
 {
+  ircd_log(LOG_ERROR, "Hi! This is a debug message generated from zip_free");
   SetZipped(cptr);
   if (cptr->zip)
     {
-      if (cptr->zip->in)
+      if (cptr->zip->in) {
         inflateEnd(cptr->zip->in);
-      MyFree(cptr->zip->in);
-      if (cptr->zip->out)
+        MyFree(cptr->zip->in);
+        cptr->zip->in = NULL;
+      }
+      if (cptr->zip->out) {
         deflateEnd(cptr->zip->out);
-      MyFree(cptr->zip->out);
+        MyFree(cptr->zip->out);
+        cptr->zip->out = NULL;
+      }
       MyFree(cptr->zip);
       cptr->zip = NULL;
     }
+  ircd_log(LOG_ERROR, "Hi! This is a debug message generated from zip_free, we are done!");
 }
 
 /*
