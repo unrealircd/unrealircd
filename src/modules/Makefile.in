@@ -20,10 +20,12 @@
 #*/
 
 R_MODULES=m_sethost.so m_chghost.so m_chgident.so m_setname.so \
-		m_setident.so m_sdesc.so m_svsmode.so scan.so scan_socks.so blackhole.so
+		m_setident.so m_sdesc.so m_svsmode.so m_swhois.so\
+		m_svsmotd.so \
+		scan.so scan_socks.so blackhole.so
 
 COMMANDS=m_sethost.c m_chghost.c m_chgident.c m_setname.c m_setident.c \
-         m_sdesc.c m_svsmode.c
+         m_sdesc.c m_svsmode.c m_swhois.c m_svsmotd.c
 
 MODULES=commands.so $(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -63,6 +65,14 @@ m_sdesc.so: m_sdesc.c $(INCLUDES)
 m_svsmode.so: m_svsmode.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		 -o m_svsmode.so m_svsmode.c
+
+m_swhois.so: m_swhois.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		 -o m_swhois.so m_swhois.c
+
+m_svsmotd.so: m_svsmotd.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		 -o m_svsmotd.so m_svsmotd.c
 
 scan.so: scan.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \

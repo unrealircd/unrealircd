@@ -206,6 +206,8 @@
 #define TOK_TECHAT  	"AB"	/* questionmark? */
 #define MSG_NACHAT  	"NACHAT"	/* netadmin chat */
 #define TOK_NACHAT  	"AC"	/* *beep* */
+#define MSG_SETIDENT    "SETIDENT"
+#define TOK_SETIDENT    "AD"
 #define MSG_SETNAME	"SETNAME"	/* set GECOS */
 #define TOK_SETNAME	"AE"	/* its almost unreeaaall... */
 #define MSG_LAG		"LAG"	/* Lag detect */

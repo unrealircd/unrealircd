@@ -87,6 +87,8 @@ void    l_commands_init(void)
 	m_setident_init();
 	m_sdesc_init();
 	m_svsmode_init();
+	m_swhois_init();
+	m_svsmotd_init();
 	module_buffer = &l_commands_info;
 }
 
@@ -100,7 +102,10 @@ void	l_commands_unload(void)
 	m_setname_unload();
 	m_chghost_unload();
 	m_chgident_unload();
-    m_setident_unload();
-    m_sdesc_unload();
+	m_setident_unload();
+	m_sdesc_unload();
+	m_svsmode_unload();
+	m_swhois_unload();
+	m_svsmotd_unload();
 }
 

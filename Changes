@@ -603,3 +603,4 @@ seen. gmtime warning still there
 - Added MAXCONNECTIONS to configure
 - Added a little utility to make converting an m_* command to a module easier
 - Moved m_svsmode and m_svs2mode to m_svsmode.so and updated modulize a bit
+- Moved m_swhois and m_svsmotd to modules

@@ -1,8 +1,8 @@
 /*
- *   IRC - Internet Relay Chat, src/modules/%FILE%
+ *   IRC - Internet Relay Chat, src/modules/m_swhois.c
  *   (C) 2001 The UnrealIRCd Team
  *
- *   %DESC%
+ *   SWHOIS command
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers.
@@ -46,18 +46,18 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_%COMMAND%(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+DLLFUNC int m_swhois(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
-#define MSG_%UCOMMAND% 	"%UCOMMAND%"	
-#define TOK_%UCOMMAND% 	"%TOKEN%"	
+#define MSG_SWHOIS 	"SWHOIS"	
+#define TOK_SWHOIS 	"BA"	
 
 
-ModuleInfo m_%COMMAND%_info
+ModuleInfo m_swhois_info
   = {
   	1,
 	"test",
 	"$Id$",
-	"command /%COMMAND%", 
+	"command /swhois", 
 	NULL,
 	NULL 
     };
@@ -65,17 +65,17 @@ ModuleInfo m_%COMMAND%_info
 #ifdef DYNAMIC_LINKING
 DLLFUNC void	mod_init(void)
 #else
-void    m_%COMMAND%_init(void)
+void    m_swhois_init(void)
 #endif
 {
-	module_buffer = &m_%COMMAND%_info;
-	add_Command(MSG_%UCOMMAND%, TOK_%UCOMMAND%, m_%COMMAND%, %MAXPARA%);
+	module_buffer = &m_swhois_info;
+	add_Command(MSG_SWHOIS, TOK_SWHOIS, m_swhois, MAXPARA);
 }
 
 #ifdef DYNAMIC_LINKING
 DLLFUNC void	mod_load(void)
 #else
-void    m_%COMMAND%_load(void)
+void    m_swhois_load(void)
 #endif
 {
 }
@@ -83,12 +83,39 @@ void    m_%COMMAND%_load(void)
 #ifdef DYNAMIC_LINKING
 DLLFUNC void	mod_unload(void)
 #else
-void	m_%COMMAND%_unload(void)
+void	m_swhois_unload(void)
 #endif
 {
-	if (del_Command(MSG_%UCOMMAND%, TOK_%UCOMMAND%, m_%COMMAND%) < 0)
+	if (del_Command(MSG_SWHOIS, TOK_SWHOIS, m_swhois) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_%COMMAND%_info.name);
+				m_swhois_info.name);
 	}
+}
+/*
+ * m_swhois
+ * parv[1] = nickname
+ * parv[2] = new swhois
+ *
+*/
+
+int m_swhois(aClient *cptr, aClient *sptr, int parc, char *parv[])
+{
+        aClient *acptr;
+
+        if (!IsServer(sptr) && !IsULine(sptr))
+                return 0;
+        if (parc < 3)
+                return 0;
+        acptr = find_person(parv[1], (aClient *)NULL);
+        if (!acptr)
+                return 0;
+
+        if (acptr->user->swhois)
+                MyFree(acptr->user->swhois);
+        acptr->user->swhois = MyMalloc(strlen(parv[2]) + 1);
+        ircsprintf(acptr->user->swhois, "%s", parv[2]);
+        sendto_serv_butone_token(cptr, sptr->name,
+           MSG_SWHOIS, TOK_SWHOIS, "%s :%s", parv[1], parv[2]);
+        return 0;
 }

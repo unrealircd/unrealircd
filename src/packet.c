@@ -237,14 +237,12 @@ void	init_CommandHash(void)
 	add_Command(MSG_SMO, TOK_SMO, m_sendumode, MAXPARA);
 	add_Command(MSG_ADDMOTD, TOK_ADDMOTD, m_addmotd, 1);
 	add_Command(MSG_ADDOMOTD, TOK_ADDOMOTD, m_addomotd, 1);
-	add_Command(MSG_SVSMOTD, TOK_SVSMOTD, m_svsmotd, MAXPARA);
 	add_Command(MSG_OPERMOTD, TOK_OPERMOTD, m_opermotd, MAXPARA);
 	add_Command(MSG_TSCTL, TOK_TSCTL, m_tsctl, MAXPARA);
 	add_Command(MSG_SVSJOIN, TOK_SVSJOIN, m_svsjoin, MAXPARA);
 	add_Command(MSG_SAJOIN, TOK_SAJOIN, m_sajoin, MAXPARA);
 	add_Command(MSG_SVSPART, TOK_SVSPART, m_svspart, MAXPARA);
 	add_Command(MSG_SAPART, TOK_SAPART, m_sapart, MAXPARA);
-	add_Command(MSG_SWHOIS, TOK_SWHOIS, m_swhois, MAXPARA);
 	add_Command(MSG_SVSO, TOK_SVSO, m_svso, MAXPARA);
 	add_Command(MSG_SVSFLINE, TOK_SVSFLINE, m_svsfline, MAXPARA);
 	add_Command(MSG_TKL, TOK_TKL, m_tkl, MAXPARA);

@@ -415,34 +415,6 @@ int  m_rpong(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	return 0;
 }
 /*
- * m_swhois
- * parv[1] = nickname
- * parv[2] = new swhois
- *
-*/
-
-int m_swhois(aClient *cptr, aClient *sptr, int parc, char *parv[])
-{
-	aClient *acptr;
-
-	if (!IsServer(sptr) && !IsULine(sptr))
-		return 0;
-	if (parc < 3)
-		return 0;
-
-	acptr = find_person(parv[1], (aClient *)NULL);
-	if (!acptr)
-		return 0;
-
-	if (acptr->user->swhois)
-		MyFree(acptr->user->swhois);
-	acptr->user->swhois = MyMalloc(strlen(parv[2]) + 1);
-	ircsprintf(acptr->user->swhois, "%s", parv[2]);
-	sendto_serv_butone_token(cptr, sptr->name,
-	   MSG_SWHOIS, TOK_SWHOIS, "%s :%s", parv[1], parv[2]);
-	return 0;
-}
-/*
 ** m_sendumode - Stskeeps
 **      parv[0] = sender prefix
 **      parv[1] = target
