@@ -1733,3 +1733,4 @@ seen. gmtime warning still there
   (#0000542) reported by BiGi
 - Fixed a bug where included files were not added to the file list in the Config menu under
   win32. Reported by PoisonDart316 (#0000535)
+- Added chmode +u to help.conf, reported by Jaw959 (#0000544)
