@@ -147,10 +147,11 @@ int  m_version(cptr, sptr, parc, parv)
 		    serveropts,
 		    (IsAnOper(sptr) ? MYOSNAME : "*"), UnrealProtocol, x);
 		if (MyClient(sptr))
-		{
 			sendto_one(sptr, rpl_str(RPL_PROTOCTL), me.name,
 			    sptr->name, PROTOCTL_PARAMETERS);
-		}
+		else 
+			sendto_one(sptr, rpl_str(RPL_REMOTEPROTOCTL), me.name,
+				sptr->name, PROTOCTL_PARAMETERS);
 	}
 	return 0;
 }

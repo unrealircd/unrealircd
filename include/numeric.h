@@ -37,6 +37,8 @@
 
 #define RPL_REDIR	     10
 
+#define RPL_REMOTEPROTOCTL 105
+
 /*
  * Errors are in the range from 400-599 currently and are grouped by what
  * commands they come from.

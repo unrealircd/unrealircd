@@ -230,7 +230,6 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 /* IRCu/Hybrid/Unreal way now :) -Stskeeps */
 
 #define PROTOCTL_CLIENT           \
-		":%s 005 %s"      \
 		" MAP"            \
 		" KNOCK"          \
 		" SAFELIST"       \

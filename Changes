@@ -564,3 +564,4 @@ seen. gmtime warning still there
 - Minor src/Makefile screwup fix
 - Added some pthread checking support
 - Fixed double dependicies bug.. stupid dlsym
+- Added /version using numeric 105 for remove clients to show protoctl (idea from hybrid)
