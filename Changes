@@ -2305,3 +2305,4 @@ seen. gmtime warning still there
   only show up in local (or server) /whois, reported by format (#0001141).
 - minor m_kick tweak.
 - Fixed bug in /silence regarding cloaked hosts, reported by kuwatog (#0001157).
+- Fixed a problem with a Sleep call on win32

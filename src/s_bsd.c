@@ -1748,7 +1748,7 @@ int  read_message(time_t delay, fdlist *listp)
 #ifndef _WIN32
 		sleep(10);
 #else
-		Sleep(10);
+		Sleep(10000);
 #endif
 	}
 #ifndef _WIN32
