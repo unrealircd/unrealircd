@@ -3556,20 +3556,20 @@ CMD_FUNC(m_botmotd)
 
 	if (botmotd == (aMotd *) NULL)
 	{
-		sendto_one(sptr, ":%s NOTICE AUTH :BOTMOTD File not found",
-		    me.name);
+		sendto_one(sptr, ":%s NOTICE %s :BOTMOTD File not found",
+		    me.name, sptr->name);
 		return 0;
 	}
-	sendto_one(sptr, ":%s NOTICE AUTH :- %s Bot Message of the Day - ",
-	    me.name, me.name);
+	sendto_one(sptr, ":%s NOTICE %s :- %s Bot Message of the Day - ",
+	    me.name, sptr->name, me.name);
 
 	temp = botmotd;
 	while (temp)
 	{
-		sendto_one(sptr, ":%s NOTICE AUTH :- %s", me.name, temp->line);
+		sendto_one(sptr, ":%s NOTICE %s :- %s", me.name, sptr->name, temp->line);
 		temp = temp->next;
 	}
-	sendto_one(sptr, ":%s NOTICE AUTH :End of /BOTMOTD command.", me.name);
+	sendto_one(sptr, ":%s NOTICE %s :End of /BOTMOTD command.", me.name, sptr->name);
 	return 0;
 }
 

@@ -2583,3 +2583,6 @@ seen. gmtime warning still there
   with the same oper block. Suggested by kain.
 - Made /dns oper-only (the ircd command, not your client /dns command :p).
 - Various help.conf fixes. Reported by nukie (#0001373).
+- Fixed remote BOTMOTD bug reported by Angrywolf (#0001365).
+- Workaround for "special ban makes it impossible to add other bans" bug
+  reported by wilkie, SerialKillinNinja, etc. 

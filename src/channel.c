@@ -415,6 +415,8 @@ int add_exbanid(aClient *cptr, aChannel *chptr, char *banid)
 			}
 			else
 			{
+			  /* Temp workaround added in b19. -- Syzop */
+			  if (!mycmp(ban->banstr, banid) || (!strchr(banid, '\\') && !strchr(ban->banstr, '\\')))
 #ifdef NAZIISH_CHBAN_HANDLING
 				if (!match(ban->banstr, banid) ||
 				    !match(banid, ban->banstr))
@@ -488,6 +490,8 @@ int add_banid(aClient *cptr, aChannel *chptr, char *banid)
 			}
 			else
 			{
+			  /* Temp workaround added in b19. -- Syzop */
+			  if (!mycmp(ban->banstr, banid) || (!strchr(banid, '\\') && !strchr(ban->banstr, '\\')))
 #ifdef NAZIISH_CHBAN_HANDLING /* why does it do this?? */
 				if (!match(ban->banstr, banid) ||
 				    !match(banid, ban->banstr))
