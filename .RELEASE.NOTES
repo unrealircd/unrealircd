@@ -26,7 +26,7 @@ and a _lot_ more).
     md5 internally. It requires 3 keys of 5-100 characters (10-20 is fine) consisting
     of mixed lowercase (a-z), uppercase (A-Z) and digits (0-9). So for example:
     set { cloak-keys { "AHsHS6ds2sQGAkish"; "qF5D3orm6Evba26hjf"; "f6oaO2hhd6sIHSfs"; };
-  - 'oldcloak' is the <=3.2 cloaking algorithm, it is ONLY ment for use during the
+  - 'oldcloak' is the <=3.2 cloaking algorithm, it is ONLY meant for use during the
     upgrade process (it will give a warning if you use it), you should switch to the
     much more secure 'cloak' module AS SOON AS POSSIBLE. As mentioned earlier, the old
     cloaking algorithm has been cracked so it makes no sense to keep using it.
@@ -71,6 +71,8 @@ and a _lot_ more).
 - Added new logtype 'spamfilter' to log spamfilter matches.
 - Added 'can_addline' operflag, this is now required in order to use /addline.
 - Spanish and Hungarian translations of unreal32docs were added.
+- Readded support for the T (topic time) and C (creation time) flags for /list. 
+- Added support for the ELIST 005 token (ELIST=MNUCT)
 
 ==[ MAJOR BUGS FIXED ]==
 - win32: crash bugs in TRE on /rehash are probably fixed.
