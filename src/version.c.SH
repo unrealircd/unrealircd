@@ -188,7 +188,7 @@ char *unrealcredits[] =
 	"[FBI]         Corey Lang              fbi@dal.net",
 	" - Being a good IRC friend and getting me started with",
 	"   IRC through our old little wIRCd net :)",
-	"ice-fox.net".
+	"ice-fox.net",
 	" - For donating a shell for me to be able to develop Unreal on",
 	"The +x 2.0 team: RaYmAn, NiQuiL, narf, Griever (great thinking)",
 	"                 eternal, bball, JK. Thanks for makin a",
