@@ -2723,7 +2723,7 @@ int  m_whois(cptr, sptr, parc, parv)
 			{
 				sendto_one(sptr, rpl_str(RPL_WHOISHOST),
 				    me.name, parv[0], acptr->name,
-				    acptr->user->realhost);
+				    user->realhost);
 			}
 			if (IsARegNick(acptr))
 				sendto_one(sptr, rpl_str(RPL_WHOISREGNICK),
@@ -2817,7 +2817,7 @@ int  m_whois(cptr, sptr, parc, parv)
 			}
 
 			if (IsHelpOp(acptr) && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
-				if (!acptr->user->away)
+				if (!user->away)
 					sendto_one(sptr,
 					    rpl_str(RPL_WHOISHELPOP), me.name,
 					    parv[0], name);
@@ -2833,9 +2833,9 @@ int  m_whois(cptr, sptr, parc, parv)
 				RPL_WHOISSPECIAL,
 				parv[0], name, "is a \2Secure Connection\2");
 			}
-			if (acptr->user->swhois && !IsHideOper(acptr))
+			if (user->swhois && !IsHideOper(acptr))
 			{
-				if (*acptr->user->swhois != '\0')
+				if (*user->swhois != '\0')
 					sendto_one(sptr, ":%s %d %s %s :%s",
 					    me.name, RPL_WHOISSPECIAL, parv[0],
 					    name, acptr->user->swhois);
