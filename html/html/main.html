@@ -1,0 +1,107 @@
+<html>
+
+	<head>
+		<meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+		<title>UnrealIRCdConfig</title>
+		<style type="text/css" media="screen"> 
+<!-- 
+BODY, TABLE { 
+    scrollbar-base-color : Black; 
+    scrollbar-3d-light-color : #D3D3D3; 
+    scrollbar-dark-shadow-color : #D3D3D3; 
+    scrollbar-shadow-color : #D3D3D3; 
+    scrollbar-highlight-color : #D3D3D3; 
+    scrollbar-arrow-color : Black; 
+    scrollbar-face-color : #D3D3D3; 
+    background-color : #FFFFFF; 
+    font-size : 8pt; 
+    font-family : "Trebuchet MS", Arial, Tahoma; 
+}
+BODY, TABLE, DIV { 
+    scrollbar-base-color : Black; 
+    scrollbar-3d-light-color : #D3D3D3; 
+    scrollbar-dark-shadow-color : #D3D3D3; 
+    scrollbar-shadow-color : #D3D3D3; 
+    scrollbar-highlight-color : #D3D3D3; 
+    scrollbar-arrow-color : Black; 
+    scrollbar-face-color : #D3D3D3; 
+    font-size : 8pt; 
+    font-family : "Trebuchet MS", Arial, Tahoma; 
+}
+SELECT, .textbox { 
+    font-family : "Trebuchet MS", Arial, Tahoma; 
+    font-size : 8pt; 
+    scrollbar-base-color : Black; 
+    scrollbar-3d-light-color : #D3D3D3; 
+    scrollbar-dark-shadow-color : #D3D3D3; 
+    scrollbar-shadow-color : #D3D3D3; 
+    scrollbar-highlight-color : #D3D3D3; 
+    scrollbar-arrow-color : Black; 
+    scrollbar-face-color : #D3D3D3; 
+    border : 1px solid #D3D3D3; 
+    background-color : #F4f4F4; 
+} 
+.button { 
+    font-family : Tahoma; 
+    border : 1px solid #C8C8C8; 
+    font-size : 11px; 
+    cursor : hand; 
+    background-color : #E5E5E5; 
+    }
+#background { position: absolute; z-index: 0; top: 0px; left: 0px; width: 800px; height: 600px; visibility: visible }
+#buttons         { position: absolute; top: 420px; left: 6px; width: 470px; height: 21px; visibility: visible }
+#content           { position: absolute; top: 77px; left: 133px; width: 399px; height: 283px; visibility: visible }
+#unrealIRCdLink      { font-size: 8pt; font-family: "Trebuchet MS", Arial, Tahoma; position: absolute; top: 364px; left: 559px; width: 89px; height: 16px; visibility: visible; scrollbar-3d-light-color: #D3D3D3; scrollbar-arrow-color: Black; scrollbar-base-color: Black; scrollbar-dark-shadow-color: #D3D3D3; scrollbar-face-color: #D3D3D3; scrollbar-highlight-color: #D3D3D3; scrollbar-shadow-color: #D3D3D3  }
+#background { position: absolute; z-index: -10; top: 0px; left: 0px; width: 800px; height: 600px; visibility: visible }
+#icon { z-index: 1; font-size: 8pt; font-family: "Trebuchet MS", Arial, Tahoma; position: absolute; top: 13px; left: 22px; width: 72px; height: 73px; visibility: visible; scrollbar-3d-light-color: #D3D3D3; scrollbar-arrow-color: Black; scrollbar-base-color: Black; scrollbar-dark-shadow-color: #D3D3D3; scrollbar-face-color: #D3D3D3; scrollbar-highlight-color: #D3D3D3; scrollbar-shadow-color: #D3D3D3 }
+
+#button1img {z-index: 1; font-size: 8pt; font-family: "Trebuchet MS", Arial, Tahoma; position: absolute; top: 150px; left: 11px; width: 111px; height: 23px; visibility: visible; scrollbar-3d-light-color: #D3D3D3; scrollbar-arrow-color: Black; scrollbar-base-color: Black; scrollbar-dark-shadow-color: #D3D3D3; scrollbar-face-color: #D3D3D3; scrollbar-highlight-color: #D3D3D3; scrollbar-shadow-color: #D3D3D3 }
+#button1text   { font-size: 8pt; font-family: "Trebuchet MS", Arial, Tahoma; position: absolute; z-index: 2; top: 150px; left: 11px; width: 111px; height: 23px; visibility: visible; scrollbar-3d-light-color: #D3D3D3; scrollbar-arrow-color: Black; scrollbar-base-color: Black; scrollbar-dark-shadow-color: #D3D3D3; scrollbar-face-color: #D3D3D3; scrollbar-highlight-color: #D3D3D3; scrollbar-shadow-color: #D3D3D3; padding: 1px; }
+#button2img {z-index: 1; font-size: 8pt; font-family: "Trebuchet MS", Arial, Tahoma; position: absolute; top: 180px; left: 11px; width: 111px; height: 23px; visibility: visible; scrollbar-3d-light-color: #D3D3D3; scrollbar-arrow-color: Black; scrollbar-base-color: Black; scrollbar-dark-shadow-color: #D3D3D3; scrollbar-face-color: #D3D3D3; scrollbar-highlight-color: #D3D3D3; scrollbar-shadow-color: #D3D3D3 }
+#button2text   { font-size: 8pt; font-family: "Trebuchet MS", Arial, Tahoma; position: absolute; z-index: 2; top: 180px; left: 11px; width: 111px; height: 23px; visibility: visible; scrollbar-3d-light-color: #D3D3D3; scrollbar-arrow-color: Black; scrollbar-base-color: Black; scrollbar-dark-shadow-color: #D3D3D3; scrollbar-face-color: #D3D3D3; scrollbar-highlight-color: #D3D3D3; scrollbar-shadow-color: #D3D3D3; padding: 1px; }
+</style>
+	</head>
+
+	<body bgcolor="#ffffff" text="black" link="black" vlink="black" alink="black">
+			<div id="button1img" OnClick="location.href='http://www.whatever.org'" onMouseOver="document.body.style.cursor = 'hand'; document.button1.src='../sections/active.gif';" onMouseOut="document.body.style.cursor = 'auto'; document.button1.src='../sections/inactive.gif';"> <img src="../sections/inactive.gif" name="button1" border="0"></div>
+			<div id="button1text" align="center" OnClick="location.href='http://www.whatever.org'" onMouseOver="document.body.style.cursor = 'hand'; document.button1.src='../sections/active.gif';" onMouseOut="document.body.style.cursor = 'auto'; document.button1.src='../sections/inactive.gif';">Operators</div>
+
+			<div id="button2img" OnClick="location.href='http://www.whatever.org'" onMouseOver="document.body.style.cursor = 'hand'; document.button2.src='../sections/active.gif';" onMouseOut="document.body.style.cursor = 'auto'; document.button2.src='../sections/inactive.gif';"> <img src="../sections/inactive.gif" name="button2" border="0"></div>
+			<div id="button2text" align="center" OnClick="location.href='http://www.whatever.org'" onMouseOver="document.body.style.cursor = 'hand'; document.button2.src='../sections/active.gif';" onMouseOut="document.body.style.cursor = 'auto'; document.button2.src='../sections/inactive.gif';">Stats</div>
+		<div id="icon">
+				<img src="../icons/opers.jpg" width="72" height="73" border="0"></div>
+		<div id="background">
+			<img src="../back/background.jpg" width="650" height="450" border="0">
+			<div id="unrealIRCdLink">
+				<a target="_blank"href="http://www.unrealircd.com/" onMouseOver="document.unreallink.src='../unrealircd.com/active.gif';" onMouseOut="document.unreallink.src='../unrealircd.com/inactive.gif';"> <img src="../unrealircd.com/inactive.gif" name="unreallink" border="0"> </a> </div>
+		</div>
+		<div id="buttons">
+			<div align="left">
+				<input type="submit" class="textbox" name="submitButtonName" value="save and close"> <input class="textbox" type="submit" name="submitButtonName" value="discard and close"> <input class="textbox" type="submit" name="submitButtonName" value="reset to original values"></div>
+		</div>
+		<div id="content">
+			<div align="left">
+				<i><font size="+2">Section Title </font></i>
+				<p></p>
+			</div>
+			<div align="center">
+				<table border="1" cellpadding="20" cellspacing="0" width="309" height="161" borderColorDark="black" borderColorLight="black">
+					<tr>
+						<td borderColorDark="#ffffff" borderColorLight="#ffffff">
+							<p><input type="radio" value="radioValue" name="default">Radio one <input type="radio" value="radioValue" name="default">Radio two</p>
+							<p><select name="selectName" size="4" multiple>
+									<option value="one">First</option>
+									<option value="two">Second</option>
+									<option value="three">Third</option>
+								</select></p>
+							<p><input class="textbox" type="text" name="textfieldName" size="24" value="Textbox to enter text values"></p>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<p></p>
+		</div>
+		<p></p>
+	</body>
+
+</html>
