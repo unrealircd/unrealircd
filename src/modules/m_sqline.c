@@ -152,6 +152,6 @@ DLLFUNC int m_sqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	bconf->flag.type = CONF_BAN_NICK;
 	bconf->flag.type2 = CONF_BAN_TYPE_AKILL;
 	if (addit == 1)
-		add_ConfigItem((ConfigItem *) bconf, (ConfigItem **) &conf_ban);
+		AddListItem(bconf, conf_ban);
 
 }

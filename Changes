@@ -960,3 +960,5 @@ seen. gmtime warning still there
   even on win32
 - Added ssl.c and cidr.c to the win32 makefile
 - Added ssl-pubkey auth method (parameter = pem file for public key)
+- Converted tkl, events, commands, hooks, and all config structs to ListStruct
+

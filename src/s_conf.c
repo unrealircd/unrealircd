@@ -375,48 +375,6 @@ long conf_size(char *value) {
 	return num;
 }
 		
-/*
- * This will link in a ConfigItem into a list of it
- * Example:
- *    add_ConfigItem((ConfigItem *) class, (ConfigItem **) &conf_class);
- *
-*/
-void	add_ConfigItem(ConfigItem *item, ConfigItem **list)
-{
-	item->next = *list;
-	item->prev = NULL;
-	if (*list)
-		(*list)->prev = item;
-	*list = item;
-}
-
-/*
- * Removes a ConfigItem from a linked list
- * Example:
- *    del_ConfigItem((ConfigItem *) class, (ConfigItem **)&conf_class);
- * -Stskeeps
-*/
-ConfigItem *del_ConfigItem(ConfigItem *item, ConfigItem **list)
-{
-	ConfigItem *p, *q;
-
-	for (p = *list; p; p = p->next)
-	{
-		if (p == item)
-		{
-			q = p->next;
-			if (p->prev)
-				p->prev->next = p->next;
-			else
-				*list = p->next;
-
-			if (p->next)
-				p->next->prev = p->prev;
-			return q;
-		}
-	}
-	return NULL;
-}
 
 int	config_error_flag = 0;
 /* Small function to bitch about stuff */
@@ -483,7 +441,7 @@ void config_progress(char *format, ...)
 
 void clear_unknown() {
 	ConfigItem_unknown *p;
-	ConfigItem t;
+	ListStruct t;
 	ConfigItem_unknown_ext *q;
 
 	for (p = conf_unknown; p; p = (ConfigItem_unknown *)p->next) {
@@ -508,7 +466,7 @@ void clear_unknown() {
 				p->ce->ce_fileptr->cf_filename, p->ce->ce_varlinenum,
 				p->ce->ce_varname); 
 
-		t.next = del_ConfigItem((ConfigItem *)p, (ConfigItem **)&conf_unknown);
+		t.next = DelListItem(p, conf_unknown);
 		MyFree(p);
 		p = (ConfigItem_unknown *)&t;
 	}
@@ -516,7 +474,7 @@ void clear_unknown() {
 		config_status("%s:%i: unknown directive set::%s",
 			q->ce_fileptr->cf_filename, q->ce_varlinenum,
 			q->ce_varname);
-		t.next = del_ConfigItem((ConfigItem *)q, (ConfigItem **)&conf_unknown_set);
+		t.next = DelListItem(q, conf_unknown_set);
 		MyFree(q);
 		q = (ConfigItem_unknown_ext *)&t;
 	}
@@ -918,7 +876,7 @@ int	init_conf2(char *filename)
 		if (!includes) {
 			includes = MyMalloc(sizeof(ConfigItem_include));
 			includes->file = strdup(filename);
-			add_ConfigItem((ConfigItem *)includes, (ConfigItem **)&conf_include);
+			DelListItem(includes, conf_include);
 		}
 		return i;
 	}
@@ -969,7 +927,7 @@ int	ConfigCmd(ConfigFile *cf, ConfigEntry *ce, ConfigCommand *cc)
 			ConfigItem_unknown *ca = (ConfigItem_unknown *)malloc(sizeof(ConfigItem_unknown));
 			ca->ce = cep;			
 			/* Add to the unknown list */
-			add_ConfigItem((ConfigItem *)ca, (ConfigItem **)&conf_unknown);
+			DelListItem(ca, conf_unknown);
 		}
 	}
 }
@@ -1088,7 +1046,7 @@ int	_conf_admin(ConfigFile *conf, ConfigEntry *ce)
 		if (!conf_admin)
 			conf_admin_tail = ca;
 		ircstrdup(ca->line, cep->ce_varname);
-		add_ConfigItem((ConfigItem *)ca, (ConfigItem **) &conf_admin);
+		AddListItem(ca, conf_admin);
 	}
 }
 
@@ -1111,7 +1069,7 @@ int	_conf_ulines(ConfigFile *conf, ConfigEntry *ce)
 		}
 		ca = MyMallocEx(sizeof(ConfigItem_ulines));
 		ircstrdup(ca->servername, cep->ce_varname);
-		add_ConfigItem((ConfigItem *)ca, (ConfigItem **) &conf_ulines);
+		AddListItem(ca, conf_ulines);
 	}
 }
 
@@ -1205,7 +1163,7 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 	if (isnew)
-		add_ConfigItem((ConfigItem *) class, (ConfigItem **) &conf_class);
+		AddListItem(class, conf_class);
 }
 
 /*
@@ -1493,7 +1451,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 					{
 						from = (ConfigItem_oper_from *)MyMallocEx(sizeof(ConfigItem_oper_from));
 						ircstrdup(from->name, cepp->ce_vardata);
-						add_ConfigItem((ConfigItem *) from, (ConfigItem **)&oper->from);
+						AddListItem(from, oper->from);
 					}
 					else
 					{
@@ -1516,7 +1474,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 
 	}
 	if (isnew)
-		add_ConfigItem((ConfigItem *)oper, (ConfigItem **)&conf_oper);
+		AddListItem(oper, conf_oper);
 }
 
 
@@ -1615,7 +1573,7 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 				cep->ce_varname);
 		}
 	}
-	add_ConfigItem((ConfigItem *)ca, (ConfigItem **) &conf_tld);
+	AddListItem(ca, conf_tld);
 }
 
 /*
@@ -1735,7 +1693,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 
 	}
 	if (isnew)
-		add_ConfigItem((ConfigItem *)listen, (ConfigItem **)&conf_listen);
+		AddListItem(listen, conf_listen);
 	listen->flag.temporary = 0;
 }
 
@@ -1759,7 +1717,7 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		{
 			ConfigItem_unknown *ca2 = malloc(sizeof(ConfigItem_unknown));
 			ca2->ce = ce;
-			add_ConfigItem((ConfigItem *)ca2, (ConfigItem **)&conf_unknown);
+			AddListItem(ca2, conf_unknown);
 			return -1;
 		}
 	}
@@ -1824,7 +1782,7 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 	if (isnew)
-		add_ConfigItem((ConfigItem *) allow, (ConfigItem **) &conf_allow);
+		AddListItem(allow, conf_allow);
 }
 
 int	_conf_allow_channel(ConfigFile *conf, ConfigEntry *ce)
@@ -1864,7 +1822,7 @@ int	_conf_allow_channel(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else
 	{
-		add_ConfigItem((ConfigItem *)allow, (ConfigItem **)&conf_allow_channel);
+		AddListItem(allow, conf_allow_channel);
 		return 0;
 	}
 }
@@ -1924,7 +1882,7 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 					{
 						from = (ConfigItem_oper_from *)MyMallocEx(sizeof(ConfigItem_oper_from));
 						ircstrdup(from->name, cepp->ce_vardata);
-						add_ConfigItem((ConfigItem *) from, (ConfigItem **)&vhost->from);
+						AddListItem(from, vhost->from);
 					}
 					else
 					{
@@ -1961,7 +1919,7 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 	if (isnew)
-		add_ConfigItem((ConfigItem *) vhost, (ConfigItem **) &conf_vhost);
+		AddListItem(vhost, conf_vhost);
 }
 
 int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
@@ -1994,7 +1952,7 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 		ca->flag.type = 1;
-		add_ConfigItem((ConfigItem *)ca, (ConfigItem **) &conf_except);
+		AddListItem(ca, conf_except);
 	}
 	else if (!strcmp(ce->ce_vardata, "scan")) {
 		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -2009,14 +1967,14 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 		ca->flag.type = 0;
-		add_ConfigItem((ConfigItem *)ca, (ConfigItem **) &conf_except);
+		AddListItem(ca, conf_except);
 
 	}
 	else {
 		ConfigItem_unknown *ca2 = malloc(sizeof(ConfigItem_unknown));
 		MyFree(ca);
 		ca2->ce = ce;
-		add_ConfigItem((ConfigItem *)ca2, (ConfigItem **)&conf_unknown);
+		AddListItem(ca2, conf_unknown);
 	}
 }
 
@@ -2051,7 +2009,7 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 		ConfigItem_unknown *ca2 = malloc(sizeof(ConfigItem_unknown));
 		MyFree(ca);
 		ca2->ce = ce;
-		add_ConfigItem((ConfigItem *)ca2, (ConfigItem **)&conf_unknown);
+		AddListItem(ca2, conf_unknown);
 		return -1;
 	}
 
@@ -2079,7 +2037,7 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 					ce->ce_vardata, cep->ce_varname);
 		}
 	}
-	add_ConfigItem((ConfigItem *)ca, (ConfigItem **) &conf_ban);
+	AddListItem(ca, conf_ban);
 }
 
 int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
@@ -2212,7 +2170,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 
 	}
 	if (isnew)
-		add_ConfigItem((ConfigItem *)link, (ConfigItem **)&conf_link);
+		AddListItem(link, conf_link);
 }
 int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 {
@@ -2400,7 +2358,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			ca2->ce_vardata = cep->ce_vardata;
 			ca2->ce_varname = cep->ce_varname;
 			ca2->ce_entries = cep->ce_entries;
-			add_ConfigItem((ConfigItem *)ca2, (ConfigItem **)&conf_unknown_set);
+			DelListItem(ca2, conf_unknown_set);
 /*			config_status("%s:%i: unknown directive set::%s",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 				cep->ce_varname); */
@@ -2466,9 +2424,9 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 	if (!strcmp(ce->ce_vardata, "channel"))
-		add_ConfigItem((ConfigItem *)ca, (ConfigItem **) &conf_badword_channel);
+		AddListItem(ca, conf_badword_channel);
 	else if (!strcmp(ce->ce_vardata, "message"))
-		add_ConfigItem((ConfigItem *)ca, (ConfigItem **) &conf_badword_message);
+		AddListItem(ca, conf_badword_message);
 
 
 }
@@ -2495,7 +2453,7 @@ int	_conf_deny(ConfigFile *conf, ConfigEntry *ce)
 	{
 		ConfigItem_unknown *ca2 = malloc(sizeof(ConfigItem_unknown));
 		ca2->ce = ce;
-		add_ConfigItem((ConfigItem *)ca2, (ConfigItem **)&conf_unknown);
+		AddListItem(ca2, conf_unknown);
 		return -1;
 	}
 	return -1;
@@ -2543,7 +2501,7 @@ int	_conf_deny_dcc(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else
 	{
-		add_ConfigItem((ConfigItem *)deny, (ConfigItem **)&conf_deny_dcc);
+		AddListItem(deny, conf_deny_dcc);
 		return 0;
 	}
 }
@@ -2590,7 +2548,7 @@ int	_conf_deny_channel(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else
 	{
-		add_ConfigItem((ConfigItem *)deny, (ConfigItem **)&conf_deny_channel);
+		AddListItem(deny, conf_deny_channel);
 		return 0;
 	}
 }
@@ -2653,7 +2611,7 @@ int	_conf_deny_link(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else
 	{
-		add_ConfigItem((ConfigItem *)deny, (ConfigItem **)&conf_deny_link);
+		AddListItem(deny, conf_deny_link);
 		return 0;
 	}
 }
@@ -2705,7 +2663,7 @@ int	_conf_deny_version(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else
 	{
-		add_ConfigItem((ConfigItem *)deny, (ConfigItem **)&conf_deny_version);
+		AddListItem(deny, conf_deny_version);
 		return 0;
 	}
 }
@@ -2764,7 +2722,7 @@ int	_conf_log(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 		}
 	}
-	add_ConfigItem((ConfigItem *)log, (ConfigItem **) &conf_log);
+	AddListItem(log, conf_log);
 }
 
 int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
@@ -2788,7 +2746,7 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 		return -1;
 	}
 	if ((alias = Find_alias(ce->ce_vardata)))
-		del_ConfigItem((ConfigItem *)alias, (ConfigItem **)&conf_alias);
+		DelListItem(alias, conf_alias);
 	alias = MyMallocEx(sizeof(ConfigItem_alias));
 	ircstrdup(alias->alias, ce->ce_vardata);
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -2816,7 +2774,7 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 					ircstrdup(format->parameters, cepp->ce_vardata);
 				}
 			}
-			add_ConfigItem((ConfigItem *)format, (ConfigItem **) &alias->format);
+			AddListItem(format, alias->format);
 		}		
 				
 		else if (!strcmp(cep->ce_varname, "nick")) {
@@ -2843,7 +2801,7 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 			ircstrdup(alias->nick, alias->alias); 
 		}
 		add_CommandX(alias->alias, NULL, m_alias, 1, M_USER|M_ALIAS);
-		add_ConfigItem((ConfigItem *)alias, (ConfigItem **) &conf_alias);
+		AddListItem(alias, conf_alias);
 }
 
 
@@ -2893,13 +2851,13 @@ void	listen_cleanup()
 {
 	int	i = 0;
 	ConfigItem_listen *listen_ptr;
-	ConfigItem t;
+	ListStruct t;
 	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *)listen_ptr->next)
 	{
 		if (listen_ptr->flag.temporary && !listen_ptr->clients)
 		{
 			ircfree(listen_ptr->ip);
-			t.next = del_ConfigItem((ConfigItem *) listen_ptr, (ConfigItem **)&conf_listen);
+			t.next = DelListItem(listen_ptr, conf_listen);
 			MyFree(listen_ptr);
 			listen_ptr = (ConfigItem_listen *) &t;
 			i++;
@@ -2926,7 +2884,7 @@ void	validate_configuration(void)
 	ConfigItem_vhost *vhost_ptr;
 	ConfigItem_log *log_ptr;
 	ConfigItem_alias *alias_ptr;
-	ConfigItem t;
+	ListStruct t;
 	short hide_host = 1;
 	char *s;
 	struct in_addr in;
@@ -3108,7 +3066,7 @@ void	validate_configuration(void)
 				oper_ptr->name);
 			oper_from = (ConfigItem_oper_from *)MyMallocEx(sizeof(ConfigItem_oper_from));
 			ircstrdup(oper_from->name, "*@*");
-			add_ConfigItem((ConfigItem *) oper_from, (ConfigItem **)&oper_ptr->from);	
+			AddListItem(oper_from, oper_ptr->from);	
 		}
 		if (!oper_ptr->class) {
 			Warning("oper %s::class is missing or unknown, using default of class 'default'",
@@ -3131,7 +3089,7 @@ void	validate_configuration(void)
 		if (!listen_ptr->port) {
 			Warning("listen port illegal. Deleting listen {} block");
 			ircfree(listen_ptr->ip);
-			t.next = del_ConfigItem((ConfigItem *)listen_ptr, (ConfigItem **)&conf_listen);
+			t.next = DelListItem(listen_ptr, conf_listen);
 			MyFree(listen_ptr);
 			listen_ptr = (ConfigItem_listen *)&t;
 			continue;
@@ -3160,7 +3118,7 @@ void	validate_configuration(void)
 	{
 		if (BadPtr(except_ptr->mask)) {
 			Warning("except mask missing. Deleting except {} block");
-			t.next = del_ConfigItem((ConfigItem *)except_ptr, (ConfigItem **)&conf_except);
+			t.next = DelListItem(except_ptr, conf_except);
 			MyFree(except_ptr);
 			except_ptr = (ConfigItem_except *)&t;
 		}
@@ -3170,7 +3128,7 @@ void	validate_configuration(void)
 		if (BadPtr(ban_ptr->mask)) {
 			Warning("ban mask missing. Deleting ban {} block");
 			ircfree(ban_ptr->reason);
-			t.next = del_ConfigItem((ConfigItem *)ban_ptr, (ConfigItem **)&conf_ban);
+			t.next = DelListItem(ban_ptr, conf_ban);
 			MyFree(ban_ptr);
 			ban_ptr = (ConfigItem_ban *)&t;
 			continue;
@@ -3186,7 +3144,7 @@ void	validate_configuration(void)
 		if (BadPtr(link_ptr->servername))
 		{
 			Warning("link without name. Deleting link {} block");
-			t.next = del_ConfigItem((ConfigItem *)link_ptr, (ConfigItem **)&conf_link);
+			t.next = DelListItem(link_ptr, conf_link);
 			link_cleanup(link_ptr);
 			MyFree(link_ptr);
 			link_ptr = (ConfigItem_link *)&t;
@@ -3199,7 +3157,7 @@ void	validate_configuration(void)
 			}
 			if (BadPtr(link_ptr->hostname)) {
 				Warning("link with invalid hostname. Deleting link {} block");
-				t.next = del_ConfigItem((ConfigItem *)link_ptr, (ConfigItem **)&conf_link);
+				t.next = DelListItem(link_ptr, conf_link);
 				link_cleanup(link_ptr);
 				MyFree(link_ptr);
 				link_ptr = (ConfigItem_link *)&t;
@@ -3207,7 +3165,7 @@ void	validate_configuration(void)
 			}
 			if (BadPtr(link_ptr->connpwd)) {
 				Warning("link with invalid password-connect. Deleting link {} block");
-				t.next = del_ConfigItem((ConfigItem *)link_ptr, (ConfigItem **)&conf_link);
+				t.next = DelListItem(link_ptr, conf_link);
 				link_cleanup(link_ptr);
 				MyFree(link_ptr);
 				link_ptr = (ConfigItem_link *)&t;
@@ -3230,7 +3188,7 @@ void	validate_configuration(void)
 	{
 		if (BadPtr(tld_ptr->mask)) {
 			Warning("tld without mask. Deleting tld {} block");
-			t.next = del_ConfigItem((ConfigItem *)tld_ptr, (ConfigItem **)&conf_tld);
+			t.next = DelListItem(tld_ptr, conf_tld);
 			ircfree(tld_ptr->motd_file);
 			ircfree(tld_ptr->rules_file);
 			MyFree(tld_ptr);
@@ -3267,11 +3225,11 @@ void	validate_configuration(void)
 			for (vhost_from = (ConfigItem_oper_from *) vhost_ptr->from; vhost_from; vhost_from = (ConfigItem_oper_from *) vhost_from->next)
 			{
 				ircfree(vhost_from->name);
-				t.next = del_ConfigItem((ConfigItem *)vhost_from, (ConfigItem **)&vhost_ptr->from);
+				t.next = DelListItem(vhost_from, vhost_ptr->from);
 				MyFree(vhost_from);
 				vhost_from = (ConfigItem_oper_from *) &t;
 			}
-			t.next = del_ConfigItem((ConfigItem *)vhost_ptr, (ConfigItem **)&conf_vhost);
+			t.next = DelListItem(vhost_ptr, conf_vhost);
 			MyFree(vhost_ptr);
 			vhost_ptr = (ConfigItem_vhost *)&t;
 		}
@@ -3284,7 +3242,7 @@ void	validate_configuration(void)
 		log_ptr = MyMallocEx(sizeof(ConfigItem_log));
 		ircstrdup(log_ptr->file, "ircd.log");
 		log_ptr->flags |= LOG_ERROR|LOG_KLINE|LOG_TKL;
-		add_ConfigItem((ConfigItem *)log_ptr, (ConfigItem **) &conf_log);
+		AddListItem(log_ptr, conf_log);
 		Warning("No log {} found using ircd.log as default");
 	}
 	if (!conf_alias) {
@@ -3292,37 +3250,37 @@ void	validate_configuration(void)
 		ircstrdup(alias_ptr->alias, "NickServ");
 		ircstrdup(alias_ptr->nick, "NickServ");
 		alias_ptr->type = ALIAS_SERVICES;
-		add_ConfigItem((ConfigItem *)alias_ptr, (ConfigItem **) &conf_alias);
+		AddListItem(alias_ptr, conf_alias);
 		add_CommandX("NickServ", NULL, m_alias, 1, M_USER|M_ALIAS);
 		alias_ptr = MyMallocEx(sizeof(ConfigItem_alias));
 		ircstrdup(alias_ptr->alias, "ChanServ");
 		ircstrdup(alias_ptr->nick, "ChanServ");
 		alias_ptr->type = ALIAS_SERVICES;
-		add_ConfigItem((ConfigItem *)alias_ptr, (ConfigItem **) &conf_alias);
+		AddListItem(alias_ptr, conf_alias);
 		add_CommandX("ChanServ", NULL, m_alias, 1, M_USER|M_ALIAS);
 		alias_ptr = MyMallocEx(sizeof(ConfigItem_alias));
 		ircstrdup(alias_ptr->alias, "MemoServ");
 		ircstrdup(alias_ptr->nick, "MemoServ");
 		alias_ptr->type = ALIAS_SERVICES;
-		add_ConfigItem((ConfigItem *)alias_ptr, (ConfigItem **) &conf_alias);
+		AddListItem(alias_ptr, conf_alias);
 		add_CommandX("MemoServ", NULL, m_alias, 1, M_USER|M_ALIAS);
 		alias_ptr = MyMallocEx(sizeof(ConfigItem_alias));
 		ircstrdup(alias_ptr->alias, "OperServ");
 		ircstrdup(alias_ptr->nick, "OperServ");
 		alias_ptr->type = ALIAS_SERVICES;
-		add_ConfigItem((ConfigItem *)alias_ptr, (ConfigItem **) &conf_alias);
+		AddListItem(alias_ptr, conf_alias);
 		add_CommandX("OperServ", NULL, m_alias, 1, M_USER|M_ALIAS);
 		alias_ptr = MyMallocEx(sizeof(ConfigItem_alias));
 		ircstrdup(alias_ptr->alias, "HelpServ");
 		ircstrdup(alias_ptr->nick, "HelpServ");
 		alias_ptr->type = ALIAS_SERVICES;
-		add_ConfigItem((ConfigItem *)alias_ptr, (ConfigItem **) &conf_alias);
+		AddListItem(alias_ptr, conf_alias);
 		add_CommandX("HelpServ", NULL, m_alias, 1, M_USER|M_ALIAS);
 		alias_ptr = MyMallocEx(sizeof(ConfigItem_alias));
 		ircstrdup(alias_ptr->alias, "StatServ");
 		ircstrdup(alias_ptr->nick, "StatServ");
 		alias_ptr->type = ALIAS_STATS;
-		add_ConfigItem((ConfigItem *)alias_ptr, (ConfigItem **) &conf_alias);
+		AddListItem(alias_ptr, conf_alias);
 		add_CommandX("StatServ", NULL, m_alias, 1, M_USER|M_ALIAS);
 		Warning("No alias{}'s found, using default of NickServ, ChanServ, MemoServ, OperServ, HelpServ, StatServ");
 	}
@@ -3368,7 +3326,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	ConfigItem_log			*log_ptr;
 	ConfigItem_alias		*alias_ptr;
 	ConfigItem_include		*include_ptr;
-	ConfigItem 	t;
+	ListStruct 	t;
 
 
 	flush_connections(&me);
@@ -3385,7 +3343,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	for (admin_ptr = conf_admin; admin_ptr; admin_ptr = (ConfigItem_admin *) admin_ptr->next)
 	{
 		ircfree(admin_ptr->line);
-		t.next = del_ConfigItem((ConfigItem *) admin_ptr, (ConfigItem **)&conf_admin);
+		t.next = DelListItem(admin_ptr, conf_admin);
 		MyFree(admin_ptr);
 		admin_ptr = (ConfigItem_admin *) &t;
 	}
@@ -3399,11 +3357,11 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		for (oper_from = (ConfigItem_oper_from *) oper_ptr->from; oper_from; oper_from = (ConfigItem_oper_from *) oper_from->next)
 		{
 			ircfree(oper_from->name);
-			t.next = del_ConfigItem((ConfigItem *)oper_from, (ConfigItem **)&oper_ptr->from);
+			t.next = DelListItem(oper_from, oper_ptr->from);
 			MyFree(oper_from);
 			oper_from = (ConfigItem_oper_from *) &t;
 		}
-		t.next = del_ConfigItem((ConfigItem *)oper_ptr, (ConfigItem **)&conf_oper);
+		t.next = DelListItem(oper_ptr, conf_oper);
 		MyFree(oper_ptr);
 		oper_ptr = (ConfigItem_oper *) &t;
 	}
@@ -3416,7 +3374,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		if (!class_ptr->clients)
 		{
 			ircfree(class_ptr->name);
-			t.next = del_ConfigItem((ConfigItem *) class_ptr, (ConfigItem **)&conf_class);
+			t.next = DelListItem(class_ptr, conf_class);
 			MyFree(class_ptr);
 			class_ptr = (ConfigItem_class *) &t;
 		}
@@ -3425,7 +3383,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	{
 		/* We'll wipe it out when it has no clients */
 		ircfree(uline_ptr->servername);
-		t.next = del_ConfigItem((ConfigItem *) uline_ptr, (ConfigItem **)&conf_ulines);
+		t.next = DelListItem(uline_ptr, conf_ulines);
 		MyFree(uline_ptr);
 		uline_ptr = (ConfigItem_ulines *) &t;
 	}
@@ -3434,14 +3392,14 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		ircfree(allow_ptr->ip);
 		ircfree(allow_ptr->hostname);
 		Auth_DeleteAuthStruct(allow_ptr->auth);
-		t.next = del_ConfigItem((ConfigItem *) allow_ptr, (ConfigItem **) &conf_allow);
+		t.next = DelListItem(allow_ptr, conf_allow);
 		MyFree(allow_ptr);
 		allow_ptr = (ConfigItem_allow *) &t;
 	}
 	for (except_ptr = conf_except; except_ptr; except_ptr = (ConfigItem_except *) except_ptr->next)
 	{
 		ircfree(except_ptr->mask);
-		t.next = del_ConfigItem((ConfigItem *) except_ptr, (ConfigItem **)&conf_except);
+		t.next = DelListItem(except_ptr, conf_except);
 		MyFree(except_ptr);
 		except_ptr = (ConfigItem_except *) &t;
 	}
@@ -3451,7 +3409,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		{
 			ircfree(ban_ptr->mask);
 			ircfree(ban_ptr->reason);
-			t.next = del_ConfigItem((ConfigItem *) ban_ptr, (ConfigItem **)&conf_ban);
+			t.next = DelListItem(ban_ptr, conf_ban);
 			MyFree(ban_ptr);
 			ban_ptr = (ConfigItem_ban *) &t;
 		}
@@ -3461,7 +3419,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		if (link_ptr->refcount == 0)
 		{
 			link_cleanup(link_ptr);
-			t.next = del_ConfigItem((ConfigItem *) link_ptr, (ConfigItem **)&conf_link);
+			t.next = DelListItem(link_ptr, conf_link);
 			MyFree(link_ptr);
 			link_ptr = (ConfigItem_link *) &t;
 		}
@@ -3495,7 +3453,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 				tld_ptr->rules = motd;
 			}
 		}
-		t.next = del_ConfigItem((ConfigItem *) tld_ptr, (ConfigItem **)&conf_tld);
+		t.next = DelListItem(tld_ptr, conf_tld);
 		MyFree(tld_ptr);
 		tld_ptr = (ConfigItem_tld *) &t;
 	}
@@ -3511,11 +3469,11 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 			vhost_from = (ConfigItem_oper_from *) vhost_from->next)
 		{
 			ircfree(vhost_from->name);
-			t.next = del_ConfigItem((ConfigItem *)vhost_from, (ConfigItem **)&vhost_ptr->from);
+			t.next = DelListItem(vhost_from, vhost_ptr->from);
 			MyFree(vhost_from);
 			vhost_from = (ConfigItem_oper_from *) &t;
 		}
-		t.next = del_ConfigItem((ConfigItem *)vhost_ptr, (ConfigItem **)&conf_vhost);
+		t.next = DelListItem(vhost_ptr, conf_vhost);
 		MyFree(vhost_ptr);
 		vhost_ptr = (ConfigItem_vhost *) &t;
 	}
@@ -3524,7 +3482,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		badword_ptr = (ConfigItem_badword *) badword_ptr->next) {
 		ircfree(badword_ptr->word);
 			ircfree(badword_ptr->replace);
-		t.next = del_ConfigItem((ConfigItem *) badword_ptr, (ConfigItem **)&conf_badword_channel);
+		t.next = DelListItem(badword_ptr, conf_badword_channel);
 		MyFree(badword_ptr);
 		badword_ptr = (ConfigItem_badword *) &t;
 	}
@@ -3532,7 +3490,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		badword_ptr = (ConfigItem_badword *) badword_ptr->next) {
 		ircfree(badword_ptr->word);
 			ircfree(badword_ptr->replace);
-		t.next = del_ConfigItem((ConfigItem *) badword_ptr, (ConfigItem **)&conf_badword_message);
+		t.next = DelListItem(badword_ptr, conf_badword_message);
 		MyFree(badword_ptr);
 		badword_ptr = (ConfigItem_badword *) &t;
 	}
@@ -3543,7 +3501,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		{
 			ircfree(deny_dcc_ptr->filename);
 			ircfree(deny_dcc_ptr->reason);
-			t.next = del_ConfigItem((ConfigItem *) deny_dcc_ptr, (ConfigItem **)&conf_deny_dcc);
+			t.next = DelListItem(deny_dcc_ptr, conf_deny_dcc);
 			MyFree(deny_dcc_ptr);
 			deny_dcc_ptr = (ConfigItem_deny_dcc *) &t;
 		}
@@ -3552,7 +3510,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		ircfree(deny_link_ptr->prettyrule);
 		ircfree(deny_link_ptr->mask);
 		crule_free(&deny_link_ptr->rule);
-		t.next = del_ConfigItem((ConfigItem *) deny_link_ptr, (ConfigItem **)&conf_deny_link);
+		t.next = DelListItem(deny_link_ptr, conf_deny_link);
 		MyFree(deny_link_ptr);
 		deny_link_ptr = (ConfigItem_deny_link *) &t;
 	}
@@ -3560,7 +3518,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		ircfree(deny_version_ptr->mask);
 		ircfree(deny_version_ptr->version);
 		ircfree(deny_version_ptr->flags);
-		t.next = del_ConfigItem((ConfigItem *) deny_version_ptr, (ConfigItem **)&conf_deny_version);
+		t.next = DelListItem(deny_version_ptr, conf_deny_version);
 		MyFree(deny_version_ptr);
 		deny_version_ptr = (ConfigItem_deny_version *) &t;
 	}
@@ -3569,7 +3527,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	{
 		ircfree(deny_channel_ptr->channel);
 		ircfree(deny_channel_ptr->reason);
-		t.next = del_ConfigItem((ConfigItem *) deny_channel_ptr, (ConfigItem **)&conf_deny_channel);
+		t.next = DelListItem(deny_channel_ptr, conf_deny_channel);
 		MyFree(deny_channel_ptr);
 		deny_channel_ptr = (ConfigItem_deny_channel *) &t;
 	}
@@ -3577,7 +3535,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	for (allow_channel_ptr = conf_allow_channel; allow_channel_ptr; allow_channel_ptr = (ConfigItem_allow_channel *) allow_channel_ptr->next)
 	{
 		ircfree(allow_channel_ptr->channel);
-		t.next = del_ConfigItem((ConfigItem *) allow_channel_ptr, (ConfigItem **)&conf_allow_channel);
+		t.next = DelListItem(allow_channel_ptr, conf_allow_channel);
 		MyFree(allow_channel_ptr);
 		allow_channel_ptr = (ConfigItem_allow_channel *) &t;
 	}
@@ -3592,7 +3550,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	}
 	for (log_ptr = conf_log; log_ptr; log_ptr = (ConfigItem_log *)log_ptr->next) {
 		ircfree(log_ptr->file);
-		t.next = del_ConfigItem((ConfigItem *)log_ptr, (ConfigItem **)&conf_log);
+		t.next = DelListItem(log_ptr, conf_log);
 		MyFree(log_ptr);
 		log_ptr = (ConfigItem_log *)&t;
 	}
@@ -3607,18 +3565,18 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 			{
 				ircfree(fmt->format);
 				ircfree(fmt->parameters);
-				t.next = del_ConfigItem((ConfigItem *)fmt, (ConfigItem **)&alias_ptr->format);
+				t.next = DelListItem(fmt, alias_ptr->format);
 				MyFree(fmt);
 				fmt = (ConfigItem_alias_format *) &t;
 			}
 		}
-		t.next = del_ConfigItem((ConfigItem *)alias_ptr, (ConfigItem **)&conf_alias);
+		t.next = DelListItem(alias_ptr, conf_alias);
 		MyFree(alias_ptr);
 		alias_ptr = (ConfigItem_alias *)&t;
 	}
 	for (include_ptr = conf_include; include_ptr; include_ptr = (ConfigItem_include *)include_ptr->next) {
 		ircfree(include_ptr->file);
-		t.next = del_ConfigItem((ConfigItem *)include_ptr, (ConfigItem **)&conf_include);
+		t.next = DelListItem(include_ptr, conf_include);
 		MyFree(include_ptr);
 		include_ptr = (ConfigItem_include *)&t;
 	}

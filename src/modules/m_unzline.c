@@ -222,7 +222,7 @@ DLLFUNC int m_unzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			return 0;
 		}			
 	}
-	del_ConfigItem((ConfigItem *)bconf, (ConfigItem **)&conf_ban);
+	DelListItem(bconf, conf_ban);
 	sendto_realops("%s removed z:line %s", parv[0], userhost);
 	if (bconf->mask)
 		MyFree(bconf->mask);

@@ -1077,7 +1077,7 @@ int  InitwIRCD(argc, argv)
 	default_class->maxclients = 100;
 	default_class->sendq = MAXSENDQLENGTH;
 	default_class->name = "default";
-	add_ConfigItem((ConfigItem *) default_class, (ConfigItem **) &conf_class);
+	AddListItem(default_class, conf_class);
 	init_conf2(configfile);
 	validate_configuration();
 	booted = TRUE;

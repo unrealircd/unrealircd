@@ -196,7 +196,7 @@ DLLFUNC int m_akill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		bconf->mask = strdup(make_user_host(usermask, hostmask));
 		bconf->reason = comment ? strdup(comment) : NULL;
 		bconf->flag.type2 = CONF_BAN_TYPE_AKILL;
-		add_ConfigItem((ConfigItem *) bconf, (ConfigItem **) &conf_ban);
+		AddListItem(bconf, conf_ban);
 	}
 
 	if (comment)

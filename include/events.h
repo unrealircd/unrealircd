@@ -24,7 +24,7 @@
 typedef struct _event Event;
 
 struct _event {
-	Event   *next, *prev;
+	Event   *prev, *next;
 	char	*name;
 	time_t	every;
 	long	howmany;

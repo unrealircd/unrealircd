@@ -73,13 +73,9 @@ Event	*EventAdd(char *name, long every, long howmany,
 	newevent->every = every;
 	newevent->event = event;
 	newevent->data = data;
-	newevent->next = events;
-	newevent->prev = NULL;
 	/* We don't want a quick execution */
 	newevent->last = TStime();
-	if (events)
-		events->prev = newevent;
-	events = newevent;
+	AddListItem(newevent,events);
 #ifndef HAVE_NO_THREADS
 	IRCMutexUnlock(sys_EventLock);
 #endif
@@ -97,13 +93,7 @@ Event	*EventDel(Event *event)
 		{
 			q = p->next;
 			MyFree(p->name);
-			if (p->prev)
-				p->prev->next = p->next;
-			else
-				events = p->next;
-				
-			if (p->next)
-				p->next->prev = p->prev;
+			DelListItem(p, events);
 			MyFree(p);
 			return q;		
 		}

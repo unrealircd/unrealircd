@@ -2253,7 +2253,7 @@ int  connect_server(aconf, by, hp)
 		Link lin;
 
 		lin.flags = ASYNC_CONNECT;
-		lin.value.aconf = (ConfigItem *) aconf;
+		lin.value.aconf = (ListStruct *) aconf;
 		nextdnscheck = 1;
 		s = aconf->hostname;
 #ifndef INET6

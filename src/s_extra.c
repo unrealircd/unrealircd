@@ -121,12 +121,12 @@ void	DCCdeny_add(char *filename, char *reason, int type)
 	deny->filename = strdup(filename);
 	deny->reason = strdup(reason);
 	deny->flag.type2 = type;
-	add_ConfigItem((ConfigItem *)deny, (ConfigItem **)&conf_deny_dcc);
+	AddListItem(deny, conf_deny_dcc);
 }
 
 void	DCCdeny_del(ConfigItem_deny_dcc *deny)
 {
-	del_ConfigItem((ConfigItem *)deny, (ConfigItem **)&conf_deny_dcc);
+	DelListItem(deny, conf_deny_dcc);
 	if (deny->filename)
 		MyFree(deny->filename);
 	if (deny->reason)
@@ -238,7 +238,7 @@ void dcc_wipe_services(void)
 	{
 		if ((dconf->flag.type2 == CONF_BAN_TYPE_AKILL))
 		{
-			t.next = (ConfigItem *)del_ConfigItem((ConfigItem *)dconf, (ConfigItem **)&conf_deny_dcc);
+			t.next = (ConfigItem *)DelListItem(dconf, conf_deny_dcc);
 			if (dconf->filename)
 				MyFree(dconf->filename);
 			if (dconf->reason)

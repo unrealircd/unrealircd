@@ -496,8 +496,7 @@ DLLFUNC int	h_config_set_blackhole(void)
  			blackhole_conf.ip = strdup(ip);
  			blackhole_conf.port = iport;			
 	explodeblackhole:
-			del_ConfigItem((ConfigItem *)sets, 
-				(ConfigItem **) &conf_unknown_set);
+			DelListItem(sets, conf_unknown_set);
 			continue;
 		}	
 	}

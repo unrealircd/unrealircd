@@ -236,6 +236,6 @@ DLLFUNC int m_kline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	bconf->mask = strdup(make_user_host(name, uhost));
 	bconf->reason = parv[2] ? strdup(parv[2]) : NULL;
 	bconf->flag.type2 = CONF_BAN_TYPE_TEMPORARY;
-	add_ConfigItem((ConfigItem *) bconf, (ConfigItem **) &conf_ban);
+	AddListItem(bconf, conf_ban);
 	check_pings(TStime(), 1);
 }

@@ -450,7 +450,7 @@ int  exit_client(cptr, sptr, from, comment)
 			  && sptr->serv->conf->flag.temporary)
 			{
 				/* Due for deletion */
-				del_ConfigItem((ConfigItem *) sptr->serv->conf, (ConfigItem **)&conf_link);
+				DelListItem(sptr->serv->conf, conf_link);
 				link_cleanup(sptr->serv->conf);
 				MyFree(sptr->serv->conf);
 			}

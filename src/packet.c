@@ -235,7 +235,7 @@ void	add_Command_backend(char *cmd, int (*func)(), unsigned char parameters, uns
 	newcmd->flags = flags;
 	
 	/* Add in hash with hash value = first byte */
-	add_Command_to_list(newcmd, &CommandHash[toupper(*cmd)]);
+	AddListItem(newcmd, CommandHash[toupper(*cmd)]);
 }
 
 void	add_Command(char *cmd, char *token, int (*func)(), unsigned char parameters)
@@ -250,37 +250,6 @@ void    add_CommandX(char *cmd, char *token, int (*func)(), unsigned char parame
 	add_Command_backend(cmd, func, parameters, 0, flags);
 	if (token != NULL)
 		add_Command_backend(token, func, parameters, 1, flags);
-}
-
-void	add_Command_to_list(aCommand *item, aCommand **list)
-{
-	item->next = *list;
-	item->prev = NULL;
-	if (*list)
-		(*list)->prev = item;
-	*list = item;
-}
-
-aCommand *del_Command_from_list(aCommand *item, aCommand **list)
-{
-	aCommand *p, *q;
-	
-	for (p = *list; p; p = p->next)
-	{
-		if (p == item)
-		{
-			q = p->next;
-			if (p->prev)
-				p->prev->next = p->next;
-			else
-				*list = p->next;
-				
-			if (p->next)
-				p->next->prev = p->prev;
-			return q;		
-		}
-	}
-	return NULL;
 }
 
 inline aCommand *find_CommandEx(char *cmd, int (*func)(), int token)
@@ -311,7 +280,7 @@ int del_Command(char *cmd, char *token, int (*func)())
 		i--;
 	else
 	{
-		del_Command_from_list(p, &CommandHash[toupper(*cmd)]);
+		DelListItem(p, CommandHash[toupper(*cmd)]);
 		if (p->cmd)
 			MyFree(p->cmd);
 		MyFree(p);
@@ -322,7 +291,7 @@ int del_Command(char *cmd, char *token, int (*func)())
 			i--;
 		else
 		{
-			del_Command_from_list(p, &CommandHash[toupper(*token)]);
+			DelListItem(p, CommandHash[toupper(*token)]);
 			if (p->cmd)
 				MyFree(p->cmd);
 			MyFree(p);

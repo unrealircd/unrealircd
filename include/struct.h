@@ -670,8 +670,7 @@ struct Server {
 #define M_RESETIDLE 0x0040
 
 struct Command {
-	aCommand		*next;
-	aCommand		*prev;
+	aCommand		*prev, *next;
 	char 			*cmd;
 	int			(*func) ();
 	int			flags;
@@ -699,10 +698,10 @@ struct Command {
 #define TKL_QUIET	0x0010
 
 struct t_kline {
+	aTKline *prev, *next;
 	int  type;
 	char *usermask, *hostmask, *reason, *setby;
 	TS expire_at, set_at;
-	aTKline *prev, *next;
 };
 
 typedef struct ircstatsx {
@@ -888,28 +887,26 @@ struct _configitem {
 };
 
 struct _configitem_me {
-	ConfigFlag flag;
-	ConfigItem *prev, *next;
 	char	   *name, *info;
 	short	   numeric;
 };
 
 struct _configitem_admin {
-	ConfigFlag flag;
 	ConfigItem *prev, *next;
+	ConfigFlag flag;
 	char	   *line; 
 };
 
 struct _configitem_class {
-	ConfigFlag flag;
 	ConfigItem *prev, *next;
+	ConfigFlag flag;
 	char	   *name;
 	int	   pingfreq, connfreq, maxclients, sendq, clients;
 };
 
 struct _configitem_allow {
-	ConfigFlag 	 flag;
 	ConfigItem       *prev, *next;
+	ConfigFlag 	 flag;
 	char	         *ip, *hostname, *server;
 	anAuthStruct	 *auth;	
 	short		 maxperip;
@@ -918,8 +915,8 @@ struct _configitem_allow {
 };
 
 struct _configitem_oper {
-	ConfigFlag 	 flag;
 	ConfigItem       *prev, *next;
+	ConfigFlag 	 flag;
 	char		 *name, *swhois;
 	anAuthStruct	 *auth;
 	ConfigItem_class *class;
@@ -928,51 +925,49 @@ struct _configitem_oper {
 };
 
 struct _configitem_oper_from {
-	ConfigFlag 	 flag;
 	ConfigItem       *prev, *next;
+	ConfigFlag 	 flag;
 	char		 *name;
 };
 
 struct _configitem_drpass {
-	ConfigFlag 	 flag;
-	ConfigItem       *prev, *next;
 	anAuthStruct	 *restartauth;
 	anAuthStruct	 *dieauth;
 };
 
 struct _configitem_ulines {
-	ConfigFlag 	 flag;
 	ConfigItem       *prev, *next;
+	ConfigFlag 	 flag;
 	char 		 *servername;
 };
 
 struct _configitem_tld {
-	ConfigFlag_tld 	flag;
 	ConfigItem 	*prev, *next;
+	ConfigFlag_tld 	flag;
 	char 		*mask, *motd_file, *rules_file, *channel;
 	struct tm	*motd_tm;
 	aMotd		*rules, *motd;
 };
 
 struct _configitem_listen {
-	ConfigFlag 	flag;
 	ConfigItem 	*prev, *next;
+	ConfigFlag 	flag;
 	char		*ip;
 	int		port;
 	long		options, clients;
 };
 
 struct _configitem_vhost {
-	ConfigFlag 	flag;
 	ConfigItem 	*prev, *next;
+	ConfigFlag 	flag;
 	ConfigItem       *from;
 	char		*login, *virthost, *virtuser;
 	anAuthStruct	*auth;
 };
 
 struct _configitem_link {
-	ConfigFlag	flag;
 	ConfigItem	*prev, *next;
+	ConfigFlag	flag;
 	char		*servername, *username, *hostname, *bindip, *hubmask, *leafmask, *connpwd;
 	anAuthStruct	*recvauth;
 	short		port, options;
@@ -984,14 +979,14 @@ struct _configitem_link {
 };
 
 struct _configitem_except {
-	ConfigFlag_except      flag;
 	ConfigItem      *prev, *next;
+	ConfigFlag_except      flag;
 	char		*mask;
 };
 
 struct _configitem_ban {
-	ConfigFlag_ban	flag;
 	ConfigItem		*prev, *next;
+	ConfigFlag_ban	flag;
 	char			*mask, *reason;
 	struct IN_ADDR netmask;
 	int bits;
@@ -1000,58 +995,58 @@ struct _configitem_ban {
 };
 
 struct _configitem_badword {
-	ConfigFlag	flag;
 	ConfigItem      *prev, *next;
+	ConfigFlag	flag;
 	char		*word, *replace;
 };
 
 struct _configitem_deny_dcc {
-	ConfigFlag_ban		flag;
 	ConfigItem		*prev, *next;
+	ConfigFlag_ban		flag;
 	char			*filename, *reason;
 };
 
 struct _configitem_deny_link {
-	ConfigFlag_except       flag;
 	ConfigItem              *prev, *next;
+	ConfigFlag_except       flag;
 	char			*mask, *rule, *prettyrule;
 };
 
 struct _configitem_deny_version {
-	ConfigFlag		flag;
 	ConfigItem		*prev, *next;
+	ConfigFlag		flag;
 	char 			*mask, *version, *flags;
 };
 
 struct _configitem_deny_channel {
-	ConfigFlag		flag;
 	ConfigItem		*prev, *next;
+	ConfigFlag		flag;
 	char			*channel, *reason;
 };
 
 struct _configitem_allow_channel {
-	ConfigFlag		flag;
 	ConfigItem		*prev, *next;
+	ConfigFlag		flag;
 	char			*channel;
 };
 
 struct _configitem_log {
-	ConfigFlag flag;
 	ConfigItem *prev, *next;
+	ConfigFlag flag;
 	char *file;
 	long maxsize;
 	int  flags;
 };
 
 struct _configitem_unknown {
-	ConfigFlag flag;
 	ConfigItem *prev, *next;
+	ConfigFlag flag;
 	ConfigEntry *ce;
 };
 
 struct _configitem_unknown_ext {
-	ConfigFlag flag;
 	ConfigItem *prev, *next;
+	ConfigFlag flag;
 	char *ce_varname, *ce_vardata;
 	ConfigFile      *ce_fileptr;
 	int             ce_varlinenum;
@@ -1064,29 +1059,29 @@ struct _configitem_unknown_ext {
 #define ALIAS_COMMAND 4
 
 struct _configitem_alias {
-	ConfigFlag flag;
 	ConfigItem *prev, *next;
+	ConfigFlag flag;
 	ConfigItem_alias_format *format;
 	char *alias, *nick;
 	short type;
 };
 
 struct _configitem_alias_format {
-	ConfigFlag flag;
 	ConfigItem *prev, *next;
+	ConfigFlag flag;
 	ConfigItem_alias *alias;
 	char *format, *parameters;
 };
 	
 struct _configitem_include {
-	ConfigFlag flag;
 	ConfigItem *prev, *next;
+	ConfigFlag flag;
 	char *file;
 };
 
 struct _irchook {
-	ConfigFlag flag;
 	Hook *prev, *next;
+	ConfigFlag flag;
 	union
 	{
 		int (*intfunc)();
@@ -1177,7 +1172,7 @@ struct SLink {
 	union {
 		aClient *cptr;
 		aChannel *chptr;
-		ConfigItem *aconf;
+		ListStruct *aconf;
 		aWatch *wptr;
 		aName *whowas;
 		char *cp;
@@ -1239,12 +1234,15 @@ struct DSlink {
 	union {
 		aClient *cptr;
 		aChannel *chptr;
-		ConfigItem *aconf;
+		ListStruct *aconf;
 		char *cp;
 	} value;
 };
 #define AddListItem(item,list) add_ListItem((ListStruct *)item, (ListStruct **)&list)
 #define DelListItem(item,list) del_ListItem((ListStruct *)item, (ListStruct **)&list)
+/* Backwards compatibility */
+#define add_ConfigItem(item,list) add_ListItem((ListStruct *)item, (ListStruct **)&list)
+#define del_ConfigItem(item,list) del_ListItem((ListStruct *)item, (ListStruct **)&list)
 
 struct liststruct {
 	ListStruct *prev, *next;

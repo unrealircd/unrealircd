@@ -199,7 +199,7 @@ DLLFUNC int m_rakill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	
 	/* Wipe it out. */
-	del_ConfigItem(bconf, &conf_ban);
+	DelListItem(bconf, conf_ban);
 	MyFree(bconf->mask);
 	if (bconf->reason)
 		MyFree(bconf->reason);

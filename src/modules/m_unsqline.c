@@ -122,7 +122,7 @@ DLLFUNC int m_unsqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (bconf = Find_banEx(parv[1], CONF_BAN_NICK, CONF_BAN_TYPE_AKILL))
 	{
-		del_ConfigItem(bconf, &conf_ban);
+		DelListItem(bconf, conf_ban);
 		if (bconf->mask)
 			MyFree(bconf->mask);
 		if (bconf->reason)

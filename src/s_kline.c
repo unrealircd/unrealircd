@@ -73,11 +73,7 @@ int  tkl_add_line(int type, char *usermask, char *hostmask, char *reason, char *
 	AllocCpy(nl->hostmask, hostmask);
 	AllocCpy(nl->reason, reason);
 	AllocCpy(nl->setby, setby);
-	nl->prev = NULL;
-	nl->next = tklines;
-	if (tklines)
-		tklines->prev = nl;
-	tklines = nl;
+	AddListItem(nl, tklines);
 }
 
 aTKline *tkl_del_line(aTKline *tkl)
@@ -93,19 +89,7 @@ aTKline *tkl_del_line(aTKline *tkl)
 			GFreeStr(p->usermask);
 			GFreeStr(p->reason);
 			GFreeStr(p->setby);
-			/* chain1 to chain3 */
-			if (p->prev)
-			{
-				p->prev->next = p->next;
-			}
-			else
-			{
-				tklines = p->next;
-			}
-			if (p->next)
-			{
-				p->next->prev = p->prev;
-			}
+			DelListItem(p, tklines);
 			MyFree((aTKline *) p);
 			return q;
 		}

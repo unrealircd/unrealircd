@@ -160,7 +160,7 @@ DLLFUNC int m_unkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			return 0;
 		}
 		
-		del_ConfigItem((ConfigItem *)bconf, (ConfigItem **)&conf_ban);
+		DelListItem(bconf, conf_ban);
 		if (bconf->mask)
 			MyFree(bconf->mask);
 		if (bconf->reason)

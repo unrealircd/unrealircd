@@ -486,7 +486,7 @@ void	HookAddEx(int hooktype, int (*func)(), void (*vfunc)())
 		p->func.intfunc = func;
 	if (vfunc)
 		p->func.voidfunc = vfunc;
-	add_ConfigItem((ConfigItem *) p, (ConfigItem **) &Hooks[hooktype]);
+	AddListItem(p, Hooks[hooktype]);
 }
 
 void	HookDelEx(int hooktype, int (*func)(), void (*vfunc)())
@@ -497,7 +497,7 @@ void	HookDelEx(int hooktype, int (*func)(), void (*vfunc)())
 		if ((func && (p->func.intfunc == func)) || 
 			(vfunc && (p->func.voidfunc == vfunc)))
 		{
-			del_ConfigItem((ConfigItem *) p, (ConfigItem **) &Hooks[hooktype]);
+			DelListItem(p, Hooks[hooktype]);
 			return;
 		}
 }

@@ -265,7 +265,7 @@ DLLFUNC int m_zline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	else
 	{
-		add_ConfigItem((ConfigItem *)bconf, (ConfigItem **)&conf_ban);
+		AddListItem(bconf, conf_ban);
 	}
 propo_label:
 	if (propo == 1)		/* propo is if a ulined server is propagating a z-line

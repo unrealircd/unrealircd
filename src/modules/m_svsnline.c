@@ -117,7 +117,7 @@ void wipe_svsnlines(void)
 		if ((bconf->flag.type == CONF_BAN_REALNAME) &&
 			(bconf->flag.type2 == CONF_BAN_TYPE_AKILL))
 		{
-			t.next = (ConfigItem *) del_ConfigItem((ConfigItem *)bconf, (ConfigItem **) &conf_ban);
+			t.next = (ConfigItem *)DelListItem(bconf, conf_ban);
 			if (bconf->mask)
 				MyFree(bconf->mask);
 			if (bconf->reason)
@@ -166,7 +166,7 @@ DLLFUNC int m_svsnline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				if (*s == '_')
 					*s = ' ';
 			bconf->flag.type2 = CONF_BAN_TYPE_AKILL;
-			add_ConfigItem((ConfigItem *) bconf, (ConfigItem **) &conf_ban);
+			AddListItem(bconf, conf_ban);
 		  } 
 		 
 		  if (IsULine(sptr))
@@ -187,7 +187,7 @@ DLLFUNC int m_svsnline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  
 		  if (bconf = Find_banEx(parv[3], CONF_BAN_REALNAME, CONF_BAN_TYPE_AKILL))
 		  {
-		  	del_ConfigItem((ConfigItem *)bconf, (ConfigItem **)&conf_ban);
+		  	DelListItem(bconf, conf_ban);
 		  	
 		  	if (bconf->mask)
 		  		MyFree(bconf->mask);
