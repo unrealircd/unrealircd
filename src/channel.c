@@ -3439,7 +3439,7 @@ int  m_topic(cptr, sptr, parc, parv)
 			    && (chptr->mode.mode & MODE_TOPICLIMIT))
 			{
 #ifdef NO_OPEROVERRIDE
-				continue;
+				return 0;
 #endif
 				sendto_umode(UMODE_EYES,
 				    "*** OperTopic [IRCop: %s] - [Channel: %s] - [Topic: %s]",

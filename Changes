@@ -460,3 +460,4 @@
 - Added networks/chatstation.network
 [recall]
 - Fixed the pesky hostname bug
+- Fixed a NO_OPEROVERDIE bug reported by Taz
