@@ -389,7 +389,7 @@ void server_reboot(mesg)
 #endif
 	exit(-1);
 }
-
+char *areason;
 
 /*
 ** try_connections
@@ -414,6 +414,7 @@ static TS try_connections(currenttime)
 	connecting = FALSE;
 	Debug((DEBUG_NOTICE, "Connection check at   : %s",
 	    myctime(currenttime)));
+#ifdef OLD
 	for (aconf = conf; aconf; aconf = aconf->next)
 	{
 		/* Also when already connecting! (update holdtimes) --SRB */
@@ -481,6 +482,7 @@ static TS try_connections(currenttime)
 			sendto_ops("Connection to %s[%s] activated.",
 			    con_conf->name, con_conf->host);
 	}
+#endif
 	Debug((DEBUG_NOTICE, "Next connection check : %s", myctime(next)));
 	return (next);
 }
@@ -494,6 +496,7 @@ ery check_pings call to add new parameter.
    -- Barubary */
 extern TS check_pings(TS currenttime, int check_kills)
 {
+
 	aClient *cptr;
 	int  killflag;
 	int  ping = 0, i, i1, rflag = 0;
@@ -516,16 +519,20 @@ extern TS check_pings(TS currenttime, int check_kills)
 				continue;
 			}
 			areason = NULL;
+#ifdef OLD
 			if (check_kills)
 				killflag = IsPerson(cptr) ? find_kill(cptr) : 0;
 			else
+#endif
 				killflag = 0;
+#ifdef OLD
 			if (check_kills && !killflag && IsPerson(cptr))
 				if (find_zap(cptr, 1)
 				    || find_tkline_match(cptr, 0) > -1 ||
 				    (!IsAnOper(cptr) && find_nline(cptr)))
 					killflag = 1;
-			ping = IsRegistered(cptr) ? get_client_ping(cptr) :
+#endif
+			ping = IsRegistered(cptr) ? cptr->class->pingfreq :
 			    CONNECTTIMEOUT;
 			Debug((DEBUG_DEBUG, "c(%s)=%d p %d k %d r %d a %d",
 			    cptr->name, cptr->status, ping, killflag, rflag,
@@ -733,7 +740,7 @@ int  InitwIRCD(argc, argv)
 	uid_t uid, euid;
 	TS   delay = 0;
 #endif
-	int i;
+	int i, ggg;
 	int  portarg = 0;
 #ifdef  FORCE_CORE
 	struct rlimit corelim;
@@ -857,7 +864,6 @@ int  InitwIRCD(argc, argv)
 			  (void)printf("sizeof(aServer) == %u\n", sizeof(aServer));
 			  (void)printf("sizeof(Link) == %u\n", sizeof(Link));
 			  (void)printf("sizeof(anUser) == %u\n", sizeof(anUser));
-			  (void)printf("sizeof(aConfItem) == %u\n", sizeof(aConfItem));
 			  (void)printf("sizeof(aVhost) == %u\n", sizeof(aVhost));
 			  (void)printf("sizeof(aTKline) == %u\n", sizeof(aTKline));
 
@@ -994,6 +1000,7 @@ int  InitwIRCD(argc, argv)
 #ifndef _WIN32
 	fprintf(stderr, unreallogo);
 #endif
+	
 	fprintf(stderr, "                           v%s\n\n", VERSIONONLY);
 	clear_client_hash_table();
 	clear_channel_hash_table();
@@ -1001,7 +1008,6 @@ int  InitwIRCD(argc, argv)
 	bzero(&loop, sizeof(loop));
 	inittoken();
 	initlists();
-	initclass();
 	initwhowas();
 	initstats();
 	booted = FALSE;
@@ -1069,19 +1075,6 @@ int  InitwIRCD(argc, argv)
 #ifdef USE_SYSLOG
 	openlog(myargv[0], LOG_PID | LOG_NDELAY, LOG_FACILITY);
 #endif
-	if (initconf(bootopt) == -1)
-	{
-		Debug((DEBUG_FATAL, "Failed in reading configuration file %s",
-		    configfile));
-#ifndef _WIN32
-		(void)fprintf(stderr, "Couldn't open configuration file %s\n",
-		    configfile);
-#else
-		MessageBox(NULL, "Couldn't open configuration file " CONFIGFILE,
-		    "UnrealIRCD/32", MB_OK);
-#endif
-		exit(-1);
-	}
 	/* Put in our info */
 	strncpyzt(me.info, conf_me->info, sizeof(me.info));
 	strncpyzt(me.name, conf_me->name, sizeof(me.name));
@@ -1107,7 +1100,7 @@ int  InitwIRCD(argc, argv)
 		strncpyzt(me.name, me.sockhost, sizeof(me.name));
 	me.hopcount = 0;
 	me.authfd = -1;
-	me.confs = NULL;
+	me.class = NULL;
 	me.next = NULL;
 	me.user = NULL;
 	me.from = &me;
@@ -1156,7 +1149,6 @@ int  InitwIRCD(argc, argv)
 #ifdef SOCKSPORT
 	init_socks(&me);
 #endif
-	check_class();
 	write_pidfile();
 #ifdef USE_SSL
 	init_ssl();
@@ -1425,7 +1417,8 @@ void SocketLoop(void *dummy)
 
 		if (dorehash)
 		{
-			(void)rehash(&me, &me, 1);
+/*			(void)rehash(&me, &me, 1);
+		*/
 			dorehash = 0;
 		}
 		/*

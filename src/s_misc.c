@@ -347,6 +347,7 @@ void get_sockhost(cptr, host)
  * Return wildcard name of my server name according to given config entry
  * --Jto
  */
+/*
 char *my_name_for_link(name, aconf)
 	char *name;
 	aConfItem *aconf;
@@ -372,7 +373,7 @@ char *my_name_for_link(name, aconf)
 
 	return namebuf;
 }
-
+*/
 /*
 ** exit_client
 **	This is old "m_bye". Name  changed, because this is not a

@@ -54,6 +54,7 @@ Computing Center and Jarkko Oikarinen";
 #include <time.h>
 #endif
 #include <string.h>
+#ifdef OLD
 
 ID_Notes("O:line flags in here");
 #include "h.h"
@@ -237,7 +238,7 @@ int  attach_Iline(cptr, hp, sockhost)
 			cptr->flags |= FLAGS_DOID;
 		get_sockhost(cptr, uhost);
 
-		if (aconf->passwd && !strcmp(aconf->passwd, "ONE"))
+		if (aconf->password && !strcmp(aconf->password, "ONE"))
 		{
 			for (i = highest_fd; i >= 0; i--)
 				if (local[i] && MyClient(local[i]) &&
@@ -2855,3 +2856,63 @@ int  m_svso(cptr, sptr, parc, parv)
 	}
 }
 
+#endif
+
+#define STAR1 OFLAG_SADMIN|OFLAG_ADMIN|OFLAG_NETADMIN|OFLAG_COADMIN
+#define STAR2 OFLAG_TECHADMIN|OFLAG_ZLINE|OFLAG_HIDE|OFLAG_WHOIS
+#define STAR3 OFLAG_INVISIBLE
+static int oper_access[] = {
+	~(STAR1 | STAR2 | STAR3), '*',
+	OFLAG_LOCAL, 'o',
+	OFLAG_GLOBAL, 'O',
+	OFLAG_REHASH, 'r',
+	OFLAG_EYES, 'e',
+	OFLAG_DIE, 'D',
+	OFLAG_RESTART, 'R',
+	OFLAG_HELPOP, 'h',
+	OFLAG_GLOBOP, 'g',
+	OFLAG_WALLOP, 'w',
+	OFLAG_LOCOP, 'l',
+	OFLAG_LROUTE, 'c',
+	OFLAG_GROUTE, 'L',
+	OFLAG_LKILL, 'k',
+	OFLAG_GKILL, 'K',
+	OFLAG_KLINE, 'b',
+	OFLAG_UNKLINE, 'B',
+	OFLAG_LNOTICE, 'n',
+	OFLAG_GNOTICE, 'G',
+	OFLAG_ADMIN, 'A',
+	OFLAG_SADMIN, 'a',
+	OFLAG_NETADMIN, 'N',
+	OFLAG_COADMIN, 'C',
+	OFLAG_TECHADMIN, 'T',
+	OFLAG_UMODEC, 'u',
+	OFLAG_UMODEF, 'f',
+	OFLAG_ZLINE, 'z',
+	OFLAG_WHOIS, 'W',
+	OFLAG_HIDE, 'H',
+/*        OFLAG_AGENT,	'S',*/
+	OFLAG_INVISIBLE, '^',
+	0, 0
+};
+
+char oflagbuf[128];
+
+char *oflagstr(long oflag)
+{
+	int *i, flag;
+	char m;
+	char *p = oflagbuf;
+
+	for (i = &oper_access[6], m = *(i + 1); (flag = *i);
+	    i += 2, m = *(i + 1))
+	{
+		if (oflag & flag)
+		{
+			*p = m;
+			p++;
+		}
+	}
+	*p = '\0';
+	return oflagbuf;
+}

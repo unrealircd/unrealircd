@@ -565,6 +565,7 @@ int  m_setname(cptr, sptr, parc, parv)
 		ircsprintf(sptr->info, "%s", parv[1]);
 
 	/* Check for n:lines here too */
+#ifdef OLD
 	if (!IsAnOper(sptr) && find_nline(sptr))
 	{
 		int  xx;
@@ -573,7 +574,7 @@ int  m_setname(cptr, sptr, parc, parv)
 		    "Your GECOS (real name) is banned from this server");
 		return xx;
 	}
-
+#endif
 	sendto_serv_butone_token(cptr, sptr->name, MSG_SETNAME, TOK_SETNAME,
 	    ":%s", parv[1]);
 	if (MyConnect(sptr))
@@ -1477,6 +1478,7 @@ int  m_chgname(cptr, sptr, parc, parv)
 		/* set the realname first to make n:line checking work */
 		ircsprintf(acptr->info, "%s", parv[2]);
 		/* only check for n:lines if the person who's name is being changed is not an oper */
+#ifdef OLD
 		if (!IsAnOper(acptr) && find_nline(acptr)) {
 			int xx;
 			xx =
@@ -1484,6 +1486,7 @@ int  m_chgname(cptr, sptr, parc, parv)
 			   "Your GECOS (real name) is banned from this server");
 			return xx;
 		}
+#endif
 		if (!IsULine(sptr))
 		{
 			sendto_umode(UMODE_EYES,

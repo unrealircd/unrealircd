@@ -50,7 +50,7 @@ INCLUDES = ../include/struct.h ../include/config.h ../include/settings.h \
 
 all: build
 
-build: ircd chkconf
+build: ircd
 
 version.c: version.c.SH
 	$(SHELL) version.c.SH

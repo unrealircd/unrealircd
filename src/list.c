@@ -77,7 +77,7 @@ void initlists()
 	bzero((char *)&servs, sizeof(servs));
 	bzero((char *)&links, sizeof(links));
 	bzero((char *)&classs, sizeof(classs));
-	bzero((char *)&aconfs, sizeof(aconfs));
+//	bzero((char *)&aconfs, sizeof(aconfs));
 #endif
 }
 
@@ -138,7 +138,7 @@ aClient *make_client(from, servr)
 	{
 		cptr->since = cptr->lasttime =
 		    cptr->lastnick = cptr->firsttime = TStime();
-		cptr->confs = NULL;
+		cptr->class = NULL;
 		cptr->sockhost[0] = '\0';
 		cptr->buffer[0] = '\0';
 		cptr->authfd = -1;
@@ -503,42 +503,6 @@ aSqlineItem *make_sqline()
 	return (asqline);
 }
 
-aConfItem *make_conf()
-{
-	aConfItem *aconf;
-
-	aconf = (struct ConfItem *)MyMalloc(sizeof(aConfItem));
-#ifdef	DEBUGMODE
-	aconfs.inuse++;
-#endif
-	bzero((char *)&aconf->ipnum, sizeof(struct IN_ADDR));
-	aconf->next = NULL;
-	aconf->host = aconf->passwd = aconf->name = NULL;
-	aconf->status = CONF_ILLEGAL;
-	aconf->clients = 0;
-	aconf->port = 0;
-	aconf->hold = 0;
-	aconf->options = 0;
-	Class(aconf) = 0;
-	return (aconf);
-}
-
-void delist_conf(aconf)
-	aConfItem *aconf;
-{
-	if (aconf == conf)
-		conf = conf->next;
-	else
-	{
-		aConfItem *bconf;
-
-		for (bconf = conf; aconf != bconf->next; bconf = bconf->next)
-			;
-		bconf->next = aconf->next;
-	}
-	aconf->next = NULL;
-}
-
 void free_sqline(asqline)
 	aSqlineItem *asqline;
 {
@@ -548,24 +512,6 @@ void free_sqline(asqline)
 	MyFree(asqline->sqline);
 	MyFree(asqline->reason);
 	MyFree((char *)asqline);
-	return;
-}
-
-void free_conf(aconf)
-	aConfItem *aconf;
-{
-#ifndef NEWDNS
-	del_queries((char *)aconf);
-#endif /*NEWDNS*/
-	MyFree(aconf->host);
-	if (aconf->passwd)
-		bzero(aconf->passwd, strlen(aconf->passwd));
-	MyFree(aconf->passwd);
-	MyFree(aconf->name);
-	MyFree((char *)aconf);
-#ifdef	DEBUGMODE
-	aconfs.inuse--;
-#endif
 	return;
 }
 

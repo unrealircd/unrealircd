@@ -623,11 +623,14 @@ int	init_conf2(char *filename)
 {
 	ConfigFile	*cfptr;
 	int		i = 0;
+
 	if (!filename)
 	{
 		config_error("Could not load config file %s", filename);
 		return 0;
 	}
+	
+	
 	config_status("Opening config file %s .. ", filename);
 	if (cfptr = config_load(filename))
 	{
@@ -1316,10 +1319,6 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		{
 			allow->ip = strdup(cep->ce_vardata);
 		} else
-		if (!strcmp(cep->ce_varname, "user"))
-		{
-			allow->user = strdup(cep->ce_vardata);
-		} else
 		if (!strcmp(cep->ce_varname, "hostname"))
 		{
 			allow->hostname = strdup(cep->ce_vardata);
@@ -1916,8 +1915,7 @@ void	report_configuration(void)
 	{
 		for (allow_ptr = conf_allow; allow_ptr; allow_ptr = (ConfigItem_allow *) allow_ptr->next)
 		{
-			printf("I allow for user %s IP %s and hostname %s to enter.\n",
-				allow_ptr->user,
+			printf("I allow for IP %s and hostname %s to enter.\n",
 				allow_ptr->ip,
 				allow_ptr->hostname);
 				
@@ -2031,8 +2029,8 @@ ConfigItem_except *Find_except(char *host, short type) {
 	
 	for(excepts = conf_except; excepts; excepts =(ConfigItem_except *) excepts->next) {
 		if (excepts->flag.type == type)
-			if (!stricmp(host, excepts->mask))
-			return excepts;
+			if (!match(excepts->mask, host))
+				return excepts;
 	}
 	return NULL;
 }
@@ -2071,4 +2069,85 @@ ConfigItem_link *Find_link(char *username,
 	}
 	return NULL;
 		
+}
+
+ConfigItem_ban 	*Find_ban(char *host, short type)
+{
+	ConfigItem_ban *ban;
+	
+	/* Person got a exception */
+	if (Find_except(host, type))
+		return NULL;
+		
+	for (ban = conf_ban; ban; ban = (ConfigItem_ban *) ban->next)
+		if (ban->flag.type == type)
+			if (!match(ban->mask, host))
+				return ban;
+	return NULL;
+}
+
+
+int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
+{
+	ConfigItem_allow *aconf;
+	char *hname;
+	int  i;
+	static char uhost[HOSTLEN + USERLEN + 3];
+	static char fullname[HOSTLEN + 1];
+
+	for (aconf = conf_allow; aconf; aconf = (ConfigItem_allow *) aconf->next)
+	{
+		if (!aconf->hostname || !aconf->ip)
+			goto attach;
+		if (hp)
+			for (i = 0, hname = hp->h_name; hname;
+			    hname = hp->h_aliases[i++])
+			{
+				(void)strncpy(fullname, hname,
+				    sizeof(fullname) - 1);
+				add_local_domain(fullname,
+				    HOSTLEN - strlen(fullname));
+				Debug((DEBUG_DNS, "a_il: %s->%s",
+				    sockhost, fullname));
+				if (index(aconf->hostname, '@'))
+				{
+					(void)strcpy(uhost, cptr->username);
+					(void)strcat(uhost, "@");
+				}
+				else
+					*uhost = '\0';
+				(void)strncat(uhost, fullname,
+				    sizeof(uhost) - strlen(uhost));
+				if (!match(aconf->hostname, uhost))
+					goto attach;
+			}
+
+		if (index(aconf->ip, '@'))
+		{
+			strncpyzt(uhost, cptr->username, sizeof(uhost));
+			(void)strcat(uhost, "@");
+		}
+		else
+			*uhost = '\0';
+		(void)strncat(uhost, sockhost, sizeof(uhost) - strlen(uhost));
+		if (!match(aconf->ip, uhost))
+			goto attach;
+		continue;
+	      attach:
+		if (index(uhost, '@'))
+			cptr->flags |= FLAGS_DOID;
+		get_sockhost(cptr, uhost);
+
+		if (aconf->password && !strcmp(aconf->password, "ONE"))
+		{
+			for (i = highest_fd; i >= 0; i--)
+				if (local[i] && MyClient(local[i]) &&
+				    local[i]->ip.S_ADDR == cptr->ip.S_ADDR)
+					return -1;	/* Already got one with that ip# */
+		}
+
+		cptr->class = aconf->class;
+		return 0;
+	}
+	return -1;
 }

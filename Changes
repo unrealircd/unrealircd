@@ -114,3 +114,20 @@
 - Fixed some stskeeps-drunk-coding stuff in m_server
 - Fixed a typo "receive" not "recieve"
 - Made SVSNICK check if a nick is valid
+- Made get_sendq be a macro
+- Added find_ban, AllowClient() (old attach_Iline)
+- Temporary disabled /svsnoop, /akill, /sqline /unsqline, /kline, /unkline
+  /zline, /rakill, /unzline and /svso
+- chkconf is not being built anymore
+- Ripped out s_conf.c with the roots. 
+- Ripped out add_listener
+- Disabled a lot of stuff that needs to adapt to conf2
+- Made allow {} work
+- Changed allow {} to do user@host instead of user item
+- Took out my_name_for_link
+- Temporary disabled D:d lines/SQLines/Qlines
+- Fixed some /connect stuff
+- Disabled rehash temporary
+- Made ban user/ban realname work (s_unreal.c needs to be modified)
+- Added Zogg to credits
+- NOTE: Unreal-devel is handicapped right now, code in progress, do not use

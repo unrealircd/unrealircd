@@ -661,7 +661,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 	aClient *sptr;
 	char *nick, *username, *virthost, *umode;
 {
-	aConfItem *aconf;
+	ConfigItem_ban *bconf;
 	char *parv[3], *tmpstr, *encr;
 #ifdef HOSTILENAME
 	char stripuser[USERLEN + 1], *u1 = stripuser, *u2, olduser[USERLEN + 1],
@@ -768,7 +768,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			strncpyzt(user->realhost, sptr->sockhost, HOSTLEN + 1);
 		strncpyzt(user->realhost, user->realhost,
 		    sizeof(user->realhost));
-		aconf = sptr->confs->value.aconf;
+	//	aconf = sptr->confs->value.aconf;
 		/*
 		 * I do not consider *, ~ or ! 'hostile' in usernames,
 		 * as it is easy to differentiate them (Use \*, \? and \\)
@@ -851,6 +851,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			u1 = NULL;
 #endif
 
+#ifdef OLD
 		if (!BadPtr(aconf->passwd) && !StrEq("ONE", aconf->passwd))
 		{
 /* I:line password encryption --codemastr */
@@ -888,30 +889,34 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 				sptr->passwd = NULL;
 			}
 		}
-
+#endif
 		/*
 		 * following block for the benefit of time-dependent K:-lines
 		 */
-		if (find_kill(sptr))
+		if ((bconf = Find_ban(make_nick_user_host(nick, user->username, user->realhost),
+				CONF_BAN_USER)))
 		{
 			ircstp->is_ref++;
-			tmpx = MyMalloc(1024);
-			ircsprintf(tmpx,
-			    "[%s] You are banned from using this server",
-			    ircnetwork);
-			xx =
-			    exit_client(cptr, sptr, &me,
-			    "You are banned from using this server");
-			MyFree(tmpx);
-			return xx;
+			sendto_one(cptr, 
+				":%s %d %s :*** You are not welcome on this server (%s)"
+				" Email %s for more information.",
+					me.name, ERR_YOUREBANNEDCREEP,
+					cptr->name, bconf->reason ? bconf->reason : "",
+					KLINE_ADDRESS);
+			return exit_client(cptr, cptr, cptr, "You are banned");
 		}
-		if (find_nline(sptr))
+		if ((bconf = Find_ban(sptr->info, CONF_BAN_REALNAME)))
 		{
 			ircstp->is_ref++;
-			xx =
-			    exit_client(cptr, sptr, &me,
+			sendto_one(cptr, 
+				":%s %d %s :*** Your GECOS (real name) is not allowed on this server (%s)"
+				" Please change it and reconnect",
+					me.name, ERR_YOUREBANNEDCREEP,
+					cptr->name, bconf->reason ? bconf->reason : "",
+					KLINE_ADDRESS);
+
+			exit_client(cptr, sptr, &me,
 			    "Your GECOS (real name) is banned from this server");
-			return xx;
 		}
 		tkl_check_expire();
 		if ((xx = find_tkline_match(sptr, 0)) != -1)
@@ -1271,6 +1276,7 @@ int  m_nick(cptr, sptr, parc, parv)
 		    "Reserved for internal IRCd purposes");
 		return 0;
 	}
+#ifdef OLD
 	if (!IsULine(sptr)
 	    && ((aconf = find_conf_name(nick, CONF_QUARANTINED_NICK))
 	    || (asqline = find_sqline_match(nick))))
@@ -1307,13 +1313,12 @@ int  m_nick(cptr, sptr, parc, parv)
 				    nick,
 				    BadPtr(asqline->reason) ?
 				    "reason unspecified" : asqline->reason);
-
 			sendto_realops("Forbidding Q-lined nick %s from %s.",
 			    nick, get_client_name(cptr, FALSE));
 			return 0;	/* NICK message ignored */
 		}
 	}
-
+#endif
 	/*
 	   ** acptr already has result from previous find_server()
 	 */
@@ -3676,6 +3681,7 @@ int  m_oper(cptr, sptr, parc, parv)
 	int  parc;
 	char *parv[];
 {
+#ifdef OLD
 	aConfItem *aconf;
 	char *name, *password, *encr;
 #ifdef CRYPT_OPER_PASSWORD
@@ -3754,6 +3760,7 @@ int  m_oper(cptr, sptr, parc, parv)
 #else /* CRYPT_OPER_PASSWORD */
 	encr = password;
 #endif /* CRYPT_OPER_PASSWORD */
+
 
 	if ((aconf->status & CONF_OPS) && StrEq(encr, aconf->passwd)
 	    && !attach_conf(sptr, aconf))
@@ -4112,6 +4119,7 @@ int  m_oper(cptr, sptr, parc, parv)
 #endif
 	}
 	return 0;
+#endif
 }
 
 /***************************************************************************
@@ -4571,7 +4579,6 @@ int  m_umode(cptr, sptr, parc, parv)
 #ifndef NO_FDLIST
 		delfrom_fdlist(sptr->fd, &oper_fdlist);
 #endif
-		det_confs_butmask(sptr, CONF_CLIENT & ~CONF_OPS);
 		sptr->oflag = 0;
 	}
 	if (!(setflags & UMODE_OPER) && IsOper(sptr))

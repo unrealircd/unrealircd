@@ -384,10 +384,11 @@ void count_memory(cptr, nick)
 	{
 		if (MyConnect(acptr))
 		{
-			lc++;
+/*			lc++;
 			for (link = acptr->confs; link; link = link->next)
 				lcc++;
 			wle += acptr->notifies;
+			*/
 		}
 		else
 			rc++;
@@ -426,7 +427,7 @@ void count_memory(cptr, nick)
 		}
 	}
 
-	for (aconf = conf; aconf; aconf = aconf->next)
+/*	for (aconf = conf; aconf; aconf = aconf->next)
 	{
 		co++;
 		com += aconf->host ? strlen(aconf->host) + 1 : 0;
@@ -437,7 +438,7 @@ void count_memory(cptr, nick)
 
 	for (cltmp = classes; cltmp; cltmp = cltmp->next)
 		cl++;
-
+*/
 	sendto_one(cptr, ":%s %d %s :Client Local %d(%d) Remote %d(%d)",
 	    me.name, RPL_STATSDEBUG, nick, lc, lcm, rc, rcm);
 	sendto_one(cptr, ":%s %d %s :Users %d(%d) Invites %d(%d)",

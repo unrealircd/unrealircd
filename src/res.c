@@ -288,10 +288,11 @@ time_t	now;
 					sendto_ops("Host %s unknown",
 						   rptr->name);
 					ClearDNS(cptr);
-					if (check_server(cptr, NULL,
+/*					if (check_server(cptr, NULL,
 							 NULL, NULL, 1))
 						(void)exit_client(cptr, cptr,
 							&me, "No Permission");
+							*/
 					break;
 				case ASYNC_CONNECT :
 					sendto_ops("Host %s unknown",

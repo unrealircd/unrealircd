@@ -1637,9 +1637,9 @@ void sendto_connectnotice(nick, user, sptr)
 	"", "", "");
 #endif
 	ircsprintf(connecth,
-	    "*** Notice -- Client connecting: %s (%s@%s) [%s] {%d}", nick,
+	    "*** Notice -- Client connecting: %s (%s@%s) [%s] {%s}", nick,
 	    user->username, user->realhost, sptr->sockhost,
-	    get_client_class(sptr));
+	    sptr->class ? sptr->class->name : "0");
 
 	for (i = 0; i <= highest_fd; i++)
 		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&

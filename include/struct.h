@@ -630,6 +630,8 @@ struct SqlineItem {
 	struct SqlineItem *next;
 };
 
+#ifdef OLD
+
 struct ConfItem {
 	unsigned int status;	/* If CONF_ILLEGAL, delete when no clients */
 	int  clients;		/* Number of *LOCAL* clients using this */
@@ -646,7 +648,7 @@ struct ConfItem {
 	short options;
 	struct ConfItem *next;
 };
-
+#endif
 #define	CONF_ILLEGAL		0x80000000
 #define	CONF_MATCH		0x40000000
 #define	CONF_QUARANTINED_SERVER	0x0001
@@ -858,7 +860,6 @@ struct Client {
 #endif
 #ifdef USE_SSL
 	struct	SSL	*ssl;
-	struct X509	*client_cert;	
 #endif
 #ifndef NO_FDLIST
 	long lastrecvM;		/* to check for activity --Mika */
@@ -868,7 +869,7 @@ struct Client {
 	u_short sendB;		/* counters to count upto 1-k lots of bytes */
 	u_short receiveB;	/* sent and received. */
 	aClient *listener;
-	Link *confs;		/* Configuration record associated */
+	ConfigItem_class *class;		/* Configuration record associated */
 	int  authfd;		/* fd for rfc931 authentication */
 #ifdef SOCKSPORT
 	int  socksfd;
@@ -986,7 +987,6 @@ struct _configitem_allow {
 	ConfigFlag 	 flag;
 	ConfigItem       *prev;
 	ConfigItem       *next;
-	char		 *user;
 	char	         *ip;
 	char	   	 *hostname;
 	char		 *password;
@@ -1187,7 +1187,7 @@ struct SLink {
 	union {
 		aClient *cptr;
 		aChannel *chptr;
-		aConfItem *aconf;
+		ConfigItem *aconf;
 		aNotify *nptr;
 		aName *whowas;
 		char *cp;
@@ -1212,7 +1212,7 @@ struct DSlink {
 	union {
 		aClient *cptr;
 		aChannel *chptr;
-		aConfItem *aconf;
+		ConfigItem *aconf;
 		char *cp;
 	} value;
 };

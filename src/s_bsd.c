@@ -397,6 +397,7 @@ int  inetport(cptr, name, port)
  * Create a new client which is essentially the stub like 'me' to be used
  * for a socket that is passive (listen'ing for connections to be accepted).
  */
+#ifdef OLD
 int  add_listener(aconf)
 	aConfItem *aconf;
 {
@@ -464,7 +465,7 @@ int  add_listener(aconf)
 		free_client(cptr);
 	return 0;
 }
-
+#endif
 int add_listener2(ConfigItem_listen *conf)
 {
 	aClient *cptr;
@@ -498,8 +499,10 @@ int add_listener2(ConfigItem_listen *conf)
  * Close and free all clients which are marked as having their socket open
  * and in a state where they can accept connections. 
  */
+
 void close_listeners()
 {
+#ifdef OLD
 	aClient *cptr;
 	int  i;
 	aConfItem *aconf;
@@ -520,6 +523,7 @@ void close_listeners()
 			close_connection(cptr);
 		}
 	}
+#endif
 }
 
 /*
@@ -754,7 +758,7 @@ int  check_client(cptr)
 		}
 	}
 
-	if ((i = attach_Iline(cptr, hp, sockname)))
+	if ((i = AllowClient(cptr, hp, sockname)))
 	{
 		Debug((DEBUG_DNS, "ch_cl: access denied: %s[%s]",
 		    cptr->name, sockname));
@@ -798,6 +802,7 @@ int  check_client(cptr)
 int  check_server_init(cptr)
 	aClient *cptr;
 {
+#ifdef OLD
 	char *name;
 	aConfItem *c_conf = NULL, *n_conf = NULL;
 	struct hostent *hp = NULL;
@@ -869,10 +874,10 @@ int  check_server_init(cptr)
 #endif /*NEWDNS*/
 		}
 	}
-	return check_server(cptr, hp, c_conf, n_conf, 0);
-
+//	return check_server(cptr, hp, c_conf, n_conf, 0);
+#endif
 }
-
+#ifdef OLD
 int  check_server(cptr, hp, c_conf, n_conf, estab)
 	aClient *cptr;
 	aConfItem *n_conf, *c_conf;
@@ -1006,6 +1011,7 @@ int  check_server(cptr, hp, c_conf, n_conf, estab)
 		return m_server_estab(cptr);
 	return 0;
 }
+#endif
 #undef	CFLAG
 #undef	NFLAG
 
@@ -1020,6 +1026,7 @@ int  check_server(cptr, hp, c_conf, n_conf, estab)
 static int completed_connection(cptr)
 	aClient *cptr;
 {
+#ifdef OLD
 	aConfItem *aconf, *cline;
 	extern char serveropts[];
 	SetHandshake(cptr);
@@ -1062,6 +1069,7 @@ static int completed_connection(cptr)
 		start_auth(cptr);
 
 	return (IsDead(cptr)) ? -1 : 0;
+#endif
 }
 
 /*
@@ -1132,6 +1140,7 @@ void close_connection(cptr)
 	 * the SQUIT flag has been set, then we don't schedule a fast
 	 * reconnect.  Pisses off too many opers. :-)  -Cabal95
 	 */
+#ifdef OLD
 	if (IsServer(cptr) && !(cptr->flags & FLAGS_SQUIT) &&
 	    (aconf = find_conf_exact(cptr->name, cptr->username,
 	    cptr->sockhost, CONF_CONNECT_SERVER)))
@@ -1148,6 +1157,7 @@ void close_connection(cptr)
 		if (nextconnect > aconf->hold)
 			nextconnect = aconf->hold;
 	}
+#endif
 #ifdef USE_SSL
 	if (cptr->flags & FLAGS_SSL)
 	{
@@ -1194,7 +1204,6 @@ void close_connection(cptr)
 		if (local[highest_fd])
 			break;
 
-	det_confs_butmask(cptr, 0);
 	cptr->from = NULL;	/* ...this should catch them! >:) --msa */
 
 	/*
@@ -1465,6 +1474,7 @@ aClient *add_connection(cptr, fd)
 		bcopy((char *)&addr.SIN_ADDR, (char *)&acptr->ip,
 		    sizeof(struct IN_ADDR));
 		/* Check for zaps -- Barubary */
+#ifdef OLD
 		if (find_zap(acptr, 0))
 		{
 			set_non_blocking(fd, acptr);
@@ -1472,7 +1482,9 @@ aClient *add_connection(cptr, fd)
 			send(fd, zlinebuf, strlen(zlinebuf), 0);
 			goto add_con_refuse;
 		}
-		else if (find_tkline_match_zap(acptr) != -1)
+		else
+#endif
+		 if (find_tkline_match_zap(acptr) != -1)
 		{
 			set_non_blocking(fd, acptr);
 			set_sock_opts(fd, acptr);
@@ -2660,25 +2672,11 @@ int  connect_server(aconf, by, hp)
 	aClient *by;
 	struct hostent *hp;
 {
+#ifdef OLD
 	struct SOCKADDR *svp;
 	aClient *cptr, *c2ptr;
 	char *s;
 	int  errtmp, len;
-
-	Debug((DEBUG_NOTICE, "Connect to %s[%s] @%s",
-	    aconf->name, aconf->host, inetntoa((char *)&aconf->ipnum)));
-
-	if ((c2ptr = find_server_quick(aconf->name)))
-	{
-		sendto_ops("Server %s already present from %s",
-		    aconf->name, get_client_name(c2ptr, TRUE));
-		if (by && IsPerson(by) && !MyClient(by))
-			sendto_one(by,
-			    ":%s NOTICE %s :*** Server %s already present from %s",
-			    me.name, by->name, aconf->name,
-			    get_client_name(c2ptr, TRUE));
-		return -1;
-	}
 
 	/*
 	 * If we dont know the IP# for this host and itis a hostname and
@@ -2836,7 +2834,7 @@ int  connect_server(aconf, by, hp)
 	get_sockhost(cptr, aconf->host);
 	add_client_to_list(cptr);
 	nextping = TStime();
-
+#endif
 	return 0;
 }
 
@@ -2845,6 +2843,7 @@ static struct SOCKADDR *connect_inet(aconf, cptr, lenp)
 	aClient *cptr;
 	int *lenp;
 {
+#ifdef OLD
 	static struct SOCKADDR_IN server;
 	struct hostent *hp;
 
@@ -2924,6 +2923,7 @@ static struct SOCKADDR *connect_inet(aconf, cptr, lenp)
 	server.SIN_PORT = htons(((aconf->port > 0) ? aconf->port : portnum));
 	*lenp = sizeof(server);
 	return (struct SOCKADDR *)&server;
+#endif
 }
 
 
@@ -3045,7 +3045,7 @@ void do_dns_async(id)
 				  cptr->hostp = hp;
 			  }
 			  break;
-		  case ASYNC_CONNECT:
+/*		  case ASYNC_CONNECT:
 			  aconf = ln.value.aconf;
 			  if (hp && aconf)
 			  {
@@ -3064,13 +3064,15 @@ void do_dns_async(id)
 				  bcopy(hp->h_addr, (char *)&aconf->ipnum,
 				      sizeof(struct IN_ADDR));
 			  break;
+			  */
 		  case ASYNC_SERVER:
 			  cptr = ln.value.cptr;
 			  del_queries((char *)cptr);
 			  ClearDNS(cptr);
-			  if (check_server(cptr, hp, NULL, NULL, 1))
+/*			  if (check_server(cptr, hp, NULL, NULL, 1))
 				  (void)exit_client(cptr, cptr, &me,
 				      "No Authorization");
+				      */
 			  break;
 		  default:
 			  break;

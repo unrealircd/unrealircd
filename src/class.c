@@ -27,7 +27,7 @@
 ID_Copyright("(C) 1990 Darren Reed");
 ID_Notes("1.4 6/28/93");
 
-
+#ifdef OLD
 #define BAD_CONF_CLASS		-1
 #define BAD_PING		-2
 #define BAD_CLIENT_CLASS	-3
@@ -243,3 +243,5 @@ long get_sendq(cptr)
 		}
 	return sendq;
 }
+
+#endif

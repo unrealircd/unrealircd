@@ -44,6 +44,9 @@ extern TS TSoffset;
 extern TS check_pings(TS now, int check_kills);
 extern TS TS2ts(char *s);
 /* newconf */
+#define get_sendq(x) ((x)->class ? (x)->class->sendq : MAXSENDQLENGTH) 
+
+
 /*
  * Configuration linked lists
 */
@@ -68,6 +71,10 @@ ConfigItem_ulines	*Find_uline(char *host);
 ConfigItem_except	*Find_except(char *host, short type);
 ConfigItem_tld		*Find_tld(char *host);
 ConfigItem_link		*Find_link(char *username, char *hostname, char *ip, char *servername);
+ConfigItem_ban 		*Find_ban(char *host, short type);
+
+int			AllowClient(aClient *cptr, struct hostent *hp, char *sockhost);
+
 
 aMotd *read_motd(char *filename);
 aMotd *read_rules(char *filename);

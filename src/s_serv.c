@@ -727,6 +727,7 @@ int  m_server(cptr, sptr, parc, parv)
 		cptr->hopcount = hop;
 		/* Add ban server stuff */
 		/* Check on V:line stuff now -FIXME: newconf */
+#ifdef OLD
 		if (SupportVL(cptr))
 		{
 			/* we also have a fail safe incase they say they are sending
@@ -755,6 +756,8 @@ int  m_server(cptr, sptr, parc, parv)
 					    && !match(vlines->name, cptr->name))
 						break;
 				}
+				
+				
 				if (vlines)
 				{
 					char *proto = vlines->host;
@@ -863,9 +866,10 @@ int  m_server(cptr, sptr, parc, parv)
 				    sizeof(cptr->info));
 		}
 		else
+#endif
 			strncpyzt(cptr->info, info[0] ? info : me.name,
 			    sizeof(cptr->info));
-		for (cconf = conf; cconf; cconf = cconf->next)
+/*		for (cconf = conf; cconf; cconf = cconf->next)
 			if ((cconf->status == CONF_CRULEALL) &&
 			    (match(cconf->host, servername) == 0))
 				if (crule_eval(cconf->passwd))
@@ -876,7 +880,7 @@ int  m_server(cptr, sptr, parc, parv)
 					return exit_client(cptr, cptr, cptr,
 					    "Disallowed by connection rule");
 				}
-
+*/
 		/* Numerics .. */
 		numeric = num ? atol(num) : numeric;
 		if (numeric)
@@ -1294,7 +1298,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 		else
 			ns = NULL;
 
-		for (tmp = sqline; tmp; tmp = tmp->next)
+/*		for (tmp = sqline; tmp; tmp = tmp->next)
 		{
 			if (tmp->status != CONF_ILLEGAL)
 				if (tmp->reason)
@@ -1312,6 +1316,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 					    (IsToken(cptr) ? TOK_SQLINE :
 					    MSG_SQLINE), tmp->sqline);
 		}
+		*/
 	}
 
 	sendto_one(cptr, "%s %li %li %li 0 0 0 0 :%s",
@@ -1768,7 +1773,7 @@ int  m_server_estab(cptr)
 		else
 			ns = NULL;
 
-		for (tmp = sqline; tmp; tmp = tmp->next)
+/*		for (tmp = sqline; tmp; tmp = tmp->next)
 		{
 			if (tmp->status != CONF_ILLEGAL)
 				if (tmp->reason)
@@ -1785,7 +1790,7 @@ int  m_server_estab(cptr)
 					    me.name,
 					    (IsToken(cptr) ? TOK_SQLINE :
 					    MSG_SQLINE), tmp->sqline);
-		}
+		}*/
 	}
 
 	sendto_one(cptr, "%s %li %li %li 0 0 0 0 :%s",
@@ -2399,7 +2404,7 @@ static void report_sqlined_nicks(sptr)
 	aSqlineItem *tmp;
 	char *nickmask, *reason;
 
-	for (tmp = sqline; tmp; tmp = tmp->next)
+/*	for (tmp = sqline; tmp; tmp = tmp->next)
 	{
 		if (tmp->status != CONF_ILLEGAL)
 		{
@@ -2409,6 +2414,7 @@ static void report_sqlined_nicks(sptr)
 			    sptr->name, nickmask, reason);
 		}
 	}
+	*/
 }
 
 static void report_configured_links(sptr, mask)
@@ -2420,7 +2426,7 @@ static void report_configured_links(sptr, mask)
 	int *p, port, tmpmask, options;
 	char c, *host, *pass, *name, optbuf[5];
 	tmpmask = (mask == CONF_MISSING) ? CONF_CONNECT_SERVER : mask;
-
+#ifdef OLD
 	for (tmp = conf; tmp; tmp = tmp->next)
 		if (tmp->status & tmpmask)
 		{
@@ -2586,6 +2592,7 @@ static void report_configured_links(sptr, mask)
 				}
 			}
 		}
+#endif
 	return;
 }
 
@@ -2957,7 +2964,7 @@ int  m_stats(cptr, sptr, parc, parv)
 		  break;
 	  case 'Y':
 	  case 'y':
-		  report_classes(sptr);
+//		  report_classes(sptr);
 		  break;
 	  case 'Z':
 	  case 'z':
@@ -3318,8 +3325,10 @@ void load_tunefile(void)
 	int  parc;
 	char *parv[];
 {
+#ifdef OLD
 	int  port, tmpport, retval;
-	aConfItem *aconf, *cconf;
+	aConfItem *cconf;
+	ConfigItem_link	*aconf;
 	aClient *acptr;
 
 
@@ -3353,28 +3362,22 @@ void load_tunefile(void)
 
 	if ((acptr = find_server_quick(parv[1])))
 	{
-		sendto_one(sptr, ":%s NOTICE %s :Connect: Server %s %s %s.",
+		sendto_one(sptr, ":%s NOTICE %s :*** Connect: Server %s %s %s.",
 		    me.name, parv[0], parv[1], "already exists from",
 		    acptr->from->name);
 		return 0;
 	}
 
-	for (aconf = conf; aconf; aconf = aconf->next)
-		if (aconf->status == CONF_CONNECT_SERVER &&
-		    match(parv[1], aconf->name) == 0)
+	for (aconf = conf_link; aconf; aconf = (ConfigItem_link *) aconf->next)
+		if (match(parv[1], aconf->servername))
 			break;
+
 	/* Checked first servernames, then try hostnames. */
-	if (!aconf)
-		for (aconf = conf; aconf; aconf = aconf->next)
-			if (aconf->status == CONF_CONNECT_SERVER &&
-			    (match(parv[1], aconf->host) == 0 ||
-			    match(parv[1], index(aconf->host, '@') + 1) == 0))
-				break;
 
 	if (!aconf)
 	{
 		sendto_one(sptr,
-		    "NOTICE %s :Connect: Host %s not listed in ircd.conf",
+		    "NOTICE %s :*** Connect: Server %s is not configured for linking",
 		    parv[0], parv[1]);
 		return 0;
 	}
@@ -3389,13 +3392,13 @@ void load_tunefile(void)
 		if ((port = atoi(parv[2])) <= 0)
 		{
 			sendto_one(sptr,
-			    "NOTICE %s :Connect: Illegal port number", parv[0]);
+			    "NOTICE %s :*** Connect: Illegal port number", parv[0]);
 			return 0;
 		}
 	}
 	else if (port <= 0 && (port = PORTNUM) <= 0)
 	{
-		sendto_one(sptr, ":%s NOTICE %s :Connect: missing port number",
+		sendto_one(sptr, ":%s NOTICE %s :*** Connect: missing port number",
 		    me.name, parv[0]);
 		return 0;
 	}
@@ -3408,7 +3411,7 @@ void load_tunefile(void)
 	 */
 	for (cconf = conf; cconf; cconf = cconf->next)
 		if ((cconf->status == CONF_CRULEALL) &&
-		    (match(cconf->host, aconf->name) == 0))
+		    (match(cconf->host, aconf->servername) == 0))
 			if (crule_eval(cconf->passwd))
 			{
 				sendto_one(sptr,
@@ -3431,29 +3434,32 @@ void load_tunefile(void)
 		    parv[2] ? parv[2] : "");
 #endif
 	}
+	/* Interesting */
 	aconf->port = port;
-	switch (retval = connect_server(aconf, sptr, NULL))
+/*	switch (retval = connect_server(aconf, sptr, NULL))
 	{
 	  case 0:
 		  sendto_one(sptr,
 		      ":%s NOTICE %s :*** Connecting to %s[%s].",
-		      me.name, parv[0], aconf->host, aconf->name);
+		      me.name, parv[0], aconf->servername, aconf->ip);
 		  break;
 	  case -1:
 		  sendto_one(sptr, ":%s NOTICE %s :*** Couldn't connect to %s.",
-		      me.name, parv[0], aconf->host);
+		      me.name, parv[0], aconf->servername);
 		  break;
 	  case -2:
 		  sendto_one(sptr, ":%s NOTICE %s :*** Host %s is unknown.",
-		      me.name, parv[0], aconf->host);
+		      me.name, parv[0], aconf->servername);
 		  break;
 	  default:
 		  sendto_one(sptr,
 		      ":%s NOTICE %s :*** Connection to %s failed: %s",
-		      me.name, parv[0], aconf->host, strerror(retval));
+		      me.name, parv[0], aconf->servername, strerror(retval));
 	}
+*/
 	aconf->port = tmpport;
 	return 0;
+#endif
 }
 
 /*
@@ -4016,9 +4022,9 @@ int  m_rehash(cptr, sptr, parc, parv)
 			sendto_ops
 			    ("%s is remotely rehashing server config file",
 			    parv[0]);
-			return rehash(cptr, sptr,
+/*			return rehash(cptr, sptr,
 			    (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
-		}
+*/		}
 		parv[1] = parv[2];
 	}
 	else
@@ -4178,7 +4184,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 #ifdef USE_SYSLOG
 	syslog(LOG_INFO, "REHASH From %s\n", get_client_name(sptr, FALSE));
 #endif
-	return rehash(cptr, sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
+//	return rehash(cptr, sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
 }
 
 /*
@@ -4378,7 +4384,7 @@ int  m_trace(cptr, sptr, parc, parv)
 		if (!dow && mycmp(tname, acptr->name))
 			continue;
 		name = get_client_name(acptr, FALSE);
-		class = get_client_class(acptr);
+	//	class = get_client_class(acptr);
 
 		switch (acptr->status)
 		{
@@ -4472,10 +4478,11 @@ int  m_trace(cptr, sptr, parc, parv)
 		    link_u[me.fd], me.name, "*", "*", me.name);
 		return 0;
 	}
-	for (cltmp = FirstClass(); doall && cltmp; cltmp = NextClass(cltmp))
+/*	for (cltmp = FirstClass(); doall && cltmp; cltmp = NextClass(cltmp))
 		if (Links(cltmp) > 0)
 			sendto_one(sptr, rpl_str(RPL_TRACECLASS), me.name,
 			    parv[0], Class(cltmp), Links(cltmp));
+*/
 	return 0;
 }
 
