@@ -93,6 +93,7 @@ int	_conf_deny		(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_deny_dcc		(ConfigFile *conf, ConfigEntry *ce);
 int     _conf_deny_link         (ConfigFile *conf, ConfigEntry *ce);
 int	_conf_deny_channel	(ConfigFile *conf, ConfigEntry *ce);
+int     _conf_deny_version      (ConfigFile *conf, ConfigEntry *ce);
 int	_conf_allow_channel	(ConfigFile *conf, ConfigEntry *ce);
 
 extern int conf_debuglevel;
@@ -202,6 +203,7 @@ ConfigItem_deny_dcc     *conf_deny_dcc = NULL;
 ConfigItem_deny_channel *conf_deny_channel = NULL;
 ConfigItem_allow_channel *conf_allow_channel = NULL;
 ConfigItem_deny_link	*conf_deny_link = NULL;
+ConfigItem_deny_version *conf_deny_version = NULL;
 
 #ifdef STRIPBADWORDS
 ConfigItem_badword	*conf_badword_channel = NULL;
@@ -2011,6 +2013,8 @@ int	_conf_deny(ConfigFile *conf, ConfigEntry *ce)
 		_conf_deny_channel(conf, ce);
 	else if (!strcmp(ce->ce_vardata, "link"))
 		_conf_deny_link(conf, ce);
+	else if (!strcmp(ce->ce_vardata, "version"))
+		_conf_deny_version(conf, ce);
 	else
 	{
 		config_status("%s:%i: deny with unknown type",
@@ -2176,6 +2180,59 @@ int	_conf_deny_link(ConfigFile *conf, ConfigEntry *ce)
 		return 0;
 	}
 }
+
+int	_conf_deny_version(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigItem_deny_version *deny = NULL;
+	ConfigEntry 	    	*cep;
+	
+	deny = MyMallocEx(sizeof(ConfigItem_deny_version));
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname || !cep->ce_vardata)
+		{
+			config_error("%s:%i: blank deny version item",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum);
+			continue;	
+		}
+		if (!strcmp(cep->ce_varname, "mask"))
+		{
+			ircstrdup(deny->mask, cep->ce_vardata);	
+		}
+		else if (!strcmp(cep->ce_varname, "version"))
+		{
+			ircstrdup(deny->version, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "flags"))
+		{
+			ircstrdup(deny->flags, cep->ce_vardata);
+		}
+		else
+		{
+			config_status("%s:%i: unknown directive deny version::%s",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum, cep->ce_varname);
+		}
+	}	
+	if (!deny->mask || !deny->flags || !deny->version)
+	{
+		config_status("%s:%i: deny version {} without mask/flags/version, ignoring",
+			cep->ce_fileptr->cf_filename,
+			cep->ce_varlinenum);
+		ircfree(deny->mask);
+		ircfree(deny->version);
+		ircfree(deny->flags);
+		ircfree(deny);
+		return -1;
+	}
+	else
+	{
+		add_ConfigItem((ConfigItem *)deny, (ConfigItem **)&conf_deny_version);
+		return 0;
+	}
+}
+
 
 
 /*
@@ -2582,9 +2639,11 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	ConfigItem_vhost		*vhost_ptr;
 	ConfigItem_badword		*badword_ptr;
 	ConfigItem_deny_dcc		*deny_dcc_ptr;
+	ConfigItem_deny_link		*deny_link_ptr;
 	ConfigItem_deny_channel		*deny_channel_ptr;
 	ConfigItem_allow_channel	*allow_channel_ptr;
 	ConfigItem_admin		*admin_ptr;
+	ConfigItem_deny_version		*deny_version_ptr;
 	ConfigItem 	t;
 
 	
@@ -2757,6 +2816,22 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 			MyFree(deny_dcc_ptr);
 			deny_dcc_ptr = (ConfigItem_deny_dcc *) &t;			
 		}
+	}
+	for (deny_link_ptr = conf_deny_link; deny_link_ptr; deny_link_ptr = (ConfigItem_deny_link *) deny_link_ptr->next) {
+		ircfree(deny_link_ptr->prettyrule);
+		ircfree(deny_link_ptr->mask);
+		crule_free(&deny_link_ptr->rule);
+		t.next = del_ConfigItem((ConfigItem *) deny_link_ptr, (ConfigItem **)&conf_deny_link);
+		MyFree(deny_link_ptr);
+		deny_link_ptr = (ConfigItem_deny_link *) &t;
+	}
+	for (deny_version_ptr = conf_deny_version; deny_version_ptr; deny_version_ptr = (ConfigItem_deny_version *) deny_version_ptr->next) {
+		ircfree(deny_version_ptr->mask);
+		ircfree(deny_version_ptr->version);
+		ircfree(deny_version_ptr->flags);
+		t.next = del_ConfigItem((ConfigItem *) deny_version_ptr, (ConfigItem **)&conf_deny_version);
+		MyFree(deny_version_ptr);
+		deny_version_ptr = (ConfigItem_deny_version *) &t;
 	}
 
 	for (deny_channel_ptr = conf_deny_channel; deny_channel_ptr; deny_channel_ptr = (ConfigItem_deny_channel *) deny_channel_ptr->next)

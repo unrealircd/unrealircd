@@ -274,5 +274,7 @@
 - Made autoconnect msgs only go to +os
 - Made DNS cache list show a notice to other ops
 - Made /stats C show flags correctly
+- Added deny version {}
+- Made deny link {} rehash
 - Removed class.c, from the old conf
 - Removed dynconf.c, from the old dynconf

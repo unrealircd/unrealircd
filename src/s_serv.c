@@ -745,7 +745,7 @@ int  m_server(cptr, sptr, parc, parv)
 			/* we also have a fail safe incase they say they are sending
 			 * VL stuff and don't -- codemastr
 			 */
-			aConfItem *vlines = NULL;
+			ConfigItem_deny_version *vlines;
 			inf = NULL;
 			protocol = NULL;
 			flags = NULL;
@@ -757,8 +757,75 @@ int  m_server(cptr, sptr, parc, parv)
 				num = (char *)strtok((char *)NULL, " ");
 			if (num)
 				inf = (char *)strtok((char *)NULL, "");
+			if (inf) {
+				for (vlines = conf_deny_version; vlines; vlines = (ConfigItem_deny_version *) vlines->next) {
+					if (!match(vlines->mask, cptr->name)) 
+						break;
+				}
+				if (vlines) {
+					char *proto = vlines->version;
+					char *vflags = vlines->flags;
+					int version, result = 0, i;
+					protocol++;
+					version = atoi(protocol);
+					switch (*proto) {
+						case '<':
+							proto++;
+							if (version < atoi(proto))
+								result = 1;
+							break;
+						case '>':
+							proto++;
+							if (version > atoi(proto))
+								result = 1;
+							break;
+						case '=':
+							proto++;
+							if (version == atoi(proto))
+								result = 1;
+							break;
+						case '!':
+							proto++;
+							if (version != atoi(proto))
+								result = 1;
+							break;
+						default:
+							if (version == atoi(proto))
+								result = 1;
+							break;
+					}
+					if (version == 0 || *proto == '*')
+						result = 0;
+
+					if (result)
+						return exit_client(cptr, cptr, cptr,
+							"Denied by V:line");
+					
+					for (i = 0; vflags[i]; i++) {
+						if (vflags[i] == '!') {
+							i++;
+							if (strchr(flags, vflags[i])) {
+								result = 1;
+								break;
+							}
+						}
+						else if (!strchr(flags, vflags[i])) {
+								result = 1;
+								break;
+						}
+					}
+					if (*vflags == '*' || !strcmp(flags, "0"))
+						result = 0;
+					if (result)
+						return exit_client(cptr, cptr, cptr,
+							"Denied by V:line");
+				}
+			}
+
+					
+							
 		}
-			strncpyzt(cptr->info, info[0] ? info : me.name,
+			strncpyzt(cptr->info, inf[0] ? inf : me.name,
 			    sizeof(cptr->info));
 		/* Numerics .. */
 		numeric = num ? atol(num) : numeric;

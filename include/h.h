@@ -73,6 +73,8 @@ extern ConfigItem_deny_dcc	*conf_deny_dcc;
 extern ConfigItem_deny_channel  *conf_deny_channel;
 extern ConfigItem_deny_link	*conf_deny_link;
 extern ConfigItem_allow_channel *conf_allow_channel;
+extern ConfigItem_deny_version	*conf_deny_version;
+
 
 ConfigItem_class	*Find_class(char *name);
 ConfigItem_deny_dcc	*Find_deny_dcc(char *name);

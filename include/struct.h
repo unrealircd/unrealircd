@@ -90,6 +90,7 @@ typedef struct _configitem_badword ConfigItem_badword;
 typedef struct _configitem_deny_dcc ConfigItem_deny_dcc;
 typedef struct _configitem_deny_link ConfigItem_deny_link;
 typedef struct _configitem_deny_channel ConfigItem_deny_channel;
+typedef struct _configitem_deny_version ConfigItem_deny_version;
 
 typedef struct Notify aNotify;
 typedef struct Client aClient;
@@ -1151,6 +1152,15 @@ struct _configitem_deny_link {
 	char			*mask;
 	char			*rule;
 	char			*prettyrule;
+};
+
+struct _configitem_deny_version {
+	ConfigFlag		flag;
+	ConfigItem		*prev;
+	ConfigItem		*next;
+	char 			*mask;
+	char			*version;
+	char			*flags;
 };
 
 struct _configitem_deny_channel {
