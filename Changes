@@ -1421,3 +1421,5 @@ seen. gmtime warning still there
 - Fixed OperOverride snotice bugs with halfop
 - Standardized OperOverride notices
 - Implemented new operoverride system
+- Fixed some compile errors found by Zerwas and fixed some implementation problems of 
+  the not able to set +z when there's non +z users (ULines not counted) in channel
