@@ -562,3 +562,5 @@
 - Corrected the help.conf documentation for /invite (#0002306) reported by White_Magic.
 - Fixed a documentation inconsistency with me::numeric (#0002290) reported by Bugz.
 - Fixed a problem when compiling Unreal with GUEST support (#0001758) dvzion.
+- Fixed a win32 GUI problem where the tray menu's config submenu was not updated when new
+  files were loaded or files were unloaded (#0002084) reported by Troco.
