@@ -184,7 +184,7 @@ char  *Module_Load (char *path_, int load)
 		}
 		irc_dlsym(Mod, "Mod_Handle", Mod_Handle);
 		if (Mod_Handle)
-			*Mod_Handle = mod;
+			*((Module **)Mod_Handle) = mod;
 		if ((ret = (*Mod_Init)(load)) < MOD_SUCCESS)
 		{
 			ircsprintf(errorbuf, "Mod_Init returned %i",
