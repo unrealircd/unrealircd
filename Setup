@@ -1,5 +1,7 @@
 #!/bin/sh
-echo "Starting up Setup"
+clear
+echo "Starting up UnrealIRCd Setup"
+echo ""
 echo "Press enter to proceed to setup..."
 read cc
 more Unreal.nfo
