@@ -147,7 +147,6 @@ void	init_CommandHash(void)
 	add_CommandX(MSG_QUIT, TOK_QUIT, m_quit, MAXPARA, M_UNREGISTERED|M_USER);
 	add_Command(MSG_WATCH, TOK_WATCH, m_watch, 1);
 	add_Command(MSG_USERHOST, TOK_USERHOST, m_userhost, 1);
-	add_Command(MSG_SVSNICK, TOK_SVSNICK, m_svsnick, MAXPARA);
 	add_Command(MSG_LUSERS, TOK_LUSERS, m_lusers, MAXPARA);
 	add_Command(MSG_TOPIC, TOK_TOPIC, m_topic, MAXPARA);
 	add_Command(MSG_INVITE, TOK_INVITE, m_invite, MAXPARA);
@@ -224,7 +223,6 @@ void	init_CommandHash(void)
 	add_Command(MSG_SAJOIN, TOK_SAJOIN, m_sajoin, MAXPARA);
 	add_Command(MSG_SVSPART, TOK_SVSPART, m_svspart, MAXPARA);
 	add_Command(MSG_SAPART, TOK_SAPART, m_sapart, MAXPARA);
-	add_Command(MSG_SVSO, TOK_SVSO, m_svso, MAXPARA);
 	add_Command(MSG_SVSFLINE, TOK_SVSFLINE, m_svsfline, MAXPARA);
 	add_Command(MSG_TKL, TOK_TKL, m_tkl, MAXPARA);
 	add_Command(MSG_VHOST, TOK_VHOST, m_vhost, MAXPARA);

@@ -95,6 +95,8 @@ int    l_commands_init(int module_load)
 	m_mkpasswd_init(module_load);
 	m_away_init(module_load);
 	m_svsnoop_init(module_load);
+	m_svso_init(module_load);
+	m_svsnick_init(module_load);
 #ifdef SCAN_API
 	module_depend_resolve(&scan_socks_depend[0]);
 	m_scan_init(module_load);
@@ -122,6 +124,8 @@ void    l_commands_load(int module_load)
 	m_mkpasswd_load(module_load);
 	m_away_load(module_load);
 	m_svsnoop_load(module_load);
+	m_svso_load(module_load);
+	m_svsnick_load(module_load);
 #ifdef SCAN_API
 	m_scan_load(module_load);
 	scan_socks_load(module_load);
@@ -148,6 +152,8 @@ void	l_commands_unload(void)
 	m_mkpasswd_unload();
 	m_away_unload();
 	m_svsnoop_unload();
+	m_svso_unload();
+	m_svsnick_unload();
 #ifdef SCAN_API
 	scan_socks_unload();
 	m_scan_unload();

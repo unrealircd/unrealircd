@@ -1047,62 +1047,6 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 }
 
 /*
-** m_svsnick
-**	parv[0] = sender
-**	parv[1] = old nickname
-**	parv[2] = new nickname
-**	parv[3] = timestamp
-*/
-int  m_svsnick(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
-{
-	aClient *acptr;
-
-	if (!IsULine(sptr) || parc < 4 || (strlen(parv[2]) > NICKLEN))
-		return -1;	/* This looks like an error anyway -Studded */
-
-	if (!hunt_server(cptr, sptr, ":%s SVSNICK %s %s :%s", 1, parc,
-	    parv) != HUNTED_ISME)
-	{
-		if ((acptr = find_person(parv[1], NULL)))
-		{
-			if (find_client(parv[2], NULL))	/* Collision */
-				return exit_client(cptr, acptr, sptr,
-				    "Nickname collision due to Services enforced "
-				    "nickname change, your nick was overruled");
-			if (do_nick_name(parv[2]) == 0)
-				return 0;
-			acptr->umodes &= ~UMODE_REGNICK;
-			acptr->lastnick = TS2ts(parv[3]);
-			sendto_common_channels(acptr, ":%s NICK :%s", parv[1],
-			    parv[2]);
-			if (IsPerson(acptr))
-				add_history(acptr, 1);
-			sendto_serv_butone_token(NULL, parv[1], MSG_NICK,
-			    TOK_NICK, "%s :%i", parv[2], TS2ts(parv[3]));
-			if (acptr->name[0])
-			{
-				(void)del_from_client_hash_table(acptr->name, acptr);
-				if (IsPerson(acptr))
-					hash_check_watch(acptr, RPL_LOGOFF);
-			}
-			if (MyClient(acptr))
-			{
-				RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, acptr, parv[2]);
-			}
-			(void)strcpy(acptr->name, parv[2]);
-			(void)add_to_client_hash_table(parv[2], acptr);
-			if (IsPerson(acptr))
-				hash_check_watch(acptr, RPL_LOGON);
-
-		}
-	}
-	return 0;
-}
-
-/*
 ** m_nick
 **	parv[0] = sender prefix
 **	parv[1] = nickname

@@ -224,69 +224,6 @@ void strrangetok(char *in, char *out, char tok, short first, short last) {
 	}
 	out[j] = 0;
 }			
-		
-
-/*
-** m_svso - Stskeeps
-**      parv[0] = sender prefix
-**      parv[1] = nick
-**      parv[2] = options
-*/
-
-int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
-{
-	aClient *acptr;
-	long fLag;
-
-	if (!IsULine(sptr))
-		return 0;
-
-	if (parc < 3)
-		return 0;
-
-	if (!(acptr = find_client(parv[1], (aClient *)NULL)))
-		return 0;
-
-	if (!MyClient(acptr))
-	{
-		sendto_one(acptr, ":%s SVSO %s %s", parv[0], parv[1], parv[2]);
-		return 0;
-	}
-
- 	if (*parv[2] == '+')
-	{
-		int	*i, flag;
-		char *m = NULL;
-		for (m = (parv[2] + 1); *m; m++)
-		{
-			for (i = oper_access; flag = *i; i += 2)
-			{
-				if (*m == (char) *(i + 1))
-				{
-					acptr->user->oflag |= flag;
-					break;
-				}
-			}
-		}
-	}
-	if (*parv[2] == '-')
-	{
-		fLag = acptr->umodes;
-		if (IsAnOper(acptr))
-			IRCstats.operators--;
-		acptr->umodes &=
-		    ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP | UMODE_SERVICES |
-		    UMODE_SADMIN | UMODE_ADMIN);
-		acptr->umodes &=
-		    ~(UMODE_NETADMIN | UMODE_TECHADMIN | UMODE_WHOIS);
-		acptr->umodes &=
-		    ~(UMODE_KIX | UMODE_HIDING | UMODE_DEAF | UMODE_HIDEOPER);
-		acptr->user->oflag = 0;
-		acptr->user->snomask &= ~(SNO_CLIENT|SNO_FLOOD|SNO_FCLIENT|SNO_EYES|SNO_VHOST);
-		send_umode_out(acptr, acptr, fLag);
-	}
-}
-
 
 /* ** m_akill;
 **	parv[0] = sender prefix
