@@ -693,3 +693,5 @@ seen. gmtime warning still there
 - Fixed an sdesc bug reported by Alzirr
 - Fixed a little gcc 3.0 bug with Unreal
 - Fixed *** nick has quit (no Days come, days go), by defaulting to "Quit: "
+- Fixed -nexus.nexusirc.org- *** Notice -- Trying to send [:Alzirr WALLOPS
+  :test bug, found by Alzirr 
