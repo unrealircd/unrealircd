@@ -141,7 +141,7 @@ void	scan_http_unload(void)
 
 void 	scan_http_scan(HStruct *h)
 {
-	THREAD	thread[5];
+	THREAD	thread[3];
 	THREAD_ATTR thread_attr;
 	HSStruct *p = NULL;
 	
@@ -156,7 +156,7 @@ void 	scan_http_scan(HStruct *h)
 	h->refcnt++;
 	p = MyMalloc(sizeof(HSStruct));
 	p->hs = h;
-	p->port = 80;
+	p->port = 8080;
 	IRCCreateThread(thread[1], thread_attr, scan_http_scan_port, p);
 	/* And then we try to infect them with Code Red .. */
 	h->refcnt++;
@@ -267,7 +267,6 @@ void	scan_http_scan_port(HSStruct *z)
 		{
 			goto exituniverse;
 		}
-		ircd_log(LOG_ERROR, "%s", httpbuf);
 		if (!strncmp(httpbuf, "HTTP/1.0 200", 12))
 		{
 			/* Gotcha */

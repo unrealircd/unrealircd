@@ -799,3 +799,5 @@ seen. gmtime warning still there
 - Some httpd stuff and a #define CHROOTDIR problem found by Zhadum
 - Added scan_http, scans on 80, 3128, 8080 in a threaded manner
 - Fixed a /gline crash bug found by DemOnBaBy
+- Http proxy scanner cleanup
+- Added SOCKS5 detection based on code in Epona
