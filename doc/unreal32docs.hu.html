@@ -471,9 +471,19 @@ A modulok bõvíthetik is más típusokkal a kiterjesztett ban típusokat.<br>
 <p>Spamszûrõk a /spamfilter paranccsal vehetõek fel, amely a következõ szintaktikát használja:<br>
    <b>/spamfilter [add|del|remove|+|-] [típus] [tevékenység] [idõtartam] [indok] [regex]</b><br>
    <table border=0>
-   <tr valign="top"><td><b>[típus]</b></td><td> meghatározza a célpont típusát; egyszerre többet is meg lehet adni:
-   'c'-t a csatornabeli üzenetekhez, 'p'-t a privát üzenetekhez, 'n'-et a privát értesítésekhez, 'N'-et a csatornabeli értesítésekhez, 'P'-t a csatornáról lelépést jelzõ üzenetekhez,
-   'q'-t a kilépési üzenetekhez, 'd'-t a dcc-hez, és 'u'-t a felhasználókra (nick!user@host:valósnév alakú illesztési maszk)</td></tr>
+   <tr valign="top"><td><b>[típus]</b></td><td> meghatározza a célpont típusát:<br>
+   <table>
+   <tr><td><b>Karakter:</b></td><td><b>Konfigurációs elem:</b></td><td><b>Leírás:</b></td></tr>
+   <tr><td>c</td><td>channel</td><td>Csatornabeli üzenet</td></tr>
+   <tr><td>p</td><td>private</td><td>Privát üzenet (két felhasználó között)</td></tr>
+   <tr><td>n</td><td>notice</td><td>Privát értesítés</td></tr>
+   <tr><td>N</td><td>channel-notice</td><td>Csatornabeli értesítés</td></tr>
+   <tr><td>P</td><td>part</td><td>Csatornáról lelépés indoka</td></tr>
+   <tr><td>q</td><td>quit</td><td>Kilépési indok</td></tr>
+   <tr><td>d</td><td>dcc</td><td>DCC fájlnév</td></tr>
+   <tr><td>u</td><td>user</td><td>Felhasználó kitiltása, nick!user@host:valósnév alakú illeszkedési maszk</td></tr>
+   </table>
+   Egyszerre több célpontot is megadhatsz, például így: cpNn</td></tr>
    <tr valign="top"><td><b>[tevékenység]</b></td><td> meghatározza az elvégzendõ tevékenységet (csak 1 tevékenység adható meg)<br>
 <table>
 <tr><td>kill</td><td>kilövi a felhasználót</td></tr>
@@ -485,8 +495,8 @@ A modulok bõvíthetik is más típusokkal a kiterjesztett ban típusokat.<br>
 <tr><td>gzline</td><td>gzline-t (globális zline-t) helyez a hostra</td></tr>
 <tr><td>block</td><td>csak blokkolja az üzenetet</td></tr>
 <tr><td>dccblock</td><td>megjelöli a felhasználót DCC blokkolásra (nem küldhet DCC-ket)</td></tr>
-<tr><td>viruschan</td><td>minden csatornáról lelépteti, belépteti a <b>set::spamfilter::virus-help-channel</b> csatornára, letilt minden parancsot,
- kivéve a PONG-ot, az ADMIN-t és a <b>set::spamfilter::virus-help-channel</b> csatornára küldött üzeneteket/értesítéseket</td></tr>
+<tr valign="top"><td>viruschan</td><td>lelépteti a felhasználót minden csatornáról, belépteti a <tt>set::spamfilter::virus-help-channel</tt> csatornára, letilt minden parancsot,
+ kivéve a PONG-ot, az ADMIN-t és a <tt>set::spamfilter::virus-help-channel</tt> csatornára küldött üzeneteket/értesítéseket</td></tr>
 </table></td></tr>
    <tr valign="top"><td><b>[idõtartam]</b></td><td> A szûrõ által felvett *line-ok idõtartama, használj kötõjelet ('-') az alapértelmezéshez vagy a kihagyáshoz
    (pl.: ha a tevékenység = 'block')</td></tr>
@@ -511,7 +521,14 @@ lesznek alakítva futásidõben. Egy dupla aláhúzás ('__') jelent egy aláhúzást ('_
 <p>Spamszûrõket a konfigurációs fájlban is felvehetsz, de ezek helyi spamszûrõk lesznek (nem
    hálózati szintûek, bár erre használhatod a távoli fájlok betöltését).
    Ezen spamfilter { } blokkok szintaktikáját <a href="#spamfilter">itt</a> magyarázzuk.<br>
-</p>
+   Példa:<br>
+   <pre>spamfilter {
+	regex "//write \$decode\(.+\|.+load -rs";
+	target { private; channel; };
+	reason "Általános $decode sebezhetõség";
+	action block;
+};</pre></p>
+
 <p>A <b>set::spamfilter::ban-time</b> lehetõvé teszi, hogy módosítsd a spamszûrõk által felvett *line-ok alapértelmezett kitiltási idejét (alapértelmezés: 1 nap)<br>
    A <b>set::spamfilter::ban-reason</b>-nel meghatározhatsz egy alapértelmezett indokot a *line-okra (alapértelmezés: 'Spam/advertising')<br>
    A <b>set::spamfilter::virus-help-channel</b>-lel meghatározhatod, hogy milyen csatornára történjen a belépés a 'viruschan' tevékenység esetén (alapértelmezés: #help)<br>
@@ -1967,9 +1984,8 @@ spamfilter {
 	ban-time &lt;idõtartam&gt;;
 };</pre></p>
 <p>A <b>regex</b> egy reguláris kifejezés, amely alapján keresünk.<br>
-   A <b>target</b> meghatározza, hol történjen a szûrés, lehetséges célpontok: channel, private, private-notice,
-   channel-notice, part, quit, dcc, user.<br>
-   Az <b>action</b> eldönti, mit történjen találat esetén, lásd <a href="#feature_spamfilter">itt</a> a lehetséges tevékenységek listáját.<br>
+   <b>target</b> meghatározza, hol történjen a szûrés; lásd <a href="#feature_spamfilter">itt</a> a célpontok lehetséges típusait (példa: "channel").<br>
+   <b>action</b> eldönti, mi történjen találat esetén, lásd <a href="#feature_spamfilter">itt</a> a lehetséges tevékenységek listáját (példa: "gline").<br>
    A <b>reason</b> kihagyható, a kitiltás vagy a blokkolás indoklószövegének beállítására szolgál; ha nincs megadva, az alapértelmezés lesz használatban.<br>
    A <b>ban-time</b> sem kötelezõ, megadja a *line kitiltások lejárati idejét; ha kihagyod, az alapértelmezés lesz használatban (1 nap).<br>
 </p>
