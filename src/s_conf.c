@@ -3175,8 +3175,10 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 {
 	char has_class = 0, has_password = 0, has_flags = 0, has_swhois = 0, has_snomask = 0;
 	char has_modes = 0, has_from = 0, has_maxlogins = 0;
+	int oper_flags = 0;
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
+	OperFlag *ofp;
 	int	errors = 0;
 
 	if (!ce->ce_vardata)
@@ -3322,21 +3324,13 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 						errors++; 
 						continue;
 					}
-					if (!config_binary_flags_search(_OperFlags, cepp->ce_varname, ARRAY_SIZEOF(_OperFlags))) {
-						if (!strcmp(cepp->ce_varname, "can_stealth"))
-						{
-							config_warn("%s:%i: unknown oper flag '%s' [feature no longer exists]",
-								cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
-								cepp->ce_varname);
-						} 
-						else
-						{
-							config_error_unknownflag(cepp->ce_fileptr->cf_filename,
-								cepp->ce_varlinenum, "oper",
-								cepp->ce_varname);
-							errors++; 
-						}
+					if (!(ofp = config_binary_flags_search(_OperFlags, cepp->ce_varname, ARRAY_SIZEOF(_OperFlags)))) {
+						config_error_unknownflag(cepp->ce_fileptr->cf_filename,
+							cepp->ce_varlinenum, "oper",
+							cepp->ce_varname);
+						errors++; 
 					}
+					oper_flags |= ofp->flag;
 				}
 				continue;
 			}
@@ -3395,13 +3389,25 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 			"oper::flags");
 		errors++;
-	}	
+	} else {
+		/* Check oper flags */
+		if (!(oper_flags & OFLAG_ISGLOBAL) && (oper_flags & OFLAG_OVERRIDE))
+		{
+			config_status("%s:%i: oper::oflags: WARNING: can_override (a global privilege) is incompatible with local oper",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		}
+		if (!(oper_flags & OFLAG_ISGLOBAL) && (oper_flags & (OFLAG_GZL|OFLAG_TKL)))
+		{
+			config_status("%s:%i: oper::oflags: WARNING: can_gzline/can_gkline (global privileges) are incompatible with local oper",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		}
+	}
 	if (!has_class)
 	{
 		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 			"oper::class");
 		errors++;
-	}	
+	}
 	return errors;
 	
 }
