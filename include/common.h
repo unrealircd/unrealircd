@@ -201,8 +201,15 @@ extern struct SLink *find_user_link(/* struct SLink *, struct Client * */);
  * Protocol support text.  DO NO CHANGE THIS unless you know what
  * you are doing.
  */
+
+#ifdef ZIP_LINKS
+#define ZIPSTUFF " ZIP"
+#else
+#define ZIPSTUFF ""
+#endif
+
 #define PROTOCTL_CLIENT "TOKEN WATCH=128 SAFELIST HCN PREFIX=@+%"
-#define PROTOCTL_SERVER "NOQUIT TOKEN NICKv2 SJOIN SJOIN2 UMODE2 ALN"
+#define PROTOCTL_SERVER "NOQUIT TOKEN NICKv2 SJOIN SJOIN2 UMODE2 ALN" ZIPSTUFF
 
 #ifdef _WIN32
 /*

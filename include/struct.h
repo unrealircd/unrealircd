@@ -29,6 +29,9 @@
 #include "hash.h"
 #include <stdio.h>
 #include <sys/types.h>
+#ifdef ZIP_LINKS
+#include "zip.h"
+#endif
 #ifndef _WIN32
 #include <netinet/in.h>
 #include <netdb.h>
@@ -201,6 +204,7 @@ typedef unsigned int  u_int32_t; /* XXX Hope this works! */
 #define FLAGS_GOTSOCKS  0x2000000
 #endif
 #define FLAGS_SHUNNED    0x4000000
+
 #define FLAGS_MAP       0x80000000 /* Show this entry in /map */
 
 /* Dec 26th, 1997 - added flags2 when I ran out of room in flags -DuffJ 
@@ -253,6 +257,7 @@ typedef unsigned int  u_int32_t; /* XXX Hope this works! */
 #define PROTO_SJOIN2	0x10	/* Negotiated SJOIN2 protocol */
 #define PROTO_UMODE2	0x20	/* Negotiated UMODE2 protocol */
 #define PROTO_ALN	0x40	/* Negotiated ALN protocol */
+#define PROTO_ZIP	0x80	/* Negotiated ZIP protocol */
 /*
  * flags macros.
  */
@@ -796,6 +801,9 @@ struct Client	{
 	long	sendM;		/* Statistics: protocol messages send */
 	long	sendK;		/* Statistics: total k-bytes send */
 	long	receiveM;	/* Statistics: protocol messages received */
+#ifdef ZIP_LINKS
+	struct Zdata *zip;        /* zip data */
+#endif
 #ifndef NO_FDLIST
         long    lastrecvM;         /* to check for activity --Mika */
         int     priority;             

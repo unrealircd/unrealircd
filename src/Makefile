@@ -28,7 +28,8 @@ OBJS=agent.o aln.o badwords.o bsd.o channel.o class.o cloak.o crule.o dbuf.o dyn
 	match.o md5.o packet.o parse.o res.o $(RES) s_auth.o \
 	s_bsd.o s_conf.o s_debug.o s_err.o s_extra.o s_kline.o \
 	s_misc.o s_numeric.o s_serv.o s_socks.o $(STRTOUL) s_unreal.o \
-	s_user.o scache.o send.o support.o userload.o version.o whowas.o
+	s_user.o scache.o send.o support.o userload.o version.o whowas.o \
+	zip.o
 
 # OBJS=bsd.o dbuf.o packet.o send.o match.o parse.o support.o channel.o \
 #	class.o hash.o ircd.o list.o res.o cloak.o s_auth.o s_bsd.o s_conf.o \
@@ -91,6 +92,9 @@ badwords.o: badwords.c $(INCLUDES)
 
 aln.o: aln.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c aln.c
+
+zip.o: zip.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c zip.c
 
 send.o: send.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c send.c

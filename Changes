@@ -333,3 +333,4 @@
 - Added channel mode +C to disallow channel CTCPs, /me (CTCP ACTION) is still allowed
 - Fixed a bunch of +H bugs
 - Fixed a bug where the channel was still shown in /who for +I users
+- First part of ZIP_LINKS
