@@ -1971,24 +1971,6 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 if test "$ac_cv_c_compiler_gnu" = "yes"; then
 CFLAGS="$CFLAGS -funsigned-char"
-echo "$as_me:$LINENO: checking if you have gcc 3.0 or higher" >&5
-echo $ECHO_N "checking if you have gcc 3.0 or higher... $ECHO_C" >&6
-if test "${ac_cv_gcc3+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-
-if test -z "`gcc -v 2>&1 |grep 'gcc version 3.'`"; then
-ac_cv_gcc3="no"
-else
-ac_cv_gcc3="yes"
-fi
-
-fi
-echo "$as_me:$LINENO: result: $ac_cv_gcc3" >&5
-echo "${ECHO_T}$ac_cv_gcc3" >&6
-if test "$ac_cv_gcc3" = "yes"; then
-CFLAGS="$CFLAGS -Wnone"
-fi
 echo "$as_me:$LINENO: checking if gcc has a working -pipe" >&5
 echo $ECHO_N "checking if gcc has a working -pipe... $ECHO_C" >&6
 if test "${ac_cv_pipe+set}" = set; then

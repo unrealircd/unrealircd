@@ -1648,3 +1648,5 @@ seen. gmtime warning still there
 - Converted the config flag parsing systems to use a binary search
 - Conf3 cleanups
 - Converted help and log to conf3
+- Fixed a configure script bug involving gcc3 (#0000398, #0000412, #0000433) found and 
+  fixed by mister
