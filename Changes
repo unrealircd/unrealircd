@@ -508,3 +508,5 @@ seen. gmtime warning still there
 - Added McSkaf's mIRC color parse patch
 - More winlocal fixes, and a +f bugfix
 - Added HOOKTYPE_LOCAL_CONNECT (aClient *)
+- Fixed DEBUGMODE under win32
+- Fixed /trace problem with slots (idea from ircu2.10.01+winnt)
