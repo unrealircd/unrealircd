@@ -574,6 +574,7 @@ void sendto_chmodemucrap(aClient *from, aChannel *chptr, char *text)
 	Member *lp;
 	aClient *acptr;
 	int  i;
+	int remote = MyClient(from) ? 0 : 1;
 
 	sprintf(tcmd, ":%s %s %s :%s", from->name, TOK_PRIVATE, chptr->chname, text); /* token */
 	sprintf(ccmd, ":%s %s %s :%s", from->name, MSG_PRIVATE, chptr->chname, text); /* msg */
@@ -587,6 +588,8 @@ void sendto_chmodemucrap(aClient *from, aChannel *chptr, char *text)
 		if (IsDeaf(acptr) && !sendanyways)
 			continue;
 		if (!(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)))
+			continue;
+		if (remote && (acptr->from == from->from)) /* don't send it back to where it came from */
 			continue;
 		i = acptr->from->slot;
 		if (MyConnect(acptr) && IsRegisteredUser(acptr))

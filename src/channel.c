@@ -864,8 +864,7 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 		        (!lp || !(lp->flags & (CHFL_CHANOP|CHFL_VOICE|CHFL_CHANOWNER|CHFL_HALFOP|CHFL_CHANPROT))) &&
 		        !is_irc_banned(chptr))
 		    {
-				sendto_chanops_butone(cptr, chptr, ":IRC PRIVMSG %s :%s: %s",
-					chptr->chname, cptr->name, msgtext);
+				sendto_chmodemucrap(cptr, chptr, msgtext);
 				return (CANNOT_SEND_MODERATED);
 			}
 		}

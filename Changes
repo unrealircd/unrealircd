@@ -352,3 +352,5 @@
 - Fixed prefix bug caused by previous 'fix'/behavior change. Reported by aquanight (#0002067).
 - Updated doc/technical/token.txt and resolved 2 token conflicts. SVSWATCH is now Sw and
   SVSJOIN is now BX (#0002073) reported by trystanscott.
+- Fixed a bug regarding chanmode +mu where the <IRC> messages were not properly relayed
+  to all servers. Reported by Aenox (#0002079).
