@@ -152,7 +152,7 @@ void save_stats(void)
 
 
 void server_reboot(char *);
-void restart PROTO((char *));
+void restart(char *);
 static void open_debugfile(), setup_signals();
 extern void init_glines(void);
 

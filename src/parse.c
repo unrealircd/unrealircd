@@ -53,8 +53,8 @@ extern int lifesux;
 static char *para[MAXPARA + 1];
 
 static char sender[HOSTLEN + 1];
-static int cancel_clients PROTO((aClient *, aClient *, char *));
-static void remove_unknown PROTO((aClient *, char *));
+static int cancel_clients(aClient *, aClient *, char *);
+static void remove_unknown(aClient *, char *);
 static char nsprefix = 0;
 /*
 **  Find a client (server or user) by name.

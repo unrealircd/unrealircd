@@ -40,7 +40,7 @@
 #include "h.h"
 #include <string.h>
 
-char *collapse PROTO((char *pattern));
+char *collapse(char *pattern);
 extern aClient *client, *local[];
 
 ID_Copyright("(C) Tony Vincell");
@@ -54,13 +54,6 @@ ID_Copyright("(C) Tony Vincell");
 #define mycmp strcasecmp
 #endif
 
-#ifndef PROTO
-#if __STDC__
-#       define PROTO(x) x
-#else
-#       define PROTO(x) ()
-#endif
-#endif
 #if defined(CR_DEBUG) || defined(CR_CHKCONF)
 #define MyMalloc malloc
 #undef MyFree
@@ -84,7 +77,7 @@ enum crule_errcode
 
 /* expression tree structure, function pointer, and tree pointer */
 /* local! */
-typedef int (*crule_funcptr) PROTO((int, void **));
+typedef int (*crule_funcptr) (int, void **);
 struct crule_treestruct {
 	crule_funcptr funcptr;
 	int  numargs;
@@ -95,29 +88,29 @@ typedef struct crule_treestruct crule_treeelem;
 typedef crule_treeelem *crule_treeptr;
 
 /* rule function prototypes - local! */
-int crule_connected PROTO((int, void **));
-int crule_directcon PROTO((int, void **));
-int crule_via PROTO((int, void **));
-int crule_directop PROTO((int, void **));
-int crule__andor PROTO((int, void **));
-int crule__not PROTO((int, void **));
+int crule_connected(int, void **);
+int crule_directcon(int, void **);
+int crule_via(int, void **);
+int crule_directop(int, void **);
+int crule__andor(int, void **);
+int crule__not(int, void **);
 
 /* parsing function prototypes - local! */
-int crule_gettoken PROTO((int *, char **));
-void crule_getword PROTO((char *, int *, int, char **));
-int crule_parseandexpr PROTO((crule_treeptr *, int *, char **));
-int crule_parseorexpr PROTO((crule_treeptr *, int *, char **));
-int crule_parseprimary PROTO((crule_treeptr *, int *, char **));
-int crule_parsefunction PROTO((crule_treeptr *, int *, char **));
-int crule_parsearglist PROTO((crule_treeptr, int *, char **));
+int crule_gettoken(int *, char **);
+void crule_getword(char *, int *, int, char **);
+int crule_parseandexpr(crule_treeptr *, int *, char **);
+int crule_parseorexpr(crule_treeptr *, int *, char **);
+int crule_parseprimary(crule_treeptr *, int *, char **);
+int crule_parsefunction(crule_treeptr *, int *, char **);
+int crule_parsearglist(crule_treeptr, int *, char **);
 
 #if defined(CR_DEBUG) || defined(CR_CHKCONF)
 /* prototypes for the test parser; if not debugging, these are
  * defined in h.h */
-char *crule_parse PROTO((char *));
-void crule_free PROTO((char **));
+char *crule_parse(char *);
+void crule_free(char **);
 #ifdef CR_DEBUG
-void print_tree PROTO((crule_treeptr));
+void print_tree(crule_treeptr));
 #endif
 #endif
 

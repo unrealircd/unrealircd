@@ -45,8 +45,8 @@
 #include "malloc.h"
 #endif
 #include <string.h>
-void free_link PROTO((Link *));
-Link *make_link PROTO(());
+void free_link(Link *);
+Link *make_link();
 extern ircstats IRCstats;
 
 ID_Copyright

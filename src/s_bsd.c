@@ -104,14 +104,14 @@ int      OpenFiles = 0;    /* GLOBAL - number of files currently open */
 int readcalls = 0, resfd = -1;
 static struct SOCKADDR_IN mysk;
 
-static struct SOCKADDR *connect_inet PROTO((ConfigItem_link *, aClient *, int *));
-static int completed_connection PROTO((aClient *));
-static int check_init PROTO((aClient *, char *));
+static struct SOCKADDR *connect_inet(ConfigItem_link *, aClient *, int *);
+static int completed_connection(aClient *);
+static int check_init(aClient *, char *);
 #ifndef _WIN32
-static void do_dns_async PROTO(());
-void set_sock_opts PROTO((int, aClient *));
+static void do_dns_async();
+void set_sock_opts(int, aClient *);
 #else
-void set_sock_opts PROTO((int, aClient *));
+void set_sock_opts(int, aClient *);
 #endif
 static char readbuf[8192];
 char zlinebuf[BUFSIZE];

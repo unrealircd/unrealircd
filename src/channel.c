@@ -70,30 +70,30 @@ extern ircstats IRCstats;
 extern int lifesux;
 #endif
 
-void over_notice PROTO((aClient *, aClient *, aChannel *, char *));
-static void add_invite PROTO((aClient *, aChannel *));
-static int add_banid PROTO((aClient *, aChannel *, char *));
-static int can_join PROTO((aClient *, aClient *, aChannel *, char *, char *,
-    char **));
-static int channel_link PROTO((aClient *, aClient *, int, char **));
-static void channel_modes PROTO((aClient *, char *, char *, aChannel *));
-static int check_channelmask PROTO((aClient *, aClient *, char *));
-int del_banid PROTO((aChannel *, char *));
-static void set_mode PROTO((aChannel *, aClient *, int, char **, u_int *,
-    char[MAXMODEPARAMS][MODEBUFLEN + 3], int));
-static void make_mode_str PROTO((aChannel *, long, long, int,
-    char[MAXMODEPARAMS][MODEBUFLEN + 3], char *, char *, char));
-static int do_mode_char PROTO((aChannel *, long, char, char *,
+void over_notice(aClient *, aClient *, aChannel *, char *);
+static void add_invite(aClient *, aChannel *);
+static int add_banid(aClient *, aChannel *, char *);
+static int can_join(aClient *, aClient *, aChannel *, char *, char *,
+    char **);
+static int channel_link(aClient *, aClient *, int, char **);
+static void channel_modes(aClient *, char *, char *, aChannel *);
+static int check_channelmask(aClient *, aClient *, char *);
+int del_banid(aChannel *, char *);
+static void set_mode(aChannel *, aClient *, int, char **, u_int *,
+    char[MAXMODEPARAMS][MODEBUFLEN + 3], int);
+static void make_mode_str(aChannel *, long, long, int,
+    char[MAXMODEPARAMS][MODEBUFLEN + 3], char *, char *, char);
+static int do_mode_char(aChannel *, long, char, char *,
 	u_int, aClient *,
-    u_int *, char[MAXMODEPARAMS][MODEBUFLEN + 3], char));
-static void do_mode PROTO((aChannel *, aClient *, aClient *, int, char **, int,
-    int));
-static void bounce_mode PROTO((aChannel *, aClient *, int, char **));
+    u_int *, char[MAXMODEPARAMS][MODEBUFLEN + 3], char);
+static void do_mode(aChannel *, aClient *, aClient *, int, char **, int,
+    int);
+static void bounce_mode(aChannel *, aClient *, int, char **);
 
-static void sub1_from_channel PROTO((aChannel *));
+static void sub1_from_channel(aChannel *);
 
-void clean_channelname PROTO((char *));
-void del_invite PROTO((aClient *, aChannel *));
+void clean_channelname(char *);
+void del_invite(aClient *, aChannel *);
 
 static char *PartFmt = ":%s PART %s";
 static char *PartFmt2 = ":%s PART %s :%s";

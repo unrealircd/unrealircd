@@ -43,7 +43,7 @@
 #include "version.h"
 #endif
 
-static int is_silenced PROTO((aClient *, aClient *));
+static int is_silenced(aClient *, aClient *);
 
 DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice);
 DLLFUNC int  m_notice(aClient *cptr, aClient *sptr, int parc, char *parv[]);

@@ -52,11 +52,11 @@ Computing Center and Jarkko Oikarinen";
 #include "version.h"
 #endif
 
-void send_umode_out PROTO((aClient *, aClient *, long));
-void send_umode_out_nickv2 PROTO((aClient *, aClient *, long));
-void send_umode PROTO((aClient *, aClient *, long, long, char *));
+void send_umode_out(aClient *, aClient *, long);
+void send_umode_out_nickv2(aClient *, aClient *, long);
+void send_umode(aClient *, aClient *, long, long, char *);
 void set_snomask(aClient *, char *);
-/* static  Link    *is_banned PROTO((aClient *, aChannel *)); */
+/* static  Link    *is_banned(aClient *, aChannel *); */
 int  dontspread = 0;
 extern char *me_hash;
 extern char backupbuf[];

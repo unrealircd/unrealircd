@@ -64,9 +64,9 @@ extern float currentrate2;
 extern ircstats IRCstats;
 extern char	*me_hash;
 
-static void exit_one_client PROTO((aClient *, aClient *, aClient *, char *, int));
-extern void exit_one_client_in_split PROTO((aClient *, aClient *, aClient *,
-    char *));
+static void exit_one_client(aClient *, aClient *, aClient *, char *, int);
+extern void exit_one_client_in_split(aClient *, aClient *, aClient *,
+    char *);
 
 static char *months[] = {
 	"January", "February", "March", "April",
