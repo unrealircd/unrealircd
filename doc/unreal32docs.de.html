@@ -2297,6 +2297,7 @@ bekannt als C/N/H:Lines)</font>
 	leaf &lt;leaf-mask&gt;;
 	leafdepth &lt;depth&gt;;
 	class &lt;class-name&gt;;
+	ciphers &lt;ssl-ciphers&gt; 
 	options {
 		&lt;option&gt;;
 		&lt;option&gt;;
@@ -2370,6 +2371,12 @@ definiert.
 <p><b>compression-level</b> (optional)<br>
 Gibt den Kompressions Level (1-9) für diesen Link an. Wird nur verwendet, wenn
 auch &quot;link::options::zip&quot; gesetzt ist.
+</p>
+<p><b>ciphers</b> (optional)<br>
+Gibt die SSL Verschlüsselung an, die für diesen Link benutzt wird. Um eine
+Liste der verfügbaren Verschlüsselungscodes zu erhalten, kann man den 'openssl
+ciphers' Befehl benutzen. ciphers ist als eine durch ':' getrennte Liste
+anzugeben.&nbsp;
 </p>
 <p><b>options block</b><br>
 Eine oder mehrere Optionen für eine Verbindung zu diesem Server. Wird manchmal
