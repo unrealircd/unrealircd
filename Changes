@@ -1068,3 +1068,5 @@ seen. gmtime warning still there
 - Fixed .1081 problem, see bug #0000020 for more information about how
   it REALLY should be fixed
 - Fixed a typo reported by Tracer (bug #0000022)
+- Made support in *nix for encrypted SSL private keys,
+  "make encpem" to make an encrypted server key if you already have one

@@ -1102,6 +1102,10 @@ int  InitwIRCD(argc, argv)
 	load_tunefile();
 	make_umodestr();
 	make_cmodestr();
+#ifdef USE_SSL
+	fprintf(stderr, "* Initializing SSL.\n");
+	init_ssl();
+#endif
 	fprintf(stderr,
 	    "* Dynamic configuration initialized .. booting IRCd.\n");
 	fprintf(stderr,
@@ -1189,9 +1193,6 @@ int  InitwIRCD(argc, argv)
 	R_fin_id = strlen(REPORT_FIN_ID);
 	R_fail_id = strlen(REPORT_FAIL_ID);
 	write_pidfile();
-#ifdef USE_SSL
-	init_ssl();
-#endif
 	Debug((DEBUG_NOTICE, "Server ready..."));
 #ifdef USE_SYSLOG
 	syslog(LOG_NOTICE, "Server Ready");
