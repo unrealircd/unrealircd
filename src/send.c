@@ -1342,6 +1342,7 @@ void sendto_conn_hcn(char *pattern, ...)
 	va_start(vl, pattern);
 	for (i = 0; i <= LastSlot; i++)
 		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
+		    IsPerson(cptr) && 
 		    (cptr->user->snomask & SNO_CLIENT) && IsHybNotice(cptr))
 		{
 			(void)ircsprintf(nbuf, ":%s NOTICE %s :",
