@@ -970,6 +970,7 @@ void	free_iConf(aConfiguration *i)
 	ircfree(i->auto_join_chans);
 	ircfree(i->oper_auto_join_chans);
 	ircfree(i->oper_only_stats);
+	ircfree(i->oper_snomask);
 	ircfree(i->egd_path);
 	ircfree(i->static_quit);
 #ifdef USE_SSL
@@ -1987,6 +1988,10 @@ void report_dynconf(aClient *sptr)
 	    sptr->name, KLINE_ADDRESS);
 	sendto_one(sptr, ":%s %i %s :modes-on-connect: %s", me.name, RPL_TEXT,
 	    sptr->name, get_modestr(CONN_MODES));
+	sendto_one(sptr, ":%s %i %s :modes-on-oper: %s", me.name, RPL_TEXT,
+	    sptr->name, get_modestr(OPER_MODES));
+	sendto_one(sptr, ":%s %i %s :snomask-on-oper: %s", me.name, RPL_TEXT,
+	    sptr->name, OPER_SNOMASK ? OPER_SNOMASK : SNO_DEFOPER);
 	if (OPER_ONLY_STATS)
 		sendto_one(sptr, ":%s %i %s :oper-only-stats: %s", me.name, RPL_TEXT,
 			sptr->name, OPER_ONLY_STATS);
@@ -4476,6 +4481,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "modes-on-oper")) {
 			tempiConf.oper_modes = (long) set_usermode(cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "snomask-on-oper")) {
+			ircstrdup(tempiConf.oper_snomask, cep->ce_vardata);
+		}
 		else if (!strcmp(cep->ce_varname, "static-quit")) {
 			ircstrdup(tempiConf.static_quit, cep->ce_vardata);
 		}
@@ -4709,6 +4717,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "modes-on-oper")) {
 			CheckNull(cep);
 			templong = (long) set_usermode(cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "snomask-on-oper")) {
+			CheckNull(cep);
 		}
 		else if (!strcmp(cep->ce_varname, "static-quit")) {
 			CheckNull(cep);

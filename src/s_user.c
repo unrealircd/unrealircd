@@ -56,6 +56,7 @@ void send_umode_out(aClient *, aClient *, long);
 void send_umode_out_nickv2(aClient *, aClient *, long);
 void send_umode(aClient *, aClient *, long, long, char *);
 void set_snomask(aClient *, char *);
+int create_snomask(char *, int);
 /* static  Link    *is_banned(aClient *, aChannel *); */
 int  dontspread = 0;
 extern char *me_hash;
@@ -1848,6 +1849,22 @@ char *get_modestr(long umodes)
 	return buf;
 }
 
+char *get_snostr(long sno) {
+	int flag;
+	int *s;
+	char *m;
+
+	m = buf;
+
+	*m++ = '+';
+	for (s = sno_mask; (flag = *s) && (m - buf < BUFSIZE - 4); s += 2)
+		if (sno & flag)
+			*m++ = (char)(*(s + 1));
+	*m = 0;
+	return buf;
+}
+
+
 /*
 ** m_user
 **	parv[0] = sender prefix
@@ -2157,6 +2174,39 @@ void set_snomask(aClient *sptr, char *snomask) {
 	if (!IsAnOper(sptr)) {
 		sptr->user->snomask &= (SNO_NONOPERS);
 	}
+}
+
+int create_snomask(char *snomask, int oper) {
+	int what = MODE_ADD;
+	char *p;
+	int *s, flag, sno = 0;
+	
+	if (snomask == NULL) 
+		return sno;
+	
+	for (p = snomask; p && *p; p++) {
+		switch (*p) {
+			case '+':
+				what = MODE_ADD;
+				break;
+			case '-':
+				what = MODE_DEL;
+				break;
+			default:
+				for (s = sno_mask; (flag = *s); s += 2)
+					if (*p == (char) (*(s + 1))) {
+						if (what == MODE_ADD)
+							sno |= flag;
+						else
+							sno &= ~flag;
+					}
+				
+		}
+	}
+	if (!oper) {
+		sno &= (SNO_NONOPERS);
+	}
+	return sno;
 }
 
 /*
