@@ -44,11 +44,10 @@ void badwords_stats(aClient *sptr)
 char *stripbadwords_channel(char *str)
 {
 	regmatch_t pmatch[MAX_MATCH];
-	regex_t pcomp;
 	static char cleanstr[4096];
 	char buf[4096];
 	char *ptr;
-	int  errorcode, matchlen, stringlen;
+	int  matchlen, stringlen;
 	ConfigItem_badword *this_word;
 	if (!conf_badword_channel)
 		return str;
@@ -63,19 +62,12 @@ char *stripbadwords_channel(char *str)
 
 	for (this_word = conf_badword_channel; this_word; this_word = (ConfigItem_badword *)this_word->next)
 	{
-		if ((errorcode =
-		    regcomp(&pcomp, this_word->word, REG_ICASE)) > 0)
-		{
-			regfree(&pcomp);
-			return cleanstr;
-		}
-
 		/*
 		 * Set pointer to start of string
 		 */
 		ptr = cleanstr;
 
-		while (regexec(&pcomp, ptr, MAX_MATCH, pmatch,
+		while (regexec(&this_word->expr, ptr, MAX_MATCH, pmatch,
 		    0) != REG_NOMATCH)
 		{
 			if (pmatch[0].rm_so == -1)
@@ -93,7 +85,6 @@ char *stripbadwords_channel(char *str)
 		strlcat(buf, ptr, sizeof buf);	
 		memcpy(cleanstr, buf, sizeof cleanstr);
 		memset(buf, 0, sizeof(buf));
-		regfree(&pcomp);
 		if (matchlen == stringlen)
 			break;
 	}
@@ -104,11 +95,10 @@ char *stripbadwords_channel(char *str)
 char *stripbadwords_message(char *str)
 {
 	regmatch_t pmatch[MAX_MATCH];
-	regex_t pcomp;
 	static char cleanstr[4096];
 	char buf[4096];
 	char *ptr;
-	int  errorcode, matchlen, stringlen;
+	int matchlen, stringlen;
 	ConfigItem_badword *this_word;
 	if (!conf_badword_message)
 		return str;
@@ -123,19 +113,12 @@ char *stripbadwords_message(char *str)
 
 	for (this_word = conf_badword_message; this_word; this_word = (ConfigItem_badword *)this_word->next)
 	{
-		if ((errorcode =
-		    regcomp(&pcomp, this_word->word, REG_ICASE)) > 0)
-		{
-			regfree(&pcomp);
-			return cleanstr;
-		}
-
 		/*
 		 * Set pointer to start of string
 		 */
 		ptr = cleanstr;
 
-		while (regexec(&pcomp, ptr, MAX_MATCH, pmatch,
+		while (regexec(&this_word->expr, ptr, MAX_MATCH, pmatch,
 		    0) != REG_NOMATCH)
 		{
 			if (pmatch[0].rm_so == -1)
@@ -153,7 +136,6 @@ char *stripbadwords_message(char *str)
 		strlcat(buf, ptr, sizeof buf);	
 		memcpy(cleanstr, buf, sizeof cleanstr);
 		memset(buf, 0, sizeof(buf));
-		regfree(&pcomp);
 		if (matchlen == stringlen)
 			break;
 	}

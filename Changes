@@ -1721,3 +1721,7 @@ seen. gmtime warning still there
 *** beta13 released ***
 - Added set::htm to set HTM options via the config. set::htm is only valid if either
   commands.so or m_htm.so is loaded.
+- Recoded some of +G to work MUCH faster. A compiled copy of the regex is now stored 
+  in memory rather than compiling the regex each time the swear stripping was trigged. 
+  This uses slightly more memory, but saves a signifigant amount of execution time.
+  Idea inspired by a suggestion from CaliMonk

@@ -49,6 +49,7 @@
 #ifdef _WIN32
 #undef GLOBH
 #endif
+#include "badwords.h"
 
 #define ircstrdup(x,y) if (x) MyFree(x); if (!y) x = NULL; else x = strdup(y)
 #define ircfree(x) if (x) MyFree(x); x = NULL
@@ -1286,7 +1287,9 @@ void	config_rehash()
 		badword_ptr = (ConfigItem_badword *) next) {
 		next = (ListStruct *)badword_ptr->next;
 		ircfree(badword_ptr->word);
+		if (badword_ptr->replace)
 			ircfree(badword_ptr->replace);
+		regfree(badword_ptr->expr);
 		DelListItem(badword_ptr, conf_badword_channel);
 		MyFree(badword_ptr);
 	}
@@ -1294,7 +1297,9 @@ void	config_rehash()
 		badword_ptr = (ConfigItem_badword *) next) {
 		next = (ListStruct *)badword_ptr->next;
 		ircfree(badword_ptr->word);
+		if (badword_ptr->replace)
 			ircfree(badword_ptr->replace);
+		regfree(badword_ptr->expr);
 		DelListItem(badword_ptr, conf_badword_message);
 		MyFree(badword_ptr);
 	}
@@ -3819,9 +3824,15 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 		ca->word = MyMalloc(strlen(cep->ce_vardata) + strlen(PATTERN) -1);
 		ircsprintf(ca->word, PATTERN, cep->ce_vardata);
 	}
+	/* Yes this is called twice, once in test, and once here, but it is still MUCH
+	   faster than calling it each time a message is received like before. -- codemastr
+	 */
+	regcomp(&ca->expr, ca->word, REG_ICASE);
 	if ((cep = config_find_entry(ce->ce_entries, "replace"))) {
 		ircstrdup(ca->replace, cep->ce_vardata);
 	}
+	else
+		ca->replace = NULL;
 	if (!strcmp(ce->ce_vardata, "channel"))
 		AddListItem(ca, conf_badword_channel);
 	else if (!strcmp(ce->ce_vardata, "message"))
@@ -3833,6 +3844,7 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 int _test_badword(ConfigFile *conf, ConfigEntry *ce) { 
 	int errors = 0;
 	ConfigEntry *word, *replace, *cep;
+	regex_t expr;
 	if (!ce->ce_entries)
 	{
 		config_error("%s:%i: empty badword block", 
@@ -3863,7 +3875,44 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce) {
 			config_error("%s:%i: badword::word without contents",
 				word->ce_fileptr->cf_filename, word->ce_varlinenum);
 			errors++;
-		}	
+		}
+		else 
+		{
+			
+			int errorcode, errorbufsize, regex;
+			char *errorbuf, *tmp, *tmpbuf;
+			for (tmp = word->ce_vardata; *tmp; tmp++) {
+				if ((int)*tmp < 65 || (int)*tmp > 123) {
+					regex = 1;
+					break;
+				}
+			}
+			if (regex)
+				errorcode = regcomp(&expr, word->ce_vardata, REG_ICASE);
+			else
+			{
+				tmpbuf = malloc(strlen(word->ce_vardata) +
+					 strlen(PATTERN) -1);
+				ircsprintf(tmpbuf, PATTERN, word->ce_vardata);
+				errorcode = regcomp(&expr, tmpbuf, REG_ICASE);
+			}
+			if (errorcode > 0)
+			{
+				errorbufsize = regerror(errorcode, &expr, NULL, 0)+1;
+				errorbuf = malloc(errorbufsize);
+				regerror(errorcode, &expr, errorbuf, errorbufsize);
+				config_error("%s:%i: badword::%s contains an invalid regex: %s",
+					word->ce_fileptr->cf_filename,
+					word->ce_varlinenum,
+					word->ce_varname, errorbuf);
+				errors++;
+				free(errorbuf);
+			}
+			if (!regex)
+				free(tmpbuf);	
+			regfree(&expr);
+		}
+
 	}
 	if ((replace = config_find_entry(ce->ce_entries, "replace")))
 	{

@@ -57,6 +57,11 @@
 #include <openssl/rand.h>
 #endif
 #include "auth.h" 
+#ifdef HAVE_REGEX
+#include <regex.h>
+#else
+#include "../extras/regex/regex.h"
+#endif
 extern int sendanyways;
 
 
@@ -1012,6 +1017,7 @@ struct _configitem_badword {
 	ConfigItem      *prev, *next;
 	ConfigFlag	flag;
 	char		*word, *replace;
+	regex_t 	expr;
 };
 
 struct _configitem_deny_dcc {
