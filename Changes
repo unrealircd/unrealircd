@@ -734,3 +734,6 @@
   in connect moment thou) -stskeeps
 - Removed 1.0 msg/s when not in HTM
 - Fixed cutoff server infos in synch
+- Added so /gline and /shun accepts time periods in 1d2h3s etc. a recode of
+  some potvin stuff
+- Added so blocking is only effective when SSL_connect()'ing

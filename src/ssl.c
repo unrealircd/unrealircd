@@ -159,6 +159,7 @@ int  ssl_client_handshake(aClient *cptr)
 		sendto_realops("Couldn't SSL_new(ctx_client)");
 		return;
 	}
+	set_blocking(cptr->fd);
 	SSL_set_fd((SSL *)cptr->ssl, cptr->fd);
 	SSL_set_connect_state((SSL *)cptr->ssl);
 	if (SSL_connect((SSL *)cptr->ssl) <= 0)

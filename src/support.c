@@ -590,3 +590,51 @@ char *inetntop(af, in, out, the_size)
 	return out;
 }
 #endif
+
+/* Made by Potvin originally, i guess */
+time_t	atime_exp(char *base, char *ptr)
+{
+	time_t	tmp;
+	char	*p, c = *ptr;
+	
+	p = ptr;
+	*ptr-- = '\0';
+	while (ptr-- > base)
+		if (isalpha(*ptr))
+			break;
+	tmp = atoi(ptr + 1);
+	*p = c;
+
+	return tmp;
+}
+
+#define Xtract(x, y) if (x) y = atime_exp(xtime, x)
+
+time_t	atime(char *xtime)
+{
+	char *d, *h, *m, *s;
+	time_t D, H, M, S;
+	int i;
+	
+	d = h = m = s = NULL;
+	D = H = M = S = 0;
+	
+	
+	i = 0;
+	for (d = xtime; *d; d++)
+		if (isalpha(*d) && (i != 1))
+			i = 1;
+	if (i == 0)
+		return (atol(xtime)); 
+	d = strchr(xtime, 'd');
+	h = strchr(xtime, 'h');
+	m = strchr(xtime, 'm');
+	s = strchr(xtime, 's');
+	
+	Xtract(d, D);
+	Xtract(h, H);
+	Xtract(m, M);
+	Xtract(s, S);
+
+	return ((D * 86400) + (H * 3600) + (M * 60) + S);		
+}

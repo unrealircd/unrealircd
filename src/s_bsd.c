@@ -2707,8 +2707,7 @@ int  connect_server(aconf, by, hp)
 		return -1;
 	}
 
-	if (!(aconf->options & CONNECT_SSL))
-		set_non_blocking(cptr->fd, cptr);
+	set_non_blocking(cptr->fd, cptr);
 	set_sock_opts(cptr->fd, cptr);
 #ifndef _WIN32
 	(void)signal(SIGALRM, dummy);

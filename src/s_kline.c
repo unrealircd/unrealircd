@@ -1,6 +1,6 @@
 /*
  *   Unreal Internet Relay Chat Daemon, src/s_kline.c
- *   (C) 1999-2000 Carsten Munk (Techie/Stskeeps) <cmunk@toybox.flirt.org>
+ *   (C) 1999-2000 Carsten Munk (Techie/Stskeeps) <stskeeps@tspre.org>
  *   File to take care of dynamic K:/G:/Z: lines
  *
  *
@@ -858,7 +858,7 @@ int  m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	if (whattodo == 0)
 	{
-		secs = atol(parv[2]);
+		secs = atime(parv[2]);
 		if (secs < 0)
 		{
 			sendto_one(sptr,
@@ -1064,7 +1064,7 @@ int  m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	if (whattodo == 0)
 	{
-		secs = atol(parv[2]);
+		secs = atime(parv[2]);
 		if (secs < 0)
 		{
 			sendto_one(sptr,
