@@ -1,4 +1,5 @@
 /************************************************************************
+/************************************************************************
  *   Unreal Internet Relay Chat Daemon, src/s_err.c
  *   Copyright (C) 1992 Darren Reed
  *
@@ -241,7 +242,7 @@ static char *replies[] = {
 /* 208    RPL_TRACENEWTYPE */    ":%s 208 %s <newtype> 0 %s",
 /* 209    RPL_TRACECLASS */      ":%s 209 %s Class %d %d",
 /* 210 */ NULL,
-/* 211 */ NULL,
+/* 211 */ NULL, /* Used */
 #ifdef DEBUGMODE
 /* 212    RPL_STATSCOMMANDS */ ":%s 212 %s %s %u %u %u %u %u %u",
 #else
@@ -267,9 +268,9 @@ static char *replies[] = {
 /* 230 */ NULL,
 /* 231 */ NULL,
 /* 232    RPL_RULES */ ":%s 232 %s :- %s",
-/* 233 */ NULL,
-/* 234 */ NULL,
-/* 235 */ NULL,
+/* 233 */ NULL, /* Used */
+/* 234 */ NULL, /* Used */
+/* 235 */ NULL, /* Used */
 /* 236 */ NULL,
 /* 237 */ NULL,
 /* 238 */ NULL,
@@ -329,17 +330,16 @@ static char *replies[] = {
 /* 292 */ NULL,
 /* 293 */ NULL,
 /* 294    RPL_HELPFWD */ ":%s 294 %s :Your help-request has been forwarded to Help Operators",
-/* 295    RPL_HELPIGN */ ":%s 295 %s :Your address has been ignored from
-forwarding",
+/* 295    RPL_HELPIGN */ ":%s 295 %s :Your address has been ignored from forwarding",
 /* 296 */ NULL,
 /* 297 */ NULL,
 /* 298 */ NULL,
 /* 299 */ NULL,
-/* 300 */ NULL,
+/* 300 */ NULL, /* Used */
 /* 301    RPL_AWAY */ ":%s 301 %s %s :%s",
 /* 302    RPL_USERHOST */ ":%s 302 %s :",
 /* 303    RPL_ISON */ ":%s 303 %s :",
-/* 304 */ NULL,
+/* 304 */ NULL, /* Used */
 /* 305    RPL_UNAWAY */ ":%s 305 %s :You are no longer marked as being away",
 /* 306    RPL_NOWAWAY */ ":%s 306 %s :You have been marked as being away",
 /* 307    RPL_WHOISREGNICK */ ":%s 307 %s %s :is a registered nick",
@@ -351,7 +351,7 @@ forwarding",
 /* 313    RPL_WHOISOPERATOR */ ":%s 313 %s %s :is %s on %s",
 /* 314    RPL_WHOWASUSER */ ":%s 314 %s %s %s %s * :%s",
 /* 315    RPL_ENDOFWHO */ ":%s 315 %s %s :End of /WHO list.",
-/* 316 */ NULL,
+/* 316 */ NULL, /* Used */
 /* 317    RPL_WHOISIDLE */ ":%s 317 %s %s %ld %ld :seconds idle, signon time",
 /* 318    RPL_ENDOFWHOIS */ ":%s 318 %s %s :End of /WHOIS list.",
 /* 319    RPL_WHOISCHANNELS */ ":%s 319 %s %s :%s",
@@ -418,9 +418,9 @@ forwarding",
 /* 380 */ NULL, 
 /* 381    RPL_YOUREOPER */ ":%s 381 %s :You are now an IRC Operator",
 /* 382    RPL_REHASHING */ ":%s 382 %s %s :Rehashing",
-/* 383 */ NULL,
+/* 383 */ NULL, /* Used */
 /* 384    RPL_MYPORTIS */ ":%s 384 %s %d :Port to local server is\r\n",
-/* 385 */ NULL,
+/* 385 */ NULL, /* Used */
 /* 386    RPL_QLIST */ ":%s 386 %s %s %s",
 /* 387    RPL_ENDOFQLIST */ ":%s 387 %s %s :End of Channel Owner List",
 /* 388    RPL_ALIST */ ":%s 388 %s %s %s",
@@ -450,7 +450,7 @@ forwarding",
 /* 405    ERR_TOOMANYCHANNELS */ ":%s 405 %s %s :You have joined too many channels",
 /* 406    ERR_WASNOSUCHNICK */ ":%s 406 %s %s :There was no such nickname",
 /* 407    ERR_TOOMANYTARGETS */ ":%s 407 %s %s :Duplicate recipients. No message delivered",
-/* 408 */ NULL,
+/* 408 */ NULL, /* Used */
 /* 409    ERR_NOORIGIN */ ":%s 409 %s :No origin specified",
 /* 410 */ NULL, 
 /* 411    ERR_NORECIPIENT */ ":%s 411 %s :No recipient given (%s)",
@@ -477,7 +477,7 @@ forwarding",
 /* 432    ERR_ERRONEUSNICKNAME */ ":%s 432 %s %s :Erroneous Nickname: %s",
 /* 433    ERR_NICKNAMEINUSE */ ":%s 433 %s %s :Nickname is already in use.",
 /* 434    ERR_NORULES */ ":%s 434 %s :RULES File is missing",
-/* 435 */ NULL,
+/* 435 */ NULL, /* Used */
 /* 436    ERR_NICKCOLLISION */ ":%s 436 %s %s :Nickname collision KILL",
 /* 437    ERR_BANNICKCHANGE */ ":%s 437 %s %s :Cannot change nickname while banned on channel",
 /* 438    ERR_NCHANGETOOFAST */ ":%s 438 %s %s :Nick change too fast. Please wait %d seconds",
@@ -488,7 +488,7 @@ forwarding",
 /* 443    ERR_USERONCHANNEL */ ":%s 443 %s %s %s :is already on channel",
 /* 444    ERR_NOLOGIN */ ":%s 444 %s %s :User not logged in",
 #ifndef	ENABLE_SUMMON
-/* 445    ERR_SUMMONDISABLED */ ":%s 445 %s :SUMMON has been disabled",
+/* 445    ERR_SUMMONDISABLED */ ":%s 447 %s :SUMMON has been disabled",
 #else
 /* 445 */ NULL,
 #endif
@@ -524,7 +524,7 @@ forwarding",
 /* 463    ERR_NOPERMFORHOST */ ":%s 463 %s :Your host isn't among the privileged",
 /* 464    ERR_PASSWDMISMATCH */ ":%s 464 %s :Password Incorrect",
 /* 465    ERR_YOUREBANNEDCREEP */	":%s 465 %s :You are banned from this server.  Mail %s for more information",
-/* 466 */ NULL, 
+/* 466 */ NULL, /* Used */
 /* 467    ERR_KEYSET */ ":%s 467 %s %s :Channel key already set",
 /* 468    ERR_ONLYSERVERSCANCHANGE */ ":%s 468 %s %s :Only servers can change that mode",
 /* 469    ERR_LINKSET */ ":%s 469 %s %s :Channel link already set",
@@ -576,7 +576,7 @@ forwarding",
 /* 515 */ NULL,
 /* 516 */ NULL,
 /* 517 */ NULL,
-/* 518    518 */ ":%s 518 %s :Cannot invite (+V) at channel",
+/* 518    518 */ ":%s 518 %s :Cannot invite (+I) at channel",
 /* 519    519 */ ":%s 519 %s :Cannot join channel (Admin only)",
 /* 520    520 */ ":%s 520 %s :Cannot join channel (IRCops only)",
 /* 521    ERR_LISTSYNTAX */ ":%s 521 %s Bad list syntax, type /quote list ? or /raw list ?",
