@@ -342,3 +342,8 @@ done, but whatever.)
 Moved cloak key definitions to unrealircd.conf
 --Luke
 ===================================
+
+omfg, I screwed up the mode patch so that desynchs
+occurred with fucked -bbbbbb modes. Fixed now!
+--Luke
+===================================

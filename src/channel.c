@@ -2163,7 +2163,7 @@ void set_mode(chptr, cptr, parc, parv, pcount, pvar, bounce)
 				      me.name, cptr->name, *curchr);
 				  break;
 			  }
-                          if (parc - paracount < 1)
+                          if (parc - paracount >= 1)
 				  parv[paracount] = NULL;
 			  if (parv[paracount] &&
 			      strlen(parv[paracount]) >= MODEBUFLEN)

@@ -6,14 +6,14 @@ If you need help setting up your server, mail
 supporters@lists.unrealircd.org or ask on IRC:
 /server irc.ircsystems.net, /join #unreal-support
 
-Regardless, please read Unreal.nfo first along with all documenation
+Regardless, please read Unreal.nfo first along with all documentation
 and FAQ's in doc/. If you do not do this, we will NOT help you!
  
 If the code is changed in any way, or the version string is modified,
-we do _NOT_ support the product. (Unless of course you got explicit
+we will _NOT_ support the product. (Unless of course you got explicit
 permission from one of the UnrealIRCd coders.)
 
-Finally, unofficial UnrealIRCd/32 builds (if it doesn't say "geniune"
+Finally, unofficial UnrealIRCd/32 builds (if it doesn't say "genuine"
 in the display) are _NOT_ supported.
 
 -Luke (maintainer of UnrealIRCd 3.1.x)
