@@ -461,3 +461,8 @@ Thanks a TON to JK, applied patch he developed to
 resolve desynch problem with mode +,-p/s.
 --Luke
 ===================================
+
+Fixed I line segfault bug...lots of fun. Thanks again
+to JK for helping :)
+--Luke
+===================================

@@ -868,6 +868,10 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			else
 			{
 				MyFree(sptr->passwd);
+				/* BadPtr relies on things being null, it doesn't
+				 * test validity which is *not* cool.
+				 */
+				sptr->passwd = NULL;
 			}
 		}
 
@@ -1048,8 +1052,10 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 	}
 
 	if (MyConnect(sptr) && !BadPtr(sptr->passwd)) 
+	{
 		MyFree(sptr->passwd);
-
+		sptr->passwd = NULL;
+	}
 	return 0;
 }
 
@@ -1714,11 +1720,13 @@ int  m_nick(cptr, sptr, parc, parv)
 		/* Copy password to the passwd field if it's given after NICK
 		 * - originally by taz, modified by Wizzu
 		 */
-		if ((parc > 2) && !BadPtr(sptr->passwd) && (strlen(parv[2]) < sizeof(sptr->passwd)))
+		if (parc > 2)
 		{
-			if (sptr->passwd)
+			if (BadPtr(sptr->passwd) || strlen(parv[2]) > strlen(sptr->passwd))
+			{
 				MyFree(sptr->passwd);
-			sptr->passwd = MyMalloc(strlen(parv[2]) + 1);
+				sptr->passwd = MyMalloc(strlen(parv[2]) + 1);
+			}
 			(void)strcpy(sptr->passwd, parv[2]);
 		}
 		/* This had to be copied here to avoid problems.. */
@@ -4052,8 +4060,11 @@ int  m_pass(cptr, sptr, parc, parv)
 		return 0;
 	}
 	PassLen = strlen(password);
-	if (cptr->passwd)
+	if (!BadPtr(cptr->passwd))
+	{
 		MyFree(cptr->passwd);
+		cptr->passwd = NULL;
+	}
 	if (PassLen > (PASSWDLEN))
 		PassLen = PASSWDLEN;
 	cptr->passwd = MyMalloc(PassLen + 1);
