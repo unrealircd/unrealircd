@@ -7,6 +7,7 @@ AppPublisher=UnrealIRCd Team
 AppPublisherURL=http://www.unrealircd.com
 AppSupportURL=http://www.unrealircd.com
 AppUpdatesURL=http://www.unrealircd.com
+AppMutex=UnrealMutex
 DefaultDirName={pf}\Unreal3.2
 DefaultGroupName=UnrealIRCd
 AllowNoIcons=yes

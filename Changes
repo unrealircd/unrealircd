@@ -1531,3 +1531,5 @@ seen. gmtime warning still there
     specified, no action is taken when a crash occurs
 - Made some changes to the win32 resolver, hopefully this will fix the crash bugs
 - Made /die exit gracefully when in service mode
+- Made it so Unreal (win32) can't be reinstalled or uninstalled while it is currently
+  running

@@ -781,6 +781,9 @@ int InitwIRCD(int argc, char *argv[])
 #ifndef NO_FDLIST
 	TS   nextfdlistcheck = 0;	/*end of priority code */
 #endif
+#ifdef _WIN32
+	CreateMutex(NULL, FALSE, "UnrealMutex");
+#endif
 #if !defined(_WIN32) && !defined(_AMIGA)
 	sbrk0 = (char *)sbrk((size_t)0);
 	uid = getuid();
