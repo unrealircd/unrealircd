@@ -93,11 +93,18 @@ typedef struct {
 #define MOBJ_HOOK    0x0002
 #define MOBJ_COMMAND 0x0004
 #define MOBJ_HOOKTYPE 0x0008
+#define MOBJ_VERSIONFLAG 0x0010
 
 typedef struct _command {
 	struct _command *prev, *next;
 	aCommand *cmd, *tok;
 } Command;
+
+typedef struct _versionflag {
+	struct _versionflag *prev, *next;
+	char flag;
+	ModuleChild *parents;
+} Versionflag;
 
 typedef struct _ModuleObject {
 	struct _ModuleObject *prev, *next;
@@ -107,6 +114,7 @@ typedef struct _ModuleObject {
 		Hook *hook;
 		Command *command;
 		Hooktype *hooktype;
+		Versionflag *versionflag;
 	} object;
 } ModuleObject;
 
@@ -226,6 +234,9 @@ int	Module_free(Module *mod);
 #ifdef __OpenBSD__
 void *obsd_dlsym(void *handle, char *symbol);
 #endif
+
+Versionflag *VersionflagAdd(Module *module, char flag);
+void VersionflagDel(Versionflag *vflag, Module *module);
 
 #define add_Hook(hooktype, func) HookAddMain(NULL, hooktype, func, NULL, NULL)
 #define HookAdd(hooktype, func) HookAddMain(NULL, hooktype, func, NULL, NULL)

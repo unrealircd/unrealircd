@@ -539,7 +539,7 @@ extern void link_cleanup(ConfigItem_link *link_ptr);
 extern void       listen_cleanup();
 extern int  numeric_collides(long numeric);
 extern u_long cres_mem(aClient *sptr, char *nick);
-extern void      flag_add(char *ch);
+extern void      flag_add(char ch);
 extern void      flag_del(char ch);
 extern void init_dynconf(void);
 extern char *pretty_time_val(long);

@@ -2126,3 +2126,6 @@ seen. gmtime warning still there
 - Fixed a bug where operoverride notices were not send when overriding chmodes +aq (#0000831)
   reported by _SciFi_
 - Fixed a bug in SVSMODE with setting -b on a user in a channel
+- Recoded the "version flag" system, it is now safe to have multiple modules that use the 
+  same flag, new functions are VersionflagAdd and VersionflagDel they replace flag_add and
+  flag_del

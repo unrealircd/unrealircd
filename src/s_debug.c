@@ -147,19 +147,24 @@ char *extraflags = NULL;
 #define ssize_t unsigned int
 #endif
 
-void	flag_add(char *ch)
+void	flag_add(char ch)
 {
 	char *newextra;
 	if (extraflags)
 	{
-		newextra = (char *)MyMalloc(strlen(extraflags) + 1 + strlen(ch));
+		char tmp[2] = { ch, 0 };
+		newextra = (char *)MyMalloc(strlen(extraflags) + 2);
 		strcpy(newextra, extraflags);
-		strcat(newextra, ch);
+		strcat(newextra, tmp);
 		MyFree(extraflags);
 		extraflags = newextra;
 	}
 	else
-		extraflags = (char *)strdup(ch);
+	{
+		extraflags = malloc(2);
+		extraflags[0] = ch;
+		extraflags[1] = 0;
+	}
 }
 
 void	flag_del(char ch)
