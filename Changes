@@ -1116,3 +1116,4 @@ v- Fixed some bugreport stuff
 - Recoded the module system somewhat, events are now 'stable' meaning if a module doesn't unload an 
   event the IRCd will not crash. Also fixed a crash involving delayed unloads and cleaned up notices
 - Problem with sendto_ops and !aClient->user  fix
+- Fixed bug in m_tkl_line and various m_line functions (was checking for wrong # of paras)
