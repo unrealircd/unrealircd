@@ -976,8 +976,6 @@ HWND DrawToolbar(HWND hwndParent, UINT iID) {
 
 LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 	HWND hWnd;
-	static HFONT hFont, hFont2, hFont3;
-	static HBRUSH hBrush;
 	static FINDREPLACE find;
 	static char *file;
 	static HWND hTool, hClip;
@@ -998,13 +996,6 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			SetWindowText(hDlg, szText);
 			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_TEXT), GWL_WNDPROC, (DWORD)RESubClassFunc);
 			hTool = DrawToolbar(hDlg, IDC_TOOLBAR);
-			hFont = CreateFont(8,0,0,0,FW_HEAVY,0,0,0,ANSI_CHARSET,0,0,PROOF_QUALITY,0,"MS Sans Serif");
-			hFont2 = CreateFont(8,0,0,0,FW_BOLD,0,1,0,ANSI_CHARSET,0,0,PROOF_QUALITY,0,"MS Sans Serif");
-			hFont3 = CreateFont(8,0,0,0,FW_BOLD,0,0,0,ANSI_CHARSET,0,0,PROOF_QUALITY,0,"MS Sans Serif");
-			hBrush = GetSysColorBrush(COLOR_BTNFACE);
-			SendMessage(GetDlgItem(hDlg, IDC_BOLD), WM_SETFONT, (WPARAM)hFont,TRUE);
-			SendMessage(GetDlgItem(hDlg, IDC_UNDERLINE), WM_SETFONT, (WPARAM)hFont2,TRUE);
-			SendMessage(GetDlgItem(hDlg, IDC_COLOR), WM_SETFONT, (WPARAM)hFont3,TRUE);
 			SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_SETEVENTMASK, 0, (LPARAM)ENM_SELCHANGE);
 			chars.cbSize = sizeof(CHARFORMAT2);
 			chars.dwMask = CFM_FACE;
@@ -1281,10 +1272,6 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				EndDialog(hDlg, TRUE);
 		}
 		case WM_DESTROY:
-			DeleteObject(hFont);
-			DeleteObject(hFont2);
-			DeleteObject(hFont3);
-			DeleteObject(hBrush);
 			ChangeClipboardChain(hDlg, hClip);
 			break;
 		}
