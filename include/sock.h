@@ -23,8 +23,8 @@
  * $Id$
  *
  * $Log$
- * Revision 1.1.1.1.6.6  2000/08/20 11:40:42  stskeeps
- * Upgrade to Unreal3.1-Silverheart+
+ * Revision 1.1.1.1.6.7  2000/08/20 12:00:43  stskeeps
+ * .
  *
  * Revision 1.1.1.1.6.1.2.1  2000/07/14 20:22:57  stskeeps
  * +- Indentation and more SJ3 fixes
