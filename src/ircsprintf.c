@@ -290,6 +290,7 @@ char *ircvsprintf(char *str, const char *format, va_list vl)
 					while ((*++str = *++p1));
 				continue;
 			}
+			
 			if (c == 'l' && *format == 'u')	/* Prints time_t value in interval
 							   [ 100000000 , 4294967295 ]
 							   Actually prints like "%09lu" */
@@ -364,6 +365,28 @@ char *ircvsprintf(char *str, const char *format, va_list vl)
 				continue;
 			}
 #endif
+			/* Send base64 value */
+			if (c == 'b')
+			{
+				unsigned long v1;
+				char *ap;
+				
+				v1 = va_arg(vl, unsigned long);
+				for (ap = (char *) xbase64enc(v1); *ap; ap++)
+					*str++ = *ap;
+				continue;
+			}
+			if (c == 'B')
+			{
+				unsigned long v1;
+				char *ap;
+				
+				v1 = va_arg(vl, unsigned long);
+				*str++ = '!';
+				for (ap = (char *) xbase64enc(v1); *ap; ap++)
+					*str++ = *ap;
+				continue;
+			}
 			if (c == 'd')
 			{
 				unsigned int v1, v2;

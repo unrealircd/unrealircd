@@ -647,3 +647,6 @@
 - Changed Cannot find server message to be to sendto_realops
 - Fixed a warning in CENSOR_QUIT
 - Fixed the G:Line user wrongly matching (ip-alike addys didnt check user)
+- Added protoctl SJB64, which adds B64-9 timestamps to many timestamping
+  operations
+- Added ircsprintf %B (base64-9^10) with ! as prefix, and %b (no prefix)

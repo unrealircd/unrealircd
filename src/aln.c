@@ -63,10 +63,31 @@ char *base64enc(unsigned long i)
 	return int_to_base64(i);
 }
 
+char *xbase64enc(unsigned long i)
+{
+	if (i > 1000)
+		i = i - 900000000;
+	return int_to_base64(i);
+}
+
 unsigned long base64dec(char *b64)
 {
 	if (b64)
 		return base64_to_int(b64);
+	else
+		return 0;
+}
+
+unsigned long xbase64dec(char *b64)
+{
+	unsigned long r;
+	if (b64)
+	{
+		r = base64_to_int(b64);
+		if (r > 1000)
+			r = r - 900000000;
+		return r;
+	}
 	else
 		return 0;
 }

@@ -3422,8 +3422,8 @@ int  m_topic(cptr, sptr, parc, parv)
 		{
 			if (!MyClient(sptr) && !IsULine(cptr, sptr))
 			{
-				sendto_realops
-				    ("Remote TOPIC for unknown channel %s (%s)",
+				sendto_umode
+				    (UMODE_JUNK,"Remote TOPIC for unknown channel %s (%s)",
 				    parv[1], backupbuf);
 			}
 			sendto_one(sptr, rpl_str(ERR_NOSUCHCHANNEL),
@@ -3444,7 +3444,7 @@ int  m_topic(cptr, sptr, parc, parv)
 		if (parc > 4)
 		{
 			tnick = parv[2];
-			ttime = atol(parv[3]);
+			ttime = (*parv[3] == '!' ? xbase64dec(parv[3] + 1) : atol(parv[3]));
 			topic = parv[4];
 
 		}
@@ -4523,8 +4523,10 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	}
 	chptr = get_channel(cptr, parv[2], CREATE);
 
-	ts = atol(parv[1]);
-
+	if (*parv[1] != '!')
+		ts = atol(parv[1]);
+	else
+		ts = xbase64dec(parv[1] + 1);
 	if (chptr->creationtime > ts)
 	{
 		removeours = 1;
@@ -5366,20 +5368,23 @@ void send_channel_modes_sjoin3(cptr, chptr)
 
 	if (nomode && nopara)
 	{
-		ircsprintf(buf, "%s %ld %s :",
+		ircsprintf(buf,
+		    (cptr->proto & PROTO_SJB64 ? "%s %B %s :" : "%s %ld %s :"),
 		    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
 		    chptr->creationtime, chptr->chname);
 	}
 	if (nopara && !nomode)
 	{
-		ircsprintf(buf, "%s %ld %s %s :",
+		ircsprintf(buf, 
+		    (cptr->proto & PROTO_SJB64 ? "%s %B %s %s :" : "%s %ld %s %s :"),
 		    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
 		    chptr->creationtime, chptr->chname, modebuf);
 
 	}
 	if (!nopara && !nomode)
 	{
-		ircsprintf(buf, "%s %ld %s %s %s :",
+		ircsprintf(buf,
+		    (cptr->proto & PROTO_SJB64 ? "%s %B %s %s %s :" : "%s %ld %s %s %s :"),
 		    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
 		    chptr->creationtime, chptr->chname, modebuf, parabuf);
 	}

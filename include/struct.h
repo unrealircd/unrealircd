@@ -286,6 +286,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define PROTO_SJ3	0x200	/* Negotiated SJ3 protocol */
 #define PROTO_VHP	0x400	/* Send hostnames in NICKv2 even if not 
 				   sethosted */
+#define PROTO_SJB64	0x800
 /*
  * flags macros.
  */

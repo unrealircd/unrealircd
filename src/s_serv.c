@@ -544,6 +544,20 @@ int  m_protoctl(cptr, sptr, parc, parv)
 			    proto, cptr->name));
 			SetSJ3(cptr);
 		}
+		else if (strcmp(s, "SJB64") == 0)
+		{
+#ifndef PROTOCTL_MADNESS
+			if (remove)
+			{
+				cptr->proto &=~ PROTO_SJB64;
+				continue;
+			}
+#endif
+			Debug((DEBUG_ERROR,
+			    "Chose protocol %s for link %s",
+			    proto, cptr->name));
+			cptr->proto |= PROTO_SJB64;
+		}
 		/*
 		 * Add other protocol extensions here, with proto
 		 * containing the base option, and options containing
@@ -1305,7 +1319,8 @@ int  m_server_estab(cptr)
 
 			if (!SupportNICKv2(cptr))
 			{
-				sendto_one(cptr, "%s %s %d %d %s %s %s %lu :%s",
+				sendto_one(cptr, 
+				  "%s %s %d %d %s %s %s %lu :%s",
 				    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
 				    acptr->name, acptr->hopcount + 1,
 				    acptr->lastnick, acptr->user->username,
@@ -1328,7 +1343,10 @@ int  m_server_estab(cptr)
 				send_umode(NULL, acptr, 0, SEND_UMODES, buf);
 				if (!SupportVHP(cptr))
 					sendto_one(cptr,
-					    "%s %s %d %d %s %s %s %lu %s %s :%s",
+					    (cptr->proto & PROTO_SJB64 ?
+					    "%s %s %d %B %s %s %s %lu %s %s :%s"
+					    :
+					    "%s %s %d %d %s %s %s %lu %s %s :%s"),
 					    (IsToken(cptr) ? TOK_NICK :
 					    MSG_NICK), acptr->name,
 					    acptr->hopcount + 1,
@@ -1396,7 +1414,11 @@ int  m_server_estab(cptr)
 			else
 				send_channel_modes_sjoin3(cptr, chptr);
 			if (chptr->topic_time)
-				sendto_one(cptr, "%s %s %s %lu :%s",
+				sendto_one(cptr, 
+				   (cptr->proto & PROTO_SJB64 ? 
+				     "%s %s %s %B :%s" 
+				     :
+				     "%s %s %s %lu :%s"),
 				    (IsToken(cptr) ? TOK_TOPIC : MSG_TOPIC),
 				    chptr->chname, chptr->topic_nick,
 				    chptr->topic_time, chptr->topic);

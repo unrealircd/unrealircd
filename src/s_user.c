@@ -1358,7 +1358,10 @@ int  m_nick(cptr, sptr, parc, parv)
 		 */
 		if (parc > 3)
 		{
-			lastnick = atoi(parv[3]);
+			if (*parv[3] != '!')
+				lastnick = atoi(parv[3]);
+			else
+				lastnick = xbase64dec(parv[3] + 1);
 			if (parc > 5)
 				differ = (mycmp(acptr->user->username, parv[4])
 				    || mycmp(acptr->user->realhost, parv[5]));
