@@ -206,3 +206,6 @@
 
 /* Set to the max connections you want */
 #undef MAXCONNECTIONS
+
+/* Define if you want IPv6 enabled */
+#undef INET6

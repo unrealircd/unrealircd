@@ -40,6 +40,9 @@ fi
 if [ "$CRYPT_ILINE_PASSWORD" = "1" ] ; then
 ARG="$ARG--with-crypt-iline "
 fi
+if [ "$INET6" = "1" ] ; then
+ARG="$ARG--enable-inet6 "
+fi
 ARG="$ARG--with-listen=$LISTEN_SIZE "
 ARG="$ARG--with-dpath=$DPATH "
 ARG="$ARG--with-spath=$SPATH "
@@ -83,7 +86,7 @@ NICKNAMEHISTORYLENGTH="2000"
 MAXSENDQLENGTH="3000000"
 BUFFERPOOL="9"
 MAXCONNECTIONS="1024"
-
+INET6=""
 if [ "`eval echo -n 'a'`" = "-n a" ] ; then
         c="\c"
 else
@@ -412,6 +415,35 @@ done
 
 TEST=""
 while [ -z "$TEST" ] ; do
+    if [ "$INET6" = "1" ] ; then
+	TEST="Yes"
+    else
+	TEST="No"
+    fi
+    echo ""
+    echo "Do you want to enable IPv6 support?"
+    echo $n "[$TEST] -> $c"
+	read cc
+    if [ -z "$cc" ] ; then
+	cc=$TEST
+    fi
+    case "$cc" in
+	[Yy]*)
+	    INET6="1"
+	    ;;
+	[Nn]*)
+	    INET6=""
+	    ;;
+	*)
+	    echo ""
+	    echo "You must enter either Yes or No"
+	    TEST=""
+	    ;;
+    esac
+done
+
+TEST=""
+while [ -z "$TEST" ] ; do
     TEST="$LISTEN_SIZE"
     echo ""
     echo "What listen() backlog value do you wish to use?  Some older servers"
@@ -538,6 +570,7 @@ CRYPT_OPER_PASSWORD="$CRYPT_OPER_PASSWORD"
 CRYPT_LINK_PASSWORD="$CRYPT_LINK_PASSWORD"
 CRYPT_ILINE_PASSWORD="$CRYPT_ILINE_PASSWORD"
 CRYPT_XLINE_PASSWORD="$CRYPT_XLINE_PASSWORD"
+INET6="$INET6"
 LISTEN_SIZE="$LISTEN_SIZE"
 MAXSENDQLENGTH="$MAXSENDQLENGTH"
 BUFFERPOOL="$BUFFERPOOL"
