@@ -29,7 +29,7 @@ Hungarian |
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com/">http://www.unrealircd.com</a></font><br>
   <font size="4">Verzió: 3.2.2-CVS</font><br>
-  <b>Utolsó dokumentáció módosítás:</b> 2005-01-29</div>
+  <b>Utolsó dokumentáció módosítás:</b> 2005-02-13</div>
 <br>
   <b>Fõ fejlesztõk:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Munkatársak:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -466,8 +466,10 @@ A kiterjesztett ban típusok ~[!]&lt;típus&gt;:&lt;valami&gt; alakúak. Jelenleg a
  hacsak nincs +v módjuk vagy annál magasabb. <i>Pl.: ~q:*!*@blah.blah.com</i></td></tr>
 <tr><td>~n</td><td>névváltás</td><td>Az erre a banra illõ emberek nem válthatnak nicknevet, 
  hacsak nincs +v módjuk vagy annál magasabb. <i>Pl.: ~n:*!*@*.aol.com</i></td></tr>
-<tr><td>~c</td><td>csatorna</td><td>Ha a felhasználó ezen a csatornán van, nem léphet be.
-<i>Pl.: ~c:#lamers</i></td></tr>
+<tr><td>~c</td><td>[elõtag]csatorna</td><td>Ha a felhasználó ezen a csatornán van, nem léphet be. 
+ Megadható egy elõtag is (+/%/@/&amp;/~), ami azt jelenti, hogy csak akkor fog illeszkedni, ha a felhasználónak
+ olyan vagy annál magasabb jogai vannak a megadott csatornán.
+<i>Pl.: +b ~c:#lamerek, +e ~c:@#megbizhatoak </i></td></tr>
 <tr><td>~r</td><td>valós név</td><td>Ha egy felhasználó valós neve illik a banra, nem léphet be.<br>
  <i>Pl.: ~r:*Stupid_bot_script*</i><br>
  MEGJEGYZÉS: az aláhúzás ('_') mind a szóközre (' ') és az aláhúzásra ('_') is illik, így ez a ban illik a
@@ -512,9 +514,9 @@ A modulok bõvíthetik is más típusokkal a kiterjesztett ban típusokat.<br>
 <tr valign="top"><td>viruschan</td><td>lelépteti a felhasználót minden csatornáról, belépteti a <tt>set::spamfilter::virus-help-channel</tt> csatornára, letilt minden parancsot,
  kivéve a PONG-ot, az ADMIN-t és a <tt>set::spamfilter::virus-help-channel</tt> csatornára küldött üzeneteket/értesítéseket</td></tr>
 </table></td></tr>
-   <tr valign="top"><td><b>[idõtartam]</b></td><td> A szûrõ által felvett *line-ok idõtartama, használj kötõjelet ('-') az alapértelmezéshez vagy a kihagyáshoz
+   <tr valign="top"><td><b>[idõtartam]</b></td><td> A szûrõ által felvett *line-ok/shunok idõtartama, használj kötõjelet ('-') az alapértelmezéshez vagy a kihagyáshoz
    (pl.: ha a tevékenység = 'block')</td></tr>
-   <tr valign="top"><td><b>[indok]</b></td><td> a blokkolás vagy a *line indoka.. itt NEM használhatsz szóközöket, de az aláhúzásjelek ('_') szóközökké
+   <tr valign="top"><td><b>[indok]</b></td><td> a blokkolás/*line/shun indoka.. itt NEM használhatsz szóközöket, de az aláhúzásjelek ('_') szóközökké
 lesznek alakítva futásidõben. Egy dupla aláhúzás ('__') jelent egy aláhúzást ('_'). Itt is írj kötõjelet ('-') az alapértelmezett indok használatához.</td></tr>
    <tr valign="top"><td><b>[regex]</b></td><td> ez a tényleges regex vagy "csúnya szó", amelyre végezzük a blokkolást és a tevékenységet</td></tr>
    </table>
@@ -543,8 +545,8 @@ lesznek alakítva futásidõben. Egy dupla aláhúzás ('__') jelent egy aláhúzást ('_
 	action block;
 };</pre></p>
 
-<p>A <b>set::spamfilter::ban-time</b> lehetõvé teszi, hogy módosítsd a spamszûrõk által felvett *line-ok alapértelmezett kitiltási idejét (alapértelmezés: 1 nap)<br>
-   A <b>set::spamfilter::ban-reason</b>-nel meghatározhatsz egy alapértelmezett indokot a *line-okra (alapértelmezés: 'Spam/advertising')<br>
+<p>A <b>set::spamfilter::ban-time</b> lehetõvé teszi, hogy módosítsd a spamszûrõk által felvett *line-ok/shunok alapértelmezett kitiltási idejét (alapértelmezés: 1 nap)<br>
+   A <b>set::spamfilter::ban-reason</b>-nel meghatározhatsz egy alapértelmezett indokot (alapértelmezés: 'Spam/advertising')<br>
    A <b>set::spamfilter::virus-help-channel</b>-lel meghatározhatod, hogy milyen csatornára történjen a belépés a 'viruschan' tevékenység esetén (alapértelmezés: #help)<br>
    A <b>set::spamfilter::virus-help-channel-deny</b> segítségével pedig letilthatod a normál belépéseket a "virus-help-channel"-ben (alapértelmezés: no)<br>
 </p></div>
@@ -1252,7 +1254,7 @@ loadmodule "modules/cloak.dll";
 </pre>
 </div>
 <p><font class="block_section">4.11 - </font><font class="block_name">Log blokk</font>
-   <font class="block_optional">SZABADON VÁLASZTHATÓ</font><a name="logblock"></a><div class="desc">
+   <font class="block_recommended">AJÁNLOTT</font><a name="logblock"></a><div class="desc">
 </p>
 <p>Szintaktika:<br>
 <pre>
@@ -2010,7 +2012,7 @@ spamfilter {
    A <b>target</b> meghatározza, hol történjen a szûrés; lásd <a href="#feature_spamfilter">itt</a> a célpontok lehetséges típusait (példa: "channel").<br>
    Az <b>action</b> eldönti, mi történjen találat esetén, lásd <a href="#feature_spamfilter">itt</a> a lehetséges tevékenységek listáját (példa: "gline").<br>
    A <b>reason</b> kihagyható, a kitiltás vagy a blokkolás indoklószövegének beállítására szolgál; ha nincs megadva, az alapértelmezés lesz használatban.<br>
-   A <b>ban-time</b> sem kötelezõ, megadja a *line kitiltások lejárati idejét; ha kihagyod, az alapértelmezés lesz használatban (1 nap).<br>
+   A <b>ban-time</b> sem kötelezõ, megadja a *line kitiltás vagy shun lejárati idejét; ha kihagyod, az alapértelmezés lesz használatban (1 nap).<br>
 </p>
 
 <p>Példák:<br>
@@ -2211,6 +2213,9 @@ set {
   ez az érték kihagyható.</p>
 <p><font class="set">set::help-channel &lt;network-help-channel&gt;;</font><br>
   Beállítja e hálózat segélycsatornájának nevét.</p>
+<p><font class="set">set::allowed-characters { &lt;felsorolás&gt;; };</font><br>
+  Nicknevekben elfogadandó karakterek (nyelvek!) listája. Jelenleg elérhetõek:
+  <i>german</i> (német), <i>french</i> (francia), <i>dutch</i> (holland), <i>spanish</i> (spanyol).</p>
 <p><font class="set">set::cloak-keys { &quot;kulcs1&quot;; &quot;kulcs2&quot;; &quot;kulcs3&quot;; };</font><br>
   Beállítja a +x gazdanevek generálásához használandó kulcsokat. Ezeknek a kulcsoknak a hálózat minden
   szerverén azonosnak kell lenniük, különben a szerverek nem fognak linkelni. Mind a 3 set::cloak-keys::
@@ -2296,9 +2301,9 @@ set {
   Ha megadod az "action"-t (pl. zline, gline stb.) a ban version blokkban, itt beállíthatod, 
   mennyi idõre legyen az IP kitiltva. Az alapértelmezés 86400 (1 nap).</p>
  <p><font class="set">set::spamfilter::ban-time &lt;idõérték&gt;</font><br>
-  Ugyanaz, mint a fenti, de a spamszûrõk által beállított *line-okra.</p>
+  Ugyanaz, mint a fenti, de a spamszûrõk által beállított *line-okra/shunokra.</p>
  <p><font class="set">set::spamfilter::ban-reason &lt;indok&gt;</font><br>
-  A spamszûrõk által beállított *line-okhoz használt indoklószöveg.</p>
+  A spamszûrõk által beállított bejegyzésekhez használt indoklószöveg.</p>
  <p><font class="set">set::spamfilter::virus-help-channel &lt;csatorna&gt;</font><br>
   A spamszûrõ "viruschan" tevékenysége által használt csatorna neve.</p>
  <p><font class="set">set::spamfilter::virus-help-channel-deny &lt;yes|no&gt;</font><br>
