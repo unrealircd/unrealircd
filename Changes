@@ -2874,3 +2874,5 @@ seen. gmtime warning still there
   not be accurate as umode changes are done manually many places.
 - Added HOOKTYPE_TOPIC (catches both remote and local TOPIC sets).
 - Added a missing ; in the docs oper {} example, reported by Certus
+- Fixed a bug with leaving out SJB64 in PROTOCTL resulting in strangeness
+  (#0001545) reported by MagicalTux2

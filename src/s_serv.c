@@ -1303,10 +1303,10 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 					    && acptr->srvptr->serv->numeric)
 					{
 						sendto_one(cptr,
-						    cptr->proto & PROTO_SJB64 ?
+						    ((cptr->proto & PROTO_SJB64) ?
 						    "%s %s %d %B %s %s %b %lu %s %s :%s"
 						    :
-						    "%s %s %d %ld %s %s %b %lu %s %s :%s",
+						    "%s %s %d %lu %s %s %b %lu %s %s :%s"),
 						    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
 						    acptr->name,
 						    acptr->hopcount + 1,
@@ -1325,7 +1325,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 						    (cptr->proto & PROTO_SJB64 ?
 						    "%s %s %d %B %s %s %s %lu %s %s :%s"
 						    :
-						    "%s %s %d %ld %s %s %s %lu %s %s :%s"),
+						    "%s %s %d %lu %s %s %s %lu %s %s :%s"),
 						    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
 						    acptr->name,
 						    acptr->hopcount + 1,
