@@ -2763,6 +2763,21 @@ char *get_mode_str(aClient *acptr)
 	return buf;
 }
 
+char *get_modestr(long modes)
+{
+	int  flag;
+	int *s;
+	char *m;
+
+	m = buf;
+	*m++ = '+';
+	for (s = user_modes; (flag = *s) && (m - buf < BUFSIZE - 4); s += 2)
+		if ((modes & flag))
+			*m++ = (char)(*(s + 1));
+	*m = '\0';
+	return buf;
+}
+
 /*
 ** m_whois
 **	parv[0] = sender prefix

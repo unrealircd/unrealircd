@@ -3213,48 +3213,40 @@ void report_dynconf(aClient *sptr)
 {
 	sendto_one(sptr, ":%s %i %s :*** Dynamic Configuration Report ***",
 	    me.name, RPL_TEXT, sptr->name);
-	sendto_one(sptr, ":%s %i %s :INCLUDE: %s", me.name, RPL_TEXT,
-	    sptr->name, INCLUDE);
-	sendto_one(sptr, ":%s %i %s :KLINE_ADDRESS: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :kline-address: %s", me.name, RPL_TEXT,
 	    sptr->name, KLINE_ADDRESS);
-	sendto_one(sptr, ":%s %i %s :MODE_X: %d", me.name, RPL_TEXT, sptr->name,
-	    MODE_X);
-	sendto_one(sptr, ":%s %i %s :MODE_STRIPWORDS: %d", me.name, RPL_TEXT,
-	    sptr->name, MODE_STRIPWORDS);
-	sendto_one(sptr, ":%s %i %s :MODE_I: %d", me.name, RPL_TEXT, sptr->name,
-	    MODE_I);
-	sendto_one(sptr, ":%s %i %s :TRUEHUB: %d", me.name, RPL_TEXT,
-	    sptr->name, TRUEHUB);
+	sendto_one(sptr, ":%s %i %s :modes-on-connect: %s", me.name, RPL_TEXT,
+	    sptr->name, get_modestr(CONN_MODES));
 	sendto_one(sptr, ":%s %i %s :SHOWOPERS: %d", me.name, RPL_TEXT,
 	    sptr->name, SHOWOPERS);
-	sendto_one(sptr, ":%s %i %s :KILLDIFF: %d", me.name, RPL_TEXT,
-	    sptr->name, KILLDIFF);
-	sendto_one(sptr, ":%s %i %s :SHOWOPERMOTD: %d", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :options::show-opermotd: %d", me.name, RPL_TEXT,
 	    sptr->name, SHOWOPERMOTD);
-	sendto_one(sptr, ":%s %i %s :HIDE_ULINES: %d", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :options::hide-ulines: %d", me.name, RPL_TEXT,
 	    sptr->name, HIDE_ULINES);
-	sendto_one(sptr, ":%s %i %s :ALLOW_CHATOPS: %d", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :options::enable-chatops: %d", me.name, RPL_TEXT,
 	    sptr->name, ALLOW_CHATOPS);
-	sendto_one(sptr, ":%s %i %s :SOCKS_BAN_MESSAGE: %s", me.name, RPL_TEXT,
-	    sptr->name, iConf.socksbanmessage);
-	sendto_one(sptr, ":%s %i %s :SOCKS_QUIT_MESSAGE: %s", me.name, RPL_TEXT,
-	    sptr->name, iConf.socksquitmessage);
-	sendto_one(sptr, ":%s %i %s :SOCKSBANTIME: %i", me.name, RPL_TEXT,
-	    sptr->name, iConf.socksbantime);
-	sendto_one(sptr, ":%s %i %s :MAXCHANNELSPERUSER: %i", me.name, RPL_TEXT,
-	    sptr->name, MAXCHANNELSPERUSER);
-	sendto_one(sptr, ":%s %i %s :WEBTV_SUPPORT: %d", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :options::webtv-support: %d", me.name, RPL_TEXT,
 	    sptr->name, WEBTV_SUPPORT);
-	sendto_one(sptr, ":%s %i %s :NO_OPER_HIDING: %d", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :options::no-stealth: %d", me.name, RPL_TEXT,
 	    sptr->name, NO_OPER_HIDING);
-	sendto_one(sptr, ":%s %i %s :AUTO_JOIN_CHANS: %s", me.name, RPL_TEXT,
-	    sptr->name, AUTO_JOIN_CHANS);
-	sendto_one(sptr, ":%s %i %s :OPER_AUTO_JOIN_CHANS: %s", me.name,
-	    RPL_TEXT, sptr->name, OPER_AUTO_JOIN_CHANS);
-	sendto_one(sptr, ":%s %i %s :HOST_TIMEOUT: %li", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :socks::ban-message: %s", me.name, RPL_TEXT,
+	    sptr->name, iConf.socksbanmessage);
+	sendto_one(sptr, ":%s %i %s :socks::quit-message: %s", me.name, RPL_TEXT,
+	    sptr->name, iConf.socksquitmessage);
+	sendto_one(sptr, ":%s %i %s :socks::ban-time: %i", me.name, RPL_TEXT,
+	    sptr->name, iConf.socksbantime);
+	sendto_one(sptr, ":%s %i %s :maxchannelsperuser: %i", me.name, RPL_TEXT,
+	    sptr->name, MAXCHANNELSPERUSER);
+	sendto_one(sptr, ":%s %i %s :auto-join: %s", me.name, RPL_TEXT,
+	    sptr->name, AUTO_JOIN_CHANS ? AUTO_JOIN_CHANS : "0");
+	sendto_one(sptr, ":%s %i %s :oper-auto-join: %s", me.name,
+	    RPL_TEXT, sptr->name, OPER_AUTO_JOIN_CHANS ? OPER_AUTO_JOIN_CHANS : "0");
+	sendto_one(sptr, ":%s %i %s :dns::timeout: %li", me.name, RPL_TEXT,
 	    sptr->name, HOST_TIMEOUT);
-	sendto_one(sptr, ":%s %i %s :HOST_RETRIES: %d", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :dns::retries: %d", me.name, RPL_TEXT,
 	    sptr->name, HOST_RETRIES);
+	sendto_one(sptr, ":%s %i %s :dns::nameserver: %s", me.name, RPL_TEXT,
+	    sptr->name, NAME_SERVER);
 }
 
 /* Report the network file info -codemastr */
@@ -3293,3 +3285,4 @@ void report_network(aClient *sptr)
 	sendto_one(sptr, ":%s %i %s :INAH: %i", me.name, RPL_TEXT, sptr->name,
 	    iNAH);
 }
+

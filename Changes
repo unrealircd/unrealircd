@@ -288,3 +288,4 @@
 - Moved dynconf stuff from s_svs.c to s_conf.c, on popular request
 - Made NAME_SERVER (set::dns::nameserver work). The IRCd no longer
   uses /etc/resolv.conf as reference.
+- Updated most of /stats S for newconf
