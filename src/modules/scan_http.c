@@ -65,6 +65,8 @@ static vFP			xEadd_scan = NULL;
 static struct SOCKADDR_IN	*xScan_endpoint = NULL;
 static int xScan_TimeOut = 0;
 static Hook *HttpScanHost = NULL;
+static int HOOKTYPE_SCAN_HOST;
+static Hooktype *ScanHost;
 #ifdef STATIC_LINKING
 extern void Eadd_scan();
 extern struct SOCKADDR_IN	Scan_endpoint;
@@ -110,6 +112,7 @@ int    scan_http_Init(ModuleInfo *modinfo)
 	 * Add scanning hooks
 	*/
 	bcopy(modinfo, &ScanHttpModInfo, modinfo->size);
+	ScanHost = HooktypeAdd(ScanHttpModInfo.handle, "HOOKTYPE_SCAN_HOST", &HOOKTYPE_SCAN_HOST);
 	HttpScanHost = HookAddVoidEx(ScanHttpModInfo.handle, HOOKTYPE_SCAN_HOST, scan_http_scan); 
 	return MOD_SUCCESS;
 }
@@ -132,6 +135,7 @@ DLLFUNC int	Mod_Unload(int module_unload)
 int	scan_http_Unload(int module_unload)
 #endif
 {
+	HooktypeDel(ScanHost, ScanHttpModInfo.handle);
 	HookDel(HttpScanHost);
 	return MOD_SUCCESS;
 }

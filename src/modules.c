@@ -50,6 +50,7 @@
 
 Hook	   	*Hooks[MAXHOOKTYPES];
 Hook 	   	*global_i = NULL;
+Hooktype	Hooktypes[MAXCUSTOMHOOKS];
 Module          *Modules = NULL;
 int     Module_Depend_Resolve(Module *p);
 Module *Module_make(ModuleHeader *header, 
@@ -78,6 +79,7 @@ void *obsd_dlsym(void *handle, char *symbol) {
 void Module_Init(void)
 {
 	bzero(Hooks, sizeof(Hooks));
+	bzero(Hooktypes, sizeof(Hooktypes));
 }
 
 Module *Module_Find(char *name)
@@ -295,6 +297,9 @@ int    Module_free(Module *mod)
 		}
 		else if (objs->type == MOBJ_COMMAND) {
 			CommandDel(objs->object.command);
+		}
+		else if (objs->type == MOBJ_HOOKTYPE) {
+			HooktypeDel(objs->object.hooktype, mod);
 		}
 	}
 	for (p = Modules; p; p = p->next)
@@ -636,6 +641,88 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	return 1;
 }
 
+Hooktype *HooktypeFind(char *string) {
+	Hooktype *hooktype;
+	for (hooktype = Hooktypes; hooktype->string ;hooktype++) {
+		if (!stricmp(hooktype->string, string))
+			return hooktype;
+	}
+	return NULL;
+}
+
+Hooktype *HooktypeAdd(Module *module, char *string, int *type) {
+	Hooktype *hooktype;
+	int i;
+	ModuleChild *parent;
+	ModuleObject *hooktypeobj;
+	if ((hooktype = HooktypeFind(string))) {
+		ModuleChild *child;
+		for (child = hooktype->parents; child; child = child->next) {
+			if (child->child == module)
+				break;
+		}
+		if (!child) {
+			parent = MyMallocEx(sizeof(ModuleChild));
+			parent->child = module;
+			if (module) {
+				hooktypeobj = MyMallocEx(sizeof(ModuleObject));
+				hooktypeobj->type = MOBJ_HOOKTYPE;
+				hooktypeobj->object.hooktype = hooktype;
+				AddListItem(hooktypeobj, module->objects);
+			}
+			AddListItem(parent,hooktype->parents);
+		}
+		*type = hooktype->id;
+		return hooktype;
+	}
+	for (hooktype = Hooktypes, i = 0; hooktype->string; hooktype++, i++) ;
+
+	if (i >= 29)
+		return NULL;
+
+	Hooktypes[i].id = i+31;
+	Hooktypes[i].string = strdup(string);
+	parent = MyMallocEx(sizeof(ModuleChild));
+	parent->child = module;
+	if (module) {
+		hooktypeobj = MyMallocEx(sizeof(ModuleObject));
+		hooktypeobj->type = MOBJ_HOOKTYPE;
+		hooktypeobj->object.hooktype = &Hooktypes[i];
+		AddListItem(hooktypeobj,module->objects);
+	}
+	AddListItem(parent,Hooktypes[i].parents);
+	*type = i+31;
+	return &Hooktypes[i];
+}
+
+void HooktypeDel(Hooktype *hooktype, Module *module) {
+	ModuleChild *child;
+	ModuleObject *objs;
+	for (child = hooktype->parents; child; child = child->next) {
+		if (child->child == module) {
+			DelListItem(child,hooktype->parents);
+			MyFree(child);
+			break;
+		}
+	}
+	if (module) {
+		for (objs = module->objects; objs; objs = objs->next) {
+			if (objs->type == MOBJ_HOOKTYPE && objs->object.hooktype == hooktype) {
+				DelListItem(objs,module->objects);
+				MyFree(objs);
+				break;
+			}
+		}
+	}
+	if (!hooktype->parents) {
+		MyFree(hooktype->string);
+		hooktype->string = NULL;
+		hooktype->id = 0;
+		hooktype->parents = NULL;
+	}
+}
+		
+	
 Hook	*HookAddMain(Module *module, int hooktype, int (*func)(), void (*vfunc)())
 {
 	Hook *p;

@@ -81,6 +81,8 @@ EVENT(e_scannings_clean);
 
 static Event	*Scannings_clean = NULL;
 static Hook 	*LocConnect = NULL, *ConfUnknown = NULL, *ServerStats = NULL;
+static Hooktype *ScanHost = NULL;
+static int HOOKTYPE_SCAN_HOST;
 ModuleInfo ScanModInfo;
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
@@ -89,7 +91,9 @@ DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
 int    m_scan_Init(ModuleInfo *modinfo)
 #endif
 {
+	int id;
 	bcopy(modinfo,&ScanModInfo,modinfo->size);
+	ScanHost = (Hooktype *)HooktypeAdd(modinfo->handle, "HOOKTYPE_SCAN_HOST", &HOOKTYPE_SCAN_HOST);
 	LocConnect = HookAddEx(ScanModInfo.handle, HOOKTYPE_LOCAL_CONNECT, h_scan_connect);
 	ConfUnknown = HookAddEx(ScanModInfo.handle, HOOKTYPE_CONFIG_UNKNOWN, h_config_set_scan);
 	ServerStats = HookAddEx(ScanModInfo.handle, HOOKTYPE_STATS, h_stats_scan);
@@ -152,6 +156,7 @@ int	m_scan_Unload(void)
 	IRCMutexUnlock(Scannings_lock);	
 	if (ret != MOD_DELAY)
 	{
+		HooktypeDel(ScanHost,ScanModInfo.handle);
 		HookDel(LocConnect);
 		HookDel(ConfUnknown);
 		LockEventSystem();

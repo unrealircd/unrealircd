@@ -1252,3 +1252,4 @@ seen. gmtime warning still there
 - Fix for desynch problem with the fix in /mode system, Thanks to Luke
 - One little patch for humanity, one giant step for science..
 - Cosmetic fix for /setident, found by juli ..
+- Implimented a dynamic hooktype system to allow modules to create their own hooktypes

@@ -22,7 +22,8 @@
 #define MODULES_H
 #define MOD_VERSION	"3.2-b5-1"
 #define MOD_WE_SUPPORT  "3.2-b5*"
-#define MAXHOOKTYPES	20
+#define MAXCUSTOMHOOKS  30
+#define MAXHOOKTYPES	60
 typedef void			(*vFP)();	/* Void function pointer */
 typedef int			(*iFP)();	/* Integer function pointer */
 typedef char			(*cFP)();	/* char * function pointer */
@@ -91,6 +92,7 @@ typedef struct {
 #define MOBJ_EVENT   0x0001
 #define MOBJ_HOOK    0x0002
 #define MOBJ_COMMAND 0x0004
+#define MOBJ_HOOKTYPE 0x0008
 
 typedef struct _command {
 	struct _command *prev, *next;
@@ -104,6 +106,7 @@ typedef struct _ModuleObject {
 		Event *event;
 		Hook *hook;
 		Command *command;
+		Hooktype *hooktype;
 	} object;
 } ModuleObject;
 
@@ -117,6 +120,11 @@ struct _irchook {
 	Module *owner;
 };
 
+struct _hooktype {
+	short id;
+	char *string;
+	ModuleChild *parents;
+};
 /*
  * What we use to keep track internally of the modules
 */
@@ -198,8 +206,7 @@ void    SetupEvents(void);
 void	LockEventSystem(void);
 void	UnlockEventSystem(void);
 extern Hook		*Hooks[MAXHOOKTYPES];
-extern Hooktype		*Hooktypes;
-extern int		Hooktypes_count;
+extern Hooktype		Hooktypes[MAXCUSTOMHOOKS];
 extern Hook		*global_i;
 
 void    Module_Init(void);
@@ -223,6 +230,9 @@ void *obsd_dlsym(void *handle, char *symbol);
 Hook	*HookAddMain(Module *module, int hooktype, int (*intfunc)(), void (*voidfunc)());
 Hook	*HookDel(Hook *hook);
 
+Hooktype *HooktypeAdd(Module *module, char *string, int *type);
+void HooktypeDel(Hooktype *hooktype, Module *module);
+
 #define RunHook0(hooktype) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next)(*(global_i->func.intfunc))()
 #define RunHook(hooktype,x) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*(global_i->func.intfunc))(x)
 #define RunHookReturn(hooktype,x,ret) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) if((*(global_i->func.intfunc))(x) ret) return -1
@@ -237,7 +247,6 @@ void CommandDel(Command *command);
 #define HOOKTYPE_LOCAL_QUIT	1
 #define HOOKTYPE_LOCAL_NICKCHANGE 2
 #define HOOKTYPE_LOCAL_CONNECT 3
-#define HOOKTYPE_SCAN_HOST 4	/* Taken care of in scan.c */
 #define HOOKTYPE_SCAN_INFO 5    /* Taken care of in scan.c */
 #define HOOKTYPE_CONFIG_UNKNOWN 6
 #define HOOKTYPE_REHASH 7
