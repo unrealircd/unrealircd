@@ -86,6 +86,7 @@ typedef struct _configitem_deny_link ConfigItem_deny_link;
 typedef struct _configitem_deny_channel ConfigItem_deny_channel;
 typedef struct _configitem_deny_version ConfigItem_deny_version;
 typedef struct _configitem_log ConfigItem_log;
+typedef struct _configitem_unknown ConfigItem_unknown;
 
 typedef struct Notify aNotify;
 typedef struct Client aClient;
@@ -1094,6 +1095,12 @@ struct _configitem_log {
 	ConfigItem *prev, *next;
 	char *file;
 	int  flags;
+};
+
+struct _configitem_unknown {
+	ConfigFlag flag;
+	ConfigItem *prev, *next;
+	ConfigEntry *ce;
 };
 
 struct _irchook {

@@ -44,7 +44,6 @@
 #include "h.h"
 
 extern char *my_itoa(long i);
-
 /*
  * TODO:
  *  - deny version {} (V:lines)
@@ -259,7 +258,7 @@ ConfigItem_allow_channel *conf_allow_channel = NULL;
 ConfigItem_deny_link	*conf_deny_link = NULL;
 ConfigItem_deny_version *conf_deny_version = NULL;
 ConfigItem_log		*conf_log = NULL;
-
+ConfigItem_unknown	*conf_unknown = NULL;
 #ifdef STRIPBADWORDS
 ConfigItem_badword	*conf_badword_channel = NULL;
 ConfigItem_badword      *conf_badword_message = NULL;
@@ -415,6 +414,21 @@ void config_progress(char *format, ...)
 	fprintf(stderr, "* %s\n", buffer);
 	sendto_realops("%s", buffer);
 }
+
+void clear_unknown() {
+	ConfigItem_unknown *p;
+	ConfigItem t;
+
+	for (p = conf_unknown; p; p = (ConfigItem_unknown *)p->next) {
+		config_status("%s:%i: unknown directive %s",
+			p->ce->ce_fileptr->cf_filename, p->ce->ce_varlinenum,
+			p->ce->ce_varname); 
+		t.next = del_ConfigItem((ConfigItem *)p, (ConfigItem **)&conf_unknown);
+		MyFree(p);
+		p = (ConfigItem_unknown *)&t;
+	}
+}
+
 /* This is the internal parser, made by Chris Behrens & Fred Jacobs */
 static ConfigFile *config_parse(char *filename, char *confdata)
 {
@@ -787,6 +801,8 @@ int	init_conf2(char *filename)
 		config_progress("Config file %s loaded without problems",
 			filename);
 		i = ConfigParse(cfptr);
+		RunHook0(HOOKTYPE_CONFIG_UNKNOWN);
+		clear_unknown();
 		config_free(cfptr);
 		return i;
 	}
@@ -832,11 +848,12 @@ int	ConfigCmd(ConfigFile *cf, ConfigEntry *ce, ConfigCommand *cc)
 				break;
 			}
 		}
-		if (!ccp)
+		if (!ccp->name)
 		{
-			config_error("%s:%i: unknown directive %s",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				cep->ce_varname);
+			ConfigItem_unknown *ca = (ConfigItem_unknown *)malloc(sizeof(ConfigItem_unknown));
+			ca->ce = cep;			
+			/* Add to the unknown list */
+			add_ConfigItem((ConfigItem *)ca, (ConfigItem **)&conf_unknown);
 		}
 	}
 }
@@ -3016,7 +3033,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		write_pidfile();
 #endif
 	}
-
+	RunHook0(HOOKTYPE_REHASH);
 	for (admin_ptr = conf_admin; admin_ptr; admin_ptr = (ConfigItem_admin *) admin_ptr->next)
 	{
 		ircfree(admin_ptr->line);

@@ -72,7 +72,7 @@ vFP	module_sym(char *name);
 void	add_HookX(int hooktype, int (*intfunc)(), void (*voidfunc)());
 void	del_HookX(int hooktype, int (*intfunc)(), void (*voidfunc)());
 
-
+#define RunHook0(hooktype) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next)(*(global_i->func.intfunc))()
 #define RunHook(hooktype,x) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*(global_i->func.intfunc))(x)
 #define RunHook2(hooktype,x,y) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*(global_i->func.intfunc))(x,y)
 #define HOOKTYPE_LOCAL_QUIT	1
@@ -80,5 +80,6 @@ void	del_HookX(int hooktype, int (*intfunc)(), void (*voidfunc)());
 #define HOOKTYPE_LOCAL_CONNECT 3
 #define HOOKTYPE_SCAN_HOST 4
 #define HOOKTYPE_SCAN_INFO 5
-
+#define HOOKTYPE_CONFIG_UNKNOWN 6
+#define HOOKTYPE_REHASH 7
 

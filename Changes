@@ -547,3 +547,9 @@ seen. gmtime warning still there
 - Converted threads to IRC*Thread by codemastr. 
 - Updated the win32 thread code (maybe it will work now?)
 - One last final change for the win32 thread stuff, but at least it works now :)
+- Added hooks to allow you to add config directives
+  - HOOKTYPE_CONFIG_UNKNOWN sent after config parsing, look in conf_unknown for all the
+  blocks the config parser didn't understand
+  - HOOKTYPE_REHASH sent when a rehash is being done
+  Note: if you parse a block in conf_unknown make sure to del_ConfigItem it from the list
+  or Unreal will return an unknown directive error for it.

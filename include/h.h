@@ -90,7 +90,8 @@ extern ConfigItem_deny_link	*conf_deny_link;
 extern ConfigItem_allow_channel *conf_allow_channel;
 extern ConfigItem_deny_version	*conf_deny_version;
 extern ConfigItem_log		*conf_log;
-
+extern ConfigItem_unknown	*conf_unknown;
+extern void clear_unknown();
 EVENT(tkl_check_expire);
 
 ConfigItem_class	*Find_class(char *name);
