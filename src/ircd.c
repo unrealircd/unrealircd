@@ -818,6 +818,9 @@ char buf[1024];
 #endif	
 }
 
+/** Ugly version checker that ensures zlib/ssl/curl runtime libraries match the
+ * version we compiled for.
+ */
 static void do_version_check()
 {
 const char *compiledfor, *runtime;
@@ -828,7 +831,7 @@ int error = 0;
 	runtime = SSLeay_version(SSLEAY_VERSION);
 	if (strcasecmp(compiledfor, runtime))
 	{
-		version_check_logerror("[!!!] OpenSSL version mismatch: compiled for '%s', library is '%s'",
+		version_check_logerror("OpenSSL version mismatch: compiled for '%s', library is '%s'",
 			compiledfor, runtime);
 		error=1;
 	}
@@ -838,18 +841,50 @@ int error = 0;
 	compiledfor = ZLIB_VERSION;
 	if (strcasecmp(compiledfor, runtime))
 	{
-		version_check_logerror("[!!!] Zlib version mismatch: compiled for '%s', library is '%s'",
+		version_check_logerror("Zlib version mismatch: compiled for '%s', library is '%s'",
 			compiledfor, runtime);
 		error = 1;
 	}
 #endif
+#ifdef USE_LIBCURL
+	/* Perhaps someone should tell them to do this a bit more easy ;)
+	 * problem is runtime output is like: 'libcurl/7.11.1 zlib/1.2.1 c-ares/1.2.0'
+	 * while header output is like: '7.11.1'.
+	 */
+	{
+		char buf[128], *p;
+		
+		runtime = curl_version();
+		compiledfor = LIBCURL_VERSION;
+		if (!strncmp(runtime, "libcurl/", 8))
+		{
+			strlcpy(buf, runtime+8, sizeof(buf));
+			p = strchr(buf, ' ');
+			if (p)
+			{
+				*p = '\0';
+				if (strcmp(compiledfor, buf))
+				{
+					version_check_logerror("Curl version mismatch: compiled for '%s', library is '%s'",
+						compiledfor, buf);
+					error = 1;
+				}
+			}
+		}
+	}
+#endif
+
 	if (error)
 	{
-		version_check_logerror("[!!!] Header<->library mismatches can make UnrealIRCd *CRASH*! "
+#ifndef _WIN32
+		version_check_logerror("Header<->library mismatches can make UnrealIRCd *CRASH*! "
 		                "Make sure you don't have multiple versions of openssl or zlib installed (eg: "
 		                "one in /usr and one in /usr/local). And, if you recently upgraded them, "
 		                "be sure to recompile Unreal.");
-#ifdef _WIN32
+#else
+		version_check_logerror("Header<->library mismatches can make UnrealIRCd *CRASH*! "
+		                "This should never happen with official Windows builds... unless "
+		                "you overwrote any .dll files with newer/older ones or something.");
 		win_error();
 #endif
 		tainted = 1;
