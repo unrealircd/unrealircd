@@ -1,5 +1,5 @@
 /*
- * UnrealIRCd Changes File - (C) Carsten Munk 1999-2002 &
+ * UnrealIRCd Changes File - (C) Carsten Munk 1999-2005 &
  *                               The UnrealIRCd Team
  *                              
  * $Id$
@@ -758,3 +758,4 @@
 - Removed oldcloak cloaking module, everyone should be using the new cloak one by now.
 - Updated release notes (translated docs, zlib, doc\technical, sp/cS desynch).
 - Made +g get removed when an oper sets -o (#0002399) reported by Ron2K.
+- Made it so the win32 version shows channel modes in /list (#0002397) reported by Ron2K.
