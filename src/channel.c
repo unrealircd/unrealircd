@@ -2352,12 +2352,13 @@ static int can_join(cptr, sptr, chptr, key, link, parv)
 	if (is_banned(sptr, sptr, chptr))
 		return (ERR_BANNEDFROMCHAN);
 
+#ifndef NO_OPEROVERRIDE
 #ifdef OPEROVERRIDE_VERIFY
         if (IsOper(sptr) && (chptr->mode.mode & MODE_SECRET ||
             chptr->mode.mode & MODE_PRIVATE))
                 return (ERR_OPERSPVERIFY);
 #endif
-
+#endif
 
 	return 0;
 }
