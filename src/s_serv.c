@@ -2907,7 +2907,7 @@ void save_tunefile(void)
 {
 	FILE *tunefile;
 
-	tunefile = fopen(IRCDTUNE, "w+");
+	tunefile = fopen(IRCDTUNE, "w");
 	if (!tunefile)
 	{
 #if !defined(_WIN32) && !defined(_AMIGA)

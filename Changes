@@ -60,3 +60,4 @@
 - Fixed a bug reported by S7 that affected chg* and set* as well as sdesc
 - Started work on the except parser
 - Fixed a STATS_ONLYOPER bug
+- Fixed a ircd.tune bug (the file may not write if it didn't exist)
