@@ -21,6 +21,7 @@ Table of Contents
 13.4 Ban server block (q:line)
 14.0 Except ban block (E:line)
 14.1 Except scan block (e:line)
+14.2 Except tkl block (N/A)
 15.0 Deny dcc block (dccdeny.conf)
 15.1 Deny version block (V:line)
 15.2 Deny link block (D:line and d:line)
@@ -376,6 +377,19 @@ The except scan block allows you to specify an IP mask that will override the sc
 only works if you have chosen to load the scanner modules. The except::mask specifies an IP 
 mask that will not be banned because of any type of scanner problem.
 
+14.2 Except tkl block (N/A)
+
+Syntax:
+except tkl {
+	type <type>;
+	mask <hostmask>;
+};
+
+The except tkl block lets you set a host as being exempt from certain types of tkls. The
+except::type specifies the type of tkl the mask will be exempt from. Valid entries are gline,
+gzline, tkline, tzline, or shun. The except::mask specifies a user@host that will be exempt
+from the ban.
+
 15.0 Deny dcc block (dccdeny.conf)
 
 Syntax:
@@ -521,6 +535,7 @@ link <server-name> {
 	leaf <leaf-mask>;
 	leafdepth <depth>;
 	class <class-name>;
+	cipher <ciphers>;
 	options {
 		<option>;
 		<option>;
@@ -547,7 +562,12 @@ before this in the config) class block that will be used for the server connecti
 link block. The link::options is a list of one or more options you wish this server to use, 
 valid options are ssl (the server will connect using SSL encryption), autoconnect (the server 
 will be autoconnected based on the value in the specified link::class), quarantine (opers on 
-this server will maintain locop status).
+this server will maintain locop status). If the server is set to link via SSL, the
+link::cipher directive may be used. This allows you to specify the ciphers that will be
+used for this link. The ciphers are specified as a : seperated list in the order of preference. 
+Different systems support different ciphers, so the best way to get a list of available ciphers
+for your system is to execute the openssl ciphers command. This will return a : seperated list
+of the available ciphers.
 
 21.0 Alias block (N/A)
 

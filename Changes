@@ -1140,3 +1140,4 @@ v- Fixed some bugreport stuff
 - Made SHOW_SECRET (allow opers to see +s chans in /whois) defined by default, suggested by Sid-V (#0000037)
 - Added except tkl to allow exceptions from tklines, tzlines, shuns, glines, and gzlines, suggested by
   funraiser [still need to design a way to report in /stats] (#0000044)
+- Documented link::cipher and except tkl in doc/conf.doc
