@@ -159,7 +159,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 	int i = 0, j = 0;
 	char* announce = 0;
 
-	if (IsServer(sptr))
+	if (!MyClient(sptr))
 		return 0;
 
 	if (parc < 3) {
