@@ -578,6 +578,10 @@ aJFlood *e;
 	e->prev_u = e->prev_c = NULL;
 	e->next_u = cptr->user->jflood;
 	e->next_c = chptr->jflood;
+	if (cptr->user->jflood)
+		cptr->user->jflood->prev_u = e;
+	if (chptr->jflood)
+		chptr->jflood->prev_c = e;
 	cptr->user->jflood = chptr->jflood = e;
 
 	return e;
@@ -627,6 +631,7 @@ aJFlood *e, *e_next;
 		/* actually free it */
 		MyFree(e);
 	}
+	cptr->user->jflood = NULL;
 }
 
 /** Removes all entries belonging to channel from all lists and free them. */
@@ -649,6 +654,7 @@ aJFlood *e, *e_next;
 		/* actually free it */
 		MyFree(e);
 	}
+	chptr->jflood = NULL;
 }
 
 /** Regulary cleans up cmode-j user/chan structs */

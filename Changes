@@ -767,3 +767,5 @@
 - Updated the list of donators
 - /SAMODE could cause 'fishy timestamp' if digit parameters were used (eg: SAMODE #chan +l 5),
   this has now be fixed by sending an explicit TS 0.
+- Fixed an important channelmode +j memory corruption bug that would cause crashes, reported
+  by Bergee (#0002416).
