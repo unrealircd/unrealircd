@@ -922,16 +922,6 @@ void close_connection(cptr)
 		if (nextconnect > aconf->hold)
 			nextconnect = aconf->hold;
 	}
-#ifdef USE_SSL
-	if (cptr->flags & FLAGS_SSL)
-	{
-		if (cptr->ssl)
-		{
-			SSL_shutdown((SSL *)cptr->ssl);
-			SSL_free((SSL *)cptr->ssl);
-		}
-	}
-#endif
 
 	if (cptr->authfd >= 0)
 	{
@@ -953,6 +943,16 @@ void close_connection(cptr)
 	}
 
 	cptr->from = NULL;	/* ...this should catch them! >:) --msa */
+#ifdef USE_SSL
+	if (cptr->flags & FLAGS_SSL)
+	{
+		if (cptr->ssl)
+		{
+			SSL_shutdown((SSL *)cptr->ssl);
+			SSL_free((SSL *)cptr->ssl);
+		}
+	}
+#endif
 
 	/*
 	 * fd remap to keep local[i] filled at the bottom.
