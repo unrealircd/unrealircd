@@ -1444,3 +1444,4 @@ seen. gmtime warning still there
 - Fixed SSL compile error wrt to /trace
 - Removed doc/features.txt, doc/unrealircd.conf.txt, include/relinfo.h,
   include/stamp.h, src/buildm4, src/chkconf.c, src/conftool.c
+- Removed doc/Etiquette
