@@ -97,7 +97,7 @@ DLLFUNC CMD_FUNC(m_sapart)
 		return 0;
 	}
 
-	if (parc != 3)
+	if (parc < 3)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0], "SAPART");
 		return 0;

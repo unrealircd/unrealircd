@@ -3100,3 +3100,4 @@ seen. gmtime warning still there
 - spamfilter.conf: added signatures for Gaggle worm.
 - Changed version to pre1
 - Fixed SJOIN bug: it sometimes was setting too many modes at once.
+- Minor sajoin/sapart ERR_NEEDMOREPARAMS tweak.
