@@ -21,5 +21,5 @@
  */                             
                                 
 [ Unreal4.0 ]
-- Fixed a _serious_ bug in SERVER command, reported by Valen, For,
-  M0rpheus and JK.
+- Fixed a _serious_ bug in SERVER command, reported by Valen, Forrester,
+  M0rpheus, JK, and Hiten.

@@ -99,8 +99,12 @@ char serveropts[] = {
 #ifdef USE_POLL
 	'P',
 #endif
+#ifdef USE_SSL
+	'e',
+#endif
 /* we are a stable ircd */
 	'S',
+	's',
 	'\0'
 };
 
