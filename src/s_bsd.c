@@ -653,10 +653,7 @@ char logbuf[BUFSIZ];
 for (fd = 3; fd < MAXCONNECTIONS; fd++)
 {
 	(void)close(fd);
-	local[fd] = NULL;
 }
-
-local[1] = NULL;
 (void)close(1);
 
 if (bootopt & BOOT_TTY)		/* debugging is going to a tty */
@@ -1884,7 +1881,11 @@ int  read_message(delay, listp)
 	 * I really hate to do this.. but another loop
 	 * to check to see if we have any socks fd's.. - darkrot
 	 */
+#ifdef NO_FDLIST
 	for (i = LastSlot; (socks > 0) && (i >= 0); i--)
+#else
+	for (i = listp->entry[j = 1];  (socks > 0) && (j <= listp->last_entry); i = listp->entry[++j])
+#endif
 	{
 		if (!(cptr = local[i]))
 			continue;
@@ -1933,7 +1934,11 @@ int  read_message(delay, listp)
 	}
 #endif /* SOCKSPORT */
 
+#ifdef NO_FDLIST
 	for (i = LastSlot; i >= 0; i--)
+#else
+	for (i = listp->entry[j = 1];  (j <= listp->last_entry); i = listp->entry[++j])
+#endif
 		if ((cptr = local[i]) && FD_ISSET(cptr->fd, &read_set) &&
 		    IsListening(cptr))
 		{
@@ -1983,8 +1988,11 @@ int  read_message(delay, listp)
 			if (!cptr->listener)
 				cptr->listener = &me;
 		}
-
+#ifndef NO_FDLIST
+	for (i = listp->entry[j = 1];  (j <= listp->last_entry); i = listp->entry[++j])
+#else
 	for (i = LastSlot; i >= 0; i--)
+#endif
 	{
 		if (!(cptr = local[i]) || IsMe(cptr))
 			continue;

@@ -4333,8 +4333,8 @@ int  m_trace(cptr, sptr, parc, parv)
 		 * trace
 		 */
 		sendto_one(sptr, rpl_str(RPL_TRACESERVER),
-		    me.name, parv[0], 0, link_s[me.fd],
-		    link_u[me.fd], me.name, "*", "*", me.name);
+		    me.name, parv[0], 0, link_s[me.slot],
+		    link_u[me.slot], me.name, "*", "*", me.name);
 		return 0;
 	}
 	for (cltmp = conf_class; doall && cltmp; cltmp = (ConfigItem_class *) cltmp->next)
