@@ -127,8 +127,13 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *message;
 	char *p;
+	int i;
+	long umode_s = 0;
+	long snomask = 0;
+	int and = 0;
 
-	message = parc > 2 ? parv[2] : NULL;
+
+	message = (parc > 3) ? parv[3] : parv[2];
 
 	if (BadPtr(message))
 	{
@@ -146,50 +151,44 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	sendto_serv_butone(IsServer(cptr) ? cptr : NULL,
 	    ":%s SMO %s :%s", parv[0], parv[1], message);
 
-
 	for (p = parv[1]; *p; p++)
 	{
-		switch (*p)
+		umode_s = 0;
+		
+		for(i = 0; Usermode_Table[i].flag; i++)
 		{
-		  case 'e':
-			  sendto_snomask(SNO_EYES, "%s", parv[2]);
-			  break;
-		  case 'o':
-			  sendto_umode(UMODE_OPER, "%s", parv[2]);
-			  break;
-		  case 'O':
-			  sendto_umode(UMODE_LOCOP, "%s", parv[2]);
-			  break;
-		  case 'h':
-			  sendto_umode(UMODE_HELPOP, "%s", parv[2]);
-			  break;
-		  case 'N':
-			  sendto_umode(UMODE_NETADMIN, "%s",
-			      parv[2]);
-			  break;
-		  case 'A':
-			  sendto_umode(UMODE_ADMIN, "%s", parv[2]);
-			  break;
-/*		  case '1':
-			  sendto_umode(UMODE_CODER, "%s", parv[2]);
-			  break;
-*/
-		  case 'I':
-			  sendto_umode(UMODE_HIDING, "%s", parv[2]);
-			  break;
-		  case 'w':
-			  sendto_umode(UMODE_WALLOP, "%s", parv[2]);
-			  break;
-		  case 's':
-			  sendto_umode(UMODE_SERVNOTICE, "%s", parv[2]);
-			  break;
-		  case '*':
-		  	  sendto_all_butone(NULL, &me, ":%s NOTICE :%s", 
-			   	me.name, parv[2]);  	  	
-					  	  	 	 
-			  break;
+			if (Usermode_Table[i].flag == *p)
+			{
+				sendto_umode(Usermode_Table[i].mode, "%s", message);
+				break;
+			}
+		}
+		if (Usermode_Table[i].flag)
+			break;
+
+		for (i = 1; sno_mask[i]; i += 2)
+		{
+			if (sno_mask[i] ==  *p) 	
+			{
+				sendto_snomask(sno_mask[i - 1], "%s", message);
+				break;
+			}
 		}
 	}
+
+	if (parc > 3)
+	    for(p = parv[2]; *p; p++)
+	{
+		for (i = 1; sno_mask[i]; i += 2)
+		{
+			if (sno_mask[i] ==  *p) 	
+			{
+				sendto_snomask(sno_mask[i - 1], "%s", message);
+				break;
+			}
+		}
+	}
+
 	return 0;
 }
 
