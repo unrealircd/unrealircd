@@ -183,6 +183,7 @@ static OperFlag _OperFlags[] = {
 	{ OFLAG_ZLINE,		"can_zline"},
 	{ OFLAG_WHOIS,		"get_umodew"},
 	{ OFLAG_INVISIBLE,	"can_stealth"},
+	{ OFLAG_HIDE,		"get_host"},
 	{ 0L, 	NULL  }
 };
 
