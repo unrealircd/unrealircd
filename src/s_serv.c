@@ -4346,7 +4346,7 @@ int  m_trace(cptr, sptr, parc, parv)
 		return 0;
 	}
 	for (cltmp = conf_class; doall && cltmp; cltmp = (ConfigItem_class *) cltmp->next)
-		if (cltmp->clients > 0)
+	//	if (cltmp->clients > 0)
 			sendto_one(sptr, rpl_str(RPL_TRACECLASS), me.name,
 			    parv[0], cltmp->name ? cltmp->name : "[noname]", cltmp->clients);
 	return 0;
