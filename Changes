@@ -871,3 +871,7 @@ Fixed stats being visible to users even after defining
 STATS_ONLYOPER in config.h
 --Luke
 ===================================
+
+Applied Syzop's fix for operoverride crash.
+--Luke
+===================================

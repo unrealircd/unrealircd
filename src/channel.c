@@ -1214,7 +1214,7 @@ int  m_mode(cptr, sptr, parc, parv)
 	 * Now, we can actually do the mode.  */
 
 	(void)do_mode(chptr, cptr, sptr, parc - 2, parv + 2, sendts, 0);
-
+	opermode = 0;
 	return 0;
 }
 
