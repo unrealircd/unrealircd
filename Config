@@ -1914,6 +1914,7 @@ fi
 
 if [ -n "$CRYPTOIRCD" ] ; then
     if [ ! -f server.req.pem ]; then
+	    echo "Using openssl in $OPENSSLPATH .."
 	    export OPENSSLPATH
     	    make pem
             cat .SICI
