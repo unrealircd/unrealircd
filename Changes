@@ -674,3 +674,5 @@
 - Module coders: using extcmode_default_requirechop is now depricated, check src/extcmodes.c
   ctrl+f extcmode_default_requirechop for more details (solution: copy+paste & fill in modechar).
 - Nicks with ~ are now also not cutoff anymore but rejected like any other illegal char (#0002074).
+- Fixed bug in +G where with not-really-matching-words color was needlessly stripped,
+  reported by SpeedFire (#0002375).

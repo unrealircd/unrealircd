@@ -102,7 +102,6 @@ int cleaned = 0;
 		pold = our_strcasestr(pold, badword->word);
 		if (!pold)
 			break;
-		cleaned = 1;
 		if (replacen == -1)
 			replacen = strlen(replacew);
 		if (searchn == -1)
@@ -130,6 +129,8 @@ int cleaned = 0;
 			pold++;
 			continue;
 		}
+
+		cleaned = 1; /* still too soon? Syzop/20050227 */
 
 		/* Do we have any not-copied-yet data? */
 		if (poldx != startw) {
