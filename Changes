@@ -2166,3 +2166,4 @@ seen. gmtime warning still there
 - Code cleanup (sys_errlist[])
 - Fixed a crash in SVSMOTD that could occur if invalid parameters were used. Reported by 
   emigrant
+- Committed little de-Fizzer module to extras/
