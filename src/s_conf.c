@@ -686,9 +686,9 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 							case 'm':
 								newf.l[FLD_MSG] = v;
 								if (a == 'M')
-									newf.a[FLD_CTCP] = a;
+									newf.a[FLD_MSG] = a;
 								else
-									newf.a[FLD_CTCP] = 'm';
+									newf.a[FLD_MSG] = 'm';
 								break;
 							case 'n':
 								newf.l[FLD_NICK] = v;

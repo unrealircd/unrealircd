@@ -2389,3 +2389,4 @@ seen. gmtime warning still there
   a part bug. Most of them reported by Lx (#0001097).
 - Fixed a bug in +f + modes-on-join + 't' subfloodtype, reported by Rocko (#0001228).
 - Fixed a crashbug with +f and services, reported by Rocko (#0001227).
+- And another +f + modes-on-join one...
