@@ -2655,13 +2655,13 @@ CMD_FUNC(m_umode2)
 		parv[0],
 		parv[0],
 		parv[1],
-		parv[3] ? parv[3] : NULL,
+		(parc > 3) ? parv[3] : NULL,
 		NULL
 	};
 
 	if (!parv[1])
 		return 0;
-	return m_umode(cptr, sptr, parv[3] ? 4 : 3, xparv);
+	return m_umode(cptr, sptr, (parc > 3) ? 4 : 3, xparv);
 }
 
 

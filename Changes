@@ -2553,3 +2553,4 @@ seen. gmtime warning still there
   servers with autoconnect enabled. Bug was reported by Rocko (#0001321).
 - Added insane OperOverride system for joining +z channels (#0001189).
   This seems better than just allowing the insecure oper trough +z.
+- Fixed a UMODE2 bug.
