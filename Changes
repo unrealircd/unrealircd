@@ -480,3 +480,4 @@
 - Rewrote some of the previous change to deal with some strange issues found by aquanight
   - Introduced two new macros DYN_LOCAL and DYN_FREE to allow creation/deletion of dynamically
     sized arrays in the most efficient manner (C99 variable length, alloca, or malloc)
+- Changed the +z cannot join message to be a bit more descriptive (#0002148) suggested by cust.
