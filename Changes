@@ -574,3 +574,4 @@ seen. gmtime warning still there
 - Fixed a set_non_blocking bug
 - Fixed a codemastr screwup in quarantine code
 - Removed the old SOCKS check code.
+- Fixed a quarantine bug

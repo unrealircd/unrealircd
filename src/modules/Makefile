@@ -28,7 +28,7 @@ COMMANDS=m_sethost.c m_chghost.c m_chgident.c m_setname.c m_setident.c \
 
 MODULES=commands.so $(R_MODULES)
 
-PTHREAD=-pthread
+PTHREAD=-kthread
 
 all: build
 

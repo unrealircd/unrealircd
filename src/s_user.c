@@ -4391,7 +4391,7 @@ int  m_umode(cptr, sptr, parc, parv)
 				  /* since we now use chatops define in unrealircd.conf, we have
 				   * to disallow it here */
 			  case 'o':
-				  if(sptr->srvptr->flags & FLAGS_QUARANTINE)
+				  if(sptr->from->flags & FLAGS_QUARANTINE)
 					break;
 				  goto def;
 			  case 'b':
