@@ -962,3 +962,5 @@ seen. gmtime warning still there
 - Added ssl-pubkey auth method (parameter = pem file for public key)
 - Converted tkl, events, commands, hooks, and all config structs to ListStruct
 - can_gkline/t and can_gzline/Z flags added, docs not modded yet
+- Added snomask +n (nick change notices) I personally hate it, but people wanted it...
+- Added oper::snomask to allow you to specify a default snomask for an oper

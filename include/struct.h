@@ -272,14 +272,15 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
  */
 
 
-#define SNO_KILLS   0x0001
-#define SNO_CLIENT  0x0002
-#define SNO_FLOOD   0x0004
-#define SNO_FCLIENT 0x0008
-#define SNO_JUNK    0x0010
-#define SNO_VHOST   0x0020
-#define SNO_EYES    0x0040
-#define SNO_TKL     0x0080
+#define SNO_KILLS      0x0001
+#define SNO_CLIENT     0x0002
+#define SNO_FLOOD      0x0004
+#define SNO_FCLIENT    0x0008
+#define SNO_JUNK       0x0010
+#define SNO_VHOST      0x0020
+#define SNO_EYES       0x0040
+#define SNO_TKL        0x0080
+#define SNO_NICKCHANGE 0x0100
 
 #define SNO_DEFOPER "+kcfvG"
 #define SNO_DEFUSER "+k"
@@ -919,7 +920,7 @@ struct _configitem_allow {
 struct _configitem_oper {
 	ConfigItem       *prev, *next;
 	ConfigFlag 	 flag;
-	char		 *name, *swhois;
+	char		 *name, *swhois, *snomask;
 	anAuthStruct	 *auth;
 	ConfigItem_class *class;
 	ConfigItem	 *from;

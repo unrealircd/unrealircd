@@ -1,5 +1,5 @@
 /*
- *   Unreal Internet Relay Chat Daemon, src/s_conf2.c
+ *   Unreal Internet Relay Chat Daemon, src/s_conf.c
  *   (C) 1998-2000 Chris Behrens & Fred Jacobs (comstud, moogle)
  *   (C) 2000-2001 Carsten V. Munk and the UnrealIRCd Team
  *
@@ -1376,6 +1376,9 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 			}
 			else if (!strcmp(cep->ce_varname, "swhois")) {
 				ircstrdup(oper->swhois, cep->ce_vardata);
+			}
+			else if (!strcmp(cep->ce_varname, "snomask")) {
+					ircstrdup(oper->snomask, cep->ce_vardata);
 			}
 			else if (!strcmp(cep->ce_varname, "flags"))
 			{
@@ -3357,6 +3360,8 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		ConfigItem_oper_from *oper_from;
 
 		ircfree(oper_ptr->name);
+		ircfree(oper_ptr->swhois);
+		ircfree(oper_ptr->snomask);
 		Auth_DeleteAuthStruct(oper_ptr->auth);
 		for (oper_from = (ConfigItem_oper_from *) oper_ptr->from; oper_from; oper_from = (ConfigItem_oper_from *) oper_from->next)
 		{

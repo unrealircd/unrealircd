@@ -70,6 +70,7 @@ int sno_mask[] = {
 	SNO_VHOST, 'v',
 	SNO_EYES, 'e',
 	SNO_TKL, 'G',
+	SNO_NICKCHANGE, 'n',
 	0, 0
 };
 
@@ -1513,6 +1514,8 @@ int  m_nick(cptr, sptr, parc, parv)
 					return 0;
 				}
 			}
+			sendto_snomask(SNO_NICKCHANGE, "*** Notice -- %s (%s@%s) has changed his/her nickname to %s", sptr->name, sptr->user->username, sptr->user->realhost, nick);
+
 			RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, sptr, nick);
 		}
 		/*
@@ -2017,6 +2020,8 @@ void set_snomask(aClient *sptr, char *snomask) {
 			sptr->user->snomask &= ~SNO_VHOST;
 		if (sptr->user->snomask & SNO_TKL)
 			sptr->user->snomask &= ~SNO_TKL;
+		if (sptr->user->snomask & SNO_NICKCHANGE)
+			sptr->user->snomask &= ~SNO_NICKCHANGE;
 	}
 }
 
@@ -2201,6 +2206,8 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sptr->user->snomask &= ~SNO_VHOST;
 		if (sptr->user->snomask & SNO_TKL)
 			sptr->user->snomask &= ~SNO_TKL;
+		if (sptr->user->snomask & SNO_NICKCHANGE)
+			sptr->user->snomask &= ~SNO_NICKCHANGE;
 
 	}
 
@@ -2327,6 +2334,8 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sptr->user->snomask &= ~SNO_VHOST;
 		if (sptr->user->snomask & SNO_TKL)
 			sptr->user->snomask &= ~SNO_TKL;
+		if (sptr->user->snomask & SNO_NICKCHANGE)
+			sptr->user->snomask &= ~SNO_NICKCHANGE;
 	}
 	if (!(setflags & UMODE_OPER) && IsOper(sptr))
 		IRCstats.operators++;
