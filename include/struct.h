@@ -471,7 +471,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OFLAG_GNOTICE	0x00008000	/* Oper can send global notices */
 #define OFLAG_ADMIN	0x00010000	/* Admin */
 #define OFLAG_ZLINE	0x00080000	/* Oper can use /zline and /unzline */
-#define OFLAG_NETADMIN  0x00200000	/* netadmin gets +N */
+#define OFLAG_NETADMIN	0x00200000	/* netadmin gets +N */
 #define OFLAG_COADMIN	0x00800000	/* co admin gets +C */
 #define OFLAG_SADMIN	0x01000000	/* services admin gets +a */
 #define OFLAG_WHOIS     0x02000000	/* gets auto +W on oper up */
@@ -483,7 +483,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OFLAG_LOCAL	(OFLAG_REHASH|OFLAG_HELPOP|OFLAG_GLOBOP|OFLAG_WALLOP|OFLAG_LOCOP|OFLAG_LROUTE|OFLAG_LKILL|OFLAG_KLINE|OFLAG_UNKLINE|OFLAG_LNOTICE)
 #define OFLAG_GLOBAL	(OFLAG_LOCAL|OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE)
 #define OFLAG_ISGLOBAL	(OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE)
-
+#define OFLAG_NADMIN	(OFLAG_NETADMIN | OFLAG_SADMIN | OFLAG_ADMIN | OFLAG_GLOBAL)
 
 #define OPCanTKL(x)	((x)->user->oflag & OFLAG_TKL)
 #define OPCanGZL(x)	((x)->user->oflag & OFLAG_GZL)
