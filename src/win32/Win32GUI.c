@@ -118,9 +118,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	MSG msg;
 	char *s;
 	HWND hWnd;
-    WSADATA WSAData;
+	WSADATA WSAData;
 	HICON hIcon;
 	char regbuf[128];
+
+	WM_TASKBARCREATED = RegisterWindowMessage("TaskbarCreated");
+
 	atexit(CleanUp);
 	if(!LoadLibrary("riched20.dll"))
 		LoadLibrary("riched32.dll");

@@ -535,3 +535,4 @@ seen. gmtime warning still there
 - Fixed the /stats C = crash if it is a leaf bug found by BaTmAn
 - Added a patch by McSkaf to make Unreal reload its tray icon if explorer restarts
 - Fixed a win32 bug found by eternal
+- Fixed yet another win32 bug (I think I should test before I commit ;P)
