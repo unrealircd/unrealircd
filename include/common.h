@@ -90,8 +90,11 @@ void free();
 #endif
 #endif
 
-
+#ifndef __OpenBSD__
 #define TS time_t
+#else
+#define TS clock_t
+#endif
 
 extern int match PROTO((char *, char *));
 #define mycmp(a,b) \

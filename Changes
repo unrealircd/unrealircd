@@ -242,3 +242,7 @@
 - Made link { options { work OK again. Had a dead loop as well
 - Made autoconnect work again :>. Changes in behavouir: It connects more at
   a time now. You need autoconnect flag in options.
+- Minor OpenBSD support cleanup
+- bsd.c, channel.c, s_svs.c, s_unreal.c, s_kline.c, and s_extra.c now use ANSI 
+  standards for naming function params
+

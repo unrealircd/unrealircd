@@ -201,10 +201,7 @@ int advanced_check(char *userhost, int ipstat)
 
 
 
-int  m_svsnoop(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 
@@ -254,10 +251,7 @@ int  m_svsnoop(cptr, sptr, parc, parv)
 **      parv[2] = options
 */
 
-int  m_svso(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 	long fLag;
@@ -319,10 +313,7 @@ int  m_svso(cptr, sptr, parc, parv)
 **	parv[2] = username
 **	parv[3] = comment
 */
-int  m_akill(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_akill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *hostmask, *usermask, *comment;
 	ConfigItem_ban *bconf;
@@ -428,10 +419,7 @@ int  m_akill(cptr, sptr, parc, parv)
 **      parv[2] = username
 **      parv[3] = comment
 */
-int  m_rakill(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_rakill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *hostmask, *usermask;
 	ConfigItem_ban  *bconf;
@@ -536,10 +524,7 @@ int  m_rakill(cptr, sptr, parc, parv)
  *    parv[2] = reason
  */
 
-int  m_zline(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_zline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char userhost[512 + 2] = "", *in;
 	int  uline = 0, i = 0, propo = 0;
@@ -707,10 +692,7 @@ propo_label:
  *    parv[1] = host
  */
 
-int  m_unzline(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_unzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char userhost[512 + 2] = "", *in;
 	int  result = 0, uline = 0, akill = 0;
@@ -837,10 +819,7 @@ int  m_unzline(cptr, sptr, parc, parv)
 **	parv[1] = nickname
 **	parv[2] = comment or filename
 */
-int  m_kline(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_kline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *host, *tmp, *hosttemp;
 	char uhost[80], name[80];
@@ -963,10 +942,7 @@ int  m_kline(cptr, sptr, parc, parv)
  *    parv[1] = userhost
  */
 
-int  m_unkline(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_unkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 
 	int  result, temp;
@@ -1041,10 +1017,7 @@ int  m_unkline(cptr, sptr, parc, parv)
 **	parv[1] = nickmask
 **	parv[2] = reason
 */
-int  m_sqline(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_sqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	ConfigItem_ban	*bconf;
 	/* So we do not make double entries */
@@ -1087,10 +1060,7 @@ int  m_sqline(cptr, sptr, parc, parv)
 **	parv[0] = sender
 **	parv[1] = nickmask
 */
-int  m_unsqline(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_unsqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	ConfigItem_ban *bconf;
 

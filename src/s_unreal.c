@@ -67,10 +67,7 @@ extern int LRV;
    A: Remember to see server_etabl ;)))))
       *evil fucking grin*
 */
-int  m_sethost(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *vhost, *s;
 #ifndef DISABLE_USERMOD
@@ -200,10 +197,7 @@ int  m_sethost(cptr, sptr, parc, parv)
  *
 */
 
-int  m_chghost(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 	char *s;
@@ -304,10 +298,7 @@ int  m_chghost(cptr, sptr, parc, parv)
  *
 */
 
-int  m_chgident(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_chgident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 	char *s;
@@ -406,10 +397,7 @@ int  m_chgident(cptr, sptr, parc, parv)
  * 	   Cloning of m_sethost at some points - so same authors ;P
 */
 
-int  m_setident(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 
 	char *vident, *s;
@@ -534,10 +522,7 @@ int  m_setident(cptr, sptr, parc, parv)
     FREEDOM TO THE USERS! ;)
 */
 
-int  m_setname(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_setname(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	if (parc < 2)
 		return;
@@ -590,10 +575,7 @@ int  m_setname(cptr, sptr, parc, parv)
  *  D: Sets server info if you are Server Admin (ONLINE)
 */
 
-int  m_sdesc(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_sdesc(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	if (IsCoAdmin(sptr))
 		goto sdescok;
@@ -646,10 +628,7 @@ int  m_sdesc(cptr, sptr, parc, parv)
 **      parv[0] = sender prefix
 **      parv[1] = message text
 */
-int  m_admins(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_admins(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *message;
 
@@ -686,10 +665,7 @@ int  m_admins(cptr, sptr, parc, parv)
 **      parv[0] = sender prefix
 **      parv[1] = message text
 */
-int  m_techat(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_techat(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *message;
 
@@ -725,10 +701,7 @@ int  m_techat(cptr, sptr, parc, parv)
 **      parv[0] = sender prefix
 **      parv[1] = message text
 */
-int  m_nachat(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_nachat(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *message;
 
@@ -768,10 +741,7 @@ int  m_nachat(cptr, sptr, parc, parv)
  * parv[1] = server to query
 */
 
-int  m_lag(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_lag(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 
 	if (MyClient(sptr))
@@ -1007,10 +977,7 @@ int  m_rpong(aClient *cptr, aClient *sptr, int parc, char *parv[])
  *
 */
 
-int  m_swhois(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_swhois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 
@@ -1041,10 +1008,7 @@ int  m_swhois(cptr, sptr, parc, parv)
 **   :server.unreal.net SENDUMODE F :Client connecting at server server.unreal.net port 4141 usw..
 ** or for sending msgs to locops.. :P
 */
-int  m_sendumode(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *message;
 	char *p;
@@ -1131,10 +1095,7 @@ int  m_sendumode(cptr, sptr, parc, parv)
 **      parv[2] = options
 */
 
-int  m_tsctl(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	time_t timediff;
 
@@ -1252,10 +1213,7 @@ int  m_tsctl(cptr, sptr, parc, parv)
 
 
 #ifdef GUEST
-int m_guest (cptr, sptr, parc, parv)
-aClient *cptr, *sptr;
-int parc;
-char *parv[];
+int m_guest(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 int randnum;
 char guestnick[NICKLEN];
@@ -1275,10 +1233,7 @@ m_nick(sptr,cptr,2,param);
 }
 #endif
 
-int  m_htm(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	int  x;
 	if (!IsOper(sptr))
@@ -1417,10 +1372,7 @@ int  m_htm(cptr, sptr, parc, parv)
  *
 */
 
-int  m_chgname(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 

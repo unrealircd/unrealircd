@@ -59,9 +59,7 @@ char *cannotjoin_msg = NULL;
 
 /* ircd.dcc configuration */
 
-ConfigItem_deny_dcc *dcc_isforbidden(cptr, sptr, target, filename)
-	aClient *cptr, *sptr, *target;
-	char *filename;
+ConfigItem_deny_dcc *dcc_isforbidden(aClient *cptr, aClient *sptr, aClient *target, char *filename)
 {
 	ConfigItem_deny_dcc *p;
 
@@ -101,8 +99,7 @@ void dcc_sync(aClient *sptr)
 	}
 }
 
-void report_flines(sptr)
-	aClient *sptr;
+void report_flines(aClient *sptr)
 {
 	ConfigItem_deny_dcc *tmp;
 	char *filemask, *reason;
@@ -152,11 +149,7 @@ void	DCCdeny_del(ConfigItem_deny_dcc *deny)
  * parv[2] - reason
  */
 
-int  m_dccdeny(cptr, sptr, parc, parv)
-	aClient *cptr;
-	aClient *sptr;
-	int  parc;
-	char *parv[];
+int m_dccdeny(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	ConfigItem_deny_dcc	*deny;
 	if (!MyClient(sptr))
@@ -197,11 +190,7 @@ int  m_dccdeny(cptr, sptr, parc, parv)
  * parv[0] - sender
  * parv[1] - file/mask
  */
-int  m_undccdeny(cptr, sptr, parc, parv)
-	aClient *cptr;
-	aClient *sptr;
-	int  parc;
-	char *parv[];
+int m_undccdeny(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	ConfigItem_deny_dcc *p;
 	if (!MyClient(sptr))
@@ -305,9 +294,7 @@ int  m_svsfline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 /* restrict channel stuff */
 
 
-int  channel_canjoin(sptr, name)
-	aClient *sptr;
-	char *name;
+int  channel_canjoin(aClient *sptr, char *name)
 {
 	ConfigItem_deny_channel *p;
 
@@ -327,8 +314,7 @@ int  channel_canjoin(sptr, name)
 	return 1;
 }
 
-void vhost_report(sptr)
-	aClient *sptr;
+void vhost_report(aClient *sptr)
 {
 
 }

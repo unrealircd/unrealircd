@@ -95,10 +95,7 @@ VOIDSIG dummy()
 **	*NOTE*	I nuked 'em.  At the load of current ircd servers
 **		you can't run with stuff that blocks. And we don't.
 */
-int  deliver_it(cptr, str, len)
-	aClient *cptr;
-	int  len;
-	char *str;
+int  deliver_it(aClient *cptr, char *str, int len)
 {
 	int  retval;
 	aClient *acpt = cptr->listener;

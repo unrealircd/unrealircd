@@ -58,10 +58,7 @@ extern char zlinebuf[];
  *	set_at    = was set at
 */
 
-int  tkl_add_line(type, usermask, hostmask, reason, setby, expire_at, set_at)
-	int  type;
-	char *usermask, *hostmask, *reason, *setby;
-	TS   expire_at, set_at;
+int  tkl_add_line(int type, char *usermask, char *hostmask, char *reason, char *setby, TS expire_at, TS set_at)
 {
 	aTKline *nl;
 
@@ -84,8 +81,7 @@ int  tkl_add_line(type, usermask, hostmask, reason, setby, expire_at, set_at)
 	tklines = nl;
 }
 
-aTKline *tkl_del_line(tkl)
-	aTKline *tkl;
+aTKline *tkl_del_line(aTKline *tkl)
 {
 	aTKline *p, *q;
 
@@ -250,9 +246,7 @@ void tkl_check_expire(void)
 	returns >= 0 if client exits
 */
 
-int  find_tkline_match(cptr, xx)
-	aClient *cptr;
-	int  xx;
+int  find_tkline_match(aClient *cptr, int xx)
 {
 	aTKline *lp;
 	char *chost, *cname, *cip;
@@ -340,8 +334,7 @@ int  find_tkline_match(cptr, xx)
 	return -1;
 }
 
-int  find_tkline_match_zap(cptr)
-	aClient *cptr;
+int  find_tkline_match_zap(aClient *cptr)
 {
 	aTKline *lp;
 	char *cip;
@@ -395,8 +388,7 @@ int  tkl_sweep()
 }
 
 
-void tkl_stats(cptr)
-	aClient *cptr;
+void tkl_stats(aClient *cptr)
 {
 	aTKline *tk;
 	TS   curtime;
@@ -492,10 +484,7 @@ void tkl_synch(aClient *sptr)
            Z = Z:Line	
 */
 
-int  m_tkl(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aTKline *tk;
 	int  type;
@@ -559,19 +548,8 @@ int  m_tkl(cptr, sptr, parc, parv)
 		  tkl_add_line(type, parv[3], parv[4], parv[8], parv[5],
 		      expiry_1, setat_1);
 
-#ifndef __OpenBSD__
-		  strncpy(gmt, asctime(gmtime((clock_t *) & setat_1)),
-		      sizeof(gmt));
-#else
 		  strncpy(gmt, asctime(gmtime((TS *)&setat_1)), sizeof(gmt));
-#endif
-
-#ifndef __OpenBSD__
-		  strncpy(gmt2, asctime(gmtime((clock_t *) & expiry_1)),
-		      sizeof(gmt2));
-#else
 		  strncpy(gmt2, asctime(gmtime((TS *)&expiry_1)), sizeof(gmt2));
-#endif
 		  gmt[strlen(gmt) - 1] = '\0';
 		  gmt2[strlen(gmt2) - 1] = '\0';
 
@@ -670,15 +648,9 @@ int  m_tkl(cptr, sptr, parc, parv)
 				  if (!strcmp(tk->hostmask, parv[4])
 				      && !strcmp(tk->usermask, parv[3]))
 				  {
-#ifndef __OpenBSD__
-					  strncpy(gmt,
-					      asctime(gmtime((clock_t *) &
-					      tk->set_at)), sizeof(gmt));
-#else
 					  strncpy(gmt,
 					      asctime(gmtime((TS *)&tk->
 					      set_at)), sizeof(gmt));
-#endif
 					  gmt[strlen(gmt) - 1] = '\0';
 					  sendto_umode(UMODE_EYES,
 					      "%s removed %s %s@%s (set at %s - reason: %s)",
