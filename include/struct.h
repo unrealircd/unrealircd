@@ -930,6 +930,14 @@ struct _configflag_tld
 #define CONF_BAN_TYPE_AKILL	1
 #define CONF_BAN_TYPE_TEMPORARY 2
 
+#define BAN_ACT_KILL		0
+#define BAN_ACT_TEMPSHUN	1
+#define BAN_ACT_SHUN		2
+#define BAN_ACT_KLINE		3
+#define BAN_ACT_ZLINE		4
+#define BAN_ACT_GLINE		5
+#define BAN_ACT_GZLINE		6
+
 #define CRULE_ALL		0
 #define CRULE_AUTO		1
 
@@ -1068,7 +1076,7 @@ struct _configitem_ban {
 	struct IN_ADDR netmask;
 	int bits;
 	short masktype;
-
+	unsigned short action;
 };
 
 #ifdef FAST_BADWORD_REPLACE

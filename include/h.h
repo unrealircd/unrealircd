@@ -617,3 +617,4 @@ extern int l_commands_Load(int);
 #endif
 extern void sendto_chmodemucrap(aClient *, aChannel *, char *);
 extern void verify_opercount(aClient *, char *);
+extern int place_host_ban(aClient *sptr, int action, char *reason, long time);

@@ -128,6 +128,7 @@ struct zConfiguration {
 	unsigned char modef_default_unsettime;
 	unsigned char modef_max_unsettime;
 #endif
+	long ban_version_tkl_time;
 	aNetwork network;
 };
 
@@ -218,3 +219,5 @@ extern aConfiguration iConf;
 #endif
 
 #define ALLOW_PART_IF_SHUNNED	iConf.allow_part_if_shunned
+
+#define BAN_VERSION_TKL_TIME	iConf.ban_version_tkl_time

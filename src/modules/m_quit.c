@@ -97,7 +97,7 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	static char comment[TOPICLEN + 1];
 	Membership *lp;
 
-	if (!IsServer(cptr))
+	if (!IsServer(cptr) && IsPerson(sptr))
 	{
 #ifdef STRIPBADWORDS
 		int blocked = 0;
@@ -141,9 +141,9 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				ocomment = StripColors(ocomment);
 				if (*ocomment == '\0')
 					ocomment = parv[0];
-			} else {
+			} else
+			if (filtertype == 2)
 				ocomment = parv[0];
-			}
 		} /* (strip color codes) */
 
 		strncpy(s, ocomment, TOPICLEN - (s - comment));

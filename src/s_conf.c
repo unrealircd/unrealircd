@@ -1336,6 +1336,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->modef_default_unsettime = 0;
 	i->modef_max_unsettime = 60; /* 1 hour seems enough :p */
 #endif
+	i->ban_version_tkl_time = 86400; /* 1d */
 }
 
 /* needed for set::options::allow-part-if-shunned,
@@ -5041,6 +5042,25 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 		ca->masktype = parse_netmask(ca->mask, &ca->netmask, &ca->bits);
 	cep = config_find_entry(ce->ce_entries, "reason");
 	ca->reason = strdup(cep->ce_vardata);
+	cep = config_find_entry(ce->ce_entries, "action");
+	if (cep)
+	{
+		if (!strcmp(cep->ce_vardata, "kill"))
+			ca->action = BAN_ACT_KILL;
+		else if (!strcmp(cep->ce_vardata, "tempshun"))
+			ca->action = BAN_ACT_TEMPSHUN;
+		else if (!strcmp(cep->ce_vardata, "shun"))
+			ca->action = BAN_ACT_SHUN;
+		else if (!strcmp(cep->ce_vardata, "kline"))
+			ca->action = BAN_ACT_KLINE;
+		else if (!strcmp(cep->ce_vardata, "zline"))
+			ca->action = BAN_ACT_ZLINE;
+		else if (!strcmp(cep->ce_vardata, "gline"))
+			ca->action = BAN_ACT_GLINE;
+		else if (!strcmp(cep->ce_vardata, "gzline"))
+			ca->action = BAN_ACT_GZLINE;
+	}
+
 	AddListItem(ca, conf_ban);
 	return 0;
 }
@@ -5119,6 +5139,20 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 				cep->ce_fileptr->cf_filename,
 				cep->ce_varlinenum,
 				cep->ce_varname);
+			errors++;
+		}
+	}
+
+	cep = config_find_entry(ce->ce_entries, "action");
+	if (cep)
+	{
+		if (strcmp(cep->ce_vardata, "kill")  && strcmp(cep->ce_vardata, "shun") &&
+		    strcmp(cep->ce_vardata, "kline") && strcmp(cep->ce_vardata, "zline") &&
+		    strcmp(cep->ce_vardata, "gline") && strcmp(cep->ce_vardata, "gzline") &&
+		    strcmp(cep->ce_vardata, "tempshun"))
+		{
+			config_error("%s:%i: ban %s::action has unknown action type '%s'",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata, cep->ce_vardata);
 			errors++;
 		}
 	}
@@ -5406,6 +5440,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "default-bantime"))
 		{
 			tempiConf.default_bantime = config_checkval(cep->ce_vardata,CFG_TIME);
+		}
+		else if (!strcmp(cep->ce_varname, "ban-version-tkl-time"))
+		{
+			tempiConf.ban_version_tkl_time = config_checkval(cep->ce_vardata,CFG_TIME);
 		}
 #ifdef NEWCHFLOODPROT
 		else if (!strcmp(cep->ce_varname, "modef-default-unsettime")) {
@@ -5967,13 +6005,14 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 			}
 		}
-		else if (!strcmp(cep->ce_varname, "default-bantime")) {
+		else if (!strcmp(cep->ce_varname, "default-bantime") ||
+		         !strcmp(cep->ce_varname, "ban-version-tkl-time")) {
 			long x;
 			x = config_checkval(cep->ce_vardata,CFG_TIME);
 			if ((x < 0) > (x > 2000000000))
 			{
-				config_error("%s:%i: set::default-bantime: value '%ld' out of range",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, x);
+				config_error("%s:%i: set::%s: value '%ld' out of range",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname, x);
 				errors++;
 			}
 		}

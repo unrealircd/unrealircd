@@ -21,7 +21,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 Beta18<br>
-  <b>Last doc update:</b> 2003-10-27</div>
+  <b>Last doc update:</b> 2003-10-30</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke / McSkaf<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -1222,17 +1222,31 @@ ban realname {
 ban version {
 	mask &lt;version-mask&gt;;
 	reason &lt;reason-for-ban&gt;;
+	action [kill|tempshun|shun|kline|zline|gline|gzline];
 };</pre></p>
-<p>The ban version block allows you to ban a client based on the IRC client software
-  they use. This makes use of the clients CTCP version reply. Therefore if a client does not   send out a CTCP version, the ban will not work. This feature is intended to allow you to block   malicious scripts. The ban::mask specifies the version which should be banned. 
-  The mask may contain wildcards. The ban::reason specifies the reason why this 
-  ban is being placed.</p>
+<p>The ban version block allows you to ban a client based on the IRC client software they use. 
+  This makes use of the clients CTCP version reply. Therefore if a client does not 
+  send out a CTCP version, the ban will not work. This feature is intended to allow you to block 
+  malicious scripts. The <b>ban::mask</b> specifies the version which should be banned. 
+  The mask may contain wildcards. The <b>ban::reason</b> specifies the reason why this 
+  ban is being placed. You can also specify <b>ban::action</b>, <i>kill</i> is the default, 
+  <i>tempshun</i> will shun the specific user connection only and would work very effective against 
+  zombies/bots at dynamic IPs because it won't affect innocent users. <i>shun/kline/zline/gline/gzline</i> 
+  will place a ban of that type on the ip (*@IPADDR), the duration of these bans can be configured 
+  with set::ban-version-tkl-time and defaults to 1 day.</p>
 <p>Example:<br>
 <pre>
 ban version {
 	mask "*SomeLameScript*";
 	reason "SomeLameScript contains backdoors";
-};</pre></p>
+};</pre>
+<pre>
+ban version {
+	mask "*w00tZombie*";
+	reason "I hate those hundreds of zombies";
+	action zline;
+};</pre>
+</p>
 <p></p></div>
 <p><font class="block_section">4.19 - </font><font class="block_name">Ban Exceptions Block</font>
    <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as the E:Line)</font><a name="banexceptionblock"></a><div class="desc">
