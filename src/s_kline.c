@@ -185,7 +185,8 @@ aTKline *tkl_expire(aTKline * tmp)
 						chost = acptr->sockhost;
 						cname = acptr->user->username;
 
-						cip = (char *)inet_ntoa(acptr->ip);
+	
+						cip = (char *)Inet_ia2p(&acptr->ip);
 
 						if (!(*tmp->hostmask < '0') && (*tmp->hostmask > '9'))
 							is_ip = 1;
@@ -260,7 +261,7 @@ int  find_tkline_match(aClient *cptr, int xx)
 	nowtime = TStime();
 	chost = cptr->sockhost;
 	cname = cptr->user ? cptr->user->username : "unknown";
-	cip = (char *)inet_ntoa(cptr->ip);
+	cip = (char *)Inet_ia2p(&cptr->ip);
 
 
 	for (lp = tklines; lp; lp = lp->next)
@@ -344,7 +345,7 @@ int  find_tkline_match_zap(aClient *cptr)
 
 
 	nowtime = TStime();
-	cip = (char *)inet_ntoa(cptr->ip);
+	cip = (char *)Inet_ia2p(&cptr->ip);
 
 	for (lp = tklines; lp; lp = lp->next)
 	{
