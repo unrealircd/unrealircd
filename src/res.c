@@ -1580,33 +1580,34 @@ char	*parv[];
 		aCache	*cp;
 	int	i;
 
-	if (parv[1] && *parv[1] == 'l') {
-		for(cp = cachetop; cp; cp = cp->list_next)
-		    {
-			sendto_one(sptr, "NOTICE %s :Ex %d ttl %d host %s(%s)",
-				   parv[0], cp->expireat - TStime(), cp->ttl,
-#ifndef _WIN32
-				   cp->he.h_name, inetntoa(cp->he.h_addr));
-			for (i = 0; cp->he.h_aliases[i]; i++)
-				sendto_one(sptr,"NOTICE %s : %s = %s (CN)",
-					   parv[0], cp->he.h_name,
-					   cp->he.h_aliases[i]);
-			for (i = 1; cp->he.h_addr_list[i]; i++)
-				sendto_one(sptr,"NOTICE %s : %s = %s (IP)",
-					   parv[0], cp->he.h_name,
-					   inetntoa(cp->he.h_addr_list[i]));
+	if (IsOper(sptr))
+		if (parv[1] && *parv[1] == 'l') {
+			for(cp = cachetop; cp; cp = cp->list_next)
+			    {
+				sendto_one(sptr, "NOTICE %s :Ex %d ttl %d host %s(%s)",
+					   parv[0], cp->expireat - TStime(), cp->ttl,
+#ifndef	 _WIN32
+					   cp->he.h_name, inetntoa(cp->he.h_addr));
+				for (i = 0; cp->he.h_aliases[i]; i++)
+					sendto_one(sptr,"NOTICE %s : %s = %s (CN)",
+						   parv[0], cp->he.h_name,
+						   cp->he.h_aliases[i]);
+				for (i = 1; cp->he.h_addr_list[i]; i++)
+					sendto_one(sptr,"NOTICE %s : %s = %s (IP)",
+						   parv[0], cp->he.h_name,
+						   inetntoa(cp->he.h_addr_list[i]));
 #else
-				   cp->he->h_name, inetntoa(cp->he->h_addr));
-			for (i = 0; cp->he->h_aliases[i]; i++)
-				sendto_one(sptr,"NOTICE %s : %s = %s (CN)",
-					   parv[0], cp->he->h_name,
-					   cp->he->h_aliases[i]);
-			for (i = 1; cp->he->h_addr_list[i]; i++)
-				sendto_one(sptr,"NOTICE %s : %s = %s (IP)",
-					   parv[0], cp->he->h_name,
+					   cp->he->h_name, inetntoa(cp->he->h_addr));
+				for (i = 0; cp->he->h_aliases[i]; i++)
+					sendto_one(sptr,"NOTICE %s : %s = %s (CN)",
+						   parv[0], cp->he->h_name,
+						   cp->he->h_aliases[i]);
+				for (i = 1; cp->he->h_addr_list[i]; i++)
+					sendto_one(sptr,"NOTICE %s : %s = %s (IP)",
+						   parv[0], cp->he->h_name,
 					   inetntoa(cp->he->h_addr_list[i]));
 #endif
-		    }
+			    }
 		return 0;
 	}
 	sendto_one(sptr,"NOTICE %s :Ca %d Cd %d Ce %d Cl %d Ch %d:%d Cu %d",

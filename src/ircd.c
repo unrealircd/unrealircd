@@ -986,7 +986,7 @@ int  InitwIRCD(argc, argv)
 #ifndef BIG_SECURITY_HOLE
 		if ((IRC_UID == 0) || (IRC_GID == 0))
 		{
-			(void)fprintf(stderr, "ERROR: SETUID and SETGID have not been set properly in unrealircd.conf"
+			(void)fprintf(stderr, "ERROR: SETUID and SETGID have not been set properly"
 			    "\nPlease read your documentation\n(HINT:SETUID or SETGID can not be 0)\n");
 			exit(-1);
 		}
@@ -1042,10 +1042,8 @@ int  InitwIRCD(argc, argv)
 	initstats();
 	booted = FALSE;
 	init_dynconf();
-	load_conf(ZCONF, 0);
-	doneconf(0);
-	init_conf2("unrealircd.conf");
-	report_configuration();
+	init_conf2(configfile);
+	validate_configuration();
 #ifdef STRIPBADWORDS
 	if (loadbadwords_message("badwords.message.conf"))
 	{

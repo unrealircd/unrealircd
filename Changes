@@ -201,4 +201,11 @@
 - Added /stats P on listener info (oper-only)
 - listener temporary stuff works now
 - Fixed temporary stuf with conf_link
+- Fixed a problem with +x
+- Made CPATH be unrealircd.conf and init_conf2 use configfile instead
+- Disabled calls to dynconf
+- Added validate_conf, added dynconf checking, me, admin, class, oper
+  testing
+- Added config_progress() Fixed temporary stuff
+  with conf_link
 - Made tld {} get rehashed

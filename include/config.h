@@ -223,7 +223,7 @@
  * these are only the recommened names and paths. Change as needed.
  * You must define these to something, even if you don't really want them.
  */
-#define	CPATH		"ircd.conf"	/* server configuration file */
+#define	CPATH		"unrealircd.conf"	/* server configuration file */
 #define	MPATH		"ircd.motd"	/* server MOTD file */
 #define RPATH   	"ircd.rules"	/* server rules file */
 #define ZPATH		"ircd.notes"	/* server notes */

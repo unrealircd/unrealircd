@@ -277,6 +277,21 @@ static void config_status(char *format, ...)
 	fprintf(stderr, "* %s\n", buffer);
 	sendto_realops("warning: %s", buffer);
 }
+
+static void config_progress(char *format, ...)
+{
+	va_list		ap;
+	char		buffer[1024];
+	char		*ptr;
+
+	va_start(ap, format);
+	vsprintf(buffer, format, ap);
+	va_end(ap);
+	if ((ptr = strchr(buffer, '\n')) != NULL)
+		*ptr = '\0';
+	fprintf(stderr, "* %s\n", buffer);
+	sendto_realops("%s", buffer);
+}
 /* This is the internal parser, made by Chris Behrens & Fred Jacobs */
 static ConfigFile *config_parse(char *filename, char *confdata)
 {
@@ -1990,6 +2005,125 @@ void	listen_cleanup()
 		close_listeners();
 }
 
+#define Error config_error
+#define Status config_progress
+#define Warning config_status
+void	validate_configuration(void)
+{
+	ConfigItem_class *class_ptr;
+	ConfigItem_oper	 *oper_ptr;
+	
+	/* Let us validate dynconf first */
+	if (!KLINE_ADDRESS || (*KLINE_ADDRESS == '\0'))
+		Error("Missing KLINE_ADDRESS");
+#ifndef DEVELOP
+	if (KLINE_ADDRESS) 
+		if (!strchr(KLINE_ADDRESS, '@') && !strchr(KLINE_ADDRESS, ':'))
+		{
+			strcat(errormsg,
+			    "set::kline-address is not an e-mail or an URL");
+		}
+		else if (!match("*@unrealircd.com", KLINE_ADDRESS) || !match("*@unrealircd.org",KLINE_ADDRESS) || !match("unreal-*@lists.sourceforge.net",KLINE_ADDRESS)) 
+			strcat(errormsg,
+			   "set::kline-address may not be an UnrealIRCd Team address");
+	
+#endif
+	if ((MAXCHANNELSPERUSER < 1))
+		Error(
+		    "set::maxchannelsperuser is an invalid value, must be > 0");
+	if ((iNAH < 0) || (iNAH > 1))
+		Error("set::host-on-oper-op is an invalid value");
+	if (AUTO_JOIN_CHANS == '\0')
+		Error("set::auto-join is an invalid value");
+	if (OPER_AUTO_JOIN_CHANS == '\0')
+		Error(
+		    "set::oper-auto-join is an invalid value");
+	if (HOST_TIMEOUT < 0 || HOST_TIMEOUT > 180)
+		Error("set::dns::timeout is an invalid value");
+	if (HOST_RETRIES < 0 || HOST_RETRIES > 10)
+		Error("set::dns::retries is an invalid value");
+#define Missing(x) !(x) || (*(x) == '\0')
+	if (Missing(defserv))
+		Error("set::default-server is missing");
+	if (Missing(SERVICES_NAME))
+		Error("set::services-server is missing");
+	if (Missing(oper_host))
+		Error("set::hosts::global is missing");
+	if (Missing(admin_host))
+		Error("set::hosts::admin is missing");
+	if (Missing(locop_host))
+		Error("set::hosts:local is missing");
+	if (Missing(sadmin_host))
+		Error("set::hosts::servicesadmin is missing");
+	if (Missing(netadmin_host))
+		Error("set::hosts::netadmin is missing");
+	if (Missing(coadmin_host))
+		Error("set::hosts::coadmin is missing");
+	if (Missing(techadmin_host))
+		Error("set::hosts::techadmin is missing");
+	if (Missing(hidden_host))
+		Error("set::hiddenhost-prefix is missing");
+	if (Missing(helpchan))
+		Error("set::help-channel is missing");
+	if (Missing(STATS_SERVER))
+		Error("set::stats-server is missing");
+	if (Missing(iConf.socksbanmessage))
+		Error("set::socks::ban-message is missing");
+	if (Missing(iConf.socksquitmessage))
+		Error("set::socks::quit-message is missing");
+
+	/* Now for the real config */
+	if (conf_me)
+	{
+		if (!conf_me->name)
+			Error("me::name is missing");
+		if (!conf_me->info)
+			Error("me::info is missing");
+		/* numeric is being checked in _conf_me */	
+	}
+	if (!conf_admin)
+		Error("admin {} is missing");
+
+	for (class_ptr = conf_class; class_ptr; class_ptr = (ConfigItem_class *) class_ptr->next)
+	{
+		if (!class_ptr->name)
+			Error("class without name");
+		else
+		{
+			if (!class_ptr->pingfreq)
+				Error("class %s::pingfreq with illegal value",
+					class_ptr->name);
+			if (!class_ptr->sendq)
+				Error("class %s::sendq with illegal value",
+					class_ptr->name);;
+			if (class_ptr->maxclients < 0)
+				Error("class %s:maxclients with illegal (negative) value",
+					class_ptr->name);				
+		}
+	}
+	for (oper_ptr = conf_oper; oper_ptr; oper_ptr = (ConfigItem_oper *) oper_ptr->next)
+	{	
+		ConfigItem_oper_from *oper_from;
+		
+		if (!oper_ptr->from)
+			Error("oper %s: does not have a from record",
+				oper_ptr->name);
+		if (!oper_ptr->class)
+			Error("oper %s::class is missing or unknown",
+				oper_ptr->name);
+		if (!oper_ptr->password)
+			Error("oper %s::password is missing",
+				oper_ptr->name);
+		if (!oper_ptr->oflags)
+			Warning("oper %s without privileges",
+				oper_ptr->name);
+	}
+
+}
+#undef Error
+#undef Status
+#undef Missing
+
 int     rehash(aClient *cptr, aClient *sptr, int sig)
 {
 	ConfigItem_oper		*oper_ptr;
@@ -2126,7 +2260,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		ircfree(conf_drpass->die);
 		ircfree(conf_drpass);
 	}
-	init_conf2("unrealircd.conf");
+	init_conf2(configfile);
 	/* Clean up listen records */
 	close_listeners();
 	listen_cleanup();
