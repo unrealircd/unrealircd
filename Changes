@@ -3061,3 +3061,6 @@ seen. gmtime warning still there
   ~300Kb smaller. Now also requires Inno Setup 4.1.6 (tested with 4.2.0).
 - Usermode 'r' (registered) was unset even in case of "case"-nickchanges (like:
   'Syzop' -> 'syzop'). This affected f.e. ircservices. Reported by LoVeR (#0001679).
+- spamfilter.conf: changed a lot of rules from 'block' to 'gline', left some
+  on 'block' however if there was some (very low) chance on false positives (even though
+  just like 0.01%).
