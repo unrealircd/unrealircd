@@ -41,6 +41,9 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#ifndef RTLD_NOW
+#define RTLD_NOW RTLD_LAZY
+#endif
 
 ModuleInfo *Modules[MAXMODULES];
 Hook	   *Hooks[MAXHOOKTYPES];

@@ -988,7 +988,6 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 				    ssl_get_cipher(sptr->ssl));
 #endif
 		(void)m_lusers(sptr, sptr, 1, parv);
-		update_load();
 		(void)m_motd(sptr, sptr, 1, parv);
 #ifdef EXPERIMENTAL
 		sendto_one(sptr,
@@ -3715,7 +3714,7 @@ int  m_mkpasswd(cptr, sptr, parc, parv)
 		    me.name, parv[0]);
 		return 0;
 	}
-	srandom(time(0));
+	srandom(TStime());
 #ifndef _WIN32
 	salt[0] = saltChars[random() % 64];
 	salt[1] = saltChars[random() % 64];

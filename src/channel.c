@@ -4005,7 +4005,7 @@ int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
 int  m_list(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aChannel *chptr;
-	TS   currenttime = time(NULL);
+	TS   currenttime = TStime();
 	char *name, *p = NULL;
 	LOpts *lopt = NULL;
 	Link *lp, *next;

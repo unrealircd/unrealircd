@@ -35,7 +35,6 @@ Computing Center and Jarkko Oikarinen";
 #include "common.h"
 #include "sys.h"
 #include "numeric.h"
-#include "userload.h"
 #include <sys/stat.h>
 #include <fcntl.h>
 #if !defined(ULTRIX) && !defined(SGI) && \
@@ -483,15 +482,11 @@ int  exit_client(cptr, sptr, from, comment)
 			    sptr->user->realhost, comment, sptr->sockhost);
 
 		}
-		current_load_data.conn_count--;
 		if (IsPerson(sptr))
 		{
 			char mydom_mask[HOSTLEN + 1];
 			mydom_mask[0] = '\0';
 			strncpy(&mydom_mask[1], DOMAINNAME, HOSTLEN - 1);
-			current_load_data.client_count--;
-			if (match(mydom_mask, sptr->sockhost) == 0)
-				current_load_data.local_count--;
 			/* Clean out list and watch structures -Donwulff */
 			hash_del_notify_list(sptr);
 			if (sptr->user && sptr->user->lopt)
@@ -501,7 +496,6 @@ int  exit_client(cptr, sptr, from, comment)
 				MyFree(sptr->user->lopt);
 			}
 		}
-		update_load();
 		on_for = TStime() - sptr->firsttime;
 # if defined(USE_SYSLOG) && defined(SYSLOG_USERS)
 		if (IsPerson(sptr))

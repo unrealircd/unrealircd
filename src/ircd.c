@@ -81,6 +81,7 @@ int  un_gid = 99;
 extern char unreallogo[];
 #endif
 
+time_t timeofday = 0;
 LoopStruct loop;
 extern aMotd *opermotd;
 extern aMotd *svsmotd;
@@ -740,6 +741,8 @@ char chess[] = {
 	85, 110, 114, 101, 97, 108, 0
 };
 
+extern time_t TSoffset;
+
 #ifndef _WIN32
 int  main(argc, argv)
 #else
@@ -796,7 +799,6 @@ int  InitwIRCD(argc, argv)
 #endif
 	bzero((char *)&me, sizeof(me));
 	setup_signals();
-	initload();
 	init_ircstats();
 	clear_scache_hash_table();
 #ifdef FORCE_CORE
@@ -1157,7 +1159,7 @@ int  InitwIRCD(argc, argv)
 
 void SocketLoop(void *dummy)
 {
-	TS   delay = 0, now;
+	TS   delay = 0;
 	static TS lastglinecheck = 0;
 	TS   last_tune;
 #ifndef NO_FDLIST
@@ -1168,11 +1170,11 @@ void SocketLoop(void *dummy)
 	for (;;)
 #endif
 	{
-		now = TStime();
-		if ((now - lastglinecheck) > 4)
+		timeofday = time(NULL) + TSoffset;
+		if ((timeofday - lastglinecheck) > 4)
 		{
 			tkl_check_expire();
-			lastglinecheck = now;
+			lastglinecheck = timeofday;
 #ifdef STATSWRITING
 			save_stats();
 #endif
@@ -1189,7 +1191,7 @@ void SocketLoop(void *dummy)
 			save_tunefile();
 		}
 
-		if (((now - last_garbage_collect) >
+		if (((timeofday - last_garbage_collect) >
 		    GARBAGE_COLLECT_EVERY || (loop.do_garbage_collect == 1)))
 		{
 			extern int freelinks;
@@ -1219,7 +1221,7 @@ void SocketLoop(void *dummy)
 			}
 			if (loop.do_garbage_collect == 1)
 				loop.do_garbage_collect = 0;
-			last_garbage_collect = now;
+			last_garbage_collect = timeofday;
 		}
 		/*
 		   ** Run through the hashes and check lusers every
@@ -1232,9 +1234,9 @@ void SocketLoop(void *dummy)
 			static TS lasttime = 0;
 			static long lastrecvK, lastsendK;
 			static int lrv;
-			if (now - lasttime < LCF)
+			if (timeofday - lasttime < LCF)
 				goto done_check;
-			lasttime = now;
+			lasttime = timeofday;
 			lrv = LRV * LCF;
 			if ((me.receiveK - lrv >= lastrecvK) || HTMLOCK == 1)
 			{
@@ -1281,21 +1283,21 @@ void SocketLoop(void *dummy)
 					lifesux = 0;
 					if (noisy_htm)
 						sendto_realops
-						    ("Resuming standard operation (incoming = %0.2f kb/s, outgoing = %0.2f kb/s now)",
+						    ("Resuming standard operation (incoming = %0.2f kb/s, outgoing = %0.2f kb/s timeofday)",
 						    currentrate, currentrate2);
 				}
 			}
 			lastrecvK = me.receiveK;
 			lastsendK = me.sendK;
 		      done_check:
-			if (lasttime != now)
+			if (lasttime != timeofday)
 			{
 				currentrate =
 				    ((float)(me.receiveK -
-				    lastrecvK)) / ((float)(now - lasttime));
+				    lastrecvK)) / ((float)(timeofday - lasttime));
 				currentrate2 =
 				    ((float)(me.sendK -
-				    lastsendK)) / ((float)(now - lasttime));
+				    lastsendK)) / ((float)(timeofday - lasttime));
 				if (currentrate > highest_rate)
 					highest_rate = currentrate;
 				if (currentrate2 > highest_rate2)
@@ -1314,15 +1316,15 @@ void SocketLoop(void *dummy)
 		   ** active C lines, this call to Tryconnections is
 		   ** made once only; it will return 0. - avalon
 		 */
-		if (nextconnect && now >= nextconnect)
-			nextconnect = try_connections(now);
+		if (nextconnect && timeofday >= nextconnect)
+			nextconnect = try_connections(timeofday);
 		/*
 		   ** DNS checks. One to timeout queries, one for cache expiries.
 		 */
-		if (now >= nextdnscheck)
-			nextdnscheck = timeout_query_list(now);
-		if (now >= nextexpire)
-			nextexpire = expire_cache(now);
+		if (timeofday >= nextdnscheck)
+			nextdnscheck = timeout_query_list(timeofday);
+		if (timeofday >= nextexpire)
+			nextexpire = expire_cache(timeofday);
 		    /*
 		       ** take the smaller of the two 'timed' event times as
 		       ** the time of next event (stops us being late :) - avalon
@@ -1334,7 +1336,7 @@ void SocketLoop(void *dummy)
 			delay = nextping;
 		delay = MIN(nextdnscheck, delay);
 		delay = MIN(nextexpire, delay);
-		delay -= now;
+		delay -= timeofday;
 		/*
 		   ** Adjust delay to something reasonable [ad hoc values]
 		   ** (one might think something more clever here... --msa)
@@ -1366,16 +1368,16 @@ void SocketLoop(void *dummy)
 		}
 		{
 			static TS lasttime = 0;
-			if ((lasttime + (lifesux + 1) * 2) < (now = TStime()))
+			if ((lasttime + (lifesux + 1) * 2) < (timeofday = TStime()))
 			{
 				read_message(delay, NULL);	/*  check everything */
-				lasttime = now;
+				lasttime = timeofday;
 			}
 		}
 
 #endif
 		Debug((DEBUG_DEBUG, "Got message(s)"));
-		now = TStime();
+		timeofday = TStime();
 		/*
 		   ** ...perhaps should not do these loops every time,
 		   ** but only if there is some chance of something
@@ -1385,25 +1387,25 @@ void SocketLoop(void *dummy)
 		   ** ping times) --msa
 		 */
 #ifdef NO_FDLIST
-		if (now >= nextping)
+		if (timeofday >= nextping)
 #else
-		if (now >= nextping && !lifesux)
+		if (timeofday >= nextping && !lifesux)
 #endif
-			nextping = check_pings(now, 0);
+			nextping = check_pings(timeofday, 0);
 		if (dorehash)
 		{
 			(void)rehash(&me, &me, 1);
 			dorehash = 0;
 		}
 		/*
-		   ** Flush output buffers on all connections now if they
+		   ** Flush output buffers on all connections timeofday if they
 		   ** have data in them (or at least try to flush)
 		   ** -avalon
 		 */
 #ifndef NO_FDLIST
 		/* check which clients are active */
-		if (now > nextfdlistcheck)
-			nextfdlistcheck = check_fdlists(now);
+		if (timeofday > nextfdlistcheck)
+			nextfdlistcheck = check_fdlists(timeofday);
 #endif
 		flush_connections(me.fd);
 	}

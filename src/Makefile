@@ -27,7 +27,7 @@ OBJS=agent.o aln.o badwords.o bsd.o channel.o cloak.o crule.o dbuf.o \
 	res_init.o res_comp.o res_mkquery.o res_skipname.o s_auth.o \
 	s_bsd.o s_conf.o s_debug.o s_err.o s_extra.o s_kline.o \
 	s_misc.o s_numeric.o s_serv.o s_socks.o s_svs.o $(STRTOUL) ssl.o s_unreal.o \
-	s_user.o scache.o send.o support.o userload.o version.o webtv.o \
+	s_user.o scache.o send.o support.o version.o webtv.o \
 	whowas.o zip.o
 
 SRC=$(OBJS:%.o=%.c)

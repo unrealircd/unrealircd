@@ -33,7 +33,6 @@ static char sccsid[] =
 #include "numeric.h"
 #include "msg.h"
 #include "channel.h"
-#include "userload.h"
 #include "version.h"
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -991,8 +990,6 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	aChannel	*chptr;
 	int		i;
 		
-	current_load_data.conn_count++;
-	update_load();
 	
 	if (cptr->passwd)
 	{
@@ -1313,8 +1310,6 @@ int  m_server_estab(cptr)
 	split = mycmp(cptr->name, cptr->sockhost);
 	host = cptr->name;
 
-	current_load_data.conn_count++;
-	update_load();
 
 	if (!(aconf = find_conf(cptr->confs, host, CONF_NOCONNECT_SERVER)))
 	{
@@ -2807,10 +2802,6 @@ int  m_stats(cptr, sptr, parc, parv)
 	  }
 	  case 'V':
 		  break;
-	  case 'W':
-	  case 'w':
-		  calc_load(sptr, parv[0]);
-		  break;
 	  case 'X':
 	  case 'x':
 		  for (link_p = conf_link; link_p; link_p = (ConfigItem_link *) link_p->next)
@@ -2899,8 +2890,6 @@ int  m_stats(cptr, sptr, parc, parv)
 		      "v - Send the V line list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "V - Send the vhost list");
-		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
-		      "W - Send load information");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
 		      "Y - Send the Y line list");
 		  sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, parv[0],
@@ -3136,9 +3125,6 @@ int  m_lusers(cptr, sptr, parc, parv)
 			sendto_ops("Maximum connections: %d (%d clients)",
 			    max_connection_count, IRCstats.me_clients);
 	}
-	current_load_data.client_count = IRCstats.me_clients;
-	current_load_data.conn_count =
-	    IRCstats.me_clients + IRCstats.me_servers;
 	return 0;
 }
 

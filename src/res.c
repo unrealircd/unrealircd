@@ -98,7 +98,7 @@ int init_resolver(op)
 	int  ret = 0;
 
 #ifdef	LRAND48
-	srand48(time(NULL));
+	srand48(TStime());
 #endif
 	if (op & RES_INITLIST)
 	{

@@ -569,7 +569,7 @@ int  hash_check_notify(cptr, reply)
 		return 0;	/* This nick isn't on notify */
 
 	/* Update the time of last change to item */
-	anptr->lasttime = time(NULL);
+	anptr->lasttime = TStime();
 
 	/* Send notifies out to everybody on the list in header */
 	for (lp = anptr->notify; lp; lp = lp->next)

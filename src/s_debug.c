@@ -259,7 +259,7 @@ void send_usage(cptr, nick)
 		return;
 	}
 	secs = rus.ru_utime.tv_sec + rus.ru_stime.tv_sec;
-	rup = time(NULL) - me.since;
+	rup = TStime() - me.since;
 	if (secs == 0)
 		secs = 1;
 
