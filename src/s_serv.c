@@ -759,13 +759,98 @@ int  m_server(cptr, sptr, parc, parv)
 		/* we also have a fail safe incase they say they are sending
 		 * VL stuff and don't -- codemastr
 		 */
+		aConfItem *vlines = NULL;
 		protocol = (char *)strtok((char *)info, "-");
 		if (protocol)
 		flags = (char *)strtok((char *)NULL, " ");
-		if (flags) {
+		if (flags) 
 		inf = (char *)strtok((char *)NULL, "");
+		if (inf) {
 		strncpyzt(cptr->info, inf[0] ? inf : me.name, sizeof(cptr->info));
+		for (vlines = conf; vlines; vlines = vlines->next) {
+			if ((vlines->status & CONF_VERSION) && !match(vlines->name,cptr->name))
+			break;
 		}
+		if (vlines) {
+		char *proto = vlines->host;
+		char *vflags = vlines->passwd;
+		int result = 0;
+		int i;
+		protocol++;
+		/* check the protocol */
+		switch(*proto) {
+		case '<':
+		proto++;
+		if (atoi(protocol) < atoi(proto))
+		result = 1;
+		else
+		result = 0;
+		break;
+		case '>':
+		proto++;
+		if (atoi(protocol) > atoi(proto))
+		result = 1;
+		else
+		result = 0;
+		break;
+		case '=':
+		proto++;
+		if (atoi(protocol) == atoi(proto))
+		result = 1;
+		else
+		result = 0;
+		break;
+		case '!':
+		proto++;
+		if (atoi(protocol) != atoi(proto))
+		result = 1;
+		else
+		result = 0;
+		break;
+	/* default to = if anything else */
+		default:
+		if (atoi(protocol) == atoi(proto))
+		result = 1;
+		else
+		result = 0;
+		break;
+	} /* switch(*proto) */
+	/* For Services */
+	if (atoi(protocol) == 0)
+		result = 0;
+	/* if the proto in the V:line is * let it pass */
+	if (*proto == '*')
+		result = 0;
+
+	
+	if (result)
+		return exit_client(cptr, cptr, cptr, "Denied by V:line");	
+
+	/* If it passed the protocol check, check the flags */
+
+	for(i = 0; vflags[i]; i++) {
+	if (vflags[i] == '!') {
+		i++;
+	if (strchr(flags, (int)vflags[i])) {
+		result = 1;
+		break;
+	}
+	}	
+	if (!strchr(flags, (int)vflags[i])) {
+		result = 1;
+		break;
+	}
+	} /* for(i = 0; vflags[i]; i++) */
+	if (*vflags == '*')
+		result = 0;
+	/* for services */
+	if (!strcmp(flags, "0"))
+		result = 0;
+	if (result)
+		return exit_client(cptr, cptr, cptr, "Denied by V:line");
+
+	} /* if (vlines) */
+	} /* if (flags) */
 		else
 		strncpyzt(cptr->info, info[0] ? info : me.name, sizeof(cptr->info));
 	}
@@ -1846,6 +1931,7 @@ static int report_array[][3] = {
 	{CONF_MISSING, RPL_STATSXLINE, 'X'},
 	{CONF_TLINE, RPL_STATSTLINE, 't'},
 	{CONF_SOCKSEXCEPT, RPL_STATSELINE, 'e'},
+	{CONF_VERSION, RPL_STATSVLINE, 'V'},
 	{0, 0}
 };
 
@@ -1992,6 +2078,9 @@ static void report_configured_links(sptr, mask)
 				sendto_one(sptr, rpl_str(RPL_STATSNLINE),
 				    me.name, sptr->name, host, pass);
 			}
+			else if (mask == CONF_VERSION)
+				sendto_one(sptr, rpl_str(RPL_STATSVLINE),
+				    me.name, sptr->name, host, pass, name);
 /*			else if (mask == CONF_EXCEPT)
 			{
 				ppx = MyMalloc(strlen(tmp->passwd) + 1);
@@ -2310,6 +2399,8 @@ int  m_stats(cptr, sptr, parc, parv)
 		  break;
 	  }
 	  case 'v':
+		report_configured_links(sptr, CONF_VERSION);
+		break;
 	  case 'V':
 		  vhost_report(sptr);
 		  break;

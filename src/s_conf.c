@@ -1241,6 +1241,10 @@ int  initconf(opt)
 		  case 'u':	/* *Every* server on the net must define the same !!! */
 			  aconf->status = CONF_UWORLD;
 			  break;
+		  case 'V':
+		  case 'v':
+			  aconf->status = CONF_VERSION;
+			  break;
 		  case 'Y':
 		  case 'y':
 			  aconf->status = CONF_CLASS;

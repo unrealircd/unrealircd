@@ -208,7 +208,7 @@ extern struct SLink *find_user_link(/* struct SLink *, struct Client * */);
 #define ZIPSTUFF ""
 #endif
 
-#define PROTOCTL_CLIENT "TOKEN WATCH=128 SAFELIST HCN PREFIX=@+%"
+#define PROTOCTL_CLIENT "TOKEN WATCH=128 SAFELIST HCN PREFIX=@%+"
 #define PROTOCTL_SERVER "NOQUIT TOKEN NICKv2 SJOIN SJOIN2 UMODE2 ALN VL" ZIPSTUFF
 
 #ifdef _WIN32

@@ -262,7 +262,7 @@ static char *replies[] = {
 /* 224    RPL_STATSTLINE */ ":%s 224 %s T %s %s %s",
 /* 225    RPL_STATSELINE */ ":%s 225 %s e %s %s %s",
 /* 226    RPL_STATSNLINE */ ":%s 226 %s n %s %s",
-/* 227 */ NULL,
+/* 227    RPL_STATSVLINE */ ":%s 227 %s V %s %s %s",
 /* 228 */ NULL,
 /* 229 */ NULL,
 /* 230 */ NULL,
