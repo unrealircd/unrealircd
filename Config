@@ -1194,7 +1194,7 @@ while [ -z "$FOO" ] ; do
     esac
 done
 
-DOMAINNAME=`hostname -f`
+DOMAINNAME=`hostname`
 FOO=""
 runonce=""
 while [ -z "$FOO" ] ; do
