@@ -2205,3 +2205,4 @@ seen. gmtime warning still there
 - Fixed _some_ gcc3.3 + -Wall warnings.
 - Fixed a bug where the win32 config editor could crash if the file contained color codes.
 - Resolver fix nr #1 (prolly not "the real problem").
+- Minor oob fix for parse_v4_netmask
