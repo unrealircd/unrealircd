@@ -1274,3 +1274,4 @@ seen. gmtime warning still there
 - Fixed a cloak problem on OSes with 64bit integers (reported by wolven)
 - Updated credits
 - Memory leak fixes with scanners
+- Some fixes with connect(). Knowing my luck this will fuck up to hell
