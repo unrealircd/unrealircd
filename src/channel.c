@@ -4839,7 +4839,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
         }
 
 	/* This sends out to SJ3 servers .. */
-        sendto_serv_butone_token(cptr, OPT_SJOIN|OPT_SJ3,
+	sendto_serv_butone_token_opt(cptr, OPT_SJOIN|OPT_SJ3,
         	MSG_SJOIN, TOK_SJOIN, "%s :%s", parabuf, parv[parc - 1]);
         
 	/* We strip out & and " here, for SJ2 */
@@ -4859,14 +4859,14 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	
 	if (nomode)
 	{
-		sendto_serv_butone_token(cptr, OPT_SJOIN|OPT_SJOIN2|OPT_NOT_SJ3,
+		sendto_serv_butone_token_opt(cptr, OPT_SJOIN|OPT_SJOIN2|OPT_NOT_SJ3,
 			MSG_SJOIN, TOK_SJOIN, "%s %s + <-> :%s", parv[1],
 				parv[2], parabuf);
 		return 0;
 	}
 	if (nopara)
 	{
-		sendto_serv_butone_token(cptr, OPT_SJOIN|OPT_SJOIN2|OPT_NOT_SJ3,
+		sendto_serv_butone_token_opt(cptr, OPT_SJOIN|OPT_SJOIN2|OPT_NOT_SJ3,
 			MSG_SJOIN, TOK_SJOIN, "%s %s %s <-> :%s", parv[1],
 				parv[2], parv[3], parabuf);
 		return 0;
@@ -4879,7 +4879,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 		strcat(paraback, ap->parv[i]);
 		strcat(paraback, " ");
 	}
-	sendto_serv_butone_token(cptr, OPT_SJOIN|OPT_SJOIN2|OPT_NOT_SJ3,
+	sendto_serv_butone_token_opt(cptr, OPT_SJOIN|OPT_SJOIN2|OPT_NOT_SJ3,
 		MSG_SJOIN, TOK_SJOIN, "%s %s %s %s :%s",
 			parv[1], parv[2], parv[3], paraback, parabuf);
 	
