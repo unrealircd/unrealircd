@@ -356,3 +356,4 @@
 - Removed the old /rehash flags, reported by Morbid
 - Reverted Demigurus's select() speedup patch, did speedup, but it 
   also caused a good bit of CPU.
+- Fixed a globops bug that required it to have a : found by ROXnet

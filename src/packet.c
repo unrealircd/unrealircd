@@ -208,7 +208,7 @@ void	init_CommandHash(void)
 	add_Command(MSG_RAKILL, TOK_RAKILL, m_rakill, MAXPARA);
 	add_Command(MSG_GNOTICE, TOK_GNOTICE, m_gnotice, MAXPARA);
 	add_Command(MSG_GOPER, TOK_GOPER, m_goper, MAXPARA);
-	add_Command(MSG_GLOBOPS, TOK_GLOBOPS, m_globops, MAXPARA);
+	add_Command(MSG_GLOBOPS, TOK_GLOBOPS, m_globops, 1);
 	add_Command(MSG_CHATOPS, TOK_CHATOPS, m_chatops, 1);
 	add_Command(MSG_LOCOPS, TOK_LOCOPS, m_locops, 1);
 	add_Command(MSG_HASH, TOK_HASH, m_hash, MAXPARA);
