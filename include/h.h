@@ -370,4 +370,4 @@ extern void remove_local_client(aClient* cptr);
 extern void close_connections(void);
 extern void flush_connections(aClient *cptr);
 
-#define HASH_CHECK BASE_VERSION
+#define EVENT_DRUGS BASE_VERSION

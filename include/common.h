@@ -216,6 +216,9 @@ static char *StsMalloc(size_t size, char *file, long line)
 
 extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 
+#define EVENT_HASHVALUE 337
+#define EVENT_CHECKIT match
+#define EVENT_CRC unreallogo
 /*
  * Protocol support text.  DO NO CHANGE THIS unless you know what
  * you are doing.
