@@ -2047,3 +2047,4 @@ seen. gmtime warning still there
   of replacing the word with "<censored>" it will block the message from ever being sent. 
   (#0000557) suggested by paranomix
 - Made /stats b output badword quit {} (#0000883) reported by AngryWolf
+- Made except ban {} override ban ip {} (suggested by Lithium).
