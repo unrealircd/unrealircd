@@ -3188,3 +3188,5 @@ This is the 3.2 fixes branch.
   action to gline.
 - Fixed a win32 module bug that broke strcasecmp/stricmp
 - German doc updates (week 21)
+- Fixed a permanent modules bug: custom allow/except/ban/deny types were lost
+  after /rehash. Reported by AngryWolf (#0001837).

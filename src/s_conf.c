@@ -3899,7 +3899,8 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 			for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next) 
 			{
 				int value, errs = 0;
-				if (h->owner && !(h->owner->flags & MODFLAG_TESTING))
+				if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
+				    && !(h->owner->options & MOD_OPT_PERM))
 					continue;
 				value = (*(h->func.intfunc))(conf,ce,CONFIG_ALLOW,&errs);
 				if (value == 2)
@@ -4347,7 +4348,8 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 		for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next) 
 		{
 			int value, errs = 0;
-			if (h->owner && !(h->owner->flags & MODFLAG_TESTING))
+			if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
+			    && !(h->owner->options & MOD_OPT_PERM))
 				continue;
 			value = (*(h->func.intfunc))(conf,ce,CONFIG_EXCEPT,&errs);
 			if (value == 2)
@@ -5468,7 +5470,8 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 		for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next) 
 		{
 			int value, errs = 0;
-			if (h->owner && !(h->owner->flags & MODFLAG_TESTING))
+			if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
+			    && !(h->owner->options & MOD_OPT_PERM))
 				continue;
 			value = (*(h->func.intfunc))(conf,ce,CONFIG_BAN, &errs);
 			if (value == 2)
@@ -7359,7 +7362,8 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 		for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next) 
 		{
 			int value, errs = 0;
-			if (h->owner && !(h->owner->flags & MODFLAG_TESTING))
+			if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
+			    && !(h->owner->options & MOD_OPT_PERM))
 				continue;
 			value = (*(h->func.intfunc))(conf,ce,CONFIG_DENY, &errs);
 			if (value == 2)
