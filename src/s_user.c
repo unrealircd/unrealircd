@@ -808,7 +808,7 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 	
 	if (MyConnect(sptr))
 	{
-		if ((i = check_client(sptr))) {
+		if ((i = check_client(sptr, username))) {
 			/* This had return i; before -McSkaf */
 			if (i == -5)
 				return FLUSH_BUFFER;

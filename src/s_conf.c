@@ -2265,7 +2265,7 @@ ConfigItem_ban 	*Find_banEx(char *host, short type, short type2)
 	return NULL;
 }
 
-int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
+int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *username)
 {
 	ConfigItem_allow *aconf;
 	char *hname;
@@ -2299,7 +2299,10 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 					 * ALREADY sure that it is proper 
 					 * lengths
 					*/
-					(void)strcpy(uhost, cptr->username);
+					if (aconf->flags.noident)
+						strcpy(uhost, username);
+					else
+						(void)strcpy(uhost, cptr->username);
 					(void)strcat(uhost, "@");
 				}
 				else
@@ -2316,7 +2319,10 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 
 		if (index(aconf->ip, '@'))
 		{
-			strncpyzt(uhost, cptr->username, sizeof(uhost));
+			if (aconf->flags.noident)
+				strncpyzt(uhost, username, sizeof(uhost));
+			else
+				strncpyzt(uhost, cptr->username, sizeof(uhost));
 			(void)strcat(uhost, "@");
 		}
 		else
@@ -2331,7 +2337,10 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 		{
 			if (index(aconf->hostname, '@'))
 			{
-				strcpy(uhost, cptr->username);
+				if (aconf->flags.noident)
+					strcpy(uhost, username);
+				else
+					strcpy(uhost, cptr->username);
 				strcat(uhost, "@localhost");
 			}
 			else
