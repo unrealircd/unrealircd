@@ -736,57 +736,6 @@ void reset_help(void)
 	free_str_list(helpign);
 }
 
-/*
- * parv[0] = sender
- * parv[1] = server to query
- */
-CMD_FUNC(m_lusers)
-{
-char flatmap;
-
-	if (hunt_server_token(cptr, sptr, MSG_LUSERS, TOK_LUSERS,
-                          ":%s", 1, parc, parv) != HUNTED_ISME)
-		return 0;
-
-	flatmap = (FLAT_MAP && !IsAnOper(sptr)) ? 1 : 0;
-
-	/* Just to correct results ---Stskeeps */
-	if (IRCstats.clients > IRCstats.global_max)
-		IRCstats.global_max = IRCstats.clients;
-	if (IRCstats.me_clients > IRCstats.me_max)
-		IRCstats.me_max = IRCstats.me_clients;
-
-	sendto_one(sptr, rpl_str(RPL_LUSERCLIENT), me.name, parv[0],
-	    IRCstats.clients - IRCstats.invisible, IRCstats.invisible,
-	    IRCstats.servers);
-
-	if (IRCstats.operators)
-		sendto_one(sptr, rpl_str(RPL_LUSEROP),
-		    me.name, parv[0], IRCstats.operators);
-	if (IRCstats.unknown)
-		sendto_one(sptr, rpl_str(RPL_LUSERUNKNOWN),
-		    me.name, parv[0], IRCstats.unknown);
-	if (IRCstats.channels)
-		sendto_one(sptr, rpl_str(RPL_LUSERCHANNELS),
-		    me.name, parv[0], IRCstats.channels);
-	sendto_one(sptr, rpl_str(RPL_LUSERME),
-	    me.name, parv[0], IRCstats.me_clients, flatmap ? 0 : IRCstats.me_servers);
-	sendto_one(sptr, rpl_str(RPL_LOCALUSERS),
-	    me.name, parv[0], IRCstats.me_clients, IRCstats.me_max);
-	sendto_one(sptr, rpl_str(RPL_GLOBALUSERS),
-	    me.name, parv[0], IRCstats.clients, IRCstats.global_max);
-	if ((IRCstats.me_clients + IRCstats.me_servers) > max_connection_count)
-	{
-		max_connection_count =
-		    IRCstats.me_clients + IRCstats.me_servers;
-		if (max_connection_count % 10 == 0)	/* only send on even tens */
-			sendto_ops("Maximum connections: %d (%d clients)",
-			    max_connection_count, IRCstats.me_clients);
-	}
-	return 0;
-}
-
-
 EVENT(save_tunefile)
 {
 	FILE *tunefile;

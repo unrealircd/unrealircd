@@ -1056,7 +1056,7 @@ int register_user(aClient *cptr, aClient *sptr, char *nick, char *username, char
 				    me.name, sptr->name, me.name,
 				    ssl_get_cipher(sptr->ssl));
 #endif
-		(void)m_lusers(sptr, sptr, 1, parv);
+		do_cmd(sptr, sptr, "LUSERS", 1, parv);
 		short_motd(sptr);
 #ifdef EXPERIMENTAL
 		sendto_one(sptr,
