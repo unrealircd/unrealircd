@@ -349,12 +349,10 @@ dnl the following 2 macros are based on CHECK_SSL by Mark Ethan Trostler <trostl
 AC_DEFUN([CHECK_SSL],
 [
 AC_ARG_ENABLE(ssl,
-[  --enable-ssl enable ssl [will check /usr/local/ssl
-                              /usr/lib/ssl /usr/ssl /usr/pkg /usr/local /usr ]
-],
+[AC_HELP_STRING([--enable-ssl=],[enable ssl will check /usr/local/ssl /usr/lib/ssl /usr/ssl /usr/pkg /usr/local /usr])],
 [ 
 AC_MSG_CHECKING(for openssl)
-    for dir in $withval /usr/local/ssl /usr/lib/ssl /usr/ssl /usr/pkg /usr/local /usr; do
+    for dir in $enableval /usr/local/ssl /usr/lib/ssl /usr/ssl /usr/pkg /usr/local /usr; do
         ssldir="$dir"
         if test -f "$dir/include/openssl/ssl.h"; then
 	    AC_MSG_RESULT(found in $ssldir/include/openssl)
@@ -384,11 +382,10 @@ AC_DEFINE(USE_SSL)
 AC_DEFUN([CHECK_ZLIB],
 [
 AC_ARG_ENABLE(ziplinks,
-[  --enable-ziplinks enable ziplinks [will check /usr/local /usr /usr/pkg ]
-],
+[AC_HELP_STRING([--enable-ziplinks],[enable ziplinks will check /usr/local /usr /usr/pkg])],
 [ 
 AC_MSG_CHECKING(for zlib)
-    for dir in $withval /usr/local /usr /usr/pkg; do
+    for dir in $enableval /usr/local /usr /usr/pkg; do
         zlibdir="$dir"
         if test -f "$dir/include/zlib.h"; then
 	    AC_MSG_RESULT(found in $zlibdir)

@@ -612,7 +612,7 @@ matchok:
 			if (WHOLIMIT && !IsAnOper(sptr) && ++i > WHOLIMIT)
 			{
 				sendto_one(sptr, rpl_str(ERR_WHOLIMEXCEED), me.name, sptr->name, WHOLIMIT);
-				continue;
+				return;
 			}
 
 			channel = first_visible_channel(sptr, acptr, &flg);

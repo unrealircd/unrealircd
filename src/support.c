@@ -1750,7 +1750,7 @@ int unreal_copyfile(char *src, char *dest)
 	if (srcfd < 0)
 		return 0;
 
-	destfd  = open(dest, O_WRONLY|O_CREAT, S_IRUSR|S_IXUSR);
+	destfd  = open(dest, O_WRONLY|O_CREAT, DEFAULT_PERMISSIONS);
 
 	if (destfd < 0)
 	{

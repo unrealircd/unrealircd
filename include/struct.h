@@ -634,6 +634,8 @@ struct aloopStruct {
 	unsigned do_bancheck : 1;
 	unsigned ircd_rehashing : 1;
 	unsigned tainted : 1;
+	aClient *rehash_save_cptr, *rehash_save_sptr;
+	int rehash_save_sig;
 };
 
 typedef struct Whowas {
@@ -1178,12 +1180,17 @@ struct _configitem_alias_format {
 	regex_t expr;
 };
 
-#define INCLUDE_NOTLOADED 1
+#define INCLUDE_NOTLOADED  0x1
+#define INCLUDE_REMOTE     0x2
+#define INCLUDE_DLQUEUED   0x4
 	
 struct _configitem_include {
 	ConfigItem *prev, *next;
 	ConfigFlag_ban flag;
 	char *file;
+#ifdef USE_LIBCURL
+	char *url;
+#endif
 };
 
 struct _configitem_help {

@@ -2628,3 +2628,9 @@ seen. gmtime warning still there
 - Partial cleanup of m_part (hopefully I didn't destroy anything).
 - Minor stats compile warning fixed
 - Started some work on the remote include system
+- Fixed a bug with set::who-limit sending multiple error notices, reported by doh
+- Fixed a bug with the configure script reported by doh where Unreal would ignore the
+  manually specified directory for OpenSSL (and also Zlib)
+- Made the ./configure --help display a bit cleaner
+- Added include/types.h to hold any new datatypes we create
+- A lot more work on the remote include system

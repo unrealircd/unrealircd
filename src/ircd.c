@@ -855,6 +855,9 @@ int InitwIRCD(int argc, char *argv[])
 	bzero(&StatsZ, sizeof(StatsZ));
 	setup_signals();
 	init_ircstats();
+#ifdef USE_LIBCURL
+	url_init();
+#endif
 	umode_init();
 #ifdef EXTCMODE
 	extcmode_init();

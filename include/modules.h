@@ -20,13 +20,11 @@
  */
 #ifndef MODULES_H
 #define MODULES_H
+#include "types.h"
 #define MOD_VERSION	"3.2-b5-1"
 #define MOD_WE_SUPPORT  "3.2-b5*"
 #define MAXCUSTOMHOOKS  30
 #define MAXHOOKTYPES	70
-typedef void			(*vFP)();	/* Void function pointer */
-typedef int			(*iFP)();	/* Integer function pointer */
-typedef char			(*cFP)();	/* char * function pointer */
 #if defined(_WIN32)
 #define DLLFUNC	_declspec(dllexport)
 #define irc_dlopen(x,y) LoadLibrary(x)

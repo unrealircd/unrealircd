@@ -822,30 +822,33 @@ if test -n "$ac_init_help"; then
 Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
- --enable-nospoof     Enable spoofing protection
- --enable-prefixaq    Enable chanadmin and chanprot prefixes
- --enable-hub     Compile as a hub server
-  --enable-ssl enable ssl will check /usr/local/ssl
-                              /usr/lib/ssl /usr/ssl /usr/pkg /usr/local /usr
-
-  --enable-ziplinks enable ziplinks will check /usr/local /usr /usr/pkg
-
- --enable-dynamic-linking     Make the IRCd dynamically link shared objects rather than statically
- --enable-inet6     Make the IRCd support IPv6
+  --enable-nospoof        Enable spoofing protection
+  --enable-prefixaq       Enable chanadmin and chanowner prefixes
+  --enable-hub            Compile as a hub server
+  --enable-ssl=           enable ssl will check /usr/local/ssl /usr/lib/ssl
+                          /usr/ssl /usr/pkg /usr/local /usr
+  --enable-ziplinks       enable ziplinks will check /usr/local /usr /usr/pkg
+  --enable-dynamic-linking
+                          Make the IRCd dynamically link shared objects rather
+                          than statically
+  --enable-inet6          Make the IRCd support IPv6
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
- --with-listen=backlog     Specify the listen backlog value
- --with-nick-history=length     Specify the length of the nickname history
- --with-sendq=maxsendq     Specify the max sendq for the server
- --with-bufferpool=size     Specify the size of the buffer pool
- --with-hostname=host     Specify the local hostname of the server
- --with-permissions=permissions     Specify the default permissions for
-configuration files
- --with-dpath=path     Specify the path where configuration files are stored
- --with-fd-setsize=size     Specify the max file descriptors to use
- --with-spath     Specify the location of the executable
+  --with-listen=backlog   Specify the listen backlog value
+  --with-nick-history=length
+                          Specify the length of the nickname history
+  --with-sendq=maxsendq   Specify the max sendq for the server
+  --with-bufferpool=size  Specify the size of the buffer pool
+  --with-hostname=host    Specify the local hostname of the server
+  --with-permissions=permissions
+                          Specify the default permissions for configuration
+                          files
+  --with-dpath=path       Specify the path where configuration files are
+                          stored
+  --with-fd-setsize=size  Specify the max file descriptors to use
+  --with-spath            Specify the location of the executable
 
 Some influential environment variables:
   CC          C compiler command
@@ -9411,7 +9414,6 @@ _ACEOF
 
 fi;
 
-
 # Check whether --with-hostname or --without-hostname was given.
 if test "${with_hostname+set}" = set; then
   withval="$with_hostname"
@@ -9514,7 +9516,7 @@ if test "${enable_ssl+set}" = set; then
 
 echo "$as_me:$LINENO: checking for openssl" >&5
 echo $ECHO_N "checking for openssl... $ECHO_C" >&6
-    for dir in $withval /usr/local/ssl /usr/lib/ssl /usr/ssl /usr/pkg /usr/local /usr; do
+    for dir in $enableval /usr/local/ssl /usr/lib/ssl /usr/ssl /usr/pkg /usr/local /usr; do
         ssldir="$dir"
         if test -f "$dir/include/openssl/ssl.h"; then
 	    echo "$as_me:$LINENO: result: found in $ssldir/include/openssl" >&5
@@ -9554,7 +9556,7 @@ if test "${enable_ziplinks+set}" = set; then
 
 echo "$as_me:$LINENO: checking for zlib" >&5
 echo $ECHO_N "checking for zlib... $ECHO_C" >&6
-    for dir in $withval /usr/local /usr /usr/pkg; do
+    for dir in $enableval /usr/local /usr /usr/pkg; do
         zlibdir="$dir"
         if test -f "$dir/include/zlib.h"; then
 	    echo "$as_me:$LINENO: result: found in $zlibdir" >&5

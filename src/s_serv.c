@@ -2915,6 +2915,12 @@ CMD_FUNC(m_rehash)
 #endif
 		if (parv[2] == NULL)
 		{
+			if (loop.ircd_rehashing)
+			{
+				sendto_one(sptr, ":%s NOTICE %s :A rehash is already in progress",
+					me.name, sptr->name);
+				return 0;
+			}
 			sendto_serv_butone(&me,
 			    ":%s GLOBOPS :%s is remotely rehashing server config file",
 			    me.name, sptr->name);
@@ -2999,7 +3005,15 @@ CMD_FUNC(m_rehash)
 		}
 	}
 	else
+	{
+		if (loop.ircd_rehashing)
+		{
+			sendto_one(sptr, ":%s NOTICE %s :A rehash is already in progress",
+				me.name, sptr->name);
+			return 0;
+		}
 		sendto_ops("%s is rehashing server config file", parv[0]);
+	}
 
 	/* Normal rehash, rehash motds&rules too, just like the on in the tld block will :p */
 	reread_motdsandrules();

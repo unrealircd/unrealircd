@@ -1649,7 +1649,9 @@ int  read_message(time_t delay, fdlist *listp)
 #ifdef _WIN32
 		FD_ZERO(&excpt_set);
 #endif
-
+#ifdef USE_LIBCURL
+		url_do_transfers_async();
+#endif
 #ifdef NO_FDLIST
 		for (i = LastSlot; i >= 0; i--)
 #else

@@ -108,7 +108,8 @@ static size_t do_download(void *ptr, size_t size, size_t nmemb, void *stream)
  * knowledge of how libcurl works. If the function succeeds, the
  * filename the file was downloaded to is returned. Otherwise NULL
  * is returned and the string pointed to by error contains the error
- * message.
+ * message. The returned filename is malloc'ed and must be freed by
+ * the caller.
  */
 char *download_file(char *url, char **error)
 {
@@ -116,7 +117,8 @@ char *download_file(char *url, char **error)
 	CURL *curl = curl_easy_init();
 	CURLcode res;
 	char *file = url_getfilename(url);
-	char *tmp = unreal_mktemp("tmp", file ? file : "download.conf");
+	char *filename = unreal_getfilename(file);
+	char *tmp = unreal_mktemp("tmp", filename ? filename : "download.conf");
 	if (curl)
 	{
 		FILE *fd = fopen(tmp, "wb");
@@ -133,7 +135,7 @@ char *download_file(char *url, char **error)
 		free(file);
 	curl_easy_cleanup(curl);
 	if (res == CURLE_OK)
-		return tmp;
+		return strdup(tmp);
 	else
 	{
 		remove(tmp);
@@ -145,8 +147,9 @@ char *download_file(char *url, char **error)
 /*
  * Initializes the URL system
  */
-void url_init()
+void url_init(void)
 {
+	curl_global_init(CURL_GLOBAL_ALL);
 	multihandle = curl_multi_init();
 }
 
@@ -157,17 +160,21 @@ void url_init()
  * called when the download completes, or the download fails. The 
  * callback function is defined as:
  *
- * void callback(char *filename, char *errorbuf);
+ * void callback(char *url, char *filename, char *errorbuf, int cached);
+ * url will contain the URL that was downloaded
  * filename will contain the name of the file (if successful, NULL otherwise)
  * errorbuf will contain the error message (if failed, NULL otherwise)
+ * cached 1 if the specified cachetime is >= the current file on the server,
+ *        if so, both filename and errorbuf will be NULL
  */
-void download_file_async(char *url, vFP callback)
+void download_file_async(char *url, time_t cachetime, vFP callback)
 {
 	CURL *curl = curl_easy_init();
 	if (curl)
 	{
 	        char *file = url_getfilename(url);
-        	char *tmp = unreal_mktemp("tmp", file ? file : "download.conf");
+		char *filename = unreal_getfilename(file);
+        	char *tmp = unreal_mktemp("tmp", filename ? filename : "download.conf");
 		FileHandle *handle = malloc(sizeof(FileHandle));
 		if (file)
 			free(file);
@@ -181,6 +188,12 @@ void download_file_async(char *url, vFP callback)
 		bzero(handle->errorbuf, CURL_ERROR_SIZE);
 		curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, handle->errorbuf);
 		curl_easy_setopt(curl, CURLOPT_PRIVATE, (char *)handle);
+		if (cachetime)
+		{
+			curl_easy_setopt(curl, CURLOPT_TIMECONDITION, CURL_TIMECOND_IFMODSINCE);
+			curl_easy_setopt(curl, CURLOPT_TIMEVALUE, cachetime);
+		}
+
 		curl_multi_add_handle(multihandle, curl);
 	}
 }
@@ -189,7 +202,7 @@ void download_file_async(char *url, vFP callback)
  * Called in the select loop. Handles the transferring of any
  * queued asynchronous transfers.
  */
-void url_do_transfers_async()
+void url_do_transfers_async(void)
 {
 	int cont;
 	int msgs_left;
@@ -228,13 +241,25 @@ void url_do_transfers_async()
 		if (msg->msg == CURLMSG_DONE)
 		{
 			FileHandle *handle;
+			char *url;
+			long code;
+			curl_easy_getinfo(msg->easy_handle, CURLINFO_RESPONSE_CODE, &code);
 			curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, (char*)&handle);
-			fclose(handle->fd);			
+			curl_easy_getinfo(msg->easy_handle, CURLINFO_EFFECTIVE_URL, &url);
+			fclose(handle->fd);
 			if (msg->data.result == CURLE_OK)
-				handle->callback(handle->filename, NULL);
+			{
+				if (code == 304)
+				{
+					handle->callback(url, NULL, NULL, 1);
+					remove(handle->filename);
+				}
+				else
+					handle->callback(url, handle->filename, NULL, 0);
+			}
 			else
 			{
-				handle->callback(NULL, handle->errorbuf);
+				handle->callback(url, NULL, handle->errorbuf, 0);
 				remove(handle->filename);
 			}
 			free(handle);

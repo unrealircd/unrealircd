@@ -18,6 +18,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 #include "struct.h"
+#include "url.h"
 #include "common.h"
 #include "sys.h"
 #include "numeric.h"
@@ -377,6 +378,14 @@ ConfigFile		*conf = NULL;
 
 int			config_error_flag = 0;
 int			config_verbose = 0;
+
+void add_include(char *);
+#ifdef USE_LIBCURL
+void add_remote_include(char *, char *);
+#endif
+void unload_notloaded_includes(void);
+void load_includes(void);
+void unload_loaded_includes(void);
 
 /* Pick out the ip address and the port number from a string.
  * The string syntax is:  ip:port.  ip must be enclosed in brackets ([]) if its an ipv6
@@ -1358,8 +1367,6 @@ aCommand *cmptr = find_Command_simple("PART");
 
 int	init_conf(char *rootconf, int rehash)
 {
-	ConfigItem_include *inc, *next;
-
 	config_status("Loading IRCd configuration ..");
 	if (conf)
 	{
@@ -1381,15 +1388,7 @@ int	init_conf(char *rootconf, int rehash)
 #ifndef STATIC_LINKING
 			Unload_all_testing_modules();
 #endif
-			for (inc = conf_include; inc; inc = next)
-			{
-				next = (ConfigItem_include *)inc->next;
-				if (inc->flag.type != INCLUDE_NOTLOADED)
-					continue;
-				ircfree(inc->file);
-				DelListItem(inc, conf_include);
-				MyFree(inc);
-			}
+			unload_notloaded_includes();
 			config_free(conf);
 			conf = NULL;
 			free_iConf(&tempiConf);
@@ -1404,19 +1403,11 @@ int	init_conf(char *rootconf, int rehash)
 #else
 			RunHook0(HOOKTYPE_REHASH);
 #endif
-			for (inc = conf_include; inc; inc = next)
-			{
-				next = (ConfigItem_include *)inc->next;
-				if (inc->flag.type == INCLUDE_NOTLOADED)
-					continue;
-				ircfree(inc->file);
-				DelListItem(inc, conf_include);
-				MyFree(inc);
-			}
-			
+			unload_loaded_includes();
 		}
 #ifndef STATIC_LINKING
 		Init_all_testing_modules();
+		load_includes();
 #else
 		if (!rehash) {
 			ModuleInfo ModCoreInfo;
@@ -1426,11 +1417,6 @@ int	init_conf(char *rootconf, int rehash)
 			l_commands_Init(&ModCoreInfo);
 		}
 #endif
-		for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
-		{
-			if (inc->flag.type == INCLUDE_NOTLOADED)
-				inc->flag.type = 0;
-		}
 		if (config_run() < 0)
 		{
 			config_error("Bad case of config errors. Server will now die. This really shouldn't happen");
@@ -1444,15 +1430,6 @@ int	init_conf(char *rootconf, int rehash)
 	}
 	else	
 	{
-		for (inc = conf_include; inc; inc = next)
-		{
-			next = (ConfigItem_include *)inc->next;
-			if (inc->flag.type != INCLUDE_NOTLOADED)
-				continue;
-			ircfree(inc->file);
-			DelListItem(inc, conf_include);
-			MyFree(inc);
-		}
 		config_error("IRCd configuration failed to load");
 		config_free(conf);
 		conf = NULL;
@@ -1480,7 +1457,6 @@ int	load_conf(char *filename)
 	ConfigFile 	*cfptr, *cfptr2, **cfptr3;
 	ConfigEntry 	*ce;
 	int		ret;
-	ConfigItem_include *includes;
 
 	if (config_verbose > 0)
 		config_status("Loading config file %s ..", filename);
@@ -1509,19 +1485,6 @@ int	load_conf(char *filename)
 				 if (ret < 0) 
 					 	return ret;
 			}
-		if (stricmp(filename, CPATH)) {
-			for (includes = conf_include; includes; includes = (ConfigItem_include *)includes->next) {
-				if (includes->flag.type == INCLUDE_NOTLOADED &&
-				    !stricmp(includes->file, filename)) 
-					break;
-			}
-			if (!includes) {
-				includes = MyMalloc(sizeof(ConfigItem_include));
-				includes->file = strdup(filename);
-				includes->flag.type = INCLUDE_NOTLOADED;
-				AddListItem(includes, conf_include);
-			}
-		}
 		return 1;
 	}
 	else
@@ -2480,6 +2443,10 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_varlinenum);
 		return -1;
 	}
+#ifdef USE_LIBCURL
+	if (url_is_valid(ce->ce_vardata))
+		return remote_include(ce);
+#endif
 #if !defined(_WIN32) && !defined(_AMIGA) && DEFAULT_PERMISSIONS != 0
 	chmod(ce->ce_vardata, DEFAULT_PERMISSIONS);
 #endif
@@ -2503,6 +2470,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 			globfree(&files);
 			return ret;
 		}
+		add_include(files.gl_pathv[i]);
 	}
 	globfree(&files);
 #elif defined(_WIN32)
@@ -2526,15 +2494,23 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 		strcpy(path,cPath);
 		strcat(path,FindData.cFileName);
 		ret = load_conf(path);
+		if (ret >= 0)
+			add_include(path);
 		free(path);
+
 	}
 	else
+	{
 		ret = load_conf(FindData.cFileName);
+		if (ret >= 0)
+			add_include(FindData.cFileName);
+	}
 	if (ret < 0)
 	{
 		FindClose(hFind);
 		return ret;
 	}
+
 	ret = 0;
 	while (FindNextFile(hFind, &FindData) != 0) {
 		if (cPath) {
@@ -2542,18 +2518,32 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 			strcpy(path,cPath);
 			strcat(path,FindData.cFileName);
 			ret = load_conf(path);
-			free(path);
-			if (ret < 0)
+			if (ret >= 0)
+			{
+				add_include(path);
+				free(path);
+			}
+			else
+			{
+				free(path);
 				break;
+			}
 		}
 		else
+		{
 			ret = load_conf(FindData.cFileName);
+			if (ret >= 0)
+				add_include(FindData.cFileName);
+		}
 	}
 	FindClose(hFind);
 	if (ret < 0)
 		return ret;
 #else
-	return (load_conf(ce->ce_vardata));
+	ret = load_conf(ce->ce_vardata);
+	if (ret >= 0)
+		add_include(ce->ce_vardata);
+	return ret;
 #endif
 	return 1;
 }
@@ -6937,10 +6927,88 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 	return errors;	
 }
 
+#ifdef USE_LIBCURL
+static void conf_download_complete(char *url, char *file, char *errorbuf, int cached)
+{
+	ConfigItem_include *inc;
+	if (!loop.ircd_rehashing)
+	{
+		remove(file);
+		return;
+	}
+	if (!file && !cached)
+	{
+		config_error("Error downloading %s: %s", url, errorbuf);
+		loop.ircd_rehashing = 0;
+		unload_notloaded_includes();
+		return;
+	}
+	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
+	{
+		if (!(inc->flag.type & INCLUDE_REMOTE))
+			continue;
+		if (inc->flag.type & INCLUDE_NOTLOADED)
+			continue;
+		if (!stricmp(url, inc->url))
+		{
+			inc->flag.type &= ~INCLUDE_DLQUEUED;
+			break;
+		}
+	}
+	if (cached)
+	{
+		char *urlfile = url_getfilename(url);
+		char *tmp = unreal_mktemp("tmp", urlfile);
+		free(urlfile);
+		unreal_copyfile(inc->file, tmp);
+		add_remote_include(tmp, url);
+	}
+	else
+		add_remote_include(file, url);
+	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
+	{
+		if (inc->flag.type & INCLUDE_DLQUEUED)
+			return;
+	}
+	rehash_internal(loop.rehash_save_cptr, loop.rehash_save_sptr, loop.rehash_save_sig);
+}
+#endif
 
 int     rehash(aClient *cptr, aClient *sptr, int sig)
 {
+#ifdef USE_LIBCURL
+	ConfigItem_include *inc;
+	if (loop.ircd_rehashing)
+	{
+		if (!sig)
+			sendto_one(sptr, ":%s NOTICE %s :A rehash is already in progress",
+				me.name, sptr->name);
+		return 0;
+	}	
+
 	loop.ircd_rehashing = 1;
+	loop.rehash_save_cptr = cptr;
+	loop.rehash_save_sptr = sptr;
+	loop.rehash_save_sig = sig;
+	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
+	{
+		struct stat sb;
+		if (!(inc->flag.type & INCLUDE_REMOTE))
+			continue;
+		if (inc->flag.type & INCLUDE_NOTLOADED)
+			continue;
+		stat(inc->file, &sb);
+		download_file_async(inc->url, sb.st_ctime, conf_download_complete);
+		inc->flag.type |= INCLUDE_DLQUEUED;
+	}
+	return 0;
+#else
+	return rehash_internal(cptr, sptr, sig);
+#endif
+}
+
+int	rehash_internal(aClient *cptr, aClient *sptr, int sig)
+{
 	flush_connections(&me);
 	if (sig == 1)
 	{
@@ -6994,4 +7062,154 @@ void	listen_cleanup()
 	}
 	if (i)
 		close_listeners();
+}
+
+#ifdef USE_LIBCURL
+char *find_remote_include(char *url)
+{
+	ConfigItem_include *inc;
+	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
+	{
+		if (!(inc->flag.type & INCLUDE_NOTLOADED))
+			continue;
+		if (!(inc->flag.type & INCLUDE_REMOTE))
+			continue;
+		if (!stricmp(url, inc->url))
+			return inc->file;
+	}
+	return NULL;
+}
+
+int remote_include(ConfigEntry *ce)
+{
+	char *file = find_remote_include(ce->ce_vardata);
+	int ret;
+	if (!loop.ircd_rehashing || (loop.ircd_rehashing && !file))
+	{
+		char *error;
+		if (config_verbose > 0)
+			config_status("Downloading %s", ce->ce_vardata);
+		file = download_file(ce->ce_vardata, &error);
+		if (!file)
+		{
+			config_error("%s:%i: include: error downloading '%s': %s",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+				 ce->ce_vardata, error);
+			return -1;
+		}
+		else
+		{
+			if ((ret = load_conf(file)) >= 0)
+				add_remote_include(file, ce->ce_vardata);
+			free(file);
+			return ret;
+		}
+	}
+	else
+	{
+		if (config_verbose > 0)
+			config_status("Loading %s from download", ce->ce_vardata);
+		if ((ret = load_conf(file)) >= 0)
+			add_remote_include(file, ce->ce_vardata);
+		return ret;
+	}
+	return 0;
+}
+#endif
+		
+void add_include(char *file)
+{
+	ConfigItem_include *inc;
+	if (!stricmp(file, CPATH))
+		return;
+
+	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
+	{
+		if (!(inc->flag.type & INCLUDE_NOTLOADED))
+			continue;
+		if (!stricmp(file, inc->file))
+			return;
+	}
+	inc = MyMallocEx(sizeof(ConfigItem_include));
+	inc->file = strdup(file);
+	inc->flag.type = INCLUDE_NOTLOADED;
+	AddListItem(inc, conf_include);
+}
+
+#ifdef USE_LIBCURL
+void add_remote_include(char *file, char *url)
+{
+	ConfigItem_include *inc;
+
+	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
+	{
+		if (!(inc->flag.type & INCLUDE_REMOTE))
+			continue;
+		if (!(inc->flag.type & INCLUDE_NOTLOADED))
+			continue;
+		if (!stricmp(url, inc->url))
+			return;
+	}
+	inc = MyMallocEx(sizeof(ConfigItem_include));
+	inc->file = strdup(file);
+	inc->url = strdup(url);
+	inc->flag.type = (INCLUDE_NOTLOADED|INCLUDE_REMOTE);
+	AddListItem(inc, conf_include);
+}
+#endif
+
+void unload_notloaded_includes(void)
+{
+	ConfigItem_include *inc, *next;
+
+	for (inc = conf_include; inc; inc = next)
+	{
+		next = (ConfigItem_include *)inc->next;
+		if (inc->flag.type & INCLUDE_NOTLOADED)
+		{
+#ifdef USE_LIBCURL
+			if (inc->flag.type & INCLUDE_REMOTE)
+			{
+				remove(inc->file);
+				free(inc->url);
+			}
+#endif
+			free(inc->file);
+			DelListItem(inc, conf_include);
+			free(inc);
+		}
+	}
+}
+
+void unload_loaded_includes(void)
+{
+	ConfigItem_include *inc, *next;
+
+	for (inc = conf_include; inc; inc = next)
+	{
+		next = (ConfigItem_include *)inc->next;
+		if (inc->flag.type & INCLUDE_NOTLOADED)
+			continue;
+#ifdef USE_LIBCURL
+		if (inc->flag.type & INCLUDE_REMOTE)
+		{
+			remove(inc->file);
+			free(inc->url);
+		}
+#endif
+		free(inc->file);
+		DelListItem(inc, conf_include);
+		free(inc);
+	}
+}
+			
+void load_includes(void)
+{
+	ConfigItem_include *inc;
+
+	/* Doing this for all the modules should actually be faster
+	 * than only doing it for modules that are not-loaded
+	 */
+	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
+		inc->flag.type &= ~INCLUDE_NOTLOADED; 
 }
