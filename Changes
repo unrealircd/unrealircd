@@ -779,3 +779,4 @@ seen. gmtime warning still there
 - Fixed bug with SSL, detected properly and fixed by Chawmp
 - Fixed an oper-only-stats bug
 - Updated some documentation to prepar for release
+- Docs prepare
