@@ -86,11 +86,6 @@ void    l_commands_init(void)
 	m_chgident_init();
 	m_setident_init();
 	m_sdesc_init();
-#ifdef SCAN_API
-	m_scan_init();
-/*	scan_dummy_init(); */
-	scan_socks_init();
-#endif
 	module_buffer = &l_commands_info;
 }
 
@@ -106,10 +101,5 @@ void	l_commands_unload(void)
 	m_chgident_unload();
     m_setident_unload();
     m_sdesc_unload();
-#ifdef SCAN_API
-/*	scan_dummy_unload(); */
-	scan_socks_unload();
-	m_scan_unload();
-#endif
 }
 

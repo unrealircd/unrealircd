@@ -44,6 +44,7 @@
 #ifdef _WIN32
 #include "version.h"
 #endif
+#define IS_SCAN_C
 #include "modules/scan.h"
 
 #define MSG_SCAN 	"SCAN"	/* scan */

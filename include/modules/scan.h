@@ -50,16 +50,16 @@ struct _VHStruct
 	char			reason[50];
 };
 
-
+#ifndef IS_SCAN_C
 extern HStruct			Hosts[SCAN_AT_ONCE];
 extern VHStruct		VHosts[SCAN_AT_ONCE];
 
 /* 
  * If it is legal to edit Hosts table
 */
-extern MUTEX		HSlock;
-extern MUTEX		VSlock;
-
+MUTEX		*xHSlock;
+MUTEX		*xVSlock;
+#endif
 /* Some prototypes .. aint they sweet? */
 DLLFUNC int			h_scan_connect(aClient *sptr);
 DLLFUNC EVENT		(HS_Cleanup);

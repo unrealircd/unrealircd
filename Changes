@@ -563,3 +563,4 @@ seen. gmtime warning still there
 - Allowed capturing of unknown set {} variables by modules
 - Minor src/Makefile screwup fix
 - Added some pthread checking support
+- Fixed double dependicies bug.. stupid dlsym

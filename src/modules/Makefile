@@ -23,11 +23,11 @@ R_MODULES=m_sethost.so m_chghost.so m_chgident.so m_setname.so \
 		m_setident.so m_sdesc.so scan.so scan_socks.so
 
 COMMANDS=m_sethost.c m_chghost.c m_chgident.c m_setname.c m_setident.c \
-         m_sdesc.c scan.c scan_socks.c
+         m_sdesc.c
 
 MODULES=commands.so $(R_MODULES)
 
-PTHREAD=-kthread
+PTHREAD=-pthread
 
 all: build
 

@@ -38,6 +38,8 @@
 #define SCAN_ON_PORT 1080
 #endif
 
+iFP	xVS_add = NULL;
+
 void	scan_socks_scan(HStruct *h);
 
 ModuleInfo scan_socks_info
@@ -67,7 +69,18 @@ void    scan_socks_init(void)
 	   the module_load() will use this to add to the modules linked 
 	   list
 	*/
+	xHSlock = (MUTEX *) module_sym("HSlock");
+	xVSlock = (MUTEX *) module_sym("VSlock");
+	xVS_add = (iFP) module_sym("VS_Add");
+	
+	if (!xHSlock || !xVSlock || !xVS_add)
+	{
+		module_buffer = NULL;
+		ircd_log(LOG_ERROR, "scan_socks: i depend on scan.so");
+		return;
+	}	
 	module_buffer = &scan_socks_info;
+	
 	/*
 	 * Add scanning hooks
 	*/
@@ -111,9 +124,9 @@ void	scan_socks_scan(HStruct *h)
 	struct timeval  tv;
 	int				len;
 	/* Get host */
-	IRCMutexLock(HSlock);
+	IRCMutexLock((*xHSlock));
 	strcpy(host, h->host);
-	IRCMutexUnlock(HSlock);
+	IRCMutexUnlock((*xHSlock));
 	
 	sin.SIN_ADDR.S_ADDR = inet_addr(host);
  
@@ -180,9 +193,9 @@ void	scan_socks_scan(HStruct *h)
 		if (socksbuf[1] == 90)
 		{
 			/* We found SOCKS. */
-			IRCMutexLock(VSlock);
-			VS_Add(host, "Open SOCKS4/5 server");
-			IRCMutexUnlock(VSlock);
+			IRCMutexLock((*xVSlock));
+			(*xVS_add)(host, "Open SOCKS4/5 server");
+			IRCMutexUnlock((*xVSlock));
 			goto exituniverse;
 		}
 	}
@@ -192,9 +205,9 @@ void	scan_socks_scan(HStruct *h)
 		CLOSE_SOCK(fd);
 	}
 exituniverse:
-	IRCMutexLock(HSlock);
+	IRCMutexLock((*xHSlock));
 	h->refcnt--;
-	IRCMutexUnlock(HSlock);
+	IRCMutexUnlock((*xHSlock));
 	IRCExitThread(NULL);
 	return;
 }
