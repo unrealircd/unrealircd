@@ -29,3 +29,7 @@ TODO :
 * codemastr - Tue Dec 12 2000 - 8 - [ +I Fixes ]:
     +I still has some bugs that may cause desync and show users
     that the +I user is actually on the channel.
+
+* stskeeps - Tue Dec 12 2000 - 1 - [ Bugfixes/Hash ]:
+    Check for possible hash bug with del_from_client_table or something
+    People still complain about crashes
