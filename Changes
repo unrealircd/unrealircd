@@ -1952,3 +1952,4 @@ seen. gmtime warning still there
 - Added SVSSILENCE: allows U-lined server to modify the silence list of a user.
 - Documentation/text updates.
 - WebTV fixes
+- Doc/text updates
