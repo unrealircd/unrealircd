@@ -738,4 +738,4 @@ seen. gmtime warning still there
 - Added 2 more network files (yea, I'm slow)
 - Fixed SQLINE bug, FINALLY. (forgot to set type ..oops..)
 - Added more network files...
-
+- Fixed a bug affecting /oper and /vhost caused by IP checking

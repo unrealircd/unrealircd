@@ -333,7 +333,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	ConfigItem_vhost *vhost;
 	ConfigItem_oper_from *from;
-	char *user, *pwd, *host, *host2;
+	char *user, *pwd, host[NICKLEN+USERLEN+HOSTLEN+6], host2[NICKLEN+USERLEN+HOSTLEN+6];
 
 	if (parc < 3)
 	{
@@ -359,8 +359,8 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    me.name, sptr->name, user);
 		return 0;
 	}
-	host = make_user_host(sptr->user->username, sptr->user->realhost);
-	host2 = make_user_host(sptr->user->username, (char *)inet_ntoa(sptr->ip));
+	strcpy(host, make_user_host(sptr->user->username, sptr->user->realhost));
+	strcpy(host2, make_user_host(sptr->user->username, (char *)inet_ntoa(sptr->ip)));
 	for (from = (ConfigItem_oper_from *)vhost->from; from; from = (ConfigItem_oper_from *)from->next) {
 		if (!match(from->name, host) || !match(from->name, host2))
 			break;
