@@ -23,10 +23,10 @@
 #define MAXMODULES	50
 #ifdef _WIN32
 #define DLLFUNC	_declspec(dllexport)
-#define irc_dlopen LoadLibrary
+#define irc_dlopen(x,y) LoadLibrary(x)
 #define irc_dlclose FreeLibrary
 #define irc_dlsym (void *)GetProcAddress
-#define irc_dlerror strerror(GetLastError())
+#undef irc_dlerror
 #else
 #define irc_dlopen dlopen
 #define irc_dlclose dlclose

@@ -320,3 +320,4 @@
 - Started on commands.so making, works good atm -on req of codemastr,
   both as m_module.so and commands.so :) - long live dynamiclinking
 - Fixed bug with double module unloading, bug found by RaYmAn
+- Win32 Changes

@@ -340,6 +340,7 @@ VOIDSIG s_segv()
 	{
 		(void)close(i);
 	}
+	kill(p, SIGQUIT);
 #else
 	for (i = 0; i < highest_fd; i++)
 	{
@@ -347,7 +348,6 @@ VOIDSIG s_segv()
 			close(i);
 	}
 #endif
-	kill(p, SIGQUIT);
 	exit(-1);
 }
 

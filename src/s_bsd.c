@@ -1116,15 +1116,19 @@ int  get_sockerr(cptr)
  */
 int set_blocking(int fd)
 {
-   int flags;
+   int flags, nonb;
 
+#ifndef _WIN32
     if ((flags = fcntl(fd, F_GETFL, 0)) < 0
         || fcntl(fd, F_SETFL, flags & ~O_NONBLOCK) < 0)
-        return 0;
+#else
+    nonb = 0;
+    if (ioctlsocket(fd, FIONBIO, &nonb) < 0)
+#endif 
+       return 0;
     else
         return 1;                                       
 }
-
 
 
 

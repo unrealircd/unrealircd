@@ -34,12 +34,13 @@
 #include <stdlib.h>
 #include <string.h>
 #ifdef _WIN32
-
 #include <io.h>
+#define RTLD_NOW 0
+#else
+#include <dlfcn.h>
 #endif
 #include <fcntl.h>
 #include "h.h"
-#include <dlfcn.h>
 
 ModuleInfo *Modules[MAXMODULES];
 int  modules_loaded = 0;
@@ -148,6 +149,7 @@ int  load_module(char *module)
 		}
 		return 1;
 	}
+#ifdef _WIN32
 	else
 	{
 		const char *err = irc_dlerror();
@@ -159,6 +161,7 @@ int  load_module(char *module)
 		}
 		return -1;
 	}
+#endif
 }
 
 int	unload_module(char *name)
