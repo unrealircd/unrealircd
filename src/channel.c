@@ -626,7 +626,7 @@ int  can_send(cptr, chptr, msgtext)
 {
 	Link *lp;
 	int  member;
-
+	static char tempbuf[1500];
 	/* Moved check here, kinda faster.
 	 * Note IsULine only uses the other parameter. -Donwulff */
 	if (IsULine(cptr) || IsServer(cptr))
@@ -647,7 +647,18 @@ int  can_send(cptr, chptr, msgtext)
 	    (!lp
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
 	    CHFL_HALFOP | CHFL_CHANPROT))))
-		return (CANNOT_SEND_MODERATED);
+	    {
+		if (!(chptr->mode.mode & MODE_AUDITORIUM))
+		{
+			return (CANNOT_SEND_MODERATED);
+		} 
+		{
+			sendto_chanops_butone(cptr, chptr, ":IRC PRIVMSG %s :%s: %s",
+					chptr->chname, cptr->name,
+					msgtext);
+			return (CANNOT_SEND_MODERATED);
+		}
+	    }
 
 	if (chptr->mode.mode & MODE_NOCTCP &&
 	    (!lp
