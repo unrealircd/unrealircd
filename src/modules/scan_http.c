@@ -72,6 +72,7 @@ static Hooktype *ScanHost;
 extern void Eadd_scan();
 extern struct SOCKADDR_IN	Scan_endpoint;
 extern int Scan_TimeOut;
+extern struct IN_ADDR Scan_bind;
 #endif
 static Mod_SymbolDepTable modsymdep[] = 
 {

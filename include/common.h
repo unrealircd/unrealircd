@@ -229,27 +229,6 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 
 /* IRCu/Hybrid/Unreal way now :) -Stskeeps */
 
-#define PROTOCTL_CLIENT           \
-		" MAP"            \
-		" KNOCK"          \
-		" SAFELIST"       \
-		" HCN"	          \
-		" WALLCHOPS"	  \
-		" WATCH=%i"       \
-		" SILENCE=%i"     \
-		" MODES=%i"       \
-		" MAXCHANNELS=%i" \
-		" MAXBANS=%i"     \
-		" NICKLEN=%i"     \
-		" TOPICLEN=%i"    \
-		" KICKLEN=%i"     \
-		" CHANTYPES=%s"    \
-		" PREFIX=%s"     \
-		" CHANMODES=%s,%s,%s,%s" \
-		" NETWORK=%s" \
-		" :are supported by this server"
-
-
 #define PROTOCTL_CLIENT_1         \
 		"MAP"             \
 		" KNOCK"          \
@@ -261,6 +240,7 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 		" TOPICLEN=%i"    \
 		" KICKLEN=%i"     \
 		" MAXTARGETS=%i"  \
+		" AWAYLEN=%i"	  \
 		" :are supported by this server"
 #define PROTOCTL_PARAMETERS_1	  \
 		MAXCHANNELSPERUSER, \
@@ -268,7 +248,8 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 		NICKLEN, \
 		TOPICLEN, \
 		TOPICLEN, \
-		MAXTARGETS
+		MAXTARGETS, \
+		TOPICLEN
 
 #define PROTOCTL_CLIENT_2	  \
 		"WALLCHOPS"	  \
