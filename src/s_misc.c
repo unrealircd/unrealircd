@@ -118,6 +118,25 @@ char *date(clock)
 	return buf;
 }
 
+
+char *convert_time (time_t ltime)
+{
+	unsigned long days = 0,hours = 0,minutes = 0,seconds = 0;
+	static char buffer[40];
+
+	
+	*buffer = '\0';
+	seconds = ltime % 60;
+	ltime = (ltime - seconds) / 60;
+	minutes = ltime%60;
+	ltime = (ltime - minutes) / 60;
+	hours = ltime % 24;
+	days = (ltime - hours) / 24;
+	sprintf(buffer, "%ludays %luhours %lumonths %lusecs", days, hours, minutes, seconds);
+	return(*buffer ? buffer : "");
+}
+
+
 /*
  *  Fixes a string so that the first white space found becomes an end of
  * string marker (`\-`).  returns the 'fixed' string or "*" if the string
