@@ -838,22 +838,22 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		{
 /* I:line password encryption --codemastr */
 #ifdef CRYPT_ILINE_PASSWORD
-		if (sptr->passwd) {
-			char salt[3];
-			extern char *crypt();
+			if (sptr->passwd) {
+				char salt[3];
+				extern char *crypt();
 
-			salt[0]=aconf->passwd[0];
-			salt[1]=aconf->passwd[1];
-			salt[3]='\0';
+				salt[0]=aconf->passwd[0];
+				salt[1]=aconf->passwd[1];
+				salt[3]='\0';
 			
-			encr = crypt(sptr->passwd, salt);
-		}
-		else
-			encr = "";
+				encr = crypt(sptr->passwd, salt);
+			}
+			else
+				encr = "";
 #else
-			encr = sptr->passwd;
+				encr = sptr->passwd;
 #endif
-			if (!encr || !StrEq(encr, aconf->passwd))
+			if (BadPtr(sptr->passwd) || !StrEq(encr, aconf->passwd))
 			{
 				ircstp->is_ref++;
 				sendto_one(sptr, err_str(ERR_PASSWDMISMATCH),
@@ -866,7 +866,9 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			 * - Wizzu
 			 */
 			else
-			MyFree(sptr->passwd);
+			{
+				MyFree(sptr->passwd);
+			}
 		}
 
 		/*
@@ -1026,7 +1028,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 	 */
 	if (MyConnect(sptr))
 	{
-	if (sptr->passwd) 
+	if (!BadPtr(sptr->passwd)) 
 		if (sptr->passwd && (nsptr = find_person(NickServ, NULL)))
 			sendto_one(nsptr, ":%s PRIVMSG %s@%s :IDENTIFY %s",
 			    sptr->name, NickServ, SERVICES_NAME, sptr->passwd);
@@ -1712,7 +1714,7 @@ int  m_nick(cptr, sptr, parc, parv)
 		/* Copy password to the passwd field if it's given after NICK
 		 * - originally by taz, modified by Wizzu
 		 */
-		if ((parc > 2) && (strlen(parv[2]) < sizeof(sptr->passwd)))
+		if ((parc > 2) && !BadPtr(sptr->passwd) && (strlen(parv[2]) < sizeof(sptr->passwd)))
 		{
 			if (sptr->passwd)
 				MyFree(sptr->passwd);

@@ -250,15 +250,34 @@ static int add_exbanid(aClient *cptr, aChannel *chptr, char *banid)
 
         if (MyClient(cptr))
                 (void)collapse(banid);
-        for (ban = chptr->exlist; ban; ban = ban->next)
+
+        /* I'm not sure wtf MAXBANLENGTH is *supposed* to implement
+         * but I would guess it's supposed to be the length of an
+         * individual ban and not the sum of the lengths of all the
+         * bans in a given list. --Luke
+         */
+        if (strlen(banid) > MAXBANLENGTH)
         {
+                sendto_ops("BANLISTFULL: strlen(banid) is > %i [%s, %s]",
+                    MAXBANLENGTH,chptr->chname, banid);
+                sendto_one(cptr, err_str(ERR_BANLISTFULL),
+                    me.name, cptr->name, chptr->chname, banid);
+                return -1;
+        }
+        
+        for (ban = chptr->banlist; ban; ban = ban->next)
+        {
+                /* wtf is this?
                 len += strlen(ban->banstr);
+                */
                 if (MyClient(cptr))
-                        if ((len > MAXBANLENGTH) || (++cnt >= MAXBANS))
+                        if (++cnt >= MAXBANS)
                         {
-                                sendto_one(cptr, err_str(ERR_BANLISTFULL),
+                               sendto_ops("BANLISTFULL: Hit MAXBANS (%i) with CNT %i [%s, %s]",
+                                    MAXBANS, cnt, chptr->chname, banid);
+		       	       sendto_one(cptr, err_str(ERR_BANLISTFULL),
                                     me.name, cptr->name, chptr->chname, banid);
-                                return -1;
+                               return -1;
                         }
                         else
                         {
@@ -326,13 +345,32 @@ static int add_banid(aClient *cptr, aChannel *chptr, char *banid)
         
         if (MyClient(cptr))
                 (void)collapse(banid);
-        for (ban = chptr->banlist; ban; ban = ban->next)
+
+	/* I'm not sure wtf MAXBANLENGTH is *supposed* to implement
+	 * but I would guess it's supposed to be the length of an
+	 * individual ban and not the sum of the lengths of all the
+	 * bans in a given list. --Luke
+	 */
+	if (strlen(banid) > MAXBANLENGTH)
+	{
+		sendto_ops("BANLISTFULL: strlen(banid) is > %i [%s, %s]",
+				MAXBANLENGTH,chptr->chname, banid);
+		sendto_one(cptr, err_str(ERR_BANLISTFULL),
+		    me.name, cptr->name, chptr->chname, banid);
+		return -1;
+	}
+	
+	for (ban = chptr->banlist; ban; ban = ban->next)
         {
+		/* wtf is this?
                 len += strlen(ban->banstr);
+		*/
                 if (MyClient(cptr))
-                        if ((len > MAXBANLENGTH) || (++cnt >= MAXBANS))
+                        if (++cnt >= MAXBANS)
                         {
-                                sendto_one(cptr, err_str(ERR_BANLISTFULL),
+				sendto_ops("BANLISTFULL: Hit MAXBANS (%i) with CNT %i [%s, %s]",
+						MAXBANS, cnt, chptr->chname, banid);
+				sendto_one(cptr, err_str(ERR_BANLISTFULL),
                                     me.name, cptr->name, chptr->chname, banid);
                                 return -1;
                         }       
@@ -1017,7 +1055,11 @@ int  m_mode(cptr, sptr, parc, parv)
 	    && parv[2][1] == '\0') || (parv[2][1] == 'b' && parv[2][2] == '\0'
 	    && (*parv[2] == '+' || *parv[2] == '-'))))
 	{
-		if (!IsMember(sptr, chptr))
+		if (!IsMember(sptr, chptr)
+#ifndef NO_OPEROVERRIDE
+	     	   && !IsOper(sptr)
+#endif
+		   )
 			return 0;
 		/* send ban list */
 		for (ban = chptr->banlist; ban; ban = ban->next)
@@ -1034,7 +1076,11 @@ int  m_mode(cptr, sptr, parc, parv)
 	    && parv[2][1] == '\0') || (parv[2][1] == 'e' && parv[2][2] == '\0'
 	    && (*parv[2] == '+' || *parv[2] == '-'))))
 	{
-		if (!IsMember(sptr, chptr))
+		if (!IsMember(sptr, chptr)
+#ifndef NO_OPEROVERRIDE
+		    && !IsOper(sptr)
+#endif
+		   )
 			return 0;
 		/* send exban list */
 		for (ban = chptr->exlist; ban; ban = ban->next)
@@ -1051,7 +1097,11 @@ int  m_mode(cptr, sptr, parc, parv)
 	    && parv[2][1] == '\0') || (parv[2][1] == 'q' && parv[2][2] == '\0'
 	    && (*parv[2] == '+' || *parv[2] == '-'))))
 	{
-		if (!IsMember(sptr, chptr))
+		if (!IsMember(sptr, chptr)
+#ifndef NO_OPEROVERRIDE
+		    && !IsOper(sptr)
+#endif
+		   )
 			return 0;
 		{
 			struct SLink *member;
@@ -1090,7 +1140,11 @@ int  m_mode(cptr, sptr, parc, parv)
 	    && parv[2][1] == '\0') || (parv[2][1] == 'a' && parv[2][2] == '\0'
 	    && (*parv[2] == '+' || *parv[2] == '-'))))
 	{
-		if (!IsMember(sptr, chptr))
+		if (!IsMember(sptr, chptr)
+#ifndef NO_OPEROVERRIDE
+		    && !IsOper(sptr)
+#endif
+		   )
 			return 0;
 		{
 			struct SLink *member;
@@ -1130,7 +1184,11 @@ int  m_mode(cptr, sptr, parc, parv)
 	    && parv[2][1] == '\0') || (parv[2][1] == 'I' && parv[2][2] == '\0'
 	    && (*parv[2] == '+' || *parv[2] == '-'))))
 	{
-		if (!IsMember(sptr, chptr))
+		if (!IsMember(sptr, chptr)
+#ifndef NO_OPEROVERRIDE
+		    && !IsOper(sptr)
+#endif
+		   )
 			return 0;
 		sendto_one(sptr, rpl_str(RPL_ENDOFINVITELIST), me.name,
 		    sptr->name, chptr->chname);
