@@ -29,7 +29,7 @@ Hungarian |
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com/">http://www.unrealircd.com</a></font><br>
   <font size="4">Verzió: 3.2.2-CVS</font><br>
-  <b>Utolsó dokumentáció módosítás:</b> 2005-02-13</div>
+  <b>Utolsó dokumentáció módosítás:</b> 2005-03-05</div>
 <br>
   <b>Fõ fejlesztõk:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Munkatársak:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -236,13 +236,10 @@ Windows:<br>
    Ez a featúra hasznos annak a megelõzésére, hogy a felhasználók egymást árasszák (floodolják), mivel így nem látják a valódi gazdanevet ill. IP címet.</p>
 <p>Ez a +x felhasználói móddal vezérelhetõ (például: /mode nickneved +x), az adminok erõltethetik a +x alapértelemzésbeli
    engedélyezését is, vagy beállíthatják, hogy a mód soha ne legyen eltávolítható.</p>
-<p>Az álcázott gazdanevet egy álcázó modul állítja elõ (egyet szükséges betöltened), jelenleg 2 ilyen hivatalos modul áll rendelkezésre:<br>
-   <b>cloak:</b> Ez az új, hivatalos álcázó modul, amely sokkal biztonságosabb, mint a korábbi;
+<p>Az álcázott gazdanevet egy álcázó modul állítja elõ (egyet szükséges betöltened), az Unreal jelenleg 1 ilyen hivatalos modult tartalmaz:<br>
+   <b>cloak:</b> Ez a hivatalos álcázó modul a 3.2.1 óta, sokkal biztonságosabb, mint a régi algoritmus;
    belsõleg használ md5-öt, és 3 kulcsot igényel (set::cloak-keys::), amelyek mindegyike kis- (a-z),
    nagybetû (A-Z) valamint szám (0-9) karakterekbõl áll [pl.: "AopAS6WQH2Os6hfosh4SFJHs"]. Az example.conf-ban találsz példát.<br>
-   <b>oldcloak:</b> Ez az Unreal3.2 és korábbi verziók által használt, régi álcázó algoritmus, és csak azért van itt,
-   hogy segédkezzen a frissítési folyamatban. Most már nem tartjuk biztonságosnak (kapsz egy figyelmeztést,
-   ha használod), és rögtön érdemes átváltanod a "cloak"-ra, amint frissítetted a szervereidet.</p>
 <p>Az álcázási kulcsoknak egy hálózat MINDEN SZERVERÉN azonosnak KELL lenniük. Továbbá a kulcsokat tartsd TITOKBAN,
    mert ha valaki ismeri a kulcsokat, visszafejtheti az eredeti gazdanevet (ami a +x felhasználói módot hasznavehetetlenné teszi).</p>
 </div>
@@ -441,6 +438,15 @@ A módtörlési idõk különösképpen egyéni ízlés dolgai.. olyasmire kellene gondolno
 kezelésére? Szeretném-e a csatornát lezárni pl. 15 percre (=nem kellemes a felhasználóknak) vagy 5 percre (=feltehetõleg az árasztók
 csak várni fognak 5 percet, és árasztanak újra)? Függ az árasztás típusától is; ha a felhasználók képtelen belépni (+i) vagy beszélni (+m), az rosszabb, mint
 ha nem változtathatják meg a neveiket (+N) vagy nem küldhetnek ctcp-ket a csatornára (+C), tehát érdemesebb különbözõ törlési idõket használni.
+<br>
+<b>A j csatornamód</b><br>
+A +f módnak van egy olyan képessége, hogy megakadályozza a join árasztásokat, azonban ez a képesség "globális."
+Például ha 5:10-re van állítva, és belép 5 <u>különbözõ</u> felhasználó 10 másodperc alatt, az árasztásvédelem
+bekapcsol. A +j csatornamód más. Ez a mód felhasználónkénti alapon mûködik.
+Ahelyett, hogy a join árasztások ellen védne, arra van tervezve, hogy a join-part árasztásokat gátolja meg
+(forgóajtós árasztások). A mód egy X:Y alakú paramétert igényel, ahol X a belépések száma, és
+Y a másodpercek száma. Ha egy felhasználó túllépi ezt a korlátot, nem fog tudni belépni
+a csatornára.
 </p></div>
 
 <p><font size="+2"><b>3.13 - Ban típusok</b></font><a name="feature_bantypes"></a></p><div class="desc">
@@ -2981,14 +2987,14 @@ további információt kapj.</p>
     <td>IRCop</td>
   </tr>
   <tr> 
-    <td height="39">restart &lt;szerver&gt; &lt;jelszó&gt;<br></td>
-    <td>Újraindítja az IRCD processzust. Jelszó megadása szükséges. Szervernevet is
-      megadhatsz, hogy egy távoli szervert indíts újra.<br></td>
+    <td height="39">restart &lt;jelszó&gt; &lt;indok&gt;<br></td>
+    <td>Újraindítja az IRCD processzust. Jelszó akkor szükséges, ha van drpass { }. 
+        Megadhatsz indokot is.<br></td>
     <td>IRCop</td>
   </tr>
   <tr> 
     <td height="39">die &lt;jelszó&gt;<br></td>
-    <td>Leállítja az IRCD processzust. Jelszó megadása szükséges.</td>
+    <td>Leállítja az IRCD processzust. Jelszó akkor szükséges, ha van drpass { }.</td>
     <td>IRCop</td>
   </tr>
   <tr> 
