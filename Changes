@@ -1255,3 +1255,4 @@ seen. gmtime warning still there
 - Implimented a dynamic hooktype system to allow modules to create their own hooktypes
 - Fixed a conf_unknown bug
 - Added EXLIBS= to make custommodule so a module can specify additional libraries it needs
+- Changed version to beta9 and updated documentation
