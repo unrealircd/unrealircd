@@ -33,6 +33,7 @@
 #ifdef PCS
 #include <time.h>
 #endif
+#include <string.h>
 
 ID_Copyright("(C) 1993 Darren Reed");
 ID_Notes("DF version was 1.9 1/30/94");
@@ -416,8 +417,6 @@ static aConfItem *initconf(opt)
 		 */
 		if (aconf->status & CONF_CLASS)
 		{
-			int  class = 0;
-
 			if (!aconf->host)
 			{
 				(void)fprintf(stderr, "\tERROR: no class #\n");

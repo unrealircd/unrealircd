@@ -53,6 +53,7 @@ Computing Center and Jarkko Oikarinen";
 #endif
 #include "h.h"
 #include "channel.h"
+#include <string.h>
 
 #ifndef NO_FDLIST
 extern fdlist serv_fdlist;
@@ -117,6 +118,25 @@ char *date(clock)
 
 	return buf;
 }
+
+
+char *convert_time (time_t ltime)
+{
+	unsigned long days = 0,hours = 0,minutes = 0,seconds = 0;
+	static char buffer[40];
+
+	
+	*buffer = '\0';
+	seconds = ltime % 60;
+	ltime = (ltime - seconds) / 60;
+	minutes = ltime%60;
+	ltime = (ltime - minutes) / 60;
+	hours = ltime % 24;
+	days = (ltime - hours) / 24;
+	ircsprintf(buffer, "%ludays %luhours %lumonths %lusecs", days, hours, minutes, seconds);
+	return(*buffer ? buffer : "");
+}
+
 
 /*
  *  Fixes a string so that the first white space found becomes an end of
@@ -429,11 +449,11 @@ int  exit_client(cptr, sptr, from, comment)
 				current_load_data.local_count--;
 			/* Clean out list and watch structures -Donwulff */
 			hash_del_notify_list(sptr);
-			if (sptr->lopt)
+			if (sptr->user && sptr->user->lopt)
 			{
-				free_str_list(sptr->lopt->yeslist);
-				free_str_list(sptr->lopt->nolist);
-				MyFree(sptr->lopt);
+				free_str_list(sptr->user->lopt->yeslist);
+				free_str_list(sptr->user->lopt->nolist);
+				MyFree(sptr->user->lopt);
 			}
 		}
 		update_load();
@@ -694,7 +714,7 @@ static void exit_one_client_backend(cptr, sptr, from, comment, split)
 			sendto_common_channels(sptr, ":%s QUIT :%s",
 			    sptr->name, comment);
 
-			if (!IsULine(cptr, sptr) && !split)
+			if (!IsULine(sptr) && !split)
 				if (sptr->user->server != me_hash)
 					sendto_umode(UMODE_FCLIENT,
 					    "*** Notice -- Client exiting at %s: %s!%s@%s (%s)",

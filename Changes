@@ -1,573 +1,252 @@
-/*
+/*                              
  * UnrealIRCd Changes File - (C) Carsten Munk 1999-2000 &
  *                               The UnrealIRCd Team
- *
+ *                              
  * $Id$
- * 
+ *                              
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 1, or (at your option)
- * any later version.
- * 
+ * any later version.           
+ *                              
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *                              
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
- */
+ *                              
+ */                             
+                                
 
-*** Unreal3.1 *** (final)
-- Moved REMOVE_ADVERTISE a little
-- Fixed bug where you could /mode #test +L #test (link a channel to
-  itself)
-- Fixed a bug where a +L channel didn't have to be valid ex /mode #test
-  +L blah would work, dangerous if 0 is used
-- Fixed /map showing U:lines even if HIDE_ULINES was set oops :)
-- Fixed a bug where opers couldn't walk through +l
-- Fixed a bug where /mode #test +f *N:N was recognized the same as +f N:N
-  (if *2:3 was set then /mode #chan +f 2:3 it wouldn't set, thought it was the same)
-- Removed src/cio_init.c src/cio_main.c src/win32.c src/win32.rc as we don't
-  use that anymore
-- Added ircsprintf() (ircsprintf.c and ircsprintf.h)
-- Converted to use ircsprintf
-- Now using sprintf_irc from ircu, as %li would screw up the hybrid variant
-- Some fdlist updates from bahamut
-- Header change
-- Some more Header change
-- Added agent.c for IRCd Agents (remote control etc)
-- Fixed up some make misalignments
-- Fixed +I /names
-- Removed TESTNET defines
-- Added poll() engine from bahamut (hard!)
-- Made /vhost send failed login's to +e
-- Made /stats V/R/F use raw rather than NOTICE
-- Fixed some poll() engine problems
-- Some more problems with poll()
-- Removed the \2's from the is a Coder msg, whywere they there, no one
-  knows (codemastr) Because i was the only one using it =P (Stskeeps)
-- Fixed /names problem..
-- Made /mode <nick> use get_mode_str() to list the modes
-- Made /lusers info be pre-calculated :) Saves hell of a lot CPU time
-- Made /stats z/Z oper only
-- Fixed SJOIN bug only totally fixed when all servers upgraded
-- Moving old 3.0 stuff to Changes.old
-- Re-added README.ALPHA
-- Fixed some more SJOIN bugs
-- Fixed NICKv2 bugs with non NICKv2
-- Fixed up /info, there will be a better layout for this
-- Fixed up some poll() engine bugs (i hope)
-- Start of telnet proxy scan code
-- Took telnet proxy scan code out again =/ It really fux0red up
-- Added networks/treklink.network
-- Added options to /HTM, ON/OFF TO (what load do we auto start at) NOISY/QUIET (toggle whether HTM should
-  announce when it starts)
-- Fixed a little bug where /part didn't show the correct channel case
-- Made unresolved host connections go faster, idea from PTLink IRCd v3.5.4 great job :)
-- Removed support for & and + channels (i hope) and made m_message more
-  handy and support for /notice +#channel, %#channel etc etc
-- Topic fix?
-- Incorperated the bahamut m_list and send_list, it's faster and smaller :P
-- When /HTM is active /list is disabled to non-opers
-- OperMOTD is now loaded into memory (faster, saves memory, and CPU)
-- Added /rehash -omotd to rehash the OperMOTD
-- Added unrealircd.conf option for SETUID and SETGID if ircd started as root.  And you can turn that off/on
-   by defining/undefining BIG_SECURITY_HOLE in config.h
-- Fixed small bug in ircd.c and dynconf.c (not using #ifndef BIG_SECURITY_HOLE)
-- Removed & and + channels for sure..
-- All MOTDs, RULES are read into memory (including T:lines)
-- Added /rehash -bmotd (BotMOTD) /rehash -motd/-rules (MOTDs/RULES)
-- Fixed memory leak in dynconf.c, allocated 2048 on each /rehash -dynconf
-- Fixed _serious_ memory leak in cloak.c, abused 128 bytes every time
-  someone went +x 
-- Alphabeticalized making..
-- flush_connections more better
-- Fixed calls to check_registered*, more CPU spare:)
-- Fixed a bug in /tsctl svstime
-- Fixed a bug in the cached MOTDs
-- Added support for remote /htm
-- Even more tokensation
-- Removed IRCII_KLUDGE
-- Fixed /lusers wrong reply
-- Removed V28PlusOnly define
-- Fixed a bug in channel_modes()
-- More and more and more tokenzation >:)
-- Fixed a bug in m_user
-- Removed have_ops() and is_deopped(), they weren't used
-- Reorganized can_send() to make it faster
-- More tokenzation >:)
-- Fixed ircsprintf() %lu error when %lu == 0
-- Added devel/ directory, put ideas/specifications in here
-- Added devel/new.plines to describe new upcoming P:lines
-- Added NO_IDENT_CHECKING in config.h
-- Fixed bugs in get_version() and also made it a bit faster
-- Fixed RPL_MYINFO problem with UnrealIRCd/32 version and ircII
-  misunderstanding it, prob other clients too
-- Updated msg.h hashtable to get most used commands more close
-- Removed some unused defines in msg.h
-- Removed dusers (not in use)
-- m_user stuff
-- Made use of : 's in between ircd.conf field working, using this format:
-  A:"Test test:Moo":Moo:moo
-- Fixed some /lusers miscalculations
-- Added INET6 patch, now for making it work :P
-- More INET6 patching (not working atm)
-- INET6 compiles now, works? :P
-- Fixed some WebTV stuff
-- Made the m_message routine not do a user hash lookup if it starts with #
-- Removed some fields in structures like aClient etc that was unused
-- Removed Client->iown and the OWNLOGON code
-- Removed Channel->blist
-- Removed heaps of unused variables in functions
-- Fixed THE G:line bug, missing parameter
-- Hopefully fixed some calculation bugs
-- +F bugfix
-- In TKL a gline shows reason in quit message now
-- Fixed the SVSMOTD OPERMOTD and BOTMOTD bug, suggest parantheses problem
-- In K:Line it shows reason in quit message now, not sure about AKILL
-- Experimental NOTE in register_user added
-- Implemented hybrid scache.c, created by orabidoo and Dianora
-- Fixed /connect scache problem, and actually fixed the OPERMOTD bug
-- The hopefully last calculation bug..
-- Made bans and exceptions actually sync *ducks*, done in old fashion MODE
-  manner, better than making BS (bansync) or incorporating it in SJOIN
-- Made /opermotd oper-only, bug reported by Bagge@ROXnet
-- Made TOPICs be dynamically allocated - saves heaps memory
-- Added hybrids/+cs'es /whowas system. Improved so it doesn't use static
-  character arrays, and uses dynamically allocated strings instead 
-- Added UMODE2 PROTOCTL and command, when a usermode change it uses :nick
-  UMODE2 +-umodes. token = '|'
-- Made CONNECTFAST default, will ensure faster connecting
-- Updated /helpop to list more commands and new modes
-- the 1-message-per-2-sec not applied to opers
-- Topic fix with dynamic allocation
-- 1-message-per-2-sec now 1-message-per-1.5-sec
-- Removed TS fix notice
-- Removed User %s tries to become server notice
-- Made MAXCHANNELSPERUSER an unrealircd.conf option
-- Changed unrealircd.conf version to 1.2
-- Credit changes..
-- Uses dgets() from hybrid now, should be a minor CPU fix
-- Moved WebTV support, and +I disabling to an unrealircd.conf option
-- Updated doc/conf.doc, removed references to DALnet, and fixed typos
-- Moved doc/Elite.Changes to doc/History/Elite.Changes, away away away with
-  that one
-- Tokenized SQLINE
-- Recoded dynconf, validates data too now
-- Fixed a /list bug that crashed the server
-- Fixed a minor bug in the new dynconf
-- Fixed a bug in vhost.conf and dccdeny.conf where if the line was not valid it would crash, now it just
-  ignores that line
-- Added comment support to vhost.conf, dccdeny.conf, and chrestrict.conf (makes loading faster)
-- Fixed one of those "code, what the fuck were you smoking" bugs in m_svsmode etc
-  (what = MODE_DEL - eh?)
-- Added AUTO_JOIN_CHANS to unrealircd.conf to force a user to join 1 or
-  more channels on connect, read networks/unrealircd.conf for more info
-- Added networks/axenet.network
-- Possible change in the -1 operator bug
-- /info changes
-- Unreal3.1-beta1 release
-- Added a bunch of networks
-- Updated doc/conf.doc
-- Updated networks/networks.ndx cause someone *cough* sts *cough* forgot
-- Updated m_svso to -H the user
-- Added Solaris2.5 support and cleaned up Solaris2.x support
-- A little /list fix
-- Changed the unrealircd.conf version to 1.3
-- Fixed a bug in the AUTO_JOIN_CHANS
-- Added OPER_AUTO_JOIN_CHANS to unrealircd.conf, same as AUTO_JOIN_CHANS
-  but is called on /oper
-- Readded /ns, /cs, etc but this time they point to /nickserv, /chanserv,
-  etc
-- Removed IRCd Agents and made it so all opers can join unlimited channels
-- Updated src/chkconf.c to recognize new lines
-- Added "/mode #chan qa" support to send a list of +q users / +a users in a chan
-- Fixed "/mode #chan qa" ... see channel.c m_join for the problem ... sts you owe me a tenner =P ..
-- Removed Reg1, Reg2 etc etc and register. Modern compilers optimize better
-  that way
-- Sidenote: /msg nick@ bug can easily be caused in m_message
-- Unreal3.1-beta1(build2)
-- Disabled ID_* stuff but is still there, saves memory
-- Made user->virthost a dynamic string now
-- Fixed a virthost bug again, and starting to wreck in meow's badword patch,
-  gonna be a swearword filter and new version of REMOVE_ADVERTISING
-- Added meow's badword patch
-- Moved the badword patch chmode to +G (G Rated Channel) cause thats what some other ircd's use so lets try
-  and keep cross compatibility :P
-- Added networks/interturk.network
-- Fixed a bug in /names thanks to lucas for reporting it and fixing it :)
-- Changed the badword umode to +G also
-- Removed some unused variables from dynconf.h
-- Cleaned up the dynconf and network file code to use less memory
-- Fixed the kill bug in NICKv2, caused by codemastr(TM) code
-  (was calling m_join before sending NICK info to other servers) 
-  - SO NO IT WAS NOT MY FAULT *slap* (Stskeeps) -
-- Did an attempt on fixing the /msg nick@ bug
-- /stats s in DEVELOP mode will show cached scache hosts
-- Added src/aln.c, for the new ALN system, read doc/aln.doc
-- Minor ALN fix
-- Introduced ALN system, look at send.c::sendto_serv_butone_nickcmd, a
-  little better, we can scrape some functions now
-- Some more ALN stuff, the server now understands |<aln> prefixes,
-  find_client too
-- Added the "IRC Operators Message Of The Day" to /opermotd
-- Made Y:1 class in makeconf max 250 (we might get some complaints here, 
-  but people can change to their limit, but we have to make it this low
-  because else the program rj had can flood/crash the server
-- Fixed a ALN problem with |nick persons getting killed off
-- Removed an OLD EliteIRCD reference in ./Config, thanks to Linus
-- Moved the ALN prefix to @ instead of |, as | would conflict with 
-  clients
-- Fixed ALN problem with it masskilling everyone :P
-- ** RELEASE OF UNREAL3.1-BETA2 **
-- Small Linux-ALPHA fix
-- A small vsendto_prefix bugfix(?)
-- Added /stats e to list e:lines
-- Fixed a small /list problem
-- Added #define USE_LOCALE, uses locale stuff in *nix versions
-  to make better toupper() tolower(). might help some chinese nick
-  things too
-- Fixed a few minor NOSPOOF things
-- Changed ircsprintf() to work with %lu with 0-5
-- Added unreal-test.network, for the upcoming Unreal TESTnet (for beta
-  testers and developers only)
-- Using MyFree/MyMalloc now instead of MyRealloc.. lets hope it fixes
-  something
-- Fixed the virthost (possible), need extensive testing
-- Possible fix of some server_estab problems
-- Added networks/cc2.network, networks/kissland.network, and networks/digital-irc.network
-- Changed unrealircd.conf version to 1.5
-- Added HOST_TIMEOUT and HOST_RETRIES to unrealircd.conf to customize host resolving times
-- Added Freelinks garbage collector (by Stskeeps :)), saves a lot of memory. 
-  Check include/config.h on configuring it (default values should do)
-- Fixed a /chghost and /chgident buffer overflow problem reported
-  by Gravitron.
-- Added Solaris2.6 and 2.7 support
-- Added /dccdeny to add a temporary dccdeny, erased on /rehash -dccdeny
-- Added /undccdeny, if the EXACT file you type is found it is removed, else it uses wildcards to search
-- Made it so you can't add duplicate dccdenys
-- IRCstats.operators count fix. It MUST work now.
-- Fixed a bug in dccdeny
-- Added a logo to the IRCd startup and made it work a little bit better
-- Made version.c update when .c.SH is changed
-- Made sendto_serv_butone_token work with ALN prefixes too
-- Fixed an SQLINE bug
-- SVSFLINEs now sync when a server links
-- SVSFLINEs are now tokenized
-- Fixed the /nick othernick thing failing (ALN fault, lets hope it doesnt
-  break other stuff)
-- Implemented DOUGH_HASH from hybrid IRCd
-- Ran Unreal thru another memory leak check
-  - Fixed a whowas.c memory leak
-- Added /rehash -garbage which will clean up freelinks
-- NOTE on PTlinks so called make yourself oper bug.. cannot see how it 
-  can trigger at all.
-- Fixed up some E:line code
-- Added n:lines banning based on real names (E:lines override n:lines)
-- Fixed a minor bug in m_message
-- Fixed up and ALNized SERVER commands like @E8 SERVER name  
-  for instance.. sts tends to severely drool over this
-- Hopefully fixed the /msg unknownnick missing ERR_NOSUCHNICK bug
-- Fixed the cannot change to lowercase nick thing, and made
-  find_server() call hash_find_server instead of hash_find_client
-  *slaps* to stskeeps :P
-- Fixed a bug caused by sts's '/msg unknownnick missing ERR_NOSUCHNICK bug' fix :)
-- n:lines now checked on /setname (not checked for opers)
-- Fixed a bug caused by a line of code I forgot to remove ;P
-- Fixed the pesky \r bug caused by windows editors. Unreal ignores \r now
-  in ircd.conf
-- For any sake, included the PTlink bugfix.., had some reports from
-  zurna.net of it
-- Fixed an n:line bug(nice bug really? :P)
-- Removed behavoir of co-admins able to set +q in #channels
-  (i think this was cos i was co-admin long time ago -sts)
-- Made IRCops able to talk through +b, suggested by The_Cat
-- Added /chgname nick :new realname and /svsname as an alias for it
-  (suggested by ^Tux^)
-- Fixed Sts's favorite mistake
-- Indented Unreal .c files
-- PROTOCTL's can be said more than once now
-- Fixed a /dccdeny - /undccdeny bug reported by auspice
-- Fixed the negative oper count bug. Was caused by codemastr-coding(TM)
-- Removed the old non-caching motd functions
-- Some IRCstats.unknown fixes..
-- Took out compatibility for "Pyramid OS", is ancient and let them
-  fix their fscked up os
-- If a user (unknown connection) floods 2K (2048 byte) the user is
-  disconnected and tkl z:lined for 600 secs (10 mins). Idea by GZ 
-  from StarChat IRCd, code recoded by Stskeeps
-- A ircd.conf Y:Line class is not added if it contains max clients
-  > (MAXCONNECTIONS - 15)
-- Flood activates only at unknown connections and only at 4K now ..
-- Fixed a bug in m_setname with n:lines
-- Added n:line support to m_chgname
-- n:lines are now checked after a rehash
-- Did a bugfix on ALN and non-ALN servers
-- Fixed a bug with /chgname with incorrect parameters to other servers
-- "Fixed" the /stats u bug?
-- Fixed +f not working (?)
-- Made the Own-protection just reduce the class maxli instead of bitching..
-- Did a dirty hack on ALN problem with colliding hash (will deny linking in
-  wrong servers)
-- Fixed /stats C not showing N:lines, reported by auspice
-- Fixed codemastr (possible) fucked up the shell ircd script with
-  overwriting it ...
-- Created /shun, /gline style. /shun +user@host time reason /shun -user@host
-  will extend it so you can /shun +nick later
-- A little anti-0 fix in channel.c
-- Made MODE_X, MODE_I etc show mode change to user
-- Added channel mode +C to disallow channel CTCPs, /me (CTCP ACTION) is still allowed
-- Fixed a bunch of +H bugs
-- Fixed a bug where the channel was still shown in /who for +I users
-- First part of ZIP_LINKS
-- Fixed a typo in ./newnet
-- Made /close reset IRCstats.unknown ..
-- Made SVSO (ofcourse) IRCstats.operators--;
-- Another IRCstats.unknown fix. Hope this works (hacked from undernet code)
-- NETINFO protocol 0 is accepted as valid protocool (for services etc)
-- /stats s is now avail only for opers in mainstream
-- Took out "nick did a /userhost on you"
-- Reduced hashtable size
-- Took out sequent/dynix support
-- Fixed a bug that prolly was fixed by Potvin, but was "not fixed correctly"
-- Fixed a crash problem in register_user and most likely fixed the "strange
-  vhost" thing, (was a dumb bug, mising ircsprintf)
-- Fixed the *** NickServ sets mode +creep SVS2MODE bug..
-- sendto_serv_butone_token_opt ()..
-- Small testing stuff
-- In ./Config it runs a quick test to see how many socket()s you can do
-- Fixed the double +cF notice on local connections exiting, ugly hack
-- Removed the last traces of unix sockets, flag 0x10 free now
-- Made all ircops able to use +F (totally this time)
-- /quote close do not show realhost of caller anymore
-- /shun accepts nick in add mode now (adds *@host)
-- Allowed /shunned users to use /pong now
-- Fixed (by DrBin) Shun and Gline bug, where they replaced eachothers ->type
-  .... Learn that (= != ==) /me looks at Sts
-- You can now specify 0 as the time for any TKL (ex Glines, Shun) for it to be perm
-- Fixed a +L bug, (3.1 only) where any op could set +L
-- Added channel mode +u, "Auditorium". Makes /names and /who #channel only
-  show @'s
-- Added config.h setting to disable oper overrides, NO_OPEROVERRIDE
-- Added Debug support to win32 makefile ... compile with syntax
-  NMAKE -f makefile.win32 DEBUG=1
-  inorder to have debug support ... leave the DEBUG=1 out for normal builds
-- Fixed ircsprintf.h ... we do want it to compile in debug mode yes ?
-- Made /addline write to correct place when you use -f
-- Made /zline not memory corrupt/crash, bad df bug
-- Fixed a counting bug with unknown connections, very hopefully
-- Fixed /htm giving wrong response when /htm to 1
-- Fixed /shun showing "1970" to permanently shunned users
-- Fixed ./Config showing freebsd 3.0 in freebsd 4
-- Made so badwords.*.conf accepts # comments
-- Added some default default badwords.message.conf and badwords.channel.conf
-- Made so auditorium mode shows users to @'s 
-- Fixed a bug where /chgident would overflow into the *real* host if it where greater than USERLEN
-  because _someone_ aka sts told it to check against HOSTLEN rather than USERLEN... reported by wshs
-- Fixed a bug in badwords not loading words correctly, and upped word limit
-  to 50
-- Small fix with ./Config showing incorrect path of stddef.h
-- Made operkick be part of NO_OPEROVERRIDE
-- Made admins unable to be shunned
-- Made some socket errors which normally only showed up in DEBUGMODE, show
-  up in ircd.log as well
-- Fixed a wrongly outputted message (in hash collision detect)
-- Removed aHush, not in use
-- Removed DISALLOW_MIXED_CASE and IGNORE_FIRST_CHAR, waste of space
-- Made IDLE_FROM_MSG stock define
-- Made IRCII_KLUDGE disappear :P
-- Fixed SENDQ_ALWAYS to be mainstream define (as always)
-- Removed s_gline, not in use, removed some modeless channel checks (not needed), removed an old zombie
-  code, and removed a line from aHush that was missed
-- Added networks/seveneagle.network
-- /msg irc <command> now works whether or not WEBTV_SUPPORT is on
-- Moved /mode #channel ^ and ListBits() to #ifdef DEVELOP
-- Made it so servers behind a U:lined server (ex Juped Server) are U:lined too, helpful if HIDE_ULINES is
-  on (from bahamut)
-- Added find_uline (from bahamut) for the new U:line code
-- Modified /map to work with the new U:line code
-- Redid s_err.c to be ALOT faster, based on bahamut's s_err.c (ALOT of
-  work)
-- Fixed last R_LINE stuff (check_time_interval)
-- Fixed /setname desynch
-- Removed IsService(), and some wierd stuff
-- Broken INETD support removed
-- Removed some odd Clone stuff(?)
-- Added Blowfish encryption ability (SetSecure()), will extend to more
-  better encryption
-- Fixed a typo in /stats z
-- Some more crypto stuff, will work on the new engine tommorow
-- You can now encrypt the I:line passwords using mkpasswd (must have CRYPT_ILINE_PASSWORD defined)
-- Editted Config to ask if you want encrypted I:line passwords
-- Made it so you can encrypt restart/die passwords (same as I:line passwords)
-- Editted Config to ask about encrypted restart/die passwords
-- Made it so you can *view* a channel topic using /topic #channel without being a member
-- Removed , support from /topic (not needed)
-- Removed count_channels (not in use)
-- Made a major is_banned speed up
-- Redid K:line and n:line checking to be alot faster
-- Fixed crypto stuff 100% :))
-- Added CRYPTOIRCd ('r') to version string
-- Added some more crypto stuff
-    - /crypto <algoritm> <keyfile laying in keys/> <parameters>
-- Fixed a ->passwd bug caused by codemastr..
-- Added fclose() calls to the vhost, dccdeny, and chrestrict confs
-- Some V:line stuff (added VL protoctl, and parsing of the SERVER command for the proto and flags)
-- Fixed so that in +c it shows if a user is connected securely
-- Backported the passwd stuff, not needed.
-- Fixed a crash problem on /quit or /squit
-- Fixed some aligning in the VL PROTOCTL
-- Fixed some fucked up passwd stuff again ..
-- Fixed a little Client Protoctl problem
-- Fixed a crypto problem (forgot an #ifdef bad sts!)
-- Fully added V:lines (doesn't really do much till the next version, since old versions don't support it)
-- Added /stats v to list V:lines (/stats V still does vhost.conf)
-- Added OpenBSD 2.x support, thanks to noriko for donating the development shell
-- Added so stuff like Lost connection to, (report_error) only goes to realops
-- Added some more descriptive error messages
-- Added doc/crypto.doc describing the encrypted irc protocol
-- Fixed a sendto_serv_butone_token problem
-- Removed any trace of MD5, we use random() for nospoof now, this fixed a
-  license problem too
-- Removed NOSPOOF_SEED01 and 02
-- Added VHP protoctl, (not in use in the synch). This makes virthost field
-  in NICKv2 use the real virthost even if its +t. (Thanks to SL7)
-- Added support for the CR Java Chat auto join feature
-- Fixed a msg.h location problem ..
-- Added secure connections and openssl tracing to Config
-- Added regex portablity and checks in Config
-- Added a #define capability to config.h (DISABLE_USERMOD),
-  disables /sethost, /setident, /chgname, /chghost, /chgident
-- Fixed a /rehash -garbage bug reported by Curt|s
-- Added networks/makenet (generates a network configuration file)
-- Added networks/staticedge.network
-- Fixed some host revealing nick collision stuff
-- Tokenized nick->nick PRIVMSG and NOTICE
-- Made it so you can remove a protoctl by putting a - in front
-- Fixed a bug in summon
-- Added protection against webproxies
-- Fixed TKL?
-- Added SJ3, removed the old
-- SJ3 bugfix, and another
-- Hopefully a res.c fix.
-- Fixed a +I bug
-- Fixed a more SJ3 bug
-- Updated networks/networks.ndx (bad sts!)
-- Added networks/linuxsquare.network
-- Added networks/chatstation.network
-[recall]
-- Fixed the pesky hostname bug
-- Fixed a NO_OPEROVERDIE bug reported by Taz
-- Fixed a +L bug
-- Fixed a typo in Config
-- SJ3 fixes. Let's hope this works (f*cken hell..)
-- Fixed a V:line bug
-- Added /infoserv (you can stop bugging us now skold ;P)
-- Removed ALN, and the ALN system.
-- Added base64 encoding instead, for ALN v2 (NS)
-- Removed a SJ3 debug msg
-- Removed SVSMODE +l support, and fixed servicestamp and +d support
-- Changed to ircu/hybrid6/unreal mix of numeric 005
-- Fixed a SJ3 Fake Direction loopbug (kills on nick collisions)
-- SJ3 fixes, loop fix
-- Added NS, new generation ALN.
-- Added llthangel's whoisfix.patch, Makes sure +hv users show up as
-  %#channel instead of +#channel. Bug report by ^Fanta.
-- Changed find_server_quick to work with masks too ..
-- Removed UPING UDP socket. Only resfd opens a udp fd now
-- Small memory cleanup
-- NS introduction in sendto_serv_butone_token
-- Fixed Q:lined nick NickServ from <unregistered> on Nickname Server message
-- Fixed a problem in synch using acptr->name as info line
-- Introduced NS in SQLINE..
-- Fixed a problem in SVS2MODE not displaying mode changes, and well known
-  why
-- Recoded SVSNOOP, but the IRCd doesn't get it at all??
-- added llthangel to credits
-- Changed channel.c so when you kick someone as halfop it doesn't show as an
-  OperKick (unless you kick an op) (reported by ^Fanta, patch by llthangel)
-(rc2)
-- Fixed SVS2MODE bug with illegal modes
-- Fixed /notice @%+ bug, where it didnt work at all
-- Fixed a small chmode +u bug
-- Added sendto_chanops_butone because of codemastr's laziness
-- Fixed a few +u bugs 
-- Fixed a +I bug (yes another one)
-- Changed channel.c so that when an opped non +q/+a Oper kicks a user who
-  is +q/+a it invokes an OperKick (patch by llthangel)
-- Fixed the +lL (+Ll) bug, will first be fixed 100% when all is 3.1
-- Possible fixed the lopts bug
-- Fixed a egcs problem in Config, the strtok bug
-- Fixed the 'ulimit core size failed' bug (now checks whether it should
-  set the core size to unlimited in ./Config
-- Changed s_user.c so that Opers will see +s channels in /whois
-  (patch by llthangel)
-- +u now lists +a and +q people, and sends JOINs/PARTs to +a and +q people
-- Fixed a /mode (umode) typo where it said no such channel rather than no such nick,
-  reported by llthangel
-- Disabled anything with time in /list options temporary, causes bugs
-- Fixed a little /chghost bug
-- Fixed a SJ3 bug with ban syncing to SJ2 servers
-- Fixed some cloak bugs(???)
-- Made it so you can /knock without a reason, and a few /knock cleanups
-- Made it so if the server name specified in the M:line does not contain a "."
-  the ircd logs it to ircd.log and dies
-- Updated ./ircd to also say to look at ircd.log
-- Fixed a SQLINE synch bug
-- Added command line option -F to prevent the ircd to fork out
-- Fixed the f*cken TKL bug
-- Fixed a netsplit bug
-- Changed some find_server(name, NULL) to find_server_quick to speed up
-  lookup of servers
-- Made find_server_quick a prototype, and made some work more quicker as
-  well
-- Removed the : in :nick NICK newnick :timestamp
-- Added script ./update to help update, uses pull technology (wget, cvs)
-- Added script ./Setup which makes the user forced through Unreal.nfo, FAQ,
-  Config, and all the things we want them to read/do to compile the IRCd
-- Updated PREFIX Client Protoctl
-- Added ^MrMike^'s command list, this one will be updated
-- Removed ID_CVS, hopefully fixing some bastard stuff
-- Fixed a last minute SJOIN bug
-[ last fixes ]
-- Re-added res_comp.c and win32.c and res_mkquery.c, which was damaged by
-  the ID_CVS remove
-- Fixed a SHOWCONNECTINFO bug
-- Fixed a MODE_STRIPWORDS bug
-- Fixed a PART bug
-- Fixed a STRIPBADWORDS bug
-- Fixed a BotMOTD bug
-- Added Dianora's /userhost
-- Recoded /links using NS
-- Recoded /map a bit using NS, and added usercounts to Server struct
-- Some crazy time_t -> TS stuff, will save us some time in 2038
-- Fixed the "/mode #blah +Cplkf 1 moo 5:5" ( mode/#blah [+pClkf 1moo 5:5] 
-  problem
-- Hopefully fixed the +x problem
-- Fixed a bug with mkpasswd on OpenBSD
-- Added desynch +e warning, and updated ./update enough ...
-- Updated update to work better, and that you can use lynx instead of wget
-- Added #undef SHUN_NOTICES, to add notices for users who are shunned
-- Fixed bug with U:Lines should be able to privmsg/notice and recieve
-  badwords :P, does not work in channels
-- Removed the old GLINE system, TKL is now standard.
-- Added INV_TRACK define, we want people testing this.
-- Fixed the -1 usercount bug, found by codemastr, fixed by Stskeeps
-- Fixed a +h bug reported by Dukemaster
-- Added IRIX support (does it work?)
-- Fixed crypter so it actually functions (Makefile now sets mode 700) and
-  it encrypts X and N lines too.
-- Fixed empty mode sends in register_user, reported by Bagge
-- Added some portability stuff
-- Fixed some empty-line/missing parameter stuff in dccdeny, vhost, 
-  and dynconf, chrestrict
-- Made vhost strip too long vhosts
-- Removed INV_TRACK
-- Fixed a typo in /vhost
-- Fixed some problems/typos/notlookingsogood (TM) bugs, in the tkl code
-- Fixed ban merging/similar bug in SJOIN
-- Made /kick for opers only be possible for netadmin/techadmin
-- Fixed /server so it doesnt support SERVER name :info anymore..
+[Unreal3.1.1-Darkshades]
+- Fixed /userhost showing "unknown" as username for a lot of people
+- Fixed ./update error
+- Fixed a NO_FDLIST define problem in send.c and channel.c
+- Added define PROPER_COREDUMP, will not launch s_segv when done and make
+  proper coredumps
+- Fixed the G:line bugs, i hope - moved tkl_sweep into a loopstruct
+- Removed the ERR_NOTONCHANNEL message =P
+- Made some memory cleanups on the command list (saved 268 bytes)
+- More memory cleanups, changed aClient->refcnt to a signed char,
+  aClient->hopcount to unsigned char
+- Changed aChannel->mode.msgs & .per to unsigned short, and changed
+  .kmode to unsigned char
+- Changed aChannel->users to unsigned short (max 65536 users per channel)
+  and FloodOpt->nmsg to an unsigned short
+- Removed SUMMON totally
+- Fixed another SJOIN problem, but not the exact one i was looking for
+- Added IRCd bot (raw commands) and the IRC bot, webtv.c
+  - Added WHOIS command (working) to IRCbot-
+- Fixed a fun doublechar token problem (the AA unknown command)
+- Removed _alot_ of unused variables
+- Fixed *some* -Wall warnings (still alot left to fix)
+- Fixed some more -Wall warnings
+- ./update now checks when you specify wget if it exists, if not it tries lynx
+- Cached MOTDs are now dynamically allocated (saves alot of memory)
+- Made aClient->passwd dynamically allocated (saves 32bytes per user/server)
+- Fixed a NOTICE crash bug, reported by EJ
+- Removed a excessive va_end in send.c
+- Fixed a bug when running the ircd with -h
+- Readded /summon to return ERR_SUMMONDISABLED (required by RFC1459)
+- Made /users return ERR_USERSDISABLED (required by RFC1459)
+- Removed all utmp calls
+- Fixed Something ... cant remember what ... oh yes, fixed if (sptr->passwd[0]) to if (sptr->passwd)
+  it stopped the server crashing !
+- Made Code revisions so that we can compile on Win32, and fixed some of sts's late nite 
+  coding sessions(dbin)
+- Fixed some REAL dumb find_server_quick bugs
+- Fixed a wierd NOTICE bug
+- Modified and fixed the NOTICE bug totally, with some waste of the nospoof
+  system
+- Fixed a bug where +K could be set when +i was not (reported by rapta)
+- Made it so if you set -i on a channel that is +K it sets -iK
+- Fixed whowas so it no longer reports away messages
+- Made major changes to +I (may need debugging)
+  - When you set +I while on a chan it sends a PART to the rest of the channel
+  - When you set -I which on a chan it sends a JOIN to the rest of the channel
+  - Net/TechAdmins now receive a JOIN/PART when you JOIN/PART a channel  - Net/TechAdmins can now see +I users in /names
+- Fixed a typo in s_err.c reported by TRON
+- Fixed more -Wall warnings
+- Added #define LIST_SHOW_MODES to show channel modes in a /list (NOTE: only shows modes, not params)
+- Fixed /mode # + bug reported by PhatNet/Mind
+- Possible fixed the SJOIN kick bug (mode +Q), servers can now always kick
+- Added NEW DNS resolver (Win32 Only atm)  ... use by defining NEWDNS
+- FIXED "BUG" caused by NEWDNS *shrug*
+- Fixed the passwd NICK problem
+- Fixed the problem with NewDNS (ive always known about it but never known how it happens) [a pointer prob]
+- Redhat 7 (broken string.h problem), ./Config
+- Added SSL connections, open ports with P:ip:s:*:port to make them SSL
+  ports, made after hq.alert.sk's implementation
+- Added P:line flags C - client only, S - server only, J - java clients (replaces CONFROOM_JAVA_PORT)
+- Fixed up a few various things
+- Made SHOWCONNECTNOTICES work properly again, also with SSL
+- Changed ./Config to detect SSL better, and generate certificates properly
+- Removed some annoying logging in ssl.c
+- Merged in changes from TEMPcvs branch
+- Fixed a /UNSQLINE para problem, found by Joe
+- #define SHOW_SECRET now allows all ircops to see +s channels in /whois.  If not defined, only net/tech admins can.
+- Added #define CENSOR_QUIT, for WaveRide
+- Fixed hashing bug that caused the server to crash on exit
+- Made find_server_b64_or_real be a little faster, possible fixing bug
+- Made /stats s checking check for sanity or insanity (ignore them for 0
+  numerics)
+- Fixed SJOIN (mp2parv) bug, that caused insane desynchs
+- Changed Cannot find server message to be to sendto_realops
+- Fixed a warning in CENSOR_QUIT
+- Fixed the G:Line user wrongly matching (ip-alike addys didnt check user)
+- Added protoctl SJB64, which adds B64-9 timestamps to many timestamping
+  operations
+- Added ircsprintf %B (base64-9^10) with ! as prefix, and %b (no prefix)
+- Fixed a few places where for some reason sprintf() was used rather than ircsprintf()
+- Tokenized ADCHAT, TECHAT, NACHAT, SWHOIS, and SVSKILL
+- Fixed a bug in opermode that would make it display a notice on invalid modes
+- Fixed a bug where the Found your hostname (cached) message was messed up
+- Fixed a memory leak in the new password code
+- Fixed a sptr->passwd bug
+- Removed the unnecessary param from IsULine() it is now just IsULine(sptr)
+- ircsprintf() is now used everywhere
+- Fixed the SJB64 bugs that misplaced users
+- Removed sendto_helpops and replaced it with sendto_umode
+- Added is_chanownprotop() checks if +q +a or +o with 1 loop
+- Added chmode +N (no nick changes) (opers, ulines, +o +q or +a can override)
+- Added some fixes on the SJB64 crashing bug, and added tokenization in 
+  channel messsages (yahooooo!)
+- Fixed the /list bug, reported by many people
+- Fixed a linking bug (where did that come from)
+- Fixed bug where duplicate numerics could occur
+- Fixed the hashing bug (thank you ROXnet ...)
+- Fixed a wierd channel message bug ||
+- Fixed a bug where non-NS servers would crash when linking
+- Added TS2ts (supporting the SJB64 stuff), and fixed the !0 timestamp bug
+- Fixed the /list only showing 64 channels bug! Also sped /list up in the process
+- Probably fixed the hash bug, again.
+- Possible fixed some b64 bugs
+- Autodetects /usr/sbin/openssl now, thanks trinity
+- Tokenized PING and PONG
+- Fixes a missing : in SJOIN
+- Possible fixed a internal server list bug
+- When IRC WebTV bot cannot find a command, it sends it to parse() instead,
+  thanks [Real]
+- Added burst.c in extras/
+- Moved lopt and whowas to anUser (saves 8 bytes for every server)
+- Removed aClient->history, not used (saves 4 bytes for every user/server)
+- Fixed compile error with SSL
+- Fixed a /list and /quit bug
+- Fixed the masskill bug with replacing "Server Exists" code.. i removed it
+  accidentialy last time
+- Added /botserv /bs command, patch by ATHnet.de
+- /who's now show +i users for opers in channels, idea by  Strider@ChatCircuit
+- Fixed NO_OPEROVERRIDE bug reported by otherguy
+- #define STATSWRITING will make ircd write ircd.stats every 4 seconds,
+  idea/sortof by WaveRide
+    Format of ircd.stats:
+       <global users>
+       <global invisible users>
+       <global servers>
+       <irc operators>
+       <unknown connections>
+       <local clients>
+       <local servers>
+       <local max clients>
+       <global max clients>
+- Fixed +d (deaf) so it works again
+- Removed some leftovers from the &channel code (which fixed a minor bug as well)
+- Fixed a SJOIN3<->services problem
+- Fixed a typo where it still said +I instead of +V in an error message
+- Fixed the "Bad file descriptor" bug in SSL. This bugfix may be a bit risky
+  as it is manipulating BIO fds. The reason openssl freaked at this, was
+  that when a fd is closed, we change fds from 4 to 3 etc, in other words,
+  we renumber fds. SSL didn't know this and if you would call SSL_set_fd it
+  would close the connection/crash. Added SSL_change_fd() to change the FD
+  directly through BIO_set_fd. 
+- Fixed the masskill bug, hopefully. Was a delimiter/number array bug in
+  find_server_b64_or_real, causing negative base64 to be accepted (bad).
+  value 1-256 will never be able to be in two letters (a server name)
+- Fixed \r\n bug, hopefully
+- made SSL use same cert client/server
+- Fixed help.c bug reported by Curt|s
+- Different fixes, unreal.tspre.org -> unrealircd.com
+- Fixed-fixed-fixed the \r\n bug and removed some useless cpu wasting code
+- Removed remapping fds, and did a severe select() speedup, suggested by
+  Demiurgus. Should speed CPU a lot
+- Updated some messages
+- Fixed-fixed-fixed the U:line branching thing made by codemastr
+- Fixed a G: line-turn-into Z:line problem, reported by eYe-Man
+- Added SJOIN (SJ3 only) instead of JOIN/MODE in /join and discovered a bug in 
+  SJOIN code, that if the line doesnt have a " " appeneded, it wont take the
+  last users or first for that sake. Hopefully patched SJ3 code for it
+- Added OPT target OPT_SJB64 and OPT_NOT_SJB64
+- Made SSL server<->server work, using __blocking__ sockets (this is only
+  in connect moment thou) -stskeeps
+- Removed 1.0 msg/s when not in HTM
+- Fixed cutoff server infos in synch
+- Added so /gline and /shun accepts time periods in 1d2h3s etc. a recode of
+  some potvin stuff
+- Added so blocking is only effective when SSL_connect()'ing
+- Fixed a couple of SJOIN/Link problems detected by Curt|s
+- Changed some stuff with SSL, you may want to seperate server.pem into
+  server.key.pem and server.cert.pem (or "rm Makefile" and "./Config")
+- Fixed a couple of SJOIN/Link problems detected by Curt|s
+- Made /stats C show SSL/Zip flags
+- Fixed the Stskeeps "mass G:line on /rehash" (tm) bug
+- Removed last point of confusion in ALN/NS
+- Removed CRYPTOIRCD (replaced by SSL)
+- Added support for some more SJB64 stuff
+- Added some more support for some even more SJB64 stuff
+- Added some network files and even more network files
+- Fixed some copyright stuff in ssl.c
+- Fixed a /map problem
+- Updated doc/conf.doc and doc/example.conf
+- Fixed a bug where /map showed U:lines while HIDE_ULINES was set
+- Removed "on network" in /whois oper
+- Added code to makenet to stop fake submissions
+- Fixed some /whois channels code, which may break +I /whois
+- Fixed overflow in SJOIN
+- Added SMO *, all users
+- If a +r user is /who'ed, it shows a "r" in flags field. Suggested by
+  Mirar.
+- Fixed a typo in ssl.c
+- Added SICI information, Donation information, fixed a ./Config problem
+  overwriting certs ..
+- Added hatblade's files
+- Added some credits
+- Fixed a real bad  /whois bug, reported by BiGi
+- Fixed a problem with /sajoin .. atleast possible
+- Added infofield in /stats L for clients/listeners
+- Fixed a blocking socket thing
+- Fixed up /stats L bug
+- Changed CONNECTTIMEOUT to 30sec
+- Changed some _more_ credits
+- Fixed compile error found by Headbang
+- #define CHINESE_NICK will make you able to use chinese nicks
+  thanks to RexHsu and Aim
+- Fixed up CHINESE_NICK and JAPANESE_NICK, suggested by Aim, see
+  include/config.h
+- Config change in SSL.h detection part
+- SSL error change to sendto_umode(UMODE_JUNK)
+- Fixed a hash error, topic problem
+
+[fixes]
+- Fixed a +d bug (it didnt send ` prefixes)
+- Fixed a SJOIN bug, i think, thanks to Web
+- Fixed a chinese nick thing, thanks to miCro and RexHsu
+- Fixed a typo in config.h
+- Fixed a bug in sendto_channel_prefix_tok reported by Strider@ChatCircuit
+- Fixed P:line bug, caused by codemastr(tm) coding, (masskills), reported by
+  sidv@sid-kitty-land.org
+- Some few fixes from CodeM and Barubary:
+  - Fixed /whois to show users for opers when not in the channel. 
+  - Fixed /whois to allow only global eyes opers to see user modes.  
+  - Fixed /whois to not show idle times of global opers to anyone except
+    another global oper or services.
+  - Fixed /who to show users for opers when not in the channel. 
+- Fixed restart bug, reported by RaYmAn
+- Fix-fixed " Fixed /whois to not show idle times of global opers to
+     anyone" patch
+- Fixed a recently found exploit involving reverse DNS (fix from bahamut)
+- Made more openssl binary detection using 'which'
+- Added message when trying to join a +z channel
+- New segmentation fault code by Kanzen_Greiver

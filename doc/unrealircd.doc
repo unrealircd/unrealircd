@@ -1,307 +1,436 @@
-                ****** UnrealIRCd v2.1.7 Documentation ******
-        [ $Id$ ]
-
-1) About UnrealIRCd
-
-  	I started making UnrealIRCd about 1-2 months ago. (July 1999 now)
-  	First it was called mpx2.0b13.soundforge - as I was
-  	inspired of the 'forge' word. I quickly changed name
-  	after I realized the IRCd had more potential.
-        Unreal is based off Elite2.0b13 and some of
-  	the minor bugfixes Potvin came up with. First lemme
-  	introduce myself. My nick is Techie/Stskeeps. I hang
-  	out at Global-IRC.net, DALnet, DragonWings.org and so on
-  	
-	Unreal is a hybrid of Elite (as I said) mixed with some
-	Twilight IRCd, TerraIRCd, TS4 (channel mode +h & +e) features
-	(IMHO TwilightIRCd is one of the best dreamforge hybrids I've seen!
-	Unreal is not a rip-off of other IRCds - I added a lot of features myself!
-	I really cannot mention some major features as I think a IRCd is a
-	IRCd when it has got useful commands- and people actually say mine has!
-	
-	Anyways I dunt demand donations or anything. I just do coding for fun
-	I treat coding like playing with toys. It makes me happy(or is it just
-	caffeine?;). An addy to send donations is at the Donation file in the IRCd dir
-	And.. I don't sweat while making features unlike some Potvin coder so dunt
-	send me towels;) I would be more happy if someone e-mailed me with ideas
-	to the IRCd.. The whole IRCd is GNU so if you want to rip off any of my ideas
-	You are generally welcome:) Just remember to do what's said in the Changes file!
-	-- So.. Enjoy this IRCd:) It may become a dream to IRCd owners as its infact
-	   a sortof hybrid of EliteIRCd (Cite .man-pages/page1 in Elite:
-	EliteIRCD has become a dream to many ircd owners</end cite>
-	   -- Carsten Munk / Techie .. =)
-
-2) Commands (User Commands)
-
-       *** WATCH Command ***
-	Watch is a new notify-type system in UnrealIRCd which is both faster
-	and uses less network resources than any old-style notify
-	system. You may add entries to your Watch list with the command
-	/watch +nick1 [+nick2 +nick3 ..., and the server will send
-	you a message when any nickname in your watch list logs on or off.
-	Use /watch -nick to remove a nickname from the watch list, and
-	just /watch to view your watch list.
-	The watch list DOES NOT REMAIN BETWEEN SESSIONS - you (or your
-	script or client) must add the nicknames to your watch list every
-	time you connect to an IRC server. /Watch was made in DreamForge IRCd
-	which UnrealIRCd in ground is based off
-
-   	 *** HELPOP Command ***
-   	HelpOp is a new system of getting IRC Server help. You type either
-   	/HelpOp ? <help system topic>  or /HelpOp ! <question>
-   	The "?" in /HelpOp means query the help system and if you get no
-   	response you can choose '!' to send it to the Help Operators online
-   	------------oOo--------------
-
-     *** LIST Command ***
-	New extended /list command options are supported.  To use these
-	features, you will likely need to prefix the LIST command with
-	/quote to avoid your client interpreting the command.
-
-	Usage: /quote LIST options
-	
-	If you don't include any options, the default is to send you the
-	entire unfiltered list of channels. Below are the options you can
-	use, and what channels LIST will return when you use them.
-	>number  List channels with more than <number> people.
-	<number  List channels with less than <number> people.
-	C>number List channels created between now and <number> minutes ago.
-	C<number List channels created earlier than <number> minutes ago.
-	T>number List channels whose topics are older than <number> minutes
-	         (Ie., they have not changed in the last <number> minutes.
-	T<number List channels whose topics are newer than <number> minutes.
-	*mask*   List channels that match *mask*
-	!*mask*  List channels that do not match *mask*
-	LIST defaults to sending a list of channels with 2 or more members,
-	so use the >0 option to get the full channel listing.  
-
-		*** PRIVMSG Command ***
-	PRIVMSG and NOTICE, which are used internally by the client for
-	/msg and /notice, in UnrealIRCd support two additional formats:
-	/msg @#channel <text> will send the text to channel-ops on the
-	given channel only. /msg @+#channel <text> will send the text
-	to both ops and voiced users on the channel. While some clients
-	may support these as-is, on others (such as ircII), it's necessary
-	to use /quote privmsg @#channel <text> instead. It's perhaps a
-	good idea to add the/alias omsg /quote privmsg @$0 $1 into
-	your script (.ircrc) file in that case.
-
-	**** KNOCK Command ****
-	/Knock is a new UnrealIRCd command which enables you to
-	'knock' on a channel if it is +i and these criteria is met
-	- Channel is not +K (No knocks)
-	- Channel is not +I (No invites!)
-	- You're not banned!
-	- And you are not already there:)
-
-	Syntax:
-      /Knock #Channel :Reason
-     
-      **** LICENSE Command ****
- 	This command shows the GNU License
- 	Which is hard-coded into the IRCd:)
-	Syntax: /License [optional server]
-
-	*** SetName Command ***
-   	/SetName is a new feature in UnrealIRCd
-   	Which allows users to change their 'Real name'
-   	(GECOS) directly online at IRC without reconnecting
-   	
-	Syntax:
-   	/SetName :New Real Name
+                                       ***************************************
+                                       ********* UnrealIRCd Commands *********
+                                       ***************************************
+                                      
+                                                     v2.0
+						
+                                                      By:
+                                    
+                                          hAtbLaDe <hAtbLaDe@Roxnet.org>
 
 
-   	*** MODE Command ***
-   	This is basically the /mode command as it has always
-   	been on IRC. Thou in Channel mode basis it has got an
-   	Extra feature (/mode #Channel ^ ) which reports channel
-   	modes represented in a bitstring (may be handy, maybe not)
-   	UnrealIRCd has got some new channel / usermodes I think you
-   	wish to take a look at
-   	Channel Modes Help: /HelpOp CHMODES
-   	User modes help: /HelpOp UMODES
- 
-	*** STATSERV Command ***
-  	This is a alias for the /msg StatServ command,
-   	But is more secure. If the IRC network doesn't have StatServ
-   	It will report it is down.
-   	
-	Syntax:
-   	/StatServ <command>
 
-   	*** /Credits Help ***
-  	This command will list the credits I've created
-   	to thank the people who has helped me with making
-   	UnrealIRCd. Anyone who I've forgotten all my kind
-   	thoughts go to -- Techie'99
-   	
-	Syntax:
-   	/Credits [optional server]
-
-   	*** /DALINFO Help ***
-   	This command will list the credits that the
-   	Dreamforge IRCd team/the IRCd developers
-   	from the start when IRCd got developed
-   	
-	Syntax:
-   	/DALInfo [optional server]
-
-3) Operator Commands
-
- 	This section is the IRCOp's only commands
-   	area:) - These topics are available:
-   	Note: This doesnt include Dreamforge commands
-
-   	SETHOST    SETIDENT     SDESC
-   	ADCHAT     NACHAT       TECHAT
-   	GLINE      REMGLINE     STATS
-   	MKPASSWD   SNOTES       SNOTE
-   	ADDLINE    LAG          RPING
-	ADDMOTD	   ADDOMOTD     OPERMOTD
-	CHGHOST	   TSCTL        SAJOIN
-
-	*** ADDMOTD Command Help ***");
-	This will add the text you specify to the MOTD
-	(the general motd - T:lines doesnt count ..)
-	Server Admin & Co-Admin only
-
-	Syntax: /ADDMOTD :text
-
-	*** ADDOMOTD Command Help ***
-	This will add the text you specify to the Operator MOTD
-	Server Admin & Co-Admin only
-	
-	Syntax: /ADDOMOTD :text
-
-	*** OPERMOTD Command Help ***
-	This is a IRCop only command - shows the IRCd Operator MOTD
-	Syntax: /OperMotd
-			
-   	*** SETHOST Command Help ***
-   	This command is so you can change your
-   	Virtual host (hiddenhost) to everything you want to
-   	Except special characters;). 
-	
-	Syntax:
-  	/SetHost <new hostname>)
-  	
-	Example:
-   	/Sethost ircaddicts.org
-   	
-	*** SETIDENT Command Help ***
-   	With this command you can change your
-   	ident (username).
-   	
-	Syntax:
-   	/SetIdent <new ident>
-
-	Example:
-	/SetIdent root
-
-   	*** SDesc Command help ***
-   	NOTE: This is a Server Admin/Co Admin only command
-   	With this command you can change your Server Info Line
-   	Without having to squit and reconnect.
-   	Syntax: /SDesc :New description
-   	Example: /SDesc :If you belong to me..		
-
-   	*** AdChat Command Help ***
-   	This command sends to all Admins online (IsAdmin)
-   	Only for Admins. This is a ChatOps style command
-   	Syntax: /AdChat :<text>
-	Example: /AdChat :Hey guys!
-  
- 	*** NAChat Command Help ***
-   	This command sends to all NetAdmins & TechAdmins online
-   	Only for Net/Techadmins. This is a ChatOps style command
-   	Syntax: /NAChat :<text>
-	Example: /NAChat :Hey guys!
-   	
-	*** Stats Command Help ***
-   	UnrealIRCd has got a extension called /Stats G
-   	Which will list the current G:Lines
-   	Syntax: /Stats G
-
-   	*** TEChat Command Help ***
-   	This command sends to all TechAdmins online
-   	Only for Net/Techadmins. This is a ChatOps style command
-   	Syntax: /TEChat :<text>
-	Example: /TEChat :Hey guys!
-
-   	*** CHGHOST Command help ***
-   	This command makes you able to change other people's virtual hostname
-   	- IRCop only.
-   	Syntax: /CHGHOST <nick> <newhost>
-  	
-	*** TSCTL Command Help ***");
-  	This is a highly advanced command");
-  	Syntax:");
-  	 /TSCTL OFFSET +|- <time> - Adjust internal IRC clock");
- 	 /TSCTL TIME - Will give TS report");
-
-  	*** SAJOIN Command help **");
-  	Makes <nick> join channel <channel>");
-  	Services Admin only..");
-  	Syntax: /SAJOIN nick channel");
+            Many times I have had users asking me how some command works & what are all the different
+      options they can use with it. So I thought it would be a good idea & helpful for both chatters & IRC
+      Operators , If they had a centralised command reference , rather than having to look all over for
+      the syntax of new or old commands. In this list , I have tried to incorporate all the commands which
+      work on UnrealIRCd , as best as possible. In case I have missed out any or there are any errors , please
+      let me know , so I can fix them in the next amendment. With new features and modes being added all the
+      time , this manual will be ever changing :-)
 
 
-   	*** RemGline Command Help
-   	This command can remove G:Lines
-   	
-	Syntax:
-   	/RemGline <user@host mask>
-   	
-	Example:
-   	/RemGline *@*.flirt.org
- 
-  	*** G:line command Help ***
-   	This command provides timed G:Lines. If you match
-   	a G:Line you cannot connect to ANY server at the
-   	IRC network
-   	Syntax:
-   	/GLINE <user@host mask> <seconds to be banned> :<reason>
-   	Example:
-   	/GLINE *@*.dal.net 900 :Spammers
-   	this will ban all users matching *@*.dal.net for 15 minutes
-   	with reason 'Spammers'
+           This Manual is written at the time when I am running Unreal-3.1.1-Darkshades (Not public release).
+      However most of these commands will also work on Unreal3.1+sf-Silverheart. In case of any problems ,
+      please visit #UnrealIRCd on irc.fyremoon.net (Official Help Channel) & Bugs can be emailed to
+      unreal-dev@lists.sourceforge.net. 	
+      Some modes only apply to Unreal-SSL or Unreal-3.1.1 because they require SSL (Secure Sockets Layer)
+      support.
 
-   	*** MkPasswd Command help ***
-   	This command will encrypt the string it has been given
-   	So u can add it directly to the ircd.conf if you use
-   	Encrypted passwords. /MKPassWd is disabled in UnrealIRCd/32
-	Syntax : /MkPasswd :string to be encrypted
+
+           Here is the command list :      
+
+
+      **** NICK Command ***
    
-	*** SNOTE Command Help ***
-   	This will store the parameter of the command to a file
-   	Which then can be read by using /SNOTES LIST
-	Syntax:  /SNOTE :<message>
-   	
-	*** SNOTES Command Help ***
-   	This command is made to view notes
-   	Written to the SNOTE file by using /SNOTE
-   	Syntax: /SNOTES LIST
-      or /SNOTES <number>
+      Changes your "Online Identity" on a server. All those in the channel you are in will be
+      alerted of your nickname change.
 
-  	*** ADDLINE Command Help ***
-  	This command can be used to add lines to the ircd.conf file
-  	Only for Server Admins
-  	Syntax: /AddLine :<line>
+      Syntax:  NICK <new nickname>
+      Example: NICK hAtbLaDe1
 
-	*** LAG Command Help ***
-	This command is like a sonar/traceroute for IRC servers
-	You type in /lag server1.irc.net and it will
-	reply from every server it passes with time and so on
-	Useful for looking where lag is and optional TS future/past travels
-	Syntax: /LAG <servername>
+      *** WHOIS Command ***
 
-	**** RPING Command help ***	
-        This will calculate the milliseconds (lag) between servers
+      Shows information about the user in question, such as their "Name", channels they are
+      currently in, their hostmask, etc.
+
+      Syntax:  WHOIS <user>
+      Example: WHOIS hAtbLaDe
+
+      *** WHO Command ***
+
+      Searches User Information (-i users only) for supplied information. IRCops are able to
+      search +i users & can use masks only. When used on a channel , it will give a list of 
+      all the non-invisible users on that channel.
+      
+      Syntax:  WHO <mask>
+               WHO <nickname>
+               WHO <#channel>   
+               WHO 0 o (Lists all Online IRC Operators currently online and not +i)
+      Example: WHO *.aol.com
+               WHO *Bot*
+               WHO #UnrealIRCd
+
+      *** WHOWAS Command ***
+
+      Retrieves previous 'WHOIS' information for users no longer connected to the server.
+
+      Syntax:  WHOWAS <nickname>
+               WHOWAS <nickname> <max number of replies>
+      Example: WHOWAS hAtbLaDe
+
+      *** NAMES Command ***
+  
+      Provides a list of users on the specified channel.
+
+      Syntax:  NAMES <channel>
+      Example: NAMES #Support
+
+      *** ISON Command ***
+ 
+      Used to determine of a certain user or users are currently on the IRC server based upon
+      their nickname.
+
+      Syntax:  ISON <user> <user2> <user3> <user4>
+      Example: ISON hAtbLaDe NickServ ChanServ OperServ MemoServ
+
+      *** JOIN Command ***
+   
+      Used to enter one or more channels on an IRC server. All occupants of the channel will be
+      notified of your arrival. JOIN with 0 as a parameter makes you Part all channels.
+
+      Syntax:  JOIN <chan>,<chan2>,<chan3>
+               JOIN 0 (Parts all channels)
+      Example: JOIN #Support
+               JOIN #Support,#Lobby
+
+      *** PART Command ***
+ 
+      Used to part (or leave) a channel you currently occupy. All those in the channel will be
+      notified of your departure.
+
+      Syntax:  PART <chan>,<chan2>,<chan3>,<chan4>
+      Example: PART #Support
+               PART #Lobby,#Support
+
+      *** MOTD Command ***
+
+      Displays the Message Of The Day.
+
+      Syntax: MOTD
+              MOTD <server>
+ 
+      *** RULES Command ***
+
+      Reads the ircd.rules file and sends the contents to the user.
+
+      Syntax: RULES
+              RULES <server>
+
+      *** LUSERS Command ***
+
+      Provides Local and Global user information (Such as Current and Maximum user count).
+
+      Syntax: LUSERS
+
+      *** MAP Command ***
+      
+      Provides a "Network Map" of the IRC network. Mainly used for routing purposes.
+
+      Syntax: MAP
+
+      *** QUIT Command ***
+
+      Disconnects you from the IRC server. Those in the channels you occupy will be notified of
+      your departure. If you do  not specify a reason, your nickname becomes the reason.
+
+      Syntax:  QUIT <reason>
+      Example: QUIT Leaving!
+
+      *** PING Command ***
+
+      The PING command is used to test the presence of an active client or
+      server at the other end of the connection.  Servers send a PING
+      message at regular intervals if no other activity detected coming
+      from a connection.  If a connection fails to respond to a PING
+      message within a set amount of time, that connection is closed.  A
+      PING message MAY be sent even if the connection is active.
+      Note that this is different from a CTCP PING command..
+
+      Syntax:  PING <server> <server2>
+      Example: PING irc.fyremoon.net
+               PING hAtbLaDe
+               PING hAtbLaDe irc2.dynam.ac
+
+      *** PONG Command ***
+
+      PONG message is a reply to ping message.  If parameter <server2> is
+      given, this message will be forwarded to given target.  The <server>
+      parameter is the name of the entity who has responded to PING message
+      and generated this message.
+
+      Syntax:  PONG <server> <server2> 
+      Example: PONG irc.fyremoon.net irc2.dynam.ac 
+               (PONG message from irc.fyremoon.net to irc2.dynam.ac).
+ 
+      *** VERSION Command ***
+
+      Provides version information of the IRCd software in usage.
+
+      Syntax: VERSION
+              VERSION <server>
+
+      *** STATS Command ***
+
+      Provides certain Statistical information about the server 
+
+      Syntax:  STATS <flags>
+      Example: STATS u
+
+          ### Stats Flags ###
+
+          k = Lists all the current K:Lines, Z:Lines (Banned hosts/IP) & E:Lines (K:Line exceptions)
+          g = Lists all the current G:Lines (Banned hosts) & Shuns
+          E = Lists all the current E:Lines (K:Line Exceptions)
+          f = Lists all the current F:lines (Filename masks on DCCDENY)
+          O = Lists all the current O:Lines (IRC Operator Lines)
+          Q = Lists all the current Q:Lines (Forbidden Nicks)
+          C = Lists all the current C/N:Lines (Servers to connect or accept connects from)
+          H = Lists all the current H:Lines (Hub Lines) & L:Lines (Leaf Lines)
+          n = Lists all the current n:Lines (GECOS Deny)
+          V = Lists all the current VHost lines
+          T = Lists all the current T:Lines (Specific MOTD/Rules Lines)
+          Y = Lists all the current Y:Lines (Connection classes)
+          U = Lists all the current U:Lines (Usually Services)
+          v = Lists all the current V:Lines (Version Deny)
+          D = Lists all the current D:Lines (Disallow Lines-Oper & Server Orig Connects)
+          d = Lists all the current d:Lines (Disallow Lines-Autoconnects)
+          e = Lists all the current e:Lines (Proxy scan exempt IPs)
+          I = Lists all the current I:Lines (Client auth Lines)
+          F = Lists all the current F:Lines (DCCDENY Lines)
+          r = Lists all Channel Restrict lines
+          N = Lists the Network Configuration report
+          S = Gives the Dynamic Configuration report
+          W = Gives the current Server Load
+          q = Lists all the SQLINEed Nicks
+          u = Server Uptime
+          m = Gives the Server command list
+          z = Gives Misc Server Information
+          s = Returns the scache and NS numbers
+          t = Returns Misc Info
+          L = Information about current server connections
+
+      *** LINKS Command ***
+
+      Lists all of the servers currently linked to the network.
+
+      Syntax: LINKS
+
+      *** ADMIN Command ***
+
+      Provides Administrative information regarding the server.
+
+      Syntax: ADMIN <server>
+
+      *** USERHOST Command ***
+
+      Returns the userhost of the user in question. Usually used by scripts or bots to retrieve
+      userhost information.
+
+      Syntax:  USERHOST <nickname>
+      Example: USERHOST hAtbLaDe
+
+      *** TOPIC Command ***
+
+      Sets/Changes the topic of the channel in question, or just display the current Topic.
+
+      Syntax:  TOPIC <channel>
+               TOPIC <channel> <topic>
+      Example: TOPIC #operhelp
+               TOPIC #Lobby Welcome to #Lobby!!
+      
+      *** INVITE Command ***
+
+      Sends a user an invitation to join a particular channel. You must be an Operator on the
+      channel in order to invite a user into it.
+
+      Syntax:  INVITE <user> <channel>
+      Example: INVITE hAtbLaDe #Support
+
+      *** KICK Command ***
+
+      Removes a user from a channel. Can only be used by Operators or Half-Ops. If no reason is
+      specified, your nickname becomes the reason.
+
+      Syntax:  KICK <channel>[,<channel2>..] <user>[,<user2>..] <reason>
+      Example: KICK #Lobby foobar Language!
+               KICK #Lobby,#OperHelp Lamer23,Luser12 Lamers!
+
+      *** AWAY Command ***
+
+      Sets your online status to "Away".
+
+      Syntax:  AWAY <reason> (Marks you as 'Away' with the reason given) 
+               AWAY          (Un-marks you as 'Away')
+      Example: AWAY Lunch time!
+
+      *** WATCH Command ***
+
+      Watch is a new notify-type system in UnrealIRCd which is both faster
+      and uses less network resources than any old-style notify
+      system. The server will send you a message when any nickname
+      in your watch list logs on or off.
+      The watch list DOES NOT REMAIN BETWEEN SESSIONS - you (or your
+      script or client) must add the nicknames to your watch list every
+      time you connect to an IRC server.
+
+      Syntax : WATCH +nick1 +nick2 +nick3  (Add nicknames)
+               WATCH -nick                 (Delete nicknames)
+               WATCH                       (View the watchlist)
+ 
+      *** HELPOP Command ***
+
+      HelpOp is a new system of getting IRC Server help. You type either
+      /HELPOP ? <help system topic>  or /HELPOP ! <question>
+      The "?" in /HELPOP means query the help system and if you get no
+      response you can choose '!' to send it to the Help Operators online
+      Using neither ? nor ! will mean the command will be first queried
+      within the help system and if no match if found , it will be 
+      forwarded to the help operators.
+      
+      Example: HELPOP ?CHMODES  (Channel Modes Help)
+               HELPOP ?UMODES   (User Mode Help)
+
+
+      *** LIST Command ***
 	
-        Syntax: /RPING <servermask>
+      Provides a complete listing of all channels on the network. If a search string is
+      specified, it will only show those matching the search string.
 
- 4) *** UnrealIRCd Usermodes ***
-		o = Global IRCop
-		O = Local IRCop
+      Syntax:  LIST <search string>
+      Example: LIST
+               LIST *ircd*
+
+      New extended /LIST command options are supported.  To use these
+      features, you will likely need to prefix the LIST command with
+      /QUOTE to avoid your client interpreting the command.
+
+      Usage: /QUOTE LIST options
+	
+      If you don't include any options, the default is to send you the
+      entire unfiltered list of channels. Below are the options you can
+      use, and what channels LIST will return when you use them.
+      >number  List channels with more than <number> people.
+      <number  List channels with less than <number> people.
+      C>number List channels created between now and <number> minutes ago.
+      C<number List channels created earlier than <number> minutes ago.
+      T>number List channels whose topics are older than <number> minutes
+               (Ie., they have not changed in the last <number> minutes.
+      T<number List channels whose topics are newer than <number> minutes.
+      *mask*   List channels that match *mask*
+      !*mask*  List channels that do not match *mask*
+
+      NOTE : C & T parameters do not exist in Unreal 3.1.1-Darkshades.
+      LIST defaults to sending a list of channels with 2 or more members,
+      so use the >0 option to get the full channel listing.  
+
+      *** PRIVMSG/NOTICE Command ***
+
+      PRIVMSG and NOTICE, which are used internally by the client for
+      /msg and /notice, in UnrealIRCd support two additional formats:
+      /msg @#channel <text> will send the text to channel-ops on the
+      given channel only. /msg @+#channel <text> will send the text
+      to both ops and voiced users on the channel. While some clients
+      may support these as-is, on others (such as ircII), it's necessary
+      to use /quote privmsg @#channel <text> instead. You can also use
+      % to signify HalfOps on the channel.
+
+      Syntax:  MSG <nick>,<nick2>,<nick3>,<nick4> :<text>
+      Example: PRIVMSG hAtbLaDe :Hello. 
+               PRIVMSG hAtbLaDe,Hatter,GoodBot :Hello everyone!
+
+      The format for the NOTICE command is the same as above.
+
+      **** KNOCK Command ****
+
+      For channels which are invite only, you can "Knock" on the channel to request an invite.
+  
+      The following criteria must be met : 
+          - Channel is not +K (No knocks)
+          - Channel is not +I (No invites!)
+          - You're not banned!
+          - And you are not already there
+
+      Syntax:  KNOCK <channel> <message>
+      Example: KNOCK #secret_chan I'm an op, let me in!
+     
+      *** SETNAME Command ***
+
+      Allows users to change their 'Real name'
+      directly online at IRC without reconnecting
+   	
+      Syntax: SETNAME <New Real Name>
+
+      *** VHOST Command ***
+
+      Hides your real hostname with a virtual hostname provided by the IRC server , using SetHost.
+
+      Synatx:  VHOST login password
+      Example: VHOST IWant newhost
+
+      *** MODE Command ***
+
+      Sets a mode on a Channel or User.
+      UnrealIRCd has got some new Channel & User modes.
+  
+      Syntax:  MODE <channel/user> <mode>
+      Example: MODE #Support +tn
+               MODE #Support +ootn hAtbLaDe cb
+
+		### Channel Modes ###
+        
+		p = Private channel
+		s = Secret channel
+		i = Invite-only allowed
+		m = Moderated channel, noone can speak except users with mode +voh
+		n = No messages from outside channel
+		t = Only channel operators may set the topic
+		r = Channel is registered
+		R = Requires a registered nickname to join the channel
+		c = No ANSI color can be sent to the channel (ColourBlock)
+		q = Channel owner 
+	      (*)Q = No kicks able in channel unless by U:Lines 
+		O = IRCop only channel (Setable by IRCops)
+		A = Administrator only channel (Setable by Admins)
+		K = /Knock is not allowed
+		V = /Invite is not allowed
+		S = Strip all incoming colours away
+		l <number of max users> = Channel may hold at most <number> of users
+		b <nick!user@host>      = Bans the nick!user@host from the channel
+		k <key>                 = Needs the channel key to join the channel
+		o <nickname>            = Gives operator status to the user
+		v <nickname>            = Gives voice to the user (May talk if chan is +m)
+		L <chan2>               = If +l is full, the next user will auto-join <chan2>
+		a <nickname>            = Gives protection to the user (No kick/drop)
+		e <nick!user@host>      = Exception ban - If someone matches it
+                                            they can join even if a ban matches them
+	     (**)h <nickname>            = Gives halfop status to the user 
+		f [*]<lines>:<seconds>  = Flood protection, if the * is given a user will
+                                            be kick banned when they send <lines> in <seconds>
+                                            If * is not given they are just kicked
+		H                       = No +I users may join that channel. (Setable by Admins).
+		N                       = No nickname changes are permitted in the channel.
+		^                       = Reports Channel modes in bitstring.
+                                            (Only exists in Development Versions i.e #define DEVELOP) 
+		G                       = Makes the channel G Rated. Any words in badwords.channel.conf
+                                            are replaced with <censored> in channel messages. 
+		u                       = "Auditorium". Makes /names and /who #channel only show @'s
+		C                       = No CTCPs allowed in the channel.
+		z                       = Only Clients on a Secure Connection (SSL) can join.
+
+ 		(*)   Channel mode +Q 
+   			This is the 'peace' mode. Noone can kick each other 
+   			except by U:Lines. Bans can be placed though.
+
+		(**)  Channel halfops (+h)  
+  			If you are marked as halfop (% in /names) you can do:
+    		          - Set topic
+  		          - Kick non-ops
+  		          - Set modes +vmntibe
+
+		### User Modes ###
+
+		O = Local IRC Operator
+		o = Global IRC Operator
 		i = Invisible (Not shown in /who searches)
 		w = Can listen to wallop messages
 		g = Can read & send to globops, and locops
@@ -309,99 +438,633 @@
 		s = Can listen to server notices
 		k = See's all the /KILL's which were executed
 		S = For services only. (Protects them)
-		a = Is a services admin
-		A = Is a server admin
-		N = Is a network admin
-		T = Is a tech admin
-		C = Is a co admin
-		c = See's all connects/disconnects on local server
+		a = Is a Services Administrator
+		A = Is a Server Administrator
+		N = Is a Network Administrator
+		T = Is a Tech Admininistator
+		C = Is a Co Administrator
+		c = See's all Connects/Disconnects on local server
 		f = Listen to flood alerts from server
 		r = Identifies the nick as being registered
 		x = Gives the user hidden hostname
 		e = Can listen to server messages sent to +e users
 		b = Can read & send to chatops
-		W = (IRCops only) Lets you see when people does a /whois on you
-		q = (Services Admins only) Gets you unable to be
-		     kicked unless by U:Lines
-		B = (users) Marks you being a Bot
-		F = (net|tech admin only) Lets you see far client connect/disconnects
-		I = (net|tech admin only) Invisible Join/Part. Makes you
-                    being hidden at channels
-		1 = (IRCops only) Marks you a Coder 
-5) *** UnrealIRCd Channel Modes ***
-	    p = Private channel
-	    s = Secret channel
-	    i = Invite-only allowed
-	    m = Moderated channel, noone can speak except users with mode +voh
-	    n = No messages from outside channel
-	    t = Only channel operators may set the topic
-	    r = Channel is registered
-	    R = Requires a registered nickname to join the channel
-	    x = No ANSI color can be sent to the channel
-	    q = Channel owner (The big cheese)
-	    Q = No kicks able in channel unless by U:Lines
-	    O = IRCop only channel (setable by Opers)
-	    A = Server Admin | Network Admin | Tech Admin only channel (same as above)
-	    K = /Knock is not allowed
-	    I = /Invite is not allowed
-	    S = Strip all incoming colours away
-	    l <number of max users> = Channel may hold at most <number> of users
-	    b <nick!user@host>      = Bans the nick!user@host from the channel
-	    k <key>                 = Needs the channel key to join the channel
-	    o <nickname>            = Gives operator status to the user
-	    v <nickname>            = Gives voice to the user (May talk if chan is +m)
-	    a <nickname>            = Gives protection to the user (No kick/drop)
-	    e <exception ban>       = Exception ban - If someone matches it
-		                          they can join even if some else ban matches!
-	    h <nickname>            = Gives halfop status to the user	    
-	    L <chan2>		    = If channel is full (+l) the next user
-					will autojoin <chan2>
-	    You can get additional explanation on modes:
-		 Q h
-	    With /HELPOP mode-<x> where <x> is Q f.x. like mode-Q
+		W = (IRC Operators only) Lets you see when people does a /whois on you
+		q = (Services Admins only) Only U:lines can kick you
+		B = Marks you as being a Bot
+		F = Lets you recieve far Connect notices & Local notices.
+		I = Invisible Join/Part. Makes you being hidden at channels
+		H = (IRC Operators only) Hide IRC Operator status in /who and /whois
+		d = Makes it so you can not recieve channel messages
+		v = Receive infected DCC send rejection notices
+		t = Says that you are using a /vhost
+		G = Filters out all bad words (badwords.message.conf) in messages with <censored>
+		z = Marks the client as being on a Secure Connection (SSL).
 
- 	*** Channel mode +Q ***
-   		This is the 'peace' mode. Noone can kick eachother
-   		except by U:Lines. Bans can be placed thou.
 
-	*** Channel halfops (+h) *** 
-  		If you are marked as halfop (% in /names) you can do:
-  		 - Set topic
-  		 - Kick non-ops
-  		 - Set modes +vmntibe
 
-6) *** UnrealIRCd O:Line flags ***
-		r = Access to /rehash server
-		R = Access to /restart server
-		D = Access to /die server
-		h = Oper can send /help ops - gets +h on oper up
-		g = Oper can send /globops
-		w = Oper can send /wallops
-		l = Oper can send /locops
-		c = Access to do local /squits and /connects
-		Y = Access to do remote /squits and /connects
-		k = Access to do local /kills
-		K = Access to do global /kills
-		b = Oper can /kline users from server
-		B = Oper can /unkline users from server
-		n = Oper can send local server notices(/notice $servername message)
-		N = Oper can send global notices(/notice $*.network.net message)
-		u = Oper can set /umode +c
-		f = Oper can set /umode +f
-		o = Local oper, flags included: rhgwlckbBnuf
-		O = Global oper, flags included: oRDCKN
-		A = Gets +A on oper up. Is server admin
-		a = Gets +a on oper up. Is services admin
-		N = Gets +N on oper up. Is network admin
-		T = Gets +T on oper up. Is tech admin
-		C = Gets +C on oper up. Is co admin
-		z = Can add /zlines
-		H = Gets +x on oper up.
-		W = Gets +W on oper up.	  
-                ^ = Allows to use umode +I
+	*** CREDITS Command ***
+ 
+  	This command will list the credits to all the people who helped create UnrealIRCd
+         	
+	Syntax: CREDITS
+	        CREDITS <server>
 
-7) Last word
 
-This documentation is based off src/help.c in Unreal2.1.7
-For version Unreal2.1.7 - $Date$ 
-Made by Carsten Munk 1999 (Stskeeps)
+   	*** DALINFO Command ***
+
+   	This command will list the Credits that the Dreamforge IRCd team/the IRCd developers
+   	from the start when IRCd got developed
+   	
+	Syntax: DALINFO
+ 	        DALINFO <server>
+
+	*** LICENSE Command ***
+ 
+ 	This command shows the GNU License Which is hard-coded into the IRCd
+
+	Syntax: LICENSE
+	        LICENSE <server>
+
+        *** TIME Command ***
+
+        Lists the current Server Date and Time.
+
+        Syntax: TIME
+                TIME <server>
+
+        *** BOTMOTD Command ***
+
+        Lists the IRCd Bot Message Of The Day
+
+        Syntax: BOTMOTD
+                BOTMOTD <server>
+      	
+        *** SILENCE Command ***
+
+        Ignores messages from a user or list of users at the Server itself.
+
+        Syntax: SILENCE +<nickname> (Adds a nickname to SILENCE list).
+                SILENCE -<nickname> (Removes a nickname from the SILENCE list).
+                SILENCE             (Lists the current SILENCE list)
+
+        *** IDENTIFY Command ***
+
+        An alias to allow you to identify to NickServ or ChanServ with your password.
+        If it cannot find NickServ or ChanServ , it will report services as down.
+
+        Syntax: IDENTIFY <password>            (Identify to NickServ)
+                IDENTIFY #<channel> <password> (Identify to ChanServ as Founder of #channel)
+        
+
+	
+
+					*********************************      
+					***** IRC Operator Commands *****
+					*********************************
+
+
+      *** OPER Command ***
+
+      Attempts to give a user IRC Operator status.
+ 
+      Syntax:  OPER <uid> <password>
+      Example: OPER hAtbLaDe foobar234
+
+      *** WALLOPS Command ***
+
+      Sends a "Message" to all those with the umode +w. Only IRCops can send wallops,
+      while anyone can view them.
+ 
+      Syntax: WALLOPS <message>
+
+      *** GLOBOPS Command ***
+
+      Sends a global "Message" to all IRCops. Only viewable by IRCops
+      (unlike WALLOPS, which can be viewed by normal users).
+ 
+      Syntax:  GLOBOPS <message>
+      Example: GLOBOPS Going to be akilling those clones...
+
+      *** CHATOPS Command ***
+
+      GLOBOPS is usually reserved for important network information. Therefore, for Oper Chat,
+      CHATOPS was invented. IRCops  with the +c flag enabled will be able to send/receive CHATOPS messages.
+  
+      Syntax:  CHATOPS <message>
+      Example: CHATOPS How's everyone doing today?
+
+      *** LOCOPS Command ***
+
+      Similar to GLOBOPS, except only received by those IRCops local to your server.
+ 
+      Syntax:  LOCOPS <message>
+      Example: LOCOPS Going to be adding a temp k:line for that user...
+
+      *** ADCHAT Command ***
+
+      This command sends to all Admins online
+      Only for Admins. This is a ChatOps style command
+ 
+      Syntax:  ADCHAT <text>
+      Example: ADCHAT Hey guys!
+  
+      *** NACHAT Command ***
+
+      This command sends to all NetAdmins & TechAdmins online
+      Only for Net/Techadmins. This is a ChatOps style command
+
+      Syntax:  NACHAT <text>
+      Example: NACHAT Hey guys!
+   	
+      *** TECHAT Command ***
+
+      This command sends to all TechAdmins online
+      Only for Net/Techadmins. This is a ChatOps style command
+
+      Syntax:  TECHAT <text>
+      Example: TECHAT Hey guys!
+
+      *** KILL Command ***
+
+      Forcefully Disconnects a user from an IRC Server.
+      IRC Operators only.
+  
+      Syntax:  KILL <user> <reason>
+      Example: KILL Clone5 Cloning is not allowed
+
+      *** KLINE Command ***
+ 
+      "Bans" a hostmask from connection to the IRC server.
+      The user can however connect to other servers on the network !!
+      IRC Operators only.
+ 
+      Syntax:  KLINE <hostmask> <reason>
+      Example: KLINE *@*.aol.com Abuse
+
+      *** UNKLINE Command ***
+
+      Removes a k:line from the server.
+      IRC Operators only.
+ 
+      Syntax:  UNKLINE <hostmask>
+      Example: UNKLINE *@*.aol.com
+
+      *** ZLINE Command ***
+
+      Disables all access to the IRC server from a specified IP.
+      The IP can however connect to other servers on the network !!
+      IRC Operators only.
+ 
+      Syntax:  ZLINE <ip> :reason
+      Example: ZLINE 127.0.0.1 :Localhost
+
+      *** UNZLINE Command ***
+
+      Removes a currently active z:Line.
+      IRC Operators only.
+ 
+      Syntax:  UNZLINE <ip>
+      Example: UNZLINE 127.0.0.1
+
+      *** GLINE command ***
+
+      This command provides timed G:Lines. If you match
+      a G:Line you cannot connect to ANY server on the
+      IRC network. A time of 0 in the GLINE makes it permanent (Never Expires).
+      In Unreal 3.1.1 you may also specify the time in the format 1d10h15m30s.  
+      IRC Operators only.
+
+      Syntax:  GLINE <user@host mask> <seconds to be banned> :<reason> (Adds a G:line for user@host) 
+               GLINE -<user@host mask>          (Removes a G:line for user@host)
+      Example: GLINE *@*.dal.net 900 :Spammers  (Adds a 15 min G:line)
+               GLINE *@*.dal.net 1d5h :Spammers (Adds a 29 hour G:line)
+   	
+      *** SHUN Command ***
+     
+      Prevents a user from executing ANY command except ADMIN and respond to Server Pings.
+      This effectively prevents them from doing anything on the server.
+      A time of 0 on the SHUN makes it permanent (Never Expires).
+      In Unreal 3.1.1 you may also specify the time in the format 1d10h15m30s.  
+      IRC Operators only.
+      
+      Syntax :  SHUN <nickname> <time> :<Reason>    (Shun the nickname for time)
+                SHUN +<user@host> <time> :<Reason>  (Shun the user@host for time)
+                SHUN -<user@host>                   (Removes the SHUN for user@host)
+                SHUN                                (View the current SHUN list)
+
+      Example : SHUN +foobar@aol.com 600 :Spamming (Shuns foobar@aol.com for 10 mins for Spamming) 
+                SHUN +foobar@aol.com 1d6h :Spamming (Adds a 30 hour SHUN)
+
+      *** AKILL Command *** (Use Services AKILL Instead)
+
+      Adds an Autokill for the specific host mask. This prevents any user from that 
+      hostmask from connecting to the network. 
+      Services Admin & above only ..
+  
+      Syntax :  AKILL <user@host> :<Reason>
+      Example : AKILL foo@aol.com :Spammers!
+
+      *** RAKILL Command *** (Use Services AKILL Instead)
+      
+      Removes an AKILL set by an IRC Operator or Services.
+      Services Admin & above only ..
+   
+      Syntax : RAKILL <user@host>      
+
+      *** REHASH Command ***
+
+      Prompts the server to reread the configuration files.
+      IRC Operators only.
+  
+      Syntax: REHASH <servername> -<flags>
+              REHASH -<flags>
+
+      If servername and flags are not specified this rehashes the ircd.conf , removing
+      any temporary k:lines.
+      If servername is specified, this is used to rehash config files on servername
+      Only TechAdmins and NetAdmins may specify a server name
+      
+      The flags are used to rehash other config files, valid flags are: 
+            -dccdeny   - Rehashes dccdeny.conf
+            -dynconf   - Rehashes UnrealIRCd Config and Network file
+            -restrict  - Rehashes chrestrict.conf
+            -vhost     - Rehashes vhost.conf
+            -motd      - Rehashes all MOTD files and RULES files (including T:lines)
+            -opermotd  - Rehashes the OPERMOTD
+            -botmotd   - Rehashes the BOTMOTD
+            -garbage   - Force garbage collection
+            -badwords  - Rehashes the badwords config.
+
+      *** RESTART Command ***
+
+      Kills and restarts the IRC daemon, disconnecting all users currently on that server.
+      IRC Operators only.
+ 
+      Syntax: RESTART
+              RESTART <password>
+              RESTART <server> <password>
+
+      *** DIE Command ***
+
+      Kills the IRC daemon, disconnecting all users currently on the current server.
+      IRC Operators only.
+ 
+      Syntax: DIE
+              DIE <password>
+ 
+      *** LAG Command ***
+
+      This command is like a Sonar or Traceroute for IRC servers
+      You type in /LAG irc.fyremoon.net and it will
+      reply from every server it passes with time and so on
+      Useful for looking where lag is and optional TS future/past travels
+
+      Syntax: LAG <servername>
+
+      *** SETHOST Command ***
+
+      This command is so you can change your
+      Virtual host (hiddenhost) to everything you want to,
+      Except special characters. 
+      IRC Operators only.
+	
+      Syntax:  SETHOST <new hostname>
+      Example: SETHOST microsoft.com
+   	
+      *** SETIDENT Command ***
+
+      With this command you can change your Ident (username).
+      IRC Operators only.
+   	
+      Syntax:  SETIDENT <new ident>
+      Example: SETIDENT root
+
+      *** CHGHOST Command ***
+
+      Changes the hostname of a user currently on the IRC network.
+      IRC Operators only.
+ 
+      Syntax:  CHGHOST <nick> <host>
+      Example: CHGHOST hAtbLaDe code.slashdot.org
+
+      *** CHGIDENT Command ***
+
+      Changes the ident of a user currently on the IRC network.
+      IRC Operators only.
+ 
+      Syntax:  CHGIDENT <nick> <ident>
+      Example: CHGIDENT hAtbLaDe FreeBSD
+
+      *** CHGNAME Command ***
+
+      Changes the "IRC Name" (or "Real Name") of a user currently on the IRC network.
+      IRC Operators only.
+      
+      Syntax:  CHGNAME <nick> <name>
+      Example: CHGNAME hAtbLaDe TechAdmin on SomeNet
+
+      *** SQUIT Command ***
+
+      Disconnects an IRC Server from the network
+      IRC Operators only.
+ 
+      Syntax:  SQUIT <server>
+      Example: SQUIT leaf.*
+
+      *** CONNECT Command ***
+
+      Links another IRC server to the one you are currently on. Remote connections are also
+      possible.
+      IRC Operators only.
+ 
+      Syntax:  CONNECT <server>
+               CONNECT <hub> <port> <leaf>
+      Example: CONNECT leaf.*
+               CONNECT hub.* 6667 leaf.*
+
+      *** DCCDENY Command ***
+   
+      Adds a DCC Deny for that filename mask. This means that any DCC sends of that filename mask
+      through the server will be rejected.
+      IRC Operators only.
+
+      Syntax : DCCDENY <filename mask> <reason>
+
+      *** UNDCCDENY Command ***
+ 
+      If the EXACT file you type is found it is removed, else it uses wildcards to search
+      IRC Operators only.
+
+      Syntax : UNDCCDENY <filename mask>
+
+      *** SAJOIN Command ***
+
+      Forces a user to join channel(s). Can only be used by a Services Admin.
+ 
+      Syntax:  SAJOIN <nick> <channel>[,<channel2>..]
+      Example: SAJOIN hAtbLaDe #OperHelp
+               SAJOIN hAtbLaDe #Support,#IRCHelp
+
+      *** SAPART Command ***
+
+      Forces a user to leave channel(s). Can only be used by a Services Admin.
+ 
+      Syntax:  SAPART <nick> <channel>[,<channel2>..]
+      Example: SAPART hAtbLaDe #OperHelp
+               SAPART hAtbLaDe #Support,#IRCHelp
+
+      *** SAMODE Command ***
+ 
+      Allows a Services Administrator to change the mode on a channel,
+      without having Operator status.
+ 
+      Syntax:  SAMODE <channel> <mode>
+      Example: SAMODE #Support +m
+
+      *** RPING Command ***	
+
+      This will calculate the milliseconds (Lag) between servers
+	
+      Syntax: RPING <servermask>
+
+      *** TRACE Command ***
+  
+      TRACE is useful to know what servers are connected to
+      what. Sometimes TRACE can be confusing, especially if you are using
+      it for the first time.  
+
+      Syntax:  TRACE <servername> 
+      Example: TRACE irc.fyremoon.net
+
+      *** OPERMOTD Command ***
+
+      Shows the IRCd Operator MOTD
+      IRC Operators only.
+
+      Syntax: OPERMOTD
+
+      *** ADDMOTD Command ***
+
+      This will add the text you specify to the MOTD
+      (the general motd - T:lines doesnt count ..)
+      Server Admin & Co-Admin only
+
+      Syntax: ADDMOTD :text
+
+      *** ADDOMOTD Command ***
+
+      This will add the text you specify to the Operator MOTD
+      Server Admin & Co-Admin only
+	
+      Syntax: ADDOMOTD :text
+
+      *** SDESC Command ***
+
+      With this command you can change your Server Info Line
+      Without having to squit and reconnect.
+      This is a Server Admin/Co Admin only command
+   	
+      Syntax:  SDESC <New description>
+      Example: SDESC If you belong to me..		
+
+      *** ADDLINE Command ***
+
+      This command can be used to add lines to the ircd.conf file
+      Only for Server Admins
+
+      Syntax: ADDLINE <line>
+
+      *** MKPASSWD Command ***
+
+      This command will encrypt the string it has been given
+      So u can add it directly to the ircd.conf if you use
+      Encrypted passwords. 
+
+      Syntax : MKPASSWD <string to be encrypted>
+
+      *** TSCTL Command ***
+
+      This is a highly advanced command
+      IRC Operators only.
+
+      Syntax: TSCTL OFFSET +|- <time>   (Adjust internal IRC clock)
+              TSCTL TIME                (Will give TS report)
+              TSCTL ALLTIME   (Shows the TS report of all Servers)
+              TSCTL SVSTIME <timestamp>  (Sets the Time on all servers)
+
+      *** HTM Command ***
+
+      Switches the server In & Out of High Traffic Mode
+      It is activated when the server is receiving extremely high amounts of information
+      IRC Operators only.
+
+      Syntax: HTM [option]
+
+      If no option is specified it just displays the current HTM state
+      If an option is specified it does a more specific task, valid options are:
+
+      ON         - Force HTM to activate
+      OFF        - Force HTM to deactivate
+      NOISY      - Make HTM announce when it is entering/leaving HTM
+      QUIET      - Stop HTM from announcing when it is entering/leaving HTM
+      TO <value> - Tell HTM at what incoming rate to activate HTM
+
+
+
+					*****************************************
+					*** Services Commands (U:Lined Server)***
+					*****************************************
+
+      These commands can only be used by Services or some other server which has a U Line & so is allowed to
+      make changes to the IRC Environment without any hindering. Most times 'raw' commands to services can
+      only be sent by a person who is on the Services Operator , Services Administrator or who is the Services
+      root.    
+   
+      *** SVSNICK Command ***
+
+      Changes the nickname of the user in question.
+      Must be sent through an U:Lined server.    
+
+      Syntax:  SVSNICK <nickname> <new nickname> <timestamp>
+      Example: SVSNICK hAtbLaDe Foobar 963086432
+
+      *** SVSMODE Command ***
+
+      Changes the mode of the user in question.
+      Must be sent through an U:Lined server.    
+ 
+      Syntax:  SVSMODE <nickname> <usermode>
+      Example: SVSMODE hAtbLaDe +i
+
+      *** SVSKILL Command ***
+
+      Forcefully disconnects a user from the network.
+      Must be sent through an U:Lined server.    
+ 
+      Syntax:  SVSKILL <user> :<reason>
+      Example: SVSKILL Lamer21 :Goodbye
+
+      *** SVSNOOP Command ***
+
+      Enabled or disables whether Global IRCop functions exist on the server in question or not.
+      Must be sent through an U:Lined server.    
+ 
+      Syntax:  SVSNOOP <server> <+/->
+      Example: SVSNOOP leaf.* -
+
+      *** SVSJOIN Command ***
+
+      Forces a user to join a channel. 
+      Must be sent through an U:Lined server.    
+     
+      Syntax:  SVSJOIN <nick> <channel>[,<channel2>..]
+      Example: SVSJOIN hAtbLaDe #jail
+               SVSJOIN hAtbLaDe #jail,#zoo
+
+      *** SVSPART Command ***
+
+      Forces a user to leave a channel.
+      Must be sent through an U:Lined server.    
+    
+      Syntax:  SVSPART <nick> <channel>[,<channel2>..]
+      Example: SVSPART hAtbLaDe #Hanson
+               SVSPART hAtbLaDe #Hanson,#AOL
+
+      *** SVSO Command ***
+
+      Gives nick Operflags like the ones in O:lines, remember to set SVSMODE +o and alike.
+      Must be sent through an U:Lined server.    
+
+      Syntax:  SVSO <nick> <+operflags>    (Adds the Operflags)
+               SVSO <nick> -               (Removes all O:Line flags)
+      Example: SVSO SomeNick +bBkK
+
+      *** SWHOIS Command ***
+
+      Changes the WHOIS message of the Nickname.
+      Must be sent through an U:Lined server.    
+
+      Syntax:  SWHOIS <nick> :<message>     (Sets the SWHOIS)
+               SWHOIS <nick> :              (Resets the SWHOIS)
+      Example: SWHOIS SomeNick :is a lamer
+
+      *** SQLINE Command ***
+
+      Bans a Nickname or a certain Nickname mask from the Server.
+      Must be sent through an U:Lined server.    
+
+      Syntax : SQLINE <nickmask> :<Reason>
+      Example: SQLINE *Bot* :No bots
+
+      *** UNSQLINE Command ***
+
+      Un-Bans a Nickname or Nickname mask
+      Must be sent through an U:Lined server.    
+
+      Synax :  UNSQLINE <nickmask> 
+      Example: UNSQLINE *Bot*
+
+      *** SVS2MODE Command ***
+
+      Changes the Usermode of a nickname
+      Must be sent through an U:Lined server.    
+
+      Syntax : :services.somenet.com SVS2MODE <nickname> +<mode> 
+      Example: :services.roxnet.org SVS2MODE hAtbLaDe +h
+
+      *** SVSFLINE Command ***
+
+      Adds the given Filename mask to DCCDENY
+      Must be sent through an U:Lined server.    
+
+      Syntax: :server SVSFLINE + file :reason (Add the filename)
+              :server SVSFLINE - file (Deletes the filename)
+              :server SVSFLINE *      (Wipes the DCCDENY list)
+
+      *** SVSMOTD Command ***
+
+      Changes the Services Message Of The Day
+      Must be sent through an U:Lined server.    
+
+      Syntax:  SVSMOTD # :<text> (Adds to Services MOTD)
+               SVSMOTD !         (Deletes the MOTD)
+               SVSMOTD ! :<text> (Deletes and Adds text)
+      Example: SVSMOTD # :Services MOTD
+
+
+
+                   
+                                    ***********************************
+                                    ***** UnrealIRCd O:Line flags ***** 
+                                    ***********************************
+	
+
+		 r = Access to /rehash server
+		 h = Oper can send /help ops - gets +h on oper up
+		 g = Oper can send /globops
+		 w = Oper can send /wallops
+		 l = Oper can send /locops
+		 c = Access to do local /squits and /connects
+		 k = Access to do local /kills
+		 b = Oper can /kline users from server
+		 B = Oper can /unkline users from server
+		 n = Oper can send local server notices (/notice $servername message)
+		 u = Oper can set /umode +c
+		 f = Oper can set /umode +f
+		 O = Global oper, flags included: oRDK
+		 o = Local oper, flags included: rhgwlckbBnuf
+		 R = Access to /restart server
+		 D = Access to /die server
+		 K = Access to do global /kills
+		 A = Gets +A on oper up. Server Administrator
+		 a = Gets +a on oper up. Services Administrator
+		 N = Gets +N on oper up. Network Administrator
+		 T = Gets +T on oper up. Technical Administator
+		 C = Gets +C on oper up. Co Administrator
+		 Y = Access to do remote /squits and /connects
+		 z = Can add /zlines
+		 H = Gets +x on oper up.
+		 W = Gets +W on oper up.	  
+		 ^ = Allows to use umode +I
+		 * = Flags AaNCTzSHW^

@@ -1,11 +1,10 @@
 
-Unreal3.1-Silverheart Release Notes
+Unreal3.1.1-Darkshades Release Notes
 ===================================
 
-* It is most wise to have a Unreal3.1 (FINAL) -only network whenever possible. Do not
-  link this to 2.1.7 or alike (might have unexpected problems). Unreal3.0
-  linking might at times cause channel desynchs because of 3.0 broken SJOIN
-  code. 
+* It is REALLY RECOMMENDED that you run only Unreal3.1.1<->Unreal3.1.1,
+  as Unreal3.1+sf got some funny SJOIN bugs that causes the network to
+  desynch
 
 * It is ADVISABLE that you allocate numerics to each server on your network.
   You simply in the M: line, just after the port, add :numeric, like:
@@ -15,15 +14,10 @@ Unreal3.1-Silverheart Release Notes
   Where 20 is the numeric. Numerics are 1-255, 0 means no numeric (bad),
   and no server must have same numeric
 
-* We have introduced encrypted irc connections, and we will soon have a
-  client out for it (this is not SSL). Stay tuned in #UnrealIRCd for more
-   information
+* We have introduced encrypted irc connections, using SSL
+      You need to set up a SSL port, P:IP:s:*:port
+      To connect securely to another server, add :S at the end of the C:line
+       and make sure it autoconnect/connects to a SSL port
 
-* NOTE, in #UnrealIRCD we don't help with Services etc.
-
-* Documentation will show up on the website sooner or later, 
-  http://unreal.tspre.org
-
-* Read Unreal.nfo for any sake. To update your IRCd, please run the ./update
-  script. This requires "wget" and "cvs" on the box to function
- 
+* Read Unreal.nfo for any sake AND THE DOCS IN doc/. To update/upgrade your IRCd,
+  please run the ./update script. This requires "wget" and "cvs" on the box to function

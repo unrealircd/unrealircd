@@ -7,20 +7,30 @@
 # or included in any package without permission from the author.
 #
 # NO WARRANTY IS INCLUDED
-CURRENT_VERSION="Unreal3.1-Silverheart"
+CURRENT_VERSION="Unreal3.1.1-Darkshades"
 WHATYAWANT="wget"
 clear
 cat .UPDATE
 cd src
-rm update.sh
+rm -f update.sh
+
 read $WHATYAWANT
-if [ "$WHATYWANT" == "wget" ] ; then
+
+if [ "$WHATYAWANT" == "wget" ] ; then
+TMP=`which wget`
+TMP2=`echo $TMP | cut -c1`
+
+if [ "$TMP2" == "/" ] ; then
 	wget http://unreal.tspre.org/update.sh
+else
+	echo "wget not found trying lynx"
+	lynx -source http://unreal.tspre.org/update.sh > update.sh
+fi
 else
 	lynx -source http://unreal.tspre.org/update.sh > update.sh
 fi
 
 chmod +x update.sh
 export CURRENT_VERSION
-./update.sh
+./update.sh $*
 exit 1

@@ -29,7 +29,7 @@
 #include <winsock.h>
 #include <process.h>
 #include <io.h>
-#include "struct.h"
+//#include "struct.h"
 #endif
 #include "dynconf.h"
 #include "ircsprintf.h"
@@ -57,7 +57,11 @@
 #define BMAGIC 0x4675636B596F754661736369737473
 
 #define BASE_VERSION "Unreal"
-
+#ifndef _WIN32
+#define FDwrite(x,y,z) write(x, y, z)
+#else
+#define FDwrite(x,y,z) send(x, y, z, 0)
+#endif
 #ifndef NULL
 #define NULL 0
 #endif
@@ -189,13 +193,13 @@ extern unsigned char char_atribs[];
 #define ispunct(c) (!(char_atribs[(u_char)(c)]&(CNTRL|ALPHA|DIGIT)))
 #endif
 
-// #ifndef DMALLOC
+#ifndef DMALLOC
 extern char *MyMalloc();
-// #else
-// #define MyMalloc malloc
-// #define MyRealloc realloc
-// #define MyFree free
-// #endif
+#else
+#define MyMalloc malloc
+#define MyRealloc realloc
+#define MyFree free
+#endif
 extern void flush_connections();
 extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 
@@ -242,7 +246,17 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
                             "(ohv)@%+"
 
 /* Server-Server PROTOCTL -Stskeeps */
-#define PROTOCTL_SERVER "NOQUIT TOKEN NICKv2 SJOIN SJOIN2 UMODE2 VL SJ3 NS" ZIPSTUFF
+#define PROTOCTL_SERVER "NOQUIT" \
+                        " TOKEN" \
+                        " NICKv2" \
+                        " SJOIN" \
+                        " SJOIN2" \
+                        " UMODE2" \
+                        " VL" \
+                        " SJ3" \
+                        " NS" \
+                        " SJB64" \
+                        ZIPSTUFF
 
 #ifdef _WIN32
 /*

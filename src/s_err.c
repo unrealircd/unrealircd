@@ -246,8 +246,8 @@ static char *replies[] = {
 #else
 /* 212    RPL_STATSCOMMANDS */ ":%s 212 %s %s %u %u",
 #endif
-/* 213    RPL_STATSCLINE */ ":%s 213 %s %c %s * %s %d %d",
-/* 214    RPL_STATSOLDNLINE */ ":%s 214 %s %c %s * %s %d %d",
+/* 213    RPL_STATSCLINE */ ":%s 213 %s %c %s * %s %d %d %s",
+/* 214    RPL_STATSOLDNLINE */ ":%s 214 %s %c %s * %s %d %d %s",
 /* 215    RPL_STATSILINE */ ":%s 215 %s %c %s * %s %d %d",
 /* 216    RPL_STATSKLINE */ ":%s 216 %s %c %s %s %s %d %d",
 /* 217    RPL_STATSQLINE */ ":%s 217 %s %c %s %s %s %d %d",
@@ -346,7 +346,7 @@ static char *replies[] = {
 /* 310    RPL_WHOISHELPOP */ ":%s 310 %s %s :is available for help.",
 /* 311    RPL_WHOISUSER */ ":%s 311 %s %s %s %s * :%s",
 /* 312    RPL_WHOISSERVER */ ":%s 312 %s %s %s :%s",
-/* 313    RPL_WHOISOPERATOR */ ":%s 313 %s %s :is %s on %s",
+/* 313    RPL_WHOISOPERATOR */ ":%s 313 %s %s :is %s",
 /* 314    RPL_WHOWASUSER */ ":%s 314 %s %s %s %s * :%s",
 /* 315    RPL_ENDOFWHO */ ":%s 315 %s %s :End of /WHO list.",
 /* 316 */ NULL, /* Used */
@@ -355,7 +355,11 @@ static char *replies[] = {
 /* 319    RPL_WHOISCHANNELS */ ":%s 319 %s %s :%s",
 /* 320    RPL_WHOISSPECIAL */ ":%s 320 %s %s :%s",
 /* 321    RPL_LISTSTART */ ":%s 321 %s Channel :Users  Name",
+#ifndef LIST_SHOW_MODES
 /* 322    RPL_LIST */ ":%s 322 %s %s %d :%s",
+#else
+/* 322    RPL_LIST */ ":%s 322 %s %s %d :%s %s",
+#endif
 /* 323    RPL_LISTEND */ ":%s 323 %s :End of /LIST",
 /* 324    RPL_CHANNELMODEIS */ ":%s 324 %s %s %s %s",
 /* 325 */ NULL,
@@ -485,17 +489,9 @@ static char *replies[] = {
 /* 442    ERR_NOTONCHANNEL */ ":%s 442 %s %s :You're not on that channel",
 /* 443    ERR_USERONCHANNEL */ ":%s 443 %s %s %s :is already on channel",
 /* 444    ERR_NOLOGIN */ ":%s 444 %s %s :User not logged in",
-#ifndef	ENABLE_SUMMON
-/* 445    ERR_SUMMONDISABLED */ ":%s 447 %s :SUMMON has been disabled",
-#else
-/* 445 */ NULL,
-#endif
-#ifndef	ENABLE_USERS
+/* 445    ERR_SUMMONDISABLED */ ":%s 445 %s :SUMMON has been disabled",
 /* 446    ERR_USERSDISABLED */ ":%s 446 %s :USERS has been disabled",
-#else
-/* 446 */ NULL,
-#endif
-/* 447 */ NULL,
+/* 447    ERR_NONICKCHANGE */ ":%s 447 %s :Can not change nickname while on %s (+N)",
 /* 448 */ NULL,
 /* 449 */ NULL,
 /* 450 */ NULL,
@@ -574,7 +570,7 @@ static char *replies[] = {
 /* 515 */ NULL,
 /* 516 */ NULL,
 /* 517 */ NULL,
-/* 518    518 */ ":%s 518 %s :Cannot invite (+I) at channel",
+/* 518    518 */ ":%s 518 %s :Cannot invite (+V) at channel",
 /* 519    519 */ ":%s 519 %s :Cannot join channel (Admin only)",
 /* 520    520 */ ":%s 520 %s :Cannot join channel (IRCops only)",
 /* 521    ERR_LISTSYNTAX */ ":%s 521 %s Bad list syntax, type /quote list ? or /raw list ?",

@@ -1,6 +1,6 @@
 /*
  *   Unreal Internet Relay Chat Daemon, src/s_kline.c
- *   (C) 1999-2000 Carsten Munk (Techie/Stskeeps) <cmunk@toybox.flirt.org>
+ *   (C) 1999-2000 Carsten Munk (Techie/Stskeeps) <stskeeps@tspre.org>
  *   File to take care of dynamic K:/G:/Z: lines
  *
  *
@@ -34,9 +34,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifndef _WIN32
-#include <utmp.h>
-#else
+#ifdef _WIN32
 #include <io.h>
 #endif
 #include <fcntl.h>
@@ -262,91 +260,106 @@ int  find_tkline_match(cptr, xx)
 	int  is_ip;
 	char msge[1024];
 	char gmt2[256];
-
+	int	points = 0;
 	if (IsServer(cptr) || IsMe(cptr))
 		return -1;
 
 
 	nowtime = TStime();
 	chost = cptr->sockhost;
-	cname = (xx != 2) ? cptr->user->username : NULL;
-
+	cname = cptr->user ? cptr->user->username : "unknown";
 	cip = (char *)inet_ntoa(cptr->ip);
 
 
 	for (lp = tklines; lp; lp = lp->next)
 	{
-		if (*lp->hostmask >= '0' && *lp->hostmask <= '9')
-			is_ip = 1;
+		points = 0;
+		
+		if (!match(lp->usermask, cname) && !match(lp->hostmask, chost))
+			points = 1;
+		if (!match(lp->usermask, cname) && !match(lp->hostmask, cip))
+			points = 1;
+		if (points == 1)
+			break;
 		else
-			is_ip = 0;
+			points = 0;
+	}
 
-		if (xx != 2 ? is_ip == 0 ? (!match(lp->hostmask, chost)
-		    && !match(lp->usermask, cname)) :
-		    (!match(lp->hostmask, chost) || !match(lp->hostmask, cip))
-		    : !match(lp->hostmask, chost))
+	if (points != 1)
+		return -1;	
+	
+	if ((lp->type & TKL_KILL) && (xx != 2))
+	{
+		if (lp->type & TKL_GLOBAL)
 		{
-			if (lp->type & TKL_KILL)
-			{
-				if (lp->type & TKL_GLOBAL)
-				{
-					ircstp->is_ref++;
-					if (lp->expire_at)
-					{
-						sendto_one(cptr,
-						    ":%s NOTICE %s :*** You are banned for %li seconds (%s)",
-						    me.name, cptr->name,
-						    lp->expire_at - TStime(),
-						    lp->reason);
-						ircsprintf(msge,
-						    "User has been banned from %s (%s)",
-						    ircnetwork, lp->reason);
-						return (exit_client(cptr, cptr, &me,
-						    msge));
-					}
-					else
-					{
-						sendto_one(cptr, 
-							":%s NOTICE %s :*** You have been banned permanently (%s)",
-							me.name, cptr->name,
-							lp->reason);
-						ircsprintf(msge, 
-							"User has been permanently banned from %s (%s)",
-							ircnetwork, lp->reason);
-						return(exit_client(cptr, cptr, &me, msge));
-					}
-				}
-				else
-				{
-					ircstp->is_ref++;
-					if (lp->expire_at)
-					{
-						sendto_one(cptr,
-						    ":%s NOTICE %s :*** You are banned for %li seconds (%s)",
-						    me.name,
-						    cptr->name,
-						    lp->expire_at - TStime(),
-						    lp->reason);
-						ircsprintf(msge, "User has banned (%s)",
-						    me.name, lp->reason);
-						return (exit_client(cptr, cptr, &me,
-						    msge));
-					}
-					else
-					{
-						sendto_one(cptr,
-						    ":%s NOTICE %s :*** You have been permanently banned (%s)",
-						    me.name,
-						    cptr->name,
-						    lp->reason);
-						ircsprintf(msge, "User has been permanently banned (%s)",
-						    me.name, lp->reason);
-						return (exit_client(cptr, cptr, &me,
-						    msge));
-					}
-				}
-			}
-			else if (lp->type & (TKL_ZAP))
+			ircstp->is_ref++;
+			sendto_one(cptr,
+				":%s NOTICE %s :*** You are %s from %s (%s)",
+					me.name, cptr->name, 
+					(lp->expire_at ? "banned" : "permanently banned"),
+					ircnetwork, lp->reason);
+			ircsprintf(msge, "User has been %s from %s (%s)",
+				(lp->expire_at ? "banned" : "permanently banned"),
+				ircnetwork, lp->reason);
+			return (exit_client(cptr, cptr, &me,
+				msge));
+		}
+		else
+		{
+			ircstp->is_ref++;
+			sendto_one(cptr,
+				":%s NOTICE %s :*** You are %s from %s (%s)",
+					me.name, cptr->name, 
+					(lp->expire_at ? "banned" : "permanently banned"),
+				me.name, lp->reason);
+			ircsprintf(msge, "User is %s (%s)",
+				(lp->expire_at ? "banned" : "permanently banned"),
+				lp->reason);
+			return (exit_client(cptr, cptr, &me,
+				msge));
+			
+		}
+	}
+	if (lp->type & TKL_ZAP)
+	{
+		ircstp->is_ref++;
+		ircsprintf(msge,
+		    "Z:lined (%s)",lp->reason);
+		return exit_client(cptr, cptr, &me, msge);
+	}
+	if (lp->type & (TKL_SHUN))
+	{
+		if (IsShunned(cptr))
+			return -1;
+		if (IsAdmin(cptr))
+			return -1;
+		SetShunned(cptr);
+		return -1;
+	}
+
+	return -1;
+}
+
+int  find_tkline_match_zap(cptr)
+	aClient *cptr;
+{
+	aTKline *lp;
+	char *cip;
+	TS   nowtime;
+	char msge[1024];
+
+	if (IsServer(cptr) || IsMe(cptr))
+		return -1;
+
+
+	nowtime = TStime();
+	cip = (char *)inet_ntoa(cptr->ip);
+
+	for (lp = tklines; lp; lp = lp->next)
+	{
+		if (lp->type & TKL_ZAP)
+		{
+			if (!match(lp->hostmask, cip))
 			{
 				ircstp->is_ref++;
 				ircsprintf(msge,
@@ -360,39 +373,6 @@ int  find_tkline_match(cptr, xx)
 				strcpy(zlinebuf, msge);
 				return (1);
 			}
-			else if (lp->type & (TKL_SHUN))
-			{
-				if (IsShunned(cptr))
-					return -1;
-				if (IsAdmin(cptr))
-					return -1;
-				SetShunned(cptr);
-#ifndef __OpenBSD__
-				strncpy(gmt2,
-				    asctime(gmtime((clock_t *) & lp->
-				    expire_at)), sizeof(gmt2));
-
-#else
-				strncpy(gmt2,
-				    asctime(gmtime((TS *)&lp->expire_at)),
-				    sizeof(gmt2));
-
-#endif
-				gmt2[strlen(gmt2) - 1] = '\0';
-#ifdef SHUN_NOTICES
-				if (lp->expire_at)
-					sendto_one(cptr,
-					    ":%s NOTICE %s :*** You have been shunned by %s until %s (Reason: %s)",
-					    me.name, cptr->name, lp->setby,
-					    gmt2, lp->reason);
-				else
-					sendto_one(cptr,
-					    ":%s NOTICE %s :*** You have been shunned permanently by %s (Reason: %s)",
-					    me.name, cptr->name, lp->setby,
-					    lp->reason);
-#endif
-				return -1;
-			}
 		}
 	}
 	return -1;
@@ -401,19 +381,15 @@ int  find_tkline_match(cptr, xx)
 
 int  tkl_sweep()
 {
-	/* just sweeps net for people that should be killed */
+	/* just sweeps local for people that should be killed */
 	aClient *acptr;
-	long i, i1;
+	long i;
 
 	tkl_check_expire();
-	for (i1 = 0; i1 <= 5; i1++)
+	for (i = 0; i <= (MAXCONNECTIONS - 1); i++)
 	{
-		for (i = 0; i <= (MAXCONNECTIONS - 1); i++)
-		{
-			if (acptr = local[i])
-				if (MyClient(acptr))
-					find_tkline_match(acptr, 0);
-		}
+		if (acptr = local[i])
+			find_tkline_match(acptr, 0);
 	}
 	return 1;
 }
@@ -639,7 +615,7 @@ int  m_tkl(cptr, sptr, parc, parv)
 			      ("Permanent %s added for %s@%s on %s GMT (from %s: %s)",
 			      txt, parv[3], parv[4], gmt, parv[5], parv[8]);
 		  }
-		  tkl_sweep();
+		  loop.do_tkl_sweep = 1;
 		  if (type & TKL_GLOBAL)
 		  {
 			  sendto_serv_butone(cptr,
@@ -882,7 +858,7 @@ int  m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	if (whattodo == 0)
 	{
-		secs = atol(parv[2]);
+		secs = atime(parv[2]);
 		if (secs < 0)
 		{
 			sendto_one(sptr,
@@ -1088,7 +1064,7 @@ int  m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	if (whattodo == 0)
 	{
-		secs = atol(parv[2]);
+		secs = atime(parv[2]);
 		if (secs < 0)
 		{
 			sendto_one(sptr,

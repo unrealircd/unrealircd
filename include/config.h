@@ -52,34 +52,27 @@
     * Define this if you're testing/debugging/programming.
   */
 #undef DEBUG
-
 /* Type of host. These should be made redundant somehow. -avalon */
 
 /*	BSD			Nothing Needed 4.{2,3} BSD, SunOS 3.x, 4.x */
 /*	HPUX			Nothing needed (A.08/A.09) */
 /*	ULTRIX			Nothing needed (4.2) */
 /*	OSF			Nothing needed (1.2) */
-/* #undef	AIX		/* IBM ugly so-called Unix, AIX */
-/* #undef	MIPS		/* MIPS Unix */
+/* #undef	AIX		IBM ugly so-called Unix, AIX */
+/* #undef	MIPS		MIPS Unix */
 /*	SGI			Nothing needed (IRIX 4.0.4) */
-/* #undef 	SVR3		/* SVR3 stuff - being worked on where poss. */
-/* #undef	DYNIXPTX	/* Sequents Brain-dead Posix implement. */
-/* #undef	SOL20		/* Solaris2 */
-/* #undef	ESIX		/* ESIX */
-/* #undef	NEXT		/* NeXTStep */
-/* #undef	SVR4 /* */
+/* #undef 	SVR3		SVR3 stuff - being worked on where poss. */
+/* #undef	DYNIXPTX	Sequents Brain-dead Posix implement. */
+/* #undef	SOL20		Solaris2 */
+/* #undef	ESIX		ESIX */
+/* #undef	NEXT		NeXTStep */
+/* #undef	SVR4 */
 
 /* Additional flags to give FreeBSD's malloc, only play with this if you
  * know what you're doing.
  */
 
 #define MALLOC_FLAGS_EXTRA ""
-/* 
-   ConferenceRoom Java Client Hack -Fish
-   if you want it to work #define CONFROOM_JAVA_PORT <port>
-   where port MUST be a seperate port java clients connects on .. 
-*/
-#undef CONFROOM_JAVA_PORT
 
 /*
     dog3/comstud ircd fdlists
@@ -87,6 +80,17 @@
 */
 
 #undef NO_FDLIST
+
+/*
+ * Defining this will allow all ircops to see people in +s channels
+ * By default, only net/tech admins can see this
+ */
+#undef SEE_SECRET
+
+/*
+ * This allows you to see modes in /list
+*/
+#define LIST_SHOW_MODES
 
 /*
  * Admin's chat...
@@ -97,6 +101,12 @@
   If you want SHUN_NOTICES, define this 
 */
 #undef SHUN_NOTICES
+
+/*
+   If you want to support chinese and/or japanese nicks
+*/
+#undef CHINESE_NICK
+#undef JAPANESE_NICK
 
 /*
   Remote rehash
@@ -130,7 +140,7 @@
  *
  * This enables the spoof protection.
  */
-/* #define NOSPOOF 1 /* */
+/* #define NOSPOOF 1  */
 
 /*
  * HOSTILENAME - Define this if you want the hostile username patch included,
@@ -169,9 +179,9 @@
 
 /* Do these work? I dunno... */
 
-/* #undef	VMS		/* Should work for IRC client, not server */
-/* #undef	MAIL50		/* If you're running VMS 5.0 */
-/* #undef	PCS		/* PCS Cadmus MUNIX, use with BSD flag! */
+/* #undef	VMS		   Should work for IRC client, not server */
+/* #undef	MAIL50		   If you're running VMS 5.0 */
+/* #undef	PCS		   PCS Cadmus MUNIX, use with BSD flag! */
 
 /*
  * NOTE: On some systems, valloc() causes many problems.
@@ -199,7 +209,7 @@
  *       the maintainer.
  */
 
-/* #undef	DEBUGMODE	/* define DEBUGMODE to enable debugging mode.*/
+/* #undef	DEBUGMODE	   define DEBUGMODE to enable debugging mode.*/
 
 /* We not check whether this is ok at compile time -- codemastr */
 /*
@@ -253,7 +263,7 @@
  *
  * You may want to define IRC_UID and IRC_GID
  */
-/* #define CHROOTDIR /* */
+/* #define CHROOTDIR    */
 
 /* SHOW_INVISIBLE_LUSERS
  *
@@ -405,7 +415,7 @@
 #define HelpServ "HelpServ"
 #define StatServ "StatServ"
 #define InfoServ "InfoServ"
-
+#define BotServ "BotServ"
 /*
  * How many seconds in between simultaneous nick changes?
  */
@@ -538,7 +548,7 @@
  * CONNECTTIMEOUT - 10 seconds for its host to respond to an ident lookup
  * query and for a DNS answer to be retrieved.
  */
-#define	CONNECTTIMEOUT	60	/* Recommended value: 60 */
+#define	CONNECTTIMEOUT	30	/* Recommended value: 60 */
 
 /*
  * Max time from the nickname change that still causes KILL
@@ -597,9 +607,7 @@ extern void debug();
 # endif
 #endif
 
-#ifndef ENABLE_SUMMON
 #  undef LEAST_IDLE
-#endif
 
 #if defined(mips) || defined(PCS)
 #undef SYSV

@@ -30,6 +30,7 @@ Computing Center and Jarkko Oikarinen";
 #include "sys.h"
 #include "numeric.h"
 #include "userload.h"
+#include "msg.h"
 #include <sys/stat.h>
 #include <signal.h>
 #include <fcntl.h>
@@ -60,6 +61,7 @@ Computing Center and Jarkko Oikarinen";
 #include "badwords.h"
 #endif
 #include "version.h"
+#include "proto.h"
 
 ID_Copyright
     ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
@@ -79,6 +81,7 @@ int  un_gid = 99;
 extern char unreallogo[];
 #endif
 
+LoopStruct loop;
 extern aMotd *opermotd;
 extern aMotd *svsmotd;
 extern aMotd *motd;
@@ -123,12 +126,30 @@ int  noisy_htm = 1;
 
 TS   check_fdlists();
 #endif
+
+void save_stats(void)
+{
+	FILE	*stats = fopen("ircd.stats", "w");
+	if (!stats)
+		return;
+	fprintf(stats, "%li\n", IRCstats.clients);
+	fprintf(stats, "%li\n", IRCstats.invisible);
+	fprintf(stats, "%li\n", IRCstats.servers);
+	fprintf(stats, "%li\n", IRCstats.operators);
+	fprintf(stats, "%li\n", IRCstats.unknown);
+	fprintf(stats, "%li\n", IRCstats.me_clients);
+	fprintf(stats, "%li\n", IRCstats.me_servers);
+	fprintf(stats, "%li\n", IRCstats.me_max);
+	fprintf(stats, "%li\n", IRCstats.global_max);
+	fclose(stats);
+}
+
+
 void server_reboot(char *);
 void restart PROTO((char *));
 static void open_debugfile(), setup_signals();
 extern void init_glines(void);
 
-int  do_garbage_collect = 0;
 TS   last_garbage_collect = 0;
 char **myargv;
 int  portnum = -1;		/* Server port number, listening this */
@@ -237,12 +258,42 @@ VOIDSIG s_restart()
 	}
 }
 
+
 VOIDSIG s_segv()
 {
+#ifdef	POSIX_SIGNALS
+	struct sigaction act;
+#endif
 	int  i;
 	FILE *log;
 	int  p;
+	static TS segv_last = (TS)0;
+#ifdef RENAME_CORE
 	char corename[512];
+#else
+# define corename "core"
+#endif
+	if (!segv_last) {
+		sendto_ops("Recieved first Segfault, doing re-enter test");
+		segv_last = TStime();
+		return;
+	}
+	if ((TStime() - segv_last) > 5) {
+#ifdef USE_SYSLOG
+		(void)syslog(LOG_WARNING, "Possible fake segfault");
+#endif
+		segv_last = TStime();
+		return;
+	}
+#ifdef POSIX_SIGNALS
+	act.sa_flags = 0;
+	act.sa_handler = SIG_DFL;
+	(void)sigemptyset(&act.sa_mask);
+        (void)sigaction(SIGSEGV,&act,NULL);	
+#else
+        (void)signal(SIGSEGV,SIG_DFL);
+#endif
+
 #ifdef USE_SYSLOG
 	(void)syslog(LOG_WARNING, "Server terminating: Segmention fault!!!");
 	(void)closelog();
@@ -253,6 +304,7 @@ VOIDSIG s_segv()
 	sendto_serv_butone(&me,
 	    ":%s GLOBOPS :AIEEE!!! Server Terminating: Segmention fault (buf: %s)",
 	    me.name, backupbuf);
+        sendto_all_butone(NULL, &me, "NOTICE ALL :SEGFAULT! I'm Meeeeellllting, what a world!");
 	log = fopen(lPATH, "a");
 	if (log)
 	{
@@ -264,14 +316,12 @@ VOIDSIG s_segv()
 
 #if !defined(_WIN32) && !defined(_AMIGA)
 	p = getpid();
-	if (fork() > 0)
-	{
-		kill(p, 3);
-		kill(p, 9);
-	}
+	if (fork()) { return; }
 	write_pidfile();
+#ifdef RENAME_CORE
 	(void)ircsprintf(corename, "core.%d", p);
 	(void)rename("core", corename);
+#endif
 	sendto_realops
 	    ("Dumped core to %s - please read Unreal.nfo on what to do!",
 	    corename);
@@ -279,15 +329,19 @@ VOIDSIG s_segv()
 	flush_connections(me.fd);
 
 #ifndef _WIN32
-	for (i = 3; i < MAXCONNECTIONS; i++)
+	for (i = 3; i < MAXCONNECTIONS; i++) {
 		(void)close(i);
+	}
 #else
-	for (i = 0; i < highest_fd; i++)
+	for (i = 0; i < highest_fd; i++) {
 		if (closesocket(i) == -1)
 			close(i);
+	}
 #endif
+	kill(p,SIGQUIT);
 	exit(-1);
 }
+
 void server_reboot(mesg)
 	char *mesg;
 {
@@ -467,7 +521,7 @@ extern TS check_pings(TS currenttime, int check_kills)
 				killflag = 0;
 			if (check_kills && !killflag && IsPerson(cptr))
 				if (find_zap(cptr, 1)
-				    || find_tkline_match(cptr, 2) > -1 ||
+				    || find_tkline_match(cptr, 0) > -1 ||
 				    (!IsAnOper(cptr) && find_nline(cptr)))
 					killflag = 1;
 			ping = IsRegistered(cptr) ? get_client_ping(cptr) :
@@ -528,38 +582,23 @@ extern TS check_pings(TS currenttime, int check_kills)
 
 #ifdef SHOWCONNECTINFO
 					if (DoingDNS(cptr))
-#ifndef _WIN32
-						write(cptr->fd, REPORT_FAIL_DNS,
-						    R_fail_dns);
-#else
-						send(cptr->fd, REPORT_FAIL_DNS,
-						    R_fail_dns, 0);
-#endif
+						sendto_one(cptr, REPORT_FAIL_DNS);
 					else if (DoingAuth(cptr))
-#ifndef _WIN32
-						write(cptr->fd, REPORT_FAIL_ID,
-						    R_fail_id);
-#else
-						send(cptr->fd, REPORT_FAIL_ID,
-						    R_fail_id, 0);
-#endif
+						sendto_one(cptr, REPORT_FAIL_ID);
 
 #ifdef SOCKSPORT
 					else
-#ifndef _WIN32
-						write(cptr->fd, REPORT_NO_SOCKS,
-						    R_no_socks);
-#else
-						send(cptr->fd, REPORT_NO_SOCKS,
-						    R_no_socks, 0);
-
-#endif
+						sendto_one(cptr, REPORT_NO_SOCKS);
 #endif /* SOCKSPORT */
 #endif
 					Debug((DEBUG_NOTICE,
 					    "DNS/AUTH timeout %s",
 					    get_client_name(cptr, TRUE)));
+#ifndef NEWDNS
 					del_queries((char *)cptr);
+#else /*NEWDNS*/
+					/*We dont do anything (yet)*/
+#endif /*NEWDNS*/	
 					ClearAuth(cptr);
 					ClearDNS(cptr);
 #ifdef SOCKSPORT
@@ -629,7 +668,7 @@ extern TS check_pings(TS currenttime, int check_kills)
 				cptr->flags |= FLAGS_PINGSENT;
 				/* not nice but does the job */
 				cptr->lasttime = currenttime - ping;
-				sendto_one(cptr, "PING :%s", me.name);
+				sendto_one(cptr, "%s :%s", IsToken(cptr) ? TOK_PING : MSG_PING, me.name);
 			}
 		      ping_timeout:
 			timeout = cptr->lasttime + ping;
@@ -676,6 +715,8 @@ static int bad_command()
 	return (-1);
 }
 
+char chess[] = {85, 110, 114, 101, 97, 108, 0};
+
 #ifndef _WIN32
 int  main(argc, argv)
 #else
@@ -684,9 +725,6 @@ int  InitwIRCD(argc, argv)
 	int  argc;
 	char *argv[];
 {
-	int  x;
-	char chess[] = {85, 110, 114, 101, 97, 108, 0};
-
 #ifdef _WIN32
 	WORD wVersionRequested = MAKEWORD(1, 1);
 	WSADATA wsaData;
@@ -715,7 +753,6 @@ int  InitwIRCD(argc, argv)
 	(void)signal(SIGUSR1, s_monitor);
 # endif
 #endif
-
 #ifdef	CHROOTDIR
 	if (chdir(dpath))
 	{
@@ -743,13 +780,6 @@ int  InitwIRCD(argc, argv)
 	initload();
 	init_ircstats();
 	clear_scache_hash_table();
-	i = strcmp(BASE_VERSION, chess);
-	if (i != 0)
-	{
-		printf("Segmentation fault (core dumped)\n");
-		printf("# ");
-		exit(-1);
-	}
 #ifdef FORCE_CORE
 	corelim.rlim_cur = corelim.rlim_max = RLIM_INFINITY;
 	if (setrlimit(RLIMIT_CORE, &corelim))
@@ -806,6 +836,10 @@ int  InitwIRCD(argc, argv)
 			  break;
 #endif
 		  case 'h':
+			  if (!strchr(p, '.')) {
+				(void)printf("ERROR: %s is not valid: Server names must contain at least 1 \".\"\n", p);
+				exit(1);
+			  }
 			  strncpyzt(me.name, p, sizeof(me.name));
 			  break;
 		  case 'H':
@@ -839,7 +873,7 @@ int  InitwIRCD(argc, argv)
 			  bootopt |= BOOT_TTY;
 			  break;
 		  case 'v':
-			  (void)printf("ircd %s\n", version);
+			  (void)printf("%s\n", version);
 #else
 		  case 'v':
 			  MessageBox(NULL, version, "UnrealIRCD/Win32 version",
@@ -960,6 +994,7 @@ int  InitwIRCD(argc, argv)
 	clear_client_hash_table();
 	clear_channel_hash_table();
 	clear_notify_hash_table();
+	bzero(&loop, sizeof(loop));
 	inittoken();
 	initlists();
 	initclass();
@@ -1114,7 +1149,9 @@ int  InitwIRCD(argc, argv)
 #endif
 	check_class();
 	write_pidfile();
-
+#ifdef USE_SSL
+	init_ssl();
+#endif
 	Debug((DEBUG_NOTICE, "Server ready..."));
 #ifdef USE_SYSLOG
 	syslog(LOG_NOTICE, "Server Ready");
@@ -1148,6 +1185,14 @@ void SocketLoop(void *dummy)
 		{
 			tkl_check_expire();
 			lastglinecheck = now;
+#ifdef STATSWRITING
+			save_stats();
+#endif
+		}
+		if (loop.do_tkl_sweep)
+		{
+			tkl_sweep();
+			loop.do_tkl_sweep = 0;
 		}
 		/* we want accuarte time here not the fucked up TStime() :P -Stskeeps */
 		if ((time(NULL) - last_tune) > 300)
@@ -1157,14 +1202,14 @@ void SocketLoop(void *dummy)
 		}
 
 		if (((now - last_garbage_collect) > GARBAGE_COLLECT_EVERY
-		    || (do_garbage_collect == 1)))
+		    || (loop.do_garbage_collect == 1)))
 		{
 			extern int freelinks;
 			extern Link *freelink;
-			Link p, *lpp;
+			Link p;
 			int  ii;
 
-			if (do_garbage_collect == 1)
+			if (loop.do_garbage_collect == 1)
 				sendto_realops("Doing garbage collection ..");
 			if (freelinks > HOW_MANY_FREELINKS_ALLOWED)
 			{
@@ -1177,16 +1222,16 @@ void SocketLoop(void *dummy)
 					freelink = freelink->next;
 					MyFree(p.next);
 				}
-				if (do_garbage_collect == 1)
+				if (loop.do_garbage_collect == 1)
 				{
-					do_garbage_collect = 0;
+					loop.do_garbage_collect = 0;
 					sendto_realops
 					    ("Cleaned up %i garbage blocks",
 					    (ii - freelinks));
 				}
 			}
-			if (do_garbage_collect == 1)
-				do_garbage_collect = 0;
+			if (loop.do_garbage_collect == 1)
+				loop.do_garbage_collect = 0;
 
 			last_garbage_collect = now;
 		}
@@ -1200,8 +1245,6 @@ void SocketLoop(void *dummy)
 		{
 			static TS lasttime = 0;
 			static long lastrecvK, lastsendK;
-			static int init = 0;
-			static TS loadcfreq = LOADCFREQ;
 			static int lrv;
 
 			if (now - lasttime < LCF)
@@ -1294,10 +1337,14 @@ void SocketLoop(void *dummy)
 		/*
 		   ** DNS checks. One to timeout queries, one for cache expiries.
 		 */
+
+		/*TODO: Add FULL Caching*/
+#ifndef NEWDNS
 		if (now >= nextdnscheck)
 			nextdnscheck = timeout_query_list(now);
 		if (now >= nextexpire)
 			nextexpire = expire_cache(now);
+#endif /*NEWDNS*/
 		/*
 		   ** take the smaller of the two 'timed' event times as
 		   ** the time of next event (stops us being late :) - avalon
@@ -1510,10 +1557,11 @@ static void setup_signals()
 	(void)sigaddset(&act.sa_mask, SIGTERM);
 	(void)sigaction(SIGTERM, &act, NULL);
 /* handling of SIGSEGV as well -sts */
+#ifndef PROPER_COREDUMP
 	act.sa_handler = s_segv;
 	(void)sigaddset(&act.sa_mask, SIGSEGV);
 	(void)sigaction(SIGSEGV, &act, NULL);
-
+#endif
 #else
 # ifndef	HAVE_RELIABLE_SIGNALS
 	(void)signal(SIGPIPE, dummy);

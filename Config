@@ -11,7 +11,7 @@
 # distribution without the author's prior consent.
 #
 # $Id$
-IRCD_VERSION="Unreal3.1"
+IRCD_VERSION="Unreal3.1.1-Darkshades"
 CONF_DATE=`date`
 LAST_VERSION="very very old"
 #
@@ -44,11 +44,14 @@ GETTIMEOFDAY=undef
 LRAND48=undef
 STRTOUL=undef
 OPENSSL=""
+OPENSSL_OTHERPLACE=""
 REGEXP=""
 NEEDSKIPNAME=""
 CRYPTOLIB=""
 CRYPTOIRCD=""
+OPENSSLPATH=""
 CCPATH=''
+STRCASECMP=undef
 SIGNAL=''
 BLOCKING=''
 TMP=/tmp/.Configtmp$$.c
@@ -503,12 +506,13 @@ else
 	echo 'not found (good!)'
 fi
 
-echo $n "...Looking for /usr/include/openssl/blowfish.h...$c"
-if [ -r /usr/include/openssl/blowfish.h ] ; then
+echo $n "...Looking for /usr/include/openssl/ssl.h...$c"
+if [ -r /usr/include/openssl/ssl.h ] ; then
 	OPENSSL=define
 	echo 'found!'
 else
-	echo 'not found (you will not be able to do secure connections)'
+	echo 'not found (you will not be able to do secure connections'
+	echo 'If you do have it, please type in ln -s <openssl include dir> /usr/include/openssl'
 fi
 
 echo $n "...Looking for /usr/include/regex.h...$c"
@@ -522,6 +526,33 @@ else
 	./configure
 	make
 	cd ../..
+fi
+
+if [ -r /usr/include/openssl/ssl.h ] ; then
+       echo $n "...Looking where you got the openssl binary...$c"
+       if [ -r /bin/openssl ] ; then
+               OPENSSLPATH=/bin/openssl
+               echo $OPENSSLPATH
+       elif [ -r /usr/bin/openssl ] ; then
+               OPENSSLPATH=/usr/bin/openssl
+               echo $OPENSSLPATH
+       elif [ -r /usr/sbin/openssl ] ; then
+               OPENSSLPATH=/usr/sbin/openssl
+               echo $OPENSSLPATH
+       elif [ -r /usr/local/bin/openssl ] ; then
+               OPENSSLPATH=/usr/local/bin/openssl
+               echo $OPENSSLPATH
+       elif [ -r /usr/local/ssl/bin/openssl ] ; then
+               OPENSSLPATH=/usr/local/ssl/bin/openssl
+               echo $OPENSSLPATH
+       elif [ -r `which openssl` ] ; then
+		OPENSSLPATH=`which openssl`
+		echo $OPENSSLPATH
+       else
+               echo "Couldn't find it! (bad)"
+               OPENSSLPATH=/bin/false
+               OPENSSLPATH=/bin/false
+       fi
 fi
 
 #
@@ -792,7 +823,6 @@ else
 	fi
 fi
 $RM -f $EXEC $TMP
-
 #
 # what do we need that isn't here already ?
 #
@@ -993,8 +1023,25 @@ if [ $? -ne 0 ] ; then
 	echo $n " inet_netof$c"
 	NINETNETOF=define
 fi
-$RM -f $EXEC $TMP
 echo " "
+$RM -f $EXEC $TMP
+cat > $TMP << __EOF__
+#include <string.h>
+main()
+{
+	strcasecmp("moo", "moo");
+}
+__EOF__
+$COMP 
+# >/dev/null 2>&1
+if [ $? -ne 0 ] ; then
+	echo $n " strcasecmp $c "
+	STRCASECMP=undef
+else
+	STRCASECMP=define
+fi
+$RM -f $EXEC $TMP
+
 #
 #
 #
@@ -1074,6 +1121,7 @@ cat > $SETUP  <<__EOF__
 #$NINETNETOF	NEED_INET_NETOF
 #$GETTIMEOFDAY	GETTIMEOFDAY
 #$LRAND48	LRAND48
+#$STRCASECMP GOT_STRCASECMP
 __EOF__
 if [ "$MALLOCH" = "undef" ] ; then
 	echo "#undef	MALLOCH" >> $SETUP
@@ -1281,7 +1329,7 @@ while [ -z "$FOO" ] ; do
 	FOO="No"
     fi
     echo ""
-    echo "Do you want to support encrypted connections"
+    echo "Do you want to support SSL (Secure Sockets Layer) connections"
     echo $n "[$FOO] -> $c"
     if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
 	read cc
@@ -1295,7 +1343,7 @@ while [ -z "$FOO" ] ; do
     case "$cc" in
 	[Yy]*)
 	    CRYPTOIRCD="1"
-	    CRYPTOLIB="-lcrypto"
+	    CRYPTOLIB="-lssl -lcrypto"
 	    ;;
 	[Nn]*)
 	    CRYPTOIRCD=""
@@ -1709,6 +1757,30 @@ else
 	
 fi
 
+if [ -n "$CRYPTOIRCD" ] ; then
+       $RM -f Makefile.tmp
+       sed -e "s@^OPENSSLPATH=\(.*\)@OPENSSLPATH=$OPENSSLPATH@" Makefile > Makefile.tmp
+       cp Makefile.tmp Makefile
+       $RM -f Makefile.tmp
+else
+    $RM -f Makefile.tmp
+    sed -e "s@^OPENSSLPATH=\(.*\)@OPENSSLPATH=@" Makefile > Makefile.tmp
+    cp Makefile.tmp Makefile
+    $RM -f Makefile.tmp
+fi
+
+if [ -n "$OPENSSL_OTHERPLACE" ] ; then
+       $RM -f Makefile.tmp
+       sed -e "s@^OPENSSLINCLUDE=\(.*\)@OPENSSLINCLUDES=-I/usr/local/ssl/include/openssl@" Makefile > Makefile.tmp
+       cp Makefile.tmp Makefile
+       $RM -f Makefile.tmp
+else
+    $RM -f Makefile.tmp
+    sed -e "s@^OPENSSLINCLUDE=\(.*\)@OPENSSLINCLUDES=@" Makefile > Makefile.tmp
+    cp Makefile.tmp Makefile
+    $RM -f Makefile.tmp
+fi
+
 if [ -n "$REGEX" ] ; then
     $RM -f Makefile.tmp
     sed -e "s@^REGEX=\(.*\)@REGEX=@" Makefile > Makefile.tmp
@@ -1756,9 +1828,9 @@ else
     echo "#undef CRYPT_OPER_PASSWORD" >> $OPTIONS_H
 fi
 if [ -n "$CRYPTOIRCD" ] ; then
-    echo "#define CRYPTOIRCD 1" >> $OPTIONS_H
+    echo "#define USE_SSL 1" >> $OPTIONS_H
 else
-    echo "#undef CRYPTOIRCD" >> $OPTIONS_H
+    echo "#undef USE_SSL" >> $OPTIONS_H
 fi
 if [ -n "$CRYPT_LINK_PASSWORD" ] ; then
     echo "#define CRYPT_LINK_PASSWORD 1" >> $OPTIONS_H
@@ -1834,6 +1906,16 @@ if [ "$OSNAME" = "Linux (with GLIBC 2.x or greater)" ]; then
    echo ""
 fi
 
+if [ -n "$CRYPTOIRCD" ] ; then
+    if [ ! -f server.req.pem ]; then
+	    echo "Using openssl in $OPENSSLPATH .."
+	    export OPENSSLPATH
+    	    make pem
+            cat .SICI
+            read cc
+    fi
+fi
+
 cat << __EOF__
 
  _____________________________________________________________________
@@ -1852,8 +1934,8 @@ cat << __EOF__
 |_____________________________________________________________________|
 |_____________________________________________________________________|
 | - The UnrealIRCd Team -                                             |
-| * Stskeeps  stskeeps@tspre.org                                      |
-| * codemastr codemastr@tspre.org                                     |
-| * DrBin     drbin@tspre.org                                         |
+| * Stskeeps  stskeeps@unrealircd.com                                 |
+| * codemastr codemastr@unrealircd.com                                |
+| * DrBin     drbin@unrealircd.com                                    |
 |_____________________________________________________________________|
 __EOF__

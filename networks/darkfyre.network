@@ -1,0 +1,39 @@
+ver^2.2
+#
+# Network Configuration File Template
+# -----------------------------------------
+# Added-at: <day> <month> <year> <hh:dd> GMT
+# Author: <nick> (<real name>)
+# E-Mail: <email>
+# $Id$
+# -----------------------------------------
+# This is a template so you can create your own network configuration files
+# Just follow the instructions and it will prolly work ;)
+ver^2.2
+#
+# Darkfyre (irc.darkfyre.net) Network Configuration File
+# --------------------------------------------------
+# Added-at: 10 September 2000 22:23
+# Author: Mel
+# Email: mel19791@home.com <mailto:mel19791@home.com>
+# -----------------------------------------
+#
+
+Network >..........: Darkfyre
+Set ircnetwork ....: Darkfyre
+Set defserv .......: irc.darkfyre.net
+Set SERVICES_NAME .: Services.Darkfyre.Net
+Set oper_host .....: IRCop.Darkfyre.Net
+Set admin_host ....: Admin.Darkfyre.Net
+Set locop_host ....: LocalOp.Darkfyre.Net
+Set sadmin_host ...: CSop.Darkfyre.Net
+Set netadmin_host .: NetAdmin.Darkfyre.Net
+Set coadmin_host ..: CoAdmin.Darkfyre.Net
+Set techadmin_host : TechAdmin.Darkfyre.Net
+Set hidden_host ...: darkfyre
+Set netdomain .....: Darkfyre.net
+Set helpchan ......: #help
+Set STATS_SERVER ..: Stats.Darkfyre.Net
+Set HUB ...........: not_in_use
+Set iNAH ..........: 1
+Set net_quit ......: not_in_use

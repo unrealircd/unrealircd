@@ -1,7 +1,7 @@
 /************************************************************************
 /************************************************************************
  *   IRC - Internet Relay Chat, s_unreal.c
- *   (C) 1999 Carsten Munk (Techie/Stskeeps) <cmunk@toybox.flirt.org>
+ *   (C) 1999-2000 Carsten Munk (Techie/Stskeeps) <stskeeps@tspre.org>
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers. 
@@ -34,9 +34,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifndef _WIN32
-#include <utmp.h>
-#else
+#ifdef _WIN32
 #include <io.h>
 #endif
 #include <fcntl.h>
@@ -80,7 +78,6 @@ int  m_sethost(cptr, sptr, parc, parv)
 #else
 	int  permit = 2;
 #endif
-	int  donotice = 0;	/* send out notices if local connect ( 0 = NOT 1 = yes ) */
 	int  legalhost = 1;	/* is legal characters? */
 
 
@@ -272,7 +269,7 @@ int  m_chghost(cptr, sptr, parc, parv)
 
 	if ((acptr = find_person(parv[1], NULL)))
 	{
-		if (!IsULine(cptr, sptr))
+		if (!IsULine(sptr))
 		{
 			sendto_umode(UMODE_EYES,
 			    "%s changed the virtual hostname of %s (%s@%s) to be %s",
@@ -286,7 +283,7 @@ int  m_chghost(cptr, sptr, parc, parv)
 		if (acptr->user->virthost)
 			MyFree(acptr->user->virthost);
 		acptr->user->virthost = MyMalloc(strlen(parv[2]) + 1);
-		sprintf(acptr->user->virthost, "%s", parv[2]);
+		ircsprintf(acptr->user->virthost, "%s", parv[2]);
 		return 0;
 	}
 	else
@@ -376,7 +373,7 @@ int  m_chgident(cptr, sptr, parc, parv)
 
 	if ((acptr = find_person(parv[1], NULL)))
 	{
-		if (!IsULine(cptr, sptr))
+		if (!IsULine(sptr))
 		{
 			sendto_umode(UMODE_EYES,
 			    "%s changed the virtual ident of %s (%s@%s) to be %s",
@@ -387,7 +384,7 @@ int  m_chgident(cptr, sptr, parc, parv)
 		sendto_serv_butone_token(cptr, sptr->name,
 		    MSG_CHGIDENT,
 		    TOK_CHGIDENT, "%s %s", acptr->name, parv[2]);
-		sprintf(acptr->user->username, "%s", parv[2]);
+		ircsprintf(acptr->user->username, "%s", parv[2]);
 		return 0;
 	}
 	else
@@ -421,7 +418,6 @@ int  m_setident(cptr, sptr, parc, parv)
 #else
 	int  permit = 2;
 #endif
-	int  donotice = 0;	/* send out notices if local connect ( 0 = NOT 1 = yes ) */
 	int  legalident = 1;	/* is legal characters? */
 	if (!MyConnect(sptr))
 		goto permit_2;
@@ -514,7 +510,7 @@ int  m_setident(cptr, sptr, parc, parv)
 	}
 
 	/* get it in */
-	sprintf(sptr->user->username, "%s", vident);
+	ircsprintf(sptr->user->username, "%s", vident);
 	/* spread it out */
 	sendto_serv_butone_token(cptr, sptr->name,
 	    MSG_SETIDENT, TOK_SETIDENT, "%s", parv[1]);
@@ -566,7 +562,7 @@ int  m_setname(cptr, sptr, parc, parv)
 
 	/* set the new name before we check, but don't send to servers unless it is ok */
 	else
-		sprintf(sptr->info, "%s", parv[1]);
+		ircsprintf(sptr->info, "%s", parv[1]);
 
 	/* Check for n:lines here too */
 	if (!IsAnOper(sptr) && find_nline(sptr))
@@ -632,7 +628,7 @@ int  m_sdesc(cptr, sptr, parc, parv)
 		return 0;
 	}
 
-	sprintf(sptr->srvptr->info, "%s", parv[1]);
+	ircsprintf(sptr->srvptr->info, "%s", parv[1]);
 
 	sendto_serv_butone_token(cptr, sptr->name, MSG_SDESC, TOK_SDESC, ":%s",
 	    parv[1]);
@@ -679,8 +675,8 @@ int  m_admins(cptr, sptr, parc, parv)
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
-	sendto_serv_butone(IsServer(cptr) ? cptr : NULL,
-	    ":%s ADCHAT :%s", parv[0], message);
+	sendto_serv_butone_token(IsServer(cptr) ? cptr : NULL, parv[0],
+   	    MSG_ADMINCHAT, TOK_ADMINCHAT, ":%s", message);	
 #ifdef ADMINCHAT
 	sendto_umode(UMODE_ADMIN, "*** AdminChat -- from %s: %s",
 	    parv[0], message);
@@ -720,8 +716,8 @@ int  m_techat(cptr, sptr, parc, parv)
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
-	sendto_serv_butone(IsServer(cptr) ? cptr : NULL,
-	    ":%s TECHAT :%s", parv[0], message);
+	sendto_serv_butone_token(IsServer(cptr) ? cptr : NULL, parv[0],
+	   MSG_TECHAT, TOK_TECHAT, ":%s", message);
 #ifdef ADMINCHAT
 	sendto_umode(UMODE_TECHADMIN, "*** Te-chat -- from %s: %s",
 	    parv[0], message);
@@ -762,8 +758,8 @@ int  m_nachat(cptr, sptr, parc, parv)
 		return 0;
 	}
 
-	sendto_serv_butone(IsServer(cptr) ? cptr : NULL,
-	    ":%s NACHAT :%s", parv[0], message);
+	sendto_serv_butone_token(IsServer(cptr) ? cptr : NULL, parv[0],
+	   MSG_NACHAT, TOK_NACHAT, ":%s", message);
 #ifdef ADMINCHAT
 	sendto_umode(UMODE_NETADMIN, "*** NetAdmin.Chat -- from %s: %s",
 	    parv[0], message);
@@ -861,11 +857,11 @@ static char *militime(char *sec, char *usec)
 	tv.tv_usec = 0;
 #endif
 	if (sec && usec)
-		sprintf(timebuf, "%ld",
+		ircsprintf(timebuf, "%ld",
 		    (tv.tv_sec - atoi(sec)) * 1000 + (tv.tv_usec -
 		    atoi(usec)) / 1000);
 	else
-		sprintf(timebuf, "%ld %ld", tv.tv_sec, tv.tv_usec);
+		ircsprintf(timebuf, "%ld %ld", tv.tv_sec, tv.tv_usec);
 
 	return timebuf;
 }
@@ -1024,11 +1020,7 @@ int  m_swhois(cptr, sptr, parc, parv)
 {
 	aClient *acptr;
 
-/*	if (!IsServer(sptr) && !IsULine(cptr, sptr) && !(IsNetAdmin(sptr) || IsTechAdmin(sptr)))
-	{
-		return 0;
-	}*/
-	if (!IsServer(sptr) && !IsULine(cptr, sptr))
+	if (!IsServer(sptr) && !IsULine(sptr))
 		return 0;
 	if (parc < 3)
 		return 0;
@@ -1040,9 +1032,9 @@ int  m_swhois(cptr, sptr, parc, parv)
 	if (acptr->user->swhois)
 		MyFree(acptr->user->swhois);
 	acptr->user->swhois = MyMalloc(strlen(parv[2]) + 1);
-	sprintf(acptr->user->swhois, "%s", parv[2]);
-	sendto_serv_butone(cptr, ":%s SWHOIS %s :%s", sptr->name, parv[1],
-	    parv[2]);
+	ircsprintf(acptr->user->swhois, "%s", parv[2]);
+	sendto_serv_butone_token(cptr, sptr->name,
+	   MSG_SWHOIS, TOK_SWHOIS, "%s :%s", parv[1], parv[2]);
 	return 0;
 }
 /*
@@ -1111,9 +1103,10 @@ int  m_sendumode(cptr, sptr, parc, parv)
 		  case 'A':
 			  sendto_umode(UMODE_ADMIN, "%s", parv[2]);
 			  break;
-		  case '1':
+/*		  case '1':
 			  sendto_umode(UMODE_CODER, "%s", parv[2]);
 			  break;
+*/
 		  case 'I':
 			  sendto_umode(UMODE_HIDING, "%s", parv[2]);
 			  break;
@@ -1125,6 +1118,11 @@ int  m_sendumode(cptr, sptr, parc, parv)
 			  break;
 		  case 'T':
 			  sendto_umode(UMODE_TECHADMIN, "%s", parv[2]);
+			  break;
+		  case '*':
+		  	  sendto_all_butone(NULL, &me, ":%s NOTICE :%s", 
+			   	me.name, parv[2]);  	  	
+					  	  	 	 
 			  break;
 		}
 	}
@@ -1239,7 +1237,7 @@ int  m_tsctl(cptr, sptr, parc, parv)
 			{
 				return 0;
 			}
-			if (!IsULine(cptr, sptr))
+			if (!IsULine(sptr))
 			{
 				return 0;
 			}
@@ -1258,54 +1256,6 @@ int  m_tsctl(cptr, sptr, parc, parv)
 }
 
 
-/*
-** m_svso - Stskeeps
-**      parv[0] = sender prefix
-**      parv[1] = nick
-**      parv[2] = options
-*/
-
-int  m_svso(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
-{
-	aClient *acptr;
-	long fLag;
-
-	if (!IsULine(cptr, sptr))
-		return 0;
-
-	if (parc < 3)
-		return 0;
-
-	if (!(acptr = find_client(parv[1], (aClient *)NULL)))
-		return 0;
-
-	if (!MyClient(acptr))
-	{
-		sendto_one(acptr, ":%s SVSO %s %s", parv[0], parv[1], parv[2]);
-		return 0;
-	}
-
-	if (*parv[2] == '-')
-	{
-		fLag = acptr->umodes;
-		if (IsOper(acptr))
-			IRCstats.operators--;
-		acptr->umodes &=
-		    ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP | UMODE_SERVICES |
-		    UMODE_SADMIN | UMODE_ADMIN);
-		acptr->umodes &=
-		    ~(UMODE_NETADMIN | UMODE_TECHADMIN | UMODE_CLIENT |
-		    UMODE_FLOOD | UMODE_EYES | UMODE_CHATOP | UMODE_WHOIS);
-		acptr->umodes &=
-		    ~(UMODE_KIX | UMODE_FCLIENT | UMODE_HIDING | UMODE_CODER |
-		    UMODE_DEAF | UMODE_HIDEOPER);
-		acptr->oflag = 0;
-		send_umode_out(acptr, acptr, fLag);
-	}
-}
 
 #ifdef GUEST
 int m_guest (cptr, sptr, parc, parv)
@@ -1479,7 +1429,6 @@ int  m_chgname(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	aClient *acptr;
-	char *s;
 
 #ifdef DISABLE_USERMOD
 	if (MyClient(sptr))
@@ -1526,7 +1475,7 @@ int  m_chgname(cptr, sptr, parc, parv)
 	if ((acptr = find_person(parv[1], NULL)))
 	{
 		/* set the realname first to make n:line checking work */
-		sprintf(acptr->info, "%s", parv[2]);
+		ircsprintf(acptr->info, "%s", parv[2]);
 		/* only check for n:lines if the person who's name is being changed is not an oper */
 		if (!IsAnOper(acptr) && find_nline(acptr)) {
 			int xx;
@@ -1535,7 +1484,7 @@ int  m_chgname(cptr, sptr, parc, parv)
 			   "Your GECOS (real name) is banned from this server");
 			return xx;
 		}
-		if (!IsULine(cptr, sptr))
+		if (!IsULine(sptr))
 		{
 			sendto_umode(UMODE_EYES,
 			    "%s changed the GECOS of %s (%s@%s) to be %s",
@@ -1556,74 +1505,3 @@ int  m_chgname(cptr, sptr, parc, parv)
 	return 0;
 }
 
-#ifdef CRYPTOIRCD
-/*
- *  parv[0] = sender
- *  parv[1] = algoritm (BLOWFISH, DES, RC5, etc)
- *  parv[2] = keyfile
- *  parv[3] = parameters, * if none
-*/
-int  m_crypto(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
-{
-	aClient *acptr;
-	int method;
-	FILE *f;
-	char	string[512], *s;
-	
-	if (parc < 4)
-		return 0;
-
-	if (!strcmp(parv[1], "BLOWFISH"))
-	{
-		method = METHOD_BLOWFISH;
-	}
-		else
-	if (!strcmp(parv[1], "OFF"))
-	{
-		if (IsSecure(sptr))
-			ClearSecure(sptr);
-		
-		sendto_one(sptr, "CRYPTO ERROR :Secure connection breaked");
-		return 0;
-	}
-		else
-	if (!strcmp(parv[1], "ON"))
-		return 0;
-	
-	if (method == METHOD_BLOWFISH)
-	{
-		if (strchr(parv[2], '/') || strchr(parv[2], '\\'))
-		{
-			sendto_one(sptr, "CRYPTO ERROR :Illegal keypath");
-			return 0;
-		}
-		ircsprintf(string, "keys/%s", parv[2]);
-		f = fopen(string, "r");
-		if (!f)
-		{
-			sendto_one(sptr, "CRYPTO ERROR :Failed to open keyfile %s", parv[2]);
-			return 0;
-		}		
-		
-		s = fgets(string, 510, f);
-		if (!s)
-		{
-			sendto_one(sptr, "CRYPTO ERROR :Unable to read keyfile %s", parv[2]);
-			return 0;
-		}		
-		fclose(f);
-		iCstrip(string);
-		sptr->cryptinfo = (aCryptInfo *) MyMalloc(sizeof(aCryptInfo));
-		sptr->cryptinfo->method = method;
-		sptr->cryptinfo->key = (void *) MyMalloc(sizeof(BF_KEY));
-		BF_set_key(sptr->cryptinfo->key, strlen(string), string);
-		sendto_one(sptr, "CRYPTO ON BLOWFISH");
-		SetSecure(sptr);
-		return 0;
-	}
-	sendto_one(sptr, "CRYPTO ERROR :No such method/command %s", parv[1]);
-}
-#endif

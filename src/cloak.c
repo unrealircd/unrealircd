@@ -36,9 +36,7 @@ static char sccxid[] = "@(#)cloak.c		9.00 7/12/99 UnrealIRCd";
 #include "userload.h"
 #include <sys/stat.h>
 #include <fcntl.h>
-#ifndef _WIN32
-#include <utmp.h>
-#endif
+#include <string.h>
 #include "h.h"
 
 
@@ -213,7 +211,7 @@ char *make_virthost(char *curr, char *new, int mode)
 	char *x;
 	int  i;
 	if (curr == NULL)
-		return;
+		return (char *)NULL;
 
 	mask = hidehost(curr, 0);
 	if (mode == 0)

@@ -2,23 +2,36 @@
 # Win32Gui Config File .. By DrBin
 #
 CC=cl
+COMPILERHELP=compilerhelp.exe
 # Here you put your settings
 FD_SETSIZE=/D FD_SETSIZE=16384
 NS_ADDRESS=/D NS_ADDRESS="\"nospoof@dal.net\""
 
 !IFNDEF DEBUG
 
-CFLAGS=/MT /O2 /G5 /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D _WIN32GUI /D NOSPOOF=1 /c
+!IFNDEF DISTDEBUG
+CFLAGS=/MT /O2 /G5 /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D _WIN32GUI /D USENEWDNS /D NOSPOOF=1 /c
 
-LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib \
+LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib \
  oldnames.lib libcmt.lib comctl32.lib /nodefaultlib /nologo /out:WIRCD2.EXE
 
 !ELSE
 
-CFLAGS=/MTd /O2 /G5 /Od /ZI /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D DEBUG /D DEBUGMODE /D _DEBUG /D _WIN32GUI /D NOSPOOF=1 /c
-
+CFLAGS=  /MTd /Zi /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D USENEWDNS /D _WIN32GUI /D NOSPOOF=1 /c
+#/Od /Yd /G5
 LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib \
- oldnames.lib libcmt.lib comctl32.lib /nodefaultlib /nologo /debug /OUT:WIRCD.EXE
+ oldnames.lib libcmt.lib comctl32.lib /nodefaultlib /nologo /debug /debugtype:BOTH /OUT:WIRCD.EXE
+
+
+!ENDIF
+
+
+!ELSE
+
+CFLAGS=  /MTd /Zi /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D DEBUG /D DEBUGMODE /D USENEWDNS /D _DEBUG /D _WIN32GUI /D NOSPOOF=1 /c
+#/Od /Yd /G5
+LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib \
+ oldnames.lib libcmt.lib comctl32.lib /nodefaultlib /nologo /debug /debugtype:BOTH /OUT:WIRCD.EXE
 
 !ENDIF
 
@@ -27,21 +40,21 @@ INCLUDES=./include/struct.h ./include/config.h ./include/sys.h \
  ./include/common.h ./include/version.h ./include/h.h ./include/numeric.h \
  ./include/msg.h ./include/setup.h ./include/dynconf.h
 LINK=link.exe
-
+# SRC/RES.OBJ SRC/RES_INIT.OBJ SRC/RES_COMP.OBJ
 OBJ_FILES=SRC/CHANNEL.OBJ SRC/USERLOAD.OBJ SRC/SEND.OBJ SRC/BSD.OBJ \
- SRC/S_CONF.OBJ SRC/FDLIST.OBJ SRC/DBUF.OBJ SRC/RES.OBJ \
+ SRC/S_CONF.OBJ SRC/FDLIST.OBJ SRC/DBUF.OBJ  \
  SRC/CLOAK.OBJ SRC/HASH.OBJ SRC/PARSE.OBJ SRC/IRCD.OBJ \
- SRC/S_NUMERIC.OBJ SRC/WHOWAS.OBJ SRC/RES_COMP.OBJ SRC/S_AUTH.OBJ \
+ SRC/S_NUMERIC.OBJ SRC/WHOWAS.OBJ  SRC/S_AUTH.OBJ \
  SRC/HELP.OBJ SRC/S_MISC.OBJ SRC/MATCH.OBJ SRC/CRULE.OBJ \
- SRC/S_DEBUG.OBJ SRC/RES_INIT.OBJ SRC/SUPPORT.OBJ SRC/LIST.OBJ \
+ SRC/S_DEBUG.OBJ  SRC/SUPPORT.OBJ SRC/LIST.OBJ \
  SRC/S_ERR.OBJ SRC/PACKET.OBJ SRC/CLASS.OBJ SRC/S_BSD.OBJ \
  SRC/S_SERV.OBJ SRC/S_USER.OBJ SRC/WIN32GUI.OBJ \
- SRC/VERSION.OBJ SRC/win32/WIN32.RES SRC/S_UNREAL.OBJ SRC/DYNCONF.OBJ \
+ SRC/VERSION.OBJ SRC/S_UNREAL.OBJ SRC/DYNCONF.OBJ \
  SRC/S_SOCKS.OBJ SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ \
- SRC/SCACHE.OBJ SRC/ALN.OBJ
+ SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/NEWDNS.OBJ src/version.obj
 RC=rc.exe
 
-ALL: WIRCD.EXE CHKCONF.EXE
+ALL: COMPILERHELP.EXE WIRCD.EXE
 
 CLEAN:
         -@erase src\*.exe 2>NUL
@@ -59,15 +72,20 @@ CLEAN:
 #src/version.c: dummy
 #        @config.exe -v
 
-src/version.obj: src/win32/version.c
-        $(CC) $(CFLAGS) src/win32/version.c
+./COMPILERHELP.EXE:
+	cl src/win32/compilerhelp.c /link /out:compilerhelp.exe
 
-./WIRCD.EXE: $(OBJ_FILES) src/win32/version.obj
-        $(LINK) $(LFLAGS) $(OBJ_FILES)
+./WIRCD.EXE: $(OBJ_FILES) SRC/win32/WIN32.RES
+        $(LINK) $(LFLAGS) $(OBJ_FILES) SRC/win32/WIN32.RES SRC/WIN32/GNU_REGEX.LIB SRC/WIN32/DEBUG/STACKTRACE.LIB /MAPINFO:LINES /MAP
+	-@erase src\win32\win32.res
 !IFNDEF DEBUG
- Non Debug version built 
+!IFNDEF DISTDEBUG
+ @echo Non Debug version built 
 !ELSE
- Debug version built ... 
+ @echo Distribution DEBUG Version Built
+!ENDIF
+!ELSE
+ @echo Debug version built ... 
 !ENDIF
 
 ./CHKCONF.EXE: ./include/struct.h ./include/config.h ./include/sys.h \
@@ -78,8 +96,20 @@ src/version.obj: src/win32/version.c
         $(LINK) /nologo /out:./chkconf.exe src/chkconf.obj src/chkmatch.obj \
                 src/chkcrule.obj
 
+src/newdns.obj: src/newdns.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/newdns.c
+
+src/version.obj: src/win32/version.c
+        $(CC) $(CFLAGS) src/win32/version.c
+
 src/parse.obj: src/parse.c $(INCLUDES)
         $(CC) $(CFLAGS) src/parse.c
+
+src/badwords.obj: src/badwords.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/badwords.c
+
+src/webtv.obj: src/webtv.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/webtv.c
 
 src/bsd.obj: src/bsd.c $(INCLUDES)
         $(CC) $(CFLAGS) src/bsd.c
@@ -201,9 +231,15 @@ src/md5.obj: src/md5.c $(INCLUDES)
         $(CC) $(CFLAGS) src/md5.c
 
 src/win32/win32.res: src/win32/win32gui.rc
+!IFNDEF DISTDEBUG
+	$(COMPILERHELP) src/win32/leavealone.h
+!ELSE
+	$(COMPILERHELP) src/win32/leavealone.h 0
+!ENDIF
         $(RC) /l 0x409 /fosrc/win32/win32.res /i ./include /i ./src \
               /d NDEBUG src/win32/win32gui.rc
 
 dummy:
+
 
 

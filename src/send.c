@@ -37,7 +37,7 @@ static char sccsid[] =
 #ifdef _WIN32
 #include <io.h>
 #endif
-
+#include <string.h>
 
 void vsendto_one(aClient *to, char *pattern, va_list vl);
 void sendbufto_one(aClient *to);
@@ -50,6 +50,8 @@ extern fdlist oper_fdlist;
 #define NEWLINE	"\r\n"
 
 static char sendbuf[2048];
+static char tcmd[1024];
+static char ccmd[1024];
 
 static int send_message PROTO((aClient *, char *, int));
 
@@ -87,7 +89,13 @@ static int dead_link(to, notice)
 	DBufClear(&to->recvQ);
 	DBufClear(&to->sendQ);
 	if (!IsPerson(to) && !IsUnknown(to) && !(to->flags & FLAGS_CLOSING))
-		(void)sendto_failops_whoare_opers(notice, get_client_name(to, FALSE));
+		(void)sendto_failops_whoare_opers(notice, get_client_name(to, FALSE),
+#ifndef _WIN32
+		strerror(errno));
+#else
+		strerror(WSAGetLastError()));
+#endif
+		
 	Debug((DEBUG_ERROR, notice, get_client_name(to, FALSE)));
 	return -1;
 }
@@ -120,6 +128,7 @@ void flush_connections(fd)
 
 }
 /* flush an fdlist intelligently */
+#ifndef NO_FDLIST
 void flush_fdlist_connections(fdlist * listp)
 {
 	int  i, fd;
@@ -131,7 +140,7 @@ void flush_fdlist_connections(fdlist * listp)
 		    && DBufLength(&cptr->sendQ) > 0)
 			send_queued(cptr);
 }
-
+#endif
 
 /*
 ** send_queued
@@ -166,7 +175,7 @@ int  send_queued(to)
 		msg = dbuf_map(&to->sendQ, &len);
 		/* Returns always len > 0 */
 		if ((rlen = deliver_it(to, msg, len)) < 0)
-			return dead_link(to, "Write error to %s, closing link");
+			return dead_link(to, "Write error to %s, closing link (%s)");
 		(void)dbuf_delete(&to->sendQ, rlen);
 		to->lastsq = DBufLength(&to->sendQ) / 1024;
 		if (rlen < len)
@@ -202,8 +211,6 @@ void vsendto_one(aClient *to, char *pattern, va_list vl)
 void sendbufto_one(aClient *to)
 {
 	int  len;
-	char *s;
-	int  i;
 
 	Debug((DEBUG_ERROR, "Sending [%s] to %s", sendbuf, to->name));
 
@@ -242,16 +249,6 @@ void sendbufto_one(aClient *to)
 		sendto_ops("Trying to send [%s] to myself!", tmp_sendbuf);
 		return;
 	}
-#ifdef CRYPTOIRCD	
-	if (IsSecure(to))
-	{
-		s = (char *) ep_encrypt(to, sendbuf, &len);
-		bcopy(s, sendbuf, len);
-#ifdef DEVELOP
-		sendto_ops("Sent off encrypted packet len %i", len);
-#endif
-	}
-#endif
 	if (DBufLength(&to->sendQ) > get_sendq(to))
 	{
 		if (IsServer(to))
@@ -345,7 +342,7 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 			goto good;
 		if ((prefix & 0x4) && (lp->flags & CHFL_CHANOP))
 			goto good;
-		bad:	
+		bad:
 			continue;
 		good:
 		
@@ -369,6 +366,63 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 	va_end(vl);
 	return;
 }
+
+void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chptr,
+	int	prefix,
+    char *cmd, char *tok, char *nick, char *text)
+{
+	Link *lp;
+	aClient *acptr;
+	int  i;
+	
+	sprintf(tcmd, ":%s %s %s :%s", from->name, tok, nick, text);
+	sprintf(ccmd, ":%s %s %s :%s", from->name, cmd, nick, text);
+	for (i = 0; i < MAXCONNECTIONS; i++)
+		sentalong[i] = 0;
+	for (lp = chptr->members; lp; lp = lp->next)
+	{
+		acptr = lp->value.cptr;
+		if (acptr->from == one)
+			continue;	/* ...was the one I should skip
+					   or user not not a channel op */
+                if (prefix == 0)
+                	goto good;
+                if ((prefix & 0x1) && (lp->flags & CHFL_HALFOP))
+                	goto good;
+		if ((prefix & 0x2) && (lp->flags & CHFL_VOICE))
+			goto good;
+		if ((prefix & 0x4) && (lp->flags & CHFL_CHANOP))
+			goto good;
+		bad:
+			continue;
+		good:
+		
+		i = acptr->from->fd;
+
+		if (MyConnect(acptr) && IsRegisteredUser(acptr) && !(IsDeaf(acptr) 
+			&& !(sendanyways == 1)))
+		{
+			sendto_prefix_one(acptr, from, ":%s %s %s :%s",
+				from->name, cmd, nick, text);
+			sentalong[i] = 1;
+		}
+		else
+		{
+			/* Now check whether a message has been sent to this
+			 * remote link already */
+			if ((sentalong[i] == 0) && ((!IsDeaf(acptr) && !(sendanyways == 1))))
+			{
+				if (IsToken(acptr->from))
+					sendto_one(acptr, "%s", tcmd);
+				else
+					sendto_one(acptr, "%s", ccmd);
+				sentalong[i] = 1;
+			}
+		}
+	}
+	return;
+}
+
 
 /*
    sendto_chanops_butone -Stskeeps
@@ -586,8 +640,6 @@ void sendto_serv_butone_token(aClient *one, char *prefix, char *command,
 #ifndef NO_FDLIST
 	int  j;
 #endif
-	static char tcmd[1024];
-	static char ccmd[1024];
 	static char buff[1024];
 	static char pref[100];
 	va_start(vl, pattern);
@@ -669,7 +721,6 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 #ifndef NO_FDLIST
 	int  j;
 #endif
-	char	*p;
 	static char tcmd[1024];
 	static char ccmd[1024];
 	static char buff[1024];
@@ -728,6 +779,11 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 			continue;
 		if ((opt & OPT_SJ3) && !SupportSJ3(cptr))
 			continue;
+		if ((opt & OPT_SJB64) && !(cptr->proto & PROTO_SJB64))
+			continue;
+		if ((opt & OPT_NOT_SJB64) && (cptr->proto & PROTO_SJB64))
+			continue;
+		
 		if (IsToken(cptr))
 		{
 			if (SupportNS(cptr) && pref[0])
@@ -1227,62 +1283,6 @@ void sendto_failops(char *pattern, ...)
 }
 
 /*
- * sendto_chatops
- *
- *      Send to *local* mode +b ops only.
- */
-/*
-sendto_umode does just as good a job -- codemastr
-  void    sendto_chatops(char *pattern, ...)
-{
-        va_list vl;
-        aClient *cptr;
-        int     i;
-        char    nbuf[1024];
-
-        va_start(vl,pattern);
-        for (i = 0; i <= highest_fd; i++)
-                if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
-                    SendChatops(cptr))
-                    {
-                        (void)ircsprintf(nbuf, ":%s NOTICE %s :*** ChatOps -- ", 
-                                        me.name, cptr->name);
-                        (void)strncat(nbuf, pattern,
-                                        sizeof(nbuf) - strlen(nbuf));
-                        vsendto_one(cptr, nbuf, vl);
-                    }
-	va_end(vl);
-        return;
-} */
-
-/*
- * sendto_helpops
- *
- *	Send to mode +h people
- */
-void sendto_helpops(char *pattern, ...)
-{
-	va_list vl;
-	aClient *cptr;
-	int  i;
-	char nbuf[1024];
-
-	va_start(vl, pattern);
-	for (i = 0; i <= highest_fd; i++)
-		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
-		    IsHelpOp(cptr))
-		{
-			(void)ircsprintf(nbuf, ":%s NOTICE %s :*** HelpOp -- ",
-			    me.name, cptr->name);
-			(void)strncat(nbuf, pattern,
-			    sizeof(nbuf) - strlen(nbuf));
-			vsendto_one(cptr, nbuf, vl);
-		}
-	va_end(vl);
-	return;
-}
-
-/*
  * sendto_umode
  *
  *  Send to specified umode
@@ -1627,12 +1627,14 @@ void sendto_connectnotice(nick, user, sptr)
 	char connectd[1024];
 	char connecth[1024];
 	ircsprintf(connectd,
-	    "*** Notice -- Client connecting on port %d: %s (%s@%s) %s",
+	    "*** Notice -- Client connecting on port %d: %s (%s@%s) %s%s%s",
 	    sptr->acpt->port, nick, user->username, user->realhost,
-#ifdef CRYPTOIRCD    
-	IsSecure(sptr) ? "[secure]" : "");
+#ifdef USE_SSL
+	IsSecure(sptr) ? "[secure " : "", 
+	IsSecure(sptr) ? SSL_get_cipher((SSL *)sptr->ssl) : "",
+	IsSecure(sptr) ? "]" : "");
 #else
-	"");
+	"", "", "");
 #endif
 	ircsprintf(connecth,
 	    "*** Notice -- Client connecting: %s (%s@%s) [%s] {%d}", nick,
@@ -1663,7 +1665,6 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
     int lastnick, char *username, char *realhost, char *server,
     long servicestamp, char *info, char *umodes, char *virthost)
 {
-	va_list vl;
 	int  i;
 	aClient *cptr;
 #ifndef NO_FDLIST
@@ -1685,14 +1686,29 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 		{
 			if (SupportNICKv2(cptr))
 			{
-				sendto_one(cptr,
-				    "%s %s %d %d %s %s %s %lu %s %s :%s",
-				    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
-				    hopcount, lastnick, username, realhost,
-				    SupportNS(cptr) && sptr->srvptr->serv->numeric ? base64enc(sptr->srvptr->serv->numeric) : server,
-				    servicestamp, umodes, 
-					  (SupportVHP(cptr) ? (IsHidden(sptr) ? sptr->user->virthost : realhost) : virthost),
-					    info);
+				if (sptr->srvptr->serv->numeric && SupportNS(cptr))
+					sendto_one(cptr,
+						(cptr->proto & PROTO_SJB64) ? 
+					    "%s %s %d %B %s %s %b %lu %s %s :%s"
+					    :
+					    "%s %s %d %d %s %s %b %lu %s %s :%s"
+					    ,
+					    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
+					    hopcount, lastnick, username, realhost,
+					    sptr->srvptr->serv->numeric,
+					    servicestamp, umodes, 
+						  (SupportVHP(cptr) ? (IsHidden(sptr) ? sptr->user->virthost : realhost) : virthost),
+						    info);
+				else
+					sendto_one(cptr,
+					    "%s %s %d %d %s %s %s %lu %s %s :%s",
+					    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
+					    hopcount, lastnick, username, realhost,
+					    SupportNS(cptr) && sptr->srvptr->serv->numeric ? base64enc(sptr->srvptr->serv->numeric) : server,
+					    servicestamp, umodes, 
+						  (SupportVHP(cptr) ? (IsHidden(sptr) ? sptr->user->virthost : realhost) : virthost),
+						    info);
+				
 			}
 			else
 			{
@@ -1718,7 +1734,6 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 			}
 		}
 	}
-	va_end(vl);
 	return;
 }
 
@@ -1731,4 +1746,77 @@ void	sendto_message_one(aClient *to, aClient *from, char *sender,
         }
         sendto_prefix_one(to, from, ":%s %s %s :%s",
                          sender, cmd, nick, msg);
+}
+
+/* The following functions are for +/-I -- codemastr */
+
+void sendto_channels_inviso_join(aClient *user)
+{
+        Link *channels;
+        Link *users;
+        aClient *cptr;
+
+        memset((char *)sentalong, '\0', sizeof(sentalong));
+        if (user->fd >= 0)
+                sentalong[user->fd] = 1;
+        if (user->user)
+                for (channels = user->user->channel; channels; channels = channels->next)
+                        for (users = channels->value.chptr->members; users; users = users->next)
+			{
+                                cptr = users->value.cptr;
+                                if (!MyConnect(cptr) || IsTechAdmin(cptr) || IsNetAdmin(cptr) || sentalong[cptr->fd] || cptr == user)
+                                        continue;
+                                sentalong[cptr->fd]++;
+                                sendto_one(cptr, ":%s!%s@%s JOIN :%s", user->name, user->user->username,
+				(IsHidden(user) ? user->user->virthost : user->user->realhost), channels->value.chptr->chname); 
+			}
+	return;
+}
+
+void sendto_channels_inviso_part(aClient *user)
+{
+        Link *channels;
+        Link *users;
+        aClient *cptr;
+
+        memset((char *)sentalong, '\0', sizeof(sentalong));
+        if (user->fd >= 0)
+                sentalong[user->fd] = 1;
+        if (user->user)
+                for (channels = user->user->channel; channels; channels = channels->next)
+                        for (users = channels->value.chptr->members; users; users = users->next)
+			{
+                                cptr = users->value.cptr;
+                                if (!MyConnect(cptr) || IsTechAdmin(cptr) || IsNetAdmin(cptr) || sentalong[cptr->fd] || cptr == user)
+                                        continue;
+                                sentalong[cptr->fd]++;
+                		sendto_one(cptr, ":%s!%s@%s PART :%s", user->name, user->user->username, (IsHidden(user) ? user->user->virthost : user->user->realhost), channels->value.chptr->chname);
+			}
+	return;
+}
+
+void sendto_channel_ntadmins(aClient *from, aChannel *chptr, char *pattern, ...)
+{
+        va_list vl;
+        Link *lp;
+        aClient *acptr;
+        int  i;
+
+        va_start(vl, pattern);
+        ++sentalong_marker;
+        for (lp = chptr->members; lp; lp = lp->next)
+	{
+                acptr = lp->value.cptr;
+                if (acptr->from == from || !(IsNetAdmin(acptr) || IsTechAdmin(acptr)) || (IsDeaf(acptr) && !(sendanyways == 1)))
+                        continue;
+                if (MyConnect(acptr))   /* (It is always a client) */
+                        vsendto_prefix_one(acptr, from, pattern, vl);
+                else if (sentalong[(i = acptr->from->fd)] != sentalong_marker)
+		{
+                        sentalong[i] = sentalong_marker;
+                        vsendto_prefix_one(acptr, from, pattern, vl);
+		}
+	}
+	va_end(vl);
+	return;
 }

@@ -30,6 +30,7 @@ static char sccsid[] = "@(#)support.c	2.21 4/13/94 1990, 1991 Armin Gruner;\
 #ifdef _WIN32
 #include <io.h>
 #else
+#include <string.h>
 
 
 extern int errno;		/* ...seems that errno.h doesn't define this everywhere */
@@ -37,6 +38,14 @@ extern int errno;		/* ...seems that errno.h doesn't define this everywhere */
 extern void outofmemory();
 
 #define is_enabled match
+
+long	TS2ts(char *s)
+{
+	if (*s == '!')
+		return (xbase64dec(s + 1));
+	else
+		return (atoi(s));	
+}
 
 char	*my_itoa(int i)
 {
@@ -193,7 +202,7 @@ int  inet_netof(in)
 
 #endif /* NEED_INET_NETOF */
 
-
+#ifndef DMALLOC
 #if defined(DEBUGMODE)
 void dumpcore(msg, p1, p2, p3, p4, p5, p6, p7, p8, p9)
 	char *msg, *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8, *p9;
@@ -278,6 +287,7 @@ char *MyMalloc(x)
 char *MyRealloc(x, y)
 	char *x;
 	size_t y;
+
 {
 	int  l;
 	char **s;
@@ -395,6 +405,7 @@ char *MyRealloc(x, y)
 	}
 	return ret;
 }
+#endif
 #endif
 /*
  * * read a string terminated by \r or \n in from a fd *
@@ -581,3 +592,51 @@ char *inetntop(af, in, out, the_size)
 	return out;
 }
 #endif
+
+/* Made by Potvin originally, i guess */
+time_t	atime_exp(char *base, char *ptr)
+{
+	time_t	tmp;
+	char	*p, c = *ptr;
+	
+	p = ptr;
+	*ptr-- = '\0';
+	while (ptr-- > base)
+		if (isalpha(*ptr))
+			break;
+	tmp = atoi(ptr + 1);
+	*p = c;
+
+	return tmp;
+}
+
+#define Xtract(x, y) if (x) y = atime_exp(xtime, x)
+
+time_t	atime(char *xtime)
+{
+	char *d, *h, *m, *s;
+	time_t D, H, M, S;
+	int i;
+	
+	d = h = m = s = NULL;
+	D = H = M = S = 0;
+	
+	
+	i = 0;
+	for (d = xtime; *d; d++)
+		if (isalpha(*d) && (i != 1))
+			i = 1;
+	if (i == 0)
+		return (atol(xtime)); 
+	d = strchr(xtime, 'd');
+	h = strchr(xtime, 'h');
+	m = strchr(xtime, 'm');
+	s = strchr(xtime, 's');
+	
+	Xtract(d, D);
+	Xtract(h, H);
+	Xtract(m, M);
+	Xtract(s, S);
+
+	return ((D * 86400) + (H * 3600) + (M * 60) + S);		
+}

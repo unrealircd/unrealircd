@@ -24,6 +24,8 @@
 #include "numeric.h"
 #include "h.h"
 #include "hash.h"
+#include "proto.h"
+#include <string.h>
 
 /* externally defined functions */
 unsigned int hash_whowas_name(char *);	/* defined in hash.c */
@@ -54,11 +56,10 @@ void add_history(aClient *cptr, int online)
 		SafeFree(new->virthost);
 		SafeFree(new->realname);
 		SafeFree(new->username);
-		SafeFree(new->away);
 		new->servername = NULL;
 
 		if (new->online)
-			del_whowas_from_clist(&(new->online->whowas), new);
+			del_whowas_from_clist(&(new->online->user->whowas), new);
 		del_whowas_from_list(&WHOWASHASH[new->hashv], new);
 	}
 	new->hashv = hash_whowas_name(cptr->name);
@@ -68,12 +69,6 @@ void add_history(aClient *cptr, int online)
 	AllocCpy(new->username, cptr->user->username);
 	AllocCpy(new->hostname, cptr->user->realhost);
 	AllocCpy(new->virthost, cptr->user->virthost);
-	if (cptr->user->away)
-	{
-		AllocCpy(new->away, cptr->user->away);
-	}
-	else
-		new->away = NULL;
 	new->servername = cptr->user->server;
 	AllocCpy(new->realname, cptr->info);
 
@@ -86,7 +81,7 @@ void add_history(aClient *cptr, int online)
 	if (online)
 	{
 		new->online = cptr;
-		add_whowas_to_clist(&(cptr->whowas), new);
+		add_whowas_to_clist(&(cptr->user->whowas), new);
 	}
 	else
 		new->online = NULL;
@@ -100,11 +95,11 @@ void off_history(aClient *cptr)
 {
 	aWhowas *temp, *next;
 
-	for (temp = cptr->whowas; temp; temp = next)
+	for (temp = cptr->user->whowas; temp; temp = next)
 	{
 		next = temp->cnext;
 		temp->online = NULL;
-		del_whowas_from_clist(&(cptr->whowas), temp);
+		del_whowas_from_clist(&(cptr->user->whowas), temp);
 	}
 }
 
@@ -133,7 +128,6 @@ void count_whowas_memory(int *wwu, u_long *wwum)
 	int  i;
 	int  u = 0;
 	u_long um = 0;
-	u_long uam = 0;
 	/* count the number of used whowas structs in 'u' */
 	/* count up the memory used of whowas structs in um */
 
@@ -142,8 +136,6 @@ void count_whowas_memory(int *wwu, u_long *wwum)
 		{
 			u++;
 			um += sizeof(aWhowas);
-			if (tmp->away)
-				uam += (strlen(tmp->away) + 1);
 		}
 	*wwu = u;
 	*wwum = um;
@@ -159,9 +151,7 @@ int  m_whowas(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	aWhowas *temp;
 	int  cur = 0;
 	int  max = -1, found = 0;
-	char *p, *nick, *s;
-	static time_t last_used = 0L;
-	static int last_count = 0;
+	char *p, *nick;
 
 	if (parc < 2)
 	{
@@ -199,9 +189,6 @@ int  m_whowas(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sendto_one(sptr, rpl_str(RPL_WHOISSERVER), me.name,
 			    parv[0], temp->name, temp->servername,
 			    myctime(temp->logoff));
-			if (temp->away)
-				sendto_one(sptr, rpl_str(RPL_AWAY),
-				    me.name, parv[0], temp->name, temp->away);
 			cur++;
 			found++;
 		}

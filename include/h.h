@@ -42,12 +42,11 @@ extern int bootopt;
 extern TS TSoffset;
 /* Prototype added to force errors -- Barubary */
 extern TS check_pings(TS now, int check_kills);
+extern TS TS2ts(char *s);
 
 /* Remmed out for win32 compatibility.. as stated of 467leaf win32 port.. */
 
-#ifdef _WIN32
-// extern       void    *hCio;
-#endif
+extern LoopStruct loop;
 
 #ifdef SHOWCONNECTINFO
 
@@ -81,8 +80,8 @@ extern int R_do_socks, R_good_socks, R_no_socks;
 #endif
 extern aChannel *find_channel PROTO((char *, aChannel *));
 extern void remove_user_from_channel PROTO((aClient *, aChannel *));
-extern char *base64enc PROTO((unsigned long));
-extern unsigned long base64dec PROTO((char *));
+extern char *base64enc PROTO((long));
+extern long base64dec PROTO((char *));
 extern void add_server_to_table PROTO((aClient *));
 extern void remove_server_from_tabel PROTO((aClient *));
 
@@ -105,8 +104,9 @@ extern aClient *find_name PROTO((char *, aClient *));
 extern aClient *find_nickserv PROTO((char *, aClient *));
 extern aClient *find_person PROTO((char *, aClient *));
 extern aClient *find_server PROTO((char *, aClient *));
+extern aClient *find_server_quickx PROTO((char *, aClient *));
 extern aClient *find_service PROTO((char *, aClient *));
-extern aClient *find_server_quick PROTO((char *));
+#define find_server_quick(x) find_server_quickx(x, NULL)
 extern char *find_or_add PROTO((char *));
 extern int attach_conf PROTO((aClient *, aConfItem *));
 extern aConfItem *attach_confs PROTO((aClient *, char *, int));
@@ -139,8 +139,9 @@ extern void inittoken PROTO(());
 extern void reset_help PROTO(());
 extern int find_exception(char *);	/* hidden host */
 
+#ifndef DMALLOC
 extern char *MyMalloc PROTO((int)), *MyRealloc PROTO((char *, int));
-
+#endif
 extern char *debugmode, *configfile, *sbrk0;
 extern char *getfield PROTO((char *));
 extern void get_sockhost PROTO((aClient *, char *));
@@ -179,10 +180,6 @@ extern int read_message PROTO((TS, fdlist *));
 extern void report_error PROTO((char *, aClient *));
 extern void set_non_blocking PROTO((int, aClient *));
 extern int setup_ping PROTO(());
-extern void summon PROTO((aClient *, char *, char *, char *));
-extern int utmp_open PROTO(());
-extern int utmp_read PROTO((int, char *, char *, char *, int));
-extern int utmp_close PROTO((int));
 
 extern void start_auth PROTO((aClient *));
 extern void read_authports PROTO((aClient *));
@@ -267,8 +264,8 @@ extern aClient *next_client PROTO((aClient *, char *));
 extern int m_umode PROTO((aClient *, aClient *, int, char **));
 extern int m_names PROTO((aClient *, aClient *, int, char **));
 extern int m_server_estab PROTO((aClient *));
-extern void send_umode PROTO((aClient *, aClient *, int, int, char *));
-extern void send_umode_out PROTO((aClient *, aClient *, int));
+extern void send_umode PROTO((aClient *, aClient *, long, long, char *));
+extern void send_umode_out PROTO((aClient *, aClient *, long));
 
 extern void free_client PROTO((aClient *));
 extern void free_link PROTO((Link *));
@@ -276,7 +273,7 @@ extern void free_ban PROTO((Ban *));
 extern void free_conf PROTO((aConfItem *));
 extern void free_class PROTO((aClass *));
 extern void free_user PROTO((anUser *, aClient *));
-extern int find_str_match_link PROTO((Link **, char *));
+extern int find_str_match_link PROTO((Link *, char *));
 extern void free_str_list PROTO((Link *));
 extern Link *make_link PROTO(());
 extern Ban *make_ban PROTO(());
@@ -333,6 +330,9 @@ extern char *find_by_aln PROTO((char *));
 extern char *convert2aln PROTO((int));
 extern int convertfromaln PROTO((char *));
 extern char *find_server_aln PROTO((char *));
+extern atime(char *xtime);
+
+
 extern int dopacket PROTO((aClient *, char *, int));
 
 /*VARARGS2*/

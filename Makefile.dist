@@ -34,6 +34,7 @@ FROMDOS=/home/cmunk/bin/4dos
 XCFLAGS=
 IRCDLIBS=
 CRYPTOLIB=
+OPENSSLINCLUDES=
 #
 # use the following on MIPS:
 #CFLAGS= -systype bsd43 -DSYSTYPE_BSD43 -I$(INCLUDEDIR)
@@ -121,6 +122,9 @@ STRTOUL=
 # override it here and see what happens.
 FD_SETSIZE=
 
+# Where is your openssl binary
+OPENSSLPATH=
+
 CFLAGS=-I$(INCLUDEDIR) $(XCFLAGS) $(NEED_U_INT32_T) $(FD_SETSIZE)
 
 SHELL=/bin/sh
@@ -140,7 +144,8 @@ MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 		'INCLUDEDIR=${INCLUDEDIR}' 'IRCDDIR=${IRCDDIR}' \
 		'MANDIR=${MANDIR}' 'RM=${RM}' 'CP=${CP}' 'TOUCH=${TOUCH}' \
 		'RES=${RES}' 'SHELL=${SHELL}' 'STRTOUL=${STRTOUL}' \
-		'CRYPTOLIB=${CRYPTOLIB}' 'REGEX=${REGEX}'
+		'CRYPTOLIB=${CRYPTOLIB}' 'REGEX=${REGEX}' \
+		'CRYPTOINCLUDES=${CRYPTOINCLUDES}'
 
 server:
 build:
@@ -159,6 +164,12 @@ build:
 	@echo '| file "dynconf" using your favourite viewer or    |'
 	@echo '| editor. The file will contain instructions on how|'
 	@echo '| to do the dynamic configuration :)               |'
+	@echo '| You might want to see include/config.h to adjust |'
+	@echo '| some settings                                    |'
+	@echo '|                                                  |'
+	@echo '| If you really like UnrealIRCd, and would like to |'
+	@echo '| make a donation, please read the Donation file in|'
+	@echo '| this archive. :)                                 |'
 	@echo '|                                                  |'
 	@echo '| Thanks for using Unreal IRCd! If you are in need |' 
 	@echo '| for any kind of help regarding the IRCd please   |'
@@ -210,3 +221,14 @@ depend:
 install: all
 	@echo "Now install by hand; make install is broken."
 
+pem:	src/ssl.cnf
+	@echo "Generating certificate request .. "
+	$(OPENSSLPATH) req -new -config src/ssl.cnf -out server.req.pem \
+              -keyout server.key.pem -nodes
+	@echo "Generating self-signed certificate .. "
+	$(OPENSSLPATH) req -x509 -days 365 -in server.req.pem \
+               -key server.key.pem -out server.cert.pem
+	@echo "Generating fingerprint .."
+	$(OPENSSLPATH) x509 -subject -dates -fingerprint -noout \
+		-in server.cert.pem
+        

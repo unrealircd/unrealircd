@@ -21,7 +21,9 @@ P:ip:flags:password1,password2,password3:port
   |        R = ONLY allow our remote admin connections 
   |            (may only be on a P:line of its own)
   |        J = Clients that connect here are counted as Java(Confroomhack)
+  |        s = Makes this a SSL port
   |        * = CS 
+  | 
   |
   \--- IP to bind to, * = INADDR_ANY (all interfaces)
 
