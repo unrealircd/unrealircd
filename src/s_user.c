@@ -885,18 +885,17 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		sendto_one(sptr, rpl_str(RPL_WELCOME), me.name, nick,
 		    ircnetwork, nick, user->username, user->realhost);
 		/* This is a duplicate of the NOTICE but see below... */
-		sendto_one(sptr, rpl_str(RPL_YOURHOST), me.name, nick,
-		    me.name, version);
+			sendto_one(sptr, rpl_str(RPL_YOURHOST), me.name, nick,
+			    me.name, version);
 		sendto_one(sptr, rpl_str(RPL_CREATED), me.name, nick, creation);
 		if (!(sptr->listener->umodes & LISTENER_JAVACLIENT))
-#ifndef _WIN32
 			sendto_one(sptr, rpl_str(RPL_MYINFO), me.name, parv[0],
 			    me.name, version, umodestring, cmodestring);
-#else
-			sendto_one(sptr, rpl_str(RPL_MYINFO), me.name, parv[0],
-			    me.name, "Unreal" VERSIONONLY, umodestring,
-			    cmodestring);
-#endif
+		else
+			sendto_one(sptr, ":%s 004 %s %s CR1.8.03-%s %s %s",
+				    me.name, parv[0],
+				    me.name, version, umodestring, cmodestring);
+			
 		sendto_one(sptr, rpl_str(RPL_PROTOCTL), me.name, nick,
 		    PROTOCTL_PARAMETERS);
 #ifdef USE_SSL

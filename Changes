@@ -720,3 +720,4 @@ seen. gmtime warning still there
 - Fixed a win32 bug dealing with the new RTF parser
 - Fixed a scan_socks problem under win32
 - Fixed a MOTD rehash bug found by fryo
+- Made CR compatilbity actually work, it autojoins now :)
