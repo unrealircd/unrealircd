@@ -605,3 +605,4 @@
   (#0002223).
 - Fixed a bug where shuns placed on IP's did not take effect to currently connected users.
 - Fixed a small doc bug regarding shun in spamfilter, reported by KnuX (#0002338).
+- Added greek docs, translator: GSF.
