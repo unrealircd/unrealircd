@@ -226,3 +226,4 @@
 - Fixed up CHINESE_NICK and JAPANESE_NICK, suggested by Aim, see
   include/config.h
 - Config change in SSL.h detection part
+- SSL error change to sendto_umode(UMODE_JUNK)
