@@ -351,13 +351,19 @@ int  m_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
                                       && !(acptr->umodes & UMODE_OPER))
                                   {
                                           IRCstats.operators++;
-                                          addto_fdlist(acptr->slot, &oper_fdlist);
+#ifndef NO_FDLIST
+					  if (MyClient(acptr))
+	                                          addto_fdlist(acptr->slot, &oper_fdlist);
+#endif
                                   }
                                   if (what == MODE_DEL
                                       && (acptr->umodes & UMODE_OPER))
                                   {
                                           IRCstats.operators--;
-                                          delfrom_fdlist(acptr->slot, &oper_fdlist);
+#ifndef NO_FDLIST
+					  if (MyClient(acptr))
+	                                          delfrom_fdlist(acptr->slot, &oper_fdlist);
+#endif
                                   }
                                   goto setmodex;
 			  case 'H':
@@ -483,13 +489,19 @@ int  m_svs2mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
                                       && !(acptr->umodes & UMODE_OPER))
                                   {
                                           IRCstats.operators++;
-                                          addto_fdlist(acptr->slot, &oper_fdlist);
+#ifndef NO_FDLIST
+					  if (MyClient(acptr))
+	                                          addto_fdlist(acptr->slot, &oper_fdlist);
+#endif
                                   }
                                   if (what == MODE_DEL
                                       && (acptr->umodes & UMODE_OPER))
                                   {
                                           IRCstats.operators--;
-                                          delfrom_fdlist(acptr->slot, &oper_fdlist);
+#ifndef NO_FDLIST
+					  if (MyClient(acptr))
+	                                          delfrom_fdlist(acptr->slot, &oper_fdlist);
+#endif
                                   }
 				  goto setmodey;
 			  case 'H':
