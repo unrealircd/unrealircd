@@ -87,7 +87,13 @@ static int dead_link(to, notice)
 	DBufClear(&to->recvQ);
 	DBufClear(&to->sendQ);
 	if (!IsPerson(to) && !IsUnknown(to) && !(to->flags & FLAGS_CLOSING))
-		(void)sendto_failops_whoare_opers(notice, get_client_name(to, FALSE));
+		(void)sendto_failops_whoare_opers(notice, get_client_name(to, FALSE)
+#ifndef _WIN32
+		, strerror(errno)
+#else
+		, strerror(WSAGetLastError());
+#endif
+		);
 	Debug((DEBUG_ERROR, notice, get_client_name(to, FALSE)));
 	return -1;
 }
@@ -167,7 +173,7 @@ int  send_queued(to)
 		msg = dbuf_map(&to->sendQ, &len);
 		/* Returns always len > 0 */
 		if ((rlen = deliver_it(to, msg, len)) < 0)
-			return dead_link(to, "Write error to %s, closing link");
+			return dead_link(to, "Write error to %s, closing link (%s)");
 		(void)dbuf_delete(&to->sendQ, rlen);
 		to->lastsq = DBufLength(&to->sendQ) / 1024;
 		if (rlen < len)
@@ -203,6 +209,9 @@ void vsendto_one(aClient *to, char *pattern, va_list vl)
 void sendbufto_one(aClient *to)
 {
 	int  len;
+#ifdef CRYPTOIRCD
+	char *s;
+#endif
 
 	Debug((DEBUG_ERROR, "Sending [%s] to %s", sendbuf, to->name));
 
