@@ -994,6 +994,8 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				edit.pfnCallback = SplitIt;
 				SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_STREAMIN,
 					(WPARAM)SF_RTF|SFF_PLAINRTF, (LPARAM)&edit);
+				SendMessage(GetDlgItem(hDlg, IDC_TEXT), EM_SETMODIFY,
+					(WPARAM)FALSE, 0);
 				close(fd);
 				RTFBuf = NULL;
 				free(buffer);

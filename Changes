@@ -1063,3 +1063,5 @@ seen. gmtime warning still there
   individual module loading
 - Fix for svsnoop symdep problem
 - Fixed sts's fix for svsnoop (since he failed to test his fix)
+- Fixed a bug where the win32 editor would always say the file
+  was modified even if it wasn't
