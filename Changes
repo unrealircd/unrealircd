@@ -662,3 +662,5 @@
 - Removed sendto_helpops and replaced it with sendto_umode
 - Added is_chanownprotop() checks if +q +a or +o with 1 loop
 - Added chmode +N (no nick changes) (opers, ulines, +o +q or +a can override)
+- Added some fixes on the SJB64 crashing bug, and added tokenization in 
+  channel messsages (yahooooo!)

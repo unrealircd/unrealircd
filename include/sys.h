@@ -129,8 +129,8 @@ typedef unsigned int u_int;
 #define MYOSNAME "Win32"
 #endif
 #ifdef DEBUGMODE
-#define ircsprintf sprintf
-#define ircvsprintf vsprintf
+// #define ircsprintf sprintf
+//#define ircvsprintf vsprintf
 #endif
 
 

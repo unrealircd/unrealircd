@@ -413,7 +413,7 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 		i = acptr->from->fd;
 		if (MyConnect(acptr) && IsRegisteredUser(acptr))
 		{
-			sendto_one(acptr, "%s", ccmd);
+			sendto_prefix_one(acptr, from, "%s", ccmd);
 			sentalong[i] = 1;
 		}
 		else

@@ -44,6 +44,7 @@ char backupbuf[8192];
 #include "numeric.h"
 #include "h.h"
 
+
 /*
  * NOTE: parse() should not be called recursively by other functions!
  */
@@ -208,9 +209,7 @@ int  parse(cptr, buffer, bufend, mptr)
 	if (IsDead(cptr))
 		return 0;
 
-#ifdef RAWDEBUG
-	sendto_ops("Debug: parse(): %s", buffer);
-#endif
+//	sendto_realops("Debug: parse(): %s", buffer);
 
 	if ((cptr->receiveK >= 4) && IsUnknown(cptr))
 	{
