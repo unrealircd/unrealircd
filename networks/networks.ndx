@@ -37,3 +37,4 @@ networks/staticedge.network ......: StaticEdge
 networks/german-elite.network ....: German-Elite (http://www.german-elite.net)
 networks/thainet.network .........: Thai IRC Network
 networks/linuxsquare.network .....: LinuxSquare (http://www.linuxsquare.net)
+networks/chatstation.network .....: ChatStation
