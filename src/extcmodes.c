@@ -152,6 +152,8 @@ Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode)
 				Channelmode_highest = j;
 	make_cmodestr();
 	make_extcmodestr();
+	if (reserved)
+		reserved->errorcode = MODERR_NOERROR;
 	return &(Channelmode_Table[i]);
 }
 

@@ -127,6 +127,9 @@ extern fdlist oper_fdlist;
 extern fdlist socks_fdlist;
 #endif
 
+#ifdef USE_LIBCURL
+extern void url_do_transfers_async(void);
+#endif
 
 /*
  * Try and find the correct name to use with getrlimit() for setting the max.

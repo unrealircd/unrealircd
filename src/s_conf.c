@@ -382,10 +382,13 @@ int			config_verbose = 0;
 void add_include(char *);
 #ifdef USE_LIBCURL
 void add_remote_include(char *, char *);
+int remote_include(ConfigEntry *ce);
 #endif
 void unload_notloaded_includes(void);
 void load_includes(void);
 void unload_loaded_includes(void);
+int rehash_internal(aClient *cptr, aClient *sptr, int sig);
+
 
 /* Pick out the ip address and the port number from a string.
  * The string syntax is:  ip:port.  ip must be enclosed in brackets ([]) if its an ipv6

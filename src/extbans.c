@@ -102,7 +102,7 @@ int slot;
 	if (module)
 	{
 		ModuleObject *banobj = MyMallocEx(sizeof(ModuleObject));
-		banobj->object.extban = banobj;
+		banobj->object.extban = &ExtBan_Table[slot];
 		banobj->type = MOBJ_EXTBAN;
 		AddListItem(banobj, module->objects);
 		module->errorcode = MODERR_NOERROR;

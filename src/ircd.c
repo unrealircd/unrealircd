@@ -134,6 +134,10 @@ TS   check_fdlists();
 unsigned char conf_debuglevel = 0;
 char trouble_info[1024];
 
+#ifdef USE_LIBCURL
+extern void url_init(void);
+#endif
+
 void save_stats(void)
 {
 	FILE *stats = fopen("ircd.stats", "w");

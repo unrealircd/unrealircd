@@ -2703,3 +2703,5 @@ seen. gmtime warning still there
 - Fixes for TRE under win32
 - Made Extbans use the module object system
 - Fixed a problem caused by the previous change
+- Fixed some compile warnings
+- Made CmodeAdd set MODERR_NOERROR when no error occurs (#0001484) reported by AngryWolf
