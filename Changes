@@ -1554,3 +1554,6 @@ seen. gmtime warning still there
 - Made so every join is a SJOIN to prevent TS0 problems. Read config.h to disable this if it causes problems
 - Added set::static-quit to unreal32docs.html
 - Updated docs to include ripemd-160 encryption option
+** beta12 released **
+- Fixed problem where SSL handshakes weren't unknown--'ed on remove reported
+  by Alzirr
