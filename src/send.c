@@ -75,13 +75,8 @@ int  sendanyways = 0;
 **	Instead, mark it with FLAGS_DEADSOCKET. This should
 **	generate ExitClient from the main loop.
 **
-**	If 'notice' is not NULL, it is assumed to be a format
-**	for a message to local opers. I can contain only one
-**	'%s', which will be replaced by the sockhost field of
-**	the failing link.
-**
-**	Also, the notice is skipped for "uninteresting" cases,
-**	like Persons and yet unknown connections...
+**	notice will be the quit message. notice will also be
+**	sent to failops in case 'to' is a server.
 */
 static int dead_link(aClient *to, char *notice)
 {
@@ -95,15 +90,11 @@ static int dead_link(aClient *to, char *notice)
 	DBufClear(&to->recvQ);
 	DBufClear(&to->sendQ);
 	
-#ifndef _WIN32
-	error = strerror(errno);
-#else
-	error = strerror(WSAGetLastError());
-#endif	
 	if (!IsPerson(to) && !IsUnknown(to) && !(to->flags & FLAGS_CLOSING))
-		(void)sendto_failops_whoare_opers(notice, get_client_name(to, FALSE),
-			error);
+		(void)sendto_failops_whoare_opers("Closing link: %s - %s",
+			notice, get_client_name(to, FALSE));
 	Debug((DEBUG_ERROR, notice, get_client_name(to, FALSE), error));
+	to->error_str = strdup(notice);
 	return -1;
 }
 
@@ -190,7 +181,7 @@ int  send_queued(aClient *to)
 			if (len == -1)
 				return dead_link(to, "fatal error in zip_buffer()");
 			if (!dbuf_put(&to->sendQ, msg, len))
-				return dead_link(to, "Buffer allocation error for %s");
+				return dead_link(to, "Buffer allocation error");
 		}
 	}
 #endif
@@ -199,7 +190,11 @@ int  send_queued(aClient *to)
 		msg = dbuf_map(&to->sendQ, &len);
 		/* Returns always len > 0 */
 		if ((rlen = deliver_it(to, msg, len)) < 0)
-			return dead_link(to, "Write error to %s, closing link (%s)");
+		{
+			char buf[256];
+			snprintf(buf, 256, "Write error: %s", strerror(ERRNO));
+			return dead_link(to, buf);
+		}
 		(void)dbuf_delete(&to->sendQ, rlen);
 		to->lastsq = DBufLength(&to->sendQ) / 1024;
 		if (rlen < len)
@@ -220,7 +215,7 @@ int  send_queued(aClient *to)
 			if (len == -1)
 				return dead_link(to, "fatal error in zip_buffer()");
 			if (!dbuf_put(&to->sendQ, msg, len))
-				return dead_link(to, "Buffer allocation error for %s");
+				return dead_link(to, "Buffer allocation error");
 		}
 #endif
 	}

@@ -489,7 +489,7 @@ extern TS check_pings(TS currenttime)
 		 * ** already done when "FLAGS_DEADSOCKET" is set.
 		 */
 		if (cptr->flags & FLAGS_DEADSOCKET) {
-			(void)exit_client(cptr, cptr, &me, "Dead socket");
+			(void)exit_client(cptr, cptr, &me, cptr->error_str ? cptr->error_str : "Dead socket");
 			continue;
 		}
 		killflag = 0;

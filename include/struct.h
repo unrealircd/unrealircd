@@ -831,6 +831,7 @@ struct Client {
 #ifdef DEBUGMODE
 	TS   cputime;
 #endif
+	char *error_str;	/* Quit reason set by dead_link in case of socket/buffer error */
 };
 
 

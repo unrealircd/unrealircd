@@ -147,7 +147,7 @@ int  dopacket(aClient *cptr, char *buffer, int length)
 				 */
 				if (cptr->flags & FLAGS_DEADSOCKET)
 					return exit_client(cptr, cptr, &me,
-					    "Dead Socket");
+					    cptr->error_str ? cptr->error_str : "Dead socket");
 #ifdef ZIP_LINKS
 				if ((IsZipped(cptr)) && (zipped == 0) && (length > 0))
 				{

@@ -604,6 +604,7 @@ static int fatal_ssl_error(int ssl_error, int where, aClient *sptr)
     	sptr->name, ssl_func, ssl_errstr);
     SET_ERRNO(errtmp ? errtmp : P_EIO); /* Stick a generic I/O error */
     sptr->flags |= FLAGS_DEADSOCKET;
+    sptr->error_str = strdup(strerror(errtmp));
     return -1;
 }
 
