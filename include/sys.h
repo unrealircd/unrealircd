@@ -226,11 +226,10 @@ static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 #define P_ENOBUFS       WSAENOBUFS
 #define P_EWOULDBLOCK   WSAEWOULDBLOCK
 #define P_EAGAIN        WSAEWOULDBLOCK
-#define P_EINPROGRESS   WSAEWOULDBLOCK
+#define P_EINPROGRESS   WSAEINPROGRESS
 #define P_EINTR         WSAEINTR
 #define P_ETIMEDOUT     WSAETIMEDOUT
-#define P_ENOTSOCK		WSAENOTSOCK
-
+#define P_ENOTSOCK	WSAENOTSOCK
 #endif
 
 #endif /* __sys_include__ */

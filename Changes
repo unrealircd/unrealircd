@@ -513,3 +513,5 @@ seen. gmtime warning still there
 - Fixed listener problem, reported by McSkaf
 - Minor Win32 bug fix
 - Fixed problem with addto_fdlist(cptr->fd) caused by slotpatch
+- Fixed minor socksfd problem in read_message
+- Fixed identd problem

@@ -1717,12 +1717,16 @@ int  read_message(delay, listp)
 			if (DoingSocks(cptr))
 			{
 				socks++;
-				FD_SET(cptr->socksfd, &read_set);
+				if (cptr->socksfd >= 0)
+				{
+					FD_SET(cptr->socksfd, &read_set);
 #ifdef _WIN32
-				FD_SET(cptr->socksfd, &excpt_set);
+					FD_SET(cptr->socksfd, &excpt_set);
 #endif
-				if (cptr->flags & FLAGS_WRSOCKS)
-					FD_SET(cptr->socksfd, &write_set);
+				
+					if (cptr->flags & FLAGS_WRSOCKS)
+						FD_SET(cptr->socksfd, &write_set);
+				}
 			}
 #endif /* SOCKSPORT */
 

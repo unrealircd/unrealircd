@@ -106,7 +106,8 @@ void start_auth(cptr)
 	sock.SIN_FAMILY = AFINET;
 
 	if (connect(cptr->authfd, (struct sockaddr *)&sock,
-		sizeof(sock)) == -1 && ERRNO != P_EWOULDBLOCK)
+		sizeof(sock)) == -1 && !((ERRNO == P_EWOULDBLOCK)
+		 || (ERRNO == P_EINPROGRESS)))
 	{
 		ircstp->is_abad++;
 		/*
