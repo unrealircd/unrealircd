@@ -636,3 +636,4 @@ seen. gmtime warning still there
 - Fixed some minor mod_load troubles, and made it go a little more sensible
   regarding retarded rehashes
 - Added some thread debugging, and fixed a SVS2MODE bug
+- Fixed a major scan bug caused by stskeeps(TM) lazy-coding

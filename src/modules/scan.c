@@ -82,6 +82,7 @@ DLLFUNC EVENT			(VS_Ban);
 DLLFUNC int			h_scan_info(aClient *sptr);
 DLLFUNC int			m_scan(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 DLLFUNC int			h_config_set_blackhole(void);
+DLLFUNC int			h_config_set_blackhole_rehash(void);
 DLLFUNC void 			blackhole(void *p);
 THREAD				acceptthread;
 THREAD_ATTR			acceptthread_attr;
@@ -125,6 +126,7 @@ int    m_scan_init(int module_load)
 	blackhole_stop = 0;
 	bzero(&blackhole_conf, sizeof(blackhole_conf));
 	add_Hook(HOOKTYPE_CONFIG_UNKNOWN, h_config_set_blackhole);
+	add_Hook(HOOKTYPE_REHASH, h_config_set_blackhole_rehash);
 }
 
 /* Is first run when server is 100% ready */
@@ -214,6 +216,7 @@ void	m_scan_unload(void)
 	IRCMutexLock(VSlock);
 	IRCMutexDestroy(VSlock);
 	del_Hook(HOOKTYPE_CONFIG_UNKNOWN, h_config_set_blackhole);
+	del_Hook(HOOKTYPE_REHASH, h_config_set_blackhole_rehash);
 	blackhole_stop = 1;
 	if (blackholefd)
 	{
@@ -414,6 +417,11 @@ DLLFUNC int m_scan(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	return 0;
 }
 
+DLLFUNC int     h_config_set_blackhole_rehash(void) {
+	if (blackhole_conf.ip)
+		MyFree(blackhole_conf.ip);
+}
+
 DLLFUNC int	h_config_set_blackhole(void)
 {
 	ConfigItem_unknown_ext *sets;
@@ -421,8 +429,6 @@ DLLFUNC int	h_config_set_blackhole(void)
 	char	*ip;
 	char	*port;
 	int	iport;
-	if (blackhole_conf.ip)
-		MyFree(blackhole_conf.ip);
 	for (sets = conf_unknown_set; sets; 
 		sets = (ConfigItem_unknown_ext *)sets->next)
 	{
