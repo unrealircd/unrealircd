@@ -1,5 +1,5 @@
 
-Unreal3.2-Selene (BETA12) Release Notes
+Unreal3.2-Selene (BETA13) Release Notes
 ======================================
     
      I M P O R T A N T   R E A D I N G
@@ -198,10 +198,33 @@ Unreal3.2-Selene (BETA12) Release Notes
 * We have removed ./Setup - Please read the new docs for information on configuring &
   setting up Unreal3.2
 
+* Removed makeconf - Read the docs to make a config file
+
+* Added set::ssl::options with the following options:
+    fail-if-no-clientcert   - If SSL client connects and doesn't provide a client
+                              certificate, abort connection immediately
+    verify-certificate      - Check the certificate's validity using X509 methods, check if
+                              we trust CA's, etc. 
+                              It however does slip self signed certificates through UNLESS
+    no-self-signed          - Don't allow self-signed certificates through (requires
+                              verify-certificate)
+
+* Added the ability specify which CA's are trusted using set::ssl::trusted-ca-file
+
+* A new configuration system has been added. The system is a bit more strict (meaning it
+  will complain more often) but it will never crash due to configuration errors, just
+  display a message saying errors exist.
+
+* SVSLUSERS was added to all U:lines to change local and global max user counts (this is
+  NOT meant so you can make the max count higher than it really should be.)
+
 * A new oper flag, can_override/v has been added. This is an attempt to stop oper abuse.
   All opers can no longer use oper-override, this oflag MUST be in place for oper-override
   to be allowed. Can_override is NOT assumed to be present no matter what your flags,
   meaning you could be +N but still not be allowed to use oper-override.
+
+* UNKLINE and UNZLINE have been removed in favor of a system like G:lines, to remove you
+  now /kline -user@host or /zline -user@host
 
 * MAKE SURE YOU RERUN ./Config AND RUN make clean BEFORE USING THIS VERSION!!!
 

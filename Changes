@@ -1707,3 +1707,6 @@ seen. gmtime warning still there
 - Changed resolver code to use IRCMutex macros.
 - Documentation updates (some reported by poisoner) (#0000493)
 - Fixed some problems with /kline when removing a K:line
+- Updated docs some more
+- Fixed a makefile.win32.ssl problem reported by WeeD
+- Changed version to beta13, updated docs

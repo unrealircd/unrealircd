@@ -239,6 +239,32 @@
 <p><font size="-1">* We have removed ./Setup - Please read the new docs for information 
   on configuring &amp;<br>
   setting up Unreal3.2</font></p>
+<p><font size="-1">* Removed makeconf - Read the docs to make a config file</font></p>
+<p><font size="-1">* Added set::ssl::options with the following options:<br>
+    fail-if-no-clientcert   - If SSL client connects and doesn't provide a client<br>
+                              certificate, abort connection immediately<br>
+    verify-certificate      - Check the certificate's validity using X509 methods, check if<br>
+                              we trust CA's, etc. <br>
+                              It however does slip self signed certificates through UNLESS<br>
+    no-self-signed          - Don't allow self-signed certificates through (requires<br>
+                              verify-certificate)</font></p>
+
+<p><font size="-1">* Added the ability specify which CA's are trusted using set::ssl::trusted-ca-file</font></p>
+
+<p><font size="-1">* A new configuration system has been added. The system is a bit more strict (meaning it
+  will complain more often) but it will never crash due to configuration errors, just
+  display a message saying errors exist.</font></p>
+
+<p><font size="-1">* SVSLUSERS was added to all U:lines to change local and global max user counts (this is
+  NOT meant so you can make the max count higher than it really should be.)</font></p>
+
+<p><font size="-1">* A new oper flag, can_override/v has been added. This is an attempt to stop oper abuse.
+  All opers can no longer use oper-override, this oflag MUST be in place for oper-override
+  to be allowed. Can_override is NOT assumed to be present no matter what your flags,
+  meaning you could be +N but still not be allowed to use oper-override.</font></p>
+
+<p><font size="-1">* UNKLINE and UNZLINE have been removed in favor of a system like G:lines, to remove you
+  now /kline -user@host or /zline -user@host</font></p>
 <p><font size="-1">* MAKE SURE YOU RERUN ./Config AND RUN make clean BEFORE USING 
   THIS VERSION!!!</font></p>
 <p> </p>
@@ -1308,7 +1334,8 @@
 <p>Syntax [command alias]:<br>
   alias &lt;name&gt; {<br>
   format &lt;regex-expression&gt; {<br>
-  alias &lt;alias-to-forward-to&gt;;<br>
+  nick &lt;nick-to-forward-to&gt;;<br>
+  type &lt;type-of-alias&gt;;<br>
   parameters &lt;parameter-string&gt;;<br>
   };<br>
   format &lt;regex-expression&gt; {<br>
@@ -1322,9 +1349,9 @@
   a regular expression that compares against the text sent to the alias command, 
   when matched the sub-entries of that alias::format will be used, you may have 
   multiple alias::format's to make the command do different things depending on 
-  the text sent to it. The alias::format::alias is the name of a preexisting (appears 
-  before this in the config file) alias block in the standard format that when 
-  that format is matched will be used. The alias::format::parameters is what will 
+  the text sent to it. The alias::format::nick is the nickname to forward this
+  alias to. The alias::format::type specifies the type of the alias that the
+  message should be forwarded to. The alias::format::parameters is what will 
   be sent as the parameters to this alias. To specify one of the parameters given 
   to the command alias specify % followed by a number, for example, %1 is the 
   first parameter. To specify all parameters from a given parameter to the end 
