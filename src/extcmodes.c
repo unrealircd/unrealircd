@@ -238,16 +238,16 @@ void extcmode_free_paramlist(CmodeParam *lst)
 int extcmode_default_requirechop(aClient *cptr, aChannel *chptr, char *para, int checkt, int what)
 {
 	if (IsPerson(cptr) && is_chan_op(cptr, chptr))
-		return 1;
-	return 0;
+		return EX_ALLOW;
+	return EX_DENY;
 }
 
 int extcmode_default_requirehalfop(aClient *cptr, aChannel *chptr, char *para, int checkt, int what)
 {
 	if (IsPerson(cptr) &&
 	    (is_chan_op(cptr, chptr) || is_half_op(cptr, chptr)))
-		return 1;
-	return 0;
+		return EX_ALLOW;
+	return EX_DENY;
 }
 
 #endif /* EXTCMODE */

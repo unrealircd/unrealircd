@@ -147,68 +147,6 @@ void count_whowas_memory(int *wwu, u_long *wwum)
 	*wwum = um;
 	return;
 }
-/*
-** m_whowas
-**      parv[0] = sender prefix
-**      parv[1] = nickname queried
-*/
-int  m_whowas(aClient *cptr, aClient *sptr, int parc, char *parv[])
-{
-	aWhowas *temp;
-	int  cur = 0;
-	int  max = -1, found = 0;
-	char *p, *nick;
-
-	if (parc < 2)
-	{
-		sendto_one(sptr, err_str(ERR_NONICKNAMEGIVEN),
-		    me.name, parv[0]);
-		return 0;
-	}
-	if (parc > 2)
-		max = atoi(parv[2]);
-	if (parc > 3)
-		if (hunt_server_token(cptr, sptr, MSG_WHOWAS, TOK_WHOWAS, "%s %s :%s", 3, parc,
-		    parv))
-			return 0;
-
-	if (!MyConnect(sptr) && (max > 20))
-		max = 20;
-
-	p = (char *)strchr(parv[1], ',');
-	if (p)
-		*p = '\0';
-	nick = parv[1];
-	temp = WHOWASHASH[hash_whowas_name(nick)];
-	found = 0;
-	for (; temp; temp = temp->next)
-	{
-		if (!mycmp(nick, temp->name))
-		{
-			sendto_one(sptr, rpl_str(RPL_WHOWASUSER),
-			    me.name, parv[0], temp->name,
-			    temp->username,
-			    (IsOper(sptr) ? temp->hostname :
-			    (*temp->virthost !=
-			    '\0') ? temp->virthost : temp->hostname),
-			    temp->realname);
-                	if (!((Find_uline(temp->servername)) && !IsOper(sptr) && HIDE_ULINES))
-				sendto_one(sptr, rpl_str(RPL_WHOISSERVER), me.name,
-				    parv[0], temp->name, temp->servername,
-				    myctime(temp->logoff));
-			cur++;
-			found++;
-		}
-		if (max > 0 && cur >= max)
-			break;
-	}
-	if (!found)
-		sendto_one(sptr, err_str(ERR_WASNOSUCHNICK),
-		    me.name, parv[0], nick);
-
-	sendto_one(sptr, rpl_str(RPL_ENDOFWHOWAS), me.name, parv[0], parv[1]);
-	return 0;
-}
 
 void initwhowas()
 {
@@ -222,7 +160,6 @@ void initwhowas()
 	for (i = 0; i < WW_MAX; i++)
 		WHOWASHASH[i] = NULL;
 }
-
 
 static void add_whowas_to_clist(aWhowas ** bucket, aWhowas * whowas)
 {

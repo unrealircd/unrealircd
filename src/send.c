@@ -837,6 +837,10 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 			continue;
 		if ((opt & OPT_NOT_VHP) && (cptr->proto & PROTO_VHP))
 			continue;
+		if ((opt & OPT_TKLEXT) && !(cptr->proto & PROTO_TKLEXT))
+			continue;
+		if ((opt & OPT_NOT_TKLEXT) && (cptr->proto & PROTO_TKLEXT))
+			continue;
 
 		if (IsToken(cptr))
 		{
@@ -1872,12 +1876,20 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 					    (IsToken(cptr) ? TOK_MODE :
 					    MSG_MODE), nick, umodes);
 				}
-				if (strcmp(virthost, "*"))
+				if (IsHidden(sptr) && (sptr->umodes & UMODE_SETHOST))
 				{
 					sendto_one(cptr, ":%s %s %s",
 					    nick,
 					    (IsToken(cptr) ? TOK_SETHOST :
 					    MSG_SETHOST), virthost);
+				}
+				else if (SupportVHP(cptr))
+				{
+					sendto_one(cptr, ":%s %s %s",
+					    nick,
+					    (IsToken(cptr) ? TOK_SETHOST :
+					     MSG_SETHOST), (IsHidden(sptr) ? virthost :
+					     realhost));
 				}
 			}
 		}

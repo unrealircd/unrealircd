@@ -89,7 +89,7 @@ char *url_getfilename(char *url)
                 else
                 {
                         char *file = malloc(c-start+1);
-                        strncpy(file, start, c-start);
+                        strlcpy(file, start, c-start+1);
                         return file;
                 }
                 return NULL;
@@ -166,6 +166,8 @@ char *download_file(char *url, char **error)
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, fd);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download);
 	curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
+	curl_easy_setopt(curl, CURLOPT_FILETIME, 1);
+
 #ifdef USE_SSL
 	set_curl_ssl_options(curl);
 #endif
@@ -179,11 +181,20 @@ char *download_file(char *url, char **error)
 #endif
 	if (file)
 		free(file);
-	curl_easy_cleanup(curl);
 	if (res == CURLE_OK)
+	{
+		long last_mod;
+
+		curl_easy_getinfo(curl, CURLINFO_FILETIME, &last_mod);
+		curl_easy_cleanup(curl);
+
+		if (last_mod != -1)
+			unreal_setfilemodtime(tmp, last_mod);
 		return strdup(tmp);
+	}
 	else
 	{
+		curl_easy_cleanup(curl);
 		remove(tmp);
 		*error = errorbuf;
 		return NULL;
@@ -219,9 +230,9 @@ void download_file_async(char *url, time_t cachetime, vFP callback)
 	CURL *curl = curl_easy_init();
 	if (curl)
 	{
-	    char *file = url_getfilename(url);
+		char *file = url_getfilename(url);
 		char *filename = unreal_getfilename(file);
-        char *tmp = unreal_mktemp("tmp", filename ? filename : "download.conf");
+        	char *tmp = unreal_mktemp("tmp", filename ? filename : "download.conf");
 		FileHandle *handle = malloc(sizeof(FileHandle));
 		handle->fd = fopen(tmp, "wb");
 		if (!handle->fd)
@@ -248,9 +259,9 @@ void download_file_async(char *url, time_t cachetime, vFP callback)
 		bzero(handle->errorbuf, CURL_ERROR_SIZE);
 		curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, handle->errorbuf);
 		curl_easy_setopt(curl, CURLOPT_PRIVATE, (char *)handle);
+		curl_easy_setopt(curl, CURLOPT_FILETIME, 1);
 		if (cachetime)
 		{
-			curl_easy_setopt(curl, CURLOPT_FILETIME, 1);
 			curl_easy_setopt(curl, CURLOPT_TIMECONDITION, CURL_TIMECOND_IFMODSINCE);
 			curl_easy_setopt(curl, CURLOPT_TIMEVALUE, cachetime);
 		}
@@ -305,10 +316,11 @@ void url_do_transfers_async(void)
 			char *url;
 			long code;
 			long last_mod;
-			curl_easy_getinfo(msg->easy_handle, CURLINFO_RESPONSE_CODE, &code);
-			curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, (char*)&handle);
-			curl_easy_getinfo(msg->easy_handle, CURLINFO_EFFECTIVE_URL, &url);
-			curl_easy_getinfo(msg->easy_handle, CURLINFO_FILETIME, &last_mod);
+			CURL *easyhand = msg->easy_handle;
+			curl_easy_getinfo(easyhand, CURLINFO_RESPONSE_CODE, &code);
+			curl_easy_getinfo(easyhand, CURLINFO_PRIVATE, (char*)&handle);
+			curl_easy_getinfo(easyhand, CURLINFO_EFFECTIVE_URL, &url);
+			curl_easy_getinfo(easyhand, CURLINFO_FILETIME, &last_mod);
 			fclose(handle->fd);
 #if defined(IRC_UID) && defined(IRC_GID)
 			if (!loop.ircd_booted)
@@ -320,9 +332,15 @@ void url_do_transfers_async(void)
 				{
 					handle->callback(url, NULL, NULL, 1);
 					remove(handle->filename);
+
 				}
 				else
+				{
+					if (last_mod != -1)
+						unreal_setfilemodtime(handle->filename, last_mod);
+
 					handle->callback(url, handle->filename, NULL, 0);
+				}
 			}
 			else
 			{
@@ -330,10 +348,13 @@ void url_do_transfers_async(void)
 				remove(handle->filename);
 			}
 			free(handle);
-			curl_easy_cleanup(msg->easy_handle);
-
+			curl_multi_remove_handle(multihandle, easyhand);
+			/* NOTE: after curl_multi_remove_handle() you cannot use
+			 * 'msg' anymore because it has freed by curl (as of v7.11.0),
+			 * therefore 'easyhand' is used... fun! -- Syzop
+			 */
+			curl_easy_cleanup(easyhand);
 		}
-
 	}
 }
 

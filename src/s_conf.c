@@ -52,8 +52,8 @@
 #endif
 #include "badwords.h"
 
-#define ircstrdup(x,y) if (x) MyFree(x); if (!y) x = NULL; else x = strdup(y)
-#define ircfree(x) if (x) MyFree(x); x = NULL
+#define ircstrdup(x,y) do { if (x) MyFree(x); if (!y) x = NULL; else x = strdup(y); } while(0)
+#define ircfree(x) do { if (x) MyFree(x); x = NULL; } while(0)
 #define ircabs(x) (x < 0) ? -x : x
 
 /* 
@@ -337,7 +337,6 @@ void 			config_progress(char *format, ...);
 extern void 	win_log(char *format, ...);
 extern void		win_error();
 #endif
-extern char modebuf[MAXMODEPARAMS*2+1], parabuf[504];
 extern void add_entropy_configfile(struct stat st, char *buf);
 extern void unload_all_unused_snomasks();
 extern void unload_all_unused_umodes();
@@ -397,7 +396,7 @@ int			config_verbose = 0;
 
 void add_include(char *);
 #ifdef USE_LIBCURL
-void add_remote_include(char *, char *);
+void add_remote_include(char *, char *, int);
 int remote_include(ConfigEntry *ce);
 #endif
 void unload_notloaded_includes(void);
@@ -611,14 +610,6 @@ long config_checkval(char *orig, unsigned short flags) {
 	free(value);
 	return ret;
 }
-
-typedef struct {
-	long mode;
-	char flag;
-	unsigned  halfop : 1;		/* 1 = yes 0 = no */
-	unsigned  parameters : 1; 
-} aCtab;
-extern aCtab cFlagTab[];
 
 void set_channelmodes(char *modes, struct ChMode *store, int warn)
 {
@@ -1347,6 +1338,8 @@ void	free_iConf(aConfiguration *i)
 	ircfree(i->network.x_helpchan);
 	ircfree(i->network.x_stats_server);
 	ircfree(i->spamfilter_ban_reason);
+	ircfree(i->spamfilter_virus_help_channel);
+	ircfree(i->spamexcept_line);
 }
 
 int	config_test();
@@ -1369,22 +1362,65 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->ban_version_tkl_time = 86400; /* 1d */
 	i->spamfilter_ban_time = 86400; /* 1d */
 	i->spamfilter_ban_reason = strdup("Spam/advertising");
+	i->spamfilter_virus_help_channel = strdup("#help");
 }
 
-/* needed for set::options::allow-part-if-shunned,
+/* 1: needed for set::options::allow-part-if-shunned,
  * we can't just make it M_SHUN and do a ALLOW_PART_IF_SHUNNED in
  * m_part itself because that will also block internal calls (like sapart). -- Syzop
+ * 2: now also used by spamfilter entries added by config...
+ * we got a chicken-and-egg problem here.. antries added without reason or ban-time
+ * field should use the config default (set::spamfilter::ban-reason/ban-time) but
+ * this isn't (or might not) be known yet when parsing spamfilter entries..
+ * so we do a VERY UGLY mass replace here.. unless someone else has a better idea.
  */
 static void do_weird_shun_stuff()
 {
-aCommand *cmptr = find_Command_simple("PART");
+aCommand *cmptr;
+aTKline *tk;
+char *encoded;
 
-	if (!cmptr) /* Huh? */
-		return;
-	if (ALLOW_PART_IF_SHUNNED)
-		cmptr->flags |= M_SHUN;
-	else
-		cmptr->flags &= ~M_SHUN;
+	if ((cmptr = find_Command_simple("PART")))
+	{
+		if (ALLOW_PART_IF_SHUNNED)
+			cmptr->flags |= M_SHUN;
+		else
+			cmptr->flags &= ~M_SHUN;
+	}
+
+	encoded = unreal_encodespace(SPAMFILTER_BAN_REASON);
+	for (tk = tklines[tkl_hash('q')]; tk; tk = tk->next)
+	{
+		if (tk->type != TKL_NICK)
+			continue;
+		if (!tk->setby)
+		{
+			if (me.name[0] != '\0')
+				tk->setby = strdup(me.name);
+			else
+				tk->setby = strdup(conf_me->name ? conf_me->name : "~server~");
+		}
+	}
+
+	for (tk = tklines[tkl_hash('f')]; tk; tk = tk->next)
+	{
+		if (tk->type != TKL_SPAMF)
+			continue; /* global entry or something else.. */
+		if (!strcmp(tk->spamf->tkl_reason, "<internally added by ircd>"))
+		{
+			MyFree(tk->spamf->tkl_reason);
+			tk->spamf->tkl_reason = strdup(encoded);
+			tk->spamf->tkl_duration = SPAMFILTER_BAN_TIME;
+		}
+		/* This one is even more ugly, but our config crap is VERY confusing :[ */
+		if (!tk->setby)
+		{
+			if (me.name[0] != '\0')
+				tk->setby = strdup(me.name);
+			else
+				tk->setby = strdup(conf_me->name ? conf_me->name : "~server~");
+		}
+	}
 }
 
 int	init_conf(char *rootconf, int rehash)
@@ -1438,9 +1474,9 @@ int	init_conf(char *rootconf, int rehash)
 #endif
 			unload_loaded_includes();
 		}
+		load_includes();
 #ifndef STATIC_LINKING
 		Init_all_testing_modules();
-		load_includes();
 #else
 		if (!rehash) {
 			ModuleInfo ModCoreInfo;
@@ -1475,10 +1511,13 @@ int	init_conf(char *rootconf, int rehash)
 	}
 	config_free(conf);
 	conf = NULL;
-#ifndef STATIC_LINKING
 	if (rehash)
+	{
+#ifndef STATIC_LINKING
 		module_loadall(0);
 #endif
+		RunHook0(HOOKTYPE_REHASH_COMPLETE);
+	}
 	do_weird_shun_stuff();
 	nextconnect = TStime() + 1; /* check for autoconnects */
 	config_status("Configuration loaded without any problems ..");
@@ -1553,6 +1592,7 @@ void	config_rehash()
 	OperStat 			*os_ptr;
 	ListStruct 	*next, *next2;
 	aTKline *tk, *tk_next;
+	SpamExcept *spamex_ptr;
 
 	USE_BAN_VERSION = 0;
 	/* clean out stuff that we don't use */	
@@ -1744,6 +1784,14 @@ void	config_rehash()
 			tk_next = tk->next;
 	}
 
+	for (tk = tklines[tkl_hash('q')]; tk; tk = tk_next)
+	{
+		if (tk->type == TKL_NICK)
+			tk_next = tkl_del_line(tk);
+		else 
+			tk_next = tk->next;
+	}
+
 	for (deny_dcc_ptr = conf_deny_dcc; deny_dcc_ptr; deny_dcc_ptr = (ConfigItem_deny_dcc *)next)
 	{
 		next = (ListStruct *)deny_dcc_ptr->next;
@@ -1846,6 +1894,12 @@ void	config_rehash()
 		MyFree(os_ptr);
 	}
 	iConf.oper_only_stats_ext = NULL;
+	for (spamex_ptr = iConf.spamexcept; spamex_ptr; spamex_ptr = (SpamExcept *)next)
+	{
+		next = (ListStruct *)spamex_ptr->next;
+		MyFree(spamex_ptr);
+	}
+	iConf.spamexcept = NULL;
 	for (of_ptr = conf_offchans; of_ptr; of_ptr = (ConfigItem_offchans *)next)
 	{
 		next = (ListStruct *)of_ptr->next;
@@ -2271,7 +2325,7 @@ ConfigItem_ban 	*Find_banEx(char *host, short type, short type2)
 	return NULL;
 }
 
-int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
+int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *username)
 {
 	ConfigItem_allow *aconf;
 	char *hname;
@@ -2305,7 +2359,10 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 					 * ALREADY sure that it is proper 
 					 * lengths
 					*/
-					(void)strcpy(uhost, cptr->username);
+					if (aconf->flags.noident)
+						strcpy(uhost, username);
+					else
+						(void)strcpy(uhost, cptr->username);
 					(void)strcat(uhost, "@");
 				}
 				else
@@ -2322,7 +2379,10 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 
 		if (index(aconf->ip, '@'))
 		{
-			strncpyzt(uhost, cptr->username, sizeof(uhost));
+			if (aconf->flags.noident)
+				strncpyzt(uhost, username, sizeof(uhost));
+			else
+				strncpyzt(uhost, cptr->username, sizeof(uhost));
 			(void)strcat(uhost, "@");
 		}
 		else
@@ -2337,7 +2397,10 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 		{
 			if (index(aconf->hostname, '@'))
 			{
-				strcpy(uhost, cptr->username);
+				if (aconf->flags.noident)
+					strcpy(uhost, username);
+				else
+					strcpy(uhost, cptr->username);
 				strcat(uhost, "@localhost");
 			}
 			else
@@ -3084,7 +3147,15 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 			errors++; continue;
 		}
 		if (!strcmp(cep->ce_varname, "pingfreq"))
-		{} else
+		{
+			int v = atol(cep->ce_vardata);
+			if ((v < 30) || (v > 600))
+			{
+				config_error("%s:%i: class::pingfreq should be a reasonable value (30-600)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++; continue;
+			}
+		} else
 		if (!strcmp(cep->ce_varname, "maxclients"))
 		{} else
 		if (!strcmp(cep->ce_varname, "connfreq"))
@@ -3596,6 +3667,14 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 			return 1;
 		}
+		if (end - start >= 100)
+		{
+			config_error("%s:%i: listen: you requested port %d-%d, that's %d ports "
+				"(and thus consumes %d sockets) this is probably not what you want.",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum, start, end,
+				end - start + 1, end - start + 1);
+			return 1;
+		}
 		if ((start < 0) || (start > 65535) || (end < 0) || (end > 65535))
 		{
 			config_error("%s:%i: listen: illegal port range values must be between 0 and 65535",
@@ -4028,6 +4107,10 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 		ca->mask = strdup(cep2->ce_vardata);
 		if (!strcmp(cep3->ce_vardata, "gline"))
 			ca->type = TKL_KILL|TKL_GLOBAL;
+		else if (!strcmp(cep3->ce_vardata, "qline"))
+			ca->type = TKL_NICK;
+		else if (!strcmp(cep3->ce_vardata, "gqline"))
+			ca->type = TKL_NICK|TKL_GLOBAL;
 		else if (!strcmp(cep3->ce_vardata, "gzline"))
 			ca->type = TKL_ZAP|TKL_GLOBAL;
 		else if (!strcmp(cep3->ce_vardata, "shun"))
@@ -4159,6 +4242,8 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 		if (!strcmp(cep3->ce_vardata, "gline")) {}
+		else if (!strcmp(cep3->ce_vardata, "qline")) {}
+		else if (!strcmp(cep3->ce_vardata, "gqline")) {}
 		else if (!strcmp(cep3->ce_vardata, "gzline")){}
 		else if (!strcmp(cep3->ce_vardata, "shun")) {}
 		else if (!strcmp(cep3->ce_vardata, "tkline")) {
@@ -4681,19 +4766,34 @@ int _conf_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 	nl->reason = strdup(word);
 
 	cep = config_find_entry(ce->ce_entries, "target");
-	for (cep = cep->ce_entries; cep; cep = cep->ce_next)
-		target |= spamfilter_getconftargets(cep->ce_varname);
+	if (cep->ce_vardata)
+		target = spamfilter_getconftargets(cep->ce_vardata);
+	else {
+		for (cep = cep->ce_entries; cep; cep = cep->ce_next)
+			target |= spamfilter_getconftargets(cep->ce_varname);
+	}
+
 	strncpyzt(nl->usermask, spamfilter_target_inttostring(target), sizeof(nl->usermask));
 	nl->subtype = target;
 
 	cep = config_find_entry(ce->ce_entries, "action");
 	action = banact_stringtoval(cep->ce_vardata);
 	nl->hostmask = strdup(cep->ce_vardata);
-	nl->setby = strdup(BadPtr(me.name) ? "~server~" : me.name); /* Hmm! */
+	nl->setby = BadPtr(me.name) ? NULL : strdup(me.name); /* Hmm! */
 	
 	nl->spamf = unreal_buildspamfilter(word);
 	nl->spamf->action = action;
-	
+
+	if ((cep = config_find_entry(ce->ce_entries, "reason")))
+		nl->spamf->tkl_reason = strdup(cep->ce_vardata);
+	else
+		nl->spamf->tkl_reason = strdup("<internally added by ircd>");
+
+	if ((cep = config_find_entry(ce->ce_entries, "ban-time")))
+		nl->spamf->tkl_duration = config_checkval(cep->ce_vardata, CFG_TIME);
+	else
+		nl->spamf->tkl_duration = (SPAMFILTER_BAN_TIME ? SPAMFILTER_BAN_TIME : 86400);
+		
 	AddListItem(nl, tklines[tkl_hash('f')]);
 	return 1;
 }
@@ -4720,7 +4820,8 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
 			errors++; continue;
 		}
-		if (!strcmp(cep->ce_varname, "regex") || !strcmp(cep->ce_varname, "action"))
+		if (!strcmp(cep->ce_varname, "regex") || !strcmp(cep->ce_varname, "action") ||
+		    !strcmp(cep->ce_varname, "reason") || !strcmp(cep->ce_varname, "ban-time"))
 			continue;
 		
 		config_error("%s:%i: unknown directive spamfilter::%s",
@@ -4752,6 +4853,13 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		errors++;
 	} else if (cep->ce_vardata) {
+		if (!spamfilter_getconftargets(cep->ce_vardata))
+		{
+			config_error("%s:%i: unknown spamfiler target type '%s'",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
+			errors++;
+		}
+	} else if (cep->ce_entries) {
 		for (cep = cep->ce_entries; cep; cep = cep->ce_next)
 		{
 			if (!cep->ce_varname)
@@ -4767,6 +4875,10 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 			}
 		}
+	} else {
+		config_error("%s:%i: empty spamfilter::target block",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
 	}
 
 	if (!(cep = config_find_entry(ce->ce_entries, "action")))
@@ -5189,7 +5301,17 @@ int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 
 	ca = MyMallocEx(sizeof(ConfigItem_ban));
 	if (!strcmp(ce->ce_vardata, "nick"))
-		ca->flag.type = CONF_BAN_NICK;
+	{
+		aTKline *nl = MyMallocEx(sizeof(aTKline));
+		nl->type = TKL_NICK;
+		cep = config_find_entry(ce->ce_entries, "mask");
+		nl->hostmask = strdup(cep->ce_vardata);
+		cep = config_find_entry(ce->ce_entries, "reason");
+		nl->reason = strdup(cep->ce_vardata);
+		strcpy(nl->usermask, "*");
+		AddListItem(nl, tklines[tkl_hash('q')]);
+		return 0;
+	}
 	else if (!strcmp(ce->ce_vardata, "ip"))
 		ca->flag.type = CONF_BAN_IP;
 	else if (!strcmp(ce->ce_vardata, "server"))
@@ -5429,7 +5551,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			{
 				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 				{
-					OperStat *os = MyMalloc(sizeof(OperStat));
+					OperStat *os = MyMallocEx(sizeof(OperStat));
 					ircstrdup(os->flag, cepp->ce_varname);
 					AddListItem(os, tempiConf.oper_only_stats_ext);
 				}
@@ -5610,6 +5732,25 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					tempiConf.spamfilter_ban_time = config_checkval(cepp->ce_vardata,CFG_TIME);
 				if (!strcmp(cepp->ce_varname, "ban-reason"))
 					ircstrdup(tempiConf.spamfilter_ban_reason, cepp->ce_vardata);
+				if (!strcmp(cepp->ce_varname, "virus-help-channel"))
+					ircstrdup(tempiConf.spamfilter_virus_help_channel, cepp->ce_vardata);
+				if (!strcmp(cepp->ce_varname, "except"))
+				{
+					char *name, *p;
+					SpamExcept *e;
+					ircstrdup(tempiConf.spamexcept_line, cepp->ce_vardata);
+					for (name = strtoken(&p, cepp->ce_vardata, ","); name; name = strtoken(&p, NULL, ","))
+					{
+						if (*name == ' ')
+							name++;
+						if (*name)
+						{
+							e = MyMallocEx(sizeof(SpamExcept) + strlen(name));
+							strcpy(e->name, name);
+							AddListItem(e, tempiConf.spamexcept);
+						}
+					}
+				}
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "default-bantime"))
@@ -5964,8 +6105,25 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				CheckNull(cepp);
 				if (!strcmp(cepp->ce_varname, "period")) {
+					int x = config_checkval(cepp->ce_vardata,CFG_TIME);
+					if (x > 86400*7)
+					{
+						config_error("%s:%i: insane set::throttle::period value",
+							cepp->ce_fileptr->cf_filename,
+							cepp->ce_varlinenum);
+						errors++;
+						continue;
+					}
 				}
 				else if (!strcmp(cepp->ce_varname, "connections")) {
+					int x = atoi(cepp->ce_vardata);
+					if ((x < 1) || (x > 127))
+					{
+						config_error("%s:%i: set::throttle::connections out of range, should be 1-127",
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+						errors++;
+						continue;
+					}
 				}
 				else
 				{
@@ -6199,8 +6357,22 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					}
 				} else
 				if (!strcmp(cepp->ce_varname, "ban-reason"))
-				{ }
-				else {
+				{ } else
+				if (!strcmp(cepp->ce_varname, "virus-help-channel"))
+				{
+					if ((cepp->ce_vardata[0] != '#') || (strlen(cepp->ce_vardata) > CHANNELLEN))
+					{
+						config_error("%s:%i: set::spamfilter:virus-help-channel: "
+						             "specified channelname is too long or contains invalid characters (%s)",
+						             cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+						             cepp->ce_vardata);
+						errors++;
+						continue;
+					}
+				} else 
+				if (!strcmp(cepp->ce_varname, "except"))
+				{ } else
+				{
 					config_error("%s:%i: unknown directive set::spamfilter::%s",
 						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, cepp->ce_varname);
 					errors++;
@@ -7111,13 +7283,6 @@ static void conf_download_complete(char *url, char *file, char *errorbuf, int ca
 		remove(file);
 		return;
 	}
-	if (!file && !cached)
-	{
-		config_error("Error downloading %s: %s", url, errorbuf);
-		loop.ircd_rehashing = 0;
-		unload_notloaded_includes();
-		return;
-	}
 	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
 	{
 		if (!(inc->flag.type & INCLUDE_REMOTE))
@@ -7127,20 +7292,25 @@ static void conf_download_complete(char *url, char *file, char *errorbuf, int ca
 		if (!stricmp(url, inc->url))
 		{
 			inc->flag.type &= ~INCLUDE_DLQUEUED;
+			if (!file && !cached)
+				inc->errorbuf = strdup(errorbuf);
 			break;
 		}
 	}
-	if (cached)
+	if (!inc->errorbuf)
 	{
-		char *urlfile = url_getfilename(url);
-		char *file = unreal_getfilename(urlfile);
-		char *tmp = unreal_mktemp("tmp", file);
-		unreal_copyfile(inc->file, tmp);
-		add_remote_include(tmp, url);
-		free(urlfile);
+		if (cached)
+		{
+			char *urlfile = url_getfilename(url);
+			char *file = unreal_getfilename(urlfile);
+			char *tmp = unreal_mktemp("tmp", file);
+			unreal_copyfile(inc->file, tmp);
+			add_remote_include(tmp, url, 0);
+			free(urlfile);
+		}
+		else
+			add_remote_include(file, url, 0);
 	}
-	else
-		add_remote_include(file, url);
 	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
 	{
 		if (inc->flag.type & INCLUDE_DLQUEUED)
@@ -7161,7 +7331,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 			sendto_one(sptr, ":%s NOTICE %s :A rehash is already in progress",
 				me.name, sptr->name);
 		return 0;
-	}	
+	}
 
 	loop.ircd_rehashing = 1;
 	loop.rehash_save_cptr = cptr;
@@ -7169,15 +7339,16 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	loop.rehash_save_sig = sig;
 	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
 	{
-		struct stat sb;
+		time_t modtime;
 		if (!(inc->flag.type & INCLUDE_REMOTE))
 			continue;
+
 		if (inc->flag.type & INCLUDE_NOTLOADED)
 			continue;
 		found_remote = 1;
-		stat(inc->file, &sb);
-		download_file_async(inc->url, sb.st_ctime, conf_download_complete);
+		modtime = unreal_getfilemodtime(inc->file);
 		inc->flag.type |= INCLUDE_DLQUEUED;
+		download_file_async(inc->url, modtime, conf_download_complete);
 	}
 	if (!found_remote)
 		return rehash_internal(cptr, sptr, sig);
@@ -7245,7 +7416,7 @@ void	listen_cleanup()
 }
 
 #ifdef USE_LIBCURL
-char *find_remote_include(char *url)
+char *find_remote_include(char *url, char **errorbuf)
 {
 	ConfigItem_include *inc;
 	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
@@ -7255,14 +7426,33 @@ char *find_remote_include(char *url)
 		if (!(inc->flag.type & INCLUDE_REMOTE))
 			continue;
 		if (!stricmp(url, inc->url))
+		{
+			*errorbuf = inc->errorbuf;
 			return inc->file;
+		}
 	}
 	return NULL;
 }
 
+char *find_loaded_remote_include(char *url)
+{
+	ConfigItem_include *inc;
+	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
+	{
+		if ((inc->flag.type & INCLUDE_NOTLOADED))
+			continue;
+		if (!(inc->flag.type & INCLUDE_REMOTE))
+			continue;
+		if (!stricmp(url, inc->url))
+			return inc->file;
+	}
+	return NULL;
+}	
+
 int remote_include(ConfigEntry *ce)
 {
-	char *file = find_remote_include(ce->ce_vardata);
+	char *errorbuf;
+	char *file = find_remote_include(ce->ce_vardata, &errorbuf);
 	int ret;
 	if (!loop.ircd_rehashing || (loop.ircd_rehashing && !file))
 	{
@@ -7280,17 +7470,24 @@ int remote_include(ConfigEntry *ce)
 		else
 		{
 			if ((ret = load_conf(file)) >= 0)
-				add_remote_include(file, ce->ce_vardata);
+				add_remote_include(file, ce->ce_vardata, INCLUDE_USED);
 			free(file);
 			return ret;
 		}
 	}
 	else
 	{
+		if (errorbuf)
+		{
+			config_error("%s:%i: include: error downloading '%s': %s",
+                                ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+                                ce->ce_vardata, errorbuf);
+			return -1;
+		}
 		if (config_verbose > 0)
 			config_status("Loading %s from download", ce->ce_vardata);
 		if ((ret = load_conf(file)) >= 0)
-			add_remote_include(file, ce->ce_vardata);
+			add_remote_include(file, ce->ce_vardata, INCLUDE_USED);
 		return ret;
 	}
 	return 0;
@@ -7312,12 +7509,12 @@ void add_include(char *file)
 	}
 	inc = MyMallocEx(sizeof(ConfigItem_include));
 	inc->file = strdup(file);
-	inc->flag.type = INCLUDE_NOTLOADED;
+	inc->flag.type = INCLUDE_NOTLOADED|INCLUDE_USED;
 	AddListItem(inc, conf_include);
 }
 
 #ifdef USE_LIBCURL
-void add_remote_include(char *file, char *url)
+void add_remote_include(char *file, char *url, int flags)
 {
 	ConfigItem_include *inc;
 
@@ -7330,10 +7527,11 @@ void add_remote_include(char *file, char *url)
 		if (!stricmp(url, inc->url))
 			return;
 	}
+
 	inc = MyMallocEx(sizeof(ConfigItem_include));
 	inc->file = strdup(file);
 	inc->url = strdup(url);
-	inc->flag.type = (INCLUDE_NOTLOADED|INCLUDE_REMOTE);
+	inc->flag.type = (INCLUDE_NOTLOADED|INCLUDE_REMOTE|flags);
 	AddListItem(inc, conf_include);
 }
 #endif
@@ -7345,13 +7543,15 @@ void unload_notloaded_includes(void)
 	for (inc = conf_include; inc; inc = next)
 	{
 		next = (ConfigItem_include *)inc->next;
-		if (inc->flag.type & INCLUDE_NOTLOADED)
+		if ((inc->flag.type & INCLUDE_NOTLOADED) || !(inc->flag.type & INCLUDE_USED))
 		{
 #ifdef USE_LIBCURL
 			if (inc->flag.type & INCLUDE_REMOTE)
 			{
 				remove(inc->file);
 				free(inc->url);
+				if (inc->errorbuf)
+					free(inc->errorbuf);
 			}
 #endif
 			free(inc->file);
@@ -7368,18 +7568,21 @@ void unload_loaded_includes(void)
 	for (inc = conf_include; inc; inc = next)
 	{
 		next = (ConfigItem_include *)inc->next;
-		if (inc->flag.type & INCLUDE_NOTLOADED)
-			continue;
-#ifdef USE_LIBCURL
-		if (inc->flag.type & INCLUDE_REMOTE)
+		if (!(inc->flag.type & INCLUDE_NOTLOADED) || !(inc->flag.type & INCLUDE_USED))
 		{
-			remove(inc->file);
-			free(inc->url);
-		}
+#ifdef USE_LIBCURL
+			if (inc->flag.type & INCLUDE_REMOTE)
+			{
+				remove(inc->file);
+				free(inc->url);
+				if (inc->errorbuf)
+					free(inc->errorbuf);
+			}
 #endif
-		free(inc->file);
-		DelListItem(inc, conf_include);
-		free(inc);
+			free(inc->file);
+			DelListItem(inc, conf_include);
+			free(inc);
+		}
 	}
 }
 			

@@ -1,8 +1,6 @@
 /*
  *   IRC - Internet Relay Chat, src/modules/%FILE%
- *   (C) 2001 The UnrealIRCd Team
- *
- *   %DESC%
+ *   (C) 2004 The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers.
@@ -27,6 +25,7 @@
 #include "sys.h"
 #include "numeric.h"
 #include "msg.h"
+#include "proto.h"
 #include "channel.h"
 #include <time.h>
 #include <sys/stat.h>
@@ -50,48 +49,34 @@ DLLFUNC int m_%COMMAND%(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_%UCOMMAND% 	"%UCOMMAND%"	
 #define TOK_%UCOMMAND% 	"%TOKEN%"	
 
-
-#ifndef DYNAMIC_LINKING
-ModuleInfo m_%COMMAND%_info
-#else
-#define m_%COMMAND%_info mod_header
-ModuleInfo mod_header
-#endif
+ModuleHeader MOD_HEADER(m_%COMMAND%)
   = {
-  	2,
-	"test",
+	"m_%COMMAND%",
 	"$Id$",
 	"command /%COMMAND%", 
-	NULL,
+	"3.2-b8-1",
 	NULL 
     };
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_init(int module_load)
-#else
-int    m_%COMMAND%_init(int module_load)
-#endif
+DLLFUNC int MOD_INIT(m_%COMMAND%)(ModuleInfo *modinfo)
 {
 	add_Command(MSG_%UCOMMAND%, TOK_%UCOMMAND%, m_%COMMAND%, %MAXPARA%);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	return MOD_SUCCESS;
 }
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	mod_load(int module_load)
-#else
-int    m_%COMMAND%_load(int module_load)
-#endif
+DLLFUNC int MOD_LOAD(m_%COMMAND%)(int module_load)
 {
+	return MOD_SUCCESS;
 }
 
-#ifdef DYNAMIC_LINKING
-DLLFUNC void	mod_unload(void)
-#else
-void	m_%COMMAND%_unload(void)
-#endif
+DLLFUNC int MOD_UNLOAD(m_%COMMAND%)(int module_unload)
 {
 	if (del_Command(MSG_%UCOMMAND%, TOK_%UCOMMAND%, m_%COMMAND%) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
-				m_%COMMAND%_info.name);
+			MOD_HEADER(m_%COMMAND%).name);
 	}
+	return MOD_SUCCESS;
 }
+

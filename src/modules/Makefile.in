@@ -33,7 +33,16 @@ R_MODULES=m_sethost.so m_chghost.so m_chgident.so m_setname.so \
 	 m_quit.so m_rakill.so m_rping.so m_sendumode.so m_sqline.so \
 	 m_tsctl.so m_unkline.so m_unsqline.so m_unzline.so m_whois.so \
 	 m_tkl.so m_vhost.so m_cycle.so m_svsjoin.so m_svspart.so \
-	 m_svswatch.so m_svssilence.so m_sendsno.so m_svssno.so
+	 m_svswatch.so m_svssilence.so m_sendsno.so m_svssno.so \
+	 m_sajoin.so m_sapart.so m_samode.so m_kick.so m_topic.so \
+	 m_invite.so m_list.so m_time.so m_svskill.so m_sjoin.so \
+	 m_pass.so m_userhost.so m_ison.so m_silence.so m_knock.so \
+	 m_umode2.so m_squit.so m_protoctl.so m_addline.so m_addomotd.so \
+	 m_wallops.so m_admin.so m_globops.so m_locops.so m_chatops.so \
+	 m_trace.so m_netinfo.so m_links.so m_help.so m_rules.so \
+	 m_close.so m_map.so m_eos.so m_server.so m_stats.so \
+	 m_svsfline.so m_dccdeny.so m_undccdeny.so m_whowas.so \
+	 m_connect.so
 
 COMMANDS=m_sethost.c m_chghost.c m_chgident.c m_setname.c m_setident.c \
          m_sdesc.c m_svsmode.c m_swhois.c m_svsmotd.c m_svsnline.c \
@@ -44,7 +53,15 @@ COMMANDS=m_sethost.c m_chghost.c m_chgident.c m_setname.c m_setident.c \
 	 m_tsctl.c m_unkline.c m_unsqline.c m_unzline.c m_whois.c \
 	 m_tkl.c m_vhost.c m_cycle.c m_svsjoin.c m_svspart.c \
 	 m_svslusers.c m_svswatch.c m_svssilence.c m_sendsno.c \
-	 m_svssno.c
+	 m_svssno.c m_sajoin.c m_sapart.c m_samode.c m_kick.c m_topic.c \
+	 m_invite.c m_list.c m_time.c m_svskill.c m_sjoin.c \
+	 m_pass.c m_userhost.c m_ison.c m_silence.c m_knock.c m_umode2.c \
+	 m_squit.c m_protoctl.c m_addline.c m_addmotd.c m_addomotd.c \
+	 m_wallops.c m_admin.c m_globops.c m_locops.c m_chatops.c \
+	 m_trace.c m_netinfo.c m_links.c m_help.c m_rules.c \
+	 m_close.c m_map.c m_eos.c m_server.c m_stats.c \
+	 m_svsfline.c m_dccdeny.c m_undccdeny.c m_whowas.c \
+	 m_connect.c
 
 
 MODULES=commands.so $(R_MODULES)
@@ -249,6 +266,170 @@ m_sendsno.so: m_sendsno.c $(INCLUDES)
 m_svssno.so: m_svssno.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_svssno.so m_svssno.c
+
+m_sajoin.so: m_sajoin.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_sajoin.so m_sajoin.c
+
+m_sapart.so: m_sapart.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_sapart.so m_sapart.c
+
+m_samode.so: m_samode.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_samode.so m_samode.c
+
+m_kick.so: m_kick.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_kick.so m_kick.c
+
+m_topic.so: m_topic.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_topic.so m_topic.c
+
+m_invite.so: m_invite.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_invite.so m_invite.c
+
+m_list.so: m_list.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_list.so m_list.c
+
+m_time.so: m_time.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_time.so m_time.c
+
+m_svskill.so: m_svskill.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_svskill.so m_svskill.c
+
+m_sjoin.so: m_sjoin.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_sjoin.so m_sjoin.c
+
+m_pass.so: m_pass.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_pass.so m_pass.c
+
+m_userhost.so: m_userhost.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_userhost.so m_userhost.c
+
+m_ison.so: m_ison.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_ison.so m_ison.c
+
+m_silence.so: m_silence.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_silence.so m_silence.c
+
+m_knock.so: m_knock.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_knock.so m_knock.c
+
+m_umode2.so: m_umode2.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_umode2.so m_umode2.c
+
+m_squit.so: m_squit.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_squit.so m_squit.c
+
+m_protoctl.so: m_protoctl.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_protoctl.so m_protoctl.c
+
+m_addline.so: m_addline.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_addline.so m_addline.c
+
+m_addmotd.so: m_addmotd.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_addmotd.so m_addmotd.c
+
+m_addomotd.so: m_addomotd.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_addomotd.so m_addomotd.c
+
+m_wallops.so: m_wallops.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_wallops.so m_wallops.c
+
+m_admin.so: m_admin.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_admin.so m_admin.c
+
+m_globops.so: m_globops.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_globops.so m_globops.c
+
+m_locops.so: m_locops.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_locops.so m_locops.c
+
+m_chatops.so: m_chatops.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_chatops.so m_chatops.c
+
+m_trace.so: m_trace.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_trace.so m_trace.c
+
+m_netinfo.so: m_netinfo.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_netinfo.so m_netinfo.c
+
+m_links.so: m_links.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_links.so m_links.c
+
+m_help.so: m_help.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_help.so m_help.c
+
+m_rules.so: m_rules.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_rules.so m_rules.c
+
+m_close.so: m_close.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_close.so m_close.c
+
+m_map.so: m_map.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_map.so m_map.c
+
+m_eos.so: m_eos.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_eos.so m_eos.c
+
+m_server.so: m_server.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_server.so m_server.c
+
+m_stats.so: m_stats.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_stats.so m_stats.c
+
+m_svsfline.so: m_svsfline.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_svsfline.so m_svsfline.c
+
+m_dccdeny.so: m_dccdeny.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_dccdeny.so m_dccdeny.c
+
+m_undccdeny.so: m_undccdeny.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_undccdeny.so m_undccdeny.c
+
+m_whowas.so: m_whowas.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_whowas.so m_whowas.c
+
+m_connect.so: m_connect.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_connect.so m_connect.c
 
 clean:
 	$(RM) -f *.o *.so *~ core

@@ -92,31 +92,20 @@ DLLFUNC int MOD_UNLOAD(m_unsqline)(int module_unload)
 */
 DLLFUNC int m_unsqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	ConfigItem_ban *bconf;
+       char *tkllayer[6] = {
+                me.name,        /*0  server.name */
+                "-",            /*1  - */
+                "Q",            /*2  Q   */
+                "*",            /*3  unused */
+                parv[1],        /*4  host */
+                sptr->name      /*5  whoremoved */
+        };
 
-	if (!(IsServer(sptr) || IsULine(sptr)) || parc < 2)
+	if (parc < 2)
 		return 0;
+        if (!IsServer(cptr))
+                return 0;
 
-	sendto_serv_butone_token(cptr, parv[0], MSG_UNSQLINE, TOK_UNSQLINE,
-	    "%s", parv[1]);
-
-	for (bconf = conf_ban; bconf; bconf = (ConfigItem_ban *)bconf->next)
-	{
-		if (bconf->flag.type != CONF_BAN_NICK)
-			continue;
-		if (bconf->flag.type2 != CONF_BAN_TYPE_AKILL)
-			continue;
-		if (!stricmp(parv[1], bconf->mask))
-			break;
-	}
-	if (bconf)
-	{
-		DelListItem(bconf, conf_ban);
-		if (bconf->mask)
-			MyFree(bconf->mask);
-		if (bconf->reason)
-			MyFree(bconf->reason);
-		MyFree(bconf);
-	}
-	return 0;
+        m_tkl(&me, &me, 6, tkllayer);
+        return 0;
 }

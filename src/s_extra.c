@@ -48,23 +48,24 @@ ID_Copyright("(C) Carsten Munk 1999");
        2     = set by ircops by /dccdeny
 */
 
-#define AllocCpy(x,y) x = (char *) MyMalloc(strlen(y) + 1); strcpy(x,y)
-
 /* ircd.dcc configuration */
 
+/* checks if the dcc is blacklisted.
+ * NOTE: 'target' can be NULL if the target was a channel
+ */
 ConfigItem_deny_dcc *dcc_isforbidden(aClient *cptr, aClient *sptr, aClient *target, char *filename)
 {
 	ConfigItem_deny_dcc *p;
 
-	if (!conf_deny_dcc || !target || !filename)
+	if (!conf_deny_dcc || !filename)
 		return NULL;
 
 	if (IsOper(sptr) || IsULine(sptr))
 		return NULL;
 
-	if (IsOper(target))
+	if (target && IsOper(target))
 		return NULL;
-	if (IsVictim(target))
+	if (target && IsVictim(target))
 	{
 		return NULL;
 	}
@@ -113,103 +114,6 @@ void	DCCdeny_del(ConfigItem_deny_dcc *deny)
 	MyFree(deny);
 }
 
-/* Add a temporary dccdeny line
- *
- * parv[0] - sender
- * parv[1] - file
- * parv[2] - reason
- */
-
-int m_dccdeny(aClient *cptr, aClient *sptr, int parc, char *parv[])
-{
-	if (!MyClient(sptr))
-		return 0;
-
-	if (!IsAnOper(sptr) || !OPCanDCCDeny(sptr))
-	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-		return 0;
-	}
-	/* fixup --Stskeeps */
-	if (parc < 2)
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0],
-		    "DCCDENY");
-		return 0;
-	}
-	
-	if (BadPtr(parv[2]))
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0],
-		    "DCCDENY");
-		return 0;
-	}
-	if (!Find_deny_dcc(parv[1]))
-	{
-		sendto_ops("%s added a temp dccdeny for %s (%s)", parv[0],
-		    parv[1], parv[2]);
-		DCCdeny_add(parv[1], parv[2], CONF_BAN_TYPE_TEMPORARY);		
-		return 0;
-	}
-	else
-		sendto_one(sptr, "NOTICE %s :*** %s already has a dccdeny", parv[0],
-		    parv[1]);
-	return 0;
-}
-
-/* Remove a temporary dccdeny line
- * parv[0] - sender
- * parv[1] - file/mask
- */
-int m_undccdeny(aClient *cptr, aClient *sptr, int parc, char *parv[])
-{
-	ConfigItem_deny_dcc *p;
-	if (!MyClient(sptr))
-		return 0;
-
-	if (!IsAnOper(sptr) || !OPCanDCCDeny(sptr))
-	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-		return 0;
-	}
-
-	if (parc < 2)
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0],
-		    "UNDCCDENY");
-		return 0;
-	}
-
-	if (BadPtr(parv[1]))
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0],
-		    "UNDCCDENY");
-		return 0;
-	}
-/* If we find an exact match even if it is a wild card only remove the exact match -- codemastr */
-	if ((p = Find_deny_dcc(parv[1])) && p->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
-	{
-		sendto_ops("%s removed a temp dccdeny for %s", parv[0],
-		    parv[1]);
-		DCCdeny_del(p);
-		return 1;
-	}
-/* Next search using the wild card -- codemastr */
-/* Uncommented by Stskeeps:
-	else if (dcc_del_wild_match(parv[1]) == 1)
-		sendto_ops
-		    ("%s removed a temp dccdeny for all dccdenys matching %s",
-		    parv[0], parv[1]);
-*/
-/* If still no match, give an error */
-	else
-		sendto_one(sptr,
-		    "NOTICE %s :*** Unable to find a temp dccdeny matching %s",
-		    parv[0], parv[1]);
-	return 0;
-
-}
-
 void dcc_wipe_services(void)
 {
 	ConfigItem_deny_dcc *dconf, *next;
@@ -230,64 +134,7 @@ void dcc_wipe_services(void)
 
 }
 
-int  m_svsfline(aClient *cptr, aClient *sptr, int parc, char *parv[])
-{
-	if (!IsServer(sptr))
-		return 0;
-
-	if (parc < 2)
-		return 0;
-
-	switch (*parv[1])
-	{
-		  /* Allow non-U:lines to send ONLY SVSFLINE +, but don't send it out
-		   * unless it is from a U:line -- codemastr */
-	  case '+':
-	  {
-		  if (parc < 4)
-			  return 0;
-		  if (!Find_deny_dcc(parv[2]))
-			  DCCdeny_add(parv[2], parv[3], CONF_BAN_TYPE_AKILL);
-		  if (IsULine(sptr))
-			  sendto_serv_butone_token(cptr,
-			      sptr->name,
-			      MSG_SVSFLINE, TOK_SVSFLINE,
-			      "+ %s :%s",
-			      parv[2], parv[3]);
-		  break;
-	  }
-	  case '-':
-	  {
-		  ConfigItem_deny_dcc *deny;
-		  if (!IsULine(sptr))
-			  return 0;
-		  if (parc < 3)
-			  return 0;
-		  if (!(deny = Find_deny_dcc(parv[2])))
-			break;
-		  DCCdeny_del(deny);
-		  sendto_serv_butone_token(cptr, sptr->name,
-		 	MSG_SVSFLINE, TOK_SVSFLINE, "%s",
-			      parv[2]);
-		  break;
-	  }
-	  case '*':
-	  {
-		  if (!IsULine(sptr))
-			  return 0;
-		  dcc_wipe_services();
-		  sendto_serv_butone_token(cptr, sptr->name,
-		      MSG_SVSFLINE, TOK_SVSFLINE,
-		      	"*");
-		  break;
-	  }
-
-	}
-	return 0;
-}
-
 /* restrict channel stuff */
-
 
 int  channel_canjoin(aClient *sptr, char *name)
 {

@@ -806,7 +806,7 @@ Ilovegotos:
 			errtmp = MyMalloc(errorbufsize);
 			regerror(errorcode, &expr, errtmp, errorbufsize);
 			strncpyzt(errorbuf, errtmp, sizeof(errorbuf));
-			free(errorbuf);
+			free(errtmp);
 			regfree(&expr);
 			return errorbuf;
 		}
@@ -833,6 +833,10 @@ int banact_stringtoval(char *s)
 		return BAN_ACT_GZLINE;
 	if (!strcmp(s, "block"))
 		return BAN_ACT_BLOCK;
+	if (!strcmp(s, "dccblock"))
+		return BAN_ACT_DCCBLOCK;
+	if (!strcmp(s, "viruschan"))
+		return BAN_ACT_VIRUSCHAN;
 	return 0;
 }
 
@@ -862,6 +866,8 @@ int banact_chartoval(char c)
 		case 'g': return BAN_ACT_GLINE; 
 		case 'Z': return BAN_ACT_GZLINE; 
 		case 'b': return BAN_ACT_BLOCK;
+		case 'd': return BAN_ACT_DCCBLOCK;
+		case 'v': return BAN_ACT_VIRUSCHAN;
 		default: return 0;
 	}
 	return 0; /* NOTREACHED */
@@ -879,6 +885,8 @@ char banact_valtochar(int val)
 		case BAN_ACT_GLINE: return 'g';
 		case BAN_ACT_GZLINE: return 'Z';
 		case BAN_ACT_BLOCK: return 'b';
+		case BAN_ACT_DCCBLOCK: return 'd';
+		case BAN_ACT_VIRUSCHAN: return 'v';
 		default: return '\0';
 	}
 	return '\0'; /* NOTREACHED */
@@ -896,6 +904,8 @@ char *banact_valtostring(int val)
 		case BAN_ACT_GLINE: return "gline";
 		case BAN_ACT_GZLINE: return "gzline";
 		case BAN_ACT_BLOCK: return "block";
+		case BAN_ACT_DCCBLOCK: return "dccblock";
+		case BAN_ACT_VIRUSCHAN: return "viruschan";
 		default: return "UNKNOWN";
 	}
 	return "UNKNOWN"; /* NOTREACHED */
@@ -994,4 +1004,28 @@ char *spamfilter_inttostring_long(int v)
 		default:
 			return "UNKNOWN";
 	}
+}
+
+char *unreal_decodespace(char *s)
+{
+static char buf[512], *i, *o;
+	for (i = s, o = buf; (*i) && (o < buf+510); i++)
+		if (*i == '_')
+			*o++ = ' ';
+		else
+			*o++ = *i;
+	*o = '\0';
+	return buf;
+}
+
+char *unreal_encodespace(char *s)
+{
+static char buf[512], *i, *o;
+	for (i = s, o = buf; (*i) && (o < buf+510); i++)
+		if (*i == ' ')
+			*o++ = '_';
+		else
+			*o++ = *i;
+	*o = '\0';
+	return buf;
 }

@@ -20,11 +20,6 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/**
- * 2003-01-06
- * - Added ability to log sajoin and sapart to ircd.log
- * XeRXeS
- */
 
 #ifndef CLEAN_COMPILE
 static char sccsid[] =
@@ -813,7 +808,7 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 	
 	if (MyConnect(sptr))
 	{
-		if ((i = check_client(sptr))) {
+		if ((i = check_client(sptr, username))) {
 			/* This had return i; before -McSkaf */
 			if (i == -5)
 				return FLUSH_BUFFER;
@@ -1018,7 +1013,6 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 #endif
 		(void)m_lusers(sptr, sptr, 1, parv);
 		short_motd(sptr);
-//		(void)m_motd(sptr, sptr, 1, parv);
 #ifdef EXPERIMENTAL
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** \2NOTE:\2 This server (%s) is running experimental IRC server software. If you find any bugs or problems, please mail unreal-dev@lists.sourceforge.net about it",
@@ -1104,8 +1098,9 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 	    sptr->hopcount + 1, sptr->lastnick, user->username, user->realhost,
 	    user->server, user->servicestamp, sptr->info,
 	    (!buf || *buf == '\0' ? "+" : buf),
-	    ((IsHidden(sptr)
-	    && (sptr->umodes & UMODE_SETHOST)) ? sptr->user->virthost : "*"));
+/*	    ((IsHidden(sptr)
+	    && (sptr->umodes & UMODE_SETHOST)) ? sptr->user->virthost : "*"));*/
+	    sptr->user->virthost);
 
 	/* Send password from sptr->passwd to NickServ for identification,
 	 * if passwd given and if NickServ is online.
@@ -1182,7 +1177,8 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 */
 CMD_FUNC(m_nick)
 {
-	ConfigItem_ban *aconf;
+	aTKline *tklban;
+	int ishold;
 	aClient *acptr, *serv = NULL;
 	aClient *acptrs;
 	char nick[NICKLEN + 2], *s;
@@ -1318,9 +1314,9 @@ CMD_FUNC(m_nick)
 		    "Reserved for internal IRCd purposes");
 		return 0;
 	}
-	if (!IsULine(sptr) && ((aconf = Find_ban(nick, CONF_BAN_NICK))))
+	if (!IsULine(sptr) && (tklban = find_qline(sptr, nick, &ishold)))
 	{
-		if (IsServer(sptr))
+		if (IsServer(sptr) && !ishold)
 		{
 			acptrs =
 			    (aClient *)find_server_b64_or_real(sptr->user ==
@@ -1333,7 +1329,7 @@ CMD_FUNC(m_nick)
 				    && !IsServer(sptr) ? sptr->name : "<unregistered>"),
 				    acptrs ? acptrs->name : "unknown server");
 		}
-		else
+		else if (!ishold)
 		{
 			sendto_snomask(SNO_QLINE, "Q:lined nick %s from %s on %s",
 			    nick,
@@ -1341,18 +1337,24 @@ CMD_FUNC(m_nick)
 			    me.name);
 		}
 
-		if ((!IsServer(cptr)) && (!IsOper(cptr)))
+		if (!IsServer(cptr))
 		{
-
-			if (aconf)
+			if (ishold)
+			{
 				sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
 				    me.name, BadPtr(parv[0]) ? "*" : parv[0],
-				    nick,
-				    BadPtr(aconf->reason) ? "reason unspecified"
-				    : aconf->reason);
-			sendto_snomask(SNO_QLINE, "Forbidding Q-lined nick %s from %s.",
-			    nick, get_client_name(cptr, FALSE));
-			return 0;	/* NICK message ignored */
+				    nick, tklban->reason);
+				return 0;
+			}
+			if (!IsOper(cptr))
+			{
+				sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
+				    me.name, BadPtr(parv[0]) ? "*" : parv[0],
+				    nick, tklban->reason);
+				sendto_snomask(SNO_QLINE, "Forbidding Q-lined nick %s from %s.",
+				    nick, get_client_name(cptr, FALSE));
+				return 0;	/* NICK message ignored */
+			}
 		}
 	}
 	/*
@@ -2046,167 +2048,6 @@ CMD_FUNC(m_user)
 	return 0;
 }
 
-
-
-
-
-/***************************************************************************
- * m_pass() - Added Sat, 4 March 1989
- ***************************************************************************/
-
-/*
-** m_pass
-**	parv[0] = sender prefix
-**	parv[1] = password
-*/
-CMD_FUNC(m_pass)
-{
-	char *password = parc > 1 ? parv[1] : NULL;
-	int  PassLen = 0;
-	if (BadPtr(password))
-	{
-		sendto_one(cptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "PASS");
-		return 0;
-	}
-	if (!MyConnect(sptr) || (!IsUnknown(cptr) && !IsHandshake(cptr)))
-	{
-		sendto_one(cptr, err_str(ERR_ALREADYREGISTRED),
-		    me.name, parv[0]);
-		return 0;
-	}
-
-	PassLen = strlen(password);
-	if (cptr->passwd)
-		MyFree(cptr->passwd);
-	if (PassLen > (PASSWDLEN))
-		PassLen = PASSWDLEN;
-	cptr->passwd = MyMalloc(PassLen + 1);
-	strncpyzt(cptr->passwd, password, PassLen + 1);
-
-	/* note: the original non-truncated password is supplied as 2nd parameter. */
-	RunHookReturnInt2(HOOKTYPE_LOCAL_PASS, sptr, password, !=0);
-	return 0;
-}
-
-/*
- * m_userhost added by Darren Reed 13/8/91 to aid clients and reduce
- * the need for complicated requests like WHOIS. It returns user/host
- * information only (no spurious AWAY labels or channels).
- * Re-written by Dianora 1999
- */
-CMD_FUNC(m_userhost)
-{
-
-	char *p;		/* scratch end pointer */
-	char *cn;		/* current name */
-	struct Client *acptr;
-	char response[5][NICKLEN * 2 + CHANNELLEN + USERLEN + HOSTLEN + 30];
-	int  i;			/* loop counter */
-
-	if (parc < 2)
-	{
-		sendto_one(sptr, rpl_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "USERHOST");
-		return 0;
-	}
-
-	/* The idea is to build up the response string out of pieces
-	 * none of this strlen() nonsense.
-	 * 5 * (NICKLEN*2+CHANNELLEN+USERLEN+HOSTLEN+30) is still << sizeof(buf)
-	 * and our ircsprintf() truncates it to fit anyway. There is
-	 * no danger of an overflow here. -Dianora
-	 */
-	response[0][0] = response[1][0] = response[2][0] =
-	    response[3][0] = response[4][0] = '\0';
-
-	cn = parv[1];
-
-	for (i = 0; (i < 5) && cn; i++)
-	{
-		if ((p = strchr(cn, ' ')))
-			*p = '\0';
-
-		if ((acptr = find_person(cn, NULL)))
-		{
-			ircsprintf(response[i], "%s%s=%c%s@%s",
-			    acptr->name,
-			    (IsAnOper(acptr) && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
-				? "*" : "",
-			    (acptr->user->away) ? '-' : '+',
-			    acptr->user->username,
-			    ((acptr != sptr) && !IsOper(sptr)
-			    && IsHidden(acptr) ? acptr->user->virthost :
-			    acptr->user->realhost));
-		}
-		if (p)
-			p++;
-		cn = p;
-	}
-
-	sendto_one(sptr, rpl_str(RPL_USERHOST), me.name, parv[0],
-	    response[0], response[1], response[2], response[3], response[4]);
-
-	return 0;
-}
-
-/*
- * m_ison added by Darren Reed 13/8/91 to act as an efficent user indicator
- * with respect to cpu/bandwidth used. Implemented for NOTIFY feature in
- * clients. Designed to reduce number of whois requests. Can process
- * nicknames in batches as long as the maximum buffer length.
- *
- * format:
- * ISON :nicklist
- */
-
-CMD_FUNC(m_ison)
-{
-	char namebuf[USERLEN + HOSTLEN + 4];
-	aClient *acptr;
-	char *s, **pav = parv, *user;
-	int  len;
-	char *p = NULL;
-
-
-	if (parc < 2)
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "ISON");
-		return 0;
-	}
-
-	(void)ircsprintf(buf, rpl_str(RPL_ISON), me.name, *parv);
-	len = strlen(buf);
-#ifndef NO_FDLIST
-	cptr->priority += 30;	/* this keeps it from moving to 'busy' list */
-#endif
-	for (s = strtoken(&p, *++pav, " "); s; s = strtoken(&p, NULL, " "))
-	{
-		if ((user = index(s, '!')))
-			*user++ = '\0';
-		if ((acptr = find_person(s, NULL)))
-		{
-			if (user)
-			{
-				strcpy(namebuf, acptr->user->username);
-				strcat(namebuf, "@");
-				strcat(namebuf, GetHost(acptr));
-				if (match(user, namebuf))
-					continue;
-				*--user = '!';
-			}
-
-			(void)strncat(buf, s, sizeof(buf) - len);
-			len += strlen(s);
-			(void)strncat(buf, " ", sizeof(buf) - len);
-			len++;
-		}
-	}
-	sendto_one(sptr, "%s", buf);
-	return 0;
-}
-
 void set_snomask(aClient *sptr, char *snomask) {
 	int what = MODE_ADD; /* keep this an int. -- Syzop */
 	char *p;
@@ -2543,8 +2384,9 @@ CMD_FUNC(m_umode)
 		}
 		sptr->user->virthost = (char *)make_virthost(sptr->user->realhost,
 		    sptr->user->virthost, 1);
-		sendto_serv_butone_token_opt(cptr, OPT_VHP, sptr->name,
-			MSG_SETHOST, TOK_SETHOST, "%s", sptr->user->virthost);
+		if (!dontspread)
+			sendto_serv_butone_token_opt(cptr, OPT_VHP, sptr->name,
+				MSG_SETHOST, TOK_SETHOST, "%s", sptr->user->virthost);
 		if (UHOST_ALLOWED == UHALLOW_REJOIN)
 		{
 			/* LOL, this is ugly ;) */
@@ -2633,6 +2475,8 @@ CMD_FUNC(m_umode)
 	 * compare new flags with old flags and send string which
 	 * will cause servers to update correctly.
 	 */
+	if (setflags != sptr->umodes)
+		RunHook3(HOOKTYPE_UMODE_CHANGE, sptr, setflags, sptr->umodes);
 	if (dontspread == 0)
 		send_umode_out(cptr, sptr, setflags);
 
@@ -2642,30 +2486,6 @@ CMD_FUNC(m_umode)
 
 	return 0;
 }
-
-/*
-    m_umode2 added by Stskeeps
-    parv[0] - sender
-    parv[1] - modes to change
-
-    Small wrapper to bandwidth save
-*/
-
-CMD_FUNC(m_umode2)
-{
-	char *xparv[5] = {
-		parv[0],
-		parv[0],
-		parv[1],
-		(parc > 3) ? parv[3] : NULL,
-		NULL
-	};
-
-	if (!parv[1])
-		return 0;
-	return m_umode(cptr, sptr, (parc > 3) ? 4 : 3, xparv);
-}
-
 
 /*
  * send the MODE string for user (user) to connection cptr
@@ -2821,220 +2641,3 @@ int add_silence(aClient *sptr, char *mask, int senderr)
 	sptr->user->silence = lp;
 	return 0;
 }
-
-/*
-** m_silence
-**	parv[0] = sender prefix
-** From local client:
-**	parv[1] = mask (NULL sends the list)
-** From remote client:
-**	parv[1] = nick that must be silenced
-**      parv[2] = mask
-*/
-
-CMD_FUNC(m_silence)
-{
-	Link *lp;
-	aClient *acptr;
-	char c, *cp;
-
-	acptr = sptr;
-
-	if (MyClient(sptr))
-	{
-		if (parc < 2 || *parv[1] == '\0'
-		    || (acptr = find_person(parv[1], NULL)))
-		{
-			if (!(acptr->user))
-				return 0;
-			for (lp = acptr->user->silence; lp; lp = lp->next)
-				sendto_one(sptr, rpl_str(RPL_SILELIST), me.name,
-				    sptr->name, acptr->name, lp->value.cp);
-			sendto_one(sptr, rpl_str(RPL_ENDOFSILELIST), me.name,
-			    acptr->name);
-			return 0;
-		}
-		cp = parv[1];
-		c = *cp;
-		if (c == '-' || c == '+')
-			cp++;
-		else if (!(index(cp, '@') || index(cp, '.') ||
-		    index(cp, '!') || index(cp, '*')))
-		{
-			sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name,
-			    parv[0], parv[1]);
-			return -1;
-		}
-		else
-			c = '+';
-		cp = pretty_mask(cp);
-		if ((c == '-' && !del_silence(sptr, cp)) ||
-		    (c != '-' && !add_silence(sptr, cp, 1)))
-		{
-			sendto_prefix_one(sptr, sptr, ":%s SILENCE %c%s",
-			    parv[0], c, cp);
-			if (c == '-')
-				sendto_serv_butone(NULL, ":%s SILENCE * -%s",
-				    sptr->name, cp);
-		}
-	}
-	else if (parc < 3 || *parv[2] == '\0')
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0],
-		    "SILENCE");
-		return -1;
-	}
-	else if ((c = *parv[2]) == '-' || (acptr = find_person(parv[1], NULL)))
-	{
-		if (c == '-')
-		{
-			if (!del_silence(sptr, parv[2] + 1))
-				sendto_serv_butone(cptr, ":%s SILENCE %s :%s",
-				    parv[0], parv[1], parv[2]);
-		}
-		else
-		{
-			(void)add_silence(sptr, parv[2], 1);
-			if (!MyClient(acptr))
-				sendto_one(acptr, ":%s SILENCE %s :%s",
-				    parv[0], parv[1], parv[2]);
-		}
-	}
-	else
-	{
-		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, parv[0],
-		    parv[1]);
-		return -1;
-	}
-	return 0;
-}
-
-
-
-/* m_sajoin() - Lamego - Wed Jul 21 20:04:48 1999
-   Copied off PTlink IRCd (C) PTlink coders team.
-   Coded for Sadmin by Stskeeps
-   also Modified by NiQuiL (niquil@programmer.net)
-	parv[0] - sender
-	parv[1] - nick to make join
-	parv[2] - channel(s) to join
-*/
-CMD_FUNC(m_sajoin)
-{
-	aClient *acptr;
-	if (!IsSAdmin(sptr) && !IsULine(sptr))
-	{
-	 sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-	 return 0;
-	}
-
-	if (parc != 3)
-	{
-	 sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0], "SAJOIN");
-	 return 0;
-	}
-
-	if (!(acptr = find_person(parv[1], NULL)))
-	{
-		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, parv[0], parv[1]);
-		return 0;
-	}
-
-	if (MyClient(acptr))
-	{
-		int flags;
-		aChannel *chptr;
-		Membership *lp;
-		if (strlen(parv[2]) > CHANNELLEN)
-			parv[2][CHANNELLEN] = 0;
-		clean_channelname(parv[2]);
-		if (check_channelmask(sptr, cptr, parv[2]) == -1 || *parv[2] == '0' ||
-		    !IsChannelName(parv[2]))
-		{
-			sendto_one(sptr,
-			    err_str(ERR_NOSUCHCHANNEL), me.name,
-			    parv[0], parv[2]);
-			return 0;
-		}
-		flags = (ChannelExists(parv[2])) ? CHFL_DEOPPED : CHFL_CHANOP;
-		chptr = get_channel(sptr, parv[2], CREATE);
-		if (chptr && (lp = find_membership_link(acptr->user->channel, chptr)))
-		{
-			sendto_one(sptr, err_str(ERR_USERONCHANNEL), me.name, parv[0], 
-				   parv[1], parv[2]);
-			return 0;
-		}
-		sendto_one(acptr,
-		    ":%s %s %s :*** You were forced to join %s", me.name,
-		    IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, parv[2]);
-		join_channel(chptr, acptr, acptr, flags);
-	}
-	else
-		sendto_one(acptr, ":%s SAJOIN %s %s", parv[0],
-		    parv[1], parv[2]);
-
-	sendto_realops("%s used SAJOIN to make %s join %s", sptr->name, parv[1],
-	    parv[2]);
-
-	/* Logging function added by XeRXeS */
-	ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",
-		sptr->name, parv[1], parv[2]);
-
-	return 0;
-}
-
-
-/* m_sapart() - Lamego - Wed Jul 21 20:04:48 1999
-   Copied off PTlink IRCd (C) PTlink coders team.
-   Coded for Sadmin by Stskeeps
-   also Modified by NiQuiL (niquil@programmer.net)
-	parv[0] - sender
-	parv[1] - nick to make part
-	parv[2] - channel(s) to part
-*/
-CMD_FUNC(m_sapart)
-{
-	aClient *acptr;
-	if (!IsSAdmin(sptr) && !IsULine(sptr))
-	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-		return 0;
-	}
-
-	if (parc != 3)
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0], "SAPART");
-		return 0;
-	}
-
-	if (!(acptr = find_person(parv[1], NULL)))
-	{
-		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, parv[0], parv[1]);
-		return 0;
-	}
-
-	sendto_realops("%s used SAPART to make %s part %s", sptr->name, parv[1],
-	    parv[2]);
-
- 
-	/* Logging function added by XeRXeS */
-	ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s", 
-		sptr->name, parv[1], parv[2]);
-
-	if (MyClient(acptr))
-	{
-		parv[0] = parv[1];
-		parv[1] = parv[2];
-		parv[2] = NULL;
-		sendto_one(acptr,
-		    ":%s %s %s :*** You were forced to part %s", me.name,
-		    IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, parv[1]);
-		(void)m_part(acptr, acptr, 2, parv);
-	}
-	else
-		sendto_one(acptr, ":%s SAPART %s %s", parv[0],
-		    parv[1], parv[2]);
-
-	return 0;
-}
-

@@ -88,7 +88,6 @@ DLLFUNC int MOD_UNLOAD(m_svsmode)(int module_unload)
 }
 
 extern void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, char *param);
-extern char modebuf[MODEBUFLEN], parabuf[MODEBUFLEN];
 int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[]) 
 {
 	aChannel *chptr;

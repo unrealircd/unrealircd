@@ -300,31 +300,21 @@
 
 #define MAXPARA    	15
 
-extern int m_topic(), m_join(), m_part(), m_mode();
-extern int m_wallops(), m_kick();
-extern int m_nick(), m_error(), m_samode();
-extern int m_invite(), m_svskill();
-extern int m_chatops(), m_dns();
-extern int m_gnotice(), m_goper(), m_globops(), m_locops();
-extern int m_protoctl(), m_tkl();
-extern int m_motd(), m_user(), m_list();
-extern int m_server(), m_info(), m_links(), m_summon(), m_stats();
-extern int m_users(), m_version(), m_help();
-extern int m_squit(), m_connect();
-extern int m_pass(), m_trace();
-extern int m_time(), m_names(), m_admin();
-extern int m_lusers(), m_umode(), m_close();
-extern int m_motd(), m_whowas(), m_silence();
-extern int m_service(), m_userhost(), m_ison(), m_watch();
-extern int m_map(), m_dalinfo();
-extern int m_addline(), m_rules();
-extern int m_knock(),m_credits();
+extern int m_join(), m_part(), m_mode();
+extern int m_nick(), m_error();
+extern int m_dns();
+extern int m_tkl();
+extern int m_motd(), m_user();
+extern int m_info(), m_summon();
+extern int m_users(), m_version();
+extern int m_names();
+extern int m_lusers(), m_umode();
+extern int m_motd();
+extern int m_service(), m_watch();
+extern int m_dalinfo();
+extern int m_credits();
 extern int m_license();
-extern int m_netinfo(), m_addmotd(), m_addomotd();
-extern int m_sajoin(), m_sapart();
-extern int m_svsfline();
-extern int m_botmotd(), m_sjoin();
-extern int m_umode2(), m_dccdeny(), m_undccdeny();
+extern int m_botmotd();
 extern int m_opermotd();
 extern int m_module(), m_alias(), m_tkl(), m_opermotd();
 extern int m_rehash(), m_die(), m_restart();

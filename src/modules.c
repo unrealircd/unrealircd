@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #ifdef _WIN32
 #include <io.h>
 #define RTLD_NOW 0
@@ -81,10 +82,10 @@ void *obsd_dlsym(void *handle, char *symbol) {
 
 void DeleteTempModules(void)
 {
+	char tempbuf[PATH_MAX+1];
 #ifndef _WIN32
 	DIR *fd = opendir("tmp");
 	struct dirent *dir;
-	char tempbuf[PATH_MAX+1];
 
 	if (!fd) /* Ouch.. this is NOT good!! */
 	{
@@ -97,12 +98,35 @@ void DeleteTempModules(void)
 
 	while ((dir = readdir(fd)))
 	{
+		if (!strcmp(dir->d_name, ".") || !strcmp(dir->d_name, ".."))
+			continue;
 		strcpy(tempbuf, "tmp/");
 		strcat(tempbuf, dir->d_name);
 		remove(tempbuf);
 	}
 	closedir(fd);
-#endif
+#else
+	WIN32_FIND_DATA hData;
+	HANDLE hFile = FindFirstFile("tmp/*", &hData);
+	if (hFile != INVALID_HANDLE_VALUE)
+	{
+		if (strcmp(hData.cFileName, ".") || strcmp(hData.cFileName, ".."))
+		{
+			strcpy(tempbuf, "tmp/");
+			strcat(tempbuf, hData.cFileName);
+			remove(tempbuf);
+		}
+	}
+	while (FindNextFile(hFile, &hData))
+	{
+		if (!strcmp(hData.cFileName, ".") || !strcmp(hData.cFileName, ".."))
+			continue;
+		strcpy(tempbuf, "tmp/");
+		strcat(tempbuf, hData.cFileName);
+		remove(tempbuf);
+	}
+	FindClose(hFile);
+#endif	
 }
 
 void Module_Init(void)
@@ -217,6 +241,8 @@ char  *Module_Create(char *path_)
 		}
 		mod = (Module *)Module_make(mod_header, Mod);
 		mod->tmp_file = strdup(tmppath);
+		if (Mod_Version)
+			mod->compilecheck = 1;
 		irc_dlsym(Mod, "Mod_Init", Mod_Init);
 		if (!Mod_Init)
 		{
@@ -805,6 +831,8 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			strcat(tmp, "[PERM] ");
 		if (!(mi->options & MOD_OPT_OFFICIAL))
 			strcat(tmp, "[3RD] ");
+		if (!mi->compilecheck)
+			strcat(tmp, "[OLD?] ");
 		if (!IsOper(sptr))
 			sendto_one(sptr, ":%s NOTICE %s :*** %s (%s)%s", me.name, sptr->name,
 				mi->header->name, mi->header->description,

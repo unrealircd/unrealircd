@@ -224,72 +224,28 @@ void	init_CommandHash(void)
 	add_Command(MSG_OPERMOTD, TOK_OPERMOTD, m_opermotd, MAXPARA);
 	add_CommandX(MSG_NICK, TOK_NICK, m_nick, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
 	add_CommandX(MSG_JOIN, TOK_JOIN, m_join, MAXPARA, M_USER);
-	add_Command(MSG_ISON, TOK_ISON, m_ison, 1);
 	add_CommandX(MSG_USER, TOK_USER, m_user, 4, M_UNREGISTERED|M_USER);
 	add_CommandX(MSG_PART, TOK_PART, m_part, 2, M_USER);
 	add_Command(MSG_WATCH, TOK_WATCH, m_watch, 1);
-	add_Command(MSG_USERHOST, TOK_USERHOST, m_userhost, 1);
 	add_Command(MSG_LUSERS, TOK_LUSERS, m_lusers, MAXPARA);
-	add_Command(MSG_TOPIC, TOK_TOPIC, m_topic, 4);
-	add_Command(MSG_INVITE, TOK_INVITE, m_invite, MAXPARA);
-	add_Command(MSG_KICK, TOK_KICK, m_kick, 3);
-	add_Command(MSG_WALLOPS, TOK_WALLOPS, m_wallops, 1);
 	add_CommandX(MSG_ERROR, TOK_ERROR, m_error, MAXPARA, M_UNREGISTERED|M_SERVER);
-	add_CommandX(MSG_PROTOCTL, TOK_PROTOCTL, m_protoctl, MAXPARA, M_UNREGISTERED|M_SERVER|M_USER);
-	add_CommandX(MSG_SERVER, TOK_SERVER, m_server, MAXPARA, M_UNREGISTERED|M_SERVER);
-	add_Command(MSG_SQUIT, TOK_SQUIT, m_squit, 2);
-	add_Command(MSG_WHOWAS, TOK_WHOWAS, m_whowas, MAXPARA);
-	add_Command(MSG_LIST, TOK_LIST, m_list, MAXPARA);
 	add_Command(MSG_NAMES, TOK_NAMES, m_names, MAXPARA);
-	add_Command(MSG_TRACE, TOK_TRACE, m_trace, MAXPARA);
-	add_CommandX(MSG_PASS, TOK_PASS, m_pass, 1, M_UNREGISTERED|M_USER|M_SERVER);
-	add_Command(MSG_TIME, TOK_TIME, m_time, MAXPARA);
-	add_Command(MSG_CONNECT, TOK_CONNECT, m_connect, MAXPARA);
 	add_CommandX(MSG_VERSION, TOK_VERSION, m_version, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
-	add_Command(MSG_STATS, TOK_STATS, m_stats, 3);
-	add_Command(MSG_LINKS, TOK_LINKS, m_links, MAXPARA);
-	add_CommandX(MSG_ADMIN, TOK_ADMIN, m_admin, MAXPARA, M_UNREGISTERED|M_USER|M_SHUN);
 	add_Command(MSG_SUMMON, NULL, m_summon, 1);
 	add_Command(MSG_USERS, NULL, m_users, MAXPARA);
-	add_Command(MSG_SAMODE, NULL, m_samode, MAXPARA);
-	add_Command(MSG_SVSKILL, TOK_SVSKILL, m_svskill, MAXPARA);
-	add_Command(MSG_HELP, TOK_HELP, m_help, 1);
-	add_Command(MSG_HELPOP, TOK_HELP, m_help, 1);
 	add_Command(MSG_INFO, TOK_INFO, m_info, MAXPARA);
 	add_Command(MSG_MOTD, TOK_MOTD, m_motd, MAXPARA);
-	add_Command(MSG_CLOSE, TOK_CLOSE, m_close, MAXPARA);
-	add_Command(MSG_SILENCE, TOK_SILENCE, m_silence, MAXPARA);
-	add_Command(MSG_GNOTICE, TOK_GNOTICE, m_gnotice, MAXPARA);
-	add_Command(MSG_GOPER, TOK_GOPER, m_goper, MAXPARA);
-	add_Command(MSG_GLOBOPS, TOK_GLOBOPS, m_globops, 1);
-	add_Command(MSG_CHATOPS, TOK_CHATOPS, m_chatops, 1);
-	add_Command(MSG_LOCOPS, TOK_LOCOPS, m_locops, 1);
 	add_Command(MSG_DNS, TOK_DNS, m_dns, MAXPARA);
 	add_Command(MSG_REHASH, TOK_REHASH, m_rehash, MAXPARA);
 	add_Command(MSG_RESTART, TOK_RESTART, m_restart, MAXPARA);
 	add_Command(MSG_DIE, TOK_DIE, m_die, MAXPARA);
-	add_Command(MSG_RULES, TOK_RULES, m_rules, MAXPARA);
-	add_Command(MSG_MAP, TOK_MAP, m_map, MAXPARA);
 	add_Command(MSG_DALINFO, TOK_DALINFO, m_dalinfo, MAXPARA);
-	add_Command(MSG_ADDLINE, TOK_ADDLINE, m_addline, 1);
-	add_Command(MSG_KNOCK, TOK_KNOCK, m_knock, 2);
 	add_Command(MSG_CREDITS, TOK_CREDITS, m_credits, MAXPARA);
 	add_Command(MSG_LICENSE, TOK_LICENSE, m_license, MAXPARA);
-	add_Command(MSG_NETINFO, TOK_NETINFO, m_netinfo, MAXPARA);
-	add_Command(MSG_ADDMOTD, TOK_ADDMOTD, m_addmotd, 1);
-	add_Command(MSG_ADDOMOTD, TOK_ADDOMOTD, m_addomotd, 1);
-	add_Command(MSG_SAJOIN, TOK_SAJOIN, m_sajoin, MAXPARA);
-	add_Command(MSG_SAPART, TOK_SAPART, m_sapart, MAXPARA);
-	add_Command(MSG_SVSFLINE, TOK_SVSFLINE, m_svsfline, MAXPARA);
 	add_Command(MSG_BOTMOTD, TOK_BOTMOTD, m_botmotd, MAXPARA);
-	add_Command(MSG_SJOIN, TOK_SJOIN, m_sjoin, MAXPARA);
-	add_Command(MSG_UMODE2, TOK_UMODE2, m_umode2, MAXPARA);
-	add_Command(MSG_DCCDENY, TOK_DCCDENY, m_dccdeny, 2);
-	add_Command(MSG_UNDCCDENY, TOK_UNDCCDENY, m_undccdeny, MAXPARA);
 	add_Command(MSG_NEWJOIN, TOK_JOIN, m_join, MAXPARA);
 	add_Command(MSG_MODULE, TOK_MODULE, m_module, MAXPARA);	
 	add_Command(MSG_TKL, TOK_TKL, m_tkl, MAXPARA);
-	add_CommandX(MSG_EOS, TOK_EOS, m_eos, MAXPARA, M_SERVER);
 		
 #ifdef DEVELOP_DEBUG
 	for (i = 0; i <= 255; i++)
@@ -504,6 +460,8 @@ static inline aCommand *find_Token(char *cmd, int flags)
 			continue;
 		if ((flags & M_SHUN) && !(p->flags & M_SHUN))
 			continue;
+		if ((flags & M_VIRUS) && !(p->flags & M_VIRUS))
+			continue;
 		if ((flags & M_ALIAS) && !(p->flags & M_ALIAS))
 			continue;
 		if (!strcmp(p->cmd, cmd))
@@ -519,6 +477,8 @@ static inline aCommand *find_Cmd(char *cmd, int flags)
 		if ((flags & M_UNREGISTERED) && !(p->flags & M_UNREGISTERED))
 			continue;
 		if ((flags & M_SHUN) && !(p->flags & M_SHUN))
+			continue;
+		if ((flags & M_VIRUS) && !(p->flags & M_VIRUS))
 			continue;
 		if ((flags & M_ALIAS) && !(p->flags & M_ALIAS))
 			continue;

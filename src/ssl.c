@@ -83,6 +83,8 @@ LRESULT SSLPassDLG(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam) {
 
 char *ssl_error_str(int err)
 {
+static char ssl_errbuf[256];
+
      char *ssl_errstr = NULL;
      switch(err) {
     	case SSL_ERROR_NONE:
@@ -101,7 +103,8 @@ char *ssl_error_str(int err)
 	    ssl_errstr = "OpenSSL requested a X509 lookup which didn`t arrive";
 	    break;
 	case SSL_ERROR_SYSCALL:
-	    ssl_errstr = "Underlying syscall error";
+		snprintf(ssl_errbuf, sizeof(ssl_errbuf), "Underlying syscall error [%s]", strerror(ERRNO));
+		ssl_errstr = ssl_errbuf;
 	    break;
 	case SSL_ERROR_ZERO_RETURN:
 	    ssl_errstr = "Underlying socket operation returned zero";
@@ -112,7 +115,7 @@ char *ssl_error_str(int err)
 	default:
 	    ssl_errstr = "Unknown OpenSSL error (huh?)";
      }
-     return (ssl_errstr);
+     return ssl_errstr;
 }
 				
 				

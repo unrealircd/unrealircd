@@ -1,9 +1,9 @@
 #!/bin/sh
 #
 # Syntax:
-# ./modulize m_template.c TOKEN CMD MAXPARA CMDFILE outfile.name(curdir) desc
+# ./modulize m_template.c TOKEN cmd MAXPARA CMDFILE outfile.name(curdir)
 #
-# CMD = LOWERCASE
+# cmd = LOWERCASE!!
 #
 #
 #

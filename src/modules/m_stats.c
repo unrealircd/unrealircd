@@ -1,22 +1,86 @@
+/*
+ *   IRC - Internet Relay Chat, src/modules/out.c
+ *   (C) 2004 The UnrealIRCd Team
+ *
+ *   See file AUTHORS in IRC package for additional names of
+ *   the programmers.
+ *
+ *   This program is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation; either version 1, or (at your option)
+ *   any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program; if not, write to the Free Software
+ *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+#include "config.h"
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
 #include "numeric.h"
 #include "msg.h"
+#include "proto.h"
 #include "channel.h"
-#include "version.h"
+#include <time.h>
 #include <sys/stat.h>
-#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #ifdef _WIN32
 #include <io.h>
 #endif
-#include <time.h>
+#include <fcntl.h>
 #include "h.h"
-#include "proto.h"
-#include <string.h>
+#ifdef STRIPBADWORDS
+#include "badwords.h"
+#endif
+#ifdef _WIN32
+#include "version.h"
+#endif
+
+DLLFUNC int m_stats(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+
+#define MSG_STATS 	"STATS"	
+#define TOK_STATS 	"2"	
+
+ModuleHeader MOD_HEADER(m_stats)
+  = {
+	"m_stats",
+	"$Id$",
+	"command /stats", 
+	"3.2-b8-1",
+	NULL 
+    };
+
+DLLFUNC int MOD_INIT(m_stats)(ModuleInfo *modinfo)
+{
+	add_Command(MSG_STATS, TOK_STATS, m_stats, 3);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	return MOD_SUCCESS;
+}
+
+DLLFUNC int MOD_LOAD(m_stats)(int module_load)
+{
+	return MOD_SUCCESS;
+}
+
+DLLFUNC int MOD_UNLOAD(m_stats)(int module_unload)
+{
+	if (del_Command(MSG_STATS, TOK_STATS, m_stats) < 0)
+	{
+		sendto_realops("Failed to delete commands when unloading %s",
+			MOD_HEADER(m_stats).name);
+	}
+	return MOD_SUCCESS;
+}
 
 extern int  max_connection_count;
-extern char modebuf[MAXMODEPARAMS*2+1], parabuf[504];
 extern char *get_client_name2(aClient *, int);
 
 int stats_banversion(aClient *, char *);
@@ -87,7 +151,7 @@ struct statstab StatsTable[] = {
 	{ 'M', "command",	stats_command,		0 		},
 	{ 'O', "oper",		stats_oper,		0 		},
 	{ 'P', "port",		stats_port,		0 		},
-	{ 'Q', "bannick",	stats_bannick,		0 		},
+	{ 'Q', "sqline",	stats_sqline,		FLAGS_AS_PARA 	},
 	{ 'R', "usage",		stats_usage,		0 		},
 	{ 'S', "set",		stats_set,		0		},
 	{ 'T', "traffic",	stats_traffic,		0 		},
@@ -100,15 +164,15 @@ struct statstab StatsTable[] = {
 	{ 'c', "link", 		stats_links,		0 		},
 	{ 'd', "denylinkauto",	stats_denylinkauto,	0 		},
 	{ 'e', "exceptthrottle",stats_exceptthrottle,	0		},
-	{ 'f', "spamfilter",	stats_spamfilter,		FLAGS_AS_PARA		},	
+	{ 'f', "spamfilter",	stats_spamfilter,	FLAGS_AS_PARA	},	
 	{ 'g', "gline",		stats_gline,		FLAGS_AS_PARA	},
 	{ 'h', "link", 		stats_links,		0 		},
-	{ 'j', "officialchans", stats_officialchannels, 0 },
+	{ 'j', "officialchans", stats_officialchannels, 0 		},
 	{ 'k', "kline",		stats_kline,		0 		},
 	{ 'l', "linkinfo",	stats_linkinfo,		SERVER_AS_PARA 	},
 	{ 'n', "banrealname",	stats_banrealname,	0 		},
 	{ 'o', "oper",		stats_oper,		0 		},
-	{ 'q', "sqline",	stats_sqline,		0 		},
+	{ 'q', "bannick",	stats_bannick,		FLAGS_AS_PARA	},
 	{ 'r', "chanrestrict",	stats_chanrestrict,	0 		},
 	{ 's', "shun",		stats_shun,		FLAGS_AS_PARA	},
 	{ 't', "tld",		stats_tld,		0 		},
@@ -320,7 +384,7 @@ inline char *stats_operonly_long_to_short()
 	return buffer;
 }
 
-CMD_FUNC(m_stats)
+DLLFUNC CMD_FUNC(m_stats)
 {
 	struct statstab *stat;
 
@@ -605,12 +669,7 @@ int stats_port(aClient *sptr, char *para)
 
 int stats_bannick(aClient *sptr, char *para)
 {
-	ConfigItem_ban *bans;
-
-	for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) 
-		if (bans->flag.type == CONF_BAN_NICK && (bans->flag.type2 != CONF_BAN_TYPE_AKILL))
-			sendto_one(sptr, rpl_str(RPL_STATSQLINE),
-				me.name, sptr->name,  bans->reason, bans->mask);
+	tkl_stats(sptr, TKL_NICK, para);
 	return 0;
 }
 
@@ -1069,13 +1128,7 @@ int stats_banrealname(aClient *sptr, char *para)
 
 int stats_sqline(aClient *sptr, char *para)
 {
-	ConfigItem_ban *bans;
-
-	for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) 
-		if (bans->flag.type == CONF_BAN_NICK && (bans->flag.type2 == CONF_BAN_TYPE_AKILL))
-			sendto_one(sptr, rpl_str(RPL_SQLINE_NICK),
-				me.name, sptr->name, bans->mask, bans->reason ? bans->reason
-				: "No Reason");
+	tkl_stats(sptr, TKL_NICK|TKL_GLOBAL, para);
 	return 0;
 }
 
@@ -1266,6 +1319,11 @@ int stats_set(aClient *sptr, char *para)
 		sptr->name, pretty_time_val(SPAMFILTER_BAN_TIME));
 	sendto_one(sptr, ":%s %i %s :spamfilter::ban-reason: %s", me.name, RPL_TEXT,
 		sptr->name, SPAMFILTER_BAN_REASON);
+	sendto_one(sptr, ":%s %i %s :spamfilter::virus-help-channel: %s", me.name, RPL_TEXT,
+		sptr->name, SPAMFILTER_VIRUSCHAN);
+	if (SPAMFILTER_EXCEPT)
+		sendto_one(sptr, ":%s %i %s :spamfilter::except: %s", me.name, RPL_TEXT,
+			sptr->name, SPAMFILTER_EXCEPT);
 	sendto_one(sptr, ":%s %i %s :hosts::global: %s", me.name, RPL_TEXT,
 	    sptr->name, oper_host);
 	sendto_one(sptr, ":%s %i %s :hosts::admin: %s", me.name, RPL_TEXT,

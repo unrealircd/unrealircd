@@ -132,7 +132,7 @@ OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ \
  SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ \
  SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ \
- SRC/SERVICE.OBJ SRC/DEBUG.OBJ SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/S_STATS.OBJ \
+ SRC/SERVICE.OBJ SRC/DEBUG.OBJ SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ \
  SRC/EXTBANS.OBJ $(ZIPOBJ) $(CURLOBJ)
 
 MOD_FILES=SRC/L_COMMANDS.OBJ SRC/M_CHGHOST.OBJ SRC/M_SDESC.OBJ SRC/M_SETIDENT.OBJ \
@@ -146,7 +146,16 @@ MOD_FILES=SRC/L_COMMANDS.OBJ SRC/M_CHGHOST.OBJ SRC/M_SDESC.OBJ SRC/M_SETIDENT.OB
  SRC/M_UNSQLINE.OBJ SRC/M_UNZLINE.OBJ SRC/M_WHOIS.OBJ \
  SRC/M_TKL.OBJ SRC/M_VHOST.OBJ \
  SRC/M_CYCLE.OBJ SRC/M_SVSJOIN.OBJ SRC/M_SVSPART.OBJ SRC/M_SVSLUSERS.OBJ \
- SRC/M_SVSWATCH.OBJ SRC/M_SVSSILENCE.OBJ SRC/M_SENDSNO.OBJ SRC/M_SVSSNO.OBJ
+ SRC/M_SVSWATCH.OBJ SRC/M_SVSSILENCE.OBJ SRC/M_SENDSNO.OBJ SRC/M_SVSSNO.OBJ \
+ SRC/M_SAJOIN.OBJ SRC/M_SAPART.OBJ SRC/M_SAMODE.OBJ SRC/M_KICK.OBJ SRC/M_TOPIC.OBJ \
+ SRC/M_INVITE.OBJ SRC/M_LIST.OBJ SRC/M_TIME.OBJ SRC/M_SVSKILL.OBJ SRC/M_KNOCK.OBJ \
+ SRC/M_UMODE2.OBJ SRC/M_SQUIT.OBJ SRC/M_PROTOCTL.OBJ SRC/M_SJOIN.OBJ SRC/M_PASS.OBJ \
+ SRC/M_USERHOST.OBJ SRC/M_ISON.OBJ SRC/M_SILENCE.OBJ SRC/M_ADDLINE.OBJ SRC/M_ADDMOTD.OBJ \
+ SRC/M_ADDOMOTD.OBJ SRC/M_WALLOPS.OBJ SRC/M_GLOBOPS.OBJ SRC/M_LOCOPS.OBJ SRC/M_CHATOPS.OBJ \
+ SRC/M_ADMIN.OBJ SRC/M_TRACE.OBJ SRC/M_NETINFO.OBJ SRC/M_LINKS.OBJ SRC/M_HELP.OBJ \
+ SRC/M_RULES.OBJ SRC/M_CLOSE.OBJ SRC/M_MAP.OBJ SRC/M_EOS.OBJ SRC/M_SERVER.OBJ \
+ SRC/M_STATS.OBJ SRC/M_SVSFLINE.OBJ SRC/M_DCCDENY.OBJ SRC/M_UNDCCDENY.OBJ \
+ SRC/M_WHOWAS.OBJ SRC/M_CONNECT.OBJ
 
 ALL: CONF UNREAL.EXE WIRCD.EXE
 
@@ -199,9 +208,6 @@ src/ircsprintf.obj: src/ircsprintf.c $(INCLUDES)
 
 src/packet.obj: src/packet.c $(INCLUDES)
         $(CC) $(CFLAGS) src/packet.c
-
-src/s_stats.obj: src/s_stats.c $(INCLUDES)
-        $(CC) $(CFLAGS) src/s_stats.c
 
 src/fdlist.obj: src/fdlist.c $(INCLUDES)
         $(CC) $(CFLAGS) src/fdlist.c
@@ -496,6 +502,129 @@ src/m_sendsno.obj: src/modules/m_sendsno.c $(INCLUDES)
 
 src/m_svssno.obj: src/modules/m_svssno.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/modules/m_svssno.c
+
+src/m_sajoin.obj: src/modules/m_sajoin.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_sajoin.c
+
+src/m_sapart.obj: src/modules/m_sapart.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_sapart.c
+
+src/m_samode.obj: src/modules/m_samode.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_samode.c
+
+src/m_kick.obj: src/modules/m_kick.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_kick.c
+
+src/m_topic.obj: src/modules/m_topic.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_topic.c
+
+src/m_invite.obj: src/modules/m_invite.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_invite.c
+
+src/m_list.obj: src/modules/m_list.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_list.c
+
+src/m_time.obj: src/modules/m_time.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_time.c
+
+src/m_svskill.obj: src/modules/m_svskill.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_svskill.c
+
+src/m_sjoin.obj: src/modules/m_sjoin.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_sjoin.c
+
+src/m_pass.obj: src/modules/m_pass.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_pass.c
+
+src/m_userhost.obj: src/modules/m_userhost.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_userhost.c
+
+src/m_ison.obj: src/modules/m_ison.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_ison.c
+
+src/m_silence.obj: src/modules/m_silence.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_silence.c
+
+src/m_knock.obj: src/modules/m_knock.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_knock.c
+
+src/m_umode2.obj: src/modules/m_umode2.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_umode2.c
+
+src/m_squit.obj: src/modules/m_squit.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_squit.c
+
+src/m_protoctl.obj: src/modules/m_protoctl.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_protoctl.c
+
+src/m_addline.obj: src/modules/m_addline.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_addline.c
+
+src/m_addmotd.obj: src/modules/m_addmotd.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_addmotd.c
+
+src/m_addomotd.obj: src/modules/m_addomotd.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_addomotd.c
+
+src/m_wallops.obj: src/modules/m_wallops.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_wallops.c
+
+src/m_admin.obj: src/modules/m_admin.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_admin.c
+
+src/m_globops.obj: src/modules/m_globops.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_globops.c
+
+src/m_locops.obj: src/modules/m_locops.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_locops.c
+
+src/m_chatops.obj: src/modules/m_chatops.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_chatops.c
+
+src/m_trace.obj: src/modules/m_trace.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_trace.c
+
+src/m_netinfo.obj: src/modules/m_netinfo.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_netinfo.c
+
+src/m_links.obj: src/modules/m_links.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_links.c
+
+src/m_help.obj: src/modules/m_help.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_help.c
+
+src/m_rules.obj: src/modules/m_rules.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_rules.c
+
+src/m_close.obj: src/modules/m_close.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_close.c
+
+src/m_map.obj: src/modules/m_map.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_map.c
+
+src/m_eos.obj: src/modules/m_eos.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_eos.c
+
+src/m_server.obj: src/modules/m_server.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_server.c
+
+src/m_stats.obj: src/modules/m_stats.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_stats.c
+
+src/m_svsfline.obj: src/modules/m_svsfline.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_svsfline.c
+
+src/m_dccdeny.obj: src/modules/m_dccdeny.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_dccdeny.c
+
+src/m_undccdeny.obj: src/modules/m_undccdeny.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_undccdeny.c
+
+src/m_whowas.obj: src/modules/m_whowas.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_whowas.c
+
+src/m_connect.obj: src/modules/m_connect.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_connect.c
 
 src/win32/win32.res: src/win32/win32gui.rc
         $(RC) /l 0x409 /fosrc/win32/win32.res /i ./include /i ./src \

@@ -125,3 +125,6 @@ SJB64         This token allows timestamps to be specified in base64 notation to
 ZIP           If both servers have this set then the link will be (zlib) compressed after
               the SERVER message. If one of the servers does not have ZIP in his PROTOCTL
               message then the link stays uncompressed.
+
+TKLEXT        This allows 10 instead of 8 parameters in TKL's for spamfilter, see s_kline.c
+              function m_tkl for more info on this (added in 3.2RC2).

@@ -83,6 +83,8 @@ char tkl_typetochar(int type)
 			return 'G';
 		if (type & TKL_SPAMF)
 			return 'F';
+		if (type & TKL_NICK)
+			return 'Q';
 	} else {
 		if (type & TKL_ZAP)
 			return 'z';
@@ -90,6 +92,8 @@ char tkl_typetochar(int type)
 			return 'k';
 		if (type & TKL_SPAMF)
 			return 'f';
+		if (type & TKL_NICK)
+			return 'q';
 	}
 	sendto_realops("[BUG]: tkl_typetochar(): unknown type 0x%x !!!", type);
 	ircd_log(LOG_ERROR, "[BUG] tkl_typetochar(): unknown type 0x%x !!!", type);
@@ -110,7 +114,8 @@ void tkl_init(void)
  *	set_at    = was set at
 */
 
-int  tkl_add_line(int type, char *usermask, char *hostmask, char *reason, char *setby, TS expire_at, TS set_at)
+int  tkl_add_line(int type, char *usermask, char *hostmask, char *reason, char *setby,
+                  TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason)
 {
 	aTKline *nl;
 	int index;
@@ -133,7 +138,16 @@ int  tkl_add_line(int type, char *usermask, char *hostmask, char *reason, char *
 		nl->subtype = spamfilter_gettargets(usermask, NULL);
 		nl->spamf = unreal_buildspamfilter(reason);
 		nl->spamf->action = banact_chartoval(*hostmask);
-		nl->expire_at = 0; /* temporarely spamfilters are NOT supported! (makes no sense) */
+		nl->expire_at = 0; /* temporary spamfilters are NOT supported! (makes no sense) */
+		if (!spamf_tkl_reason)
+		{
+			/* no exttkl support, use default values... */
+			nl->spamf->tkl_duration = SPAMFILTER_BAN_TIME;
+			nl->spamf->tkl_reason = strdup(unreal_encodespace(SPAMFILTER_BAN_REASON));
+		} else {
+			nl->spamf->tkl_duration = spamf_tkl_duration;
+			nl->spamf->tkl_reason = strdup(unreal_encodespace(spamf_tkl_reason));
+		}
 	}
 	index = tkl_hash(tkl_typetochar(type));
 	AddListItem(nl, tklines[index]);
@@ -154,7 +168,11 @@ aTKline *tkl_del_line(aTKline *tkl)
 			MyFree(p->reason);
 			MyFree(p->setby);
 			if (p->spamf)
+			{
+				if (p->spamf->tkl_reason)
+					MyFree(p->spamf->tkl_reason);
 				MyFree(p->spamf);
+			}
 			DelListItem(p, tklines[index]);
 			MyFree(p);
 			return q;
@@ -235,42 +253,50 @@ aTKline *tkl_expire(aTKline * tmp)
 		    tmp->usermask, tmp->hostmask);
 		return (tmp->next);
 	}
-
+	/* Using strlcpy here is wasteful, we know it is < 512 */
 	if (tmp->type & TKL_GLOBAL)
 	{
 		if (tmp->type & TKL_KILL)
-		{
-			strlcpy(whattype, "G:Line", sizeof whattype);
-		}
+			strcpy(whattype, "G:Line");
 		else if (tmp->type & TKL_ZAP)
-		{
-			strlcpy(whattype, "Global Z:Line", sizeof whattype);
-		}
+			strcpy(whattype, "Global Z:Line");
 		else if (tmp->type & TKL_SHUN)
-			strlcpy(whattype, "Shun", sizeof whattype);
+			strcpy(whattype, "Shun");
+		else if (tmp->type & TKL_NICK)
+			strcpy(whattype, "Global Q:line");
 	}
 	else
 	{
 		if (tmp->type & TKL_KILL)
-		{
-			strlcpy(whattype, "Timed K:Line", sizeof whattype);
-		}
+			strcpy(whattype, "K:Line");
 		else if (tmp->type & TKL_ZAP)
-		{
-			strlcpy(whattype, "Timed Z:Line", sizeof whattype);
-		}
+			strcpy(whattype, "Z:Line");
 		else if (tmp->type & TKL_SHUN)
-			strlcpy(whattype, "Local Shun", sizeof whattype);
+			strcpy(whattype, "Local Shun");
+		else if (tmp->type & TKL_NICK)
+			strcpy(whattype, "Q:line");
 	}
-	sendto_snomask(SNO_TKL,
-	    "*** Expiring %s (%s@%s) made by %s (Reason: %s) set %li seconds ago",
-	    whattype, tmp->usermask, tmp->hostmask, tmp->setby, tmp->reason,
-	    TStime() - tmp->set_at);
-	ircd_log
-	    (LOG_TKL, "Expiring %s (%s@%s) made by %s (Reason: %s) set %li seconds ago",
-	    whattype, tmp->usermask, tmp->hostmask, tmp->setby, tmp->reason,
-	    TStime() - tmp->set_at);
-
+	if (!(tmp->type & TKL_NICK))
+	{
+		sendto_snomask(SNO_TKL,
+		    "*** Expiring %s (%s@%s) made by %s (Reason: %s) set %li seconds ago",
+		    whattype, tmp->usermask, tmp->hostmask, tmp->setby, tmp->reason,
+		    TStime() - tmp->set_at);
+		ircd_log
+		    (LOG_TKL, "Expiring %s (%s@%s) made by %s (Reason: %s) set %li seconds ago",
+		    whattype, tmp->usermask, tmp->hostmask, tmp->setby, tmp->reason,
+		    TStime() - tmp->set_at);
+	}
+	else if (!(*tmp->usermask == 'H')) /* Q:line but not a hold */
+	{
+		sendto_snomask(SNO_TKL,
+			"*** Expiring %s (%s) made by %s (Reason: %s) set %li seconds ago",
+			whattype, tmp->hostmask, tmp->setby, tmp->reason, 
+			TStime() - tmp->set_at);
+		ircd_log
+			(LOG_TKL, "Expiring %s (%s) made by %s (Reason: %s) set %li seconds ago",
+			whattype, tmp->hostmask, tmp->setby, tmp->reason, TStime() - tmp->set_at);
+	}
 	if (tmp->type & TKL_SHUN)
 		tkl_check_local_remove_shun(tmp);
 
@@ -329,7 +355,7 @@ int  find_tkline_match(aClient *cptr, int xx)
 	{
 		for (lp = tklines[index]; lp; lp = lp->next)
 		{
-			if ((lp->type & TKL_SHUN) || (lp->type & TKL_SPAMF))
+			if ((lp->type & TKL_SHUN) || (lp->type & TKL_SPAMF) || (lp->type & TKL_NICK))
 				continue;
 			if (!match(lp->usermask, cname) && !match(lp->hostmask, chost))
 				points = 1;
@@ -462,6 +488,56 @@ int  find_shun(aClient *cptr)
 	return 2;
 }
 
+aTKline *find_qline(aClient *cptr, char *nick, int *ishold)
+{
+	aTKline *lp;
+	char *chost, *cname, *cip;
+	char host[NICKLEN+USERLEN+HOSTLEN+6], host2[NICKLEN+USERLEN+HOSTLEN+6];
+	int	points = 0;
+	ConfigItem_except *excepts;
+	*ishold = 0;
+	if (IsServer(cptr) || IsMe(cptr))
+		return NULL;
+
+	for (lp = tklines[tkl_hash('q')]; lp; lp = lp->next)
+	{
+		points = 0;
+		
+		if (!(lp->type & TKL_NICK))
+			continue;
+		if (!match(lp->hostmask, nick))
+		{
+			points = 1;
+			break;	
+		}
+	}
+
+	if (points != 1)
+		return NULL;
+
+	/* It's a services hold */
+	if (*lp->usermask == 'H')
+	{
+		*ishold = 1;
+		return lp;
+	}
+
+	chost = cptr->sockhost;
+	cname = cptr->user ? cptr->user->username : "unknown";
+	cip = (char *)Inet_ia2p(&cptr->ip);
+	strcpy(host, make_user_host(cname, chost));
+	strcpy(host2, make_user_host(cname, cip));
+
+	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) {
+		if (excepts->flag.type != CONF_EXCEPT_TKL || excepts->type != TKL_NICK)
+			continue;
+		if (!match(excepts->mask, host) || !match(excepts->mask, host2))
+			return NULL;
+	}
+	return lp;
+}
+
+
 int  find_tkline_match_zap(aClient *cptr)
 {
 	aTKline *lp;
@@ -481,7 +557,6 @@ int  find_tkline_match_zap(aClient *cptr)
 	{
 		if (lp->type & TKL_ZAP)
 		{
-
 			if (!match(lp->hostmask, cip))
 			{
 				for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) {
@@ -601,13 +676,27 @@ void tkl_stats(aClient *cptr, int type, char *para)
 		if (!BadPtr(para))
 		{
 			if (tklflags.flags & BY_MASK)
-				if (match(tklflags.mask, make_user_host(tk->usermask,
+			{
+				if (tk->type & TKL_NICK)
+				{
+					if (match(tklflags.mask, tk->hostmask))
+						continue;
+				}
+				else if (match(tklflags.mask, make_user_host(tk->usermask,
 					tk->hostmask)))
 					continue;
+			}
 			if (tklflags.flags & NOT_BY_MASK)
-				if (!match(tklflags.mask, make_user_host(tk->usermask,
+			{
+				if (tk->type & TKL_NICK)
+				{
+					if (!match(tklflags.mask, tk->hostmask))
+						continue;
+				}
+				else if (!match(tklflags.mask, make_user_host(tk->usermask,
 					tk->hostmask)))
 					continue;
+			}
 			if (tklflags.flags & BY_REASON)
 				if (match(tklflags.reason, tk->reason))
 					continue;
@@ -670,9 +759,15 @@ void tkl_stats(aClient *cptr, int type, char *para)
 				banact_valtostring(tk->spamf->action),
 				(tk->expire_at != 0) ? (tk->expire_at - curtime) : 0,
 				curtime - tk->set_at,
+				tk->spamf->tkl_duration, tk->spamf->tkl_reason,
 				tk->setby,
 				tk->reason);
 		}
+		if (tk->type & TKL_NICK)
+			sendto_one(cptr, rpl_str(RPL_STATSQLINE), me.name,
+				cptr->name, (tk->type & TKL_GLOBAL) ? 'Q' : 'q',
+				tk->hostmask, (tk->expire_at != 0) ? (tk->expire_at - curtime) : 0,
+				curtime - tk->set_at, tk->setby, tk->reason); 
 	 }
 
 }
@@ -696,28 +791,52 @@ void tkl_synch(aClient *sptr)
 					typ = 's';
 				if (tk->type & TKL_SPAMF)
 					typ = 'F';
-				sendto_one(sptr,
-				    ":%s %s + %c %s %s %s %li %li :%s", me.name,
-				    IsToken(sptr) ? TOK_TKL : MSG_TKL,
-				    typ,
-				    tk->usermask, tk->hostmask, tk->setby,
-				    tk->expire_at, tk->set_at, tk->reason);
+				if (tk->type & TKL_NICK)
+					typ = 'Q';
+				if ((tk->type & TKL_SPAMF) && (sptr->proto & PROTO_TKLEXT))
+				{
+					sendto_one(sptr,
+					    ":%s %s + %c %s %s %s %li %li %li %s :%s", me.name,
+					    IsToken(sptr) ? TOK_TKL : MSG_TKL,
+					    typ,
+					    tk->usermask, tk->hostmask, tk->setby,
+					    tk->expire_at, tk->set_at,
+					    tk->spamf->tkl_duration, tk->spamf->tkl_reason,
+					    tk->reason);
+				} else
+					sendto_one(sptr,
+					    ":%s %s + %c %s %s %s %li %li :%s", me.name,
+					    IsToken(sptr) ? TOK_TKL : MSG_TKL,
+					    typ,
+					    tk->usermask ? tk->usermask : "*", tk->hostmask, tk->setby,
+					    tk->expire_at, tk->set_at, tk->reason);
 			}
 		}
 }
 
 /*
-  Service function for timed *:lines
-
-  add:  TKL + type user host setby expire_at set_at reason
-  del:  TKL - type user host removedby
-  list: TKL ?
-
-  only global lines are spread out this way.
-     type= G = G:Line
-           Z = Z:Line
-*/
-
+ * m_tkl:
+ * HISTORY:
+ * This was originall called Timed KLines, but today it's
+ * used by various *line types eg: zline, gline, gzline, shun,
+ * but also by spamfilter etc...
+ * USAGE:
+ * This routine is used both internally by the ircd (to
+ * for example add local klines, zlines, etc) and over the
+ * network (glines, gzlines, spamfilter, etc).
+ *           add:      remove:    spamfilter:    spamfilter+TKLEXT  sqline:
+ * parv[ 1]: +         -          +/-            +                  +/-
+ * parv[ 2]: type      type       type           type               type
+ * parv[ 3]: user      user       target         target             hold
+ * parv[ 4]: host      host       action         action             host
+ * parv[ 5]: setby     removedby  (un)setby      setby              setby
+ * parv[ 6]: expire_at            expire_at (0)  expire_at (0)      expire_at
+ * parv[ 7]: set_at               set_at         set_at             set_at
+ * parv[ 8]: reason               regex          tkl duration       reason
+ * parv[ 9]:                                     tkl reason         
+ * parv[10]:                                     regex              
+ *
+ */
 int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aTKline *tk;
@@ -725,9 +844,9 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	int  found = 0;
 	char gmt[256], gmt2[256];
 	char txt[256];
-	TS   expiry_1, setat_1;
+	TS   expiry_1, setat_1, spamf_tklduration;
 	int index;
-
+	char *reason;
 
 	if (!IsServer(sptr) && !IsOper(sptr) && !IsMe(sptr))
 		return 0;
@@ -760,19 +879,34 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			  type = TKL_SPAMF;
 		  else if (parv[2][0] == 'F')
 			  type = TKL_SPAMF | TKL_GLOBAL;
+		  else if (parv[2][0] == 'Q')
+			  type = TKL_NICK | TKL_GLOBAL;
+		  else if (parv[2][0] == 'q')
+			  type = TKL_NICK;
 		  else
 			  return 0;
 
 		  expiry_1 = atol(parv[6]);
 		  setat_1 = atol(parv[7]);
+		  reason = parv[8];
 
 		  found = 0;
+		  if ((type & TKL_SPAMF) && (parc >= 11))
+		  {
+		  	reason = parv[10];
+		  	spamf_tklduration = config_checkval(parv[8], CFG_TIME); /* was: atol(parv[8]); */
+		  }
 		  for (tk = tklines[tkl_hash(parv[2][0])]; tk; tk = tk->next)
 		  {
 			  if (tk->type == type)
 			  {
-				  if (!strcmp(tk->hostmask, parv[4]) && !strcmp(tk->usermask, parv[3]) &&
-				     (!(type & TKL_SPAMF) || !strcmp(tk->reason, parv[8])))
+				  if ((tk->type & TKL_NICK) && !strcmp(tk->hostmask, parv[4]))
+				  {
+					  found = 1;
+					  break;
+				  }
+				  else if (!strcmp(tk->hostmask, parv[4]) && !strcmp(tk->usermask, parv[3]) &&
+				     (!(type & TKL_SPAMF) || !strcmp(tk->reason, reason)))
 				  {
 					  found = 1;
 					  break;
@@ -782,9 +916,18 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  /* *:Line already exists! */
 		  if (found == 1)
 		  {
+		  		/* SYZTAG: TODO: check for tklreason/tklduration differnces */
 				/* do they differ in ANY way? */
+				if (type & TKL_NICK)
+				{
+					/* for sqline: usermask = H overrides */
+
+					if (*parv[3] == 'H')
+						*tk->usermask = 'H';
+				}
+
 				if ((setat_1 != tk->set_at) || (expiry_1 != tk->expire_at) ||
-				    strcmp(tk->reason, parv[8]) || strcmp(tk->setby, parv[5]))
+				    strcmp(tk->reason, reason) || strcmp(tk->setby, parv[5]))
 				{
 					/* here's how it goes:
 					 * set_at: oldest wins
@@ -800,30 +943,55 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					if (!tk->expire_at || !expiry_1)
 			 			tk->expire_at = 0;
 			 		else
-			 			tk->expire_at = MIN(tk->expire_at, expiry_1);
-			 		if (strcmp(tk->reason, parv[8]) < 0)
+			 			tk->expire_at = MAX(tk->expire_at, expiry_1);
+			 		if (strcmp(tk->reason, reason) < 0)
 			 		{
 			 			MyFree(tk->reason);
-			 			tk->reason = strdup(parv[8]);
+			 			tk->reason = strdup(reason);
 			 		}
 			 		if (strcmp(tk->setby, parv[5]) < 0)
 			 		{
 			 			MyFree(tk->setby);
 			 			tk->setby = strdup(parv[5]);
 			 		}
-			 		sendto_snomask(SNO_JUNK, "tkl update for %s@%s/reason='%s'/by=%s/set=%ld/expire=%ld",
-			 			tk->usermask, tk->hostmask, tk->reason, tk->setby, tk->set_at, tk->expire_at);
-			 		sendto_serv_butone(cptr,
-			 			":%s TKL %s %s %s %s %s %ld %ld :%s", sptr->name,
-			 			parv[1], parv[2], parv[3], parv[4],
-			 			tk->setby, tk->expire_at, tk->set_at, tk->reason);
+					if (tk->type & TKL_NICK)
+					{
+						if (!(*tk->usermask) == 'H')
+					 		sendto_snomask(SNO_JUNK, "tkl update for %s/reason='%s'/by=%s/set=%ld/expire=%ld [causedby: %s]",
+					 			tk->hostmask, tk->reason, tk->setby, tk->set_at, tk->expire_at, sptr->name);
+					}
+					else
+				 		sendto_snomask(SNO_JUNK, "tkl update for %s@%s/reason='%s'/by=%s/set=%ld/expire=%ld [causedby: %s]",
+				 			tk->usermask, tk->hostmask, tk->reason, tk->setby, tk->set_at, tk->expire_at, sptr->name);
+				 	if ((parc == 11) && (type & TKL_SPAMF))
+					{
+						/* I decided to only send updates to OPT_TKLEXT in this case,
+						 * it's pretty useless to send it also to OPT_NOT_TKLEXT because
+						 * spamfilter entries are permanent (no expire time), the only stuff
+						 * that can differ for non-opt is the 'setby' and 'setat' field...
+						 */
+				 		sendto_serv_butone_token_opt(cptr, OPT_TKLEXT, sptr->name,
+				 			MSG_TKL, TOK_TKL,
+				 			"%s %s %s %s %s %ld %ld %ld %s :%s",
+				 			parv[1], parv[2], parv[3], parv[4],
+				 			tk->setby, tk->expire_at, tk->set_at, tk->spamf->tkl_duration,
+				 			tk->spamf->tkl_reason, tk->reason);
+				 	} else
+				 		sendto_serv_butone(cptr,
+				 			":%s TKL %s %s %s %s %s %ld %ld :%s", sptr->name,
+				 			parv[1], parv[2], parv[3], parv[4],
+				 			tk->setby, tk->expire_at, tk->set_at, tk->reason);
 		      }
 			  return 0;
 		  }
 
 		  /* there is something fucked here? */
-		  tkl_add_line(type, parv[3], parv[4], parv[8], parv[5],
-		      expiry_1, setat_1);
+		  if ((type & TKL_SPAMF) && (parc >= 11))
+			tkl_add_line(type, parv[3], parv[4], reason, parv[5],
+				expiry_1, setat_1, spamf_tklduration, parv[9]);
+		  else
+			tkl_add_line(type, parv[3], parv[4], reason, parv[5],
+				expiry_1, setat_1, 0, NULL);
 
 		  strncpyzt(gmt, asctime(gmtime((TS *)&setat_1)), sizeof(gmt));
 		  strncpyzt(gmt2, asctime(gmtime((TS *)&expiry_1)), sizeof(gmt2));
@@ -846,6 +1014,12 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    case TKL_SHUN | TKL_GLOBAL:
 			    strcpy(txt, "Shun");
 			    break;
+		    case TKL_NICK | TKL_GLOBAL:
+			    strcpy(txt, "Global Q:line");
+			    break;
+		    case TKL_NICK:
+			    strcpy(txt, "Q:line");
+			    break;
 		    default:
 			    strcpy(txt, "Unknown *:Line");
 		  }
@@ -853,41 +1027,66 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  {
 		  	  char buf[512];
 			  snprintf(buf, 512,
-			      "Spamfilter added: '%s' [target: %s] [action: %s] on %s GMT (from %s)",
-			      parv[8], parv[3], banact_valtostring(banact_chartoval(*parv[4])), gmt, parv[5]);
+			      "Spamfilter added: '%s' [target: %s] [action: %s] [reason: %s] on %s GMT (from %s)",
+			      reason, parv[3], banact_valtostring(banact_chartoval(*parv[4])),
+			      parc >= 10 ? unreal_decodespace(parv[9]) : SPAMFILTER_BAN_REASON,
+			      gmt, parv[5]);
 			  sendto_snomask(SNO_TKL, "*** %s", buf);
 			  ircd_log(LOG_TKL, "%s", buf);
 		  } else {
+			char buf[512];
 			  if (expiry_1 != 0)
 			  {
-				  sendto_snomask(SNO_TKL,
-				      "*** %s added for %s@%s on %s GMT (from %s to expire at %s GMT: %s)",
-				      txt, parv[3], parv[4], gmt, parv[5], gmt2,
-				      parv[8]);
-				  ircd_log
-				      (LOG_TKL, "%s added for %s@%s on %s GMT (from %s to expire at %s GMT: %s)",
-				      txt, parv[3], parv[4], gmt, parv[5], gmt2,
-				      parv[8]);
+				if (type & TKL_NICK)
+				{
+					if (*parv[3] != 'H')
+						snprintf(buf, 512, "%s added for %s on %s GMT (from %s to expire at %s GMT: %s)",
+							txt, parv[4], gmt, parv[5], gmt2, reason);
+				}
+				else
+					snprintf(buf, 512, "%s added for %s@%s on %s GMT (from %s to expire at %s GMT: %s)",
+						txt, parv[3], parv[4], gmt, parv[5], gmt2, reason);
 			  }
 			  else
 			  {
-				  sendto_snomask(SNO_TKL,
-				      "*** Permanent %s added for %s@%s on %s GMT (from %s: %s)",
-				      txt, parv[3], parv[4], gmt, parv[5], parv[8]);
-				  ircd_log
-				      (LOG_TKL, "Permanent %s added for %s@%s on %s GMT (from %s: %s)",
-				      txt, parv[3], parv[4], gmt, parv[5], parv[8]);
+				if (type & TKL_NICK)
+				{
+					if (*parv[3] != 'H')
+						snprintf(buf, 512, "Permanent %s added for %s on %s GMT (from %s: %s)",
+							txt, parv[4], gmt, parv[5], reason);
+				}
+				else
+					snprintf(buf, 512, "Permanent %s added for %s@%s on %s GMT (from %s: %s)",
+						txt, parv[3], parv[4], gmt, parv[5], reason);
 			  }
+			if (!((type & TKL_NICK) && *parv[3] == 'H'))
+			{
+				sendto_snomask(SNO_TKL, "*** %s", buf);
+				ircd_log(LOG_TKL, "%s", buf);
+			}
 		  }
 		  loop.do_bancheck = 1;
 		  /* Makes check_pings be run ^^  */
 		  if (type & TKL_GLOBAL)
 		  {
-			  sendto_serv_butone(cptr,
-			      ":%s TKL %s %s %s %s %s %s %s :%s", sptr->name,
-			      parv[1], parv[2], parv[3], parv[4], parv[5],
-			      parv[6], parv[7], parv[8]);
-		  }
+		  	if ((parc == 11) && (type & TKL_SPAMF))
+		  	{
+				sendto_serv_butone_token_opt(cptr, OPT_TKLEXT, sptr->name,
+					MSG_TKL, TOK_TKL,
+					"%s %s %s %s %s %s %s %s %s :%s",
+					parv[1], parv[2], parv[3], parv[4], parv[5],
+					parv[6], parv[7], parv[8], parv[9], parv[10]);
+				sendto_serv_butone_token_opt(cptr, OPT_NOT_TKLEXT, sptr->name,
+					MSG_TKL, TOK_TKL,
+					"%s %s %s %s %s %s %s :%s",
+					parv[1], parv[2], parv[3], parv[4], parv[5],
+					parv[6], parv[7], parv[10]);
+			} else
+				sendto_serv_butone(cptr,
+					":%s TKL %s %s %s %s %s %s %s :%s", sptr->name,
+					parv[1], parv[2], parv[3], parv[4], parv[5],
+					parv[6], parv[7], parv[8]);
+		  } /* TKL_GLOBAL */
 		  return 0;
 	  }
 	  case '-':
@@ -903,6 +1102,10 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			  type = TKL_KILL;
 		  else if (*parv[2] == 's')
 			  type = TKL_SHUN | TKL_GLOBAL;
+		  else if (*parv[2] == 'Q')
+			  type = TKL_NICK | TKL_GLOBAL;
+		  else if (*parv[2] == 'q')
+			  type = TKL_NICK;
 		  else if (*parv[2] == 'F')
 		  {
 		      if (parc < 8)
@@ -912,6 +1115,10 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		          return 0; /* bogus */
 		      }
 			  type = TKL_SPAMF | TKL_GLOBAL;
+			  if (parc >= 11)
+			  	reason = parv[10];
+			  else
+			  	reason = parv[8];
 		  }
 		  else if (*parv[2] == 'f')
 		  {
@@ -922,6 +1129,10 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		          return 0; /* bogus */
 		      }
 			  type = TKL_SPAMF;
+			  if (parc >= 11)
+			  	reason = parv[10];
+			  else
+			  	reason = parv[8];
 		  }
 		  else
 			  return 0;
@@ -929,10 +1140,10 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  switch (type)
 		  {
 		    case TKL_KILL:
-			    strcpy(txt, "Timed K:Line");
+			    strcpy(txt, "K:Line");
 			    break;
 		    case TKL_ZAP:
-			    strcpy(txt, "Timed Z:Line");
+			    strcpy(txt, "Z:Line");
 			    break;
 		    case TKL_KILL | TKL_GLOBAL:
 			    strcpy(txt, "G:Line");
@@ -943,6 +1154,12 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    case TKL_SHUN | TKL_GLOBAL:
 			    strcpy(txt, "Shun");
 			    break;
+		    case TKL_NICK | TKL_GLOBAL:
+			    strcpy(txt, "Global Q:line");
+			    break;
+		    case TKL_NICK:
+			    strcpy(txt, "Q:line");
+			    break;
 		    default:
 			    strcpy(txt, "Unknown *:Line");
 		  }
@@ -952,13 +1169,32 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  {
 			  if (tk->type == type)
 			  {
-				  if (!strcmp(tk->hostmask, parv[4]) && !strcmp(tk->usermask, parv[3]) &&
-				      (!(type & TKL_SPAMF) || !strcmp(tk->reason, parv[8])))
+				int match = 0;
+				if ((type & TKL_NICK) && !strcmp(tk->hostmask, parv[4]))
+					match = 1;
+				else if ((type & TKL_SPAMF) && !strcmp(tk->hostmask, parv[4])
+					&& !strcmp(tk->usermask, parv[3]) && 
+					!strcmp(tk->reason, parv[8]))
+					match = 1;
+				else if (!strcmp(tk->hostmask, parv[4]) && !strcmp(tk->usermask, parv[3]))
+					match = 1;
+
+				  if (match)
 				  {
 					  strncpyzt(gmt, asctime(gmtime((TS *)&tk->set_at)), sizeof(gmt));
 					  iCstrip(gmt);
 					  /* broadcast remove msg to opers... */
-					  if (type & TKL_SPAMF)
+					  if (type & TKL_NICK)
+					  {
+						if (!(*parv[3] == 'H'))
+						{
+							sendto_snomask(SNO_TKL, "%s removed %s %s (set at %s - reason: %s)",
+								parv[5], txt, tk->hostmask, gmt, tk->reason);
+							ircd_log(LOG_TKL, "%s removed %s %s (set at %s - reason: %s)",
+								parv[5], txt, tk->hostmask, gmt, tk->reason);
+						}
+					  }
+					  else if (type & TKL_SPAMF)
 					  {
 					  	  sendto_snomask(SNO_TKL, "%s removed Spamfilter '%s' (set at %s)",
 					  	     parv[5], tk->reason, gmt);
@@ -986,7 +1222,7 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 							  sendto_serv_butone(cptr,
 							      ":%s TKL %s %s %s %s %s %s %s :%s",
 							      sptr->name, parv[1], parv[2], parv[3], parv[4], parv[5],
-							      parv[6], parv[7], parv[8]);
+							      parv[6], parv[7], reason);
 				      }
 					  break;
 				  }
@@ -1025,7 +1261,7 @@ int place_host_ban(aClient *sptr, int action, char *reason, long duration)
 	{
 		case BAN_ACT_TEMPSHUN:
 			/* We simply mark this connection as shunned and do not add a ban record */
-			sendto_snomask(SNO_TKL, "Temporarely shun added at user %s (%s@%s) [%s]",
+			sendto_snomask(SNO_TKL, "Temporary shun added at user %s (%s@%s) [%s]",
 				sptr->name,
 				sptr->user ? sptr->user->username : "unknown",
 				sptr->user ? sptr->user->realhost : Inet_ia2p(&sptr->ip),
@@ -1065,7 +1301,10 @@ int place_host_ban(aClient *sptr, int action, char *reason, long duration)
 				tkllayer[2] = "S";
 			tkllayer[4] = hostip;
 			tkllayer[5] = me.name;
-			ircsprintf(mo, "%li", duration + TStime());
+			if (!duration)
+				strcpy(mo, "0"); /* perm */
+			else
+				ircsprintf(mo, "%li", duration + TStime());
 			ircsprintf(mo2, "%li", TStime());
 			tkllayer[6] = mo;
 			tkllayer[7] = mo2;
@@ -1078,6 +1317,21 @@ int place_host_ban(aClient *sptr, int action, char *reason, long duration)
 			return exit_client(sptr, sptr, sptr, reason);
 	}
 	return -1;
+}
+
+/** Checks if 'target' is on the spamfilter exception list.
+ * RETURNS 1 if found in list, 0 if not.
+ */
+int target_is_spamexcept(char *target)
+{
+SpamExcept *e;
+
+	for (e = iConf.spamexcept; e; e = e->next)
+	{
+		if (!match(e->name, target))
+			return 1;
+	}
+	return 0;
 }
 
 /** dospamfilter: executes the spamfilter onto the string.
@@ -1113,18 +1367,88 @@ char *str = (char *)StripControlCodes(str_in);
 				strlcpy(targetbuf+1, target, sizeof(targetbuf)-1); /* cut it off */
 			} else
 				targetbuf[0] = '\0';
-			ircsprintf(buf, "[Spamfilter] %s!%s@%s matches filter '%s': [%s%s: '%s']",
+
+			/* Hold on.. perhaps it's on the exceptions list... */
+			if (target && target_is_spamexcept(target))
+				return 0; /* No problem! */
+
+			ircsprintf(buf, "[Spamfilter] %s!%s@%s matches filter '%s': [%s%s: '%s'] [%s]",
 				sptr->name, sptr->user->username, sptr->user->realhost,
 				tk->reason,
-				spamfilter_inttostring_long(type), targetbuf, str);
+				spamfilter_inttostring_long(type), targetbuf, str,
+				unreal_decodespace(tk->spamf->tkl_reason));
 
 			sendto_snomask(SNO_SPAMF, "%s", buf);
 			sendto_serv_butone_token(NULL, me.name, MSG_SENDSNO, TOK_SENDSNO, "S :%s", buf);
 
-			if (tk->spamf->action != BAN_ACT_BLOCK)
-				return place_host_ban(sptr, tk->spamf->action, SPAMFILTER_BAN_REASON, SPAMFILTER_BAN_TIME);
-			else
+			if (tk->spamf->action == BAN_ACT_BLOCK)
+			{
+				switch(type)
+				{
+					case SPAMF_USERMSG:
+					case SPAMF_USERNOTICE:
+						sendnotice(sptr, "Message to %s blocked: %s",
+							target, unreal_decodespace(tk->spamf->tkl_reason));
+						break;
+					case SPAMF_CHANMSG:
+					case SPAMF_CHANNOTICE:
+						sendto_one(sptr, ":%s 404 %s %s :Message blocked: %s",
+							me.name, sptr->name, target,
+							unreal_decodespace(tk->spamf->tkl_reason));
+						break;
+					case SPAMF_DCC:
+						sendnotice(sptr, "DCC to %s blocked: %s",
+							target, unreal_decodespace(tk->spamf->tkl_reason));
+						break;
+					default:
+						break;
+				}
 				return -1;
+			} else
+			if (tk->spamf->action == BAN_ACT_DCCBLOCK)
+			{
+				if (type == SPAMF_DCC)
+				{
+					sendnotice(sptr, "DCC to %s blocked: %s",
+						target, unreal_decodespace(tk->spamf->tkl_reason));
+					sendnotice(sptr, "*** You have been blocked from sending files, "
+					           "reconnect to regain permission to send files");
+					sptr->flags |= FLAGS_DCCBLOCK;
+				}
+				return -1;
+			} else
+			if (tk->spamf->action == BAN_ACT_VIRUSCHAN)
+			{
+				char *xparv[3], chbuf[CHANNELLEN + 16];
+				aChannel *chptr;
+				
+				if (IsVirus(sptr)) /* Already tagged */
+					return 0;
+				ircsprintf(buf, "0,%s", SPAMFILTER_VIRUSCHAN);
+				xparv[0] = sptr->name;
+				xparv[1] = buf;
+				xparv[2] = NULL;
+				/* RECURSIVE CAUTION in case we ever add blacklisted chans */
+				if (m_join(sptr, sptr, 2, xparv) == FLUSH_BUFFER)
+					return FLUSH_BUFFER; /* don't ask me how we could have died... */
+				sendnotice(sptr, "You are now restricted to talking in %s: %s",
+					SPAMFILTER_VIRUSCHAN, unreal_decodespace(tk->spamf->tkl_reason));
+				/* todo: send notice to channel? */
+				chptr = find_channel(SPAMFILTER_VIRUSCHAN, NULL);
+				if (chptr)
+				{
+					ircsprintf(chbuf, "%s%s", CHANOPPFX, chptr->chname);
+					ircsprintf(buf, "[Spamfilter] %s matched filter '%s' [%s%s] [%s]",
+						sptr->name, tk->reason, spamfilter_inttostring_long(type), targetbuf,
+						unreal_decodespace(tk->spamf->tkl_reason));
+					sendto_channelprefix_butone_tok(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+						MSG_NOTICE, TOK_NOTICE, chbuf, buf, 0);
+				}
+				SetVirus(sptr);
+				return -1;
+			} else
+				return place_host_ban(sptr, tk->spamf->action,
+					unreal_decodespace(tk->spamf->tkl_reason), tk->spamf->tkl_duration);
 		}
 	}
 	return 0;

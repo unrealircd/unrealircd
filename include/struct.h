@@ -66,6 +66,10 @@
 #else
 #include "win32/regex.h"
 #endif
+
+#include "channel.h"
+
+
 extern int sendanyways;
 
 
@@ -73,6 +77,7 @@ typedef struct aloopStruct LoopStruct;
 typedef struct ConfItem aConfItem;
 typedef struct t_kline aTKline;
 typedef struct _spamfilter Spamfilter;
+typedef struct _spamexcept SpamExcept;
 /* New Config Stuff */
 typedef struct _configentry ConfigEntry;
 typedef struct _configfile ConfigFile;
@@ -269,6 +274,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPT_NOT_SJB64	0x0800
 #define OPT_VHP		0x1000
 #define OPT_NOT_VHP	0x2000
+#define OPT_TKLEXT	0x4000
+#define OPT_NOT_TKLEXT	0x8000
 
 /* client->flags (32 bits): 28 used, 4 free */
 #define	FLAGS_PINGSENT   0x0001	/* Unreplied ping sent */
@@ -300,7 +307,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #endif
 #define FLAGS_UNOCCUP2   0x2000000 /* [FREE] */
 #define FLAGS_SHUNNED    0x4000000
-#define FLAGS_UNOCCUP3   0x8000000 /* [FREE] */
+#define FLAGS_VIRUS      0x8000000 /* tagged by spamfilter */
 #ifdef USE_SSL
 #define FLAGS_SSL        0x10000000
 #endif
@@ -323,19 +330,21 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 
 #define	FLAGS_ID	(FLAGS_DOID|FLAGS_GOTID)
 
-#define PROTO_NOQUIT	0x1	/* Negotiated NOQUIT protocol */
-#define PROTO_TOKEN	0x2	/* Negotiated TOKEN protocol */
-#define PROTO_SJOIN	0x4	/* Negotiated SJOIN protocol */
-#define PROTO_NICKv2	0x8	/* Negotiated NICKv2 protocol */
-#define PROTO_SJOIN2	0x10	/* Negotiated SJOIN2 protocol */
-#define PROTO_UMODE2	0x20	/* Negotiated UMODE2 protocol */
-#define PROTO_NS	0x40	/* Negotiated NS protocol */
-#define PROTO_ZIP	0x80	/* Negotiated ZIP protocol */
-#define PROTO_VL	0x100	/* Negotiated VL protocol */
-#define PROTO_SJ3	0x200	/* Negotiated SJ3 protocol */
-#define PROTO_VHP	0x400	/* Send hostnames in NICKv2 even if not 
-				   sethosted */
-#define PROTO_SJB64	0x800
+#define PROTO_NOQUIT	0x0001	/* Negotiated NOQUIT protocol */
+#define PROTO_TOKEN		0x0002	/* Negotiated TOKEN protocol */
+#define PROTO_SJOIN		0x0004	/* Negotiated SJOIN protocol */
+#define PROTO_NICKv2	0x0008	/* Negotiated NICKv2 protocol */
+#define PROTO_SJOIN2	0x0010	/* Negotiated SJOIN2 protocol */
+#define PROTO_UMODE2	0x0020	/* Negotiated UMODE2 protocol */
+#define PROTO_NS		0x0040	/* Negotiated NS protocol */
+#define PROTO_ZIP		0x0080	/* Negotiated ZIP protocol */
+#define PROTO_VL		0x0100	/* Negotiated VL protocol */
+#define PROTO_SJ3		0x0200	/* Negotiated SJ3 protocol */
+#define PROTO_VHP		0x0400	/* Send hostnames in NICKv2 even if not sethosted */
+#define PROTO_SJB64		0x0800
+#define PROTO_TKLEXT	0x1000	/* TKL extension: 10 parameters instead of 8 (3.2RC2) */
+/* note: client->proto is currently a 'short' (max is 0x8000) */
+
 /*
  * flags macros.
  */
@@ -383,6 +392,9 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define IsShunned(x)		((x)->flags & FLAGS_SHUNNED)
 #define SetShunned(x)		((x)->flags |= FLAGS_SHUNNED)
 #define ClearShunned(x)		((x)->flags &= ~FLAGS_SHUNNED)
+#define IsVirus(x)			((x)->flags & FLAGS_VIRUS)
+#define SetVirus(x)			((x)->flags |= FLAGS_VIRUS)
+#define ClearVirus(x)		((x)->flags |= FLAGS_VIRUS)
 
 #ifdef USE_SSL
 #define IsSecure(x)		((x)->flags & FLAGS_SSL)
@@ -476,6 +488,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SupportVL(x)		((x)->proto & PROTO_VL)
 #define SupportSJ3(x)		((x)->proto & PROTO_SJ3)
 #define SupportVHP(x)		((x)->proto & PROTO_VHP)
+#define SupportTKLEXT(x)	((x)->proto & PROTO_TKLEXT)
 
 #define SetSJOIN(x)		((x)->proto |= PROTO_SJOIN)
 #define SetNoQuit(x)		((x)->proto |= PROTO_NOQUIT)
@@ -487,6 +500,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SetVL(x)		((x)->proto |= PROTO_VL)
 #define SetSJ3(x)		((x)->proto |= PROTO_SJ3)
 #define SetVHP(x)		((x)->proto |= PROTO_VHP)
+#define SetTKLEXT(x)	((x)->proto |= PROTO_TKLEXT)
 
 #define ClearSJOIN(x)		((x)->proto &= ~PROTO_SJOIN)
 #define ClearNoQuit(x)		((x)->proto &= ~PROTO_NOQUIT)
@@ -497,6 +511,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define ClearVL(x)		((x)->proto &= ~PROTO_VL)
 #define ClearVHP(x)		((x)->proto &= ~PROTO_VHP)
 #define ClearSJ3(x)		((x)->proto &= ~PROTO_SJ3)
+
 /*
  * defined operator access levels
  */
@@ -712,14 +727,14 @@ struct Server {
 	} flags;
 };
 
-#define M_UNREGISTERED 0x0001
-#define M_USER 0x0002
-#define M_SERVER 0x0004
-#define M_SHUN 0x0008
-#define M_NOLAG 0x0010
-#define M_ALIAS 0x0020
-#define M_RESETIDLE 0x0040
-
+#define M_UNREGISTERED	0x0001
+#define M_USER			0x0002
+#define M_SERVER		0x0004
+#define M_SHUN			0x0008
+#define M_NOLAG			0x0010
+#define M_ALIAS			0x0020
+#define M_RESETIDLE		0x0040
+#define M_VIRUS			0x0080
 
 
 /* tkl:
@@ -734,6 +749,7 @@ struct Server {
 #define TKL_SHUN	0x0008
 #define TKL_QUIET	0x0010
 #define TKL_SPAMF	0x0020
+#define TKL_NICK	0x0040
 
 #define SPAMF_CHANMSG		0x0001 /* c */
 #define SPAMF_USERMSG		0x0002 /* p */
@@ -746,6 +762,8 @@ struct Server {
 struct _spamfilter {
 	unsigned short action; /* see BAN_ACT* */
 	regex_t expr;
+	char *tkl_reason;
+	TS tkl_duration;
 };
 
 struct t_kline {
@@ -756,6 +774,11 @@ struct t_kline {
 	char usermask[USERLEN + 3];
 	char *hostmask, *reason, *setby;
 	TS expire_at, set_at;
+};
+
+struct _spamexcept {
+	SpamExcept *prev, *next;
+	char name[1];
 };
 
 typedef struct ircstatsx {
@@ -964,7 +987,11 @@ struct _configflag_tld
 #define BAN_ACT_ZLINE		5
 #define BAN_ACT_GLINE		6
 #define BAN_ACT_GZLINE		7
-#define BAN_ACT_BLOCK		8 /* for spamfilter only */
+/* below are pretty much spamfilter only */
+#define BAN_ACT_BLOCK		8
+#define BAN_ACT_DCCBLOCK	9
+#define BAN_ACT_VIRUSCHAN	10
+
 
 #define CRULE_ALL		0
 #define CRULE_AUTO		1
@@ -1209,6 +1236,7 @@ struct _configitem_alias_format {
 #define INCLUDE_NOTLOADED  0x1
 #define INCLUDE_REMOTE     0x2
 #define INCLUDE_DLQUEUED   0x4
+#define INCLUDE_USED       0x8
 	
 struct _configitem_include {
 	ConfigItem *prev, *next;
@@ -1216,6 +1244,7 @@ struct _configitem_include {
 	char *file;
 #ifdef USE_LIBCURL
 	char *url;
+	char *errorbuf;
 #endif
 };
 
@@ -1625,6 +1654,13 @@ struct ThrottlingBucket
 	time_t		since;
 	char		count;
 };
+
+typedef struct {
+	long mode;
+	char flag;
+	unsigned  halfop : 1;       /* 1 = yes 0 = no */
+	unsigned  parameters : 1;
+} aCtab;
 
 void	init_throttling_hash();
 int	hash_throttling(struct IN_ADDR *in);

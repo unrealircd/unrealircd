@@ -122,6 +122,13 @@ typedef struct {
 #define EXSJ_WEWON			1 /* We won! w00t */
 #define EXSJ_THEYWON		2 /* They won :( */
 
+/* return values for EXCHK_ACCESS*: */
+#define EX_DENY				0  /* Disallowed, except in case of operoverride */
+#define EX_ALLOW			1  /* Allowed */
+#define EX_ALWAYS_DENY		-1 /* Disallowed, even in case of operoverride
+                                * (eg: for operlevel modes like +A)
+                                */
+
 /** Extended channel mode table.
  * This table contains all extended channelmode info like the flag, mode, their
  * functions, etc..
@@ -342,13 +349,14 @@ struct _Module
 #else
 	void	*dll;		/* Return value of dlopen */
 #endif	
-	unsigned char flags;    /* 8-bits for flags .. */
+	unsigned char flags;    /* 8-bits for flags .. [<- this is misleading, there's mod->flags = .. everywhere] */
 	ModuleChild *children;
 	ModuleObject *objects;
 	ModuleInfo modinfo; /* Used to store handle info for module */
 	unsigned char options;
 	unsigned char errorcode;
 	char *tmp_file;
+	unsigned char compilecheck; /* feel free to rename this mess, but mod->flags sucks :[. */
 };
 /*
  * Symbol table
@@ -528,6 +536,14 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define HOOKTYPE_CHANNEL_DESTROY 33
 #define HOOKTYPE_REMOTE_CHANMODE 34
 #define HOOKTYPE_TKL_EXCEPT 35
+#define HOOKTYPE_UMODE_CHANGE 36
+#define HOOKTYPE_TOPIC 37
+#define HOOKTYPE_REHASH_COMPLETE 38
+
+/* Hook return values */
+#define HOOK_CONTINUE 0
+#define HOOK_ALLOW -1
+#define HOOK_DENY 1
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000
