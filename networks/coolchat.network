@@ -1,0 +1,28 @@
+/*
+ * Coolchat Irc Network (irc.coolchat.net) Network Configuration
+File
+ *
+ * Added-at:     21 September 2001 18:41
+ * Author: ZeR0
+ * Email: admin@cedarcreekcomm.com
+ */
+
+set {
+network-name "Coolchat Irc Network";
+default-server "irc.coolchat.net"; 
+services-server "services.coolchat.net";
+stats-server "stats.mynet.org";
+help-channel "#help";
+hiddenhost-prefix "staff";
+hosts {
+local "staff.coolchat.ent";
+global "staff.coolchat.net";
+coadmin "";
+admin "staff.coolchat.net";
+servicesadmin "[";
+techadmin "staff.coolchat.entstaff.c";
+netadmin "staff.coolchat.net";
+host-on-oper yes;
+};
+};
+

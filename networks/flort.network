@@ -1,0 +1,27 @@
+/*
+ * Flort.Net (irc.flort.net) Network Configuration File
+ *
+ * Added-at:     12 October 2001 19:38
+ * Author: dzhakimi
+ * Email: ircadmin@flort.net
+ */
+
+set {
+network-name "Flort.Net";
+default-server "irc.flort.net"; 
+services-server "services.flort.net";
+stats-server "stats.flort.net";
+help-channel "#Destek";
+hiddenhost-prefix "hide";
+hosts {
+local "locop.flort.net";
+global "oper.flort.net";
+coadmin "coadmin.flort.net";
+admin "admin.flort.net";
+servicesadmin "csop.flort.net";
+techadmin "tecadmin.flort.net";
+netadmin "netadmin.flort.net";
+host-on-oper yes;
+};
+};
+
