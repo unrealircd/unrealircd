@@ -19,7 +19,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <strong>Current Version:</strong> 3.2 Beta15<br>
-  <strong>Last doc update:</strong> 2003-03-01 </div>
+  <strong>Last doc update:</strong> 2003-03-02 </div>
   <strong>Head Coders:</strong> Stskeeps / Codemastr / Luke / McSkaf / Syzop<br>
   <strong>Contributors:</strong> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <strong>Documentation:</strong> CKnight^ / Syzop<br>
@@ -231,13 +231,24 @@
    you probably want to read those after installing :).</p>
 
 <p><font size="+2"><strong>3.9 - SSL</strong></font><a name="feature_ssl"></a></p>
-<p>SSL stands for Secure Socket Layer, with SSL you can make secure (encrypted) connections. 
-   It can be used to encrypt server2server traffic, but clients can also use it if you want.
-   If set up right it can useful again sniffing attacks, if you don't know what I'm talking
-   about then SSL is (not yet) for you ;).</p>
-<p>To setup a secure SSL port you need to add the ssl flag to the listen block.
-   NOTE: you cannot connect with non-ssl clients to a SSL port, so don't set port 6667 to SSL for example ;).</p>
-
+<p>SSL stands for Secure Socket Layer, with SSL you can make secure encrypted connections. 
+   It can be used to encrypt server&lt;-&gt;server traffic, but client&lt;-&gt;server traffic can also be encrypted.
+   You usually use SSL to protect against sniffing and for authentication.</p>
+<p>You need to have your IRC server compiled with SSL support. To setup a SSL port you need to set listen::options::ssl.</p>
+<p>You cannot connect normally to a SSL port (so don't make port 6667 ssl!), you need a client or a tunnel
+   that understands the SSL protocol.</p>
+<p>Clients that support SSL: <A HREF="http://www.xchat.org/" TARGET="_blank">XChat</a></p>
+<p>For all other clients which don't support SSL (like mIRC) you can use a tunnel like
+   <A HREF="http://www.stunnel.org/" TARGET="_blank">stunnel</A>, here's a stunnel.conf example (for stunnel 4.x):<br>
+   <pre>
+   [irc]
+   accept = 127.0.0.1:6667
+   connect = irc.myserv.com:6900
+</pre>
+   If you then connect to 127.0.0.1 port 6667 your traffic will be encrypted and forwarded to irc.myserv.com
+   port 6900 (a SSL port).</p>
+<p>If you are really concerned about security/sniffing then you also need to validate certificates on the client end.
+   That's however way too offtopic to explain here. Learn about SSL, don't ask us, it has nothing to do with UnrealIRCd.</p>
 <p><font size="+2"><strong>3.10 - IPv6</strong></font><a name="feature_ipv6"></a></p>
 <p>UnrealIRCd supports IPv6, since beta15 it seems to work well altough there might be some
    bugs in it. You need to compile with IPv6 support (answer yes to the ./Config question), ofcourse your
@@ -245,10 +256,10 @@
 <p>Altough microsoft has an experimental IPv6 implementation for w2k/XP it is not (yet) supported by UnrealIRCd</p>
 
 <p><font size="+2"><strong>3.11 - Zip links</strong></font><a name="feature_ziplinks"></a></p>
-<p>Zip links can be turned on for server2server links, it compresses the data by using zlib.
+<p>Zip links can be turned on for server&lt;-&gt;server links, it compresses the data by using zlib.
    It can save 60-80% bandwidth... So it's quite useful for low-bandwidth links or links with
    many users, it can help a lot when you are linking since then a lot of data is sent about ever user/channel/etc.</p>
-<p>To compile with zip links support, you need to answer Yes to the zlib question in ./Config</p>
+<p>To compile with zip links support, you need to answer Yes to the zlib question in ./Config and set it in link::options::zip</p>
 
 <p><font size="+2"><strong>3.12 - Other stuff</strong></font><a name="feature_other"></a></p>
 <p>UnrealIRCd has a lot of features so not everything is covered here... You'll find that out by yourself</p>
