@@ -2016,3 +2016,4 @@ seen. gmtime warning still there
 - Made gline/zline/kline take precedence over a shun in TKL (#0000870) reported by KnuX`
 - Fixed a long standing typo where doc/example.conf still mentioned oflag e (#0000638)
   reported by twigboy.
+- Possibly fixed an SSL crash bug (#0000871 and #000784) reported by shotgun and comrade

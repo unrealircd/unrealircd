@@ -359,17 +359,7 @@ char	*ssl_get_cipher(SSL *ssl)
 	SSL_CIPHER *c; 
 	
 	buf[0] = '\0';
-	switch(ssl->session->ssl_version)
-	{
-		case SSL2_VERSION:
-			strcat(buf, "SSLv2"); break;
-		case SSL3_VERSION:
-			strcat(buf, "SSLv3"); break;
-		case TLS1_VERSION:
-			strcat(buf, "TLSv1"); break;
-		default:
-			strcat(buf, "UNKNOWN");
-	}
+	strcpy(buf, SSL_get_version(ssl));
 	strcat(buf, "-");
 	strcat(buf, SSL_get_cipher(ssl));
 	c = SSL_get_current_cipher(ssl);
