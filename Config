@@ -410,6 +410,7 @@ while [ -z "$TEST" ] ; do
 	    ;;
 	[Nn]*)
 	    REMOTEINC=""
+	    CURLDIR=""
 	    ;;
 	*)
 	    echo ""
@@ -422,12 +423,13 @@ done
 if [ "$REMOTEINC" = "1" ] ; then
 	TEST=""
 	while [ -z "$TEST" ] ; do
+		TEST="$CURLDIR"
 		echo ""
 		echo "Specify the directory you installed libcurl to"
 		echo $n "[$TEST] -> $c"
 		read cc
 		if [ -z "$cc" ] ; then
-		    TEST=""
+		    cc=$TEST
 		else
 		    TEST=$cc
 		    CURLDIR=$cc
