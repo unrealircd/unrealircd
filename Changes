@@ -443,3 +443,4 @@
   disables /sethost, /setident, /chgname, /chghost, /chgident
 - Fixed a /rehash -garbage bug reported by Curt|s
 - Added networks/makenet (generates a network configuration file)
+- Added networks/staticedge.network
