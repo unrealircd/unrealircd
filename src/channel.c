@@ -5162,7 +5162,11 @@ CMD_FUNC(m_sjoin)
 		if (((i + 1) <= (parc - 2)))
 			strcat(parabuf, " ");
 	}
-
+	if (!chptr->users)
+	{
+		sub1_from_channel(chptr);
+		return -1;
+	}
 	/* This sends out to SJ3 servers .. */
 	Debug((DEBUG_DEBUG, "Sending '%li %s :%s' to sj3-!sjb64", ts, parabuf,
 	    parv[parc - 1]));
