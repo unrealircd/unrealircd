@@ -365,7 +365,7 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 			return 0;
 		}
 
-	if (TSTime() < sptr->user->nexttarget)
+	if (TStime() < sptr->user->nexttarget)
 	{
 		sptr->since += TARGET_DELAY; /* lag them up */
 		sptr->user->nexttarget += TARGET_DELAY;
@@ -373,9 +373,9 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 		return 1;
 	}
 
-	if (TSTime() > sptr->user->nexttarget + TARGET_DELAY*MAXTARGETS)
+	if (TStime() > sptr->user->nexttarget + TARGET_DELAY*MAXTARGETS)
 	{
-		sptr->user->nexttarget = TSTime() + TARGET_DELAY*MAXTARGETS;
+		sptr->user->nexttarget = TStime() + TARGET_DELAY*MAXTARGETS;
 	}
 
 	sptr->user->nexttarget += TARGET_DELAY;
