@@ -1284,3 +1284,5 @@ seen. gmtime warning still there
 - Fixed a bug in the socks scanner causing it to fail
 - Removed some typecasts from free calls, *hopefully* it will fix some problems
 - Fixed a bug with \r\n being mistakenly parsed wrong. Thanks to John_z
+- Fixed a config parser bug that would cause a crash under certain conditions. Reported by 
+  roskecr (#0000173)

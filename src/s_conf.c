@@ -692,9 +692,9 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					if (curce)
 						config_error("%s: Unexpected EOF for variable starting at %i\n",
 							filename, curce->ce_varlinenum);
-					else if (cursection)
+					else if (cursection) 
 						config_error("%s: Unexpected EOF for section starting at %i\n",
-							filename, curce->ce_sectlinenum);
+							filename, cursection->ce_sectlinenum);
 					else
 						config_error("%s: Unexpected EOF.\n", filename);
 					config_entry_free(curce);
