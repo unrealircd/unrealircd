@@ -486,3 +486,4 @@
 - Fixed a problem in SVS2MODE not displaying mode changes, and well known
   why
 - Recoded SVSNOOP, but the IRCd doesn't get it at all??
+- added llthangel to credits
