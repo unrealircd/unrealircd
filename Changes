@@ -921,3 +921,5 @@ seen. gmtime warning still there
   show up in the correct font
 - Added hscroll bars to the win32 editor (if needed)
 - The win32 editor now allows you to edit files included via tld {} (probably needs testing)
+- Made the win32 editor allow you to edit include "" files
+- Recoded the win32 rehash button to be much better

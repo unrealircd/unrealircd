@@ -93,6 +93,7 @@ typedef struct _configitem_unknown ConfigItem_unknown;
 typedef struct _configitem_unknown_ext ConfigItem_unknown_ext;
 typedef struct _configitem_alias ConfigItem_alias;
 typedef struct _configitem_alias_format ConfigItem_alias_format;
+typedef struct _configitem_include ConfigItem_include;
 
 typedef struct Watch aWatch;
 typedef struct Client aClient;
@@ -1066,6 +1067,11 @@ struct _configitem_alias_format {
 	char *format, *parameters;
 };
 	
+struct _configitem_include {
+	ConfigFlag flag;
+	ConfigItem *prev, *next;
+	char *file;
+};
 
 struct _irchook {
 	ConfigFlag flag;

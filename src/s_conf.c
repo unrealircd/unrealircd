@@ -271,6 +271,7 @@ ConfigItem_log		*conf_log = NULL;
 ConfigItem_unknown	*conf_unknown = NULL;
 ConfigItem_unknown_ext  *conf_unknown_set = NULL;
 ConfigItem_alias	*conf_alias = NULL;
+ConfigItem_include	*conf_include = NULL;
 #ifdef STRIPBADWORDS
 ConfigItem_badword	*conf_badword_channel = NULL;
 ConfigItem_badword      *conf_badword_message = NULL;
@@ -901,12 +902,24 @@ int	init_conf2(char *filename)
 	config_progress("Opening config file %s .. ", filename);
 	if (cfptr = config_load(filename))
 	{
+		ConfigItem_include *includes;
 		config_progress("Config file %s loaded without problems",
 			filename);
 		i = ConfigParse(cfptr);
 		RunHook0(HOOKTYPE_CONFIG_UNKNOWN);
 		clear_unknown();
 		config_free(cfptr);
+		if (!stricmp(filename, CPATH))
+			return i;
+		for (includes = conf_include; includes; includes = (ConfigItem_include *)includes->next) {
+			if (!stricmp(includes->file, filename)) 
+				break;
+		}
+		if (!includes) {
+			includes = MyMalloc(sizeof(ConfigItem_include));
+			includes->file = strdup(filename);
+			add_ConfigItem((ConfigItem *)includes, (ConfigItem **)&conf_include);
+		}
 		return i;
 	}
 	else
@@ -3474,6 +3487,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	ConfigItem_deny_version		*deny_version_ptr;
 	ConfigItem_log			*log_ptr;
 	ConfigItem_alias		*alias_ptr;
+	ConfigItem_include		*include_ptr;
 	ConfigItem 	t;
 
 
@@ -3719,6 +3733,12 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		t.next = del_ConfigItem((ConfigItem *)alias_ptr, (ConfigItem **)&conf_alias);
 		MyFree(alias_ptr);
 		alias_ptr = (ConfigItem_alias *)&t;
+	}
+	for (include_ptr = conf_include; include_ptr; include_ptr = (ConfigItem_include *)include_ptr->next) {
+		ircfree(include_ptr->file);
+		t.next = del_ConfigItem((ConfigItem *)include_ptr, (ConfigItem **)&conf_include);
+		MyFree(include_ptr);
+		include_ptr = (ConfigItem_include *)&t;
 	}
 	/* rehash_modules */
 	init_conf2(configfile);

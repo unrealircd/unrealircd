@@ -75,6 +75,7 @@ void win_map(aClient *, HWND, short);
 extern Link *Servers;
 extern ircstats IRCstats;
 char *errors, *RTFBuf;
+extern aMotd *botmotd, *opermotd, *motd, *rules;
 void CleanUp(void)
 {
 	Shell_NotifyIcon(NIM_DELETE ,&SysTray);
@@ -598,13 +599,35 @@ static HMENU hRehash, hAbout, hConfig, hTray;
 				 return 0;
 			 }
 			 else if ((p.x >= 140) && (p.x <= 186) && (p.y >= 178) && (p.y <= 190))  {
-				static int i = 0;
+				static int i = 0, j = 0;
 				ClientToScreen(hDlg,&p);
+				DeleteMenu(hConfig, IDM_MOTD, MF_BYCOMMAND);
+				DeleteMenu(hConfig, IDM_OPERMOTD, MF_BYCOMMAND);
+				DeleteMenu(hConfig, IDM_BOTMOTD, MF_BYCOMMAND);
+				DeleteMenu(hConfig, IDM_RULES, MF_BYCOMMAND);
+
 				while (i >= 6000) 
 					DeleteMenu(hConfig, i--, MF_BYCOMMAND);
+				while(j >= 16000)
+					DeleteMenu(hConfig, j--, MF_BYCOMMAND);
+
+				if (conf_include) {
+					ConfigItem_include *inc;
+					j = 16000;
+					for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next) {
+						AppendMenu(hConfig, MF_STRING, ++j, inc->file);
+					}
+					AppendMenu(hConfig, MF_SEPARATOR, ++j, NULL);
+				}
+
+				AppendMenu(hConfig, MF_STRING, IDM_MOTD, MPATH);
+				AppendMenu(hConfig, MF_STRING, IDM_OPERMOTD, OPATH);
+				AppendMenu(hConfig, MF_STRING, IDM_BOTMOTD, BPATH);
+				AppendMenu(hConfig, MF_STRING, IDM_RULES, RPATH);
+				
 				if (conf_tld) {
 					ConfigItem_tld *tlds;
-					i = 6001;
+					i = 6000;
 					AppendMenu(hConfig, MF_SEPARATOR, 6000, NULL);
 					for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *)tlds->next) {
 						if (!tlds->flag.motdptr)
@@ -634,7 +657,7 @@ static HMENU hRehash, hAbout, hConfig, hTray;
 
 			case WM_COMMAND: {
 				/* Hopefully no one will have more than 10000 files? */
-				if (LOWORD(wParam) > 6000 && LOWORD(wParam) < 16000) {
+				if (LOWORD(wParam) > 6000 && LOWORD(wParam) < 35000) {
 					char path[MAX_PATH];
 					GetMenuString(hConfig,LOWORD(wParam), path, MAX_PATH, MF_BYCOMMAND);
 					DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, 
@@ -657,46 +680,60 @@ static HMENU hRehash, hAbout, hConfig, hTray;
 						break;
 
 					case IDM_RHALL:
-					case IDM_RHCONF:
-					case IDM_RHMOTD:
-					case IDM_RHOMOTD:
-					case IDM_RHBMOTD:
-						argv[0] = "The Console";
-						paClient = make_client(NULL, &me);
-						SetNetAdmin(paClient);
-						SetAdmin(paClient);
-						strcpy(paClient->name, "The Console");
-						switch (LOWORD(wParam))
-						{
-						case IDM_RHALL:
-							msg = "Rehashing the wIRCd";
-							argv[2] = "-all";
-	         				m_rehash(&me, paClient, 3, argv);
-							/* fall through! */
-						case IDM_RHCONF:
-							if (LOWORD(wParam) == IDM_RHCONF)
-								msg = "Rehashing the config file";
-							argv[1] = "";
-							argv[2] = NULL;
-							break;
-						case IDM_RHMOTD:
-							msg = "Rehashing all MOTDs and Rules files";
-							argv[2] = "-motd";
-							break;
-						case IDM_RHOMOTD:
-							msg = "Rehashing the OPER MOTD file";
-							argv[2] = "-opermotd";
-							break;
-						case IDM_RHBMOTD:
-							msg = "Rehashing the BOT MOTD file";
-							argv[2] = "-botmotd";
-							break;
-						}
-						MessageBox(hDlg, msg, "Rehashing", MB_OK);
-       					m_rehash(&me, paClient, 3, argv);
-						free(paClient);
+						MessageBox(NULL, "Rehashing all files", "Rehashing", MB_OK);
+						sendto_realops("Rehashing all files via the console");
+						rehash(&me,&me,0);
+						opermotd = (aMotd *) read_file(OPATH, &opermotd);
+						botmotd = (aMotd *) read_file(BPATH, &botmotd);
 						break;
-						case IDM_LICENSE: 
+					case IDM_RHCONF:
+						MessageBox(NULL, "Rehashing the Config file", "Rehashing", MB_OK);
+						sendto_realops("Rehashing the Config file via the console");
+						rehash(&me,&me,0);
+						break;
+					case IDM_RHMOTD: {
+						ConfigItem_tld *tlds;
+						aMotd *amotd;
+						MessageBox(NULL, "Rehashing all MOTD and Rules files", "Rehashing", MB_OK);
+						motd = (aMotd *) read_motd(MPATH);
+						rules = (aMotd *) read_rules(RPATH);
+						for (tlds = conf_tld; tlds;
+						    tlds = (ConfigItem_tld *) tlds->next) {
+							if (!tlds->flag.motdptr) {
+								while (tlds->motd)
+								{
+									amotd = tlds->motd->next;
+									MyFree(tlds->motd->line);
+									MyFree(tlds->motd);
+									tlds->motd = amotd;
+								}
+							}
+							tlds->motd = read_motd(tlds->motd_file);
+							if (!tlds->flag.rulesptr) {
+								while (tlds->rules)
+								{
+									amotd = tlds->rules->next;
+									MyFree(tlds->rules->line);
+									MyFree(tlds->rules);
+									tlds->rules = amotd;
+								}
+							}
+							tlds->rules = read_rules(tlds->rules_file);
+						}
+						sendto_realops("Rehashing all MOTD and Rules files via the console");
+						break;
+					}
+					case IDM_RHOMOTD:
+						MessageBox(NULL, "Rehashing the OperMOTD", "Rehashing", MB_OK);
+						opermotd = (aMotd *) read_file(OPATH, &opermotd);
+						sendto_realops("Rehashing the OperMOTD via the console");
+						break;
+					case IDM_RHBMOTD:
+						MessageBox(NULL, "Rehashing the BotMOTD", "Rehashing", MB_OK);
+						botmotd = (aMotd *) read_file(BPATH, &botmotd);
+						sendto_realops("Rehashing the BotMOTD via the console");
+						break;
+					case IDM_LICENSE: 
 						DialogBox(hInst, "FromVar", hDlg, (DLGPROC)LicenseDLG);
 						break;
 					case IDM_CREDITS:

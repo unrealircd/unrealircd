@@ -94,6 +94,7 @@ extern ConfigItem_log		*conf_log;
 extern ConfigItem_unknown	*conf_unknown;
 extern ConfigItem_unknown_ext   *conf_unknown_set;
 extern ConfigItem_alias		*conf_alias;
+extern ConfigItem_include	*conf_include;
 extern void clear_unknown();
 EVENT(tkl_check_expire);
 

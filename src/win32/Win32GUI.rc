@@ -388,10 +388,6 @@ BEGIN
     BEGIN
         MENUITEM "ircd.&conf",                  IDM_CONF
         MENUITEM SEPARATOR
-        MENUITEM "ircd.&motd",                  IDM_MOTD
-        MENUITEM "&oper.motd",                  IDM_OPERMOTD
-        MENUITEM "&bot.motd",                   IDM_BOTMOTD
-        MENUITEM "ircd.&rules",                 IDM_RULES
     END
 END
 
@@ -399,12 +395,12 @@ MENU_REHASH MENU DISCARDABLE
 BEGIN
     POPUP "Rehash"
     BEGIN
-        MENUITEM "&Everything",                 IDM_RHALL
+        MENUITEM "&All Files",                 IDM_RHALL
         MENUITEM SEPARATOR
         MENUITEM "&Config file",                IDM_RHCONF
-        MENUITEM "&All MOTDs and Rules",        IDM_RHMOTD
-        MENUITEM "&OPER MOTD",                  IDM_RHOMOTD
-        MENUITEM "&BOT MOTD",                   IDM_RHBMOTD
+        MENUITEM "&All MOTD and Rules",        IDM_RHMOTD
+        MENUITEM "&OperMOTD",                  IDM_RHOMOTD
+        MENUITEM "&BotMOTD",                   IDM_RHBMOTD
     END
 END
 
