@@ -307,3 +307,4 @@
 - Changed the output of makeconf from ircd.conf to unrealircd.conf
 - Renamed hostmask to hostname like it should be in makeconf - IpAddress
 - Added "get_host" old 'H' O:flag
+- Added #define KILL_LOGGING, by otherguy

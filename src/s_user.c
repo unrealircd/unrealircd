@@ -3419,6 +3419,18 @@ int  m_kill(cptr, sptr, parc, parv)
 			syslog(LOG_DEBUG, "KILL From %s For %s Path %s!%s",
 			    parv[0], acptr->name, inpath, path);
 #endif
+#ifdef KILL_LOGGING
+		/*
+		 * By otherguy
+		*/
+                ircd_log
+                    ("KILL (%s) by  %s(%s!%s)",
+                           make_nick_user_host 
+                     (acptr->name, acptr->user->username, (IsHidden(acptr) ? acptr->user->virthost : acptr->user->realhost)),
+                            parv[0],
+                            inpath, 
+                            path);
+#endif
 		/*
 		   ** And pass on the message to other servers. Note, that if KILL
 		   ** was changed, the message has to be sent to all links, also
@@ -3469,6 +3481,7 @@ int  m_kill(cptr, sptr, parc, parv)
 				killer = path;
 			(void)ircsprintf(buf2, "Killed (%s)", killer);
 		}
+		
 		if (exit_client(cptr, acptr, sptr, buf2) == FLUSH_BUFFER)
 			return FLUSH_BUFFER;
 	}
