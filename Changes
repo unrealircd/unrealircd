@@ -808,3 +808,4 @@ seen. gmtime warning still there
 - Disabled #undef PROPER_CORE
 - Added alias {} to doc/example.conf
 - Fixed a bug in alias {} found by RaYmAn
+- Fixed another alias {} bug
