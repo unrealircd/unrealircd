@@ -423,7 +423,7 @@ extern Ban *is_banned(cptr, sptr, chptr)
 	aClient *cptr, *sptr;
 	aChannel *chptr;
 {
-	Ban *tmp;
+	Ban *tmp, *tmp2;
 	char *s;
 	static char realhost[NICKLEN + USERLEN + HOSTLEN + 6];
 	static char virthost[NICKLEN + USERLEN + HOSTLEN + 6];
@@ -443,16 +443,21 @@ extern Ban *is_banned(cptr, sptr, chptr)
 	s = make_nick_user_host(cptr->name, cptr->user->username,
 	    cptr->user->virthost);
 	strcpy(virthost, s);
-	/* -- exceptions are BEFORE testing bans */
-	for (tmp = chptr->exlist; tmp; tmp = tmp->next)
-		if ((match(tmp->banstr, realhost) == 0) ||
-		    (dovirt && (match(tmp->banstr, virthost) == 0)))
-			return (NULL);	/* exception ! */
-
+/* We now check +b first, if a +b is found we then see if there is a +e.
+ * If a +e was found we return NULL, if not, we return the ban.
+ */
 	for (tmp = chptr->banlist; tmp; tmp = tmp->next)
 		if ((match(tmp->banstr, realhost) == 0) ||
-		    (dovirt && (match(tmp->banstr, virthost) == 0)))
-			break;
+			(dovirt && (match(tmp->banstr, virthost) == 0))) {
+			/* Ban found, now check for +e */
+		for (tmp2 = chptr->exlist; tmp2; tmp2 = tmp2->next)
+		if ((match(tmp2->banstr, realhost) == 0) ||
+		    (dovirt && (match(tmp2->banstr, virthost) == 0)))
+			return (NULL);
+
+		break;
+		}
+
 	return (tmp);
 }
 
