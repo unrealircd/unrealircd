@@ -4679,19 +4679,19 @@ int  m_svs2mode(cptr, sptr, parc, parv)
 					      TS2ts(parv[3]);
 				  break;
 			  case 'i':
-				  if (what == MODE_ADD)
+				  if (what == MODE_ADD && !(acptr->umodes & UMODE_INVISIBLE))
 				  {
 					  IRCstats.invisible++;
 				  }
-				  if (what == MODE_DEL)
+				  if (what == MODE_DEL && (acptr->umodes & UMODE_INVISIBLE))
 				  {
 					  IRCstats.invisible--;
 				  }
 			  	  goto setmodey;
 			  case 'o':
-				  if (what == MODE_ADD)
+				  if (what == MODE_ADD && !(acptr->umodes & UMODE_OPER))
 					  IRCstats.operators++;
-				  if (what == MODE_DEL)
+				  if (what == MODE_DEL && (acptr->umodes & UMODE_OPER))
 					  IRCstats.operators--;
 			  default:
 setmodey:
@@ -4716,7 +4716,7 @@ setmodey:
 		    TOK_SVS2MODE, "%s %s", parv[1], parv[2]);
 
 	send_umode(NULL, acptr, setflags, ALL_UMODES, buf);
-	if (MyClient(acptr) && buf[1])
+	if (MyClient(acptr) && buf[0] && buf[1])
 		sendto_one(acptr, ":%s MODE %s :%s", parv[0], parv[1], buf);
 	return 0;
 }
@@ -4776,20 +4776,20 @@ int  m_svsmode(cptr, sptr, parc, parv)
 			  case '\t':
 				  break;
 			  case 'i':
-				  if (what == MODE_ADD)
+				  if (what == MODE_ADD && !(acptr->umodes & UMODE_INVISIBLE))
 				  {
 					  IRCstats.invisible++;
 				  }
-				  if (what == MODE_DEL)
+				  if (what == MODE_DEL && (acptr->umodes & UMODE_INVISIBLE))
 				  {
 
 					  IRCstats.invisible--;
 			          }
 			  	  goto setmodex;
 			  case 'o':
-				  if (what == MODE_ADD)
+				  if (what == MODE_ADD && !(acptr->umodes & UMODE_OPER))
 					  IRCstats.operators++;
-				  if (what == MODE_DEL)
+				  if (what == MODE_DEL && (acptr->umodes & UMODE_OPER))
 					  IRCstats.operators--;
 				  goto setmodex;
 			  case 'd':

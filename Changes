@@ -92,3 +92,5 @@
 - Fixed the same bug in shun that affected G:line
 - Made +f faster by replacing 2 strchr()s and a strrchr() with a if () inside an existing loop
 - Fixed a +f bug reported by Enstyne
+- Fixed a SVSMODE/SVS2MODE bug that could cause an incorrect +i and +o count, reported by CaliMonk
+- Fixed another SVS2MODE bug that would make it send an empty MODE change
