@@ -3613,8 +3613,6 @@ CMD_FUNC(m_rehash)
 		{
 			if (!_match("-all", parv[1]))
 			{
-				ConfigItem_tld *tlds;
-				aMotd *amotd;
 				sendto_ops("%sRehashing everything on the request of %s",
 					cptr != sptr ? "Remotely " : "",sptr->name);
 				if (cptr != sptr)
@@ -4373,7 +4371,7 @@ void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_length, int
 	{
 		acptr = lp->value.cptr;
 		if (acptr->srvptr != server ||
- 		    IsULine(acptr) && !IsOper(cptr) && HIDE_ULINES)
+ 		    (IsULine(acptr) && !IsOper(cptr) && HIDE_ULINES))
 			continue;
 		acptr->flags |= FLAGS_MAP;
 		cnt++;

@@ -1654,7 +1654,7 @@ int  read_message(time_t delay, fdlist *listp)
 			
 			if (DoingAuth(cptr))
 			{
-				int s = TStime() - cptr->firsttime, fail = 0;
+				int s = TStime() - cptr->firsttime;
 				/* Maybe they should be timed out. -- Syzop. */
 				if ( ((s > IDENT_CONNECT_TIMEOUT) && (cptr->flags & FLAGS_WRAUTH)) ||
 				     (s > IDENT_READ_TIMEOUT))

@@ -4266,7 +4266,7 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 	ca = MyMallocEx(sizeof(ConfigItem_badword));
 	ca->action = BADWORD_REPLACE;
 	regflags = REG_ICASE|REG_EXTENDED;
-	if (cep = config_find_entry(ce->ce_entries, "action"))
+	if ((cep = config_find_entry(ce->ce_entries, "action")))
 	{
 		if (!strcmp(cep->ce_vardata, "block"))
 		{

@@ -337,7 +337,6 @@ int  find_shun(aClient *cptr)
 	aTKline *lp;
 	char *chost, *cname, *cip;
 	TS   nowtime;
-	char msge[1024];
 	int	points = 0;
 	ConfigItem_except *excepts;
 	char host[NICKLEN+USERLEN+HOSTLEN+6], host2[NICKLEN+USERLEN+HOSTLEN+6];

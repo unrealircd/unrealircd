@@ -70,6 +70,8 @@ extern ircstats IRCstats;
 extern int lifesux;
 #endif
 
+/* Some forward declarations */
+CMD_FUNC(do_join);
 static void add_invite(aClient *, aChannel *);
 static int add_banid(aClient *, aChannel *, char *);
 static int can_join(aClient *, aClient *, aChannel *, char *, char *,
@@ -230,7 +232,7 @@ Membership *find_membership_link(Membership *lp, aChannel *ptr)
 Member	*make_member(void)
 {
 	Member *lp;
-	int	i;
+	unsigned int	i;
 
 	if (freemember == NULL)
 	{
@@ -267,7 +269,7 @@ Membership	*make_membership(int local)
 {
 	Membership *lp = NULL;
 	MembershipL *lp2 = NULL;
-	int	i;
+	unsigned int	i;
 
 	if (!local)
 	{

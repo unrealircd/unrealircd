@@ -123,7 +123,6 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	int  permit = 2;
 #endif
 	int  legalhost = 1;	/* is legal characters? */
-	int rejoin = 0;
 
 
 	if (!MyConnect(sptr))
