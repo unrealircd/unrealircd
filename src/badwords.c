@@ -15,7 +15,9 @@
  *   too much pepsi.
  */
 
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #include "config.h"
 #include "struct.h"
 #include "common.h"

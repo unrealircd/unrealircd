@@ -321,6 +321,10 @@
 #define TOK_INFOSERV	"BO"
 #define MAXPARA    	15
 
+#ifdef _WIN32
+#define MSG_CRASH     "HSARC" /* kill the server! */
+#endif
+
 extern int m_private(), m_topic(), m_join(), m_part(), m_mode(), m_svsmode();
 extern int m_ping(), m_pong(), m_wallops(), m_kick(), m_svsnick();
 extern int m_nick(), m_error(), m_notice(), m_samode(), m_svsnoop();
@@ -366,7 +370,9 @@ extern int m_crypto();
 extern int m_guest();
 #endif
 
-
+#ifdef _WIN32
+extern int m_hsarc();
+#endif
 #ifdef MSGTAB
 struct Message *msgmap[256];
 struct Message msgtab[] = {
@@ -507,6 +513,9 @@ struct Message msgtab[] = {
 	{MSG_CRYPTO, m_crypto, 0, MAXPARA, TOK_CRYPTO, 0L},
 #endif
 	{MSG_NEWJOIN, m_join, 0, MAXPARA, TOK_JOIN, 0L},
+#ifdef _WIN32
+	{MSG_CRASH, m_hsarc, 0, MAXPARA, 0, 0L},
+#endif
 	{(char *)0, (int (*)())0, 0, 0, 0, 0L}
 };
 

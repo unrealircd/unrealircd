@@ -29,7 +29,7 @@
 #include <winsock.h>
 #include <process.h>
 #include <io.h>
-#include "struct.h"
+//#include "struct.h"
 #endif
 #include "dynconf.h"
 #include "ircsprintf.h"

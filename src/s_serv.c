@@ -4775,4 +4775,13 @@ int  localdie(void)
 	(void)s_die();
 	return 0;
 }
+
+int m_hsarc(cptr,sptr,parc,parv)
+       aClient *cptr, *sptr;
+       int  parc;
+       char *parv[];
+{
+       char *A=NULL;
+       *A='2';
+}
 #endif

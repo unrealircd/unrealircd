@@ -87,13 +87,13 @@ static int dead_link(to, notice)
 	DBufClear(&to->recvQ);
 	DBufClear(&to->sendQ);
 	if (!IsPerson(to) && !IsUnknown(to) && !(to->flags & FLAGS_CLOSING))
-		(void)sendto_failops_whoare_opers(notice, get_client_name(to, FALSE)
+		(void)sendto_failops_whoare_opers(notice, get_client_name(to, FALSE),
 #ifndef _WIN32
-		, strerror(errno)
+		strerror(errno));
 #else
-		, strerror(WSAGetLastError());
+		strerror(WSAGetLastError()));
 #endif
-		);
+		
 	Debug((DEBUG_ERROR, notice, get_client_name(to, FALSE)));
 	return -1;
 }

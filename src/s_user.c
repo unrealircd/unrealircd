@@ -1574,8 +1574,11 @@ int  m_nick(cptr, sptr, parc, parv)
 		 *
 		 * Generate a random string for them to pong with.
 		*/
+#ifndef _WIN32
 		sptr->nospoof = 1+(int) (9000000.0*random()/(RAND_MAX+80000000.0));
-
+#else
+		sptr->nospoof = 1+(int) (9000000.0*rand()/(RAND_MAX+80000000.0));
+#endif
 		/*
 		 * If on the odd chance it comes out zero, make it something
 		 * non-zero.
@@ -3487,10 +3490,15 @@ int  m_mkpasswd(cptr, sptr, parc, parv)
 		return 0;
 	}
 	srandom(time(0));
+#ifndef _WIN32
 	salt[0] = saltChars[random() % 64];
 	salt[1] = saltChars[random() % 64];
 	salt[2] = 0;
-
+#else
+	salt[0] = saltChars[rand() % 64];
+	salt[1] = saltChars[rand() % 64];
+	salt[2] = 0;
+#endif
 	if ((strchr(saltChars, salt[0]) == NULL)
 	    || (strchr(saltChars, salt[1]) == NULL))
 	{
