@@ -16,7 +16,6 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-#define DYNCONF_C
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
@@ -1087,93 +1086,3 @@ int m_unsqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	return 0;
 }
 
-void init_dynconf(void)
-{
-	bzero(&iConf, sizeof(iConf));
-}
-
-/* Report the unrealircd.conf info -codemastr*/
-void report_dynconf(aClient *sptr)
-{
-	sendto_one(sptr, ":%s %i %s :*** Dynamic Configuration Report ***",
-	    me.name, RPL_TEXT, sptr->name);
-	sendto_one(sptr, ":%s %i %s :INCLUDE: %s", me.name, RPL_TEXT,
-	    sptr->name, INCLUDE);
-	sendto_one(sptr, ":%s %i %s :KLINE_ADDRESS: %s", me.name, RPL_TEXT,
-	    sptr->name, KLINE_ADDRESS);
-	sendto_one(sptr, ":%s %i %s :MODE_X: %d", me.name, RPL_TEXT, sptr->name,
-	    MODE_X);
-	sendto_one(sptr, ":%s %i %s :MODE_STRIPWORDS: %d", me.name, RPL_TEXT,
-	    sptr->name, MODE_STRIPWORDS);
-	sendto_one(sptr, ":%s %i %s :MODE_I: %d", me.name, RPL_TEXT, sptr->name,
-	    MODE_I);
-	sendto_one(sptr, ":%s %i %s :TRUEHUB: %d", me.name, RPL_TEXT,
-	    sptr->name, TRUEHUB);
-	sendto_one(sptr, ":%s %i %s :SHOWOPERS: %d", me.name, RPL_TEXT,
-	    sptr->name, SHOWOPERS);
-	sendto_one(sptr, ":%s %i %s :KILLDIFF: %d", me.name, RPL_TEXT,
-	    sptr->name, KILLDIFF);
-	sendto_one(sptr, ":%s %i %s :SHOWOPERMOTD: %d", me.name, RPL_TEXT,
-	    sptr->name, SHOWOPERMOTD);
-	sendto_one(sptr, ":%s %i %s :HIDE_ULINES: %d", me.name, RPL_TEXT,
-	    sptr->name, HIDE_ULINES);
-	sendto_one(sptr, ":%s %i %s :ALLOW_CHATOPS: %d", me.name, RPL_TEXT,
-	    sptr->name, ALLOW_CHATOPS);
-	sendto_one(sptr, ":%s %i %s :SOCKS_BAN_MESSAGE: %s", me.name, RPL_TEXT,
-	    sptr->name, iConf.socksbanmessage);
-	sendto_one(sptr, ":%s %i %s :SOCKS_QUIT_MESSAGE: %s", me.name, RPL_TEXT,
-	    sptr->name, iConf.socksquitmessage);
-	sendto_one(sptr, ":%s %i %s :SOCKSBANTIME: %i", me.name, RPL_TEXT,
-	    sptr->name, iConf.socksbantime);
-	sendto_one(sptr, ":%s %i %s :MAXCHANNELSPERUSER: %i", me.name, RPL_TEXT,
-	    sptr->name, MAXCHANNELSPERUSER);
-	sendto_one(sptr, ":%s %i %s :WEBTV_SUPPORT: %d", me.name, RPL_TEXT,
-	    sptr->name, WEBTV_SUPPORT);
-	sendto_one(sptr, ":%s %i %s :NO_OPER_HIDING: %d", me.name, RPL_TEXT,
-	    sptr->name, NO_OPER_HIDING);
-	sendto_one(sptr, ":%s %i %s :AUTO_JOIN_CHANS: %s", me.name, RPL_TEXT,
-	    sptr->name, AUTO_JOIN_CHANS);
-	sendto_one(sptr, ":%s %i %s :OPER_AUTO_JOIN_CHANS: %s", me.name,
-	    RPL_TEXT, sptr->name, OPER_AUTO_JOIN_CHANS);
-	sendto_one(sptr, ":%s %i %s :HOST_TIMEOUT: %li", me.name, RPL_TEXT,
-	    sptr->name, HOST_TIMEOUT);
-	sendto_one(sptr, ":%s %i %s :HOST_RETRIES: %d", me.name, RPL_TEXT,
-	    sptr->name, HOST_RETRIES);
-}
-
-/* Report the network file info -codemastr */
-void report_network(aClient *sptr)
-{
-	sendto_one(sptr, ":%s %i %s :*** Network Configuration Report ***",
-	    me.name, RPL_TEXT, sptr->name);
-	sendto_one(sptr, ":%s %i %s :NETWORK: %s", me.name, RPL_TEXT,
-	    sptr->name, ircnetwork);
-	sendto_one(sptr, ":%s %i %s :DEFAULT_SERVER: %s", me.name, RPL_TEXT,
-	    sptr->name, defserv);
-	sendto_one(sptr, ":%s %i %s :SERVICES_NAME: %s", me.name, RPL_TEXT,
-	    sptr->name, SERVICES_NAME);
-	sendto_one(sptr, ":%s %i %s :OPER_HOST: %s", me.name, RPL_TEXT,
-	    sptr->name, oper_host);
-	sendto_one(sptr, ":%s %i %s :ADMIN_HOST: %s", me.name, RPL_TEXT,
-	    sptr->name, admin_host);
-	sendto_one(sptr, ":%s %i %s :LOCOP_HOST: %s", me.name, RPL_TEXT,
-	    sptr->name, locop_host);
-	sendto_one(sptr, ":%s %i %s :SADMIN_HOST: %s", me.name, RPL_TEXT,
-	    sptr->name, sadmin_host);
-	sendto_one(sptr, ":%s %i %s :NETADMIN_HOST: %s", me.name, RPL_TEXT,
-	    sptr->name, netadmin_host);
-	sendto_one(sptr, ":%s %i %s :COADMIN_HOST: %s", me.name, RPL_TEXT,
-	    sptr->name, coadmin_host);
-	sendto_one(sptr, ":%s %i %s :TECHADMIN_HOST: %s", me.name, RPL_TEXT,
-	    sptr->name, techadmin_host);
-	sendto_one(sptr, ":%s %i %s :HIDDEN_HOST: %s", me.name, RPL_TEXT,
-	    sptr->name, hidden_host);
-	sendto_one(sptr, ":%s %i %s :NETDOMAIN: %s", me.name, RPL_TEXT,
-	    sptr->name, netdomain);
-	sendto_one(sptr, ":%s %i %s :HELPCHAN: %s", me.name, RPL_TEXT,
-	    sptr->name, helpchan);
-	sendto_one(sptr, ":%s %i %s :STATS_SERVER: %s", me.name, RPL_TEXT,
-	    sptr->name, STATS_SERVER);
-	sendto_one(sptr, ":%s %i %s :INAH: %i", me.name, RPL_TEXT, sptr->name,
-	    iNAH);
-}
