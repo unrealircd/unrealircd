@@ -1,3 +1,4 @@
+
 /*
  *   Unreal Internet Relay Chat Daemon, src/channel.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
@@ -4417,6 +4418,8 @@ aParv *mp2parv(char *xmbuf, char *parmbuf)
 
 #define Addsingle(x) modebuf[b] = x; b++
 #define CheckStatus(x,y) if (modeflags & (y)) { Addit((x), nick); }
+#define AddBan(x) strcat(banbuf, x); strcat(banbuf, " ");
+#define AddEx(x) strcat(exbuf, x); strcat(exbuf, " ");
 
 
 int  m_sjoin(cptr, sptr, parc, parv)
@@ -4431,7 +4434,10 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	unsigned short merge;	/* same timestamp */
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
 	char paraback[1024], modeback[1024];
+	char banbuf[1024];
+	char exbuf[1024];
 	char nick[NICKLEN + 1];
+	char *s;
 	aClient *acptr, *tempptr;
 	aChannel *chptr;
 	Link *lp;
@@ -4501,6 +4507,8 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	parabuf[0] = '\0';
 	modebuf[0] = '+';
 	modebuf[1] = '\0';
+	banbuf[0] = '\0';
+	exbuf[0] = '\0';
 	channel_modes(cptr, modebuf, parabuf, chptr);
 	if (removeours)
 	{
@@ -4879,21 +4887,13 @@ int  m_sjoin(cptr, sptr, parc, parv)
 				{
 					add_banid(sptr, chptr, nick);
 					Addit('b', nick);
-					sendto_serv_butone_token_opt(cptr,
-					    OPT_SJOIN2 | OPT_NOT_SJ3,
-					    sptr->name, MSG_MODE, TOK_MODE,
-					    "%s +b %s %li", chptr->chname, nick,
-					    chptr->creationtime);
+					AddBan(nick);
 				}
 				if (modeflags & CHFL_EXCEPT)
 				{
 					add_exbanid(sptr, chptr, nick);
 					Addit('e', nick);
-					sendto_serv_butone_token_opt(cptr,
-					    OPT_SJOIN2 | OPT_NOT_SJ3,
-					    sptr->name, MSG_MODE, TOK_MODE,
-					    "%s +e %s %li", chptr->chname, nick,
-					    chptr->creationtime);
+					AddEx(nick);
 				}
 			}
 
@@ -4956,8 +4956,32 @@ nextnick:
 		    OPT_SJOIN | OPT_SJOIN2 | OPT_NOT_SJ3, sptr->name, MSG_SJOIN,
 		    TOK_SJOIN, "%s %s + <-> :%s", parv[1], parv[2], parabuf);
 		Debug((DEBUG_DEBUG, "Sending to SJ2: %s %s + <-> :%s", parv[1], parv[2], parabuf));
+		if (*banbuf)
+		{
+			for (s = (char *) strtok(banbuf, " "); s && (*s != ' '); s = (char *) strtok(NULL, " "))
+			{
+				sendto_serv_butone_token_opt(cptr,
+					OPT_SJOIN2|OPT_NOT_SJ3,
+						sptr->name, MSG_MODE, TOK_MODE,
+					"%s +b %s %li", chptr->chname, s,
+					chptr->creationtime);
+			} 
+		}
+		
+		if (*exbuf)
+		{
+			for (s = (char *) strtok(exbuf, " "); s && (*s != ' '); s = (char *) strtok(NULL, " "))
+			{
+				sendto_serv_butone_token_opt(cptr,
+					OPT_SJOIN2|OPT_NOT_SJ3,
+						sptr->name, MSG_MODE, TOK_MODE,
+					"%s +e %s %li", chptr->chname, s,
+					chptr->creationtime);
+			} 
+		}
 		return 0;
 	}
+	
 	if (nopara)
 	{
 		sendto_serv_butone_token_opt(cptr,
@@ -4966,6 +4990,29 @@ nextnick:
 		    parabuf);
 		Debug((DEBUG_DEBUG, "Sending to SJ2: %s %s %s <-> :%s",
 			parv[1], parv[2], parv[3], parabuf));
+		if (*banbuf)
+		{
+			for (s = (char *) strtok(banbuf, " "); s && (*s != ' '); s = (char *) strtok(NULL, " "))
+			{
+				sendto_serv_butone_token_opt(cptr,
+					OPT_SJOIN2|OPT_NOT_SJ3,
+						sptr->name, MSG_MODE, TOK_MODE,
+					"%s +b %s %li", chptr->chname, s,
+					chptr->creationtime);
+			} 
+		}
+		
+		if (*exbuf)
+		{
+			for (s = (char *) strtok(exbuf, " "); s && (*s != ' '); s = (char *) strtok(NULL, " "))
+			{
+				sendto_serv_butone_token_opt(cptr,
+					OPT_SJOIN2|OPT_NOT_SJ3,
+						sptr->name, MSG_MODE, TOK_MODE,
+					"%s +e %s %li", chptr->chname, s,
+					chptr->creationtime);
+			} 
+		}
 		return 0;
 	}
 	strcpy(paraback, "");
@@ -4981,6 +5028,30 @@ nextnick:
 	    parv[1], parv[2], parv[3], paraback, parabuf);
 	Debug((DEBUG_DEBUG, "sending to SJ2: %s %s %s %s :%s",
 		parv[1], parv[2], parv[3], paraback, parabuf));
+	/* Syncing bans to sj2 .. correctly. */
+	if (*banbuf)
+	{
+		for (s = (char *) strtok(banbuf, " "); s && (*s != ' '); s = (char *) strtok(NULL, " "))
+		{
+			sendto_serv_butone_token_opt(cptr,
+				OPT_SJOIN2|OPT_NOT_SJ3,
+					sptr->name, MSG_MODE, TOK_MODE,
+				"%s +b %s %li", chptr->chname, s,
+				chptr->creationtime);
+		} 
+	}
+	
+	if (*exbuf)
+	{
+		for (s = (char *) strtok(exbuf, " "); s && (*s != ' '); s = (char *) strtok(NULL, " "))
+		{
+			sendto_serv_butone_token_opt(cptr,
+				OPT_SJOIN2|OPT_NOT_SJ3,
+					sptr->name, MSG_MODE, TOK_MODE,
+				"%s +e %s %li", chptr->chname, s,
+				chptr->creationtime);
+		} 
+	}
 	/* And we are synched */
 	return 0;
 }
