@@ -1515,8 +1515,9 @@ void sendto_connectnotice(nick, user, sptr)
 	char connectd[1024];
 	char connecth[1024];
 	ircsprintf(connectd,
-	    "*** Notice -- Client connecting on port %d: %s (%s@%s)",
-	    sptr->acpt->port, nick, user->username, user->realhost);
+	    "*** Notice -- Client connecting on port %d: %s (%s@%s) %s",
+	    sptr->acpt->port, nick, user->username, user->realhost,
+	    IsSecure(sptr) ? "[secure]" : "");
 	ircsprintf(connecth,
 	    "*** Notice -- Client connecting: %s (%s@%s) [%s] {%d}", nick,
 	    user->username, user->realhost, sptr->sockhost,
