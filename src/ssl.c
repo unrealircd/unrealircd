@@ -30,6 +30,12 @@
 extern HINSTANCE hInst;
 extern HWND hwIRCDWnd;
 #endif
+
+#define SAFE_SSL_READ 1
+#define SAFE_SSL_WRITE 2
+#define SAFE_SSL_ACCEPT 3
+static int fatal_ssl_error(int ssl_error, int where, aClient *sptr);
+
 /* The SSL structures */
 SSL_CTX *ctx_server;
 SSL_CTX *ctx_client;
@@ -340,7 +346,7 @@ int ircd_SSL_read(aClient *acptr, void *buf, int sz)
                if(errno == EAGAIN)
                    return 0;
            default:
-		return -1;        
+		return fatal_ssl_error(ssl_err, SAFE_SSL_READ, acptr);        
        }
     }
     return len;
@@ -368,9 +374,106 @@ int ircd_SSL_write(aClient *acptr, const void *buf, int sz)
                if(errno == EAGAIN)
                    return 0;
            default:
-		return -1;
+		return fatal_ssl_error(ssl_err, SAFE_SSL_WRITE, acptr);
        }
     }
     return len;
 }
+
+int ircd_SSL_accept(aClient *acptr, int fd) {
+
+    int ssl_err;
+
+    if((ssl_err = SSL_accept((SSL *)acptr->ssl)) <= 0) {
+	switch(ssl_err = SSL_get_error((SSL *)acptr->ssl, ssl_err)) {
+	    case SSL_ERROR_SYSCALL:
+		if (errno == EINTR || errno == EWOULDBLOCK
+			|| errno == EAGAIN)
+	    case SSL_ERROR_WANT_READ:
+	    case SSL_ERROR_WANT_WRITE:
+		    /* handshake will be completed later . . */
+		    return 1;
+	    default:
+		return fatal_ssl_error(ssl_err, SAFE_SSL_ACCEPT, acptr);
+		
+	}
+	/* NOTREACHED */
+	return -1;
+    }
+    return 1;
+}
+
+int SSL_smart_shutdown(SSL *ssl) {
+    char i;
+    int rc;
+    rc = 0;
+    for(i = 0; i < 4; i++) {
+	if((rc = SSL_shutdown(ssl)))
+	    break;
+    }
+
+    return rc;
+}
+
+static int fatal_ssl_error(int ssl_error, int where, aClient *sptr)
+{
+    /* don`t alter errno */
+    int errtmp = errno;
+    char *errstr = strerror(errtmp);
+    char *ssl_errstr, *ssl_func;
+
+    switch(where) {
+	case SAFE_SSL_READ:
+	    ssl_func = "SSL_read()";
+	    break;
+	case SAFE_SSL_WRITE:
+	    ssl_func = "SSL_write()";
+	    break;
+	case SAFE_SSL_ACCEPT:
+	    ssl_func = "SSL_accept()";
+	    break;
+	default:
+	    ssl_func = "undefined SSL func";
+    }
+
+    switch(ssl_error) {
+    	case SSL_ERROR_NONE:
+	    ssl_errstr = "No error";
+	    break;
+	case SSL_ERROR_SSL:
+	    ssl_errstr = "Internal OpenSSL error or protocol error";
+	    break;
+	case SSL_ERROR_WANT_READ:
+	    ssl_errstr = "OpenSSL functions requested a read()";
+	    break;
+	case SSL_ERROR_WANT_WRITE:
+	    ssl_errstr = "OpenSSL functions requested a write()";
+	    break;
+	case SSL_ERROR_WANT_X509_LOOKUP:
+	    ssl_errstr = "OpenSSL requested a X509 lookup which didn`t arrive";
+	    break;
+	case SSL_ERROR_SYSCALL:
+	    ssl_errstr = "Underlying syscall error";
+	    break;
+	case SSL_ERROR_ZERO_RETURN:
+	    ssl_errstr = "Underlying socket operation returned zero";
+	    break;
+	case SSL_ERROR_WANT_CONNECT:
+	    ssl_errstr = "OpenSSL functions wanted a connect()";
+	    break;
+	default:
+	    ssl_errstr = "Unknown OpenSSL error (huh?)";
+    }
+    /* if we reply() something here, we might just trigger another
+     * fatal_ssl_error() call and loop until a stack overflow... 
+     * the client won`t get the ERROR : ... string, but this is
+     * the only way to do it.
+     * IRC protocol wasn`t SSL enabled .. --vejeta
+     */
+    errno = errtmp ? errtmp : EIO; /* Stick a generic I/O error */
+    sptr->flags |= FLAGS_DEADSOCKET;
+    return -1;
+}
+
+
 #endif

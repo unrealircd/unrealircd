@@ -1590,7 +1590,17 @@ int  read_message(time_t delay, fdlist *listp)
 				continue;
 			if (IsLog(cptr))
 				continue;
-
+			
+#ifdef USE_SSL
+			if (cptr->ssl != NULL && IsSSL(cptr) &&
+				!SSL_is_init_finished((SSL *)cptr->ssl))
+			{
+				if (IsDead(cptr) || (!ircd_SSL_accept(cptr, cptr->fd)))
+					close_connection(cptr);
+				continue;
+			}
+#endif
+			
 			if (DoingAuth(cptr))
 			{
 				auth++;
@@ -1960,6 +1970,7 @@ int  read_message(time_t delay, fdlist *listp)
 				continue;
 			if (IsLog(cptr))
 				continue;
+			
 			if (DoingAuth(cptr))
 			{
 				if (auth == 0)
