@@ -108,7 +108,7 @@ int m_swhois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
         aClient *acptr;
 
-        if (!IsServer(sptr) && !IsULine(sptr))
+        if (!(IsServer(sptr) || IsULine(sptr)))
                 return 0;
         if (parc < 3)
                 return 0;

@@ -1500,4 +1500,5 @@ seen. gmtime warning still there
 - Updated .CHANGES.NEW with new version # and link to docs
 - Updated .RELEASE.NOTES with new version # and link to docs
 - Added NEW doc/unreal32docs.html Docs
-
+- Fixed an oper::swhois bug where the swhois was not propagated reported by FrostByghte
+  (#0000247)
