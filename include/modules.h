@@ -562,4 +562,10 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define MOD_UNLOAD(name) name##_Unload
 #endif
 
+#ifdef DYNAMIC_LINKING
+/* ugly alert!!!! */
+#include "version.h"
+char Mod_Version[] = BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9;
+#endif
+
 #endif

@@ -89,6 +89,7 @@ long SNO_TKL = 0L;
 long SNO_NICKCHANGE = 0L;
 long SNO_FNICKCHANGE = 0L;
 long SNO_QLINE = 0L;
+long SNO_SPAMF = 0L;
 long SNO_SNOTICE = 0L;
 
 long AllUmodes;		/* All umodes */
@@ -156,6 +157,7 @@ void	umode_init(void)
 	SnomaskAdd(NULL, 'n', umode_allow_opers, &SNO_NICKCHANGE);
 	SnomaskAdd(NULL, 'N', umode_allow_opers, &SNO_FNICKCHANGE);
 	SnomaskAdd(NULL, 'q', umode_allow_opers, &SNO_QLINE);
+	SnomaskAdd(NULL, 'S', umode_allow_opers, &SNO_SPAMF);
 	SnomaskAdd(NULL, 's', umode_allow_all, &SNO_SNOTICE);
 }
 

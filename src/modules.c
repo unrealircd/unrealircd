@@ -144,6 +144,7 @@ char  *Module_Create(char *path_)
 	int		(*Mod_Init)();
 	int             (*Mod_Load)();
 	int             (*Mod_Unload)();
+	char    *Mod_Version;
 	static char 	errorbuf[1024];
 	char 		*path, *tmppath;
 	ModuleHeader    *mod_header;
@@ -169,6 +170,16 @@ char  *Module_Create(char *path_)
 	if ((Mod = irc_dlopen(tmppath, RTLD_NOW)))
 	{
 		/* We have engaged the borg cube. Scan for lifesigns. */
+		irc_dlsym(Mod, "Mod_Version", Mod_Version);
+		if (Mod_Version && strcmp(version, Mod_Version))
+		{
+			snprintf(errorbuf, sizeof(errorbuf),
+			         "Module was compiled for '%s', we are '%s', please recompile the module",
+			         Mod_Version, version);
+			irc_dlclose(Mod);
+			remove(tmppath);
+			return errorbuf;
+		}
 		irc_dlsym(Mod, "Mod_Header", mod_header);
 		if (!mod_header)
 		{

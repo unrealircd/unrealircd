@@ -38,13 +38,16 @@
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
-#ifdef _WIN32
 #include "version.h"
-#endif
 #ifndef STATIC_LINKING
 #define DYNAMIC_LINKING
 #else
 #undef DYNAMIC_LINKING
+#endif
+
+/* l_commands.c/commands.so is a special case so we have to do this manually :p */
+#ifdef DYNAMIC_LINKING
+char Mod_Version[] = BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9;
 #endif
 
 extern ModuleHeader m_svsnoop_Header;
@@ -87,6 +90,7 @@ extern int m_sqline_Init(ModuleInfo *modinfo), m_unsqline_Init(ModuleInfo *modin
 extern int m_vhost_Init(ModuleInfo *modinfo), m_cycle_Init(ModuleInfo *modinfo), m_svsjoin_Init(ModuleInfo *modinfo);
 extern int m_svspart_Init(ModuleInfo *modinfo), m_svslusers_Init(ModuleInfo *modinfo);
 extern int m_svswatch_Init(ModuleInfo *modinfo), m_svssilence_Init(ModuleInfo *modinfo);
+extern int m_sendsno_Init(ModuleInfo *modinfo);
 #ifdef GUEST
 extern int m_guest_Init(ModuleInfo *modinfo);
 #endif
@@ -107,6 +111,7 @@ extern int m_sqline_Load(int module_load), m_unsqline_Load(int module_load), m_t
 extern int m_vhost_Load(int module_load), m_cycle_Load(int module_load), m_svsjoin_Load(int module_load);
 extern int m_svspart_Load(int module_load), m_svslusers_Load(int module_load);
 extern int m_svswatch_Load(int module_load), m_svssilence_Load(int module_load);
+extern int m_sendsno_Load(int module_load);
 #ifdef GUEST
 extern int m_guest_Load(int module_load);
 #endif
@@ -123,6 +128,7 @@ extern int m_unzline_Unload(), m_unkline_Unload();
 extern int m_sqline_Unload(), m_unsqline_Unload(), m_tkl_Unload(), m_vhost_Unload();
 extern int m_cycle_Unload(), m_svsjoin_Unload(), m_svspart_Unload(), m_svslusers_Unload();
 extern int m_svswatch_Unload(), m_svssilence_Unload();
+extern int m_sendsno_Unload();
 #ifdef GUEST
 extern int m_guest_Unload();
 #endif
@@ -200,6 +206,7 @@ int    l_commands_Init(ModuleInfo *modinfo)
 	m_svswatch_Init(ModCmdsInfo);
 	m_svssilence_Init(ModCmdsInfo);
 	m_svslusers_Init(ModCmdsInfo);
+	m_sendsno_Init(ModCmdsInfo);
 #ifdef GUEST
 	m_guest_Init(ModCmdsInfo);
 #endif
@@ -256,6 +263,7 @@ int    l_commands_Load(int module_load)
 	m_svswatch_Load(module_load);
 	m_svssilence_Load(module_load);
 	m_svslusers_Load(module_load);
+	m_sendsno_Load(module_load);
 #ifdef GUEST
 	m_guest_Load(module_load);
 #endif
@@ -312,6 +320,7 @@ int	l_commands_Unload(int module_unload)
 	m_svswatch_Unload();
 	m_svssilence_Unload();
 	m_svslusers_Unload();
+	m_sendsno_Unload();
 #ifdef GUEST
 	m_guest_Unload();
 #endif

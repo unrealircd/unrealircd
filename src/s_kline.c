@@ -1090,7 +1090,7 @@ int place_host_ban(aClient *sptr, int action, char *reason, long duration)
  * (like from m_message, m_part, m_quit, etc).
  */
  
-int dospamfilter(aClient *sptr, char *str_in, int type)
+int dospamfilter(aClient *sptr, char *str_in, int type, char *target)
 {
 aTKline *tk;
 int n;
@@ -1106,6 +1106,21 @@ char *str = (char *)StripControlCodes(str_in);
 		if (!regexec(&tk->spamf->expr, str, 0, NULL, 0))
 		{
 			/* matched! */
+			char buf[1024];
+			char targetbuf[48];
+			if (target) {
+				targetbuf[0] = ' ';
+				strlcpy(targetbuf+1, target, sizeof(targetbuf)-1); /* cut it off */
+			} else
+				targetbuf[0] = '\0';
+			ircsprintf(buf, "[Spamfilter] %s!%s@%s matches filter '%s': [%s%s: '%s']",
+				sptr->name, sptr->user->username, sptr->user->realhost,
+				tk->reason,
+				spamfilter_inttostring_long(type), targetbuf, str);
+
+			sendto_snomask(SNO_SPAMF, "%s", buf);
+			sendto_serv_butone_token(NULL, me.name, MSG_SENDSNO, TOK_SENDSNO, "S :%s", buf);
+
 			if (tk->spamf->action != BAN_ACT_BLOCK)
 				return place_host_ban(sptr, tk->spamf->action, SPAMFILTER_BAN_REASON, SPAMFILTER_BAN_TIME);
 			else

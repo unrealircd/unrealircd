@@ -122,6 +122,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 	int  cansend = 0;
 	int  prefix = 0;
 	char pfixchan[CHANNELLEN + 32];
+	int n;
 
 	/*
 	 * Reasons why someone can't send to a channel
@@ -221,7 +222,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				{
 					ConfigItem_deny_dcc *fl;
 					char *end, file[BUFSIZE];
-					int  size_string = 0, n;
+					int  size_string = 0;
 
 					if (sptr->flags & FLAGS_DCCBLOCK)
 					{
@@ -247,11 +248,8 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 					strncpy(file, ctcp, size_string);
 					file[size_string] = '\0';
 
-					n = dospamfilter(sptr, file, SPAMF_DCC);
-					if (n == FLUSH_BUFFER)
+					if ((n = dospamfilter(sptr, file, SPAMF_DCC, acptr->name)) < 0)
 						return n;
-					if (n < 0)
-						continue;
 
 					if ((fl =
 					    (ConfigItem_deny_dcc *)
@@ -319,11 +317,9 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 
 				if (MyClient(sptr))
 				{
-					int n = dospamfilter(sptr, text, newcmd == MSG_NOTICE ? SPAMF_USERNOTICE : SPAMF_USERMSG);
-					if (n == FLUSH_BUFFER)
-						return FLUSH_BUFFER;
+					n = dospamfilter(sptr, text, newcmd == MSG_NOTICE ? SPAMF_USERNOTICE : SPAMF_USERMSG, acptr->name);
 					if (n < 0)
-						continue;
+						return FLUSH_BUFFER;
 				}
 
 				for (tmphook = Hooks[HOOKTYPE_USERMSG]; tmphook; tmphook = tmphook->next) {
@@ -442,11 +438,9 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 
 				if (MyClient(sptr))
 				{
-					int n = dospamfilter(sptr, text, notice ? SPAMF_CHANNOTICE : SPAMF_CHANMSG);
-					if (n == FLUSH_BUFFER)
-						return FLUSH_BUFFER;
+					n = dospamfilter(sptr, text, notice ? SPAMF_CHANNOTICE : SPAMF_CHANMSG, chptr->chname);
 					if (n < 0)
-						continue;
+						return n;
 				}
 
 				for (tmphook = Hooks[HOOKTYPE_CHANMSG]; tmphook; tmphook = tmphook->next) {

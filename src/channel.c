@@ -4006,7 +4006,7 @@ CMD_FUNC(m_part)
 		}
 		if (commentx)
 		{
-			n = dospamfilter(sptr, commentx, SPAMF_PART);
+			n = dospamfilter(sptr, commentx, SPAMF_PART, name);
 			if (n == FLUSH_BUFFER)
 				return n;
 			if (n < 0)

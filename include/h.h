@@ -451,6 +451,7 @@ extern long SNO_NICKCHANGE;
 extern long SNO_FNICKCHANGE;
 extern long SNO_QLINE;
 extern long SNO_SNOTICE;
+extern long SNO_SPAMF;
 
 #ifdef EXTCMODE
 /* Extended chanmodes... */
@@ -651,7 +652,9 @@ extern char banact_valtochar(int val);
 extern int spamfilter_gettargets(char *s, aClient *sptr);
 extern char *spamfilter_target_inttostring(int v);
 extern Spamfilter *unreal_buildspamfilter(char *s);
-extern int dospamfilter(aClient *sptr, char *str, int type);
+extern int dospamfilter(aClient *sptr, char *str_in, int type, char *target);
 extern char *our_strcasestr(char *haystack, char *needle);
 extern int spamfilter_getconftargets(char *s);
 extern void remove_oper_snomasks(aClient *sptr);
+extern char *spamfilter_inttostring_long(int v);
+extern int check_channelmask(aClient *, aClient *, char *);

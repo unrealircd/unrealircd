@@ -146,7 +146,7 @@ MOD_FILES=SRC/L_COMMANDS.OBJ SRC/M_CHGHOST.OBJ SRC/M_SDESC.OBJ SRC/M_SETIDENT.OB
  SRC/M_UNSQLINE.OBJ SRC/M_UNZLINE.OBJ SRC/M_WHOIS.OBJ \
  SRC/M_TKL.OBJ SRC/M_VHOST.OBJ \
  SRC/M_CYCLE.OBJ SRC/M_SVSJOIN.OBJ SRC/M_SVSPART.OBJ SRC/M_SVSLUSERS.OBJ \
- SRC/M_SVSWATCH.OBJ SRC/M_SVSSILENCE.OBJ
+ SRC/M_SVSWATCH.OBJ SRC/M_SVSSILENCE.OBJ SRC/M_SENDSNO.OBJ
 
 ALL: CONF UNREAL.EXE WIRCD.EXE
 
@@ -490,6 +490,9 @@ src/m_svswatch.obj: src/modules/m_svswatch.c $(INCLUDES)
 
 src/m_svssilence.obj: src/modules/m_svssilence.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/modules/m_svssilence.c
+
+src/m_sendsno.obj: src/modules/m_sendsno.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/modules/m_sendsno.c
 
 src/win32/win32.res: src/win32/win32gui.rc
         $(RC) /l 0x409 /fosrc/win32/win32.res /i ./include /i ./src \

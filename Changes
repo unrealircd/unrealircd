@@ -2821,3 +2821,14 @@ seen. gmtime warning still there
   spamfilter::word to spamfilter::regex to make it even more clear (since we match
   on the whole line and have nothing to do with words.. 'word' doesn't make sense).
 - Updated docs with some better regex examples, reported by AngryWolf (#0001520).
+- Added snomasks 'S' (Spamfilter) which notifies you of any spamfilter matches.
+- [internal] always return after spamfilter match, don't continue looping trough
+  targets list (eg in case of: /msg #a,#b,#c spamspam), otherwise you would get
+  duplicate notification msgs.
+- Added SENDSNO server command, similar to SENDUMODE but for snomasks, this is
+  used by the spamfilter snomask (+S) so you get network-wide notifications.
+- Added "compiled for.." versioning system, this way a beta17 module can't be loaded
+  on beta18, etc... People often forgot to recompile their modules or had old ones
+  somewhere by mistake, therefore crashing after upgrades... this should fix this
+  (in the future). Module coders don't have to do anything for making this work,
+  it's done automatically (via modules.h).

@@ -973,3 +973,25 @@ char *p = buf;
 	*p = '\0';
 	return buf;
 }
+
+/* only used by dospamfilter() */
+char *spamfilter_inttostring_long(int v)
+{
+	switch(v)
+	{
+		case SPAMF_CHANMSG:
+		case SPAMF_USERMSG:
+			return "PRIVMSG";
+		case SPAMF_USERNOTICE:
+		case SPAMF_CHANNOTICE:
+			return "NOTICE";
+		case SPAMF_PART:
+			return "PART";
+		case SPAMF_QUIT:
+			return "QUIT";
+		case SPAMF_DCC:
+			return "DCC";
+		default:
+			return "UNKNOWN";
+	}
+}
