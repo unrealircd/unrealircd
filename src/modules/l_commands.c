@@ -52,7 +52,7 @@ extern ModuleHeader scan_socks_Header;
 extern ModuleHeader scan_http_Header;
 #endif
 extern ModuleHeader m_svsnoop_Header;
-
+ModuleInfo ModCmdsInfo;
 /* Place includes here */
 /* replace this with a common name of your module */
 #ifdef DYNAMIC_LINKING
@@ -64,7 +64,7 @@ ModuleHeader l_commands_Header
 	"commands",	/* Name of module */
 	"$Id$", /* Version */
 	"Wrapper library for m_ commands", /* Short description of module */
-	"3.2-b5",
+	"3.2-b8-1",
 	NULL 
     };
 
@@ -131,17 +131,20 @@ extern int m_scan_Unload(), scan_socks_Unload(), scan_http_Unload();
 #endif
 
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(int module_load)
+DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
 #else
-int    l_commands_Init(int module_load)
+int    l_commands_Init(ModuleInfo *modinfo)
 #endif
 {
+	int module_load;
 #ifdef SCAN_API
 	Module p;
 #endif
 	/*
 	 * We call our add_Command crap here
 	*/
+	bcopy(modinfo,&ModCmdsInfo,modinfo->size);
+	module_load = ModCmdsInfo.module_load;
 	m_sethost_Init(module_load);
 	m_setname_Init(module_load);
 	m_chghost_Init(module_load);
@@ -189,9 +192,9 @@ int    l_commands_Init(int module_load)
         Module_Depend_Resolve(&p);
         p.header = &scan_http_Header;
         Module_Depend_Resolve(&p);
-	m_scan_Init(module_load);
-	scan_socks_Init(module_load);
-	scan_http_Init(module_load);
+	m_scan_Init(&ModCmdsInfo);
+	scan_socks_Init(&ModCmdsInfo);
+	scan_http_Init(&ModCmdsInfo);
 #endif
 	return MOD_SUCCESS;
 }

@@ -68,11 +68,6 @@ extern int Scan_TimeOut;
 void	scan_socks_scan(Scan_AddrStruct *sr);
 void	scan_socks4_scan(Scan_AddrStruct *sr);
 void	scan_socks5_scan(Scan_AddrStruct *sr);
-#ifdef DYNAMIC_LINKING
-Module *Mod_Handle = NULL;
-#else
-#define Mod_Handle NULL
-#endif
 static Mod_SymbolDepTable modsymdep[] = 
 {
 	MOD_Dep(Eadd_scan, xEadd_scan, "src/modules/scan.so"),
@@ -80,7 +75,7 @@ static Mod_SymbolDepTable modsymdep[] =
 	MOD_Dep(Scan_TimeOut, xScan_TimeOut, "src/modules/scan.so"),
 	{NULL, NULL}
 };
-
+ModuleInfo ScanSocksModInfo;
 
 #ifndef DYNAMIC_LINKING
 ModuleHeader scan_socks_Header
@@ -91,7 +86,7 @@ ModuleHeader Mod_Header
 	"scan_socks",	/* Name of module */
 	"$Id$", /* Version */
 	"scanning API: socks", /* Short description of module */
-	"3.2-b5",
+	"3.2-b8-1",
     	modsymdep
     };
 
@@ -103,15 +98,16 @@ ModuleHeader Mod_Header
 
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(int module_load)
+DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
 #else
-int    scan_socks_Init(int module_load)
+int    scan_socks_Init(ModuleInfo *modinfo)
 #endif
 {
 	/*
 	 * Add scanning hooks
 	*/
-	SocksScanHost = HookAddVoidEx(Mod_Handle, HOOKTYPE_SCAN_HOST, scan_socks_scan); 
+	bcopy(modinfo,&ScanSocksModInfo,modinfo->size);
+	SocksScanHost = HookAddVoidEx(ScanSocksModInfo.handle, HOOKTYPE_SCAN_HOST, scan_socks_scan); 
 	return MOD_SUCCESS;
 }
 

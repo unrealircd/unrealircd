@@ -1226,3 +1226,5 @@ seen. gmtime warning still there
 - Small release tricks
 - Fixed a win32 editor bug where the line count didn't display right away (reported by
   iDW-badSol)
+- Module Insanity Recode (part 1) if the module version is 3.2-b8* we now pass a ModuleInfo struct
+  to Mod_Init which contains extended information. This replaces the Mod_Handle method in beta7

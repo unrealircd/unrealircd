@@ -80,6 +80,13 @@ typedef struct _ModuleChild
 	Module *child; /* Aww. aint it cute? */
 } ModuleChild;
 
+typedef struct {
+	int size;
+	int module_load;
+	Module *handle;
+} ModuleInfo;
+
+
 #define MOBJ_EVENT   0x0001
 #define MOBJ_HOOK    0x0002
 #define MOBJ_COMMAND 0x0004
