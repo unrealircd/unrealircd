@@ -3198,7 +3198,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	}
 	for (ban_ptr = conf_ban; ban_ptr; ban_ptr = (ConfigItem_ban *) ban_ptr->next)
 	{
-		if (ban_ptr->flag.type2 == CONF_BAN_TYPE_CONF)
+		if (ban_ptr->flag.type2 == CONF_BAN_TYPE_CONF || ban_ptr->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
 		{
 			ircfree(ban_ptr->mask);
 			ircfree(ban_ptr->reason);

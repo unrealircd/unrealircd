@@ -675,3 +675,4 @@ seen. gmtime warning still there
 - Some configure.in fixes to pthread stuff
 - Added possiblity to add parameters to configure in Config
 - Minor SJOIN fix .. 
+- Fixed a ban {} bug where temporary bans were not cleared on rehash
