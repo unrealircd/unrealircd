@@ -1236,3 +1236,5 @@ seen. gmtime warning still there
   reported by peck
 - Made the command system use module objects (haven't yet converted modules to use it)
 - Fix with DEBUGMODE
+- Fixed a Chinese nick bug found and fixed by Xuefer
+

@@ -253,7 +253,8 @@ Command *CommandAdd(Module *module, char *cmd, char *tok, int (*func)(), unsigne
 	return command;
 }
 
- void CommandDel(Command *command) {
+
+void CommandDel(Command *command) {
 	DelListItem(command->cmd, CommandHash[toupper(*command->cmd->cmd)]);
 	if (command->tok)
 		DelListItem(command->tok, CommandHash[toupper(*command->tok->cmd)]);

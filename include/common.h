@@ -140,10 +140,10 @@ extern u_char tolowertab[], touppertab[];
 
 #ifndef USE_LOCALE
 #undef tolower
-#define tolower(c) (tolowertab[(int)(c)])
+#define tolower(c) (tolowertab[(u_char)(c)])
 
 #undef toupper
-#define toupper(c) (touppertab[(int)(c)])
+#define toupper(c) (touppertab[(u_char)(c)])
 
 #undef isalpha
 #undef isdigit
