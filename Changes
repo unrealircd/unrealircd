@@ -20,7 +20,7 @@
  *
  */
 
-*** Unreal3.1 *** (state: we're going for the final)
+*** Unreal3.1 *** (final)
 - Moved REMOVE_ADVERTISE a little
 - Fixed bug where you could /mode #test +L #test (link a channel to
   itself)
