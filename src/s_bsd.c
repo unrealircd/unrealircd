@@ -1298,12 +1298,6 @@ aClient *add_connection(cptr, fd)
 		}
 #endif /*SHOWCONNECTINFO*/
 		nextdnscheck = 1;
-
-
-#ifdef SHOWCONNECTINFO
-		if (!(cptr->umodes & LISTENER_SSL))
-			FDwrite(fd, REPORT_FIN_DNSC, R_fin_dnsc);
-#endif /*SHOWCONNECTINFO*/
 	}
 
 	acptr->fd = fd;

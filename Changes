@@ -456,3 +456,4 @@
 - Fixed up some CHANMODES= support and added WALLCHOPS support
 - Added keyboard shortcuts to the win32 config and about popup menus
 - Possible fixed a buggie in +f
+- Fixed a bug causing Found your hostname (cached) to be displayed 2 times
