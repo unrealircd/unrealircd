@@ -207,7 +207,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				parse(sptr, parv[2], (parv[2] + strlen(parv[2])));
 				recursive_webtv = 0;
 			}
-			continue;
+			return 0;
 		}
 		if (!strcasecmp(nick, "irc") && MyClient(sptr))
 		{
@@ -220,7 +220,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 					    (parv[2] + strlen(parv[2])));
 				}
 				recursive_webtv = 0;
-				continue;
+				return 0;
 			}
 		}
 		if (*nick != '#' && (acptr = find_person(nick, NULL)))
