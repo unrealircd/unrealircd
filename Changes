@@ -1614,3 +1614,14 @@ seen. gmtime warning still there
   jollino (#0000343)
 - Possibly fixed some crash bugs in scan_socks and scan_http in Win32 reported by
   UrLoverGuy13 and Xose (#0000389)
+- Documentation - Updatet sec2.0 - list of Supported OS's for Win32 Version
+- Documentation - Updated sec1.1 - Instructed to use bugs.unrealircd.org to report problems with docs
+- Documentation - Updated misc hyperlinks - doc/unreal32docs.html
+- Documentation - Updated sec3.31 - Added better description to the format we present set:: settings 
+- Documentation - Updated sec3.31 - Added more details to set directives
+- Documentation - Updated sec3.25 - Added option vhost::swhois to section 3.25 Vhost block
+- Documentation - Replaced text vair {} with <> to prevent confusion.
+- Documentation - Documented that lusers now supports remote servers
+- Documentation - Corrected vhost::from example as reported by joolz #329 
+- Documentation - Corrected set::scan:messages, currently listed as set::messages - as reported by joolz (#329) 
+- Documentation - Added channel mode t & description as reported by stfcs (#315) 
