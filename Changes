@@ -1729,3 +1729,5 @@ seen. gmtime warning still there
 - Fixed a bug reported by |Zerwas| where tsctl required all lowercase params (#0000537)
 - Fixed a bug reported by |Zerwas| where forgetting to have an oper::flags would cause a 
   crash (#0000543)
+- Added a max of 500:500 to +f (higher than this is just stupid), this fixes
+  (#0000542) reported by BiGi

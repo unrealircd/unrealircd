@@ -1586,7 +1586,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	char tmpbuf[512], *tmpstr;
 	char tc = ' ';		/* */
 	int  chasing, x;
-	int  xxi, xyi, xzi, hascolon;
+	int xxi, xyi, xzi, hascolon;
 	char *xxx;
 	char *xp;
 	int  notsecure;
@@ -2142,6 +2142,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				      '*' ? (param + 1) : param));
 				  xp++;
 				  xyi = atoi(xp);
+				  if (xxi > 500 || xyi > 500)
+					break;
 				  xp--;
 				  *xp = ':';
 				  if ((xxi == 0) || (xyi == 0))
