@@ -970,3 +970,4 @@ seen. gmtime warning still there
   disconnect respectively
 - Added module v3 code. Needs testing, and NO MODULES DOES NOT COMPILE
 - Fixed a win32 movude v3 bug
+- Small v3 fix with no dependency problem

@@ -409,6 +409,11 @@ int	Module_Depend_Resolve(Module *p)
 {
 	Mod_SymbolDepTable *d = p->header->symdep;
 	Module		   *parental = NULL;
+	
+	if (d == NULL)
+	{
+		return 0;
+	}
 #ifndef STATIC_LINKING
 	while (d->pointer)
 	{
