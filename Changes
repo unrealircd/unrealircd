@@ -363,3 +363,6 @@
 - Added channel mode +u, "Auditorium". Makes /names and /who #channel only
   show @'s
 - Added config.h setting to disable oper overrides, NO_OPEROVERRIDE
+- Added Debug support to win32 makefile ... compile with syntax
+  NMAKE -f makefile.win32 DEBUG=1
+  inorder to have debug support ... leave the DEBUG=1 out for normal builds

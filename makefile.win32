@@ -5,13 +5,29 @@ CC=cl
 # Here you put your settings
 FD_SETSIZE=/D FD_SETSIZE=16384
 NS_ADDRESS=/D NS_ADDRESS="\"nospoof@dal.net\""
+
+!IFNDEF DEBUG
+
 CFLAGS=/MT /O2 /G5 /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D _WIN32GUI /D NOSPOOF=1 /c
+
+LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib \
+ oldnames.lib libcmt.lib comctl32.lib /nodefaultlib /nologo /out:WIRCD2.EXE
+
+!ELSE
+
+CFLAGS=/MTd /O2 /G5 /Od /ZI /I ./INCLUDE /Fosrc/ /nologo $(FD_SETSIZE) $(NS_ADDRESS) /D DEBUG /D DEBUGMODE /D _DEBUG /D _WIN32GUI /D NOSPOOF=1 /c
+
+LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib \
+ oldnames.lib libcmt.lib comctl32.lib /nodefaultlib /nologo /debug /OUT:WIRCD.EXE
+
+!ENDIF
+
+
 INCLUDES=./include/struct.h ./include/config.h ./include/sys.h \
  ./include/common.h ./include/version.h ./include/h.h ./include/numeric.h \
  ./include/msg.h ./include/setup.h ./include/dynconf.h
 LINK=link.exe
-LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib wsock32.lib \
- oldnames.lib libcmt.lib comctl32.lib /nodefaultlib /nologo /out:WIRCD2.EXE
+
 OBJ_FILES=SRC/CHANNEL.OBJ SRC/USERLOAD.OBJ SRC/SEND.OBJ SRC/BSD.OBJ \
  SRC/S_CONF.OBJ SRC/FDLIST.OBJ SRC/DBUF.OBJ SRC/RES.OBJ \
  SRC/CLOAK.OBJ SRC/HASH.OBJ SRC/PARSE.OBJ SRC/IRCD.OBJ \
@@ -26,8 +42,6 @@ OBJ_FILES=SRC/CHANNEL.OBJ SRC/USERLOAD.OBJ SRC/SEND.OBJ SRC/BSD.OBJ \
 RC=rc.exe
 
 ALL: WIRCD.EXE CHKCONF.EXE
-        @echo Please, please REMEMBER to add those U lines!
-        @echo Read the file READTHIS.NOW formore info
 
 CLEAN:
         -@erase src\*.exe 2>NUL
@@ -50,6 +64,11 @@ src/version.obj: src/win32/version.c
 
 ./WIRCD.EXE: $(OBJ_FILES) src/win32/version.obj
         $(LINK) $(LFLAGS) $(OBJ_FILES)
+!IFNDEF DEBUG
+ Non Debug version built 
+!ELSE
+ Debug version built ... 
+!ENDIF
 
 ./CHKCONF.EXE: ./include/struct.h ./include/config.h ./include/sys.h \
                  ./include/common.h ./src/crule.c ./src/match.c ./src/chkconf.c
