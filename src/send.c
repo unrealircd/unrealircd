@@ -41,6 +41,8 @@ static char sccsid[] =
 
 void vsendto_one(aClient *to, char *pattern, va_list vl);
 void sendbufto_one(aClient *to);
+aClient *findlocalbyfd(SOCKET fd);	// winlocal	
+
 extern int sendanyways;
 #ifndef NO_FDLIST
 extern fdlist serv_fdlist;
@@ -122,7 +124,10 @@ void flush_connections(fd)
 			    && DBufLength(&cptr->sendQ) > 0)
 				send_queued(cptr);
 	}
+	/* winlocal
 	else if (fd >= 0 && (cptr = local[fd]) && !(cptr->flags & FLAGS_BLOCKED)
+	*/
+	else if (fd >= 0 && (cptr = findlocalbyfd(fd)) && !(cptr->flags & FLAGS_BLOCKED) // winlocal
 	    && DBufLength(&cptr->sendQ) > 0)
 		send_queued(cptr);
 

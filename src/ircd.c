@@ -621,22 +621,17 @@ extern TS check_pings(TS currenttime, int check_kills)
 
 #ifdef SHOWCONNECTINFO
 					if (DoingDNS(cptr))
-						sendto_one(cptr,
-						    REPORT_FAIL_DNS);
+						sendto_one(cptr,REPORT_FAIL_DNS);
 					else if (DoingAuth(cptr))
-						sendto_one(cptr,
-						    REPORT_FAIL_ID);
+						sendto_one(cptr,REPORT_FAIL_ID);
 #ifdef SOCKSPORT
 					else
-						sendto_one(cptr,
-						    REPORT_NO_SOCKS);
+						sendto_one(cptr,REPORT_NO_SOCKS);
 #endif /* SOCKSPORT */
 #endif
-					Debug((DEBUG_NOTICE,
-					    "DNS/AUTH timeout %s",
-					    get_client_name(cptr, TRUE)));
+					Debug((DEBUG_NOTICE,"DNS/AUTH timeout %s",get_client_name(cptr, TRUE)));
 					del_queries((char *)cptr);
-					    ClearAuth(cptr);
+					ClearAuth(cptr);
 					ClearDNS(cptr);
 #ifdef SOCKSPORT
 					ClearSocks(cptr);
@@ -646,22 +641,15 @@ extern TS check_pings(TS currenttime, int check_kills)
 					cptr->lasttime = currenttime;
 					continue;
 				}
-				if (IsServer(cptr) || IsConnecting(cptr) ||
-				    IsHandshake(cptr))
+				if (IsServer(cptr) || IsConnecting(cptr) || IsHandshake(cptr))
 				{
-					sendto_realops
-					    ("No response from %s, closing link",
-					    get_client_name(cptr, FALSE));
-					sendto_serv_butone(&me,
-					    ":%s GLOBOPS :No response from %s, closing link",
-					    me.name, get_client_name(cptr,
-					    FALSE));
+					sendto_realops("No response from %s, closing link",get_client_name(cptr, FALSE));
+					sendto_serv_butone(&me,":%s GLOBOPS :No response from %s, closing link",me.name, get_client_name(cptr,FALSE));
 				}
 				exit_client(cptr, cptr, &me, "Ping timeout");
 				continue;
 			}
-			else if (IsRegistered(cptr) &&
-			    ((cptr->flags & FLAGS_PINGSENT) == 0))
+			else if (IsRegistered(cptr) && ((cptr->flags & FLAGS_PINGSENT) == 0))
 			{
 				/*
 				 * if we havent PINGed the connection and we havent
@@ -682,10 +670,8 @@ extern TS check_pings(TS currenttime, int check_kills)
 		 * for > 100s, close them.
 		 */
 		if (IsUnknown(cptr))
-			if (cptr->firsttime ? ((TStime() - cptr->firsttime) >
-			    100) : 0)
-				(void)exit_client(cptr, cptr, &me,
-				    "Connection Timed Out");
+			if (cptr->firsttime ? ((TStime() - cptr->firsttime) > 100) : 0)
+				(void)exit_client(cptr, cptr, &me, "Connection Timed Out");
 	}
 
 	/* EXPLANATION
@@ -793,6 +779,8 @@ int  InitwIRCD(argc, argv)
 	(void)umask(077);	/* better safe than sorry --SRB */
 #else
 	WSAStartup(wVersionRequested, &wsaData);
+	for (i = 0; i < MAXCONNECTIONS; ++i)	// winlocal
+		local[i] = NULL;	// winlocal
 #endif
 	bzero((char *)&me, sizeof(me));
 	setup_signals();
@@ -1371,7 +1359,7 @@ void SocketLoop(void *dummy)
 		}
 
 #endif
-		Debug((DEBUG_DEBUG, "Got message(s)"));
+		//Debug((DEBUG_DEBUG, "Got message(s)"));
 		now = TStime();
 		/*
 		   ** ...perhaps should not do these loops every time,
@@ -1417,8 +1405,7 @@ TS   check_fdlists(now)
 	{
 		if (!(cptr = local[i]))
 			continue;
-		if (IsServer(cptr) || IsListening(cptr)
-		    || IsOper(cptr) || DoingAuth(cptr))
+		if (IsServer(cptr) || IsListening(cptr) || IsOper(cptr) || DoingAuth(cptr))
 		{
 			busycli_fdlist.entry[++j] = i;
 			continue;

@@ -158,11 +158,9 @@ int  deliver_it(aClient *cptr, char *str, int len)
 	{
 		writeb[0]++;
 # ifndef _WIN32
-		Debug((DEBUG_ERROR, "write error (%s) to %s",
-		    sys_errlist[errno], cptr->name));
+		Debug((DEBUG_ERROR, "write error (%s) to %s", sys_errlist[errno], cptr->name));
 # else
-		Debug((DEBUG_ERROR, "write error (%s) to %s",
-		    sys_errlist[WSAGetLastError()], cptr->name));
+		Debug((DEBUG_ERROR, "write error (%s) to %s", sys_errlist[WSAGetLastError()], cptr->name));
 # endif
 
 	}

@@ -2909,8 +2909,7 @@ int  m_whois(cptr, sptr, parc, parv)
 					showperson = 1;
 					break;
 				}
-				if (!invis && HiddenChannel(chptr) &&
-				    !SecretChannel(chptr))
+				if (!invis && HiddenChannel(chptr) && !SecretChannel(chptr))
 					showperson = 1;
 				else if (IsAnOper(sptr) && SecretChannel(chptr))
 				{
@@ -2956,21 +2955,15 @@ int  m_whois(cptr, sptr, parc, parv)
 				    user->realhost);
 			}
 			if (IsARegNick(acptr))
-				sendto_one(sptr, rpl_str(RPL_WHOISREGNICK),
-				    me.name, parv[0], name);
+				sendto_one(sptr, rpl_str(RPL_WHOISREGNICK), me.name, parv[0], name);
 			found = 1;
-			mlen = strlen(me.name) + strlen(parv[0]) + 6 +
-			    strlen(name);
-			for (len = 0, *buf = '\0', lp = user->channel; lp;
-			    lp = lp->next)
+			mlen = strlen(me.name) + strlen(parv[0]) + 6 + strlen(name);
+			for (len = 0, *buf = '\0', lp = user->channel; lp; lp = lp->next)
 			{
 				chptr = lp->chptr;
-				if (!IsServices(sptr) && (IsAnOper(sptr)
-				    || ShowChannel(sptr, chptr)
-				    || (acptr == sptr)))
+				if (!invis && !IsServices(sptr) && (IsAnOper(sptr) || ShowChannel(sptr, chptr) || (acptr == sptr)))
 				{
-					if (len + strlen(chptr->chname)
-					    > (size_t)BUFSIZE - 4 - mlen)
+					if (len + strlen(chptr->chname) > (size_t)BUFSIZE - 4 - mlen)
 					{
 						sendto_one(sptr,
 						    ":%s %d %s %s :%s",
@@ -3010,8 +3003,7 @@ int  m_whois(cptr, sptr, parc, parv)
 			}
 
 			if (buf[0] != '\0')
-				sendto_one(sptr, rpl_str(RPL_WHOISCHANNELS),
-				    me.name, parv[0], name, buf);
+				sendto_one(sptr, rpl_str(RPL_WHOISCHANNELS), me.name, parv[0], name, buf);
 
 			sendto_one(sptr, rpl_str(RPL_WHOISSERVER),
 			    me.name, parv[0], name, user->server,

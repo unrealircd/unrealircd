@@ -70,7 +70,10 @@ void init_socks(aClient *cptr)
 	socksid[3] = LOCHAR(sport);
 	socksid[8] = 0;
 
+	/* winlocal
 	if ((cptr->socksfd = socket(AFINET, SOCK_STREAM, 0)) == -1)
+	*/
+	if ((cptr->socksfd = socket(AFINET, SOCK_STREAM, 0)) == INVALID_SOCKET)	// winlocal
 		return;
 
 	set_non_blocking(cptr->socksfd, cptr);
@@ -114,7 +117,10 @@ void start_socks(cptr)
 	struct SOCKADDR_IN sin;
 	int  sinlen = sizeof(struct SOCKADDR_IN);
 
+	/* winlocal
 	if ((cptr->socksfd = socket(AFINET, SOCK_STREAM, 0)) == -1)
+	*/
+	if ((cptr->socksfd = socket(AFINET, SOCK_STREAM, 0)) == INVALID_SOCKET) // winlocal
 	{
 		Debug((DEBUG_ERROR, "Unable to create socks socket for %s:%s",
 		    get_client_name(cptr, TRUE), strerror(get_sockerr(cptr))));
@@ -151,8 +157,8 @@ void start_socks(cptr)
 #ifndef _WIN32
 	    sinlen) == -1 && errno != EINPROGRESS)
 #else
-	    sinlen) == -1 && (WSAGetLastError() !=
-	    WSAEINPROGRESS && WSAGetLastError() != WSAEWOULDBLOCK))
+	    sinlen) == SOCKET_ERROR && 
+		(WSAGetLastError() != WSAEINPROGRESS && WSAGetLastError() != WSAEWOULDBLOCK))
 #endif
 	{
 		/* we have no socks server! */
@@ -161,15 +167,17 @@ void start_socks(cptr)
 #else
 		closesocket(cptr->socksfd);
 #endif
-		cptr->socksfd = -1;
+		cptr->socksfd = INVALID_SOCKET;
 #ifdef SHOWCONNECTINFO
 		sendto_one(cptr, REPORT_NO_SOCKS);
 #endif
 		return;
 	}
 	cptr->flags |= (FLAGS_WRSOCKS | FLAGS_SOCKS);
+#ifndef _WIN32		// winlocal
 	if (cptr->socksfd > highest_fd)
 		highest_fd = cptr->socksfd;
+#endif				// winlocal
 	return;
 
       skip_socks:
@@ -217,9 +225,12 @@ void send_socksquery(cptr)
 #else
 		closesocket(cptr->socksfd);
 #endif
+		/* winlocal
 		if (cptr->socksfd == highest_fd)
 			while (!local[highest_fd])
 				highest_fd--;
+		*/
+		removelocalbyfd(cptr->socksfd, cptr);	// winlocal
 		cptr->socksfd = -1;
 		cptr->flags &= ~FLAGS_SOCKS;
 #ifdef SHOWCONNECTINFO
@@ -249,9 +260,12 @@ void read_socks(cptr)
 #else
 	(void)closesocket(cptr->socksfd);
 #endif
+	/* winlocal
 	if (cptr->socksfd == highest_fd)
 		while (!local[highest_fd])
 			highest_fd--;
+	*/
+	removelocalbyfd(cptr->socksfd, cptr);	// winlocal
 	cptr->socksfd = -1;
 	ClearSocks(cptr);
 

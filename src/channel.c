@@ -311,7 +311,7 @@ Membership	*make_membership(int local)
 			Debug((DEBUG_ERROR, "floodmode::freelist gotone"));
 		}
 		Debug((DEBUG_ERROR, "floodmode:: bzeroing"));	
-		bzero(&lp2, sizeof(MembershipL));
+		bzero(lp2, sizeof(MembershipL));
 	}
 	if (local)
 	{

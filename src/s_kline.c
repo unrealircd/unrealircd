@@ -175,7 +175,10 @@ aTKline *tkl_expire(aTKline * tmp)
 	{
 		for (i1 = 0; i1 <= 5; i1++)
 		{
-			for (i = 0; i <= (MAXCONNECTIONS - 1); i++)
+			/* winlocal
+			for (i = 0; i <= (MAXCONNECTIONS - 1); i++)	
+			*/
+			for (i = 0; i <= highest_fd; ++i)	
 			{
 				if (acptr = local[i])
 					if (MyClient(acptr) && IsShunned(acptr))

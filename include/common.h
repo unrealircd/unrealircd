@@ -286,6 +286,11 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
  */
 extern int DisplayString(HWND hWnd, char *InBuf, ...);
 #undef	strerror
+// winlocal
+#else
+typedef int SOCKET;
+#define INVALID_SOCKET -1
+// winlocal
 #endif
 
 #if defined(__FreeBSD__) || defined(__APPLE__)
