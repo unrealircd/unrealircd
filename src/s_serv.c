@@ -3201,7 +3201,7 @@ int  m_chatops(cptr, sptr, parc, parv)
 
 	if (MyClient(sptr) && !IsAnOper(cptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVELEGES), me.name, sptr->name);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
 
