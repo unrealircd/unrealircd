@@ -2027,6 +2027,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				  if (*param == '\0')
 					break;
 				  param[KEYLEN] = '\0';
+				  if (!strcmp(chptr->mode.key, param))
+					break;
 				  strncpyzt(chptr->mode.key, param,
 				      sizeof(chptr->mode.key));
 			  }
@@ -2127,7 +2129,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				  retval = 0;
 				  break;
 			  }
-
+			  if (!stricmp(param, chptr->mode.link))
+				break;
 			  if (!stricmp(param, chptr->chname))
 			  {
 				  if (MyClient(cptr))

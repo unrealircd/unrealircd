@@ -2321,3 +2321,5 @@ seen. gmtime warning still there
 - Fixed a bug in the snomask and umode system dealing with removing flags
 - Added two module functions ModuleGetOptions and ModuleSetOptions to retrieve/toggle
   module options
+- Fixed a bug effecting +k/+L where you could /mode #chan +k test, /mode #chan +k test
+  and each time it would send a mode change (#0001170) reported by Airnike.
