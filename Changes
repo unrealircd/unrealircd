@@ -2164,3 +2164,5 @@ seen. gmtime warning still there
 - Made some fixes to the resolver code under Win32
 - Fixed a bug in del_throttling_bucket 
 - Code cleanup (sys_errlist[])
+- Fixed a crash in SVSMOTD that could occur if invalid parameters were used. Reported by 
+  emigrant

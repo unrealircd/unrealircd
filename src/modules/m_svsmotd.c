@@ -139,7 +139,7 @@ int  m_svsmotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
                   break;
           }
           default:
-                  break;
+                  return 0;
         }
         sendto_serv_butone_token(cptr, parv[0], MSG_SVSMOTD, TOK_SVSMOTD,
             "%s :%s", parv[1], parv[2]);
