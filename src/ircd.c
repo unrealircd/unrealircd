@@ -1261,6 +1261,11 @@ int InitwIRCD(int argc, char *argv[])
 	{ 
 		config_error("Someone forgot to load modules with proper commands in them. READ THE DOCUMENTATION");
 #ifdef _WIN32
+		/* Temporary! */
+		config_error("As of Unreal3.2.1 modules are supported on windows, "
+		    "therefore you MUST load the commands.dll module and a cloaking module. "
+		    "Just add 'loadmodule \"modules/commands.dll\"' and 'loadmodule \"modules/cloak.dll\"' "
+		    "to your unrealircd.conf and be sure to read the release notes!");
 		win_error();
 #endif
 		exit(-4);

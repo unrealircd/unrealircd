@@ -646,6 +646,7 @@ static void send_who_reply(aClient *sptr, aClient *acptr,
 			   char *channel, char *status, char *xstat)
 {
 	char *stat;
+	int flat = (FLAT_MAP && !IsAnOper(sptr)) ? 1 : 0;
 
 	stat = malloc(strlen(status) + strlen(xstat) + 1);
 	sprintf(stat, "%s%s", status, xstat);
@@ -660,22 +661,22 @@ static void send_who_reply(aClient *sptr, aClient *acptr,
 	             "hidden",              /* let's hide the server from normal users if the server is a uline and HIDE_ULINES is on */
         	     acptr->name,           /* nick */
 	             stat,                  /* status */
-        	     acptr->hopcount,        /* hops */
+        	     0,                     /* hops (hidden) */
 	             acptr->info            /* realname */
              	);
 
 	else
 		sendto_one(sptr, getreply(RPL_WHOREPLY), me.name, sptr->name,      
 		     channel,       /* channel name */
-		     acptr->user->username, /* user name */
+		     acptr->user->username,      /* user name */
 		     (IsHidden(acptr) && !(who_flags & WF_REALHOST)) ?
 		     acptr->user->virthost :
-		     acptr->user->realhost, /* hostname */
-		     acptr->user->server,   /* server name */
-		     acptr->name,           /* nick */
-		     stat,                  /* status */
-		     acptr->hopcount,        /* hops */ 
-		     acptr->info            /* realname */
+		     acptr->user->realhost,      /* hostname */
+		     acptr->user->server,        /* server name */
+		     acptr->name,                /* nick */
+		     stat,                       /* status */
+		     flat ? 0 : acptr->hopcount, /* hops */ 
+		     acptr->info                 /* realname */
 		     );
 	free(stat);
 }

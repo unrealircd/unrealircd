@@ -70,6 +70,7 @@ typedef struct zConfiguration aConfiguration;
 struct zConfiguration {
 	unsigned som:1;
 	unsigned hide_ulines:1;
+	unsigned flat_map:1;
 	unsigned allow_chatops:1;
 	unsigned webtv_support:1;
 	unsigned no_oper_hiding:1;
@@ -107,6 +108,9 @@ struct zConfiguration {
 	char *x_server_key_pem;
 	char *trusted_ca_file;
 	long ssl_options;
+#elif defined(_WIN32)
+	void *bogus1, *bogus2, *bogus3;
+	long bogus4;
 #endif
 	enum UHAllowed userhost_allowed;
 	char *restrict_usermodes;
@@ -151,6 +155,7 @@ extern MODVAR aConfiguration iConf;
 #define CONNECT_SNOMASK			iConf.user_snomask
 #define SHOWOPERMOTD			iConf.som
 #define HIDE_ULINES			iConf.hide_ulines
+#define FLAT_MAP			iConf.flat_map
 #define ALLOW_CHATOPS			iConf.allow_chatops
 #define MAXCHANNELSPERUSER		iConf.maxchannelsperuser
 #define WEBTV_SUPPORT			iConf.webtv_support

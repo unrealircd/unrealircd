@@ -615,7 +615,11 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #ifdef DYNAMIC_LINKING
 /* ugly alert!!!! */
 #include "version.h"
-DLLFUNC char Mod_Version[] = BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9;
+ #if defined(USE_SSL) && !defined(_WIN32)
+  DLLFUNC char Mod_Version[] = BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9 "/SSL";
+ #else
+  DLLFUNC char Mod_Version[] = BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9;
+ #endif /* USE_SSL && !WIN_32 */
 #endif /* DYNAMIC_LINKING */
 
 

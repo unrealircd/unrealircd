@@ -5745,6 +5745,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "hide-ulines")) {
 					tempiConf.hide_ulines = 1;
 				}
+				else if (!strcmp(cepp->ce_varname, "flat-map")) {
+					tempiConf.flat_map = 1;
+				}
 				else if (!strcmp(cepp->ce_varname, "no-stealth")) {
 					tempiConf.no_oper_hiding = 1;
 				}
@@ -6299,6 +6302,8 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				if (!strcmp(cepp->ce_varname, "webtv-support")) {
 				}
 				else if (!strcmp(cepp->ce_varname, "hide-ulines")) {
+				}
+				else if (!strcmp(cepp->ce_varname, "flat-map")) {
 				}
 				else if (!strcmp(cepp->ce_varname, "no-stealth")) {
 				}

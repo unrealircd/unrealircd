@@ -896,6 +896,8 @@ struct Client {
 #endif
 #ifdef USE_SSL
 	SSL		*ssl;
+#elif defined(_WIN32)
+	void	*ssl_NOTUSED;
 #endif
 #ifndef NO_FDLIST
 	long lastrecvM;		/* to check for activity --Mika */
@@ -1120,6 +1122,8 @@ struct _configitem_link {
 	time_t			hold;
 #ifdef USE_SSL
 	char		*ciphers;
+#elif defined(_WIN32)
+	void *ciphers_NOTUSED;
 #endif
 #ifdef ZIP_LINKS
 	int compression_level;

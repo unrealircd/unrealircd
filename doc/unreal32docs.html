@@ -2043,6 +2043,10 @@ set {
   user is not on any channel, <i>force-rejoin</i> will force a rejoin in all channels and re-op/voice/etc if needed.</p>
 <p><font class="set">set::options::hide-ulines;</font><br>
   If this is present, Ulined server will be hidden in a /links requested by non-opers.</p>
+<p><font class="set">set::options::flat-map;</font><br>
+  If this is present, all servers will appear as directly linked in /map and /links, 
+  thus you can no longer see which server is linked to which. This is a little help against 
+  (D)DoS attacks because evil people now no longer can easily see the 'weak points'.</p>
 <p><font class="set">set::options::show-opermotd;</font><br>
   If present the opermotd will be shown to users once they successfully /oper.</p>
 <p><font class="set">set::options::identd-check;</font><br>

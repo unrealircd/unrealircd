@@ -1,50 +1,65 @@
 
-Unreal3.2 Release Notes
-========================
+Unreal3.2 *CVS* Release Notes
+==============================
+
+Please READ this carefully, otherwise your ircd won't boot!
 
 ==[ GENERAL INFORMATION ]==
-* If you are upgrading, make sure you run make clean and ./Config before doing make
-* The official UnrealIRCd documentation is doc/unreal32docs.html
+- If you are upgrading on *NIX, make sure you run make clean and ./Config before doing make
+- The official UnrealIRCd documentation is doc/unreal32docs.html
   online version at: http://www.vulnscan.org/UnrealIrcd/unreal32docs.html
   FAQ: http://www.vulnscan.org/UnrealIrcd/faq/
   Read them before asking for help.
-* Report bugs at http://bugs.unrealircd.org/
+- Report bugs at http://bugs.unrealircd.org/
 
 == [ NEW ]==
-- Added german docs (doc/unreal32docs.de.html)
-- In a spamfilter reason field '_' gets converted to a space (' '),
-  now also added '__' which gets converted to underscore itself ('_').
+- [!] Cloaking has been modulized.
+  - This means you now MUST load a cloaking module in order to boot.
+    Example: loadmodule "src/modules/cloak.so";
+  - 2 cloaking modules are provided: 'cloak' and 'oldcloak':
+  - 'cloak' is the new, RECOMMENDED, and much more secure cloaking algorithm that uses
+    md5 internally. It requires 3 keys of 5-100 characters (10-20 is fine) consisting
+    of mixed lowcase (a-z), upcase (A-Z) and digits (0-9). So for example:
+    set { cloak-keys { "AHsHS6ds2sQGAkish"; "qF5D3orm6Evba26hjf"; "f6oaO2hhd6sIHSfs"; };
+  - 'oldcloak' is the <=3.2 cloaking algorithm, it is ONLY ment for use during the
+    upgrade process (it will give a warning if you use it), you should switch to the
+    much more secure 'cloak' module as soon as all your servers are upgraded.
+  - 3rd party cloak modules are also possible.
+- [!] Windows now also supports modules
+  - This means you MUST load commands.dll and a cloaking module on windows too, eg:
+    loadmodule "modules/commands.dll";
+    loadmodule "modules/cloak.dll";
+  - 3rd party modules are now easy to install too... developers can put .dll files
+    online which you just need to put in your modules\ directory (or, that could
+    even be done by an installer), after that you just add a loadmodule line for it,
+    like: loadmodule "modules/leetmod.dll";
+    NOTE: Just as on *NIX, you'll have to upgrade your modules every release.
+- Added set::spamfilter::virus-help-channel-deny: blocks any normal joins to the
+  virus-help-channel (only people force-joined by spamfilter and opers can join).
 
 ==[ MAJOR BUGS FIXED ]==
-- '/spamfiltere remove' was often removing the wrong entry (RC2 bug)
-- The TRE regex library was sometimes matching too much if [range].+
-  was used multiple times.
-- Fixed a remote include issue and added timeouts in case a connection/transfer fails
+- win32: people have reported TRE crashes upon /rehash, hopefully these
+  are resolved now (upgraded to TRE 0.6.7). [?????????????????????????????????]
 
 ==[ MINOR BUGS FIXED ]==
-- Sometimes hosts were not resolved on Windows due to a resolver bug
-- spamfilter and sqline: memory leak on /rehash (a few kb)
-- spamfilter: protect against insane long reason/regex fields in configfile
-- set::modes-on-join now accepts extended channelmodes
-- Opteron: various crashbugs fixed, should work ok now.
-- Win32 GUI "rehash all" option did not reload motd/rules.
-- Same for ./unreal rehash on *NIX
-- Usermode 'r' (registered) was unset if you changed the case of your
-  nick (eg: 'blah'->'Blah'), this affected at least ircservices.
-- vhost::swhois wasn't shown if you did a remote /whois.
-- Made './curlinstall' work with new c-ares-1.0.0.
-- Fixed compile problem on some machines related to TRE / libintl.
-- /who +m was incorrectly hiding +H users even for opers.
-- Fixed /rehash bug if an .so or remote include didn't load properly
+- GUEST support wasn't working
+- empty set::ssl::options would cause a crash
+- compiles fine with SSL support on OpenBSD 3.5 now.
+- Local opers can now join +O (operonly) channels
+- Permanent modules: custom allow/except/ban/deny types were lost after /rehash
 
 ==[ CHANGED ]==
-- spamfilter.conf: fixed fyle sig, added sigs for: soex, Nkie, LOI, Gaggle,
-  changed a lot of sigs from block to gline.
-- Windows: now using new Inno Setup which made the installer 300k smaller
-- Docs, help.conf and other text updates.
-
-==[ COMMING UP ]==
-- You can expect module support on windows in a nearby release.
+- spamfilter.conf.......................
+- usage of CHG* commands are now no longer logged from U:lines
+- services admins are now shown as 'Services Administrator' in /whois again.
+- Changed the way MSG/NOTICE <prefix>#chan works:
+  - It now goes to <prefix> and higher, so '/notice +#chan hi!' goes to +vhoaq
+  - You need at least voice in order to be able to msg/notice +#chan, %#chan or @#chan
+  - You need at least ops in order to be able to msg/notice &#chan or ~#chan
+  - Any multi-prefix targets will be converted automatically (eg: ~&@#chan to @#chan)
+- SVSJOIN now also supports channel keys
+- Docs, help.conf and other text updates
+- Added zlib+SSL+curl version check on boot to protect against crashes
 
 ==[ ADDITIONAL INFO ]==
 * See Changelog

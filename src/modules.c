@@ -1326,6 +1326,9 @@ int i;
 #else
 		config_error("ERROR: No cloaking module loaded. (hint: you probably want to load modules\\cloak.dll)");
 #endif
+		/* TEMPORARY! */
+		config_error("If you are upgrading from 3.2 (or any older version), be sure to read the release notes "
+		             "or www.vulnscan.org/tmp/newcloak.txt regarding the cloaking change!");
 		return -1;
 	}
 

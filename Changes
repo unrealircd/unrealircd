@@ -3193,3 +3193,13 @@ This is the 3.2 fixes branch.
 - Fixed a problem with NICK collisions not using NICKv2 (#0001773) reported by thilo
 - Added NICKIP (#0000605 & #0001376) 
 - Compile warning cleanups
+- Added release notes (no, we won't release 3.2.1 anytime soon.. just updating ;p).
+- Added various extra messages to make it a bit more easier for people who are
+  upgrading (win32 commands.dll, cloaking mod).
+- Made win32 ssl<->non-ssl modules binary compatible.
+- Added ssl/non-ssl check in Mod_Version on *NIX.
+- Added set::options::flat-map: This makes all servers look like they are linked
+  directly to the server you are on (/map, /links), thus you cannot see which server
+  is linked to which ("hopcount"). This can make it a bit harder for kiddies to find
+  any 'weak spots' (which server to attack/[D]DoS). Obviously opers will always
+  see the real map.
