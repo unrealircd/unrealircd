@@ -1271,3 +1271,5 @@ seen. gmtime warning still there
 - Some more of skyper's security audit patch. Some of them were simply
   unfair in regards to performance or blindly added strlcats/strlcpy
 - Fixed some problems with skyper's patch (typos)
+- Fixed a cloak problem on OSes with 64bit integers (reported by wolven)
+- Updated credits
