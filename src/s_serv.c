@@ -739,7 +739,6 @@ int  m_server(cptr, sptr, parc, parv)
 		strncpyzt(cptr->name, servername, sizeof(cptr->name));
 		cptr->hopcount = hop;
 		/* Add ban server stuff */
-		/* Check on V:line stuff now -FIXME: newconf */
 		if (SupportVL(cptr))
 		{
 			/* we also have a fail safe incase they say they are sending
@@ -758,6 +757,9 @@ int  m_server(cptr, sptr, parc, parv)
 			if (num)
 				inf = (char *)strtok((char *)NULL, "");
 			if (inf) {
+				strncpyzt(cptr->info, inf[0] ? inf : me.name,
+				    sizeof(cptr->info));
+
 				for (vlines = conf_deny_version; vlines; vlines = (ConfigItem_deny_version *) vlines->next) {
 					if (!match(vlines->mask, cptr->name)) 
 						break;
@@ -821,12 +823,14 @@ int  m_server(cptr, sptr, parc, parv)
 							"Denied by V:line");
 				}
 			}
-
-					
+			else
+				strncpyzt(cptr->info, info[0] ? info : me.name,
+				    sizeof(cptr->info));					
 							
 		}
-			strncpyzt(cptr->info, inf[0] ? inf : me.name,
-			    sizeof(cptr->info));
+		else
+				strncpyzt(cptr->info, info[0] ? info : me.name,
+					sizeof(cptr->info));
 		/* Numerics .. */
 		numeric = num ? atol(num) : numeric;
 		if (numeric)

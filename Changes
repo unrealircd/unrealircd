@@ -278,3 +278,4 @@
 - Made deny link {} rehash
 - Removed class.c, from the old conf
 - Removed dynconf.c, from the old dynconf
+- Fixed a deny version {} bug (oops)
