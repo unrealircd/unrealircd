@@ -128,6 +128,8 @@ int  noisy_htm = 1;
 
 TS   check_fdlists();
 #endif
+static TS alllasttime = 0;
+
 unsigned char conf_debuglevel = 0;
 
 void save_stats(void)
@@ -1230,12 +1232,11 @@ void SocketLoop(void *dummy)
 
 #ifndef NO_FDLIST
 		{
-			static TS lasttime = 0;
 			static long lastrecvK, lastsendK;
 			static int lrv;
-			if (timeofday - lasttime < LCF)
+			if (timeofday - alllasttime < LCF)
 				goto done_check;
-			lasttime = timeofday;
+			alllasttime = timeofday;
 			lrv = LRV * LCF;
 			if ((me.receiveK - lrv >= lastrecvK) || HTMLOCK == 1)
 			{
@@ -1289,14 +1290,14 @@ void SocketLoop(void *dummy)
 			lastrecvK = me.receiveK;
 			lastsendK = me.sendK;
 		      done_check:
-			if (lasttime != timeofday)
+			if (alllasttime != timeofday)
 			{
 				currentrate =
 				    ((float)(me.receiveK -
-				    lastrecvK)) / ((float)(timeofday - lasttime));
+				    lastrecvK)) / ((float)(timeofday - alllasttime));
 				currentrate2 =
 				    ((float)(me.sendK -
-				    lastsendK)) / ((float)(timeofday - lasttime));
+				    lastsendK)) / ((float)(timeofday - alllasttime));
 				if (currentrate > highest_rate)
 					highest_rate = currentrate;
 				if (currentrate2 > highest_rate2)
@@ -1366,11 +1367,11 @@ void SocketLoop(void *dummy)
 			flush_fdlist_connections(&serv_fdlist);
 		}
 		{
-			static TS lasttime = 0;
-			if ((lasttime + (lifesux + 1) * 2) < (timeofday = (time(NULL) + TSoffset)))
+			timeofday = time(NULL) + TSoffset;
+			if ((alllasttime + ((lifesux + 1) * 2)) > timeofday)
 			{
 				read_message(delay, NULL);	/*  check everything */
-				lasttime = timeofday;
+				alllasttime = timeofday;
 			}
 		}
 
