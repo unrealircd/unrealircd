@@ -575,13 +575,6 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 
 	if (MyConnect(sptr))
 	{
-		if (badclass)
-		{
-			ircsprintf(mo2, "ircd.conf Y:line class number %i is bad (contains too many max clients (> %i). Get your IRC admin to fix this",
-				badclass, MAXCONNECTIONS - 15);
-			exit_client(cptr, sptr, &me, mo2);
-			return 0;
-		}
 #ifdef SOCKSPORT
 		if (sptr->flags & FLAGS_GOTSOCKS)
 		{

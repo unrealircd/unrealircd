@@ -320,3 +320,4 @@
 - Fixed a bug with /chgname with incorrect parameters to other servers
 - "Fixed" the /stats u bug?
 - Fixed +f not working (?)
+- Made the Own-protection just reduce the class maxli instead of bitching..
