@@ -385,15 +385,20 @@ int  add_listener(aconf)
 			switch (*p)
 			{
 			  case 'C':
+				  if (!(cptr->umodes & LISTENER_SERVERSONLY))
 				  cptr->umodes |= LISTENER_CLIENTSONLY;
 				  break;
 			  case 'S':
+				  if (!(cptr->umodes & LISTENER_CLIENTSONLY))
 				  cptr->umodes |= LISTENER_SERVERSONLY;
 				  break;
+#ifdef USE_SSL
 			  case 's':
 			  	cptr->umodes |= LISTENER_SSL;
 			  	break;
+#endif
 			  case 'R':
+				  cptr->umodes = 0;
 				  cptr->umodes |= LISTENER_REMOTEADMIN;
 				  break;
 			  case 'J':
