@@ -181,10 +181,12 @@ DLLFUNC int  m_nospoof(cptr, sptr, parc, parv)
 	int  parc;
 	char *parv[];
 {
+#ifdef NOSPOOF
+	unsigned long result;
+#endif
 Debug((DEBUG_NOTICE, "NOSPOOF"));
 
 #ifdef NOSPOOF
-	unsigned long result;
 	if (IsNotSpoof(cptr))
 		return 0;
 	if (IsRegistered(cptr))
