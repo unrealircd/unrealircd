@@ -120,7 +120,7 @@ void tkl_init(void)
  *  [1]: only relevant for spamfilters, else ignored (eg 0, NULL).
 */
 
-int  tkl_add_line(int type, char *usermask, char *hostmask, char *reason, char *setby,
+aTKline *tkl_add_line(int type, char *usermask, char *hostmask, char *reason, char *setby,
                   TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason)
 {
 	aTKline *nl;
@@ -129,7 +129,7 @@ int  tkl_add_line(int type, char *usermask, char *hostmask, char *reason, char *
 	nl = (aTKline *) MyMallocEx(sizeof(aTKline));
 
 	if (!nl)
-		return -1;
+		return NULL;
 
 	nl->type = type;
 	nl->expire_at = expire_at;
@@ -166,7 +166,8 @@ int  tkl_add_line(int type, char *usermask, char *hostmask, char *reason, char *
 	}
 	index = tkl_hash(tkl_typetochar(type));
 	AddListItem(nl, tklines[index]);
-	return 0;
+
+	return nl;
 }
 
 aTKline *tkl_del_line(aTKline *tkl)
@@ -225,7 +226,7 @@ aClient *acptr;
 					cname = acptr->user->username;
 
 	
-					cip = (char *)Inet_ia2p(&acptr->ip);
+					cip = GetIP(acptr);
 
 					if (!(*tmp->hostmask < '0') && (*tmp->hostmask > '9'))
 						is_ip = 1;
@@ -319,6 +320,7 @@ aTKline *tkl_expire(aTKline * tmp)
 	if (tmp->type & TKL_SHUN)
 		tkl_check_local_remove_shun(tmp);
 
+	RunHook3(HOOKTYPE_TKL_DEL, NULL, NULL, tmp);
 	return (tkl_del_line(tmp));
 }
 
@@ -367,7 +369,7 @@ int  find_tkline_match(aClient *cptr, int xx)
 	nowtime = TStime();
 	chost = cptr->sockhost;
 	cname = cptr->user ? cptr->user->username : "unknown";
-	cip = (char *)Inet_ia2p(&cptr->ip);
+	cip = GetIP(cptr);
 
 	points = 0;
 	for (index = 0; index < TKLISTLEN; index++)
@@ -492,8 +494,7 @@ int  find_shun(aClient *cptr)
 	nowtime = TStime();
 	chost = cptr->sockhost;
 	cname = cptr->user ? cptr->user->username : "unknown";
-	cip = (char *)Inet_ia2p(&cptr->ip);
-
+	cip = GetIP(cptr);
 
 	for (lp = tklines[tkl_hash('s')]; lp; lp = lp->next)
 	{
@@ -555,7 +556,7 @@ aTKline *find_qline(aClient *cptr, char *nick, int *ishold)
 {
 	aTKline *lp;
 	char *chost, *cname, *cip;
-	char host[NICKLEN+USERLEN+HOSTLEN+6], hostx2[NICKLEN+USERLEN+HOSTLEN+6], *host2 = NULL;
+	char host[NICKLEN+USERLEN+HOSTLEN+6], hostbuf2[NICKLEN+USERLEN+HOSTLEN+6], *host2 = NULL;
 	int	points = 0;
 	ConfigItem_except *excepts;
 	*ishold = 0;
@@ -589,16 +590,11 @@ aTKline *find_qline(aClient *cptr, char *nick, int *ishold)
 	cname = cptr->user ? cptr->user->username : "unknown";
 	strcpy(host, make_user_host(cname, chost));
 
-	if (MyConnect(cptr))
+	cip = GetIP(cptr);
+	if (cip)
 	{
-		cip = (char *)Inet_ia2p(&cptr->ip);
-		strcpy(hostx2, make_user_host(cname, cip));
-		host2 = hostx2;
-	} else
-	if (cptr->user->ip_str)
-	{
-		strcpy(hostx2, make_user_host(cname, cptr->user->ip_str));
-		host2 = hostx2;
+		strcpy(hostbuf2, make_user_host(cname, cip));
+		host2 = hostbuf2;
 	}
 
 	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next)
@@ -630,7 +626,7 @@ int  find_tkline_match_zap(aClient *cptr)
 		return -1;
 
 	nowtime = TStime();
-	cip = (char *)Inet_ia2p(&cptr->ip);
+	cip = GetIP(cptr);
 
 	for (lp = tklines[tkl_hash('z')]; lp; lp = lp->next)
 	{
@@ -1075,11 +1071,14 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 		  /* there is something fucked here? */
 		  if ((type & TKL_SPAMF) && (parc >= 11))
-			tkl_add_line(type, parv[3], parv[4], reason, parv[5],
+			tk = tkl_add_line(type, parv[3], parv[4], reason, parv[5],
 				expiry_1, setat_1, spamf_tklduration, parv[9]);
 		  else
-			tkl_add_line(type, parv[3], parv[4], reason, parv[5],
+			tk = tkl_add_line(type, parv[3], parv[4], reason, parv[5],
 				expiry_1, setat_1, 0, NULL);
+
+		  if (tk)
+		  	RunHook3(HOOKTYPE_TKL_ADD, cptr, sptr, tk);
 
 		  strncpyzt(gmt, asctime(gmtime((TS *)&setat_1)), sizeof(gmt));
 		  strncpyzt(gmt2, asctime(gmtime((TS *)&expiry_1)), sizeof(gmt2));
@@ -1304,6 +1303,7 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					  }
 					  if (type & TKL_SHUN)
 					      tkl_check_local_remove_shun(tk);
+					  RunHook3(HOOKTYPE_TKL_DEL, cptr, sptr, tk);
 					  tkl_del_line(tk);
 					  if (type & TKL_GLOBAL)
 					  {
@@ -1357,7 +1357,7 @@ int place_host_ban(aClient *sptr, int action, char *reason, long duration)
 			sendto_snomask(SNO_TKL, "Temporary shun added at user %s (%s@%s) [%s]",
 				sptr->name,
 				sptr->user ? sptr->user->username : "unknown",
-				sptr->user ? sptr->user->realhost : Inet_ia2p(&sptr->ip),
+				sptr->user ? sptr->user->realhost : GetIP(sptr),
 				reason);
 			SetShunned(sptr);
 			break;
@@ -1380,7 +1380,7 @@ int place_host_ban(aClient *sptr, int action, char *reason, long duration)
 				NULL		/*8  reason */
 			};
 
-			strlcpy(hostip, Inet_ia2p(&sptr->ip), sizeof(hostip));
+			strlcpy(hostip, GetIP(sptr), sizeof(hostip));
 
 			if (action == BAN_ACT_KLINE)
 				tkllayer[2] = "k";

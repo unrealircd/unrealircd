@@ -24,7 +24,7 @@
 #define MOD_VERSION	"3.2-b5-1"
 #define MOD_WE_SUPPORT  "3.2-b5*"
 #define MAXCUSTOMHOOKS  30
-#define MAXHOOKTYPES	70
+#define MAXHOOKTYPES	100
 #define MAXCALLBACKS	30
 #if defined(_WIN32)
  #define DLLFUNC	_declspec(dllexport)
@@ -566,6 +566,10 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define HOOKTYPE_UMODE_CHANGE 36
 #define HOOKTYPE_TOPIC 37
 #define HOOKTYPE_REHASH_COMPLETE 38
+#define HOOKTYPE_TKL_ADD 39
+#define HOOKTYPE_TKL_DEL 40
+#define HOOKTYPE_LOCAL_KILL 41
+
 
 /* Hook return values */
 #define HOOK_CONTINUE 0

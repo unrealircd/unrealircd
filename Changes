@@ -3283,3 +3283,14 @@ This is the 3.2 fixes branch.
 - Fixed a CIDR bug when compiled without IPv6 support
 - Fixed an SVSNICK bug that could lead to duplicate users in very rare circumstances
   (#0001874) reported by Jiuka.
+- internal: Added GetIP() which we will now use instead of all the Inet_ia2p() stuff
+  because it's slightly faster (already replaced all of them in src/s_kline.c).
+  GetIP(acptr) will return the ip for local users and remote users that support NICKIP,
+  it returns NULL for remote users that are on non-NICKIP servers (or have non-NICKIP
+  servers along their path).
+- internal: tkl_add_line now returns aTKline *
+- Added some more hooks:
+  - HOOKTYPE_TKL_ADD [aClient *cptr, aClient *sptr, aTKline *tk]
+  - HOOKTYPE_TKL_DEL [aClient *cptr, aClient *sptr, aTKline *tk]
+    NOTE: 'NULL, NULL, tk' is used for *lines that are removed due to expiring
+  - HOOKTYPE_LOCAL_KILL [aClient *sptr, aClient *target, char *comment]

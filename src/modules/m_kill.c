@@ -323,6 +323,8 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			(void)ircsprintf(buf2, "Killed (%s)", killer);
 		}
 
+		if (MyClient(sptr))
+			RunHook3(HOOKTYPE_LOCAL_KILL, sptr, acptr, parv[2]);
 		if (exit_client(cptr, acptr, sptr, buf2) == FLUSH_BUFFER)
 			return FLUSH_BUFFER;
 	}
