@@ -1117,7 +1117,7 @@ struct SMode {
 struct Watch {
 	aWatch *hnext;
 	TS   lasttime;
-	Link *watch;;
+	Link *watch;
 	char nick[1];
 };
 
