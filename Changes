@@ -3079,3 +3079,5 @@ seen. gmtime warning still there
 - Updated /credits a bit more
 - Updated the /stats ? output to say Q is sqline and q is ban nick (#0001689) reported
   by Alzirr
+- Made a note in example.conf about not using link::options::autoconnect for services
+  (#0001674) suggested by fez
