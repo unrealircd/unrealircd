@@ -369,7 +369,9 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define ClearHybNotice(x)	((x)->flags &= ~FLAGS_HYBNOTICE)
 #define IsHidden(x)             ((x)->umodes & UMODE_HIDE)
 #define IsHideOper(x)		((x)->umodes & UMODE_HIDEOPER)
-
+#ifdef USE_SSL
+#define IsSSL(x)		IsSecure(x)
+#endif
 #ifdef NOSPOOF
 #define	IsNotSpoof(x)		((x)->nospoof == 0)
 #else

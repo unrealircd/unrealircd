@@ -11,3 +11,4 @@ extern   int ssl_client_handshake(aClient *, ConfigItem_link *); /* and the init
 extern	 int ircd_SSL_read(aClient *acptr, void *buf, int sz);
 extern	 int ircd_SSL_write(aClient *acptr, const void *buf, int sz);
 extern	 int ircd_SSL_accept(aClient *acpr, int fd);
+extern	 int SSL_smart_shutdown(SSL *ssl);

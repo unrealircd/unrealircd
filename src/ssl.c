@@ -199,10 +199,11 @@ int  ssl_handshake(aClient *cptr)
 	 *    The behaviour of SSL_write() depends on the underlying BIO. 
 	 *   
 	 */
-	err = SSL_accept((SSL *) cptr->ssl);
-	if (err == -1)
-	{	
-		/* wtf. it works, so ? */
+	if (!ircd_SSL_accept(cptr, cptr->fd)) {
+		SSL_set_shutdown((SSL *)cptr->ssl, SSL_RECEIVED_SHUTDOWN);
+		SSL_smart_shutdown((SSL *)cptr->ssl);
+		SSL_free((SSL *)cptr->ssl);
+		cptr->ssl = NULL;
 		return -1;
 	}
 

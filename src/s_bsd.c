@@ -35,7 +35,7 @@
 
 #ifndef CLEAN_COMPILE
 static char sccsid[] =
-    "@(#)s_bsd.c	2.78 2/7/94 (C) 1988 University of Oulu, \
+    "@(#)	2.78 2/7/94 (C) 1988 University of Oulu, \
 Computing Center and Jarkko Oikarinen";
 #endif
 
@@ -900,6 +900,14 @@ void close_connection(aClient *cptr)
 	{
 		flush_connections(cptr);
 		remove_local_client(cptr);
+#ifdef USE_SSL
+		if (IsSSL(cptr) && cptr->ssl) {
+			SSL_set_shutdown((SSL *)cptr->ssl, SSL_RECEIVED_SHUTDOWN);
+			SSL_smart_shutdown((SSL *)cptr->ssl);
+			SSL_free((SSL *)cptr->ssl);
+			cptr->ssl = NULL;
+		}
+#endif
 		CLOSE_SOCK(cptr->fd);
 		cptr->fd = -2;
 		--OpenFiles;
@@ -909,17 +917,6 @@ void close_connection(aClient *cptr)
 	}
 
 	cptr->from = NULL;	/* ...this should catch them! >:) --msa */
-#ifdef USE_SSL
-	if (cptr->flags & FLAGS_SSL)
-	{
-		if (cptr->ssl)
-		{
-			SSL_shutdown((SSL *)cptr->ssl);
-			SSL_free((SSL *)cptr->ssl);
-		}
-	}
-#endif
-
 	/*
 	 * fd remap to keep local[i] filled at the bottom.
 	 */
