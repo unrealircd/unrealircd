@@ -303,7 +303,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				if (IsNetAdmin(acptr))
 					strlcat(buf, "a Network Administrator", sizeof buf);
 				else if (IsSAdmin(acptr))
-					strlcat(buf, "a Services Operator", sizeof buf);
+					strlcat(buf, "a Services Administrator", sizeof buf);
 				else if (IsAdmin(acptr) && !IsCoAdmin(acptr))
 					strlcat(buf, "a Server Administrator", sizeof buf);
 				else if (IsCoAdmin(acptr))

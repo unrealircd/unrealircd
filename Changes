@@ -1837,3 +1837,4 @@ seen. gmtime warning still there
 - Fixed some minor sending-1-byte-too-much bugs
 - Made a STRIPBADWORDS_CHAN_ALWAYS option in include/config.h, if you define it badwords will
   always be stripped from all channels (regardless whether +G has been set or not) [default=disabled].
+- Fixed whois: "a Services Operator" -> "a Services Administrator".
