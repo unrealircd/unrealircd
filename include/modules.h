@@ -55,6 +55,7 @@ typedef struct _mod_symboltable Mod_SymbolDepTable;
 typedef struct _event Event;
 typedef struct _eventinfo EventInfo;
 typedef struct _irchook Hook;
+typedef struct _hooktype Hooktype;
 
 /*
  * Module header that every module must include, with the name of
@@ -197,6 +198,8 @@ void    SetupEvents(void);
 void	LockEventSystem(void);
 void	UnlockEventSystem(void);
 extern Hook		*Hooks[MAXHOOKTYPES];
+extern Hooktype		*Hooktypes;
+extern int		Hooktypes_count;
 extern Hook		*global_i;
 
 void    Module_Init(void);
@@ -244,7 +247,7 @@ void CommandDel(Command *command);
 #define HOOKTYPE_SERVER_CONNECT 11
 #define HOOKTYPE_SERVER_QUIT 12
 #define HOOKTYPE_STATS 13
-#define HOOKTYPE_JOIN 14
+#define HOOKTYPE_LOCAL_JOIN 14
 /* Module flags */
 #define MODFLAG_NONE	0x0000
 #define MODFLAG_LOADED	0x0001 /* (mod_load has been called and suceeded) */

@@ -2802,9 +2802,11 @@ CMD_FUNC(channel_link)
 			}
 			continue;
 		}
-		for (global_i = Hooks[HOOKTYPE_JOIN]; global_i; global_i = global_i->next) {
-			if((*(global_i->func.intfunc))(cptr, sptr, chptr, parv) > 0)
-				return 0;
+		if (MyConnect(sptr)) {
+			for (global_i = Hooks[HOOKTYPE_LOCAL_JOIN]; global_i; global_i = global_i->next) {
+				if((*(global_i->func.intfunc))(cptr, sptr, chptr, parv) > 0)
+					return 0;
+			}
 		}
 		/*
 		   **  Complete user entry to the new channel (if any)
@@ -3041,9 +3043,11 @@ CMD_FUNC(m_join)
 			continue;
 
 		}
-		for (global_i = Hooks[HOOKTYPE_JOIN]; global_i; global_i = global_i->next) {
-			if((*(global_i->func.intfunc))(cptr,sptr,chptr,parv) > 0)
-				return 0;
+		if (MyConnect(sptr)) {
+			for (global_i = Hooks[HOOKTYPE_LOCAL_JOIN]; global_i; global_i = global_i->next) {
+				if((*(global_i->func.intfunc))(cptr,sptr,chptr,parv) > 0)
+					return 0;
+			}
 		}
 
 		/*
