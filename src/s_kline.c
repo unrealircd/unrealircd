@@ -167,7 +167,7 @@ aTKline *tkl_expire(aTKline * tmp)
 	    TStime() - tmp->set_at);
 
 	ircd_log
-	    ("Expiring %s (%s@%s) made by %s (Reason: %s) set %li seconds ago",
+	    (LOG_TKL, "Expiring %s (%s@%s) made by %s (Reason: %s) set %li seconds ago",
 	    whattype, tmp->usermask, tmp->hostmask, tmp->setby, tmp->reason,
 	    TStime() - tmp->set_at);
 
@@ -580,7 +580,7 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			      txt, parv[3], parv[4], gmt, parv[5], gmt2,
 			      parv[8]);
 			  ircd_log
-			      ("%s added for %s@%s on %s GMT (from %s to expire at %s GMT: %s)",
+			      (LOG_TKL, "%s added for %s@%s on %s GMT (from %s to expire at %s GMT: %s)",
 			      txt, parv[3], parv[4], gmt, parv[5], gmt2,
 			      parv[8]);
 		  }
@@ -590,7 +590,7 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			      "*** Permanent %s added for %s@%s on %s GMT (from %s: %s)",
 			      txt, parv[3], parv[4], gmt, parv[5], parv[8]);
 			  ircd_log
-			      ("Permanent %s added for %s@%s on %s GMT (from %s: %s)",
+			      (LOG_TKL, "Permanent %s added for %s@%s on %s GMT (from %s: %s)",
 			      txt, parv[3], parv[4], gmt, parv[5], parv[8]);
 		  }
 		  loop.do_tkl_sweep = 1;

@@ -217,7 +217,7 @@ void report_error(text, cptr)
 				errtmp = err;
 #endif
 	sendto_umode(UMODE_JUNK, text, host, strerror(errtmp));
-	ircd_log(text,host,strerror(errtmp));
+	ircd_log(LOG_ERROR, text,host,strerror(errtmp));
 #ifdef USE_SYSLOG
 	syslog(LOG_WARNING, text, host, strerror(errtmp));
 #endif

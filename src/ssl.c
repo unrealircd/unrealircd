@@ -34,24 +34,24 @@ void init_ctx_server(void)
 	ctx_server = SSL_CTX_new(SSLv23_server_method());
 	if (!ctx_server)
 	{
-		ircd_log("Failed to do SSL CTX new");
+		ircd_log(LOG_ERROR, "Failed to do SSL CTX new");
 		exit(2);
 	}
 
 	if (SSL_CTX_use_certificate_file(ctx_server, CERTF, SSL_FILETYPE_PEM) <= 0)
 	{
-		ircd_log("Failed to load SSL certificate %s", CERTF);
+		ircd_log(LOG_ERROR, "Failed to load SSL certificate %s", CERTF);
 		exit(3);
 	}
 	if (SSL_CTX_use_PrivateKey_file(ctx_server, KEYF, SSL_FILETYPE_PEM) <= 0)
 	{
-		ircd_log("Failed to load SSL private key %s", KEYF);
+		ircd_log(LOG_ERROR, "Failed to load SSL private key %s", KEYF);
 		exit(4);
 	}
 
 	if (!SSL_CTX_check_private_key(ctx_server))
 	{
-		ircd_log("Failed to check SSL private key");
+		ircd_log(LOG_ERROR, "Failed to check SSL private key");
 		exit(5);
 	}
 }
@@ -61,24 +61,24 @@ void init_ctx_client(void)
 	ctx_client = SSL_CTX_new(SSLv3_client_method());
 	if (!ctx_client)
 	{
-		ircd_log("Failed to do SSL CTX new client");
+		ircd_log(LOG_ERROR, "Failed to do SSL CTX new client");
 		exit(2);
 	}
 
 	if (SSL_CTX_use_certificate_file(ctx_client, CERTF, SSL_FILETYPE_PEM) <= 0)
 	{
-		ircd_log("Failed to load SSL certificate %s (client)", CERTF);
+		ircd_log(LOG_ERROR, "Failed to load SSL certificate %s (client)", CERTF);
 		exit(3);
 	}
 	if (SSL_CTX_use_PrivateKey_file(ctx_client, KEYF, SSL_FILETYPE_PEM) <= 0)
 	{
-		ircd_log("Failed to load SSL private key %s (client)", KEYF);
+		ircd_log(LOG_ERROR, "Failed to load SSL private key %s (client)", KEYF);
 		exit(4);
 	}
 
 	if (!SSL_CTX_check_private_key(ctx_client))
 	{
-		ircd_log("Failed to check SSL private key (client)");
+		ircd_log(LOG_ERROR, "Failed to check SSL private key (client)");
 		exit(5);
 	}
 }

@@ -347,4 +347,5 @@
   - Using ERR_NOPRIVLEDGES (says you aren't oper)
   - Disabled commands allowed by unregistered users from registered users
 - Removed networks/unrealircd.conf
+- Implimented new logging system using log {} (if you leave it out it reverts to the old ircd.log)
 - Added Hooks, only one working now is HOOKTYPE_LOCAL_QUIT 

@@ -393,24 +393,23 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 }
 
 /* irc logs.. */
-void ircd_log(char *format, ...)
+void ircd_log(int flags, char *format, ...)
 {
 	va_list ap;
-	FILE *f;
-
+	ConfigItem_log *logs;
+	char buf[2048];
+	int fd;
 	va_start(ap, format);
-	f = fopen(lPATH, "a+");
-	if (!f)
-	{
-#if !defined(_WIN32) && !defined(_AMIGA)
-		sendto_realops("Couldn't write to %s - %s", lPATH,
-		    strerror(errno));
-#endif
-		return;
+	ircvsprintf(buf, format, ap);	
+	strcat(buf, "\n");
+	for (logs = conf_log; logs; logs = (ConfigItem_log *) logs->next) {
+		fd = open(logs->file, O_CREAT|O_APPEND|O_WRONLY, S_IRUSR|S_IWUSR);
+		if (fd == -1)
+			continue;
+		if (logs->flags & flags) {
+			write(fd, buf, strlen(buf));
+			close(fd);
+		}
 	}
-	fprintf(f, "(%s) ", myctime(TStime()));
-	vfprintf(f, format, ap);
-	fprintf(f, "\n");
-	fclose(f);
 	va_end(ap);
 }

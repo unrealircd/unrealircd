@@ -3424,7 +3424,7 @@ int  m_kill(cptr, sptr, parc, parv)
 		 * By otherguy
 		*/
                 ircd_log
-                    ("KILL (%s) by  %s(%s!%s)",
+                    (LOG_KILL, "KILL (%s) by  %s(%s!%s)",
                            make_nick_user_host 
                      (acptr->name, acptr->user->username, (IsHidden(acptr) ? acptr->user->virthost : acptr->user->realhost)),
                             parv[0],

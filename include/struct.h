@@ -84,6 +84,7 @@ typedef struct _configitem_deny_dcc ConfigItem_deny_dcc;
 typedef struct _configitem_deny_link ConfigItem_deny_link;
 typedef struct _configitem_deny_channel ConfigItem_deny_channel;
 typedef struct _configitem_deny_version ConfigItem_deny_version;
+typedef struct _configitem_log ConfigItem_log;
 
 typedef struct Notify aNotify;
 typedef struct Client aClient;
@@ -140,6 +141,15 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 
 /* NOTE: this must be down here so the stuff from struct.h IT uses works */
 #include "whowas.h"
+
+/* Loggin types */
+#define LOG_ERROR 0x0001
+#define LOG_KILL  0x0002
+#define LOG_TKL   0x0004
+#define LOG_KLINE 0x0008
+#define LOG_CLIENT 0x0010
+#define LOG_SERVER 0x0020
+
 
 
 /*
@@ -1067,6 +1077,13 @@ struct _configitem_allow_channel {
 	ConfigFlag		flag;
 	ConfigItem		*prev, *next;
 	char			*channel;
+};
+
+struct _configitem_log {
+	ConfigFlag flag;
+	ConfigItem *prev, *next;
+	char *file;
+	int  flags;
 };
 
 struct _irchook {

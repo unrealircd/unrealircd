@@ -925,7 +925,7 @@ int m_kline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	sendto_realops("%s added a temporary user ban for %s@%s %s", parv[0], name, uhost,
 	    parv[2] ? parv[2] : "");
-	ircd_log("%s added a temporary user ban for %s@%s %s",
+	ircd_log(LOG_KLINE, "%s added a temporary user ban for %s@%s %s",
 	   parv[0], name, uhost,
 	    parv[2] ? parv[2] : "");
 	bconf = (ConfigItem_ban *)MyMallocEx(sizeof(ConfigItem_ban));
@@ -1003,7 +1003,7 @@ int m_unkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    me.name, parv[0], name, host);
 		sendto_realops("%s removed temporary user ban %s@%s", parv[0],
 		    name, host);
-		ircd_log(
+		ircd_log(LOG_KLINE,
 		    "%s removed temporary user ban %s@%s",
 		    parv[0], name, host);
 		return 0;

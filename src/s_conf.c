@@ -96,6 +96,7 @@ int	_conf_deny_channel	(ConfigFile *conf, ConfigEntry *ce);
 int     _conf_deny_version      (ConfigFile *conf, ConfigEntry *ce);
 int	_conf_allow_channel	(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_loadmodule	(ConfigFile *conf, ConfigEntry *ce);
+int	_conf_log		(ConfigFile *conf, ConfigEntry *ce);
 
 extern int conf_debuglevel;
 
@@ -120,6 +121,7 @@ static ConfigCommand _ConfigCommands[] = {
 #endif
 	{ "deny",		_conf_deny },
 	{ "loadmodule",		_conf_loadmodule },
+	{ "log",		_conf_log },
 	{ NULL, 		NULL  }
 };
 
@@ -207,6 +209,15 @@ static OperFlag _LinkFlags[] = {
 	{ 0L, 		NULL }
 }; 
 
+static OperFlag _LogFlags[] = {
+	{ LOG_ERROR, "errors" },
+	{ LOG_KILL, "kills" },
+	{ LOG_TKL, "tkl" },
+	{ LOG_CLIENT, "connects" },
+	{ LOG_SERVER, "server-connects" },
+	{ 0L, NULL }
+};
+
 /*
  * Some prototypes
  */
@@ -240,6 +251,7 @@ ConfigItem_deny_channel *conf_deny_channel = NULL;
 ConfigItem_allow_channel *conf_allow_channel = NULL;
 ConfigItem_deny_link	*conf_deny_link = NULL;
 ConfigItem_deny_version *conf_deny_version = NULL;
+ConfigItem_log		*conf_log = NULL;
 
 #ifdef STRIPBADWORDS
 ConfigItem_badword	*conf_badword_channel = NULL;
@@ -2317,7 +2329,59 @@ int	_conf_deny_version(ConfigFile *conf, ConfigEntry *ce)
 	}
 }
 
+int	_conf_log(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigItem_log *log = NULL;
+	ConfigEntry 	    	*cep, *cepp;
+	OperFlag *ofl = NULL;
 
+	if (!ce->ce_vardata)
+	{
+		config_error("%s:%i: log without filename",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}	
+	log = MyMallocEx(sizeof(ConfigItem_log));
+	ircstrdup(log->file, ce->ce_vardata);
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname)
+		{
+			config_error("%s:%i: blank log item",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum);
+			continue;	
+		}
+		if (!strcmp(cep->ce_varname, "flags")) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!cepp->ce_varname)
+				{
+					config_error("%s:%i: log::flags item without variable name",
+						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+					continue;
+				}
+				for (ofl = _LogFlags; ofl->name; ofl++)
+				{
+					if (!strcmp(ofl->name, cepp->ce_varname))
+					{
+							log->flags |= ofl->flag;
+						break;
+					} 
+				}
+				if (!ofl->name)
+				{
+					config_error("%s:%i: unknown log flag '%s'",
+						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
+						cepp->ce_varname);
+					continue;								
+				}			
+			}	
+				continue;
+		}			
+	}
+	add_ConfigItem((ConfigItem *)log, (ConfigItem **) &conf_log);
+}
 
 /*
  * Report functions
@@ -2442,7 +2506,7 @@ void	run_configuration(void)
 		{
 			if (add_listener2(listenptr) == -1)
 			{
-				ircd_log("Failed to bind to %s:%i", listenptr->ip, listenptr->port);
+				ircd_log(LOG_ERROR, "Failed to bind to %s:%i", listenptr->ip, listenptr->port);
 			}
 				else
 			{
@@ -2498,6 +2562,7 @@ void	validate_configuration(void)
 	ConfigItem_except *except_ptr;
 	ConfigItem_ban *ban_ptr;
 	ConfigItem_link *link_ptr;
+	ConfigItem_log *log_ptr;
 	ConfigItem t;
 	short hide_host = 1;
 	struct in_addr in;
@@ -2714,6 +2779,14 @@ void	validate_configuration(void)
 				Error("tld %s::motd is missing", tld_ptr->mask);
 		}
 	}
+	/* No log? No problem! Make a simple default one */
+	if (!conf_log) {
+		log_ptr = MyMalloc(sizeof(ConfigItem_log));
+		ircstrdup(log_ptr->file, "ircd.log");
+		log_ptr->flags |= LOG_ERROR|LOG_KLINE|LOG_TKL;
+		add_ConfigItem((ConfigItem *)log_ptr, (ConfigItem **) &conf_log);	
+		Warning("No log {} found using ircd.log as default");
+	}
 	if (config_error_flag)
 	{
 		Error("Errors in configuration, terminating program.");
@@ -2743,6 +2816,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	ConfigItem_allow_channel	*allow_channel_ptr;
 	ConfigItem_admin		*admin_ptr;
 	ConfigItem_deny_version		*deny_version_ptr;
+	ConfigItem_log			*log_ptr;
 	ConfigItem 	t;
 
 	
@@ -2955,6 +3029,12 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		ircfree(conf_drpass->restart);
 		ircfree(conf_drpass->die);
 		ircfree(conf_drpass);
+	}
+	for (log_ptr = conf_log; log_ptr; log_ptr = (ConfigItem_log *)log_ptr->next) {
+		ircfree(log_ptr->file);
+		t.next = del_ConfigItem((ConfigItem *)log_ptr, (ConfigItem **)&conf_log);
+		MyFree(log_ptr);
+		log_ptr = (ConfigItem_log *)&t;
 	}
 	init_conf2(configfile);
 	/* Clean up listen records */

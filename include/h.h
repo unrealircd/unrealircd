@@ -74,6 +74,7 @@ extern ConfigItem_deny_channel  *conf_deny_channel;
 extern ConfigItem_deny_link	*conf_deny_link;
 extern ConfigItem_allow_channel *conf_allow_channel;
 extern ConfigItem_deny_version	*conf_deny_version;
+extern ConfigItem_log		*conf_log;
 
 
 ConfigItem_class	*Find_class(char *name);
@@ -152,7 +153,7 @@ extern int is_chanowner PROTO((aClient *, aChannel *));
 extern Ban *is_banned PROTO((aClient *, aClient *, aChannel *));
 extern int parse_help PROTO((aClient *, char *, char *));
 
-extern void ircd_log PROTO((char *, ...));
+extern void ircd_log PROTO((int, char *, ...));
 extern aClient *find_client PROTO((char *, aClient *));
 extern aClient *find_name PROTO((char *, aClient *));
 extern aClient *find_nickserv PROTO((char *, aClient *));
