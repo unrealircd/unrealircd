@@ -166,7 +166,7 @@ static HMENU hRehash, hAbout, hConfig, hTray;
 	char *msg;
 	POINT p;
 
-	if (message = WM_TASKBARCREATED){
+	if (message == WM_TASKBARCREATED){
 		TaskBarCreated();
 		return TRUE;
 	}
