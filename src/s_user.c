@@ -1983,7 +1983,7 @@ static int m_message(cptr, sptr, parc, parv, notice)
 						  break;	/* ignore it :P */
 					}
 					pfixchan[len] = '\0';
-					strncat(pfixchan, p2, sizeof(pfixchan));
+					strncat(pfixchan, p2, sizeof(pfixchan) - strlen(pfixchan));
 					nick = pfixchan;
 				}
 			}
