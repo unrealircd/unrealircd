@@ -1446,14 +1446,14 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 #else
 				pbuf);
 #endif
-#ifdef DEBUGMODE
-			for (acptr = client; acptr; acptr = acptr->next)
-			{
-				if (IsServer(acptr))
-					sendto_one(sptr, ":%s NOTICE %s :Server %s is %s",
-						me.name, sptr->name, acptr->name, acptr->serv->flags.synced ? "SYNCED" : "NOT SYNCED!!");
-			}
-#endif
 	}
+#ifdef DEBUGMODE
+	for (acptr = client; acptr; acptr = acptr->next)
+	{
+		if (IsServer(acptr))
+			sendto_one(sptr, ":%s NOTICE %s :Server %s is %s",
+				me.name, sptr->name, acptr->name, acptr->serv->flags.synced ? "SYNCED" : "NOT SYNCED!!");
+	}
+#endif
 	return 0;
 }

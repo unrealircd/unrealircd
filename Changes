@@ -2410,3 +2410,4 @@ seen. gmtime warning still there
 - Fixed a crashbug introduced by +mu fixes 3 days ago (#0001237).
 - Fixed a typo where /knock would say the channel is +I if +V is set, reported by Certus
 - Improved SSL error msg sent to junk snomask.
+- Fixed Q:lined nickname msgs during linking and a debug fix.

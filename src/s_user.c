@@ -1313,10 +1313,12 @@ CMD_FUNC(m_nick)
 			    (aClient *)find_server_b64_or_real(sptr->user ==
 			    NULL ? (char *)parv[6] : (char *)sptr->user->
 			    server);
-			sendto_snomask(SNO_QLINE, "Q:lined nick %s from %s on %s", nick,
-			    (*sptr->name != 0
-			    && !IsServer(sptr) ? sptr->name : "<unregistered>"),
-			    acptrs ? acptrs->name : "unknown server");
+			/* (NEW: no unregistered q:line msgs anymore during linking) */
+			if (!acptrs || (acptrs->serv && acptrs->serv->flags.synced))
+				sendto_snomask(SNO_QLINE, "Q:lined nick %s from %s on %s", nick,
+				    (*sptr->name != 0
+				    && !IsServer(sptr) ? sptr->name : "<unregistered>"),
+				    acptrs ? acptrs->name : "unknown server");
 		}
 		else
 		{
