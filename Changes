@@ -3227,3 +3227,4 @@ This is the 3.2 fixes branch.
 - Made Unreal create the tmp/ dir at startup, rather than configure (#0001824) suggested by
   LinDevel
 - Added /dns c to clear the DNS cache (#0001852) suggested by samson.
+- Seems I forgot to del_Command() SPAMFILTER and TEMPSHUN.
