@@ -2705,3 +2705,4 @@ seen. gmtime warning still there
 - Fixed a problem caused by the previous change
 - Fixed some compile warnings
 - Made CmodeAdd set MODERR_NOERROR when no error occurs (#0001484) reported by AngryWolf
+- Fixed a bug in /kick reported by rav2k (#0001490)

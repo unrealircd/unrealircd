@@ -4146,7 +4146,8 @@ CMD_FUNC(m_kick)
 		if (check_channelmask(sptr, cptr, name))
 			continue;
 		/* Store "sptr" access flags */
-		sptr_flags = get_access(sptr, chptr);
+		if (IsPerson(sptr))
+			sptr_flags = get_access(sptr, chptr);
 		if (!IsServer(cptr) && !IsULine(sptr) && !op_can_override(sptr)
 		    && !(sptr_flags & CHFL_ISOP) && !(sptr_flags & CHFL_HALFOP))
 		{
