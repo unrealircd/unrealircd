@@ -144,6 +144,7 @@ char *download_file(char *url, char **error)
 	char *tmp = unreal_mktemp("tmp", filename ? filename : "download.conf");
 	FILE *fd;
 
+
 	if (!curl)
 	{
 		if (file)
@@ -167,6 +168,9 @@ char *download_file(char *url, char **error)
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download);
 	curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
 	curl_easy_setopt(curl, CURLOPT_FILETIME, 1);
+ 	curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
+ 	curl_easy_setopt(curl, CURLOPT_TIMEOUT, 45);
+ 	curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 15);
 
 #ifdef USE_SSL
 	set_curl_ssl_options(curl);
@@ -265,6 +269,9 @@ void download_file_async(char *url, time_t cachetime, vFP callback)
 			curl_easy_setopt(curl, CURLOPT_TIMECONDITION, CURL_TIMECOND_IFMODSINCE);
 			curl_easy_setopt(curl, CURLOPT_TIMEVALUE, cachetime);
 		}
+		curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
+		curl_easy_setopt(curl, CURLOPT_TIMEOUT, 45);
+		curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 15);
 
 		curl_multi_add_handle(multihandle, curl);
 	}
@@ -301,6 +308,7 @@ void url_do_transfers_async(void)
 		switch(rc) {
 			case -1:
 			case 0:
+				cont = 0;
 				break;
 			default:
 				while(CURLM_CALL_MULTI_PERFORM == 

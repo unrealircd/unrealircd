@@ -3104,3 +3104,5 @@ seen. gmtime warning still there
 ** internal pre1 release **
 - Docs/help.conf tweak on /connect syntax (#0001755).
 - German doc updates (from April 18) + gzline docs tweak.
+- Fixed some remote includes issues and added a connect/transfer timeout, server should
+  now no longer be frozen if the site is unreachable. Reported by Ron2K (#0001751).

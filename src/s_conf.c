@@ -396,7 +396,7 @@ int			config_verbose = 0;
 
 void add_include(char *);
 #ifdef USE_LIBCURL
-void add_remote_include(char *, char *, int);
+void add_remote_include(char *, char *, int, char *);
 int remote_include(ConfigEntry *ce);
 #endif
 void unload_notloaded_includes(void);
@@ -7386,12 +7386,12 @@ static void conf_download_complete(char *url, char *file, char *errorbuf, int ca
 		if (!stricmp(url, inc->url))
 		{
 			inc->flag.type &= ~INCLUDE_DLQUEUED;
-			if (!file && !cached)
-				inc->errorbuf = strdup(errorbuf);
 			break;
 		}
 	}
-	if (!inc->errorbuf)
+	if (!file && !cached)
+		add_remote_include(file, url, 0, errorbuf);
+	else
 	{
 		if (cached)
 		{
@@ -7399,11 +7399,11 @@ static void conf_download_complete(char *url, char *file, char *errorbuf, int ca
 			char *file = unreal_getfilename(urlfile);
 			char *tmp = unreal_mktemp("tmp", file);
 			unreal_copyfile(inc->file, tmp);
-			add_remote_include(tmp, url, 0);
+			add_remote_include(tmp, url, 0, NULL);
 			free(urlfile);
 		}
 		else
-			add_remote_include(file, url, 0);
+			add_remote_include(file, url, 0, NULL);
 	}
 	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
 	{
@@ -7547,10 +7547,10 @@ char *find_loaded_remote_include(char *url)
 
 int remote_include(ConfigEntry *ce)
 {
-	char *errorbuf;
+	char *errorbuf = NULL;
 	char *file = find_remote_include(ce->ce_vardata, &errorbuf);
 	int ret;
-	if (!loop.ircd_rehashing || (loop.ircd_rehashing && !file))
+	if (!loop.ircd_rehashing || (loop.ircd_rehashing && !file && !errorbuf))
 	{
 		char *error;
 		if (config_verbose > 0)
@@ -7566,7 +7566,7 @@ int remote_include(ConfigEntry *ce)
 		else
 		{
 			if ((ret = load_conf(file)) >= 0)
-				add_remote_include(file, ce->ce_vardata, INCLUDE_USED);
+				add_remote_include(file, ce->ce_vardata, INCLUDE_USED, NULL);
 			free(file);
 			return ret;
 		}
@@ -7583,7 +7583,7 @@ int remote_include(ConfigEntry *ce)
 		if (config_verbose > 0)
 			config_status("Loading %s from download", ce->ce_vardata);
 		if ((ret = load_conf(file)) >= 0)
-			add_remote_include(file, ce->ce_vardata, INCLUDE_USED);
+			add_remote_include(file, ce->ce_vardata, INCLUDE_USED, NULL);
 		return ret;
 	}
 	return 0;
@@ -7600,6 +7600,8 @@ void add_include(char *file)
 	{
 		if (!(inc->flag.type & INCLUDE_NOTLOADED))
 			continue;
+		if (inc->flag.type & INCLUDE_REMOTE)
+			continue;
 		if (!stricmp(file, inc->file))
 			return;
 	}
@@ -7610,7 +7612,7 @@ void add_include(char *file)
 }
 
 #ifdef USE_LIBCURL
-void add_remote_include(char *file, char *url, int flags)
+void add_remote_include(char *file, char *url, int flags, char *errorbuf)
 {
 	ConfigItem_include *inc;
 
@@ -7625,9 +7627,12 @@ void add_remote_include(char *file, char *url, int flags)
 	}
 
 	inc = MyMallocEx(sizeof(ConfigItem_include));
-	inc->file = strdup(file);
+	if (file)
+		inc->file = strdup(file);
 	inc->url = strdup(url);
 	inc->flag.type = (INCLUDE_NOTLOADED|INCLUDE_REMOTE|flags);
+	if (errorbuf)
+		inc->errorbuf = strdup(errorbuf);
 	AddListItem(inc, conf_include);
 }
 #endif
