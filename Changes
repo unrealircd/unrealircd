@@ -1396,3 +1396,4 @@ seen. gmtime warning still there
   just reply that the commands are depricated. Server compatiblity is maintained. 
   Eventually it will just be removed. Thank god for modules.
 - Fixed a silly bug with regards to matching against compressed IPs in link {} checking
+- Added some release notes with regards to scanners
