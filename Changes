@@ -2377,3 +2377,4 @@ seen. gmtime warning still there
 - Moved EOS debugging code to DEBUGMODE.
 - Fixed a channel sync bug reported by thilo&Rocko (#0001218).
 - Fixed minor config parser memleak reported by AngryWolf (#0001214).
+- Fixed bug regarding hidden opers + m_whois cleanup (#0001208).

@@ -147,7 +147,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	for (tmp = parv[1]; (nick = strtoken(&p, tmp, ",")); tmp = NULL)
 	{
-		int  invis, showchannel, member, wilds;
+		unsigned char invis, showchannel, member, wilds, hideoper; /* <- these are all boolean-alike */
 
 		found = 0;
 		/* We do not support "WHOIS *" */
@@ -180,6 +180,10 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			member = (user->channel) ? 1 : 0;
 
 			a2cptr = find_server_quick(user->server);
+
+			hideoper = 0;
+			if (IsHideOper(acptr) && (acptr != sptr) && !IsAnOper(sptr))
+				hideoper = 1;
 
 			if (IsWhois(acptr) && (sptr != acptr))
 			{
@@ -233,7 +237,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				if (acptr == sptr)
 					showchannel = 1;
 				/* Hey, if you are editting here... don't forget to change the webtv w_whois ;p. */
-				
+
 				if (showchannel)
 				{
 					long access;
@@ -297,9 +301,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			/* makesure they aren't +H (we'll also check
 			   before we display a helpop or IRCD Coder msg)
 			   -- codemastr */
-			if ((IsAnOper(acptr) || IsServices(acptr))
-			    && (!IsHideOper(acptr) || sptr == acptr
-			    || IsAnOper(sptr)))
+			if ((IsAnOper(acptr) || IsServices(acptr)) && !hideoper)
 			{
 				buf[0] = '\0';
 				if (IsNetAdmin(acptr))
@@ -323,32 +325,21 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					    parv[0], name, buf);
 			}
 
-			if (IsHelpOp(acptr) && (!IsHideOper(acptr)
-			    || sptr == acptr || IsAnOper(sptr)))
-				if (!user->away)
-					sendto_one(sptr,
-					    rpl_str(RPL_WHOISHELPOP), me.name,
-					    parv[0], name);
+			if (IsHelpOp(acptr) && !hideoper && !user->away)
+				sendto_one(sptr, rpl_str(RPL_WHOISHELPOP), me.name, parv[0], name);
 
 			if (acptr->umodes & UMODE_BOT)
-			{
-				sendto_one(sptr, rpl_str(RPL_WHOISBOT),
-				    me.name, parv[0], name, ircnetwork);
-			}
+				sendto_one(sptr, rpl_str(RPL_WHOISBOT), me.name, parv[0], name, ircnetwork);
+
 			if (acptr->umodes & UMODE_SECURE)
-			{
 				sendto_one(sptr, ":%s %d %s %s :%s", me.name,
-				    RPL_WHOISSPECIAL,
-				    parv[0], name,
-				    "is a Secure Connection");
-			}
-			if (user->swhois && !IsHideOper(acptr))
-			{
-				if (*user->swhois != '\0')
+				    RPL_WHOISSPECIAL, parv[0], name, "is a Secure Connection");
+
+			if (!BadPtr(user->swhois) && !hideoper)
 					sendto_one(sptr, ":%s %d %s %s :%s",
 					    me.name, RPL_WHOISSPECIAL, parv[0],
 					    name, acptr->user->swhois);
-			}
+
 			/*
 			 * Fix /whois to not show idle times of
 			 * global opers to anyone except another
