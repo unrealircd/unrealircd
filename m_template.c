@@ -28,7 +28,6 @@
 #include "numeric.h"
 #include "msg.h"
 #include "channel.h"
-#include "userload.h"
 #include <time.h>
 #include <sys/stat.h>
 #include <stdio.h>
@@ -59,7 +58,7 @@ ModuleInfo m_%COMMAND%_info
 ModuleInfo mod_header
 #endif
   = {
-  	1,
+  	2,
 	"test",
 	"$Id$",
 	"command /%COMMAND%", 
