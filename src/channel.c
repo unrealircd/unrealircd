@@ -2116,7 +2116,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 					      && (*xp != '*'))
 						goto break_flood;
 					  /* uh oh, not the first char */
-					  if (*xp == '*' && *param != '*')
+					  if (*xp == '*' && (xp != param))
 						goto break_flood;
 				  }
 				  /* We can avoid 2 strchr() and a strrchr() like this

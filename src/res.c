@@ -918,6 +918,7 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 			  ans++;
 			  break;
 		  default:
+			  cp += dlen;
 #ifdef DEBUGMODE
 			  Debug((DEBUG_INFO, "proc_answer: type:%d for:%s",
 			      type, hostbuf));

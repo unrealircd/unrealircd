@@ -27,7 +27,7 @@
 #ifndef _WIN32
 extern int errno;		/* ...seems that errno.h doesn't define this everywhere */
 #endif
-#if !defined(__FreeBSD__) && !defined(__NetBSD__) && !defined(__linux__)
+#if !defined(__FreeBSD__) && !defined(__NetBSD__) && !defined(__linux__) && !defined(__APPLE__)
 extern char *sys_errlist[];
 #endif
 #include <sys/types.h>
