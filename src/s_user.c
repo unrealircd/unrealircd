@@ -2774,7 +2774,7 @@ int  m_whois(cptr, sptr, parc, parv)
 				}
 			}
 
-			if (buf[0] != '\0' && IsAnOper(sptr) || ShowChannel(sptr, chptr) || (acptr == sptr))
+			if (buf[0] != '\0')
 				sendto_one(sptr, rpl_str(RPL_WHOISCHANNELS),
 				    me.name, parv[0], name, buf);
 
