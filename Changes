@@ -569,3 +569,4 @@ seen. gmtime warning still there
   this hook returns >0 the register_user exits
 - Removed src/agent.c (empty file)
 - Removed src/userload.obj from the win32 makefile
+- Added link::options::quarantine suggested by DumbFish

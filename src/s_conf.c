@@ -207,6 +207,7 @@ static OperFlag _LinkFlags[] = {
 	{ CONNECT_AUTO,	"autoconnect" },
 	{ CONNECT_SSL,	"ssl"		  },
 	{ CONNECT_ZIP,	"zip"		  },
+	{ CONNECT_QUARANTINE, "quarantine"},
 	{ 0L, 		NULL }
 };
 

@@ -257,6 +257,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #endif
 #define FLAGS_DCCBLOCK	0x40000000
 #define FLAGS_MAP       0x80000000	/* Show this entry in /map */
+#define FLAGS_QUARANTINE 0x100000000
 /* Dec 26th, 1997 - added flags2 when I ran out of room in flags -DuffJ */
 
 /* Dec 26th, 1997 - having a go at
@@ -803,6 +804,7 @@ typedef struct ircstatsx {
 #define CONNECT_SSL		0x000001
 #define CONNECT_ZIP		0x000002 
 #define CONNECT_AUTO		0x000004
+#define CONNECT_QUARANTINE	0x000008
 
 struct Client {
 	struct Client *next, *prev, *hnext;

@@ -4430,6 +4430,9 @@ int  m_umode(cptr, sptr, parc, parv)
 					  break;
 				  /* since we now use chatops define in unrealircd.conf, we have
 				   * to disallow it here */
+			  case 'o':
+				  if(sptr->srvptr->flags & FLAGS_QUARANTINE)
+					break;
 			  case 'b':
 				  if (ALLOW_CHATOPS == 0 && what == MODE_ADD
 				      && MyClient(sptr))
@@ -4767,6 +4770,8 @@ int  m_svs2mode(cptr, sptr, parc, parv)
 				  }
 				  goto setmodey;
 			  case 'o':
+				  if (acptr->srvptr->flags & FLAGS_QUARANTINE)
+					break;
 				  if (what == MODE_ADD
 				      && !(acptr->umodes & UMODE_OPER))
 					  IRCstats.operators++;

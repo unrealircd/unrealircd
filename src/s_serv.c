@@ -860,7 +860,8 @@ int  m_server(cptr, sptr, parc, parv)
 					"Disallowed by connection rule");
 			}
 		}
-
+		if (aconf->options & CONNECT_QUARANTINE)
+			cptr->flags |= FLAGS_QUARANTINE;
 		/* Start synch now */
 		m_server_synch(cptr, numeric, aconf);
 	}
