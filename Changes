@@ -249,3 +249,5 @@
 - Added deny link { mask "servermask"; rule "connectionrule"; type all/auto; }; (equivilant of D/dlines)
 - Made admin {} get rehashed
 - Got /stats x to work again
+- Recoded check_pings, with bits used from bahamut-ircd/hybrid-ircd, credits
+  to lucas.

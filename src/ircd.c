@@ -426,7 +426,7 @@ static TS try_connections(currenttime)
 		/* Also when already connecting! (update holdtimes) --SRB */
 		if (!(aconf->options & CONNECT_AUTO))
 			continue;
-			
+
 		cltmp = aconf->class;
 		/*
 		   ** Skip this entry if the use of it is still on hold until
@@ -454,15 +454,17 @@ static TS try_connections(currenttime)
 		if (!cptr && (cltmp->clients < cltmp->maxclients))
 		{
 			/* Check connect rules to see if we're allowed to try */
-			for (deny = conf_deny_link; deny; deny = (ConfigItem_deny_link *) deny->next) 
-				if (!match(deny->mask, aconf->servername) && crule_eval(deny->rule)) 
-						break;
-			
+			for (deny = conf_deny_link; deny;
+			    deny = (ConfigItem_deny_link *) deny->next)
+				if (!match(deny->mask, aconf->servername)
+				    && crule_eval(deny->rule))
+					break;
+
 			if (connect_server(aconf, (aClient *)NULL,
 			    (struct hostent *)NULL) == 0)
 				sendto_ops("Connection to %s[%s] activated.",
 				    aconf->servername, aconf->hostname);
-			
+
 		}
 		if ((next > aconf->hold) || (next == 0))
 			next = aconf->hold;
@@ -475,14 +477,14 @@ static TS try_connections(currenttime)
 /* Now find_kill is only called when a kline-related command is used:
    AKILL/RAKILL/KLINE/UNKLINE/REHASH.  Very significant CPU usage decrease.
    -- Barubary */
+
 extern TS check_pings(TS currenttime, int check_kills)
 {
-	ConfigItem_ban *bconf;
-	static char moobuf[1024];
 	aClient *cptr;
-	int  killflag;
-	int  ping = 0, i, i1, rflag = 0;
-	TS   oldest = 0, timeout;
+	ConfigItem_ban *bconf = NULL;
+	int  ping = 0, killflag = 0, i = 0;
+	TS   oldest = 0;
+	static char banbuf[1024];
 
 	for (i = 0; i <= highest_fd; i++)
 	{
@@ -505,8 +507,9 @@ extern TS check_pings(TS currenttime, int check_kills)
 			if (IsPerson(cptr))
 			{
 				bconf =
-				    Find_ban(make_user_host(
-				    cptr->user ? cptr->user->username : cptr->username,
+				    Find_ban(make_user_host(cptr->
+				    user ? cptr->user->username : cptr->
+				    username,
 				    cptr->user ? cptr->user->realhost : cptr->
 				    sockhost), CONF_BAN_USER);
 				if (bconf)
@@ -520,183 +523,194 @@ extern TS check_pings(TS currenttime, int check_kills)
 
 		if (check_kills && !killflag && IsPerson(cptr))
 		{
-			if (bconf = Find_ban(inetntoa((char *)&cptr->ip), CONF_BAN_IP))
+			if (bconf =
+			    Find_ban(inetntoa((char *)&cptr->ip), CONF_BAN_IP))
 			{
 				killflag = 1;
-				goto nextstep;
 			}
 			if (find_tkline_match(cptr, 0) < 0)
 			{
-				continue;	
+				continue;
 			}
-			if (!IsAnOper(cptr) && (bconf = Find_ban(cptr->info, CONF_BAN_REALNAME)))
+			if (!IsAnOper(cptr)
+			    && (bconf =
+			    Find_ban(cptr->info, CONF_BAN_REALNAME)))
 			{
 				killflag = 1;
-				goto nextstep;
 			}
 		}
-nextstep:
-		ping = IsRegistered(cptr) ? (cptr->class ? cptr->class->pingfreq :
-			CONNECTTIMEOUT) : CONNECTTIMEOUT;
-		Debug((DEBUG_DEBUG, "c(%s)=%d p %d k %d r %d a %d",
-		    cptr->name, cptr->status, ping, killflag, rflag,
-		    currenttime - cptr->lasttime));
-		/*
-		 * Ok, so goto's are ugly and can be avoided here but this code
-		 * is already indented enough so I think its justified. -avalon
-		 */
-		if (!killflag && !rflag && IsRegistered(cptr) &&
-		    (ping >= currenttime - cptr->lasttime))
-			goto ping_timeout;
-		/*
-		 * If the server hasnt talked to us in 2*ping seconds
-		 * and it has a ping time, then close its connection.
-		 * If the client is a user and a KILL line was found
-		 * to be active, close this connection too.
-		 */
-		if (killflag || rflag ||
-		    ((currenttime - cptr->lasttime) >= (2 * ping) &&
-		    (cptr->flags & FLAGS_PINGSENT)) ||
-		    (!IsRegistered(cptr) &&
-		    (currenttime - cptr->firsttime) >= ping))
+		if (killflag)
 		{
-			if (!IsRegistered(cptr) &&
-			    (DoingDNS(cptr) || DoingAuth(cptr)
-#ifdef SOCKSPORT
-			    || DoingSocks(cptr)
-#endif
-			    ))
+			if (IsPerson(cptr))
 			{
-				if (cptr->authfd >= 0)
+				sendto_realops
+				    ("Kill line active for %s (%s)",
+				    get_client_name(cptr, FALSE),
+				    bconf ?
+				    bconf->
+				    reason ? bconf->reason : "no reason" :
+				    "no reason");
+				if (bconf && bconf->reason)
 				{
-#ifndef _WIN32
-					(void)close(cptr->authfd);
-#else
-					(void)closesocket(cptr->authfd);
-#endif
-					cptr->authfd = -1;
-					cptr->count = 0;
-					*cptr->buffer = '\0';
+					ircsprintf(banbuf,
+					    "User has been banned (%s)",
+					    bconf->reason);
+					(void)exit_client(cptr, cptr, &me,
+					    banbuf);
 				}
+				else
+				{
+					(void)exit_client(cptr, cptr, &me,
+					    "User has been banned");
+				}
+			}
+			else
+			{
+				exit_client(cptr, cptr, &me, "Banned");
+			}
+			continue;
+		}
+		/* If we go here, its a ping timeout */
+		ping =
+		    IsRegistered(cptr) ? (cptr->class ? cptr->
+		    class->pingfreq : CONNECTTIMEOUT) : CONNECTTIMEOUT;
+		Debug((DEBUG_DEBUG, "c(%s)=%d p %d k %d r %d a %d", cptr->name,
+		    cptr->status, ping, killflag, rflag,
+		    currenttime - cptr->lasttime));
+		if (ping < (currenttime - cptr->lasttime))
+		{
+			if (((cptr->flags & FLAGS_PINGSENT)
+			    && ((currenttime - cptr->lasttime) >= (2 * ping)))
+			    || ((!IsRegistered(cptr)
+			    && (currenttime - cptr->since) >= ping)))
+
+			{
+				if (!IsRegistered(cptr) &&
+				    (DoingDNS(cptr) || DoingAuth(cptr)
+#ifdef SOCKSPORT
+				    || DoingSocks(cptr)
+#endif
+				    ))
+				{
+					if (cptr->authfd >= 0)
+					{
+#ifndef _WIN32
+						(void)close(cptr->authfd);
+#else
+						(void)closesocket(cptr->authfd);
+#endif
+						cptr->authfd = -1;
+						cptr->count = 0;
+						*cptr->buffer = '\0';
+					}
 
 #ifdef SOCKSPORT
-				if (cptr->socksfd >= 0)
-				{
+					if (cptr->socksfd >= 0)
+					{
 #ifndef _WIN32
-					(void)close(cptr->socksfd);
+						(void)close(cptr->socksfd);
 #else
-					(void)closesocket(cptr->socksfd);
+						(void)closesocket(cptr->socksfd);
 #endif /* _WIN32 */
-					cptr->socksfd = -1;
-				}
+						cptr->socksfd = -1;
+					}
 #endif /* SOCKSPORT */
 
 
 #ifdef SHOWCONNECTINFO
-				if (DoingDNS(cptr))
-					sendto_one(cptr, REPORT_FAIL_DNS);
-				else if (DoingAuth(cptr))
-					sendto_one(cptr, REPORT_FAIL_ID);
-
+					if (DoingDNS(cptr))
+						sendto_one(cptr,
+						    REPORT_FAIL_DNS);
+					else if (DoingAuth(cptr))
+						sendto_one(cptr,
+						    REPORT_FAIL_ID);
 #ifdef SOCKSPORT
-				else
-					sendto_one(cptr, REPORT_NO_SOCKS);
+					else
+						sendto_one(cptr,
+						    REPORT_NO_SOCKS);
 #endif /* SOCKSPORT */
 #endif
-				Debug((DEBUG_NOTICE,
-				    "DNS/AUTH timeout %s",
-				    get_client_name(cptr, TRUE)));
+					Debug((DEBUG_NOTICE,
+					    "DNS/AUTH timeout %s",
+					    get_client_name(cptr, TRUE)));
 #ifndef NEWDNS
-				del_queries((char *)cptr);
-#else				 /*NEWDNS*/
-				    /*We dont do anything (yet) */
-#endif				     /*NEWDNS*/
-				    ClearAuth(cptr);
-				ClearDNS(cptr);
+					del_queries((char *)cptr);
+#else					 /*NEWDNS*/
+					    /*We dont do anything (yet) */
+#endif					     /*NEWDNS*/
+					    ClearAuth(cptr);
+					ClearDNS(cptr);
 #ifdef SOCKSPORT
-				ClearSocks(cptr);
+					ClearSocks(cptr);
 #endif
-				SetAccess(cptr);
-				cptr->firsttime = currenttime;
-				cptr->lasttime = currenttime;
+					SetAccess(cptr);
+					cptr->firsttime = currenttime;
+					cptr->lasttime = currenttime;
+					continue;
+				}
+				if (IsServer(cptr) || IsConnecting(cptr) ||
+				    IsHandshake(cptr))
+				{
+					sendto_realops
+					    ("No response from %s, closing link",
+					    get_client_name(cptr, FALSE));
+					sendto_serv_butone(&me,
+					    ":%s GLOBOPS :No response from %s, closing link",
+					    me.name, get_client_name(cptr,
+					    FALSE));
+				}
+				exit_client(cptr, cptr, &me, "Ping timeout");
 				continue;
 			}
-			if (IsServer(cptr) || IsConnecting(cptr) ||
-			    IsHandshake(cptr))
+			else if (IsRegistered(cptr) &&
+			    ((cptr->flags & FLAGS_PINGSENT) == 0))
 			{
-				sendto_realops
-				    ("No response from %s, closing link",
-				    get_client_name(cptr, FALSE));
-				sendto_serv_butone(&me,
-				    ":%s GLOBOPS :No response from %s, closing link",
-				    me.name, get_client_name(cptr, FALSE));
+				/*
+				 * if we havent PINGed the connection and we havent
+				 * heard from it in a while, PING it to make sure
+				 * it is still alive.
+				 */
+				cptr->flags |= FLAGS_PINGSENT;
+				/* not nice but does the job */
+				cptr->lasttime = currenttime - ping;
+				sendto_one(cptr, "%s :%s",
+				    IsToken(cptr) ? TOK_PING : MSG_PING,
+				    me.name);
 			}
-			/*
-			 * this is used for KILL lines with time restrictions
-			 * on them - send a messgae to the user being killed
-			 * first.
-			 */
-			if (killflag && IsPerson(cptr))
-				sendto_realops
-				    ("Kill line active for %s (%s)",
-				    get_client_name(cptr, FALSE),
-				    bconf->reason ? bconf->reason : "no reason");
+		}
 
-			if (killflag && bconf)
-			{
-				if (bconf->reason)
-				{
-					ircsprintf(moobuf,
-					    "User has been banned (%s)",
-					    bconf->reason);
-					(void)exit_client(cptr, cptr, &me,
-					    moobuf);
-				}
-				else
-				{
-
-					(void)exit_client(cptr, cptr, &me,
-					    "User has been banned");
-
-				}
-				bconf = NULL;
-			}
-			else
+		/*
+		 * Check UNKNOWN connections - if they have been in this state
+		 * for > 100s, close them.
+		 */
+		if (IsUnknown(cptr))
+			if (cptr->firsttime ? ((TStime() - cptr->firsttime) >
+			    100) : 0)
 				(void)exit_client(cptr, cptr, &me,
-				    "Ping timeout");
-			continue;
-		}
-		else if (IsRegistered(cptr) &&
-		    (cptr->flags & FLAGS_PINGSENT) == 0)
-		{
-			/*
-			 * if we havent PINGed the connection and we havent
-			 * heard from it in a while, PING it to make sure
-			 * it is still alive.
-			 */
-			cptr->flags |= FLAGS_PINGSENT;
-			/* not nice but does the job */
-			cptr->lasttime = currenttime - ping;
-			sendto_one(cptr, "%s :%s",
-			    IsToken(cptr) ? TOK_PING : MSG_PING, me.name);
-		}
-	      ping_timeout:
-		timeout = cptr->lasttime + ping;
-		while (timeout <= currenttime)
-			timeout += ping;
-		if (timeout < oldest || !oldest)
-			oldest = timeout;
+				    "Connection Timed Out");
 	}
 
-	if (!oldest || oldest < currenttime)
-		oldest = currenttime + PINGFREQUENCY;
-	Debug((DEBUG_NOTICE, "Next auto check_ping() call at: %s, %d %d %d",
+	/* EXPLANATION
+	 * on a server with a large volume of clients, at any given point
+	 * there may be a client which needs to be pinged the next second,
+	 * or even right away (a second may have passed while running
+	 * check_pings). Preserving CPU time is more important than
+	 * pinging clients out at exact times, IMO. Therefore, I am going to make
+	 * check_pings always return currenttime + 9. This means that it may take
+	 * a user up to 9 seconds more than pingfreq to timeout. Oh well.
+	 * Plus, the number is 9 to 'stagger' our check_pings calls out over
+	 * time, to avoid doing it and the other tasks ircd does at the same time
+	 * all the time (which are usually done on intervals of 5 seconds or so). 
+	 * - lucas
+	 *
+	 */
+
+	oldest = currenttime + 9;
+	Debug((DEBUG_NOTICE, "Next check_ping() call at: %s, %d %d %d",
 	    myctime(oldest), ping, oldest, currenttime));
 
-	return (oldest);
+	return oldest;
 }
-
-
 
 /*
 ** bad_command
@@ -724,7 +738,9 @@ static int bad_command()
 	return (-1);
 }
 
-char chess[] = { 85, 110, 114, 101, 97, 108, 0 };
+char chess[] = {
+	85, 110, 114, 101, 97, 108, 0
+};
 
 #ifndef _WIN32
 int  main(argc, argv)
@@ -751,7 +767,6 @@ int  InitwIRCD(argc, argv)
 #endif
 	TS   last_tune = 0;
 	static TS lastglinecheck = 0;
-
 #if !defined(_WIN32) && !defined(_AMIGA)
 	sbrk0 = (char *)sbrk((size_t)0);
 	uid = getuid();
@@ -782,7 +797,6 @@ int  InitwIRCD(argc, argv)
 	WSAStartup(wVersionRequested, &wsaData);
 #endif
 	bzero((char *)&me, sizeof(me));
-
 #ifndef _WIN32
 	setup_signals();
 #endif
@@ -794,7 +808,6 @@ int  InitwIRCD(argc, argv)
 	if (setrlimit(RLIMIT_CORE, &corelim))
 		printf("unlimit core size failed; errno = %d\n", errno);
 #endif
-
 	/*
 	   ** All command line parameters have the syntax "-fstring"
 	   ** or "-f string" (e.g. the space is optional). String may
@@ -805,7 +818,6 @@ int  InitwIRCD(argc, argv)
 	{
 		char *p = argv[0] + 1;
 		int  flag = *p++;
-
 		if (flag == '\0' || *p == '\0')
 			if (argc > 1 && argv[1][0] != '-')
 			{
@@ -814,7 +826,6 @@ int  InitwIRCD(argc, argv)
 			}
 			else
 				p = "";
-
 		switch (flag)
 		{
 #ifndef _WIN32
@@ -847,12 +858,10 @@ int  InitwIRCD(argc, argv)
 		  case 'h':
 			  if (!strchr(p, '.'))
 			  {
-				  
-				      (void)
-				      printf
+
+				  (void)printf
 				      ("ERROR: %s is not valid: Server names must contain at least 1 \".\"\n",
-				      p);
-				  exit(1);
+				      p); exit(1);
 			  }
 			  strncpyzt(me.name, p, sizeof(me.name));
 			  break;
@@ -866,18 +875,19 @@ int  InitwIRCD(argc, argv)
 			  break;
 		  case 's':
 			  (void)printf("sizeof(aClient) == %u\n", sizeof(aClient));
-			  (void)printf("sizeof(aChannel) == %u\n", sizeof(aChannel));
-			  (void)printf("sizeof(aServer) == %u\n", sizeof(aServer));
+			  (void)printf("sizeof(aChannel) == %u\n",
+			      sizeof(aChannel));
+			  (void)printf("sizeof(aServer) == %u\n",
+			      sizeof(aServer));
 			  (void)printf("sizeof(Link) == %u\n", sizeof(Link));
-			  (void)printf("sizeof(anUser) == %u\n", sizeof(anUser));
-			  (void)printf("sizeof(aTKline) == %u\n", sizeof(aTKline));
-
+			  (void)printf("sizeof(anUser) == %u\n",
+			      sizeof(anUser));
+			  (void)printf("sizeof(aTKline) == %u\n",
+			      sizeof(aTKline));
 			  (void)printf("sizeof(struct ircstatsx) == %u\n",
 			      sizeof(struct ircstatsx));
 			  (void)printf("aClient remote == %u\n",
-			      CLIENT_REMOTE_SIZE);
-
-			  exit(0);
+			      CLIENT_REMOTE_SIZE); exit(0);
 			  break;
 #ifndef _WIN32
 		  case 't':
@@ -888,8 +898,8 @@ int  InitwIRCD(argc, argv)
 			  (void)printf("%s\n", version);
 #else
 		  case 'v':
-			  MessageBox(NULL, version, "UnrealIRCD/Win32 version",
-			      MB_OK);
+			  MessageBox(NULL, version,
+			      "UnrealIRCD/Win32 version", MB_OK);
 #endif
 			  exit(0);
 		  case 'C':
@@ -951,7 +961,6 @@ int  InitwIRCD(argc, argv)
 	(void)setuid((uid_t) uid);
 	(void)setuid((uid_t) euid);
 # endif
-
 /*
  * Modified 13/2000 DrBin
  * We need to have better controll over running as root ... see config.h
@@ -972,9 +981,9 @@ int  InitwIRCD(argc, argv)
 			(void)fprintf(stderr,
 			    "WARNING: ircd invloked as root\n         changing to uid = %d\n",
 			    IRC_UID);
-			(void)fprintf(stderr, "         changing to gid %d.\n",
-			    IRC_GID);
-			(void)setuid(IRC_UID);
+			(void)fprintf(stderr,
+			    "         changing to gid %d.\n",
+			    IRC_GID); (void)setuid(IRC_UID);
 			(void)setgid(IRC_GID);
 		}
 #else
@@ -1000,12 +1009,9 @@ int  InitwIRCD(argc, argv)
 
 	if (argc > 0)
 		return bad_command();	/* This should exit out */
-
-
 #ifndef _WIN32
 	fprintf(stderr, unreallogo);
 #endif
-
 	fprintf(stderr, "                           v%s\n\n", VERSIONONLY);
 	clear_client_hash_table();
 	clear_channel_hash_table();
@@ -1027,7 +1033,6 @@ int  InitwIRCD(argc, argv)
 	    "* Dynamic configuration initialized .. booting IRCd.\n");
 	fprintf(stderr,
 	    "---------------------------------------------------------------------\n");
-
 	open_debugfile();
 #ifndef NO_FDLIST
 	init_fdlist(&serv_fdlist);
@@ -1049,19 +1054,16 @@ int  InitwIRCD(argc, argv)
 	me.fd = -1;
 	SetMe(&me);
 	make_server(&me);
-
 #ifdef USE_SYSLOG
 	openlog(myargv[0], LOG_PID | LOG_NDELAY, LOG_FACILITY);
 #endif
 	/* Put in our info */
 	strncpyzt(me.info, conf_me->info, sizeof(me.info));
 	strncpyzt(me.name, conf_me->name, sizeof(me.name));
-
 	/* We accept the first listen record */
 	portnum = conf_listen->port;
 	me.ip.S_ADDR =
 	    *conf_listen->ip != '*' ? inet_addr(conf_listen->ip) : INADDR_ANY;
-
 	Debug((DEBUG_ERROR, "Port = %d", portnum));
 	if (inetport(&me, conf_listen->ip, portnum))
 		exit(1);
@@ -1098,9 +1100,7 @@ int  InitwIRCD(argc, argv)
 	if (!(bootopt & BOOT_NOFORK))
 		if (fork())
 			exit(0);
-
 #endif
-
 #ifdef SHOWCONNECTINFO
 	(void)ircsprintf(REPORT_DO_DNS, ":%s %s", me.name, BREPORT_DO_DNS);
 	(void)ircsprintf(REPORT_FIN_DNS, ":%s %s", me.name, BREPORT_FIN_DNS);
@@ -1112,19 +1112,20 @@ int  InitwIRCD(argc, argv)
 #ifdef SOCKSPORT
 	(void)ircsprintf(REPORT_DO_SOCKS, ":%s %s", me.name, BREPORT_DO_SOCKS);
 	(void)ircsprintf(REPORT_NO_SOCKS, ":%s %s", me.name, BREPORT_NO_SOCKS);
-	(void)ircsprintf(REPORT_GOOD_SOCKS, ":%s %s", me.name, BREPORT_GOOD_SOCKS);
+	(void)ircsprintf(REPORT_GOOD_SOCKS, ":%s %s",
+	    me.name, BREPORT_GOOD_SOCKS);
 #endif
-	R_do_dns = sizeof(REPORT_DO_DNS)-1;
-	R_fin_dns = sizeof(REPORT_FIN_DNS)-1;
-	R_fin_dnsc = sizeof(REPORT_FIN_DNSC)-1;
-	R_fail_dns = sizeof(REPORT_FAIL_DNS)-1;
-	R_do_id = sizeof(REPORT_DO_ID)-1;
-	R_fin_id = sizeof(REPORT_FIN_ID)-1;
-	R_fail_id = sizeof(REPORT_FAIL_ID)-1;
+	R_do_dns = sizeof(REPORT_DO_DNS) - 1;
+	R_fin_dns = sizeof(REPORT_FIN_DNS) - 1;
+	R_fin_dnsc = sizeof(REPORT_FIN_DNSC) - 1;
+	R_fail_dns = sizeof(REPORT_FAIL_DNS) - 1;
+	R_do_id = sizeof(REPORT_DO_ID) - 1;
+	R_fin_id = sizeof(REPORT_FIN_ID) - 1;
+	R_fail_id = sizeof(REPORT_FAIL_ID) - 1;
 #ifdef SOCKSPORT
-	R_do_socks = sizeof(REPORT_DO_SOCKS)-1;
-	R_no_socks = sizeof(REPORT_NO_SOCKS)-1;
-	R_good_socks = sizeof(REPORT_GOOD_SOCKS)-1;
+	R_do_socks = sizeof(REPORT_DO_SOCKS) - 1;
+	R_no_socks = sizeof(REPORT_NO_SOCKS) - 1;
+	R_good_socks = sizeof(REPORT_GOOD_SOCKS) - 1;
 #endif /* SOCKSPORT */
 #endif
 #ifdef SOCKSPORT
@@ -1142,7 +1143,6 @@ int  InitwIRCD(argc, argv)
 	check_fdlists(TStime());
 #endif
 	nextkillcheck = TStime() + (TS)1;
-
 #ifdef _WIN32
 	return 1;
 }
@@ -1156,7 +1156,6 @@ void SocketLoop(void *dummy)
 #ifndef NO_FDLIST
 	TS   nextfdlistcheck = 0;	/*end of priority code */
 #endif
-
 	while (1)
 #else
 	for (;;)
@@ -1183,14 +1182,13 @@ void SocketLoop(void *dummy)
 			save_tunefile();
 		}
 
-		if (((now - last_garbage_collect) > GARBAGE_COLLECT_EVERY
-		    || (loop.do_garbage_collect == 1)))
+		if (((now - last_garbage_collect) >
+		    GARBAGE_COLLECT_EVERY || (loop.do_garbage_collect == 1)))
 		{
 			extern int freelinks;
 			extern Link *freelink;
 			Link p;
 			int  ii;
-
 			if (loop.do_garbage_collect == 1)
 				sendto_realops("Doing garbage collection ..");
 			if (freelinks > HOW_MANY_FREELINKS_ALLOWED)
@@ -1214,7 +1212,6 @@ void SocketLoop(void *dummy)
 			}
 			if (loop.do_garbage_collect == 1)
 				loop.do_garbage_collect = 0;
-
 			last_garbage_collect = now;
 		}
 		/*
@@ -1228,7 +1225,6 @@ void SocketLoop(void *dummy)
 			static TS lasttime = 0;
 			static long lastrecvK, lastsendK;
 			static int lrv;
-
 			if (now - lasttime < LCF)
 				goto done_check;
 			lasttime = now;
@@ -1243,8 +1239,7 @@ void SocketLoop(void *dummy)
 						sendto_realops
 						    ("Entering high-traffic mode (incoming = %0.2f kb/s (LRV = %dk/s, outgoing = %0.2f kb/s currently)",
 						    currentrate, LRV,
-						    currentrate2);
-				}
+						    currentrate2);}
 				else
 				{
 					lifesux++;	/* Ok, life really sucks! */
@@ -1254,11 +1249,10 @@ void SocketLoop(void *dummy)
 						    ("Still high-traffic mode %d%s (%d delay): %0.2f kb/s",
 						    lifesux,
 						    (lifesux >
-						    9) ? " (TURBO)" : "",
-						    (int)LCF, currentrate);
+						    9) ? " (TURBO)" :
+						    "", (int)LCF, currentrate);
 					/* Reset htm here, because its been on a little too long.
 					 * Bad Things(tm) tend to happen with HTM on too long -epi */
-
 					if (lifesux > 15)
 					{
 						if (noisy_htm)
@@ -1307,7 +1301,6 @@ void SocketLoop(void *dummy)
 			IRCstats.global_max = IRCstats.clients;
 		if (IRCstats.me_clients > IRCstats.me_max)
 			IRCstats.me_max = IRCstats.me_clients;
-
 		/*
 		   ** We only want to connect if a connection is due,
 		   ** not every time through.  Note, if there are no
@@ -1319,7 +1312,6 @@ void SocketLoop(void *dummy)
 		/*
 		   ** DNS checks. One to timeout queries, one for cache expiries.
 		 */
-
 		/*TODO: Add FULL Caching */
 #ifndef NEWDNS
 		if (now >= nextdnscheck)
@@ -1379,7 +1371,6 @@ void SocketLoop(void *dummy)
 
 #endif
 		Debug((DEBUG_DEBUG, "Got message(s)"));
-
 		now = TStime();
 		/*
 		   ** ...perhaps should not do these loops every time,
@@ -1395,11 +1386,9 @@ void SocketLoop(void *dummy)
 		if (now >= nextping && !lifesux)
 #endif
 			nextping = check_pings(now, 0);
-
 		if (dorehash)
 		{
 			(void)rehash(&me, &me, 1);
-		
 			dorehash = 0;
 		}
 		/*
@@ -1423,13 +1412,12 @@ TS   check_fdlists(now)
 	int  pri;		/* temp. for priority */
 	int  i, j;
 	j = 0;
-
 	for (i = highest_fd; i >= 0; i--)
 	{
 		if (!(cptr = local[i]))
 			continue;
-		if (IsServer(cptr) || IsListening(cptr) || IsOper(cptr) ||
-		    DoingAuth(cptr))
+		if (IsServer(cptr) || IsListening(cptr)
+		    || IsOper(cptr) || DoingAuth(cptr))
 		{
 			busycli_fdlist.entry[++j] = i;
 			continue;
@@ -1443,14 +1431,12 @@ TS   check_fdlists(now)
 			pri = 0;
 		if (pri > 80)
 			pri = 80;
-
 		cptr->lastrecvM = cptr->receiveM;
 		cptr->priority = pri;
 		if ((pri < 10) || (!lifesux && (pri < 25)))
 			busycli_fdlist.entry[++j] = i;
 	}
 	busycli_fdlist.last_entry = j;	/* rest of the fdlist is garbage */
-
 	return (now + FDLISTCHKFREQ + lifesux * FDLISTCHKFREQ);
 }
 #endif
@@ -1470,7 +1456,6 @@ static void open_debugfile()
 #ifdef	DEBUGMODE
 	int  fd;
 	aClient *cptr;
-
 	if (debuglevel >= 0)
 	{
 		cptr = make_client(NULL, NULL);
@@ -1502,8 +1487,9 @@ static void open_debugfile()
 		else
 # endif
 			(void)strcpy(cptr->name, "FD2-Pipe");
-		Debug((DEBUG_FATAL, "Debug: File <%s> Level: %d at %s",
-		    cptr->name, cptr->port, myctime(time(NULL))));
+		Debug((DEBUG_FATAL,
+		    "Debug: File <%s> Level: %d at %s", cptr->name,
+		    cptr->port, myctime(time(NULL))));
 	}
 	else
 		local[2] = NULL;
@@ -1516,7 +1502,6 @@ static void setup_signals()
 {
 #ifdef	POSIX_SIGNALS
 	struct sigaction act;
-
 	act.sa_handler = SIG_IGN;
 	act.sa_flags = 0;
 	(void)sigemptyset(&act.sa_mask);
@@ -1563,7 +1548,6 @@ static void setup_signals()
 	(void)signal(SIGINT, s_restart);
 	(void)signal(SIGSEGV, s_segv);
 #endif
-
 #ifdef RESTARTING_SYSTEMCALLS
 	/*
 	   ** At least on Apollo sr10.1 it seems continuing system calls
