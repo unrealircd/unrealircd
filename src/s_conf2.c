@@ -1373,12 +1373,6 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			continue;	
 		}
-		if (!cep->ce_vardata)
-		{
-			config_error("%s:%i: vhost item without parameter",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-			continue;	
-		}
 		if (!strcmp(cep->ce_varname, "vhost"))
 		{
 			vhost->virthost = strdup(cep->ce_vardata);
@@ -2185,4 +2179,14 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 		return 0;
 	}
 	return -1;
+}
+
+ConfigItem_vhost *Find_vhost(char *name) {
+	ConfigItem_vhost *vhost;
+
+	for (vhost = conf_vhost; vhost; vhost = (ConfigItem_vhost *)vhost->next) {
+		if (!strcmp(name, vhost->login))
+			return vhost;
+	}
+	return NULL;
 }

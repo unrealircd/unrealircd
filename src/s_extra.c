@@ -51,11 +51,9 @@ ID_Copyright("(C) Carsten Munk 1999");
 #define AllocCpy(x,y) x = (char *) MyMalloc(strlen(y) + 1); strcpy(x,y)
 #define IRCD_DCCDENY  "dccdeny.conf"
 #define IRCD_RESTRICT "chrestrict.conf"
-#define IRCD_VHOST    "vhost.conf"
 
 aFline *flines = NULL;
 aCRline *crlines = NULL;
-aVhost *vhosts = NULL;
 
 char *cannotjoin_msg = NULL;
 
@@ -595,154 +593,17 @@ void cr_report(sptr)
 
 }
 
-/* vhost configuration (vhost.conf) 
-   vhost - login password vhost
-*/
-
-int  vhost_add(vhost, login, password, usermask, hostmask)
-	char *vhost, *login, *password, *usermask, *hostmask;
-{
-	aVhost *fl;
-
-	fl = (aVhost *) MyMalloc(sizeof(aVhost));
-	if (strlen(vhost) > (HOSTLEN - 4))
-	{
-		*(vhost + (HOSTLEN - 4)) = '\0';
-	}
-	AllocCpy(fl->virthost, vhost);
-	AllocCpy(fl->usermask, usermask);
-	AllocCpy(fl->hostmask, hostmask);
-	AllocCpy(fl->login, login);
-	AllocCpy(fl->password, password);
-	fl->next = vhosts;
-	fl->prev = NULL;
-	if (vhosts)
-		vhosts->prev = fl;
-	vhosts = fl;
-}
-
-aVhost *vhost_del(fl)
-	aVhost *fl;
-{
-	aVhost *p, *q;
-	for (p = vhosts; p; p = p->next)
-	{
-		if (p == fl)
-		{
-			q = p->next;
-			MyFree((char *)(fl->virthost));
-			MyFree((char *)(fl->usermask));
-			MyFree((char *)(fl->hostmask));
-			MyFree((char *)(fl->login));
-			MyFree((char *)(fl->password));
-			/* chain1 to chain3 */
-			if (p->prev)
-			{
-				p->prev->next = p->next;
-			}
-			else
-			{
-				vhosts = p->next;
-			}
-			if (p->next)
-			{
-				p->next->prev = p->prev;
-			}
-			MyFree((aVhost *) p);
-			return q;
-		}
-	}
-	return NULL;
-}
-
-/* 
-  vhost.conf
-   ------------
-# vhost virtualhost username password mask
-
-vhost microsoft.com billgates ilovelinux *@*
-*/
-int  vhost_loadconf(void)
-{
-	char buf[2048];
-	char *x, *y, *login, *password, *mask, *usermask, *hostmask;
-	FILE *f;
-/* _not_ a failsafe routine .. */
-	f = fopen(IRCD_VHOST, "r");
-	if (!f)
-		return -1;
-
-	while (fgets(buf, 2048, f))
-	{
-		if (buf[0] == '#' || buf[0] == '/' || buf[0] == '\0')
-			continue;
-		iCstrip(buf);
-		if (buf[0] == '#' || buf[0] == '/' || buf[0] == '\0')
-			continue;
-		x = strtok(buf, " ");
-		if (strcmp("vhost", x) == 0)
-		{
-			y = strtok(NULL, " ");
-			if (!y)
-				continue;
-			login = strtok(NULL, " ");
-			if (!login)
-				continue;
-			password = strtok(NULL, " ");
-			if (!password)
-				continue;
-			mask = strtok(NULL, "");
-			if (!mask)
-				continue;
-			usermask = strtok(mask, "@");
-			if (!usermask)
-				continue;
-			hostmask = strtok(NULL, " ");
-			if (!hostmask)
-				continue;
-			vhost_add(y, login, password, usermask, hostmask);
-		}
-	}
-	fclose(f);
-	return 0;
-}
-
-void vhost_rehash(void)
-{
-	aVhost *p, q;
-
-	for (p = vhosts; p; p = p->next)
-	{
-		q.next = vhost_del(p);
-		p = &q;
-	}
-	vhost_loadconf();
-}
-
 void vhost_report(sptr)
 	aClient *sptr;
 {
-	aVhost *tmp;
-	char *filemask;
-	//char  a;
-
-	for (tmp = vhosts; tmp; tmp = tmp->next)
-	{
-		filemask = BadPtr(tmp->virthost) ? "<NULL>" : tmp->virthost;
-		sendto_one(sptr, ":%s %i %s :V %s %s (%s@%s)", me.name,
-		    RPL_TEXT, sptr->name, filemask, tmp->login, tmp->usermask,
-		    tmp->hostmask);
-	}
 
 }
 
-int  m_vhost(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	aVhost *p;
-	char *user, *pwd;
+	ConfigItem_vhost *vhost;
+	ConfigItem_oper_from *from;
+	char *user, *pwd, *host;
 
 	if (parc < 3)
 	{
@@ -757,63 +618,65 @@ int  m_vhost(cptr, sptr, parc, parv)
 	user = parv[1];
 	pwd = parv[2];
 
-	for (p = vhosts; p; p = p->next)
-	{
-		if (!strcmp(p->login, user))
-		{
-			/* First check hostmask.. */
-			if (!match(p->hostmask, sptr->user->realhost)
-			    && !match(p->usermask, sptr->user->username))
-			{
-				/* that was okay, lets check password */
-				if (!strcmp(p->password, pwd))
-				{
-					/* let's vhost him .. */
-					if (sptr->user->virthost)
-						MyFree(sptr->user->virthost);
-					
-					sptr->user->virthost = MyMalloc(strlen(p->virthost) + 1);
-					strcpy(sptr->user->virthost,
-					    p->virthost);
-					sptr->umodes |= UMODE_HIDE;
-					sptr->umodes |= UMODE_SETHOST;
-					sendto_serv_butone_token(cptr, sptr->name,
-						MSG_SETHOST, TOK_SETHOST,
-						"%s", p->virthost);
-					sendto_one(sptr, ":%s MODE %s :+tx",
-					    sptr->name, sptr->name);
-					sendto_one(sptr,
-					    ":%s NOTICE %s :*** Your hostname is now %s",
-					    me.name, sptr->name, p->virthost);
-					sendto_umode(UMODE_EYES,
-					    "[\2vhost\2] %s (%s!%s@%s) is now using vhost %s",
-					    user, sptr->name,
-					    sptr->user->username,
-					    sptr->user->realhost, p->virthost);
-					return 0;
-				}
-				else
-				{
-					sendto_umode(UMODE_EYES,
-					    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - incorrect password",
-					    user, sptr->name,
-					    sptr->user->username,
-					    sptr->user->realhost);
-					sendto_one(sptr,
-					    ":%s NOTICE %s :*** [\2vhost\2] Login for %s failed - password incorrect",
-					    me.name, sptr->name, user);
-					return 0;
-				}
-			}
-		}
+	if (!(vhost = Find_vhost(user))) {
+		sendto_umode(UMODE_EYES,
+		    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - incorrect password",
+		    user, sptr->name,
+		    sptr->user->username,
+		    sptr->user->realhost);
+		sendto_one(sptr,
+		    ":%s NOTICE %s :*** [\2vhost\2] Login for %s failed - password incorrect",
+		    me.name, sptr->name, user);
+		return 0;
 	}
-	sendto_umode(UMODE_EYES,
-	    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - host does not match",
-	    user, sptr->name, sptr->user->username, sptr->user->realhost);
-	sendto_one(sptr,
-	    ":%s NOTICE %s :*** No vHost lines available for your host",
-	    me.name, sptr->name);
-	return 0;
+	host = make_user_host(sptr->user->username, sptr->user->realhost);
+	for (from = (ConfigItem_oper_from *)vhost->from; from; from = (ConfigItem_oper_from *)from->next) {
+		if (!match(from->name, host))
+			break;
+	}
+	if (!from) {
+		sendto_umode(UMODE_EYES,
+		    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - host does not match",
+		    user, sptr->name, sptr->user->username, sptr->user->realhost);
+		sendto_one(sptr,
+		    ":%s NOTICE %s :*** No vHost lines available for your host",
+		    me.name, sptr->name);
+		return 0;
+	}
+	if (!strcmp(vhost->password, pwd)) {
+		if (sptr->user->virthost)
+			MyFree(sptr->user->virthost);
+		sptr->user->virthost = MyMalloc(strlen(vhost->virthost) + 1);
+		strcpy(sptr->user->virthost, vhost->virthost);
+		sptr->umodes |= UMODE_HIDE;
+		sptr->umodes |= UMODE_SETHOST;
+		sendto_serv_butone_token(cptr, sptr->name,
+			MSG_SETHOST, TOK_SETHOST,
+			"%s", vhost->virthost);
+		sendto_one(sptr, ":%s MODE %s :+tx",
+		    sptr->name, sptr->name);
+		sendto_one(sptr,
+		    ":%s NOTICE %s :*** Your hostname is now %s",
+		    me.name, sptr->name, vhost->virthost);
+		sendto_umode(UMODE_EYES,
+		    "[\2vhost\2] %s (%s!%s@%s) is now using vhost %s",
+		    user, sptr->name,
+		    sptr->user->username,
+		    sptr->user->realhost, vhost->virthost);
+		return 0;
+	}
+	else {
+		sendto_umode(UMODE_EYES,
+		    "[\2vhost\2] Failed login for vhost %s by %s!%s@%s - incorrect password",
+		    user, sptr->name,
+		    sptr->user->username,
+		    sptr->user->realhost);
+		sendto_one(sptr,
+		    ":%s NOTICE %s :*** [\2vhost\2] Login for %s failed - password incorrect",
+		    me.name, sptr->name, user);
+		return 0;
+	}
+		
 }
 
 /* irc logs.. */

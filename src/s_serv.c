@@ -4149,6 +4149,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 
 				return 0;
 			}
+#ifdef OLD
 			if (!strnicmp("-vhos", parv[1], 5))
 			{
 				if (!IsAdmin(sptr))
@@ -4160,6 +4161,7 @@ int  m_rehash(cptr, sptr, parc, parv)
 				vhost_rehash();
 				return 0;
 			}
+#endif
 #ifdef STRIPBADWORDS
 			if (!strnicmp("-bad", parv[1], 4))
 			{

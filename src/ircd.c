@@ -864,7 +864,6 @@ int  InitwIRCD(argc, argv)
 			  (void)printf("sizeof(aServer) == %u\n", sizeof(aServer));
 			  (void)printf("sizeof(Link) == %u\n", sizeof(Link));
 			  (void)printf("sizeof(anUser) == %u\n", sizeof(anUser));
-			  (void)printf("sizeof(aVhost) == %u\n", sizeof(aVhost));
 			  (void)printf("sizeof(aTKline) == %u\n", sizeof(aTKline));
 
 			  (void)printf("sizeof(struct ircstatsx) == %u\n",
@@ -1037,10 +1036,6 @@ int  InitwIRCD(argc, argv)
 	{
 		fprintf(stderr,
 		    "* Loaded Channel Restrict configuration file..\n");
-	}
-	if (vhost_loadconf() == 0)
-	{
-		fprintf(stderr, "* Loaded Vhost configuration file..\n");
 	}
 	load_tunefile();
 	make_umodestr();

@@ -72,6 +72,7 @@ ConfigItem_except	*Find_except(char *host, short type);
 ConfigItem_tld		*Find_tld(char *host);
 ConfigItem_link		*Find_link(char *username, char *hostname, char *ip, char *servername);
 ConfigItem_ban 		*Find_ban(char *host, short type);
+ConfigItem_vhost	*Find_vhost(char *name);
 
 int			AllowClient(aClient *cptr, struct hostent *hp, char *sockhost);
 

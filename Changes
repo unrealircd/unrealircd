@@ -145,3 +145,5 @@
   -I IPMASK:HOSTMASK:IPs,... to allow you to specify an ipmax. ex. 
   -I *@205.188.*:*@*.aol.com:10,*@*:*@*:100 that will allow 10 on your aol.com allow, 
   and 100 on your *@* allow
+- /vhost uses newconf
+- Removed old vhost.conf code 
