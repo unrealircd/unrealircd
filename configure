@@ -2340,6 +2340,46 @@ else
 echo "${ECHO_T}no" >&6
 fi
 
+# Extract the first word of "pkg-config", so it can be a program name with args.
+set dummy pkg-config; ac_word=$2
+echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
+if test "${ac_cv_path_PKGCONFIG+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  case $PKGCONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_PKGCONFIG="$PKGCONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_PKGCONFIG="$as_dir/$ac_word$ac_exec_ext"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+
+  ;;
+esac
+fi
+PKGCONFIG=$ac_cv_path_PKGCONFIG
+
+if test -n "$PKGCONFIG"; then
+  echo "$as_me:$LINENO: result: $PKGCONFIG" >&5
+echo "${ECHO_T}$PKGCONFIG" >&6
+else
+  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi
+
+
 echo "$as_me:$LINENO: checking for crypt in -ldescrypt" >&5
 echo $ECHO_N "checking for crypt in -ldescrypt... $ECHO_C" >&6
 if test "${ac_cv_lib_descrypt_crypt+set}" = set; then
@@ -9998,9 +10038,10 @@ else
 	cp tre.tar.gz.bak tre.tar.gz
 	tar xf tre.tar
 fi
+tre_version="0.6.6"
 echo "$as_me:$LINENO: result: configuring TRE regex library" >&5
 echo "${ECHO_T}configuring TRE regex library" >&6
-cd tre-0.6.5
+cd tre-$tre_version
 ./configure --disable-agrep --disable-shared --disable-system-abi --disable-wchar --disable-multibyte --prefix=$cur_dir/extras/regexp
 echo "$as_me:$LINENO: result: compiling TRE regex library" >&5
 echo "${ECHO_T}compiling TRE regex library" >&6
@@ -10009,6 +10050,12 @@ echo "$as_me:$LINENO: result: installing TRE regex library" >&5
 echo "${ECHO_T}installing TRE regex library" >&6
 $ac_cv_prog_MAKER install
 TREINCDIR="$cur_dir/extras/regexp/include"
+
+if test "x$ac_cv_path_PKGCONFIG" = "x" ; then
+	TRELIBS="-L../extras/regexp/lib -ltre"
+else
+	TRELIBS=`$ac_cv_path_PKGCONFIG --libs tre.pc`
+fi
 
 cd $cur_dir
 ac_config_files="$ac_config_files Makefile src/modules/Makefile unreal ircdcron/ircdchk"
@@ -10583,6 +10630,7 @@ s,@INSTALL@,$INSTALL,;t t
 s,@MAKER@,$MAKER,;t t
 s,@GMAKE@,$GMAKE,;t t
 s,@GUNZIP@,$GUNZIP,;t t
+s,@PKGCONFIG@,$PKGCONFIG,;t t
 s,@IRCDLIBS@,$IRCDLIBS,;t t
 s,@MKPASSWDLIBS@,$MKPASSWDLIBS,;t t
 s,@CPP@,$CPP,;t t
@@ -10595,6 +10643,7 @@ s,@IRCDDIR@,$IRCDDIR,;t t
 s,@BINDIR@,$BINDIR,;t t
 s,@FD_SETSIZE@,$FD_SETSIZE,;t t
 s,@TREINCDIR@,$TREINCDIR,;t t
+s,@TRELIBS@,$TRELIBS,;t t
 CEOF
 
 _ACEOF

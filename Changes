@@ -3046,4 +3046,6 @@ seen. gmtime warning still there
 - help.conf: updated snomasks section.
 - Added a patch by baafie to fix a problem where environment variables could not
   be specified in the Config script (#0001657)
-- Imported TRE 0.6.6 on Win32
+- Imported TRE 0.6.6 on Win32 and Linux
+- Made use of TRE's pkg-config support to solve a problem with libintl reported by
+  raistlinmajere (#0001592)

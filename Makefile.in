@@ -34,7 +34,7 @@ FROMDOS=/home/cmunk/bin/4dos
 #
 
 #XCFLAGS=-O -g -export-dynamic
-IRCDLIBS=@IRCDLIBS@ -L../extras/regexp/lib -ltre
+IRCDLIBS=@IRCDLIBS@ @TRELIBS@
 CRYPTOLIB=@CRYPTOLIB@
 OPENSSLINCLUDES=
 
