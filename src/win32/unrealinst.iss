@@ -50,6 +50,8 @@ Source: "..\..\.RELEASE.NOTES"; DestDir: "{app}"; DestName: "RELEASE.NOTES.txt";
 Source: "..\..\.SICI"; DestDir: "{app}"; DestName: "SICI.txt"; Flags: ignoreversion
 Source: "..\..\badwords.channel.conf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\badwords.message.conf"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\badwords.quit.conf"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\spamfilter.conf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\Changes"; DestDir: "{app}"; DestName: "Changes.txt"; Flags: ignoreversion
 Source: "..\..\Changes.old"; DestDir: "{app}"; DestName: "Changes.old.txt"; Flags: ignoreversion
 Source: "..\..\Donation"; DestDir: "{app}"; DestName: "Donation.txt"; Flags: ignoreversion

@@ -37,6 +37,7 @@ Unreal3.2-RC2 Release Notes
   * Added set::spamfilter::except which allows you to specify targets where
     spamfilter should not take action. Useful for spam-report/help chans.
     Ex: set { spamfilter { except "#spamreport,#help"; }; };
+  * there's now a 'spamfilter.conf' file with some effective spamfilter rules.
 * Added '/tempshun' command (/tempshun nick reason, /tempshun -nick).
 
 ==[ MAJOR BUGS FIXED ]==

@@ -3000,3 +3000,5 @@ seen. gmtime warning still there
 - Imported TRE 0.6.5 on Win32 and Linux, solves (#0001542) and (#0001564) reported 
   by methos
 - Added rest of release notes.
+- Added first 2 rules to spamfilter.conf, update release notes and unrealinst.iss
+  for it too (also added missing badwords.quit.conf file @ win32).
