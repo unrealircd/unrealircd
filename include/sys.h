@@ -24,21 +24,21 @@
 
 /* alloca stuff */
 #ifdef _WIN32
-#include <malloc.h>
-#define alloca _alloca
-#else
-# if defined(__GNUC__) && !defined(alloca)
-#  define alloca __builtin_alloca
-# else
-#  if HAVE_ALLOCA_H
+# include <malloc.h>
+# define alloca _alloca
+#else /* _WIN32 */
+# ifdef HAVE_ALLOCA
+#  if defined(_AIX) && !defined(__GNUC__)
+    #pragma alloca
+#  endif /* _AIX */
+#  if defined(HAVE_ALLOCA_H)
 #   include <alloca.h>
-#  else
-#   ifdef _AIX
- #pragma alloca
-#   endif
-#  endif
-# endif
-#endif
+#  endif /* HAVE_ALLOCA_H */
+#  if defined(__GNUC__) && !defined(HAVE_ALLOCA_H) && !defined(alloca)
+#   define alloca __builtin_alloca
+#  endif /* __GNUC__ */
+# endif /* HAVE_ALLOCA */
+#endif /* !_WIN32 */
 
 #ifdef ISC202
 #include <net/errno.h>

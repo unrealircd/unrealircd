@@ -533,3 +533,4 @@
 - Fixed a problem where doing ./unreal restart multiple times would not actually restart
   the ircd (#0002120) reported by SineSwiper.
 - Made it so +f notices are sent to %#chan, not @%#chan (#0002248) reported by aquanight.
+- Hopefully fixed the last of the alloca warnings (#0002202) reported by Stoebi.
