@@ -25,7 +25,7 @@
   <font size="4"><a href="http://www.unrealircd.com/">http://www.unrealircd.com</a></font><br>
   <font size="4">Verzió: 3.2.1</font><br>
   <b>Jelenlegi verzió:</b> 3.2.1<br>
-  <b>Utolsó módosítás:</b> 2004-07-03</div>
+  <b>Utolsó dokumentáció módosítás:</b> 2004-07-03</div>
 <br>
   <b>Fõ fejlesztõk:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Munkatársak:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -805,6 +805,7 @@ listen *:6601 {
 	};
 	swhois &lt;whois info&gt;;
 	snomask &lt;snomask&gt;;
+	modes &lt;módok&gt;;
 	maxlogins &lt;szám&gt;;
 };
 </pre></p>
@@ -1105,9 +1106,11 @@ listen *:6601 {
 </table>
 <p>Az <b>oper::swhois</b> direktívával egy tetszõleges szövegû sorral egészítheted ki az operátor
    whois információját. <font color=blue>[egyéni]</font></p>
-<p>Az <b>oper::snomask</b> direktívával elõre meghatározhatod egy operátor szerverüzenet-maszkját,
-   amely opereléskor lesz beállítva rajta. A rendelkezésre álló SNOMASKok listáját lásd a
+<p>Az <b>oper::snomask</b> direktívával elõre beállíthatod, hogy az operátor milyen
+   szerverüzenet-maszkokat kapjon opereléskor. A rendelkezésre álló SNOMASKok listáját lásd a
    <a href="#feature_snomasks">3.3. szekcóban</a>!  <font color=blue>[egyéni]</font></p>
+<p>Az <b>oper::modes</b> direktívával elõre beállíthatod, hogy az operátor milyen módokat kapjon opereléskor.
+  <font color=blue>[egyéni]</font></p>
 <p>Az <b>oper::maxlogins</b> direktívával lekorlátozhatod az egyidejû oper bejelentkezések számát errõl
    a login névrõl, például ha 1-re állítod, csak 1 személy lehet operátor ezzel a blokkal egyszerre.
    <font color=blue>[egyéni]</font></p>
