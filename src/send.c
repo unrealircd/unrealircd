@@ -1872,12 +1872,20 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 					    (IsToken(cptr) ? TOK_MODE :
 					    MSG_MODE), nick, umodes);
 				}
-				if (strcmp(virthost, "*"))
+				if (IsHidden(sptr) && (sptr->umodes & UMODE_SETHOST))
 				{
 					sendto_one(cptr, ":%s %s %s",
 					    nick,
 					    (IsToken(cptr) ? TOK_SETHOST :
 					    MSG_SETHOST), virthost);
+				}
+				else if (SupportVHP(cptr))
+				{
+					sendto_one(cptr, ":%s %s %s",
+					    nick,
+					    (IsToken(cptr) ? TOK_SETHOST :
+					     MSG_SETHOST), (IsHidden(sptr) ? virthost :
+					     realhost));
 				}
 			}
 		}

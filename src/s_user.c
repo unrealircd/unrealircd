@@ -1013,7 +1013,6 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 #endif
 		(void)m_lusers(sptr, sptr, 1, parv);
 		short_motd(sptr);
-//		(void)m_motd(sptr, sptr, 1, parv);
 #ifdef EXPERIMENTAL
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** \2NOTE:\2 This server (%s) is running experimental IRC server software. If you find any bugs or problems, please mail unreal-dev@lists.sourceforge.net about it",
@@ -1099,8 +1098,9 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 	    sptr->hopcount + 1, sptr->lastnick, user->username, user->realhost,
 	    user->server, user->servicestamp, sptr->info,
 	    (!buf || *buf == '\0' ? "+" : buf),
-	    ((IsHidden(sptr)
-	    && (sptr->umodes & UMODE_SETHOST)) ? sptr->user->virthost : "*"));
+/*	    ((IsHidden(sptr)
+	    && (sptr->umodes & UMODE_SETHOST)) ? sptr->user->virthost : "*"));*/
+	    sptr->user->virthost);
 
 	/* Send password from sptr->passwd to NickServ for identification,
 	 * if passwd given and if NickServ is online.
@@ -2377,8 +2377,9 @@ CMD_FUNC(m_umode)
 		}
 		sptr->user->virthost = (char *)make_virthost(sptr->user->realhost,
 		    sptr->user->virthost, 1);
-		sendto_serv_butone_token_opt(cptr, OPT_VHP, sptr->name,
-			MSG_SETHOST, TOK_SETHOST, "%s", sptr->user->virthost);
+		if (!dontspread)
+			sendto_serv_butone_token_opt(cptr, OPT_VHP, sptr->name,
+				MSG_SETHOST, TOK_SETHOST, "%s", sptr->user->virthost);
 		if (UHOST_ALLOWED == UHALLOW_REJOIN)
 		{
 			/* LOL, this is ugly ;) */

@@ -2900,3 +2900,5 @@ seen. gmtime warning still there
   but it didn't work either.
 - Fixed a bug in the unreal_checkregex() routine which could cause a crash
   if you added an invalid regex. Reported by Tony (#0001556).
+- Fixed the problem with services and SETHOST for unknown user errors
+  (#0000893) reported by vorte[x]
