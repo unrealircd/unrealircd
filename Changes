@@ -1043,3 +1043,4 @@ seen. gmtime warning still there
 - Fixed a freeze bug in m_htm (pthreads now uses recursive mutexes)
 - Reversed freeze bug fix, _NP means NON PORTABLE
 - Fixed a freeze problem with conf_deny_link
+- Fixed a bug under WinXP in the editor

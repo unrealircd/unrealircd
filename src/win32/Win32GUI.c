@@ -1016,6 +1016,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 					CheckDlgButton(hDlg, IDC_UNDERLINE, BST_UNCHECKED);
 				return (TRUE);
 			}
+			return (TRUE);
 		case WM_DRAWITEM: {
 			LPDRAWITEMSTRUCT lpdis = (LPDRAWITEMSTRUCT)lParam;
 			if (wParam == IDC_COLOR) {
