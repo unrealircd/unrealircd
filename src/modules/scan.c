@@ -419,9 +419,14 @@ DLLFUNC int m_scan(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	return 0;
 }
 
-DLLFUNC int     h_config_set_blackhole_rehash(void) {
+DLLFUNC int     h_config_set_blackhole_rehash(void)
+{
 	if (blackhole_conf.ip)
 		MyFree(blackhole_conf.ip);
+	if (blackhole_conf.outip)
+		MyFree(blackhole_conf.outip);
+	blackhole_conf.ip = NULL;
+	blackhole_conf.outip = NULL;
 }
 
 DLLFUNC int	h_config_set_blackhole(void)
@@ -440,6 +445,10 @@ DLLFUNC int	h_config_set_blackhole(void)
 			{
 				config_error("%s:%i: set::blackhole - missing parameter");
 				goto explodeblackhole;
+			}
+			if (sets->ce_entries)
+			{
+				blackhole_conf.outip = strdup(sets->ce_entries->ce_varname);
 			}
 			ipport_seperate(sets->ce_vardata, &ip, &port);
 			if (!ip || !*ip)

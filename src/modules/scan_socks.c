@@ -165,9 +165,10 @@ void	scan_socks_scan(HStruct *h)
 	sin.SIN_PORT = htons(SCAN_ON_PORT);
 	sin.SIN_FAMILY = AFINET;
 	/* We do this blocking. */
-	if (connect(fd, (struct sockaddr *)&sin,
-		sizeof(sin)) == -1)
+	if ((retval = connect(fd, (struct sockaddr *)&sin,
+		sizeof(sin))) == -1)
 	{
+		printf("%i", ERRNO);
 		/* we have no socks server! */
 		CLOSE_SOCK(fd);	
 		goto exituniverse;
@@ -185,7 +186,7 @@ void	scan_socks_scan(HStruct *h)
 		goto exituniverse;
 	}
 				
-	sin.SIN_ADDR.S_ADDR = inet_addr(blackh_conf->ip);
+	sin.SIN_ADDR.S_ADDR = inet_addr(blackh_conf->outip ? blackh_conf->outip : blackh_conf->ip);
 	theip = htonl(sin.SIN_ADDR.S_ADDR);
 	bzero(socksbuf, sizeof(socksbuf));
 	socksbuf[0] = 4;

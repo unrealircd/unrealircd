@@ -27,6 +27,7 @@ typedef struct _conf_blackhole ConfigItem_blackhole;
 struct _conf_blackhole
 {
 	char	*ip;
+	char	*outip;
 	short	port;
 };
 

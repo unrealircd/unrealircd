@@ -1065,6 +1065,9 @@ int  InitwIRCD(argc, argv)
 	chmod(CPATH,DEFAULT_PERMISSIONS);
 #endif
 	init_dynconf();
+#ifdef STATIC_LINKING	
+	l_commands_init();
+#endif
 	init_conf2(configfile);
 	validate_configuration();
 	booted = TRUE;
@@ -1115,9 +1118,6 @@ int  InitwIRCD(argc, argv)
 	conf_listen->options |= LISTENER_BOUND;
 	me.umodes = conf_listen->options;
 	run_configuration();
-#ifdef STATIC_LINKING	
-	l_commands_init();
-#endif
 	botmotd = (aMotd *) read_file(BPATH, &botmotd);
 	rules = (aMotd *) read_rules(RPATH);
 	opermotd = (aMotd *) read_file(OPATH, &opermotd);
