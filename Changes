@@ -2279,3 +2279,4 @@ seen. gmtime warning still there
 - Fixed a problem in PPC detection
 - Will now error at too large cloak keys (2147483647 and greater) because it's dangerous
   and could cause cloak key differences (ex: mixed ia32&ia64 networks).
+- Some minor text/documentation fixes.

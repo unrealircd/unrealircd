@@ -21,7 +21,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 Beta17<br>
-  <b>Last doc update:</b> 2003-07-15</div>
+  <b>Last doc update:</b> 2003-07-28</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Luke / McSkaf / Syzop<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -728,7 +728,7 @@ listen *:6601 {
   <tr> 
     <td><div align="center">v</div></td>
     <td><div align="center">can_override</div></td>
-    <td>Can use OperOverride</td>
+    <td>Can use <a href="#operoverride">OperOverride</a></td>
   </tr>
 </table>
 <p>Certin flags give you other flags by default:</p>
@@ -756,10 +756,10 @@ listen *:6601 {
   </tr>
   <tr> 
     <td>can_globops</td>
-    <td>can_glopops</td>
-    <td>can_glopops</td>
-    <td>can_glopops</td>
-    <td>can_glopops</td>
+    <td>can_globops</td>
+    <td>can_globops</td>
+    <td>can_globops</td>
+    <td>can_globops</td>
   </tr>
   <tr> 
     <td>can_wallops</td>
@@ -847,6 +847,11 @@ oper bobsmith {
 	snomask frebWqFv;
 };
 </pre></p>
+<a name="operoverride"><b>Some little info about OperOverride:</b><br>
+OperOverride are things like: joining a +ikl channel and going trough bans (you need to /invite yourself first however), 
+op'ing yourself in a channel, etc.<br>
+The can_override operflag was added as an attempt to stop oper abuse.
+No oper is able to override by default, you would have to give them the can_override flag explicitly.
 <p> </p></div>
 <p><font class="block_section">4.8 - </font><font class="block_name">DRpass Block</font>
    <font class="block_recommended">RECOMMENDED</font> <font class="block_old">(Previously known as the X:Line)</font><a name="drpassblock"></a><div class="desc">
@@ -1765,10 +1770,15 @@ set {
 <p><b><font size="+2">5 &#8211; Additional Files<a name="addtlfiles"></a>
   </font></b></p><div class="desc">
   In addition to the configuration files, Unreal has a few other files, such as MOTD, OperMOTD, 
-  BotMOTD, and Rules. Listed below are the names of these files and their uses.
+  BotMOTD, and Rules. Listed below are the names of these files and their uses.<br>
+  Note that the motd files (all types) and rules files can also be specified in a tld block, 
+  these are just the files used by default (and for remote MOTD/RULES's).<p />
 <table width="83%" border="1">
   <tr>
-    <td>ircd.motd</td><td>Displayed when a /motd is executed and when a user connects</td> 
+    <td>ircd.motd</td><td>Displayed when a /motd is executed and (if ircd.smotd is not present) when a user connects</td> 
+  </tr>
+  <tr>
+    <td>ircd.smotd</td><td>Displayed on connect only (short MOTD)</td>
   </tr>
   <tr>
     <td>ircd.rules</td><td>Displayed when a /rules is executed</td>
