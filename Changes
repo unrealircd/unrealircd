@@ -2967,3 +2967,4 @@ seen. gmtime warning still there
 - Added some extra debugging for tkl update notice...
 - Fixed a problem in 'tkl update': lowest expire time won instead of
   highest. Reported by Malcolm.
+- Fixed a tkl update problem with sqlines

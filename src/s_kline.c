@@ -918,6 +918,14 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  {
 		  		/* SYZTAG: TODO: check for tklreason/tklduration differnces */
 				/* do they differ in ANY way? */
+				if (type & TKL_NICK)
+				{
+					/* for sqline: usermask = H overrides */
+
+					if (*parv[3] == 'H')
+						*tk->usermask = 'H';
+				}
+
 				if ((setat_1 != tk->set_at) || (expiry_1 != tk->expire_at) ||
 				    strcmp(tk->reason, reason) || strcmp(tk->setby, parv[5]))
 				{
@@ -926,7 +934,6 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			 		 * expire_at: longest wins
 			 		 * reason: highest strcmp wins
 			 		 * setby: highest strcmp wins
-					 * for sqline: usermask = H overrides *
 			 		 * We broadcast the result of this back to all servers except
 			 		 * cptr's direction, because cptr will do the same thing and
 			 		 * send it back to his servers (except us)... no need for a
@@ -949,9 +956,6 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			 		}
 					if (tk->type & TKL_NICK)
 					{
-						if (*parv[3] == 'H')
-							*tk->usermask = 'H';
-
 						if (!(*tk->usermask) == 'H')
 					 		sendto_snomask(SNO_JUNK, "tkl update for %s/reason='%s'/by=%s/set=%ld/expire=%ld [causedby: %s]",
 					 			tk->hostmask, tk->reason, tk->setby, tk->set_at, tk->expire_at, sptr->name);
