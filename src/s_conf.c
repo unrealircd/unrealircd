@@ -532,8 +532,10 @@ tolower(*(text+1)) == 'n') || *text == '1' || tolower(*text) == 't') {
 						break;
 				}
 				ret += atoi(sz+1)*mfactor;
-				if (*text == '\0')
+				if (*text == '\0') {
+					text++;
 					break;
+				}
 			}
 		}
 		mfactor = 1;

@@ -1795,3 +1795,4 @@ seen. gmtime warning still there
 - Fixed /shun: ADMIN and PONG allowed if shunned (as documented) and removing a shun now also
   affects connected clients immediately. (#0000593)
 - Fixed SVSMODE bug in handling of non-qaohvbe modes. (#0000631)
+- Fixed time calculation bug. (#0000634)
