@@ -347,3 +347,4 @@
 - Added a /userip command that works just like ircu's.
 - Fixed a typo in the *nix Makefile reported by Troco (#0002059)
 - Added french docs, translated by Kolibot & Babass.
+- Changed some stuff to use the release version of MS libraries.
