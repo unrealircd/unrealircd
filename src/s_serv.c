@@ -2887,11 +2887,12 @@ static void reread_motdsandrules()
 ** ugly code but it seems to work :) -- codemastr
 ** added -all and fixed up a few lines -- niquil (niquil@programmer.net)
 ** fixed remote rehashing, but it's getting a bit weird code again -- Syzop
+** removed '-all' code, this is now considered as '/rehash', this is ok
+** since we rehash everything with simple '/rehash' now. Syzop/20040205
 */
 CMD_FUNC(m_rehash)
 {
 	int  x;
-
 
 	if (MyClient(sptr) && !OPCanRehash(sptr))
 	{
@@ -2947,7 +2948,7 @@ CMD_FUNC(m_rehash)
 		parv[1] = parv[2];
 	}
 
-	if (!BadPtr(parv[1]))
+	if (!BadPtr(parv[1]) && strcmp(parv[1], "-all"))
 	{
 
 		if (!IsAdmin(sptr) && !IsCoAdmin(sptr))
@@ -2958,18 +2959,6 @@ CMD_FUNC(m_rehash)
 
 		if (*parv[1] == '-')
 		{
-			if (!_match("-all", parv[1]))
-			{
-				sendto_ops("%sRehashing everything on the request of %s",
-					cptr != sptr ? "Remotely " : "",sptr->name);
-				if (cptr != sptr)
-					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing everything", me.name, sptr->name);
-				opermotd = (aMotd *) read_file(OPATH, &opermotd);
-				botmotd = (aMotd *) read_file(BPATH, &botmotd);
-				rehash_motdrules();
-				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
-				return 0;
-			}
 			if (!strnicmp("-gar", parv[1], 4))
 			{
 				loop.do_garbage_collect = 1;

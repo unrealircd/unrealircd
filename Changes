@@ -2807,3 +2807,6 @@ seen. gmtime warning still there
 - Added can_dccdeny operflag so you can give your local/global opers access to this too.
   Co-admin, admin, sadmin and netadmin get it by default. Suggested in #0001247.
 - Updated operflag docs.
+- '/rehash -all' had bugs and is now considered depricated, just use '/rehash' instead.
+  On '/rehash' we reload everything already so the '-all' option was useless anyway.
+  Reported by fez (#0001516).
