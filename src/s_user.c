@@ -964,11 +964,13 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 			    "Your GECOS (real name) is banned from this server");
 		}
 		tkl_check_expire(NULL);
+		/* Check G/Z lines before shuns -- kill before quite -- codemastr */
 		if ((xx = find_tkline_match(sptr, 0)) < 0)
 		{
 			ircstp->is_ref++;
 			return xx;
 		}
+		find_shun(sptr);
 		RunHookReturn(HOOKTYPE_PRE_LOCAL_CONNECT, sptr, >0);
 	}
 	else

@@ -515,6 +515,7 @@ extern int  channel_canjoin(aClient *sptr, char *name);
 extern char *collapse(char *pattern);
 extern void send_list(aClient *cptr, int numsend);
 extern int  find_tkline_match_zap(aClient *cptr);
+extern int  find_shun(aClient *cptr);
 extern void tkl_synch(aClient *sptr);
 extern void dcc_sync(aClient *sptr);
 extern void report_flines(aClient *sptr);

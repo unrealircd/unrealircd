@@ -503,6 +503,7 @@ extern TS check_pings(TS currenttime)
 				 */
 				continue;
 			}
+			find_shun(cptr);
 			if (!killflag && IsPerson(cptr)) {
 				/*
 				 * If it's a user, we check for CONF_BAN_USER

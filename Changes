@@ -2013,3 +2013,4 @@ seen. gmtime warning still there
 - Fixed a typo in the docs (#0000867) reported by tc
 - Fixed a fast badword replace crash (#0000834) reported by orga
 - Fixed a ban version {} bug with NOSPOOF (#0000872) reported by poisoner
+- Made gline/zline/kline take precedence over a shun in TKL (#0000870) reported by KnuX`
