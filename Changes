@@ -1608,3 +1608,5 @@ seen. gmtime warning still there
 - Fixed crash bug in m_tkl_line found by Keeper
 - Fixed another m_tkl_line bug found by Keeper
 - Fixed an samode bug reported by mcskaf (#0000403)
+- Added the ability to /lusers server.name to get the lusers reply of another server
+  suggested by tony0man (#0000373)

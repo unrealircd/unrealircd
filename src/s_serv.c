@@ -2667,12 +2667,13 @@ CMD_FUNC(m_help)
 
 /*
  * parv[0] = sender
- * parv[1] = host/server mask.
- * parv[2] = server to query
+ * parv[1] = server to query
  */
 CMD_FUNC(m_lusers)
 {
-
+	if (hunt_server_token(cptr, sptr, MSG_LUSERS, TOK_LUSERS, ":%s", 1, parc,
+	    parv) != HUNTED_ISME)
+		return 0;
 	/* Just to correct results ---Stskeeps */
 	if (IRCstats.clients > IRCstats.global_max)
 		IRCstats.global_max = IRCstats.clients;
