@@ -1334,8 +1334,7 @@ static const char *module_error_str[] = {
 
 const char *ModuleGetErrorStr(Module *module)
 {
-	if (module->errorcode < 0 
-	    || module->errorcode >= sizeof(module_error_str)/sizeof(module_error_str[0]))
+	if (module->errorcode >= sizeof(module_error_str)/sizeof(module_error_str[0]))
 		return NULL;
 
 	return module_error_str[module->errorcode];

@@ -328,3 +328,6 @@
     testing.
   - Added an M_ANNOUNCE flag for CommandAdd to add the command to the CMDS token, may need
     testing.
+- Fixed some compile warnings.
+- Fixed a bug where bans were not matched against IPs in all circumstances (#0002045) 
+  reported by heper.

@@ -582,9 +582,10 @@ Ban *is_banned(aClient *sptr, aChannel *chptr, int type)
 
 	if (MyConnect(sptr)) {
 		mine = 1;
-		s = make_nick_user_host(sptr->name, sptr->user->username, sptr->sockhost);
+		s = make_nick_user_host(sptr->name, sptr->user->username, GetIP(sptr));
 		strlcpy(nuip, s, sizeof nuip);
 		ban_ip = nuip;
+sendto_realops("%s", nuip);
 	}
 
 	if (sptr->user->virthost)

@@ -473,6 +473,7 @@ void VersionflagDel(Versionflag *vflag, Module *module);
 Isupport *IsupportAdd(Module *module, const char *token, const char *value);
 void IsupportSetValue(Isupport *isupport, const char *value);
 void IsupportDel(Isupport *isupport);
+Isupport *IsupportFind(const char *token);
 
 #define add_Hook(hooktype, func) HookAddMain(NULL, hooktype, func, NULL, NULL)
 #define HookAdd(hooktype, func) HookAddMain(NULL, hooktype, func, NULL, NULL)
