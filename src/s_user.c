@@ -1611,8 +1611,12 @@ int  m_nick(cptr, sptr, parc, parv)
 		 * - originally by taz, modified by Wizzu
 		 */
 		if ((parc > 2) && (strlen(parv[2]) < sizeof(sptr->passwd)))
+		{
+			if (sptr->passwd)
+				MyFree(sptr->passwd);
+			sptr->passwd = MyMalloc(strlen(parv[2]) + 1);
 			(void)strcpy(sptr->passwd, parv[2]);
-
+		}
 		/* This had to be copied here to avoid problems.. */
 		(void)strcpy(sptr->name, nick);
 		if (sptr->user && IsNotSpoof(sptr))

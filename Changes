@@ -627,3 +627,4 @@
 - Possible fixed the SJOIN kick bug (mode +Q), servers can now always kick
 - Added NEW DNS resolver (Win32 Only atm)  ... use by defining NEWDNS
 - FIXED "BUG" caused by NEWDNS *shrug*
+- Fixed the passwd NICK problem
