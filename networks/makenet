@@ -21,7 +21,6 @@ ADMIN_HOST="admin.mynet.org"
 LOCOP_HOST="locop.mynet.org"
 CSOP_HOST="csop.mynet.org"
 NETADMIN_HOST="netadmin.mynet.org"
-#TECHADMIN_HOST="techadmin.mynet.org"
 COADMIN_HOST="coadmin.mynet.org"
 HIDDEN_HOST="hide"
 NETDOMAIN="mynet.org"
@@ -156,14 +155,6 @@ if [ ! -z $cc ]; then
 	COADMIN_HOST="$cc"
 fi
 
-#echo ""
-#echo "What is the virtual host techadmins will get when they oper up?"
-#echo $n "[$TECHADMIN_HOST] -> $c"
-#read cc
-#if [ ! -z $cc ]; then
-#	TECHADMIN_HOST="$cc"
-#fi
-
 echo ""
 echo "What is the virtual host netadmins will get when they oper up?"
 echo $n "[$NETADMIN_HOST] -> $c"
@@ -237,7 +228,6 @@ set {
 		coadmin		"$COADMIN_HOST";
 		admin		"$ADMIN_HOST";
 		servicesadmin	"$CSOP_HOST";
-		techadmin	"$TECHADMIN_HOST";
 		netadmin	"$NETADMIN_HOST";
 __EOF__
 if [ "$INAH" = "1" ]; then
@@ -250,42 +240,6 @@ echo "	};" >> $FILE
 echo "};" >> $FILE
 __EOF__
 
-echo ""
-echo "Would you like to submit the your network file to be included with future releases of unreal?"
-echo $n "[$SUBMIT] -> $c"
-read cc
-if [ ! -z $cc ]; then
-	SUBMIT="$cc"
-fi
-case "$SUBMIT" in
-	[Nn]*)
-		echo ""
-		echo "" >> ../unrealircd.conf
-		echo "// Added by makenet $DATE" >> ../unrealircd.conf
-		echo "include \"networks/$FILE\";" >> ../unrealircd.conf
-		echo "All done. I have added \"include \"networks/$FILE\ to your unrealircd.conf"
-		echo "You might want to edit it if you have done makenet before"
-		echo "Thank you for choosing UnrealIRCd"
-		exit
-		;;
-	*)
-		;;
-	esac
-
-if [ "$NETWORK" == "My IRC Network" ] ; then
-echo ""
-echo "You may not submit a network file that uses default values"
-exit
-fi
-
-cat |sendmail -t << __EOF__&
-To: unreal-networks@lists.sourceforge.net
-From: $EMAIL
-Subject: Network file submission for $NETWORK
-
-`cat $FILE`
-.
-__EOF__
 echo ""
 echo "" >> ../unrealircd.conf
 echo "// Added by makenet $DATE" >> ../unrealircd.conf

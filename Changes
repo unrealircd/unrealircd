@@ -1692,3 +1692,5 @@ seen. gmtime warning still there
   occurred.
 - Cleaned up some module code, also removed /module load|unload (just use /rehash)
 - Removed makeconf
+- Fixed errors in doc/example.conf and makenet
+
