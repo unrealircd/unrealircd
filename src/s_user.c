@@ -2513,7 +2513,7 @@ static void do_who(sptr, acptr, repchan)
 #endif
 	else
 #ifdef ENABLE_INVISOPER
-		if (channelwho && IsHiding(acptr) && IsNetAdmin(sptr) ||
+		if (channelwho && IsHiding(acptr) ||
                     IsInvisible(acptr) && !IsMember(sptr,repchan) ||
                     IsAuditorium(repchan) && !is_chan_op(acptr,repchan) ||
                     !ShowChannel(sptr,repchan))
