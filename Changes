@@ -489,4 +489,6 @@
 - added llthangel to credits
 - Changed channel.c so when you kick someone as halfop it doesn't show as an
   OperKick (unless you kick an op) (reported by ^Fanta, patch by llthangel)
+(rc2)
 - Fixed SVS2MODE bug with illegal modes
+- Fixed /notice @%+ bug, where it didnt work at all
