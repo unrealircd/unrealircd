@@ -1,18 +1,19 @@
 Welcome to the UnrealIRCd configuration program. This program
-will help you to compile your IRC server, and ask you questions
-regarding the setup of it, during the process.
+will help you compile your IRC server by asking you questions
+regarding your system and how you want the ircd to function.
 
-If you need help to set the IRCd up, mail
-supporters@lists.unrealircd.org or ask at IRC:
+If you need help setting up your server, mail
+supporters@lists.unrealircd.org or ask on IRC:
 /server irc.ircsystems.net, /join #unreal-support
 
-For any sake, read Unreal.nfo and read doc/faq before asking questions
+Regardless, please read Unreal.nfo first along with all documenation
+and FAQ's in doc/. If you do not do this, we will NOT help you!
  
-NOTE: If the code is changed in any way, or the version string is changed, 
-      we do _NOT_ support the product, except if you got explicit permission
-      from one of the UnrealIRCd coders. If it fails and you messed with it, 
-      you can't blame noone but yourself. Also, non-official UnrealIRCd/32 
-      builds (if it doesn't say "geniune" in the display) are _NOT_
-      supported.
+If the code is changed in any way, or the version string is modified,
+we do _NOT_ support the product. (Unless of course you got explicit
+permission from one of the UnrealIRCd coders.)
 
--Stskeeps (Head coder of UnrealIRCd)
+Finally, unofficial UnrealIRCd/32 builds (if it doesn't say "geniune"
+in the display) are _NOT_ supported.
+
+-Luke (maintainer of UnrealIRCd 3.1.x)

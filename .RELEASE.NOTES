@@ -14,4 +14,6 @@ Unreal3.1.4-Meadows Release Notes
   as the cloaking routine was unable to deal with IPv6 format addresses. This is
   also corrected in this version
 
-* Read Unreal.nfo for any sake AND THE DOCS IN doc/.
+* The rest of the changes can be found (obviously) in the Changes file.
+
+* Finally, read Unreal.nfo as usual AND THE DOCS in doc/.

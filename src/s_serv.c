@@ -1673,13 +1673,13 @@ void m_info_send(sptr)
 	sendto_one(sptr, ":%s %d %s :| Brought to you by the following people:",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * Stskeeps     <stskeeps@tspre.org>",
+	sendto_one(sptr, ":%s %d %s :| * Stskeeps     <stskeeps@unrealircd.com>",
 	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * codemastr    <codemastr@tspre.org>",
+	sendto_one(sptr, ":%s %d %s :| * codemastr    <codemastr@unrealircd.com>",
 	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * DrBin        <drbin@tspre.org>",
+	sendto_one(sptr, ":%s %d %s :| * DrBin        <drbin@unrealircd.com>",
 	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * Luke         <luke@unrealircd.org>",
+	sendto_one(sptr, ":%s %d %s :| * Luke         <luke@unrealircd.com>",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| Credits - Type /Credits",
@@ -1687,11 +1687,11 @@ void m_info_send(sptr)
 	sendto_one(sptr, ":%s %d %s :| DALnet Credits - Type /DalInfo",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| This is an UnrealIRCD-style server",
+	sendto_one(sptr, ":%s %d %s :| This is an UnrealIRCd-style server",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| If you find any bugs, please mail",
 	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :|  unreal-dev@lists.sourceforge.net",
+	sendto_one(sptr, ":%s %d %s :|  coders@lists.unrealircd.org",
 	    me.name, RPL_INFO, sptr->name);
 
 	sendto_one(sptr,

@@ -300,3 +300,9 @@ Additionally, I think it's a useful command
 for anyone to have.
 --Luke
 ===================================
+
+Revamped operoverride stuff so it's consistent
+and somewhat sane. (also made NetAdmin.Chat
+NetAdminChat to keep with other forms)
+--Luke
+===================================

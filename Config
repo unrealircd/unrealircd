@@ -2093,6 +2093,6 @@ cat << __EOF__
 | * Stskeeps  stskeeps@unrealircd.com                                 |
 | * codemastr codemastr@unrealircd.com                                |
 | * DrBin     drbin@unrealircd.com                                    |
-| * Luke      luke@unrealircd.org                                     |
+| * Luke      luke@unrealircd.com                                     |
 |_____________________________________________________________________|
 __EOF__

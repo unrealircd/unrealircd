@@ -73,6 +73,7 @@ extern ircstats IRCstats;
 extern int lifesux;
 #endif
 
+void over_notice(aClient *, aClient *, aChannel *, char *);
 static void add_invite PROTO((aClient *, aChannel *));
 static int add_banid PROTO((aClient *, aChannel *, char *));
 static int can_join PROTO((aClient *, aClient *, aChannel *, char *, char *,
@@ -1313,10 +1314,11 @@ void do_mode(chptr, cptr, sptr, parc, parv, sendts, samode)
 #ifndef NO_OPEROVERRIDE
 	if (opermode == 1)
 	{
-		if (MyClient(sptr) && mode_buf[1])
+		if (mode_buf[1])
 			sendto_umode(UMODE_EYES,
-			    "*** OperMode [IRCop: %s] - [Channel: %s] - [Mode: %s %s]",
-			    sptr->name, chptr->chname, mode_buf, parabuf);
+			    "*** OperOverride -- %s (%s@%s) MODE %s %s %s",
+			    sptr->name, sptr->user->username, sptr->user->realhost,
+			    chptr->chname, mode_buf, parabuf);
 		sendts = 0;
 	}
 #endif
@@ -2263,9 +2265,6 @@ static int can_join(cptr, sptr, chptr, key, link, parv)
 		/* We check this later return (ERR_CHANNELISFULL); */
 	}
 
-/*    if ((chptr->mode.mode & MODE_OPERONLY) && IsOper(sptr)) {
-    	goto admok;
-    } */
 	if ((chptr->mode.mode & MODE_ONLYSECURE) &&
 		!(sptr->umodes & UMODE_SECURE))
 	{
@@ -2294,14 +2293,6 @@ static int can_join(cptr, sptr, chptr, key, link, parv)
 	    && (chptr->mode.mode & MODE_OPERONLY)))
 		return (ERR_BANNEDFROMCHAN);	/* banned as an ircop at a +O cannot join */
 
-/*	if (ib == 1)
-		if (IsOper(sptr))
-			return 0;
-	else
-		if (ib == 2)
-			if (IsNetAdmin(sptr))
-				return 0;
-*/
 	switch (ib)
 	{
 	  case 1:
@@ -2343,10 +2334,36 @@ static int can_join(cptr, sptr, chptr, key, link, parv)
 		return (ERR_BANNEDFROMCHAN);
 
 
-
 	return 0;
 }
 
+/* Sends notices to +e's about opers possibly abusing priv's
+ * By NiQuiL (niquil@programmer.net)
+ * suggestion by -ins4ne-
+ */
+
+void over_notice(aClient *cptr, aClient *sptr, aChannel *chptr, char *key)
+{
+        Link *lp;
+
+        for (lp = sptr->user->invited; lp; lp = lp->next)
+         if (lp->value.chptr == chptr)
+          break;
+
+        if (is_banned(cptr, sptr, chptr) && IsOper(sptr) && !IsULine(sptr))
+        {
+                sendto_umode(UMODE_EYES, "*** OperOverride -- %s (%s@%s) BANWALK %s",sptr->name,
+				sptr->user->username, sptr->user->realhost, chptr->chname);
+        } else if (IsOper(sptr) && !IsULine(sptr) && *chptr->mode.key && (BadPtr(key) ||
+            mycmp(chptr->mode.key, key))) {
+                sendto_umode(UMODE_EYES, "*** OperOverride -- %s (%s@%s) KEYWALK %s",sptr->name,
+				sptr->user->username, sptr->user->realhost, chptr->chname);
+        } else if (IsOper(sptr) && !IsULine(sptr) && (chptr->mode.mode & MODE_INVITEONLY) && !lp) {
+                sendto_umode(UMODE_EYES, "*** OperOverride -- %s (%s@%s) INVITEWALK %s",sptr->name,
+				sptr->user->username, sptr->user->realhost, chptr->chname);
+        }
+
+}
 
 /*
 ** Remove bells and commas from channel name
@@ -2942,15 +2959,10 @@ int  m_join(cptr, sptr, parc, parv)
 			continue;
 
 		}
-		if (is_banned(cptr, sptr, chptr) && IsOper(sptr))
-		{
-			sendto_umode(UMODE_EYES,
-			    "*** Banwalk [IRCop: %s] [Channel: %s]",
-			    sptr->name, chptr->chname);
-		}
 		/*
 		   **  Complete user entry to the new channel (if any)
 		 */
+		(void)over_notice(cptr, sptr, chptr, key);
 		add_user_to_channel(chptr, sptr, flags);
 		/*
 		   ** notify all other users on the new channel
@@ -3335,8 +3347,9 @@ int  m_kick(cptr, sptr, parc, parv)
 #ifndef NO_OPEROVERRIDE
 				if ((IsOper(sptr) && !IsServices(who)) || IsNetAdmin(sptr))
 				{
-					sendto_umode(UMODE_EYES, "*** OperKick [%s @ %s -> %s (%s)]",
-						     sptr->name, chptr->chname, who->name, comment);
+					sendto_umode(UMODE_EYES, "*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
+						     sptr->name, sptr->user->username, sptr->user->realhost,
+						     chptr->chname, who->name, comment);
 					goto attack;
 				}
 #endif
@@ -3443,7 +3456,12 @@ int  m_topic(cptr, sptr, parc, parv)
 	TS   ttime = 0;
 	int  topiClen = 0;
 	int  nicKlen = 0;
-
+	char *smo[3] = {
+	       me.name,
+	       "e",
+	       NULL
+	};	       
+	
 	if (parc < 2)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
@@ -3556,8 +3574,9 @@ int  m_topic(cptr, sptr, parc, parv)
 				return 0;
 #endif
 				sendto_umode(UMODE_EYES,
-				    "*** OperTopic [IRCop: %s] - [Channel: %s] - [Topic: %s]",
-				    sptr->name, chptr->chname, topic);
+				    "*** OperOverride -- %s (%s@%s) TOPIC %s \'%s\'",
+				    sptr->name, sptr->user->username, sptr->user->realhost,
+				    chptr->chname, topic);
 			}
 			/* setting a topic */
 			topiClen = strlen(topic);

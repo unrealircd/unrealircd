@@ -69,9 +69,9 @@ char *infotext[] =
 char *unrealcredits[] =
 {
 	"-=-=-=-=-=-=-=-=-=-= [ " IRCDTOTALVERSION " Credits ] -=-=-=-=-",
-	"The people on this list is people who have helped up through",
+	"The people on this list are people who have helped us through",
 	"the development of UnrealIRCd. The Unreal Team would like to thank",
-	"those people by listing them here:",
+	"these people by listing them here:",
 	"-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=",
 	"              \2\37The UnrealIRCd Team would like to thank:\2\37",
 	"Nutcais (Phil Hawkins)",

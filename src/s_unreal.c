@@ -712,7 +712,7 @@ int  m_nachat(cptr, sptr, parc, parv)
 	sendto_serv_butone_token(IsServer(cptr) ? cptr : NULL, parv[0],
 	   MSG_NACHAT, TOK_NACHAT, ":%s", message);
 #ifdef ADMINCHAT
-	sendto_umode(UMODE_NETADMIN, "*** NetAdmin.Chat -- from %s: %s",
+	sendto_umode(UMODE_NETADMIN, "*** NetAdminChat -- from %s: %s",
 	    parv[0], message);
 #endif
 	return 0;
