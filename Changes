@@ -1810,3 +1810,4 @@ seen. gmtime warning still there
   etc fails with (in stunnel log) "SSL_connect: Peer suddenly disconnected". This happends with
   OpenSSL 0.9.7.
 - Fixed some formatting issues.
+- Cleanup of m_userhost

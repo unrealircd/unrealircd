@@ -2072,10 +2072,8 @@ CMD_FUNC(m_userhost)
 		cn = p;
 	}
 
-	ircsprintf(buf, "%s%s %s %s %s %s",
-	    rpl_str(RPL_USERHOST),
+	sendto_one(sptr, rpl_str(RPL_USERHOST), me.name, parv[0],
 	    response[0], response[1], response[2], response[3], response[4]);
-	sendto_one(sptr, "%s", buf, me.name, parv[0]);
 
 	return 0;
 }

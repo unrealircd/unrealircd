@@ -335,7 +335,7 @@ static char *replies[] = {
 /* 299 */ NULL,
 /* 300 */ NULL, /* Used */
 /* 301    RPL_AWAY */ ":%s 301 %s %s :%s",
-/* 302    RPL_USERHOST */ ":%s 302 %s :",
+/* 302    RPL_USERHOST */ ":%s 302 %s :%s %s %s %s %s",
 /* 303    RPL_ISON */ ":%s 303 %s :",
 /* 304 */ NULL, /* Used */
 /* 305    RPL_UNAWAY */ ":%s 305 %s :You are no longer marked as being away",
