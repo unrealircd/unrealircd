@@ -1,3 +1,42 @@
 
 Unreal3.2-Selene (BETA1) RELEASE NOTES
 ======================================
+    
+     I M P O R T A N T   R E A D I N G
+
+
+* Unreal3.2-Selene is a lot different than Unreal3.1.1. Forget all you have
+  learnt about setting up Unreal3.1.1 - this is a lot different. We have got
+  a new configuration format that intregrates all the former config files,
+  ircd.conf, vhost.conf, chrestrict.conf, unrealircd.conf, into to one new
+  unrealircd.conf (what the ircd.conf is called now). See doc/ for more
+  information on the configuration format
+
+* We have introduced a new cloaking algoritm (+x), which makes it
+  incompatible with Unreal3.1.1 - these can however still link, but the
+  hostname will look different. This is made of three big numbers,
+  configured in the config file - and these MUST be the same on all servers
+  on the network. Keep these numbers secret, and the cloaking algoritm is
+  uncrackable (within 55 years, that is)
+
+* We use autoconf to help with compiliation, and this should make us able
+  to a lot more platform (we have even ported to BeOS). 
+
+* We require a pthreads library for the SOCKS scan now - and this is now
+  done in the background (no more waiting!). 
+
+* The IRCd is now modularized, and you load modules with the loadmodule
+  command. You will most likely want to add these lines:
+ 
+  loadmodule "src/modules/commands.so";
+  loadmodule "src/modules/scan.so";
+  loadmodule "src/modules/scan_socks.so";
+   
+  If you would like to code a module, doc/ will contain a module guide,
+  and we got an example module in src/modules/m_dummy.c.
+
+* We got limited IPv6 support, and there are some minor bugs in it. 
+
+* THIS IS A BETA VERSION. THINGS MAY NOT WORK. REPORT ANY BUGS TO THESE 
+  ADDRESSES:
+   * coders@lists.unrealircd.org and bugs@lists.unrealircd.org
