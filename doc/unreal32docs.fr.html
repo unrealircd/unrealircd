@@ -27,7 +27,7 @@ French |
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com/">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2.2-CVS</font><br>
-  <b>Derni&egrave;re mise &agrave; jour de la documentation:</b> 2005-02-13</div>
+  <b>Derni&egrave;re mise &agrave; jour de la documentation:</b> 2005-03-05</div>
 <br>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -443,11 +443,17 @@ Les temps de retrait des modes est sp&eacute;cialement une question de goût... v
 vous en douter... Que faire si aucun op n'est disponible quand un &eacute;v&eacute;nement se produit, voudrais-je
 que le salon soit bloqu&eacute; pendant 15 minutes (= pas agr&eacute;able pour les
 utilisateurs) ou 5 minutes (= la fautif n'ayant qu'&agrave; attendre 5m et flooder
-&agrave; nouveau). Ca d&eacute;pend aussi du type de flood, les utilisateurs sont incapables de rejoindre le salon (+i) ou
-parler (+m) est pire que de leur empecher de changer leur pseudo (+N)
-ou d'envoyer des ctcps au salon (+C) ontranslations@lists.unrealircd.orgc vous devrez &eacute;tablir diff&eacute;rents temps de
-retrait des modes.
-<p></p></div>
+&agrave; nouveau). Ca d&eacute;pend aussi du type de flood, les utilisateurs sont incapables de rejoindre le salon (+i) ou de parler (+m) est pire que de les empecher de changer leur pseudo (+N) ou d'envoyer des ctcps au salon (+C) donc vous devrez &eacute;tablir diff&eacute;rents temps de retrait des modes.
+<br>
+<b>Mode salon j</b><br>
+Le mode +f inclus un dispositif permettant d'emp&ecirc;cher les join floods, toutefois ce dispositif est "global".
+Par exemple, si il est regl&eacute; &agrave; 5:10 et que 5 utilisateurs <u>diff&eacute;rents</u> joingnent 
+en 10 secondes, la protection contre le flood est activée. Le mode de salon +j est diff&eacute;rent. 
+Ce mode fonctionne sur la base d'un utilisateur. Plut&ocirc;t que de prot&eacute;ger contre les join floods, 
+il est fait pour prot&eacute;ger contre les join-part floods. Le mode prend un param&egrave;tre de la forme X:Y 
+o&ugrave; X est le nombre de joins et Y est le nombre de secondes. Si un utilisateur d&eacute;passe la limite, 
+il/elle ne pourra plus rejoindre le salon.
+</p></div>
 
 <p><font size="+2"><b>3.13 - Types de ban</b></font><a name="feature_bantypes"></a></p><div class="desc">
 <p>
