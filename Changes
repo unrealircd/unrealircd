@@ -646,5 +646,6 @@
   - Relaxed nick character checking from remote servers (rely on NICKCHARS= PROTOCTL
     to deal with problems). This is useful to prevent any kills in case we slightly
     change the characters that are allowed in a language.
-- Added polish (latin2), supplied by k4be.
-- Added hebrew (iso8859-8I / windows-1255), supplied by PHANTOm.
+  - Added 'polish' (latin2), supplied by k4be.
+  - Added 'hebrew' (iso8859-8I / windows-1255), supplied by PHANTOm.
+- Added French example.fr.conf and help.fr.conf, translated/maintained by Babass.
