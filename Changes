@@ -2197,3 +2197,4 @@ seen. gmtime warning still there
 - IPv6: UnrealIRCd can now lookup ip6.arpa addresses too (original IRCnet patch modified for
   UnrealIRCd by Onliner).
 - Doc updates
+- Removed "Duplicate user entry in SJOIN" notice because the problem has been traced down.

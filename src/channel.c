@@ -4838,9 +4838,16 @@ CMD_FUNC(m_sjoin)
 			{
 				modeflags = 0;
 			}
-#if 1
-			/* temporarely added for tracing user-twice-in-channel bugs -- Syzop, 2003-01-24 */
+			/* [old: temporarely added for tracing user-twice-in-channel bugs -- Syzop, 2003-01-24.]
+			 * 2003-05-29: now traced this bug down: it's possible to get 2 joins if persons
+			 * at 2 different servers kick a target on a 3rd server. This will require >3 servers
+			 * most of the time but is also possible with only 3 if there's asynchronic lag.
+			 * The general rule here (and at other places as well! see kick etc) is we ignore it
+			 * locally (dont send a join to the chan) but propagate it to the other servers.
+			 * I'm not sure if the propagation is needed however -- Syzop.
+			 */
 			if (IsMember(acptr, chptr)) {
+#if 0
 				int i;
 				sendto_realops("[BUG] Duplicate user entry in SJOIN! Please report at http://bugs.unrealircd.org !!! Chan='%s', User='%s', modeflags=%ld",
 					chptr->chname ? chptr->chname : "<NULL>", acptr->name ? acptr->name : "<NULL>", modeflags);
@@ -4850,12 +4857,13 @@ CMD_FUNC(m_sjoin)
 				for (i=0; i < parc; i++)
 					ircd_log(LOG_ERROR, "parv[%d] = '%s'", i, BadPtr(parv[i]) ? "<NULL-or-empty>" : parv[i]);
 				ircd_log(LOG_ERROR, "--- End of dump ---");
-			} else
 #endif
-			add_user_to_channel(chptr, acptr, modeflags);
-			sendto_channel_butserv(chptr, acptr,
-			    ":%s JOIN :%s", nick,
-			    chptr->chname);
+			} else {
+				add_user_to_channel(chptr, acptr, modeflags);
+				sendto_channel_butserv(chptr, acptr,
+				    ":%s JOIN :%s", nick,
+				    chptr->chname);
+			}
 			sendto_serv_butone_sjoin(cptr, ":%s JOIN %s",
 			    nick, chptr->chname);
 			CheckStatus('q', CHFL_CHANOWNER);
