@@ -3028,3 +3028,4 @@ seen. gmtime warning still there
 - Made some changes to the curlinstall script to make it work with c-ares-1.0.0
   also updated INSTALL.REMOTEINC
 - Fixed a typo in the /credits
+- Made it so curlinstall doesn't use cp -f since it is nonportable

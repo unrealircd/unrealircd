@@ -38,7 +38,10 @@ while [ -z "$SSLFLAG" ] ; do
 	esac
 done
 if [ -f $HOME/ares/lib/libcares.a ] ; then
-	cp -f $HOME/ares/lib/libcares.a $HOME/ares/lib/libares.a
+	if [ -f $HOME/ares/lib/libares.a ] ; then
+		rm -f $HOME/ares/lib/libares.a
+	fi
+	cp $HOME/ares/lib/libcares.a $HOME/ares/lib/libares.a
 fi
 
 echo "Installing libcurl"
@@ -48,7 +51,10 @@ CPPFLAGS="-I$HOME/ares/include" ./configure --prefix=$HOME/curl --disable-shared
 cp -R $HOME/ares/lib ares
 make && make install
 
-cp -f $HOME/ares/lib/libares.a $HOME/curl/lib
+if [ -f $HOME/curl/lib/libares.a ] ; then
+	rm -f $HOME/curl/lib/libares.a
+fi
+cp $HOME/ares/lib/libares.a $HOME/curl/lib
 
 cd $save_PWD
 
