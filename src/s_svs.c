@@ -1053,7 +1053,7 @@ int m_sqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		
 	/* CONF_BAN_NICK && CONF_BAN_TYPE_AKILL == SQLINE */
 	bconf->flag.type2 = CONF_BAN_TYPE_AKILL;
-	if (addit == 1)
+	if (addit != 1)
 		add_ConfigItem((ConfigItem *) bconf, (ConfigItem **) &conf_ban);
 
 }
