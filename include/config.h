@@ -145,6 +145,14 @@
 #undef NO_OPEROVERRIDE
 
 /*
+ * OPEROVERRIDE_VERIFY
+ *   This will prompt opers before permitting them to join +p/+s
+ *   channels, decreasing the chances of someone "accidentally"
+ *   entering a random channel.
+ */
+#define OPEROVERRIDE_VERIFY 1
+
+/*
  * NAZIISH_CHBAN_HANDLING (formerly ANNOYING_BAN_THING)
  *   Reject bans that are matched by existing bans, causes chanserv
  *   To flood-kick an akicked user if their akick is matched by another
