@@ -1040,11 +1040,27 @@ Hier eine Liste der möglichen Einstellungen:<br>
 <tr><td width="98"><b>chinese</b></td> <td width="494">	chinese-*	<td width="254">Multibyte: GBK</td></tr>
 <tr><td width="98"><b>gbk</b></td> <td width="494">	chinese-*	<td width="254">Multibyte: GBK</td></tr>
 </table>
-Zu beachten ist, dass einige Kombinationen Probleme verursachen können.
+&nbsp;
+<p>Anmerkung 1: Zu beachten ist, dass einige Kombinationen Probleme verursachen können.
 Beispielsweise kann eine Kombination aus latin* und chinesisch-* nicht korrekt
 von IRCd behandelt werden und es wird ein Fehler angezeigt. Das Mischen von
 Zeichensätzen kann der Grund von Anzeige Problemen sein. Aus diesem Grund wird
-Unreal eine Warnung anzeigen, wenn versucht wird, latin1/latin2/greek zu mischen.<br>
+Unreal eine Warnung anzeigen, wenn versucht wird, latin1/latin2/greek oder
+andere inkompatibele Gruppen zu mischen.<br>
+<br>
+Anmerkung 2: Die Übereinstimmung von Zeichen, also welcher Großbuchstabe zu
+welchem Kleinbuchstaben gehört, erfolgt nach dem US-ASCII, was bedeutet, dass
+ö und Ö nicht als 'gleiches Zeichen' erkannt werden und deswegen jemand
+beispielsweise den Nick Bär haben kann, während jemand anderes gleichzeitig
+den Nick BÄr hat. Das ist eine Einschränkung durch das aktuelle SDystem und IRCd
+Standards, die nicht binnen kurzer Zeit gelöst werden können. Den Usern sollte
+diese Enschränkung klar sein. Zu beachten dabei ist, dass es diese
+Einschränkung schon immer bei den Channelnamen gegeben hat, in denen ja fast
+alle Zeichen erlaubt sind und schon immer die US-ASCII Regeln der
+Zeichenübereinstimmung gegolten haben.<br>
+<br>
+Anmerkung 3: Die Basis Nick Zeichen (a-z A-Z 0-9 [ \ ] ^ _ - { | }) sind immer
+erlaubt/aktiviert.<br>
 <br>
 Beispiel 1, für West-Europäer:<br>
 <br>
