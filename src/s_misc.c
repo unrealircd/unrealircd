@@ -429,6 +429,7 @@ int  exit_client(cptr, sptr, from, comment)
 #ifdef	FNAME_USERLOG
 	time_t on_for;
 #endif
+	ConfigItem_listen *listen_conf;
 	static char comment1[HOSTLEN + HOSTLEN + 2];
 	static int recurse = 0;
 
@@ -452,7 +453,16 @@ int  exit_client(cptr, sptr, from, comment)
 		
 		if (sptr->listener)
 			if (sptr->listener->class)
-				((ConfigItem_listen *)sptr->listener->class)->clients--;
+			{
+				listen_conf = (ConfigItem_listen *) sptr->listener->class;
+				listen_conf->clients--;
+				if (listen_conf->flag.temporary
+				    && (listen_conf->clients == 0))
+				{
+					/* Call listen cleanup */
+					listen_cleanup();					
+				}
+			}	
 		sptr->flags |= FLAGS_CLOSING;
 		if (IsPerson(sptr))
 		{

@@ -1957,6 +1957,26 @@ void	run_configuration(void)
 	}
 }
 
+void	listen_cleanup()
+{
+	int	i = 0;
+	ConfigItem_listen *listen_ptr;
+	ConfigItem t;
+	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *)listen_ptr->next)
+	{
+		if (listen_ptr->flag.temporary && !listen_ptr->clients)
+		{
+			ircfree(listen_ptr->ip);
+			t.next = del_ConfigItem((ConfigItem *) listen_ptr, (ConfigItem **)&conf_listen);
+			MyFree(listen_ptr);
+			listen_ptr = (ConfigItem_listen *) &t;
+			i++;			
+		}
+	} 
+	if (i)
+		close_listeners();
+}
+
 int     rehash(cptr, sptr, sig)
         aClient *cptr, *sptr;
         int  sig;
@@ -2083,17 +2103,8 @@ int     rehash(cptr, sptr, sig)
 	init_conf2("unrealircd.conf");
 	/* Clean up listen records */
 	close_listeners();
-	for (listen_ptr = conf_listen; listen_ptr; listen_ptr = (ConfigItem_listen *)listen_ptr->next)
-	{
-		if (listen_ptr->flag.temporary)
-		{
-			ircfree(listen_ptr->ip);
-			t.next = del_ConfigItem((ConfigItem *) listen_ptr, (ConfigItem **)&conf_listen);
-			MyFree(listen_ptr);
-			listen_ptr = (ConfigItem_listen *) &t;
-						
-		}
-	} 
+	listen_cleanup();
+	run_configuration();
 	check_pings(TStime(), 1);
 	sendto_realops("Completed rehash");
 }

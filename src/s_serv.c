@@ -2576,6 +2576,24 @@ int  m_stats(cptr, sptr, parc, parv)
 		  }
 		  if (SHOWOPERS == 1)
 		  break;
+	  case 'P':
+	  	  if (IsOper(sptr))
+	  	  {
+			  for (i = 0; i <= highest_fd; i++)
+			  {
+			        if (!(acptr = local[i]))
+					  continue;
+	  	  	  	if (!IsListening(acptr))
+	  	  	  		continue;
+	  	  	  	sendto_one(sptr, ":%s NOTICE %s :*** Listener on %s:%i, clients %i. is %s",
+	  	  	  		me.name, sptr->name, 
+	  	  	  		((ConfigItem_listen *)acptr->class)->ip,
+	  	  	  		((ConfigItem_listen *)acptr->class)->port,
+	  	  	  		((ConfigItem_listen *)acptr->class)->clients,
+	  	  	   		((ConfigItem_listen *)acptr->class)->flag.temporary ? "TEMPORARY" : "PERM");
+	  	  	  }
+	  	  }
+	  	  break;
 	  case 'Q':
 	  {
 		  ConfigItem_ban *bans;

@@ -77,7 +77,6 @@ void initlists()
 	bzero((char *)&servs, sizeof(servs));
 	bzero((char *)&links, sizeof(links));
 	bzero((char *)&classs, sizeof(classs));
-//	bzero((char *)&aconfs, sizeof(aconfs));
 #endif
 }
 

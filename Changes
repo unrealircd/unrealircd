@@ -198,3 +198,5 @@
 - Fixed a bunch of possible bugs in newconf
 - Added sendto_realops logging of config errors
 - Made /rehash work .. sortof. Fixed some crash bugs
+- Added /stats P on listener info (oper-only)
+- listener temporary stuff works now
