@@ -80,26 +80,6 @@ DLLFUNC int MOD_UNLOAD(m_svsfline)(int module_unload)
 	return MOD_SUCCESS;
 }
 
-void dcc_wipe_services(void)
-{
-	ConfigItem_deny_dcc *dconf, *next;
-	
-	for (dconf = conf_deny_dcc; dconf; dconf = (ConfigItem_deny_dcc *) next)
-	{
-		next = (ConfigItem_deny_dcc *)dconf->next;
-		if ((dconf->flag.type2 == CONF_BAN_TYPE_AKILL))
-		{
-			DelListItem(dconf, conf_deny_dcc);
-			if (dconf->filename)
-				MyFree(dconf->filename);
-			if (dconf->reason)
-				MyFree(dconf->reason);
-			MyFree(dconf);
-		}
-	}
-
-}
-
 DLLFUNC CMD_FUNC(m_svsfline)
 {
 	if (!IsServer(sptr))

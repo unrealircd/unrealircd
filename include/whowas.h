@@ -76,8 +76,6 @@ aClient *get_history(char *, time_t);
 					/* Nick name */
 					/* Time limit in seconds */
 
-int  m_whowas(aClient *, aClient *, int, char *[]);
-
 /*
 ** for debugging...counts related structures stored in whowas array.
 */
