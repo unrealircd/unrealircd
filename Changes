@@ -290,7 +290,7 @@
   were not properly resolved. Original bug reported by kormat.
 - Fixed bugs regarding HOOKTYPE_SERVER_QUIT: was sometimes called twice and could cause
   crashes due read-after-free. Reported by SET (#0001988).
-- Fixed possible crash id /rehash'ing and a servername was just resolving (due to
+- Fixed possible crash if /rehash'ing and a servername was just resolving (due to
   /connect or autoconnect) and was not present in the cache. Reported and traced by sh0
   (#0001976).
 - Fixed compile bug at *NIX caused by ModuleGetErrorStr fix.
