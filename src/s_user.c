@@ -202,8 +202,8 @@ long set_usermode(char *umode)
  */
 
 unsigned char *StripColors(unsigned char *text) {
-	int i = 0, len = strlen(text), save_len;
-	char nc = 0, col = 0, rgb = 0, *save_text;
+	int i = 0, len = strlen(text), save_len=0;
+	char nc = 0, col = 0, rgb = 0, *save_text=NULL;
 	static unsigned char new_str[4096];
 
 	while (len > 0) 
@@ -267,8 +267,8 @@ unsigned char *StripColors(unsigned char *text) {
 /* strip color, bold, underline, and reverse codes from a string */
 const char *StripControlCodes(unsigned char *text) 
 {
-	int i = 0, len = strlen(text), save_len;
-	char nc = 0, col = 0, rgb = 0, *save_text;
+	int i = 0, len = strlen(text), save_len=0;
+	char nc = 0, col = 0, rgb = 0, *save_text=NULL;
 	static unsigned char new_str[4096];
 	while (len > 0) 
 	{
