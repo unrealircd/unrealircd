@@ -193,7 +193,7 @@ case "$OS" in
         echo "You are using FreeBSD ; do NOT crypt passwords at this time"
         ;;
     *OpenBSD*2*)
-	DEFCFLAGS="$DEFOPT"
+	DEFCFLAGS="-O -g"
 	DEFLIBS="none"
 	MKPASSWDLIBS=""
 	OSNAME="OpenBSD 2.x"

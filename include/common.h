@@ -37,6 +37,9 @@
 #ifdef	PARAMH
 #include <sys/param.h>
 #endif
+#ifdef __OpenBSD__
+#include "sys.h"
+#endif
 
 #ifndef PROTO
 #if __STDC__
@@ -90,11 +93,7 @@ void free();
 #endif
 #endif
 
-#ifndef __OpenBSD__
 #define TS time_t
-#else
-#define TS clock_t
-#endif
 
 extern int match PROTO((char *, char *));
 #define mycmp(a,b) \
