@@ -63,8 +63,8 @@ can appear on one line or over multiple lines. The format above is what is norma
 what will be used in this file) because it is easy to read. Note: the configuration file is 
 currently case sensitive so BLOCK-NAME is not the same as block-name. There is a special 
 notation used to talk about entries in the config file. For example, to talk about 
-<directive-name> in the example above, you'd say <block-name>::<block-directive>, and if that 
-directive has a subblock you want to reverence, you would add another :: and the name of the 
+<block-directive> in the example above, you'd say <block-name>::<block-directive>, and if that 
+directive has a sub-block you want to reference, you would add another :: and the name of the 
 sub directive. To talk about an unnamed directive you would do <block-name>:: which would in 
 this case mean <block-value>, or it could be an entry in a sub block that has no name.
 
@@ -215,6 +215,7 @@ oper <name> {
 	password <password> { <auth-type>; };
 	class <class-name>;
 	snomask <snomask>;
+	swhois <swhois>;
 	flags <flags>;
 	flags {
 		<flag>;
@@ -242,11 +243,14 @@ The oper::password is the password the user must specify, oper::password:: allow
 specify an authentication method for this password, valid auth-types are crypt, md5, and sha1. 
 If you want to use a plain-text password leave this sub-block out. The oper::class directive 
 specifies the name of a preexisting (appears before this in the config file) class name that 
-the oper block will use. The oper::snomask directive lets you specify the default snomask the oper will
-receive, this overrides the standard snomask that is normally set. The oper::flags directive has two
-formats. If you wish to use the old style oper flags i.e., OAa, you use the flags <flags> method, 
-if you want to use the new style, i.e., services-admin, then you use the flags { <flag>; } method. 
-Below is a list of all the flags (in both formats) and what they do.
+the oper block will use. The oper::snomask directive lets you specify the default snomask
+the \oper will receive, this overrides the standard snomask that is normally set. The 
+oper::swhois directive allows you to specify an swhois line that will be set when the user 
+/oper's. Note: This directive will be overridden if you use an IRC Services program that also 
+sets swhois. The oper::flags directive has two formats. If you wish to use the old style
+oper flags i.e., OAa, you use the flags <flags> method, if you want to use the new style, i.e.,
+services-admin, then you use the flags { <flag>; } method. Below is a list of all the flags 
+(in both formats) and what they do.
 
 o	local			Makes you a local operator (contains rhgwlckbBn)
 O	global			Makes you a global operator (contains oLKG)
@@ -337,12 +341,15 @@ log ircd.log {
 	flags { errors; tkl; kline; };
 };
 
-The log block allows you to assign different log files for different purposes. The log:: 
-contains the name of the log file. log::maxsize is an optional directive that allows you to 
-specify a size that the log file will be wiped and restarted. You can enter this string using 
-MB for megabytes, KB, for kilobytes, GB, for gigabytes. The log::flags specifies which types of
-information will be in this log. You can specify one or more of the following, errors, kills, 
-tkl (G:lines and Shuns), connects, server-connects, kline, and oper. 
+The log block allows you to assign different log files for different purposes. If the log 
+filename is syslog and your system has syslogd, then syslogd will be used to log for this file.
+If you do not have syslogd, then specifying a filename of syslog will simply write to a file 
+named syslog. The log:: contains the name of the log file. log::maxsize is an optional 
+directive that allows you to specify a size that the log file will be wiped and restarted. You
+can enter this string using MB for megabytes, KB, for kilobytes, GB, for gigabytes. The 
+log::flags specifies which types of information will be in this log. You can specify one or 
+more of the following, errors, kills, tkl (G:lines and Shuns), connects, server-connects, 
+kline, and oper. 
 
 12.0 Tld block (T:line)
 

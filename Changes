@@ -1248,4 +1248,4 @@ seen. gmtime warning still there
 - Added log {} syslog support (appears to work fine) [#0000099]
 - Added HOOKTYPE_JOIN
 - Converted all modules to 3.2-b8 format (passes ModuleInfo)
-- Changed HOOKTYPE_JOIN to HOOKTYPE_LOCAL_JOIN (musta been drunk when I did the first commit)
+- Updated doc/conf.doc
