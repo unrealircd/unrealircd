@@ -3025,4 +3025,6 @@ seen. gmtime warning still there
 - Made it so set::modes-on-join correctly works with extcmodes. Note: to 
   correctly work with modes created by modules, the module _must_ call CmodeAdd
   from Mod_Test (#0001624) reported by thunderbirdjl
-
+- Made some changes to the curlinstall script to make it work with c-ares-1.0.0
+  also updated INSTALL.REMOTEINC
+- Fixed a typo in the /credits

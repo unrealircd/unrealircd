@@ -1,10 +1,8 @@
 **** Remote Includes ****
 
 Setting up UnrealIRCd to work with remote includes is not very difficult. The first step is to
-download c-ares (also known as arescurl). At the time of this writing, only a pre-release 
-version of c-ares is available and can be downloaded at <http://curl.haxx.se/beta/> in the
-future stable versions will be available at <http://curl.haxx.se/download.html> download
-the latest version of c-ares and extract the .tar.gz somewhere.
+download c-ares. C-ares can be downloaded from <http://daniel.haxx.se/projects/c-ares/>
+download the latest version of c-ares and extract the .tar.gz somewhere.
 
 Now, download the latest version of curl, available at <http://curl.haxx.se/download.html>
 again, extract the tar.gz somewhere. 
@@ -14,10 +12,10 @@ as follows:
 
 ./curlinstall ares_path curl_path
 
-Paths should be complete pathnames. If you extracted ares to /home/username/arescurl-1.0-pre1
-and curl to /home/username/curl-7.10.8 then you would run:
+Paths should be complete pathnames. If you extracted c-ares to /home/username/c-ares-1.0.0
+and curl to /home/username/curl-7.11.0 then you would run:
 
-./curlinstall /home/username/arescurl-1.0-pre1 /home/username/curl-7.10.8
+./curlinstall /home/username/c-ares-1.0.0 /home/username/curl-7.11.0
 
 Lastly, run ./Config. When asked whether to enable remote includes say "yes" and when asked
 for the path curl was installed to include the path that is printed out after ./curlinstall

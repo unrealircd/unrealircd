@@ -80,7 +80,7 @@ char *unrealcredits[] =
 	"Internet Services, Interlink Access Corp, Jan Knutar, ThePlayer,",
 	"Headband, noriko, powerstorm.net, RedMaxima, IronHelix,",
 	"Pierce - irc.AAcNet.org, Franky75 - Betas-Online.com, irc.vco.se,",
-	"Bedlock - irc.coldfront.net, Kusau - chat.tochat.org, Japsclan,",
+	"Beldock - irc.coldfront.net, Kusau - chat.tochat.org, Japsclan,",
 	"WolfLord - UplinkCorp, Isaiah - irc.frogstar.us, Kedrin Milborn,",
 	"Dionisios Koutsikos, Tank - irc.scifi-fans.net, irc.P2Pchat.net",
 	"Leo Zhadanovsky - irc.leozh.net, Lyote - ZodiaCIrC/DecayOnline,",
