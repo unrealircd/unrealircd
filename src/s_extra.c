@@ -269,9 +269,10 @@ int  m_svsfline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  if (!Find_deny_dcc(parv[2]))
 			  DCCdeny_add(parv[2], parv[3], CONF_BAN_TYPE_AKILL);
 		  if (IsULine(sptr))
-			  sendto_serv_butone(cptr, ":%s %s + %s :%s",
+			  sendto_serv_butone_token(cptr,
 			      sptr->name,
-			      (IsToken(cptr) ? TOK_SVSFLINE : MSG_SVSFLINE),
+			      MSG_SVSFLINE, TOK_SVSFLINE,
+			      "+ %s :%s",
 			      parv[2], parv[3]);
 		  break;
 	  }
@@ -283,9 +284,9 @@ int  m_svsfline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			  return 0;
 		  
 		  DCCdeny_del(Find_deny_dcc(parv[2]));
-		  sendto_serv_butone(cptr, ":%s %s - %s",
-		      sptr->name, (IsToken(cptr) ? TOK_SVSFLINE : MSG_SVSFLINE),
-		      parv[2]);
+		  sendto_serv_butone_token(cptr, sptr->name,
+		 	MSG_SVSFLINE, TOK_SVSFLINE,
+			      parv[2]);
 		  break;
 	  }
 	  case '*':
@@ -293,8 +294,9 @@ int  m_svsfline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  if (!IsULine(sptr))
 			  return 0;
 		  dcc_wipe_services();
-		  sendto_serv_butone(cptr, ":%s %s *", sptr->name,
-		      (IsToken(cptr) ? TOK_SVSFLINE : MSG_SVSFLINE));
+		  sendto_serv_butone_token(cptr, sptr->name,
+		      MSG_SVSFLINE, TOK_SVSFLINE,
+		      	"*");
 		  break;
 	  }
 
