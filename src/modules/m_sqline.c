@@ -105,7 +105,7 @@ int	m_sqline_Unload(int module_unload)
 {
 	if (del_Command(MSG_SQLINE, TOK_SQLINE, m_sqline) < 0)
 	{
-		sendto_realops("Failed to delete commands when unloading %s",
+		sendto_realopers("Failed to delete commands when unloading %s",
 				m_sqline_Header.name);
 	}
 	return MOD_SUCCESS;
