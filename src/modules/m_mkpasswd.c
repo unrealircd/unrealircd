@@ -101,53 +101,44 @@ void	m_mkpasswd_unload(void)
 **      parv[1] = password to encrypt
 */
 #ifndef _WIN32
-int  m_mkpasswd(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
-        static char saltChars[] =
-
-"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./";
-        char salt[3];
-        extern char *crypt();
-        int  useable = 0;
-
+int  m_mkpasswd(aClient *cptr, aClient *sptr, int parc, char *parv[])
+{
+	short	type;
+	char	*result = NULL;
         if (!IsAnOper(sptr))
                 return -1;
-        if (parc > 1)
-        {
-                if (strlen(parv[1]) >= 1)
-                        useable = 1;
-        }
-
-        if (useable == 0)
+	if (parc < 3)
+	{
+		sendto_one(sptr, ":%s NOTICE %s :*** Syntax: /mkpasswd <authmethod> :parameter",
+			me.name, sptr->name);
+		return 0;
+	}        
+        
+        if (strlen(parv[1]) < 1)
         {
                 sendto_one(sptr,
-                    ":%s %s %s :*** Encryption's MUST be atleast 1 character in length",
-                    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE",
-parv[0]);
+                    ":%s %s %s :*** Parameters MUST be atleast 1 character in length",
+                    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0]);
                 return 0;
         }
         srandom(TStime());
-#ifndef _WIN32
-        salt[0] = saltChars[random() % 64];
-        salt[1] = saltChars[random() % 64];
-        salt[2] = 0;
-#else
-        salt[0] = saltChars[rand() % 64];
-        salt[1] = saltChars[rand() % 64];
-        salt[2] = 0;
-#endif
-        if ((strchr(saltChars, salt[0]) == NULL)
-            || (strchr(saltChars, salt[1]) == NULL))
-        {
-                sendto_one(sptr, ":%s %s %s :*** Illegal salt %s",
-me.name,
-                        IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0],
-salt);
-                return 0;
-        }
-
-
-        sendto_one(sptr, ":%s %s %s :*** Encryption for [%s] is %s",
-            me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], parv[1], crypt(parv[1], salt));
+	if ((type = Auth_FindType(parv[1])) == -1)
+	{
+		sendto_one(sptr, 
+			":%s NOTICE %s :*** %s is not a enabled authentication method",
+				me.name, sptr->name, parv[1]);
+		return 0;
+	}
+	
+	if (!(result = Auth_Make(type, parv[2])))
+	{
+		sendto_one(sptr, 
+			":%s NOTICE %s :*** Authentication method %s failed",
+				me.name, sptr->name, parv[1]);
+		return;
+	}
+        sendto_one(sptr, ":%s %s %s :*** Authentication phrase (method=%s, para=%s) is: %s",
+            me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], parv[1], parv[2], result);
         return 0;
 }
 #else

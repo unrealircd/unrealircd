@@ -61,7 +61,7 @@ int		Auth_FindType(char *type)
 	
 	while (p)
 	{
-		if (p->data, "type")
+		if (!strcmp(p->data, type))
 			return p->type;
 		p++;
 	}
@@ -135,7 +135,7 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 	char	salt[3];
 	extern	char *crypt();
 #endif
-#if defined(AUTHENABLE_MD5) || defined(AUTHENABLE_MD5)
+#if defined(AUTHENABLE_MD5) || defined(AUTHENABLE_SHA1)
 	char	buf[512];
 #endif
 
@@ -221,7 +221,7 @@ char	*Auth_Make(short type, char *para)
 	char	salt[3];
 	extern	char *crypt();
 #endif
-#if defined(AUTHENABLE_MD5) || defined(AUTHENABLE_MD5)
+#if defined(AUTHENABLE_MD5) || defined(AUTHENABLE_SHA1)
 	char	buf[512];
 #endif
 
