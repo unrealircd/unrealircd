@@ -491,3 +491,4 @@ seen. gmtime warning still there
 - Added McSkaf's patch for the richedit to be able to support reverse codes
 - Fixed the problems with 100% cpu, hopefully
 - Fixed the 100% cpu problem, again, HTM is screwed now though?
+- Got /stats O working

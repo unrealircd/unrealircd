@@ -2382,6 +2382,8 @@ int  m_stats(cptr, sptr, parc, parv)
 	char pbuf[96];		/* Should be enough for to ints */
 #endif
 	ConfigItem_link *link_p;
+	ConfigItem_oper *oper_p;
+	ConfigItem_oper_from *oper_p_from;
 	aCommand *mptr;
 	aClient *acptr;
 	char stat = parc > 1 ? parv[1][0] : '\0';
@@ -2661,11 +2663,26 @@ int  m_stats(cptr, sptr, parc, parv)
 		  break;
 	  case 'o':
 	  case 'O':
-		  if (SHOWOPERS == 0 && (IsOper(sptr)))
+		  if (SHOWOPERS == 0 && (!IsOper(sptr)))
 		  {
 			  break;
 		  }
-		  if (SHOWOPERS == 1)
+		  for (oper_p = conf_oper; oper_p; oper_p = (ConfigItem_oper *) oper_p->next)
+		  {
+		  	if (!oper_p->from)
+		  		sendto_one(sptr, rpl_str(RPL_STATSOLINE),
+		  			me.name, sptr->name, 
+		  			'O', "(none)", oper_p->name,
+		  			oflagstr(oper_p->oflags),
+		  			oper_p->class->name);
+			else
+				for (oper_p_from = (ConfigItem_oper_from *) oper_p->from; oper_p_from; oper_p_from = (ConfigItem_oper_from *) oper_p_from->next)
+			  		sendto_one(sptr, rpl_str(RPL_STATSOLINE),
+			  			me.name, sptr->name, 
+			  			'O', oper_p_from->name, oper_p->name,
+			  			oflagstr(oper_p->oflags),
+			  			oper_p->class->name);
+		  }
 		  break;
 	  case 'P':
 	  	  if (IsOper(sptr))
