@@ -349,21 +349,8 @@ int match_ip(struct IN_ADDR addr, char *uhost, char *mask, struct irc_netmask *n
 {
 	char *end;
 
-	if (!netmask) /* host-alike matching */
-	{
-		/* Is an user@ given at all? */
-		if (strchr(uhost, '@'))
-		{
-			return (!match(mask, uhost));
-		} else {
-			/* No. Then only try to match against the host. */
-			end = strchr(mask, '@');
-			if (end)
-				return (!match(end+1, uhost));
-			else
-				return (!match(mask, uhost));
-		}
-	}
+	if (!netmask)
+		return (!match(mask, uhost));
 
 	/* If it is an IP mask, we need to extract the user portion of both 
          * and run a match. 
@@ -383,7 +370,6 @@ int match_ip(struct IN_ADDR addr, char *uhost, char *mask, struct irc_netmask *n
 	switch (netmask->type)
 	{
 		case HM_HOST:
-			/* NOTREACHED? */
 			return (!match(mask, uhost));
 		case HM_IPV4:
 			return match_ipv4(&addr, &netmask->mask, netmask->bits);
