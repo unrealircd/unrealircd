@@ -177,8 +177,8 @@ int     EventMod(Event *event, EventInfo *mods);
 void    DoEvents(void);
 void    EventStatus(aClient *sptr);
 void    SetupEvents(void);
-
-
+void	LockEventSystem(void);
+void	UnlockEventSystem(void);
 extern Hook		*Hooks[MAXHOOKTYPES];
 extern Hook		*global_i;
 

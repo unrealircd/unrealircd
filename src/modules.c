@@ -254,8 +254,9 @@ int    Module_free(Module *mod)
 	for (objs = mod->objects; objs; objs = next) {
 		next = objs->next;
 		if (objs->type == MOBJ_EVENT) {
+			LockEventSystem();
 			EventDel(objs->object.event);
-
+			UnlockEventSystem();
 		}
 		else if (objs->type == MOBJ_HOOK) {
 			HookDel(objs->object.hook);

@@ -2151,7 +2151,9 @@ CMD_FUNC(m_stats)
 		  break;
 	  }
 	  case 'm':
+		LockEventSystem();
 		EventStatus(sptr);
+		UnlockEventSystem();
 		break;
 
 	  case 'M':

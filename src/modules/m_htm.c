@@ -98,8 +98,10 @@ int    m_htm_Init(int module_load)
 	*/
 	add_Command(MSG_HTM, TOK_HTM, m_htm, MAXPARA);
 #ifndef NO_FDLIST
+	LockEventSystem();
 	e_lcf = EventAddEx(Mod_Handle, "lcf", LCF, 0, lcf_check, NULL);
 	e_htmcalc = EventAddEx(Mod_Handle, "htmcalc", 1, 0, htm_calc, NULL);
+	UnlockEventSystem();
 #endif
 	return MOD_SUCCESS;
 }
@@ -128,8 +130,10 @@ int	m_htm_Unload(int module_unload)
 				m_htm_Header.name);
 	}
 #ifndef NO_FDLIST
+	LockEventSystem();
 	EventDel(e_lcf);
 	EventDel(e_htmcalc);
+	UnlockEventSystem();
 #endif
 	return MOD_SUCCESS;
 }
@@ -228,7 +232,9 @@ DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			LCF = 60;	/* 60 seconds */
 			mod.flags = EMOD_EVERY;
 			mod.every = LCF;
+			LockEventSystem();
 			EventMod(e_lcf, &mod);
+			UnlockEventSystem();
 		}
 		else if (!stricmp(command, "OFF"))
 		{
@@ -237,7 +243,9 @@ DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			LCF = LOADCFREQ;
 			mod.flags = EMOD_EVERY;
 			mod.every = LCF;
+			LockEventSystem();
 			EventMod(e_lcf, &mod);
+			UnlockEventSystem();
 			sendto_one(sptr,
 			    ":%s NOTICE %s :High traffic mode is now OFF.",
 			    me.name, parv[0]);

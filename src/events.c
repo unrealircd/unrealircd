@@ -50,21 +50,28 @@ MUTEX			sys_EventLock;
 
 Event *events = NULL;
 
+void	LockEventSystem(void)
+{
+#ifndef HAVE_NO_THREADS
+	IRCMutexLock(sys_EventLock);
+#endif
+}
+
+void	UnlockEventSystem(void)
+{
+#ifndef HAVE_NO_THREADS
+	IRCMutexUnLock(sys_EventLock);
+#endif
+}
+
 
 Event	*EventAddEx(Module *module, char *name, long every, long howmany,
 		  vFP event, void *data)
 {
 	Event *newevent;
-#ifndef HAVE_NO_THREADS
-	IRCMutexLock(sys_EventLock);
-#endif
 	
 	if (!name || (every < 0) || (howmany < 0) || !event)
 	{
-#ifndef HAVE_NO_THREADS
-		IRCMutexUnlock(sys_EventLock);
-#endif
-
 		return NULL;
 	}
 	newevent = (Event *) MyMallocEx(sizeof(Event));
@@ -83,9 +90,6 @@ Event	*EventAddEx(Module *module, char *name, long every, long howmany,
 		eventobj->type = MOBJ_EVENT;
 		AddListItem(eventobj, module->objects);
 	}
-#ifndef HAVE_NO_THREADS
-	IRCMutexUnlock(sys_EventLock);
-#endif
 	return newevent;
 	
 }
@@ -126,9 +130,6 @@ Event	*EventFind(char *name)
 }
 
 int EventMod(Event *event, EventInfo *mods) {
-#ifndef HAVE_NO_THREADS
-	IRCMutexLock(sys_EventLock);
-#endif
 	if (!event || !mods)
 		return -1;
 
@@ -144,9 +145,6 @@ int EventMod(Event *event, EventInfo *mods) {
 		event->event = mods->event;
 	if (mods->flags & EMOD_DATA)
 		event->data = mods->data;
-#ifndef HAVE_NO_THREADS
-	IRCMutexUnlock(sys_EventLock);
-#endif
 	return 0;
 }
 
@@ -155,9 +153,6 @@ inline void	DoEvents(void)
 	Event *eventptr;
 	Event temp;
 
-#ifndef HAVE_NO_THREADS
-	IRCMutexLock(sys_EventLock);
-#endif
 	for (eventptr = events; eventptr; eventptr = eventptr->next)
 		if ((eventptr->every == 0) || ((TStime() - eventptr->last) >= eventptr->every))
 		{
@@ -175,11 +170,6 @@ inline void	DoEvents(void)
 			}
 
 		}
-	
-#ifndef HAVE_NO_THREADS
-	IRCMutexUnlock(sys_EventLock);
-#endif
-
 }
 
 void	EventStatus(aClient *sptr)
@@ -208,6 +198,8 @@ void	SetupEvents(void)
 #ifndef HAVE_NO_THREADS
 	IRCCreateMutex(sys_EventLock);
 #endif
+	LockEventSystem();
+
 	/* Start events */
 	EventAddEx(NULL, "tklexpire", 5, 0, tkl_check_expire, NULL);
 	EventAddEx(NULL, "tunefile", 300, 0, save_tunefile, NULL);
@@ -216,4 +208,5 @@ void	SetupEvents(void)
 #ifndef NO_FDLIST
 	EventAddEx(NULL, "fdlistcheck", 1, 0, e_check_fdlists, NULL);
 #endif
+	UnlockEventSystem();
 }

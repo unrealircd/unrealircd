@@ -154,7 +154,7 @@ void	flag_add(char *ch)
 		extraflags = newextra;
 	}
 	else
-		extraflags = strdup(ch);
+		extraflags = (char *)strdup(ch);
 }
 
 void	flag_del(char ch)

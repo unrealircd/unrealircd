@@ -1170,4 +1170,6 @@ v- Fixed some bugreport stuff
 - Fixed auth.c to use random salt
 - Fixed loadmodule invisibility.so: undefined symbol: 
   get_umode bug, reported by James-Bond, #0000060)
-
+- BEFORE you use event functions, LockEventSystem(), after,
+  UnlockEventSystem(). In EVENT() functions, the system _is_ locked.
+  This might fix the double recursion mutex problem we got.

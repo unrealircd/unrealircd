@@ -1243,7 +1243,9 @@ void SocketLoop(void *dummy)
 		{
 			sendto_realops("Time running backwards! %i-%i<0", timeofday, oldtimeofday);
 		}
+		LockEventSystem();
 		DoEvents();
+		UnlockEventSystem();
 		/*
 		   ** Run through the hashes and check lusers every
 		   ** second

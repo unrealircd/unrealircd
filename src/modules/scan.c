@@ -123,8 +123,9 @@ int    m_scan_Load(int module_load)
 
 	if (Scan_TimeOut == 0)
 		Scan_TimeOut = 20;
-
+	LockEventSystem();
 	Scannings_clean = EventAddEx(Mod_Handle, "e_scannings_clean", 0, 0, e_scannings_clean, NULL);
+	UnlockEventSystem();
 	return MOD_SUCCESS;
 }
 
@@ -141,11 +142,13 @@ int	m_scan_Unload(void)
 	IRCMutexLock(Scannings_lock);
 	if (Scannings)	
 	{
+		LockEventSystem();
 		EventAddEx(Mod_Handle, "scan_unload", 
 			2, /* Should be enough */
 			1,
 			e_unload_module_delayed,
 			(void *)m_scan_Header.name);
+		UnlockEventSystem();
 		ret = MOD_DELAY;
 	}	
 	IRCMutexUnlock(Scannings_lock);	
@@ -153,7 +156,9 @@ int	m_scan_Unload(void)
 	{
 		HookDel(LocConnect);
 		HookDel(ConfUnknown);
+		LockEventSystem();
 		EventDel(Scannings_clean);
+		UnlockEventSystem();
 	}
 	return ret;
 }
@@ -259,7 +264,9 @@ void	Eadd_scan(struct IN_ADDR *in, char *reason)
 	Scan_Result *sr = (Scan_Result *) MyMalloc(sizeof(Scan_Result));
 	sr->in = *in;
 	strcpy(sr->reason, reason);
+	LockEventSystem();
 	EventAddEx(Mod_Handle, "scan_ban", 0, 1, e_scan_ban, (void *)sr);
+	UnlockEventSystem();
 	return;
 }
 
