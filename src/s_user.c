@@ -1160,7 +1160,6 @@ int  m_nick(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	ConfigItem_ban *aconf;
-	aSqlineItem *asqline;
 	aClient *acptr, *serv;
 	aClient *acptrs;
 	char nick[NICKLEN + 2], *s;

@@ -171,3 +171,5 @@
 - Moved advanced_check to s_svs.c
 - Made /kline work again, with newconf
 - Made /trace work again properly with class names
+- Made /sqline /unsqline work again.
+- Made SQLINE synching work with newconf

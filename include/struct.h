@@ -61,7 +61,6 @@ typedef struct t_vhline aVHline;
 typedef struct t_kline aTKline;
 typedef struct t_vhost aVhost;
 
-typedef struct SqlineItem aSqlineItem;
 typedef struct aloopStruct LoopStruct;
 typedef struct ConfItem aConfItem;
 
@@ -622,13 +621,6 @@ typedef struct Whowas {
 	struct Whowas *cprev;	/* for client struct linked list */
 } aWhowas;
 
-
-struct SqlineItem {
-	unsigned int status;
-	char *sqline;
-	char *reason;
-	struct SqlineItem *next;
-};
 
 #ifdef OLD
 

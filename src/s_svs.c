@@ -398,7 +398,7 @@ int  m_akill(cptr, sptr, parc, parv)
 		return 0;
 	}
 
-	if (!(bconf = Find_ban(make_user_host(usermask, hostmask), CONF_BAN_USER)))
+	if (!(bconf = Find_banEx(make_user_host(usermask, hostmask), CONF_BAN_USER, CONF_BAN_TYPE_AKILL)))
 	{
 		bconf = (ConfigItem_ban *) MyMallocEx(sizeof(ConfigItem_ban));
 		bconf->flag.type = CONF_BAN_USER;
@@ -486,7 +486,7 @@ int  m_rakill(cptr, sptr, parc, parv)
 		return 0;
 	}
 	
-	if (!(bconf = Find_ban(make_user_host(usermask, hostmask), CONF_BAN_USER)))
+	if (!(bconf = Find_banEx(make_user_host(usermask, hostmask), CONF_BAN_USER, CONF_BAN_TYPE_AKILL)))
 	{
 		if (!MyClient(sptr))
 		{
@@ -940,9 +940,9 @@ int  m_kline(cptr, sptr, parc, parv)
 		}
 	}
 
-	sendto_realops("%s added a temp k:line for %s@%s %s", parv[0], name, uhost,
+	sendto_realops("%s added a temporary user ban for %s@%s %s", parv[0], name, uhost,
 	    parv[2] ? parv[2] : "");
-	ircd_log("%s added a temp k:line for %s@%s %s",
+	ircd_log("%s added a temporary user ban for %s@%s %s",
 	   parv[0], name, uhost,
 	    parv[2] ? parv[2] : "");
 	bconf = (ConfigItem_ban *)MyMallocEx(sizeof(ConfigItem_ban));
@@ -952,4 +952,160 @@ int  m_kline(cptr, sptr, parc, parv)
 	bconf->flag.type2 = CONF_BAN_TYPE_TEMPORARY;
 	add_ConfigItem((ConfigItem *) bconf, (ConfigItem **) &conf_ban);
 	check_pings(TStime(), 1);
+}
+
+/*
+ *  m_unkline
+ *    parv[0] = sender prefix
+ *    parv[1] = userhost
+ */
+
+int  m_unkline(cptr, sptr, parc, parv)
+	aClient *cptr, *sptr;
+	int  parc;
+	char *parv[];
+{
+
+	int  result, temp;
+	char *hosttemp = parv[1], host[80], name[80];
+	ConfigItem_ban *bconf;
+	
+	
+	if (!MyClient(sptr) || !OPCanUnKline(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		return 0;
+	}
+	if (parc < 2)
+	{
+		sendto_one(sptr, ":%s NOTICE %s :*** Not enough parameters", me.name, parv[0]);
+		return 0;
+	}
+	if (hosttemp = (char *)strchr((char *)parv[1], '@'))
+	{
+		temp = 0;
+		while (temp <= 20)
+			name[temp++] = 0;
+		strcpy(host, ++hosttemp);
+		strncpy(name, parv[1], hosttemp - 1 - parv[1]);
+		if (name[0] == '\0' || host[0] == '\0')
+		{
+			Debug((DEBUG_INFO, "UNKLINE: Bad field"));
+			sendto_one(sptr,
+			    ":%s NOTICE %s :*** Both user and host fields must be non-null",
+			    me.name, parv[0]);
+			return 0;
+		}
+		if (!(bconf = Find_banEx(make_user_host(name, host), CONF_BAN_USER, CONF_BAN_TYPE_TEMPORARY)))
+		{
+			sendto_one(sptr, ":%s NOTICE %s :*** Cannot find user ban %s@%s",
+				me.name, parv[0], name, host);
+			return 0;
+		}
+		if (bconf->flag.type2 != CONF_BAN_TYPE_TEMPORARY)
+		{
+			sendto_one(sptr, ":%s NOTICE %s :*** You cannot remove permament user bans",
+				me.name, sptr->name);
+			return 0;
+		}
+		
+		del_ConfigItem((ConfigItem *)bconf, (ConfigItem **)&conf_ban);
+		if (bconf->mask)
+			MyFree(bconf->mask);
+		if (bconf->reason)
+			MyFree(bconf->reason);
+		MyFree(bconf);
+		
+		sendto_one(sptr,
+			":%s NOTICE %s :*** Temporary user ban %s@%s is now removed.",
+			    me.name, parv[0], name, host);
+		sendto_realops("%s removed temporary user ban %s@%s", parv[0],
+		    name, host);
+		ircd_log(
+		    "%s removed temporary user ban %s@%s",
+		    parv[0], name, host);
+		return 0;
+	}
+	/* This wasn't here before -- Barubary */
+	check_pings(TStime(), 1);
+}
+
+
+/*    m_sqline
+**	parv[0] = sender
+**	parv[1] = nickmask
+**	parv[2] = reason
+*/
+int  m_sqline(cptr, sptr, parc, parv)
+	aClient *cptr, *sptr;
+	int  parc;
+	char *parv[];
+{
+	ConfigItem_ban	*bconf;
+	/* So we do not make double entries */
+	int		addit = 0;
+	if (!IsServer(sptr) || parc < 2)
+		return 0;
+
+	if (parv[2])
+		sendto_serv_butone_token(cptr, parv[0], MSG_SQLINE, TOK_SQLINE,
+		    "%s :%s", parv[1], parv[2]);
+	else
+		sendto_serv_butone_token(cptr, parv[0], MSG_SQLINE, TOK_SQLINE,
+		    "%s", parv[1]);
+
+	/* Only replaces AKILL (global ban nick)'s */
+	if (bconf = Find_banEx(parv[1], CONF_BAN_NICK, CONF_BAN_TYPE_AKILL))
+	{
+		if (bconf->mask)
+			MyFree(bconf->mask);
+		if (bconf->reason)
+			MyFree(bconf->reason);
+		bconf->mask = NULL;
+		bconf->reason = NULL;
+		addit = 1;
+	}
+	else
+		bconf = (ConfigItem_ban *) MyMallocEx(sizeof(ConfigItem_ban));
+	if (parv[2])
+		DupString(bconf->reason, parv[2]);
+	if (parv[1])
+		DupString(bconf->mask, parv[1]);
+		
+	/* CONF_BAN_NICK && CONF_BAN_TYPE_AKILL == SQLINE */
+	bconf->flag.type2 = CONF_BAN_TYPE_AKILL;
+	if (addit == 1)
+		add_ConfigItem((ConfigItem *) bconf, (ConfigItem **) &conf_ban);
+
+}
+/*    m_unsqline
+**	parv[0] = sender
+**	parv[1] = nickmask
+*/
+int  m_unsqline(cptr, sptr, parc, parv)
+	aClient *cptr, *sptr;
+	int  parc;
+	char *parv[];
+{
+	ConfigItem_ban *bconf;
+
+	if (!IsServer(sptr) || parc < 2)
+		return 0;
+
+	sendto_serv_butone_token(cptr, parv[0], MSG_UNSQLINE, TOK_UNSQLINE,
+	    "%s", parv[1]);
+
+	if (bconf = Find_banEx(parv[1], CONF_BAN_NICK, CONF_BAN_TYPE_AKILL))
+	{
+		del_ConfigItem(bconf, &conf_me);
+		if (bconf->mask)
+			MyFree(bconf->mask);
+		if (bconf->reason)
+			MyFree(bconf->reason);
+		MyFree(bconf);
+	}
+	else
+		return;
+
+	return 0;
 }

@@ -484,29 +484,6 @@ void free_class(tmp)
 #endif
 }
 
-aSqlineItem *make_sqline()
-{
-	aSqlineItem *asqline;
-
-	asqline = (struct SqlineItem *)MyMalloc(sizeof(aSqlineItem));
-	asqline->next = NULL;
-	asqline->sqline = asqline->reason = NULL;
-
-	return (asqline);
-}
-
-void free_sqline(asqline)
-	aSqlineItem *asqline;
-{
-#ifndef NEWDNS
-	del_queries((char *)asqline);
-#endif /*NEWDNS*/
-	MyFree(asqline->sqline);
-	MyFree(asqline->reason);
-	MyFree((char *)asqline);
-	return;
-}
-
 #ifdef	DEBUGMODE
 void send_listinfo(cptr, name)
 	aClient *cptr;

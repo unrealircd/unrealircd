@@ -1157,7 +1157,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	   ** Pass on all services based q-lines
 	 */
 	{
-		aSqlineItem *tmp;
+		ConfigItem_ban *bconf;
 		char *ns = NULL;
 
 		if (me.serv->numeric && SupportNS(cptr))
@@ -1165,25 +1165,25 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 		else
 			ns = NULL;
 
-/*		for (tmp = sqline; tmp; tmp = tmp->next)
+		for (bconf = conf_ban; bconf; bconf = (ConfigItem_ban *) bconf->next)
 		{
-			if (tmp->status != CONF_ILLEGAL)
-				if (tmp->reason)
-					sendto_one(cptr, "%s%s %s %s :%s",
-					    ns ? "@" : ":",
-					    ns ? ns : me.name,
-					    (IsToken(cptr) ? TOK_SQLINE :
-					    MSG_SQLINE), tmp->sqline,
-					    tmp->reason);
-				else
-					sendto_one(cptr, "%s%s %s %s",
-					    ns ? "@" : ":",
-					    ns ? ns : me.name,
-					    me.name,
-					    (IsToken(cptr) ? TOK_SQLINE :
-					    MSG_SQLINE), tmp->sqline);
+			if (bconf->flag.type == CONF_BAN_NICK)
+				if (bconf->flag.type2 == CONF_BAN_TYPE_AKILL)
+					if (bconf->reason)
+						sendto_one(cptr, "%s%s %s %s :%s",
+						    ns ? "@" : ":",
+						    ns ? ns : me.name,
+						    (IsToken(cptr) ? TOK_SQLINE :
+						    MSG_SQLINE), bconf->mask,
+						    bconf->reason);
+					else
+						sendto_one(cptr, "%s%s %s %s",
+						    ns ? "@" : ":",
+						    ns ? ns : me.name,
+						    me.name,
+						    (IsToken(cptr) ? TOK_SQLINE :
+						    MSG_SQLINE), bconf->mask);
 		}
-		*/
 	}
 
 	sendto_one(cptr, "%s %li %li %li 0 0 0 0 :%s",
@@ -2224,7 +2224,6 @@ int  m_watch(cptr, sptr, parc, parv)
 static void report_sqlined_nicks(sptr)
 	aClient *sptr;
 {
-	aSqlineItem *tmp;
 	char *nickmask, *reason;
 
 /*	for (tmp = sqline; tmp; tmp = tmp->next)
