@@ -520,5 +520,7 @@
   recent DRM exploits (spyware etc).
 - Fixed /restart reasons, reported by SouL-FoRTuNe.
 - Partial (incomplete!) fix for alloca warnings during compile (especially w/SSL).
-- Fixed serious crashbug
+- Fixed serious crashbug that can be triggered by users, released a hotfix and a seperate
+  version called 3.2.2b (which is just 3.2.2+patch+version change to '3.2.2b',
+  nothing else).
 - Fixed 'make install' error due to example.settings remove.
