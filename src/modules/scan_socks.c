@@ -156,8 +156,11 @@ void	scan_socks_scan(HStruct *h)
 	strcpy(host, h->host);
 	IRCMutexUnlock((*xHSlock));
 	
+#ifndef INET6
 	sin.SIN_ADDR.S_ADDR = inet_addr(host);
- 
+#else
+	inet_pton(AF_INET6, host, sin.SIN_ADDR.S_ADDR);
+#endif 
 	if ((fd = socket(AFINET, SOCK_STREAM, 0)) < 0)
 	{
 		goto exituniverse;

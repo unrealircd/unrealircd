@@ -597,3 +597,4 @@ seen. gmtime warning still there
   pools, and some illegal if test $var = othervar
 - Fixed a configure.in error with IRCDLOBS
 - Taking some more Config changes
+- Some more INET6 fixes
