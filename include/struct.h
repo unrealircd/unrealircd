@@ -1400,6 +1400,6 @@ extern char *gnulicense[];
 #endif
 #define HASH_TEST HASH_CHECK
 #include "modules.h"
-
+#include "events.h"
 #endif /* __struct_include__ */
 

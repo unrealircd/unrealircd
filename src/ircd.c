@@ -1186,9 +1186,9 @@ void SocketLoop(void *dummy)
 			loop.do_tkl_sweep = 0;
 		}
 		/* we want accuarte time here not the fucked up TStime() :P -Stskeeps */
-		if ((TStime() - last_tune) > 300)
+		if ((timeofday - last_tune) > 300)
 		{
-			last_tune = time(NULL);
+			last_tune = timeofday;
 			save_tunefile();
 		}
 
