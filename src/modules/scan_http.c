@@ -307,7 +307,7 @@ void	scan_http_scan_port(HSStruct *z)
 		CLOSE_SOCK(fd);
 		if (len < 4)
 			goto exituniverse;
-		if (strncmp(httpbuf, "HTTP/1.0 200", 12))
+		if (!strncmp(httpbuf, "HTTP/1.0 200", 12))
 		{
 			/* Gotcha */
 			IRCMutexLock((h->lock));
