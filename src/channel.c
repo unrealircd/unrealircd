@@ -103,7 +103,6 @@ static char nickbuf[BUFSIZE], buf[BUFSIZE];
 char modebuf[MAXMODEPARAMS*2+1], parabuf[504];
 #include "sjoin.h"
 
-#ifdef USE_LONGMODE
 typedef struct {
 	long mode;
 	char flag;
@@ -112,7 +111,6 @@ typedef struct {
 } aCtab;
 
 
-// typedef struct CFlagTab aCtab;
 #define MODESYS_LINKOK		/* We do this for a TEST  */
 aCtab cFlagTab[] = {
 	{MODE_LIMIT, 'l', 0, 1},
@@ -151,7 +149,6 @@ aCtab cFlagTab[] = {
 	{MODE_NONICKCHANGE, 'N', 0, 0},
 	{0x0, 0x0, 0x0}
 };
-#endif
 
 
 #define	BADOP_BOUNCE	1

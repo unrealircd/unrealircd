@@ -1753,3 +1753,5 @@ seen. gmtime warning still there
 - Fixed a TKL bug where leaving out the reason caused a crash (reported by Ravage)
 - Added the ability to specify port ranges, for example listen *:6660-6669; listens
   on ports 6660, 6661, ... 6669. Suggested by Krisztian Romek
+- Removed USE_LONGMODE, if it was #undef'ed problems could occur, so there is no reason to
+  have it if it doesn't to anything.

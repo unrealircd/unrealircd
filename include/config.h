@@ -638,8 +638,6 @@ error You stuffed up config.h signals
 #ifdef _WIN32
 # undef FORCE_CORE
 #endif
-/* use cflag longmodes */
-#define USE_LONGMODE
 #ifdef NEED_BCMP
 #define bcmp memcmp
 #endif

@@ -1166,11 +1166,7 @@ struct ListOptions {
 
 /* mode structure for channels */
 struct SMode {
-#ifndef USE_LONGMODE
-	unsigned int mode;
-#else
 	long mode;
-#endif
 	int  limit;
 	char key[KEYLEN + 1];
 	char link[LINKLEN + 1];
