@@ -5040,9 +5040,10 @@ int  m_sapart(cptr, sptr, parc, parv)
 	{
 		parv[0] = parv[1];
 		parv[1] = parv[2];
+		parv[2] = NULL;
 		sendto_one(acptr,
 		    ":%s NOTICE %s :*** You were forced to part %s", me.name,
-		    acptr->name, parv[2]);
+		    acptr->name, parv[1]);
 		(void)m_part(acptr, acptr, 2, parv);
 	}
 	else
@@ -5051,35 +5052,4 @@ int  m_sapart(cptr, sptr, parc, parv)
 
 	return 0;
 }
-/* These just waste space
-int m_noshortn(cptr, sptr, parc, parv)
-aClient	*cptr, *sptr;
-int	parc;
-char	*parv[];
-{	sendto_one(sptr, "NOTICE %s :*** Please use /nickserv for that command",sptr->name);
-}
-int m_noshortc(cptr, sptr, parc, parv)
-aClient	*cptr, *sptr;
-int	parc;
-char	*parv[];
-{	sendto_one(sptr, "NOTICE %s :*** Please use /chanserv for that command",sptr->name);
-}
-int m_noshortm(cptr, sptr, parc, parv)
-aClient	*cptr, *sptr;
-int	parc;
-char	*parv[];
-{	sendto_one(sptr, "NOTICE %s :*** Please use /memoserv for that command",sptr->name);
-}
-int m_noshorto(cptr, sptr, parc, parv)
-aClient	*cptr, *sptr;
-int	parc;
-char	*parv[];
-{	sendto_one(sptr, "NOTICE %s :*** Please use /operserv for that command",sptr->name);
-}
-int m_noshorth(cptr, sptr, parc, parv)
-aClient *cptr, *sptr;
-int     parc;
-char    *parv[];
-{       sendto_one(sptr, "NOTICE %s :*** Please use /helpserv for that command",sptr->name);
-}
-*/
+

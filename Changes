@@ -706,3 +706,4 @@ seen. gmtime warning still there
 - Made oper {} (and vhost {}) allow you to enter an IP even if your host resolves by request of Cas
 - Added set::options:show-klines and set::options::show-tkl to make /stats G and /stats K oper only
 - Added a patch by Zogg to fix a socks scanner problem
+- Fixed a /sapart bug found by SubZero
