@@ -2074,3 +2074,4 @@ seen. gmtime warning still there
 - Fixed a PRIVMSG channelprefix bug reported by aragon (#0000902)
 - Fixed far connect (+s +F): connects from U-lined servers are now hidden again.
 - Added IP bans like *!*@194.109.* (#0000474).
+- Fixed usermode +S: was accidently a local usermode (#0000909) reported by DukePyrolator.

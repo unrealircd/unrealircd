@@ -102,7 +102,7 @@ void	umode_init(void)
 	UMODE_LOCOP = umode_lget('O');     /* 0x0200	 Local operator -- SRB */
 	UMODE_RGSTRONLY = umode_gget('R'); /* 0x0400  Only reg nick message */
 	UMODE_WEBTV = umode_gget('V');     /* 0x0800  WebTV Client */
-	UMODE_SERVICES = umode_lget('S');  /* 0x4000	 services */
+	UMODE_SERVICES = umode_gget('S');  /* 0x4000	 services */
 	UMODE_HIDE = umode_gget('x');	     /* 0x8000	 Hide from Nukes */
 	UMODE_NETADMIN = umode_gget('N');  /* 0x10000	 Network Admin */
 	UMODE_COADMIN = umode_gget('C');   /* 0x80000	 Co Admin */
