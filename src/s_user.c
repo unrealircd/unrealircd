@@ -57,6 +57,7 @@ void send_umode_out_nickv2(aClient *, aClient *, long);
 void send_umode(aClient *, aClient *, long, long, char *);
 void set_snomask(aClient *, char *);
 int create_snomask(char *, int);
+char *get_snostr(long sno);
 /* static  Link    *is_banned(aClient *, aChannel *); */
 int  dontspread = 0;
 extern char *me_hash;
@@ -1095,7 +1096,7 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 	}
 
 	hash_check_watch(sptr, RPL_LOGON);	/* Uglier hack */
-	send_umode(NULL, sptr, 0, SEND_UMODES, buf);
+	send_umode(NULL, sptr, 0, SEND_UMODES|UMODE_SERVNOTICE, buf);
 	/* NICKv2 Servers ! */
 	sendto_serv_butone_nickcmd(cptr, sptr, nick,
 	    sptr->hopcount + 1, sptr->lastnick, user->username, user->realhost,
@@ -1120,6 +1121,9 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 		if (buf[0] != '\0' && buf[1] != '\0')
 			sendto_one(cptr, ":%s MODE %s :%s", cptr->name,
 			    cptr->name, buf);
+		if (user->snomask)
+			sendto_one(sptr, rpl_str(RPL_SNOMASK),
+				me.name, sptr->name, get_snostr(user->snomask));
 		strcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost));
 
 		for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *) tlds->next) {
@@ -1959,6 +1963,11 @@ CMD_FUNC(m_user)
 	if (!IsServer(cptr))
 	{
 		sptr->umodes |= CONN_MODES;
+		if (CONNECT_SNOMASK)
+		{
+			sptr->umodes |= UMODE_SERVNOTICE;
+			user->snomask = create_snomask(CONNECT_SNOMASK, 0);
+		}
 	}
 
 	strncpyzt(user->realhost, host, sizeof(user->realhost));
@@ -2239,7 +2248,7 @@ CMD_FUNC(m_umode)
 	{
 		sendto_one(sptr, rpl_str(RPL_UMODEIS),
 		    me.name, parv[0], get_mode_str(sptr));
-		if (SendServNotice(sptr) && sptr->user->snomask)
+		if (sptr->user->snomask)
 			sendto_one(sptr, rpl_str(RPL_SNOMASK),
 				me.name, parv[0], get_sno_str(sptr));
 		return 0;
@@ -2283,6 +2292,8 @@ CMD_FUNC(m_umode)
 			  if (what == MODE_DEL) {
 				if (parc >= 4 && sptr->user->snomask) {
 					set_snomask(sptr, parv[3]); 
+					if (sptr->user->snomask == 0)
+						goto def;
 					break;
 				}
 				else {
@@ -2295,6 +2306,7 @@ CMD_FUNC(m_umode)
 					set_snomask(sptr, IsAnOper(sptr) ? SNO_DEFOPER : SNO_DEFUSER);
 				else
 					set_snomask(sptr, parv[3]);
+				goto def;
 			  }
 		  case 'o':
 			  if(sptr->from->flags & FLAGS_QUARANTINE)

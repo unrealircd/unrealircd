@@ -290,7 +290,10 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		else
 			set_snomask(sptr, SNO_DEFOPER);
 		if (sptr->user->snomask)
+		{
 			sptr->user->snomask |= SNO_SNOTICE; /* set +s if needed */
+			sptr->umodes |= UMODE_SERVNOTICE;
+		}
 		send_umode_out(cptr, sptr, old);
 		sendto_one(sptr, rpl_str(RPL_SNOMASK),
 			me.name, parv[0], get_sno_str(sptr));

@@ -1852,3 +1852,4 @@ seen. gmtime warning still there
 - Ahem... Fix for patch above (memleak).
 - Fixed bug which made opers unable to do -a/-q (#0000654).
 - Fixed bug in +q/+a list (/mode #chan q)
+- Added set::snomask-on-connect
