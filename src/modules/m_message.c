@@ -201,26 +201,28 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 		 */
 		if (!strcasecmp(nick, "ircd") && MyClient(sptr))
 		{
+			int ret = 0;
 			if (!recursive_webtv)
 			{
 				recursive_webtv = 1;
-				parse(sptr, parv[2], (parv[2] + strlen(parv[2])));
+				ret = parse(sptr, parv[2], (parv[2] + strlen(parv[2])));
 				recursive_webtv = 0;
 			}
-			return 0;
+			return ret;
 		}
 		if (!strcasecmp(nick, "irc") && MyClient(sptr))
 		{
 			if (!recursive_webtv)
 			{
+				int ret;
 				recursive_webtv = 1;
-				if (webtv_parse(sptr, parv[2]) == -2)
+				ret = webtv_parse(sptr, parv[2]);
+				if (ret == -99)
 				{
-					parse(sptr, parv[2],
-					    (parv[2] + strlen(parv[2])));
+					ret = parse(sptr, parv[2], (parv[2] + strlen(parv[2])));
 				}
 				recursive_webtv = 0;
-				return 0;
+				return ret;
 			}
 		}
 		if (*nick != '#' && (acptr = find_person(nick, NULL)))

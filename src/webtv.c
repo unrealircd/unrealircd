@@ -79,7 +79,7 @@ int	webtv_parse(aClient *sptr, char *string)
 	n = strlen(string);
 	cmd = strtok(string, " ");
 	if (!cmd)
-		return -2;	
+		return -99;	
 		
 	for (message = webtv_cmds; message->command; message++)
 		if (strcasecmp(message->command, cmd) == 0)
@@ -92,7 +92,7 @@ int	webtv_parse(aClient *sptr, char *string)
 		/* restore the string*/
 		if (strlen(cmd) < n)
 			cmd[strlen(cmd)]= ' ';
-		return -2;
+		return -99;
 	}
 
 	i = 0;
@@ -130,8 +130,7 @@ int	webtv_parse(aClient *sptr, char *string)
 	}
 	para[++i] = NULL;
 
-	(*message->func) (sptr->from, sptr, i, para);
-	return 0;
+	return (*message->func) (sptr->from, sptr, i, para);
 }
 
 int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
