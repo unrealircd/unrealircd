@@ -1234,4 +1234,4 @@ seen. gmtime warning still there
   various other people ..
 - Fixed a /mkpasswd typo and added the updated /mkpasswd syntax to doc/unrealircd.doc, both
   reported by peck
-
+- Made the command system use module objects (haven't yet converted modules to use it)

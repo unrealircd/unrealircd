@@ -655,20 +655,6 @@ struct Server {
 #define M_ALIAS 0x0020
 #define M_RESETIDLE 0x0040
 
-struct Command {
-	aCommand		*prev, *next;
-	char 			*cmd;
-	int			(*func) ();
-	int			flags;
-	unsigned int    	count;
-	unsigned		parameters : 5;
-	unsigned		token : 1;
-	unsigned long   	bytes;
-#ifdef DEBUGMODE
-	unsigned long 		lticks;
-	unsigned long 		rticks;
-#endif
-};
 
 
 /* tkl:
@@ -1401,6 +1387,21 @@ extern char *gnulicense[];
 #define EVENT_HASHES EVENT_DRUGS
 #include "modules.h"
 #include "events.h"
+struct Command {
+	aCommand		*prev, *next;
+	char 			*cmd;
+	int			(*func) ();
+	int			flags;
+	unsigned int    	count;
+	unsigned		parameters : 5;
+	unsigned		token : 1;
+	unsigned long   	bytes;
+	Module 			*owner;
+#ifdef DEBUGMODE
+	unsigned long 		lticks;
+	unsigned long 		rticks;
+#endif
+};
 
 #endif /* __struct_include__ */
 

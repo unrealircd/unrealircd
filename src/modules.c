@@ -293,6 +293,9 @@ int    Module_free(Module *mod)
 		else if (objs->type == MOBJ_HOOK) {
 			HookDel(objs->object.hook);
 		}
+		else if (objs->type == MOBJ_COMMAND) {
+			CommandDel(objs->object.command);
+		}
 	}
 	for (p = Modules; p; p = p->next)
 	{

@@ -91,13 +91,18 @@ typedef struct {
 #define MOBJ_HOOK    0x0002
 #define MOBJ_COMMAND 0x0004
 
+typedef struct _command {
+	struct _command *prev, *next;
+	aCommand *cmd, *tok;
+} Command;
+
 typedef struct _ModuleObject {
 	struct _ModuleObject *prev, *next;
 	short type;
 	union {
 		Event *event;
 		Hook *hook;
-		aCommand *command;
+		Command *command;
 	} object;
 } ModuleObject;
 
@@ -221,6 +226,9 @@ Hook	*HookDel(Hook *hook);
 #define RunHookReturnVoid(hooktype,x,ret) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) if((*(global_i->func.intfunc))(x) ret) return
 #define RunHook2(hooktype,x,y) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*(global_i->func.intfunc))(x,y)
 
+
+Command *CommandAdd(Module *module, char *cmd, char *tok, int (*func)(), unsigned char params, int flags);
+void CommandDel(Command *command);
 
 /* Hook types */
 #define HOOKTYPE_LOCAL_QUIT	1
