@@ -2086,7 +2086,6 @@ void set_snomask(aClient *sptr, char *snomask) {
  */
 CMD_FUNC(m_umode)
 {
-	int  flag = 0;
 	int  i;
 	char **p, *m;
 	aClient *acptr;
@@ -2198,11 +2197,11 @@ CMD_FUNC(m_umode)
 						  sptr->umodes &= ~Usermode_Table[i].mode;
 					  break;
 				  }
-				  if (flag == 0 && MyConnect(sptr) && !rpterror)
-				  {
-					  sendto_one(sptr,
-					      err_str(ERR_UMODEUNKNOWNFLAG),
-					      me.name, parv[0]);
+			  	  else if (i == Usermode_highest && MyConnect(sptr) && !rpterror)
+  			  	  {
+				  	sendto_one(sptr,
+				      		err_str(ERR_UMODEUNKNOWNFLAG),
+				      		me.name, parv[0]);
 					  rpterror = 1;
 				  }
 			  }
