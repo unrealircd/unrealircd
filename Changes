@@ -508,3 +508,4 @@
   show up if flat-map was enabled, reported by GSF19 (#0002230).
 - Some doc/ updates: removed: Unreal31_to_32.html & example.settings, updated: Authors &
   translations.txt.
+- Added a basic regex tutorial to unreal32docs.html (#0000920)

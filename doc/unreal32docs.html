@@ -121,6 +121,16 @@ English | <a href="unreal32docs.de.html">German</a> |
   ---8.8. <a href="#secantiexploit">Protecting against exploits</a><br>
   ---8.9. <a href="#secsummary">Summary</a><br>
   9. <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">Frequently Asked Questions (FAQ)</a><br> 
+  A. <a href="#regex">Regular Expressions</a><br>
+  ---A.1. <a href="#regexlit">Literals</a><br>
+  ---A.2. <a href="#regexdot">Dot Operator</a><br>
+  ---A.3. <a href="#regexrep">Repetition Operators</a><br>
+  ---A.4. <a href="#regexbracket">Bracket Expressions</a><br>
+  ---A.5. <a href="#regexassert">Assertions</a><br>
+  ---A.6. <a href="#regexalt">Alternation</a><br>
+  ---A.7. <a href="#regexsub">Subexpressions</a><br>
+  ---A.8. <a href="#regexbackref">Back References</a><br>
+  ---A.9. <a href="#regexcase">Case Sensitivity</a><br>
 </p>
 <p><b><font size="+2">1.0 &#8211; Introduction & Notes <a name="IntroductionNotes"></a></font></b><br>
 </p><div class="desc">
@@ -3280,5 +3290,85 @@ security until they got hacked, try to avoid that :).
 <p><font size="+2"><b>9 &#8211; Frequently Asked Questions (FAQ)<a name="faq"></a></b></font></p>
 <div class="desc"><p>The FAQ is available online <a href="http://www.vulnscan.org/UnrealIrcd/faq/" TARGET="_blank">here</a></p></div>
 <p></p>
+
+<p><font size="+2"><b>A Regular Expressions<a name="regex"></a></b></font></p>
+<div class="desc"><p>Regular expressions are used in many places in Unreal, including badwords, spamfilter, and aliases. Regular expressions are a very complex tool used for pattern matching. They are sometimes referred to as "regexp" or "regex." Unreal uses the TRE regular expression library for its regex. This library supports some very complex and advanced expressions that may be confusing. The information below will help you understand how regexps work. If you are interested in more technical and detailed information about the regexp syntax used by Unreal, visit the <a href="http://www.laurikari.net/tre/syntax.html" target="_new">TRE homepage</a>.</p></div>
+
+<p><font size="+2"><b>A.1 Literals<a name="regexlit"></a></b></font></p>
+<div class="desc"><p>Literals are the most basic component of a regexp. Basically, they are characters that are treated as plaintext. For example, the pattern "test" consists of the four literals, "t," "e," "s," and "t." In Unreal, literals are treated as case insensitive, so the previous regex would match "test" as well as "TEST." Any character that is not a "meta character" (discussed in the following sections) is treated as a literal. You can also explicitely make a character a literal by using a backslash (\). For example, the dot (.) is a metacharacter. If you wish to include a literal ., simply use \. and Unreal will treat this as a period. It is also possible that you want to check for a character that is not easily typed, say ASCII character 3 (color). Rather than having to deal with using an IRC client to create this character, you can use a special sequence, the \x. If you type \x3, then it is interpretted as being the ASCII character 3. The number after the \x is represented as hexidecimal and can be in the range from \x0 to \xFF.</p></div>
+
+<p><font size="+2"><b>A.2 Dot Operator<a name="regexdot"></a></b></font></p>
+<div class="desc"><p>The dot (.) operator is used to match "any character." It matches a single character that has any value. For example, the regex "a.c" will match "abc," "adc," etc. However, it will not match "abd" because the "a" and "c" are literals that must match exactly.</p></div>
+
+<p><font size="+2"><b>A.3 Repetition Operators<a name="regexrep"></a></b></font></p>
+<div class="desc"><p>One of the common mistakes people make with regex is assuming that they work just like wildcards. That is, the * and ? characters will match just like in a wildcard. While these characters do have similar meaning in a regex, they are not exactly the same. Additionaly, regular expressions also support other, more advanced methods of repetition.
+<p>
+The most basic repetition operator is the ? operator. This operator matches 0 or 1 of the previous character. This, "of the previous character," is where the ? in regex differs from a wildcard. In a wildcard, the expression, "a?c" matches an "a" followed by any character (or no character), followed by a "c." In regex it has a different meaning. It matches 0 or 1 of the letter "a" followed by the letter "c." Basically, the ? is modifying the a by specifying how many a's may be present. To emulate the ? in a wildcard, the . operator is used. The regex "a.?c" is equivilent to the previously mentioned wildcard. It matches the letter "a" followed by 0 or 1 of any character (the ? is modifying the .), followed by a "c."
+<p>
+The next repetition operator is the *. Again, this operator is similar to a wildcard. It matches 0 or more of the previous character. Note that this "of the previous character" is something that is characteristic of all repetition operators. The regex "a*c" matches 0 or more a's followed by a "c." For example, "aaaaaac" matches. Once again, to make this work like a wildcard, you would use "a.*c" which will cause the * to modify the . (any character) rather than the "a."
+<p>
+The + operator is very similar to the *. However, instead of matching 0 or more, it matches 1 or more. Basically, "a*c" will match "c" (0 a's followed by a c), where as "a+c" would not. The "a+" states that there must be "at least" 1 a. So "c" does not match but "ac" and "aaaaaaaaac" do.
+<p>
+The most advanced repetition operator is known as a "boundary." A boundary lets you set exact constraints on how many of the previous character must be present. For example, you may want to require exactly 8 a's, or at least 8 a's, or between 3 and 5 a's. The boundary allows you to accomplish all of these. The basic syntax is {M,N} where M is the lower bound, and N is the upper bound. For example, the match between 3 and 5 a's, you would do "a{3,5}". However, you do not have to specify both numbers. If you do "a{8}" it means there must be exactly 8 a's. Therefore, "a{8}" is equivilent to "aaaaaaaa." To specify the "at least" example, you basically create a boundary that only has a lower bound. So for at least 8 a's, you would do "a{8,}".
+<p>
+By default, all of the repetition operators are "greedy." Greediness is a somewhat complex idea. Basically, it means that an operator will match as many characters as it can. This is best explained by an example. <p>Say we have the following text:<br>
+HELLO<br>
+And the following regex:<br>
+.+L<p>
+In this example, you might think that the .+ matches "HE." However, this is incorrect. Because the + is greedy, it matches "HEL." The reason is, it chooses the largest portion of the input text that can be matched while still allowing the entire regex to match. In this example, it chose "HEL" because the only other requirement is that the character after the text matched by .+ must be an "L". Since the text is "HELLO", "HEL" is followed by an "L," and therefore it matches. Sometimes, however, it is useful to make an operator nongreedy. This can be done by adding a ? character after the repetition operator. Modifying the above to, ".+?L" the .+? will now match "HE" rather than "HEL" since it has been placed in a nongreedy state. The ? can be added to any repetition character: ??, *?, +?, {M,N}?.</p></div>
+
+<p><font size="+2"><b>A.4 Bracket Expressions<a name="regexbracket"></a></b></font></p>
+<div class="desc">Bracket expressions provide a convenient way to do an "or" operator. For example, if you want to say "match an a or a b." The bracket expression gets its name from the fact that it is enclosed in brackets ([]). The basic syntax is that the expression includes a series of characters. These characters are then treated as though there were an "or" between them. As an example, the expression "[abc]" matches an "a," a "b," or a "c." Therefore, the regexp "a[bd]c" matches "abc" and "adc" but not "acc."
+<p>
+One very common thing to do is to check for things such as, a letter, or a digit. Rather than having to do, for example, "[0123456789]", the bracket operator supports ranges. Ranges work by specifying the beginning and ending point with a - between them. Therefore, a more simplistic way to test for a digit is to simply do "[0-9]". The same thing can be used on letters, or in fact, any range of ASCII values. If you want to match a letter, simply do "[a-z]" since Unreal is case insensitive, this will match all letters. You can also include multiple ranges in the same expression. To match a letter or a number, "[0-9a-z]". One complication that this creates is that the - is a special character in a bracket expression. To have it match a literal -, the easiest way is to place it as either the first or last character in the expression. For example, "[0-9-]" matches a digit or a -.
+<p>
+To make things even more simple, there are several "character classes" that may be used within a bracket expression. These character classes eliminate the need to define certain ranges. Character classes are written by enclosing their name in :'s. For example, "[0-9]" could also be written as "[:isdigit:]". The list below shows all of the available character classes and what they do:
+<ul>
+<li><tt>alnum</tt> - alphanumeric characters</li>
+<li><tt>alpha</tt> - alphabetic characters</li>
+<li><tt>blank</tt> - blank characters</li>
+<li><tt>cntrl</tt> - control characters</li>
+<li><tt>digit</tt> - decimal digits (0 through 9)</li>
+<li><tt>graph</tt> - all printable characters except space</li>
+<li><tt>lower</tt> - lower-case letters</li>
+<li><tt>print</tt> - printable characters including space</li>
+<li><tt>punct</tt> - printable characters not space or alphanumeric</li>
+<li><tt>space</tt> - white-space characters</li>
+<li><tt>upper</tt> - upper case letters</li>
+<li><tt>xdigit</tt> - hexadecimal digits</li>
+</ul>
+One important note about character classes is that they MUST be the only element in the expression. For example, [:isdigit:-] is NOT legal. Instead, you can accomplish this same goal by nesting the expressions, for example, to do the same thing as "[0-9-]" using a character class, you could do "[[:isdigit:]-]".
+<p>
+The last feature of the bracket expression is negation. Sometimes it is useful to say "anything except these characters." For example, if you want to check if the character is "not a letter," it is easier to list a-z and say "not these," than it is to list all the non-letters. Bracket expressions allow you to handle this through negation. You negate the expression by specifying a "^" as the first character. For example, "[^a-z]" would match any non-letter. As with the -, if you want to include a literal ^, do not place it in the first position, "[a-z^]". Also, to negate a character class, you must once again use nesting, "[^[:isdigit:]]" would match any non-digit.</p></div>
+<p><font size="+2"><b>A.5 Assertions<a name="regexassert"></a></b></font></p>
+<div class="desc">Assertions allow you to test for certain conditions that are not representable by character strings, as well as providing shortcuts for some common bracket expressions.
+<p>
+The ^ character is referred to as the "left anchor." This character matches the beginning of a string. If you simply specify a regex such as "test", it will match, for example "this is a test" since that string contains "test." But, sometimes it is useful to ensure that the string actually starts with the pattern. This can be done with ^. For example "^test" means that the text must start with "test." Additionally, the $ character is the "right anchor." This character matches the end of the string. So if you were to do "^test$", then the string must be exactly the word "test."
+<p>
+Similar tests also exist for words. All of the other assertions are specified using a \ followed by a specific character. For example, to test for the beginning and ending of a word, you can use \< and \> respectively. 
+<p>
+The remaining assertions all come with two forms, a positive and a negative. These assertions are listed below:
+<ul>
+<li><tt>\b</tt> - Word boundary
+<li><tt>\B</tt> - Non-word boundary
+<li><tt>\d</tt> - Digit character (equivalent to <tt>[[:digit:]]</tt>)</li>
+<li><tt>\D</tt> - Non-digit character (equivalent to <tt>[^[:digit:]]</tt>)</li>
+<li><tt>\s</tt> - Space character (equivalent to <tt>[[:space:]]</tt>)</li>
+<li><tt>\S</tt> - Non-space character (equivalent to <tt>[^[:space:]]</tt>)</li>
+<li><tt>\w</tt> - Word character (equivalent to <tt>[[:alnum:]_]</tt>)</li>
+<li><tt>\W</tt> - Non-word character (equivalent to <tt>[^[:alnum:]_]</tt>)</li>
+</ul>
+</div>
+<p><font size="+2"><b>A.6 Alternation<a name="regexalt"></a></b></font></p>
+<div class="desc">Alternation is a method of saying "or." The alternation operator is the vertical bar (|). For example, if you wanted to say "a or b" you could do "a|b". For normal letters, this could be replaced by a bracket expression, but alternation can also be used with subexpressions (discussed in the next section).
+</div>
+<p><font size="+2"><b>A.7 Subexpressions<a name="regexsub"></a></b></font></p>
+<div class="desc">Subexpressions are a portion of of a regex that is treated as a single entity. There are two ways to create a subexpression. The two methods differ with regard to "back references," which will be explained later. To declare a subexpression that uses back references, simply enclose it in parentheses (). To create a subexpression that does not use back references, replace the open-parenthesis with, "(?:". For example, "([a-z])" and "(?:[a-z])". The reason subexpressions are useful is you can then apply operators to the expression. All of the repetition operators, for example, that were mentioned as "X or more of the previous character," can also be used for "X or more of the previous subexpression." For example, if you have a regex of "[0-9][a-z][0-9]", to match a digit, followed by a letter, followed by a digit, and then you decided you wanted to match this sequence twice. Normally, you would do, "[0-9][a-z][0-9][0-9][a-z][0-9]". With subexpressions, however, you can simply do "([0-9][a-z][0-9]){2}".</div>
+<p><font size="+2"><b>A.8 Back References<a name="regexbackref"></a></b></font></p>
+<div class="desc">Back references allow you to reference the string that matched one of the subexpressions of the regexp. You use a back reference by specifying a backslash (\) followed by a number, 0-9, for example \1. \0 is a special back reference that refers to the entire regexp, rather than a subexpression. Back references are useful when you want to match something that contains the same string twice. For example, say you have a nick!user@host. You know that there is a trojan that uses a nickname and username that matches "[0-9][a-z]{5}", and both the nickname and username are the same. Using "[0-9][a-z]{5}![0-9][a-z]{5}@.+" will not work because it would allow the nickname and username to be different. For example, the nickname could be 1abcde and the username 2fghij. Back references allow you to overcome this limitation. Using, "([0-9][a-z]{5})!\1@.+" will work exactly as expected. This searches for the nickname matching the given subexpressions, then it uses a back reference to say that the username must be the same text. 
+<p>
+Since you can only have 9 back references, this is the reason why the (?:) notation is useful. It allows you to create a subexpression without wasting a back reference. Additionally, since back reference information does not need to be saved, it is also faster. Because of this, non-back reference subexpressions should be used whenever back references are not needed.</div>
+<p><font size="+2"><b>A.9 Case Sensitivity<a name="regexcase"></a></b></font></p>
+<div class="desc">As was already mentioned, Unreal makes all regexps case insensitive by default. The main reason for this is, there seem to be many more instances where you want case insensitive searching rather than sensitive, for example, if you block the text "www.test.com," you presumably want to block "WWW.TEST.COM" as well. However, there are instances where you may want case sensitivity, for example, matching for certain trojans. Because of this, a method is provided to dynamically turn case insensitivity on/off. To turn it off, simply use "(?-i)" and to turn it on, "(?i)". For example, "(?-i)[a-z](?i)[a-z]" will match a lowercase letter (case insensitivity is off) followed by either an uppercase or lowercase letter (case insensitivity is on). Additionally, rather than having to always remember to turn the flag back on when you are finished, you can also specify that the flag change should only apply to a subexpression, for example, "(?-i:[a-z])[a-z]" is equivilent to the previous regexp because the -i only applies to the given subexpression.
 </body>
 </html>
