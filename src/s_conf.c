@@ -886,15 +886,9 @@ int  m_svsnoop(cptr, sptr, parc, parv)
 					acptr->umodes &=
 		    				~(UMODE_NETADMIN | UMODE_CLIENT |
 		 			   UMODE_FLOOD | UMODE_EYES | UMODE_WHOIS);
-#ifdef ENABLE_INVISOPER
-					acptr->umodes &=
-					    ~(UMODE_KIX | UMODE_FCLIENT | UMODE_HIDING |
-					    UMODE_DEAF | UMODE_HIDEOPER);
-#else
 					acptr->umodes &=
 					    ~(UMODE_KIX | UMODE_FCLIENT |
 					    UMODE_DEAF | UMODE_HIDEOPER);
-#endif
 					acptr->oflag = 0;
 				
 				}
@@ -1044,15 +1038,8 @@ extern char *getfield();
 
 #define STAR1 OFLAG_SADMIN|OFLAG_ADMIN|OFLAG_NETADMIN|OFLAG_COADMIN
 #define STAR2 OFLAG_ZLINE|OFLAG_HIDE|OFLAG_WHOIS
-#ifdef ENABLE_INVISOPER
-  #define STAR3 OFLAG_INVISIBLE
-#endif
 static int oper_access[] = {
-#ifdef ENABLE_INVISOPER
-	~(STAR1 | STAR2 | STAR3), '*',
-#else
 	~(STAR1 | STAR2 ), '*',
-#endif
 	OFLAG_LOCAL, 'o',
 	OFLAG_GLOBAL, 'O',
 	OFLAG_REHASH, 'r',
@@ -1083,9 +1070,6 @@ static int oper_access[] = {
 /*        OFLAG_AGENT,	'S',*/
 #ifndef NO_OPEROVERRIDE
 	OFLAG_CANOVER, 'v',
-#endif
-#ifdef ENABLE_INVISOPER
-	OFLAG_INVISIBLE, '^',
 #endif
 	0, 0
 };
@@ -2670,15 +2654,9 @@ int  m_svso(cptr, sptr, parc, parv)
 		acptr->umodes &=
 		    ~(UMODE_NETADMIN | UMODE_CLIENT |
 		    UMODE_FLOOD | UMODE_EYES | UMODE_WHOIS);
-#ifdef ENABLE_INVISOPER
-		acptr->umodes &=
-		    ~(UMODE_KIX | UMODE_FCLIENT | UMODE_HIDING |
-		    UMODE_DEAF | UMODE_HIDEOPER);
-#else
 		acptr->umodes &=
 		    ~(UMODE_KIX | UMODE_FCLIENT |
 		    UMODE_DEAF | UMODE_HIDEOPER);
-#endif
 		acptr->oflag = 0;
 		send_umode_out(acptr, acptr, fLag);
 	}

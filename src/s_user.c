@@ -88,9 +88,6 @@ static int user_modes[] = { UMODE_OPER, 'o',
 	UMODE_KIX, 'q',
 	UMODE_BOT, 'B',
 	UMODE_FCLIENT, 'F',
-#ifdef ENABLE_INVISOPER
-	UMODE_HIDING, 'I',
-#endif
 	UMODE_SECURE, 'z',
 	UMODE_DEAF, 'd',
 	UMODE_VICTIM, 'v',
@@ -1809,9 +1806,10 @@ static int m_message(cptr, sptr, parc, parv, notice)
 	static char *err_cantsend[] = {
 		"You need voice (+v)",
 		"No external channel messages",
-		"Colour is not permitted in this channel",
+		"Color is not permitted in this channel",
 		"You are banned",
 		"CTCPs are not permitted in this channel",
+		"You must have a registered nick (+r) to talk on this channel",
 		NULL
 	};
 
@@ -2464,10 +2462,6 @@ static void do_who(sptr, acptr, repchan)
 	/* checks for channel /who's and nonopers */
 	if (channelwho && !IsOper(sptr) && sptr != acptr)
 	{
-#ifdef ENABLE_INVISOPER
-		if IsHiding(acptr)
-			return;
-#endif
 		if (IsAuditorium(repchan) && !is_chan_op(acptr,repchan)
 		    && !is_chan_op(sptr,repchan))
 			return;
@@ -2476,10 +2470,6 @@ static void do_who(sptr, acptr, repchan)
 		if (IsInvisible(acptr) && !IsMember(sptr,repchan))
 			return;
 	}
-#ifdef ENABLE_INVISOPER	
-	if (channelwho && IsHiding(acptr) && !IsNetAdmin(sptr))
-		return;
-#endif
 	if (acptr->user->away)
 		status[i++] = 'G';
 	else
@@ -2498,33 +2488,17 @@ static void do_who(sptr, acptr, repchan)
 	 * simply because they are an oper. (adds ! to the who "flags")
 	 */
 	if (IsAnOper(sptr) && sptr != acptr)
-#ifdef ENABLE_INVISOPER
-		if (channelwho && IsHiding(acptr) && IsNetAdmin(sptr) ||
-		    IsInvisible(acptr) && !IsMember(sptr,repchan) ||
-		    IsAuditorium(repchan) && !is_chan_op(acptr,repchan) ||
-		    !ShowChannel(sptr,repchan)) 
-			status[i++] = '!';
-#else
 		if (
 		    IsInvisible(acptr) && !IsMember(sptr,repchan) ||
                     IsAuditorium(repchan) && !is_chan_op(acptr,repchan) ||
                     !ShowChannel(sptr,repchan))
                         status[i++] = '!';
-#endif
 	else if (sptr != acptr)
-#ifdef ENABLE_INVISOPER
-		if (channelwho && IsHiding(acptr) ||
-                    IsInvisible(acptr) && !IsMember(sptr,repchan) ||
-                    IsAuditorium(repchan) && !is_chan_op(acptr,repchan) ||
-                    !ShowChannel(sptr,repchan))
-			return;
-#else
 		if (
 		    IsInvisible(acptr) && !IsMember(sptr,repchan) ||
                     IsAuditorium(repchan) && !is_chan_op(acptr,repchan) ||
                     !ShowChannel(sptr,repchan))
                     	return;
-#endif
 	
 	/* Channel owner */
 	if (repchan && is_chanowner(acptr, repchan))
@@ -2551,10 +2525,6 @@ static void do_who(sptr, acptr, repchan)
 		    ":%s NOTICE %s :*** %s either did a /who or a specific /who on you",
 		    me.name, acptr->name, sptr->name);
 	}
-#ifdef ENABLE_INVISOPER
-	if (IsHiding(acptr) && sptr != acptr && !IsNetAdmin(sptr))
-		repchan = NULL;
-#endif
 
 	sendto_one(sptr, rpl_str(RPL_WHOREPLY), me.name, sptr->name,
 	    (repchan) ? (repchan->chname) : "*", acptr->user->username,
@@ -2903,13 +2873,7 @@ int  m_whois(cptr, sptr, parc, parv)
 			mlen = strlen(me.name) + strlen(parv[0]) + 6 +
 			    strlen(name);
 
-#ifdef ENABLE_INVISOPER
-			if (!IsServices(acptr) && !IsHiding(acptr) ||
-			    ((IsServices(acptr) || IsHiding(acptr)) && IsNetAdmin(sptr))
-			   )
-#else
 			if (!IsServices(acptr) || IsServices(acptr) && IsNetAdmin(sptr))
-#endif
 			{
 				for (len = 0, *buf = '\0', lp = user->channel; lp;
 				    lp = lp->next)
@@ -4361,13 +4325,6 @@ int  m_umode(cptr, sptr, parc, parv)
 				      && MyClient(sptr))
 					  break;
 				  goto def;
-#ifdef ENABLE_INVISOPER
-			  case 'I':
-				  if (NO_OPER_HIDING == 1 && what == MODE_ADD
-				      && MyClient(sptr))
-					  break;
-				  goto def;
-#endif
 			  case 'B':
 				  if (what == MODE_ADD && MyClient(sptr))
 					  (void)m_botmotd(sptr, sptr, 1, parv);
@@ -4456,11 +4413,6 @@ int  m_umode(cptr, sptr, parc, parv)
 			ClearNetAdmin(sptr);
 		if (IsCoAdmin(sptr) && !OPIsCoAdmin(sptr))
 			ClearCoAdmin(sptr);
-#ifdef ENABLE_INVISOPER
-		if ((sptr->umodes & UMODE_HIDING)
-		    && !(sptr->oflag & OFLAG_INVISIBLE))
-			sptr->umodes &= ~UMODE_HIDING;
-#endif
 		if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
 		    && !IsSecure(sptr))
 			sptr->umodes &= ~UMODE_SECURE;
@@ -4504,48 +4456,11 @@ int  m_umode(cptr, sptr, parc, parv)
 		/* Agents 
 		   if ((sptr->umodes & (UMODE_AGENT)) && !(sptr->oflag & OFLAG_AGENT))
 		   sptr->umodes &= ~UMODE_AGENT; */
-#ifdef ENABLE_INVISOPER
-		if ((sptr->umodes & UMODE_HIDING) && !IsAnOper(sptr))
-			sptr->umodes &= ~UMODE_HIDING;
-		if ((sptr->umodes & UMODE_HIDING)
-		    && !(sptr->oflag & OFLAG_INVISIBLE))
-			sptr->umodes &= ~UMODE_HIDING;
-#endif
 		if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
 		    && !IsSecure(sptr))
 			sptr->umodes &= ~UMODE_SECURE;
-#ifdef ENABLE_INVISOPER
-		if ((sptr->umodes & (UMODE_HIDING))
-		    && !(setflags & UMODE_HIDING))
-		{
-			sendto_umode(UMODE_ADMIN,
-			    "[+I] Activated total invisibility mode on %s",
-			    sptr->name);
-			sendto_serv_butone(cptr,
-			    ":%s SMO A :[+I] Activated total invisibility mode on %s",
-			    me.name, sptr->name);
-			sendto_channels_inviso_part(sptr);
-		}
-#endif
 		if ((sptr->umodes & UMODE_JUNK) && !IsOper(sptr))
 			sptr->umodes &= ~UMODE_JUNK;
-			
-#ifdef ENABLE_INVISOPER
-		if (!(sptr->umodes & (UMODE_HIDING)))
-		{
-			if (setflags & UMODE_HIDING)
-			{
-				sendto_umode(UMODE_ADMIN,
-				    "[+I] De-activated total invisibility mode on %s",
-				    sptr->name);
-				sendto_serv_butone(cptr,
-				    ":%s SMO A :[+I] De-activated total invisibility mode on %s",
-				    me.name, sptr->name);
-				sendto_channels_inviso_join(sptr);
-
-			}
-		}
-#endif
 	}
 	/*
 	 * If I understand what this code is doing correctly...

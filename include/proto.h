@@ -52,7 +52,6 @@ void sendto_chanops_butone PROTO((aClient *one, aChannel *chptr, char *pattern, 
 void sendto_realops PROTO((char *pattern, ...));
 void sendto_serv_butone_token PROTO((aClient *one, char *prefix, char *command, char *token, char *pattern, ...));
 void sendto_serv_butone_token_opt PROTO((aClient *one, int opt, char *prefix, char *command, char *token, char *pattern, ...));
-void sendto_channel_ntadmins PROTO((aClient *from, aChannel *chptr, char *pattern, ...)); 
 
 /* support.c */
 char *my_itoa PROTO((int i));

@@ -797,3 +797,11 @@ Fixed /botserv bug, reported by SciFi
 Unbroke +A channels and bans. :-/
 --Luke
 ===================================
+
+Removed +I. Don't you dare even think about whining.
+--Luke
+===================================
+
+Added chmode +R, requires umode +r to speak.
+--Luke
+===================================

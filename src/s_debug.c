@@ -81,9 +81,6 @@ char serveropts[] = {
 #ifdef	USE_SYSLOG
 	'Y',
 #endif
-#ifdef ENABLE_INVISOPER
-	'R',
-#endif
 #ifndef NO_OPEROVERRIDE
 	'O',
 #endif

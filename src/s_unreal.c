@@ -973,11 +973,6 @@ int  m_sendumode(cptr, sptr, parc, parv)
 			  sendto_umode(UMODE_CODER, "%s", parv[2]);
 			  break;
 */
-#ifdef ENABLE_INVISOPER
-		  case 'I':
-			  sendto_umode(UMODE_HIDING, "%s", parv[2]);
-			  break;
-#endif
 		  case 'w':
 			  sendto_umode(UMODE_WALLOP, "%s", parv[2]);
 			  break;
