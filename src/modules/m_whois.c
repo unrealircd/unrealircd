@@ -229,7 +229,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				sendto_one(sptr, rpl_str(RPL_WHOISREGNICK), me.name, parv[0], name);
 			
 			found = 1;
-			mlen = strlen(me.name) + strlen(parv[0]) + 6 + strlen(name);
+			mlen = strlen(me.name) + strlen(parv[0]) + 10 + strlen(name);
 			for (len = 0, *buf = '\0', lp = user->channel; lp; lp = lp->next)
 			{
 				chptr = lp->chptr;
@@ -248,7 +248,8 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					showchannel = 0;
 				if (acptr == sptr)
 					showchannel = 1;
-
+				/* Hey, if you are editting here... don't forget to change the webtv w_whois ;p. */
+				
 				if (showchannel)
 				{
 					if (len + strlen(chptr->chname) > (size_t)BUFSIZE - 4 - mlen)

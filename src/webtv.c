@@ -170,7 +170,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	for (tmp = parv[1]; (nick = strtoken(&p, tmp, ",")); tmp = NULL)
 	{
-		int  invis, showsecret = 0, showperson, member, wilds;
+		int  invis, showsecret = 0, showchannel, showperson, member, wilds;
 
 		found = 0;
 		(void)collapse(nick);
@@ -269,13 +269,28 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				sendto_one(sptr, ":IRC PRIVMSG %s :%s is a registered nick",
 					sptr->name, name);
 			found = 1;
-			mlen = strlen(me.name) + strlen(sptr->name) + 6 +
-			    strlen(name);
+			mlen = 24 + strlen(sptr->name) + strlen(name);
 			for (len = 0, *buf = '\0', lp = user->channel; lp;
 			    lp = lp->next)
 			{
 				chptr = lp->chptr;
-				if (IsAnOper(sptr) || ShowChannel(sptr, chptr) || (acptr == sptr))
+				showchannel = 0;
+				if (ShowChannel(sptr, chptr))
+					showchannel = 1;
+#ifndef SHOW_SECRET
+				if (IsAnOper(sptr) && !SecretChannel(chptr))
+#else
+				if (IsAnOper(sptr))
+#endif
+					showchannel = 1;
+				if ((acptr->umodes & UMODE_HIDEWHOIS) && !IsMember(sptr, chptr) && !IsAnOper(sptr))
+					showchannel = 0;
+				if (IsServices(acptr) && !IsNetAdmin(sptr))
+					showchannel = 0;
+				if (acptr == sptr)
+					showchannel = 1;
+					
+				if (showchannel)
 				{
 					if (len + strlen(chptr->chname)
 					    > (size_t)BUFSIZE - 4 - mlen)
