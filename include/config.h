@@ -424,6 +424,11 @@
 #define SIXBONE_HACK
 
 /*
+ * Forces Unreal to use compressed IPv6 addresses rather than expanding them
+ */
+#undef IPV6_COMPRESSED
+
+/*
  * Extended channel modes. This extends the channel modes with yet another
  * 32 possible modes which can also be used in modules.
  */
