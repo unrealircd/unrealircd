@@ -106,6 +106,9 @@ char serveropts[] = {
 #ifdef STRIPBADWORDS
 	'X',
 #endif
+#ifdef USE_POLL
+	'P',
+#endif
 	'\0'
 };
 

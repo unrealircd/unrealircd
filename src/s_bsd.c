@@ -264,7 +264,6 @@ int  inetport(cptr, name, port)
 
 	if (cptr->fd < 0)
 	{
-//              fprintf(
 #if !defined(DEBUGMODE) && !defined(_WIN32)
 #endif
 		report_error("opening stream socket %s:%s", cptr);
@@ -2263,8 +2262,8 @@ int  read_message(delay, listp)
 			}
 			else if (!IsMe(cptr))
 			{
-				if (DBufLength(&cptr->recvQ) && delay2 > 2)
-					delay2 = 1;
+/*				if (DBufLength(&cptr->recvQ) && delay2 > 2)
+					delay2 = 1; */
 				if (DBufLength(&cptr->recvQ) < 4088)
 					PFD_SETR(i);
 			}

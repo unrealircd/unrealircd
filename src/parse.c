@@ -231,7 +231,7 @@ void	ban_flooder(aClient *cptr)
 	return;
 }
 
-int	Rha;
+int	Rha = 0;
 
 /*
  * parse a buffer.
@@ -325,7 +325,7 @@ int  parse(cptr, buffer, bufend, mptr)
 			 */
 			 
 			/* debugging tool */
-			if (Rha)
+			if (Rha == 1)
 				from = NULL;
 			if (!from)
 			{
