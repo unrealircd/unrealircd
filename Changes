@@ -3067,3 +3067,5 @@ seen. gmtime warning still there
 - Fixed an SVSMODE #chan -qaohv bug that would cause the user to be able to readd the mode
   (#0001690) reported by auspice
 - spamfilter.conf: added signature for LOI trojan.
+- Added german translation of unreal32docs (doc/unreal32docs.de.html), translated
+  by Stylus740 which will also maintain it.
