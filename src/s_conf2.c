@@ -2162,6 +2162,7 @@ void	validate_configuration(void)
 	ConfigItem_except *except_ptr;
 	ConfigItem_ban *ban_ptr;
 	ConfigItem_link *link_ptr;
+	ConfigItem t;
 	short hide_host = 1;
 	
 	/* Let us validate dynconf first */
@@ -2318,13 +2319,19 @@ void	validate_configuration(void)
 	}
 	for (except_ptr = conf_except; except_ptr; except_ptr = (ConfigItem_except *) except_ptr->next)
 	{
-		if (!except_ptr->mask)
-			Error("except mask missing");
+		if (!except_ptr->mask) {
+			Warning("except mask missing. Deleting except {} block");
+			t.next = del_ConfigItem((ConfigItem *)except_ptr, (ConfigItem **)&conf_except);
+			except_ptr = (ConfigItem_except *)&t;
+		}
 	}
 	for (ban_ptr = conf_ban; ban_ptr; ban_ptr = (ConfigItem_ban *) ban_ptr->next)
 	{
-		if (!ban_ptr->mask)
-			Error("ban mask missing");
+		if (!ban_ptr->mask) {
+			Warning("ban mask missing");
+			t.next = del_ConfigItem((ConfigItem *)ban_ptr, (ConfigItem **)&conf_ban);
+			ban_ptr = (ConfigItem_ban *)&t;
+		}
 	}	
 	for (link_ptr = conf_link; link_ptr; link_ptr = (ConfigItem_link *) link_ptr->next)
 	{
