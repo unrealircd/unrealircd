@@ -184,6 +184,8 @@ inline void stats_help(aClient *sptr)
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"E - exceptban - Send the except ban block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+		"f - spamfilter - Send the spamfilter list");
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"F - denydcc - Send the deny dcc block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"G - gline - Send the gline list");

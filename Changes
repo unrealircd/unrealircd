@@ -2766,3 +2766,4 @@ seen. gmtime warning still there
 - internal: added sendnotice()
 - win32 compile fix (typo)
 - added set::spamfilter::* to docs
+- updated /stats help and docs on '/stats f'
