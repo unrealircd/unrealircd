@@ -48,7 +48,7 @@ int  match(mask, name)
 	u_char *n;
 	u_char cm;
 	u_char *mylowertab;
-	u_char *wsn;
+	u_char *wsn = NULL;
 	u_char *wsm;
 
 	m = (u_char *)mask;

@@ -353,6 +353,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SetHelpOp(x)		((x)->umodes |= UMODE_HELPOP)
 #define	SetOper(x)		((x)->umodes |= UMODE_OPER)
 #define	SetLocOp(x)    		((x)->umodes |= UMODE_LOCOP)
+#define SetWhois(x)		((x)->umodes |= UMODE_WHOIS)
+#define SetHide(x)		((x)->umodes |= UMODE_HIDE)
 #define SetAdmin(x)		((x)->umodes |= UMODE_ADMIN)
 #define SetSAdmin(x)		((x)->umodes |= UMODE_SADMIN)
 #define SetNetAdmin(x)		((x)->umodes |= UMODE_NETADMIN)
@@ -466,8 +468,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #ifdef ENABLE_INVISOPER
   #define OFLAG_INVISIBLE 0x80000000
 #endif
-#define OFLAG_LOCAL	(OFLAG_REHASH|OFLAG_HELPOP|OFLAG_GLOBOP|OFLAG_WALLOP|OFLAG_LOCOP|OFLAG_LROUTE|OFLAG_LKILL|OFLAG_KLINE|OFLAG_UNKLINE|OFLAG_LNOTICE|OFLAG_UMODEC|OFLAG_UMODEF)
-#define OFLAG_GLOBAL	(OFLAG_LOCAL|OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE)
+#define OFLAG_LOCAL	(OFLAG_REHASH|OFLAG_HELPOP|OFLAG_LOCOP|OFLAG_LROUTE|OFLAG_LKILL|OFLAG_KLINE|OFLAG_UNKLINE|OFLAG_LNOTICE|OFLAG_UMODEC|OFLAG_ZLINE|OFLAG_HIDE)
+#define OFLAG_GLOBAL	(OFLAG_LOCAL|OFLAG_GLOBOP|OFLAG_WALLOP|OFLAG_UMODEF|OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE|OFLAG_HIDE)
 #define OFLAG_ISGLOBAL	(OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE)
 
 
@@ -490,6 +492,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPIsAdmin(x)	((x)->oflag & OFLAG_ADMIN)
 #define OPIsSAdmin(x)	((x)->oflag & OFLAG_SADMIN)
 #define OPIsNetAdmin(x) ((x)->oflag & OFLAG_NETADMIN)
+#define OPIsGlobal(x)	((x)->oflag & OFLAG_ISGLOBAL)
 #define OPIsCoAdmin(x)	((x)->oflag & OFLAG_COADMIN)
 #define OPCanUModeC(x)	((x)->oflag & OFLAG_UMODEC)
 #define OPCanUModeF(x)	((x)->oflag & OFLAG_UMODEF)

@@ -330,7 +330,7 @@ extern char *find_by_aln PROTO((char *));
 extern char *convert2aln PROTO((int));
 extern int convertfromaln PROTO((char *));
 extern char *find_server_aln PROTO((char *));
-extern atime(char *xtime);
+extern time_t atime(char *xtime);
 
 
 extern int dopacket PROTO((aClient *, char *, int));

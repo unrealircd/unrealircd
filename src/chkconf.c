@@ -92,7 +92,7 @@ static int openconf()
 	return open(configfile, O_RDONLY);
 }
 
-#define STAR1 OFLAG_SADMIN|OFLAG_ADMIN|OFLAG_NETADMIN|OFLAG_COADMIN
+#define STAR1 OFLAG_SADMIN|OFLAG_ADMIN|OFLAG_NETADMIN
 #define STAR2 OFLAG_ZLINE|OFLAG_HIDE|OFLAG_WHOIS
 static int oper_access[] = {
 	~(STAR1 | STAR2), '*',

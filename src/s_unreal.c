@@ -74,49 +74,22 @@ int  m_sethost(cptr, sptr, parc, parv)
 	char *parv[];
 {
 	char *vhost, *s;
-#ifndef DISABLE_USERMOD
-	int  permit = 0;	/* 0 = opers(glob/locop) 1 = global oper 2 = not MY clients.. */
-#else
-	int  permit = 2;
-#endif
-	int  legalhost = 1;	/* is legal characters? */
 
+#ifdef DISABLE_USERMOD
+        if (MyClient(sptr))
+        {                   
+                sendto_one(sptr, ":%s NOTICE %s :*** The /sethost command is disabled on this server", me.name, sptr->name);
+                return 0;
+        }       
+#endif  
 
-	if (!MyConnect(sptr))
-		goto have_permit1;
-	switch (permit)
-	{
-	  case 0:
-		  if (!IsAnOper(sptr))
-		  {
-			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			      parv[0]);
-			  return 0;
-		  }
-		  break;
-	  case 1:
-		  if (!IsOper(sptr))
-		  {
-			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			      parv[0]);
-			  return 0;
-		  }
-		  break;
-	  case 2:
-		  if (MyConnect(sptr))
-		  {
-			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			      parv[0]);
-			  return 0;
-		  }
-	  default:
-		  sendto_ops_butone(IsServer(cptr) ? cptr : NULL, sptr,
-		      ":%s WALLOPS :[SETHOST] Somebody fixing this corrupted server? !(0|1) !!!",
-		      me.name);
-		  break;
+        if (MyClient(sptr) && !IsAnOper(sptr))
+        {
+               sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+                   parv[0]);
+               return 0;
 	}
 
-      have_permit1:
 	if (parc < 2)
 		vhost = NULL;
 	else
@@ -128,18 +101,19 @@ int  m_sethost(cptr, sptr, parc, parv)
 		if (MyConnect(sptr))
 		{
 			sendto_one(sptr,
-			    ":%s NOTICE %s :*** Syntax: /SetHost <new host>",
+			    ":%s NOTICE %s :*** SetHost Error: Syntax is /sethost <new host>",
 			    me.name, parv[0]);
 		}
-		return;
+		return 0;
 	}
 	/* uh uh .. too small */
 	if (strlen(parv[1]) < 1)
 	{
 		if (MyConnect(sptr))
 			sendto_one(sptr,
-			    ":%s NOTICE %s :*** /SetHost Error: Atleast write SOMETHING that makes sense (':' string)",
+			    ":%s NOTICE %s :*** SetHost Error: Host cannot be NULL.",
 			    me.name, sptr->name);
+		return 0;
 	}
 	/* too large huh? */
 	if (strlen(parv[1]) > (HOSTLEN))
@@ -147,9 +121,9 @@ int  m_sethost(cptr, sptr, parc, parv)
 		/* ignore us as well if we're not a child of 3k */
 		if (MyConnect(sptr))
 			sendto_one(sptr,
-			    ":%s NOTICE %s :*** /SetHost Error: Hostnames are limited to %i characters.",
+			    ":%s NOTICE %s :*** SetHost Error: Hostnames are limited to %i characters.",
 			    me.name, sptr->name, HOSTLEN);
-		return;
+		return 0;
 	}
 
 	/* illegal?! */
@@ -157,16 +131,11 @@ int  m_sethost(cptr, sptr, parc, parv)
 	{
 		if (!isallowed(*s))
 		{
-			legalhost = 0;
+			sendto_one(sptr,
+			    ":%s NOTICE %s :*** SetHost Error: Hostnames may only contain a-z, A-Z, 0-9, '-' & '.'",
+			    me.name, parv[0]);
+			return 0;
 		}
-	}
-
-	if (legalhost == 0)
-	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** /SetHost Error: A hostname may contain a-z, A-Z, 0-9, '-' & '.' - Please only use them",
-		    me.name, parv[0]);
-		return 0;
 	}
 
 	/* hide it */
@@ -208,7 +177,6 @@ int  m_chghost(cptr, sptr, parc, parv)
 {
 	aClient *acptr;
 	char *s;
-	int  legalhost = 1;
 
 #ifdef DISABLE_USERMOD
 	if (MyClient(sptr))
@@ -218,19 +186,17 @@ int  m_chghost(cptr, sptr, parc, parv)
 	}
 #endif
 
-	if (MyClient(sptr))
-		if (!IsAnOper(sptr))
-		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			    parv[0]);
-			return 0;
-
-		}
+	if (MyClient(sptr) && !IsOper(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+		    parv[0]);
+		return 0;
+	}
 
 	if (parc < 3)
 	{
 		sendto_one(sptr,
-		    ":%s NOTICE %s :*** /ChgHost syntax is /ChgHost <nick> <newhost>",
+		    ":%s NOTICE %s :*** ChgHost Error: Syntax is /chghost <nick> <newhost>",
 		    me.name, sptr->name);
 		return 0;
 	}
@@ -238,7 +204,7 @@ int  m_chghost(cptr, sptr, parc, parv)
 	if (strlen(parv[2]) < 1)
 	{
 		sendto_one(sptr,
-		    ":%s NOTICE %s :*** Write atleast something to change the host to!",
+		    ":%s NOTICE %s :*** ChgHost Error: The host cannot be NULL.",
 		    me.name, sptr->name);
 		return 0;
 	}
@@ -246,8 +212,8 @@ int  m_chghost(cptr, sptr, parc, parv)
 	if (strlen(parv[2]) > (HOSTLEN))
 	{
 		sendto_one(sptr,
-		    ":%s NOTICE %s :*** ChgHost Error: Too long hostname!!",
-		    me.name, sptr->name);
+		    ":%s NOTICE %s :*** ChgHost Error: Hostnames are limited to %i characters.",
+		    me.name, sptr->name, HOSTLEN);
 		return 0;
 	}
 
@@ -256,16 +222,11 @@ int  m_chghost(cptr, sptr, parc, parv)
 	{
 		if (!isallowed(*s))
 		{
-			legalhost = 0;
+			sendto_one(sptr,
+			    ":%s NOTICE %s :*** ChgHost Error: Hostnames may only contain a-z, A-Z, 0-9, '-' & '.'",
+			    me.name, parv[0]);
+			return 0;
 		}
-	}
-
-	if (legalhost == 0)
-	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** /ChgHost Error: A hostname may contain a-z, A-Z, 0-9, '-' & '.' - Please only use them",
-		    me.name, parv[0]);
-		return 0;
 	}
 
 	if ((acptr = find_person(parv[1], NULL)))
@@ -312,7 +273,6 @@ int  m_chgident(cptr, sptr, parc, parv)
 {
 	aClient *acptr;
 	char *s;
-	int  legalident = 1;
 
 #ifdef DISABLE_USERMOD
 	if (MyClient(sptr))
@@ -322,19 +282,17 @@ int  m_chgident(cptr, sptr, parc, parv)
 	}
 #endif
 
-	if (MyClient(sptr))
-		if (!IsAnOper(sptr))
-		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			    parv[0]);
-			return 0;
-
-		}
+	if (MyClient(sptr) && !IsOper(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+		    parv[0]);
+		return 0;
+	}
 
 	if (parc < 3)
 	{
 		sendto_one(sptr,
-		    ":%s NOTICE %s :*** /ChgIdent syntax is /ChgIdent <nick> <newident>",
+		    ":%s NOTICE %s :*** ChgIdent Error: Syntax is /chgident <nick> <newident>",
 		    me.name, sptr->name);
 		return 0;
 	}
@@ -342,7 +300,7 @@ int  m_chgident(cptr, sptr, parc, parv)
 	if (strlen(parv[2]) < 1)
 	{
 		sendto_one(sptr,
-		    ":%s NOTICE %s :*** Write atleast something to change the ident to!",
+		    ":%s NOTICE %s :*** ChgIdent Error: Ident cannot be NULL.",
 		    me.name, sptr->name);
 		return 0;
 	}
@@ -350,26 +308,21 @@ int  m_chgident(cptr, sptr, parc, parv)
 	if (strlen(parv[2]) > (USERLEN))
 	{
 		sendto_one(sptr,
-		    ":%s NOTICE %s :*** ChgIdent Error: Too long ident!!",
-		    me.name, sptr->name);
+		    ":%s NOTICE %s :*** ChgIdent Error: Ident is limited to %i characters.",
+		    me.name, sptr->name, USERLEN);
 		return 0;
 	}
 
 	/* illegal?! */
 	for (s = parv[2]; *s; s++)
 	{
-		if (!isallowed(*s))
+		if (!isallowed(*s) && (*s != '~'))
 		{
-			legalident = 0;
+			sendto_one(sptr,
+			    ":%s NOTICE %s :*** ChgIdent Error: Ident may only contain a-z, A-Z, 0-9, '-', '~' & '.'",
+			    me.name, parv[0]);
+			return 0;
 		}
-	}
-
-	if (legalident == 0)
-	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** /ChgIdent Error: A ident may contain a-z, A-Z, 0-9, '-' & '.' - Please only use them",
-		    me.name, parv[0]);
-		return 0;
 	}
 
 	if ((acptr = find_person(parv[1], NULL)))
@@ -412,49 +365,23 @@ int  m_setident(cptr, sptr, parc, parv)
 	int  parc;
 	char *parv[];
 {
-
 	char *vident, *s;
-#ifndef DISABLE_USERMOD
-	int  permit = 0;	/* 0 = opers(glob/locop) 1 = global oper */
-#else
-	int  permit = 2;
-#endif
-	int  legalident = 1;	/* is legal characters? */
-	if (!MyConnect(sptr))
-		goto permit_2;
-	switch (permit)
-	{
-	  case 0:
-		  if (!IsAnOper(sptr))
-		  {
-			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			      parv[0]);
-			  return 0;
-		  }
-		  break;
-	  case 1:
-		  if (!IsOper(sptr))
-		  {
-			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			      parv[0]);
-			  return 0;
-		  }
-		  break;
-	  case 2:
-		  if (MyConnect(sptr))
-		  {
-			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			      parv[0]);
-			  return 0;
-		  }
-		  break;
-	  default:
-		  sendto_ops_butone(IsServer(cptr) ? cptr : NULL, sptr,
-		      ":%s WALLOPS :[SETIDENT] Somebody fixing this corrupted server? !(0|1) !!!",
-		      me.name);
-		  break;
+	
+#ifdef DISABLE_USERMOD
+        if (MyClient(sptr))
+        {                   
+                sendto_one(sptr, ":%s NOTICE %s :*** The /setident command is disabled on this server", me.name, sptr->name);
+                return 0;
+        }       
+#endif  
+
+        if (MyClient(sptr) && !IsAnOper(sptr))
+        {
+                sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+                    parv[0]);
+                return 0;
 	}
-      permit_2:
+
 	if (parc < 2)
 		vident = NULL;
 	else
@@ -466,17 +393,18 @@ int  m_setident(cptr, sptr, parc, parv)
 		if (MyConnect(sptr))
 		{
 			sendto_one(sptr,
-			    ":%s NOTICE %s :*** Syntax: /SetIdent <new host>",
+			    ":%s NOTICE %s :*** SetIdent Error: Syntax /setident <new ident>",
 			    me.name, parv[0]);
 		}
-		return;
+		return 0;
 	}
 	if (strlen(parv[1]) < 1)
 	{
 		if (MyConnect(sptr))
 			sendto_one(sptr,
-			    ":%s NOTICE %s :*** /SetIdent Error: Atleast write SOMETHING that makes sense (':' string)",
+			    ":%s NOTICE %s :*** SetIdent Error: Ident cannot be NULL.",
 			    me.name, sptr->name);
+		return 0;
 	}
 
 	/* too large huh? */
@@ -485,29 +413,21 @@ int  m_setident(cptr, sptr, parc, parv)
 		/* ignore us as well if we're not a child of 3k */
 		if (MyConnect(sptr))
 			sendto_one(sptr,
-			    ":%s NOTICE %s :*** /SetIdent Error: Usernames are limited to %i characters.",
+			    ":%s NOTICE %s :*** SetIdent Error: Ident is limited to %i characters.",
 			    me.name, sptr->name, USERLEN);
-		return;
+		return 0;
 	}
 
 	/* illegal?! */
 	for (s = vident; *s; s++)
 	{
-		if (!isallowed(*s))
+		if (!isallowed(*s) && (*s != '~'))
 		{
-			legalident = 0;
+			sendto_one(sptr,
+			    ":%s NOTICE %s :*** SetIdent Error: Ident may only contain a-z, A-Z, 0-9, '-', '~' & '.'",
+			    me.name, parv[0]);
+			return 0;
 		}
-		if (*s == '~')
-			legalident = 1;
-
-	}
-
-	if (legalident == 0)
-	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** /SetIdent Error: A username may contain a-z, A-Z, 0-9, '-', '~' & '.' - Please only use them",
-		    me.name, parv[0]);
-		return 0;
 	}
 
 	/* get it in */
@@ -524,7 +444,7 @@ int  m_setident(cptr, sptr, parc, parv)
 		    IsHidden(sptr) ? sptr->user->virthost : sptr->
 		    user->realhost);
 	}
-	return;
+	return 0;
 }
 /* m_setname - 12/05/1999 - Stskeeps
  *  :prefix SETNAME :gecos
@@ -542,12 +462,13 @@ int  m_setname(cptr, sptr, parc, parv)
 {
 	if (parc < 2)
 		return;
+	
 	if (strlen(parv[1]) > (REALLEN))
 	{
 		if (MyConnect(sptr))
 		{
 			sendto_one(sptr,
-			    ":%s NOTICE %s :*** /SetName Error: \"Real names\" may maximum be %i characters of length",
+			    ":%s NOTICE %s :*** SetName Error: GECOS may be %i characters of length max.",
 			    me.name, sptr->name, REALLEN);
 		}
 		return 0;
@@ -556,7 +477,7 @@ int  m_setname(cptr, sptr, parc, parv)
 	if (strlen(parv[1]) < 1)
 	{
 		sendto_one(sptr,
-		    ":%s NOTICE %s :Couldn't change realname - Nothing in parameter",
+		    ":%s NOTICE %s :*** SetName Error: GECOS cannot be NULL.",
 		    me.name, sptr->name);
 		return 0;
 	}
@@ -579,12 +500,9 @@ int  m_setname(cptr, sptr, parc, parv)
 	    ":%s", parv[1]);
 	if (MyConnect(sptr))
 		sendto_one(sptr,
-		    ":%s NOTICE %s :Your \"real name\" is now set to be %s - you have to set it manually to undo it",
+		    ":%s NOTICE %s :*** SetName: Your GECOS is now set to be %s - you have to set it manually to undo it",
 		    me.name, parv[0], parv[1]);
 
-	return 0;
-
-/*      sendto_serv_butone(cptr, ":%s SETNAME %s", parv[0], parv[1]); */
 	return 0;
 }
 
@@ -597,7 +515,7 @@ int  m_setname(cptr, sptr, parc, parv)
 
 int m_sdesc(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-        if (!IsAdmin(sptr) && !IsCoAdmin(sptr))
+        if (!IsAdmin(sptr))
                 return 0;
 
         if (parc < 2)
@@ -699,8 +617,7 @@ int  m_nachat(cptr, sptr, parc, parv)
 		return 0;
 	}
 #ifdef ADMINCHAT
-	if (MyClient(sptr))
-		if (!(IsNetAdmin(sptr)))
+	if (MyClient(sptr) && !IsNetAdmin(sptr))
 #else
 	if (MyClient(sptr))
 #endif
@@ -1387,19 +1304,17 @@ int  m_chgname(cptr, sptr, parc, parv)
 #endif
 
 
-	if (MyClient(sptr))
-		if (!IsAnOper(sptr))
-		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			    parv[0]);
-			return 0;
-
-		}
+	if (MyClient(sptr) && !IsOper(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+		    parv[0]);
+		return 0;
+	}	
 
 	if (parc < 3)
 	{
 		sendto_one(sptr,
-		    ":%s NOTICE %s :*** /ChgName syntax is /ChgName <nick> <newident>",
+		    ":%s NOTICE %s :*** ChgName Error: Syntax is /chgname <nick> <newident>",
 		    me.name, sptr->name);
 		return 0;
 	}
@@ -1407,7 +1322,7 @@ int  m_chgname(cptr, sptr, parc, parv)
 	if (strlen(parv[2]) < 1)
 	{
 		sendto_one(sptr,
-		    ":%s NOTICE %s :*** Write atleast something to change the ident to!",
+		    ":%s NOTICE %s :*** ChgName Error: GECOS cannot be NULL.",
 		    me.name, sptr->name);
 		return 0;
 	}
@@ -1415,8 +1330,8 @@ int  m_chgname(cptr, sptr, parc, parv)
 	if (strlen(parv[2]) > (REALLEN - 1))
 	{
 		sendto_one(sptr,
-		    ":%s NOTICE %s :*** ChgName Error: Too long !!", me.name,
-		    sptr->name);
+		    ":%s NOTICE %s :*** ChgName Error: GECOS can be %i characters of length max.", me.name,
+		    sptr->name, REALLEN);
 		return 0;
 	}
 

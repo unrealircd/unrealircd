@@ -3774,124 +3774,52 @@ int  m_oper(cptr, sptr, parc, parv)
 
 		s = index(aconf->host, '@');
 		*s++ = '\0';
-		/*if ((aconf->port & OFLAG_AGENT))
-		   sptr->umodes |= UMODE_AGENT; */
 		if ((aconf->port & OFLAG_HELPOP))
+			SetHelpOp(sptr);
+		
+		if (aconf->port & OFLAG_NETADMIN)
 		{
-			sptr->umodes |= UMODE_HELPOP;
-		}
-
-		if (!(aconf->port & OFLAG_ISGLOBAL))
-		{
-			SetLocOp(sptr);
-		}
-		else if (aconf->port & OFLAG_NETADMIN)
-		{
-			if (aconf->port & OFLAG_SADMIN)
-			{
-				sptr->umodes |=
-				    (UMODE_NETADMIN | UMODE_ADMIN |
-				    UMODE_SADMIN);
-				SetNetAdmin(sptr);
-				SetSAdmin(sptr);
-				SetAdmin(sptr);
-
-				SetOper(sptr);
-			}
-			else
-			{
-				sptr->umodes |= (UMODE_NETADMIN | UMODE_ADMIN);
-				SetNetAdmin(sptr);
-				SetAdmin(sptr);
-				SetOper(sptr);
-
-			}
-		}
-		else if (aconf->port & OFLAG_COADMIN)
-		{
-			if (aconf->port & OFLAG_SADMIN)
-			{
-				sptr->umodes |=
-				    (UMODE_COADMIN | UMODE_ADMIN |
-				    UMODE_SADMIN);
-				SetCoAdmin(sptr);
-				SetSAdmin(sptr);
-				SetAdmin(sptr);
-				SetOper(sptr);
-
-			}
-			else
-			{
-				sptr->umodes |= (UMODE_COADMIN | UMODE_ADMIN);
-				SetCoAdmin(sptr);
-				SetAdmin(sptr);
-				SetOper(sptr);
-
-			}
-		}
-		else
-		    if (aconf->port & OFLAG_ADMIN && aconf->port & OFLAG_SADMIN)
-		{
-			sptr->umodes |= (UMODE_ADMIN | UMODE_SADMIN);
+			SetNetAdmin(sptr);
 			SetAdmin(sptr);
-			SetSAdmin(sptr);
 			SetOper(sptr);
-
-		}
-		else if (aconf->port & OFLAG_SADMIN)
-		{
-			sptr->umodes |= (UMODE_SADMIN);
-			SetSAdmin(sptr);
-			SetOper(sptr);
-
 		}
 		else if (aconf->port & OFLAG_ADMIN)
 		{
-			sptr->umodes |= (UMODE_ADMIN);
 			SetAdmin(sptr);
 			SetOper(sptr);
-
 		}
+		else if (aconf->port & OFLAG_COADMIN)
+		{
+			SetCoAdmin(sptr);
+			SetAdmin(sptr);
+			SetOper(sptr);
+		}
+		else if (aconf->port & OFLAG_ISGLOBAL)
+			SetOper(sptr);
 		else
-		{
-			if (aconf->port & OFLAG_SADMIN)
-			{
-				sptr->umodes |= (UMODE_OPER | UMODE_SADMIN);
-				SetSAdmin(sptr);
-				SetOper(sptr);
-
-			}
-			else
-			{
-				sptr->umodes |= (UMODE_OPER);
-				SetOper(sptr);
-
-			}
-		}
-
+			SetLocOp(sptr);
+		
+		if (aconf->port & OFLAG_SADMIN)
+			SetSAdmin(sptr);
+		
 		if (aconf->port & OFLAG_EYES)
-		{
-			sptr->umodes |= (UMODE_EYES);
 			SetEyes(sptr);
-		}
 
 		if (aconf->port & OFLAG_WHOIS)
-		{
-			sptr->umodes |= (UMODE_WHOIS);
-		}
+			SetWhois(sptr);
 
 		if (aconf->port & OFLAG_HIDE)
-		{
-			sptr->umodes |= (UMODE_HIDE);
-		}
+			SetHide(sptr);
 
 		sptr->oflag = aconf->port;
 
 		*--s = '@';
 
+		/* Set useful modes here */
 		sptr->umodes |=
 		    (UMODE_SERVNOTICE | UMODE_WALLOP | UMODE_FAILOP |
 		    UMODE_FLOOD | UMODE_CLIENT | UMODE_KILLS);
+		
 		send_umode_out(cptr, sptr, old);
 #ifndef NO_FDLIST
 		addto_fdlist(sptr->fd, &oper_fdlist);

@@ -81,6 +81,9 @@ int  un_gid = 99;
 extern char unreallogo[];
 #endif
 
+#ifndef NO_FDLIST
+extern void flush_fdlist_connections(fdlist * listp);
+#endif
 LoopStruct loop;
 extern aMotd *opermotd;
 extern aMotd *svsmotd;
@@ -132,15 +135,15 @@ void save_stats(void)
 	FILE	*stats = fopen("ircd.stats", "w");
 	if (!stats)
 		return;
-	fprintf(stats, "%li\n", IRCstats.clients);
-	fprintf(stats, "%li\n", IRCstats.invisible);
-	fprintf(stats, "%li\n", IRCstats.servers);
-	fprintf(stats, "%li\n", IRCstats.operators);
-	fprintf(stats, "%li\n", IRCstats.unknown);
-	fprintf(stats, "%li\n", IRCstats.me_clients);
-	fprintf(stats, "%li\n", IRCstats.me_servers);
-	fprintf(stats, "%li\n", IRCstats.me_max);
-	fprintf(stats, "%li\n", IRCstats.global_max);
+	fprintf(stats, "%i\n", IRCstats.clients);
+	fprintf(stats, "%i\n", IRCstats.invisible);
+	fprintf(stats, "%i\n", IRCstats.servers);
+	fprintf(stats, "%i\n", IRCstats.operators);
+	fprintf(stats, "%i\n", IRCstats.unknown);
+	fprintf(stats, "%i\n", IRCstats.me_clients);
+	fprintf(stats, "%i\n", IRCstats.me_servers);
+	fprintf(stats, "%i\n", IRCstats.me_max);
+	fprintf(stats, "%i\n", IRCstats.global_max);
 	fclose(stats);
 }
 
@@ -409,7 +412,8 @@ static TS try_connections(currenttime)
 	int  connecting, confrq;
 	TS   next = 0;
 	aClass *cltmp;
-	aConfItem *cconf, *con_conf;
+	aConfItem *cconf;
+	aConfItem *con_conf = NULL;
 	int  con_class = 0;
 
 	connecting = FALSE;
@@ -736,7 +740,6 @@ int  InitwIRCD(argc, argv)
 	uid_t uid, euid;
 	TS   delay = 0;
 #endif
-	int i;
 	int  portarg = 0;
 #ifdef  FORCE_CORE
 	struct rlimit corelim;
@@ -808,7 +811,9 @@ int  InitwIRCD(argc, argv)
 				argc -= 1;
 			}
 			else
+			{
 				p = "";
+			}
 
 		switch (flag)
 		{

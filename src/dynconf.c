@@ -316,8 +316,7 @@ int  load_conf2(FILE * conf, char *filename, int type)
 					    "[fatal error] STOP code in %s\n",
 					    filename);
 					fprintf(stderr,
-					    "*** READ/EDIT YOUR CONFIGURATION FILES! ***",
-					    filename);
+					    "*** READ/EDIT YOUR CONFIGURATION FILES! ***");
 #endif
 					exit(-1);
 				}

@@ -28,7 +28,7 @@
  */
 #include "ircsprintf.h"
 #include <stdio.h>
-
+extern char *xbase64enc(long i);
 
 /* *INDENT-OFF* */
 

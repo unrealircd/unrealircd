@@ -429,3 +429,18 @@ permanent gline, which is essentially what an akill
 is anyway (yes, I know they disappear when you rehash)
 --Luke
 ===================================
+
+Rewrote m_oper, massive mods to most set* and chg* functions
+--Luke
+===================================
+
+Reintroduced original patch in channel.c with mode overflow
+(saves char * for each function call)
+-- Luke
+===================================
+
+Fixed a seriously stupid bug introduced by myself with SAMODE
+globops. (Thanks to Zerwas)
+--Luke
+===================================
+

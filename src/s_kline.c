@@ -1528,4 +1528,3 @@ int  m_rakill(cptr, sptr, parc, parv)
         /* call the tkl layer .. */
         m_tkl(&me, &me, 6, tkllayer);
 }
-

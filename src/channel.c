@@ -1318,7 +1318,7 @@ void do_mode(chptr, cptr, sptr, parc, parv, sendts, samode)
 		    sptr->user->username, sptr->user->realhost, chptr->chname,
 		    mode_buf, parabuf);
 		sendto_failops_whoare_opers
-		    ("from %s: %s (%s@%s) used SAMODE %s %s %s", sptr->name,
+		    ("from %s: %s (%s@%s) used SAMODE %s %s %s", me.name, sptr->name,
 		    sptr->user->username, sptr->user->realhost, chptr->chname,
 		    mode_buf, parabuf);
 		sptr = &me;
@@ -2080,7 +2080,6 @@ void set_mode(chptr, cptr, parc, parv, pcount, pvar, bounce)
 	char *curchr;
 	u_int what = MODE_ADD;
 	long modetype = 0;
-	char *param = NULL;
 	int  paracount = 1;
 #ifdef DEVELOP
 	char *tmpo = NULL;
@@ -2120,7 +2119,6 @@ void set_mode(chptr, cptr, parc, parv, pcount, pvar, bounce)
 				  /* compatiblity */
 				  *curchr = 'V';
 			  }
-			jumpdammit:
 		  default:
 			  found = 0;
 			  tab = &cFlagTab[0];
@@ -2149,18 +2147,14 @@ void set_mode(chptr, cptr, parc, parv, pcount, pvar, bounce)
 				  break;
 			  }
 			  /* We can afford to send off a param */
-                          if (parc - paracount >= 1)
-			  {
-				  param = parv[paracount];
-			  }
-			  else
-				  param = NULL;
-			  
-			  if (param && ((strlen(param) >= MODEBUFLEN)))
-			          param[MODEBUFLEN - 1] = '\0';
+                          if (parc - paracount < 1)
+			  	parv[paracount] = NULL;
+			  if (parv[paracount] &&
+			      strlen(parv[paracount]) >= MODEBUFLEN)
+				parv[paracount][MODEBUFLEN-1] = '\0';
 			  paracount +=
 			      do_mode_char(chptr, modetype, *curchr,
-			      param, what, cptr, pcount, pvar,
+			      parv[paracount], what, cptr, pcount, pvar,
 			      bounce);
 			  break;
 		}
@@ -2191,6 +2185,8 @@ int  sendmodeto_one(cptr, from, name, mode, param, creationtime)
 	else
 		sendto_one(cptr, ":%s %s %s %s %s", from,
 		    (IsToken(cptr) ? TOK_MODE : MSG_MODE), name, mode, param);
+	
+	return 0;
 }
 
 char *pretty_mask(mask)
@@ -2626,7 +2622,7 @@ int  channel_link(cptr, sptr, parc, parv)
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** Cannot join %s: bounced through too many links.",
 		    me.name, sptr->name, parv[1]);
-		return;
+		return 0;
 	}
 	for (i = 0, name = strtoken(&p, parv[1], ","); name;
 	    name = strtoken(&p, NULL, ","))
@@ -2726,7 +2722,7 @@ int  channel_link(cptr, sptr, parc, parv)
 
 		i1 = 0;
 		if (chptr == NULL)
-			return;
+			return 0;
 
 		if (!chptr ||
 		    (MyConnect(sptr)
@@ -3396,27 +3392,27 @@ int  m_kick(cptr, sptr, parc, parv)
 			
 				/* Overriding channel mode +Q */
 			        if ((chptr->mode.mode & MODE_NOKICKS) &&
-				     (IsOper(sptr) && !IsServices(who) || IsNetAdmin(sptr)))
+				     ((IsOper(sptr) && !IsServices(who)) || IsNetAdmin(sptr)))
 					goto override;	
 				
 				/* sptr isn't a channel operator or a halfop, automatically means override */
 				if ((!is_chan_op(sptr,chptr) && !is_halfop(sptr,chptr)) &&
-				     (IsOper(sptr) && !IsServices(who) || IsNetAdmin(sptr)))
+				     ((IsOper(sptr) && !IsServices(who)) || IsNetAdmin(sptr)))
 					goto override;
 				
 				/* Half op oper kicking a channel operator */
 				if (is_chan_op(who,chptr) && !is_chan_op(sptr,chptr) && is_halfop(sptr,chptr) &&
-				    (!IsServices(who) && IsOper(sptr) || IsNetAdmin(sptr)))
+				    ((!IsServices(who) && IsOper(sptr)) || IsNetAdmin(sptr)))
 					goto override;
 			
 				/* Oper taking out a protected user */	
 				if (is_chanprot(who,chptr) && !is_chanowner(sptr,chptr) &&
-			       	    (!IsServices(who) && IsOper(sptr) || IsNetAdmin(sptr)))
+			       	    ((!IsServices(who) && IsOper(sptr)) || IsNetAdmin(sptr)))
 					goto override;
 
 				/* Oper taking out channel owner */
 				if (is_chanowner(who,chptr) &&
-				    (!IsServices(who) && IsOper(sptr) || IsNetAdmin(sptr)))
+				    ((!IsServices(who) && IsOper(sptr)) || IsNetAdmin(sptr)))
 					goto override;
 #endif
 				
@@ -3629,7 +3625,7 @@ int  m_topic(cptr, sptr, parc, parv)
 		}
 		else if (((chptr->mode.mode & MODE_TOPICLIMIT) == 0 ||
 		    is_chan_op(sptr, chptr)) || IsOper(sptr)
-		    || IsULine(sptr) || is_halfop(sptr, chptr) && topic)
+		    || IsULine(sptr) || (is_halfop(sptr, chptr) && topic))
 		{
 			/* setting a topic */
 			if (IsOper(sptr) && !(is_halfop(sptr, chptr)
@@ -4001,6 +3997,8 @@ int  check_for_chan_flood(cptr, sptr, chptr)
 		remove_user_from_channel(sptr, chptr);
 		return 1;
 	}
+
+	return 0;
 }
 
 /* Originally from bahamut, modified a bit for Unreal by codemastr
