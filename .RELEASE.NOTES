@@ -34,10 +34,11 @@ Unreal3.2 Release Notes
 - Made './curlinstall' work with new c-ares-1.0.0.
 - Fixed compile problem on some machines related to TRE / libintl.
 - /who +m was incorrectly hiding +H users even for opers.
+- Fixed /rehash bug if an .so or remote include didn't load properly
 
 ==[ CHANGED ]==
-- spamfilter.conf: fixed fyle sig, added sigs for: soex, Nkie, LOI,
-  changed a lot of sigs from block->gline.
+- spamfilter.conf: fixed fyle sig, added sigs for: soex, Nkie, LOI, Gaggle,
+  changed a lot of sigs from block to gline.
 - Windows: now using new Inno Setup which made the installer 300k smaller
 - Docs, help.conf and other text updates.
 
