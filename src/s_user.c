@@ -771,7 +771,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		{
 /* I:line password encryption --codemastr */
 #ifdef CRYPT_ILINE_PASSWORD
-		if (*sptr->passwd) {
+		if (sptr->passwd) {
 			char salt[3];
 			extern char *crypt();
 
@@ -784,9 +784,9 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		else
 			encr = "";
 #else
-		encr = sptr->passwd;
+			encr = sptr->passwd;
 #endif
-			if (!StrEq(encr, aconf->passwd))
+			if (!encr || !StrEq(encr, aconf->passwd))
 			{
 				ircstp->is_ref++;
 				sendto_one(sptr, err_str(ERR_PASSWDMISMATCH),

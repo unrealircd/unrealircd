@@ -1436,7 +1436,7 @@ aClient *add_connection(cptr, fd)
 		else
 		{
 			if (!(cptr->umodes & LISTENER_SSL))
-				FDwrite(fd, REPORT_FIN_DNSC, R_do_dns);
+				FDwrite(fd, REPORT_FIN_DNSC, R_fin_dnsc);
 		}
 #endif /*SHOWCONNECTINFO*/
 		nextdnscheck = 1;

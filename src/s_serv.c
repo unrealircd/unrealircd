@@ -3434,8 +3434,9 @@ int  m_svskill(cptr, sptr, parc, parv)
 
 	if (parc < 1 || (!(acptr = find_client(parv[1], NULL))))
 		return 0;
-	sendto_serv_butone(cptr, ":%s SVSKILL %s :%s", parv[0], parv[1],
-	    comment);
+	
+	sendto_serv_butone_token(cptr, parv[0],
+	   MSG_SVSKILL, TOK_SVSKILL, "%s :%s", parv[1], comment);
 
 	return exit_client(cptr, acptr, sptr, comment);
 

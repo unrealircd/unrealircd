@@ -987,6 +987,7 @@ int  m_mode(cptr, sptr, parc, parv)
 	if (parc < 3)
 	{
 		*mode_buf = *parabuf = '\0';
+		
 		mode_buf[1] = '\0';
 		channel_modes(sptr, mode_buf, parabuf, chptr);
 		sendto_one(sptr, rpl_str(RPL_CHANNELMODEIS), me.name, parv[0],
@@ -1179,7 +1180,7 @@ int  m_mode(cptr, sptr, parc, parv)
       aftercheck:
 /*	if (IsPerson(sptr) && IsOper(sptr)) {
 		if (!is_chan_op(sptr, chptr)) {
-			if (MyClient(sptr) && !IsULine(cptr, cptr))
+			if (MyClient(sptr) && !IsULine(cptr, cptr) && mode_buf[1])
 				sendto_umode(UMODE_EYES, "*** OperMode [IRCop: %s] - [Channel: %s] - [Mode: %s %s]",
         	 		   sptr->name, chptr->chname, mode_buf, parabuf);
 			sendts = 0;
@@ -1299,7 +1300,7 @@ void do_mode(chptr, cptr, sptr, parc, parv, sendts, samode)
 #ifndef NO_OPEROVERRIDE
 	if (opermode == 1)
 	{
-		if (MyClient(sptr))
+		if (MyClient(sptr) && mode_buf[1])
 			sendto_umode(UMODE_EYES,
 			    "*** OperMode [IRCop: %s] - [Channel: %s] - [Mode: %s %s]",
 			    sptr->name, chptr->chname, mode_buf, parabuf);

@@ -132,6 +132,7 @@ aClient *make_client(from, servr)
 	cptr->srvptr = servr;
 	cptr->status = STAT_UNKNOWN;
 	cptr->fd = -1;
+	cptr->passwd;
 	(void)strcpy(cptr->username, "unknown");
 	if (size == CLIENT_LOCAL_SIZE)
 	{
@@ -158,6 +159,8 @@ void free_client(cptr)
 	if (MyClient(cptr) && cptr->cryptinfo)
 		MyFree((char *)cptr->cryptinfo);
 #endif
+	if (MyClient(cptr) && cptr->passwd)
+		MyFree((char *)cptr->passwd);
 	MyFree((char *)cptr);
 }
 

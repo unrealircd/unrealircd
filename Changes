@@ -650,3 +650,9 @@
 - Added protoctl SJB64, which adds B64-9 timestamps to many timestamping
   operations
 - Added ircsprintf %B (base64-9^10) with ! as prefix, and %b (no prefix)
+- Fixed a few places where for some reason sprintf() was used rather than ircsprintf()
+- Tokenized ADCHAT, TECHAT, NACHAT, SWHOIS, and SVSKILL
+- Fixed a bug in opermode that would make it display a notice on invalid modes
+- Fixed a bug where the Found your hostname (cached) message was messed up
+- Fixed a memory leak in the new password code
+- Fixed a sptr->passwd bug
