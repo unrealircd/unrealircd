@@ -60,37 +60,6 @@ int  dontspread = 0;
 extern char *me_hash;
 extern char backupbuf[];
 static char buf[BUFSIZE], buf2[BUFSIZE];
-int user_modes[] = { UMODE_OPER, 'o',
-	UMODE_LOCOP, 'O',
-	UMODE_INVISIBLE, 'i',
-	UMODE_WALLOP, 'w',
-	UMODE_FAILOP, 'g',
-	UMODE_HELPOP, 'h',
-	UMODE_SERVNOTICE, 's',
-	UMODE_SERVICES, 'S',
-	UMODE_SADMIN, 'a',
-	UMODE_HIDEOPER, 'H',
-	UMODE_ADMIN, 'A',
-	UMODE_NETADMIN, 'N',
-	UMODE_TECHADMIN, 'T',
-	UMODE_COADMIN, 'C',
-	UMODE_REGNICK, 'r',
-	UMODE_RGSTRONLY, 'R',
-	UMODE_HIDE, 'x',
-	UMODE_WHOIS, 'W',
-	UMODE_KIX, 'q',
-	UMODE_BOT, 'B',
-	UMODE_HIDING, 'I',
-	UMODE_SECURE, 'z',
-	UMODE_DEAF, 'd',
-	UMODE_VICTIM, 'v',
-	UMODE_SETHOST, 't',
-	UMODE_WEBTV, 'V',
-#ifdef STRIPBADWORDS
-	UMODE_STRIPBADWORDS, 'G',
-#endif
-	0, 0
-};
 
 int sno_mask[] = { 
 	SNO_KILLS, 'k',
@@ -123,8 +92,7 @@ long set_usermode(char *umode)
 	int  newumode;
 	int  what;
 	char **p, *m;
-	int  flag;
-	int *s;
+	int i;
 
 	newumode = 0;
 	what = MODE_ADD;
@@ -143,19 +111,18 @@ long set_usermode(char *umode)
 		  case '\t':
 			  break;
 		  default:
-			  for (s = user_modes; (flag = *s); s += 2)
-				  if (*m == (char)(*(s + 1)))
-				  {
-					  if (what == MODE_ADD)
-					  {
-						  newumode |= flag;
-					  }
-					  else
-					  {
-						  newumode &= ~flag;
-					  }
-					  break;
-				  }
+		 	 for (i = 0; i <= Usermode_highest; i++)
+		 	 {
+		 	 	if (!Usermode_Table[i].flag)
+		 	 		continue;
+		 	 	if (*m == Usermode_Table[i].flag)
+		 	 	{
+		 	 		if (what == MODE_ADD)
+			 	 		newumode |= Usermode_Table[i].mode;
+			 	 	else
+			 	 		newumode &= ~Usermode_Table[i].mode;
+		 	 	}
+		 	 } 	  
 		}
 
 	return (newumode);
@@ -257,23 +224,7 @@ unsigned char *StripColors(unsigned char *text) {
 }
 
 
-char umodestring[512];
-
-void make_umodestr(void)
-{
-
-	int *s;
-	char *m;
-
-	m = umodestring;
-
-	for (s = user_modes; *s; s += 2)
-	{
-		*m++ = (char)(*(s + 1));
-	}
-
-	*m = '\0';
-}
+char umodestring[UMODETABLESZ+1];
 
 /*
 ** next_client
@@ -1626,7 +1577,7 @@ int  m_nick(cptr, sptr, parc, parv)
 		/* Copy password to the passwd field if it's given after NICK
 		 * - originally by taz, modified by Wizzu
 		 */
-		if ((parc > 2) && (strlen(parv[2]) < sizeof(sptr->passwd)))
+		if ((parc > 2) && (strlen(parv[2]) <= PASSWDLEN))
 		{
 			if (sptr->passwd)
 				MyFree(sptr->passwd);
@@ -1701,30 +1652,31 @@ char *get_sno_str(aClient *sptr) {
 
 char *get_mode_str(aClient *acptr)
 {
-	int  flag;
-	int *s;
+	int  i;
 	char *m;
 
 	m = buf;
 	*m++ = '+';
-	for (s = user_modes; (flag = *s) && (m - buf < BUFSIZE - 4); s += 2)
-		if ((acptr->umodes & flag))
-			*m++ = (char)(*(s + 1));
+	for (i = 0; (i <= Usermode_highest) && (m - buf < BUFSIZE - 4); i++)
+		
+		if (Usermode_Table[i].flag && (acptr->umodes & Usermode_Table[i].mode))
+			*m++ = Usermode_Table[i].flag;
 	*m = '\0';
 	return buf;
 }
 
-char *get_modestr(long modes)
+
+char *get_modestr(long umodes)
 {
-	int  flag;
-	int *s;
+	int  i;
 	char *m;
 
 	m = buf;
 	*m++ = '+';
-	for (s = user_modes; (flag = *s) && (m - buf < BUFSIZE - 4); s += 2)
-		if ((modes & flag))
-			*m++ = (char)(*(s + 1));
+	for (i = 0; (i <= Usermode_highest) && (m - buf < BUFSIZE - 4); i++)
+		
+		if (Usermode_Table[i].flag && (umodes & Usermode_Table[i].mode))
+			*m++ = Usermode_Table[i].flag;
 	*m = '\0';
 	return buf;
 }
@@ -2077,7 +2029,7 @@ void set_snomask(aClient *sptr, char *snomask) {
 int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	int  flag;
-	int *s;
+	int  i;
 	char **p, *m;
 	aClient *acptr;
 	int  what, setflags, setsnomask;
@@ -2114,9 +2066,11 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	/* find flags already set for user */
 	setflags = 0;
-	for (s = user_modes; (flag = *s); s += 2)
-		if ((sptr->umodes & flag))
-			setflags |= flag;
+	
+	for (i = 0; i <= Usermode_highest; i++)
+		if ((sptr->umodes & Usermode_Table[i].mode))
+			setflags |= Usermode_Table[i].mode;
+
 	if (MyConnect(sptr))
 		setsnomask = sptr->user->snomask;
 	/*
@@ -2175,22 +2129,25 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				  (void)m_botmotd(sptr, sptr, 1, parv);
 		  default:
 			def:
-			  for (s = user_modes; (flag = *s); s += 2)
-				  if (*m == (char)(*(s + 1)))
+			  
+			  for (i = 0; i <= Usermode_highest; i++)
+			  {
+				  if (*m == Usermode_Table[i].flag)
 				  {
 					  if (what == MODE_ADD)
-						  sptr->umodes |= flag;
+						  sptr->umodes |= Usermode_Table[i].mode;
 					  else
-						  sptr->umodes &= ~flag;
+						  sptr->umodes &= ~Usermode_Table[i].mode;
 					  break;
 				  }
 				  if (flag == 0 && MyConnect(sptr) && !rpterror)
 				  {
-				  sendto_one(sptr,
-				      err_str(ERR_UMODEUNKNOWNFLAG),
-				      me.name, parv[0]);
-				  rpterror = 1;
+					  sendto_one(sptr,
+					      err_str(ERR_UMODEUNKNOWNFLAG),
+					      me.name, parv[0]);
+					  rpterror = 1;
 				  }
+			  }
 			  break;
 		}
 	/*
@@ -2230,6 +2187,21 @@ int  m_umode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			ClearCoAdmin(sptr);
 		if (IsTechAdmin(sptr))
 			ClearTechAdmin(sptr);
+		if (sptr->user->snomask & SNO_CLIENT)
+			sptr->user->snomask &= ~SNO_CLIENT;
+		if (sptr->user->snomask & SNO_FCLIENT)
+			sptr->user->snomask &= ~SNO_FCLIENT;
+		if (sptr->user->snomask & SNO_FLOOD)
+			sptr->user->snomask &= ~SNO_FLOOD;
+		if (sptr->user->snomask & SNO_JUNK)
+			sptr->user->snomask &= ~SNO_JUNK;
+		if (sptr->user->snomask & SNO_EYES)
+			sptr->user->snomask &= ~SNO_EYES;
+		if (sptr->user->snomask & SNO_VHOST)
+			sptr->user->snomask &= ~SNO_VHOST;
+		if (sptr->user->snomask & SNO_TKL)
+			sptr->user->snomask &= ~SNO_TKL;
+
 	}
 
 	/*
@@ -2415,7 +2387,8 @@ void send_umode(cptr, sptr, old, sendmask, umode_buf)
 	long old, sendmask;
 	char *umode_buf;
 {
-	int *s, flag;
+	int i;
+	long flag;
 	char *m;
 	int  what = MODE_NULL;
 
@@ -2425,30 +2398,33 @@ void send_umode(cptr, sptr, old, sendmask, umode_buf)
 	 */
 	m = umode_buf;
 	*m = '\0';
-	for (s = user_modes; (flag = *s); s += 2)
+	for (i = 0; i <= Usermode_highest; i++)
 	{
+		if (!Usermode_Table[i].flag)
+			continue;
+		flag = Usermode_Table[i].mode;
 		if (MyClient(sptr) && !(flag & sendmask))
 			continue;
 		if ((flag & old) && !(sptr->umodes & flag))
 		{
 			if (what == MODE_DEL)
-				*m++ = *(s + 1);
+				*m++ = Usermode_Table[i].flag;
 			else
 			{
 				what = MODE_DEL;
 				*m++ = '-';
-				*m++ = *(s + 1);
+				*m++ = Usermode_Table[i].flag;
 			}
 		}
 		else if (!(flag & old) && (sptr->umodes & flag))
 		{
 			if (what == MODE_ADD)
-				*m++ = *(s + 1);
+				*m++ = Usermode_Table[i].flag;
 			else
 			{
 				what = MODE_ADD;
 				*m++ = '+';
-				*m++ = *(s + 1);
+				*m++ = Usermode_Table[i].flag;
 			}
 		}
 	}

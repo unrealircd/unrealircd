@@ -869,3 +869,22 @@ seen. gmtime warning still there
 - Fixed a typo in config.h
 - Final changes to prepare for beta3
 - Fixed some bugreport stuff
+- Fixed codemastr-on-crack bug regarding oflag
+- Fixed a win32 bug where the http scanner didn't get loaded
+- Hopefully fixed the weird Z:line bug on win32?
+- Fixed the Z:line bug (caused by stskeeps-on-crack coding) reported by Power2All
+- Removed the tokens for /users, /summon, and /samode (these never come from a server so they don't need
+  it)
+- Added a utility to auto create version.c for win32. It's the worst coding I've ever done, but it works :P
+- Added a hell lot of DNS debugging code, and fixed the BIGENDIAN problem
+  with resolver. Thanks to dawn and Trash.net for shell on a sparc
+- Added umodes.c, long val = get_umode('c');
+- Added new umode system to win32 makefile
+- Made umode_delete(flag, mode);
+- made the umodestring variable smaller to conserve memory
+- Added M_RESETIDLE to fix a /privmsg bug
+- Fixed a bug with nickserv passwords found and fixed by Mathieu
+- Fixed a DEBUGMODE problem with umodes.c
+- Fixed a snomask bug found by Rob
+- Made the missing commands error a little more.. tardfriendly
+- Preperation for beta4

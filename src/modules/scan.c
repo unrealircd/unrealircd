@@ -74,7 +74,7 @@ MUTEX				blackhole_mutex;
 ConfigItem_blackhole		blackhole_conf;
 char				blackhole_stop = 0;
 SOCKET				blackholefd = 0;
-static struct SOCKADDR_IN		blackholesin;
+struct SOCKADDR_IN		blackholesin;
 /* Some prototypes .. aint they sweet? */
 DLLFUNC int			h_scan_connect(aClient *sptr);
 DLLFUNC EVENT			(HS_Cleanup);
@@ -198,7 +198,7 @@ void	m_scan_unload(void)
 		i = 0;
 		HS_Cleanup(NULL);
 		IRCMutexLock(HSlock);
-		for (j = 0; j <= SCAN_AT_ONCE;  j++)
+		for (j = 0; j < SCAN_AT_ONCE;  j++)
 			if (Hosts[i].host[0])
 				i++;
 		IRCMutexUnlock(HSlock);
@@ -209,7 +209,7 @@ void	m_scan_unload(void)
 		i = 0;
 		VS_Ban(NULL);
 		IRCMutexLock(VSlock);
-		for (j = 0; j <= SCAN_AT_ONCE;  j++)
+		for (j = 0; j < SCAN_AT_ONCE;  j++)
 			if (VHosts[i].host[0])
 				i++;
 		IRCMutexUnlock(VSlock);
@@ -241,7 +241,7 @@ HStruct	*HS_Add(char *host)
 {
 	int	i;
 	
-	for (i = 0; i <= SCAN_AT_ONCE; i++)
+	for (i = 0; i < SCAN_AT_ONCE; i++)
 		if (!(*Hosts[i].host))
 		{
 			strcpy(Hosts[i].host, host);
@@ -254,7 +254,7 @@ VHStruct	*VS_Add(char *host, char *reason)
 {
 	int	i;
 	
-	for (i = 0; i <= SCAN_AT_ONCE; i++)
+	for (i = 0; i < SCAN_AT_ONCE; i++)
 		if (!(*VHosts[i].host))
 		{
 			strcpy(VHosts[i].host, host);
@@ -269,7 +269,7 @@ HStruct *HS_Find(char *host)
 {
 	int	i;
 
-	for (i = 0; i <= SCAN_AT_ONCE; i++)
+	for (i = 0; i < SCAN_AT_ONCE; i++)
 		if (!strcmp(Hosts[i].host, host))
 		{
 			return (&Hosts[i]);
@@ -281,7 +281,7 @@ VHStruct *VS_Find(char *host)
 {
 	int	i;
 
-	for (i = 0; i <= SCAN_AT_ONCE; i++)
+	for (i = 0; i < SCAN_AT_ONCE; i++)
 		if (!strcmp(VHosts[i].host, host))
 		{
 			return (&VHosts[i]);
@@ -296,7 +296,7 @@ DLLFUNC EVENT(HS_Cleanup)
 	/* If it is called as a event, get lock */
 	if (data == NULL)
 		IRCMutexLock(HSlock);			
-	for (i = 0; i <= SCAN_AT_ONCE; i++)
+	for (i = 0; i < SCAN_AT_ONCE; i++)
 		if (Hosts[i].host[0] && (Hosts[i].refcnt <= 0))
 		{
 			*(Hosts[i].host) = '\0';	
@@ -324,7 +324,7 @@ DLLFUNC EVENT(VS_Ban)
 
 	if (data == NULL)
 		IRCMutexLock(VSlock);			
-	for (i = 0; i <= SCAN_AT_ONCE; i++)
+	for (i = 0; i < SCAN_AT_ONCE; i++)
 		if (*VHosts[i].host && *VHosts[i].reason)
 		{
 			
@@ -410,13 +410,13 @@ DLLFUNC int h_scan_info(aClient *sptr)
 			me.name, sptr->name);
 	sendto_one(sptr, ":%s NOTICE %s :*** Currently scanning:",
 		me.name, sptr->name);
-	for (i = 0; i <= SCAN_AT_ONCE; i++)
+	for (i = 0; i < SCAN_AT_ONCE; i++)
 		if (*Hosts[i].host)
 			sendto_one(sptr, ":%s NOTICE %s :*** IP: %s refcnt: %i",
 				me.name, sptr->name, Hosts[i].host, Hosts[i].refcnt);
 	sendto_one(sptr, ":%s NOTICE %s :*** Currently banning:",
 		me.name, sptr->name);
-	for (i = 0; i <= SCAN_AT_ONCE; i++)
+	for (i = 0; i < SCAN_AT_ONCE; i++)
 		if (*VHosts[i].host)
 			sendto_one(sptr, ":%s NOTICE %s :*** IP: %s Reason: %s",
 				me.name, sptr->name, VHosts[i].host, VHosts[i].reason);

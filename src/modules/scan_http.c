@@ -203,7 +203,7 @@ void	scan_http_scan_port(HSStruct *z)
 		return;
 	}
 
-	sin.sin_port = htons(z->port);
+	sin.sin_port = htons((unsigned short)z->port);
 	sin.sin_family = AF_INET;
 	/* We do this non-blocking to prevent a hang of the entire ircd with newer
 	 * versions of glibc.  Don't you just love new "features?"

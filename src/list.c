@@ -181,6 +181,7 @@ anUser *make_user(cptr)
 		user->lopt = NULL;
 		user->whowas = NULL;
 		user->snomask = 0;
+		user->oflag = 0;
 		user->virthost = MyMalloc(5);
 		*user->virthost = '\0';
 		cptr->user = user;

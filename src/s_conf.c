@@ -3436,7 +3436,7 @@ void	validate_configuration(void)
 	if (!find_Command_simple("AWAY") || !find_Command_simple("KILL") ||
 		!find_Command_simple("OPER") || !find_Command_simple("PING"))
 	{
-		Error("Someone forgot to load modules with proper commands in them. Read the documentation");
+		Error("Someone forgot to load modules with proper commands in them. Read the documentation (.RELEASE.NOTES)");
 	}
 #ifdef _WIN32
 	if (config_error_flag)

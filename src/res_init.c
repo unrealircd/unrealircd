@@ -488,14 +488,13 @@ int ircd_res_init()
 			dots--;
 		}
 		*pp = NULL;
-#ifdef DEBUG
-		if (ircd_res.options & RES_DEBUG)
+#ifdef DEBUGMODE
+		Debug((DEBUG_DNS, ";; res_init()... default dnsrch list:"));
+		for (pp = ircd_res.dnsrch; *pp; pp++)
 		{
-			printf(";; res_init()... default dnsrch list:\n");
-			for (pp = ircd_res.dnsrch; *pp; pp++)
-				printf(";;\t%s\n", *pp);
-			printf(";;\t..END..\n");
+				Debug((DEBUG_DNS, ";;\t%s", *pp));
 		}
+		Debug((DEBUG_DNS, ";;\t..END..\n"));
 #endif /* DEBUG */
 #endif /* !RFC1535 */
 	}
@@ -512,10 +511,9 @@ static void ircd_res_setoptions(options, source)
 	char *cp = options;
 	int  i;
 
-#ifdef DEBUG
-	if (ircd_res.options & RES_DEBUG)
-		printf(";; ircd_res_setoptions(\"%s\", \"%s\")...\n",
-		    options, source);
+#ifdef DEBUGMODE
+	Debug((DEBUG_DNS, ";; ircd_res_setoptions(\"%s\", \"%s\")...",
+		    options, source));
 #endif
 	while (*cp)
 	{
@@ -530,22 +528,17 @@ static void ircd_res_setoptions(options, source)
 				ircd_res.ndots = i;
 			else
 				ircd_res.ndots = RES_MAXNDOTS;
-#ifdef DEBUG
-			if (ircd_res.options & RES_DEBUG)
-				printf(";;\tndots=%d\n", ircd_res.ndots);
+#ifdef DEBUGMODE
+			Debug((DEBUG_DNS, ";;\tndots=%d", ircd_res.ndots));
 #endif
 		}
 		else if (!strncmp(cp, "debug", sizeof("debug") - 1))
 		{
-#ifdef DEBUG
-			if (!(ircd_res.options & RES_DEBUG))
-			{
-				printf
-				    (";; ircd_res_setoptions(\"%s\", \"%s\")..\n",
-				    options, source);
+#ifdef DEBUGMODE
+				Debug((DEBUG_DNS,
+				    ";; ircd_res_setoptions(\"%s\", \"%s\")..",
+				    options, source));
 				ircd_res.options |= RES_DEBUG;
-			}
-			printf(";;\tdebug\n");
 #endif
 		}
 		else if (!strncmp(cp, "inet6", sizeof("inet6") - 1))

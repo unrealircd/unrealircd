@@ -49,6 +49,7 @@
 
 #ifdef SCAN_API
 extern MSymbolTable scan_socks_depend[];
+extern MSymbolTable scan_http_depend[];
 #endif
 
 /* Place includes here */
@@ -125,8 +126,10 @@ int    l_commands_init(int module_load)
 #endif
 #ifdef SCAN_API
 	module_depend_resolve(&scan_socks_depend[0]);
+	module_depend_resolve(&scan_http_depend[0]);
 	m_scan_init(module_load);
 	scan_socks_init(module_load);
+	scan_http_init(module_load);
 #endif
 
 }
@@ -181,6 +184,7 @@ void    l_commands_load(int module_load)
 #ifdef SCAN_API
 	m_scan_load(module_load);
 	scan_socks_load(module_load);
+	scan_http_load(module_load);
 #endif
 }
 
@@ -234,6 +238,7 @@ void	l_commands_unload(void)
 #endif
 #ifdef SCAN_API
 	scan_socks_unload();
+	scan_http_unload();
 	m_scan_unload();
 #endif
 }

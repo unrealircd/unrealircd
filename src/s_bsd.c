@@ -632,6 +632,7 @@ init_dgram:
 #endif /*_WIN32*/
 
 	resfd = init_resolver(0x1f);
+	Debug((DEBUG_DNS, "resfd %d", resfd));
 	return;
 }
 
@@ -1690,6 +1691,7 @@ int  read_message(delay, listp)
 #ifndef _WIN32
 	if (resfd >= 0 && FD_ISSET(resfd, &read_set))
 	{
+		Debug((DEBUG_DNS, "Doing DNS async.."));
 		do_dns_async();
 		nfds--;
 		FD_CLR(resfd, &read_set);
