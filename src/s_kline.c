@@ -910,13 +910,13 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  {
 			  if (tk->type == type)
 			  {
-				  if ((tk->type & TKL_NICK) && !strcmp(tk->hostmask, parv[4]))
+				  if ((tk->type & TKL_NICK) && !stricmp(tk->hostmask, parv[4]))
 				  {
 					  found = 1;
 					  break;
 				  }
 				  else if (!strcmp(tk->hostmask, parv[4]) && !strcmp(tk->usermask, parv[3]) &&
-				     (!(type & TKL_SPAMF) || !strcmp(tk->reason, reason)))
+				     (!(type & TKL_SPAMF) || !stricmp(tk->reason, reason)))
 				  {
 					  found = 1;
 					  break;
@@ -1182,16 +1182,16 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				int match = 0;
 				if (type & TKL_NICK)
 				{
-					if (!strcmp(tk->hostmask, parv[4]))
+					if (!stricmp(tk->hostmask, parv[4]))
 						match = 1;
 				} else
 				if (type & TKL_SPAMF)
 				{
 					if (!strcmp(tk->hostmask, parv[4]) && !strcmp(tk->usermask, parv[3]) && 
-					    !strcmp(tk->reason, reason))
+					    !stricmp(tk->reason, reason))
 						match = 1;
 				} else /* all other types... */
-				if (!strcmp(tk->hostmask, parv[4]) && !strcmp(tk->usermask, parv[3]))
+				if (!stricmp(tk->hostmask, parv[4]) && !stricmp(tk->usermask, parv[3]))
 					match = 1;
 
 				  if (match)

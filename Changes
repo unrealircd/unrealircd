@@ -3223,3 +3223,4 @@ This is the 3.2 fixes branch.
 - Fixed a NICKIP bug regarding passing along IPs (#0001846) reported by Troco
 - And another one, should be fixed now.
 - Added snomask +S to the documentation (#0001835) reported by medice.
+- Made a bunch of TKL parameters case insensitive (#0001766) reported by medice.
