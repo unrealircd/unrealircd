@@ -921,11 +921,13 @@ struct Client {
 	long receiveM;		/* Statistics: protocol messages received */
 #ifdef ZIP_LINKS
 	struct Zdata *zip;	/* zip data */
+#elif defined(_WIN32)
+	void *zip_NOTUSED; /* (win32 binary compatability) */
 #endif
 #ifdef USE_SSL
 	SSL		*ssl;
 #elif defined(_WIN32)
-	void	*ssl_NOTUSED;
+	void	*ssl_NOTUSED; /* (win32 binary compatability) */
 #endif
 #ifndef NO_FDLIST
 	long lastrecvM;		/* to check for activity --Mika */

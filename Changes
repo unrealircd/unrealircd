@@ -306,3 +306,10 @@
   weirdness, this also affected spamfilter (so any spamfilters added only at notice
   and not at msg on windows would not work). Now using the real 'notice' parameter.
 - unbroke spamfilter not working for msgs/notices (oops..).
+- Made zip/non-zip modules on win32 binary compatible. Since it was nowhere documented
+  that you should pass the ZIP_LINKS etc options to 'nmake -f makefile.win32 custommodule'
+  many people didn't do this which caused odd problems when reading certain clientstructs.
+  Module coders: in the meantime, for 3.2.1 mods, use something like:
+  nmake -f makefile.win32 USE_ZIPLINKS=1 ZLIB_INC_DIR="c:\dev\zlib" 
+   ZLIB_LIB_DIR="c:\dev\zlib\dll32" custommodule MODULEFILE=m_mymodule
+  For 3.2.2+ these additional parameters will no longer be needed (but wouldn't harm either).
