@@ -580,3 +580,4 @@
 - Fixed mode #chan +O set by locop causing a desynch, reported by Unim4trix0 (#0001946).
 - Added spamfilter topic support ('t' in /spamfilter, or 'topic' in conf), suggested
   by Z3l3zT (#0001929).
+- Updated makefile to fix compile problem, reported by vonitsanet (#0002317) [?].

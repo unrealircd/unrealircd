@@ -362,6 +362,36 @@ m_dccallow.o: m_dccallow.c $(INCLUDES)
 m_userip.o: m_userip.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_userip.c
 
+m_nick.o: m_nick.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_nick.c
+
+m_user.o: m_user.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_user.c
+
+m_mode.o: m_mode.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_mode.c
+
+m_watch.o: m_watch.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_watch.c
+
+m_part.o: m_part.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_part.c
+
+m_join.o: m_join.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_join.c
+
+m_motd.o: m_motd.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_motd.c
+
+m_opermotd.o: m_opermotd.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_opermotd.c
+
+m_botmotd.o: m_botmotd.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_botmotd.c
+
+m_lusers.o: m_lusers.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_lusers.c
+
 #############################################################################
 #             .so's section
 #############################################################################
@@ -780,5 +810,3 @@ oldcloak.so: oldcloak.c $(INCLUDES)
 
 clean:
 	$(RM) -f *.o *.so *~ core
-
-
