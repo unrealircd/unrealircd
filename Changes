@@ -2842,3 +2842,4 @@ seen. gmtime warning still there
   what you can do about it in a (hopefully) simple and understandable language ;).
 - Fixed a snomask bug reported by Cat / HERZ (#0001531).
 - Started using the umode->allowed stuff a bit ourselves, just to be sure.
+- Fixed a problem with module reloading (#0001533) reported by penna.

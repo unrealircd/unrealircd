@@ -6353,6 +6353,7 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 			config_status("%s:%i: loadmodule %s: failed to load: %s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 				files.gl_pathv[i], ret);
+			return -1;
 		}
 	}
 	globfree(&files);
@@ -6366,15 +6367,19 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 		return -1;
 	}
 	if ((ret = Module_Create(FindData.cFileName))) {
-			config_status("%s:%i: loadmodule %s: failed to load: %s",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-				FindData.cFileName, ret);
+		config_status("%s:%i: loadmodule %s: failed to load: %s",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			FindData.cFileName, ret);
+		return -1;
 	}
 	while (FindNextFile(hFind, &FindData) != 0) {
-		if (((ret = Module_Create(FindData.cFileName)))) 
+		if ((ret = Module_Create(FindData.cFileName)))
+		{
 			config_status("%s:%i: loadmodule %s: failed to load: %s",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 				FindData.cFileName, ret);
+			return -1;
+		}
 	}
 	FindClose(hFind);
 #else
