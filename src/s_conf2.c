@@ -2172,7 +2172,7 @@ void	validate_configuration(void)
 	if (KLINE_ADDRESS) 
 		if (!strchr(KLINE_ADDRESS, '@') && !strchr(KLINE_ADDRESS, ':'))
 		{
-			Error
+			Error(
 			    "set::kline-address is not an e-mail or an URL");
 		}
 		else if (!match("*@unrealircd.com", KLINE_ADDRESS) || !match("*@unrealircd.org",KLINE_ADDRESS) || !match("unreal-*@lists.sourceforge.net",KLINE_ADDRESS)) 
