@@ -760,7 +760,6 @@ int  m_server(cptr, sptr, parc, parv)
 			if (num)
 				inf = (char *)strtok((char *)NULL, "");
 		}
-		else
 			strncpyzt(cptr->info, info[0] ? info : me.name,
 			    sizeof(cptr->info));
 		/* Numerics .. */
