@@ -344,3 +344,5 @@
 - Reduced hashtable size
 - Took out sequent/dynix support
 - Fixed a bug that prolly was fixed by Potvin, but was "not fixed correctly"
+- Fixed a crash problem in register_user and most likely fixed the "strange
+  vhost" thing, (was a dumb bug, mising ircsprintf)

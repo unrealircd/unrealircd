@@ -109,6 +109,7 @@ void iNAH_host(aClient *sptr, char *host)
 	if (sptr->user->virthost)
 		MyFree(sptr->user->virthost);
 	sptr->user->virthost = MyMalloc(strlen(host) + 1);
+	ircsprintf(sptr->user->virthost, host);
 	if (MyConnect(sptr))
 		sendto_serv_butone_token(&me, sptr->name, MSG_SETHOST,
 		    TOK_SETHOST, sptr->user->virthost);
@@ -924,7 +925,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			if (sptr->user->virthost)
 				MyFree(sptr->user->virthost);
 			sptr->user->virthost =
-			    MyMalloc(strlen(sptr->user->virthost) + 1);
+			    MyMalloc(strlen(virthost) + 1);
 			ircsprintf(sptr->user->virthost, virthost);
 		}
 	}
