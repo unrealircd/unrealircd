@@ -404,3 +404,5 @@
 - Editted Config to ask if you want encrypted I:line passwords
 - Made it so you can encrypt restart/die passwords (same as I:line passwords)
 - Editted Config to ask about encrypted restart/die passwords
+- Made it so you can *view* a channel topic using /topic #channel without being a member
+- Removed , support from /topic (not needed)

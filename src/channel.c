@@ -3319,15 +3319,15 @@ int  count_channels(sptr)
 **
 **	For servers using TS: (Lefler)
 **	parv[0] = sender prefix
-**	parv[1] = channel list
+**	parv[1] = channel name
 **	parv[2] = topic nickname
 **	parv[3] = topic time
 **	parv[4] = topic text
 */
 int  m_topic(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+aClient *cptr, *sptr;
+int parc;
+char *parv[];
 {
 	aChannel *chptr = NullChn;
 	char *topic = NULL, *name, *p = NULL, *tnick = NULL;
@@ -3341,39 +3341,29 @@ int  m_topic(cptr, sptr, parc, parv)
 		    me.name, parv[0], "TOPIC");
 		return 0;
 	}
+	name = parv[1];
 
-	for (; (name = strtoken(&p, parv[1], ",")); parv[1] = NULL)
-	{
-		if (parc > 1 && IsChannelName(name))
+	if (name && IsChannelName(name)) {
+	chptr = find_channel(parv[1], NullChn);
+			if (!chptr)
 		{
-			chptr = find_channel(name, NullChn);
-			if (!chptr || (!IsMember(sptr, chptr) &&
-			    !IsServer(sptr) && !IsULine(cptr, sptr)))
-			{
-				sendto_one(sptr,
-				    err_str(ERR_NOTONCHANNEL), me.name,
-				    parv[0], name);
-				continue;
-			}
-			if (parc > 2)
-				topic = parv[2];
-			if (parc > 4)
-			{
-				tnick = parv[2];
-				ttime = atol(parv[3]);
-				topic = parv[4];
-			}
-		}
-
-		if (!chptr)
-		{
-			sendto_one(sptr, rpl_str(RPL_NOTOPIC),
+			sendto_one(sptr, rpl_str(ERR_NOSUCHCHANNEL),
 			    me.name, parv[0], name);
 			return 0;
 		}
+	if (parc > 2) {
+		if (!IsMember(sptr, chptr) && !IsServer(sptr) && !IsULine(cptr, sptr)) {
+			sendto_one(sptr, err_str(ERR_NOTONCHANNEL), me.name, parv[0], name);
+			return 0;
+		}
+		topic = parv[2];
+	}
+	if (parc > 4) {
+		tnick = parv[2];
+		ttime = atol(parv[3]);
+		topic = parv[4];
 
-		if (check_channelmask(sptr, cptr, name))
-			continue;
+	}
 
 		if (!topic)	/* only asking  for topic  */
 		{
