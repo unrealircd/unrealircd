@@ -1367,7 +1367,7 @@ void make_mode_str(chptr, oldm, oldl, pcount, pvar, mode_buf, parabuf, bounce)
 	aCtab *tab = &cFlagTab[0];
 	char *x = mode_buf;
 	int  what, cnt, z;
-
+	char *m;
 	what = 0;
 
 	*tmpbuf = '\0';
@@ -1457,11 +1457,17 @@ void make_mode_str(chptr, oldm, oldl, pcount, pvar, mode_buf, parabuf, bounce)
 		}
 		*x++ = *(pvar[cnt] + 1);
 		tmpstr = &pvar[cnt][2];
-		strncat(parabuf, tmpstr, MODEBUFLEN - 1);
-		parabuf[MODEBUFLEN - 1] = '\0';
-		z = strlen(parabuf);
-		parabuf[z] = ' ';	/* add a space */
-		parabuf[z + 1] = '\0';
+		z = MODEBUFLEN - 1 - strlen(parabuf);
+		m = parabuf;
+		while ((*m)) { m++; }
+		while ((*tmpstr) && ((m-parabuf) < z))
+		{
+			*m = *tmpstr;
+			m++;
+			tmpstr++;
+		}
+		*m++ = ' ';
+		*m = '\0';
 	}
 	if (bounce)
 		chptr->mode.mode = oldm;
