@@ -752,3 +752,4 @@ seen. gmtime warning still there
 - Fixed a bug where /die didn't do anything on win32 reported by Gilou
 - Fixed a bug where /restart didn't send out notices on win32
 - Made /restart call mod_unload for all modules
+- Fixed a typo in the win32 makefile
