@@ -2048,6 +2048,27 @@ int  m_nickserv(cptr, sptr, parc, parv)
 		    parv[0], NickServ);
 }
 
+int m_infoserv(cptr, sptr, parc, parv)
+	aClient *cptr, *sptr;
+	int  parc;
+	char *parv[];
+{
+	aClient *acptr;
+	if (parc < 2 || *parv[1] == '\0')
+	{
+	sendto_one(sptr, err_str(ERR_NOTEXTTOSEND), me.name, parv[0]);
+	return -1;
+	}
+
+	if ((acptr = find_person(InfoServ, NULL)))
+	{
+	sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", parv[0],
+		InfoServ, SERVICES_NAME, parv[1]);		
+	}
+	else
+		sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name,
+			parv[0], InfoServ);
+}
 int  m_operserv(cptr, sptr, parc, parv)
 	aClient *cptr, *sptr;
 	int  parc;

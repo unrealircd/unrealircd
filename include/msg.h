@@ -314,9 +314,11 @@
 #define TOK_CRYPTO	"BM"
 #endif
 #define MSG_NEWJOIN 	"NEWJOIN"	/* For CR Java Chat */
-
 #define MSG_POST	"POST"
 #define TOK_POST	"BN"
+#define MSG_INFOSERV 	"INFOSERV"
+#define MSG_IS		"IS"
+#define TOK_INFOSERV	"BO"
 #define MAXPARA    	15
 
 extern int m_private(), m_topic(), m_join(), m_part(), m_mode(), m_svsmode();
@@ -332,7 +334,7 @@ extern int m_motd(), m_who(), m_whois(), m_user(), m_list();
 extern int m_server(), m_info(), m_links(), m_summon(), m_stats();
 extern int m_users(), m_version(), m_help();
 extern int m_nickserv(), m_operserv(), m_chanserv(), m_memoserv(),
-m_helpserv(), m_services(), m_identify();
+m_infoserv(), m_helpserv(), m_services(), m_identify();
 extern int m_statserv();
 extern int m_squit(), m_away(), m_connect();
 extern int m_oper(), m_pass(), m_trace();
@@ -413,6 +415,8 @@ struct Message msgtab[] = {
 	{MSG_CS, m_chanserv, 0, 1, 1, TOK_CHANSERV, 0L},
 	{MSG_NICKSERV, m_nickserv, 0, 1, 1, TOK_NICKSERV, 0L},
 	{MSG_NS, m_nickserv, 0, 1, 1, TOK_NICKSERV, 0L},
+	{MSG_INFOSERV, m_infoserv, 0, 1, 1, TOK_INFOSERV, 0L},
+	{MSG_IS, m_infoserv, 0, 1, 1, TOK_INFOSERV, 0L},
 	{MSG_OPERSERV, m_operserv, 0, 1, 1, TOK_OPERSERV, 0L},
 	{MSG_OS, m_operserv, 0, 1, 1, TOK_OPERSERV, 0L},
 	{MSG_MEMOSERV, m_memoserv, 0, 1, 1, TOK_MEMOSERV, 0L},

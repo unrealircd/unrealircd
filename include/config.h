@@ -399,6 +399,7 @@
 #define OperServ "OperServ"
 #define HelpServ "HelpServ"
 #define StatServ "StatServ"
+#define InfoServ "InfoServ"
 
 /*
  * How many seconds in between simultaneous nick changes?
