@@ -4559,7 +4559,7 @@ aMotd *read_botmotd(char *filename)
 	(void)dgets(-1, NULL, 0);	/* make sure buffer is at empty pos */
 
 	newmotd = last = NULL;
-	while (i = dgets(fd, line, 81) > 0)
+	while ((i = dgets(fd, line, 81)) > 0)
 	{
 		line[i] = '\0';
 		if ((tmp = (char *)strchr(line, '\n')))

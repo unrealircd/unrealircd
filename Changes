@@ -539,3 +539,4 @@
 - Fixed a MODE_STRIPWORDS bug
 - Fixed a PART bug
 - Fixed a STRIPBADWORDS bug
+- Fixed a BotMOTD bug
