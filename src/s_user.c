@@ -1791,7 +1791,7 @@ CMD_FUNC(m_nick)
 	{
 		parv[3] = nick;
 		m_user(cptr, sptr, parc - 3, &parv[3]);
-		if (GotNetInfo(cptr))
+		if (GotNetInfo(cptr) && !IsULine(sptr))
 			sendto_snomask(SNO_FCLIENT,
 			    "*** Notice -- Client connecting at %s: %s (%s@%s)",
 			    sptr->user->server, sptr->name,
