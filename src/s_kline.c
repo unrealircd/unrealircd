@@ -420,7 +420,7 @@ int  find_tkline_match(aClient *cptr, int xx)
 
 		if (excepts->netmask)
 		{
-			if (match_ip(cptr->ip, NULL, NULL, excepts->netmask))
+			if (match_ip(cptr->ip, host2, excepts->mask, excepts->netmask))
 				return 1;		
 		} else
 		if (!match(excepts->mask, host) || !match(excepts->mask, host2))

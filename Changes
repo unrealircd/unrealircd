@@ -331,3 +331,5 @@
 - Fixed some compile warnings.
 - Fixed a bug where bans were not matched against IPs in all circumstances (#0002045) 
   reported by heper.
+- Fixed a bug with IP based except tkl {} lines did not validate the ident portion of the mask
+  (#0002049) reported by Rocko.
