@@ -2724,6 +2724,7 @@ int	_conf_log(ConfigFile *conf, ConfigEntry *ce)
 int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigItem_alias *alias = NULL;
+	ConfigItem_alias_format *format;
 	ConfigEntry 	    	*cep, *cepp;
 	aCommand *cmptr;
 
@@ -2753,7 +2754,26 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 				cep->ce_varlinenum);
 			continue;
 		}
-		if (!strcmp(cep->ce_varname, "nick")) {
+		if (!strcmp(cep->ce_varname, "format")) {
+			format = MyMallocEx(sizeof(ConfigItem_alias_format));
+			ircstrdup(format->format, cep->ce_vardata);
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+				if (!strcmp(cepp->ce_varname, "alias")) {
+					if (!(format->alias = Find_alias(cepp->ce_vardata))) {
+						config_status("%s:%i: alias %s not found",
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
+							cepp->ce_vardata);
+							return 0;
+					}
+				}
+				else if (!strcmp(cepp->ce_varname, "parameters")) {
+					ircstrdup(format->parameters, cepp->ce_vardata);
+				}
+			}
+			add_ConfigItem((ConfigItem *)format, (ConfigItem **) &alias->format);
+		}		
+				
+		else if (!strcmp(cep->ce_varname, "nick")) {
 			ircstrdup(alias->nick, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "type")) {
@@ -2763,11 +2783,19 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 				alias->type = ALIAS_STATS;
 			else if (!strcmp(cep->ce_vardata, "normal"))
 				alias->type = ALIAS_NORMAL;
-			else 
-				continue;
+			else if (!strcmp(cep->ce_vardata, "command"))
+				alias->type = ALIAS_COMMAND;
+			else {
+				alias->type = ALIAS_SERVICES;
+				config_status("%s:%i: Invalid alias type, using default of 'services'",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			}
 		}
 			
 	}
+		if (BadPtr(alias->nick) && alias->type != ALIAS_COMMAND) {
+			ircstrdup(alias->nick, alias->alias); 
+		}
 		add_CommandX(alias->alias, NULL, m_alias, 1, M_USER|M_ALIAS);
 		add_ConfigItem((ConfigItem *)alias, (ConfigItem **) &conf_alias);
 }
@@ -3321,18 +3349,6 @@ void	validate_configuration(void)
 		add_CommandX("StatServ", NULL, m_alias, 1, M_USER|M_ALIAS);
 		Warning("No alias{}'s found, using default of NickServ, ChanServ, MemoServ, OperServ, HelpServ, StatServ");
 	}
-	else {
-		for (alias_ptr = conf_alias; alias_ptr; alias_ptr = (ConfigItem_alias *)alias_ptr->next) {
-			if (BadPtr(alias_ptr->nick)) {
-				ircstrdup(alias_ptr->nick, alias_ptr->alias); 
-			}
-			if (alias_ptr->type != ALIAS_SERVICES && alias_ptr->type != ALIAS_STATS && alias_ptr->type != ALIAS_NORMAL) {
-				alias_ptr->type = ALIAS_SERVICES;
-				Warning("Invalid alias type, using default of 'services'");
-			}
-		}
-	}
-		
 #ifdef _WIN32
 	if (config_error_flag)
 		win_log("Errors in configuration, terminating program.");
@@ -3597,9 +3613,20 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	}
 	for (alias_ptr = conf_alias; alias_ptr; alias_ptr = (ConfigItem_alias *)alias_ptr->next) {
 		aCommand *cmptr = find_Command(alias_ptr->alias, 0, 0);
+		ConfigItem_alias_format *fmt;
 		ircfree(alias_ptr->nick);
 		del_Command(alias_ptr->alias, NULL, cmptr->func);
 		ircfree(alias_ptr->alias);
+		if (alias_ptr->format && alias_ptr->type == ALIAS_COMMAND) {
+			for (fmt = (ConfigItem_alias_format *) alias_ptr->format; fmt; fmt = (ConfigItem_alias_format *) fmt->next)
+			{
+				ircfree(fmt->format);
+				ircfree(fmt->parameters);
+				t.next = del_ConfigItem((ConfigItem *)fmt, (ConfigItem **)&alias_ptr->format);
+				MyFree(fmt);
+				fmt = (ConfigItem_alias_format *) &t;
+			}
+		}
 		t.next = del_ConfigItem((ConfigItem *)alias_ptr, (ConfigItem **)&conf_alias);
 		MyFree(alias_ptr);
 		alias_ptr = (ConfigItem_alias *)&t;
@@ -4064,4 +4091,5 @@ void report_network(aClient *sptr)
 	sendto_one(sptr, ":%s %i %s :cloak-keys: %X", me.name, RPL_TEXT, sptr->name,
 		CLOAK_KEYCRC);
 }
+
 

@@ -826,3 +826,4 @@ seen. gmtime warning still there
   recognized)
 - Fixed a bug where log::maxsize would say it started a new log file if the log file didn't exist
 - Converted /mkpasswd, /away, and /svsnoop to modules
+- Added the ability to add aliases like /identify (complex, so see example.conf for samples)

@@ -89,6 +89,7 @@ typedef struct _configitem_log ConfigItem_log;
 typedef struct _configitem_unknown ConfigItem_unknown;
 typedef struct _configitem_unknown_ext ConfigItem_unknown_ext;
 typedef struct _configitem_alias ConfigItem_alias;
+typedef struct _configitem_alias_format ConfigItem_alias_format;
 
 typedef struct Watch aWatch;
 typedef struct Client aClient;
@@ -1060,13 +1061,23 @@ struct _configitem_unknown_ext {
 #define ALIAS_SERVICES 1
 #define ALIAS_STATS 2
 #define ALIAS_NORMAL 3
+#define ALIAS_COMMAND 4
 
 struct _configitem_alias {
 	ConfigFlag flag;
 	ConfigItem *prev, *next;
+	ConfigItem_alias_format *format;
 	char *alias, *nick;
 	short type;
 };
+
+struct _configitem_alias_format {
+	ConfigFlag flag;
+	ConfigItem *prev, *next;
+	ConfigItem_alias *alias;
+	char *format, *parameters;
+};
+	
 
 struct _irchook {
 	ConfigFlag flag;

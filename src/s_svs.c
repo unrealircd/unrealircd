@@ -36,6 +36,11 @@
 #include <time.h>
 #endif
 #include <string.h>
+#ifdef HAVE_REGEX
+#include <regex.h>
+#else
+#include "../extras/regex/regex.h"
+#endif
 
 #include "h.h"
 
@@ -199,6 +204,27 @@ int advanced_check(char *userhost, int ipstat)
 #undef IP_WILDS_OK
 
 }
+
+/* Function to return a group of tokens -- codemastr */
+void strrangetok(char *in, char *out, char tok, short first, short last) {
+	int i = 0, tokcount = 0, j = 0;
+	first--;
+	last--;
+	while(in[i]) {
+		if (in[i] == tok) {
+			tokcount++;
+			if (tokcount == first)
+				i++;
+		}
+		if (tokcount >= first && (tokcount <= last || last == -1)) {
+			out[j] = in[i];
+			j++;
+		}
+		i++;
+	}
+	out[j] = 0;
+}			
+		
 
 /*
 ** m_svso - Stskeeps
@@ -1081,6 +1107,71 @@ int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd) {
 		else
 			sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name,
 				parv[0], alias->nick);
-	}			
+	}
+	else if (alias->type == ALIAS_COMMAND) {
+		regex_t pcomp;
+		ConfigItem_alias_format *format;
+		char *ptr = parv[1];
+		for (format = alias->format; format; format = (ConfigItem_alias_format *)format->next) {
+			regcomp(&pcomp, format->format, REG_ICASE|REG_EXTENDED);
+			if (regexec(&pcomp, ptr, 0, NULL, 0) == 0) {
+				/* Parse the parameters */
+				int i = 0, j = 0, k = 1;
+				char output[501];
+				char nums[4];
+				char *current = malloc(strlen(parv[1])+1);
+				char *xparv[3];
+				bzero(current, strlen(parv[1])+1);
+				bzero(output, 501);
+				while(format->parameters[i] && j < 500) {
+					k = 0;
+					if (format->parameters[i] == '%') {
+						i++;
+						if (format->parameters[i] == '%') 
+							output[j++] = '%';
+						else if (isdigit(format->parameters[i])) {
+							for(; isdigit(format->parameters[i]) && k < 2; i++, k++) {
+								nums[k] = format->parameters[i];
+							}
+							nums[k] = 0;
+							i--;
+							ircd_log(LOG_ERROR, "num - %s", nums);
+							if (format->parameters[i+1] == '-') {
+								strrangetok(parv[1], current, ' ', atoi(nums),0);
+								i++;
+							}
+							else 
+								strrangetok(parv[1], current, ' ', atoi(nums), atoi(nums));
+							if (!current)
+								continue;
+							if (j + strlen(current)+1 >= 500)
+								break;
+							strcat(output, current);
+							j += strlen(current);
+							
+						}
+						else {
+							output[j++] = '%';
+							output[j++] = format->parameters[i];
+						}
+						i++;
+						continue;
+					}
+					output[j++] = format->parameters[i++];
+				}
+				output[j] = 0;
+				xparv[0] = parv[0];
+				xparv[1] = output;
+				xparv[2] = NULL;
+				m_alias(cptr, sptr, 2, xparv, format->alias->alias);
+				regfree(&pcomp);
+				free(current);
+				break;
+			}
+			regfree(&pcomp);
+		}
+		return 0;
+	}
+		
 	return 0;
 }
