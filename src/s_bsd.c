@@ -1397,7 +1397,6 @@ aClient *add_connection(cptr, fd)
 		send(fd, REPORT_DO_DNS, R_do_dns, 0);
 #endif
 #endif
-
 #ifndef USENEWDNS
 		lin.flags = ASYNC_CLIENT;  //newdns
 		lin.value.cptr = acptr;
@@ -1407,9 +1406,6 @@ aClient *add_connection(cptr, fd)
 
 		acptr->hostp = gethost_byaddr((char *)&acptr->ip, &lin);
 
-
-
-		acptr->hostp = newdns_lookupfromip(&acptr->ip);
 		if (!acptr->hostp)
 			SetDNS(acptr);
 #ifdef SHOWCONNECTINFO
