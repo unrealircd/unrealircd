@@ -1587,8 +1587,8 @@ int  m_nick(cptr, sptr, parc, parv)
 			sptr->nospoof = 0xa123b789;
 		sendto_one(sptr, ":%s NOTICE %s :*** If you are having problems"
 		    " connecting due to ping timeouts, please"
-		    " type /notice %X nospoof now.",
-		    me.name, nick, sptr->nospoof);
+		    " type /quote pong %X or /raw pong %X now.",
+		    me.name, nick, sptr->nospoof, sptr->nospoof);
 		sendto_one(sptr, "PING :%X", sptr->nospoof);
 #endif /* NOSPOOF */
 
@@ -2305,20 +2305,7 @@ int  m_notice(cptr, sptr, parc, parv)
 	int  parc;
 	char *parv[];
 {
-	if (!IsRegistered(cptr) && (cptr->name[0]) && !IsNotSpoof(cptr))
-	{
-		if (BadPtr(parv[1]))
-			return 0;
-		if (sptr->user && sptr->name[0])
-			return register_user(cptr, sptr, sptr->name,
-			    sptr->user->username, NULL, NULL);
-		return 0;
-	}
-        else
-	if (sptr->name[0])
-	{
-		return m_message(cptr, sptr, parc, parv, 1);
-	}
+	return m_message(cptr, sptr, parc, parv, 1);
 }
 
 int  channelwho = 0;

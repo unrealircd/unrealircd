@@ -610,3 +610,5 @@
   coding sessions(dbin)
 - Fixed some REAL dumb find_server_quick bugs
 - Fixed a wierd NOTICE bug
+- Modified and fixed the NOTICE bug totally, with some waste of the nospoof
+  system

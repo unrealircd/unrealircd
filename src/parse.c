@@ -472,9 +472,6 @@ int  parse(cptr, buffer, bufend, mptr)
 #ifdef CRYPTOIRCD
 	    && (mptr->func != m_crypto)
 #endif
-#ifdef NOSPOOF
-	    && (mptr->func != m_notice)
-#endif
 	    )))
 	{
 		sendto_one(from, ":%s %d %s :You have not registered",
