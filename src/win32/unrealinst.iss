@@ -3,7 +3,7 @@
 
 ; #define USE_SSL
 ; Uncomment the above line to package an SSL build
-; #define USE_ZIP
+#define USE_ZIP
 ; Uncomment the above line to package with ZIP support
 
 
@@ -40,37 +40,37 @@ Name: "enccert"; Description: "&Encrypt certificate"; GroupDescription: "SSL opt
 #endif
 
 [Files]
-Source: "..\..\wircd.exe"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\..\WIRCD.pdb"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\..\.CHANGES.NEW"; DestDir: "{app}"; DestName: "CHANGES.NEW.txt";CopyMode: alwaysoverwrite
-Source: "..\..\.CONFIG.RANT"; DestDir: "{app}"; DestName: "CONFIG.RANT.txt"; CopyMode: alwaysoverwrite
-Source: "..\..\.RELEASE.NOTES"; DestDir: "{app}"; DestName: "RELEASE.NOTES.txt"; CopyMode: alwaysoverwrite
-Source: "..\..\.SICI"; DestDir: "{app}"; DestName: "SICI.txt"; CopyMode: alwaysoverwrite
-Source: "..\..\badwords.channel.conf"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\..\badwords.message.conf"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\..\Changes"; DestDir: "{app}"; DestName: "Changes.txt"; CopyMode: alwaysoverwrite
-Source: "..\..\Changes.old"; DestDir: "{app}"; DestName: "Changes.old.txt"; CopyMode: alwaysoverwrite
-Source: "..\..\Donation"; DestDir: "{app}"; DestName: "Donation.txt"; CopyMode: alwaysoverwrite
-Source: ".\gnu_regex.dll"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\..\help.conf"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; CopyMode: alwaysoverwrite
-Source: "..\..\Unreal.nfo"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\..\doc\*.*"; DestDir: "{app}\doc"; CopyMode: alwaysoverwrite
-Source: "..\..\aliases\*"; DestDir: "{app}\aliases"; CopyMode: alwaysoverwrite
-Source: "..\..\networks\*"; DestDir: "{app}\networks"; CopyMode: alwaysoverwrite
-Source: "..\..\unreal.exe"; DestDir: "{app}"; CopyMode: alwaysoverwrite; MinVersion: 0,4.0
+Source: "..\..\wircd.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\WIRCD.pdb"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\.CHANGES.NEW"; DestDir: "{app}"; DestName: "CHANGES.NEW.txt";Flags: ignoreversion
+Source: "..\..\.CONFIG.RANT"; DestDir: "{app}"; DestName: "CONFIG.RANT.txt"; Flags: ignoreversion
+Source: "..\..\.RELEASE.NOTES"; DestDir: "{app}"; DestName: "RELEASE.NOTES.txt"; Flags: ignoreversion
+Source: "..\..\.SICI"; DestDir: "{app}"; DestName: "SICI.txt"; Flags: ignoreversion
+Source: "..\..\badwords.channel.conf"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\badwords.message.conf"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\Changes"; DestDir: "{app}"; DestName: "Changes.txt"; Flags: ignoreversion
+Source: "..\..\Changes.old"; DestDir: "{app}"; DestName: "Changes.old.txt"; Flags: ignoreversion
+Source: "..\..\Donation"; DestDir: "{app}"; DestName: "Donation.txt"; Flags: ignoreversion
+Source: ".\gnu_regex.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\help.conf"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
+Source: "..\..\Unreal.nfo"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\doc\*.*"; DestDir: "{app}\doc"; Flags: ignoreversion
+Source: "..\..\aliases\*"; DestDir: "{app}\aliases"; Flags: ignoreversion
+Source: "..\..\networks\*"; DestDir: "{app}\networks"; Flags: ignoreversion
+Source: "..\..\unreal.exe"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0,4.0
 #ifdef USE_SSL
-Source: "c:\openssl\bin\openssl.exe"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "c:\openssl\bin\ssleay32.dll"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "c:\openssl\bin\libeay32.dll"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: ".\makecert.bat"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: ".\encpem.bat"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\ssl.cnf"; DestDir: "{app}"; CopyMode: alwaysoverwrite
+Source: "c:\openssl\bin\openssl.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\openssl\bin\ssleay32.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\openssl\bin\libeay32.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\makecert.bat"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\encpem.bat"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\ssl.cnf"; DestDir: "{app}"; Flags: ignoreversion
 #endif
 #ifdef USE_ZIP
-Source: "c:\dev\zlib\dll32\zlib.dll"; DestDir: "{app}"; CopyMode: alwaysoverwrite
+Source: "c:\dev\zlib\dll32\zlib.dll"; DestDir: "{app}"; Flags: ignoreversion
 #endif
-Source: isxdl.dll; DestDir: {tmp}; CopyMode: dontcopy
+Source: isxdl.dll; DestDir: {tmp}; Flags: dontcopy
 
 [UninstallDelete]
 Type: files; Name: "{app}\DbgHelp.Dll"

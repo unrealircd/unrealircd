@@ -2175,3 +2175,4 @@ seen. gmtime warning still there
   #operhelp sends people to #help
 - Made it so Unreal always uses extended regex support
 - Fixed the compile problem on Solaris/SunOS (#0000984) reported by Dom
+- Updated src/win32/unrealinst.iss a bit
