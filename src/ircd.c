@@ -816,6 +816,9 @@ int error = 0;
 #ifndef _WIN32
 		fprintf(stderr, "[!!!] OpenSSL version mismatch: compiled for '%s', library is '%s'\n",
 			compiledfor, runtime);
+#else
+		win_log("[!!!] OpenSSL version mismatch: compiled for '%s', library is '%s'\n",
+			compiledfor, runtime);
 #endif
 		error=1;
 	}
@@ -828,6 +831,9 @@ int error = 0;
 #ifndef _WIN32
 		fprintf(stderr, "[!!!] Zlib version mismatch: compiled for '%s', library is '%s'\n",
 			compiledfor, runtime);
+#else
+		win_log("[!!!] Zlib version mismatch: compiled for '%s', library is '%s'\n",
+			compiledfor, runtime);
 #endif
 		error = 1;
 	}
@@ -839,6 +845,12 @@ int error = 0;
 		                "Make sure you don't have multiple versions of openssl or zlib installed (eg: "
 		                "one in /usr and one in /usr/local). And, if you recently upgraded them, "
 		                "be sure to recompile Unreal.\n");
+#else
+		win_log("[!!!] Header<->library mismatches can make UnrealIRCd *CRASH*! "
+		        "Make sure you don't have multiple versions of openssl or zlib installed (eg: "
+		        "one in /usr and one in /usr/local). And, if you recently upgraded them, "
+		        "be sure to recompile Unreal.\n");
+		win_error();
 #endif
 		tainted = 1;
 	}
