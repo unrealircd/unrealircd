@@ -635,6 +635,8 @@ extern int count_oper_sessions(char *);
 extern char *unreal_mktemp(char *dir, char *suffix);
 extern char *unreal_getfilename(char *path);
 extern int unreal_copyfile(char *src, char *dest);
+extern time_t unreal_getfilemodtime(char *filename);
+extern void unreal_setfilemodtime(char *filename, time_t mtime);
 extern void DeleteTempModules(void);
 extern Extban *extbaninfo;
 extern Extban *findmod_by_bantype(char c);

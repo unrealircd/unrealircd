@@ -1461,9 +1461,9 @@ int	init_conf(char *rootconf, int rehash)
 #endif
 			unload_loaded_includes();
 		}
+		load_includes();
 #ifndef STATIC_LINKING
 		Init_all_testing_modules();
-		load_includes();
 #else
 		if (!rehash) {
 			ModuleInfo ModCoreInfo;
@@ -7253,7 +7253,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 			sendto_one(sptr, ":%s NOTICE %s :A rehash is already in progress",
 				me.name, sptr->name);
 		return 0;
-	}	
+	}
 
 	loop.ircd_rehashing = 1;
 	loop.rehash_save_cptr = cptr;
@@ -7261,15 +7261,16 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	loop.rehash_save_sig = sig;
 	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
 	{
-		struct stat sb;
+		time_t modtime;
 		if (!(inc->flag.type & INCLUDE_REMOTE))
 			continue;
+
 		if (inc->flag.type & INCLUDE_NOTLOADED)
 			continue;
 		found_remote = 1;
-		stat(inc->file, &sb);
-		download_file_async(inc->url, sb.st_ctime, conf_download_complete);
+		modtime = unreal_getfilemodtime(inc->file);
 		inc->flag.type |= INCLUDE_DLQUEUED;
+		download_file_async(inc->url, modtime, conf_download_complete);
 	}
 	if (!found_remote)
 		return rehash_internal(cptr, sptr, sig);
@@ -7351,6 +7352,21 @@ char *find_remote_include(char *url)
 	}
 	return NULL;
 }
+
+char *find_loaded_remote_include(char *url)
+{
+	ConfigItem_include *inc;
+	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
+	{
+		if ((inc->flag.type & INCLUDE_NOTLOADED))
+			continue;
+		if (!(inc->flag.type & INCLUDE_REMOTE))
+			continue;
+		if (!stricmp(url, inc->url))
+			return inc->file;
+	}
+	return NULL;
+}	
 
 int remote_include(ConfigEntry *ce)
 {

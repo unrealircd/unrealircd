@@ -2932,3 +2932,5 @@ seen. gmtime warning still there
     instead of 8 are supported for m_tkl (used by spamfilter add).
   This new system needs some testing... :)
 - Fixed a bug in 'Flood from unknown connection' (#0001566).
+- Rewrote a great deal of the remote include code to make it work on Windows
+  due to Microsoft insanity. 

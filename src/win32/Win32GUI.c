@@ -115,6 +115,10 @@ HMENU hContext;
 OSVERSIONINFO VerInfo;
 char OSName[256];
 HWND hFind;
+#ifdef USE_LIBCURL
+extern char *find_loaded_remote_include(char *url);
+#endif 
+
 void TaskBarCreated() {
 	HICON hIcon = (HICON)LoadImage(hInst, MAKEINTRESOURCE(ICO_MAIN), IMAGE_ICON,16, 16, 0);
 	SysTray.cbSize = sizeof(NOTIFYICONDATA);
@@ -737,6 +741,8 @@ static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 						if (conf_include) {
 							ConfigItem_include *inc;
 							for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next) {
+								if (inc->flag.type & INCLUDE_NOTLOADED)
+									continue;
 #ifdef USE_LIBCURL
 								if (inc->flag.type & INCLUDE_REMOTE)
 									AppendMenu(hConfig, MF_STRING, i++, inc->url);
@@ -890,7 +896,7 @@ static HMENU hRehash, hAbout, hConfig, hTray, hLogs;
 #ifdef USE_LIBCURL
 						if (url_is_valid(path))
 						{
-							char *file = find_remote_include(path);
+							char *file = find_loaded_remote_include(path);
 							DialogBoxParam(hInst, "FromVar", hDlg, (DLGPROC)FromFileReadDLG, (LPARAM)file);
 						}
 						else

@@ -28,15 +28,17 @@ static char sccsid[] = "@(#)support.c	2.21 4/13/94 1990, 1991 Armin Gruner;\
 #include "sys.h"
 #include "version.h"
 #include "h.h"
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <limits.h>
 #ifdef _WIN32
 #include <io.h>
 #else
 #include <string.h>
-#include <fcntl.h>
-#include <sys/stat.h>
+#include <utime.h>
 extern int errno;		/* ...seems that errno.h doesn't define this everywhere */
 #endif
+
 extern void outofmemory();
 
 #define is_enabled match
@@ -1738,17 +1740,25 @@ char *unreal_getfilename(char *path)
  */
 int unreal_copyfile(char *src, char *dest)
 {
-#ifndef _WIN32
 	char buf[2048];
+	time_t mtime = unreal_getfilemodtime(src);
+
+#ifndef _WIN32
 	int srcfd = open(src, O_RDONLY);
+#else
+	int srcfd = open(src, _O_RDONLY);
+#endif
 	int destfd;
 	int len;
 
 	if (srcfd < 0)
 		return 0;
 
+#ifndef _WIN32
 	destfd  = open(dest, O_WRONLY|O_CREAT, DEFAULT_PERMISSIONS);
-
+#else
+	destfd = open(dest, _O_WRONLY|_O_CREAT, _S_IWRITE);
+#endif
 	if (destfd < 0)
 	{
 		config_error("Unable to create file '%s': %s", dest, strerror(ERRNO));
@@ -1771,6 +1781,7 @@ int unreal_copyfile(char *src, char *dest)
 
 	close(srcfd);
 	close(destfd);
+	unreal_setfilemodtime(dest, mtime);
 #if defined(IRC_UID) && defined(IRC_GID)
 	if (!loop.ircd_booted)
 		chown(dest, IRC_UID, IRC_GID);
@@ -1781,7 +1792,61 @@ fail:
 	close(destfd);
 	unlink(dest); /* make sure our corrupt file isn't used */
 	return 0;
+}
+
+void unreal_setfilemodtime(char *filename, time_t mtime)
+{
+#ifndef _WIN32
+	struct utimbuf utb;
+	utb.actime = utb.modtime = mtime;
+	utime(filename, &utb);
 #else
-	return 0;
+	FILETIME mTime;
+	LONGLONG llValue;
+	HANDLE hFile = CreateFile(filename, GENERIC_WRITE, 0, NULL, OPEN_EXISTING,
+				  FILE_ATTRIBUTE_NORMAL, NULL);
+	if (hFile == INVALID_HANDLE_VALUE)
+		return;
+	llValue = Int32x32To64(mtime, 10000000) + 116444736000000000;
+	mTime.dwLowDateTime = (long)llValue;
+	mTime.dwHighDateTime = llValue >> 32;
+	
+	SetFileTime(hFile, &mTime, &mTime, &mTime);
+	CloseHandle(hFile);
+#endif
+}
+
+time_t unreal_getfilemodtime(char *filename)
+{
+#ifndef _WIN32
+	struct stat sb;
+	if (stat(filename, &sb))
+		return 0;
+	return sb.st_ctime;
+#else
+	/* See how much more fun WinAPI programming is??? */
+	FILETIME cTime;
+	SYSTEMTIME sTime, lTime;
+	ULARGE_INTEGER fullTime;
+	time_t result;
+	HANDLE hFile = CreateFile(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING,
+				  FILE_ATTRIBUTE_NORMAL, NULL);
+	if (hFile == INVALID_HANDLE_VALUE)
+		return 0;
+	if (!GetFileTime(hFile, NULL, NULL, &cTime))
+		return 0;
+
+	CloseHandle(hFile);
+
+	FileTimeToSystemTime(&cTime, &sTime);
+	SystemTimeToTzSpecificLocalTime(NULL, &sTime, &lTime);
+	SystemTimeToFileTime(&sTime, &cTime);
+
+	fullTime.LowPart = cTime.dwLowDateTime;
+	fullTime.HighPart = cTime.dwHighDateTime;
+	fullTime.QuadPart -= 116444736000000000;
+	fullTime.QuadPart /= 10000000;
+	
+	return fullTime.LowPart;	
 #endif
 }

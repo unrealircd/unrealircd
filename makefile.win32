@@ -13,12 +13,12 @@ RC=rc
 #
 #
 #To enable remote includes uncomment the next line:
-#USE_REMOTEINC=1
+USE_REMOTEINC=1
 #
 #If your libcurl library and include files are not in your compiler's
 #default locations, specify the locations here:
-#LIBCURL_INC_DIR="c:\dev\curl\include"
-#LIBCURL_LIB_DIR="c:\dev\curl\lib"
+LIBCURL_INC_DIR="c:\dev\curl\include"
+LIBCURL_LIB_DIR="c:\dev\curl\lib"
 #
 #
 ### END REMOTE INCLUDES ##

@@ -24,7 +24,6 @@
 #include <h.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <limits.h>
 
 #ifdef USE_SSL
 extern char *SSLKeyPasswd;
@@ -167,6 +166,8 @@ char *download_file(char *url, char **error)
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, fd);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download);
 	curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
+	curl_easy_setopt(curl, CURLOPT_FILETIME, 1);
+
 #ifdef USE_SSL
 	set_curl_ssl_options(curl);
 #endif
@@ -182,7 +183,15 @@ char *download_file(char *url, char **error)
 		free(file);
 	curl_easy_cleanup(curl);
 	if (res == CURLE_OK)
+	{
+		long last_mod;
+
+		curl_easy_getinfo(curl, CURLINFO_FILETIME, &last_mod);
+
+		if (last_mod != -1)
+			unreal_setfilemodtime(tmp, last_mod);
 		return strdup(tmp);
+	}
 	else
 	{
 		remove(tmp);
@@ -218,12 +227,11 @@ void download_file_async(char *url, time_t cachetime, vFP callback)
 {
 	static char errorbuf[CURL_ERROR_SIZE];
 	CURL *curl = curl_easy_init();
-
 	if (curl)
 	{
-	    char *file = url_getfilename(url);
+		char *file = url_getfilename(url);
 		char *filename = unreal_getfilename(file);
-        char *tmp = unreal_mktemp("tmp", filename ? filename : "download.conf");
+        	char *tmp = unreal_mktemp("tmp", filename ? filename : "download.conf");
 		FileHandle *handle = malloc(sizeof(FileHandle));
 		handle->fd = fopen(tmp, "wb");
 		if (!handle->fd)
@@ -250,9 +258,9 @@ void download_file_async(char *url, time_t cachetime, vFP callback)
 		bzero(handle->errorbuf, CURL_ERROR_SIZE);
 		curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, handle->errorbuf);
 		curl_easy_setopt(curl, CURLOPT_PRIVATE, (char *)handle);
+		curl_easy_setopt(curl, CURLOPT_FILETIME, 1);
 		if (cachetime)
 		{
-			curl_easy_setopt(curl, CURLOPT_FILETIME, 1);
 			curl_easy_setopt(curl, CURLOPT_TIMECONDITION, CURL_TIMECOND_IFMODSINCE);
 			curl_easy_setopt(curl, CURLOPT_TIMEVALUE, cachetime);
 		}
@@ -322,9 +330,15 @@ void url_do_transfers_async(void)
 				{
 					handle->callback(url, NULL, NULL, 1);
 					remove(handle->filename);
+
 				}
 				else
+				{
+					if (last_mod != -1)
+						unreal_setfilemodtime(handle->filename, last_mod);
+
 					handle->callback(url, handle->filename, NULL, 0);
+				}
 			}
 			else
 			{

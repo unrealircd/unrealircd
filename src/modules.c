@@ -82,10 +82,10 @@ void *obsd_dlsym(void *handle, char *symbol) {
 
 void DeleteTempModules(void)
 {
+	char tempbuf[PATH_MAX+1];
 #ifndef _WIN32
 	DIR *fd = opendir("tmp");
 	struct dirent *dir;
-	char tempbuf[PATH_MAX+1];
 
 	if (!fd) /* Ouch.. this is NOT good!! */
 	{
@@ -105,7 +105,28 @@ void DeleteTempModules(void)
 		remove(tempbuf);
 	}
 	closedir(fd);
-#endif
+#else
+	WIN32_FIND_DATA hData;
+	HANDLE hFile = FindFirstFile("tmp/*", &hData);
+	if (hFile != INVALID_HANDLE_VALUE)
+	{
+		if (strcmp(hData.cFileName, ".") || strcmp(hData.cFileName, ".."))
+		{
+			strcpy(tempbuf, "tmp/");
+			strcat(tempbuf, hData.cFileName);
+			remove(tempbuf);
+		}
+	}
+	while (FindNextFile(hFile, &hData))
+	{
+		if (!strcmp(hData.cFileName, ".") || !strcmp(hData.cFileName, ".."))
+			continue;
+		strcpy(tempbuf, "tmp/");
+		strcat(tempbuf, hData.cFileName);
+		remove(tempbuf);
+	}
+	FindClose(hFile);
+#endif	
 }
 
 void Module_Init(void)
