@@ -69,6 +69,7 @@ struct zConfiguration {
 	unsigned show_connect_info:1;
 	unsigned dont_resolve:1;
 	unsigned use_ban_version:1;
+	unsigned mkpasswd_for_everyone:1;
 	unsigned use_egd;
 	long host_timeout;
 	int  host_retries;
@@ -182,3 +183,5 @@ extern aConfiguration iConf;
 
 #define IDENT_CONNECT_TIMEOUT	iConf.ident_connect_timeout
 #define IDENT_READ_TIMEOUT		iConf.ident_read_timeout
+
+#define MKPASSWD_FOR_EVERYONE	iConf.mkpasswd_for_everyone

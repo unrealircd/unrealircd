@@ -117,10 +117,16 @@ int	m_sdesc_Unload(int module_unload)
 int m_sdesc(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	if (!IsAdmin(sptr) && !IsCoAdmin(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
-
+	}
+	
 	if (parc < 2)
+	{
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "SDESC");
 		return 0;
+	}
 
 	if (strlen(parv[1]) < 1)
 		if (MyConnect(sptr))

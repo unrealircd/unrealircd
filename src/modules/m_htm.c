@@ -170,8 +170,10 @@ DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	int  x = HUNTED_NOSUCH;
 	char *command, *param;
 	if (!IsOper(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
-
+	}
 
 	switch(parc) {
 		case 1:

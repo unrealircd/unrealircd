@@ -21,7 +21,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 Beta16<br>
-  <b>Last doc update:</b> 2003-05-14 </div>
+  <b>Last doc update:</b> 2003-05-17 </div>
   <b>Head Coders:</b> Stskeeps / codemastr / Luke / McSkaf / Syzop<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -1664,6 +1664,9 @@ set {
   If present hosts of incomming users are not resolved, can be useful if many of your
   users don't have a host to speed up connecting.<br>
   Note that since no resolving is done you also can't have host based allow blocks.</p>
+<p><font class="set">set::options::mkpasswd-for-everyone;</font><br>
+  Makes it so the /mkpasswd can be used by anyone instead of oper-only, usage of the command 
+  by non-opers is sent to the EYES snomask.</p>
 <p><font class="set">set::dns::timeout &lt;timevalue&gt;;</font><br>
   A time value specifying the length of time a DNS server has to respond before 
   a timeout. A time value is a numeric string with d meaning days, h meaning hours, 

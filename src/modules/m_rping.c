@@ -142,8 +142,11 @@ DLLFUNC int  m_rping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	aClient *acptr;
 
 	if (!IsPrivileged(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
-
+	}
+	
 	if (parc < (IsAnOper(sptr) ? (MyConnect(sptr) ? 2 : 3) : 6))
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0],

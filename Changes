@@ -2178,3 +2178,6 @@ seen. gmtime warning still there
 - Updated src/win32/unrealinst.iss a bit
 - Changed /who flag '&' to '?'
 - Fixed regex detection problem (introduced by a change 2 days ago).
+- Added set::options::mkpasswd-for-everyone to let normal users use /mkpasswd, requested
+  by Evats.
+- Added error messages if not oper for: sdesc, mkpasswd, htm, rping, opermotd (#0000988).

@@ -5180,6 +5180,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "dont-resolve")) {
 					tempiConf.dont_resolve = 1;
 				}
+				else if (!strcmp(cepp->ce_varname, "mkpasswd-for-everyone")) {
+					tempiConf.mkpasswd_for_everyone = 1;
+				}
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "hosts")) {
@@ -5606,6 +5609,8 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "show-connect-info")) {
 				}
 				else if (!strcmp(cepp->ce_varname, "dont-resolve")) {
+				}
+				else if (!strcmp(cepp->ce_varname, "mkpasswd-for-everyone")) {
 				}
 				else
 				{
