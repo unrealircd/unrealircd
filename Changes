@@ -365,4 +365,4 @@
 - Temporary fix for ircsprintf %lu 1..6 issue.
 - Fixed a problem with +u for some clients that have a strict interpretation of the RFC.
 - Added TRE 0.7.0, fixes #0001952 reported by Praetorian
-- Fixed a (useless) cloak typo / made it a few nanosec faster. Reported by Martin Brulisauer.
+- Fixed an (unimportant) cloak typo / made it a few nanosec faster. Reported by Martin Brulisauer.
