@@ -57,7 +57,6 @@ ID_CVS("$Id$");
 ID_Notes("O:line flags in here");
 #include "h.h"
 #define IN6ADDRSZ (sizeof(struct IN_ADDR))
-static int check_time_interval PROTO((char *, char *));
 static int lookup_confhost PROTO((aConfItem *));
 static int is_comment PROTO((char *));
 static int advanced_check(char *, int);
@@ -1620,17 +1619,10 @@ int  find_kill(cptr)
 		    (match(tmp->host, host) == 0) &&
 		    (!name || match(tmp->name, name) == 0) &&
 		    (!tmp->port || (tmp->port == cptr->acpt->port)))
-			/* can short-circuit evaluation - not taking chances
-			   cos check_time_interval destroys tmp->passwd
-			   - Mmmm
-			 */
 			if (BadPtr(tmp->passwd))
 				break;
 			else if (is_comment(tmp->passwd))
 				break;
-			else if (check_time_interval(tmp->passwd, reply))
-				break;
-
 
 	if (reply[0])
 		sendto_one(cptr, reply,
@@ -1793,67 +1785,6 @@ static int is_comment(comment)
 }
 
 
-/*
-** check against a set of time intervals
-*/
-
-static int check_time_interval(interval, reply)
-	char *interval, *reply;
-{
-	struct tm *tptr;
-	time_t tick;
-	char *p;
-	int  perm_min_hours, perm_min_minutes, perm_max_hours, perm_max_minutes;
-	int  now, perm_min, perm_max;
-
-	tick = TStime();
-	tptr = localtime(&tick);
-	now = tptr->tm_hour * 60 + tptr->tm_min;
-
-	while (interval)
-	{
-		p = (char *)index(interval, ',');
-		if (p)
-			*p = '\0';
-		if (sscanf(interval, "%2d%2d-%2d%2d",
-		    &perm_min_hours, &perm_min_minutes,
-		    &perm_max_hours, &perm_max_minutes) != 4)
-		{
-			if (p)
-				*p = ',';
-			return (0);
-		}
-		if (p)
-			*(p++) = ',';
-		perm_min = 60 * perm_min_hours + perm_min_minutes;
-		perm_max = 60 * perm_max_hours + perm_max_minutes;
-		/*
-		   ** The following check allows intervals over midnight ...
-		 */
-		if ((perm_min < perm_max)
-		    ? (perm_min <= now && now <= perm_max)
-		    : (perm_min <= now || now <= perm_max))
-		{
-			(void)ircsprintf(reply,
-			    ":%%s %%d %%s :%s %d:%02d to %d:%02d.",
-			    "You are not allowed to connect from",
-			    perm_min_hours, perm_min_minutes,
-			    perm_max_hours, perm_max_minutes);
-			return (ERR_YOUREBANNEDCREEP);
-		}
-		if ((perm_min < perm_max)
-		    ? (perm_min <= now + 5 && now + 5 <= perm_max)
-		    : (perm_min <= now + 5 || now + 5 <= perm_max))
-		{
-			(void)ircsprintf(reply, ":%%s %%d %%s :%d minute%s%s",
-			    perm_min - now, (perm_min - now) > 1 ? "s " : " ",
-			    "and you will be denied for further access");
-			return (ERR_YOUWILLBEBANNED);
-		}
-		interval = p;
-	}
-	return (0);
-}
 
 /*
 ** m_rakill;
