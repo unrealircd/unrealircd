@@ -578,3 +578,7 @@ Fixed lowercase host errors with cloaking (sts' patch)
 do_mode_char fixes (mostly from sts)
 --Luke
 ===================================
+
+SJ3 fixes from codemastr for possible desynch
+--Luke
+===================================

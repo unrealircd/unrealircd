@@ -5144,11 +5144,8 @@ int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
                 if (oldmode.key[0] && chptr->mode.key[0]
                     && strcmp(oldmode.key, chptr->mode.key))
                 {
-                        x = strlen(oldmode.key);
-                        y = strlen(chptr->mode.key);
-                        z = MAX(x, y);
-                        if (z == x)
-                        {
+                        if (strcmp(oldmode.key, chptr->mode.key) > 0)
+			{
                                 strcpy(chptr->mode.key, oldmode.key);
                         }
                         else
@@ -5156,15 +5153,12 @@ int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[])
                                 Addit('k', chptr->mode.key);
                         }
                 }
-                /* same as above .. */
+                /* same as above (except case insensitive #test == #TEST -- codemastr) */
                 if (oldmode.link[0] && chptr->mode.link[0]
-                    && strcmp(oldmode.link, chptr->mode.link))
+                    && stricmp(oldmode.link, chptr->mode.link))
                 {
-                        x = strlen(oldmode.link);
-                        y = strlen(chptr->mode.link);
-                        z = MAX(x, y);
-                        if (z == x)
-                        {
+                        if (strcmp(oldmode.link, chptr->mode.link) > 0)
+			{
                                 strcpy(chptr->mode.link, oldmode.link);
                         }
                         else
