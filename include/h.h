@@ -387,6 +387,7 @@ extern char *inetntop(int af, const void *in, char *local_dummy,
 
 char	*Inet_si2p(struct SOCKADDR_IN *sin);
 char	*Inet_si2pB(struct SOCKADDR_IN *sin, char *buf, int sz);
+char	*Inet_ia2p(struct IN_ADDR *ia);
 
 /*
  * CommandHash -Stskeeps
