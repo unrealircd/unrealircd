@@ -72,3 +72,37 @@ InTe[_:#roxnet> -oxygen.phrozen.org- *** Global -- from Irc.LinuxFreakz.Net:
                  No response from dumper.roxnet.org[130.240.202.121], closing
                  link
              Users can see that using +g ???
+
+* stskeeps - Fri Dec 14 2000 - 1 - [ SSL ]
+	Challenge/Response kind of thing.
+            
+	/CHALLENGE nick keyname/commonidentifier type :b64text
+	  type = 0, challenge type = 1, response
+         Must be flood controlled in some way
+         Can only work between servers and or U:lines and or 
+           +z users
+
+	Example:
+          > :Stskeeps CHALLENGE RaYmAn rayman.pem 0 :0D0FE5F6D46
+          < :RaYmAn CHALLENGE Stskeeps rayman.pem 1 :D0F5F543433
+        
+	The way this works is, that the challenger got RaYmAn's public RSA key
+        and he needs to authenticate that he is really talking to RaYmAn (the
+        real one). He then sends a random string to RaYmAn, encrypted with 
+        RaYmAn's public key. RaYmAn then decrypts it using his private key, and
+        then re-encrypts the random stuff using his private key, and sends back
+        to Stskeeps, Sts then checks with decrypting the crypted text using the public
+        key, and if its OK, then considers him OK. 
+
+        We can use this for NickServ authentication using RSA keys, 
+        or server<->server authentication, or /oper authentication
+        (no more stolen passwords, yipieeeeeeee)
+
+        This is also easily possible to add, in IRCii, in BitchX, EPIC, 
+        mIRC (DLLs), etc.
+        
+        This is also good for raising security/authenticating to another level.
+        Users can check if they are talking to the right person, NickServ databases
+        no longer needs to have passwords, just use RSA keys
+
+	
