@@ -2535,3 +2535,4 @@ seen. gmtime warning still there
   fixed things (like kick a +h if you are +h) because older servers will still block
   the kick. You will receive a 'You cannot kick channel' message from every older
   server so you'll at least be notified ;p.
+- Don't allow remote pongs if unregistered.

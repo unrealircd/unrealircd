@@ -224,6 +224,12 @@ DLLFUNC int m_pong(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (!BadPtr(destination) && mycmp(destination, me.name) != 0)
 	{
+		/* No remote pongs if not registered */
+		if (MyConnect(sptr) && IsUnknown(sptr))
+		{
+			sendto_one(sptr, err_str(ERR_NOSUCHSERVER), me.name, parv[0], destination);
+			return 0;
+		}
 		if ((acptr = find_client(destination, NULL)) ||
 		    (acptr = find_server_quick(destination)))
 		{
