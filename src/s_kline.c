@@ -608,7 +608,7 @@ aTKline *find_qline(aClient *cptr, char *nick, int *ishold)
 		return lp;
 	}
 
-	chost = cptr->sockhost;
+	chost = cptr->user ? cptr->user->realhost : (MyConnect(cptr) ? cptr->sockhost : "unknown");
 	cname = cptr->user ? cptr->user->username : "unknown";
 	strcpy(host, make_user_host(cname, chost));
 
@@ -625,7 +625,7 @@ aTKline *find_qline(aClient *cptr, char *nick, int *ishold)
 			continue;
 		if (excepts->netmask)
 		{
-			if (match_ip(cptr->ip, NULL, NULL, excepts->netmask))
+			if (MyConnect(cptr) && match_ip(cptr->ip, NULL, NULL, excepts->netmask))
 				return NULL;
 		} else
 		if (!match(excepts->mask, host) || (host2 && !match(excepts->mask, host2)))

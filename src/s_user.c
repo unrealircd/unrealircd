@@ -1359,7 +1359,7 @@ CMD_FUNC(m_nick)
 	}
 	if (!IsULine(sptr) && (tklban = find_qline(sptr, nick, &ishold)))
 	{
-		if (IsServer(sptr) && !ishold)
+		if (IsServer(sptr) && !ishold) /* server introducing new client */
 		{
 			acptrs =
 			    (aClient *)find_server_b64_or_real(sptr->user ==
@@ -1372,8 +1372,14 @@ CMD_FUNC(m_nick)
 				    && !IsServer(sptr) ? sptr->name : "<unregistered>"),
 				    acptrs ? acptrs->name : "unknown server");
 		}
+		
+		if (IsServer(cptr) && IsPerson(sptr)) /* remote user changing nick */
+		{
+			sendto_snomask(SNO_QLINE, "Q:lined nick %s from %s on %s", nick,
+				sptr->name, sptr->srvptr ? sptr->srvptr->name : "<unknown>");
+		}
 
-		if (!IsServer(cptr))
+		if (!IsServer(cptr)) /* local */
 		{
 			if (ishold)
 			{
@@ -1382,9 +1388,9 @@ CMD_FUNC(m_nick)
 				    nick, tklban->reason);
 				return 0;
 			}
-			sptr->since += 4; /* lag them up */
 			if (!IsOper(cptr))
 			{
+				sptr->since += 4; /* lag them up */
 				sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
 				    me.name, BadPtr(parv[0]) ? "*" : parv[0],
 				    nick, tklban->reason);

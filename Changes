@@ -398,3 +398,7 @@
 - Windows version can now hold ~4096 connections instead of ~1024
 - help.conf: clarified MKPASSWD documentation, reported by hypnetric (#0001926).
 - Some modeskip handling for future versions
+- Fixed serious heap corruption bug if remote users were using qlined nicks, thanks to
+  Gilou and Trankill for making me able to trace this issue down (#0002032).
+- Fixed qline notices again: now gives msg #1 for local qlined-nick attempts, and
+  another msg in case of a remote client (eg: oper) using a qlined nick.
