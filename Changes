@@ -728,3 +728,4 @@ seen. gmtime warning still there
 - Updated a few network files that managed to slip by the update process
 - Updated networks/networks.ndx and alphabetized it and added all network files submitted in 3.2 format
   (didn't feel like converting right now ;P)
+- Win32 code cleanup

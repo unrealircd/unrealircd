@@ -58,16 +58,11 @@ LRESULT CALLBACK LicenseDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK CreditsDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK DalDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK HelpDLG(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK ConfigDLG(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK MotdDLG(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK OperMotdDLG(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK BotMotdDLG(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK RulesDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK StatusDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK ConfigErrorDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK ColorDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK FromVarDLG(HWND, UINT, WPARAM, LPARAM, char *, char **);
-LRESULT CALLBACK FromFileDLG(HWND, UINT, WPARAM, LPARAM, char *, char *);
+LRESULT CALLBACK FromFileDLG(HWND, UINT, WPARAM, LPARAM);
 
 extern  void      SocketLoop(void *dummy), rehash(aClient *, aClient *, int);
 int CountRTFSize(char *);
@@ -107,6 +102,17 @@ void TaskBarCreated() {
 	lstrcpy(SysTray.szTip, WIN32_VERSION);
 	Shell_NotifyIcon(NIM_ADD ,&SysTray);
 }
+
+LRESULT LinkSubClassFunc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) {
+	static HCURSOR hCursor;
+	if (!hCursor)
+		hCursor = LoadCursor(hInst, MAKEINTRESOURCE(CUR_HAND));
+	if (Message == WM_MOUSEMOVE || WM_LBUTTONUP)
+		SetCursor(hCursor);
+
+	return CallWindowProc((WNDPROC)lpfnOldWndProc, hWnd, Message, wParam, lParam);
+}
+
 
 
 LRESULT RESubClassFunc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam) {
@@ -629,19 +635,24 @@ static HMENU hRehash, hAbout, hConfig, hTray;
 						DialogBox(hInst, "Help", hDlg, (DLGPROC)HelpDLG);
 						break;
 					case IDM_CONF:
-						DialogBox(hInst, "FromFile", hDlg, (DLGPROC)ConfigDLG);
+						DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, 
+							(LPARAM)CPATH);
 						break;
 					case IDM_MOTD:
-						DialogBox(hInst, "FromFile", hDlg, (DLGPROC)MotdDLG);
+						DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, 
+							(LPARAM)MPATH);
 						break;
 					case IDM_OPERMOTD:
-						DialogBox(hInst, "FromFile", hDlg, (DLGPROC)OperMotdDLG);
+						DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG,
+							(LPARAM)OPATH);
 						break;
 					case IDM_BOTMOTD:
-						DialogBox(hInst, "FromFile", hDlg, (DLGPROC)BotMotdDLG);
+						DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG,
+							(LPARAM)BPATH);
 						break;
 					case IDM_RULES:
-						DialogBox(hInst, "FromFile", hDlg, (DLGPROC)RulesDLG);
+						DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG,
+							(LPARAM)RPATH);
 
 				}
 			}
@@ -730,7 +741,6 @@ LRESULT CALLBACK FromVarDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 
 
 LRESULT CALLBACK HelpDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
-	static HBRUSH hBrush;
 	static HFONT hFont;
 	static HCURSOR hCursor;
 	switch (message) {
@@ -739,72 +749,50 @@ LRESULT CALLBACK HelpDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
 			hFont = CreateFont(8,0,0,0,0,0,1,0,ANSI_CHARSET,0,0,PROOF_QUALITY,0,"MS Sans Serif");
 			SendMessage(GetDlgItem(hDlg, IDC_EMAIL), WM_SETFONT, (WPARAM)hFont,TRUE);
 			SendMessage(GetDlgItem(hDlg, IDC_URL), WM_SETFONT, (WPARAM)hFont,TRUE);
-			hBrush = GetSysColorBrush(COLOR_3DFACE);
+			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_EMAIL), GWL_WNDPROC, (DWORD)LinkSubClassFunc);
+			SetWindowLong(GetDlgItem(hDlg, IDC_URL), GWL_WNDPROC, (DWORD)LinkSubClassFunc);
 			return (TRUE);
 
-		case WM_CTLCOLORSTATIC: 
-			if ((GetDlgItem(hDlg, IDC_URL) == (HWND)lParam) 
-				|| (GetDlgItem(hDlg, IDC_EMAIL) == (HWND)lParam)) {
-				SetBkMode((HDC)wParam, TRANSPARENT);
-				SetTextColor((HDC)wParam, RGB(0,0,255));
-			return (DWORD)hBrush;
+		case WM_DRAWITEM: {
+			LPDRAWITEMSTRUCT lpdis = (LPDRAWITEMSTRUCT)lParam;
+			char text[500];
+			COLORREF oldtext;
+			RECT focus;
+			GetWindowText(lpdis->hwndItem, text, 500);
+			if (wParam == IDC_URL || IDC_EMAIL) {
+				FillRect(lpdis->hDC, &lpdis->rcItem, GetSysColorBrush(COLOR_3DFACE));
+				oldtext = SetTextColor(lpdis->hDC, RGB(0,0,255));
+				DrawText(lpdis->hDC, text, strlen(text), &lpdis->rcItem, DT_CENTER|DT_VCENTER);
+				SetTextColor(lpdis->hDC, oldtext);
+				if (lpdis->itemState & ODS_FOCUS) {
+					CopyRect(&focus, &lpdis->rcItem);
+					focus.left += 2;
+					focus.right -= 2;
+					focus.top += 1;
+					focus.bottom -= 1;
+					DrawFocusRect(lpdis->hDC, &focus);
+				}
+				return TRUE;
 			}
-			break;
-		/* Ugly code to make it change the cursor over a link */
-		case WM_MOUSEMOVE: {
-			POINT p;
-			RECT r;
-			p.x = LOWORD(lParam);
-			p.y = HIWORD(lParam);
-			GetClientRect(GetDlgItem(hDlg, IDC_URL),&r);
-			MapWindowPoints(GetDlgItem(hDlg, IDC_URL),hDlg, &r, 2);
-			if ((p.x >= r.left) && (p.x <= r.right) && (p.y <= r.bottom) && (p.y >= r.top)) {
-				SetCursor(hCursor);
-				return 0;
-			}
-			GetClientRect(GetDlgItem(hDlg, IDC_EMAIL),&r);
-			MapWindowPoints(GetDlgItem(hDlg, IDC_EMAIL),hDlg, &r, 2);
-			if ((p.x >= r.left) && (p.x <= r.right) && (p.y <= r.bottom) && (p.y >= r.top)) {
-				SetCursor(hCursor);
-				return 0;
-			}
-
-			return 0;
-		}
-		/* Ugly code to simulate a link by opening the browser/email program */
-		case WM_LBUTTONDOWN: {
-			POINT p;
-			RECT r;
-			p.x = LOWORD(lParam);
-			p.y = HIWORD(lParam);
-			GetClientRect(GetDlgItem(hDlg, IDC_URL),&r);
-			MapWindowPoints(GetDlgItem(hDlg, IDC_URL),hDlg, &r, 2);
-			if ((p.x >= r.left) && (p.x <= r.right) && (p.y <= r.bottom) && (p.y >= r.top)) {
-				ShellExecute(NULL, "open", "http://www.unrealircd.com", NULL, NULL,
-					SW_MAXIMIZE);
-				EndDialog(hDlg, TRUE);
-				return 0;
-			}
-			GetClientRect(GetDlgItem(hDlg, IDC_EMAIL),&r);
-			MapWindowPoints(GetDlgItem(hDlg, IDC_EMAIL),hDlg, &r, 2);
-			if ((p.x >= r.left) && (p.x <= r.right) && (p.y <= r.bottom) && (p.y >= r.top)) {
-				ShellExecute(NULL, "open", "mailto:unreal-dev@lists.sourceforge.net", NULL,
-					NULL, SW_MAXIMIZE);
-				EndDialog(hDlg, TRUE);
-				return 0;
-			}
-
-			return 0;
-		}
+		}	
 		case WM_COMMAND:
 			if (LOWORD(wParam) == IDOK)
 				EndDialog(hDlg, TRUE);
+			if (HIWORD(wParam) == BN_DBLCLK) {
+				if (LOWORD(wParam) == IDC_URL) 
+					ShellExecute(NULL, "open", "http://www.unrealircd.com", NULL, NULL, 
+						SW_MAXIMIZE);
+				else if (LOWORD(wParam) == IDC_EMAIL)
+					ShellExecute(NULL, "open", "mailto:coders@lists.unrealircd.org", NULL, NULL, 
+						SW_MAXIMIZE);
+				EndDialog(hDlg, TRUE);
+				return 0;
+			}
 			break;
 		case WM_CLOSE:
 			EndDialog(hDlg, TRUE);
 			break;
 		case WM_DESTROY:
-			DeleteObject(hBrush);
 			DeleteObject(hFont);
 			break;
 
@@ -812,38 +800,22 @@ LRESULT CALLBACK HelpDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
 	return (FALSE);
 }
 
-LRESULT CALLBACK ConfigDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
-	return FromFileDLG(hDlg, message, wParam, lParam, "UnrealIRCd Configuration File", CPATH);
-}
-
-LRESULT CALLBACK MotdDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
-	return FromFileDLG(hDlg, message, wParam, lParam, "UnrealIRCd MOTD File", MPATH);
-}
-
-LRESULT CALLBACK OperMotdDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
-	return FromFileDLG(hDlg, message, wParam, lParam, "UnrealIRCd OperMOTD File", OPATH);
-}
-
-LRESULT CALLBACK BotMotdDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
-	return FromFileDLG(hDlg, message, wParam, lParam, "UnrealIRCd BotMOTD File", BPATH);
-}
-
-LRESULT CALLBACK RulesDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
-	return FromFileDLG(hDlg, message, wParam, lParam, "UnrealIRCd Rules File", RPATH);
-}
-
-LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam, char *title, char *file) {
+LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 	HWND hWnd;
 	CHARFORMAT2 chars;
 	static HFONT hFont, hFont2, hFont3;
 	static HBRUSH hBrush;
 	static FINDREPLACE find;
+	static char *file;
 	switch (message) {
 		case WM_INITDIALOG: {
 			int fd,len;
 			char *buffer = '\0', *string = '\0';
+			char szText[256];
 			struct stat sb;
-			SetWindowText(hDlg, title);
+			file = (char *)lParam;
+			wsprintf(szText, "UnrealIRCd Editor - %s", file);
+			SetWindowText(hDlg, szText);			
 			lpfnOldWndProc = (FARPROC)SetWindowLong(GetDlgItem(hDlg, IDC_TEXT), GWL_WNDPROC, (DWORD)RESubClassFunc);
 			hFont = CreateFont(8,0,0,0,FW_HEAVY,0,0,0,ANSI_CHARSET,0,0,PROOF_QUALITY,0,"MS Sans Serif");
 			hFont2 = CreateFont(8,0,0,0,FW_BOLD,0,1,0,ANSI_CHARSET,0,0,PROOF_QUALITY,0,"MS Sans Serif");
@@ -887,7 +859,6 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			}
 		case WM_DRAWITEM: {
 			LPDRAWITEMSTRUCT lpdis = (LPDRAWITEMSTRUCT)lParam;
-
 			if (wParam == IDC_COLOR) {
 				RECT focus, caption;
 				char text[5];
@@ -1142,88 +1113,57 @@ LRESULT CALLBACK ColorDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		SetFocus(NULL);
 		return (TRUE);
 	case WM_DRAWITEM: {
-		UINT state = (UINT)wParam;
 		LPDRAWITEMSTRUCT lpdis = (LPDRAWITEMSTRUCT)lParam;
 		if (wParam == IDC_WHITE) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushWhite);
-			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
-			return TRUE;
 			}
 		if (wParam == IDC_BLACK) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushBlack);
-			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
-			return TRUE;
 		}
 		if (wParam == IDC_DARKBLUE) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushDarkBlue);
-			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
-			return TRUE;
 		}
 		if (wParam == IDC_DARKGREEN) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushDarkGreen);
-			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
-			return TRUE;
 		}
 		if (wParam == IDC_RED) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushRed);
-			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
-			return TRUE;
 		}
 		if (wParam == IDC_DARKRED) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushDarkRed);
-			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
-			return TRUE;
 		}
 		if (wParam == IDC_PURPLE) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushPurple);
-			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
-			return TRUE;
 		}
 		if (wParam == IDC_ORANGE) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushOrange);
-			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
-			return TRUE;
 		}
 		if (wParam == IDC_YELLOW) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushYellow);
-			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
-			return TRUE;
 		}
 		if (wParam == IDC_GREEN) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushGreen);
-			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
-			return TRUE;
 		}
 		if (wParam == IDC_VDARKGREEN) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushVDarkGreen);
-			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
-			return TRUE;
 		}
 		if (wParam == IDC_LIGHTBLUE) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushLightBlue);
-			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
-			return TRUE;
 		}
 		if (wParam == IDC_BLUE) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushBlue);
-			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
-			return TRUE;
 		}
 		if (wParam == IDC_PINK) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushPink);
-			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
-			return TRUE;
 		}
 		if (wParam == IDC_DARKGRAY) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushDarkGray);
-			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
-			return TRUE;
 		}
 		if (wParam == IDC_GRAY) {
 			FillRect(lpdis->hDC, &lpdis->rcItem, hBrushGray);
-			DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
-			return TRUE;
 		}
+		DrawEdge(lpdis->hDC, &lpdis->rcItem, EDGE_SUNKEN, BF_RECT);
+		return TRUE;
 		}
 	case WM_COMMAND: {
 		COLORREF clrref;
@@ -1504,7 +1444,6 @@ HTREEITEM AddItemToTree(HWND hWnd, LPSTR lpszItem, int nLevel, short remap)
  */
 void win_map(aClient *server, HWND hwTreeView, short remap)
 {
-        static char prompt[64];
         aClient *acptr;
 		Link *lp;
 		AddItemToTree(hwTreeView,server->name,server->hopcount+1, remap);
@@ -1552,7 +1491,6 @@ LRESULT CALLBACK ConfigErrorDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 			MyFree(errors);
 			errors = NULL;
 			return (TRUE);
-
 		case WM_COMMAND:
 			if (LOWORD(wParam) == IDOK)
 				EndDialog(hDlg, TRUE);
