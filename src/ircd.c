@@ -52,6 +52,12 @@ Computing Center and Jarkko Oikarinen";
 #undef _KERNEL
 #endif
 #include <errno.h>
+#ifdef HAVE_PSSTRINGS
+#include <sys/exec.h>
+#endif
+#ifdef HAVE_PSTAT
+#include <sys/pstat.h>
+#endif
 #include "h.h"
 #ifndef NO_FDLIST
 #include "fdlist.h"
@@ -783,6 +789,9 @@ int  InitwIRCD(argc, argv)
 	uid_t uid, euid;
 	TS   delay = 0;
 #endif
+#ifdef HAVE_PSTAT
+	union pstun pstats;
+#endif
 	int  i, ggg;
 	int  portarg = 0;
 #ifdef  FORCE_CORE
@@ -1162,8 +1171,14 @@ int  InitwIRCD(argc, argv)
 #endif
 	SetupEvents();
 	loop.ircd_booted = 1;
-#ifdef HAVE_SETPROCTITLE
+#if defined(HAVE_SETPROCTITLE)
 	setproctitle("%s", me.name);
+#elif defined(HAVE_PSTAT)
+	pstats.pst_command = me.name;
+	pstat(PSTAT_SETCMD, pstats, strlen(me.name), 0, 0);
+#elif defined(HAVE_PSSTRINGS)
+	PS_STRINGS->ps_nargvstr = 1;
+	PS_STRINGS->ps_argvstr = me.name;
 #endif
 	module_loadall();
 #ifdef STATIC_LINKING

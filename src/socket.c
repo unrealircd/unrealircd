@@ -207,7 +207,7 @@ char	*Inet_ia2p(struct IN_ADDR *ia)
 {
 	static char buf[256]; 
 #ifndef INET6
-	return(inet_ntoa(*ia));
+	return (inet_ntoa(*ia));
 #else
 	/* Hack to make proper addresses */
 	u_char	*cp;

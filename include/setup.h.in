@@ -168,6 +168,12 @@
 /* Define if you have setproctitle */
 #undef HAVE_SETPROCTITLE
 
+/* Define if you have PS_STRINGS */
+#undef HAVE_PSSTRINGS
+
+/* Define if you have pstat */
+#undef HAVE_PSTAT
+
 /* Local hostname of the server */
 #undef DOMAINNAME
 
