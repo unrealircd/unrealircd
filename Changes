@@ -1023,3 +1023,4 @@ seen. gmtime warning still there
 - Added back good old error reporting in ./unreal start
 - Changed to beta5
 - Fixed some slave work.. return MOD_SUCCESS; in all command modules..
+- make install fix
