@@ -34,7 +34,7 @@ Name: "installservice/startdemand"; Description: "Start UnrealIRCd on &request";
 Name: "installservice/crashrestart"; Description: "Restart UnrealIRCd if it &crashes"; GroupDescription: "Service support:"; MinVersion: 0,5.0;
 #ifdef USE_SSL
 Name: "makecert"; Description: "&Create certificate"; GroupDescription: "SSL options:";
-Name: "enccert"; Description: "&Encrypt certificate"; GroupDescription: "SSL options:";
+Name: "enccert"; Description: "&Encrypt certificate"; GroupDescription: "SSL options:"; Flags: unchecked;
 #endif
 
 [Files]
