@@ -198,8 +198,8 @@ static char retbuf[REALLEN + 8];
 
 	strncpyzt(retbuf, para, sizeof(retbuf));
 	mask = retbuf+3;
-	if (strlen(mask) > REALLEN)
-		mask[REALLEN] = '\0';
+	if (strlen(mask) > REALLEN + 3)
+		mask[REALLEN + 3] = '\0';
 	return retbuf;
 }
 int extban_moder_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type)
