@@ -113,7 +113,6 @@ DLLFUNC int  m_ping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	aClient *acptr;
 	char *origin, *destination;
 
-
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NOORIGIN), me.name, parv[0]);
@@ -122,16 +121,22 @@ DLLFUNC int  m_ping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	origin = parv[1];
 	destination = parv[2];	/* Will get NULL or pointer (parc >= 2!!) */
 
-	acptr = find_client(origin, NULL);
-	if (!acptr)
-		acptr = find_server_quick(origin);
-	if (acptr && acptr != sptr)
-		origin = cptr->name;
+	if (!MyClient(sptr))
+	{
+		/* I've no idea who invented this or what it is supposed to do.. */
+		acptr = find_client(origin, NULL);
+		if (!acptr)
+			acptr = find_server_quick(origin);
+		if (acptr && acptr != sptr)
+			origin = cptr->name;
+	}
+
 	if (!BadPtr(destination) && mycmp(destination, me.name) != 0)
 	{
+		if (MyClient(sptr))
+			origin = sptr->name; /* Make sure origin is not spoofed */
 		if ((acptr = find_server_quick(destination)) && (acptr != &me))
-			sendto_one(acptr, ":%s PING %s :%s", parv[0],
-			    origin, destination);
+			sendto_one(acptr, ":%s PING %s :%s", parv[0], origin, destination);
 		else
 		{
 			sendto_one(sptr, err_str(ERR_NOSUCHSERVER),
@@ -141,7 +146,7 @@ DLLFUNC int  m_ping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	else
 		sendto_one(sptr, ":%s %s %s :%s", me.name,
-		    IsToken(sptr) ? TOK_PONG : MSG_PONG,
+		    IsToken(cptr) ? TOK_PONG : MSG_PONG,
 		    (destination) ? destination : me.name, origin);
 	return 0;
 }
@@ -222,14 +227,12 @@ DLLFUNC int m_pong(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	cptr->flags &= ~FLAGS_PINGSENT;
 	sptr->flags &= ~FLAGS_PINGSENT;
 
+	/* Remote pongs for clients? uhh... */
+	if (MyClient(sptr) || !IsRegistered(sptr))
+		destination = NULL;
+
 	if (!BadPtr(destination) && mycmp(destination, me.name) != 0)
 	{
-		/* No remote pongs if not registered */
-		if (MyConnect(sptr) && IsUnknown(sptr))
-		{
-			sendto_one(sptr, err_str(ERR_NOSUCHSERVER), me.name, parv[0], destination);
-			return 0;
-		}
 		if ((acptr = find_client(destination, NULL)) ||
 		    (acptr = find_server_quick(destination)))
 		{

@@ -2547,3 +2547,4 @@ seen. gmtime warning still there
   you won't notice, I suggest you to update your callback functions anyway.
 - Possibly fixed an issue with set::modes-on-join and mode +f, it could have
   set random remove-chanmode times in the default chanmode line.
+- Fixed some other weird remote PING/PONG stuff as well.
