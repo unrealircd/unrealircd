@@ -1336,6 +1336,7 @@ extern char *gnulicense[];
 #ifdef USE_SSL
 #include "ssl.h"
 #endif
+#define HASH_TEST HASH_CHECK
+
 #endif /* __struct_include__ */
 
-#define HASH_TEST HASH_CHECK
