@@ -202,6 +202,7 @@ extern int send_queued PROTO((aClient *));
 // extern       void    sendto_one(char *, ...);
 /*VARARGS4*/
 /* i know this is naughty but :P --stskeeps */
+extern void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnect, char *comment);
 extern void sendto_channel_butone(aClient *, aClient *, aChannel *, char *,
     ...);
 extern void sendto_channelops_butone(aClient *, aClient *, aChannel *,
@@ -242,7 +243,6 @@ extern void sendto_failops(char *, ...);
 extern void sendto_opers(char *, ...);
 /*VARARGS?*/
 extern void sendto_umode(int, char *, ...);
-extern void sendto_conn_hcn(char *, ...);
 extern int writecalls, writeb[];
 extern int deliver_it PROTO((aClient *, char *, int));
 

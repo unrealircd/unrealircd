@@ -952,7 +952,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 			    sptr->name, olduser, userbad, stripuser);
 #endif
 		nextping = TStime();
-		sendto_connectnotice(nick, user, sptr);
+		sendto_connectnotice(nick, user, sptr, 0, NULL);
 		if (IsSecure(sptr))
 			sptr->umodes |= UMODE_SECURE;
 	}

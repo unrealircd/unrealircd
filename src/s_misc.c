@@ -432,11 +432,7 @@ int  exit_client(cptr, sptr, from, comment)
 			    "*** Notice -- Client exiting: %s (%s@%s) [%s]",
 			    sptr->name, sptr->user->username,
 			    sptr->user->realhost, comment);
-			sendto_conn_hcn
-			    ("*** Notice -- Client exiting: %s (%s@%s) [%s] [%s]",
-			    sptr->name, sptr->user->username,
-			    sptr->user->realhost, comment, sptr->sockhost);
-
+			sendto_connectnotice(sptr->name, sptr->user, sptr, 1, comment);
 		}
 		current_load_data.conn_count--;
 		if (IsPerson(sptr))

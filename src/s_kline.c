@@ -754,6 +754,7 @@ int  m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
         if (parc == 1)
         {
                 tkl_stats(sptr);
+		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
                 return 0;
         }
 
@@ -949,6 +950,7 @@ int  m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc == 1)
 	{
 		tkl_stats(sptr);
+		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
 		return 0;
 	}
 
@@ -1146,6 +1148,7 @@ int  m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc == 1)
 	{
 		tkl_stats(sptr);
+		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
 		return 0;
 	}
 
@@ -1347,6 +1350,7 @@ int  m_akill(cptr, sptr, parc, parv)
         if (parc == 1)
         {
                 tkl_stats(sptr);
+		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
                 return 0;
         }
 
@@ -1472,6 +1476,7 @@ int  m_rakill(cptr, sptr, parc, parv)
         if (parc == 1)
         {
                 tkl_stats(sptr);
+		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
                 return 0;
         }
 

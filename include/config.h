@@ -705,7 +705,6 @@ error You stuffed up config.h signals
 # undef FORCE_CORE
 #endif
 /* use cflag longmodes */
-#define USE_LONGMODE
 #define Reg1 register
 #define Reg2 register
 #define Reg3 register

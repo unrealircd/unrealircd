@@ -242,7 +242,7 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 			    "ohvbeqa", \
 			    "kfL", \
 			    "l", \
-			    "psmntirRcOAQKVHGCuzN"
+			    "psmntirRcOAQKVGCuzNSM"
 
 /* Server-Server PROTOCTL -Stskeeps */
 #define PROTOCTL_SERVER "NOQUIT" \

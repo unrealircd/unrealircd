@@ -105,7 +105,6 @@ static char nickbuf[BUFSIZE], buf[BUFSIZE];
 static char modebuf[MAXMODEPARAMS*2+1], parabuf[504];
 #include "sjoin.h"
 
-#ifdef USE_LONGMODE
 typedef struct {
 	long mode;
 	char flag;
@@ -151,8 +150,6 @@ aCtab cFlagTab[] = {
 	{MODE_NONICKCHANGE, 'N', 0, 0},
 	{0x0, 0x0, 0x0}
 };
-#endif
-
 
 #define	BADOP_BOUNCE	1
 #define	BADOP_USER	2
@@ -1534,6 +1531,7 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 		   - this allows halfops to do +b +e +v and so on */
 		if (Halfop_mode(modetype) == FALSE)
 		{
+			int eaten = 0;
 			while (tab->mode != 0x0)
 			{
 				if (tab->mode == modetype)
@@ -1541,10 +1539,12 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 					sendto_one(cptr,
 					    err_str(ERR_NOTFORHALFOPS), me.name,
 					    cptr->name, tab->flag);
+					eaten = tab->parameters;
+					break;
 				}
 				tab++;
 			}
-			return (0);
+			return (eaten);
 		}
 	}
 
@@ -1950,8 +1950,18 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 				  break;
 			  }
 			  if (!bounce)	/* don't do the mode at all. */
+			  {
+				  char *tmp;
+				  if (( tmp = strchr(param, ' ')))
+					  *tmp = '\0';
+				  if (( tmp = strchr(param, ':')))
+					  *tmp = '\0';
+				  if (strlen(param) > CHANNELLEN)
+					  param[CHANNELLEN] = '\0';
+				  
 				  strncpyzt(chptr->mode.link, param,
 				      sizeof(chptr->mode.link));
+			  }
 			  tmpstr = param;
 		  }
 		  else
@@ -2038,6 +2048,8 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 				      '*' ? (param + 1) : param));
 				  xp++;
 				  xyi = atoi(xp);
+				  if (xxi > 500 || xyi > 500)
+					  break;
 				  xp--;
 				  *xp = ':';
 				  if ((xxi == 0) || (xyi == 0))

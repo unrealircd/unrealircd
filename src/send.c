@@ -1312,33 +1312,6 @@ void sendto_umode(int umodes, char *pattern, ...)
 }
 
 /*
- * sendto_conn_hcn
- *
- *  Send to umode +c && IsHybNotice(cptr)
- */
-void sendto_conn_hcn(char *pattern, ...)
-{
-	va_list vl;
-	aClient *cptr;
-	int  i;
-	char nbuf[1024];
-
-	va_start(vl, pattern);
-	for (i = 0; i <= highest_fd; i++)
-		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
-		    (cptr->umodes & UMODE_CLIENT) && IsHybNotice(cptr))
-		{
-			(void)ircsprintf(nbuf, ":%s NOTICE %s :",
-			    me.name, cptr->name);
-			(void)strncat(nbuf, pattern,
-			    sizeof(nbuf) - strlen(nbuf));
-			vsendto_one(cptr, nbuf, vl);
-		}
-	va_end(vl);
-	return;
-}
-
-/*
  * sendto_failops_whoare_opers
  *
  *      Send to *local* mode +g ops only who are also +o.
@@ -1617,29 +1590,42 @@ void sendto_realops(char *pattern, ...)
 	return;
 }
 
-void sendto_connectnotice(nick, user, sptr)
+void sendto_connectnotice(nick, user, sptr, disconnect, comment)
 	char *nick;
 	anUser *user;
 	aClient *sptr;
+	int disconnect;
+	char *comment;
 {
 	aClient *cptr;
 	int  i;
 	char connectd[1024];
 	char connecth[1024];
-	ircsprintf(connectd,
-	    "*** Notice -- Client connecting on port %d: %s (%s@%s) %s%s%s",
-	    sptr->acpt->port, nick, user->username, user->realhost,
+
+	if (!disconnect)
+	{
+		ircsprintf(connectd,
+		    "*** Notice -- Client connecting on port %d: %s (%s@%s) %s%s%s",
+		    sptr->acpt->port, nick, user->username, user->realhost,
 #ifdef USE_SSL
-	IsSecure(sptr) ? "[secure " : "", 
-	IsSecure(sptr) ? SSL_get_cipher((SSL *)sptr->ssl) : "",
-	IsSecure(sptr) ? "]" : "");
+		IsSecure(sptr) ? "[secure " : "", 
+		IsSecure(sptr) ? SSL_get_cipher((SSL *)sptr->ssl) : "",
+		IsSecure(sptr) ? "]" : "");
 #else
-	"", "", "");
+		"", "", "");
 #endif
-	ircsprintf(connecth,
-	    "*** Notice -- Client connecting: %s (%s@%s) [%s] {%d}", nick,
-	    user->username, user->realhost, inet_ntoa(sptr->ip),
-	    get_client_class(sptr));
+		ircsprintf(connecth,
+		    "*** Notice -- Client connecting: %s (%s@%s) [%s] {%d}", nick,
+		    user->username, user->realhost, inet_ntoa(sptr->ip),
+		    get_client_class(sptr));
+	}
+	else
+	{
+                ircsprintf(connectd, "*** Notice -- Client exiting: %s (%s@%s) [%s]",
+                        nick, user->username, user->realhost, comment);
+                ircsprintf(connecth, "*** Notice -- Client exiting: %s (%s@%s) [%s] [%s]",
+                        nick, user->username, user->realhost, comment, inet_ntoa(sptr->ip));
+	}
 
 	for (i = 0; i <= highest_fd; i++)
 		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&

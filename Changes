@@ -805,3 +805,37 @@ Removed +I. Don't you dare even think about whining.
 Added chmode +R, requires umode +r to speak.
 --Luke
 ===================================
+
+Deleted extra, unused oflag...wmaster.
+--Luke
+===================================
+
+Added a max of 500:500 to +f
+--Luke
+===================================
+
+Removed USE_LONGMODE.
+--Luke
+===================================
+
+Added modes S, M to common.h.
+--Luke
+===================================
+
+Added end of stats messages in /gline, /gzline, /shun
+--Luke
+===================================
+
+Fixed bug in channel mode +L
+--Luke
+===================================
+
+Fixed -o+b user *!*@blah.com halfop stuff.
+--Luke
+===================================
+
+Fixed bug where HCN would display exit client notices twice.
+--Luke
+===================================
+
+

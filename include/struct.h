@@ -453,7 +453,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OFLAG_CANOVER   0x10000000	/* Oper can utilize operoverride */
 #endif
 #define OFLAG_COFOUND   0x20000000
-#define OFLAG_WMASTER	0x40000000
 #define OFLAG_LOCAL	(OFLAG_REHASH|OFLAG_HELPOP|OFLAG_LOCOP|OFLAG_LROUTE|OFLAG_LKILL|OFLAG_KLINE|OFLAG_UNKLINE|OFLAG_LNOTICE|OFLAG_UMODEC|OFLAG_ZLINE|OFLAG_HIDE)
 #define OFLAG_GLOBAL	(OFLAG_LOCAL|OFLAG_GLOBOP|OFLAG_WALLOP|OFLAG_UMODEF|OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE|OFLAG_HIDE)
 #define OFLAG_ISGLOBAL	(OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE)
@@ -910,11 +909,7 @@ struct ListOptions {
 
 /* mode structure for channels */
 struct SMode {
-#ifndef USE_LONGMODE
-	unsigned int mode;
-#else
 	long mode;
-#endif
 	int  limit;
 	char link[LINKLEN + 1];
         char key[KEYLEN + 1];
