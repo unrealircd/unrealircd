@@ -6534,7 +6534,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 							}
 						}
 					}
-					if (!ofl->name)
+					if (ofl && !ofl->name)
 					{
 						config_error("%s:%i: unknown SSL flag '%s'",
 							ceppp->ce_fileptr->cf_filename, 
