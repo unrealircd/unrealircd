@@ -924,6 +924,7 @@ void config_progress(char *format, ...)
 
 int	init_conf(char *rootconf, int rehash)
 {
+	config_status("Fair warning to people using this release: READ CHANGES FILE");
 	if (conf)
 	{
 		config_error("%s:%i - Someone forgot to clean up", __FILE__, __LINE__);
