@@ -27,7 +27,7 @@
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2.2-CVS </font><br>
-  <b>Letztes Dokumentation Update:</b>           2001-2-13</div>
+  <b>Letztes Dokumentation Update:</b>            2005-03-05</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b>  McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
 <b>Dokumentation</b><b>:</b> CKnight^ / Syzop<br>
@@ -264,20 +264,15 @@ können.</p>
 können +x auch als Default erzwingen oder so einstellen, dass User kein -x
 einstellen können.</p>
 <p>Ein durch Cloaking geschützter Host wird durch ein Cloaking Modul
-(wenigstens eines muss geladen sein) erzeugt. Momentan sind 2 solche offizielle
-Module verfügbar:<br>
+(wenigstens eines muss geladen sein) erzeugt. Momentan wird nur 1 solches&nbsp;
+Modul mitgeliefert:<br>
 <b>cloak:</b><br>
 Hierbei handelt es sich um das neue offizielle Cloaking Modul, welches viel
-sicherer, als das alte ist. Es verwendet intern md5 und erfordert, dass 3 <b>::cloak-keys::</b>
+sicherer, als der alte Algorithmis ist. Es verwendet intern md5 und erfordert, dass 3
+<b>set::cloak-keys::</b>
 gesetzt sind, die gemischt Kleinbuchstaben (a-z), Großbuchstaben (A-Z) und
 Ziffern (0-9) enthalten [z.B. "AopAS6WQH2Os6hfosh4SFJHs"] . Siehe auch
-example.conf für ein Beispiel.&nbsp;<br>
-<b>oldcloak:</b><br>
-Hierbei handelt es sich um den alten Cloaking Algorithmus, wie er in Unreal3.2
-und früher benutzt wurde. Es gibt ihn nur, um beim Upgrade Prozess zu helfen.
-Diese Methode ist nicht länger sicher (es wird eine Warnung angezeigt, wenn man
-sie benutzt) und sollte beim nächten Upgrade der Server umgehend durch die neue
-Methode 'cloak' ersetzt werden.</p>
+example.conf für ein Beispiel.&nbsp;</p>
 <p>Die Keys MÜSSEN identisch auf ALLEN SERVERN im Netzwerk sein und sie sollten
 GEHEIM gehalten werden. Wenn jemand
 diese drei Keys kennt, kann er den geschützten Host erkennen und den realen
@@ -678,8 +673,17 @@ Minuten (dann warten Flooder möglicherweise 5 min um dann erneut zu flooden)?
 Das hängt auch vom Typ des Floods ab. Es beeinträchtigt User mehr, wenn sie
 nicht joinen können (+i) oder nicht schreiben können (+m) als wenn sie keinen
 Nick ändern können (+N) oder keine CTCP senden können (+C). Es sollten daher
-unterschiedliche Zeiten für das Löschen der Modi angegeben werden..<br>
-<br></div>
+unterschiedliche Zeiten für das Löschen der Modi angegeben werden.
+
+<p><b>Channel mode j</b><br>
+Der +f Modus enthält ein Feature, um join Floods zu vermeiden, allerdings ist
+dieses Feature "global." Lautet z.B. die Einstellung 5:10 und 5 verschiedene
+User joinen in 10 Sekunden, spricht der Flood Schutz an. Der Channel Mode +j
+arbeitet anders. Dieser Modus arbeitet auf einer pro User Basis. Anders als Join
+Floods wirkt er gegen join-part Floods (eine Art ständig sich wiederholendes
+rein - raus). Der Modus benötigt einen Parameter in der Form X:Y, wobei X die
+Anzahl der Joins und Y die Anzahl der Sekunden ist. Überschreitet ein User
+dieses Limit, wird er für diesen Channel gesperrt und kann nicht mehr joinen.</div>
 
 &nbsp;
 <p><font size="+2"><b><a name="feature_bantypes">
@@ -3737,16 +3741,16 @@ Befehlsliste</a></b></font></p><div class="desc">
     <td width="93" height="152">IRCop</td>
   </tr>
   <tr> 
-    <td height="57" width="267">restart &lt;server&gt; &lt;password&gt;</td>
+    <td height="57" width="267">restart &lt;password&gt; &lt;reason&gt;</td>
     <td width="486" height="57">Restartet den IRCD Prozess. Das Passwort ist
-      erforderlich. Durch Angabe des Servernamens kann man auch einen entfernten
-      Server restarten.</td>
+      erforderlich, wenn ein drpass {} Block definiert ist. Man kann hier auch
+      einen Grund mit angeben.</td>
     <td width="93" height="57">IRCop</td>
   </tr>
   <tr> 
     <td height="38" width="267">die &lt;password&gt;</td>
     <td width="486" height="38">Beendet den IRCD Prozess. Das Passwort ist
-      erforderlich.</td>
+      erforderlich, wenn ein drpass {} Block definiert ist.</td>
     <td width="93" height="38">IRCop</td>
   </tr>
   <tr> 
