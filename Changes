@@ -560,3 +560,4 @@ seen. gmtime warning still there
 - Fixed up scan_dummy.c
 - Fixed /quote sethost : and /quote setident : exploit, found by ac1d, fixed
   by Griever
+- Allowed capturing of unknown set {} variables by modules

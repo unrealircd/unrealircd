@@ -259,6 +259,7 @@ ConfigItem_deny_link	*conf_deny_link = NULL;
 ConfigItem_deny_version *conf_deny_version = NULL;
 ConfigItem_log		*conf_log = NULL;
 ConfigItem_unknown	*conf_unknown = NULL;
+ConfigItem_unknown_ext  *conf_unknown_set = NULL;
 #ifdef STRIPBADWORDS
 ConfigItem_badword	*conf_badword_channel = NULL;
 ConfigItem_badword      *conf_badword_message = NULL;
@@ -418,6 +419,7 @@ void config_progress(char *format, ...)
 void clear_unknown() {
 	ConfigItem_unknown *p;
 	ConfigItem t;
+	ConfigItem_unknown_ext *q;
 
 	for (p = conf_unknown; p; p = (ConfigItem_unknown *)p->next) {
 		if (!strcmp(p->ce->ce_varname, "ban")) 
@@ -440,9 +442,18 @@ void clear_unknown() {
 			config_status("%s:%i: unknown directive %s",
 				p->ce->ce_fileptr->cf_filename, p->ce->ce_varlinenum,
 				p->ce->ce_varname); 
+
 		t.next = del_ConfigItem((ConfigItem *)p, (ConfigItem **)&conf_unknown);
 		MyFree(p);
 		p = (ConfigItem_unknown *)&t;
+	}
+	for (q = conf_unknown_set; q; q = (ConfigItem_unknown_ext *)q->next) {
+		config_status("%s:%i: unknown directive set::%s",
+			q->ce_fileptr->cf_filename, q->ce_varlinenum,
+			q->ce_varname);
+		t.next = del_ConfigItem((ConfigItem *)q, (ConfigItem **)&conf_unknown_set);
+		MyFree(q);
+		q = (ConfigItem_unknown_ext *)&t;
 	}
 }
 
@@ -2160,9 +2171,16 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 #endif
 		else
 		{
-			config_status("%s:%i: unknown directive set::%s",
+			ConfigItem_unknown_ext *ca2 = malloc(sizeof(ConfigItem_unknown_ext));
+			ca2->ce_fileptr = cep->ce_fileptr;
+			ca2->ce_varlinenum = cep->ce_varlinenum;
+			ca2->ce_vardata = cep->ce_vardata;
+			ca2->ce_varname = cep->ce_varname;
+			ca2->ce_entries = cep->ce_entries;
+			add_ConfigItem((ConfigItem *)ca2, (ConfigItem **)&conf_unknown_set);
+/*			config_status("%s:%i: unknown directive set::%s",
 				cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				cep->ce_varname);
+				cep->ce_varname); */
 		}
 	}
 }
