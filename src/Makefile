@@ -250,7 +250,7 @@ extcmodes.o: extcmodes.c $(INCLUDES)
 extbans.o: extbans.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c extbans.c
 
-url.o: url.c $(INCLUDES) include/url.h
+url.o: url.c $(INCLUDES) ../include/url.h
 	$(CC) $(CFLAGS) -c url.c
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.

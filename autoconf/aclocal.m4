@@ -57,7 +57,7 @@ AC_DEFUN(CHECK_LIBCURL,
 
 		dnl curl-7.11.0 and up will include the ares info, older versions do not
 		if test "x`echo $CURLLIBS |grep .*ares.*`" = x ; then
-			CURLLIBS="$CURLLIBS -L$enableval/ares -lares"
+			CURLLIBS="$CURLLIBS -lares"
 		fi
 		IRCDLIBS="$IRCDLIBS $CURLLIBS"
 		URL="url.o"

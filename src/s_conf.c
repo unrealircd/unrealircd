@@ -6978,6 +6978,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 {
 #ifdef USE_LIBCURL
 	ConfigItem_include *inc;
+	char found_remote = 0;
 	if (loop.ircd_rehashing)
 	{
 		if (!sig)
@@ -6997,10 +6998,13 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 			continue;
 		if (inc->flag.type & INCLUDE_NOTLOADED)
 			continue;
+		found_remote = 1;
 		stat(inc->file, &sb);
 		download_file_async(inc->url, sb.st_ctime, conf_download_complete);
 		inc->flag.type |= INCLUDE_DLQUEUED;
 	}
+	if (!found_remote)
+		return rehash_internal(cptr, sptr, sig);
 	return 0;
 #else
 	return rehash_internal(cptr, sptr, sig);

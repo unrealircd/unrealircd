@@ -2676,3 +2676,7 @@ seen. gmtime warning still there
 - Added a ./curlinstall script to help with installing curl (Read INSTALL.REMOTEINC for
   more information).
 - Added code to make remote includes able to use SSL (HTTPS/FTPS) if SSL support is enabled
+- Fixed a remote include bug with rehashing when no remote includes were loaded
+- Fixed a remote include compile bug on Linux regarding url.h
+- Fixed a remote include compile bug regarding ares (#0001458) reported by mustapha88
+- Made the tmp/ directory cleaned up better

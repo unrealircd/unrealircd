@@ -97,12 +97,9 @@ void DeleteTempModules(void)
 
 	while ((dir = readdir(fd)))
 	{
-		if (!match("*.so", dir->d_name))
-		{
-			strcpy(tempbuf, "tmp/");
-			strcat(tempbuf, dir->d_name);
-			remove(tempbuf);
-		}
+		strcpy(tempbuf, "tmp/");
+		strcat(tempbuf, dir->d_name);
+		remove(tempbuf);
 	}
 	closedir(fd);
 #endif

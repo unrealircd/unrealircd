@@ -45,6 +45,8 @@ CPPFLAGS="-I$HOME/ares/include" ./configure --prefix=$HOME/curl --disable-shared
 cp -R $HOME/ares/lib ares
 make && make install
 
+cp $HOME/ares/lib/libares.a $HOME/curl/lib
+
 cd $save_PWD
 
 echo ""

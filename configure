@@ -9597,7 +9597,7 @@ if test "${enable_libcurl+set}" = set; then
 		CURLLIBS=`$enableval/bin/curl-config --libs`
 
 				if test "x`echo $CURLLIBS |grep .*ares.*`" = x ; then
-			CURLLIBS="$CURLLIBS -L$enableval/ares -lares"
+			CURLLIBS="$CURLLIBS -lares"
 		fi
 		IRCDLIBS="$IRCDLIBS $CURLLIBS"
 		URL="url.o"
