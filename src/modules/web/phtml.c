@@ -134,18 +134,18 @@ DLLFUNC int h_u_phtml(HTTPd_Request *r)
 				{
 					if (!strcmp(s, "TITLE"))
 					{
-						sockprintf(r->fd, "%s", Titles[section]);
+						sockprintf(r, "%s", Titles[section]);
 					}
 					else
 					if (!strcmp(s, "ICON"))
 					{
-						sockprintf(r->fd, " src=\"%s\" ",
+						sockprintf(r, " src=\"%s\" ",
 							Icons[section]);
 					}
 					else
 					if (!strcmp(s, "SECTION"))
 					{
-						sockprintf(r->fd, "%s",
+						sockprintf(r, "%s",
 							Sections[section]);
 					}
 					else
@@ -153,20 +153,20 @@ DLLFUNC int h_u_phtml(HTTPd_Request *r)
 					{
 						if (section == SECTION_STATS)
 						{
-							sockprintf(r->fd, "My name is %s<br>Been up for %lu", me.name, TStime()-me.since);
+							sockprintf(r, "My name is %s<br>Been up for %lu", me.name, TStime()-me.since);
 							
 						}
 					}
 					
 				}	
 				else
-					sockprintf(r->fd, "%s", bbuf);
+					sockprintf(r, "%s", bbuf);
 			}
 			else
-			    sockprintf(r->fd, "%s", bbuf);
+			    sockprintf(r, "%s", bbuf);
 		}
 		else
-			sockprintf(r->fd, "%s", bbuf);
+			sockprintf(r, "%s", bbuf);
 	}
 	return 1;
 }

@@ -708,3 +708,4 @@ seen. gmtime warning still there
 - Added a patch by Zogg to fix a socks scanner problem
 - Fixed a /sapart bug found by SubZero
 - Minor bugfix in scan_socks, + some comments
+- Fixed some flaws in httpd, that made it break unmercifully

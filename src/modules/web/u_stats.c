@@ -70,16 +70,16 @@ DLLFUNC int h_u_stats(HTTPd_Request *r)
 	if (!match("/stats", r->url))
 	{
 		httpd_standard_header(r, "text/html");
-		soprintf(r->fd, "<title>Current user stats on %s</title>", me.name);
-		soprintf(r->fd, "Clients: %li  Invisible: %li  Servers: %li<br>",
+		soprintf(r, "<title>Current user stats on %s</title>", me.name);
+		soprintf(r, "Clients: %li  Invisible: %li  Servers: %li<br>",
 			IRCstats.clients, IRCstats.invisible, IRCstats.servers);
-		soprintf(r->fd, "Unknown: %li  My clients: %li  My Servers: %li<br>",
+		soprintf(r, "Unknown: %li  My clients: %li  My Servers: %li<br>",
 			IRCstats.unknown, IRCstats.me_clients, IRCstats.me_servers);
-		soprintf(r->fd, "My Peak: %li    Global Peak: %li<br>",
+		soprintf(r, "My Peak: %li    Global Peak: %li<br>",
 			IRCstats.me_max, IRCstats.global_max);
 		for (p = r->headers; p; p = p->next)
 		{
-			soprintf(r->fd, "%s = %s<br>",
+			soprintf(r, "%s = %s<br>",
 				p->name, p->value);	
 		}
 		return 1;

@@ -95,7 +95,8 @@ DLLFUNC int h_u_vfs(HTTPd_Request *r)
 	struct stat statf;
 	char	*ims;
 	time_t	tmt;
-	char	datebuf[100];
+	char	*datebuf = NULL;
+
 	ims = GetHeader(r, "if-modified-since");
 	while (p->filename)
 	{
@@ -116,9 +117,11 @@ DLLFUNC int h_u_vfs(HTTPd_Request *r)
 				} 
 			}			
 			httpd_standard_headerX(r, p->ct, 1);
-			soprintf(r->fd, "Last-Modified: %s",
-				rfctime(statf.st_mtime, r->inbuf));
-			soprintf(r->fd, "");
+			datebuf = MyMalloc(60);
+			soprintf(r, "Last-Modified: %s",
+				rfctime(statf.st_mtime, datebuf));
+			MyFree(datebuf);
+			soprintf(r, "");
 			
 			httpd_sendfile(r, p->realfile);
 			return 1;

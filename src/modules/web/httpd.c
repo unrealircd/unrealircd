@@ -103,17 +103,16 @@ void	httpd_sendfile(HTTPd_Request *r, char *filename)
  * Helper function
 */
 
-void	sockprintf(SOCKET fd, char *format, ...)
+void	sockprintf(HTTPd_Request *r, char *format, ...)
 {
 	va_list		ap;
-	char		buffer[1024];
 	char		*ptr;
 
 	va_start(ap, format);
-	vsprintf(buffer, format, ap);
-	strcat(buffer, "\r\n");
+	vsprintf(r->inbuf, format, ap);
+	strcat(r->inbuf, "\r\n");
 	va_end(ap);
-	FDwrite(fd, buffer, strlen(buffer));
+	FDwrite(r->fd, r->inbuf, strlen(r->inbuf));
 }
 /* The purpose of these ifdefs, are that we can "static" link the ircd if we
  * want to
@@ -308,13 +307,13 @@ char	*GetHeader(HTTPd_Request *request, char *name)
 void 	httpd_standard_headerX(HTTPd_Request *request, char *type, int extra)
 {
 	char		 datebuf[100];
-	sockprintf(request->fd, "HTTP/1.1 200 OK");
-	sockprintf(request->fd, "Server: UnrealIRCd HTTPd");
-	sockprintf(request->fd, "Connection: close");
-	sockprintf(request->fd, "Date: %s", (char *) rfctime(time(NULL), datebuf));
-	sockprintf(request->fd, "Content-Type: %s", type);
+	sockprintf(request, "HTTP/1.1 200 OK");
+	sockprintf(request, "Server: UnrealIRCd HTTPd");
+	sockprintf(request, "Connection: close");
+	sockprintf(request, "Date: %s", (char *) rfctime(time(NULL), datebuf));
+	sockprintf(request, "Content-Type: %s", type);
 	if (extra != 1)	
-		sockprintf(request->fd, "");
+		sockprintf(request, "");
 }
 
 void 	httpd_standard_header(HTTPd_Request *request, char *type)
@@ -325,38 +324,38 @@ void 	httpd_standard_header(HTTPd_Request *request, char *type)
 void 	httpd_404_header(HTTPd_Request *request, char *path)
 {
 	char		 datebuf[100];
-	sockprintf(request->fd, "HTTP/1.1 404 Not Found");
-	sockprintf(request->fd, "Server: UnrealIRCd HTTPd");
-	sockprintf(request->fd, "Connection: close");
-	sockprintf(request->fd, "Date: %s", (char *) rfctime(time(NULL), datebuf));
-	sockprintf(request->fd, "Content-Type: text/html");
-	sockprintf(request->fd, "");
-	sockprintf(request->fd, "<b>Not Found</b><br>Could not find %s<br>",
+	sockprintf(request, "HTTP/1.1 404 Not Found");
+	sockprintf(request, "Server: UnrealIRCd HTTPd");
+	sockprintf(request, "Connection: close");
+	sockprintf(request, "Date: %s", (char *) rfctime(time(NULL), datebuf));
+	sockprintf(request, "Content-Type: text/html");
+	sockprintf(request, "");
+	sockprintf(request, "<b>Not Found</b><br>Could not find %s<br>",
 		path);
 }
 
 void 	httpd_304_header(HTTPd_Request *request)
 {
 	char		 datebuf[100];
-	sockprintf(request->fd, "HTTP/1.1 304 Not Modified");
-	sockprintf(request->fd, "Server: UnrealIRCd HTTPd");
-	sockprintf(request->fd, "Connection: close");
-	sockprintf(request->fd, "Date: %s", (char *) rfctime(time(NULL), datebuf));
-	sockprintf(request->fd, "Content-Type: text/html");
-	sockprintf(request->fd, "");
+	sockprintf(request, "HTTP/1.1 304 Not Modified");
+	sockprintf(request, "Server: UnrealIRCd HTTPd");
+	sockprintf(request, "Connection: close");
+	sockprintf(request, "Date: %s", (char *) rfctime(time(NULL), datebuf));
+	sockprintf(request, "Content-Type: text/html");
+	sockprintf(request, "");
 }
 
 
 void 	httpd_400_header(HTTPd_Request *request, char *why)
 {
 	char		 datebuf[100];
-	sockprintf(request->fd, "HTTP/1.1 400 Internal Server Error");
-	sockprintf(request->fd, "Server: UnrealIRCd HTTPd");
-	sockprintf(request->fd, "Connection: close");
-	sockprintf(request->fd, "Date: %s", (char *) rfctime(time(NULL), datebuf));
-	sockprintf(request->fd, "Content-Type: text/html");
-	sockprintf(request->fd, "");
-	sockprintf(request->fd, "%s<br>",
+	sockprintf(request, "HTTP/1.1 400 Internal Server Error");
+	sockprintf(request, "Server: UnrealIRCd HTTPd");
+	sockprintf(request, "Connection: close");
+	sockprintf(request, "Date: %s", (char *) rfctime(time(NULL), datebuf));
+	sockprintf(request, "Content-Type: text/html");
+	sockprintf(request, "");
+	sockprintf(request, "%s<br>",
 		why);
 }
 
@@ -369,7 +368,7 @@ void	httpd_parse_final(HTTPd_Request *request)
 		cl = GetHeader(request, "Content-Length:");
 		if (!cl)
 		{
-			sockprintf(request->fd, "Missing content-length header..");
+			sockprintf(request, "Missing content-length header..");
 			return;
 		}
 		request->content_length = atoi(cl);
@@ -388,12 +387,12 @@ void	httpd_parse_final(HTTPd_Request *request)
 
 void	httpd_badrequest(HTTPd_Request *request, char *reason)
 {
-	sockprintf(request->fd, "HTTP/1.1 400 Bad Request");
-	sockprintf(request->fd, "Server: UnrealIRCd HTTPd");
-	sockprintf(request->fd, "Connection: close");
-	sockprintf(request->fd, "Content-Type: text/plain");
-	sockprintf(request->fd, "");
-	sockprintf(request->fd, "%s", reason);
+	sockprintf(request, "HTTP/1.1 400 Bad Request");
+	sockprintf(request, "Server: UnrealIRCd HTTPd");
+	sockprintf(request, "Connection: close");
+	sockprintf(request, "Content-Type: text/plain");
+	sockprintf(request, "");
+	sockprintf(request, "%s", reason);
 }
 
 int	httpd_parse(HTTPd_Request *request)
@@ -430,7 +429,9 @@ int	httpd_parse(HTTPd_Request *request)
 				
 			}
 			else
+			{
 				httpd_badrequest(request, cmd);
+			}
 			return -1;
 		}
 		return 1;
@@ -462,7 +463,6 @@ int	httpd_parse(HTTPd_Request *request)
 			else
 			{
 				HTTPd_Header *header;
-				
 				header = (HTTPd_Header *) MyMalloc(sizeof(HTTPd_Header));
 				header->name = strdup(headername);
 				header->value = strdup(headerdata);
