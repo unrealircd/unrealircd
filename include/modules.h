@@ -439,6 +439,8 @@ int CommandExists(char *name);
 #define HOOKTYPE_LOCAL_CHANMODE 21
 #define HOOKTYPE_LOCAL_TOPIC 22
 #define HOOKTYPE_LOCAL_OPER 23
+#define HOOKTYPE_UNKUSER_QUIT 24
+
 /* Module flags */
 #define MODFLAG_NONE	0x0000
 #define MODFLAG_LOADED	0x0001 /* Fully loaded */
