@@ -1815,3 +1815,5 @@ seen. gmtime warning still there
   100% finished and more testing has been done.
 - Cleanups in badwords.c.
 - Fixed minor bug in resolving of IPv4 names if IPv6 is enabled (#0000659).
+- Temporarely added user-already-in-chan check in m_sjoin to help tracing user-twice-in-chan bug
+  which has been reported by two users (#0000594).
