@@ -1,4 +1,4 @@
-/*
+k/*
  * UnrealIRCd Changes File - (C) Carsten Munk 1999-2000 &
  *                               The UnrealIRCd Team
  *
@@ -452,3 +452,4 @@
 - SJ3 part 2/3 and a VL fix
 - Indentation and more SJ3 fixes
 - Fixed TKL?
+- 3/4 SJ3 fix

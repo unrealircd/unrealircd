@@ -617,6 +617,8 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 			continue;
 		if ((opt & OPT_NOT_UMODE2) && SupportUMODE2(cptr))
 			continue;
+		if ((opt & OPT_NOT_SJ3) && SupportSJ3(cptr))
+			continue;
 		if ((opt & OPT_NICKv2) && !SupportNICKv2(cptr))
 			continue;
 		if ((opt & OPT_SJOIN) && !SupportSJOIN(cptr))
@@ -625,7 +627,8 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 			continue;
 		if ((opt & OPT_UMODE2) && !SupportUMODE2(cptr))
 			continue;
-		
+		if ((opt & OPT_SJ3) && !SupportSJ3(cptr))
+			continue;
 		if (IsToken(cptr))
 			{
 				if ((pref[0] != '\0') && SupportALN(cptr))

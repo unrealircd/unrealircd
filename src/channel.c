@@ -4362,7 +4362,6 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	char nick[NICKLEN + 1];
 	aClient *acptr, *tempptr;
 	aChannel *chptr;
-	aSynchList *synchptr;
 	Link *lp;
 	Ban *ban;
 	aParv *ap;
@@ -4801,11 +4800,17 @@ int  m_sjoin(cptr, sptr, parc, parv)
 				{
 					add_banid(sptr, chptr, nick);
 					Addit('b', nick);
+					sendto_serv_butone_token_opt(cptr, OPT_SJOIN2|OPT_NOT_SJ3,
+						sptr->name, MSG_MODE, TOK_MODE, "%s +b %s %li", chptr->chname,
+							nick, TStime());
 				}
 				if (modeflags & CHFL_EXCEPT)
 				{
 					add_exbanid(sptr, chptr, nick);
 					Addit('e', nick);
+					sendto_serv_butone_token_opt(cptr, OPT_SJOIN2|OPT_NOT_SJ3,
+						sptr->name, MSG_MODE, TOK_MODE, "%s +e %s %li", chptr->chname,
+							nick, TStime());
 				}
 			}
 		}
@@ -4819,7 +4824,66 @@ int  m_sjoin(cptr, sptr, parc, parv)
 		sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
 		    sptr->name, chptr->chname, modebuf, parabuf);
 	}
+	/* we should be synched by now, */
+	if (oldts != -1)
+		if (oldts != chptr->creationtime)
+			sendto_channel_butserv(chptr, &me, 
+			":%s NOTICE %s :*** Notice -- TS for %s changed from %ld to %ld",
+			me.name, chptr->chname, chptr->chname,
+			oldts, chptr->creationtime);	
+        
+       
+        strcpy(parabuf, "");
+        for (i = 1; i <= (parc - 2); i++)
+        {
+        	strcat(parabuf, parv[i]);
+        }
 
+	/* This sends out to SJ3 servers .. */
+        sendto_serv_butone_token(cptr, OPT_SJOIN|OPT_SJ3,
+        	MSG_SJOIN, TOK_SJOIN, "%s :%s", parabuf, parv[parc - 1]);
+        
+	/* We strip out & and " here, for SJ2 */
+        strcpy(parabuf, ":");
+        t = parv[parc - 1];
+        ap = mp2parv("*", t);
+	for (i = 2; i <= ap->parc; i++)
+	{
+		if (*ap->parv[i] == '&')
+			continue;
+		if (*ap->parv[i] == '"')
+			continue;
+	 	
+		strcat(parabuf, ap->parv[i]);
+		strcat(parabuf, " ");
+	}
+	
+	if (nomode)
+	{
+		sendto_serv_butone_token(cptr, OPT_SJOIN|OPT_SJOIN2|OPT_NOT_SJ3,
+			MSG_SJOIN, TOK_SJOIN, "%s %s + <-> :%s", parv[1],
+				parv[2], parabuf);
+		return 0;
+	}
+	if (nopara)
+	{
+		sendto_serv_butone_token(cptr, OPT_SJOIN|OPT_SJOIN2|OPT_NOT_SJ3,
+			MSG_SJOIN, TOK_SJOIN, "%s %s %s <-> :%s", parv[1],
+				parv[2], parv[3], parabuf);
+		return 0;
+		
+	}
+	strcpy(paraback, "");
+        ap = mp2parv("*", parv[4]);
+	for (i = 2; i <= ap->parc; i++)
+	{
+		strcat(paraback, ap->parv[i]);
+		strcat(paraback, " ");
+	}
+	sendto_serv_butone_token(cptr, OPT_SJOIN|OPT_SJOIN2|OPT_NOT_SJ3,
+		MSG_SJOIN, TOK_SJOIN, "%s %s %s %s :%s",
+			parv[1], parv[2], parv[3], paraback, parabuf);
+	
 }
 
 #else
