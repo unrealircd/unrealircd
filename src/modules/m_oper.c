@@ -42,13 +42,46 @@
 #include "version.h"
 #endif
 
-DLLFUNC int m_dummy(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+DLLFUNC int m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 
 /* Place includes here */
 #define MSG_OPER        "OPER"  /* OPER */
 #define TOK_OPER        ";"     /* 59 */
 
+typedef struct oper_oflag_ {
+	unsigned long oflag;
+	long* umode;	/* you just HAD to make them variables */
+	char** host;
+	char* announce;
+} oper_oflag_t;
+
+static oper_oflag_t oper_oflags[] = {
+	{ OFLAG_NETADMIN,	&UMODE_NETADMIN,	&netadmin_host,
+		"is now a network administrator (N)" },
+	{ OFLAG_SADMIN,		&UMODE_SADMIN,		&sadmin_host,
+		"is now a services administrator (a)" },
+	{ OFLAG_ADMIN,		&UMODE_ADMIN,		&admin_host,
+		"is now a server admin (A)" },
+	{ OFLAG_COADMIN,	&UMODE_COADMIN,		&coadmin_host,
+		"is now a co administrator (C)" },
+	{ OFLAG_ISGLOBAL,	&UMODE_OPER,		&oper_host,
+		"is now an operator (O)" },
+	{ 0,			&UMODE_LOCOP,		&locop_host,
+		"is now a local operator (o)" },
+	{ OFLAG_HELPOP,		&UMODE_HELPOP,		0 ,
+		0 },
+	{ OFLAG_GLOBOP,		&UMODE_FAILOP,		0 ,
+		0 },
+	{ OFLAG_WALLOP,		&UMODE_WALLOP,	0 ,
+		0 },
+	{ OFLAG_WHOIS,		&UMODE_WHOIS,	0 , 		
+		0 },
+	{ OFLAG_HIDE,		&UMODE_HIDE,	0 ,
+		0 },
+	{ 0,			0,	0 ,
+		0 },
+};
 
 #ifndef DYNAMIC_LINKING
 ModuleHeader m_oper_Header
@@ -119,7 +152,10 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 	ConfigItem_oper *aconf;
 	ConfigItem_oper_from *oper_from;
 	char *name, *password, *encr, nuhhost[NICKLEN+USERLEN+HOSTLEN+6], nuhhost2[NICKLEN+USERLEN+HOSTLEN+6];
-	int i;
+	unsigned long oper_type = 0;
+	char* host = 0;
+	int i = 0, j = 0;
+	char* announce = 0;
 
 	if (parc < 3) {
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
@@ -187,6 +223,9 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 			sendto_serv_butone_token(cptr, sptr->name,
 				MSG_SWHOIS, TOK_SWHOIS, "%s :%s", sptr->name, aconf->swhois);
 		}
+
+#ifdef POTVINIZE /* scary shit below */
+
 		sptr->umodes |= (UMODE_SERVNOTICE | UMODE_WALLOP | UMODE_FAILOP);
 		if (aconf->oflags & OFLAG_NETADMIN) {
 			sptr->umodes |= (UMODE_NETADMIN | UMODE_ADMIN | UMODE_SADMIN | UMODE_OPER);
@@ -292,6 +331,63 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		if (aconf->oflags & OFLAG_EYES)
 			sptr->user->snomask |= SNO_EYES;
 		sptr->user->oflag |= aconf->oflags;
+
+#else
+
+/* new oper code */
+
+		sptr->umodes |= UMODE_SERVNOTICE;
+
+/* handle oflags that trigger umodes */
+		
+		while(oper_oflags[j].umode) {
+#if 1
+
+#endif
+			if(aconf->oflags & oper_oflags[j].oflag) {	/* we match this oflag */
+				if (!announce && oper_oflags[j].announce) { /* we haven't matched an oper_type yet */
+					host = *oper_oflags[j].host;	/* set the iNAH host */
+#if 0
+					oper_type = oper_oflags[j].oflag; /* set the oper_type */
+#endif
+					announce = oper_oflags[j].announce; /* set the announcement */
+				}
+				sptr->umodes |= 
+					*oper_oflags[j].umode; /* add the umode for this oflag */
+			}
+			j++;
+		}
+
+		sptr->user->oflag = aconf->oflags;
+
+		if ((aconf->oflags & OFLAG_HIDE) && iNAH) {
+			iNAH_host(sptr, (host != NULL) ? host : "eek.host.is.null.pointer");
+		}
+
+		if (announce != NULL) {
+
+			sendto_ops
+			    ("%s (%s@%s) %s",
+			    parv[0], sptr->user->username,
+			    IsHidden(sptr) ? sptr->user->virthost : sptr->
+			    user->realhost, announce);
+			if (aconf->oflags & (OFLAG_SADMIN | OFLAG_NETADMIN)) {
+				sendto_serv_butone(&me,
+				    ":%s GLOBOPS :%s (%s@%s) %s",
+				    me.name, parv[0], sptr->user->username,
+				    IsHidden(sptr) ? sptr->
+				    user->virthost : sptr->user->realhost, announce);
+			}
+
+		} else {
+			sendto_ops
+			    ("%s (%s@%s) opered but announce is NULL!",
+			    parv[0], sptr->user->username,
+			    IsHidden(sptr) ? sptr->user->virthost : sptr->
+			    user->realhost, announce);
+		}
+
+#endif
 
 		if (!aconf->snomask)
 			set_snomask(sptr, SNO_DEFOPER);

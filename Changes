@@ -976,3 +976,7 @@ seen. gmtime warning still there
 - Yes, even more module v3 bugfixes
 - Module v3 bugfixes. cause: codemastr lack find n replace skill
 - Moved the mkpasswd program into ./unreal mkpasswd <method> <password>
+- Recoded m_oper almost completely, note that the fceT flags are ignored
+  now (you still get them, they just dont do shit). Remove them for me 
+  please, as well as the +T usermode. I haven't tested this completely but 
+  I see nowhere a bug could happen.
