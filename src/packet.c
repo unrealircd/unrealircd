@@ -204,7 +204,7 @@ void	init_CommandHash(void)
 	add_Command(MSG_UMODE2, TOK_UMODE2, m_umode2, MAXPARA);
 	add_Command(MSG_DCCDENY, TOK_DCCDENY, m_dccdeny, 2);
 	add_Command(MSG_UNDCCDENY, TOK_UNDCCDENY, m_undccdeny, MAXPARA);
-	add_Command(MSG_SHUN, TOK_SHUN, m_shun, MAXPARA);
+/*	add_Command(MSG_SHUN, TOK_SHUN, m_shun, MAXPARA); */
 	add_Command(MSG_NEWJOIN, TOK_JOIN, m_join, MAXPARA);
 	add_Command(MSG_CYCLE, TOK_CYCLE, m_cycle, MAXPARA);	
 	add_Command(MSG_MODULE, TOK_MODULE, m_module, MAXPARA);	
