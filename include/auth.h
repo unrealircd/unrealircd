@@ -39,6 +39,11 @@ typedef	struct {
 /* OpenSSL provides a crypt() */
 #ifndef AUTHENABLE_UNIXCRYPT
 #define AUTHENABLE_UNIXCRYPT
+#if OPENSSL_VERSION_NUMBER >= 0x0090700fL 
+#ifndef HAVE_CRYPT
+#define crypt DES_crypt
+#endif
+#endif
 #endif
 #endif
 
