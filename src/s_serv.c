@@ -26,6 +26,7 @@ static char sccsid[] =
     "@(#)s_serv.c	2.55 2/7/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen";
 #endif
 
+
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
@@ -3558,9 +3559,12 @@ int  m_restart(cptr, sptr, parc, parv)
 	int  parc;
 	char *parv[];
 {
-	char *pass = NULL;
+	char *pass = NULL, *encr;
 	int  x;
-
+#ifdef CRYPT_XLINE_PASSWORD
+	char salt[3];
+	extern char *crypt();
+#endif
 	if (MyClient(sptr) && !OPCanRestart(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
@@ -3606,8 +3610,16 @@ int  m_restart(cptr, sptr, parc, parv)
 			    parv[0], "RESTART");
 			return 0;
 		}
-
-		if (strcmp(pass, parv[1]))
+#ifdef CRYPT_XLINE_PASSWORD
+		salt[0]=pass[0];
+		salt[1]=pass[1];
+		salt[3]='\0';		
+	
+		encr = crypt(parv[1], salt);
+#else
+		encr = parv[1];
+#endif
+		if (strcmp(pass, encr))
 		{
 			sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name,
 			    parv[0]);
@@ -4369,8 +4381,12 @@ int  m_die(cptr, sptr, parc, parv)
 {
 	aClient *acptr;
 	int  i;
-	char *pass = NULL;
+	char *pass = NULL, *encr;
 
+#ifdef CRYPT_XLINE_PASSWORD
+	char salt[3];
+	extern char *crypt();
+#endif
 
 	if (!MyClient(sptr) || !OPCanDie(sptr))
 	{
@@ -4387,7 +4403,17 @@ int  m_die(cptr, sptr, parc, parv)
 			return 0;
 		}
 
-		if (strcmp(pass, parv[1]))
+#ifdef CRYPT_XLINE_PASSWORD
+		salt[0] = pass[0];
+		salt[1] = pass[1];
+		salt[3] = '\0';
+		
+		encr = crypt(parv[1], salt);
+#else
+		encr = parv[1];
+#endif
+
+		if (strcmp(pass,encr))
 		{
 			sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name,
 			    parv[0]);

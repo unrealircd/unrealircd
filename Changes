@@ -402,3 +402,5 @@
 - Some more crypto stuff, will work on the new engine tommorow
 - You can now encrypt the I:line passwords using mkpasswd (must have CRYPT_ILINE_PASSWORD defined)
 - Editted Config to ask if you want encrypted I:line passwords
+- Made it so you can encrypt restart/die passwords (same as I:line passwords)
+- Editted Config to ask about encrypted restart/die passwords
