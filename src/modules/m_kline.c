@@ -218,7 +218,7 @@ DLLFUNC int m_kline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		/*
 		 * sscanf is bad :/ at least make host < uhost
 		 */
-		if (strlen(host) > sizeof uhost)
+		if (strlen(host) > sizeof uhost - 1)
 			host[sizeof uhost - 1] = '\0';
 
 		strlcpy(uhost, host, sizeof uhost);

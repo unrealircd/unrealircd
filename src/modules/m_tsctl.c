@@ -209,7 +209,7 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		}
 		if (strcmp(parv[1], "svstime") == 0)
 		{
-			if (parv[2] == '\0')
+			if (!parv[2] || *parv[2] == '\0')
 			{
 				return 0;
 			}

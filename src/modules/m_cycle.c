@@ -119,10 +119,13 @@ CMD_FUNC(m_cycle)
 {
 	char	channels[1024];
 	
+	if (IsServer(sptr))
+		return 0;
+
         if (parc < 2)
                 return 0;
         parv[2] = "cycling";
-	strncpy(channels, parv[1], 1020);
+	strncpyzt(channels, parv[1], 1020);
         (void)m_part(cptr, sptr, 3, parv);
 	parv[1] = channels;
         parv[2] = NULL;

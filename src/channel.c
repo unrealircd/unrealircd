@@ -2894,7 +2894,9 @@ CMD_FUNC(m_join)
 	char *p = NULL, *p2 = NULL;
 
 	bouncedtimes = 0;
-
+	if (IsServer(sptr))
+		return 0;
+		
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
@@ -4567,6 +4569,9 @@ void send_user_joins(aClient *cptr, aClient *user)
 CMD_FUNC(m_knock)
 {
 	aChannel *chptr;
+
+	if (IsServer(sptr))
+		return 0;
 
 	if (parc < 2 || *parv[1] == '\0')
 	{

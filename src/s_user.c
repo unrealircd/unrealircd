@@ -759,13 +759,11 @@ extern int register_user(aClient *cptr, aClient *sptr, char *nick, char *usernam
 			char temp[USERLEN + 1];
 			strncpyzt(temp, username, USERLEN + 1);
 			if (IDENT_CHECK == 0) {
-				strncpy(user->username, temp, USERLEN);
-				user->username[USERLEN] = '\0';
+				strncpyzt(user->username, temp, USERLEN + 1);
 			}
 			else {
 				*user->username = '~';
-				(void)strncpy(&user->username[1], temp, USERLEN);
-				user->username[USERLEN] = '\0';
+				strncpyzt((user->username + 1), temp, USERLEN);
 #ifdef HOSTILENAME
 				noident = 1;
 #endif

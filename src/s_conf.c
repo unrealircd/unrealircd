@@ -1050,7 +1050,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 #elif defined(_WIN32)
 	bzero(cPath,MAX_PATH);
 	if (strchr(ce->ce_vardata, '/') || strchr(ce->ce_vardata, '\\')) {
-		strncpy(cPath,ce->ce_vardata,MAX_PATH);
+		strncpyzt(cPath,ce->ce_vardata,MAX_PATH);
 		cSlash=cPath+strlen(cPath);
 		while(*cSlash != '\\' && *cSlash != '/' && cSlash > cPath)
 			cSlash--; 
@@ -4044,8 +4044,8 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 			for (i = 0, hname = hp->h_name; hname;
 			    hname = hp->h_aliases[i++])
 			{
-				(void)strncpy(fullname, hname,
-				    sizeof(fullname) - 1);
+				strncpyzt(fullname, hname,
+				    sizeof(fullname));
 				add_local_domain(fullname,
 				    HOSTLEN - strlen(fullname));
 				Debug((DEBUG_DNS, "a_il: %s->%s",
@@ -4089,9 +4089,9 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost)
 		if (!aconf->flags.noident)
 			cptr->flags |= FLAGS_DOID;
 		if (!aconf->flags.useip && hp) 
-			(void)strncpy(uhost, fullname, sizeof(uhost));
+			strncpyzt(uhost, fullname, sizeof(uhost));
 		else
-			(void)strncpy(uhost, sockhost, sizeof(uhost));
+			strncpyzt(uhost, sockhost, sizeof(uhost));
 		get_sockhost(cptr, uhost);
 		/* FIXME */
 		if (aconf->maxperip)

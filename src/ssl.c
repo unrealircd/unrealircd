@@ -125,8 +125,7 @@ int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 #endif
 	if (before)
 	{
-		strncpy(buf, (char *)beforebuf, size);
-		buf[size - 1] = '\0';
+		strncpyzt(buf, (char *)beforebuf, size);
 		return (strlen(buf));
 	}
 #ifndef _WIN32
@@ -140,10 +139,8 @@ int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 #endif
 	if (pass)
 	{
-		strncpy(buf, (char *)pass, size);
-		strncpy(beforebuf, (char *)pass, sizeof(beforebuf));
-		beforebuf[sizeof(beforebuf) - 1] = '\0';
-		buf[size - 1] = '\0';
+		strncpyzt(buf, (char *)pass, size);
+		strncpyzt(beforebuf, (char *)pass, sizeof(beforebuf));
 		before = 1;
 		return (strlen(buf));
 	}

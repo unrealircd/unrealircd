@@ -1583,3 +1583,5 @@ seen. gmtime warning still there
 - Removed some old debug code from the win32 debugger
 - Compile warning cleanups
 - Made the win32 version default to unsigned chars, and the linux version do the same under gcc
+- Added Syzop's various zero-terminate patches and fixes for crashes when
+  you send commands like JOIN from a server directly

@@ -117,7 +117,8 @@ int	m_away_Unload(int module_unload)
 int  m_away(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
         char *away, *awy2 = parv[1];
 
-
+	if (IsServer(sptr))
+		return 0;
         away = sptr->user->away;
         if (parc < 2 || !*awy2)
         {

@@ -333,8 +333,7 @@ CMD_FUNC(m_protoctl)
 	/* parv[parc - 1] */
 	for (i = 1; i < parc; i++)
 	{
-		strncpy(proto, parv[i], 127);
-		proto[127] = '\0';	/* Just to be safe... */
+		strncpyzt(proto, parv[i], sizeof proto);
 		s = proto;
 #ifndef PROTOCTL_MADNESS
 		if (*s == '-')
@@ -712,7 +711,7 @@ CMD_FUNC(m_server)
 					get_client_name(cptr, TRUE));
 			return exit_client(cptr, cptr, &me, "Invalid numeric");
 		}
-		(void)strncpy(info, parv[parc - 1], REALLEN + 60);
+		strncpyzt(info, parv[parc - 1], REALLEN + 61);
 		strncpyzt(cptr->name, servername, sizeof(cptr->name));
 		cptr->hopcount = hop;
 		/* Add ban server stuff */
@@ -893,7 +892,7 @@ CMD_FUNC(m_server_remote)
 			servername);
 		return exit_client(cptr, cptr, &me, "Invalid remote numeric");
 	}
-	(void)strncpy(info, parv[parc - 1], REALLEN + 60);
+	strncpyzt(info, parv[parc - 1], REALLEN + 61);
 	if (!cptr->serv->conf)
 	{
 		sendto_realops("Lost conf for %s!!, dropping link", cptr->name);
@@ -1915,6 +1914,8 @@ CMD_FUNC(m_stats)
 	int  doall = 0, wilds = 0, showports = IsAnOper(sptr), remote = 0;
 	char *name;
 
+	if (IsServer(sptr))
+		return 0;
 	if (hunt_server_token(cptr, sptr, MSG_STATS, TOK_STATS, "%s :%s", 2, parc,
 	    parv) != HUNTED_ISME)
 		return 0;
@@ -3766,6 +3767,8 @@ CMD_FUNC(m_motd)
 	int  svsnofile = 0;
 	char userhost[HOSTLEN + USERLEN + 6];
 
+	if (IsServer(sptr))
+		return 0;
 	if (hunt_server_token(cptr, sptr, MSG_MOTD, TOK_MOTD, ":%s", 1, parc, parv) !=
 HUNTED_ISME)
 		return 0;
@@ -4058,6 +4061,9 @@ CMD_FUNC(m_rules)
 	ConfigItem_tld *ptr;
 	aMotd *temp;
 	char userhost[USERLEN + HOSTLEN + 6];
+	if (IsServer(sptr))
+		return 0;
+		
 	if (hunt_server_token(cptr, sptr, MSG_RULES, TOK_RULES, ":%s", 1, parc,
 	    parv) != HUNTED_ISME)
 		return 0;

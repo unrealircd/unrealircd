@@ -158,6 +158,9 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 	int i = 0, j = 0;
 	char* announce = 0;
 
+	if (IsServer(sptr))
+		return 0;
+
 	if (parc < 3) {
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
 		    me.name, parv[0], "OPER");
