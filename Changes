@@ -534,3 +534,4 @@ seen. gmtime warning still there
 - Made Unreal run correctly on OpenBSD (thanks to PFAK for the shell)
 - Fixed the /stats C = crash if it is a leaf bug found by BaTmAn
 - Added a patch by McSkaf to make Unreal reload its tray icon if explorer restarts
+- Fixed a win32 bug found by eternal

@@ -92,6 +92,8 @@ UINT WM_TASKBARCREATED;
 FARPROC lpfnOldWndProc;
 
 void TaskBarCreated() {
+	HICON hIcon;
+
 	hIcon = (HICON)LoadImage(hInst, MAKEINTRESOURCE(ICO_MAIN), IMAGE_ICON,16, 16, 0);
 	SysTray.cbSize = sizeof(NOTIFYICONDATA);
 	SysTray.hIcon = hIcon;
