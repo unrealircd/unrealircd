@@ -2743,3 +2743,7 @@ seen. gmtime warning still there
   random numbers. We will also no longer be using rand()/random() anywhere.
   Thanks to dek\ for pointing out this is potentionally dangerous, especially on
   win32 with NOSPOOF enabled.
+- Changed NOSPOOF msg in ./Config a bit since this can also be effective against
+  "blind proxies" (like HTTP POST proxies).
+- WebTV updates: made it so (user generated) channel notices are now displayed as
+  privmsgs in the channel. Also made the /knock channelnotice a privmsg for webtv.

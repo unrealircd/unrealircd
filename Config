@@ -163,11 +163,10 @@ while [ -z "$TEST" ] ; do
     echo "Many older operating systems have an insecure TCP/IP stack"
     echo "which may be vulnerable to IP spoofing attacks, if you run"
     echo "an operating system that is vulnerable to such attacks"
-    echo "enable this option. If you aren't sure if your OS is vulnerable"
-    echo "you should still enable it."
+    echo "enable this option. This option can also be useful to prevent"
+    echo "blind proxies from connecting (eg: HTTP POST proxies)."
     echo ""
-    echo "Do you have an insecure operating system and therefore want to"
-    echo "use the server anti-spoof protection?"
+    echo "Do you want to enable the server anti-spoof protection?"
     echo $n "[$TEST] -> $c"
 	read cc
     if [ -z "$cc" ] ; then

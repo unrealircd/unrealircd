@@ -5469,7 +5469,8 @@ void send_user_joins(aClient *cptr, aClient *user)
 CMD_FUNC(m_knock)
 {
 	aChannel *chptr;
-
+	char buf[1024], chbuf[CHANNELLEN + 8];	
+	
 	if (IsServer(sptr))
 		return 0;
 
@@ -5543,11 +5544,12 @@ CMD_FUNC(m_knock)
 		return 0;
 	}
 
-	sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-	    ":%s NOTICE " CHANOPPFX "%s :[Knock] by %s!%s@%s (%s) ",
-	    me.name, chptr->chname, sptr->name,
-	    sptr->user->username, GetHost(sptr), 
-	    parv[2] ? parv[2] : "no reason specified");
+	ircsprintf(chbuf, "%s%s", CHANOPPFX, chptr->chname);
+	ircsprintf(buf, "[Knock] by %s!%s@%s (%s)",
+		sptr->name, sptr->user->username, GetHost(sptr),
+		parv[2] ? parv[2] : "no reason specified");
+	sendto_channelprefix_butone_tok(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+		MSG_NOTICE, TOK_NOTICE, chbuf, buf, 0);
 
 	sendto_one(sptr, ":%s %s %s :Knocked on %s", me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE",
 	    sptr->name, chptr->chname);
