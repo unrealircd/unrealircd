@@ -738,7 +738,7 @@ struct Server {
 #define M_USER 0x0002
 #define M_SERVER 0x0004
 #define M_SHUN 0x0008
-
+#define M_NOLAG 0x0010
 struct Command {
 	aCommand		*next;
 	aCommand		*prev;

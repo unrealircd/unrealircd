@@ -388,7 +388,7 @@ int  parse(cptr, buffer, bufend)
 		 * We only generate fake lag in HTM ..
 		 * --Stskeeps
 		*/
-		if (!IsServer(cptr) && !IsOper(cptr))
+		if (!IsServer(cptr) && !IsOper(cptr) && !(cmptr->flags & M_NOLAG))
 		{
 			cptr->since += (1 + i /90);
 			

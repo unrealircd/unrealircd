@@ -380,3 +380,5 @@
   you can vhost "user@host.name"; (suggested by IpAddress)
 - Fixed a bug where you could use an infinitely large host in a vhost {} (now limited to HOSTLEN)
 - Fixed improper old username being displayed reported by IpAddress
+- Added M_NOLAG.
+- Added new CRC32-hex-based IPv4 and hostname cloaking form
