@@ -154,6 +154,8 @@ aTKline *tkl_add_line(int type, char *usermask, char *hostmask, char *reason, ch
 			nl->ptr.spamf->tkl_duration = spamf_tkl_duration;
 			nl->ptr.spamf->tkl_reason = strdup(spamf_tkl_reason); /* already encoded */
 		}
+		if (nl->subtype & SPAMF_USER)
+			loop.do_bancheck_spamf = 1;
 	}
 	else if (type & TKL_KILL || type & TKL_ZAP || type & TKL_SHUN)
 	{
@@ -550,6 +552,21 @@ int  find_shun(aClient *cptr)
 	
 	SetShunned(cptr);
 	return 2;
+}
+
+/** Checks if the user matches a spamfilter of type 'u' (user,
+ * nick!user@host:realname ban).
+ * Written by: Syzop
+ * Assumes: only call for clients, possible assume on local clients [?]
+ * Return values: see dospamfilter()
+ */
+int find_spamfilter_user(aClient *sptr)
+{
+char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64]; /* n!u@h:r */
+
+	ircsprintf(spamfilter_user, "%s!%s@%s:%s",
+		sptr->name, sptr->user->username, sptr->user->realhost, sptr->info);
+	return dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL);
 }
 
 aTKline *find_qline(aClient *cptr, char *nick, int *ishold)
@@ -1442,9 +1459,17 @@ int dospamfilter(aClient *sptr, char *str_in, int type, char *target)
 {
 aTKline *tk;
 int n;
-char *str = (char *)StripControlCodes(str_in);
+char *str;
 
-	if (!IsPerson(sptr) || IsAnOper(sptr) || IsULine(sptr))
+	if (type == SPAMF_USER)
+		str = str_in;
+	else
+		str = (char *)StripControlCodes(str_in);
+
+	/* (note: using sptr->user check here instead of IsPerson()
+	 * due to SPAMF_USER where user isn't marked as client/person yet.
+	 */
+	if (!sptr->user || IsAnOper(sptr) || IsULine(sptr))
 		return 0;
 
 	for (tk = tklines[tkl_hash('F')]; tk; tk = tk->next)

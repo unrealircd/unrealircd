@@ -583,6 +583,9 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define HOOKTYPE_TKL_DEL 40
 #define HOOKTYPE_LOCAL_KILL 41
 #define HOOKTYPE_LOG 42
+#define HOOKTYPE_REMOTE_JOIN 43
+#define HOOKTYPE_REMOTE_PART 44
+#define HOOKTYPE_REMOTE_KICK 45
 
 /* Hook return values */
 #define HOOK_CONTINUE 0

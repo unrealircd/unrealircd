@@ -470,7 +470,8 @@ Modules can also add other extended ban types.<br>
    <b>/spamfilter [add|del|remove|+|-] [type] [action] [tkltime] [reason] [regex]</b><br>
    <table border=0>
    <tr valign="top"><td><b>[type]</b></td><td> specifies the target type, you can specify multiple targets:
-   'c' channel msg, 'p' private msg, 'n' private notice, 'N' channel notice, 'P' part msg, 'q' quit msg, 'd' dcc</td></tr>
+   'c' channel msg, 'p' private msg, 'n' private notice, 'N' channel notice, 'P' part msg, 'q' quit msg, 'd' dcc, 
+   'u' user (matches against nick!user@host:realname)</td></tr>
    <tr valign="top"><td><b>[action]</b></td><td> specifies the action to be taken (only 1 action can be specified)<br>
 <table>
 <tr><td>kill</td><td>kills the user</td></tr>
@@ -1965,7 +1966,7 @@ spamfilter {
 };</pre></p>
 <p><b>regex</b> is the regex to be matched.<br>
    <b>target</b> specifies the targets, possible targets are: channel, private, private-notice, channel-notice, 
-   part, quit, dcc.<br>
+   part, quit, dcc, user.<br>
    <b>action</b> specifies the action to be taken, see <a href="#feature_spamfilter">here</a> for a list of possible actions.<br>
    <b>reason</b> optional: specifies the ban or block reason, else the default is used.<br>
    <b>ban-time</b> optional: specifies the duration of a *line ban, else the default is used (1 day).<br>

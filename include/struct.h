@@ -263,6 +263,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	SetClient(x)		((x)->status = STAT_CLIENT)
 #define	SetLog(x)		((x)->status = STAT_LOG)
 
+#define IsSynched(x)	(x->serv->flags.synced)
+
 /* opt.. */
 #define OPT_SJOIN	0x0001
 #define OPT_NOT_SJOIN	0x0002
@@ -684,7 +686,8 @@ struct MotdItem {
 struct aloopStruct {
 	unsigned do_garbage_collect : 1;
 	unsigned ircd_booted : 1;
-	unsigned do_bancheck : 1;
+	unsigned do_bancheck : 1; /* perform *line bancheck? */
+	unsigned do_bancheck_spamf : 1; /* perform 'user' spamfilter bancheck? */
 	unsigned ircd_rehashing : 1;
 	unsigned tainted : 1;
 	aClient *rehash_save_cptr, *rehash_save_sptr;
@@ -792,6 +795,7 @@ struct Server {
 #define SPAMF_PART			0x0010 /* P */
 #define SPAMF_QUIT			0x0020 /* q */
 #define SPAMF_DCC			0x0040 /* d */
+#define SPAMF_USER			0x0080 /* u */
 
 struct _spamfilter {
 	unsigned short action; /* see BAN_ACT* */

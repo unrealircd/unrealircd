@@ -3702,6 +3702,8 @@ void join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags)
 		parv[1] = chptr->chname;
 		(void)m_names(cptr, sptr, 2, parv);
 		RunHook4(HOOKTYPE_LOCAL_JOIN, cptr, sptr,chptr,parv);
+	} else {
+		RunHook4(HOOKTYPE_REMOTE_JOIN, cptr, sptr, chptr, parv); /* (rarely used) */
 	}
 
 #ifdef NEWCHFLOODPROT
@@ -4129,6 +4131,8 @@ CMD_FUNC(m_part)
 			}
 			if (MyClient(sptr))
 				RunHook4(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, comment);
+			else
+				RunHook4(HOOKTYPE_REMOTE_PART, cptr, sptr, chptr, comment);
 
 			remove_user_from_channel(sptr, chptr);
 		}

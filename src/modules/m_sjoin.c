@@ -472,6 +472,7 @@ CMD_FUNC(m_sjoin)
 #endif
 			} else {
 				add_user_to_channel(chptr, acptr, modeflags);
+				RunHook4(HOOKTYPE_REMOTE_JOIN, cptr, acptr, chptr, NULL);
 				if (chptr->mode.mode & MODE_AUDITORIUM)
 				{
 					if (modeflags & (CHFL_CHANOP|CHFL_CHANPROT|CHFL_CHANOWNER))

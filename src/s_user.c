@@ -972,6 +972,9 @@ int register_user(aClient *cptr, aClient *sptr, char *nick, char *username, char
 			return xx;
 		}
 		find_shun(sptr);
+		xx = find_spamfilter_user(sptr);
+		if (xx < 0)
+			return xx;
 		RunHookReturnInt(HOOKTYPE_PRE_LOCAL_CONNECT, sptr, !=0);
 	}
 	else
@@ -1666,6 +1669,7 @@ CMD_FUNC(m_nick)
 			    cptr->name, backupbuf);
 			sptr->lastnick = TStime();
 		}
+		newusr = 1;
 	}
 	else if (sptr->name[0] && IsPerson(sptr))
 	{

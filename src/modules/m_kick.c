@@ -293,6 +293,8 @@ CMD_FUNC(m_kick)
 					if (breakit)
 						continue;
 					RunHook5(HOOKTYPE_LOCAL_KICK, cptr,sptr,who,chptr,comment);
+				} else {
+					RunHook5(HOOKTYPE_REMOTE_KICK, cptr, sptr, who, chptr, comment);
 				}
 				if (lp)
 				{
