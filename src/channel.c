@@ -3099,6 +3099,44 @@ char *clean_ban_mask(char *mask)
 		trim_str(host,HOSTLEN));
 }
 
+/* This function adds as an extra (weird) operoverride.
+ * Currently it's only used if you try to operoverride for a +z channel,
+ * if you then do '/join #chan override' it will put the channel -z and allow you directly in.
+ * This is to avoid attackers from using 'race conditions' to prevent you from joining.
+ * PARAMETERS: sptr = the client, chptr = the channel, mval = mode value (eg MODE_ONLYSECURE),
+ *             mchar = mode char (eg 'z')
+ * RETURNS: 1 if operoverride, 0 if not.
+ */
+int extended_operoverride(aClient *sptr, aChannel *chptr, char *key, int mval, char mchar)
+{
+unsigned char invited = 0;
+Link *lp;
+
+	if (!IsAnOper(sptr) || !OPCanOverride(sptr))
+		return 0;
+
+	for (lp = sptr->user->invited; lp; lp = lp->next)
+		if (lp->value.chptr == chptr)
+		{
+			invited = 1;
+			break;
+		}
+	if (invited)
+	{
+		if (key && !strcasecmp(key, "override"))
+		{
+			sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP,
+				":%s NOTICE @%s :setting channel -%c due to OperOverride request from %s",
+				me.name, chptr->chname, mchar, sptr->name);
+			sendto_serv_butone(&me, ":%s MODE %s -%c 0", me.name, chptr->chname, mchar);
+			sendto_channel_butserv(chptr, &me, ":%s MODE %s -%c", me.name, chptr->chname, mchar);
+			chptr->mode.mode &= ~mval;
+			return 1;
+		}
+	}
+	return 0;
+}
+
 /* Now let _invited_ people join thru bans, +i and +l.
  * Checking if an invite exist could be done only if a block exists,
  * but I'm not too fancy of the complicated structure that'd cause,
@@ -3111,9 +3149,13 @@ int can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *lin
         Link *lp;
 	Ban *banned;
 
-        if ((chptr->mode.mode & MODE_ONLYSECURE) &&
-                !(sptr->umodes & UMODE_SECURE))
-                return (ERR_SECUREONLYCHAN);
+		if ((chptr->mode.mode & MODE_ONLYSECURE) && !(sptr->umodes & UMODE_SECURE))
+		{
+			if (!extended_operoverride(sptr, chptr, key, MODE_ONLYSECURE, 'z'))
+				return (ERR_SECUREONLYCHAN);
+			else
+				return 0;
+		}
 
         if ((chptr->mode.mode & MODE_OPERONLY) && !IsOper(sptr))
                 return (ERR_OPERONLY);
@@ -4532,6 +4574,16 @@ CMD_FUNC(m_invite)
                         sendto_snomask(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +k).",
                           sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+	        }
+        	else if (chptr->mode.mode & MODE_ONLYSECURE)
+	        {
+                        sendto_snomask(SNO_EYES,
+                          "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +z).",
+                          sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+				sendto_one(sptr, ":%s NOTICE %s :The channel is +z and you are trying to OperOverride, "
+					"you'll have to override explicitly after this invite with the command '/join %s override'"
+					" (use override as a key) this will set the channel -z and then join you",
+					me.name, sptr->name, chptr->chname);
 	        }
 #ifdef OPEROVERRIDE_VERIFY
         	else if (chptr->mode.mode & MODE_SECRET || chptr->mode.mode & MODE_PRIVATE)

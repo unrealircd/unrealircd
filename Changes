@@ -2551,3 +2551,5 @@ seen. gmtime warning still there
 - Fixed a bug where link::options::autoconnect wasn't working after rehash, ircd
   had to be restarted to make it work. Will now try to connect on /rehash to
   servers with autoconnect enabled. Bug was reported by Rocko (#0001321).
+- Added insane OperOverride system for joining +z channels (#0001189).
+  This seems better than just allowing the insecure oper trough +z.
