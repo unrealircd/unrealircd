@@ -920,3 +920,4 @@ seen. gmtime warning still there
 - Fixed a win32 bug where pasting text into the editor would not
   show up in the correct font
 - Added hscroll bars to the win32 editor (if needed)
+- The win32 editor now allows you to edit files included via tld {} (probably needs testing)

@@ -598,8 +598,23 @@ static HMENU hRehash, hAbout, hConfig, hTray;
 				 return 0;
 			 }
 			 else if ((p.x >= 140) && (p.x <= 186) && (p.y >= 178) && (p.y <= 190))  {
+				static int i = 0;
 				ClientToScreen(hDlg,&p);
+				while (i >= 6000) 
+					DeleteMenu(hConfig, i--, MF_BYCOMMAND);
+				if (conf_tld) {
+					ConfigItem_tld *tlds;
+					i = 6001;
+					AppendMenu(hConfig, MF_SEPARATOR, 6000,NULL);
+					for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *)tlds->next) {
+						if (!tlds->flag.motdptr)
+							AppendMenu(hConfig, MF_STRING, ++i, tlds->motd_file);
+						if (!tlds->flag.rulesptr)
+							AppendMenu(hConfig, MF_STRING, ++i, tlds->rules_file);
+					}
+				}
 				TrackPopupMenu(hConfig,TPM_LEFTALIGN|TPM_LEFTBUTTON,p.x,p.y,0,hDlg,NULL);
+
 				return 0;
 			 }
 			 else if ((p.x >= 194) && (p.x <= 237) && (p.y >= 178) && (p.y <= 190)) {
@@ -618,6 +633,15 @@ static HMENU hRehash, hAbout, hConfig, hTray;
 		}
 
 			case WM_COMMAND: {
+				/* Hopefully no one will have more than 12000 motd files? */
+				if (LOWORD(wParam) > 6000 && LOWORD(wParam) < 20000) {
+					char path[MAX_PATH];
+					GetMenuString(hConfig,LOWORD(wParam), path, MAX_PATH, MF_BYCOMMAND);
+					DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, 
+							(LPARAM)path);
+					return FALSE;
+				}
+
 				switch(LOWORD(wParam)) {
 
 					case IDM_STATUS:
