@@ -3120,3 +3120,4 @@ This is the 3.2 fixes branch.
 - Fixed a little problem in ./unreal to move ircd.pid.bak to ircd.pid of starting failed.
   Fixed by fez (#0001739)
 - Made it so chg* command usage is not logged from U:lines. Reported by diskman1 (#0001718)
+- Changed int_to_base64() warning so it has less false positives (#0001797).

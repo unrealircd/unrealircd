@@ -232,13 +232,14 @@ static inline char *int_to_base64(long val)
 
 	base64buf[i] = '\0';
 
-	/* Temporary debugging code.. remove before 2038 ;p */
-	if (val > 2147483646)
+	/* Temporary debugging code.. remove before 2038 ;p.
+	 * This might happen in case of 64bit longs (opteron/ia64),
+	 * if the value is then too large it can easily lead to
+	 * a buffer underflow and thus to a crash. -- Syzop
+	 */
+	if (val > 2147483647L)
 	{
-		snprintf(trouble_info, sizeof(trouble_info),
-			"[BUG] int_to_base64() called for insane value %ld. Please report!", val);
-		ircd_log(LOG_ERROR, "%s", trouble_info);
-		val = 2147483647L; /* prevent buffer overflow */
+		abort();
 	}
 
 	do
