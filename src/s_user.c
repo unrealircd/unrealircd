@@ -3972,7 +3972,8 @@ int  m_oper(cptr, sptr, parc, parv)
 		sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name, parv[0]);
 #ifdef  FAILOPER_WARN
 		sendto_one(sptr,
-		    ":%s NOTICE :*** Your attempt has been logged.", me.name);
+		    ":%s NOTICE %s :*** Your attempt has been logged.", me.name, 
+		    	sptr->name);
 #endif
 		sendto_realops
 		    ("Failed OPER attempt by %s (%s@%s) using UID %s [NOPASSWORD]",
