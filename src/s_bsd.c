@@ -94,17 +94,7 @@ int  rr;
 
 extern char backupbuf[8192];
 aClient *local[MAXCONNECTIONS];
-/* winlocal
 int  highest_fd = 0, readcalls = 0, resfd = -1;
-*/
-#ifdef _WIN32
-// first 3 fd's reserved for stdin, stdout, stderror
-SOCKET highest_fd = 2;	// winlocal
-#else
-// the *NIX version takes care of the standard streams
-SOCKET highest_fd = 0;	// winlocal
-#endif
-int readcalls = 0, resfd = -1;
 static struct SOCKADDR_IN mysk;
 
 static struct SOCKADDR *connect_inet PROTO((ConfigItem_link *, aClient *, int *));
@@ -146,89 +136,6 @@ extern fdlist socks_fdlist;
 #  endif
 # endif
 #endif
-
-/* winlocal
-** addlocal()
-*/
-int addlocal(SOCKET fd, aClient *paClient)
-{
-	// highest_fd = number of entries in local[] minus one
-	// range is 0 to MAXCONNECTIONS-1, local[0-2] are not used
-#ifdef _WIN32
-	if (highest_fd >= MAXCONNECTIONS-1)
-		return 0;
-	local[++highest_fd] = paClient;
-#else
-	local[fd] = paClient;
-	if (fd > highest_fd)
-		highest_fd = fd;
-#endif
-	return 1;
-}
-
-/* winlocal
-** removelocalbyindex() 
-*/
-int removelocalbyindex(SOCKET fd, aClient *paClient)
-{
-#ifdef _WIN32
-	if (fd > highest_fd)
-		return 0;
-	if (fd != highest_fd)
-		local[fd] = local[highest_fd];
-	local[highest_fd] = NULL;
-	--highest_fd;
-#else
-	if (fd == highest_fd)
-		while (!local[highest_fd])
-			--highest_fd;
-#endif
-	return 1;
-}
-
-/* winlocal
-** removelocalbyfd() 
-*/
-int removelocalbyfd(SOCKET fd, aClient *paClient)
-{
-	SOCKET i;
-#ifdef _WIN32
-	// socket and auth fd's don't take up separate entries
-	if (paClient->socksfd == fd || paClient->authfd == fd)
-		return 1;
-	for (i = highest_fd; i > 2; --i)
-		if (local[i] && local[i]->fd == fd)
-		{
-			if (i != highest_fd)
-				local[i] = local[highest_fd];
-			local[highest_fd] = NULL;
-			--highest_fd;
-			return 1;
-		}
-	return 0;
-#else
-	if (fd == highest_fd)
-		while (!local[highest_fd])
-			--highest_fd;
-#endif
-	return 1;
-}
-
-/* winlocal
-** findlocalbyfd() 
-*/
-aClient *findlocalbyfd(SOCKET fd)
-{
-	SOCKET i;
-#ifdef _WIN32
-	for (i = highest_fd; i > 2; --i)
-		if (local[i] && local[i]->fd == fd)
-			return local[i];
-	return NULL;
-#else
-	return local[fd];
-#endif
-}
 
 /*
 ** add_local_domain()
@@ -391,16 +298,10 @@ int  inetport(cptr, name, port)
 	/*
 	 * At first, open a new socket
 	 */
-	/* winlocal
 	if (cptr->fd == -1)
-	*/
-	if (cptr->fd == INVALID_SOCKET)
 		cptr->fd = socket(AFINET, SOCK_STREAM, 0);
 
-	/* winlocal
 	if (cptr->fd < 0)
-	*/
-	if (cptr->fd == INVALID_SOCKET)
 	{
 #if !defined(DEBUGMODE) && !defined(_WIN32)
 #endif
@@ -474,10 +375,9 @@ int  inetport(cptr, name, port)
 		    ntohs(server.SIN_PORT));
 		(void)write(0, buf, strlen(buf));
 	}
-#ifndef _WIN32		// winlocal
+
 	if (cptr->fd > highest_fd)
 		highest_fd = cptr->fd;
-#endif				// winlocal
 #ifdef INET6
 	bcopy(server.sin6_addr.s6_addr, cptr->ip.s6_addr, IN6ADDRSZ);
 #else
@@ -485,8 +385,7 @@ int  inetport(cptr, name, port)
 #endif
 	cptr->port = (int)ntohs(server.SIN_PORT);
 	(void)listen(cptr->fd, LISTEN_SIZE);
-	// local[cptr->fd] = cptr;	// winlocal
-	addlocal(cptr->fd, cptr);	// winlocal
+	local[cptr->fd] = cptr;
 
 	return 0;
 }
@@ -1043,8 +942,7 @@ void close_connection(cptr)
 	if (cptr->fd >= 0)
 	{
 		flush_connections(cptr->fd);
-		// local[cptr->fd] = NULL;			// winlocal
-		removelocalbyfd(cptr->fd, cptr);	// winlocal
+		local[cptr->fd] = NULL;
 #ifndef _WIN32
 		(void)close(cptr->fd);
 #else
@@ -1055,11 +953,9 @@ void close_connection(cptr)
 		DBufClear(&cptr->recvQ);
 	
 	}
-	/* winlocal - this isn't necessary anymore
 	for (; highest_fd > 0; highest_fd--)
 		if (local[highest_fd])
 			break;
-	*/
 
 	cptr->from = NULL;	/* ...this should catch them! >:) --msa */
 
@@ -1068,7 +964,8 @@ void close_connection(cptr)
 	 */
 #ifdef DO_REMAPPING
 	if (empty > 0)
-		if ((j = highest_fd) > (i = empty) && (local[j]->status != STAT_LOG))
+		if ((j = highest_fd) > (i = empty) &&
+		    (local[j]->status != STAT_LOG))
 		{
 			if (dup2(j, i) == -1)
 				return;
@@ -1112,8 +1009,7 @@ void close_connection(cptr)
 		}
 #endif
 	while (!local[highest_fd])
-		// highest_fd--;					// winlocal
-		removelocalbyindex(highest_fd, NULL);	// winlocal
+		highest_fd--;
 	return;
 }
 
@@ -1405,12 +1301,9 @@ aClient *add_connection(cptr, fd)
 	}
 
 	acptr->fd = fd;
-	/* winlocal
 	if (fd > highest_fd)
 		highest_fd = fd;
 	local[fd] = acptr;
-	*/
-	addlocal(fd, acptr);	// winlocal
 	acptr->listener = cptr;
 	if (!acptr->listener->class)
 	{
@@ -1772,8 +1665,7 @@ int  read_message(delay, listp)
 				continue;
 			if (IsLog(cptr))
 				continue;
-			if (!(cptr->fd > 0))
-				continue;
+			
 #ifdef SOCKSPORT
 			if (DoingSocks(cptr))
 			{
@@ -1806,21 +1698,20 @@ int  read_message(delay, listp)
 				continue;
 			if (IsMe(cptr) && IsListening(cptr))
 			{
-				FD_SET(cptr->fd, &read_set);	// winlocal
+				FD_SET(i, &read_set);
 			}
 			
 			else if (!IsMe(cptr))
 			{
-
 				if (DBufLength(&cptr->recvQ) && delay2 > 2)
 					delay2 = 1;
-				if ((DBufLength(&cptr->recvQ) < 4088))
-					FD_SET(cptr->fd, &read_set);	// winlocal
+				if (DBufLength(&cptr->recvQ) < 4088)
+					FD_SET(i, &read_set);
 			}
 
 			if (DBufLength(&cptr->sendQ) || IsConnecting(cptr) ||
 			    (DoList(cptr) && IsSendable(cptr)))
-				FD_SET(cptr->fd, &write_set);	// winlocal
+				FD_SET(i, &write_set);
 		}
 
 #ifdef SOCKSPORT
@@ -1876,11 +1767,10 @@ int  read_message(delay, listp)
 		int  tmpsock;
 
 		tmpsock = accept(me.socksfd, NULL, NULL);
+		if (tmpsock >= 0)
 #ifdef _WIN32
-		if (tmpsock != SOCKET_ERROR)
 			closesocket(tmpsock);
 #else
-		if (tmpsock >= 0)
 			close(tmpsock);
 #endif /* _WIN32 */
 		FD_CLR(me.socksfd, &read_set);
@@ -1926,12 +1816,9 @@ int  read_message(delay, listp)
 			{
 				ircstp->is_abad++;
 				closesocket(cptr->authfd);
-				/* winlocal
 				if (cptr->authfd == highest_fd)
 					while (!local[highest_fd])
 						highest_fd--;
-				*/
-				removelocalbyfd(cptr->authfd, cptr);	// winlocal
 				cptr->authfd = -1;
 				cptr->flags &= ~(FLAGS_AUTH | FLAGS_WRAUTH);
 				if (!DoingDNS(cptr))
@@ -1980,12 +1867,9 @@ int  read_message(delay, listp)
 			{
 				ircstp->is_abad++;
 				closesocket(cptr->socksfd);
-				/* winlocal
 				if (cptr->socksfd == highest_fd)
 					while (!local[highest_fd])
 						highest_fd--;
-				*/
-				removelocalbyfd(cptr->socksfd, cptr);	// winlocal
 				cptr->socksfd = -1;
 				cptr->flags &= ~(FLAGS_SOCKS | FLAGS_WRSOCKS);
 				if (nfds > 0)
@@ -2008,10 +1892,10 @@ int  read_message(delay, listp)
 #endif /* SOCKSPORT */
 
 	for (i = highest_fd; i >= 0; i--)
-		if ((cptr = local[i]) && (cptr->fd >= 0) && FD_ISSET(cptr->fd, &read_set) &&
+		if ((cptr = local[i]) && FD_ISSET(i, &read_set) &&
 		    IsListening(cptr))
 		{
-			FD_CLR(cptr->fd, &read_set);
+			FD_CLR(i, &read_set);
 			nfds--;
 			cptr->lasttime = TStime();
 			/*
@@ -2025,20 +1909,14 @@ int  read_message(delay, listp)
 			   ** point, just assume that connections cannot
 			   ** be accepted until some old is closed first.
 			 */
-#ifndef _WIN32
-			if ((fd = accept(cptr->fd, NULL, NULL)) < 0)
-#else
-			if ((fd = accept(cptr->fd, NULL, NULL)) == INVALID_SOCKET)
-#endif
+			if ((fd = accept(i, NULL, NULL)) < 0)
 			{
-				report_error("Cannot accept connections %s:%s", cptr);
+				report_error("Cannot accept connections %s:%s",
+				    cptr);
 				break;
 			}
 			ircstp->is_ac++;
-			/* winlocal
 			if (fd >= MAXCLIENTS)
-			*/
-			if (highest_fd >= MAXCLIENTS)	// winlocal
 			{
 				ircstp->is_ref++;
 				sendto_ops("All connections in use. (%s)",
@@ -2072,7 +1950,7 @@ int  read_message(delay, listp)
 		if (!(cptr = local[i]) || IsMe(cptr))
 			continue;
 					
-		if ((cptr->fd >= 0) && FD_ISSET(cptr->fd, &write_set))
+		if (FD_ISSET(i, &write_set))
 		{
 			int  write_err = 0;
 			nfds--;
@@ -2092,10 +1970,10 @@ int  read_message(delay, listp)
 			if (IsDead(cptr) || write_err)
 			{
 			      deadsocket:
-				if (FD_ISSET(cptr->fd, &write_set))		// winlocal
+				if (FD_ISSET(i, &read_set))
 				{
 					nfds--;
-					FD_CLR(cptr->fd, &read_set);		// winlocal
+					FD_CLR(i, &read_set);
 				}
 				(void)exit_client(cptr, cptr, &me,
 				    ((sockerr = get_sockerr(cptr))
@@ -2103,17 +1981,14 @@ int  read_message(delay, listp)
 				continue;
 			}
 		}
-		if (cptr->fd < 0)
-			continue;
-			
 		length = 1;	/* for fall through case */
-		if (!NoNewLine(cptr) || FD_ISSET(cptr->fd, &read_set))
+		if (!NoNewLine(cptr) || FD_ISSET(i, &read_set))
 			length = read_packet(cptr, &read_set);
 		if (length > 0)
-			flush_connections(cptr->fd);
+			flush_connections(i);
 		if ((length != FLUSH_BUFFER) && IsDead(cptr))
 			goto deadsocket;
-		if ((cptr->fd >= 0) && !FD_ISSET(cptr->fd, &read_set) && length > 0) 
+		if (!FD_ISSET(i, &read_set) && length > 0)
 			continue;
 		nfds--;
 		readcalls++;
@@ -2366,7 +2241,7 @@ int  read_message(delay, listp)
 		int  tmpsock;
 		nfds--;
 		tmpsock = accept(me.socksfd, NULL, NULL);
-		if (tmpsock != INVALID_SOCKET)
+		if (tmpsock >= 0)
 			close(tmpsock);
 	}
 
@@ -2433,9 +2308,10 @@ int  read_message(delay, listp)
 			 ** point, just assume that connections cannot
 			 ** be accepted until some old is closed first.
 			 */
-			if ((fd = accept(fd, NULL, NULL)) == INVALID_SOCKET)
+			if ((fd = accept(fd, NULL, NULL)) < 0)
 			{
-				report_error("Cannot accept connections %s:%s", cptr);
+				report_error("Cannot accept connections %s:%s",
+				    cptr);
 				break;
 			}
 			ircstp->is_ac++;
@@ -2607,7 +2483,7 @@ int  connect_server(aconf, by, hp)
 	{
 		errtmp = errno;	/* other system calls may eat errno */
 #else
-	if (connect(cptr->fd, svp, len) == SOCKET_ERROR &&
+	if (connect(cptr->fd, svp, len) < 0 &&
 	    WSAGetLastError() != WSAEINPROGRESS &&
 	    WSAGetLastError() != WSAEWOULDBLOCK)
 	{
@@ -2658,12 +2534,9 @@ int  connect_server(aconf, by, hp)
 		cptr->serv->user = NULL;
 	}
 	cptr->serv->up = me.name;
-	/* winlocal
 	if (cptr->fd > highest_fd)
 		highest_fd = cptr->fd;
 	local[cptr->fd] = cptr;
-	*/
-	addlocal(cptr->fd, cptr);	// winlocal
 	cptr->listener = &me;
 	SetConnecting(cptr);
 	IRCstats.unknown++;
@@ -2686,10 +2559,7 @@ static struct SOCKADDR *connect_inet(aconf, cptr, lenp)
 	 * with it so if it fails its useless.
 	 */
 	cptr->fd = socket(AFINET, SOCK_STREAM, 0);
-	/* winlocal
 	if (cptr->fd >= MAXCLIENTS)
-	*/
-	if (cptr->fd == INVALID_SOCKET || highest_fd >= MAXCLIENTS)
 	{
 		sendto_realops("No more connections allowed (%s)", cptr->name);
 		return NULL;
@@ -2699,10 +2569,7 @@ static struct SOCKADDR *connect_inet(aconf, cptr, lenp)
 	server.SIN_FAMILY = AFINET;
 	get_sockhost(cptr, aconf->hostname);
 
-	/* winlocal
 	if (cptr->fd == -1)
-	*/
-	if (cptr->fd == INVALID_SOCKET)		// winlocal
 	{
 		report_error("opening stream socket to server %s:%s", cptr);
 		return NULL;
@@ -2890,7 +2757,7 @@ void do_dns_async(id)
 		  if (hp && aconf)
 			  bcopy(hp->h_addr, (char *)&aconf->ipnum,
 		      sizeof(struct IN_ADDR));
-		  break;
+		break;
 		default :
 			break;
 		}

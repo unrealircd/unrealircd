@@ -465,4 +465,5 @@
   well. 
 - Some Open(aaaaaaaaaaargh)BSD patches, most stubborn compiler i've ever 
 seen. gmtime warning still there
-
+- Had to revert McSkaf's winlocal.patch, caused too many crashes. I believe
+there is a better way to do this ..

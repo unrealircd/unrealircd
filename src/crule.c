@@ -41,7 +41,6 @@
 
 char *collapse PROTO((char *pattern));
 extern aClient *client, *local[];
-extern aClient *findlocalbyfd(SOCKET fd);
 
 ID_Copyright("(C) Tony Vincell");
 
@@ -205,10 +204,7 @@ int  crule_via(numargs, crulearg)
 		acptr = lp->value.cptr;
 		if (match((char *)crulearg[1], acptr->name))
 			continue;
-		/* winlocal
 		if (match((char *)crulearg[0], (local[acptr->fd])->name))
-		*/
-		if (match((char *)crulearg[0], (findlocalbyfd(acptr->fd))->name))
 			continue;
 		return (1);
 	}

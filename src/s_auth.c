@@ -66,7 +66,7 @@ void start_auth(cptr)
 #endif
 	Debug((DEBUG_NOTICE, "start_auth(%x) fd %d status %d",
 	    cptr, cptr->fd, cptr->status));
-	if ((cptr->authfd = socket(AFINET, SOCK_STREAM, 0)) == INVALID_SOCKET)
+	if ((cptr->authfd = socket(AFINET, SOCK_STREAM, 0)) == -1)
 	{
 #ifdef	USE_SYSLOG
 		syslog(LOG_ERR, "Unable to create auth socket for %s:%m",
@@ -79,17 +79,15 @@ void start_auth(cptr)
 		ircstp->is_abad++;
 		return;
 	}
-//#ifndef _WIN32	// winlocal
-	/* winlocal
+#ifndef _WIN32
 	if (cptr->authfd >= (MAXCONNECTIONS - 3))
-	*/
-	if (highest_fd >= (MAXCONNECTIONS - 3))
 	{
-		sendto_ops("Can't allocate fd for auth on %s", get_client_name(cptr, TRUE));
+		sendto_ops("Can't allocate fd for auth on %s",
+		    get_client_name(cptr, TRUE));
 		(void)close(cptr->authfd);
 		return;
 	}
-//#endif			// winlocal
+#endif
 
 #ifdef SHOWCONNECTINFO
 	sendto_one(cptr, REPORT_DO_ID);
@@ -112,8 +110,8 @@ void start_auth(cptr)
 #ifndef _WIN32
 	    sizeof(sock)) == -1 && errno != EINPROGRESS)
 #else
-	    sizeof(sock)) == SOCKET_ERROR && 
-		(WSAGetLastError() != WSAEINPROGRESS && WSAGetLastError() != WSAEWOULDBLOCK))
+	    sizeof(sock)) == -1 && (WSAGetLastError() !=
+	    WSAEINPROGRESS && WSAGetLastError() != WSAEWOULDBLOCK))
 #endif
 	{
 		ircstp->is_abad++;
@@ -125,19 +123,17 @@ void start_auth(cptr)
 #else
 		(void)closesocket(cptr->authfd);
 #endif
-		cptr->authfd = INVALID_SOCKET;
+		cptr->authfd = -1;
 		if (!DoingDNS(cptr))
 			SetAccess(cptr);
 #ifdef SHOWCONNECTINFO
-		sendto_one(cptr, REPORT_FAIL_ID);
+	sendto_one(cptr, REPORT_FAIL_ID);
 #endif
 		return;
 	}
 	cptr->flags |= (FLAGS_WRAUTH | FLAGS_AUTH);
-#ifndef _WIN32	// winlocal
 	if (cptr->authfd > highest_fd)
 		highest_fd = cptr->authfd;
-#endif			// winlocal
 	return;
 }
 
@@ -174,26 +170,25 @@ void send_authports(cptr)
 	    (unsigned int)ntohs(them.SIN_PORT),
 	    (unsigned int)ntohs(us.SIN_PORT));
 
-	Debug((DEBUG_SEND, "sending [%s] to auth port %s.113",authbuf, inetntoa((char *)&them.SIN_ADDR)));
+	Debug((DEBUG_SEND, "sending [%s] to auth port %s.113",
+	    authbuf, inetntoa((char *)&them.SIN_ADDR)));
 #ifndef _WIN32
 	if (write(cptr->authfd, authbuf, strlen(authbuf)) != strlen(authbuf))
 #else
-	if (send(cptr->authfd, authbuf, strlen(authbuf),0) != (int)strlen(authbuf))
+	if (send(cptr->authfd, authbuf, strlen(authbuf),
+	    0) != (int)strlen(authbuf))
 #endif
 	{
-authsenderr:
+	      authsenderr:
 		ircstp->is_abad++;
 #ifndef _WIN32
 		(void)close(cptr->authfd);
 #else
 		(void)closesocket(cptr->authfd);
 #endif
-/* winlocal
 		if (cptr->authfd == highest_fd)
 			while (!local[highest_fd])
 				highest_fd--;
-*/
-		removelocalbyfd(cptr->authfd, cptr); // winlocal
 		cptr->authfd = -1;
 		cptr->flags &= ~FLAGS_AUTH;
 #ifdef SHOWCONNECTINFO
@@ -210,7 +205,7 @@ authsenderr:
  * read_authports
  *
  * read the reply (if any) from the ident server we connected to.
- * The actual read processing here is pretty weak - no handling of the reply
+ * The actual read processijng here is pretty weak - no handling of the reply
  * if it is fragmented by IP.
  */
 void read_authports(cptr)
@@ -274,12 +269,9 @@ void read_authports(cptr)
 #else
 	(void)closesocket(cptr->authfd);
 #endif
-	/* winlocal
 	if (cptr->authfd == highest_fd)
 		while (!local[highest_fd])
 			highest_fd--;
-	*/
-	removelocalbyfd(cptr->authfd, cptr);
 	cptr->count = 0;
 	cptr->authfd = -1;
 	ClearAuth(cptr);
