@@ -2344,3 +2344,4 @@ seen. gmtime warning still there
   needed atm since +F/+f both ignore U lines.
 - Internal: changed 2 MyMalloc's to MyMallocEx (mem zerofill).. nothing was currently
   affected by this but it's easy to forget if you add new stuff.
+- Fixed minor /WALLOPS bug reported by Praetorian_ (#0001195).

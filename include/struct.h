@@ -361,7 +361,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define IsWebTV(x)		((x)->umodes & UMODE_WEBTV)
 #define	IsPerson(x)		((x)->user && IsClient(x))
 #define	IsPrivileged(x)		(IsAnOper(x) || IsServer(x))
-#define	SendWallops(x)		(!IsMe(x) && ((x)->umodes & UMODE_WALLOP))
+#define	SendWallops(x)		(!IsMe(x) && IsPerson(x) && ((x)->umodes & UMODE_WALLOP))
 #define	SendServNotice(x)	(((x)->user) && ((x)->user->snomask & SNO_SNOTICE))
 #define	IsListening(x)		((x)->flags & FLAGS_LISTEN)
 // #define	DoAccess(x)		((x)->flags & FLAGS_CHKACCESS)
