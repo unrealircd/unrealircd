@@ -1,19 +1,32 @@
+UnrealIRCd is a free program, but we do put a lot of time, effort, and money
+into creating and maintaining Unreal. To make it easier for user's to show their
+appreciation, the Unreal team has decided to accept donations through PayPal. If
+you like Unreal, and you'd like to see it continue to exist, please consider making
+a donation. We're not asking for anything huge, whatever you can afford is fine.
 
-Send donations to:
-------------------
+PayPal Donation Link:
+<https://www.paypal.com/xclick/business=donation%40unrealircd.com&
+item_name=UnrealIRCd+Donation&no_shipping=1&cn=Comments&tax=0&currency_code=USD>
+
+Or simply send a payment through PayPal to:
+donation@unrealircd.com
+
+If you don't want to use PayPal, or you want to donate something other than money
+(old computer hardware, etc.), contact Stskeeps (stskeeps@unrealircd.com) and send
+your donation to:
+
 UnrealIRCd Project
 C/O Carsten Munk
 P.O.Box 52
 7400 Herning
 Denmark
 
-(if you want to that is .. it will just make us a little more able to code
-even more on this project. You will get in /credits if you do so). 
+All those who donate at least $10 USD will have their name and/or company listed in /credits.
+Additionally, all donators will be listed on the website (regardless of the amount). To make 
+this possible, please include along with your donation the name (or nickname) you want to 
+appear in the list as well as the company name (or IRC server) to list. 
 
-Payment preferred (if money, is western union) - contact me on email
-regarding other methods
-
-
--- Stskeeps
+Thank you for your support,
+The UnrealIRCd Team
 
 [ $Id$ ]
