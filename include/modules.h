@@ -342,13 +342,14 @@ struct _Module
 #else
 	void	*dll;		/* Return value of dlopen */
 #endif	
-	unsigned char flags;    /* 8-bits for flags .. */
+	unsigned char flags;    /* 8-bits for flags .. [<- this is misleading, there's mod->flags = .. everywhere] */
 	ModuleChild *children;
 	ModuleObject *objects;
 	ModuleInfo modinfo; /* Used to store handle info for module */
 	unsigned char options;
 	unsigned char errorcode;
 	char *tmp_file;
+	unsigned char compilecheck; /* feel free to rename this mess, but mod->flags sucks :[. */
 };
 /*
  * Symbol table

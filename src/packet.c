@@ -230,16 +230,12 @@ void	init_CommandHash(void)
 	add_Command(MSG_WATCH, TOK_WATCH, m_watch, 1);
 	add_Command(MSG_USERHOST, TOK_USERHOST, m_userhost, 1);
 	add_Command(MSG_LUSERS, TOK_LUSERS, m_lusers, MAXPARA);
-	add_Command(MSG_TOPIC, TOK_TOPIC, m_topic, 4);
-	add_Command(MSG_INVITE, TOK_INVITE, m_invite, MAXPARA);
-	add_Command(MSG_KICK, TOK_KICK, m_kick, 3);
 	add_Command(MSG_WALLOPS, TOK_WALLOPS, m_wallops, 1);
 	add_CommandX(MSG_ERROR, TOK_ERROR, m_error, MAXPARA, M_UNREGISTERED|M_SERVER);
 	add_CommandX(MSG_PROTOCTL, TOK_PROTOCTL, m_protoctl, MAXPARA, M_UNREGISTERED|M_SERVER|M_USER);
 	add_CommandX(MSG_SERVER, TOK_SERVER, m_server, MAXPARA, M_UNREGISTERED|M_SERVER);
 	add_Command(MSG_SQUIT, TOK_SQUIT, m_squit, 2);
 	add_Command(MSG_WHOWAS, TOK_WHOWAS, m_whowas, MAXPARA);
-	add_Command(MSG_LIST, TOK_LIST, m_list, MAXPARA);
 	add_Command(MSG_NAMES, TOK_NAMES, m_names, MAXPARA);
 	add_Command(MSG_TRACE, TOK_TRACE, m_trace, MAXPARA);
 	add_CommandX(MSG_PASS, TOK_PASS, m_pass, 1, M_UNREGISTERED|M_USER|M_SERVER);
@@ -251,7 +247,6 @@ void	init_CommandHash(void)
 	add_CommandX(MSG_ADMIN, TOK_ADMIN, m_admin, MAXPARA, M_UNREGISTERED|M_USER|M_SHUN);
 	add_Command(MSG_SUMMON, NULL, m_summon, 1);
 	add_Command(MSG_USERS, NULL, m_users, MAXPARA);
-	add_Command(MSG_SAMODE, NULL, m_samode, MAXPARA);
 	add_Command(MSG_SVSKILL, TOK_SVSKILL, m_svskill, MAXPARA);
 	add_Command(MSG_HELP, TOK_HELP, m_help, 1);
 	add_Command(MSG_HELPOP, TOK_HELP, m_help, 1);
@@ -278,8 +273,6 @@ void	init_CommandHash(void)
 	add_Command(MSG_NETINFO, TOK_NETINFO, m_netinfo, MAXPARA);
 	add_Command(MSG_ADDMOTD, TOK_ADDMOTD, m_addmotd, 1);
 	add_Command(MSG_ADDOMOTD, TOK_ADDOMOTD, m_addomotd, 1);
-	add_Command(MSG_SAJOIN, TOK_SAJOIN, m_sajoin, MAXPARA);
-	add_Command(MSG_SAPART, TOK_SAPART, m_sapart, MAXPARA);
 	add_Command(MSG_SVSFLINE, TOK_SVSFLINE, m_svsfline, MAXPARA);
 	add_Command(MSG_BOTMOTD, TOK_BOTMOTD, m_botmotd, MAXPARA);
 	add_Command(MSG_SJOIN, TOK_SJOIN, m_sjoin, MAXPARA);

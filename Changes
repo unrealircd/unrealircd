@@ -2876,3 +2876,5 @@ seen. gmtime warning still there
 - Added a missing ; in the docs oper {} example, reported by Certus
 - Fixed a bug with leaving out SJB64 in PROTOCTL resulting in strangeness
   (#0001545) reported by MagicalTux2
+- Added [OLD?] flag in /module so you can easily spot old beta* modules.
+- Modulized: samode, sajoin, sapart, kick, topic, invite, list

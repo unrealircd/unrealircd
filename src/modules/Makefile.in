@@ -33,7 +33,9 @@ R_MODULES=m_sethost.so m_chghost.so m_chgident.so m_setname.so \
 	 m_quit.so m_rakill.so m_rping.so m_sendumode.so m_sqline.so \
 	 m_tsctl.so m_unkline.so m_unsqline.so m_unzline.so m_whois.so \
 	 m_tkl.so m_vhost.so m_cycle.so m_svsjoin.so m_svspart.so \
-	 m_svswatch.so m_svssilence.so m_sendsno.so m_svssno.so
+	 m_svswatch.so m_svssilence.so m_sendsno.so m_svssno.so \
+	 m_sajoin.so m_sapart.so m_samode.so m_kick.so m_topic.so \
+	 m_invite.so m_list.so
 
 COMMANDS=m_sethost.c m_chghost.c m_chgident.c m_setname.c m_setident.c \
          m_sdesc.c m_svsmode.c m_swhois.c m_svsmotd.c m_svsnline.c \
@@ -44,7 +46,8 @@ COMMANDS=m_sethost.c m_chghost.c m_chgident.c m_setname.c m_setident.c \
 	 m_tsctl.c m_unkline.c m_unsqline.c m_unzline.c m_whois.c \
 	 m_tkl.c m_vhost.c m_cycle.c m_svsjoin.c m_svspart.c \
 	 m_svslusers.c m_svswatch.c m_svssilence.c m_sendsno.c \
-	 m_svssno.c
+	 m_svssno.c m_sajoin.c m_sapart.c m_samode.c m_kick.c m_topic.c \
+	 m_invite.c m_list.c
 
 
 MODULES=commands.so $(R_MODULES)
@@ -249,6 +252,35 @@ m_sendsno.so: m_sendsno.c $(INCLUDES)
 m_svssno.so: m_svssno.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_svssno.so m_svssno.c
+
+m_sajoin.so: m_sajoin.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_sajoin.so m_sajoin.c
+
+m_sapart.so: m_sapart.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_sapart.so m_sapart.c
+
+m_samode.so: m_samode.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_samode.so m_samode.c
+
+m_kick.so: m_kick.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_kick.so m_kick.c
+
+m_topic.so: m_topic.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_topic.so m_topic.c
+
+m_invite.so: m_invite.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_invite.so m_invite.c
+
+m_list.so: m_list.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_list.so m_list.c
+
 
 clean:
 	$(RM) -f *.o *.so *~ core

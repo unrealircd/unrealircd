@@ -91,6 +91,10 @@ extern int m_vhost_Init(ModuleInfo *modinfo), m_cycle_Init(ModuleInfo *modinfo),
 extern int m_svspart_Init(ModuleInfo *modinfo), m_svslusers_Init(ModuleInfo *modinfo);
 extern int m_svswatch_Init(ModuleInfo *modinfo), m_svssilence_Init(ModuleInfo *modinfo);
 extern int m_sendsno_Init(ModuleInfo *modinfo), m_svssno_Init(ModuleInfo *modinfo);
+extern int m_sajoin_Init(ModuleInfo *modinfo), m_sapart_Init(ModuleInfo *modinfo);
+extern int m_kick_Init(ModuleInfo *modinfo), m_topic_Init(ModuleInfo *modinfo);
+extern int m_invite_Init(ModuleInfo *modinfo), m_list_Init(ModuleInfo *modinfo);
+extern int m_samode_Init(ModuleInfo *modinfo);
 #ifdef GUEST
 extern int m_guest_Init(ModuleInfo *modinfo);
 #endif
@@ -112,6 +116,10 @@ extern int m_vhost_Load(int module_load), m_cycle_Load(int module_load), m_svsjo
 extern int m_svspart_Load(int module_load), m_svslusers_Load(int module_load);
 extern int m_svswatch_Load(int module_load), m_svssilence_Load(int module_load);
 extern int m_sendsno_Load(int module_load), m_svssno_Load(int module_load);
+extern int m_sajoin_Load(int module_load), m_sapart_Load(int module_load);
+extern int m_kick_Load(int module_load), m_topic_Load(int module_load);
+extern int m_invite_Load(int module_load), m_list_Load(int module_load);
+extern int m_samode_Load(int module_load);
 #ifdef GUEST
 extern int m_guest_Load(int module_load);
 #endif
@@ -129,6 +137,10 @@ extern int m_sqline_Unload(), m_unsqline_Unload(), m_tkl_Unload(), m_vhost_Unloa
 extern int m_cycle_Unload(), m_svsjoin_Unload(), m_svspart_Unload(), m_svslusers_Unload();
 extern int m_svswatch_Unload(), m_svssilence_Unload();
 extern int m_sendsno_Unload(), m_svssno_Unload();
+extern int m_sajoin_Unload(), m_sapart_Unload();
+extern int m_kick_Unload(), m_topic_Unload();
+extern int m_invite_Unload(), m_list_Unload();
+extern int m_samode_Unload();
 #ifdef GUEST
 extern int m_guest_Unload();
 #endif
@@ -208,6 +220,13 @@ int    l_commands_Init(ModuleInfo *modinfo)
 	m_svslusers_Init(ModCmdsInfo);
 	m_sendsno_Init(ModCmdsInfo);
 	m_svssno_Init(ModCmdsInfo);
+	m_sajoin_Init(ModCmdsInfo);
+	m_sapart_Init(ModCmdsInfo);
+	m_samode_Init(ModCmdsInfo);
+	m_kick_Init(ModCmdsInfo);
+	m_topic_Init(ModCmdsInfo);
+	m_invite_Init(ModCmdsInfo);
+	m_list_Init(ModCmdsInfo);
 #ifdef GUEST
 	m_guest_Init(ModCmdsInfo);
 #endif
@@ -266,6 +285,13 @@ int    l_commands_Load(int module_load)
 	m_svslusers_Load(module_load);
 	m_sendsno_Load(module_load);
 	m_svssno_Load(module_load);
+	m_sajoin_Load(module_load);
+	m_sapart_Load(module_load);
+	m_samode_Load(module_load);
+	m_kick_Load(module_load);
+	m_topic_Load(module_load);
+	m_invite_Load(module_load);
+	m_list_Load(module_load);
 #ifdef GUEST
 	m_guest_Load(module_load);
 #endif
@@ -324,6 +350,13 @@ int	l_commands_Unload(int module_unload)
 	m_svslusers_Unload();
 	m_sendsno_Unload();
 	m_svssno_Unload();
+	m_sajoin_Unload();
+	m_sapart_Unload();
+	m_samode_Unload();
+	m_kick_Unload();
+	m_topic_Unload();
+	m_invite_Unload();
+	m_list_Unload();
 #ifdef GUEST
 	m_guest_Unload();
 #endif

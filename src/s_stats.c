@@ -16,7 +16,6 @@
 #include <string.h>
 
 extern int  max_connection_count;
-extern char modebuf[MAXMODEPARAMS*2+1], parabuf[504];
 extern char *get_client_name2(aClient *, int);
 
 int stats_banversion(aClient *, char *);

@@ -337,7 +337,6 @@ void 			config_progress(char *format, ...);
 extern void 	win_log(char *format, ...);
 extern void		win_error();
 #endif
-extern char modebuf[MAXMODEPARAMS*2+1], parabuf[504];
 extern void add_entropy_configfile(struct stat st, char *buf);
 extern void unload_all_unused_snomasks();
 extern void unload_all_unused_umodes();
