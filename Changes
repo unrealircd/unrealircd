@@ -2944,3 +2944,4 @@ seen. gmtime warning still there
 - Modulized: netinfo, links, help, rules, close, map, eos
 - Made it compile on win32 again
 - Modulized: server, stats
+- Modulized: svsfline, dccdeny, undccdeny, whowas

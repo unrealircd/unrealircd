@@ -154,7 +154,8 @@ MOD_FILES=SRC/L_COMMANDS.OBJ SRC/M_CHGHOST.OBJ SRC/M_SDESC.OBJ SRC/M_SETIDENT.OB
  SRC/M_ADDOMOTD.OBJ SRC/M_WALLOPS.OBJ SRC/M_GLOBOPS.OBJ SRC/M_LOCOPS.OBJ SRC/M_CHATOPS.OBJ \
  SRC/M_ADMIN.OBJ SRC/M_TRACE.OBJ SRC/M_NETINFO.OBJ SRC/M_LINKS.OBJ SRC/M_HELP.OBJ \
  SRC/M_RULES.OBJ SRC/M_CLOSE.OBJ SRC/M_MAP.OBJ SRC/M_EOS.OBJ SRC/M_SERVER.OBJ \
- SRC/M_STATS.OBJ
+ SRC/M_STATS.OBJ SRC/M_SVSFLINE.OBJ SRC/M_DCCDENY.OBJ SRC/M_UNDCCDENY.OBJ \
+ SRC/M_WHOWAS.OBJ
 
 ALL: CONF UNREAL.EXE WIRCD.EXE
 
@@ -609,6 +610,18 @@ src/m_server.obj: src/modules/m_server.c $(INCLUDES)
 
 src/m_stats.obj: src/modules/m_stats.c $(INCLUDES)
         $(CC) $(CFLAGS) src/modules/m_stats.c
+
+src/m_svsfline.obj: src/modules/m_svsfline.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_svsfline.c
+
+src/m_dccdeny.obj: src/modules/m_dccdeny.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_dccdeny.c
+
+src/m_undccdeny.obj: src/modules/m_undccdeny.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_undccdeny.c
+
+src/m_whowas.obj: src/modules/m_whowas.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/modules/m_whowas.c
 
 src/win32/win32.res: src/win32/win32gui.rc
         $(RC) /l 0x409 /fosrc/win32/win32.res /i ./include /i ./src \
