@@ -375,7 +375,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 		tkllayer[7] = mo2;
 		if (parc > 3) {
 			tkllayer[8] = parv[3];
-		} else {
+		} else if (parc > 2) {
 			tkllayer[8] = parv[2];
 		}
 		/* call the tkl layer .. */

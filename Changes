@@ -1749,3 +1749,5 @@ seen. gmtime warning still there
   to make it easier to read.
 - Fixed a bug in the binary search functions that could cause crashes when unknown config
   directives were added. Reported by 1of10 (#0000587)
+- Fixed a bug at synch time that could cause more parameters to be sent than should be
+- Fixed a TKL bug where leaving out the reason caused a crash (reported by Ravage)
