@@ -1473,3 +1473,5 @@ seen. gmtime warning still there
   to 0
 - Fixed the bug where /invite doesn't work (TEST BEFORE COMMIT!) reported by havlaz
   (#0000255)
+- Fixed problem where the parameters of the RAKILL aliasing to TKL were switched, 
+  and a missing return for normal users.

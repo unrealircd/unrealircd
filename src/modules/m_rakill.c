@@ -149,17 +149,17 @@ DLLFUNC int m_rakill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 			    sptr->name);
-			return 0;
 		}
 		else
 		{
 			sendto_one(sptr, ":%s NOTICE %s :*** RAKILL is depricated and should not be used. Please use /gline -user@host instead", 
 				me.name, sptr->name);
 		}
+		return 0;
 	}
 	
-	tkllayer[3] = parv[1];
-	tkllayer[4] = parv[2];	
+	tkllayer[3] = parv[2];
+	tkllayer[4] = parv[1];	
 	tkllayer[5] = sptr->name;
 	m_tkl(&me, &me, 6, tkllayer);
 	loop.do_bancheck = 1;
