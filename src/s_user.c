@@ -58,7 +58,6 @@ void send_umode(aClient *, aClient *, long, long, char *);
 void set_snomask(aClient *, char *);
 void create_snomask(aClient *, anUser *, char *);
 extern int short_motd(aClient *sptr);
-char *get_snostr(long sno);
 /* static  Link    *is_banned(aClient *, aChannel *); */
 int  dontspread = 0;
 extern char *me_hash;

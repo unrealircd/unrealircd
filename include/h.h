@@ -213,10 +213,10 @@ extern int dgets(int, char *, int);
 extern char *inetntoa(char *);
 
 #if !defined(HAVE_SNPRINT) || !defined(HAVE_VSNPRINTF)
-#ifndef _WIN32
+/* #ifndef _WIN32 XXX why was this?? -- Syzop. */
 extern int snprintf (char *str, size_t count, const char *fmt, ...);
 extern int vsnprintf (char *str, size_t count, const char *fmt, va_list arg);
-#endif
+/* #endif */
 #endif
 
 #ifdef _WIN32
@@ -598,3 +598,16 @@ extern CMD_FUNC(m_eos);
 extern int do_chanflood(ChanFloodProt *, int);
 extern void do_chanflood_action(aChannel *, int, char *, char, long);
 extern char *channel_modef_string(ChanFloodProt *);
+extern void chmode_str(struct ChMode, char *, char *);
+extern char *get_cptr_status(aClient *);
+extern char *get_snostr(long);
+#ifdef _WIN32
+extern void InitDebug(void);
+extern int InitwIRCD(int argc, char **);
+extern void SocketLoop(void *);
+#endif
+#ifdef STATIC_LINKING
+extern int l_commands_Init(ModuleInfo *);
+extern int l_commands_Test(ModuleInfo *);
+extern int l_commands_Load(int);
+#endif

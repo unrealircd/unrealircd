@@ -25,6 +25,7 @@
 #include "h.h"
 #include "config.h"
 #include "fdlist.h"
+#include "proto.h"
 #include <string.h>
 
 extern fdlist default_fdlist;

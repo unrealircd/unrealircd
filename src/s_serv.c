@@ -1248,8 +1248,10 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 			{
 				sendto_one(cptr, ":%s %s", acptr->name,
 					(IsToken(cptr) ? TOK_EOS : MSG_EOS));
+#ifdef DEBUGMODE
 				ircd_log(LOG_ERROR, "[EOSDBG] m_server_synch: sending to uplink '%s' with src %s...",
 					cptr->name, acptr->name);
+#endif
 			}
 		}
 	}
@@ -1449,9 +1451,10 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	/* Send EOS (End Of Sync) to the just linked server... */
 	sendto_one(cptr, ":%s %s", me.name,
 		(IsToken(cptr) ? TOK_EOS : MSG_EOS));
+#ifdef DEBUGMODE
 	ircd_log(LOG_ERROR, "[EOSDBG] m_server_synch: sending to justlinked '%s' with src ME...",
 			cptr->name);
-
+#endif
 	return 0;
 
 }
@@ -3886,8 +3889,11 @@ CMD_FUNC(m_eos)
 		return 0;
 	sptr->serv->flags.synced = 1;
 	/* pass it on ^_- */
+#ifdef DEBUGMODE
 	ircd_log(LOG_ERROR, "[EOSDBG] m_eos: got sync from %s (path:%s)", sptr->name, cptr->name);
 	ircd_log(LOG_ERROR, "[EOSDBG] m_eos: broadcasting it back to everyone except route from %s", cptr->name);
+#endif
 	sendto_serv_butone_token(cptr,
 		parv[0], MSG_EOS, TOK_EOS, "", NULL);
+	return 0;
 }

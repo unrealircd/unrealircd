@@ -25,6 +25,7 @@
 #include "sys.h"
 #include "numeric.h"
 #include "msg.h"
+#include "proto.h"
 #include "channel.h"
 #include "version.h"
 #include <time.h>

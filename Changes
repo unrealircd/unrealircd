@@ -2370,5 +2370,8 @@ seen. gmtime warning still there
   channel is set automatically +i (invite only) by the server.
   You can read more about it in section 3.12 'Anti-Flood features' of unreal32docs.html:
   http://www.vulnscan.org/UnrealIrcd/unreal32docs.html#feature_antiflood
-  This change can cause desynch problems if both old+f and new+f servers are used on a network.
-  It's (currrently!) possible to use the old +f system if you undef NEWCHFLOODPROT in include/config.h.
+  This change can cause desynch problems if both old+f and new+f servers are used on
+  a network. It's (currrently!) possible to use the old +f system if you undef NEWCHFLOODPROT
+  in include/config.h.
+- Fixed ~5 compiler warnings at *NIX and ~20 at windows. Some of them _could_ have caused problems.
+- Moved EOS debugging code to DEBUGMODE.
