@@ -117,7 +117,7 @@ English | <a href="unreal32docs.de.html">German</a><br><br>
   ---8.9. <a href="#secsummary">Summary</a><br>
   9. <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">Frequently Asked Questions (FAQ)</a><br> 
 </p>
-<p><b><font size="+2">1.0 &#8211;Introduction & Notes <a name="IntroductionNotes"></a></font></b><br>
+<p><b><font size="+2">1.0 &#8211; Introduction & Notes <a name="IntroductionNotes"></a></font></b><br>
 </p><div class="desc">
 <p>This document was written for exclusive use with UnrealIRCd. Use of this 
   document with another software package, or distribution of this document with 
@@ -277,7 +277,7 @@ Windows:<br>
 <p>This is controlled by the oper flags in the oper block, see the oper block for more information.</p></div>
 
 <p><font size="+2"><b>3.7 - Oper commands</b></font><a name="feature_opercmds"></a></p><div class="desc">
-<p>UnrealIRCd has a lot of powerful oper commands which are explained in section 6,
+<p>UnrealIRCd has a lot of powerful oper commands which are explained in <a href="#useropercommands">User &amp; Oper Commands</a>,
    you probably want to read those after installing :).</p></div>
 
 <p><font size="+2"><b>3.8 - SSL</b></font><a name="feature_ssl"></a></p><div class="desc">
@@ -290,7 +290,7 @@ Windows:<br>
 <p>Clients that support SSL: <A HREF="http://www.xchat.org/" TARGET="_blank">XChat</a>,
                              <A HREF="http://www.irssi.org/" TARGET="_blank">irssi</a>,
                              <A HREF="http://www.irssi.org/" TARGET="_blank">mIRC</a> (6.14 and up, 
-                             also requires some <a href="http://www.mirc.co.uk/ssl.html" target="_blank>additional steps</a>)</p>
+                             also requires some <a href="http://www.mirc.co.uk/ssl.html" target="_blank">additional steps</a>)</p>
 <p>For clients which do not support SSL you can use a tunnel like
    <A HREF="http://www.stunnel.org/" TARGET="_blank">stunnel</A>, here's a stunnel.conf example (for stunnel 4.x):<br>
    <pre>
@@ -2717,35 +2717,37 @@ to get more information on a command.</p>
     <td>IRCop</td>
   </tr>
   <tr> 
-    <td height="39">kline +-&lt;hostmask&gt; &lt;time to ban&gt; &lt;reason&gt;</td>
-    <td>Bans the hostmask from the server it is issued on. It is not a global 
-      ban. Time to ban is in seconds, or you can use 1d for 1 days. If the hostmask is prefixed with a -, the kline is removed</td>
+    <td height="39">kline [+|-]&lt;user@host | nick&gt; [&lt;time to ban&gt; &lt;reason&gt;]</td>
+    <td>Bans the hostmask from the server it is issued on. A kline is not a global ban.<br> 
+        <b>time to ban</b> is either: a) a value in seconds, b) a time value, like '1d' is 1 day or c) '0' for permanent.
+        Time and reason are optional, if unspecified set::default-bantime (default: 0/permanent) and 'no reason' are used.<br>
+        To remove a kline use /kline -user@host</td>
     <td>IRCop</td>
   </tr>
   <tr> 
-    <td height="39">zline +-&lt;ip&gt; &lt;time to ban&gt; &lt;reason&gt;</td>
-    <td>Bans an IP Address from the local server it is issued on. Time to ban is in seconds, or you can use 1d for 1 days. If the ip is prefixed with a - then the zline is removed.<br></td>
+    <td height="39">zline [+|-]&lt;*@ip&gt; [&lt;time to ban&gt; &lt;reason&gt;]</td>
+    <td>Bans an IP Address from the local server it is issued on (not global). See kline for more syntax info. 
+        Use /zline -*@ip to remove.<br></td>
     <td>IRCop</td>
   </tr>
   <tr> 
-    <td height="39">gline +-&lt;user@host&gt; &lt;time to ban&gt; :&lt;reason&gt;<br></td>
-    <td>Adds a global ban to anyone that matches. Time to ban is in seconds, or 
-      you can use 1d for 1 days. To remove a gline, put a &#8211;user@host<br></td>
+    <td height="39">gline [+|-]&lt;user@host | nick&gt; [&lt;time to ban&gt; &lt;reason&gt;]<br></td>
+    <td>Adds a global ban to anyone that matches. See kline for more syntax info.
+      Use /gline -user@host to remove.<br></td>
     <td>IRCop</td>
   </tr>
   <tr> 
-    <td height="39">shun +-&lt;user@host&gt; &lt;time to shun&gt; :&lt;reason&gt;<br></td>
+    <td height="39">shun [+|-]&lt;user@host | nick&gt; [&lt;time to shun&gt; &lt;reason&gt;]<br></td>
     <td>Prevents a user from executing ANY commands and prevents them from speaking. 
-      Shuns are global (like glines). Time to shun is in seconds, or you can use 1d for 1 days. 
-      To remove a shun, put a &#8211;user@host. Setting time to 0 makes it permanent. 
+      Shuns are global (like glines). See kline for more syntax info.
+      Use /shun -user@host to remove a shun.
       <br></td>
     <td>IRCop</td>
   </tr>
   <tr> 
-    <td height="39">gzline +-&lt;ip&gt; &lt;time to ban&gt; :&lt;reason&gt;<br></td>
-    <td>Adds a global zline. Time to ban is in seconds, or you can use 1d for 1 
-      days. To remove a gzline, put a &#8211;user@host. Setting time to 0 makes 
-      it permanent.<br></td>
+    <td height="39">gzline [+|-]&lt;ip&gt; &lt;time to ban&gt; :&lt;reason&gt;<br></td>
+    <td>Adds a global zline. See kline for more syntax info.
+      Use /gzline -user@host to remove a gzline.<br></td>
     <td>IRCop</td>
   </tr>
   <tr> 

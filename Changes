@@ -3096,3 +3096,4 @@ seen. gmtime warning still there
 - Added some release notes already.
 - Fixed /rehash bug if an .so (or remote include?) failed to load properly,
   reported by fez (#0001736).
+- doc/unreal32docs.html and help.conf updates (#0001734 + other stuff).
