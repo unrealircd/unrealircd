@@ -1,3 +1,4 @@
+
 /************************************************************************
  *   Unreal Internet Relay Chat Daemon, include/struct.h
  *   Copyright (C) 1990 Jarkko Oikarinen and

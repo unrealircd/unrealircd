@@ -278,13 +278,7 @@ time_t	now;
 				{
 				case ASYNC_CLIENT :
 #ifdef SHOWCONNECTINFO
-#ifndef _WIN32
-					write(cptr->fd, REPORT_FAIL_DNS,
-						R_fail_dns);
-#else
-					send(cptr->fd, REPORT_FAIL_DNS,
-						R_fail_dns, 0);
-#endif
+					sendto_one(cptr, REPORT_FAIL_DNS);
 #endif
 					ClearDNS(cptr);
 					if (!DoingAuth(cptr))

@@ -1402,11 +1402,8 @@ aClient *add_connection(cptr, fd)
 #endif
 #ifdef SHOWCONNECTINFO
 		/* Start of the very first DNS check */
-#ifndef _WIN32
-		write(fd, REPORT_DO_DNS, R_do_dns);
-#else
-		send(fd, REPORT_DO_DNS, R_do_dns, 0);
-#endif
+		if (!(cptr->umodes & LISTENER_SSL))	
+			FDwrite(fd, REPORT_DO_DNS, R_do_dns);
 #endif
 #ifndef USENEWDNS
 		lin.flags = ASYNC_CLIENT;  //newdns
@@ -1421,12 +1418,10 @@ aClient *add_connection(cptr, fd)
 			SetDNS(acptr);
 #ifdef SHOWCONNECTINFO
 		else
-#ifndef _WIN32
-			write(fd, REPORT_FIN_DNSC, R_fin_dnsc);
-#else /*_WIN32*/
-			send(fd, REPORT_FIN_DNSC, R_fin_dnsc, 0);
-#endif /*_WIN32*/
-
+		{
+			if (!(cptr->umodes & LISTENER_SSL))
+				FDwrite(fd, REPORT_FIN_DNSC, R_do_dns);
+		}
 #endif /*SHOWCONNECTINFO*/
 		nextdnscheck = 1;
 
@@ -1440,13 +1435,8 @@ aClient *add_connection(cptr, fd)
 		if (acptr->hostp = newdns_checkcacheip(acptr))
 
 #ifdef SHOWCONNECTINFO
-
-#ifndef _WIN32
-			write(fd, REPORT_FIN_DNSC, R_fin_dnsc);
-#else /*_WIN32*/
-			send(fd, REPORT_FIN_DNSC, R_fin_dnsc, 0);
-#endif /*_WIN32*/
-
+		if (!(cptr->umodes & LISTENER_SSL))
+			FDwrite(fd, REPORT_FIN_DNSC, R_fin_dnsc);
 #endif /*SHOWCONNECTINFO*/
 
 #endif /*USENEWDNS*/
@@ -2941,11 +2931,7 @@ void do_dns_async(id)
 			  {
 				  del_queries((char *)cptr);
 #ifdef SHOWCONNECTINFO
-#ifndef _WIN32
-				  write(cptr->fd, REPORT_FIN_DNS, R_fin_dns);
-#else
-				  send(cptr->fd, REPORT_FIN_DNS, R_fin_dns, 0);
-#endif
+			          sendto_one(cptr, REPORT_FIN_DNS);
 #endif
 				  ClearDNS(cptr);
 				  if (!DoingAuth(cptr))

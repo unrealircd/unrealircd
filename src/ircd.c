@@ -531,32 +531,13 @@ extern TS check_pings(TS currenttime, int check_kills)
 
 #ifdef SHOWCONNECTINFO
 					if (DoingDNS(cptr))
-#ifndef _WIN32
-						write(cptr->fd, REPORT_FAIL_DNS,
-						    R_fail_dns);
-#else
-						send(cptr->fd, REPORT_FAIL_DNS,
-						    R_fail_dns, 0);
-#endif
+						sendto_one(cptr, REPORT_FAIL_DNS);
 					else if (DoingAuth(cptr))
-#ifndef _WIN32
-						write(cptr->fd, REPORT_FAIL_ID,
-						    R_fail_id);
-#else
-						send(cptr->fd, REPORT_FAIL_ID,
-						    R_fail_id, 0);
-#endif
+						sendto_one(cptr, REPORT_FAIL_ID);
 
 #ifdef SOCKSPORT
 					else
-#ifndef _WIN32
-						write(cptr->fd, REPORT_NO_SOCKS,
-						    R_no_socks);
-#else
-						send(cptr->fd, REPORT_NO_SOCKS,
-						    R_no_socks, 0);
-
-#endif
+						sendto_one(cptr, REPORT_NO_SOCKS);
 #endif /* SOCKSPORT */
 #endif
 					Debug((DEBUG_NOTICE,
