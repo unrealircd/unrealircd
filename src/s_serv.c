@@ -639,7 +639,7 @@ CMD_FUNC(m_server)
 		 * Then on compressed 
 		*/
 		if (!aconf)
-			aconf = Find_link(cptr->username, cptr->sockhost, Inet_ia2pNB(&cptr->ip, 0), servername);
+			aconf = Find_link(cptr->username, cptr->sockhost, Inet_ia2pNB(&cptr->ip, 1), servername);
 #endif		
 		if (!aconf)
 		{

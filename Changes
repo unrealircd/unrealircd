@@ -1395,3 +1395,4 @@ seen. gmtime warning still there
 - Depricated AKILL/RAKILL and made them alias to TKL G +/- - for normal users they
   just reply that the commands are depricated. Server compatiblity is maintained. 
   Eventually it will just be removed. Thank god for modules.
+- Fixed a silly bug with regards to matching against compressed IPs in link {} checking
