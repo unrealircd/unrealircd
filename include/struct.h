@@ -63,6 +63,7 @@ typedef struct _configfile ConfigFile;
 typedef struct _configflag ConfigFlag;
 typedef struct _configflag_except ConfigFlag_except;
 typedef struct _configflag_ban ConfigFlag_ban;
+typedef struct _configflag_tld ConfigFlag_tld;
 typedef struct _configitem ConfigItem;
 typedef struct _configitem_me ConfigItem_me;
 typedef struct _configitem_admin ConfigItem_admin;
@@ -920,6 +921,12 @@ struct _configflag_ban
 	unsigned	type2	  : 2;
 };
 
+struct _configflag_tld
+{
+	unsigned	temporary : 1;
+	unsigned	motdptr   : 1;
+	unsigned	rulesptr  : 1;
+};
 
 #define CONF_BAN_NICK		1
 #define CONF_BAN_IP		2
@@ -997,7 +1004,7 @@ struct _configitem_ulines {
 };
 
 struct _configitem_tld {
-	ConfigFlag 	flag;
+	ConfigFlag_tld 	flag;
 	ConfigItem 	*prev, *next;
 	char 		*mask, *motd_file, *rules_file, *channel;
 	struct tm	*motd_tm;

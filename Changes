@@ -374,3 +374,4 @@
 - Fixed a problem with SDESC module token being wrong - Found by eternal
 - If no oper flags are found, default to locop (suggested by devdev)
 - Added tld::channel so you can make people join a channel based on hostmask
+- Made it so a motd or rules loaded in 2 seperate tld {} is only read into memory once (may need debugging?)

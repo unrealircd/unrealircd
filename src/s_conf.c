@@ -97,6 +97,7 @@ int     _conf_deny_version      (ConfigFile *conf, ConfigEntry *ce);
 int	_conf_allow_channel	(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_loadmodule	(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_log		(ConfigFile *conf, ConfigEntry *ce);
+aMotd *Find_file(char *, short);
 
 extern int conf_debuglevel;
 
@@ -1284,12 +1285,18 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 			ca->mask = strdup(cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "motd")) {
-			ca->motd = read_motd(cep->ce_vardata);
+			if (!(ca->motd = Find_file(cep->ce_vardata,0)))
+				ca->motd = read_motd(cep->ce_vardata);
+			else 
+				ca->flag.motdptr = 1;
 			ca->motd_file = strdup(cep->ce_vardata);
 			ca->motd_tm = motd_tm;
 		}
 		else if (!strcmp(cep->ce_varname, "rules")) {
-			ca->rules = read_rules(cep->ce_vardata);
+			if (!(ca->rules = Find_file(cep->ce_vardata,1)))
+				ca->rules = read_rules(cep->ce_vardata);
+			else 
+				ca->flag.rulesptr = 1;
 			ca->rules_file = strdup(cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "channel")) {
@@ -2935,17 +2942,21 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		aMotd *motd;
 		ircfree(tld_ptr->motd_file);
 		ircfree(tld_ptr->rules_file);
-		while (tld_ptr->motd) {
-			motd = tld_ptr->motd->next;
-			ircfree(tld_ptr->motd->line);	
-			ircfree(tld_ptr->motd);
-			tld_ptr->motd = motd;
+		if (!tld_ptr->flag.motdptr) {
+			while (tld_ptr->motd) {
+				motd = tld_ptr->motd->next;
+				ircfree(tld_ptr->motd->line);	
+				ircfree(tld_ptr->motd);
+				tld_ptr->motd = motd;
+			}
 		}
-		while (tld_ptr->rules) {
-			motd = tld_ptr->rules->next;
-			ircfree(tld_ptr->rules->line);
-			ircfree(tld_ptr->rules);
-			tld_ptr->rules = motd;
+		if (!tld_ptr->flag.rulesptr) {
+			while (tld_ptr->rules) {
+				motd = tld_ptr->rules->next;
+				ircfree(tld_ptr->rules->line);
+				ircfree(tld_ptr->rules);
+				tld_ptr->rules = motd;
+			}
 		}
 		t.next = del_ConfigItem((ConfigItem *) tld_ptr, (ConfigItem **)&conf_tld);
 		MyFree(tld_ptr);
@@ -3222,6 +3233,22 @@ ConfigItem_ban 	*Find_banEx(char *host, short type, short type2)
 					return NULL;
 				return ban;
 			}
+	return NULL;
+}
+
+aMotd *Find_file(char *file, short type) {
+	ConfigItem_tld *tlds;
+
+	for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *)tlds->next) {
+		if (type == 0) {
+			if (!strcmp(file, tlds->motd_file))
+				return tlds->motd;
+		}
+		else {
+			if (!strcmp(file, tlds->rules_file)) 
+				return tlds->rules;
+		}
+	}
 	return NULL;
 }
 
