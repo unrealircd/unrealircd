@@ -135,20 +135,11 @@ struct _timeb nowt;
 	/* Grab OS specific "random" data */
 #ifndef _WIN32
 	gettimeofday(&nowt, NULL);
-	fd = open("/dev/random", O_RDONLY);
+	fd = open("/dev/urandom", O_RDONLY);
 	if (fd) {
 		(void)read(fd, &xrnd, sizeof(int));
-		Debug((DEBUG_INFO, "init_random: read from /dev/random: 0x%.8x", xrnd));
+		Debug((DEBUG_INFO, "init_random: read from /dev/urandom: 0x%.8x", xrnd));
 		close(fd);
-	} else {
-		fd = open("/dev/urandom", O_RDONLY);
-		if (fd) {
-			(void)read(fd, &xrnd, sizeof(int));
-			Debug((DEBUG_INFO, "init_random: read from /dev/urandom: 0x%.8x", xrnd));
-			close(fd);
-		} else {
-			Debug((DEBUG_INFO, "init_random: [BAD] nothing read from random devices"));
-		}
 	}
 #else
 	_ftime(&nowt);

@@ -392,7 +392,7 @@ void ipport_seperate(char *string, char **ip, char **port)
 		/* handle ipv6 type of ip address */
 		if (*string == '[')
 		{
-			if (f = strrchr(string, ']'))
+			if ((f = strrchr(string, ']')))
 			{
 				*ip = string + 1;	/* skip [ */
 				*f = '\0';			/* terminate the ip string */
@@ -404,7 +404,7 @@ void ipport_seperate(char *string, char **ip, char **port)
 			}
 		}
 		/* handle ipv4 and port */
-		else if (f = strchr(string, ':'))
+		else if ((f = strchr(string, ':')))
 		{
 			/* we found a colon... we may have ip:port or just :port */
 			if (f == string)
@@ -532,7 +532,8 @@ tolower(*(text+1)) == 'n') || *text == '1' || tolower(*text) == 't') {
 						break;
 				}
 				ret += atoi(sz+1)*mfactor;
-				
+				if (*text == '\0')
+					break;
 			}
 		}
 		mfactor = 1;
@@ -1032,6 +1033,8 @@ void	free_iConf(aConfiguration *i)
 	ircfree(i->network.x_helpchan);
 	ircfree(i->network.x_stats_server);
 }
+
+int	config_test();
 
 int	init_conf(char *rootconf, int rehash)
 {
@@ -4027,8 +4030,8 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce) {
 		else 
 		{
 			
-			int errorcode, errorbufsize, regex;
-			char *errorbuf, *tmp, *tmpbuf;
+			int errorcode, errorbufsize, regex=0;
+			char *errorbuf, *tmp, *tmpbuf=NULL;
 			for (tmp = word->ce_vardata; *tmp; tmp++) {
 				if ((int)*tmp < 65 || (int)*tmp > 123) {
 					regex = 1;

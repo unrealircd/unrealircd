@@ -1765,3 +1765,4 @@ seen. gmtime warning still there
   is specified as encrypted. (#0000597)
 - Fixed bug #0000601 reported by cate where specifying just a :port number for set::scan::endpoint 
   caused a seg fault.
+- Added some patches by Syzop to fix a variety of different bugs

@@ -199,7 +199,7 @@ int	Scan_IsBeingChecked(struct IN_ADDR *ia)
 	IRCMutexLock(Scannings_lock);
 	for (sr = Scannings; sr; sr = sr->next)
 	{
-		if (!bcmp(&sr->in, ia, sizeof(Scan_AddrStruct)))
+		if (!bcmp(&sr->in, ia, sizeof(struct IN_ADDR)))
 		{
 			ret = 1;
 			break;
@@ -347,7 +347,7 @@ DLLFUNC int h_scan_connect(aClient *sptr)
  *    };
  * 
  */
-DLLFUNC h_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs) {
+DLLFUNC int h_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs) {
 	ConfigEntry *cep;
 	int errors = 0;
 
@@ -439,7 +439,7 @@ DLLFUNC h_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs) {
 		return 0;
 }
 
-DLLFUNC h_config_run(ConfigFile *cf, ConfigEntry *ce, int type) {
+DLLFUNC int h_config_run(ConfigFile *cf, ConfigEntry *ce, int type) {
 	ConfigEntry *cep;
 	int errors = 0;
 
@@ -515,6 +515,7 @@ DLLFUNC int h_config_rehash()
 {
 	if (scan_message)
 		MyFree(scan_message);
+	return 1;
 }
 
 DLLFUNC int h_stats_scan(aClient *sptr, char *stats) {
