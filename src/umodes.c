@@ -230,6 +230,17 @@ void UmodeDel(Umode *umode)
 		umode->unloaded = 1;
 	else	
 	{
+		aClient *cptr;
+		for (cptr = client; cptr; cptr = cptr->next)
+		{
+			long oldumode = 0;
+			if (!IsPerson(cptr))
+				continue;
+			oldumode = cptr->umodes;
+			cptr->umodes &= ~umode->mode;
+			if (MyClient(cptr))
+				send_umode_out(cptr, cptr, oldumode);
+		}
 		umode->flag = '\0';
 		AllUmodes &= ~(umode->mode);
 		SendUmodes &= ~(umode->mode);
@@ -300,7 +311,22 @@ void SnomaskDel(Snomask *sno)
 	if (loop.ircd_rehashing)
 		sno->unloaded = 1;
 	else	
+	{
+		int i;
+		for (i = 0; i <= LastSlot; i++)
+		{
+			aClient *cptr = local[i];
+			long oldsno;
+			if (!cptr || !IsPerson(cptr))
+				continue;
+			oldsno = cptr->user->snomask;
+			cptr->user->snomask &= ~sno->mode;
+			if (oldsno != cptr->user->snomask)
+				sendto_one(cptr, rpl_str(RPL_SNOMASK), me.name,
+					cptr->name, get_snostr(cptr->user->snomask));
+		}
 		sno->flag = '\0';
+	}
 	if (sno->owner) {
 		ModuleObject *snoobj;
 		for (snoobj = sno->owner->objects; snoobj; snoobj = snoobj->next) {

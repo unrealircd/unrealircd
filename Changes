@@ -2318,3 +2318,4 @@ seen. gmtime warning still there
 - Rewrote the usermode module interface to be more stable and consistent with other
   module functions. New functions are UmodeAdd and UmodeDel (backwards compatibility
   is available for the old functions).
+- Fixed a bug in the snomask and umode system dealing with removing flags
