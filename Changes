@@ -276,3 +276,5 @@
 - Possibly fixed a bug that could cause Unreal to eat 100% CPU at startup on Windows.
   (#0001635) reported by eggburt. Thanks to STING for helping to debug this.
 - Implemented a new modules Makefile written by fez (#0001930).
+- Added oper::modes to specify modes to be set for a particular oper (overrides 
+  set::modes-on-oper), suggested by parker182 (#0001899).

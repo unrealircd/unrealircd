@@ -3020,6 +3020,10 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 	{
 		ircstrdup(oper->snomask, cep->ce_vardata);
 	}
+	if ((cep = config_find_entry(ce->ce_entries, "modes")))
+	{
+		oper->modes = set_usermode(cep->ce_vardata);
+	}
 	if ((cep = config_find_entry(ce->ce_entries, "maxlogins")))
 	{
 		oper->maxlogins = (int)config_checkval(cep->ce_vardata, CFG_TIME);
@@ -3082,6 +3086,8 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			else if (!strcmp(cep->ce_varname, "swhois")) {
 			}
 			else if (!strcmp(cep->ce_varname, "snomask")) {
+			}
+			else if (!strcmp(cep->ce_varname, "modes")) {
 			}
 			else if (!strcmp(cep->ce_varname, "maxlogins"))
 			{

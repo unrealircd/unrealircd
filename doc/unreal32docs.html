@@ -805,6 +805,7 @@ listen *:6601 {
 	};
 	swhois &lt;whois info&gt;;
 	snomask &lt;snomask&gt;;
+	modes &lt;modes&gt;;
 	maxlogins &lt;num&gt;;
 };
 </pre></p>
@@ -1107,6 +1108,8 @@ listen *:6601 {
   information. <font color=blue>[optional]</font></p>
 <p>The <b>oper::snomask</b> directive allows you to preset an oper's server notice mask 
   on oper up. For a list of available SNOMASKs, see <a href="#feature_snomasks">Section 3.3</a> 
+  <font color=blue>[optional]</font></p>
+<p>The <b>oper::modes</b> directive allows you to preset an oper's modes on oper up.
   <font color=blue>[optional]</font></p>
 <p>The <b>oper::maxlogins</b> allows you to restrict the number of concurrent oper logins from this host,
    for example if you set it to 1 then only 1 person can be oper'ed via this block at any time. 

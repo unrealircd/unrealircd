@@ -252,7 +252,10 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 
 /* new oper code */
 
-		sptr->umodes |= OPER_MODES;
+		if (aconf->modes)
+			sptr->umodes |= aconf->modes;
+		else
+			sptr->umodes |= OPER_MODES;
 
 /* handle oflags that trigger umodes */
 		
