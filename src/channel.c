@@ -72,34 +72,33 @@ extern int lifesux;
 
 /* Some forward declarations */
 CMD_FUNC(do_join);
-static void add_invite(aClient *, aChannel *);
-static char *clean_ban_mask(char *);
-static int add_banid(aClient *, aChannel *, char *);
-static int can_join(aClient *, aClient *, aChannel *, char *, char *,
+void add_invite(aClient *, aChannel *);
+char *clean_ban_mask(char *);
+int add_banid(aClient *, aChannel *, char *);
+int can_join(aClient *, aClient *, aChannel *, char *, char *,
     char **);
-static int channel_link(aClient *, aClient *, int, char **);
 void channel_modes(aClient *, char *, char *, aChannel *);
-static int check_channelmask(aClient *, aClient *, char *);
+int check_channelmask(aClient *, aClient *, char *);
 int del_banid(aChannel *, char *);
-static void set_mode(aChannel *, aClient *, int, char **, u_int *,
+void set_mode(aChannel *, aClient *, int, char **, u_int *,
     char[MAXMODEPARAMS][MODEBUFLEN + 3], int);
 
 #ifdef EXTCMODE
-static void make_mode_str(aChannel *, long, ExtCMode, long, int,
+void make_mode_str(aChannel *, long, ExtCMode, long, int,
     char[MAXMODEPARAMS][MODEBUFLEN + 3], char *, char *, char);
 #else
-static void make_mode_str(aChannel *, long, long, int,
+void make_mode_str(aChannel *, long, long, int,
     char[MAXMODEPARAMS][MODEBUFLEN + 3], char *, char *, char);
 #endif
 
-static int do_mode_char(aChannel *, long, char, char *,
+int do_mode_char(aChannel *, long, char, char *,
 	u_int, aClient *,
     u_int *, char[MAXMODEPARAMS][MODEBUFLEN + 3], char);
-static void do_mode(aChannel *, aClient *, aClient *, int, char **, int,
+void do_mode(aChannel *, aClient *, aClient *, int, char **, int,
     int);
-static void bounce_mode(aChannel *, aClient *, int, char **);
+void bounce_mode(aChannel *, aClient *, int, char **);
 
-static void sub1_from_channel(aChannel *);
+void sub1_from_channel(aChannel *);
 
 void clean_channelname(char *);
 void del_invite(aClient *, aChannel *);
@@ -360,7 +359,7 @@ void	free_membership(Membership *lp, int local)
 **	message (NO SUCH NICK) is generated. If the client was found
 **	through the history, chasing will be 1 and otherwise 0.
 */
-static aClient *find_chasing(aClient *sptr, char *user, int *chasing)
+aClient *find_chasing(aClient *sptr, char *user, int *chasing)
 {
 	aClient *who = find_client(user, (aClient *)NULL);
 
@@ -392,7 +391,7 @@ static aClient *find_chasing(aClient *sptr, char *user, int *chasing)
 
 /* add_exbanid - add an id to be excepted to the channel bans  (belongs to cptr) */
 
-static int add_exbanid(aClient *cptr, aChannel *chptr, char *banid)
+int add_exbanid(aClient *cptr, aChannel *chptr, char *banid)
 {
 	Ban *ban;
 	int  cnt = 0, len = 0;
@@ -465,7 +464,7 @@ int del_exbanid(aChannel *chptr, char *banid)
  */
 /* add_banid - add an id to be banned to the channel  (belongs to cptr) */
 
-static int add_banid(aClient *cptr, aChannel *chptr, char *banid)
+int add_banid(aClient *cptr, aChannel *chptr, char *banid)
 {
 	Ban *ban;
 	int  cnt = 0, len = 0;
@@ -618,7 +617,7 @@ static int is_irc_banned(aChannel *chptr)
  * adds a user to a channel by adding another link to the channels member
  * chain.
  */
-static void add_user_to_channel(aChannel *chptr, aClient *who, int flags)
+void add_user_to_channel(aChannel *chptr, aClient *who, int flags)
 {
 	Member *ptr;
 	Membership *ptr2;
@@ -2026,7 +2025,8 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 					*tmp = '\0';
 				  if (*param == '\0')
 					break;
-				  param[KEYLEN] = '\0';
+				  if (strlen(param) > KEYLEN)
+				    param[KEYLEN] = '\0';
 				  if (!strcmp(chptr->mode.key, param))
 					break;
 				  strncpyzt(chptr->mode.key, param,
@@ -2661,7 +2661,7 @@ char *clean_ban_mask(char *mask)
  * a user won't have invites on him anyway. -Donwulff
  */
 
-static int can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[])
+int can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[])
 {
         Link *lp;
 	Ban *banned;
@@ -2766,7 +2766,7 @@ void clean_channelname(char *cn)
 /*
 ** Return -1 if mask is present and doesnt match our server name.
 */
-static int check_channelmask(aClient *sptr, aClient *cptr, char *chname)
+int check_channelmask(aClient *sptr, aClient *cptr, char *chname)
 {
 	char *s;
 
@@ -2789,7 +2789,7 @@ static int check_channelmask(aClient *sptr, aClient *cptr, char *chname)
 **  Get Channel block for i (and allocate a new channel
 **  block, if it didn't exists before).
 */
-static aChannel *get_channel(aClient *cptr, char *chname, int flag)
+aChannel *get_channel(aClient *cptr, char *chname, int flag)
 {
 	aChannel *chptr;
 	int  len;
@@ -2832,7 +2832,7 @@ static aChannel *get_channel(aClient *cptr, char *chname, int flag)
  * Should U-lined clients have higher limits?   -Donwulff
  */
 
-static void add_invite(aClient *cptr, aChannel *chptr)
+void add_invite(aClient *cptr, aChannel *chptr)
 {
 	Link *inv, *tmp;
 
@@ -2906,7 +2906,7 @@ void del_invite(aClient *cptr, aChannel *chptr)
 **  Subtract one user from channel i (and free channel
 **  block, if channel became empty).
 */
-static void sub1_from_channel(aChannel *chptr)
+void sub1_from_channel(aChannel *chptr)
 {
 	Ban *ban;
 	Link *lp;
@@ -4506,7 +4506,8 @@ CMD_FUNC(m_names)
 	{
 		if (*s == ',')
 		{
-			para[TRUNCATED_NAMES] = '\0';
+			if (strlen(para) > TRUNCATED_NAMES)
+				para[TRUNCATED_NAMES] = '\0';
 			sendto_realops("names abuser %s %s",
 			    get_client_name(sptr, FALSE), para);
 			sendto_one(sptr, err_str(ERR_TOOMANYTARGETS),

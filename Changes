@@ -2323,3 +2323,8 @@ seen. gmtime warning still there
   module options
 - Fixed a bug effecting +k/+L where you could /mode #chan +k test, /mode #chan +k test
   and each time it would send a mode change (#0001170) reported by Airnike.
+- A few documentation updates/fixes
+- 005 CHANMODES= set back to original value before extcmode merge
+- made some functions in channel.c non-static so module coders
+  can use them (they are not defined in the header files [yet] however).
+- fixed 2 minor oob write issues
