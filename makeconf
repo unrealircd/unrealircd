@@ -515,16 +515,16 @@ ulines {
 };
 
 /* Banned nick names */
-ban nickname { mask "*C*h*a*n*S*e*r*v*"; reason "Reserved for services"; };
-ban nickname { mask "*N*i*c*k*S*e*r*v*"; reason "Reserved for services"; };
-ban nickname { mask "*M*e*m*o*S*e*r*v*"; reason "Reserved for services"; };
-ban nickname { mask "*H*e*l*p*S*e*r*v*"; reason "Reserved for services"; };
-ban nickname { mask "*O*p*e*r*S*e*r*v*"; reason "Reserved for services"; };
-ban nickname { mask "*I*n*f*o*S*e*r*v*"; reason "Reserved for services"; };
-ban nickname { mask "*Admin*"; reason "Reserved for Administrator"; };
-ban nickname { mask "*IRC*op*"; reason "Reserved for ircops"; };
-ban nickname { mask "*Oper*"; reason "Reserved for ircops"; };
-ban nickname { mask "Status"; reason "Bug in mIRC"; };
+ban nick { mask "*C*h*a*n*S*e*r*v*"; reason "Reserved for services"; };
+ban nick { mask "*N*i*c*k*S*e*r*v*"; reason "Reserved for services"; };
+ban nick { mask "*M*e*m*o*S*e*r*v*"; reason "Reserved for services"; };
+ban nick { mask "*H*e*l*p*S*e*r*v*"; reason "Reserved for services"; };
+ban nick { mask "*O*p*e*r*S*e*r*v*"; reason "Reserved for services"; };
+ban nick { mask "*I*n*f*o*S*e*r*v*"; reason "Reserved for services"; };
+ban nick { mask "*Admin*"; reason "Reserved for Administrator"; };
+ban nick { mask "*IRC*op*"; reason "Reserved for ircops"; };
+ban nick { mask "*Oper*"; reason "Reserved for ircops"; };
+ban nick { mask "Status"; reason "Bug in mIRC"; };
 
 /* Ports */
 listen $VIRTUAL:$PORT;
