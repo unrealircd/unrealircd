@@ -44,10 +44,9 @@ u_char touppertab[], tolowertab[];
 static inline match2(mask, name)
 	char *mask, *name;
 {
-	u_char *m;		/* why didn't the old one use registers ?!??!?!?! */
-	u_char *n;
+	u_char *m;		/* why didn't the old one use registers */
+	u_char *n;		/* because registers suck -- codemastr */
 	u_char cm;
-	u_char *mylowertab;
 	u_char *wsn;
 	u_char *wsm;
 
@@ -56,9 +55,8 @@ static inline match2(mask, name)
 	cm = *m;
 
 #ifndef USE_LOCALE
-	mylowertab = tolowertab2;
-#define lc(x) mylowertab[x]	/* use mylowertab, because registers are FASTER */
-#else
+#define lc(x) tolowertab2[x]	/* use mylowertab, because registers are FASTER */
+#else				/* maybe in the old 4mb hard drive days but not anymore -- codemastr */
 #define lc(x) tolower(x)
 #endif
 

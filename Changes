@@ -540,3 +540,4 @@ seen. gmtime warning still there
 - Changed how hooks work, making them support voidfuncs
 - Added src/modules/scan.c and src/modules/scan_dummy.c
 - Made militime() just as accurate on win32 as on linux
+- Made match() a little bit faster
