@@ -638,3 +638,5 @@ seen. gmtime warning still there
 - Added some thread debugging, and fixed a SVS2MODE bug
 - Fixed a major scan bug caused by stskeeps(TM) lazy-coding
 - Hmm .. minor s_bsd.c read_message fix
+- Some /info stuff, updated docs, .CHANGES.NEW, .RELEASENOTES
+

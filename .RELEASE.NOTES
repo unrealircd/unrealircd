@@ -1,23 +1,3 @@
 
-Unreal3.1.1-Darkshades Release Notes
-===================================
-
-* It is REALLY RECOMMENDED that you run only Unreal3.1.1<->Unreal3.1.1,
-  as Unreal3.1+sf got some funny SJOIN bugs that causes the network to
-  desynch
-
-* It is ADVISABLE that you allocate numerics to each server on your network.
-  You simply in the M: line, just after the port, add :numeric, like:
-  
-   M:irc.fyremoon.net:*:Description:6667:20
-
-  Where 20 is the numeric. Numerics are 1-255, 0 means no numeric (bad),
-  and no server must have same numeric
-
-* We have introduced encrypted irc connections, using SSL
-      You need to set up a SSL port, P:IP:s:*:port
-      To connect securely to another server, add :S at the end of the C:line
-       and make sure it autoconnect/connects to a SSL port
-
-* Read Unreal.nfo for any sake AND THE DOCS IN doc/. To update/upgrade your IRCd,
-  please run the ./update script. This requires "wget" and "cvs" on the box to function
+Unreal3.2-Selene (BETA1) RELEASE NOTES
+======================================

@@ -1,10 +1,24 @@
 ===============================================
-=            UnrealIRCd v3.1.1                =
+=            UnrealIRCd v3.2-Selene (beta1)   =
 ===============================================
  Was brought to you by:
+
+  The core team:
+  ==============
   * Stskeeps  <stskeeps@tspre.org>
   * codemastr <codemastr@unrealircd.com>
+
+  Coders team:
+  ============
+  * McSkaf    <mcskaf@unrealircd.org>
+  * Griever   <griever@unrealircd.org>
+  * Zogg      <zogg@unrealircd.org>
+  * NiQuiL    <niquil@unrealircd.org>
+  * assyrian  <assyrian@unrealircd.org>
+
+ In former versions:
   * DrBin     <drbin@unrealircd.com>
+  * llthangel <llthangel@unrealircd.org>
   
  Precenses on the Internet:
   * http://www.unrealircd.com
