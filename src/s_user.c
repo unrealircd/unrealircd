@@ -2479,8 +2479,6 @@ CMD_FUNC(m_umode)
 			MSG_SETHOST, TOK_SETHOST, "%s", sptr->user->virthost);
 	}
 
-/* Disabled because we use this for checking bans against virthosts -- Syzop */
-#if 0
 	if (!IsHidden(sptr) && (setflags & UMODE_HIDE))
 	{
 			if (sptr->user->virthost)
@@ -2488,8 +2486,12 @@ CMD_FUNC(m_umode)
 				MyFree(sptr->user->virthost);
 				sptr->user->virthost = NULL;
 			}
+			/* (Re)create the cloaked virthost, because it will be used
+			 * for ban-checking... free+recreate here because it could have
+			 * been a vhost for example. -- Syzop
+			 */
+			sptr->user->virthost = (char *)make_virthost(sptr->user->realhost, sptr->user->virthost, 1);
 	}
-#endif
 	/*
 	 * If I understand what this code is doing correctly...
 	 *   If the user WAS an operator and has now set themselves -o/-O
