@@ -530,3 +530,6 @@
 - Made the win32 installer include the dccallow.conf (#0002269) reported by Ron2K.
 - Made the win32 installer work with the latest version of Inno Setup (5.0.6).
 - Made /sajoin support multiple channels and using 0 (#0002231) suggested by acemi.
+- Fixed a problem where doing ./unreal restart multiple times would not actually restart
+  the ircd (#0002120) reported by SineSwiper.
+
