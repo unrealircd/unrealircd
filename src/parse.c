@@ -508,7 +508,8 @@ int  parse(cptr, buffer, bufend, mptr)
 	 * in s_user.c for NOTICE to limit commands by 
 	 * unregistered users. -Studded */
 	if (IsShunned(cptr) && IsRegistered(cptr))
-		if ((mptr->func != m_admin) && (mptr->func != m_quit))
+		if ((mptr->func != m_admin) && (mptr->func != m_quit)
+			&& (mptr->func != m_pong))
 			return -4;
 			
 	if ((!IsRegistered(cptr)) &&

@@ -614,7 +614,7 @@ int  m_tkl(cptr, sptr, parc, parv)
 			    break;
 		    case TKL_SHUN | TKL_GLOBAL:
 		    	    strcpy(txt, "Shun");
-		    break;
+			    break;
 		    default:
 			    strcpy(txt, "Unknown *:Line");
 		  }
