@@ -4268,7 +4268,7 @@ int  m_knock(cptr, sptr, parc, parv)
 {
 	aChannel *chptr;
 
-	if (parc < 3 || *parv[1] == '\0')
+	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
 		    me.name, parv[0], "KNOCK");
@@ -4281,7 +4281,7 @@ int  m_knock(cptr, sptr, parc, parv)
 	if (check_channelmask(sptr, cptr, parv[1]))
 		return 0;
 	/* bugfix for /knock PRv Please? */
-	if (*parv[1] != '#' && *parv[1] != '&')
+	if (*parv[1] != '#')
 	{
 		sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
 		    me.name,
@@ -4313,10 +4313,7 @@ int  m_knock(cptr, sptr, parc, parv)
 		return 0;
 	}
 
-	if (chptr->mode.mode & MODE_INVITEONLY)
-	{
-	}
-	else
+	if (!(chptr->mode.mode & MODE_INVITEONLY))
 	{
 		sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
 		    me.name,
@@ -4346,9 +4343,9 @@ int  m_knock(cptr, sptr, parc, parv)
 	    me.name, chptr->chname, sptr->name,
 	    sptr->user->username,
 	    (IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost),
-	    parv[2]);
+	    parv[2] ? parv[2] : "no reason specified");
 
-	sendto_one(sptr, ":%s NOTICE %s :Knocked on to %s", me.name,
+	sendto_one(sptr, ":%s NOTICE %s :Knocked on %s", me.name,
 	    sptr->name, chptr->chname);
 	return 0;
 }

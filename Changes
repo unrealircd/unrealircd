@@ -512,3 +512,4 @@
 - Fixed a little /chghost bug
 - Fixed a SJ3 bug with ban syncing to SJ2 servers
 - Fixed some cloak bugs(???)
+- Made it so you can /knock without a reason, and a few /knock cleanups
