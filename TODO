@@ -33,3 +33,18 @@ TODO :
 * stskeeps - Tue Dec 12 2000 - 1 - [ Bugfixes/Hash ]:
     Check for possible hash bug with del_from_client_table or something
     People still complain about crashes
+
+* stskeeps - Wed Dec 13 2000 - 10 - [ Bugfixes ]:
+[[r00t3d](~lok70@168.213.226.rox-62220)] The other one, is lets say you are on
+          server (a), and you set +p to your channel. All the users on Server
+          (b,c, etc..) when they do a /list can see the +p channel in the
+          list. Now if I set it wih chanserv ie.. mlock +ntp, it doesn't do
+          that.. ON all servers (a,b,c) no one sees the +p channel in /list
+          unless they are in the channel allready. 
+    Solution: Fix send_list to use PubChannel instead of SecretChannel
+
+* stskeeps - Wed Dec 13 2000 - 10 - [ Bugfixes ]:
+[[r00t3d](~lok70@168.213.226.rox-62220)] If you are set +I (Tech
+          Admin/Network Admin) and you are set +q/+a in a channel. When someone /whoises
+          you hey see the channel names: *#channel ^#channel.
+  Fix /whois ShowChannel code
