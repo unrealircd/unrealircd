@@ -351,4 +351,5 @@ CFLAGS="$CFLAGS -D_AMIGA -m68040"
 CFLAGS="$CFLAGS -D_AMIGA -m68060"
 ;;
 esac
-AC_OUTPUT(Makefile crypt/Makefile src/modules/Makefile)
+AC_OUTPUT(Makefile crypt/Makefile src/modules/Makefile unreal)
+chmod 0700 unreal

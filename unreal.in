@@ -2,7 +2,7 @@
 
 if [ "$1" = "start" ] ; then
 	echo "Starting UnrealIRCd"
-	./ircd
+	@BINDIR@
 
 elif [ "$1" = "stop" ] ; then
 	echo "Stopping UnrealIRCd"
