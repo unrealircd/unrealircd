@@ -3140,7 +3140,7 @@ int  m_part(cptr, sptr, parc, parv)
 					sptr->user->virthost :
 					sptr->user->realhost),
 					chptr->chname);
-				if (!is_chan_op(cptr, chptr)) 
+				if (!is_chan_op(sptr, chptr)) 
 					sendto_one(sptr, ":%s!%s@%s PART %s",
 						sptr->name,
 						sptr->user->username,
@@ -4164,8 +4164,10 @@ int  m_names(cptr, sptr, parc, parv)
 		if (IsHiding(acptr) && acptr != sptr)
 			continue;
 		if (chptr->mode.mode & MODE_AUDITORIUM)
-			if (!is_chan_op(sptr, chptr))
-				if (!(cm->flags & CHFL_CHANOP) && acptr != sptr)
+			if (!is_chan_op(sptr, chptr) && !is_chanprot(sptr, chptr) && 
+			    !is_chanowner(sptr, chptr))
+				if (!(cm->flags & (CHFL_CHANOP | CHFL_CHANPROT | CHFL_CHANOWNER))
+			            && acptr != sptr)
 					continue;
 
 		if (cm->flags & CHFL_CHANOP)

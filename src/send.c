@@ -385,7 +385,7 @@ void sendto_chanops_butone(aClient *one, aChannel *chptr, char *pattern, ...)
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
 		acptr = lp->value.cptr;
-		if (acptr == one || !(lp->flags & CHFL_CHANOP))
+		if (acptr == one || !(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)))
 			continue;	/* ...was the one I should skip
 					   or user not not a channel op */
 		if (MyConnect(acptr) && IsRegisteredUser(acptr))
