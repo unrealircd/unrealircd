@@ -1299,3 +1299,4 @@ seen. gmtime warning still there
 - Added some new network files (hopefully I'll be able to get all the submissions added soon)
 *** beta10 released ***
 - Added a config check to see which (if any) gethostbyname_r exists (based on a macro by Caolan McNamara)
+- Removed some SOCKS scanner debug code that was forgotten

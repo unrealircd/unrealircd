@@ -235,7 +235,6 @@ void	scan_socks4_scan(Scan_AddrStruct *h)
 		goto exituniverse;
 		return;
 	}
-ircd_log(LOG_ERROR, "%s:%d - (Connection Established)", Inet_ia2p(&h->in), SCAN_ON_PORT);
 	
 	/* We wait for write-ready */
 	tv.tv_sec = xScan_TimeOut;
