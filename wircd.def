@@ -1,6 +1,7 @@
 ; dlltool --output-def wircd.def.in --export-all-symbols SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ SRC/S_CONF.OBJ SRC/FDLIST.OBJ SRC/DBUF.OBJ SRC/CLOAK.OBJ SRC/HASH.OBJ SRC/PARSE.OBJ SRC/IRCD.OBJ SRC/S_NUMERIC.OBJ SRC/WHOWAS.OBJ SRC/S_AUTH.OBJ SRC/HELP.OBJ SRC/S_MISC.OBJ SRC/MATCH.OBJ SRC/CRULE.OBJ SRC/S_DEBUG.OBJ SRC/SUPPORT.OBJ SRC/LIST.OBJ SRC/S_ERR.OBJ SRC/PACKET.OBJ SRC/S_BSD.OBJ SRC/S_SERV.OBJ SRC/S_USER.OBJ SRC/VERSION.OBJ SRC/RES_INIT.OBJ SRC/RES_COMP.OBJ SRC/RES_MKQUERY.OBJ SRC/RES_SKIPNAME.OBJ SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/MD5.OBJ SRC/EXTBANS.OBJ
 EXPORTS
 	find_Command_simple
+	AllUmodes
 	AllowClient
 	AuthTypes
 	Auth_Check
@@ -26,6 +27,7 @@ EXPORTS
 	DCCdeny_add
 	DCCdeny_del
 	DeleteTempModules
+	DoEvents
 	DoesOp
 	EXTMODE_NONOTICE
 	EventAddEx
@@ -181,6 +183,7 @@ EXPORTS
 	Versionflags
 	WHOWAS
 	WHOWASHASH
+	WSAErrors
 	__ircd_dn_skipname
 	_match
 	add_Command
@@ -190,6 +193,7 @@ EXPORTS
 	add_banid
 	add_client_to_list
 	add_connection
+	add_dccallow
 	add_entropy_configfile
 	add_exbanid
 	add_history
@@ -282,6 +286,7 @@ EXPORTS
 	conf_alias
 	conf_allow
 	conf_allow_channel
+	conf_allow_dcc
 	conf_badword_channel
 	conf_badword_message
 	conf_badword_quit
@@ -364,16 +369,19 @@ EXPORTS
 	dbuf_put
 	dbufalloc
 	dbufblocks
+	dcc_isdiscouraged
 	dcc_isforbidden
 	dcc_sync
 	dcc_wipe_services
 	debuglevel
 	debugmode
+	decode_ip
 	default_class
 	default_fdlist
 	del_Command
 	del_ListItem
 	del_banid
+	del_dccallow
 	del_exbanid
 	del_from_channel_hash_table
 	del_from_client_hash_table
@@ -400,6 +408,7 @@ EXPORTS
 	e_check_fdlists
 	e_clean_out_throttling_buckets
 	e_unload_module_delayed
+	encode_ip
 	events
 	exit_client
 	expire_cache
@@ -424,7 +433,6 @@ EXPORTS
 	fast_badword_replace
 	find_Command
 	find_CommandEx
-	AllUmodes
 	find_by_hash
 	find_chasing
 	find_client
@@ -526,7 +534,10 @@ EXPORTS
 	iNAH_host
 	ident_failed
 	inet_netof
+	inet_ntop
+	inet_pton
 	inetntoa
+	inetntop
 	inetport
 	infotext
 	init_CommandHash
@@ -658,6 +669,7 @@ EXPORTS
 	off_history
 	oflagbuf
 	oflagstr
+	on_dccallow_list
 	op_can_override
 	oper_access
 	oper_fdlist
@@ -690,6 +702,7 @@ EXPORTS
 	rejoin_dojoinandmode
 	rejoin_doparts
 	remove_client_from_list
+	remove_dcc_references
 	remove_local_client
 	remove_oper_snomasks
 	remove_server_from_table
@@ -739,11 +752,13 @@ EXPORTS
 	sendto_connectnotice
 	sendto_failops
 	sendto_failops_whoare_opers
+	sendto_fconnectnotice
 	sendto_locfailops
 	sendto_match_butone
 	sendto_match_servs
 	sendto_message_one
 	sendto_one
+	sendto_one_nickcmd
 	sendto_opers
 	sendto_opers_butone
 	sendto_ops
@@ -780,6 +795,8 @@ EXPORTS
 	smotd_tm
 	smycmp
 	snprintf
+	sock_strerror
+	spamf_ugly_vchanoverride
 	spamfilter_getconftargets
 	spamfilter_gettargets
 	spamfilter_inttostring_long
@@ -852,5 +869,3 @@ EXPORTS
 	whowas_next
 	write_pidfile
 	zlinebuf
-	encode_ip
-	decode_ip
