@@ -690,7 +690,7 @@ struct User {
 	char *away;		/* pointer to away message */
 	TS   last;
 	u_int32_t servicestamp;	/* Services' time stamp variable */
-	int  refcnt;		/* Number of times this block is referenced */
+	signed char refcnt;	/* Number of times this block is referenced */
 	unsigned short joined;		/* number of channels joined */
 	char username[USERLEN + 1];
 	char realhost[HOSTLEN + 1];
@@ -810,7 +810,7 @@ struct Client {
 	long umodes;		/* client usermodes */
 	aClient *from;		/* == self, if Local Client, *NEVER* NULL! */
 	int  fd;		/* >= 0, for local clients */
-	int  hopcount;		/* number of servers to this 0 = local */
+	unsigned char hopcount;		/* number of servers to this 0 = local */
 	short status;		/* Client type */
 	char name[HOSTLEN + 1];	/* Unique name of the client, nick or host */
 	char username[USERLEN + 1];	/* username here now for auth stuff */
@@ -932,9 +932,9 @@ struct SMode {
 	char key[KEYLEN + 1];
 	char link[LINKLEN + 1];
 	/* x:y */
-	int  msgs;		/* x */
-	int  per;		/* y */
-	unsigned short kmode;	/* mode  0 = kick  1 = ban */
+	unsigned short  msgs;		/* x */
+	unsigned short  per;		/* y */
+	unsigned char	 kmode;	/* mode  0 = kick  1 = ban */
 };
 
 /* Message table structure */
@@ -1011,7 +1011,7 @@ struct Channel {
 	char *topic;
 	char *topic_nick;
 	TS   topic_time;
-	int  users;
+	unsigned short users;
 	Link *members;
 	Link *invites;
 	Ban *banlist;
@@ -1103,7 +1103,7 @@ struct Channel {
                 find_channel_link((blah->user)->channel, chan)) ? 1 : 0)
 
 struct FloodOpt {
-	int  nmsg;
+	unsigned short nmsg;
 	TS   lastmsg;
 };
 

@@ -581,4 +581,9 @@
 - Fixed the G:line bugs, i hope - moved tkl_sweep into a loopstruct
 - Removed the ERR_NOTONCHANNEL message =P
 - Made some memory cleanups on the command list (saved 268 bytes)
-- More memory cleanups
+- More memory cleanups, changed aClient->refcnt to a signed char,
+  aClient->hopcount to unsigned char
+- Changed aChannel->mode.msgs & .per to unsigned short, and changed
+  .kmode to unsigned char
+- Changed aChannel->users to unsigned short (max 65536 users per channel)
+  and FloodOpt->nmsg to an unsigned short
