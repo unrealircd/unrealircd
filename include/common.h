@@ -47,11 +47,9 @@
 #endif
 
 #ifdef DEVELOP_CVS
-#define ID_CVS(x) static char id_cvs[] = x
 #define ID_Copyright(x) static char id_copyright[] = x
 #define ID_Notes(x) static char id_notes[] = x
 #else
-#define ID_CVS(x)
 #define ID_Copyright(x)
 #define ID_Notes(x)
 #endif

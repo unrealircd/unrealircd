@@ -26,7 +26,6 @@
 #include "sys.h"
 #include "h.h"
 
-ID_CVS("$Id$");
 ID_Copyright("DALnet & Techie");
 ID_Notes("6.20 7/5/99");
 

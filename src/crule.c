@@ -42,7 +42,6 @@
 char *collapse PROTO((char *pattern));
 extern aClient *client, *local[];
 
-ID_CVS("$Id$");
 ID_Copyright("(C) Tony Vincell");
 
 #else

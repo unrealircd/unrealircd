@@ -63,7 +63,6 @@ extern float currentrate2;
 extern ircstats IRCstats;
 extern char	*me_hash;
 
-ID_CVS("$Id$");
 static void exit_one_client PROTO((aClient *, aClient *, aClient *, char *));
 static void exit_one_client_in_split PROTO((aClient *, aClient *, aClient *,
     char *));

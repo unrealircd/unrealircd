@@ -25,7 +25,6 @@
 static char sccsid[] = "@(#)s_err.c	1.12 11/1/93 (C) 1992 Darren Reed";
 #endif
 
-ID_CVS("$Id$");
 
 /* Redone to be similar to bahamut's s_err.c -- codemastr */
 

@@ -44,7 +44,6 @@ static char sccsid[] = "@(#)s_auth.c	1.18 4/18/94 (C) 1992 Darren Reed";
 			/* define it (BSD4.2 needs this) */
 #include "h.h"
 
-ID_CVS("$Id$");
 /*
  * start_auth
  *

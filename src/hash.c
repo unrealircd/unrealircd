@@ -25,7 +25,6 @@
 #include "hash.h"
 #include "h.h"
 
-ID_CVS("$Id$");
 ID_Copyright("(C) 1991 Darren Reed");
 ID_Notes("2.10 7/3/93");
 

@@ -25,7 +25,6 @@
 #include "msg.h"
 #include "h.h"
 
-ID_CVS("$Id$");
 ID_Copyright
     ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
 ID_Notes("2.12 1/30/94");

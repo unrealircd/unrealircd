@@ -34,7 +34,6 @@
 #include <time.h>
 #endif
 
-ID_CVS("$Id$");
 ID_Copyright("(C) 1993 Darren Reed");
 ID_Notes("DF version was 1.9 1/30/94");
 

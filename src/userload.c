@@ -39,7 +39,6 @@
 #endif
 #include "h.h"
 
-ID_CVS("$Id$");
 
 struct current_load_struct current_load_data;
 struct load_entry *load_list_head = NULL, *load_list_tail = NULL,

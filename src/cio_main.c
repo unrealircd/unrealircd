@@ -5,7 +5,6 @@
 #include "Cio.h"
 #include "CioFunc.h"
 #include "common.h"
-ID_CVS("$Id$");
 
 CioLine *CioMakeLine(CioLine * Prev, CioLine * Next)
 {

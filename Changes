@@ -530,3 +530,4 @@
   Config, and all the things we want them to read/do to compile the IRCd
 - Updated PREFIX Client Protoctl
 - Added ^MrMike^'s command list, this one will be updated
+- Removed ID_CVS, hopefully fixing some bastard stuff

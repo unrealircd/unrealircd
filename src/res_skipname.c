@@ -3,7 +3,6 @@
 #include "nameser.h"
 #include "common.h"
 
-ID_CVS("$Id$");
 /*
  * Skip over a compressed domain name. Return the size or -1.
  */

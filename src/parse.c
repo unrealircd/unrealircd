@@ -30,7 +30,6 @@ Computing Center and Jarkko Oikarinen";
 #include "struct.h"
 #include "common.h"
 
-ID_CVS("$Id$");
 ID_Copyright
     ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
 ID_Notes("2.33 1/30/94");

@@ -31,7 +31,6 @@ static char sccsid[] = "@(#)support.c	2.21 4/13/94 1990, 1991 Armin Gruner;\
 #include <io.h>
 #else
 
-ID_CVS("$Id$");
 
 extern int errno;		/* ...seems that errno.h doesn't define this everywhere */
 #endif

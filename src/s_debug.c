@@ -154,7 +154,6 @@ char serveropts[] = {
 #define ssize_t unsigned int
 #endif
 
-ID_CVS("$Id$");
 
 #ifdef DEBUGMODE
 static char debugbuf[1024];

@@ -34,7 +34,6 @@ static char sccsid[] = "@(#)res_init.c	6.14.1 (Berkeley) 6/27/90";
 #include "nameser.h"
 #include "resolv.h"
 
-ID_CVS("$Id$");
 /*
  * Resolver state default settings
  */

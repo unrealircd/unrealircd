@@ -54,7 +54,6 @@ Computing Center and Jarkko Oikarinen";
 #include <time.h>
 #endif
 
-ID_CVS("$Id$");
 ID_Notes("O:line flags in here");
 #include "h.h"
 #define IN6ADDRSZ (sizeof(struct IN_ADDR))

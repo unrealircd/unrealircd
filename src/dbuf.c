@@ -42,7 +42,6 @@
 #ifdef USE_DMALLOC
 #include "h.h"
 #endif
-ID_CVS("$Id$");
 ID_Copyright("(C) 1990 Markku Savela");
 ID_Notes("2.17 1/30/94 (C) 1990 Markku Savela");
 #if !defined(VALLOC) && !defined(valloc) && !defined(USE_DMALLOC)

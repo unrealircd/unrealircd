@@ -81,7 +81,6 @@ int  rr;
 
 #endif
 
-ID_CVS("$Id$");
 
 #ifndef IN_LOOPBACKNET
 #define IN_LOOPBACKNET	0x7f

@@ -42,7 +42,6 @@
 #include <fcntl.h>
 #include "h.h"
 
-ID_CVS("$Id$");
 ID_Copyright("(C) Carsten Munk 1999");
 
 time_t TSoffset = 0;

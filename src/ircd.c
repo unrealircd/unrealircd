@@ -61,7 +61,6 @@ Computing Center and Jarkko Oikarinen";
 #endif
 #include "version.h"
 
-ID_CVS("$Id$");
 ID_Copyright
     ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
 ID_Notes("2.48 3/9/94");

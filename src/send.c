@@ -38,7 +38,6 @@ static char sccsid[] =
 #include <io.h>
 #endif
 
-ID_CVS("$Id$");
 
 void vsendto_one(aClient *to, char *pattern, va_list vl);
 void sendbufto_one(aClient *to);

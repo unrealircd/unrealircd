@@ -3,7 +3,6 @@
 #include "Cio.h"
 #include "CioFunc.h"
 #include "common.h"
-ID_CVS("$Id$");
 
 //
 //  FUNCTION: Cio_Init(void)

@@ -23,7 +23,6 @@
 #include "numeric.h"
 #include "h.h"
 
-ID_CVS("$Id$");
 ID_Copyright("(C) 1990 Darren Reed");
 ID_Notes("1.4 6/28/93");
 

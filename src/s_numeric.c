@@ -31,7 +31,6 @@ Computing Center and Jarkko Oikarinen";
 #include "numeric.h"
 #include "h.h"
 
-ID_CVS("$Id$");
 
 static char buffer[1024];
 

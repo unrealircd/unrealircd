@@ -48,7 +48,6 @@ static char sccsid[] =
 #include <time.h>
 #include "h.h"
 
-ID_CVS("$Id$");
 
 
 static char buf[BUFSIZE];
