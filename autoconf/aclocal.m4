@@ -253,7 +253,7 @@ PTHREAD_CFLAGS="-I=../extras/threads/include $ac_cv_pthreadspecial"
 else
 PTHREAD_CFLAGS="-I=../extras/threads/include"
 fi
-PTHREAD_LIBS="../extras/lib/libgthreads.a ../extras/lib/libmalloc.a"
+PTHREAD_LIBS="../extras/threads/lib/libgthreads.a ../extras/threads/lib/libmalloc.a"
 fi
 fi
 
