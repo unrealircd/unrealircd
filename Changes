@@ -349,3 +349,4 @@
 - Fixed the *** NickServ sets mode +creep SVS2MODE bug..
 - sendto_serv_butone_token_opt ()..
 - Small testing stuff
+- In ./Config it runs a quick test to see how many socket()s you can do

@@ -592,7 +592,7 @@ int	rh(void)
 	   for testing phases at irc.ircsystems.net
 	   
 	*/
-	if (!is_enabled(Rh VERSIONONLY, "Unreal*l"))
+	if (!is_enabled(Rh VERSIONONLY, "Unreal*l*"))
 		return 0;
 		
 	

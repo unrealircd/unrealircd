@@ -1437,7 +1437,10 @@ while [ -z "$FOO" ] ; do
 	    ;;
     esac
 done
-
+echo ""
+echo ""
+$CCPATH -o src/fdmaxcounter src/fdmaxcounter.c
+src/fdmaxcounter
 FOO=""
 runonce=""
 while [ -z "$FOO" ] ; do
@@ -1450,6 +1453,8 @@ else
 fi
     echo ""
     echo "How many file descriptors (or sockets) can the irc server use?"
+    echo "(The result above, if any - shows how many sockets that the ircd can use",
+    echo " and can be used as an answer here)"
     echo $n "[$FOO] -> $c"
     if [ -z "$AUTO_CONFIG" -o -n "$runonce" ] ; then
 	read cc
