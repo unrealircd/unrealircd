@@ -2056,3 +2056,4 @@ seen. gmtime warning still there
 - Added some missing /stats flags to help.conf and the /stats ? output (#0000886) reported
   by Rocko
 - Fix for set::restrict-channelmodes (eating parameters).
+- Made it so if someone /who's you and you are +p it doesn't show the channel you are on
