@@ -1,0 +1,966 @@
+*** Unreal3.0-Morrigan(fix) ***
+* NOTE: If your system clock is wrong you will have problems with TOPICs
+  being set on all servers. That is because TOPICs which are _new_ are 
+  taken instead of old
+- Fixed +f not banning when * is specified
+- Fixed +q (chan owners) not being able to set +L (partially fixed)
+- Fixed /tsctl segfaulting the server
+- Fixed the killing bug. The cause was that when m_mode was called in the
+  NICKv2 parsing routine, it sent out a :nick MODE :+x which was an unknown 
+  nick, and the NICK was being sent just after, causing it to kill the user
+  (was a _huge_ bastard to find)
+- If someone changes their nick to irc and WebTV is enabled, problems
+  occur FIX: deny change to that in m_nick (bug fixed)
+- Added lost unrealircd.bmp.gz file
+- Removed the old Elite host masking code, wasn't even in use
+
+*** Unreal3.0-Morrigan ***
+- Added the new GUI main coded by DrBin, first coding by {X}
+- Added v64net.network
+- Added 972-scripterz.network
+- Made NO_FDLIST compilation work as well
+- Fixed DCCDENY bug (p->mask, p->mask) (*slaps sts*)
+- +F not flood off if netsplit happens
+- Made TODO, made "Unable to write tunefile" show an error if *nix
+- Added stormdancing.network
+- send.c sendto_realops problem solved
+- Fixed a segfaulting bug in /tsctl reported by x-wartech
+- Fixed segfaulting bug with -oh bounce stuff in channel.c reported by Dana
+- Fixed +q bug reported by several people, inc DrBin
+- Added networks/fireirc.network
+- Fixed +f * option not banning correctly
+- Fixed fdlist on win32 problem
+- Added /HTM for high traffic mode status (partially added)
+- Added networks/digitalirc.network
+- G:lines expire every 5th second now
+- /stats T now show incoming and outgoing rate
+- Some HTM stuff
+- Some release stuff
+- Fixed up some NICKv2 stuff, more faster stuff:)
+- Moved old Changes stuff to Changes.old
+- Made so /path ~path or ".."'s in T:lines arent possible
+- Made it so certain files ie ircd.conf,oper.motd, unrealircd.conf, ircd.log
+  can't be used in a T:line
+- Added dynconf option to specify SOCKS kill message & ban message & bantime
+- Fixed SOCKS exception bug (!!)
+- Fixed some indention in dynconf.c and a memory leak problem (what were you
+   smoking code?:P)
+- iNAH bugfixes( call them fixes and ill smash you;))
+- Recoded color striping to be ALOT more accurate and faster
+- Using hybrid IsMember()
+- Fixed +F bug (again)
+- Added FDlists, does those work on win32?
+- De-Potvinized addline, addmotd, and addomotd (should run faster)
+- Made addline, addmotd, addomotd display to the user what was written
+- Removed /snote and /snotes (no one used them)
+- GPL stuff
+- Some comestic tkl fixes..
+- Fixed +F bug
+- Made +F connect notices more bandwidth friendly, 
+  only bad things:
+    - Not showing port in connect +F
+    - On servers rejoin you get +F flooded (will be fixed in an later
+       release)
+- Made ALLOW_CHATOPS a unrealircd.conf option rather than a #define
+- Fixed a bug where you had to be +AC to see adminchats
+- chatops, adchat, nachat, techat, wallops no longer require a leading :
+- More TKL stuff..
+- m_chatops uses sendto_umode now, and also removed sendto_chatops
+- Remote rehashes now support the - flags, ex -dcc, -vhost etc
+- Fixed more G:Line stuff
+- Fixed G:Line bug with not expiring correctly - thanks Dark-Prince for
+  being guinea pig, and to JojoII for finding it
+- Fixed +ix remote bug reported by RevPsych
+- /list can now make opers see +s channels
+- Did some SJOIN2 work..
+- Fixed /whois bug with WHOIS_Channels
+- Fixed a minor, yet annoying bug in the dynconf version system, thanks to GoNiS
+- Fixed bug: EpicII stripping too much of /oper fail notice
+- Fixed bug: SJOIN TS Change notice should not show when (ts == oldts)
+- Fixed WEBTV_NONOTICE bug with CTCPs - thanks rjameson
+- Fixed +h can +o themselves bug, thanks to Mikey, HERZ and many other
+  people
+- Added TSP client/server
+- Fixed m_netinfo stuff..
+- Fixed a bug with the new m_names and +h (chanmode)
+- Removed .CHANGES.NEW2 - not in use anyways
+- Now using new m_names from bahamut by Lucas Madar (DarkRot)
+- Removed zombie code
+- Fixed up the MODE_ADMINONLY code
+- Fixed some bugs in can_send
+- Added TS Change notice to SJOIN
+- Fixed a +f bug, and fixed SJOIN resynch bug (serious)
+- Fixed up the remote rehash code a bit
+- Updated conf.doc
+- Added some WebTV stuff, read config.h
+- Removed the NO_DEFAULT_INVISIBLE define from config.h
+- Added MODE_I to unrealircd.conf, auto setting of +i when a user connects
+- Fixed a minor unrealircd.conf bug
+- Fixed up all SJOIN fuzz, made RESYNCMODES be 12
+- Fixed this bug:
+   * After sync on other server 
+      *** Stskeeps is using modes +oiwghsaHATcCreWIdt
+    should be:
+       Stskeeps is using modes +owghskaATcfrebW
+
+- Made unrealircd.conf option to hide U:lines from non-opers in /links
+- Updated the unrealircd.conf and all the .network files to support the
+  version system, and for unrealircd.conf to support HIDE_ULINES
+- Made a versioning system for unrealircd.conf and *.network (This will
+  allow us to makesure _old_ versions are not being used when new features
+  are added to the files)
+- TKL/zap bugfix!!
+- Channel mode +H errors in numeric 459 now, coded by Rev_Null- thanks
+- Moved RPL_WHOISSPECIAL to 320
+- Another TKL bug.
+- TKL bug fixed
+- Made TKL backwards compatible
+- TKLs are now syncing
+- Bug fixes..
+- Fixed TKL<->GLINE protocol problems
+- Renamed chmode +I to +V as it screwed up some clients thinking it was
+  IRCnet..
+- Took out m_fjoin, not in use
+- Fixed up +e so it works with mIRC channel dialog now
+- Added channel mode +H, only setable by SkoAdmin, makes +I users unable to
+  join channel - code&thanks to RevPsych & Rev_Null
+- Removed all MegaIRC references
+- Fixed VHOST desynch bug..
+- Removed aGline record
+- Fixed some idention in msg.h
+- Fixed warning in s_misc.c
+- Removes /ns, /cs, /ms, /os, /hs commands (not in use)
+- Fixed bug where /statserv needed a : for more than one param
+- Fixed so that /trace only cloaks hostname if it is an oper
+- Fixed token non case sensitive problem
+- Fixed warning in mp2parv..
+- Fixed DEBUGMODE compile bug..
+- Fixed BOTMOTD bug..
+- Fixed some bugs (1.16->1.17) and removed aClient->user->host and replaced
+  it by realhost. Saves memory
+- Fixing up for beta release
+- Updated networks/networks.ndx
+- Reason in temp and static K:lines like |kc.gline will show user klined
+  file kc.gline (only legal names are |kc.*)
+- Added e:lines to the docs
+- Added solargalaxy.network
+- Fixed a minor +S (chanmode) bug
+- Fixed a bug where if a channel was +n it would display a
+  must be +v msg rather than no external msgs (thank Potvin for that one)
+- Made dccdeny's notice +e users when a file is rejected
+- Added NOTICE in m_sajoin/m_sapart (You were forced to join/part #)
+- Added e:lines, SOCKS check exception lines
+  format: e:ip (not hostname):*:*
+- Added doc/faq entry about debian on sparcs..
+- added debian sparc support (read doc/faq)
+- SJOIN sortof working. Straight testing needed
+- made /botmotd use NOTICE AUTH (so all bots will see it)
+- fixed NICKv2 umode field when no mode bug..
+- added T (TechAdmin) to the SMO flags
+- fixed a little _mistake_ in the /dusers error message
+- fixed a bug where +c (chanmode) blocked all privmsgs :P
+- m_sjoin compiled, need to make it unreal3.0 compatible
+- added include/sjoin.h for SJOIN stuff
+- Deleted :server prefix from SWHOIS burst.
+- Added UMODE_SETHOST (+t), and set NICKv2 up to only send when a real
+  virthost. Spares bandwidth:) +t is _not_ user setable
+- Removed UMODE_COFOUND, UMODE_WMASTER, not in use anymore.
+- Fixed up MODE_LINK, MODE_FLOODLIMIT syncronization,
+  you can mode do /mode # -lf without parameters
+- Gave Unreal correct orgin (df4.6.5)
+- Gave /stats N,S a header
+- Added network solarxtreme.network
+- /stats N returns .network file information
+- /stats S returns unrealircd.conf information
+- Added a virtualhost field to NICKv2
+- Updated conf.doc
+- Removed all traces of CLIENT_COMPILE
+- Some Linux-ALPHA support.. i need accces to a alpha box :P
+  Fixes done by Ramuh (irc.risanet.com) originally for UltimateIRCd, 
+  thanks to ShadowMastr for forwarding me..
+- Removed all traces of services.h..
+- NICKv2 working.. :)
+- Updated doc/faq slightly
+- Updated doc/example.conf with new lines an Oflags
+- Implemented NICKv2 (umode field in NICK)
+- Similar topics are sent along now .. was a bug ? (thanks Headbang,
+    WonderWal, etc)
+- Fixed up compile warnings
+- Fixed channel.c warning in can_join
+- Removed SHOW_PASSWORD define, not in use anymore
+- Removed USE_CASETABLES define, not in use anymore
+- Removed TIMED_KLINE define, not in use anymore
+- Added OPER_NO_HIDING define
+- Removed RelicNet +z, unreal isnt at use at relicnet anyways and 
+  i still dont believe that potvin _thought_ he could make them use it?
+  hah!
+- Added REMOVE_ADVERTISING define (off by default) , check include/config.h
+  and src/s_user.c (m_message) for more info (by ice)
+- Fixed channel name similarity bug reported by IXpfah
+- Comment on Nickflood/joinflood thing (stskeeps): Services can do that?
+- Fixed up some version.c.SH stuff
+- Added SJOIN protoctl for preparing for SJOIN
+- Split up PROTOCTL_SUPPORTED in PROTOCTL_SERVER and PROTOCTL_CLIENT
+- Added networks/uzaynet.network
+- NOTICE auth, tells you that it found a bad SOCKS.
+- Made umode +d work correctly
+- Made it so users can't see the RPL_WHOISCHANNELS for a
+  +I user
+- Fixed a bug in +I where a +I user couldn't see themself
+  in /names
+- Fixed a minor bug in /chgident
+- Added bot.motd support on +B and /botmotd
+- /join 0 now shows "Left all channels" in reason why left
+- Added +H umode, hides oper status
+  in /who /who 0 o /whois (so opers
+  can spy on a channel and no one knows
+- win32: s_socks.c small problem fixed
+- Fixed a bug in the new zline code
+- Fixed a typo in the Win32 socks check (oops)
+- (development) added TODO.maybe
+- Added /vhost login password
+  read the s_extra.c on vhost.conf format
+- vhost.conf, added /rehash -vhost
+- Removed s_user.c/m_message warning
+- SOCKS check functioning
+- Removed src/list2.c - not in use
+- Removed networks/agitated.network, no longer existing network
+- Added networks/bunker7.network
+- Deleted ircdbug
+- Renamed LICENCE to LICENSE
+- /version shows alpha while in development..
+- (development) added include/stamp.h for static development stamping
+- send.c optimations from ircu :)
+- Added codemastr as offical developer
+- Now using GPL v2
+- NOTICE AUTH problem solved, i hope
+- Took out UNIXPORT code
+- Removed traces of R_LINE* in config.h
+- SOCKS check in progress
+- Fixed the Blowbug
+- TSCTL svstime works now :P correctly that is
+- nick is using modes +rx
+  instead of "nick is using modes [+rx]
+- Removed some lame brackets
+- /close sendto_ops() now
+- Fixed small SVSNICK bug (.)
+- Fixed +L resync bug..
+- df4.6.7 SVSNICK - fixes desynchs
+- Took out all the R_LINES code
+- Took out all SERVICES_MODE code
+- Took out all USE_SERVICES code
+- Added .crjava patch by Fish read include/config.h for more info..
+- Added IRCu .ack patch you can now use "ONE" in password line in I:Lines
+  to ensure only one connecting from that kind of I:line per IP.
+- /Lusers <mask> is not working anymore.. took out possible flood thing..
+- /List - IRCops should be able to see +s now (thanks Headbang and others)
+- RPL_YOURHOST - Your host is server, running version x
+  Removed [hostname].
+- RPL_MYINFO now selfupdates when adding new modes (channel and user)
+- Fixed umodestring
+- Umode +d avail to everyone now:P
+- Fixed channel mode +r defunctional bug
+  (thanks to gdb and the coder-com people who learnt me to use gdb:P)
+- SVSFLINE <+/-/*> [mask] [reason]
+     + = add (mask + reason)
+     - = delete (mask)
+     * = wipe all services F:Lines
+  (13/12/1999 working.)
+- Fixed server<->server token problem
+- Moved /info data to m_info_send
+- Made SIGSEGV do core too.. MAIL THEM TO ME ALONG WITH THE src/ircd FILE
+  if it tells ya to! 
+- Fixed "GLINE @moo.org 10 :moo\r" G:Line bug (they haunt me)
+- New F:Line system (dccdeny.conf)
+- Removed OLD F:lines
+- Fixed up /stats f/F 
+- Made /rehash -dcc      = rehashes dccdeny.conf
+       /rehash -dyn      = rehashes dynamic configuration (RISK OF TERMINATE:P)
+       /rehash -rest     = rehashes channel restrict config chrestrict.conf
+- New channel restrict system
+  (chrestrict.conf)
+  # = comment
+  allow #moo             = can join #moo
+  msg message            = shows message when cannot join cos of allow
+
+
+-------------------------------
+|      Unreal2.1.7            | 
+-------------------------------
+RELEASE NOTES:
+** IF YOUR VERSION REPLY DOES NOT SAY UNREAL2.1.7+rs PLEASE REDOWNLOAD!! **
+* The announced GUI (UnrealIRCd/32) is going to be released around 
+  1-2 weeks after this release
+* If you experince any bugs PLEASE email me at stskeeps@tspre.org
+  or seek me at /server toybox.flirt.org - #unrealircd 
+  (savage.global-irc.net) and talk with me there
+------------------------------- 
+*** Unreal2.1.7+rs
+- Small win32 compilation problem fixed.
+- Changed snprintf references in channel.c to sprintf for compatiblity
+- Fixed RPONG bug
+- Changed version.h to Unreal2.1.7+rs
+*(released original)*
+- Fixed the U:line kill bug thingie.
+- Fixed up K: Z: & G: lines.
+- Fixed that bloody parse() lookup routine again..
+- /addline now shows who added what:P
+- New command lookup routine to support tokens etc.
+- Fixed the bloody blowbug - exit(-1) in remove_unknown()
+  :services.* SVSO nick -
+  == remove Oo and operflags:P 
+- FINALLY fixed svsmotd
+- Fixed umode +h thing :P
+- /stats O now show oper flags :>
+- Did PTR overflow thingie in res.c from PTlink IRCd (Lamego)
+  Thank you:)
+- /ADCHAT not to co-admins fixed..
+- Added Channel Mode +f (Flood)
+    Example: 
+       +f 5:10 <- Will kick a user non-oper & non-chanop if saying >= 5
+                  lines in 10 secs
+       +f *5:10 <- Will do the same just ban the user using *!*@virthost
+                   instead
+  Idea from ircbr improved thou (thanks _Jozeph_)
+- Added in doc/tao.of.irc - read it! its funny
+- Made IRCops possible to see realhosts in /whowas..
+  (suggested by many people)
+- Added F:Lines by _Jozeph_ (jozeph@globalmedia.com.br)
+  They check if DCC sends are allowed f.x so you can do 
+  F::You are infected with dmsetup.exe - seek help at http://www.vira.org:dmsetup.exe
+  (i think)..
+- Fixed setname cosmetic bug..
+- Added SWHOIS.. contact me for more info on this feature:P
+- Fixed 66.6% services maybe IRCd 66.6% CPU bug..
+  (damn m_topic to hell)
+- Fixed the +C Server Administrator bug.
+- Made the whois notice be "***"'ed
+- Made it possible for U:lines to join any channel under RESTRICTCHAN
+- Fixed +qa +ov stuff 
+- Fixed restart bug
+- Fixed the mysterious kill questionmark bug.
+- Z:Line wrong network name fixed.
+- Fixed the hopefully last G:Line bug.
+- Changed version to Unreal2.1.6-tCx3.miscfix
+- unP 2109 
+- Added RESTRICTCHAN define. r:?channelname  will enable people non-opers
+  only to go to r:lined chanels. Example: r:?chatzone
+** Unreal2.1.6-tCx3 ***
+- Fixed small G:Line bugs
+- Fixed +I bug. ANYONE could use it.
+- Fixed watch bug?
+- Fixed +L bug with numeric.
+- Fixed KILL virthost bug.
+- Similar AWAY's are now not spread out (strcmp)
+- SMO can now be like "SMO oO" - added some more flags.
+- Upgraded to unProto 2107
+- Fixed wrong IP cloakin'
+- Fixed really wierd identd bug
+- Fixed remote rehashes
+- Added remote restarts. (/RESTART password server.* reason)
+- Max local users & TStiem is now kept (tunefile)
+- Did some facelifiting
+** Unreal2.1.6-tCx2 (Bugfix) **
+* Okay I can't keep promises anymore regarding Unreal releases
+* so if there isnt coming one out for some time im working on Mercury
+* If you need help ./server irc.global-irc.net #UnrealIRCd.
+[Done:]
+- Y2k Bugfix. /Time didnt work
+- G:Line expire bug fixed. <= !!! >=
+- +I bug fixed. Was restricting ^ to netadmins/techadmins
+- chmode +e memory leak bug fixed. (sub_channel)
+- Fixed /userhost hostname revealing bug.
+- Fixed +a not working bug.
+- Fixed wierd +e bug (send_mode_list)
+- Fixed some version.c.SH stuff
+- Fixed possible +x bug.
+  (this may be a iNAH one).
+- Added SAPART, SVSPART, CHGIDENT
+
+** Unreal2.1.6-tCx **
+   I hoped you enjoy this IRCd as much as I did
+   when I made it (yes that bad :>) So .. 
+   Any support can be given at my e:mail or at
+   #UnrealIRCd @ irc: irc.global-irc.net
+
+         Seeya in the future!
+         *vaporizes* -Techie 
+]
+QUOTE OF THE RELEASE:
+*** You have been killed by operator Potvin Elite!HSE-TOR-ppp38181.sympatico.ca!Potvin (.)
+* (v:Lines not included yet.. would be too hard and delay too much) 
+- Fixed CHGHOST BUG. Thanks to vim.
+- Fixed umode +S bug.
+- Removed obsolete admin.invisible.patch .. due to recode of +I
+- Fixed possible DCC error with +x.. (USERHOST)
+  Gardien-de-reves found this:)
+- Fixed up +I . OFLAG required (^)
+- SMO A - Server admins.
+- Changed unprotocol to 2106
+- Changed version from Unreal2.1.5-tabby2 to Unreal2.1.5-tCx
+- YAY! G:lines work!!!!
+- Added "N" flag to SMO - netadmin/techadmin
+- /userhost notices & showrealhost..
+- Banwalk notices..
+- +B umode now show up in /whois as RPL_WHOISBOT 335
+- Made OperTopic notices..
+- Fixed DEBUG/DEBUGMODE
+- Mandrake bugfix.. (PTlink)
+- Added SVSJOIN/SAJOIN . SVSJOIN copied from PTlink IRCd
+  (C) PTlink coders team.
+- Wildcards like C:*:password:*::32 must be the only one in the file
+    (this is a bug)
+- Made C/N & H:lines support wildcards
+  YAY! ;)
+- Fixed win32 stuff (ramuh.win32.patch for dal4.4.15 write != send)
+- Started on new CVS rep
+- Added some MegaIRC stuff
+- Disabled G:Line commands. Due to G:Line bug.
+- IPs +x = 0.0.0.network-chksum
+- Added +I patch for admins, coded by me, idea by Hedge
+- Managed to retrieve my old s_user.c :P~
+- Fixed notice on +I bug.
+- Fixed some remote rehash bug..
+- Added relinfo.h for release info.
+- Added some credits
+- Fixed oflag H / iNAH bug reported by Kyle
+  Thank you.
+- Added patches by }{ - extras/
+- Added "Real hostname: nick (hostname)" in Whois
+  (Patch by }{) =)
+- Added a couple of networks.
+- Added neohorizion network. 
+- Internal TSCTL function added.
+  /TSCTL OFFSET +|- time
+  will correct the internal IRC clock offset to be f.x -1242
+  (watch out with negative values- u will have to reconnect to the server)
+  /TSCTL TIME 
+  - will report TS report.
+- Fixed +q +a kick bug.
+- Fixed /GLINE wrong response.
+- Added amiga config support. Thanks to Mick & Sp^ 
+- src/chkconf screws up with X:Lines and T:Lines
+  (segfault) cannot fix bug.
+- G:Lines was tested by }{ and Sandman .. thank you
+  (worked:P)
+- Fixed up CHKCONF to fit T:Lines and new oper flags..
+- Fixed /stats t
+- T:hostmask:motd:rules
+  Patch by codemastr
+- no */~ prefix in /names
+- Fixed WIERD locop bug(showed +o at OTHER servers) ?? 
+- Fixed wierd channel resync bug (damn *='\0') to hell
+  (this involved +k and more..)
+  Reported by strtok(Erik)
+- missing "techadmin" dynconf bug fixed.
+  (reported by Syndicate and others)..
+- Wierd +q kick bug fixed.. I've never seen SUCH bad coding
+  (waste from Elite)
+- spreadout bug in SVSMOTD fixed.
+- cptr bug in chghost bug fixed
+- nick_user_host in G:line reply
+  & a possible cause of G:Line spreadout crash
+^^ Unreal2.1.5-tabby patch ^^
+* YOU MAY NEED TO RECONFIGURE UNREALIRCD.CONF*
+- "Full channel" on link now not shown .. LINKED CHANNEL message shown
+  instead.. 
+- Fixed +l bug plus more..
+- KLINE_ADDRESS null bug fixed.
+- #define STATS_ONLYOPER makes /stats oper-only .. 
+- +L can now be taken off with +l not set.
+- +I join/part missing addys fixed.. Thanks to Sp^ and Mick
+- +I activation doesnt show up for non-ops .. only for NA/TE
+- E:Line comments now show up
+  (E:host:comment:user)
+  /stats E and /stats K with E:Lines work OK now
+- -D_AMIGA lets you compile Unreal on AmigaOS now.
+  Made by Sp^ given to me by Mick..
+- To Erik: /names # show hidden users if you are net/techadmin 
+  Yes.. it's not a bug;)
+- codemastr is now official win32 maker of 2.1.5 wether
+  he wants it or not. 
+- win32 compiling patches by codemastr done.
+- OperMOTD config file option ..
+- Fixed G:Line spreading bug (switched parameters)
+- SVSMOTD shown correctly now.. END OF MOTD not shown if there wasnt any
+  local motd
+*** Unreal2.1.5 *** (10 August 1999) 
+- E:Lines not shown correctly.. (in stats E)
+- ADDLINE, SVSMOTD, OPERMOTD bugs fixed, T:Line stats fixed
+- Added usermode +I - NetAdmin/TechAdmin only
+  Can join/part channel without being noticed
+- Server<->Server bug fixed
+- DOMAINNAME no longer static
+- Client->Server bug fixed.. :P
+- I would like to apoligze for all that havoc 2.1.3,4 caused..
+  It worked on my box so I thought I knew it worked other places. 
+  (Which it didnt)
+- IRCops can now see +sp channels in /list..
+- WIN32 is not sured to work in this version.
+*** Unreal2.1.3 *** (5 August 1999 - took 14 days so far)
+|-----------------------------------------|
+| RELEASE NOTES:                          |
+|-----------------------------------------|
+^ Unreal2.1.3 is highly incompatible with uProtocols < 2103 (unreal2.1.3)
+^ /DUsers is deactivated in this version due to Aiiee! Segmentation Fault :P
+^ 2.1.2 never was released and thank god for that...  (cos of bugs)
+^ Mailing list not active yet, e-mail stskeeps@Mp3Fans.net for more info
+^ I HIGHLY RECOMMEND YOU TO USE FULL O:LINE FLAGS INSTEAD OF  
+  "*" - as its easier to prevent abuse of stuff
+[Done: ]
+- Removed scripts/
+- G:lines should work now and i still friggin hate em :P
+- G:line as owner of G:Line now fixed..
+- G:Lines "setby" is now in nick!user@real/virthost
+- Fixed G:Lines again... i friggin hate those:P
+- Fixed chmode +sp mode (reported by Avenger12)
+- Added anti-fake squit kill again .. 
+- Win32 stuff
+- Config.c
+- Fixed small SMO bug + server-go-mental-when-squit bug .. 
+  (missed a { } )
+- SENDUMODE is aliased to SMO server<->server to lower bw usage
+- Removed annyoing EliteIRCd reference in ./makeconf
+- Hub, halfhub, leaf option in ./Config
+- Unreal compiles under LinuxPPC (iMac) (thanks to Amgine)
+- ./ircdbug made to bug reports
+- Added MegaIRC as network
+- ./ircdreg now also chmod +x'ed on makedist..
+- ./ircdreg working, $nick bug fixed ($nickname it should be)
+- /ChgHost fixed up to be alike the set* family.. in checking (sorry SL7!!)
+- Made /Knock show hostname now..
+- G:Lines minus bug fixed.. reported by NonMortal (O_x)
+- G:Lines are now double chained..more failsafe
+- NEWNET working OK
+- Statement: +L is working:))
+- Fixed sethost/inah bug reported by Erik.. (!(setflags & UMODE_HIDDEN))
+- G:Line bugfixed.. (thanks to Erik.. which network with 6 servers segfaulted:P)
+- Numeric 62* -> 64* for Zero compatibility.. 
+- Added IRCd Registration script (just so i know people actually use it :P)
+- /Info bug found .. I think! (when did i add a rpl_str ??)
+- Removed dynconf.c warning..
+- Uhm dynconf system actually works now but /info crashes..
+- Made NOSPOOF seeds STATIC :(
+- Bugfixed %#channel .. works now .. (compiles :P~)
+- Added newsgroup news://the.elite-hacker.cx/irc.unreal-ircd
+- /notice %#channel for halfops.. 
+- /notice +#channel now sends to halfops as well :P
+- Dynconf stuff
+- Changed networks configs to use new format:)
+- UnrealIRCd/32 shows up as UnrealIRCd/32 v2.1.3 in win32
+- /StatServ is now able to send without @stats.*
+  If your statserv is secure define STATSERV_ABSOLUTE
+  (secure in accepting StatServ@Stats.* privmsgs)
+- Did some dynconf stuff
+- elite.c is now called cloak.c
+- Static Linking of setting is gone now. (sorry) - use configuration file
+- One more +L try.. this was a FULLCHANNEL recode in can_join ..
+^ Added Agitated.net in networks.default
+^ Made doc/History directory
+* Added doc/faq
+- Agents can now join so many channels they want to >;)
+- Added IRCd Agents ground code (umode 'Z' oflag 'S' UMODE_AGENT)
+- Netinfo detect TS-splits now .. (endsync < sendsync)
+- /Names now show chan owners as * chan prots as ~
+  Example:
+    #Global *Roxxon ~Stskeeps @Shmad %Helper +Voice Peon
+- Win32: Made the motd/rules window works.
+   to porters: Please put ircd.motd / ircd.rules samples together with the port
+- +L still not even working .. 
+- Stats for t:lines added.
+- /Stats T != /stats t
+- T:Lines work. (recoded to use find_tline)
+- /DUsers disabled due to bug. (will be back later)
+- Using different nick collision style by binary (to fit with twilight)
+- Fixed addnet bug (forgot cat << so results didnt even get emailed to me)
+- Fixed some iNAH bugs (yes ihateNetadminAnnoyingHosts =P )
+  (this may be the one you had trouble with michael ..)
+- +L bug attempted once more (Yes I know Elite has fixed it but Potvin
+   made it commercial)
+- is_halfop checks if user is already channel operator .. :P
+- Added Anti-Commercial note
+- Topics now bounces.. (binary)
+- Fake kills by SQUIT not able to anymore (fix by binary from twilight ircd)
+- Now using more cryptic version number system .. 
+- Win32 hCio compatibility fixed..
+- Made /DUSERS
+- Removed make devserv1 & devserv2 support
+- Added TODO file as we are developing
+- Added /ADDMOTD, /ADDOMOTD
+  Shaped up the /ADD* family
+  NOTE: ADDMOTD is the one pointing to the real MOTD 
+  (so T:Line support is Shell/file stuff)
+- Added T:Line support
+  T:hostmask:path(or relative) pointing to MOTD
+  Read from the bottom and up .. so beware..
+  /stats T added as well
+- E:Lines comments are now shown =P
+*** Unreal2.1.2 *** (22 July 1999)
+- alpha(1) Symbolic link to Unreal2.1.2
+- Doing HEAVY CVS'ing.. 
+- NA/TE/AD chat uses sendto_umode now .. MORE stable i think 
+  (THANKS to fourcorners.global-irc.net for finding this bug :P)
+- Okay.. rolling to alpha(1) now.. 
+- Opermotd done.. /OperMotd .. auto shown when /opering up as well
+*** Unreal2.1.1 *** (21 July 1999)
+** ROLLING back to 2.1.1 as +q bug found.
+- +F - Global connect notices:)) (waaste of bandwidth)
+- +q bugfixed.. 
+- Having a go making some +q bugfixing (umode)
+*** Unreal2.2-alpha(1) *** (21 July 1999)
+- SENDUMODE added .. for servers only
+- Starting on alpha(1).. 
+*** Unreal2.1.1 *** (21 July 1999)
+- server settings(dynamically) are in progress. not active in 2.1.1 as
+  of some bugs in the main IRCd hybrid
+- Made so non-opers cannot see machine info in /version
+- Moved Elite.Changes to doc/
+- Made ./Config remove core after Config..
+- Added remote rehash by binary..
+  (net/tech admins only)
+- Sigsegvs are globops'ed now .. :P
+- Fixed /KNOCK <no # prefix> :reason sigsegv bug
+- Accidently removed ircop-can-pass-bans in 2.1 .. activated now
+  with customization possibility
+- REMGLINE bug fixed? (strchr or some strange stuff) ?
+- Added credits, raised protocol number (2101)
+- MYOSNAME in win32 = 'Win32'
+- Win32 Porters -- look in config.h
+  (WIN32_SPECIFY) - It's wIRCd port credits to standardize stuff more
+- Made the "version" field in win32 work (-1?!)
+- Having a go making server settings be chosen as dynamically or static
+  (and no im not ripping off elite)
+- Changed version.h a tad
+*** Unreal2.1+win32(2) *** (14 July 1999)
+- This is a Windows only release
+  Fixing of win32.c szAppName bug + TITLEAPP
+  + case missing ":"
+  + Win32 port credits goes to Magic_Wizard & {X}
+- #define MYOSNAME "Windows" in Config.c output
+- millitime() may be not precise cos of lack of gettimeofday
+  little patch applied
+*** Unreal2.1 *** (12 July 1999)
+- TODO before release (Unreal2.1 now)
+  * Establisment of help channels with more.
+- NETINFO actually WORKS now ! :P
+- HIDE_ULINES defined makes U:lines be hidden for non-opers in /links & /map
+- Improved NETINFO - Calcs synctime as well
+- Fixed email addy again :/
+- Didn't add UPING cos I am not able to make UDP sockets  
+  (due to lack of knowledge from my side)
+- Added RPING/RPONG (from Undernet IRCd) made by Run (Carlo Wood)
+- Added some stuff to readthis.now
+- "kill" in root of unreal dist is now called killircd
+- Now using TerraIRCd's +x with some modifications to work better
+  Therefore pre(8)+terra[x]
+- Fixed FUNNY set family bug ( /setident :)
+- Fixed writeout bug in Config networks part
+- Changed /KILL messages a tad
+  "Local kill by %s" -> "[<servername where its local>] Local kill by %s"
+  Now sends to UMODE_KILLS on all kills - b4 it was sendto_ops !! :P
+  More proper IsHidden() behaviour
+- Moved Bot/Coder stuff lower down in /whois
+- Fixed BREPORT a bit (messages)
+- Changed ban messages a bit
+- Pre(8) should originally be called Pre(7.2)+elinefix
+   as i added E:Lines in it
+- NOTE: Elite.c hostcloaking will be recoded in 2.1.1
+- Doing a little main cleanup of stuff
+  * Bugs fixed:
+    - Setname and family bug fixed
+    - Halfop_mode mysteriously disappeared.. halfop mysterious bug fixed
+    - malloc->MyMalloc in m_gline to prevent faults that c7 has got
+    - Fixed 'cc' bug in makeconf
+    - changed missing # bug in Config
+    - wIRCd(UnrealIRCd/32) fixed target too fast bug
+    - Fixed small HALFHUB bug in ./Config
+    - Fixed re-init of hashtables in set_mode (stack bug)
+    - Fixed svskill bug
+    - SNote Family bug fixed:
+         cleaned up "%s:***" -> "%s :***"
+         Where has that P*coder learnt to make NOTICES??
+    - NETINFO bug fixed (the max global count setting != max_global_count
+          but lu_mglobalu; (also in s_serv.c)
+    - Segfault when +N doing TECHAT fixed (done (sendto_techat))
+  * Someone tell me parv[parc - 1] is the element of parc.. 
+  * Removed some flushes from rehash @ s_conf.c
+  * /mode #channel ^ lists info about current mode (+ bitstring)
+	Added ListBits(<long>, <maxbitlength>
+  * Co-admins are not spread out with globops anymore
+  * Changed some stuff in config.c
+  * Added some return 0; 's in channel.c
+  * UnrealIRCd/32: Added some stuff to About menu
+  * Added /License to show GNU License
+  * Added include/license.h with the GNU license:)
+    We are the GNU Generation remember?
+  * When a helpop is away it doesn't show "available for help"
+    (ive changed "looks very helpful" btw!)
+  * Netadmins/techadmins can only set umode +q now
+  * Server admins / Server Co-Admins can use /SDesc
+  * Added Mp3fans net to networks
+  * Having a go making the /raw help system
+    * Help system changed a tad.. so we can do ircd -H :)
+    * ./manual is ircd -H now .. 
+    * Manual now checks if ircd is compiled
+    * Converted help.c to text ;) (doc/unreal.doc)
+  * Fixed some TAB's
+  * Added some hush reference.. not sure if I'm gonna use it yet :P
+  * Recoded /lag removed /lagrpl
+    - /Lag only for Opers (local & global)
+    - Returns in a SNOTICE  *** Lag reply -- <server1> <searchedserver> <unixtime>
+      from every server the lag command passes before reaching searchedserver
+      This can be used to trace timestamp errors
+  * Fixed the rpl-umodes/chmodes avail
+  * Changed email addy
+  * Recoded G:line system + fixed small gline syncro bug 
+  * Tried applying a simple fix for the +L line bug >;)
+    This only allows people to bounce 5 times thou but > 5 would be excessive?!
+  * Fixed Y2k Bug in /Time (date())
+  * Added halfhub option to addnet
+  * Made EYES notice when doing a operkick (IRCops can do this now as well)
+  * Fixed REMGLINE bug (cosmetic!)
+  * Fixed expire bug
+  * Changed unrealmanual to use fgets to avoid warning
+  * Added umode +1 (UMODE_CODER) - For opers (ircops, locops only)
+  * Fixed networks who want to use @netadmin.network.net by #define iNAH
+  * Added E:Lines (doesn't pass G:Lines)
+    Same format as K:Lines.. can be viewed using /Stats K
+  * Removed the sendto_ops("*** Set<name>") stuff in the set family.. 
+    cos it would require a total recode to fix it :P
+  * Made notice on SDESC
+  * I will do 1-2 tries to fix the +L bug b4 releasing Unreal2.1 in total
+    at 14th July <my birthday>.. So until then its disabled cos it doesn't
+    work :/
+*** Unreal2.1c7 *** (1 July 1999)
+[ I got a feeling that UnrealIRCd is soon able to be released:)
+  No bugs found yet except them already fixed.. so .. N'joy:)
+  This is prolly gonna be the last c version of 2.1:)
+  I'm doing some cleanup of the IRCd atm just to tighten things up
+  I've already started finding new ideas for Unreal2.2 .. 
+  so .. I hope you will enjoy what I've made - cos I'm
+  heading off for a little non-programming holiday soon .. 
+  (which I deserve after all!) ] --Techie
+- Fixed G:Line stuff again ;) - Its fixed now
+- Added a ":" to s_err.c / ERR_NOTFORHALFOPS
+- By this G:lines are both incompatible with < Unreal2.1c7 and EliteIRCd
+- GLINE server<-> server is now :servername GLINE user@host unixtime_for_expire maker :reason
+- Moved m_knock from channel.c to s_unreal.c
+- Fixed some semi-memoryleaks .. G:Lines not using MyMalloc() & MyFree()
+  Where has that coder learnt IRCd programming??
+- Recoded m_gline a tad.. fixed some general dropholes
+  Expirelag can only exist now when time is incorrect
+- Fixed small G:line bug made by me..
+- Fixing message outputs a bit at G:lines stuff
+  + file outputs in gline.log
+- Added error when doing mode not for halfops
+  (numerics) ERR_NOTFORHALFOPS (460)
+- Got rid of cflags[] as we made new system
+- Fixed small server_estab bug with sethost that made
+   services and non-+x people get virthost:P
+- Using twilight ircd match.c by binary- another good job
+- Fixed spelling mistake (the old dusty erroneus)
+- Removed m_bm from s_user.c
+- Made halfhub support
+- Fixed up on tokens
+*** Unreal2.1c6 *** (30 June 1999)
+- Recoding m_knock replies a tad to use numerics
+- Added numeric 480 (ERR_CANNOTKNOCK)
+- Made simple anti-354 (so i wont use it by accident!)
+- Fixed make_mode_str bug - What was needed:
+    - a 1024x768 resolution
+    - two "joe's"
+    - and a !( ) :P - LOL!!!
+- Made alias for numeric 223 (RPL_STATSGLINE) and changed it to be
+  "G " at start to fit with format of /stats K
+- Fixed /StatServ bug + m_knock "dunt have to use " : " + in setname
+- +L will first be activated in 2.2 thou - sorry!
+- Tried to make my own implementaion of +L (maybe more sucky but it maybe works!)
+- Customizing can_join a little to be more fair with ADMONLY and alike
+- Changed m_version & RPL_VERSION to do version(IRCNETWORK)
+- Changed version.h again a tad
+- Incorporated IsMember patch for m_knock by codemastr
+*** Unreal2.1c5 *** (29 June 1999)
+- Fixed modesystem make_mode_str bug .. halfops can now ban people as well
+- Fixed numeric 001 a tad.. (%s!%s@%s)
+- Changed NACHAT to go to both na's & te's
+  TECHAT goes only to TE's
+- Added /Credits ;) for unreal ircd credits
+- Added /DALINFO again for dalnet credits 
+- Fixed the modesystem bug ;)
+- Changed version.h a tad
+- Make kill messages to +k be virthost
+  if u #define SHOWREALHOSTATKILL in config.h it will send
+  *** /Kill victim was nick!user@host
+- Made halfops able to use +b, +e & alike
+- Fixed +h-can-kick-+o-bug
+- Having a go at making channel flags "long"
+- Diagnosis on overlap bug: unsigned int ! WTF not "long" channel modes?
+- Fixed +hv bug in m_names (put halfop higher than voice)
+- Fixed /whois non-% bug
+- Chmode +Q is now ok - U:lines can kick
+  - reported by codemastr, SL7 and others
+- wIRCd is now called UnrealIRCd/32 in the UnrealIRCd wIRCd version:)
+- Changed s_segv message
+- Made /stats G use numerics
+  (Numeric 223 - No name) "%s@%s %d %s :%s"
+	"user@host secsback madeby :reason"
+- Fixed addnet
+- Made STATS_SERVER networks.h option
+- Chmode +S .. overlaps?
+- Done some win32 support..
+  mkpasswd disabled in win32
+- Done Apple MacOS X Server support
+- Fixed some version.h stuff
+ (version is  Unreal2.1c5+(win32)=Global-IRC f.x for win32 compiling at Global-IRC)
+- "DALINFO" -> "CREDITS"
+- Made "New max global" in m_netinfo
+- Changed version to 2.1c5
+
+*** Unreal2.1c4 *** 
+- Fixed +S & IP in kill message
+- Fixed NA/TEchat
+- Fixed watch hidden hostname bug
+- Fixed rehash bug
+- Fixed setname & clones bug (length)
+- Fixed m_knock bug (flags & banned)
+- Fixed silly +l bug (i forgot it!)
+- Changed version to 2.1c4
+- NETINFO <maxglobal> :network name
+  fixed! when server_estab it has the same maxglobal over all net
+- Re-etablish glines when server_etablish (done)
+- G:Lines always expire SAME time over ALL network
+- +L will be back in 2.2
+- Disabled +S (didn't work!) will be back in 2.2
+- Added to s_err.c
+/* 620 */       RPL_DUMPING, ":Dumping clients matching %s",
+/* 621 */       RPL_DUMPRPL, "%s %s %s %s %c",
+/* 622 */       RPL_EODUMP,  ":End of /dusers - %i",
+- Added numerics RPL_DUMPING(620), RPL_DUMPRPL(621) & RPL_EODUMP(622)
+- Removed OFLAG_PASSER from old can_join thingie.. not any use
+- Fixed rehash bug
+    (flush_connections(me.fd) b4 anything breaks loose)
+- Fixed Opermode bug
+   (silly! =))
+- Added SIGSEGV handling - Why didn't it have it before ??
+- Having a go at removing the Rehash Bug
+- Having a go at opermode as well
+- Noinvite works (chmode +I)
+- /knock # reason   - if +i && !MODE_NOKNOCK
+  - :servername NOTICE @# :[Knock] requested by <nick> (reason)
+- Added channel mode MODE_NOKNOCK ('K') & MODE_NOINVITE ('I')
+- Fixed silly except ban bug ;) (b instead of e)
+- Added m_statserv / statserv - behaviour is in config.h .. (good old :))
+- Removed automatic syslog logging? (why was it on anyways??)
+- Okay .. what to do now is = Bug testing/compiling and all that ****:P
+- Made GLIBC 2.x support (RH6.0) 
+- (b) Okay - I have skipped the support of channel mode +L
+  I will make a better implementation somekind before release
+- Having a go to add the elite modes of ch
+- Added OperMode [IRCop (and so on) to new modesystem
+- Added +SHE to channels mode of numeric of modes avail 
+- Hmm .. in my implementation of +h 
+  Can a halfop do:
+   o Kick non-ops
+   o Set topic
+  Cannot:
+   o Kick ops
+   o Set modes (this includes +b & +e & +v & +o)
+- Added +e (works)
+- Fixed svsnoop bug (fix by binary)
+- Okay.. after messing around making my own channel mode system,
+  I found a great re-coded one made by binary - (garryb@binary.islesfan.net)
+  from the Twilight / DarkFire IRCd - I will keep who wrote it and so on and 
+  add "Exception bans & Elite IRCd modes support made by Stskeeps" to it 
+    To binary: GREAT JOB!=)) 
+- Having a go at intregating twilight mode system.. done?
+- Removed some EliteIRCd references..
+
+*** Unreal2.0-buggy ***
+- Have fixed Chanmode +S (?)
+- Made /who notice for +W
+- Hmm . nachat works for TECHADMINS as well .. It sends to TechAdmins
+  as well now - And techadmins can as well ... TECHAT sends to umode
+   techadmin & netadmin .. and allows both (decision?)
+- Rehash bug shouldnt be a case (?)
+- Make /who <x> o notice (to helpops)
+- Customized can_join .. take a look in channel.c
+- Okay I both tested and looked into the whois bug .. I will say
+  it was fake :( If you ever get the "Permission Denied" on a whois.. 
+  email me
+
+*** Unreal2.0c1 ***
+- Now is Unreal 2.0 RELEASED (1.99b(ug))
+- /sdesc :desc  - RENAME server description (Server admin ONLY)
+- Disabled +S again will be back at 2.1
+- q+A & Q+A bug (or alike) bug fixed
+  (changed MODE_OPERONLY to 0x20000)
+  (changed MODE_ADMINONLY to 0x40000)
+  (changed MODE_NOKICKS to 0x80000)
+- changed +B whois reply to "Bot is a \2bot\2 on <network>"
+- changed version to Unreal2.0c13.1
+- Moved new features to s_unreal.c + included from s_user.c
+- Made error message for sethost too long error
+- Restricted sethost to be a-z, A-Z, 0-9, '-' & '.'
+  (inc error message)
+- /setident <ident> made - restricted to same as sethost + '~'
+- /setname <name> made - :) No restrictions except length
+- Fixed RPL_MYINFO line to be updated
+- +P umode can now pass bans (noone else!)
+- Fixed channel_modes system to be more fast (may fix some client bugs as
+  well?)
+- Made chanode +S (strip colours)
+  (took from Terra IRCd hybrid) - added MODE_STRIP (+S)
+   (wif some modifications)
+- /lag <servername> should work
+- Dammit! There's TWO characters in the token system *slaps himself*
+  Now using it 
+
+*** Unreal2.0.beta13 ***
+- Removement of bold stuff with more.
+- Removement of @hostname.network.net for opers
+  (this includes auto +x on oper up (?))
+  (replaced by manually /sethost)
+- Addition of /sethost <host> for IRCops
+- /nachat <message> sends out to all Network Admins
+- /techat <message> sends out to all Technical Admins
+- Removement on whois notice - replacement to if you
+  want it - umode +W
+- Change of some whois stuff
+  (bold stuff and some text)
+- Removement of IPs in /links
+- Channel mode +O - IRCop only channel
+- Channel mode +A - Admin only channel
+- User mode +q - Cannot be kicked (?)
+- Channel mode +Q - No kicks able (?)
+- numeric 470,265,266 removed bold stuff    --sts
+  (in 265,266 - the []'s too)
+- Virthost patchin' for netsplit..
+  (m_server_etabl or something)
+- /sethost done
+  (+ removement of the admin.network.net stuff -- Do it MANUALLY people! ;)
+- msg.h - Use of "?" token 4ever - token system is not active
+  (ran out of token space)
+- Auto +x on oper up removed - (UMODE_HIDE in m_oper)
+  (replace by sethost)
+- Whois mode +W stuff made
+- /nachat & /techat made 
+- Removed bold stuff from WHOIS_OPERATOR reply in whois .. 
+  + "Services Bot" -> "Network Service"
+- Removed the "IP" stuff in SERVER connect (/links)
+- ONLY NetAdmins can go through bans now (can_join)
+- Added numeric 519, 520 (ERR_ADMONLY, ERR_OPERONLY)
+- Added mode +O & +A
+  (+O is for IRCops only)
+  (+A is for Server admins - tech admins & Co admins )
+- Usermode +q added - only settable by services admins(+A)
+  not sure if it works - +q umode ppl cannot be kicked
+  except by servers/ulines
+- Oper ircd.conf flag H & W  - H is auto +x - W is auto +W
+- HelpOp flag in ircd.conf gives auto +h now (on oper up)
+- +B flag - Shows "nick" is a bot 
+- Fixed the sethost "long-hostname" bug... + sent umode to user as well
+- NetAdmins||Techadmins can set channels to b +O and +A
+- U:line bug in usermode +q fixed - U:lines can now kick +q users as well
+- Channel mode +Q - No kicks able unless by Services/U:Lines
+
+** Started base off Elite2.0b13 by Potvin **
