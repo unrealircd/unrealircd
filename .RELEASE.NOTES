@@ -1,11 +1,11 @@
 
-Unreal3.2-Selene (BETA13) Release Notes
+Unreal3.2-beta13 Release Notes
 ======================================
     
      I M P O R T A N T   R E A D I N G
 (YES, YOU WILL NEED TO READ ALL OF THIS)
 
-* Unreal3.2-Selene is a lot different than Unreal3.1.1. Forget all you have
+* Unreal3.2 is a lot different than Unreal3.1.1. Forget all you have
   learned about setting up Unreal3.1.1 - this is a lot different. We have got
   a new configuration format that integrates all the former config files,
   ircd.conf, vhost.conf, chrestrict.conf, unrealircd.conf, into to one new

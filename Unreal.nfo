@@ -1,5 +1,5 @@
 ===============================================
-=            UnrealIRCd v3.2-Selene (beta12)  =
+=            UnrealIRCd v3.2 (beta13)         =
 ===============================================
  Was brought to you by:
 
@@ -10,10 +10,10 @@
   * Griever   <griever@unrealircd.com>
   * Luke      <luke@unrealircd.com>
   * nighthawk <nighthawk@unrealircd.com>
+  * McSkaf    <mcskaf@unrealircd.org>
 
   Coders team:
   ============
-  * McSkaf    <mcskaf@unrealircd.org>
   * Zogg      <zogg@unrealircd.org>
   * NiQuiL    <niquil@unrealircd.org>
   * assyrian  <assyrian@unrealircd.org>
@@ -65,4 +65,4 @@ latest devel:
   ==============================================
       http://bugs.unrealircd.org
 
-y
+

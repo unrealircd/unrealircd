@@ -107,8 +107,8 @@ char *unrealcredits[] =
 "value your donations. ",
 "",
 "Stskeeps would primarily like to thank Julie for her",
-"support through the years. See the page for a more extensive",
-"list of all the coders' credits.",
+"support through the years.  See the page for a more extensive",
+"list of all the coders' credits. ",
 "",
 "This IRCd is dedicated to those who have kept us rocking and", 
 "in good mood all through the years we've struggled with this"
