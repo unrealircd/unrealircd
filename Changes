@@ -3014,3 +3014,6 @@ seen. gmtime warning still there
 *** RC2fix release ***
 - spamfilter.conf: fixed fyle sig (was bad!), some minor updates to the rest,
   added mirc 6.12 exploit sig. Reported by PHANTOm.
+- Added a check to try and prevent people from adding all-encompassing
+  regexp's in /spamfilter. Thanks to Ville Laurikari for coming up with the
+  method!

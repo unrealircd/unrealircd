@@ -4681,7 +4681,7 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce) {
 		}
 		else 
 		{
-			char *errbuf = unreal_checkregex(word->ce_vardata,1);
+			char *errbuf = unreal_checkregex(word->ce_vardata,1,0);
 			if (errbuf)
 			{
 				config_error("%s:%i: badword::%s contains an invalid regex: %s",
@@ -4836,7 +4836,7 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 		errors++;
 	} else if (cep->ce_vardata) {
 		/* Check if it's a valid one */
-		char *errbuf = unreal_checkregex(cep->ce_vardata,0);
+		char *errbuf = unreal_checkregex(cep->ce_vardata,0,0);
 		if (errbuf)
 		{
 			config_error("%s:%i: spamfilter::regex contains an invalid regex: %s",

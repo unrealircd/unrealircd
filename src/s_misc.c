@@ -775,8 +775,10 @@ char *p;
 /** Checks if the specified regex (or fast badwords) is valid.
  * returns NULL in case of success [!],
  * pointer to buffer with error message otherwise
+ * if check_broadness is 1, the function will attempt to determine
+ * if the given regex string is too broad (i.e. matches everything)
  */
-char *unreal_checkregex(char *s, int fastsupport)
+char *unreal_checkregex(char *s, int fastsupport, int check_broadness)
 {
 int errorcode, errorbufsize, regex=0;
 char *errtmp, *tmp;
@@ -807,6 +809,12 @@ Ilovegotos:
 			regerror(errorcode, &expr, errtmp, errorbufsize);
 			strncpyzt(errorbuf, errtmp, sizeof(errorbuf));
 			free(errtmp);
+			regfree(&expr);
+			return errorbuf;
+		}
+		if (check_broadness && !regexec(&expr, "", 0, NULL, 0))
+		{
+			strncpyzt(errorbuf, "Regular expression is too broad", sizeof(errorbuf));
 			regfree(&expr);
 			return errorbuf;
 		}
