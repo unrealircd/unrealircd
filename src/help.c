@@ -96,42 +96,7 @@ int  parse_help(sptr, name, help)
 	}
 	else if (!myncmp(help, "ABOUT", 8))
 	{
-		HDR(" *** About UnrealIRCd ***");
-		SND("I started making UnrealIRCd about 3-4 months ago.");
-		SND("First it was called mpx2.0b13.soundforge - as I was");
-		SND("inspired of the 'forge' word. I quickly changed name");
-		SND("after I realized the IRCd had more potential for other");
-		SND("IRC nets. Unreal is based off df4.6.5 and some of");
-		SND("First lemme");
-		SND("introduce myself. My nick is Techie/Stskeeps. I hang");
-		SND("out at Global-IRC.net, DALnet, DragonWings.org and so on");
-		SND("--");
-		SND
-		    ("Unreal is a hybrid of Dreamforge (as I said) mixed with some");
-		SND
-		    ("Twilight IRCd, TerraIRCd, TS4 (channel mode +h & +e) features");
-		SND
-		    ("(IMHO TwilightIRCd is one of the best dreamforge hybrids I've seen!)");
-		SND
-		    ("Unreal is not a rip-off of other IRCds - I added a lot of features myself!");
-		SND
-		    ("I really cannot mention some major features as I think a IRCd is a");
-		SND
-		    ("IRCd when it has got useful commands- and people actually say mine has!");
-		SND("--");
-		SND
-		    ("Anyways I dunt demand donations or anything. I just do coding for fun");
-		SND
-		    ("I treat coding like playing with toys. It makes me happy(or is it just");
-		SND
-		    ("caffeine?;). An addy to send donations is at the Donation file in the IRCd dir");
-		SND("I would be more happy if someone e-mailed me with ideas");
-		SND
-		    ("to the IRCd.. The whole IRCd is GNU so if you want to rip off any of my ideas");
-		SND
-		    ("You are generally welcome:) Just remember to do what's said in the Changes file!");
-		SND("-- So.. Enjoy this IRCd:)");
-		SND("   -- Carsten Munk / Techie .. =)");
+		SND("Type /info for UnrealIRCd information   -- Carsten Munk / Techie .. =)");
 	}
 	else if (!myncmp(help, "WATCH", 8))
 	{
