@@ -1767,3 +1767,5 @@ seen. gmtime warning still there
   caused a seg fault.
 - Added some patches by Syzop to fix a variety of different bugs
 - Added some bugfixes for IPv6 and others by Syzop
+- Fixed a bug where leaving out the parameter to a password config entry would cause a
+  crash, reported by AngryWolf (#0000623)

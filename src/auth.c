@@ -91,8 +91,7 @@ int		Auth_CheckError(ConfigEntry *ce)
 	if (!ce->ce_vardata)
 	{
 		config_error("%s:%i: authentication module failure: missing parameter",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			ce->ce_entries->ce_varname);
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return -1;
 	}
 	if (ce->ce_entries)
