@@ -2786,4 +2786,8 @@ seen. gmtime warning still there
 - Fixed problems with Unreal using devices in a chroot'ed environment and ircd.pid problems
   with setuid/setgid, reported by thilo (#0001514).
 - Made /sajoin override modes (e.g. +bilk) reported by mcskaf (#0000518).
-
+- Fixed issue when 2 servers link with identical user@host *:lines but with different
+  expire times, reason field, etc... Entries are now fully synced between servers.
+  Reported by Cnils (#0001448).
+- Added umode +T to help.conf
+- Fixed an issue with add/del/remove in /spamfilter being case sensitive.

@@ -450,9 +450,9 @@ char targetbuf[64], actionbuf[2];
 	 * parv[3]: action
 	 * parv[4]: regex
 	 */
-	if (!strcmp(parv[1], "add") || !strcmp(parv[1], "+"))
+	if (!strcasecmp(parv[1], "add") || !strcmp(parv[1], "+"))
 		whattodo = 0;
-	else if (!strcmp(parv[1], "del") || !strcmp(parv[1], "-") || !strcmp(parv[1], "remove"))
+	else if (!strcasecmp(parv[1], "del") || !strcmp(parv[1], "-") || !strcasecmp(parv[1], "remove"))
 		whattodo = 1;
 	else
 	{

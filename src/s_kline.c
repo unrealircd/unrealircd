@@ -767,6 +767,9 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  else
 			  return 0;
 
+		  expiry_1 = atol(parv[6]);
+		  setat_1 = atol(parv[7]);
+
 		  found = 0;
 		  for (tk = tklines[tkl_hash(parv[2][0])]; tk; tk = tk->next)
 		  {
@@ -780,12 +783,47 @@ int m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				  }
 			  }
 		  }
-		  /* *:Line already exists, don't add */
+		  /* *:Line already exists! */
 		  if (found == 1)
+		  {
+				/* do they differ in ANY way? */
+				if ((setat_1 != tk->set_at) || (expiry_1 != tk->expire_at) ||
+				    strcmp(tk->reason, parv[8]) || strcmp(tk->setby, parv[5]))
+				{
+					/* here's how it goes:
+					 * set_at: oldest wins
+			 		 * expire_at: longest wins
+			 		 * reason: highest strcmp wins
+			 		 * setby: highest strcmp wins
+			 		 * We broadcast the result of this back to all servers except
+			 		 * cptr's direction, because cptr will do the same thing and
+			 		 * send it back to his servers (except us)... no need for a
+			 		 * double networkwide flood ;p. -- Syzop
+			 		 */
+					tk->set_at = MIN(tk->set_at, setat_1);
+					if (!tk->expire_at || !expiry_1)
+			 			tk->expire_at = 0;
+			 		else
+			 			tk->expire_at = MIN(tk->expire_at, expiry_1);
+			 		if (strcmp(tk->reason, parv[8]) < 0)
+			 		{
+			 			MyFree(tk->reason);
+			 			tk->reason = strdup(parv[8]);
+			 		}
+			 		if (strcmp(tk->setby, parv[5]) < 0)
+			 		{
+			 			MyFree(tk->setby);
+			 			tk->setby = strdup(parv[5]);
+			 		}
+			 		sendto_snomask(SNO_JUNK, "tkl update for %s@%s/reason='%s'/by=%s/set=%ld/expire=%ld",
+			 			tk->usermask, tk->hostmask, tk->reason, tk->setby, tk->set_at, tk->expire_at);
+			 		sendto_serv_butone(cptr,
+			 			":%s TKL %s %s %s %s %s %ld %ld :%s", sptr->name,
+			 			parv[1], parv[2], parv[3], parv[4],
+			 			tk->setby, tk->expire_at, tk->set_at, tk->reason);
+		      }
 			  return 0;
-
-		  expiry_1 = atol(parv[6]);
-		  setat_1 = atol(parv[7]);
+		  }
 
 		  /* there is something fucked here? */
 		  tkl_add_line(type, parv[3], parv[4], parv[8], parv[5],
