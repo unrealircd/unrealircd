@@ -3526,7 +3526,7 @@ fi
 if test "${with_bufferpool+set}" = set; then
   withval="$with_bufferpool"
   cat >> confdefs.h <<EOF
-#define BUFFERPOOL $withval
+#define BUFFERPOOL ($withval * MAXSENDQLENGTH)
 EOF
 
 else

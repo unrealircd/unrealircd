@@ -23,7 +23,7 @@
 #define	__config_include__
 
 #include "setup.h"
-#include "settings.h"
+
 /*
  *
  *   NOTICE

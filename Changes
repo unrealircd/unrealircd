@@ -578,3 +578,4 @@ seen. gmtime warning still there
 - Added NETWORK= numeric 005 token for mIRC 5.91
 - Fixed some scan-socks and blackhole fuckups
 - Added ./configure, autoconf generated configure script, (still need to update ./Config)
+- Config fixes, settings.h and Makefile.dist are now dead. RIP.

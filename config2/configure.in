@@ -271,7 +271,7 @@ AC_DEFINE_UNQUOTED(NICKNAMEHISTORYLENGTH,$withval), AC_DEFINE(NICKNAMEHISTORYLEN
 AC_ARG_WITH(sendq, [ --with-sendq=maxsendq     Specify the max sendq for the server],
 AC_DEFINE_UNQUOTED(MAXSENDQLENGTH,$withval),AC_DEFINE(MAXSENDQLENGTH,3000000))
 AC_ARG_WITH(bufferpool, [ --with-bufferpool=size     Specify the size of the buffer pool],
-AC_DEFINE_UNQUOTED(BUFFERPOOL,$withval),AC_DEFINE(BUFFERPOOL,[(9 * MAXSENDQLENGTH)]))
+AC_DEFINE_UNQUOTED(BUFFERPOOL,[($withval * MAXSENDQLENGTH)]),AC_DEFINE(BUFFERPOOL,[(9 * MAXSENDQLENGTH)]))
 
 AC_ARG_WITH(hostname, [ --with-hostname=host     Specify the local hostname of the server], AC_DEFINE_UNQUOTED(DOMAINNAME,"$withval"),AC_DEFINE_UNQUOTED(DOMAINNAME,"`hostname`"))
 AC_DEFINE_UNQUOTED(MYOSNAME,"`uname -a`")
