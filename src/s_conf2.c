@@ -1125,6 +1125,62 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 	add_ConfigItem((ConfigItem *)ca, (ConfigItem **) &conf_tld);
 }
 
+
+/*
+ * Report functions
+*/
+
+void	report_configuration(void)
+{
+	ConfigItem_admin	*admin_ptr;
+	ConfigItem_oper		*oper_ptr;
+	ConfigItem_oper_from	*from_ptr;
+	ConfigItem_class	*class_ptr;
+	
+	printf("Report:\n");
+	printf("-------\n");
+	if (conf_me)
+	{
+		printf("My name is %s and i describe myself as \"%s\", my numeric is %i\n",
+			conf_me->name, conf_me->info, conf_me->numeric);
+		
+	}
+	if (conf_admin)
+	{
+		printf("My pathetic admin is:\n");
+		for (admin_ptr = conf_admin; admin_ptr; admin_ptr = (ConfigItem_admin *) admin_ptr->next)
+			printf("        %s\n", admin_ptr->line);
+	}
+	if (conf_oper)
+	{
+		printf("My even more pathetic opers are:\n");
+		for (oper_ptr = conf_oper; oper_ptr; oper_ptr = (ConfigItem_oper *)oper_ptr->next)
+		{
+			printf("      %s (%s) :\n", oper_ptr->name, oflagstr(oper_ptr->oflags));
+			printf("        - Password: %s\n", oper_ptr->password);
+			printf("        - Class: %s\n", oper_ptr->class->name);
+			if (oper_ptr->from)
+			{
+				printf("        - He can come from (the grave):\n");
+				for (from_ptr = (ConfigItem_oper_from *) oper_ptr->from; from_ptr; from_ptr = (ConfigItem_oper_from *) from_ptr->next)
+				printf("          * %s\n", from_ptr->name);		
+			}
+		}
+	}
+	if (conf_class)
+	{
+		printf("I got some nice classes that i like to put servers or people in:\n");
+		for (class_ptr = conf_class; class_ptr; class_ptr = (ConfigItem_class *)class_ptr->next)
+		{	
+			printf("       class %s:\n", class_ptr->name);
+			printf("         * pingfreq: %i\n", class_ptr->pingfreq);
+			printf("         * maxclients: %i\n", class_ptr->maxclients);
+			printf("         * sendq: %i\n", class_ptr->sendq);
+		}
+	}
+}
+
+
 /*
  * Lookup functions
  * -Stskeeps
