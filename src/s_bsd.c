@@ -544,7 +544,7 @@ if ((bootopt & BOOT_CONSOLE) || isatty(0))
 }
 init_dgram:
 #endif /*_WIN32*/
-#ifdef NEWDNS
+#ifndef NEWDNS
 resfd = init_resolver(0x1f);
 #endif /*NEWDNS*/
 return;
