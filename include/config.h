@@ -112,7 +112,7 @@
 /*
    If you want to support chinese and/or japanese nicks
 */
-#undef CHINESE_NICK
+#define CHINESE_NICK
 #undef JAPANESE_NICK
 
 /*

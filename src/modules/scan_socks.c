@@ -183,7 +183,7 @@ void	scan_socks_scan(HStruct *h)
 	 */
 	set_non_blocking(fd, NULL);
 	if ((retval = connect(fd, (struct sockaddr *)&sin,
-		sizeof(sin))) == -1 && errno != EINPROGRESS)
+                sizeof(sin))) == -1 && errno != P_EINPROGRESS)
 	{
 		/* we have no socks server! */
 		CLOSE_SOCK(fd);	
