@@ -207,6 +207,13 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], nick, acptr->name);
 			chasing = 1;
 		}
+		if (!IsPerson(acptr))
+		{
+			/* Nick exists but user is not registered yet: IOTW "doesn't exist". -- Syzop */
+			sendto_one(sptr, err_str(ERR_NOSUCHNICK),
+			    me.name, parv[0], nick);
+			continue;
+		}
 		if ((!MyConnect(acptr) && MyClient(cptr) && !OPCanGKill(cptr))
 		    || (MyConnect(acptr) && MyClient(cptr)
 		    && !OPCanLKill(cptr)))

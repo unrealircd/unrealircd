@@ -2129,3 +2129,4 @@ seen. gmtime warning still there
 - Recoded the "version flag" system, it is now safe to have multiple modules that use the 
   same flag, new functions are VersionflagAdd and VersionflagDel they replace flag_add and
   flag_del
+- Fixed a local /kill bug during connection phase, reported by Gilou (#0000952).
