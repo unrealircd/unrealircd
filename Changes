@@ -1239,3 +1239,4 @@ seen. gmtime warning still there
 - Fixed a Chinese nick bug found and fixed by Xuefer
 - Fix with status needed for remote clients too. Found by
   Craig/FrostyCoolSlug <Craig@e-tidalwave.org>
+- Fixed m_oper setting +O on globops
