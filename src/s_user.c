@@ -3339,7 +3339,7 @@ int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 
 		sptr->class = aconf->class;
 		sptr->class->clients++;
-
+		sptr->user->oflag = 0;
 		if (aconf->swhois) {
 			if (sptr->user->swhois)
 				MyFree(sptr->user->swhois);

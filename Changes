@@ -821,3 +821,4 @@ seen. gmtime warning still there
 - Cleaned up NOSPOOF code a bit
 - Cleaned up /oper (a lot)
 - Fixed a bug where the /oper recode broke oper host masking (found by James-Bond)
+- Fixed something that could cause a possible bug in /oper ?
