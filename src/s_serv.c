@@ -831,6 +831,10 @@ ConfigItem_tld *tlds;
 		tlds->rules = read_file(tlds->rules_file, &tlds->rules);
 		if (tlds->smotd_file)
 			tlds->smotd = read_file_ex(tlds->smotd_file, &tlds->smotd, &tlds->smotd_tm);
+		if (tlds->opermotd_file)
+			tlds->opermotd = read_file(tlds->opermotd_file, &tlds->opermotd);
+		if (tlds->botmotd_file)
+			tlds->botmotd = read_file(tlds->botmotd_file, &tlds->botmotd);
 	}
 }
 
@@ -1214,6 +1218,20 @@ HUNTED_ISME)
 CMD_FUNC(m_opermotd)
 {
 	aMotd *temp;
+	ConfigItem_tld *ptr;
+	char userhost[HOSTLEN + USERLEN + 6];
+	strlcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost), sizeof userhost);
+	ptr = Find_tld(sptr, userhost);
+
+	if (ptr)
+	{
+		if (ptr->opermotd)
+			temp = ptr->opermotd;
+		else
+			temp = opermotd;
+	}
+	else
+		temp = opermotd;
 
 	if (!IsAnOper(sptr))
 	{
@@ -1221,16 +1239,15 @@ CMD_FUNC(m_opermotd)
 		return 0;
 	}
 
-	if (opermotd == (aMotd *) NULL)
+	if (!temp)
 	{
 		sendto_one(sptr, err_str(ERR_NOOPERMOTD), me.name, parv[0]);
 		return 0;
 	}
 	sendto_one(sptr, rpl_str(RPL_MOTDSTART), me.name, parv[0], me.name);
 	sendto_one(sptr, rpl_str(RPL_MOTD), me.name, parv[0],
-	    "\2IRC Operator Message of the Day\2");
+	    "IRC Operator Message of the Day");
 
-	temp = opermotd;
 	while (temp)
 	{
 		sendto_one(sptr, rpl_str(RPL_MOTD), me.name, parv[0],
@@ -1332,11 +1349,27 @@ aMotd *read_file_ex(char *filename, aMotd **list, struct tm *t)
 CMD_FUNC(m_botmotd)
 {
 	aMotd *temp;
+	ConfigItem_tld *ptr;
+	char userhost[HOSTLEN + USERLEN + 6];
+
 	if (hunt_server_token(cptr, sptr, MSG_BOTMOTD, TOK_BOTMOTD, ":%s", 1, parc,
 	    parv) != HUNTED_ISME)
 		return 0;
 
-	if (botmotd == (aMotd *) NULL)
+	strlcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost), sizeof userhost);
+	ptr = Find_tld(sptr, userhost);
+
+	if (ptr)
+	{
+		if (ptr->botmotd)
+			temp = ptr->botmotd;
+		else
+			temp = botmotd;
+	}
+	else
+		temp = botmotd;
+
+	if (!temp)
 	{
 		sendto_one(sptr, ":%s NOTICE %s :BOTMOTD File not found",
 		    me.name, sptr->name);
@@ -1345,7 +1378,6 @@ CMD_FUNC(m_botmotd)
 	sendto_one(sptr, ":%s NOTICE %s :- %s Bot Message of the Day - ",
 	    me.name, sptr->name, me.name);
 
-	temp = botmotd;
 	while (temp)
 	{
 		sendto_one(sptr, ":%s NOTICE %s :- %s", me.name, sptr->name, temp->line);

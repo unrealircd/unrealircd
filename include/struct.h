@@ -1128,9 +1128,10 @@ struct _configitem_ulines {
 struct _configitem_tld {
 	ConfigItem 	*prev, *next;
 	ConfigFlag_tld 	flag;
-	char 		*mask, *motd_file, *rules_file, *smotd_file, *channel;
+	char 		*mask, *motd_file, *rules_file, *smotd_file;
+	char 		*botmotd_file, *opermotd_file, *channel;
 	struct tm	motd_tm, smotd_tm;
-	aMotd		*rules, *motd, *smotd;
+	aMotd		*rules, *motd, *smotd, *botmotd, *opermotd;
 	u_short		options;
 };
 

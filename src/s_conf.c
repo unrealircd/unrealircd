@@ -1849,6 +1849,8 @@ void	config_rehash()
 		ircfree(tld_ptr->motd_file);
 		ircfree(tld_ptr->rules_file);
 		ircfree(tld_ptr->smotd_file);
+		ircfree(tld_ptr->opermotd_file);
+		ircfree(tld_ptr->botmotd_file);
 		if (!tld_ptr->flag.motdptr) {
 			while (tld_ptr->motd) {
 				motd = tld_ptr->motd->next;
@@ -1870,6 +1872,18 @@ void	config_rehash()
 			ircfree(tld_ptr->smotd->line);
 			ircfree(tld_ptr->smotd);
 			tld_ptr->smotd = motd;
+		}
+		while (tld_ptr->opermotd) {
+			motd = tld_ptr->opermotd->next;
+			ircfree(tld_ptr->opermotd->line);
+			ircfree(tld_ptr->opermotd);
+			tld_ptr->opermotd = motd;
+		}
+		while (tld_ptr->botmotd) {
+			motd = tld_ptr->botmotd->next;
+			ircfree(tld_ptr->botmotd->line);
+			ircfree(tld_ptr->botmotd);
+			tld_ptr->botmotd = motd;
 		}
 		DelListItem(tld_ptr, conf_tld);
 		MyFree(tld_ptr);
@@ -3683,6 +3697,16 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 			ca->smotd_file = strdup(cep->ce_vardata);
 			ca->smotd = read_file_ex(cep->ce_vardata, NULL, &ca->smotd_tm);
 		}
+		else if (!strcmp(cep->ce_varname, "opermotd"))
+		{
+			ca->opermotd_file = strdup(cep->ce_vardata);
+			ca->opermotd = read_file(cep->ce_vardata, NULL);
+		}
+		else if (!strcmp(cep->ce_varname, "botmotd"))
+		{
+			ca->botmotd_file = strdup(cep->ce_vardata);
+			ca->botmotd = read_file(cep->ce_vardata, NULL);
+		}
 		else if (!strcmp(cep->ce_varname, "rules"))
 		{
 			ca->rules_file = strdup(cep->ce_vardata);
@@ -3712,7 +3736,7 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 	int	    errors = 0;
 	int	    fd = -1;
 	char has_mask = 0, has_motd = 0, has_rules = 0, has_shortmotd = 0, has_channel = 0;
-	char has_options = 0;
+	char has_opermotd = 0, has_botmotd = 0, has_options = 0;
 
         for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -3805,6 +3829,46 @@ int     _test_tld(ConfigFile *conf, ConfigEntry *ce)
 			if (((fd = open(cep->ce_vardata, O_RDONLY)) == -1))
 			{
 				config_error("%s:%i: tld::shortmotd: %s: %s",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+					cep->ce_vardata, strerror(errno));
+				errors++;
+			}
+			else
+				close(fd);
+		}
+		/* tld::opermotd */
+		else if (!strcmp(cep->ce_varname, "opermotd"))
+		{
+			if (has_opermotd)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "tld::opermotd");
+				continue;
+			}
+			has_opermotd = 1;
+			if (((fd = open(cep->ce_vardata, O_RDONLY)) == -1))
+			{
+				config_error("%s:%i: tld::opermotd: %s: %s",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+					cep->ce_vardata, strerror(errno));
+				errors++;
+			}
+			else
+				close(fd);
+		}
+		/* tld::botmotd */
+		else if (!strcmp(cep->ce_varname, "botmotd"))
+		{
+			if (has_botmotd)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "tld::botmotd");
+				continue;
+			}
+			has_botmotd = 1;
+			if (((fd = open(cep->ce_vardata, O_RDONLY)) == -1))
+			{
+				config_error("%s:%i: tld::botmotd: %s: %s",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 					cep->ce_vardata, strerror(errno));
 				errors++;

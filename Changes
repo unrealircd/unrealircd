@@ -439,3 +439,5 @@
 - Added -advanced flag to ./Config to configure advanced options (#0002145) suggested by
   Bugz. As a result, some config.h options are now in ./Config -advanced.
 - Small fix for above
+- Added the ability to specify a botmotd and opermotd in a tld {} (#0000176) suggested by
+  swissSolaris.
