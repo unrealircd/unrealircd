@@ -1119,6 +1119,11 @@ int  m_sendumode(cptr, sptr, parc, parv)
 		  case 'T':
 			  sendto_umode(UMODE_TECHADMIN, "%s", parv[2]);
 			  break;
+		  case '*':
+		  	  sendto_all_butone(NULL, &me, ":%s NOTICE :%s", 
+			   	me.name, parv[2]);  	  	
+					  	  	 	 
+			  break;
 		}
 	}
 	return 0;

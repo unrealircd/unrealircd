@@ -4490,7 +4490,7 @@ aParv *mp2parv(char *xmbuf, char *parmbuf)
 /* Some ugly macros, but useful */
 #define Addit(x,y) modebuf[b] = x; strcat(parabuf, y); \
   strcat(parabuf, " "); \
-  if (b >= RESYNCMODES) \
+  if (b >= MODEPARAMS) \
   { modebuf[b + 1] = '\0'; sendto_serv_butone_sjoin(cptr, \
   	":%s MODE %s %s %s %lu", sptr->name, chptr->chname,  \
   	modebuf, parabuf, chptr->creationtime); \
@@ -5212,7 +5212,7 @@ static int send_ban_list(cptr, chname, creationtime, channel)
 		}
 		else if (*parabuf)
 			send = 1;
-		if (count == RESYNCMODES)
+		if (count == MODEPARAMS)
 			send = 1;
 		if (send)
 		{
@@ -5225,7 +5225,7 @@ static int send_ban_list(cptr, chname, creationtime, channel)
 			*parabuf = '\0';
 			cp = modebuf;
 			*cp++ = '+';
-			if (count != RESYNCMODES)
+			if (count != MODEPARAMS)
 			{
 				(void)strcpy(parabuf, name);
 				*cp++ = 'b';
@@ -5250,7 +5250,7 @@ static int send_ban_list(cptr, chname, creationtime, channel)
 		}
 		else if (*parabuf)
 			send = 1;
-		if (count == RESYNCMODES)
+		if (count == MODEPARAMS)
 			send = 1;
 		if (send)
 		{
@@ -5263,7 +5263,7 @@ static int send_ban_list(cptr, chname, creationtime, channel)
 			*parabuf = '\0';
 			cp = modebuf;
 			*cp++ = '+';
-			if (count != RESYNCMODES)
+			if (count != MODEPARAMS)
 			{
 				(void)strcpy(parabuf, name);
 				*cp++ = 'e';

@@ -204,3 +204,5 @@
 - Removed "on network" in /whois oper
 - Added code to makenet to stop fake submissions
 - Fixed some /whois channels code, which may break +I /whois
+- Fixed overflow in SJOIN
+- Added SMO *, all users
