@@ -157,7 +157,7 @@ case "$OS" in
         CRYPT_OPER_PASSWORD=""
         CRYPT_LINK_PASSWORD=""
 	CRYPT_ILINE_PASSWORD=""
-	CRYPT+XLINE_PASSWORD=""
+	CRYPT_XLINE_PASSWORD=""
         echo "You are using FreeBSD 4.0; You can use encrypted passwords now."
         ;;
     *FreeBSD*3*)

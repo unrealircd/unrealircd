@@ -1902,6 +1902,14 @@ int  do_mode_char(chptr, modetype, modechar, param, what, cptr, pcount, pvar,
 					      chptr->chname);
 				  break;
 			  }
+			  if (strchr(param, ','))
+			  {
+				if (MyClient(cptr))
+					sendto_one(cptr,
+					     ":%s NOTICE %s :*** You may only specify 1 channel to link to",
+					     me.name, cptr->name);
+				break;
+			  }
 			  if (!IsChannelName(param))
 			  {
 				  if (MyClient(cptr))

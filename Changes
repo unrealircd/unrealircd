@@ -461,3 +461,5 @@
 [recall]
 - Fixed the pesky hostname bug
 - Fixed a NO_OPEROVERDIE bug reported by Taz
+- Fixed a +L bug
+- Fixed a typo in Config
