@@ -57,8 +57,13 @@
 #include <openssl/ssl.h>
 #endif
 #ifdef INET6
+#ifndef _WIN32
 #include <netinet/in.h>
 #include <sys/socket.h>
+#else
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#endif
 #endif
 #ifndef GOT_STRCASECMP
 #define	strcasecmp	mycmp

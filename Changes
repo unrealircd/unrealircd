@@ -1357,3 +1357,4 @@ seen. gmtime warning still there
 - Added 005 token AWAYLEN= from ircu
 - Heavily updated INSTALL
 - Removed Win32 and READMENOW.Win32.txt (obsolete)
+- Started WinXP IPv6 support (added headers)
