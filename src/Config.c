@@ -198,7 +198,6 @@ int  main(int argc, char *argv[])
 	    ("To do win32 compiling copy include/win32/setup.h to include/\n");
 	printf("Copy include/win32/settings.h to include/ and modify it\n");
 	printf("and copy makefile.win32 to Makefile\n");
-//      return do_config(0);
 }
 
 

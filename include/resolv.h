@@ -72,7 +72,11 @@ struct state {
 #define RES_STAYOPEN	0x0100	/* Keep TCP socket open */
 #define RES_DNSRCH	0x0200	/* search up local domain tree */
 
+
 #define RES_DEFAULT	(RES_RECURSE | RES_DEFNAMES | RES_DNSRCH)
+#if ((__GNU_LIBRARY__ == 6) && (__GLIBC__ >=2) && (__GLIBC_MINOR__ >= 2))
+#define res_init __res_init
+#endif
 
 extern struct state _res;
 extern char *p_cdname(), *p_rr(), *p_type(), *p_class(), *p_time();

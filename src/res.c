@@ -5,7 +5,7 @@
  * loss of property which results from the use of this software.  Distribution
  * of this file must include this notice.
  */
-// *INDENT-OFF*
+/* *INDENT-OFF* */
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
@@ -1339,6 +1339,7 @@ ResRQ	*rptr;
 #ifndef _WIN32
 	if (!rptr->he.h_name || !rptr->he.h_addr.S_ADDR)
 #else
+	if (!rptr->he->h_name || !((struct in_addr *)rptr->he->h_addr)->s_addr)
 #endif
 		return NULL;
 	/*
@@ -1579,7 +1580,7 @@ char	*parv[];
 		aCache	*cp;
 	int	i;
 
-	if (parv[1] && *parv[1] == 'l') {
+	if (IsOper(sptr) && parv[1] && *parv[1] == 'l') {
 		for(cp = cachetop; cp; cp = cp->list_next)
 		    {
 			sendto_one(sptr, "NOTICE %s :Ex %d ttl %d host %s(%s)",

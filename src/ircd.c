@@ -338,7 +338,9 @@ VOIDSIG s_segv()
 			close(i);
 	}
 #endif
+#ifndef _WIN32
 	kill(p,SIGQUIT);
+#endif
 	exit(-1);
 }
 

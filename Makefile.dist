@@ -231,4 +231,8 @@ pem:	src/ssl.cnf
 	@echo "Generating fingerprint .."
 	$(OPENSSLPATH) x509 -subject -dates -fingerprint -noout \
 		-in server.cert.pem
-        
+
+	@echo "Setting o-rwx & g-rwx for files... "
+	chmod o-rwx server.req.pem server.key.pem server.cert.pem
+	chmod g-rwx server.req.pem server.key.pem server.cert.pem
+	@echo "Done!" 

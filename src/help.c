@@ -166,7 +166,7 @@ int  parse_help(sptr, name, help)
      SND(" N = Is a Network Administrator");
      SND(" T = Is a Technical Administrator");
      SND(" C = Is a Co Administrator");
-//   SND(" 1 = Is a coder");  Taken out
+/*   SND(" 1 = Is a coder");  Taken out */
      SND(" c = See's all Connects/Disconnects on local server");
      SND(" f = Listen to Flood Alerts from server");
      SND(" r = Identifies the nick as being Registered");
@@ -1488,7 +1488,7 @@ int  parse_help(sptr, name, help)
       SND(" TO <value> - Tell HTM at what incoming rate to activate HTM");
       SND(" -");
    }
-   else if (!myncmp(help, "REMGLINE", 8))  // Obsolete .. 
+   else if (!myncmp(help, "REMGLINE", 8))  /* Obsolete .. */
    {
       SND(" -");
       HDR(" *** REMGLINE Command ***");
@@ -1697,7 +1697,7 @@ int  parse_help(sptr, name, help)
 
 	}
 
-	else          // When no argument is specified .. - hAtbLaDe
+	else          /* When no argument is specified .. - hAtbLaDe */
 	{
       HLP(" -");
 	  HLP(" For help with the Services :");

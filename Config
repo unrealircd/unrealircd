@@ -11,7 +11,7 @@
 # distribution without the author's prior consent.
 #
 # $Id$
-IRCD_VERSION="Unreal3.1.1-Darkshades"
+IRCD_VERSION="Unreal3.1.3 Komara"
 CONF_DATE=`date`
 LAST_VERSION="very very old"
 #
@@ -1624,7 +1624,11 @@ while [ -z "$FOO" ] ; do
 done
 echo ""
 echo ""
-$CCPATH -o src/fdmaxcounter src/fdmaxcounter.c
+if [ "$OSNAME" = "Solaris 2.x (or SunOS 5.x)" ] ; then
+    $CCPATH -lsocket -o src/fdmaxcounter src/fdmaxcounter.c
+else
+    $CCPATH -o src/fdmaxcounter src/fdmaxcounter.c
+fi
 src/fdmaxcounter
 FOO=""
 runonce=""
@@ -1937,5 +1941,6 @@ cat << __EOF__
 | * Stskeeps  stskeeps@unrealircd.com                                 |
 | * codemastr codemastr@unrealircd.com                                |
 | * DrBin     drbin@unrealircd.com                                    |
+| * Luke      luke@unrealircd.org                                     |
 |_____________________________________________________________________|
 __EOF__

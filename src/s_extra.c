@@ -244,7 +244,7 @@ void report_flines(sptr)
 			a = 'o';
 		sendto_one(sptr, ":%s %i %s :%c %s %s", me.name, RPL_TEXT,
 		    sptr->name, a, filemask, reason);
-// sendto_one(sptr, ":%s NOTICE %s :*** (dcc) [%c] %-22s %s", me.name, sptr->name, a, filemask, reason);
+/* sendto_one(sptr, ":%s NOTICE %s :*** (dcc) [%c] %-22s %s", me.name, sptr->name, a, filemask, reason); */
 	}
 
 }
@@ -590,7 +590,7 @@ void cr_report(sptr)
 			a = 'o';
 		sendto_one(sptr, ":%s %i %s :%c %s", me.name, RPL_TEXT,
 		    sptr->name, a, filemask);
-//              sendto_one(sptr, ":%s NOTICE %s :*** (allow) [%c] %s", me.name, sptr->name, a, filemask);
+/*              sendto_one(sptr, ":%s NOTICE %s :*** (allow) [%c] %s", me.name, sptr->name, a, filemask); */
 	}
 
 }
@@ -724,7 +724,7 @@ void vhost_report(sptr)
 {
 	aVhost *tmp;
 	char *filemask;
-	//char  a;
+	/* char a; */
 
 	for (tmp = vhosts; tmp; tmp = tmp->next)
 	{

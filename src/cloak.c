@@ -40,7 +40,6 @@ static char sccxid[] = "@(#)cloak.c		9.00 7/12/99 UnrealIRCd";
 #include "h.h"
 
 
-// #define iNAH /* networks.h now */
 /* Hidden host code below */
 
 #define MAXVIRTSIZE     (3 + 5 + 1)

@@ -55,6 +55,7 @@ extern int noisy_htm;
 extern int LCF;
 extern int LRV;
 #endif
+
 /*
    m_sethost() added by Stskeeps (30/04/1999)
                (modified at 15/05/1999) by Stskeeps | Potvin
@@ -74,7 +75,7 @@ int  m_sethost(cptr, sptr, parc, parv)
 {
 	char *vhost, *s;
 #ifndef DISABLE_USERMOD
-	int  permit = 0;	// 0 = opers(glob/locop) 1 = global oper 2 = not MY clients.. 
+	int  permit = 0;	/* 0 = opers(glob/locop) 1 = global oper 2 = not MY clients.. */
 #else
 	int  permit = 2;
 #endif
@@ -141,7 +142,7 @@ int  m_sethost(cptr, sptr, parc, parv)
 			    me.name, sptr->name);
 	}
 	/* too large huh? */
-	if (strlen(parv[1]) > (HOSTLEN - 1))
+	if (strlen(parv[1]) > (HOSTLEN))
 	{
 		/* ignore us as well if we're not a child of 3k */
 		if (MyConnect(sptr))
@@ -242,7 +243,7 @@ int  m_chghost(cptr, sptr, parc, parv)
 		return 0;
 	}
 
-	if (strlen(parv[2]) > (HOSTLEN - 1))
+	if (strlen(parv[2]) > (HOSTLEN))
 	{
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** ChgHost Error: Too long hostname!!",
@@ -346,7 +347,7 @@ int  m_chgident(cptr, sptr, parc, parv)
 		return 0;
 	}
 
-	if (strlen(parv[2]) > (USERLEN - 1))
+	if (strlen(parv[2]) > (USERLEN))
 	{
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** ChgIdent Error: Too long ident!!",
@@ -479,7 +480,7 @@ int  m_setident(cptr, sptr, parc, parv)
 	}
 
 	/* too large huh? */
-	if (strlen(vident) > (USERLEN - 1))
+	if (strlen(vident) > (USERLEN))
 	{
 		/* ignore us as well if we're not a child of 3k */
 		if (MyConnect(sptr))
@@ -541,7 +542,7 @@ int  m_setname(cptr, sptr, parc, parv)
 {
 	if (parc < 2)
 		return;
-	if (strlen(parv[1]) > (REALLEN - 2))
+	if (strlen(parv[1]) > (REALLEN))
 	{
 		if (MyConnect(sptr))
 		{
@@ -583,7 +584,7 @@ int  m_setname(cptr, sptr, parc, parv)
 
 	return 0;
 
-//      sendto_serv_butone(cptr, ":%s SETNAME %s", parv[0], parv[1]);
+/*      sendto_serv_butone(cptr, ":%s SETNAME %s", parv[0], parv[1]); */
 	return 0;
 }
 
@@ -594,56 +595,49 @@ int  m_setname(cptr, sptr, parc, parv)
  *  D: Sets server info if you are Server Admin (ONLINE)
 */
 
-int  m_sdesc(cptr, sptr, parc, parv)
-	aClient *cptr, *sptr;
-	int  parc;
-	char *parv[];
+int m_sdesc(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	if (IsCoAdmin(sptr))
-		goto sdescok;
-	/* ignoring */
-	if (!IsAdmin(sptr))
-		return;
-      sdescok:
+        if (!IsAdmin(sptr) && !IsCoAdmin(sptr))
+                return 0;
 
-	if (parc < 2)
-		return;
+        if (parc < 2)
+                return 0;
 
-	if (strlen(parv[1]) < 1)
-		if (MyConnect(sptr))
-		{
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** Nothing to change to (SDESC)",
-			    me.name, sptr->name);
-			return 0;
-		}
-	if (strlen(parv[1]) > (REALLEN - 1))
-	{
-		if (MyConnect(sptr))
-		{
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** /SDESC Error: \"Server info\" may maximum be %i characters of length",
-			    me.name, sptr->name, REALLEN);
-		}
-		return 0;
-	}
+        if (strlen(parv[1]) < 1)
+                if (MyConnect(sptr))
+                {
+                        sendto_one(sptr,
+                            ":%s NOTICE %s :*** Nothing to change to (SDESC)",
+                            me.name, sptr->name);
+                        return 0;
+                }
+        if (strlen(parv[1]) > (REALLEN))
+        {
+                if (MyConnect(sptr))
+                {
+                        sendto_one(sptr,
+                            ":%s NOTICE %s :*** /SDESC Error: \"Server info\" may maximum be %i characters of length",
+                            me.name, sptr->name, REALLEN);
+                }
+                return 0;
+        }
 
-	ircsprintf(sptr->srvptr->info, "%s", parv[1]);
+        ircsprintf(sptr->srvptr->info, "%s", parv[1]);
 
-	sendto_serv_butone_token(cptr, sptr->name, MSG_SDESC, TOK_SDESC, ":%s",
-	    parv[1]);
+        sendto_serv_butone_token(cptr, sptr->name, MSG_SDESC, TOK_SDESC, ":%s",
+            parv[1]);
 
-	if (MyConnect(sptr))
-	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :Your \"server description\" is now set to be %s - you have to set it manually to undo it",
-		    me.name, parv[0], parv[1]);
-		return 0;
-	}
-	sendto_ops("Server description for %s is now '%s' changed by %s",
-	    sptr->srvptr->name, sptr->srvptr->info, parv[0]);
+        if (MyConnect(sptr))
+        {
+                sendto_one(sptr,
+                    ":%s NOTICE %s :Your \"server description\" is now set to be %s - you have to set it manually to undo it",
+                    me.name, parv[0], parv[1]);
+                return 0;
+        }
+        sendto_ops("Server description for %s is now '%s' changed by %s",
+            sptr->srvptr->name, sptr->srvptr->info, parv[0]);
+        return 0;
 }
-
 
 /*
 ** m_admins (Admin chat only) -Potvin
@@ -721,8 +715,8 @@ int  m_techat(cptr, sptr, parc, parv)
 #ifdef ADMINCHAT
 	sendto_umode(UMODE_TECHADMIN, "*** Te-chat -- from %s: %s",
 	    parv[0], message);
-//        sendto_techat("from %s: %s", parv[0], message);
-//              sendto_achat(1,"from %s: %s", parv[0], message);
+/*        sendto_techat("from %s: %s", parv[0], message); */
+/*              sendto_achat(1,"from %s: %s", parv[0], message); */
 #endif
 	return 0;
 }

@@ -172,7 +172,7 @@ void ban_flooder(aClient *cptr)
 	};
 
 	strcpy(hostip, (char *)inetntoa((char *)&cptr->ip));
-//	exit_client(cptr, cptr, &me, "Flooding");
+/*	exit_client(cptr, cptr, &me, "Flooding"); */
 
 	tkllayer[4] = hostip;
 	tkllayer[5] = me.name;
@@ -210,7 +210,7 @@ int  parse(cptr, buffer, bufend, mptr)
 	if (IsDead(cptr))
 		return 0;
 
-//	sendto_realops("Debug: parse(): %s", buffer);
+/*	sendto_realops("Debug: parse(): %s", buffer); */
 
 	if ((cptr->receiveK >= 4) && IsUnknown(cptr))
 	{
@@ -401,8 +401,7 @@ int  parse(cptr, buffer, bufend, mptr)
 		*/
 		if (!IsServer(cptr) && !IsOper(cptr))
 		{
-			if (lifesux)
-				cptr->since += (2 + i / 90);
+			cptr->since += (2 + i / 90);
 		}		
 	}
 	/*
