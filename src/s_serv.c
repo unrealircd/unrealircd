@@ -904,9 +904,20 @@ int	m_server_remote(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return exit_client(cptr, cptr, cptr, "Lost configuration");
 	}
 	aconf = cptr->serv->conf;
+	if (!aconf->hubmask)
+	{
+		sendto_locfailops("Link %s cancelled, is Non-Hub but introduced Leaf %s",
+			cptr->name, servername);
+		return exit_client(cptr, cptr, cptr, "Non-Hub Link");
+	}
+	if (match(aconf->hubmask, servername))
+	{
+		sendto_locfailops("Link %s cancelled, linked in %s, which hub config disallows", cptr->name, servername);
+		return exit_client(cptr, cptr, cptr, "Not matching hub configuration");
+	}
 	if (aconf->leafmask)
 	{
-		if (!match(aconf->leafmask, servername))
+		if (match(aconf->leafmask, servername))
 		{
 			sendto_locfailops("Link %s(%s) cancelled, disallowed by leaf configuration", cptr->name, servername);
 			return exit_client(cptr, cptr, cptr, "Disallowed by leaf configuration");
@@ -917,7 +928,6 @@ int	m_server_remote(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sendto_locfailops("Link %s(%s) cancelled, too deep depth", cptr->name, servername);
 			return exit_client(cptr, cptr, cptr, "Too deep link depth (leaf)");
 	}
-	/* ADD: ban server code */
 	if (numeric)
 	{
 		if (numeric_collides(numeric))

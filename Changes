@@ -995,4 +995,4 @@ seen. gmtime warning still there
 - Added a new dynamic help system that allows you to add and modify /helpop items
 - Made N also give you OaA, since its what most people use it for *sigh*
 - A and a give you O, set::modes-on-oper
-
+- Made link::hubmask and link::leafmask actually work properly
