@@ -351,6 +351,9 @@ int  hunt_server(aClient *cptr, aClient *sptr, char *command, int server, int pa
 			if (IsRegistered(acptr) && (acptr != cptr))
 				break;
 		}
+	/* Fix for unregistered client receiving msgs: */
+	if (acptr && MyConnect(acptr) && IsUnknown(acptr))
+		acptr = NULL;
 	if (acptr)
 	{
 		if (IsMe(acptr) || MyClient(acptr))
@@ -427,6 +430,9 @@ int  hunt_server_token(aClient *cptr, aClient *sptr, char *command, char *token,
 			if (IsRegistered(acptr) && (acptr != cptr))
 				break;
 		}
+	/* Fix for unregistered client receiving msgs: */
+	if (acptr && MyConnect(acptr) && IsUnknown(acptr))
+		acptr = NULL;
 	if (acptr)
 	{
 		char buff[1024];

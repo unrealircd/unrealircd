@@ -2435,3 +2435,4 @@ seen. gmtime warning still there
 - Added a few macros (MOD_HEADER, MOD_INIT, MOD_TEST, MOD_LOAD, MOD_UNLOAD) to make
   setting up a module for both static and dynamic linking easier
 - Fixed a win32 resolver lockup bug
+- Fixed hunt_server* bug
