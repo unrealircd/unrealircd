@@ -438,13 +438,15 @@ void config_progress(char *format, ...)
 	sendto_realops("%s", buffer);
 }
 
-void clear_unknown() {
+void clear_unknown(ConfigFile *file) {
 	ConfigItem_unknown *p;
 	ListStruct *next;
 	ConfigItem_unknown_ext *q;
 
 	for (p = conf_unknown; p; p = (ConfigItem_unknown *)next) {
 		next = (ListStruct *)p->next;
+		if (p->ce->ce_fileptr != file)
+			continue;
 		if (!strcmp(p->ce->ce_varname, "ban")) 
 			config_status("%s:%i: unknown ban type %s",
 				p->ce->ce_fileptr->cf_filename, p->ce->ce_varlinenum,
@@ -471,6 +473,8 @@ void clear_unknown() {
 	}
 	for (q = conf_unknown_set; q; q = (ConfigItem_unknown_ext *)next) {
 		next = (ListStruct *)q->next;
+		if (q->ce_fileptr != file)
+			continue;
 		config_status("%s:%i: unknown directive set::%s",
 			q->ce_fileptr->cf_filename, q->ce_varlinenum,
 			q->ce_varname);
@@ -864,7 +868,7 @@ int	init_conf2(char *filename)
 			filename);
 		i = ConfigParse(cfptr);
 		RunHook0(HOOKTYPE_CONFIG_UNKNOWN);
-		clear_unknown();
+		clear_unknown(cfptr);
 		config_free(cfptr);
 		if (!stricmp(filename, CPATH))
 			return i;
