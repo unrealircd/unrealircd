@@ -559,9 +559,15 @@ int stats_exceptban(aClient *sptr, char *para)
 {
 	ConfigItem_except *excepts;
 	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *) excepts->next)
-		if (excepts->flag.type == 1)
+	{
+		if (excepts->flag.type == CONF_EXCEPT_BAN)
 			sendto_one(sptr, rpl_str(RPL_STATSKLINE), me.name,
 				sptr->name, "E", excepts->mask, "");
+		else if (excepts->flag.type == CONF_EXCEPT_TKL)
+			sendto_one(sptr, rpl_str(RPL_STATSEXCEPTTKL), me.name,
+				sptr->name, tkl_typetochar(excepts->type), excepts->mask);
+					
+	}
 	return 0;
 }
 
@@ -1132,8 +1138,9 @@ int stats_kline(aClient *sptr, char *para)
 	}
 	tkl_stats(sptr, TKL_KILL, NULL);
 	tkl_stats(sptr, TKL_ZAP, NULL);
-	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) {
-		if (excepts->flag.type == 1)
+	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) 
+	{
+		if (excepts->flag.type == CONF_EXCEPT_BAN)
 			sendto_one(sptr, rpl_str(RPL_STATSKLINE),
 				me.name, sptr->name, "E", excepts->mask, "");
 	}

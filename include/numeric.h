@@ -272,6 +272,7 @@
 #define RPL_STATSVLINE	     227
 #define RPL_STATSBANVER	     228
 #define RPL_STATSSPAMF       229
+#define RPL_STATSEXCEPTTKL   230
 #define RPL_SERVICEINFO      231
 #define RPL_RULES            232
 #define	RPL_SERVICE          233
