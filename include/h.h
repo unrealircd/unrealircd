@@ -277,6 +277,8 @@ extern aClient *next_client(aClient *, char *);
 extern int m_umode(aClient *, aClient *, int, char **);
 extern int m_names(aClient *, aClient *, int, char **);
 extern int m_server_estab(aClient *);
+extern void umode_init(void);
+extern long umode_get(char ch);
 extern void send_umode(aClient *, aClient *, long, long, char *);
 extern void send_umode_out(aClient *, aClient *, long);
 
@@ -331,6 +333,38 @@ extern char *convert2aln(int);
 extern int convertfromaln(char *);
 extern char *find_server_aln(char *);
 extern atime(char *xtime);
+
+
+/* Mode externs
+*/
+extern long UMODE_INVISIBLE; /*  0x0001	 makes user invisible */
+extern long UMODE_OPER;      /*  0x0002	 Operator */
+extern long UMODE_WALLOP;    /*  0x0004	 send wallops to them */
+extern long UMODE_FAILOP;    /*  0x0008	 Shows some global messages */
+extern long UMODE_HELPOP;    /*  0x0010	 Help system operator */
+extern long UMODE_REGNICK;   /*  0x0020	 Nick set by services as registered */
+extern long UMODE_SADMIN;    /*  0x0040	 Services Admin */
+extern long UMODE_ADMIN;     /*  0x0080	 Admin */
+extern long UMODE_SERVNOTICE;/* 0x0100	 server notices such as kill */
+extern long UMODE_LOCOP;     /* 0x0200	 Local operator -- SRB */
+extern long UMODE_RGSTRONLY; /* 0x0400  Only reg nick message */
+extern long UMODE_WEBTV;     /* 0x0800  WebTV Client */
+extern long UMODE_SERVICES;  /* 0x4000	 services */
+extern long UMODE_HIDE;	     /* 0x8000	 Hide from Nukes */
+extern long UMODE_NETADMIN;  /* 0x10000	 Network Admin */
+extern long UMODE_TECHADMIN; /* 0x40000	 Tech Admin */
+extern long UMODE_COADMIN;   /* 0x80000	 Co Admin */
+extern long UMODE_WHOIS;     /* 0x100000	 gets notice on /whois */
+extern long UMODE_KIX;       /* 0x200000	 usermode +q */
+extern long UMODE_BOT;       /* 0x400000	 User is a bot */
+extern long UMODE_SECURE;    /*	0x800000	 User is a secure connect */
+extern long UMODE_HIDING;    /* 0x2000000	 Totally invisible .. */
+extern long UMODE_VICTIM;    /* 0x8000000	 Intentional Victim */
+extern long UMODE_DEAF;      /* 0x10000000       Deaf */
+extern long UMODE_HIDEOPER;  /* 0x20000000	 Hide oper mode */
+extern long UMODE_SETHOST;   /* 0x40000000	 used sethost */
+extern long UMODE_STRIPBADWORDS; /* 0x80000000	 */
+
 
 
 extern int dopacket(aClient *, char *, int);

@@ -825,6 +825,7 @@ int  InitwIRCD(argc, argv)
 	bzero((char *)&me, sizeof(me));
 	setup_signals();
 	init_ircstats();
+	umode_init();
 	clear_scache_hash_table();
 #ifdef FORCE_CORE
 	corelim.rlim_cur = corelim.rlim_max = RLIM_INFINITY;

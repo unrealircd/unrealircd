@@ -267,34 +267,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
  * -DuffJ
  */
 
-#define	UMODE_INVISIBLE  0x0001	/* makes user invisible */
-#define	UMODE_OPER       0x0002	/* Operator */
-#define	UMODE_WALLOP     0x0004	/* send wallops to them */
-#define UMODE_FAILOP	 0x0008	/* Shows some global messages */
-#define UMODE_HELPOP	 0x0010	/* Help system operator */
-#define UMODE_REGNICK	 0x0020	/* Nick set by services as registered */
-#define UMODE_SADMIN	 0x0040	/* Services Admin */
-#define UMODE_ADMIN	 0x0080	/* Admin */
-#define	UMODE_SERVNOTICE 0x0100	/* server notices such as kill */
-#define	UMODE_LOCOP      0x0200	/* Local operator -- SRB */
-#define UMODE_RGSTRONLY  0x0400 /* Only reg nick message */
-#define UMODE_WEBTV	 0x0800 /* WebTV Client */
-#define UMODE_SERVICES   0x4000	/* services */
-#define UMODE_HIDE	 0x8000	/* Hide from Nukes */
-#define UMODE_NETADMIN  0x10000	/* Network Admin */
-#define UMODE_TECHADMIN 0x40000	/* Tech Admin */
-#define UMODE_COADMIN   0x80000	/* Co Admin */
-#define UMODE_WHOIS    0x100000	/* gets notice on /whois */
-#define UMODE_KIX      0x200000	/* usermode +q */
-#define UMODE_BOT       0x400000	/* User is a bot */
-#define UMODE_SECURE	0x800000	/* User is a secure connect */
-#define UMODE_FCLIENT  0x1000000	/* recieve client on far connects.. */
-#define UMODE_HIDING   0x2000000	/* Totally invisible .. */
-#define	UMODE_VICTIM   0x8000000	/* Intentional Victim */
-#define UMODE_DEAF     0x10000000
-#define UMODE_HIDEOPER 0x20000000	/* Hide oper mode */
-#define UMODE_SETHOST  0x40000000	/* used sethost */
-#define UMODE_STRIPBADWORDS 0x80000000	/* */
 
 #define SNO_KILLS   0x0001
 #define SNO_CLIENT  0x0002
@@ -308,7 +280,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SNO_DEFOPER "+kcfvG"
 #define SNO_DEFUSER "+k"
 
-#define	SEND_UMODES (UMODE_INVISIBLE|UMODE_OPER|UMODE_WALLOP|UMODE_FAILOP|UMODE_HELPOP|UMODE_RGSTRONLY|UMODE_REGNICK|UMODE_SADMIN|UMODE_NETADMIN|UMODE_TECHADMIN|UMODE_COADMIN|UMODE_ADMIN|UMODE_SERVICES|UMODE_HIDE|UMODE_WHOIS|UMODE_KIX|UMODE_BOT|UMODE_SECURE|UMODE_FCLIENT|UMODE_HIDING|UMODE_DEAF|UMODE_VICTIM|UMODE_HIDEOPER|UMODE_SETHOST|UMODE_STRIPBADWORDS|UMODE_WEBTV)
+#define	SEND_UMODES (UMODE_INVISIBLE|UMODE_OPER|UMODE_WALLOP|UMODE_FAILOP|UMODE_HELPOP|UMODE_RGSTRONLY|UMODE_REGNICK|UMODE_SADMIN|UMODE_NETADMIN|UMODE_TECHADMIN|UMODE_COADMIN|UMODE_ADMIN|UMODE_SERVICES|UMODE_HIDE|UMODE_WHOIS|UMODE_KIX|UMODE_BOT|UMODE_SECURE|UMODE_HIDING|UMODE_DEAF|UMODE_VICTIM|UMODE_HIDEOPER|UMODE_SETHOST|UMODE_STRIPBADWORDS|UMODE_WEBTV)
 #define	ALL_UMODES (SEND_UMODES|UMODE_SERVNOTICE|UMODE_LOCOP|UMODE_SERVICES)
 #define	FLAGS_ID	(FLAGS_DOID|FLAGS_GOTID)
 
@@ -742,6 +714,14 @@ typedef struct ircstatsx {
 } ircstats;
 
 extern ircstats IRCstats;
+
+typedef struct {
+	long	mode;
+	char	flag;
+} aUMtable;
+
+extern aUMtable *Usermode_Table;
+extern short	 Usermode_highest;
 
 
 #define LISTENER_NORMAL		0x000001

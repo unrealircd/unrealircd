@@ -49,7 +49,6 @@ DLLFUNC int m_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 DLLFUNC int m_svs2mode(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 extern ircstats IRCstats;
-extern int user_modes[];
 #define MSG_SVSMODE 	"SVSMODE"	
 #define TOK_SVSMODE 	"n"	
 #define MSG_SVS2MODE    "SVS2MODE"
@@ -286,8 +285,7 @@ int  m_svsmode(cptr, sptr, parc, parv)
         int  parc;
         char *parv[];
 {
-        int  flag;
-        int *s;
+	int i;
         char **p, *m;
         aClient *acptr;
         int  what, setflags;
@@ -306,9 +304,9 @@ int  m_svsmode(cptr, sptr, parc, parv)
         if (!(acptr = find_person(parv[1], NULL)))
                 return 0;
         setflags = 0;
-        for (s = user_modes; (flag = *s); s += 2)
-                if (acptr->umodes & flag)
-                        setflags |= flag;
+        for (i = 0; i <= Usermode_highest; i++)
+                if (Usermode_Table[i].flag && (acptr->umodes & Usermode_Table[i].mode))
+                        setflags |= Usermode_Table[i].mode;
         /*
          * parse mode change string(s)
          */
@@ -361,16 +359,20 @@ int  m_svsmode(cptr, sptr, parc, parv)
                                   }
                           default:
                                 setmodex:
-                                  for (s = user_modes; (flag = *s); s += 2)
-                                          if (*m == (char)(*(s + 1)))
+                                  for (i = 0; i <= Usermode_highest; i++)
+                                  {
+                                  	  if (!Usermode_Table[i].flag)
+                                  	  	continue;
+                                          if (*m == Usermode_Table[i].flag)
                                           {
                                                   if (what == MODE_ADD)
-                                                          acptr->umodes |= flag;
+                                                          acptr->umodes |= Usermode_Table[i].mode;
                                                   else
                                                           acptr->umodes &=
-                                                              ~flag;
+                                                              ~Usermode_Table[i].mode;
                                                   break;
                                           }
+                                  }
                                   break;
                         }
         if (parc > 3)
@@ -395,8 +397,7 @@ int  m_svs2mode(cptr, sptr, parc, parv)
         int  parc;
         char *parv[];
 {
-        int  flag;
-        int *s;
+        int  i;
         char **p, *m;
         aClient *acptr;
         int  what, setflags;
@@ -418,10 +419,10 @@ int  m_svs2mode(cptr, sptr, parc, parv)
                 return 0;
 
         setflags = 0;
-        for (s = user_modes; (flag = *s); s += 2)
-                if (acptr->umodes & flag)
-                        setflags |= flag;
-        /*
+        for (i = 0; i <= Usermode_highest; i++)
+                if (Usermode_Table[i].flag && (acptr->umodes & Usermode_Table[i].mode))
+                        setflags |= Usermode_Table[i].mode;
+         /*
          * parse mode change string(s)
          */
         for (p = &parv[2]; p && *p; p++)
@@ -472,16 +473,21 @@ int  m_svs2mode(cptr, sptr, parc, parv)
                                           IRCstats.operators--;
                           default:
                                 setmodey:
-                                  for (s = user_modes; (flag = *s); s += 2)
-                                          if (*m == (char)(*(s + 1)))
+                                  for (i = 0; i <= Usermode_highest; i++)
+                                  {
+                                  	  if (!Usermode_Table[i].flag)
+                                  	  	continue;
+                                          if (*m == Usermode_Table[i].flag)
                                           {
                                                   if (what == MODE_ADD)
-                                                          acptr->umodes |= flag;
+                                                          acptr->umodes |= Usermode_Table[i].mode;
                                                   else
                                                           acptr->umodes &=
-                                                              ~flag;
+                                                              ~Usermode_Table[i].mode;
                                                   break;
+                                            
                                           }
+                                  }
                                   break;
                         }
 

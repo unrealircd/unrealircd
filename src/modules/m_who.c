@@ -142,7 +142,6 @@ int  chk_who(aClient *, aClient *, int);
 
 /* Externally defined stuffs */
 extern int lifesux;
-extern int user_modes[];
 
 
 int build_searchopts(aClient *sptr, int parc, char *parv[])
@@ -297,10 +296,10 @@ int build_searchopts(aClient *sptr, int parc, char *parv[])
 			  }
 			  s = parv[args];
 			  while (*s) {
-				  for (i = 1; user_modes[i] != 0x0; i += 2) {
-					  if (*s == (char)user_modes[i]) {
+				  for (i = 0; i <= Usermode_highest; i++) {
+					  if (*s == Usermode_Table[i].flag) {
 						  wsopts.umodes |=
-						      user_modes[i - 1];
+						     Usermode_Table[i].mode;
 						  break;
 					  }
 				  }
