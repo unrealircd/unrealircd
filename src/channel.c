@@ -5163,7 +5163,7 @@ CMD_FUNC(m_knock)
 		sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
 		    me.name,
 		    sptr->name,
-		    chptr->chname, "You can not get invited anyways! (+I)");
+		    chptr->chname, "The channel does not allow invites (+V)");
 
 		return 0;
 	}

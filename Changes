@@ -2408,3 +2408,5 @@ seen. gmtime warning still there
 - Added clientsonly/serversonly/ssl/java flags to /stats P (#0000992).
 - Added official-channels block. These channels are listed in /list even if they have 0 users.
 - Fixed a crashbug introduced by +mu fixes 3 days ago (#0001237).
+- Fixed a typo where /knock would say the channel is +I if +V is set, reported by Certus
+
