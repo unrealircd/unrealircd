@@ -2986,4 +2986,4 @@ seen. gmtime warning still there
 - Fixed a few more remote include problems on Windows
 - Fixed a remote include problem caused by an earlier fix that resulted in referencing
   free'd memory 
-- Q comes after P. Thanks to Rocko for remind us! (fixes /stats P bug ;p).
+- Q comes after P. Thanks to Rocko for reminding us! (fixes /stats P bug ;p).
