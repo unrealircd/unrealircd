@@ -61,7 +61,6 @@ struct zConfiguration {
 	unsigned ident_check:1;
 	unsigned fail_oper_warn:1;
 	unsigned show_connect_info:1;
-	unsigned owner_gets_dot:1;
 	unsigned use_egd;
 	long host_timeout;
 	int  host_retries;
@@ -112,7 +111,6 @@ extern aConfiguration iConf;
 #define IDENT_CHECK			iConf.ident_check
 #define FAILOPER_WARN			iConf.fail_oper_warn
 #define SHOWCONNECTINFO			iConf.show_connect_info
-#define OWNER_GETS_DOT			iConf.owner_gets_dot
 #define OPER_ONLY_STATS			iConf.oper_only_stats
 #define ANTI_SPAM_QUIT_MSG_TIME		iConf.anti_spam_quit_message_time
 #define USE_EGD				iConf.use_egd

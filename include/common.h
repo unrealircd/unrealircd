@@ -264,7 +264,7 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
                  MAXSILES, \
                  MAXMODEPARAMS, \
                  "#",      \
-                 (OWNER_GETS_DOT ? "(qohv).@%+" : "(ohv)@%+"), \
+                 "(ohv)@%+", \
                  "ohvbeqa", \
                  "kfL", \
 		 "l", \

@@ -658,8 +658,6 @@ static void make_who_status(aClient *sptr, aClient *acptr, aChannel *channel,
 
   if (cm)
     {
-      if (OWNER_GETS_DOT && (cm->flags & CHFL_CHANOWNER))
-	status[i++] = '.';
       if (cm->flags & CHFL_CHANOP)
 	status[i++] = '@';
       else if (cm->flags & CHFL_HALFOP)

@@ -4451,9 +4451,7 @@ CMD_FUNC(m_names)
 				    CHFL_CHANOWNER)) && acptr != sptr)
 					continue;
 
-		if (OWNER_GETS_DOT && (cm->flags & CHFL_CHANOWNER))
-			buf[idx++] = '.';
-		else if (cm->flags & CHFL_CHANOP)
+		if (cm->flags & CHFL_CHANOWNER)
 			buf[idx++] = '@';
 		else if (cm->flags & CHFL_HALFOP)
 			buf[idx++] = '%';
