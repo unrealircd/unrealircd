@@ -212,7 +212,7 @@ extern char *strerror(int);
 extern int dgets(int, char *, int);
 extern char *inetntoa(char *);
 
-#if !defined(HAVE_SNPRINT) || !defined(HAVE_VSNPRINTF)
+#if !defined(HAVE_SNPRINTF) || !defined(HAVE_VSNPRINTF)
 /* #ifndef _WIN32 XXX why was this?? -- Syzop. */
 extern int snprintf (char *str, size_t count, const char *fmt, ...);
 extern int vsnprintf (char *str, size_t count, const char *fmt, va_list arg);
