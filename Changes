@@ -2239,3 +2239,15 @@ seen. gmtime warning still there
 - Added a README
 - Added some checking in fdlist add/remove functions.
 - Updated docs a bit (how-to-get-support/FAQ link style).
+- Rewrote the win32 editor handling of mIRC codes. The new system should be more stable,
+  and it supports more features, such as background colors. Just a note, the editor should
+  be able to display any mIRC code without problem, however, some codes may be changed once
+  you save the file. For example, reverse is replaced with ctrl+k0,1 and color code 99 is 
+  treated as a 1 if used for a text color and 0 if used for a bgcolor. This might cause
+  problems when displaying in some clients, however not all clients support color code 99.
+  As for the reverse, if I can come up with a decent way to still keep the original reverse
+  code, I will change it to do that. So in short, if you need the color codes to stay
+  _exactly_ the way they are, then you shouldn't use the editor on that file. Also, color 
+  codes that are 0..9 are translated to 2 digits, ie "2" becomes "02" this is to prevent 
+  problems when a number follows directly after the color code. 
+- Added support for editting short motds in the win32 editor.

@@ -44,6 +44,7 @@
 #define IDC_DIRUP                       1139
 #define IDC_DIRDOWN                     1140
 #define IDC_COLOR                       1141
+#define IDC_BGCOLOR			1142
 #define IDC_WHITE                       1163
 #define IDC_BLACK                       1164
 #define IDC_DARKBLUE                    1165
@@ -67,6 +68,7 @@
 #define IDM_HELP                        40030
 #define IDM_SAVE                        40031
 #define IDM_REDO                        40032
+#define IDM_SMOTD			40036
 #define IDM_CONF                        40037
 #define IDM_MOTD                        40038
 #define IDM_BOTMOTD                     40039
