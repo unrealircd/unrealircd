@@ -742,9 +742,14 @@ void reset_help(void)
  */
 CMD_FUNC(m_lusers)
 {
-	if (hunt_server_token(cptr, sptr, MSG_LUSERS, TOK_LUSERS, ":%s", 1, parc,
-	    parv) != HUNTED_ISME)
+char flatmap;
+
+	if (hunt_server_token(cptr, sptr, MSG_LUSERS, TOK_LUSERS,
+                          ":%s", 1, parc, parv) != HUNTED_ISME)
 		return 0;
+
+	flatmap = (FLAT_MAP && !IsAnOper(sptr)) ? 1 : 0;
+
 	/* Just to correct results ---Stskeeps */
 	if (IRCstats.clients > IRCstats.global_max)
 		IRCstats.global_max = IRCstats.clients;
@@ -765,7 +770,7 @@ CMD_FUNC(m_lusers)
 		sendto_one(sptr, rpl_str(RPL_LUSERCHANNELS),
 		    me.name, parv[0], IRCstats.channels);
 	sendto_one(sptr, rpl_str(RPL_LUSERME),
-	    me.name, parv[0], IRCstats.me_clients, IRCstats.me_servers);
+	    me.name, parv[0], IRCstats.me_clients, flatmap ? 0 : IRCstats.me_servers);
 	sendto_one(sptr, rpl_str(RPL_LOCALUSERS),
 	    me.name, parv[0], IRCstats.me_clients, IRCstats.me_max);
 	sendto_one(sptr, rpl_str(RPL_GLOBALUSERS),
