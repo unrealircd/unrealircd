@@ -256,3 +256,6 @@
 - Fixed a bug where an ident in a vhost {} was never sent out to other servers and added
   user@host support for set::hosts (#0001834) reported/suggested by bleepy.
 - Fixed defizzer module. Reported by Rocko and netrixtardis.
+- Removed the * and ^ flags from /whois if PREFIX_AQ is not enabled (requested by many people)
+- Updated the /who docs to use correct English
+- Added documentation for the /who and /whois flags (#0001881) reported by AngryWolf and Bugz.

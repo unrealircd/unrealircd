@@ -238,12 +238,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						&& IsAnOper(sptr))
 						*(buf + len++) = '!';
 					access = get_access(acptr, chptr);
-#ifndef PREFIX_AQ
-					if (access & CHFL_CHANOWNER)
-						*(buf + len++) = '*';
-					else if (access & CHFL_CHANPROT)
-						*(buf + len++) = '^';
-#else
+#ifdef PREFIX_AQ
 					if (access & CHFL_CHANOWNER)
 						*(buf + len++) = '~';
 					else if (access & CHFL_CHANPROT)
