@@ -2301,3 +2301,5 @@ seen. gmtime warning still there
 
   I really suggest module coders to wait a few weeks till the system is ready..
   In the meantime, don't report bugs or ask for support on this.
+- Fixed bug with SWHOIS: oper::swhois wasn't broadcasted correctly which made it
+  only show up in local (or server) /whois, reported by format (#0001141).

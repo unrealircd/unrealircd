@@ -225,7 +225,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 				MyFree(sptr->user->swhois);
 			sptr->user->swhois = MyMalloc(strlen(aconf->swhois) +1);
 			strcpy(sptr->user->swhois, aconf->swhois);
-			sendto_serv_butone_token(cptr, sptr->name,
+			sendto_serv_butone_token(cptr, me.name,
 				MSG_SWHOIS, TOK_SWHOIS, "%s :%s", sptr->name, aconf->swhois);
 		}
 
