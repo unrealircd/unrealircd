@@ -496,3 +496,5 @@
 - Added sendto_chanops_butone because of codemastr's laziness
 - Fixed a few +u bugs 
 - Fixed a +I bug (yes another one)
+- Changed channel.c so that when an opped non +q/+a Oper kicks a user who
+  is +q/+a it invokes an OperKick (patch by llthangel)

@@ -3293,7 +3293,16 @@ int  m_kick(cptr, sptr, parc, parv)
 				if (is_chanprot(who, chptr)
 				    || is_chanowner(who, chptr)
 				    || IsServices(who))
-					if (!IsULine(cptr, sptr) && who != sptr)
+					if IsOper(sptr)
+					{ /* IRCop kicking owner/prot */
+						sendto_umode(UMODE_EYES,
+						    "*** OperKick [%s @ %s -> %s (%s)]",
+						    sptr->name,
+						    chptr->chname,
+						    who->name, comment);
+						goto attack;
+					}
+					else if (!IsULine(cptr, sptr) && who != sptr)
 					{
 						sendto_one(sptr,
 						    ":%s NOTICE %s :*** You cannot kick %s from %s because %s is channel protected",
