@@ -1310,7 +1310,7 @@ static int read_packet(aClient *cptr, fd_set *rfd)
 		SET_ERRNO(0);
 #ifdef USE_SSL
 		if (cptr->flags & FLAGS_SSL)
-	    		length = SSL_read((SSL *)cptr->ssl, readbuf, sizeof(readbuf));
+	    		length = ircd_SSL_read(cptr, readbuf, sizeof(readbuf));
 		else
 #endif
 			length = recv(cptr->fd, readbuf, sizeof(readbuf), 0);
@@ -1473,7 +1473,7 @@ static int read_packet(aClient *cptr)
 
 #ifdef USE_SSL
 		if (cptr->flags & FLAGS_SSL)
-	    		length = SSL_read((SSL *)cptr->ssl, readbuf, sizeof(readbuf));
+	    		length = ircd_SSL_read((SSL *)cptr->ssl, readbuf, sizeof(readbuf));
 		else
 #endif
 			length = recv(cptr->fd, readbuf, sizeof(readbuf), 0);

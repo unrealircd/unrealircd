@@ -84,7 +84,7 @@ int  deliver_it(aClient *cptr, char *str, int len)
 
 #ifdef USE_SSL
 	if (cptr->flags & FLAGS_SSL)
-		 retval = SSL_write((SSL *)cptr->ssl, str, len);	
+		 retval = ircd_SSL_write(cptr, str, len);	
 	else
 #endif
 		retval = send(cptr->fd, str, len, 0);

@@ -20,8 +20,9 @@
 
 #include "config.h"
 #ifdef USE_SSL
-
+#include "common.h"
 #include "struct.h"
+#include "sys.h"
 #ifdef _WIN32
 #include <windows.h>
 
@@ -321,5 +322,55 @@ char	*ssl_get_cipher(SSL *ssl)
 	return (buf);
 }
 
+int ircd_SSL_read(aClient *acptr, void *buf, int sz)
+{
+    int len, ssl_err;
+    len = SSL_read((SSL *)acptr->ssl, buf, sz);
+    if (len <= 0)
+    {
+       switch(ssl_err = SSL_get_error((SSL *)acptr->ssl, len)) {
+           case SSL_ERROR_SYSCALL:
+               if (errno == EWOULDBLOCK || errno == EAGAIN ||
+                       errno == EINTR) {
+           case SSL_ERROR_WANT_READ:
+                   errno = EWOULDBLOCK;
+                   return 0;
+               }
+           case SSL_ERROR_SSL:
+               if(errno == EAGAIN)
+                   return 0;
+           default:
+		return 0;        
+       }
+    }
+    return len;
+}
+int ircd_SSL_write(aClient *acptr, const void *buf, int sz)
+{
+    int len, ssl_err;
 
+    len = SSL_write((SSL *)acptr->ssl, buf, sz);
+    if (len <= 0)
+    {
+       switch(ssl_err = SSL_get_error((SSL *)acptr->ssl, len)) {
+           case SSL_ERROR_SYSCALL:
+               if (errno == EWOULDBLOCK || errno == EAGAIN ||
+                       errno == EINTR)
+		{
+			errno = EWOULDBLOCK;
+			return 0;
+		}
+		return 0;
+          case SSL_ERROR_WANT_WRITE:
+                   errno = EWOULDBLOCK;
+                   return 0;
+           case SSL_ERROR_SSL:
+               if(errno == EAGAIN)
+                   return 0;
+           default:
+		return 0;
+       }
+    }
+    return len;
+}
 #endif

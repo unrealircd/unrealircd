@@ -1404,3 +1404,5 @@ seen. gmtime warning still there
 - Removed mutex.c
 - Credits changes, various tweaks mzp ftq Gzdqmx qhqdk dqxqmeq oapq otmxxqzsq. Tmbbk tgzfuzs.
 - Fixed some ./configure errors
+- Added ircd/safe_SSL_read/write from bahamut+inet6/azzuranet. This can be done much nicer
+  when newio is done.
