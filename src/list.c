@@ -271,7 +271,13 @@ void remove_client_from_list(cptr)
 	if (IsClient(cptr))
 	{
 		if (IsInvisible(cptr))
+		{
 			IRCstats.invisible--;
+#ifdef INV_TRACK
+			ircd_log("invisible-- in %s at %s, for %s client",
+				__FILE__, __LINE__, (MyClient(cptr) ? "MY" : "REMOTE"));
+#endif
+		}
 		if (IsOper(cptr))
 			IRCstats.operators--;
 		IRCstats.clients--;

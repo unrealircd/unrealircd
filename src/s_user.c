@@ -2908,7 +2908,6 @@ int  m_user(cptr, sptr, parc, parv)
 
 	if (!IsServer(cptr))
 	{
-		sptr->umodes |= (UFLAGS & atoi(host));
 		if (MODE_I == 1)
 		{
 			sptr->umodes |= UMODE_INVISIBLE;
@@ -2927,6 +2926,10 @@ int  m_user(cptr, sptr, parc, parv)
 
 	if (sptr->umodes & UMODE_INVISIBLE)
 	{
+#ifdef INV_TRACK
+		ircd_log("invisible++ in %s:%s for %s client", 
+			__FILE__, __LINE__, MyClient(sptr) ? "MY" : "REMOTE");
+#endif
 		IRCstats.invisible++;
 	}
 
@@ -4433,10 +4436,22 @@ int  m_umode(cptr, sptr, parc, parv)
 		                         
 	}
 	if (!(setflags & UMODE_INVISIBLE) && IsInvisible(sptr))
+	{
+#ifdef INV_TRACK
+		ircd_log("invisible++ in %s:%s for %s client", 
+			__FILE__, __LINE__, MyClient(sptr) ? "MY" : "REMOTE");
+#endif
 		IRCstats.invisible++;
+	}
 	if ((setflags & UMODE_INVISIBLE) && !IsInvisible(sptr))
-		IRCstats.invisible--;
+	{
+#ifdef INV_TRACK
+		ircd_log("invisible-- in %s:%s for %s client", 
+			__FILE__, __LINE__, MyClient(sptr) ? "MY" : "REMOTE");
+#endif
 
+		IRCstats.invisible--;
+	}
 	/*
 	 * compare new flags with old flags and send string which
 	 * will cause servers to update correctly.
@@ -4535,9 +4550,21 @@ int  m_svs2mode(cptr, sptr, parc, parv)
 				  break;
 			  case 'i':
 				  if (what == MODE_ADD)
+				  {
+#ifdef INV_TRACK
+					ircd_log("invisible++ in %s:%s for %s client", 
+						__FILE__, __LINE__, MyClient(sptr) ? "MY" : "REMOTE");
+#endif
 					  IRCstats.invisible++;
+				  }
 				  if (what == MODE_DEL)
+				  {
+#ifdef INV_TRACK
+					ircd_log("invisible-- in %s:%s for %s client", 
+						__FILE__, __LINE__, MyClient(sptr) ? "MY" : "REMOTE");
+#endif
 					  IRCstats.invisible--;
+				  }
 			  	  goto setmodey;
 			  case 'o':
 				  if (what == MODE_ADD)
@@ -4628,15 +4655,29 @@ int  m_svsmode(cptr, sptr, parc, parv)
 				  break;
 			  case 'i':
 				  if (what == MODE_ADD)
+				  {
+#ifdef INV_TRACK
+					ircd_log("invisible++ in %s:%s for %s client", 
+						__FILE__, __LINE__, MyClient(sptr) ? "MY" : "REMOTE");
+#endif
 					  IRCstats.invisible++;
+				  }
 				  if (what == MODE_DEL)
+				  {
+#ifdef INV_TRACK
+					ircd_log("invisible-- in %s:%s for %s client", 
+						__FILE__, __LINE__, MyClient(sptr) ? "MY" : "REMOTE");
+#endif
+
 					  IRCstats.invisible--;
+			          }
 			  	  goto setmodex;
 			  case 'o':
 				  if (what == MODE_ADD)
 					  IRCstats.operators++;
 				  if (what == MODE_DEL)
 					  IRCstats.operators--;
+				  goto setmodex;
 			  case 'd':
 				  if (parv[3] && isdigit(*parv[3]))
 				  {
