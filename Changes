@@ -2947,3 +2947,5 @@ seen. gmtime warning still there
 - Modulized: svsfline, dccdeny, undccdeny, whowas
 - Modulized: connect... should be the last one till 3.2final.
 - Fixed some compile warnings/problems caused by modulizing.
+- Fixed a bug which prevented "/spamfilter del[..]" from working.
+  Reported by Fury (#0001575).
