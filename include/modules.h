@@ -79,7 +79,7 @@ extern Hook		*Hooks[MAXHOOKTYPES];
 extern Hook		*global_i;
 
 void 	module_init(void);
-int  	load_module(char *module);
+int  	load_module(char *module, int module_load);
 int	unload_module(char *name);
 vFP	module_sym(char *name);
 

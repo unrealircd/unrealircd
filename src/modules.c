@@ -58,7 +58,7 @@ void module_init(void)
 	modules_loaded = 0;
 }
 
-int  load_module(char *module)
+int  load_module(char *module, int module_load)
 {
 #ifndef STATIC_LINKING
 #ifdef _WIN32
@@ -183,7 +183,7 @@ int  load_module(char *module)
 		{
 			mod_load = irc_dlsym(Mod, "_mod_load");
 		}
-		if ((*mod_init)() < 0)
+		if ((*mod_init)(module_load) < 0)
 		{
 			config_progress
 			    ("Failed to load module %s: mod_init failed",
@@ -392,7 +392,7 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			return 0;
 		}
 		sendto_realops("Trying to load module %s", parv[2]);
-		if (load_module(parv[2]) == 1)
+		if (load_module(parv[2],1) == 1)
 			sendto_realops("Loaded module %s", parv[2]);
 	}
 	else

@@ -1174,7 +1174,7 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 		return -1;
 	}	
 	for (i = 0; i < files.gl_pathc; i++) {
-		if (load_module(files.gl_pathv[i]) != 1) {
+		if (load_module(files.gl_pathv[i],0) != 1) {
 			config_error("%s:%i: loadmodule %s: failed to load",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 				files.gl_pathv[i]);
@@ -1182,7 +1182,7 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 	}
 	globfree(&files);
 #else
-	if (load_module(ce->ce_vardata) != 1) {
+	if (load_module(ce->ce_vardata,0) != 1) {
 			config_error("%s:%i: loadmodule %s: failed to load",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 				ce->ce_vardata);

@@ -88,6 +88,23 @@ int    l_commands_init(int module_load)
 	m_swhois_init();
 	m_svsmotd_init();
 }
+#ifdef DYNAMIC_LINKING
+DLLFUNC void	mod_load()
+#else
+void    l_commands_load()
+#endif
+{
+
+	m_sethost_load();
+	m_setname_load();
+	m_chghost_load();
+	m_chgident_load();
+	m_setident_load();
+	m_sdesc_load();
+	m_svsmode_load();
+	m_swhois_load();
+	m_svsmotd_load();
+}
 
 #ifdef DYNAMIC_LINKING
 DLLFUNC void	mod_unload(void)

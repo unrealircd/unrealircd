@@ -625,3 +625,4 @@ seen. gmtime warning still there
 - Commited the +k fix to +L
 - Made version.c depend on ../Changes
 - Made the ircd call mod_unload when it shuts down
+- Made use of the new module_load parameter in mod_init, and made commands.so use mod_load
