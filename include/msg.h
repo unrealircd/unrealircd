@@ -321,7 +321,7 @@ extern int m_credits();
 extern int m_license();
 extern int m_netinfo(), m_addmotd(), m_addomotd();
 extern int m_svsfline();
-extern int m_botmotd(), m_sjoin();
+extern int m_botmotd();
 extern int m_dccdeny(), m_undccdeny();
 extern int m_opermotd();
 extern int m_module(), m_alias(), m_tkl(), m_opermotd();
