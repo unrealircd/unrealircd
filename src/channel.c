@@ -3502,7 +3502,7 @@ int  m_topic(cptr, sptr, parc, parv)
 		else if (ttime && topic && (IsServer(sptr)
 		    || IsULine(sptr)))
 		{
-			if (!chptr->topic_time || ttime < chptr->topic_time)
+			if (!chptr->topic_time || ttime > chptr->topic_time)
 			{
 				/* setting a topic */
 				topiClen = strlen(topic);
