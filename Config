@@ -535,7 +535,7 @@ else
 	cd ../..
 fi
 
-if [ -r /usr/include/openssl/ssl.h ] ; then
+if [ -r /usr/include/openssl/ssl.h || -r /usr/local/ssl/include/openssl/ssl.h] ; then
        echo $n "...Looking where you got the openssl binary...$c"
        if [ -r /bin/openssl ] ; then
                OPENSSLPATH=/bin/openssl
