@@ -1056,3 +1056,4 @@ seen. gmtime warning still there
 - doh, missing a ! in m_tkl.c that allows us to do bad things(TM)
 - Fix for nested comments, found by lnxgk
 - C++ comment fix, lnxgk again.
+- Crash in scan_http fixed, h->in instead of &h->in = bad
