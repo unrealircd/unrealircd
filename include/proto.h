@@ -20,6 +20,8 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#ifndef proto_h
+#define proto_h
 /* badwords.c */
 int  loadbadwords_message PROTO((char *wordfile));
 int  loadbadwords_channel PROTO((char *wordfile));
@@ -50,6 +52,7 @@ void sendto_chanops_butone PROTO((aClient *one, aChannel *chptr, char *pattern, 
 void sendto_realops PROTO((char *pattern, ...));
 void sendto_serv_butone_token PROTO((aClient *one, char *prefix, char *command, char *token, char *pattern, ...));
 void sendto_serv_butone_token_opt PROTO((aClient *one, int opt, char *prefix, char *command, char *token, char *pattern, ...));
+void sendto_channel_ntadmins PROTO((aClient *from, aChannel *chptr, char *pattern, ...)); 
 
 /* support.c */
 char *my_itoa PROTO((int i));
@@ -85,5 +88,12 @@ void unrealmanual PROTO((void));
 int  check_for_target_limit PROTO((aClient *sptr, void *target, const char *name));
 void make_umodestr PROTO((void));
 
+/* webtv.c */
+int  is_halfop PROTO((aClient *cptr, aChannel *chptr));
+int  is_chanprot PROTO((aClient *cptr, aChannel *chptr));
+char *convert_time PROTO((time_t ltime));
+char *get_mode_str PROTO((aClient *acptr));
+
 /* whowas.c */
 void initwhowas PROTO((void));
+#endif /* proto_h */

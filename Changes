@@ -620,3 +620,5 @@
   - When you set -I which on a chan it sends a JOIN to the rest of the channel
   - Net/TechAdmins now receive a JOIN/PART when you JOIN/PART a channel
   - Net/TechAdmins can now see +I users in /names
+- Fixed a typo in s_err.c reported by TRON
+- Fixed more -Wall warnings

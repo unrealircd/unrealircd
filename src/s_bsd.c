@@ -69,6 +69,8 @@ Computing Center and Jarkko Oikarinen";
 #endif
 #include "resolv.h"
 #include "sock.h"		/* If FD_ZERO isn't define up to this point,  */
+#include <string.h>
+#include "proto.h"
 			/* define it (BSD4.2 needs this) */
 #include "h.h"
 #ifndef NO_FDLIST

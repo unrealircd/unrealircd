@@ -53,6 +53,7 @@ Computing Center and Jarkko Oikarinen";
 #endif
 #include "h.h"
 #include "channel.h"
+#include <string.h>
 
 #ifndef NO_FDLIST
 extern fdlist serv_fdlist;

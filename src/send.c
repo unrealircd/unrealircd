@@ -37,7 +37,7 @@ static char sccsid[] =
 #ifdef _WIN32
 #include <io.h>
 #endif
-
+#include <string.h>
 
 void vsendto_one(aClient *to, char *pattern, va_list vl);
 void sendbufto_one(aClient *to);

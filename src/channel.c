@@ -47,6 +47,7 @@
 #include "hash.h"		/* For CHANNELHASHSIZE */
 #include "h.h"
 #include "proto.h"
+#include <string.h>
 
 ID_Copyright
     ("(C) 1990 University of Oulu, Computing Center and Jarkko Oikarinen");
@@ -81,7 +82,6 @@ static int channel_link PROTO((aClient *, aClient *, int, char **));
 static void channel_modes PROTO((aClient *, char *, char *, aChannel *));
 static int check_channelmask PROTO((aClient *, aClient *, char *));
 static int del_banid PROTO((aChannel *, char *));
-static int find_banid PROTO((aChannel *, char *));
 static void set_mode PROTO((aChannel *, aClient *, int, char **, u_int *,
     char[MAXMODEPARAMS][MODEBUFLEN + 3], int));
 static void make_mode_str PROTO((aChannel *, long, long, int,
@@ -307,22 +307,6 @@ static int del_exbanid(chptr, banid)
 	return -1;
 }
 
-/*
- * find_banid - Find an exact match for a exban
- */
-static int find_exbanid(chptr, banid)
-	aChannel *chptr;
-	char *banid;
-{
-	Ban **ban;
-
-	if (!banid)
-		return -1;
-	for (ban = &(chptr->exlist); *ban; ban = &((*ban)->next))
-		if (!mycmp(banid, (*ban)->banstr))
-			return 1;
-	return 0;
-}
 
 
 /*
@@ -397,22 +381,6 @@ static int del_banid(chptr, banid)
 	return -1;
 }
 
-/*
- * find_banid - Find an exact match for a ban
- */
-static int find_banid(chptr, banid)
-	aChannel *chptr;
-	char *banid;
-{
-	Ban **ban;
-
-	if (!banid)
-		return -1;
-	for (ban = &(chptr->banlist); *ban; ban = &((*ban)->next))
-		if (!mycmp(banid, (*ban)->banstr))
-			return 1;
-	return 0;
-}
 
 /*
  * IsMember - returns 1 if a person is joined
@@ -564,7 +532,7 @@ int  is_chan_op(cptr, chptr)
 	Link *lp;
 /* chanop/halfop ? */
 	if (chptr)
-		if (lp = find_user_link(chptr->members, cptr))
+		if ((lp = find_user_link(chptr->members, cptr)))
 			return ((lp->flags & CHFL_CHANOP));
 
 	return 0;
@@ -601,7 +569,7 @@ int  is_halfop(cptr, chptr)
 	Link *lp;
 
 	if (chptr)
-		if (lp = find_user_link(chptr->members, cptr))
+		if ((lp = find_user_link(chptr->members, cptr)))
 			if (!is_chan_op(cptr, chptr))	/* excessive but needed */
 				return (lp->flags & CHFL_HALFOP);
 
@@ -615,7 +583,7 @@ int  is_chanowner(cptr, chptr)
 	Link *lp;
 
 	if (chptr)
-		if (lp = find_user_link(chptr->members, cptr))
+		if ((lp = find_user_link(chptr->members, cptr)))
 			return (lp->flags & CHFL_CHANOWNER);
 
 	return 0;
@@ -628,7 +596,7 @@ int  is_chanprot(cptr, chptr)
 	Link *lp;
 
 	if (chptr)
-		if (lp = find_user_link(chptr->members, cptr))
+		if ((lp = find_user_link(chptr->members, cptr)))
 			return (lp->flags & CHFL_CHANPROT);
 
 	return 0;
@@ -1314,7 +1282,7 @@ void do_mode(chptr, cptr, sptr, parc, parv, sendts, samode)
 	if (*mode_buf == '\0' || (*(mode_buf + 1) == '\0' && (*mode_buf == '+'
 	    || *mode_buf == '-')))
 	{
-		if (tschange || isbounce)	/* relay bounce time changes */
+		if (tschange || isbounce) {	/* relay bounce time changes */
 			if (chptr->creationtime)
 				sendto_serv_butone_token(cptr, me.name,
 				    MSG_MODE, TOK_MODE, "%s %s+ %lu",
@@ -1325,6 +1293,7 @@ void do_mode(chptr, cptr, sptr, parc, parv, sendts, samode)
 				    MSG_MODE, TOK_MODE, "%s %s+ ",
 				    chptr->chname, isbounce ? "&" : "");
 		return;		/* nothing to send */
+		}
 	}
 	/* opermode for twimodesystem --sts */
 #ifndef NO_OPEROVERRIDE

@@ -400,6 +400,7 @@ int  load_conf2(FILE * conf, char *filename, int type)
 	{
 		sendto_realops("Loaded %s ..", filename);
 	}
+return 0;
 }
 
 /* Load .network options */
@@ -512,6 +513,7 @@ int  load_conf3(FILE * conf, char *filename, int type)
 	{
 		sendto_realops("Loaded %s ..", INCLUDE);
 	}
+	return 0;
 }
 
 

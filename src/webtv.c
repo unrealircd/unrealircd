@@ -35,6 +35,7 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 
 ID_Copyright("(C) Carsten Munk 2000");
 

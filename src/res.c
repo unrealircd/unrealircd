@@ -20,6 +20,7 @@
 #endif
 #include "nameser.h"
 #include "resolv.h"
+#include <string.h>
 
 #ifndef lint
 static  char sccsid[] = "@(#)res.c	2.38 4/13/94 (C) 1992 Darren Reed";

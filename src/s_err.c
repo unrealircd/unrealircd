@@ -485,7 +485,7 @@ static char *replies[] = {
 /* 442    ERR_NOTONCHANNEL */ ":%s 442 %s %s :You're not on that channel",
 /* 443    ERR_USERONCHANNEL */ ":%s 443 %s %s %s :is already on channel",
 /* 444    ERR_NOLOGIN */ ":%s 444 %s %s :User not logged in",
-/* 445    ERR_SUMMONDISABLED */ ":%s 447 %s :SUMMON has been disabled",
+/* 445    ERR_SUMMONDISABLED */ ":%s 445 %s :SUMMON has been disabled",
 /* 446    ERR_USERSDISABLED */ ":%s 446 %s :USERS has been disabled",
 /* 447 */ NULL,
 /* 448 */ NULL,

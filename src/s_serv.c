@@ -45,7 +45,7 @@ static char sccsid[] =
 #endif
 #include <time.h>
 #include "h.h"
-
+#include <string.h>
 
 
 static char buf[BUFSIZE];

@@ -53,6 +53,7 @@ Computing Center and Jarkko Oikarinen";
 #if defined(PCS) || defined(AIX) || defined(SVR3)
 #include <time.h>
 #endif
+#include <string.h>
 
 ID_Notes("O:line flags in here");
 #include "h.h"

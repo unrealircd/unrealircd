@@ -24,6 +24,8 @@
 #include "numeric.h"
 #include "h.h"
 #include "hash.h"
+#include "proto.h"
+#include <string.h>
 
 /* externally defined functions */
 unsigned int hash_whowas_name(char *);	/* defined in hash.c */
@@ -126,7 +128,6 @@ void count_whowas_memory(int *wwu, u_long *wwum)
 	int  i;
 	int  u = 0;
 	u_long um = 0;
-	u_long uam = 0;
 	/* count the number of used whowas structs in 'u' */
 	/* count up the memory used of whowas structs in um */
 
