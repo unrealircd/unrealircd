@@ -18,6 +18,11 @@
 #include <string.h>
 #ifdef _WIN32
 #include <io.h>
+#else
+#include <sys/socket.h>
+#include <sys/file.h>
+#include <sys/ioctl.h>
+#include <sys/resource.h>
 #endif
 #include <fcntl.h>
 #include "h.h"
@@ -28,6 +33,10 @@
 #include "version.h"
 #endif
 #include "modules/scan.h"
+
+#ifndef SCAN_ON_PORT
+#define SCAN_ON_PORT 1080
+#endif
 
 void	scan_socks_scan(HStruct *h);
 
@@ -85,12 +94,17 @@ void	scan_socks_unload(void)
 	del_HookX(HOOKTYPE_SCAN_HOST, NULL, scan_socks_scan);
 }
 
+#define HICHAR(s)	(((unsigned short) s) >> 8)
+#define LOCHAR(s)	(((unsigned short) s) & 0xFF)
+
 void	scan_socks_scan(HStruct *h)
 {
+	int			retval;
 	char			host[SCAN_HOSTLENGTH];
 	struct			SOCKADDR_IN sin;
-	int				fd;
+	SOCKET				fd;
 	int				sinlen = sizeof(struct SOCKADDR_IN);
+	unsigned short	sport = SOCKSPORT;
 	unsigned char   socksbuf[12];
 	unsigned long   theip;
 	fd_set			rfds;
@@ -109,7 +123,7 @@ void	scan_socks_scan(HStruct *h)
 		return;
 	}
 
-	sin.SIN_PORT = htons(1080);
+	sin.SIN_PORT = htons(SCAN_ON_PORT);
 	sin.SIN_FAMILY = AFINET;
 	/* We do this blocking. */
 	if (connect(fd, (struct sockaddr *)&sin,
@@ -120,28 +134,41 @@ void	scan_socks_scan(HStruct *h)
 		goto exituniverse;
 		return;
 	}
-//	bcopy((char *)&socksid, (char *)&socksbuf, 9);
-
-	getsockname(me.fd, (struct SOCKADDR *)&sin, &sinlen);
-
+	
+	/* We wait for write-ready */
+	tv.tv_sec = 10;
+	tv.tv_usec = 0;
+	FD_ZERO(&rfds);
+	FD_SET(fd, &rfds);
+	if (!select(fd + 1, NULL, &rfds, NULL, &tv))
+	{
+		CLOSE_SOCK(fd);
+		goto exituniverse;
+	}
+				
+	sin.SIN_ADDR.S_ADDR = inet_addr("65.160.249.130");
 	theip = htonl(sin.SIN_ADDR.S_ADDR);
-
+	bzero(socksbuf, sizeof(socksbuf));
+	socksbuf[0] = 4;
+	socksbuf[1] = 1;
+	socksbuf[2] = HICHAR(sport);
+	socksbuf[3] = LOCHAR(sport);
 	socksbuf[4] = (theip >> 24);
 	socksbuf[5] = (theip >> 16) & 0xFF;
 	socksbuf[6] = (theip >> 8) & 0xFF;
 	socksbuf[7] = theip & 0xFF;
-
-	if (send(fd, socksbuf, 9, 0) != 9)
+	
+	if ((retval = send(fd, socksbuf, 9, 0)) != 9)
 	{
 		CLOSE_SOCK(fd);
 		goto exituniverse;
 	}
 	/* Now we wait for data. 30 secs ought to be enough  */
-	tv.tv_sec = 30;
+	tv.tv_sec = 10;
 	tv.tv_usec = 0;
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);
-	if (select(1, &rfds, NULL, NULL, &tv))
+	if (retval = select(fd + 1, &rfds, NULL, NULL, &tv))
 	{
 		/* There's data in the jar. Let's read it */
 		len = recv(fd, socksbuf, 9, 0);
@@ -154,13 +181,14 @@ void	scan_socks_scan(HStruct *h)
 		{
 			/* We found SOCKS. */
 			IRCMutexLock(VSlock);
-			VS_Add(host, "Open SOCKS server");
+			VS_Add(host, "Open SOCKS4/5 server");
 			IRCMutexUnlock(VSlock);
 			goto exituniverse;
 		}
 	}
 	else
 	{
+		socksbuf[0] = retval;
 		CLOSE_SOCK(fd);
 	}
 exituniverse:

@@ -261,13 +261,13 @@ DLLFUNC int h_scan_connect(aClient *sptr)
 
 	IRCMutexLock(HSlock);
 	HS_Cleanup((void *)1);
-	if (HS_Find(sptr->sockhost))
+	if (HS_Find((char *)inet_ntoa(sptr->ip)))
 	{
 		/* Not gonna scan, already scanning */
 		IRCMutexUnlock(HSlock);
 		return 0;
 	}
-	if (h = HS_Add(sptr->sockhost))
+	if (h = HS_Add((char *)inet_ntoa(sptr->ip)))
 	{
 		/* Run scanning threads, refcnt++ for each thread that uses the struct */
 		/* Use hooks, making it easy, remember to convert to vFP */

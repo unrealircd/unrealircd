@@ -58,7 +58,7 @@ static unsigned char socksid[12];
 /* init_socks
  * Set up socksid, simply.
  */
-
+   
 void init_socks(aClient *cptr)
 {
 	unsigned short sport = SOCKSPORT;
@@ -118,7 +118,7 @@ void start_socks(aClient *cptr)
 		Debug((DEBUG_ERROR, "Unable to create socks socket for %s:%s",
 		    get_client_name(cptr, TRUE), strerror(get_sockerr(cptr))));
 		return;
-	}
+		}
 	if (++OpenFiles >= (MAXCONNECTIONS - 3))
 	{
 		sendto_ops("Can't allocate fd for socks on %s",

@@ -19,13 +19,13 @@
 #*   $Id$
 #*/
 
-COMMANDS_MODULES=m_sethost.so m_chghost.so m_chgident.so m_setname.so \
-		m_setident.so m_sdesc.so 
+R_MODULES=m_sethost.so m_chghost.so m_chgident.so m_setname.so \
+		m_setident.so m_sdesc.so scan.so scan_socks.so
 
 COMMANDS=m_sethost.c m_chghost.c m_chgident.c m_setname.c m_setident.c \
-         m_sdesc.c
+         m_sdesc.c scan.c scan_socks.c
 
-MODULES=commands.so $(COMMANDS_MODULES)
+MODULES=commands.so $(R_MODULES)
 
 all: build
 
@@ -58,6 +58,15 @@ m_setname.so: m_setname.c $(INCLUDES)
 m_sdesc.so: m_sdesc.c $(INCLUDES)
 	$(CC) $(CFLAGS) -fPIC -DPIC -shared -DDYNAMIC_LINKING \
 		 -o m_sdesc.so m_sdesc.c
+
+
+scan.so: scan.c $(INCLUDES)
+	$(CC) $(CFLAGS) -fPIC -DPIC -shared -DDYNAMIC_LINKING \
+		 -o scan.so scan.c
+
+scan_socks.so: scan_socks.c $(INCLUDES)
+	$(CC) $(CFLAGS) -fPIC -DPIC -shared -DDYNAMIC_LINKING \
+		 -o scan_socks.so scan_socks.c
 
 clean:
 	$(RM) -f *.o *.so *~ core

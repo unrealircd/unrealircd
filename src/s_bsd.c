@@ -1231,17 +1231,24 @@ void set_non_blocking(fd, cptr)
 	res = 1;
 
 	if (ioctl(fd, FIONBIO, &res) < 0)
-		report_error("ioctl(fd,FIONBIO) failed for %s:%s", cptr);
+	{
+		if (cptr) 
+			report_error("ioctl(fd,FIONBIO) failed for %s:%s", cptr);
+		
+	}
 #else
 # if !defined(_WIN32)
 	if ((res = fcntl(fd, F_GETFL, 0)) == -1)
-		report_error("fcntl(fd, F_GETFL) failed for %s:%s", cptr);
+		if (cptr)
+			report_error("fcntl(fd, F_GETFL) failed for %s:%s", cptr);
 	else if (fcntl(fd, F_SETFL, res | nonb) == -1)
-		report_error("fcntl(fd, F_SETL, nonb) failed for %s:%s", cptr);
+		if (cptr)
+			report_error("fcntl(fd, F_SETL, nonb) failed for %s:%s", cptr);
 # else
 	nonb = 1;
 	if (ioctlsocket(fd, FIONBIO, &nonb) < 0)
-		report_error("ioctlsocket(fd,FIONBIO) failed for %s:%s", cptr);
+		if (cptr)
+			report_error("ioctlsocket(fd,FIONBIO) failed for %s:%s", cptr);
 # endif
 #endif
 	return;
