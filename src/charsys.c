@@ -592,7 +592,7 @@ char latin1=0, latin2=0, w1250=0, chinese=0;
 		/* supplied by Roman Parkin:
 		 * 128-159 and 223-254
 		 */
-		charsys_addallowed("€‚ƒ„…†‡‰‹‘’“”•–—™›ίΰαβγδεζηθικλμνξοπρςστυφχψωϊϋόύώ");
+		charsys_addallowed("ΐΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡÒΣΤΥΦΧΨΩΪΫάέήίΰαβγδεζηθικλμνξοπρςστυφχψωϊϋόύώÿ");
 	}
 	
 	/* [GREEK] */	
