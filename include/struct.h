@@ -914,6 +914,7 @@ struct _configflag_tld
 #define CONF_EXCEPT_SCAN	0
 #define CONF_EXCEPT_BAN		1
 #define CONF_EXCEPT_TKL		2
+#define CONF_EXCEPT_THROTTLE	3
 
 
 struct _configitem {

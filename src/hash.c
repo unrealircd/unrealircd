@@ -747,11 +747,16 @@ void	init_throttling_hash()
 
 int	hash_throttling(struct IN_ADDR *in)
 {
+#ifdef INET6
+	u_char *cp;
+#endif
 #ifndef INET6
 	return ((int)in->s_addr % THROTTLING_HASH_SIZE); 
 #else
-	/* FIXME: This way it will work until we find a way to do it.  */ 
-	return 0;
+	cp = (u_char *) &in->s6_addr;
+	return (cp[0] ^ cp[1] ^ cp[2] ^ cp[3] ^ cp[4] ^ cp[5] ^
+		cp[6] ^ cp[7] ^ cp[8] ^ cp[9] ^ cp[10] ^ cp[11] ^ 
+		cp[12] ^ cp[13] ^ cp[14] ^ cp[15]);
 #endif
 }
 
@@ -798,7 +803,11 @@ int	throttle_can_connect(struct IN_ADDR *in)
 	if (!find_throttling_bucket(in))
 		return 1;
 	else
+	{
+		if (Find_except(Inet_ia2p(in), CONF_EXCEPT_THROTTLE))
+			return 1;
 		return 0;
+	}
 }
 
 EVENT(e_clean_out_throttling_buckets)

@@ -3626,6 +3626,22 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 		}
 
 	}
+#ifdef THROTTLING
+	else if (!strcmp(ce->ce_vardata, "throttle")) {
+		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+		{
+			if (!strcmp(cep->ce_varname, "mask")) {
+				ca = MyMallocEx(sizeof(ConfigItem_except));
+				ca->mask = strdup(cep->ce_vardata);
+				ca->flag.type = CONF_EXCEPT_THROTTLE;
+				AddListItem(ca, conf_except);
+			}
+			else {
+			}
+		}
+
+	}
+#endif
 	else if (!strcmp(ce->ce_vardata, "tkl")) {
 		cep2 = config_find_entry(ce->ce_entries, "mask");
 		cep3 = config_find_entry(ce->ce_entries, "type");
@@ -3727,6 +3743,37 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 		}
 		return errors;
 	}
+#ifdef THROTTLING
+	else if (!strcmp(ce->ce_vardata, "throttle")) {
+		if (!config_find_entry(ce->ce_entries, "mask"))
+		{
+			config_error("%s:%i: except throttle without mask item",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			return 1;
+		}
+		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+		{
+			if (!cep->ce_vardata)
+			{
+				config_error("%s:%i: except throttle item without contents",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+				continue;
+			}
+			if (!strcmp(cep->ce_varname, "mask"))
+			{
+			}
+			else
+			{
+				config_error("%s:%i: unknown except throttle directive %s",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
+				errors++;
+				continue;
+			}
+		}
+		return errors;
+	}
+#endif
 	else if (!strcmp(ce->ce_vardata, "tkl")) {
 		if (!config_find_entry(ce->ce_entries, "mask"))
 		{
@@ -3755,7 +3802,7 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 			else if (!strcmp(cep->ce_varname, "type")) {}
 			else
 			{
-				config_error("%s:%i: unknown except scan directive %s",
+				config_error("%s:%i: unknown except tkl directive %s",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_varname);
 				errors++;
 				continue;
