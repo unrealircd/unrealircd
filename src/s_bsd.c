@@ -797,8 +797,8 @@ static int completed_connection(aClient *cptr)
 		sendto_one(cptr, "PASS :%s", aconf->connpwd);
 
 	sendto_one(cptr, "PROTOCTL %s", PROTOCTL_SERVER);
-	sendto_one(cptr, "SERVER %s 1 :U%d-%s-%i %s",
-	    me.name, UnrealProtocol, serveropts, me.serv->numeric,
+	sendto_one(cptr, "SERVER %s 1 :U%d-%s%s-%i %s",
+	    me.name, UnrealProtocol, serveropts, extraflags ? extraflags : "", me.serv->numeric,
 	    me.info);
 	if (!IsDead(cptr))
 		start_auth(cptr);

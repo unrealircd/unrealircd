@@ -1208,3 +1208,6 @@ seen. gmtime warning still there
 - Added a patch by Syzop to fix a MyMalloc/MyFree debugmode error
 - Added yet another patch by Syzop to fix a /vhost bug when using very long args
 - Added a patch by Syzop to fix a possible hash bug with /list
+- Made the server pass extraflags at linking for deny version validation
+- Added a patch by Syzop to fix a bug preventing +I from being used (fixes #0000073)
+

@@ -64,6 +64,7 @@ int    invisibility_Init(int module_load)
 #endif
 {
 	UMODE_HIDING = umode_get('I');	
+	flag_add("R");
 	return MOD_SUCCESS;
 }
 
@@ -73,8 +74,6 @@ DLLFUNC int	Mod_Load(int module_load)
 int    invisibility_Load(int module_load)
 #endif
 {
-	UMODE_HIDING = umode_get('I');	
-	flag_add("R");
 	return MOD_SUCCESS;
 }
 
