@@ -191,6 +191,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPT_NOT_UMODE2	0x0080
 #define OPT_SJ3		0x0100
 #define OPT_NOT_SJ3	0x0200
+#define OPT_SJB64	0x0400
+#define OPT_NOT_SJB64	0x0800
 
 #define	FLAGS_PINGSENT   0x0001	/* Unreplied ping sent */
 #define	FLAGS_DEADSOCKET 0x0002	/* Local socket is dead--Exiting soon */

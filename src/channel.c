@@ -2986,12 +2986,33 @@ int  m_join(cptr, sptr, parc, parv)
 		else
 			sendto_channel_butserv(chptr, sptr,
 			    ":%s JOIN :%s", parv[0], chptr->chname);
+	
+		sendto_serv_butone_token_opt(cptr, OPT_NOT_SJ3, parv[0], MSG_JOIN,
+			    TOK_JOIN, "%s", chptr->chname);
 
-		sendto_serv_butone_token(cptr, parv[0], MSG_JOIN,
-		    TOK_JOIN, "%s", chptr->chname);
+		if ((MyClient(sptr) && !(flags & CHFL_CHANOP)) || !MyClient(sptr))
+			sendto_serv_butone_token_opt(cptr, OPT_SJ3, parv[0], MSG_JOIN,
+			    TOK_JOIN, "%s", chptr->chname);
+				
 
 		if (MyClient(sptr))
 		{
+			
+			/* Send out SJOIN stuff */
+			if (flags & CHFL_CHANOP)
+			{
+				/* I _know_ that the "@%s " look a bit wierd
+				   with the space and all .. but its to get around
+				   a SJOIN bug --stskeeps */
+				sendto_serv_butone_token_opt(cptr, OPT_SJ3|OPT_SJB64,
+					me.name, MSG_SJOIN, TOK_SJOIN,
+					"%B %s :@%s ", chptr->creationtime, 
+					chptr->chname, sptr->name);
+				sendto_serv_butone_token_opt(cptr, OPT_SJ3|OPT_NOT_SJB64,
+					me.name, MSG_SJOIN, TOK_SJOIN,
+					"%li %s :@%s ", chptr->creationtime, 
+					chptr->chname, sptr->name);
+			}
 			/*
 			   ** Make a (temporal) creationtime, if someone joins
 			   ** during a net.reconnect : between remote join and
@@ -3006,7 +3027,8 @@ int  m_join(cptr, sptr, parc, parv)
 			}
 			del_invite(sptr, chptr);
 			if (flags & CHFL_CHANOP)
-				sendto_serv_butone_token(cptr, me.name,
+				sendto_serv_butone_token_opt(cptr, OPT_NOT_SJ3, 
+				    me.name,
 				    MSG_MODE, TOK_MODE, "%s +o %s %lu",
 				    chptr->chname, parv[0],
 				    chptr->creationtime);
@@ -4498,6 +4520,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	unsigned short removetheirs;
 	unsigned short merge;	/* same timestamp */
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
+	char tsbuf[100];
 	char paraback[1024], modeback[1024];
 	char banbuf[1024];
 	char exbuf[1024];
@@ -4511,7 +4534,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	int  ts, oldts, pcount, x, y, z, i, f;
 	unsigned short b, c;
 	Mode oldmode;
-	char *t, *bp, *tp;
+	char *t, *bp, *tamax, *tp;
 	long modeflags;
 
 	if (IsClient(sptr) || parc < 3 || !IsServer(sptr))
@@ -4547,6 +4570,9 @@ int  m_sjoin(cptr, sptr, parc, parv)
 		ts = atol(parv[1]);
 	else
 		ts = base64dec(parv[1] + 1);
+	ircsprintf(tsbuf, "%li", ts);
+	parv[1] = (char *)ts;
+
 	if (chptr->creationtime > ts)
 	{
 		removeours = 1;
@@ -4658,9 +4684,10 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	b = 1;
 	c = 0;
 	bp = buf;
-	while (*t != '\0')
+	tamax = t + strlen(parv[parc-1]);
+	while (t <= tamax)
 	{
-		if (*t == ' ')
+		if (*t == ' ' || *t == '\0')
 		{
 			if (f)
 				strncpyzt(bp, (t - c), (c + 1));	/* Put the nick in bp */
@@ -5000,7 +5027,7 @@ int  m_sjoin(cptr, sptr, parc, parv)
 
 
 	strcpy(parabuf, "");
-	for (i = 1; i <= (parc - 2); i++)
+	for (i = 2; i <= (parc - 2); i++)
 	{
 		if (!parv[i])
 		{
@@ -5013,10 +5040,15 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	}
 
 	/* This sends out to SJ3 servers .. */
-	sendto_serv_butone_token_opt(cptr, OPT_SJOIN | OPT_SJ3, sptr->name,
-	    MSG_SJOIN, TOK_SJOIN, "%s :%s", parabuf, parv[parc - 1]);
-	Debug((DEBUG_DEBUG, "Sending '%s :%s' to sj3", parabuf,
+	Debug((DEBUG_DEBUG, "Sending '%s %s :%s' to sj3-!sjb64", parv[1], parabuf,
 	    parv[parc - 1]));
+	sendto_serv_butone_token_opt(cptr, OPT_SJOIN | OPT_SJ3 | OPT_NOT_SJB64, sptr->name,
+	    MSG_SJOIN, TOK_SJOIN, "%s %s :%s", parv[1], parabuf, parv[parc - 1]);
+	Debug((DEBUG_DEBUG, "Sending '%B %s :%s' to sj3-sjb64", atol(parv[1]), parabuf,
+	    parv[parc - 1]));
+	sendto_serv_butone_token_opt(cptr, OPT_SJOIN | OPT_SJ3 | OPT_SJB64, sptr->name,
+	    MSG_SJOIN, TOK_SJOIN, "%B %s :%s", atol(parv[1]), parabuf, parv[parc - 1]);
+	 
 	/* We strip out & and " here, for SJ2 */
 	strcpy(parabuf, "");
 	t = parv[parc - 1];

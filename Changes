@@ -726,3 +726,7 @@
 - Updated some messages
 - Fixed-fixed-fixed the U:line branching thing made by codemastr
 - Fixed a G: line-turn-into Z:line problem, reported by eYe-Man
+- Added SJOIN (SJ3 only) instead of JOIN/MODE in /join and discovered a bug in 
+  SJOIN code, that if the line doesnt have a " " appeneded, it wont take the
+  last users or first for that sake. Hopefully patched SJ3 code for it
+- Added OPT target OPT_SJB64 and OPT_NOT_SJB64
