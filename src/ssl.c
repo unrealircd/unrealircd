@@ -117,14 +117,14 @@ int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 
 void init_ctx_server(void)
 {
-	ctx_server = SSL_CTX_new(SSLv3_server_method());
+	ctx_server = SSL_CTX_new(SSLv23_server_method());
 	if (!ctx_server)
 	{
 		ircd_log(LOG_ERROR, "Failed to do SSL CTX new");
 		exit(2);
 	}
 	SSL_CTX_set_default_passwd_cb(ctx_server, ssl_pem_passwd_cb);
-
+	SSL_CTX_set_options(ctx_server, SSL_OP_NO_SSLv2);
 	if (SSL_CTX_use_certificate_file(ctx_server, CERTF, SSL_FILETYPE_PEM) <= 0)
 	{
 		ircd_log(LOG_ERROR, "Failed to load SSL certificate %s", CERTF);

@@ -1452,3 +1452,4 @@ seen. gmtime warning still there
 - Cleaned out Credits (i'll fix the web part of it later), made doug lea malloc default
   on Linux FSU Pthread installs. (When we got a better way, we will have full doug lea malloc..)
 - Made OPEROVERRIDE_VERIFY default undeffed
+- SSL fixes to deal with not allowing SSLv2
