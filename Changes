@@ -934,3 +934,6 @@ seen. gmtime warning still there
 - Added new auth.c API and a lot of different crap .. will document later
 - Made make install copy modules (oops)
 - Added configure code to get the Auth crypt working
+- Made Events do thread locking (so we can do funny things and kill small
+  furry animals in the attempt for the perfect scanning module) .. yes, this 
+  is drunken coding

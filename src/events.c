@@ -41,17 +41,30 @@
 
 ID_Copyright("(C) Carsten Munk 2001");
 
+#ifndef HAVE_NO_THREADS
+#include "threads.h"
+MUTEX			sys_EventLock;
+#endif
 
 
 Event *events = NULL;
+
 
 void	EventAdd(char *name, long every, long howmany,
 		  vFP event, void *data)
 {
 	Event *newevent;
+
+#ifndef HAVE_NO_THREADS
+	IRCMutexLock(sys_EventLock);
+#endif
 	
 	if (!name || (every < 0) || (howmany < 0) || !event)
 	{
+#ifndef HAVE_NO_THREADS
+		IRCMutexUnlock(sys_EventLock);
+#endif
+
 		return;
 	}
 	newevent = (Event *) MyMallocEx(sizeof(Event));
@@ -67,6 +80,10 @@ void	EventAdd(char *name, long every, long howmany,
 	if (events)
 		events->prev = newevent;
 	events = newevent;
+#ifndef HAVE_NO_THREADS
+	IRCMutexUnlock(sys_EventLock);
+#endif
+	
 }
 
 Event	*EventDel(char *name)
@@ -106,10 +123,18 @@ Event	*EventFind(char *name)
 void	EventModEvery(char *name, int every)
 {
 	Event *eventptr;
-	
+
+#ifndef HAVE_NO_THREADS
+	IRCMutexLock(sys_EventLock);
+#endif
 	eventptr = EventFind(name);
 	if (eventptr)
 		eventptr->every = every;
+
+#ifndef HAVE_NO_THREADS
+	IRCMutexUnlock(sys_EventLock);
+#endif
+
 }
 
 inline void	DoEvents(void)
@@ -117,6 +142,9 @@ inline void	DoEvents(void)
 	Event *eventptr;
 	Event temp;
 
+#ifndef HAVE_NO_THREADS
+	IRCMutexLock(sys_EventLock);
+#endif
 	for (eventptr = events; eventptr; eventptr = eventptr->next)
 		if ((eventptr->every == 0) || ((TStime() - eventptr->last) >= eventptr->every))
 		{
@@ -134,6 +162,11 @@ inline void	DoEvents(void)
 			eventptr->last = TStime();
 			(*eventptr->event)(eventptr->data);
 		}
+	
+#ifndef HAVE_NO_THREADS
+	IRCMutexUnlock(sys_EventLock);
+#endif
+
 }
 
 void	EventStatus(aClient *sptr)
@@ -159,7 +192,9 @@ void	SetupEvents(void)
 	/* We're doomed! */
 	if (match(EVENT_HASHES, &EVENT_CRC[EVENT_HASHVALUE]))
 		exit (0);
-		
+#ifndef HAVE_NO_THREADS
+	IRCCreateMutex(sys_EventLock);
+#endif
 	/* Start events */
 	EventAdd("tklexpire", 5, 0, tkl_check_expire, NULL);
 	EventAdd("tunefile", 300, 0, save_tunefile, NULL);
