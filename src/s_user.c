@@ -2634,9 +2634,11 @@ int  m_who(cptr, sptr, parc, parv)
 	mychannel = NullChn;
 	if (oper)
 	{
+#ifdef HELP_WHO
 		sendto_umode(UMODE_HELPOP,
 		    "*** HelpOp -- from %s: [Did a /who 0 o]", parv[0]);
 		sendto_serv_butone(&me, ":%s HELP :[Did a /who 0 o]", parv[0]);
+#endif
 		operwho = 1;
 	}
 	if (sptr->user)

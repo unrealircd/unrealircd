@@ -406,3 +406,4 @@
 - Fixed up some codemastr(TM) coding regarding M_*
 - Implimented a cloak fix based on code by Zogg (just used a #define ircabs rather than abs())
 - Possible FD leak in ircd_log, caused by some codemastr coding(TM)
+- #define HELP_WHO for the "did a /who 0 o"
