@@ -69,6 +69,10 @@ void iNAH_host(aClient *sptr, char *host)
 {
 	if (!sptr->user)
 		return;
+
+	if (UHOST_ALLOWED == UHALLOW_REJOIN)
+		rejoin_doparts(sptr);
+
 	if (sptr->user->virthost)
 	{
 		MyFree(sptr->user->virthost);
@@ -79,6 +83,9 @@ void iNAH_host(aClient *sptr, char *host)
 		sendto_serv_butone_token(&me, sptr->name, MSG_SETHOST,
 		    TOK_SETHOST, "%s", sptr->user->virthost);
 	sptr->umodes |= UMODE_SETHOST;
+	
+	if (UHOST_ALLOWED == UHALLOW_REJOIN)
+		rejoin_dojoinandmode(sptr);
 }
 
 long set_usermode(char *umode)

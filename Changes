@@ -246,3 +246,7 @@
 ** 3.2.1 release **
 - Fixed a win32 module problem where file not found errors would display random characters,
   reported by STING
+- Fixed a bug where the allow-userhost-change force-rejoin setting was not applied to users
+  who /oper and receive an oper-host (#0001901) reported by hypnetric.
+- Removed the /hs alias pointing to HelpServ for Anope since this conflicts with HostServ
+  (#0001709) reported by DukePyrolator
