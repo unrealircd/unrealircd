@@ -2014,3 +2014,5 @@ seen. gmtime warning still there
 - Fixed a fast badword replace crash (#0000834) reported by orga
 - Fixed a ban version {} bug with NOSPOOF (#0000872) reported by poisoner
 - Made gline/zline/kline take precedence over a shun in TKL (#0000870) reported by KnuX`
+- Fixed a long standing typo where doc/example.conf still mentioned oflag e (#0000638)
+  reported by twigboy.
