@@ -3265,6 +3265,7 @@ aChannel *get_channel(aClient *cptr, char *chname, int flag)
 		channel = chptr;
 		(void)add_to_channel_hash_table(chname, chptr);
 		IRCstats.channels++;
+		RunHook2(HOOKTYPE_CHANNEL_CREATE, cptr, chptr);
 	}
 	return chptr;
 }
@@ -3362,6 +3363,7 @@ void sub1_from_channel(aChannel *chptr)
 		/*
 		 * Now, find all invite links from channel structure
 		 */
+		RunHook(HOOKTYPE_CHANNEL_DESTROY, chptr);
 		while ((lp = chptr->invites))
 			del_invite(lp->value.cptr, chptr);
 
