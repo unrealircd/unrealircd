@@ -21,7 +21,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 Beta18<br>
-  <b>Last doc update:</b> 2003-09-22</div>
+  <b>Last doc update:</b> 2003-09-28</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Luke / McSkaf / Syzop<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -87,7 +87,7 @@
   ---4.24. <a href="#denylinkblock">Deny Link Block -=- (D:Line / d:Line)</a><br>
   ---4.25. <a href="#denychannelblock">Deny Channel Block -=- (chrestrict.conf)</a><br>
   ---4.26. <a href="#allowchannelblock">Allow Channel Block</a><br>
-  ---4.27. <a href="#vhostblock">Vhost Block Block -=- (vhost.conf)</a><br>
+  ---4.27. <a href="#vhostblock">Vhost Block -=- (vhost.conf)</a><br>
   ---4.28. <a href="#badwordsblock">Badword Block -=- (badwords.conf)</a><br>
   ---4.29. <a href="#ulinesblock">Uline Block -=- (U:Line)</a><br>
   ---4.30. <a href="#linkblock">Link Block -=- (C/N/H:Lines)</a><br>
@@ -542,6 +542,9 @@ allow {
 <p><b>password</b> (optional)<br>
    Require a connect password. You can also specify an password encryption method here.
 </p>
+<p><b>class</b><br>
+   Specifies the class name that connections using this allow block will be placed into.
+</p>
 <p><b>maxperip</b> (optional, but recommended)<br>
    Allows you to specify how many connections per IP are allowed to this server (ex: maxperip 4;).
 </p>
@@ -797,7 +800,7 @@ listen *:6601 {
     <td>Can use <a href="#operoverride">OperOverride</a></td>
   </tr>
 </table>
-<p>Certin flags give you other flags by default:</p>
+<p>Certain flags give you other flags by default:</p>
 <table width="59%" border="1">
   <tr> 
     <td width="19%"><b>local</b></td>
@@ -890,11 +893,32 @@ listen *:6601 {
     <td>can_globalnotice</td>
     <td>can_globalnotice</td>
   </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>global</td>
+    <td>global</td>
+    <td>global</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>admin</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>services-admin</td>
+  </tr>
 </table>
 <p>The oper::swhois directive allows you to add an extra line to an opers whois 
   information.</p>
 <p>The oper::snomask directive allows you to preset an oper's server notice mask 
-  on oper up. For a list of available SNOMASKs, see <a href="#feature_snomasks">Section 3.4</a><br>
+  on oper up. For a list of available SNOMASKs, see <a href="#feature_snomasks">Section 3.3</a><br>
 
 <p>Example:<br>
 <pre>
@@ -1052,7 +1076,8 @@ tld {
   you to specify a channel that this user will be forced to join on connect. If 
   this exists it will override the default auto join channel.
   The <b>tld::options</b> block allows you to define additional requirements,
-  currently only tld::options::ssl exists.</p>
+  currently only tld::options::ssl which only displays the file for SSL users, and
+  tld::options::remote which only displays the file for remote users, exists.</p>
 <p>TLD entries are matched upside down</p>
 <p>Example:<br>
 <pre>
@@ -1396,10 +1421,10 @@ vhost {
   /vhost. The vhost::from::userhost contains a user@host that the user must match 
   to be eligible for the vhost. You may specify more than one hostmask. The vhost::login 
   in the login name the user must enter and vhost::password is the password that 
-  must be entered. Lastly vhost::password:: allows you to specify the type of 
+  must be entered. The vhost::password:: allows you to specify the type of 
   authentication used by this item. The currently supported authentication types 
-  are crypt, md5, and sha1, ripemd-160. vhost::swhois allows you to add an extra 
-  line to a users whois, exactly as it does in the Oper Block oper::svhost.</p>
+  are crypt, md5, and sha1, ripemd-160. Lastly vhost::swhois allows you to add an extra 
+  line to a users whois, exactly as it does in the Oper Block oper::swhois.</p>
 <p>Example:<br>
 <pre>
 vhost {

@@ -2445,3 +2445,4 @@ seen. gmtime warning still there
 - Rewrote some of the message searching code to make it roughly 25% faster
 - Minor botmotd-on-mode+B fix.
 - Added a "command override" system for modules (experimental)
+- Fixed some documentation typos (#0001273) reported by AngryWolf
