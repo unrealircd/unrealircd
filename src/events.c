@@ -188,13 +188,9 @@ void	EventStatus(aClient *sptr)
 				TStime() - eventptr->last, (eventptr->last + eventptr->every) - TStime());
 	}
 }
-extern char EVENT_CRC[];
 
 void	SetupEvents(void)
 {
-	/* We're doomed! */
-	if (match(EVENT_HASHES, &EVENT_CRC[EVENT_HASHVALUE]))
-		exit (0);
 #ifndef HAVE_NO_THREADS
 	IRCCreateMutex(sys_EventLock);
 #endif

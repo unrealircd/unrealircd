@@ -205,6 +205,7 @@ void	init_CommandHash(void)
 	add_Command(MSG_CYCLE, TOK_CYCLE, m_cycle, MAXPARA);	
 	add_Command(MSG_MODULE, TOK_MODULE, m_module, MAXPARA);	
 	add_Command(MSG_TKL, TOK_TKL, m_tkl, MAXPARA);
+		
 #ifdef DEVELOP_DEBUG
 	for (i = 0; i <= 255; i++)
 	{
