@@ -559,7 +559,7 @@ int  m_setname(cptr, sptr, parc, parv)
 		return xx;
 	}
 
-	sendto_serv_butone(cptr, sptr->name, MSG_SETNAME, TOK_SETNAME,
+	sendto_serv_butone_token(cptr, sptr->name, MSG_SETNAME, TOK_SETNAME,
 	    ":%s", parv[1]);
 	if (MyConnect(sptr))
 		sendto_one(sptr,

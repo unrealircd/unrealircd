@@ -403,3 +403,4 @@
 - Redid s_err.c to be ALOT faster, based on bahamut's s_err.c (ALOT of
   work)
 - Fixed last R_LINE stuff (check_time_interval)
+- Fixed /setname desynch
