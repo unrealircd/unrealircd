@@ -27,7 +27,6 @@
 #include "common.h"
 #include "sys.h"
 #include "hash.h"
-#include "modules.h"
 #include <stdio.h>
 #include <sys/types.h>
 #ifdef ZIP_LINKS
@@ -102,6 +101,8 @@ typedef struct Command aCommand;
 typedef struct SMember Member;
 typedef struct SMembership Membership;
 typedef struct SMembershipL MembershipL;
+typedef struct _irchook Hook;
+
 #ifdef NEED_U_INT32_T
 typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #endif
@@ -924,6 +925,7 @@ struct _configflag_ban
 #define CRULE_AUTO		1
 
 
+
 struct _configitem {
 	ConfigFlag flag;
 	ConfigItem *prev, *next;
@@ -1065,6 +1067,12 @@ struct _configitem_allow_channel {
 	ConfigFlag		flag;
 	ConfigItem		*prev, *next;
 	char			*channel;
+};
+
+struct _irchook {
+	ConfigFlag flag;
+	Hook *prev, *next;
+	int (*func)();
 };
 
 /*
@@ -1365,6 +1373,7 @@ extern char *gnulicense[];
 #include "ssl.h"
 #endif
 #define HASH_TEST HASH_CHECK
+#include "modules.h"
 
 #endif /* __struct_include__ */
 

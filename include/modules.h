@@ -21,6 +21,8 @@
 
 #define MOD_VERSION	1
 #define MAXMODULES	50
+#define MAXHOOKTYPES	20
+
 #ifdef _WIN32
 #define DLLFUNC	_declspec(dllexport)
 #define irc_dlopen(x,y) LoadLibrary(x)
@@ -55,10 +57,18 @@ struct moduleInfo
 };
 
 extern ModuleInfo	*module_buffer;
-
+extern Hook		*Hooks[MAXHOOKTYPES];
+extern Hook		*global_i;
 
 void 	module_init(void);
 int  	load_module(char *module);
 int	unload_module(char *name);
 vFP	module_sym(char *name);
+
+void	add_Hook(int hooktype, int (*func)());
+void	del_Hook(int hooktype, int (*func)());
+
+#define RunHook(hooktype,x) for (global_i = Hooks[hooktype]; global_i; global_i = global_i->next) (*global_i->func)(x)
+
+#define HOOKTYPE_LOCAL_QUIT	1
 

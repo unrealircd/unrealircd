@@ -474,6 +474,7 @@ int  exit_client(cptr, sptr, from, comment)
 		sptr->flags |= FLAGS_CLOSING;
 		if (IsPerson(sptr))
 		{
+			RunHook(HOOKTYPE_LOCAL_QUIT, sptr);
 			sendto_umode(UMODE_OPER | UMODE_CLIENT,
 			    "*** Notice -- Client exiting: %s (%s@%s) [%s]",
 			    sptr->name, sptr->user->username,

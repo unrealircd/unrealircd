@@ -306,7 +306,7 @@ ConfigItem *del_ConfigItem(ConfigItem *item, ConfigItem **list)
 
 int	config_error_flag = 0;
 /* Small function to bitch about stuff */
-static void config_error(char *format, ...)
+void config_error(char *format, ...)
 {
 	va_list		ap;
 	char		buffer[1024];

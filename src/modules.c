@@ -43,11 +43,15 @@
 #include "h.h"
 
 ModuleInfo *Modules[MAXMODULES];
+Hook	   *Hooks[MAXHOOKTYPES];
+Hook 	   *global_i = NULL;
 int  modules_loaded = 0;
+
 ModuleInfo *module_buffer;
 void module_init(void)
 {
 	bzero(Modules, sizeof(Modules));
+	bzero(Hooks, sizeof(Hooks));
 	modules_loaded = 0;
 }
 
@@ -235,7 +239,7 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (parc < 3)
 		{
 			sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-			    me.name, parv[0], "MODULES LOAD");
+			    me.name, parv[0], "MODULE LOAD");
 			return 0;
 		}
 		sendto_realops("Trying to load module %s", parv[2]);
@@ -248,7 +252,7 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (parc < 3)
 		{
 			sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-			    me.name, parv[0], "MODULES UNLOAD");
+			    me.name, parv[0], "MODULE UNLOAD");
 			return 0;
 		}
 		sendto_realops("Trying to unload module %s", parv[2]);
@@ -279,4 +283,24 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	return 1;
 }
 
+void	add_Hook(int hooktype, int (*func)())
+{
+	Hook *p;
+	
+	p = (Hook *) MyMallocEx(sizeof(Hook));
+	p->func = func;
+	add_ConfigItem((ConfigItem *) p, (ConfigItem **) &Hooks[hooktype]);
+}
+
+void	del_Hook(int hooktype, int (*func)())
+{
+	Hook *p;
+	
+	for (p = Hooks[hooktype]; p; p = p->next)
+		if (p->func == func)
+		{
+			del_ConfigItem((ConfigItem *) p, (ConfigItem **) &Hooks[hooktype]);
+			return;
+		}
+}
 
