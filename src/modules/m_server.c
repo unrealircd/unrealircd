@@ -901,7 +901,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	/* send out SVSFLINEs */
 	dcc_sync(cptr);
 
-	sendto_one(cptr, "%s %i %li %i %lX 0 0 0 :%s",
+	sendto_one(cptr, "%s %i %li %i %s 0 0 0 :%s",
 	    (IsToken(cptr) ? TOK_NETINFO : MSG_NETINFO),
 	    IRCstats.global_max, TStime(), UnrealProtocol,
 	    CLOAK_KEYCRC,

@@ -686,3 +686,5 @@ extern void DCCdeny_del(ConfigItem_deny_dcc *deny);
 extern void dcc_wipe_services(void);
 extern void reread_motdsandrules();
 extern MODVAR int SVSNOOP;
+extern int callbacks_check(void);
+extern void callbacks_switchover(void);

@@ -27,10 +27,6 @@
 
 typedef struct zNetwork aNetwork;
 struct zNetwork {
-	long	key;
-	long	key2;
-	long	key3;
-	long	keycrc;
 	unsigned x_inah:1;
 	char *x_ircnetwork;
 	char *x_ircnet005;
@@ -191,10 +187,6 @@ extern MODVAR aConfiguration iConf;
 #define SSL_SERVER_CERT_PEM		(iConf.x_server_cert_pem ? iConf.x_server_cert_pem : "server.cert.pem")
 #define SSL_SERVER_KEY_PEM		(iConf.x_server_key_pem ? iConf.x_server_key_pem : "server.key.pem")
 
-#define CLOAK_KEY1			iConf.network.key
-#define CLOAK_KEY2			iConf.network.key2
-#define CLOAK_KEY3			iConf.network.key3
-#define CLOAK_KEYCRC			iConf.network.keycrc
 #define STATIC_QUIT			iConf.static_quit
 #define STATIC_PART			iConf.static_part
 #define UHOST_ALLOWED			iConf.userhost_allowed

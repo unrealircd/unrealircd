@@ -3142,3 +3142,16 @@ This is the 3.2 fixes branch.
 
   NOTE: It is expected that there will probably be a few bugs to work out with this, so
   please consider testing it! And module coders, please report any problems you experience!
+- Modulized cloaking:
+  - Currently there are 2 cloaking modules: 'cloak' and 'oldcloak'.
+  - You MUST load at least 1 of them (like: loadmodule "src/modules/cloak.so";).
+  - 'oldcloak' is just the <=3.2 cloaking algorithm.
+  - 'cloak' is the new, recommended, and much more secure cloaking algorithm that uses
+    md5 internally and requires 3 keys of 5-100 characters (10-20 is fine) consisting of
+    mixed lowcase (a-z), upcase (A-Z) and digits (0-9) [eg: "AopAS6WQH2Os6hfosh4SFJHs"].
+  - Note that 'oldcloak' is only ment for use during the upgrade process (it will give
+    a warning if you use it), you should switch to the much more secure 'cloak' module
+    as soon as all your servers are upgraded.
+  - Module coders can code 3rd party cloak modules that use other algorithms or cloak
+    in a different way (have a look at src/modules/cloak.c).
+- spamfilter: Added Bloodhound.Exploit.6 sig

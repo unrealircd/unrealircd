@@ -1188,7 +1188,7 @@ int stats_set(aClient *sptr, char *para)
 	    sptr->name, hidden_host);
 	sendto_one(sptr, ":%s %i %s :help-channel: %s", me.name, RPL_TEXT,
 	    sptr->name, helpchan);
-	sendto_one(sptr, ":%s %i %s :cloak-keys: %lX", me.name, RPL_TEXT, sptr->name,
+	sendto_one(sptr, ":%s %i %s :cloak-keys: %s", me.name, RPL_TEXT, sptr->name,
 		CLOAK_KEYCRC);
 	sendto_one(sptr, ":%s %i %s :kline-address: %s", me.name, RPL_TEXT,
 	    sptr->name, KLINE_ADDRESS);

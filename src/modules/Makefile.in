@@ -42,7 +42,7 @@ R_MODULES=m_sethost.so m_chghost.so m_chgident.so m_setname.so \
 	 m_trace.so m_netinfo.so m_links.so m_help.so m_rules.so \
 	 m_close.so m_map.so m_eos.so m_server.so m_stats.so \
 	 m_svsfline.so m_dccdeny.so m_undccdeny.so m_whowas.so \
-	 m_connect.so
+	 m_connect.so cloak.so oldcloak.so
 
 COMMANDS=m_sethost.c m_chghost.c m_chgident.c m_setname.c m_setident.c \
          m_sdesc.c m_svsmode.c m_swhois.c m_svsmotd.c m_svsnline.c \
@@ -430,6 +430,14 @@ m_whowas.so: m_whowas.c $(INCLUDES)
 m_connect.so: m_connect.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_connect.so m_connect.c
+
+cloak.so: cloak.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o cloak.so cloak.c
+
+oldcloak.so: oldcloak.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o oldcloak.so oldcloak.c
 
 clean:
 	$(RM) -f *.o *.so *~ core

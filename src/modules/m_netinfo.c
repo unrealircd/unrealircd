@@ -185,7 +185,7 @@ DLLFUNC CMD_FUNC(m_netinfo)
 		    me.name, cptr->name, protocol, me.name, UnrealProtocol);
 
 	}
-	ircsprintf(buf, "%lX", CLOAK_KEYCRC);
+	strlcpy(buf, CLOAK_KEYCRC, sizeof(buf));
 	if (*parv[4] != '*' && strcmp(buf, parv[4]))
 	{
 		sendto_realops

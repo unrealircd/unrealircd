@@ -302,7 +302,6 @@ struct {
 		unsigned sadminhost : 1;
 		unsigned netadminhost : 1;
 		unsigned coadminhost : 1;
-		unsigned cloakkeys : 1;
 		unsigned hlpchan : 1;
 		unsigned hidhost : 1;
 	} settings;
@@ -1505,7 +1504,7 @@ int	init_conf(char *rootconf, int rehash)
 	config_setdefaultsettings(&tempiConf);
 	if (load_conf(rootconf) > 0)
 	{
-		if (config_test() < 0)
+		if ((config_test() < 0) || (callbacks_check() < 0))
 		{
 			config_error("IRCd configuration failed to pass testing");
 #ifdef _WIN32
@@ -1521,7 +1520,7 @@ int	init_conf(char *rootconf, int rehash)
 			free_iConf(&tempiConf);
 			return -1;
 		}
-		
+		callbacks_switchover();
 		if (rehash)
 		{
 			Hook *h;
@@ -2026,8 +2025,6 @@ int	config_post_test()
 		Error("set::hosts::netadmin missing");
 	if (!requiredstuff.settings.coadminhost)
 		Error("set::hosts::coadmin missing");
-	if (!requiredstuff.settings.cloakkeys)
-		Error("set::cloak-keys missing");
 	if (!requiredstuff.settings.hlpchan)
 		Error("set::help-channel missing");
 	if (!requiredstuff.settings.hidhost)
@@ -5799,12 +5796,13 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "cloak-keys"))
 		{
-			tempiConf.network.key = ircabs(atol(cep->ce_entries->ce_varname));
-			tempiConf.network.key2 = ircabs(atol(cep->ce_entries->ce_next->ce_varname));
-			tempiConf.network.key3 = ircabs(atol(cep->ce_entries->ce_next->ce_next->ce_varname));
-			ircsprintf(temp, "%li.%li.%li", tempiConf.network.key,
-				tempiConf.network.key2, tempiConf.network.key3);
-			tempiConf.network.keycrc = (long) our_crc32(temp, strlen(temp));
+			for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
+			{
+				int value;
+				value = (*(h->func.intfunc))(conf, cep, CONFIG_CLOAKKEYS);
+				if (value == 1)
+					break;
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "ident"))
 		{
@@ -6368,42 +6366,24 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "cloak-keys"))
 		{
-			/* Count number of numbers there .. */
-			for (cepp = cep->ce_entries, i = 0; cepp; cepp = cepp->ce_next, i++) { }
-			if (i != 3)
+			for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next)
 			{
-				config_error("%s:%i: set::cloak-keys: we want 3 values, not %i!",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-					i);
-				errors++;
-				continue;
+				int value, errs = 0;
+				if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
+				    && !(h->owner->options & MOD_OPT_PERM))
+					continue;
+				value = (*(h->func.intfunc))(conf, cep, CONFIG_CLOAKKEYS, &errs);
+
+				if (value == 1)
+					break;
+				if (value == -1)
+				{
+					errors += errs;
+					break;
+				}
+				if (value == -2) 
+					errors += errs;
 			}
-			/* i == 3 SHOULD make this true .. */
-			l1 = ircabs(atol(cep->ce_entries->ce_varname));
-			l2 = ircabs(atol(cep->ce_entries->ce_next->ce_varname));
-			l3  = ircabs(atol(cep->ce_entries->ce_next->ce_next->ce_varname));
-			if ((l1 < 10000) || (l2 < 10000) || (l3 < 10000))
-			{
-				config_error("%s:%i: set::cloak-keys: values must be over 10000",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-				errors++;
-				continue;
-			}		
-			/* values which are >LONG_MAX are (re)set to LONG_MAX, problem is
-			 * that 'long' could be 32 or 64 bits resulting in different limits (LONG_MAX),
-			 * which then again results in different cloak keys.
-			 * We could warn/error here or silently reset them to 2147483647...
-			 * IMO it's best to error because the value 2147483647 would be predictable
-			 * (actually that's even unrelated to this 64bit problem).
-			 */
-			if ((l1 >= 2147483647) || (l2 >= 2147483647) || (l3 >= 2147483647))
-			{
-				config_error("%s:%i: set::cloak-keys: values must be below 2147483647 (2^31-1)",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-				errors++;
-				continue;
-			}
-			requiredstuff.settings.cloakkeys = 1;	
 		}
 		else if (!strcmp(cep->ce_varname, "scan")) {
 			config_status("%s:%i: set::scan: WARNING: scanner support has been removed, "

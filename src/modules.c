@@ -55,6 +55,8 @@ const char *our_dlerror(void);
 
 Hook	   	*Hooks[MAXHOOKTYPES];
 Hooktype	Hooktypes[MAXCUSTOMHOOKS];
+Callback	*Callbacks[MAXCALLBACKS];	/* Callback objects for modules, used for rehashing etc (can be multiple) */
+Callback	*RCallbacks[MAXCALLBACKS];	/* 'Real' callback function, used for callback function calls */
 MODVAR Module          *Modules = NULL;
 MODVAR Versionflag     *Versionflags = NULL;
 int     Module_Depend_Resolve(Module *p);
@@ -134,6 +136,8 @@ void Module_Init(void)
 {
 	bzero(Hooks, sizeof(Hooks));
 	bzero(Hooktypes, sizeof(Hooktypes));
+	bzero(Callbacks, sizeof(Callback));
+	bzero(RCallbacks, sizeof(Callback));
 }
 
 Module *Module_Find(char *name)
@@ -433,6 +437,9 @@ void Unload_all_loaded_modules(void)
 			else if (objs->type == MOBJ_EXTBAN) {
 				ExtbanDel(objs->object.extban);
 			}
+			else if (objs->type == MOBJ_CALLBACK) {
+				CallbackDel(objs->object.callback);
+			}
 		}
 		for (child = mi->children; child; child = childnext)
 		{
@@ -489,6 +496,9 @@ void Unload_all_testing_modules(void)
 			}
 			else if (objs->type == MOBJ_EXTBAN) {
 				ExtbanDel(objs->object.extban);
+			}
+			else if (objs->type == MOBJ_CALLBACK) {
+				CallbackDel(objs->object.callback);
 			}
 		}
 		for (child = mi->children; child; child = childnext)
@@ -552,6 +562,9 @@ int    Module_free(Module *mod)
 		}
 		else if (objs->type == MOBJ_EXTBAN) {
 			ExtbanDel(objs->object.extban);
+		}
+		else if (objs->type == MOBJ_CALLBACK) {
+			CallbackDel(objs->object.callback);
 		}
 	}
 	for (p = Modules; p; p = p->next)
@@ -1103,6 +1116,56 @@ Hook *HookDel(Hook *hook)
 	return NULL;
 }
 
+Callback	*CallbackAddMain(Module *module, int cbtype, int (*func)(), void (*vfunc)(), char *(*cfunc)())
+{
+	Callback *p;
+	
+	p = (Callback *) MyMallocEx(sizeof(Callback));
+	if (func)
+		p->func.intfunc = func;
+	if (vfunc)
+		p->func.voidfunc = vfunc;
+	if (cfunc)
+		p->func.pcharfunc = cfunc;
+	p->type = cbtype;
+	p->owner = module;
+	AddListItem(p, Callbacks[cbtype]);
+	if (module) {
+		ModuleObject *cbobj = (ModuleObject *)MyMallocEx(sizeof(ModuleObject));
+		cbobj->object.callback = p;
+		cbobj->type = MOBJ_CALLBACK;
+		AddListItem(cbobj, module->objects);
+		module->errorcode = MODERR_NOERROR;
+	}
+	return p;
+}
+
+Callback *CallbackDel(Callback *cb)
+{
+	Callback *p, *q;
+	for (p = Callbacks[cb->type]; p; p = p->next) {
+		if (p == cb) {
+			q = p->next;
+			DelListItem(p, Callbacks[cb->type]);
+			if (RCallbacks[cb->type] == p)
+				RCallbacks[cb->type] = NULL;
+			if (p->owner) {
+				ModuleObject *cbobj;
+				for (cbobj = p->owner->objects; cbobj; cbobj = cbobj->next) {
+					if ((cbobj->type == MOBJ_CALLBACK) && (cbobj->object.callback == p)) {
+						DelListItem(cbobj, cb->owner->objects);
+						MyFree(cbobj);
+						break;
+					}
+				}
+			}
+			MyFree(p);
+			return q;
+		}
+	}
+	return NULL;
+}
+
 Cmdoverride *CmdoverrideAdd(Module *module, char *name, iFP function)
 {
 	aCommand *p;
@@ -1234,6 +1297,70 @@ static const char *module_error_str[] = {
 const char *ModuleGetErrorStr(Module *module)
 {
 	return module_error_str[module->errorcode];
+}
+
+static int num_callbacks(int cbtype)
+{
+Callback *e;
+int cnt = 0;
+
+	for (e = Callbacks[cbtype]; e; e = e->next)
+		if (!e->willberemoved)
+			cnt++;
+			
+	return cnt;
+}
+
+/** Ensure that all required callbacks are in place and meet
+ * all specified requirements (eg: a cloaking module should
+ * be loaded).
+ */
+int callbacks_check(void)
+{
+int i;
+
+	if (!num_callbacks(CALLBACKTYPE_CLOAK) || !num_callbacks(CALLBACKTYPE_CLOAKKEYCSUM))
+	{
+#ifndef _WIN32
+		config_error("ERROR: No cloaking module loaded. (hint: you probably want to load cloak.so)");
+#else
+		config_error("ERROR: No cloaking module loaded. (hint: you probably want to load modules\\cloak.dll)");
+#endif
+		return -1;
+	}
+
+	for (i=0; i < MAXCALLBACKS; i++)
+	{
+		if (num_callbacks(i) > 1)
+		{
+			config_error("ERROR: Multiple callbacks loaded for type %d. "
+			             "Make sure you only load 1 module of 1 type (eg: only 1 cloaking module)",
+			             i); /* TODO: make more clear? */
+			return -1;
+		}
+	}
+		
+	return 0;
+}
+
+void callbacks_switchover(void)
+{
+Callback *e;
+int i;
+
+	/* Now set the real callback, and tag the new one
+	 * as 'willberemoved' if needed.
+	 */
+
+	for (i=0; i < MAXCALLBACKS; i++)
+		for (e = Callbacks[i]; e; e = e->next)
+			if (!e->willberemoved)
+			{
+				RCallbacks[i] = e; /* This is the new one. */
+				if (!(e->owner->options & MOD_OPT_PERM))
+					e->willberemoved = 1;
+				break;
+			}
 }
 
 #ifdef _WIN32
