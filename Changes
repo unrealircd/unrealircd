@@ -1124,3 +1124,5 @@ v- Fixed some bugreport stuff
 - Fixed a listener bug reported by Dragon974
 - Removed some useless tkl code
 - Fixed #0000046 regarding Module_free memory leak
+- Added patch in #0000053 by |savage|, speedup in can_send
+

@@ -717,9 +717,11 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext)
 	Membership *lp;
 	int  member;
 	static char tempbuf[1500];
-	/* Moved check here, kinda faster.
-	 * Note IsULine only uses the other parameter. -Donwulff */
-	if (IsULine(cptr) || IsServer(cptr))
+	/* 
+	 * #0000053 by |savage|, speedup 
+	*/
+	
+	if (!MyClient(cptr))
 		return 0;
 
 	if (chptr->mode.mode & MODE_NOCOLOR)
