@@ -152,6 +152,12 @@ allow {
 	maxperip <max-connections-per-ip>;
 	redirect-server <server-to-forward-to>;
 	redirect-port <port-to-forward-to>;
+	options {
+		<option>;
+		<option>;
+		...
+	};
+		
 };
 
 Example:
@@ -171,7 +177,15 @@ config) class block that will be used for this class. The rest of the directives
 allow::password specifies a password that users must enter to connect. The allow::password:: 
 allows you to specify an authentication method. Currently supported methods are crypt, md3, and
 sha1. If you are using plain-text you can just leave this sub-block out. This directive also 
-allows you to configure close killing, allow::maxperip lets you specify the maximum number of clients that may connect from a single IP. Lastly, the allow block supports redirection when the server is full, allow::redirect-server specifies the address of a server to forward to, and allow::redirect-port specifies the port, if no port is specified, 6667 is assumed. Note: for auto-redirection to occur the client must have support for the redirection numeric, at this time not many clients do.
+allows you to configure close killing, allow::maxperip lets you specify the maximum number of 
+clients that may connect from a single IP. Lastly, the allow block supports redirection when 
+the server is full, allow::redirect-server specifies the address of a server to forward to, and
+allow::redirect-port specifies the port, if no port is specified, 6667 is assumed. Note: for 
+auto-redirection to occur the client must have support for the redirection numeric, at this 
+time not many clients do. The allow::options defines two option flags, the noident option
+instructs the IRCd to use the username supplied by the client rather than using what is
+returned by an ident response. The useip flag tells the IRCd to use the IP of the client as
+the host even if it is possible to resolve the IP to a hostname.
 
 6.0 Listen block (P:line)
 
@@ -366,7 +380,7 @@ tld {
 	mask *@*.es;
 	motd motd.spanish;
 	rules rules.spanish;
-	channel #help-spanish;
+	channel "#help-spanish";
 };
 
 The tld block allows you to specify a motd, rules, and channel for a user based on their host. 

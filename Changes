@@ -1333,4 +1333,7 @@ seen. gmtime warning still there
 - Split 005 and 105 up in order to conform to the RFC1459 limit of 15 parameters per
   command
 - Failsafe check (to be removed again) in s_bsd.c
-- [nighthawk 2002-06-16] Added myself to s_info.c:m_info().
+- [nighthawk 2002-06-16] Added myself to s_serv.c:m_info().
+- Fixed a doc/conf.doc typo reported by SciFi
+- Documented the new allow::options in doc/conf.doc
+
