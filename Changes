@@ -570,3 +570,4 @@
 - Fixed some problems/typos/notlookingsogood (TM) bugs, in the tkl code
 - Fixed ban merging/similar bug in SJOIN
 - Made /kick for opers only be possible for netadmin/techadmin
+- Fixed /server so it doesnt support SERVER name :info anymore..

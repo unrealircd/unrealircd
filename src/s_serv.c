@@ -575,7 +575,7 @@ int  m_server(cptr, sptr, parc, parv)
 {
 	char *ch;
 	int  i;
-	char info[REALLEN + 1], *inpath, *host, *encr, *f;
+	char info[REALLEN + 61], *inpath, *host, *encr, *f;
 	char pp[512];
 	aClient *acptr, *bcptr;
 	aConfItem *aconf, *cconf;
@@ -596,18 +596,22 @@ int  m_server(cptr, sptr, parc, parv)
 	{
 		numeric = atoi(parv[3]);
 		hop = atoi(parv[2]);
-		(void)strncpy(info, parv[4], REALLEN);
+		(void)strncpy(info, parv[4], REALLEN + 60);
 		info[REALLEN] = '\0';
 	}
 	else if (parc > 3 && atoi(parv[2]))
 	{
 		hop = atoi(parv[2]);
-		(void)strncpy(info, parv[3], REALLEN);
+		(void)strncpy(info, parv[3], REALLEN + 60);
 		info[REALLEN] = '\0';
 	}
+/*
+	We do not support "SERVER server :desc" anymore, this is an ugly hack 
+	too
+	
 	else if (parc > 2)
 	{
-		(void)strncpy(info, parv[2], REALLEN);
+		(void)strncpy(info, parv[2], REALLEN + 60);
 		if (parc > 3 && ((i = strlen(info)) < (REALLEN - 2)))
 		{
 			(void)strcat(info, " ");
@@ -615,6 +619,7 @@ int  m_server(cptr, sptr, parc, parv)
 			info[REALLEN] = '\0';
 		}
 	}
+*/
 	/*
 	   ** Check for "FRENCH " infection ;-) (actually this should
 	   ** be replaced with routine to check the hostname syntax in
