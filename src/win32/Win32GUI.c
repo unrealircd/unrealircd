@@ -42,6 +42,9 @@
 #include <direct.h>
 #include <errno.h>
 #include "h.h"
+#include <richedit.h>
+
+#define MIRC_COLORS "{\\colortbl ;\\red255\\green255\\blue255;\\red0\\green0\\blue128;\\red0\\green128\\blue0;\\red255\\green0\\blue0;\\red128\\green0\\blue0;\\red128\\green0\\blue128;\\red255\\green128\\blue0;\\red255\\green255\\blue0;\\red0\\green255\\blue0;\\red0\\green128\\blue128;\\red0\\green255\\blue255;\\red0\\green0\\blue255;\\red255\\green0\\blue255;\\red128\\green128\\blue128;\\red192\\green192\\blue192;\\red0\\green0\\blue0;}"
 
 /* Comments:
  * 
@@ -96,7 +99,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	HKEY hKey;
 	char regbuf[128];
 	atexit(CleanUp);
-	if (!LoadLibrary("riched20.dll"))
+	if(!LoadLibrary("riched20.dll"))
 		LoadLibrary("riched32.dll");
 	InitStackTraceLibrary();
     if (WSAStartup(MAKEWORD(1, 1), &WSAData) != 0)
@@ -273,8 +276,9 @@ LRESULT CALLBACK LicenseDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			SetWindowText(hDlg, "UnrealIRCd License");
 			String[0] = 0;
 			sprintf(String, "{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0\\fmodern\\fprq1\\"
-				"fcharset0 Fixedsys;} {\\f1\\fnil\\fcharset0 Times New Roman;}}\r\n\\viewkind4"
-				"\\uc1\\pard\\lang1033\\f0\\fs20");
+				"fcharset0 Fixedsys;} {\\f1\\fnil\\fcharset0 Times New Roman;}}\r\n"
+				MIRC_COLORS
+				"\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20");
 			while (*s)
 			    {
 				strcat(String, ParseCodes(*s++));
@@ -303,8 +307,10 @@ LRESULT CALLBACK CreditsDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 		case WM_INITDIALOG: {
 			char	String[16384], **s = unrealcredits;
 			SetWindowText(hDlg, "UnrealIRCd Credits");
+			SendMessage(GetDlgItem(hDlg,IDC_TEXT),EM_AUTOURLDETECT,(WPARAM)TRUE,0);
 			sprintf(String, "{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0\\fmodern\\fprq1\\"
 				"fcharset0 Fixedsys;} {\\f1\\fnil\\fcharset0 Times New Roman;}}\r\n"
+				MIRC_COLORS
 				"\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20");
 			while (*s)
 			    {
@@ -336,8 +342,9 @@ LRESULT CALLBACK DalDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 			SetWindowText(hDlg, "UnrealIRCd DALnet Credits");
 			String[0] = 0;
 			sprintf(String, "{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0\\fmodern\\fprq1\\"
-				"fcharset0 Fixedsys;} {\\f1\\fnil\\fcharset0 Times New Roman;}}\r\n\\viewkind4"
-				"\\uc1\\pard\\lang1033\\f0\\fs20");
+				"fcharset0 Fixedsys;} {\\f1\\fnil\\fcharset0 Times New Roman;}}\r\n"
+				MIRC_COLORS
+				"\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20");
 			while (*s)
 			    {
 				strcat(String, ParseCodes(*s++));
@@ -749,6 +756,21 @@ static char *ParseCodes(char *buffer)
 
 	while (tmp[i])
 	{
+		if (tmp[i] == '\022') {
+			reverse = ~reverse;
+			if (reverse) {
+				strcat(out, "\\cf1\\highlight16 ");
+				j += 17;
+			}
+			else {
+				strcat(out, "\\cf0\\highlight0 ");
+				j += 16;
+			}
+			++i;
+			continue;
+		}
+
+
 		if (tmp[i] == '\037' || tmp[i] == '\031') {
 			if (!underline) {
 				strcat(out,"\\ul ");

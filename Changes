@@ -488,3 +488,4 @@ seen. gmtime warning still there
 - Added code so the rich edit _should_ work with any version of the richedit dll
 - Changed all TStime() to use timeofday - CPU SAVE
 - Removed userload.c & userload.h
+- Added McSkaf's patch for the richedit to be able to support reverse codes
