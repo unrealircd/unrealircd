@@ -1806,3 +1806,6 @@ seen. gmtime warning still there
 - Added win32 compile instructions in doc/compiling_win32.txt.
 - Fixed major (?) bug in resolver (affects ipv4 only), could cause long stalls / crashes.
 - Added much better checking for weird characters in hostnames.
+- Fixed SSL session cache bug, symptoms were: stunnel can only connect the 1st time, reconnecting
+  etc fails with (in stunnel log) "SSL_connect: Peer suddenly disconnected". This happends with
+  OpenSSL 0.9.7.
