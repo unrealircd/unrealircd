@@ -1738,3 +1738,5 @@ seen. gmtime warning still there
   netadmins, reported by PoisonDart316 (#0000547), also removed /unkline and /unzline from
   the docs (replaced with /kline - and /zline -, also reported by PoisonDart316 (#0000548)
 - Fixed bug with INET6 and find_tkline_zap (..)
+- Fixed include bug
+- Created StripControlCodes() and call it from stripbadwords() to fix bug 552
