@@ -231,3 +231,4 @@
 
 [fixes]
 - Fixed a +d bug (it didnt send ` prefixes)
+- Fixed a SJOIN bug, i think, thanks to Web

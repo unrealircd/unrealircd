@@ -4523,8 +4523,9 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	char paraback[1024], modeback[1024];
 	char banbuf[1024];
 	char exbuf[1024];
+	char cbuf[1024];
 	char nick[NICKLEN + 1];
-	char *s;
+	char *s = NULL;
 	aClient *acptr;
 	aChannel *chptr;
 	Link *lp;
@@ -4533,7 +4534,8 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	int  ts, oldts, pcount, x, y, z, i, f;
 	unsigned short b, c;
 	Mode oldmode;
-	char *t, *bp, *tamax, *tp;
+	char *t, *bp, *tamax, *tp, *p = NULL;
+	 char *s0 = NULL;
 	long modeflags;
 
 	if (IsClient(sptr) || parc < 3 || !IsServer(sptr))
@@ -4681,133 +4683,119 @@ int  m_sjoin(cptr, sptr, parc, parv)
 	b = 1;
 	c = 0;
 	bp = buf;
-	tamax = t + strlen(parv[parc-1]);
-	while (t <= tamax)
+	strcpy(cbuf, parv[parc-1]);
+	for (s = s0 = strtoken(&p, cbuf, " "); s; s = s0 = strtoken(&p, (char *)NULL, " "))
 	{
-		if (*t == ' ' || *t == '\0')
+	
+		c = f = 0;
+		modeflags = 0;
+		i = 0;
+		tp = s;
+		while (
+		    (*tp == '@') || (*tp == '+') || (*tp == '%')
+		    || (*tp == '*') || (*tp == '~') || (*tp == '&')
+		    || (*tp == '"'))
 		{
-			if (f)
-				strncpyzt(bp, (t - c), (c + 1));	/* Put the nick in bp */
-			else
-				strncpyzt(bp, (t - (c - 1)), c);	/* Put the nick in bp */
-
-			c = f = 0;
-			modeflags = 0;
-			i = 0;
-			tp = bp;
-			while (
-			    (*tp == '@') || (*tp == '+') || (*tp == '%')
-			    || (*tp == '*') || (*tp == '~') || (*tp == '&')
-			    || (*tp == '"'))
+			switch (*(tp++))
 			{
-				switch (*(tp++))
-				{
-				  case '@':
-					  modeflags |= CHFL_CHANOP;
-					  break;
-				  case '%':
-					  modeflags |= CHFL_HALFOP;
-					  break;
-				  case '+':
-					  modeflags |= CHFL_VOICE;
-					  break;
-				  case '*':
-					  modeflags |= CHFL_CHANOWNER;
-					  break;
-				  case '~':
-					  modeflags |= CHFL_CHANPROT;
-					  break;
-				  case '&':
-					  modeflags |= CHFL_BAN;
-					  goto getnick;
-					  break;
-				  case '"':
-					  modeflags |= CHFL_EXCEPT;
-					  goto getnick;
-					  break;
-				}
+			  case '@':
+				  modeflags |= CHFL_CHANOP;
+				  break;
+			  case '%':
+				  modeflags |= CHFL_HALFOP;
+				  break;
+			  case '+':
+				  modeflags |= CHFL_VOICE;
+				  break;
+			  case '*':
+				  modeflags |= CHFL_CHANOWNER;
+				  break;
+			  case '~':
+				  modeflags |= CHFL_CHANPROT;
+				  break;
+			  case '&':
+				  modeflags |= CHFL_BAN;					  goto getnick;
+				  break;
+			  case '"':
+				  modeflags |= CHFL_EXCEPT;
+				  goto getnick;
+				  break;
 			}
-		      getnick:
-			i = 0;
-			while ((*tp != ' ') && (*tp != '\0'))
-				nick[i++] = *(tp++);	/* get nick */
-			nick[i] = '\0';
-			if (nick[0] == ' ')
-				goto nextnick;
-			if (nick[0] == '\0')
-				goto nextnick;
-			Debug((DEBUG_DEBUG, "Got nick: %s", nick));
-			if (!(modeflags & CHFL_BAN)
-			    && !(modeflags & CHFL_EXCEPT))
-			{
-				if (!(acptr = find_person(nick, NULL)))
-				{
-					sendto_realops
-					    ("Missing user %s in SJOIN for %s from %s (%s)",
-					    nick, chptr->chname, sptr->name,
-					    backupbuf);
-					goto nextnick;
-				}
-				if (acptr->from != sptr->from)
-				{
-					sendto_one(sptr,
-					    ":%s KICK %s %s :Fake direction",
-					    me.name, chptr->chname,
-					    acptr->name);
-					sendto_ops
-					    ("Fake direction from user %s in SJOIN from %s(%s) at %s",
-					    nick, sptr->srvptr->name,
-					    sptr->name, chptr->chname);
-					goto nextnick;
-				}
-				if (removetheirs)
-				{
-					modeflags = 0;
-				}
-				add_user_to_channel(chptr, acptr, modeflags);
-				if (!IsHiding(acptr))
-					sendto_channel_butserv(chptr, acptr,
-					    ":%s JOIN :%s", nick,
-					    chptr->chname);
-				sendto_serv_butone_sjoin(cptr, ":%s JOIN %s",
-				    nick, chptr->chname);
-
-				CheckStatus('q', CHFL_CHANOWNER);
-				CheckStatus('a', CHFL_CHANPROT);
-				CheckStatus('o', CHFL_CHANOP);
-				CheckStatus('h', CHFL_HALFOP);
-				CheckStatus('v', CHFL_VOICE);
-			}
-			else
-			{
-				if (removetheirs)
-					goto nextnick;
-				if (modeflags & CHFL_BAN)
-				{
-					f = add_banid(sptr, chptr, nick);
-					if (f != -1)
-					{
-						Addit('b', nick);
-						AddBan(nick);
-					}
-				}
-				if (modeflags & CHFL_EXCEPT)
-				{
-					f = add_exbanid(sptr, chptr, nick);
-					if (f != -1)
-					{
-						Addit('e', nick);
-						AddEx(nick);
-					}
-				}
-			}
-
 		}
-	      nextnick:
-		t++;
-		c++;
+	     getnick:
+		i = 0;
+		while ((*tp != ' ') && (*tp != '\0'))
+			nick[i++] = *(tp++);	/* get nick */
+		nick[i] = '\0';
+		if (nick[0] == ' ')
+			continue;
+		if (nick[0] == '\0')
+			continue;
+		Debug((DEBUG_DEBUG, "Got nick: %s", nick));
+		if (!(modeflags & CHFL_BAN)
+		    && !(modeflags & CHFL_EXCEPT))
+		{
+			if (!(acptr = find_person(nick, NULL)))
+			{
+				sendto_realops
+				    ("Missing user %s in SJOIN for %s from %s (%s)",
+				    nick, chptr->chname, sptr->name,
+				    backupbuf);
+				continue;
+			}
+			if (acptr->from != sptr->from)
+			{
+				sendto_one(sptr,
+				    ":%s KICK %s %s :Fake direction",
+				    me.name, chptr->chname,
+				    acptr->name);
+				sendto_ops
+				    ("Fake direction from user %s in SJOIN from %s(%s) at %s",
+				    nick, sptr->srvptr->name,
+				    sptr->name, chptr->chname);
+				continue;
+			}
+			if (removetheirs)
+			{
+				modeflags = 0;
+			}
+			add_user_to_channel(chptr, acptr, modeflags);
+			if (!IsHiding(acptr))
+				sendto_channel_butserv(chptr, acptr,
+				    ":%s JOIN :%s", nick,
+				    chptr->chname);
+			sendto_serv_butone_sjoin(cptr, ":%s JOIN %s",
+			    nick, chptr->chname);
+			CheckStatus('q', CHFL_CHANOWNER);
+			CheckStatus('a', CHFL_CHANPROT);
+			CheckStatus('o', CHFL_CHANOP);
+			CheckStatus('h', CHFL_HALFOP);
+			CheckStatus('v', CHFL_VOICE);
+		}
+		else
+		{
+			if (removetheirs)
+				continue;
+			if (modeflags & CHFL_BAN)
+			{
+				f = add_banid(sptr, chptr, nick);
+				if (f != -1)
+				{
+					Addit('b', nick);
+					AddBan(nick);
+				}
+			}
+			if (modeflags & CHFL_EXCEPT)
+			{
+				f = add_exbanid(sptr, chptr, nick);
+				if (f != -1)
+				{
+					Addit('e', nick);
+					AddEx(nick);
+				}
+			}
+		}
 	}
-
 
 	if (modebuf[1])
 	{

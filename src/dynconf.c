@@ -301,6 +301,8 @@ int  load_conf2(FILE * conf, char *filename, int type)
 			}
 			else if (strcmp(var, "CONFIG_FILE_STOP") == 0)
 			{
+
+#ifndef DEVELOP
 				if (atoi(setto) == 1)
 				{
 #ifdef _WIN32
@@ -315,6 +317,7 @@ int  load_conf2(FILE * conf, char *filename, int type)
 #endif
 					exit(-1);
 				}
+#endif
 			}
 			else if (strcmp(var, "SHOWOPERS") == 0)
 			{
