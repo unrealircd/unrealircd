@@ -2259,3 +2259,7 @@ seen. gmtime warning still there
 - Added a system to allow modules to create snomasks using functions SnomaskAdd and SnomaskDel
 - Fixed ban version crash and another read-after-free.
 - Fixed problem with make custommodule and multiple EXLIBS arguments (EXLIBS="-la -lb -lc").
+- Fixed a bug with +b and +e involving how trimming should occur when a mask is too long.
+  (#0001103) reported by Troco.
+- Fixed a bug in aliases reported by darko``
+- Updated help.conf and unreal32docs.html (#0001111) reported by SciFi, AngryWolf, and Zerwas.

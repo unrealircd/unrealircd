@@ -73,6 +73,7 @@ extern int lifesux;
 /* Some forward declarations */
 CMD_FUNC(do_join);
 static void add_invite(aClient *, aChannel *);
+static char *clean_ban_mask(char *);
 static int add_banid(aClient *, aChannel *, char *);
 static int can_join(aClient *, aClient *, aChannel *, char *, char *,
     char **);
@@ -1968,7 +1969,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  break;
 		  }
 		  retval = 1;
-		  tmpstr = pretty_mask(param);
+		  tmpstr = clean_ban_mask(param);
 		  /* For bounce, we don't really need to worry whether
 		   * or not it exists on our server.  We'll just always
 		   * bounce it. */
@@ -1987,7 +1988,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  break;
 		  }
 		  retval = 1;
-		  tmpstr = pretty_mask(param);
+		  tmpstr = clean_ban_mask(param);
 		  /* For bounce, we don't really need to worry whether
 		   * or not it exists on our server.  We'll just always
 		   * bounce it. */
@@ -2402,6 +2403,40 @@ char *pretty_mask(char *mask)
 		return make_nick_user_host(NULL, NULL, cp);
 	return make_nick_user_host(cp, user, host);
 }
+
+char *trim_str(char *str, int len)
+{
+	int l;
+	if ((l = strlen(str)) > len)
+	{
+		str += l - len;
+		*str = '*';
+	}
+	return str;
+}
+
+char *clean_ban_mask(char *mask)
+{
+	char *cp;
+	char *user;
+	char *host;
+
+	if ((user = index((cp = mask), '!')))
+		*user++ = '\0';
+	if ((host = rindex(user ? user : cp, '@')))
+	{
+		*host++ = '\0';
+
+		if (!user)
+			return make_nick_user_host(NULL, trim_str(cp,USERLEN), 
+				trim_str(host,HOSTLEN));
+	}
+	else if (!user && index(cp, '.'))
+		return make_nick_user_host(NULL, NULL, trim_str(cp,HOSTLEN));
+	return make_nick_user_host(trim_str(cp,NICKLEN), trim_str(user,USERLEN), 
+		trim_str(host,HOSTLEN));
+}
+
 /* Now let _invited_ people join thru bans, +i and +l.
  * Checking if an invite exist could be done only if a block exists,
  * but I'm not too fancy of the complicated structure that'd cause,

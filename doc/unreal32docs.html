@@ -21,7 +21,7 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 Beta17<br>
-  <b>Last doc update:</b> 2003-06-22 </div>
+  <b>Last doc update:</b> 2003-07-13 </div>
   <b>Head Coders:</b> Stskeeps / codemastr / Luke / McSkaf / Syzop<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
@@ -1998,7 +1998,7 @@ set {
   </tr>
   <tr> 
     <td><div align="center">d</div></td>
-    <td>Makes it so you can not receive private messages</td>
+    <td>Makes it so you can not receive channel PRIVMSGs</td>
   </tr>
   <tr> 
     <td><div align="center">k</div></td>
@@ -2027,6 +2027,18 @@ set {
   <tr> 
     <td><div align="center">p</div></td>
     <td>Hides the channels you are in in a /whois reply</td>
+  </tr>
+  <tr> 
+    <td><div align="center">R</div></td>
+    <td>Allows you to only receive PRIVMSGs/NOTICEs from registered (+r) users</td>
+  </tr>
+  <tr> 
+    <td><div align="center">V</div></td>
+    <td>Marks you as a WebTV user</td>
+  </tr>
+  <tr>
+    <td><div align="center">z</div></td>
+    <td>Indicates that you are an SSL client</td>
   </tr>
 </table>
 <p></p></div>
@@ -2077,9 +2089,9 @@ to get more information on a command.</p>
     <td>All</td>
   </tr>
   <tr> 
-    <td height="39">part &lt;channel1, channel2, ...&gt;</td>
-    <td>Allows you to part (leave) channels. Using the /part #channel1, #channel2, 
-      channel3 will allow you to part more than one channel at a time. </td>
+    <td height="39">cycle &lt;channel1, channel2, ...&gt;</td>
+    <td>Cycles the given channel(s). This command is equivilent
+      to sending a PART then a JOIN command.</td>
     <td>All</td>
   </tr>
   <tr> 
@@ -2251,6 +2263,15 @@ to get more information on a command.</p>
     <td height="39">identify &lt;channel&gt; &lt;password&gt;</td>
     <td>Sends your password to the services system to identify as the founder 
       of a channel.<br></td>
+    <td>All</td>
+  </tr>
+  <tr> 
+    <td height="39">dns &lt;option&gt;</td>
+    <td>Returns information about the IRC server's DNS cache.
+        Note, since most clients have a builtin DNS command,
+        you will most likely need to use /raw DNS to use this.
+        Opers may specify an l as the first parameter to the command
+        to receive a list of entries in the DNS cache.</td>
     <td>All</td>
   </tr>
   <tr> 
@@ -2530,13 +2551,21 @@ to get more information on a command.</p>
       V - Send the vhost block list<br>
       y - Send the class block list<br>
       Z - Send memory usage information</td>
-    <td>Admin</td>
+    <td>All</td>
   </tr>
   <tr>
     <td height="36">module<br></td>
     <td>
 	Lists all loaded modules
+     </td>
     <td>Admin</td>
+  </tr>
+  <tr>
+    <td height="36">close<br></td>
+    <td>
+	This command will disconnect all unknown connections from the IRC server.
+    </td>
+    <td>IRCOp</td>
   </tr>
 </table>
 
