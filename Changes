@@ -1607,3 +1607,4 @@ seen. gmtime warning still there
 - Removed some IPv6 resolver specifics that seemed illogical (reference to Jollino's IPv6 crashes)
 - Fixed crash bug in m_tkl_line found by Keeper
 - Fixed another m_tkl_line bug found by Keeper
+- Fixed an samode bug reported by mcskaf (#0000403)

@@ -1395,6 +1395,9 @@ void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv
 	}
 #endif
 
+	/* Should stop null modes */
+	if (*(modebuf + 1) == '\0')
+		return;
 	if (IsPerson(sptr) && samode && MyClient(sptr))
 	{
 		sendto_serv_butone_token(NULL, me.name, MSG_GLOBOPS,
@@ -1406,9 +1409,7 @@ void do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv
 		sptr = &me;
 		sendts = 0;
 	}
-	/* Should stop null modes */
-	if (*(modebuf + 1) == '\0')
-		return;
+
 	
 	sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
 	    sptr->name, chptr->chname, modebuf, parabuf);
