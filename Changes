@@ -2660,3 +2660,5 @@ seen. gmtime warning still there
 - Updated win32 makefile...
 - Module-systemized the extban stuff
 - As expected, fixed a crashbug in extended bans system. Reported by Rocko (#0001444).
+- internal: changed is_banned() again: cptr,sptr -> sptr (dropped cptr). It was too
+  confusing (and thus causing bad code/bugs) and was never used anyway.

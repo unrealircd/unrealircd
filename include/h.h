@@ -189,7 +189,7 @@ extern long get_access(aClient *, aChannel *);
 extern int is_chan_op(aClient *, aChannel *);
 extern int has_voice(aClient *, aChannel *);
 extern int is_chanowner(aClient *, aChannel *);
-extern Ban *is_banned(aClient *, aClient *, aChannel *, int);
+extern Ban *is_banned(aClient *, aChannel *, int);
 extern int parse_help(aClient *, char *, char *);
 
 extern void ircd_log(int, char *, ...) __attribute__((format(printf,2,3)));

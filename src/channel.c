@@ -550,10 +550,15 @@ int del_banid(aChannel *chptr, char *banid)
  */
 char *ban_realhost = NULL, *ban_virthost = NULL, *ban_ip = NULL;
 
-/*
- * is_banned - returns a pointer to the ban structure if banned else NULL
+/** is_banned - checks for bans.
+ * PARAMETERS:
+ * sptr:	the client to check (can be remote client)
+ * chptr:	the channel to check
+ * type:	one of BANCHK_*
+ * RETURNS:
+ * a pointer to the ban structure if banned, else NULL.
  */
-Ban *is_banned(aClient *cptr, aClient *sptr, aChannel *chptr, int type)
+Ban *is_banned(aClient *sptr, aChannel *chptr, int type)
 {
 	Ban *tmp, *tmp2;
 	char *s, *p;
@@ -563,7 +568,7 @@ Ban *is_banned(aClient *cptr, aClient *sptr, aChannel *chptr, int type)
 	int dovirt = 0, mine = 0;
 	ExtbanInfo *extban;
 
-	if (!IsPerson(cptr))
+	if (!IsPerson(sptr))
 		return NULL;
 
 	ban_realhost = realhost;
@@ -571,25 +576,25 @@ Ban *is_banned(aClient *cptr, aClient *sptr, aChannel *chptr, int type)
 
 	if (MyConnect(sptr)) {
 		mine = 1;
-		s = make_nick_user_host(cptr->name, cptr->user->username, Inet_ia2p(&cptr->ip));
+		s = make_nick_user_host(sptr->name, sptr->user->username, Inet_ia2p(&sptr->ip));
 		strlcpy(nuip, s, sizeof nuip);
 		ban_ip = nuip;
 	}
 
-	if (cptr->user->virthost)
-		if (strcmp(cptr->user->realhost, cptr->user->virthost))
+	if (sptr->user->virthost)
+		if (strcmp(sptr->user->realhost, sptr->user->virthost))
 		{
 			dovirt = 1;
 		}
 
-	s = make_nick_user_host(cptr->name, cptr->user->username,
-	    cptr->user->realhost);
+	s = make_nick_user_host(sptr->name, sptr->user->username,
+	    sptr->user->realhost);
 	strlcpy(realhost, s, sizeof realhost);
 
 	if (dovirt)
 	{
-		s = make_nick_user_host(cptr->name, cptr->user->username,
-		    cptr->user->virthost);
+		s = make_nick_user_host(sptr->name, sptr->user->username,
+		    sptr->user->virthost);
 		strlcpy(virthost, s, sizeof virthost);
 		ban_virthost = virthost;
 	}
@@ -905,7 +910,7 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 	if ((!lp
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
 	    CHFL_HALFOP | CHFL_CHANPROT))) && MyClient(cptr)
-	    && is_banned(cptr, cptr, chptr, BANCHK_MSG))
+	    && is_banned(cptr, chptr, BANCHK_MSG))
 		return (CANNOT_SEND_BAN);
 
 	return 0;
@@ -3264,7 +3269,7 @@ int can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *lin
                 return (ERR_ADMONLY);
 
 	/* Admin, Coadmin, Netadmin, and SAdmin can still walk +b in +O */
-	banned = is_banned(cptr, sptr, chptr, BANCHK_JOIN);
+	banned = is_banned(sptr, chptr, BANCHK_JOIN);
         if (IsOper(sptr) && !IsAdmin(sptr) && !IsCoAdmin(sptr) && !IsNetAdmin(sptr)
 	    && !IsSAdmin(sptr) && banned
             && (chptr->mode.mode & MODE_OPERONLY))
@@ -4381,7 +4386,7 @@ CMD_FUNC(m_topic)
 		{
 			if ((chptr->mode.mode & MODE_OPERONLY && !IsAnOper(sptr) && !IsMember(sptr, chptr)) ||
 			    (chptr->mode.mode & MODE_ADMONLY && !IsAdmin(sptr) && !IsMember(sptr, chptr)) ||
-			    (is_banned(sptr,sptr,chptr,BANCHK_JOIN) && !IsAnOper(sptr) && !IsMember(sptr, chptr))) {
+			    (is_banned(sptr,chptr,BANCHK_JOIN) && !IsAnOper(sptr) && !IsMember(sptr, chptr))) {
 				sendto_one(sptr, err_str(ERR_NOTONCHANNEL), me.name, parv[0], name);
 				return 0;
 			}
@@ -4662,7 +4667,7 @@ CMD_FUNC(m_invite)
 
 
 	if (over && MyConnect(acptr)) {
-	        if (is_banned(acptr, sptr, chptr, BANCHK_JOIN))
+	        if (is_banned(sptr, chptr, BANCHK_JOIN))
         	{
                         sendto_snomask(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +b).",
@@ -5435,7 +5440,7 @@ CMD_FUNC(m_knock)
 		return 0;
 	}
 
-	if (is_banned(cptr, sptr, chptr, BANCHK_JOIN))
+	if (is_banned(sptr, chptr, BANCHK_JOIN))
 	{
 		sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
 		    me.name, sptr->name, chptr->chname, "You're banned!");
