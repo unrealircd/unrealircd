@@ -48,6 +48,9 @@ struct	_confcommand
 	int	(*func)(ConfigFile *conf, ConfigEntry *ce);
 };
 
+/* 
+ * Top-level configuration commands -Stskeeps
+ */
 int	_conf_admin(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_me(ConfigFile *conf, ConfigEntry *ce);
 int	_conf_oper(ConfigFile *conf, ConfigEntry *ce);
@@ -61,17 +64,28 @@ static ConfigCommand _ConfigCommands[] = {
 	{ NULL, NULL  }
 };
 
-void config_free(ConfigFile *cfptr);
-ConfigFile *config_load(char *filename);
-ConfigEntry *config_find(ConfigEntry *ceptr, char *name);
-static void config_error(char *format, ...);
-static ConfigFile *config_parse(char *filename, char *confdata);
-static void config_entry_free(ConfigEntry *ceptr);
-int	ConfigParse(ConfigFile *cfptr);
+/*
+ * Some prototypes
+ */
+void 			config_free(ConfigFile *cfptr);
+ConfigFile 		*config_load(char *filename);
+ConfigEntry 		*config_find(ConfigEntry *ceptr, char *name);
+static void 		config_error(char *format, ...);
+static ConfigFile 	*config_parse(char *filename, char *confdata);
+static void 		config_entry_free(ConfigEntry *ceptr);
+int			ConfigParse(ConfigFile *cfptr);
 
-ConfigItem_me	*conf_me = NULL;
-ConfigItem_class *conf_class = NULL;
+/*
+ * Configuration linked lists
+*/
+ConfigItem_me		*conf_me = NULL;
+ConfigItem_class 	*conf_class = NULL;
+ConfigItem_admin 	*conf_admin = NULL;
 
+/*
+ * MyMalloc with the only difference that it clears the memory too
+ * -Stskeeps
+ */
 void	*MyMallocEx(size_t size)
 {
 	void *p = MyMalloc(size);
@@ -80,6 +94,12 @@ void	*MyMallocEx(size_t size)
 	return (p);
 }
 
+/*
+ * This will link in a ConfigItem into a list of it
+ * Example:
+ *    add_ConfigItem((ConfigItem *) class, (ConfigItem **) &conf_class);
+ *
+*/
 void	add_ConfigItem(ConfigItem *item, ConfigItem **list)
 {
 	item->next = *list;
@@ -89,6 +109,12 @@ void	add_ConfigItem(ConfigItem *item, ConfigItem **list)
 	*list = item;
 }
 
+/*
+ * Removes a ConfigItem from a linked list
+ * Example:
+ *    del_ConfigItem((ConfigItem *) class, (ConfigItem **)&conf_class);
+ * -Stskeeps
+*/
 ConfigItem *del_ConfigItem(ConfigItem *item, ConfigItem **list)
 {
 	ConfigItem *p, *q;
@@ -111,6 +137,7 @@ ConfigItem *del_ConfigItem(ConfigItem *item, ConfigItem **list)
 	return NULL;
 }
 
+/* Small function to bitch about stuff */
 static void config_error(char *format, ...)
 {
 	va_list		ap;
@@ -122,9 +149,10 @@ static void config_error(char *format, ...)
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
-	fprintf(stderr, "%s\n", buffer);
+	fprintf(stderr, "[error] %s\n", buffer);
 }
 
+/* Like above */
 static void config_status(char *format, ...)
 {
 	va_list		ap;
@@ -138,7 +166,7 @@ static void config_status(char *format, ...)
 		*ptr = '\0';
 	fprintf(stderr, "%s\n", buffer);
 }
-
+/* This is the internal parser, made by Chris Behrens & Fred Jacobs */
 static ConfigFile *config_parse(char *filename, char *confdata)
 {
 	char		*ptr;
@@ -508,7 +536,7 @@ ConfigEntry *config_find(ConfigEntry *ceptr, char *name)
 	return ceptr;
 }
 
-
+/* This will load a config named <filename> -Stskeeps */
 int	init_conf2(char *filename)
 {
 	ConfigFile	*cfptr;
@@ -528,11 +556,16 @@ int	init_conf2(char *filename)
 	}
 	else
 	{
-		config_error("Could not load config file");
+		config_error("Could not load config file %s", filename);
 		return 0;
 	}
 }
 
+/* This is a function to make looking up config commands quick
+   It goes in and checks the variable names and executes commands 
+   that it is told to execute when encountering certain variable names
+   -Stskeeps
+*/
 int	ConfigCmd(ConfigFile *cf, ConfigEntry *ce, ConfigCommand *cc)
 {
 	ConfigEntry *cep;
@@ -551,21 +584,23 @@ int	ConfigCmd(ConfigFile *cf, ConfigEntry *ce, ConfigCommand *cc)
 	{
 		if (!cep->ce_varname)
 		{
-			config_error("NULL cep->ce_varname");
+			config_error("%s:%i: (null) cep->ce_varname",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			continue;	
 		}
-		config_status("Searching for command %s", cep->ce_varname);
 		for (ccp = cc; ccp->name; ccp++)
 		{
 			if (!strcasecmp(ccp->name, cep->ce_varname))
 			{
-				config_status("Executing %s", cep->ce_varname);
 				ccp->func(cf, cep);
 			}
 		}
 	}
 }
 
+/* This simply starts the parsing of a config file from top level
+   -Stskeeps
+*/
 int	ConfigParse(ConfigFile *cfptr)
 {
 	ConfigEntry	*ce = NULL;
@@ -575,23 +610,32 @@ int	ConfigParse(ConfigFile *cfptr)
 
 /* Here is the command parsing instructions */
 
+/* 
+ * The admin {} block parser
+*/
 int	_conf_admin(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
+	ConfigItem_admin *ca;
 	
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!cep->ce_varname)
 		{
-			config_error("Blank admin line");
+			config_error("%s:%i: blank admin item",
+				ce->ce_fileptr->cf_filename,
+				ce->ce_varlinenum);
 			continue;	
 		}
-		config_status("[admin] we got line: %s",
-				cep->ce_varname);
-		
+		ca = MyMallocEx(sizeof(ConfigItem_admin));
+		ca->line = strdup(cep->ce_varname);
+		add_ConfigItem((ConfigItem *)ca, (ConfigItem **) &conf_admin);
 	} 
 }
 
+/*
+ * The class {} block parser
+*/
 int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
@@ -599,17 +643,24 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 	
 	if (!ce->ce_vardata)
 	{
-		config_error("class without name!");
+		config_error("%s:%i: class without name",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return -1;
 	}
 	class = (ConfigItem_class *) MyMallocEx(sizeof(ConfigItem_class));
-	config_status("Adding class %s", ce->ce_vardata);
 	class->name = strdup(ce->ce_vardata);
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!cep->ce_varname)
 		{
-			config_error("Blank class line");
+			config_error("%s:%i: class item without variable name",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			continue;	
+		}
+		if (!cep->ce_vardata)
+		{
+			config_error("%s:%i: class item without parameter",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 			continue;	
 		}
 		if (!strcmp(cep->ce_varname, "pingfreq"))
@@ -624,13 +675,13 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 		{
 			class->sendq = atol(ce->ce_vardata);
 		}
-		config_status("Set class %s->%s as %s",
-				class->name, cep->ce_varname, cep->ce_vardata);
 	}
-	config_status("Adding to conf_class .. ");
 	add_ConfigItem((ConfigItem *) class, (ConfigItem **) &conf_class);
 }
 
+/*
+ * The me {} block parser
+*/
 int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
@@ -669,6 +720,10 @@ int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 }
+
+/*
+ * The oper {} block parser
+*/
 
 int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 {
