@@ -2587,3 +2587,5 @@ seen. gmtime warning still there
 - Workaround for "special ban makes it impossible to add other bans" bug
   reported by wilkie, SerialKillinNinja, etc. 
 - Made /rehash reread botmotd and opermotd (#0001291).
+- Made OperOverride work for chanmode +Q (#0001370).
+- A few example.conf changes.

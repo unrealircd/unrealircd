@@ -4045,14 +4045,21 @@ CMD_FUNC(m_kick)
 				 * always contain a && MyClient(sptr) [or sptr!=cptr] and at the end
 				 * a remote kick should always be allowed (pass trough). -- Syzop
 				 */
-				if ((chptr->mode.mode & MODE_NOKICKS)
-				    && MyClient(sptr))
+				if (chptr->mode.mode & MODE_NOKICKS)
 				{
-					sendto_one(sptr,
-					    ":%s %s %s :*** You cannot kick people on %s",
-					    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, chptr->chname);
-					goto deny;
-					continue;
+					if (MyClient(sptr) && !(IsOper(sptr) && OPCanOverride(sptr)))
+					{
+						sendto_one(sptr,
+						    ":%s %s %s :*** You cannot kick people on %s",
+						    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, chptr->chname);
+						goto deny;
+					}
+					if (IsOper(sptr))
+						sendto_snomask(SNO_EYES,
+							"*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
+							sptr->name, sptr->user->username, sptr->user->realhost,
+							chptr->chname, who->name, comment);
+					goto attack; /* No reason to continue.. */
 				}
 
 				/* we are neither +o nor +h, OR..
