@@ -561,7 +561,7 @@ Ban *is_banned(aClient *cptr, aClient *sptr, aChannel *chptr, int type)
 	static char virthost[NICKLEN + USERLEN + HOSTLEN + 6];
 	static char     nuip[NICKLEN + USERLEN + HOSTLEN + 6];
 	int dovirt = 0, mine = 0;
-	ExtBanInfo *extban;
+	ExtbanInfo *extban;
 
 	if (!IsPerson(cptr))
 		return NULL;
@@ -2247,7 +2247,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  if ((tmpstr[0] == '~') && MyClient(cptr) && !bounce)
 		  {
 		      /* extban: check access if needed */
-		      ExtBanInfo *p = findmod_by_bantype(tmpstr[1]);
+		      ExtbanInfo *p = findmod_by_bantype(tmpstr[1]);
 		      if (p && p->is_ok && !p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_BAN))
 		      {
 		          if (IsAnOper(cptr))
@@ -2283,7 +2283,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  if ((tmpstr[0] == '~') && MyClient(cptr) && !bounce)
 		  {
 		      /* extban: check access if needed */
-		      ExtBanInfo *p = findmod_by_bantype(tmpstr[1]);
+		      ExtbanInfo *p = findmod_by_bantype(tmpstr[1]);
 		      if (p && p->is_ok && !p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_EXCEPT))
 		      {
 		          if (IsAnOper(cptr))
@@ -3153,7 +3153,7 @@ char *clean_ban_mask(char *mask, int what)
 	char *cp;
 	char *user;
 	char *host;
-	ExtBanInfo *p;
+	ExtbanInfo *p;
 
 	cp = index(mask, ' ');
 	if (cp)

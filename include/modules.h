@@ -259,7 +259,8 @@ typedef struct {
 	 * int: a value of BANCHK_* (see struct.h)
 	 */
 	int			(*is_banned)(aClient *, aChannel *, char *, int);
-} ExtBanInfo;
+} ExtbanInfo;
+typedef ExtbanInfo Extban; /* Just to be consistent */
 
 
 typedef struct _command {

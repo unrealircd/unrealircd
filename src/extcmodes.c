@@ -125,6 +125,8 @@ Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode)
 	if (i == EXTCMODETABLESZ)
 	{
 		Debug((DEBUG_DEBUG, "CmodeAdd failed, no space"));
+		if (reserved)
+			reserved->errorcode = MODERR_NOSPACE;
 		return NULL;
 	}
 	*mode = Channelmode_Table[i].mode;

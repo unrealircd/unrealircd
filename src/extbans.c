@@ -42,10 +42,12 @@
 #include <fcntl.h>
 #include "h.h"
 
-ExtBanInfo ExtBan_Table[EXTBANTABLESZ]; /* this should be fastest */
+Extban ExtBan_Table[EXTBANTABLESZ]; /* this should be fastest */
 unsigned short ExtBan_highest = 0;
 
-ExtBanInfo *findmod_by_bantype(char c)
+/* TODO: Add 005 stuff */
+
+Extban *findmod_by_bantype(char c)
 {
 int i;
 
@@ -56,47 +58,41 @@ int i;
 	 return NULL;
 }
 
-int ExtBanAdd(Module *reserved, ExtBanInfo req)
+Extban *ExtbanAdd(Module *reserved, ExtbanInfo req)
 {
-ExtBanInfo *tmp;
+Extban *tmp;
 int slot;
 
 	if (findmod_by_bantype(req.flag))
-		return 0; /* TODO: set error: already exists */
+	{
+		if (reserved)
+			reserved->errorcode = MODERR_EXISTS;
+		return NULL; 
+	}
 
 	/* TODO: perhaps some sanity checking on a-zA-Z0-9? */
 	for (slot = 0; slot < EXTBANTABLESZ; slot++)
 		if (ExtBan_Table[slot].flag == '\0')
 			break;
 	if (slot == EXTBANTABLESZ - 1)
-		return 0; /* TODO: set error: too many bantypes (wtf ;p) */
-
+	{
+		if (reserved)
+			reserved->errorcode = MODERR_NOSPACE;
+		return NULL;
+	}
 	ExtBan_Table[slot].flag = req.flag;
 	ExtBan_Table[slot].is_ok = req.is_ok;
 	ExtBan_Table[slot].conv_param = req.conv_param;
 	ExtBan_Table[slot].is_banned = req.is_banned;
 
 	ExtBan_highest = slot;
-	return 1;
+	return &ExtBan_Table[slot];
 }
 
-void ExtBanDel(char c)
+void ExtbanDel(Extban *eb)
 {
-int i, found = 0;
-
-	for (i=0; i <= ExtBan_highest; i++)
-	{
-		if (ExtBan_Table[i].flag == c)
-		{
-			found = 1;
-			break;
-		}
-	}
-	if (!found)
-		return;
-
 	/* Just zero it all away.. */
-	memset(&ExtBan_Table[i], 0, sizeof(ExtBanInfo));
+	memset(eb, 0, sizeof(Extban));
 	
 	/* Hmm do we want to go trough all chans and remove the bans?
 	 * I would say 'no' because perhaps we are just reloading,
@@ -212,19 +208,19 @@ char *ban = banin+3;
 
 void extban_init(void)
 {
-ExtBanInfo req;
+Extban req;
 
-	memset(&req, 0, sizeof(ExtBanInfo));
+	memset(&req, 0, sizeof(ExtbanInfo));
 	req.flag = 'c';
 	req.conv_param = extban_modec_conv_param;
 	req.is_banned = extban_modec_is_banned;
-	ExtBanAdd(NULL, req);
+	ExtbanAdd(NULL, req);
 	req.flag = 'q';
 	req.conv_param = extban_conv_param_nuh;
 	req.is_banned = extban_modeq_is_banned;
-	ExtBanAdd(NULL, req);
+	ExtbanAdd(NULL, req);
 	req.flag = 'r';
 	req.conv_param = extban_moder_conv_param;
 	req.is_banned = extban_moder_is_banned;
-	ExtBanAdd(NULL, req);
+	ExtbanAdd(NULL, req);
 }
