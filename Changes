@@ -1958,3 +1958,4 @@ seen. gmtime warning still there
 - Fixed /setident bug
 *** beta15 release **
 - Fixed a problem with modules not loading when #undef STRIPBADWORDS
+- Doc updates (SSL/stunnel example was wrong)
