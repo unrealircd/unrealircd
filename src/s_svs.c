@@ -236,8 +236,7 @@ int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd) {
 
 	if (alias->type == ALIAS_SERVICES) {
 		if (SERVICES_NAME && (acptr = find_person(alias->nick, NULL)))
-			sendto_one(acptr, ":%s!%s@%s PRIVMSG %s@%s :%s", parv[0],
-				sptr->user->username, IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost,
+			sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", parv[0],
 				alias->nick, SERVICES_NAME, parv[1]);
 		else
 			sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name,
@@ -245,18 +244,22 @@ int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd) {
 	}
 	else if (alias->type == ALIAS_STATS) {
 		if (STATS_SERVER && (acptr = find_person(alias->nick, NULL)))
-			sendto_one(acptr, ":%s!%s@%s PRIVMSG %s@%s :%s", parv[0],
-				sptr->user->username, IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost,
+			sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", parv[0],
 				alias->nick, STATS_SERVER, parv[1]);
 		else
 			sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name,
 				parv[0], alias->nick);
 	}
 	else if (alias->type == ALIAS_NORMAL) {
-		if ((acptr = find_person(alias->nick, NULL)))
-			sendto_one(acptr, ":%s!%s@%s PRIVMSG %s :%s", parv[0], 
-				sptr->user->username, IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost,
-				alias->nick, parv[1]);
+		if ((acptr = find_person(alias->nick, NULL))) {
+			if (MyClient(acptr))
+				sendto_one(acptr, ":%s!%s@%s PRIVMSG %s :%s", parv[0], 
+					sptr->user->username, IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost,
+					alias->nick, parv[1]);
+			else
+				sendto_one(acptr, ":%s PRIVMSG %s :%s", parv[0],
+					alias->nick, parv[1]);
+		}
 		else
 			sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name,
 				parv[0], alias->nick);
