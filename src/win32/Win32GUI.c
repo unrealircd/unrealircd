@@ -506,7 +506,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		else if (VerInfo.dwMajorVersion == 5) {
 			if (VerInfo.dwMinorVersion == 0)
 				strcat(OSName, "2000 ");
-			else if (VerInfo.dwMinorVersion == 1)
+			else if (VerInfo.dwMinorVersion == 1) 
 				strcat(OSName, "XP ");
 			else if (VerInfo.dwMinorVersion == 2)
 				strcat(OSName, ".NET Server ");

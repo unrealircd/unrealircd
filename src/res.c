@@ -199,6 +199,7 @@ static void rem_request(ResRQ *old)
 #ifdef	DEBUGMODE
 	Debug((DEBUG_INFO, "rem_request:Remove %#x at %#x %#x",
 	    old, *rptr, r2ptr));
+ircd_log(LOG_ERROR, "Crash Info: %#x at %#x %#x - %s", old, *rptr, r2ptr, r2ptr->name ? r2ptr->name : "No name");
 #endif
 	r2ptr = old;
 #ifndef _WIN32

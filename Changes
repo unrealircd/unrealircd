@@ -1462,3 +1462,6 @@ seen. gmtime warning still there
 - Readded find_match_server which got removed, m_rping uses it. Now in hash.c
 - Added note about Linux and FD_SETSIZE > 1024 in release notes
 - Made IRCd bitch properly when MAXCONNECTIONS>FD_SETSIZE
+- Fixed a make install bug due to removing obsolete files, reported by Morbid (#0000250)
+- Removed find_match_server from hash.c since it wasn't removed and was instead already
+  moved to s_serv.
