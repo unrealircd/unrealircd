@@ -982,6 +982,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 #elif defined(_WIN32)
 	HANDLE hFind;
 	WIN32_FIND_DATA FindData;
+	char cPath[MAX_PATH], *cSlash = NULL, *path;
 #endif
 	if (!ce->ce_vardata)
 	{
@@ -1011,6 +1012,14 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 	}
 	globfree(&files);
 #elif defined(_WIN32)
+	bzero(cPath,MAX_PATH);
+	if (strchr(ce->ce_vardata, '/') || strchr(ce->ce_vardata, '\\')) {
+		strncpy(cPath,ce->ce_vardata,MAX_PATH);
+		cSlash=cPath+strlen(cPath);
+		while(*cSlash != '\\' && *cSlash != '/' && cSlash > cPath)
+			cSlash--; 
+		*(cSlash+1)=0;
+	}
 	hFind = FindFirstFile(ce->ce_vardata, &FindData);
 	if (!FindData.cFileName) {
 		config_status("%s:%i: include %s: invalid file given",
@@ -1019,9 +1028,26 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 		FindClose(hFind);
 		return -1;
 	}
-	init_conf2(FindData.cFileName);
-	while (FindNextFile(hFind, &FindData) != 0) 
+	if (cPath) {
+		path = malloc(strlen(cPath) + strlen(FindData.cFileName)+1);
+		strcpy(path,cPath);
+		strcat(path,FindData.cFileName);
+		init_conf2(path);
+		free(path);
+	}
+	else
 		init_conf2(FindData.cFileName);
+	while (FindNextFile(hFind, &FindData) != 0) {
+		if (cPath) {
+			path = malloc(strlen(cPath) + strlen(FindData.cFileName)+1);
+			strcpy(path,cPath);
+			strcat(path,FindData.cFileName);
+			init_conf2(path);
+			free(path);
+		}
+		else
+			init_conf2(FindData.cFileName);
+	}
 
 	FindClose(hFind);
 #else

@@ -854,3 +854,4 @@ seen. gmtime warning still there
 - Fixed a scan.c bug on win32
 - Made the http scanner work on win32
 - Fixed a bug where /userhost would report oper status regardless of +H
+- Added some stuff that should fix the bug in Windows when including files in other directories
