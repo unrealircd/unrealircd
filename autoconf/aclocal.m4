@@ -78,13 +78,17 @@ AC_MSG_CHECKING(for openssl)
         if test -f "$dir/include/openssl/ssl.h"; then
 	    AC_MSG_RESULT(found in $ssldir/include/openssl)
             found_ssl="yes";
-            CFLAGS="$CFLAGS -I$ssldir/include";
+	    if test ! "$ssldir" = "/usr" ; then
+                CFLAGS="$CFLAGS -I$ssldir/include";
+  	    fi
             break;
         fi
         if test -f "$dir/include/ssl.h"; then
 	    AC_MSG_RESULT(found in $ssldir/include)
             found_ssl="yes";
-            CFLAGS="$CFLAGS -I$ssldir/include";
+	    if test ! "$ssldir" = "/usr" ; then
+	        CFLAGS="$CFLAGS -I$ssldir/include";
+	    fi
             break
         fi
     done
@@ -93,7 +97,9 @@ AC_MSG_CHECKING(for openssl)
 	AC_WARN(disabling ssl support)
     else
         CRYPTOLIB="-lssl -lcrypto";
-        LDFLAGS="$LDFLAGS -L$ssldir/lib";
+	if test ! "$ssldir" = "/usr" ; then
+           LDFLAGS="$LDFLAGS -L$ssldir/lib";
+        fi
     fi
 AC_DEFINE(USE_SSL)
 ],

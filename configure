@@ -9477,14 +9477,18 @@ echo $ECHO_N "checking for openssl... $ECHO_C" >&6
 	    echo "$as_me:$LINENO: result: found in $ssldir/include/openssl" >&5
 echo "${ECHO_T}found in $ssldir/include/openssl" >&6
             found_ssl="yes";
-            CFLAGS="$CFLAGS -I$ssldir/include";
+	    if test ! "$ssldir" = "/usr" ; then
+                CFLAGS="$CFLAGS -I$ssldir/include";
+  	    fi
             break;
         fi
         if test -f "$dir/include/ssl.h"; then
 	    echo "$as_me:$LINENO: result: found in $ssldir/include" >&5
 echo "${ECHO_T}found in $ssldir/include" >&6
             found_ssl="yes";
-            CFLAGS="$CFLAGS -I$ssldir/include";
+	    if test ! "$ssldir" = "/usr" ; then
+	        CFLAGS="$CFLAGS -I$ssldir/include";
+	    fi
             break
         fi
     done
@@ -9495,7 +9499,9 @@ echo "${ECHO_T}not found" >&6
 echo "$as_me: WARNING: disabling ssl support" >&2;}
     else
         CRYPTOLIB="-lssl -lcrypto";
-        LDFLAGS="$LDFLAGS -L$ssldir/lib";
+	if test ! "$ssldir" = "/usr" ; then
+           LDFLAGS="$LDFLAGS -L$ssldir/lib";
+        fi
     fi
 cat >>confdefs.h <<\_ACEOF
 #define USE_SSL 1
