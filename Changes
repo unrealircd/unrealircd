@@ -3187,3 +3187,4 @@ This is the 3.2 fixes branch.
   infection (reported by nexus), also changed LOI trojan and Bloodhound.Exploit.6
   action to gline.
 - Fixed a win32 module bug that broke strcasecmp/stricmp
+- German doc updates (week 21)

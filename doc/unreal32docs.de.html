@@ -21,9 +21,10 @@
 
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
-  <font size="4">Version: 3.2</font><br>
-  <b>Aktuelle Version:</b> 3.2 *CVS*<br>
-  <b>Letztes Dokumentation Update:</b> 2004-05-18 </div>
+  <font size="4">Version: 3.2 </font>*CVS*<br>
+  <b>Aktuelle Version:</b>  <b> 3.2</b>&nbsp;
+  <b><br>
+  Letztes Dokumentation Update:</b>     2004-05-18 </div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b>  McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
 <b>Dokumentation</b><b>:</b> CKnight^ / Syzop<br>
@@ -849,7 +850,9 @@ set::spamfilter::ban-reason</b> ermöglicht die Festlegung eines Grundes für
 die *lines (Default: 'Spam/advertising'). Mehrere Worte sind durch Underscores
 (&quot;_&quot;) und nicht durch Leerzeichen zu trennen.<br>
 <b>set::spamfilter::virus-help-channel</b> ermöglicht die Angabe eines
-Channels, in den bei der Action 'viruschan' gejoined wird (Default: #help)
+Channels, in den bei der Action 'viruschan' gejoined wird (Default: #help)<br>
+<b>set::spamfilter::virus-help-channel-deny</b> ermöglicht es, normale Joins in
+den virus-help-channel zu blockieren (Default: no)
 </div>
 
 <p><font size="+2"><b><a name="feature_other">3.15 - Andere Features</a></b></font></p><div class="desc">
@@ -2785,8 +2788,13 @@ Anzuzeigender Grund bei&nbsp; *lines, die durch den Spam Filter gesetzt wurden.
 Mehrere Worte sind durch Underscores (&quot;_&quot;) und nicht durch Leerzeichen
 zu trennen.</p>  
 <p><b>set::spamfilter::virus-help-channel &lt;channel&gt;</b><br>
-Festlegung des Channels für die Aktion 'viruschan'&nbsp; in Spamfilter<br>
-<br>
+Festlegung des Channels für die Aktion 'viruschan'&nbsp; in Spamfilter</p>   
+<p><b>set::spamfilter::virus-help-channel-deny &lt;yes|no&gt;</b><br>
+Falls auf 'yes' (oder '1') gesetzt, erhält jeder normalen User, der versucht,
+diesen Channel zu joinen, die Antwort 'invite only'. Nur Opers, User, bei denen
+der Spamfilter zutrifft oder User, die eingeladen werden, können diesen Channel
+joinen.</p>   
+<p>
 <b>set::spamfilter::except &lt;target(s)&gt;</b><br>
 Diese Ziele werden vom Spamfilter ausgenommen (es wird also keine Aktion
 durchgeführt). Es sind einzelne Ziele oder eine durch Kommata getrennte Liste
