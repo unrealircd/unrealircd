@@ -50,6 +50,7 @@ extern TS TS2ts(char *s);
 extern ConfigItem_me		*conf_me;
 extern ConfigItem_class 	*conf_class;
 extern ConfigItem_admin 	*conf_admin;
+extern ConfigItem_admin		*conf_admin_tail;
 extern ConfigItem_drpass	*conf_drpass;
 extern ConfigItem_ulines	*conf_ulines;
 extern ConfigItem_tld		*conf_tld;

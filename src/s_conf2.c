@@ -174,6 +174,7 @@ int			ConfigParse(ConfigFile *cfptr);
 ConfigItem_me		*conf_me = NULL;
 ConfigItem_class 	*conf_class = NULL;
 ConfigItem_admin 	*conf_admin = NULL;
+ConfigItem_admin	*conf_admin_tail = NULL;
 ConfigItem_drpass	*conf_drpass = NULL;
 ConfigItem_ulines	*conf_ulines = NULL;
 ConfigItem_tld		*conf_tld = NULL;
@@ -746,6 +747,8 @@ int	_conf_admin(ConfigFile *conf, ConfigEntry *ce)
 			continue;	
 		}
 		ca = MyMallocEx(sizeof(ConfigItem_admin));
+		if (!conf_admin)
+			conf_admin_tail = ca;
 		ircstrdup(ca->line, cep->ce_varname);
 		add_ConfigItem((ConfigItem *)ca, (ConfigItem **) &conf_admin);
 	} 

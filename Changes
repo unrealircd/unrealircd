@@ -81,3 +81,5 @@
 - Fixed a ircd.tune bug (the file may not write if it didn't exist)
 - Fixed a serious bug reported by Kanzen_Griever
 - Merged in sts-laptop branch
+- Made /admin use the new config (had to modify some newconf stuff to make a backwards copy
+  of the list as well)

@@ -3591,8 +3591,7 @@ int  m_admin(cptr, sptr, parc, parv)
 	int  parc;
 	char *parv[];
 {
-	aConfItem *aconf;
-
+	ConfigItem_admin *admin;
 	/* Users may want to get the address in case k-lined, etc. -- Barubary
 
 	   /* Only allow remote ADMINs if registered -- Barubary */
@@ -3600,20 +3599,28 @@ int  m_admin(cptr, sptr, parc, parv)
 		if (hunt_server(cptr, sptr, ":%s ADMIN :%s", 1, parc,
 		    parv) != HUNTED_ISME)
 			return 0;
-	if ((aconf = find_admin()))
-	{
-		sendto_one(sptr, rpl_str(RPL_ADMINME),
-		    me.name, parv[0], me.name);
-		sendto_one(sptr, rpl_str(RPL_ADMINLOC1),
-		    me.name, parv[0], (aconf->host ? aconf->host : "-"));
-		sendto_one(sptr, rpl_str(RPL_ADMINLOC2),
-		    me.name, parv[0], (aconf->passwd ? aconf->passwd : "-"));
-		sendto_one(sptr, rpl_str(RPL_ADMINEMAIL),
-		    me.name, parv[0], (aconf->name ? aconf->name : "-"));
-	}
-	else
+
+	if (!conf_admin_tail) {
 		sendto_one(sptr, err_str(ERR_NOADMININFO),
 		    me.name, parv[0], me.name);
+		return 0;
+	}
+
+	sendto_one(sptr, rpl_str(RPL_ADMINME),
+	    me.name, parv[0], me.name);
+
+	/* cycle through the list backwards */
+	for (admin = conf_admin_tail; admin; admin = (ConfigItem_admin *)admin->prev) {
+		if (!admin->next)
+			sendto_one(sptr, rpl_str(RPL_ADMINLOC1),
+			    me.name, parv[0], admin->line);
+		else if (!admin->next->next)
+			sendto_one(sptr, rpl_str(RPL_ADMINLOC2),
+                            me.name, parv[0], admin->line);
+		else
+			sendto_one(sptr, rpl_str(RPL_ADMINEMAIL),
+			    me.name, parv[0], admin->line);		
+	}
 	return 0;
 }
 
