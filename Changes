@@ -1783,3 +1783,178 @@ seen. gmtime warning still there
 - Fixed so crypt() works on !HAVE_CRYPT systems with openssl 0.9.7+ too
   (yes, this makes us able to compile win32-ssl)
 ** beta14 released **
+<<<<<<< Changes
+- Fixed example.conf set::dns::retries, 2s -> 2
+- Updated help.conf: added access level required for channel modes, added chanmode +G, etc.
+- Fix for missing mode 'S' in 005 CHANMODES= message
+- Added message if '/helpop' is used without parameters by helpops.
+- Fixed compile error in makefile.win32.ssl (added src/random.c).
+- Fixed compile error in src/random.c at win32.
+- Added end of stats message to /kline, /gline, etc.
+- Fixed some of the FreeBSD warnings, like 'Cannot accept connections' and 'getsockopt(IP_OPTIONS)'
+  (#0000616) and also changed report_error() to give additional error info.
+- Fixed /shun: ADMIN and PONG allowed if shunned (as documented) and removing a shun now also
+  affects connected clients immediately. (#0000593)
+- Fixed SVSMODE bug in handling of non-qaohvbe modes. (#0000631)
+- Fixed time calculation bug. (#0000634)
+- Made netadmins able to see users in all chans by using /who #chan or /names #chan.
+- Fixed crash when +x is in modes-on-oper, user has -x and then /oper's. (#0000578/#0000624/0000637)
+- Removed ircdreg, bug (#0000614), outdated
+- Fixed win32 compile error because of report_error patch (oops..)
+- Minor documentation fixes reported by Jollino (LUSERS, OFLAGS mode h).
+- Fixed bug in non-working channel mode +H. (#0000572)
+- Fixed bug in channel mode +L #aaaaaaaa<etc>
+- Added win32 compile instructions in doc/compiling_win32.txt.
+- Fixed major (?) bug in resolver (affects ipv4 only), could cause long stalls / crashes.
+- Added much better checking for weird characters in hostnames.
+- Fixed SSL session cache bug, symptoms were: stunnel can only connect the 1st time, reconnecting
+  etc fails with (in stunnel log) "SSL_connect: Peer suddenly disconnected". This happends with
+  OpenSSL 0.9.7.
+- Fixed some formatting issues.
+- Cleanup of m_userhost
+- Added a much faster (>100x) badwords replace routine, currently disabled until it's
+  100% finished and more testing has been done.
+- Cleanups in badwords.c.
+- Fixed minor bug in resolving of IPv4 names if IPv6 is enabled (#0000659).
+- Temporarely added user-already-in-chan check in m_sjoin to help tracing user-twice-in-chan bug
+  which has been reported by two users (#0000594).
+- Fixed halfop bug, ex: /mode -o+b user *!*@blah.com will get +b user!*@*. (#0000653)
+- Blah... forgot to remove some debugging code in badwords.c (new fast replace system).
+- Fixed yet another bug in new badwords replace system (should be almost finished now! ;P).
+- Optimization: channel msg routine now 10-30% faster.
+- Fixed 2-bans-needed-trick. (#0000626)
+- Minor documentation update for SVSNLINE. (#0000651)
+- Tweaked fix for 2-bans-needed-trick a bit.
+- Fixed crash when link::leaf was empty. (#0000610)
+- Fixed a bug where HCN would mean client exiting notices were displayed twice. As are result
+  of the fix, sendto_conn_hcn has also been removed. Reported by AngryWolf (#0000672)
+- Added some missing oflags for SVSO. Reported by auspice (#0000671)
+- Possibly fixed the throttling bug reported by Jaw959 (#0000644)
+- Fixed triple WATCH reply bug (#0000632)
+- Added ZIP_LINKS support, no check in ./Config & configure yet.. you currently need to
+  add -lz to IRCDLIBS in Makefile and enable it in include/config.h (and ofcourse set
+  link::options::zip on both sides) -- Syzop.
+- Removed unnecessary #ifdef blocks added by previous ZIP_LINKS patch
+- Fixed some minor sending-1-byte-too-much bugs
+- Made a STRIPBADWORDS_CHAN_ALWAYS option in include/config.h, if you define it badwords will
+  always be stripped from all channels (regardless whether +G has been set or not) [default=disabled].
+- Fix for error msgs flood at (at least) Linux 2.4.x and FreeBSD ("Transport endpoint is not connected"
+  and "Socket is not connected"). (#0000677)
+- Added makefiles to compile with zip links @ windows (zlib needed).
+- Added '/stats zip' (Oper only, only usefull if ZIP_LINKS is defined).
+- Fixed missing 's' flag in oper::snomask causing not receiving any server notices.
+- Fixed a bug with channel mode +A that could prevent admins from joining. Reported 
+  by Maxsus (#0000678)
+- Added some missing stuff to the documentation. Reported by AngryWolf (#0000611)
+- Started work on set::allow-userhost-change
+- Fixed some typos in aliases/operstats.conf (#0000684) and added an aliases/cygnus.conf
+  (#0000686), both reported by katsklaw
+- Added better error messages support instead of just "Dead socket".
+- Ahem... Fix for patch above (memleak).
+- Fixed bug which made opers unable to do -a/-q (#0000654).
+- Fixed bug in +q/+a list (/mode #chan q)
+- Added set::snomask-on-connect
+- Some tiny text fixes
+- Fast badword replace is now enabled by default
+- Added (optional) class::recvq so you can dynamically/per class set the recvq (flood control).
+  CLIENT_FLOOD in config.h is used as a default value if recvq is not specified.
+- Bugfix for crash with STRIPBADWORDS_CHAN_ALWAYS.
+- Fixed bug in ipv6 + unknown connection flood.
+- Don't encrypt SSL certificate by default @ win32.
+- Fixed /topic for opers when not in +s-channel.
+- Improved unreal32docs.html readability/layout/text.
+- Minor doc updates (example.conf).
+- Added better (specific) link error messages (only on the "incomming" side) so you can easily
+  see whether servername, hostname/ip or username is wrong.
+- Added recvq column to /stats y reply.
+- Fixed a throttling bug reported by Ely (#0000704)
+- Fixed a resolver bug where cache entries didn't timeout correctly.
+- Made async resolve-and-connect work
+- Added link::options::nodnscache which means Unreal will not cache the host forever for
+  outgoing server connections, you could for example enable this if you are linking two servers
+  with an often changing host (like dyndns.org).
+- Documentation updates for nodnscache.
+- Fixed minor memleak with zip links.
+- Code cleanup in m_umode
+- Fixed bug in ISON
+- Code cleanup
+- Fixed a bug in m_part
+- Fixed a bug where compiling with ZIP_LINKS and SSL wouldn't work (#0000707) reported by 
+  Ravage.
+- Added the ability to enable ziplinks via ./Config as well as specify a directory zlib is
+  in. Also added the ability to specify a directory for OpenSSL.
+- ZIP_LINKS fixes/debugging.
+- Code (comments) cleanup
+- Fixed an ident bug, maybe it actually works now.. (#0000709) reported by marviiin.
+- Added config error if link::options::zip was enabled at a non-zip compiled server.
+- Fixed a bug with ZIP_LINKS + show-connect-info, also added fallback to uncompressed link.
+- Updated protoctl.txt (added ZIP).
+- Added USE_ZIP stuff to win32 installer script.
+- Fixed a bug with except ban {} reported by Gargo (#0000604). As a result except tkl {} of
+  type tkline and tzline have been removed since they are now handled by except ban {}
+- Updated docs.
+- Added set::restrict-usermodes so you can restrict which usermodes users can (un)set,
+  for example you can force users to be all +G by setting G in modes-on-connect and
+  also in restrict-usermodes. Ofcourse these restrictions do not apply to ircops.
+  Feature suggested Gargo (#0000603).
+- Fixed a bug in coadmin: global flags were not added (#0000716).
+- Made ".. did a /whois on you" always show the real host (#0000705).
+- Removed usermode +I (invisibility)
+- Fixed link::port bug reported by AngryWolf: was signed so ports >32767 had problems
+- Fixed a win32 bug that could cause crashes when editting files. Reported by camje_lemon
+  (#0000717)
+- Removed channel mode +H (not needed without umode +I)
+- Allow coadmins to use /rehash -flags. Suggested by kyotou
+- Added channel mode +M. Can't talk unless you are using a registered nick. Suggested by 
+  CaliMonk
+- Fixed compile warning in ssl.c.
+- Updated docs, removed umode +I and cmode +H and added cmode +M
+- Removed some left over +I code
+- Added set::restrict-usermodes to /stats S (reported by AngryWolf)
+- Zip links: Added link::compression-level so you can set the compression level per link.
+- set::services-server is now required to be set (#0000730).
+- Fixed /list memory leak.
+- Fixed MyConnect()/MyClient() bug causing memory leak.
+- Fixed a bug with TKL and rehash
+- Recoded aliases (regex style) to be much faster.
+- Removed some leftover +I code
+- Fixed a bug in /who where +s was case sensitive. Reported by jollino (#0000736)
+- Removed some debugging messages
+- Fixed an alias bug reported by darko`` where alias::format::type of "normal" produced
+  an error.
+- Fixed some case insensitive checks in configfile parsing, fixed to be case sensitive.
+- Module changes: added two hooks: HOOKTYPE_USERMSG and HOOKTYPE_CHANMSG, changed umode_get.
+- Fixed bug with chmode +u: Quits/nick changes of other users were shown.
+- Added /who *.host.com support (ircop only), this was already possible via /who -h <host>
+  but most ppl expect it to work this way too.
+- Updated win32 compile instructions
+- Fixed set::dns error messages
+- Fixed win32 compile error
+- Fixed chmode +u again.
+- Fixed a bug reported by mQ where it was possible to include spaces in a TKL host
+- Documentation updates (added a section about features).
+- Fixed remote /rehash bug (#0000600).
+- Documentation updates (unreal32docs.html, example.conf).
+- Added a new badword type, quit. This replaces the old CENSOR_QUIT. If you want to censor
+  quit messages you create a badword quit {}. Additionally loading badwords.quit.conf will
+  censor several badwords by default. Based on suggestions by Gargo
+- Fixed two ident bugs (multihomed&connect), both resulted in ident not working.
+- Added set::options::dont-resolve (=hostnames of incomming clients won't be resolved).
+- Code cleanup (gcc 3.2 warnings with -Wall).
+- Removed/updated some NS stuff
+- Added EventMarkDel which marks an event for deletion for the (next) DoEvents() call.
+- Fixed /rehash stall caused by delayed unloading of the scan module (deadlock).
+- Added feature that if the chan is +m AND +u (so both!) and you ban IRC!*@* then ops
+  will no longer see the "relayed" message from IRC.
+- Made set::allow-userhost-change force-rejoin work.
+- Fixed chmode +u bug when chanop was parting but wasn't sent to normal users.
+- Added allow-userhost-change checks to /vhost.
+- Added SVSWATCH: allows U-lined server to modify the watch list of a user.
+- Added SVSSILENCE: allows U-lined server to modify the silence list of a user.
+- Documentation/text updates.
+- WebTV fixes
+- Added except throttle {}, only working when #define THROTTLE
+- Doc/text updates
+- Changed version to beta15
+- Fixed /setident bug
+*** beta15 released **
