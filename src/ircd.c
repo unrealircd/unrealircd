@@ -1127,10 +1127,12 @@ int  InitwIRCD(argc, argv)
 		strncpyzt(me.name, me.sockhost, sizeof(me.name));
 	me.hopcount = 0;
 	me.authfd = -1;
-	me.class = NULL;
 	me.next = NULL;
 	me.user = NULL;
 	me.from = &me;
+	me.class = (ConfigItem_class *) conf_listen;
+	/* This listener will never go away */
+	conf_listen->clients++;
 #ifdef SOCKSPORT
 	me.socksfd = -1;
 #endif

@@ -184,5 +184,5 @@
 - Made reference counts work again
 - Started some rehash work
 - Made full class work on servers too
-
+- Fixed a refcount bug
  
