@@ -1730,12 +1730,15 @@ int  read_message(delay, listp)
 			{
 				auth++;
 				Debug((DEBUG_NOTICE, "auth on %x %d", cptr, i));
-				FD_SET(cptr->authfd, &read_set);
+				if (cptr->authfd >= 0)
+				{
+					FD_SET(cptr->authfd, &read_set);
 #ifdef _WIN32
-				FD_SET(cptr->authfd, &excpt_set);
+					FD_SET(cptr->authfd, &excpt_set);
 #endif
-				if (cptr->flags & FLAGS_WRAUTH)
-					FD_SET(cptr->authfd, &write_set);
+					if (cptr->flags & FLAGS_WRAUTH)
+						FD_SET(cptr->authfd, &write_set);
+				}
 			}
 			if (DoingDNS(cptr) || DoingAuth(cptr)
 #ifdef SOCKSPORT
@@ -1745,7 +1748,8 @@ int  read_message(delay, listp)
 				continue;
 			if (IsMe(cptr) && IsListening(cptr))
 			{
-				FD_SET(cptr->fd, &read_set);
+				if (cptr->fd >= 0)
+					FD_SET(cptr->fd, &read_set);
 			}
 			else if (!IsMe(cptr))
 			{
