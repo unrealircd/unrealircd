@@ -84,6 +84,7 @@ struct zConfiguration {
 	long ssl_options;
 #endif
 	enum UHAllowed userhost_allowed;
+	char *restrict_usermodes;
 	aNetwork network;
 };
 
@@ -140,3 +141,4 @@ extern aConfiguration iConf;
 #define CLOAK_KEYCRC			iConf.network.keycrc
 #define STATIC_QUIT			iConf.static_quit
 #define UHOST_ALLOWED			iConf.userhost_allowed
+#define RESTRICT_USERMODES	iConf.restrict_usermodes

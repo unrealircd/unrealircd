@@ -1892,3 +1892,7 @@ seen. gmtime warning still there
 - Fixed a bug with except ban {} reported by Gargo (#0000604). As a result except tkl {} of
   type tkline and tzline have been removed since they are now handled by except ban {}
 - Updated docs.
+- Added set::restrict-usermodes so you can restrict which usermodes users can (un)set,
+  for example you can force users to be all +G by setting G in modes-on-connect and
+  also in restrict-usermodes. Ofcourse these restrictions do not apply to ircops.
+  Feature suggested Gargo (#0000603).

@@ -2223,7 +2223,7 @@ CMD_FUNC(m_umode)
 	char **p, *m;
 	aClient *acptr;
 	int  what, setflags, setsnomask = 0;
-	short rpterror = 0;
+	short rpterror = 0, umode_restrict_err = 0;
 
 	what = MODE_ADD;
 
@@ -2268,6 +2268,18 @@ CMD_FUNC(m_umode)
 	 */
 	p = &parv[2];
 	for (m = *p; *m; m++)
+	{
+		if (MyClient(sptr) && RESTRICT_USERMODES &&
+		    !IsAnOper(sptr) && strchr(RESTRICT_USERMODES, *m))
+		{
+			if (!umode_restrict_err)
+			{
+				sendto_one(sptr, ":%s NOTICE %s :Setting/removing of usermode(s) '%s' has been disabled.",
+					me.name, sptr->name, RESTRICT_USERMODES);
+				umode_restrict_err = 1;
+			}
+			continue;
+		}
 		switch (*m)
 		{
 		  case '+':
@@ -2362,7 +2374,8 @@ CMD_FUNC(m_umode)
 				  }
 			  }
 			  break;
-		}
+		} /* switch */
+	} /* for */
 	/*
 	 * stop users making themselves operators too easily
 	 */

@@ -1022,6 +1022,7 @@ void	free_iConf(aConfiguration *i)
 	ircfree(i->x_server_key_pem);
 	ircfree(i->trusted_ca_file);
 #endif	
+	ircfree(i->restrict_usermodes);
 	ircfree(i->network.x_ircnetwork);
 	ircfree(i->network.x_ircnet005);	
 	ircfree(i->network.x_defserv);
@@ -4713,6 +4714,18 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			else
 				tempiConf.userhost_allowed = UHALLOW_REJOIN;
 		}
+		else if (!strcmp(cep->ce_varname, "restrict-usermodes")) {
+			int i;
+			char *p = MyMalloc(strlen(cep->ce_vardata) + 1), *x = p;
+			/* The data should be something like 'Gw' or something,
+			 * but just in case users use '+Gw' then ignore the + (and -).
+			 */
+			for (i=0; i < strlen(cep->ce_vardata); i++)
+				if ((cep->ce_vardata[i] != '+') && (cep->ce_vardata[i] != '-'))
+					*x++ = cep->ce_vardata[i];
+			*x = '\0';
+			tempiConf.restrict_usermodes = p;
+		}
 		else if (!strcmp(cep->ce_varname, "anti-spam-quit-message-time")) {
 			tempiConf.anti_spam_quit_message_time = config_checkval(cep->ce_vardata,CFG_TIME);
 		}
@@ -5017,6 +5030,21 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "prefix-quit")) {
 			CheckNull(cep);
+		}
+		else if (!strcmp(cep->ce_varname, "restrict-usermodes"))
+		{
+			CheckNull(cep);
+			if (cep->ce_varname) {
+				int warn = 0;
+				char *p;
+				for (p = cep->ce_vardata; *p; p++)
+					if ((*p == '+') || (*p == '-'))
+						warn = 1;
+				if (warn) {
+					config_status("%s:%i: warning: set::restrict-usermodes: should only contain modechars, no + or -.\n",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				}
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "dns")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
