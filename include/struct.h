@@ -935,7 +935,7 @@ struct Message {
 	char *cmd;
 	int  (*func) ();
 	unsigned int count;
-	unsigned short  parameters;
+	unsigned parameters : 5;
 	u_char token[3];	/* Cheat for tokenized value */
 	unsigned long bytes;
 #ifdef DEBUGMODE

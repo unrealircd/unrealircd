@@ -2925,7 +2925,7 @@ int  m_whois(cptr, sptr, parc, parv)
 			 * global oper or services.
 			 * -CodeM/Barubary
 			 */
-			if (IsOper(sptr) || (acptr->user && MyConnect(acptr) && !IsOper(acptr)))
+			if (MyConnect(acptr) && (IsOper(sptr) || (acptr->user && MyConnect(acptr) && !IsOper(acptr))))
 				sendto_one(sptr, rpl_str(RPL_WHOISIDLE),
 				    me.name, parv[0], name,
 				    TStime() - user->last, acptr->firsttime);
