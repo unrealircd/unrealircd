@@ -4358,12 +4358,15 @@ int  m_umode(cptr, sptr, parc, parv)
 		if ((sptr->umodes & (UMODE_KIX)) && !(IsNetAdmin(sptr)
 		    || IsTechAdmin(sptr)))
 			sptr->umodes &= ~UMODE_KIX;
+		if ((sptr->umodes & (UMODE_FCLIENT)) && !IsOper(sptr))
+			sptr->umodes &= ~UMODE_FCLIENT;
 
 		/* Agents 
 		   if ((sptr->umodes & (UMODE_AGENT)) && !(sptr->oflag & OFLAG_AGENT))
 		   sptr->umodes &= ~UMODE_AGENT; */
 		if ((sptr->umodes & UMODE_HIDING) && !IsAnOper(sptr))
 			sptr->umodes &= ~UMODE_HIDING;
+
 
 		if ((sptr->umodes & UMODE_HIDING)
 		    && !(sptr->oflag & OFLAG_INVISIBLE))

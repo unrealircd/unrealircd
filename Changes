@@ -352,4 +352,4 @@
 - In ./Config it runs a quick test to see how many socket()s you can do
 - Fixed the double +cF notice on local connections exiting, ugly hack
 - Removed the last traces of unix sockets, flag 0x10 free now
-- Made all ircops able to use +F
+- Made all ircops able to use +F (totally this time)
