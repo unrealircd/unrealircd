@@ -347,15 +347,6 @@
 #define LOG_FACILITY LOG_DAEMON
 #endif /* USE_SYSLOG */
 
-/*
- * IDLE_FROM_MSG
- *
- * Idle-time nullified only from privmsg, if undefined idle-time
- * is nullified from everything except ping/pong.
- * Added 3.8.1992, kny@cs.hut.fi (nam)
- */
-#define IDLE_FROM_MSG
-
 /* 
  * Size of the LISTEN request.  Some machines handle this large
  * without problem, but not all.  It defaults to 5, but can be
