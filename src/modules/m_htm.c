@@ -56,11 +56,6 @@ extern int LRV;
 #endif
 
 
-#ifdef DYNAMIC_LINKING
-Module *Mod_Handle = NULL;
-#else
-#define Mod_Handle NULL
-#endif
 DLLFUNC int m_htm(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 EVENT(lcf_check);
 EVENT(htm_calc);
@@ -70,7 +65,12 @@ Event *e_lcf, *e_htmcalc;
 #define MSG_HTM         "HTM"
 #define TOK_HTM         "BH"
 
+DLLFUNC int htm_config_test(ConfigFile *, ConfigEntry *, int, int *);
+DLLFUNC int htm_config_run(ConfigFile *, ConfigEntry *, int);
+DLLFUNC int htm_stats(aClient *, char *); 
 
+ModuleInfo HtmModInfo;
+static Hook *ConfTest, *ConfRun, *ServerStats;
 #ifndef DYNAMIC_LINKING
 ModuleHeader m_htm_Header
 #else
@@ -90,6 +90,21 @@ ModuleHeader Mod_Header
  * want to
 */
 
+#ifdef DYNAMIC_LINKING
+DLLFUNC int	Mod_Test(ModuleInfo *modinfo)
+#else
+int    m_htm_Test(ModuleInfo *modinfo)
+#endif
+{
+	/*
+	 * We call our add_Command crap here
+	*/
+	bcopy(modinfo,&HtmModInfo,modinfo->size);
+	ConfTest = HookAddEx(HtmModInfo.handle, HOOKTYPE_CONFIGTEST, htm_config_test);
+	return MOD_SUCCESS;
+}
+
+
 /* This is called on module init, before Server Ready */
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
@@ -101,10 +116,12 @@ int    m_htm_Init(ModuleInfo *modinfo)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_HTM, TOK_HTM, m_htm, MAXPARA);
+	ConfRun = HookAddEx(HtmModInfo.handle, HOOKTYPE_CONFIGRUN, htm_config_run);
+	ServerStats = HookAddEx(HtmModInfo.handle, HOOKTYPE_STATS, htm_stats);
 #ifndef NO_FDLIST
 	LockEventSystem();
-	e_lcf = EventAddEx(Mod_Handle, "lcf", LCF, 0, lcf_check, NULL);
-	e_htmcalc = EventAddEx(Mod_Handle, "htmcalc", 1, 0, htm_calc, NULL);
+	e_lcf = EventAddEx(HtmModInfo.handle, "lcf", LCF, 0, lcf_check, NULL);
+	e_htmcalc = EventAddEx(HtmModInfo.handle, "htmcalc", 1, 0, htm_calc, NULL);
 	UnlockEventSystem();
 #endif
 	return MOD_SUCCESS;
@@ -398,5 +415,102 @@ EVENT(htm_calc)
 			highest_rate2 = currentrate2;
 	last = TStime();
 }
-
 #endif
+
+DLLFUNC int htm_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs) {
+	ConfigEntry *cep;
+	int errors = 0;
+
+	if (type != CONFIG_SET)
+		return 0;
+
+	if (!strcmp(ce->ce_varname, "htm"))
+	{
+		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+		{
+			if (!cep->ce_varname)
+			{
+				config_error("%s:%i: blank set::htm item",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum);	
+				errors++;
+				continue;
+			}
+			if (!cep->ce_vardata)
+			{
+				config_error("%s:%i: set::htm::%s item without value",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, cep->ce_varname);
+				errors++;
+				continue;
+			}
+			if (!strcmp(cep->ce_varname, "mode"))
+			{
+
+				if (stricmp(cep->ce_vardata, "noisy") && stricmp(cep->ce_vardata, "quiet"))
+				{
+					config_error("%s%i: set::htm::mode: illegal mode",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+					errors++;
+				}
+			}
+			else if (!strcmp(cep->ce_varname, "incoming-rate"))
+			{
+				int value = config_checkval(cep->ce_vardata, CFG_SIZE);
+				if (value < 10240)
+				{
+					config_error("%s%i: set::htm::incoming-rate: must be at least 10kb",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+					errors++;
+				}
+			}
+			else 
+			{
+				config_error("%s:%i: unknown directive set::htm::%s",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+					cep->ce_varname);
+				errors++;
+			}
+			
+		}
+		*errs = errors;
+		return errors ? -1 : 1;
+	}
+	else
+		return 0;
+}
+
+DLLFUNC int htm_config_run(ConfigFile *cf, ConfigEntry *ce, int type) {
+	ConfigEntry *cep;
+	int errors = 0;
+
+	if (type != CONFIG_SET)
+		return 0;
+	if (!strcmp(ce->ce_varname, "htm"))
+	{
+		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+		{
+			if (!strcmp(cep->ce_varname, "mode"))
+			{
+				if (!stricmp(cep->ce_vardata, "noisy"))
+					noisy_htm = 1;
+				else
+					noisy_htm = 0;
+			}
+			else if (!strcmp(cep->ce_varname, "incoming-rate"))
+				LRV = config_checkval(cep->ce_vardata, CFG_SIZE);
+		}
+		return 1;		
+	}
+	return 0;
+}
+
+DLLFUNC int htm_stats(aClient *sptr, char *stats) {
+	if (*stats == 'S') {
+		sendto_one(sptr, ":%s %i %s :htm::mode: %s", me.name, RPL_TEXT,
+			   sptr->name, noisy_htm ? "noisy" : "quiet");
+		sendto_one(sptr, ":%s %i %s :htm::incoming-rate: %d", me.name, RPL_TEXT,
+			   sptr->name, LRV);
+	}
+        return 0;
+}

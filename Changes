@@ -1719,3 +1719,5 @@ seen. gmtime warning still there
 - Changed base version name to Unreal3.2, instead of Unreal3.2-Selene
 - Made McSkaf part of core coder team
 *** beta13 released ***
+- Added set::htm to set HTM options via the config. set::htm is only valid if either
+  commands.so or m_htm.so is loaded.
