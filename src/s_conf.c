@@ -2180,7 +2180,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cepp;
 	char	    temp[512];
 	int	    i;
-
+#define CheckNull(x) if (!(x)->ce_vardata) { config_status("%s:%i: missing parameter", (x)->ce_fileptr->cf_filename, (x)->ce_varlinenum); continue; }
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -2192,37 +2192,88 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			continue;
 		}
 		if (!strcmp(cep->ce_varname, "kline-address")) {
+			CheckNull(cep);
 			ircstrdup(KLINE_ADDRESS, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "modes-on-connect")) {
-			if (cep->ce_vardata)
+			CheckNull(cep);
+			CONN_MODES = (long) set_usermode(cep->ce_vardata);
+			if (CONN_MODES & UMODE_OPER)
 			{
-				CONN_MODES = (long) set_usermode(cep->ce_vardata);
-				if (CONN_MODES & UMODE_OPER)
-				{
-					config_status("%s:%i set::modes-on-connect contains +o, deleting",
-						cep->ce_fileptr->cf_filename,
-						cep->ce_varlinenum);
-					CONN_MODES &= ~UMODE_OPER;
-				}
+				config_status("%s:%i set::modes-on-connect contains +o, deleting",
+					cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum);
+				CONN_MODES &= ~UMODE_OPER;
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "modes-on-oper")) {
-			if (cep->ce_vardata) {
-				OPER_MODES = (long) set_usermode(cep->ce_vardata);
-			}
+			CheckNull(cep);
+			OPER_MODES = (long) set_usermode(cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "auto-join")) {
+			CheckNull(cep);
 			ircstrdup(AUTO_JOIN_CHANS, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "oper-auto-join")) {
+			CheckNull(cep);
 			ircstrdup(OPER_AUTO_JOIN_CHANS, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "anti-spam-quit-message-time")) {
+			CheckNull(cep);
 			ANTI_SPAM_QUIT_MSG_TIME = atime(cep->ce_vardata);
 		}
-		else if (!strcmp(cep->ce_varname, "socks")) {
+		else if (!strcmp(cep->ce_varname, "oper-only-stats")) {
+			CheckNull(cep);
+			ircstrdup(OPER_ONLY_STATS, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "maxchannelsperuser")) {
+			CheckNull(cep);
+			MAXCHANNELSPERUSER = atoi(cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "network-name")) {
+			char *tmp;
+			CheckNull(cep);
+			ircstrdup(ircnetwork, cep->ce_vardata);
+			for (tmp = cep->ce_vardata; *cep->ce_vardata; cep->ce_vardata++) {
+				if (*cep->ce_vardata == ' ')
+					*cep->ce_vardata='-';
+			}
+			ircstrdup(ircnet005, tmp);
+			cep->ce_vardata = tmp;
+		}
+		else if (!strcmp(cep->ce_varname, "default-server")) {
+			CheckNull(cep);
+			ircstrdup(defserv, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "services-server")) {
+			CheckNull(cep);
+
+			ircstrdup(SERVICES_NAME, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "stats-server")) {
+			CheckNull(cep);
+			ircstrdup(STATS_SERVER, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "help-channel")) {
+			CheckNull(cep);
+			ircstrdup(helpchan, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "hiddenhost-prefix")) {
+			CheckNull(cep);
+			ircstrdup(hidden_host, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "prefix-quit")) {
+			CheckNull(cep);
+			if (conf_yesno(cep->ce_vardata) == 0)
+			{
+				ircstrdup(prefix_quit, "Quit: ");
+			}
+			ircstrdup(prefix_quit, cep->ce_vardata);
+		}
+		else
+		if (!strcmp(cep->ce_varname, "socks")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+				CheckNull(cepp);
 				if (!strcmp(cepp->ce_varname, "ban-message")) {
 					ircstrdup(SOCKSBANMSG, cepp->ce_vardata);
 				}
@@ -2236,6 +2287,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "dns")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+				CheckNull(cepp);
 				if (!strcmp(cepp->ce_varname, "timeout")) {
 					HOST_TIMEOUT = atime(cepp->ce_vardata);
 				}
@@ -2272,46 +2324,11 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 			}
 		}
-		else if (!strcmp(cep->ce_varname, "oper-only-stats")) {
-			ircstrdup(OPER_ONLY_STATS, cep->ce_vardata);
-		}
-		else if (!strcmp(cep->ce_varname, "maxchannelsperuser")) {
-			MAXCHANNELSPERUSER = atoi(cep->ce_vardata);
-		}
-		else if (!strcmp(cep->ce_varname, "network-name")) {
-			char *tmp;
-			ircstrdup(ircnetwork, cep->ce_vardata);
-			for (tmp = cep->ce_vardata; *cep->ce_vardata; cep->ce_vardata++) {
-				if (*cep->ce_vardata == ' ')
-					*cep->ce_vardata='-';
-			}
-			ircstrdup(ircnet005, tmp);
-			cep->ce_vardata = tmp;
-		}
-		else if (!strcmp(cep->ce_varname, "default-server")) {
-			ircstrdup(defserv, cep->ce_vardata);
-		}
-		else if (!strcmp(cep->ce_varname, "services-server")) {
-			ircstrdup(SERVICES_NAME, cep->ce_vardata);
-		}
-		else if (!strcmp(cep->ce_varname, "stats-server")) {
-			ircstrdup(STATS_SERVER, cep->ce_vardata);
-		}
-		else if (!strcmp(cep->ce_varname, "help-channel")) {
-			ircstrdup(helpchan, cep->ce_vardata);
-		}
-		else if (!strcmp(cep->ce_varname, "hiddenhost-prefix")) {
-			ircstrdup(hidden_host, cep->ce_vardata);
-		}
-		else if (!strcmp(cep->ce_varname, "prefix-quit")) {
-			if (conf_yesno(cep->ce_vardata) == 0)
-			{
-				ircstrdup(prefix_quit, "Quit: ");
-			}
-			ircstrdup(prefix_quit, cep->ce_vardata);
-		}
 		else if (!strcmp(cep->ce_varname, "hosts")) {
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!cepp->ce_vardata)
+					continue; 
 				if (!strcmp(cepp->ce_varname, "local")) {
 					ircstrdup(locop_host, cepp->ce_vardata);
 				}
