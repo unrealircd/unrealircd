@@ -733,3 +733,4 @@
 - Made SSL server<->server work, using __blocking__ sockets (this is only
   in connect moment thou) -stskeeps
 - Removed 1.0 msg/s when not in HTM
+- Fixed cutoff server infos in synch

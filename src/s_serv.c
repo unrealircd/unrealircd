@@ -611,13 +611,13 @@ int  m_server(cptr, sptr, parc, parv)
 		numeric = atoi(parv[3]);
 		hop = atoi(parv[2]);
 		(void)strncpy(info, parv[4], REALLEN + 60);
-		info[REALLEN] = '\0';
+		info[REALLEN + 60] = '\0';
 	}
 	else if (parc > 3 && atoi(parv[2]))
 	{
 		hop = atoi(parv[2]);
 		(void)strncpy(info, parv[3], REALLEN + 60);
-		info[REALLEN] = '\0';
+		info[REALLEN + 60] = '\0';
 	}
 /*
 	We do not support "SERVER server :desc" anymore, this is an ugly hack 
