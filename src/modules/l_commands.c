@@ -73,6 +73,10 @@ ModuleHeader l_commands_Header
  * want to
 */
 
+#ifdef SCAN_API
+extern int m_scan_Test(ModuleInfo *modinfo);
+#endif
+
 extern int m_sethost_Init(ModuleInfo *modinfo), m_setname_Init(ModuleInfo *modinfo), m_chghost_Init(ModuleInfo *modinfo);
 extern int m_chgident_Init(ModuleInfo *modinfo), m_setident_Init(ModuleInfo *modinfo), m_sdesc_Init(ModuleInfo *modinfo);
 extern int m_svsmode_Init(ModuleInfo *modinfo), m_swhois_Init(ModuleInfo *modinfo), m_svsmotd_Init(ModuleInfo *modinfo);
@@ -144,6 +148,25 @@ extern int m_scan_Unload(), scan_socks_Unload(), scan_http_Unload();
 extern int invisibility_Unload();
 #endif
 
+#ifdef SCAN_API
+#ifdef DYNAMIC_LINKING
+DLLFUNC int Mod_Test(ModuleInfo *modinfo)
+#else
+int l_commands_Test(ModuleInfo *modinfo)
+#endif
+{
+	Module p;
+	bcopy(modinfo,&ModCmdsInfo,modinfo->size);
+        p.header = &scan_socks_Header;
+        Module_Depend_Resolve(&p);
+        p.header = &scan_http_Header;
+        Module_Depend_Resolve(&p);
+	m_scan_Test(modinfo);
+	return MOD_SUCCESS;
+}
+#endif
+
+
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
 #else
@@ -207,10 +230,6 @@ int    l_commands_Init(ModuleInfo *modinfo)
 	m_guest_Init(&ModCmdsInfo);
 #endif
 #ifdef SCAN_API
-        p.header = &scan_socks_Header;
-        Module_Depend_Resolve(&p);
-        p.header = &scan_http_Header;
-        Module_Depend_Resolve(&p);
 	m_scan_Init(&ModCmdsInfo);
 	scan_socks_Init(&ModCmdsInfo);
 	scan_http_Init(&ModCmdsInfo);

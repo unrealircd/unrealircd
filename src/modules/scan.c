@@ -65,6 +65,7 @@ DLLFUNC int h_scan_connect(aClient *sptr);
 DLLFUNC int h_config_test(ConfigFile *, ConfigEntry *, int);
 DLLFUNC int h_config_run(ConfigFile *, ConfigEntry *, int);
 DLLFUNC int h_config_posttest();
+DLLFUNC int h_config_rehash();
 DLLFUNC int h_stats_scan(aClient *sptr, char *stats);
 
 struct requiredconfig {
@@ -94,7 +95,7 @@ EVENT(e_scannings_clean);
 
 static Event	*Scannings_clean = NULL;
 static Hook 	*LocConnect = NULL, *ConfTest = NULL, *ConfRun = NULL, *ServerStats = NULL;
-static Hook	*ConfPostTest = NULL;
+static Hook	*ConfPostTest = NULL, *ConfRehash = NULL;
 static Hooktype *ScanHost = NULL;
 static int HOOKTYPE_SCAN_HOST;
 ModuleInfo ScanModInfo;
@@ -108,6 +109,7 @@ int    m_scan_Test(ModuleInfo *modinfo)
 	bcopy(modinfo,&ScanModInfo,modinfo->size);
 	ConfTest = HookAddEx(ScanModInfo.handle, HOOKTYPE_CONFIGTEST, h_config_test);
 	ConfPostTest = HookAddEx(ScanModInfo.handle, HOOKTYPE_CONFIGPOSTTEST, h_config_posttest);
+	return MOD_SUCCESS;
 }
 
 /* This is called on module init, before Server Ready */
@@ -123,6 +125,7 @@ int    m_scan_Init(ModuleInfo *modinfo)
 	ScanHost = (Hooktype *)HooktypeAdd(modinfo->handle, "HOOKTYPE_SCAN_HOST", &HOOKTYPE_SCAN_HOST);
 	LocConnect = HookAddEx(ScanModInfo.handle, HOOKTYPE_LOCAL_CONNECT, h_scan_connect);
 	ConfRun = HookAddEx(ScanModInfo.handle, HOOKTYPE_CONFIGRUN, h_config_run);
+	ConfRehash = HookAddEx(ScanModInfo.handle, HOOKTYPE_REHASH, h_config_rehash);
 	ServerStats = HookAddEx(ScanModInfo.handle, HOOKTYPE_STATS, h_stats_scan);
 	bzero(&Scan_bind, sizeof(Scan_bind));
 	IRCCreateMutex(Scannings_lock);
@@ -504,6 +507,12 @@ DLLFUNC int h_config_posttest() {
 		errors++;
 	}
 	return errors ? -1 : 1;	
+}
+
+DLLFUNC int h_config_rehash()
+{
+	if (scan_message)
+		MyFree(scan_message);
 }
 
 DLLFUNC int h_stats_scan(aClient *sptr, char *stats) {

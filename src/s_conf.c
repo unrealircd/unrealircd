@@ -1025,10 +1025,20 @@ int	init_conf(char *rootconf, int rehash)
 			config_rehash();
 #ifdef DYNAMIC_LINKING
 			Unload_all_loaded_modules();
+#else
+			RunHook0(HOOKTYPE_REHASH);
 #endif
 		}
 #ifdef DYNAMIC_LINKING
 		Init_all_testing_modules();
+#else
+		if (!rehash) {
+			ModuleInfo ModCoreInfo;
+			ModCoreInfo.size = sizeof(ModuleInfo);
+			ModCoreInfo.module_load = 0;
+			ModCoreInfo.handle = NULL;
+			l_commands_Init(&ModCoreInfo);
+		}
 #endif
 		if (config_run() < 0)
 		{
@@ -1437,7 +1447,7 @@ int	config_post_test()
 		global_i = global_i->next) 
 	{
 		int value;
-		if (!(global_i->owner->flags & MODFLAG_TESTING))
+		if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
 			continue;
 		value = (*(global_i->func.intfunc))();
 		if (value == -1)
@@ -1545,7 +1555,7 @@ int	config_test()
 					global_i = global_i->next) 
 				{
 					int value;
-					if (!(global_i->owner->flags & MODFLAG_TESTING))
+					if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
 						continue;
 					value = (*(global_i->func.intfunc))(cfptr,ce,CONFIG_MAIN);
 					if (value == 2)
@@ -3135,7 +3145,7 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 				global_i = global_i->next) 
 			{
 				int value;
-				if (!(global_i->owner->flags & MODFLAG_TESTING))
+				if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
 					continue;
 				value = (*(global_i->func.intfunc))(conf,ce,CONFIG_ALLOW);
 				if (value == 2)
@@ -3573,7 +3583,7 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 			global_i = global_i->next) 
 		{
 			int value;
-			if (!(global_i->owner->flags & MODFLAG_TESTING))
+			if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
 				continue;
 			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_EXCEPT);
 			if (value == 2)
@@ -4290,7 +4300,7 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 			global_i = global_i->next) 
 		{
 			int value;
-			if (!(global_i->owner->flags & MODFLAG_TESTING))
+			if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
 				continue;
 			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_BAN);
 			if (value == 2)
@@ -4835,7 +4845,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				global_i = global_i->next) 
 			{
 				int value;
-				if (!(global_i->owner->flags & MODFLAG_TESTING))
+				if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
 					continue;
 				value = (*(global_i->func.intfunc))(conf,cep,CONFIG_SET);
 				if (value == 2)
@@ -5500,7 +5510,7 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 			global_i = global_i->next) 
 		{
 			int value;
-			if (!(global_i->owner->flags & MODFLAG_TESTING))
+			if (global_i->owner && !(global_i->owner->flags & MODFLAG_TESTING))
 				continue;
 			value = (*(global_i->func.intfunc))(conf,ce,CONFIG_DENY);
 			if (value == 2)

@@ -1046,7 +1046,7 @@ int InitwIRCD(int argc, char *argv[])
 		ModCoreInfo.size = sizeof(ModuleInfo);
 		ModCoreInfo.module_load = 0;
 		ModCoreInfo.handle = NULL;
-		l_commands_Init(&ModCoreInfo);
+		l_commands_Test(&ModCoreInfo);
 	}
 #endif
 	/*

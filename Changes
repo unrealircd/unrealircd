@@ -1681,3 +1681,5 @@ seen. gmtime warning still there
 - Made alias {}'s get rehashed
 - Made modules correctly rehash, this involves adding a Mod_Test function to modules that
   need to perform configuration tests. This is currently only implimented for dynamic linking
+- Made the same system work under static linking. This (barring any bugs) should be the
+  completion of conf3. :)
