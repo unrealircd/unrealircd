@@ -2512,3 +2512,5 @@ seen. gmtime warning still there
   This is however disabled by default because the idea of shun is to totally shun a user
   so (s)he can't do anything except /admin (and thus not causing "any" [server]traffic).
   Suggested by brentos. Note that we won't support /quit, or any other command, just this.
+- Module coders: Moved call to HOOKTYPE_LOCAL_JOIN down to where the JOIN, NAMES, etc
+  are already sent... this seems to make more sense since we have a prejoin hook now.

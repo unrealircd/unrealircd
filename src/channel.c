@@ -3633,7 +3633,6 @@ CMD_FUNC(do_join)
 					sub1_from_channel(chptr);
 				continue;
 			}
-			RunHook4(HOOKTYPE_LOCAL_JOIN, cptr, sptr,chptr,parv);
 		}
 
 		/*
@@ -3754,6 +3753,9 @@ CMD_FUNC(do_join)
 		}
 #endif
 	}
+
+	if (MyClient(sptr))
+		RunHook4(HOOKTYPE_LOCAL_JOIN, cptr, sptr,chptr,parv);
 
 	RET(0)
 #undef RET
