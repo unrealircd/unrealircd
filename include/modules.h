@@ -27,16 +27,17 @@
 #define DLLFUNC	_declspec(dllexport)
 #define irc_dlopen(x,y) LoadLibrary(x)
 #define irc_dlclose FreeLibrary
-#define irc_dlsym (void *)GetProcAddress
+#define irc_dlsym(x,y,z) z = (void *)GetProcAddress(x,y)
 #undef irc_dlerror
 #elif defined(HPUX)
 #define irc_dlopen(x,y) shl_load(x,y,0L)
+#define irc_dlsym(x,y,z) shl_findsym(x,y,z)
 #define irc_dlclose shl_unload
 #define irc_dlerror() strerror(errno)
 #else
 #define irc_dlopen dlopen
 #define irc_dlclose dlclose
-#define irc_dlsym dlsym
+#define irc_dlsym(x,y,z) z = dlsym(x,y)
 #define irc_dlerror dlerror
 #define DLLFUNC 
 #endif

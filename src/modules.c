@@ -103,7 +103,8 @@ char  *Module_Load (char *path, int load)
 	if ((Mod = irc_dlopen(path, RTLD_NOW)))
 	{
 		/* We have engaged the borg cube. Scan for lifesigns. */
-		if (!(mod_header = irc_dlsym(Mod, "Mod_Header")))
+		irc_dlsym(Mod, "Mod_Header", mod_header);
+		if (!mod_header)
 		{
 			irc_dlclose(Mod);
 			return ("Unable to locate Mod_Header");
@@ -132,21 +133,24 @@ char  *Module_Load (char *path, int load)
 			return ("Module already loaded");
 		}
 		mod = (Module *)Module_make(mod_header, Mod);
-		if (!(Mod_Init = irc_dlsym(Mod, "Mod_Init")))
+		irc_dlsym(Mod, "Mod_Init", Mod_Init);
+		if (!Mod_Init)
 		{
 			Module_free(mod);
 			return ("Unable to locate Mod_Init");
 		}
-		if (!(Mod_Unload = irc_dlsym(Mod, "Mod_Unload")))
+		irc_dlsym(Mod, "Mod_Unload", Mod_Unload);
+		if (!Mod_Unload)
 		{
 			Module_free(mod);
 			return ("Unable to locate Mod_Unload");
 		}
-			if (!(Mod_Load = irc_dlsym(Mod, "Mod_Load")))
-			{
-				Module_free(mod);
-				return ("Unable to locate Mod_Load"); 
-			}
+		irc_dlsym(Mod, "Mod_Load", Mod_Load);
+		if (!Mod_Load)
+		{
+			Module_free(mod);
+			return ("Unable to locate Mod_Load"); 
+		}
 		if ((ret = (*Mod_Init)(load)) < MOD_SUCCESS)
 		{
 			ircsprintf(errorbuf, "Mod_Init returned %i",
@@ -158,7 +162,8 @@ char  *Module_Load (char *path, int load)
 		
 		if (load)
 		{
-			if (!(Mod_Load = irc_dlsym(Mod, "Mod_Load")))
+			irc_dlsym(Mod, "Mod_Load", Mod_Load);
+			if (!Mod_Load)
 			{
 				/* We cannot do delayed unloading if this happens */
 				(*Mod_Unload)();
@@ -269,7 +274,8 @@ int     Module_Unload(char *name, int unload)
 	}      
 	if (!m)
 		return -1;
-	if (!(Mod_Unload = irc_dlsym(m->dll, "Mod_Unload")))
+	irc_dlsym(m->dll, "Mod_Unload", Mod_Unload);
+	if (!Mod_Unload)
 	{
 		return -1;
 	}
@@ -305,9 +311,11 @@ vFP Module_Sym(char *name)
 	/* Run through all modules and check for symbols */
 	for (mi = Modules; mi; mi = mi->next)
 	{
-		if (fp = (vFP) irc_dlsym(mi->dll, name))
+		irc_dlsym(mi->dll, name, fp);
+		if (fp)
 			return (fp);
-		if (fp = (vFP) irc_dlsym(mi->dll, buf))
+		irc_dlsym(mi->dll, buf, fp);
+		if (fp)
 			return (fp);
 	}
 	return NULL;
@@ -330,12 +338,14 @@ vFP Module_SymX(char *name, Module **mptr)
 	/* Run through all modules and check for symbols */
 	for (mi = Modules; mi; mi = mi->next)
 	{
-		if (fp = (vFP) irc_dlsym(mi->dll, name))
+		irc_dlsym(mi->dll, name, fp);
+		if (fp)
 		{
 			*mptr = mi;
 			return (fp);
 		}
-		if (fp = (vFP) irc_dlsym(mi->dll, buf))
+		irc_dlsym(mi->dll, buf, fp);
+		if (fp)
 		{
 			*mptr = mi;
 			return (fp);
@@ -352,7 +362,7 @@ vFP Module_SymX(char *name, Module **mptr)
 void	module_loadall(int module_load)
 {
 #ifndef STATIC_LINKING
-	iFP	fp;
+	iFP	fp, fpp;
 	int	i;
 	Module *mi;
 	
@@ -366,13 +376,10 @@ void	module_loadall(int module_load)
 	{
 		if (mi->flags & MODFLAG_LOADED)
 			continue;
-		if (fp = (iFP) irc_dlsym(mi->dll, "Mod_Load"))
-		{
-		}
-		else
-		if (fp = (iFP) irc_dlsym(mi->dll, "_Mod_Load"))
-		{
-		}
+		irc_dlsym(mi->dll, "Mod_Load", fp);
+		irc_dlsym(mi->dll, "_Mod_Load", fpp);
+		if (fp);
+		else if (fpp) { fp = fpp; }
 		else
 		{
 			/* else, we didn't find it */
@@ -592,7 +599,7 @@ void	unload_all_modules(void)
 	int	(*Mod_Unload)();
 	for (m = Modules; m; m = m->next)
 	{
-		Mod_Unload = irc_dlsym(m->dll, "Mod_Unload");
+		irc_dlsym(m->dll, "Mod_Unload", Mod_Unload);
 		if (Mod_Unload)
 			(*Mod_Unload)(0);
 	}

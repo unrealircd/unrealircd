@@ -984,3 +984,4 @@ seen. gmtime warning still there
   oper::snomask supercedes them.
 - Fixed another module v3 bug caused by Stskeeps drunkeness
 - Started adding HP-UX module support (Not enough added where it actually works yet)
+- Added some more HP-UX code
