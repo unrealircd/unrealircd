@@ -136,22 +136,24 @@ static int	_test_log		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_alias		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_help		(ConfigFile *conf, ConfigEntry *ce);
  
+/* This MUST be alphabetized */
 static ConfigCommand _ConfigCommands[] = {
-	{ "include",		NULL,		  	_test_include	},
 	{ "admin", 		_conf_admin,		_test_admin 	},
-	{ "me", 		_conf_me,			_test_me	},
-	{ "oper", 		_conf_oper,			_test_oper	},
-	{ "class", 		_conf_class,		_test_class	},
-	{ "drpass",		_conf_drpass,		_test_drpass	},
-	{ "ulines",		_conf_ulines,		_test_ulines	},
-	{ "tld",		_conf_tld,			_test_tld	},
-	{ "listen", 	_conf_listen,		_test_listen	},
 	{ "allow",		_conf_allow,		_test_allow	},
-	{ "except",		_conf_except,		_test_except	},
-	{ "vhost", 		_conf_vhost,		_test_vhost	},
 #ifdef STRIPBADWORDS
 	{ "badword",	_conf_badword,		_test_badword	},
 #endif
+	{ "class", 		_conf_class,		_test_class	},
+	{ "drpass",		_conf_drpass,		_test_drpass	},
+	{ "except",		_conf_except,		_test_except	},
+	{ "include",	NULL,		  		_test_include	},
+	{ "listen", 	_conf_listen,		_test_listen	},
+	{ "me", 		_conf_me,			_test_me	},
+	{ "oper", 		_conf_oper,			_test_oper	},
+	{ "tld",		_conf_tld,			_test_tld	},
+	{ "ulines",		_conf_ulines,		_test_ulines	},
+	{ "vhost", 		_conf_vhost,		_test_vhost	},
+
 /*
 	{ "link", 		_conf_link,		_test_link	},
 	{ "ban", 		_conf_ban,		_test_ban	},
@@ -161,7 +163,6 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "log",		_conf_log,		_test_log	},
 	{ "alias",		_conf_alias,		_test_alias	},
 	{ "help",		_conf_help,		_test_help	},*/
-	{ NULL, 		NULL,			NULL		}
 };
 
 static int _OldOperFlags[] = {
@@ -1003,6 +1004,24 @@ int	config_run()
 	return -1;
 }
 
+ConfigCommand *config_binary_search(char *cmd) {
+	int start = 0;
+	int stop = sizeof(_ConfigCommands)/sizeof(_ConfigCommands[0])-1;
+	int mid;
+	while (start <= stop) {
+		mid = (start+stop)/2;
+		if (smycmp(cmd,_ConfigCommands[mid].name) < 0) {
+			stop = mid-1;
+		}
+		else if (smycmp(cmd,_ConfigCommands[mid].name) == 0) {
+			return &_ConfigCommands[mid];
+		}
+		else
+			start = mid+1;
+	}
+	return NULL;
+}
+
 int	config_test()
 {
 	ConfigEntry 	*ce;
@@ -1022,18 +1041,11 @@ int	config_test()
 					__FILE__, __LINE__);
 				return -1;
 			}
-			for (cc = _ConfigCommands; cc->name; cc++)
-			{
-				if (!strcasecmp(cc->name, ce->ce_varname))
-				{
-					if ((cc->testfunc) && (cc->testfunc(cfptr, ce) < 0))
-					{
-						errors++;
-					}
-					break;
-				}
+			if ((cc = config_binary_search(ce->ce_varname))) {
+				if ((cc->testfunc) && (cc->testfunc(cfptr, ce) < 0))
+					errors++;
 			}
-			if (!cc->name)
+			else 
 			{
 				config_error("%s:%i: unknown directive %s", 
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,

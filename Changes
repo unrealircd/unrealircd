@@ -1643,3 +1643,5 @@ seen. gmtime warning still there
 - Converted badword to conf3
 - Fixed some win32 problems with conf3
 - Fixed a problem in config testing with conf3
+- Modified the main conf3 searching routine to use a binary search, this should speed up
+  config processing somewhat
