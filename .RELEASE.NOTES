@@ -1,10 +1,54 @@
 
-Unreal3.2-beta14 Release Notes
+Unreal3.2-beta15 Release Notes
 ======================================
-    
-     I M P O R T A N T   R E A D I N G
-(YES, YOU WILL NEED TO READ ALL OF THIS)
 
+==[ GENERAL INFORMATION ]==
+* If you are upgrading, make sure you run ./Config and make clean before doing make
+* The official UnrealIRCd documentation is doc/unreal32docs.html (also contains a FAQ),
+  read it before asking for help.
+* Report bugs at http://bugs.unrealircd.org/
+
+== [NEW FEATURES (see unreal32docs.html for more information) ]==
+- link::options::zip: ZIP links (compressed links), can save ~60-70% bandwidth if enabled.
+- set::allow-userhost-change to control user@host changes (+x/chghost/chgident/vhost/etc),
+  can be: always, never, not-on-channels or force-rejoin.
+- class::recvq for better floodcontrol (old CLIENT_FLOOD in config.h).
+- link::options::nodnscache: usefull for "dynamic hosts" like dyndns.org.
+- set::snomask-on-connect
+- set::restrict-usermodes: deny users to set/unset specified usermodes.
+- Channel mode +M: Can't talk unless you are using a registered nick.
+- set::options::dont-resolve: don't resolve hosts of incomming clients.
+
+==[ UPDATED ]==
+- Speed: badwords (+G) replace routine >100x faster (non-regex)
+- Speed: aliases much faster
+- unreal32docs.html has been improved a lot, also added a FAQ.
+- More detailed error message when linking of a server fails.
+
+==[ MAJOR BUGS FIXED ]==
+- Security fixes
+- Resolver bugfixes: 10s stall, ipv6, cache timeouts
+- SSL session cache bug causing users unable to connect ("protocol error",
+  "peer suddenly disconnected", etc)
+- Win32 "everyone with coadmin host"
+- IPv6
+- Throttling
+- Error message floods on FreeBSD and Linux 2.4.x
+- Most known non-win32 crash bugs
+- Win32 GUI
+- Some memory leaks
+- /who fixes
+- Multiple channelmode +u fixes
+- Multiple ident fixes
+- /rehash bug causing a "stall" (server no longer responding)
+
+==[ REMOVED ]==
+- Invisibility (usermode +I) has been removed.
+
+==[ MORE INFO ]==
+See Changelog
+
+==[ OLD RELEASE NOTES ]==
 * Unreal3.2 is a lot different than Unreal3.1.1. Forget all you have
   learned about setting up Unreal3.1.1 - this is a lot different. We have got
   a new configuration format that integrates all the former config files,
@@ -231,4 +275,3 @@ Unreal3.2-beta14 Release Notes
 * If you want throttling protection, read include/config.h
 
 * MAKE SURE YOU RERUN ./Config AND RUN make clean BEFORE USING THIS VERSION!!!
-
