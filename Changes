@@ -590,3 +590,4 @@ seen. gmtime warning still there
 - Fixed a few configure problems with sunos and amiga
 - Fixed an OpenBSD bug reported by perian
 - Moved config/ to autoconf/
+- Some fixes to configure.in that seemly got deleted?

@@ -28,13 +28,7 @@ AC_DEFUN(AC_ENABLE_SSL,
 [
 if test $openssl = yes; then
 AC_DEFINE(USE_SSL)
-CRYPTOLIB="-lcrypto"
-if [ ! -f server.req.pem ]; then
-export OPENSSLPATH
-make pem
-cat .SICI
-read cc
-fi
+CRYPTOLIB="-lcrypto -lssl"
 else
 AC_WARN(SSL support could not be enabled because openssl/ssl.h could not be found)
 fi
