@@ -86,6 +86,7 @@ void    l_commands_init(void)
 	m_chgident_init();
 	m_setident_init();
 	m_sdesc_init();
+	m_svsmode_init();
 	module_buffer = &l_commands_info;
 }
 

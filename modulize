@@ -9,7 +9,10 @@ sed "s/%UCOMMAND%/$UCOMMAND/g" $1.tmp >$1.tmp.1
 mv $1.tmp.1 $1.tmp
 sed "s/%MAXPARA%/$4/g" $1.tmp >$1.tmp.1
 mv $1.tmp.1 $1.tmp
-
+sed "s/%FILE%/$6/g" $1.tmp >$1.tmp.1
+mv $1.tmp.1 $1.tmp
+sed "s/%DESC%/$7/g" $1.tmp >$1.tmp.1
+mv $1.tmp.1 $1.tmp
 cat >> $1.tmp << __EOF__
 `cat $5`
 __EOF__

@@ -148,7 +148,6 @@ void	init_CommandHash(void)
 	add_Command(MSG_WATCH, TOK_WATCH, m_watch, 1);
 	add_Command(MSG_USERHOST, TOK_USERHOST, m_userhost, 1);
 	add_Command(MSG_SVSNICK, TOK_SVSNICK, m_svsnick, MAXPARA);
-	add_Command(MSG_SVSMODE, TOK_SVSMODE, m_svsmode, MAXPARA);
 	add_Command(MSG_LUSERS, TOK_LUSERS, m_lusers, MAXPARA);
 	add_Command(MSG_IDENTIFY, TOK_IDENTIFY, m_identify, 1);
 	add_Command(MSG_CHANSERV, TOK_CHANSERV, m_chanserv, 1);
@@ -221,7 +220,6 @@ void	init_CommandHash(void)
 	add_Command(MSG_GLINE, TOK_GLINE, m_gline, MAXPARA);
 	add_Command(MSG_REMGLINE, TOK_REMGLINE, m_remgline, MAXPARA);
 	add_Command(MSG_DALINFO, TOK_DALINFO, m_dalinfo, MAXPARA);
-	add_Command(MSG_SVS2MODE, TOK_SVS2MODE, m_svs2mode, MAXPARA);
 	add_Command(MSG_MKPASSWD, TOK_MKPASSWD, m_mkpasswd, MAXPARA);
 	add_Command(MSG_ADDLINE, TOK_ADDLINE, m_addline, 1);
 	add_Command(MSG_ADMINCHAT, TOK_ADMINCHAT, m_admins, 1);

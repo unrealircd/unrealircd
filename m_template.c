@@ -1,7 +1,25 @@
 /*
- * Module skeleton, by Carsten V. Munk 2001 <stskeeps@tspre.org>
- * May be used, modified, or changed by anyone, no license applies.
- * You may relicense this, to any license
+ *   IRC - Internet Relay Chat, src/modules/%FILE
+ *   (C) 2001 The UnrealIRCd Team
+ *
+ *   %DESC%
+ *
+ *   See file AUTHORS in IRC package for additional names of
+ *   the programmers.
+ *
+ *   This program is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation; either version 1, or (at your option)
+ *   any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program; if not, write to the Free Software
+ *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 #include "config.h"
 #include "struct.h"
