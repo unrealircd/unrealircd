@@ -542,3 +542,4 @@
 - Fixed a BotMOTD bug
 - Added Dianora's /userhost
 - Recoded /links using NS
+- Recoded /map a bit using NS, and added usercounts to Server struct

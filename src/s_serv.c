@@ -4776,7 +4776,8 @@ void dump_map(cptr, server, mask, prompt_length, length)
 	char *p = &prompt[prompt_length];
 	int  cnt = 0, local = 0;
 	aClient *acptr;
-
+	Link *lp;
+	
 	*p = '\0';
 
 	if (prompt_length > 60)
@@ -4784,18 +4785,8 @@ void dump_map(cptr, server, mask, prompt_length, length)
 		    prompt, server->name);
 	else
 	{
-		for (acptr = client; acptr; acptr = acptr->next)
-		{
-			if (IsPerson(acptr))
-			{
-				++cnt;	/* == */
-				if (!strcmp(acptr->user->server, server->name))
-					++local;
-			}
-		}
-
 		sendto_one(cptr, rpl_str(RPL_MAP), me.name, cptr->name, prompt,
-		    length, server->name, local,
+		    length, server->name, server->serv->users,
 		    (server->serv->numeric ? (char *)my_itoa(server->serv->
 		    numeric) : ""));
 		cnt = 0;
@@ -4813,40 +4804,29 @@ void dump_map(cptr, server, mask, prompt_length, length)
 	strcpy(p, "|-");
 
 
-	for (acptr = client; acptr; acptr = acptr->next)
+	for (lp = (Link *) return_servers(); lp; lp = lp->next)
 	{
-		if (HIDE_ULINES == 1)
-		{
-			if (!IsServer(acptr)
-			    || strcmp(acptr->serv->up, server->name))
-				continue;
-
-			if (IsULine(acptr, acptr) && !IsAnOper(cptr))
-				continue;
-		}
-
-		if (match(mask, acptr->name))
-			acptr->flags &= ~FLAGS_MAP;
-		else
-		{
-			acptr->flags |= FLAGS_MAP;
-			cnt++;
-		}
+		acptr = lp->value.cptr;
+		if (acptr->srvptr != server)
+			continue;
+			
+		if (IsULine(acptr, acptr) && HIDE_ULINES && !IsAnOper(cptr))
+			continue;
+		acptr->flags |= FLAGS_MAP;
+		cnt++;
 	}
 
-	for (acptr = client; acptr; acptr = acptr->next)
+	for (lp = (Link *) return_servers(); lp; lp = lp->next)
 	{
-		if (!(acptr->flags & FLAGS_MAP) ||	/* != */
-		    !IsServer(acptr) || strcmp(acptr->serv->up, server->name))
+		acptr = lp->value.cptr;
+		if (acptr->srvptr != server)
 			continue;
-		if (HIDE_ULINES == 1)
-		{
-			if (IsULine(acptr, acptr) && !IsAnOper(cptr))
-				continue;
-		}
+		if (!acptr->flags & FLAGS_MAP)
+			continue;
 		if (--cnt == 0)
 			*p = '`';
 		dump_map(cptr, acptr, mask, prompt_length + 2, length - 2);
+		
 	}
 
 	if (prompt_length > 0)
@@ -4865,16 +4845,20 @@ int  m_map(cptr, sptr, parc, parv)
 	int  parc;
 	char *parv[];
 {
+	Link *lp;
 	aClient *acptr;
 	int  longest = strlen(me.name);
 
 
 	if (parc < 2)
 		parv[1] = "*";
-	for (acptr = client; acptr; acptr = acptr->next)
-		if (IsServer(acptr)
-		    && (strlen(acptr->name) + acptr->hopcount * 2) > longest)
+	for (lp = (Link *) return_servers(); lp; lp = lp->next)
+	{
+		acptr = lp->value.cptr;
+		if ((strlen(acptr->name) + acptr->hopcount * 2) > longest)
 			longest = strlen(acptr->name) + acptr->hopcount * 2;
+	}
+	for (acptr = client; acptr; acptr = acptr->next)
 
 	if (longest > 60)
 		longest = 60;

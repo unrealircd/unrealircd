@@ -707,6 +707,7 @@ struct Server {
 	aConfItem *nline;	/* N-line pointer for this server */
 	time_t timestamp;	/* Remotely determined connect try time */
 	unsigned short numeric; /* NS numeric, 0 if none */
+	long	users;
 #ifdef	LIST_DEBUG
 	aClient *bcptr;
 #endif

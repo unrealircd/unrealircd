@@ -843,6 +843,8 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 	}
 	SetClient(sptr);
 	IRCstats.clients++;
+	if (sptr->srvptr && sptr->srvptr->serv)
+		sptr->srvptr->serv->users++;
 	user->virthost =
 	    (char *)make_virthost(user->realhost, user->virthost, 1);
 	if (MyConnect(sptr))

@@ -207,6 +207,7 @@ aServer *make_server(cptr)
 		serv->nexts = NULL;
 		*serv->by = '\0';
 		serv->numeric = 0;
+		serv->users = 0;
 		serv->up = NULL;
 		cptr->serv = serv;
 	}
@@ -274,6 +275,8 @@ void remove_client_from_list(cptr)
 		if (IsOper(cptr))
 			IRCstats.operators--;
 		IRCstats.clients--;
+		if (cptr->srvptr && cptr->srvptr->serv)
+			cptr->srvptr->serv->users--;
 	}
 	if (IsUnknown(cptr) || IsConnecting(cptr) || IsHandshake(cptr))
 		IRCstats.unknown--;
