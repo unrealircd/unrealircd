@@ -1360,8 +1360,6 @@ int  initconf(opt)
 				{
 					if (*cp == 'S')
 						aconf->options |= CONNECT_SSL;
-					else if (*cp == 'Z')
-						aconf->options |= CONNECT_ZIP;
 				}
 			}
 			break;

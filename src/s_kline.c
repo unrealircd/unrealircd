@@ -255,6 +255,7 @@ int  find_tkline_match(cptr, xx)
 	int  xx;
 {
 	aTKline *lp;
+	aConfItem *tmp;
 	char *chost, *cname, *cip;
 	TS   nowtime;
 	int  is_ip;
@@ -287,7 +288,21 @@ int  find_tkline_match(cptr, xx)
 
 	if (points != 1)
 		return -1;	
-	
+
+	/* The mask matched some type of tkl line above, cycle through E lines
+	 * and see if we find a match. If so, they're exempt from everything now,
+	 * not just klines.
+	 */
+
+#ifdef ENABLE_EXEMPTALL
+	for (tmp = conf; tmp; tmp = tmp->next)
+	if ((tmp->status == CONF_EXCEPT) && tmp->host && tmp->name &&
+	    ((match(tmp->host, chost) == 0) || (match(tmp->host,cip) == 0)) &&
+	    (!cname || match(tmp->name, cname) == 0) &&
+	    (!tmp->port || (tmp->port == cptr->acpt->port)))
+		return -1;
+#endif
+
 	if ((lp->type & TKL_KILL) && (xx != 2))
 	{
 		if (lp->type & TKL_GLOBAL)

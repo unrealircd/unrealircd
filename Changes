@@ -237,3 +237,18 @@ fixed map bug that allowed you to trivially
 find a hidden U lined server (hopefully)
 --Luke
 ===================================
+
+rmed zip.c (not used at all.)
+and zip.h and anything related to zip
+--Luke
+===================================
+
+E lines now match glines, zlines, shuns
+(if you say yes in config)
+--Luke
+===================================
+
+map bug still exists (earlier fix made it
+worse)...removed.
+--Luke
+=================================== 

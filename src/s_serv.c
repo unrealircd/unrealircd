@@ -2264,10 +2264,6 @@ static void report_configured_links(sptr, mask)
 							optbuf[cnt] = 'S';
 							cnt++;
 						}
-						if (options & CONNECT_ZIP) {
-							optbuf[cnt] = 'Z';
-							cnt++;
-						}
 						optbuf[cnt] = '\0';
 					}
 						
@@ -4827,14 +4823,14 @@ void dump_map(cptr, server, mask, prompt_length, length)
 	for (lp = (Link *) return_servers(); lp; lp = lp->next)
 	{
 		acptr = lp->value.cptr;
-		if (--cnt == 0)
-			*p = '`';
 		if (IsULine(acptr) && HIDE_ULINES && !IsAnOper(cptr))
 			continue;		
 		if (acptr->srvptr != server)
 			continue;
 		if (!acptr->flags & FLAGS_MAP)
 			continue;
+		if (--cnt == 0)
+			*p = '`';
 		dump_map(cptr, acptr, mask, prompt_length + 2, length - 2);
 		
 	}

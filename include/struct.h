@@ -30,9 +30,6 @@
 #include "hash.h"
 #include <stdio.h>
 #include <sys/types.h>
-#ifdef ZIP_LINKS
-#include "zip.h"
-#endif
 #ifndef _WIN32
 #include <netinet/in.h>
 #include <netdb.h>
@@ -268,7 +265,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define PROTO_SJOIN2	0x10	/* Negotiated SJOIN2 protocol */
 #define PROTO_UMODE2	0x20	/* Negotiated UMODE2 protocol */
 #define PROTO_NS	0x40	/* Negotiated NS protocol */
-#define PROTO_ZIP	0x80	/* Negotiated ZIP protocol */
 #define PROTO_VL	0x100	/* Negotiated VL protocol */
 #define PROTO_SJ3	0x200	/* Negotiated SJ3 protocol */
 #define PROTO_VHP	0x400	/* Send hostnames in NICKv2 even if not 
@@ -777,7 +773,6 @@ struct t_vhline {
 #define LISTENER_SSL		0x000040
 
 #define CONNECT_SSL		0x000001
-#define CONNECT_ZIP		0x000002 
 
 
 struct Client {
@@ -821,9 +816,6 @@ struct Client {
 	long sendM;		/* Statistics: protocol messages send */
 	long sendK;		/* Statistics: total k-bytes send */
 	long receiveM;		/* Statistics: protocol messages received */
-#ifdef ZIP_LINKS
-	struct Zdata *zip;	/* zip data */
-#endif
 #ifdef USE_SSL
 	struct	SSL	*ssl;
 	struct X509	*client_cert;	

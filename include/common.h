@@ -208,12 +208,6 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
  * you are doing.
  */
 
-#ifdef ZIP_LINKS
-#define ZIPSTUFF " ZIP"
-#else
-#define ZIPSTUFF ""
-#endif
-
 /* IRCu/Hybrid/Unreal way now :) -Stskeeps */
 
 #define PROTOCTL_CLIENT           \
@@ -255,8 +249,7 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
                         " VL" \
                         " SJ3" \
                         " NS" \
-                        " SJB64" \
-                        ZIPSTUFF
+                        " SJB64"
 
 #ifdef _WIN32
 /*
