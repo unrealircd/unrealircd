@@ -2421,3 +2421,6 @@ seen. gmtime warning still there
 - Fixed a Linux PPC problem (#0001242)
 - Made the win32 version use libtre for regex rather than GNU regex
   libtre is smaller, faster, and more feature rich.
+- Fixed some issues regarding unsetting of -R/-M when server set that mode due to a flood (+f),
+  it would set the mode back immediately after next msg/join, counters are now reset.
+- Updated documentation

@@ -1918,11 +1918,19 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 					break;
 				case MODE_MODERATED:
 					chptr->mode.floodprot->c[FLD_MSG] = 0;
+					chptr->mode.floodprot->c[FLD_CTCP] = 0;
 					break;
 				case MODE_NOKNOCK:
 					chptr->mode.floodprot->c[FLD_KNOCK] = 0;
 					break;
 				case MODE_INVITEONLY:
+					chptr->mode.floodprot->c[FLD_JOIN] = 0;
+					break;
+				case MODE_MODREG:
+					chptr->mode.floodprot->c[FLD_MSG] = 0;
+					chptr->mode.floodprot->c[FLD_CTCP] = 0;
+					break;
+				case MODE_RGSTRONLY:
 					chptr->mode.floodprot->c[FLD_JOIN] = 0;
 					break;
 				default:

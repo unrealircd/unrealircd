@@ -21,14 +21,14 @@
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2</font><br>
   <b>Current Version:</b> 3.2 Beta17<br>
-  <b>Last doc update:</b> 2003-08-01</div>
+  <b>Last doc update:</b> 2003-09-15</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Luke / McSkaf / Syzop<br>
   <b>Contributors:</b> Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
 <p>Due to the increasing complexity of UnrealIRCd3.2 We have switched to an easier 
   to navigate, more inclusive documentation set. To view this documentation you 
   must have a compatible browser, which are listed below. Up to date docs are 
-  available @ <a href="http://www.vulnscan.org/UnrealIrcd/unreal32docs.html">http://www.vulnscan.org/UnrealIrcd/unreal32docs.html</a></p>
+  available at <a href="http://www.vulnscan.org/UnrealIrcd/unreal32docs.html">http://www.vulnscan.org/UnrealIrcd/unreal32docs.html</a></p>
 <p><b>Compatible Browsers: </b><br>
 <ul>
 <li>Opera 6.02
@@ -127,7 +127,7 @@
 Linux:<br>
 <ul>
 <li>Rename your old UnrealIRCd directory (or otherwise you'll overwrite it in the next step)
-<li>Extract the new UnrealIRCd version and run ./Config and make(*NIX).
+<li>Extract the new UnrealIRCd version and run ./Config and make
 <li>Copy your old configuration files to the new directory (unrealircd.conf, motd, rules, server.* [SSL certs], network file, etc)</p></ul>
 Windows:<br>
 <ul>
@@ -136,8 +136,8 @@ Windows:<br>
 <li>Run the installer for the new version of Unreal.
 <li>Copy your old configuration files to the new folder.
 </ul>
-<p>Please also check .RELEASE.NOTES and maybe even Changes to see what has been changed. 
-   If you notice any changes (or bugs) between version, BE SURE TO READ THOSE FILES FIRST before reporting it as a bug!.</p></div>
+<p>Please also check .RELEASE.NOTES to see what has been changed. 
+   If you notice any changes (or bugs) between version, BE SURE TO READ THE RELEASE NOTES FIRST before reporting it as a bug!.</p></div>
 
 <p><font size="+2"><b>2.0 - Installation</b></font><a name="installation" id="installation"></a><br><div class="desc">
   <br>
@@ -206,7 +206,7 @@ Windows:<br>
 <p><font size="+2"><b>3.2 - Modules</b></font><a name="feature_modules"></a></p><div class="desc">
 <p>UnrealIRCd supports modules (except under windows) which is nice because:<br>
    - You can load/reload/unload them while the ircd is running (by /rehash). This allows some bugs to be fixed or new features to be added without requiring a restart.<br>
-   - Other people can create modules as well with new commands or usermodes for example.<br>
+   - Other people can create (3rd party) modules with new commands, usermodes and even channelmodes.<br>
    UnrealIRCd only comes with a few modules, take a look at www.unrealircd.com -&gt; modules
    or use google to find 3rd party modules.</p>
 <p>Note that you need to load at least the commands module!</p></div>
@@ -265,7 +265,8 @@ Windows:<br>
 <p>You need to have your IRC server compiled with SSL support. To setup an SSL port you need to set listen::options::ssl.</p>
 <p>You cannot connect normally to a SSL port (so don't make port 6667 ssl!), you need a client or a tunnel
    that understands the SSL protocol.</p>
-<p>Clients that support SSL: <A HREF="http://www.xchat.org/" TARGET="_blank">XChat</a></p>
+<p>Clients that support SSL: <A HREF="http://www.xchat.org/" TARGET="_blank">XChat</a>,
+                             <A HREF="http://www.irssi.org/" TARGET="_blank">irssi</a></p>
 <p>For all other clients which don't support SSL (like mIRC) you can use a tunnel like
    <A HREF="http://www.stunnel.org/" TARGET="_blank">stunnel</A>, here's a stunnel.conf example (for stunnel 4.x):<br>
    <pre>
@@ -280,16 +281,16 @@ Windows:<br>
 <p>If you are really concerned about security/sniffing then you also need to validate certificates on the client end.
    That's however way too off topic to explain here. Learn about SSL, don't ask us, it has nothing to do with UnrealIRCd.</p></div>
 <p><font size="+2"><b>3.9 - IPv6</b></font><a name="feature_ipv6"></a></p><div class="desc">
-<p>UnrealIRCd supports IPv6, since beta15 it seems to work well although there might be some
-   bugs in it. You need to compile with IPv6 support (answer yes to the ./Config question), ofcourse your
-   OS needs to have IPv6 support enabled too.</p>
+<p>UnrealIRCd supports IPv6, since beta15 it seems to be stable.<br> 
+   Your OS needs to have IPv6 support and you need to enable IPv6 support in UnrealIRCd during ./Config as well.<br>
 <p>Although microsoft has an experimental IPv6 implementation for w2k/XP it is not (yet) supported by UnrealIRCd.</p></div>
 
 <p><font size="+2"><b>3.10 - Zip links</b></font><a name="feature_ziplinks"></a></p><div class="desc">
 <p>Zip links can be turned on for server&lt;-&gt;server links, it compresses the data by using zlib.
    It can save 60-80% bandwidth... So it's quite useful for low-bandwidth links or links with
    many users, it can help a lot when you are linking since a lot of data is sent about every user/channel/etc.</p>
-<p>To compile with zip links support, you need to answer Yes to the zlib question in ./Config and set it in link::options::zip</p></div>
+<p>To compile with zip links support, you need to answer Yes to the zlib question in ./Config and set it in link::options::zip 
+   (on both sides)</p></div>
 
 <p><font size="+2"><b>3.11 - Dynamic DNS/IP linking support</b></font><a name="feature_dyndns"></a></p><div class="desc">
 <p>UnrealIRCd has some (new) nice features which helps dynamic IP users using dynamic DNS (like blah.dyndns.org).
@@ -310,13 +311,14 @@ Instead of using scripts and bots to protect against channel floods it is now bu
 This is an example +f mode: <i>*** Blah sets mode: +f [10j]:15</i><br>
 This means 10 joins per 15 seconds are allowed in the channel, if the limit is hit, the channel will be set +i automatically.<br>
 The following floodtypes are available:<br>
-<table border=0 cellpadding=1 cellspacing=0>
-<tr><td>c</td><td>CTCPs</td><td>auto +C</td></tr>
-<tr><td>j</td><td>joins</td><td>auto +i</td></tr>
-<tr><td>k</td><td>knocks</td><td>auto +K <font size=-1>(counted for local clients only)</font></td></tr>
-<tr><td>m</td><td>messages/notices</td><td>auto +m</td></tr>
-<tr><td>n</td><td>nickchanges</td><td>auto +N</td></tr>
-<tr><td>t</td><td>text</td><td>per-user messages/notices like the old +f. Will kick or ban the user.</td></tr>
+<table border=1 cellpadding=3 cellspacing=1>
+<tr><td>mode:</td><td>name:</td><td>default action:</td><td>other avail. actions:</td><td>comments</td></tr>
+<tr><td>c</td><td>CTCPs</td><td>auto +C</td><td>m, M</td><td>&nbsp;</td></tr>
+<tr><td>j</td><td>joins</td><td>auto +i</td><td>R</td><td>&nbsp;</td></tr>
+<tr><td>k</td><td>knocks</td><td>auto +K</td><td>&nbsp;</td><td><font size=-1>(counted for local clients only)</font></td></tr>
+<tr><td>m</td><td>messages/notices</td><td>auto +m</td><td>M</td><td>&nbsp;</td></tr>
+<tr><td>n</td><td>nickchanges</td><td>auto +N</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+<tr><td>t</td><td>text</td><td>kick</td><td>b</td><td>per-user messages/notices like the old +f. Will kick or ban the user.</td></tr>
 </table>
 <p />
 Example:
@@ -350,6 +352,12 @@ Example:
 <font color=brown>-server1.test.net:#test *** Channel nickflood detected (limit is 7 per 15 seconds), putting +N</font>
 <font color=green>*** server1.test.net sets mode: +N</font>
 </pre>
+
+Instead of the default action, you can for some floodtypes specify another one, for example: <i>+f [20j#R,50m#M]:15</i><br>
+This will set the channel +R if the joinlimit is reached (&gt;20 joins in 15 seconds),
+and will set the channel +M if the msg limit is reached (&gt;50 messages in 15 seconds).<br>
+Look at the table above to see more options.<br>
+<br>
 The old +f mode (msgflood per-user) is also still available as 't', +f 10:6 is now called +f [10t]:6 and 
 +f *20:10 is now +f [20t#b]:10. Currently the ircd will automatically convert old +f mode types to new ones.<br>
 </p></div>
@@ -479,7 +487,7 @@ class &lt;name&gt; {
 <p><b>maxclients</b> specifies the maximum (total) number of clients/servers which can be in this class</p>
 <p><b>sendq</b> specifies the amount of data which can be in the send queue (very high for servers with low bandwith, medium for clients)</p>
 <p><b>recvq</b> specifies the amount of data which can be in the receive queue and is used for flood control 
- (this only applies to normal users, try experimenting with values 3000-8000, >8000 is no difference and 8000 is the default).</p>
+ (this only applies to normal users, try experimenting with values 3000-8000, 8000 is the default).</p>
 <p>Examples:<br>
 <pre>
 class clients {
@@ -582,7 +590,7 @@ listen &lt;ip:port&gt; {
   no options are required, you may specify this without any directives in the 
   form listen &lt;ip:port&gt;;.</p>
 <p><b>ip and port</b><br>
-  ip is usually set at * but you can specify an IP here to only bind to that IP. 
+  You can set ip to * to bind to all available ips, or specify one to only bind to that ip (usually needed at shell providers).
   The port is the port you want to listen on. You can also set the port to a range rather than an individual
   value. For example, 6660-6669 would listen on ports 6660 through 6669 (inclusive). IPv6 users, see below.</p>
 <p><b>Info for IPv6 users</b><br>
@@ -590,7 +598,7 @@ listen &lt;ip:port&gt; {
   Like [::1]:6667 (listen at localhost on port 6667). If you are using IPv6 and you 
   want to listen at a specific IPv4 addr you need to use ::ffff:ipv4ip. For example: 
   [::ffff:203.123.67.1]:6667 which will listen at 203.123.67.1 on port 6667. 
-  Ofcourse you can also just use * with IPv6.</p>
+  Ofcourse you can also just use *.</p>
 <p><b>options block</b> (optional)<br>
   You can specify special options for this port if you want, valid options are:<br>
 <table border="0">
@@ -613,6 +621,7 @@ listen *:6601 {
 </pre></p>
 <p>Or if there are no options:</p>
 <p>listen *:8067;<br>
+  listen 213.12.31.126:6667;<br>
   listen *:6660-6669;</p></div>
 <p><font class="block_section">4.7 - </font><font class="block_name">Oper Block</font>
    <font class="block_recommended">RECOMMENDED</font> <font class="block_old">(Previously known as the O:Line)</font><a name="operblock"></a><div class="desc">
