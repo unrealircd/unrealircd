@@ -215,8 +215,8 @@ int charsys_postconftest(void)
 /** Check if language is available. */
 int charsys_test_language(char *name)
 {
-	if (!strcmp(name, "euro-west") ||
-	    !strcmp(name, "german") || !strcmp(name, "dutch") ||
+	if (!strcmp(name, "euro-west") || !strcmp(name, "german") ||
+	    !strcmp(name, "dutch") || !strcmp(name, "swedish") ||
 	    !strcmp(name, "french") || !strcmp(name, "spanish"))
 	{
 		langav |= LANGAV_ASCII;
@@ -286,6 +286,11 @@ char euro_west=0, chinese=0;
 	{
 		/* A`, E`, E', I`, I', O`, O', U`, U', a`, e`, e', i`, i', o`, o', u`, u' */
 		charsys_addallowed("ÀÈÉÌÍÒÓÙÚàèéìíòóùú");
+	}
+	if (euro_west || !strcmp(name, "swedish"))
+	{
+		/* ao, Ao, a", A", o", O" */ 
+		charsys_addallowed("åÅäÄöÖ");
 	}
 	if (chinese || !strcmp(name, "chinese-ja"))
 	{

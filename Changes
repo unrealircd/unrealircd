@@ -620,3 +620,4 @@
   If you are a native of your language (or know the language well), and your language
   is not included yet or you have some corrections, then contact syzop@vulnscan.org or
   report it as a bug on http://bugs.unrealircd.org/
+- Added swedish support for nicks, supplied by Tank.
