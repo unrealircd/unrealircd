@@ -83,6 +83,7 @@ int    m_sendumode_Init(int module_load)
 	*/
 	add_Command(MSG_SENDUMODE, TOK_SENDUMODE, m_sendumode, MAXPARA);
 	add_Command(MSG_SMO, TOK_SMO, m_sendumode, MAXPARA);
+	return MOD_SUCCESS;
 }
 
 /* Is first run when server is 100% ready */
@@ -92,6 +93,7 @@ DLLFUNC int	Mod_Load(int module_load)
 int    m_sendumode_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 
@@ -112,6 +114,8 @@ int	m_sendumode_Unload(int module_unload)
 		sendto_realops("Failed to delete command smo when unloading %s",
 				m_sendumode_Header.name);
 	}
+	return MOD_SUCCESS;
+	
 
 }
 

@@ -79,6 +79,8 @@ int    m_quit_Init(int module_load)
 	 * We call our add_Command crap here
 	*/
 	add_CommandX(MSG_QUIT, TOK_QUIT, m_quit, MAXPARA, M_UNREGISTERED|M_USER);
+	return MOD_SUCCESS;
+	
 }
 
 /* Is first run when server is 100% ready */
@@ -88,6 +90,8 @@ DLLFUNC int	Mod_Load(int module_load)
 int    m_quit_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
+	
 }
 
 
@@ -103,6 +107,8 @@ int	m_quit_Unload(int module_unload)
 		sendto_realops("Failed to delete commands when unloading %s",
 				m_quit_Header.name);
 	}
+	return MOD_SUCCESS;
+	
 }
 
 

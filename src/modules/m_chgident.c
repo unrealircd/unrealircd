@@ -82,6 +82,7 @@ int   m_chgident_Init(int module_load)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_CHGIDENT, TOK_CHGIDENT, m_chgident, MAXPARA);
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
@@ -90,6 +91,7 @@ DLLFUNC int	Mod_Load(int module_load)
 int   m_chgident_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
@@ -103,6 +105,7 @@ int	m_chgident_Unload(int module_unload)
 		sendto_realops("Failed to delete commands when unloading %s",
 				m_chgident_Header.name);
 	}
+	return MOD_SUCCESS;
 }
 
 /* 

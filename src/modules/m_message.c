@@ -86,6 +86,8 @@ int    m_message_Init(int module_load)
 	*/
 	add_CommandX(MSG_PRIVATE, TOK_PRIVATE, m_private, MAXPARA, M_USER|M_SERVER|M_RESETIDLE);
 	add_Command(MSG_NOTICE, TOK_NOTICE, m_notice, MAXPARA);
+	return MOD_SUCCESS;
+	
 }
 
 /* Is first run when server is 100% ready */
@@ -95,6 +97,8 @@ DLLFUNC int	Mod_Load(int module_load)
 int    m_message_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
+	
 }
 
 
@@ -115,6 +119,7 @@ int	m_message_Unload(int module_unload)
 		sendto_realops("Failed to delete command notice when unloading %s",
 				m_message_Header.name);
 	}
+	return MOD_SUCCESS;
 }
 
 

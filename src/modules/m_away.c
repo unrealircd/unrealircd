@@ -72,6 +72,7 @@ int    m_away_Init(int module_load)
 #endif
 {
 	add_Command(MSG_AWAY, TOK_AWAY, m_away, MAXPARA);
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
@@ -80,6 +81,7 @@ DLLFUNC int	Mod_Load(int module_load)
 int    m_away_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
@@ -93,6 +95,7 @@ int	m_away_Unload(int module_unload)
 		sendto_realops("Failed to delete commands when unloading %s",
 				m_away_Header.name);
 	}
+	return MOD_SUCCESS;
 }
 /***********************************************************************
  * m_away() - Added 14 Dec 1988 by jto.

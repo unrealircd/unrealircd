@@ -79,6 +79,8 @@ int    m_guest_Init(int module_load)
 #ifdef GUEST
 	add_Hook(HOOKTYPE_GUEST, m_guest);
 #endif
+	return MOD_SUCCESS;
+	
 }
 
 /* Is first run when server is 100% ready */
@@ -88,6 +90,8 @@ DLLFUNC int	Mod_Load(int module_load)
 int    m_guest_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
+	
 }
 
 
@@ -101,6 +105,7 @@ int	m_guest_Unload(int module_unload)
 #ifdef GUEST
 	del_Hook(HOOKTYPE_GUEST, m_guest);
 #endif
+	return MOD_SUCCESS;
 }
 
 

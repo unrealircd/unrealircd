@@ -72,6 +72,7 @@ int    m_svsnick_Init(int module_load)
 #endif
 {
 	add_Command(MSG_SVSNICK, TOK_SVSNICK, m_svsnick, MAXPARA);
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
@@ -80,6 +81,7 @@ DLLFUNC int	Mod_Load(int module_load)
 int    m_svsnick_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
@@ -93,6 +95,7 @@ int	m_svsnick_Unload(int module_unload)
 		sendto_realops("Failed to delete commands when unloading %s",
 				m_svsnick_Header.name);
 	}
+	return MOD_SUCCESS;
 }
 /*
 ** m_svsnick

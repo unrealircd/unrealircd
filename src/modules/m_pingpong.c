@@ -87,6 +87,8 @@ int    m_pingpong_Init(int module_load)
 
 	add_Command(MSG_PING, TOK_PING, m_ping, MAXPARA);
 	add_CommandX(MSG_PONG, TOK_PONG, m_pong, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
+	return MOD_SUCCESS;
+	
 }
 
 /* Is first run when server is 100% ready */
@@ -96,6 +98,7 @@ DLLFUNC int	Mod_Load(int module_load)
 int    m_pingpong_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 
@@ -116,6 +119,7 @@ int	m_pingpong_Unload(int module_unload)
 		sendto_realops("Failed to delete command pong when unloading %s",
 				m_pingpong_Header.name);
 	}
+	return MOD_SUCCESS;
 }
 
 

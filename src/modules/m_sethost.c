@@ -77,6 +77,8 @@ int    m_sethost_Init(int module_load)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_SETHOST, TOK_SETHOST, m_sethost, MAXPARA);
+	return MOD_SUCCESS;
+	
 }
 
 #ifdef DYNAMIC_LINKING
@@ -85,6 +87,8 @@ DLLFUNC int	Mod_Load(int module_load)
 int    m_sethost_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
+	 
 }
 
 #ifdef DYNAMIC_LINKING
@@ -98,6 +102,8 @@ int	m_sethost_Unload(int module_unload)
 		sendto_realops("Failed to delete commands when unloading %s",
 				Mod_Header.name);
 	}
+	return MOD_SUCCESS;
+	 
 }
 
 /*

@@ -100,7 +100,7 @@ int    m_htm_Init(int module_load)
 	e_lcf = EventAdd("lcf", LCF, 0, lcf_check, NULL);
 	e_htmcalc = EventAdd("htmcalc", 1, 0, htm_calc, NULL);
 #endif
-
+	return MOD_SUCCESS;
 }
 
 /* Is first run when server is 100% ready */
@@ -110,6 +110,7 @@ DLLFUNC int	Mod_Load(int module_load)
 int    m_htm_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 
@@ -129,6 +130,7 @@ int	m_htm_Unload(int module_unload)
 	EventDel(e_lcf);
 	EventDel(e_htmcalc);
 #endif
+	return MOD_SUCCESS;
 }
 
 /* m_htm recoded by griever

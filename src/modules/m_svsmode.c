@@ -76,6 +76,7 @@ int    m_svsmode_Init(int module_load)
 {
 	add_Command(MSG_SVSMODE, TOK_SVSMODE, m_svsmode, MAXPARA);
 	add_Command(MSG_SVS2MODE, TOK_SVS2MODE, m_svs2mode, MAXPARA);
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
@@ -84,6 +85,7 @@ DLLFUNC int	Mod_Load(int module_load)
 int m_svsmode_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
@@ -97,6 +99,7 @@ int	m_svsmode_Unload(int module_unload)
 		sendto_realops("Failed to delete commands when unloading %s",
 				m_svsmode_Header.name);
 	}
+	return MOD_SUCCESS;
 }
 
 extern void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, char *param);

@@ -57,7 +57,7 @@ ModuleHeader m_swhois_Header
 ModuleHeader Mod_Header
 #endif
   = {
-	"test",
+	"m_swhois",
 	"$Id$",
 	"command /swhois", 
 	"3.2-b5",
@@ -71,6 +71,7 @@ int    m_swhois_Init(int module_load)
 #endif
 {
 	add_Command(MSG_SWHOIS, TOK_SWHOIS, m_swhois, MAXPARA);
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
@@ -79,6 +80,7 @@ DLLFUNC int	Mod_Load(int module_load)
 int    m_swhois_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
@@ -92,6 +94,7 @@ int	m_swhois_Unload(int module_unload)
 		sendto_realops("Failed to delete commands when unloading %s",
 				m_swhois_Header.name);
 	}
+	return MOD_SUCCESS;
 }
 /*
  * m_swhois

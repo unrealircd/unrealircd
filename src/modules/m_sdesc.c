@@ -78,6 +78,7 @@ int    m_sdesc_Init(int module_load)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_SDESC, TOK_SDESC, m_sdesc, 1);
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
@@ -86,6 +87,8 @@ DLLFUNC int	Mod_Load(int module_load)
 int    m_sdesc_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
+	
 }
 
 #ifdef DYNAMIC_LINKING
@@ -99,6 +102,8 @@ int	m_sdesc_Unload(int module_unload)
 		sendto_realops("Failed to delete commands when unloading %s",
 				m_sdesc_Header.name);
 	}
+	return MOD_SUCCESS;
+	
 }
 
 /* m_sdesc - 15/05/1999 - Stskeeps

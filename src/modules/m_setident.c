@@ -76,6 +76,8 @@ int    m_setident_Init(int module_load)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_SETIDENT, TOK_SETIDENT, m_setident, MAXPARA);
+	return MOD_SUCCESS;
+	
 }
 
 #ifdef DYNAMIC_LINKING
@@ -84,6 +86,8 @@ DLLFUNC int	Mod_Load(int module_load)
 int	m_setident_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
+	
 }
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Unload(int module_unload)
@@ -96,6 +100,8 @@ int	m_setident_Unload(int module_unload)
 		sendto_realops("Failed to delete commands when unloading %s",
 				m_setident_Header.name);
 	}
+	return MOD_SUCCESS;
+	
 }
 
 /* m_setident - 12/05/1999 - Stskeeps

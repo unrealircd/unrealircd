@@ -78,6 +78,7 @@ int    m_adminchat_Init(int module_load)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_ADMINCHAT, TOK_ADMINCHAT, m_admins, MAXPARA);
+	return MOD_SUCCESS;
 }
 
 /* Is first run when server is 100% ready */
@@ -87,6 +88,7 @@ DLLFUNC int	Mod_Load(int module_load)
 int    m_adminchat_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 
@@ -102,6 +104,7 @@ int	m_adminchat_Unload(int module_unload)
 		sendto_realops("Failed to delete commands when unloading %s",
 				m_adminchat_Header.name);
 	}
+	return MOD_SUCCESS;
 }
 
 /*

@@ -75,6 +75,8 @@ int    m_chghost_Init(int module_load)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_CHGHOST, TOK_CHGHOST, m_chghost, MAXPARA);
+	return MOD_SUCCESS;
+	
 }
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Load(int module_load)
@@ -82,6 +84,8 @@ DLLFUNC int	Mod_Load(int module_load)
 int    m_chghost_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
+	
 }
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Unload(int module_unload)
@@ -94,6 +98,8 @@ int	m_chghost_Unload(int module_unload)
 		sendto_realops("Failed to delete commands when unloading %s",
 				Mod_Header.name);
 	}
+	return MOD_SUCCESS;
+	
 }
 
 /* 

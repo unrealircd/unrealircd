@@ -84,6 +84,8 @@ int    m_rping_Init(int module_load)
 	*/
 	add_Command(MSG_RPING, TOK_RPING, m_rping, MAXPARA);
 	add_Command(MSG_RPONG, TOK_RPONG, m_rpong, MAXPARA);
+	return MOD_SUCCESS;
+	
 }
 
 /* Is first run when server is 100% ready */
@@ -93,6 +95,8 @@ DLLFUNC int	Mod_Load(int module_load)
 int    m_rping_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
+	
 }
 
 
@@ -113,6 +117,8 @@ int	m_rping_Unload(int module_unload)
 		sendto_realops("Failed to delete commands when unloading %s",
 				m_rping_Header.name);
 	}
+	return MOD_SUCCESS;	
+	
 }
 
 /*

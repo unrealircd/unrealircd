@@ -78,7 +78,7 @@ int    m_tkl_Init(int module_load)
 	add_Command(MSG_TZLINE, TOK_NONE, m_tzline, 3);
 	add_Command(MSG_TKLINE, TOK_NONE, m_tkline, 3);
 	add_Command(MSG_GZLINE, TOK_NONE, m_gzline, 3);
-
+	return MOD_SUCCESS;
 }
 
 /* Is first run when server is 100% ready */
@@ -88,6 +88,7 @@ DLLFUNC int	Mod_Load(int module_load)
 int    m_tkl_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 
@@ -108,6 +109,7 @@ int	m_tkl_Unload(int module_unload)
 		sendto_realops("Failed to delete commands when unloading %s",
 				m_tkl_Header.name);
 	}
+	return MOD_SUCCESS;
 }
 
 /*

@@ -79,6 +79,7 @@ int    m_unzline_Init(int module_load)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_UNZLINE, TOK_UNZLINE, m_unzline, MAXPARA);
+	return MOD_SUCCESS;
 }
 
 /* Is first run when server is 100% ready */
@@ -88,6 +89,7 @@ DLLFUNC int	Mod_Load(int module_load)
 int    m_unzline_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 
@@ -103,6 +105,7 @@ int	m_unzline_Unload(int module_unload)
 		sendto_realops("Failed to delete commands when unloading %s",
 				m_unzline_Header.name);
 	}
+	return MOD_SUCCESS;
 }
 
 

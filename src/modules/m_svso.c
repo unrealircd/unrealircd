@@ -106,6 +106,7 @@ int    m_svso_Init(int module_load)
 #endif
 {
 	add_Command(MSG_SVSO, TOK_SVSO, m_svso, MAXPARA);
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
@@ -114,6 +115,7 @@ DLLFUNC int	Mod_Load(int module_load)
 int    m_svso_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
@@ -127,6 +129,7 @@ int	m_svso_Unload(int module_unload)
 		sendto_realops("Failed to delete commands when unloading %s",
 				m_svso_Header.name);
 	}
+	return MOD_SUCCESS;
 }
 /*
 ** m_svso - Stskeeps

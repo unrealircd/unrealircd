@@ -74,6 +74,7 @@ int    m_svsnoop_Init(int module_load)
 #endif
 {
 	add_Command(MSG_SVSNOOP, TOK_SVSNOOP, m_svsnoop, MAXPARA);
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
@@ -82,6 +83,7 @@ DLLFUNC int	Mod_Load(int module_load)
 int    m_svsnoop_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
 }
 
 #ifdef DYNAMIC_LINKING
@@ -95,6 +97,7 @@ int	m_svsnoop_Unload(int module_unload)
 		sendto_realops("Failed to delete commands when unloading %s",
 				m_svsnoop_Header.name);
 	}
+	return MOD_SUCCESS;
 }
 int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {

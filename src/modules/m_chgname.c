@@ -79,6 +79,8 @@ int    m_chgname_Init(int module_load)
 	*/
 	add_Command(MSG_CHGNAME, TOK_CHGNAME, m_chgname, MAXPARA);
         add_Command(MSG_SVSNAME, TOK_CHGNAME, m_chgname, MAXPARA);
+	return MOD_SUCCESS;
+	
 }
 
 /* Is first run when server is 100% ready */
@@ -88,6 +90,8 @@ DLLFUNC int	Mod_Load(int module_load)
 int    m_chgname_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
+	
 }
 
 
@@ -108,6 +112,8 @@ int	m_chgname_Unload(int module_unload)
 		sendto_realops("Failed to delete command svsname when unloading %s",
 				m_chgname_Header.name);
 	}
+	return MOD_SUCCESS;
+	
 }
 
 

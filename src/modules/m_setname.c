@@ -78,6 +78,8 @@ int    m_setname_Init(int module_load)
 	 * We call our add_Command crap here
 	*/
 	add_Command(MSG_SETNAME, TOK_SETNAME, m_setname, 1);
+	return MOD_SUCCESS;
+	
 }
 #ifdef DYNAMIC_LINKING
 DLLFUNC int	Mod_Load(int module_load)
@@ -85,6 +87,8 @@ DLLFUNC int	Mod_Load(int module_load)
 int    m_setname_Load(int module_load)
 #endif
 {
+	return MOD_SUCCESS;
+	
 }
 
 #ifdef DYNAMIC_LINKING
@@ -98,6 +102,8 @@ int	m_setname_Unload(int module_unload)
 		sendto_realops("Failed to delete commands when unloading %s",
 				m_setname_Header.name);
 	}
+	return MOD_SUCCESS;
+	
 }
 
 /* m_setname - 12/05/1999 - Stskeeps
