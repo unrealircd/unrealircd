@@ -868,7 +868,7 @@ seen. gmtime warning still there
 - Added headers to all the new modules
 - Fixed a typo in config.h
 - Final changes to prepare for beta3
-v- Fixed some bugreport stuff
+- Fixed some bugreport stuff
 - Fixed codemastr-on-crack bug regarding oflag
 - Fixed a win32 bug where the http scanner didn't get loaded
 - Hopefully fixed the weird Z:line bug on win32?
@@ -1200,3 +1200,4 @@ v- Fixed some bugreport stuff
 - Clean compile under -Wunused
 - Clean compile under -Wformat
 - Clean compile under -Wparentheses
+- Clean compile under -Wall -Wno-implicit

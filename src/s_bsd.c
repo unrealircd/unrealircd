@@ -33,7 +33,7 @@
  * Added SO_REUSEADDR fix from zessel@informatik.uni-kl.de
  */
 
-#ifndef lint
+#ifndef CLEAN_COMPILE
 static char sccsid[] =
     "@(#)s_bsd.c	2.78 2/7/94 (C) 1988 University of Oulu, \
 Computing Center and Jarkko Oikarinen";

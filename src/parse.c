@@ -22,7 +22,7 @@
  * Changed the order of defines...
  */
 
-#ifndef lint
+#ifndef CLEAN_COMPILE
 static char sccsid[] =
     "@(#)parse.c	2.33 1/30/94 (C) 1988 University of Oulu, \
 Computing Center and Jarkko Oikarinen";

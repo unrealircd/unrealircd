@@ -41,7 +41,7 @@ u_char touppertab[], tolowertab[];
  * match()
  *  written by binary
  */
-static inline match2(char *mask, char *name)
+static inline int match2(char *mask, char *name)
 {
 	u_char *m;		/* why didn't the old one use registers */
 	u_char *n;		/* because registers suck -- codemastr */

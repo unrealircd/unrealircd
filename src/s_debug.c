@@ -19,7 +19,7 @@
  */
 
 
-#ifndef lint
+#ifndef CLEAN_COMPILE
 static char sccsid[] =
     "@(#)s_debug.c	2.30 1/3/94 (C) 1988 University of Oulu, \
 Computing Center and Jarkko Oikarinen";

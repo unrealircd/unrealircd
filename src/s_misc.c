@@ -22,7 +22,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef lint
+#ifndef CLEAN_COMPILE
 static char sccsid[] =
     "@(#)s_misc.c	2.42 3/1/94 (C) 1988 University of Oulu, \
 Computing Center and Jarkko Oikarinen";

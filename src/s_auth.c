@@ -1,6 +1,4 @@
-/************************************************************************
-/************************************************************************
-/************************************************************************
+/*
  *   Unreal Internet Relay Chat Daemon, src/s_auth.c
  *   Copyright (C) 1992 Darren Reed
  *
@@ -19,7 +17,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef lint
+#ifndef CLEAN_COMPILE
 static char sccsid[] = "@(#)s_auth.c	1.18 4/18/94 (C) 1992 Darren Reed";
 #endif
 

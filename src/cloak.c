@@ -16,7 +16,7 @@
  */
 
 /*
-#ifdef lint
+#ifdef CLEAN_COMPILE
 static char sccxid[] = "@(#)cloak.c		9.00 7/12/99 UnrealIRCd";
 #endif
 */

@@ -409,4 +409,5 @@ DLLFUNC int h_stats_scan(aClient *sptr, char *stats) {
 		sendto_one(sptr, ":%s %i %s :scan::timeout: %d", me.name, RPL_TEXT, sptr->name,
 				Scan_TimeOut);
 	}
+        return 0;
 }

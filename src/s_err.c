@@ -21,7 +21,7 @@
 #include "numeric.h"
 #include "common.h"
 
-#ifndef lint
+#ifndef CLEAN_COMPILE
 static char sccsid[] = "@(#)s_err.c	1.12 11/1/93 (C) 1992 Darren Reed";
 #endif
 

@@ -22,7 +22,7 @@
  * Added Armin's PRIVMSG patches...
  */
 
-#ifndef lint
+#ifndef CLEAN_COMPILE
 static char sccsid[] =
     "@(#)send.c	2.32 2/28/94 (C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen";
 #endif

@@ -31,10 +31,12 @@
 #include "nameser.h"
 #include "resolv.h"
 #include <string.h>
-#ifndef lint
+#ifndef CLEAN_COMPILE
 static char rcsid[] = "@(#)$Id$";
 #endif
-/* #undef	DEBUG	/* because there is a lot of debug code in here :-) */
+#if 0
+#undef	DEBUG	/* because there is a lot of debug code in here :-) */
+#endif
 #ifdef _WIN32
 #define HE(x) (x)->he
 #else

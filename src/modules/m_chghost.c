@@ -192,7 +192,7 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (acptr->user->virthost)
 		{
 			MyFree(acptr->user->virthost);
-			acptr->user->virthost;
+			acptr->user->virthost = 0;
 		}
 		acptr->user->virthost = strdup(parv[2]);
 		return 0;
