@@ -162,6 +162,25 @@ char *check_string(s)
 	return (BadPtr(str)) ? star : str;
 }
 
+char *make_user_host(name, host)
+	char *name, *host;
+{
+	static char namebuf[USERLEN + HOSTLEN + 6];
+	char *s = namebuf;
+
+	bzero(namebuf, sizeof(namebuf));
+	name = check_string(name);
+	strncpyzt(s, name, USERLEN + 1);
+	s += strlen(s);
+	*s++ = '@';
+	host = check_string(host);
+	strncpyzt(s, host, HOSTLEN + 1);
+	s += strlen(s);
+	*s = '\0';
+	return (namebuf);
+}
+
+
 /*
  * create a string of form "foo!bar@fubar" given foo, bar and fubar
  * as the parameters.  If NULL, they become "*".

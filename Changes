@@ -135,3 +135,4 @@
 - Made /setname and /chgname use ban realname {}
 - Made /oper work with newconf (come get us now bastards!)
 - Made +c show class names in connect
+- Fixed a minor problem with ban {} and oper {}

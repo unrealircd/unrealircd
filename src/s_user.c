@@ -893,7 +893,7 @@ static int register_user(cptr, sptr, nick, username, umode, virthost)
 		/*
 		 * following block for the benefit of time-dependent K:-lines
 		 */
-		if ((bconf = Find_ban(make_nick_user_host(nick, user->username, user->realhost),
+		if ((bconf = Find_ban(make_user_host(user->username, user->realhost),
 				CONF_BAN_USER)))
 		{
 			ircstp->is_ref++;
@@ -3736,7 +3736,7 @@ int  m_oper(cptr, sptr, parc, parv)
 		sptr->since += 7;
 		return 0;
 	}
-	nuhhost = make_nick_user_host(sptr->name, sptr->user->username,
+	nuhhost = make_user_host(sptr->user->username,
 			sptr->user->realhost);
 	for (oper_from = (ConfigItem_oper_from *) aconf->from;
 	          oper_from;
