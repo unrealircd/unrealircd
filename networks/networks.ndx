@@ -1,5 +1,6 @@
 # Networks index file - do not touch please 
-# 50 networks listed
+# 54 networks listed
+# Please report outdated entries to unreal-networks@lists.sourceforge.net
 networks/global-irc.network ......: Global-IRC (http://www.global-irc.net)
 networks/mp3fans.network .........: Mp3Fans.Net (http://www.mp3fans.net)
 networks/roxnet.network ..........: ROXnet (http://www.rox.za.net)
@@ -50,3 +51,7 @@ networks/german-global-irc.network: German Global IRC (http://www.global-irc.de)
 networks/darkwar.network .........: Darkwar (http://www.darkwar.net)
 networks/lamenet.network .........: Lamenet (http://www.lamenet.net)
 networks/spin.network ............: SpiN
+networks/subtrexnet.network ......: Subtrex.net (http://www.subtrex.net)
+networks/data-storm.network ......: Data-Storm
+networks/tutkunet.network ........: TuTKu.Net
+networks/raptanet.network ........: RaptaNet (http://www.rapta.net)
