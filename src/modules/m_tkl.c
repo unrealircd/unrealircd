@@ -299,6 +299,8 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 		    sptr->name);
 		return 0;
 	}
+	if (strchr(mask, ' '))
+		return 0;
 
 	/* Check if its a hostmask and legal .. */
 	p = strchr(mask, '@');
