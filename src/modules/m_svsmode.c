@@ -200,10 +200,12 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					}
 					i++;
 
-					strcpy(uhost, make_nick_user_host(acptr->name, 
-						acptr->user->username, acptr->user->realhost));
-					strcpy(vhost, make_nick_user_host(acptr->name,
-						acptr->user->username, acptr->user->virthost ? acptr->user->virthost : acptr->user->realhost));
+					strlcpy(uhost, make_nick_user_host(acptr->name, 
+						acptr->user->username, acptr->user->realhost),
+						sizeof uhost);
+					strlcpy(vhost, make_nick_user_host(acptr->name,
+						acptr->user->username, acptr->user->virthost ? acptr->user->virthost : acptr->user->realhost),
+						sizeof vhost);
 					ban = chptr->banlist;
 					while (ban) {
 						bnext = ban->next;
@@ -240,12 +242,13 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					}
 					i++;
 
-					strcpy(uhost, make_nick_user_host(acptr->name, 
-						acptr->user->username, acptr->user->realhost));
-					strcpy(vhost, make_nick_user_host(acptr->name,
+					strlcpy(uhost, make_nick_user_host(acptr->name, 
+						acptr->user->username, acptr->user->realhost),
+						sizeof uhost);
+					strlcpy(vhost, make_nick_user_host(acptr->name,
 						acptr->user->username, acptr->user->virthost
 						? acptr->user->virthost : 
-					 acptr->user->realhost));
+					 acptr->user->realhost), sizeof vhost);
 					ban = chptr->exlist;
 					while (ban) {
 						bnext = ban->next;

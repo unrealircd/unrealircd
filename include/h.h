@@ -77,6 +77,7 @@ extern ConfigItem_admin 	*conf_admin;
 extern ConfigItem_admin		*conf_admin_tail;
 extern ConfigItem_drpass	*conf_drpass;
 extern ConfigItem_ulines	*conf_ulines;
+extern ConfigItem_ssl		*conf_ssl;
 extern ConfigItem_tld		*conf_tld;
 extern ConfigItem_oper		*conf_oper;
 extern ConfigItem_listen	*conf_listen;
@@ -204,6 +205,11 @@ extern void get_sockhost(aClient *, char *);
 extern char *strerror(int);
 extern int dgets(int, char *, int);
 extern char *inetntoa(char *);
+
+#if !defined(HAVE_SNPRINT) || !defined(HAVE_VSNPRINTF)
+extern int snprintf (char *str, size_t count, const char *fmt, ...);
+extern int vsnprintf (char *str, size_t count, const char *fmt, va_list arg);
+#endif
 
 #ifdef _WIN32
 extern int dbufalloc, dbufblocks, debuglevel;
@@ -411,6 +417,15 @@ extern long UMODE_HIDEOPER;  /* 0x20000000	 Hide oper mode */
 extern long UMODE_SETHOST;   /* 0x40000000	 used sethost */
 extern long UMODE_STRIPBADWORDS; /* 0x80000000	 */
 
+#ifndef HAVE_STRLCPY
+size_t strlcpy(char *dst, const char *src, size_t size);
+#endif
+#ifndef HAVE_STRLCAT
+size_t strlcat(char *dst, const char *src, size_t size);
+#endif
+#ifndef HAVE_STRLNCAT
+size_t strlncat(char *dst, const char *src, size_t size, size_t n);
+#endif
 
 
 extern int dopacket(aClient *, char *, int);

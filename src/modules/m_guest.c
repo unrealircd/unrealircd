@@ -114,20 +114,20 @@ int	m_guest_Unload(int module_unload)
 
 DLLFUNC int m_guest(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-int randnum;
-char guestnick[NICKLEN];
-char *param[2];
+	int randnum;
+	char guestnick[NICKLEN];
+	char *param[2];
 
-randnum = 1+(int) (99999.0*rand()/(RAND_MAX+10000.0));
-snprintf(guestnick, NICKLEN, "Guest%d", randnum);
+	randnum = 1+(int) (99999.0*rand()/(RAND_MAX+10000.0));
+	snprintf(guestnick, NICKLEN, "Guest%d", randnum);
 
-while(find_client(guestnick, (aClient *)NULL))
-{ 
-randnum = 1+(int) (99999.0*rand()/(RAND_MAX+10000.0));
-snprintf(guestnick, NICKLEN, "Guest%d", randnum);
-}
-param[0] = sptr->name;
-param[1] = guestnick;
-m_nick(sptr,cptr,2,param);
+	while(find_client(guestnick, (aClient *)NULL))
+	{ 
+		randnum = 1+(int) (99999.0*rand()/(RAND_MAX+10000.0));
+		snprintf(guestnick, NICKLEN, "Guest%d", randnum);
+	}
+	param[0] = sptr->name;
+	param[1] = guestnick;
+	m_nick(sptr,cptr,2,param);
 	return 0;
 }

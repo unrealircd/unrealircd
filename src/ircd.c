@@ -1051,7 +1051,7 @@ int  InitwIRCD(int argc, char *argv[])
 	if (argc > 0)
 		return bad_command();	/* This should exit out */
 #ifndef _WIN32
-	fprintf(stderr, unreallogo);
+	fprintf(stderr, "%s", unreallogo);
 #endif
 	fprintf(stderr, "                           v%s\n\n", VERSIONONLY);
 	clear_client_hash_table();
@@ -1378,7 +1378,7 @@ static void open_debugfile(void)
 		cptr->flags = 0;
 		cptr->listener = cptr;
 		/* local[2] = cptr;  winlocal */
-		(void)strcpy(cptr->sockhost, me.sockhost);
+		(void)strlcpy(cptr->sockhost, me.sockhost, sizeof cptr->sockhost);
 # ifndef _WIN32
 		(void)printf("isatty = %d ttyname = %#x\n",
 		    isatty(2), (u_int)ttyname(2));

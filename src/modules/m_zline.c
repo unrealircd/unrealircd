@@ -168,7 +168,7 @@ DLLFUNC int m_zline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if ((acptr = find_client(parv[1], NULL)))
 	{
-		strcpy(userhost, inetntoa((char *)&acptr->ip));
+		strlcpy(userhost, inetntoa((char *)&acptr->ip), sizeof userhost);
 		person = &acptr->name[0];
 		acptr = NULL;
 	}
@@ -176,7 +176,7 @@ DLLFUNC int m_zline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	   work with ip addresses and nicks */
 	else if ((in = index(parv[1], '@')) && (*(in + 1) != '\0'))
 	{
-		strcpy(userhost, in + 1);
+		strlcpy(userhost, in + 1, sizeof userhost);
 		in = &userhost[0];
 		while (*in)
 		{
@@ -200,7 +200,7 @@ DLLFUNC int m_zline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	else
 	{
-		strcpy(userhost, parv[1]);
+		strlcpy(userhost, parv[1], sizeof userhost);
 		in = &userhost[0];
 		while (*in)
 		{

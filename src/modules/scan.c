@@ -249,7 +249,7 @@ EVENT(e_scan_ban)
 	if (!sr)
 		return;
 	
-	strcpy(hostip, Inet_ia2p(&sr->in));
+	strlcpy(hostip, Inet_ia2p(&sr->in), sizeof hostip);
 	tkllayer[4] = hostip;
 	tkllayer[5] = me.name;
 	ircsprintf(mo, "%li", Scan_BanTime + TStime());
@@ -266,7 +266,7 @@ void	Eadd_scan(struct IN_ADDR *in, char *reason)
 {
 	Scan_Result *sr = (Scan_Result *) MyMalloc(sizeof(Scan_Result));
 	sr->in = *in;
-	strcpy(sr->reason, reason);
+	strlcpy(sr->reason, reason, sizeof sr->reason);
 	LockEventSystem();
 	EventAddEx(ScanModInfo.handle, "scan_ban", 0, 1, e_scan_ban, (void *)sr);
 	UnlockEventSystem();

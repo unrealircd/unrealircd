@@ -539,13 +539,13 @@ extern Ban *is_banned(aClient *cptr, aClient *sptr, aChannel *chptr)
 
 	s = make_nick_user_host(cptr->name, cptr->user->username,
 	    cptr->user->realhost);
-	strcpy(realhost, s);
+	strlcpy(realhost, s, sizeof realhost);
 
 	if (dovirt)
 	{
 		s = make_nick_user_host(cptr->name, cptr->user->username,
-	    cptr->user->virthost);
-		strcpy(virthost, s);
+		    cptr->user->virthost);
+		strlcpy(virthost, s, sizeof virthost);
 	}
 		/* We now check +b first, if a +b is found we then see if there is a +e.
  * If a +e was found we return NULL, if not, we return the ban.
@@ -811,7 +811,8 @@ static void channel_modes(aClient *cptr, char *mbuf, char *pbuf, aChannel *chptr
 		if (IsMember(cptr, chptr) || IsServer(cptr)
 		    || IsULine(cptr))
 		{
-			(void)ircsprintf(bcbuf, "%s ", chptr->mode.key);
+			/* FIXME: hope pbuf is long enough */
+			(void)snprintf(bcbuf, sizeof bcbuf, "%s ", chptr->mode.key);
 			(void)strcat(pbuf, bcbuf);
 		}
 	}
@@ -821,7 +822,8 @@ static void channel_modes(aClient *cptr, char *mbuf, char *pbuf, aChannel *chptr
 		if (IsMember(cptr, chptr) || IsServer(cptr)
 		    || IsULine(cptr))
 		{
-			(void)ircsprintf(bcbuf, "%s ", chptr->mode.link);
+			/* FIXME: is pbuf long enough?  */
+			(void)snprintf(bcbuf, sizeof bcbuf, "%s ", chptr->mode.link);
 			(void)strcat(pbuf, bcbuf);
 		}
 	}
@@ -879,8 +881,8 @@ static int send_mode_list(aClient *cptr, char *chname, TS creationtime, Member *
 		if (strlen(parabuf) + strlen(name) + 11 < (size_t)MODEBUFLEN)
 		{
 			if (*parabuf)
-				(void)strcat(parabuf, " ");
-			(void)strcat(parabuf, name);
+				(void)strlcat(parabuf, " ", sizeof parabuf);
+			(void)strlcat(parabuf, name, sizeof parabuf);
 			count++;
 			*cp++ = flag;
 			*cp = '\0';
@@ -901,7 +903,7 @@ static int send_mode_list(aClient *cptr, char *chname, TS creationtime, Member *
 			*cp++ = '+';
 			if (count != RESYNCMODES)
 			{
-				(void)strcpy(parabuf, name);
+				(void)strlcpy(parabuf, name, sizeof parabuf);
 				*cp++ = flag;
 			}
 			count = 0;
@@ -2727,10 +2729,13 @@ CMD_FUNC(channel_link)
 			continue;
 		}
 		if (*jbuf)
-			(void)strcat(jbuf, ",");
-		(void)strncat(jbuf, name, sizeof(jbuf) - i - 1);
+			(void)strlcat(jbuf, ",", sizeof jbuf);
+		(void)strlncat(jbuf, name, sizeof jbuf, sizeof(jbuf) - i - 1);
 		i += strlen(name) + 1;
 	}
+	/*
+	 * FIXME: Hopefully parv[1] is long enough?
+	*/
 	(void)strcpy(parv[1], jbuf);
 
 	p = NULL;
@@ -2963,8 +2968,8 @@ CMD_FUNC(m_join)
 			continue;
 		}
 		if (*jbuf)
-			(void)strcat(jbuf, ",");
-		(void)strncat(jbuf, name, sizeof(jbuf) - i - 1);
+			(void)strlcat(jbuf, ",", sizeof jbuf);
+		(void)strlncat(jbuf, name, sizeof jbuf, sizeof(jbuf) - i - 1);
 		i += strlen(name) + 1;
 	}
 	(void)strcpy(parv[1], jbuf);
@@ -3933,7 +3938,7 @@ char mode_buf[MODEBUFLEN], parabuf[MODEBUFLEN];
 				if (mode_buf[2] == '\0')
 					mode_buf[0] = '\0';
 				else
-					strcat(mode_buf, "]");
+					strlcat(mode_buf, "]", sizeof mode_buf);
 #endif
 				if (!IsAnOper(cptr))
 					sendto_one(cptr,
@@ -4268,7 +4273,7 @@ CMD_FUNC(m_list)
 					if (mode_buf[2] == '\0')
 						mode_buf[0] = '\0';
 					else
-						strcat(mode_buf, "]");
+						strlcat(mode_buf, "]", sizeof mode_buf);
 #endif
 					  sendto_one(sptr,
 					      rpl_str(RPL_LIST),
@@ -4442,7 +4447,7 @@ void send_user_joins(aClient *cptr, aClient *user)
 	int  cnt = 0, len = 0, clen;
 	char *mask;
 
-	ircsprintf(buf, ":%s %s ", user->name,
+	snprintf(buf, sizeof buf, ":%s %s ", user->name,	
 	    (IsToken(cptr) ? TOK_JOIN : MSG_JOIN));
 	len = strlen(buf);
 
@@ -4462,18 +4467,18 @@ void send_user_joins(aClient *cptr, aClient *user)
 				buf[len - 1] = '\0';
 				sendto_one(cptr, "%s", buf);
 			}
-			ircsprintf(buf, ":%s %s ", user->name,
+			snprintf(buf, sizeof buf, ":%s %s ", user->name,
 			    (IsToken(cptr) ? TOK_JOIN : MSG_JOIN));
 			len = strlen(buf);
 			cnt = 0;
 		}
-		(void)strcpy(buf + len, chptr->chname);
+		(void)strlcpy(buf + len, chptr->chname, sizeof buf-len);
 		cnt++;
 		len += clen;
 		if (lp->next)
 		{
 			len++;
-			(void)strcat(buf, ",");
+			(void)strlcat(buf, ",", sizeof buf);
 		}
 	}
 	if (*buf && cnt)
@@ -4672,8 +4677,8 @@ else if (b == MAXMODEPARAMS) {\
 }
 #define Addsingle(x) modebuf[b] = x; b++
 #define CheckStatus(x,y) if (modeflags & (y)) { Addit((x), nick); }
-#define AddBan(x) strcat(banbuf, x); strcat(banbuf, " ");
-#define AddEx(x) strcat(exbuf, x); strcat(exbuf, " ");
+#define AddBan(x) strlcat(banbuf, x, sizeof banbuf); strlcat(banbuf, " ", sizeof banbuf);
+#define AddEx(x) strlcat(exbuf, x, sizeof exbuf); strlcat(exbuf, " ", sizeof banbuf);
 
 
 CMD_FUNC(m_sjoin)
@@ -4853,7 +4858,7 @@ CMD_FUNC(m_sjoin)
 	b = 1;
 	c = 0;
 	bp = buf;
-	strcpy(cbuf, parv[parc-1]);
+	strlcpy(cbuf, parv[parc-1], sizeof cbuf);
 	for (s = s0 = strtoken(&p, cbuf, " "); s; s = s0 = strtoken(&p, (char *)NULL, " "))
 	{
 	
@@ -4986,15 +4991,15 @@ CMD_FUNC(m_sjoin)
 	
 	if (!merge && !removetheirs && !nomode)
 	{
-		strcpy(modebuf, parv[3]);
+		strlcpy(modebuf, parv[3], sizeof modebuf);
 		parabuf[0] = '\0';
 		if (!nopara)
 			for (b = 4; b <= (parc - 2); b++)
 			{
-				strcat(parabuf, parv[b]);
-				strcat(parabuf, " ");
+				strlcat(parabuf, parv[b], sizeof parabuf);
+				strlcat(parabuf, " ", sizeof parabuf);
 			}
-		strcpy(paraback, parabuf);
+		strlcpy(paraback, parabuf, sizeof paraback);
 		ap = mp2parv(modebuf, parabuf);
 		set_mode(chptr, cptr, ap->parc, ap->parv, &pcount, pvar, 0);
 		sendto_serv_butone_sjoin(cptr,
@@ -5009,13 +5014,13 @@ CMD_FUNC(m_sjoin)
 		aCtab *acp;
 		bcopy(&chptr->mode, &oldmode, sizeof(Mode));
 		/* merge the modes */
-		strcpy(modebuf, parv[3]);
+		strlcpy(modebuf, parv[3], sizeof modebuf);
 		parabuf[0] = '\0';
 		if (!nopara)
 			for (b = 4; b <= (parc - 2); b++)
 			{
-				strcat(parabuf, parv[b]);
-				strcat(parabuf, " ");
+				strlcat(parabuf, parv[b], sizeof parabuf);
+				strlcat(parabuf, " ", sizeof parabuf);
 			}
 		ap = mp2parv(modebuf, parabuf);
 		set_mode(chptr, cptr, ap->parc, ap->parv, &pcount, pvar, 0);
@@ -5024,7 +5029,7 @@ CMD_FUNC(m_sjoin)
 		   We first see if any para modes are set
 
 		 */
-		strcpy(modebuf, "-");
+		strlcpy(modebuf, "-", sizeof modebuf);
 		parabuf[0] = '\0';
 		b = 1;
 		/* however, is this really going to happen at all? may be unneeded */
@@ -5064,7 +5069,7 @@ CMD_FUNC(m_sjoin)
 		}
 		else
 		{
-			strcpy(modebuf, "+");
+			strlcpy(modebuf, "+", sizeof modebuf);
 			b = 1;
 		}
 		for (acp = cFlagTab; acp->mode; acp++)
@@ -5120,7 +5125,7 @@ CMD_FUNC(m_sjoin)
 			z = MAX(x, y);
 			if (z == x)
 			{
-				strcpy(chptr->mode.key, oldmode.key);
+				strlcpy(chptr->mode.key, oldmode.key, sizeof chptr->mode.key);
 			}
 			else
 			{
@@ -5136,7 +5141,7 @@ CMD_FUNC(m_sjoin)
 			z = MAX(x, y);
 			if (z == x)
 			{
-				strcpy(chptr->mode.link, oldmode.link);
+				strlcpy(chptr->mode.link, oldmode.link, sizeof(chptr->mode.link));
 			}
 			else
 			{
@@ -5187,7 +5192,7 @@ CMD_FUNC(m_sjoin)
 			    oldts, chptr->creationtime);
 
 
-	strcpy(parabuf, "");
+	strlcpy(parabuf, "", sizeof parabuf);
 	for (i = 2; i <= (parc - 2); i++)
 	{
 		if (!parv[i])
@@ -5195,9 +5200,9 @@ CMD_FUNC(m_sjoin)
 			sendto_ops("Got null parv in SJ3 code");
 			continue;
 		}
-		strcat(parabuf, parv[i]);
+		strlcat(parabuf, parv[i], sizeof parabuf);
 		if (((i + 1) <= (parc - 2)))
-			strcat(parabuf, " ");
+			strlcat(parabuf, " ", sizeof parabuf);
 	}
 	if (!chptr->users)
 	{
@@ -5260,7 +5265,7 @@ static int send_ban_list(aClient *cptr, char *chname, TS creationtime, aChannel 
 			*cp++ = '+';
 			if (count != MODEPARAMS)
 			{
-				(void)strcpy(parabuf, name);
+				(void)strlcpy(parabuf, name, sizeof parabuf);
 				*cp++ = 'b';
 			}
 			count = 0;
@@ -5298,7 +5303,7 @@ static int send_ban_list(aClient *cptr, char *chname, TS creationtime, aChannel 
 			*cp++ = '+';
 			if (count != MODEPARAMS)
 			{
-				(void)strcpy(parabuf, name);
+				(void)strlcpy(parabuf, name, sizeof parabuf);
 				*cp++ = 'e';
 			}
 			count = 0;
@@ -5339,9 +5344,9 @@ void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
 	else
 	{
 		if (!SupportSJOIN2(cptr))
-			strcpy(parabuf, "<none>");
+			strlcpy(parabuf, "<none>", sizeof parabuf);
 		else
-			strcpy(parabuf, "<->");
+			strlcpy(parabuf, "<->", sizeof parabuf);
 	}
 	ircsprintf(buf, "%s %ld %s %s %s :",
 	    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),

@@ -731,7 +731,7 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 		/* name server never returns with trailing '.' */
 		if (!index(hostbuf, '.') && (ircd_res.options & RES_DEFNAMES))
 		{
-			(void)strcat(hostbuf, dot);
+			(void)strlcat(hostbuf, dot, sizeof hostbuf);
 			len++;
 			(void)strncat(hostbuf, ircd_res.defdname,
 			    sizeof(hostbuf) - 1 - len);
@@ -789,7 +789,7 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 			if (!hp->h_name && len < HOSTLEN)
 			    {
 				hp->h_name =(char *)MyMalloc(len+1);
-				(void)strcpy(hp->h_name, hostbuf);
+				(void)strlcpy(hp->h_name, hostbuf, len+1);
 			    }
 			  ans++;
 			  adr++;
@@ -820,7 +820,7 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 			  else
 			  {
 				  hp->h_name = (char *)MyMalloc(len + 1);
-				  (void)strcpy(hp->h_name, hostbuf);
+				  (void)strlcpy(hp->h_name, hostbuf, len +1);
 			  }
 			  ans++;
 			  break;
@@ -832,7 +832,7 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 			  if (alias >= &(hp->h_aliases[MAXALIASES - 1]))
 				  break;
 			  *alias = (char *)MyMalloc(len + 1);
-			  (void)strcpy(*alias++, hostbuf);
+			  (void)strlcpy(*alias++, hostbuf, len+1);
 			  *alias = NULL;
 			  ans++;
 			  break;
@@ -1096,7 +1096,7 @@ struct hostent *get_res(char *lp,long id)
                  long        amt;
                  struct        hostent        *hp, *he = rptr->he;
 
-                 strcpy(tempname, he->h_name);
+                 strlcpy(tempname, he->h_name, sizeof tempname);
                  hp = gethostbyname(tempname);
                  if (hp && !bcmp(hp->h_addr, he->h_addr, sizeof(struct IN_ADDR)))
                      {
@@ -1911,6 +1911,9 @@ int	res_copyhostent(struct hostent *from, struct hostent *to)
 	 */
 	amt = (long)to + sizeof(struct hostent);
 	to->h_name = (char *)amt;
+	/*
+	 * WIN32: FIXME: THIS LOOKS BAD
+	*/
 	strcpy(to->h_name, from->h_name);
 	amt += strlen(to->h_name)+1;
 	/* Setup tto alias list */

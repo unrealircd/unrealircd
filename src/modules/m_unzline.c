@@ -173,7 +173,7 @@ DLLFUNC int m_unzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	   the same thing to remove it if they specified *@ or something... */
 	if ((in = index(parv[1], '@')))
 	{
-		strcpy(userhost, in + 1);
+		strlcpy(userhost, in + 1, sizeof userhost);
 		in = &userhost[0];
 		while (*in)
 		{
@@ -189,7 +189,7 @@ DLLFUNC int m_unzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	else
 	{
-		strcpy(userhost, parv[1]);
+		strlcpy(userhost, parv[1], sizeof userhost);
 		in = &userhost[0];
 		while (*in)
 		{

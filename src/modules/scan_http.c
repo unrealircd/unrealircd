@@ -261,7 +261,7 @@ void	scan_http_scan_port(HSStruct *z)
 	}
 				
 	bzero(httpbuf, sizeof(httpbuf));
-	sprintf(httpbuf, "CONNECT %s:%i HTTP/1.1\n\n",
+	snprintf(httpbuf, sizeof httpbuf, "CONNECT %s:%i HTTP/1.1\n\n",
 		Inet_ia2p(&xScan_endpoint->SIN_ADDR), ntohs(xScan_endpoint->SIN_PORT));
 	if ((retval = send(fd, httpbuf, strlen(httpbuf), 0)) != strlen(httpbuf))
 	{

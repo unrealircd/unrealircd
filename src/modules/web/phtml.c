@@ -105,7 +105,7 @@ DLLFUNC int h_u_phtml(HTTPd_Request *r)
 {
 	int	section = 0;
 	char	buf[1024];
-	char	bbuf[1024];
+	char	bbuf[sizeof buf];
 	char	*s;
 	FILE	*f = NULL;
 

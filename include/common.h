@@ -130,7 +130,7 @@ extern char *strtoken(char **, char *, char *);
 #define MIN(a, b)	((a) < (b) ? (a) : (b))
 #endif
 
-#define DupString(x,y) do{x=MyMalloc(strlen(y)+1);(void)strcpy(x,y);}while(0)
+#define DupString(x,y) do{int l=strlen(y);x=MyMalloc(l+1);(void)memcpy(x,y, l+1);}while(0)
 
 extern u_char tolowertab[], touppertab[];
 

@@ -464,7 +464,7 @@ int ircd_res_init(void)
 	if (ircd_res.defdname[0] == 0 &&
 	    gethostname(buf, sizeof(ircd_res.defdname) - 1) == 0 &&
 	    (cp = strchr(buf, '.')) != NULL)
-		strcpy(ircd_res.defdname, cp + 1);
+		strlcpy(ircd_res.defdname, cp + 1, sizeof ircd_res.defdname);
 
 	/* find components of local domain that might be searched */
 	if (havesearch == 0)

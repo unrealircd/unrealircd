@@ -188,8 +188,8 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		sptr->since += 7;
 		return 0;
 	}
-	strcpy(nuhhost, make_user_host(sptr->user->username, sptr->user->realhost));
-	strcpy(nuhhost2, make_user_host(sptr->user->username, Inet_ia2p(&sptr->ip)));
+	strlcpy(nuhhost, make_user_host(sptr->user->username, sptr->user->realhost), sizeof(nuhhost));
+	strlcpy(nuhhost2, make_user_host(sptr->user->username, Inet_ia2p(&sptr->ip)), sizeof(nuhhost2));
 	for (oper_from = (ConfigItem_oper_from *) aconf->from;
 	    oper_from; oper_from = (ConfigItem_oper_from *) oper_from->next)
 		if (!match(oper_from->name, nuhhost) || !match(oper_from->name, nuhhost2))
