@@ -1622,6 +1622,9 @@ seen. gmtime warning still there
 - Documentation - Updated sec3.25 - Added option vhost::swhois to section 3.25 Vhost block
 - Documentation - Replaced text vair {} with <> to prevent confusion.
 - Documentation - Documented that lusers now supports remote servers
-- Documentation - Corrected vhost::from example as reported by joolz #329 
-- Documentation - Corrected set::scan:messages, currently listed as set::messages - as reported by joolz (#329) 
-- Documentation - Added channel mode t & description as reported by stfcs (#315) 
+- Documentation - Corrected vhost::from example as reported by joolz (#0000329 )
+- Documentation - Corrected set::scan:messages, currently listed as set::messages - as reported by joolz (#0000329) 
+- Documentation - Added channel mode t & description as reported by stfcs (#0000315) 
+- example.conf - Corrected incorrect set::services-services statment in alias block - reported by mcskaf (#0000401)
+- Documentation - Corrected Spelling mistake in HTM mode - Reported by CoNfOuNd (#0000387)
+- Documentation - Added coadmin to table of oper types - Reported by FrostByghte (#0000359)
