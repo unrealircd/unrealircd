@@ -2110,6 +2110,8 @@ void report_dynconf(aClient *sptr)
 	    sptr->name, FAILOPER_WARN);
 	sendto_one(sptr, ":%s %i %s :options::show-connect-info: %d", me.name, RPL_TEXT,
 	    sptr->name, SHOWCONNECTINFO);
+	sendto_one(sptr, ":%s %i %s :options::owner-gets-dot: %d", me.name, RPL_TEXT,
+	    sptr->name, OWNER_GETS_DOT);
 	sendto_one(sptr, ":%s %i %s :maxchannelsperuser: %i", me.name, RPL_TEXT,
 	    sptr->name, MAXCHANNELSPERUSER);
 	sendto_one(sptr, ":%s %i %s :auto-join: %s", me.name, RPL_TEXT,
@@ -4804,6 +4806,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "show-connect-info")) {
 					tempiConf.show_connect_info = 1;
 				}
+				else if (!strcmp(cepp->ce_varname, "owner-gets-dot")) {
+					tempiConf.owner_gets_dot = 1;
+				}
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "hosts")) {
@@ -5086,6 +5091,8 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "fail-oper-warn")) {
 				}
 				else if (!strcmp(cepp->ce_varname, "show-connect-info")) {
+				}
+				else if (!strcmp(cepp->ce_varname, "owner-gets-dot")) {
 				}
 				else
 				{
