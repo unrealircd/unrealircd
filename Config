@@ -511,15 +511,8 @@ if [ -r /usr/include/openssl/ssl.h ] ; then
 	OPENSSL=define
 	echo 'found!'
 else
-	echo 'not found (you will not be able to do secure connections, i think'
-	echo $n "..Trying to see if its in /usr/local/ssl/include/openssl/ssl.h .. $c"
-	if [ -r /usr/local/ssl/include/openssl/ssl.h ] ; then
-		OPENSSL=define
-		OPENSSL_OTHERPLACE=define
-		echo 'found!'
-	else
-		echo 'not found.'
-	fi	
+	echo 'not found (you will not be able to do secure connections'
+	echo 'If you do have it, please type in ln -s <openssl include dir> /usr/include/openssl'
 fi
 
 echo $n "...Looking for /usr/include/regex.h...$c"

@@ -47,7 +47,7 @@
 #  include <sys/syslog.h>
 # endif
 #endif
-#ifdef USE_SSL
+#if defined(USE_SSL)
 #include <openssl/rsa.h>       /* SSL stuff */
 #include <openssl/crypto.h>
 #include <openssl/x509.h>
