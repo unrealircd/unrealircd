@@ -43,6 +43,7 @@ struct Zdata {
 	char outbuf[ZIP_MAXIMUM];	/* outgoing (unzipped) buffer */
 	int  incount;		/* size of inbuf content */
 	int  outcount;		/* size of outbuf content */
+	int first; /* First message? */
 };
 
 #endif /* ZIP_LINKS */

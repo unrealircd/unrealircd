@@ -521,7 +521,7 @@ extern char *oflagstr(long oflag);
 extern int rehash(aClient *cptr, aClient *sptr, int sig);
 extern int _match(char *mask, char *name);
 extern void outofmemory(void);
-extern unsigned long crc32(const unsigned char *s, unsigned int len);
+extern unsigned long our_crc32(const unsigned char *s, unsigned int len);
 extern int add_listener2(ConfigItem_listen *conf);
 extern void link_cleanup(ConfigItem_link *link_ptr);
 extern void       listen_cleanup();

@@ -118,7 +118,7 @@ void set_sock_opts(int, aClient *);
 #else
 void set_sock_opts(int, aClient *);
 #endif
-static char readbuf[8192];
+static char readbuf[READBUF_SIZE];
 char zlinebuf[BUFSIZE];
 extern char *version;
 extern ircstats IRCstats;
@@ -1666,7 +1666,11 @@ int  read_message(time_t delay, fdlist *listp)
 					FD_SET(cptr->fd, &read_set);
 			}
 			if ((cptr->fd >= 0) && (DBufLength(&cptr->sendQ) || IsConnecting(cptr) ||
-			    (DoList(cptr) && IsSendable(cptr))))
+			    (DoList(cptr) && IsSendable(cptr))
+#ifdef ZIP_LINKS
+				|| ((IsZipped(cptr)) && (cptr->zip->outcount > 0))
+#endif
+			    ))
 			{
 				FD_SET(cptr->fd, &write_set);
 			}
@@ -2107,6 +2111,8 @@ int  read_message(time_t delay, fdlist *listp)
 			PFD_SETR(resfd);
 			res_pfd = pfd;
 		}
+
+/* FIXME: no ZIP link handling here, but this code doesnt work anyway -- Syzop */
 
 		if (me.socksfd >= 0)
 		{

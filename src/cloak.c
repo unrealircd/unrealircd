@@ -146,7 +146,7 @@ static unsigned long crc32_tab[] = {
 
 /* Return a 32-bit CRC of the contents of the buffer. */
 
-unsigned long crc32(const unsigned char *s, unsigned int len)
+unsigned long our_crc32(const unsigned char *s, unsigned int len)
 {
   unsigned int i;
   unsigned long crc32val;
@@ -197,12 +197,12 @@ char *hidehost(char *rhost)
 		         &l[4], &l[5], &l[6], &l[7]);
 		ircsprintf(h3, "%lx:%lx:%lx:%lx",
 			l[0], l[1], l[2], l[3]);
-		l[0] = crc32(h3, strlen(h3));
+		l[0] = our_crc32(h3, strlen(h3));
 		ircsprintf(h3, "%lx:%lx:%lx:%lx:%lx:%lx:%lx",
 			l[0], l[1], l[2], l[3],
 			l[4], l[5], l[6]);
-		l[1] = crc32(h3, strlen(h3));
-		l[2] = crc32(host, strlen(host));
+		l[1] = our_crc32(h3, strlen(h3));
+		l[2] = our_crc32(host, strlen(host));
 		for (i = 0; i <= 2; i++)
 		{
 #ifdef COMPAT_BETA4_KEYS
@@ -237,17 +237,17 @@ char *hidehost(char *rhost)
 		}
 #ifndef COMPAT_BETA4_KEYS
 		ircsprintf(h3, "%s.%s", h2[0], h2[1]);
-		l[0] = ((crc32(h3, strlen(h3)) + KEY) ^ KEY2) + KEY3;
+		l[0] = ((our_crc32(h3, strlen(h3)) + KEY) ^ KEY2) + KEY3;
 		ircsprintf(h3, "%s.%s.%s", h2[0], h2[1], h2[2]);		
-		l[1] = ((KEY2 ^ crc32(h3, strlen(h3))) + KEY3) ^ KEY;
-		l[4] = crc32(host, strlen(host));
+		l[1] = ((KEY2 ^ our_crc32(h3, strlen(h3))) + KEY3) ^ KEY;
+		l[4] = our_crc32(host, strlen(host));
 		l[2] = ((l[4] + KEY3) ^ KEY) + KEY2;
 #else
 		ircsprintf(h3, "%s.%s", h2[0], h2[1]);
-		l[0] = ((crc32(h3, strlen(h3)) + KEY2) ^ KEY) ^ KEY3;
+		l[0] = ((our_crc32(h3, strlen(h3)) + KEY2) ^ KEY) ^ KEY3;
 		ircsprintf(h3, "%s.%s.%s", h2[0], h2[1], h2[2]);
-		l[1] = ((KEY2 + crc32(h3, strlen(h3))) ^ KEY3) ^ KEY;
-		l[4] = crc32(host, strlen(host));
+		l[1] = ((KEY2 + our_crc32(h3, strlen(h3))) ^ KEY3) ^ KEY;
+		l[4] = our_crc32(host, strlen(host));
 		l[2] = ((l[4] + KEY) ^ KEY3)^ KEY2;
 #endif
 		l[2] &= 0x3FFFFFFF;
@@ -272,9 +272,9 @@ char *hidehost(char *rhost)
 			}
 		}
 #ifdef COMPAT_BETA4_KEYS
-		l[0] = ((crc32(host, strlen(host)) + KEY2) ^ KEY)^ KEY3;
+		l[0] = ((our_crc32(host, strlen(host)) + KEY2) ^ KEY)^ KEY3;
 #else
-		l[0] = ((crc32(host, strlen(host)) ^ KEY2) + KEY) ^ KEY3;
+		l[0] = ((our_crc32(host, strlen(host)) ^ KEY2) + KEY) ^ KEY3;
 #endif
 		l[0] &= 0x3FFFFFFF;
 		if (*p) {

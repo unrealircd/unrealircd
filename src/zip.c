@@ -50,7 +50,7 @@
 **      (cptr->zip->inbuf should never hold more than ONE compression block.
 **      The biggest block allowed for compression is ZIP_MAXIMUM bytes)
 */
-#define ZIP_BUFFER_SIZE         (ZIP_MAXIMUM + BUFSIZE)
+#define ZIP_BUFFER_SIZE         (ZIP_MAXIMUM + READBUF_SIZE)
 
 /*
 ** size of the buffer where zlib puts compressed data
@@ -86,6 +86,7 @@ int     zip_init(aClient *cptr)
   cptr->zip->outcount = 0;
 
   cptr->zip->in  = (z_stream *) MyMalloc(sizeof(z_stream));
+  bzero(cptr->zip->in, sizeof(z_stream)); /* Just to be sure -- Syzop */
   cptr->zip->in->total_in = 0;
   cptr->zip->in->total_out = 0;
   cptr->zip->in->zalloc = (alloc_func)0;
@@ -98,6 +99,7 @@ int     zip_init(aClient *cptr)
     }
 
   cptr->zip->out = (z_stream *) MyMalloc(sizeof(z_stream));
+  bzero(cptr->zip->out, sizeof(z_stream)); /* Just to be sure -- Syzop */
   cptr->zip->out->total_in = 0;
   cptr->zip->out->total_out = 0;
   cptr->zip->out->zalloc = (alloc_func)0;
@@ -114,7 +116,7 @@ int     zip_init(aClient *cptr)
 */
 void    zip_free(aClient *cptr)
 {
-  cptr->flags2 &= ~FLAGS2_ZIP;
+  SetZipped(cptr);
   if (cptr->zip)
     {
       if (cptr->zip->in)
@@ -151,7 +153,7 @@ char *unzip_packet(aClient *cptr, char *buffer, int *length)
        */
       memcpy((void *)unzipbuf,(void *)cptr->zip->inbuf,cptr->zip->incount);
       zin->avail_out = UNZIP_BUFFER_SIZE - cptr->zip->incount;
-      zin->next_out = unzipbuf + cptr->zip->incount;
+      zin->next_out = (Bytef *) (unzipbuf + cptr->zip->incount);
       cptr->zip->incount = 0;
       cptr->zip->inbuf[0] = '\0'; /* again unnecessary but nice for debugger */
     }
@@ -167,9 +169,9 @@ char *unzip_packet(aClient *cptr, char *buffer, int *length)
           *length = -1;
           return((char *)NULL);
         }
-      zin->next_in = buffer;
+      zin->next_in = (Bytef *) buffer;
       zin->avail_in = *length;
-      zin->next_out = unzipbuf;
+      zin->next_out = (Bytef *) unzipbuf;
       zin->avail_out = UNZIP_BUFFER_SIZE;
     }
 
@@ -216,7 +218,7 @@ char *unzip_packet(aClient *cptr, char *buffer, int *length)
                    * the bottom of the unzip buffer. -db
                    */
 
-                  for(p = zin->next_out;p >= unzipbuf;)
+                  for(p = (char *) zin->next_out;p >= unzipbuf;)
                     {
                       if((*p == '\r') || (*p == '\n'))
                         break;
@@ -266,10 +268,10 @@ char *unzip_packet(aClient *cptr, char *buffer, int *length)
       break;
 
     case Z_DATA_ERROR: /* the buffer might not be compressed.. */
-      if ((IsCapable(cptr, CAP_ZIP))  && !strncmp("ERROR ", buffer, 6))
+      if (!strncmp("ERROR ", buffer, 6))
         {
-          cptr->flags2 &= ~FLAGS2_ZIP;
-          cptr->caps &= ~CAP_ZIP;
+          cptr->zip->first = 0;
+          ClearZipped(cptr);
           /*
            * This is not sane at all.  But if other server
            * has sent an error now, it is probably closing
@@ -277,7 +279,9 @@ char *unzip_packet(aClient *cptr, char *buffer, int *length)
            */
           return buffer;
         }
-
+        /* Let's be nice and give them a hint ;) -- Syzop */
+        sendto_realops("inflate() error: * Are you perhaps linking zipped with non-zipped? *");
+        sendto_realops("Hint: link::options::zip should be the same at both sides (either both disabled or both enabled)");
         /* no break */
 
     default: /* error ! */
@@ -310,20 +314,25 @@ char *zip_buffer(aClient *cptr, char *buffer, int *length, int flush)
   if (buffer)
     {
       /* concatenate buffer in cptr->zip->outbuf */
-      memcpy((void *)cptr->zip->outbuf + cptr->zip->outcount, (void *)buffer,
+      memcpy((void *)(cptr->zip->outbuf + cptr->zip->outcount), (void *)buffer,
              *length );
       cptr->zip->outcount += *length;
     }
   *length = 0;
 
+#if 0
   if (!flush && ((cptr->zip->outcount < ZIP_MINIMUM) ||
                  ((cptr->zip->outcount < (ZIP_MAXIMUM - BUFSIZE)) &&
                   CBurst(cptr))))
+	/* Implement this? more efficient? or not? -- Syzop */
+#else
+  if (!flush && (cptr->zip->outcount < ZIP_MINIMUM))
+#endif
     return((char *)NULL);
 
-  zout->next_in = cptr->zip->outbuf;
+  zout->next_in = (Bytef *) cptr->zip->outbuf;
   zout->avail_in = cptr->zip->outcount;
-  zout->next_out = zipbuf;
+  zout->next_out = (Bytef *) zipbuf;
   zout->avail_out = ZIP_BUFFER_SIZE;
 
   switch (r = deflate(zout, Z_PARTIAL_FLUSH))

@@ -149,8 +149,15 @@ aClient *make_client(aClient *from, aClient *servr)
 
 void free_client(aClient *cptr)
 {
-	if (MyClient(cptr) && cptr->passwd)
-		MyFree((char *)cptr->passwd);
+	if (MyClient(cptr))
+	{
+		if (cptr->passwd)
+			MyFree((char *)cptr->passwd);
+#ifdef ZIP_LINKS
+		if (cptr->zip)
+			zip_free(cptr);
+#endif
+	}
 	MyFree((char *)cptr);
 }
 

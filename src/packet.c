@@ -49,6 +49,10 @@ int  dopacket(aClient *cptr, char *buffer, int length)
 	char *ch1;
 	char *ch2;
 	aClient *acpt = cptr->listener;
+#ifdef ZIP_LINKS
+	int zipped = 0;
+	int done_unzip = 0;
+#endif
 
 	me.receiveB += length;	/* Update bytes received */
 	cptr->receiveB += length;
@@ -73,6 +77,40 @@ int  dopacket(aClient *cptr, char *buffer, int length)
 	}
 	ch1 = cptr->buffer + cptr->count;
 	ch2 = buffer;
+#ifdef ZIP_LINKS
+	if (IsZipStart(cptr))
+	{
+		 if (*ch2 == '\n' || *ch2 == '\r')
+		 {
+		 	ch2++;
+		 	length--;
+		 }
+		 cptr->zip->first = 0;
+	} else {
+		done_unzip = 1;
+	}
+
+	if (IsZipped(cptr))
+	{
+		/* uncompressed buffer first */
+		zipped = length;
+		cptr->zip->inbuf[0] = '\0';    /* unnecessary but nicer for debugging */
+		cptr->zip->incount = 0;
+		ch2 = unzip_packet(cptr, ch2, &zipped);
+		length = zipped;
+		zipped = 1;
+		if (length == -1)
+			return exit_client(cptr, cptr, &me,
+				"fatal error in unzip_packet(1)");
+	}
+
+	/* While there is "stuff" in the compressed input to deal with,
+	 * keep loop parsing it. I have to go through this loop at least once.
+	 * -Dianora
+	 */
+	do
+	{
+#endif
 		while (--length >= 0)
 		{
 			char g = (*ch1 = *ch2++);
@@ -110,12 +148,63 @@ int  dopacket(aClient *cptr, char *buffer, int length)
 				if (cptr->flags & FLAGS_DEADSOCKET)
 					return exit_client(cptr, cptr, &me,
 					    "Dead Socket");
+#ifdef ZIP_LINKS
+				if ((IsZipped(cptr)) && (zipped == 0) && (length > 0))
+				{
+					/*
+					** beginning of server connection, the buffer
+					** contained PASS/CAPAB/SERVER and is now
+					** zipped!
+					** Ignore the '\n' that should be here.
+					*/
+					/* Checked RFC1950: \r or \n can't start a
+					** zlib stream  -orabidoo
+					*/
+					zipped = length;
+					if (zipped > 0 && (*ch2 == '\n' || *ch2 == '\r'))
+					{
+						ch2++;
+						zipped--;
+					}
+					cptr->zip->first = 0;
+					ch2 = unzip_packet(cptr, ch2, &zipped);
+					length = zipped;
+					zipped = 1;
+					if (length == -1)
+						return exit_client(cptr, cptr, &me,
+							"fatal error in unzip_packet(2)");
+				}
+#endif
 				ch1 = cptr->buffer;
 			}
 			else if (ch1 <
 			    cptr->buffer + (sizeof(cptr->buffer) - 1))
 				ch1++;	/* There is always room for the null */
 		}
+#ifdef ZIP_LINKS
+		 /* Now see if anything is left uncompressed in the input
+		  * If so, uncompress it and continue to parse
+		  * -Dianora
+		  */
+		if ((IsZipped(cptr)) && cptr->zip->incount)
+		{
+			/* This call simply finishes unzipping whats left
+			 * second parameter is not used. -Dianora
+			 */
+			ch2 = unzip_packet(cptr, (char *)NULL, &zipped);
+			length = zipped;
+			zipped = 1;
+			if (length == -1)
+				return exit_client(cptr, cptr, &me,
+					"fatal error in unzip_packet(3)");
+			ch1 = ch2 + length;
+			done_unzip = 0;
+		} else {
+			done_unzip = 1;
+		}
+
+	} while(!done_unzip);
+#endif
 	cptr->count = ch1 - cptr->buffer;
 	return 0;
 }

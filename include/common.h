@@ -335,5 +335,6 @@ TS   now;
 #endif
 #endif
 
+#define READBUF_SIZE 8192
 
 #endif /* __common_include__ */

@@ -158,7 +158,9 @@ int  send_queued(aClient *to)
 {
 	char *msg;
 	int  len, rlen;
-
+#ifdef ZIP_LINKS
+	int more = 0;
+#endif
 	if (IsBlocked(to))
 		return -1;		/* Can't write to already blocked socket */
 
@@ -175,6 +177,23 @@ int  send_queued(aClient *to)
 		 */
 		return -1;
 	}
+#ifdef ZIP_LINKS
+	/*
+	** Here, we must make sure than nothing will be left in to->zip->outbuf
+	** This buffer needs to be compressed and sent if all the sendQ is sent
+	*/
+	if ((IsZipped(to)) && to->zip->outcount) {
+		if (DBufLength(&to->sendQ) > 0) {
+			more = 1;
+		} else {
+			msg = zip_buffer(to, NULL, &len, 1);
+			if (len == -1)
+				return dead_link(to, "fatal error in zip_buffer()");
+			if (!dbuf_put(&to->sendQ, msg, len))
+				return dead_link(to, "Buffer allocation error for %s");
+		}
+	}
+#endif
 	while (DBufLength(&to->sendQ) > 0)
 	{
 		msg = dbuf_map(&to->sendQ, &len);
@@ -190,6 +209,20 @@ int  send_queued(aClient *to)
 			SetBlocked(to);
 			break;
 		}
+#ifdef ZIP_LINKS
+		if (DBufLength(&to->sendQ) == 0 && more) {
+			/*
+			** The sendQ is now empty, compress what's left
+			** uncompressed and try to send it too
+			*/
+			more = 0;
+			msg = zip_buffer(to, NULL, &len, 1);
+			if (len == -1)
+				return dead_link(to, "fatal error in zip_buffer()");
+			if (!dbuf_put(&to->sendQ, msg, len))
+				return dead_link(to, "Buffer allocation error for %s");
+		}
+#endif
 	}
 
 	return (IsDead(to)) ? -1 : 0;
@@ -216,7 +249,8 @@ void vsendto_one(aClient *to, char *pattern, va_list vl)
 void sendbufto_one(aClient *to)
 {
 	int  len;
-
+	char *msg = sendbuf;
+	
 	Debug((DEBUG_ERROR, "Sending [%s] to %s", sendbuf, to->name));
 
 	if (to->from)
@@ -265,7 +299,20 @@ void sendbufto_one(aClient *to)
 		return;
 	}
 
+#ifdef ZIP_LINKS
+	/*
+	** data is first stored in to->zip->outbuf until
+	** it's big enough to be compressed and stored in the sendq.
+	** send_queued is then responsible to never let the sendQ
+	** be empty and to->zip->outbuf not empty.
+	*/
+	if (IsZipped(to))
+		msg = zip_buffer(to, msg, &len, 0);
+	
+	if (len && !dbuf_put(&to->sendQ, msg, len))
+#else
 	if (!dbuf_put(&to->sendQ, sendbuf, len))
+#endif
 	{
 		dead_link(to, "Buffer allocation error");
 		return;

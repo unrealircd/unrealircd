@@ -516,6 +516,18 @@ CMD_FUNC(m_protoctl)
 			    proto, cptr->name));
 			cptr->proto |= PROTO_SJB64;
 		}
+		else if (strcmp(s, "ZIP") == 0)
+		{
+			if (remove)
+			{
+				cptr->proto &= ~PROTO_ZIP;
+				continue;
+			}
+			Debug((DEBUG_ERROR,
+				"Chose protocol %s for link %s",
+				proto, cptr->name));
+			cptr->proto |= PROTO_ZIP;
+		}
 		/*
 		 * Add other protocol extensions here, with proto
 		 * containing the base option, and options containing
@@ -832,7 +844,8 @@ CMD_FUNC(m_server)
 		if (aconf->options & CONNECT_QUARANTINE)
 			cptr->flags |= FLAGS_QUARANTINE;
 		/* Start synch now */
-		m_server_synch(cptr, numeric, aconf);
+		if (m_server_synch(cptr, numeric, aconf) == FLUSH_BUFFER)
+			return FLUSH_BUFFER;
 	}
 	else
 	{
@@ -1002,6 +1015,19 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 			    serveropts, me.serv->numeric,
 			    (me.info[0]) ? (me.info) : "IRCers United");
 	}
+#ifdef ZIP_LINKS
+	if (aconf->options & CONNECT_ZIP)
+	{
+		if (zip_init(cptr) == -1)
+		{
+			zip_free(cptr);
+			sendto_realops("Unable to setup compressed link for %s", get_client_name(cptr, TRUE));
+			return exit_client(cptr, cptr, &me, "zip_init() failed");
+		}
+		SetZipped(cptr);
+		cptr->zip->first = 1;
+	}
+#endif
 	/* Set up server structure */
 	SetServer(cptr);
 	IRCstats.me_servers++;
@@ -1018,17 +1044,39 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 #ifdef USE_SSL
 	if (IsSecure(cptr))
 	{
-		sendto_serv_butone(&me, ":%s SMO o :(\2link\2) Secure link %s -> %s established (%s)",
-			me.name, me.name, inpath, (char *) ssl_get_cipher((SSL *)cptr->ssl));
-		sendto_realops("(\2link\2) Secure link %s -> %s established (%s)",
+		sendto_serv_butone(&me, ":%s SMO o :(\2link\2) Secure %slink %s -> %s established (%s)",
+			me.name,
+#ifdef ZIP_LINKS
+			(aconf->options & CONNECT_ZIP) ? "ZIP" : "",
+#else
+			"",
+#endif
+			me.name, inpath, (char *) ssl_get_cipher((SSL *)cptr->ssl));
+		sendto_realops("(\2link\2) Secure %slink %s -> %s established (%s)",
+#ifdef ZIP_LINKS
+			(aconf->options & CONNECT_ZIP) ? "ZIP" : "",
+#else
+			"",
+#endif
 			me.name, inpath, (char *) ssl_get_cipher((SSL *)cptr->ssl));
 	}
 	else
 #endif
 	{
-		sendto_serv_butone(&me, ":%s SMO o :(\2link\2) Link %s -> %s established",
-			me.name, me.name, inpath);
-		sendto_realops("(\2link\2) Link %s -> %s established",
+		sendto_serv_butone(&me, ":%s SMO o :(\2link\2) %sLink %s -> %s established",
+			me.name,
+#ifdef ZIP_LINKS
+			(aconf->options & CONNECT_ZIP) ? "ZIP" : "",
+#else
+			"",
+#endif
+			me.name, inpath);
+		sendto_realops("(\2link\2) %sLink %s -> %s established",
+#ifdef ZIP_LINKS
+			(aconf->options & CONNECT_ZIP) ? "ZIP" : "",
+#else
+			"",
+#endif
 			me.name, inpath);
 	}
 	(void)add_to_client_hash_table(cptr->name, cptr);
@@ -1397,6 +1445,15 @@ CMD_FUNC(m_netinfo)
 	    ("Link %s -> %s is now synced [secs: %li recv: %li.%li sent: %li.%li]",
 	    cptr->name, me.name, (TStime() - endsync), sptr->receiveK,
 	    sptr->receiveB, sptr->sendK, sptr->sendB);
+#ifdef ZIP_LINKS
+	if ((MyConnect(cptr)) && (IsZipped(cptr)) && cptr->zip->out->total_in) {
+		sendto_realops
+		("Zipstats for link to %s: %01lu, compressed %01lu (%3.1f%%)",
+			get_client_name(cptr, TRUE), cptr->zip->out->total_in,
+			cptr->zip->out->total_out,
+			(100.0*(float)cptr->zip->out->total_out) /(float)cptr->zip->out->total_in);
+	}
+#endif
 
 	sendto_serv_butone(&me,
 	    ":%s SMO o :\2(sync)\2 Link %s -> %s is now synced [secs: %li recv: %li.%li sent: %li.%li]",

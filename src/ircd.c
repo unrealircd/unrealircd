@@ -1025,6 +1025,9 @@ int InitwIRCD(int argc, char *argv[])
 #ifdef USE_SSL
 	fprintf(stderr, "                     using %s\n\n", OPENSSL_VERSION_TEXT);
 #endif
+#ifdef ZIP_LINKS
+	fprintf(stderr, "                     using zlib %s\n\n", zlibVersion());
+#endif
 #endif
 	clear_client_hash_table();
 	clear_channel_hash_table();

@@ -127,6 +127,10 @@ typedef struct SMember Member;
 typedef struct SMembership Membership;
 typedef struct SMembershipL MembershipL;
 
+#ifdef ZIP_LINKS
+typedef struct  Zdata   aZdata;
+#endif
+
 #ifdef NEED_U_INT32_T
 typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #endif
@@ -279,7 +283,9 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define FLAGS_NETINFO   0x200000
 #define FLAGS_HYBNOTICE 0x400000
 #define FLAGS_QUARANTINE     0x800000
-#define FLAGS_UNOCCUP2   0x1000000
+#ifdef ZIP_LINKS
+#define FLAGS_ZIP   0x1000000
+#endif
 #define FLAGS_UNOCCUP3   0x2000000
 #define FLAGS_SHUNNED    0x4000000
 #ifdef USE_SSL
@@ -383,6 +389,11 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define IsSecure(x)		(0)
 #endif
 
+#ifdef ZIP_LINKS
+#define IsZipped(x) 	((x)->flags & FLAGS_ZIP)
+#define IsZipStart(x)	(((x)->flags & FLAGS_ZIP) && ((x)->zip->first == 1))
+#endif
+
 #define IsHybNotice(x)		((x)->flags & FLAGS_HYBNOTICE)
 #define SetHybNotice(x)         ((x)->flags |= FLAGS_HYBNOTICE)
 #define ClearHybNotice(x)	((x)->flags &= ~FLAGS_HYBNOTICE)
@@ -441,6 +452,10 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define ClearHidden(x)          ((x)->umodes &= ~UMODE_HIDE)
 #define ClearHideOper(x)    ((x)->umodes &= ~UMODE_HIDEOPER)
 
+#ifdef ZIP_LINKS
+#define SetZipped(x)        ((x)->flags |= FLAGS_ZIP)
+#define ClearZipped(x)      ((x)->flags &= ~FLAGS_ZIP)
+#endif
 
 /*
  * ProtoCtl options

@@ -4764,7 +4764,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			tempiConf.network.key3 = ircabs(atol(cep->ce_entries->ce_next->ce_next->ce_varname));
 			ircsprintf(temp, "%li.%li.%li", tempiConf.network.key,
 				tempiConf.network.key2, tempiConf.network.key3);
-			tempiConf.network.keycrc = (long) crc32(temp, strlen(temp));
+			tempiConf.network.keycrc = (long) our_crc32(temp, strlen(temp));
 		}
 		else if (!strcmp(cep->ce_varname, "ssl")) {
 #ifdef USE_SSL

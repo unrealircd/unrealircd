@@ -1830,3 +1830,6 @@ seen. gmtime warning still there
 - Added some missing oflags for SVSO. Reported by auspice (#0000671)
 - Possibly fixed the throttling bug reported by Jaw959 (#0000644)
 - Fixed triple WATCH reply bug (#0000632)
+- Added ZIP_LINKS support, no check in ./Config & configure yet.. you currently need to
+  add -lz to IRCDLIBS in Makefile and enable it in include/config.h (and ofcourse set
+  link::options::zip on both sides) -- Syzop.
