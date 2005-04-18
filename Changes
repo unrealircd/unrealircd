@@ -780,3 +780,4 @@
 - Clarified some nickchar stuff in the docs
 - Added 'danish' nickchars, supplied by klaus (#0002436).
 - Module coders: Added HOOKTYPE_LOCAL_SPAMFILTER: catches (local) spamfilter matches.
+- Fixed chanmode G showing up twice in 005, reported by Snake (#0002466).
