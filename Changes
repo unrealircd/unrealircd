@@ -794,7 +794,3 @@
 - Fixed a bug making ./Config not load the previously stored settings on Solaris 10 and
   probably other Unixes, reported by lion-o (#0002474).
 - Cosmetic bug in set::modes-on-join: now rejecting +I in it. Reported by Ron2K (#0002508).
-- Removed quarantaine from all docs: this feature does not exactly add much security because
-  whenever a server is added to a network it has a lot of power that cannot simply be controlled
-  by things like unsetting operflags remotely or anything else. I don't want to encourage
-  anyone to use it.
