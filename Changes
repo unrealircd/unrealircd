@@ -793,3 +793,4 @@
 - Added './unreal backtrace', so far this has only been tested on Linux and FreeBSD.
 - Fixed a bug making ./Config not load the previously stored settings on Solaris 10 and
   probably other Unixes, reported by lion-o (#0002474).
+- Cosmetic bug in set::modes-on-join: now rejecting +I in it. Reported by Ron2K (#0002508).

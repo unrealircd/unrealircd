@@ -6842,6 +6842,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					case 'v':
 					case 'b':
 					case 'e':
+					case 'I':
 					case 'O':
 					case 'A':
 					case 'z':
