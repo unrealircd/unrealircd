@@ -47,11 +47,7 @@
 
 /* l_commands.c/commands.so is a special case so we have to do this manually :p */
 #ifdef DYNAMIC_LINKING
-#if defined(USE_SSL) && !defined(_WIN32)
-DLLFUNC char Mod_Version[] = BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9 "/SSL";
-#else
-DLLFUNC char Mod_Version[] = BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9;
-#endif
+#include "modversion.h"
 #endif
 
 extern ModuleHeader m_svsnoop_Header;

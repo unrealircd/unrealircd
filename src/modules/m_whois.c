@@ -102,7 +102,8 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	aChannel *chptr;
 	char *nick, *tmp, *name;
 	char *p = NULL;
-	int  found, len, mlen;
+	int  found, len, mlen, cnt = 0;
+	char querybuf[BUFSIZE];
 
 	if (IsServer(sptr))	
 		return 0;
@@ -122,9 +123,14 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		parv[1] = parv[2];
 	}
 
-	for (tmp = parv[1]; (nick = strtoken(&p, tmp, ",")); tmp = NULL)
+	strcpy(querybuf, parv[1]);
+
+	for (tmp = canonize(parv[1]); (nick = strtoken(&p, tmp, ",")); tmp = NULL)
 	{
 		unsigned char invis, showchannel, member, wilds, hideoper; /* <- these are all boolean-alike */
+
+		if (++cnt > MAXTARGETS)
+			break;
 
 		found = 0;
 		/* We do not support "WHOIS *" */
@@ -332,10 +338,8 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (!found)
 			sendto_one(sptr, err_str(ERR_NOSUCHNICK),
 			    me.name, parv[0], nick);
-		if (p)
-			p[-1] = ',';
 	}
-	sendto_one(sptr, rpl_str(RPL_ENDOFWHOIS), me.name, parv[0], parv[1]);
+	sendto_one(sptr, rpl_str(RPL_ENDOFWHOIS), me.name, parv[0], querybuf);
 
 	return 0;
 }

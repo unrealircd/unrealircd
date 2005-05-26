@@ -34,6 +34,101 @@ elif [ "$1" = "mkpasswd" ] ; then
 	@BINDIR@ -P $2 $3
 elif [ "$1" = "version" ] ; then
 	@BINDIR@ -v
+elif [ "$1" = "backtrace" ] ; then
+	cd @IRCDDIR@
+
+	if [ -d "modules" ]; then
+		modpath="modules"
+	elif [ -d "src/modules" ]; then
+		modpath="src/modules"
+	else
+		echo 'Enter the path to your modules directory relative to your root installed directory (eg: "mods")'
+		read modpath
+		if [ ! -d "$modpath" ]; then
+			echo "Not a directory"
+			exit
+		fi
+	fi
+
+	# Find the corefile
+	echo "Core files available:"
+	n="0"
+	for i in `echo *core*`
+	do
+		ls -l $i
+		n=`expr $n + 1`
+	done
+
+	if [ "$n" -gt 1 ]; then
+		echo "Type the name of the core file you want to research:"
+		read corefile
+	elif [ "$i" = "*core*" -o "$n" -eq 0 ]; then
+		echo 'No core files found... Nothing to do'
+		echo ''
+		echo 'If you are sure UnrealIRCd crashed, then verify that unreal'
+		echo 'has permission to dump core (type "ulimit -c unlimited" and see'
+		echo 'if you get permission denied errors). Also verify that you did'
+		echo 'not run out of quota.'
+		echo 'If all that is ok, then it might be that Unreal did not crash but'
+		echo 'got killed by the OS (eg: cpu/mem resource limits), the syadmin,'
+		echo 'or an automated process.'
+		exit 1
+	else
+		corefile="$i"
+	fi
+
+	if [ ! -f "$corefile" ]; then
+		echo "Core file '$corefile' not found"
+	fi
+	if [ ! -s "$corefile" ]; then
+		echo 'Seems the corefile is 0 bytes'
+		echo 'This usually means you need to relax the core file resource limit'
+		echo '(type "ulimit -c unlimited"), or you might have ran out of quota.'
+		exit 1
+	fi
+
+	# Some ugly prepare work -- ignore errors
+	(echo quit|gdb @BINDIR@ $corefile 2>&1)|\
+	grep -i 'no such file'|\
+	awk -F ':' '{ print $1 }'|sort|uniq|\
+	awk -F '.' "{ system(\"ln -s ../$modpath/\" \$2 \".so \" \$0) }"
+	
+	echo ""
+	echo "=================== START HERE ======================"
+	echo "BACKTRACE:"
+
+cat >gdb.commands << __EOF__
+bt
+echo \n
+frame
+echo \n
+x/s backupbuf
+echo \n
+bt 3 full
+quit
+__EOF__
+
+	gdb -batch -x gdb.commands @BINDIR@ $corefile
+	rm -f gdb.commands
+	echo "GCC: `gcc -v 2>&1|tail -n 1`"
+	echo "UNAME: `uname -a`"
+	echo "UNREAL: `$0 version`"
+	echo "CORE: `ls -al $corefile`"
+	echo "===================  STOP HERE ======================"
+	echo ""
+	echo "Copy the parts between the START HERE and STOP HERE marker"
+	echo "and report it on http://bugs.unrealircd.org/"
+	echo ""
+	echo 'But before you do, note the following:'
+	echo '1. We do not support modifications of any unrealircd code'
+	echo '   (except for config.h changes).'
+	echo '2. If you are using 3rd party modules we might request you'
+	echo '   to run without them and verify you still crash. This is'
+	echo '   to eleminate any loss of time due to bugs made by others'
+	echo '3. Always use the latest UnrealIRCd version, we fix (crash)bugs'
+	echo '   all the time so your bug might as well be fixed already.'
+	echo ""
+	echo "Thanks!"
 else
 	echo "Usage: unreal start|stop|rehash|restart|mkpasswd|version"
 fi

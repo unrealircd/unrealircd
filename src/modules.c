@@ -54,6 +54,8 @@ const char *our_dlerror(void);
 #ifndef RTLD_NOW
 #define RTLD_NOW RTLD_LAZY
 #endif
+#define UNREALCORE
+#include "modversion.h"
 
 Hook	   	*Hooks[MAXHOOKTYPES];
 Hooktype	Hooktypes[MAXCUSTOMHOOKS];
@@ -212,16 +214,6 @@ Module *Module_Find(char *name)
 	
 }
 
-static char *our_mod_version()
-{
-static char retbuf[128];
-	strlcpy(retbuf, version, sizeof(retbuf));
-#if defined(USE_SSL) && !defined(_WIN32)
-	strlcat(retbuf, "/SSL", sizeof(retbuf));
-#endif
-	return retbuf;
-}
-
 int parse_modsys_version(char *version)
 {
 	int betaversion, tag;
@@ -267,7 +259,7 @@ char  *Module_Create(char *path_)
 	ModuleHeader    *mod_header = NULL;
 	int		ret = 0;
 	Module          *mod = NULL, **Mod_Handle = NULL;
-	char *expectedmodversion = our_mod_version();
+	char *expectedmodversion = our_mod_version;
 	long modsys_ver = 0;
 	Debug((DEBUG_DEBUG, "Attempting to load module from %s",
 	       path_));

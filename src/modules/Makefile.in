@@ -20,10 +20,17 @@
 #*/
 # major edit from fez - to compile objects individually...
 
-INCLUDES = ../include/struct.h ../include/config.h \
-	../include/sys.h ../include/common.h ../include/version.h \
-	../include/h.h ../include/numeric.h ../include/msg.h \
-	../include/dynconf.h ../include/modules.h ../include/setup.h
+INCLUDES = ../include/auth.h ../include/badwords.h ../include/channel.h \
+	../include/class.h ../include/common.h ../include/config.h ../include/dbuf.h \
+	../include/dynconf.h ../include/events.h ../include/fdlist.h ../include/h.h \
+	../include/hash.h ../include/inet.h ../include/ircsprintf.h \
+	../include/license.h ../include/macros.h ../include/md5.h \
+	../include/modules.h ../include/modversion.h ../include/msg.h ../include/nameser.h \
+	../include/numeric.h ../include/proto.h ../include/res.h ../include/resolv.h \
+	../include/resource.h ../include/setup.h ../include/sjoin.h \
+	../include/sock.h ../include/ssl.h ../include/struct.h ../include/sys.h \
+	../include/threads.h ../include/types.h ../include/url.h \
+	../include/version.h ../include/whowas.h ../include/zip.h
 
 #just changing this to cloak.so could be a ./Config option...
 #R_MODULES=cloak.so

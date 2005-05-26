@@ -438,6 +438,11 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 	/* Check if its a hostmask and legal .. */
 	p = strchr(mask, '@');
 	if (p) {
+		if ((p == mask) || !p[1])
+		{
+			sendnotice(sptr, "Error: no user@host specified");
+			return 0;
+		}
 		usermask = strtok(mask, "@");
 		hostmask = strtok(NULL, "");
 		if (BadPtr(hostmask)) {

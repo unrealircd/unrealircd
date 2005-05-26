@@ -781,3 +781,15 @@
 - Added 'danish' nickchars, supplied by klaus (#0002436).
 - Module coders: Added HOOKTYPE_LOCAL_SPAMFILTER: catches (local) spamfilter matches.
 - Fixed chanmode G showing up twice in 005, reported by Snake (#0002466).
+- Fixed a TKL crash on incorrect *line, reported by nanookles1234 (#0002524).
+- Redid include dependencies in Makefile, this makes things safer because on any .h change it
+  would force a recompile of all files, but it could mean things will be a bit slower for us
+  coders unless we tweak it later on.
+- Changed whois a bit to print less useless results.
+- Added several indicators to the "detect binary incompatible modules"-system such as detecting
+  of a ziplinks module on non-ziplinks (on windows this is ok however), nospoof module on a
+  a server without nospoof server, etc. Hopefully this will help some people preventing odd
+  crashes because they did not recompile or (re)install modules properly.
+- Added './unreal backtrace', so far this has only been tested on Linux and FreeBSD.
+- Fixed a bug making ./Config not load the previously stored settings on Solaris 10 and
+  probably other Unixes, reported by lion-o (#0002474).

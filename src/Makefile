@@ -44,10 +44,17 @@ MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 
 MAKE = make $(MAKEARGS)
 
-INCLUDES = ../include/struct.h ../include/config.h \
-	../include/sys.h ../include/common.h ../include/version.h \
-	../include/h.h ../include/numeric.h ../include/msg.h \
-	../include/dynconf.h ../include/modules.h ../include/setup.h
+INCLUDES = ../include/auth.h ../include/badwords.h ../include/channel.h \
+	../include/class.h ../include/common.h ../include/config.h ../include/dbuf.h \
+	../include/dynconf.h ../include/events.h ../include/fdlist.h ../include/h.h \
+	../include/hash.h ../include/inet.h ../include/ircsprintf.h \
+	../include/license.h ../include/macros.h ../include/md5.h \
+	../include/modules.h ../include/modversion.h ../include/msg.h ../include/nameser.h \
+	../include/numeric.h ../include/proto.h ../include/res.h ../include/resolv.h \
+	../include/resource.h ../include/setup.h ../include/sjoin.h \
+	../include/sock.h ../include/ssl.h ../include/struct.h ../include/sys.h \
+	../include/threads.h ../include/types.h ../include/url.h \
+	../include/version.h ../include/whowas.h ../include/zip.h
 
 all: build
 
@@ -93,7 +100,7 @@ socket.o: socket.c $(INCLUDES)
 
 
 
-dbuf.o: dbuf.c $(INCLUDES) ../include/dbuf.h
+dbuf.o: dbuf.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c dbuf.c
 
 packet.o: packet.c $(INCLUDES)
@@ -162,78 +169,73 @@ cleandir: clean
 depend:
 	makedepend -I${INCLUDEDIR} ${SRC}
 
-channel.o: channel.c $(INCLUDES) ../include/channel.h
+channel.o: channel.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c channel.c
 
-ircd.o: ircd.c ../include/dbuf.h $(INCLUDES)
+ircd.o: ircd.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c ircd.c
 
-list.o: list.c ../include/dbuf.h $(INCLUDES)
+list.o: list.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c list.c
 
-lusers.o: lusers.c ../include/dbuf.h $(INCLUDES)
+lusers.o: lusers.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c lusers.c
 
-res.o: res.c ../include/res.h $(INCLUDES)
+res.o: res.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c res.c
 
-cloak.o: cloak.c ../include/res.h $(INCLUDES)
+cloak.o: cloak.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c cloak.c
 
-fdlist.o: fdlist.c ../include/fdlist.h $(INCLUDES)
+fdlist.o: fdlist.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c fdlist.c
 
-s_bsd.o: s_bsd.c ../include/dbuf.h $(INCLUDES)
+s_bsd.o: s_bsd.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c s_bsd.c
 
-s_auth.o: s_auth.c ../include/dbuf.h $(INCLUDES)
+s_auth.o: s_auth.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c s_auth.c
 
-s_conf.o: s_conf.c ../include/dbuf.h $(INCLUDES)
+s_conf.o: s_conf.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c s_conf.c
 
-s_debug.o: ../include/sys.h s_debug.c $(INCLUDES)
+s_debug.o: s_debug.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c s_debug.c
 
-s_err.o: ../include/msg.h s_err.c $(INCLUDES)
+s_err.o: s_err.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c s_err.c
 
-s_misc.o: s_misc.c ../include/dbuf.h $(INCLUDES)
+s_misc.o: s_misc.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c s_misc.c
 
-scache.o: scache.c ../include/dbuf.h $(INCLUDES)
+scache.o: scache.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c scache.c
 
-ircsprintf.o: ircsprintf.c ../include/dbuf.h $(INCLUDES)
+ircsprintf.o: ircsprintf.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c ircsprintf.c
 
-s_user.o: s_user.c $(INCLUDES) \
-	  ../include/dbuf.h ../include/channel.h ../include/whowas.h
+s_user.o: s_user.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c s_user.c
 
-charsys.o: charsys.c $(INCLUDES) \
-	  ../include/dbuf.h ../include/channel.h ../include/whowas.h
+charsys.o: charsys.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c charsys.c
 
-s_extra.o: s_extra.c $(INCLUDES) \
-	  s_numeric.c ../include/dbuf.h ../include/channel.h ../include/whowas.h
+s_extra.o: s_extra.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c s_extra.c
 
-s_kline.o: s_kline.c $(INCLUDES) \
-	  s_numeric.c ../include/dbuf.h ../include/channel.h ../include/whowas.h
+s_kline.o: s_kline.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c s_kline.c
 
-s_serv.o: s_serv.c $(INCLUDES) \
-	  ../include/dbuf.h ../include/whowas.h
+s_serv.o: s_serv.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c s_serv.c
 
-s_numeric.o: s_numeric.c ../include/dbuf.h $(INCLUDES)
+s_numeric.o: s_numeric.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c s_numeric.c
 
-whowas.o: whowas.c ../include/dbuf.h ../include/whowas.h $(INCLUDES)
+whowas.o: whowas.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c whowas.c
 
-hash.o: hash.c ../include/hash.h $(INCLUDES)
+hash.o: hash.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c hash.c
 
 crule.o: crule.c $(INCLUDES)
@@ -260,7 +262,7 @@ api-command.o: api-command.c $(INCLUDES)
 api-isupport.o: api-isupport.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c api-isupport.c
 
-url.o: url.c $(INCLUDES) ../include/url.h
+url.o: url.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c url.c
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
