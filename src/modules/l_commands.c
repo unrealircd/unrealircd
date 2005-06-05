@@ -73,7 +73,8 @@ ModuleHeader l_commands_Header
 */
 
 extern int m_htm_Test(ModuleInfo *modinfo), m_join_Test(ModuleInfo *modinfo);
-extern int m_mode_Test(ModuleInfo *modinfo);
+extern int m_mode_Test(ModuleInfo *modinfo), m_nick_Test(ModuleInfo *modinfo);
+extern int m_tkl_Test(ModuleInfo *modinfo);
 
 extern int m_sethost_Init(ModuleInfo *modinfo), m_setname_Init(ModuleInfo *modinfo), m_chghost_Init(ModuleInfo *modinfo);
 extern int m_chgident_Init(ModuleInfo *modinfo), m_setident_Init(ModuleInfo *modinfo), m_sdesc_Init(ModuleInfo *modinfo);
@@ -218,6 +219,8 @@ int l_commands_Test(ModuleInfo *modinfo)
 	m_htm_Test(ModCmdsInfo);
 	m_join_Test(ModCmdsInfo);
 	m_mode_Test(ModCmdsInfo);
+	m_nick_Test(ModCmdsInfo);
+	m_tkl_Test(ModCmdsInfo);
 	return MOD_SUCCESS;
 }
 

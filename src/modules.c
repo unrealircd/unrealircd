@@ -87,6 +87,26 @@ void (*do_mode)(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *p
 void (*set_mode)(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
 int (*m_umode)(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+int (*register_user)(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
+int (*tkl_hash)(unsigned int c);
+char (*tkl_typetochar)(int type);
+aTKline *(*tkl_add_line)(int type, char *usermask, char *hostmask, char *reason, char *setby,
+    TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason);
+aTKline *(*tkl_del_line)(aTKline *tkl);
+void (*tkl_check_local_remove_shun)(aTKline *tmp);
+aTKline *(*tkl_expire)(aTKline * tmp);
+EVENT((*tkl_check_expire));
+int (*find_tkline_match)(aClient *cptr, int xx);
+int (*find_shun)(aClient *cptr);
+int(*find_spamfilter_user)(aClient *sptr);
+aTKline *(*find_qline)(aClient *cptr, char *nick, int *ishold);
+int  (*find_tkline_match_zap)(aClient *cptr);
+void (*tkl_stats)(aClient *cptr, int type, char *para);
+void (*tkl_synch)(aClient *sptr);
+int (*m_tkl)(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+int (*place_host_ban)(aClient *sptr, int action, char *reason, long duration);
+int (*dospamfilter)(aClient *sptr, char *str_in, int type, char *target);
+
 
 static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 00 */	{NULL, NULL},
@@ -96,29 +116,28 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 04 */	{"do_mode", (void *)&do_mode},
 /* 05 */	{"set_mode", (void *)&set_mode},
 /* 06 */	{"m_umode", (void *)&m_umode},
-/* 07 */	{NULL, NULL},
-/* 08 */	{NULL, NULL},
-/* 09 */	{NULL, NULL},
-/* 10 */	{NULL, NULL},
-/* 11 */	{NULL, NULL},
-/* 12 */	{NULL, NULL},
-/* 13 */	{NULL, NULL},
-/* 14 */	{NULL, NULL},
-/* 15 */	{NULL, NULL},
-/* 16 */	{NULL, NULL},
-/* 17 */	{NULL, NULL},
-/* 18 */	{NULL, NULL},
-/* 19 */	{NULL, NULL},
-/* 20 */	{NULL, NULL},
-/* 21 */	{NULL, NULL},
-/* 22 */	{NULL, NULL},
-/* 23 */	{NULL, NULL},
-/* 24 */	{NULL, NULL},
+/* 07 */	{"register_user", (void *)&register_user},
+/* 08 */	{"tkl_hash", (void *)&tkl_hash},
+/* 09 */	{"tkl_typetochar", (void *)&tkl_typetochar},
+/* 10 */	{"tkl_add_line", (void *)&tkl_add_line},
+/* 11 */	{"tkl_del_line", (void *)&tkl_del_line},
+/* 12 */	{"tkl_check_local_remove_shun", (void *)&tkl_check_local_remove_shun},
+/* 13 */	{"tkl_expire", (void *)&tkl_expire},
+/* 14 */	{"tkl_check_expire", (void *)&tkl_check_expire},
+/* 15 */	{"find_tkline_match", (void *)&find_tkline_match},
+/* 16 */	{"find_shun", (void *)&find_shun},
+/* 17 */	{"find_spamfilter_user", (void *)&find_spamfilter_user},
+/* 18 */	{"find_qline", (void *)&find_qline},
+/* 19 */	{"find_tkline_match_zap", (void *)&find_tkline_match_zap},
+/* 20 */	{"tkl_stats", (void *)&tkl_stats},
+/* 21 */	{"tkl_synch", (void *)&tkl_synch},
+/* 22 */	{"m_tkl", (void *)&m_tkl},
+/* 23 */	{"place_host_ban", (void *)&place_host_ban},
+/* 24 */	{"dospamfilter", (void *)&dospamfilter},
 /* 25 */	{NULL, NULL},
 /* 26 */	{NULL, NULL},
 /* 27 */	{NULL, NULL},
-/* 28 */	{NULL, NULL},
-/* 29 */	{NULL, NULL}
+/* 28 */	{NULL, NULL}
 };
 
 

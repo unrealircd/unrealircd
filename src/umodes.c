@@ -41,7 +41,8 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
-extern char umodestring[UMODETABLESZ+1];
+
+char umodestring[UMODETABLESZ+1];
 
 Umode *Usermode_Table = NULL;
 short	 Usermode_highest = 0;

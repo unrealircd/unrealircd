@@ -794,3 +794,8 @@
 - Fixed a bug making ./Config not load the previously stored settings on Solaris 10 and
   probably other Unixes, reported by lion-o (#0002474).
 - Cosmetic bug in set::modes-on-join: now rejecting +I in it. Reported by Ron2K (#0002508).
+- Moved all TKL code and register_user to modules (using efuncs), that means 20 functions
+  and 2000 lines total that can be hotfixed if needed ;). The effort involved in moving all
+  this sucks a lot though :/. This might need some more testing to make sure it doesn't break
+  anything.
+- Updated support OS list in documentation.

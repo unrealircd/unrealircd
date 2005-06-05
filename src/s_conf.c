@@ -337,11 +337,6 @@ extern void charsys_reset_pretest(void);
 int charsys_postconftest(void);
 void charsys_finish(void);
 
-/* Stuff we only need here for spamfilter, so not in h.h... */
-extern aTKline *tklines[TKLISTLEN];
-extern inline int tkl_hash(char c);
-extern aTKline *tkl_del_line(aTKline *tkl);
-
 /*
  * Config parser (IRCd)
 */
