@@ -799,3 +799,4 @@
   this sucks a lot though :/. This might need some more testing to make sure it doesn't break
   anything.
 - Updated support OS list in documentation.
+- Fixed various major bugs due to TKL move from 13h ago.

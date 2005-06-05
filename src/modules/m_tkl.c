@@ -92,6 +92,8 @@ extern int MODVAR spamf_ugly_vchanoverride;
 #define MSG_TEMPSHUN "TEMPSHUN"
 #define TOK_TEMPSHUN "Tz"
 
+ModuleInfo *TklModInfo;
+
 ModuleHeader MOD_HEADER(m_tkl)
   = {
 	"tkl",	/* Name of module */
@@ -104,6 +106,7 @@ ModuleHeader MOD_HEADER(m_tkl)
 DLLFUNC int MOD_TEST(m_tkl)(ModuleInfo *modinfo)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+	TklModInfo = modinfo;
 	EfunctionAdd(modinfo->handle, EFUNC_TKL_HASH, _tkl_hash);
 	EfunctionAdd(modinfo->handle, EFUNC_TKL_TYPETOCHAR, TO_INTFUNC(_tkl_typetochar));
 	EfunctionAddPVoid(modinfo->handle, EFUNC_TKL_ADD_LINE, TO_PVOIDFUNC(_tkl_add_line));
@@ -138,6 +141,7 @@ DLLFUNC int MOD_INIT(m_tkl)(ModuleInfo *modinfo)
 	add_Command(MSG_KLINE, TOK_NONE, m_tkline, 3);
 	add_Command(MSG_GZLINE, TOK_NONE, m_gzline, 3);
 	add_Command(MSG_SPAMFILTER, TOK_NONE, m_spamfilter, 6);
+	add_Command(MSG_TKL, TOK_TKL, _m_tkl, MAXPARA);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -145,6 +149,7 @@ DLLFUNC int MOD_INIT(m_tkl)(ModuleInfo *modinfo)
 /* Is first run when server is 100% ready */
 DLLFUNC int MOD_LOAD(m_tkl)(int module_load)
 {
+	EventAddEx(TklModInfo->handle, "tklexpire", 5, 0, tkl_check_expire, NULL);
 	return MOD_SUCCESS;
 }
 
@@ -157,7 +162,8 @@ DLLFUNC int MOD_UNLOAD(m_tkl)(int module_unload)
 	    (del_Command(MSG_GZLINE, TOK_NONE, m_gzline) < 0) ||
 	    (del_Command(MSG_KLINE, TOK_NONE, m_tkline) < 0) ||
 	    (del_Command(MSG_SPAMFILTER, TOK_NONE, m_spamfilter) < 0) ||
-	    (del_Command(MSG_TEMPSHUN, TOK_TEMPSHUN, m_tempshun) < 0))
+	    (del_Command(MSG_TEMPSHUN, TOK_TEMPSHUN, m_tempshun) < 0) ||
+	    (del_Command(MSG_TKL, TOK_TKL, _m_tkl) < 0))
 
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
