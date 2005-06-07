@@ -800,3 +800,5 @@
   anything.
 - Updated support OS list in documentation.
 - Fixed various major bugs due to TKL move from 13h ago.
+- Fixed 2 problems caused by TKL move: 1 windows crash, 1 problem with loading m_*.so,
+  reported by Trocotronic (#0002553, #0002554).

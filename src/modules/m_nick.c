@@ -61,6 +61,7 @@ ModuleHeader MOD_HEADER(m_nick)
 
 DLLFUNC int MOD_TEST(m_nick)(ModuleInfo *modinfo)
 {
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAdd(modinfo->handle, EFUNC_REGISTER_USER, _register_user);
 	return MOD_SUCCESS;
 }
@@ -794,7 +795,7 @@ DLLFUNC CMD_FUNC(m_nick)
 **	   this is not fair. It should actually request another
 **	   nick from local user or kill him/her...
 */
-extern int badclass;
+extern MODVAR int badclass;
 extern MODVAR char cmodestring[512];
 extern MODVAR char umodestring[UMODETABLESZ+1];
 
@@ -1029,7 +1030,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 				    me.name, parv[0],
 				    me.name, version, umodestring, cmodestring);
 		{
-			extern char *IsupportStrings[];
+			extern MODVAR char *IsupportStrings[];
 			int i;
 			for (i = 0; IsupportStrings[i]; i++)
 				sendto_one(sptr, rpl_str(RPL_ISUPPORT), me.name, nick, IsupportStrings[i]);
