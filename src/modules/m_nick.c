@@ -795,7 +795,6 @@ DLLFUNC CMD_FUNC(m_nick)
 **	   this is not fair. It should actually request another
 **	   nick from local user or kill him/her...
 */
-extern MODVAR int badclass;
 extern MODVAR char cmodestring[512];
 extern MODVAR char umodestring[UMODETABLESZ+1];
 
