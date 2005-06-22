@@ -23,13 +23,24 @@
 #endif
      /**/
 #define COMPILEINFO DEBUGMODESET DEBUGSET
-/*
- * Version Unreal3.2.2
+
+/** Unreal Protocol version */
+#define UnrealProtocol 		2400
+
+/** These UNREAL_VERSION_* macros will be used so (3rd party) modules
+ * can easily distinguish versions.
  */
-#define UnrealProtocol 		2306
+
+/** The generation version number (eg: 3 for Unreal3*) */
+#define UNREAL_VERSION_GENERATION   3
+/** The major version number (eg: 3 for Unreal3.3*) */
+#define UNREAL_VERSION_MAJOR        3
+/** The minor version number (eg: 1 for Unreal3.3.1), we'll use negative numbers for unstable/alpha/beta */
+#define UNREAL_VERSION_MINOR        -100
+
 #define PATCH1  		"3"
-#define PATCH2  		".2"
-#define PATCH3  		".3"
+#define PATCH2  		".3"
+#define PATCH3  		"-unstable"
 #define PATCH4  		""
 #define PATCH5  		""
 #define PATCH6  		""
