@@ -35,12 +35,7 @@ DLLFUNC int h_defizzer_connect(aClient *sptr);
 static Hook *LocConnect = NULL;
 ModuleInfo DefizzerModInfo;
 
-#ifndef DYNAMIC_LINKING
-ModuleHeader defizzer_Header
-#else
-#define defizzer_Header Mod_Header
-ModuleHeader Mod_Header
-#endif
+ModuleHeader MOD_HEADER(defizzer)
   = {
 	"defizzer",	/* Name of module */
 	"$Id$", /* Version */
@@ -49,43 +44,25 @@ ModuleHeader Mod_Header
 	NULL 
     };
 
-
-/* The purpose of these ifdefs, are that we can "static" link the ircd if we
- * want to
-*/
-
-/* This is called on module init, before Server Ready */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Init(ModuleInfo *modinfo)
-#else
-int    defizzer_Init(ModuleInfo *modinfo)
-#endif
+DLLFUNC int MOD_INIT(defizzer)(ModuleInfo *modinfo)
 {
 	bcopy(modinfo,&DefizzerModInfo,modinfo->size);
 	LocConnect = HookAddEx(DefizzerModInfo.handle, HOOKTYPE_PRE_LOCAL_CONNECT, h_defizzer_connect);
 	return MOD_SUCCESS;
 }
 
-/* Is first run when server is 100% ready */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Load(int module_load)
-#else
-int    defizzer_Load(int module_load)
-#endif
+DLLFUNC int MOD_LOAD(defizzer)(int module_load)
 {
+	return MOD_SUCCESS;
 }
 
 
-/* Called when module is unloaded */
-#ifdef DYNAMIC_LINKING
-DLLFUNC int	Mod_Unload(int module_unload)
-#else
-int	defizzer_Unload(int module_unload)
-#endif
+DLLFUNC int MOD_UNLOAD(defizzer)(int module_unload)
 {
 	HookDel(LocConnect);
 	return MOD_SUCCESS;
 }
+
 static void ban_fizzer(aClient *cptr)
 {
 	int i;

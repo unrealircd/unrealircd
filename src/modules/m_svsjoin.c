@@ -47,7 +47,7 @@ DLLFUNC int m_svsjoin(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_SVSJOIN       "SVSJOIN"
-#define TOK_SVSJOIN       "BR"
+#define TOK_SVSJOIN       "BX"
 
 ModuleHeader MOD_HEADER(m_svsjoin)
   = {
@@ -91,6 +91,7 @@ DLLFUNC int MOD_UNLOAD(m_svsjoin)(int module_unload)
 	parv[0] - sender
 	parv[1] - nick to make join
 	parv[2] - channel(s) to join
+	parv[3] - (optional) channel key(s)
 */
 CMD_FUNC(m_svsjoin)
 {
@@ -98,18 +99,32 @@ CMD_FUNC(m_svsjoin)
 	if (!IsULine(sptr))
 		return 0;
 
-	if (parc != 3 || !(acptr = find_person(parv[1], NULL)))
+	if ((parc < 3) || !(acptr = find_person(parv[1], NULL)))
 		return 0;
 
 	if (MyClient(acptr))
 	{
 		parv[0] = parv[1];
 		parv[1] = parv[2];
-		(void)m_join(acptr, acptr, 2, parv);
+		if (parc == 3)
+		{
+			parv[2] = NULL;
+			do_cmd(acptr, acptr, "JOIN", 2, parv);
+		} else {
+			parv[2] = parv[3];
+			parv[3] = NULL;
+			do_cmd(acptr, acptr, "JOIN", 3, parv);
+		}
 	}
 	else
-		sendto_one(acptr, ":%s SVSJOIN %s %s", parv[0],
-		    parv[1], parv[2]);
+	{
+		if (parc == 3)
+			sendto_one(acptr, ":%s SVSJOIN %s %s", parv[0],
+			    parv[1], parv[2]);
+		else
+			sendto_one(acptr, ":%s SVSJOIN %s %s %s", parv[0],
+				parv[1], parv[2], parv[3]);
+	}
 
 	return 0;
 }

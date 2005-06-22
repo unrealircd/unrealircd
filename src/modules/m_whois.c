@@ -102,7 +102,8 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	aChannel *chptr;
 	char *nick, *tmp, *name;
 	char *p = NULL;
-	int  found, len, mlen;
+	int  found, len, mlen, cnt = 0;
+	char querybuf[BUFSIZE];
 
 	if (IsServer(sptr))	
 		return 0;
@@ -122,9 +123,14 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		parv[1] = parv[2];
 	}
 
-	for (tmp = parv[1]; (nick = strtoken(&p, tmp, ",")); tmp = NULL)
+	strcpy(querybuf, parv[1]);
+
+	for (tmp = canonize(parv[1]); (nick = strtoken(&p, tmp, ",")); tmp = NULL)
 	{
 		unsigned char invis, showchannel, member, wilds, hideoper; /* <- these are all boolean-alike */
+
+		if (++cnt > MAXTARGETS)
+			break;
 
 		found = 0;
 		/* We do not support "WHOIS *" */
@@ -169,25 +175,27 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				    me.name, IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, sptr->name,
 				    sptr->user->username, sptr->user->realhost);
 			}
-
 			sendto_one(sptr, rpl_str(RPL_WHOISUSER), me.name,
 			    parv[0], name,
 			    user->username,
 			    IsHidden(acptr) ? user->virthost : user->realhost,
 			    acptr->info);
 
-			if (IsEyes(sptr) && IsOper(sptr))
+			if (IsOper(sptr))
 			{
+				char sno[512];
+				strcpy(sno, get_sno_str(acptr));
+				
 				/* send the target user's modes */
 				sendto_one(sptr, rpl_str(RPL_WHOISMODES),
 				    me.name, parv[0], name,
-				    get_mode_str(acptr));
+				    get_mode_str(acptr), sno[1] == 0 ? "" : sno);
 			}
-			if (IsHidden(acptr) && ((acptr == sptr) || IsAnOper(sptr))) 
+			if ((acptr == sptr) || IsAnOper(sptr))
 			{
 				sendto_one(sptr, rpl_str(RPL_WHOISHOST),
 				    me.name, parv[0], acptr->name,
-				    user->realhost);
+				    user->realhost, user->ip_str ? user->ip_str : "");
 			}
 
 			if (IsARegNick(acptr))
@@ -239,18 +247,15 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						&& IsAnOper(sptr))
 						*(buf + len++) = '!';
 					access = get_access(acptr, chptr);
-#ifndef PREFIX_AQ
-					if (access & CHFL_CHANOWNER)
-						*(buf + len++) = '*';
-					else if (access & CHFL_CHANPROT)
-						*(buf + len++) = '^';
-#else
+#ifdef PREFIX_AQ
 					if (access & CHFL_CHANOWNER)
 						*(buf + len++) = '~';
 					else if (access & CHFL_CHANPROT)
+
 						*(buf + len++) = '&';
+					else
 #endif
-					else if (access & CHFL_CHANOP)
+					if (access & CHFL_CHANOP)
 						*(buf + len++) = '@';
 					else if (access & CHFL_HALFOP)
 						*(buf + len++) = '%';
@@ -266,7 +271,8 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			}
 
 			if (buf[0] != '\0')
-				sendto_one(sptr, rpl_str(RPL_WHOISCHANNELS), me.name, parv[0], name, buf);
+				sendto_one(sptr, rpl_str(RPL_WHOISCHANNELS), me.name, parv[0], name, buf); 
+
                         if (!(IsULine(acptr) && !IsOper(sptr) && HIDE_ULINES))
 				sendto_one(sptr, rpl_str(RPL_WHOISSERVER),
 				    me.name, parv[0], name, user->server,
@@ -278,13 +284,14 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			/* makesure they aren't +H (we'll also check
 			   before we display a helpop or IRCD Coder msg)
 			   -- codemastr */
+
 			if ((IsAnOper(acptr) || IsServices(acptr)) && !hideoper)
 			{
 				buf[0] = '\0';
 				if (IsNetAdmin(acptr))
 					strlcat(buf, "a Network Administrator", sizeof buf);
 				else if (IsSAdmin(acptr))
-					strlcat(buf, "a Services Operator", sizeof buf);
+					strlcat(buf, "a Services Administrator", sizeof buf);
 				else if (IsAdmin(acptr) && !IsCoAdmin(acptr))
 					strlcat(buf, "a Server Administrator", sizeof buf);
 				else if (IsCoAdmin(acptr))
@@ -309,8 +316,8 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				sendto_one(sptr, rpl_str(RPL_WHOISBOT), me.name, parv[0], name, ircnetwork);
 
 			if (acptr->umodes & UMODE_SECURE)
-				sendto_one(sptr, ":%s %d %s %s :%s", me.name,
-				    RPL_WHOISSPECIAL, parv[0], name, "is a Secure Connection");
+				sendto_one(sptr, rpl_str(RPL_WHOISSECURE), me.name, parv[0], name,
+					"is using a Secure Connection");
 
 			if (!BadPtr(user->swhois) && !hideoper)
 					sendto_one(sptr, ":%s %d %s %s :%s",
@@ -331,10 +338,8 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (!found)
 			sendto_one(sptr, err_str(ERR_NOSUCHNICK),
 			    me.name, parv[0], nick);
-		if (p)
-			p[-1] = ',';
 	}
-	sendto_one(sptr, rpl_str(RPL_ENDOFWHOIS), me.name, parv[0], parv[1]);
+	sendto_one(sptr, rpl_str(RPL_ENDOFWHOIS), me.name, parv[0], querybuf);
 
 	return 0;
 }

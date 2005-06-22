@@ -80,6 +80,20 @@ DLLFUNC int MOD_UNLOAD(m_invite)(int module_unload)
 	return MOD_SUCCESS;
 }
 
+/* Send the user his/her list of active invites */
+int send_invite_list(aClient *sptr)
+{
+	Link *inv;
+
+	for (inv = sptr->user->invited; inv; inv = inv->next)
+	{
+		sendto_one(sptr, rpl_str(RPL_INVITELIST), me.name, sptr->name,
+			   inv->value.chptr->chname);	
+	}
+	sendto_one(sptr, rpl_str(RPL_ENDOFINVITELIST), me.name, sptr->name);
+	return 0;
+}
+
 /*
 ** m_invite
 **	parv[0] - sender prefix
@@ -92,7 +106,9 @@ DLLFUNC CMD_FUNC(m_invite)
         aChannel *chptr;
         short over = 0;
 
-        if (parc < 3 || *parv[1] == '\0')
+	if (parc == 1)
+		return send_invite_list(sptr);
+        else if (parc < 3 || *parv[1] == '\0')
         {
                 sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
                     me.name, parv[0], "INVITE");
@@ -193,6 +209,15 @@ DLLFUNC CMD_FUNC(m_invite)
                 }
         }
 
+		if (MyClient(sptr) && SPAMFILTER_VIRUSCHANDENY && SPAMFILTER_VIRUSCHAN &&
+		    !strcasecmp(chptr->chname, SPAMFILTER_VIRUSCHAN) &&
+		    !is_chan_op(sptr, chptr) && !IsAnOper(sptr) && !IsULine(sptr))
+		{
+			sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
+				me.name, parv[0], chptr->chname);
+			return -1;
+		}
+
         if (MyConnect(sptr))
         {
                 if (check_for_target_limit(sptr, acptr, acptr->name))
@@ -215,64 +240,9 @@ DLLFUNC CMD_FUNC(m_invite)
 
 
 	if (over && MyConnect(acptr)) {
-	        if (is_banned(sptr, chptr, BANCHK_JOIN))
-        	{
-                        sendto_snomask(SNO_EYES,
-                          "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +b).",
-                          sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
-
-			/* Logging implementation added by XeRXeS */
-			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Ban).",
-				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
-
-	        }
-        	else if (chptr->mode.mode & MODE_INVITEONLY)
+        	if ((chptr->mode.mode & MODE_ONLYSECURE) && !IsSecure(acptr))
 	        {
-                        sendto_snomask(SNO_EYES,
-                          "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +i).",
-                          sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
-
-                        /* Logging implementation added by XeRXeS */
-			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Invite Only)",
-				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
-
-	        }
-        	else if (chptr->mode.limit)
-	        {
-                        sendto_snomask(SNO_EYES,
-                          "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +l).",
-                          sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
-
-                        /* Logging implementation added by XeRXeS */
-			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Limit)",
-				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
-
-		}
-        	else if (chptr->mode.mode & MODE_RGSTRONLY)
-	        {
-                        sendto_snomask(SNO_EYES,
-                          "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +R).",
-                          sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
-
-                        /* Logging implementation added by XeRXeS */
-			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Reg Nicks Only)",
-				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
-
-	        }
-        	else if (*chptr->mode.key)
-	        {
-                        sendto_snomask(SNO_EYES,
-                          "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +k).",
-                          sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
-
-                        /* Logging implementation added by XeRXeS */
-			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Key)",
-				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
-
-	        }
-        	else if (chptr->mode.mode & MODE_ONLYSECURE)
-	        {
-                        sendto_snomask(SNO_EYES,
+                        sendto_snomask_global(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +z).",
                           sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
 
@@ -284,6 +254,61 @@ DLLFUNC CMD_FUNC(m_invite)
 					"you'll have to override explicitly after this invite with the command '/join %s override'"
 					" (use override as a key) this will set the channel -z and then join you",
 					me.name, sptr->name, chptr->chname);
+	        }
+	        else if (is_banned(sptr, chptr, BANCHK_JOIN))
+        	{
+                        sendto_snomask_global(SNO_EYES,
+                          "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +b).",
+                          sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
+			/* Logging implementation added by XeRXeS */
+			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Ban).",
+				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
+	        }
+        	else if (chptr->mode.mode & MODE_INVITEONLY)
+	        {
+                        sendto_snomask_global(SNO_EYES,
+                          "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +i).",
+                          sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
+                        /* Logging implementation added by XeRXeS */
+			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Invite Only)",
+				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
+	        }
+        	else if (chptr->mode.limit)
+	        {
+                        sendto_snomask_global(SNO_EYES,
+                          "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +l).",
+                          sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
+                        /* Logging implementation added by XeRXeS */
+			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Limit)",
+				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
+		}
+        	else if (chptr->mode.mode & MODE_RGSTRONLY)
+	        {
+                        sendto_snomask_global(SNO_EYES,
+                          "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +R).",
+                          sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
+                        /* Logging implementation added by XeRXeS */
+			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Reg Nicks Only)",
+				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
+	        }
+        	else if (*chptr->mode.key)
+	        {
+                        sendto_snomask_global(SNO_EYES,
+                          "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +k).",
+                          sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
+                        /* Logging implementation added by XeRXeS */
+			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Key)",
+				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
+
 	        }
 #ifdef OPEROVERRIDE_VERIFY
         	else if (chptr->mode.mode & MODE_SECRET || chptr->mode.mode & MODE_PRIVATE)
@@ -302,11 +327,11 @@ DLLFUNC CMD_FUNC(m_invite)
 		    )) {
 		        if (over == 1)
                 		sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-		                  ":%s NOTICE " CHANOPPFX "%s :OperOverride -- %s invited him/herself into the channel.",
+		                  ":%s NOTICE @%s :OperOverride -- %s invited him/herself into the channel.",
                 		  me.name, chptr->chname, sptr->name);
 		        else if (over == 0)
 		                sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-                		  ":%s NOTICE " CHANOPPFX "%s :%s invited %s into the channel.",
+                		  ":%s NOTICE @%s :%s invited %s into the channel.",
 		                  me.name, chptr->chname, sptr->name, acptr->name);
 
 		        add_invite(acptr, chptr);

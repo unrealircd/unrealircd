@@ -51,6 +51,9 @@ static ResRQ *last, *first;
 static void rem_cache(aCache *);
 static void rem_request(ResRQ *);
 static int do_query_name(Link *, char *, ResRQ *);
+/* revquery is used when looking up IP -> name -> IP to differentiate between
+ * IPv6 and IPv4, to make the proper request type --slePP */
+static int do_revquery_name(Link *, char *, ResRQ *, int is_ipv6_address);
 static int do_query_number(Link *, struct IN_ADDR *, ResRQ *);
 static void resend_query(ResRQ *);
 static int proc_answer(ResRQ *, HEADER *, char *, char *);
@@ -127,13 +130,28 @@ int init_resolver(int op)
 	if (op & RES_INITSOCK)
 	{
 		int  on = 0;
-
+		struct sockaddr_in sa; /* TODO: IPv6 */
+		
 #ifdef INET6
 		/* still IPv4 */
 		ret = resfd = socket(AF_INET, SOCK_DGRAM, 0);
 #else
 		ret = resfd = socket(AF_INET, SOCK_DGRAM, 0);
 #endif
+
+		/* TODO: IPv6 */
+		/* for FreeBSD jail we need to bind() explicitly.. */
+		bzero(&sa, sizeof(sa));
+		sa.sin_family = AF_INET;
+		sa.sin_port = 0;
+		if (!DNS_BINDIP || !strcmp(DNS_BINDIP, "*"))
+			sa.sin_addr.s_addr = INADDR_ANY;
+		else
+			sa.sin_addr.s_addr = inet_addr(DNS_BINDIP);
+		if (bind(resfd, (struct sockaddr *) &sa, sizeof(sa)))
+			ircd_log(LOG_ERROR, "resolver socket: error while bind()'ing to %s",
+				(DNS_BINDIP || !strcmp(DNS_BINDIP, "*")) ? "ANY" : DNS_BINDIP);
+
 		(void)setsockopt(ret, SOL_SOCKET, SO_BROADCAST, &on, on);
 	}
 #ifdef DEBUGMODE
@@ -304,6 +322,19 @@ void del_queries(char *cp)
 	}
 }
 
+void del_async_connects(void)
+{
+ResRQ *rptr, *r2ptr;
+
+	for (rptr = first; rptr; rptr = r2ptr)
+	{
+		r2ptr = rptr->next;
+		if (rptr->cinfo.flags == ASYNC_CONNECT)
+			rem_request(rptr);
+	}
+}
+
+
 /*
  * sends msg to all nameservers found in the "ircd_res" structure.
  * This should reflect /etc/resolv.conf. We will get responses
@@ -374,7 +405,7 @@ static int send_res_msg(char *msg, int len, int rcount)
 #endif
 
 		{
-			Debug((DEBUG_DNS, "send_res_msg, errno = %s",strerror(ERRNO)));
+			Debug((DEBUG_DNS, "send_res_msg, errno = %s",STRERROR(ERRNO)));
 			reinfo.re_sent++;
 			sent++;
 		}
@@ -399,6 +430,7 @@ static ResRQ *find_id(int id)
 	return rptr;
 }
 
+/* As of 2004-10-08 gethost_byname() is only used for outgoing connects to servers */
 struct hostent *gethost_byname(char *name, Link *lp)
 {
 	aCache *cp;
@@ -409,6 +441,20 @@ struct hostent *gethost_byname(char *name, Link *lp)
 	if (!lp)
 		return NULL;
 	(void)do_query_name(lp, name, NULL);
+	return NULL;
+}
+
+/* This is identical to gethost_byname, except it includes is_ipv6_address
+ * See do_revquery_name() */
+struct hostent *gethost_byname_revquery(char *name, Link *lp, int is_ipv6_address)
+{
+	aCache *cp;
+	reinfo.re_na_look++;
+	if ((cp = find_cache_name(name)))
+		return (struct hostent *)&(cp->he);
+	if (!lp)
+		return NULL;
+	(void)do_revquery_name(lp, name, NULL, is_ipv6_address);
 	return NULL;
 }
 
@@ -425,20 +471,19 @@ struct hostent *gethost_byaddr(char *addr, Link *lp)
 	return NULL;
 }
 
+/* [2004-10-08/Syzop] used for outgoing connects to servers and
+ * also for repeated normal requests (in which case rptr is non-NULL).
+ */
 static int do_query_name(Link *lp, char *name, ResRQ *rptr)
 {
-	char hname[HOSTLEN + 1];
-	int  len;
+char hname[HOSTLEN + 1];
 
-	strncpyzt(hname, name, sizeof(hname));
-	len = strlen(hname);
+	strlcpy(hname, name, sizeof(hname));
 
 	if (rptr && !index(hname, '.') && ircd_res.options & RES_DEFNAMES)
 	{
-		(void)strncat(hname, dot, sizeof(hname) - len - 1);
-		len++;
-		(void)strncat(hname, ircd_res.defdname,
-		    sizeof(hname) - len - 1);
+		strlcat(hname, dot, sizeof(hname));
+		strlcat(hname, ircd_res.defdname, sizeof(hname));
 	}
 
 	/*
@@ -449,19 +494,57 @@ static int do_query_name(Link *lp, char *name, ResRQ *rptr)
 	{
 		rptr = make_request(lp);
 #ifdef INET6
-		rptr->type = T_ANY; /* Was T_AAAA: now using T_ANY so we fetch both A and AAAA -- Syzop */
+		rptr->type = T_AAAA; /* outgoing connect: try AAAA first, then A later */
 #else
 		rptr->type = T_A;
 #endif
-		rptr->name = (char *)MyMalloc(strlen(name) + 1);
-		(void)strcpy(rptr->name, name);
+		rptr->name = strdup(name);
 	}
 	Debug((DEBUG_DNS, "do_query_name(): %s ", hname));
-#ifdef INET6
-	return (query_name(hname, C_IN, T_ANY, rptr)); /* Was T_AAAA: now using T_ANY so we fetch both A and AAAA -- Syzop */
-#else
-	return (query_name(hname, C_IN, T_A, rptr));
-#endif
+
+	/* We used 'type' here instead of 'rptr->type', but I don't see
+	 * any reason not to use the latter. -- Syzop, 2004-10-08
+	 */
+	return (query_name(hname, C_IN, rptr->type, rptr));
+}
+
+/* If is_ipv6_address is set, look for AAAA records, if not,
+ * go looking for A records. This fixes a bug when talking to
+ * servers that do not provide any non-authoritative information
+ * to an ANY query (ie. dnscache). --slePP */
+static int do_revquery_name(Link *lp, char *name, ResRQ *rptr, int is_ipv6_address)
+{
+char hname[HOSTLEN + 1];
+
+	Debug((DEBUG_DNS, "do_revquery_name: looking for %s", (is_ipv6_address?"IPv6":"IPv4")));
+
+	strncpyzt(hname, name, sizeof(hname));
+
+	if (rptr && !index(hname, '.') && ircd_res.options & RES_DEFNAMES)
+	{
+		strlcat(hname, dot, sizeof(hname));
+		strlcat(hname, ircd_res.defdname, sizeof(hname));
+	}
+
+	/*
+	 * Store the name passed as the one to lookup and generate other host
+	 * names to pass onto the nameserver(s) for lookups.
+	 */
+	if (!rptr)
+	{
+		rptr = make_request(lp);
+		if(is_ipv6_address)
+			rptr->type = T_AAAA;
+		else
+			rptr->type = T_A;
+		rptr->name = strdup(name);
+	}
+	Debug((DEBUG_DNS, "do_revquery_name(): %s ", hname));
+
+	if(is_ipv6_address)
+		return (query_name(hname, C_IN, T_AAAA, rptr));
+	else
+		return (query_name(hname, C_IN, T_A, rptr));
 }
 
 /*
@@ -540,7 +623,6 @@ static int do_query_number(Link *lp, struct IN_ADDR *numb, ResRQ *rptr)
  */
 static int query_name(char *name, int class, int type, ResRQ *rptr)
 {
-	struct timeval tv;
 	char buf[MAXPACKET];
 	int  r, s;
 	HEADER *hptr;
@@ -554,6 +636,7 @@ static int query_name(char *name, int class, int type, ResRQ *rptr)
 		return r;
 	}
 	hptr = (HEADER *) buf;
+        hptr->rd = 1;
 	do
 	{
 		hptr->id = htons(getrandom16());
@@ -680,6 +763,29 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 				cp += dlen;
 				break;
 			}
+			/* make sure the A/AAAA record we get belongs
+			 * to the name we are actually processing.
+			 * This is needed against crazy servers that return:
+			 * requestedname CNAME somename
+			 * requestedname A 1.2.3.4
+			 * somename A 1.1.1.1
+			 * Which would screw our cache up.
+			 * We store 'somename' as soon as we get a CNAME,
+			 * and then we make sure our A/AAAA records belong to this
+			 * stored name. I hope that's correct. -- Syzop
+			 */
+			if (hp->h_name && strcasecmp(hp->h_name, hostbuf))
+			{
+				Debug((DEBUG_DNS, "Expected A record for '%s', got one for '%s' -- ignored",
+					hp->h_name, hostbuf));
+#ifdef DEBUGMODE
+				ircd_log(LOG_ERROR, "[DNS/Syzop] Expected A record for '%s', got one for '%s' -- ignored",
+					hp->h_name, hostbuf);
+#endif
+				cp += dlen;
+				break;
+			}
+			
 			  hp->h_length = dlen;
 			  if (ans == 1)
 				  hp->h_addrtype = (class == C_IN) ?
@@ -755,9 +861,40 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 				  return -1;	/* a break would be enough here */
 			  if (alias >= &(hp->h_aliases[MAXALIASES - 1]))
 				  break;
-			  *alias = (char *)MyMalloc(len + 1);
-			  (void)strlcpy(*alias++, hostbuf, len+1);
-			  *alias = NULL;
+			  if (len < HOSTLEN)
+			  {
+			      *alias = (char *)MyMalloc(len + 1);
+			      (void)strlcpy(*alias++, hostbuf, len+1);
+			      *alias = NULL;
+			  } else {
+			      Debug((DEBUG_INFO, "CNAME '%s' too long %d >= %d",
+			            hostbuf, len, HOSTLEN));
+			  }
+			  if (!hp->h_name)
+			  {
+			      char cname_dest[HOSTLEN];
+				  /* If we got a CNAME, so: orig CNAME dest, then our
+				   * request got changed to 'dest', so we have to set h_name
+				   * here to that.. -- Syzop
+				   */
+				  /* need to expand 'dest' here... will use 'cname_dest' for storage.. */
+				  cp -= dlen;
+				  if ((n = ircd_dn_expand((u_char *)buf, (u_char *)eob,
+				      (u_char *)cp, cname_dest, sizeof(cname_dest))) < 0)
+				  {
+				      /* hmm.. this is not really friendly, is this ok? */
+					  Debug((DEBUG_INFO, "Expanding of CNAME failed!"));
+					  cp = NULL;
+					  break;
+				  }
+				  cp += dlen;
+				  /* no length check needed, assured by ircd_dn_expand() to
+				   * be sizeof(cname_dest) which is HOSTLEN, thus the name
+				   * will be at max HOSTLEN-1.
+				   */
+				  hp->h_name = strdup(cname_dest);
+				  Debug((DEBUG_INFO, "Our request got changed to '%s'", cname_dest));
+			  }
 			  ans++;
 			  break;
 		  default:
@@ -900,6 +1037,7 @@ struct hostent *get_res(char *lp)
 	if (a > 0 && rptr->type == T_PTR)
 	{
 		struct hostent *hp2 = NULL;
+		int is_ipv6_address = 0;
 
 		if (BadPtr(rptr->he.h_name))	/* Kludge!      960907/Vesa */
 			goto getres_err;
@@ -913,7 +1051,11 @@ struct hostent *get_res(char *lp)
 		 * type we automatically gain the use of the cache with no
 		 * extra kludges.
 		 */
-		if ((hp2 = gethost_byname(rptr->he.h_name, &rptr->cinfo)))
+		/* We add this IPv6 check to query for T_AAAA or T_A respectively.
+		 * djbdns/dnscache doesn't return A or AAAA to a T_ANY (as it should)
+		 * --slePP */
+		is_ipv6_address = (strchr(Inet_ia2p((struct IN_ADDR *)&rptr->he.h_addr), ':') != NULL);
+		if ((hp2 = gethost_byname_revquery(rptr->he.h_name, &rptr->cinfo, is_ipv6_address)))
 			if (lp)
 				bcopy((char *)&rptr->cinfo, lp, sizeof(Link));
 		/*
@@ -1204,7 +1346,7 @@ static void update_list(ResRQ *rptr, aCache *cachep)
 #ifdef	DEBUGMODE
  #ifdef INET6
 			Debug((DEBUG_DNS, "u_l:add IP %s hal %x ac %d",
-				inet_ntop(((struct IN_ADDR *)s), mydummy,
+				inet_ntop(AF_INET6, ((struct IN_ADDR *)s), mydummy,
 				          MYDUMMY_SIZE),
 				HE(cp)->h_addr_list, addrcount));
  #else
@@ -1662,6 +1804,13 @@ int m_dns(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_one(sptr, "NOTICE %s :retrans=%d s, retry=%d times", sptr->name, ircd_res.retrans, ircd_res.retry);
 		sendto_one(sptr, "NOTICE %s :Default domain name: %s", sptr->name, ircd_res.defdname);
 		sendto_one(sptr, "NOTICE %s :End of info.", sptr->name);
+		return 2;
+	}
+	if (parv[1] && *parv[1] == 'c')
+	{
+		flush_cache();
+		sendto_realops("%s cleared the DNS cache", sptr->name);
+		sendto_one(sptr, "NOTICE %s :DNS cache cleared", sptr->name);
 		return 2;
 	}
 	sendto_one(sptr, "NOTICE %s :Ca %d Cd %d Ce %d Cl %d Ch %d:%d Cu %d",

@@ -166,15 +166,16 @@ else {\
 	sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", sptr->name, chptr->chname,\
 		modebuf, parabuf);\
 	strcpy(parabuf,param);\
-	modebuf[0] = '+';\
+	/* modebuf[0] should stay what it was ('+' or '-') */ \
 	modebuf[1] = mode;\
 	modebuf[2] = '\0';\
 	b = 2;\
 }
-#define Addsingle(x) modebuf[b] = x; b++; modebuf[b] = '\0'
-#define CheckStatus(x,y) if (modeflags & (y)) { Addit((x), nick); }
-#define AddBan(x) strlcat(banbuf, x, sizeof banbuf); strlcat(banbuf, " ", sizeof banbuf);
-#define AddEx(x) strlcat(exbuf, x, sizeof exbuf); strlcat(exbuf, " ", sizeof banbuf);
+#define Addsingle(x) do { modebuf[b] = x; b++; modebuf[b] = '\0'; } while(0)
+#define CheckStatus(x,y) do { if (modeflags & (y)) { Addit((x), nick); } } while(0)
+#define AddBan(x) do { strlcat(banbuf, x, sizeof banbuf); strlcat(banbuf, " ", sizeof banbuf); } while(0)
+#define AddEx(x) do { strlcat(exbuf, x, sizeof exbuf); strlcat(exbuf, " ", sizeof exbuf); } while(0)
+#define AddInvex(x) do { strlcat(invexbuf, x, sizeof invexbuf); strlcat(invexbuf, " ", sizeof invexbuf); } while(0)
 
 CMD_FUNC(m_sjoin)
 {
@@ -184,9 +185,13 @@ CMD_FUNC(m_sjoin)
 	unsigned short removetheirs;
 	unsigned short merge;	/* same timestamp */
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
-	char paraback[1024], modeback[1024];
+	char paraback[1024];
+#ifndef NEWCHFLOODPROT
+	char modeback[1024];
+#endif
 	char banbuf[1024];
 	char exbuf[1024];
+	char invexbuf[1024];
 	char cbuf[1024];
 	char buf[1024];
 	char nick[NICKLEN + 1];
@@ -204,6 +209,8 @@ CMD_FUNC(m_sjoin)
 	 char *s0 = NULL;
 	long modeflags;
 	Ban *ban=NULL;
+	char queue_s=0, queue_c=0; /* oh this is soooooo ugly :p */
+	
 	if (IsClient(sptr) || parc < 3 || !IsServer(sptr))
 		return 0;
 
@@ -267,6 +274,7 @@ CMD_FUNC(m_sjoin)
 	modebuf[1] = '\0';
 	banbuf[0] = '\0';
 	exbuf[0] = '\0';
+	invexbuf[0] = '\0';
 	channel_modes(cptr, modebuf, parabuf, chptr);
 	if (removeours)
 	{
@@ -306,6 +314,15 @@ CMD_FUNC(m_sjoin)
 			ban = chptr->exlist;
 			Addit('e', ban->banstr);
 			chptr->exlist = ban->next;
+			MyFree(ban->banstr);
+			MyFree(ban->who);
+			free_ban(ban);
+		}
+		while(chptr->invexlist)
+		{
+			ban = chptr->invexlist;
+			Addit('I', ban->banstr);
+			chptr->invexlist = ban->next;
 			MyFree(ban->banstr);
 			MyFree(ban->who);
 			free_ban(ban);
@@ -379,7 +396,7 @@ CMD_FUNC(m_sjoin)
 		while (
 		    (*tp == '@') || (*tp == '+') || (*tp == '%')
 		    || (*tp == '*') || (*tp == '~') || (*tp == '&')
-		    || (*tp == '"'))
+		    || (*tp == '"') || (*tp == '\''))
 		{
 			switch (*(tp++))
 			{
@@ -399,10 +416,15 @@ CMD_FUNC(m_sjoin)
 				  modeflags |= CHFL_CHANPROT;
 				  break;
 			  case '&':
-				  modeflags |= CHFL_BAN;					  goto getnick;
+				  modeflags |= CHFL_BAN;				
+				  goto getnick;
 				  break;
 			  case '"':
 				  modeflags |= CHFL_EXCEPT;
+				  goto getnick;
+				  break;
+			  case '\'':
+				  modeflags |= CHFL_INVEX;
 				  goto getnick;
 				  break;
 			}
@@ -417,8 +439,7 @@ CMD_FUNC(m_sjoin)
 		if (nick[0] == '\0')
 			continue;
 		Debug((DEBUG_DEBUG, "Got nick: %s", nick));
-		if (!(modeflags & CHFL_BAN)
-		    && !(modeflags & CHFL_EXCEPT))
+		if (!(modeflags & CHFL_BAN) && !(modeflags & CHFL_EXCEPT) && !(modeflags & CHFL_INVEX))
 		{
 			if (!(acptr = find_person(nick, NULL)))
 			{
@@ -472,6 +493,7 @@ CMD_FUNC(m_sjoin)
 #endif
 			} else {
 				add_user_to_channel(chptr, acptr, modeflags);
+				RunHook4(HOOKTYPE_REMOTE_JOIN, cptr, acptr, chptr, NULL);
 				if (chptr->mode.mode & MODE_AUDITORIUM)
 				{
 					if (modeflags & (CHFL_CHANOP|CHFL_CHANPROT|CHFL_CHANOWNER))
@@ -500,7 +522,7 @@ CMD_FUNC(m_sjoin)
 				continue;
 			if (modeflags & CHFL_BAN)
 			{
-				f = add_banid(sptr, chptr, nick);
+				f = add_listmode(&chptr->banlist, sptr, chptr, nick);
 				if (f != -1)
 				{
 					Addit('b', nick);
@@ -509,14 +531,26 @@ CMD_FUNC(m_sjoin)
 			}
 			if (modeflags & CHFL_EXCEPT)
 			{
-				f = add_exbanid(sptr, chptr, nick);
+				f = add_listmode(&chptr->exlist, sptr, chptr, nick);
 				if (f != -1)
 				{
 					Addit('e', nick);
 					AddEx(nick);
 				}
 			}
+			if (modeflags & CHFL_INVEX)
+			{
+
+				f = add_listmode(&chptr->invexlist, sptr, chptr, nick);
+				if (f != -1)
+				{
+					Addit('I', nick);
+					AddInvex(nick);
+				}
+			}
 		}
+docontinue:
+		continue;
 	}
 
 	if (modebuf[1])
@@ -636,6 +670,23 @@ CMD_FUNC(m_sjoin)
 			}
 		}
 #endif
+		/* Check if we had +s and it became +p, then revert it... */
+		if ((oldmode.mode & MODE_SECRET) && (chptr->mode.mode & MODE_PRIVATE))
+		{
+			/* stay +s ! */
+			chptr->mode.mode &= ~MODE_PRIVATE;
+			chptr->mode.mode |= MODE_SECRET;
+			Addsingle('p'); /* - */
+			queue_s = 1;
+		}
+		/* Check if we had +c and it became +S, then revert it... */
+		if ((oldmode.mode & MODE_NOCOLOR) && (chptr->mode.mode & MODE_STRIP))
+		{
+			chptr->mode.mode &= ~MODE_STRIP;
+			chptr->mode.mode |= MODE_NOCOLOR;
+			Addsingle('S'); /* - */
+			queue_c = 1;
+		}
 		/* Add single char modes... */
 		for (acp = cFlagTab; acp->mode; acp++)
 		{
@@ -654,6 +705,10 @@ CMD_FUNC(m_sjoin)
 			strlcpy(modebuf, "+", sizeof modebuf);
 			b = 1;
 		}
+		if (queue_s)
+			Addsingle('s');
+		if (queue_c)
+			Addsingle('c');
 		for (acp = cFlagTab; acp->mode; acp++)
 		{
 			if (!(oldmode.mode & acp->mode) &&

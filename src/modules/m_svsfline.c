@@ -97,7 +97,7 @@ DLLFUNC CMD_FUNC(m_svsfline)
 		  if (parc < 4)
 			  return 0;
 		  if (!Find_deny_dcc(parv[2]))
-			  DCCdeny_add(parv[2], parv[3], CONF_BAN_TYPE_AKILL);
+			  DCCdeny_add(parv[2], parv[3], DCCDENY_HARD, CONF_BAN_TYPE_AKILL);
 		  if (IsULine(sptr))
 			  sendto_serv_butone_token(cptr,
 			      sptr->name,

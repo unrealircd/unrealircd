@@ -25,6 +25,7 @@
  * XeRXeS
  */
 
+#include "macros.h"
 #include "config.h"
 #include "struct.h"
 #include "common.h"
@@ -106,56 +107,43 @@ DLLFUNC int MOD_UNLOAD(m_chgident)(int module_unload)
 
 int m_chgident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	aClient *acptr;
-	char *s;
-	int  legalident = 1;
+aClient *acptr;
+char *s;
+int  legalident = 1;
+
+	if (MyClient(sptr) && !IsAnOper(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		return 0;
+	}
+
 
 #ifdef DISABLE_USERMOD
 	if (MyClient(sptr))
 	{
-		sendto_one(sptr, ":%s NOTICE %s :*** The /chgident command is disabled on this server", me.name, sptr->name);
+		sendto_one(sptr, err_str(ERR_DISABLED), me.name, sptr->name, "CHGIDENT",
+			"This command is disabled on this server");
 		return 0;
 	}
 #endif
 
-	if (MyClient(sptr))
-		if (!IsAnOper(sptr))
-		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			    parv[0]);
-			return 0;
-
-		}
-
-	if (parc < 3)
+	if ((parc < 3) || !*parv[2])
 	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** /ChgIdent syntax is /ChgIdent <nick> <newident>",
-		    me.name, sptr->name);
-		return 0;
-	}
-
-	if (strlen(parv[2]) < 1)
-	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** Write atleast something to change the ident to!",
-		    me.name, sptr->name);
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "CHGIDENT");
 		return 0;
 	}
 
 	if (strlen(parv[2]) > (USERLEN))
 	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** ChgIdent Error: Too long ident!!",
-		    me.name, sptr->name);
+		sendnotice(sptr, "*** ChgIdent Error: Requested ident too long -- rejected.");
 		return 0;
 	}
 
 	/* illegal?! */
 	for (s = parv[2]; *s; s++)
 	{
-                if ((*s == '~') && (s == parv[2]))
-                        continue;
+		if ((*s == '~') && (s == parv[2]))
+			continue;
 		if (!isallowed(*s))
 		{
 			legalident = 0;
@@ -164,20 +152,21 @@ int m_chgident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (legalident == 0)
 	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** /ChgIdent Error: A ident may contain a-z, A-Z, 0-9, '-' & '.' - Please only use them",
-		    me.name, parv[0]);
+		sendnotice(sptr, "*** /ChgIdent Error: A ident may contain a-z, A-Z, 0-9, '-' & '.' - Please only use them");
 		return 0;
 	}
 
 	if ((acptr = find_person(parv[1], NULL)))
 	{
+		DYN_LOCAL(char, did_parts, acptr->user->joined);
 		switch (UHOST_ALLOWED)
 		{
 			case UHALLOW_NEVER:
 				if (MyClient(sptr))
 				{
-					sendto_one(sptr, ":%s NOTICE %s :*** /ChgIdent is disabled", me.name, sptr->name);
+					sendto_one(sptr, err_str(ERR_DISABLED), me.name, sptr->name, "CHGIDENT",
+						"This command is disabled on this server");
+					DYN_FREE(did_parts);
 					return 0;
 				}
 				break;
@@ -186,12 +175,13 @@ int m_chgident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			case UHALLOW_NOCHANS:
 				if (IsPerson(acptr) && MyClient(sptr) && acptr->user->joined)
 				{
-					sendto_one(sptr, ":%s NOTICE %s :*** /ChgIdent can not be used while %s is on a channel", me.name, sptr->name, acptr->name);
+					sendnotice(sptr, "*** /ChgIdent can not be used while %s is on a channel", acptr->name);
+					DYN_FREE(did_parts);
 					return 0;
 				}
 				break;
 			case UHALLOW_REJOIN:
-				rejoin_doparts(acptr);
+				rejoin_doparts(acptr, did_parts);
 				/* join sent later when the ident has been changed */
 				break;
 		}
@@ -201,13 +191,13 @@ int m_chgident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    "%s changed the virtual ident of %s (%s@%s) to be %s",
 			    sptr->name, acptr->name, acptr->user->username,
 			    GetHost(acptr), parv[2]);
+			/* Logging ability added by XeRXeS */
+			ircd_log(LOG_CHGCMDS,
+				"CHGIDENT: %s changed the virtual ident of %s (%s@%s) to be %s",
+				sptr->name, acptr->name, acptr->user->username,    
+				GetHost(acptr), parv[2]);
 		}
 
-		/* Logging ability added by XeRXeS */
-		ircd_log(LOG_CHGCMDS,
-		"CHGIDENT: %s changed the virtual ident of %s (%s@%s) to be %s",
-		sptr->name, acptr->name, acptr->user->username,    
-		GetHost(acptr), parv[2]);
 
 
 		sendto_serv_butone_token(cptr, sptr->name,
@@ -215,7 +205,8 @@ int m_chgident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    TOK_CHGIDENT, "%s %s", acptr->name, parv[2]);
 		ircsprintf(acptr->user->username, "%s", parv[2]);
 		if (UHOST_ALLOWED == UHALLOW_REJOIN)
-			rejoin_dojoinandmode(acptr);
+			rejoin_dojoinandmode(acptr, did_parts);
+		DYN_FREE(did_parts);
 		return 0;
 	}
 	else

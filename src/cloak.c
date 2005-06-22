@@ -33,18 +33,6 @@ static char sccxid[] = "@(#)cloak.c		9.00 7/12/99 UnrealIRCd";
 #include <string.h>
 #include "h.h"
 
-#undef KEY
-#undef KEY2
-#undef KEY3
-#define KEY CLOAK_KEY1
-#define KEY2 CLOAK_KEY2
-#define KEY3 CLOAK_KEY3
-
-#define POW_8 256L
-#define POW_16 65536L
-#define POW_32 4294967296L
-
-
 /* The implementation here was originally done by Gary S. Brown.  I have
    borrowed the tables directly, and made some minor changes to the
    crc32-function (including changing the interface). //ylo */
@@ -161,134 +149,22 @@ unsigned long our_crc32(const unsigned char *s, unsigned int len)
   return crc32val;
 }
 
-char *hidehost(char *rhost)
-{
-	static char	cloaked[512];
-	static char	h1[512];
-	static char	h2[4][4];
-	static char	h3[300];
-	char		*host;
-	unsigned long		l[8];
-	int		i;
-	char		*p, *q;
-
-	host = MyMalloc(strlen(rhost)+1);
-	q = host;
-	for (p = rhost; *p; p++, q++) {
-		*q = tolower(*p);
-	}
-	*q = '\0';
-	/* Find out what kind of host we're dealing with here */
-	/* IPv6 ? */	
-	if (strchr(host, ':'))
-	{
-		/* Do IPv6 cloaking here */
-		/* FIXME: what the hell to do with :FFFF:192.168.1.5? 
-		*/
-		/*
-		 * a:b:c:d:e:f:g:h
-		 * 
-		 * crc(a.b.c.d)
-		 * crc(a.b.c.d.e.f.g)
-		 * crc(a.b.c.d.e.f.g.h)
-		 */
-		sscanf(host, "%lx:%lx:%lx:%lx:%lx:%lx:%lx:%lx",
-		         &l[0], &l[1], &l[2], &l[3],
-		         &l[4], &l[5], &l[6], &l[7]);
-		ircsprintf(h3, "%lx:%lx:%lx:%lx",
-			l[0], l[1], l[2], l[3]);
-		l[0] = our_crc32(h3, strlen(h3));
-		ircsprintf(h3, "%lx:%lx:%lx:%lx:%lx:%lx:%lx",
-			l[0], l[1], l[2], l[3],
-			l[4], l[5], l[6]);
-		l[1] = our_crc32(h3, strlen(h3));
-		l[2] = our_crc32(host, strlen(host));
-		for (i = 0; i <= 2; i++)
-		{
-			l[i] = ((l[i] + KEY2) ^ KEY) + KEY3;
-			l[i] &= 0x3FFFFFFF;
-	        }
-		ircsprintf(cloaked, "%lx:%lx:%lx:IP",
-			l[2], l[1], l[0]);
-		free(host);
-		return cloaked;
-	}
-	/* Is this a IPv4 IP? */
-	for (p = host; *p; p++)
-	{
-		if (!isdigit(*p) && !(*p == '.'))
-		{
-				break;
-		}
-	}
-	if (!(*p))
-	{	
-		/* Do IPv4 cloaking here */
-		strlcpy(h1, host, sizeof h1);
-		i = 0;
-		for (i = 0, p = strtok(h1, "."); p && (i <= 3); p = strtok(NULL, "."), i++)
-		{
-			strncpy(h2[i], p, 4);			
-		}
-		ircsprintf(h3, "%s.%s", h2[0], h2[1]);
-		l[0] = ((our_crc32(h3, strlen(h3)) + KEY) ^ KEY2) + KEY3;
-		ircsprintf(h3, "%s.%s.%s", h2[0], h2[1], h2[2]);		
-		l[1] = ((KEY2 ^ our_crc32(h3, strlen(h3))) + KEY3) ^ KEY;
-		l[4] = our_crc32(host, strlen(host));
-		l[2] = ((l[4] + KEY3) ^ KEY) + KEY2;
-		l[2] &= 0x3FFFFFFF;
-		l[0] &= 0x7FFFFFFF;
-		l[1] &= 0xFFFFFFFF;
-		snprintf(cloaked, sizeof cloaked, "%lX.%lX.%lX.IP", l[2], l[1], l[0]);
-		free(host);
-		return cloaked;
-	}
-	else
-	{
-		/* Normal host cloaking here
-		 *
-		 * Find first .<alpha>
-		*/
-		for (p = rhost; *p; p++)
-		{
-			if (*p == '.')
-			{
-				if (isalpha(*(p + 1)))
-					break;
-			}
-		}
-		l[0] = ((our_crc32(host, strlen(host)) ^ KEY2) + KEY) ^ KEY3;
-		l[0] &= 0x3FFFFFFF;
-		if (*p) {
-			int len;
-			p++;
-			snprintf(cloaked, sizeof cloaked, "%s-%lX.", hidden_host, l[0]);
-			len = strlen(cloaked) + strlen(p);
-			if (len <= HOSTLEN)
-				strcat(cloaked, p);
-			else
-				strcat(cloaked, p + (len - HOSTLEN));
-		}
-		else
-			snprintf(cloaked, sizeof cloaked, "%s-%lX", hidden_host, l[0]);
-		free(host);
-		return cloaked;
-	}
-	/* Couldn't cloak, -WTF? */
-	free(host);
-	return NULL;
-}
-
-/* Regular user host */
 /* mode = 0, just use strncpyzt, 1 = Realloc new and return new pointer */
 char *make_virthost(char *curr, char *new, int mode)
 {
-	char *mask;
-	char *x;
-	if (curr == NULL)
-		return (char *)NULL;
+char host[256], *mask, *x, *p, *q;
 
-	mask = hidehost(curr);
+	if (!curr)
+		return NULL;
+
+	/* Convert host to lowercase and cut off at 255 bytes just to be sure */
+	for (p = curr, q = host; *p && (q < host+sizeof(host)-1); p++, q++)
+		*q =  tolower(*p);
+	*q = '\0';
+
+	/* Call the cloaking layer */
+	mask = RCallbacks[CALLBACKTYPE_CLOAK]->func.pcharfunc(host);
+
 	if (mode == 0)
 	{
 		strncpyzt(new, mask, HOSTLEN);	/* */

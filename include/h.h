@@ -25,28 +25,29 @@
  * Most of the externs and prototypes thrown in here to 'cleanup' things.
  * -avalon
  */
+#include "setup.h"
 #ifndef NO_FDLIST
 #include "fdlist.h"
 #endif
-extern char *extraflags;
-extern int tainted;
+extern MODVAR char *extraflags;
+extern MODVAR int tainted;
 /* for the new s_err.c */
 extern char *getreply(int);
 #define rpl_str(x) getreply(x)
 #define err_str(x) getreply(x)
-extern Member *freemember;
-extern Membership *freemembership;
-extern MembershipL *freemembershipL;
-extern TS nextconnect, nextdnscheck, nextping;
-extern aClient *client, me, *local[];
-extern aChannel *channel;
-extern struct stats *ircstp;
-extern int bootopt;
-extern time_t TSoffset;
+extern MODVAR Member *freemember;
+extern MODVAR Membership *freemembership;
+extern MODVAR MembershipL *freemembershipL;
+extern MODVAR TS nextconnect, nextdnscheck, nextping;
+extern MODVAR aClient *client, me, *local[];
+extern MODVAR aChannel *channel;
+extern MODVAR struct stats *ircstp;
+extern MODVAR int bootopt;
+extern MODVAR time_t TSoffset;
 /* Prototype added to force errors -- Barubary */
 extern TS check_pings(TS now);
 extern TS TS2ts(char *s);
-extern time_t timeofday;
+extern MODVAR time_t timeofday;
 /* newconf */
 #define get_sendq(x) ((x)->class ? (x)->class->sendq : MAXSENDQLENGTH) 
 /* get_recvq is only called in send.c for local connections */
@@ -55,53 +56,53 @@ extern time_t timeofday;
 #define CMD_FUNC(x) int (x) (aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 #ifndef NO_FDLIST
-extern float currentrate;
-extern float currentrate2;		/* outgoing */
-extern float highest_rate;
-extern float highest_rate2;
-extern int  lifesux;
-extern int  LRV;
-extern time_t   LCF;
-extern int  currlife;
-extern int  HTMLOCK;
-extern int  noisy_htm;
-extern long lastsendK, lastrecvK;
+extern MODVAR float currentrate;
+extern MODVAR float currentrate2;		/* outgoing */
+extern MODVAR float highest_rate;
+extern MODVAR float highest_rate2;
+extern MODVAR int  lifesux;
+extern MODVAR int  LRV;
+extern MODVAR time_t   LCF;
+extern MODVAR int  currlife;
+extern MODVAR int  HTMLOCK;
+extern MODVAR int  noisy_htm;
+extern MODVAR long lastsendK, lastrecvK;
 #endif
 
 /*
  * Configuration linked lists
 */
-extern ConfigItem_me		*conf_me;
-extern ConfigItem_class 	*conf_class;
-extern ConfigItem_class		*default_class;
-extern ConfigItem_admin 	*conf_admin;
-extern ConfigItem_admin		*conf_admin_tail;
-extern ConfigItem_drpass	*conf_drpass;
-extern ConfigItem_ulines	*conf_ulines;
-extern ConfigItem_tld		*conf_tld;
-extern ConfigItem_oper		*conf_oper;
-extern ConfigItem_listen	*conf_listen;
-extern ConfigItem_allow		*conf_allow;
-extern ConfigItem_except	*conf_except;
-extern ConfigItem_vhost		*conf_vhost;
-extern ConfigItem_link		*conf_link;
-extern ConfigItem_ban		*conf_ban;
-extern ConfigItem_badword	*conf_badword_channel;
-extern ConfigItem_badword       *conf_badword_message;
-extern ConfigItem_badword	*conf_badword_quit;
-extern ConfigItem_deny_dcc	*conf_deny_dcc;
-extern ConfigItem_deny_channel  *conf_deny_channel;
-extern ConfigItem_deny_link	*conf_deny_link;
-extern ConfigItem_allow_channel *conf_allow_channel;
-extern ConfigItem_deny_version	*conf_deny_version;
-extern ConfigItem_log		*conf_log;
-extern ConfigItem_alias		*conf_alias;
-extern ConfigItem_include	*conf_include;
-extern ConfigItem_help		*conf_help;
-extern ConfigItem_offchans	*conf_offchans;
+extern MODVAR ConfigItem_me		*conf_me;
+extern MODVAR ConfigItem_class 	*conf_class;
+extern MODVAR ConfigItem_class		*default_class;
+extern MODVAR ConfigItem_admin 	*conf_admin;
+extern MODVAR ConfigItem_admin		*conf_admin_tail;
+extern MODVAR ConfigItem_drpass	*conf_drpass;
+extern MODVAR ConfigItem_ulines	*conf_ulines;
+extern MODVAR ConfigItem_tld		*conf_tld;
+extern MODVAR ConfigItem_oper		*conf_oper;
+extern MODVAR ConfigItem_listen	*conf_listen;
+extern MODVAR ConfigItem_allow		*conf_allow;
+extern MODVAR ConfigItem_except	*conf_except;
+extern MODVAR ConfigItem_vhost		*conf_vhost;
+extern MODVAR ConfigItem_link		*conf_link;
+extern MODVAR ConfigItem_ban		*conf_ban;
+extern MODVAR ConfigItem_badword	*conf_badword_channel;
+extern MODVAR ConfigItem_badword       *conf_badword_message;
+extern MODVAR ConfigItem_badword	*conf_badword_quit;
+extern MODVAR ConfigItem_deny_dcc	*conf_deny_dcc;
+extern MODVAR ConfigItem_deny_channel  *conf_deny_channel;
+extern MODVAR ConfigItem_deny_link	*conf_deny_link;
+extern MODVAR ConfigItem_allow_channel *conf_allow_channel;
+extern MODVAR ConfigItem_allow_dcc *conf_allow_dcc;
+extern MODVAR ConfigItem_deny_version	*conf_deny_version;
+extern MODVAR ConfigItem_log		*conf_log;
+extern MODVAR ConfigItem_alias		*conf_alias;
+extern MODVAR ConfigItem_include	*conf_include;
+extern MODVAR ConfigItem_help		*conf_help;
+extern MODVAR ConfigItem_offchans	*conf_offchans;
 extern int		completed_connection(aClient *);
 extern void clear_unknown();
-extern EVENT(tkl_check_expire);
 extern EVENT(e_unload_module_delayed);
 #ifdef THROTTLING
 extern EVENT(e_clean_out_throttling_buckets);
@@ -110,9 +111,8 @@ extern EVENT(e_clean_out_throttling_buckets);
 extern void  module_loadall(int module_load);
 extern long set_usermode(char *umode);
 extern char *get_modestr(long umodes);
-extern void tkl_stats(aClient *cptr, int type, char *para);
 extern void                    config_error(char *format, ...) __attribute__((format(printf,1,2)));
-extern int			config_verbose;
+extern MODVAR int config_verbose;
 extern void config_progress(char *format, ...) __attribute__((format(printf,1,2)));
 extern void       ipport_seperate(char *string, char **ip, char **port);
 ConfigItem_class	*Find_class(char *name);
@@ -120,28 +120,26 @@ ConfigItem_deny_dcc	*Find_deny_dcc(char *name);
 ConfigItem_oper		*Find_oper(char *name);
 ConfigItem_listen	*Find_listen(char *ipmask, int port);
 ConfigItem_ulines	*Find_uline(char *host);
-ConfigItem_except	*Find_except(char *host, short type);
+ConfigItem_except	*Find_except(aClient *, char *host, short type);
 ConfigItem_tld		*Find_tld(aClient *cptr, char *host);
 ConfigItem_link		*Find_link(char *username, char *hostname, char *ip, char *servername);
-ConfigItem_ban 		*Find_ban(char *host, short type);
-ConfigItem_ban 		*Find_banEx(char *host, short type, short type2);
+ConfigItem_ban 		*Find_ban(aClient *, char *host, short type);
+ConfigItem_ban 		*Find_banEx(aClient *,char *host, short type, short type2);
 ConfigItem_vhost	*Find_vhost(char *name);
 ConfigItem_deny_channel *Find_channel_allowed(char *name);
 ConfigItem_alias	*Find_alias(char *name);
 ConfigItem_help 	*Find_Help(char *command);
 int			AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *username);
-int parse_netmask(const char *text, struct IN_ADDR *addr, int *b);
-int match_ipv4(struct IN_ADDR *addr, struct IN_ADDR *mask, int b);
-#ifdef INET6
-int match_ipv6(struct IN_ADDR *addr, struct IN_ADDR *mask, int b);
-#endif
-extern struct tm motd_tm, smotd_tm;
-extern Link	*Servers;
+int parse_netmask(const char *text, struct irc_netmask *netmask);
+int match_ip(struct IN_ADDR addr, char *uhost, char *mask, struct irc_netmask *netmask);
+ConfigItem_ban  *Find_ban_ip(aClient *sptr);
+extern MODVAR struct tm motd_tm, smotd_tm;
+extern MODVAR Link	*Servers;
 void add_ListItem(ListStruct *, ListStruct **);
 ListStruct *del_ListItem(ListStruct *, ListStruct **);
 /* Remmed out for win32 compatibility.. as stated of 467leaf win32 port.. */
 extern aClient *find_match_server(char *mask);
-extern LoopStruct loop;
+extern MODVAR LoopStruct loop;
 extern int del_banid(aChannel *chptr, char *banid);
 extern int del_exbanid(aChannel *chptr, char *banid);
 #ifdef SHOWCONNECTINFO
@@ -155,11 +153,11 @@ extern int del_exbanid(aChannel *chptr, char *banid);
 #define BREPORT_FIN_ID	"NOTICE AUTH :*** Received identd response\r\n"
 #define BREPORT_FAIL_ID	"NOTICE AUTH :*** No ident response; username prefixed with ~\r\n"
 
-extern char REPORT_DO_DNS[256], REPORT_FIN_DNS[256], REPORT_FIN_DNSC[256],
+extern MODVAR char REPORT_DO_DNS[256], REPORT_FIN_DNS[256], REPORT_FIN_DNSC[256],
     REPORT_FAIL_DNS[256], REPORT_DO_ID[256], REPORT_FIN_ID[256],
     REPORT_FAIL_ID[256];
 
-extern int R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns,
+extern MODVAR int R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns,
     R_do_id, R_fin_id, R_fail_id;
 
 #endif
@@ -183,6 +181,7 @@ extern int del_silence(aClient *, char *);
 extern void send_user_joins(aClient *, aClient *);
 extern void clean_channelname(char *);
 extern int do_nick_name(char *);
+extern int do_remote_nick_name(char *);
 extern int can_send(aClient *, aChannel *, char *, int);
 extern long get_access(aClient *, aChannel *);
 extern int is_chan_op(aClient *, aChannel *);
@@ -205,10 +204,14 @@ extern int attach_conf(aClient *, aConfItem *);
 extern void inittoken();
 extern void reset_help();
 
-extern char *debugmode, *configfile, *sbrk0;
+extern MODVAR char *debugmode, *configfile, *sbrk0;
 extern char *getfield(char *);
 extern void get_sockhost(aClient *, char *);
+#ifndef _WIN32
 extern char *strerror(int);
+#else
+extern MODFUNC char *sock_strerror(int);
+#endif
 extern int dgets(int, char *, int);
 extern char *inetntoa(char *);
 
@@ -220,14 +223,14 @@ extern int vsnprintf (char *str, size_t count, const char *fmt, va_list arg);
 #endif
 
 #ifdef _WIN32
-extern int dbufalloc, dbufblocks, debuglevel;
+extern MODVAR int dbufalloc, dbufblocks, debuglevel;
 #else
 extern int dbufalloc, dbufblocks, debuglevel, errno, h_errno;
 #endif
-extern short LastSlot; /* last used index in local client array */
-extern int OpenFiles;  /* number of files currently open */
-extern int debuglevel, portnum, debugtty, maxusersperchannel;
-extern int readcalls, udpfd, resfd;
+extern MODVAR short LastSlot; /* last used index in local client array */
+extern MODVAR int OpenFiles;  /* number of files currently open */
+extern MODVAR int debuglevel, portnum, debugtty, maxusersperchannel;
+extern MODVAR int readcalls, udpfd, resfd;
 extern aClient *add_connection(aClient *, int);
 extern int add_listener(aConfItem *);
 extern void add_local_domain(char *, int);
@@ -310,8 +313,11 @@ extern void sendto_opers(char *, ...) __attribute__((format(printf,1,2)));
 extern void sendto_umode(int, char *, ...) __attribute__((format(printf,2,3)));
 extern void sendto_umode_raw(int, char *, ...) __attribute__((format(printf,2,3)));
 extern void sendto_snomask(int snomask, char *pattern, ...) __attribute__((format(printf,2,3)));
+extern void sendto_snomask_global(int snomask, char *pattern, ...) __attribute__((format(printf,2,3)));
+extern void sendto_snomask_normal(int snomask, char *pattern, ...) __attribute__((format(printf,2,3)));
+extern void sendto_snomask_normal_global(int snomask, char *pattern, ...) __attribute__((format(printf,2,3)));
 extern void sendnotice(aClient *to, char *pattern, ...) __attribute__((format(printf,2,3)));
-extern int writecalls, writeb[];
+extern MODVAR int writecalls, writeb[];
 extern int deliver_it(aClient *, char *, int);
 extern int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr);
 extern int  check_for_target_limit(aClient *sptr, void *target, const char *name);
@@ -323,7 +329,8 @@ extern unsigned char *StripColors(unsigned char *);
 extern const char *StripControlCodes(unsigned char *text);
 extern char *canonize(char *buffer);
 extern int webtv_parse(aClient *sptr, char *string);
-extern ConfigItem_deny_dcc *dcc_isforbidden(aClient *cptr, aClient *sptr, aClient *target, char *filename);
+extern ConfigItem_deny_dcc *dcc_isforbidden(aClient *sptr, char *filename);
+extern ConfigItem_deny_dcc *dcc_isdiscouraged(aClient *sptr, char *filename);
 extern int check_registered(aClient *);
 extern int check_registered_user(aClient *);
 extern char *get_client_name(aClient *, int);
@@ -340,7 +347,6 @@ extern int hunt_server(aClient *, aClient *, char *, int, int, char **);
 extern int hunt_server_token(aClient *, aClient *, char *, char *, char *, int, int, char **);
 extern int hunt_server_token_quiet(aClient *, aClient *, char *, char *, char *, int, int, char **);
 extern aClient *next_client(aClient *, char *);
-extern int m_umode(aClient *, aClient *, int, char **);
 extern int m_names(aClient *, aClient *, int, char **);
 extern int m_server_estab(aClient *);
 extern void umode_init(void);
@@ -410,52 +416,57 @@ extern time_t atime(char *xtime);
 
 /* Mode externs
 */
-extern long UMODE_INVISIBLE; /*  0x0001	 makes user invisible */
-extern long UMODE_OPER;      /*  0x0002	 Operator */
-extern long UMODE_WALLOP;    /*  0x0004	 send wallops to them */
-extern long UMODE_FAILOP;    /*  0x0008	 Shows some global messages */
-extern long UMODE_HELPOP;    /*  0x0010	 Help system operator */
-extern long UMODE_REGNICK;   /*  0x0020	 Nick set by services as registered */
-extern long UMODE_SADMIN;    /*  0x0040	 Services Admin */
-extern long UMODE_ADMIN;     /*  0x0080	 Admin */
-extern long UMODE_SERVNOTICE;/* 0x0100	 server notices such as kill */
-extern long UMODE_LOCOP;     /* 0x0200	 Local operator -- SRB */
-extern long UMODE_RGSTRONLY; /* 0x0400  Only reg nick message */
-extern long UMODE_WEBTV;     /* 0x0800  WebTV Client */
-extern long UMODE_SERVICES;  /* 0x4000	 services */
-extern long UMODE_HIDE;	     /* 0x8000	 Hide from Nukes */
-extern long UMODE_NETADMIN;  /* 0x10000	 Network Admin */
-extern long UMODE_COADMIN;   /* 0x80000	 Co Admin */
-extern long UMODE_WHOIS;     /* 0x100000	 gets notice on /whois */
-extern long UMODE_KIX;       /* 0x200000	 usermode +q */
-extern long UMODE_BOT;       /* 0x400000	 User is a bot */
-extern long UMODE_SECURE;    /*	0x800000	 User is a secure connect */
-extern long UMODE_VICTIM;    /* 0x8000000	 Intentional Victim */
-extern long UMODE_DEAF;      /* 0x10000000       Deaf */
-extern long UMODE_HIDEOPER;  /* 0x20000000	 Hide oper mode */
-extern long UMODE_SETHOST;   /* 0x40000000	 used sethost */
-extern long UMODE_STRIPBADWORDS; /* 0x80000000	 */
-extern long UMODE_HIDEWHOIS; /* hides channels in /whois */
-extern long UMODE_NOCTCP;    /* blocks all ctcp (except dcc and action) */
-extern long AllUmodes, SendUmodes;
+extern MODVAR long UMODE_INVISIBLE; /*  0x0001	 makes user invisible */
+extern MODVAR long UMODE_OPER;      /*  0x0002	 Operator */
+extern MODVAR long UMODE_WALLOP;    /*  0x0004	 send wallops to them */
+extern MODVAR long UMODE_FAILOP;    /*  0x0008	 Shows some global messages */
+extern MODVAR long UMODE_HELPOP;    /*  0x0010	 Help system operator */
+extern MODVAR long UMODE_REGNICK;   /*  0x0020	 Nick set by services as registered */
+extern MODVAR long UMODE_SADMIN;    /*  0x0040	 Services Admin */
+extern MODVAR long UMODE_ADMIN;     /*  0x0080	 Admin */
+extern MODVAR long UMODE_SERVNOTICE;/* 0x0100	 server notices such as kill */
+extern MODVAR long UMODE_LOCOP;     /* 0x0200	 Local operator -- SRB */
+extern MODVAR long UMODE_RGSTRONLY; /* 0x0400  Only reg nick message */
+extern MODVAR long UMODE_WEBTV;     /* 0x0800  WebTV Client */
+extern MODVAR long UMODE_SERVICES;  /* 0x4000	 services */
+extern MODVAR long UMODE_HIDE;	     /* 0x8000	 Hide from Nukes */
+extern MODVAR long UMODE_NETADMIN;  /* 0x10000	 Network Admin */
+extern MODVAR long UMODE_COADMIN;   /* 0x80000	 Co Admin */
+extern MODVAR long UMODE_WHOIS;     /* 0x100000	 gets notice on /whois */
+extern MODVAR long UMODE_KIX;       /* 0x200000	 usermode +q */
+extern MODVAR long UMODE_BOT;       /* 0x400000	 User is a bot */
+extern MODVAR long UMODE_SECURE;    /*	0x800000	 User is a secure connect */
+extern MODVAR long UMODE_VICTIM;    /* 0x8000000	 Intentional Victim */
+extern MODVAR long UMODE_DEAF;      /* 0x10000000       Deaf */
+extern MODVAR long UMODE_HIDEOPER;  /* 0x20000000	 Hide oper mode */
+extern MODVAR long UMODE_SETHOST;   /* 0x40000000	 used sethost */
+extern MODVAR long UMODE_STRIPBADWORDS; /* 0x80000000	 */
+extern MODVAR long UMODE_HIDEWHOIS; /* hides channels in /whois */
+extern MODVAR long UMODE_NOCTCP;    /* blocks all ctcp (except dcc and action) */
+extern MODVAR long AllUmodes, SendUmodes;
 
-extern long SNO_KILLS;
-extern long SNO_CLIENT;
-extern long SNO_FLOOD;
-extern long SNO_FCLIENT;
-extern long SNO_JUNK;
-extern long SNO_VHOST;
-extern long SNO_EYES;
-extern long SNO_TKL;
-extern long SNO_NICKCHANGE;
-extern long SNO_FNICKCHANGE;
-extern long SNO_QLINE;
-extern long SNO_SNOTICE;
-extern long SNO_SPAMF;
+extern MODVAR long SNO_KILLS;
+extern MODVAR long SNO_CLIENT;
+extern MODVAR long SNO_FLOOD;
+extern MODVAR long SNO_FCLIENT;
+extern MODVAR long SNO_JUNK;
+extern MODVAR long SNO_VHOST;
+extern MODVAR long SNO_EYES;
+extern MODVAR long SNO_TKL;
+extern MODVAR long SNO_NICKCHANGE;
+extern MODVAR long SNO_FNICKCHANGE;
+extern MODVAR long SNO_QLINE;
+extern MODVAR long SNO_SNOTICE;
+extern MODVAR long SNO_SPAMF;
+extern MODVAR long SNO_OPER;
 
 #ifdef EXTCMODE
 /* Extended chanmodes... */
-extern Cmode_t EXTMODE_NONOTICE;
+extern MODVAR Cmode_t EXTMODE_NONOTICE;
+#ifdef STRIPBADWORDS
+extern MODVAR Cmode_t EXTMODE_STRIPBADWORDS;
+#endif
+extern MODVAR Cmode_t EXTMODE_JOINTHROTTLE;
 #endif
 
 #ifndef HAVE_STRLCPY
@@ -476,6 +487,7 @@ extern void debug(int, char *, ...);
 extern void send_usage(aClient *, char *);
 extern void send_listinfo(aClient *, char *);
 extern void count_memory(aClient *, char *);
+extern int checkprotoflags(aClient *, int, char *, int);
 #endif
 
 #ifdef INET6
@@ -495,8 +507,8 @@ char	*Inet_ia2pNB(struct IN_ADDR *ia, int compressed);
 /*
  * CommandHash -Stskeeps
 */
-extern aCommand *CommandHash[256];
-extern aCommand *TokenHash[256];
+extern MODVAR aCommand *CommandHash[256];
+extern MODVAR aCommand *TokenHash[256];
 extern void	init_CommandHash(void);
 extern aCommand	*add_Command_backend(char *cmd, int (*func)(), unsigned char parameters, unsigned char token, int flags);
 extern void	add_Command(char *cmd, char *token, int (*func)(), unsigned char parameters);
@@ -542,10 +554,6 @@ extern char *make_virthost(char *curr, char *new, int mode);
 extern int  channel_canjoin(aClient *sptr, char *name);
 extern char *collapse(char *pattern);
 extern void send_list(aClient *cptr, int numsend);
-extern int  find_tkline_match_zap(aClient *cptr);
-extern int  find_shun(aClient *cptr);
-extern aTKline *find_qline(aClient *cptr, char *nick, int *ishold);
-extern void tkl_synch(aClient *sptr);
 extern void dcc_sync(aClient *sptr);
 extern void report_flines(aClient *sptr);
 extern void report_network(aClient *sptr);
@@ -585,7 +593,7 @@ extern time_t rfc2time(char *s);
 extern char *rfctime(time_t t, char *buf);
 extern void *MyMallocEx(size_t size);
 #ifdef USE_SSL
-extern char  *ssl_get_cipher(SSL *ssl);
+extern MODFUNC char  *ssl_get_cipher(SSL *ssl);
 #endif
 extern long config_checkval(char *value, unsigned short flags);
 extern void config_status(char *format, ...) __attribute__((format(printf,1,2)));
@@ -593,14 +601,14 @@ extern void init_random();
 extern u_char getrandom8();
 extern u_int16_t getrandom16();
 extern u_int32_t getrandom32();
-extern char trouble_info[1024];
+extern MODVAR char trouble_info[1024];
 #define EVENT_DRUGS BASE_VERSION
-extern void rejoin_doparts(aClient *sptr);
-extern void rejoin_dojoinandmode(aClient *sptr);
+extern void rejoin_doparts(aClient *sptr, char did_parts[]);
+extern void rejoin_dojoinandmode(aClient *sptr, char did_parts[]);
 extern void ident_failed(aClient *cptr);
 
-extern char extchmstr[4][64];
-extern char extbanstr[EXTBANTABLESZ+1];
+extern MODVAR char extchmstr[4][64];
+extern MODVAR char extbanstr[EXTBANTABLESZ+1];
 #ifdef EXTCMODE
 extern int extcmode_default_requirechop(aClient *, aChannel *, char *, int, int);
 extern int extcmode_default_requirehalfop(aClient *, aChannel *, char *, int, int);
@@ -629,23 +637,23 @@ extern int l_commands_Load(int);
 #endif
 extern void sendto_chmodemucrap(aClient *, aChannel *, char *);
 extern void verify_opercount(aClient *, char *);
-extern int place_host_ban(aClient *sptr, int action, char *reason, long time);
 extern int valid_host(char *host);
 extern int count_oper_sessions(char *);
 extern char *unreal_mktemp(char *dir, char *suffix);
+extern char *unreal_getpathname(char *filepath, char *path);
 extern char *unreal_getfilename(char *path);
 extern int unreal_copyfile(char *src, char *dest);
+extern int unreal_copyfileex(char *src, char *dest, int tryhardlink);
 extern time_t unreal_getfilemodtime(char *filename);
 extern void unreal_setfilemodtime(char *filename, time_t mtime);
 extern void DeleteTempModules(void);
-extern Extban *extbaninfo;
+extern MODVAR Extban *extbaninfo;
 extern Extban *findmod_by_bantype(char c);
 extern Extban *ExtbanAdd(Module *reserved, ExtbanInfo req);
 extern void ExtbanDel(Extban *);
 extern void extban_init(void);
 extern char *trim_str(char *str, int len);
-extern char *ban_realhost, *ban_virthost, *ban_ip;
-extern void join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);
+extern MODVAR char *ban_realhost, *ban_virthost, *ban_ip;
 extern char *unreal_checkregex(char *s, int fastsupport, int check_broadness);
 extern int banact_stringtoval(char *s);
 extern char *banact_valtostring(int val);
@@ -654,34 +662,102 @@ extern char banact_valtochar(int val);
 extern int spamfilter_gettargets(char *s, aClient *sptr);
 extern char *spamfilter_target_inttostring(int v);
 extern Spamfilter *unreal_buildspamfilter(char *s);
-extern int dospamfilter(aClient *sptr, char *str_in, int type, char *target);
 extern char *our_strcasestr(char *haystack, char *needle);
 extern int spamfilter_getconftargets(char *s);
 extern void remove_oper_snomasks(aClient *sptr);
 extern char *spamfilter_inttostring_long(int v);
 extern int check_channelmask(aClient *, aClient *, char *);
 extern aChannel *get_channel(aClient *cptr, char *chname, int flag);
-extern char backupbuf[];
+extern MODVAR char backupbuf[];
 extern void add_invite(aClient *, aChannel *);
 extern void channel_modes(aClient *, char *, char *, aChannel *);
-extern char modebuf[BUFSIZE], parabuf[BUFSIZE];
+extern MODVAR char modebuf[BUFSIZE], parabuf[BUFSIZE];
 extern int op_can_override(aClient *sptr);
 extern aClient *find_chasing(aClient *sptr, char *user, int *chasing);
-extern long opermode;
-extern void do_mode(aChannel *, aClient *, aClient *, int, char **, time_t, int);
-extern void set_mode(aChannel *, aClient *, int, char **, u_int *,
-                     char[MAXMODEPARAMS][MODEBUFLEN + 3], int);
+extern MODVAR long opermode;
 extern void add_user_to_channel(aChannel *chptr, aClient *who, int flags);
 extern int add_banid(aClient *, aChannel *, char *);
 extern int add_exbanid(aClient *cptr, aChannel *chptr, char *banid);
 extern void sub1_from_channel(aChannel *);
-extern aCtab cFlagTab[];
+extern MODVAR aCtab cFlagTab[];
 extern char *unreal_encodespace(char *s);
 extern char *unreal_decodespace(char *s);
-extern Link *helpign;
-extern aMotd *rules;
-extern fdlist default_fdlist, busycli_fdlist, serv_fdlist, oper_fdlist;
-extern void DCCdeny_add(char *filename, char *reason, int type);
+extern MODVAR Link *helpign;
+extern MODVAR aMotd *rules;
+extern MODVAR fdlist default_fdlist, busycli_fdlist, serv_fdlist, oper_fdlist;
+extern void DCCdeny_add(char *filename, char *reason, int type, int type2);
 extern void DCCdeny_del(ConfigItem_deny_dcc *deny);
 extern void dcc_wipe_services(void);
 extern void reread_motdsandrules();
+extern MODVAR int SVSNOOP;
+extern int callbacks_check(void);
+extern void callbacks_switchover(void);
+extern int efunctions_check(void);
+extern void efunctions_switchover(void);
+extern char *encode_ip(u_char *);
+extern char *decode_ip(char *);
+extern void sendto_fconnectnotice(char *nick, anUser *user, aClient *sptr, int disconnect, char *comment);
+extern void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes);
+extern int on_dccallow_list(aClient *to, aClient *from);
+extern int add_dccallow(aClient *sptr, aClient *optr);
+extern int del_dccallow(aClient *sptr, aClient *optr);
+extern void delete_linkblock(ConfigItem_link *link_ptr);
+extern void delete_classblock(ConfigItem_class *class_ptr);
+extern void del_async_connects(void);
+extern void make_extbanstr(void);
+extern void isupport_init(void);
+extern int do_cmd(aClient *cptr, aClient *sptr, char *cmd, int parc, char *parv[]);
+extern void create_snomask(aClient *sptr, anUser *user, char *snomask);
+extern MODVAR char *me_hash;
+extern MODVAR int dontspread;
+/* Efuncs */
+extern MODVAR int (*do_join)(aClient *, aClient *, int, char **);
+extern MODVAR void (*join_channel)(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);
+extern MODVAR int (*can_join)(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[]);
+extern MODVAR void (*do_mode)(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode);
+extern MODVAR void (*set_mode)(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
+    char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
+extern MODVAR int (*m_umode)(aClient *, aClient *, int, char **);
+extern MODVAR int (*register_user)(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
+extern MODVAR int (*tkl_hash)(unsigned int c);
+extern MODVAR char (*tkl_typetochar)(int type);
+extern MODVAR aTKline *(*tkl_add_line)(int type, char *usermask, char *hostmask, char *reason, char *setby,
+                  TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason);
+extern MODVAR aTKline *(*tkl_del_line)(aTKline *tkl);
+extern MODVAR void (*tkl_check_local_remove_shun)(aTKline *tmp);
+extern MODVAR aTKline *(*tkl_expire)(aTKline * tmp);
+extern MODVAR EVENT((*tkl_check_expire));
+extern MODVAR int (*find_tkline_match)(aClient *cptr, int xx);
+extern MODVAR int (*find_shun)(aClient *cptr);
+extern MODVAR int (*find_spamfilter_user)(aClient *sptr);
+extern MODVAR aTKline *(*find_qline)(aClient *cptr, char *nick, int *ishold);
+extern MODVAR int  (*find_tkline_match_zap)(aClient *cptr);
+extern MODVAR void (*tkl_stats)(aClient *cptr, int type, char *para);
+extern MODVAR void (*tkl_synch)(aClient *sptr);
+extern MODVAR int (*m_tkl)(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+extern MODVAR int (*place_host_ban)(aClient *sptr, int action, char *reason, long duration);
+extern MODVAR int (*dospamfilter)(aClient *sptr, char *str_in, int type, char *target);
+/* /Efuncs */
+extern MODVAR aMotd *opermotd, *svsmotd, *motd, *botmotd, *smotd;
+extern MODVAR int max_connection_count;
+extern int add_listmode(Ban **list, aClient *cptr, aChannel *chptr, char *banid);
+extern int del_listmode(Ban **list, aChannel *chptr, char *banid);
+extern int Halfop_mode(long mode);
+extern void chanfloodtimer_add(aChannel *chptr, char mflag, long mbit, time_t when);
+extern void chanfloodtimer_del(aChannel *chptr, char mflag, long mbit);
+extern char *clean_ban_mask(char *, int, aClient *);
+extern void chanfloodtimer_stopchantimers(aChannel *chptr);
+extern int find_invex(aChannel *chptr, aClient *sptr);
+extern void DoMD5(unsigned char *mdout, unsigned char *src, unsigned long n);
+#ifdef JOINTHROTTLE
+aJFlood *cmodej_addentry(aClient *cptr, aChannel *chptr);
+void cmodej_delentry(aJFlood *e);
+void cmodej_deluserentries(aClient *cptr);
+void cmodej_delchannelentries(aChannel *chptr);
+#endif
+extern void charsys_reset(void);
+extern void charsys_addmultibyterange(char s1, char e1, char s2, char e2);
+extern void charsys_addallowed(char *s);
+extern void charsys_reset(void);
+extern MODVAR char langsinuse[4096];
+extern MODVAR aTKline *tklines[TKLISTLEN];

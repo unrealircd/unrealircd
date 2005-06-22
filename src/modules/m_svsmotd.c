@@ -45,7 +45,7 @@
 #ifdef _WIN32
 #include "version.h"
 #endif
-extern aMotd *svsmotd;
+extern MODVAR aMotd *svsmotd;
 extern aMotd *read_file(char *, aMotd **);
 DLLFUNC int m_svsmotd(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 

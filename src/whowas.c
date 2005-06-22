@@ -37,10 +37,10 @@ static void del_whowas_from_clist(aWhowas **, aWhowas *);
 static void add_whowas_to_list(aWhowas **, aWhowas *);
 static void del_whowas_from_list(aWhowas **, aWhowas *);
 
-aWhowas WHOWAS[NICKNAMEHISTORYLENGTH];
-aWhowas *WHOWASHASH[WW_MAX];
+aWhowas MODVAR WHOWAS[NICKNAMEHISTORYLENGTH];
+aWhowas MODVAR *WHOWASHASH[WW_MAX];
 
-int  whowas_next = 0;
+MODVAR int  whowas_next = 0;
 #define AllocCpy(x,y) x = (char *) MyMalloc(strlen(y) + 1); strcpy(x,y)
 #define SafeFree(x) if (x) { MyFree((x)); (x) = NULL; }
 

@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_map)
 
 DLLFUNC int MOD_INIT(m_map)(ModuleInfo *modinfo)
 {
-	add_Command(MSG_MAP, TOK_MAP, m_map, MAXPARA);
+	CommandAdd(modinfo->handle, MSG_MAP, TOK_MAP, m_map, MAXPARA, M_USER|M_ANNOUNCE);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -72,11 +72,6 @@ DLLFUNC int MOD_LOAD(m_map)(int module_load)
 
 DLLFUNC int MOD_UNLOAD(m_map)(int module_unload)
 {
-	if (del_Command(MSG_MAP, TOK_MAP, m_map) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-			MOD_HEADER(m_map).name);
-	}
 	return MOD_SUCCESS;
 }
 
@@ -100,7 +95,7 @@ static void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_leng
 
 	if (prompt_length > 60)
 		sendto_one(cptr, rpl_str(RPL_MAPMORE), me.name, cptr->name,
-		    prompt, server->name);
+		    prompt, length, server->name);
 	else
 	{
 		sendto_one(cptr, rpl_str(RPL_MAP), me.name, cptr->name, prompt,
@@ -151,6 +146,41 @@ static void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_leng
 		p[-1] = '-';
 }
 
+void dump_flat_map(aClient *cptr, aClient *server, int length)
+{
+char buf[4];
+Link *lp;
+aClient *acptr;
+int cnt = 0, hide_ulines;
+
+	hide_ulines = (HIDE_ULINES && !IsOper(cptr)) ? 1 : 0;
+
+	sendto_one(cptr, rpl_str(RPL_MAP), me.name, cptr->name, "",
+	    length, server->name, server->serv->users,
+	    (server->serv->numeric ? (char *)my_itoa(server->serv->numeric) : ""));
+
+	for (lp = Servers; lp; lp = lp->next)
+	{
+		acptr = lp->value.cptr;
+		if ((IsULine(acptr) && hide_ulines) || (acptr == server))
+			continue;
+		cnt++;
+	}
+
+	strcpy(buf, "|-");
+	for (lp = Servers; lp; lp = lp->next)
+	{
+		acptr = lp->value.cptr;
+		if ((IsULine(acptr) && hide_ulines) || (acptr == server))
+			continue;
+		if (--cnt == 0)
+			*buf = '`';
+		sendto_one(cptr, rpl_str(RPL_MAP), me.name, cptr->name, buf,
+		    length-2, acptr->name, acptr->serv->users,
+		    (acptr->serv->numeric ? my_itoa(acptr->serv->numeric) : ""));
+	}
+}
+
 /*
 ** New /MAP format. -Potvin
 ** m_map (NEW)
@@ -176,7 +206,10 @@ DLLFUNC CMD_FUNC(m_map)
 	if (longest > 60)
 		longest = 60;
 	longest += 2;
-	dump_map(sptr, &me, "*", 0, longest);
+	if (FLAT_MAP && !IsAnOper(sptr))
+		dump_flat_map(sptr, &me, longest);
+	else
+		dump_map(sptr, &me, "*", 0, longest);
 	sendto_one(sptr, rpl_str(RPL_MAPEND), me.name, parv[0]);
 
 	return 0;

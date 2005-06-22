@@ -239,7 +239,6 @@
 #define MSG_TSCTL 	"TSCTL"
 #define TOK_TSCTL 	"AW"
 #define MSG_SVSJOIN 	"SVSJOIN"
-#define TOK_SVSJOIN 	"BR"
 #define MSG_SAJOIN 	"SAJOIN"
 #define TOK_SAJOIN 	"AX"
 #define MSG_SVSPART 	"SVSPART"
@@ -300,23 +299,16 @@
 
 #define MAXPARA    	15
 
-extern int m_join(), m_part(), m_mode();
-extern int m_nick(), m_error();
+extern int m_error();
 extern int m_dns();
-extern int m_tkl();
-extern int m_motd(), m_user();
 extern int m_info(), m_summon();
 extern int m_users(), m_version();
 extern int m_names();
-extern int m_lusers(), m_umode();
-extern int m_motd();
-extern int m_service(), m_watch();
+extern int m_service();
 extern int m_dalinfo();
 extern int m_credits();
 extern int m_license();
-extern int m_botmotd();
-extern int m_opermotd();
-extern int m_module(), m_alias(), m_tkl(), m_opermotd();
+extern int m_module(), m_alias();
 extern int m_rehash(), m_die(), m_restart();
 #endif
 

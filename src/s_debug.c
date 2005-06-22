@@ -31,7 +31,7 @@ Computing Center and Jarkko Oikarinen";
 /*
  * Option string.  Must be before #ifdef DEBUGMODE.
  */
-char serveropts[] = {
+MODVAR char serveropts[] = {
 #ifdef	CHROOTDIR
 	'c',
 #endif
@@ -317,11 +317,7 @@ void send_usage(aClient *cptr, char *nick)
 	if (times(&tmsbuf) == -1)
 	{
 		sendto_one(cptr, ":%s %d %s :times(2) error: %s.",
-#  ifndef _WIN32
-		    me.name, RPL_STATSDEBUG, nick, strerror(errno));
-#  else
-		me.name, RPL_STATSDEBUG, nick, strerror(WSAGetLastError()));
-#  endif
+		    me.name, RPL_STATSDEBUG, nick, STRERROR(ERRNO));
 		return;
 	}
 	secs = tmsbuf.tms_utime + tmsbuf.tms_stime;
@@ -345,6 +341,12 @@ void send_usage(aClient *cptr, char *nick)
 	    writeb[5], writeb[6], writeb[7], writeb[8], writeb[9]);
 	return;
 }
+
+int checkprotoflags(aClient *sptr, int flags, char *file, int line)
+{
+	if (!MyConnect(sptr))
+		ircd_log(LOG_ERROR, "[Debug] [BUG] ERROR: %s:%d: IsToken(<%s>,%d) on remote client",
+		         file, line, sptr->name, flags);
+	return (sptr->proto & flags) ? 1 : 0;
+}
 #endif
-
-

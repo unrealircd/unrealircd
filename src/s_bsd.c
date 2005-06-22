@@ -118,7 +118,7 @@ static char readbuf[READBUF_SIZE];
 char zlinebuf[BUFSIZE];
 extern char *version;
 extern ircstats IRCstats;
-TS last_allinuse = 0;
+MODVAR TS last_allinuse = 0;
 
 #ifndef NO_FDLIST
 extern fdlist default_fdlist;
@@ -271,7 +271,7 @@ void report_error(char *text, aClient *cptr)
 	
 	host = (cptr) ? get_client_name(cptr, FALSE) : "";
 
-	Debug((DEBUG_ERROR, text, host, strerror(errtmp)));
+	Debug((DEBUG_ERROR, text, host, STRERROR(errtmp)));
 
 	/*
 	 * Get the *real* error from the socket (well try to anyway..).
@@ -290,14 +290,14 @@ void report_error(char *text, aClient *cptr)
 		 * some tricks are needed because of 2x strerror() (or at least
 		 * according to the man page) -- Syzop.
 		 */
-		snprintf(xbuf, 200, "[syserr='%s'", strerror(origerr));
+		snprintf(xbuf, 200, "[syserr='%s'", STRERROR(origerr));
 		n = strlen(xbuf);
-		snprintf(xbuf+n, 256-n, ", sockerr='%s']", strerror(errtmp));
+		snprintf(xbuf+n, 256-n, ", sockerr='%s']", STRERROR(errtmp));
 		sendto_snomask(SNO_JUNK, text, host, xbuf);
 		ircd_log(LOG_ERROR, text, host, xbuf);
 	} else {
-		sendto_snomask(SNO_JUNK, text, host, strerror(errtmp));
-		ircd_log(LOG_ERROR, text,host,strerror(errtmp));
+		sendto_snomask(SNO_JUNK, text, host, STRERROR(errtmp));
+		ircd_log(LOG_ERROR, text,host,STRERROR(errtmp));
 	}
 	return;
 }
@@ -316,7 +316,7 @@ void report_baderror(char *text, aClient *cptr)
 
 /*	fprintf(stderr, text, host, strerror(errtmp));
 	fputc('\n', stderr); */
-	Debug((DEBUG_ERROR, text, host, strerror(errtmp)));
+	Debug((DEBUG_ERROR, text, host, STRERROR(errtmp)));
 
 	/*
 	 * Get the *real* error from the socket (well try to anyway..).
@@ -330,7 +330,8 @@ void report_baderror(char *text, aClient *cptr)
 			if (err)
 				errtmp = err;
 #endif
-	sendto_umode(UMODE_OPER, text, host, strerror(errtmp));
+	sendto_umode(UMODE_OPER, text, host, STRERROR(errtmp));
+	ircd_log(LOG_ERROR, text, host, STRERROR(errtmp));
 	return;
 }
 
@@ -384,7 +385,7 @@ int  inetport(aClient *cptr, char *name, int port)
 	{
 #if !defined(DEBUGMODE) && !defined(_WIN32)
 #endif
-		report_error("Cannot open stream socket() %s:%s", cptr);
+		report_baderror("Cannot open stream socket() %s:%s", cptr);
 		return -1;
 	}
 	else if (++OpenFiles >= MAXCLIENTS)
@@ -425,7 +426,7 @@ int  inetport(aClient *cptr, char *name, int port)
 			ircsprintf(backupbuf, "Error binding stream socket to IP %s port %i",
 				ipname, port);
 			strlcat(backupbuf, " - %s:%s", sizeof backupbuf);
-			report_error(backupbuf, cptr);
+			report_baderror(backupbuf, cptr);
 #if !defined(_WIN32) && defined(INET6)
 			/* Check if ipv4-over-ipv6 (::ffff:a.b.c.d, RFC2553
 			 * section 3.7) is disabled, like at newer FreeBSD's. -- Syzop
@@ -1252,7 +1253,7 @@ add_con_refuse:
 			}
 		}
 
-		if ((bconf = Find_ban(acptr->sockhost, CONF_BAN_IP))) {
+		if ((bconf = Find_ban(acptr, Inet_ia2p(&acptr->ip), CONF_BAN_IP))) {
 			if (bconf)
 			{
 				ircsprintf(zlinebuf,
@@ -1278,11 +1279,11 @@ add_con_refuse:
 		else
 		{
 			int val;
-			if (!(val = throttle_can_connect(&acptr->ip)))
+			if (!(val = throttle_can_connect(acptr, &acptr->ip)))
 			{
 				ircsprintf(zlinebuf,
 					"ERROR :Closing Link: [%s] (Throttled: Reconnecting too fast) -"
-						"Email %s for more information.)\r\n",
+						"Email %s for more information.\r\n",
 						Inet_ia2p(&acptr->ip),
 						KLINE_ADDRESS);
 				set_non_blocking(fd, acptr);
@@ -1342,13 +1343,12 @@ void	start_of_normal_client_handshake(aClient *acptr)
 {
 	Link	lin;
 	acptr->status = STAT_UNKNOWN;	
-	if (SHOWCONNECTINFO && !acptr->serv) {
-		sendto_one(acptr, "%s", REPORT_DO_DNS);
-	}
-	lin.flags = ASYNC_CLIENT;
-	lin.value.cptr = acptr;
 	if (DONT_RESOLVE)
 		goto skipdns;
+	if (SHOWCONNECTINFO && !acptr->serv)
+		sendto_one(acptr, "%s", REPORT_DO_DNS);
+	lin.flags = ASYNC_CLIENT;
+	lin.value.cptr = acptr;
 	Debug((DEBUG_DNS, "lookup %s", acptr->sockhost));
 	acptr->hostp = gethost_byaddr((char *)&acptr->ip, &lin);
 	
@@ -1741,7 +1741,7 @@ int  read_message(time_t delay, fdlist *listp)
 			return -1;
 		else if (nfds >= 0)
 			break;
-		report_error("select %s:%s", &me);
+		report_baderror("select %s:%s", &me);
 		res++;
 		if (res > 5)
 			restart("too many select errors");
@@ -1841,7 +1841,7 @@ int  read_message(time_t delay, fdlist *listp)
 			if ((fd = accept(cptr->fd, NULL, NULL)) < 0)
 			{
 		        if ((ERRNO != P_EWOULDBLOCK) && (ERRNO != P_ECONNABORTED))
-					report_error("Cannot accept connections %s:%s", cptr);
+					report_baderror("Cannot accept connections %s:%s", cptr);
 				break;
 			}
 			ircstp->is_ac++;
@@ -1918,7 +1918,7 @@ deadsocket:
 				}
 				(void)exit_client(cptr, cptr, &me,
 				    ((sockerr = get_sockerr(cptr))
-				    ? strerror(sockerr) : "Client exited"));
+				    ? STRERROR(sockerr) : "Client exited"));
 				continue;
 			}
 		}
@@ -2005,7 +2005,7 @@ deadsocket:
 		if (length != FLUSH_BUFFER)
 			(void)exit_client(cptr, cptr, &me,
 			    ((sockerr = get_sockerr(cptr))
-			    ? strerror(sockerr) : "Client exited"));
+			    ? STRERROR(sockerr) : "Client exited"));
 	}
 	return 0;
 }
@@ -2290,7 +2290,7 @@ int  read_message(time_t delay, fdlist *listp)
 
 				(void)exit_client(cptr, cptr, &me,
 				    ((sockerr =
-				    get_sockerr(cptr)) ? strerror(sockerr) :
+				    get_sockerr(cptr)) ? STRERROR(sockerr) :
 				    "Client exited"));
 				continue;
 			}
@@ -2312,7 +2312,7 @@ int  read_message(time_t delay, fdlist *listp)
 		if (IsDead(cptr))
 		{
 			ircsprintf(errmsg, "Read/Dead Error: %s",
-			    strerror(get_sockerr(cptr)));
+			    STRERROR(get_sockerr(cptr)));
 			exit_client(cptr, cptr, &me, errmsg);
 			continue;
 		}
@@ -2341,7 +2341,7 @@ int  read_message(time_t delay, fdlist *listp)
 		if (length != FLUSH_BUFFER)
 			(void)exit_client(cptr, cptr, &me,
 			    ((sockerr = get_sockerr(cptr))
-			    ? strerror(sockerr) : "Client exited"));
+			    ? STRERROR(sockerr) : "Client exited"));
 
 	}
 	return 0;
@@ -2366,7 +2366,7 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	 * If we dont know the IP# for this host and itis a hostname and
 	 * not a ip# string, then try and find the appropriate host record.
 	 */
-	 if ((!aconf->ipnum.S_ADDR))
+	 if (!WHOSTENTP(aconf->ipnum.S_ADDR))
 	 {
 		Link lin;
 
@@ -2445,6 +2445,9 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	 */
 	(void)make_server(cptr);
 	cptr->serv->conf = aconf;
+	cptr->serv->conf->refcount++;
+	Debug((DEBUG_ERROR, "reference count for %s (%s) is now %d",
+		cptr->name, cptr->serv->conf->servername, cptr->serv->conf->refcount));
 	if (by && IsPerson(by))
 	{
 		(void)strlcpy(cptr->serv->by, by->name, sizeof cptr->serv->by);
@@ -2464,6 +2467,7 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
     add_local_client(cptr);
 	cptr->listener = &me;
 	SetConnecting(cptr);
+	SetOutgoing(cptr);
 	IRCstats.unknown++;
 	get_sockhost(cptr, aconf->hostname);
 	add_client_to_list(cptr);
@@ -2489,7 +2493,7 @@ static struct SOCKADDR *connect_inet(ConfigItem_link *aconf, aClient *cptr, int 
 					 get_client_name(cptr, TRUE));
 		  return NULL;
 		}
-		report_error("opening stream socket to server %s:%s", cptr);
+		report_baderror("opening stream socket to server %s:%s", cptr);
 		return NULL;
 	}
 	if (++OpenFiles >= MAXCLIENTS)
@@ -2515,7 +2519,7 @@ static struct SOCKADDR *connect_inet(ConfigItem_link *aconf, aClient *cptr, int 
 	}
 	if (bind(cptr->fd, (struct SOCKADDR *)&server, sizeof(server)) == -1)
 	{
-		report_error("error binding to local port for %s:%s", cptr);
+		report_baderror("error binding to local port for %s:%s", cptr);
 		return NULL;
 	}
 	bzero((char *)&server, sizeof(server));
@@ -2526,8 +2530,9 @@ static struct SOCKADDR *connect_inet(ConfigItem_link *aconf, aClient *cptr, int 
 	 * being present instead. If we dont know it, then the connect fails.
 	 */
 #ifdef INET6
-	if (!inet_pton(AF_INET6, aconf->hostname, aconf->ipnum.s6_addr))
-		bcopy(minus_one, aconf->ipnum.s6_addr, IN6ADDRSZ);
+	if (!WHOSTENTP(aconf->ipnum.S_ADDR) &&
+	    !inet_pton(AF_INET6, aconf->hostname, aconf->ipnum.s6_addr))
+		bcopy(minus_one, aconf->ipnum.s6_addr, IN6ADDRSZ); /* IP->struct failed: make invalid */
 	if (AND16(aconf->ipnum.s6_addr) == 255)
 #else
 	if (isdigit(*aconf->hostname) && (aconf->ipnum.S_ADDR == -1))
@@ -2624,7 +2629,7 @@ static void do_dns_async(void)
 						sendto_realops("Hostname %s is unknown for server %s (!?).", aconf->hostname, aconf->servername);
 						break;
 					default:
-						sendto_realops("Connection to %s failed: %s", aconf->servername, strerror(n));
+						sendto_realops("Connection to %s failed: %s", aconf->servername, STRERROR(n));
 				}
 			}
 			if (!hp) {

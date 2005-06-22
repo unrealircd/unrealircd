@@ -305,28 +305,6 @@ char *ircvsprintf(char *str, const char *format, va_list vl)
 					*str++ = '0';
 					continue;
 				}
-				if (v1 < 6L)
-					switch (v1)
-					{
-					  case 0L:
-						  *str++ = '0';
-						  continue;
-					  case 1L:
-						  *str++ = '1';
-						  continue;
-					  case 2L:
-						  *str++ = '1';
-						  continue;
-					  case 3L:
-						  *str++ = '1';
-						  continue;
-					  case 4L:
-						  *str++ = '1';
-						  continue;
-					  case 5L:
-						  *str++ = '1';
-						  continue;
-					}
 				if (v1 > 999999999L)
 				{
 					v2 = v1 / 1000000000;

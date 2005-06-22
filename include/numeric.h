@@ -33,11 +33,11 @@
 #define	RPL_YOURHOST         002
 #define	RPL_CREATED          003
 #define	RPL_MYINFO           004
-#define RPL_PROTOCTL	     005
+#define RPL_ISUPPORT	     005
 
 #define RPL_REDIR	     10
 
-#define RPL_REMOTEPROTOCTL 105
+#define RPL_REMOTEISUPPORT 105
 
 /*
  * Errors are in the range from 400-599 currently and are grouped by what
@@ -127,6 +127,9 @@
 #define ERR_NOOPERHOST       491
 #define ERR_NOCTCP	     492
 
+#define ERR_CHANOWNPRIVNEEDED 499
+
+#define ERR_TOOMANYJOINS     500
 #define ERR_UMODEUNKNOWNFLAG 501
 #define ERR_USERSDONTMATCH   502
 
@@ -134,6 +137,9 @@
 #define ERR_TOOMANYWATCH     512
 #define ERR_NEEDPONG         513
 
+#define ERR_TOOMANYDCC       514
+
+#define ERR_DISABLED         517
 #define ERR_NOINVITE		 518
 #define ERR_ADMONLY			 519
 #define ERR_OPERONLY		 520
@@ -178,8 +184,12 @@
 #define RPL_TOPIC            332
 #define RPL_TOPICWHOTIME     333
 
+#define RPL_INVITELIST       336
+#define RPL_ENDOFINVITELIST  337
+
 #define RPL_LISTSYNTAX       334
 #define RPL_WHOISBOT	     335
+#define RPL_USERIP	     340
 #define RPL_INVITING         341
 #define	RPL_SUMMONING        342
 
@@ -189,8 +199,8 @@
 #define RPL_ENDOFWHO         315
 #define RPL_NAMREPLY         353
 #define RPL_ENDOFNAMES       366
-#define RPL_INVITELIST	     346
-#define RPL_ENDOFINVITELIST  347
+#define RPL_INVEXLIST	     346
+#define RPL_ENDOFINVEXLIST   347
 
 #define RPL_EXLIST	     348
 #define RPL_ENDOFEXLIST      349
@@ -264,6 +274,7 @@
 #define RPL_STATSVLINE	     227
 #define RPL_STATSBANVER	     228
 #define RPL_STATSSPAMF       229
+#define RPL_STATSEXCEPTTKL   230
 #define RPL_SERVICEINFO      231
 #define RPL_RULES            232
 #define	RPL_SERVICE          233
@@ -305,6 +316,7 @@
 #define RPL_HELPFWD	     294
 #define RPL_HELPIGN	     295
 
+
 /*
  * New /MAP format.
  */
@@ -332,8 +344,18 @@
 #define RPL_NOWOFF           605
 #define RPL_WATCHLIST        606
 #define RPL_ENDOFWATCHLIST   607
+
+#define RPL_DCCSTATUS        617
+#define RPL_DCCLIST          618
+#define RPL_ENDOFDCCLIST     619
+#define RPL_DCCINFO          620
+
 #define RPL_DUMPING			 640
 #define RPL_DUMPRPL			 641
 #define RPL_EODUMP           642
 
+#define RPL_WHOISSECURE      671
+
+#define ERR_CANNOTDOCOMMAND 972
+#define ERR_CANNOTCHANGECHANMODE 974
 #define ERR_NUMERICERR       999

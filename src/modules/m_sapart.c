@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_sapart)
 
 DLLFUNC int MOD_INIT(m_sapart)(ModuleInfo *modinfo)
 {
-	add_Command(MSG_SAPART, TOK_SAPART, m_sapart, MAXPARA);
+	add_Command(MSG_SAPART, TOK_SAPART, m_sapart, 3);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -87,10 +87,15 @@ DLLFUNC int MOD_UNLOAD(m_sapart)(int module_unload)
 	parv[0] - sender
 	parv[1] - nick to make part
 	parv[2] - channel(s) to part
+	parv[3] - comment
 */
 DLLFUNC CMD_FUNC(m_sapart)
 {
 	aClient *acptr;
+	aChannel *chptr;
+	Membership *lp;
+	char *comment = (parc > 3 && parv[3] ? parv[3] : NULL);
+	char commentx[512];
 	if (!IsSAdmin(sptr) && !IsULine(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
@@ -108,28 +113,63 @@ DLLFUNC CMD_FUNC(m_sapart)
 		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, parv[0], parv[1]);
 		return 0;
 	}
-
-	sendto_realops("%s used SAPART to make %s part %s", sptr->name, parv[1],
-	    parv[2]);
-
- 
-	/* Logging function added by XeRXeS */
-	ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s", 
-		sptr->name, parv[1], parv[2]);
+	if (!(chptr = get_channel(acptr, parv[2], 0)))
+	{
+		sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL), me.name, parv[0],
+			parv[2]);
+		return 0;
+	}
+	if (!(lp = find_membership_link(acptr->user->channel, chptr)))
+	{
+		sendto_one(sptr, err_str(ERR_USERNOTINCHANNEL), me.name, parv[0], 
+			   parv[1], parv[2]);
+		return 0;
+	}
+	
+	if (comment)
+	{
+		sendto_realops("%s used SAPART to make %s part %s (%s)", sptr->name, parv[1],
+		               parv[2], comment);
+		/* Logging function added by XeRXeS */
+		ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s (%s)", 
+			 sptr->name, parv[1], parv[2], comment);
+		strcpy(commentx, "SAPart: ");
+		strlcat(commentx, comment, 512);
+	}
+	else
+	{
+		sendto_realops("%s used SAPART to make %s part %s", sptr->name, parv[1],
+			        parv[2]);
+		/* Logging function added by XeRXeS */
+		ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s",
+			 sptr->name, parv[1], parv[2]);
+	}
 
 	if (MyClient(acptr))
 	{
 		parv[0] = parv[1];
 		parv[1] = parv[2];
-		parv[2] = NULL;
-		sendto_one(acptr,
-		    ":%s %s %s :*** You were forced to part %s", me.name,
-		    IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, parv[1]);
-		(void)m_part(acptr, acptr, 2, parv);
+		parv[2] = comment ? commentx : NULL;
+		if (comment)
+			sendto_one(acptr,
+			    ":%s %s %s :*** You were forced to part %s (%s)", me.name,
+			    IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, parv[1], 
+			    commentx);
+		else
+			sendto_one(acptr,
+			    ":%s %s %s :*** You were forced to part %s", me.name,
+			    IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, parv[1]);
+		do_cmd(acptr, acptr, "PART", comment ? 3 : 2, parv);
 	}
 	else
-		sendto_one(acptr, ":%s SAPART %s %s", parv[0],
-		    parv[1], parv[2]);
+	{
+		if (comment)
+			sendto_one(acptr, ":%s SAPART %s %s :%s", parv[0],
+			    parv[1], parv[2], comment);
+		else
+			sendto_one(acptr, ":%s SAPART %s %s", parv[0], parv[1],
+				   parv[2]);
+	}
 
 	return 0;
 }

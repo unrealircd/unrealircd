@@ -268,7 +268,7 @@ nohostcheck:
 			return exit_client(acptr, acptr, acptr,
 			    "Server Exists");
 		}
-		if ((bconf = Find_ban(servername, CONF_BAN_SERVER)))
+		if ((bconf = Find_ban(NULL, servername, CONF_BAN_SERVER)))
 		{
 			sendto_realops
 				("Cancelling link %s, banned server",
@@ -471,7 +471,7 @@ CMD_FUNC(m_server_remote)
 			return 0;
 		}
 	}
-	if ((bconf = Find_ban(servername, CONF_BAN_SERVER)))
+	if ((bconf = Find_ban(NULL, servername, CONF_BAN_SERVER)))
 	{
 		sendto_realops
 			("Cancelling link %s, banned server %s",
@@ -552,7 +552,7 @@ CMD_FUNC(m_server_remote)
 	/* Taken from bahamut makes it so all servers behind a U:lined
 	 * server are also U:lined, very helpful if HIDE_ULINES is on
 	 */
-	if (IsULine(cptr)
+	if (IsULine(sptr)
 	    || (Find_uline(acptr->name)))
 		acptr->flags |= FLAGS_ULINE;
 	add_server_to_table(acptr);
@@ -589,10 +589,11 @@ CMD_FUNC(m_server_remote)
 int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 {
 	char		*inpath = get_client_name(cptr, TRUE);
-	extern char 	serveropts[];
+	extern MODVAR char 	serveropts[];
 	aClient		*acptr;
 	int		i;
 	char buf[BUFSIZE];
+	int incoming = IsUnknown(cptr) ? 1 : 0;
 
 	ircd_log(LOG_SERVER, "SERVER %s", cptr->name);
 
@@ -601,7 +602,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 		MyFree(cptr->passwd);
 		cptr->passwd = NULL;
 	}
-	if (IsUnknown(cptr))
+	if (incoming)
 	{
 		/* If this is an incomming connection, then we have just received
 		 * their stuff and now send our stuff back.
@@ -684,7 +685,12 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	cptr->srvptr = &me;
 	cptr->serv->numeric = numeric;
 	cptr->serv->conf = aconf;
-	cptr->serv->conf->refcount++;
+	if (incoming)
+	{
+		cptr->serv->conf->refcount++;
+		Debug((DEBUG_ERROR, "reference count for %s (%s) is now %d",
+			cptr->name, cptr->serv->conf->servername, cptr->serv->conf->refcount));
+	}
 	cptr->serv->conf->class->clients++;
 	cptr->class = cptr->serv->conf->class;
 	add_server_to_table(cptr);
@@ -798,9 +804,9 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 					{
 						sendto_one(cptr,
 						    ((cptr->proto & PROTO_SJB64) ?
-						    "%s %s %d %B %s %s %b %lu %s %s :%s"
+						    "%s %s %d %B %s %s %b %lu %s %s %s%s:%s"
 						    :
-						    "%s %s %d %lu %s %s %b %lu %s %s :%s"),
+						    "%s %s %d %lu %s %s %b %lu %s %s %s%s:%s"),
 						    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
 						    acptr->name,
 						    acptr->hopcount + 1,
@@ -811,15 +817,16 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 						    (unsigned long)acptr->user->servicestamp,
 						    (!buf || *buf == '\0' ? "+" : buf),
 						    ((IsHidden(acptr) && (acptr->umodes & UMODE_SETHOST)) ? acptr->user->virthost : "*"),
-						    acptr->info);
+						    SupportNICKIP(cptr) ? encode_ip(acptr->user->ip_str) : "",
+					            SupportNICKIP(cptr) ? " " : "", acptr->info);
 					}
 					else
 					{
 						sendto_one(cptr,
 						    (cptr->proto & PROTO_SJB64 ?
-						    "%s %s %d %B %s %s %s %lu %s %s :%s"
+						    "%s %s %d %B %s %s %s %lu %s %s %s%s:%s"
 						    :
-						    "%s %s %d %lu %s %s %s %lu %s %s :%s"),
+						    "%s %s %d %lu %s %s %s %lu %s %s %s%s:%s"),
 						    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
 						    acptr->name,
 						    acptr->hopcount + 1,
@@ -830,12 +837,13 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 						    (unsigned long)acptr->user->servicestamp,
 						    (!buf || *buf == '\0' ? "+" : buf),
 						    ((IsHidden(acptr) && (acptr->umodes & UMODE_SETHOST)) ? acptr->user->virthost : "*"),
-						    acptr->info);
+						    SupportNICKIP(cptr) ? encode_ip(acptr->user->ip_str) : "",
+					            SupportNICKIP(cptr) ? " " : "", acptr->info);
 					}
 				}
 				else
 					sendto_one(cptr,
-					    "%s %s %d %ld %s %s %s %lu %s %s :%s",
+					    "%s %s %d %ld %s %s %s %lu %s %s %s%s:%s",
 					    (IsToken(cptr) ? TOK_NICK :
 					    MSG_NICK), acptr->name,
 					    acptr->hopcount + 1,
@@ -851,7 +859,8 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 					    (!buf
 					    || *buf == '\0' ? "+" : buf),
 					    GetHost(acptr),
-					    acptr->info);
+					    SupportNICKIP(cptr) ? encode_ip(acptr->user->ip_str) : "",
+				            SupportNICKIP(cptr) ? " " : "", acptr->info);
 			}
 
 			if (acptr->user->away)
@@ -901,7 +910,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	/* send out SVSFLINEs */
 	dcc_sync(cptr);
 
-	sendto_one(cptr, "%s %i %li %i %lX 0 0 0 :%s",
+	sendto_one(cptr, "%s %i %li %i %s 0 0 0 :%s",
 	    (IsToken(cptr) ? TOK_NETINFO : MSG_NETINFO),
 	    IRCstats.global_max, TStime(), UnrealProtocol,
 	    CLOAK_KEYCRC,

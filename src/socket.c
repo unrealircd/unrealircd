@@ -119,11 +119,7 @@ int  deliver_it(aClient *cptr, char *str, int len)
 	if (retval < 0)
 	{
 		writeb[0]++;
-# ifndef _WIN32
-		Debug((DEBUG_ERROR, "write error (%s) to %s", strerror(errno), cptr->name));
-# else
-                Debug((DEBUG_ERROR, "write error (%s) to %s", "", cptr->name));
-# endif
+		Debug((DEBUG_ERROR, "write error (%s) to %s", STRERROR(ERRNO), cptr->name));
 
 	}
 	else if (retval == 0)

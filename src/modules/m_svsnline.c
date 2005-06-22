@@ -137,7 +137,7 @@ DLLFUNC int m_svsnline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  if (parc < 4)
 			  return 0;
 		 
-		  if (!Find_banEx(parv[3], CONF_BAN_REALNAME, CONF_BAN_TYPE_AKILL))
+		  if (!Find_banEx(NULL, parv[3], CONF_BAN_REALNAME, CONF_BAN_TYPE_AKILL))
 		  {
 			bconf = (ConfigItem_ban *) MyMallocEx(sizeof(ConfigItem_ban));
 			bconf->flag.type = CONF_BAN_REALNAME;

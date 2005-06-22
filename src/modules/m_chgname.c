@@ -116,45 +116,31 @@ DLLFUNC int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 
+	if (MyClient(sptr) && !IsAnOper(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+		    parv[0]);
+		return 0;
+	}
+
 #ifdef DISABLE_USERMOD
 	if (MyClient(sptr))
 	{
-		sendto_one(sptr, ":%s NOTICE %s :*** The /chgname command is disabled on this server", me.name, sptr->name);
+		sendto_one(sptr, err_str(ERR_DISABLED), me.name, sptr->name, "CHGNAME",
+			"This command is disabled on this server");
 		return 0;
 	}
 #endif
 
-
-	if (MyClient(sptr))
-		if (!IsAnOper(sptr))
-		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			    parv[0]);
-			return 0;
-
-		}
-
-	if (parc < 3)
+	if ((parc < 3) || !*parv[2])
 	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** /ChgName syntax is /ChgName <nick> <newident>",
-		    me.name, sptr->name);
-		return 0;
-	}
-
-	if (strlen(parv[2]) < 1)
-	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** Write atleast something to change the ident to!",
-		    me.name, sptr->name);
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "CHGNAME");
 		return 0;
 	}
 
 	if (strlen(parv[2]) > (REALLEN))
 	{
-		sendto_one(sptr,
-		    ":%s NOTICE %s :*** ChgName Error: Too long !!", me.name,
-		    sptr->name);
+		sendnotice(sptr, "*** ChgName Error: Requested realname too long -- rejected.");
 		return 0;
 	}
 
@@ -163,7 +149,7 @@ DLLFUNC int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		/* set the realname first to make n:line checking work */
 		ircsprintf(acptr->info, "%s", parv[2]);
 		/* only check for n:lines if the person who's name is being changed is not an oper */
-		if (!IsAnOper(acptr) && Find_ban(acptr->info, CONF_BAN_REALNAME)) {
+		if (!IsAnOper(acptr) && Find_ban(NULL, acptr->info, CONF_BAN_REALNAME)) {
 			int xx;
 			xx =
 			   exit_client(cptr, sptr, &me,
@@ -176,13 +162,13 @@ DLLFUNC int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    "%s changed the GECOS of %s (%s@%s) to be %s",
 			    sptr->name, acptr->name, acptr->user->username,
 			    GetHost(acptr), parv[2]);
+			/* Logging ability added by XeRXeS */
+			ircd_log(LOG_CHGCMDS,
+				"CHGNAME: %s changed the GECOS of %s (%s@%s) to be %s", 
+				sptr->name, acptr->name, acptr->user->username,
+				GetHost(acptr), parv[2]);
 		}
 
-		/* Logging ability added by XeRXeS */
-		ircd_log(LOG_CHGCMDS,
-		"CHGNAME: %s changed the GECOS of %s (%s@%s) to be %s", 
-		sptr->name, acptr->name, acptr->user->username,
-		GetHost(acptr), parv[2]);
 
 		sendto_serv_butone_token(cptr, sptr->name,
 		    MSG_CHGNAME, TOK_CHGNAME, "%s :%s", acptr->name, parv[2]);

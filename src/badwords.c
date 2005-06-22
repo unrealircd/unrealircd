@@ -62,12 +62,12 @@ inline int fast_badword_match(ConfigItem_badword *badword, char *line)
 	{
 		if (!(badword->type & BADW_TYPE_FAST_L))
 		{
-			if ((p != line) && isalnum(*(p - 1))) /* aaBLA but no *BLA */
+			if ((p != line) && !iswseperator(*(p - 1))) /* aaBLA but no *BLA */
 				goto next;
 		}
 		if (!(badword->type & BADW_TYPE_FAST_R))
 		{
-			if (isalnum(*(p + bwlen)))  /* BLAaa but no BLA* */
+			if (!iswseperator(*(p + bwlen)))  /* BLAaa but no BLA* */
 				goto next;
 		}
 		/* Looks like it matched */
@@ -102,15 +102,14 @@ int cleaned = 0;
 		pold = our_strcasestr(pold, badword->word);
 		if (!pold)
 			break;
-		cleaned = 1;
 		if (replacen == -1)
 			replacen = strlen(replacew);
 		if (searchn == -1)
 			searchn = strlen(badword->word);
 		/* Hunt for start of word */
  		if (pold > line) {
-			for (startw = pold; (isalnum(*startw) && (startw != line)); startw--);
-			if (!isalnum(*startw))
+			for (startw = pold; (!iswseperator(*startw) && (startw != line)); startw--);
+			if (iswseperator(*startw))
 				startw++; /* Don't point at the space/seperator but at the word! */
 		} else {
 			startw = pold;
@@ -123,13 +122,15 @@ int cleaned = 0;
 		}
 
 		/* Hunt for end of word */
-		for (endw = pold; ((*endw != '\0') && (isalnum(*endw))); endw++);
+		for (endw = pold; ((*endw != '\0') && (!iswseperator(*endw))); endw++);
 
 		if (!(badword->type & BADW_TYPE_FAST_R) && (pold+searchn != endw)) {
 			/* not matched */
 			pold++;
 			continue;
 		}
+
+		cleaned = 1; /* still too soon? Syzop/20050227 */
 
 		/* Do we have any not-copied-yet data? */
 		if (poldx != startw) {
@@ -185,7 +186,7 @@ char *stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked)
 	static char cleanstr[4096];
 	char buf[4096];
 	char *ptr;
-	int  matchlen, stringlen, cleaned;
+	int  matchlen, m, stringlen, cleaned;
 	ConfigItem_badword *this_word;
 	
 	*blocked = 0;
@@ -244,8 +245,11 @@ char *stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked)
 				{
 					if (pmatch[0].rm_so == -1)
 						break;
+					m = pmatch[0].rm_eo - pmatch[0].rm_so;
+					if (m == 0)
+						break; /* anti-loop */
 					cleaned = 1;
-					matchlen += pmatch[0].rm_eo - pmatch[0].rm_so;
+					matchlen += m;
 					strlncat(buf, ptr, sizeof buf, pmatch[0].rm_so);
 					if (this_word->replace)
 						strlcat(buf, this_word->replace, sizeof buf); 

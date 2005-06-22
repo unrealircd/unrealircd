@@ -5,13 +5,13 @@
 ; Uncomment the above line to package an SSL build
 #define USE_ZIP
 ; Uncomment the above line to package with ZIP support
-; #define USE_CURL
+#define USE_CURL
 ; Uncomment the above line to package with libcurl support
 
 
 [Setup]
 AppName=UnrealIRCd
-AppVerName=UnrealIRCd3.2
+AppVerName=UnrealIRCd3.2.3
 AppPublisher=UnrealIRCd Team
 AppPublisherURL=http://www.unrealircd.com
 AppSupportURL=http://www.unrealircd.com
@@ -32,10 +32,10 @@ OutputDir=../../
 [Tasks]
 Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"
 Name: "quicklaunchicon"; Description: "Create a &Quick Launch icon"; GroupDescription: "Additional icons:"; Flags: unchecked
-Name: "installservice"; Description: "Install as a &service (not for beginners)"; GroupDescription: "Service support:"; MinVersion: 0,4.0
-Name: "installservice/startboot"; Description: "S&tart UnrealIRCd when Windows starts"; GroupDescription: "Service support:"; MinVersion: 0,4.0; Flags: exclusive
-Name: "installservice/startdemand"; Description: "Start UnrealIRCd on &request"; GroupDescription: "Service support:"; MinVersion: 0,4.0; Flags: exclusive
-Name: "installservice/crashrestart"; Description: "Restart UnrealIRCd if it &crashes"; GroupDescription: "Service support:"; MinVersion: 0,5.0;
+Name: "installservice"; Description: "Install as a &service (not for beginners)"; GroupDescription: "Service support:"; Flags: unchecked; MinVersion: 0,4.0
+Name: "installservice/startboot"; Description: "S&tart UnrealIRCd when Windows starts"; GroupDescription: "Service support:"; MinVersion: 0,4.0; Flags: exclusive unchecked
+Name: "installservice/startdemand"; Description: "Start UnrealIRCd on &request"; GroupDescription: "Service support:"; MinVersion: 0,4.0; Flags: exclusive unchecked
+Name: "installservice/crashrestart"; Description: "Restart UnrealIRCd if it &crashes"; GroupDescription: "Service support:"; Flags: unchecked; MinVersion: 0,5.0;
 #ifdef USE_SSL
 Name: "makecert"; Description: "&Create certificate"; GroupDescription: "SSL options:";
 Name: "enccert"; Description: "&Encrypt certificate"; GroupDescription: "SSL options:"; Flags: unchecked;
@@ -52,6 +52,7 @@ Source: "..\..\badwords.channel.conf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\badwords.message.conf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\badwords.quit.conf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\spamfilter.conf"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\dccallow.conf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\Changes"; DestDir: "{app}"; DestName: "Changes.txt"; Flags: ignoreversion
 Source: "..\..\Changes.old"; DestDir: "{app}"; DestName: "Changes.old.txt"; Flags: ignoreversion
 Source: "..\..\Donation"; DestDir: "{app}"; DestName: "Donation.txt"; Flags: ignoreversion
@@ -59,9 +60,11 @@ Source: "..\..\help.conf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
 Source: "..\..\Unreal.nfo"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\doc\*.*"; DestDir: "{app}\doc"; Flags: ignoreversion
+Source: "..\..\doc\technical\*.*"; DestDir: "{app}\doc\technical"; Flags: ignoreversion
 Source: "..\..\aliases\*"; DestDir: "{app}\aliases"; Flags: ignoreversion
 Source: "..\..\networks\*"; DestDir: "{app}\networks"; Flags: ignoreversion
 Source: "..\..\unreal.exe"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0,4.0
+Source: "..\modules\*.dll"; DestDir: "{app}\modules"; Flags: ignoreversion
 Source: "tre.dll"; DestDir: "{app}"; Flags: ignoreversion
 #ifdef USE_SSL
 Source: "c:\openssl\bin\openssl.exe"; DestDir: "{app}"; Flags: ignoreversion
@@ -90,12 +93,14 @@ function isxdl_Download(hWnd: Integer; URL, Filename: PChar): Integer;
 external 'isxdl_Download@files:isxdl.dll stdcall';
 function isxdl_SetOption(Option, Value: PChar): Integer;
 external 'isxdl_SetOption@files:isxdl.dll stdcall';
-const url = 'http://www.unrealircd.com/downloads/DbgHelp.Dll';
-var didDl: Boolean;
+const dbgurl = 'http://www.unrealircd.com/downloads/DbgHelp.Dll';
+const crturl = 'http://www.unrealircd.com/downloads/msvcr70.dll';
+var didDbgDl,didCrtDl: Boolean;
 
 function NextButtonClick(CurPage: Integer): Boolean;
 var
 dbghelp,tmp,output: String;
+msvcrt: String;
 m: String;
 hWnd,answer: Integer;
 begin
@@ -103,7 +108,21 @@ begin
     if ((CurPage = wpReady)) then begin
       dbghelp := ExpandConstant('{sys}\DbgHelp.Dll');
       output := ExpandConstant('{app}\DbgHelp.Dll');
+      msvcrt := ExpandConstant('{sys}\msvcr70.Dll');
       GetVersionNumbersString(dbghelp,m);
+    if (NOT FileExists(msvcrt)) then begin
+      answer := MsgBox('Unreal requires the MS C Runtime 7.0 in order to run, do you wish to install it now?', mbConfirmation, MB_YESNO);
+      if answer = IDYES then begin
+        tmp := ExpandConstant('{tmp}\msvcr70.Dll');
+        isxdl_SetOption('title', 'Downloading msvcr70.dll');
+        hWnd := StrToInt(ExpandConstant('{wizardhwnd}'));
+        if isxdl_Download(hWnd, crturl, tmp) = 0 then begin
+          MsgBox('Download and installation of msvcr70.dll failed, the file must be manually installed. The file can be downloaded at http://www.unrealircd.com/downloads/mscvr70.dll', mbInformation, MB_OK);
+        end else
+          didCrtDl := true;
+      end else
+        MsgBox('In order for Unreal to properly function, you must manually install msvcr70.dll. The dll can be downloaded from http://www.unrealircd.com/downloads/msvcr70.dll', mbInformation, MB_OK);
+    end;
     if (NOT FileExists(output)) then begin
           if (NOT FileExists(dbghelp)) then
         m := StringOfChar('0',1);
@@ -113,26 +132,33 @@ begin
           tmp := ExpandConstant('{tmp}\dbghelp.dll');
           isxdl_SetOption('title', 'Downloading DbgHelp.dll');
           hWnd := StrToInt(ExpandConstant('{wizardhwnd}'));
-          if isxdl_Download(hWnd, url, tmp) = 0 then begin
+          if isxdl_Download(hWnd, dbgurl, tmp) = 0 then begin
             MsgBox('Download and installation of DbgHelp.Dll failed, the file must be manually installed. The file can be downloaded at http://www.unrealircd.com/downloads/DbgHelp.Dll', mbInformation, MB_OK);
           end else
-            didDl := true;
+            didDbgDl := true;
         end else
-        MsgBox('In order for Unreal to properly function you must manually install this dll. The dll can be downloaded from http://www.unrealircd.com/downloads/DbgHelp.Dll', mbInformation, MB_OK);
+        MsgBox('In order for Unreal to properly function you must manually install dbghelp.dll. The dll can be downloaded from http://www.unrealircd.com/downloads/DbgHelp.Dll', mbInformation, MB_OK);
       end;
     end;
   end;
   Result := true;
 end;
 
-procedure DeInitializeSetup();
+procedure CurStepChanged(CurStep: TSetupStep);
 var
 input,output: String;
 begin
-  if (didDl) then begin
-    input := ExpandConstant('{tmp}\dbghelp.dll');
-    output := ExpandConstant('{app}\dbghelp.dll');
-    FileCopy(input, output, true);
+  if (CurStep = ssPostInstall) then begin
+    if (didDbgDl) then begin
+      input := ExpandConstant('{tmp}\dbghelp.dll');
+      output := ExpandConstant('{app}\dbghelp.dll');
+      FileCopy(input, output, true);
+    end;
+    if (didCrtDl) then begin
+      input := ExpandConstant('{tmp}\msvcr70.dll');
+      output := ExpandConstant('{sys}\msvcr70.dll');
+      FileCopy(input, output, true);
+    end;
   end;
 end;
 

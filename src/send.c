@@ -70,8 +70,8 @@ static int sentalong[MAXCONNECTIONS];
 void vsendto_prefix_one(struct Client *to, struct Client *from,
     const char *pattern, va_list vl);
 
-int  sentalong_marker;
-int  sendanyways = 0;
+MODVAR int  sentalong_marker;
+MODVAR int  sendanyways = 0;
 /*
 ** dead_link
 **	An error has been detected. The link *must* be closed,
@@ -84,7 +84,6 @@ int  sendanyways = 0;
 */
 static int dead_link(aClient *to, char *notice)
 {
-	char	*error = NULL;
 	
 	to->flags |= FLAGS_DEADSOCKET;
 	/*
@@ -97,7 +96,7 @@ static int dead_link(aClient *to, char *notice)
 	if (!IsPerson(to) && !IsUnknown(to) && !(to->flags & FLAGS_CLOSING))
 		(void)sendto_failops_whoare_opers("Closing link: %s - %s",
 			notice, get_client_name(to, FALSE));
-	Debug((DEBUG_ERROR, notice, get_client_name(to, FALSE), error));
+	Debug((DEBUG_ERROR, "dead_link: %s - %s", notice, get_client_name(to, FALSE)));
 	to->error_str = strdup(notice);
 	return -1;
 }
@@ -196,7 +195,7 @@ int  send_queued(aClient *to)
 		if ((rlen = deliver_it(to, msg, len)) < 0)
 		{
 			char buf[256];
-			snprintf(buf, 256, "Write error: %s", strerror(ERRNO));
+			snprintf(buf, 256, "Write error: %s", STRERROR(ERRNO));
 			return dead_link(to, buf);
 		}
 		(void)dbuf_delete(&to->sendQ, rlen);
@@ -574,10 +573,11 @@ void sendto_chmodemucrap(aClient *from, aChannel *chptr, char *text)
 	Member *lp;
 	aClient *acptr;
 	int  i;
+	int remote = MyClient(from) ? 0 : 1;
 
 	sprintf(tcmd, ":%s %s %s :%s", from->name, TOK_PRIVATE, chptr->chname, text); /* token */
 	sprintf(ccmd, ":%s %s %s :%s", from->name, MSG_PRIVATE, chptr->chname, text); /* msg */
-	sprintf(xcmd, ":IRC PRIVMSG %s :%s: %s", chptr->chname, from->name, text); /* local */
+	sprintf(xcmd, ":IRC!IRC@%s PRIVMSG %s :%s: %s", me.name, chptr->chname, from->name, text); /* local */
 
 	++sentalong_marker;
 	for (lp = chptr->members; lp; lp = lp->next)
@@ -587,6 +587,8 @@ void sendto_chmodemucrap(aClient *from, aChannel *chptr, char *text)
 		if (IsDeaf(acptr) && !sendanyways)
 			continue;
 		if (!(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)))
+			continue;
+		if (remote && (acptr->from == from->from)) /* don't send it back to where it came from */
 			continue;
 		i = acptr->from->slot;
 		if (MyConnect(acptr) && IsRegisteredUser(acptr))
@@ -840,6 +842,10 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 		if ((opt & OPT_TKLEXT) && !(cptr->proto & PROTO_TKLEXT))
 			continue;
 		if ((opt & OPT_NOT_TKLEXT) && (cptr->proto & PROTO_TKLEXT))
+			continue;
+		if ((opt & OPT_NICKIP) && !(cptr->proto & PROTO_TKLEXT))
+			continue;
+		if ((opt & OPT_NOT_NICKIP) && (cptr->proto & PROTO_NICKIP))
 			continue;
 
 		if (IsToken(cptr))
@@ -1133,7 +1139,7 @@ void sendto_common_channels(aClient *user, char *pattern, ...)
 			for (users = channels->chptr->members; users; users = users->next)
 			{
 				cptr = users->cptr;
-				if (!MyConnect(cptr) || sentalong[cptr->slot] == sentalong_marker)
+				if (!MyConnect(cptr) || (cptr->slot < 0) || (sentalong[cptr->slot] == sentalong_marker))
 					continue;
 				if ((channels->chptr->mode.mode & MODE_AUDITORIUM) &&
 				    !(is_chanownprotop(user, channels->chptr) || is_chanownprotop(cptr, channels->chptr)))
@@ -1443,32 +1449,110 @@ void sendto_umode_raw(int umodes, char *pattern, ...)
 	va_end(vl);
 	return;
 }
-/*
- * sendto_snomask
- *
- *  Send to specified umode
+/** Send to specified snomask - local / operonly.
+ * @param snomask Snomask to send to (can be a bitmask [AND])
+ * @param pattern printf-style pattern, followed by parameters.
+ * This function does not send snomasks to non-opers.
  */
 void sendto_snomask(int snomask, char *pattern, ...)
 {
 	va_list vl;
 	aClient *cptr;
-	int  i;
-	char nbuf[1024];
+	int  i, j;
+	char nbuf[2048];
+
 	va_start(vl, pattern);
-	for (i = 0; i <= LastSlot; i++)
-		if ((cptr = local[i]) && IsPerson(cptr) && (cptr->user->snomask & snomask))
-		{
-			(void)ircsprintf(nbuf, ":%s NOTICE %s :",
-			    me.name, cptr->name);
-			(void)strncat(nbuf, pattern,
-			    sizeof(nbuf) - strlen(nbuf));
-			va_start(vl, pattern);
-			vsendto_one(cptr, nbuf, vl);
-			va_end(vl);
-		}
+	ircvsprintf(nbuf, pattern, vl);
 	va_end(vl);
-	return;
+
+	for (i = oper_fdlist.entry[j = 1]; j <= oper_fdlist.last_entry; i = oper_fdlist.entry[++j])
+		if (((cptr = local[i])) && (cptr->user->snomask & snomask))
+			sendto_one(cptr, ":%s NOTICE %s :%s", me.name, cptr->name, nbuf);
 }
+
+/** Send to specified snomask - global / operonly.
+ * @param snomask Snomask to send to (can be a bitmask [AND])
+ * @param pattern printf-style pattern, followed by parameters
+ * This function does not send snomasks to non-opers.
+ */
+void sendto_snomask_global(int snomask, char *pattern, ...)
+{
+	va_list vl;
+	aClient *cptr;
+	int  i, j;
+	char nbuf[2048], snobuf[32], *p;
+
+	va_start(vl, pattern);
+	ircvsprintf(nbuf, pattern, vl);
+	va_end(vl);
+
+	for (i = oper_fdlist.entry[j = 1]; j <= oper_fdlist.last_entry; i = oper_fdlist.entry[++j])
+		if (((cptr = local[i])) && (cptr->user->snomask & snomask))
+			sendto_one(cptr, ":%s NOTICE %s :%s", me.name, cptr->name, nbuf);
+
+	/* Build snomasks-to-send-to buffer */
+	snobuf[0] = '\0';
+	for (i = 0, p=snobuf; i<= Snomask_highest; i++)
+		if (snomask & Snomask_Table[i].mode)
+			*p++ = Snomask_Table[i].flag;
+	*p = '\0';
+
+	sendto_serv_butone_token(NULL, me.name, MSG_SENDSNO, TOK_SENDSNO,
+		"%s :%s", snobuf, nbuf);
+}
+
+/** Send to specified snomask - local.
+ * @param snomask Snomask to send to (can be a bitmask [AND])
+ * @param pattern printf-style pattern, followed by parameters.
+ * This function also delivers to non-opers w/the snomask if needed.
+ */
+void sendto_snomask_normal(int snomask, char *pattern, ...)
+{
+	va_list vl;
+	aClient *cptr;
+	int  i;
+	char nbuf[2048];
+
+	va_start(vl, pattern);
+	ircvsprintf(nbuf, pattern, vl);
+	va_end(vl);
+
+	for (i = LastSlot; i >= 0; i--)
+		if ((cptr = local[i]) && IsPerson(cptr) && (cptr->user->snomask & snomask))
+			sendto_one(cptr, ":%s NOTICE %s :%s", me.name, cptr->name, nbuf);
+}
+
+/** Send to specified snomask - global.
+ * @param snomask Snomask to send to (can be a bitmask [AND])
+ * @param pattern printf-style pattern, followed by parameters
+ * This function also delivers to non-opers w/the snomask if needed.
+ */
+void sendto_snomask_normal_global(int snomask, char *pattern, ...)
+{
+	va_list vl;
+	aClient *cptr;
+	int  i;
+	char nbuf[2048], snobuf[32], *p;
+
+	va_start(vl, pattern);
+	ircvsprintf(nbuf, pattern, vl);
+	va_end(vl);
+
+	for (i = LastSlot; i >= 0; i--)
+		if ((cptr = local[i]) && IsPerson(cptr) && (cptr->user->snomask & snomask))
+			sendto_one(cptr, ":%s NOTICE %s :%s", me.name, cptr->name, nbuf);
+
+	/* Build snomasks-to-send-to buffer */
+	snobuf[0] = '\0';
+	for (i = 0, p=snobuf; i<= Snomask_highest; i++)
+		if (snomask & Snomask_Table[i].mode)
+			*p++ = Snomask_Table[i].flag;
+	*p = '\0';
+
+	sendto_serv_butone_token(NULL, me.name, MSG_SENDSNO, TOK_SENDSNO,
+		"%s :%s", snobuf, nbuf);
+}
+
 
 /*
  * sendto_failops_whoare_opers
@@ -1763,7 +1847,7 @@ void sendto_realops(char *pattern, ...)
 void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnect, char *comment)
 {
 	aClient *cptr;
-	int  i;
+	int  i, j;
 	char connectd[1024];
 	char connecth[1024];
 
@@ -1794,9 +1878,45 @@ void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnec
 			nick, user->username, user->realhost, comment, Inet_ia2p(&sptr->ip));
 	}
 
-	for (i = 0; i <= LastSlot; i++)
-		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
-		    IsAnOper(cptr) && (cptr->user->snomask & SNO_CLIENT))
+	for (i = oper_fdlist.entry[j = 1]; j <= oper_fdlist.last_entry; i = oper_fdlist.entry[++j])
+		if (((cptr = local[i])) && (cptr->user->snomask & SNO_CLIENT))
+		{
+			if (IsHybNotice(cptr))
+				sendto_one(cptr, ":%s NOTICE %s :%s", me.name,
+				    cptr->name, connecth);
+			else
+				sendto_one(cptr, ":%s NOTICE %s :%s", me.name,
+				    cptr->name, connectd);
+
+		}
+}
+
+void sendto_fconnectnotice(char *nick, anUser *user, aClient *sptr, int disconnect, char *comment)
+{
+	aClient *cptr;
+	int  i, j;
+	char connectd[1024];
+	char connecth[1024];
+
+	if (!disconnect)
+	{
+		ircsprintf(connectd, "*** Notice -- Client connecting at %s: %s (%s@%s)",
+			    user->server, nick, user->username, user->realhost);
+		ircsprintf(connecth,
+		    "*** Notice -- Client connecting at %s: %s (%s@%s) [%s] {0}", user->server, nick,
+		    user->username, user->realhost, user->ip_str ? user->ip_str : "0");
+	}
+	else 
+	{
+		ircsprintf(connectd, "*** Notice -- Client exiting at %s: %s!%s@%s (%s)",
+			   user->server, nick, user->username, user->realhost, comment);
+		ircsprintf(connecth, "*** Notice -- Client exiting at %s: %s (%s@%s) [%s] [%s]",
+			user->server, nick, user->username, user->realhost, comment,
+			user->ip_str ? user->ip_str : "0");
+	}
+
+	for (i = oper_fdlist.entry[j = 1]; j <= oper_fdlist.last_entry; i = oper_fdlist.entry[++j])
+		if (((cptr = local[i])) && (cptr->user->snomask & SNO_FCLIENT))
 		{
 			if (IsHybNotice(cptr))
 				sendto_one(cptr, ":%s NOTICE %s :%s", me.name,
@@ -1836,30 +1956,47 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 		if (IsServer(cptr))
 #endif
 		{
+			char *vhost;
+			if (SupportVHP(cptr))
+			{
+				if (IsHidden(sptr))
+					vhost = sptr->user->virthost;
+				else
+					vhost = sptr->user->realhost;
+			}
+			else
+			{
+				if (IsHidden(sptr) && sptr->umodes & UMODE_SETHOST)
+					vhost = sptr->user->virthost;
+				else
+					vhost = "*";
+			}
+				
 			if (SupportNICKv2(cptr))
 			{
 				if (sptr->srvptr->serv->numeric && SupportNS(cptr))
 					sendto_one(cptr,
 						(cptr->proto & PROTO_SJB64) ?
-					    "%s %s %d %B %s %s %b %lu %s %s :%s"
+					    /* Ugly double %s to prevent excessive spaces */
+					    "%s %s %d %B %s %s %b %lu %s %s %s%s:%s"
 					    :
-					    "%s %s %d %d %s %s %b %lu %s %s :%s"
+					    "%s %s %d %d %s %s %b %lu %s %s %s%s:%s"
 					    ,
 					    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
 					    hopcount, lastnick, username, realhost,
 					    (long)(sptr->srvptr->serv->numeric),
-					    servicestamp, umodes,
-						  (SupportVHP(cptr) ? (IsHidden(sptr) ? sptr->user->virthost : realhost) : (virthost ? virthost : "*")),
-						    info);
+					    servicestamp, umodes, vhost,
+					    SupportNICKIP(cptr) ? encode_ip(sptr->user->ip_str) : "",
+					    SupportNICKIP(cptr) ? " " : "", info);
 				else
 					sendto_one(cptr,
-					    "%s %s %d %d %s %s %s %lu %s %s :%s",
+					    "%s %s %d %d %s %s %s %lu %s %s %s%s:%s",
 					    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
 					    hopcount, lastnick, username, realhost,
 					    SupportNS(cptr) && sptr->srvptr->serv->numeric ? base64enc(sptr->srvptr->serv->numeric) : server,
-					    servicestamp, umodes,
-						  (SupportVHP(cptr) ? (IsHidden(sptr) ? sptr->user->virthost : realhost) : (virthost ? virthost : "*")),
-						    info);
+					    servicestamp, umodes, vhost,
+					    SupportNICKIP(cptr) ? encode_ip(sptr->user->ip_str) : "",
+					    SupportNICKIP(cptr) ? " " : "", info);
 
 			}
 			else
@@ -1892,6 +2029,84 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 					     realhost));
 				}
 			}
+		}
+	}
+	return;
+}
+
+/*
+ * sendto_one_nickcmd
+ *
+ */
+void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes)
+{
+	if (SupportNICKv2(cptr))
+	{
+		char *vhost;
+		if (SupportVHP(cptr))
+		{
+			if (IsHidden(sptr))
+				vhost = sptr->user->virthost;
+			else
+				vhost = sptr->user->realhost;
+		}
+		else
+		{
+			if (IsHidden(sptr) && sptr->umodes & UMODE_SETHOST)
+				vhost = sptr->user->virthost;
+			else
+				vhost = "*";
+		}
+		if (sptr->srvptr->serv->numeric && SupportNS(cptr))
+			sendto_one(cptr,
+				(cptr->proto & PROTO_SJB64) ?
+			    /* Ugly double %s to prevent excessive spaces */
+			    "%s %s %d %B %s %s %b %lu %s %s %s%s:%s"
+			    :
+			    "%s %s %d %d %s %s %b %lu %s %s %s%s:%s"
+			    ,
+			    (IsToken(cptr) ? TOK_NICK : MSG_NICK), sptr->name,
+			    sptr->hopcount+1, sptr->lastnick, sptr->user->username, 
+			    sptr->user->realhost, (long)(sptr->srvptr->serv->numeric),
+			    sptr->user->servicestamp, umodes, vhost,
+			    SupportNICKIP(cptr) ? encode_ip(sptr->user->ip_str) : "",
+			    SupportNICKIP(cptr) ? " " : "", sptr->info);
+		else
+			sendto_one(cptr,
+			    "%s %s %d %d %s %s %s %lu %s %s %s%s:%s",
+			    (IsToken(cptr) ? TOK_NICK : MSG_NICK), sptr->name,
+			    sptr->hopcount+1, sptr->lastnick, sptr->user->username, 
+			    sptr->user->realhost, SupportNS(cptr) && 
+			    sptr->srvptr->serv->numeric ? base64enc(sptr->srvptr->serv->numeric)
+			    : sptr->user->server, sptr->user->servicestamp, umodes, vhost,
+			    SupportNICKIP(cptr) ? encode_ip(sptr->user->ip_str) : "",
+			    SupportNICKIP(cptr) ? " " : "", sptr->info);
+	}
+	else
+	{
+		sendto_one(cptr, "%s %s %d %d %s %s %s %lu :%s",
+		    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
+		    sptr->name, sptr->hopcount+1, sptr->lastnick, sptr->user->username,
+		    sptr->user->realhost, sptr->user->server, sptr->user->servicestamp, 
+		    sptr->info);
+		if (strcmp(umodes, "+"))
+		{
+			sendto_one(cptr, ":%s %s %s :%s",
+			    sptr->name, (IsToken(cptr) ? TOK_MODE :
+			    MSG_MODE), sptr->name, umodes);
+		}
+		if (IsHidden(sptr) && (sptr->umodes & UMODE_SETHOST))
+		{
+			sendto_one(cptr, ":%s %s %s",
+			    sptr->name, (IsToken(cptr) ? TOK_SETHOST :
+			    MSG_SETHOST), sptr->user->virthost);
+		}
+		else if (SupportVHP(cptr))
+		{
+			sendto_one(cptr, ":%s %s %s", sptr->name, 
+			    (IsToken(cptr) ? TOK_SETHOST : MSG_SETHOST),
+			    (IsHidden(sptr) ? sptr->user->virthost :
+			    sptr->user->realhost));
 		}
 	}
 	return;

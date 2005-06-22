@@ -77,11 +77,6 @@
 #define SHOW_SECRET
 
 /*
- * This allows you to see modes in /list
-*/
-#define LIST_SHOW_MODES
-
-/*
  * Admin's chat...
  */
 #define ADMINCHAT 1
@@ -93,23 +88,11 @@
 #undef SECURECHANMSGSONLYGOTOSECURE
 
 /*
- * be compatible with older cloak keys? If you link to servers beta4 and 
- * earlier without this the cloak keys will produce diff results
- * Not recommended, however, as beta4 and earlier 3.2 has an insecure
- * cloak algo -griever
- */
-#undef COMPAT_BETA4_KEYS
-
-/*
-  If you want SHUN_NOTICES, define this
-*/
-#undef SHUN_NOTICES
-
-/*
    If you want to support chinese and/or japanese nicks
 */
-#undef CHINESE_NICK
-#undef JAPANESE_NICK
+#undef NICK_GB2312
+#undef NICK_GBK
+#undef NICK_GBK_JAP
 
 /*
   Remote rehash
@@ -127,37 +110,10 @@
 #undef STRIPBADWORDS_CHAN_ALWAYS
 
 /*
- * NO_OPEROVERRIDE
- *   This will disable OperMode, OperTopic and Banwalks
-*/
-#undef NO_OPEROVERRIDE
-
-/*
- * OPEROVERRIDE_VERIFY
- *   This will prompt opers before permitting them to join +p/+s
- *   channels, decreasing the chances of someone "accidentally"
- *   entering a random channel.
- */
-#undef OPEROVERRIDE_VERIFY
-
-/*
  * THROTTLING
  *   This will only allow 1 connection per ip in set::throttle::period time
  */
 #define THROTTLING
-
-/*
- * NAZIISH_CHBAN_HANDLING (formerly ANNOYING_BAN_THING)
- *   Reject bans that are matched by existing bans, causes chanserv
- *   To flood-kick an akicked user if their akick is matched by another
- *   Ban, but if you don't mind, this can free up ban list space I guess
- */
-#undef NAZIISH_CHBAN_HANDLING
-
-/*
- * Disable /sethost, /setident, /chgname, /chghost, /chgident
-*/
-#undef DISABLE_USERMOD
 
 /*
  * No spoof code
@@ -177,13 +133,6 @@
  *		 it will strip characters that are not 0-9,a-z,A-Z,_,- or .
  */
 #define HOSTILENAME		/* [DO NOT CHANGE!] */
-
-/*
- * This makes topics include nick!user@host instead of nick in topic whoset, 
- * ALL servers must be Unreal3.2-beta12 or higher, and services may have some
- * problems with this
-*/
-#undef TOPIC_NICK_IS_NUHOST
 
 /*
  * Use JOIN instead of SJOIN on every remotely sent JOIN
@@ -241,7 +190,11 @@
  *       the maintainer.
  */
 
-/* #undef	DEBUGMODE	   define DEBUGMODE to enable debugging mode.*/
+/* DEBUGMODE: This should only be used when tracing a problem. It creates
+ * an insane amount of log output which can be very useful for debugging.
+ * You should *NEVER* enable this setting on production servers.
+ */
+/* #undef	DEBUGMODE */
 
 /*
  * Full pathnames and defaults of irc system's support files. Please note that
@@ -255,7 +208,6 @@
 #define OPATH   	"oper.motd"	/* Operators MOTD file */
 #define	LPATH		"debug.log"	/* Where the debug file lives, if DEBUGMODE */
 #define	PPATH		"ircd.pid"	/* file for server pid */
-#define lPATH		"ircd.log"	/* server log file */
 #define VPATH		"ircd.svsmotd"	/* Services MOTD append. */
 #define BPATH		"bot.motd"	/* Bot MOTD */
 #define IRCDTUNE 	"ircd.tune"	/* tuning .. */
@@ -374,25 +326,13 @@
 #define PORTNUM 6667		/* 6667 is default */
 
 /*
- * Maximum number of network connections your server will allow.  This should
- * never exceed max. number of open file descrpitors and wont increase this.
- * Should remain LOW as possible. Most sites will usually have under 30 or so
- * connections. A busy hub or server may need this to be as high as 50 or 60.
- * Making it over 100 decreases any performance boost gained from it being low.
- * if you have a lot of server connections, it may be worth splitting the load
- * over 2 or more servers.
- * 1 server = 1 connection, 1 user = 1 connection.
- * This should be at *least* 3: 1 listen port, 1 dns port + 1 client
- *
- * Note: this figure will be too high for most systems. If you get an
- * fd-related error on compile, change this to 256.
- *
- * Windows users: This should be a fairly high number.  Some operations
- * will slow down because of this, but it is _required_ because of the way
- * windows NT(and possibly 95) allocate fd handles. A good number is 16384.
+ * Maximum number of network connections your server will allow.
+ * This is usually configured via ./Config on *NIX,
+ * the setting mentioned below is the default for Windows.
+ * 2004-10-13: 1024 -> 4096
  */
 #ifndef MAXCONNECTIONS
-#define MAXCONNECTIONS	1024
+#define MAXCONNECTIONS	4096
 #endif
 
 /*
@@ -484,8 +424,14 @@
 #define SIXBONE_HACK
 
 /*
+ * Forces Unreal to use compressed IPv6 addresses rather than expanding them
+ */
+#undef IPV6_COMPRESSED
+
+/*
  * Extended channel modes. This extends the channel modes with yet another
  * 32 possible modes which can also be used in modules.
+ * This is now pretty much required.
  */
 #define EXTCMODE
 
@@ -494,6 +440,13 @@
  * msgs, joins, ctcps, nickchanges and /knock.
  */
 #define NEWCHFLOODPROT
+
+/* JoinThrottle (chanmode +j): +j x:y throttles users to X joins per Y seconds (per-user).
+ * In peak situations (eg: just after a server restart with thousand clients joining
+ * hundreds of channels) it can use like ~200k, but in normal circumstances you should
+ * count on just ~10-50k.
+ */
+#define JOINTHROTTLE
 
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #define MOTD MPATH

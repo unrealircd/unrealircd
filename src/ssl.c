@@ -103,7 +103,7 @@ static char ssl_errbuf[256];
 	    ssl_errstr = "OpenSSL requested a X509 lookup which didn`t arrive";
 	    break;
 	case SSL_ERROR_SYSCALL:
-		snprintf(ssl_errbuf, sizeof(ssl_errbuf), "Underlying syscall error [%s]", strerror(ERRNO));
+		snprintf(ssl_errbuf, sizeof(ssl_errbuf), "Underlying syscall error [%s]", STRERROR(ERRNO));
 		ssl_errstr = ssl_errbuf;
 	    break;
 	case SSL_ERROR_ZERO_RETURN:

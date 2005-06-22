@@ -36,7 +36,7 @@
 #include <process.h>
 #include <io.h>
 #endif
-//#include "dynconf.h"
+#include "types.h"
 #include "config.h"
 #ifdef	PARAMH
 #include <sys/param.h>
@@ -96,12 +96,12 @@ void free();
 #define TS time_t
 
 
-extern int match(char *, char *);
+extern int match(const char *, const char *);
 #define mycmp(a,b) \
  ( (toupper(a[0])!=toupper(b[0])) || smycmp((a)+1,(b)+1) )
-extern int smycmp(char *, char *);
+extern int smycmp(const char *, const char *);
 #ifndef GLIBC2_x
-extern int myncmp(char *, char *, int);
+extern int myncmp(const char *, const char *, int);
 #endif
 
 #ifdef NEED_STRTOK
@@ -125,7 +125,15 @@ extern char *inet_ntoa(struct IN_ADDR);
 extern int inet_netof(struct IN_ADDR);
 #endif
 
-int  global_count, max_global_count;
+#ifndef HAVE_INET_NTOP
+const char *inet_ntop(int, const void *, char *, size_t);
+#endif
+
+#ifndef HAVE_INET_PTON
+int inet_pton(int af, const char *src, void *dst);
+#endif
+
+MODVAR int  global_count, max_global_count;
 extern char *myctime(time_t);
 extern char *strtoken(char **, char *, char *);
 
@@ -140,10 +148,11 @@ extern char *strtoken(char **, char *, char *);
 
 #define DupString(x,y) do{int l=strlen(y);x=MyMalloc(l+1);(void)memcpy(x,y, l+1);}while(0)
 
-extern u_char tolowertab[], touppertab[];
+extern MODVAR u_char tolowertab[], touppertab[];
 
-#if defined(CHINESE_NICK) || defined(JAPANESE_NICK)
+#if defined(NICK_GB2312) || defined(NICK_GBK) || defined(NICK_GBK_JAP)
 #define USE_LOCALE
+#include <ctype.h>
 #endif
 
 #ifndef USE_LOCALE
@@ -166,7 +175,7 @@ extern u_char tolowertab[], touppertab[];
 #undef isspace
 #undef iscntrl
 #endif
-extern unsigned char char_atribs[];
+extern MODVAR unsigned char char_atribs[];
 
 #define PRINT 1
 #define CNTRL 2
@@ -175,6 +184,7 @@ extern unsigned char char_atribs[];
 #define DIGIT 16
 #define SPACE 32
 #define ALLOW 64
+#define ALLOWN 128
 
 #ifndef KLINE_TEMP
 #define KLINE_PERM 0
@@ -199,6 +209,7 @@ extern unsigned char char_atribs[];
 #define isgraph(c) ((char_atribs[(u_char)(c)]&PRINT) && ((u_char)(c) != 0x32))
 #define ispunct(c) (!(char_atribs[(u_char)(c)]&(CNTRL|ALPHA|DIGIT)))
 #endif
+#define iswseperator(c) (!isalnum(c) && !((u_char)c >= 128))
 
 #ifndef MALLOCD
 #define MyFree free
@@ -240,66 +251,18 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
  #define EXPAR4 ""
 #endif /* EXTCMODE */
 
-#define PROTOCTL_CLIENT_1         \
-		"MAP"             \
-		" KNOCK"          \
-		" SAFELIST"       \
-		" HCN"	          \
-		" MAXCHANNELS=%i" \
-		" MAXBANS=%i"     \
-		" NICKLEN=%i"     \
-		" TOPICLEN=%i"    \
-		" KICKLEN=%i"     \
-		" MAXTARGETS=%i"  \
-		" AWAYLEN=%i"	  \
-		" :are supported by this server"
-#define PROTOCTL_PARAMETERS_1	  \
-		MAXCHANNELSPERUSER, \
-		MAXBANS, \
-		NICKLEN, \
-		TOPICLEN, \
-		TOPICLEN, \
-		MAXTARGETS, \
-		TOPICLEN
-
 #ifdef PREFIX_AQ
-#define CHPFIX	"(qaohv)~&@%+"
-#define CHPAR1	"be"
+#define CHPFIX        "(qaohv)~&@%+"
+#define CHPAR1        "beI"
 #else
-#define CHPFIX	"(ohv)@%+"
-#define CHPAR1	"beqa"
+#define CHPFIX        "(ohv)@%+"
+#define CHPAR1        "beIqa"
 #endif /* PREFIX_AQ */
 
-#define CHPAR2	"kfL"
-#define CHPAR3	"l"
-#define CHPAR4	"psmntirRcOAQKVGCuzNSM"
+#define CHPAR2        "kfL"
+#define CHPAR3        "l"
+#define CHPAR4        "psmntirRcOAQKVCuzNSM"
 
-#define PROTOCTL_CLIENT_2	  \
-		"WALLCHOPS"	  \
-		" WATCH=%i"	  \
-		" SILENCE=%i"	  \
-		" MODES=%i"	  \
-		" CHANTYPES=%s"   \
-		" PREFIX=%s"      \
-		" CHANMODES=%s%s,%s%s,%s%s,%s%s" \
-		" NETWORK=%s" 	  \
-		" CASEMAPPING=%s" \
-		" EXTBAN=~,%s" \
-		" :are supported by this server"
-
-#define PROTOCTL_PARAMETERS_2	  \
-		MAXWATCH, \
-		SILENCE_LIMIT, \
-		MAXMODEPARAMS, \
-		"#", \
-		CHPFIX, \
-		CHPAR1, EXPAR1, \
-		CHPAR2, EXPAR2, \
-		CHPAR3, EXPAR3, \
-		"psmntirRcOAQKVGCuzNSM", EXPAR4, \
-		ircnet005, \
-		"ascii", \
-		extbanstr
 
 /* Server-Server PROTOCTL -Stskeeps
  * Please check send_proto() for more. -- Syzop
@@ -314,7 +277,8 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
                         " SJ3" \
                         " NS" \
                         " SJB64" \
-                        " TKLEXT"
+                        " TKLEXT" \
+			" NICKIP"
 
 #ifdef _WIN32
 /*
@@ -322,7 +286,6 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
  * Windows' internal strerror() function doesn't work with socket errors.
  */
 extern int DisplayString(HWND hWnd, char *InBuf, ...);
-#undef	strerror
 #else
 typedef int SOCKET;
 #define INVALID_SOCKET -1
@@ -336,8 +299,9 @@ extern int lu_noninv, lu_inv, lu_serv, lu_oper,
     lu_unknown, lu_channel, lu_lu, lu_lulocal, lu_lserv,
     lu_clu, lu_mlu, lu_cglobalu, lu_mglobalu;
 
-TS   now;
+MODVAR TS   now;
 
+#ifndef _WIN32
 #if defined(__STDC__)
 #define __const         const
 #define __signed        signed
@@ -359,6 +323,9 @@ TS   now;
 #define volatile
 #endif
 #endif
+#endif
+#else
+#define inline __inline
 #endif
 
 #define READBUF_SIZE 8192

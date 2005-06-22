@@ -41,7 +41,8 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
-extern char umodestring[UMODETABLESZ+1];
+
+char umodestring[UMODETABLESZ+1];
 
 Umode *Usermode_Table = NULL;
 short	 Usermode_highest = 0;
@@ -91,6 +92,7 @@ long SNO_FNICKCHANGE = 0L;
 long SNO_QLINE = 0L;
 long SNO_SPAMF = 0L;
 long SNO_SNOTICE = 0L;
+long SNO_OPER = 0L;
 
 long AllUmodes;		/* All umodes */
 long SendUmodes;	/* All umodes which are sent to other servers (global umodes) */
@@ -129,7 +131,7 @@ void	umode_init(void)
 	UmodeAdd(NULL, 'i', UMODE_GLOBAL, NULL, &UMODE_INVISIBLE);
 	UmodeAdd(NULL, 'o', UMODE_GLOBAL, umode_allow_opers, &UMODE_OPER);
 	UmodeAdd(NULL, 'w', UMODE_GLOBAL, NULL, &UMODE_WALLOP);
-	UmodeAdd(NULL, 'g', UMODE_GLOBAL, NULL, &UMODE_FAILOP);
+	UmodeAdd(NULL, 'g', UMODE_GLOBAL, umode_allow_opers, &UMODE_FAILOP);
 	UmodeAdd(NULL, 'h', UMODE_GLOBAL, NULL, &UMODE_HELPOP);
 	UmodeAdd(NULL, 'r', UMODE_GLOBAL, NULL, &UMODE_REGNICK);
 	UmodeAdd(NULL, 'a', UMODE_GLOBAL, umode_allow_opers, &UMODE_SADMIN);
@@ -147,7 +149,7 @@ void	umode_init(void)
 	UmodeAdd(NULL, 'q', UMODE_GLOBAL, umode_allow_opers, &UMODE_KIX);
 	UmodeAdd(NULL, 'B', UMODE_GLOBAL, NULL, &UMODE_BOT);
 	UmodeAdd(NULL, 'z', UMODE_GLOBAL, NULL, &UMODE_SECURE);
-	UmodeAdd(NULL, 'v', UMODE_GLOBAL, NULL, &UMODE_VICTIM);
+	UmodeAdd(NULL, 'v', UMODE_GLOBAL, umode_allow_opers, &UMODE_VICTIM);
 	UmodeAdd(NULL, 'd', UMODE_GLOBAL, NULL, &UMODE_DEAF);
 	UmodeAdd(NULL, 'H', UMODE_GLOBAL, umode_allow_opers, &UMODE_HIDEOPER);
 	UmodeAdd(NULL, 't', UMODE_GLOBAL, NULL, &UMODE_SETHOST);
@@ -166,6 +168,7 @@ void	umode_init(void)
 	SnomaskAdd(NULL, 'q', umode_allow_opers, &SNO_QLINE);
 	SnomaskAdd(NULL, 'S', umode_allow_opers, &SNO_SPAMF);
 	SnomaskAdd(NULL, 's', umode_allow_all, &SNO_SNOTICE);
+	SnomaskAdd(NULL, 'o', umode_allow_opers, &SNO_OPER);
 }
 
 void make_umodestr(void)

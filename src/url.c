@@ -157,7 +157,7 @@ char *download_file(char *url, char **error)
 	fd = fopen(tmp, "wb");
 	if (!fd)
 	{
-		snprintf(errorbuf, CURL_ERROR_SIZE, "Cannot write to %s: %s", tmp, strerror(ERRNO));
+		snprintf(errorbuf, CURL_ERROR_SIZE, "Cannot write to %s: %s", tmp, strerror(errno));
 		if (file)
 			free(file);
 		*error = errorbuf;

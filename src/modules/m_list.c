@@ -107,13 +107,11 @@ DLLFUNC CMD_FUNC(m_list)
 		"use, and what channels LIST will return when you use them.",
 		">number  List channels with more than <number> people.",
 		"<number  List channels with less than <number> people.",
-#ifdef LIST_USE_T
 		"C>number List channels created between now and <number> minutes ago.",
 		"C<number List channels created earlier than <number> minutes ago.",
 		"T>number List channels whose topics are older than <number> minutes",
 		"         (Ie, they have not changed in the last <number> minutes.",
 		"T<number List channels whose topics are not older than <number> minutes.",
-#endif
 		"*mask*   List channels that match *mask*",
 		"!*mask*  List channels that do not match *mask*",
 		NULL
@@ -190,7 +188,6 @@ DLLFUNC CMD_FUNC(m_list)
 			  usermin = atoi(name + 1) + 1;
 			  doall = 1;
 			  break;
-#ifdef LIST_USE_T
 		  case 'C':
 		  case 'c':	/* Channel TS time -- creation time? */
 			  ++name;
@@ -205,13 +202,11 @@ DLLFUNC CMD_FUNC(m_list)
 				    doall = 1;
 				    break;
 			    default:
-				    sendto_one(sptr,
-					err_str(ERR_LISTSYNTAX),
-					me.name, cptr->name,
-					"Bad list syntax, type /list ?");
+				    sendto_one(sptr, err_str(ERR_LISTSYNTAX), me.name, cptr->name);
 				    error = 1;
 			  }
 			  break;
+#ifdef LIST_USE_T
 		  case 'T':
 		  case 't':
 			  ++name;

@@ -246,6 +246,11 @@ DLLFUNC CMD_FUNC(m_topic)
 			if (MyClient(sptr))
 			{
 				Hook *tmphook;
+				int n;
+				
+				if ((n = dospamfilter(sptr, topic, SPAMF_TOPIC, chptr->chname)) < 0)
+					return n;
+
 				for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_TOPIC]; tmphook; tmphook = tmphook->next) {
 					topic = (*(tmphook->func.pcharfunc))(sptr, chptr, topic);
 					if (!topic)

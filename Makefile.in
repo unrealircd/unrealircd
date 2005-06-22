@@ -208,11 +208,12 @@ install: all
 	$(INSTALL) -m 0700 networks/makenet $(IRCDDIR)/networks
 	$(INSTALL) -m 0600 networks/networks.ndx $(IRCDDIR)/networks
 	$(INSTALL) -m 0700 -d $(IRCDDIR)/doc
-	$(INSTALL) -m 0600 doc/Authors doc/example.conf doc/example.settings doc/coding-guidelines doc/tao.of.irc doc/unreal32docs.html $(IRCDDIR)/doc
+	$(INSTALL) -m 0600 doc/Authors doc/example.conf doc/coding-guidelines doc/tao.of.irc doc/unreal32docs.html $(IRCDDIR)/doc
 	$(INSTALL) -m 0700 -d $(IRCDDIR)/aliases
 	$(INSTALL) -m 0600 aliases/*.conf $(IRCDDIR)/aliases
 	$(TOUCH) $(IRCDDIR)/unrealircd.conf
 	chmod 0600 $(IRCDDIR)/unrealircd.conf
+	$(INSTALL) -m 0600 spamfilter.conf dccallow.conf $(IRCDDIR)
 	$(INSTALL) -m 0600 badwords.*.conf help.conf LICENSE Donation $(IRCDDIR)
 	$(INSTALL) -m 0700 unreal $(IRCDDIR)
 	$(INSTALL) -m 0700 -d $(IRCDDIR)/modules

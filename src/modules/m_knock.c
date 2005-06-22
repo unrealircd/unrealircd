@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_knock)
 
 DLLFUNC int MOD_INIT(m_knock)(ModuleInfo *modinfo)
 {
-	add_Command(MSG_KNOCK, TOK_KNOCK, m_knock, 2);
+	CommandAdd(modinfo->handle, MSG_KNOCK, TOK_KNOCK, m_knock, 2, M_USER|M_ANNOUNCE);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -72,11 +72,6 @@ DLLFUNC int MOD_LOAD(m_knock)(int module_load)
 
 DLLFUNC int MOD_UNLOAD(m_knock)(int module_unload)
 {
-	if (del_Command(MSG_KNOCK, TOK_KNOCK, m_knock) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-			MOD_HEADER(m_knock).name);
-	}
 	return MOD_SUCCESS;
 }
 
@@ -169,7 +164,7 @@ CMD_FUNC(m_knock)
 		return 0;
 	}
 
-	ircsprintf(chbuf, "%s%s", CHANOPPFX, chptr->chname);
+	ircsprintf(chbuf, "@%s", chptr->chname);
 	ircsprintf(buf, "[Knock] by %s!%s@%s (%s)",
 		sptr->name, sptr->user->username, GetHost(sptr),
 		parv[2] ? parv[2] : "no reason specified");

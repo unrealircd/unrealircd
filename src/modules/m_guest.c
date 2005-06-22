@@ -93,7 +93,7 @@ DLLFUNC int MOD_UNLOAD(m_guest)(int module_unload)
 DLLFUNC int m_guest(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char guestnick[NICKLEN];
-	char *param[2];
+	char *param[3];
 
 	snprintf(guestnick, NICKLEN, "Guest%d", getrandom32());
 
@@ -103,6 +103,7 @@ DLLFUNC int m_guest(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	param[0] = sptr->name;
 	param[1] = guestnick;
-	m_nick(sptr,cptr,2,param);
+	param[2] = NULL;
+	do_cmd(sptr, cptr, "NICK", 2, param);
 	return 0;
 }

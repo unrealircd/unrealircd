@@ -553,13 +553,24 @@ int   hash_check_watch(aClient *cptr, int reply)
 	
 	/* Send notifies out to everybody on the list in header */
 	for (lp = anptr->watch; lp; lp = lp->next)
-	  sendto_one(lp->value.cptr, rpl_str(reply), me.name,
-		    lp->value.cptr->name, cptr->name,
-		    (IsPerson(cptr) ? cptr->user->username : "<N/A>"),
-		    (IsPerson(cptr) ?
-		    (IsHidden(cptr) ? cptr->user->virthost : cptr->
-		    user->realhost) : "<N/A>"), anptr->lasttime, cptr->info);
-
+	{
+		if (IsWebTV(lp->value.cptr))
+			sendto_one(lp->value.cptr, ":IRC!IRC@%s PRIVMSG %s :%s (%s@%s) "
+				" %s IRC",
+				me.name, lp->value.cptr->name, cptr->name,
+			    	(IsPerson(cptr) ? cptr->user->username : "<N/A>"),
+				(IsPerson(cptr) ?
+			    	(IsHidden(cptr) ? cptr->user->virthost : cptr->
+			    	user->realhost) : "<N/A>"), reply == RPL_LOGON ? 
+				"is now on" : "has left");
+		else
+			sendto_one(lp->value.cptr, rpl_str(reply), me.name,
+			    lp->value.cptr->name, cptr->name,
+			    (IsPerson(cptr) ? cptr->user->username : "<N/A>"),
+			    (IsPerson(cptr) ?
+			    (IsHidden(cptr) ? cptr->user->virthost : cptr->
+			    user->realhost) : "<N/A>"), anptr->lasttime, cptr->info);
+	}
 	
 	return 0;
 }
@@ -736,7 +747,7 @@ int   hash_del_watch_list(aClient *cptr)
 
 #ifdef THROTTLING
 
-struct	ThrottlingBucket	*ThrottlingHash[THROTTLING_HASH_SIZE+1];
+struct	MODVAR ThrottlingBucket	*ThrottlingHash[THROTTLING_HASH_SIZE+1];
 
 void	init_throttling_hash()
 {
@@ -779,7 +790,7 @@ EVENT(e_clean_out_throttling_buckets)
 {
 	struct ThrottlingBucket *n;
 	int	i;
-	struct ThrottlingBucket z = { NULL, NULL, 0};
+	struct ThrottlingBucket z = { NULL, NULL, {0}, 0, 0};
 	static time_t t = 0;
 		
 	for (i = 0; i < THROTTLING_HASH_SIZE; i++)
@@ -793,7 +804,6 @@ EVENT(e_clean_out_throttling_buckets)
 
 	if (!t || (TStime() - t > 30))
 	{
-		int i;
 		extern char serveropts[];
 		extern Module *Modules;
 		char *p = serveropts + strlen(serveropts);
@@ -846,7 +856,7 @@ void	del_throttling_bucket(struct ThrottlingBucket *bucket)
  * @retval 2 Allowed, not in list or is an exception.
  * @see add_connection()
  */
-int	throttle_can_connect(struct IN_ADDR *in)
+int	throttle_can_connect(aClient *sptr, struct IN_ADDR *in)
 {
 	struct ThrottlingBucket *b;
 
@@ -857,7 +867,7 @@ int	throttle_can_connect(struct IN_ADDR *in)
 		return 1;
 	else
 	{
-		if (Find_except(Inet_ia2p(in), CONF_EXCEPT_THROTTLE))
+		if (Find_except(sptr, Inet_ia2p(in), CONF_EXCEPT_THROTTLE))
 			return 2;
 		b->count++;
 		if (b->count > (THROTTLING_COUNT ? THROTTLING_COUNT : 3))

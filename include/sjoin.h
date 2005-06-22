@@ -30,7 +30,7 @@ struct SynchList {
 	aSynchList *next, *prev;
 };
 
-aSynchList *SJSynchList = NULL;
+MODVAR aSynchList *SJSynchList = NULL;
 
 aSynchList *make_synchlist()
 {

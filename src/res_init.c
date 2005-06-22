@@ -272,6 +272,7 @@ int get_res_interfaces_nt(HKEY hKey, char *subkey, char *obuf, int *size)
 	int idx = 0;
 	FILETIME lastwrite;
 	HKEY hVal;
+
 	while (RegEnumKeyEx(hKey, idx++, buf, &key_len, 0, NULL, NULL, &lastwrite) != ERROR_NO_MORE_ITEMS)
 	{
 		if (RegOpenKeyEx(hKey, buf, 0, KEY_QUERY_VALUE, &hVal) != ERROR_SUCCESS)
@@ -303,6 +304,8 @@ void get_res_from_reg_nt()
 	HKEY hKey, hInter;
 	char buf[BUFSIZ];
 	int key_len = BUFSIZ;
+	char no_interfaces = 0;
+
 	ircd_res.nscount = 0;
 
 	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, "System\\CurrentControlSet\\Services\\Tcpip\\Parameters",
@@ -311,7 +314,9 @@ void get_res_from_reg_nt()
 		Debug((DEBUG_DNS, "Error: get_res_from_reg_nt: unable to open registry key"));
 		return;
 	}
-	RegOpenKeyEx(hKey, "Interfaces", 0, KEY_QUERY_VALUE|KEY_ENUMERATE_SUB_KEYS, &hInter);
+	if (RegOpenKeyEx(hKey, "Interfaces", 0, KEY_QUERY_VALUE|KEY_ENUMERATE_SUB_KEYS,
+			 &hInter) != ERROR_SUCCESS)
+		no_interfaces = 1;
 
 	/* Retreive the Domain key */
 	if (!get_res_nt(hKey, "Domain", buf, &key_len))
@@ -324,7 +329,7 @@ void get_res_from_reg_nt()
 			if (!get_res_interfaces_nt(hInter, "Domain", buf, &key_len))
 			{
 				key_len = BUFSIZ;
-				if (!get_res_interfaces_nt(hInter, "DhcpDomain", buf, &key_len))
+				if (!no_interfaces && !get_res_interfaces_nt(hInter, "DhcpDomain", buf, &key_len))
 				{
 					Debug((DEBUG_DNS, "get_res_from_reg_nt: RegQueryValueEx: Domain failed"));
 				}
@@ -343,7 +348,7 @@ void get_res_from_reg_nt()
 		if (!get_res_nt(hKey, "DhcpSearchList", buf, &key_len))
 		{
 			key_len = BUFSIZ;
-			if (!get_res_interfaces_nt(hInter, "SearchList", buf, &key_len))
+			if (!no_interfaces && !get_res_interfaces_nt(hInter, "SearchList", buf, &key_len))
 			{
 				key_len = BUFSIZ;
 				if (!get_res_interfaces_nt(hInter, "DhcpSearchList", buf, &key_len))
@@ -380,8 +385,7 @@ void get_res_from_reg_nt()
 			++cp;
 		*cp = 0;
 		*pp++ = 0;
-	}	
-
+	}
 	/* Retreive the NameServer key */
 	key_len = BUFSIZ;
 	if (!get_res_nt(hKey, "NameServer", buf, &key_len))
@@ -391,7 +395,7 @@ void get_res_from_reg_nt()
 		if (!get_res_nt(hKey, "DhcpNameServer", buf, &key_len))
 		{
 			key_len = BUFSIZ;
-			if (!get_res_interfaces_nt(hInter, "NameServer", buf, &key_len))
+			if (!no_interfaces && !get_res_interfaces_nt(hInter, "NameServer", buf, &key_len))
 			{
 				key_len = BUFSIZ;
 				if (!get_res_interfaces_nt(hInter, "DhcpNameServer", buf, &key_len))
@@ -429,7 +433,8 @@ void get_res_from_reg_nt()
 			} while (ircd_res.nscount <= MAXNS);
 		}
 	}
-	RegCloseKey(hInter);
+	if (!no_interfaces)
+		RegCloseKey(hInter);
 	RegCloseKey(hKey);
 }
 #endif

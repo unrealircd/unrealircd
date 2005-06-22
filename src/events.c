@@ -43,7 +43,11 @@
 ID_Copyright("(C) Carsten Munk 2001");
 
 
-Event *events = NULL;
+MODVAR Event *events = NULL;
+
+#ifdef JOINTHROTTLE
+extern EVENT(cmodej_cleanup_structs);
+#endif
 
 void	LockEventSystem(void)
 {
@@ -58,7 +62,6 @@ Event	*EventAddEx(Module *module, char *name, long every, long howmany,
 		  vFP event, void *data)
 {
 	Event *newevent;
-	
 	if (!name || (every < 0) || (howmany < 0) || !event)
 	{
 		if (module)
@@ -152,7 +155,11 @@ int EventMod(Event *event, EventInfo *mods) {
 	return 0;
 }
 
+#ifndef _WIN32
 inline void	DoEvents(void)
+#else
+void DoEvents(void)
+#endif
 {
 	Event *eventptr;
 	Event temp;
@@ -204,12 +211,14 @@ void	SetupEvents(void)
 	LockEventSystem();
 
 	/* Start events */
-	EventAddEx(NULL, "tklexpire", 5, 0, tkl_check_expire, NULL);
 	EventAddEx(NULL, "tunefile", 300, 0, save_tunefile, NULL);
 	EventAddEx(NULL, "garbage", GARBAGE_COLLECT_EVERY, 0, garbage_collect, NULL);
 	EventAddEx(NULL, "loop", 0, 0, loop_event, NULL);
 #ifndef NO_FDLIST
 	EventAddEx(NULL, "fdlistcheck", 1, 0, e_check_fdlists, NULL);
+#endif
+#ifdef JOINTHROTTLE
+	EventAddEx(NULL, "cmodej_cleanup_structs", 60, 0, cmodej_cleanup_structs, NULL);
 #endif
 	UnlockEventSystem();
 }

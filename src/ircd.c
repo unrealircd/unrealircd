@@ -85,17 +85,17 @@ time_t TSoffset = 0;
 extern char unreallogo[];
 #endif
 int  SVSNOOP = 0;
-extern char *buildid;
+extern MODVAR char *buildid;
 time_t timeofday = 0;
 int  tainted = 0;
 LoopStruct loop;
-extern aMotd *opermotd;
-extern aMotd *svsmotd;
-extern aMotd *motd;
-extern aMotd *rules;
-extern aMotd *botmotd;
-extern aMotd *smotd;
-MemoryInfo StatsZ;
+extern MODVAR aMotd *opermotd;
+extern MODVAR aMotd *svsmotd;
+extern MODVAR aMotd *motd;
+extern MODVAR aMotd *rules;
+extern MODVAR aMotd *botmotd;
+extern MODVAR aMotd *smotd;
+MODVAR MemoryInfo StatsZ;
 
 int  R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns, R_do_id, R_fin_id, R_fail_id;
 
@@ -104,7 +104,7 @@ char REPORT_DO_DNS[256], REPORT_FIN_DNS[256], REPORT_FIN_DNSC[256],
     REPORT_FAIL_ID[256];
 extern ircstats IRCstats;
 aClient me;			/* That's me */
-char *me_hash;
+MODVAR char *me_hash;
 aClient *client = &me;		/* Pointer to beginning of Client list */
 extern char backupbuf[8192];
 #ifdef _WIN32
@@ -165,29 +165,29 @@ static void open_debugfile(), setup_signals();
 extern void init_glines(void);
 extern void tkl_init(void);
 
-TS   last_garbage_collect = 0;
-char **myargv;
+MODVAR TS   last_garbage_collect = 0;
+MODVAR char **myargv;
 int  portnum = -1;		/* Server port number, listening this */
 char *configfile = CONFIGFILE;	/* Server configuration file */
 int  debuglevel = 10;		/* Server debug level */
 int  bootopt = 0;		/* Server boot option flags */
 char *debugmode = "";		/*  -"-    -"-   -"-  */
 char *sbrk0;			/* initial sbrk(0) */
-static int dorehash = 0;
+static int dorehash = 0, dorestart = 0;
 static char *dpath = DPATH;
-int  booted = FALSE;
-TS   nextconnect = 1;		/* time for next try_connections call */
-TS   nextping = 1;		/* same as above for check_pings() */
-TS   nextdnscheck = 0;		/* next time to poll dns to force timeouts */
-TS   nextexpire = 1;		/* next expire run on the dns cache */
-TS   lastlucheck = 0;
+MODVAR int  booted = FALSE;
+MODVAR TS   nextconnect = 1;		/* time for next try_connections call */
+MODVAR TS   nextping = 1;		/* same as above for check_pings() */
+MODVAR TS   nextdnscheck = 0;		/* next time to poll dns to force timeouts */
+MODVAR TS   nextexpire = 1;		/* next expire run on the dns cache */
+MODVAR TS   lastlucheck = 0;
 
 #ifdef UNREAL_DEBUG
 #undef CHROOTDIR
 #define CHROOT
 #endif
 
-TS   NOW;
+MODVAR TS   NOW;
 #if	defined(PROFIL) && !defined(_WIN32)
 extern etext();
 
@@ -270,6 +270,8 @@ void restart(char *mesg)
 
 VOIDSIG s_restart()
 {
+	dorestart = 1;
+#if 0
 	static int restarting = 0;
 
 	if (restarting == 0) {
@@ -280,6 +282,7 @@ VOIDSIG s_restart()
 		restarting = 1;
 		server_reboot("SIGINT");
 	}
+#endif
 }
 
 
@@ -387,7 +390,7 @@ void server_reboot(char *mesg)
 	exit(-1);
 }
 
-char *areason;
+MODVAR char *areason;
 
 EVENT(loop_event)
 {
@@ -545,7 +548,7 @@ extern TS check_pings(TS currenttime)
 				 * If it's a user, we check for CONF_BAN_USER
 				 */
 				bconf =
-				    Find_ban(make_user_host(cptr->
+				    Find_ban(cptr, make_user_host(cptr->
 				    user ? cptr->user->username : cptr->
 				    username,
 				    cptr->user ? cptr->user->realhost : cptr->
@@ -555,7 +558,7 @@ extern TS check_pings(TS currenttime)
 
 				if (!killflag && !IsAnOper(cptr) &&
 				    (bconf =
-				    Find_ban(cptr->info, CONF_BAN_REALNAME))) {
+				    Find_ban(NULL, cptr->info, CONF_BAN_REALNAME))) {
 					killflag++;
 				}
 
@@ -565,7 +568,7 @@ extern TS check_pings(TS currenttime)
 			 */
 			if (!killflag)
 				if ((bconf =
-				    Find_ban(Inet_ia2p(&cptr->ip),
+				    Find_ban(cptr, Inet_ia2p(&cptr->ip),
 				    CONF_BAN_IP)))
 					killflag++;
 			if (killflag) {
@@ -603,6 +606,17 @@ extern TS check_pings(TS currenttime)
 				continue;
 			}
 
+		}
+		/* Do spamfilter 'user' banchecks.. */
+		if (loop.do_bancheck_spamf_user && IsPerson(cptr))
+		{
+			if (find_spamfilter_user(cptr) == FLUSH_BUFFER)
+				continue;
+		}
+		if (loop.do_bancheck_spamf_away && IsPerson(cptr) && cptr->user->away)
+		{
+			if (dospamfilter(cptr, cptr->user->away, SPAMF_AWAY, NULL) == FLUSH_BUFFER)
+				continue;
 		}
 		/*
 		 * We go into ping phase 
@@ -725,8 +739,7 @@ extern TS check_pings(TS currenttime)
 	 * * - lucas
 	 * *
 	 */
-	if (loop.do_bancheck)
-		loop.do_bancheck = 0;
+	loop.do_bancheck = loop.do_bancheck_spamf_user = loop.do_bancheck_spamf_away = 0;
 	Debug((DEBUG_NOTICE, "Next check_ping() call at: %s, %d %d %d",
 	    myctime(currenttime+9), ping, currenttime+9, currenttime));
 
@@ -803,6 +816,94 @@ EVENT(e_check_fdlists)
 
 #endif
 
+static void version_check_logerror(char *fmt, ...)
+{
+va_list va;
+char buf[1024];
+	
+	va_start(va, fmt);
+	vsnprintf(buf, sizeof(buf), fmt, va);
+	va_end(va);
+#ifndef _WIN32
+	fprintf(stderr, "[!!!] %s\n", buf);
+#else
+	win_log("[!!!] %s", buf);
+#endif	
+}
+
+/** Ugly version checker that ensures zlib/ssl/curl runtime libraries match the
+ * version we compiled for.
+ */
+static void do_version_check()
+{
+const char *compiledfor, *runtime;
+int error = 0;
+
+#ifdef USE_SSL
+	compiledfor = OPENSSL_VERSION_TEXT;
+	runtime = SSLeay_version(SSLEAY_VERSION);
+	if (strcasecmp(compiledfor, runtime))
+	{
+		version_check_logerror("OpenSSL version mismatch: compiled for '%s', library is '%s'",
+			compiledfor, runtime);
+		error=1;
+	}
+#endif
+#ifdef ZIP_LINKS
+	runtime = zlibVersion();
+	compiledfor = ZLIB_VERSION;
+	if (strcasecmp(compiledfor, runtime))
+	{
+		version_check_logerror("Zlib version mismatch: compiled for '%s', library is '%s'",
+			compiledfor, runtime);
+		error = 1;
+	}
+#endif
+#ifdef USE_LIBCURL
+	/* Perhaps someone should tell them to do this a bit more easy ;)
+	 * problem is runtime output is like: 'libcurl/7.11.1 zlib/1.2.1 c-ares/1.2.0'
+	 * while header output is like: '7.11.1'.
+	 */
+	{
+		char buf[128], *p;
+		
+		runtime = curl_version();
+		compiledfor = LIBCURL_VERSION;
+		if (!strncmp(runtime, "libcurl/", 8))
+		{
+			strlcpy(buf, runtime+8, sizeof(buf));
+			p = strchr(buf, ' ');
+			if (p)
+			{
+				*p = '\0';
+				if (strcmp(compiledfor, buf))
+				{
+					version_check_logerror("Curl version mismatch: compiled for '%s', library is '%s'",
+						compiledfor, buf);
+					error = 1;
+				}
+			}
+		}
+	}
+#endif
+
+	if (error)
+	{
+#ifndef _WIN32
+		version_check_logerror("Header<->library mismatches can make UnrealIRCd *CRASH*! "
+		                "Make sure you don't have multiple versions of openssl or zlib installed (eg: "
+		                "one in /usr and one in /usr/local). And, if you recently upgraded them, "
+		                "be sure to recompile Unreal.");
+#else
+		version_check_logerror("Header<->library mismatches can make UnrealIRCd *CRASH*! "
+		                "This should never happen with official Windows builds... unless "
+		                "you overwrote any .dll files with newer/older ones or something.");
+		win_error();
+#endif
+		tainted = 1;
+	}
+}
+
 extern time_t TSoffset;
 
 #ifndef _WIN32
@@ -830,6 +931,7 @@ int InitwIRCD(int argc, char *argv[])
 #endif
 #ifdef _WIN32
 	CreateMutex(NULL, FALSE, "UnrealMutex");
+	SetErrorMode(SEM_FAILCRITICALERRORS);
 #endif
 #if !defined(_WIN32) && !defined(_AMIGA)
 	sbrk0 = (char *)sbrk((size_t)0);
@@ -895,7 +997,7 @@ int InitwIRCD(int argc, char *argv[])
 		exit(5);
 	}
 #endif	 /*CHROOTDIR*/
-	    myargv = argv;
+	myargv = argv;
 #ifndef _WIN32
 	(void)umask(077);	/* better safe than sorry --SRB */
 #else
@@ -904,6 +1006,7 @@ int InitwIRCD(int argc, char *argv[])
 	bzero((char *)&me, sizeof(me));
 	bzero(&StatsZ, sizeof(StatsZ));
 	setup_signals();
+	charsys_reset();
 	init_ircstats();
 #ifdef USE_LIBCURL
 	url_init();
@@ -1034,13 +1137,6 @@ int InitwIRCD(int argc, char *argv[])
 			  }
 #endif
 			  exit(0);
-		  case 'W':{
-			  struct IN_ADDR bah;
-			  int  bit;
-			  parse_netmask("255.255.255.255/8", &bah, &bit);
-			  printf("%s - %d\n", Inet_ia2p(&bah), bit);
-			  exit(0);
-		  }
 		  case 'C':
 			  config_verbose = atoi(p);
 			  break;
@@ -1073,6 +1169,8 @@ int InitwIRCD(int argc, char *argv[])
 		}
 	}
 
+	do_version_check();
+
 #ifndef	CHROOTDIR
 	if (chdir(dpath)) {
 # ifndef _WIN32
@@ -1087,7 +1185,11 @@ int InitwIRCD(int argc, char *argv[])
 		exit(-1);
 	}
 #endif
-
+#ifndef _WIN32
+	mkdir("tmp", S_IRUSR|S_IWUSR|S_IXUSR); /* Create the tmp dir, if it doesn't exist */
+#else
+	mkdir("tmp");
+#endif
 #ifndef _WIN32
 	/*
 	 * didn't set debuglevel 
@@ -1107,6 +1209,7 @@ int InitwIRCD(int argc, char *argv[])
 #ifndef _WIN32
 	fprintf(stderr, "%s", unreallogo);
 	fprintf(stderr, "                           v%s\n", VERSIONONLY);
+	fprintf(stderr, "                     using %s\n", tre_version());
 #ifdef USE_SSL
 	fprintf(stderr, "                     using %s\n", OPENSSL_VERSION_TEXT);
 #endif
@@ -1164,10 +1267,20 @@ int InitwIRCD(int argc, char *argv[])
 #ifdef EXTCMODE
 	make_extcmodestr();
 #endif
-	if (!find_Command_simple("AWAY") || !find_Command_simple("KILL") ||
-		!find_Command_simple("OPER") || !find_Command_simple("PING"))
-	{
+	make_extbanstr();
+	isupport_init();
+	if (!find_Command_simple("AWAY") /*|| !find_Command_simple("KILL") ||
+		!find_Command_simple("OPER") || !find_Command_simple("PING")*/)
+	{ 
 		config_error("Someone forgot to load modules with proper commands in them. READ THE DOCUMENTATION");
+#ifdef _WIN32
+		/* Temporary! */
+		config_error("As of Unreal3.2.1 modules are supported on windows, "
+		    "therefore you MUST load the commands.dll module and a cloaking module. "
+		    "Just add 'loadmodule \"modules/commands.dll\"' and 'loadmodule \"modules/cloak.dll\"' "
+		    "to your unrealircd.conf and be sure to read the release notes!");
+		win_error();
+#endif
 		exit(-4);
 	}
 
@@ -1470,10 +1583,16 @@ void SocketLoop(void *dummy)
 		if ((timeofday >= nextping && !lifesux) || loop.do_bancheck)
 #endif
 			nextping = check_pings(timeofday);
-		if (dorehash) {
+		if (dorehash) 
+		{
 			(void)rehash(&me, &me, 1);
 			dorehash = 0;
 		}
+		if (dorestart)
+		{
+			server_reboot("SIGINT");
+		}
+
 		/*
 		 * ** Flush output buffers on all connections timeofday if they
 		 * ** have data in them (or at least try to flush)

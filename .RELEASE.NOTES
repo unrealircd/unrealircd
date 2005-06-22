@@ -1,50 +1,116 @@
 
-Unreal3.2 Release Notes
-========================
+Unreal3.2.3 Release Notes
+==========================
 
 ==[ GENERAL INFORMATION ]==
-* If you are upgrading, make sure you run make clean and ./Config before doing make
-* The official UnrealIRCd documentation is doc/unreal32docs.html
+- If you are upgrading on *NIX, make sure you run 'make clean' and './Config'
+  first before doing 'make'
+- The official UnrealIRCd documentation is doc/unreal32docs.html
   online version at: http://www.vulnscan.org/UnrealIrcd/unreal32docs.html
   FAQ: http://www.vulnscan.org/UnrealIrcd/faq/
   Read them before asking for help.
-* Report bugs at http://bugs.unrealircd.org/
+- Report bugs at http://bugs.unrealircd.org/
+- When upgrading a network, we assume you are upgrading from the previous
+  version (3.2.2). If you got a net running with servers that are several
+  versions behind (eg: 3.2.1) then you might experience (desynch) problems.
+  Also, if you try to use the new features, some might not work properly
+  until all your servers are upgraded. It is therefore recommended to
+  upgrade all servers in a 'short' time span (x day[s], not weeks).
 
-== [ NEW ]==
-- Added german docs (doc/unreal32docs.de.html)
-- In a spamfilter reason field '_' gets converted to a space (' '),
-  now also added '__' which gets converted to underscore itself ('_').
-
-==[ MAJOR BUGS FIXED ]==
-- '/spamfiltere remove' was often removing the wrong entry (RC2 bug)
-- The TRE regex library was sometimes matching too much if [range].+
-  was used multiple times.
-- Fixed a remote include issue and added timeouts in case a connection/transfer fails
-
-==[ MINOR BUGS FIXED ]==
-- Sometimes hosts were not resolved on Windows due to a resolver bug
-- spamfilter and sqline: memory leak on /rehash (a few kb)
-- spamfilter: protect against insane long reason/regex fields in configfile
-- set::modes-on-join now accepts extended channelmodes
-- Opteron: various crashbugs fixed, should work ok now.
-- Win32 GUI "rehash all" option did not reload motd/rules.
-- Same for ./unreal rehash on *NIX
-- Usermode 'r' (registered) was unset if you changed the case of your
-  nick (eg: 'blah'->'Blah'), this affected at least ircservices.
-- vhost::swhois wasn't shown if you did a remote /whois.
-- Made './curlinstall' work with new c-ares-1.0.0.
-- Fixed compile problem on some machines related to TRE / libintl.
-- /who +m was incorrectly hiding +H users even for opers.
-- Fixed /rehash bug if an .so or remote include didn't load properly
+==[ NEW ]==
+- Channel mode +I (invex, invite exceptions). Users on this list can join +i channels
+  without needing an /invite.
+- Channel mode +j (jointhrottle). If you set +j X:Y you limit each user (individually)
+  to X joins per Y seconds to the channel.
+- Nick Character System: this allows you to choose which additional characters to
+  allow in nicknames by language (and codepage). Currently available are:
+  catalan, dutch, french, german, swiss-german, icelandic, italian, spanish,
+  swedish, hungarian, polish, romanian, slovak, czech, greek, turkish, russian,
+  hebrew and chinese. There are also several 'groups' available, for more info see:
+  http://www.vulnscan.org/UnrealIrcd/unreal32docs.html#feature_nickchars
+- *NIX: ./Config -advanced, allows you to choose more options
+- tld::botmotd and tld::opermotd
+- Using /INVITE with no parameters will a list of channels you are invited to
+  but have not yet joined.
+- set::gline-address, works just like set::kline-address but then for glines.
+- Added a basic regex tutorial in unreal32docs.html
+- /SAJOIN now supports multiple channels (and '0') again.
+- Spamfilter topic support ('t' in spamfilter, 'topic' in conf).
+- Added a feature to +b/+e ~c: ~c:[prefix]<#channel>. This can be used if you for
+  example trust all ops of #leet: mode #x +e ~c:@#leet.
+- Various translated documents in doc/: unreal32docs.gr.html (Greek), help.fr.conf
+  and example.fr.conf (French), help.de.conf & example.de.conf (German), and
+  example.hu.conf (Hungarian).
 
 ==[ CHANGED ]==
-- spamfilter.conf: fixed fyle sig, added sigs for: soex, Nkie, LOI, Gaggle,
-  changed a lot of sigs from block to gline.
-- Windows: now using new Inno Setup which made the installer 300k smaller
-- Docs, help.conf and other text updates.
+- Updated auspice.conf
+- The usual doc updates, help.conf, spamfilter.conf, dccallow.conf, etc.
+- The config parser got (mostly) recoded. This makes it rehash much faster,
+  additionally "duplicate item" checking is now available.
+- Added a 'B' flag to /who output for bots. Also normal users can now /who +m B.
+- Support in configfiles for \\ (= a \)
+- set::dns::bind::ip, hardly useful for anyone
+- If a user is +b on a channel, and set::allow-userhost-change force-rejoin is
+  in use, then a part/join is not sent in order to prevent flooding.
+- OperOverride INVITE notices are now sent out globally to all +s +e users.
+- User mode 'g' is now operonly, it hardly did anything for non-opers.
+- Made CIDR no longer accept bitmasks with less than 16bits for /*line commands.
+- Modulized a lot of commands (~5000 lines of code).
+- Made channel modes +c/+S deal with RGB color codes.
+- If no log { } block is present, then a warning will be printed and we will log
+  by default to ircd.log (errors only).
+- If an invalid character is found in a nick then the whole nick is rejected now.
+- Changed numeric&text of 'is a Secure Connection' to 'is using a Secure Connection',
+  client coders are encouraged to add support for this new numeric 671. Until then,
+  in-window-/whois's will probably be broken.
+- A locops with can_override/can_gkline/can_gzline is now automatically converted
+  to a globop, just like we do with can_globalroute/can_gkline. These privileges
+  are GLOBAL and therefore are not meant to be granted to locops.
+- A warning is now sent to an oper if (s)he tries to use /(G)ZLINE on a host.
+  (G)ZLINES should be placed on *@ipmasks because they are processed before any
+  ident and host lookups.
+- Made (fast) badwords work better with word boundaries, in practice this means
+  blocking of words with accents/umlauts/es-zett/etc now works properly.
+- Made it so halfops can now -h themselves and chanadmins can -a themselves.
+- Made spamfilter 'u' also check nickchanges.
 
-==[ COMMING UP ]==
-- You can expect module support on windows in a nearby release.
+==[ MAJOR BUGS FIXED ]==
+- Serious crashbug [this is the same fix that was fixed by the hotfix/3.2.2b]
+- TRE mem corruption- & crash-bugs (eg: in backreferences).
+
+==[ MINOR BUGS FIXED ]==
+- Made kline/shun/zline/gzline without parameters report the correct stats(flag).
+- Made a few more errors send out to all opers, such as link::bind-ip problems.
+- A few missing operflags in /STATS O (and SVSO)
+- DCC Spamfilter was not always working correctly
+- OperOverriding to, for example, a +zi channel did not print the special join notice.
+- Servers behind ulines were not properly ulined, one effect that had was causing
+  an odd view in /MAP if you had flat-map + hide ulines + a juped server in services.
+- Made SVSMODE -b/-e remove bans/excepts placed on IPs
+- The set::htm::incoming-rate config item was not working correctly
+- If a user was +R then remote server notices were accidently also filtered.
+- A locop setting MODE #CHAN +O caused a desynch
+- Resolver sometimes incorrectly aliased names, causing incorect TTLs etc.
+- Fixed SVSNOOP not removing ALL oper status properly.
+- 'shun' target was not working for spamfilter and ban version { }
+- Removing of shuns placed on IP's did not take effect immediately (had to reconnect).
+- Fixed a bug in mode skipping (eg: '+qk a b' if not +q) and error msgs.
+- Chanmode +f #t (per-user text limit) now no longer affects halfops.
+- Opers w/can_override can now +qa/-qa if they are not netadmins, also affected +L/+u.
+  Be sure you upgrade all servers to 3.2.3 if using these new abilities, or else you
+  will get desynch issues.
+- Fixed several /SAMODE bugs as well, regarding non-netadmins, being halfop'ed, etc.
+- /GZLINE [nick] was placing a *line on *@host instead of *@IP, fixed.
+- alias::format in combination with ::type 'command' caused a crash
+- zlib upgraded to 1.2.2, curl upgraded to 7.13.1, both fix various issues.
+- Win32 installer now also installs doc\technical\*.*
+- Desynch issues regarding +s/+p and +c/+S
+- /SAMODE causing a 'fishy timestamp' if a cmode with a digit parameter was used.
+
+==[ REMOVED ]==
+- NAZIISH_CHBAN_HANDLING (did not work at all)
+- The 'oldcloak' cloaking module is now removed, since this old algorithm got broken
+  8 months ago, nobody should be using it anymore.
 
 ==[ ADDITIONAL INFO ]==
-* See Changelog
+* See Changelog for more details

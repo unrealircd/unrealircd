@@ -85,8 +85,6 @@ static int oper_access[] = {
         0, 0
 };
 
-extern ircstats IRCstats;
-
 ModuleHeader MOD_HEADER(m_svso)
   = {
 	"m_svso",
@@ -176,7 +174,7 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
                 acptr->umodes &=
                     ~(UMODE_NETADMIN | UMODE_WHOIS);
                 acptr->umodes &=
-                    ~(UMODE_KIX | UMODE_DEAF | UMODE_HIDEOPER);
+                    ~(UMODE_KIX | UMODE_DEAF | UMODE_HIDEOPER | UMODE_VICTIM);
                 acptr->oflag = 0;
 		remove_oper_snomasks(acptr);
 		RunHook2(HOOKTYPE_LOCAL_OPER, acptr, 0);

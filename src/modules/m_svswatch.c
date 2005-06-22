@@ -47,7 +47,7 @@ DLLFUNC int m_svswatch(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_SVSWATCH       "SVSWATCH"
-#define TOK_SVSWATCH       "BW"
+#define TOK_SVSWATCH       "Bw"
 
 ModuleHeader MOD_HEADER(m_svswatch)
   = {
@@ -105,7 +105,8 @@ CMD_FUNC(m_svswatch)
 	{
 		parv[0] = parv[1];
 		parv[1] = parv[2];
-		(void)m_watch(acptr, acptr, 2, parv);
+		parv[2] = NULL;
+		do_cmd(acptr, acptr, "WATCH", 2, parv);
 	}
 	else
 		sendto_one(acptr, ":%s SVSWATCH %s :%s", parv[0], parv[1], parv[2]);

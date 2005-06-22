@@ -97,14 +97,14 @@ int  m_svsnick(aClient *cptr, aClient *sptr, int parc, char *parv[])
         if (!hunt_server_token(cptr, sptr, MSG_SVSNICK, TOK_SVSNICK, "%s %s :%s", 1, parc,
 		parv) != HUNTED_ISME)
         {
+		if (do_nick_name(parv[2]) == 0)
+			return 0;
                 if ((acptr = find_person(parv[1], NULL)))
                 {
                         if (find_client(parv[2], NULL)) /* Collision */
                                 return exit_client(cptr, acptr, sptr,
                                     "Nickname collision due to Services enforced "
                                     "nickname change, your nick was overruled");
-                        if (do_nick_name(parv[2]) == 0)
-                                return 0;
                         acptr->umodes &= ~UMODE_REGNICK;
                         acptr->lastnick = TS2ts(parv[3]);
                         sendto_common_channels(acptr, ":%s NICK :%s", parv[1],
@@ -121,6 +121,9 @@ int  m_svsnick(aClient *cptr, aClient *sptr, int parc, char *parv[])
                         }
                         if (MyClient(acptr))
                         {
+				sendto_snomask(SNO_NICKCHANGE, "*** Notice -- %s (%s@%s) has changed his/her nickname to %s", 
+					acptr->name, acptr->user->username, acptr->user->realhost, parv[2]);
+				
                                 RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, acptr, parv[2]);
                         }
                         (void)strlcpy(acptr->name, parv[2], sizeof acptr->name);
