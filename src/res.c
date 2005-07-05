@@ -688,6 +688,11 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 	struct hent *hp;
 	int  class, type, dlen, len, ans = 0, ansa = 0, n;
 	struct IN_ADDR dr, *adr;
+	char current_name[HOSTLEN+1];
+
+	current_name[0] = '\0';
+	if (rptr && rptr->name)
+		strlcpy(current_name, rptr->name, sizeof(current_name));
 
 	cp = buf + sizeof(HEADER);
 	hp = (struct hent *)&(rptr->he);
@@ -773,14 +778,17 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 			 * We store 'somename' as soon as we get a CNAME,
 			 * and then we make sure our A/AAAA records belong to this
 			 * stored name. I hope that's correct. -- Syzop
+			 *
+			 * UPDATE: we now store it in a slightly different location
+			 * because this caused problems with CNAME reversedns delegation. -- Syzop
 			 */
-			if (hp->h_name && strcasecmp(hp->h_name, hostbuf))
+			if (current_name[0] && strcasecmp(current_name, hostbuf))
 			{
 				Debug((DEBUG_DNS, "Expected A record for '%s', got one for '%s' -- ignored",
-					hp->h_name, hostbuf));
+					current_name, hostbuf));
 #ifdef DEBUGMODE
 				ircd_log(LOG_ERROR, "[DNS/Syzop] Expected A record for '%s', got one for '%s' -- ignored",
-					hp->h_name, hostbuf);
+					current_name, hostbuf);
 #endif
 				cp += dlen;
 				break;
@@ -870,11 +878,11 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 			      Debug((DEBUG_INFO, "CNAME '%s' too long %d >= %d",
 			            hostbuf, len, HOSTLEN));
 			  }
-			  if (!hp->h_name)
+			  if (current_name[0])
 			  {
 			      char cname_dest[HOSTLEN];
 				  /* If we got a CNAME, so: orig CNAME dest, then our
-				   * request got changed to 'dest', so we have to set h_name
+				   * request got changed to 'dest', so we have to set current_name
 				   * here to that.. -- Syzop
 				   */
 				  /* need to expand 'dest' here... will use 'cname_dest' for storage.. */
@@ -888,12 +896,11 @@ static int proc_answer(ResRQ *rptr, HEADER *hptr, char *buf, char *eob)
 					  break;
 				  }
 				  cp += dlen;
-				  /* no length check needed, assured by ircd_dn_expand() to
-				   * be sizeof(cname_dest) which is HOSTLEN, thus the name
-				   * will be at max HOSTLEN-1.
-				   */
-				  hp->h_name = strdup(cname_dest);
+				  strlcpy(current_name, cname_dest, sizeof(current_name));
 				  Debug((DEBUG_INFO, "Our request got changed to '%s'", cname_dest));
+#ifdef DEBUGMODE
+				  ircd_log(LOG_ERROR, "[Syzop/DNS] Our request got changed to '%s'", cname_dest);
+#endif
 			  }
 			  ans++;
 			  break;

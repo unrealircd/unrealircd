@@ -802,3 +802,6 @@
 - Fixed various major bugs due to TKL move from 13h ago.
 - Fixed 2 problems caused by TKL move: 1 windows crash, 1 problem with loading m_*.so,
   reported by Trocotronic (#0002553, #0002554).
+- Added some TSCTL logging (this reminds me we need to add new log levels for 3.3 ;p).
+- Attempt to fix bug #2431: 3.2.2 broke CNAME delegation for reverse dns. I'm sorry it took
+  so long, but this stuff just plain sucks...
