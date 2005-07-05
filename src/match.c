@@ -139,7 +139,11 @@ static inline int match2(const char *mask, const char *name)
 				return 1; /* false: no character left */
 			n++;
 			if (!*n)	/* return true if end of both, */
+			{
+				if ((m[0] == '*') && (m[1] == '\0'))
+					return 0; /* special case.. a '?*' */
 				return (cm ? 1 : 0);	/* false if end of test str only */
+			}
 			continue;
 		}
 		if (cm == '_')	/* found _: check for '_' or ' ' */
@@ -149,7 +153,11 @@ static inline int match2(const char *mask, const char *name)
 				return 1; /* false: didnt match or no character left */
 			n++;
 			if (!*n)	/* return true if end of both, */
+			{
+				if ((m[0] == '*') && (m[1] == '\0'))
+					return 0; /* special case.. a '?*' */
 				return (cm ? 1 : 0);	/* false if end of test str only */
+			}
 			continue;
 		}
 		if (cm == '\\')	/* next char will not be a wildcard. */
