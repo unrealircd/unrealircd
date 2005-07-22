@@ -805,4 +805,6 @@
 - Added some TSCTL logging (this reminds me we need to add new log levels for 3.3 ;p).
 - Attempt to fix bug #2431: 3.2.3 broke CNAME delegation for reverse dns. I'm sorry it took
   so long, but this stuff just plain sucks...
-- Made '?*' work correctly in wildcard matches, reported by Bugz (#2585).
+- Made '?*' work correctly in wildcard matches ('1 or more characters'), reported by
+  Bugz (#2585).
+- Added -fno-strict-aliasing

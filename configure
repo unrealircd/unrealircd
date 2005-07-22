@@ -2038,6 +2038,11 @@ CFLAGS="-pipe $CFLAGS"
 fi
 fi
 
+case "`gcc -v --help 2>&1`" in
+	*-fstrict-aliasing* ) CFLAGS="$CFLAGS -fno-strict-aliasing" ;;
+esac
+
+
 # Extract the first word of "rm", so it can be a program name with args.
 set dummy rm; ac_word=$2
 echo "$as_me:$LINENO: checking for $ac_word" >&5
