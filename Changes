@@ -807,4 +807,5 @@
   so long, but this stuff just plain sucks...
 - Made '?*' work correctly in wildcard matches ('1 or more characters'), reported by
   Bugz (#2585).
-- Added -fno-strict-aliasing
+- Added -fno-strict-aliasing.. this might well be temporary, but we get tons of strict-
+  aliasing warnings, so it sounds good to disable this type of optimization for now.
