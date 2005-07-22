@@ -20,6 +20,13 @@ CFLAGS="-pipe $CFLAGS"
 fi
 fi
 
+dnl UnrealIRCd might not be strict-aliasing safe at this time
+dnl (the check below is taken from xemacs/Vin Shelton)
+case "`gcc -v --help 2>&1`" in
+	*-fstrict-aliasing* ) CFLAGS="$CFLAGS -fno-strict-aliasing" ;;
+esac
+
+
 AC_PATH_PROG(RM,rm)
 AC_PATH_PROG(CP,cp)
 AC_PATH_PROG(TOUCH,touch)
