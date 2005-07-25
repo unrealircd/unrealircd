@@ -194,7 +194,7 @@ CMD_FUNC(m_sjoin)
 	char invexbuf[1024];
 	char cbuf[1024];
 	char buf[1024];
-	char nick[NICKLEN + 1];
+	char nick[1024];
 	char *s = NULL;
 	aClient *acptr;
 	aChannel *chptr;

@@ -809,3 +809,5 @@
   Bugz (#2585).
 - Added -fno-strict-aliasing.. this might well be temporary, but we get tons of strict-
   aliasing warnings, so it sounds good to disable this type of optimization for now.
+- Fixed problem with crash-on-link if compiled with GCC 4, reported by jonneyboy (#2573)
+  and PHANTOm (#2590).
