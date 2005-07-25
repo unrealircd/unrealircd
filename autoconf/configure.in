@@ -128,7 +128,7 @@ if test "$ac_cv_ip6" = "no"; then
 AC_MSG_WARN(Your system does not support IPv6 so it will not be enabled)
 else
 AC_DEFINE(INET6)
-have_v6="yes"
+	dnl in6addr_any detection code taken from ratbox
 	AC_MSG_CHECKING([for struct in6addr_any])
 	AC_COMPILE_IFELSE(
 		[AC_LANG_PROGRAM(
