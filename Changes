@@ -811,3 +811,5 @@
   aliasing warnings, so it sounds good to disable this type of optimization for now.
 - Fixed problem with crash-on-link if compiled with GCC 4, reported by jonneyboy (#2573)
   and PHANTOm (#2590).
+- IPv6: Added configure check for in6addr_any to fix Fedora Core 4 compile problem,
+  reported by wheatie80 (#2594).
