@@ -813,5 +813,5 @@
   and PHANTOm (#2590).
 - IPv6: Added configure check for in6addr_any to fix Fedora Core 4 compile problem,
   reported by wheatie80 (#2594).
-- Added -Wno-pointer-sign to get rid of those stupid warnings that are enabled by default
-  even without -Wall (!?) on GCC4.
+- Added -Wno-pointer-sign (if available) to get rid of those stupid warnings that are
+  enabled by default even without -Wall (!?) on GCC4.
