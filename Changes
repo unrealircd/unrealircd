@@ -815,3 +815,5 @@
   reported by wheatie80 (#2594).
 - Added -Wno-pointer-sign (if available) to get rid of those stupid warnings that are
   enabled by default even without -Wall (!?) on GCC4.
+- Fixed a bug where allow channel::channel generated a warning when specified multiple times
+  (#0002427) reported by matridom.

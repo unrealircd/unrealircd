@@ -4476,15 +4476,7 @@ int	_test_allow_channel(ConfigFile *conf, ConfigEntry *ce)
 			continue;
 		}
 		if (!strcmp(cep->ce_varname, "channel"))
-		{
-			if (has_channel)
-			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
-					cep->ce_varlinenum, "allow channel::channel");
-				continue;
-			}
 			has_channel = 1;
-		}
 		else
 		{
 			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
