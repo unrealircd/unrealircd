@@ -866,8 +866,6 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		else		/* Failsafe point, don't let the user define their
 				   own hostname via the USER command --Cabal95 */
 			strncpyzt(user->realhost, sptr->sockhost, HOSTLEN + 1);
-		strncpyzt(user->realhost, user->realhost,
-		    sizeof(user->realhost));
 		/*
 		 * I do not consider *, ~ or ! 'hostile' in usernames,
 		 * as it is easy to differentiate them (Use \*, \? and \\)

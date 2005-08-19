@@ -817,3 +817,18 @@
   enabled by default even without -Wall (!?) on GCC4.
 - Fixed a bug where allow channel::channel generated a warning when specified multiple times
   (#0002427) reported by matridom.
+- Fixed ~c not working properly with * and ?'s in channel names.. Now you just need to
+  escape them like in all bans (eg: to ban #* you need to +b ~c:#\*). As an additional
+  bonus, real wildcards are now accepted and processed (eg: +b ~c:#*sex*, just don't
+  forget to specify the #). Reported by PhantasyX (#2605).
+- Sidenote on above: ~c:*chan* is not supported (use ~c:#*chan* instead) because it would
+  cause "hidden bans", therefore it now prints a message (which is useful anyway), but
+  does accept such remote bans. In 3.2.5 or so we could enable support for it, it's
+  not that important though... ;)
+- Added ifdefs for mass closing of file descriptors on start, can now be disabled by
+  adding -DNOCLOSEFD as a compile option. Useful for valgrind w/--db-attach=yes, mpatrol,
+  and some other debugging tools (not useful for anyone normally running a server).
+- Fixed a read-after-free: sptr->serv->aconf was freed but not NULL'ed in exit_client,
+  causing close_connection to read from it (when deciding on doing a quick reconnect).
+  Could have caused a crash, although nobody ever reported one...
+- Removed useless strncpyzt with dest==src.

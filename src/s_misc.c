@@ -476,6 +476,7 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 			{
 				Debug((DEBUG_ERROR, "deleting temporary block %s", sptr->serv->conf->servername));
 				delete_linkblock(sptr->serv->conf);
+				sptr->serv->conf = NULL;
 			}
 		}
 		if (IsServer(sptr))
