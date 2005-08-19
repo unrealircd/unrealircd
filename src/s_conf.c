@@ -6977,8 +6977,17 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			CheckDuplicate(cep, maxdccallow, "maxdccallow");
 		}
 		else if (!strcmp(cep->ce_varname, "network-name")) {
+			char *p;
 			CheckNull(cep);
 			CheckDuplicate(cep, network_name, "network-name");
+			for (p = cep->ce_vardata; *p; p++)
+				if ((*p < ' ') || (*p > '~'))
+				{
+					config_error("%s:%i: set::network-name can only contain ASCII characters 33-126. Invalid character = '%c'",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, *p);
+					errors++;
+					break;
+				}
 		}
 		else if (!strcmp(cep->ce_varname, "default-server")) {
 			CheckNull(cep);
