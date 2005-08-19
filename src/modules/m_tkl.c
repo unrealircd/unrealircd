@@ -742,6 +742,17 @@ char reason[512];
 	}
 	actionbuf[0] = banact_valtochar(action);
 	actionbuf[1] = '\0';
+
+	/* (temporary?) disable 'u' (user) target in combination with 'viruschan' action -- else causes crashes
+	 * SIDENOTE: This workaround is present at two places, 1) here, and 2) at the checking/banning code,
+	 *           why? well because there might be existing *lines! which is a very real assumption...
+	 */
+	if ((action == BAN_ACT_VIRUSCHAN) && (targets & SPAMF_USER))
+	{
+		sendnotice(sptr, "Unfortunately, at least for the moment, the action 'viruschan' is incompatible with target 'u' (user) "
+		                 "for technical reasons. It caused crashes in previous versions, and has been (temporary?) disabled for now.");
+		return -1;
+	}
 	
 	/* now check the regex... */
 	p = unreal_checkregex(parv[6],0,1);
@@ -2299,6 +2310,24 @@ char *str;
 				
 				if (IsVirus(sptr)) /* Already tagged */
 					return 0;
+				
+				if (!IsClient(sptr))
+				{
+					/* Problem! viruschan selected, but we got a just connected user,
+					 * this causes severe problems (atm). [this check is also present
+					 * when adding the thing]. We just kill them instead for now...
+					 * which seems the best alternative: adding shun/*lines is clearly
+					 * not what the oper/service wanted, blocking/tempshunning does not
+					 * give the user any hint about what is going in, and KILL is most
+					 * obvious/clear, and less intrussive (you remove the spamfilter and
+					 * the user can access the network again). -- Syzop
+					 */
+					sendto_realops("[WORKAROUND] Warning: spamfilter on target 'u' (user) + target 'viruschan' "
+					               "is (temporary) no longer supported because it caused crashes, "
+					               "user %s is killed instead!", sptr->name);
+					return place_host_ban(sptr, BAN_ACT_KILL,
+						unreal_decodespace(tk->ptr.spamf->tkl_reason), 0);
+				}
 				ircsprintf(buf, "0,%s", SPAMFILTER_VIRUSCHAN);
 				xparv[0] = sptr->name;
 				xparv[1] = buf;
