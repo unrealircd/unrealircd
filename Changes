@@ -836,4 +836,4 @@
   'u' (user) target can cause severe problems (crashes, etc). For now, we have disabled
   'viruschan' in combination with 'u'. A real fix will require quite some work, sorry.
 - Fixed crash with invalid set::network-name (eg: high ascii), reported by galahad
-  (#0002584), now printing an error instead (the network name is limited by the 005 spec).
+  (#0002584), now printing an error instead (the network name is limited by the 005 spec). 
