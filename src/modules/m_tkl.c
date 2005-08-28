@@ -495,9 +495,9 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 		mask++;
 	}
 
-	if (strchr(mask, '!'))
+	if (strchr(mask, '!') || strchr(mask, ':'))
 	{
-		sendto_one(sptr, ":%s NOTICE %s :[error] Cannot have ! in masks.", me.name,
+		sendto_one(sptr, ":%s NOTICE %s :[error] Cannot have ! or : in masks.", me.name,
 		    sptr->name);
 		return 0;
 	}
@@ -1960,6 +1960,8 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	  case '-':
 		  if (!IsServer(sptr) && !IsMe(sptr))
 			  return 0;
+		  if (parc < 6)
+		  	  return 0;
 		  if (*parv[2] == 'G')
 			  type = TKL_KILL | TKL_GLOBAL;
 		  else if (*parv[2] == 'Z')
