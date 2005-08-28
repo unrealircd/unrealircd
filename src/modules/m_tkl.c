@@ -690,7 +690,8 @@ char *tkllayer[11] = {
 };
 int targets = 0, action = 0;
 char targetbuf[64], actionbuf[2];
-char reason[512]; 
+char reason[512];
+int n;
 
 	if (IsServer(sptr))
 		return 0;
@@ -783,6 +784,23 @@ char reason[512];
 
 	tkllayer[9] = reason;
 	tkllayer[10] = parv[6];
+
+	/* SPAMFILTER LENGTH CHECK.
+	 * We try to limit it here so '/stats f' output shows ok, output of that is:
+	 * :servername 229 destname F <target> <action> <num> <num> <num> <reason> <setby> :<regex>
+	 * : ^NICKLEN       ^ NICKLEN                                       ^check   ^check   ^check
+	 * And for the other fields (and spacing/etc) we count on max 40 characters.
+	 * We also do >500 instead of >510, since that looks cleaner ;).. so actually we count
+	 * on 50 characters for the rest... -- Syzop
+	 */
+	n = strlen(reason) + strlen(parv[6]) + strlen(tkllayer[5]) + (NICKLEN * 2) + 40;
+	if (n > 500)
+	{
+		sendnotice(sptr, "Sorry, spamfilter too long. You'll either have to trim down the "
+		                 "reason or the regex (exceeded by %d bytes)", n - 500);
+		return 0;
+	}
+	
 	
 	if (whattodo == 0)
 	{

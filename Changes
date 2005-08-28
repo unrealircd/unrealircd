@@ -838,3 +838,9 @@
 - Fixed crash with invalid set::network-name (eg: high ascii), reported by galahad
   (#0002584), now printing an error instead (the network name is limited by the 005 spec).
 - Added Bulgarian example.bg.conf, translated by Peace.
+- Spamfilter: regexes (and reasons) are now more limited in size, this is to combat "I set
+  a spamfilter, but cannot remove it" problems. In practice this means - depending on the
+  length of your spamfilter reason - regexes will be max ~300 characters.
+  Spamfilters set in the .conf can be slightly longer (which still causes them to be
+  truncated in '/stats f', but they don't have to be removed anyway so it's kinda
+  acceptable if it's really needed). This should fix bug #2083, reported by White_Magic.
