@@ -527,7 +527,11 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 			hostmask = usermask;
 			usermask = "*";
 		}
-		
+		if (*hostmask == ':')
+		{
+			sendnotice(sptr, "[error] For (weird) technical reasons you cannot start the host with a ':', sorry");
+			return 0;
+		}
 		if (((*type == 'z') || (*type == 'Z')) && !whattodo)
 		{
 			/* It's a (G)ZLINE, make sure the user isn't specyfing a HOST.
