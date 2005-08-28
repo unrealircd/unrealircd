@@ -495,10 +495,16 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 		mask++;
 	}
 
-	if (strchr(mask, '!') || strchr(mask, ':'))
+	if (strchr(mask, '!'))
 	{
-		sendto_one(sptr, ":%s NOTICE %s :[error] Cannot have ! or : in masks.", me.name,
+		sendto_one(sptr, ":%s NOTICE %s :[error] Cannot have '!' in masks.", me.name,
 		    sptr->name);
+		return 0;
+	}
+	if (*mask == ':')
+	{
+		sendto_one(sptr, ":%s NOTICE %s :[error] Mask cannot start with a ':'.", me.name,
+			sptr->name);
 		return 0;
 	}
 	if (strchr(mask, ' '))

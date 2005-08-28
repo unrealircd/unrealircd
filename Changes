@@ -845,3 +845,4 @@
   truncated in '/stats f', but they don't have to be removed anyway so it's kinda
   acceptable if it's really needed). This should fix bug #2083, reported by White_Magic.
 - Fixed a bug where an invalid /*line could cause a crash, reported by Gilou (#2629).
+- (5 minutes later..) Small update for above, fix was incorrect for ipv6.
