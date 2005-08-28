@@ -846,3 +846,15 @@
   acceptable if it's really needed). This should fix bug #2083, reported by White_Magic.
 - Fixed a bug where an invalid /*line could cause a crash, reported by Gilou (#2629).
 - (5 minutes later..) Small update for above, fix was incorrect for ipv6.
+- CMDLINE_CONFIG behavior change: command line configuration is now still permitted
+  if #undef'ed (which is the default) if uid==euid && gid==egid, since it doesn't make
+  any sense to disable it then and is in fact just plain annoying.
+- Added FAKELAG_CONFIGURABLE option in include/config.h, this enables an option called
+  class::options::nofakelag, which disables "fake lag" for a certain class (that is:
+  the artificial delay introduced by the ircd to prevent flooding is turned off,
+  allowing the user to flood at full speed).
+  IT'S USE IS DISCOURAGED UNLESS YOU REALLY KNOW WHAT YOU ARE DOING.
+  Sorry, option is not in ./Config -advanced since I don't get autoconf working, but it's
+  such a scary option that this might as well be a good idea to keep in config.h anyway.
+  This feature has been suggested for several years (and refused), but the final
+  suggestion (with implementation specific hints) came from Gilou in bug #0002207.

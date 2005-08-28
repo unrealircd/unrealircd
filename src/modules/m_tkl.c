@@ -2346,7 +2346,7 @@ char *str;
 					/* Problem! viruschan selected, but we got a just connected user,
 					 * this causes severe problems (atm). [this check is also present
 					 * when adding the thing]. We just kill them instead for now...
-					 * which seems the best alternative: adding shun/*lines is clearly
+					 * which seems the best alternative: adding shun and *lines is clearly
 					 * not what the oper/service wanted, blocking/tempshunning does not
 					 * give the user any hint about what is going in, and KILL is most
 					 * obvious/clear, and less intrussive (you remove the spamfilter and

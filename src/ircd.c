@@ -754,14 +754,8 @@ extern TS check_pings(TS currenttime)
 static int bad_command(void)
 {
 #ifndef _WIN32
-#ifdef CMDLINE_CONFIG
-#define CMDLINE_CFG "[-f config] "
-#else
-#define CMDLINE_CFG ""
-#endif
 	(void)printf
-	    ("Usage: ircd %s[-h servername] [-p portnumber] [-x loglevel] [-t] [-H]\n",
-	    CMDLINE_CFG);
+	    ("Usage: ircd [-f config] [-h servername] [-p portnumber] [-x loglevel] [-t] [-H]\n");
 	(void)printf("Server not started\n\n");
 #else
 	if (!IsService) {
@@ -917,6 +911,7 @@ int InitwIRCD(int argc, char *argv[])
 	WSADATA wsaData;
 #else
 	uid_t uid, euid;
+	gid_t gid, egid;
 	TS   delay = 0;
 #endif
 #ifdef HAVE_PSTAT
@@ -937,6 +932,8 @@ int InitwIRCD(int argc, char *argv[])
 	sbrk0 = (char *)sbrk((size_t)0);
 	uid = getuid();
 	euid = geteuid();
+	gid = getgid();
+	egid = getegid();
 # ifdef	PROFIL
 	(void)monstartup(0, etext);
 	(void)moncontrol(1);
@@ -1062,12 +1059,17 @@ int InitwIRCD(int argc, char *argv[])
 			  bootopt |= BOOT_NOFORK;
 			  break;
 #ifndef _WIN32
-#ifdef CMDLINE_CONFIG
 		  case 'f':
+#ifndef CMDLINE_CONFIG
+		      if ((uid == euid) && (gid == egid))
+			       configfile = p;
+			  else
+			       printf("ERROR: Command line config with a setuid/setgid ircd is not allowed");
+#else
 			  (void)setuid((uid_t) uid);
 			  configfile = p;
-			  break;
 #endif
+			  break;
 		  case 'h':
 			  if (!strchr(p, '.')) {
 

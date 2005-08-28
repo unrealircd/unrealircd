@@ -1089,6 +1089,8 @@ struct _configitem_admin {
 	char	   *line; 
 };
 
+#define CLASS_OPT_NOFAKELAG		0x1
+
 struct _configitem_class {
 	ConfigItem *prev, *next;
 	ConfigFlag flag;
@@ -1097,6 +1099,7 @@ struct _configitem_class {
 	int xrefcount; /* EXTRA reference count, 'clients' also acts as a reference count but
 	                * link blocks also refer to classes so a 2nd ref. count was needed.
 	                */
+	unsigned int options;
 };
 
 struct _configflag_allow {

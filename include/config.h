@@ -238,9 +238,25 @@
  *       that the 'new' access lets them. Note also that defining this is
  *       a major security hole if your ircd goes down and some other user
  *       starts up the server with a new conf file that has some extra
- *       O-lines. So don't use this unless you're debugging.
+ *       O-lines.
+ *       Naturally, for non-suid/sgid ircds, this setting does not matter,
+ *       hence command line parameters are always permitted then.
  */
-#undef	CMDLINE_CONFIG		/* allow conf-file to be specified on command line */
+#undef	CMDLINE_CONFIG
+
+/** FAKELAG_CONFIGURABLE makes it possible to make certain classes exempted
+ * from 'fake lag' (that is, the artificial delay that is added by the ircd
+ * to prevent flooding, which causes the messages/commands of the user to
+ * slow down). Naturally, incorrect use of this feature can cause SEVERE
+ * issues, in fact it can easily bring your whole IRCd down if one of the
+ * users with class::options::nofakelag does a good flood at full speed.
+ * Hence, this is disabled by default, and you need to explicitly enable it
+ * here IF YOU KNOW WHAT YOU ARE DOING. People complaining their ircd
+ * ""crashed"" because of this setting will be shot. </DISCLAIMER>
+ * Common usage for this are: a trusted bot ran by an IRCOp, that you only
+ * want to give "flood access" and nothing else, and other such things.
+ */
+#undef FAKELAG_CONFIGURABLE
 
 /*
  * Size of the LISTEN request.  Some machines handle this large
