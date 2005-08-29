@@ -858,3 +858,4 @@
   such a scary option that this might as well be a good idea to keep in config.h anyway.
   This feature has been suggested for several years (and refused), but the final
   suggestion (with implementation specific hints) came from Gilou in bug #0002207.
+- Fixed win32 makefile, now compiles fine.

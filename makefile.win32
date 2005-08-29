@@ -472,7 +472,7 @@ src/modules/commands.dll: $(MOD_FILES) $(INCLUDES)
 	$(CC) $(MODDBGCFLAG) $(LIBCURL_INC) $(ZLIB_INC) $(OPENSSL_INC) /nologo \
 	      $(SSLCFLAGS) $(ZIPCFLAGS) $(CURLCFLAGS) /Fosrc/modules/ \
 	      /I ./INCLUDE /D NOSPOOF /D MODULE_COMPILE $(MOD_FILES) \
-	      $(MODLFLAGS) /OUT:src/modules/commands.dll
+	      $(MODLFLAGS) src/win32/tre.lib /OUT:src/modules/commands.dll
 
 src/modules/m_chghost.dll: src/modules/m_chghost.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/m_chghost.c $(MODLFLAGS)
@@ -499,7 +499,7 @@ src/modules/m_svsmode.dll: src/modules/m_svsmode.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/m_svsmode.c $(MODLFLAGS)
 
 src/modules/m_tkl.dll: src/modules/m_tkl.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/m_tkl.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/m_tkl.c $(MODLFLAGS) src/win32/tre.lib
 
 src/modules/m_swhois.dll: src/modules/m_swhois.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/m_swhois.c $(MODLFLAGS)
