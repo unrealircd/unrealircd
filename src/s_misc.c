@@ -802,8 +802,7 @@ char text[2048];
 	if (counted == IRCstats.operators)
 		return;
 	sprintf(text, "[BUG] operator count bug! value in /lusers is '%d', we counted '%d', "
-	               "user='%s', userserver='%s', tag=%s. "
-	               "please report to UnrealIRCd team at http://bugs.unrealircd.org/",
+	               "user='%s', userserver='%s', tag=%s. Corrected. "
 	               IRCstats.operators, counted, orig->name ? orig->name : "<null>",
 	               orig->srvptr ? orig->srvptr->name : "<null>", tag ? tag : "<null>");
 #ifdef DEBUGMODE
