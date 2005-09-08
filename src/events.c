@@ -48,6 +48,7 @@ MODVAR Event *events = NULL;
 #ifdef JOINTHROTTLE
 extern EVENT(cmodej_cleanup_structs);
 #endif
+extern EVENT(unrealdns_removeoldrecords);
 
 void	LockEventSystem(void)
 {
@@ -220,5 +221,6 @@ void	SetupEvents(void)
 #ifdef JOINTHROTTLE
 	EventAddEx(NULL, "cmodej_cleanup_structs", 60, 0, cmodej_cleanup_structs, NULL);
 #endif
+	EventAddEx(NULL, "unrealdns_removeoldrecords", 15, 0, unrealdns_removeoldrecords, NULL);
 	UnlockEventSystem();
 }

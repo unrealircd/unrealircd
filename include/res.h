@@ -1,74 +1,55 @@
-/*
- * ircd/res_def.h (C)opyright 1992 Darren Reed.
- */
+#include <ares.h>
+#include <ares_version.h>
 
-#define	RES_INITLIST	1
-#define	RES_CALLINIT	2
-#define RES_INITSOCK	4
-#define RES_INITDEBG	8
-#define RES_INITCACH    16
+typedef struct _dnsreq DNSReq;
 
-#define MAXPACKET	1024
-#define MAXALIASES	35
-#define MAXADDRS	35
-
-#define	AR_TTL		300	/* minimum TTL in seconds for dns cache entries */
-
-struct	hent {
-	char	*h_name;	/* official name of host */
-	char	*h_aliases[MAXALIASES];	/* alias list */
-	int	h_addrtype;	/* host address type */
-	int	h_length;	/* length of address */
-	/* list of addresses from name server */
-	struct	IN_ADDR	h_addr_list[MAXADDRS];
-#define	h_addr	h_addr_list[0]	/* address, for backward compatiblity */
+struct _dnsreq {
+	DNSReq *prev, *next;
+	aClient *cptr; /**< Client the request is for, if NULL then the client died */
+	char ipv6; /**< Resolving for ipv6 or ipv4? */
 };
 
-typedef	struct	reslist {
-	int	id;
-	int	sent;	/* number of requests sent */
-	int	srch;
-	time_t	ttl;
-	char	type;
-	char	retries; /* retry counter */
-	char	sends;	/* number of sends (>1 means resent) */
-	char	resend;	/* send flag. 0 == dont resend */
-	time_t	sentat;
-	time_t	timeout;
-	struct	IN_ADDR	addr;
-	char	*name;
-	struct	reslist	*next;
-	Link	cinfo;
-	struct	hent he;
-	} ResRQ;
 
-typedef	struct	cache {
-	time_t	expireat;
-	time_t	ttl;
-	struct hostent he;
-	struct	cache	*hname_next, *hnum_next, *list_next;
-	} aCache;
+typedef struct _dnscache DNSCache;
 
-typedef struct	cachetable {
-	aCache	*num_list;
-	aCache	*name_list;
-	} CacheTable;
+struct _dnscache {
+	DNSCache *prev, *next;		/**< Previous and next in linked list */
+	DNSCache *hprev, *hnext;	/**< Previous and next in hash list */
+	char *name;					/**< The hostname */
+	struct IN_ADDR addr;		/**< Stored IP address */
+	time_t expires;				/**< When record expires */
+};
 
-#define ARES_CACSIZE	101
+typedef struct _dnsstats DNSStats;
 
-#define	MAXCACHED	81
-#ifdef _WIN32
-typedef unsigned short u_int16_t;
-#endif
-extern struct __res_state ircd_res;
-extern int ircd_res_init();
-extern u_int ircd_res_randomid();
-extern u_int16_t ircd_getshort(const u_char *msgp);
-extern u_int32_t ircd_getlong(const u_char *msgp);
-extern void ircd__putshort(register u_int16_t s, register u_char *msgp);
-extern void ircd__putlong(register u_int32_t l,register u_char *msgp);
-extern int ircd_dn_expand(const u_char *msg, const u_char *eom, const u_char *src, char *dst, int dstsiz);
-extern int __ircd_dn_skipname(const u_char *ptr, const u_char *eom);
-extern int ircd_dn_comp(const char *src, u_char *dst, int dstsiz, u_char **dnptrs, u_char **lastdnptr);
-extern int ircd_res_mkquery(int op, const char *dname, int class, int type, const u_char *data, 
-	int datalen, const u_char *newrr_in, u_char *buf, int buflen);
+struct _dnsstats {
+	unsigned int cache_hits;
+	unsigned int cache_misses;
+	unsigned int cache_adds;
+};
+
+/** Time to keep cache records. */
+#define DNSCACHE_TTL			600
+
+/** Size of the hash table (prime!).
+ * Consumes <this>*4 on ia32 and <this>*4 on 64 bit
+ * 241 seems a good bet.. which ~1k on ia32 and ~2k on ia64.
+ */
+#define DNS_HASH_SIZE	241
+
+/** Max # of entries we want in our cache.
+ * This:
+ * a) prevents us from using too much memory, and
+ * b) prevents us from keeping useless cache records
+ *
+ * A dnscache item is roughly ~80 bytes in size (slightly more on x86),
+ * so 241*80=~20k, which seems reasonable ;).
+ */
+#define DNS_MAX_ENTRIES	DNS_HASH_SIZE
+
+
+extern ares_channel resolver_channel;
+
+extern void init_resolver(void);
+
+struct hostent *unrealdns_doclient(aClient *cptr);

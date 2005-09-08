@@ -973,7 +973,8 @@ int stats_mem(aClient *sptr, char *para)
 	    fl, (long)(fl * sizeof(Link)),
 	    flinks, (long)(flinks * sizeof(Link)));
 
-	rm = cres_mem(sptr,sptr->name);
+//	rm = cres_mem(sptr,sptr->name);
+	rm = 0; // syzop: todo ??????????
 
 	tot = totww + totch + totcl + com + cl * sizeof(aClass) + db + rm;
 	tot += fl * sizeof(Link);

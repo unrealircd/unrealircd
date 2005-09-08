@@ -2307,6 +2307,39 @@ inet_pton6(const char *src, unsigned char *dst)
 }
 #endif /* !HAVE_INET_PTON */
 
+/** Finds out if an address is IPv6, returns 1 if so, otherwise 0 */
+int isipv6(struct IN_ADDR *addr)
+{
+#ifndef IPV6
+	return 0;
+#else
+static char compareme[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff } /* First part of IPv4-in-IPv6 (::ffff) */
+
+	/* If memcmp returns non-zero it means it did not match, hence it is ipv6, otherwise it is ipv4 */
+	return memcmp(addr, compareme, 12) ? 1 : 0;
+#endif
+}
+
+/** Transforms an IPv4 address (assumed in network byte order) to inet6 (as ::ffff:a.b.c.d). */
+void inet4_to_inet6(const void *src_in, void *dst_in)
+{
+char *dst = dst_in;
+const char *src = src_in;
+
+	memset(dst, 0, 10);
+	dst[10] = 0xff;
+	dst[11] = 0xff;
+	memcpy(dst, &src[12], 4);
+}
+
+/** Transforms an IPv4-in-IPv6 mapped address to IPv4 (so ::ffff:a.b.c.d to a.b.c.d),
+ * both are (/will be) in NETWORK BYTE ORDER.
+ */
+void inet6_to_inet4(const void *src, void *dst)
+{
+	memcpy(dst, (char *)src + 12, 4);
+}
+
 
 #ifdef _WIN32
 /* Microsoft makes things nice and fun for us! */
