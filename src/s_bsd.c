@@ -2370,10 +2370,6 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	 */
 	 if (!WHOSTENTP(aconf->ipnum.S_ADDR))
 	 {
-		Link lin;
-
-		lin.flags = ASYNC_CONNECT;
-		lin.value.aconf = (ListStruct *) aconf;
 		nextdnscheck = 1;
 		s = aconf->hostname;
 #ifndef INET6
@@ -2387,12 +2383,8 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 #else
 			aconf->ipnum.S_ADDR = 0;
 #endif
-			abort(); /* SYZTODO: IMPLEMENT */
-//			hp = gethost_byname(s, &lin);
-			if (!hp)
-				return -2;
-			bcopy(hp->h_addr, (char *)&aconf->ipnum,
-			    sizeof(struct IN_ADDR));
+			unrealdns_gethostbyname_link(aconf->hostname, aconf);
+			return -2;
 		}
 	}
 	cptr = make_client(NULL, NULL);

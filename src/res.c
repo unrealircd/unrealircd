@@ -48,6 +48,8 @@
 /* Forward declerations */
 void unrealdns_cb_iptoname(void *arg, int status, struct hostent *he);
 void unrealdns_cb_nametoip_verify(void *arg, int status, struct hostent *he);
+void unrealdns_cb_nametoip_link(void *arg, int status, struct hostent *he);
+void unrealdns_delasyncconnects(void);
 static unsigned int unrealdns_haship(void *binaryip, int length);
 static void unrealdns_addtocache(char *name, void *binaryip, int length);
 static char *unrealdns_findcache_byaddr(struct IN_ADDR *addr);
@@ -131,6 +133,36 @@ char *cache_name, ipv6;
 #endif
 
 	return NULL;
+}
+
+/** Resolve a name to an IP, for a link block.
+ */
+void unrealdns_gethostbyname_link(char *name, ConfigItem_link *conf)
+{
+DNSReq *r;
+#ifdef INET6
+char ipv4[4];
+#endif
+
+	/* Create a request */
+	r = MyMallocEx(sizeof(DNSReq));
+	r->linkblock = conf;
+	r->name = strdup(name);
+#ifdef INET6
+	/* We try IPv6 first, and if that fails we try IPv4 */
+	r->ipv6 = 1;
+#else
+	r->ipv6 = 0;
+#endif
+	unrealdns_addreqtolist(r);
+	r->name = strdup(name);
+	
+	/* Execute it */
+#ifndef INET6
+	ares_gethostbyname(resolver_channel, r->name, AF_INET, unrealdns_cb_nametoip_link, r);
+#else
+	ares_gethostbyname(resolver_channel, r->name, r->ipv6 ? AF_INET6 : AF_INET, unrealdns_cb_nametoip_link, r);
+#endif
 }
 
 void unrealdns_cb_iptoname(void *arg, int status, struct hostent *he)
@@ -230,6 +262,76 @@ u_int32_t ipv4_addr;
 		he2 = unreal_create_hostent(he->h_name, (struct IN_ADDR *)he->h_addr_list[i]); /* NETWORK BYTE ORDER WARNING AGAIN? */
 		proceed_normal_client_handshake(acptr, he2);
 	}
+}
+
+void unrealdns_cb_nametoip_link(void *arg, int status, struct hostent *he)
+{
+DNSReq *r = (DNSReq *)arg;
+int n;
+struct hostent *he2;
+
+	if (!r->linkblock)
+		return; /* Possible if deleted due to rehash async removal */
+
+	if (status != 0)
+	{
+#ifdef INET6
+		if (r->ipv6)
+		{
+			/* Retry for IPv4... */
+			DNSReq *newr = ....;
+			return;
+		}
+#else
+		/* fatal */
+		sendto_realops("Unable to resolve '%s'", r->name);
+		unrealdns_freeandremovereq(r);
+		return;
+#endif
+	}
+
+#ifdef INET6
+	if ((he->h_length != 4) && (he->h_length != 6)) || !he->h_addr_list[0])
+#else
+	if ((he->h_length != 4) || !he->h_addr_list[0])
+#endif
+	{
+		/* Illegal response -- fatal */
+		sendto_realops("Unable to resolve hostname '%s', when trying to connect to server %s.",
+			r->name, r->linkblock->servername);
+		unrealdns_freeandremovereq(r);
+	}
+
+	/* Ok, since we got here, it seems things were actually succesfull */
+
+	/* Fill in [linkblockstruct]->ipnum */
+#ifdef INET6
+	if (he->h_length == 4)
+		inet4_to_inet6(he->h_addr_list[0], &r->linkblock->ipnum);
+	else
+#endif
+		memcpy(&r->linkblock->ipnum, he->h_addr_list[0], sizeof(struct IN_ADDR));
+
+	he2 = unreal_create_hostent(he->h_name, (struct IN_ADDR *)&he->h_addr_list[0]);
+
+	switch ((n = connect_server(r->linkblock, r->cptr, he2)))
+	{
+		case 0:
+			sendto_realops("Connecting to %s[%s].", r->linkblock->servername, r->linkblock->hostname);
+			break;
+		case -1:
+			sendto_realops("Couldn't connect to %s.", r->linkblock->servername);
+			break;
+		case -2:
+			/* Should not happen since he is not NULL */
+			sendto_realops("Hostname %s is unknown for server %s (!?).", r->linkblock->hostname, r->linkblock->servername);
+			break;
+		default:
+			sendto_realops("Connection to %s failed: %s", r->linkblock->servername, STRERROR(n));
+	}
+	
+	unrealdns_freeandremovereq(r);
+	/* DONE */
 }
 
 static unsigned int unrealdns_haship(void *binaryip, int length)
@@ -435,6 +537,8 @@ static void unrealdns_freeandremovereq(DNSReq *r)
 	if (r->next)
 		r->next->prev = r->prev;
 
+	if (r->name)
+		MyFree(r->name);
 	MyFree(r);
 }
 
@@ -448,6 +552,15 @@ DNSReq *r;
 	for (r = requests; r; r = r->next)
 		if (r->cptr == cptr)
 			r->cptr = NULL;
+}
+
+void unrealdns_delasyncconnects(void)
+{
+DNSReq *r;
+	for (r = requests; r; r = r->next)
+		if ((r->type == DNSREQ_CONNECT) || (r->type == DNSREQ_CONNECT))
+			r->linkblock = NULL;
+	
 }
 
 CMD_FUNC(m_dns)

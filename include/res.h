@@ -1,14 +1,27 @@
 #include <ares.h>
 #include <ares_version.h>
 
+typedef enum {
+	DNSREQ_CLIENT = 1,
+	DNSREQ_LINKCONF = 2,
+	DNSREQ_CONNECT = 3
+} DNSReqType;
+
 typedef struct _dnsreq DNSReq;
+
+/* Depending on the request type, some fields are filled in:
+ * cptr: DNSREQ_CLIENT, DNSREQ_CONNECT
+ * link: DNSREQ_LINKCONF, DNSREQ_CONNECT
+ */
 
 struct _dnsreq {
 	DNSReq *prev, *next;
-	aClient *cptr; /**< Client the request is for, if NULL then the client died */
+	char *name; /**< Name being resolved (only for DNSREQ_LINKCONF and DNSREQ_CONNECT) */
 	char ipv6; /**< Resolving for ipv6 or ipv4? */
+	DNSReqType type; /**< DNS Request type (DNSREQ_*) */
+	aClient *cptr; /**< Client the request is for, NULL if client died OR unavailable */
+	ConfigItem_link *linkblock; /**< Linkblock */
 };
-
 
 typedef struct _dnscache DNSCache;
 

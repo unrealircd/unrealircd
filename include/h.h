@@ -766,3 +766,5 @@ extern void inet4_to_inet6(const void *src_in, void *dst_in);
 extern void unrealdns_delreq_bycptr(aClient *cptr);
 extern void inet6_to_inet4(const void *src, void *dst);
 extern void sendtxtnumeric(aClient *to, char *pattern, ...);
+extern void unrealdns_gethostbyname_link(char *name, ConfigItem_link *conf);
+extern void unrealdns_delasyncconnects(void);
