@@ -2360,6 +2360,11 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	char *s;
 	int  errtmp, len;
 
+#ifdef DEBUGMODE
+	sendto_realops("connect_server() called with aconf %p, refcount: %d, TEMP: %s",
+		aconf, aconf->refcount, aconf->flag.temporary ? "YES" : "NO");
+#endif
+
 	if (aconf->options & CONNECT_NODNSCACHE) {
 		/* Remove "cache" if link::options::nodnscache is set */
 		memset(&aconf->ipnum, '\0', sizeof(struct IN_ADDR));
@@ -2441,6 +2446,10 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	(void)make_server(cptr);
 	cptr->serv->conf = aconf;
 	cptr->serv->conf->refcount++;
+#ifdef DEBUGMODE
+	sendto_realops("connect_server() CONTINUED (%s:%d), aconf %p, refcount: %d, TEMP: %s",
+		__FILE__, __LINE__, aconf, aconf->refcount, aconf->flag.temporary ? "YES" : "NO");
+#endif
 	Debug((DEBUG_ERROR, "reference count for %s (%s) is now %d",
 		cptr->name, cptr->serv->conf->servername, cptr->serv->conf->refcount));
 	if (by && IsPerson(by))

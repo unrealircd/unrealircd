@@ -560,7 +560,9 @@ void Unload_all_loaded_modules(void)
 		}
 		DelListItem(mi,Modules);
 		irc_dlclose(mi->dll);
+#ifndef DEBUGMODE
 		remove(mi->tmp_file);
+#endif
 		MyFree(mi->tmp_file);
 		MyFree(mi);
 	}
