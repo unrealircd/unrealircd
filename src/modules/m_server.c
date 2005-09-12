@@ -179,9 +179,15 @@ DLLFUNC CMD_FUNC(m_server)
 			strcpy(xerrmsg, "Null servername");
 			goto errlink;
 		}
-		for(link = conf_link; link; link = (ConfigItem_link *) link->next)
-			if (!match(link->servername, servername))
-				break;
+		if (cptr->serv && cptr->serv->conf)
+		{
+			/* We already know what block we are dealing with (outgoing connect!) */
+			link = cptr->serv->conf;
+		} else {
+			for(link = conf_link; link; link = (ConfigItem_link *) link->next)
+				if (!match(link->servername, servername))
+					break;
+		}
 		if (!link) {
 			snprintf(xerrmsg, 256, "No link block named '%s'", servername);
 			goto errlink;
