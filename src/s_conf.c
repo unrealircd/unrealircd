@@ -5385,7 +5385,7 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce)
 		if (has_replace && action == 'b')
 		{
 			config_error("%s:%i: badword::action is block but badword::replace exists",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 			errors++;
 		}
 	}

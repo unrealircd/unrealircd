@@ -861,3 +861,4 @@
 - Fixed win32 makefile, now compiles fine.
 - Fixed (important?) reference count bug regarding sptr->serv->conf. I don't know what
   effects this caused (memory corruption?), but it didn't look good ;).
+- Fixed an invalid badword block in the conf causing a crash, reported by Monk (#2639).
