@@ -475,11 +475,11 @@ else
 fi
 AC_MSG_RESULT(configuring c-ares library)
 cd c-ares-$cares_version
-./configure --prefix=$cur_dir/extras/c-ares
+./configure --prefix=$cur_dir/extras/c-ares || exit 1
 AC_MSG_RESULT(compiling c-ares resolver library)
-$ac_cv_prog_MAKER
+$ac_cv_prog_MAKER || exit 1
 AC_MSG_RESULT(installing TRE regex library)
-$ac_cv_prog_MAKER install
+$ac_cv_prog_MAKER install || exit 1
 CARESINCDIR="$cur_dir/extras/c-ares/include"
 AC_SUBST(CARESINCDIR)
 CARESLIBS="-L../extras/c-ares/lib -lcares"
