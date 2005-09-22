@@ -214,12 +214,12 @@ u_int32_t ipv4_addr;
 
 	if ((status != 0) ||
 #ifdef INET6
-	    ((he->h_length != 4) && (he->h_length != 6)))
+	    ((he->h_length != 4) && (he->h_length != 16)))
 #else
 	    (he->h_length != 4))
 #endif
 	{
-		/* Failed: error code, or data length is not 4 (nor 6) */
+		/* Failed: error code, or data length is not 4 (nor 16) */
 		unrealdns_freeandremovereq(r);
 		proceed_normal_client_handshake(acptr, NULL);
 		return;
@@ -293,7 +293,7 @@ struct hostent *he2;
 	}
 
 #ifdef INET6
-	if (((he->h_length != 4) && (he->h_length != 6)) || !he->h_addr_list[0])
+	if (((he->h_length != 4) && (he->h_length != 16)) || !he->h_addr_list[0])
 #else
 	if ((he->h_length != 4) || !he->h_addr_list[0])
 #endif
@@ -348,7 +348,7 @@ unsigned int alpha, beta;
 #ifndef INET6
 	abort(); /* impossible */
 #else	
-	if (length != 6)
+	if (length != 16)
 		abort(); /* impossible */
 	
 	memcpy(&alpha, (char *)binaryip + 8, sizeof(alpha));
