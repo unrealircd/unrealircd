@@ -194,7 +194,7 @@ aClient *acptr = r->cptr;
 #ifndef INET6
 	ares_gethostbyname(resolver_channel, he->h_name, AF_INET, unrealdns_cb_nametoip_verify, newr);
 #else
-	ares_gethostbyname(resolver_channel, ne->h_name, r->ipv6 ? AF_INET6 : AF_INET, unrealdns_cb_nametoip_verify, newr);
+	ares_gethostbyname(resolver_channel, he->h_name, r->ipv6 ? AF_INET6 : AF_INET, unrealdns_cb_nametoip_verify, newr);
 #endif
 }
 
@@ -214,7 +214,7 @@ u_int32_t ipv4_addr;
 
 	if ((status != 0) ||
 #ifdef INET6
-	    ((he->h_length != 4) && (he->h_length != 6))
+	    ((he->h_length != 4) && (he->h_length != 6)))
 #else
 	    (he->h_length != 4))
 #endif
@@ -245,6 +245,7 @@ u_int32_t ipv4_addr;
 				break;
 		} else {
 			if ((he->h_length == 4) && !memcmp(he->h_addr_list[i], &ipv4_addr, 4))
+				break;
 		}
 #endif
 	}
@@ -279,7 +280,8 @@ struct hostent *he2;
 		if (r->ipv6)
 		{
 			/* Retry for IPv4... */
-			DNSReq *newr = ....;
+			r->ipv6 = 0;
+			ares_gethostbyname(resolver_channel, r->name, AF_INET, unrealdns_cb_nametoip_link, r);
 			return;
 		}
 #else
@@ -291,7 +293,7 @@ struct hostent *he2;
 	}
 
 #ifdef INET6
-	if ((he->h_length != 4) && (he->h_length != 6)) || !he->h_addr_list[0])
+	if (((he->h_length != 4) && (he->h_length != 6)) || !he->h_addr_list[0])
 #else
 	if ((he->h_length != 4) || !he->h_addr_list[0])
 #endif
@@ -349,8 +351,8 @@ unsigned int alpha, beta;
 	if (length != 6)
 		abort(); /* impossible */
 	
-	memcpy(&alpha, cp + 8, sizeof(alpha));
-	memcpy(&beta, cp + 12, sizeof(beta));
+	memcpy(&alpha, (char *)binaryip + 8, sizeof(alpha));
+	memcpy(&beta, (char *)binaryip + 12, sizeof(beta));
 
 	return (alpha ^ beta) % DNS_HASH_SIZE;
 #endif
