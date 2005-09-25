@@ -862,3 +862,16 @@
 - Fixed (important?) reference count bug regarding sptr->serv->conf. I don't know what
   effects this caused (memory corruption?), but it didn't look good ;).
 - Fixed an invalid badword block in the conf causing a crash, reported by Monk (#2639).
+- [Internal] Code cleanup for spamfilter target/bantype routines
+- Added 'warn' target which is basically the same as 'block' except it does not block ;).
+  It also sends a numeric to the user saying the command has been processed, but a copy
+  has been sent to ircops. I feel this is a good idea for privacy reasons (anti-spy),
+  though I don't know how users will react to this. If you are using this on your network
+  and get users bothering you about it (or before that ;p), it's probably a good idea
+  to explain it somewhere on your site or FAQ :).
+  Example usage:
+   /spamfilter add p warn - Testing_mirc_decode_filter \$decode\(.*\)
+  [WARNING] The numeric text is likely to change in the next few weeks (early-cvs-commit).
+- If a class block was removed and any other blocks would be referencing the class block
+  (such as: allow::class, oper::class, link::class), then this would cause a crash.
+  Reported by Mike_ (#0002646).

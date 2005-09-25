@@ -270,7 +270,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 
 				if (MyClient(sptr))
 				{
-					ret = dospamfilter(sptr, text, (notice ? SPAMF_USERNOTICE : SPAMF_USERMSG), acptr->name);
+					ret = dospamfilter(sptr, text, (notice ? SPAMF_USERNOTICE : SPAMF_USERMSG), acptr->name, 0);
 					if (ret < 0)
 						return ret;
 				}
@@ -448,7 +448,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 
 				if (MyClient(sptr))
 				{
-					ret = dospamfilter(sptr, text, notice ? SPAMF_CHANNOTICE : SPAMF_CHANMSG, chptr->chname);
+					ret = dospamfilter(sptr, text, notice ? SPAMF_CHANNOTICE : SPAMF_CHANMSG, chptr->chname, 0);
 					if (ret < 0)
 						return ret;
 				}
@@ -779,7 +779,7 @@ int size_string, ret;
 
 	strlcpy(realfile, ctcp, size_string+1);
 
-	if ((ret = dospamfilter(sptr, realfile, SPAMF_DCC, target)) < 0)
+	if ((ret = dospamfilter(sptr, realfile, SPAMF_DCC, target, 0)) < 0)
 		return ret;
 
 	if ((fl = dcc_isforbidden(sptr, realfile)))

@@ -250,7 +250,7 @@ DLLFUNC CMD_FUNC(m_nick)
 		int xx;
 		ircsprintf(spamfilter_user, "%s!%s@%s:%s",
 			nick, sptr->user->username, sptr->user->realhost, sptr->info);
-		xx = dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL);
+		xx = dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0);
 		if (xx < 0)
 			return xx;
 	}
@@ -988,7 +988,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			return xx;
 		}
 		find_shun(sptr);
-		xx = find_spamfilter_user(sptr);
+		xx = find_spamfilter_user(sptr, 0);
 		if (xx < 0)
 			return xx;
 		RunHookReturnInt(HOOKTYPE_PRE_LOCAL_CONNECT, sptr, !=0);

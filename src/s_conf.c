@@ -3099,7 +3099,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "class"))
 		{
 			oper->class = Find_class(cep->ce_vardata);
-			if (!oper->class)
+			if (!oper->class || (oper->class->flag.temporary == 1))
 			{
 				config_status("%s:%i: illegal oper::class, unknown class '%s' using default of class 'default'",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
@@ -4240,7 +4240,7 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "class"))
 		{
 			allow->class = Find_class(cep->ce_vardata);
-			if (!allow->class)
+			if (!allow->class || (allow->class->flag.temporary == 1))
 			{
 				config_status("%s:%i: illegal allow::class, unknown class '%s' using default of class 'default'",
 					cep->ce_fileptr->cf_filename,
@@ -5826,7 +5826,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "class"))
 		{
 			link->class = Find_class(cep->ce_vardata);
-			if (!link->class)
+			if (!link->class || (link->class->flag.temporary == 1))
 			{
 				config_status("%s:%i: illegal link::class, unknown class '%s' using default of class 'default'",
 					cep->ce_fileptr->cf_filename,

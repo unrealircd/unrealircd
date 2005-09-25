@@ -610,12 +610,12 @@ extern TS check_pings(TS currenttime)
 		/* Do spamfilter 'user' banchecks.. */
 		if (loop.do_bancheck_spamf_user && IsPerson(cptr))
 		{
-			if (find_spamfilter_user(cptr) == FLUSH_BUFFER)
+			if (find_spamfilter_user(cptr, SPAMFLAG_NOWARN) == FLUSH_BUFFER)
 				continue;
 		}
 		if (loop.do_bancheck_spamf_away && IsPerson(cptr) && cptr->user->away)
 		{
-			if (dospamfilter(cptr, cptr->user->away, SPAMF_AWAY, NULL) == FLUSH_BUFFER)
+			if (dospamfilter(cptr, cptr->user->away, SPAMF_AWAY, NULL, SPAMFLAG_NOWARN) == FLUSH_BUFFER)
 				continue;
 		}
 		/*

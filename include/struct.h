@@ -818,6 +818,9 @@ struct Server {
 #define SPAMF_AWAY			0x0100 /* a */
 #define SPAMF_TOPIC			0x0200 /* t */
 
+/* Other flags only for function calls: */
+#define SPAMFLAG_NOWARN		0x0001
+
 struct _spamfilter {
 	unsigned short action; /* see BAN_ACT* */
 	regex_t expr;
@@ -1063,6 +1066,7 @@ struct _configflag_tld
 #define BAN_ACT_BLOCK		8
 #define BAN_ACT_DCCBLOCK	9
 #define BAN_ACT_VIRUSCHAN	10
+#define BAN_ACT_WARN		11
 
 
 #define CRULE_ALL		0

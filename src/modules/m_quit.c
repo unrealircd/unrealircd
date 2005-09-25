@@ -118,7 +118,7 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (blocked)
 			ocomment = parv[0];
 #endif
-		n = dospamfilter(sptr, ocomment, SPAMF_QUIT, NULL);
+		n = dospamfilter(sptr, ocomment, SPAMF_QUIT, NULL, 0);
 		if (n == FLUSH_BUFFER)
 			return n;
 		if (n < 0)
