@@ -875,3 +875,7 @@
 - If a class block was removed and any other blocks would be referencing the class block
   (such as: allow::class, oper::class, link::class), then this would cause a crash.
   Reported by Mike_ (#0002646).
+- Changed the way we build most of the .so's: the .o files of individual modules that were
+  generated (for linkage by commands.so), are now used to generate the .so files of the
+  individual modules as well (eg: m_setname.o -link-> m_setname.so). This reduces compile
+  time ('make') on my machine by 33%, so it's quite noticable ;).
