@@ -79,6 +79,8 @@ void init_resolver(void)
 		abort(); // should never happen
 	memset(&cache_hashtbl, 0, sizeof(cache_hashtbl));
 	memset(&dnsstats, 0, sizeof(dnsstats));
+
+//	..todo..add..options..such..as..retry..and..timeout..!!!!!
 	ares_init(&resolver_channel);
 }
 
@@ -124,7 +126,7 @@ char *cache_name, ipv6;
 	ares_gethostbyaddr(resolver_channel, &cptr->ip, 4, AF_INET, unrealdns_cb_iptoname, r);
 #else
 	if (r->ipv6)
-		ares_gethostbyaddr(resolver_channel, &cptr->ip, 6, AF_INET6, unrealdns_cb_iptoname, r);
+		ares_gethostbyaddr(resolver_channel, &cptr->ip, 16, AF_INET6, unrealdns_cb_iptoname, r);
 	else {
 		/* This is slightly more tricky: convert it to an IPv4 presentation and issue the request with that */
 		memcpy(ipv4, ((char *)&cptr->ip) + 12, 4);
@@ -202,15 +204,15 @@ void unrealdns_cb_nametoip_verify(void *arg, int status, struct hostent *he)
 {
 DNSReq *r = (DNSReq *)arg;
 aClient *acptr = r->cptr;
+char ipv6 = r->ipv6;
 int i;
 struct hostent *he2;
 u_int32_t ipv4_addr;
 
+	unrealdns_freeandremovereq(r);
+	
 	if (!acptr)
-	{
-		unrealdns_freeandremovereq(r);
 		return;
-	}
 
 	if ((status != 0) ||
 #ifdef INET6
@@ -220,7 +222,6 @@ u_int32_t ipv4_addr;
 #endif
 	{
 		/* Failed: error code, or data length is not 4 (nor 16) */
-		unrealdns_freeandremovereq(r);
 		proceed_normal_client_handshake(acptr, NULL);
 		return;
 	}
@@ -241,7 +242,7 @@ u_int32_t ipv4_addr;
 #else
 		if (r->ipv6)
 		{
-			if ((he->h_length == 6) && !memcmp(he->h_addr_list[i], &acptr->ip, 6))
+			if ((he->h_length == 16) && !memcmp(he->h_addr_list[i], &acptr->ip, 16))
 				break;
 		} else {
 			if ((he->h_length == 4) && !memcmp(he->h_addr_list[i], &ipv4_addr, 4))
@@ -253,14 +254,15 @@ u_int32_t ipv4_addr;
 	if (he->h_addr_list[i])
 	{
 		/* Entry was found, verified, and can be added to cache */
-		unrealdns_addtocache(he->h_name, he->h_addr_list[i], he->h_length);
+		unrealdns_addtocache(he->h_name, &acptr->ip, sizeof(acptr->ip));
 	}
-	
-	unrealdns_freeandremovereq(r);
 	
 	if (acptr)
 	{
-		he2 = unreal_create_hostent(he->h_name, (struct IN_ADDR *)he->h_addr_list[i]); /* NETWORK BYTE ORDER WARNING AGAIN? */
+		/* Always called, because the IP<->name mapping gets verified again
+		 * (plus some 'restricted hostname chars'-stuff is done ;).
+		 */
+		he2 = unreal_create_hostent(he->h_name, &acptr->ip);
 		proceed_normal_client_handshake(acptr, he2);
 	}
 }

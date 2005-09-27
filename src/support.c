@@ -2310,10 +2310,10 @@ inet_pton6(const char *src, unsigned char *dst)
 /** Finds out if an address is IPv6, returns 1 if so, otherwise 0 */
 int isipv6(struct IN_ADDR *addr)
 {
-#ifndef IPV6
+#ifndef INET6
 	return 0;
 #else
-static char compareme[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff } /* First part of IPv4-in-IPv6 (::ffff) */
+static char compareme[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff }; /* First part of IPv4-in-IPv6 (::ffff) */
 
 	/* If memcmp returns non-zero it means it did not match, hence it is ipv6, otherwise it is ipv4 */
 	return memcmp(addr, compareme, 12) ? 1 : 0;
