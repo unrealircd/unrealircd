@@ -879,3 +879,4 @@
   generated (for linkage by commands.so), are now used to generate the .so files of the
   individual modules as well (eg: m_setname.o -link-> m_setname.so). This reduces compile
   time ('make') on my machine by 33%, so it's quite noticable ;).
+- Added doc/technical/serverprotocol.html created by aquanight (updates will follow soon).
