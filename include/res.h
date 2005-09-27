@@ -1,5 +1,17 @@
+/* OMG... OMG! WHAT AN INCLUDE HORROR !!! */
+#undef strcasecmp
+#undef strncasecmp
+#include <win32/ares/setup.h>
 #include <ares.h>
 #include <ares_version.h>
+#undef strcasecmp
+#undef strncasecmp
+#ifndef GOT_STRCASECMP
+#define	strcasecmp	mycmp
+#define	strncasecmp	myncmp
+#endif
+
+
 
 typedef enum {
 	DNSREQ_CLIENT = 1,
