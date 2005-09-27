@@ -75,13 +75,17 @@ static unsigned int unrealdns_num_cache = 0; /**< # of cache entries in memory *
 
 void init_resolver(void)
 {
+struct ares_options options;
+
 	if (requests)
 		abort(); // should never happen
 	memset(&cache_hashtbl, 0, sizeof(cache_hashtbl));
 	memset(&dnsstats, 0, sizeof(dnsstats));
 
-//	..todo..add..options..such..as..retry..and..timeout..!!!!!
-	ares_init(&resolver_channel);
+	options.timeout = 3;
+	options.tries = 2;
+	options.flags = ARES_FLAG_NOALIASES;
+	ares_init_options(&resolver_channel, &options, ARES_OPT_TIMEOUT|ARES_OPT_TRIES|ARES_OPT_FLAGS);
 }
 
 void unrealdns_addreqtolist(DNSReq *r)

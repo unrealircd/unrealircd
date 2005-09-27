@@ -1,7 +1,9 @@
 /* OMG... OMG! WHAT AN INCLUDE HORROR !!! */
 #undef strcasecmp
 #undef strncasecmp
+#ifdef WIN32
 #include <win32/ares/setup.h>
+#endif
 #include <ares.h>
 #include <ares_version.h>
 #undef strcasecmp
