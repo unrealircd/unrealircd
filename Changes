@@ -880,3 +880,5 @@
   individual modules as well (eg: m_setname.o -link-> m_setname.so). This reduces compile
   time ('make') on my machine by 33%, so it's quite noticable ;).
 - Added doc/technical/serverprotocol.html created by aquanight (updates will follow soon).
+- Documented set::channel-command-prefix a bit more, and also changed the default from
+  "`" to "`!." which seems much more reasonable / widespread :).

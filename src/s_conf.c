@@ -1511,6 +1511,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->spamfilter_ban_reason = strdup("Spam/advertising");
 	i->spamfilter_virus_help_channel = strdup("#help");
 	i->maxdccallow = 10;
+	i->channel_command_prefix = strdup("`!.");
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,

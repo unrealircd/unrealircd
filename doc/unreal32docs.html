@@ -2213,7 +2213,7 @@ set {
 <p><font class="set">set::channel-command-prefix &lt;command-prefixes&gt;;</font><br>
   Specifies the prefix characters for services "in channel commands". Messages starting with 
   any of the specified characters will still be sent even if the client is +d. The default 
-  value is "`".</p>
+  value is "`!.".</p>
 <p><font class="set">set::allowed-nickchars { &lt;list&gt; };</font><br>
   Character sets / languages to allow in nicks, see <a href="#feature_nickchars">Nick Character Sets</a>.</p>
 <p><font class="set">set::allow-userhost-change [never|always|not-on-channels|force-rejoin]</font><br>
@@ -2576,7 +2576,8 @@ set {
   </tr>
   <tr> 
     <td><div align="center">d</div></td>
-    <td>Makes it so you can not receive channel PRIVMSGs</td>
+    <td>Makes it so you can not receive channel PRIVMSGs (with the exception
+        of text prefixed with certain characters, see set::channel-command-prefix)</td>
   </tr>
   <tr> 
     <td><div align="center">G</div></td>

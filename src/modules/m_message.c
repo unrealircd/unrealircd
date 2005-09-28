@@ -409,10 +409,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 					if (check_for_chan_flood(cptr, sptr, chptr) == 1)
 						continue;
 
-				if (!CHANCMDPFX)
-					sendanyways = (parv[2][0] == '`' ? 1 : 0);
-				else
-					sendanyways = (strchr(CHANCMDPFX,parv[2][0]) ? 1 : 0);
+				sendanyways = (strchr(CHANCMDPFX,parv[2][0]) ? 1 : 0);
 				text = parv[2];
 				if (MyClient(sptr) && (chptr->mode.mode & MODE_STRIP))
 					text = StripColors(parv[2]);
