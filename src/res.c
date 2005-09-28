@@ -195,13 +195,14 @@ aClient *acptr = r->cptr;
 	newr = MyMallocEx(sizeof(DNSReq));
 	newr->cptr = acptr;
 	newr->ipv6 = r->ipv6;
-	unrealdns_freeandremovereq(r);
 	
 #ifndef INET6
 	ares_gethostbyname(resolver_channel, he->h_name, AF_INET, unrealdns_cb_nametoip_verify, newr);
 #else
 	ares_gethostbyname(resolver_channel, he->h_name, r->ipv6 ? AF_INET6 : AF_INET, unrealdns_cb_nametoip_verify, newr);
 #endif
+
+	unrealdns_freeandremovereq(r);
 }
 
 void unrealdns_cb_nametoip_verify(void *arg, int status, struct hostent *he)
@@ -230,7 +231,7 @@ u_int32_t ipv4_addr;
 		return;
 	}
 
-	if (!r->ipv6)
+	if (!ipv6)
 #ifndef INET6
 		ipv4_addr = acptr->ip.S_ADDR;
 #else
@@ -244,7 +245,7 @@ u_int32_t ipv4_addr;
 		if ((he->h_length == 4) && !memcmp(he->h_addr_list[i], &ipv4_addr, 4))
 			break;
 #else
-		if (r->ipv6)
+		if (ipv6)
 		{
 			if ((he->h_length == 16) && !memcmp(he->h_addr_list[i], &acptr->ip, 16))
 				break;
