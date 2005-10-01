@@ -2901,7 +2901,7 @@ Zeichensätze</a></p>
 <p><font class="set">set::channel-command-prefix &lt;command-prefixes&gt;;<br>
 </font>Stellt das Vorzeichen für Services in &quot;channel Befehlen&quot; ein.
 Nachrichten, die mit einem dieser Zeichen beginnen, werden auch noch gesendet,
-wenn der Client +d ist. Die Voreinstellung lautet "`".</p>
+wenn der Client +d ist. Die Voreinstellung lautet &quot;`!.&quot;.</p>
 <p><font class="set">set::allow-userhost-change [never|always|not-on-channels|force-rejoin]</font><br>
 Einstellung, was passiert, wenn sich der user@host ändert (+x/-x/chghost/chgident/setident/vhost/etc).<br>
   <i>never</i>  schaltet sämtliche Befehle ab, <i>always</i>  gestattet so
@@ -3299,7 +3299,8 @@ möglich. Beispiel: except "#help,#spamreport"</p> </div>
   </tr>
   <tr>
     <td height="19"><div align="center">d</div></td>
-    <td height="19">User kann keine Channel PRIVMSGs empfangen</td>
+    <td height="19">User kann keine Channel PRIVMSGs empfangen (mit der Ausnahme
+      von Text, dem bestimmte Zeichen vorangestellt sind. Siehe hierzu: 'set::channel-command-prefix'.</td>
   </tr>
   <tr>
     <td height="19"><div align="center">G</div></td>
