@@ -2329,7 +2329,7 @@ const char *src = src_in;
 	memset(dst, 0, 10);
 	dst[10] = 0xff;
 	dst[11] = 0xff;
-	memcpy(dst, &src[12], 4);
+	memcpy(&dst[12], src, 4);
 }
 
 /** Transforms an IPv4-in-IPv6 mapped address to IPv4 (so ::ffff:a.b.c.d to a.b.c.d),
