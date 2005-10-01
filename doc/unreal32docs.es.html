@@ -2086,7 +2086,7 @@ set {
 <p><font class="set">set::maxdccallow &lt;n&ordm;-entradas&gt;;</font><br>
   L&iacute;mite de entradas en la lista dccallow.</p>
 <p><font class="set">set::channel-command-prefix &lt;prefijo&gt;;</font><br>
-  Especifica el prefijo para mostrar el mensaje a los usuarios que est&eacute;n con +d. Suele usarse para bots. Si se omite, el prefijo es &quot;`&quot;. </p>
+  Especifica el prefijo para mostrar el mensaje a los usuarios que est&eacute;n con +d. Suele usarse para bots. Si se omite, el prefijo es &quot;`!.&quot;. </p>
   <p><font class="set">set::allowed-nickchars { &lt;list&gt; };</font><br>
   Juego de caracteres / lenguajes permitidos en los nicks, vea <a href="#feature_nickchars">Configuraci&oacute;n de caracteres para nicks</a>.</p>
 <p><font class="set">set::allow-userhost-change [never|always|not-on-channels|force-rejoin]</font><br>
@@ -2404,7 +2404,7 @@ set {
   </tr>
   <tr> 
     <td><div align="center">d</div></td>
-    <td>No recibe mensajes de canal </td>
+    <td>No recibes mensajes de canales (a menos que estén prefijados por los caracteres especificados en set::channel-command-prefix)</td>
   </tr>
   <tr> 
     <td><div align="center">G</div></td>
