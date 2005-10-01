@@ -55,7 +55,7 @@ static void unrealdns_addtocache(char *name, void *binaryip, int length);
 static char *unrealdns_findcache_byaddr(struct IN_ADDR *addr);
 struct hostent *unreal_create_hostent(char *name, struct IN_ADDR *addr);
 static void unrealdns_freeandremovereq(DNSReq *r);
-DNSCache *unrealdns_removecacherecord(DNSCache *c);
+void unrealdns_removecacherecord(DNSCache *c);
 
 /* Externs */
 extern void proceed_normal_client_handshake(aClient *acptr, struct hostent *he);
@@ -78,7 +78,7 @@ void init_resolver(void)
 struct ares_options options;
 
 	if (requests)
-		abort(); // should never happen
+		abort(); /* should never happen */
 	memset(&cache_hashtbl, 0, sizeof(cache_hashtbl));
 	memset(&dnsstats, 0, sizeof(dnsstats));
 
@@ -160,8 +160,8 @@ char ipv4[4];
 #else
 	r->ipv6 = 0;
 #endif
-	unrealdns_addreqtolist(r);
 	r->name = strdup(name);
+	unrealdns_addreqtolist(r);
 	
 	/* Execute it */
 #ifndef INET6
@@ -176,17 +176,16 @@ void unrealdns_cb_iptoname(void *arg, int status, struct hostent *he)
 DNSReq *r = (DNSReq *)arg;
 DNSReq *newr;
 aClient *acptr = r->cptr;
+char ipv6 = r->ipv6;
+
+	unrealdns_freeandremovereq(r);
 
 	if (!acptr)
-	{
-		unrealdns_freeandremovereq(r);
 		return; 
-	}
 	
 	if (status != 0)
 	{
 		/* Failed */
-		unrealdns_freeandremovereq(r);
 		proceed_normal_client_handshake(acptr, NULL);
 		return;
 	}
@@ -194,15 +193,13 @@ aClient *acptr = r->cptr;
 	/* Good, we got a valid response, now prepare for name -> ip */
 	newr = MyMallocEx(sizeof(DNSReq));
 	newr->cptr = acptr;
-	newr->ipv6 = r->ipv6;
+	newr->ipv6 = ipv6;
 	
 #ifndef INET6
 	ares_gethostbyname(resolver_channel, he->h_name, AF_INET, unrealdns_cb_nametoip_verify, newr);
 #else
-	ares_gethostbyname(resolver_channel, he->h_name, r->ipv6 ? AF_INET6 : AF_INET, unrealdns_cb_nametoip_verify, newr);
+	ares_gethostbyname(resolver_channel, he->h_name, ipv6 ? AF_INET6 : AF_INET, unrealdns_cb_nametoip_verify, newr);
 #endif
-
-	unrealdns_freeandremovereq(r);
 }
 
 void unrealdns_cb_nametoip_verify(void *arg, int status, struct hostent *he)
@@ -262,14 +259,8 @@ u_int32_t ipv4_addr;
 		unrealdns_addtocache(he->h_name, &acptr->ip, sizeof(acptr->ip));
 	}
 	
-	if (acptr)
-	{
-		/* Always called, because the IP<->name mapping gets verified again
-		 * (plus some 'restricted hostname chars'-stuff is done ;).
-		 */
-		he2 = unreal_create_hostent(he->h_name, &acptr->ip);
-		proceed_normal_client_handshake(acptr, he2);
-	}
+	he2 = unreal_create_hostent(he->h_name, &acptr->ip);
+	proceed_normal_client_handshake(acptr, he2);
 }
 
 void unrealdns_cb_nametoip_link(void *arg, int status, struct hostent *he)
@@ -279,7 +270,11 @@ int n;
 struct hostent *he2;
 
 	if (!r->linkblock)
-		return; /* Possible if deleted due to rehash async removal */
+	{
+		/* Possible if deleted due to rehash async removal */
+		unrealdns_freeandremovereq(r);
+		return;
+	}
 
 	if (status != 0)
 	{
@@ -291,12 +286,12 @@ struct hostent *he2;
 			ares_gethostbyname(resolver_channel, r->name, AF_INET, unrealdns_cb_nametoip_link, r);
 			return;
 		}
-#else
-		/* fatal */
-		sendto_realops("Unable to resolve '%s'", r->name);
+#endif
+		/* fatal error while resolving */
+		sendto_realops("Unable to resolve hostname '%s', when trying to connect to server %s.",
+			r->name, r->linkblock->servername);
 		unrealdns_freeandremovereq(r);
 		return;
-#endif
 	}
 
 #ifdef INET6
@@ -309,6 +304,7 @@ struct hostent *he2;
 		sendto_realops("Unable to resolve hostname '%s', when trying to connect to server %s.",
 			r->name, r->linkblock->servername);
 		unrealdns_freeandremovereq(r);
+		return;
 	}
 
 	/* Ok, since we got here, it seems things were actually succesfull */
@@ -346,7 +342,7 @@ struct hostent *he2;
 static unsigned int unrealdns_haship(void *binaryip, int length)
 {
 #ifdef INET6
-unsigned int alpha, beta;
+u_int32_t alpha, beta;
 #endif
 
 	if (length == 4)
@@ -358,8 +354,8 @@ unsigned int alpha, beta;
 	if (length != 16)
 		abort(); /* impossible */
 	
-	memcpy(&alpha, (char *)binaryip + 8, sizeof(alpha));
-	memcpy(&beta, (char *)binaryip + 12, sizeof(beta));
+	memcpy(&alpha, (char *)binaryip + 8, 4);
+	memcpy(&beta, (char *)binaryip + 12, 4);
 
 	return (alpha ^ beta) % DNS_HASH_SIZE;
 #endif
@@ -383,8 +379,8 @@ struct IN_ADDR addr;
 
 	hashv = unrealdns_haship(binaryip, length);
 
-	/* Check first if it is already present in the cache (how? don't know, but just
-	 * in case, minor cpu impact, really).
+	/* Check first if it is already present in the cache.
+	 * This is possible, when 2 clients connect at the same time.
 	 */	
 	for (c = cache_hashtbl[hashv]; c; c = c->hnext)
 		if (!memcmp(&addr, &c->addr, sizeof(struct IN_ADDR)))
@@ -392,10 +388,7 @@ struct IN_ADDR addr;
 
 	if (c)
 	{
-		/* Entry already exists, hmmm...
-		 * We COULD update it, but.. this seems suspicious?
-		 * We bail out for now...
-		 */
+		/* Already present (don't add duplicate), return. */
 		return;
 	}
 
@@ -404,7 +397,7 @@ struct IN_ADDR addr;
 	{
 		for (c = cache_list; c->next; c = c->next);
 		if (!c)
-			abort(); // impossible
+			abort(); /* impossible */
 		unrealdns_removecacherecord(c);
 	}
 
@@ -456,12 +449,10 @@ DNSCache *c;
 }
 
 /** Removes dns cache record from list (and frees it).
- * @returns Next entry in LINKED cache list
  */
-DNSCache *unrealdns_removecacherecord(DNSCache *c)
+void unrealdns_removecacherecord(DNSCache *c)
 {
 unsigned int hashv;
-DNSCache *next;
 
 	/* We basically got 4 pointers to update:
 	 * <previous listitem>->next
@@ -484,21 +475,17 @@ DNSCache *next;
 		/* new hash HEAD */
 		hashv = unrealdns_haship(&c->addr, sizeof(struct IN_ADDR));
 		if (cache_hashtbl[hashv] != c)
-			abort(); // impossible
+			abort(); /* impossible */
 		cache_hashtbl[hashv] = c->hnext;
 	}
 	
 	if (c->hnext)
 		c->hnext->hprev = c->hprev;
 	
-	next = c->next;
-	
 	MyFree(c->name);
 	MyFree(c);
 
 	unrealdns_num_cache--;
-	
-	return next;
 }
 
 /** This regulary removes old dns records from the cache */
@@ -529,7 +516,7 @@ struct hostent *he;
 	he->h_name = strdup(name);
 	he->h_addrtype = AFINET;
 	he->h_length = sizeof(struct IN_ADDR);
-	he->h_addr_list = MyMallocEx(sizeof(char *) * 2); // alocate an array of 2 pointers
+	he->h_addr_list = MyMallocEx(sizeof(char *) * 2); /* alocate an array of 2 pointers */
 	he->h_addr_list[0] = MyMallocEx(sizeof(struct IN_ADDR));
 	memcpy(he->h_addr_list[0], addr, sizeof(struct IN_ADDR));
 
@@ -541,7 +528,7 @@ static void unrealdns_freeandremovereq(DNSReq *r)
 	if (r->prev)
 		r->prev->next = r->next;
 	else
-		requests = r->next; // new HEAD
+		requests = r->next; /* new HEAD */
 	
 	if (r->next)
 		r->next->prev = r->prev;
@@ -567,7 +554,7 @@ void unrealdns_delasyncconnects(void)
 {
 DNSReq *r;
 	for (r = requests; r; r = r->next)
-		if ((r->type == DNSREQ_CONNECT) || (r->type == DNSREQ_CONNECT))
+		if (r->type == DNSREQ_CONNECT)
 			r->linkblock = NULL;
 	
 }
@@ -579,7 +566,10 @@ DNSReq *r;
 char *param;
 
 	if (!IsAnOper(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
+	}
 
 	if ((parc > 1) && !BadPtr(parv[1]))
 		param = parv[1];
@@ -619,15 +609,12 @@ char *param;
 	{
 		sendtxtnumeric(sptr, "DNS Configuration info:");
 		sendtxtnumeric(sptr, " c-ares version %s",ares_version(NULL));
-		// TODO: hmm... we cannot get the nameservers from c-ares, do we?
+		/* TODO: hmm... we cannot get the nameservers from c-ares, can we? */
 	} else /* STATISTICS */
 	{
-		sendto_one(sptr, ":%s %d %s :DNS CACHE Stats:",
-			sptr->name, RPL_TEXT, me.name);
-		sendto_one(sptr, ":%s %d %s : hits: %d",
-			sptr->name, RPL_TEXT, me.name, dnsstats.cache_hits);
-		sendto_one(sptr, ":%s %d %s : misses: %d (unavoidable: %d)",
-			sptr->name, RPL_TEXT, me.name, dnsstats.cache_misses, dnsstats.cache_misses - dnsstats.cache_adds);
+		sendtxtnumeric(sptr, "DNS CACHE Stats:");
+		sendtxtnumeric(sptr, " hits: %d", dnsstats.cache_hits);
+		sendtxtnumeric(sptr, " misses: %d", dnsstats.cache_misses);
 	}
 	return 0;
 }
