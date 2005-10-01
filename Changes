@@ -882,3 +882,4 @@
 - Added doc/technical/serverprotocol.html created by aquanight (updates will follow soon).
 - Documented set::channel-command-prefix a bit more, and also changed the default from
   "`" to "`!." which seems much more reasonable / widespread :).
+- Some m_restart cleanups, suggested by w00t (#2652).

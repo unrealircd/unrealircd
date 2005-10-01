@@ -957,67 +957,45 @@ CMD_FUNC(m_rehash)
 */
 CMD_FUNC(m_restart)
 {
-	char *reason = NULL;
+char *reason = parv[1];
+
 	/* Check permissions */
-        if (MyClient(sptr) && !OPCanRestart(sptr))
-        {
-                sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-                return 0;
-        }
-        if (!MyClient(sptr) && !IsNetAdmin(sptr)
-            && !IsULine(sptr))
-        {
-                sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-                return 0;
-        }
+	if (MyClient(sptr) && !OPCanRestart(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		return 0;
+	}
+	if (!MyClient(sptr) && !IsNetAdmin(sptr) && !IsULine(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		return 0;
+	}
 
 	/* Syntax: /restart */
 	if (parc == 1)
 	{
 		if (conf_drpass)
 		{
-			sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name,
-                            parv[0], "RESTART");
-                        return 0;
+			sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0], "RESTART");
+			return 0;
 		}
-	}
-	else if (parc == 2)
+	} else
+	if (parc >= 2)
 	{
-		/* Syntax: /restart <pass> */
+		/* Syntax: /restart <pass> [reason] */
 		if (conf_drpass)
 		{
 			int ret;
 			ret = Auth_Check(cptr, conf_drpass->restartauth, parv[1]);
 			if (ret == -1)
 			{
-				sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name,
-					   parv[0]);
+				sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name, parv[0]);
 				return 0;
 			}
 			if (ret < 1)
 				return 0;
+			reason = parv[2];
 		}
-		/* Syntax: /rehash <reason> */
-		else 
-			reason = parv[1];
-	}
-	else if (parc > 2)
-	{
-		/* Syntax: /restart <pass> <reason> */
-		if (conf_drpass)
-		{
-			int ret;
-			ret = Auth_Check(cptr, conf_drpass->restartauth, parv[1]);
-			if (ret == -1)
-			{
-				sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name,
-					   parv[0]);
-				return 0;
-			}
-			if (ret < 1)
-				return 0;
-		}
-		reason = parv[2];
 	}
 	sendto_ops("Server is Restarting by request of %s", parv[0]);
 	server_reboot(reason ? reason : "No reason");
