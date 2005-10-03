@@ -2143,7 +2143,7 @@ spamfilter {
   Sp&eacute;cifie le caract&egrave;re de pr&eacute;fixe pour les services dans les "commandes de salons". 
   Les messages commen&ccedil;ant par le caract&egrave;re sp&eacute;cifi&eacute; seront envoy&eacute; même si le
   client est en +d. 
-  La valeur par d&eacute;faut est "`".</p>
+  La valeur par d&eacute;faut est "`!.".</p>
 <p><font class="set">set::allowed-nickchars { &lt;list&gt; };</font><br>
   Jeux de caract&egrave;res / langages autoris&eacute;s dans les pseudos, voir <a href="#feature_nickchars">
   Caract&egrave;res admis dans les pseudos</a>.</p>
@@ -2509,7 +2509,8 @@ spamfilter {
   </tr>
   <tr> 
     <td><div align="center">d</div></td>
-    <td>Fait en sorte que vous ne puissiez pas recevoir de message provenant des channels</td>
+    <td>Fait en sorte que vous ne puissiez pas recevoir de message provenant des channels
+    (&agrave; l'exception de texte commencant par certains caract&egrave;res, voir set::channel-command-prefix)</td>
   </tr>
   <tr> 
     <td><div align="center">G</div></td>
