@@ -2215,7 +2215,7 @@ set {
 <p><font class="set">set::channel-command-prefix &lt;parancs-elõtagok&gt;;</font><br>
   Meghatározza a csatornabeli services parancsok elõtag karaktereit. Azok az üzenetek, amelyek az
   itt megadott karakterek bármelyikével kezdõdnek, még olyan kliensekhez is el lesznek küldve, amelyek
-  a +d móddal rendelkeznek. Az alapérték "`".</p>
+  a +d móddal rendelkeznek. Az alapérték "`!.".</p>
 <p><font class="set">set::allowed-nickchars { &lt;felsorolás&gt; };</font><br>
   Nicknevekben engedélyezendõ karakterkészletek / nyelvek, lásd: <a href="#feature_nickchars">Karakterkészletek nicknevekben</a>.</p>
 <p><font class="set">set::allow-userhost-change [never|always|not-on-channels|force-rejoin]</font><br>
@@ -2578,7 +2578,8 @@ set {
   </tr>
   <tr> 
     <td><div align="center">d</div></td>
-    <td>Nem fogadsz csatornabeli PRIVMSG-ket</td>
+    <td>Nem fogadsz csatornabeli PRIVMSG-ket (kivéve az olyan szövegûeket,
+        amelyek bizonyos karakterrel kezdõdnek, lásd: set::channel-command-prefix)</td>
   </tr>
   <tr> 
     <td><div align="center">G</div></td>
