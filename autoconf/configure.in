@@ -23,14 +23,14 @@ fi
 dnl (the gcc flag detection trick is taken from xemacs/Vin Shelton)
 
 dnl UnrealIRCd might not be strict-aliasing safe at this time
-case "`gcc -v --help 2>&1`" in
+case "`$CC -v --help 2>&1`" in
 	*-fstrict-aliasing* ) CFLAGS="$CFLAGS -fno-strict-aliasing" ;;
 esac
 
 dnl Pointer signedness warnings are really a pain and 99.9% of the time
 dnl they are of absolutely no use whatsoever. IMO the person who decided
 dnl to enable this without -Wall should be shot on sight.
-case "`gcc -v --help 2>&1`" in
+case "`$CC -v --help 2>&1`" in
 	*-Wpointer-sign* ) CFLAGS="$CFLAGS -Wno-pointer-sign" ;;
 esac
 
@@ -425,7 +425,7 @@ IRCDLIBS="$IRCDLIBS -lresolv "
 ;;
 esac
 
-dnl REMEMBER TO CHANGE WITH A NEW RELEASE!
+dnl REMEMBER TO CHANGE WITH A NEW TRE RELEASE!
 tre_version="0.7.2"
 AC_MSG_RESULT(extracting TRE regex library)
 cur_dir=`pwd`
@@ -442,11 +442,11 @@ else
 fi
 AC_MSG_RESULT(configuring TRE regex library)
 cd tre-$tre_version
-./configure --disable-agrep --disable-shared --disable-system-abi --disable-wchar --disable-multibyte --prefix=$cur_dir/extras/regexp
+./configure --disable-agrep --disable-shared --disable-system-abi --disable-wchar --disable-multibyte --prefix=$cur_dir/extras/regexp || exit 1
 AC_MSG_RESULT(compiling TRE regex library)
-$ac_cv_prog_MAKER
+$ac_cv_prog_MAKER || exit 1
 AC_MSG_RESULT(installing TRE regex library)
-$ac_cv_prog_MAKER install
+$ac_cv_prog_MAKER install || exit 1
 TREINCDIR="$cur_dir/extras/regexp/include"
 AC_SUBST(TREINCDIR)
 if test "x$ac_cv_path_PKGCONFIG" = "x" ; then
@@ -456,6 +456,37 @@ else
 fi
 AC_SUBST(TRELIBS)
 cd $cur_dir
+
+
+dnl REMEMBER TO CHANGE WITH A NEW C-ARES RELEASE!
+cares_version="1.3.0"
+AC_MSG_RESULT(extracting c-ares resolver library)
+cur_dir=`pwd`
+cd extras
+dnl remove old c-ares directory to force a recompile...
+rm -rf c-ares-$cares_version
+if test "x$ac_cv_path_GUNZIP" = "x" ; then
+	tar xfz c-ares.tar.gz
+else
+	cp c-ares.tar.gz c-ares.tar.gz.bak
+	gunzip -f c-ares.tar.gz
+	cp c-ares.tar.gz.bak c-ares.tar.gz
+	tar xf c-ares.tar
+fi
+AC_MSG_RESULT(configuring c-ares library)
+cd c-ares-$cares_version
+./configure --prefix=$cur_dir/extras/c-ares || exit 1
+AC_MSG_RESULT(compiling c-ares resolver library)
+$ac_cv_prog_MAKER || exit 1
+AC_MSG_RESULT(installing c-ares resolver library)
+$ac_cv_prog_MAKER install || exit 1
+CARESINCDIR="$cur_dir/extras/c-ares/include"
+AC_SUBST(CARESINCDIR)
+CARESLIBS="-L../extras/c-ares/lib -lcares"
+AC_SUBST(CARESLIBS)
+cd $cur_dir
+
+
 AC_OUTPUT(Makefile src/modules/Makefile unreal ircdcron/ircdchk)
 chmod 0700 unreal
 chmod 0700 ircdcron/ircdchk

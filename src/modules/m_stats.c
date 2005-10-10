@@ -496,6 +496,9 @@ int stats_banversion(aClient *sptr, char *para)
 int stats_links(aClient *sptr, char *para)
 {
 	ConfigItem_link *link_p;
+#ifdef DEBUGMODE
+	aClient *acptr;
+#endif
 	for (link_p = conf_link; link_p; link_p = (ConfigItem_link *) link_p->next)
 	{
 		sendto_one(sptr, ":%s 213 %s C %s@%s * %s %i %s %s%s%s%s%s%s",
@@ -510,7 +513,8 @@ int stats_links(aClient *sptr, char *para)
 			(link_p->options & CONNECT_NOHOSTCHECK) ? "h" : "",
 			(link_p->flag.temporary == 1) ? "T" : "");
 #ifdef DEBUGMODE
-		sendnotice(sptr, "%s has refcount %d", link_p->servername, link_p->refcount);
+		sendnotice(sptr, "%s (%p) has refcount %d",
+			link_p->servername, link_p, link_p->refcount);
 #endif
 		if (link_p->hubmask)
 			sendto_one(sptr, ":%s 244 %s H %s * %s",
@@ -521,6 +525,21 @@ int stats_links(aClient *sptr, char *para)
 				me.name, sptr->name,
 				link_p->leafmask, link_p->servername, link_p->leafdepth);
 	}
+#ifdef DEBUGMODE
+	for (acptr = client; acptr; acptr = acptr->next)
+		if (MyConnect(acptr) && IsServer(acptr))
+		{
+			if (!acptr->serv->conf)
+				sendnotice(sptr, "client '%s' (%p) has NO CONF attached (? :P)",
+					acptr->name, acptr);
+			else
+				sendnotice(sptr, "client '%s' (%p) has conf %p attached, refcount: %d, temporary: %s",
+					acptr->name, acptr,
+					acptr->serv->conf,
+					acptr->serv->conf->refcount,
+					acptr->serv->conf->flag.temporary ? "YES" : "NO");
+		}
+#endif
 	return 0;
 }
 
@@ -973,7 +992,8 @@ int stats_mem(aClient *sptr, char *para)
 	    fl, (long)(fl * sizeof(Link)),
 	    flinks, (long)(flinks * sizeof(Link)));
 
-	rm = cres_mem(sptr,sptr->name);
+/*	rm = cres_mem(sptr,sptr->name); */
+	rm = 0; /* syzop: todo ?????????? */
 
 	tot = totww + totch + totcl + com + cl * sizeof(aClass) + db + rm;
 	tot += fl * sizeof(Link);

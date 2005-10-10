@@ -28,6 +28,7 @@ static char sccsid[] =
 #endif
 
 #include "struct.h"
+#include "numeric.h"
 #include "common.h"
 #include "sys.h"
 #include "h.h"
@@ -2123,6 +2124,10 @@ void	sendto_message_one(aClient *to, aClient *from, char *sender,
                          sender, cmd, nick, msg);
 }
 
+/* sidenote: sendnotice() and sendtxtnumeric() assume no client or server
+ * has a % in their nick, which is a safe assumption since % is illegal.
+ */
+ 
 void sendnotice(aClient *to, char *pattern, ...)
 {
 static char realpattern[1024];
@@ -2130,6 +2135,21 @@ va_list vl;
 
 	if (!IsWebTV(to))
 		ircsprintf(realpattern, ":%s NOTICE %s :%s", me.name, to->name, pattern);
+	else
+		ircsprintf(realpattern, ":%s PRIVMSG %s :%s", me.name, to->name, pattern);
+
+	va_start(vl, pattern);
+	vsendto_one(to, realpattern, vl);
+	va_end(vl);
+}
+
+void sendtxtnumeric(aClient *to, char *pattern, ...)
+{
+static char realpattern[1024];
+va_list vl;
+
+	if (!IsWebTV(to))
+		ircsprintf(realpattern, ":%s %d %s :%s", me.name, RPL_TEXT, to->name, pattern);
 	else
 		ircsprintf(realpattern, ":%s PRIVMSG %s :%s", me.name, to->name, pattern);
 

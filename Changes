@@ -883,3 +883,9 @@
 - Documented set::channel-command-prefix a bit more, and also changed the default from
   "`" to "`!." which seems much more reasonable / widespread :).
 - Some m_restart cleanups, suggested by w00t (#2652).
+- Removed all old resolver code and switched over to c-ares (+our caching routines).
+  This should get rid of some annoying untracable (and usually rare) crashbugs in the
+  old resolver. Besides that, it makes things look more clean and understandable.
+  This should be the fix for the following bugids (all the same issue): #2499, #2551, #2558,
+  #2559, #2603, #2642, #2502, #2501, #2618, #2616.
+  Feedback and testing is very much welcomed (syzop@unrealircd.com).

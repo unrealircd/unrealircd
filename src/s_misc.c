@@ -790,6 +790,13 @@ static void exit_one_client(aClient *cptr, aClient *sptr, aClient *from, char *c
 			 * that have this person on DCCALLOW that the user just left/got removed.
 			 */
 			remove_dcc_references(sptr);
+			
+			/* For remote clients, we need to check for any outstanding async
+			 * connects attached to this 'sptr', and set those records to NULL.
+			 * Why not for local? Well, we already do that in close_connection ;)
+			 */
+			if (!MyConnect(sptr))
+				unrealdns_delreq_bycptr(sptr);
 		}
 	}
 

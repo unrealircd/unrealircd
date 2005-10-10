@@ -662,7 +662,7 @@ extern TS check_pings(TS currenttime)
 					Debug((DEBUG_NOTICE,
 					    "DNS/AUTH timeout %s",
 					    get_client_name(cptr, TRUE)));
-					del_queries((char *)cptr);
+					unrealdns_delreq_bycptr(cptr);
 					ClearAuth(cptr);
 					ClearDNS(cptr);
 					SetAccess(cptr);
@@ -1507,13 +1507,7 @@ void SocketLoop(void *dummy)
 		 */
 		if (nextconnect && timeofday >= nextconnect)
 			nextconnect = try_connections(timeofday);
-		/*
-		 * ** DNS checks. One to timeout queries, one for cache expiries.
-		 */
-		if (timeofday >= nextdnscheck)
-			nextdnscheck = timeout_query_list(timeofday);
-		if (timeofday >= nextexpire)
-			nextexpire = expire_cache(timeofday);
+
 		/*
 		 * ** take the smaller of the two 'timed' event times as
 		 * ** the time of next event (stops us being late :) - avalon
