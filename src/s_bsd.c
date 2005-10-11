@@ -1346,19 +1346,36 @@ add_con_refuse:
 	return acptr;
 }
 
+static int dns_special_flag = 0; /* This is for an "interesting" race condition / fuck up issue.. very ugly. */
+
 void	start_of_normal_client_handshake(aClient *acptr)
 {
+struct hostent *he;
+
+	acptr->status = STAT_UNKNOWN;
+
 	if (!DONT_RESOLVE)
 	{
-		acptr->hostp = unrealdns_doclient(acptr);
-		if (!acptr->hostp)
+		dns_special_flag = 1;
+		he = unrealdns_doclient(acptr);
+		dns_special_flag = 0;
+
+		if (acptr->hostp)
+			goto doauth; /* Race condition detected, DNS has been done, continue with auth */
+
+		if (!he)
 		{
+			/* Resolving in progress */
 			SetDNS(acptr);
 		} else {
+			/* Host was in our cache */
+			acptr->hostp = he;
 			if (SHOWCONNECTINFO && !acptr->serv)
 				sendto_one(acptr, "%s", REPORT_FIN_DNSC);
 		}
 	}
+
+doauth:
 	start_auth(acptr);
 }
 
@@ -1369,7 +1386,7 @@ void proceed_normal_client_handshake(aClient *acptr, struct hostent *he)
 	if (SHOWCONNECTINFO && !acptr->serv)
 		sendto_one(acptr, "%s", acptr->hostp ? REPORT_FIN_DNS : REPORT_FAIL_DNS);
 	
-	if (!DoingAuth(acptr))
+	if (!dns_special_flag && !DoingAuth(acptr))
 		SetAccess(acptr);
 }
 

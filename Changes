@@ -889,3 +889,7 @@
   This should be the fix for the following bugids (all the same issue): #2499, #2551, #2558,
   #2559, #2603, #2642, #2502, #2501, #2618, #2616.
   Feedback and testing is very much welcomed (syzop@unrealircd.com).
+- Fixed SSL + new resolver problem, would cause an "interesting flood" of messages / 100% CPU.
+  Reported by Trocotronic (#0002659).
+- Fixed a problem with entries in the hosts file (such as, usually, localhost), this would
+  cause an unresolved host and a 30s delay for the user, even though resolving succeeded.
