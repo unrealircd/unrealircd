@@ -1088,3 +1088,29 @@ SpamfilterTargetTable *e;
 			return e->irccommand;
 	return "???";
 }
+
+int is_autojoin_chan(char *chname)
+{
+char buf[512];
+char *p, *name;
+
+	if (OPER_AUTO_JOIN_CHANS)
+	{
+		strlcpy(buf, OPER_AUTO_JOIN_CHANS, sizeof(buf));
+
+		for (name = strtoken(&p, buf, ","); name; name = strtoken(&p, NULL, ","))
+			if (!strcasecmp(name, chname))
+				return 1;
+	}
+	
+	if (AUTO_JOIN_CHANS)
+	{
+		strlcpy(buf, AUTO_JOIN_CHANS, sizeof(buf));
+
+		for (name = strtoken(&p, buf, ","); name; name = strtoken(&p, NULL, ","))
+			if (!strcasecmp(name, chname))
+				return 1;
+	}
+
+	return 0;
+}

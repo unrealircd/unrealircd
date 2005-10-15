@@ -769,3 +769,4 @@ extern void inet6_to_inet4(const void *src, void *dst);
 extern void sendtxtnumeric(aClient *to, char *pattern, ...);
 extern void unrealdns_gethostbyname_link(char *name, ConfigItem_link *conf);
 extern void unrealdns_delasyncconnects(void);
+extern int is_autojoin_chan(char *chname);

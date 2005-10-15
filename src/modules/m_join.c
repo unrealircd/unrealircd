@@ -219,7 +219,7 @@ Ban *banned;
 #ifndef NO_OPEROVERRIDE
 #ifdef OPEROVERRIDE_VERIFY
         if (IsOper(sptr) && (chptr->mode.mode & MODE_SECRET ||
-            chptr->mode.mode & MODE_PRIVATE))
+            chptr->mode.mode & MODE_PRIVATE) && !is_autojoin_chan(chptr->chname))
                 return (ERR_OPERSPVERIFY);
 #endif
 #endif

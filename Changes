@@ -893,3 +893,6 @@
   Reported by Trocotronic (#0002659).
 - Fixed a problem with entries in the hosts file (such as, usually, localhost), this would
   cause an unresolved host and a 30s delay for the user, even though resolving succeeded.
+- When OPEROVERRIDE_VERIFY is enabled, we now allow opers to still join any channels listed
+  in set::auto-join or set::oper-auto-join, even if they are +s/+p. Suggested by ultrotter
+  (#0002644).
