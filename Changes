@@ -896,3 +896,16 @@
 - When OPEROVERRIDE_VERIFY is enabled, we now allow opers to still join any channels listed
   in set::auto-join or set::oper-auto-join, even if they are +s/+p. Suggested by ultrotter
   (#0002644).
+- Added 4 UNREAL_VERSION_* macro's that can be useful for 3rd party modules to find out the
+  unreal version that the user is using. I presume this can be helpful (although nobody ever
+  suggested it ;p). The macros (#define's) are:
+  UNREAL_VERSION_GENERATION    The generation version number        eg: 3 for 3.2.4
+  UNREAL_VERSION_MAJOR         The major version number             eg: 2 for 3.2.4
+  UNREAL_VERSION_MINOR         The minor version number             eg: 4 for 3.2.4
+                               This can be negative for unstable,
+                               alpha and beta versions.
+  UNREAL_VERSION_TIME          Year + week of the day (starting     eg: 200541
+                               on Monday), this is updated on
+                               the CVS server every week.
+  The first 3 are for nicely identifiying the version, the 4th can be useful in case
+  you want to support CVS and/or want some more control.
