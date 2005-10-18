@@ -909,3 +909,5 @@
                                the CVS server every week.
   The first 3 are for nicely identifiying the version, the 4th can be useful in case
   you want to support CVS and/or want some more control.
+- Fixed crash bug (due to new resolver) if not using 1 general *@* / *@* allow block,
+  reported by Daniel.

@@ -2568,41 +2568,36 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 			continue;
 		if (aconf->flags.ssl && !IsSecure(cptr))
 			continue;
-		if (hp)
-			for (i = 0, hname = hp->h_name; hname;
-			    hname = hp->h_aliases[i++])
+		if (hp && hp->h_name)
+		{
+			hname = hp->h_name;
+			strncpyzt(fullname, hname, sizeof(fullname));
+			add_local_domain(fullname, HOSTLEN - strlen(fullname));
+			Debug((DEBUG_DNS, "a_il: %s->%s", sockhost, fullname));
+			if (index(aconf->hostname, '@'))
 			{
-				strncpyzt(fullname, hname,
-				    sizeof(fullname));
-				add_local_domain(fullname,
-				    HOSTLEN - strlen(fullname));
-				Debug((DEBUG_DNS, "a_il: %s->%s",
-				    sockhost, fullname));
-				if (index(aconf->hostname, '@'))
-				{
-					/*
-					 * Doing strlcpy / strlcat here
-					 * would simply be a waste. We are
-					 * ALREADY sure that it is proper 
-					 * lengths
-					*/
-					if (aconf->flags.noident)
-						strcpy(uhost, username);
-					else
-						(void)strcpy(uhost, cptr->username);
-					(void)strcat(uhost, "@");
-				}
-				else
-					*uhost = '\0';
-				/* 
-				 * Same here as above
-				 * -Stskeeps 
+				/*
+				 * Doing strlcpy / strlcat here
+				 * would simply be a waste. We are
+				 * ALREADY sure that it is proper 
+				 * lengths
 				*/
-				(void)strncat(uhost, fullname,
-				    sizeof(uhost) - strlen(uhost));
-				if (!match(aconf->hostname, uhost))
-					goto attach;
+				if (aconf->flags.noident)
+					strcpy(uhost, username);
+				else
+					strcpy(uhost, cptr->username);
+				strcat(uhost, "@");
 			}
+			else
+				*uhost = '\0';
+			/* 
+			 * Same here as above
+			 * -Stskeeps 
+			*/
+			strncat(uhost, fullname, sizeof(uhost) - strlen(uhost));
+			if (!match(aconf->hostname, uhost))
+				goto attach;
+		}
 
 		if (index(aconf->ip, '@'))
 		{
