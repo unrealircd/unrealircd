@@ -7870,6 +7870,13 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 
 	if ((cmptr = find_Command(ce->ce_vardata, 0, M_ALIAS)))
 		del_Command(ce->ce_vardata, NULL, cmptr->func);
+	if (find_Command_simple(ce->ce_vardata))
+	{
+		config_warn("%s:%i: Alias '%s' would conflict with command '%s', alias not added.",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			ce->ce_vardata, ce->ce_vardata);
+		return 0;
+	}
 	if ((alias = Find_alias(ce->ce_vardata)))
 		DelListItem(alias, conf_alias);
 	alias = MyMallocEx(sizeof(ConfigItem_alias));

@@ -911,3 +911,4 @@
   you want to support CVS and/or want some more control.
 - Fixed crash bug (due to new resolver) if not using 1 general *@* / *@* allow block,
   reported by Daniel.
+- Fixed issue that could cause an alias to be added that would override a command.
