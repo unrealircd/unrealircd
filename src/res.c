@@ -29,6 +29,11 @@
 #include "proto.h"
 #include "channel.h"
 #include "version.h"
+
+#if !defined(UNREAL_VERSION_TIME)
+ #error "YOU MUST RUN ./Config WHENEVER YOU ARE UPGRADING UNREAL!!!!"
+#endif
+
 #include <time.h>
 #ifdef _WIN32
 #include <sys/timeb.h>
