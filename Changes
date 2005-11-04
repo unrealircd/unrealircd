@@ -912,3 +912,5 @@
 - Fixed crash bug (due to new resolver) if not using 1 general *@* / *@* allow block,
   reported by Daniel.
 - Fixed issue that could cause an alias to be added that would override a command.
+- Fixed OpenBSD crash on /REHASH. Thanks to Peter Laur (OpenBSD.se) for providing us
+  a shell account to trace this issue down.

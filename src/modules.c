@@ -294,7 +294,14 @@ char  *Module_Create(char *path_)
 		strcpy(path, "./");
 		strcat(path, path_);
 	}
+#ifdef __OpenBSD__
+	/* For OpenBSD, do not do a hardlinkink attempt first because it checks inode
+	 * numbers to see if a certain module is already loaded. -- Syzop
+	 */
+	unreal_copyfileex(path, tmppath, 0);
+#else
 	unreal_copyfileex(path, tmppath, 1);
+#endif
 	if ((Mod = irc_dlopen(tmppath, RTLD_NOW)))
 	{
 		/* We have engaged the borg cube. Scan for lifesigns. */
