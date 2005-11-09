@@ -341,17 +341,28 @@ void extban_init(void)
 	req.is_banned = extban_modec_is_banned;
 	req.is_ok = extban_modec_is_ok;
 	ExtbanAdd(NULL, req);
+
+	memset(&req, 0, sizeof(ExtbanInfo));
 	req.flag = 'q';
 	req.conv_param = extban_conv_param_nuh;
 	req.is_banned = extban_modeq_is_banned;
 	ExtbanAdd(NULL, req);
+
+	memset(&req, 0, sizeof(ExtbanInfo));
 	req.flag = 'n';
 	req.conv_param = extban_conv_param_nuh;
 	req.is_banned = extban_moden_is_banned;
 	ExtbanAdd(NULL, req);
+
+	memset(&req, 0, sizeof(ExtbanInfo));
 	req.flag = 'r';
 	req.conv_param = extban_moder_conv_param;
 	req.is_banned = extban_moder_is_banned;
 	req.options = EXTBOPT_CHSVSMODE;
 	ExtbanAdd(NULL, req);
+
+	/* When adding new extbans, be sure to always add a prior memset like above
+	 * so you don't "inherit" old options (we are 2005 and the 20 nanoseconds
+	 * per-boot/rehash is NOT EXACTLY a problem....) -- Syzop.
+	 */
 }

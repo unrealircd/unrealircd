@@ -90,48 +90,43 @@ DLLFUNC int MOD_UNLOAD(m_svsnick)(int module_unload)
 */
 int  m_svsnick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-        aClient *acptr;
+aClient *acptr;
 
-        if (!IsULine(sptr) || parc < 4 || (strlen(parv[2]) > NICKLEN))
-		return -1;        /* This looks like an error anyway -Studded */
-        if (!hunt_server_token(cptr, sptr, MSG_SVSNICK, TOK_SVSNICK, "%s %s :%s", 1, parc,
-		parv) != HUNTED_ISME)
-        {
-		if (do_nick_name(parv[2]) == 0)
-			return 0;
-                if ((acptr = find_person(parv[1], NULL)))
-                {
-                        if (find_client(parv[2], NULL)) /* Collision */
-                                return exit_client(cptr, acptr, sptr,
-                                    "Nickname collision due to Services enforced "
-                                    "nickname change, your nick was overruled");
-                        acptr->umodes &= ~UMODE_REGNICK;
-                        acptr->lastnick = TS2ts(parv[3]);
-                        sendto_common_channels(acptr, ":%s NICK :%s", parv[1],
-                            parv[2]);
-                        if (IsPerson(acptr))
-                                add_history(acptr, 1);
-                        sendto_serv_butone_token(NULL, parv[1], MSG_NICK,
-                            TOK_NICK, "%s :%ld", parv[2], TS2ts(parv[3]));
-                        if (acptr->name[0])
-                        {
-				(void)del_from_client_hash_table(acptr->name, acptr);
-                                if (IsPerson(acptr))
-                                        hash_check_watch(acptr, RPL_LOGOFF);
-                        }
-                        if (MyClient(acptr))
-                        {
-				sendto_snomask(SNO_NICKCHANGE, "*** Notice -- %s (%s@%s) has changed his/her nickname to %s", 
-					acptr->name, acptr->user->username, acptr->user->realhost, parv[2]);
-				
-                                RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, acptr, parv[2]);
-                        }
-                        (void)strlcpy(acptr->name, parv[2], sizeof acptr->name);
-                        (void)add_to_client_hash_table(parv[2], acptr);
-                        if (IsPerson(acptr))
-                                hash_check_watch(acptr, RPL_LOGON);
+	if (!IsULine(sptr) || parc < 4 || (strlen(parv[2]) > NICKLEN))
+		return -1; /* This looks like an error anyway -Studded */
 
-                }
-        }
-        return 0;
+	if (hunt_server_token(cptr, sptr, MSG_SVSNICK, TOK_SVSNICK, "%s %s :%s", 1, parc, parv) != HUNTED_ISME)
+		return 0; /* Forwarded, done */
+
+	if (do_nick_name(parv[2]) == 0)
+		return 0;
+
+	if (!(acptr = find_person(parv[1], NULL)))
+		return 0; /* User not found, bail out */
+
+	if (find_client(parv[2], NULL)) /* Collision */
+		return exit_client(cptr, acptr, sptr,
+		                   "Nickname collision due to Services enforced "
+		                   "nickname change, your nick was overruled");
+
+	acptr->umodes &= ~UMODE_REGNICK;
+	acptr->lastnick = TS2ts(parv[3]);
+	sendto_common_channels(acptr, ":%s NICK :%s", parv[1], parv[2]);
+	add_history(acptr, 1);
+	sendto_serv_butone_token(NULL, parv[1], MSG_NICK, TOK_NICK,
+	                         "%s :%ld", parv[2], TS2ts(parv[3]));
+
+	(void)del_from_client_hash_table(acptr->name, acptr);
+	hash_check_watch(acptr, RPL_LOGOFF);
+
+	sendto_snomask(SNO_NICKCHANGE,
+		"*** Notice -- %s (%s@%s) has been forced to change his/her nickname to %s", 
+		acptr->name, acptr->user->username, acptr->user->realhost, parv[2]);
+	RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, acptr, parv[2]);
+
+	strlcpy(acptr->name, parv[2], sizeof acptr->name);
+	add_to_client_hash_table(parv[2], acptr);
+	hash_check_watch(acptr, RPL_LOGON);
+
+	return 0;
 }

@@ -183,7 +183,7 @@ extern int m_sqline_Unload(), m_unsqline_Unload(), m_tkl_Unload(), m_vhost_Unloa
 extern int m_cycle_Unload(), m_svsjoin_Unload(), m_svspart_Unload(), m_svslusers_Unload();
 extern int m_svswatch_Unload(), m_svssilence_Unload(), m_svskill_Unload();
 extern int m_sendsno_Unload(), m_svssno_Unload(), m_time_Unload();
-extern int m_sajoin_Unload(), m_sapart_Unload(), m_knock_Umload();
+extern int m_sajoin_Unload(), m_sapart_Unload();
 extern int m_kick_Unload(), m_topic_Unload(), m_umode2_Unload();
 extern int m_invite_Unload(), m_list_Unload(), m_squit_Unload();
 extern int m_samode_Unload(), m_sjoin_Unload(), m_protoctl_Unload();
