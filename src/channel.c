@@ -435,15 +435,26 @@ int del_listmode(Ban **list, aChannel *chptr, char *banid)
  */
 char *ban_realhost = NULL, *ban_virthost = NULL, *ban_ip = NULL;
 
-/** is_banned - checks for bans.
- * PARAMETERS:
- * sptr:	the client to check (can be remote client)
- * chptr:	the channel to check
- * type:	one of BANCHK_*
- * RETURNS:
- * a pointer to the ban structure if banned, else NULL.
+/** is_banned - Check if a user is banned on a channel.
+ * @param sptr   Client to check (can be remote client)
+ * @param chptr  Channel to check
+ * @param type   Type of ban to check for (BANCHK_*)
+ * @returns      A pointer to the ban struct if banned, otherwise NULL.
+ * @comments     Simple wrapper for is_banned_with_nick()
  */
-Ban *is_banned(aClient *sptr, aChannel *chptr, int type)
+inline Ban *is_banned(aClient *sptr, aChannel *chptr, int type)
+{
+	return is_banned_with_nick(sptr, chptr, type, sptr->name);
+}
+
+/** is_banned_with_nick - Check if a user is banned on a channel.
+ * @param sptr   Client to check (can be remote client)
+ * @param chptr  Channel to check
+ * @param type   Type of ban to check for (BANCHK_*)
+ * @param nick   Nick of the user
+ * @returns      A pointer to the ban struct if banned, otherwise NULL.
+ */
+Ban *is_banned_with_nick(aClient *sptr, aChannel *chptr, int type, char *nick)
 {
 	Ban *tmp, *tmp2;
 	char *s;
@@ -461,7 +472,7 @@ Ban *is_banned(aClient *sptr, aChannel *chptr, int type)
 
 	if (MyConnect(sptr)) {
 		mine = 1;
-		s = make_nick_user_host(sptr->name, sptr->user->username, GetIP(sptr));
+		s = make_nick_user_host(nick, sptr->user->username, GetIP(sptr));
 		strlcpy(nuip, s, sizeof nuip);
 		ban_ip = nuip;
 	}
@@ -472,13 +483,13 @@ Ban *is_banned(aClient *sptr, aChannel *chptr, int type)
 			dovirt = 1;
 		}
 
-	s = make_nick_user_host(sptr->name, sptr->user->username,
+	s = make_nick_user_host(nick, sptr->user->username,
 	    sptr->user->realhost);
 	strlcpy(realhost, s, sizeof realhost);
 
 	if (dovirt)
 	{
-		s = make_nick_user_host(sptr->name, sptr->user->username,
+		s = make_nick_user_host(nick, sptr->user->username,
 		    sptr->user->virthost);
 		strlcpy(virthost, s, sizeof virthost);
 		ban_virthost = virthost;

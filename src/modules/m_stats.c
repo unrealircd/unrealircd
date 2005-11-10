@@ -1392,6 +1392,8 @@ int stats_set(aClient *sptr, char *para)
 	if (SPAMFILTER_EXCEPT)
 		sendto_one(sptr, ":%s %i %s :spamfilter::except: %s", me.name, RPL_TEXT,
 			sptr->name, SPAMFILTER_EXCEPT);
+	sendto_one(sptr, ":%s %i %s :check-target-nick-bans: %s", me.name, RPL_TEXT,
+		sptr->name, CHECK_TARGET_NICK_BANS ? "yes" : "no");
 	sendto_one(sptr, ":%s %i %s :hosts::global: %s", me.name, RPL_TEXT,
 	    sptr->name, oper_host);
 	sendto_one(sptr, ":%s %i %s :hosts::admin: %s", me.name, RPL_TEXT,

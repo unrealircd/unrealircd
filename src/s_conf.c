@@ -1512,6 +1512,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->spamfilter_virus_help_channel = strdup("#help");
 	i->maxdccallow = 10;
 	i->channel_command_prefix = strdup("`!.");
+	i->check_target_nick_bans = 1;
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,
@@ -6409,6 +6410,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "oper-auto-join")) {
 			ircstrdup(tempiConf.oper_auto_join_chans, cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "check-target-nick-bans")) {
+			tempiConf.check_target_nick_bans = config_checkval(cep->ce_vardata, CFG_YESNO);
+		}
 		else if (!strcmp(cep->ce_varname, "allow-userhost-change")) {
 			if (!stricmp(cep->ce_vardata, "always"))
 				tempiConf.userhost_allowed = UHALLOW_ALWAYS;
@@ -6918,6 +6922,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "oper-auto-join")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, oper_auto_join, "oper-auto-join");
+		}
+		else if (!strcmp(cep->ce_varname, "check-target-nick-bans")) {
+			CheckNull(cep);
+			CheckDuplicate(cep, check_target_nick_bans, "check-target-nick-bans");
 		}
 		else if (!strcmp(cep->ce_varname, "channel-command-prefix")) {
 			CheckNull(cep);

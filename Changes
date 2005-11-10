@@ -917,3 +917,6 @@
 - Couple of source code cleanups (svsnick, a *line msg, kill, and some useless l_commands
   code), suggested by Nazzy and Requi3m.
 - Fixed extbans no longer working properly in CVS, fix provided by Nazzy (#0002681).
+- Made it so you no longer can change your nick to a banned one in a channel, suggested
+  by vonitsanet (#0002388), partial patch provided by Nazzy.
+  This option can be turned off by setting set::check-target-nick-bans to 'no'.

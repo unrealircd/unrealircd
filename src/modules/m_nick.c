@@ -616,6 +616,14 @@ DLLFUNC CMD_FUNC(m_nick)
 					    mp->chptr->chname);
 					return 0;
 				}
+				if (CHECK_TARGET_NICK_BANS && !is_skochanop(sptr, mp->chptr) && is_banned_with_nick(sptr, mp->chptr, BANCHK_NICK, nick))
+				{
+					sendto_one(sptr,
+					    ":%s 437 %s %s :Cannot change to a nickname banned on channel",
+					    me.name, parv[0],
+					    mp->chptr->chname);
+					return 0;
+				}
 				if (!IsOper(sptr) && !IsULine(sptr)
 				    && mp->chptr->mode.mode & MODE_NONICKCHANGE
 				    && !is_chanownprotop(sptr, mp->chptr))

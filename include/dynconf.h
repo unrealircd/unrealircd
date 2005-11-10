@@ -81,6 +81,7 @@ struct zConfiguration {
 	unsigned use_ban_version:1;
 	unsigned mkpasswd_for_everyone:1;
 	unsigned allow_part_if_shunned:1;
+	unsigned check_target_nick_bans:1;
 	unsigned use_egd;
 	long host_timeout;
 	int  host_retries;
@@ -246,6 +247,7 @@ extern MODVAR aConfiguration iConf;
 #define SPAMFILTER_VIRUSCHAN	iConf.spamfilter_virus_help_channel
 #define SPAMFILTER_VIRUSCHANDENY	iConf.spamfilter_vchan_deny
 #define SPAMFILTER_EXCEPT		iConf.spamexcept_line
+#define CHECK_TARGET_NICK_BANS	iConf.check_target_nick_bans
 
 /* Used for duplicate checking */
 struct SetCheck {
@@ -277,6 +279,7 @@ struct SetCheck {
 	unsigned has_snomask_on_oper:1;
 	unsigned has_auto_join:1;
 	unsigned has_oper_auto_join:1;
+	unsigned has_check_target_nick_bans:1;
 	unsigned has_oper_only_stats:1;
 	unsigned has_maxchannelsperuser:1;
 	unsigned has_maxdccallow:1;
