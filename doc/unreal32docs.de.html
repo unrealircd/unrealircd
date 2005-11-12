@@ -27,7 +27,7 @@
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2.3 </font><br>
-  <b>Letztes Dokumentation Update:</b>            2005-03-13</div>
+  <b>Letztes Dokumentation Update:</b>             2005-10-11</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b>  McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
 <b>Dokumentation</b><b>:</b> CKnight^ / Syzop<br>
@@ -3081,7 +3081,10 @@ joinen.</p>
 <b>set::spamfilter::except &lt;target(s)&gt;</b><br>
 Diese Ziele werden vom Spamfilter ausgenommen (es wird also keine Aktion
 durchgeführt). Es sind einzelne Ziele oder eine durch Kommata getrennte Liste
-möglich. Beispiel: except "#help,#spamreport"</p> </div>
+möglich. Beispiel: except &quot;#help,#spamreport&quot;</p> <p><b>set::<font face="Helvetica,Arial" size="-1">check-target-nick-bans</font> &lt;yes|no&gt;</b><br>
+Wann immer ein User seinen Nick ändert, wird überprüft, ob der NEUE Nick zu
+bannen wäre. Ist das der Fall, wird der Nickwechsel nicht erlaubt. Default ist
+'yes'.</p> </div>
 <p><b><font size="+2"><a name="addtlfiles">5 &#8211; Additional Files</a></font></b></p><div class="desc">
   Zusätzlich zu den Konfigurationsdateien hat Unreal einige weitere Dateien,
   wie MOTD, OperMOTD, BotMOTD, und Rules. In der nachfolgenden Liste stehen die
