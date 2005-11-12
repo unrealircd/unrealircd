@@ -29,7 +29,7 @@ Spanish |
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Versi&oacute;n: 3.2.3</font><br>
-  <b>&Uacute;ltima actualizaci&oacute;n del documento:</b> 13-03-2005</div>
+  <b>&Uacute;ltima actualizaci&oacute;n del documento:</b> 11-11-2005</div>
 <br>
   <b>Programadores:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contribuciones:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -2196,6 +2196,8 @@ set {
   Si est&aacute; en 'yes' (o '1') s&oacute;lo los usuarios invitados por el filtro de spam pueden entrar en ese canal, a excepci&oacute;n de los operadores.</p>
  <p><font class="set">set::spamfilter::except &lt;target(s)&gt;</font><br>
   Estos &quot;target(s)&quot; se omiten del filtro de spam (no se toma ninguna acci&oacute;n). Puede especificar varios separ&aacute;ndolos con comas. Ej: except &quot;#help,#spamreport&quot;;.</p>
+ <p><font class="set">set::check-target-nick-bans &lt;yes|no&gt;</font><br>
+  Si un usuario se cambia de nick, comprueba si el nuevo nick se relaciona con algún ban. Si es así, no permite el cambio de nick. Por defecto 'yes'.</p>
 </div>
 <p><b><font size="+2">5 &#8211; Archivos adicionales <a name="addtlfiles"></a>
   </font></b></p>
