@@ -921,3 +921,5 @@
   by vonitsanet (#0002388), partial patch provided by Nazzy.
   This option can be turned off by setting set::check-target-nick-bans to 'no'.
 - Removed useless (unused) WATCH code that was still present in the core.
+- Made it so coadmins can use /ADCHAT (makes sense, since they already *received*
+  adchats). Reported by RandomNumber (#0002557).
