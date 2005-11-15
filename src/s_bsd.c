@@ -2382,7 +2382,7 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 		aconf, aconf->refcount, aconf->flag.temporary ? "YES" : "NO");
 #endif
 
-	if (aconf->options & CONNECT_NODNSCACHE) {
+	if (!hp && (aconf->options & CONNECT_NODNSCACHE)) {
 		/* Remove "cache" if link::options::nodnscache is set */
 		memset(&aconf->ipnum, '\0', sizeof(struct IN_ADDR));
 	}

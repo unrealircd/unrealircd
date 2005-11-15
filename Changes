@@ -923,3 +923,5 @@
 - Removed useless (unused) WATCH code that was still present in the core.
 - Made it so coadmins can use /ADCHAT (makes sense, since they already *received*
   adchats). Reported by RandomNumber (#0002557).
+- Fixed serious flood of notices to opers if link::options::dnscache was present.
+  Reported by firstof9.
