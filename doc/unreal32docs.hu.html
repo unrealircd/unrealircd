@@ -29,7 +29,7 @@ Hungarian |
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com/">http://www.unrealircd.com</a></font><br>
   <font size="4">Verzió: 3.2.3</font><br>
-  <b>Utolsó dokumentáció módosítás:</b> 2005-03-13</div>
+  <b>Utolsó dokumentáció módosítás:</b> 2005-10-11</div>
 <br>
   <b>Fõ fejlesztõk:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Munkatársak:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -2373,6 +2373,9 @@ set {
  <p><font class="set">set::spamfilter::except &lt;célpont(ok)&gt;</font><br>
   Ezek a célpontok kivételek a spamszûrések alól (nem lesz tevékenység végrehajtva),
   lehet egyetlen célpont vagy egy vesszõvel elválaszott felsorolás. Pl.: except "#help,#spamreport"</p>
+ <p><font class="set">set::check-target-nick-bans &lt;yes|no&gt;</font><br>
+  Valahányszor a felhasználó nicknevet változtat, ellenõrzi, hogy az ÚJ név le van-e
+  tiltva. Ha igen, nem engedélyezi a nickváltást. Az alapértelmezés "yes".</p>
 <p></p> </div>
 <p><b><font size="+2">5 &#8211; További fájlok<a name="addtlfiles"></a>
   </font></b></p><div class="desc">
