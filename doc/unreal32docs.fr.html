@@ -27,7 +27,7 @@ French |
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com/">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2.3</font><br>
-  <b>Derni&egrave;re mise &agrave; jour de la documentation:</b> 2005-03-13</div>
+  <b>Derni&egrave;re mise &agrave; jour de la documentation:</b> 2005-10-11</div>
 <br>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -2305,6 +2305,9 @@ spamfilter {
  <p><font class="set">set::spamfilter::except &lt;target(s)&gt;</font><br>
   Ces cibles sont exempt&eacute;s du spamfilter ( aucune action sera entrepris ), cela peut être 
   une simple cible, ou une liste s&eacute;par&eacute; par des virgules. Ex: except "#help,#spamreport"</p>
+ <p><font class="set">set::check-target-nick-bans &lt;yes|no&gt;</font><br>
+  A chaque fois qu'un utilisateur change son pseudo, v&eacute;rifie si le nouveau pseudo sera banni.
+  Si c'est le cas, le changement de pseudo n'est pas autoris&eacute;. La valeur par d&eacute;faut est "yes".</p>
 <p></p> </div>
 <p><b><font size="+2">5 &#8211; Fichiers additionnels<a name="addtlfiles"></a>
   </font></b></p><div class="desc">
