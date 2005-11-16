@@ -105,6 +105,8 @@ DLLFUNC CMD_FUNC(m_part)
 		{
 			if (!strcasecmp(STATIC_PART, "yes") || !strcmp(STATIC_PART, "1"))
 				commentx = NULL;
+			else if (!strcasecmp(STATIC_PART, "no") || !strcmp(STATIC_PART, "0"))
+				; /* keep original reason */
 			else
 				commentx = STATIC_PART;
 		}

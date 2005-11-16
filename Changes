@@ -925,3 +925,7 @@
   adchats). Reported by RandomNumber (#0002557).
 - Fixed serious flood of notices to opers if link::options::dnscache was present.
   Reported by firstof9.
+- Added proper "not enough parameters" message for /SETNAME and cleaned up some whitespace
+  in the function, reported by Robby22 (#0002696).
+- Fixed set::static-part set to 'no' not working properly. Reported by Robby22 (#0002698).
+- Fixed crash in new resolver, reported by firstof9.

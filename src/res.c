@@ -1,9 +1,6 @@
 /************************************************************************
- * IRC - Internet Relay Chat, random.c
+ * IRC - Internet Relay Chat, res.c
  * (C) 2005 Bram Matthys (Syzop) and the UnrealIRCd Team
- *
- * See file AUTHORS in IRC package for additional names of
- * the programmers. 
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -188,7 +185,8 @@ char ipv6 = r->ipv6;
 	if (!acptr)
 		return; 
 	
-	if (status != 0)
+	/* Check for status and null name (yes, we must) */
+	if ((status != 0) || !he->h_name || !*he->h_name)
 	{
 		/* Failed */
 		proceed_normal_client_handshake(acptr, NULL);
@@ -199,6 +197,7 @@ char ipv6 = r->ipv6;
 	newr = MyMallocEx(sizeof(DNSReq));
 	newr->cptr = acptr;
 	newr->ipv6 = ipv6;
+	unrealdns_addreqtolist(newr);
 	
 #ifndef INET6
 	ares_gethostbyname(resolver_channel, he->h_name, AF_INET, unrealdns_cb_nametoip_verify, newr);
