@@ -929,3 +929,4 @@
   in the function, reported by Robby22 (#0002696).
 - Fixed set::static-part set to 'no' not working properly. Reported by Robby22 (#0002698).
 - Fixed crash in new resolver, reported by firstof9.
+- [CVS Only] Refixed name<->ip mapping check in new resolver, reported by Darko.

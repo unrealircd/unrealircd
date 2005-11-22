@@ -257,11 +257,15 @@ u_int32_t ipv4_addr;
 #endif
 	}
 
-	if (he->h_addr_list[i])
+	if (!he->h_addr_list[i])
 	{
-		/* Entry was found, verified, and can be added to cache */
-		unrealdns_addtocache(he->h_name, &acptr->ip, sizeof(acptr->ip));
+		/* Failed name <-> IP mapping */
+		proceed_normal_client_handshake(acptr, NULL);
+		return;
 	}
+
+	/* Entry was found, verified, and can be added to cache */
+	unrealdns_addtocache(he->h_name, &acptr->ip, sizeof(acptr->ip));
 	
 	he2 = unreal_create_hostent(he->h_name, &acptr->ip);
 	proceed_normal_client_handshake(acptr, he2);
