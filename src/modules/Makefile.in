@@ -404,311 +404,412 @@ m_lusers.o: m_lusers.c $(INCLUDES)
 #############################################################################
 
 m_adminchat.so: m_adminchat.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_adminchat.so m_adminchat.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_adminchat.so m_adminchat.c
 
 m_akill.so: m_akill.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_akill.so m_akill.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_akill.so m_akill.c
 
 m_chgname.so: m_chgname.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_chgname.so m_chgname.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_chgname.so m_chgname.c
 
 m_guest.so: m_guest.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_guest.so m_guest.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_guest.so m_guest.c
 
 m_htm.so: m_htm.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_htm.so m_htm.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_htm.so m_htm.c
 
 m_kill.so: m_kill.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_kill.so m_kill.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_kill.so m_kill.c
 
 m_lag.so: m_lag.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_lag.so m_lag.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_lag.so m_lag.c
 
 m_message.so: m_message.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_message.so m_message.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_message.so m_message.c
 
 m_nachat.so: m_nachat.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_nachat.so m_nachat.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_nachat.so m_nachat.c
 
 m_oper.so: m_oper.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_oper.so m_oper.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_oper.so m_oper.c
 
 m_pingpong.so: m_pingpong.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_pingpong.so m_pingpong.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_pingpong.so m_pingpong.c
 
 m_quit.so: m_quit.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_quit.so m_quit.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_quit.so m_quit.c
 
 m_rakill.so: m_rakill.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_rakill.so m_rakill.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_rakill.so m_rakill.c
 
 m_rping.so: m_rping.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_rping.so m_rping.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_rping.so m_rping.c
 
 m_sendumode.so: m_sendumode.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_sendumode.so m_sendumode.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_sendumode.so m_sendumode.c
 
 m_sqline.so: m_sqline.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_sqline.so m_sqline.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_sqline.so m_sqline.c
 
 m_tsctl.so: m_tsctl.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_tsctl.so m_tsctl.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_tsctl.so m_tsctl.c
 
 m_unkline.so: m_unkline.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_unkline.so m_unkline.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_unkline.so m_unkline.c
 
 m_unsqline.so: m_unsqline.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_unsqline.so m_unsqline.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_unsqline.so m_unsqline.c
 
 m_unzline.so: m_unzline.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_unzline.so m_unzline.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_unzline.so m_unzline.c
 
 m_whois.so: m_whois.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_whois.so m_whois.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_whois.so m_whois.c
 
 m_sethost.so: m_sethost.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_sethost.so m_sethost.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_sethost.so m_sethost.c
 
 m_chghost.so: m_chghost.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_chghost.so m_chghost.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		 -o m_chghost.so m_chghost.c
 
 m_chgident.so: m_chgident.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_chgident.so m_chgident.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		 -o m_chgident.so m_chgident.c
 
 m_setident.so: m_setident.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_setident.so m_setident.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		 -o m_setident.so m_setident.c
 
 m_setname.so: m_setname.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_setname.so m_setname.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		 -o m_setname.so m_setname.c
 
 m_sdesc.so: m_sdesc.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_sdesc.so m_sdesc.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		 -o m_sdesc.so m_sdesc.c
 
 m_svsmode.so: m_svsmode.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_svsmode.so m_svsmode.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		 -o m_svsmode.so m_svsmode.c
 
 m_swhois.so: m_swhois.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_swhois.so m_swhois.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		 -o m_swhois.so m_swhois.c
 
 m_svsmotd.so: m_svsmotd.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_svsmotd.so m_svsmotd.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		 -o m_svsmotd.so m_svsmotd.c
 
 m_svsnline.so: m_svsnline.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_svsnline.so m_svsnline.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		 -o m_svsnline.so m_svsnline.c
 
 m_who.so: m_who.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_who.so m_who.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		 -o m_who.so m_who.c
 
 m_mkpasswd.so: m_mkpasswd.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_mkpasswd.so m_mkpasswd.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_mkpasswd.so m_mkpasswd.c
 
 m_away.so: m_away.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_away.so m_away.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_away.so m_away.c
 
 m_svsnoop.so: m_svsnoop.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_svsnoop.so m_svsnoop.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_svsnoop.so m_svsnoop.c
 
 m_svso.so: m_svso.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_svso.so m_svso.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_svso.so m_svso.c
 
 m_svsnick.so: m_svsnick.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_svsnick.so m_svsnick.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_svsnick.so m_svsnick.c
 
 m_tkl.so: m_tkl.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_tkl.so m_tkl.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_tkl.so m_tkl.c
 
 m_vhost.so: m_vhost.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_vhost.so m_vhost.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_vhost.so m_vhost.c
 
 m_cycle.so: m_cycle.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_cycle.so m_cycle.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_cycle.so m_cycle.c
 
 m_svsjoin.so: m_svsjoin.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_svsjoin.so m_svsjoin.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_svsjoin.so m_svsjoin.c
 
 m_svspart.so: m_svspart.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_svspart.so m_svspart.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_svspart.so m_svspart.c
 
 m_svslusers.so: m_svslusers.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_svslusers.so m_svslusers.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_svslusers.so m_svslusers.c
 
 m_svswatch.so: m_svswatch.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_svswatch.so m_svswatch.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_svswatch.so m_svswatch.c
 
 m_svssilence.so: m_svssilence.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_svssilence.so m_svssilence.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_svssilence.so m_svssilence.c
 
 m_sendsno.so: m_sendsno.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_sendsno.so m_sendsno.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_sendsno.so m_sendsno.c
 
 m_svssno.so: m_svssno.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_svssno.so m_svssno.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_svssno.so m_svssno.c
 
 m_sajoin.so: m_sajoin.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_sajoin.so m_sajoin.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_sajoin.so m_sajoin.c
 
 m_sapart.so: m_sapart.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_sapart.so m_sapart.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_sapart.so m_sapart.c
 
 m_samode.so: m_samode.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_samode.so m_samode.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_samode.so m_samode.c
 
 m_kick.so: m_kick.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_kick.so m_kick.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_kick.so m_kick.c
 
 m_topic.so: m_topic.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_topic.so m_topic.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_topic.so m_topic.c
 
 m_invite.so: m_invite.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_invite.so m_invite.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_invite.so m_invite.c
 
 m_list.so: m_list.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_list.so m_list.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_list.so m_list.c
 
 m_time.so: m_time.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_time.so m_time.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_time.so m_time.c
 
 m_svskill.so: m_svskill.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_svskill.so m_svskill.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_svskill.so m_svskill.c
 
 m_sjoin.so: m_sjoin.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_sjoin.so m_sjoin.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_sjoin.so m_sjoin.c
 
 m_pass.so: m_pass.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_pass.so m_pass.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_pass.so m_pass.c
 
 m_userhost.so: m_userhost.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_userhost.so m_userhost.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_userhost.so m_userhost.c
 
 m_ison.so: m_ison.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_ison.so m_ison.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_ison.so m_ison.c
 
 m_silence.so: m_silence.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_silence.so m_silence.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_silence.so m_silence.c
 
 m_knock.so: m_knock.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_knock.so m_knock.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_knock.so m_knock.c
 
 m_umode2.so: m_umode2.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_umode2.so m_umode2.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_umode2.so m_umode2.c
 
 m_squit.so: m_squit.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_squit.so m_squit.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_squit.so m_squit.c
 
 m_protoctl.so: m_protoctl.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_protoctl.so m_protoctl.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_protoctl.so m_protoctl.c
 
 m_addline.so: m_addline.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_addline.so m_addline.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_addline.so m_addline.c
 
 m_addmotd.so: m_addmotd.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_addmotd.so m_addmotd.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_addmotd.so m_addmotd.c
 
 m_addomotd.so: m_addomotd.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_addomotd.so m_addomotd.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_addomotd.so m_addomotd.c
 
 m_wallops.so: m_wallops.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_wallops.so m_wallops.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_wallops.so m_wallops.c
 
 m_admin.so: m_admin.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_admin.so m_admin.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_admin.so m_admin.c
 
 m_globops.so: m_globops.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_globops.so m_globops.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_globops.so m_globops.c
 
 m_locops.so: m_locops.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_locops.so m_locops.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_locops.so m_locops.c
 
 m_chatops.so: m_chatops.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_chatops.so m_chatops.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_chatops.so m_chatops.c
 
 m_trace.so: m_trace.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_trace.so m_trace.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_trace.so m_trace.c
 
 m_netinfo.so: m_netinfo.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_netinfo.so m_netinfo.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_netinfo.so m_netinfo.c
 
 m_links.so: m_links.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_links.so m_links.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_links.so m_links.c
 
 m_help.so: m_help.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_help.so m_help.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_help.so m_help.c
 
 m_rules.so: m_rules.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_rules.so m_rules.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_rules.so m_rules.c
 
 m_close.so: m_close.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_close.so m_close.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_close.so m_close.c
 
 m_map.so: m_map.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_map.so m_map.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_map.so m_map.c
 
 m_eos.so: m_eos.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_eos.so m_eos.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_eos.so m_eos.c
 
 m_server.so: m_server.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_server.so m_server.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_server.so m_server.c
 
 m_stats.so: m_stats.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_stats.so m_stats.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_stats.so m_stats.c
 
 m_svsfline.so: m_svsfline.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_svsfline.so m_svsfline.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_svsfline.so m_svsfline.c
 
 m_dccdeny.so: m_dccdeny.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_dccdeny.so m_dccdeny.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_dccdeny.so m_dccdeny.c
 
 m_undccdeny.so: m_undccdeny.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_undccdeny.so m_undccdeny.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_undccdeny.so m_undccdeny.c
 
 m_whowas.so: m_whowas.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_whowas.so m_whowas.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_whowas.so m_whowas.c
 
 m_connect.so: m_connect.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_connect.so m_connect.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_connect.so m_connect.c
 
 m_dccallow.so: m_dccallow.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_dccallow.so m_dccallow.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_dccallow.so m_dccallow.c
 
 m_userip.so: m_userip.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_userip.so m_userip.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+	       -o m_userip.so m_userip.c
 
 m_nick.so: m_nick.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_nick.so m_nick.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+	       -o m_nick.so m_nick.c
 
 m_user.so: m_user.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_user.so m_user.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+	       -o m_user.so m_user.c
 
 m_mode.so: m_mode.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_mode.so m_mode.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+	       -o m_mode.so m_mode.c
 
 m_watch.so: m_watch.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_watch.so m_watch.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+	       -o m_watch.so m_watch.c
 
 m_part.so: m_part.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_part.so m_part.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+	       -o m_part.so m_part.c
 
 m_join.so: m_join.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_join.so m_join.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+	       -o m_join.so m_join.c
 
 m_motd.so: m_motd.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_motd.so m_motd.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+	       -o m_motd.so m_motd.c
 
 m_opermotd.so: m_opermotd.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_opermotd.so m_opermotd.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+	       -o m_opermotd.so m_opermotd.c
 
 m_botmotd.so: m_botmotd.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_botmotd.so m_botmotd.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+	       -o m_botmotd.so m_botmotd.c
 
 m_lusers.so: m_lusers.c $(INCLUDES)
-	$(CC) $(MODULEFLAGS) -DDYNAMIC_LINKING -o m_lusers.so m_lusers.o
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+	       -o m_lusers.so m_lusers.c
 
 #############################################################################
 #             and now the remaining modules...
 #############################################################################
 
 cloak.so: cloak.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING -o cloak.so cloak.c
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o cloak.so cloak.c
 
 clean:
 	$(RM) -f *.o *.so *~ core

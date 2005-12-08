@@ -930,3 +930,5 @@
 - Fixed set::static-part set to 'no' not working properly. Reported by Robby22 (#0002698).
 - Fixed crash in new resolver, reported by firstof9.
 - [CVS Only] Refixed name<->ip mapping check in new resolver, reported by Darko.
+- Reverting "Changed the way we build most of the .so's" feature, this caused m_*.so
+  to be build incorrectly. So now back at normal compile speed :p.
