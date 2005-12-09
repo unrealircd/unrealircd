@@ -84,7 +84,7 @@ ARG="$ARG--enable-dynamic-linking "
 ARG="$ARG $EXTRAPARA "
 CONF="./configure $ARG"
 echo $CONF
-$CONF
+$CONF || exit 1
 if [  "$CRYPTOIRCD" = "1" ] ; then
 if [ ! -f server.req.pem ]; then
 export OPENSSLPATH

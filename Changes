@@ -937,3 +937,9 @@
   This is so you can have for example /MS filtered (due to heavy spam), while keeping
   /NS and /CS unfiltered. Reported by Homer (#0002496).
 - The memoserv aliases (/MS and /MEMOSERV) now have spamfiltering enabled by default.
+- Made the "strict aliasing"-warning-disabler use $CC instead of gcc.
+- Made ./Config better react to errors (no longer print a "everything is a big success"
+  kind of message when in fact everything went wrong).
+- Made ./Config (configure) exit on openssl or zlib not found errors, instead of
+  silently continueing and then causing trouble later on. Also now printing _a bit_
+  more helpful error message.

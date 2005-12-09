@@ -94,6 +94,15 @@ AC_MSG_CHECKING(for openssl)
     done
     if test x_$found_ssl != x_yes; then
 	AC_MSG_RESULT(not found)
+	echo ""
+	echo "Apparently you do not have both the openssl binary and openssl development libraries installed."
+	echo "You have two options:"
+	echo "a) Install the needed binaries and libraries"
+	echo "   and run ./Config"
+	echo "OR"
+	echo "b) If you don't need SSL..."
+	echo "   Run ./Config and say 'no' when asked about SSL"
+	echo ""
 	exit 1
     else
         CRYPTOLIB="-lssl -lcrypto";
@@ -127,6 +136,15 @@ AC_MSG_CHECKING(for zlib)
     done
     if test x_$found_zlib != x_yes; then
 	AC_MSG_RESULT(not found)
+	echo ""
+	echo "Apparently you do not have the zlib development library installed."
+	echo "You have two options:"
+	echo "a) Install the zlib development library"
+	echo "   and run ./Config"
+	echo "OR"
+	echo "b) If you don't need compressed links..."
+	echo "   Run ./Config and say 'no' when asked about ziplinks support"
+	echo ""
 	exit 1
     else
         IRCDLIBS="$IRCDLIBS -lz";
