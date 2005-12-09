@@ -220,9 +220,12 @@ void strrangetok(char *in, char *out, char tok, short first, short last) {
 	out[j] = 0;
 }			
 
-int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd) {
-	ConfigItem_alias *alias;
-	aClient *acptr;
+int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd)
+{
+ConfigItem_alias *alias;
+aClient *acptr;
+int ret;
+
 	if (parc < 2 || *parv[1] == '\0') 
 	{
 		sendto_one(sptr, err_str(ERR_NOTEXTTOSEND), me.name, parv[0]);
@@ -238,9 +241,13 @@ int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd) {
 	if (alias->type == ALIAS_SERVICES) 
 	{
 		if (SERVICES_NAME && (acptr = find_person(alias->nick, NULL)))
+		{
+			if (alias->spamfilter && (ret = dospamfilter(sptr, parv[1], SPAMF_USERMSG, alias->nick, 0)) < 0)
+				return ret;
 			sendto_one(acptr, ":%s %s %s@%s :%s", parv[0],
 				IsToken(acptr->from) ? TOK_PRIVATE : MSG_PRIVATE, 
 				alias->nick, SERVICES_NAME, parv[1]);
+		}
 		else
 			sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name,
 				parv[0], alias->nick);
@@ -248,9 +255,13 @@ int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd) {
 	else if (alias->type == ALIAS_STATS) 
 	{
 		if (STATS_SERVER && (acptr = find_person(alias->nick, NULL)))
+		{
+			if (alias->spamfilter && (ret = dospamfilter(sptr, parv[1], SPAMF_USERMSG, alias->nick, 0)) < 0)
+				return ret;
 			sendto_one(acptr, ":%s %s %s@%s :%s", parv[0],
 				IsToken(acptr->from) ? TOK_PRIVATE : MSG_PRIVATE, 
 				alias->nick, STATS_SERVER, parv[1]);
+		}
 		else
 			sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name,
 				parv[0], alias->nick);
@@ -259,6 +270,8 @@ int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd) {
 	{
 		if ((acptr = find_person(alias->nick, NULL))) 
 		{
+			if (alias->spamfilter && (ret = dospamfilter(sptr, parv[1], SPAMF_USERMSG, alias->nick, 0)) < 0)
+				return ret;
 			if (MyClient(acptr))
 				sendto_one(acptr, ":%s!%s@%s PRIVMSG %s :%s", parv[0], 
 					sptr->user->username, GetHost(sptr),
@@ -279,6 +292,8 @@ int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd) {
 		{
 			if (!can_send(sptr, chptr, parv[1], 0))
 			{
+				if (alias->spamfilter && (ret = dospamfilter(sptr, parv[1], SPAMF_CHANMSG, chptr->chname, 0)) < 0)
+					return ret;
 				sendto_channelprefix_butone_tok(sptr,
 				    sptr, chptr,
 				    PREFIX_ALL,
@@ -355,27 +370,35 @@ int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd) {
 				if (format->type == ALIAS_SERVICES) 
 				{
 					if (SERVICES_NAME && (acptr = find_person(format->nick, NULL)))
+					{
+						if (alias->spamfilter && (ret = dospamfilter(sptr, output, SPAMF_USERMSG, format->nick, 0)) < 0)
+							return ret;
 						sendto_one(acptr, ":%s %s %s@%s :%s", parv[0],
 						IsToken(acptr->from) ? TOK_PRIVATE : MSG_PRIVATE, 
 						format->nick, SERVICES_NAME, output);
-					else
+					} else
 						sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name,
 							parv[0], format->nick);
 				}
 				else if (format->type == ALIAS_STATS) 
 				{
 					if (STATS_SERVER && (acptr = find_person(format->nick, NULL)))
+					{
+						if (alias->spamfilter && (ret = dospamfilter(sptr, output, SPAMF_USERMSG, format->nick, 0)) < 0)
+							return ret;
 						sendto_one(acptr, ":%s %s %s@%s :%s", parv[0],
 							IsToken(acptr->from) ? TOK_PRIVATE : MSG_PRIVATE, 
 							format->nick, STATS_SERVER, output);
-					else
-					sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name,
-						parv[0], format->nick);
+					} else
+						sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name,
+							parv[0], format->nick);
 				}
 				else if (format->type == ALIAS_NORMAL) 
 				{
 					if ((acptr = find_person(format->nick, NULL))) 
 					{
+						if (alias->spamfilter && (ret = dospamfilter(sptr, output, SPAMF_USERMSG, format->nick, 0)) < 0)
+							return ret;
 						if (MyClient(acptr))
 							sendto_one(acptr, ":%s!%s@%s PRIVMSG %s :%s", parv[0], 
 							sptr->user->username, IsHidden(sptr) ? sptr->user->virthost : sptr->user->realhost,
@@ -396,6 +419,8 @@ int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd) {
 					{
 						if (!can_send(sptr, chptr, parv[1], 0))
 						{
+							if (alias->spamfilter && (ret = dospamfilter(sptr, parv[1], SPAMF_CHANMSG, chptr->chname, 0)) < 0)
+								return ret;
 							sendto_channelprefix_butone_tok(sptr,
 							    sptr, chptr,
 							    PREFIX_ALL, MSG_PRIVATE,

@@ -7933,7 +7933,8 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 			else if (!strcmp(cep->ce_vardata, "command"))
 				alias->type = ALIAS_COMMAND;
 		}
-			
+		else if (!strcmp(cep->ce_varname, "spamfilter"))
+			alias->spamfilter = config_checkval(cep->ce_vardata, CFG_YESNO);
 	}
 	if (BadPtr(alias->nick) && alias->type != ALIAS_COMMAND) {
 		ircstrdup(alias->nick, alias->alias); 
@@ -8110,6 +8111,8 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 				errors++;
 			}
 		}
+		else if (!strcmp(cep->ce_varname, "spamfilter"))
+			;
 		else {
 			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 				"alias", cep->ce_varname);

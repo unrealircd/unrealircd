@@ -1973,6 +1973,7 @@ link hub.mynet.com {
 alias &lt;name&gt; {
 	target &lt;nick-to-forward-to&gt;;
 	type &lt;type-of-alias&gt;;
+	spamfilter &lt;yes|no&gt;;
 };</pre></p>
 <p>(Note: also see <a href="#includedirective">here</a> about the standard alias files UnrealIRCd has)</p>
 <p>The alias block [standard alias] allows you to forward a command to a user, 
@@ -1982,8 +1983,9 @@ alias &lt;name&gt; {
   forward to, alias::target can be left out. The alias::type specifies the type 
   of alias, valid types are services (the user is on the services server), stats 
   (the user is on the stats server), normal (the user is a normal user on 
-  any server), and channel (the target is a channel name). The alias block also has another
-  purpose which is explained below.</p>
+  any server), and channel (the target is a channel name). If alias::spamfilter (optional)
+  is set to 'yes', then the spamfilters will be checked (default is 'no').<br>
+  The alias block also has another purpose which is explained below.</p>
 <p>Syntax [command alias]:<br>
 <pre>
 alias &lt;name&gt; {
@@ -1996,6 +1998,7 @@ alias &lt;name&gt; {
 		...
 	};
 	type command;
+	spamfilter &lt;yes|no&gt;;
 };</pre></p>
 <p>When the alias block is used in this format, it allows you a much broader range 
   of usage. For example you can create aliases such as /identify. The alias:: 

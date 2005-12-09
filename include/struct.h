@@ -1314,6 +1314,7 @@ struct _configitem_alias {
 	ConfigItem_alias_format *format;
 	char *alias, *nick;
 	AliasType type;
+	unsigned int spamfilter:1;
 };
 
 struct _configitem_alias_format {
