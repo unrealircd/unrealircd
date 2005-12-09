@@ -94,7 +94,7 @@ AC_MSG_CHECKING(for openssl)
     done
     if test x_$found_ssl != x_yes; then
 	AC_MSG_RESULT(not found)
-	AC_WARN(disabling ssl support)
+	exit 1
     else
         CRYPTOLIB="-lssl -lcrypto";
 	if test ! "$ssldir" = "/usr" ; then
@@ -127,7 +127,7 @@ AC_MSG_CHECKING(for zlib)
     done
     if test x_$found_zlib != x_yes; then
 	AC_MSG_RESULT(not found)
-	AC_WARN(disabling ziplink support)
+	exit 1
     else
         IRCDLIBS="$IRCDLIBS -lz";
 	if test "$zlibdir" != "/usr" ; then
