@@ -29,7 +29,7 @@ Spanish |
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Versi&oacute;n: 3.2.3</font><br>
-  <b>&Uacute;ltima actualizaci&oacute;n del documento:</b> 11-11-2005</div>
+  <b>&Uacute;ltima actualizaci&oacute;n del documento:</b> 10-12-2005</div>
 <br>
   <b>Programadores:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contribuciones:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -1900,12 +1900,17 @@ link hub.mynet.com {
 <p>Sintaxis [alias est&aacute;ndar]:<br>
 <pre>
 alias &lt;nombre&gt; {
- target &lt;destino&gt;;
+ 	target &lt;destino&gt;;
 	type &lt;tipo&gt;;
+	spamfilter &lt;yes|no&gt;;
 };</pre>
 </p>
 <p>(Nota: puede ver m&aacute;s archivos de alias est&aacute;ndars que lleva UnrealIRCd en este <a href="#includedirective">enlace</a>)</p>
-<p>Este bloque (est&aacute;ndar) le permite redireccionar comandos a usuarios, generlamente a bots como por ejemplo /chanserv para enviarle privados. <b>alias::</b> especifica el nombre del comando, por ejemplo chanserv. <b>alias::target</b> el nick o canal al que se le enviar&aacute; el mensaje y puede omitirse. <b>alias::type</b> define el tipo de alias: services (el usuario est&aacute; en el servidor de servicios), stats (en el de estad&iacute;sticas), normal (en un servidor normal) y channel (el target es un canal). Este bloque tiene otro prop&oacute;sito detallado a continuaci&oacute;n.</p>
+<p>Este bloque (est&aacute;ndar) le permite redireccionar comandos a usuarios, generlamente a bots como por ejemplo /chanserv para enviarle privados. 
+<b>alias::</b> especifica el nombre del comando, por ejemplo chanserv. <b>alias::target</b> el nick o canal al que se le enviar&aacute; el mensaje y puede omitirse. 
+<b>alias::type</b> define el tipo de alias: services (el usuario est&aacute; en el servidor de servicios), stats (en el de estad&iacute;sticas), normal (en un servidor normal) y channel (el target es un canal). 
+Si alias::spamfilter (opcional) está puesto en 'yes', entonces ser&aacute; procesado por spamfilters (por defecto 'no').<br>
+Este bloque tiene otro prop&oacute;sito detallado a continuaci&oacute;n.</p>
 <p>Sintaxis [alias de comandos]:<br>
 <pre>
 alias &lt;nombre&gt; {
@@ -1918,6 +1923,7 @@ alias &lt;nombre&gt; {
 		...
 	};
 	type command;
+	spamfilter &lt;yes|no&gt;;
 };</pre>
 </p>
 <p>Este uso es m&aacute;s extenso y tiene m&aacute;s posibilidades. Por ejemplo, puede crear aliases como /identify. <b>alias::</b> es el mismo que el anterior: el nombre del comando. <b>alias::format</b> especifica la expresi&oacute;n regular que debe coincidir con el texto enviado. Si lo hace, se usan las subentradas. As&iacute; puede tener varios alias::format para seguir distintas acciones seg&uacute;n la coincidencia, a partir de sus subentradas. <b>alias::format::target</b> es el nick o canal de destino. <b>alias::format::type</b> es el tipo de alias. <b>alias::format::parameters</b> es lo que se enviar&aacute; como par&aacute;metro al alias. Para especificar un par&aacute;metro que se enviar&aacute; al nick, use % seguido del n&uacute;mero de par&aacute;metro. Por ejemplo, %1 enviar&aacute; el primer par&aacute;metro. Para especificar todos los par&aacute;metros a partir de uno, use %n- donde n es el n&uacute;mero de par&aacute;metro. Por ejemplo, %2- enviar&iacute;a todos los par&aacute;metros a partir del segundo, inclu&iacute;do. Adem&aacute;s, puede usarse %n para que sea reemplazado por el nick que ejecuta el comando. Para m&aacute;s informaci&oacute;n consulte doc/example.conf.</p>
