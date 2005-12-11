@@ -2628,6 +2628,7 @@ nicht vorhanden)</font>
 <pre>alias &lt;name&gt; {
 	target &lt;nick-to-forward-to&gt;;
 	type &lt;type-of-alias&gt;;
+	spamfilter &lt;yes|no|&gt;
 };</pre>
 <p>(Hinweis: siehe auch <a href="#includedirective">hier</a> , welche Standard
 Alias Dateien bei UnrealIRCd mitgeliefert werden.)</p>
@@ -2639,9 +2640,11 @@ der Nickname, an den weitergeleitet wird. Wenn &quot;alias::&quot; identisch mit
 dem Nick ist, an den weitergeleitet wird, kann &quot;alias::target&quot;
 weggelassen werden. <b> alias::type</b> gibt den Typ des Alias an, gültige
 Typen sind hier &quot;services&quot; (der User ist auf dem Services Server),
-&quot;stats&quot; (der User ist auf dem Stats Server), und &quot;normal&quot; (der
-User ist normaler User auf irgendeinem Server). Der &quot;alias block&quot; hat
-auch einen weiteren Zweck, der nachfolgend erklärt ist.</p>
+&quot;stats&quot; (der User ist auf dem Stats Server) &quot;normal&quot; (der
+User ist normaler User auf irgendeinem Server) und &quot;channel&quot; (das Ziel
+ist ein Channel Name). Wenn <b>alias::spampfilter</b> (optional) auf 'yes'
+eingestellt ist, werden auch Spamfilter geprüft (Default ist 'no'). Der &quot;alias block&quot; hat
+auch einen weiteren nachfolgend erklärten Zweck.</p>
 <p>Syntax [Befehl alias]:
 <pre>alias &lt;name&gt; {
 	format &lt;regex-expression&gt; {
@@ -2653,6 +2656,7 @@ auch einen weiteren Zweck, der nachfolgend erklärt ist.</p>
 		...
 	};
 	type command;
+	spamfilter &lt;yes|no&gt;
 };</pre>
 <p>Wird der &quot;alias Block&quot; in diesem Format benutzt, ermöglicht er
 eine breitere Anwendungsweise. Beispielsweise kann man einen Alias wie /identify
