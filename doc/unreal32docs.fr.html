@@ -1909,6 +1909,7 @@ deny channel {
 </p><pre>alias &lt;name&gt; {
 	target &lt;nick-to-forward-to&gt;;
 	type &lt;type-of-alias&gt;;
+	spamfilter &lt;yes|no&gt;;
 };</pre><p></p>
 <p>(Note: reportez-vous &eacute;galement <a href="#includedirective">ici</a> &agrave; propos des fichiers d'alias standards d'UnrealIRCd)</p>
 <p>L'alias block (alias standards) vous permet de transmettre une commande &agrave; un 
@@ -1918,7 +1919,10 @@ deny channel {
   le même que la cible &agrave; qui il sera envoy&eacute; alias::target peut ne pas être rempli. 
   L' alias::type sp&eacute;cifie le type d'alias, les types valides sont services 
   (l'utilisateur est sur le serveur des services), stats (l'utilisateur est sur le 
-  serveur de statistiques), normal (la cible est sur n'importe quel serveur). 
+  serveur de statistiques), normal (la cible est sur n'importe quel serveur) et salon 
+  (si la cible est un nom de salon).
+  Si alias::spamfilter (optionel) a comme valeur 'yes', alors les spamfilters 
+  seront v&eacute;rifi&eacute;s (la valeur par d&eacute;faut est 'no').<br>
   L'alias block a &eacute;galement une autre utilit&eacute; expliqu&eacute; ci-dessous.</p>
 <p>Syntaxe [command alias]:<br>
 </p><pre>alias &lt;name&gt; {
@@ -1931,6 +1935,7 @@ deny channel {
 		...
 	};
 	type command;
+	spamfilter &lt;yes|no&gt;;
 };</pre><p></p>
 <p>Lorsque l'alias block est utilis&eacute; dans ce format, il vous permet une plus vaste plage d'usage. 
   Par exemple, vous pouvez cr&eacute;er des alias tels que /identify. L' alias:: est comme ci-dessus, 
