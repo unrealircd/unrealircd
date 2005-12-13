@@ -1975,6 +1975,7 @@ link hub.sajatnet.com {
 alias &lt;név&gt; {
 	target &lt;ahová-továbbítsa&gt;;
 	type &lt;álparancs-típusa&gt;;
+	spamfilter &lt;yes|no&gt;;
 };</pre></p>
 <p>(Megjegyzés: lásd még az <a href="#includedirective">include</a> direktívát az UnrealIRCd szabványos álparancsokat tartalmazó fájljairól.)</p>
 <p>Az alias blokk [szabványos álparancsokra] lehetõvé teszi, hogy parancsokat továbbíts egy
@@ -1984,8 +1985,9 @@ alias &lt;név&gt; {
   mint a továbbítási célpont, az alias::target elhagyható. Az alias::type meghatározza
   az álparancs típusát; érvényes típusok: services (a felhasználó egy szolgáltatás szerveren van), stats
   (a felhasználó egy statisztikai szerveren van), normal (a felhasználó egy közönséges felhasználó
-  bármilyen szerveren), és channel (a célpont egy csatornanév). Az alias blokknak van más célja is,
-  amit az alábbiakban magyarázunk el.</p>
+  bármilyen szerveren), és channel (a célpont egy csatornanév). Az alias::spamfilter (nem kötelezõ)
+  "yes"-re állításával bekapcsolható a spamszûrés erre az álparancsra (az alapértelmezés "no").<br>
+  Az alias blokknak van másik célja is, amit az alábbiakban magyarázunk el.</p>
 <p>Szintaktika [formázott álparancsokra]:<br>
 <pre>
 alias &lt;név&gt; {
@@ -1998,6 +2000,7 @@ alias &lt;név&gt; {
 		...
 	};
 	type command;
+	spamfilter &lt;yes|no&gt;;
 };</pre></p>
 <p>Amikor az alias blokkot ebben a formában használod, lehetõséget ad egy sokkal szélesebb körû
   alkalmazásra. Például készíthetsz olyan álparancsokat is, mint az /identify. Az alias::
