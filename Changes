@@ -943,3 +943,7 @@
 - Made ./Config (configure) exit on openssl or zlib not found errors, instead of
   silently continueing and then causing trouble later on. Also now printing _a bit_
   more helpful error message.
+- Made the link::options::quarantine actually do something... People that get global
+  oper privileges on quarantined servers will be instantly killed. Bit ugly perhaps, but
+  then it actually does what it should (prevent opers on quarantine from getting GLOBAL
+  oper privileges). This "fixes" #2510, #2163 and #1968.
