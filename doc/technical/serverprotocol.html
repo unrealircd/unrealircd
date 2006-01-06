@@ -6,18 +6,78 @@
 		<title>Unreal 3.2 Protocol Documentation</title>
 	</head>
 	<body>
-		<h1>1 Introduction</h1>
+		<h1 style="text-align: center;">Unreal 3.2 Protocol Documentation</h1>
+		<h3 style="text-align: center;">Last update: 6 January 2005</h3>
+		<h1>Table of Contents</h1>
+		<p><a href="#S1">1 Introduction</a></p>
+		<p><a href="#S2">2 Server Negotiation</a></p>
+		<blockquote><p><a href="#S2_1">2.1 PASS - Connection Password</a></p></blockquote>
+		<blockquote><p><a href="#S2_2">2.2 PROTOCTL - Server Protocol Negotiation</a></p></blockquote>
+		<blockquote><p><a href="#S2_3">2.3 SERVER - Server Negotiation</a></p></blockquote>
+		<blockquote><p><a href="#S2_4">2.4 EOS - End Of Synch</a></p></blockquote>
+		<blockquote><p><a href="#S2_5">2.5 NETINFO - Network Information</a></p></blockquote>
+		<p><a href="#S3">3 User Operations</a></p>
+		<blockquote><p><a href="#S3_1">3.1 NICK - User Introduction and Nick Change</a></p></blockquote>
+		<blockquote><blockquote><p><a href="#S3_1_1">3.1.1 Nick Collisions</a></p></blockquote></blockquote>
+		<blockquote><p><a href="#S3_2">3.2 MODE, UMODE2 - User Mode Change</a></p></blockquote>
+		<blockquote><p><a href="#S3_3">3.3 QUIT - User Disconnect</a></p></blockquote>
+		<blockquote><p><a href="#S3_4">3.4 KILL - Force Disconnect</a></p></blockquote>
+		<blockquote><p><a href="#S3_5">3.5 SETHOST/CHGHOST - Change virtual host</a></p></blockquote>
+		<blockquote><p><a href="#S3_6">3.6 SETIDENT/CHGIDENT - Change a user's username</a></p></blockquote>
+		<blockquote><p><a href="#S3_7">3.7 SETNAME/CHGNAME - Change a user's realname</a></p></blockquote>
+		<p><a href="#S1">4 Server Operations</a></p>
+		<blockquote><p><a href="#S4_1">4.1 SERVER - Server Introduction</a></p></blockquote>
+		<blockquote><p><a href="#S4_2">4.2 SQUIT - Server Removal</a></p></blockquote>
+		<blockquote><p><a href="#S4_3">4.3 SDESC - Server Description</a></p></blockquote>
+		<p><a href="#S5">5 Channel Operations</a></p>
+		<blockquote><p><a href="#S5_1">5.1 SJOIN - Channel Burst</a></p></blockquote>
+		<blockquote><p><a href="#S5_2">5.2 JOIN - Channel Join</a></p></blockquote>
+		<blockquote><p><a href="#S5_3">5.3 PART - Channel Part</a></p></blockquote>
+		<blockquote><p><a href="#S5_4">5.4 KICK - Channel Kick</a></p></blockquote>
+		<blockquote><p><a href="#S5_5">5.5 MODE - Channel Mode</a></p></blockquote>
+		<blockquote><p><a href="#S5_6">5.6 INVITE - Invite a user to a channel</a></p></blockquote>
+		<blockquote><p><a href="#S5_7">5.7 SAJOIN - Channel Force Join</a></p></blockquote>
+		<blockquote><p><a href="#S5_8">5.8 SAPART - Channel Force Part</a></p></blockquote>
+		<blockquote><p><a href="#S5_9">5.9 SAMODE - Channel Force Mode</a></p></blockquote>
+		<p><a href="#S6">6 Services Commands</a></p>
+		<blockquote><p><a href="#S6_1">6.1 SVSKILL - Force Disconnect by Service</a></p></blockquote>
+		<blockquote><p><a href="#S6_2">6.2 SVSMODE, SVS2MODE - Force User Mode Change</a></p></blockquote>
+		<blockquote><p><a href="#S6_3">6.3 SVSSNO, SVS2SNO - Forced SNomask Change</a></p></blockquote>
+		<blockquote><p><a href="#S6_4">6.4 SVSNICK - Forced Nick Change</a></p></blockquote>
+		<blockquote><p><a href="#S6_5">6.5 SVSJOIN - Forced Join</a></p></blockquote>
+		<blockquote><p><a href="#S6_6">6.6 SVSPART - Forced Part</a></p></blockquote>
+		<blockquote><p><a href="#S6_7">6.7 SVSO - Oper Permissions</a></p></blockquote>
+		<blockquote><p><a href="#S6_8">6.8 SVSNOOP - Oper Lockdown</a></p></blockquote>
+		<blockquote><p><a href="#S6_9">6.9 SVSNLINE - RealName Ban</a></p></blockquote>
+		<blockquote><p><a href="#S6_10">6.10 SVSFLINE - File Ban</a></p></blockquote>
+		<p><a href="#S7">7 Messaging</a></p>
+		<blockquote><p><a href="#S7_1">7.1 PRIVMSG, NOTICE - Simple Message Transmission</a></p></blockquote>
+		<blockquote><p><a href="#S7_2">7.2 SENDUMODE, SMO - Usermode-based Delivery</a></p></blockquote>
+		<blockquote><p><a href="#S7_3">7.3 SENDSNO - SNomask-based Delivery</a></p></blockquote>
+		<blockquote><p><a href="#S7_4">7.4 CHATOPS - IRCop Chat</a></p></blockquote>
+		<blockquote><p><a href="#S7_5">7.5 WALLOPS - Wallop Chat</a></p></blockquote>
+		<blockquote><p><a href="#S7_6">7.6 GLOBOPS - FailOp Chat</a></p></blockquote>
+		<blockquote><p><a href="#S7_7">7.7 ADCHAT - Admin Chat</a></p></blockquote>
+		<blockquote><p><a href="#S7_8">7.8 NACHAT - NetAdmin Chat</a></p></blockquote>
+		<p><a href="#S8">8 Ban Control</a></p>
+		<blockquote><p><a href="#S8_1">8.1 TKL - Master Ban Control</a></p></blockquote>
+		<blockquote><blockquote><p><a href="#S8_1_1">8.1.1 GLINE - Network-wide user@host ban</a></p></blockquote></blockquote>
+		<blockquote><blockquote><p><a href="#S8_1_2">8.1.2 GZLINE - Network-wide IP ban</a></p></blockquote></blockquote>
+		<blockquote><blockquote><p><a href="#S8_1_3">8.1.3 SQLINE, UNSQLINE - Network-wide Nickname ban</a></p></blockquote></blockquote>
+		<blockquote><blockquote><p><a href="#S8_1_4">8.1.4 SPAMFILTER - Message Spam Filtration System</a></p></blockquote></blockquote>
+		<hr/>
+		<h1><a name="S1"></a>1 Introduction</h1>
 		<p>This document describes the UnrealIRCd server-to-server protocol as of protocol 2306 (Unreal 3.2.3).</p>
 		<h2>A word about clocks.</h2>
 		<p>Unreal is very time-dependant. Users and channels, for example, are timestamped, and if server clocks are not synchronized properly, things can go very wrong very fast. See <a href="http://vulnscan.org/UnrealIrcd/faq/#67">http://vulnscan.org/UnrealIrcd/faq/#67</a> for more information on this. Note that there is a slight difference between server time and what is actually reported by the UNIX date command or by the C time() function. Unreal can apply an offset to the real time to create the server time, allowing servers to be virtually synchronized when synchronizing the real clocks is not possible (such as on shell servers).
 			I should make it quite clear that GMT time is used for everything. To be specific, timestamps in unreal are 32-bit integer values (actually, however many bits the time_t type is, which is 32 on 32-bit systems such as x86). This integer value is the number of seconds that have elapsed since Midnight January 1, 1970 GMT (can be referred to as Epoch time in the UNIX world). This means that timezones are no problem, nor is daylight savings time (or whatever your country of choice calls it).</p>
 		<hr/>
-		<h1>2 Server Negotiation</h1>
+		<h1><a name="S2"></a>2 Server Negotiation</h1>
 		<p>The first step to establish a server-to-server communication is to negotiate the connection as a server. Negotiation is done using standard IRC commands - no PROTOCTL options are in force until the link is established. The first step is to open a TCP/IP connection to the target server. The target port must be one described by a listen {} block in the remote server's configuration, and that listen block must not have the clientsonly option. After the connection is open, you will be treated as any other connection and be greeted with the "Looking up your hostname..." and "Checking identd..." notices as you would for a client. As these are NOTICE messages and your session as a server isn't established, they should simply be ignored. Use the commands below to introduce a server connection.</p>
-		<h2>2.1 PASS - Connection Password</h2>
+		<h2><a name="S2_1"></a>2.1 PASS - Connection Password</h2>
 		<p><b>Syntax:</b> <tt>PASS :<i>link password</i></tt></p>
 		<p>The PASS command is used to transmit the password required for a server link. It must match the password specified in the remote server's link::password-receive (which can be crypted), otherwise the link will be rejected. This should be the first message sent.</p>
-		<h2>2.2 PROTOCTL - Server Protocol Negotiation</h2>
+		<h2><a name="S2_2"></a>2.2 PROTOCTL - Server Protocol Negotiation</h2>
 		<p><b>Syntax:</b> <tt>PROTOCTL :<i>protocol options</i></tt></p>
 		<p>The PROTOCTL command sets several protocol options. The tokens supported are listed below.</p>
 		<ul>
@@ -37,7 +97,7 @@
 			<li>NICKCHARS : Indicates the set of enabled nickchar options (see the regular documention for info about this).</li>
 			<li>CHANMODES : (Not required to be sent) This is the same as the CHANMODES value in the 005 for client connections. Useful for autodetecting things like what modes are valid for ChanServ MLOCK, for example.</li>
 		</ul>
-		<h2>2.3 SERVER - Server Negotiation</h2>
+		<h2><a name="S2_3"></a>2.3 SERVER - Server Negotiation</h2>
 		<p><b>Note:</b> This message is also used for introducing additional servers, the format of this message in those cases is described later.</p>
 		<p><b>Syntax (normal):</b> <tt>SERVER <i>server.name</i> 1 :<i>server description</i></tt></p>
 		<p><b>Syntax (with VL):</b> <tt>SERVER <i>server.name</i> 1 :U<i>protocolversion</i>-<i>protocolflags</i> <i>server description</i></tt></p>
@@ -79,74 +139,74 @@
 			<li>M : Channel message handling is 'tainted' (one or modules registered a CHANMSG hook).</li>
 			<li>Additional Version flags can be added by 3rd-party modules.</li>
 		</ul>
-		<h2>2.4 EOS - End Of Synch (TOKEN: ES)</h2>
+		<h2><a name="S2_4"></a>2.4 EOS - End Of Synch (TOKEN: ES)</h2>
 		<p><b>Syntax:</b> ES</p>
 		<p>Marks the end of the synching process.</p>
-		<h2>2.5 NETINFO - Network Information (TOKEN: AO)</h2>
+		<h2><a name="S2_5"></a>2.5 NETINFO - Network Information (TOKEN: AO)</h2>
 		<p><b>Syntax:</b> AO <i>currenttime</i> <i>protocolversion</i> <i>cloakhash</i> 0 0 0 :<i>networkname</i></p>
 		<p>This tells the other server your current network configuration. The current time is a timestamp value. Protocolversion is the same as that in the SERVER command. Cloakhash is a hash representing the configured cloak keys. It may be a * if you are implementing services. The network name is that specified in set::network-name. The cloak-prefix is currently not sent here (and thus unreal won't generate warning for mismatching cloak prefixes, but they should be the same anyway).</p>
 		<hr/>
-		<h1>3 User Operations</h1>
+		<h1><a name="S3"></a>3 User Operations</h1>
 		<p>One important function of servers is it must notify all other servers about all of the users behind it. These commands represent the operations that can result in the change of a user's global state.</p>
-		<h2>3.1 NICK - User Introduction and Nick Change (TOKEN: &amp;)</h2>
+		<h2><a name="S3_1"></a>3.1 NICK - User Introduction and Nick Change (TOKEN: &amp;)</h2>
 		<p><b>Syntax (nick change):</b> <tt>:<i>oldnick</i> &amp; <i>newnick</i> :<i>timestamp</i></tt></p>
 		<p>This format of the NICK message indicates an existing user is changing his or her nickname. If a collision occurs, see the section on Nick Collisions below. The timestamp is the new nickname's timestamp.</p>
 		<p><b>Syntax (normal):</b> <tt>:<i>source.server</i> &amp; <i>nick</i> <i>hopcount</i> <i>timestamp</i>	<i>username</i> <i>hostname</i> <i>server</i> <i>servicestamp</i> :<i>realname</i></tt></p>
 		<p><b>Syntax (NICKv2):</b> <tt>:<i>source.server</i> &amp; <i>nick</i> <i>hopcount</i> <i>timestamp</i>	<i>username</i> <i>hostname</i> <i>server</i> <i>servicestamp</i> <i>+usermodes</i> <i>virtualhost</i> :<i>realname</i></tt></p>
 		<p><b>Syntax (NICKv2+NICKIP):</b> <tt>:<i>source.server</i> &amp; <i>nick</i> <i>hopcount</i> <i>timestamp</i> <i>username</i> <i>hostname</i> <i>server</i> <i>servicestamp</i> <i>+usermodes</i> <i>virtualhost</i> <i>nickipaddr</i> :<i>realname</i></tt></p>
 		<p>This format of the NICK message introduces a new user to the network. If PROTOCTL VHP is enabled, the user's cloaked host is put in the virtualhost field, otherwise it'll be * unless the user is +t.</p>
-		<h3>3.1.1 Nick Collisions</h3>
+		<h3><a name="S3_1_1"></a>3.1.1 Nick Collisions</h3>
 		<p>A nick collision occurs when a server receives a NICK message (or &amp; token) introducing a user that the server already sees on the network. When a collision occurs, one or both of the colliding clients must be disconnected. The timestamp is examined to determine which client loses. The client with the earlier timestamp remains. If both clients have equal timestamps, both are removed. Collisions can be handled passively, or aggressively. Unreal currently does both in all cases, although this may not be the best approach.</p>
 		<ul>
 			<li><b>Aggressive Handling:</b> The server actively sends a KILL message back across the link to terminate that end's client.</li>
 			<li><b>Passive Handling:</b> Upon receipt of a NICK message that should "win", the server simply silently exits it's own client.</li>
 		</ul>
-		<h2>3.2 MODE, UMODE2 - User Mode Change (TOKEN: G or |)</h2>
+		<h2><a name="S3_2"></a>3.2 MODE, UMODE2 - User Mode Change (TOKEN: G or |)</h2>
 		<p><b>Syntax (MODE):</b> <tt>:<i>user</i> G <i>user</i> <i>modechange</i></tt></p>
 		<p><b>Syntax (UMODE2):</b> <tt>:<i>user</i> | <i>modechange</i></tt></p>
 		<p>This indicates a usermode change. The modechange can consist of zero or more strings of characters, each prefixed with either a + or -; the only delimiter between them being said + or -. If no + or - is at the beginning of the mode string, a + should be implied.</p>
 		<p>Some user modes are never sent between servers. Specifically, usermode +s and +O are not sent between servers. Modules can define additional usermodes that also might not be sent between servers. The UMODE2 saves bandwidth by not including the redundant target field for usermode changes, so use it when possible.</p>
-		<h2>3.3 QUIT - User Disconnect (TOKEN: ,)</h2>
+		<h2><a name="S3_3"></a>3.3 QUIT - User Disconnect (TOKEN: ,)</h2>
 		<p><b>Syntax:</b> <tt>:<i>user</i> , :<i>reason</i></tt></p>
 		<p>This command indicates that a user has disconnected. The reason field is filled in with the reason the user disconnected, which will be any of: quit message provided by the user in a /quit command, kill message for local operator kills, "Client exited" if the user does a brutal quit (clean (by TCP's definition) disconnect without sending a QUIT message), or a socket error message if present.</p>
 		<p>The QUIT message must NOT be prefixed when passing on to other servers. Only local user quit messages are affected by set::prefix-quit.</p>
-		<h2>3.4 KILL - Force Disconnect (TOKEN: .)</h2>
+		<h2><a name="S3_4"></a>3.4 KILL - Force Disconnect (TOKEN: .)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> . <i>target</i> :<i>killpath</i>!<i>source</i> (<i>reason</i>)</tt></p>
 		<p>Used to indicate that an operator has used KILL on a user not on the same server. Anything beyond the last ! in the kill path is used as the reason. The source (reason) part is simply a standard used by Unreal. As each server passes on a KILL message, it usually prepends the bottommost part (up to the first .) of it's name followed by a ! character. When unreal receives a KILL from a directly connected irc operator, it will usually add that oper's vhost (or realhost if -x) as the first hop in the kill path, then follow with it's own name as mentioned before if it is passing to another server.</p>
 		<p>A server can also send KILLs on it's own. This is done in cases involving nickname collisions, fake senders, bad direction, and other cases of protocol errors. Usually, in these cases, the server puts it's own name as the source, and also prefixes with <i>bottompart</i>! like for any other ircop on that server. For example: @3 . someone :irc!irc.example.com (Nick collision)</p>
-		<h2>3.5 SETHOST/CHGHOST - Change virtual host (TOKEN: AA or AL)</h2>
+		<h2><a name="S3_5"></a>3.5 SETHOST/CHGHOST - Change virtual host (TOKEN: AA or AL)</h2>
 		<p><b>Syntax (SETHOST):</b> <tt>:<i>source</i> AA <i>newvhost</i></tt></p>
 		<p><b>Syntax (CHGHOST):</b> <tt>:<i>source</i> AL <i>target</i> <i>newvhost</i></tt></p>
 		<p>Indicates the change of a user's virtual host. Currently, servers are expected to assume UMODE2 +xt on the target user in both commands. (In the case of SETHOST, the target is the sender.) Servers using PROTOCTL VHP will receive the cloaked host in a SETHOST message when a user activates his cloaked host. A server can also send CHGHOST (from one of it's opered clients) to change a user's hostname. This is generally used by HostServ implementations. To disable a cloaked host, use CHGHOST to set the user's virtual host equal to his real host, or use SVSMODE -xt, but the latter requires services.</p>
-		<h2>3.6 SETIDENT/CHGIDENT - Change a user's username (TOKEN: AD or AZ)</h2>
+		<h2><a name="S3_6"></a>3.6 SETIDENT/CHGIDENT - Change a user's username (TOKEN: AD or AZ)</h2>
 		<p><b>Syntax (SETIDENT):</b> <tt>:<i>source</i> AD <i>newusername</i></tt></p>
 		<p><b>Syntax (CHGIDENT):</b> <tt>:<i>source</i> AZ <i>target</i> <i>newusername</i></tt></p>
 		<p>Indicates the change of a user's username. No usermode change is associated with this. Unreal does not use a distinguished virtual username, so servers should only keep the original username (from the NICK message) if they intend to allow the user to reset the original username. Servers can use CHGIDENT to change a user's username.</p>
-		<h2>3.7 SETNAME/CHGNAME - CHange a user's realname (TOKEN: AE or BK)</h2>
+		<h2><a name="S3_7"></a>3.7 SETNAME/CHGNAME - Change a user's realname (TOKEN: AE or BK)</h2>
 		<p><b>Syntax (SETNAME):</b> <tt>:<i>source</i> AE :<i>newrealname</i></tt></p>
 		<p><b>Syntax (CHGNAME):</b> <tt>:<i>source</i> BK <i>target</i> :<i>newrealname</i></tt></p>
 		<p>Indicates the change of a user's realname. No usermode change is associated with this. Unreal does not use a distinguished virtual realname, so servers should only keep the original realname (from the NICK message) if they intend to allow the user to reset the original realname. Servers can use CHGNAME to change a user's username. Note that servers must NOT check that the sender be an IRCop in SETNAME - normal users are permitted to use SETNAME.</p>
 		<hr/>
-		<h1>4 Server Operations</h1>
+		<h1><a name="S4"></a>4 Server Operations</h1>
 		<p>This is different from server negotiation. Negotiation is when you are first connecting. Server introduction is used for introducing additional servers behind an existing server (aka hubbing). Hubbing is limited as specified by the hub, leaf, and leafdepth parameters in the link block and attempted violation of a hub restriction results in termination of the link. If no hub or leaf directive is given your server is a leaf by default, so any introduction of any server behind you would be an automatic drop. U:Lines don't matter here; services must be configured as a hub in the link block. The reason is U:Line is a permission rule, but hub privilege is a network structure rule.</p>
-		<h2>4.1 SERVER - Server Introduction (TOKEN: ')</h2>
+		<h2><a name="S4_1"></a>4.1 SERVER - Server Introduction (TOKEN: ')</h2>
 		<p><b>Note: This command is also used for negotiation. Be warned that the token for this command is NOT VALID at that time! See section 2.3 for the syntax for negotiation.</b></p>
 		<p><b>Syntax (without PROTOCTL NS):</b> <tt>:<i>source</i> SERVER <i>new.server</i> <i>hopcount</i> :<i>description</i></tt></p>
 		<p><b>Syntax (with PROTOCTL NS):</b> <tt>@<i>sourcenumeric</i> SERVER <i>new.server</i> <i>hopcount</i> <i>numeric</i> :<i>description</i></tt></p>
 		<p>The command indicates that the server named new.server is being introduced by the source (the source is the server which new.server is directly linked to). The hopcount will be the number of links the receiving server would have to cross to reach new.server. In other words, new.server introduced itself with a hopcount of 1, and as the SERVER message is passed along, hopcount is incremented.</p>
 		<p>As an example, a services server faking a SERVER message for JUPE functionality would use a hopcount of 2.</p>
-		<h2>4.2 SQUIT - Server Removal (TOKEN: -)</h2>
+		<h2><a name="S4_2"></a>4.2 SQUIT - Server Removal (TOKEN: -)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> SQUIT <i>server.name</i> <i>:reason</i></tt></p>
 		<p>From an IRCop or when server.name is not behind the source, this command requests the removal of the specified server.name. The command in this case is treated very much like KILL in the respect that the message is broadcasted to all servers, except server.name and any servers behind it. When the SQUIT reaches server.name's uplink, that server closes the link to server.name (which would then generate it's own SQUIT on behalf of it's uplink for the servers behind it).</p>
 		<p>A server can also use SQUIT in the same manner as QUIT to note the removal of a server behind it, or that it itself is quitting. In the former case, server.name is behind source, and the message is forward on to all other servers. In the latter case, source and server.name are equal, the receiving server closes the link and forwards the SQUIT message.</p>
 		<p>Unreal closes a direct link by simply sending an ERROR message and then closing the TCP connection. This typically causes the other end to generate an SQUIT bearing the message "Client exited" or similar, however, the ERROR will usually cause the server to send a message to all IRCops.</p>
-		<h2>4.3 SDESC - Server Description (TOKEN: AG)</h2>
+		<h2><a name="S4_3"></a>4.3 SDESC - Server Description (TOKEN: AG)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> AG :<i>newdesc</i></tt></p>
 		<p>The server to which source is connected to should have it's description updated to newdesc. This does NOT include the VL inforamtion.</p>
 		<hr/>
-		<h1>5 Channel Operations</h1>
+		<h1><a name="S5"></a>5 Channel Operations</h1>
 		<p>These commands deal with the state of channels across the network. Unreal only supports Network Channels, where the first character is a # character.</p>
-		<h2>5.1 SJOIN - Channel Burst (TOKEN: ~)</h2>
+		<h2><a name="S5_1"></a>5.1 SJOIN - Channel Burst (TOKEN: ~)</h2>
 		<p><b>Syntax:</b> @<i>servernumeric</i> ~ <i>timestamp</i> <i>channel</i> +<i>modes</i>[ <i>modeparams</i>] :<i>memberlist</i> <i>&amp;ban</i> <i>"exempt</i> <i>'invex</i></p>
 		<p>Timestamp is the channel timestamp and can be !b64 as defined by PROTOCTL SJB64. Modes should only include those in the last three mode sets listed in CHANMODES. Modeparams is one parameter for each mode character that requires one. Memberlist is a series of users (all of which must at least be behind the server sending the SJOIN), each user is prefixed with one or more characters indicating their status. Owners (+q) are prefixed with *, admins (+a) ~, ops (+o) @, halfops (+h) %, voices (+v) +. Normal users are not prefixed with anything. Ban, ban exception, and invite exception masks are also included, with bans prefixed with &amp;, ban exceptions prefixed with ", and invite exceptions with '. Note that when a &amp;, " or ' is encountered as the first character, further processing of ~, *, @, %, or + characters must not continue because ban, exempt, and invite masks can contain any of those characters. (Plus it's just not right for a ban mask to be marked as a channel admin...)</p>
 		<p>If the channel didn't already exist it is created with the information given in the SJOIN. Otherwise the timestamp is used to determine how the SJOIN information is handled. As a given, all members are joined into the channel, regardless. The mode information (modes, modeparams, memberlist prefixes, bans, exempts, and invites) is subject to the timestamp rules:</p>
@@ -166,41 +226,41 @@
 			<li><b>Join-Throttle:</b> Highest of time period wins, if equal, highest of join amount wins (so +j 3:40 beats +j 5:20 but +j 5:20 beats +j 3:20).</li>
 			<li>Parameterized modes in third party modules will define their own conflict resolution formula.</li>
 		</ul>
-		<h2>5.2 JOIN - Channel Join (TOKEN: C)</h2>
+		<h2><a name="S5_2"></a>5.2 JOIN - Channel Join (TOKEN: C)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> C <i>#channel</i></tt></p>
 		<p>Indicates a user has joined a channel. Only one channel is sent this way, and the key is not sent even if the user gave one one joining. If the channel parameter is the special "0" case, the server must interpret the message as a PART for all channels the user is on (but I don't think this is ever sent amongst servers).</p>
-		<h2>5.3 PART - Channel Part (TOKEN: D)</h2>
+		<h2><a name="S5_3"></a>5.3 PART - Channel Part (TOKEN: D)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> D <i>#channel</i>[ :<i>reason</i></tt>]</p>
 		<p>Indicates a user has left a channel. Only one channel is sent this way. The reason parameter may be left out if no reason was given.</p>
-		<h2>5.4 KICK - Channel Kick (TOKEN: H)</h2>
+		<h2><a name="S5_4"></a>5.4 KICK - Channel Kick (TOKEN: H)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> H <i>#channel</i> <i>user</i> :<i>reason</i></tt></p>
 		<p>Orders the forced removal of user from #channel with the given reason. When updating state for this command, it should be the same as if :user PART #channel had been received - the user is removed from #channel's memberlist.</p>
-		<h2>5.5 MODE - Channel Mode (TOKEN: G)</h2>
+		<h2><a name="S5_5"></a>5.5 MODE - Channel Mode (TOKEN: G)</h2>
 		<p><b>Note:</b> This is the same command as that used for usermode changes.</p>
 		<p><b>Syntax:</b> <tt>:<i>source</i> G <i>#channel</i> <i>modechange</i> <i>modeparams</i>[ <i>timestamp</i>]</tt></p>
 		<p>Changes the specified modes on the given channel. If the source is a server and the last parameter is numeric, it is interpreted as timestamp (although it can also be consumed as a parameter for modes. For example: :server.name MODE #channel +l 4 &lt;-- 4 will be a timestamp and the +l parameter). When a mode change is timestamped in this way, the mode is treated as it is with SJOIN: the MODE message is ignored if the timestamp is greater than the channel timestamp. (If the timestamp is equal, the mode is simply added replacing any conflicting modes already in place.)</p>
 		<p>A services implementation can easily clear all entries in a list mode such as bans with SVSMODE (see below).</p>
-		<h2>5.6 INVITE - Invite a user to a channel (TOKEN: *)</h2>
+		<h2><a name="S5_6"></a>5.6 INVITE - Invite a user to a channel (TOKEN: *)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> * <i>target</i> <i>#channel</i></tt></p>
 		<p>Sends to target an invitation to join #channel. If the source is a channel operator on #channel, or a U:Lined server, the invitation grants the user the temporary ability to join the channel regardless of any bans or some restricting channel modes (not +O or +A).</p>
-		<h2>5.7 SAJOIN - Channel Force Join (TOKEN: AX)</h2>
+		<h2><a name="S5_7"></a>5.7 SAJOIN - Channel Force Join (TOKEN: AX)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> AX <i>targetuser</i> <i>#channel</i></tt></p>
 		<p>This requests the forced join of targetuser to #channel. This type of forced join overrides bans, and most modes. The server to which targetuser is connected to must actually acknowledge the join for it to occur. Service implementations may ignore this command, as they would only ever receive it if an SAJOIN was targeted at a service client, in which case it should be ignored...</p>
-		<h2>5.8 SAPART - Channel Force Part (TOKEN: AY)</h2>
+		<h2><a name="S5_8"></a>5.8 SAPART - Channel Force Part (TOKEN: AY)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> AY <i>targetuser</i> <i>#channel</i>[ :<i>reason</i>]</tt></p>
 		<p>This requests the forced part of targetuser from #channel. This is slightly different from a KICK in that the user's removal is announced with PART. The server to which targetuser is connected to must actually acknowledge the part for it to occur. Service implementations may ignore this command, as they would only ever receive it if an SAPART was targeted at a service client, in which case it should be ignored...</p>
 		<p>The reason field is optional. If provided the acknowledging PART message should prefix the message with &quot;SAPart:&quot;.</p>
-		<h2>5.9 SAMODE - Channel Force Mode (TOKEN: o)</h2>
+		<h2><a name="S5_9"></a>5.9 SAMODE - Channel Force Mode (TOKEN: o)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> o <i>#channel</i> <i>modechange</i> <i>modeparams</i></tt></p>
 		<p>This has the same parameters as for MODE. The only difference is that servers probably will never receive this (but is best to document just in case), and that absolutely NO permission checking is done on anything.</p>
 		<hr/>
-		<h1>6 Services Commands</h1>
+		<h1><a name="S6"></a>6 Services Commands</h1>
 		<p>These are commands typically employed by a service implementation, in addition to some of the normal commands. All of the commands listed here require the sender to be correctly U:Lined. This means that the services server name must appear within a ulines {} block in the unrealircd.conf configuration for ALL servers in the network. All servers and clients behind a U:Lined server are themselves U:Lined.</p>
-		<h2>6.1 SVSKILL - Force Disconnect by Service (TOKEN: h)</h2>
+		<h2><a name="S6_1"></a>6.1 SVSKILL - Force Disconnect by Service (TOKEN: h)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> h <i>target</i> :<i>reason</i></tt></p>
 		<p>This command is similar to KILL but differs in several ways. First of all: there is no mutilation of the reason value. The reason given is the exact reason used to generate QUIT messages sent to users. Second, it is silent; no server notice is generated in response to this command. Third, it can only be used by a U:Lined server or client (such as services).</p>
 		<p>Because this command can be dangerous in the hands of an abusive person, service implementations should avoid granting humans control over the reason parameter. In cases of commands where a person has control over such parameter, either use a regular KILL instead, or otherwise modify the reason so that operators can be held accountable if necessary.</p>
-		<h2>6.2 SVSMODE, SVS2MODE - Force User Mode Change (TOKEN: n or v)</h2>
+		<h2><a name="S6_2"></a>6.2 SVSMODE, SVS2MODE - Force User Mode Change (TOKEN: n or v)</h2>
 		<p><b>Syntax (SVSMODE):</b> <tt>:<i>source</i> n <i>target</i> +<i>usermodes</i></tt></p>
 		<p><b>Syntax (SVS2MODE):</b> <tt>:<i>source</i> v <i>target</i> +<i>usermodes</i></tt></p>
 		<p>Judging by these commands alone, you'd think they are identical. Both commands force a usermode change to occur. This is typically used by services to set +r on a user who has successfully identified. They differ in that SVS2MODE also sends the mode change to the user, while SVSMODE does not (hidden mode change).</p>
@@ -208,22 +268,22 @@
 		<p><b>Note:</b> Do <b>NOT</b> use SVSMODE to remove IRCop status from a user. Use the SVSO command for that instead.</p>
 		<p>Alternatively, target can name a channel. In this case, the mode change parameter can consist of a - character, followed by any or all of: b, e, I, q, a, o, h, or v. These characters cause the corresponding lists to be cleared of all entries. For example: SVSMODE #channel -b removes ALL bans from #channel, and SVSMODE #channel -qaohv turns ALL users on #channel into normal users (removes all owner, admin, op, halfop, and voice status). In this case, the uplink will acknowledge with a MODE listing the bans, etc that were removed.</p>
 		<p>To completely clear a channel of all modes: MODE #channel -cfijklmnprstzACGMKLNOQRSTVu (plus any added by third-party module) followed by SVSMODE #channel -beIqaohv.</p>
-		<h2>6.3 SVSSNO, SVS2SNO - Forced SNomask Change (TOKEN: BV or BW)</h2>
+		<h2><a name="S6_3"></a>6.3 SVSSNO, SVS2SNO - Forced SNomask Change (TOKEN: BV or BW)</h2>
 		<p><b>Syntax (SVSSNO):</b> <tt>:<i>source</i> BV <i>target</i> +<i>snomasks</i></tt></p>
 		<p><b>Syntax (SVS2SNO):</b> <tt>:<i>source</i> BW <i>target</i> +<i>snomask</i></tt></p>
 		<p>Changes a user's snomasks. The difference between SVSSNO and SVS2SNO is the same as with SVSMODE versus SVS2MODE. If the user is not +s, you must add it via SVSMODE +s. For example:</p>
 		<pre>:OperServ v someuser +s
 :OperServ BW someuser +ks</pre>
-		<h2>6.4 SVSNICK - Forced Nick Change (TOKEN: e)</h2>
+		<h2><a name="S6_4"></a>6.4 SVSNICK - Forced Nick Change (TOKEN: e)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> e <i>target</i> <i>newnick</i> :<i>newtimestamp</i></tt></p>
 		<p>Forces the specified user to change his nick to newnick and also sets the nick timestamp to newtimestamp (so, for example, services could protect identified users from a nick collision by simply setting the nick timestamp to something way less than "now"). SVSNICK requires the server to which the target is connected to acknowledge the nick change. If the user specified by newnick already exists, then target will be disconnected.</p>
-		<h2>6.5 SVSJOIN - Forced Join (TOKEN: BX)</h2>
+		<h2><a name="S6_5"></a>6.5 SVSJOIN - Forced Join (TOKEN: BX)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> BX <i>target</i> <i>#channel</i></tt></p>
 		<p>This is identical to SAJOIN with a few exceptions: 1) It is U:Line-only. 2) No opernotice on use. 3) Bans and restricting modes are respected, a prior INVITE message must be sent to cause bans to be ignored.</p>
-		<h2>6.6 SVSPART - Forced Part (TOKEN: BT)</h2>
+		<h2><a name="S6_6"></a>6.6 SVSPART - Forced Part (TOKEN: BT)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> BT <i>target</i> <i>#channel</i> :<i>reason</i></tt></p>
 		<p>Also identical to SAPART with a few exceptions: no static prefix on the optional part reason, and no global notice, and requires a U:Line. Usage recommendation of SVSPART versus KICK is the same as for SVSKILL versus KILL.</p>
-		<h2>6.7 SVSO - Oper Permissions (TOKEN: BB)</h2>
+		<h2><a name="S6_7"></a>6.7 SVSO - Oper Permissions (TOKEN: BB)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> BB <i>target</i> <i>flagchanges</i></tt></p>
 		<p>This allows a service to add or remove IRCop permission flags for a user. Flagchanges is formatted similar to that of MODE with the exception that operflags are used instead of usermodes. If the change string consists only of -, then all oper permissions, usermodes, and snomasks are removed (as if the user had himself typed MODE nick -Oo).</p>
 		<p>If you are granting IRCop permissions to a user who is not currently an IRCop, you should follow up with an SVSMODE +o or SVSMODE +O as appropriate. For example:</p>
@@ -231,21 +291,21 @@
 :OperServ BW somenick +cefknoqsSv
 :OperServ AL somenick local.oper.somethinghere.net
 :OperServ v somenick +Ohs </pre>
-		<h2>6.8 SVSNOOP - Oper Lockdown (TOKEN: f)</h2>
+		<h2><a name="S6_8"></a>6.8 SVSNOOP - Oper Lockdown (TOKEN: f)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> f <i>(op)</i><i>server.name</i></tt></p>
 		<p>The (op) parameter is either a + or - indicating if NOOP mode should be activated (+) or deactivated (-). When NOOP mode is activated, all IRCops on the server are deopered (including local operators) and the /oper command is disabled. IRCop privileges can still be granted through use of SVSO. On UnrealIRCd, it is not necessary to masskill all IRCops on the nooped server, as they are deopered automatically.</p>
-		<h2>6.9 SVSNLINE - RealName Ban (TOKEN: BR)</h2>
+		<h2><a name="S6_9"></a>6.9 SVSNLINE - RealName Ban (TOKEN: BR)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> BR <i>op</i> <i>reason</i> :<i>realname mask</i></tt></p>
 		<p>Op is either + (add) or - (remove). In the case of +, reason is a space-escaped string (all space chars are encoded as _). If -, reason is ignored.</p>
-		<h2>6.10 SVSFLINE - File Ban (TOKEN: BC)</h2>
+		<h2><a name="S6_10"></a>6.10 SVSFLINE - File Ban (TOKEN: BC)</h2>
 		<p><b>Syntax (add):</b> <tt>:<i>source</i> BC + <i>filemask</i> :<i>reason</i></tt></p>
 		<p><b>Syntax (remove):</b> <tt>:<i>source</i> BC - <i>filemask</i></tt></p>
 		<p><b>Syntax (clear):</b> <tt>:<i>source</i> BC *</tt></p>
 		<p>Adds or removes a DCCDENY item for the specified filemask on all servers. These DCCDENYs are hard dccdenies - the /dccallow command cannot override it. The last form removes all dccdenies added via SVSFLINE.</p>
 		<hr/>
-		<h1>7 Messaging</h1>
+		<h1><a name="S7"></a>7 Messaging</h1>
 		<p>What good is Internet Relay <b>CHAT</b> if users cannot <b>CHAT</b>? This section addresses the commands through which arbitrary user messages are sent.</p>
-		<h2>7.1 PRIVMSG, NOTICE - Simple Message Transmission (Token: ! or B)</h2>
+		<h2><a name="S7_1"></a>7.1 PRIVMSG, NOTICE - Simple Message Transmission (Token: ! or B)</h2>
 		<p><b>PRIVMSG Syntax:</b> <tt>:<i>source</i> ! <i>target</i> :<i>message</i></tt></p>
 		<p><b>NOTICE Syntax:</b> <tt>:<i>source</i> B <i>target</i> :<i>message</i></tt></p>
 		<p>Sends a messages to the given target. The target either names a single client, or identifies a list of clients in which the message is to be sent to. The available targets include:</p>
@@ -257,53 +317,66 @@
 			<li>$<i>servermask</i>: Sends a message to ALL users on all servers matching the specified servermask (known as a server broadcast message). The RFC requirements of having a TLD with no wildcards is not applied to U:Lined clients.</li>
 		</ul>
 		<p>Unreal does not support the #hostmask format.</p>
-		<h2>7.2 SENDUMODE, SMO - Usermode-based Delivery (TOKEN: AP or AU)</h2>
+		<h2><a name="S7_2"></a>7.2 SENDUMODE, SMO - Usermode-based Delivery (TOKEN: AP or AU)</h2>
 		<p><b>Syntax:</b> <tt>@<i>servernumeric</i> AU <i>umode</i> :<i>message</i></tt></p>
 		<p>Sends the specified message to all users with the given mode. Only one usermode may be given. This is a server-only command if you can't tell from the sender prefix :) .</p>
 		<p>The message will be displayed as coming from the receiving client's own server. It may be appropriate to add a &quot;*** Notice (or other leader here) -- from blah:&quot; if you wish to clarify where the message is from.</p>
-		<h2>7.3 SENDSNO - SNomask-based Delivery (TOKEN: Ss)</h2>
+		<h2><a name="S7_3"></a>7.3 SENDSNO - SNomask-based Delivery (TOKEN: Ss)</h2>
 		<p><b>Syntax:</b> <tt>@<i>servernumeric</i> Ss <i>snomask</i> :<i>message</i></tt></p>
 		<p>Sends the specified message to all users with the given snomask. Only one snomask may be given. This is a server-only command if you can't tell from the sender prefix :) .</p>
 		<p>The message will be displayed as coming from the receiving client's own server. It may be appropriate to add a &quot;*** Notice (or other leader here) -- from blah:&quot; if you wish to clarify where the message is from.</p>
-		<h2>7.4 CHATOPS - IRCop Chat (TOKEN: p)</h2>
+		<h2><a name="S7_4"></a>7.4 CHATOPS - IRCop Chat (TOKEN: p)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> p :<i>message</i></tt></p>
 		<p>Sends the message to all IRCops on all servers.</p>
-		<h2>7.5 WALLOPS - Wallop Chat (TOKEN: =)</h2>
+		<h2><a name="S7_5"></a>7.5 WALLOPS - Wallop Chat (TOKEN: =)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> = :<i>message</i></tt></p>
 		<p>Sends the message to all users with usermode +w, whether they are ircops or not.</p>
-		<h2>7.6 GLOBOPS - FailOp Chat (TOKEN: ])</h2>
+		<h2><a name="S7_6"></a>7.6 GLOBOPS - FailOp Chat (TOKEN: ])</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> ] :<i>message</i></tt></p>
 		<p>Send the message to all IRCops with usermode +g.</p>
-		<h2>7.7 ADCHAT - Admin Chat (TOKEN: x)</h2>
+		<h2><a name="S7_7"></a>7.7 ADCHAT - Admin Chat (TOKEN: x)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> x :<i>message</i></tt></p>
 		<p>Send the message to all Server and Network Admins (usermode +A).</p>
-		<h2>7.8 NACHAT - NetAdmin Chat (TOKEN: AC)</h2>
+		<h2><a name="S7_8"></a>7.8 NACHAT - NetAdmin Chat (TOKEN: AC)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> AC :<i>message</i></tt></p>
 		<p>Send the message to all Network Admins (usermode +N).</p>
 		<hr/>
-		<h1>8 Ban Control</h1>
+		<h1><a name="S8"></a>8 Ban Control</h1>
 		<p>Sometimes, you have the misfortune of encountering a user who has no purpose but to serve as an annoyance to your server or network. These commands transmit network-wide ban information amongst each other.</p>
-		<h2>8.1 TKL - Master Ban Control (TOKEN: BD)</h2>
+		<h2><a name="S8_1"></a>8.1 TKL - Master Ban Control (TOKEN: BD)</h2>
 		<p>The TKL command seems to have one oddity about it: the real ban source is included in the TKL command rather than in the sender prefix. Most likely this is done for synching reasons (so that the *line ban can be credited to the proper person even if he/she is offline). For this reason, the command syntax is given without any sender prefix at all. It is still permissible to use one, however.</p>
-		<h3>8.1.1 GLINE - Network-wide user@host ban</h3>
+		<h3><a name="S8_1_1"></a>8.1.1 GLINE - Network-wide user@host ban</h3>
 		<p><b>Add Syntax (TKL):</b> <tt>BD + G <i>userpart</i> <i>hostpart</i> <i>source</i> <i>expiretimestamp</i> <i>settimestamp</i> :<i>reason</i></tt></p>
 		<p><b>Remove Syntax (TKL):</b> <tt>BD - G <i>userpart</i> <i>hostpart</i> <i>source</i></tt></p>
 		<p>Adds and Removes Network-wide user@host bans, known as G:Lines. The GLINE command itself must not be used. The userpart and hostpart are the user portion and hostname portion of the ban mask. The expiretimestamp is 0 if the G:Line should not expire, otherwise it will expire at the given time. It is an absolute time, not relative, thus it's imperitive to have reasonably synchrnoized clocks or bans may be removed too early or even immediately!</p>
-		<h3>8.1.2 GZLINE - Network-wide IP ban (NO TOKEN)</h3>
+		<h3><a name="S8_1_2"></a>8.1.2 GZLINE - Network-wide IP ban</h3>
 		<p><b>Add Syntax (TKL):</b> <tt>BD + Z * <i>ipmask</i> <i>source</i> <i>expiretimestamp</i> <i>settimestamp</i> :<i>reason</i></tt></p>
 		<p><b>Remove Syntax (TKL):</b> <tt>BD - Z * <i>ipmask</i> <i>source</i></tt></p>
 		<p>Adds and Removes Network-wide IP bans, known as Global Z:Lines. The GZLINE command itself must not be used. Ipmask permits CIDR notation as well as wildcard masks.</p>
-		<h3>8.1.3 SQLINE, UNSQLINE - Network-wide Nickname ban (TOKEN: c or d)</h3>
+		<h3><a name="S8_1_3"></a>8.1.3 SQLINE, UNSQLINE - Network-wide Nickname ban (TOKEN: c or d)</h3>
 		<p><b>Add Syntax (TKL):</b> <tt>BD + Q <i>hold</i> <i>nickmask</i> <i>source</i> <i>expiretimestamp</i> <i>settimestamp</i> :<i>reason</i></tt></p>
 		<p><b>Add Syntax (SQLINE):</b> <tt>:<i>source</i> c <i>nickmask</i> :<i>reason</i></tt></p>
 		<p><b>Remove Syntax (TKL):</b> <tt>BD - Q <i>hold</i> <i>nickmask</i> <i>source</i></tt></p>
 		<p><b>Remove Syntax (UNSQLINE):</b> <tt>:<i>source</i> d <i>nickmask</i></tt></p>
 		<p>In the TKL syntax, the hold parameter is either a * to mark the qline as a nick ban, or an H to mark it as a services hold. A services hold does not trigger qline rejection notice, and is typically used by NickServ to reserve registered nicks until they are released by the owner. The (UN)SQLINE syntax can only be used by a server, but any user can be used as the source for the TKL syntax. Unlike G and GZ lines, Q:Lines do not cause existing matching users to be disconnected or otherwise affected.</p>
 		<p>The TKL syntax is preferred, since it is more flexible, but (UN)SQLINE is permitted for compatibility.</p>
-		<h3>8.1.4 SPAMFILTER - Message Spam Filtration System (NO TOKEN)</h3>
+		<h3><a name="S8_1_4"></a>8.1.4 SPAMFILTER - Message Spam Filtration System</h3>
 		<p>Proper use of spamfilter in TKL commands requires use of PROTOCTL TKLEXT, which increases the number of parameters allowed in TKL.</p>
 		<p><b>Add Syntax (TKL):</b> <tt>BD + F <i>target(s)</i> <i>action</i> <i>source</i> 0 <i>settimestamp</i> <i>tklduration</i> <i>tklreason</i> :<i>regex</i></tt></p>
 		<p><b>Remove Syntax (TKL):</b> <tt>BD - F <i>target(s)</i> <i>action</i> <i>source</i> 0 <i>settimestap</i> :<i>regex</i></tt></p>
-		<p>Adds and Removes network-wide spamfilters. The SPAMFILTER command itself must not be used. See <a href="http://vulnscan.org/UnrealIrcd/unreal32docs.html#feature_spamfilter">http://vulnscan.org/UnrealIrcd/unreal32docs.html#feature_spamfilter</a> for a list of valid targets and actions.</p>
+		<p>Adds and Removes network-wide spamfilters. The SPAMFILTER command itself must not be used. See <a href="http://vulnscan.org/UnrealIrcd/unreal32docs.html#feature_spamfilter">http://vulnscan.org/UnrealIrcd/unreal32docs.html#feature_spamfilter</a> for a list of valid targets. For actions, a single character is used to identify the action to be taken:</p>
+		<ul>
+			<li>K (kill) - The user is simply disconnected, with the reason given.</li>
+			<li>S (tempshun) - A temporary shun is placed on the user. This shun is applied only to that user, and disappears if the user reconnects.</li>
+			<li>s (shun) - A regular shun on the user's IP address is added. This causes all users with the same hostname to be shunned, but they will also stay shunned if they reconnect.</li>
+			<li>k (kline) - A K:Line is added on the user's IP address.</li>
+			<li>z (zline) - A Z:Line is added on the user's IP address.</li>
+			<li>g (gline) - A G:Line is added on the user's IP address.</li>
+			<li>Z (gzline) - A Global Z:Line is added on the user's IP address.</li>
+			<li>b (block) - Messages (or users!) matching the filter are simply blocked.</li>
+			<li>d (dccblock) - The user is prevented from sending files using DCC for the remainder of his session (in other words, until he quits).</li>
+			<li>v (viruschan) - User is removed from all channels, joined to the viruschan as defined in conf, and cannot message anything but that channel.</li>
+			<li>w (warn) - No action on the user is taken. Only the Spamfilter notice is sent to opers with snomask +S. (Available in devel CVS)</li>
+		</ul>
 	</body>
 </html>
