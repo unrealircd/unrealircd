@@ -670,8 +670,8 @@ while [ -z "$TEST" ] ; do
     echo ""
     echo "Do you want to enable prefixes for chanadmin and chanowner?"
     echo "This will give +a the & prefix and ~ for +q (just like +o is @)"
-    echo "Supported by the major clients (mIRC, xchat, epic, eggdrop, Klient, PJIRC, etc.)"
-    echo "with the notable exceptions of irssi, KVIrc and CGI:IRC."
+    echo "Supported by the major clients (mIRC, xchat, epic, eggdrop, Klient,"
+    echo "PJIRC, irssi, CGI:IRC, etc.)"
     echo "This feature should be enabled/disabled network-wide."
     echo $n "[$TEST] -> $c"
 	read cc
