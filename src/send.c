@@ -1981,10 +1981,10 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 					    /* Ugly double %s to prevent excessive spaces */
 					    "%s %s %d %B %s %s %b %lu %s %s %s%s:%s"
 					    :
-					    "%s %s %d %d %s %s %b %lu %s %s %s%s:%s"
+					    "%s %s %d %lu %s %s %b %lu %s %s %s%s:%s"
 					    ,
 					    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
-					    hopcount, lastnick, username, realhost,
+					    hopcount, (long)lastnick, username, realhost,
 					    (long)(sptr->srvptr->serv->numeric),
 					    servicestamp, umodes, vhost,
 					    SupportNICKIP(cptr) ? encode_ip(sptr->user->ip_str) : "",
@@ -2064,10 +2064,10 @@ void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes)
 			    /* Ugly double %s to prevent excessive spaces */
 			    "%s %s %d %B %s %s %b %lu %s %s %s%s:%s"
 			    :
-			    "%s %s %d %d %s %s %b %lu %s %s %s%s:%s"
+			    "%s %s %d %lu %s %s %b %lu %s %s %s%s:%s"
 			    ,
 			    (IsToken(cptr) ? TOK_NICK : MSG_NICK), sptr->name,
-			    sptr->hopcount+1, sptr->lastnick, sptr->user->username, 
+			    sptr->hopcount+1, (long)sptr->lastnick, sptr->user->username, 
 			    sptr->user->realhost, (long)(sptr->srvptr->serv->numeric),
 			    sptr->user->servicestamp, umodes, vhost,
 			    SupportNICKIP(cptr) ? encode_ip(sptr->user->ip_str) : "",

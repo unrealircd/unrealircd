@@ -670,6 +670,7 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define EFUNC_M_TKL							22
 #define EFUNC_PLACE_HOST_BAN				23
 #define EFUNC_DOSPAMFILTER					24
+#define EFUNC_DOSPAMFILTER_VIRUSCHAN		25
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000

@@ -242,7 +242,7 @@ int ret;
 	{
 		if (SERVICES_NAME && (acptr = find_person(alias->nick, NULL)))
 		{
-			if (alias->spamfilter && (ret = dospamfilter(sptr, parv[1], SPAMF_USERMSG, alias->nick, 0)) < 0)
+			if (alias->spamfilter && (ret = dospamfilter(sptr, parv[1], SPAMF_USERMSG, alias->nick, 0, NULL)) < 0)
 				return ret;
 			sendto_one(acptr, ":%s %s %s@%s :%s", parv[0],
 				IsToken(acptr->from) ? TOK_PRIVATE : MSG_PRIVATE, 
@@ -256,7 +256,7 @@ int ret;
 	{
 		if (STATS_SERVER && (acptr = find_person(alias->nick, NULL)))
 		{
-			if (alias->spamfilter && (ret = dospamfilter(sptr, parv[1], SPAMF_USERMSG, alias->nick, 0)) < 0)
+			if (alias->spamfilter && (ret = dospamfilter(sptr, parv[1], SPAMF_USERMSG, alias->nick, 0, NULL)) < 0)
 				return ret;
 			sendto_one(acptr, ":%s %s %s@%s :%s", parv[0],
 				IsToken(acptr->from) ? TOK_PRIVATE : MSG_PRIVATE, 
@@ -270,7 +270,7 @@ int ret;
 	{
 		if ((acptr = find_person(alias->nick, NULL))) 
 		{
-			if (alias->spamfilter && (ret = dospamfilter(sptr, parv[1], SPAMF_USERMSG, alias->nick, 0)) < 0)
+			if (alias->spamfilter && (ret = dospamfilter(sptr, parv[1], SPAMF_USERMSG, alias->nick, 0, NULL)) < 0)
 				return ret;
 			if (MyClient(acptr))
 				sendto_one(acptr, ":%s!%s@%s PRIVMSG %s :%s", parv[0], 
@@ -292,7 +292,7 @@ int ret;
 		{
 			if (!can_send(sptr, chptr, parv[1], 0))
 			{
-				if (alias->spamfilter && (ret = dospamfilter(sptr, parv[1], SPAMF_CHANMSG, chptr->chname, 0)) < 0)
+				if (alias->spamfilter && (ret = dospamfilter(sptr, parv[1], SPAMF_CHANMSG, chptr->chname, 0, NULL)) < 0)
 					return ret;
 				sendto_channelprefix_butone_tok(sptr,
 				    sptr, chptr,
@@ -371,7 +371,7 @@ int ret;
 				{
 					if (SERVICES_NAME && (acptr = find_person(format->nick, NULL)))
 					{
-						if (alias->spamfilter && (ret = dospamfilter(sptr, output, SPAMF_USERMSG, format->nick, 0)) < 0)
+						if (alias->spamfilter && (ret = dospamfilter(sptr, output, SPAMF_USERMSG, format->nick, 0, NULL)) < 0)
 							return ret;
 						sendto_one(acptr, ":%s %s %s@%s :%s", parv[0],
 						IsToken(acptr->from) ? TOK_PRIVATE : MSG_PRIVATE, 
@@ -384,7 +384,7 @@ int ret;
 				{
 					if (STATS_SERVER && (acptr = find_person(format->nick, NULL)))
 					{
-						if (alias->spamfilter && (ret = dospamfilter(sptr, output, SPAMF_USERMSG, format->nick, 0)) < 0)
+						if (alias->spamfilter && (ret = dospamfilter(sptr, output, SPAMF_USERMSG, format->nick, 0, NULL)) < 0)
 							return ret;
 						sendto_one(acptr, ":%s %s %s@%s :%s", parv[0],
 							IsToken(acptr->from) ? TOK_PRIVATE : MSG_PRIVATE, 
@@ -397,7 +397,7 @@ int ret;
 				{
 					if ((acptr = find_person(format->nick, NULL))) 
 					{
-						if (alias->spamfilter && (ret = dospamfilter(sptr, output, SPAMF_USERMSG, format->nick, 0)) < 0)
+						if (alias->spamfilter && (ret = dospamfilter(sptr, output, SPAMF_USERMSG, format->nick, 0, NULL)) < 0)
 							return ret;
 						if (MyClient(acptr))
 							sendto_one(acptr, ":%s!%s@%s PRIVMSG %s :%s", parv[0], 
@@ -419,7 +419,7 @@ int ret;
 					{
 						if (!can_send(sptr, chptr, parv[1], 0))
 						{
-							if (alias->spamfilter && (ret = dospamfilter(sptr, parv[1], SPAMF_CHANMSG, chptr->chname, 0)) < 0)
+							if (alias->spamfilter && (ret = dospamfilter(sptr, parv[1], SPAMF_CHANMSG, chptr->chname, 0, NULL)) < 0)
 								return ret;
 							sendto_channelprefix_butone_tok(sptr,
 							    sptr, chptr,

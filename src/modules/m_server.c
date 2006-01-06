@@ -817,7 +817,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 						    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
 						    acptr->name,
 						    acptr->hopcount + 1,
-						    acptr->lastnick,
+						    (long)acptr->lastnick,
 						    acptr->user->username,
 						    acptr->user->realhost,
 						    (long)(acptr->srvptr->serv->numeric),
@@ -837,7 +837,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 						    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
 						    acptr->name,
 						    acptr->hopcount + 1,
-						    acptr->lastnick,
+						    (long)acptr->lastnick,
 						    acptr->user->username,
 						    acptr->user->realhost,
 						    acptr->user->server,
@@ -908,7 +908,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 				    "%s %s %s %lu :%s"),
 				    (IsToken(cptr) ? TOK_TOPIC : MSG_TOPIC),
 				    chptr->chname, chptr->topic_nick,
-				    chptr->topic_time, chptr->topic);
+				    (long)chptr->topic_time, chptr->topic);
 		}
 	}
 	/* pass on TKLs */

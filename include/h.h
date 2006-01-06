@@ -737,7 +737,8 @@ extern MODVAR void (*tkl_stats)(aClient *cptr, int type, char *para);
 extern MODVAR void (*tkl_synch)(aClient *sptr);
 extern MODVAR int (*m_tkl)(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 extern MODVAR int (*place_host_ban)(aClient *sptr, int action, char *reason, long duration);
-extern MODVAR int (*dospamfilter)(aClient *sptr, char *str_in, int type, char *target, int flags);
+extern MODVAR int (*dospamfilter)(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
+extern MODVAR int (*dospamfilter_viruschan)(aClient *sptr, aTKline *tk, int type);
 /* /Efuncs */
 extern MODVAR aMotd *opermotd, *svsmotd, *motd, *botmotd, *smotd;
 extern MODVAR int max_connection_count;

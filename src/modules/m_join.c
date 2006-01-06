@@ -377,7 +377,7 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 		   a SJOIN bug --stskeeps */
 		sendto_serv_butone_token_opt(cptr, OPT_SJ3|OPT_SJB64,
 			me.name, MSG_SJOIN, TOK_SJOIN,
-			"%B %s :%s%s ", chptr->creationtime, 
+			"%B %s :%s%s ", (long)chptr->creationtime, 
 			chptr->chname, flags & CHFL_CHANOP ? "@" : "", sptr->name);
 		sendto_serv_butone_token_opt(cptr, OPT_SJ3|OPT_NOT_SJB64,
 			me.name, MSG_SJOIN, TOK_SJOIN,

@@ -1,7 +1,7 @@
 /*
  *   Unreal Internet Relay Chat Daemon, src/modules/m_tkl.c
  *   TKL Commands and TKL Layer
- *   (C) 1999-2005 The UnrealIRCd Team
+ *   (C) 1999-2006 The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers.
@@ -72,7 +72,8 @@ void _tkl_stats(aClient *cptr, int type, char *para);
 void _tkl_synch(aClient *sptr);
 int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 int _place_host_ban(aClient *sptr, int action, char *reason, long duration);
-int _dospamfilter(aClient *sptr, char *str_in, int type, char *target, int flags);
+int _dospamfilter(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
+int _dospamfilter_viruschan(aClient *sptr, aTKline *tk, int type);
 
 extern MODVAR char zlinebuf[BUFSIZE];
 extern MODVAR aTKline *tklines[TKLISTLEN];
@@ -124,6 +125,7 @@ DLLFUNC int MOD_TEST(m_tkl)(ModuleInfo *modinfo)
 	EfunctionAdd(modinfo->handle, EFUNC_M_TKL, _m_tkl);
 	EfunctionAdd(modinfo->handle, EFUNC_PLACE_HOST_BAN, _place_host_ban);
 	EfunctionAdd(modinfo->handle, EFUNC_DOSPAMFILTER, _dospamfilter);
+	EfunctionAdd(modinfo->handle, EFUNC_DOSPAMFILTER_VIRUSCHAN, _dospamfilter_viruschan);
 	return MOD_SUCCESS;
 }
 
@@ -754,17 +756,6 @@ int n;
 	actionbuf[0] = banact_valtochar(action);
 	actionbuf[1] = '\0';
 
-	/* (temporary?) disable 'u' (user) target in combination with 'viruschan' action -- else causes crashes
-	 * SIDENOTE: This workaround is present at two places, 1) here, and 2) at the checking/banning code,
-	 *           why? well because there might be existing *lines! which is a very real assumption...
-	 */
-	if ((action == BAN_ACT_VIRUSCHAN) && (targets & SPAMF_USER))
-	{
-		sendnotice(sptr, "Unfortunately, at least for the moment, the action 'viruschan' is incompatible with target 'u' (user) "
-		                 "for technical reasons. It caused crashes in previous versions, and has been (temporary?) disabled for now.");
-		return -1;
-	}
-	
 	/* now check the regex... */
 	p = unreal_checkregex(parv[6],0,1);
 	if (p)
@@ -1340,7 +1331,7 @@ char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64]; /* n!u@h:r */
 
 	ircsprintf(spamfilter_user, "%s!%s@%s:%s",
 		sptr->name, sptr->user->username, sptr->user->realhost, sptr->info);
-	return dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, flags);
+	return dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, flags, NULL);
 }
 
 int spamfilter_check_users(aTKline *tk)
@@ -2287,11 +2278,48 @@ SpamExcept *e;
 	return 0;
 }
 
+int _dospamfilter_viruschan(aClient *sptr, aTKline *tk, int type)
+{
+char *xparv[3], chbuf[CHANNELLEN + 16], buf[2048];
+aChannel *chptr;
+int ret;
+
+	snprintf(buf, sizeof(buf), "0,%s", SPAMFILTER_VIRUSCHAN);
+	xparv[0] = sptr->name;
+	xparv[1] = buf;
+	xparv[2] = NULL;
+
+	/* RECURSIVE CAUTION in case we ever add blacklisted chans */
+	spamf_ugly_vchanoverride = 1;
+	ret = do_cmd(sptr, sptr, "JOIN", 2, xparv);
+	spamf_ugly_vchanoverride = 0;
+
+	if (ret == FLUSH_BUFFER)
+		return FLUSH_BUFFER; /* don't ask me how we could have died... */
+
+	sendnotice(sptr, "You are now restricted to talking in %s: %s",
+		SPAMFILTER_VIRUSCHAN, unreal_decodespace(tk->ptr.spamf->tkl_reason));
+
+	chptr = find_channel(SPAMFILTER_VIRUSCHAN, NULL);
+	if (chptr)
+	{
+		ircsprintf(chbuf, "@%s", chptr->chname);
+		ircsprintf(buf, "[Spamfilter] %s matched filter '%s' [%s] [%s]",
+			sptr->name, tk->reason, cmdname_by_spamftarget(type),
+			unreal_decodespace(tk->ptr.spamf->tkl_reason));
+		sendto_channelprefix_butone_tok(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+			MSG_NOTICE, TOK_NOTICE, chbuf, buf, 0);
+	}
+	SetVirus(sptr);
+	return 0;
+}
+
 /** dospamfilter: executes the spamfilter onto the string.
  * @param str		The text (eg msg text, notice text, part text, quit text, etc
  * @param type		The spamfilter type (SPAMF_*)
  * @param target	The target as a text string (can be NULL, eg: for away)
  * @param flags		Any flags (SPAMFLAG_*)
+ * @param rettk		Pointer to an aTKLline struct, _used for special circumstances only_
  * RETURN VALUE:
  * 0 if not matched, non-0 if it should be blocked.
  * Return value can be FLUSH_BUFFER (-2) which means 'sptr' is
@@ -2299,10 +2327,13 @@ SpamExcept *e;
  * (like from m_message, m_part, m_quit, etc).
  */
  
-int _dospamfilter(aClient *sptr, char *str_in, int type, char *target, int flags)
+int _dospamfilter(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk)
 {
 aTKline *tk;
 char *str;
+
+	if (rettk)
+		*rettk = NULL; /* initialize to NULL */
 
 	if (type == SPAMF_USER)
 		str = str_in;
@@ -2408,55 +2439,21 @@ char *str;
 			} else
 			if (tk->ptr.spamf->action == BAN_ACT_VIRUSCHAN)
 			{
-				char *xparv[3], chbuf[CHANNELLEN + 16];
-				aChannel *chptr;
-				int ret;
-				
 				if (IsVirus(sptr)) /* Already tagged */
 					return 0;
-				
+					
+				/* There's a race condition for SPAMF_USER, so 'rettk' is used for SPAMF_USER
+				 * when a user is currently connecting and filters are checked:
+				 */
 				if (!IsClient(sptr))
 				{
-					/* Problem! viruschan selected, but we got a just connected user,
-					 * this causes severe problems (atm). [this check is also present
-					 * when adding the thing]. We just kill them instead for now...
-					 * which seems the best alternative: adding shun and *lines is clearly
-					 * not what the oper/service wanted, blocking/tempshunning does not
-					 * give the user any hint about what is going in, and KILL is most
-					 * obvious/clear, and less intrussive (you remove the spamfilter and
-					 * the user can access the network again). -- Syzop
-					 */
-					sendto_realops("[WORKAROUND] Warning: spamfilter on target 'u' (user) + target 'viruschan' "
-					               "is (temporary) no longer supported because it caused crashes, "
-					               "user %s is killed instead!", sptr->name);
-					return place_host_ban(sptr, BAN_ACT_KILL,
-						unreal_decodespace(tk->ptr.spamf->tkl_reason), 0);
+					if (rettk)
+						*rettk = tk;
+					return -5;
 				}
-				ircsprintf(buf, "0,%s", SPAMFILTER_VIRUSCHAN);
-				xparv[0] = sptr->name;
-				xparv[1] = buf;
-				xparv[2] = NULL;
-				/* RECURSIVE CAUTION in case we ever add blacklisted chans */
-				spamf_ugly_vchanoverride = 1;
-				ret = do_cmd(sptr, sptr, "JOIN", 2, xparv);
-				spamf_ugly_vchanoverride = 0;
-				if (ret == FLUSH_BUFFER)
-					return FLUSH_BUFFER; /* don't ask me how we could have died... */
-				sendnotice(sptr, "You are now restricted to talking in %s: %s",
-					SPAMFILTER_VIRUSCHAN, unreal_decodespace(tk->ptr.spamf->tkl_reason));
-				/* todo: send notice to channel? */
-				chptr = find_channel(SPAMFILTER_VIRUSCHAN, NULL);
-				if (chptr)
-				{
-					ircsprintf(chbuf, "@%s", chptr->chname);
-					ircsprintf(buf, "[Spamfilter] %s matched filter '%s' [%s%s] [%s]",
-						sptr->name, tk->reason, cmdname_by_spamftarget(type), targetbuf,
-						unreal_decodespace(tk->ptr.spamf->tkl_reason));
-					sendto_channelprefix_butone_tok(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-						MSG_NOTICE, TOK_NOTICE, chbuf, buf, 0);
-				}
-				SetVirus(sptr);
-				return -1;
+				
+				dospamfilter_viruschan(sptr, tk, type);
+				return -5;
 			} else
 				return place_host_ban(sptr, tk->ptr.spamf->action,
 					unreal_decodespace(tk->ptr.spamf->tkl_reason), tk->ptr.spamf->tkl_duration);

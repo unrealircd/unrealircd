@@ -2182,21 +2182,34 @@ void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
 	return;
 }
 
-/* 
- * This will send "cptr" a full list of the modes for channel chptr,
+char *mystpcpy(char *dst, const char *src)
+{
+	for (; *src; src++)
+		*dst++ = *src;
+	*dst = '\0';
+	return dst;
+}
+
+
+
+/** This will send "cptr" a full list of the modes for channel chptr,
+ *
+ * Half of it recoded by Syzop: the whole buffering and size checking stuff
+ * looked weird and just plain inefficient. We now fill up our send-buffer
+ * really as much as we can, without causing any overflows of course.
  */
-
-
 void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 {
 	Member *members;
 	Member *lp;
 	Ban *ban;
 	char *name;
-	char *bufptr;
 	short nomode, nopara;
-	char bbuf[1024];
-	int  n = 0;
+	char tbuf[512]; /* work buffer, for temporary data */
+	char buf[1024]; /* send buffer */
+	char *bufptr; /* points somewhere in 'buf' */
+	char *p; /* points to somewhere in 'tbuf' */
+	int prebuflen = 0; /* points to after the <sjointoken> <TS> <chan> <fixmodes> <fixparas <..>> : part */
 
 	if (*chptr->chname != '#')
 		return;
@@ -2221,134 +2234,140 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 		ircsprintf(buf,
 		    (cptr->proto & PROTO_SJB64 ? "%s %B %s :" : "%s %ld %s :"),
 		    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
-		    chptr->creationtime, chptr->chname);
+		    (long)chptr->creationtime, chptr->chname);
 	}
 	if (nopara && !nomode)
 	{
 		ircsprintf(buf, 
 		    (cptr->proto & PROTO_SJB64 ? "%s %B %s %s :" : "%s %ld %s %s :"),
 		    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
-		    chptr->creationtime, chptr->chname, modebuf);
-
+		    (long)chptr->creationtime, chptr->chname, modebuf);
 	}
 	if (!nopara && !nomode)
 	{
 		ircsprintf(buf,
 		    (cptr->proto & PROTO_SJB64 ? "%s %B %s %s %s :" : "%s %ld %s %s %s :"),
 		    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
-		    chptr->creationtime, chptr->chname, modebuf, parabuf);
+		    (long)chptr->creationtime, chptr->chname, modebuf, parabuf);
 	}
-	strcpy(bbuf, buf);
 
-	bufptr = buf + strlen(buf);
+	prebuflen = strlen(buf);
+	bufptr = buf + prebuflen;
+
+	/* RULES:
+	 * - Use 'tbuf' as a working buffer, use 'p' to advance in 'tbuf'.
+	 *   Thus, be sure to do a 'p = tbuf' at the top of the loop.
+	 * - When one entry has been build, check if strlen(buf) + strlen(tbuf) > BUFSIZE - 8,
+	 *   if so, do not concat but send the current result (buf) first to the server
+	 *   and reset 'buf' to only the prebuf part (all until the ':').
+	 *   Then, in both cases, concat 'tbuf' to 'buf' and continue
+	 * - Be sure to ALWAYS zero terminate (*p = '\0') when the entry has been build.
+	 * - Be sure to add a space after each entry ;)
+	 *
+	 * For a more illustrated view, take a look at the first for loop, the others
+	 * are pretty much the same.
+	 *
+	 * Follow these rules, and things would be smooth and efficient (network-wise),
+	 * if you ignore them, expect crashes and/or heap corruption, aka: HELL.
+	 * You have been warned.
+	 *
+	 * Side note: of course things would be more efficient if the prebuf thing would
+	 * not be sent every time, but that's another story
+	 *      -- Syzop
+	 */
 
 	for (lp = members; lp; lp = lp->next)
 	{
-
+		p = tbuf;
 		if (lp->flags & MODE_CHANOP)
-			*bufptr++ = '@';
-
+			*p++ = '@';
 		if (lp->flags & MODE_VOICE)
-			*bufptr++ = '+';
-
+			*p++ = '+';
 		if (lp->flags & MODE_HALFOP)
-			*bufptr++ = '%';
+			*p++ = '%';
 		if (lp->flags & MODE_CHANOWNER)
-			*bufptr++ = '*';
+			*p++ = '*';
 		if (lp->flags & MODE_CHANPROT)
-			*bufptr++ = '~';
+			*p++ = '~';
 
-		name = lp->cptr->name;
+		p = mystpcpy(p, lp->cptr->name);
+		*p++ = ' ';
+		*p = '\0';
 
-		strcpy(bufptr, name);
-		bufptr += strlen(bufptr);
-		*bufptr++ = ' ';
-		n++;
-
-		if (bufptr - buf > BUFSIZE - 80)
+		/* this is: if (strlen(tbuf) + strlen(buf) > BUFSIZE - 8) */
+		if ((p - tbuf) + (bufptr - buf) > BUFSIZE - 8)
 		{
-			*bufptr++ = '\0';
-			if (bufptr[-1] == ' ')
-				bufptr[-1] = '\0';
+			/* Would overflow, so send our current stuff right now (except new stuff) */
 			sendto_one(cptr, "%s", buf);
-
-			strcpy(buf, bbuf);
-			n = 0;
-
-			bufptr = buf + strlen(buf);
+			bufptr = buf + prebuflen;
+			*bufptr = '\0';
 		}
+		/* concat our stuff.. */
+		bufptr = mystpcpy(bufptr, tbuf);
 	}
+
 	for (ban = chptr->banlist; ban; ban = ban->next)
 	{
-		*bufptr++ = '&';
-		strcpy(bufptr, ban->banstr);
-		bufptr += strlen(bufptr);
-		*bufptr++ = ' ';
-		n++;
-		if (bufptr - buf > BUFSIZE - 80)
+		p = tbuf;
+		*p++ = '&';
+		p = mystpcpy(p, ban->banstr);
+		*p++ = ' ';
+		*p = '\0';
+		
+		/* this is: if (strlen(tbuf) + strlen(buf) > BUFSIZE - 8) */
+		if ((p - tbuf) + (bufptr - buf) > BUFSIZE - 8)
 		{
-			*bufptr++ = '\0';
-			if (bufptr[-1] == ' ')
-				bufptr[-1] = '\0';
+			/* Would overflow, so send our current stuff right now (except new stuff) */
 			sendto_one(cptr, "%s", buf);
-
-			strcpy(buf, bbuf);
-			n = 0;
-
-			bufptr = buf + strlen(buf);
+			bufptr = buf + prebuflen;
+			*bufptr = '\0';
 		}
-
+		/* concat our stuff.. */
+		bufptr = mystpcpy(bufptr, tbuf);
 	}
+
 	for (ban = chptr->exlist; ban; ban = ban->next)
 	{
-		*bufptr++ = '"';
-		strcpy(bufptr, ban->banstr);
-		bufptr += strlen(bufptr);
-		*bufptr++ = ' ';
-		n++;
-		if (bufptr - buf > BUFSIZE - 80)
+		p = tbuf;
+		*p++ = '"';
+		p = mystpcpy(p, ban->banstr);
+		*p++ = ' ';
+		*p = '\0';
+		
+		/* this is: if (strlen(tbuf) + strlen(buf) > BUFSIZE - 8) */
+		if ((p - tbuf) + (bufptr - buf) > BUFSIZE - 8)
 		{
-			*bufptr++ = '\0';
-			if (bufptr[-1] == ' ')
-				bufptr[-1] = '\0';
+			/* Would overflow, so send our current stuff right now (except new stuff) */
 			sendto_one(cptr, "%s", buf);
-
-			strcpy(buf, bbuf);
-			n = 0;
-
-			bufptr = buf + strlen(buf);
+			bufptr = buf + prebuflen;
+			*bufptr = '\0';
 		}
-
+		/* concat our stuff.. */
+		bufptr = mystpcpy(bufptr, tbuf);
 	}
+
 	for (ban = chptr->invexlist; ban; ban = ban->next)
 	{
-		*bufptr++ = '\'';
-		strcpy(bufptr, ban->banstr);
-		bufptr += strlen(bufptr);
-		*bufptr++ = ' ';
-		n++;
-		if (bufptr - buf > BUFSIZE - 80)
+		p = tbuf;
+		*p++ = '\'';
+		p = mystpcpy(p, ban->banstr);
+		*p++ = ' ';
+		*p = '\0';
+		
+		/* this is: if (strlen(tbuf) + strlen(buf) > BUFSIZE - 8) */
+		if ((p - tbuf) + (bufptr - buf) > BUFSIZE - 8)
 		{
-			*bufptr++ = '\0';
-			if (bufptr[-1] == ' ')
-				bufptr[-1] = '\0';
+			/* Would overflow, so send our current stuff right now (except new stuff) */
 			sendto_one(cptr, "%s", buf);
-
-			strcpy(buf, bbuf);
-			n = 0;
-
-			bufptr = buf + strlen(buf);
+			bufptr = buf + prebuflen;
+			*bufptr = '\0';
 		}
-
+		/* concat our stuff.. */
+		bufptr = mystpcpy(bufptr, tbuf);
 	}
 
-	if (n)
-	{
-		*bufptr++ = '\0';
-		if (bufptr[-1] == ' ')
-			bufptr[-1] = '\0';
+	if (buf[prebuflen])
 		sendto_one(cptr, "%s", buf);
-	}
 }
 
 void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, char *param) {

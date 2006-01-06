@@ -947,3 +947,7 @@
   oper privileges on quarantined servers will be instantly killed. Bit ugly perhaps, but
   then it actually does what it should (prevent opers on quarantine from getting GLOBAL
   oper privileges). This "fixes" #2510, #2163 and #1968.
+- Fixes for an amd64 crash problem, reported by Peter Laur (OpenBSD.se).
+- Redid some net synching code to make it more efficient (#2716).
+- Fixed spamfilter crash problem: the action 'viruschan' is now no longer incompatible
+  with target 'user'. Reported by Monk (#0002570).

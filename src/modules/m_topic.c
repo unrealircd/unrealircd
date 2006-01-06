@@ -248,7 +248,7 @@ DLLFUNC CMD_FUNC(m_topic)
 				Hook *tmphook;
 				int n;
 				
-				if ((n = dospamfilter(sptr, topic, SPAMF_TOPIC, chptr->chname, 0)) < 0)
+				if ((n = dospamfilter(sptr, topic, SPAMF_TOPIC, chptr->chname, 0, NULL)) < 0)
 					return n;
 
 				for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_TOPIC]; tmphook; tmphook = tmphook->next) {

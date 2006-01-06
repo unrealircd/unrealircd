@@ -105,7 +105,8 @@ void (*tkl_stats)(aClient *cptr, int type, char *para);
 void (*tkl_synch)(aClient *sptr);
 int (*m_tkl)(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 int (*place_host_ban)(aClient *sptr, int action, char *reason, long duration);
-int (*dospamfilter)(aClient *sptr, char *str_in, int type, char *target, int flags);
+int (*dospamfilter)(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
+int (*dospamfilter_viruschan)(aClient *sptr, aTKline *tk, int type);
 
 
 static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
@@ -134,7 +135,7 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 22 */	{"m_tkl", (void *)&m_tkl},
 /* 23 */	{"place_host_ban", (void *)&place_host_ban},
 /* 24 */	{"dospamfilter", (void *)&dospamfilter},
-/* 25 */	{NULL, NULL},
+/* 25 */	{"dospamfilter_viruschan", (void *)&dospamfilter_viruschan},
 /* 26 */	{NULL, NULL},
 /* 27 */	{NULL, NULL},
 /* 28 */	{NULL, NULL}

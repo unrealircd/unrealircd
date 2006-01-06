@@ -84,6 +84,7 @@ DLLFUNC int MOD_UNLOAD(m_nick)(int module_unload)
 }
 
 static char buf[BUFSIZE];
+static char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64];
 
 /*
 ** m_nick
@@ -246,11 +247,10 @@ DLLFUNC CMD_FUNC(m_nick)
 	}
 	if (MyClient(sptr)) /* local client changin nick afterwards.. */
 	{
-		char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64];
 		int xx;
 		ircsprintf(spamfilter_user, "%s!%s@%s:%s",
 			nick, sptr->user->username, sptr->user->realhost, sptr->info);
-		xx = dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0);
+		xx = dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, NULL);
 		if (xx < 0)
 			return xx;
 	}
@@ -832,6 +832,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		NULL,		/*7  set_at */
 		NULL		/*8  reason */
 	};
+	aTKline *savetkl = NULL;
 	ConfigItem_tld *tlds;
 	cptr->last = TStime();
 	parv[0] = sptr->name;
@@ -996,9 +997,21 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			return xx;
 		}
 		find_shun(sptr);
-		xx = find_spamfilter_user(sptr, 0);
-		if (xx < 0)
+
+		/* Technical note regarding next few lines of code:
+		 * If the spamfilter matches, depending on the action:
+		 *  If it's block/dccblock/whatever the retval is -1 ===> we return, client stays "locked forever".
+		 *  If it's kill/tklline the retval is -2 ==> we return with -2 (aka: FLUSH_BUFFER)
+		 *  If it's action is viruschan the retval is -5 ==> we continue, and at the end of this return
+		 *    take special actions. We cannot do that directly here since the user is not fully registered
+		 *    yet (at all).
+		 *  -- Syzop
+		 */
+		ircsprintf(spamfilter_user, "%s!%s@%s:%s", sptr->name, sptr->user->username, sptr->user->realhost, sptr->info);
+		xx = dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, &savetkl);
+		if ((xx < 0) && (xx != -5))
 			return xx;
+
 		RunHookReturnInt(HOOKTYPE_PRE_LOCAL_CONNECT, sptr, !=0);
 	}
 	else
@@ -1151,7 +1164,6 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			    sptr->name,
 			    (IsToken(nsptr->from) ? TOK_PRIVATE : MSG_PRIVATE),
 			    NickServ, SERVICES_NAME, sptr->passwd);
-		/* Force the user to join the given chans -- codemastr */
 		if (buf[0] != '\0' && buf[1] != '\0')
 			sendto_one(cptr, ":%s MODE %s :%s", cptr->name,
 			    cptr->name, buf);
@@ -1160,6 +1172,13 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 				me.name, sptr->name, get_snostr(user->snomask));
 		strcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost));
 
+		/* NOTE: Code after this 'if (savetkl)' will not be executed for quarantined-
+		 *       virus-users. So be carefull with the order. -- Syzop
+		 */
+		if (savetkl)
+			return dospamfilter_viruschan(sptr, savetkl, SPAMF_USER); /* [RETURN!] */
+
+		/* Force the user to join the given chans -- codemastr */
 		for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *) tlds->next) {
 			if (!match(tlds->mask, userhost))
 				break;
@@ -1181,6 +1200,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			};
 			do_cmd(sptr, sptr, "JOIN", 3, chans);
 		}
+		/* NOTE: If you add something here.. be sure to check the 'if (savetkl)' note above */
 	}
 
 	if (MyConnect(sptr) && !BadPtr(sptr->passwd))

@@ -122,7 +122,7 @@ int n;
                 return 0;
         }
 
-    n = dospamfilter(sptr, parv[1], SPAMF_AWAY, NULL, 0);
+    n = dospamfilter(sptr, parv[1], SPAMF_AWAY, NULL, 0, NULL);
     if (n < 0)
         return n;
 

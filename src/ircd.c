@@ -614,7 +614,7 @@ extern TS check_pings(TS currenttime)
 		}
 		if (loop.do_bancheck_spamf_away && IsPerson(cptr) && cptr->user->away)
 		{
-			if (dospamfilter(cptr, cptr->user->away, SPAMF_AWAY, NULL, SPAMFLAG_NOWARN) == FLUSH_BUFFER)
+			if (dospamfilter(cptr, cptr->user->away, SPAMF_AWAY, NULL, SPAMFLAG_NOWARN, NULL) == FLUSH_BUFFER)
 				continue;
 		}
 		/*
