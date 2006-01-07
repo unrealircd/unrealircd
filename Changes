@@ -951,3 +951,4 @@
 - Redid some net synching code to make it more efficient (#2716).
 - Fixed spamfilter crash problem: the action 'viruschan' is now no longer incompatible
   with target 'user'. Reported by Monk (#0002570).
+- Fixed invalid servername in quarantine kill, reported by pinstrate (#0002743).

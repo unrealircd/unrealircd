@@ -2123,7 +2123,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 		  case 'O':
 			  if(sptr->from->flags & FLAGS_QUARANTINE)
 			  {
-			    sendto_serv_butone(NULL, ":%s KILL %s :maintest.test.net (Quarantined: no global oper privileges allowed)", me.name, sptr->name);
+			    sendto_serv_butone(NULL, ":%s KILL %s :%s (Quarantined: no global oper privileges allowed)", me.name, sptr->name, me.name);
 			    return exit_client(cptr, sptr, &me, "Quarantined: no global oper privileges allowed");
 			  }
 			  /* A local user trying to set himself +o/+O is denied here.
