@@ -242,7 +242,7 @@ ILangList *e, *e_next;
  */
 void charsys_addmultibyterange(char s1, char e1, char s2, char e2)
 {
-MBList *m = MyMallocEx(sizeof(m));
+MBList *m = MyMallocEx(sizeof(MBList));
 
 	m->s1 = s1;
 	m->e1 = e1;
