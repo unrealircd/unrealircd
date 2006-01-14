@@ -957,3 +957,5 @@
 - Added new charsys languages: belarussian-w1251 and ukrainian-w1251. Patch provided
   by Bock (#0002724).
 - Fixed memory leak in new resolver.
+- Made the charsys mismatch during linking a warning instead of an error (temp. fix,
+  until a good solution is implemented without false positives).
