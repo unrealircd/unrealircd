@@ -531,6 +531,14 @@ struct hostent *he;
 	return he;
 }
 
+void unreal_free_hostent(struct hostent *he)
+{
+	MyFree(he->h_name);
+	MyFree(he->h_addr_list[0]);
+	MyFree(he->h_addr_list);
+	MyFree(he);
+}
+
 static void unrealdns_freeandremovereq(DNSReq *r)
 {
 	if (r->prev)

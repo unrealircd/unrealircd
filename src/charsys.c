@@ -90,6 +90,7 @@ struct _langlist
 
 /* MUST be alphabetized (first column) */
 static LangList langlist[] = {
+	{ "belarussian-w1251", "blr", LANGAV_ASCII|LANGAV_W1251 },
 	{ "catalan",      "cat", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "chinese",      "chi-s,chi-t,chi-j", LANGAV_GBK },
 	{ "chinese-simp", "chi-s", LANGAV_GBK },
@@ -117,7 +118,9 @@ static LangList langlist[] = {
 	{ "swedish",      "swe", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "swiss-german", "swg", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "turkish",      "tur", LANGAV_ASCII|LANGAV_ISO8859_9 },
+	{ "ukrainian-w1251", "ukr", LANGAV_ASCII|LANGAV_W1251 },
 	{ "windows-1250", "cze-m,pol-m,rum,slo-m,hun",  LANGAV_ASCII|LANGAV_W1250 },
+	{ "windows-1251", "rus,ukr,blr", LANGAV_ASCII|LANGAV_W1251 },
 	{ NULL, NULL, 0 }
 };
 
@@ -472,7 +475,7 @@ char tmp[512], *lang, *p;
 
 void charsys_add_language(char *name)
 {
-char latin1=0, latin2=0, w1250=0, chinese=0;
+char latin1=0, latin2=0, w1250=0, w1251=0, chinese=0;
 
 	/** Note: there could well be some characters missing in the lists below.
 	 *        While I've seen other altnernatives that just allow pretty much
@@ -493,6 +496,8 @@ char latin1=0, latin2=0, w1250=0, chinese=0;
 		latin2 = 1;
 	else if (!strcmp(name, "windows-1250"))
 		w1250 = 1;
+	else if (!strcmp(name, "windows-1251"))
+		w1251 = 1;
 	else if (!strcmp(name, "chinese") || !strcmp(name, "gbk"))
 		chinese = 1;
 	
@@ -603,13 +608,29 @@ char latin1=0, latin2=0, w1250=0, chinese=0;
 	}
 
 	/* [windows 1251] */
-	if (!strcmp(name, "russian-w1251"))
+	if (w1251 || !strcmp(name, "russian-w1251"))
 	{
 		/* supplied by Roman Parkin:
 		 * 128-159 and 223-254
 		 */
 		charsys_addallowed("ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞßàáâãäåæçèéêëìíîïğñòóôõö÷øùúûüışÿ¨¸");
 	}
+	
+	if (w1251 || !strcmp(name, "belarussian-w1251"))
+	{
+		/* supplied by Anton Samets & ss:
+		 * 128-159, 161, 162, 178, 179 and 223-254
+		 */
+		charsys_addallowed("ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞßàáâãäåæçèéêëìíîïğñòóôõö÷øùúûüışÿ¨¸¡¢²³");
+	}	
+	
+	if (w1251 || !strcmp(name, "ukrainian-w1251"))
+	{
+		/* supplied by Anton Samets & ss:
+		 * 128-159, 170, 175, 178, 179, 186, 191 and 223-254
+		 */
+		charsys_addallowed("ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞßàáâãäåæçèéêëìíîïğñòóôõö÷øùúûüışÿ¨¸²³ªº¯¿");
+	}	
 
 	/* [GREEK] */	
 	if (!strcmp(name, "greek"))
