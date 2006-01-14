@@ -596,6 +596,9 @@ A table of all possible choices:<br>
 <tr><td>greek</td><td>Greek characters</td><td>iso8859-7</td></tr>
 <tr><td>turkish</td><td>Turkish characters</td><td>iso8859-9</td></tr>
 <tr><td>russian-w1251</td><td>Russian characters</td><td>windows-1251</td></tr>
+<tr><td>belarussian-w1251</td><td>Belarussian characters</td><td>windows-1251</td></tr>
+<tr><td>ukrainian-w1251</td><td>Ukrainian characters</td><td>windows-1251</td></tr>
+<tr><td><b>windows-1251</b></td><td>russian-w1251, belarussian-w1251, ukrainian-w1251</td><td>windows-1251</td></tr>
 <tr><td>hebrew</td><td>Hebrew characters</td><td>iso8859-8-I/windows-1255</td></tr>
 <tr><td>chinese-simp</td><td>Simplified Chinese</td><td>Multibyte: GBK/GB2312</td></tr>
 <tr><td>chinese-trad</td><td>Tradditional Chinese</td><td>Multibyte: GBK</td></tr>
@@ -615,6 +618,10 @@ and IRCd standards that cannot be solved anytime soon. People should be aware of
 Note that this limitation has always also been applied to channels, in which nearly all characters were always
 permitted and US-ASCII casemapping was always performed.</p>
 <p>NOTE 3: The basic nick characters (a-z A-Z 0-9 [ \ ] ^ _ - { | }) are always allowed/included.</p>
+<p>NOTE 4: When using charset groups (eg: latin1; latin2;), you may have difficulties linking mixed
+ server versions (for example, when upgrading). For the moment you are therefore suggested to use
+ the individual languages instead (eg: catalan; danish; dutch; french; etc) or to always upgrade
+ all servers at the same time.</p>
 
 Example 1, for people of western europe:<br>
 <pre>set { allowed-nickchars { latin1; }; };</pre>

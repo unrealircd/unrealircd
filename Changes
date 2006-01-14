@@ -954,3 +954,6 @@
 - Fixed invalid servername in quarantine kill, reported by pinstrate (#0002743).
 - Fixed bug in chinese-* charset implementation that would cause crashes, reported
   and patch supplied by Xuefer (#0002744).
+- Added new charsys languages: belarussian-w1251 and ukrainian-w1251. Patch provided
+  by Bock (#0002724).
+- Fixed memory leak in new resolver.
