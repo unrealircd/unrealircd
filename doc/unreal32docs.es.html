@@ -633,6 +633,9 @@ Aqu&iacute; tiene una tabla con todas las posibilidades:<br>
 <tr><td>greek</td><td>Caracteres griegos</td><td>iso8859-7</td></tr>
 <tr><td>turkish</td><td>Caracteres turcos</td><td>iso8859-9</td></tr>
 <tr><td>russian-w1251</td><td>Caracteres rusos</td><td>windows-1251</td></tr>
+<tr><td>belarussian-w1251</td><td>Caracteres bielorusos</td><td>windows-1251</td></tr>
+<tr><td>ukrainian-w1251</td><td>Caracteres ucrainianos</td><td>windows-1251</td></tr>
+<tr><td><b>windows-1251</b></td><td>russian-w1251, belarussian-w1251, ukrainian-w1251</td><td>windows-1251</td></tr>
 <tr><td>hebrew</td><td>Caracteres hebreos</td><td>iso8859-8-I/windows-1255</td></tr>
 <tr><td>chinese-simp</td><td>Chino simple</td><td>Multibyte: GBK/GB2312</td></tr>
 <tr><td>chinese-trad</td><td>Chino tradicional</td><td>Multibyte: GBK</td></tr>
@@ -652,6 +655,9 @@ e IRCd sigue el estándar puesto que no puede solucionarse de pronto. Tengan cuid
 Note que esta limitaci&oacute;n se aplica siempre a los canales, que normalmente se permiten y el 
 US-ASCII se reforma.</p>
 <p>Nota 3: Los caracteres b&aacute;sicos para nicks (a-z A-Z 0-9 [ \ ] ^ _ - { | }) siempre se permiten y se incluyen de forma predeterminada.</p>
+<p>Nota 4: Cuando se usa un grupo de caracteres (ej: latin1; latin2;), puede observar ciertas dificultades al linkar servidores con versiones mixtas 
+ por ejemplo cuando se actualizan. Por el momento, se recomienda usar lenguajes individuales (ej: catalan; danish, dutch; french; etc) o actualizar 
+ los servidores al mismo tiempo.</p>
 
 Ejemplo 1, para gente del oeste de europa:<br>
 <pre>set { allowed-nickchars { latin1; }; };</pre>
