@@ -959,3 +959,4 @@
 - Fixed memory leak in new resolver.
 - Made the charsys mismatch during linking a warning instead of an error (temp. fix,
   until a good solution is implemented without false positives).
+- Crashbug fix for above
