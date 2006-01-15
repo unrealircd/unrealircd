@@ -734,6 +734,7 @@ static int check_init(aClient *cptr, char *sockn, size_t size)
 	if (inet_netof(sk.SIN_ADDR) == IN_LOOPBACKNET)
 #endif
 	{
+		unreal_free_hostent(cptr->hostp);
 		cptr->hostp = NULL;
 		strncpyzt(sockn, "localhost", HOSTLEN);
 	}
