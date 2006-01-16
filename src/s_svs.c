@@ -417,15 +417,15 @@ int ret;
 					aChannel *chptr;
 					if ((chptr = find_channel(format->nick, NULL)))
 					{
-						if (!can_send(sptr, chptr, parv[1], 0))
+						if (!can_send(sptr, chptr, output, 0))
 						{
-							if (alias->spamfilter && (ret = dospamfilter(sptr, parv[1], SPAMF_CHANMSG, chptr->chname, 0, NULL)) < 0)
+							if (alias->spamfilter && (ret = dospamfilter(sptr, output, SPAMF_CHANMSG, chptr->chname, 0, NULL)) < 0)
 								return ret;
 							sendto_channelprefix_butone_tok(sptr,
 							    sptr, chptr,
 							    PREFIX_ALL, MSG_PRIVATE,
 							    TOK_PRIVATE, chptr->chname,
-							    parv[1], 0);
+							    output, 0);
 							return 0;
 						}
 					}
