@@ -1205,8 +1205,13 @@ int InitwIRCD(int argc, char *argv[])
 	}
 #endif
 
+	/* HACK! This ifndef should be removed when the restart-on-w32-brings-up-dialog bug
+	 * is fixed. This is just an ugly "ignore the invalid parameter" thing ;). -- Syzop
+	 */
+#ifndef _WIN32
 	if (argc > 0)
 		return bad_command();	/* This should exit out */
+#endif
 #ifndef _WIN32
 	fprintf(stderr, "%s", unreallogo);
 	fprintf(stderr, "                           v%s\n", VERSIONONLY);

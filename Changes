@@ -962,3 +962,5 @@
 - Crashbug fix for above
 - Fixed some more memleaks, thanks to valgrind.
 - Updated the list of donators.
+- Fixed (well, workaround) win32 /RESTART bug that caused it to popup a window instead
+  of actually restarting the server properly (#0002734).
