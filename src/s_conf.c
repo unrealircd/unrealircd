@@ -938,8 +938,9 @@ ConfigFile *config_load(char *filename)
 	}
 	if (!sb.st_size)
 	{
-		close(fd);
-		return NULL;
+		/* Workaround for empty files */
+		cfptr = config_parse(filename, " ");
+		return cfptr;
 	}
 	buf = MyMalloc(sb.st_size+1);
 	if (buf == NULL)

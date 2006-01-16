@@ -977,3 +977,4 @@
   as well (see docs) or else you will hit that limit first.
 - Changed the default maxbanlength from 1K to 2K, which means people can set more bans because
   in pracitce the 60 (maxbans) limit was never met because the maxbanlimit was set so low.
+- Empty (but existing) include files no longer cause an error. Reported by w00t (#0002460).
