@@ -2141,6 +2141,11 @@ spamfilter {
 <p><font class="set">set::silence-limit &lt;limit&gt;;</font><br>
   D&eacute;fini le maximum d'entr&eacute;es dans la SILENCE list. 
   Si la directive n'est pas sp&eacute;cifi&eacute;e, une limite de 15 sera appliqu&eacute;e.</p>
+<p><font class="set">set::maxbans &lt;limit&gt;;</font><br>
+  Fixe un limite pour le nombre maximum de ban (+b) autorisés par salon. La valeur par d&eacute;faut est 60.
+  Si vous la chang&eacute;, prennez &eacute;galement attention au maxbanlength (voir ci-apr&egrave;s)!</p>
+<p><font class="set">set::maxbanlength &lt;limit&gt;;</font><br>
+  Similaire &agrave; au pr&eacute;c&eacute;dent, mais fixe le nombre maximum de caract&egrave;res pour tous les bans ajoutés l'un &agrave; l'autre, donc pratiquement, ceci fixe une limite sur la quantit&eacute; (semi-)maximum de m&eacute;moire que tous les bans sur un salon peuvent prendre. La valeur par d&eacute;faut est 2048 (bytes). Avec une valeur par d&eacute;faut pour le set::maxbans de 60 ceci permet 2048:60=34 caract&egrave;res par ban en moyenne.</p>
 <p><font class="set">set::oper-only-stats &lt;stats-list&gt;;</font><br>
   Sp&eacute;cifie une liste de flags stats sans s&eacute;parateur qui d&eacute;fini les flags stats 
   que seuls les op&eacute;rateurs pourront utiliser. Ne donnez pas de valeur si vous 
