@@ -964,3 +964,8 @@
 - Updated the list of donators.
 - Fixed (well, workaround) win32 /RESTART bug that caused it to popup a window instead
   of actually restarting the server properly (#0002734).
+- If you now use /(G)ZLINE usermask@something instead of /(G)ZLINE *@something you get
+  an error, since specifying usermask should not be done and is useless, since a (G)ZLINE
+  takes place BEFORE ident lookups.
+- Did the same for /(G)ZLINE *@hostmask (should be *@ipmask), this already was a warning
+  in 3.2.3, and is an error now in 3.2.4.

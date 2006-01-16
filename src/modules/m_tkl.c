@@ -537,14 +537,23 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 		if (((*type == 'z') || (*type == 'Z')) && !whattodo)
 		{
 			/* It's a (G)ZLINE, make sure the user isn't specyfing a HOST.
-			 * Just a warning for now, but perhaps in 3.2.4 we should make this an error.
+			 * Just a warning in 3.2.3, but an error in 3.2.4.
 			 */
+			if (strcmp(usermask, "*"))
+			{
+				sendnotice(sptr, "ERROR: (g)zlines must be placed at \037*\037@ipmask, not \037user\037@ipmask. This is "
+				                 "because (g)zlines are processed BEFORE dns and ident lookups are done. "
+				                 "If you want to use usermasks, use a KLINE/GLINE instead.");
+				return -1;
+			}
 			for (p=hostmask; *p; p++)
 				if (isalpha(*p))
 				{
-					sendnotice(sptr, "WARNING: (g)zlines should be placed on user@IPMASK, not user@hostmask "
-					                 "(this is because (g)zlines are processed BEFORE a dns lookup is done)");
-					break;
+					sendnotice(sptr, "ERROR: (g)zlines must be placed at *@\037IPMASK\037, not *@\037HOSTMASK\037 "
+					                 "(so for example *@192.168.* is ok, but *@*.aol.com is not). "
+					                 "This is because (g)zlines are processed BEFORE dns and ident lookups are done. "
+					                 "If you want to use hostmasks instead of ipmasks, use a KLINE/GLINE instead.");
+					return -1;
 				}
 		}
 		/* set 'p' right for later... */
