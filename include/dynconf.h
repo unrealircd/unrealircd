@@ -146,6 +146,8 @@ struct zConfiguration {
 	char spamfilter_vchan_deny;
 	SpamExcept *spamexcept;
 	char *spamexcept_line;
+	int maxbans;
+	int maxbanlength;
 	aNetwork network;
 };
 
@@ -248,6 +250,9 @@ extern MODVAR aConfiguration iConf;
 #define SPAMFILTER_VIRUSCHANDENY	iConf.spamfilter_vchan_deny
 #define SPAMFILTER_EXCEPT		iConf.spamexcept_line
 #define CHECK_TARGET_NICK_BANS	iConf.check_target_nick_bans
+
+#define MAXBANS		iConf.maxbans
+#define MAXBANLENGTH	iConf.maxbanlength
 
 /* Used for duplicate checking */
 struct SetCheck {

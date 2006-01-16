@@ -177,8 +177,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	BUFSIZE		512	/* WARNING: *DONT* CHANGE THIS!!!! */
 #define	MAXRECIPIENTS 	20
 #define	MAXKILLS	20
-#define	MAXBANS		60
-#define	MAXBANLENGTH	1024
 #define	MAXSILELENGTH	NICKLEN+USERLEN+HOSTLEN+10
 #define UMODETABLESZ (sizeof(long) * 8)
 /*

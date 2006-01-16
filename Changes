@@ -972,3 +972,9 @@
 - Little /STATS v tweak: should display 'v' in output, not 'V'. Reported by Robby22 (#2700).
 - Fixed complex command aliases not working properly, patch from Nazzy (#2722).
 - Made it so banned users cannot change the topic, suggested by aquanight and Stealth (#2233).
+- Made the "max bans per channel" setting dynamic. This can be changed by setting
+  set::maxbans in the configfile, note that you probably also want to enlarge set::maxbanlength
+  as well (see docs) or else you will hit that limit first.
+- Changed the default maxbanlength from 1K to 2K, which in practice will mean people can set
+  a lot more bans since in practice the 60 (maxbans) limit was never met because the
+  maxbanlimit was set so low.

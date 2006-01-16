@@ -2211,6 +2211,14 @@ set {
 <p><font class="set">set::silence-limit &lt;limit&gt;;</font><br>
   Sets the limit on the maximum SILENCE list entries. If this directive is not specified,
   a limit of 15 is set.</p>
+<p><font class="set">set::maxbans &lt;limit&gt;;</font><br>
+  Sets the limit on the maximum amount of bans (+b) allowed per channel. The default is 60.
+  If you change this, be sure to also take a look at maxbanlength (see next)!</p>
+<p><font class="set">set::maxbanlength &lt;limit&gt;;</font><br>
+  Similar to above, but sets the maximum amount of characters for all bans added up
+  together, so basically this puts up a limit on the (semi-)maximum amount of memory
+  all channel bans on a channel can take. The default is 2048 (bytes). With the default
+  set::maxbans of 60 this allows 2048:60=34 characters per ban on average.</p>
 <p><font class="set">set::oper-only-stats &lt;stats-list&gt;;</font><br>
   Specifies a list of stats flags with no separators that defines stats flags 
   only opers can use. Leave this value out to allow users to use all flags, or 
