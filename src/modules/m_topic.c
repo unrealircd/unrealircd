@@ -241,7 +241,14 @@ DLLFUNC CMD_FUNC(m_topic)
 
 #endif
 				}
-			}				
+			} else
+			if (MyClient(sptr) && !is_chan_op(sptr, chptr) && !is_halfop(sptr, chptr) && is_banned(sptr, chptr, BANCHK_MSG))
+			{
+				char buf[512];
+				ircsprintf(buf, "You cannot change the topic on %s while being banned", chptr->chname);
+				sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.name, parv[0], "TOPIC",  buf);
+				return -1;
+			}
 			/* ready to set... */
 			if (MyClient(sptr))
 			{

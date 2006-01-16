@@ -971,3 +971,4 @@
   in 3.2.3, and is an error now in 3.2.4.
 - Little /STATS v tweak: should display 'v' in output, not 'V'. Reported by Robby22 (#2700).
 - Fixed complex command aliases not working properly, patch from Nazzy (#2722).
+- Made it so banned users cannot change the topic, suggested by aquanight and Stealth (#2233).
