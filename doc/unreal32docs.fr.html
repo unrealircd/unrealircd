@@ -578,6 +578,7 @@ Certains modules peuvent ajouter d'autres types de ban &eacute;tendus.<br>
   <table border="1">
   <tr><td><b>Nom:</b></td><td><b>Description:</b></td><td><b>Jeu de caract&egrave;res /encodage:</b></td></tr>
   <tr><td>catalan</td><td>Caract&egrave;res catalans</td><td>iso8859-1 (latin1)</td></tr>
+  <tr><td>danish</td><td>Caract&egrave;res danois</td><td>iso8859-1 (latin1)</td></tr>
   <tr><td>dutch</td><td>Caract&egrave;res n&eacute;erlandais</td><td>iso8859-1 (latin1)</td></tr>
   <tr><td>french</td><td>Caract&egrave;res fran&ccedil;ais</td><td>iso8859-1 (latin1)</td></tr>
   <tr><td>german</td><td>Caract&egrave;res allemands</td><td>iso8859-1 (latin1)</td></tr>
@@ -586,7 +587,7 @@ Certains modules peuvent ajouter d'autres types de ban &eacute;tendus.<br>
   <tr><td>italian</td><td>Caract&egrave;res italiens</td><td>iso8859-1 (latin1)</td></tr>
   <tr><td>spanish</td><td>Caract&egrave;res espagnols</td><td>iso8859-1 (latin1)</td></tr>
   <tr><td>swedish</td><td>Caract&egrave;res su&eacute;dois</td><td>iso8859-1 (latin1)</td></tr>
-  <tr><td><b>latin1</b></td><td>N&eacute;erlandais, fran&ccedil;ais, allemand, suisse-allemand, espagnol, 
+  <tr><td><b>latin1</b></td><td>N&eacute;erlandais, fran&ccedil;ais, danois, allemand, suisse-allemand, espagnol, 
   catalan,islandais,italien, su&eacute;dois</td><td>iso8859-1 (latin1)</td></tr>
   <tr><td>hungarian</td><td>Caract&egrave;res hongrois</td><td>iso8859-2 (latin2), windows-1250</td></tr>
   <tr><td>polish</td><td>Caract&egrave;res polonais</td><td>iso8859-2 (latin2)</td></tr>
@@ -599,6 +600,9 @@ Certains modules peuvent ajouter d'autres types de ban &eacute;tendus.<br>
   <tr><td>greek</td><td>Caract&egrave;res grecques</td><td>iso8859-7</td></tr>
   <tr><td><b>turkish</b></td><td>Caract&egrave;res turques</td><td>iso8859-9</td></tr>
   <tr><td>russian-w1251</td><td>Caract&egrave;res russes</td><td>windows-1251</td></tr>
+  <tr><td>belarussian-w1251</td><td>Caract&egrave;res belarusses</td><td>windows-1251</td></tr>
+  <tr><td>ukrainian-w1251</td><td>Caract&egrave;res ukrainiens</td><td>windows-1251</td></tr>
+  <tr><td><b>windows-1251</b></td><td>russian-w1251, belarussian-w1251, ukrainian-w1251</td><td>windows-1251</td></tr>
   <tr><td>hebrew</td><td>Caract&egrave;res hébreux</td><td>iso8859-8-I/windows-1255</td></tr>
   <tr><td>chinese-simp</td><td>Chinois simplifi&eacute;</td><td>Multibyte: GBK/GB2312</td></tr>
   <tr><td>chinese-trad</td><td>Chinois traditionnel</td><td>Multibyte: GBK</td></tr>
@@ -606,11 +610,15 @@ Certains modules peuvent ajouter d'autres types de ban &eacute;tendus.<br>
   <tr><td><b>chinese</b></td><td>Chinois-*</td><td>Multibyte: GBK</td></tr>
   <tr><td><b>gbk</b></td><td>Chinois-*</td><td>Multibyte: GBK</td></tr>
   </table>
-  Notez s'il vous pla&icirc;t que certaines combinaisons peuvent poser des probl&egrave;mes.
+  <p>Note 1 : Notez s'il vous pla&icirc;t que certaines combinaisons peuvent poser des probl&egrave;mes.
   Par exemple, combiner latin* et chinese-* ne pourra &ecirc;tre support&eacute; par l'IRCd et
   UnrealIRCd affichera une erreur.
   Mixer d'autres charsets pourra poser des probl&egrave;mes d'affichage, donc Unreal affichera un 
-  message d'avertissement si vous essayez de mixer latin1/latin2/greek.<br><br>
+  message d'avertissement si vous essayez de mixer latin1/latin2/greek/autres groupes incompatibles.</p>
+  <p>NOTE 2 : Le casemapping (si certains caract&egrave;res minuscules se rapportent &agrave; un caract&egrave;re grave) est fait en accord avec l'US-ASCII, ceci signifique que o" et O" ne seront pas reconnu comme le 'm&ecirc;me caract&egrave;re' et par cons&eacute;quent quelqu'un peut avoir un pseudo avec B"ar et quelqu'un d'autre BA"r au m&ecirc;me moment. Ceci est une limitation du syst&egrave;me courant et des IRCds standards que ne pourra &ecirc;tre r&eacute;solu pour l'instant. Les gens doivent &ecirc;tre au courant de cette limitation. Notez que cette limitation a toujours &eacute;t&eacute; appliqu&eacute;e aux salons sur lesquels presque tous les symboles permis par le casemapping US-ASCII fonctionnaient.</p>
+  <p>NOTE 3 : Les caract&egrave;res basiques de pseudo (a-z A-Z 0-9 [ \ ] ^ _ - { | }) sont toujours permis/inclus.</p>
+  <p>NOTE 4 : Lorsque vous utilisez les charsets 'groupes' (ex. latin1; latin2;), vous pourriez avoir des difficult&eacute;s &agrave; linker des versions de serveurs diff&eacute;rantes (par exemple, lors de mises &agrave; jour). Pour le moment, il vous est conseill&eacute; de plut&ocirc;t utiliser des languages individuels (ex. catalan; danish; dutch; french; etc) ou de toujours mettre &agrave; jour tous les serveurs en m&ecirc;me temps.</p>
+  
   	 
   Exemple 1, pour les personnes d'Europe de l'ouest:<br>
   <pre>set { allowed-nickchars {  latin1; }; };</pre>
