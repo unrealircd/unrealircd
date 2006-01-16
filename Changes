@@ -975,6 +975,5 @@
 - Made the "max bans per channel" setting dynamic. This can be changed by setting
   set::maxbans in the configfile, note that you probably also want to enlarge set::maxbanlength
   as well (see docs) or else you will hit that limit first.
-- Changed the default maxbanlength from 1K to 2K, which in practice will mean people can set
-  a lot more bans since in practice the 60 (maxbans) limit was never met because the
-  maxbanlimit was set so low.
+- Changed the default maxbanlength from 1K to 2K, which means people can set more bans because
+  in pracitce the 60 (maxbans) limit was never met because the maxbanlimit was set so low.
