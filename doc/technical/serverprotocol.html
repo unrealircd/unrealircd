@@ -276,7 +276,7 @@
 :OperServ BW someuser +ks</pre>
 		<h2><a name="S6_4"></a>6.4 SVSNICK - Forced Nick Change (TOKEN: e)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> e <i>target</i> <i>newnick</i> :<i>newtimestamp</i></tt></p>
-		<p>Forces the specified user to change his nick to newnick and also sets the nick timestamp to newtimestamp (so, for example, services could protect identified users from a nick collision by simply setting the nick timestamp to something way less than "now"). SVSNICK requires the server to which the target is connected to acknowledge the nick change. If the user specified by newnick already exists, then target will be disconnected.</p>
+		<p>Forces the specified user to change his nick to newnick and also sets the nick timestamp to newtimestamp (so, for example, services could protect identified users from a nick collision by simply setting the nick timestamp to something way less than "now" - though currently this requires actually changing the nick too). SVSNICK requires the server to which the target is connected to acknowledge the nick change. If the user specified by newnick already exists, then target will be disconnected (even if it's something like a case-change).</p>
 		<h2><a name="S6_5"></a>6.5 SVSJOIN - Forced Join (TOKEN: BX)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> BX <i>target</i> <i>#channel</i></tt></p>
 		<p>This is identical to SAJOIN with a few exceptions: 1) It is U:Line-only. 2) No opernotice on use. 3) Bans and restricting modes are respected, a prior INVITE message must be sent to cause bans to be ignored.</p>
