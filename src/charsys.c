@@ -107,7 +107,7 @@ static LangList langlist[] = {
 	{ "hungarian",    "hun", LANGAV_ASCII|LANGAV_LATIN2W1250 },
 	{ "icelandic",    "ice", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "italian",      "ita", LANGAV_ASCII|LANGAV_LATIN1 },
-	{ "latin1",       "cat,dan,dut,fre,ger,ita,spa,swe", LANGAV_ASCII|LANGAV_LATIN1 },
+	{ "latin1",       "cat,dut,fre,ger,ita,spa,swe", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "latin2",       "hun,pol,rum", LANGAV_ASCII|LANGAV_LATIN2 },
 	{ "polish",       "pol", LANGAV_ASCII|LANGAV_LATIN2 },
 	{ "polish-w1250", "pol-m", LANGAV_ASCII|LANGAV_W1250 },
