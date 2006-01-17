@@ -598,6 +598,9 @@ Egy táblázat az összes választási lehetõségrõl:<br>
 <tr><td>greek</td><td>Görög karakterek</td><td>iso8859-7</td></tr>
 <tr><td>turkish</td><td>Török karakterek</td><td>iso8859-9</td></tr>
 <tr><td>russian-w1251</td><td>Orosz karakterek</td><td>windows-1251</td></tr>
+<tr><td>belarussian-w1251</td><td>Fehérorosz karakterek</td><td>windows-1251</td></tr>
+<tr><td>ukrainian-w1251</td><td>Ukrán karakterek</td><td>windows-1251</td></tr>
+<tr><td><b>windows-1251</b></td><td>russian-w1251, belarussian-w1251, ukrainian-w1251</td><td>windows-1251</td></tr>
 <tr><td>hebrew</td><td>Héber karakterek</td><td>iso8859-8-I/windows-1255</td></tr>
 <tr><td>chinese-simp</td><td>Egyszerûsített kínai</td><td>Több-bájtos: GBK/GB2312</td></tr>
 <tr><td>chinese-trad</td><td>Hagyományos kínai</td><td>Több-bájtos: GBK</td></tr>
@@ -617,6 +620,10 @@ lehet valakinek a nickje B"ar, és egyidõben egy másiknak BA"r. Ez egy korlátozás
 Megjegyzendõ, hogy ez a korlátozás csatornákra is vonatkozott, amikben mindig közel minden karakter
 engedélyezett volt, és mindig US-ASCII kis- és nagybetû leképezés volt végrehajtva.</p>
 <p>3. MEGJEGYZÉS: Az alapvetõ nickbeli karakterek (a-z A-Z 0-9 [ \ ] ^ _ - { | }) mindig megengedettek/beleszámítanak a karakterkészletbe.</p>
+<p>4. MEGJEGYZÉS: Karakterkészlet-csoportok használatakor (pl.: latin1; latin2;), nehézségek adódhatnak különbözõ
+ verziójú szerverek linkelésével (például frissítéskor). Pillanatnyilag emiatt javasolt, hogy az
+ egyes nyelveket használjuk helyettük (pl.: catalan; danish; dutch; french; stb.), vagy hogy mindig egyidejûleg
+ frissítsük az összes szervert.</p>
 
 1. Példa: nyugat-európai népeknek:<br>
 <pre>set { allowed-nickchars { latin1; }; };</pre>
@@ -1946,7 +1953,8 @@ link &lt;szervernév&gt; {
  gazdanevek (például dyndns.org) esetén.</td></tr>
 <tr><td><b>nohostcheck</b></td><td> ne érvényesítse a távoli gazdanevet (link::hostname); használd ezt gyakran változó
  gazdanevek (például dyndns.org) esetén.</td></tr>
-<tr><td><b>quarantine</b></td><td> az operátorok ezen a szerveren helyi operátorokként funkcionálnak</td></tr>
+<tr><td><b>quarantine</b></td><td> a szerver operátorai nem kaphatnak GLOBÁLIS jogosultságokat
+(ki lesznek lõve), teszt linkekre meg hasonlókra szokás használni</td></tr>
 </table>
 </p>
 <p>Példa:</p>
