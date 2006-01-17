@@ -28,7 +28,7 @@ English | <a href="unreal32docs.de.html">German</a> |
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2.3</font><br>
-  <b>Last doc update:</b> 2005-10-11</div>
+  <b>Last doc update:</b> 2006-01-17</div>
 <br>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -618,10 +618,6 @@ and IRCd standards that cannot be solved anytime soon. People should be aware of
 Note that this limitation has always also been applied to channels, in which nearly all characters were always
 permitted and US-ASCII casemapping was always performed.</p>
 <p>NOTE 3: The basic nick characters (a-z A-Z 0-9 [ \ ] ^ _ - { | }) are always allowed/included.</p>
-<p>NOTE 4: When using charset groups (eg: latin1; latin2;), you may have difficulties linking mixed
- server versions (for example, when upgrading). For the moment you are therefore suggested to use
- the individual languages instead (eg: catalan; danish; dutch; french; etc) or to always upgrade
- all servers at the same time.</p>
 
 Example 1, for people of western europe:<br>
 <pre>set { allowed-nickchars { latin1; }; };</pre>

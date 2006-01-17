@@ -980,3 +980,4 @@
 - Empty (but existing) include files no longer cause an error. Reported by w00t (#0002460).
 - Nick Character System: Silently not advertising danish if using latin1, circumventing link
   problems if using latin1.
+- Removed small comment from docs, which no longer applies (sorry translators ;p).
