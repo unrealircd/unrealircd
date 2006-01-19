@@ -986,3 +986,4 @@
 - Updated unrealinst.iss: made it easier for me to have 2 curl versions, this is so we can
   ship the SSL version of unreal with a curl that supports SSL (https, etc).
 - Preperations for pre-1 (version change, etc)
+- Update wircd.def (for developers).
