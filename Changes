@@ -982,3 +982,7 @@
   problems if using latin1.
 - Removed small comment from docs, which no longer applies (sorry translators ;p).
 - Updated /CREDITS (forums/mainsite hosting and update of current active supporters).
+- Updated makefile.win32: apparently libcurl.dll is now libcurl_imp.dll (import library)
+- Updated unrealinst.iss: made it easier for me to have 2 curl versions, this is so we can
+  ship the SSL version of unreal with a curl that supports SSL (https, etc).
+- Preperations for pre-1 (version change, etc)
