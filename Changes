@@ -981,3 +981,4 @@
 - Nick Character System: Silently not advertising danish if using latin1, circumventing link
   problems if using latin1.
 - Removed small comment from docs, which no longer applies (sorry translators ;p).
+- Updated /CREDITS (forums/mainsite hosting and update of current active supporters).
