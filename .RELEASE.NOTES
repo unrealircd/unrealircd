@@ -36,7 +36,7 @@ Unreal3.2.4 Release Notes
 - Banned users can no longer change the topic
 - Made it so you no longer can change your nick TO a banned one in a channel.
   This option can be turned off by setting set::check-target-nick-bans to "no".
-- Added Bulgarian example.bg.conf
+- Added Bulgarian example.bg.conf and Russian help.ru.conf
 - For services coders: Added doc/technical/serverprotocol.html
 
 ==[ CHANGED ]==
