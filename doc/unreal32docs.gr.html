@@ -321,11 +321,11 @@ name=installation></A>Εγκατάσταση</SPAN></B></P>
     </UL> 
     <UL type=disc> 
       <UL type=circle> 
-        <LI>Linux (2.2.*, 2.4.*, 2.6.*)
-        <LI>FreeBSD (4.*, 5.*)
-		<LI>NetBSD (2.*)
-		<LI>OpenBSD (3.7, 3.8)
-        <LI>Solaris (9, 10) </LI> 
+        <LI>Linux 2.2.x
+        <LI>Linux 2.4.x
+        <LI>FreeBSD 4.6-STABLE
+        <LI>FreeBSD 4.5-STABLE
+        <LI>Solaris 2.x </LI> 
       </UL> 
     </UL> 
     <UL type=disc> 
@@ -333,24 +333,21 @@ name=installation></A>Εγκατάσταση</SPAN></B></P>
     </UL> 
     <UL type=disc> 
       <UL type=circle> 
-        <LI>Windows 2000 (Pro, Server, Advanced Server)
-        <LI>Windows XP (Home, Pro)
-        <LI>Windows 2003
-		</UL>
-		<LI><b> Δοκιμασμένες Αρχιτεκτονικές: </b>
-		<UL>
-		<LI>ia32 (i386, i486, i586, i686)
-		<LI>ia64
-		<LI>amd64
-		<LI>alpha
+        <LI>WindowsXP Home
+        <LI>WindowsXP Pro
+        <LI>Windows 2000 Pro
+        <LI>Windows 2000 Server
+        <LI>Windows 2000 Advanced Server
+        <LI>Windows 98
+        <LI>Windows Me </LI> 
       </UL> 
     </UL> 
     <P><BR> 
       Αν γνωρίζετε οτι το Unreal3.2 λειτουργεί σωστά και σε άλλα λειτουργικά συστήματα, παρακαλούμε στείλτε τις λεπτομέριες στο <A 
 
-href="mailto://coders@lists.unrealircd.org">coders@lists.unrealircd.org<BR> 
+href="mailto://docs@unrealircd.com">docs@unrealircd.com<BR> 
       </A></P> 
-    <P><B>Οδηγείες Εγκατάστασης</B><BR> 
+    <P><B>Installation Instructions</B><BR> 
       Linux:</P> 
     <OL type=1> 
       <LI>gunzip -d Unreal3.2.2.tar.gz
@@ -945,7 +942,7 @@ lang=EN-US>ban </SPAN>βασισμένο στο CIDR σας επιτρέπει να κάνετε ban μια εταιρία
 <tr><td>hungarian</td><td>Χαρακτήρες Ουγγρικών</td><td>iso8859-2 (latin2), windows-1250</td></tr>
  <tr><td>polish</td><td>Χαρακτήρες Πολωνικών</td><td>iso8859-2 (latin2)</td></tr>
 <tr><td>romanian</td><td>Χαρακτήρες Ρουμάνικων</td><td>iso8859-2 (latin2), windows-1250, iso8859-16</td></tr> 
-   <tr><td><b>latin2</b></td><td>Ουγγρικά, Πολωνικά, Ρουμάνικα</td><td>iso8859-2 (latin2)</td></tr> 
+   <tr><td><b>latin2</b></td><td>hungarian, polish, romanian</td><td>iso8859-2 (latin2)</td></tr> 
    <tr><td>polish-w1250</td><td>Χαρακτήρες Πολωνικών, windows variant (unfortunately more common than iso)</td><td>windows-1250</td></tr> 
    <tr><td>slovak-w1250</td><td>Χαρακτήρες Σλοβακικών, windows variant</td><td>windows-1250</td></tr> 
    <tr><td>czech-w1250</td><td>Χαρακτήρες Τσέχικων, windows variant</td><td>windows-1250</td></tr> 
@@ -955,15 +952,9 @@ lang=EN-US>ban </SPAN>βασισμένο στο CIDR σας επιτρέπει να κάνετε ban μια εταιρία
         <td class="Normal">Χαρακτήρες Ελληνικών</td> 
         <td class="Normal">iso8859-7</td> 
       </tr> 
-<tr><td>turkish</td><td>Χαρακτήρες Τούρκικων</td><td>iso8859-9</td></tr> 
-   <tr><td>russian-w1251</td><td>Χαρακτήρες Ρωσσικών</td><td>windows-1251</td></tr> 
-     <tr><td>belarussian-w1251</td><td>Χαρακτήρες Belarussian</td><td>windows-1251</td></tr> 
-   <tr><td>ukrainian-w1251</td><td>Χαρακτήρες Ουκρανικών</td><td>windows-1251</td></tr> 
-   <tr><td><b>windows-1251</b></td><td>russian-w1251, belarussian-w1251, ukrainian-w1251</td><td>windows-1251</td></tr> 
-
-   <tr><td>hebrew</td>
-   <td>Χαρακτήρες Εβραϊκών</td>
-   <td>iso8859-8-I/windows-1255</td></tr> 
+<tr><td>turkish</td><td>Turkish characters</td><td>iso8859-9</td></tr> 
+   <tr><td>russian-w1251</td><td>Russian characters</td><td>windows-1251</td></tr> 
+   <tr><td>hebrew</td><td>Hebrew characters</td><td>iso8859-8-I/windows-1255</td></tr> 
       <tr> 
         <td class="Normal">chinese-simp</td> 
         <td class="Normal">Απλοποιοημένα Κινέζικα</td> 
@@ -2438,7 +2429,7 @@ cellPadding=0 border=0>
         </TR> 
         <TR> 
           <TD class="Normal"> <P><B>quarantine</B></P></TD> 
-          <TD class="Normal"> <P>οι διαχειριστές σε αυτόν τον server δεν μπορούν να αποκτήσουν δικαιώματα GLOBAL διαχειριστή(θα γίνουν KILL), χρησιμοποιείται για δοκιμαστικούς διακομιστές κτλ.</P></TD> 
+          <TD class="Normal"> <P>οι διαχειριστές σε αυτόν τον server θα έχουν τοπικά δικαιώματα μόνο status</P></TD> 
         </TR> 
       </TBODY> 
     </TABLE> 
@@ -2471,12 +2462,11 @@ style="COLOR: blue">ΠΡΟΑΙΡΕΤΙΚΟ</SPAN></B><A name=aliasblock></A> </P>
     alias &lt;name&gt; { 
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; target &lt;nick-to-forward-to&gt;; 
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; type &lt;type-of-alias&gt;; 
-	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; spamfilter &lt;yes|no&gt;;
     };</PRE> 
     <P>(Σημείωση: επίσης δείτε <A 
 
 href="#includedirective">εδώ</A> για τα standard αρχεία alias που περιέχονται στο UnrealIRCd)</P> 
-    <P>Η επιλογή alias [standard alias] σας επιτρέπει να προωθήσετε μια εντολή σε έναν χρήστη, για παράδειγμα /chanserv στέλνει ένα μήνυμα στον χρήστη chanserv. Το alias:: ορίζει το όνομα της εντολής η οποία θα είναι η συντόμευση (π.χ: chanserv), το alias::target είναι το όνομα η το κανάλι στο οποίο θα προωθηθεί το μήνυμα, άν το alias:: είναι το ίδιο με το όνομα, στο οποίο θα προωθηθεί, το alias::target είναι προαιρετικό. Το alias::type ορίζει τον τύπο της συντόμευσης, έγκυροι τύποι είναι services (ο χρήστης είναι στον server των services), stats (ο χρήστης βρίσκεται στον server των stats), normal (ο χρήστης είναι κανονικός χρήστης σε οποιονδήποτε server), και channel (ο στόχος είναι όνομα καναλιού). Αν το alias::spamfilter (μή απαραίτητο) έχει οριστεί σε 'yes', τότε τα spamfilters θα ελέγχονται (η αρχική επιλογή ειναι 'no').<br> Η επιλογή alias έχει επίσης και άλλον έναν σκοπό που εξηγείται λεπτομερώς παρακάτω.</P> 
+    <P>Η επιλογή alias [standard alias] σας επιτρέπει να προωθήσετε μια εντολή σε έναν χρήστη, για παράδειγμα /chanserv στέλνει ένα μήνυμα στον χρήστη chanserv. Το alias:: ορίζει το όνομα της εντολής η οποία θα είναι η συντόμευση (π.χ: chanserv), το alias::target είναι το όνομα η το κανάλι στο οποίο θα προωθηθεί το μήνυμα, άν το alias:: είναι το ίδιο με το όνομα, στο οποίο θα προωθηθεί, το alias::target είναι προαιρετικό. Το alias::type ορίζει τον τύπο της συντόμευσης, έγκυροι τύποι είναι services (ο χρήστης είναι στον server των services), stats (ο χρήστης βρίσκεται στον server των stats), normal (ο χρήστης είναι κανονικός χρήστης σε οποιονδήποτε server), και channel (ο στόχος είναι όνομα καναλιού). Η επιλογή alias έχει ακόμα μια χρήση της οποίας ο σκοπός επεξηγήται παρακάτω.</P> 
     <P>Σύνταξη [command alias]:</P> 
     <PRE>&nbsp; 
     alias &lt;name&gt; { 
@@ -2488,8 +2478,7 @@ href="#includedirective">εδώ</A> για τα standard αρχεία alias που περιέχονται στ
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; format &lt;regex-expression&gt; { 
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ... 
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }; 
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; type command;
-	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; spamfilter &lt;yes|no&gt;; 
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; type command; 
     };</PRE> 
     <P>Όταν η επιλογή alias χρησιμοποιείται με αυτήν την μορφή, σας επιτρέπει να έχετε μια πιο ευρεία περιοχή χρήσης. Για παράδειγμα μπορείτε να δημιουργήσετε συντομεύσεις όπως το /identify. Το alias:: είναι το ίδιο με παραπάνω, το όνομα της εντολής συντόμευσης. Το alias::format ορίζει μια κανονική έκφραση που ελέγχεται με την πρόταση που στέλνεται στην εντολή alias, και αφού ταιριάξει με την υπο-καταχώρηση της συντόμευσης το alias::format θα χρησιμοποιηθεί, μπορείτε να έχετε πολλαπλά alias::format's για να ορίσετε την εντολή να κάνει διαφορετικά πράγματα ανάλογα με την πρόταση που στέλνεται σε αυτήν. Το alias::format::target είναι ο στόχος στον οποίο θα προωθηθεί αυτή η συντόμευση. Το alias::format::type ορίζει τον τύπο της συντόμευσης με τον οποίο αυτό το μήνυμα θα προωθηθεί. Το alias::format::parameters είναι τια θα σταλθεί σάν παράμετρος σε αυτήν την συντόμευση. Για να ορίσετε μιά απο τις παραμέτρους που θα δωθεί στην συντόμευση εντολής ορίστε ένα % ακολουθούμενο απο έναν αριθμό, για παράδειγμα, %1 είναι η πρώτη παράμετρος. Για να ορίσετε όλες τις παραμέτρους απο μία παράμετρο μέχρι το τέλος δώστε % ακολουθούμενο απο έναν αριθμό και ένα -, για παράδειγμα το %2- επιστρέφει όλες τις παραμέτρους απο το δεύτερο μέχρι και το τελευταίο. Επιπλέον, μπορείτε να ορίσετε %n το οποίο θα αντικατασταθεί με το nickname του χρήστη που έδωσε την εντολή. Για παραδείγματα χρήσης της επιλογής συντόμευσης alias σε μορφή εντολών, συμβουλευτείτε το doc/example.conf.</P> 
   </DIV> 
@@ -2652,12 +2641,7 @@ href="#includedirective">include</A>. Παρακάτω μπορείτε να βρείτε μια λίστα με ό
     <P><B>set::who-limit &lt;limit&gt;;</B><BR> 
       Ορίζει το όριο για τον μέγιστο αριθμό των αποτελεσμάτων που θα επιστραφούν απο ένα /who. Αν αυτή η επιλογή δεν επιλεχθεί, δεν θα εφαρμοστεί κανένα όριο.</P> 
     <P><B>set::silence-limit &lt;limit&gt;;</B><BR> 
-      Ορίζει το όριο για τον μέγιστο αριθμό των SILENCE επιλογών. Αν αυτη η επιλογή δεν οριστεί, ορίζεται αυτόματα το όριο των 15.</P>
-	  <p><B>set::maxbans &lt;limit&gt;;</B><br> 
-     Ορίζει το όριο των μέγιστων bans (+b) που επιτρέπονται σε κάθε κανάλι. Η αρχική επιλογή είναι 60. 
-     Αν το αλλάξετε, σιγουρευτείτε οτι ρίξατε μια ματιά και στο maxbanlength (δείτε παρακάτω)!</p> 
-   <p><b>set::maxbanlength &lt;limit&gt;;</b><br> 
-     Παρόμοιο με το παραπάνω, αλλά ορίζει τον μέγιστο αριθμό χαρακτήρων για όλα τα bans συγκεντρωμένα μαζί, κάτι που βασικά θέτει ένα όριο στην (ήμη-)μέγιστο μέγεθος μνήμης την οποία μπορούν να καταλάβουν όλα τα bans σε ένα κανάλι. Η αρχική επιλογή είναι 2048 (bytes). Με την αρχική επιλογή set::maxbans στα 60 αυτο επιτρέπει 2048:60=34 χαρακτήρες για κάθε ban σε μέσο όρο.</p> 
+      Ορίζει το όριο για τον μέγιστο αριθμό των SILENCE επιλογών. Αν αυτη η επιλογή δεν οριστεί, ορίζεται αυτόματα το όριο των 15.</P> 
     <P><B>set::oper-only-stats &lt;stats-list&gt;;</B><BR> 
       Ορίζει μια λίστα με τα stats flags χωρίς διαχωριστικό που καθορίζει ποια stats flags μπορούν να χρησιμοποιήσουν μόνο οι διαχειριστές. Αγνοήστε αυτό το όρισμα για να επιτρέψετε στους χρήστες να χρησιμοποιήσουν όλα τα flags, η ορίστε * ωστε να μην μπορούν οι απλοί χρήστες να χρησιμοποιήσουν κανένα flag. Μόνο η σύντομη μορφή των stats flags μπορεί να οριστεί εδώ.</P> 
     <P><B>set::oper-only-stats {&lt;stats-flag&gt;; &lt;stats-flag&gt;;};</B><BR> 
@@ -2667,7 +2651,7 @@ href="#includedirective">include</A>. Παρακάτω μπορείτε να βρείτε μια λίστα με ό
     <P><B>set::maxdccallow &lt;amount-of-entries&gt;;</B><BR> 
       Ορίζει τον μέγιστο αριθμό επιλογών που μπορεί να έχει ένας χρήστης στην λίστα DCCALLOW του.</P> 
     <P><B>set::channel-command-prefix &lt;command-prefixes&gt;;</B><BR> 
-      Ορίζει το πρόθεμα χαρακτήρων για υπηρεσίες "εντολών καναλιών". Μηνύματα που αρχίζουν με οποιονδήποτε απο τους καθορισμένους χαρακτήρες θα στέλνονται ακόμα και αν ο χρήστης είναι +d. Η αρχική τιμή είναι "`!.".</P> 
+      Ορίζει το πρόθεμα χαρακτήρων για υπηρεσίες "εντολών καναλιών". Μηνύματα που αρχίζουν με οποιονδήποτε απο τους καθορισμένους χαρακτήρες θα στέλνονται ακόμα και αν ο χρήστης είναι +d. Η αρχική τιμή είναι "`".</P> 
     <p><b>set::allowed-nickchars { &lt;list&gt; };</b><br> 
       Σέτ χαρακτήρων / γλωσσών που επιτρέπονται στα nicks, δείτε <a href="#feature_nickchars">Σετ χαρακτήρων Nick</a>.</p> 
     <P><B>set::allow-userhost-change [never|always|not-on-channels|force-rejoin]</B><BR> 
@@ -2776,8 +2760,6 @@ href="#includedirective">include</A>. Παρακάτω μπορείτε να βρείτε μια λίστα με ό
       Αν οριστεί σε yes (ή '1') επιστρέφει 'invite only' σε όποιον απλό χρήστη προσπαθήσει να εισέρθει στο virus-help-channel. Μόνο διαχειριστές, άτομα που ταιριάζουν με τα spamfilters και άτομα που προσκλήθησαν στο κανάλι μπορούν να εισέρθουν.</P> 
     <P><B>set::spamfilter::except &lt;target(s)&gt;</B><BR> 
       Αυτοί οι στόχοι είναι εξαιρέσεις απο το spam filtering (καμία ενέργεια δεν θα γίνει), μπορεί να είναι ένας στόχος ή μια λίστα διαχωρισμένη απο κόμματα.. π.χ: except "#help,#spamreport"</P> 
-	   <p><b>set::check-target-nick-bans &lt;yes|no&gt;</b><br> 
-     Όποτε κάποιος χρήστης αλλάζει το ψευδώνυμο του/της, ελέγχει αν το ΝΕΟ ψευδώνυμο πρέπει να γίνει ban. Αν πρέπει, δεν επιτρέπει την αλλαγή του ψευδωνύμου. Η αρχική επιλογή είναι yes.</p> 
   </DIV> 
   <P><B><SPAN 
 
@@ -3008,7 +2990,7 @@ cellPadding=0 width="75%" border=1>
         </TR> 
         <TR> 
           <TD class="Normal"> <P style="TEXT-ALIGN: center" align=center>d</P></TD> 
-          <TD class="Normal"> <P>Ορίζει να μην δέχεστε μηνύματα καναλιών PRIVMSGs (με την εξέρεση αυτών που αρχίζουν με συγκεκριμένους χαρακτήρες,δείτε set::channel-command-prefix)</P></TD> 
+          <TD class="Normal"> <P>Ορίζει να μην δέχεστε μηνύματα καναλιών PRIVMSGs</P></TD> 
         </TR> 
         <TR> 
           <TD class="Normal"> <P style="TEXT-ALIGN: center" align=center>G</P></TD> 
