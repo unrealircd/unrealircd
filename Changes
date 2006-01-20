@@ -987,3 +987,4 @@
   ship the SSL version of unreal with a curl that supports SSL (https, etc).
 - Preperations for pre-1 (version change, etc)
 - Updated wircd.def (for developers).
+- Added doc/help.ru.conf, translated by Slyder.
