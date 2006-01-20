@@ -1,6 +1,6 @@
 
-Unreal3.2.4 Release Notes
-==========================
+Unreal3.2.4-pre1 Release Notes
+===============================
 
 ==[ GENERAL INFORMATION ]==
 - If you are upgrading on *NIX, make sure you run 'make clean' and './Config'
