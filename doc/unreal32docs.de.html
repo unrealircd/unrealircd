@@ -27,7 +27,7 @@
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2.4-pre1 </font><br>
-  <b>Letztes Dokumentation Update:</b>              2006-01-07</div>
+  <b>Letztes Dokumentation Update:</b>               2006-01-17</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b>  McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
 <b>Dokumentation</b><b>:</b> CKnight^ / Syzop<br>
@@ -1072,12 +1072,6 @@ Zeichenübereinstimmung gegolten haben.<br>
 Anmerkung 3: Die Basis Nick Zeichen (a-z A-Z 0-9 [ \ ] ^ _ - { | }) sind immer
 erlaubt/aktiviert.<br>
 <br>
-Anmerkung 4: Wenn charset Gruppen verwendet werden (z.B.: latin1; latin2;), können
-Probleme beim Linken unterschiedlicher Server Versionen auftreten (zum Beispiel
-bei Upgrades). Derzeit wird daher empfohlen, statt der Gruppen die einzelnen
-Sprachen zu verwenden&nbsp; (z.B.: katalanisch; dänisch; holländisch; französisch;
-usw.) oder alle Server gleichzeitig auf denselben Stand zu bringen.
-<p>
 <br>
 Beispiel 1, für West-Europäer:<br>
 <br>
@@ -2903,6 +2897,17 @@ belästigend empfunden werden kann, sollte man dies mit Bedacht wählen.</p>
 angezeigt werden sollen. Ohne Eintrag hier gibt es kein Limit.</p>
 <p><font class="set">set::silence-limit &lt;limit&gt;;<br>
 </font>Stellt den Maximalwert der anzeigbaren SILENCE Einträge ein. Ohne Eintrag ist hier ein Limit von 15 voreingestellt.</p>
+<b><font face="Helvetica,Arial" size="-1">set::maxbans &lt;limit&gt;;<br>
+</font></b>Stellt den Maximalwert der je Channel erlaubten Banns (+b) ein. Der
+Defaultwert beträgt 60. Wenn dieser Wert geändert wird, sollte man sich
+versichern, dass auch der Wert für 'maxbanlength' (siehe nächster Punkt)
+sinnvoll eingestellt ist.
+<p><b>set::maxbanlength &lt;limit&gt;;</b><br>
+Ähnliche Funktion wie im Punkt zuvor, aber legt den Maximalwert der Zeichen
+für alle Banns zusammen fest. Dadurch wird festgelegt, wie viel Speicherplatz
+für alle Banns in einem Channel zusammen benutzt wird. Der Default beträgt
+2048 (Bytes). Bei einem Default von 'set::maxbans 60' gestattet dies 2048:60=34
+Zeichen je Bann im Durchschnitt.</p>
 <p><font class="set">set::oper-only-stats &lt;stats-list&gt;;</font><br>
 Definiert eine Liste von Stats-Flags, die nur von Opers benutzt werden können.
 Die Flags sind ohne Trennungen (keine Kommata, keine Leerzeichen) anzugeben.
