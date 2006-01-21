@@ -67,7 +67,7 @@
 		<blockquote><blockquote><p><a href="#S8_1_4">8.1.4 SPAMFILTER - Message Spam Filtration System</a></p></blockquote></blockquote>
 		<hr/>
 		<h1><a name="S1"></a>1 Introduction</h1>
-		<p>This document describes the UnrealIRCd server-to-server protocol as of protocol 2306 (Unreal 3.2.3).</p>
+		<p>This document describes the UnrealIRCd server-to-server protocol as of protocol 2307 (Unreal 3.2.4).</p>
 		<h2>A word about clocks.</h2>
 		<p>Unreal is very time-dependant. Users and channels, for example, are timestamped, and if server clocks are not synchronized properly, things can go very wrong very fast. See <a href="http://vulnscan.org/UnrealIrcd/faq/#67">http://vulnscan.org/UnrealIrcd/faq/#67</a> for more information on this. Note that there is a slight difference between server time and what is actually reported by the UNIX date command or by the C time() function. Unreal can apply an offset to the real time to create the server time, allowing servers to be virtually synchronized when synchronizing the real clocks is not possible (such as on shell servers).
 			I should make it quite clear that GMT time is used for everything. To be specific, timestamps in unreal are 32-bit integer values (actually, however many bits the time_t type is, which is 32 on 32-bit systems such as x86). This integer value is the number of seconds that have elapsed since Midnight January 1, 1970 GMT (can be referred to as Epoch time in the UNIX world). This means that timezones are no problem, nor is daylight savings time (or whatever your country of choice calls it).</p>
@@ -106,6 +106,7 @@
 		<p>The server.name is the same as that in the remote server's link:: block. When received from unreal servers, this will be the value of that server's me::name. The protocol version is the numeric protocol version (2306 for example), and the protocol flags are the server's compilation flags (described below). These two fields are checked against the deny version {} blocks in the remote server's configuration. A value of 0 for either field prevents deny version{} checking for that field. The server description can be anything. When received from unreal servers, it'll be the value of me::description.</p>
 		<p>The following version numbers have been used previously:</p>
 		<ul>
+			<li>2307 - Unreal 3.2.4</li>
 			<li>2306 - Unreal 3.2.3</li>
 			<li>2305 - Unreal 3.2.2</li>
 			<li>2304 - Unreal 3.2.1</li>
