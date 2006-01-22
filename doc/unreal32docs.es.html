@@ -28,7 +28,7 @@ Spanish |
 <br><br>
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
-  <font size="4">Versi&oacute;n: 3.2.4-pre1</font><br>
+  <font size="4">Versi&oacute;n: 3.2.3</font><br>
   <b>&Uacute;ltima actualizaci&oacute;n del documento:</b> 17-01-2006</div>
 <br>
   <b>Programadores:</b> Stskeeps / codemastr / Syzop / Luke<br>
@@ -655,9 +655,6 @@ e IRCd sigue el estándar puesto que no puede solucionarse de pronto. Tengan cuid
 Note que esta limitaci&oacute;n se aplica siempre a los canales, que normalmente se permiten y el 
 US-ASCII se reforma.</p>
 <p>Nota 3: Los caracteres b&aacute;sicos para nicks (a-z A-Z 0-9 [ \ ] ^ _ - { | }) siempre se permiten y se incluyen de forma predeterminada.</p>
-<p>Nota 4: Cuando se usa un grupo de caracteres (ej: latin1; latin2;), puede observar ciertas dificultades al linkar servidores con versiones mixtas 
- por ejemplo cuando se actualizan. Por el momento, se recomienda usar lenguajes individuales (ej: catalan; danish, dutch; french; etc) o actualizar 
- los servidores al mismo tiempo.</p>
 
 Ejemplo 1, para gente del oeste de europa:<br>
 <pre>set { allowed-nickchars { latin1; }; };</pre>
@@ -2091,6 +2088,12 @@ set {
   L&iacute;mite de entradas a mostrar en /who. Si se omite, no hay l&iacute;mite.</p>
 <p><font class="set">set::silence-limit &lt;l&iacute;mite&gt;;</font><br>
   L&iacute;mite de entradas en la lista silence. Si se omite, el l&iacute;mite es de 15.</p>
+<p><font class="set">set::maxbans &lt;l&iacute;mite&gt;;</font><br>
+  Fija el límite de bans (b+) máximos permitidos por canal. Por defecto son 60.
+  Si lo cambia, asegúrese que también cambia maxbanlength (ver siguiente)</p>
+<p><font class="set">set::maxbanlength &lt;l&iacute;mite&gt;;</font><br>
+  Parecido al anterior, fija el número máximo de caracteres para todos los bans juntos. Así puede fijar esta cantidad directamente en memoria. 
+  Por defecto son 2048 (bytes). Con set::maxbans por defecto en 60, se permiten 2048:60=34 caracteres por ban.</p>
 <p><font class="set">set::oper-only-stats &lt;lista-stats&gt;;</font><br>
   Lista de stats que s&oacute;lo los operadores pueden usar en /stats. Om&iacute;talo para permitir a los usuarios ver toda la informaci&oacute;n o &quot;*&quot; para restringirla toda a operadores. S&oacute;lo se aceptan las stats en forma corta.</p>
 <p><font class="set">set::oper-only-stats {&lt;stats-flag&gt;; &lt;stats-flag&gt;;};</font><br>
