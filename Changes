@@ -994,3 +994,7 @@
 - Made it so bans on normal users work with +mu, reported by Nazzy (?).
 - Made set::maxbanlength also count the "to be set" ban in, otherwise you could exceed the
   limit by (max) NICKLEN+USERNAME+HOSTNAME+2, reported by Trocotronic (#0002762).
+- Switched over to an older match() routine based on hybrid, this one is a bit less optimized
+  but is actually understandable and has less bugs. This fixes +b ~c:#c\*t not properly
+  matching #c*t, reported by Jason (#0002752). Initial results look good, but this needs
+  some good testing ;).
