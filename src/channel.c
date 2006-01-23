@@ -363,10 +363,12 @@ aClient *find_chasing(aClient *sptr, char *user, int *chasing)
 int add_listmode(Ban **list, aClient *cptr, aChannel *chptr, char *banid)
 {
 	Ban *ban;
-	int cnt = 0, len = 0;
+	int cnt = 0, len;
 
 	if (MyClient(cptr))
 		(void)collapse(banid);
+	
+	len = strlen(banid);
 	for (ban = *list; ban; ban = ban->next)
 	{
 		len += strlen(ban->banstr);

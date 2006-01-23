@@ -992,3 +992,5 @@
 - set::maxbans / set::maxbanlength were reported as duplicates when they were not, reported
   by Jason and trystanscott (#0002753).
 - Made it so bans on normal users work with +mu, reported by Nazzy (?).
+- Made set::maxbanlength also count the "to be set" ban in, otherwise you could exceed the
+  limit by (max) NICKLEN+USERNAME+HOSTNAME+2, reported by Trocotronic (#0002762).
