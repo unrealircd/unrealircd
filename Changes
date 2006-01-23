@@ -999,3 +999,4 @@
   matching #c*t, reported by Jason (#0002752). Initial results look good, but this needs
   some good testing ;).
 - Removed some old config.h stuff + clarified some text, reported by Jason (#2765, #2766).
+** internal 3.2.4-pre2 release **
