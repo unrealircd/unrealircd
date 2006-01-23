@@ -315,6 +315,8 @@ struct SetCheck {
 	unsigned has_ident_read_timeout:1;
 	unsigned has_default_bantime:1;
 	unsigned has_who_limit:1;
+	unsigned has_maxbans:1;
+	unsigned has_maxbanlength:1;
 	unsigned has_silence_limit:1;
 #ifdef NEWCHFLOODPROT
 	unsigned has_modef_default_unsettime:1;

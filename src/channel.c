@@ -790,7 +790,7 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
 	    CHFL_HALFOP | CHFL_CHANPROT))))
 	    {
-			if ((chptr->mode.mode & MODE_AUDITORIUM) && !is_irc_banned(chptr))
+			if ((chptr->mode.mode & MODE_AUDITORIUM) && !is_irc_banned(chptr) && !is_banned(cptr, chptr, BANCHK_MSG))
 				sendto_chmodemucrap(cptr, chptr, msgtext);
 			return (CANNOT_SEND_MODERATED);
 	    }

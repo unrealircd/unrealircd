@@ -6922,11 +6922,11 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "maxbans")) {
 			CheckNull(cep);
-			CheckDuplicate(cep, who_limit, "maxbans");
+			CheckDuplicate(cep, maxbans, "maxbans");
 		}
 		else if (!strcmp(cep->ce_varname, "maxbanlength")) {
 			CheckNull(cep);
-			CheckDuplicate(cep, who_limit, "maxbanlength");
+			CheckDuplicate(cep, maxbanlength, "maxbanlength");
 		}
 		else if (!strcmp(cep->ce_varname, "silence-limit")) {
 			CheckNull(cep);

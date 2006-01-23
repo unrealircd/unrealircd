@@ -989,3 +989,6 @@
 - Updated wircd.def (for developers).
 - Added doc/help.ru.conf, translated by Slyder.
 ** internal 3.2.4-pre1 release **
+- set::maxbans / set::maxbanlength were reported as duplicates when they were not, reported
+  by Jason and trystanscott (#0002753).
+- Made it so bans on normal users work with +mu, reported by Nazzy (?).
