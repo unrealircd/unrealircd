@@ -91,6 +91,7 @@ Unreal3.2.4-pre1 Release Notes
 - ./Config was not loading the settings properly on Solaris 10
 - Crash if high ascii in set::network-name
 - Fixed advanced channel aliases not working properly
+- Fixed \* and \? escaping not always working properly (for example in ~r/~c bans).
 
 ==[ REMOVED ]==
 - Windows 9X/ME are no longer supported (it might work, but we won't support them).
