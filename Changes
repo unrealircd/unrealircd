@@ -998,3 +998,4 @@
   but is actually understandable and has less bugs. This fixes +b ~c:#c\*t not properly
   matching #c*t, reported by Jason (#0002752). Initial results look good, but this needs
   some good testing ;).
+- Removed some old config.h stuff + clarified some text, reported by Jason (#2765, #2766).

@@ -311,17 +311,13 @@
 
 #define NO_FLOOD_AWAY
 
-/*
- * Define your network service names here.
+/* You can define the nickname of NickServ here (usually "NickServ").
+ * This is ONLY used for the ""infamous IDENTIFY feature"", which is:
+ * whenever a user connects with a server password but there isn't
+ * a server password set, the password is sent to NickServ in an
+ * 'IDENTIFY <pass>' message.
  */
-#define ChanServ "ChanServ"
-#define MemoServ "MemoServ"
 #define NickServ "NickServ"
-#define OperServ "OperServ"
-#define HelpServ "HelpServ"
-#define StatServ "StatServ"
-#define InfoServ "InfoServ"
-#define BotServ "BotServ"
 
 /*
  * How many open targets can one nick have for messaging nicks and
@@ -358,7 +354,7 @@
  * 8MB or less  core memory : 500	(at least 1/4 of max users)
  * 8MB-16MB     core memory : 500-750	(1/4 -> 1/2 of max users)
  * 16MB-32MB    core memory : 750-1000	(1/2 -> 3/4 of max users)
- * 32MB or more core memory : 1000+	(> 3/4 if max users)
+ * 32MB or more core memory : 1000+	(> 3/4 of max users)
  * where max users is the expected maximum number of users.
  * (100 nicks/users ~ 25k)
  * NOTE: this is directly related to the amount of memory ircd will use whilst
@@ -373,7 +369,7 @@
 
 /*
  * Time interval to wait and if no messages have been received, then check for
- * PINGFREQUENCY and CONNECTFREQUENCY
+ * pings, outgoing connects, events, and a couple of other things.
  * Imo this is quite useless nowdays, it only saves _some_ cpu on tiny networks
  * with like 10 users all of them being inactive. On a normal network with >30
  * users this value is completely irrelevant.
@@ -387,14 +383,9 @@
  * PINGFREQUENCY seconds, then the server will attempt to check for
  * an active link with a PING message. If no reply is received within
  * (PINGFREQUENCY * 2) seconds, then the connection will be closed.
+ * NOTE: This is simply the class::pingfreq for the default class, nothing fancy ;)
  */
 #define PINGFREQUENCY    120	/* Recommended value: 120 */
-
-/*
- * If the connection to to uphost is down, then attempt to reconnect every
- * CONNECTFREQUENCY  seconds.
- */
-#define CONNECTFREQUENCY 600	/* Recommended value: 600 */
 
 /*
  * Often net breaks for a short time and it's useful to try to
