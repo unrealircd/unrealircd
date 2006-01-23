@@ -617,9 +617,7 @@ Certains modules peuvent ajouter d'autres types de ban &eacute;tendus.<br>
   message d'avertissement si vous essayez de mixer latin1/latin2/greek/autres groupes incompatibles.</p>
   <p>NOTE 2 : Le casemapping (si certains caract&egrave;res minuscules se rapportent &agrave; un caract&egrave;re grave) est fait en accord avec l'US-ASCII, ceci signifique que o" et O" ne seront pas reconnu comme le 'm&ecirc;me caract&egrave;re' et par cons&eacute;quent quelqu'un peut avoir un pseudo avec B"ar et quelqu'un d'autre BA"r au m&ecirc;me moment. Ceci est une limitation du syst&egrave;me courant et des IRCds standards que ne pourra &ecirc;tre r&eacute;solu pour l'instant. Les gens doivent &ecirc;tre au courant de cette limitation. Notez que cette limitation a toujours &eacute;t&eacute; appliqu&eacute;e aux salons sur lesquels presque tous les symboles permis par le casemapping US-ASCII fonctionnaient.</p>
   <p>NOTE 3 : Les caract&egrave;res basiques de pseudo (a-z A-Z 0-9 [ \ ] ^ _ - { | }) sont toujours permis/inclus.</p>
-  <p>NOTE 4 : Lorsque vous utilisez les charsets 'groupes' (ex. latin1; latin2;), vous pourriez avoir des difficult&eacute;s &agrave; linker des versions de serveurs diff&eacute;rantes (par exemple, lors de mises &agrave; jour). Pour le moment, il vous est conseill&eacute; de plut&ocirc;t utiliser des languages individuels (ex. catalan; danish; dutch; french; etc) ou de toujours mettre &agrave; jour tous les serveurs en m&ecirc;me temps.</p>
-  
-  	 
+ 
   Exemple 1, pour les personnes d'Europe de l'ouest:<br>
   <pre>set { allowed-nickchars {  latin1; }; };</pre>
   Exemple 2, si vous avez principalement des utilisateurs chinois et voulez autoriser les 
