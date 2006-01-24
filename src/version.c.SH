@@ -108,6 +108,7 @@ char *unrealcredits[] =
 	"Pyrexnetworks - www.pyrexnetworks.com, zunnie - www.MP-Gaming.NET,",
 	"All My Data - www.amdwebhost.com, Wulfie - irc.soundsnwaves.net,",
 	"eCoupons.com - www.ecoupons.com, MauritZ - irc.MindForge.org",
+	"Voodoohosting - www.voodoohosting.com",
 	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-[Hosting]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=",
 	"Phil Veale - email@phillipveale.com - http://www.tiefighter.org",
 	"- Donating webhosting for the project amongst other things",
