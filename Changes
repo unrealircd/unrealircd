@@ -1002,3 +1002,5 @@
 ** internal 3.2.4-pre2 release **
 - Made it so a set::maxbanlength and/or set::maxbans of 0 denies all bans properly, and
   fixes the first-ban-can-be-as-long-as-you-want bug, both reported by Trocotronic (#2762).
+- Fixed SVS2SNO not always notifying the user of the snomask change, reported by decoder
+  (#0002767).
