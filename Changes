@@ -1000,3 +1000,5 @@
   some good testing ;).
 - Removed some old config.h stuff + clarified some text, reported by Jason (#2765, #2766).
 ** internal 3.2.4-pre2 release **
+- Made it so a set::maxbanlength and/or set::maxbans of 0 denies all bans properly, and
+  fixes the first-ban-can-be-as-long-as-you-want bug, both reported by Trocotronic (#2762).

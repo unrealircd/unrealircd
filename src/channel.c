@@ -369,6 +369,12 @@ int add_listmode(Ban **list, aClient *cptr, aChannel *chptr, char *banid)
 		(void)collapse(banid);
 	
 	len = strlen(banid);
+	if (!*list && ((len > MAXBANLENGTH) || (MAXBANS < 1)))
+	{
+		sendto_one(cptr, err_str(ERR_BANLISTFULL),
+			me.name, cptr->name, chptr->chname, banid);
+		return -1;
+	}
 	for (ban = *list; ban; ban = ban->next)
 	{
 		len += strlen(ban->banstr);
