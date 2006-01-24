@@ -218,7 +218,7 @@
 		</ul>
 		<p>When merging modes, conflicting modes (including +p vs +s, differing +l limits or +k keys, etc) are handled as follows:</p>
 		<ul>
-			<li><b>Private (+p) vs. Secret (+s):</b> Secret (+s) is preferred. Private (+p) is removed. (Note: there is a <a href="http://bugs.unrealircd.org/view.php?id=2391">bug</a> in Unreal versions prior to 3.2.3 in which a desynch will occur in which one side is +p and the other is +s. Update to Unreal 3.2.3 if you have problems with this.)</li>
+			<li><b>Private (+p) vs. Secret (+s):</b> Secret (+s) is preferred. Private (+p) is removed. (Note: there is a <a href="http://bugs.unrealircd.org/view.php?id=2391">bug</a> in Unreal versions prior to 3.2.3 in which a desynch will occur in which one side is +p and the other is +s. Update to Unreal 3.2.4 if you have problems with this.)</li>
 			<li><b>Strip Color (+S) vs. Block Color (+c):</b> Block (+c) is preferred. Strip (+S) is removed. (Note: Bug for +p vs. +s in prior unreal versions apply here as well.)</li>
 			<li><b>Channel Limit:</b> Numericly larger limit is preferred (for example, +l 30 versus +l 15 : +l 30 wins).</li>
 			<li><b>Channel Key:</b> &quot;Larger&quot; key (as defined by strcmp) is preferred (for example, +k moo versus +k meow : +k moo wins).</li>
@@ -377,7 +377,7 @@
 			<li>b (block) - Messages (or users!) matching the filter are simply blocked.</li>
 			<li>d (dccblock) - The user is prevented from sending files using DCC for the remainder of his session (in other words, until he quits).</li>
 			<li>v (viruschan) - User is removed from all channels, joined to the viruschan as defined in conf, and cannot message anything but that channel.</li>
-			<li>w (warn) - No action on the user is taken. Only the Spamfilter notice is sent to opers with snomask +S. (Available in devel CVS)</li>
+			<li>w (warn) - No action on the user is taken. Only the Spamfilter notice is sent to opers with snomask +S.</li>
 		</ul>
 	</body>
 </html>
