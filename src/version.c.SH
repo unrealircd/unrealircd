@@ -128,7 +128,7 @@ char *unrealcredits[] =
 	"Thanks go to all current mirror & DNS hosters. We really value",
 	"your donations.",
 	"=-=-=-=-=-=-=-=-=-=-=-=-=-=[Supporters]=-=-=-=-=-=-=-=-=-=-=-=-=-=",
-	"aquanight, Bricker, Dukat, HERZ, jewles, SciFi, Stealth, w00t",
+	"aquanight, Bricker, Dukat, HERZ, jewles, Nazzy, SciFi, Stealth, w00t",
 	" ",
 	"Thanks to former supporters and anyone who has helped without",
 	"officially joining the staff.",
