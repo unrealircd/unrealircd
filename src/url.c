@@ -111,16 +111,7 @@ static void set_curl_ssl_options(CURL *curl)
 	if (SSLKeyPasswd)
 		curl_easy_setopt(curl, CURLOPT_SSLKEYPASSWD, SSLKeyPasswd);
 	curl_easy_setopt(curl, CURLOPT_SSLKEY, SSL_SERVER_KEY_PEM);
-/*	if (iConf.trusted_ca_file)
-		curl_easy_setopt(curl, CURLOPT_CAINFO, iConf.trusted_ca_file);
-	else
-	NOTE: The above doesn't work... the config file has not been parsed yet
-	      when we are called for includes... ;p. So using the default ca bundle,
-	      or.. see next.. on Windows use curl-ca-bundle.crt in our current path.
- */
-#ifdef _WIN32
-		curl_easy_setopt(curl, CURLOPT_CAINFO, "curl-ca-bundle.crt");
-#endif
+	curl_easy_setopt(curl, CURLOPT_CAINFO, "curl-ca-bundle.crt");
 }
 #endif
 

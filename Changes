@@ -1004,3 +1004,11 @@
   fixes the first-ban-can-be-as-long-as-you-want bug, both reported by Trocotronic (#2762).
 - Fixed SVS2SNO not always notifying the user of the snomask change, reported by decoder
   (#0002767).
+- Curl users using https/ftps/etc: UnrealIRCd now ships with a 'curl-ca-bundle.crt' which
+  contains the (root) certificates of most major Certificate Authorities. It is basically
+  the default curl ca-bundle.crt plus cacert's certificates.
+  The 'curl-ca-bundle.crt' will be copied to the installation dir if needed.
+  It will from now on be used by Unreal for all remote includes (curl) related certificates.
+  If you want to use https but don't want to buy a certificate, we suggest you to apply for
+  a free certificate at CACert (www.CACert.org). Or, alternatively, add your own certificate
+  (PEM encoded) to curl-ca-bundle.crt, see 'SSLCERTS' in the curl package for more info.

@@ -218,6 +218,9 @@ install: all
 	$(INSTALL) -m 0700 unreal $(IRCDDIR)
 	$(INSTALL) -m 0700 -d $(IRCDDIR)/modules
 	$(INSTALL) -m 0700 src/modules/*.so $(IRCDDIR)/modules
+	-@if [ ! -f "$(IRCDDIR)/curl-ca-bundle.crt" ] ; then \
+		$(INSTALL) -m 0700 curl-ca-bundle.crt $(IRCDDIR) ; \
+	fi
 
 pem:	src/ssl.cnf
 	@echo "Generating certificate request .. "
