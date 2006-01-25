@@ -1012,3 +1012,4 @@
   If you want to use https but don't want to buy a certificate, we suggest you to apply for
   a free certificate at CACert (www.CACert.org). Or, alternatively, add your own certificate
   (PEM encoded) to curl-ca-bundle.crt, see 'SSLCERTS' in the curl package for more info.
+** public 3.2.4-rc1 release **
