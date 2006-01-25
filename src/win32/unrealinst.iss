@@ -81,6 +81,7 @@ Source: "c:\dev\zlib\dll32\zlibwapi.dll"; DestDir: "{app}"; Flags: ignoreversion
 #ifdef USE_CURL
 ; curl with ssl support
 Source: "c:\dev\curl-ssl\lib\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\dev\curl-ssl\lib\ca-bundle.crt"; DestDir: "{app}"; DestName: "curl-ca-bundle.crt"; Flags: ignoreversion
 #endif
 #else
 #ifdef USE_CURL
