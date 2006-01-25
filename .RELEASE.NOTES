@@ -70,6 +70,8 @@ Unreal3.2.4-pre2 Release Notes
   /(G)ZLINE usermask@something (should be *@something). Both forms are illegal because
   (G)ZLINES are processed before dns and ident lookups. If you require a ban on a hostmask
   or a usermask, simply use a KLINE or GLINE.
+- For users using remote includes w/ssl (https, ftps): the CA certificates are now stored
+  in curl-ca-bundle.crt (shipped with Unreal) which contains most major CA's plus CACert.
 
 ==[ MAJOR BUGS FIXED ]==
 - Two issues with an incorrect badword { } block in the config file causing a crash.
