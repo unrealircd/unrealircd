@@ -1017,4 +1017,5 @@
   the switchover we were accidently using different ones which caused funny kill messages
   like "You were killed by a.b.c (a!a.b.c (SOMENICK[N\A](?) <- d.e.f))." This also broke
   some bans in pre2/rc1. Bug reported by HERZ (#0002772).
+- Fixed localhost crash (if no dns record for 127.0.0.1), reported by Trocotronic (#2773).
 ** public 3.2.4-rc2 release **
