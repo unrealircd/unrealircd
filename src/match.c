@@ -97,8 +97,20 @@ const u_char *na = name;
 		if (*m != '?')
 		{
 			if (*m == '\\')
-				if (!*++m)
-					return 1;
+			{
+				switch(m[1])
+				{
+					case '\0':
+						return 1; /* unfinished escape sequence */
+					case '*':
+					case '?':
+						m++; /* valid escape sequence: \* -> * and \? -> ? */
+						break;
+					default:
+						/* Invalid, take it as literal */
+						break;
+				}
+			}
 			if ((lc(*m) != lc(*n)) && !((*m == '_') && (*n == ' ')))
 			{
 				if (!ma)

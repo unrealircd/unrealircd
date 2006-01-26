@@ -1013,3 +1013,7 @@
   a free certificate at CACert (www.CACert.org). Or, alternatively, add your own certificate
   (PEM encoded) to curl-ca-bundle.crt, see 'SSLCERTS' in the curl package for more info.
 ** public 3.2.4-rc1 release **
+- Fixed(?) bug due to match() rewrite: we now use our old rules with escaping again, due to
+  the switchover we were accidently using different ones which caused funny kill messages
+  like "You were killed by a.b.c (a!a.b.c (SOMENICK[N\A](?) <- d.e.f))." This also broke
+  some bans in pre2/rc1. Bug reported by HERZ (#0002772).
