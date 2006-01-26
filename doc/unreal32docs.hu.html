@@ -620,6 +620,10 @@ lehet valakinek a nickje B"ar, és egyidõben egy másiknak BA"r. Ez egy korlátozás
 Megjegyzendõ, hogy ez a korlátozás csatornákra is vonatkozott, amikben mindig közel minden karakter
 engedélyezett volt, és mindig US-ASCII kis- és nagybetû leképezés volt végrehajtva.</p>
 <p>3. MEGJEGYZÉS: Az alapvetõ nickbeli karakterek (a-z A-Z 0-9 [ \ ] ^ _ - { | }) mindig megengedettek/beleszámítanak a karakterkészletbe.</p>
+<p>4. MEGJEGYZÉS: Karakterkészlet-csoportok használatakor (pl.: latin1; latin2;), nehézségek adódhatnak különbözõ
+ verziójú szerverek linkelésével (például frissítéskor). Pillanatnyilag emiatt javasolt, hogy az
+ egyes nyelveket használjuk helyettük (pl.: catalan; danish; dutch; french; stb.), vagy hogy mindig egyidejûleg
+ frissítsük az összes szervert.</p>
 
 1. Példa: nyugat-európai népeknek:<br>
 <pre>set { allowed-nickchars { latin1; }; };</pre>
@@ -2209,14 +2213,6 @@ set {
 <p><font class="set">set::silence-limit &lt;határ&gt;;</font><br>
   Beállítja a SILENCE lista bejegyzéseinek legnagyobb megengedett számát. Ha ez a direktíva nincs jelen,
   15 lesz beállítva.</p>
-<p><font class="set">set::maxbans &lt;határ&gt;;</font><br>
-  Beállítja, hogy csatornánként legfeljebb hány kitiltás (+b) megengedett. Az alapértelmezés 60.
-  Ha ezen változtatsz, ne felejts ránézni a maxbanlength direktívára is (lásd alább)!</p>
-<p><font class="set">set::maxbanlength &lt;határ&gt;;</font><br>
-  Hasonló a fentihez, de ez a kitiltások karaktereinek számára összesen határoz meg felsõ határt,
-  vagyis tulajdonképpen korlátozást tesz arra, kb. mekkora lehet az a legnagyobb mennyiségû memória,
-  amit a kitiltások csatornánként lefoglalhatnak. Az alapértelmezés 2048 (bájt). A set::maxbans
-  60-as alapértékével ez átlagosan 2048:60=34 karaktert enged kitiltásonként.</p>
 <p><font class="set">set::oper-only-stats &lt;flaglista&gt;;</font><br>
   Megad egy elválasztójelek nélküli, stats flagekbõl álló felsorolást, amely meghatározza, mely stats flageket
   használhatnak csak operátorok. Hagyd ki ezt az értéket, hogy engedélyezd a felhasználóknak az összes
