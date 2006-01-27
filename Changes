@@ -1019,3 +1019,5 @@
   some bans in pre2/rc1. Bug reported by HERZ (#0002772).
 - Fixed localhost crash (if no dns record for 127.0.0.1), reported by Trocotronic (#2773).
 ** public 3.2.4-rc2 release **
+- Sometimes if an oper was connected trough SSL and had the junk snomask (+s +j) set it
+  would cause a crash. Reported by chasingsol (#0002777).

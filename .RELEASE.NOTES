@@ -96,6 +96,7 @@ NOTE: This is a Release Candidate. This is NOT an (official) STABLE release yet
 - Sometimes a serious flood of notices was generated if link::options::nodnscache was used.
 - Spamfilter: action 'viruschan' combined with target 'user' caused crashes.
 - chinese-* nick characters support caused memory corruption.
+- Crash issue regarding SSL and junk snomask.
 
 ==[ MINOR BUGS FIXED ]==
 - Now properly resolves hostnames again that use CNAME delegation (got broken in 3.2.3).
