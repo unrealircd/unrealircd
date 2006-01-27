@@ -1021,3 +1021,4 @@
 ** public 3.2.4-rc2 release **
 - Sometimes if an oper was connected trough SSL and had the junk snomask (+s +j) set it
   would cause a crash. Reported by chasingsol (#0002777).
+- Updated help.ru.conf (corrections by CS-Help) and example.bg.conf (by Peace)
