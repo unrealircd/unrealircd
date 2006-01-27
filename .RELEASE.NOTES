@@ -47,7 +47,8 @@ NOTE: This is a Release Candidate. This is NOT an (official) STABLE release yet
 - Banned users can no longer change the topic
 - Made it so you no longer can change your nick TO a banned one in a channel.
   This option can be turned off by setting set::check-target-nick-bans to "no".
-- Added Bulgarian example.bg.conf and Russian help.ru.conf
+- Translations: Added a Bulgarian example.bg.conf, a Russian help.ru.conf, and a Dutch
+  unreal32docs.nl.html
 - For services coders: Added doc/technical/serverprotocol.html
 
 ==[ CHANGED ]==
