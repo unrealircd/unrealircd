@@ -97,6 +97,7 @@
 			<li>NICKCHARS : Indicates the set of enabled nickchar options (see the regular documention for info about this).</li>
 			<li>CHANMODES : (Not required to be sent) This is the same as the CHANMODES value in the 005 for client connections. Useful for autodetecting things like what modes are valid for ChanServ MLOCK, for example.</li>
 		</ul>
+		<p>The syntax examples here follow the conventions for TOKEN and also NS in cases of server-only messages.</p>
 		<h2><a name="S2_3"></a>2.3 SERVER - Server Negotiation</h2>
 		<p><b>Note:</b> This message is also used for introducing additional servers, the format of this message in those cases is described later.</p>
 		<p><b>Syntax (normal):</b> <tt>SERVER <i>server.name</i> 1 :<i>server description</i></tt></p>
@@ -142,7 +143,7 @@
 		</ul>
 		<h2><a name="S2_4"></a>2.4 EOS - End Of Synch (TOKEN: ES)</h2>
 		<p><b>Syntax:</b> ES</p>
-		<p>Marks the end of the synching process.</p>
+		<p>Marks the end of the synching process. This is really optionally, but it might be a good idea to send it anyway when you really are done synching.</p>
 		<h2><a name="S2_5"></a>2.5 NETINFO - Network Information (TOKEN: AO)</h2>
 		<p><b>Syntax:</b> AO <i>currenttime</i> <i>protocolversion</i> <i>cloakhash</i> 0 0 0 :<i>networkname</i></p>
 		<p>This tells the other server your current network configuration. The current time is a timestamp value. Protocolversion is the same as that in the SERVER command. Cloakhash is a hash representing the configured cloak keys. It may be a * if you are implementing services. The network name is that specified in set::network-name. The cloak-prefix is currently not sent here (and thus unreal won't generate warning for mismatching cloak prefixes, but they should be the same anyway).</p>
@@ -157,7 +158,7 @@
 		<p><b>Syntax (NICKv2+NICKIP):</b> <tt>:<i>source.server</i> &amp; <i>nick</i> <i>hopcount</i> <i>timestamp</i> <i>username</i> <i>hostname</i> <i>server</i> <i>servicestamp</i> <i>+usermodes</i> <i>virtualhost</i> <i>nickipaddr</i> :<i>realname</i></tt></p>
 		<p>This format of the NICK message introduces a new user to the network. If PROTOCTL VHP is enabled, the user's cloaked host is put in the virtualhost field, otherwise it'll be * unless the user is +t.</p>
 		<h3><a name="S3_1_1"></a>3.1.1 Nick Collisions</h3>
-		<p>A nick collision occurs when a server receives a NICK message (or &amp; token) introducing a user that the server already sees on the network. When a collision occurs, one or both of the colliding clients must be disconnected. The timestamp is examined to determine which client loses. The client with the earlier timestamp remains. If both clients have equal timestamps, both are removed. Collisions can be handled passively, or aggressively. Unreal currently does both in all cases, although this may not be the best approach.</p>
+		<p>A nick collision occurs when a server receives a NICK message (or &amp; token) introducing a user that the server already sees on the network. When a collision occurs, one or both of the colliding clients must be disconnected. The timestamp is examined to determine which client loses. The client with the earlier timestamp remains. If both clients have equal timestamps, both are removed. Currently, Unreal handles NICK collisions both passively and agressively:</p>
 		<ul>
 			<li><b>Aggressive Handling:</b> The server actively sends a KILL message back across the link to terminate that end's client.</li>
 			<li><b>Passive Handling:</b> Upon receipt of a NICK message that should "win", the server simply silently exits it's own client.</li>
