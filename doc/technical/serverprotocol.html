@@ -65,6 +65,9 @@
 		<blockquote><blockquote><p><a href="#S8_1_2">8.1.2 GZLINE - Network-wide IP ban</a></p></blockquote></blockquote>
 		<blockquote><blockquote><p><a href="#S8_1_3">8.1.3 SQLINE, UNSQLINE - Network-wide Nickname ban</a></p></blockquote></blockquote>
 		<blockquote><blockquote><p><a href="#S8_1_4">8.1.4 SPAMFILTER - Message Spam Filtration System</a></p></blockquote></blockquote>
+		<p><a href="#S9">9 Base64 Tables</a></p>
+		<blockquote><p><a href="#S9_1">9.1 Table for SJB64 (NICK and SJOIN).</a></p></blockquote>
+		<blockquote><p><a href="#S9_2">9.2 Table for NICKIP.</a></p></blockquote>
 		<hr/>
 		<h1><a name="S1"></a>1 Introduction</h1>
 		<p>This document describes the UnrealIRCd server-to-server protocol as of protocol 2307 (Unreal 3.2.4).</p>
@@ -380,5 +383,39 @@
 			<li>v (viruschan) - User is removed from all channels, joined to the viruschan as defined in conf, and cannot message anything but that channel.</li>
 			<li>w (warn) - No action on the user is taken. Only the Spamfilter notice is sent to opers with snomask +S.</li>
 		</ul>
+		<h1><a name="S9">9 Base64 Tables</a></h1>
+		<p>Unreal uses base64 encoding to allow saving bandwidth by encoding numbers in a more compact format. Unreal uses two different variations of base64, one used for the SJB64 PROTOCTL option (in NICK and SJOIN), and one used for NICKIP.</p>
+		<h2><a name="S9_1">9.1 Table for SJB64 (NICK and SJOIN).</a></h2>
+		<p>In NICK and SJOIN, remember that the timestamp will be prefixed with ! to signal a base64 timestamp.</p>
+		<p>Just like in base10, the least significant &quot;digit&quot; is last.</p>
+		<ul>
+			<li>0 through 9 are equal to ... well ... 0 through 9.</li>
+			<li><b>Uppercase</b> A through Z (base64 IS case-sensitive) equal 10 through 35.</li>
+			<li><b>Lowercase</b> a through z equal 36 through 61.</li>
+			<li>{ (opening brace) equals 62, and } (closing brace) equals 63.</li>
+		</ul>
+		<p>So for example 22A} equals 2 * 64^3 + 2 * 64^2 + A (= 10) * 64^1 + } (= 63) * 64^0 = 524288 + 8192 + 640 + 63 = 533183.</p>
+		<h2><a name="S9_2">9.2 Table for NICKIP.</a></h2>
+		<p>In this table, the IP is encoded in network byte order. In terms of IPs, this means the first byte of the address really is first. Each &quot;digit&quot; in the base64 encoded IP corresponds to 6 bits of the IP address.</p>
+		<p>An IPv4 address is 32 bits, so 6 base64 &quot;digits&quot; are needed. Since base64 requires values to come in multiples of 4 &quot;digits&quot;, padding characters (=) need to be added if a value comes up short. In the case of IPv4 addresses, two are needed.</p>
+		<p>Values are given in binary:</p>
+		<ul>
+			<li><b>Uppercase</b> A through Z (again, case-sensitive) represent binary 000000 through 011001.</li>
+			<li><b>Lowercase</b> a through z represent binary 011010 through 110011.</li>
+			<li>Numerals 0 through 9 represent binary 110100 through 111101.</li>
+			<li>+ (plus) represents binary 111110, and / (slash) represents binary 111111.</li>
+		</ul>
+		<p>Converting a base64 value to IP involves stringing together the binary values of each base64 &quot;digit&quot; and then splitting the result into real bytes.</p>
+		<p>Example: wKgCYQ== : 110000 001010 100000 000010 011000 010000 (pad) (pad) : 11000000 10101000 00000010 01100001 0000---- --------</p>
+		<p>Since IPv4 only uses 32 bits we ignore the extra: 11000000 10101000 00000010 01100001 : 192 168 2 97</p>
+		<p>Now the other way, starting with 10.34.28.172:</p>
+		<p>10 = 00001010, 34 = 00100010, 28 = 00011100, 172 = 10101100, : 000010 100010 001000 011100 101011 00</p>
+		<p>Since the last part is short of 6 bits, we tack on extra 0 bits to make it an even six: 000010 100010 001000 011100 101011 000000</p>
+		<p>Thus we come up with: CiIcr. Since we have to have multiple of 4 characters, we add two padding characters: CiIcr==</p>
+		<p>IPv6 addresses are 128-bit. They therefore need 22 base64 &quot;digits&quot; plus 2 pad characters.</p>
+		<p>Example IPv6 address: fe80:0:0:0:248:54ff:fe85:a07f</p>
+		<p>Nice thing about the hex in IPv6 is hex easily converts to binary: 1111111010000000 0000000000000000 0000000000000000 0000000000000000 0000001001001000 0101010011111111 1111111010000101 1010000001111111</p>
+		<p>Now for the base64: 111111 101000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000010 010010 000101 010011 111111 111111 101000 010110 100000 011111 11 - again, extend the last part to 6 bits: 110000</p>
+		<p>Result should be: }oAAAAAAAAACSFT}}oWgfw==</p>
 	</body>
 </html>
