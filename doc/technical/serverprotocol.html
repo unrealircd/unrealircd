@@ -388,34 +388,43 @@
 		<h2><a name="S9_1">9.1 Table for SJB64 (NICK and SJOIN).</a></h2>
 		<p>In NICK and SJOIN, remember that the timestamp will be prefixed with ! to signal a base64 timestamp.</p>
 		<p>Just like in base10, the least significant &quot;digit&quot; is last.</p>
-		<ul>
-			<li>0 through 9 are equal to ... well ... 0 through 9.</li>
-			<li><b>Uppercase</b> A through Z (base64 IS case-sensitive) equal 10 through 35.</li>
-			<li><b>Lowercase</b> a through z equal 36 through 61.</li>
-			<li>{ (opening brace) equals 62, and } (closing brace) equals 63.</li>
-		</ul>
-		<p>So for example 22A} equals 2 * 64^3 + 2 * 64^2 + A (= 10) * 64^1 + } (= 63) * 64^0 = 524288 + 8192 + 640 + 63 = 533183.</p>
+		<pre>0 0            17 H            34 Y            51 p
+1 1            18 I            35 Z            52 q
+2 2            19 J            36 a            53 r
+3 3            20 K            37 b            54 s
+4 4            21 L            38 c            55 t
+5 5            22 M            39 d            56 u
+6 6            23 N            40 e            57 v
+7 7            24 O            41 f            58 w
+8 8            25 P            42 g            59 x
+9 9            26 Q            43 h            60 y
+10 A            27 R            44 i            61 z
+11 B            28 S            45 j            62 {
+12 C            29 T            46 k            63 }
+13 D            30 U            47 l
+14 E            31 V            48 m
+15 F            32 W            49 n
+16 G            33 X            50 o</pre>
 		<h2><a name="S9_2">9.2 Table for NICKIP.</a></h2>
 		<p>In this table, the IP is encoded in network byte order. In terms of IPs, this means the first byte of the address really is first. Each &quot;digit&quot; in the base64 encoded IP corresponds to 6 bits of the IP address.</p>
 		<p>An IPv4 address is 32 bits, so 6 base64 &quot;digits&quot; are needed. Since base64 requires values to come in multiples of 4 &quot;digits&quot;, padding characters (=) need to be added if a value comes up short. In the case of IPv4 addresses, two are needed.</p>
-		<p>Values are given in binary:</p>
-		<ul>
-			<li><b>Uppercase</b> A through Z (again, case-sensitive) represent binary 000000 through 011001.</li>
-			<li><b>Lowercase</b> a through z represent binary 011010 through 110011.</li>
-			<li>Numerals 0 through 9 represent binary 110100 through 111101.</li>
-			<li>+ (plus) represents binary 111110, and / (slash) represents binary 111111.</li>
-		</ul>
-		<p>Converting a base64 value to IP involves stringing together the binary values of each base64 &quot;digit&quot; and then splitting the result into real bytes.</p>
-		<p>Example: wKgCYQ== : 110000 001010 100000 000010 011000 010000 (pad) (pad) : 11000000 10101000 00000010 01100001 0000---- --------</p>
-		<p>Since IPv4 only uses 32 bits we ignore the extra: 11000000 10101000 00000010 01100001 : 192 168 2 97</p>
-		<p>Now the other way, starting with 10.34.28.172:</p>
-		<p>10 = 00001010, 34 = 00100010, 28 = 00011100, 172 = 10101100, : 000010 100010 001000 011100 101011 00</p>
-		<p>Since the last part is short of 6 bits, we tack on extra 0 bits to make it an even six: 000010 100010 001000 011100 101011 000000</p>
-		<p>Thus we come up with: CiIcr. Since we have to have multiple of 4 characters, we add two padding characters: CiIcr==</p>
 		<p>IPv6 addresses are 128-bit. They therefore need 22 base64 &quot;digits&quot; plus 2 pad characters.</p>
-		<p>Example IPv6 address: fe80:0:0:0:248:54ff:fe85:a07f</p>
-		<p>Nice thing about the hex in IPv6 is hex easily converts to binary: 1111111010000000 0000000000000000 0000000000000000 0000000000000000 0000001001001000 0101010011111111 1111111010000101 1010000001111111</p>
-		<p>Now for the base64: 111111 101000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000010 010010 000101 010011 111111 111111 101000 010110 100000 011111 11 - again, extend the last part to 6 bits: 110000</p>
-		<p>Result should be: }oAAAAAAAAACSFT}}oWgfw==</p>
+		<pre>0 A            17 R            34 i            51 z
+1 B            18 S            35 j            52 0
+2 C            19 T            36 k            53 1
+3 D            20 U            37 l            54 2
+4 E            21 V            38 m            55 3
+5 F            22 W            39 n            56 4
+6 G            23 X            40 o            57 5
+7 H            24 Y            41 p            58 6
+8 I            25 Z            42 q            59 7
+9 J            26 a            43 r            60 8
+10 K            27 b            44 s            61 9
+11 L            28 c            45 t            62 +
+12 M            29 d            46 u            63 /
+13 N            30 e            47 v
+14 O            31 f            48 w         (pad) =
+15 P            32 g            49 x
+16 Q            33 h            50 y</pre>
 	</body>
 </html>
