@@ -388,16 +388,16 @@
 		<h2><a name="S9_1">9.1 Table for SJB64 (NICK and SJOIN).</a></h2>
 		<p>In NICK and SJOIN, remember that the timestamp will be prefixed with ! to signal a base64 timestamp.</p>
 		<p>Just like in base10, the least significant &quot;digit&quot; is last.</p>
-		<pre>0 0            17 H            34 Y            51 p
-1 1            18 I            35 Z            52 q
-2 2            19 J            36 a            53 r
-3 3            20 K            37 b            54 s
-4 4            21 L            38 c            55 t
-5 5            22 M            39 d            56 u
-6 6            23 N            40 e            57 v
-7 7            24 O            41 f            58 w
-8 8            25 P            42 g            59 x
-9 9            26 Q            43 h            60 y
+		<pre> 0 0            17 H            34 Y            51 p
+ 1 1            18 I            35 Z            52 q
+ 2 2            19 J            36 a            53 r
+ 3 3            20 K            37 b            54 s
+ 4 4            21 L            38 c            55 t
+ 5 5            22 M            39 d            56 u
+ 6 6            23 N            40 e            57 v
+ 7 7            24 O            41 f            58 w
+ 8 8            25 P            42 g            59 x
+ 9 9            26 Q            43 h            60 y
 10 A            27 R            44 i            61 z
 11 B            28 S            45 j            62 {
 12 C            29 T            46 k            63 }
@@ -409,16 +409,16 @@
 		<p>In this table, the IP is encoded in network byte order. In terms of IPs, this means the first byte of the address really is first. Each &quot;digit&quot; in the base64 encoded IP corresponds to 6 bits of the IP address.</p>
 		<p>An IPv4 address is 32 bits, so 6 base64 &quot;digits&quot; are needed. Since base64 requires values to come in multiples of 4 &quot;digits&quot;, padding characters (=) need to be added if a value comes up short. In the case of IPv4 addresses, two are needed.</p>
 		<p>IPv6 addresses are 128-bit. They therefore need 22 base64 &quot;digits&quot; plus 2 pad characters.</p>
-		<pre>0 A            17 R            34 i            51 z
-1 B            18 S            35 j            52 0
-2 C            19 T            36 k            53 1
-3 D            20 U            37 l            54 2
-4 E            21 V            38 m            55 3
-5 F            22 W            39 n            56 4
-6 G            23 X            40 o            57 5
-7 H            24 Y            41 p            58 6
-8 I            25 Z            42 q            59 7
-9 J            26 a            43 r            60 8
+		<pre> 0 A            17 R            34 i            51 z
+ 1 B            18 S            35 j            52 0
+ 2 C            19 T            36 k            53 1
+ 3 D            20 U            37 l            54 2
+ 4 E            21 V            38 m            55 3
+ 5 F            22 W            39 n            56 4
+ 6 G            23 X            40 o            57 5
+ 7 H            24 Y            41 p            58 6
+ 8 I            25 Z            42 q            59 7
+ 9 J            26 a            43 r            60 8
 10 K            27 b            44 s            61 9
 11 L            28 c            45 t            62 +
 12 M            29 d            46 u            63 /
