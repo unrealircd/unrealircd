@@ -233,7 +233,7 @@
 		</ul>
 		<h2><a name="S5_2"></a>5.2 JOIN - Channel Join (TOKEN: C)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> C <i>#channel</i></tt></p>
-		<p>Indicates a user has joined a channel. Only one channel is sent this way, and the key is not sent even if the user gave one one joining. If the channel parameter is the special "0" case, the server must interpret the message as a PART for all channels the user is on (but I don't think this is ever sent amongst servers).</p>
+		<p>Indicates a user has joined a channel. Only one channel is sent this way, and the key is not sent even if the user gave one one joining. If the channel parameter is the special "0" case, the server must interpret the message as a PART for all channels the user is on.</p>
 		<h2><a name="S5_3"></a>5.3 PART - Channel Part (TOKEN: D)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> D <i>#channel</i>[ :<i>reason</i></tt>]</p>
 		<p>Indicates a user has left a channel. Only one channel is sent this way. The reason parameter may be left out if no reason was given.</p>
