@@ -773,3 +773,4 @@ extern void unrealdns_gethostbyname_link(char *name, ConfigItem_link *conf);
 extern void unrealdns_delasyncconnects(void);
 extern int is_autojoin_chan(char *chname);
 extern void unreal_free_hostent(struct hostent *he);
+extern int match_esc(const char *mask, const char *name);

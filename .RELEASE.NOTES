@@ -60,9 +60,10 @@ NOTE: This is a Release Candidate. This is NOT an (official) STABLE release yet
   they forgot to recompile everything.
 - More modulizing: another 200 lines of code / 20 functions have been moved to modules.
 - Multiple allow channel::channel items are now permitted again
-- ExtBan ~c now can deal properly with channels with "?" and "*" in their name, such
-  as "#*test*" which you can ban via: "+b ~c:#\*test\*" (though +b ~c:#*test* will work
-  too but will match all channels with test in their name).
+- Redid glob matching. Escaping is now ripped out for normal bans (as it should be), this
+  means no longer weird issues with +b *\* etc not banning nicks with \ in it.
+  ExtBan ~c/~r get special treatment and will use our match_esc [match with escaping]
+  routine, that way you can ban channels such as "#f*ck" via "+b ~c:#f\*ck".
 - Spamfilter: regexes and reasons are now more limited in size, this is to combat the
   "I set a spamfilter, but cannot remove it" problem. In practice this means - depending
   on the length of the spamfilter reason - that spamfilter will max ~300 characters.

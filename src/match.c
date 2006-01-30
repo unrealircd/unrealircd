@@ -45,7 +45,7 @@ u_char touppertab[], tolowertab[];
 #endif
 
 
-/* Internal ('real') match routine: match2().
+/* Match routine for special cases where escaping is needed in a normal fashion.
  * Checks a string ('name') against a globbing(+more) pattern ('mask').
  * Original by Douglas A Lewis (dalewis@acsu.buffalo.edu).
  * Code based on hybrid7's version (match_esc()).
@@ -58,7 +58,7 @@ u_char touppertab[], tolowertab[];
  * - Support for '_'.
  * - Rip out support for '#'.
  */
-static inline int match2(const char *mask, const char *name)
+int match_esc(const char *mask, const char *name)
 {
 const u_char *m = mask;
 const u_char *n = name;
@@ -97,20 +97,8 @@ const u_char *na = name;
 		if (*m != '?')
 		{
 			if (*m == '\\')
-			{
-				switch(m[1])
-				{
-					case '\0':
-						return 1; /* unfinished escape sequence */
-					case '*':
-					case '?':
-						m++; /* valid escape sequence: \* -> * and \? -> ? */
-						break;
-					default:
-						/* Invalid, take it as literal */
-						break;
-				}
-			}
+				if (!*++m)
+					return 1; /* unfinished escape sequence */
 			if ((lc(*m) != lc(*n)) && !((*m == '_') && (*n == ' ')))
 			{
 				if (!ma)
@@ -122,6 +110,58 @@ const u_char *na = name;
 				m++;
 				n++;
 			}
+		} else
+		{
+			m++;
+			n++;
+		}
+	}
+	return 1;
+}
+
+/** Same credit/copyright as match_esc() applies, except escaping removed.. ;p */
+static inline int match2(const char *mask, const char *name)
+{
+const u_char *m = mask;
+const u_char *n = name;
+const u_char *ma = NULL;
+const u_char *na = name;
+
+	while(1)
+	{
+		if (*m == '*')
+		{
+			while (*m == '*') /* collapse.. */
+				m++;
+			ma = m; 
+			na = n;
+		}
+		
+		if (!*m)
+		{
+			if (!*n)
+				return 0;
+			if (!ma)
+				return 1;
+			for (m--; (m > (const u_char *)mask) && (*m == '?'); m--);
+			if (*m == '*')
+				return 0;
+			m = ma;
+			n = ++na;
+		} else
+		if (!*n)
+		{
+			while (*m == '*') /* collapse.. */
+				m++;
+			return (*m != 0);
+		}
+		
+		if ((lc(*m) != lc(*n)) && !((*m == '_') && (*n == ' ')))
+		{
+			if (!ma)
+				return 1;
+			m = ma;
+			n = ++na;
 		} else
 		{
 			m++;

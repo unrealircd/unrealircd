@@ -230,7 +230,7 @@ char *p = ban+3, symbol = '\0';
 	}
 	for (lp = sptr->user->channel; lp; lp = lp->next)
 	{
-		if (!match(p, lp->chptr->chname))
+		if (!match_esc(p, lp->chptr->chname))
 		{
 			/* Channel matched, check symbol if needed (+/%/@/etc) */
 			if (symbol)
@@ -323,10 +323,11 @@ static char retbuf[REALLEN + 8];
 		mask[REALLEN + 3] = '\0';
 	return retbuf;
 }
+
 int extban_moder_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type)
 {
 char *ban = banin+3;
-	if (!match(ban, sptr->info))
+	if (!match_esc(ban, sptr->info))
 		return 1;
 	return 0;
 }
