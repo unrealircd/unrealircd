@@ -1,5 +1,5 @@
 
-Unreal3.2.4-rc2 Release Notes
+Unreal3.2.4-rc3 Release Notes
 ==============================
 
 NOTE: This is a Release Candidate. This is NOT an (official) STABLE release yet
@@ -64,6 +64,9 @@ NOTE: This is a Release Candidate. This is NOT an (official) STABLE release yet
   means no longer weird issues with +b *\* etc not banning nicks with \ in it.
   ExtBan ~c/~r get special treatment and will use our match_esc [match with escaping]
   routine, that way you can ban channels such as "#f*ck" via "+b ~c:#f\*ck".
+  Note that for ~c/~r you would now have to escape \ to \\ as well, so to ban a channel
+  named "#bl\ah" you do "+b ~c:#bl\\ah". Again, for all bans other than ~c/~r this does not
+  apply.
 - Spamfilter: regexes and reasons are now more limited in size, this is to combat the
   "I set a spamfilter, but cannot remove it" problem. In practice this means - depending
   on the length of the spamfilter reason - that spamfilter will max ~300 characters.

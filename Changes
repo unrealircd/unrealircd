@@ -1029,3 +1029,4 @@
   ExtBan ~c/~r get special treatment and will use our match_esc [match with escaping]
   routine, that way you can ban channels such as "#f*ck" via "+b ~c:#f\*ck".
   Fix triggered by bugreport of vonitsanet (#0002782).
+** public 3.2.4-rc3 release **
