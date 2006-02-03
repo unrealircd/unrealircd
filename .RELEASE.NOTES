@@ -1,17 +1,6 @@
 
-Unreal3.2.4-rc3 Release Notes
-==============================
-
-NOTE: This is a Release Candidate. This is NOT an (official) STABLE release yet
-      and thus not suitable for running on production servers.
-      Rather, it is released to the public so people can play around and test things
-      a bit, in order to make sure this version does not contain any serious
-      release critical issues (such as crash bugs), so we can release 3.2.4
-      with a bit more confidence ;).
-      The period between the Release Candidates and the actual 3.2.4 release
-      will be quite short though, so if you find any (major) bugs while testing
-      this release, please report them as soon as you find them to
-      http://bugs.unrealircd.org/. Thanks!
+Unreal3.2.4 Release Notes
+==========================
 
 ==[ GENERAL INFORMATION ]==
 - If you are upgrading on *NIX, make sure you run 'make clean' and './Config'

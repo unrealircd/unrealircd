@@ -1030,3 +1030,5 @@
   routine, that way you can ban channels such as "#f*ck" via "+b ~c:#f\*ck".
   Fix triggered by bugreport of vonitsanet (#0002782).
 ** public 3.2.4-rc3 release **
+- No changes (except version number)
+** 3.2.4 release **
