@@ -354,6 +354,8 @@
 #define RPL_DUMPRPL			 641
 #define RPL_EODUMP           642
 
+#define RPL_SPAMCMDFWD       659
+
 #define RPL_WHOISSECURE      671
 
 #define ERR_CANNOTDOCOMMAND 972

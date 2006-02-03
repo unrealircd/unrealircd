@@ -261,7 +261,7 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 
 #define CHPAR2        "kfL"
 #define CHPAR3        "l"
-#define CHPAR4        "psmntirRcOAQKVGCuzNSM"
+#define CHPAR4        "psmntirRcOAQKVCuzNSM"
 
 
 /* Server-Server PROTOCTL -Stskeeps

@@ -144,6 +144,8 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			{
 			  case '+':
 				  timediff = atol(parv[3]);
+				  ircd_log(LOG_ERROR, "TSCTL: Time offset changed by %s to +%li (was %li)",
+				      sptr->name, timediff, TSoffset);
 				  TSoffset = timediff;
 				  sendto_ops
 				      ("TS Control - %s set TStime() to be diffed +%li",
@@ -154,6 +156,8 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				  break;
 			  case '-':
 				  timediff = atol(parv[3]);
+				  ircd_log(LOG_ERROR, "TSCTL: Time offset changed by %s to -%li (was %li)",
+				      sptr->name, timediff, TSoffset);
 				  TSoffset = -timediff;
 				  sendto_ops
 				      ("TS Control - %s set TStime() to be diffed -%li",
@@ -197,6 +201,8 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 			timediff = atol(parv[2]);
 			timediff = timediff - time(NULL);
+		    ircd_log(LOG_ERROR, "TSCTL: U:line %s set time to be %li (timediff: %li, was %li)",
+				sptr->name, atol(parv[2]), timediff, TSoffset);
 			TSoffset = timediff;
 			sendto_ops
 			    ("TS Control - U:line set time to be %li (timediff: %li)",

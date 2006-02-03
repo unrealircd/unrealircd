@@ -66,7 +66,6 @@ Computing Center and Jarkko Oikarinen";
 #else
 # include "nameser.h"
 #endif
-#include "resolv.h"
 #include "sock.h"		/* If FD_ZERO isn't define up to this point,  */
 #include <string.h>
 #include "proto.h"
@@ -106,7 +105,7 @@ extern char backupbuf[8192];
 aClient *local[MAXCONNECTIONS];
 short    LastSlot = -1;    /* GLOBAL - last used slot in local */
 int      OpenFiles = 0;    /* GLOBAL - number of files currently open */
-int readcalls = 0, resfd = -1;
+int readcalls = 0;
 static struct SOCKADDR_IN mysk;
 
 static struct SOCKADDR *connect_inet(ConfigItem_link *, aClient *, int *);
@@ -149,7 +148,8 @@ extern void url_do_transfers_async(void);
 #  endif
 # endif
 #endif
-void	start_of_normal_client_handshake(aClient *acptr);
+void start_of_normal_client_handshake(aClient *acptr);
+void proceed_normal_client_handshake(aClient *acptr, struct hostent *he);
 
 /* winlocal */
 void add_local_client(aClient* cptr)
@@ -208,8 +208,6 @@ void close_connections(void)
       }
     }
   }
-  CLOSE_SOCK(resfd);
-  resfd = -1;
   OpenFiles = 0;
   LastSlot = -1;
 #ifdef _WIN32
@@ -225,7 +223,7 @@ void close_connections(void)
 
 void add_local_domain(char *hname, int size)
 {
-#ifdef RES_INIT
+#if 0
 	/* try to fix up unqualified names */
 	if (!index(hname, '.'))
 	{
@@ -615,16 +613,20 @@ char logbuf[BUFSIZ];
 # endif
 #endif
 #ifndef _WIN32
+#ifndef NOCLOSEFD
 for (fd = 3; fd < MAXCONNECTIONS; fd++)
 {
 	(void)close(fd);
 }
 (void)close(1);
+#endif
 
 if (bootopt & BOOT_TTY)		/* debugging is going to a tty */
 	goto init_dgram;
+#ifndef NOCLOSEFD
 if (!(bootopt & BOOT_DEBUG))
 	(void)close(2);
+#endif
 
 if ((bootopt & BOOT_CONSOLE) || isatty(0))
 {
@@ -637,7 +639,9 @@ if ((bootopt & BOOT_CONSOLE) || isatty(0))
 	if ((fd = open("/dev/tty", O_RDWR)) >= 0)
 	{
 		(void)ioctl(fd, TIOCNOTTY, (char *)NULL);
+#ifndef NOCLOSEFD
 		(void)close(fd);
+#endif
 	}
 #endif
 
@@ -647,22 +651,25 @@ if ((bootopt & BOOT_CONSOLE) || isatty(0))
 #else
 	(void)setpgrp(0, (int)getpid());
 #endif
+#ifndef NOCLOSEFD
 	(void)close(0);		/* fd 0 opened by inetd */
+#endif
 	local[0] = NULL;
 }
 init_dgram:
 #else
+#ifndef NOCLOSEFD
 	close(fileno(stdin));
 	close(fileno(stdout));
 	if (!(bootopt & BOOT_DEBUG))
 	close(fileno(stderr));
+#endif
 	memset(local, 0, sizeof(aClient*) * MAXCONNECTIONS);
 	LastSlot = -1;
 
 #endif /*_WIN32*/
 
-	resfd = init_resolver(0x1f);
-	Debug((DEBUG_DNS, "resfd %d", resfd));
+	init_resolver();
 	return;
 }
 
@@ -727,7 +734,11 @@ static int check_init(aClient *cptr, char *sockn, size_t size)
 	if (inet_netof(sk.SIN_ADDR) == IN_LOOPBACKNET)
 #endif
 	{
-		cptr->hostp = NULL;
+		if (cptr->hostp)
+		{
+			unreal_free_hostent(cptr->hostp);
+			cptr->hostp = NULL;
+		}
 		strncpyzt(sockn, "localhost", HOSTLEN);
 	}
 	bcopy((char *)&sk.SIN_ADDR, (char *)&cptr->ip, sizeof(struct IN_ADDR));
@@ -892,7 +903,7 @@ void close_connection(aClient *cptr)
 	/*
 	 * remove outstanding DNS queries.
 	 */
-	del_queries((char *)cptr);
+	unrealdns_delreq_bycptr(cptr);
 	/*
 	 * If the connection has been up for a long amount of time, schedule
 	 * a 'quick' reconnect, else reset the next-connect cycle.
@@ -902,7 +913,7 @@ void close_connection(aClient *cptr)
 	 * the SQUIT flag has been set, then we don't schedule a fast
 	 * reconnect.  Pisses off too many opers. :-)  -Cabal95
 	 */
-	if (IsServer(cptr) && !(cptr->flags & FLAGS_SQUIT) &&
+	if (IsServer(cptr) && !(cptr->flags & FLAGS_SQUIT) && cptr->serv->conf &&
 	    (!cptr->serv->conf->flag.temporary &&
 	      (cptr->serv->conf->options & CONNECT_AUTO)))
 	{
@@ -1339,29 +1350,48 @@ add_con_refuse:
 	return acptr;
 }
 
+static int dns_special_flag = 0; /* This is for an "interesting" race condition / fuck up issue.. very ugly. */
+
 void	start_of_normal_client_handshake(aClient *acptr)
 {
-	Link	lin;
-	acptr->status = STAT_UNKNOWN;	
-	if (DONT_RESOLVE)
-		goto skipdns;
-	if (SHOWCONNECTINFO && !acptr->serv)
-		sendto_one(acptr, "%s", REPORT_DO_DNS);
-	lin.flags = ASYNC_CLIENT;
-	lin.value.cptr = acptr;
-	Debug((DEBUG_DNS, "lookup %s", acptr->sockhost));
-	acptr->hostp = gethost_byaddr((char *)&acptr->ip, &lin);
-	
-	if (!acptr->hostp)
-		SetDNS(acptr);
-	else
+struct hostent *he;
+
+	acptr->status = STAT_UNKNOWN;
+
+	if (!DONT_RESOLVE)
 	{
-		if (SHOWCONNECTINFO && !acptr->serv)
-			sendto_one(acptr, "%s", REPORT_FIN_DNSC);
+		dns_special_flag = 1;
+		he = unrealdns_doclient(acptr);
+		dns_special_flag = 0;
+
+		if (acptr->hostp)
+			goto doauth; /* Race condition detected, DNS has been done, continue with auth */
+
+		if (!he)
+		{
+			/* Resolving in progress */
+			SetDNS(acptr);
+		} else {
+			/* Host was in our cache */
+			acptr->hostp = he;
+			if (SHOWCONNECTINFO && !acptr->serv)
+				sendto_one(acptr, "%s", REPORT_FIN_DNSC);
+		}
 	}
-	nextdnscheck = 1;
-skipdns:
+
+doauth:
 	start_auth(acptr);
+}
+
+void proceed_normal_client_handshake(aClient *acptr, struct hostent *he)
+{
+	ClearDNS(acptr);
+	acptr->hostp = he;
+	if (SHOWCONNECTINFO && !acptr->serv)
+		sendto_one(acptr, "%s", acptr->hostp ? REPORT_FIN_DNS : REPORT_FAIL_DNS);
+	
+	if (!dns_special_flag && !DoingAuth(acptr))
+		SetAccess(acptr);
 }
 
 /*
@@ -1720,8 +1750,8 @@ int  read_message(time_t delay, fdlist *listp)
 			}
 		}
 
-		if (resfd >= 0)
-			FD_SET(resfd, &read_set);
+		ares_fds(resolver_channel, &read_set, &write_set);
+		
 		if (me.fd >= 0)
 			FD_SET(me.fd, &read_set);
 
@@ -1751,13 +1781,10 @@ int  read_message(time_t delay, fdlist *listp)
 		Sleep(10000);
 #endif
 	}
-	if (resfd >= 0 && FD_ISSET(resfd, &read_set))
-	{
-		Debug((DEBUG_DNS, "Doing DNS async.."));
-		do_dns_async();
-		nfds--;
-		FD_CLR(resfd, &read_set);
-	}
+
+	Debug((DEBUG_DNS, "Doing DNS async.."));
+	ares_process(resolver_channel, &read_set, &write_set);
+
 	/*
 	 * Check fd sets for the auth fd's (if set and valid!) first
 	 * because these can not be processed using the normal loops below.
@@ -2155,11 +2182,7 @@ int  read_message(time_t delay, fdlist *listp)
 				PFD_SETW(i);
 		}
 
-		if (resfd >= 0)
-		{
-			PFD_SETR(resfd);
-			res_pfd = pfd;
-		}
+		__THIS__CODE__DOES__NOT__WORK__
 
 /* FIXME: no ZIP link handling here, but this code doesnt work anyway -- Syzop */
 
@@ -2358,7 +2381,12 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	char *s;
 	int  errtmp, len;
 
-	if (aconf->options & CONNECT_NODNSCACHE) {
+#ifdef DEBUGMODE
+	sendto_realops("connect_server() called with aconf %p, refcount: %d, TEMP: %s",
+		aconf, aconf->refcount, aconf->flag.temporary ? "YES" : "NO");
+#endif
+
+	if (!hp && (aconf->options & CONNECT_NODNSCACHE)) {
 		/* Remove "cache" if link::options::nodnscache is set */
 		memset(&aconf->ipnum, '\0', sizeof(struct IN_ADDR));
 	}
@@ -2368,10 +2396,6 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	 */
 	 if (!WHOSTENTP(aconf->ipnum.S_ADDR))
 	 {
-		Link lin;
-
-		lin.flags = ASYNC_CONNECT;
-		lin.value.aconf = (ListStruct *) aconf;
 		nextdnscheck = 1;
 		s = aconf->hostname;
 #ifndef INET6
@@ -2385,11 +2409,8 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 #else
 			aconf->ipnum.S_ADDR = 0;
 #endif
-			hp = gethost_byname(s, &lin);
-			if (!hp)
-				return -2;
-			bcopy(hp->h_addr, (char *)&aconf->ipnum,
-			    sizeof(struct IN_ADDR));
+			unrealdns_gethostbyname_link(aconf->hostname, aconf);
+			return -2;
 		}
 	}
 	cptr = make_client(NULL, NULL);
@@ -2446,6 +2467,10 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	(void)make_server(cptr);
 	cptr->serv->conf = aconf;
 	cptr->serv->conf->refcount++;
+#ifdef DEBUGMODE
+	sendto_realops("connect_server() CONTINUED (%s:%d), aconf %p, refcount: %d, TEMP: %s",
+		__FILE__, __LINE__, aconf, aconf->refcount, aconf->flag.temporary ? "YES" : "NO");
+#endif
 	Debug((DEBUG_ERROR, "reference count for %s (%s) is now %d",
 		cptr->name, cptr->serv->conf->servername, cptr->serv->conf->refcount));
 	if (by && IsPerson(by))
@@ -2553,98 +2578,4 @@ static struct SOCKADDR *connect_inet(ConfigItem_link *aconf, aClient *cptr, int 
 	server.SIN_PORT = htons(((aconf->port > 0) ? aconf->port : portnum));
 	*lenp = sizeof(server);
 	return (struct SOCKADDR *)&server;
-}
-
-
-/*
- * do_dns_async
- *
- * Called when the fd returned from init_resolver() has been selected for
- * reading.
- */
-
-static void do_dns_async(void)
-{
-	static	Link	ln;
-	aClient	*cptr;
-	ConfigItem_link *aconf;
-	struct	hostent	*hp;
-	int	bytes, pkts;
-
-	pkts = 0;
-
-	do {
-		ln.flags = -1;
-		hp = get_res((char *)&ln);
-		Debug((DEBUG_DNS,"%#x = get_res(%d,%#x)", hp, ln.flags,
-			ln.value.cptr));
-
-		switch (ln.flags)
-		{
-		case ASYNC_NONE :
-			/*
-			 * no reply was processed that was outstanding or
-			 * had a client still waiting.
-			 */
-			break;
-		case ASYNC_CLIENT :
-			if ((cptr = ln.value.cptr))
-			    {
-				del_queries((char *)cptr);
-				ClearDNS(cptr);
-				cptr->hostp = hp;
-
-				if (SHOWCONNECTINFO && !cptr->serv)
-		          	        sendto_one(cptr, "%s", cptr->hostp ? REPORT_FIN_DNS : REPORT_FAIL_DNS);
-				  if (!DoingAuth(cptr))
-					  SetAccess(cptr);
-			    }
-			break;
-		case ASYNC_CONF :
-		  aconf = (ConfigItem_link *) ln.value.aconf;
-		  if (hp && aconf)
-			  bcopy(hp->h_addr, (char *)&aconf->ipnum,
-		      sizeof(struct IN_ADDR));
-		break;
-		case ASYNC_CONNECT :
-			/* Async connect support, the only problem is we don't know who did the /connect
-			 * anymore, so we send the statusinfo to all local ops ;P -- Syzop
-			 */
-			aconf = (ConfigItem_link *) ln.value.aconf;
-			if (hp && aconf)
-			{
-				int n;
-				bcopy(hp->h_addr, (char *)&aconf->ipnum, sizeof(struct IN_ADDR));
-				n = connect_server(aconf, (aClient *)NULL, hp);
-				/* I love semi-duplicate code */
-				switch(n) {
-					case 0:
-						sendto_realops("Connecting to %s[%s].", aconf->servername, aconf->hostname);
-						break;
-					case -1:
-						sendto_realops("Couldn't connect to %s.", aconf->servername);
-						break;
-					case -2:
-						/* Should not happen since hp is not NULL */
-						sendto_realops("Hostname %s is unknown for server %s (!?).", aconf->hostname, aconf->servername);
-						break;
-					default:
-						sendto_realops("Connection to %s failed: %s", aconf->servername, STRERROR(n));
-				}
-			}
-			if (!hp) {
-				sendto_realops("Hostname %s is unknown for server %s.", aconf->hostname, aconf->servername);
-			}
-			break;
-		default :
-			break;
-		}
-		pkts++;
-#ifndef _WIN32
-		if (ioctl(resfd, FIONREAD, &bytes) == -1)
-#else
-		if (ioctlsocket(resfd, FIONREAD, &bytes) == -1)
-#endif
-			bytes = 0;
-	} while ((bytes > 0) && (pkts < 10));
 }

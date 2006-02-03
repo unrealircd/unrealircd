@@ -24,7 +24,7 @@
 #define MAXCUSTOMHOOKS  30
 #define MAXHOOKTYPES	100
 #define MAXCALLBACKS	30
-#define MAXEFUNCTIONS	30
+#define MAXEFUNCTIONS	60
 #if defined(_WIN32)
  #define MOD_EXTENSION "dll"
  #define DLLFUNC	_declspec(dllexport)
@@ -52,6 +52,12 @@
 #endif
 
 #define EVENT(x) void (x) (void *data)
+
+/* Casts to int, void, void *, and char * function pointers */
+#define TO_INTFUNC(x) (int (*)())(x)
+#define TO_VOIDFUNC(x) (void (*)())(x)
+#define TO_PVOIDFUNC(x) (void *(*)())(x)
+#define TO_PCHARFUNC(x) (char *(*)())(x)
 
 typedef struct _mod_symboltable Mod_SymbolDepTable;
 typedef struct _event Event;
@@ -628,6 +634,7 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define HOOKTYPE_REMOTE_JOIN 43
 #define HOOKTYPE_REMOTE_PART 44
 #define HOOKTYPE_REMOTE_KICK 45
+#define HOOKTYPE_LOCAL_SPAMFILTER 46
 
 /* Hook return values */
 #define HOOK_CONTINUE 0
@@ -639,12 +646,31 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define CALLBACKTYPE_CLOAKKEYCSUM 2
 
 /* Efunction types */
-#define EFUNC_DO_JOIN       1
-#define EFUNC_JOIN_CHANNEL  2
-#define EFUNC_CAN_JOIN      3
-#define EFUNC_DO_MODE       4
-#define EFUNC_SET_MODE      5
-#define EFUNC_M_UMODE		6
+#define EFUNC_DO_JOIN       				1
+#define EFUNC_JOIN_CHANNEL  				2
+#define EFUNC_CAN_JOIN      				3
+#define EFUNC_DO_MODE       				4
+#define EFUNC_SET_MODE      				5
+#define EFUNC_M_UMODE						6
+#define EFUNC_REGISTER_USER					7
+#define EFUNC_TKL_HASH						8
+#define EFUNC_TKL_TYPETOCHAR				9
+#define EFUNC_TKL_ADD_LINE					10
+#define EFUNC_TKL_DEL_LINE					11
+#define EFUNC_TKL_CHECK_LOCAL_REMOVE_SHUN	12
+#define EFUNC_TKL_EXPIRE					13
+#define EFUNC_TKL_CHECK_EXPIRE				14
+#define EFUNC_FIND_TKLINE_MATCH				15
+#define EFUNC_FIND_SHUN						16
+#define EFUNC_FIND_SPAMFILTER_USER			17
+#define EFUNC_FIND_QLINE					18
+#define EFUNC_FIND_TKLINE_MATCH_ZAP			19
+#define EFUNC_TKL_STATS						20
+#define EFUNC_TKL_SYNCH						21
+#define EFUNC_M_TKL							22
+#define EFUNC_PLACE_HOST_BAN				23
+#define EFUNC_DOSPAMFILTER					24
+#define EFUNC_DOSPAMFILTER_VIRUSCHAN		25
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000
@@ -683,15 +709,8 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define CLOAK_KEYCRC	RCallbacks[CALLBACKTYPE_CLOAKKEYCSUM]->func.pcharfunc()
 
 #ifdef DYNAMIC_LINKING
-/* ugly alert!!!! */
-#include "version.h"
- #if defined(USE_SSL) && !defined(_WIN32)
-  DLLFUNC char Mod_Version[] = BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9 "/SSL";
- #else
-  DLLFUNC char Mod_Version[] = BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9;
- #endif /* USE_SSL && !WIN_32 */
-#endif /* DYNAMIC_LINKING */
-
+ #include "modversion.h"
+#endif
 
 #endif
 

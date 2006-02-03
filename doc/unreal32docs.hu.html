@@ -24,12 +24,13 @@
 <a href="unreal32docs.es.html">Spanish</a> | 
 Hungarian | 
 <a href="unreal32docs.fr.html">French</a> | 
-<a href="unreal32docs.gr.html">Greek</a>
+<a href="unreal32docs.gr.html">Greek</a> | 
+<a href="unreal32docs.nl.html">Dutch</a>
 <br><br>
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com/">http://www.unrealircd.com</a></font><br>
-  <font size="4">Verzió: 3.2.3</font><br>
-  <b>Utolsó dokumentáció módosítás:</b> 2005-03-13</div>
+  <font size="4">Verzió: 3.2.4</font><br>
+  <b>Utolsó dokumentáció módosítás:</b> 2006-01-17</div>
 <br>
   <b>Fõ fejlesztõk:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Munkatársak:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -183,26 +184,29 @@ Windows:<br>
 <ul>
 <li><b>*NIX verziók:</b>
 <ul>
-<li>Linux 2.2.x
-<li>Linux 2.4.x
-<li>FreeBSD 4.6-STABLE
-<li>FreeBSD 4.5-STABLE
-<li>Solaris 2.x
+<li>Linux (2.2.*, 2.4.*, 2.6.*)
+<li>FreeBSD (4.*, 5.*)
+<li>NetBSD (2.*)
+<li>OpenBSD (3.7, 3.8)
+<li>Solaris (9, 10)
 </ul>
 <li><b>Windows verzió:</b>
 <ul> 
-<li>WindowsXP Home
-<li>WindowsXP Pro
-<li>Windows 2000 Pro
-<li>Windows 2000 Server
-<li>Windows 2000 Advanced Server
-<li>Windows 98
-<li>Windows Me
+<li>Windows 2000 (Pro, Server, Advanced Server)
+<li>Windows XP (Home, Pro)
+<li>Windows 2003 
+</ul>
+<li><b>Tesztelt architektúrák:</b>
+<ul>
+<li>ia32 (i386, i486, i586, i686)
+<li>ia64
+<li>amd64
+<li>alpha
 </ul>
 </ul>
   <br>
   Ha van egy mûködõ Unreal3.2-d más operációs rendszereken, kérlek, küldd
-  a részleteket a <a href="mailto://docs@unrealircd.com">docs@unrealircd.com</a> címre.<br>
+  a részleteket a <a href="mailto:coders@lists.unrealircd.org">coders@lists.unrealircd.org</a> címre.<br>
   </p>
 <p><b>Telepítési útmutatások</b><br>
 Linux:<br>
@@ -279,8 +283,7 @@ Windows:<br>
    </p>
 <p>Beállíthatod, hogy milyen snomaskokat kapj meg automatikusan (set::snomask-on-connect) és melyeket operátorrá
    váláskor (set::snomask-on-oper, oper::snomask)</p>
-<p>Alapértelmezésben, ha a felhasználó egyszerûen csak a +s módot állítja be, bizonyos snomaszkok lesznek beállítva.
-Közönséges felhasználóknak a +ks, operátoroknak a +kscfvGqo snomaszkok.</p></div>
+<p>Alapértelmezésben, ha a felhasználó egyszerûen csak a +s módot állítja be, bizonyos snomaszkok lesznek beállítva. Közönséges felhasználóknak a +ks, operátoroknak a +kscfvGqo snomaszkok.</p></div>
 
 <p><font size="+2"><b>3.4 - Álnevek</b></font><a name="feature_aliases"></a></p><div class="desc">
 <p>Az álnevek (alias) szolgálnak szerverszintû álparancsok beállítására.
@@ -575,6 +578,7 @@ Egy táblázat az összes választási lehetõségrõl:<br>
 <table border="1">
 <tr><td><b>Név:</b></td><td><b>Leírás:</b></td><td><b>Karakterkészlet/kódolás:</b></td></tr>
 <tr><td>catalan</td><td>Katalán karakterek</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>danish</td><td>Dán karakterek</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>dutch</td><td>Holland karakterek</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>french</td><td>Francia karakterek</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>german</td><td>Német karakterek</td><td>iso8859-1 (latin1)</td></tr>
@@ -583,7 +587,7 @@ Egy táblázat az összes választási lehetõségrõl:<br>
 <tr><td>italian</td><td>Olasz karakterek</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>spanish</td><td>Spanyol karakterek</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>swedish</td><td>Svéd karakterek</td><td>iso8859-1 (latin1)</td></tr>
-<tr><td><b>latin1</b></td><td>catalan, dutch, french, german, swiss-german, spanish, icelandic, italian, swedish</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td><b>latin1</b></td><td>catalan, danish, dutch, french, german, swiss-german, spanish, icelandic, italian, swedish</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>hungarian</td><td>Magyar karakterek</td><td>iso8859-2 (latin2), windows-1250</td></tr>
 <tr><td>polish</td><td>Lengyel karakterek</td><td>iso8859-2 (latin2)</td></tr>
 <tr><td>romanian</td><td>Román karakterek</td><td>iso8859-2 (latin2), windows-1250, iso8859-16</td></tr>
@@ -595,6 +599,9 @@ Egy táblázat az összes választási lehetõségrõl:<br>
 <tr><td>greek</td><td>Görög karakterek</td><td>iso8859-7</td></tr>
 <tr><td>turkish</td><td>Török karakterek</td><td>iso8859-9</td></tr>
 <tr><td>russian-w1251</td><td>Orosz karakterek</td><td>windows-1251</td></tr>
+<tr><td>belarussian-w1251</td><td>Fehérorosz karakterek</td><td>windows-1251</td></tr>
+<tr><td>ukrainian-w1251</td><td>Ukrán karakterek</td><td>windows-1251</td></tr>
+<tr><td><b>windows-1251</b></td><td>russian-w1251, belarussian-w1251, ukrainian-w1251</td><td>windows-1251</td></tr>
 <tr><td>hebrew</td><td>Héber karakterek</td><td>iso8859-8-I/windows-1255</td></tr>
 <tr><td>chinese-simp</td><td>Egyszerûsített kínai</td><td>Több-bájtos: GBK/GB2312</td></tr>
 <tr><td>chinese-trad</td><td>Hagyományos kínai</td><td>Több-bájtos: GBK</td></tr>
@@ -602,11 +609,18 @@ Egy táblázat az összes választási lehetõségrõl:<br>
 <tr><td><b>chinese</b></td><td>chinese-*</td><td>Több-bájtos: GBK</td></tr>
 <tr><td><b>gbk</b></td><td>chinese-*</td><td>Több-bájtos: GBK</td></tr>
 </table>
-Ügyeljünk arra, hogy néhány kombináció problémákat okozhat. 
+<p>1. MEGJEGYZÉS: Ügyeljünk arra, hogy néhány kombináció problémákat okozhat. 
 Például ha keverjük a latin* és chinese-* nyelveket, azt IRCd nem tudja
 megfelelõen kezelni, és az Unreal hibaüzenetet fog kiírni.
 Más karakterkészletek együttes használata lehet, hogy megjelenítési problémákat okoz, ezért az Unreal
-figyelmeztetést fog adni, ha keverjük a latin1/latin2/greek karakterkészleteket.<br><br>
+figyelmeztetést fog adni, ha keverünk latin1, latin2, greek vagy más nem kompatibilis csoportokat.</p>
+<p>2. MEGJEGYZÉS: A kis- és nagybetûk leképezése (vagyis annak megállapítása, hogy egy bizonyos kisbetûs karakternek melyik a nagybetûs párja) US-ASCII szerint
+történik. Ez azt jelenti, hogy az o" és az O" karakterek nem lesznek "azonosnak" tekintve, ezért
+lehet valakinek a nickje B"ar, és egyidõben egy másiknak BA"r. Ez egy korlátozása a jelenlegi rendszernek
+és az IRCd szabványoknak, amely nem oldható meg egyhamar. A felhasználóknak ennek tudatában kell lenniük.
+Megjegyzendõ, hogy ez a korlátozás csatornákra is vonatkozott, amikben mindig közel minden karakter
+engedélyezett volt, és mindig US-ASCII kis- és nagybetû leképezés volt végrehajtva.</p>
+<p>3. MEGJEGYZÉS: Az alapvetõ nickbeli karakterek (a-z A-Z 0-9 [ \ ] ^ _ - { | }) mindig megengedettek/beleszámítanak a karakterkészletbe.</p>
 
 1. Példa: nyugat-európai népeknek:<br>
 <pre>set { allowed-nickchars { latin1; }; };</pre>
@@ -1936,7 +1950,8 @@ link &lt;szervernév&gt; {
  gazdanevek (például dyndns.org) esetén.</td></tr>
 <tr><td><b>nohostcheck</b></td><td> ne érvényesítse a távoli gazdanevet (link::hostname); használd ezt gyakran változó
  gazdanevek (például dyndns.org) esetén.</td></tr>
-<tr><td><b>quarantine</b></td><td> az operátorok ezen a szerveren helyi operátorokként funkcionálnak</td></tr>
+<tr><td><b>quarantine</b></td><td> a szerver operátorai nem kaphatnak GLOBÁLIS jogosultságokat
+(ki lesznek lõve), teszt linkekre meg hasonlókra szokás használni</td></tr>
 </table>
 </p>
 <p>Példa:</p>
@@ -1965,6 +1980,7 @@ link hub.sajatnet.com {
 alias &lt;név&gt; {
 	target &lt;ahová-továbbítsa&gt;;
 	type &lt;álparancs-típusa&gt;;
+	spamfilter &lt;yes|no&gt;;
 };</pre></p>
 <p>(Megjegyzés: lásd még az <a href="#includedirective">include</a> direktívát az UnrealIRCd szabványos álparancsokat tartalmazó fájljairól.)</p>
 <p>Az alias blokk [szabványos álparancsokra] lehetõvé teszi, hogy parancsokat továbbíts egy
@@ -1974,8 +1990,9 @@ alias &lt;név&gt; {
   mint a továbbítási célpont, az alias::target elhagyható. Az alias::type meghatározza
   az álparancs típusát; érvényes típusok: services (a felhasználó egy szolgáltatás szerveren van), stats
   (a felhasználó egy statisztikai szerveren van), normal (a felhasználó egy közönséges felhasználó
-  bármilyen szerveren), és channel (a célpont egy csatornanév). Az alias blokknak van más célja is,
-  amit az alábbiakban magyarázunk el.</p>
+  bármilyen szerveren), és channel (a célpont egy csatornanév). Az alias::spamfilter (nem kötelezõ)
+  "yes"-re állításával bekapcsolható a spamszûrés erre az álparancsra (az alapértelmezés "no").<br>
+  Az alias blokknak van egy másik célja is, amit az alábbiakban magyarázunk el.</p>
 <p>Szintaktika [formázott álparancsokra]:<br>
 <pre>
 alias &lt;név&gt; {
@@ -1988,6 +2005,7 @@ alias &lt;név&gt; {
 		...
 	};
 	type command;
+	spamfilter &lt;yes|no&gt;;
 };</pre></p>
 <p>Amikor az alias blokkot ebben a formában használod, lehetõséget ad egy sokkal szélesebb körû
   alkalmazásra. Például készíthetsz olyan álparancsokat is, mint az /identify. Az alias::
@@ -2192,6 +2210,14 @@ set {
 <p><font class="set">set::silence-limit &lt;határ&gt;;</font><br>
   Beállítja a SILENCE lista bejegyzéseinek legnagyobb megengedett számát. Ha ez a direktíva nincs jelen,
   15 lesz beállítva.</p>
+<p><font class="set">set::maxbans &lt;határ&gt;;</font><br>
+  Beállítja, hogy csatornánként legfeljebb hány kitiltás (+b) megengedett. Az alapértelmezés 60.
+  Ha ezen változtatsz, ne felejts ránézni a maxbanlength direktívára is (lásd alább)!</p>
+<p><font class="set">set::maxbanlength &lt;határ&gt;;</font><br>
+  Hasonló a fentihez, de ez a kitiltások karaktereinek számára összesen határoz meg felsõ határt,
+  vagyis tulajdonképpen korlátozást tesz arra, kb. mekkora lehet az a legnagyobb mennyiségû memória,
+  amit a kitiltások csatornánként lefoglalhatnak. Az alapértelmezés 2048 (bájt). A set::maxbans
+  60-as alapértékével ez átlagosan 2048:60=34 karaktert enged kitiltásonként.</p>
 <p><font class="set">set::oper-only-stats &lt;flaglista&gt;;</font><br>
   Megad egy elválasztójelek nélküli, stats flagekbõl álló felsorolást, amely meghatározza, mely stats flageket
   használhatnak csak operátorok. Hagyd ki ezt az értéket, hogy engedélyezd a felhasználóknak az összes
@@ -2207,7 +2233,7 @@ set {
 <p><font class="set">set::channel-command-prefix &lt;parancs-elõtagok&gt;;</font><br>
   Meghatározza a csatornabeli services parancsok elõtag karaktereit. Azok az üzenetek, amelyek az
   itt megadott karakterek bármelyikével kezdõdnek, még olyan kliensekhez is el lesznek küldve, amelyek
-  a +d móddal rendelkeznek. Az alapérték "`".</p>
+  a +d móddal rendelkeznek. Az alapérték "`!.".</p>
 <p><font class="set">set::allowed-nickchars { &lt;felsorolás&gt; };</font><br>
   Nicknevekben engedélyezendõ karakterkészletek / nyelvek, lásd: <a href="#feature_nickchars">Karakterkészletek nicknevekben</a>.</p>
 <p><font class="set">set::allow-userhost-change [never|always|not-on-channels|force-rejoin]</font><br>
@@ -2365,6 +2391,9 @@ set {
  <p><font class="set">set::spamfilter::except &lt;célpont(ok)&gt;</font><br>
   Ezek a célpontok kivételek a spamszûrések alól (nem lesz tevékenység végrehajtva),
   lehet egyetlen célpont vagy egy vesszõvel elválaszott felsorolás. Pl.: except "#help,#spamreport"</p>
+ <p><font class="set">set::check-target-nick-bans &lt;yes|no&gt;</font><br>
+  Valahányszor a felhasználó nicknevet változtat, ellenõrzi, hogy az ÚJ név le van-e
+  tiltva. Ha igen, nem engedélyezi a nickváltást. Az alapértelmezés "yes".</p>
 <p></p> </div>
 <p><b><font size="+2">5 &#8211; További fájlok<a name="addtlfiles"></a>
   </font></b></p><div class="desc">
@@ -2570,7 +2599,8 @@ set {
   </tr>
   <tr> 
     <td><div align="center">d</div></td>
-    <td>Nem fogadsz csatornabeli PRIVMSG-ket</td>
+    <td>Nem fogadsz csatornabeli PRIVMSG-ket (kivéve az olyan szövegûeket,
+        amelyek bizonyos karakterrel kezdõdnek, lásd: set::channel-command-prefix)</td>
   </tr>
   <tr> 
     <td><div align="center">G</div></td>

@@ -1,5 +1,4 @@
 Numeric 005 Documentation (c) 2002-2005 codemastr (Dominick Meglio) [codemastr@unrealircd.com]
-(As of Unreal3.2.3)
 
 Numeric 005 allows the server to inform the client of any protocol specific features in the
 IRCd.  The numeric is sent at connection time immediately after numeric 004. Additionally

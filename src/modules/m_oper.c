@@ -350,7 +350,8 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 				OPER_AUTO_JOIN_CHANS,
 				NULL
 			};
-			do_cmd(cptr, sptr, "JOIN", 3, chans);
+			if (do_cmd(cptr, sptr, "JOIN", 3, chans) == FLUSH_BUFFER)
+				return FLUSH_BUFFER;
 		}
 		ircd_log(LOG_OPER, "OPER (%s) by (%s!%s@%s)", name, parv[0], sptr->user->username,
 			sptr->sockhost);

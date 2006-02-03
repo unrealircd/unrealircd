@@ -24,12 +24,13 @@
 Spanish | 
 <a href="unreal32docs.hu.html">Hungarian</a> | 
 <a href="unreal32docs.fr.html">French</a> | 
-<a href="unreal32docs.gr.html">Greek</a>
+<a href="unreal32docs.gr.html">Greek</a> | 
+<a href="unreal32docs.nl.html">Dutch</a>
 <br><br>
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
-  <font size="4">Versi&oacute;n: 3.2.3</font><br>
-  <b>&Uacute;ltima actualizaci&oacute;n del documento:</b> 13-03-2005</div>
+  <font size="4">Versi&oacute;n: 3.2.4</font><br>
+  <b>&Uacute;ltima actualizaci&oacute;n del documento:</b> 17-01-2006</div>
 <br>
   <b>Programadores:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contribuciones:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -53,23 +54,23 @@ Spanish |
   ---1.2. <a href="#notesonupgrade">Notas al actualizar entre versiones 3.2</a><br>
   2. <a href="#installation">Instalaci&oacute;n</a><br>
   3. <a href="#features">Caracter&iacute;sticas</a><br>
-  -- 3.1. <a href="#feature_cloaking">Cifrado</a><br>
-  -- 3.2. <a href="#feature_modules">M&oacute;dulos</a><br>
-  -- 3.3. <a href="#feature_snomasks">M&aacute;scaras de usuario </a><br>
-  -- 3.4. <a href="#feature_aliases">Aliases</a><br>
-  -- 3.5. <a href="#feature_helpop">Helpop</a><br>
-  -- 3.6. <a href="#feature_operaccesslevels">Niveles de acceso a operadores</a><br>
-  -- 3.7. <a href="#feature_opercmds">Comandos para operadores </a><br>
-  -- 3.8. <a href="#feature_ssl">SSL</a><br>
-  -- 3.9. <a href="#feature_ipv6">IPv6</a><br>
-  -- 3.10. <a href="#feature_ziplinks">Zip links</a><br>
-  -- 3.11. <a href="#feature_dyndns">Soporte conexi&oacute;n DNS/IP din&aacute;mico</a><br>
-  -- 3.12. <a href="#feature_antiflood">Caracter&iacute;sticas anti-flood</a><br>
-  -- 3.13. <a href="#feature_bantypes">Tipos de ban </a><br>
-  -- 3.14. <a href="#feature_spamfilter">Filtro de spam </a><br>
-  -- 3.15. <a href="#feature_cidr">CIDR</a><br>
-  -- 3.16. <a href="#feature_nickchars">Configuraci&oacute;n de caracteres para nicks</a><br>
-  -- 3.17. <a href="#feature_other">Otras caracter&iacute;sticas</a><br>
+  ---3.1. <a href="#feature_cloaking">Cifrado</a><br>
+  ---3.2. <a href="#feature_modules">M&oacute;dulos</a><br>
+  ---3.3. <a href="#feature_snomasks">M&aacute;scaras de usuario </a><br>
+  ---3.4. <a href="#feature_aliases">Aliases</a><br>
+  ---3.5. <a href="#feature_helpop">Helpop</a><br>
+  ---3.6. <a href="#feature_operaccesslevels">Niveles de acceso a operadores</a><br>
+  ---3.7. <a href="#feature_opercmds">Comandos para operadores </a><br>
+  ---3.8. <a href="#feature_ssl">SSL</a><br>
+  ---3.9. <a href="#feature_ipv6">IPv6</a><br>
+  ---3.10. <a href="#feature_ziplinks">Zip links</a><br>
+  ---3.11. <a href="#feature_dyndns">Soporte conexi&oacute;n DNS/IP din&aacute;mico</a><br>
+  ---3.12. <a href="#feature_antiflood">Caracter&iacute;sticas anti-flood</a><br>
+  ---3.13. <a href="#feature_bantypes">Tipos de ban </a><br>
+  ---3.14. <a href="#feature_spamfilter">Filtro de spam </a><br>
+  ---3.15. <a href="#feature_cidr">CIDR</a><br>
+  ---3.16. <a href="#feature_nickchars">Configuraci&oacute;n de caracteres para nicks</a><br>
+  ---3.17. <a href="#feature_other">Otras caracter&iacute;sticas</a><br>
   4. <a href="#configuringyourunrealircdconf">Configurando su fichero unrealircd.conf</a><br>
   ---4.1. <a href="#configurationfileexplained">Explicaci&oacute;n del archivo</a><br>
   ---4.2. <a href="#meblock"> Bloque me  -=- (M:Line)</a><br>
@@ -181,28 +182,31 @@ Windows:<br>
   <br>
   <b>Sistemas operativos soportados y testeados:</b><br>
 <ul>
-<li><b>Versiones *NIX:</b>
+<li><b>*NIX versions:</b>
 <ul>
-<li>Linux 2.2.x
-<li>Linux 2.4.x
-<li>FreeBSD 4.6-STABLE
-<li>FreeBSD 4.5-STABLE
-<li>Solaris 2.x
+<li>Linux (2.2.*, 2.4.*, 2.6.*)
+<li>FreeBSD (4.*, 5.*)
+<li>NetBSD (2.*)
+<li>OpenBSD (3.7, 3.8)
+<li>Solaris (9, 10)
 </ul>
-<li><b>Versiones Windows:</b>
+<li><b>Windows version:</b>
 <ul> 
-<li>WindowsXP Home
-<li>WindowsXP Pro
-<li>Windows 2000 Pro
-<li>Windows 2000 Server
-<li>Windows 2000 Advanced Server
-<li>Windows 98
-<li>Windows Me
+<li>Windows 2000 (Pro, Server, Advanced Server)
+<li>Windows XP (Home, Pro)
+<li>Windows 2003 
+</ul>
+<li><b>Architectures tested:</b>
+<ul>
+<li>ia32 (i386, i486, i586, i686)
+<li>ia64
+<li>amd64
+<li>alpha
 </ul>
 </ul>
   <br>
   Si tiene Unreal3.2 trabajando correctamente en otros sistemas,
-  env&iacute;e los detalles a <a href="mailto://docs@unrealircd.com">docs@unrealircd.com<br>
+  env&iacute;e los detalles a <a href="mailto:coders@lists.unrealircd.org">coders@lists.unrealircd.org<br>
   </a> </p>
 <p><b>Instrucciones de instalaci&oacute;n</b><br>
 Linux:<br>
@@ -610,15 +614,16 @@ Aqu&iacute; tiene una tabla con todas las posibilidades:<br>
 <table border="1">
 <tr><td><b>Nombre:</b></td><td><b>Descripci&oacute;n:</b></td><td><b>Juego de caracteres:</b></td></tr>
 <tr><td>catalan</td><td>Caracteres catalanes</td><td>iso8859-1 (latin1)</td></tr>
-<tr><td>dutch</td><td>Caracteres daneses</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>danish</td><td>Caracteres daneses</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>dutch</td><td>Caracteres holandeses</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>french</td><td>Caracteres franceses</td><td>iso8859-1 (latin1)</td></tr>
-<tr><td>swiss-german</td><td>Caracteres suizo-germ&aacute;nicos (no es-zett)</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>swiss-german</td><td>Caracteres alemanosuizos (no es-zett)</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>icelandic</td><td>Caracteres isl&aacute;ndios</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>german</td><td>Caracteres alemanes</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>italian</td><td>Caracteres italianos</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>spanish</td><td>Caracteres castellanos</td><td>iso8859-1 (latin1)</td></tr>
-<tr><td>swedish</td><td>Caracteres su&iacute;zos</td><td>iso8859-1 (latin1)</td></tr>
-<tr><td><b>latin1</b></td><td>dan&eacute;s, franc&eacute;s, alem&aacute;n, suizo-germ&aacute;nic, castellano, su&iacute;zo, catal&aacute;n, italiano</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>swedish</td><td>Caracteres suecos</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td><b>latin1</b></td><td>catal&aacute;n, dan&eacute;s, holand&eacute;s, franc&eacute;s, alem&aacute;n, alemanosuizo, castellano, isl&aacute;ndico, italiano, sueco</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>hungarian</td><td>Caracteres h&uacute;ngaros</td><td>iso8859-2 (latin2), windows-1250	</td></tr>
 <tr><td>polish</td><td>Caracteres polacos, variante windows</td><td>windows-1250</td></tr>
 <tr><td><b>latin2</b></td><td>h&uacute;ngaro, polaco, rumano</td><td>iso8859-2 (latin2)</td></tr>
@@ -629,6 +634,9 @@ Aqu&iacute; tiene una tabla con todas las posibilidades:<br>
 <tr><td>greek</td><td>Caracteres griegos</td><td>iso8859-7</td></tr>
 <tr><td>turkish</td><td>Caracteres turcos</td><td>iso8859-9</td></tr>
 <tr><td>russian-w1251</td><td>Caracteres rusos</td><td>windows-1251</td></tr>
+<tr><td>belarussian-w1251</td><td>Caracteres bielorusos</td><td>windows-1251</td></tr>
+<tr><td>ukrainian-w1251</td><td>Caracteres ucrainianos</td><td>windows-1251</td></tr>
+<tr><td><b>windows-1251</b></td><td>russian-w1251, belarussian-w1251, ukrainian-w1251</td><td>windows-1251</td></tr>
 <tr><td>hebrew</td><td>Caracteres hebreos</td><td>iso8859-8-I/windows-1255</td></tr>
 <tr><td>chinese-simp</td><td>Chino simple</td><td>Multibyte: GBK/GB2312</td></tr>
 <tr><td>chinese-trad</td><td>Chino tradicional</td><td>Multibyte: GBK</td></tr>
@@ -636,11 +644,18 @@ Aqu&iacute; tiene una tabla con todas las posibilidades:<br>
 <tr><td><b>chinese</b></td><td>chino-*</td><td>Multibyte: GBK</td></tr>
 <tr><td><b>gbk</b></td><td>chino-*</td><td>Multibyte: GBK</td></tr>
 </table>
-Note que algunas combinaciones pueden causar problemas. 
+<p>Nota 1: Note que algunas combinaciones pueden causar problemas. 
 Por ejemplo, combinando latin* y chinese-* pueden no ser procesados 
 por el programa y emitir&aacute;n un error. 
 Mezclando otros lenguajes pueden mostrar problemas, as&iacute; que Unreal le notificar&aacute; una advertencia si mezcla 
-latin1/latin2/greek.<br><br>
+latin1/latin2/greek u otros grupos.</p>
+<p>Nota 2: El mapa de caracteres (si un cierto grupo de min&uacute;sculos con sus may&uacute;sculos) se corresponden con 
+US-ASCII, significa que o" y O" no se reconocen como el mismo caracter y alguien puede tener 
+un nick con B"ar y alguien con BA"r al mismo tiempo. Es una limitaci&oacute;n del propio sistema operativo 
+e IRCd sigue el estándar puesto que no puede solucionarse de pronto. Tengan cuidado con esta limitaci&oacute;n. 
+Note que esta limitaci&oacute;n se aplica siempre a los canales, que normalmente se permiten y el 
+US-ASCII se reforma.</p>
+<p>Nota 3: Los caracteres b&aacute;sicos para nicks (a-z A-Z 0-9 [ \ ] ^ _ - { | }) siempre se permiten y se incluyen de forma predeterminada.</p>
 
 Ejemplo 1, para gente del oeste de europa:<br>
 <pre>set { allowed-nickchars { latin1; }; };</pre>
@@ -1889,12 +1904,17 @@ link hub.mynet.com {
 <p>Sintaxis [alias est&aacute;ndar]:<br>
 <pre>
 alias &lt;nombre&gt; {
- target &lt;destino&gt;;
+ 	target &lt;destino&gt;;
 	type &lt;tipo&gt;;
+	spamfilter &lt;yes|no&gt;;
 };</pre>
 </p>
 <p>(Nota: puede ver m&aacute;s archivos de alias est&aacute;ndars que lleva UnrealIRCd en este <a href="#includedirective">enlace</a>)</p>
-<p>Este bloque (est&aacute;ndar) le permite redireccionar comandos a usuarios, generlamente a bots como por ejemplo /chanserv para enviarle privados. <b>alias::</b> especifica el nombre del comando, por ejemplo chanserv. <b>alias::target</b> el nick o canal al que se le enviar&aacute; el mensaje y puede omitirse. <b>alias::type</b> define el tipo de alias: services (el usuario est&aacute; en el servidor de servicios), stats (en el de estad&iacute;sticas), normal (en un servidor normal) y channel (el target es un canal). Este bloque tiene otro prop&oacute;sito detallado a continuaci&oacute;n.</p>
+<p>Este bloque (est&aacute;ndar) le permite redireccionar comandos a usuarios, generlamente a bots como por ejemplo /chanserv para enviarle privados. 
+<b>alias::</b> especifica el nombre del comando, por ejemplo chanserv. <b>alias::target</b> el nick o canal al que se le enviar&aacute; el mensaje y puede omitirse. 
+<b>alias::type</b> define el tipo de alias: services (el usuario est&aacute; en el servidor de servicios), stats (en el de estad&iacute;sticas), normal (en un servidor normal) y channel (el target es un canal). 
+Si alias::spamfilter (opcional) está puesto en 'yes', entonces ser&aacute; procesado por spamfilters (por defecto 'no').<br>
+Este bloque tiene otro prop&oacute;sito detallado a continuaci&oacute;n.</p>
 <p>Sintaxis [alias de comandos]:<br>
 <pre>
 alias &lt;nombre&gt; {
@@ -1907,6 +1927,7 @@ alias &lt;nombre&gt; {
 		...
 	};
 	type command;
+	spamfilter &lt;yes|no&gt;;
 };</pre>
 </p>
 <p>Este uso es m&aacute;s extenso y tiene m&aacute;s posibilidades. Por ejemplo, puede crear aliases como /identify. <b>alias::</b> es el mismo que el anterior: el nombre del comando. <b>alias::format</b> especifica la expresi&oacute;n regular que debe coincidir con el texto enviado. Si lo hace, se usan las subentradas. As&iacute; puede tener varios alias::format para seguir distintas acciones seg&uacute;n la coincidencia, a partir de sus subentradas. <b>alias::format::target</b> es el nick o canal de destino. <b>alias::format::type</b> es el tipo de alias. <b>alias::format::parameters</b> es lo que se enviar&aacute; como par&aacute;metro al alias. Para especificar un par&aacute;metro que se enviar&aacute; al nick, use % seguido del n&uacute;mero de par&aacute;metro. Por ejemplo, %1 enviar&aacute; el primer par&aacute;metro. Para especificar todos los par&aacute;metros a partir de uno, use %n- donde n es el n&uacute;mero de par&aacute;metro. Por ejemplo, %2- enviar&iacute;a todos los par&aacute;metros a partir del segundo, inclu&iacute;do. Adem&aacute;s, puede usarse %n para que sea reemplazado por el nick que ejecuta el comando. Para m&aacute;s informaci&oacute;n consulte doc/example.conf.</p>
@@ -2068,6 +2089,12 @@ set {
   L&iacute;mite de entradas a mostrar en /who. Si se omite, no hay l&iacute;mite.</p>
 <p><font class="set">set::silence-limit &lt;l&iacute;mite&gt;;</font><br>
   L&iacute;mite de entradas en la lista silence. Si se omite, el l&iacute;mite es de 15.</p>
+<p><font class="set">set::maxbans &lt;l&iacute;mite&gt;;</font><br>
+  Fija el límite de bans (b+) máximos permitidos por canal. Por defecto son 60.
+  Si lo cambia, asegúrese que también cambia maxbanlength (ver siguiente)</p>
+<p><font class="set">set::maxbanlength &lt;l&iacute;mite&gt;;</font><br>
+  Parecido al anterior, fija el número máximo de caracteres para todos los bans juntos. Así puede fijar esta cantidad directamente en memoria. 
+  Por defecto son 2048 (bytes). Con set::maxbans por defecto en 60, se permiten 2048:60=34 caracteres por ban.</p>
 <p><font class="set">set::oper-only-stats &lt;lista-stats&gt;;</font><br>
   Lista de stats que s&oacute;lo los operadores pueden usar en /stats. Om&iacute;talo para permitir a los usuarios ver toda la informaci&oacute;n o &quot;*&quot; para restringirla toda a operadores. S&oacute;lo se aceptan las stats en forma corta.</p>
 <p><font class="set">set::oper-only-stats {&lt;stats-flag&gt;; &lt;stats-flag&gt;;};</font><br>
@@ -2077,7 +2104,7 @@ set {
 <p><font class="set">set::maxdccallow &lt;n&ordm;-entradas&gt;;</font><br>
   L&iacute;mite de entradas en la lista dccallow.</p>
 <p><font class="set">set::channel-command-prefix &lt;prefijo&gt;;</font><br>
-  Especifica el prefijo para mostrar el mensaje a los usuarios que est&eacute;n con +d. Suele usarse para bots. Si se omite, el prefijo es &quot;`&quot;. </p>
+  Especifica el prefijo para mostrar el mensaje a los usuarios que est&eacute;n con +d. Suele usarse para bots. Si se omite, el prefijo es &quot;`!.&quot;. </p>
   <p><font class="set">set::allowed-nickchars { &lt;list&gt; };</font><br>
   Juego de caracteres / lenguajes permitidos en los nicks, vea <a href="#feature_nickchars">Configuraci&oacute;n de caracteres para nicks</a>.</p>
 <p><font class="set">set::allow-userhost-change [never|always|not-on-channels|force-rejoin]</font><br>
@@ -2187,6 +2214,8 @@ set {
   Si est&aacute; en 'yes' (o '1') s&oacute;lo los usuarios invitados por el filtro de spam pueden entrar en ese canal, a excepci&oacute;n de los operadores.</p>
  <p><font class="set">set::spamfilter::except &lt;target(s)&gt;</font><br>
   Estos &quot;target(s)&quot; se omiten del filtro de spam (no se toma ninguna acci&oacute;n). Puede especificar varios separ&aacute;ndolos con comas. Ej: except &quot;#help,#spamreport&quot;;.</p>
+ <p><font class="set">set::check-target-nick-bans &lt;yes|no&gt;</font><br>
+  Si un usuario se cambia de nick, comprueba si el nuevo nick se relaciona con algún ban. Si es así, no permite el cambio de nick. Por defecto 'yes'.</p>
 </div>
 <p><b><font size="+2">5 &#8211; Archivos adicionales <a name="addtlfiles"></a>
   </font></b></p>
@@ -2395,7 +2424,7 @@ set {
   </tr>
   <tr> 
     <td><div align="center">d</div></td>
-    <td>No recibe mensajes de canal </td>
+    <td>No recibes mensajes de canales (a menos que estén prefijados por los caracteres especificados en set::channel-command-prefix)</td>
   </tr>
   <tr> 
     <td><div align="center">G</div></td>

@@ -40,7 +40,7 @@
 #include "proto.h"
 
 Isupport *Isupports; /* List of ISUPPORT (005) tokens */
-char *IsupportStrings[5] = {0,0,0,0,0}; /* If we get more than 5 strings, God help us! */
+MODVAR char *IsupportStrings[5] = {0,0,0,0,0}; /* If we get more than 5 strings, God help us! */
 extern char *cmdstr;
 
 /**

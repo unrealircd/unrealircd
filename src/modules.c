@@ -54,6 +54,8 @@ const char *our_dlerror(void);
 #ifndef RTLD_NOW
 #define RTLD_NOW RTLD_LAZY
 #endif
+#define UNREALCORE
+#include "modversion.h"
 
 Hook	   	*Hooks[MAXHOOKTYPES];
 Hooktype	Hooktypes[MAXCUSTOMHOOKS];
@@ -85,6 +87,27 @@ void (*do_mode)(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *p
 void (*set_mode)(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
 int (*m_umode)(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+int (*register_user)(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
+int (*tkl_hash)(unsigned int c);
+char (*tkl_typetochar)(int type);
+aTKline *(*tkl_add_line)(int type, char *usermask, char *hostmask, char *reason, char *setby,
+    TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason);
+aTKline *(*tkl_del_line)(aTKline *tkl);
+void (*tkl_check_local_remove_shun)(aTKline *tmp);
+aTKline *(*tkl_expire)(aTKline * tmp);
+EVENT((*tkl_check_expire));
+int (*find_tkline_match)(aClient *cptr, int xx);
+int (*find_shun)(aClient *cptr);
+int(*find_spamfilter_user)(aClient *sptr, int flags);
+aTKline *(*find_qline)(aClient *cptr, char *nick, int *ishold);
+int  (*find_tkline_match_zap)(aClient *cptr);
+void (*tkl_stats)(aClient *cptr, int type, char *para);
+void (*tkl_synch)(aClient *sptr);
+int (*m_tkl)(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+int (*place_host_ban)(aClient *sptr, int action, char *reason, long duration);
+int (*dospamfilter)(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
+int (*dospamfilter_viruschan)(aClient *sptr, aTKline *tk, int type);
+
 
 static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 00 */	{NULL, NULL},
@@ -94,29 +117,28 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 04 */	{"do_mode", (void *)&do_mode},
 /* 05 */	{"set_mode", (void *)&set_mode},
 /* 06 */	{"m_umode", (void *)&m_umode},
-/* 07 */	{NULL, NULL},
-/* 08 */	{NULL, NULL},
-/* 09 */	{NULL, NULL},
-/* 10 */	{NULL, NULL},
-/* 11 */	{NULL, NULL},
-/* 12 */	{NULL, NULL},
-/* 13 */	{NULL, NULL},
-/* 14 */	{NULL, NULL},
-/* 15 */	{NULL, NULL},
-/* 16 */	{NULL, NULL},
-/* 17 */	{NULL, NULL},
-/* 18 */	{NULL, NULL},
-/* 19 */	{NULL, NULL},
-/* 20 */	{NULL, NULL},
-/* 21 */	{NULL, NULL},
-/* 22 */	{NULL, NULL},
-/* 23 */	{NULL, NULL},
-/* 24 */	{NULL, NULL},
-/* 25 */	{NULL, NULL},
+/* 07 */	{"register_user", (void *)&register_user},
+/* 08 */	{"tkl_hash", (void *)&tkl_hash},
+/* 09 */	{"tkl_typetochar", (void *)&tkl_typetochar},
+/* 10 */	{"tkl_add_line", (void *)&tkl_add_line},
+/* 11 */	{"tkl_del_line", (void *)&tkl_del_line},
+/* 12 */	{"tkl_check_local_remove_shun", (void *)&tkl_check_local_remove_shun},
+/* 13 */	{"tkl_expire", (void *)&tkl_expire},
+/* 14 */	{"tkl_check_expire", (void *)&tkl_check_expire},
+/* 15 */	{"find_tkline_match", (void *)&find_tkline_match},
+/* 16 */	{"find_shun", (void *)&find_shun},
+/* 17 */	{"find_spamfilter_user", (void *)&find_spamfilter_user},
+/* 18 */	{"find_qline", (void *)&find_qline},
+/* 19 */	{"find_tkline_match_zap", (void *)&find_tkline_match_zap},
+/* 20 */	{"tkl_stats", (void *)&tkl_stats},
+/* 21 */	{"tkl_synch", (void *)&tkl_synch},
+/* 22 */	{"m_tkl", (void *)&m_tkl},
+/* 23 */	{"place_host_ban", (void *)&place_host_ban},
+/* 24 */	{"dospamfilter", (void *)&dospamfilter},
+/* 25 */	{"dospamfilter_viruschan", (void *)&dospamfilter_viruschan},
 /* 26 */	{NULL, NULL},
 /* 27 */	{NULL, NULL},
-/* 28 */	{NULL, NULL},
-/* 29 */	{NULL, NULL}
+/* 28 */	{NULL, NULL}
 };
 
 
@@ -212,16 +234,6 @@ Module *Module_Find(char *name)
 	
 }
 
-static char *our_mod_version()
-{
-static char retbuf[128];
-	strlcpy(retbuf, version, sizeof(retbuf));
-#if defined(USE_SSL) && !defined(_WIN32)
-	strlcat(retbuf, "/SSL", sizeof(retbuf));
-#endif
-	return retbuf;
-}
-
 int parse_modsys_version(char *version)
 {
 	int betaversion, tag;
@@ -267,7 +279,7 @@ char  *Module_Create(char *path_)
 	ModuleHeader    *mod_header = NULL;
 	int		ret = 0;
 	Module          *mod = NULL, **Mod_Handle = NULL;
-	char *expectedmodversion = our_mod_version();
+	char *expectedmodversion = our_mod_version;
 	long modsys_ver = 0;
 	Debug((DEBUG_DEBUG, "Attempting to load module from %s",
 	       path_));
@@ -283,7 +295,14 @@ char  *Module_Create(char *path_)
 		strcpy(path, "./");
 		strcat(path, path_);
 	}
+#ifdef __OpenBSD__
+	/* For OpenBSD, do not do a hardlinkink attempt first because it checks inode
+	 * numbers to see if a certain module is already loaded. -- Syzop
+	 */
+	unreal_copyfileex(path, tmppath, 0);
+#else
 	unreal_copyfileex(path, tmppath, 1);
+#endif
 	if ((Mod = irc_dlopen(tmppath, RTLD_NOW)))
 	{
 		/* We have engaged the borg cube. Scan for lifesigns. */
@@ -549,7 +568,9 @@ void Unload_all_loaded_modules(void)
 		}
 		DelListItem(mi,Modules);
 		irc_dlclose(mi->dll);
+#ifndef DEBUGMODE
 		remove(mi->tmp_file);
+#endif
 		MyFree(mi->tmp_file);
 		MyFree(mi);
 	}

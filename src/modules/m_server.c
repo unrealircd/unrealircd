@@ -179,9 +179,16 @@ DLLFUNC CMD_FUNC(m_server)
 			strcpy(xerrmsg, "Null servername");
 			goto errlink;
 		}
-		for(link = conf_link; link; link = (ConfigItem_link *) link->next)
-			if (!match(link->servername, servername))
-				break;
+		if (cptr->serv && cptr->serv->conf)
+		{
+			/* We already know what block we are dealing with (outgoing connect!) */
+			link = cptr->serv->conf;
+		} else {
+			/* Hunt the linkblock down ;) */
+			for(link = conf_link; link; link = (ConfigItem_link *) link->next)
+				if (!match(link->servername, servername))
+					break;
+		}
 		if (!link) {
 			snprintf(xerrmsg, 256, "No link block named '%s'", servername);
 			goto errlink;
@@ -810,7 +817,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 						    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
 						    acptr->name,
 						    acptr->hopcount + 1,
-						    acptr->lastnick,
+						    (long)acptr->lastnick,
 						    acptr->user->username,
 						    acptr->user->realhost,
 						    (long)(acptr->srvptr->serv->numeric),
@@ -830,7 +837,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 						    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
 						    acptr->name,
 						    acptr->hopcount + 1,
-						    acptr->lastnick,
+						    (long)acptr->lastnick,
 						    acptr->user->username,
 						    acptr->user->realhost,
 						    acptr->user->server,
@@ -901,7 +908,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 				    "%s %s %s %lu :%s"),
 				    (IsToken(cptr) ? TOK_TOPIC : MSG_TOPIC),
 				    chptr->chname, chptr->topic_nick,
-				    chptr->topic_time, chptr->topic);
+				    (long)chptr->topic_time, chptr->topic);
 		}
 	}
 	/* pass on TKLs */

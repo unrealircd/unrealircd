@@ -19,16 +19,18 @@
 <!-- $Id$ -->
 
 <body>
-English | <a href="unreal32docs.de.html">German</a> | 
+English | 
+<a href="unreal32docs.de.html">German</a> | 
 <a href="unreal32docs.es.html">Spanish</a> | 
 <a href="unreal32docs.hu.html">Hungarian</a> | 
 <a href="unreal32docs.fr.html">French</a> | 
-<a href="unreal32docs.gr.html">Greek</a>
+<a href="unreal32docs.gr.html">Greek</a> | 
+<a href="unreal32docs.nl.html">Dutch</a>
 <br><br>
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
-  <font size="4">Version: 3.2.3</font><br>
-  <b>Last doc update:</b> 2005-03-13</div>
+  <font size="4">Version: 3.2.4</font><br>
+  <b>Last doc update:</b> 2006-01-17</div>
 <br>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -181,26 +183,29 @@ Windows:<br>
 <ul>
 <li><b>*NIX versions:</b>
 <ul>
-<li>Linux 2.2.x
-<li>Linux 2.4.x
-<li>FreeBSD 4.6-STABLE
-<li>FreeBSD 4.5-STABLE
-<li>Solaris 2.x
+<li>Linux (2.2.*, 2.4.*, 2.6.*)
+<li>FreeBSD (4.*, 5.*)
+<li>NetBSD (2.*)
+<li>OpenBSD (3.7, 3.8)
+<li>Solaris (9, 10)
 </ul>
 <li><b>Windows version:</b>
 <ul> 
-<li>WindowsXP Home
-<li>WindowsXP Pro
-<li>Windows 2000 Pro
-<li>Windows 2000 Server
-<li>Windows 2000 Advanced Server
-<li>Windows 98
-<li>Windows Me
+<li>Windows 2000 (Pro, Server, Advanced Server)
+<li>Windows XP (Home, Pro)
+<li>Windows 2003 
+</ul>
+<li><b>Architectures tested:</b>
+<ul>
+<li>ia32 (i386, i486, i586, i686)
+<li>ia64
+<li>amd64
+<li>alpha
 </ul>
 </ul>
   <br>
   If you have Unreal3.2 working correctly under other operating systems, please 
-  send the details to <a href="mailto://docs@unrealircd.com">docs@unrealircd.com<br>
+  send the details to <a href="mailto:coders@lists.unrealircd.org">coders@lists.unrealircd.org<br>
   </a> </p>
 <p><b>Installation Instructions</b><br>
 Linux:<br>
@@ -572,6 +577,7 @@ A table of all possible choices:<br>
 <table border="1">
 <tr><td><b>Name:</b></td><td><b>Description:</b></td><td><b>Character set/encoding:</b></td></tr>
 <tr><td>catalan</td><td>Catalan characters</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>danish</td><td>Danish characters</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>dutch</td><td>Dutch characters</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>french</td><td>French characters</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>german</td><td>German characters</td><td>iso8859-1 (latin1)</td></tr>
@@ -580,7 +586,7 @@ A table of all possible choices:<br>
 <tr><td>italian</td><td>Italian characters</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>spanish</td><td>Spanish characters</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>swedish</td><td>Swedish characters</td><td>iso8859-1 (latin1)</td></tr>
-<tr><td><b>latin1</b></td><td>catalan, dutch, french, german, swiss-german, spanish, icelandic, italian, swedish</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td><b>latin1</b></td><td>catalan, danish, dutch, french, german, swiss-german, spanish, icelandic, italian, swedish</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>hungarian</td><td>Hungarian characters</td><td>iso8859-2 (latin2), windows-1250</td></tr>
 <tr><td>polish</td><td>Polish characters</td><td>iso8859-2 (latin2)</td></tr>
 <tr><td>romanian</td><td>Romanian characters</td><td>iso8859-2 (latin2), windows-1250, iso8859-16</td></tr>
@@ -592,6 +598,9 @@ A table of all possible choices:<br>
 <tr><td>greek</td><td>Greek characters</td><td>iso8859-7</td></tr>
 <tr><td>turkish</td><td>Turkish characters</td><td>iso8859-9</td></tr>
 <tr><td>russian-w1251</td><td>Russian characters</td><td>windows-1251</td></tr>
+<tr><td>belarussian-w1251</td><td>Belarussian characters</td><td>windows-1251</td></tr>
+<tr><td>ukrainian-w1251</td><td>Ukrainian characters</td><td>windows-1251</td></tr>
+<tr><td><b>windows-1251</b></td><td>russian-w1251, belarussian-w1251, ukrainian-w1251</td><td>windows-1251</td></tr>
 <tr><td>hebrew</td><td>Hebrew characters</td><td>iso8859-8-I/windows-1255</td></tr>
 <tr><td>chinese-simp</td><td>Simplified Chinese</td><td>Multibyte: GBK/GB2312</td></tr>
 <tr><td>chinese-trad</td><td>Tradditional Chinese</td><td>Multibyte: GBK</td></tr>
@@ -599,11 +608,18 @@ A table of all possible choices:<br>
 <tr><td><b>chinese</b></td><td>chinese-*</td><td>Multibyte: GBK</td></tr>
 <tr><td><b>gbk</b></td><td>chinese-*</td><td>Multibyte: GBK</td></tr>
 </table>
-Please note that some combinations can cause problems. 
+<p>NOTE 1: Please note that some combinations can cause problems. 
 For example, combining latin* and chinese-* can not be properly handled by 
 the IRCd and Unreal will print an error. 
 Mixing of other charsets might cause display problems, so Unreal will print out 
-a warning if you try to mix latin1/latin2/greek.<br><br>
+a warning if you try to mix latin1/latin2/greek/other incompatible groups.</p>
+<p>NOTE 2: Casemapping (if a certain lowercase character belongs to an upper one) is done according to
+US-ASCII, this means that o" and O" are not recognized as 'the same character' and hence someone can
+have a nick with B"ar and someone else BA"r at the same time. This is a limitation of the current system
+and IRCd standards that cannot be solved anytime soon. People should be aware of this limitation.
+Note that this limitation has always also been applied to channels, in which nearly all characters were always
+permitted and US-ASCII casemapping was always performed.</p>
+<p>NOTE 3: The basic nick characters (a-z A-Z 0-9 [ \ ] ^ _ - { | }) are always allowed/included.</p>
 
 Example 1, for people of western europe:<br>
 <pre>set { allowed-nickchars { latin1; }; };</pre>
@@ -1933,7 +1949,8 @@ link &lt;server-name&gt; {
  changing host (like dyndns.org)</td></tr>
 <tr><td><b>nohostcheck</b></td><td> don't validate the remote host (link::hostname), use this if it's an often
  changing host (like dyndns.org)</td></tr>
-<tr><td><b>quarantine</b></td><td> opers on this server will maintain locop status</td></tr>
+<tr><td><b>quarantine</b></td><td> opers on this server cannot get GLOBAL oper privileges
+(they will get killed), used for test links and such</td></tr>
 </table>
 </p>
 <p>Example:</p>
@@ -1962,6 +1979,7 @@ link hub.mynet.com {
 alias &lt;name&gt; {
 	target &lt;nick-to-forward-to&gt;;
 	type &lt;type-of-alias&gt;;
+	spamfilter &lt;yes|no&gt;;
 };</pre></p>
 <p>(Note: also see <a href="#includedirective">here</a> about the standard alias files UnrealIRCd has)</p>
 <p>The alias block [standard alias] allows you to forward a command to a user, 
@@ -1971,8 +1989,9 @@ alias &lt;name&gt; {
   forward to, alias::target can be left out. The alias::type specifies the type 
   of alias, valid types are services (the user is on the services server), stats 
   (the user is on the stats server), normal (the user is a normal user on 
-  any server), and channel (the target is a channel name). The alias block also has another
-  purpose which is explained below.</p>
+  any server), and channel (the target is a channel name). If alias::spamfilter (optional)
+  is set to 'yes', then the spamfilters will be checked (default is 'no').<br>
+  The alias block also has another purpose which is explained below.</p>
 <p>Syntax [command alias]:<br>
 <pre>
 alias &lt;name&gt; {
@@ -1985,6 +2004,7 @@ alias &lt;name&gt; {
 		...
 	};
 	type command;
+	spamfilter &lt;yes|no&gt;;
 };</pre></p>
 <p>When the alias block is used in this format, it allows you a much broader range 
   of usage. For example you can create aliases such as /identify. The alias:: 
@@ -2189,6 +2209,14 @@ set {
 <p><font class="set">set::silence-limit &lt;limit&gt;;</font><br>
   Sets the limit on the maximum SILENCE list entries. If this directive is not specified,
   a limit of 15 is set.</p>
+<p><font class="set">set::maxbans &lt;limit&gt;;</font><br>
+  Sets the limit on the maximum amount of bans (+b) allowed per channel. The default is 60.
+  If you change this, be sure to also take a look at maxbanlength (see next)!</p>
+<p><font class="set">set::maxbanlength &lt;limit&gt;;</font><br>
+  Similar to above, but sets the maximum amount of characters for all bans added up
+  together, so basically this puts up a limit on the (semi-)maximum amount of memory
+  all channel bans on a channel can take. The default is 2048 (bytes). With the default
+  set::maxbans of 60 this allows 2048:60=34 characters per ban on average.</p>
 <p><font class="set">set::oper-only-stats &lt;stats-list&gt;;</font><br>
   Specifies a list of stats flags with no separators that defines stats flags 
   only opers can use. Leave this value out to allow users to use all flags, or 
@@ -2204,7 +2232,7 @@ set {
 <p><font class="set">set::channel-command-prefix &lt;command-prefixes&gt;;</font><br>
   Specifies the prefix characters for services "in channel commands". Messages starting with 
   any of the specified characters will still be sent even if the client is +d. The default 
-  value is "`".</p>
+  value is "`!.".</p>
 <p><font class="set">set::allowed-nickchars { &lt;list&gt; };</font><br>
   Character sets / languages to allow in nicks, see <a href="#feature_nickchars">Nick Character Sets</a>.</p>
 <p><font class="set">set::allow-userhost-change [never|always|not-on-channels|force-rejoin]</font><br>
@@ -2362,6 +2390,9 @@ set {
  <p><font class="set">set::spamfilter::except &lt;target(s)&gt;</font><br>
   These targets are exempt from spam filtering (no action will be taken),
   can be single target or comma seperated list.. Ex: except "#help,#spamreport"</p>
+ <p><font class="set">set::check-target-nick-bans &lt;yes|no&gt;</font><br>
+  Whenever the user changes his/her nick, check if the NEW nick would be
+  banned. If so, do not allow the nickchange. Default is yes.</p>
 <p></p> </div>
 <p><b><font size="+2">5 &#8211; Additional Files<a name="addtlfiles"></a>
   </font></b></p><div class="desc">
@@ -2567,7 +2598,8 @@ set {
   </tr>
   <tr> 
     <td><div align="center">d</div></td>
-    <td>Makes it so you can not receive channel PRIVMSGs</td>
+    <td>Makes it so you can not receive channel PRIVMSGs (with the exception
+        of text prefixed with certain characters, see set::channel-command-prefix)</td>
   </tr>
   <tr> 
     <td><div align="center">G</div></td>

@@ -1,5 +1,5 @@
 
-Unreal3.2.3 Release Notes
+Unreal3.2.4 Release Notes
 ==========================
 
 ==[ GENERAL INFORMATION ]==
@@ -11,106 +11,99 @@ Unreal3.2.3 Release Notes
   Read them before asking for help.
 - Report bugs at http://bugs.unrealircd.org/
 - When upgrading a network, we assume you are upgrading from the previous
-  version (3.2.2). If you got a net running with servers that are several
+  version (3.2.3). If you have a network running with servers that are several
   versions behind (eg: 3.2.1) then you might experience (desynch) problems.
-  Also, if you try to use the new features, some might not work properly
-  until all your servers are upgraded. It is therefore recommended to
-  upgrade all servers in a 'short' time span (x day[s], not weeks).
+  Please also minimize the time you have multiple versions running, several days
+  is not a problem, but having mixed versions on a network for weeks or months
+  is not recommended.
 
 ==[ NEW ]==
-- Channel mode +I (invex, invite exceptions). Users on this list can join +i channels
-  without needing an /invite.
-- Channel mode +j (jointhrottle). If you set +j X:Y you limit each user (individually)
-  to X joins per Y seconds to the channel.
-- Nick Character System: this allows you to choose which additional characters to
-  allow in nicknames by language (and codepage). Currently available are:
-  catalan, dutch, french, german, swiss-german, icelandic, italian, spanish,
-  swedish, hungarian, polish, romanian, slovak, czech, greek, turkish, russian,
-  hebrew and chinese. There are also several 'groups' available, for more info see:
-  http://www.vulnscan.org/UnrealIrcd/unreal32docs.html#feature_nickchars
-- *NIX: ./Config -advanced, allows you to choose more options
-- tld::botmotd and tld::opermotd
-- Using /INVITE with no parameters will a list of channels you are invited to
-  but have not yet joined.
-- set::gline-address, works just like set::kline-address but then for glines.
-- Added a basic regex tutorial in unreal32docs.html
-- /SAJOIN now supports multiple channels (and '0') again.
-- Spamfilter topic support ('t' in spamfilter, 'topic' in conf).
-- Added a feature to +b/+e ~c: ~c:[prefix]<#channel>. This can be used if you for
-  example trust all ops of #leet: mode #x +e ~c:@#leet.
-- Various translated documents in doc/: unreal32docs.gr.html (Greek), help.fr.conf
-  and example.fr.conf (French), help.de.conf & example.de.conf (German), and
-  example.hu.conf (Hungarian).
+- Spamfilter: Added 'warn' target which is basically the same as 'block' except it
+  does not block ;). It simply sends a numeric to the user saying the command has been
+  processed, but a copy has been sent to ircops (which receive a spamfilter notice).
+  Example usage: /spamfilter add p warn - Testing_mirc_decode_filter \$decode\(.*\)
+- Spamfilter: an option to apply spamfilters to aliases as well. To do so, you have
+  to put 'spamfilter yes;' in every alias block you want to get filtered.
+  The /MS and /MEMOSERV aliases in aliases/*.conf have been updated to have
+  spamfiltering enabled by default.
+- The "max bans per channel" setting can now be changed trough the config file by
+  setting set::maxbans. Note that you probably also want to enlarge set::maxbanlength
+  then as well (see docs!) or else you will hit that limit first. Note that the max ban
+  length setting has been slightly relaxed in 3.2.4, see the CHANGED section further down.
+- Nick Character System: new languages/character sets are added: 'danish',
+  'belarussian-w1251' and 'ukrainian-w1251'.
+- ExtBan ~c now accepts wildcards, such as: "+b ~c:#*xxx*" (don't forget the "#")
+- Banned users can no longer change the topic
+- Made it so you no longer can change your nick TO a banned one in a channel.
+  This option can be turned off by setting set::check-target-nick-bans to "no".
+- Translations: Added a Bulgarian example.bg.conf, a Russian help.ru.conf, and a Dutch
+  unreal32docs.nl.html
+- For services coders: Added doc/technical/serverprotocol.html
 
 ==[ CHANGED ]==
-- Updated auspice.conf
-- The usual doc updates, help.conf, spamfilter.conf, dccallow.conf, etc.
-- The config parser got (mostly) recoded. This makes it rehash much faster,
-  additionally "duplicate item" checking is now available.
-- Added a 'B' flag to /who output for bots. Also normal users can now /who +m B.
-- Support in configfiles for \\ (= a \)
-- set::dns::bind::ip, hardly useful for anyone
-- If a user is +b on a channel, and set::allow-userhost-change force-rejoin is
-  in use, then a part/join is not sent in order to prevent flooding.
-- OperOverride INVITE notices are now sent out globally to all +s +e users.
-- User mode 'g' is now operonly, it hardly did anything for non-opers.
-- Made CIDR no longer accept bitmasks with less than 16bits for /*line commands.
-- Modulized a lot of commands (~5000 lines of code).
-- Made channel modes +c/+S deal with RGB color codes.
-- If no log { } block is present, then a warning will be printed and we will log
-  by default to ircd.log (errors only).
-- If an invalid character is found in a nick then the whole nick is rejected now.
-- Changed numeric&text of 'is a Secure Connection' to 'is using a Secure Connection',
-  client coders are encouraged to add support for this new numeric 671. Until then,
-  in-window-/whois's will probably be broken.
-- A locops with can_override/can_gkline/can_gzline is now automatically converted
-  to a globop, just like we do with can_globalroute/can_gkline. These privileges
-  are GLOBAL and therefore are not meant to be granted to locops.
-- A warning is now sent to an oper if (s)he tries to use /(G)ZLINE on a host.
-  (G)ZLINES should be placed on *@ipmasks because they are processed before any
-  ident and host lookups.
-- Made (fast) badwords work better with word boundaries, in practice this means
-  blocking of words with accents/umlauts/es-zett/etc now works properly.
-- Made it so halfops can now -h themselves and chanadmins can -a themselves.
-- Made spamfilter 'u' also check nickchanges.
+- Changed the MAXBANLENGTH (now set::maxbanlength) from 1K to 2K. This means users can now
+  set more bans and actually reach the 60 MAXBANS (now set::maxbans) limit in practice.
+- Added several indicators to the "detect binary incompatible modules"-system, such as
+  a module compiled with ziplinks support on a non-ziplinks ircd (*NIX only), nospoof
+  mismatches, etc. Hopefully this will help some people preventing odd crashes when
+  they forgot to recompile everything.
+- More modulizing: another 200 lines of code / 20 functions have been moved to modules.
+- Multiple allow channel::channel items are now permitted again
+- Redid glob matching. Escaping is now ripped out for normal bans (as it should be), this
+  means no longer weird issues with +b *\* etc not banning nicks with \ in it.
+  ExtBan ~c/~r get special treatment and will use our match_esc [match with escaping]
+  routine, you can escape via \, so \* will match * (an asterisk), \? will match a
+  questionmark (?), and \\ will match a \ (backslash). This way you can ban channels
+  such as "#f*ck" via "+b ~c:#f\*ck". So, take note, if you want to ban for example a
+  channel with a backslash in it, such as "#bl\ah", then you do "+b ~c:#bl\\ah".
+  Again, for any bans other than ~c/~r this does not apply.
+- Spamfilter: regexes and reasons are now more limited in size, this is to combat the
+  "I set a spamfilter, but cannot remove it" problem. In practice this means - depending
+  on the length of the spamfilter reason - that spamfilter will max ~300 characters.
+  Note that spamfilters in the config file can still be larger (since they cannot be
+  removed on the command line anyway, it doesn't matter that they are cut off on /stats F).
+- CMDLINE_CONFIG behavior change: specifying a config file on the command line is now
+  permitted as long as the ircd isn't suid/sgid.
+- set::channel-command-prefix now defaults to ".`!" instead of "`"
+- When OPEROVERRIDE_VERIFY is enabled, we now allow opers to still join any channels listed
+  in set::auto-join or set::oper-auto-join, even if they are +s/+p.
+- Made it so co-admins can /ADCHAT. They were already receiving them anyway...
+- ./Config: the script now actually stops upon the error, making it more clear what is wrong.
+- Global opers on quarantined servers will now be KILL'ed. So link::options::quarantine now
+  actually does what it should, even if it's not in the most elegant way.
+- Empty (but existing) include files no longer cause an error.
+- We now properly error if someone tries to /(G)ZLINE *@hostmask (should be *@ipmask) or
+  /(G)ZLINE usermask@something (should be *@something). Both forms are illegal because
+  (G)ZLINES are processed before dns and ident lookups. If you require a ban on a hostmask
+  or a usermask, simply use a KLINE or GLINE.
+- For users using remote includes w/ssl (https, ftps): the CA certificates are now stored
+  in curl-ca-bundle.crt (shipped with Unreal) which contains most major CA's plus CACert.
 
 ==[ MAJOR BUGS FIXED ]==
-- Serious crashbug [this is the same fix that was fixed by the hotfix/3.2.2b]
-- TRE mem corruption- & crash-bugs (eg: in backreferences).
+- Two issues with an incorrect badword { } block in the config file causing a crash.
+- Incorrect TKL/*LINE causing a crash
+- Complete resolver recode: now using c-ares + caching to fix some (rare?) crash bugs and
+  to make our code much more cleaner.
+- Using GCC4 caused a crash on-link.
+- Crash when a class block was removed and had any other blocks were referencing it.
+- OpenBSD crash on /REHASH.
+- Several AMD64 crash issues.
+- Sometimes a serious flood of notices was generated if link::options::nodnscache was used.
+- Spamfilter: action 'viruschan' combined with target 'user' caused crashes.
+- chinese-* nick characters support caused memory corruption.
+- Crash issue regarding SSL and junk snomask.
 
 ==[ MINOR BUGS FIXED ]==
-- Made kline/shun/zline/gzline without parameters report the correct stats(flag).
-- Made a few more errors send out to all opers, such as link::bind-ip problems.
-- A few missing operflags in /STATS O (and SVSO)
-- DCC Spamfilter was not always working correctly
-- OperOverriding to, for example, a +zi channel did not print the special join notice.
-- Servers behind ulines were not properly ulined, one effect that had was causing
-  an odd view in /MAP if you had flat-map + hide ulines + a juped server in services.
-- Made SVSMODE -b/-e remove bans/excepts placed on IPs
-- The set::htm::incoming-rate config item was not working correctly
-- If a user was +R then remote server notices were accidently also filtered.
-- A locop setting MODE #CHAN +O caused a desynch
-- Resolver sometimes incorrectly aliased names, causing incorect TTLs etc.
-- Fixed SVSNOOP not removing ALL oper status properly.
-- 'shun' target was not working for spamfilter and ban version { }
-- Removing of shuns placed on IP's did not take effect immediately (had to reconnect).
-- Fixed a bug in mode skipping (eg: '+qk a b' if not +q) and error msgs.
-- Chanmode +f #t (per-user text limit) now no longer affects halfops.
-- Opers w/can_override can now +qa/-qa if they are not netadmins, also affected +L/+u.
-  Be sure you upgrade all servers to 3.2.3 if using these new abilities, or else you
-  will get desynch issues.
-- Fixed several /SAMODE bugs as well, regarding non-netadmins, being halfop'ed, etc.
-- /GZLINE [nick] was placing a *line on *@host instead of *@IP, fixed.
-- alias::format in combination with ::type 'command' caused a crash
-- zlib upgraded to 1.2.2, curl upgraded to 7.13.1, both fix various issues.
-- Win32 installer now also installs doc\technical\*.*
-- Desynch issues regarding +s/+p and +c/+S
-- /SAMODE causing a 'fishy timestamp' if a cmode with a digit parameter was used.
+- Now properly resolves hostnames again that use CNAME delegation (got broken in 3.2.3).
+- Fedora Core w/IPv6 failed to compile.
+- A few read-after-free bugs that could have caused crashes.
+- ./Config was not loading the settings properly on Solaris 10
+- Crash if high ascii in set::network-name
+- Fixed advanced channel aliases not working properly
+- Fixed \* and \? escaping not always working properly (for example in ~r/~c bans).
 
 ==[ REMOVED ]==
-- NAZIISH_CHBAN_HANDLING (did not work at all)
-- The 'oldcloak' cloaking module is now removed, since this old algorithm got broken
-  8 months ago, nobody should be using it anymore.
+- Windows 9X/ME are no longer supported (it might work, but we won't support them).
 
 ==[ ADDITIONAL INFO ]==
 * See Changelog for more details

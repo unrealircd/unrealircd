@@ -162,6 +162,8 @@ void free_client(aClient *cptr)
 		if (cptr->zip)
 			zip_free(cptr);
 #endif
+		if (cptr->hostp)
+			unreal_free_hostent(cptr->hostp);
 	}
 	MyFree((char *)cptr);
 }

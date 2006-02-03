@@ -72,6 +72,11 @@
 
 #include "channel.h"
 
+#if defined(_WIN32) && !defined(NOSPOOF)
+ #error "Compiling win32 without nospoof is VERY insecure and NOT supported"
+#endif
+
+
 extern MODVAR int sendanyways;
 
 
@@ -172,8 +177,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	BUFSIZE		512	/* WARNING: *DONT* CHANGE THIS!!!! */
 #define	MAXRECIPIENTS 	20
 #define	MAXKILLS	20
-#define	MAXBANS		60
-#define	MAXBANLENGTH	1024
 #define	MAXSILELENGTH	NICKLEN+USERLEN+HOSTLEN+10
 #define UMODETABLESZ (sizeof(long) * 8)
 /*
@@ -813,6 +816,9 @@ struct Server {
 #define SPAMF_AWAY			0x0100 /* a */
 #define SPAMF_TOPIC			0x0200 /* t */
 
+/* Other flags only for function calls: */
+#define SPAMFLAG_NOWARN		0x0001
+
 struct _spamfilter {
 	unsigned short action; /* see BAN_ACT* */
 	regex_t expr;
@@ -1058,6 +1064,7 @@ struct _configflag_tld
 #define BAN_ACT_BLOCK		8
 #define BAN_ACT_DCCBLOCK	9
 #define BAN_ACT_VIRUSCHAN	10
+#define BAN_ACT_WARN		11
 
 
 #define CRULE_ALL		0
@@ -1084,6 +1091,8 @@ struct _configitem_admin {
 	char	   *line; 
 };
 
+#define CLASS_OPT_NOFAKELAG		0x1
+
 struct _configitem_class {
 	ConfigItem *prev, *next;
 	ConfigFlag flag;
@@ -1092,6 +1101,7 @@ struct _configitem_class {
 	int xrefcount; /* EXTRA reference count, 'clients' also acts as a reference count but
 	                * link blocks also refer to classes so a 2nd ref. count was needed.
 	                */
+	unsigned int options;
 };
 
 struct _configflag_allow {
@@ -1302,6 +1312,7 @@ struct _configitem_alias {
 	ConfigItem_alias_format *format;
 	char *alias, *nick;
 	AliasType type;
+	unsigned int spamfilter:1;
 };
 
 struct _configitem_alias_format {

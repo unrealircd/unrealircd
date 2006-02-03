@@ -45,6 +45,7 @@
 #endif
 
 DLLFUNC CMD_FUNC(m_nick);
+DLLFUNC int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
 
 #define MSG_NICK 	"NICK"	
 #define TOK_NICK 	"&"	
@@ -57,6 +58,13 @@ ModuleHeader MOD_HEADER(m_nick)
 	"3.2-b8-1",
 	NULL 
     };
+
+DLLFUNC int MOD_TEST(m_nick)(ModuleInfo *modinfo)
+{
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	EfunctionAdd(modinfo->handle, EFUNC_REGISTER_USER, _register_user);
+	return MOD_SUCCESS;
+}
 
 DLLFUNC int MOD_INIT(m_nick)(ModuleInfo *modinfo)
 {
@@ -76,6 +84,7 @@ DLLFUNC int MOD_UNLOAD(m_nick)(int module_unload)
 }
 
 static char buf[BUFSIZE];
+static char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64];
 
 /*
 ** m_nick
@@ -238,11 +247,10 @@ DLLFUNC CMD_FUNC(m_nick)
 	}
 	if (MyClient(sptr)) /* local client changin nick afterwards.. */
 	{
-		char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64];
 		int xx;
 		ircsprintf(spamfilter_user, "%s!%s@%s:%s",
 			nick, sptr->user->username, sptr->user->realhost, sptr->info);
-		xx = dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL);
+		xx = dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, NULL);
 		if (xx < 0)
 			return xx;
 	}
@@ -608,6 +616,14 @@ DLLFUNC CMD_FUNC(m_nick)
 					    mp->chptr->chname);
 					return 0;
 				}
+				if (CHECK_TARGET_NICK_BANS && !is_skochanop(sptr, mp->chptr) && is_banned_with_nick(sptr, mp->chptr, BANCHK_NICK, nick))
+				{
+					sendto_one(sptr,
+					    ":%s 437 %s %s :Cannot change to a nickname banned on channel",
+					    me.name, parv[0],
+					    mp->chptr->chname);
+					return 0;
+				}
 				if (!IsOper(sptr) && !IsULine(sptr)
 				    && mp->chptr->mode.mode & MODE_NONICKCHANGE
 				    && !is_chanownprotop(sptr, mp->chptr))
@@ -765,3 +781,433 @@ DLLFUNC CMD_FUNC(m_nick)
 
 	return 0;
 }
+
+/*
+** register_user
+**	This function is called when both NICK and USER messages
+**	have been accepted for the client, in whatever order. Only
+**	after this the USER message is propagated.
+**
+**	NICK's must be propagated at once when received, although
+**	it would be better to delay them too until full info is
+**	available. Doing it is not so simple though, would have
+**	to implement the following:
+**
+**	1) user telnets in and gives only "NICK foobar" and waits
+**	2) another user far away logs in normally with the nick
+**	   "foobar" (quite legal, as this server didn't propagate
+**	   it).
+**	3) now this server gets nick "foobar" from outside, but
+**	   has already the same defined locally. Current server
+**	   would just issue "KILL foobar" to clean out dups. But,
+**	   this is not fair. It should actually request another
+**	   nick from local user or kill him/her...
+*/
+extern MODVAR char cmodestring[512];
+extern MODVAR char umodestring[UMODETABLESZ+1];
+
+extern int short_motd(aClient *sptr);
+
+int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost, char *ip)
+{
+	ConfigItem_ban *bconf;
+	char *parv[3], *tmpstr;
+#ifdef HOSTILENAME
+	char stripuser[USERLEN + 1], *u1 = stripuser, *u2, olduser[USERLEN + 1],
+	    userbad[USERLEN * 2 + 1], *ubad = userbad, noident = 0;
+#endif
+	int  xx;
+	anUser *user = sptr->user;
+	aClient *nsptr;
+	int  i;
+	char mo[256];
+	char *tkllayer[9] = {
+		me.name,	/*0  server.name */
+		"+",		/*1  +|- */
+		"z",		/*2  G   */
+		"*",		/*3  user */
+		NULL,		/*4  host */
+		NULL,
+		NULL,		/*6  expire_at */
+		NULL,		/*7  set_at */
+		NULL		/*8  reason */
+	};
+	aTKline *savetkl = NULL;
+	ConfigItem_tld *tlds;
+	cptr->last = TStime();
+	parv[0] = sptr->name;
+	parv[1] = parv[2] = NULL;
+	nick = sptr->name; /* <- The data is always the same, but the pointer is sometimes not,
+	                    *    I need this for one of my modules, so do not remove! ;) -- Syzop */
+	
+	if (MyConnect(sptr))
+	{
+		if ((i = check_client(sptr, username))) {
+			/* This had return i; before -McSkaf */
+			if (i == -5)
+				return FLUSH_BUFFER;
+
+			sendto_snomask(SNO_CLIENT,
+			    "*** Notice -- %s from %s.",
+			    i == -3 ? "Too many connections" :
+			    "Unauthorized connection", get_client_host(sptr));
+			ircstp->is_ref++;
+			ircsprintf(mo, "This server is full.");
+			return
+			    exit_client(cptr, sptr, &me,
+			    i ==
+			    -3 ? mo :
+			    "You are not authorized to connect to this server");
+		}
+		if (sptr->hostp)
+		{
+			/* No control-chars or ip-like dns replies... I cheat :)
+			   -- OnyxDragon */
+			for (tmpstr = sptr->sockhost; *tmpstr > ' ' &&
+			    *tmpstr < 127; tmpstr++);
+			if (*tmpstr || !*user->realhost
+			    || isdigit(*(tmpstr - 1)))
+				strncpyzt(sptr->sockhost,
+				    (char *)Inet_ia2p((struct IN_ADDR*)&sptr->ip), sizeof(sptr->sockhost));	/* Fix the sockhost for debug jic */
+			strncpyzt(user->realhost, sptr->sockhost,
+			    sizeof(sptr->sockhost));
+		}
+		else		/* Failsafe point, don't let the user define their
+				   own hostname via the USER command --Cabal95 */
+			strncpyzt(user->realhost, sptr->sockhost, HOSTLEN + 1);
+		/*
+		 * I do not consider *, ~ or ! 'hostile' in usernames,
+		 * as it is easy to differentiate them (Use \*, \? and \\)
+		 * with the possible?
+		 * exception of !. With mIRC etc. ident is easy to fake
+		 * to contain @ though, so if that is found use non-ident
+		 * username. -Donwulff
+		 *
+		 * I do, We only allow a-z A-Z 0-9 _ - and . now so the
+		 * !strchr(sptr->username, '@') check is out of date. -Cabal95
+		 *
+		 * Moved the noident stuff here. -OnyxDragon
+		 */
+		if (!(sptr->flags & FLAGS_DOID)) 
+			strncpyzt(user->username, username, USERLEN + 1);
+		else if (sptr->flags & FLAGS_GOTID) 
+			strncpyzt(user->username, sptr->username, USERLEN + 1);
+		else
+		{
+
+			/* because username may point to user->username */
+			char temp[USERLEN + 1];
+			strncpyzt(temp, username, USERLEN + 1);
+			if (IDENT_CHECK == 0) {
+				strncpyzt(user->username, temp, USERLEN + 1);
+			}
+			else {
+				*user->username = '~';
+				strncpyzt((user->username + 1), temp, USERLEN);
+#ifdef HOSTILENAME
+				noident = 1;
+#endif
+			}
+
+		}
+#ifdef HOSTILENAME
+		/*
+		 * Limit usernames to just 0-9 a-z A-Z _ - and .
+		 * It strips the "bad" chars out, and if nothing is left
+		 * changes the username to the first 8 characters of their
+		 * nickname. After the MOTD is displayed it sends numeric
+		 * 455 to the user telling them what(if anything) happened.
+		 * -Cabal95
+		 *
+		 * Moved the noident thing to the right place - see above
+		 * -OnyxDragon
+		 * 
+		 * No longer use nickname if the entire ident is invalid,
+                 * if thats the case, it is likely the user is trying to cause
+		 * problems so just ban them. (Using the nick could introduce
+		 * hostile chars) -- codemastr
+		 */
+		for (u2 = user->username + noident; *u2; u2++)
+		{
+			if (isallowed(*u2))
+				*u1++ = *u2;
+			else if (*u2 < 32)
+			{
+				/*
+				 * Make sure they can read what control
+				 * characters were in their username.
+				 */
+				*ubad++ = '^';
+				*ubad++ = *u2 + '@';
+			}
+			else
+				*ubad++ = *u2;
+		}
+		*u1 = '\0';
+		*ubad = '\0';
+		if (strlen(stripuser) != strlen(user->username + noident))
+		{
+			if (stripuser[0] == '\0')
+			{
+				return exit_client(cptr, cptr, cptr, "Hostile username. Please use only 0-9 a-z A-Z _ - and . in your username.");
+			}
+
+			strcpy(olduser, user->username + noident);
+			strncpy(user->username + 1, stripuser, USERLEN - 1);
+			user->username[0] = '~';
+			user->username[USERLEN] = '\0';
+		}
+		else
+			u1 = NULL;
+#endif
+
+		/*
+		 * following block for the benefit of time-dependent K:-lines
+		 */
+		if ((bconf =
+		    Find_ban(sptr, make_user_host(user->username, user->realhost),
+		    CONF_BAN_USER)))
+		{
+			ircstp->is_ref++;
+			sendto_one(cptr,
+			    ":%s %d %s :*** You are not welcome on this server (%s)"
+			    " Email %s for more information.",
+			    me.name, ERR_YOUREBANNEDCREEP,
+			    cptr->name, bconf->reason ? bconf->reason : "",
+			    KLINE_ADDRESS);
+			return exit_client(cptr, cptr, cptr, "You are banned");
+		}
+		if ((bconf = Find_ban(NULL, sptr->info, CONF_BAN_REALNAME)))
+		{
+			ircstp->is_ref++;
+			sendto_one(cptr,
+			    ":%s %d %s :*** Your GECOS (real name) is not allowed on this server (%s)"
+			    " Please change it and reconnect",
+			    me.name, ERR_YOUREBANNEDCREEP,
+			    cptr->name, bconf->reason ? bconf->reason : "");
+
+			return exit_client(cptr, sptr, &me,
+			    "Your GECOS (real name) is banned from this server");
+		}
+		tkl_check_expire(NULL);
+		/* Check G/Z lines before shuns -- kill before quite -- codemastr */
+		if ((xx = find_tkline_match(sptr, 0)) < 0)
+		{
+			ircstp->is_ref++;
+			return xx;
+		}
+		find_shun(sptr);
+
+		/* Technical note regarding next few lines of code:
+		 * If the spamfilter matches, depending on the action:
+		 *  If it's block/dccblock/whatever the retval is -1 ===> we return, client stays "locked forever".
+		 *  If it's kill/tklline the retval is -2 ==> we return with -2 (aka: FLUSH_BUFFER)
+		 *  If it's action is viruschan the retval is -5 ==> we continue, and at the end of this return
+		 *    take special actions. We cannot do that directly here since the user is not fully registered
+		 *    yet (at all).
+		 *  -- Syzop
+		 */
+		ircsprintf(spamfilter_user, "%s!%s@%s:%s", sptr->name, sptr->user->username, sptr->user->realhost, sptr->info);
+		xx = dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, &savetkl);
+		if ((xx < 0) && (xx != -5))
+			return xx;
+
+		RunHookReturnInt(HOOKTYPE_PRE_LOCAL_CONNECT, sptr, !=0);
+	}
+	else
+	{
+		strncpyzt(user->username, username, USERLEN + 1);
+	}
+	SetClient(sptr);
+	IRCstats.clients++;
+	if (sptr->srvptr && sptr->srvptr->serv)
+		sptr->srvptr->serv->users++;
+	user->virthost =
+	    (char *)make_virthost(user->realhost, user->virthost, 1);
+	if (MyConnect(sptr))
+	{
+		IRCstats.unknown--;
+		IRCstats.me_clients++;
+		if (IsHidden(sptr))
+			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s [VHOST %s]", nick,
+				user->username, user->realhost, user->virthost);
+		else
+			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s", nick, user->username,
+				user->realhost);
+		sendto_one(sptr, rpl_str(RPL_WELCOME), me.name, nick,
+		    ircnetwork, nick, user->username, user->realhost);
+		/* This is a duplicate of the NOTICE but see below... */
+			sendto_one(sptr, rpl_str(RPL_YOURHOST), me.name, nick,
+			    me.name, version);
+		sendto_one(sptr, rpl_str(RPL_CREATED), me.name, nick, creation);
+		if (!(sptr->listener->umodes & LISTENER_JAVACLIENT))
+			sendto_one(sptr, rpl_str(RPL_MYINFO), me.name, parv[0],
+			    me.name, version, umodestring, cmodestring);
+		else
+			sendto_one(sptr, ":%s 004 %s %s CR1.8.03-%s %s %s",
+				    me.name, parv[0],
+				    me.name, version, umodestring, cmodestring);
+		{
+			extern MODVAR char *IsupportStrings[];
+			int i;
+			for (i = 0; IsupportStrings[i]; i++)
+				sendto_one(sptr, rpl_str(RPL_ISUPPORT), me.name, nick, IsupportStrings[i]);
+		}
+#ifdef USE_SSL
+		if (sptr->flags & FLAGS_SSL)
+			if (sptr->ssl)
+				sendto_one(sptr,
+				    ":%s NOTICE %s :*** You are connected to %s with %s",
+				    me.name, sptr->name, me.name,
+				    ssl_get_cipher(sptr->ssl));
+#endif
+		do_cmd(sptr, sptr, "LUSERS", 1, parv);
+		short_motd(sptr);
+#ifdef EXPERIMENTAL
+		sendto_one(sptr,
+		    ":%s NOTICE %s :*** \2NOTE:\2 This server (%s) is running experimental IRC server software. If you find any bugs or problems, please mail unreal-dev@lists.sourceforge.net about it",
+		    me.name, sptr->name, me.name);
+#endif
+#ifdef HOSTILENAME
+		/*
+		 * Now send a numeric to the user telling them what, if
+		 * anything, happened.
+		 */
+		if (u1)
+			sendto_one(sptr, err_str(ERR_HOSTILENAME), me.name,
+			    sptr->name, olduser, userbad, stripuser);
+#endif
+		nextping = TStime();
+		sendto_connectnotice(nick, user, sptr, 0, NULL);
+		if (IsSecure(sptr))
+			sptr->umodes |= UMODE_SECURE;
+	}
+	else if (IsServer(cptr))
+	{
+		aClient *acptr;
+
+		if (!(acptr = (aClient *)find_server_quick(user->server)))
+		{
+			sendto_ops
+			    ("Bad USER [%s] :%s USER %s %s : No such server",
+			    cptr->name, nick, user->username, user->server);
+			sendto_one(cptr, ":%s KILL %s :%s (No such server: %s)",
+			    me.name, sptr->name, me.name, user->server);
+			sptr->flags |= FLAGS_KILLED;
+			return exit_client(sptr, sptr, &me,
+			    "USER without prefix(2.8) or wrong prefix");
+		}
+		else if (acptr->from != sptr->from)
+		{
+			sendto_ops("Bad User [%s] :%s USER %s %s, != %s[%s]",
+			    cptr->name, nick, user->username, user->server,
+			    acptr->name, acptr->from->name);
+			sendto_one(cptr, ":%s KILL %s :%s (%s != %s[%s])",
+			    me.name, sptr->name, me.name, user->server,
+			    acptr->from->name, acptr->from->sockhost);
+			sptr->flags |= FLAGS_KILLED;
+			return exit_client(sptr, sptr, &me,
+			    "USER server wrong direction");
+		}
+		else
+			sptr->flags |= acptr->flags;
+		/* *FINALL* this gets in ircd... -- Barubary */
+		/* We change this a bit .. */
+		if (IsULine(sptr->srvptr))
+			sptr->flags |= FLAGS_ULINE;
+	}
+	if (sptr->umodes & UMODE_INVISIBLE)
+	{
+		IRCstats.invisible++;
+	}
+
+	if (virthost && umode)
+	{
+		tkllayer[0] = nick;
+		tkllayer[1] = nick;
+		tkllayer[2] = umode;
+		dontspread = 1;
+		do_cmd(cptr, sptr, "MODE", 3, tkllayer);
+		dontspread = 0;
+		if (virthost && *virthost != '*')
+		{
+			if (sptr->user->virthost)
+			{
+				MyFree(sptr->user->virthost);
+				sptr->user->virthost = NULL;
+			}
+			/* Here pig.. yeah you .. -Stskeeps */
+			sptr->user->virthost = strdup(virthost);
+		}
+		if (ip && (*ip != '*'))
+			sptr->user->ip_str = strdup(decode_ip(ip));
+	}
+
+	hash_check_watch(sptr, RPL_LOGON);	/* Uglier hack */
+	send_umode(NULL, sptr, 0, SEND_UMODES|UMODE_SERVNOTICE, buf);
+	/* NICKv2 Servers ! */
+	sendto_serv_butone_nickcmd(cptr, sptr, nick,
+	    sptr->hopcount + 1, sptr->lastnick, user->username, user->realhost,
+	    user->server, user->servicestamp, sptr->info,
+	    (!buf || *buf == '\0' ? "+" : buf),
+	    sptr->umodes & UMODE_SETHOST ? sptr->user->virthost : NULL);
+
+	/* Send password from sptr->passwd to NickServ for identification,
+	 * if passwd given and if NickServ is online.
+	 * - by taz, modified by Wizzu
+	 */
+	if (MyConnect(sptr))
+	{
+		char userhost[USERLEN + HOSTLEN + 6];
+		if (sptr->passwd && (nsptr = find_person(NickServ, NULL)))
+			sendto_one(nsptr, ":%s %s %s@%s :IDENTIFY %s",
+			    sptr->name,
+			    (IsToken(nsptr->from) ? TOK_PRIVATE : MSG_PRIVATE),
+			    NickServ, SERVICES_NAME, sptr->passwd);
+		if (buf[0] != '\0' && buf[1] != '\0')
+			sendto_one(cptr, ":%s MODE %s :%s", cptr->name,
+			    cptr->name, buf);
+		if (user->snomask)
+			sendto_one(sptr, rpl_str(RPL_SNOMASK),
+				me.name, sptr->name, get_snostr(user->snomask));
+		strcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost));
+
+		/* NOTE: Code after this 'if (savetkl)' will not be executed for quarantined-
+		 *       virus-users. So be carefull with the order. -- Syzop
+		 */
+		if (savetkl)
+			return dospamfilter_viruschan(sptr, savetkl, SPAMF_USER); /* [RETURN!] */
+
+		/* Force the user to join the given chans -- codemastr */
+		for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *) tlds->next) {
+			if (!match(tlds->mask, userhost))
+				break;
+		}
+		if (tlds && !BadPtr(tlds->channel)) {
+			char *chans[3] = {
+				sptr->name,
+				tlds->channel,
+				NULL
+			};
+			do_cmd(sptr, sptr, "JOIN", 3, chans);
+		}
+		else if (!BadPtr(AUTO_JOIN_CHANS) && strcmp(AUTO_JOIN_CHANS, "0"))
+		{
+			char *chans[3] = {
+				sptr->name,
+				AUTO_JOIN_CHANS,
+				NULL
+			};
+			do_cmd(sptr, sptr, "JOIN", 3, chans);
+		}
+		/* NOTE: If you add something here.. be sure to check the 'if (savetkl)' note above */
+	}
+
+	if (MyConnect(sptr) && !BadPtr(sptr->passwd))
+	{
+		MyFree(sptr->passwd);
+		sptr->passwd = NULL;
+	}
+	return 0;
+}
+

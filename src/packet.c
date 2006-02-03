@@ -234,7 +234,6 @@ void	init_CommandHash(void)
 	add_Command(MSG_CREDITS, TOK_CREDITS, m_credits, MAXPARA);
 	add_Command(MSG_LICENSE, TOK_LICENSE, m_license, MAXPARA);
 	add_Command(MSG_MODULE, TOK_MODULE, m_module, MAXPARA);	
-	add_Command(MSG_TKL, TOK_TKL, m_tkl, MAXPARA);
 		
 #ifdef DEVELOP_DEBUG
 	for (i = 0; i <= 255; i++)

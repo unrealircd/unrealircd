@@ -278,3 +278,6 @@
 
 /* Define if you have alloca */
 #undef HAVE_ALLOCA
+
+/* Define to 1 if your system has no in6addr_any. */
+#undef NO_IN6ADDR_ANY

@@ -337,11 +337,6 @@ extern void charsys_reset_pretest(void);
 int charsys_postconftest(void);
 void charsys_finish(void);
 
-/* Stuff we only need here for spamfilter, so not in h.h... */
-extern aTKline *tklines[TKLISTLEN];
-extern inline int tkl_hash(char c);
-extern aTKline *tkl_del_line(aTKline *tkl);
-
 /*
  * Config parser (IRCd)
 */
@@ -943,8 +938,9 @@ ConfigFile *config_load(char *filename)
 	}
 	if (!sb.st_size)
 	{
-		close(fd);
-		return NULL;
+		/* Workaround for empty files */
+		cfptr = config_parse(filename, " ");
+		return cfptr;
 	}
 	buf = MyMalloc(sb.st_size+1);
 	if (buf == NULL)
@@ -1516,6 +1512,10 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->spamfilter_ban_reason = strdup("Spam/advertising");
 	i->spamfilter_virus_help_channel = strdup("#help");
 	i->maxdccallow = 10;
+	i->channel_command_prefix = strdup("`!.");
+	i->check_target_nick_bans = 1;
+	i->maxbans = 60;
+	i->maxbanlength = 2048;
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,
@@ -1624,7 +1624,7 @@ int	init_conf(char *rootconf, int rehash)
 		if (rehash)
 		{
 			Hook *h;
-			del_async_connects();
+			unrealdns_delasyncconnects();
 			config_rehash();
 #ifndef STATIC_LINKING
 			Unload_all_loaded_modules();
@@ -2572,41 +2572,36 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 			continue;
 		if (aconf->flags.ssl && !IsSecure(cptr))
 			continue;
-		if (hp)
-			for (i = 0, hname = hp->h_name; hname;
-			    hname = hp->h_aliases[i++])
+		if (hp && hp->h_name)
+		{
+			hname = hp->h_name;
+			strncpyzt(fullname, hname, sizeof(fullname));
+			add_local_domain(fullname, HOSTLEN - strlen(fullname));
+			Debug((DEBUG_DNS, "a_il: %s->%s", sockhost, fullname));
+			if (index(aconf->hostname, '@'))
 			{
-				strncpyzt(fullname, hname,
-				    sizeof(fullname));
-				add_local_domain(fullname,
-				    HOSTLEN - strlen(fullname));
-				Debug((DEBUG_DNS, "a_il: %s->%s",
-				    sockhost, fullname));
-				if (index(aconf->hostname, '@'))
-				{
-					/*
-					 * Doing strlcpy / strlcat here
-					 * would simply be a waste. We are
-					 * ALREADY sure that it is proper 
-					 * lengths
-					*/
-					if (aconf->flags.noident)
-						strcpy(uhost, username);
-					else
-						(void)strcpy(uhost, cptr->username);
-					(void)strcat(uhost, "@");
-				}
-				else
-					*uhost = '\0';
-				/* 
-				 * Same here as above
-				 * -Stskeeps 
+				/*
+				 * Doing strlcpy / strlcat here
+				 * would simply be a waste. We are
+				 * ALREADY sure that it is proper 
+				 * lengths
 				*/
-				(void)strncat(uhost, fullname,
-				    sizeof(uhost) - strlen(uhost));
-				if (!match(aconf->hostname, uhost))
-					goto attach;
+				if (aconf->flags.noident)
+					strcpy(uhost, username);
+				else
+					strcpy(uhost, cptr->username);
+				strcat(uhost, "@");
 			}
+			else
+				*uhost = '\0';
+			/* 
+			 * Same here as above
+			 * -Stskeeps 
+			*/
+			strncat(uhost, fullname, sizeof(uhost) - strlen(uhost));
+			if (!match(aconf->hostname, uhost))
+				goto attach;
+		}
 
 		if (index(aconf->ip, '@'))
 		{
@@ -3104,7 +3099,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "class"))
 		{
 			oper->class = Find_class(cep->ce_vardata);
-			if (!oper->class)
+			if (!oper->class || (oper->class->flag.temporary == 1))
 			{
 				config_status("%s:%i: illegal oper::class, unknown class '%s' using default of class 'default'",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
@@ -3414,7 +3409,7 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 */
 int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 {
-	ConfigEntry *cep;
+	ConfigEntry *cep, *cep2;
 	ConfigItem_class *class;
 	unsigned char isnew = 0;
 
@@ -3428,6 +3423,7 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 	{
 		isnew = 0;
 		class->flag.temporary = 0;
+		class->options = 0; /* RESET OPTIONS */
 	}
 	ircstrdup(class->name, ce->ce_vardata);
 
@@ -3443,6 +3439,12 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 			class->sendq = atol(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "recvq"))
 			class->recvq = atol(cep->ce_vardata);
+		else if (!strcmp(cep->ce_varname, "options"))
+		{
+			for (cep2 = cep->ce_entries; cep2; cep2 = cep2->ce_next)
+				if (!strcmp(cep2->ce_varname, "nofakelag"))
+					class->options |= CLASS_OPT_NOFAKELAG;
+		}
 	}
 	if (isnew)
 		AddListItem(class, conf_class);
@@ -3451,7 +3453,7 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 
 int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 {
-	ConfigEntry 	*cep;
+	ConfigEntry 	*cep, *cep2;
 	int		errors = 0;
 	char has_pingfreq = 0, has_connfreq = 0, has_maxclients = 0, has_sendq = 0;
 	char has_recvq = 0;
@@ -3463,13 +3465,29 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 	}
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (config_is_blankorempty(cep, "class"))
+		if (!strcmp(cep->ce_varname, "options"))
+		{
+			for (cep2 = cep->ce_entries; cep2; cep2 = cep2->ce_next)
+			{
+#ifdef FAKELAG_CONFIGURABLE
+				if (!strcmp(cep2->ce_varname, "nofakelag"))
+					;
+				else
+#endif
+				{
+					config_error("%s:%d: Unknown option '%s' in class::options",
+						cep2->ce_fileptr->cf_filename, cep2->ce_varlinenum, cep2->ce_varname);
+					errors++;
+				}
+			}
+		}
+		else if (config_is_blankorempty(cep, "class"))
 		{
 			errors++;
 			continue;
 		}
 		/* class::pingfreq */
-		if (!strcmp(cep->ce_varname, "pingfreq"))
+		else if (!strcmp(cep->ce_varname, "pingfreq"))
 		{
 			int v = atol(cep->ce_vardata);
 			if (has_pingfreq)
@@ -4222,7 +4240,7 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "class"))
 		{
 			allow->class = Find_class(cep->ce_vardata);
-			if (!allow->class)
+			if (!allow->class || (allow->class->flag.temporary == 1))
 			{
 				config_status("%s:%i: illegal allow::class, unknown class '%s' using default of class 'default'",
 					cep->ce_fileptr->cf_filename,
@@ -4481,15 +4499,7 @@ int	_test_allow_channel(ConfigFile *conf, ConfigEntry *ce)
 			continue;
 		}
 		if (!strcmp(cep->ce_varname, "channel"))
-		{
-			if (has_channel)
-			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
-					cep->ce_varlinenum, "allow channel::channel");
-				continue;
-			}
 			has_channel = 1;
-		}
 		else
 		{
 			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
@@ -5375,7 +5385,7 @@ int _test_badword(ConfigFile *conf, ConfigEntry *ce)
 		if (has_replace && action == 'b')
 		{
 			config_error("%s:%i: badword::action is block but badword::replace exists",
-				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 			errors++;
 		}
 	}
@@ -5816,7 +5826,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "class"))
 		{
 			link->class = Find_class(cep->ce_vardata);
-			if (!link->class)
+			if (!link->class || (link->class->flag.temporary == 1))
 			{
 				config_status("%s:%i: illegal link::class, unknown class '%s' using default of class 'default'",
 					cep->ce_fileptr->cf_filename,
@@ -6392,6 +6402,12 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "who-limit")) {
 			tempiConf.who_limit = atol(cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "maxbans")) {
+			tempiConf.maxbans = atol(cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "maxbanlength")) {
+			tempiConf.maxbanlength = atol(cep->ce_vardata);
+		}
 		else if (!strcmp(cep->ce_varname, "silence-limit")) {
 			tempiConf.silence_limit = atol(cep->ce_vardata);
 			if (loop.ircd_booted)
@@ -6402,6 +6418,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "oper-auto-join")) {
 			ircstrdup(tempiConf.oper_auto_join_chans, cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "check-target-nick-bans")) {
+			tempiConf.check_target_nick_bans = config_checkval(cep->ce_vardata, CFG_YESNO);
 		}
 		else if (!strcmp(cep->ce_varname, "allow-userhost-change")) {
 			if (!stricmp(cep->ce_vardata, "always"))
@@ -6842,6 +6861,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					case 'v':
 					case 'b':
 					case 'e':
+					case 'I':
 					case 'O':
 					case 'A':
 					case 'z':
@@ -6900,6 +6920,14 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			CheckNull(cep);
 			CheckDuplicate(cep, who_limit, "who-limit");
 		}
+		else if (!strcmp(cep->ce_varname, "maxbans")) {
+			CheckNull(cep);
+			CheckDuplicate(cep, maxbans, "maxbans");
+		}
+		else if (!strcmp(cep->ce_varname, "maxbanlength")) {
+			CheckNull(cep);
+			CheckDuplicate(cep, maxbanlength, "maxbanlength");
+		}
 		else if (!strcmp(cep->ce_varname, "silence-limit")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, silence_limit, "silence-limit");
@@ -6911,6 +6939,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "oper-auto-join")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, oper_auto_join, "oper-auto-join");
+		}
+		else if (!strcmp(cep->ce_varname, "check-target-nick-bans")) {
+			CheckNull(cep);
+			CheckDuplicate(cep, check_target_nick_bans, "check-target-nick-bans");
 		}
 		else if (!strcmp(cep->ce_varname, "channel-command-prefix")) {
 			CheckNull(cep);
@@ -6989,8 +7021,17 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			CheckDuplicate(cep, maxdccallow, "maxdccallow");
 		}
 		else if (!strcmp(cep->ce_varname, "network-name")) {
+			char *p;
 			CheckNull(cep);
 			CheckDuplicate(cep, network_name, "network-name");
+			for (p = cep->ce_vardata; *p; p++)
+				if ((*p < ' ') || (*p > '~'))
+				{
+					config_error("%s:%i: set::network-name can only contain ASCII characters 33-126. Invalid character = '%c'",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, *p);
+					errors++;
+					break;
+				}
 		}
 		else if (!strcmp(cep->ce_varname, "default-server")) {
 			CheckNull(cep);
@@ -7854,6 +7895,13 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 
 	if ((cmptr = find_Command(ce->ce_vardata, 0, M_ALIAS)))
 		del_Command(ce->ce_vardata, NULL, cmptr->func);
+	if (find_Command_simple(ce->ce_vardata))
+	{
+		config_warn("%s:%i: Alias '%s' would conflict with command '%s', alias not added.",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			ce->ce_vardata, ce->ce_vardata);
+		return 0;
+	}
 	if ((alias = Find_alias(ce->ce_vardata)))
 		DelListItem(alias, conf_alias);
 	alias = MyMallocEx(sizeof(ConfigItem_alias));
@@ -7902,7 +7950,8 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 			else if (!strcmp(cep->ce_vardata, "command"))
 				alias->type = ALIAS_COMMAND;
 		}
-			
+		else if (!strcmp(cep->ce_varname, "spamfilter"))
+			alias->spamfilter = config_checkval(cep->ce_vardata, CFG_YESNO);
 	}
 	if (BadPtr(alias->nick) && alias->type != ALIAS_COMMAND) {
 		ircstrdup(alias->nick, alias->alias); 
@@ -8079,6 +8128,8 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 				errors++;
 			}
 		}
+		else if (!strcmp(cep->ce_varname, "spamfilter"))
+			;
 		else {
 			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 				"alias", cep->ce_varname);

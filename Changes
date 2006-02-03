@@ -774,3 +774,261 @@
 ** internal 3.2.3-pre4 release **
 - Corrected small doc typo in unreal32docs, reported by arbiter.
 ** 3.2.3 release **
+- Fixed incorrect badword { } in conf causing a crash (should give an error).
+- spamfilter.conf Gaggle worm sigs were broken causing odd things to match, this is because
+  \\ now needs to be escaped as \\\\ due to the 3.2.3 conf change... didn't think of updating sigs.
+- Clarified some nickchar stuff in the docs
+- Added 'danish' nickchars, supplied by klaus (#0002436).
+- Module coders: Added HOOKTYPE_LOCAL_SPAMFILTER: catches (local) spamfilter matches.
+- Fixed chanmode G showing up twice in 005, reported by Snake (#0002466).
+- Fixed a TKL crash on incorrect *line, reported by nanookles1234 (#0002524).
+- Redid include dependencies in Makefile, this makes things safer because on any .h change it
+  would force a recompile of all files, but it could mean things will be a bit slower for us
+  coders unless we tweak it later on.
+- Changed whois a bit to print less useless results.
+- Added several indicators to the "detect binary incompatible modules"-system such as detecting
+  of a ziplinks module on non-ziplinks (on windows this is ok however), nospoof module on a
+  a server without nospoof server, etc. Hopefully this will help some people preventing odd
+  crashes because they did not recompile or (re)install modules properly.
+- Added './unreal backtrace', so far this has only been tested on Linux and FreeBSD.
+- Fixed a bug making ./Config not load the previously stored settings on Solaris 10 and
+  probably other Unixes, reported by lion-o (#0002474).
+- Cosmetic bug in set::modes-on-join: now rejecting +I in it. Reported by Ron2K (#0002508).
+- Moved all TKL code and register_user to modules (using efuncs), that means 20 functions
+  and 2000 lines total that can be hotfixed if needed ;). The effort involved in moving all
+  this sucks a lot though :/. This might need some more testing to make sure it doesn't break
+  anything.
+- Updated support OS list in documentation.
+- Fixed various major bugs due to TKL move from 13h ago.
+- Fixed 2 problems caused by TKL move: 1 windows crash, 1 problem with loading m_*.so,
+  reported by Trocotronic (#0002553, #0002554).
+- Added some TSCTL logging (this reminds me we need to add new log levels for 3.3 ;p).
+- Attempt to fix bug #2431: 3.2.3 broke CNAME delegation for reverse dns. I'm sorry it took
+  so long, but this stuff just plain sucks...
+- Made '?*' work correctly in wildcard matches ('1 or more characters'), reported by
+  Bugz (#2585).
+- Added -fno-strict-aliasing.. this might well be temporary, but we get tons of strict-
+  aliasing warnings, so it sounds good to disable this type of optimization for now.
+- Fixed problem with crash-on-link if compiled with GCC 4, reported by jonneyboy (#2573)
+  and PHANTOm (#2590).
+- IPv6: Added configure check for in6addr_any to fix Fedora Core 4 compile problem,
+  reported by wheatie80 (#2594).
+- Added -Wno-pointer-sign (if available) to get rid of those stupid warnings that are
+  enabled by default even without -Wall (!?) on GCC4.
+- Fixed a bug where allow channel::channel generated a warning when specified multiple times
+  (#0002427) reported by matridom.
+- Fixed ~c not working properly with * and ?'s in channel names.. Now you just need to
+  escape them like in all bans (eg: to ban #* you need to +b ~c:#\*). As an additional
+  bonus, real wildcards are now accepted and processed (eg: +b ~c:#*sex*, just don't
+  forget to specify the #). Reported by PhantasyX (#2605).
+- Sidenote on above: ~c:*chan* is not supported (use ~c:#*chan* instead) because it would
+  cause "hidden bans", therefore it now prints a message (which is useful anyway), but
+  does accept such remote bans. In 3.2.5 or so we could enable support for it, it's
+  not that important though... ;)
+- Added ifdefs for mass closing of file descriptors on start, can now be disabled by
+  adding -DNOCLOSEFD as a compile option. Useful for valgrind w/--db-attach=yes, mpatrol,
+  and some other debugging tools (not useful for anyone normally running a server).
+- Fixed a read-after-free: sptr->serv->aconf was freed but not NULL'ed in exit_client,
+  causing close_connection to read from it (when deciding on doing a quick reconnect).
+  Could have caused a crash, although nobody ever reported one...
+- Removed useless strncpyzt with dest==src.
+- Temporary workaround for spamfilter bug: action 'viruschan' in combination with the
+  'u' (user) target can cause severe problems (crashes, etc). For now, we have disabled
+  'viruschan' in combination with 'u'. A real fix will require quite some work, sorry.
+- Fixed crash with invalid set::network-name (eg: high ascii), reported by galahad
+  (#0002584), now printing an error instead (the network name is limited by the 005 spec).
+- Added Bulgarian example.bg.conf, translated by Peace.
+- Spamfilter: regexes (and reasons) are now more limited in size, this is to combat "I set
+  a spamfilter, but cannot remove it" problems. In practice this means - depending on the
+  length of your spamfilter reason - regexes will be max ~300 characters.
+  Spamfilters set in the .conf can be slightly longer (which still causes them to be
+  truncated in '/stats f', but they don't have to be removed anyway so it's kinda
+  acceptable if it's really needed). This should fix bug #2083, reported by White_Magic.
+- Fixed a bug where an invalid /*line could cause a crash, reported by Gilou (#2629).
+- (5 minutes later..) Small update for above, fix was incorrect for ipv6.
+- CMDLINE_CONFIG behavior change: command line configuration is now still permitted
+  if #undef'ed (which is the default) if uid==euid && gid==egid, since it doesn't make
+  any sense to disable it then and is in fact just plain annoying.
+- Added FAKELAG_CONFIGURABLE option in include/config.h, this enables an option called
+  class::options::nofakelag, which disables "fake lag" for a certain class (that is:
+  the artificial delay introduced by the ircd to prevent flooding is turned off,
+  allowing the user to flood at full speed).
+  IT'S USE IS DISCOURAGED UNLESS YOU REALLY KNOW WHAT YOU ARE DOING.
+  Sorry, option is not in ./Config -advanced since I don't get autoconf working, but it's
+  such a scary option that this might as well be a good idea to keep in config.h anyway.
+  This feature has been suggested for several years (and refused), but the final
+  suggestion (with implementation specific hints) came from Gilou in bug #0002207.
+- Fixed win32 makefile, now compiles fine.
+- Fixed (important?) reference count bug regarding sptr->serv->conf. I don't know what
+  effects this caused (memory corruption?), but it didn't look good ;).
+- Fixed an invalid badword block in the conf causing a crash, reported by Monk (#2639).
+- [Internal] Code cleanup for spamfilter target/bantype routines
+- Added 'warn' target which is basically the same as 'block' except it does not block ;).
+  It also sends a numeric to the user saying the command has been processed, but a copy
+  has been sent to ircops. I feel this is a good idea for privacy reasons (anti-spy),
+  though I don't know how users will react to this. If you are using this on your network
+  and get users bothering you about it (or before that ;p), it's probably a good idea
+  to explain it somewhere on your site or FAQ :).
+  Example usage:
+   /spamfilter add p warn - Testing_mirc_decode_filter \$decode\(.*\)
+  [WARNING] The numeric text is likely to change in the next few weeks (early-cvs-commit).
+- If a class block was removed and any other blocks would be referencing the class block
+  (such as: allow::class, oper::class, link::class), then this would cause a crash.
+  Reported by Mike_ (#0002646).
+- Changed the way we build most of the .so's: the .o files of individual modules that were
+  generated (for linkage by commands.so), are now used to generate the .so files of the
+  individual modules as well (eg: m_setname.o -link-> m_setname.so). This reduces compile
+  time ('make') on my machine by 33%, so it's quite noticable ;).
+- Added doc/technical/serverprotocol.html created by aquanight (updates will follow soon).
+- Documented set::channel-command-prefix a bit more, and also changed the default from
+  "`" to "`!." which seems much more reasonable / widespread :).
+- Some m_restart cleanups, suggested by w00t (#2652).
+- Removed all old resolver code and switched over to c-ares (+our caching routines).
+  This should get rid of some annoying untracable (and usually rare) crashbugs in the
+  old resolver. Besides that, it makes things look more clean and understandable.
+  This should be the fix for the following bugids (all the same issue): #2499, #2551, #2558,
+  #2559, #2603, #2642, #2502, #2501, #2618, #2616.
+  Feedback and testing is very much welcomed (syzop@unrealircd.com).
+- Fixed SSL + new resolver problem, would cause an "interesting flood" of messages / 100% CPU.
+  Reported by Trocotronic (#0002659).
+- Fixed a problem with entries in the hosts file (such as, usually, localhost), this would
+  cause an unresolved host and a 30s delay for the user, even though resolving succeeded.
+- When OPEROVERRIDE_VERIFY is enabled, we now allow opers to still join any channels listed
+  in set::auto-join or set::oper-auto-join, even if they are +s/+p. Suggested by ultrotter
+  (#0002644).
+- Added 4 UNREAL_VERSION_* macro's that can be useful for 3rd party modules to find out the
+  unreal version that the user is using. I presume this can be helpful (although nobody ever
+  suggested it ;p). The macros (#define's) are:
+  UNREAL_VERSION_GENERATION    The generation version number        eg: 3 for 3.2.4
+  UNREAL_VERSION_MAJOR         The major version number             eg: 2 for 3.2.4
+  UNREAL_VERSION_MINOR         The minor version number             eg: 4 for 3.2.4
+                               This can be negative for unstable,
+                               alpha and beta versions.
+  UNREAL_VERSION_TIME          Year + week of the day (starting     eg: 200541
+                               on Monday), this is updated on
+                               the CVS server every week.
+  The first 3 are for nicely identifiying the version, the 4th can be useful in case
+  you want to support CVS and/or want some more control.
+- Fixed crash bug (due to new resolver) if not using 1 general *@* / *@* allow block,
+  reported by Daniel.
+- Fixed issue that could cause an alias to be added that would override a command.
+- Fixed OpenBSD crash on /REHASH. Thanks to Peter Laur (OpenBSD.se) for providing us
+  a shell account to trace this issue down.
+- Couple of source code cleanups (svsnick, a *line msg, kill, and some useless l_commands
+  code), suggested by Nazzy and Requi3m.
+- Fixed extbans no longer working properly in CVS, fix provided by Nazzy (#0002681).
+- Made it so you no longer can change your nick to a banned one in a channel, suggested
+  by vonitsanet (#0002388), partial patch provided by Nazzy.
+  This option can be turned off by setting set::check-target-nick-bans to 'no'.
+- Removed useless (unused) WATCH code that was still present in the core.
+- Made it so coadmins can use /ADCHAT (makes sense, since they already *received*
+  adchats). Reported by RandomNumber (#0002557).
+- Fixed serious flood of notices to opers if link::options::dnscache was present.
+  Reported by firstof9.
+- Added proper "not enough parameters" message for /SETNAME and cleaned up some whitespace
+  in the function, reported by Robby22 (#0002696).
+- Fixed set::static-part set to 'no' not working properly. Reported by Robby22 (#0002698).
+- Fixed crash in new resolver, reported by firstof9.
+- [CVS Only] Refixed name<->ip mapping check in new resolver, reported by Darko.
+- Reverting "Changed the way we build most of the .so's" feature, this caused m_*.so
+  to be build incorrectly. So now back at normal compile speed :p.
+- Added option to apply spamfilters to aliases as well (such as /MS, etc). To do so,
+  you have to put 'spamfilter yes;' in every alias block you want to get filtered.
+  This is so you can have for example /MS filtered (due to heavy spam), while keeping
+  /NS and /CS unfiltered. Reported by Homer (#0002496).
+- The memoserv aliases (/MS and /MEMOSERV) now have spamfiltering enabled by default.
+- Made the "strict aliasing"-warning-disabler use $CC instead of gcc.
+- Made ./Config better react to errors (no longer print a "everything is a big success"
+  kind of message when in fact everything went wrong).
+- Made ./Config (configure) exit on openssl or zlib not found errors, instead of
+  silently continueing and then causing trouble later on. Also now printing _a bit_
+  more helpful error message.
+- Made the link::options::quarantine actually do something... People that get global
+  oper privileges on quarantined servers will be instantly killed. Bit ugly perhaps, but
+  then it actually does what it should (prevent opers on quarantine from getting GLOBAL
+  oper privileges). This "fixes" #2510, #2163 and #1968.
+- Fixes for an amd64 crash problem, reported by Peter Laur (OpenBSD.se).
+- Redid some net synching code to make it more efficient (#2716).
+- Fixed spamfilter crash problem: the action 'viruschan' is now no longer incompatible
+  with target 'user'. Reported by Monk (#0002570).
+- Fixed invalid servername in quarantine kill, reported by pinstrate (#0002743).
+- Fixed bug in chinese-* charset implementation that would cause crashes, reported
+  and patch supplied by Xuefer (#0002744).
+- Added new charsys languages: belarussian-w1251 and ukrainian-w1251. Patch provided
+  by Bock (#0002724).
+- Fixed memory leak in new resolver.
+- Made the charsys mismatch during linking a warning instead of an error (temp. fix,
+  until a good solution is implemented without false positives).
+- Crashbug fix for above
+- Fixed some more memleaks, thanks to valgrind.
+- Updated the list of donators.
+- Fixed (well, workaround) win32 /RESTART bug that caused it to popup a window instead
+  of actually restarting the server properly (#0002734).
+- If you now use /(G)ZLINE usermask@something instead of /(G)ZLINE *@something you get
+  an error, since specifying usermask should not be done and is useless, since a (G)ZLINE
+  takes place BEFORE ident lookups.
+- Did the same for /(G)ZLINE *@hostmask (should be *@ipmask), this already was a warning
+  in 3.2.3, and is an error now in 3.2.4.
+- Little /STATS v tweak: should display 'v' in output, not 'V'. Reported by Robby22 (#2700).
+- Fixed complex command aliases not working properly, patch from Nazzy (#2722).
+- Made it so banned users cannot change the topic, suggested by aquanight and Stealth (#2233).
+- Made the "max bans per channel" setting dynamic. This can be changed by setting
+  set::maxbans in the configfile, note that you probably also want to enlarge set::maxbanlength
+  as well (see docs) or else you will hit that limit first.
+- Changed the default maxbanlength from 1K to 2K, which means people can set more bans because
+  in pracitce the 60 (maxbans) limit was never met because the maxbanlimit was set so low.
+- Empty (but existing) include files no longer cause an error. Reported by w00t (#0002460).
+- Nick Character System: Silently not advertising danish if using latin1, circumventing link
+  problems if using latin1.
+- Removed small comment from docs, which no longer applies (sorry translators ;p).
+- Updated /CREDITS (forums/mainsite hosting and update of current active supporters).
+- Updated makefile.win32: apparently libcurl.dll is now libcurl_imp.dll (import library)
+- Updated unrealinst.iss: made it easier for me to have 2 curl versions, this is so we can
+  ship the SSL version of unreal with a curl that supports SSL (https, etc).
+- Preperations for pre-1 (version change, etc)
+- Updated wircd.def (for developers).
+- Added doc/help.ru.conf, translated by Slyder.
+** internal 3.2.4-pre1 release **
+- set::maxbans / set::maxbanlength were reported as duplicates when they were not, reported
+  by Jason and trystanscott (#0002753).
+- Made it so bans on normal users will prevent them from speaking with +mu, reported by Nazzy.
+- Made set::maxbanlength also count the "to be set" ban in, otherwise you could exceed the
+  limit by (max) NICKLEN+USERNAME+HOSTNAME+2, reported by Trocotronic (#0002762).
+- Switched over to an older match() routine based on hybrid, this one is a bit less optimized
+  but is actually understandable and has less bugs. This fixes +b ~c:#c\*t not properly
+  matching #c*t, reported by Jason (#0002752). Initial results look good, but this needs
+  some good testing ;).
+- Removed some old config.h stuff + clarified some text, reported by Jason (#2765, #2766).
+** internal 3.2.4-pre2 release **
+- Made it so a set::maxbanlength and/or set::maxbans of 0 denies all bans properly, and
+  fixes the first-ban-can-be-as-long-as-you-want bug, both reported by Trocotronic (#2762).
+- Fixed SVS2SNO not always notifying the user of the snomask change, reported by decoder
+  (#0002767).
+- Curl users using https/ftps/etc: UnrealIRCd now ships with a 'curl-ca-bundle.crt' which
+  contains the (root) certificates of most major Certificate Authorities. It is basically
+  the default curl ca-bundle.crt plus cacert's certificates.
+  The 'curl-ca-bundle.crt' will be copied to the installation dir if needed.
+  It will from now on be used by Unreal for all remote includes (curl) related certificates.
+  If you want to use https but don't want to buy a certificate, we suggest you to apply for
+  a free certificate at CACert (www.CACert.org). Or, alternatively, add your own certificate
+  (PEM encoded) to curl-ca-bundle.crt, see 'SSLCERTS' in the curl package for more info.
+** public 3.2.4-rc1 release **
+- Fixed(?) bug due to match() rewrite: we now use our old rules with escaping again, due to
+  the switchover we were accidently using different ones which caused funny kill messages
+  like "You were killed by a.b.c (a!a.b.c (SOMENICK[N\A](?) <- d.e.f))." This also broke
+  some bans in pre2/rc1. Bug reported by HERZ (#0002772).
+- Fixed localhost crash (if no dns record for 127.0.0.1), reported by Trocotronic (#2773).
+** public 3.2.4-rc2 release **
+- Sometimes if an oper was connected trough SSL and had the junk snomask (+s +j) set it
+  would cause a crash. Reported by chasingsol (#0002777).
+- Updated help.ru.conf (corrections by CS-Help / Bock)
+- Updated example.bg.conf (by Peace)
+- Added Dutch unreal32docs.nl.html, translated/maintained by Mark.
+- Redid glob matching. Escaping is now ripped out for normal bans (as it should be), this
+  means no longer weird issues with +b *\* etc not banning nicks with \ in it.
+  ExtBan ~c/~r get special treatment and will use our match_esc [match with escaping]
+  routine, that way you can ban channels such as "#f*ck" via "+b ~c:#f\*ck".
+  Fix triggered by bugreport of vonitsanet (#0002782).
+** public 3.2.4-rc3 release **
+- No changes (except version number)
+** 3.2.4 release **

@@ -111,8 +111,7 @@ static void set_curl_ssl_options(CURL *curl)
 	if (SSLKeyPasswd)
 		curl_easy_setopt(curl, CURLOPT_SSLKEYPASSWD, SSLKeyPasswd);
 	curl_easy_setopt(curl, CURLOPT_SSLKEY, SSL_SERVER_KEY_PEM);
-	if (iConf.trusted_ca_file)
-		curl_easy_setopt(curl, CURLOPT_CAINFO, iConf.trusted_ca_file);
+	curl_easy_setopt(curl, CURLOPT_CAINFO, "curl-ca-bundle.crt");
 }
 #endif
 

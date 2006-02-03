@@ -84,7 +84,7 @@ ARG="$ARG--enable-dynamic-linking "
 ARG="$ARG $EXTRAPARA "
 CONF="./configure $ARG"
 echo $CONF
-$CONF
+$CONF || exit 1
 if [  "$CRYPTOIRCD" = "1" ] ; then
 if [ ! -f server.req.pem ]; then
 export OPENSSLPATH
@@ -333,7 +333,7 @@ while [ $# -ge 1 ] ; do
 	elif [ $1 = "-quick" -o $1 = "-q" ] ; then
 		echo "running quick config"
 		if [ -f "config.settings" ] ; then
-			. config.settings
+			. ./config.settings
 		fi
 		RUN_CONFIGURE
 		exit 0
@@ -346,7 +346,7 @@ while [ $# -ge 1 ] ; do
 done
 
 if [ -f "config.settings" -a -z "$NOCACHE" ] ; then
-    . config.settings
+    . ./config.settings
 fi
 
 if [ "$PREADVANCED" = "1" ] ; then
@@ -670,8 +670,8 @@ while [ -z "$TEST" ] ; do
     echo ""
     echo "Do you want to enable prefixes for chanadmin and chanowner?"
     echo "This will give +a the & prefix and ~ for +q (just like +o is @)"
-    echo "Supported by the major clients (mIRC, xchat, epic, eggdrop, Klient, PJIRC, etc.)"
-    echo "with the notable exceptions of irssi, KVIrc and CGI:IRC."
+    echo "Supported by the major clients (mIRC, xchat, epic, eggdrop, Klient,"
+    echo "PJIRC, irssi, CGI:IRC, etc.)"
     echo "This feature should be enabled/disabled network-wide."
     echo $n "[$TEST] -> $c"
 	read cc

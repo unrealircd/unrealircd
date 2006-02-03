@@ -2038,6 +2038,15 @@ CFLAGS="-pipe $CFLAGS"
 fi
 fi
 
+
+case "`$CC -v --help 2>&1`" in
+	*-fstrict-aliasing* ) CFLAGS="$CFLAGS -fno-strict-aliasing" ;;
+esac
+
+case "`$CC -v --help 2>&1`" in
+	*-Wpointer-sign* ) CFLAGS="$CFLAGS -Wno-pointer-sign" ;;
+esac
+
 # Extract the first word of "rm", so it can be a program name with args.
 set dummy rm; ac_word=$2
 echo "$as_me:$LINENO: checking for $ac_word" >&5
@@ -2629,6 +2638,7 @@ echo "${ECHO_T}$ac_cv_lib_nsl_inet_ntoa" >&6
 if test $ac_cv_lib_nsl_inet_ntoa = yes; then
   IRCDLIBS="$IRCDLIBS-lnsl " INETLIB="-lnsl"
 fi
+
 
 
 
@@ -10159,8 +10169,16 @@ echo "${ECHO_T}found in $ssldir/include" >&6
     if test x_$found_ssl != x_yes; then
 	echo "$as_me:$LINENO: result: not found" >&5
 echo "${ECHO_T}not found" >&6
-	{ echo "$as_me:$LINENO: WARNING: disabling ssl support" >&5
-echo "$as_me: WARNING: disabling ssl support" >&2;}
+	echo ""
+	echo "Apparently you do not have both the openssl binary and openssl development libraries installed."
+	echo "You have two options:"
+	echo "a) Install the needed binaries and libraries"
+	echo "   and run ./Config"
+	echo "OR"
+	echo "b) If you don't need SSL..."
+	echo "   Run ./Config and say 'no' when asked about SSL"
+	echo ""
+	exit 1
     else
         CRYPTOLIB="-lssl -lcrypto";
 	if test ! "$ssldir" = "/usr" ; then
@@ -10198,8 +10216,16 @@ echo "${ECHO_T}found in $zlibdir" >&6
     if test x_$found_zlib != x_yes; then
 	echo "$as_me:$LINENO: result: not found" >&5
 echo "${ECHO_T}not found" >&6
-	{ echo "$as_me:$LINENO: WARNING: disabling ziplink support" >&5
-echo "$as_me: WARNING: disabling ziplink support" >&2;}
+	echo ""
+	echo "Apparently you do not have the zlib development library installed."
+	echo "You have two options:"
+	echo "a) Install the zlib development library"
+	echo "   and run ./Config"
+	echo "OR"
+	echo "b) If you don't need compressed links..."
+	echo "   Run ./Config and say 'no' when asked about ziplinks support"
+	echo ""
+	exit 1
     else
         IRCDLIBS="$IRCDLIBS -lz";
 	if test "$zlibdir" != "/usr" ; then
@@ -10550,6 +10576,58 @@ cat >>confdefs.h <<\_ACEOF
 #define INET6 1
 _ACEOF
 
+		echo "$as_me:$LINENO: checking for struct in6addr_any" >&5
+echo $ECHO_N "checking for struct in6addr_any... $ECHO_C" >&6
+	cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+#include "confdefs.h"
+#define IN_AUTOCONF
+			#include <sys/types.h>
+			#include <sys/socket.h>
+			#include <netinet/in.h>
+#ifdef F77_DUMMY_MAIN
+#  ifdef __cplusplus
+     extern "C"
+#  endif
+   int F77_DUMMY_MAIN() { return 1; }
+#endif
+int
+main ()
+{
+struct in6_addr a = in6addr_any;
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+else
+  echo "$as_me: failed program was:" >&5
+cat conftest.$ac_ext >&5
+
+			echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+			cat >>confdefs.h <<\_ACEOF
+#define NO_IN6ADDR_ANY 1
+_ACEOF
+
+
+
+fi
+rm -f conftest.$ac_objext conftest.$ac_ext
 fi
 LIBS="$save_libs"
 
@@ -10631,13 +10709,13 @@ fi
 echo "$as_me:$LINENO: result: configuring TRE regex library" >&5
 echo "${ECHO_T}configuring TRE regex library" >&6
 cd tre-$tre_version
-./configure --disable-agrep --disable-shared --disable-system-abi --disable-wchar --disable-multibyte --prefix=$cur_dir/extras/regexp
+./configure --disable-agrep --disable-shared --disable-system-abi --disable-wchar --disable-multibyte --prefix=$cur_dir/extras/regexp || exit 1
 echo "$as_me:$LINENO: result: compiling TRE regex library" >&5
 echo "${ECHO_T}compiling TRE regex library" >&6
-$ac_cv_prog_MAKER
+$ac_cv_prog_MAKER || exit 1
 echo "$as_me:$LINENO: result: installing TRE regex library" >&5
 echo "${ECHO_T}installing TRE regex library" >&6
-$ac_cv_prog_MAKER install
+$ac_cv_prog_MAKER install || exit 1
 TREINCDIR="$cur_dir/extras/regexp/include"
 
 if test "x$ac_cv_path_PKGCONFIG" = "x" ; then
@@ -10647,6 +10725,39 @@ else
 fi
 
 cd $cur_dir
+
+
+cares_version="1.3.0"
+echo "$as_me:$LINENO: result: extracting c-ares resolver library" >&5
+echo "${ECHO_T}extracting c-ares resolver library" >&6
+cur_dir=`pwd`
+cd extras
+rm -rf c-ares-$cares_version
+if test "x$ac_cv_path_GUNZIP" = "x" ; then
+	tar xfz c-ares.tar.gz
+else
+	cp c-ares.tar.gz c-ares.tar.gz.bak
+	gunzip -f c-ares.tar.gz
+	cp c-ares.tar.gz.bak c-ares.tar.gz
+	tar xf c-ares.tar
+fi
+echo "$as_me:$LINENO: result: configuring c-ares library" >&5
+echo "${ECHO_T}configuring c-ares library" >&6
+cd c-ares-$cares_version
+./configure --prefix=$cur_dir/extras/c-ares || exit 1
+echo "$as_me:$LINENO: result: compiling c-ares resolver library" >&5
+echo "${ECHO_T}compiling c-ares resolver library" >&6
+$ac_cv_prog_MAKER || exit 1
+echo "$as_me:$LINENO: result: installing c-ares resolver library" >&5
+echo "${ECHO_T}installing c-ares resolver library" >&6
+$ac_cv_prog_MAKER install || exit 1
+CARESINCDIR="$cur_dir/extras/c-ares/include"
+
+CARESLIBS="-L../extras/c-ares/lib -lcares"
+
+cd $cur_dir
+
+
 ac_config_files="$ac_config_files Makefile src/modules/Makefile unreal ircdcron/ircdchk"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -11234,6 +11345,8 @@ s,@BINDIR@,$BINDIR,;t t
 s,@FD_SETSIZE@,$FD_SETSIZE,;t t
 s,@TREINCDIR@,$TREINCDIR,;t t
 s,@TRELIBS@,$TRELIBS,;t t
+s,@CARESINCDIR@,$CARESINCDIR,;t t
+s,@CARESLIBS@,$CARESLIBS,;t t
 CEOF
 
 _ACEOF

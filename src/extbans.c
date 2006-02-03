@@ -163,7 +163,8 @@ char *chan, *p, symbol='\0';
 	if ((*chan == '+') || (*chan == '%') || (*chan == '%') ||
 	    (*chan == '@') || (*chan == '&') || (*chan == '~'))
 	    chan++;
-	if (*chan != '#')
+
+	if ((*chan != '#') && (*chan != '*') && (*chan != '?'))
 		return NULL;
 
 	if (strlen(chan) > CHANNELLEN)
@@ -175,6 +176,29 @@ char *chan, *p, symbol='\0';
 	/* on a sidenote '#' is allowed because it's a valid channel (atm) */
 	return retbuf;
 }
+
+/* The only purpose of this function is a temporary workaround to prevent a desynch.. pfff */
+int extban_modec_is_ok(aClient *sptr, aChannel *chptr, char *para, int checkt, int what, int what2)
+{
+char *p;
+
+	if ((checkt == EXBCHK_PARAM) && MyClient(sptr) && (what == MODE_ADD) && (strlen(para) > 3))
+	{
+		p = para + 3;
+		if ((*p == '+') || (*p == '%') || (*p == '%') ||
+		    (*p == '@') || (*p == '&') || (*p == '~'))
+		    p++;
+
+		if (*p != '#')
+		{
+			sendnotice(sptr, "Please use a # in the channelname (eg: ~c:#*blah*)");
+			return 0;
+		}
+	}
+	return 1;
+}
+
+
 static int extban_modec_compareflags(char symbol, int flags)
 {
 int require=0;
@@ -206,7 +230,7 @@ char *p = ban+3, symbol = '\0';
 	}
 	for (lp = sptr->user->channel; lp; lp = lp->next)
 	{
-		if (!strcasecmp(lp->chptr->chname, p))
+		if (!match_esc(p, lp->chptr->chname))
 		{
 			/* Channel matched, check symbol if needed (+/%/@/etc) */
 			if (symbol)
@@ -299,10 +323,11 @@ static char retbuf[REALLEN + 8];
 		mask[REALLEN + 3] = '\0';
 	return retbuf;
 }
+
 int extban_moder_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type)
 {
 char *ban = banin+3;
-	if (!match(ban, sptr->info))
+	if (!match_esc(ban, sptr->info))
 		return 1;
 	return 0;
 }
@@ -315,18 +340,30 @@ void extban_init(void)
 	req.flag = 'c';
 	req.conv_param = extban_modec_conv_param;
 	req.is_banned = extban_modec_is_banned;
+	req.is_ok = extban_modec_is_ok;
 	ExtbanAdd(NULL, req);
+
+	memset(&req, 0, sizeof(ExtbanInfo));
 	req.flag = 'q';
 	req.conv_param = extban_conv_param_nuh;
 	req.is_banned = extban_modeq_is_banned;
 	ExtbanAdd(NULL, req);
+
+	memset(&req, 0, sizeof(ExtbanInfo));
 	req.flag = 'n';
 	req.conv_param = extban_conv_param_nuh;
 	req.is_banned = extban_moden_is_banned;
 	ExtbanAdd(NULL, req);
+
+	memset(&req, 0, sizeof(ExtbanInfo));
 	req.flag = 'r';
 	req.conv_param = extban_moder_conv_param;
 	req.is_banned = extban_moder_is_banned;
 	req.options = EXTBOPT_CHSVSMODE;
 	ExtbanAdd(NULL, req);
+
+	/* When adding new extbans, be sure to always add a prior memset like above
+	 * so you don't "inherit" old options (we are 2005 and the 20 nanoseconds
+	 * per-boot/rehash is NOT EXACTLY a problem....) -- Syzop.
+	 */
 }

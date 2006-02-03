@@ -82,6 +82,9 @@ DLLFUNC int MOD_UNLOAD(m_user)(int module_unload)
 **	parv[2] = client host name (used only from other servers)
 **	parv[3] = server host name (used only from other servers)
 **	parv[4] = users real name info
+**
+** NOTE: Be advised that multiple USER messages are possible,
+**       hence, always check if a certain struct is already allocated... -- Syzop
 */
 DLLFUNC CMD_FUNC(m_user)
 {
@@ -169,7 +172,7 @@ DLLFUNC CMD_FUNC(m_user)
 		}
 		else
 			user->server = find_or_add(server);
-		strncpyzt(user->realhost, host, sizeof(user->realhost));
+		strlcpy(user->realhost, host, sizeof(user->realhost));
 		goto user_finish;
 	}
 
@@ -195,11 +198,12 @@ DLLFUNC CMD_FUNC(m_user)
 	 * which seemed bad. Not to say this is much better ;p. -- Syzop
 	 */
 	strncpyzt(user->realhost, Inet_ia2p(&sptr->ip), sizeof(user->realhost));
-	user->ip_str = strdup(Inet_ia2p(&sptr->ip));
+	if (!user->ip_str)
+		user->ip_str = strdup(Inet_ia2p(&sptr->ip));
 	user->server = me_hash;
       user_finish:
 	user->servicestamp = sstamp;
-	strncpyzt(sptr->info, realname, sizeof(sptr->info));
+	strlcpy(sptr->info, realname, sizeof(sptr->info));
 	if (sptr->name[0] && (IsServer(cptr) ? 1 : IsNotSpoof(sptr)))
 		/* NICK and no-spoof already received, now we have USER... */
 	{

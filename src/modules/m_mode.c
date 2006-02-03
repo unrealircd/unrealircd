@@ -2122,7 +2122,10 @@ DLLFUNC CMD_FUNC(_m_umode)
 		  case 'o':
 		  case 'O':
 			  if(sptr->from->flags & FLAGS_QUARANTINE)
-				break;
+			  {
+			    sendto_serv_butone(NULL, ":%s KILL %s :%s (Quarantined: no global oper privileges allowed)", me.name, sptr->name, me.name);
+			    return exit_client(cptr, sptr, &me, "Quarantined: no global oper privileges allowed");
+			  }
 			  /* A local user trying to set himself +o/+O is denied here.
 			   * A while later (outside this loop) it is handled as well (and +C, +N, etc too)
 			   * but we need to take care here too because it might cause problems
