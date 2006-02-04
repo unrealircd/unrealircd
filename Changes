@@ -1032,3 +1032,5 @@
 ** public 3.2.4-rc3 release **
 - No changes (except version number)
 ** 3.2.4 release **
+- Fixed amd64 problem regarding /*LINE always saying 'The time you specified is out of range',
+  reported and test shell provided by Tauop.
