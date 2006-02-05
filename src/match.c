@@ -156,7 +156,7 @@ const u_char *na = name;
 			return (*m != 0);
 		}
 		
-		if ((lc(*m) != lc(*n)) && !((*m == '_') && (*n == ' ')))
+		if ((lc(*m) != lc(*n)) && !((*m == '_') && (*n == ' ')) && (*m != '?'))
 		{
 			if (!ma)
 				return 1;

@@ -1035,3 +1035,4 @@
 - Fixed amd64 problem regarding /*LINE always saying 'The time you specified is out of range',
   reported and test shell provided by Tauop.
 - Updated example.bg.conf, the one shipped with 3.2.4 had several errors.
+- The '?' wildcard was completely broken in 3.2.4, reported by tabrisnet (#0002797).
