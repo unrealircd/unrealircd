@@ -1,3 +1,5 @@
+NOTE: This is the fixed 3.2.4 release, this release contains the '?' wilcard fix
+      but the version number is still '3.2.4'!
 
 Unreal3.2.4 Release Notes
 ==========================
@@ -36,8 +38,8 @@ Unreal3.2.4 Release Notes
 - Banned users can no longer change the topic
 - Made it so you no longer can change your nick TO a banned one in a channel.
   This option can be turned off by setting set::check-target-nick-bans to "no".
-- Translations: Added a Bulgarian example.bg.conf, a Russian help.ru.conf, and a Dutch
-  unreal32docs.nl.html
+- Translations: Added a Bulgarian example.bg.conf, a Russian help.ru.conf and
+  unreal32docs.ru.html, and a Dutch unreal32docs.nl.html
 - For services coders: Added doc/technical/serverprotocol.html
 
 ==[ CHANGED ]==
@@ -92,6 +94,7 @@ Unreal3.2.4 Release Notes
 - Spamfilter: action 'viruschan' combined with target 'user' caused crashes.
 - chinese-* nick characters support caused memory corruption.
 - Crash issue regarding SSL and junk snomask.
+- Opteron problem: /*LINE with time parameter always said 'time out of range'
 
 ==[ MINOR BUGS FIXED ]==
 - Now properly resolves hostnames again that use CNAME delegation (got broken in 3.2.3).

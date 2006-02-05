@@ -460,7 +460,7 @@ DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type) {
 	TS   secs;
 	int  whattodo = 0;	/* 0 = add  1 = del */
-	int  i;
+	TS  i;
 	aClient *acptr = NULL;
 	char *mask = NULL;
 	char mo[1024], mo2[1024];
@@ -663,7 +663,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 		}
 		/* Blerghhh... */
 		i = atol(mo);
-		t = gmtime((TS *)&i);
+		t = gmtime(&i);
 		if (!t)
 		{
 			sendto_one(sptr,
