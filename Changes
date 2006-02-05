@@ -1037,3 +1037,5 @@
 - Updated example.bg.conf, the one shipped with 3.2.4 had several errors.
 - The '?' wildcard was completely broken in 3.2.4, reported by tabrisnet (#0002797).
 - Added unreal32docs.ru.html, translated by Bock.
+- Version number NOT changed.
+** Fixed 3.2.4 release **
