@@ -56,11 +56,11 @@ AC_SUBST(MKPASSWDLIBS)
 dnl module checking based on Hyb7's module checking code
 AC_DEFUN(AC_ENABLE_DYN,
 [
-AC_CHECK_FUNC(dlopen,, AC_CHECK_LIB(dl, dlopen,IRCDLIBS="$IRCDLIBS -ldl",
+[AC_CHECK_FUNC(dlopen,, [AC_CHECK_LIB(dl, dlopen,IRCDLIBS="$IRCDLIBS -ldl",
 [
 AC_MSG_WARN(Dynamic linking is not enabled because dlopen was not found) 
 AC_DEFINE(STATIC_LINKING)
-]))
+])])]
 
 hold_cflags=$CFLAGS
 CFLAGS="$CFLAGS -export-dynamic"

@@ -1039,3 +1039,6 @@
 - Added unreal32docs.ru.html, translated by Bock.
 - Version number NOT changed.
 ** Fixed 3.2.4 release **
+- Updated autoconf/configure.in to make newer autoconf's work (developers only), reported
+  and patch provided by Xuefer (#0002798). Also rebuilt ./configure from configure.in with
+  autoconf 2.59 from my own machine.
