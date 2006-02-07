@@ -54,13 +54,13 @@ AC_SUBST(IRCDLIBS)
 AC_SUBST(MKPASSWDLIBS)
 
 dnl module checking based on Hyb7's module checking code
-AC_DEFUN(AC_ENABLE_DYN,
+AC_DEFUN([AC_ENABLE_DYN],
 [
-[AC_CHECK_FUNC(dlopen,, [AC_CHECK_LIB(dl, dlopen,IRCDLIBS="$IRCDLIBS -ldl",
+AC_CHECK_FUNC(dlopen,, [AC_CHECK_LIB(dl, dlopen,IRCDLIBS="$IRCDLIBS -ldl",
 [
 AC_MSG_WARN(Dynamic linking is not enabled because dlopen was not found) 
 AC_DEFINE(STATIC_LINKING)
-])])]
+])])
 
 hold_cflags=$CFLAGS
 CFLAGS="$CFLAGS -export-dynamic"
@@ -110,7 +110,7 @@ fi
 MODULEFLAGS=$ac_cv_pic
 AC_DEFINE(DYNAMIC_LINKING)
 ])
-AC_DEFUN(AC_ENABLE_INET6,[
+AC_DEFUN([AC_ENABLE_INET6],[
 AC_CACHE_CHECK(if your system has IPv6 support, ac_cv_ip6, [
 save_libs="$LIBS"
 LIBS="$LIBS $SOCKLIB"
@@ -396,8 +396,8 @@ AC_ARG_WITH(operoverride-verify, [AC_HELP_STRING([--with-operoverride-verify], [
 CHECK_SSL
 CHECK_ZLIB
 CHECK_LIBCURL
-AC_ARG_ENABLE(dynamic-linking, [AC_HELP_STRING([--enable-dynamic-linking],[Make the IRCd dynamically link shared objects rather than statically])], AC_ENABLE_DYN, AC_DEFINE(STATIC_LINKING))
-AC_ARG_ENABLE(inet6, [AC_HELP_STRING([--enable-inet6],[Make the IRCd support IPv6])], AC_ENABLE_INET6)
+AC_ARG_ENABLE(dynamic-linking, [AC_HELP_STRING([--enable-dynamic-linking],[Make the IRCd dynamically link shared objects rather than statically])], [AC_ENABLE_DYN], [AC_DEFINE(STATIC_LINKING)])
+AC_ARG_ENABLE(inet6, [AC_HELP_STRING([--enable-inet6],[Make the IRCd support IPv6])], [AC_ENABLE_INET6])
 AC_SUBST(IRCDDIR)
 AC_SUBST(BINDIR)
 AC_MSG_CHECKING(if FD_SETSIZE is large enough to allow $ac_fd file descriptors)

@@ -1042,3 +1042,4 @@
 - Updated autoconf/configure.in to make newer autoconf's work (developers only), reported
   and patch provided by Xuefer (#0002798). Also rebuilt ./configure from configure.in with
   autoconf 2.59 from my own machine.
+- Updated autoconf/configure.in again (does not produce different ./configure output)
