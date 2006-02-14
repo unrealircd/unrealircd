@@ -1043,3 +1043,5 @@
   and patch provided by Xuefer (#0002798). Also rebuilt ./configure from configure.in with
   autoconf 2.59 from my own machine.
 - Updated autoconf/configure.in again (does not produce different ./configure output)
+- When set::options-show-connect-notice was enabled the "*** Looking up your hostname..."
+  message was not being shown (all others were). Reported by fbi (#0002820).
