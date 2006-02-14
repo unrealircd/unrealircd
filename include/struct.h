@@ -305,7 +305,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	FLAGS_GOTID      0x1000	/* successful ident lookup achieved */
 #define	FLAGS_DOID       0x2000	/* I-lines say must use ident return */
 #define	FLAGS_NONL       0x4000	/* No \n in buffer */
-#define FLAGS_TS8        0x8000	/* Why do you want to know? */
+#define FLAGS_CGIIRC     0x8000 /* CGI IRC host: flag set = ip/host data has been filled in already */
 #define FLAGS_ULINE      0x10000	/* User/server is considered U-lined */
 #define FLAGS_SQUIT      0x20000	/* Server has been /squit by an oper */
 #define FLAGS_PROTOCTL   0x40000	/* Received a PROTOCTL message */
@@ -403,6 +403,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define IsOutgoing(x)		((x)->flags & FLAGS_OUTGOING)
 #define GotNetInfo(x) 		((x)->flags & FLAGS_NETINFO)
 #define SetNetInfo(x)		((x)->flags |= FLAGS_NETINFO)
+#define IsCGIIRC(x)			((x)->flags & FLAGS_CGIIRC)
 
 #define IsShunned(x)		((x)->flags & FLAGS_SHUNNED)
 #define SetShunned(x)		((x)->flags |= FLAGS_SHUNNED)
@@ -460,6 +461,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	SetAccess(x)		((x)->flags |= FLAGS_CHKACCESS); Debug((DEBUG_DEBUG, "SetAccess(%s)", (x)->name))
 #define SetBlocked(x)		((x)->flags |= FLAGS_BLOCKED)
 #define SetOutgoing(x)		do { x->flags |= FLAGS_OUTGOING; } while(0)
+#define SetCGIIRC(x)		do { x->flags |= FLAGS_CGIIRC; } while(0)
 #define	DoingAuth(x)		((x)->flags & FLAGS_AUTH)
 #define	NoNewLine(x)		((x)->flags & FLAGS_NONL)
 #define IsDCCNotice(x)		((x)->flags & FLAGS_DCCNOTICE)
@@ -1217,6 +1219,13 @@ struct _configitem_ban {
 	char			*mask, *reason;
 	struct irc_netmask	*netmask;
 	unsigned short action;
+};
+
+typedef struct _iplist IPList;
+struct _iplist {
+	IPList *prev, *next;
+	char *mask;
+/*	struct irc_netmask  *netmask; */
 };
 
 #ifdef FAST_BADWORD_REPLACE

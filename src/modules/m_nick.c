@@ -842,6 +842,13 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 	
 	if (MyConnect(sptr))
 	{
+		if (iConf.cgiirc_hosts && iplist_onlist(iConf.cgiirc_hosts, GetIP(sptr)) && !IsCGIIRC(sptr))
+		{
+			sendto_realops("[ERROR] Trusted CGI:IRC host '%s' (which is listed in set::cgiirc::hosts) does not "
+			               "seem to have 'realhost_as_password' set to 1 in it's cgiirc.conf. This is DANGEROUS. "
+			               "Please fix ASAP or remove the ip from set::cgiirc::hosts. Client rejected.", GetIP(sptr));
+			return exit_client(cptr, sptr, &me, "Invalid CGI:IRC configuration");
+		}
 		if ((i = check_client(sptr, username))) {
 			/* This had return i; before -McSkaf */
 			if (i == -5)

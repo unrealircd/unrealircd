@@ -774,3 +774,5 @@ extern void unrealdns_delasyncconnects(void);
 extern int is_autojoin_chan(char *chname);
 extern void unreal_free_hostent(struct hostent *he);
 extern int match_esc(const char *mask, const char *name);
+extern int iplist_onlist(IPList *iplist, char *ip);
+extern struct hostent *unreal_create_hostent(char *name, struct IN_ADDR *addr);

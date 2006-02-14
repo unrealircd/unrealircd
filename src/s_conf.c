@@ -603,6 +603,16 @@ long config_checkval(char *orig, unsigned short flags) {
 	return ret;
 }
 
+int iplist_onlist(IPList *iplist, char *ip)
+{
+IPList *e;
+
+	for (e = iplist; e; e = e->next)
+		if (!match(e->mask, ip))
+			return 1;
+	return 0;
+}
+
 void set_channelmodes(char *modes, struct ChMode *store, int warn)
 {
 	aCtab *tab;
@@ -1769,6 +1779,7 @@ void	config_rehash()
 	ListStruct 	*next, *next2;
 	aTKline *tk, *tk_next;
 	SpamExcept *spamex_ptr;
+	IPList *ipl_ptr;
 	int i;
 
 	USE_BAN_VERSION = 0;
@@ -2099,6 +2110,12 @@ void	config_rehash()
 		MyFree(os_ptr);
 	}
 	iConf.oper_only_stats_ext = NULL;
+	for (ipl_ptr = iConf.cgiirc_hosts; ipl_ptr; ipl_ptr = (IPList *)next)
+	{
+		next = (ListStruct *)ipl_ptr->next;
+		ircfree(ipl_ptr->mask);
+		MyFree(ipl_ptr);
+	}
 	for (spamex_ptr = iConf.spamexcept; spamex_ptr; spamex_ptr = (SpamExcept *)next)
 	{
 		next = (ListStruct *)spamex_ptr->next;
@@ -6660,6 +6677,21 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					break;
 			}
 		}
+		else if (!strcmp(cep->ce_varname, "cgiirc"))
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!strcmp(cepp->ce_varname, "hosts"))
+				{
+					for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
+					{
+						IPList *e = MyMallocEx(sizeof(IPList));
+						e->mask = strdup(ceppp->ce_varname);
+						AddListItem(e, tempiConf.cgiirc_hosts);
+					}
+				}
+			}
+		}
 		else if (!strcmp(cep->ce_varname, "ident"))
 		{
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
@@ -7429,6 +7461,34 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 				if (value == -2) 
 					errors += errs;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "cgiirc"))
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!strcmp(cepp->ce_varname, "hosts"))
+				{
+					for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
+					{
+						char *p;
+						/* check if really an ip.. */
+						for (p = ceppp->ce_varname; *p; p++)
+							if (!strchr("1234567890.*?", *p))
+							{
+								config_error("%s:%i: set::cgiirc::hosts: host '%s' is invalid. Only IP's are accepted (and wildcards). Eg: '1.2.3.4' or '1.2.3.*'",
+									ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum, ceppp->ce_varname);
+								errors++;
+								break;
+							}
+					}
+				} else {
+					config_error_unknown(cepp->ce_fileptr->cf_filename,
+						cepp->ce_varlinenum, "set::cgiirc",
+						cepp->ce_varname);
+					errors++;
+					continue;
+				}
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "scan")) {

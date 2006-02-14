@@ -148,6 +148,7 @@ struct zConfiguration {
 	char *spamexcept_line;
 	int maxbans;
 	int maxbanlength;
+	IPList *cgiirc_hosts;
 	aNetwork network;
 };
 

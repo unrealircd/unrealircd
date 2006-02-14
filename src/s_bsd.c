@@ -706,6 +706,8 @@ static int check_init(aClient *cptr, char *sockn, size_t size)
 	struct SOCKADDR_IN sk;
 	int  len = sizeof(struct SOCKADDR_IN);
 
+	if (IsCGIIRC(cptr))
+		return 0; /* already set */
 
 	/* If descriptor is a tty, special checking... */
 #ifndef _WIN32

@@ -73,7 +73,8 @@ English |
   -- 3.14. <a href="#feature_spamfilter">Spamfilter</a><br>
   -- 3.15. <a href="#feature_cidr">CIDR</a><br>
   -- 3.16. <a href="#feature_nickchars">Nick Character Sets</a><br>
-  -- 3.17. <a href="#feature_other">Other features</a><br>
+  -- 3.17. <a href="#feature_cgiirc">CGI:IRC Support</a><br>
+  -- 3.18. <a href="#feature_other">Other features</a><br>
   4. <a href="#configuringyourunrealircdconf">Configuring your unrealircd.conf 
   file</a><br>
   ---4.1. <a href="#configurationfileexplained">Configuration file explained</a><br>
@@ -628,7 +629,15 @@ Example 2, if you have mainly chinese users and want to allow "normal" chinese c
 <pre>set { allowed-nickchars { chinese-simp; chinese-trad; }; };</pre>
 </p></div>
 
-<p><font size="+2"><b>3.17 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
+<p><font size="+2"><b>3.17 - CGI:IRC Support</b></font><a name="feature_cgiirc"></a></p><div class="desc">
+<p>UnrealIRCd has support for CGI:IRC host spoofing, which means you can mark specific CGI:IRC
+gateways as "trusted" and the IRCd will show the users' <u>real</u> host/ip everywhere on
+IRC, instead of the <u>CGI:IRC-gateway</u> host/ip.</p>
+<p>To do so you must set 'realhost_as_password' to 1 in your cgiirc.conf. And add the CGI:IRC gateway(s)
+you fully trust to set::cgiirc::hosts (see <a href="#setblock">set block</a>).</p>
+</div>
+
+<p><font size="+2"><b>3.18 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
 <p>UnrealIRCd has a lot of features so not everything is covered here... You'll find that out by yourself.</p></div>
 
 <p> </p>
@@ -2268,6 +2277,9 @@ set {
   Allow shunned user to use /part.</p>
 <p><font class="set">set::options::fail-oper-warn;</font><br>
   If present, a user will be notified that his/her failed /oper attempt has been logged.</p>
+<p><font class="set">set::cgiirc::hosts { "ip1"; "ip2"; [etc..] };</font><br>
+  Enable CGI:IRC host spoofing for these IP's. Only do this for CGI:IRC gateways you fully
+  trust! See <a href="#feature_cgiirc">CGI:IRC Support</a> for more information.</p>
 <p><font class="set">set::dns::timeout &lt;timevalue&gt;;</font><br>
   A time value specifying the length of time a DNS server has to respond before 
   a timeout. A time value is a numeric string with d meaning days, h meaning hours, 

@@ -84,6 +84,9 @@ DLLFUNC int MOD_UNLOAD(m_pass)(int module_unload)
  * m_pass() - Added Sat, 4 March 1989
  ***************************************************************************/
 
+#define CGIIRC_STRING     "CGIIRC_"
+#define CGIIRC_STRINGLEN  (sizeof(CGIIRC_STRING)-1)
+
 /*
 ** m_pass
 **	parv[0] = sender prefix
@@ -103,6 +106,76 @@ DLLFUNC CMD_FUNC(m_pass)
 	{
 		sendto_one(cptr, err_str(ERR_ALREADYREGISTRED),
 		    me.name, parv[0]);
+		return 0;
+	}
+	
+	if (iConf.cgiirc_hosts && iplist_onlist(iConf.cgiirc_hosts, GetIP(sptr)))
+	{
+		char *ip, *host;
+		
+		/* Do CGI:IRC stuff here */
+		if (strncmp(password, CGIIRC_STRING, CGIIRC_STRINGLEN))
+		{
+			/* Hmm no CGIIRC_ prefix on a trusted host..
+			 * Maybe the admin added the host to the trusted CGI:IRC list but
+			 * did not configure CGI:IRC with realhost_as_password to 1.
+			 * This is scary, since this allows anyone on that CGI:IRC to spoof
+			 * hostnames, so warn about that and REFUSE the user.
+			 */
+			sendto_realops("[ERROR] Trusted CGI:IRC host '%s' (which is listed in set::cgiirc::hosts) does not "
+			               "seem to have 'realhost_as_password' set to 1 in it's cgiirc.conf. This is DANGEROUS. "
+			               "Please fix ASAP or remove the ip from set::cgiirc::hosts. Client rejected.", GetIP(sptr));
+			return exit_client(cptr, sptr, &me, "Invalid CGI:IRC configuration");
+		}
+		/* Ok now we got that sorted out, proceed:
+		 * Syntax: CGIIRC_<ip>_<resolvedhostname>
+		 * The <resolvedhostname> has been checked ip->host AND host->ip by CGI:IRC itself
+		 * already so we trust it.
+		 */
+		ip = password + CGIIRC_STRINGLEN;
+		host = strchr(ip, '_');
+		if (!host)
+			return exit_client(cptr, sptr, &me, "Invalid CGI:IRC IP received");
+		*host++ = '\0';
+		
+		if (!strcmp(ip, host))
+			host = NULL; /* host did not resolve, make it NULL */
+		
+		/* STEP 1: Update cptr->ip */
+#ifdef INET6
+		if (inet_pton(AFINET, ip, &cptr->ip) <= 0)
+#else
+		if ((cptr->ip.S_ADDR = inet_addr(ip)) == INADDR_NONE)
+#endif
+			return exit_client(cptr, cptr, &me, "Invalid IP address");
+
+		/* STEP 2: Update GetIP() */
+		if (cptr->user)
+		{
+			/* Kinda unsure if this is actually used.. But maybe if USER, PASS, NICK ? */
+			if (cptr->user->ip_str)
+				MyFree(cptr->user->ip_str);
+			cptr->user->ip_str = strdup(ip);
+		}
+		
+		/* STEP 3: Update cptr->hostp */
+		/* (free old) */
+		if (cptr->hostp)
+		{
+			unreal_free_hostent(cptr->hostp);
+			cptr->hostp = NULL;
+		}
+		/* (create new) */
+		if (host)
+			cptr->hostp = unreal_create_hostent(host, &sptr->ip);
+
+		/* STEP 4: Update sockhost */		
+		strlcpy(cptr->sockhost, ip, sizeof(cptr->sockhost));
+
+		/* Done? */
+		
+		/* Do not save password, return / proceed as normal instead */
+		SetCGIIRC(sptr);
 		return 0;
 	}
 
