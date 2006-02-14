@@ -1049,6 +1049,6 @@
   UnrealIRCd (untested though).
 - Added CGI:IRC host spoofing support. This means you can mark specific CGI:IRC gateways as
   "trusted" and the IRCd will show the users' _real_ host/ip everywhere on IRC, instead of the
-  _CGI:IRC-gateway_ host/ip.
+  host/ip of the CGI:IRC-gateway.
   To do so you must set 'realhost_as_password' to 1 in your cgiirc.conf. And add the
   CGI:IRC gateway(s) you fully trust to set::cgiirc::hosts.
