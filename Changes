@@ -1052,4 +1052,4 @@
   host/ip of the CGI:IRC-gateway.
   To do so you must set 'realhost_as_password' to 1 in your cgiirc.conf. And add the
   CGI:IRC gateway(s) you fully trust to set::cgiirc::hosts.
-- Fixed win32 compile problem due to CGI:IRC support (?)
+- Fixed win32 compile problem due to CGI:IRC support, reported by therock247uk (#0002821).
