@@ -142,11 +142,7 @@ DLLFUNC CMD_FUNC(m_pass)
 			host = NULL; /* host did not resolve, make it NULL */
 		
 		/* STEP 1: Update cptr->ip */
-#ifdef INET6
 		if (inet_pton(AFINET, ip, &cptr->ip) <= 0)
-#else
-		if ((cptr->ip.S_ADDR = inet_addr(ip)) == INADDR_NONE)
-#endif
 			return exit_client(cptr, cptr, &me, "Invalid IP address");
 
 		/* STEP 2: Update GetIP() */
