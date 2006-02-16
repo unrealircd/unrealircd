@@ -1053,3 +1053,8 @@
   To do so you must set 'realhost_as_password' to 1 in your cgiirc.conf. And add the
   CGI:IRC gateway(s) you fully trust to set::cgiirc::hosts.
 - Fixed win32 compile problem due to CGI:IRC support, reported by therock247uk (#0002821).
+- Redid whole CGI:IRC support. Configuration is now moved to cgiirc { } blocks.
+  We now support the webirc ('webirc_password' in CGI:IRC) method, which is kinda superior
+  to the older method ('realhost_as_password').
+  See the Unreal documentation (section '4.36 - Cgiirc Block') for details on how to configure.
+- Changed quoting color in unreal32docs.. looks better now IMO (only English docs updated).

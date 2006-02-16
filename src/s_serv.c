@@ -607,7 +607,7 @@ CMD_FUNC(m_rehash)
 	}
 	x = 0;
 
-	if (BadPtr(parv[2])) {
+	if ((parc < 3) || BadPtr(parv[2])) {
 		/* If the argument starts with a '-' (like -motd, -opermotd, etc) then it's
 		 * assumed not to be a server. -- Syzop
 		 */

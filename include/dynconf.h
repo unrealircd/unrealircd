@@ -148,7 +148,6 @@ struct zConfiguration {
 	char *spamexcept_line;
 	int maxbans;
 	int maxbanlength;
-	IPList *cgiirc_hosts;
 	aNetwork network;
 };
 
@@ -255,7 +254,7 @@ extern MODVAR aConfiguration iConf;
 #define MAXBANS		iConf.maxbans
 #define MAXBANLENGTH	iConf.maxbanlength
 
-/* Used for duplicate checking */
+/* Used for "is present?" and duplicate checking */
 struct SetCheck {
 	unsigned has_show_opermotd:1;
 	unsigned has_hide_ulines:1;
@@ -354,6 +353,9 @@ struct SetCheck {
 	unsigned has_options_show_connect_info:1;
 	unsigned has_options_mkpasswd_for_everyone:1;
 	unsigned has_options_allow_part_if_shunned:1;
+	int cgiirc_type; /* cheat :( */
+	unsigned has_cgiirc_hosts:1;
+	unsigned has_cgiirc_webpass:1;
 };
 
 

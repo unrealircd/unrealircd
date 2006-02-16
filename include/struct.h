@@ -109,6 +109,7 @@ typedef struct _configitem_allow_dcc ConfigItem_allow_dcc;
 typedef struct _configitem_vhost ConfigItem_vhost;
 typedef struct _configitem_except ConfigItem_except;
 typedef struct _configitem_link	ConfigItem_link;
+typedef struct _configitem_cgiirc ConfigItem_cgiirc;
 typedef struct _configitem_ban ConfigItem_ban;
 typedef struct _configitem_badword ConfigItem_badword;
 typedef struct _configitem_deny_dcc ConfigItem_deny_dcc;
@@ -1203,6 +1204,19 @@ struct _configitem_link {
 #ifdef ZIP_LINKS
 	int compression_level;
 #endif
+};
+
+typedef enum {
+	CGIIRC_PASS=1, CGIIRC_WEBIRC=2
+} CGIIRCType;
+
+struct _configitem_cgiirc {
+	ConfigItem  *prev, *next;
+	ConfigFlag  flag;
+	CGIIRCType type;
+	char *username;
+	char *hostname;
+	anAuthStruct *auth;
 };
 
 struct _configitem_except {

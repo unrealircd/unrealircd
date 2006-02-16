@@ -12,7 +12,7 @@
  .block_old { font-size: 14; }
  .set { font-weight: bold; }
  .desc { margin-left: 15px; }
- pre { font: "times new roman"; font-style: normal;}
+ pre { font: "times new roman"; font-style: normal; background-color: #eeeeee;}
 </style>
 </head>
 
@@ -112,7 +112,8 @@ English |
   ---4.33. <a href="#helpblock">Help Block</a><br>
   ---4.34. <a href="#officialchannels">Official Channels Block</a><br>
   ---4.35. <a href="#spamfilter">Spamfilter Block</a><br>
-  ---4.36. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
+  ---4.36. <a href="#cgiirc">Cgiirc Block</a><br> 
+  ---4.37. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
   5. <a href="#addtlfiles">Additional Files</a><br>
   6. <a href="#userchannelmodes">User & Channel Modes</a><br>
   7. <a href="#useropercommands">User & Oper Commands</a><br>
@@ -631,10 +632,9 @@ Example 2, if you have mainly chinese users and want to allow "normal" chinese c
 
 <p><font size="+2"><b>3.17 - CGI:IRC Support</b></font><a name="feature_cgiirc"></a></p><div class="desc">
 <p>UnrealIRCd has support for CGI:IRC host spoofing, which means you can mark specific CGI:IRC
-gateways as "trusted" and the IRCd will show the users' real host/ip everywhere on
+gateways as "trusted" which will cause the IRCd to show the users' real host/ip everywhere on
 IRC, instead of the host/ip of the CGI:IRC-gateway.</p>
-<p>To do so you must set 'realhost_as_password' to 1 in your cgiirc.conf. And add the CGI:IRC gateway(s)
-you fully trust to set::cgiirc::hosts (see <a href="#setblock">set block</a>).</p>
+<p>See the <a href="#cgiirc">cgiirc block</a> for information on how to configure this.</p>
 </div>
 
 <p><font size="+2"><b>3.18 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
@@ -2115,7 +2115,63 @@ spamfilter {
 </pre></p>
 </div>
 
-<p><font class="block_section">4.36 - </font><font class="block_name">Set Block</font>
+<p><font class="block_section">4.36 - </font><font class="block_name">Cgiirc Block</font>
+   <font class="block_optional">OPTIONAL</font><a name="cgiirc"></a>
+</p><div class="desc">
+<p>
+The cgiirc block allows you to configure host spoofing for CGI:IRC gateways you trust 
+(<a href="#feature_cgiirc">more info</a>).</p>
+
+<p>Syntax:<br>
+<pre>
+cgiirc {
+	type &lt;webirc|old&gt;;
+	username &lt;mask&gt;; /* optional */
+	hostname &lt;mask&gt;;
+	password &lt;password&gt;; /* only for type webirc */
+};</pre></p>
+<p><b>type</b> is either 'webirc' or 'old'.<br>
+   <b>username</b> is matched against the ident (if present). If not specified, "*" is assumed.<br>
+   <b>hostname</b> is the hostmask to match against.<br>
+   <b>password</b> is the webirc password, only used for type 'webirc'.<br>
+</p>
+
+<p><b>How to configure with method 'webirc' (recommended method)</b><br>
+In your CGI:IRC configuration file (cgiirc.conf) you set webirc_password to a good password.<br>
+Then, in your unrealircd.conf you add a cgiirc block to allow this host and password and you set
+cgiirc::type to "webirc".<br>
+<br>
+Example:<br>
+In your CGI:IRC configuration file (usually cgiirc.conf) you add:
+<pre>webirc_password = LpT4xqPI5</pre>
+Then, in your unrealircd.conf you add a cgiirc block:
+<pre>cgiirc {
+	type webirc;
+	hostname "1.2.3.4";
+	password "LpT4xqPI5";
+};</pre></p>
+
+<p><b>How to configure with method 'old'</b><br>
+NOTE: This is not the recommended method since it has two disadvantages: 
+this method will send the IP/host to spoof as a server password, meaning you cannot
+specify a server password as a CGI:IRC user. Additionally, access control is only
+IP-based and does not require an extra password like the 'webirc' method. In short,
+you probably should not be using this method unless you have a good reason to do so.<br>
+<br>
+In your CGI:IRC configuration file (cgiirc.conf) you set realhost_as_password to 1.<br>
+Then, in your unrealircd.conf you add a cgiirc block to allow this host.<br>
+<br>
+Example:<br>
+In your CGI:IRC configuration file (cgiirc.conf) you add:
+<pre>realhost_as_password = 1</pre>
+Then, in your unrealircd.conf you add a cgiirc block:
+<pre>cgiirc {
+	type old;
+	hostname "1.2.3.4";
+};</pre></p>
+</div>
+
+<p><font class="block_section">4.37 - </font><font class="block_name">Set Block</font>
    <font class="block_required">REQUIRED</font> <font class="block_old">(Previously known as unrealircd.conf/networks file)</font><a name="setblock"></a>
 </p><div class="desc">
 <p>The set file is what use to be our networks/unrealircd.conf and our networks 

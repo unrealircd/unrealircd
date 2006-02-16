@@ -108,6 +108,7 @@ static int	_conf_alias		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_help		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_offchans		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_spamfilter	(ConfigFile *conf, ConfigEntry *ce);
+static int	_conf_cgiirc	(ConfigFile *conf, ConfigEntry *ce);
 
 /* 
  * Validation commands 
@@ -140,6 +141,7 @@ static int	_test_alias		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_help		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_offchans		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_spamfilter	(ConfigFile *conf, ConfigEntry *ce);
+static int	_test_cgiirc	(ConfigFile *conf, ConfigEntry *ce);
  
 /* This MUST be alphabetized */
 static ConfigCommand _ConfigCommands[] = {
@@ -150,6 +152,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "badword",		_conf_badword,		_test_badword	},
 #endif
 	{ "ban", 		_conf_ban,		_test_ban	},
+	{ "cgiirc", 	_conf_cgiirc,	_test_cgiirc	},
 	{ "class", 		_conf_class,		_test_class	},
 	{ "deny",		_conf_deny,		_test_deny	},
 	{ "drpass",		_conf_drpass,		_test_drpass	},
@@ -336,6 +339,7 @@ extern void charsys_add_language(char *name);
 extern void charsys_reset_pretest(void);
 int charsys_postconftest(void);
 void charsys_finish(void);
+void delete_cgiircblock(ConfigItem_cgiirc *e);
 
 /*
  * Config parser (IRCd)
@@ -361,6 +365,7 @@ ConfigItem_allow	*conf_allow = NULL;
 ConfigItem_except	*conf_except = NULL;
 ConfigItem_vhost	*conf_vhost = NULL;
 ConfigItem_link		*conf_link = NULL;
+ConfigItem_cgiirc	*conf_cgiirc = NULL;
 ConfigItem_ban		*conf_ban = NULL;
 ConfigItem_deny_dcc     *conf_deny_dcc = NULL;
 ConfigItem_deny_channel *conf_deny_channel = NULL;
@@ -1760,6 +1765,7 @@ void	config_rehash()
 	ConfigItem_except 		*except_ptr;
 	ConfigItem_ban 			*ban_ptr;
 	ConfigItem_link 		*link_ptr;
+	ConfigItem_cgiirc 		*cgiirc_ptr;
 	ConfigItem_listen	 	*listen_ptr;
 	ConfigItem_tld			*tld_ptr;
 	ConfigItem_vhost		*vhost_ptr;
@@ -1779,7 +1785,6 @@ void	config_rehash()
 	ListStruct 	*next, *next2;
 	aTKline *tk, *tk_next;
 	SpamExcept *spamex_ptr;
-	IPList *ipl_ptr;
 	int i;
 
 	USE_BAN_VERSION = 0;
@@ -2110,12 +2115,6 @@ void	config_rehash()
 		MyFree(os_ptr);
 	}
 	iConf.oper_only_stats_ext = NULL;
-	for (ipl_ptr = iConf.cgiirc_hosts; ipl_ptr; ipl_ptr = (IPList *)next)
-	{
-		next = (ListStruct *)ipl_ptr->next;
-		ircfree(ipl_ptr->mask);
-		MyFree(ipl_ptr);
-	}
 	for (spamex_ptr = iConf.spamexcept; spamex_ptr; spamex_ptr = (SpamExcept *)next)
 	{
 		next = (ListStruct *)spamex_ptr->next;
@@ -2128,6 +2127,8 @@ void	config_rehash()
 		ircfree(of_ptr->topic);
 		MyFree(of_ptr);
 	}
+	conf_offchans = NULL;
+	
 #ifdef EXTCMODE
 	for (i = 0; i < EXTCMODETABLESZ; i++)
 	{
@@ -2135,7 +2136,12 @@ void	config_rehash()
 			free(iConf.modes_on_join.extparams[i]);
 	}
 #endif
-	conf_offchans = NULL;
+
+	for (cgiirc_ptr = conf_cgiirc; cgiirc_ptr; cgiirc_ptr = (ConfigItem_cgiirc *) next)
+	{
+		next = (ListStruct *)cgiirc_ptr->next;
+		delete_cgiircblock(cgiirc_ptr);
+	}
 }
 
 int	config_post_test()
@@ -2180,6 +2186,7 @@ int	config_post_test()
 		Error("set::help-channel is missing");
 	if (!settings.has_hiddenhost_prefix)
 		Error("set::hiddenhost-prefix is missing");
+		
 	for (h = Hooks[HOOKTYPE_CONFIGPOSTTEST]; h; h = h->next) 
 	{
 		int value, errs = 0;
@@ -2511,6 +2518,23 @@ ConfigItem_link *Find_link(char *username,
 	}
 	return NULL;
 
+}
+
+ConfigItem_cgiirc *Find_cgiirc(char *username, char *hostname, char *ip, CGIIRCType type)
+{
+ConfigItem_cgiirc *e;
+
+	if (!username || !hostname || !ip)
+		return NULL;
+
+	for (e = conf_cgiirc; e; e = (ConfigItem_cgiirc *)e->next)
+	{
+		if ((e->type == type) && (!e->username || !match(e->username, username)) &&
+		    (!match(e->hostname, hostname) || !match(e->hostname, ip)))
+			return e;
+	}
+
+	return NULL;
 }
 
 ConfigItem_ban 	*Find_ban(aClient *sptr, char *host, short type)
@@ -6178,6 +6202,162 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 		
 }
 
+int	_conf_cgiirc(ConfigFile *conf, ConfigEntry *ce)
+{
+ConfigEntry *cep;
+ConfigEntry *cepp;
+ConfigItem_cgiirc *cgiirc = NULL;
+
+	cgiirc = (ConfigItem_cgiirc *) MyMallocEx(sizeof(ConfigItem_cgiirc));
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "username"))
+			cgiirc->username = strdup(cep->ce_vardata);
+		else if (!strcmp(cep->ce_varname, "hostname"))
+			cgiirc->hostname = strdup(cep->ce_vardata);
+		else if (!strcmp(cep->ce_varname, "password"))
+			cgiirc->auth = Auth_ConvertConf2AuthStruct(cep);
+		else if (!strcmp(cep->ce_varname, "type"))
+		{
+			if (!strcmp(cep->ce_vardata, "webirc"))
+				cgiirc->type = CGIIRC_WEBIRC;
+			else if (!strcmp(cep->ce_vardata, "old"))
+				cgiirc->type = CGIIRC_PASS;
+			else
+				abort();
+		}
+	}
+	AddListItem(cgiirc, conf_cgiirc);
+	return 0;
+}
+
+int	_test_cgiirc(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry	*cep, *cepp;
+	OperFlag 	*ofp;
+	int		errors = 0;
+	char has_username = 0; /* dup checking only, not mandatory */
+	char has_type     = 0; /* mandatory */
+	char has_hostname = 0; /* mandatory */
+	char has_password = 0; /* mandatory */
+	CGIIRCType type;
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname)
+		{
+			config_error_blank(cep->ce_fileptr->cf_filename, cep->ce_varlinenum, "cgiirc");
+			errors++;
+			continue;
+		}
+		if (!cep->ce_vardata)
+		{
+			config_error_empty(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				"cgiirc", cep->ce_varname);
+			errors++;
+			continue;
+		}
+		if (!strcmp(cep->ce_varname, "username"))
+		{
+			if (has_username)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
+					cep->ce_varlinenum, "cgiirc::username");
+				continue;
+			}
+			has_username = 1;
+		}
+		else if (!strcmp(cep->ce_varname, "hostname"))
+		{
+			if (has_hostname)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
+					cep->ce_varlinenum, "cgiirc::hostname");
+				continue;
+			}
+			has_hostname = 1;
+#ifdef INET6
+			/* I'm nice... I'll help those poor ipv6 users. -- Syzop */
+			/* [ not null && len>6 && has not a : in it && last character is a digit ] */
+			if (cep->ce_vardata && (strlen(cep->ce_vardata) > 6) && !strchr(cep->ce_vardata, ':') &&
+			    isdigit(cep->ce_vardata[strlen(cep->ce_vardata)-1]))
+			{
+				config_error("%s:%i: cgiirc block has cgiirc::hostname set to '%s' (IPv4) on a IPv6 compile, "
+				              "use the ::ffff:1.2.3.4 form instead",
+							cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
+				errors++;
+			}
+#endif
+		}
+		else if (!strcmp(cep->ce_varname, "password"))
+		{
+			if (has_password)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
+					cep->ce_varlinenum, "cgiirc::password");
+				continue;
+			}
+			has_password = 1;
+			if (Auth_CheckError(cep) < 0)
+				errors++;
+		}
+		else if (!strcmp(cep->ce_varname, "type"))
+		{
+			if (has_type)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "cgiirc::type");
+			}
+			has_type = 1;
+			if (!strcmp(cep->ce_vardata, "webirc"))
+				type = CGIIRC_WEBIRC;
+			else if (!strcmp(cep->ce_vardata, "old"))
+				type = CGIIRC_PASS;
+			else
+			{
+				config_error("%s:%i: unknown cgiirc::type '%s', should be either 'webirc' or 'old'",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
+				errors++;
+			}
+		}
+		else
+		{
+			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				"cgiirc", cep->ce_varname);
+			errors++;
+		}
+	}
+	if (!has_type)
+	{
+		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			"cgiirc::type");
+		errors++;
+	}
+	if (!has_hostname)
+	{
+		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			"cgiirc::hostname");
+		errors++;
+	}
+	if (!has_password && (type == CGIIRC_WEBIRC))
+	{
+		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			"cgiirc::password");
+		errors++;
+	} else
+	if (has_password && (type == CGIIRC_PASS))
+	{
+		config_error("%s:%i: cgiirc block has type set to 'old' but has a password set. "
+		             "Passwords are not used with type 'old'. Either remove the password or "
+		             "use the 'webirc' method instead.",
+		             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	}
+
+	return errors;
+}
+
 int     _conf_ban(ConfigFile *conf, ConfigEntry *ce)
 {
 
@@ -6675,21 +6855,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				value = (*(h->func.intfunc))(conf, cep, CONFIG_CLOAKKEYS);
 				if (value == 1)
 					break;
-			}
-		}
-		else if (!strcmp(cep->ce_varname, "cgiirc"))
-		{
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
-			{
-				if (!strcmp(cepp->ce_varname, "hosts"))
-				{
-					for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
-					{
-						IPList *e = MyMallocEx(sizeof(IPList));
-						e->mask = strdup(ceppp->ce_varname);
-						AddListItem(e, tempiConf.cgiirc_hosts);
-					}
-				}
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "ident"))
@@ -7461,34 +7626,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 				if (value == -2) 
 					errors += errs;
-			}
-		}
-		else if (!strcmp(cep->ce_varname, "cgiirc"))
-		{
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
-			{
-				if (!strcmp(cepp->ce_varname, "hosts"))
-				{
-					for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
-					{
-						char *p;
-						/* check if really an ip.. */
-						for (p = ceppp->ce_varname; *p; p++)
-							if (!strchr("1234567890.*?", *p))
-							{
-								config_error("%s:%i: set::cgiirc::hosts: host '%s' is invalid. Only IP's are accepted (and wildcards). Eg: '1.2.3.4' or '1.2.3.*'",
-									ceppp->ce_fileptr->cf_filename, ceppp->ce_varlinenum, ceppp->ce_varname);
-								errors++;
-								break;
-							}
-					}
-				} else {
-					config_error_unknown(cepp->ce_fileptr->cf_filename,
-						cepp->ce_varlinenum, "set::cgiirc",
-						cepp->ce_varname);
-					errors++;
-					continue;
-				}
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "scan")) {
@@ -8831,6 +8968,17 @@ void delete_linkblock(ConfigItem_link *link_ptr)
 	link_cleanup(link_ptr);
 	DelListItem(link_ptr, conf_link);
 	MyFree(link_ptr);
+}
+
+void delete_cgiircblock(ConfigItem_cgiirc *e)
+{
+	Debug((DEBUG_ERROR, "delete_cgiircblock: deleting %s", e->hostname));
+	if (e->auth)
+		Auth_DeleteAuthStruct(e->auth);
+	ircfree(e->hostname);
+	ircfree(e->username);
+	DelListItem(e, conf_cgiirc);
+	MyFree(e);
 }
 
 void delete_classblock(ConfigItem_class *class_ptr)
