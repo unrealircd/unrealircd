@@ -707,7 +707,10 @@ static int check_init(aClient *cptr, char *sockn, size_t size)
 	int  len = sizeof(struct SOCKADDR_IN);
 
 	if (IsCGIIRC(cptr))
-		return 0; /* already set */
+	{
+		strlcpy(sockn, GetIP(cptr), size); /* use already set value */
+		return 0;
+	}
 
 	/* If descriptor is a tty, special checking... */
 #ifndef _WIN32

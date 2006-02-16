@@ -1061,3 +1061,4 @@
 - Fixed *BSD compile problem caused by changes of above, reported by 3rror (#0002823). 
 - Added error message if c-ares failed to initialize, might help in case something is buggy
   (either with Unreal or the OS/environment).
+- Fixed (serious) bug in CGI:IRC code, IP's were often not right, reported by 3rror (#2824).
