@@ -34,6 +34,8 @@
 #include <string.h>
 #ifdef _WIN32
 #include <io.h>
+#else
+#include <sys/socket.h>
 #endif
 #include "inet.h"
 #include <fcntl.h>
