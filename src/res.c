@@ -78,6 +78,7 @@ static unsigned int unrealdns_num_cache = 0; /**< # of cache entries in memory *
 void init_resolver(void)
 {
 struct ares_options options;
+int n;
 
 	if (requests)
 		abort(); /* should never happen */
@@ -87,7 +88,15 @@ struct ares_options options;
 	options.timeout = 3;
 	options.tries = 2;
 	options.flags = ARES_FLAG_NOALIASES;
-	ares_init_options(&resolver_channel, &options, ARES_OPT_TIMEOUT|ARES_OPT_TRIES|ARES_OPT_FLAGS);
+	n = ares_init_options(&resolver_channel, &options, ARES_OPT_TIMEOUT|ARES_OPT_TRIES|ARES_OPT_FLAGS);
+	if (n != ARES_SUCCESS)
+	{
+		config_error("resolver: ares_init_options() failed with error code %d [%s]", n, ares_strerror(n));
+#ifdef _WIN32
+		win_error();
+#endif
+		exit(-7);
+	}
 }
 
 void unrealdns_addreqtolist(DNSReq *r)
