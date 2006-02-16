@@ -1058,4 +1058,4 @@
   to the older method ('realhost_as_password').
   See the Unreal documentation (section '4.36 - Cgiirc Block') for details on how to configure.
 - Changed quoting color in unreal32docs.. looks better now IMO (only English docs updated).
-- Fixed *BSD compile problem caused by changes of above, reported by 3rror (#0002823).
+- Fixed *BSD compile problem caused by changes of above, reported by 3rror (#0002823). 
