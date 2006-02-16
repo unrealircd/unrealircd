@@ -35,6 +35,7 @@
 #ifdef _WIN32
 #include <io.h>
 #endif
+#include "inet.h"
 #include <fcntl.h>
 #include "h.h"
 #ifdef STRIPBADWORDS
