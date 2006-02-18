@@ -71,7 +71,8 @@ Spanish |
   ---3.14. <a href="#feature_spamfilter">Filtro de spam </a><br>
   ---3.15. <a href="#feature_cidr">CIDR</a><br>
   ---3.16. <a href="#feature_nickchars">Configuraci&oacute;n de caracteres para nicks</a><br>
-  ---3.17. <a href="#feature_other">Otras caracter&iacute;sticas</a><br>
+  ---3.17. <a href="#feature_cgiirc">Soporte CGI:IRC</a><br>
+  ---3.18. <a href="#feature_other">Otras caracter&iacute;sticas</a><br>
   4. <a href="#configuringyourunrealircdconf">Configurando su fichero unrealircd.conf</a><br>
   ---4.1. <a href="#configurationfileexplained">Explicaci&oacute;n del archivo</a><br>
   ---4.2. <a href="#meblock"> Bloque me  -=- (M:Line)</a><br>
@@ -108,7 +109,8 @@ Spanish |
   ---4.33. <a href="#helpblock">Bloque help</a><br>
   ---4.34. <a href="#officialchannels">Bloque official channels</a><br>
   ---4.35. <a href="#spamfilter">Bloque spamfilter</a><br>
-  ---4.36. <a href="#setblock">Bloque set  -=- (networks/unrealircd.conf)</a><br>
+  ---4.36. <a href="#cgiirc">Bloque Cgiirc</a><br> 
+  ---4.37. <a href="#setblock">Bloque set  -=- (networks/unrealircd.conf)</a><br>
   5. <a href="#addtlfiles">Archivos adicionales</a><br>
   6. <a href="#userchannelmodes">Modos de usuario y canal</a><br>
   7. <a href="#useropercommands">Comandos de usuario y operador</a><br>
@@ -653,7 +655,7 @@ latin1/latin2/greek u otros grupos.</p>
 <p>Nota 2: El mapa de caracteres (si un cierto grupo de min&uacute;sculos con sus may&uacute;sculos) se corresponden con 
 US-ASCII, significa que o" y O" no se reconocen como el mismo caracter y alguien puede tener 
 un nick con B"ar y alguien con BA"r al mismo tiempo. Es una limitaci&oacute;n del propio sistema operativo 
-e IRCd sigue el estándar puesto que no puede solucionarse de pronto. Tengan cuidado con esta limitaci&oacute;n. 
+e IRCd sigue el est&aacute;ndar puesto que no puede solucionarse de pronto. Tengan cuidado con esta limitaci&oacute;n. 
 Note que esta limitaci&oacute;n se aplica siempre a los canales, que normalmente se permiten y el 
 US-ASCII se reforma.</p>
 <p>Nota 3: Los caracteres b&aacute;sicos para nicks (a-z A-Z 0-9 [ \ ] ^ _ - { | }) siempre se permiten y se incluyen de forma predeterminada.</p>
@@ -664,7 +666,13 @@ Ejemplo 2, si tiene usuarios chinos principalmente y quiere permitir caracteres 
 <pre>set { allowed-nickchars { chinese-simp; chinese-trad; }; };</pre>
 </p></div>
 
-<p><font size="+2"><b>3.17 - Otras caracter&iacute;sticas</b></font><a name="feature_other"></p>
+<p><font size="+2"><b>3.17 - Soporte CGI:IRC</b></font><a name="feature_cgiirc"></a></p><div class="desc">
+<p>UnrealIRCd tiene soporte para CGI:IRC. Esto significa que puede marcar una puerta de acceso CGI:IRC como 
+de confianza para que el IRCd muestre los host/ips reales de los usuarios en cualquier irc, en vez de mostrar el host/ip de la puerta de acceso CGI:IRC.</p>
+<p>Vea el <a href="#cgiirc">bloque cgiirc</a> para saber c&oacute;mo configurarlo.</p>
+</div>
+
+<p><font size="+2"><b>3.18 - Otras caracter&iacute;sticas</b></font><a name="feature_other"></p>
 <div class="desc">
 <p>UnrealIRCd tiene much&iacute;simas m&aacute;s caracter&iacute;sticas que no se detallan... Deber&aacute; encontrarlas por usted mismo.</p>
 </div>
@@ -1914,7 +1922,7 @@ alias &lt;nombre&gt; {
 <p>Este bloque (est&aacute;ndar) le permite redireccionar comandos a usuarios, generlamente a bots como por ejemplo /chanserv para enviarle privados. 
 <b>alias::</b> especifica el nombre del comando, por ejemplo chanserv. <b>alias::target</b> el nick o canal al que se le enviar&aacute; el mensaje y puede omitirse. 
 <b>alias::type</b> define el tipo de alias: services (el usuario est&aacute; en el servidor de servicios), stats (en el de estad&iacute;sticas), normal (en un servidor normal) y channel (el target es un canal). 
-Si alias::spamfilter (opcional) está puesto en 'yes', entonces ser&aacute; procesado por spamfilters (por defecto 'no').<br>
+Si alias::spamfilter (opcional) est&aacute; puesto en 'yes', entonces ser&aacute; procesado por spamfilters (por defecto 'no').<br>
 Este bloque tiene otro prop&oacute;sito detallado a continuaci&oacute;n.</p>
 <p>Sintaxis [alias de comandos]:<br>
 <pre>
@@ -2016,7 +2024,61 @@ spamfilter {
 </pre></p>
 </div>
 
-<p><font class="block_section">4.36 - </font><font class="block_name">Bloque set </font>
+<p><font class="block_section">4.36 - </font><font class="block_name">Bloque Cgiirc</font>
+   <font class="block_optional">OPCIONAL</font><a name="cgiirc"></a>
+</p><div class="desc">
+<p>
+Este bloque le permite configurar el host de confianza de la puerta de acceso CGI:IRC (<a href="#feature_cgiirc">m&aacute;s informaci&oacute;n</a>).</p>
+
+<p>Sintaxis:<br>
+<pre>
+cgiirc {
+	type &lt;webirc|old&gt;;
+	username &lt;m&aacute;scara&gt;; /* opcional */
+	hostname &lt;m&aacute;scara&gt;;
+	password &lt;contrase&ntilde;a&gt;; /* s&oacute;lo para tipo webirc */
+};</pre></p>
+<p><b>type</b> s&oacute;lo puede ser 'webirc' o 'old'.<br>
+   <b>username</b> relacionado con su ident (si est&aacute; presente). Si no se especifica, se asume "*".<br>
+   <b>hostname</b> es el host que tiene.<br>
+   <b>password</b> es la contrase&ntilde;a webirc, s&oacute;lo usado para type 'webirc'.<br>
+</p>
+
+<p><b>C&oacute;mo configurar con el m&eacute;todo 'webirc' (m&eacute;todo recomendado)</b><br>
+En su arhcivo de configuraci&oacute;n CGI:IRC (cgiirc.conf) debe poner webirc_password con una contrase&ntilde;a v&aacute;lida.<br>
+Entonces, en su unrealircd.conf debe a&ntilde;adir un bloque cgiirc para permitir este host y esta contrase&ntilde;a, y poner la directriz cgiirc::type a "webirc".<br>
+<br>
+Ejemplo:<br>
+En archivo de configuraci&oacute;n CGI:IRCI (cgiirc.conf) a&ntilde;ada:
+<pre>webirc_password = LpT4xqPI5</pre>
+Entonces, en su unrealircd.conf a&ntilde;ada un bloque cgiirc:
+<pre>cgiirc {
+	type webirc;
+	hostname "1.2.3.4";
+	password "LpT4xqPI5";
+};</pre></p>
+
+<p><b>C&oacute;mo configurar con el m&eacute;todo 'old'</b><br>
+NOTA: No se recomienda puesto que tiene dos desventajas: 
+este m&eacute;todo enviar&aacute; la IP/host a falsear como una contrase&ntilde;a de servidor, causando que no pueda 
+especificar una contrase&ntilde;a de servidor como usuario CGI:IRC. Adicionalmente, el control de acceso 
+se basa en la IP y no requiere una contrase&ntilde;a extra como en el m&eacute;todo 'webirc'. No deber&iacute;a usar este m&eacute;todo salvo 
+que tenga una buena raz&oacute;n para hacerlo.<br>
+<br>
+En su archivo de configuraci&oacute;n CGI:IRC (cgiirc.conf) ponga realhost_as_password a 1.<br>
+Entonces, en su unrealircd.conf a&ntilde;ada un bloque cgiirc para permitir este host.<br>
+<br>
+Ejemplo:<br>
+En su archivo de configuraci&oacute;n CGI:IRC (cgiirc.conf) a&ntilde;da:
+<pre>realhost_as_password = 1</pre>
+Entonces, en su unrealircd.conf a&ntilde;ada un bloque cgiirc.:
+<pre>cgiirc {
+	type old;
+	hostname "1.2.3.4";
+};</pre></p>
+</div>
+
+<p><font class="block_section">4.37 - </font><font class="block_name">Bloque set </font>
    <font class="block_required">REQUERIDO </font><font class="block_old">(conocido como archivo unrealircd.conf/networks)</font><a name="setblock"></a>
 </p>
 <div class="desc">
@@ -2091,10 +2153,10 @@ set {
 <p><font class="set">set::silence-limit &lt;l&iacute;mite&gt;;</font><br>
   L&iacute;mite de entradas en la lista silence. Si se omite, el l&iacute;mite es de 15.</p>
 <p><font class="set">set::maxbans &lt;l&iacute;mite&gt;;</font><br>
-  Fija el límite de bans (b+) máximos permitidos por canal. Por defecto son 60.
-  Si lo cambia, asegúrese que también cambia maxbanlength (ver siguiente)</p>
+  Fija el l&iacute;mite de bans (b+) m&aacute;ximos permitidos por canal. Por defecto son 60.
+  Si lo cambia, aseg&uacute;rese que tambi&eacute;n cambia maxbanlength (ver siguiente)</p>
 <p><font class="set">set::maxbanlength &lt;l&iacute;mite&gt;;</font><br>
-  Parecido al anterior, fija el número máximo de caracteres para todos los bans juntos. Así puede fijar esta cantidad directamente en memoria. 
+  Parecido al anterior, fija el n&uacute;mero m&aacute;ximo de caracteres para todos los bans juntos. As&iacute; puede fijar esta cantidad directamente en memoria. 
   Por defecto son 2048 (bytes). Con set::maxbans por defecto en 60, se permiten 2048:60=34 caracteres por ban.</p>
 <p><font class="set">set::oper-only-stats &lt;lista-stats&gt;;</font><br>
   Lista de stats que s&oacute;lo los operadores pueden usar en /stats. Om&iacute;talo para permitir a los usuarios ver toda la informaci&oacute;n o &quot;*&quot; para restringirla toda a operadores. S&oacute;lo se aceptan las stats en forma corta.</p>
@@ -2216,7 +2278,7 @@ set {
  <p><font class="set">set::spamfilter::except &lt;target(s)&gt;</font><br>
   Estos &quot;target(s)&quot; se omiten del filtro de spam (no se toma ninguna acci&oacute;n). Puede especificar varios separ&aacute;ndolos con comas. Ej: except &quot;#help,#spamreport&quot;;.</p>
  <p><font class="set">set::check-target-nick-bans &lt;yes|no&gt;</font><br>
-  Si un usuario se cambia de nick, comprueba si el nuevo nick se relaciona con algún ban. Si es así, no permite el cambio de nick. Por defecto 'yes'.</p>
+  Si un usuario se cambia de nick, comprueba si el nuevo nick se relaciona con alg&uacute;n ban. Si es as&iacute;, no permite el cambio de nick. Por defecto 'yes'.</p>
 </div>
 <p><b><font size="+2">5 &#8211; Archivos adicionales <a name="addtlfiles"></a>
   </font></b></p>
@@ -2425,7 +2487,7 @@ set {
   </tr>
   <tr> 
     <td><div align="center">d</div></td>
-    <td>No recibes mensajes de canales (a menos que estén prefijados por los caracteres especificados en set::channel-command-prefix)</td>
+    <td>No recibes mensajes de canales (a menos que est&eacute;n prefijados por los caracteres especificados en set::channel-command-prefix)</td>
   </tr>
   <tr> 
     <td><div align="center">G</div></td>
