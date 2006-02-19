@@ -57,7 +57,7 @@ Hungarian |
   ---1.1. <a href="#notesonolder">Megjegyzések a 3.1.x-rõl 3.2-re frissítésrõl és a verziók keverésérõl</a><br>
   ---1.2. <a href="#notesonupgrade">Megjegyzések a 3.2-es verziók közötti frissítésrõl</a><br>
   2. <a href="#installation">Telepítés</a><br>
-  3. <a href="#features">Featúrák</a><br>
+  3. <a href="#features">Jellegzetességek</a><br>
   -- 3.1. <a href="#feature_cloaking">Álcázás</a><br>
   -- 3.2. <a href="#feature_modules">Modulok</a><br>
   -- 3.3. <a href="#feature_snomasks">Snomaszkok</a><br>
@@ -69,13 +69,13 @@ Hungarian |
   -- 3.9. <a href="#feature_ipv6">IPv6</a><br>
   -- 3.10. <a href="#feature_ziplinks">Zip linkek</a><br>
   -- 3.11. <a href="#feature_dyndns">Dinamikus DNS-sel/IP-vel linkelések támogatása</a><br>
-  -- 3.12. <a href="#feature_antiflood">Árasztásvédelmi featúrák</a><br>
+  -- 3.12. <a href="#feature_antiflood">Árasztásvédelmi lehetõségek</a><br>
   -- 3.13. <a href="#feature_bantypes">Ban típusok</a><br>
   -- 3.14. <a href="#feature_spamfilter">A spamszûrõ</a><br>
   -- 3.15. <a href="#feature_cidr">CIDR</a><br>
   -- 3.16. <a href="#feature_nickchars">Karakterkészletek nicknevekhez</a><br>
   -- 3.17. <a href="#feature_cgiirc">CGI:IRC támogatás</a><br>
-  -- 3.18. <a href="#feature_other">További featúrák</a><br>
+  -- 3.18. <a href="#feature_other">További jellegzetességek</a><br>
   4. <a href="#configuringyourunrealircdconf">Az unrealircd.conf fájlod
   beállítása</a><br>
   ---4.1. <a href="#configurationfileexplained">A konfigurációs formátumról</a><br>
@@ -160,7 +160,7 @@ Hungarian |
 <div class="desc">
 <p>Abban az esetben, ha az Unreal3.1.x-rõl Unreal3.2-re frissítesz, észre fogod venni, hogy az egész konfigurációs
    fájl megváltozott, és talán nehéznek látod elõször, de ha egyszer átváltottál, sokkal jobbnak fogod találni!</p>
-<p>Ezenkívül ne felejtsd el elolvasni a featúrákról szóló 3. részt, mert bár néhányukról tudsz, amelyek az Unreal3.1.x-ben is megtalálhatóak, de van számos új featúra is!</p>
+<p>Ezenkívül ne felejtsd el elolvasni a jellegzetességekrõl szóló 3. részt, mert bár néhányukról tudsz, amelyek az Unreal3.1.x-ben is megtalálhatóak, de van számos újdonság is!</p>
 <p>A legjobb, ha nem keversz/linkelsz 3.1.x-et 3.2-vel, de ha nagyon akarod, legaláb egy 3.1.4-es vagy 3.1.5.1-ös erõsen ajánlott.</p></div>
 
 <p><font size="+2"><b>1.2 &#8211; Megjegyzések a 3.2-es verziók közötti frissítésrõl</b></font><a name="notesonupgrade"></a><br>
@@ -231,16 +231,16 @@ Windows:<br>
 </ol>
 </p>
 <p> </p></div>
-<p><font size="+2"><b>3.0 - Featúrák</b></font>
+<p><font size="+2"><b>3.0 - Jellegzetességek</b></font>
   <a name="features"></a></p><div class="desc">
-<p>Néhány fõbb és hasznosabb featúráról adunk magyarázatot ebben a részben. Általános áttekintést nyújt,
+<p>Néhány fõbb és hasznosabb jellegzetességrõl adunk magyarázatot ebben a részben. Általános áttekintést nyújt,
    és néha utal a konfigurációs fájlra is (olyasmire, amirõl talán még semmit sem tudsz).</p>
 <p>Ezt a részt kihagyhatod, azonban ajánlott elolvasni a telepítés elõtt vagy után.</p></div>
 
 <p><font size="+2"><b>3.1 - Álcázás</b></font><a name="feature_cloaking"></a></p><div class="desc">
 <p>Az álcázás (cloaking) egy módszer a felhasználók valós gazdaneveinek elrejtésére. Például, ha a valódi gazdaneved <i>d5142341.cable.wanadoo.nl</i>,
    (a join, part, whois stb. üzenetekben) <i>rox-2DCA3201.cable.wanadoo.nl</i>-ként lesz megjelenítve.
-   Ez a featúra hasznos annak a megelõzésére, hogy a felhasználók egymást árasszák (floodolják), mivel így nem látják a valódi gazdanevet ill. IP címet.</p>
+   Ez a funkció hasznos annak a megelõzésére, hogy a felhasználók egymást árasszák (floodolják), mivel így nem látják a valódi gazdanevet ill. IP címet.</p>
 <p>Ez a +x felhasználói móddal vezérelhetõ (például: /mode nickneved +x), az adminok erõltethetik a +x alapértelemzésbeli
    engedélyezését is, vagy beállíthatják, hogy a mód soha ne legyen eltávolítható.</p>
 <p>Az álcázott gazdanevet egy álcázó modul állítja elõ (egyet szükséges betöltened), az Unreal jelenleg 1 ilyen hivatalos modult tartalmaz:<br>
@@ -352,11 +352,11 @@ Windows:<br>
    link::options::zip opciót (mindkét oldalon).</p></div>
 
 <p><font size="+2"><b>3.11 - Dinamikus DNS-sel/IP-vel linkelések támogatása</b></font><a name="feature_dyndns"></a></p><div class="desc">
-<p>Az UnrealIRCd néhány (új) hasznos featúrával segíti azokat a felhasználókat, akiknek dinamikus IP-jük van, és dinamikus DNS-t használnak
+<p>Az UnrealIRCd néhány (új) hasznos funkcióval segíti azokat a felhasználókat, akiknek dinamikus IP-jük van, és dinamikus DNS-t használnak
    (mint a valami.dyndns.org). Ha két dinamikus DNS-sel rendelkezõ gépet linkelsz, állítsd be a link::options::nodnscache és a link::options::nohostcheck opciókat.
 </p></div>
 
-<p><font size="+2"><b>3.12 - Árasztásvédelmi featúrák</b></font><a name="feature_antiflood"></a></p><div class="desc">
+<p><font size="+2"><b>3.12 - Árasztásvédelmi lehetõségek</b></font><a name="feature_antiflood"></a></p><div class="desc">
 <p>
 <b>Elfojtás</b><br>
 Az elfojtás (throttling) egy módszer annak korlátozására, hogy egy felhasználó milyen gyorsan bonthatja a kapcsolatot
@@ -417,7 +417,7 @@ Bizonyos árasztástípusoknál az alapértelmezett tevékenység helyett egy másikat i
 Ez a csatornát +R-re állítja, ha a belépési határt elérték (&gt;20 belépés 15 másodperc alatt),
 és +M-re, ha a megengedett üzenetek számát elérték (&gt;50 üzenet 15 másodperc alatt).<br>
 <br>
-Van egy &quot;töröld a módot X perc után&quot; featúra is: a <i>+f [20j#R5]:15</i> +R-re állítja a csatornát, ha
+Van egy &quot;töröld a módot X perc után&quot; funkció is: a <i>+f [20j#R5]:15</i> +R-re állítja a csatornát, ha
 elérték a határt, és -R-et állít be 5 perc után.<br>
 A szervernek lehet alapértelmezett módtörlési ideje (set::modef-default-unsettime), vagyis ha azt írod be, hogy <i>+f [20j]:15</i>,
 átváltozhat <i>+f [20j#i10]:15</i>-re. Ez csak egy alapértelmezés, továbbra is beállíthatsz [20j#i2]:15-öt vagy bármi ehhez hasonlót,
@@ -425,7 +425,7 @@ A szervernek lehet alapértelmezett módtörlési ideje (set::modef-default-unsettim
 <br>
 A régi +f mód (felhasználónkénti üzenetáradat) szintén elérhetõ a 't' tevékenységként, a +f 10:6-ot most már úgy hívjuk, hogy +f [10t]:6, és
 a +f *20:10 most már +f [20t#b]:10. Jelenleg az ircd automatikusan átalakítja a régi +f módtípusokat az újakra.
-Megjegyzendõ, hogy nincs alapértelmezett törlési idõ featúra a 't' banokra (a [20t#b30]:15 nem fog mûködni).<br>
+Megjegyzendõ, hogy nincs alapértelmezett törlési idõ funkció a 't' banokra (a [20t#b30]:15 nem fog mûködni).<br>
 <br>
 Az, hogy mi a legjobb +f mód, nagymértékben függ a csatornától... Hány felhasználója van? Van-e rajta olyan játék, ami a felhasználókat
 sok üzenet küldésére készteti (pl.: trivia), vagy használnak-e gyakran popupokat? Ez egy valamiféle fõcsatorna-e, vagy benne van-e az auto-join-ban? Stb.<br>
@@ -638,8 +638,8 @@ az IRC-n, és nem a CGI:IRC átjáróét.</p>
 <p>Lásd a <a href="#cgiirc">cgiirc blokkot</a> a beállításának hogyanjáról.</p>
 </div>
 
-<p><font size="+2"><b>3.18 - További featúrák</b></font><a name="feature_other"></a></p><div class="desc">
-<p>Az UnrealIRCd-nek rengeteg featúrája van, ezért itt nincs minden megemlítve... Rájössz majd magadtól is.</p></div>
+<p><font size="+2"><b>3.18 - További jellegzetességek</b></font><a name="feature_other"></a></p><div class="desc">
+<p>Az UnrealIRCd-nek rengeteg funkciója van, ezért itt nincs minden megemlítve... Rájössz majd magadtól is.</p></div>
 
 <p> </p>
 <p><font size="+2"><b>4.0 - Az unrealircd.conf fájlod beállítása</b></font>
@@ -2078,7 +2078,7 @@ official-channels {
 </p><div class="desc">
 <p>
 A spamfilter blokkal vehetsz fel helyi spamszûrõket (nem hálózati szintûeket).<br>
-Lásd a <a href="#feature_spamfilter">Featúrák - A spamszûrõ</a> szekciót további információért.<br>
+Lásd a <a href="#feature_spamfilter">Jellegzetességek - A spamszûrõ</a> szekciót további információért.<br>
 </p>
 <p>Szintaktika:<br>
 <pre>
@@ -2243,7 +2243,7 @@ set {
   ily módon minden (új) csatornára ráeröltetheted a +G módot úgy, hogy ne tudják törölni.<br>
   MEGJEGYZÉS: lehet, hogy ezek a csatornamódok még mindig használhatóak IRC szolgáltatásokon keresztül
   az MLOCK alkalmazásával. Sajnos mi nem tudunk sokat tenni ezügyben, a szolgáltatás fejlesztõket
-  kellene megkérned, hogy megvalósítsanak egy restrict-channelmodes featúrát is.</p>
+  kellene megkérned, hogy megvalósítsanak egy restrict-channelmodes funkciót is.</p>
 <p><font class="set">set::restrict-extendedbans &lt;típusok|*&gt;</font><br>
   Nem ad engedélyt a felhasználóknak egyetlen kiterjesztett ban típus használatára sem ("*"), vagy csak bizonyos típusokat utasít vissza (pl.: "qc").</p>
 <p><font class="set">set::auto-join &lt;csatornák&gt;;</font><br>
@@ -3428,7 +3428,7 @@ Ha történik egy szakadás (split), valaki még mindig láthatja, melyik szerver hov
 és ez érvényes még néhány más dologra is.<br>
 <br>
 <b>KÖZÖNSÉGES FELHASZNÁLÓK ÉS SNOMASKOK</b><br>
-Van egy featúra, amit nem ismernek széles körben; ez az, hogy közönséges felhasználók is beállíthatnak néhány korlátozott snomaskot,
+Van egy funkció, melyet nem ismernek széles körben; ez az, hogy közönséges felhasználók is beállíthatnak néhány korlátozott snomaskot,
 mégpedig azt, hogy "+s +sk". Ezzel láthatnak olyan dolgokat, mint a beállítások újratöltése, killek és egyéb más üzenetek.<br>
 Ennek letiltására használhatod a "set::restrict-usermodes"-t a következõképpen: <i>set { restrict-usermodes "s"; };</i>.<br>
 
