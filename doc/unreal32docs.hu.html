@@ -12,7 +12,7 @@
  .block_old { font-size: 14; }
  .set { font-weight: bold; }
  .desc { margin-left: 15px; }
- pre { font: "times new roman"; font-style: normal;}
+ pre { font: "times new roman"; font-style: normal; background-color: #eeeeee;}
 </style>
 </head>
 
@@ -74,7 +74,8 @@ Hungarian |
   -- 3.14. <a href="#feature_spamfilter">A spamszûrõ</a><br>
   -- 3.15. <a href="#feature_cidr">CIDR</a><br>
   -- 3.16. <a href="#feature_nickchars">Karakterkészletek nicknevekhez</a><br>
-  -- 3.17. <a href="#feature_other">További featúrák</a><br>
+  -- 3.17. <a href="#feature_cgiirc">CGI:IRC támogatás</a><br>
+  -- 3.18. <a href="#feature_other">További featúrák</a><br>
   4. <a href="#configuringyourunrealircdconf">Az unrealircd.conf fájlod
   beállítása</a><br>
   ---4.1. <a href="#configurationfileexplained">A konfigurációs formátumról</a><br>
@@ -112,7 +113,8 @@ Hungarian |
   ---4.33. <a href="#helpblock">Help blokk</a><br>
   ---4.34. <a href="#officialchannels">Official channels blokk</a><br>
   ---4.35. <a href="#spamfilter">Spamfilter blokk</a><br>
-  ---4.36. <a href="#setblock">Set blokk -=- (networks/unrealircd.conf)</a><br>
+  ---4.36. <a href="#cgiirc">Cgiirc blokk</a><br> 
+  ---4.37. <a href="#setblock">Set blokk -=- (networks/unrealircd.conf)</a><br>
   5. <a href="#addtlfiles">További fájlok</a><br>
   6. <a href="#userchannelmodes">Felhasználói és csatornamódok</a><br>
   7. <a href="#useropercommands">Felhasználói és operátori parancsok</a><br>
@@ -629,7 +631,14 @@ engedélyezett volt, és mindig US-ASCII kis- és nagybetû leképezés volt végrehajt
 <pre>set { allowed-nickchars { chinese-simp; chinese-trad; }; };</pre>
 </p></div>
 
-<p><font size="+2"><b>3.17 - További featúrák</b></font><a name="feature_other"></a></p><div class="desc">
+<p><font size="+2"><b>3.17 - CGI:IRC támogatás</b></font><a name="feature_cgiirc"></a></p><div class="desc">
+<p>Az UnrealIRCd támogatja a CGI:IRC gazdanév hamisítást, ami azt jelenti, hogy megjelölhetünk bizonyos CGI:IRC
+átjárókat "megbízhatóként", ezáltal az IRCd a felhasználók valódi gazdanevét/IP címét jeleníti meg mindenhol
+az IRC-n, és nem a CGI:IRC átjáróét.</p>
+<p>Lásd a <a href="#cgiirc">cgiirc blokkot</a> a beállításának hogyanjáról.</p>
+</div>
+
+<p><font size="+2"><b>3.18 - További featúrák</b></font><a name="feature_other"></a></p><div class="desc">
 <p>Az UnrealIRCd-nek rengeteg featúrája van, ezért itt nincs minden megemlítve... Rájössz majd magadtól is.</p></div>
 
 <p> </p>
@@ -2107,7 +2116,63 @@ spamfilter {
 </pre></p>
 </div>
 
-<p><font class="block_section">4.36 - </font><font class="block_name">Set blokk</font>
+<p><font class="block_section">4.36 - </font><font class="block_name">Cgiirc blokk</font>
+   <font class="block_optional">SZABADON VÁLASZTHATÓ</font><a name="cgiirc"></a>
+</p><div class="desc">
+<p>
+A cgiirc blokkal gazdanév-hamisítást állíthatunk be megbízható CGI:IRC átjárókra 
+(<a href="#feature_cgiirc">további információ</a>).</p>
+
+<p>Szintaktika:<br>
+<pre>
+cgiirc {
+	type &lt;webirc|old&gt;;
+	username &lt;maszk&gt;; /* nem kötelezõ */
+	hostname &lt;maszk&gt;;
+	password &lt;jelszó&gt;; /* csak a webirc típusra */
+};</pre></p>
+<p>A <b>type</b> lehet akár "webirc" vagy "old" (azaz "régi").<br>
+   A <b>username</b> egyeztetésre kerül az azonosítónévvel (ha van ilyen). Ha nincs megadva, "*"-ot feltételez.<br>
+   A <b>hostname</b> a gazdanévre illeszkedõ maszk.<br>
+   A <b>password</b> a webirc jelszó, csak a "webirc" típus esetén használjuk.<br>
+</p>
+
+<p><b>Hogyan állítsuk be a 'webirc' módot? (javasolt mód)</b><br>
+A CGI:IRC konfigurációs fájlunkban (cgiirc.conf) beállítjuk a webirc_password-öt egy alkalmas jelszóra.<br>
+Ezután az unrealircd.conf-ba teszünk egy cgiirc blokkot, mellyel engedélyezzük ezt a gazdanevet és jelszót, valamint beállítjuk
+a cgiirc::type-ot "webirc"-re.<br>
+<br>
+Példa:<br>
+A CGI:IRC konfigurációs fájlba (cgiirc.conf) írjuk a következõt:
+<pre>webirc_password = LpT4xqPI5</pre>
+Majd az unrealircd.conf-ba tegyünk egy cgiirc blokkot:
+<pre>cgiirc {
+	type webirc;
+	hostname "1.2.3.4";
+	password "LpT4xqPI5";
+};</pre></p>
+
+<p><b>Hogyan állítsuk be az "old" (régi) módot?</b><br>
+MEGJEGYZÉS: Ez nem javasolt mód, mivel két hátránya van: 
+ez a mód szerverjelszóként küldi el a hamisítandó IP-t/gazdanevet, emiatt nem
+adhatunk meg szerverjelszót CGI:IRC felhasználóként. Továbbá a hozzáférés-szabályozás csak
+IP alapú, és nem igényel külön jelszót, mint a 'webirc' mód. Röviden,
+nem kellene ezt használnunk, hacsak nincs nyomós indokunk rá.<br>
+<br>
+A CGI:IRC beállításfájlban (cgiirc.conf) beállítjuk a realhost_as_password-öt 1-re.<br>
+Ezután az unrealircd.conf-ba teszünk egy cgiirc blokkot, hogy engedélyezzük ezt a gazdanevet.<br>
+<br>
+Példa:<br>
+A CGI:IRC konfigurációs fájlba (cgiirc.conf) írjuk a következõt:
+<pre>realhost_as_password = 1</pre>
+Majd az unrealircd.conf-ba tegyünk egy cgiirc blokkot:
+<pre>cgiirc {
+	type old;
+	hostname "1.2.3.4";
+};</pre></p>
+</div>
+
+<p><font class="block_section">4.37 - </font><font class="block_name">Set blokk</font>
    <font class="block_required">KÖTELEZÕ</font> <font class="block_old">(Elõzõleg unrealircd.conf-ként/hálózati fájlként ismert)</font><a name="setblock"></a>
 </p><div class="desc">
 <p>A set fájl az, ami régebben a networks/unrealircd.conf-unk és a hálózati
