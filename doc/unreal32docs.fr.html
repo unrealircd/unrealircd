@@ -11,7 +11,7 @@
  .block_old { font-size: 14; }
  .set { font-weight: bold; }
  .desc { margin-left: 15px; }
- pre { font: "times new roman"; font-style: normal;}
+ pre { font: "times new roman"; font-style: normal; background-color: #eeeeee;}
 </style><!-- $Id$ --></head>
 
 
@@ -72,9 +72,9 @@ French |
   -- 3.14. <a href="#feature_spamfilter">Spamfilter</a><br>
   -- 3.15. <a href="#feature_cidr">CIDR</a><br>
   -- 3.16. <a href="#feature_nickchars">Charact&egrave;res admis dans les pseudos</a><br>
-  -- 3.17. <a href="#feature_other">Autres particularit&eacute;s</a><br>
-  4. <a href="#configuringyourunrealircdconf">Configurer votre fichier unrealircd.conf 
-  </a><br>
+  -- 3.17. <a href="#feature_cgiirc">Support CGI:IRC</a><br>
+  -- 3.18. <a href="#feature_other">Autres particularit&eacute;s</a><br>
+  4. <a href="#configuringyourunrealircdconf">Configurer votre fichier unrealircd.conf</a><br>
   ---4.1. <a href="#configurationfileexplained">Explication du fichier de configuration</a><br>
   ---4.2. <a href="#meblock"> Me Block -=- (M:Line)</a><br>
   ---4.3. <a href="#adminblock">Admin Block -=- (A:Line)</a><br>
@@ -110,7 +110,8 @@ French |
   ---4.33. <a href="#helpblock">Help Block</a><br>
   ---4.34. <a href="#officialchannels">Official Channels Block</a><br>
   ---4.35. <a href="#spamfilter">Spamfilter Block</a><br>
-  ---4.36. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
+  ---4.36. <a href="#cgiirc">Cgiirc Block</a><br>
+  ---4.37. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
   5. <a href="#addtlfiles">Fichiers additionnels</a><br>
   6. <a href="#userchannelmodes">Modes utilisateurs &amp; salons</a><br>
   7. <a href="#useropercommands">Commandes utilisateurs &amp; Op&eacute;rateurs</a><br>
@@ -626,11 +627,16 @@ Certains modules peuvent ajouter d'autres types de ban &eacute;tendus.<br>
   caract&egrave;res chinois "normaux" :<br>
   <pre>set { allowed-nickchars { chinese-simp; chinese-trad; }; };</pre>
   </p></div>   
-   
-<p><font size="+2"><b>3.17 - Autres particularit&eacute;s</b></font><a name="feature_other"></a></p><div class="desc">
+
+<p><font size="+2"><b>3.17 - Support CGI:IRC</b></font><a name="feature_cgiirc"></a></p><div class="desc">
+<p>UnrealIRCd inclus le support pour le CGI:IRC host spoofing, cela signifie que vous pourrez indiquer des
+passerelles CGI:IRC auquelles vous faites "confiance" ce qui aura pour effet d'autoriser l'IRCd &agrave; afficher les host/ip des utilisateurs partout sur IRC, au lieu de l'host/ip de la passerelle CGI:IRC.</p>
+<p>Voyez la section <a href="#cgiirc">cgiirc block</a> pour avoir des informations sur la configuration de ceci.</p>
+</div>
+       
+<p><font size="+2"><b>3.18 - Autres particularit&eacute;s</b></font><a name="feature_other"></a></p><div class="desc">
 <p>UnrealIRCd a &eacute;norm&eacute;ment de particularit&eacute;s donc tout n'est pas expos&eacute; ici... Vous d&eacute;couvrirez tout cela par vous même.</p></div>
 
-<p> </p>
 <p><font size="+2"><b>4.0 - Configurer votre unrealircd.conf</b></font> 
   <a name="configuringyourunrealircdconf"></a></p><div class="desc">
 <p>Tout d'abord, cr&eacute;er un bon unrealircd.conf vous prendra un peu de temps, certainement quelquechose 
@@ -797,7 +803,7 @@ class servers{
    &eacute;galement un user@host hostmask, encore une fois... user est souvent d&eacute;fini par *. Quelques exemples : *@* (n'importe où), 
    *@*.wanadoo.fr (seulement depuis wanadoo.fr).</p>
 <p><b>password</b> (optionnel)<br>
-   Requiert un mot de passe &agrave; la connexion. Vous devez &eacute;galement sp&eacute;cifier une m&eacute;thode d'encryption des mot de passe ici.
+   Requiert un mot-de-passe &agrave; la connexion. Vous devez &eacute;galement sp&eacute;cifier une m&eacute;thode d'encryption des mot-de-passe ici.
 </p>
 <p><b>class</b><br>
    Sp&eacute;cifie le nom de la classe dans lequel les connections relevant de cet allow block sont plac&eacute;es.
@@ -814,8 +820,8 @@ class servers{
 &nbsp;&nbsp;&nbsp;<b>useip</b> toujours afficher l'ip &agrave; la place de l'hostname<br>
 &nbsp;&nbsp;&nbsp;<b>noident</b> n'utilise pas d'ident mais l'username sp&eacute;cifi&eacute; par le client<br>
 &nbsp;&nbsp;&nbsp;<b>ssl</b> ne fonctionne que si le client est connect&eacute; via ssl<br>
-&nbsp;&nbsp;&nbsp;<b>nopasscont</b> concordance continue si aucun mot de passe n'est donn&eacute;e (ainsi vous pourrez mettre des clients dans des 
-classes sp&eacute;ciales si ils fournissent un mot de passe).
+&nbsp;&nbsp;&nbsp;<b>nopasscont</b> concordance continue si aucun mot-de-passe n'est donn&eacute;e (ainsi vous pourrez mettre des clients dans des 
+classes sp&eacute;ciales si ils fournissent un mot-de-passe).
 </p><p>Exemples:<br>
 </p><pre>allow {
 	ip *;
@@ -909,11 +915,11 @@ allow {
 <p>L'oper block vous permet d'assigner des IRC Op&eacute;rateurs pour votre serveur. Le <b>oper::</b> 
   sp&eacute;cifie le login pour la commande /oper. Le <b>oper::from::userhost</b> est le masque user@host 
   auquel l'utilisateur doit correspondre, vous pouvez sp&eacute;cifier plus qu'un seul hostmask en 
-  cr&eacute;ant plusieurs oper::from::userhost. Le <b>oper::password</b> est le mot de passe que l'utilisateur 
-  doit sp&eacute;cifier, oper::password:: vous permet de sp&eacute;cifier une m&eacute;thode d'authentification pour ce mot de passe, 
+  cr&eacute;ant plusieurs oper::from::userhost. Le <b>oper::password</b> est le mot-de-passe que l'utilisateur 
+  doit sp&eacute;cifier, oper::password:: vous permet de sp&eacute;cifier une m&eacute;thode d'authentification pour ce mot-de-passe, 
   les types d'authentifications valides sont crypt, md5 et sha1, ripemd-160. Si vous voulez laisser 
-  un mot de passe non crypt&eacute; ne mettez pas ce sous-bloc.</p>
-<p>Notez s'il vous plait que le login et le mot de passe sont tous deux case sensitive autrement dit les majuscules 
+  un mot-de-passe non crypt&eacute; ne mettez pas ce sous-bloc.</p>
+<p>Notez s'il vous plait que le login et le mot-de-passe sont tous deux case sensitive autrement dit les majuscules 
   et les minuscules ont leurs importance.</p>
 <p>La directive <b>oper::class</b> sp&eacute;cifie le nom d'une classe pr&eacute;existante (apparaît avant dans le fichier 
   de configuration) que le oper block utilisera.</p>
@@ -1740,7 +1746,7 @@ deny channel {
   user@host ou juste un host que l'utilisateur recevra apr&egrave;s un /vhost r&eacute;ussi. Le vhost::from::userhost 
   contient un user@host auquel l'utilisateur doit correspondre pour être &eacute;ligible pour un vhost. Vous 
   pouvez sp&eacute;cifier plus d'un hostmask. Le vhost::login est le login que l'utilisateur doit rentrer 
-  et vhost::password est le mot de passe devant être entr&eacute;. Le vhost::password:: vous permet de sp&eacute;cifier 
+  et vhost::password est le mot-de-passe devant être entr&eacute;. Le vhost::password:: vous permet de sp&eacute;cifier 
   le type d'authentification utilis&eacute; par cet item. Les types d'authentification actuellement support&eacute;s 
   sont crypt&eacute;, md5 et sha1, ripemd-160. Finallement, vhost::swhois vous permet d'ajouter un ligne 
   suppl&eacute;mentaire au whois des utilisateurs, exactement comme dans le oper block oper::swhois.</p>
@@ -1836,7 +1842,7 @@ deny channel {
   <tbody><tr><td><i>1.2.3.4</i></td><td> IP normale</td></tr>
   <tr><td><i>hub.blah.com</i></td><td> host: seulement pour sortie, ne peut accepter de connexion entrante sans 
     la pr&eacute;sence de link::options::nohostcheck</td></tr>
-  <tr><td><i>*</i></td><td> ne peut pas se connecter mais accepte la connexion de n'importe quel serveur (avec le bon mot de passe)</td></tr>
+  <tr><td><i>*</i></td><td> ne peut pas se connecter mais accepte la connexion de n'importe quel serveur (avec le bon mot-de-passe)</td></tr>
   <tr><td><i>::ffff:1.2.3.4</i></td><td> pour linker de l'ipv6 &agrave; de l'ipv4.</td></tr>
   </tbody></table>
 </p>
@@ -1848,10 +1854,10 @@ deny channel {
   Port auquel on se connecte (celui que le serveur distant &eacute;coutera).
  </p>
 <p><b>password-connect</b><br>
-  Le mot de passe utilis&eacute; pour se connecter au serveur distant, doit être &eacute;crit en clair.
+  Le mot-de-passe utilis&eacute; pour se connecter au serveur distant, doit être &eacute;crit en clair.
  </p>
 <p><b>password-receive</b><br>
-  Le mot de passe utilis&eacute; pour valider les links entrants, peut être encrypt&eacute; 
+  Le mot-de-passe utilis&eacute; pour valider les links entrants, peut être encrypt&eacute; 
   (les m&eacute;thodes d'encryptions valides sont crypt, md5, sha1, ripemd-160). 
   Vous pouvez laisser le param&egrave;tre auth-type d&eacute;crypt&eacute;. Souvent, il est le même que le password-connect.
 </p>
@@ -2033,10 +2039,66 @@ spamfilter {
 	action gline;
 	reason "No spamming allowed";
 };
-</pre><p></p>
+</pre>
 </div>
 
-<p><font class="block_section">4.36 - </font><font class="block_name">Set Block</font>
+<p><font class="block_section">4.36 - </font><font class="block_name">Cgiirc Block</font>
+<font class="block_optional">OPTIONNEL</font><a name="cgiirc"></a></p><div class="desc">
+<p>Le bloc cgiirc vous permet de configurer l'host spoofing pour les passerelles CGI:IRC 
+auquelles vous faites confiance (<a href="#feature_cgiirc">plus d'info</a>).</p>
+<p>Syntaxe :<br>
+<pre>cgiirc {
+	type &lt;webirc|old&gt;;
+	username &lt;mask&gt;; /* optional */
+	hostname &lt;mask&gt;;
+	password &lt;password&gt;; /* only for type webirc */
+};</pre></p>
+<p><b>type</b> peut &ecirc;tre 'webirc' ou 'old'.<br>
+<b>username</b> est compar&eacute; avec l'ident (si il est pr&eacute;sent). 
+Si il n'est pas sp&eacute;cifi&eacute;, il est suppos&eacute; &eacute;gal &agrave; "*".<br>
+<b>hostname</b> est l'hostmask auquel il faut correspondre.<br>
+<b>password</b> est le mot-de-passe webirc, uniquement utilis&eacute; pour le type 'webirc'.<br>
+</p>
+  	 
+<p><b>Comment configurer avec la m&eacute;thode 'webirc' ? (m&eacute;thode recommand&eacute;e)</b><br>
+ans votre fichier de configuration de CGI:IRC (cgiirc.conf) vous assignez &agrave; webirc_password 
+un bon mot-de-passe.<br>
+Ensuite, dans votre unrealircd.conf vous ajoutez un bloc cgiirc pour permettre cet host et ce 
+mot-de-passe et vous donnez &agrave; cgiirc::type la valeur "webirc".<br>
+<br>
+Exemple:<br>
+Dans votre fichier de configuration de CGI:IRC (cgiirc.conf) vous ajoutez :
+<pre>webirc_password = LpT4xqPI5</pre>
+Ensuite, dans votre unrealircd.conf vous ajoutez un bloc cgiirc :
+<pre>cgiirc {
+	type webirc;
+	hostname "1.2.3.4";
+	password "LpT4xqPI5";
+};</pre></p>
+
+<p><b>Comment configurer avec la m&eacute;thode 'old' ?</b><br>
+NOTE: Ce n'est pas la m&eacute;thode recommand&eacute;e car elle a deux d&eacute;savantages :
+cette m&eacute;thode va envoyer votre IP/host pour v&eacute;rification comme un mot-de-passe serveur, 
+signifiant que vous ne pouvez pas sp&eacute;cifier un mot-de-passe serveur comme un utilisateur de CGI:IRC.
+De plus, le contr&ocirc;le des acc&egrave;s est uniquement bas&eacute; sur les IP is et ne n&eacute;cessite 
+pas de mot-de-passe suppl&eacute;mentaire comme la m&eacute;thode 'webirc'. 
+En r&eacute;sum&eacute;, vous ne devriez pas utiliser cette m&eacute;thode sauf en cas de bonne raison.<br>
+<br>
+Dans votre fichier de configuration de CGI:IRC (cgiirc.conf) vous assignez &agrave; realhost_as_password 
+la valeur 1.<br>
+Ensuite, dans votre unrealircd.conf vous ajoutez un bloc cgiirc pour permettre cet host.<br>
+<br>
+Exemple:<br>
+Dans votre fichier de configuration de CGI:IRC (cgiirc.conf) vous ajoutez :
+<pre>realhost_as_password = 1</pre>
+Ensuite, dans votre unrealircd.conf vous ajoutez un bloc cgiirc :
+<pre>cgiirc {
+	type old;
+	hostname "1.2.3.4";
+};</pre></p>
+</div>
+
+<p><font class="block_section">4.37 - </font><font class="block_name">Set Block</font>
    <font class="block_required">OBLIGATOIRE</font> <font class="block_old">(connu pr&eacute;c&eacute;demment comme unrealircd.conf/networks file)</font><a name="setblock"></a>
 </p><div class="desc">
 <p>Le fichier set est ce qui est utilis&eacute; en tant que notre networks/unrealircd.conf et notre 
@@ -2421,7 +2483,7 @@ spamfilter {
   </tr>
   <tr> 
     <td><div align="center">k &lt;key&gt;</div></td>
-    <td>Attribue un mot de passe &agrave; sp&eacute;cifier pour rejoindre le salon</td>
+    <td>Attribue un mot-de-passe &agrave; sp&eacute;cifier pour rejoindre le salon</td>
   </tr>
   <tr> 
     <td><div align="center">l &lt;##&gt;</div></td>
@@ -2808,7 +2870,7 @@ spamfilter {
     <td>Tous</td>
   </tr>
   <tr> 
-    <td height="39">vhost &lt;login&gt; &lt;mot de passe&gt;</td>
+    <td height="39">vhost &lt;login&gt; &lt;mot-de-passe&gt;</td>
     <td>Cache votre host en utilisant une vhost fournie par le serveur.<br></td>
     <td>Tous</td>
   </tr>
@@ -2841,13 +2903,13 @@ spamfilter {
     <td>Tous</td>
   </tr>
   <tr> 
-    <td height="39">identify &lt;mot de passe&gt;</td>
-    <td>Envoie votre mot de passe aux services pour identifier votre pseudo.<br></td>
+    <td height="39">identify &lt;mot-de-passe&gt;</td>
+    <td>Envoie votre mot-de-passe aux services pour identifier votre pseudo.<br></td>
     <td>Tous</td>
   </tr>
   <tr> 
-    <td height="39">identify &lt;salon&gt; &lt;mot de passe&gt;</td>
-    <td>Envoie votre mot de passe aux services pour vous identifier en tant 
+    <td height="39">identify &lt;salon&gt; &lt;mot-de-passe&gt;</td>
+    <td>Envoie votre mot-de-passe aux services pour vous identifier en tant 
       que "founder" (fondateur) d'un salon.<br></td>
     <td>Tous</td>
   </tr>
@@ -2865,7 +2927,7 @@ spamfilter {
     <td>Tous</td>
   </tr>
   <tr> 
-    <td height="39">oper &lt;login&gt; &lt;mot de passe&gt;<br></td>
+    <td height="39">oper &lt;login&gt; &lt;mot-de-passe&gt;<br></td>
     <td>Commande pour donner le status d'Op&eacute;rateur &agrave; un utilisateur si les sp&eacute;cifications correspondent &agrave; un Oper Block.<br></td>
     <td>IRCop</td>
   </tr>
@@ -2950,14 +3012,14 @@ spamfilter {
     </td><td>IRCop</td>
   </tr>
   <tr> 
-    <td height="39">restart &lt;mot de passe&gt; &lt;raison&gt;<br></td>
-    <td>Relance le process IRCD. Le mot de passe est requis si drpass { } est pr&eacute;sent. Vous devez aussi 
+    <td height="39">restart &lt;mot-de-passe&gt; &lt;raison&gt;<br></td>
+    <td>Relance le process IRCD. Le mot-de-passe est requis si drpass { } est pr&eacute;sent. Vous devez aussi 
       sp&eacute;cifier une raison.<br></td>
     <td>IRCop</td>
   </tr>
   <tr> 
-    <td height="39">die &lt;mot de passe&gt;<br></td>
-    <td>Arrête le process IRCD. Le mot de passe est requis si drpass { } est pr&eacute;sent.</td>
+    <td height="39">die &lt;mot-de-passe&gt;<br></td>
+    <td>Arrête le process IRCD. Le mot-de-passe est requis si drpass { } est pr&eacute;sent.</td>
     <td>IRCop</td>
   </tr>
   <tr> 
@@ -3072,7 +3134,7 @@ spamfilter {
   </tr>
   <tr> 
     <td height="36">mkpasswd &lt;mots de passe&gt;<br></td>
-    <td>Va encrypter un mot de passe pour l'ajouter dans le unrealircd.conf<br></td>
+    <td>Va encrypter un mot-de-passe pour l'ajouter dans le unrealircd.conf<br></td>
     <td>IRCop</td>
   </tr>
   <tr> 
@@ -3222,7 +3284,7 @@ choses int&eacute;r&eacute;ssante pour planifier une attaque comme link::passwor
 Tout comme beaucoup des choses dites ici, ceci n'est pas sp&eacute;cifique &agrave; UnrealIRCd, mais ...<br>
 Choisissez toujours bien vos opers et admins. Et rappelez-vous le concept du maillon faible. 
 Même si vous êtes prudents et suivez la documentation, peut-être qu'un de vos amis oper fera quelque chose de stupide. 
-Comme partager son disque dur via netbios/kazaa/morpheus/..., avoir un trojan, utiliser un mauvais mot de passe, etc etc ... 
+Comme partager son disque dur via netbios/kazaa/morpheus/..., avoir un trojan, utiliser un mauvais mot-de-passe, etc etc ... 
 Malheureusement, ce n'est pas toujours sous votre contrôle.<br>
 Une chause que vous pouvez tout de fois faire est choisir soigneusement quels privilèges dont chacun a besoin (oper::flags).
 </div></p>
