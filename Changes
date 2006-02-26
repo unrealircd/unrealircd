@@ -1079,3 +1079,4 @@
   Side note: this does not mean we dropped the idea of (also) having a challenge-response
   system for good ;).
 - Updated win32 makefile due to m_names modulization, reported by Trocotronic (#0002838).
+- Actually committed src/modules/m_names.c... This tends to help with the compiling process.
