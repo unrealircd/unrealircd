@@ -1064,7 +1064,7 @@
 - Fixed (serious) bug in CGI:IRC code, IP's were often not right, reported by 3rror (#2824).
 - Fixed bug in currently unused code, reported by DeadNotBuried (#0002835).
 - Modulized NAMES command (can now be upgraded on the fly, if ever needed).
-- Added NAMESX support, seeing both mIRC (5.17) and XChat support this. What this does is
+- Added NAMESX support, seeing both mIRC (6.17) and XChat support this. What this does is
   send all rights of all users on the channel in the NAMES reply (eg: @+Syzop if the user is +ov)
   instead of only the highest one (@Syzop in previous example). We only do so if the client
   explicitly requested this via a NAMESX in a PROTOCTL message (eg: 'PROTOCTL NAMESX').
