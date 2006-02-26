@@ -349,7 +349,6 @@ extern int hunt_server(aClient *, aClient *, char *, int, int, char **);
 extern int hunt_server_token(aClient *, aClient *, char *, char *, char *, int, int, char **);
 extern int hunt_server_token_quiet(aClient *, aClient *, char *, char *, char *, int, int, char **);
 extern aClient *next_client(aClient *, char *);
-extern int m_names(aClient *, aClient *, int, char **);
 extern int m_server_estab(aClient *);
 extern void umode_init(void);
 extern long umode_get(char, int, int (*)(aClient *, int));

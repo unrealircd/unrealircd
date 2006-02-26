@@ -357,8 +357,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define PROTO_SJB64		0x0800
 #define PROTO_TKLEXT	0x1000	/* TKL extension: 10 parameters instead of 8 (3.2RC2) */
 #define PROTO_NICKIP	0x2000  /* Send IP addresses in the NICK command */
-
-/* note: client->proto is currently a 'short' (max is 0x8000) */
+#define PROTO_NAMESX	0x4000  /* Send all rights in NAMES output */
 
 /*
  * flags macros.
@@ -411,8 +410,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define ClearShunned(x)		((x)->flags &= ~FLAGS_SHUNNED)
 #define IsVirus(x)			((x)->flags & FLAGS_VIRUS)
 #define SetVirus(x)			((x)->flags |= FLAGS_VIRUS)
-#define ClearVirus(x)		((x)->flags |= FLAGS_VIRUS)
-
+#define ClearVirus(x)		((x)->flags &= ~FLAGS_VIRUS)
 #ifdef USE_SSL
 #define IsSecure(x)		((x)->flags & FLAGS_SSL)
 #else
@@ -518,6 +516,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SupportSJ3(x)		(CHECKPROTO(x, PROTO_SJ3))
 #define SupportVHP(x)		(CHECKPROTO(x, PROTO_VHP))
 #define SupportTKLEXT(x)	(CHECKPROTO(x, PROTO_TKLEXT))
+#define SupportNAMESX(x)	(CHECKPROTO(x, PROTO_NAMESX))
 
 #define SetSJOIN(x)		((x)->proto |= PROTO_SJOIN)
 #define SetNoQuit(x)		((x)->proto |= PROTO_NOQUIT)
@@ -530,6 +529,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SetSJ3(x)		((x)->proto |= PROTO_SJ3)
 #define SetVHP(x)		((x)->proto |= PROTO_VHP)
 #define SetTKLEXT(x)	((x)->proto |= PROTO_TKLEXT)
+#define SetNAMESX(x)	((x)->proto |= PROTO_NAMESX)
 
 #define ClearSJOIN(x)		((x)->proto &= ~PROTO_SJOIN)
 #define ClearNoQuit(x)		((x)->proto &= ~PROTO_NOQUIT)
@@ -951,7 +951,7 @@ struct Client {
 #ifdef NOSPOOF
 	u_int32_t nospoof;	/* Anti-spoofing random number */
 #endif
-	short proto;		/* ProtoCtl options */
+	int proto;		/* ProtoCtl options */
 	long sendM;		/* Statistics: protocol messages send */
 	long sendK;		/* Statistics: total k-bytes send */
 	long receiveM;		/* Statistics: protocol messages received */

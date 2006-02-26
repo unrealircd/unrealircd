@@ -461,7 +461,7 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 		}
 		parv[0] = sptr->name;
 		parv[1] = chptr->chname;
-		(void)m_names(cptr, sptr, 2, parv);
+		do_cmd(cptr, sptr, "NAMES", 2, parv);
 		RunHook4(HOOKTYPE_LOCAL_JOIN, cptr, sptr,chptr,parv);
 	} else {
 		RunHook4(HOOKTYPE_REMOTE_JOIN, cptr, sptr, chptr, parv); /* (rarely used) */
