@@ -316,9 +316,8 @@ CMD_FUNC(m_mode)
 			    "*** TS bounce for %s - %lu(ours) %lu(theirs)",
 			    chptr->chname, chptr->creationtime, sendts);
 			bounce_mode(chptr, cptr, parc - 2, parv + 2);
-			return 0;
 		}
-		/* other server will resync soon enough... */
+		return 0;
 	}
 	if (IsServer(sptr) && !sendts && *parv[parc - 1] != '0')
 		sendts = -1;
