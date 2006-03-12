@@ -1081,3 +1081,6 @@
 - Updated win32 makefile due to m_names modulization, reported by Trocotronic (#0002838).
 - Actually committed src/modules/m_names.c... This tends to help with the compiling process.
 - Fixed possible netsplit problem (#0002790).
+- Partially redid m_message, moved some stuff to a subroutine, etc to avoid duplicate code
+- Rephrased/editted part of example.conf and unreal32docs to make it a littttttle bit easier
+  for beginners / try to mention the FAQ a bit more explicitly.

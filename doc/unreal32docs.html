@@ -36,11 +36,9 @@ English |
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
-<p>Due to the increasing complexity of UnrealIRCd3.2 We have switched to an easier 
-  to navigate, more inclusive documentation set. To view this documentation you 
-  must have a compatible browser, which are listed below. Up to date docs are 
-  available at <a href="http://www.vulnscan.org/UnrealIrcd/unreal32docs.html">http://www.vulnscan.org/UnrealIrcd/unreal32docs.html</a>
-  and a FAQ at <a href="http://www.vulnscan.org/UnrealIrcd/faq/" TARGET="_blank">http://www.vulnscan.org/UnrealIrcd/faq/</a>.
+<p>To view this documentation you must have a compatible browser, which are listed below. Up to date docs are 
+  available at <a href="http://www.vulnscan.org/UnrealIRCd/unreal32docs.html">http://www.vulnscan.org/UnrealIRCd/unreal32docs.html</a>
+  and a FAQ at <a href="http://www.vulnscan.org/UnrealIRCd/faq/" TARGET="_blank">http://www.vulnscan.org/UnrealIRCd/faq/</a>.
 </p>
 <p><b>Compatible Browsers: </b><br>
 <ul>
@@ -127,7 +125,7 @@ English |
   ---8.7. <a href="#secinformation">Information disclosure</a><br>
   ---8.8. <a href="#secantiexploit">Protecting against exploits</a><br>
   ---8.9. <a href="#secsummary">Summary</a><br>
-  9. <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">Frequently Asked Questions (FAQ)</a><br> 
+  9. <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">Frequently Asked Questions (FAQ)</a><br> 
   A. <a href="#regex">Regular Expressions</a><br>
   ---A.1. <a href="#regexlit">Literals</a><br>
   ---A.2. <a href="#regexdot">Dot Operator</a><br>
@@ -146,9 +144,9 @@ English |
   another software package is strictly prohibited without the written permission 
   of the UnrealIRCd Development Team. This document may be copied/printed/reproduced/published 
   as many times as you like, provided it is for use with UnrealIRCd and it is not 
-  modified in anyway. &#8211; Copyright UnrealIRCd Development Team 2002-2004</p>
+  modified in anyway. &#8211; Copyright UnrealIRCd Development Team 2002-2006</p>
 <p>Please read this manual before asking for help, you also REALLY want to take a look at the 
-   <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">FAQ</a> since over 80% of your questions/problems are answered in it. If you still
+   <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">FAQ</a> since over 80% of your questions/problems are answered in it. If you still
    need help you can ask for support at irc.ircsystems.net (port 6667) channel #unreal-support (note 
    that we REQUIRE you to read the docs and faq and we only help with UnrealIRCd, not with services!). 
    If you have a real bug (like a crash) then report it at 
@@ -234,7 +232,8 @@ Windows:<br>
   <a name="features"></a></p><div class="desc">
 <p>Some major/nice features are explained in this section. It provides a general overview,
    and sometimes refers to the config file (something which you might know nothing about yet).</p>
-<p>You can skip this section, however it's suggested to read it before/after installing.</p></div>
+<p>You can skip this section, however it's very much suggested to read it before/after installing
+because otherwise you will not understand concepts such as 'cloaking', 'snomasks', etc.</p></div>
 
 <p><font size="+2"><b>3.1 - Cloaking</b></font><a name="feature_cloaking"></a></p><div class="desc">
 <p>Cloaking is a way to hide the real hostname of users, for example if your real host is <i>d5142341.cable.wanadoo.nl</i>,
@@ -643,11 +642,11 @@ IRC, instead of the host/ip of the CGI:IRC-gateway.</p>
 <p> </p>
 <p><font size="+2"><b>4.0 - Configuring your unrealircd.conf</b></font> 
   <a name="configuringyourunrealircdconf"></a></p><div class="desc">
-<p>First of all, creating a good unrealircd.conf will take some time, probably
-   something like 10 - 60m. You can try to get it booted up as quickly as you can and
-   tweak later, or you can learn the major sections directly step-by-step which is 
-   the recommended method ;P. If you have any problems, check your syntax, check the manual 
-   and check the FAQ before asking for help/reporting a bug.</p></div>
+<p>First of all, creating your first unrealircd.conf will take time (say, 15-60
+minutes). Creating a <u>good</u> unrealircd.conf will take even more time.
+You should not rush to get the IRCd booted, but rather go through things
+step-by-step. If you have any problems, check your syntax, check this manual 
+and check the <a href="http://www.vulnscan.org/UnrealIRCd/faq/">FAQ</a> before asking for help/reporting a bug.</p></div>
 <p><b><font size="+2">4.1 Configuration File Explained</font></b><a name="configurationfileexplained"></a><br><div class="desc">
 </p>
 <p>The new system uses a block-based format. Each entry, or block, in the new 
@@ -671,8 +670,8 @@ IRC, instead of the host/ip of the CGI:IRC-gateway.</p>
   Also note that there is no set format, meaning the whole block can appear on 
   one line or over multiple lines. The format above is what is normally used (and 
   what will be used in this file) because it is easy to read. </p>
-<p>Note: the configuration file is currently case sensitive so BLOCK-NAME is not 
-  the same as block-name. There is a special notation used to talk about entries 
+<p>Note: the configuration file is currently case sensitive so <i>BLOCK-NAME</i> is not 
+  the same as <i>block-name</i>. There is a special notation used to talk about entries 
   in the config file. For example, to talk about &lt;directive-name&gt; in the 
   example above, you'd say &lt;block-name&gt;::&lt;block-directive&gt;, and if 
   that directive has a sub block you want to reverence, you would add another 
@@ -686,9 +685,11 @@ IRC, instead of the host/ip of the CGI:IRC-gateway.</p>
     /* Multi line<br>
        &nbsp;&nbsp;&nbsp;&nbsp;comment */<br>
  </p>
-<p>Now that you know how it works, create your unrealircd.conf from scratch or
-   copy doc/example.conf and start editing. It's recommended to walk step by step
-   through all block types and use this manual as a reference.</p>
+<p>Now that you know how it works, copy <i>doc/example.conf</i> to your UnrealIRCd
+   directory (eg: /home/user/Unreal3.2) and rename it to <i>unrealircd.conf</i>
+   (OR create your <i>unrealircd.conf</i> from scratch).
+   It's recommended to walk step by step through all block types and
+   settings in your conf and use this manual as a reference.</p>
 <p></p></div>
 <p><font class="block_section">4.2 - </font><font class="block_name">Me Block</font>
    <font class="block_required">REQUIRED</font> <font class="block_old">(Previously known as the M:Line)</font><a name="meblock"></a><div class="desc">
@@ -3439,7 +3440,7 @@ It will however make it more difficult / increase the effort needed to attack/ha
 
 <p><b><font size="+2">8.8 Protecting against exploits</font></b><a name="secantiexploit"></a><br><div class="desc">
 There are kernel patches that make it more difficult for stack- and heap-based exploits to 
-work. This should however not be your main focus point, you have a far more bigger risk 
+work. This is nice, but should not be your main focus point, you have a far more bigger risk 
 of getting exploited through the other points than this... for various reasons.<br>
 <br>
 There's one thing you should do however, which is to ALWAYS USE THE LATEST VERSION, 
@@ -3459,7 +3460,7 @@ security until they got hacked, try to avoid that :).
 
 
 <p><font size="+2"><b>9 &#8211; Frequently Asked Questions (FAQ)<a name="faq"></a></b></font></p>
-<div class="desc"><p>The FAQ is available online <a href="http://www.vulnscan.org/UnrealIrcd/faq/" TARGET="_blank">here</a></p></div>
+<div class="desc"><p>The FAQ is available online <a href="http://www.vulnscan.org/UnrealIRCd/faq/" TARGET="_blank">here</a></p></div>
 <p></p>
 
 <p><font size="+2"><b>A Regular Expressions<a name="regex"></a></b></font></p>

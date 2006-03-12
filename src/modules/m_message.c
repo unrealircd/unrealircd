@@ -102,6 +102,111 @@ DLLFUNC int MOD_UNLOAD(m_message)(int module_unload)
 static int check_dcc(aClient *sptr, char *target, aClient *targetcli, char *text);
 static int check_dcc_soft(aClient *from, aClient *to, char *text);
 
+#define CANPRIVMSG_CONTINUE		100
+#define CANPRIVMSG_SEND			101
+/** Check if PRIVMSG's are permitted from a person to another person.
+ * cptr:	..
+ * sptr:	..
+ * acptr:	target client
+ * notice:	1 if notice, 0 if privmsg
+ * text:	Pointer to a pointer to a text [in, out]
+ * cmd:		Pointer to a pointer which contains the command to use [in, out]
+ *
+ * RETURN VALUES:
+ * CANPRIVMSG_CONTINUE: issue a 'continue' in target nickname list (aka: skip further processing this target)
+ * CANPRIVMSG_SEND: send the message (use text/newcmd!)
+ * Other: return with this value (can be anything like 0, -1, FLUSH_BUFFER, etc)
+ */
+static int can_privmsg(aClient *cptr, aClient *sptr, aClient *acptr, int notice, char **text, char **cmd)
+{
+char *ctcp;
+int ret;
+
+	if (IsVirus(sptr))
+	{
+		sendnotice(sptr, "You are only allowed to talk in '%s'", SPAMFILTER_VIRUSCHAN);
+		return CANPRIVMSG_CONTINUE;
+	}
+	/* Umode +R (idea from Bahamut) */
+	if (IsRegNickMsg(acptr) && !IsRegNick(sptr) && !IsULine(sptr) && !IsOper(sptr) && !IsServer(sptr)) {
+		sendto_one(sptr, err_str(ERR_NONONREG), me.name, sptr->name,
+			acptr->name);
+		return 0;
+	}
+	if (IsNoCTCP(acptr) && !IsOper(sptr) && **text == 1 && acptr != sptr)
+	{
+		ctcp = *text + 1; /* &*text[1]; */
+		if (myncmp(ctcp, "ACTION ", 7) && myncmp(ctcp, "DCC ", 4))
+		{
+			sendto_one(sptr, err_str(ERR_NOCTCP), me.name, sptr->name, acptr->name);
+			return 0;
+		}
+	}
+
+	if (MyClient(sptr) && !strncasecmp(*text, "\001DCC", 4))
+	{
+		ret = check_dcc(sptr, acptr->name, acptr, *text);
+		if (ret < 0)
+			return ret;
+		if (ret == 0)
+			return CANPRIVMSG_CONTINUE;
+	}
+	if (MyClient(acptr) && !strncasecmp(*text, "\001DCC", 4) &&
+	    !check_dcc_soft(sptr, acptr, *text))
+		return CANPRIVMSG_CONTINUE;
+
+	if (MyClient(sptr) && check_for_target_limit(sptr, acptr, acptr->name))
+		return CANPRIVMSG_CONTINUE;
+
+	if (!is_silenced(sptr, acptr))
+	{
+#ifdef STRIPBADWORDS
+		int blocked = 0;
+#endif
+		Hook *tmphook;
+		
+		if (notice && IsWebTV(acptr) && **text != '\1')
+			*cmd = MSG_PRIVATE;
+		if (!notice && MyConnect(sptr) &&
+		    acptr->user && acptr->user->away)
+			sendto_one(sptr, rpl_str(RPL_AWAY),
+			    me.name, sptr->name, acptr->name,
+			    acptr->user->away);
+
+#ifdef STRIPBADWORDS
+		if (MyClient(sptr) && !IsULine(acptr) && IsFilteringWords(acptr))
+		{
+			*text = stripbadwords_message(*text, &blocked);
+			if (blocked)
+			{
+				if (!notice && MyClient(sptr))
+					sendto_one(sptr, rpl_str(ERR_NOSWEAR),
+						me.name, sptr->name, acptr->name);
+				return CANPRIVMSG_CONTINUE;
+			}
+		}
+#endif
+
+		if (MyClient(sptr))
+		{
+			ret = dospamfilter(sptr, *text, (notice ? SPAMF_USERNOTICE : SPAMF_USERMSG), acptr->name, 0, NULL);
+			if (ret < 0)
+				return ret;
+		}
+
+		for (tmphook = Hooks[HOOKTYPE_USERMSG]; tmphook; tmphook = tmphook->next) {
+			*text = (*(tmphook->func.pcharfunc))(cptr, sptr, acptr, *text, notice);
+			if (!*text)
+				break;
+		}
+		if (!*text)
+			return CANPRIVMSG_CONTINUE;
+		
+		return CANPRIVMSG_SEND;
+	}
+	return CANPRIVMSG_CONTINUE;
+}
+
 /*
 ** m_message (used in m_private() and m_notice())
 ** the general function to deliver MSG's between users/channels
@@ -117,10 +222,10 @@ static int check_dcc_soft(aClient *from, aClient *to, char *text);
 static int recursive_webtv = 0;
 DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice)
 {
-	aClient *acptr;
+	aClient *acptr, *srvptr;
 	char *s;
 	aChannel *chptr;
-	char *nick, *server, *p, *cmd, *ctcp, *p2, *pc, *text;
+	char *nick, *server, *p, *cmd, *ctcp, *p2, *pc, *text, *newcmd;
 	int  cansend = 0;
 	int  prefix = 0;
 	char pfixchan[CHANNELLEN + 4];
@@ -197,96 +302,21 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				return ret;
 			}
 		}
+		
 		if (*nick != '#' && (acptr = find_person(nick, NULL)))
 		{
-			if (IsVirus(sptr))
+			text = parv[2];
+			newcmd = cmd;
+			ret = can_privmsg(cptr, sptr, acptr, notice, &text, &newcmd);
+			if (ret == CANPRIVMSG_SEND)
 			{
-				sendnotice(sptr, "You are only allowed to talk in '%s'", SPAMFILTER_VIRUSCHAN);
+				sendto_message_one(acptr, sptr, parv[0], newcmd, nick, text);
 				continue;
-			}
-			/* Umode +R (idea from Bahamut) */
-			if (IsRegNickMsg(acptr) && !IsRegNick(sptr) && !IsULine(sptr) && !IsOper(sptr) && !IsServer(sptr)) {
-				sendto_one(sptr, err_str(ERR_NONONREG), me.name, parv[0],
-					acptr->name);
-				return 0;
-			}
-			if (IsNoCTCP(acptr) && !IsOper(sptr) && *parv[2] == 1 && acptr != sptr)
-			{
-				ctcp = &parv[2][1];
-				if (myncmp(ctcp, "ACTION ", 7) && myncmp(ctcp, "DCC ", 4))
-				{
-					sendto_one(sptr, err_str(ERR_NOCTCP), me.name, parv[0],
-						acptr->name);
-					return 0;
-				}
-			}
-
-			if (MyClient(sptr) && !strncasecmp(parv[2], "\001DCC", 4))
-			{
-				ret = check_dcc(sptr, acptr->name, acptr, parv[2]);
-				if (ret < 0)
-					return ret;
-				if (ret == 0)
-					continue;
-			}
-			if (MyClient(acptr) && !strncasecmp(parv[2], "\001DCC", 4) &&
-			    !check_dcc_soft(sptr, acptr, parv[2]))
+			} else
+			if (ret == CANPRIVMSG_CONTINUE)
 				continue;
-
-			if (MyClient(sptr) && check_for_target_limit(sptr, acptr, acptr->name))
-				continue;
-
-			if (!is_silenced(sptr, acptr))
-			{
-#ifdef STRIPBADWORDS
-				int blocked = 0;
-#endif
-				char *newcmd = cmd, *text;
-				Hook *tmphook;
-				
-				if (notice && IsWebTV(acptr) && *parv[2] != '\1')
-					newcmd = MSG_PRIVATE;
-				if (!notice && MyConnect(sptr) &&
-				    acptr->user && acptr->user->away)
-					sendto_one(sptr, rpl_str(RPL_AWAY),
-					    me.name, parv[0], acptr->name,
-					    acptr->user->away);
-
-#ifdef STRIPBADWORDS
-				if (MyClient(sptr) && !IsULine(acptr) && IsFilteringWords(acptr))
-				{
-					text = stripbadwords_message(parv[2], &blocked);
-					if (blocked)
-					{
-						if (!notice && MyClient(sptr))
-							sendto_one(sptr, rpl_str(ERR_NOSWEAR),
-								me.name, parv[0], acptr->name);
-						continue;
-					}
-				}
-				else
-#endif
-					text = parv[2];
-
-				if (MyClient(sptr))
-				{
-					ret = dospamfilter(sptr, text, (notice ? SPAMF_USERNOTICE : SPAMF_USERMSG), acptr->name, 0, NULL);
-					if (ret < 0)
-						return ret;
-				}
-
-				for (tmphook = Hooks[HOOKTYPE_USERMSG]; tmphook; tmphook = tmphook->next) {
-					text = (*(tmphook->func.pcharfunc))(cptr, sptr, acptr, text, notice);
-					if (!text)
-						break;
-				}
-				if (!text)
-					continue;
-				
-				sendto_message_one(acptr,
-				    sptr, parv[0], newcmd, nick, text);
-			}
-			continue;
+			else
+				return ret;
 		}
 
 		p2 = (char *)strchr(nick, '#');
@@ -546,49 +576,37 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 			/* There is always a \0 if its a string */
 			if (*(server + 1) != '\0')
 			{
-				acptr = find_server_quick(server + 1);
-				if (acptr)
+				char fulltarget[NICKLEN + HOSTLEN + 1];
+				
+				strlcpy(fulltarget, nick, sizeof(fulltarget)); /* lame.. I know.. */
+				
+				srvptr = find_server_quick(server + 1);
+				if (srvptr)
 				{
-					/*
-					   ** Not destined for a user on me :-(
-					 */
-					if (!IsMe(acptr))
+					acptr = find_nickserv(nick, NULL);
+					if (acptr && (acptr->srvptr == srvptr))
 					{
-						if (IsToken(acptr->from))
-							sendto_one(acptr,
-							    ":%s %s %s :%s", parv[0],
-							    notice ? TOK_NOTICE : TOK_PRIVATE,
-							    nick, parv[2]);
-						else
-							sendto_one(acptr,
-							    ":%s %s %s :%s", parv[0],
-							    cmd, nick, parv[2]);
-						continue;
-					}
+						text = parv[2];
+						newcmd = cmd;
+						ret = can_privmsg(cptr, sptr, acptr, notice, &text, &newcmd);
+						if (ret == CANPRIVMSG_CONTINUE)
+							continue;
+						else if (ret != CANPRIVMSG_SEND)
+							return ret;
+						/* If we end up here, we have to actually send it... */
 
-					/* Find the nick@server using hash. */
-					acptr =
-					    find_nickserv(nick,
-					    (aClient *)NULL);
-					if (acptr)
-					{
-						sendto_prefix_one(acptr, sptr,
-						    ":%s %s %s :%s",
-						    parv[0], cmd,
-						    acptr->name, parv[2]);
+						if (IsMe(acptr))
+							sendto_prefix_one(acptr, sptr, ":%s %s %s :%s", sptr->name, newcmd, acptr->name, text);
+						else
+							sendto_message_one(acptr, sptr, sptr->name, newcmd, fulltarget, text);
 						continue;
 					}
 				}
-				if (server
-				    && strncasecmp(server + 1, SERVICES_NAME,
-				    strlen(SERVICES_NAME)) == 0)
-					sendto_one(sptr,
-					    err_str(ERR_SERVICESDOWN), me.name,
-					    parv[0], nick);
+				/* NICK@SERVER NOT FOUND: */
+				if (server && strncasecmp(server + 1, SERVICES_NAME, strlen(SERVICES_NAME)) == 0)
+					sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name, parv[0], nick);
 				else
-					sendto_one(sptr,
-					    err_str(ERR_NOSUCHNICK), me.name,
-					    parv[0], nick);
+					sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, parv[0], fulltarget);
 
 				continue;
 			}
