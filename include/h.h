@@ -733,6 +733,7 @@ extern MODVAR int (*find_shun)(aClient *cptr);
 extern MODVAR int (*find_spamfilter_user)(aClient *sptr, int flags);
 extern MODVAR aTKline *(*find_qline)(aClient *cptr, char *nick, int *ishold);
 extern MODVAR int  (*find_tkline_match_zap)(aClient *cptr);
+extern MODVAR int  (*find_tkline_match_zap_ex)(aClient *cptr, aTKline **rettk);
 extern MODVAR void (*tkl_stats)(aClient *cptr, int type, char *para);
 extern MODVAR void (*tkl_synch)(aClient *sptr);
 extern MODVAR int (*m_tkl)(aClient *cptr, aClient *sptr, int parc, char *parv[]);

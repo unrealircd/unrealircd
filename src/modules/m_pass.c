@@ -50,6 +50,8 @@
 DLLFUNC int m_pass(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 DLLFUNC int m_webirc(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
+extern MODVAR char zlinebuf[BUFSIZE];
+
 #define MSG_PASS 	"PASS"	
 #define TOK_PASS 	"<"	
 
@@ -87,12 +89,68 @@ DLLFUNC int MOD_UNLOAD(m_pass)(int module_unload)
 	return MOD_SUCCESS;
 }
 
+/** Handles zlines/gzlines/throttling/unknown connections */
+static int my_check_banned(aClient *cptr)
+{
+int i, j;
+aTKline *tk;
+ConfigItem_ban *bconf;
+
+	j = 1;
+	for (i = LastSlot; i >= 0; i--)
+	{
+		if (local[i] && IsUnknown(local[i]) &&
+#ifndef INET6
+			local[i]->ip.S_ADDR == cptr->ip.S_ADDR)
+#else
+			!bcmp(local[i]->ip.S_ADDR, cptr->ip.S_ADDR, sizeof(cptr->ip.S_ADDR)))
+#endif
+		{
+			j++;
+			if (j > MAXUNKNOWNCONNECTIONSPERIP)
+				return exit_client(cptr, cptr, &me, "Too many unknown connections from your IP");
+		}
+	}
+
+	if ((bconf = Find_ban(cptr, Inet_ia2p(&cptr->ip), CONF_BAN_IP)))
+	{
+		ircsprintf(zlinebuf,
+			"You are not welcome on this server: %s. Email %s for more information.",
+			bconf->reason ? bconf->reason : "no reason", KLINE_ADDRESS);
+		return exit_client(cptr, cptr, &me, zlinebuf);
+	}
+	else if (find_tkline_match_zap_ex(cptr, &tk) != -1)
+	{
+		ircsprintf(zlinebuf, "Z:Lined (%s)", tk->reason);
+		return exit_client(cptr, cptr, &me, zlinebuf);
+	}
+#ifdef THROTTLING
+	else
+	{
+		int val;
+		if (!(val = throttle_can_connect(cptr, &cptr->ip)))
+		{
+			ircsprintf(zlinebuf, "Throttled: Reconnecting too fast - Email %s for more information.",
+					KLINE_ADDRESS);
+			return exit_client(cptr, cptr, &me, zlinebuf);
+		}
+		else if (val == 1)
+			add_throttling_bucket(&cptr->ip);
+	}
+#endif
+	return 0;
+}
+
 #define CGIIRC_STRING     "CGIIRC_"
 #define CGIIRC_STRINGLEN  (sizeof(CGIIRC_STRING)-1)
 
 /* Does the CGI:IRC host spoofing work */
 int docgiirc(aClient *cptr, char *ip, char *host)
 {
+
+	if (IsCGIIRC(cptr))
+		return exit_client(cptr, cptr, &me, "Double CGI:IRC request (already identified)");
+
 	if (host && !strcmp(ip, host))
 		host = NULL; /* host did not resolve, make it NULL */
 
@@ -123,9 +181,13 @@ int docgiirc(aClient *cptr, char *ip, char *host)
 	/* STEP 4: Update sockhost */		
 	strlcpy(cptr->sockhost, ip, sizeof(cptr->sockhost));
 
-	/* Do not save password, return / proceed as normal instead */
 	SetCGIIRC(cptr);
-	return 0;
+
+	/* Check (g)zlines right now; these are normally checked upon accept(),
+	 * but since we know the IP only now after PASS/WEBIRC, we have to check
+	 * here again...
+	 */
+	return my_check_banned(cptr);
 }
 
 /* WEBIRC <pass> "cgiirc" <hostname> <ip> */

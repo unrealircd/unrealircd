@@ -1084,3 +1084,6 @@
 - Partially redid m_message, moved some stuff to a subroutine, etc to avoid duplicate code
 - Rephrased/editted part of example.conf and unreal32docs to make it a littttttle bit easier
   for beginners / try to mention the FAQ a bit more explicitly.
+- CGI:IRC: gzlines, zlines, throttling, and unknown connect floods are now all checked for
+  clients connecting trough a CGI:IRC gateway that is in cgiirc { }. This might also fix a bug
+  where (g)zlines were not applied to CGI:IRC clients, reported by devil (#0002850).
