@@ -35,11 +35,10 @@ French |
   <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
   <b>Traduction fran&ccedil;aise:</b> <a href="mailto:babass@unrealircd.org?subject=UnrealIRCd%20-%20French%20Support">babass</a> - <a href="irc://irc.rs2i.net/UnrealIRCd">irc.rs2i.net</a><br> 
-<p>En raison de la complexit&eacute; croissante d'UnrealIRCd 3.2, nous avons chang&eacute; pour une navigation plus facile, ce qui nous a permis
-  de vous donner acc&egrave;s &agrave; beaucoup plus de documentations. Pour voir ce document vous devez avoir un navigateur compatible, ils sont 
+<p>Pour voir ce document vous devez avoir un navigateur compatible, ils sont 
   list&eacute;s ci-dessous. Les mises &agrave; jour de ce document sont disponibles ici : 
-  <a href="http://www.vulnscan.org/UnrealIrcd/unreal32docs.html">http://www.vulnscan.org/UnrealIrcd/unreal32docs.html</a>
-  ainsi qu'un FAQ <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">http://www.vulnscan.org/UnrealIrcd/faq/</a>.
+  <a href="http://www.vulnscan.org/UnrealIRCd/unreal32docs.html">http://www.vulnscan.org/UnrealIRCd/unreal32docs.html</a>
+  ainsi qu'un FAQ <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">http://www.vulnscan.org/UnrealIRCd/faq/</a>.
 </p>
 <p><b>Navigateurs compatibles: </b><br>
 </p><ul>
@@ -125,7 +124,7 @@ French |
   ---8.7. <a href="#secinformation">Conseil sur la divulgation d'informations</a><br>
   ---8.8. <a href="#secantiexploit">Protection contre les exploits</a><br>
   ---8.9. <a href="#secsummary">Conclusion</a><br>
-  9. <a href="http://www.vulnscan.org/UnrealIrcd/faq.fr/" target="_blank">Foire au questions (FAQ)</a><br>
+  9. <a href="http://www.vulnscan.org/UnrealIRCd/faq.fr/" target="_blank">Foire au questions (FAQ)</a><br>
   A. <a href="#regex">Expressions R&eacute;gulières</a><br>
   ---A.1. <a href="#regexlit">Literals</a><br>
   ---A.2. <a href="#regexdot">L'op&eacute;rateur Point</a><br>
@@ -144,9 +143,9 @@ French |
    interdit sans la permission &eacute;crite de l'&eacute;quipe de d&eacute;veloppement d'UnrealIRCd. Ce document 
    peut être copi&eacute;/imprim&eacute;/reproduit/publi&eacute; autant de fois que vous le souhaitez, &agrave; condition 
    que ce soit pour l'utilisation d'UnrealIRCd et qu'il ne soit jamais modifi&eacute; d'une quelconque mani&egrave;re. 
-   &#8211; Copyright UnrealIRCd Development Team 2002-2005</p>
+   &#8211; Copyright UnrealIRCd Development Team 2002-2006</p>
 <p>Lisez ce manuel avant de demander de l'aide, vous devez aussi lire attentivement la 
-   <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">FAQ</a> qui r&eacute;pond &agrave; plus de 80% de 
+   <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">FAQ</a> qui r&eacute;pond &agrave; plus de 80% de 
    vos questions/probl&egrave;mes. Si vous avez encore besoin d'aide vous pouvez demander du support sur 
    irc.ircsystems.net (port 6667) channel #unreal-support  (notez que nous requerrons de votre part une 
    parfaite connaissance de ce document et de la FAQ et que nous donnons uniquement de l'aide sur UnrealIRCD, 
@@ -237,7 +236,7 @@ Windows:<br>
 <p>La plupart des caract&eacute;ristiques majeures/mineures sont expliqu&eacute;es dans cette section. 
    Elle fourni une vue d'ensemble, et fait parfois r&eacute;f&eacute;rence aux fichiers de configuration 
    (quelque chose dont vous ne connaissez encore rien).</p>
-<p>Vous pouvez sauter cette section, toutefois il est sugg&eacute;r&eacute; de la lire avant/apr&egrave;s l'installation.</p></div>
+<p>Vous pouvez sauter cette section, toutefois il est sugg&eacute;r&eacute; de la lire avant/apr&egrave;s l'installation car aussinon vous ne comprendrez pas des concepts telles que 'cloaking', 'snomasks', etc.</p></div>
 
 <p><font size="+2"><b>3.1 - Cloaking</b></font><a name="feature_cloaking"></a></p><div class="desc">
 <p>Le Cloaking vous permet de cacher le v&eacute;ritable host des utilisateurs, par exemple si votre host r&eacute;el est <i>d5142341.cable.wanadoo.nl</i>,
@@ -639,11 +638,12 @@ passerelles CGI:IRC auquelles vous faites "confiance" ce qui aura pour effet d'a
 
 <p><font size="+2"><b>4.0 - Configurer votre unrealircd.conf</b></font> 
   <a name="configuringyourunrealircdconf"></a></p><div class="desc">
-<p>Tout d'abord, cr&eacute;er un bon unrealircd.conf vous prendra un peu de temps, certainement quelquechose 
-   comme 10 - 60 min. Vous pouvez essayer de le lancer le plus tôt que vous pouvez et le modifier plus tard, 
-   ou alors vous pouvez &eacute;tudier les sections principales directement pas-&agrave;-pas ce qui est la m&eacute;thode recommand&eacute;e :p. 
-   Si vous avez un probl&egrave;me, v&eacute;rifiez votre syntaxe, regardez dans le manuel et la FAQ avant de demander 
-   de l'aide ou de rapporter un bug.</p></div>
+<p>Tout d'abord, cr&eacute;er votre premier unrealircd.conf vous prendra du temps (disons 15-60 minutes).
+   Cr&eacute;er un <u>bon</u> unrealircd.conf prendra beaucoup plus de temps.
+   Vous ne devriez pas vous presser pour booter l'IRCd mais plut&ocirc;t y aller par &eacute;tape.
+   Si vous avez un probl&egrave;me, v&eacute;rifiez votre syntaxe, regardez dans le manuel, regardez la 
+   <a href="http://www.vulnscan.org/UnrealIRCd/faq/">FAQ</a> et la 
+   FAQ avant de demander de l'aide ou de rapporter un bug.</p></div>
 <p><b><font size="+2">4.1 Explication du fichier de configuration</font></b><a name="configurationfileexplained"></a><br></p><div class="desc">
 <p></p>
 <p>Le nouveau syst&egrave;me utilise un syst&egrave;me bas&eacute; sur des blocs. Chaque entr&eacute;e, ou bloc, dans le nouveau format a un format sp&eacute;cifique. 
@@ -667,11 +667,11 @@ passerelles CGI:IRC auquelles vous faites "confiance" ce qui aura pour effet d'a
   seule ligne comme sur plusieurs lignes. Le format ci-dessus est ce qui est normalement utilis&eacute; 
   (et qui sera utilis&eacute; dans ce fichier) parce qu'il est facile &agrave; lire. </p>
 <p>Note : le fichier de configuration est sensible aux majuscules / minuscules (case sensitive) 
-  donc NOM-DU-BLOC n'est pas la même chose que nom-du-bloc. Il y a une notation sp&eacute;ciale utilis&eacute;e 
-  pour parler d'entr&eacute;es dans le fichier de configuration. Par exemple pour parler du &lt;nom de la directive&gt; 
-  dans l'exemple ci-dessus, vous devrez dire &lt;nom du bloc&gt;::&lt;directive du bloc&gt;, et si 
-  la directive a un sous bloc que vous voulez r&eacute;f&eacute;rencer, vous ajouterez un autre :: et le nom 
-  de la sous directive. </p>
+  donc <i>NOM-DU-BLOC</i> n'est pas la même chose que nom-du-bloc. Il y a une notation sp&eacute;ciale
+  utilis&eacute;e pour parler d'entr&eacute;es dans le fichier de configuration. Par exemple pour parler 
+  du &lt;nom de la directive&gt; dans l'exemple ci-dessus, vous devrez dire &lt;nom du bloc&gt;::&lt;directive 
+  du bloc&gt;, et si la directive a un sous bloc que vous voulez r&eacute;f&eacute;rencer, vous ajouterez 
+  un autre :: et le nom de la sous directive. </p>
 <p>Pour parler d'une directive non nomm&eacute;e vous devrez mettre &lt;nom du bloc&gt;:: qui voudra 
   dans ce cas dire &lt;valeur du bloc&gt;, ou cela pourra être une entr&eacute;e dans un sous bloc 
   qui n'a pas de nom.</p>
@@ -681,9 +681,11 @@ passerelles CGI:IRC auquelles vous faites "confiance" ce qui aura pour effet d'a
     /* Commentaire<br>
        &nbsp;&nbsp;&nbsp;&nbsp;multi-ligne */<br>
  </p>
-<p>Maintenant que vous savez comment &ccedil;a fonctionne, cr&eacute;ez votre unrealircd.conf ou copiez doc/example.conf 
-  et commencez &agrave; l'&eacute;diter. Il est recommand&eacute; d'y aller pas &agrave; pas avec les diff&eacute;rents blocs et de suivre ce 
-  manuel de r&eacute;f&eacute;rence.</p>
+<p>Maintenant que vous savez comment &ccedil;a fonctionne, copiez <i>doc/example.fr.conf</i> dans votre 
+  dossier UnrealIRCd (ex: /home/user/Unreal3.2) et renomez le en <i>unrealircd.conf</i> (OU cr&eacute;ez
+  votre <i>unrealircd.conf</i> depuis z&eacute;ro). 
+  Il est recommand&eacute; d'y aller pas &agrave; pas avec les diff&eacute;rents blocs et de suivre 
+  ce manuel de r&eacute;f&eacute;rence.</p>
 <p></p></div>
 <p><font class="block_section">4.2 - </font><font class="block_name">Me Block</font>
    <font class="block_required">OBLIGATOIRE</font> <font class="block_old">(Connu pr&eacute;c&eacute;demment comme M:Line)</font><a name="meblock"></a></p><div class="desc">
@@ -3361,8 +3363,7 @@ Cela rendra plus difficiles / importants les efforts requis pour attaquer / pira
 </div><p></p>
 
 <p><b><font size="+2">8.8 Se prot&eacute;ger des exploits</font></b><a name="secantiexploit"></a><br></p><div class="desc">
-Il y a des patches de kernel qui rendent plus difficiles les stack- et heap-based exploits. Cela ne devrait pas être votre principal point d'inqui&eacute;tude, 
-vous avez des risques de loin plus importants d'être attaqu&eacute; par d'autres points que celui-ci... Pour des raisons vari&eacute;es.<br>
+Il y a des patches de kernel qui rendent plus difficiles les stack- et heap-based exploits. Ceci est tr&egrave; bien mais ne doit pas être votre principal point d'inqui&eacute;tude, vous avez des risques de loin plus importants d'être attaqu&eacute; par d'autres points que celui-ci... Pour des raisons vari&eacute;es.<br>
 <br>
 Il y a en tout cas une chose que vous devez faire, qui est TOUJOURS UTILISER LA DERNIÈRE VERSION, 
 inscrivez vous &agrave; la <a href="http://mail1.sourceforge.net/mailman/listinfo/unreal-notify" target="_blank">unreal-notify mailinglist</a> 
@@ -3381,7 +3382,7 @@ Beaucoup de personne ne prennent pas attention &agrave; la s&eacute;curit&eacute
 
 
 <p><font size="+2"><b>9 &#8211; Foire aux Questions (FAQ)<a name="faq"></a></b></font></p>
-<div class="desc"><p>La FAQ est disponible en ligne <a href="http://www.vulnscan.org/UnrealIrcd/faq.fr/" target="_blank">ici</a></p></div>
+<div class="desc"><p>La FAQ est disponible en ligne <a href="http://www.vulnscan.org/UnrealIRCd/faq.fr/" target="_blank">ici</a></p></div>
 <p></p>
 
 <p><font size="+2"><b>A Expressions R&eacute;guli&egrave;res<a name="regex"></a></b></font></p>
