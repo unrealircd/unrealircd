@@ -37,11 +37,9 @@ Hungarian |
   <b>Munkatársak:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Dokumentáció:</b> CKnight^ / Syzop<br>
   <b>Magyar fordítás:</b> <a href="mailto:angrywolf@flashmail.com">AngryWolf</a><br>
-<p>Az UnrealIRCd 3.2 egyre nagyobb összetettsége miatt átváltottunk egy könnyebben
-  kezelhetõ, teljesebb körû dokumentációkészletre. Ezen leírás megtekintéséhez
-  a lent felsorolt kompatibilis böngészõk egyikére van szükséged. Friss dokumentációkat
-  találsz a <a href="http://www.vulnscan.org/UnrealIrcd/unreal32docs.html">http://www.vulnscan.org/UnrealIrcd/unreal32docs.html</a>
-  címen, és egy GYIK-et a <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">http://www.vulnscan.org/UnrealIrcd/faq/</a> oldalon.
+<p>E dokumentáció megtekintéséhez az alábbiakban felsorolt kompatibilis böngészõk egyikére van szükséged. Friss dokumentációkat
+  találsz a <a href="http://www.vulnscan.org/UnrealIRCd/unreal32docs.html">http://www.vulnscan.org/UnrealIRCd/unreal32docs.html</a>
+  címen, és egy GYIK-et a <a href="http://www.vulnscan.org/UnrealIRCd/faq/" TARGET="_blank">http://www.vulnscan.org/UnrealIRCd/faq/</a> oldalon.
 </p>
 <p><b>Kompatibilis böngészõk: </b><br>
 <ul>
@@ -128,7 +126,7 @@ Hungarian |
   ---8.7. <a href="#secinformation">Információközlés</a><br>
   ---8.8. <a href="#secantiexploit">Sebezhetõségek elleni védelem</a><br>
   ---8.9. <a href="#secsummary">Összegzés</a><br>
-  9. <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">Gyakran Ismételt Kérdések (FAQ)</a><br>
+  9. <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">Gyakran Ismételt Kérdések (FAQ)</a><br>
   A. <a href="#regex">Reguláris kifejezések</a><br>
   ---A.1. <a href="#regexlit">Konstansok</a><br>
   ---A.2. <a href="#regexdot">A pont operátor</a><br>
@@ -147,9 +145,9 @@ Hungarian |
   terjesztése szigorúan tilos az UnrealIRCd Fejlesztõi Csapat írásos engedélye nélkül.
   Ez a dokumentum másolható, nyomtatható, sokszorosítható és közzétehetõ
   tetszés szerinti alkalommal, feltéve, hogy azt az UnrealIRCD-hez használod, és
-  nem módosítod. &#8211; Copyright UnrealIRCd Fejlesztõi Csapat 2002-2005</p>
+  nem módosítod. &#8211; Copyright UnrealIRCd Fejlesztõi Csapat 2002-2006</p>
 <p>Kérlek, olvasd el ezt a kézikönyvet, mielõtt segítséget kérsz, és BIZTOSAN bele akarsz nézni a
-   <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">GYIK</a>-ba is, mivel a kérdéseid/problémáid 80%-a meg van válaszolva benne. Ha az nem
+   <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">GYIK</a>-ba is, mivel a kérdéseid/problémáid 80%-a meg van válaszolva benne. Ha az nem
    oldotta meg a problémádat, segítséget kérhetsz az irc.ircsystems.net-en (6667-es port) az #unreal-support csatornán. (Megjegyzendõ,
    hogy MEGKÖVETELJÜK a dokumentáció és a GYIK elolvasását, és csak az UnrealIRCd-vel kapcsolatban segítünk, nem a Servicessel!).
    Ha találsz egy valódi hibát (például egy ütközést), jelentsd a
@@ -235,7 +233,8 @@ Windows:<br>
   <a name="features"></a></p><div class="desc">
 <p>Néhány fõbb és hasznosabb jellegzetességrõl adunk magyarázatot ebben a részben. Általános áttekintést nyújt,
    és néha utal a konfigurációs fájlra is (olyasmire, amirõl talán még semmit sem tudsz).</p>
-<p>Ezt a részt kihagyhatod, azonban ajánlott elolvasni a telepítés elõtt vagy után.</p></div>
+<p>Ezt a részt kihagyhatod, azonban erõsen ajánlott elolvasni a telepítés elõtt vagy után,
+mert máskülönben nem fogsz megérteni olyan fogalmakat, mint az "álcázás", "snomaszkok" stb.</p></div>
 
 <p><font size="+2"><b>3.1 - Álcázás</b></font><a name="feature_cloaking"></a></p><div class="desc">
 <p>Az álcázás (cloaking) egy módszer a felhasználók valós gazdaneveinek elrejtésére. Például, ha a valódi gazdaneved <i>d5142341.cable.wanadoo.nl</i>,
@@ -644,11 +643,11 @@ az IRC-n, és nem a CGI:IRC átjáróét.</p>
 <p> </p>
 <p><font size="+2"><b>4.0 - Az unrealircd.conf fájlod beállítása</b></font>
   <a name="configuringyourunrealircdconf"></a></p><div class="desc">
-<p>Elõször is, egy jó unrealircd.conf készítése komoly idõt vesz igénybe, talán
-   körülbelül 10 - 60 percet. Megpróbálhatod a lehetõ leggyorsabban üzemkésszé tenni és
-   trükközgetni vele késõbb, vagy rögtön, lépésrõl lépésre megtanulhatod a legfõbb részeket,
-   ami a javasolt módszer ;P. Ha problémáid vannak, ellenõrizd a szintaktikát, nézd át a kézikönyvet,
-   és nézz bele a FAQ-ba is, mielõtt segítségért fordulsz/hibát jelentesz.</p></div>
+<p>Elõször is, az elsõ unrealircd.conf-unk elkészítése komoly idõt vesz igénybe (mondjuk, 15-60
+percet). Egy <u>jó</u> unrealircd.conf még ennél is többet.
+Nem érdemes kapkodnunk, hogy az IRCd-nk minél hamarabb elinduljon, inkább menjünk végig a dolgokon
+lépésrõl lépésre. Ha problémánk van, ellenõrizzük a szintaktikát, nézzük át ezt a kézikönyvet,
+és nézzünk bele a <a href="http://www.vulnscan.org/UnrealIRCd/faq/">GYIK</a>-ba is, mielõtt segítségért fordulnánk vagy hibát jelentenénk.</p></div>
 <p><b><font size="+2">4.1 A konfigurációs formátumról</font></b><a name="configurationfileexplained"></a><br><div class="desc">
 </p>
 <p>Az új rendszer egy blokk alapú formátumot használ. Az új formátumban minden bejegyzésnek vagy blokknak
@@ -664,21 +663,21 @@ az IRC-n, és nem a CGI:IRC átjáróét.</p>
 <p>A &lt;blokk-direktíva&gt; egy egyszerû változó, amelyet a blokk határoz meg, és
   a  &lt;direktívaérték&gt; a hozzátartozó érték. Ha a &lt;directívaérték&gt;
   szóközöket tartalmaz vagy olyan karaktereket, amelyek megjegyzéseket fejeznek ki, idézõjelek közé
-  kell tenni. Ha az idézett szövegen belül egy idézõjel karaktert szeretnél használni,
-  használj \"-t, és idézõjelként lesz értelmezve.</p>
+  kell tenni. Ha az idézett szövegen belül egy idézõjel karaktert szeretnénk írni,
+  használjunk \"-t, és idézõjelként lesz értelmezve.</p>
 <p>Egy &lt;blokk-direktíva&gt; is tartalmazhat direktívákat saját magán belül, ilyen esetben
   lesz egy saját pár kapcsoszárójele maga körül. Néhány blokknak nincs direktívája,
   és csak &lt;blokkérték&gt; formában határozzuk meg, mint az "include"-t.
   Az is megjegyzendõ, hogy nincs kötött forma, tehát az egész blokk megjelenhet egy sorban vagy akár
   több sorban is. A fenti formát használják általában (és ebben a fájlban is ezt alkalmazzuk),
   mert könnyen olvasható. </p>
-<p>Megjegyzés: a konfigurációs fájl jelenleg kis- és nagybetûérzékeny, eképpen a "BLOKKNÉV" nem
-  ugyanaz, mint a "blokknév". Van egy általános jelölési rendszer, amit arra használunk, hogy
+<p>Megjegyzés: a konfigurációs fájl jelenleg kis- és nagybetûérzékeny, eképpen a <i>BLOKKNÉV</i> nem
+  ugyanaz, mint a <i>blokknév</i>. Van egy általános jelölési rendszer, amit arra használunk, hogy
   a konfigurációs fájl bejegyzéseirõl beszéljünk. Például, hogy a fenti példabeli &lt;direktívanév&gt;-rõl
   beszéljünk, azt mondjuk, hogy &lt;blokknév&gt;::&lt;blokk-direktíva&gt;, és ha a direktívának van egy
-  alblokkja, amire utalni szeretnél, tegyél hozzá egy másik dupla kettõspontot (::)
+  alblokkja, amire utalni szeretnénk, tegyünk hozzá egy másik dupla kettõspontot (::)
   és az aldirektíva nevét. </p>
-<p>Ha egy névtelen direktíváról szeretnél beszléni, mondd azt, hogy &lt;blokknév&gt;::, ami
+<p>Ha egy névtelen direktíváról szeretnénk beszléni, írjuk azt, hogy &lt;blokknév&gt;::, ami
   ebben az esetben &lt;blokkérték&gt;-et jelent, vagy lehet egy alblokk
   névtelen bejegyzése is.</p>
 <p>Háromféle megjegyzéstípus támogatott:</p>
@@ -687,9 +686,11 @@ az IRC-n, és nem a CGI:IRC átjáróét.</p>
     /* Többsoros<br>
        &nbsp;&nbsp;&nbsp;&nbsp;megjegyzés */<br>
  </p>
-<p>Most, hogy tudod, hogyan mûködik, készítsd el a saját unrealircd.conf-odat teljesen a semmibõl, vagy
-   másold le a doc/example.conf-ot, és kezdd el szerkeszteni. Javasolt, hogy lépésrõl lépésre haladj
-   át az egyes blokktípusokon, és használd ezt a kézikönyvet segédletnek.</p>
+<p>Most, hogy tudjuk, hogyan mûködik, másoljuk a <i>doc/example.conf</i>-ot az UnrealIRCd
+   könyvtárba (pl.: /home/felhasznalo/Unreal3.2) és nevezzük át <i>unrealircd.conf</i>-ra
+   (VAGY készítsünk egy saját <i>unrealircd.conf</i>-ot a semmibõl).
+   Javasolt, hogy menjünk végig lépésrõl lépésre az egyes blokktípusokon és
+   a konfigurációs fájlunk beállításain, valamint használjuk ezt a kézikönyvet segédletként.</p>
 <p></p></div>
 <p><font class="block_section">4.2 - </font><font class="block_name">Me blokk</font>
    <font class="block_required">KÖTELEZÕ</font> <font class="block_old">(Elõzõleg M:Line néven ismert)</font><a name="meblock"></a></p><div class="desc">
@@ -3440,7 +3441,7 @@ Viszont a támadásokat, feltöréseket nehezebbé teszi, több fáradságukba kerül.<br
 
 <p><b><font size="+2">8.8. Sebezhetõségek elleni védelem</font></b><a name="secantiexploit"></a><br><div class="desc">
 Vannak kernel patchek, amelyek nehezebbé teszik a szegmens és verem alapú sebezhetõségek mûködését.
-Azonban ne ez legyen a figyelmed középpontja, sokkal nagyobb veszély van arra, hogy más módon
+Ez szép és jó, azonban ne ez legyen a figyelmed középpontja, sokkal nagyobb veszély van arra, hogy más módon
 aknázzák ki a szervere(i)det... különbözõ okok miatt.<br>
 <br>
 Van egy dolog viszont, amit meg kellene tenned, ez pedig az, hogy MINDIG HASZNÁLD A LEGFRISSEBB VERZIÓT, és
@@ -3460,7 +3461,7 @@ Nagyon sokan nem is törõdnek a biztonsággal, egészen addíg, amíg bajba nem kerül
 
 
 <p><font size="+2"><b>9 &#8211; Gyakran Ismételt Kérdések (FAQ)<a name="faq"></a></b></font></p>
-<div class="desc"><p>A FAQ online elérhetõ <a href="http://www.vulnscan.org/UnrealIrcd/faq/" TARGET="_blank">innen</a>.</p></div>
+<div class="desc"><p>A FAQ online elérhetõ <a href="http://www.vulnscan.org/UnrealIRCd/faq/" TARGET="_blank">innen</a>.</p></div>
 <p></p>
 
 <p><font size="+2"><b>A Reguláris kifejezések<a name="regex"></a></b></font></p>
