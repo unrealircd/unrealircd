@@ -37,8 +37,9 @@ Spanish |
   <b>Contribuciones:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentaci&oacute;n:</b> CKnight^ / Syzop<br>
   <b>Traducci&oacute;n al espa&ntilde;ol:</b> Trocotronic (irc.rallados.net)<br>
-<p>Debido a la crecida de la complejidad de UnrealIRCd3.2, hemos cambiado una documentaci&oacute;n m&aacute;s detallada para una m&aacute;s f&aacute;cil navegaci&oacute;n. Para ver esta documentaci&oacute;n debe tener un navegador compatible. Tiene un listado debajo. Los documentos actualizados est&aacute;n disponibles en <a href="http://www.vulnscan.org/UnrealIrcd/unreal32docs.html">http://www.vulnscan.org/UnrealIrcd/unreal32docs.html</a>
-  y una FAQ en <a href="http://www.vulnscan.org/UnrealIrcd/faq/" TARGET="_blank">http://www.vulnscan.org/UnrealIrcd/faq/</a>.
+<p>Para ver esta documentaci&oacute;n debe tener un navegador compatible, listados m&aacute;s adelante. Los documentos actualizados est&aacute;n en 
+  <a href="http://www.vulnscan.org/UnrealIRCd/unreal32docs.html">http://www.vulnscan.org/UnrealIRCd/unreal32docs.html</a>
+  y una FAQ en <a href="http://www.vulnscan.org/UnrealIRCd/faq/" TARGET="_blank">http://www.vulnscan.org/UnrealIRCd/faq/</a>.
 </p>
 <p><b>Navegadores compatibles: </b><br>
 <ul>
@@ -124,7 +125,7 @@ Spanish |
   ---8.7. <a href="#secinformation">Informaci&oacute;n descubierta</a><br>
   ---8.8. <a href="#secantiexploit">Protecci&oacute;n contra agujeros explotables</a><br>
   ---8.9. <a href="#secsummary">Sumario</a><br>
-  9. <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">Dudas m&aacute;s comunes (FAQ)</a><br> 
+  9. <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">Dudas m&aacute;s comunes (FAQ)</a><br> 
     A. <a href="#regex">Expresiones Regulares</a><br>
   ---A.1. <a href="#regexlit">Literales</a><br>
   ---A.2. <a href="#regexdot">Operador punto</a><br>
@@ -142,9 +143,9 @@ Spanish |
   o la distribuci&oacute;n de este documento con otro programa
   est&aacute; terminantemente prohibida sin los permisos de escritura del Equipo de Desarrollo de UnrealIRCd.
   Este documento se puede copiar, imprimir, reproducir o publicar tantas veces se quiera, para el uso de UnrealIRCd y sin
-  modificaci&oacute;n alguna. &#8211; Copyright Equipo de Desarrollo UnrealIRCd 2002-2005</p>
+  modificaci&oacute;n alguna. &#8211; Copyright Equipo de Desarrollo UnrealIRCd 2002-2006</p>
 <p>Por favor lea este manual antes de solicitar ayuda, el 80% de las dudas m&aacute;s frecuentes est&aacute;n en una 
-   <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">FAQ</a>. Si todav&iacute;a requiere ayuda,
+   <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">FAQ</a>. Si todav&iacute;a requiere ayuda,
    puede encontrarla en irc.ircsystems.net (puerto 6667) canal #unreal-support (nota:  
    le pedimos que sean dudas relacionadas con UnrealIRCd, no con servicios).
    Si ha encontrado un error (como un bloqueo del programa) notif&iacute;quelo en
@@ -235,7 +236,8 @@ Windows:<br>
 <div class="desc">
 <p>Algunas de las caracter&iacute;sticas m&aacute;s relevantes se explican en esta secci&oacute;n. Da una idea general de su potencia
    y a veces hace referencia al archivo de configuraci&oacute;n (algo que quiz&aacute;s no conozca todav&iacute;a).</p>
-<p>Puede omitir esta secci&oacute;n, sin embargo es interesante leerla antes y despues de la instalaci&oacute;n.</p>
+<p>Puede omitir esta secci&oacute;n, sin embargo es interesante leerla antes y despues de la instalaci&oacute;n porque puede no entender 
+conecptos como 'cloak' o 'snomask', entre otros.</p>
 </div>
 
 <p><font size="+2"><b>3.1 - Cifrado</b></font><a name="feature_cloaking"></a></p>
@@ -680,7 +682,9 @@ de confianza para que el IRCd muestre los host/ips reales de los usuarios en cua
 <p> </p>
 <p><font size="+2"><b>4.0 - Configurando su unrealircd.conf</b></font><a name="configuringyourunrealircdconf"></a></p>
 <div class="desc">
-<p>Antes de todo, crear un buen archivo unrealircd.conf puede tomarle algo de tiempo, probablemente entre 10 y 60 minutos. Puede intentar hacer uno r&aacute;pido y mejorarlo m&aacute;s tarde, o puede aprender las secciones directamente paso a paso. Si tiene problemas, compruebe su sintaxis, compruebe el manual y la FAQ antes de preguntar o notificar un fallo.</p>
+<p>Antes de todo, crear un buen archivo unrealircd.conf puede tomarle algo de tiempo, probablemente entre 15 y 60 minutos. 
+Crear una configuraci&oacute;n <u>&oacute;ptima</u> puede llevarle m&aacute;s tiempo. No es aconsejable ir con prisas para arrancar el IRCd, pero puede ir paso a paso. 
+Si tiene problemas, compruebe su sintaxis, compruebe el manual y la FAQ antes de preguntar o notificar un fallo.</p>
 </div>
 <p><b><font size="+2">4.1 Archivo de configuraci&oacute;n</font></b><a name="configurationfileexplained"></a><br>
 <div class="desc">
@@ -695,7 +699,7 @@ de confianza para que el IRCd muestre los host/ips reales de los usuarios en cua
 <p>&lt;directriz-bloque&gt; es una variable individual del bloque, y &lt;valor-directriz&gt; es su valor asociado. Si &lt;valor-directriz&gt; 
   contiene espacios, o caracteres que representan un comentario, deber&aacute; entrecomillarlo. Si quiere usar una doble comilla, deber&aacute; escaparla \&quot;.</p>
 <p> Un &lt;bloque-directriz&gt; puede tener varias directrices. Si es el caso, tendr&aacute; sus propias subsecciones. Algunos bloques s&oacute;lo requieren un &lt;valor-bloque&gt;, como ocurre en include. F&iacute;jese que no hay un formato fijado, significa que el bloque entero puede aparecer en una o varias l&iacute;neas. El formato mencionado es el m&aacute;s utilizado (y el que se usar&aacute; en adelante) porque facilita su lectura.</p>
-<p>Nota: el archivo es sensible a may&uacute;sculas/min&uacute;sculas. Es una notaci&oacute;n especial usada para refererirse a las entradas. Por ejemplo, hablar de &lt;nombre-directriz&gt;, est&aacute; diciendo &lt;nombre-bloque&gt;::&lt;directriz-bloque&gt;, y si la directriz tiene un subbloque, deber&aacute; a&ntilde;adir otros :: y el nombre de la subdirectriz.</p>
+<p>Nota: el archivo es sensible a may&uacute;sculas/min&uacute;sculas. No es lo mismo <i>NOMBRE-BLOQUE</i> que <i>nombre-bloque</i>. Es una notaci&oacute;n especial usada para refererirse a las entradas. Por ejemplo, hablar de &lt;nombre-directriz&gt;, est&aacute; diciendo &lt;nombre-bloque&gt;::&lt;directriz-bloque&gt;, y si la directriz tiene un subbloque, deber&aacute; a&ntilde;adir otros :: y el nombre de la subdirectriz.</p>
 <p>Hablar sobre una directriz sin nombre deber&aacute; hacerlo con &lt;nombre-bloque&gt;:: que en este caso significa &lt;valor-bloque&gt;, o puede tener un subbloque sin nombre.</p>
 <p>Se soportan tres tipos de comentario:</p>
 <p> # Una sola l&iacute;nea <br>
@@ -703,7 +707,8 @@ de confianza para que el IRCd muestre los host/ips reales de los usuarios en cua
     /* Varias <br>
        &nbsp;&nbsp;&nbsp;&nbsp;l&iacute;neas */<br>
  </p>
-<p>Ahora que ya conoce como funciona, cree su archivo unrealircd.conf o c&oacute;pielo de doc/example.conf y ed&iacute;telo. Es recomendable ir paso a paso.</p>
+<p>Ahora que ya conoce como funciona, copie el archivo <i>doc/example.conf</i> a su directorio principal (ej: /home/user/Unreal3.2) y ren&oacute;mbrelo a <i>unrealircd.conf</i> (o crea su <i>unrealircd.conf<i> desde un archivo en blanco. 
+Vaya paso a paso a trav&eacute;s de los bloques con este manual en la mano.</p>
 <p></p></div>
 <p><font class="block_section">4.2 - </font><font class="block_name">Bloque me </font>
    <font class="block_required">REQUERIDO</font> <font class="block_old">(conocido como M:Line)</font><a name="meblock"></a>
@@ -3146,7 +3151,7 @@ Por supuesto toda esta informaci&oacute;n oculta no es altamente segura, pero di
 
 <p><b><font size="+2">8.8 Protecci&oacute;n contra agujeros explotables</font></b><a name="secantiexploit"></a><br>
 <div class="desc">
-Existen varias actualizaciones para los sistemas operativos que hacen m&aacute;s dif&iacute;cil las vulnerabilidades del sistema. No suele ser lo m&aacute;s importante, pero es importante tenerlas al d&iacute;a por varias razones.<br>
+Existen varias actualizaciones para los sistemas operativos que hacen m&aacute;s dif&iacute;cil las vulnerabilidades del sistema. Es interesante pero no suele ser lo m&aacute;s importante, pero es importante tenerlas al d&iacute;a por varias razones.<br>
 <br>
 Use siempre la &uacute;ltima versi&oacute;n de UnrealIRCd. Subscr&iacute;base a <a href="http://mail1.sourceforge.net/mailman/listinfo/unreal-notify" target="_blank">unreal-notify mailinglist</a> 
 para recibir las actualizaciones (unreal-notify es tan s&oacute;lo para anuncios, 1 email cada X meses). Usualmente se explica detalladamente en el anuncio si contiene fallos de seguridad, sin embargo es bueno actualizar en la medida que se pueda.<br> 
@@ -3160,7 +3165,7 @@ Tal y como podr&aacute; entender, nunca se puede estar 100% seguro. Sin embargo,
 
 <p><font size="+2"><b>9 &#8211; Dudas m&aacute;s frecuentes (FAQ)<a name="faq"></a></b></font></p>
 <div class="desc">
-  <p>Tiene una FAQ disponible en este <a href="http://www.vulnscan.org/UnrealIrcd/faq/" TARGET="_blank">enlace</a></p>
+  <p>Tiene una FAQ disponible en este <a href="http://www.vulnscan.org/UnrealIRCd/faq/" TARGET="_blank">enlace</a></p>
 </div>
 <p></p>
 
