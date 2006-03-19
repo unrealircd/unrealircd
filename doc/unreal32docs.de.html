@@ -34,12 +34,10 @@
   <b>Contributors:</b>  McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
 <b>Dokumentation</b><b>:</b> CKnight^ / Syzop<br>
 <b>Deutsche Übersetzung:</b> Stylus740 (irc.smart-irc.net)<br>
-<p>Aufgrund des wachsenden Umfangs der Dokumentation von UnrealIRCd3.2 wurde das
-Dokument auf HTML umgestellt, um leichter navigieren und besser
-Querverweisen folgen zu können. Um diese Dokumentation zu lesen, wird einer der
-nachfolgenden Browser benötigt. Aktuelle Dokumentationen sind erhältlich&nbsp; @ <a href="http://www.vulnscan.org/UnrealIrcd/unreal32docs.html">http://www.vulnscan.org/UnrealIrcd/unreal32docs.html</a>
-und&nbsp; eine FAQ @
-<a href="http://www.vulnscan.org/UnrealIrcd/faq/.">http://www.vulnscan.org/UnrealIrcd/faq</a>/.</p>
+<p>Um diese Dokumentation zu lesen, ist einer der unten aufgeführten
+kompatiblen Browser erforderlich. Aktuelle Dokumentationen sind erhältlich&nbsp; @
+<a href="http://www.vulnscan.org/UnrealIRCd/unreal32docs.html">http://www.vulnscan.org/UnrealIRCd/unreal32docs.html</a>
+und&nbsp; eine FAQ @ <a href="http://www.vulnscan.org/UnrealIRCd/faq/.">http://www.vulnscan.org/UnrealIRCd/faq</a>/.</p>
 <p><b>Kompatible Browser: </b><br>
 <ul>
 <li>Opera 6.02
@@ -152,15 +150,15 @@ Verwendung des Textes mit anderer Software oder das Anbieten zusammen mit
 anderer Software ohne schriftliche Genehmigung des UnrealIRCd Entwicklungsteams
 ist streng verboten. Solange es der Benutzung von UnrealIRCd dient, darf dieses
 Dokument beliebig kopiert/gedruckt/veröffentlicht, jedoch nicht verändert
-werden. &#8211; Copyright UnrealIRCd Development Team 2002-2005</p>
+werden. &#8211; Copyright UnrealIRCd Development Team 2002-2006</p>
 <p>Bitte lesen Sie diese Anleitung, bevor Sie um Hilfe bitten und schauen Sie
 WIRKLICH erst einmal in die <a href="#faq">FAQ</a>, da rund 80% der Fragen dort
 beantwortet sind. Hilft
 dies alles nicht, kann bzgl. Support bei irc.ircsystems.net
 (Port 6667) Channel #unreal-support 
 nach Unterstützung gefragt werden (Wir erwarten UNBEDINGT, dass zuvor Dokumentation
-und
-FAQ gelesen wurden und wir helfen nur zu UnrealIRCd, nicht zu Services!). Im Falle eines echten Bugs (z.B. einem Crash) bitte Nachricht an 
+und <a href="#faq">
+FAQ</a> gelesen wurden und wir helfen nur zu UnrealIRCd, nicht zu Services!). Im Falle eines echten Bugs (z.B. einem Crash) bitte Nachricht an 
    <a href="http://bugs.unrealircd.org" TARGET="_blank">http://bugs.unrealircd.org</a>.</p></div>
 
 <p><font size="+2"><b><a name="notesonolder">1.1 &#8211; Anmerkungen zu Upgrade/Mixing 3.1.x -&gt; 3.2</a>&nbsp; </b></font><br>
@@ -258,7 +256,8 @@ erläutert. Es wird ein genereller Überblick gegeben, in dem sich manchmal auf
 die .conf Datei bezogen wird (die Neuanfängern momentan noch unbekannt sein
 dürfte).</p>
 <p>Dieser Abschnitt kann auch übersprungen werden, obwohl es sinnvoll ist ihn
-vor oder nach der Installation zu lesen.</p></div>
+vor oder nach der Installation zu lesen, weil man ansonsten Konzepte wie
+cloaking, snowmask etc. nicht verstehen wird..</p></div>
 
 <p><font size="+2"><b><a name="feature_cloaking">3.1 - Cloaking</a></b></font></p><div class="desc">
 <p>Das Cloaking ist eine Möglichkeit, den echten Hostnamen vor Usern zu verbergen.
@@ -1108,11 +1107,11 @@ aufgeführt sind. Man wird sie während der Konfiguration selbst herausfinden ;)</
 der unrealircd.conf</a></b></font> 
 <a name="configuringyourunrealircdconf">&nbsp;</a></p><div class="desc">
 <p>Beim ersten Mal wird das Erstellen einer guten unrealircd.conf Datei eine
-gewisse Zeit in Anspruch nehmen - je nach Vorerfahrung etwa 10 - 60 Minuten. Man
-kann versuchen, so rasch wie möglich den ircd zu starten und später zu
-verfeinern oder man kann die Haupt Abschnitte Schritt für Schritt erlernen (was
-der empfohlene Weg ist ;P). Im Falle auftretender Probleme zuerst die Syntax
-überprüfen, diese Anleitung und auch die FAQ bevor man nach Hilfe fragt oder
+gewisse Zeit in Anspruch nehmen - je nach Vorerfahrung etwa 15 - 60 Minuten.
+Eine <u>gute</u> unrealircd.conf zu erstellen, wird bedeutend länger dauern.
+Man sollte nicht hetzen, um den IRCd rasch gestartet zu bekommen, sondern lieber
+Schritt für Schritt vorangehen.&nbsp; Im Falle auftretender Probleme zuerst die Syntax
+überprüfen, diese Anleitung und auch die <a href="#faq"> FAQ</a> bevor man nach Hilfe fragt oder
 einen Bug meldet.</p></div>
 <p><b><font size="+2"><a name="configurationfileexplained">4.1 Erklärung der
 Konfigurationsdatei<br>
@@ -1145,7 +1144,7 @@ werden oder in mehreren Zeilen. Normalerweise wird das oben angegebene Format
 benutzt, welches leicht zu lesen ist und auch in der mitgelieferten
 unrealircd.conf benutzt wird. </p>
 <p>Achtung: Die Konfigurationsdatei ist derzeit &quot;case sensitive&quot;,
-daher ist &quot;BLOCK-NAME&quot; nicht dasselbe wie &quot;block-name&quot;. Es
+daher ist &quot;<i>BLOCK-NAME</i>&quot; nicht dasselbe wie &quot;<i>block-name</i>&quot;. Es
 gibt eine spezielle Notation wie Einträge in der Konfigurationsdatei als
 Beschreibung angegeben werden. Spricht man z.B. über &quot;&lt;directive-name&gt;&quot;
 im obigen Beispiel, so wird angegeben &quot;&lt;block-name&gt;::&lt;block-directive&gt;&quot;
@@ -1163,10 +1162,10 @@ einem Unterblock sein, der keinen Namen hat.</p>
 &nbsp;&nbsp;&nbsp; über mehrere<br>
        &nbsp;&nbsp;&nbsp;&nbsp;Zeilen */<br>
  </p>
-<p>Es sollte nun klar sein, wie das Block Format der .conf funktioniert und nun
-kann begonnen werden, eine eigene unrealircd.conf zu erstellen. Hierzu kann man
-auch dei Beispielsdatei oder Teile der Dokumentation verwenden und sich die
-entsprechenden Blöcke in die eigene Datei kopieren und editieren. Es ist
+<p>Nachdem nun klar ist, wie das funktioniert, sollte man die <i>doc/example.conf</i>
+in das UnrealIRCd Verzeichnis kopieren (z.B.: /home/user/Unreal3.2) und in <i>unrealircd.conf</i>
+umbenennen. (Oder man erstellt eine unrealircd.conf und kopiert sich die
+entsprechenden Blöcke und editieret sie). Es ist
 empfehlenswert, sich Schritt für Schritt durch alle Blöcke und diese Anleitung
 als Referenz durchzuarbeiten.</p>
 <p></p></div>
@@ -4282,7 +4281,7 @@ Datei</a></b></font></p>
   erhöht den Aufwand für einen Angriff oder hack.</div>
 <p><font size="+2"><b><a name="secantiexpolit">8.8 Schutz gegen Expolits</a></b></font></p>
 <div class="desc">Es gibt Kernel Patches, die es Stack- oder Heap-basierenden
-  Expolits erschweren, zu arbeiten. Allerdings sollte man nicht nur primär
+  Expolits erschweren, zu arbeiten. Das ist schön, allerdings sollte man nicht nur primär
   hierauf achten, es gibt weit größere Risiken mit Expolits, die andere
   Punkte, als den Kernel angreifen.... aus verschiedenen Gründen.<br>
   <br>
