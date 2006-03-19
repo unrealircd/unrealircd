@@ -36,9 +36,7 @@ Dutch |
   <b>Medewerkers:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentatie:</b> CKnight^ / Syzop<br>
   <b>Nederlandse vertaling:</b> Mark (<a href="irc://irc.irc-chatters.net/irc-chatters.net">#irc-chatters.net op irc.irc-chatters.net</a>)<br>
-<p>Door de toegenomen complexiteit van UnrealIRCd3.2 zijn we overgestapt op een
- makkelijker te bekijken en inhoudelijk vollere documentatie. Om dit document te
- bekijken heb je een geschikte browser nodig, welke hier beneden staan. De meest
+<p>Om dit document te bekijken heb je een geschikte browser nodig, welke hier beneden staan. De meest
  recente documentatie staat op <a href="http://www.vulnscan.org/UnrealIrcd/unreal32docs.html">
  http://www.vulnscan.org/UnrealIrcd/unreal32docs.html</a> en een FAQ staat op
  <a href="http://www.vulnscan.org/UnrealIrcd/faq/" TARGET="_blank">http://www.vulnscan.org/UnrealIrcd/faq/</a>.
@@ -126,7 +124,7 @@ Dutch |
   ---8.7. <a href="#secinformation">Extra informatie</a><br>
   ---8.8. <a href="#secantiexploit">Bescherming tegen exploits</a><br>
   ---8.9. <a href="#secsummary">Samenvatting</a><br>
-  9. <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">Veel gestelde vragen (FAQ)</a><br> 
+  9. <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">Veel gestelde vragen (FAQ)</a><br> 
   A. <a href="#regex">Regular Expressions</a><br>
   ---A.1. <a href="#regexlit">Letters</a><br>
   ---A.2. <a href="#regexdot">Dot Operator</a><br>
@@ -145,9 +143,9 @@ Dutch |
  verboden zonder geschreven toestemming van het UnrealIRCd Ontwikkelings Team. Dit document
  mag zo vaak je wil gekopieërd/geprint/geherproduceerd/gepubliceerd worden, gegeven dat het
  gebruikt wordt voor UnrealIRCd en er niets aangepast is in welke vorm dan ook.
- &#8211; Copyright UnrealIRCd Development Team 2002-2004</p>
+ &#8211; Copyright UnrealIRCd Development Team 2002-2006</p>
 <p>Lees dit document voordat je om hulp vraagt. We raden je ook ten zeerste aan de 
- <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">FAQ</a> te lezen, omdat
+ <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">FAQ</a> te lezen, omdat
  meer dan 80% van je problemen/vragen hierin behandeld worden. Wanneer je nog steeds hulp
  nodig hebt, kun je hulp vragen op irc.ircsystems.net (poort 6667), kanaal #unreal-support
  (Opmerking: We achten het nodig dat je de documentatie en de FAQ leest en we helpen alleen
@@ -241,7 +239,7 @@ Windows:<br>
  algemeen overzicht, en verwijst soms naar het configuratiebestand (iets waar je wellicht
  nog niets over weet)</p>
 <p>Je kan deze sectie overslaan, hoewel het aangeraden wordt om deze toch te lezen voor
- of na installatie.</p>
+ of na installatie zodat je de begrippen 'cloaking', 'snomasks' etc kent.</p>
 </div>
 
 <p><font size="+2"><b>3.1 - Cloaking</b></font><a name="feature_cloaking"></a></p><div class="desc">
@@ -674,11 +672,12 @@ Voorbeeld 2, voor wanneer je voornamelijk Chinese gebruikers hebt, en de "normal
 <p> </p>
 <p><font size="+2"><b>4.0 - Aanpassen van je unrealircd.conf</b></font> 
   <a name="configuringyourunrealircdconf"></a></p><div class="desc">
-<p>In de eerste plaats, het maken van een goede unrealircd.conf kost wat tijd, varierend
- van 10 tot 60 minuten. Je kan proberen om zo snel als mogelijk op te starten en het 
- later aan te passen, of je doet alles stap voor stap, deze documentatie volgend
- (wordt aangeraden!). Wanneer je problemen tegenkomt, controleer je syntax, controleer
- deze handleiding en controleer de FAQ voordat je vragen stelt of een bug meldt.</p></div>
+<p>
+ Ten eerste, het maken van je eerste unrealircd.conf kost tijd (zeg 15 tot 60 minuten). Het
+ maken van een <u>goede</u> kost nog meer tijd. Haast je niet om je IRCd online te krijgen,
+ maar doe alles stap voor stap. Wanneer je tegen problemen aanloopt, controleer je syntax,
+ controleer deze handleiding en de <a href="http://www.vulnscan.org/UnrealIRCd/faq/">FAQ</a>
+ voordat je hulp zoekt of een bug meldt.</p></div>
 
 <p><b><font size="+2">4.1 Configuratie bestand uitgelegd</font></b><a name="configurationfileexplained"></a><br><div class="desc">
 </p>
@@ -706,8 +705,9 @@ Voorbeeld 2, voor wanneer je voornamelijk Chinese gebruikers hebt, en de "normal
  en worden alleen gevolgd door &lt;block-value&gt;, bijvoorbeeld een include.
  Merk ook op dat er geen vaste indeling is, een blok kan op 1 regel of over verschillende
  regels verdeeld worden. De indeling hierboven is het meest gebruikelijk (en overzichtelijk).</p>
-<p>Opmerking: het configuratiebestand is op dit moment hoofdlettergevoelig, dus BLOCK-NAME
- is niet hetzelfde als block-name. Er is een speciale manier om aan te duiden hoe iets
+
+<p>Opmerking: het configuratiebestand is op dit moment hoofdlettergevoelig, dus <i>BLOCK-NAME</i>
+ is niet hetzelfde als <i>block-name</i>. Er is een speciale manier om aan te duiden hoe iets
  gebruikt moet worden in het configuratiebestand. In het bovenstaande voorbeeld zeg je
  bijvoorbeeld &lt;block-name&gt;::&lt;block-directive&gt;. Wanneer er nog een waarde bij
  hoort, voeg je gewoon nog een :: en de naam van de waarde toe.</p>
@@ -721,9 +721,11 @@ Voorbeeld 2, voor wanneer je voornamelijk Chinese gebruikers hebt, en de "normal
     /* Meerdere lijnen<br>
        &nbsp;&nbsp;&nbsp;&nbsp;commentaar */<br>
 </p>
-<p>Nu je weet hoe het werkt, kun je je unrealircd.conf vanaf het begin maken, of je
- kopieert doc/Voorbeeld.conf en past deze aan. Het wordt aangeraden alle blokken stap
- voor stap door te werken, en deze handleiding te gebruiken as hulp.</p>
+<p>Nu je weet hoe het werkt, kopieer <i>doc/example.conf</i> naar je UnrealIRCd map (bv:
+ /home/user/Unreal3.2) en hernoem het naar <i>unrealircd.conf</i> (OF je maakt een compleet
+ nieuwe <i>unrealircd.conf</i>).
+ Het wordt ten zeerste aangeraden om stap voor stap alle blocken door te werken en de
+ instellingen in je conf. Gebruik deze handleiding als leidraad.</p>
 <p></p></div>
 
 <p><font class="block_section">4.2 - </font><font class="block_name">Me Block</font>
@@ -3422,8 +3424,8 @@ Het maakt het echter wel moeilijker om aanvallen te plegen op je servers.<br>
 </div></p>
 
 <p><b><font size="+2">8.8 Bescherming tegen exploits</font></b><a name="secantiexploit"></a><br><div class="desc">
-Er zijn kernel patches die het moeilijker maken om stack- en heap-based exploits te laten werken. Dit moet
-echter niet je hoofdpunt zijn, er zijn veel grotere risico's..<br>
+Er zijn kernel patches die het moeilijker maken om stack- en heap-based exploits te laten
+werken. Dit is aardig, maar moet niet je hoofdpunt zijn, er zijn veel grotere risicos..<br>
 <br>
 Een ding dat je altijd moet doen, is DE LAATSTE NIEUWE VERSIE GEBRUIKEN.
 Je kan je aanmelden op de <a href="http://mail1.sourceforge.net/mailman/listinfo/unreal-notify" target="_blank">unreal-notify mailinglist</a>.
@@ -3441,7 +3443,7 @@ om veiligheid, totdat ze een keer gehackt worden. Probeer dit te vermijden.
 
 
 <p><font size="+2"><b>9 &#8211; Veel gestelde vragen (FAQ)<a name="faq"></a></b></font></p>
-<div class="desc"><p>De FAQ staat <a href="http://www.vulnscan.org/UnrealIrcd/faq/" TARGET="_blank">hier</a> online
+<div class="desc"><p>De FAQ staat <a href="http://www.vulnscan.org/UnrealIRCd/faq/" TARGET="_blank">hier</a> online
 (nog niet vertaald naar het Nederlands!).</p></div>
 <p></p>
 
