@@ -1087,3 +1087,7 @@
 - CGI:IRC: gzlines, zlines, throttling, and unknown connect floods are now all checked for
   clients connecting trough a CGI:IRC gateway that is in cgiirc { }. This might also fix a bug
   where (g)zlines were not applied to CGI:IRC clients, reported by devil (#0002850).
+- Changed default PREFIX_AQ behavior to ON instead of OFF. Since basically all major IRC
+  clients support it now (mIRC, xchat, epic, eggdrop, Klient, PJIRC, irssi, CGI:IRC, etc).
+  It has always been weird that win32 had it ON by default and *NIX OFF, anyway.
+  Naturally this change will be mentioned clearly in next release notes.
