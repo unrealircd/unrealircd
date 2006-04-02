@@ -859,22 +859,20 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			    -3 ? mo :
 			    "You are not authorized to connect to this server");
 		}
+
 		if (sptr->hostp)
 		{
-			/* No control-chars or ip-like dns replies... I cheat :)
-			   -- OnyxDragon */
-			for (tmpstr = sptr->sockhost; *tmpstr > ' ' &&
-			    *tmpstr < 127; tmpstr++);
-			if (*tmpstr || !*user->realhost
-			    || isdigit(*(tmpstr - 1)))
-				strncpyzt(sptr->sockhost,
-				    (char *)Inet_ia2p((struct IN_ADDR*)&sptr->ip), sizeof(sptr->sockhost));	/* Fix the sockhost for debug jic */
-			strncpyzt(user->realhost, sptr->sockhost,
-			    sizeof(sptr->sockhost));
+			/* reject ascci < 32 and ascii >= 127 (note: upper resolver might be even more strict) */
+			for (tmpstr = sptr->sockhost; *tmpstr > ' ' && *tmpstr < 127; tmpstr++);
+			
+			/* if host contained invalid ASCII _OR_ the DNS reply is an IP-like reply
+			 * (like: 1.2.3.4), then reject it and use IP instead.
+			 */
+			if (*tmpstr || !*user->realhost || (isdigit(*sptr->sockhost) && isdigit(*tmpstr - 1)))
+				strncpyzt(sptr->sockhost, (char *)Inet_ia2p((struct IN_ADDR*)&sptr->ip), sizeof(sptr->sockhost));
 		}
-		else		/* Failsafe point, don't let the user define their
-				   own hostname via the USER command --Cabal95 */
-			strncpyzt(user->realhost, sptr->sockhost, HOSTLEN + 1);
+		strncpyzt(user->realhost, sptr->sockhost, sizeof(sptr->sockhost)); /* SET HOSTNAME */
+
 		/*
 		 * I do not consider *, ~ or ! 'hostile' in usernames,
 		 * as it is easy to differentiate them (Use \*, \? and \\)

@@ -1091,3 +1091,5 @@
   clients support it now (mIRC, xchat, epic, eggdrop, Klient, PJIRC, irssi, CGI:IRC, etc).
   It has always been weird that win32 had it ON by default and *NIX OFF, anyway.
   Naturally this change will be mentioned clearly in next release notes.
+- Fixed (unimportant) DNS resolver problem if using some LAN domains with digits at end,
+  reported by Bock (#0002843).
