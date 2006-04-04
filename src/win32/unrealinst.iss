@@ -90,7 +90,7 @@ Source: "c:\dev\curl\lib\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion
 #endif
 #endif
 Source: isxdl.dll; DestDir: {tmp}; Flags: dontcopy
-Source: "..\..\dbghelp.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\..\dbghelp.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 [Dirs]
 Name: "{app}\tmp"
@@ -150,7 +150,7 @@ begin
 //        MsgBox('In order for Unreal to properly function you must manually install dbghelp.dll. The dll can be downloaded from http://www.unrealircd.com/downloads/DbgHelp.Dll', mbInformation, MB_OK);
 //      end;
 //    end;
-//  end;
+  end;
   Result := true;
 end;
 
