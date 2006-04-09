@@ -1101,3 +1101,4 @@
 - Fixed CHROOTDIR compilation problem, reported by toshio (#0002854).
 - Improved CHROOTDIR documentation in include/config.h
 - Added error if CHROOTDIR is defined but IRC_UID isn't (in include/config.h).
+- Hide stats request if requested by an U-lined client. Suggested by vonitsanet (#0002865).
