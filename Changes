@@ -1096,3 +1096,5 @@
 - Added minidump support for crashes to aid debugging a bit.
 - Added chained SSL certificates support, patch provided by justdave (#0002848).
 - Local opers may now use /TRACE (local only), suggested by GSF19 (#0002365).
+- Removed some odd code causing a 'my port is' message to appear in (f.e.) syslog, reported
+  by rsc (#0002853).

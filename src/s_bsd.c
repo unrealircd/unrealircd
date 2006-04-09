@@ -453,17 +453,6 @@ int  inetport(aClient *cptr, char *name, int port)
 		return -1;
 	}
 
-#ifndef _WIN32
-	if (cptr == &me)	/* KLUDGE to get it work... */
-	{
-		char buf[1024];
-
-		(void)ircsprintf(buf, rpl_str(RPL_MYPORTIS), me.name, "*",
-		    ntohs(server.SIN_PORT));
-		(void)write(0, buf, strlen(buf));
-	}
-#endif
-
 #ifdef INET6
 	bcopy(server.sin6_addr.s6_addr, cptr->ip.s6_addr, IN6ADDRSZ);
 #else
