@@ -1095,3 +1095,4 @@
   reported by Bock (#0002843).
 - Added minidump support for crashes to aid debugging a bit.
 - Added chained SSL certificates support, patch provided by justdave (#0002848).
+- Local opers may now use /TRACE (local only), suggested by GSF19 (#0002365).
