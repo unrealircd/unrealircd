@@ -260,7 +260,7 @@ long flags = 0; /* cache: membership flags */
 			{
 				char buf[512];
 				/* With +m and -t, only voice and higher may change the topic */
-				ircsprintf(buf, "You need at least voice (+v) in order to change the topic on %s (channel is +m)", chptr->chname);
+				ircsprintf(buf, "Voice (+v) or higher is required in order to change the topic on %s (channel is +m)", chptr->chname);
 				sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.name, parv[0], "TOPIC",  buf);
 				return -1;
 			}
