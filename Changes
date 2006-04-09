@@ -1094,3 +1094,4 @@
 - Fixed (unimportant) DNS resolver problem if using some LAN domains with digits at end,
   reported by Bock (#0002843).
 - Added minidump support for crashes to aid debugging a bit.
+- Added chained SSL certificates support, patch provided by justdave (#0002848).
