@@ -945,7 +945,10 @@ int InitwIRCD(int argc, char *argv[])
 		fprintf(stderr, "ERROR: Unable to change to directory '%s'\n", dpath);
 		exit(-1);
 	}
-	ircd_res_init();
+	if (geteuid() != 0)
+		fprintf(stderr, "WARNING: IRCd compiled with CHROOTDIR but effective user id is not root!? "
+		                "Booting is very likely to fail...\n");
+	init_resolver();
 	{
 		struct stat sb;
 		mode_t umaskold;

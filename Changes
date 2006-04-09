@@ -1098,3 +1098,6 @@
 - Local opers may now use /TRACE (local only), suggested by GSF19 (#0002365).
 - Removed some odd code causing a 'my port is' message to appear in (f.e.) syslog, reported
   by rsc (#0002853).
+- Fixed CHROOTDIR compilation problem, reported by toshio (#0002854).
+- Improved CHROOTDIR documentation in include/config.h
+- Added error if CHROOTDIR is defined but IRC_UID isn't (in include/config.h).

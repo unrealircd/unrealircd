@@ -214,14 +214,30 @@
 
 /* CHROOTDIR
  *
- * Define for value added security if you are a rooter.
+ * This enables running the IRCd chrooted (requires initial root privileges,
+ * but will be dropped to IRC_UID/IRC_GID privileges if those are defined).
  *
- * All files you access must be in the directory you define as DPATH.
+ * The directory to chroot to is simply DPATH (which is set via ./Config).
  * (This may effect the PATH locations above, though you can symlink it)
  *
- * You may want to define IRC_UID and IRC_GID
+ * Usually you only simply need to enable this, and set IRC_UID and IRC_GID,
+ * you don't need to create a special chroot environment.. UnrealIRCd will
+ * do that by itself (Unreal will create /dev/random, etc. etc.).
+ *
+ * Change to '#define CHROOTDIR' to enable...
  */
 /* #define CHROOTDIR    */
+
+/*
+ * IRC_UID
+ *
+ * If you start the server as root but wish to have it run as another user,
+ * define IRC_UID to that UID.  This should only be defined if you are running
+ * as root and even then perhaps not.
+ */
+/* #define IRC_UID <uid> */
+/* #define IRC_GID <uid> */
+
 
 /* SHOW_INVISIBLE_LUSERS
  *
@@ -280,19 +296,6 @@
 #ifndef BUFFERPOOL
 #define	BUFFERPOOL     (18 * MAXSENDQLENGTH)
 #endif
-
-/*
- * IRC_UID
- *
- * If you start the server as root but wish to have it run as another user,
- * define IRC_UID to that UID.  This should only be defined if you are running
- * as root and even then perhaps not.
- * use #define IRC_UID <uid>
- * and #define IRC_GID <gid>
- */
- 
-#undef	IRC_UID
-#undef	IRC_GID 
 
 /*
  * CLIENT_FLOOD
@@ -461,6 +464,10 @@
 #define	MYNAME SPATH
 #define	CONFIGFILE CPATH
 #define	IRCD_PIDFILE PPATH
+
+#if defined(CHROOTDIR) && !defined(IRC_UID)
+#error "ERROR: It makes no sense to define CHROOTDIR but not IRC_UID and IRC_GID! Please define IRC_UID and IRC_GID properly as the uid/gid to change to."
+#endif
 
 #ifdef	__osf__
 #define	OSF
