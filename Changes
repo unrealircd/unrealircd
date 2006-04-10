@@ -1106,3 +1106,7 @@
   Reported by aquanight (#0002233).
 - Made the windows installer better compress things (SolidCompression=true), suggested
   by Trocotronic (#0002877).
+- Added support for URL redirections in curl (if version >=7.15.1), suggested by Trocotronic
+  (#0002879).
+- Made doc/compiling_win32.txt a bit more ugly (mention that only vstudio 7.x actually works
+  at this moment).

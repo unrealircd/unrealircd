@@ -9,9 +9,17 @@ back to the initial PING at connect).
 First of all you need Microsoft Visual C++ (see below), compiling with
 cygwin is not supported (nor is there any good reason to do so).
 
-VC++ 7.x (.NET) is highly recommended.
-VC++ 6 might work but it's now fairly old, we no longer support it.
+AT THE TIME OF WRITING THIS DOCUMENT, ONLY VISUAL STUDIO 7.0 AND 7.1 ARE
+KNOWN TO WORK FLAWLESSLY, ANY OTHER VERSION (6 or 8.x) ARE KNOWN TO CAUSE
+TROUBLE: RANGING FROM COMPILE PROBLEMS TO CRASHES ON LINK/JOIN/ETC...!
 
+VC++ 7.x (.NET) are known to work perfectly (7.0, 7.1).
+VC++ 6 is known not to work
+VC++ 8.x (.NET 2005) appears - at time of writing - also to be non-working
+(causes crashes).
+
+** start of section that is currently not useful since newer compiler
+   versions cause crashes **
 If you don't have the paid version of Microsoft Visual Studio 7.x, then you can
 use the FREE development kit and PSDK as explained below:
 1. Download the MS Visual Studio Development kit at:
@@ -22,6 +30,7 @@ use the FREE development kit and PSDK as explained below:
    .NET Command Prompt' below, but you - a person using the free version - will
    actually have to start the Platform SDK Prompt instead (check out the
    Start Menu).
+** end of section **
 
 == Simple compile (no SSL/ZIP/Remote includes) ==
 1. Start the Visual Studio .NET Command Prompt
