@@ -26,6 +26,7 @@ LicenseFile=.\gpl.rtf
 LicenseFile=.\gplplusssl.rtf
 #endif
 Compression=lzma
+SolidCompression=true
 MinVersion=4.0.1111,4.0.1381
 OutputDir=../../
 

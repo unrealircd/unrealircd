@@ -1104,3 +1104,5 @@
 - Hide stats request if requested by an U-lined client. Suggested by vonitsanet (#0002865).
 - Made it so if the channel is +m but -t, you need at least voice (+v) to change the topic.
   Reported by aquanight (#0002233).
+- Made the windows installer better compress things (SolidCompression=true), suggested
+  by Trocotronic (#0002877).
