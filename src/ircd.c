@@ -948,7 +948,7 @@ int InitwIRCD(int argc, char *argv[])
 	if (geteuid() != 0)
 		fprintf(stderr, "WARNING: IRCd compiled with CHROOTDIR but effective user id is not root!? "
 		                "Booting is very likely to fail...\n");
-	init_resolver();
+	init_resolver(1);
 	{
 		struct stat sb;
 		mode_t umaskold;

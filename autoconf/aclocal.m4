@@ -52,14 +52,23 @@ AC_DEFUN(CHECK_LIBCURL,
 	[AC_HELP_STRING([--enable-libcurl=DIR],[enable libcurl (remote include) support])],
 	[
 		CURLCFLAG=`$enableval/bin/curl-config --cflags`
-		CFLAGS="$CFLAGS $CURLCFLAG -DUSE_LIBCURL"
 		CURLLIBS=`$enableval/bin/curl-config --libs`
 
-		dnl curl-7.11.0 and up will include the ares info, older versions do not
-		if test "x`echo $CURLLIBS |grep .*ares.*`" = x ; then
-			CURLLIBS="$CURLLIBS -lares"
+		dnl Ok this is ugly, basically we need to strip the version of c-ares that curl uses
+		dnl because we want to use our own version (which is hopefully fully binary
+		dnl compatible with the curl one as well).
+		dnl Therefore we need to strip the cares libs in a weird way...
+		dnl If anyone can come up with something better and still portable (no awk!?)
+		dnl then let us know.
+		if test "x`echo $CURLLIBS |grep ares`" != x ; then
+			CURLLIBS="`echo "$CURLLIBS"|sed -r 's/(@<:@^ @:>@+ @<:@^ @:>@+ )(@<:@^ @:>@+ @<:@^ @:>@+ )(.+)/\1\3/g'`"
+			if test x"$CURLLIBS" = x; then
+				AC_MSG_ERROR([sed appears to be broken. It is needed for a remote includes compile hack.])
+			fi
 		fi
+		
 		IRCDLIBS="$IRCDLIBS $CURLLIBS"
+		CFLAGS="$CFLAGS $CURLCFLAG -DUSE_LIBCURL"
 		URL="url.o"
 		AC_SUBST(URL)
 	])

@@ -580,6 +580,8 @@ void reread_motdsandrules()
 	opermotd = (aMotd *) read_file(OPATH, &opermotd);
 }
 
+extern void reinit_resolver(aClient *sptr);
+
 /*
 ** m_rehash
 ** remote rehash by binary
@@ -663,6 +665,11 @@ CMD_FUNC(m_rehash)
 			{
 				loop.do_garbage_collect = 1;
 				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
+				return 0;
+			}
+			if (!strnicmp("-dns", parv[1], 4))
+			{
+				reinit_resolver(sptr);
 				return 0;
 			}
 			if (!_match("-o*motd", parv[1]))

@@ -659,7 +659,7 @@ init_dgram:
 #endif /*_WIN32*/
 
 #ifndef CHROOTDIR
-	init_resolver();
+	init_resolver(1);
 #endif
 	return;
 }

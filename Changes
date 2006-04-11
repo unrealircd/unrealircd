@@ -1110,3 +1110,13 @@
   (#0002879).
 - Made doc/compiling_win32.txt a bit more ugly (mention that only vstudio 7.x actually works
   at this moment).
+- c-ares (currently, a forked off version) enhancements:
+  - '/quote dns i' now shows the nameserver settings (which is taken from /etc/resolv.conf
+    on *NIX, and from the registry on Windows)
+  - We no longer depend on a C++ compiler (was useless c-ares dependency caused by libtool)
+  - '/REHASH -dns' now rereads the resolver data from resolv.conf/registry, no IRCd restart
+    needed anymore. It's currently kinda experimental however, but I *think* it will work ok.
+  Unfortunately the above features required some ugly hacks if curl was enabled, so if you
+  use curl (Remote includes), feel free to test on your OS (Linux, but especially FreeBSD
+  and the other *NIXes) to see if things still compile (make clean; ./Config && make).
+(...win32 build is now broken, will be fixed within an hour..)

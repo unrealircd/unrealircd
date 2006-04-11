@@ -77,6 +77,6 @@ struct _dnsstats {
 
 extern ares_channel resolver_channel;
 
-extern void init_resolver(void);
+extern void init_resolver(int);
 
 struct hostent *unrealdns_doclient(aClient *cptr);
