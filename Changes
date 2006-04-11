@@ -1119,4 +1119,3 @@
   Unfortunately the above features required some ugly hacks if curl was enabled, so if you
   use curl (Remote includes), feel free to test on your OS (Linux, but especially FreeBSD
   and the other *NIXes) to see if things still compile (make clean; ./Config && make).
-(...win32 build is now broken, will be fixed within an hour..)
