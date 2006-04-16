@@ -12,7 +12,7 @@
  .block_old { font-size: 14; }
  .set { font-weight: bold; }
  .desc { margin-left: 15px; }
- pre { font: "times new roman"; font-style: normal;}
+ pre { font: "times new roman"; font-style: normal; background-color: #eeeeee;}
 </style>
 </head>
 
@@ -37,9 +37,9 @@ Dutch |
   <b>Documentatie:</b> CKnight^ / Syzop<br>
   <b>Nederlandse vertaling:</b> Mark (<a href="irc://irc.irc-chatters.net/irc-chatters.net">#irc-chatters.net op irc.irc-chatters.net</a>)<br>
 <p>Om dit document te bekijken heb je een geschikte browser nodig, welke hier beneden staan. De meest
- recente documentatie staat op <a href="http://www.vulnscan.org/UnrealIrcd/unreal32docs.html">
- http://www.vulnscan.org/UnrealIrcd/unreal32docs.html</a> en een FAQ staat op
- <a href="http://www.vulnscan.org/UnrealIrcd/faq/" TARGET="_blank">http://www.vulnscan.org/UnrealIrcd/faq/</a>.
+ recente documentatie staat op <a href="http://www.vulnscan.org/UnrealIRCd/unreal32docs.html">
+ http://www.vulnscan.org/UnrealIRCd/unreal32docs.html</a> en een FAQ staat op
+ <a href="http://www.vulnscan.org/UnrealIRCd/faq/" TARGET="_blank">http://www.vulnscan.org/UnrealIRCd/faq/</a>.
 </p>
 
 <p><b>Geschikte browsers: </b><br>
@@ -73,7 +73,8 @@ Dutch |
   -- 3.14. <a href="#feature_spamfilter">Spamfilter</a><br>
   -- 3.15. <a href="#feature_cidr">CIDR</a><br>
   -- 3.16. <a href="#feature_nickchars">Nick Character Sets</a><br>
-  -- 3.17. <a href="#feature_other">Andere mogelijkheden</a><br>
+  -- 3.17. <a href="#feature_cgiirc">CGI:IRC ondersteuning</a><br>
+  -- 3.18. <a href="#feature_other">Andere mogelijkheden</a><br>
   4. <a href="#configuringyourunrealircdconf">Aanpassen van je unrealircd.conf</a><br>
   ---4.1. <a href="#configurationfileexplained">Configuratie bestand uitgelegd</a><br>
   ---4.2. <a href="#meblock"> Me Block -=- (M:Line)</a><br>
@@ -110,7 +111,8 @@ Dutch |
   ---4.33. <a href="#helpblock">Help Block</a><br>
   ---4.34. <a href="#officialchannels">Official Channels Block</a><br>
   ---4.35. <a href="#spamfilter">Spamfilter Block</a><br>
-  ---4.36. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
+  ---4.36. <a href="#cgiirc">Cgiirc Block</a><br>
+  ---4.37. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
   5. <a href="#addtlfiles">Aanvullende bestanden</a><br>
   6. <a href="#userchannelmodes">Gebruikers & Kanaal Modes</a><br>
   7. <a href="#useropercommands">Gebruikers & Opers commando's</a><br>
@@ -666,7 +668,14 @@ Voorbeeld 2, voor wanneer je voornamelijk Chinese gebruikers hebt, en de "normal
 <pre>set { allowed-nickchars { chinese-simp; chinese-trad; }; };</pre>
 </p></div>
 
-<p><font size="+2"><b>3.17 - Andere mogelijkheden</b></font><a name="feature_other"></a></p><div class="desc">
+<p><font size="+2"><b>3.17 - CGI:IRC ondersteuning</b></font><a name="feature_cgiirc"></a></p><div class="desc">
+<p>UnrealIRCd ondersteunt voor CGI:IRC host spoofing, wat inhoudt dat je bepaalde CGI:IRC
+gateways als "trusted" kan bestempelen, zodat de IRCd overal de echte host/ip van de gebruiker
+laat zien, in plaats van de CGI:IRC gateway.</p>
+<p>Zie het <a href="#cgiirc">cgiirc block</a> voor informatie over het configureren</p>	
+</div>
+
+<p><font size="+2"><b>3.18 - Andere mogelijkheden</b></font><a name="feature_other"></a></p><div class="desc">
 <p>UnrealIRCd heeft heel veel mogelijkheden, dus niet alles staat beschreven hier... Je vindt het vanzelf wel.</p></div>
 
 <p> </p>
@@ -2174,7 +2183,66 @@ spamfilter {
 </pre></p>
 </div>
 
-<p><font class="block_section">4.36 - </font><font class="block_name">Set Block</font>
+
+<p><font class="block_section">4.36 - </font><font class="block_name">Cgiirc Block</font>	
+<font class="block_optional">OPTIONEEL</font><a name="cgiirc"></a>	
+</p><div class="desc">	
+<p>	
+The cgiirc block allows you to configure host spoofing for CGI:IRC gateways you trust	
+(<a href="#feature_cgiirc">more info</a>).</p>	
+	
+<p>Syntax:<br>	
+<pre>	
+cgiirc {	
+        type &lt;webirc|old&gt;;	
+        username &lt;mask&gt;; /* optioneel */	
+        hostname &lt;mask&gt;;	
+        password &lt;password&gt;; /* alleen voor het type webirc */	
+};</pre></p>	
+<p><b>type</b> is ofwel 'webirc' ofwel 'old'.<br>	
+   <b>username</b> wordt gecontroleerd op de ident (als deze er is. Zo niet, dan wordt "*" aangenomen.<br>	
+   <b>hostname</b> wordt de hostnaam op gematched.<br>	
+   <b>password</b> is het webirc wachtwoord, alleen gebruiken bij type 'webirc'.<br>	
+</p>	
+ 	
+<p><b>Hoe te configureren met 'webirc' (aangeraden methode)</b><br>
+In je CGI:IRC configuratiebestand (cgiirc.conf) stel je webirc_password in op een goed wachtwoord.<br>
+Daarna voeg je aan unrealircd.conf een cgiirc block toe, om de host en het wachtwoord toe te staan, en
+stel je cgiirc::type in op 'webirc'.<br>
+<br>	
+Voorbeeld:<br>	
+In je CGI:IRC configuratiebstand (cgiirc.conf) voeg je toe:
+<pre>webirc_password = LpT4xqPI5</pre>
+Daarna voeg je dit cgiirc block toe aan je unrealircd.conf:
+<pre>cgiirc {	
+        type webirc;	
+        hostname "1.2.3.4";	
+        password "LpT4xqPI5";	
+};</pre></p>	
+ 	 	
+<p><b>Hoe te configureren met de methode 'old'</b><br>
+Opmerking: Deze methode wordt niet aangeraden omdat ze 2 nadelen heeft:
+Deze methode zendt de IP/host om te spoofen als server wachtwoord, wat inhoudt
+dat je geen server wachtwoord als CGI:IRC gebruiker kan opgegeven. Bijkomend is
+dat de toegang alleen per IP te bepalen is, en niet met een wachtwoord zoals met
+de 'webirc' methode. Je moet deze methode dus niet gebruiken, alleen als je er
+een goede reden voor hebt.<br>
+<br>
+In je CGI:IRC configuratiebestand (cgiirc.conf) zet je realhost_as_password op 1.<br>
+Daarna voeg je een cgiirc block toe aan je unrealircd.conf om deze host toe te staan.<br>
+<br>	
+Voorbeeld:<br>	
+In je CGI:IRC configuratiebstand (cgiirc.conf) voeg je toe:
+<pre>realhost_as_password = 1</pre>	
+Daarna voeg je dit cgiirc block toe aan je unrealircd.conf:
+<pre>cgiirc {	
+        type old;	
+        hostname "1.2.3.4";	
+};</pre></p>	
+</div>	
+ 	 	
+
+<p><font class="block_section">4.37 - </font><font class="block_name">Set Block</font>
    <font class="block_required">BENODIGD</font> <font class="block_old">(Dit was unrealircd.conf/networks file)</font><a name="setblock"></a>
 </p><div class="desc">
 <p>Dit blok was eerder ons networks/unrealircd.conf en ons netwerk bestand. Op een netwerk
