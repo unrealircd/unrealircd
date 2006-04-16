@@ -438,10 +438,10 @@ int del_listmode(Ban **list, aChannel *chptr, char *banid)
  * Moved to struct.h
  */
 
-/* Those 3 pointers can be used by extended ban modules so they
- * don't have to do 3 make_nick_user_host()'s all the time:
+/* Those pointers can be used by extended ban modules so they
+ * don't have to do 4 make_nick_user_host()'s all the time:
  */
-char *ban_realhost = NULL, *ban_virthost = NULL, *ban_ip = NULL;
+char *ban_realhost = NULL, *ban_virthost = NULL, *ban_cloakhost, *ban_ip = NULL;
 
 /** is_banned - Check if a user is banned on a channel.
  * @param sptr   Client to check (can be remote client)
@@ -466,43 +466,39 @@ Ban *is_banned_with_nick(aClient *sptr, aChannel *chptr, int type, char *nick)
 {
 	Ban *tmp, *tmp2;
 	char *s;
-	static char realhost[NICKLEN + USERLEN + HOSTLEN + 6];
-	static char virthost[NICKLEN + USERLEN + HOSTLEN + 6];
-	static char     nuip[NICKLEN + USERLEN + HOSTLEN + 6];
+	static char realhost[NICKLEN + USERLEN + HOSTLEN + 24];
+	static char cloakhost[NICKLEN + USERLEN + HOSTLEN + 24];
+	static char virthost[NICKLEN + USERLEN + HOSTLEN + 24];
+	static char     nuip[NICKLEN + USERLEN + HOSTLEN + 24];
 	int dovirt = 0, mine = 0;
 	Extban *extban;
 
-	if (!IsPerson(sptr))
+	if (!IsPerson(sptr) || !chptr->banlist)
 		return NULL;
 
 	ban_realhost = realhost;
-	ban_ip = ban_virthost = NULL;
-
-	if (MyConnect(sptr)) {
+	ban_ip = ban_virthost = ban_cloakhost = NULL;
+	
+	if (MyConnect(sptr))
+	{
 		mine = 1;
-		s = make_nick_user_host(nick, sptr->user->username, GetIP(sptr));
-		strlcpy(nuip, s, sizeof nuip);
+		make_nick_user_host_r(nuip, nick, sptr->user->username, GetIP(sptr));
 		ban_ip = nuip;
+		make_nick_user_host_r(cloakhost, nick, sptr->user->username, sptr->user->cloakedhost);
+		ban_cloakhost = cloakhost;
 	}
 
-	if (sptr->user->virthost)
-		if (strcmp(sptr->user->realhost, sptr->user->virthost))
-		{
-			dovirt = 1;
-		}
-
-	s = make_nick_user_host(nick, sptr->user->username,
-	    sptr->user->realhost);
-	strlcpy(realhost, s, sizeof realhost);
-
-	if (dovirt)
+	if (IsSetHost(sptr) && strcmp(sptr->user->realhost, sptr->user->virthost))
 	{
-		s = make_nick_user_host(nick, sptr->user->username,
-		    sptr->user->virthost);
-		strlcpy(virthost, s, sizeof virthost);
+		dovirt = 1;
+		make_nick_user_host_r(virthost, nick, sptr->user->username, sptr->user->virthost);
 		ban_virthost = virthost;
 	}
-		/* We now check +b first, if a +b is found we then see if there is a +e.
+
+
+	make_nick_user_host_r(realhost, nick, sptr->user->username, sptr->user->realhost);
+
+/* We now check +b first, if a +b is found we then see if there is a +e.
  * If a +e was found we return NULL, if not, we return the ban.
  */
 	for (tmp = chptr->banlist; tmp; tmp = tmp->next)
@@ -517,7 +513,8 @@ Ban *is_banned_with_nick(aClient *sptr, aChannel *chptr, int type, char *nick)
 		} else {
 			if ((match(tmp->banstr, realhost) == 0) ||
 			    (dovirt && (match(tmp->banstr, virthost) == 0)) ||
-			    (mine && (match(tmp->banstr, nuip) == 0)))
+			    (mine && (match(tmp->banstr, nuip) == 0)) ||
+			    (mine && (match(tmp->banstr, cloakhost) == 0)) )
 			{
 				/* matches.. do nothing */
 			} else
@@ -537,7 +534,8 @@ Ban *is_banned_with_nick(aClient *sptr, aChannel *chptr, int type, char *nick)
 			} else {
 				if ((match(tmp2->banstr, realhost) == 0) ||
 					(dovirt && (match(tmp2->banstr, virthost) == 0)) ||
-					(mine && (match(tmp2->banstr, nuip) == 0)) )
+					(mine && (match(tmp2->banstr, nuip) == 0)) ||
+					(mine && (match(tmp2->banstr, cloakhost) == 0)) )
 					return NULL;
 			}
 		}
@@ -545,6 +543,17 @@ Ban *is_banned_with_nick(aClient *sptr, aChannel *chptr, int type, char *nick)
 	}
 
 	return (tmp);
+}
+
+int extban_is_banned_helper(char *buf)
+{
+	if ((match(buf, ban_realhost) == 0) ||
+	    (ban_virthost && (match(buf, ban_virthost) == 0)) ||
+	    (ban_ip && (match(buf, ban_ip) == 0)) ||
+	    (ban_cloakhost && (match(buf, ban_cloakhost) == 0)) )
+		return 1;
+	
+	return 0;
 }
 
 /*
@@ -1272,7 +1281,7 @@ char *clean_ban_mask(char *mask, int what, aClient *cptr)
 	}
 
 	if ((*mask == '~') && !strchr(mask, '@'))
-		return NULL; /* not and extended ban and not a ~user@host ban either. */
+		return NULL; /* not an extended ban and not a ~user@host ban either. */
 
 	if ((user = index((cp = mask), '!')))
 		*user++ = '\0';

@@ -1020,8 +1020,10 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 	IRCstats.clients++;
 	if (sptr->srvptr && sptr->srvptr->serv)
 		sptr->srvptr->serv->users++;
-	user->virthost =
-	    (char *)make_virthost(user->realhost, user->virthost, 1);
+
+	make_virthost(user->realhost, user->cloakedhost, 0);
+	user->virthost = strdup(user->cloakedhost);
+
 	if (MyConnect(sptr))
 	{
 		IRCstats.unknown--;

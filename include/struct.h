@@ -289,6 +289,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPT_NOT_TKLEXT	0x8000
 #define OPT_NICKIP	0x10000
 #define OPT_NOT_NICKIP  0x20000
+#define OPT_CLK	0x10000
+#define OPT_NOT_CLK  0x20000
 
 /* client->flags (32 bits): 28 used, 4 free */
 #define	FLAGS_PINGSENT   0x0001	/* Unreplied ping sent */
@@ -358,6 +360,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define PROTO_TKLEXT	0x1000	/* TKL extension: 10 parameters instead of 8 (3.2RC2) */
 #define PROTO_NICKIP	0x2000  /* Send IP addresses in the NICK command */
 #define PROTO_NAMESX	0x4000  /* Send all rights in NAMES output */
+#define PROTO_CLK		0x8000	/* Send cloaked host in the NICK command (regardless of +x/-x) */
 
 /*
  * flags macros.
@@ -429,6 +432,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SetHybNotice(x)         ((x)->flags |= FLAGS_HYBNOTICE)
 #define ClearHybNotice(x)	((x)->flags &= ~FLAGS_HYBNOTICE)
 #define IsHidden(x)             ((x)->umodes & UMODE_HIDE)
+#define IsSetHost(x)			((x)->umodes & UMODE_SETHOST)
 #define IsHideOper(x)		((x)->umodes & UMODE_HIDEOPER)
 #ifdef USE_SSL
 #define IsSSL(x)		IsSecure(x)
@@ -517,6 +521,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SupportVHP(x)		(CHECKPROTO(x, PROTO_VHP))
 #define SupportTKLEXT(x)	(CHECKPROTO(x, PROTO_TKLEXT))
 #define SupportNAMESX(x)	(CHECKPROTO(x, PROTO_NAMESX))
+#define SupportCLK(x)		(CHECKPROTO(x, PROTO_CLK))
 
 #define SetSJOIN(x)		((x)->proto |= PROTO_SJOIN)
 #define SetNoQuit(x)		((x)->proto |= PROTO_NOQUIT)
@@ -530,6 +535,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SetVHP(x)		((x)->proto |= PROTO_VHP)
 #define SetTKLEXT(x)	((x)->proto |= PROTO_TKLEXT)
 #define SetNAMESX(x)	((x)->proto |= PROTO_NAMESX)
+#define SetCLK(x)		((x)->proto |= PROTO_CLK)
 
 #define ClearSJOIN(x)		((x)->proto &= ~PROTO_SJOIN)
 #define ClearNoQuit(x)		((x)->proto &= ~PROTO_NOQUIT)
@@ -742,6 +748,7 @@ struct User {
 	unsigned short joined;		/* number of channels joined */
 	char username[USERLEN + 1];
 	char realhost[HOSTLEN + 1];
+	char cloakedhost[HOSTLEN + 1]; /* cloaked host (masked host for caching). NOT NECESSARILY THE SAME AS virthost. */
 	char *virthost;
 	char *server;
 	char *swhois;		/* special whois thing */

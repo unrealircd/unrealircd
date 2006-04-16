@@ -1979,25 +1979,31 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 					sendto_one(cptr,
 						(cptr->proto & PROTO_SJB64) ?
 					    /* Ugly double %s to prevent excessive spaces */
-					    "%s %s %d %B %s %s %b %lu %s %s %s%s:%s"
+					    "%s %s %d %B %s %s %b %lu %s %s %s%s%s%s:%s"
 					    :
-					    "%s %s %d %lu %s %s %b %lu %s %s %s%s:%s"
+					    "%s %s %d %lu %s %s %b %lu %s %s %s%s%s%s:%s"
 					    ,
 					    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
 					    hopcount, (long)lastnick, username, realhost,
 					    (long)(sptr->srvptr->serv->numeric),
 					    servicestamp, umodes, vhost,
+					    SupportCLK(cptr) ? getcloak(sptr) : "",
+					    SupportCLK(cptr) ? " " : "",
 					    SupportNICKIP(cptr) ? encode_ip(sptr->user->ip_str) : "",
-					    SupportNICKIP(cptr) ? " " : "", info);
+					    SupportNICKIP(cptr) ? " " : "",
+					    info);
 				else
 					sendto_one(cptr,
-					    "%s %s %d %d %s %s %s %lu %s %s %s%s:%s",
+					    "%s %s %d %d %s %s %s %lu %s %s %s%s%s%s:%s",
 					    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
 					    hopcount, lastnick, username, realhost,
 					    SupportNS(cptr) && sptr->srvptr->serv->numeric ? base64enc(sptr->srvptr->serv->numeric) : server,
 					    servicestamp, umodes, vhost,
+					    SupportCLK(cptr) ? getcloak(sptr) : "",
+					    SupportCLK(cptr) ? " " : "",
 					    SupportNICKIP(cptr) ? encode_ip(sptr->user->ip_str) : "",
-					    SupportNICKIP(cptr) ? " " : "", info);
+					    SupportNICKIP(cptr) ? " " : "",
+					    info);
 
 			}
 			else

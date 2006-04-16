@@ -270,6 +270,13 @@ CMD_FUNC(m_protoctl)
 			    proto, cptr->name));
 			SetVHP(cptr);
 		}
+		else if (strcmp(s, "CLK") == 0)
+		{
+			Debug((DEBUG_ERROR,
+			    "Chose protocol %s for link %s",
+			    proto, cptr->name));
+			SetCLK(cptr);
+		}
 		else if (strcmp(s, "SJ3") == 0)
 		{
 #ifndef PROTOCTL_MADNESS

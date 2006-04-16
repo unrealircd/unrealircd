@@ -2275,8 +2275,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 			MyFree(sptr->user->virthost);
 			sptr->user->virthost = NULL;
 		}
-		sptr->user->virthost = (char *)make_virthost(sptr->user->realhost,
-		    sptr->user->virthost, 1);
+		sptr->user->virthost = strdup(sptr->user->cloakedhost);
 		if (!dontspread)
 			sendto_serv_butone_token_opt(cptr, OPT_VHP, sptr->name,
 				MSG_SETHOST, TOK_SETHOST, "%s", sptr->user->virthost);
@@ -2317,7 +2316,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 		 * for ban-checking... free+recreate here because it could have
 		 * been a vhost for example. -- Syzop
 		 */
-		sptr->user->virthost = (char *)make_virthost(sptr->user->realhost, sptr->user->virthost, 1);
+		sptr->user->virthost = strdup(sptr->user->cloakedhost);
 	}
 	/*
 	 * If I understand what this code is doing correctly...

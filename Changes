@@ -1119,3 +1119,19 @@
   Unfortunately the above features required some ugly hacks if curl was enabled, so if you
   use curl (Remote includes), feel free to test on your OS (Linux, but especially FreeBSD
   and the other *NIXes) to see if things still compile (make clean; ./Config && make).
+- Made the IRCd calculate the cloaked host only once upon connect, and store (cache) it.
+- When checking if a user is banned, we always check the cloakhost too. Previously we could
+  not do this if the user had a /VHOST (=a minority of the cases, but still...). In short,
+  this is some extra protection to combat ban evasion.
+- Performance of is_banned() *slightly* improved (just 1-2 usec, but 7 usec if no bans).
+- [Module coders] For extban routines, we now offer a routine extban_is_banned_helper(buf)
+  which can be used instead of the ban_realhost/etc static chars stuff, see
+  extban_modeq_is_banned for a (real-life) example of how this is used.
+- [Services coders!] Added PROTOCTL CLK (requires NICKv2) which adds an extra field in the
+  NICK command (when a user connects) right before the infofield (gecos).
+  The added field contains the cloaked host, that is: the masked host if +x would have been
+  set. This field is ALWAYS sent, regardless of whether the user is actually +x or not.
+  Services can then store this field in memory, to know the host of the user if the user
+  is set +x (+x-t). This is a (better) alternative to PROTOCTL VHP, with no race conditions,
+  and avoids some other VHP problems.
+  VHP will stay supported though... so it's not mandatory to switch over.
