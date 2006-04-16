@@ -1135,3 +1135,5 @@
   is set +x (+x-t). This is a (better) alternative to PROTOCTL VHP, with no race conditions,
   and avoids some other VHP problems.
   VHP will stay supported though... so it's not mandatory to switch over.
+- Fixed set::maxdccallow setting to <=0 still allowing one entry to be set, reported by
+  RSCruiser (#0002883).
