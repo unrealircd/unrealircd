@@ -99,6 +99,7 @@
 			<li>NICKIP : Adds an IP parameter to the NICK message, which is the base64 encoding of the user's ip address (in network byte order). Requires NICKv2.</li>
 			<li>NICKCHARS : Indicates the set of enabled nickchar options (see the regular documention for info about this).</li>
 			<li>CHANMODES : (Not required to be sent) This is the same as the CHANMODES value in the 005 for client connections. Useful for autodetecting things like what modes are valid for ChanServ MLOCK, for example.</li>
+			<li>CLK : Supports an extra field in NICK for sending the cloaked host (not vhost).</li>
 		</ul>
 		<p>The syntax examples here follow the conventions for TOKEN and also NS in cases of server-only messages.</p>
 		<h2><a name="S2_3"></a>2.3 SERVER - Server Negotiation</h2>
@@ -158,8 +159,11 @@
 		<p>This format of the NICK message indicates an existing user is changing his or her nickname. If a collision occurs, see the section on Nick Collisions below. The timestamp is the new nickname's timestamp.</p>
 		<p><b>Syntax (normal):</b> <tt>:<i>source.server</i> &amp; <i>nick</i> <i>hopcount</i> <i>timestamp</i>	<i>username</i> <i>hostname</i> <i>server</i> <i>servicestamp</i> :<i>realname</i></tt></p>
 		<p><b>Syntax (NICKv2):</b> <tt>:<i>source.server</i> &amp; <i>nick</i> <i>hopcount</i> <i>timestamp</i>	<i>username</i> <i>hostname</i> <i>server</i> <i>servicestamp</i> <i>+usermodes</i> <i>virtualhost</i> :<i>realname</i></tt></p>
+		<p><b>Syntax (NICKv2+CLK):</b> <tt>:<i>source.server</i> &amp; <i>nick</i> <i>hopcount</i> <i>timestamp</i>	<i>username</i> <i>hostname</i> <i>server</i> <i>servicestamp</i> <i>+usermodes</i> <i>virtualhost</i> <i>cloakhost</i> :<i>realname</i></tt>
 		<p><b>Syntax (NICKv2+NICKIP):</b> <tt>:<i>source.server</i> &amp; <i>nick</i> <i>hopcount</i> <i>timestamp</i> <i>username</i> <i>hostname</i> <i>server</i> <i>servicestamp</i> <i>+usermodes</i> <i>virtualhost</i> <i>nickipaddr</i> :<i>realname</i></tt></p>
-		<p>This format of the NICK message introduces a new user to the network. If PROTOCTL VHP is enabled, the user's cloaked host is put in the virtualhost field, otherwise it'll be * unless the user is +t.</p>
+		<p><b>Syntax (NICKv2+NICKIP+CLK):</b> <tt>:<i>source.server</i> &amp; <i>nick</i> <i>hopcount</i> <i>timestamp</i>	<i>username</i> <i>hostname</i> <i>server</i> <i>servicestamp</i> <i>+usermodes</i> <i>virtualhost</i> <i>cloakhost</i> <i>nickipaddr</i> :<i>realname</i></tt>
+		<p><b>Note:</b> Because each server normally does its own cloak generation, Unreal does not expect to receive NICK messages with the CLK info, so do not send it. It will send this info to a server it has received a PROTOCTL CLK from however.</p>
+		<p>This format of the NICK message introduces a new user to the network. If PROTOCTL VHP is enabled, the user's cloaked host is put in the virtualhost field, otherwise it'll be * unless the user is +t. With the addition of CLK, VHP is no longer necessary for determining the cloak host.</p>
 		<h3><a name="S3_1_1"></a>3.1.1 Nick Collisions</h3>
 		<p>A nick collision occurs when a server receives a NICK message (or &amp; token) introducing a user that the server already sees on the network. When a collision occurs, one or both of the colliding clients must be disconnected. The timestamp is examined to determine which client loses. The client with the earlier timestamp remains. If both clients have equal timestamps, both are removed. Currently, Unreal handles NICK collisions both passively and agressively:</p>
 		<ul>
