@@ -66,7 +66,7 @@ RC=rc
 # allowed to ship due to license agreements), etc...
 # In any case, this probably should not be used, unless debugging a
 # problem locally, in which case it can be useful.
-DEBUGEXTRA=0
+#DEBUGEXTRA=1
 #
 #
 #### END RELEASE BUILD ###
