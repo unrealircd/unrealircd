@@ -43,6 +43,12 @@
 #undef  TIMES_2
 #undef  GETRUSAGE_2
 #define HAVE_ALLOCA
+/* vc 2005 */
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+#	define HAVE_VSNPRINTF
+#	define HAVE_SNPRINTF
+#	define snprintf _snprintf
+#endif
 #define SPATH "."
 #define DPATH "."
 #define DOMAINNAME "irc.net"
