@@ -1140,4 +1140,4 @@
 - Fixed Microsoft Visual Studio 2005 (8.x) unable to compile, and, after fixing that, causing
   a lot of crashes. Both are now fixed. Reported by Zell, Yamake, and others (#2875, #2704).
   Fix provided by Xuefer. This also gets rid of some annoying and useless compile warnings
-  as well.
+  as well. Also thanks to Zell for his help.
