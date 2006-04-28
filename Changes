@@ -1141,3 +1141,4 @@
   a lot of crashes. Both are now fixed. Reported by Zell, Yamake, and others (#2875, #2704).
   Fix provided by Xuefer. This also gets rid of some annoying and useless compile warnings
   as well. Also thanks to Zell for his help.
+- Fixed null pointer config parser crash, reported by alkalinex (#0002894).

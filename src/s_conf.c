@@ -6328,31 +6328,33 @@ int	_test_cgiirc(ConfigFile *conf, ConfigEntry *ce)
 			errors++;
 		}
 	}
-	if (!has_type)
-	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			"cgiirc::type");
-		errors++;
-	}
 	if (!has_hostname)
 	{
 		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 			"cgiirc::hostname");
 		errors++;
 	}
-	if (!has_password && (type == CGIIRC_WEBIRC))
+	if (!has_type)
 	{
 		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			"cgiirc::password");
+			"cgiirc::type");
 		errors++;
 	} else
-	if (has_password && (type == CGIIRC_PASS))
 	{
-		config_error("%s:%i: cgiirc block has type set to 'old' but has a password set. "
-		             "Passwords are not used with type 'old'. Either remove the password or "
-		             "use the 'webirc' method instead.",
-		             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		errors++;
+		if (!has_password && (type == CGIIRC_WEBIRC))
+		{
+			config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+				"cgiirc::password");
+			errors++;
+		} else
+		if (has_password && (type == CGIIRC_PASS))
+		{
+			config_error("%s:%i: cgiirc block has type set to 'old' but has a password set. "
+			             "Passwords are not used with type 'old'. Either remove the password or "
+			             "use the 'webirc' method instead.",
+			             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			errors++;
+		}
 	}
 
 	return errors;
@@ -7724,6 +7726,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		{
 			long x;
 			CheckDuplicate(cep, default_bantime, "default-bantime");
+			CheckNull(cep);
 			x = config_checkval(cep->ce_vardata,CFG_TIME);
 			if ((x < 0) > (x > 2000000000))
 			{
@@ -7735,6 +7738,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "ban-version-tkl-time")) {
 			long x;
 			CheckDuplicate(cep, ban_version_tkl_time, "ban-version-tkl-time");
+			CheckNull(cep);
 			x = config_checkval(cep->ce_vardata,CFG_TIME);
 			if ((x < 0) > (x > 2000000000))
 			{
@@ -7745,8 +7749,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 #ifdef NEWCHFLOODPROT
 		else if (!strcmp(cep->ce_varname, "modef-default-unsettime")) {
-			int v = atoi(cep->ce_vardata);
+			int v;
 			CheckDuplicate(cep, modef_default_unsettime, "modef-default-unsettime");
+			CheckNull(cep);
+			v = atoi(cep->ce_vardata);
 			if ((v <= 0) || (v > 255))
 			{
 				config_error("%s:%i: set::modef-default-unsettime: value '%d' out of range (should be 1-255)",
@@ -7755,8 +7761,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "modef-max-unsettime")) {
-			int v = atoi(cep->ce_vardata);
+			int v;
 			CheckDuplicate(cep, modef_max_unsettime, "modef-max-unsettime");
+			CheckNull(cep);
+			v = atoi(cep->ce_vardata);
 			if ((v <= 0) || (v > 255))
 			{
 				config_error("%s:%i: set::modef-max-unsettime: value '%d' out of range (should be 1-255)",
@@ -7769,6 +7777,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 #ifdef USE_SSL
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				if (!strcmp(cepp->ce_varname, "egd")) {
+					CheckNull(cepp);
 					CheckDuplicate(cep, ssl_egd, "ssl::egd");
 				}
 				else if (!strcmp(cepp->ce_varname, "certificate"))
