@@ -80,12 +80,25 @@
   #define MYTOKEN_INET6 ""
  #endif
 
+#ifdef __GNUC__
+ #if defined(__GNUC_PATCHLEVEL__)
+  #define GCCVER ((__GNUC__ << 16) + (__GNUC_MINOR__ << 8) + __GNUC_PATCHLEVEL__)
+ #else
+  #define GCCVER ((__GNUC__ << 16) + (__GNUC_MINOR__ << 8))
+ #endif
+#else
+ #define GCCVER 0
+#endif
+  
+
 #ifdef UNREALCORE
   char our_mod_version[] = BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9 \
                                MYTOKEN_SSL MYTOKEN_ZIP MYTOKEN_NOSPOOF MYTOKEN_EXTCMODE MYTOKEN_JOINTHROTTLE \
                                MYTOKEN_NOFLDAWAY MYTOKEN_NEWCHF MYTOKEN_INET6;
+  unsigned int our_compiler_version = GCCVER;
 #else
   DLLFUNC char Mod_Version[] = BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9 \
                                MYTOKEN_SSL MYTOKEN_ZIP MYTOKEN_NOSPOOF MYTOKEN_EXTCMODE MYTOKEN_JOINTHROTTLE \
                                MYTOKEN_NOFLDAWAY MYTOKEN_NEWCHF MYTOKEN_INET6;
+  DLLFUNC unsigned int compiler_version = GCCVER;
 #endif

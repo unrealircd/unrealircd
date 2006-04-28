@@ -420,6 +420,7 @@ struct _Module
 	unsigned char errorcode;
 	char *tmp_file;
 	unsigned long mod_sys_version;
+	unsigned int compiler_version;
 };
 /*
  * Symbol table
