@@ -1142,3 +1142,6 @@
   Fix provided by Xuefer. This also gets rid of some annoying and useless compile warnings
   as well. Also thanks to Zell for his help.
 - Fixed null pointer config parser crash, reported by alkalinex (#0002894).
+- Added compiler version checking to "module binary incompatability"-check. This should fix
+  some more odd problems from people (eg: people switching from GCC 3.x to 4.x and wondering
+  why they are crashing or getting other errors).
