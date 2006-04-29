@@ -1145,15 +1145,19 @@
 - Added compiler version checking to "module binary incompatability"-check. This should fix
   some more odd problems from people (eg: people switching from GCC 3.x to 4.x and wondering
   why they are crashing or getting other errors).
-- Module coders: For cloaking, added a new callback type CALLBACKTYPE_CLOAK_EX (which replaces
-  CALLBACKTYPE_CLOAK). This passes 'aClient *sptr, char *host' instead of only 'char *host'
-  to the cloaking module, which can be useful if you need to cloak on something other than
-  IP/host. Suggested by fez (#0002275).
+- Module coders: For cloaking, added a new callback type CALLBACKTYPE_CLOAK_EX (which is an
+  enhanced version of CALLBACKTYPE_CLOAK). This passes 'aClient *sptr, char *host' instead
+  of only 'char *host' to the cloaking module, which can be useful if you need to cloak on
+  something other than IP/host. Suggested by fez (#0002275).
   Module may still provide only CALLBACKTYPE_CLOAK though, in fact this is what the official
   cloaking module does. So no updating of cloaking modules needed.
+  If you do write a module with the new *_EX callback, you only need the *_EX one and not
+  the CALLBACKTYPE_CLOAK as well (though it's currently np if both are present).
   A side-effect of this "extra cloaking" callback is that we needed to change make_virthost()
   which now has an extra parameter in front, and another side-effect is that calling the
   CALLBACKTYPE_CLOAK may not work since only *_EX might be available. To my knowledge there
   are very few modules (only 1 I know) that will have a problem due to this, so sounds like
   an affordable tradeoff.
 - Updated sendnotice() so it sends a proper notice if the user is in pre-connect stage.
+- Fixed bug with chinese-* charsets not getting detected properly by config parser.
+  Reported and patch provided by Xuefer (#0002891).

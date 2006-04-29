@@ -92,10 +92,10 @@ struct _langlist
 static LangList langlist[] = {
 	{ "belarussian-w1251", "blr", LANGAV_ASCII|LANGAV_W1251 },
 	{ "catalan",      "cat", LANGAV_ASCII|LANGAV_LATIN1 },
-	{ "chinese",      "chi-s,chi-t,chi-j", LANGAV_GBK },
+	{ "chinese",      "chi-j,chi-s,chi-t", LANGAV_GBK },
+	{ "chinese-ja",   "chi-j", LANGAV_GBK },
 	{ "chinese-simp", "chi-s", LANGAV_GBK },
 	{ "chinese-trad", "chi-t", LANGAV_GBK },
-	{ "chinese-ja",   "chi-j", LANGAV_GBK },
 	{ "czech",        "cze-m", LANGAV_ASCII|LANGAV_W1250 },
 	{ "danish",       "dan", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "dutch",        "dut", LANGAV_ASCII|LANGAV_LATIN1 },
