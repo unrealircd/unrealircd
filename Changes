@@ -1163,3 +1163,5 @@
   Reported and patch provided by Xuefer (#0002891).
 - Made it so me::numeric can be changed (when not linked to any servers) so no server restart
   is needed anymore (#0002896).
+- set::ssl::egd does not require a parameter per-se (bug caused few days ago), reported
+  by Trocotronic (#0002899).

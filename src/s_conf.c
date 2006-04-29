@@ -7809,7 +7809,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 #ifdef USE_SSL
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				if (!strcmp(cepp->ce_varname, "egd")) {
-					CheckNull(cepp);
 					CheckDuplicate(cep, ssl_egd, "ssl::egd");
 				}
 				else if (!strcmp(cepp->ce_varname, "certificate"))
