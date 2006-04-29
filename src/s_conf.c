@@ -1602,6 +1602,38 @@ ConfigItem_log *ca = MyMallocEx(sizeof(ConfigItem_log));
 	AddListItem(ca, conf_log);
 }
 
+int isanyserverlinked(void)
+{
+int i;
+aClient *acptr;
+
+	for (i = LastSlot; i >= 0; i--)
+		if ((acptr = local[i]) && (acptr != &me) && IsServer(acptr))
+			return 1;
+
+	return 0;
+}
+
+void applymeblock(void)
+{
+	if (!conf_me || !me.serv)
+		return; /* uh-huh? */
+	
+	/* Numeric change? */
+	if (conf_me->numeric != me.serv->numeric)
+	{
+		/* Can we apply ? */
+		if (!isanyserverlinked())
+		{
+			me.serv->numeric = conf_me->numeric;
+		} else {
+			config_warn("me::numeric: Numeric change detected, but change cannot be applied "
+			            "due to being linked to other servers. Unlink all servers and /REHASH to "
+			            "try again.");
+		}
+	}
+}
+
 int	init_conf(char *rootconf, int rehash)
 {
 	config_status("Loading IRCd configuration ..");
@@ -1681,7 +1713,7 @@ int	init_conf(char *rootconf, int rehash)
 			abort();
 		}
 		charsys_finish();
-			
+		applymeblock();
 	}
 	else	
 	{

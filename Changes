@@ -1161,3 +1161,5 @@
 - Updated sendnotice() so it sends a proper notice if the user is in pre-connect stage.
 - Fixed bug with chinese-* charsets not getting detected properly by config parser.
   Reported and patch provided by Xuefer (#0002891).
+- Made it so me::numeric can be changed (when not linked to any servers) so no server restart
+  is needed anymore (#0002896).
