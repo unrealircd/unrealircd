@@ -2138,11 +2138,12 @@ void sendnotice(aClient *to, char *pattern, ...)
 {
 static char realpattern[1024];
 va_list vl;
+char *name = *to->name ? to->name : "*";
 
 	if (!IsWebTV(to))
-		ircsprintf(realpattern, ":%s NOTICE %s :%s", me.name, to->name, pattern);
+		ircsprintf(realpattern, ":%s NOTICE %s :%s", me.name, name, pattern);
 	else
-		ircsprintf(realpattern, ":%s PRIVMSG %s :%s", me.name, to->name, pattern);
+		ircsprintf(realpattern, ":%s PRIVMSG %s :%s", me.name, name, pattern);
 
 	va_start(vl, pattern);
 	vsendto_one(to, realpattern, vl);

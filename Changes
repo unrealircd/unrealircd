@@ -1156,3 +1156,4 @@
   CALLBACKTYPE_CLOAK may not work since only *_EX might be available. To my knowledge there
   are very few modules (only 1 I know) that will have a problem due to this, so sounds like
   an affordable tradeoff.
+- Updated sendnotice() so it sends a proper notice if the user is in pre-connect stage.
