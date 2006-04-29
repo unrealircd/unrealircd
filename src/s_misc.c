@@ -1131,7 +1131,7 @@ char *getcloak(aClient *sptr)
 	if (!*sptr->user->cloakedhost)
 	{
 		/* need to calculate (first-time) */
-		make_virthost(sptr->user->realhost, sptr->user->cloakedhost, 0);
+		make_virthost(sptr, sptr->user->realhost, sptr->user->cloakedhost, 0);
 	}
 
 	return sptr->user->cloakedhost;

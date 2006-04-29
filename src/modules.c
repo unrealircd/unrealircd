@@ -1590,7 +1590,7 @@ int callbacks_check(void)
 {
 int i;
 
-	if (!num_callbacks(CALLBACKTYPE_CLOAK) || !num_callbacks(CALLBACKTYPE_CLOAKKEYCSUM))
+	if ((!num_callbacks(CALLBACKTYPE_CLOAK) && !num_callbacks(CALLBACKTYPE_CLOAK_EX)) || !num_callbacks(CALLBACKTYPE_CLOAKKEYCSUM))
 	{
 #ifndef _WIN32
 		config_error("ERROR: No cloaking module loaded. (hint: you probably want to load cloak.so)");

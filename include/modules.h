@@ -645,6 +645,7 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 /* Callback types */
 #define CALLBACKTYPE_CLOAK 1
 #define CALLBACKTYPE_CLOAKKEYCSUM 2
+#define CALLBACKTYPE_CLOAK_EX 3
 
 /* Efunction types */
 #define EFUNC_DO_JOIN       				1

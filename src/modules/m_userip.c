@@ -86,7 +86,7 @@ DLLFUNC CMD_FUNC(m_userip)
 
 	char *p;		/* scratch end pointer */
 	char *cn;		/* current name */
-	char *ip;
+	char *ip, ipbuf[HOSTLEN+1];
 	struct Client *acptr;
 	char response[5][NICKLEN * 2 + CHANNELLEN + USERLEN + HOSTLEN + 30];
 	int  i;			/* loop counter */
@@ -122,7 +122,10 @@ DLLFUNC CMD_FUNC(m_userip)
 			if (!(ip = GetIP(acptr)))
 				ip = "<unknown>";
 			if (sptr != acptr && !IsOper(sptr) && IsHidden(acptr))
-				ip = RCallbacks[CALLBACKTYPE_CLOAK]->func.pcharfunc(ip);
+			{
+				make_virthost(sptr, GetIP(sptr), ipbuf, 0);
+				ip = ipbuf;
+			}
 
 			ircsprintf(response[i], "%s%s=%c%s@%s",
 			    acptr->name,

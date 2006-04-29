@@ -1021,7 +1021,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 	if (sptr->srvptr && sptr->srvptr->serv)
 		sptr->srvptr->serv->users++;
 
-	make_virthost(user->realhost, user->cloakedhost, 0);
+	make_virthost(sptr, user->realhost, user->cloakedhost, 0);
 	user->virthost = strdup(user->cloakedhost);
 
 	if (MyConnect(sptr))
