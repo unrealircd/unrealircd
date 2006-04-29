@@ -239,7 +239,7 @@ CLEAN:
 	-@erase src\modules\*.ilk >NUL
 
 ./UNREAL.EXE: SRC/UNREAL.OBJ SRC/WIN32/UNREAL.RES
-	$(LINK) advapi32.lib src/unreal.obj src/win32/unreal.res
+	$(LINK) $(DBGLFLAG) advapi32.lib src/unreal.obj src/win32/unreal.res
 
 CONF:
 	-@copy include\win32\setup.h include\setup.h >NUL
