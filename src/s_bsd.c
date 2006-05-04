@@ -345,7 +345,7 @@ int  inetport(aClient *cptr, char *name, int port)
 {
 	static struct SOCKADDR_IN server;
 	int  ad[4], len = sizeof(server);
-	char ipname[20];
+	char ipname[64];
 
 	if (BadPtr(name))
 		name = "*";
@@ -363,7 +363,7 @@ int  inetport(aClient *cptr, char *name, int port)
 	if (*name == '*')
 		ircsprintf(ipname, "::");
 	else
-		ircsprintf(ipname, "%s", name);
+		strlcpy(ipname, name, sizeof(ipname));
 #endif
 
 	if (cptr != &me)

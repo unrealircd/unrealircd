@@ -1165,3 +1165,5 @@
   is needed anymore (#0002896).
 - set::ssl::egd does not require a parameter per-se (bug caused few days ago), reported
   by Trocotronic (#0002899).
+- (multiple?) IPv6 listen blocks could cause a crash in config parser. Reported by Robby22
+  (#0002868).
