@@ -1167,3 +1167,4 @@
   by Trocotronic (#0002899).
 - (multiple?) IPv6 listen blocks could cause a crash in config parser. Reported by Robby22
   (#0002868).
+- Added error checking to (main) setuid/setgid calls.

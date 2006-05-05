@@ -899,6 +899,8 @@ int error = 0;
 
 extern time_t TSoffset;
 
+extern int unreal_time_synch(int timeout);
+
 #ifndef _WIN32
 int main(int argc, char *argv[])
 #else
@@ -1409,21 +1411,26 @@ int InitwIRCD(int argc, char *argv[])
 		if ((IRC_UID == 0) || (IRC_GID == 0)) {
 			(void)fprintf(stderr,
 			    "ERROR: SETUID and SETGID have not been set properly"
-			    "\nPlease read your documentation\n(HINT:SETUID or SETGID can not be 0)\n");
+			    "\nPlease read your documentation\n(HINT: IRC_UID and IRC_GID in include/config.h can not be 0)\n");
 			exit(-1);
 		} else {
 			/*
 			 * run as a specified user 
 			 */
 
-			(void)fprintf(stderr,
-			    "WARNING: ircd invoked as root\n");
-			(void)fprintf(stderr, "         changing to uid %d\n",
-			    IRC_UID);
-			(void)fprintf(stderr, "         changing to gid %d\n",
-			    IRC_GID);
-			(void)setgid(IRC_GID);
-			(void)setuid(IRC_UID);
+			(void)fprintf(stderr, "WARNING: ircd invoked as root\n");
+			(void)fprintf(stderr, "         changing to uid %d\n", IRC_UID);
+			(void)fprintf(stderr, "         changing to gid %d\n", IRC_GID);
+			if (setgid(IRC_GID))
+			{
+				fprintf(stderr, "ERROR: Unable to change group: %s\n", strerror(errno));
+				exit(-1);
+			}
+			if (setuid(IRC_UID))
+			{
+				fprintf(stderr, "ERROR: Unable to change userid: %s\n", strerror(errno));
+				exit(-1);
+			}
 		}
 	}
 #endif
