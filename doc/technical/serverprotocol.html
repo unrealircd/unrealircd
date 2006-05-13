@@ -29,6 +29,8 @@
 		<blockquote><p><a href="#S4_1">4.1 SERVER - Server Introduction</a></p></blockquote>
 		<blockquote><p><a href="#S4_2">4.2 SQUIT - Server Removal</a></p></blockquote>
 		<blockquote><p><a href="#S4_3">4.3 SDESC - Server Description</a></p></blockquote>
+		<blockquote><p><a href="#S4_4">4.4 PING - Live Connection Query</a></p></blockquote>
+		<blockquote><p><a href="#S4_5">4.5 PONG - Live Connection Reply</a></p></blockquote>
 		<p><a href="#S5">5 Channel Operations</a></p>
 		<blockquote><p><a href="#S5_1">5.1 SJOIN - Channel Burst</a></p></blockquote>
 		<blockquote><p><a href="#S5_2">5.2 JOIN - Channel Join</a></p></blockquote>
@@ -213,10 +215,21 @@
 		<p><b>Syntax:</b> <tt>:<i>source</i> AG :<i>newdesc</i></tt></p>
 		<p>The server to which source is connected to should have it's description updated to newdesc. This does NOT include the VL inforamtion.</p>
 		<hr/>
+		<h2><a name="S4_4">4.4 PING - Live Connection Query (TOKEN: 8)</a></h2>
+		<p><b>Syntax:</b> <tt>8 <i>source</i>[ :<i>destination</i>]</p>
+		<p>Used to check if a connection is still live if it has been &quot;quiet&quot; for a certain amount of time. Typically, unreal will send PING requests at intervals determined by the class::pingfreq setting. PINGs originating from the direct uplink will use the token, but it seems PINGs originating from a distant server will not.</p>
+		<p>The response to a PING is sent with the <a href="#S4_5">PONG</a> command.</p>
+		<p>When receiving a two-parameter PING, the second parameter is the target. If the target isn't you, you can either reply on behalf of that target (using its name instead of yours), or if there is a real connection representing the target, forward the PING to the target.</p>
+		<h2><a name="S4_5">4.5 PONG - Live Connection Reply</a></h2>
+		<p><b>Syntax:</b> <tt>9 <i>source</i>[ :<i>destination</i>]</p>
+		<p>Used to respond to a <a href="#S4_4">PING</a> query.</p>
+		<p><b>Responding to a ping:</b> Once a PING is received, you usually have an amount of time to respond equal to your class::pingfreq. The correct response will always have two parameters. If you received one parameter, then the received parameter becomes the second parameter of your response, and the first parameter is your server name. If you received two parameters, the response returns both parameters in reverse order.</p>
+		<p>For example, the response to <tt>8 uplink.server</tt> is <tt>9 my.name uplink.server</tt>, while the response to <tt>PING distant.server your.server</tt> is <tt>9 your.server distant.server</tt>. Unreal typically includes a : prior to the last parameter. This isn't required if that parameter contains no spaces, but it is especially important to not include the colon when reversing the parameters, or else Unreal mistake it for a single-parameter PONG.
+		<p>If a two-parameter PONG is received, the second parameter names the target. If the target is not you, and a real connection represents that target, you should forward the PONG message via that connection.</p>
 		<h1><a name="S5"></a>5 Channel Operations</h1>
 		<p>These commands deal with the state of channels across the network. Unreal only supports Network Channels, where the first character is a # character.</p>
 		<h2><a name="S5_1"></a>5.1 SJOIN - Channel Burst (TOKEN: ~)</h2>
-		<p><b>Syntax:</b> @<i>servernumeric</i> ~ <i>timestamp</i> <i>channel</i> +<i>modes</i>[ <i>modeparams</i>] :<i>memberlist</i> <i>&amp;ban</i> <i>"exempt</i> <i>'invex</i></p>
+		<p><b>Syntax:</b> <tt>@<i>servernumeric</i> ~ <i>timestamp</i> <i>channel</i> +<i>modes</i>[ <i>modeparams</i>] :<i>memberlist</i> <i>&amp;ban</i> <i>"exempt</i> <i>'invex</i></tt></p>
 		<p>Timestamp is the channel timestamp and can be !b64 as defined by PROTOCTL SJB64. Modes should only include those in the last three mode sets listed in CHANMODES. Modeparams is one parameter for each mode character that requires one. Memberlist is a series of users (all of which must at least be behind the server sending the SJOIN), each user is prefixed with one or more characters indicating their status. Owners (+q) are prefixed with *, admins (+a) ~, ops (+o) @, halfops (+h) %, voices (+v) +. Normal users are not prefixed with anything. Ban, ban exception, and invite exception masks are also included, with bans prefixed with &amp;, ban exceptions prefixed with ", and invite exceptions with '. Note that when a &amp;, " or ' is encountered as the first character, further processing of ~, *, @, %, or + characters must not continue because ban, exempt, and invite masks can contain any of those characters. (Plus it's just not right for a ban mask to be marked as a channel admin...)</p>
 		<p>If the channel didn't already exist it is created with the information given in the SJOIN. Otherwise the timestamp is used to determine how the SJOIN information is handled. As a given, all members are joined into the channel, regardless. The mode information (modes, modeparams, memberlist prefixes, bans, exempts, and invites) is subject to the timestamp rules:</p>
 		<ul>
