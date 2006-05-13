@@ -216,12 +216,12 @@
 		<p>The server to which source is connected to should have it's description updated to newdesc. This does NOT include the VL inforamtion.</p>
 		<hr/>
 		<h2><a name="S4_4">4.4 PING - Live Connection Query (TOKEN: 8)</a></h2>
-		<p><b>Syntax:</b> <tt>8 <i>source</i>[ :<i>destination</i>]</p>
+		<p><b>Syntax:</b> <tt>8 <i>source</i>[ :<i>destination</i>]</tt></p>
 		<p>Used to check if a connection is still live if it has been &quot;quiet&quot; for a certain amount of time. Typically, unreal will send PING requests at intervals determined by the class::pingfreq setting. PINGs originating from the direct uplink will use the token, but it seems PINGs originating from a distant server will not.</p>
 		<p>The response to a PING is sent with the <a href="#S4_5">PONG</a> command.</p>
 		<p>When receiving a two-parameter PING, the second parameter is the target. If the target isn't you, you can either reply on behalf of that target (using its name instead of yours), or if there is a real connection representing the target, forward the PING to the target.</p>
-		<h2><a name="S4_5">4.5 PONG - Live Connection Reply</a></h2>
-		<p><b>Syntax:</b> <tt>9 <i>source</i>[ :<i>destination</i>]</p>
+		<h2><a name="S4_5">4.5 PONG - Live Connection Reply (TOKEN: 9)</a></h2>
+		<p><b>Syntax:</b> <tt>9 <i>source</i>[ :<i>destination</i>]</tt></p>
 		<p>Used to respond to a <a href="#S4_4">PING</a> query.</p>
 		<p><b>Responding to a ping:</b> Once a PING is received, you usually have an amount of time to respond equal to your class::pingfreq. The correct response will always have two parameters. If you received one parameter, then the received parameter becomes the second parameter of your response, and the first parameter is your server name. If you received two parameters, the response returns both parameters in reverse order.</p>
 		<p>For example, the response to <tt>8 uplink.server</tt> is <tt>9 my.name uplink.server</tt>, while the response to <tt>PING distant.server your.server</tt> is <tt>9 your.server distant.server</tt>. Unreal typically includes a : prior to the last parameter. This isn't required if that parameter contains no spaces, but it is especially important to not include the colon when reversing the parameters, or else Unreal mistake it for a single-parameter PONG.
