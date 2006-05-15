@@ -36,7 +36,7 @@ Spanish |
   <b>Programadores:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contribuciones:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentaci&oacute;n:</b> CKnight^ / Syzop<br>
-  <b>Traducci&oacute;n al espa&ntilde;ol:</b> Trocotronic (irc.rallados.net)<br>
+  <b>Traducci&oacute;n al espa&ntilde;ol:</b> Trocotronic (<a href="irc://irc.redyc.com/">irc.redyc.com</a>)<br>
 <p>Para ver esta documentaci&oacute;n debe tener un navegador compatible, listados m&aacute;s adelante. Los documentos actualizados est&aacute;n en 
   <a href="http://www.vulnscan.org/UnrealIRCd/unreal32docs.html">http://www.vulnscan.org/UnrealIRCd/unreal32docs.html</a>
   y una FAQ en <a href="http://www.vulnscan.org/UnrealIRCd/faq/" TARGET="_blank">http://www.vulnscan.org/UnrealIRCd/faq/</a>.
@@ -186,7 +186,7 @@ Windows:<br>
   <br>
   <b>Sistemas operativos soportados y testeados:</b><br>
 <ul>
-<li><b>*NIX versions:</b>
+<li><b>Versiones *NIX:</b>
 <ul>
 <li>Linux (2.2.*, 2.4.*, 2.6.*)
 <li>FreeBSD (4.*, 5.*)
@@ -194,13 +194,13 @@ Windows:<br>
 <li>OpenBSD (3.7, 3.8)
 <li>Solaris (9, 10)
 </ul>
-<li><b>Windows version:</b>
+<li><b>Versiones Windows:</b>
 <ul> 
 <li>Windows 2000 (Pro, Server, Advanced Server)
 <li>Windows XP (Home, Pro)
 <li>Windows 2003 
 </ul>
-<li><b>Architectures tested:</b>
+<li><b>Arquitecturas probadas:</b>
 <ul>
 <li>ia32 (i386, i486, i586, i686)
 <li>ia64
@@ -237,20 +237,20 @@ Windows:<br>
 <p>Algunas de las caracter&iacute;sticas m&aacute;s relevantes se explican en esta secci&oacute;n. Da una idea general de su potencia
    y a veces hace referencia al archivo de configuraci&oacute;n (algo que quiz&aacute;s no conozca todav&iacute;a).</p>
 <p>Puede omitir esta secci&oacute;n, sin embargo es interesante leerla antes y despues de la instalaci&oacute;n porque puede no entender 
-conecptos como 'cloak' o 'snomask', entre otros.</p>
+conceptos como 'cloak' o 'snomask', entre otros.</p>
 </div>
 
 <p><font size="+2"><b>3.1 - Cifrado</b></font><a name="feature_cloaking"></a></p>
 <div class="desc">
 <p>Las direcciones host de los usuarios se encriptan mediante un cifrado. Por ejemplo, si su host es <i>d5142341.cable.wanadoo.nl</i>,
-   se mostrar&aacute; (en join, part, whois, etc) como <i>rox-2DCA3201.cable.wanadoo.nl</i>. 
+   se mostrar&aacute; (en join, part, whois, etc.) como <i>rox-2DCA3201.cable.wanadoo.nl</i>. 
    Esta medida es muy &uacute;til para prevenir ataques entre usuarios.</p>
 <p>Est&aacute; controlado por el modo de usuario +x (uso: /mode tunick +x). Los administradores pueden forzar el uso por defecto, o restringir su uso.</p>
 <p>Un host cifrado se genera a partir de un m&oacute;dulo de cifrados, que requiere ser cargado. Actualmente s&oacute;lo hay 1 m&oacute;dulo inclu&iacute;do:<br>
    <b>cloak:</b> Este es el m&oacute;dulo oficial desde la versi&oacute;n 3.2.1. Es mucho m&aacute;s seguro que su anterior algoritmo. 
-   Usa md5 internamentee y requiere 3 par&aacute;metros set::cloak-keys:: consistentes en mezclar min&uacute;sculas, may&uacute;sculas y d&iacute;gitos decimales, 
+   Usa md5 internamente y requiere 3 par&aacute;metros set::cloak-keys:: consistentes en mezclar min&uacute;sculas, may&uacute;sculas y d&iacute;gitos decimales, 
    (ej: "AopAS6WQH2Os6hfosh4SFJHs"). Vea example.conf para un ejemplo.<br></p>
-<p>Las claves de cifrado (en adelante &quot;cloak keys&quot;) deben ser las mismas en todos los servidores de la red. Procure que estas claves sean secretas. Si alguien las conociera, podr&iacute;a decodificar el host original, lo que provocar&iacute;a la p&eacute;rdida de efectividad del modo de usuario +x.</p>
+<p>Las claves de cifrado (en adelante &quot;cloak keys&quot;) deben ser las mismas en todos los servidores de la red. Procure que estas claves sean secretas. Si alguien las conociera, podr&iacute;a descodificar el host original, lo que provocar&iacute;a la p&eacute;rdida de efectividad del modo de usuario +x.</p>
 </div>
 <p><font size="+2"><b>3.2 - M&oacute;dulos</b></font><a name="feature_modules"></a></p>
 <div class="desc">
@@ -266,9 +266,9 @@ conecptos como 'cloak' o 'snomask', entre otros.</p>
 <p><font size="+2"><b>3.3 - M&aacute;scaras </b></font><a name="feature_snomasks"></a></p>
 <div class="desc">
 <p>Las m&aacute;scaras de usuario (conocidas como snomasks) son un tipo especial de modo de usuario que controla qu&eacute; notificaciones del servidor quiere recibir (generalmente usado para operadores).</p>
-<p>Se pueden usar mediante: /mode tu nick +s M&Aacute;SCARA. Por ejemplo:: /mode yournick +s +cF<br>
+<p>Se pueden usar mediante: /mode su nick +s M&Aacute;SCARA. Por ejemplo: /mode sunick +s +cF<br>
    Para quitar algunas m&aacute;scaras, use algo como: /mode tunick +s -c, por ejemplo.<br>
-  Puede quitarse todas las m&aacute;scaras quit&aacute;ndose simplemente el modo s: /mode tunick -s</p>
+  Puede quitarse todas las m&aacute;scaras quit&aacute;ndose simplemente el modo s: /mode sunick -s</p>
 <p>Se disponen de las siguientes m&aacute;scaras:<br>
    c - conexiones locales <br>
    F - conexiones remotas (menos de servidores de servicios)<br>
@@ -334,8 +334,8 @@ conecptos como 'cloak' o 'snomask', entre otros.</p>
    </div>
 <p><font size="+2"><b>3.9 - IPv6</b></font><a name="feature_ipv6"></a></p><div class="desc">
 <p>UnrealIRCd soporta IPv6. Desde la versi&oacute;n beta15 parece ser estable.<br> 
-   Su sistema opertivo necesita tener soporte IPv6 y tenerlo activado en UnrealIRCd en ./Config.<br>
-<p>Aun as&iacute;, microsoft ha a&ntilde;adido una implementaci&oacute;n experimental para w2k/XP que no soporta UnrealIRCd (todav&iacute;a).</p>
+   Su sistema operativo necesita tener soporte IPv6 y tenerlo activado en UnrealIRCd en ./Config.<br>
+<p>Aun as&iacute;, Microsoft ha a&ntilde;adido una implementaci&oacute;n experimental para W2K/XP que no soporta UnrealIRCd (todav&iacute;a).</p>
 </div>
 
 <p><font size="+2"><b>3.10 - Zip links</b></font><a name="feature_ziplinks"></a></p><div class="desc">
@@ -364,7 +364,7 @@ Un ejemplo del modo +f es:<i>*** Blah sets mode: +f [10j]:15</i><br>
 Significa que se permiten 10 joins cada 15 segundos. Si se supera este l&iacute;mite el servidor pondr&aacute; el modo +i autom&aacute;ticamente.<br> 
 Aqu&iacute; se detallan los tipos de flood:
 <br>
-<table border=1 cellpadding=3 cellspacing=1>
+<table border="1" cellpadding="3" cellspacing="1">
 <tr>
   <td>tipo:</td>
   <td>nombre:</td>
@@ -608,7 +608,7 @@ Los m&oacute;dulos pueden a&ntilde;adir otros tipos de ban.
 </p></div>
 
 <p><font size="+2"><b>3.15 - CIDR</b></font><a name="feature_cidr"></a></p><div class="desc">
-<p>UnrealIRCd dispone de soporte para CIDR (Classless Interdomain Routing). CIDR te permite banear rangos de IPs. Todas las IPs se localizan en los ISPs usando CIDR. As&iacute; pues, pudiendo banear f&aacute;cilmente un ISP. Unreal soporta CIDR para IPv4 y IPv6. Las m&aacute;scaras CIDR se pueden usar en allow::ip, ban user::mask, ban ip::mask, except ban::mask, except throttle::mask y except tkl::mask (para gzline, gline y shun). Adem&aacute;s, se puede utilizar CIDR en /kline, /gline, /gzline, /zline y /sun. Se utiliza el est&aacute;ndar de IP/bits, por ejemplo, 12.0.0.0/8 (es 127.0.0.0 - 127.255.255.255) y fe80:0:0:123::/64 (es 
+<p>UnrealIRCd dispone de soporte para CIDR (Classless Interdomain Routing). CIDR te permite banear rangos de IPs. Todas las IPs se localizan en los ISPs usando CIDR. As&iacute; pues, pudiendo banear f&aacute;cilmente un ISP. Unreal soporta CIDR para IPv4 y IPv6. Las m&aacute;scaras CIDR se pueden usar en allow::ip, ban user::mask, ban ip::mask, except ban::mask, except throttle::mask y except tkl::mask (para gzline, gline y shun). Adem&aacute;s, se puede utilizar CIDR en /kline, /gline, /gzline, /zline y /sun. Se utiliza el est&aacute;ndar de IP/bits, por ejemplo, 127.0.0.0/8 (es 127.0.0.0 - 127.255.255.255) y fe80:0:0:123::/64 (es 
 fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p>
 </div>
 <p><font size="+2"><b>3.16 - Configuraci&oacute;n de caracteres para nicks </b></font><a name="feature_nickchars"></a></p>
@@ -707,7 +707,7 @@ Si tiene problemas, compruebe su sintaxis, compruebe el manual y la FAQ antes de
     /* Varias <br>
        &nbsp;&nbsp;&nbsp;&nbsp;l&iacute;neas */<br>
  </p>
-<p>Ahora que ya conoce como funciona, copie el archivo <i>doc/example.conf</i> a su directorio principal (ej: /home/user/Unreal3.2) y ren&oacute;mbrelo a <i>unrealircd.conf</i> (o crea su <i>unrealircd.conf<i> desde un archivo en blanco. 
+<p>Ahora que ya conoce como funciona, copie el archivo <i>doc/example.conf</i> a su directorio principal (ej: /home/user/Unreal3.2) y ren&oacute;mbrelo a <i>unrealircd.conf</i> (o crea su <i>unrealircd.conf</i> desde un archivo en blanco. 
 Vaya paso a paso a trav&eacute;s de los bloques con este manual en la mano.</p>
 <p></p></div>
 <p><font class="block_section">4.2 - </font><font class="block_name">Bloque me </font>
@@ -876,9 +876,9 @@ listen &lt;ip:puerto&gt; {
 <p> </p>
 <p>Este bloque especifica qu&eacute; puertos deber&aacute;n escucharse. Si no se requieren opciones, deber&aacute; hacerlo sin directrices, con la forma &lt;ip&gt;:&lt;puerto&gt;;.</p>
 <p><b>ip y puerto</b><br>
-  Puedes fijar la ip a * para enlazar con todas las ips posibles, o especificar una ip a enlazar (usada en proveedores de shells). El puerto es el puerto que se va a escuchar. Puede especificar un rango. Por ejemplo, 6660-6669 escuchar&aacute; los puertos desde 6660 hasta 6669, ambos inclu&iacute;dos. Para usuarios IPv6 vea a continuaci&oacute;n.</p>
+  Puede fijar la ip a * para enlazar con todas las ips posibles, o especificar una ip a enlazar (usada en proveedores de shells). El puerto es el puerto que se va a escuchar. Puede especificar un rango. Por ejemplo, 6660-6669 escuchar&aacute; los puertos desde 6660 hasta 6669, ambos inclu&iacute;dos. Para usuarios IPv6 vea a continuaci&oacute;n.</p>
 <p><b>Informaci&oacute;n para usuarios IPv6</b><br>
-  Si tiene un servidor IPv6 necesitar&aacute; englobar la IP entre llaves, com [::1]:6667 (escucha localhost en el puerto 6667). Si usa IPv6 y quiere escuchar una ip IPv4 necesitar&aacute; usar ::ffff:ipv4ip. Por ejemplo, [::fff:203.123.67.1]:6667 pondr&aacute; en escucha el puerto 6667 de la ip 203.123.67.1. Obviamente puede usar *.</p>
+  Si tiene un servidor IPv6 necesitar&aacute; englobar la IP entre llaves, como [::1]:6667 (escucha localhost en el puerto 6667). Si usa IPv6 y quiere escuchar una ip IPv4 necesitar&aacute; usar ::ffff:ipv4ip. Por ejemplo, [::fff:203.123.67.1]:6667 pondr&aacute; en escucha el puerto 6667 de la ip 203.123.67.1. Obviamente puede usar *.</p>
 <p><b>bloque options</b> (opcional)<br>
   Puede especificar opciones adicionales:<br>
 <table border="0">
@@ -922,7 +922,7 @@ listen *:6601 {
 		userhost &lt;hostmask&gt;;
 	};
 	password &lt;contrase&ntilde;a&gt; { &lt;auth-type&gt;; };
-	class &lt;clasee&gt;;
+	class &lt;clase&gt;;
 	flags &lt;flags&gt;;
 	flags {
 		&lt;flag&gt;;
@@ -932,10 +932,10 @@ listen *:6601 {
 	swhois &lt;informaci&oacute;n whois&gt;;
 	snomask &lt;snomask&gt;;
 	maxlogins &lt;num&gt;;
-modes &lt;modos&gt;;
+	modes &lt;modos&gt;;
 };
 </pre>
-<p>El bloque oper permite asignar Operadores de Red para tu servidor. <b>oper::</b> especifica el nombre de usuario para /oper. <b>oper::from::userhost </b>es una m&aacute;scara user@host que debe coincidir. Puede especificar m&aacute;s de una m&aacute;scara usando varios oper::from::userhost. <b>oper::password</b> es la contrase&ntilde;a que deber&aacute; especificar, <b>oper::password::</b> permite especificar un m&eacute;todo de cifrado para esta contrase&ntilde;a. M&eacute;todos v&aacute;lidos: crypt, md5, sha1 y ripemd-160. Si no utilizar&aacute; m&eacute;todo de cifrado, este bloque puede omitirse.</p>
+<p>El bloque oper permite asignar Operadores de Red para su servidor. <b>oper::</b> especifica el nombre de usuario para /oper. <b>oper::from::userhost </b>es una m&aacute;scara user@host que debe coincidir. Puede especificar m&aacute;s de una m&aacute;scara usando varios oper::from::userhost. <b>oper::password</b> es la contrase&ntilde;a que deber&aacute; especificar, <b>oper::password::</b> permite especificar un m&eacute;todo de cifrado para esta contrase&ntilde;a. M&eacute;todos v&aacute;lidos: crypt, md5, sha1 y ripemd-160. Si no utilizar&aacute; m&eacute;todo de cifrado, este bloque puede omitirse.</p>
 <p>Note que es sensible a ma&yacute;usculas y min&uacute;sculas.</p>
 <p>La directriz <b>oper::class</b> especifica el nombre de una clase preexistente (que aparezca antes del archivo) y es a la que relacionar&aacute; el operador.</p>
 <p>La directriz <b>oper::flags</b> tiene dos formatos. Si quiere usar el antiguo sistema (ej: OAa) deber&aacute; usar flags &lt;flags&gt;; si quiere usar el nuevo estilo, flags { &lt;flag&gt;; }. A continuaci&oacute;n se detallan los flags soportados: </p>
@@ -1405,7 +1405,7 @@ tld {
 	}
 };</pre>
 </p>
-<p>Este bloque le permite especificar motd, rules y canales para usuarios en funci&oacute;n de su host. Es &uacute;til para tener varios motds en distintos lenguajes. <b>tld::mask </b>es una m&aacute;scara user@host que coincide con la m&aacute;scara del usuario. <b>tld::motd</b>, <b>tld::shortmotd</b>, <b>tld::opermotd</b>, <b>tld::botmotd</b> y <b>tld::rules</b> especifican el motd, shortmod, opermotd, botmotd y archivo de reglas espectivamente para mostrar en funci&oacute;n del host. <b>tld::shortmotd</b>, <b>tld::opermotd</b> y <b>tld::botmotd</b> son opcionales. <b>tld::channel </b>es opcional y permite especificar un canal al que el usuario ser&aacute; forzado cuando conecte. Si existe, omitir&aacute; el canal por defecto en autojoin. El bloque <b>tld::options</b> le permite definir par&aacute;metros adicionales. S&oacute;lo existen tld::options::ssl para clientes SSL y tld::options::remote para clientes remotos.</p>
+<p>Este bloque le permite especificar motd, rules y canales para usuarios en funci&oacute;n de su host. Es &uacute;til para tener varios motds en distintos lenguajes. <b>tld::mask </b>es una m&aacute;scara user@host que coincide con la m&aacute;scara del usuario. <b>tld::motd</b>, <b>tld::shortmotd</b>, <b>tld::opermotd</b>, <b>tld::botmotd</b> y <b>tld::rules</b> especifican el motd, shortmod, opermotd, botmotd y archivo de reglas respectivamente para mostrar en funci&oacute;n del host. <b>tld::shortmotd</b>, <b>tld::opermotd</b> y <b>tld::botmotd</b> son opcionales. <b>tld::channel </b>es opcional y permite especificar un canal al que el usuario ser&aacute; forzado cuando conecte. Si existe, omitir&aacute; el canal por defecto en autojoin. El bloque <b>tld::options</b> le permite definir par&aacute;metros adicionales. S&oacute;lo existen tld::options::ssl para clientes SSL y tld::options::remote para clientes remotos.</p>
 <p>Las entradas TLD se relacionan de arriba abajo. </p>
 <p>Ejemplo:<br>
 <pre>
@@ -1639,7 +1639,7 @@ deny version {
 };</pre>
 </p>
 <p>Este bloque permite parar la uni&oacute;n de un servidor a la red en funci&oacute;n de su versi&oacute;n y sus modos de compilaci&oacute;n. El formato de este bloque es algo complicado pero no es muy dif&iacute;cil imaginarselo. La directriz <b>deny::mask</b> especifica una m&aacute;scara con comodines del servidor al que se le aplica. <b>deny::version</b> especifica el n&uacute;mero de protocolo que se refiere.</p>
-<p>Por ejemplo, 3.0 es 2301, 3.1.1/3.1.2 es 2302, 3.2 es 2303. El primer caracter de este par&aacute;metro puede ser &gt;, &lt;, = o !. Si es &gt;, todas las versiones superiores a esta son bloqueadas; con &lt; todo lo contrario; con =, s&oacute;lo esa versi&oacute;n y con ! todas las versiones menos esta. La directriz <b>deny::Flags</b> permite especificar qu&eacute; modos de compilaci&oacute;n debe o no debe tener. Estos modos se ponen uno detr&aacute;s de otro y si cada modo es prefijado por ! significa que no debe tenerlo.</p>
+<p>Por ejemplo, 3.0 es 2301, 3.1.1/3.1.2 es 2302, 3.2 es 2303. El primer caracter de este par&aacute;metro puede ser &gt;, &lt;, = o !. Si es &gt;, todas las versiones superiores a esta son bloqueadas; con &lt; todo lo contrario; con =, s&oacute;lo esa versi&oacute;n y con ! todas las versiones menos esta. La directriz <b>deny::flags</b> permite especificar qu&eacute; modos de compilaci&oacute;n debe o no debe tener. Estos modos se ponen uno detr&aacute;s de otro y si cada modo es prefijado por ! significa que no debe tenerlo.</p>
 <p></p></div>
 <p><font class="block_section">4.24 - </font><font class="block_name">Bloque deny link </font>
    <font class="block_optional">OPCIONAL</font> <font class="block_old">(conocido como D/d:Line)</font><a name="denylinkblock"></a>
@@ -1746,7 +1746,7 @@ vhost {
 	swhois "&lt;swhois info&gt;";
 };</pre>
 </p>
-<p>Este bloque permite usar el comando /vhost para obtener un host virtual. El par&aacute;metro <b>vhost::vhost</b> puede ser user@host o simplemente el host que el usuario recibir&aacute;. <b>vhost::from::userhost</b> contiene las m&aacute;scaras user@host que deben coincidir para recibir el host virtual. Puedes especificar m&aacute;s de una. <b>vhost::login</b> es el login que utilizar&aacute; y <b>vhost::password</b> la contrase&ntilde;a. <b>vhost::password::</b> acepta m&eacute;todos de cifrado de contrase&ntilde;a como crypt, md5, sha y ripemd-160. <b>vhost::swhois</b> a&ntilde;ade una l&iacute;nea extra a su whois.</p>
+<p>Este bloque permite usar el comando /vhost para obtener un host virtual. El par&aacute;metro <b>vhost::vhost</b> puede ser user@host o simplemente el host que el usuario recibir&aacute;. <b>vhost::from::userhost</b> contiene las m&aacute;scaras user@host que deben coincidir para recibir el host virtual. Puede especificar m&aacute;s de una. <b>vhost::login</b> es el login que utilizar&aacute; y <b>vhost::password</b> la contrase&ntilde;a. <b>vhost::password::</b> acepta m&eacute;todos de cifrado de contrase&ntilde;a como crypt, md5, sha y ripemd-160. <b>vhost::swhois</b> a&ntilde;ade una l&iacute;nea extra a su whois.</p>
 <p>Ejemplo:<br>
 <pre>
 vhost {
@@ -1818,7 +1818,7 @@ link &lt;nombre-servidor&gt; {
 	leaf &lt;leaf-mask&gt;;
 	leafdepth &lt;profundidad&gt;;
 	class &lt;clase&gt;;
-ciphers &lt;ssl-ciphers&gt;;
+	ciphers &lt;ssl-ciphers&gt;;
 	options {
 		&lt;opci&oacute;n&gt;;
 		&lt;opci&oacute;n&gt;;
@@ -1827,9 +1827,9 @@ ciphers &lt;ssl-ciphers&gt;;
 };</pre>
 </p>
 <p>Este bloque es necesario para unir servidores. T&oacute;mese su tiempo para leerlo todo porque es bastante complicado y con lo que los usuarios tienen m&aacute;s errores.</p>
-<p>Primero de todo, <b>server-name</b> es el nombre del servidor remoto, al que quiere unir.</p>
+<p>Primero de todo, <b>nombre-servidor</b> es el nombre del servidor remoto, al que quiere unir.</p>
 <p><b>username</b><br>
-  Puedes especificarlo si tiene una autentificaci&oacute;n ident. Normalmente pondr&aacute; &quot;*&quot;.</p>
+  Puede especificarlo si tiene una autentificaci&oacute;n ident. Normalmente pondr&aacute; &quot;*&quot;.</p>
 <p><b>hostname</b><br>
   El host o la IP del servidor remoto. Es usado por ambos lados al conectar y en la verificaci&oacute;n del servidor que se une. Algunos ejemplos:<br>
   <table border="0">
@@ -1869,7 +1869,7 @@ ciphers &lt;ssl-ciphers&gt;;
 <p><b>compression-level</b> (opcional)<br>
   Especifica el nivel de compresi&oacute;n (1-9) si se especifica el par&aacute;metro link::options::zip.</p>
 <p><b>ciphers</b> (opcional)<br>
-  Especifica los &quot;ciphers&quot; ssl para este enlace. Para obtener una lista de los &quot;ciphers&quot; disponibles, use el comando 'openssl ciphers. Deben especificarse separados por ':'. </p>
+  Especifica los &quot;ciphers&quot; ssl para este enlace. Para obtener una lista de los &quot;ciphers&quot; disponibles, use el comando 'openssl ciphers'. Deben especificarse separados por ':'. </p>
 <p><b>bloque options </b><br>
   Algunas de las opciones son:<br>
 <table border="0">
@@ -1924,7 +1924,7 @@ alias &lt;nombre&gt; {
 };</pre>
 </p>
 <p>(Nota: puede ver m&aacute;s archivos de alias est&aacute;ndars que lleva UnrealIRCd en este <a href="#includedirective">enlace</a>)</p>
-<p>Este bloque (est&aacute;ndar) le permite redireccionar comandos a usuarios, generlamente a bots como por ejemplo /chanserv para enviarle privados. 
+<p>Este bloque (est&aacute;ndar) le permite redireccionar comandos a usuarios, generalmente a bots como por ejemplo /chanserv para enviarle privados. 
 <b>alias::</b> especifica el nombre del comando, por ejemplo chanserv. <b>alias::target</b> el nick o canal al que se le enviar&aacute; el mensaje y puede omitirse. 
 <b>alias::type</b> define el tipo de alias: services (el usuario est&aacute; en el servidor de servicios), stats (en el de estad&iacute;sticas), normal (en un servidor normal) y channel (el target es un canal). 
 Si alias::spamfilter (opcional) est&aacute; puesto en 'yes', entonces ser&aacute; procesado por spamfilters (por defecto 'no').<br>
@@ -2492,7 +2492,7 @@ set {
   </tr>
   <tr> 
     <td><div align="center">d</div></td>
-    <td>No recibes mensajes de canales (a menos que est&eacute;n prefijados por los caracteres especificados en set::channel-command-prefix)</td>
+    <td>No recibe mensajes de canales (a menos que est&eacute;n prefijados por los caracteres especificados en set::channel-command-prefix)</td>
   </tr>
   <tr> 
     <td><div align="center">G</div></td>
@@ -2548,7 +2548,7 @@ set {
   </tr>
   <tr> 
     <td><div align="center">s</div></td>
-    <td>Puede escuchar las notificaciones del servidor (vea <a href="#feature_snomasks">section 3.3</a> para m&aacute;s informaci&oacute;n)</td>
+    <td>Puede escuchar las notificaciones del servidor (vea <a href="#feature_snomasks">secci&oacute;n 3.3</a> para m&aacute;s informaci&oacute;n)</td>
   </tr>
   <tr>
     <td><div align="center">T</div></td>
@@ -2596,7 +2596,7 @@ set {
   </tr>
   <tr> 
     <td>nick &lt;nuevo_nick&gt;</td>
-    <td>Cambia tu nick. Alerta de ello a los dem&aacute;s usuarios.<br></td>
+    <td>Cambia su nick. Alerta de ello a los dem&aacute;s usuarios.<br></td>
     <td>Todos</td>
   </tr>
   <tr> 
@@ -2611,7 +2611,7 @@ set {
   </tr>
   <tr> 
     <td height="39">whowas &lt;nick&gt; [max_respuestas]</td>
-    <td>Muestra informaci&oacute;n sobre un nick desconectado. Puedes especificar un max_respuestas como m&aacute;ximo de entradas mostradas<br></td>
+    <td>Muestra informaci&oacute;n sobre un nick desconectado. Puede especificar un max_respuestas como m&aacute;ximo de entradas mostradas<br></td>
     <td>Todos</td>
   </tr>
   <tr> 
@@ -2700,7 +2700,7 @@ set {
     <td>Todos</td>
   </tr>
   <tr> 
-    <td height="39">Watch +-&lt;nick&gt; +-&lt;nick&gt;<br></td>
+    <td height="39">watch +-&lt;nick&gt; +-&lt;nick&gt;<br></td>
     <td>Watch es un sistema de notificaciones en UnrealIRCd, siendo m&aacute;s r&aacute;pido ya que usa menos recursos de red que el viejo sistema. El servidor le env&iacute;a un mensaje cuando un usuario de su lista watch se desconecta o se conecta. Esta lista no se conserva a cada sesi&oacute;n (su cliente o script deber&aacute; enviarla cada vez que se conecte)</td>
     <td>Todos</td>
   </tr>
@@ -3118,7 +3118,7 @@ Detalladamente:
 &nbsp;&nbsp;&nbsp; Ejemplo 1: <i>link visibiblename.yournet.com { hostname 194.15.123.16; [etc] };</i>.<br>
 &nbsp;&nbsp;&nbsp; Ejemplo 2: <i>link visibiblename.yournet.com { hostname thehostnamethatworks.yournet.com; [etc] };</i>.<br>
 &nbsp;&nbsp;&nbsp; Como nota, para el &uacute;ltimo ejemplo aseg&uacute;rese que no permiten transferencia de zonas.<br>
-2. Otro punto importante es ocultar '/stats c' y otra informaci&oacute;n. De no ser as&iacute; los atacantes tendr&aacute;n a su disposici&oacute;n cuantiosa informaci&oacute;n de real valor. Si quiere despreocuparse por eso, use set { oper-onlye-stats &quot;*&quot;; }; para restringir este comando. M&aacute;s informaci&oacute;n en el pr&oacute;ximo apartado.<br>
+2. Otro punto importante es ocultar '/stats c' y otra informaci&oacute;n. De no ser as&iacute; los atacantes tendr&aacute;n a su disposici&oacute;n cuantiosa informaci&oacute;n de real valor. Si quiere despreocuparse por eso, use set { oper-only-stats &quot;*&quot;; }; para restringir este comando. M&aacute;s informaci&oacute;n en el pr&oacute;ximo apartado.<br>
 <br>
 Por supuesto estas medidas son menos efectivas si se hacen despu&eacute;s de meses de haber empezado, porque la IP puede ser conocida por varios atacantes. Obviamente pueden atacar a servidores leaf, pero requiere m&aacute;s esfuerzo para tumbar la red que no atacando uno o dos puntos vitales.<br>
 </div></p>
@@ -3129,7 +3129,7 @@ Por supuesto estas medidas son menos efectivas si se hacen despu&eacute;s de mes
 El comando /stats proporciona numerosa informaci&oacute;n que posiblemente quiera restringir tanto como sea posible. Muchas de las redes prefieren que los usuarios no tengan acceso a este comando, otros prefieren ocultar '/stats g' o '/stats k'.<br>
 Es recomendable usar <i>set { oper-only-stats "*"; };</i>&nbsp; para prohibir todos los /stat para usuarios no operadores. Por ejemplo:<br>
 - /stats o: da informaci&oacute;n sobre los operadores y sus hosts<br>
-- /stats c: da un aidea sobre las uniones entre servidores<br>
+- /stats c: da una idea sobre las uniones entre servidores<br>
 - /stats g, /stats k: usado para banear proxis. As&iacute; el atacante puede tener una lista de proxis que puede usar<br>
 - /stats E, /stats e: informaci&oacute;n realmente importante<br>
 - /stats i, /stats y: puede permitir al atacante conocer muchos hosts de conexiones para atacar<br>
@@ -3176,21 +3176,21 @@ Tal y como podr&aacute; entender, nunca se puede estar 100% seguro. Sin embargo,
 
 <p><font size="+2"><b>A.1 Literales<a name="regexlit"></a></b></font></p>
 <div class="desc">
-  <p>Los literales son los componentes m&aacute;s b&aacute;sicos de las regexp. B&aacute;sciamente son los caracteres tratados como texto plano. Por ejemplo, el patr&oacute;n &quot;test&quot; consiste en cuatro literales: &quot;t&quot;, &quot;e&quot;, &quot;s&quot; y &quot;t&quot;. En el Unreal, los literales son tratados sin sensibilidad de may&uacute;sculas/min&uacute;sculas; as&iacute;, el texto anterior coincidir&iacute;a con &quot;test&quot; y &quot;TEST&quot;. Cualquier caracter que no es un marcador es tratado como literal. Puede especificar un marcador como literal anteponiendo la barra invertida (\). Por ejemplo, el punto (.) es un marcador. Si quiere usarlo como literal, deber&aacute; poner \. y el Unreal lo tratar&aacute; como tal. Puede darse el caso que desee usar un caracter que no est&aacute; en el teclado, por ejemplo el de color (en ASCII el 3, color). Para eso puede usar la secuencia \x. Si usa \x3 entonces es interpretado como un caracter ASCII, el 3. El n&uacute;mero que sigue a \x est&aacute; notado como hexadecimal y debe estar entre el rango \x0 y \xFF.</p>
+  <p>Los literales son los componentes m&aacute;s b&aacute;sicos de las regexp. B&aacute;sciamente son los car&aacute;cteres tratados como texto plano. Por ejemplo, el patr&oacute;n &quot;test&quot; consiste en cuatro literales: &quot;t&quot;, &quot;e&quot;, &quot;s&quot; y &quot;t&quot;. En el Unreal, los literales son tratados sin sensibilidad de may&uacute;sculas/min&uacute;sculas; as&iacute;, el texto anterior coincidir&iacute;a con &quot;test&quot; y &quot;TEST&quot;. Cualquier car&aacute;cter que no es un marcador es tratado como literal. Puede especificar un marcador como literal anteponiendo la barra invertida (\). Por ejemplo, el punto (.) es un marcador. Si quiere usarlo como literal, deber&aacute; poner \. y el Unreal lo tratar&aacute; como tal. Puede darse el caso que desee usar un car&aacute;cter que no est&aacute; en el teclado, por ejemplo el de color (en ASCII el 3, color). Para eso puede usar la secuencia \x. Si usa \x3 entonces es interpretado como un car&aacute;cter ASCII, el 3. El n&uacute;mero que sigue a \x est&aacute; notado como hexadecimal y debe estar entre el rango \x0 y \xFF.</p>
 </div>
 
 <p><font size="+2"><b>A.2 Operador punto<a name="regexdot"></a></b></font></p>
 <div class="desc">
-  <p>El operador punto (.) se usa para relacionar &quot;cualquier caracter&quot;. Relaciona cualquier caracter simple que contenga cualquier valor. Por ejemplo, la regex &quot;a.c&quot; relacionar&iacute;a con &quot;abc&quot;, &quot;adc&quot;, etc. Sin embargo, no lo har&iacute;a con &quot;abd&quot; porque &quot;a&quot; y &quot;c&quot; son literales que deben coincidir exactamente.</p>
+  <p>El operador punto (.) se usa para relacionar &quot;cualquier car&aacute;cter&quot;. Relaciona cualquier car&aacute;cter simple que contenga cualquier valor. Por ejemplo, la regex &quot;a.c&quot; relacionar&iacute;a con &quot;abc&quot;, &quot;adc&quot;, etc. Sin embargo, no lo har&iacute;a con &quot;abd&quot; porque &quot;a&quot; y &quot;c&quot; son literales que deben coincidir exactamente.</p>
 </div>
 
 <p><font size="+2"><b>A.3 Operadores de repetici&oacute;n<a name="regexrep"></a></b></font></p>
 <div class="desc">
   <p>Un error de los m&aacute;s usuales que se cometen es hacer que regex act&uacute;e como lo hacen los comodines. En otras palabras, el * y el ? s&oacute;lo se relacionan con los comodines. En las regex no tienen el mismo sentido. Adem&aacute;s, las expresiones regulares soportan muchos m&aacute;s m&eacute;todos avanzados de repetici&oacute;n.
   <p>
-El operador de repetici&oacute;n m&aacute;s b&aacute;sico es el ?. Este operador relaciona 0 o 1 vez el caracter que le precede. Por ejemplo, en el caso &quot;a?c&quot; se relacionar&iacute;a con cualquier palabra que tuviera la &quot;a&quot; repetida 0 o 1 vez seguida de la letra &quot;c&quot;. Como se ve, el sentido es diferente que en los comodines. Si se usara &quot;a.?c&quot; entonces s&iacute; que el sentido ser&iacute;a el mismo de los comodines, puesto que significar&iacute;a una &quot;a&quot; seguida de cualquier caracter repetido 0 o 1 vez seguido de una &quot;c&quot;.
+El operador de repetici&oacute;n m&aacute;s b&aacute;sico es el ?. Este operador relaciona 0 o 1 vez el car&aacute;cter que le precede. Por ejemplo, en el caso &quot;a?c&quot; se relacionar&iacute;a con cualquier palabra que tuviera la &quot;a&quot; repetida 0 o 1 vez seguida de la letra &quot;c&quot;. Como se ve, el sentido es diferente que en los comodines. Si se usara &quot;a.?c&quot; entonces s&iacute; que el sentido ser&iacute;a el mismo de los comodines, puesto que significar&iacute;a una &quot;a&quot; seguida de cualquier car&aacute;cter repetido 0 o 1 vez seguido de una &quot;c&quot;.
   <p>
-El siguiente operador es el *. Asimismo, es distinto al de los comodines. Se relaciona si el caracter que le precede se repite 0 o m&aacute;s veces. Por ejemplo, &quot;a*c&quot; relaciona 0 o m&aacute;s de una &quot;a&quot; seguida de una &quot;c&quot;. La palabra &quot;aaaac&quot; relacionar&iacute;a. Asimismo, &quot;a.*c&quot; significar&iacute;a que se relaciona con una &quot;a&quot; seguida de cualquier caracter repetido 0 o m&aacute;s veces seguido de una &quot;c&quot;, lo mismo que &quot;a*c&quot; en los comodines.
+El siguiente operador es el *. Asimismo, es distinto al de los comodines. Se relaciona si el car&aacute;cter que le precede se repite 0 o m&aacute;s veces. Por ejemplo, &quot;a*c&quot; relaciona 0 o m&aacute;s de una &quot;a&quot; seguida de una &quot;c&quot;. La palabra &quot;aaaac&quot; relacionar&iacute;a. Asimismo, &quot;a.*c&quot; significar&iacute;a que se relaciona con una &quot;a&quot; seguida de cualquier car&aacute;cter repetido 0 o m&aacute;s veces seguido de una &quot;c&quot;, lo mismo que &quot;a*c&quot; en los comodines.
   <p>
 El operador + es similar al *. Sin embargo, en vez de hacerlo en 0 o m&aacute;s veces, lo hace con 1 o m&aacute;s veces. Por ejemplo, &quot;a+c&quot; significar&iacute;a que la &quot;a&quot; debe estar &quot;almenos&quot; 1 vez. Por ejemplo, la palabra &quot;c&quot; relacionar&iacute;a con &quot;a*c&quot; (puesto que la &quot;a&quot; est&aacute; 0 o m&aacute;s veces) pero no lo har&iacute;a con &quot;a+c&quot; (porque la &quot;a&quot; debe estar almenos 1 vez). En cambio &quot;ac&quot; o &quot;aaaac&quot; s&iacute; que lo har&iacute;an con &quot;a+c&quot; (y por supuesto &quot;a*c&quot;).
   <p>
@@ -3202,7 +3202,7 @@ Por defecto, los operadores de repetici&oacute;n tienden a coger la porci&oacute
 <p><font size="+2"><b>A.4 Expresiones de corchete </b></font></p>
 <div class="desc">Las expresiones de corchete aportan una manera de hacer un operador &quot;or&quot;. Por ejemplo, si se quiere que se relacione con una &quot;a&quot; o con una &quot;b&quot;, este operador se lo permitir&aacute; ([]). Por ejemplo, si se usa &quot;[abc]&quot; se relacionar&aacute; con &quot;a&quot;, &quot;b&quot; o &quot;c&quot;. Asimismo, la expresi&oacute;n &quot;a[bc]d&quot; relacionar&iacute;a con &quot;abc&quot; o &quot;acd&quot;, pero no con &quot;acc&quot;.  
   <p>
-Un aspecto muy usual es hacerlo con un rango de letras o d&iacute;gitos. Por ejemplo, &quot;[012456789]&quot; ser&iacute;a lo mismo que usar &quot;[0-9]&quot;, puesto que el &quot;-&quot; indica un rango. Puesto que Unreal no contempla may&uacute;sculas/min&uacute;sculas, el uso de &quot;[a-z]&quot; seria lo mismo que &quot;[A-Z]&quot;. Tambi&eacute;n puede incluir varios rangos en la misma expresi&oacute;n. Para relacionar con una letra o un d&iacute;gito puede usar &quot;[0-9a-z]&quot;. Para usar el caracter &quot;-&quot; como literal deber&aacute; ponerlo al final o al principio de los corchetes. Por ejemplo, &quot;[0-9-]&quot; relacionar&iacute;a con un d&iacute;gito o con -.
+Un aspecto muy usual es hacerlo con un rango de letras o d&iacute;gitos. Por ejemplo, &quot;[012456789]&quot; ser&iacute;a lo mismo que usar &quot;[0-9]&quot;, puesto que el &quot;-&quot; indica un rango. Puesto que Unreal no contempla may&uacute;sculas/min&uacute;sculas, el uso de &quot;[a-z]&quot; seria lo mismo que &quot;[A-Z]&quot;. Tambi&eacute;n puede incluir varios rangos en la misma expresi&oacute;n. Para relacionar con una letra o un d&iacute;gito puede usar &quot;[0-9a-z]&quot;. Para usar el car&aacute;cter &quot;-&quot; como literal deber&aacute; ponerlo al final o al principio de los corchetes. Por ejemplo, &quot;[0-9-]&quot; relacionar&iacute;a con un d&iacute;gito o con -.
   <p>
 Para simplificar tareas, existen unos cuantas &quot;clases de caracteres&quot; que pueden usarse entre los corchetes. Esta clase de caracteres suprimen la necesidad de definir varios rangos. Las clases de caracteres se notan encerrando su nombre entre dos puntos :. Por ejemplo, &quot;[0-9]&quot; es lo mismo que &quot;[:isdigit:]&quot;. Aqu&iacute; tiene una lista de las clases de caracteres disponibles y su uso:
   <ul>
@@ -3221,14 +3221,14 @@ Para simplificar tareas, existen unos cuantas &quot;clases de caracteres&quot; q
 </ul>
 Cabe remarcar que estas clases de caracteres s&oacute;lo pueden usarse y deben estar SOLOS entre los corchetes. Por ejemplo, &quot;[:isdigit:-]&quot; no ser&iacute;a legal. En vez de esto, puede anidar varios corchetes entre s&iacute;. Por ejemplo, en este caso se usar&iacute;a &quot;[[:isdigit:]-]&quot;.
 <p>
-La &uacute;ltima caracter&iacute;stica de los corchetes es la negaci&oacute;n. Algunas veces es &uacute;til imponer cualquier caracter excepto unos concretos. Por ejemplo, si quiere comprobar que no es una letra, es m&aacute;s c&oacute;modo especificar a-z y notar que no es uno de estos. Para ello anteponga &quot;^&quot; como primer caracter. Por ejemplo, &quot;[^a-z]&quot; relacionar&iacute;a con lo que no fuera una letra. Tal y como ocurr&iacute;a con el -, para usar el ^ literalmente, &uacute;selo al final de la expresi&oacute;n, &quot;[a-z^]&quot;. A su vez, para negar una clase de caracteres, puede hacerlo con &quot;[^[:isdigit:]]&quot;. Recuerde que las clases de caracteres, [:blank:] por ejemplo, funcionan como una sola unidad.</p>
+La &uacute;ltima caracter&iacute;stica de los corchetes es la negaci&oacute;n. Algunas veces es &uacute;til imponer cualquier car&aacute;cter excepto unos concretos. Por ejemplo, si quiere comprobar que no es una letra, es m&aacute;s c&oacute;modo especificar a-z y notar que no es uno de estos. Para ello anteponga &quot;^&quot; como primer car&aacute;cter. Por ejemplo, &quot;[^a-z]&quot; relacionar&iacute;a con lo que no fuera una letra. Tal y como ocurr&iacute;a con el -, para usar el ^ literalmente, &uacute;selo al final de la expresi&oacute;n, &quot;[a-z^]&quot;. A su vez, para negar una clase de caracteres, puede hacerlo con &quot;[^[:isdigit:]]&quot;. Recuerde que las clases de caracteres, [:blank:] por ejemplo, funcionan como una sola unidad.</p>
 </div>
 <p><font size="+2"><b>A.5 Aserciones<a name="regexassert"></a></b></font></p>
 <div class="desc">Las aserciones le permiten comprobar ciertas condiciones que no se pueden representar con cadenas de caracteres.
   <p>
-El caracter ^ se refiere al &quot;ancho izquierdo&quot;. Este caracter relaciona con el principio de una cadena. Por ejemplo, si tan s&oacute;lo usa la expresi&oacute;n &quot;test&quot; relacionar&iacute;a con &quot;esto es un test&quot; puesto que contiene la expresi&oacute;n &quot;test&quot;. En cambio, la expresi&oacute;n &quot;^test&quot; no lo har&iacute;a, puesto que indicar&iacute;a que DEBE empezar por &quot;test&quot;. An&aacute;logamente, el caracter $ le indicar&aacute; el ancho derecho, que debe terminar con esto. Por ejemplo, &quot;test$&quot; relacionar&iacute;a con cualquier palabra que acabara en &quot;test&quot;. Asimismo puede combinarlos. Por ejemplo, &quot;^test$&quot; relacionar&iacute;a con las palabras que fueran &quot;test&quot; exactamente.
+El car&aacute;cter ^ se refiere al &quot;ancho izquierdo&quot;. Este car&aacute;cter relaciona con el principio de una cadena. Por ejemplo, si tan s&oacute;lo usa la expresi&oacute;n &quot;test&quot; relacionar&iacute;a con &quot;esto es un test&quot; puesto que contiene la expresi&oacute;n &quot;test&quot;. En cambio, la expresi&oacute;n &quot;^test&quot; no lo har&iacute;a, puesto que indicar&iacute;a que DEBE empezar por &quot;test&quot;. An&aacute;logamente, el car&aacute;cter $ le indicar&aacute; el ancho derecho, que debe terminar con esto. Por ejemplo, &quot;test$&quot; relacionar&iacute;a con cualquier palabra que acabara en &quot;test&quot;. Asimismo puede combinarlos. Por ejemplo, &quot;^test$&quot; relacionar&iacute;a con las palabras que fueran &quot;test&quot; exactamente.
   <p>
-Existen varias aserciones para palabras. Todas las dem&aacute;s se especifican usando \ seguida del caracter en cuesti&oacute;n. Por ejemplo, para probar el inicio y final de una palabra, puede usar \&lt; y \&gt; respectivamente.
+Existen varias aserciones para palabras. Todas las dem&aacute;s se especifican usando \ seguida del car&aacute;cter en cuesti&oacute;n. Por ejemplo, para probar el inicio y final de una palabra, puede usar \&lt; y \&gt; respectivamente.
   <p>
 El resto de aserciones se definen de dos formas: positivas y negativas. Estas son:
   <ul>
@@ -3245,7 +3245,7 @@ El resto de aserciones se definen de dos formas: positivas y negativas. Estas so
 <p><font size="+2"><b>A.6 Alternanza<a name="regexalt"></a></b></font></p>
 <div class="desc">La alternanza es un m&eacute;todo para especificar un &quot;or&quot;. El operador de alternanza es la barra vertical |. Por ejemplo, si quiere relacionar con &quot;a&quot; o &quot;b&quot; puede hacerlo con &quot;a|b&quot;. Para letras normales puede reemplazarse por corchetes, pero se puede usar tambi&eacute;n para subexpresiones (a continuaci&oacute;n).</div>
 <p><font size="+2"><b>A.7 Subexpresiones<a name="regexsub"></a></b></font></p>
-<div class="desc">Las subexpresiones son una parte de las regex que se tratan como una sola unidad. Existen dos formas de crear una subexpresi&oacute;n. Los dos m&eacute;todos difieren en las &quot;referencias anteriores&quot;, detalladas en el siguiente apartado. Para declarar una subexpresi&oacute;n que usa referencias anteriores simplemente engl&oacute;bela entre par&eacute;ntesis (). Para el caso contrario, reemplace el par&eacute;ntesis aberito con &quot;(?:&quot;. Por ejemplo, &quot;([a-z])&quot; y &quot;(?:[a-z])&quot;. Es muy &uacute;til porque permiten tomar lo que engloban como unidades y aplicarles operadores a esta nueva expresi&oacute;n. Por ejemplo, si se les aplica los operadores de repetici&oacute;n, la repetici&oacute;n ser&iacute;a de toda la unidad, no del caracter que les precede. En el caso que tuviera que ver que un n&uacute;mero o una letra se repite 0 o 1 vez, podr&iacute;a usar &quot;([0-9a-z])?&quot;. Asimismo, imagine que tiene una secuencia de d&iacute;gito-letra-d&iacute;gito y quiere comprobar que se repita dos veces. Podr&iacute;a usar "[0-9][a-z][0-9][0-9][a-z][0-9]". Con las subexpresiones basta con "([0-9][a-z][0-9]){2}".</div>
+<div class="desc">Las subexpresiones son una parte de las regex que se tratan como una sola unidad. Existen dos formas de crear una subexpresi&oacute;n. Los dos m&eacute;todos difieren en las &quot;referencias anteriores&quot;, detalladas en el siguiente apartado. Para declarar una subexpresi&oacute;n que usa referencias anteriores simplemente engl&oacute;bela entre par&eacute;ntesis (). Para el caso contrario, reemplace el par&eacute;ntesis aberito con &quot;(?:&quot;. Por ejemplo, &quot;([a-z])&quot; y &quot;(?:[a-z])&quot;. Es muy &uacute;til porque permiten tomar lo que engloban como unidades y aplicarles operadores a esta nueva expresi&oacute;n. Por ejemplo, si se les aplica los operadores de repetici&oacute;n, la repetici&oacute;n ser&iacute;a de toda la unidad, no del car&aacute;cter que les precede. En el caso que tuviera que ver que un n&uacute;mero o una letra se repite 0 o 1 vez, podr&iacute;a usar &quot;([0-9a-z])?&quot;. Asimismo, imagine que tiene una secuencia de d&iacute;gito-letra-d&iacute;gito y quiere comprobar que se repita dos veces. Podr&iacute;a usar "[0-9][a-z][0-9][0-9][a-z][0-9]". Con las subexpresiones basta con "([0-9][a-z][0-9]){2}".</div>
 <p><font size="+2"><b>A.8 Referencias anteriores <a name="regexbackref"></a></b></font></p>
 <div class="desc">Las referencias anteriores le permiten referirse a una cadena que ha sido relacionada anteriormente con una de las subexpresiones de la regexp. Debe hacerlo especificando una barra invertida (\) seguida de un n&uacute;mero, 0-9, por ejemplo\1. El uso de \0 es especial puesto que se refiere a la expresi&oacute;n entera y no a la subexpresi&oacute;n. Las referencias anteriores son &uacute;tiles si quiere relacionar algo que contiene la misma cadena dos veces. Pongamos por ejemplo el caso nick!user@host y sabe que algunos troyanos que le atacan usan en su nick y user una secuencia que se relaciona con &quot;[0-9][a-z]{5}&quot;, y que el nick y el user son los mismos. Usando "[0-9][a-z]{5}![0-9][a-z]{5}@.+" no funcionar&iacute;a porque tambi&eacute;n relacionar&iacute;a en caso que el nick y el user fueran distintos entre s&iacute;. Las referencias anteriores imponen esta condici&oacute;n. Usando "([0-9][a-z]{5})!\1@.+" funcionar&aacute; exactamente como se espera. Buscar&iacute;a en el nick que se relacionara con la subexpresi&oacute;n, entonces usar&iacute;a esta referencia para especificar que el user es el mismo.
   <p>
