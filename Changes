@@ -1172,3 +1172,7 @@
 - Fixed some small memory leak on rehash.
 - Removed spamfilter-oversized-checking when trying to REMOVE one.. duh.. reported by satmd
   (#00029160).
+- Allow *lining of literalident@* such as clones@* (but not *clones@*), this is also as
+  far as we want to go with regards to relaxing "too broad" checking... Just continue to use
+  services AKILL for (other) "too broad cases", as many people (correctly) do. Change
+  suggested by salama (#0002911).

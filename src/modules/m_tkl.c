@@ -594,33 +594,44 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 	if (!whattodo)
 	{
 		char c;
-		p++;
-		i = 0;
-		while (*p)
+		
+		if (!strchr(usermask, '*') && !strchr(usermask, '?'))
 		{
-			if (*p != '*' && *p != '.' && *p != '?')
-				i++;
+			/* Allow things like clone@*, dsfsf@*, etc.. */
+		} else {
+			/* Check hostmask. */
+			
+			/* STEP 1: Must at least contain 4 non-wildcard/non-dot characters */
 			p++;
-		}
-		if (i < 4)
-		{
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** [error] Too broad mask",
-			    me.name, sptr->name);
-			return 0;
-		}
-		c = tolower(*type);
-		if (c == 'k' || c == 'z' || *type == 'G' || *type == 's')
-		{
-			struct irc_netmask tmp;
-			if ((tmp.type = parse_netmask(hostmask, &tmp)) != HM_HOST)
+			i = 0;
+			while (*p)
 			{
-				if (tmp.bits < 16)
+				if (*p != '*' && *p != '.' && *p != '?')
+					i++;
+				p++;
+			}
+			if (i < 4)
+			{
+				sendto_one(sptr,
+				    ":%s NOTICE %s :*** [error] Too broad mask",
+				    me.name, sptr->name);
+				return 0;
+			}
+
+			/* STEP 2: Check CIDR.. allow x.x/16, but not /15, /14, etc... */
+			c = tolower(*type);
+			if (c == 'k' || c == 'z' || *type == 'G' || *type == 's')
+			{
+				struct irc_netmask tmp;
+				if ((tmp.type = parse_netmask(hostmask, &tmp)) != HM_HOST)
 				{
-					sendto_one(sptr,
-					    ":%s NOTICE %s :*** [error] Too broad mask",
-					    me.name, sptr->name);
-					return 0;
+					if (tmp.bits < 16)
+					{
+						sendto_one(sptr,
+						    ":%s NOTICE %s :*** [error] Too broad mask",
+						    me.name, sptr->name);
+						return 0;
+					}
 				}
 			}
 		}
