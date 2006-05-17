@@ -1168,3 +1168,7 @@
 - (multiple?) IPv6 listen blocks could cause a crash in config parser. Reported by Robby22
   (#0002868).
 - Added error checking to (main) setuid/setgid calls.
+- Fixed implicit declaration compiler warning if compiling for ipv6.
+- Fixed some small memory leak on rehash.
+- Removed spamfilter-oversized-checking when trying to REMOVE one.. duh.. reported by satmd
+  (#00029160).

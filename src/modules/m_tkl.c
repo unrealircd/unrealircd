@@ -35,8 +35,11 @@
 #include <string.h>
 #ifdef _WIN32
 #include <io.h>
+#else
+#include <sys/socket.h>
 #endif
 #include <fcntl.h>
+#include "inet.h"
 #include "h.h"
 #include "proto.h"
 #ifdef STRIPBADWORDS
@@ -806,7 +809,7 @@ int n;
 	 * on 50 characters for the rest... -- Syzop
 	 */
 	n = strlen(reason) + strlen(parv[6]) + strlen(tkllayer[5]) + (NICKLEN * 2) + 40;
-	if (n > 500)
+	if ((n > 500) && (whattodo == 0))
 	{
 		sendnotice(sptr, "Sorry, spamfilter too long. You'll either have to trim down the "
 		                 "reason or the regex (exceeded by %d bytes)", n - 500);
