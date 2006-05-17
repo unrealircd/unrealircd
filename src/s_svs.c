@@ -226,16 +226,18 @@ ConfigItem_alias *alias;
 aClient *acptr;
 int ret;
 
-	if (parc < 2 || *parv[1] == '\0') 
-	{
-		sendto_one(sptr, err_str(ERR_NOTEXTTOSEND), me.name, parv[0]);
-		return -1;
-	}
 	if (!(alias = Find_alias(cmd))) 
 	{
 		sendto_one(sptr, ":%s %d %s %s :Unknown command",
 			me.name, ERR_UNKNOWNCOMMAND, parv[0], cmd);
 		return 0;
+	}
+	
+	/* If it isn't an ALIAS_COMMAND, we require a paramter ... We check ALIAS_COMMAND LATER */
+	if (alias->type != ALIAS_COMMAND && (parc < 2 || *parv[1] == '\0'))
+	{
+		sendto_one(sptr, err_str(ERR_NOTEXTTOSEND), me.name, parv[0]);
+		return -1;
 	}
 
 	if (alias->type == ALIAS_SERVICES) 
@@ -309,7 +311,9 @@ int ret;
 	else if (alias->type == ALIAS_COMMAND) 
 	{
 		ConfigItem_alias_format *format;
-		char *ptr = parv[1];
+		char *ptr = "";
+		if (!(parc < 2 || *parv[1] == '\0'))
+			ptr = parv[1]; 
 		for (format = alias->format; format; format = (ConfigItem_alias_format *)format->next) 
 		{
 			if (regexec(&format->expr, ptr, 0, NULL, 0) == 0) 
@@ -318,8 +322,8 @@ int ret;
 				int i = 0, j = 0, k = 1;
 				char output[501];
 				char nums[4];
-				char *current = MyMalloc(strlen(parv[1])+1);
-				bzero(current, strlen(parv[1])+1);
+				char *current = MyMalloc(strlen(ptr)+1);
+				bzero(current, strlen(ptr)+1);
 				bzero(output, sizeof output);
 				while(format->parameters[i] && j < 500) 
 				{
@@ -337,11 +341,11 @@ int ret;
 							nums[k] = 0;
 							i--;
 							if (format->parameters[i+1] == '-') {
-								strrangetok(parv[1], current, ' ', atoi(nums),0);
+								strrangetok(ptr, current, ' ', atoi(nums),0);
 								i++;
 							}
 							else 
-								strrangetok(parv[1], current, ' ', atoi(nums), atoi(nums));
+								strrangetok(ptr, current, ' ', atoi(nums), atoi(nums));
 							if (!current)
 								continue;
 							if (j + strlen(current)+1 >= 500)
@@ -367,6 +371,13 @@ int ret;
 					output[j++] = format->parameters[i++];
 				}
 				output[j] = 0;
+				/* Now check to make sure we have something to send */
+				if (strlen(output) == 0)
+				{
+					sendto_one(sptr, err_str(ERR_NOTEXTTOSEND), me.name, parv[0]);
+					return -1;
+				}
+				
 				if (format->type == ALIAS_SERVICES) 
 				{
 					if (SERVICES_NAME && (acptr = find_person(format->nick, NULL)))
@@ -439,6 +450,5 @@ int ret;
 		}
 		return 0;
 	}
-		
 	return 0;
 }

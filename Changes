@@ -1176,3 +1176,7 @@
   far as we want to go with regards to relaxing "too broad" checking... Just continue to use
   services AKILL for (other) "too broad cases", as many people (correctly) do. Change
   suggested by salama (#0002911).
+- Made empty command aliases work (no more "no text to send" error) if the alias finds it ok,
+  which basically means if it allows .*. If you want to require a parameter, use .+ (or
+  anything other in regex that requires at least one character). Suggested and patch provided
+  by Nazzy (#0002722).
