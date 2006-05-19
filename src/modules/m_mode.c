@@ -2346,18 +2346,21 @@ DLLFUNC CMD_FUNC(_m_umode)
 
 	if (!(setflags & UMODE_OPER) && IsOper(sptr))
 		IRCstats.operators++;
+
+	/* deal with opercounts and stuff */
 	if ((setflags & UMODE_OPER) && !IsOper(sptr))
 	{
 		IRCstats.operators--;
 		VERIFY_OPERCOUNT(sptr, "umode1");
-	}
-	/* FIXME: This breaks something */
+	} else /* YES this 'else' must be here, otherwise we can decrease twice. fixes opercount bug. */
 	if (!(setflags & UMODE_HIDEOPER) && IsHideOper(sptr))
 	{
 		if (IsOper(sptr)) /* decrease, but only if GLOBAL oper */
 			IRCstats.operators--;
 		VERIFY_OPERCOUNT(sptr, "umode2");
 	}
+	/* end of dealing with opercounts */
+
 	if ((setflags & UMODE_HIDEOPER) && !IsHideOper(sptr))
 	{
 		if (IsOper(sptr)) /* increase, but only if GLOBAL oper */

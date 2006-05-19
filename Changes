@@ -1180,3 +1180,7 @@
   which basically means if it allows .*. If you want to require a parameter, use .+ (or
   anything other in regex that requires at least one character). Suggested and patch provided
   by Nazzy (#0002722).
+- Fixed oper count bug which happened on /mode, this was our fault (can't blame services in
+  this case ;p). Reported by KnAseN and many others (#0002581).
+  There might still be other operator count bugs, but these are triggered by a different bug
+  and may or may not be caused by services.
