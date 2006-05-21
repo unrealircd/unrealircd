@@ -46,6 +46,7 @@
 #include "version.h"
 #endif
 
+void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, char *param);
 DLLFUNC int m_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 DLLFUNC int m_svs2mode(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
@@ -86,7 +87,6 @@ DLLFUNC int MOD_UNLOAD(m_svsmode)(int module_unload)
 	return MOD_SUCCESS;
 }
 
-extern void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, char *param);
 int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[]) 
 {
 	aChannel *chptr;
@@ -569,4 +569,55 @@ int  m_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 int  m_svs2mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	return do_svsmode(cptr, sptr, parc, parv, 1);
+}
+
+void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, char *param) {
+	static char *modes = modebuf, lastwhat;
+	static short count = 0;
+	short send = 0;
+	if (!modebuf[0]) {
+		modes = modebuf;
+		*modes++ = what;
+		*modes = 0;
+		lastwhat = what;
+		*parabuf = 0;
+		count = 0;
+	}
+	if (lastwhat != what) {
+		*modes++ = what;
+		*modes = 0;
+		lastwhat = what;
+	}
+	if (strlen(parabuf) + strlen(param) + 11 < MODEBUFLEN) {
+		if (*parabuf) 
+			strcat(parabuf, " ");
+		strcat(parabuf, param);
+		*modes++ = mode;
+		*modes = 0;
+		count++;
+	}
+	else if (*parabuf) 
+		send = 1;
+
+	if (count == MAXMODEPARAMS)
+		send = 1;
+
+	if (send) {
+		sendto_channel_butserv(chptr, from, ":%s MODE %s %s %s",
+			from->name, chptr->chname, modebuf, parabuf);
+		sendto_serv_butone(NULL, ":%s MODE %s %s %s", from->name, chptr->chname, modebuf, parabuf);
+		send = 0;
+		*parabuf = 0;
+		modes = modebuf;
+		*modes++ = what;
+		lastwhat = what;
+		if (count != MAXMODEPARAMS) {
+			strcpy(parabuf, param);
+			*modes++ = mode;
+			count = 1;
+		}
+		else 
+			count = 0;
+		*modes = 0;
+	}
 }

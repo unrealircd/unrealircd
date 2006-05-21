@@ -1201,3 +1201,11 @@
 - Fixed some compile warnings for Windows
 - Updated windows compile instructions again.
 - Updated release notes
+- Added 'real' aliases, this are aliases that map to real commands, so you can for example
+  map the command '/BLAH 5' to 'NICK idiot5'. More info in docs on alias block.
+- Modulized: badwords system (src/badwords.c is now gone) and StripColors/StripControlCodes
+  to m_message, multiple netsynch routines to m_server, send_list to m_list, a certain mode
+  routine to m_svsmode, all /MSG IRC.. webtv stuff to src/modules/webtv.c which is compiled
+  with m_message.
+  This means another ~1500 lines of code are now in modules (and thus can be upgraded on
+  the fly), which brings the total of modulized lines at 32K.

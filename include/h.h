@@ -265,15 +265,12 @@ extern void send_authports(aClient *);
 
 
 extern void restart(char *);
-extern void send_channel_modes(aClient *, aChannel *);
 extern void server_reboot(char *);
 extern void terminate(), write_pidfile();
 extern void *MyMallocEx(size_t size);
 extern int advanced_check(char *userhost, int ipstat);
 extern int send_queued(aClient *);
 /* i know this is naughty but :P --stskeeps */
-extern void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr);
-extern void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr);
 extern void sendto_locfailops(char *pattern, ...) __attribute__((format(printf,1,2)));
 extern void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnect, char *comment);
 extern void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr, char *nick, int hopcount,
@@ -323,14 +320,7 @@ extern MODVAR int writecalls, writeb[];
 extern int deliver_it(aClient *, char *, int);
 extern int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr);
 extern int  check_for_target_limit(aClient *sptr, void *target, const char *name);
-extern char *stripbadwords_message(char *str, int *);
-extern char *stripbadwords_channel(char *str, int *);
-extern char *stripbadwords_quit(char *str, int *);
-extern char *stripbadwords(char *, ConfigItem_badword *, int *);
-extern unsigned char *StripColors(unsigned char *);
-extern const char *StripControlCodes(unsigned char *text);
 extern char *canonize(char *buffer);
-extern int webtv_parse(aClient *sptr, char *string);
 extern ConfigItem_deny_dcc *dcc_isforbidden(aClient *sptr, char *filename);
 extern ConfigItem_deny_dcc *dcc_isdiscouraged(aClient *sptr, char *filename);
 extern int check_registered(aClient *);
@@ -487,7 +477,6 @@ extern int dopacket(aClient *, char *, int);
 extern void debug(int, char *, ...);
 #if defined(DEBUGMODE)
 extern void send_usage(aClient *, char *);
-extern void send_listinfo(aClient *, char *);
 extern void count_memory(aClient *, char *);
 extern int checkprotoflags(aClient *, int, char *, int);
 #endif
@@ -555,7 +544,6 @@ extern int is_skochanop(aClient *cptr, aChannel *chptr);
 extern char *make_virthost(aClient *sptr, char *curr, char *new, int mode);
 extern int  channel_canjoin(aClient *sptr, char *name);
 extern char *collapse(char *pattern);
-extern void send_list(aClient *cptr, int numsend);
 extern void dcc_sync(aClient *sptr);
 extern void report_flines(aClient *sptr);
 extern void report_network(aClient *sptr);
@@ -741,6 +729,12 @@ extern MODVAR int (*m_tkl)(aClient *cptr, aClient *sptr, int parc, char *parv[])
 extern MODVAR int (*place_host_ban)(aClient *sptr, int action, char *reason, long duration);
 extern MODVAR int (*dospamfilter)(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
 extern MODVAR int (*dospamfilter_viruschan)(aClient *sptr, aTKline *tk, int type);
+extern MODVAR void (*send_list)(aClient *cptr, int numsend);
+extern MODVAR char *(*stripbadwords_channel)(char *str, int *blocked);
+extern MODVAR char *(*stripbadwords_message)(char *str, int *blocked);
+extern MODVAR char *(*stripbadwords_quit)(char *str, int *blocked);
+extern MODVAR unsigned char *(*StripColors)(unsigned char *text);
+extern MODVAR const char *(*StripControlCodes)(unsigned char *text);
 /* /Efuncs */
 extern MODVAR aMotd *opermotd, *svsmotd, *motd, *botmotd, *smotd;
 extern MODVAR int max_connection_count;

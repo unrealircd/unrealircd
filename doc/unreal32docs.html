@@ -292,7 +292,7 @@ because otherwise you will not understand concepts such as 'cloaking', 'snomasks
    You can for example let "/ns identify blah" be forwarded to nickserv (it will be 
    translated to: privmsg nickserv identify blah). You can even make more complex aliases such as /register can forward to 
    ChanServ if the first parameter begins with a # and forwarded to NickServ if it doesn't.</p>
-<p>Aliases are configured by alias blocks in the configuration file, and you can also include
+<p>Aliases are configured by <a href="#aliasblock">alias blocks</a> in the configuration file, and you can also include
    a file with default aliases for most commonly used services.</p></div>
    
 <p><font size="+2"><b>3.5 - Helpop</b></font><a name="feature_helpop"></a></p><div class="desc">
@@ -2022,11 +2022,19 @@ alias &lt;name&gt; {
 <p>Syntax [command alias]:<br>
 <pre>
 alias &lt;name&gt; {
+	/* For aliases to be sent to users/channels */
 	format &lt;regex-expression&gt; {
 		target &lt;nick-to-forward-to&gt;;
 		type &lt;type-of-alias&gt;;
 		parameters &lt;parameter-string&gt;;
 	};
+	/* For 'real aliases' */
+	format &lt;regex-expression&gt; {
+		command &lt;command&gt;;
+		type real;
+		parameters &lt;parameter-string&gt;;
+	};
+	/* Etc... You can have as many format blocks as you wish.. */
 	format &lt;regex-expression&gt; {
 		...
 	};
@@ -2035,20 +2043,23 @@ alias &lt;name&gt; {
 };</pre></p>
 <p>When the alias block is used in this format, it allows you a much broader range 
   of usage. For example you can create aliases such as /identify. The alias:: 
-  is the same as above, the name of the alias command. The alias::format specifies 
+  is the same as above, the name of the alias command. The <b>alias::format</b> specifies 
   a regular expression that compares against the text sent to the alias command, 
   when matched the sub-entries of that alias::format will be used, you may have 
   multiple alias::format's to make the command do different things depending on 
-  the text sent to it. The alias::format::target is the target to forward this
-  alias to. The alias::format::type specifies the type of the alias that the
-  message should be forwarded to. The alias::format::parameters is what will 
+  the text sent to it. The <b>alias::format::target</b> is the target to forward this
+  alias to, however in case of a "real alias" <b>alias::format::command</b> is used instead.
+  The <b>alias::format::type</b> specifies the type of the alias that the
+  message should be forwarded to, besides the types mentioned previously in
+"Syntax [standard alias]", we also allow the type "real" here, for "real
+aliases". The <b>alias::format::parameters</b> is what will 
   be sent as the parameters to this alias. To specify one of the parameters given 
   to the command alias specify % followed by a number, for example, %1 is the 
   first parameter. To specify all parameters from a given parameter to the end 
   do % followed by the number and a -, for example %2- returns all parameters 
   from the second till the last. Additionally, you may specify %n which will be replaced 
-  by the nickname of the user who executed the command. For examples of using the alias
-  block in the command format, consult doc/example.conf.</p>
+  by the nickname of the user who executed the command.<br><br>
+  For examples of using the alias block in the command format, consult doc/example.conf.</p>
 <p></p></div>
 <p><font class="block_section">4.33 - </font><font class="block_name">Help Block</font>
    <font class="block_optional">OPTIONAL</font><a name="helpblock"></a>

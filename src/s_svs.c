@@ -220,6 +220,7 @@ void strrangetok(char *in, char *out, char tok, short first, short last) {
 	out[j] = 0;
 }			
 
+static int recursive_alias = 0;
 int m_alias(aClient *cptr, aClient *sptr, int parc, char *parv[], char *cmd)
 {
 ConfigItem_alias *alias;
@@ -320,11 +321,12 @@ int ret;
 			{
 				/* Parse the parameters */
 				int i = 0, j = 0, k = 1;
-				char output[501];
+				char output[1024], current[1024];
 				char nums[4];
-				char *current = MyMalloc(strlen(ptr)+1);
-				bzero(current, strlen(ptr)+1);
+
+				bzero(current, sizeof current);
 				bzero(output, sizeof output);
+
 				while(format->parameters[i] && j < 500) 
 				{
 					k = 0;
@@ -444,7 +446,25 @@ int ret;
 						 parv[0], cmd, 
 						"You may not use this command at this time");
 				}
-				free(current);
+				else if (format->type == ALIAS_REAL)
+				{
+					int ret;
+					char mybuf[500];
+					
+					snprintf(mybuf, sizeof(mybuf), "%s %s", format->nick, output);
+
+					if (recursive_alias)
+					{
+						sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.name, parv[0], cmd, "You may not use this command at this time -- recursion");
+						return -1;
+					}
+
+					recursive_alias = 1;
+					ret = parse(sptr, mybuf, mybuf+strlen(mybuf));
+					recursive_alias = 0;
+
+					return ret;
+				}
 				break;
 			}
 		}

@@ -1333,7 +1333,7 @@ struct _configitem_unknown_ext {
 
 
 typedef enum { 
-	ALIAS_SERVICES=1, ALIAS_STATS, ALIAS_NORMAL, ALIAS_COMMAND, ALIAS_CHANNEL
+	ALIAS_SERVICES=1, ALIAS_STATS, ALIAS_NORMAL, ALIAS_COMMAND, ALIAS_CHANNEL, ALIAS_REAL
 } AliasType;
 
 struct _configitem_alias {

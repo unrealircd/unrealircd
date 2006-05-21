@@ -2115,7 +2115,7 @@ void	config_rehash()
 		ircfree(alias_ptr->nick);
 		del_Command(alias_ptr->alias, NULL, cmptr->func);
 		ircfree(alias_ptr->alias);
-		if (alias_ptr->format && alias_ptr->type == ALIAS_COMMAND) {
+		if (alias_ptr->format && (alias_ptr->type == ALIAS_COMMAND)) {
 			for (fmt = (ConfigItem_alias_format *) alias_ptr->format; fmt; fmt = (ConfigItem_alias_format *) next2)
 			{
 				next2 = (ListStruct *)fmt->next;
@@ -8194,7 +8194,8 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 			regcomp(&format->expr, cep->ce_vardata, REG_ICASE|REG_EXTENDED);
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				if (!strcmp(cepp->ce_varname, "nick") ||
-				    !strcmp(cepp->ce_varname, "target")) {
+				    !strcmp(cepp->ce_varname, "target") ||
+				    !strcmp(cepp->ce_varname, "command")) {
 					ircstrdup(format->nick, cepp->ce_vardata);
 				}
 				else if (!strcmp(cepp->ce_varname, "parameters")) {
@@ -8209,6 +8210,8 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 						format->type = ALIAS_NORMAL;
 					else if (!strcmp(cepp->ce_vardata, "channel"))
 						format->type = ALIAS_CHANNEL;
+					else if (!strcmp(cepp->ce_vardata, "real"))
+						format->type = ALIAS_REAL;
 				}
 			}
 			AddListItem(format, alias->format);
@@ -8300,6 +8303,7 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 					continue;
 				}
 				if (!strcmp(cepp->ce_varname, "nick") ||
+				    !strcmp(cepp->ce_varname, "command") ||
 				    !strcmp(cepp->ce_varname, "target"))
 				{
 					if (has_target)
@@ -8328,6 +8332,8 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 					else if (!strcmp(cepp->ce_vardata, "normal"))
 						;
 					else if (!strcmp(cepp->ce_vardata, "channel"))
+						;
+					else if (!strcmp(cepp->ce_vardata, "real"))
 						;
 					else 
 					{
