@@ -79,7 +79,7 @@ void chanfloodtimer_stopchantimers(aChannel *chptr);
  * some buffers for rebuilding channel/nick lists with ,'s
  */
 static char nickbuf[BUFSIZE], buf[BUFSIZE];
-char modebuf[BUFSIZE], parabuf[BUFSIZE];
+MODVAR char modebuf[BUFSIZE], parabuf[BUFSIZE];
 #include "sjoin.h"
 
 #define MODESYS_LINKOK		/* We do this for a TEST  */

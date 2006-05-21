@@ -776,3 +776,4 @@ extern char *unreal_time_synch_error(void);
 extern int unreal_time_synch(int timeout);
 extern int extban_is_banned_helper(char *buf);
 extern char *getcloak(aClient *sptr);
+extern MODVAR char modebuf[BUFSIZE], parabuf[BUFSIZE];
