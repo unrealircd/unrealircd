@@ -1184,3 +1184,17 @@
   this case ;p). Reported by KnAseN and many others (#0002581).
   There might still be other operator count bugs, but these are triggered by a different bug
   and may or may not be caused by services.
+- Added MINIMAL time synchronization support. This is enabled by default and will try to
+  synchronize the IRCd clock (TSOffset) with a few good time servers. It currently only does
+  this on-boot, but it will hopefully help a lot of people with most of their time differences.
+  I still keep recommending anyone who can to run proper time-synchronization software such as
+  ntpd/ntpdate on their servers.
+  To disable time synchronization (eg: because you are already running ntp), you can simply
+  set set::timesynch::enabled to no.
+  The boot timeout for the timeserver response (=causes boot delay) can be configured via
+  set::timesynch::timeout and is set to 3 seconds by default (range is 1s-5s), there should
+  be no reason to change this.
+  The time server can be configured by setting set::timesynch::server, the default is to
+  use 3 time servers on 3 continents (US, EU, AU) which should be sufficient for anyone but
+  if you got a good one near you you can use that one instead.
+  The time protocol we use is (S)NTP v4.

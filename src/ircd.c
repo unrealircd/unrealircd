@@ -1434,6 +1434,12 @@ int InitwIRCD(int argc, char *argv[])
 		}
 	}
 #endif
+	if (TIMESYNCH)
+	{
+		if (!unreal_time_synch(TIMESYNCH_TIMEOUT))
+			ircd_log(LOG_ERROR, "TIME SYNCH: Unable to synchronize time: %s. This happens sometimes, no error on your part.",
+				unreal_time_synch_error());
+	}
 	write_pidfile();
 	Debug((DEBUG_NOTICE, "Server ready..."));
 	SetupEvents();

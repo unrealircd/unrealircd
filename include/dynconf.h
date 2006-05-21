@@ -148,6 +148,9 @@ struct zConfiguration {
 	char *spamexcept_line;
 	int maxbans;
 	int maxbanlength;
+	int timesynch_enabled;
+	int timesynch_timeout;
+	char *timesynch_server;
 	aNetwork network;
 };
 
@@ -253,6 +256,11 @@ extern MODVAR aConfiguration iConf;
 
 #define MAXBANS		iConf.maxbans
 #define MAXBANLENGTH	iConf.maxbanlength
+
+#define TIMESYNCH	iConf.timesynch_enabled
+#define TIMESYNCH_TIMEOUT	iConf.timesynch_timeout
+#define TIMESYNCH_SERVER	iConf.timesynch_server
+
 
 /* Used for "is present?" and duplicate checking */
 struct SetCheck {

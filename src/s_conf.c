@@ -1531,6 +1531,9 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->check_target_nick_bans = 1;
 	i->maxbans = 60;
 	i->maxbanlength = 2048;
+	i->timesynch_enabled = 1;
+	i->timesynch_timeout = 3;
+	i->timesynch_server = strdup("193.67.79.202,192.43.244.18,128.250.36.3"); /* nlnet (EU), NIST (US), uni melbourne (AU). All open acces, nonotify, nodns. */
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,
@@ -6901,6 +6904,18 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					tempiConf.ident_read_timeout = config_checkval(cepp->ce_vardata,CFG_TIME);
 			}
 		}
+		else if (!strcmp(cep->ce_varname, "timesync") || !strcmp(cep->ce_varname, "timesynch"))
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!strcmp(cepp->ce_varname, "enabled"))
+					tempiConf.timesynch_enabled = config_checkval(cepp->ce_vardata,CFG_YESNO);
+				else if (!strcmp(cepp->ce_varname, "timeout"))
+					tempiConf.timesynch_timeout = config_checkval(cepp->ce_vardata,CFG_TIME);
+				else if (!strcmp(cepp->ce_varname, "server"))
+					ircstrdup(tempiConf.timesynch_server, cepp->ce_vardata);
+			}
+		}
 		else if (!strcmp(cep->ce_varname, "spamfilter"))
 		{
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
@@ -7695,6 +7710,34 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				} else {
 					config_error_unknown(cepp->ce_fileptr->cf_filename,
 						cepp->ce_varlinenum, "set::ident",
+						cepp->ce_varname);
+					errors++;
+					continue;
+				}
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "timesync") || !strcmp(cep->ce_varname, "timesynch")) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				CheckNull(cepp);
+				if (!strcmp(cepp->ce_varname, "enabled"))
+				{
+				}
+				else if (!strcmp(cepp->ce_varname, "timeout"))
+				{
+					int v = config_checkval(cepp->ce_vardata,CFG_TIME);
+					if ((v > 5) || (v < 1))
+					{
+						config_error("%s:%i: set::timesync::%s value out of range (%d), should be between 1 and 5 (higher=unreliable).",
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum, cepp->ce_varname, v);
+						errors++;
+						continue;
+					}
+				} else if (!strcmp(cepp->ce_varname, "server"))
+				{
+				} else {
+					config_error_unknown(cepp->ce_fileptr->cf_filename,
+						cepp->ce_varlinenum, "set::timesync",
 						cepp->ce_varname);
 					errors++;
 					continue;

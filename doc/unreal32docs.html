@@ -72,7 +72,8 @@ English |
   -- 3.15. <a href="#feature_cidr">CIDR</a><br>
   -- 3.16. <a href="#feature_nickchars">Nick Character Sets</a><br>
   -- 3.17. <a href="#feature_cgiirc">CGI:IRC Support</a><br>
-  -- 3.18. <a href="#feature_other">Other features</a><br>
+  -- 3.18. <a href="#feature_timesync">Time Synchronization</a><br>
+  -- 3.19. <a href="#feature_other">Other features</a><br>
   4. <a href="#configuringyourunrealircdconf">Configuring your unrealircd.conf 
   file</a><br>
   ---4.1. <a href="#configurationfileexplained">Configuration file explained</a><br>
@@ -636,7 +637,22 @@ IRC, instead of the host/ip of the CGI:IRC-gateway.</p>
 <p>See the <a href="#cgiirc">cgiirc block</a> for information on how to configure this.</p>
 </div>
 
-<p><font size="+2"><b>3.18 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
+<p><font size="+2"><b>3.18 - Time Synchronization</b></font><a name="feature_timesync"></a></p><div class="desc">
+<p>Having correct time is extremely important for IRC servers. Without correct time, channels can desynch, innocent
+users can be killed, channels might not show up properly in /LIST, in short: huge trouble will arrise.</p>
+<p>UnrealIRCd has some build-in time synchronization support.
+Although not optimal (time can still be off a few seconds), it should get rid of most time differences.
+If you can, you are still recommended to run time synchronization software such as ntpd on *NIX or 
+the time synchronization service on Windows (in that case, you can turn off Unreal's time synchronization, more on that later).</p>
+<p>What UnrealIRCd does (by default) is do a one-shot timesync attempt when booting. It sends (by default) a request
+to multiple time servers and when it gets the first (fastest) reply, it will adjust the internal ircd clock
+(NOT the system clock). If, for some reason, Unreal does not get a reply from the timeserver within 3 seconds,
+the IRCd will continue to boot regardlessly (should rarely happen).</p>
+<p>Time synchronization is configured (and can be turned off) through the <b>set::timesynch</b> block, see
+   the <a href="#setblock">set documentation</a> for more information.</p>
+</div>
+
+<p><font size="+2"><b>3.19 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
 <p>UnrealIRCd has a lot of features so not everything is covered here... You'll find that out by yourself.</p></div>
 
 <p> </p>
@@ -2460,6 +2476,16 @@ set {
  <p><font class="set">set::check-target-nick-bans &lt;yes|no&gt;</font><br>
   Whenever the user changes his/her nick, check if the NEW nick would be
   banned. If so, do not allow the nickchange. Default is yes.</p>
+ <p><font class="set">set::timesynch::enabled &lt;yes|no&gt;</font><br>
+  Enable or disable time synchronization on-boot. Default is yes.</p>
+ <p><font class="set">set::timesynch::server &lt;IP&gt;</font><br>
+  Server to synchronize time with. This can be up to 4 IP's seperated by comma's.
+  The servers must support NTP protocol version 4. The default is to use 3 time servers (US, EU,
+AU). Requests to these servers are sent in parallel, fastest reply wins.</p>
+ <p><font class="set">set::timesynch::timeout &lt;time&gt;</font><br>
+  Maximum time to wait for a time server reply. This is a value between 1 and 5, more is not possible
+  because it causes too much inaccuracy. This setting is 3 by default and there's probably
+  no good reason to change it.</p>
 <p></p> </div>
 <p><b><font size="+2">5 &#8211; Additional Files<a name="addtlfiles"></a>
   </font></b></p><div class="desc">
