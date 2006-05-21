@@ -1,112 +1,85 @@
-NOTE: This is the fixed 3.2.4 release, this release contains the '?' wilcard fix
-      but the version number is still '3.2.4'!
-
-Unreal3.2.4 Release Notes
+Unreal3.2.5-xx Release Notes
 ==========================
+
+If you are upgrading, please take a minute to read these release notes.
+*NIX Users: PREFIX_AQ is now enabled by default. See under 'CHANGED' below.
 
 ==[ GENERAL INFORMATION ]==
 - If you are upgrading on *NIX, make sure you run 'make clean' and './Config'
   first before doing 'make'
 - The official UnrealIRCd documentation is doc/unreal32docs.html
-  online version at: http://www.vulnscan.org/UnrealIrcd/unreal32docs.html
-  FAQ: http://www.vulnscan.org/UnrealIrcd/faq/
+  online version at: http://www.vulnscan.org/UnrealIRCd/unreal32docs.html
+  FAQ: http://www.vulnscan.org/UnrealIRCd/faq/
   Read them before asking for help.
 - Report bugs at http://bugs.unrealircd.org/
 - When upgrading a network, we assume you are upgrading from the previous
-  version (3.2.3). If you have a network running with servers that are several
-  versions behind (eg: 3.2.1) then you might experience (desynch) problems.
-  Please also minimize the time you have multiple versions running, several days
-  is not a problem, but having mixed versions on a network for weeks or months
-  is not recommended.
+  version (3.2.4). Upgrading from 3.2.3 is ok as well.
+  However, if you have a network running with servers that are several versions behind
+  (eg: 3.2.1) then you might experience small (desynch) problems.
+  Please also minimize the time you have multiple versions running, a few days or
+  one week is generally not a problem, but having mixed versions on a network for several
+  weeks or months is not recommended.
 
 ==[ NEW ]==
-- Spamfilter: Added 'warn' target which is basically the same as 'block' except it
-  does not block ;). It simply sends a numeric to the user saying the command has been
-  processed, but a copy has been sent to ircops (which receive a spamfilter notice).
-  Example usage: /spamfilter add p warn - Testing_mirc_decode_filter \$decode\(.*\)
-- Spamfilter: an option to apply spamfilters to aliases as well. To do so, you have
-  to put 'spamfilter yes;' in every alias block you want to get filtered.
-  The /MS and /MEMOSERV aliases in aliases/*.conf have been updated to have
-  spamfiltering enabled by default.
-- The "max bans per channel" setting can now be changed trough the config file by
-  setting set::maxbans. Note that you probably also want to enlarge set::maxbanlength
-  then as well (see docs!) or else you will hit that limit first. Note that the max ban
-  length setting has been slightly relaxed in 3.2.4, see the CHANGED section further down.
-- Nick Character System: new languages/character sets are added: 'danish',
-  'belarussian-w1251' and 'ukrainian-w1251'.
-- ExtBan ~c now accepts wildcards, such as: "+b ~c:#*xxx*" (don't forget the "#")
-- Banned users can no longer change the topic
-- Made it so you no longer can change your nick TO a banned one in a channel.
-  This option can be turned off by setting set::check-target-nick-bans to "no".
-- Translations: Added a Bulgarian example.bg.conf, a Russian help.ru.conf and
-  unreal32docs.ru.html, and a Dutch unreal32docs.nl.html
-- For services coders: Added doc/technical/serverprotocol.html
+- CGI:IRC Host spoofing support. This means you can mark certain CGI:IRC gateways
+  as trusted, and then the IRCd will show the real IP/host everywhere for those
+  users, instead of the IP/host of the CGI:IRC gateway. See docs section 4.36.
+- Time synchronization support. This is enabled by default and will synch the IRCd
+  clock when Unreal is started. This should get rid of most time differences, though
+  the clock can still be off 1-3 seconds. If for some reason no reply from the time
+  servers is received within 3 seconds, then the IRCd will continue to boot as usual.
+  Several set::timesynch::* settings have been added, including set::timesynch::enabled
+  which you can set to 'no' to disable time synching (eg: because you already run ntpd).
+- NAMESX support. This (mostly) fixes a long-standing IRC protocol bug. If, for
+  example, a user was +vo and then deops (-o), other clients could not always
+  know the user was then still +v, now they can. Supported by XChat and newest mIRC.
+- Chained SSL certificates support
 
 ==[ CHANGED ]==
-- Changed the MAXBANLENGTH (now set::maxbanlength) from 1K to 2K. This means users can now
-  set more bans and actually reach the 60 MAXBANS (now set::maxbans) limit in practice.
-- Added several indicators to the "detect binary incompatible modules"-system, such as
-  a module compiled with ziplinks support on a non-ziplinks ircd (*NIX only), nospoof
-  mismatches, etc. Hopefully this will help some people preventing odd crashes when
-  they forgot to recompile everything.
-- More modulizing: another 200 lines of code / 20 functions have been moved to modules.
-- Multiple allow channel::channel items are now permitted again
-- Redid glob matching. Escaping is now ripped out for normal bans (as it should be), this
-  means no longer weird issues with +b *\* etc not banning nicks with \ in it.
-  ExtBan ~c/~r get special treatment and will use our match_esc [match with escaping]
-  routine, you can escape via \, so \* will match * (an asterisk), \? will match a
-  questionmark (?), and \\ will match a \ (backslash). This way you can ban channels
-  such as "#f*ck" via "+b ~c:#f\*ck". So, take note, if you want to ban for example a
-  channel with a backslash in it, such as "#bl\ah", then you do "+b ~c:#bl\\ah".
-  Again, for any bans other than ~c/~r this does not apply.
-- Spamfilter: regexes and reasons are now more limited in size, this is to combat the
-  "I set a spamfilter, but cannot remove it" problem. In practice this means - depending
-  on the length of the spamfilter reason - that spamfilter will max ~300 characters.
-  Note that spamfilters in the config file can still be larger (since they cannot be
-  removed on the command line anyway, it doesn't matter that they are cut off on /stats F).
-- CMDLINE_CONFIG behavior change: specifying a config file on the command line is now
-  permitted as long as the ircd isn't suid/sgid.
-- set::channel-command-prefix now defaults to ".`!" instead of "`"
-- When OPEROVERRIDE_VERIFY is enabled, we now allow opers to still join any channels listed
-  in set::auto-join or set::oper-auto-join, even if they are +s/+p.
-- Made it so co-admins can /ADCHAT. They were already receiving them anyway...
-- ./Config: the script now actually stops upon the error, making it more clear what is wrong.
-- Global opers on quarantined servers will now be KILL'ed. So link::options::quarantine now
-  actually does what it should, even if it's not in the most elegant way.
-- Empty (but existing) include files no longer cause an error.
-- We now properly error if someone tries to /(G)ZLINE *@hostmask (should be *@ipmask) or
-  /(G)ZLINE usermask@something (should be *@something). Both forms are illegal because
-  (G)ZLINES are processed before dns and ident lookups. If you require a ban on a hostmask
-  or a usermask, simply use a KLINE or GLINE.
-- For users using remote includes w/ssl (https, ftps): the CA certificates are now stored
-  in curl-ca-bundle.crt (shipped with Unreal) which contains most major CA's plus CACert.
+- PREFIX_AQ (the ~ and & symbols for +q and +a) are now ENABLED BY DEFAULT on *NIX.
+  They have always been enabled on Windows, so it made sense to do the same for *NIX.
+  Pretty much all major clients support it now (mIRC, xchat, irssi, epic, PJIRC,
+  CGI:IRC, etc).
+- If DNS info (*NIX: /etc/resolv.conf, Win: registry) is updated, a '/REHASH -dns'
+  now rereads this info, no restart needed anymore.
+- me::numeric can now be changed without a restart, if no servers are linked.
+- Improved windows crash info: we now create minidumps, this should aid debugging.
+- '/quote dns i' (as an oper) now shows nameserver info again
+- Local oper may now use /TRACE
+- If channel is +m but -t, you now need at least voice (+v) to change the topic.
+- When checking if someone is banned, we now always verify bans against the cloaked host,
+  even if the user has a vhost and the cloaked host is not visible / unused.
+- Extra binary compatability checks: (gcc) compiler version
+- Allow /*LINE'ing of literalident@* (eg: gline clones@*). Things like *clones@* are
+  still denied though, and this will not be changed. Use services AKILL instead.
+- Command aliases: made empty parameters work if the alias allows it (eg, the alias
+  uses .* as a regex and not .+)
 
 ==[ MAJOR BUGS FIXED ]==
-- Two issues with an incorrect badword { } block in the config file causing a crash.
-- Incorrect TKL/*LINE causing a crash
-- Complete resolver recode: now using c-ares + caching to fix some (rare?) crash bugs and
-  to make our code much more cleaner.
-- Using GCC4 caused a crash on-link.
-- Crash when a class block was removed and had any other blocks were referencing it.
-- OpenBSD crash on /REHASH.
-- Several AMD64 crash issues.
-- Sometimes a serious flood of notices was generated if link::options::nodnscache was used.
-- Spamfilter: action 'viruschan' combined with target 'user' caused crashes.
-- chinese-* nick characters support caused memory corruption.
-- Crash issue regarding SSL and junk snomask.
-- Opteron problem: /*LINE with time parameter always said 'time out of range'
+- Spamfilter was not always working properly
+- MS Visual studio 2005 (8.x) was unable to compile Unreal and/or caused crashes
+- Certain IPv6 listen blocks could crash the ircd on-boot/on-rehash
 
 ==[ MINOR BUGS FIXED ]==
-- Now properly resolves hostnames again that use CNAME delegation (got broken in 3.2.3).
-- Fedora Core w/IPv6 failed to compile.
-- A few read-after-free bugs that could have caused crashes.
-- ./Config was not loading the settings properly on Solaris 10
-- Crash if high ascii in set::network-name
-- Fixed advanced channel aliases not working properly
-- Fixed \* and \? escaping not always working properly (for example in ~r/~c bans).
+- "Looking up your hostname" message was missing if set::options::show-connect-notice
+  was enabled (other messages, like "looking up ident" were shown, however)
+- Netsynch problem, which could cause the wrong modes to be applied to a channel in
+  some rare cases.
+- Setting set::maxdccallow to 0 (or lower) still allowed one entry to be added
+- Spamfilter oversized-checking is no longer done when removing a spamfilter
+- Operator count bug (there might still be others...)
+- Some chinese-* charsets could not be selected individually
+- No longer requiring a C++ compiler (was caused by resolver in 3.2.4)
 
 ==[ REMOVED ]==
-- Windows 9X/ME are no longer supported (it might work, but we won't support them).
+- MS Visual Studio 6 support, but this did not work anymore anyway...
+
+==[ KNOWN BUGS ]==
+- Windows 2003: Crashes directly on-boot have been reported, while other W2003 servers
+  work perfectly fine (including the one we used for testing). No pattern in this has
+  been found yet, but the bug is somewhere in the resolver (c-ares).
+- Windows: The /RESTART command will work, but the second time you do a /RESTART the
+  IRCd will "crash" with a dialogbox.
 
 ==[ ADDITIONAL INFO ]==
 * See Changelog for more details

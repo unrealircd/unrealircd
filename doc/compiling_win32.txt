@@ -2,24 +2,20 @@
 Disabling NOSPOOF at windows (w9x, nt, w2k, xp) is NOT recommended since this
 WILL allow users to use "spoofed hosts" (like the IP of someone you trust).
 
-If you got problems with NOSPOOF fix your client (bot?) instead (you should PONG
+If you have problems with NOSPOOF, fix your client (bot?) instead (you should PONG
 back to the initial PING at connect).
 
 ==[ GENERAL GUIDELINES ]==
 First of all you need Microsoft Visual C++ (see below), compiling with
 cygwin is not supported (nor is there any good reason to do so).
 
-AT THE TIME OF WRITING THIS DOCUMENT, ONLY VISUAL STUDIO 7.0 AND 7.1 ARE
-KNOWN TO WORK FLAWLESSLY, ANY OTHER VERSION (6 or 8.x) ARE KNOWN TO CAUSE
-TROUBLE: RANGING FROM COMPILE PROBLEMS TO CRASHES ON LINK/JOIN/ETC...!
+Compatible compilers:
+cygwin     NOT supported. Will not work. Should be no reason to use this anyway.
+msvc 6.x   Microsoft Visual Studio 6 does not work, this compiler is too old.
+msvc 7.x   Microsoft Visual Studio 7.x (.NET) will work just fine
+msvc 8.x   Microsoft Visual Studio 8.x (.NET 2005), including the free kit,
+           should work fine (since Unreal3.2.5).
 
-VC++ 7.x (.NET) are known to work perfectly (7.0, 7.1).
-VC++ 6 is known not to work
-VC++ 8.x (.NET 2005) appears - at time of writing - also to be non-working
-(causes crashes).
-
-** start of section that is currently not useful since newer compiler
-   versions cause crashes **
 If you don't have the paid version of Microsoft Visual Studio 7.x, then you can
 use the FREE development kit and PSDK as explained below:
 1. Download the MS Visual Studio Development kit at:
@@ -30,7 +26,6 @@ use the FREE development kit and PSDK as explained below:
    .NET Command Prompt' below, but you - a person using the free version - will
    actually have to start the Platform SDK Prompt instead (check out the
    Start Menu).
-** end of section **
 
 == Simple compile (no SSL/ZIP/Remote includes) ==
 1. Start the Visual Studio .NET Command Prompt
@@ -88,8 +83,7 @@ USE_SSL=1 OPENSSL_INC_DIR="c:\dev\openssl\include" OPENSSL_LIB_DIR="c:\dev\opens
 LIBCURL_INC_DIR="c:\dev\curl\include" LIBCURL_LIB_DIR="c:\dev\curl\lib"
 
 == SYMBOL FILES ==
-If you get something like (usually with CVS versions, but sometimes with
-releases also):
+If you get something like this:
 
   Creating library L_COMMANDS.lib and object L_COMMANDS.exp
 M_OPER.obj : error LNK2019: unresolved external symbol _sendto_snomask_global re

@@ -1199,3 +1199,5 @@
   if you got a good one near you you can use that one instead.
   The time protocol we use is (S)NTP v4.
 - Fixed some compile warnings for Windows
+- Updated windows compile instructions again.
+- Updated release notes
