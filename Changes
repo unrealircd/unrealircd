@@ -1209,3 +1209,4 @@
   with m_message.
   This means another ~1500 lines of code are now in modules (and thus can be upgraded on
   the fly), which brings the total of modulized lines at 32K.
+NOTE: WIN32 DOES NOT COMPILE AT THE MOMENT
