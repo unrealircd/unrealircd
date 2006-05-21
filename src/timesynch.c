@@ -48,9 +48,9 @@
 
 /* seconds from midnight Jan 1900 - 1970 */
 #if __STDC__
-#define DIFFERENCE 2208988800UL
+#define TSDIFFERENCE 2208988800UL
 #else
-#define DIFFERENCE 2208988800
+#define TSDIFFERENCE 2208988800
 #endif
 
 /* Maximum timeservers (which are sent in parallel).
@@ -129,7 +129,7 @@ unsigned long v;
 		return 0;
 	}
 
-	v -= DIFFERENCE;
+	v -= TSDIFFERENCE;
 	
 	if (v < 1147900561)
 	{
@@ -150,7 +150,7 @@ int s[MAXTIMESERVERS];
 int numservers = 0;
 time_t start, now, t, offset;
 struct sockaddr_in addr[MAXTIMESERVERS];
-int n, addrlen, i, highestfd;
+int n, addrlen, i, highestfd = 0;
 fd_set r;
 struct timeval tv;
 char buf[512], *buf_out;

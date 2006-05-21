@@ -1198,3 +1198,4 @@
   use 3 time servers on 3 continents (US, EU, AU) which should be sufficient for anyone but
   if you got a good one near you you can use that one instead.
   The time protocol we use is (S)NTP v4.
+- Fixed some compile warnings for Windows
