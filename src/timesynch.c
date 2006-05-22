@@ -41,6 +41,8 @@
 #include <string.h>
 #ifdef _WIN32
 #include <io.h>
+#else
+#include <sys/socket.h>
 #endif
 #include <fcntl.h>
 #include "h.h"

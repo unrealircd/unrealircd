@@ -1211,4 +1211,6 @@
   with m_message.
   This means another ~1500 lines of code are now in modules (and thus can be upgraded on
   the fly), which brings the total of modulized lines at 32K.
+- Fixed compilation error on FreeBSD and others caused by timesynch, reported by tigra
+  (#0002921).
 NOTE: WIN32 DOES NOT COMPILE AT THE MOMENT
