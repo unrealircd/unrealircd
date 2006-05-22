@@ -572,9 +572,12 @@ int  m_svs2mode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 }
 
 void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, char *param) {
-	static char *modes = modebuf, lastwhat;
+	static char *modes = NULL, lastwhat;
 	static short count = 0;
 	short send = 0;
+	
+	if (!modes) modes = modebuf;
+	
 	if (!modebuf[0]) {
 		modes = modebuf;
 		*modes++ = what;
