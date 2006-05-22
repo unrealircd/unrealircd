@@ -1213,4 +1213,4 @@
   the fly), which brings the total of modulized lines at 32K.
 - Fixed compilation error on FreeBSD and others caused by timesynch, reported by tigra
   (#0002921).
-NOTE: WIN32 DOES NOT COMPILE AT THE MOMENT
+- Fixed win32 compile problem cause by timesynch.
