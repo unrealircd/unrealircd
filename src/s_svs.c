@@ -376,7 +376,7 @@ int ret;
 				/* Now check to make sure we have something to send */
 				if (strlen(output) == 0)
 				{
-					sendto_one(sptr, err_str(ERR_NOTEXTTOSEND), me.name, parv[0]);
+					sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, cmd);
 					return -1;
 				}
 				

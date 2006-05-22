@@ -1202,7 +1202,9 @@
 - Updated windows compile instructions again.
 - Updated release notes
 - Added 'real' aliases, this are aliases that map to real commands, so you can for example
-  map the command '/BLAH 5' to 'NICK idiot5'. More info in docs on alias block.
+  map the command '/GLINEBOT <x>' to 'GLINE <x> 2d Bots are not allowed on this server, blabla'.
+  See the documentation on the alias block for more information. doc/example.conf contains an
+  example as well (search for "glinebot").
 - Modulized: badwords system (src/badwords.c is now gone) and StripColors/StripControlCodes
   to m_message, multiple netsynch routines to m_server, send_list to m_list, a certain mode
   routine to m_svsmode, all /MSG IRC.. webtv stuff to src/modules/webtv.c which is compiled
