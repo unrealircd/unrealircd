@@ -1214,3 +1214,4 @@
 - Fixed compilation error on FreeBSD and others caused by timesynch, reported by tigra
   (#0002921).
 - Fixed win32 compile problem cause by timesynch.
+- Updated release notes: more modulization and real command alias support.

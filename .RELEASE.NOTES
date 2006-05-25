@@ -54,6 +54,11 @@ If you are upgrading, please take a minute to read these release notes.
   still denied though, and this will not be changed. Use services AKILL instead.
 - Command aliases: made empty parameters work if the alias allows it (eg, the alias
   uses .* as a regex and not .+)
+- Moved another 2K lines from core to modules, this means 31K lines are now in modules
+  and can be upgraded on the fly.
+- Real Command Aliases: This makes it possible to, for example, alias '/GLINEBOT' to
+  'GLINE <param> 2d Bots are not permitted on this network, etcetc'. For more information,
+  see the docs on the alias block and/or search for "glinebot" in doc/example.conf.
 
 ==[ MAJOR BUGS FIXED ]==
 - Spamfilter was not always working properly
