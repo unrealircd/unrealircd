@@ -73,7 +73,8 @@ Spanish |
   ---3.15. <a href="#feature_cidr">CIDR</a><br>
   ---3.16. <a href="#feature_nickchars">Configuraci&oacute;n de caracteres para nicks</a><br>
   ---3.17. <a href="#feature_cgiirc">Soporte CGI:IRC</a><br>
-  ---3.18. <a href="#feature_other">Otras caracter&iacute;sticas</a><br>
+  ---3.18. <a href="#feature_timesync">Sincronizaci&oacute;n de la hora</a><br>
+  ---3.19. <a href="#feature_other">Otras caracter&iacute;sticas</a><br>
   4. <a href="#configuringyourunrealircdconf">Configurando su fichero unrealircd.conf</a><br>
   ---4.1. <a href="#configurationfileexplained">Explicaci&oacute;n del archivo</a><br>
   ---4.2. <a href="#meblock"> Bloque me  -=- (M:Line)</a><br>
@@ -292,7 +293,7 @@ conceptos como 'cloak' o 'snomask', entre otros.</p>
 
 <p><font size="+2"><b>3.4 - Aliases</b></font><a name="feature_aliases"></a></p><div class="desc">
 <p>Con los aliases puede configurar comandos de usuario. Puede, por ejemplo, permitir &quot;/ns identify blah&quot; sea redirigido a nickserv (que se traducir&iacute;a como: privmsg nickserv identify blah). Puede incluso hacer aliases m&aacute;s complejos como /register sea redirigido a chanserv si el primer par&aacute;metro empieza por # o a nickserv si no empieza.</p>
-<p>Los aliases se configuran con los bloques alias en el archivo de configuraci&oacute;n y puede inclu&iacute;r varios archivos en el mismo para la mayor&iacute;a de servicios.</p>
+<p>Los aliases se configuran con los <a href="#aliasblock">bloques alias</a> en el archivo de configuraci&oacute;n y puede inclu&iacute;r varios archivos en el mismo para la mayor&iacute;a de servicios.</p>
 </div>
    
 <p><font size="+2"><b>3.5 - Helpop</b></font><a name="feature_helpop"></a></p><div class="desc">
@@ -674,7 +675,22 @@ de confianza para que el IRCd muestre los host/ips reales de los usuarios en cua
 <p>Vea el <a href="#cgiirc">bloque cgiirc</a> para saber c&oacute;mo configurarlo.</p>
 </div>
 
-<p><font size="+2"><b>3.18 - Otras caracter&iacute;sticas</b></font><a name="feature_other"></p>
+<p><font size="+2"><b>3.18 - Sincronizaci&oacute;n de la hora</b></font><a name="feature_timesync"></a></p><div class="desc">
+<p>Tener la hora correctamente sincronizada en los servidores IRC es de vital importancia. Sin esta sincronizaci&oacute;n los canales pueden desincronizarse, gente inocente 
+puede ser desconectada, los canales pueden no ser mostrados en /LIST. Es un riesgo muy grande.</p>
+<p>UnrealIRCd tiene un soporte para hacer esta sincronizaci&oacute;n. 
+Aunque no es del todo exacta (puede haber unos pocos segundos de diferencia), soluciona la mayor&iacute;a de contratiempos. 
+No obstante, si puede usar un programa que haga esa sincronizaci&oacute;n como ntpd en sistemas *NIX o el servicio de sincronizaci&oacute;n de la hora de Windows, h&aacute;galo. Puede desactivar la sincronizaci&oacute;n 
+del propio Unreal.</p>
+<p>Lo que hace UnrealIRCd (por defecto) es hacer un intento de sincronismo cuando arran. Env&iacute;a (por defecto) una petici&oacute;n 
+a distintos servidores de hora y cuando recibe la primera respuesta (la del m&aacute;s r&aacute;pido), reajusta el reloj interno del ircd 
+(NO el reloj del sistema). Si, por cualquier raz&oacute;n, UnrealIRCd no recibe ninguna respuesta en 3 segundos, 
+continuar&aacute; su carga de forma normal (raramente ocurre).</p>
+<p>La sincronizaci&oacute;n de la hora se configura (y puede desactivarse) mediante el bloque <b>set::timesynch</b>. Vea 
+el bloque <a href="#setblock">set</a> para m&aacute;s informaci&oacute;n.</p>
+</div>
+
+<p><font size="+2"><b>3.19 - Otras caracter&iacute;sticas</b></font><a name="feature_other"></p>
 <div class="desc">
 <p>UnrealIRCd tiene much&iacute;simas m&aacute;s caracter&iacute;sticas que no se detallan... Deber&aacute; encontrarlas por usted mismo.</p>
 </div>
@@ -1932,11 +1948,19 @@ Este bloque tiene otro prop&oacute;sito detallado a continuaci&oacute;n.</p>
 <p>Sintaxis [alias de comandos]:<br>
 <pre>
 alias &lt;nombre&gt; {
+	/* Aliases para ser enviados a usuarios/canales */
 	format &lt;expresi&oacute;n-regular&gt; {
 		target &lt;destino&gt;;
 		type &lt;tipo&gt;;
 		parameters &lt;par&aacute;metros-del-mensaje&gt;;
 	};
+	/* Aliases 'reales' */
+	format &lt;expresi&oacute;n-regular&gt; {
+		command &lt;command&gt;;
+		type real;
+		parameters &lt;cadena-de-par&aacute;metros&gt;;
+	};
+	/* Etc... Puede tener tantos bloques como desee */
 	format &lt;expresi&oacute;n-regular&gt; {
 		...
 	};
@@ -1944,7 +1968,12 @@ alias &lt;nombre&gt; {
 	spamfilter &lt;yes|no&gt;;
 };</pre>
 </p>
-<p>Este uso es m&aacute;s extenso y tiene m&aacute;s posibilidades. Por ejemplo, puede crear aliases como /identify. <b>alias::</b> es el mismo que el anterior: el nombre del comando. <b>alias::format</b> especifica la expresi&oacute;n regular que debe coincidir con el texto enviado. Si lo hace, se usan las subentradas. As&iacute; puede tener varios alias::format para seguir distintas acciones seg&uacute;n la coincidencia, a partir de sus subentradas. <b>alias::format::target</b> es el nick o canal de destino. <b>alias::format::type</b> es el tipo de alias. <b>alias::format::parameters</b> es lo que se enviar&aacute; como par&aacute;metro al alias. Para especificar un par&aacute;metro que se enviar&aacute; al nick, use % seguido del n&uacute;mero de par&aacute;metro. Por ejemplo, %1 enviar&aacute; el primer par&aacute;metro. Para especificar todos los par&aacute;metros a partir de uno, use %n- donde n es el n&uacute;mero de par&aacute;metro. Por ejemplo, %2- enviar&iacute;a todos los par&aacute;metros a partir del segundo, inclu&iacute;do. Adem&aacute;s, puede usarse %n para que sea reemplazado por el nick que ejecuta el comando. Para m&aacute;s informaci&oacute;n consulte doc/example.conf.</p>
+<p>Este uso es m&aacute;s extenso y tiene m&aacute;s posibilidades. Por ejemplo, puede crear aliases como /identify. <b>alias::</b> es el mismo que el anterior: el nombre del comando. 
+<b>alias::format</b> especifica la expresi&oacute;n regular que debe coincidir con el texto enviado. Si lo hace, se usan las subentradas. As&iacute; puede tener varios alias::format para seguir distintas acciones seg&uacute;n la coincidencia, a partir de sus subentradas. 
+<b>alias::format::target</b> es el nick o canal de destino. Sin embargo, en el caso de 'aliases reales', se usa <b>alias::format::command</b> en vez de &eacute;ste. 
+<b>alias::format::type</b> es el tipo de alias. Siguiendo los tipos mencionados previamente en "Syntax [standard alias]", tambi&eacute;n permitimos el tipo "real" para "realaliases". 
+<b>alias::format::parameters</b> es lo que se enviar&aacute; como par&aacute;metro al alias. Para especificar un par&aacute;metro que se enviar&aacute; al nick, use % seguido del n&uacute;mero de par&aacute;metro. Por ejemplo, %1 enviar&aacute; el primer par&aacute;metro. Para especificar todos los par&aacute;metros a partir de uno, use %n- donde n es el n&uacute;mero de par&aacute;metro. Por ejemplo, %2- enviar&iacute;a todos los par&aacute;metros a partir del segundo, inclu&iacute;do. Adem&aacute;s, puede usarse %n para que sea reemplazado por el nick que ejecuta el comando.<br><br>
+Para m&aacute;s informaci&oacute;n consulte doc/example.conf.</p>
 <p></p></div>
 <p><font class="block_section">4.33 - </font><font class="block_name">Bloque help </font>
    <font class="block_optional">OPCIONAL</font><a name="helpblock"></a>
@@ -2284,6 +2313,15 @@ set {
   Estos &quot;target(s)&quot; se omiten del filtro de spam (no se toma ninguna acci&oacute;n). Puede especificar varios separ&aacute;ndolos con comas. Ej: except &quot;#help,#spamreport&quot;;.</p>
  <p><font class="set">set::check-target-nick-bans &lt;yes|no&gt;</font><br>
   Si un usuario se cambia de nick, comprueba si el nuevo nick se relaciona con alg&uacute;n ban. Si es as&iacute;, no permite el cambio de nick. Por defecto 'yes'.</p>
+  <p><font class="set">set::timesynch::enabled &lt;yes|no&gt;</font><br>
+  Activa o desactiva la sincronizaci&oacute;n de la hora en el inicio. Por defecto es 'yes'.</p>
+ <p><font class="set">set::timesynch::server &lt;IP&gt;</font><br>
+  Servidor de hora con el que se realiza la sincronizaci&oacute;n. Puede especificar hasta 4 IP's separadas con comas. 
+  Los servidores deben soportar almenos el protocolo NTP versi&oacute;n 4. Por defecto &uacute;selo con 3 servidores (US, EU y AU). 
+  Las peticiones se hacen en paralelo. El m&aacute;s r&aacute;pido gana.</p>
+ <p><font class="set">set::timesynch::timeout &lt;time&gt;</font><br>
+  M&aacute;ximo tiempo a esperar las respuestas de los servidores de hora. Este valor debe estar entre 1 y 5 segundos. No es posible m&aacute;s alto porque puede causar demasiada diferencia de hora. 
+  Por defecto es 3 y no hay ninguna raz&oacute;n para cambiarlo.</p>
 </div>
 <p><b><font size="+2">5 &#8211; Archivos adicionales <a name="addtlfiles"></a>
   </font></b></p>
