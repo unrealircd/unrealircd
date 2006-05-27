@@ -35,7 +35,7 @@ Dutch |
   <b>Hoofd programmeurs:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Medewerkers:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentatie:</b> CKnight^ / Syzop<br>
-  <b>Nederlandse vertaling:</b> Mark (<a href="irc://irc.irc-chatters.net/irc-chatters.net">#irc-chatters.net op irc.irc-chatters.net</a>)<br>
+  <b>Nederlandse vertaling:</b> Mark (<a href="irc://irc.irc-chatters.net/dutch">#dutch op irc.irc-chatters.net</a>)<br>
 <p>Om dit document te bekijken heb je een geschikte browser nodig, welke hier beneden staan. De meest
  recente documentatie staat op <a href="http://www.vulnscan.org/UnrealIRCd/unreal32docs.html">
  http://www.vulnscan.org/UnrealIRCd/unreal32docs.html</a> en een FAQ staat op
@@ -74,7 +74,8 @@ Dutch |
   -- 3.15. <a href="#feature_cidr">CIDR</a><br>
   -- 3.16. <a href="#feature_nickchars">Nick Character Sets</a><br>
   -- 3.17. <a href="#feature_cgiirc">CGI:IRC ondersteuning</a><br>
-  -- 3.18. <a href="#feature_other">Andere mogelijkheden</a><br>
+  -- 3.18. <a href="#feature_timesync">Tijd synchronisatie</a><br>
+  -- 3.19. <a href="#feature_other">Andere mogelijkheden</a><br>
   4. <a href="#configuringyourunrealircdconf">Aanpassen van je unrealircd.conf</a><br>
   ---4.1. <a href="#configurationfileexplained">Configuratie bestand uitgelegd</a><br>
   ---4.2. <a href="#meblock"> Me Block -=- (M:Line)</a><br>
@@ -311,7 +312,7 @@ Windows:<br>
  Je kan bijvoorbeeld "/ns identify blah" doorsturen naar NickServ (het wordt dan: PRIVMSG NickServ identify blah).
  Je kan het ook nog complexer maken, zodat bijvoorbeeld /register naar ChanServ doorgestuurd wordt wanneer het
  eerste woord met een # begint, en doorgestuurd naar NickServ wanneer dit niet het geval is</p>
- Aliassen worden ingesteld door een alias-blok in het configuratiebestand. Je kan ook een standaard
+ Aliassen worden ingesteld door een <a href="#aliasblock">alias-blok</a> in het configuratiebestand. Je kan ook een standaard
  bestand laten laden, met de meest gebruikte aliassen bij vaak gebruikte Services</p></div>
 
    
@@ -675,7 +676,22 @@ laat zien, in plaats van de CGI:IRC gateway.</p>
 <p>Zie het <a href="#cgiirc">cgiirc block</a> voor informatie over het configureren</p>	
 </div>
 
-<p><font size="+2"><b>3.18 - Andere mogelijkheden</b></font><a name="feature_other"></a></p><div class="desc">
+<p><font size="+2"><b>3.18 - Tijd Synchronisatie</b></font><a name="feature_timesync"></a></p><div class="desc">	
+<p>Heb hebben van de juiste tijd is enorm belangrijk voor IRC servers. Zonder de correcte tijd kunnen channels desynchen,
+ongeschuldige gebruikers gekilled worden, channels komen niet goed in /LIST, samengevat: grote problemen ontstaan.</p>
+<p>UnrealIRCd heeft een ingebouwde tijd synchronisatie ondersteuning.
+Hoewel deze niet optimaal is (kan nog enkele seconden speling zijn), lost het de meeste tijd-gerelateerde problemen op.
+Als het mogelijk is, wordt je nog steeds aangeraden een tijdsynchronisatie programma te gebruiken zoals ntpd op *UNIX of
+de tijdsynchronisatie service van Windows (in dat geval kun je Unreals tijdsynchronisatie uitzetten, meer volgt later).</p>
+<p>Wat UnrealIRCd probeert (standaard) is het eenmaling instellen van de tijd wanneer ze gestart wordt. Ze stuurt (standaard)
+een verzoek naar verschillende tijdservers en wanneer ze het eerste (snelste) antwoord ontvangt, past ze de interne IRCd clock
+aan (NIET de systeem clock). Als, voor welke reden dan ook, Unreal geen antwoord krijgt van de tijdserver binnen 3 seconden, start
+ze gewoon op zonder tijdsaanpassing (zal vrijwel nooit gebeuren).</p>
+<p>Tijd synchronisatie wordt ingesteld (en kan uitgezet worden) door het <b>set::timesynch</b> block, zie de
+<a href="#setblock">set documentatie</a> voor meer informatie.</p>	
+</div>
+
+<p><font size="+2"><b>3.19 - Andere mogelijkheden</b></font><a name="feature_other"></a></p><div class="desc">
 <p>UnrealIRCd heeft heel veel mogelijkheden, dus niet alles staat beschreven hier... Je vindt het vanzelf wel.</p></div>
 
 <p> </p>
@@ -2078,11 +2094,22 @@ alias &lt;name&gt; {
 <p>Syntax [command alias]:<br>
 <pre>
 alias &lt;name&gt; {
+	/* Voor aliases die gezonden moeten worden naar gebruikers/channels */
 	format &lt;regex-expression&gt; {
 		target &lt;nick-to-forward-to&gt;;
 		type &lt;type-of-alias&gt;;
 		parameters &lt;parameter-string&gt;;
 	};
+
+	/* Voor 'echte aliases' */	
+         format &lt;regex-expression&gt; {	
+                 command &lt;command&gt;;	
+                 type real;	
+                 parameters &lt;parameter-string&gt;;	
+         };	
+         /* Etc... Je kan zoveel blokken als je wilt instellen.. */
+
+
 	format &lt;regex-expression&gt; {
 		...
 	};
@@ -2091,16 +2118,19 @@ alias &lt;name&gt; {
 };</pre></p>
 <p>Wanneer het alias block gebruikt wordt in dit formaat, heeft het een veel bredere
  functie. Je kan bijvoorbeeld /identify maken. alias:: is hetzelfde als hierboven,
- de naam van het alias commando. alias::format is de reguliere expressie die de tekst,
+ de naam van het alias commando. <b>alias::format</b> is de reguliere expressie die de tekst,
  meegegeven door het commando, controleert. Wanneer dit matcht, worden de regels eronder
  uitgevoerd. Je kan meerdere formats opgeven, zodat hetzelfde commando meerdere functies
- krijgt, afhangend van de tekst die gezonden wordt. alias::format::target is het doel
- waarnaar het bericht gezonden moet worden. alias::format::type is het type.
- alias::format::parameters is de tekst die gezonden moet worden. Dit is een % gevolgd
- door een nummer. Wanneer je alles na een bepaald nummer wil zenden, doe het nummer dat
+ krijgt, afhangend van de tekst die gezonden wordt. <b>alias::format::target</b> is het doel
+ waarnaar het bericht gezonden moet worden. Als een 'echte alias' gebruikt wordt, zal het bericht
+ echter naar <b>alias::format::command</b> gezonden worden. <b>alias::format::type</b> is het type.
+ Behalve de types die we in "Syntax [standard alias" behandeld hebben, is ook het type "real" toegestaan
+ voor "echte aliases". <b>alias::format::parameters</b> is de tekst die gezonden moet worden. Dit is een
+ % gevolgd door een nummer. Wanneer je alles na een bepaald nummer wil zenden, doe het nummer dat
  je wilt (bijv 2), met een - erachter, dus %2-. Dit stuurt alle tekst vanaf het tweede
  tot het laatste woord. Je kan ook %n gebruiken om de naam van degene die het commando
- mee te sturen. Zie doc/example.conf voor meer informatie.</p>
+ mee te sturen.<br><br>
+ Voor voorbeelden betreffende het gebruik van het alias block, zie doc/example.nl.conf.</p>
 <p></p></div>
 <p><font class="block_section">4.33 - </font><font class="block_name">Help Block</font>
    <font class="block_optional">OPTIONEEL</font><a name="helpblock"></a>
@@ -2532,6 +2562,16 @@ gemiddeld 2048:60=34 tekens per ban toe.</p>
  <p><font class="set">set::check-target-nick-bans &lt;yes|no&gt;</font><br>
  Wanneer de gebruiker zijn naam verandert, controleer of de NIEUWE nick gebanned zou
  worden. Zo ja, sta de naamsverandering niet toe. Standaard is dit 'yes'.</p>
+<p><font class="set">set::timesynch::enabled &lt;yes|no&gt;</font><br>
+ Activeer of deactiveer de tijd synchronisatie bij het opstarten. Standaard is yes.</p>
+<p><font class="set">set::timesynch::server &lt;IP&gt;</font><br>
+ Server waarmee gesynchroniseerd moet worden. Dit kunnen maximaal 4 IPs zijn, gescheiden door
+ commas. De servers moeten NTP protocol versie 4 ondersteunen. Standaard worden 3 servers
+ gebruikt (US,EU,AU). De verzoeken worden parallel verzonden, het snelste antwoord wint.</p>
+<p><font class="set">set::timesynch::timeout &lt;time&gt;</font><br>	
+ Maximale wachttijd voor een antwoord. Dit is een waarde tussen 1 en 5, hoger kan niet vanwege
+ een te hoge incorrectheid. Standaard is dit 3, en er is waarschijnlijk geen goede reden
+ om dit aan te passen.</p>
 <p></p> </div>
 
 <p><b><font size="+2">5 &#8211; Aanvullende bestanden<a name="addtlfiles"></a>
