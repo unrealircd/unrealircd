@@ -1217,3 +1217,5 @@
 - Updated release notes: more modulization and real command alias support.
 - Fixed crash in /STATS Z (possibly rare), reported by yasinbey (#0002929).
 - Win32 makefile/installer updates for new curl/ssl
+- Updated versions everywhere, bumped protocol to 2308
+** 3.2.5-rc1 release **
