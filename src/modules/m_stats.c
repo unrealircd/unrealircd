@@ -987,10 +987,8 @@ int stats_mem(aClient *sptr, char *para)
 	sendto_one(sptr, ":%s %d %s :Dbuf blocks %d(%ld)",
 	    me.name, RPL_STATSDEBUG, sptr->name, dbufblocks, db);
 
-	link = freelink;
-	while ((link = link->next))
+	for (link = freelink; link; link = link->next)
 		fl++;
-	fl++;
 	sendto_one(sptr, ":%s %d %s :Link blocks free %d(%ld) total %d(%ld)",
 	    me.name, RPL_STATSDEBUG, sptr->name,
 	    fl, (long)(fl * sizeof(Link)),

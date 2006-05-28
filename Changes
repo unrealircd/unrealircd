@@ -1215,3 +1215,4 @@
   (#0002921).
 - Fixed win32 compile problem cause by timesynch.
 - Updated release notes: more modulization and real command alias support.
+- Fixed crash in /STATS Z (possibly rare), reported by yasinbey (#0002929).
