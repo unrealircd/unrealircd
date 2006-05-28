@@ -1216,3 +1216,4 @@
 - Fixed win32 compile problem cause by timesynch.
 - Updated release notes: more modulization and real command alias support.
 - Fixed crash in /STATS Z (possibly rare), reported by yasinbey (#0002929).
+- Win32 makefile/installer updates for new curl/ssl

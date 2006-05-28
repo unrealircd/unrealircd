@@ -81,13 +81,13 @@ Source: "c:\dev\zlib\dll32\zlibwapi.dll"; DestDir: "{app}"; Flags: ignoreversion
 #ifdef USE_SSL
 #ifdef USE_CURL
 ; curl with ssl support
-Source: "c:\dev\curl-ssl\lib\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\dev\curl-ssl\lib\release\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\curl-ca-bundle.crt"; DestDir: "{app}"; Flags: ignoreversion
 #endif
 #else
 #ifdef USE_CURL
 ; curl without ssl support
-Source: "c:\dev\curl\lib\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\dev\curl\lib\release\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion
 #endif
 #endif
 Source: isxdl.dll; DestDir: {tmp}; Flags: dontcopy
