@@ -69,9 +69,10 @@ und&nbsp; eine FAQ @ <a href="http://www.vulnscan.org/UnrealIRCd/faq/.">http://w
 -- 3.15. <a href="#feature_cidr">CIDR<br>
 </a>
 -- 3.16. <a href="#feature_nickchars">Nick Zeichensätze<br>
-</a>-- 3.1.7 <a href="#feature_cgiirc">CGI:IRC Unterstützung</a><a href="#feature_cidr"><br>
+</a>-- 3.17 <a href="#feature_cgiirc">CGI:IRC Unterstützung<br>
+</a>-- 3.18 <a href="#feature_timesync">Zeitsynchronisation</a><a href="#feature_cidr"><br>
 </a>
-  -- 3.18. <a href="#feature_other">Andere Features</a> <a href="#feature_other"><br>
+  -- 3.19. <a href="#feature_other">Andere Features</a> <a href="#feature_other"><br>
 </a>
   4. <a href="#configuringyourunrealircdconf">Konfiguration der unrealircd.conf
 Datei</a><br>
@@ -343,7 +344,7 @@ die beispielsweise den Befehl <font face="Courier New" size="2">/register</font>
 an Chanserv weiterleitet, wenn der erste Parameter mit einem # beginnt oder an
 Nickserv, wenn der erste Parameter nicht mit einem # beginnt. (Im ersten Fall
 soll ein Channel registriert werden, im zweiten Fall ein Nickname)</p>
-<p>Aliases werden in alias Blocks in der Konfigurationsdatei definiert oder in
+<p>Aliases werden in <a href="#aliasblock"> alias Blocks</a> in der Konfigurationsdatei definiert oder in
 einer Include Datei mit den häufigsten Default Aliassen.&nbsp;</p></div>
    
 <p><font size="+2"><b><a name="feature_helpop">3.5 - Helpop</a></b></font></p><div class="desc">
@@ -1096,7 +1097,31 @@ festlegen, wodurch der IRCd veranlasst wird, statt Host/IP des CGI:IRC Gatewäys
 <p>Nähere Informationen, wie dies konfiguriert wird, stehen im <a href="#cgiirc">cgiirc
 Block</a>&nbsp;</div>
 
-<p> </p>
+<p><font size="+2"><b><a name="feature_timesync">3.18 - Zeitsynchronisation</a></b></font></p>
+<div class="desc">
+  <p>Es ist für die IRC Server sehr wichtig, immer die korrekte Zeit
+  eingestellt zu haben. Ohne korrekte - insbesondere unterschiedliche Zeit
+  zwischen Servern - können Channel desynchronisieren (auf verschiedenen
+  Servern wird etwas anderes im gleichen Channel angezeigt), ahnungslose User
+  grundlos gekillt werden, Channels gar nicht oder falsch in der /List Anzeige
+  eingetragen sein. Kurzum: es entstehen sehr große Probleme.´</p>
+  <p>UnrealIRCd hat eine eine Unterstützung zur Zeitsybchronisation integriert.
+  Obwohl sie nicht optimal ist (die Zeiten können weiterhin um wenige Sekunden
+  differieren), sollten damit die meisten Zeitunterschiede beseitigt werden.
+  Soweit möglich ist es weiterhin empfehlenswert, eine Zeitsynchronisations
+  Software wie 'ntpd' auf&nbsp; *NIX Systemen oder den Zeit Synchonisations
+  Service von Windosws laufen zu haben. In diesem Fall kann man die Unreal Zeitsynchronisation
+  abschalten. (mehr dazu später)</p>
+  <p>Per Default versucht UnrealIRCd beim Start einen Versuch der
+  Zeitsynchronisation. Es werden hierzu einige Anforderungen an Zeitserver
+  gesendet und sobald die erste (schnellste) Antwort empfangen wird die interne
+  IRCD Uhr (NICHT die Systemuhr) danach eingestellt. Wenn aus irgendwelchen
+  Gründen nicht binnen 3 Sekunden eine Zeitabfrage beantwortet wird, startet
+  der IRCD ohne Zeitsynchronisation (sollte nur selten passieren).</p>
+  <p>Zeitsynchronisation wird im <b>set::timesynch</b> Block konfiguriert (oder
+  abgeschaltet). Siehe in der <a href="#setblock">Set-Block Beschreibung</a>
+  für weitere Informationen.</p>
+</div>
 
 <p><font size="+2"><b><a name="feature_other">3.18 - Andere Features</a></b></font></p><div class="desc">
 <p>UnrealIRCd hat eine Reihe weiterer Features, die hier nicht alle einzeln
@@ -2671,12 +2696,21 @@ eingestellt ist, werden auch Spamfilter geprüft (Default ist 'no'). Der &quot;al
 auch einen weiteren nachfolgend erklärten Zweck.</p>
 <p>Syntax [Befehl alias]:
 <pre>alias &lt;name&gt; {
+</pre>
+<pre>	/* Für Aliase, die an User/Channels gesendet werden */
 	format &lt;regex-expression&gt; {
 		target &lt;nick-to-forward-to&gt;;
 		type &lt;type-of-alias&gt;;
 		parameters &lt;parameter-string&gt;;
 	};
+	/* For 'echte Aliase' */
 	format &lt;regex-expression&gt; {
+		command &lt;command&gt;;
+		type real;
+		parameters &lt;parameter-string&gt;;
+	};
+	/* Etc... You can have as many format blocks as you wish.. */</pre>
+<pre>	format &lt;regex-expression&gt; {
 		...
 	};
 	type command;
@@ -2690,15 +2724,19 @@ einen regulären Ausdruck fest, der mit dem Text verglichen wird, der als Alias
 Befehl gesandt wurde. Es können mehrere &quot;alias::format&quot; angegeben
 werden, um unterschiedliche Dinge in Abhängigkeit vom gesandten Text
 durchführen zu lassen. <b>alias::format::target</b> ist das Ziel (der Name), an den der
-Alias weitergeleitet wird. <b> alias::format::type</b> definiert den Typ des
-Alias, zu dem die Nachricht geleitet wird. <b> alias::format::parameters</b>
+Alias weitergeleitet wird, bei &quot;realen Aliasen&quot; wird allerdings <b>alias::format::command</b>
+benutzt. <b> alias::format::type</b> definiert den Typ des
+Alias, zu dem die Nachricht geleitet wird. Neben den zuvor erwähnten Typen in
+der Syntax bein Standard Alias, kann hier auch der Typ &quot;Real&quot; für
+reale Aliase angegeben werden. <b>alias::format::parameters</b>
 ist, was als Parameter an den Alias geschickt wird. Um Parameter für einen
 Befehl an den Alias anzugeben, wird ein &quot;%&quot; gefolgt von einer Nummer
 angegeben. So ist z.B. %1 der erste Parameter, %2 der zweite Parameter usw.&nbsp;
 Man kann auch festlegen, dass ab einem Parameter alle bis zum Ende gelten
 sollen, dann gibt man z.B. an:&nbsp; %1- (das Minuszeichen bedeutet: &quot;alle
 weiteren&quot;) Zusätzlich kann man %n angeben, was durch den Nicknamen des
-Users ersetzt wird, der den befehl ausgeführt hat. Um Beispiele zum Alias Block
+Users ersetzt wird, der den Befehl ausgeführt hat.&nbsp;</p>
+<p> Um Beispiele zum Alias Block
 zu sehen, schaue man in doc/example.conf.</p>
 <p>&nbsp;</p>
 </div>
@@ -3184,7 +3222,20 @@ durchgeführt). Es sind einzelne Ziele oder eine durch Kommata getrennte Liste
 möglich. Beispiel: except &quot;#help,#spamreport&quot;</p> <p><b>set::<font face="Helvetica,Arial" size="-1">check-target-nick-bans</font> &lt;yes|no&gt;</b><br>
 Wann immer ein User seinen Nick ändert, wird überprüft, ob der NEUE Nick zu
 bannen wäre. Ist das der Fall, wird der Nickwechsel nicht erlaubt. Default ist
-'yes'.</p> </div>
+'yes'.</p> <p><b>set::timesynch::enabled&lt;yes|no&gt;</b><br>
+Aktiviert oder deaktiviert die Zeitsynchronisation beim Start des IRCd. Default
+ist 'yes'.</p> 
+<p><font class="set">set::timesynch::server &lt;IP&gt;</font><br>
+Server mit dem die Zeit synchronisiert werden soll. Hier können bis zu 4 IP's
+angegeben werden, die durch Komma zu trennen sind. Die Server müssen das NTP Protokoll
+Version 4 unterstützen. Default ist die Benutzung von 3 Zeitservern (US, EU,
+AU). Die Anforderungen an diese Server erfolgen zeitgleich, die schnellste
+Antwort gewinnt.</p>
+<p><font class="set">set::timesynch::timeout &lt;time&gt;</font><br>
+Maximale Zeit, die auf eine Zeitserverantwort gewartet wird. Möglich ist ein
+Wert von 1 bis 5, mehr ist nicht möglich, weil das Ergebnis sonst zu ungenau
+wäre. Default Einstellung ist hier 3 und normalerweise sollte es keinen Grund
+geben, dies zu ändern. </div>
 <p><b><font size="+2"><a name="addtlfiles">5 &#8211; Additional Files</a></font></b></p><div class="desc">
   Zusätzlich zu den Konfigurationsdateien hat Unreal einige weitere Dateien,
   wie MOTD, OperMOTD, BotMOTD, und Rules. In der nachfolgenden Liste stehen die
