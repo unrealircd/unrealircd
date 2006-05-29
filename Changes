@@ -1219,3 +1219,4 @@
 - Win32 makefile/installer updates for new curl/ssl
 - Updated versions everywhere, bumped protocol to 2308
 ** 3.2.5-rc1 release **
+- Added doc/example.ru.conf, translated by Bock.
