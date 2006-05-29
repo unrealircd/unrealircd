@@ -73,7 +73,8 @@ Hungarian |
   -- 3.15. <a href="#feature_cidr">CIDR</a><br>
   -- 3.16. <a href="#feature_nickchars">Karakterkészletek nicknevekhez</a><br>
   -- 3.17. <a href="#feature_cgiirc">CGI:IRC támogatás</a><br>
-  -- 3.18. <a href="#feature_other">További jellegzetességek</a><br>
+  -- 3.18. <a href="#feature_timesync">Idõszinkronizáció</a><br>
+  -- 3.19. <a href="#feature_other">További jellegzetességek</a><br>
   4. <a href="#configuringyourunrealircdconf">Az unrealircd.conf fájlod
   beállítása</a><br>
   ---4.1. <a href="#configurationfileexplained">A konfigurációs formátumról</a><br>
@@ -288,12 +289,12 @@ mert máskülönben nem fogsz megérteni olyan fogalmakat, mint az "álcázás", "snoma
 <p>Alapértelmezésben, ha a felhasználó egyszerûen csak a +s módot állítja be, bizonyos snomaszkok lesznek beállítva. Közönséges felhasználóknak a +ks, operátoroknak a +kscfvGqo snomaszkok.</p></div>
 
 <p><font size="+2"><b>3.4 - Álnevek</b></font><a name="feature_aliases"></a></p><div class="desc">
-<p>Az álnevek (alias) szolgálnak szerverszintû álparancsok beállítására.
-   Például az "/ns identify blah" parancsot továbbíthatod a nickservnek (úgy lesz
-   lefordítva, hogy "privmsg nickserv identify blah"). Ennél összetettebb álneveket is készíthetsz, mint a /register,
+<p>Az álnevek (alias) szerverszintû álparancsok beállítására szolgálnak.
+   Például az "/ns identify blah" parancsot továbbíthatjuk a nickservnek (úgy lesz
+   lefordítva, hogy "privmsg nickserv identify blah"). Ennél összetettebb álneveket is készíthetünk, mint pl. a /register,
    amely a ChanServhez továbbítódik, ha az elsõ paraméter #-tel kezdõdik, és a NickServ-hez, ha nem.</p>
-<p>Az álnevek az alias blokkban állíthatóak be a konfigurációs fájlban, és egy külön fájlt is betölthetsz, amely
-   alapértelmezett álneveket tartalmaz a leggyakrabban használt szolgáltatásokhoz.</p></div>
+<p>Álnevek az <a href="#aliasblock">alias blokkban</a> állíthatóak be a konfigurációs fájlban, és külön betölthetünk egy olyan fájlt is, amiben
+   alapértelmezett álnevek vannak a leggyakrabban használt szolgáltatásokhoz.</p></div>
    
 <p><font size="+2"><b>3.5 - Helpop</b></font><a name="feature_helpop"></a></p><div class="desc">
 <p>Az UnrealIRCd rendelkezik egy beépített súgórendszerrel, ami elérhetõ a /helpop-pal. A /helpop parancs teljes mértékben
@@ -637,7 +638,22 @@ az IRC-n, és nem a CGI:IRC átjáróét.</p>
 <p>Lásd a <a href="#cgiirc">cgiirc blokkot</a> a beállításának hogyanjáról.</p>
 </div>
 
-<p><font size="+2"><b>3.18 - További jellegzetességek</b></font><a name="feature_other"></a></p><div class="desc">
+<p><font size="+2"><b>3.18 - Idõszinkronizáció</b></font><a name="feature_timesync"></a></p><div class="desc">
+<p>A pontos idõ nagyon fontos az IRC szervereken. Pontos idõ nélkül a csatornákon desynch problémák léphetnek fel, ártatlan
+felhasználók kaphatnak kilövést, helytelenül jelenhetnek meg csatornák a /LIST-ben, egyszóval: óriási baj származhat belõle.</p>
+<p>Az UnrealIRCd-nek van egy kis beépített idõszinkronizáció támogatása.
+Bár nem optimális (az idõ még mindig eltérhet néhány másodpercet), a legtöbb esetben megszabadít az idõkülönbségtõl.
+Lehetõség szerint még mindig javasolt valamilyen idõszinkronizáló szoftver futtatása, pl. *NIX alatt az ntpd vagy 
+a Windows idõszinkronizáló szolgáltatása (ebben az esetben kikapcsolhatjuk az Unreal idõszinkronizálását, errõl bõvebben késõbb).</p>
+<p>Az UnrealIRCd (alapból) azt csinálja, hogy indításkor végrehajt egy egyszeri idõszinkronizálást. Elküld (alapértelmezésben) egy lekérdezést
+több idõszervernek, és amikor megkapja a legelsõ (leggyorsabb) választ, hozzáigazítja a belsõ ircd órát
+(NEM a rendszerórát). Ha valamilyen okból az idõszervertõl nem kap választ 3 másodpercen belül,
+az IRCd ennek ellenére folytatja az indulást (ilyennek ritkán kellene történnie).</p>
+<p>Az idõszinkronizáció beállítható (és kikapcsolható) a <b>set::timesynch</b> blokkban, lásd
+   a <a href="#setblock">set leírását</a> további információkért.</p>
+</div>
+
+<p><font size="+2"><b>3.19 - További jellegzetességek</b></font><a name="feature_other"></a></p><div class="desc">
 <p>Az UnrealIRCd-nek rengeteg funkciója van, ezért itt nincs minden megemlítve... Rájössz majd magadtól is.</p></div>
 
 <p> </p>
@@ -1994,9 +2010,9 @@ alias &lt;név&gt; {
 	spamfilter &lt;yes|no&gt;;
 };</pre></p>
 <p>(Megjegyzés: lásd még az <a href="#includedirective">include</a> direktívát az UnrealIRCd szabványos álparancsokat tartalmazó fájljairól.)</p>
-<p>Az alias blokk [szabványos álparancsokra] lehetõvé teszi, hogy parancsokat továbbíts egy
+<p>Az alias blokk [szabványos álparancsokra] lehetõvé teszi, hogy parancsokat továbbítsunk egy
   felhasználóhoz, például hogy a /chanserv üzenetet küldjön a chanserv felhasználónak.
-  Az alias:: meghatározza azt a parancsnevet, ami lesz az álnév (pl.: chanserv).
+  Az alias:: megadja azt a parancsnevet, ami lesz az álnév (pl.: chanserv).
   Az alias::target egy nick- vagy csatornanév, ahová a parancs továbbítva lesz. Ha az alias:: ugyanaz,
   mint a továbbítási célpont, az alias::target elhagyható. Az alias::type meghatározza
   az álparancs típusát; érvényes típusok: services (a felhasználó egy szolgáltatás szerveren van), stats
@@ -2007,33 +2023,44 @@ alias &lt;név&gt; {
 <p>Szintaktika [formázott álparancsokra]:<br>
 <pre>
 alias &lt;név&gt; {
+	/* Felhasználóknak/csatornára küldendõ álparancsokra */
 	format &lt;reguláris-kifejezés&gt; {
 		target &lt;ahová-továbbítsa&gt;;
 		type &lt;álparancs-típusa&gt;;
 		parameters &lt;paraméter-sztring&gt;;
 	};
+	/* "Valódi" álparancsokra */
+	format &lt;reguláris-kifejezés&gt; {
+		command &lt;parancs&gt;;
+		type real;
+		parameters &lt;paraméter-sztring&gt;;
+	};
+	/* Stb... Annyi format blokkunk lehet, ahányat szeretnénk.. */
 	format &lt;reguláris-kifejezés&gt; {
 		...
 	};
 	type command;
 	spamfilter &lt;yes|no&gt;;
 };</pre></p>
-<p>Amikor az alias blokkot ebben a formában használod, lehetõséget ad egy sokkal szélesebb körû
-  alkalmazásra. Például készíthetsz olyan álparancsokat is, mint az /identify. Az alias::
-  ugyanaz, mint fent, az álparancs neve. Az alias::format blokkok értékei reguláris kifejezések,
+<p>Amikor az alias blokkot ebben a formában használjuk, lehetõséget ad egy sokkal szélesebb körû
+  alkalmazására. Például készíthetünk olyan álparancsokat is, mint az /identify. Az alias::
+  ugyanaz, mint fent, az álparancs neve. Az <b>alias::format</b> blokkok értékei reguláris kifejezések,
   amelyek az álparancshoz küldött szöveggel lesznek összehasonlítva, és ha az egyik illik rá,
   annak az alias::format-nak az albejegyzései lesznek használatban. Lehet egyszerre több
-  alias::format-od is, hogy a parancs különbözõ dolgokat tegyen a neki küldött szövegtõl
-  függõen. Az alias::format::target az álparancs továbbításának célpontja.
-  Az alias::format::type meghatározza az elõbbi nicknevû felhasználó típusát.
-  Az alias::format::parameters az, ami megmondja, milyen paraméterek legyenek elküldve
-  a felhasználóhoz. Hogy hivatkozz az álparancshoz küldött paraméterek egyikére,
-  írj egy % jelet egy azt követõ számmal, például %1 az elsõ paraméter. Lehetõséged van arra is,
-  hogy hivatkozz egy adott paramétertõl kezdõdõen az üzenet végéig tartó összes paraméterre,
-  ehhez írj be egy % jelet, majd egy számot és egy - jelet, például a %2- visszaadja az összes
+  alias::format-unk is, így a parancs különbözõ dolgokat tehet a neki küldött szövegtõl
+  függõen. Az <b>alias::format::target</b> az álparancs továbbításának célpontja,
+  de "valódi" álparancsok esetében az <b>alias::format::command</b> használandó.
+  Az <b>alias::format::type</b> megadja, hogy az üzenet milyen típusú célponthoz
+  legyen elküldve; a "Szintaktika [szabványos álparancsokra]" részben korábban említett
+  típusok mellett itt megengedett még a "real" is, "valódi" álparancsokra.
+  Az <b>alias::format::parameters</b> mondja meg, milyen paraméterek legyenek elküldve
+  a felhasználóhoz. Ahhoz, hogy az álparancshoz küldött paraméterek egyikére hivatkozzunk,
+  írjunk egy % jelet egy azt követõ számmal, például %1 az elsõ paraméter. Lehetõség van arra is,
+  hogy hivatkozzunk egy adott paramétertõl kezdõdõen az üzenet végéig tartó összes paraméterre,
+  ehhez írjunk be egy % jelet, majd egy számot és egy - jelet, például a %2- visszaadja az összes
   paramétert a másodiktól kezdõdõen az utolsóig. Hasonló különleges célt szolgál még a %n is,
-  amit helyettesíteni fog annak a felhasználónak a neve, aki kiadta a parancsot. A formázott
-  álparancsokra vonatkozóan példákat találhatsz a doc/example.conf-ban.</p>
+  ami helyettesíti annak a felhasználónak a nevét, aki kiadta a parancsot.<br><br>
+  A formázott álparancsokra vonatkozóan példákat találunk a doc/example.conf-ban.</p>
 <p></p></div>
 <p><font class="block_section">4.33 - </font><font class="block_name">Help blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font><a name="helpblock"></a>
@@ -2045,7 +2072,7 @@ help &lt;név&gt; {
 	&lt;szövegsor&gt;;
 	...
 };</pre></p>
-<p>(Megjegyzés: szokás csak betölteni a help.conf-ot)</p>
+<p>(Megjegyzés: általában elég csak betölteni a help.conf-ot)</p>
 <p>A help blokkal készíthetsz bejegyzéseket a /helpop parancshoz. A help:: az az érték,
   amit a /helpop-nak kell átadni paraméterként; ha a help:: ki van hagyva, a blokk akkor
   lesz használatban, amikor a /helpop-nak semmilyen paraméter nincs átadva. A help blokk
@@ -2461,6 +2488,16 @@ set {
  <p><font class="set">set::check-target-nick-bans &lt;yes|no&gt;</font><br>
   Valahányszor a felhasználó nicknevet változtat, ellenõrzi, hogy az ÚJ név le van-e
   tiltva. Ha igen, nem engedélyezi a nickváltást. Az alapértelmezés "yes".</p>
+ <p><font class="set">set::timesynch::enabled &lt;yes|no&gt;</font><br>
+  Engedélyezi vagy letiltja az ircd indításkori idõszinkronizálását. Az alapértelmezés "yes".</p>
+ <p><font class="set">set::timesynch::server &lt;IP&gt;</font><br>
+  Ezzel a szerverrel szinkronizálja az idõt. Legfeljebb négy IP lehet, vesszõkkel elválasztva.
+  A szervereknek támogatniuk kell az NTP protokoll 4-es verzióját. Az alapértelmezés 3 idõszervert használ (US, EU,
+AU). A lekérdezések párhuzamosan kerülnek elküldésre, a leggyorsabb válasz nyer.</p>
+ <p><font class="set">set::timesynch::timeout &lt;idõtartam&gt;</font><br>
+  Legfeljebb ennyi ideig vár az idõszerverek válaszára. Ez egy érték 1 és 5 között; több nem lehet,
+  mert túl nagy pontatlanságot okozna. Ez az érték alapértelmezésben 3, és nem valószínû, hogy
+  érdemes megváltoztatni.</p>
 <p></p> </div>
 <p><b><font size="+2">5 &#8211; További fájlok<a name="addtlfiles"></a>
   </font></b></p><div class="desc">
