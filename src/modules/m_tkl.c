@@ -827,7 +827,6 @@ int n;
 		return 0;
 	}
 	
-	
 	if (whattodo == 0)
 	{
 		ircsprintf(mo2, "%li", TStime());
@@ -913,6 +912,21 @@ aTKline *_tkl_add_line(int type, char *usermask, char *hostmask, char *reason, c
 {
 	aTKline *nl;
 	int index;
+
+	/* Pre-allocate etc check for spamfilters that fail to compile.
+	 * This could happen if for example TRE supports a feature on server X, but not
+	 * on server Y!
+	 */
+	if (type & TKL_SPAMF)
+	{
+		char *myerr = unreal_checkregex(reason, 0, 0);
+		if (myerr)
+		{
+			sendto_realops("[TKL ERROR] ERROR: Spamfilter was added but did not compile. ERROR='%s', Spamfilter='%s'",
+				myerr, reason);
+			return NULL;
+		}
+	}
 
 	nl = (aTKline *) MyMallocEx(sizeof(aTKline));
 
@@ -1848,6 +1862,20 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  expiry_1 = atol(parv[6]);
 		  setat_1 = atol(parv[7]);
 		  reason = parv[8];
+		  
+		  if (expiry_1 < 0)
+		  {
+		  	sendto_realops("Invalid TKL entry from %s, negative expire time (%ld) -- not added. Clock on other server incorrect?",
+		  		sptr->name, (long)expiry_1);
+		  	return 0;
+		  }
+
+		  if (setat_1 < 0)
+		  {
+		  	sendto_realops("Invalid TKL entry from %s, negative set-at time (%ld) -- not added. Clock on other server incorrect?",
+		  		sptr->name, (long)setat_1);
+		  	return 0;
+		  }
 
 		  found = 0;
 		  if ((type & TKL_SPAMF) && (parc >= 11))
@@ -1953,8 +1981,10 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			tk = tkl_add_line(type, parv[3], parv[4], reason, parv[5],
 				expiry_1, setat_1, 0, NULL);
 
-		  if (tk)
-		  	RunHook5(HOOKTYPE_TKL_ADD, cptr, sptr, tk, parc, parv);
+		  if (!tk)
+		     return 0; /* ERROR on allocate or something else... */
+
+		  RunHook5(HOOKTYPE_TKL_ADD, cptr, sptr, tk, parc, parv);
 
 		  strncpyzt(gmt, asctime(gmtime((TS *)&setat_1)), sizeof(gmt));
 		  strncpyzt(gmt2, asctime(gmtime((TS *)&expiry_1)), sizeof(gmt2));

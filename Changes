@@ -1220,3 +1220,8 @@
 - Updated versions everywhere, bumped protocol to 2308
 ** 3.2.5-rc1 release **
 - Added doc/example.ru.conf, translated by Bock.
+- Deal with unsupported regexes added by remote servers (possible crash otherwise)
+- Fixed crash problem on win32 if TKL times were <0. Obviously it's hard to protect from such
+  invalid server traffic, but figured in this case it might be a good idea since *NIX does
+  not crash.
+- Made a note about possessive quantifiers, they are scary :P.

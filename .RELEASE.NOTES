@@ -85,6 +85,8 @@ If you are upgrading, please take a minute to read these release notes.
   been found yet, but the bug is somewhere in the resolver (c-ares).
 - Windows: The /RESTART command will work, but the second time you do a /RESTART the
   IRCd will "crash" with a dialogbox.
+- Regexes: Possessive quantifiers such as, for example, "++" (not to be confused with "+")
+  are not safe to use, they can freeze the IRCd.
 
 ==[ ADDITIONAL INFO ]==
 * See Changelog for more details
