@@ -1225,3 +1225,5 @@
   invalid server traffic, but figured in this case it might be a good idea since *NIX does
   not crash.
 - Made a note about possessive quantifiers, they are scary :P.
+- Made the "voice needed when channel is +m but -t" actually work, reported by Trystan and
+  Ron2K (#0002940).

@@ -256,7 +256,7 @@ long flags = 0; /* cache: membership flags */
 				sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.name, parv[0], "TOPIC",  buf);
 				return -1;
 			} else
-			if (MyClient(sptr) && (flags == 0) && (chptr->mode.mode & MODE_MODERATED))
+			if (MyClient(sptr) && ((flags&CHFL_OVERLAP) == 0) && (chptr->mode.mode & MODE_MODERATED))
 			{
 				char buf[512];
 				/* With +m and -t, only voice and higher may change the topic */
