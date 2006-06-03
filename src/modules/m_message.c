@@ -1172,6 +1172,7 @@ char *stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked)
 	return (cleaned) ? cleanstr : str;
 }
 
+#ifdef STRIPBADWORDS
 char *_stripbadwords_channel(char *str, int *blocked)
 {
 	return stripbadwords(str, conf_badword_channel, blocked);
@@ -1185,6 +1186,21 @@ char *_stripbadwords_quit(char *str, int *blocked)
 {
 	return stripbadwords(str, conf_badword_quit, blocked);
 }
+#else
+char *_stripbadwords_channel(char *str, int *blocked)
+{
+	return NULL;
+}
+
+char *_stripbadwords_message(char *str, int *blocked)
+{
+	return NULL;
+}
+char *_stripbadwords_quit(char *str, int *blocked)
+{
+	return NULL;
+}
+#endif
 
 /* Taken from xchat by Peter Zelezny
  * changed very slightly by codemastr
