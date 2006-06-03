@@ -61,10 +61,16 @@ AC_DEFUN(CHECK_LIBCURL,
 		dnl If anyone can come up with something better and still portable (no awk!?)
 		dnl then let us know.
 		if test "x`echo $CURLLIBS |grep ares`" != x ; then
-			CURLLIBS="`echo "$CURLLIBS"|sed -r 's/(@<:@^ @:>@+ @<:@^ @:>@+ )(@<:@^ @:>@+ @<:@^ @:>@+ )(.+)/\1\3/g'`"
-			if test x"$CURLLIBS" = x; then
-				AC_MSG_ERROR([sed appears to be broken. It is needed for a remote includes compile hack.])
+			dnl Attempt one: Linux sed
+			XCURLLIBS="`echo "$CURLLIBS"|sed -r 's/(@<:@^ @:>@+ @<:@^ @:>@+ )(@<:@^ @:>@+ @<:@^ @:>@+ )(.+)/\1\3/g' 2>/dev/null`"
+			if test x"$XCURLLIBS" = x; then
+				dnl Attempt two: FreeBSD (and others?) sed
+				XCURLLIBS="`echo "$CURLLIBS"|sed -E 's/(@<:@^ @:>@+ @<:@^ @:>@+ )(@<:@^ @:>@+ @<:@^ @:>@+ )(.+)/\1\3/g' 2>/dev/null`"
+				if test x"$XCURLLIBS" = x; then
+					AC_MSG_ERROR([sed appears to be broken. It is needed for a remote includes compile hack.])
+				fi
 			fi
+			CURLLIBS="$XCURLLIBS"
 		fi
 		
 		IRCDLIBS="$IRCDLIBS $CURLLIBS"

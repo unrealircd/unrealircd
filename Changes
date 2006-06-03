@@ -1230,3 +1230,5 @@
 - #undef STRIPBADWORDS did not work, reported by penna (#0002944).
 - Made the resolver no longer check /etc/hosts, since that's how it used to be and should be.
   Saves some useless file reads.
+- Fixed compile (well, configure) problem on FreeBSD if compiling with remote includes
+  enabled. Reported by psadi (#0002941).
