@@ -12146,12 +12146,16 @@ if test "${enable_libcurl+set}" = set; then
 		CURLLIBS=`$enableval/bin/curl-config --libs`
 
 														if test "x`echo $CURLLIBS |grep ares`" != x ; then
-			CURLLIBS="`echo "$CURLLIBS"|sed -r 's/([^ ]+ [^ ]+ )([^ ]+ [^ ]+ )(.+)/\1\3/g'`"
-			if test x"$CURLLIBS" = x; then
-				{ { echo "$as_me:$LINENO: error: sed appears to be broken. It is needed for a remote includes compile hack." >&5
+						XCURLLIBS="`echo "$CURLLIBS"|sed -r 's/([^ ]+ [^ ]+ )([^ ]+ [^ ]+ )(.+)/\1\3/g'`"
+			if test x"$XCURLLIBS" = x; then
+								XCURLLIBS="`echo "$CURLLIBS"|sed -E 's/([^ ]+ [^ ]+ )([^ ]+ [^ ]+ )(.+)/\1\3/g'`"
+				if test x"$XCURLLIBS" = x; then
+					{ { echo "$as_me:$LINENO: error: sed appears to be broken. It is needed for a remote includes compile hack." >&5
 echo "$as_me: error: sed appears to be broken. It is needed for a remote includes compile hack." >&2;}
    { (exit 1); exit 1; }; }
+				fi
 			fi
+			CURLLIBS="$XCURLLIBS"
 		fi
 
 		IRCDLIBS="$IRCDLIBS $CURLLIBS"
