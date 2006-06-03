@@ -112,6 +112,8 @@
 /*
  * THROTTLING
  *   This will only allow 1 connection per ip in set::throttle::period time
+ * NOTE: There's no reason to disable this (anymore) since it can be fully
+ *       configured in the unrealircd.conf. Keep the define...
  */
 #define THROTTLING
 
@@ -423,6 +425,7 @@
 
 /*
  * Use much faster badwords replace routine (>100 times faster).
+ * Disabling this is not supported.
  */
 #define FAST_BADWORD_REPLACE
 

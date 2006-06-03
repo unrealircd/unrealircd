@@ -92,7 +92,13 @@ int n;
 	options.timeout = 3;
 	options.tries = 2;
 	options.flags = ARES_FLAG_NOALIASES;
+#ifdef _WIN32
+	/* for windows, keep using the hosts file for now, until I'm sure it's safe to disable */
 	n = ares_init_options(&resolver_channel, &options, ARES_OPT_TIMEOUT|ARES_OPT_TRIES|ARES_OPT_FLAGS);
+#else
+	options.lookups = "b"; /* no hosts file shit plz */
+	n = ares_init_options(&resolver_channel, &options, ARES_OPT_TIMEOUT|ARES_OPT_TRIES|ARES_OPT_FLAGS|ARES_OPT_LOOKUPS);
+#endif
 	if (n != ARES_SUCCESS)
 	{
 		config_error("resolver: ares_init_options() failed with error code %d [%s]", n, ares_strerror(n));
