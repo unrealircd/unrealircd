@@ -450,7 +450,7 @@ static TS try_connections(TS currenttime)
 		/*
 		 * Also when already connecting! (update holdtimes) --SRB 
 		 */
-		if (!(aconf->options & CONNECT_AUTO))
+		if (!(aconf->options & CONNECT_AUTO) || (aconf->flag.temporary == 1))
 			continue;
 
 		cltmp = aconf->class;
