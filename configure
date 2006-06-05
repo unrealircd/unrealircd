@@ -309,7 +309,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT RM CP TOUCH OPENSSLPATH INSTALL MAKER GMAKE GUNZIP PKGCONFIG IRCDLIBS MKPASSWDLIBS CPP EGREP ALLOCA STRTOUL CRYPTOLIB MODULEFLAGS HAVE_ZLIB URL IRCDDIR BINDIR FD_SETSIZE TREINCDIR TRELIBS CARESINCDIR CARESLIBS LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT RM CP TOUCH OPENSSLPATH INSTALL MAKER GMAKE GUNZIP PKGCONFIG IRCDLIBS MKPASSWDLIBS CPP EGREP ALLOCA STRTOUL CRYPTOLIB MODULEFLAGS HAVE_ZLIB URL IRCDDIR BINDIR FD_SETSIZE TREINCDIR TRELIBS CARESINCDIR CARESLIBDIR CARESLIBS LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -12727,7 +12727,9 @@ echo "${ECHO_T}installing c-ares resolver library" >&6
 $ac_cv_prog_MAKER install || exit 1
 CARESINCDIR="$cur_dir/extras/c-ares/include"
 
-CARESLIBS="-L../extras/c-ares/lib -lcares"
+CARESLIBDIR="-L../extras/c-ares/lib"
+
+CARESLIBS="-lcares"
 
 cd $cur_dir
 
@@ -13378,6 +13380,7 @@ s,@FD_SETSIZE@,$FD_SETSIZE,;t t
 s,@TREINCDIR@,$TREINCDIR,;t t
 s,@TRELIBS@,$TRELIBS,;t t
 s,@CARESINCDIR@,$CARESINCDIR,;t t
+s,@CARESLIBDIR@,$CARESLIBDIR,;t t
 s,@CARESLIBS@,$CARESLIBS,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t

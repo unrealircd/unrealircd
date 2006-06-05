@@ -482,7 +482,9 @@ AC_MSG_RESULT(installing c-ares resolver library)
 $ac_cv_prog_MAKER install || exit 1
 CARESINCDIR="$cur_dir/extras/c-ares/include"
 AC_SUBST(CARESINCDIR)
-CARESLIBS="-L../extras/c-ares/lib -lcares"
+CARESLIBDIR="-L../extras/c-ares/lib"
+AC_SUBST(CARESLIBDIR)
+CARESLIBS="-lcares"
 AC_SUBST(CARESLIBS)
 cd $cur_dir
 

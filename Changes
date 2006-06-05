@@ -1236,3 +1236,4 @@
 - Fixed problem with IRCd using old link block settings if using a low connfreq, this made it
   for example near-impossible to remove autoconnect for such a server. Reported by mixx941
   (#0002836).
+- Fixed problem if c-ares library is already installed system-wide, reported by Trystan.
