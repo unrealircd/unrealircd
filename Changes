@@ -1232,3 +1232,4 @@
   Saves some useless file reads.
 - Fixed compile (well, configure) problem on FreeBSD if compiling with remote includes
   enabled. Reported by psadi (#0002941).
+- Added translated Turkish docs (doc/unreal32docs.tk.html), translated by tt` and Timaeus.
