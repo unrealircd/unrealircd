@@ -1239,3 +1239,6 @@
 - Fixed problem if c-ares library is already installed system-wide, reported by Trystan.
 - Updated release notes a bit (will be updated more later): backrefs (\1) in regexes are
   kinda scary, or at least at the moment.
+- Removed PATCH5 from module version incompatibility system, so it can be used if we ever
+  need to update stuff and not enforce modules to recompile.. Might be useful one day ;p
+- Updated list of donators
