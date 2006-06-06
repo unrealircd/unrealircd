@@ -1237,3 +1237,5 @@
   for example near-impossible to remove autoconnect for such a server. Reported by mixx941
   (#0002836).
 - Fixed problem if c-ares library is already installed system-wide, reported by Trystan.
+- Updated release notes a bit (will be updated more later): backrefs (\1) in regexes are
+  kinda scary, or at least at the moment.

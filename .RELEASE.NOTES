@@ -79,14 +79,16 @@ If you are upgrading, please take a minute to read these release notes.
 ==[ REMOVED ]==
 - MS Visual Studio 6 support, but this did not work anymore anyway...
 
-==[ KNOWN BUGS ]==
+==[ KNOWN ISSUES ]==
 - Windows 2003: Crashes directly on-boot have been reported, while other W2003 servers
   work perfectly fine (including the one we used for testing). No pattern in this has
   been found yet, but the bug is somewhere in the resolver (c-ares).
-- Windows: The /RESTART command will work, but the second time you do a /RESTART the
-  IRCd will "crash" with a dialogbox.
+- Regexes: Be careful with backreferences (\1, etc), they can slow the IRCd down
+  considerably and even bring it to a halt.
 - Regexes: Possessive quantifiers such as, for example, "++" (not to be confused with "+")
   are not safe to use, they can freeze the IRCd.
+- Windows: The /RESTART command will work, but the second time you do a /RESTART the
+  IRCd will "crash" with a dialogbox.
 
 ==[ ADDITIONAL INFO ]==
 * See Changelog for more details

@@ -251,6 +251,22 @@ char ipv6 = r->ipv6;
 #endif
 }
 
+int verify_hostname(char *name)
+{
+char *p;
+
+	if (strlen(name) > HOSTLEN)
+		return 0; 
+
+	/* No underscores or other illegal characters */
+	for (p = name; *p; p++)
+		if (!isalnum(*p) && !strchr(".-", *p))
+			return 0;
+
+	return 1;
+}
+
+
 void unrealdns_cb_nametoip_verify(void *arg, int status, struct hostent *he)
 {
 DNSReq *r = (DNSReq *)arg;
@@ -305,6 +321,13 @@ u_int32_t ipv4_addr;
 	if (!he->h_addr_list[i])
 	{
 		/* Failed name <-> IP mapping */
+		proceed_normal_client_handshake(acptr, NULL);
+		return;
+	}
+
+	if (!verify_hostname(he->h_name))
+	{
+		/* Hostname is bad, don't cache and consider unresolved */
 		proceed_normal_client_handshake(acptr, NULL);
 		return;
 	}
