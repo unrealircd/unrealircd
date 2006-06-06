@@ -1244,3 +1244,5 @@
 - Updated list of donators
 ** 3.2.5-rc2 release **
 - Updated release notes, bleh.. I forgot :P
+- Got rid of qline notice that could happen if using services holds (semi-race condition),
+  reported by tabrisnet (#0002950).

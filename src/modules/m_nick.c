@@ -270,7 +270,7 @@ DLLFUNC CMD_FUNC(m_nick)
 				    acptrs ? acptrs->name : "unknown server");
 		}
 		
-		if (IsServer(cptr) && IsPerson(sptr)) /* remote user changing nick */
+		if (IsServer(cptr) && IsPerson(sptr) && !ishold) /* remote user changing nick */
 		{
 			sendto_snomask(SNO_QLINE, "Q:lined nick %s from %s on %s", nick,
 				sptr->name, sptr->srvptr ? sptr->srvptr->name : "<unknown>");
