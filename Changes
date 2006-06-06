@@ -1242,3 +1242,4 @@
 - Removed PATCH5 from module version incompatibility system, so it can be used if we ever
   need to update stuff and not enforce modules to recompile.. Might be useful one day ;p
 - Updated list of donators
+** 3.2.5-rc2 release **
