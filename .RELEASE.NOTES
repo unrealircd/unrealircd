@@ -34,6 +34,7 @@ If you are upgrading, please take a minute to read these release notes.
   example, a user was +vo and then deops (-o), other clients could not always
   know the user was then still +v, now they can. Supported by XChat and newest mIRC.
 - Chained SSL certificates support
+- Russian doc/example.ru.conf and Turkish doc/unreal32docs.tk.html
 
 ==[ CHANGED ]==
 - PREFIX_AQ (the ~ and & symbols for +q and +a) are now ENABLED BY DEFAULT on *NIX.
@@ -59,6 +60,7 @@ If you are upgrading, please take a minute to read these release notes.
 - Real Command Aliases: This makes it possible to, for example, alias '/GLINEBOT' to
   'GLINE <param> 2d Bots are not permitted on this network, etcetc'. For more information,
   see the docs on the alias block and/or search for "glinebot" in doc/example.conf.
+- /etc/hosts is no longer checked (it never did before 3.2.3 either)
 
 ==[ MAJOR BUGS FIXED ]==
 - Spamfilter was not always working properly
@@ -68,6 +70,8 @@ If you are upgrading, please take a minute to read these release notes.
 ==[ MINOR BUGS FIXED ]==
 - "Looking up your hostname" message was missing if set::options::show-connect-notice
   was enabled (other messages, like "looking up ident" were shown, however)
+- It was sometimes impossible to update a link { } block: all old settings would still
+  be used, this happened if connfreq was low. This might also have caused crashes.
 - Netsynch problem, which could cause the wrong modes to be applied to a channel in
   some rare cases.
 - Setting set::maxdccallow to 0 (or lower) still allowed one entry to be added
