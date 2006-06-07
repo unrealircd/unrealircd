@@ -756,6 +756,11 @@ char *reason = parv[1];
 		return 0;
 	}
 
+#ifdef CHROOTDIR
+	sendnotice(sptr, "/RESTART does not work on chrooted servers");
+	return 0;
+#endif
+
 	/* Syntax: /restart */
 	if (parc == 1)
 	{

@@ -1246,5 +1246,7 @@
 - Updated release notes, bleh.. I forgot :P
 - Got rid of qline notice that could happen if using services holds (semi-race condition),
   reported and bugfix provided by tabrisnet (#0002950).
-- Made people with can_override able to change the topic again if not chanop and banned/+m-t,
+- Made opers with can_override able to change the topic again if not chanop and banned/+m-t,
   reported by vonitsanet (#0002952).
+- Disable /RESTART if running chrooted since that won't work anyway, reported by kayelem
+  (#0002956).
