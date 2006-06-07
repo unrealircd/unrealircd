@@ -80,6 +80,19 @@ DLLFUNC int MOD_UNLOAD(m_topic)(int module_unload)
 	return MOD_SUCCESS;
 }
 
+void topicoverride(aClient *sptr, aChannel *chptr, char *topic)
+{
+	sendto_snomask(SNO_EYES,
+	    "*** OperOverride -- %s (%s@%s) TOPIC %s \'%s\'",
+	    sptr->name, sptr->user->username, sptr->user->realhost,
+	    chptr->chname, topic);
+						
+	/* Logging implementation added by XeRXeS */
+	ircd_log(LOG_OVERRIDE, "OVERRIDE: %s (%s@%s) TOPIC %s \'%s\'",
+		sptr->name, sptr->user->username, sptr->user->realhost,
+		chptr->chname, topic);
+}
+
 /*
 ** m_topic
 **	parv[0] = sender prefix
@@ -236,33 +249,36 @@ long flags = 0; /* cache: membership flags */
 #ifndef NO_OPEROVERRIDE
 					}
 					else
-						sendto_snomask(SNO_EYES,
-						    "*** OperOverride -- %s (%s@%s) TOPIC %s \'%s\'",
-						    sptr->name, sptr->user->username, sptr->user->realhost,
-						    chptr->chname, topic);
-						
-						/* Logging implementation added by XeRXeS */
-						ircd_log(LOG_OVERRIDE, "OVERRIDE: %s (%s@%s) TOPIC %s \'%s\'",
-							sptr->name, sptr->user->username, sptr->user->realhost,
-							chptr->chname, topic);
-
+						topicoverride(sptr, chptr, topic);
 #endif
 				}
 			} else
 			if (MyClient(sptr) && !is_chan_op(sptr, chptr) && !is_halfop(sptr, chptr) && is_banned(sptr, chptr, BANCHK_MSG))
 			{
 				char buf[512];
-				ircsprintf(buf, "You cannot change the topic on %s while being banned", chptr->chname);
-				sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.name, parv[0], "TOPIC",  buf);
-				return -1;
+				
+				if (IsOper(sptr) && OPCanOverride(sptr))
+				{
+					topicoverride(sptr, chptr, topic);
+				} else {
+					ircsprintf(buf, "You cannot change the topic on %s while being banned", chptr->chname);
+					sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.name, parv[0], "TOPIC",  buf);
+					return -1;
+				}
 			} else
 			if (MyClient(sptr) && ((flags&CHFL_OVERLAP) == 0) && (chptr->mode.mode & MODE_MODERATED))
 			{
 				char buf[512];
-				/* With +m and -t, only voice and higher may change the topic */
-				ircsprintf(buf, "Voice (+v) or higher is required in order to change the topic on %s (channel is +m)", chptr->chname);
-				sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.name, parv[0], "TOPIC",  buf);
-				return -1;
+				
+				if (IsOper(sptr) && OPCanOverride(sptr))
+				{
+					topicoverride(sptr, chptr, topic);
+				} else {
+					/* With +m and -t, only voice and higher may change the topic */
+					ircsprintf(buf, "Voice (+v) or higher is required in order to change the topic on %s (channel is +m)", chptr->chname);
+					sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.name, parv[0], "TOPIC",  buf);
+					return -1;
+				}
 			}
 			
 			/* ready to set... */
