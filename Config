@@ -85,7 +85,7 @@ ARG="$ARG $EXTRAPARA "
 CONF="./configure $ARG"
 echo $CONF
 $CONF || exit 1
-cd .
+cd "$UNREALCWD"
 if [  "$CRYPTOIRCD" = "1" ] ; then
 if [ ! -f server.req.pem ]; then
 export OPENSSLPATH
@@ -278,6 +278,7 @@ done
 }
 c=""
 n=""
+UNREALCWD="`pwd`"
 NOSPOOF=""
 DPATH="`pwd`"
 SPATH="`pwd`/src/ircd"
@@ -337,7 +338,7 @@ while [ $# -ge 1 ] ; do
 			. ./config.settings
 		fi
 		RUN_CONFIGURE
-		cd .
+		cd "$UNREALCWD"
 		exit 0
 	elif [ $1 = "-clean" -o $1 = "-C" ] ; then
 		CLEAN="1"
@@ -855,7 +856,7 @@ EXTRAPARA="$EXTRAPARA"
 ADVANCED="$ADVANCED"
 __EOF__
 RUN_CONFIGURE
-cd .
+cd "$UNREALCWD"
 cat << __EOF__
 
  _______________________________________________________________________
