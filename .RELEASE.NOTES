@@ -1,4 +1,4 @@
-Unreal3.2.5-rc2 Release Notes
+Unreal3.2.5-rc3 Release Notes
 ==============================
 
 If you are upgrading, please take a minute to read these release notes.
@@ -79,6 +79,7 @@ If you are upgrading, please take a minute to read these release notes.
 - Operator count bug (there might still be others...)
 - Some chinese-* charsets could not be selected individually
 - No longer requiring a C++ compiler (was caused by resolver in 3.2.4)
+- Added workaround for "make: Permission denied" bug in some FreeBSD's
 
 ==[ REMOVED ]==
 - MS Visual Studio 6 support, but this did not work anymore anyway...
@@ -87,10 +88,11 @@ If you are upgrading, please take a minute to read these release notes.
 - Windows 2003: Crashes directly on-boot have been reported, while other W2003 servers
   work perfectly fine (including the one we used for testing). No pattern in this has
   been found yet, but the bug is somewhere in the resolver (c-ares).
-- Regexes: Be careful with backreferences (\1, etc), they can slow the IRCd down
-  considerably and even bring it to a halt.
+- Regexes: Be careful with backreferences (\1, etc), certain regexes can slow the IRCd
+  down considerably and even bring it to a near-halt. In the spamfilter user target it's
+  usually safe though.
 - Regexes: Possessive quantifiers such as, for example, "++" (not to be confused with "+")
-  are not safe to use, they can freeze the IRCd.
+  are not safe to use, they can easily freeze the IRCd.
 - Windows: The /RESTART command will work, but the second time you do a /RESTART the
   IRCd will "crash" with a dialogbox.
 

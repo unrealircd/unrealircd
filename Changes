@@ -1253,3 +1253,4 @@
 - On certain (newer?) FreeBSD's you get "make: Permission denied" after ./Config, but when
   you do 'cd ..' and then 'cd -' again, make works just fine. This is going to be the most
   stupid workaround in history... Reported by vonitsanet and others (#0002926).
+** 3.2.5-rc3 release **
