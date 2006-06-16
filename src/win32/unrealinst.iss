@@ -11,7 +11,7 @@
 
 [Setup]
 AppName=UnrealIRCd
-AppVerName=UnrealIRCd3.2.4
+AppVerName=UnrealIRCd3.2.5
 AppPublisher=UnrealIRCd Team
 AppPublisherURL=http://www.unrealircd.com
 AppSupportURL=http://www.unrealircd.com
@@ -26,6 +26,7 @@ LicenseFile=.\gpl.rtf
 LicenseFile=.\gplplusssl.rtf
 #endif
 Compression=lzma
+SolidCompression=true
 MinVersion=4.0.1111,4.0.1381
 OutputDir=../../
 
@@ -80,16 +81,17 @@ Source: "c:\dev\zlib\dll32\zlibwapi.dll"; DestDir: "{app}"; Flags: ignoreversion
 #ifdef USE_SSL
 #ifdef USE_CURL
 ; curl with ssl support
-Source: "c:\dev\curl-ssl\lib\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\dev\curl-ssl\lib\release\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\curl-ca-bundle.crt"; DestDir: "{app}"; Flags: ignoreversion
 #endif
 #else
 #ifdef USE_CURL
 ; curl without ssl support
-Source: "c:\dev\curl\lib\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\dev\curl\lib\release\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion
 #endif
 #endif
 Source: isxdl.dll; DestDir: {tmp}; Flags: dontcopy
+Source: "..\..\..\dbghelp.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 [Dirs]
 Name: "{app}\tmp"
@@ -115,10 +117,10 @@ hWnd,answer: Integer;
 begin
 
     if ((CurPage = wpReady)) then begin
-      dbghelp := ExpandConstant('{sys}\DbgHelp.Dll');
-      output := ExpandConstant('{app}\DbgHelp.Dll');
+//      dbghelp := ExpandConstant('{sys}\DbgHelp.Dll');
+//      output := ExpandConstant('{app}\DbgHelp.Dll');
       msvcrt := ExpandConstant('{sys}\msvcr70.Dll');
-      GetVersionNumbersString(dbghelp,m);
+//      GetVersionNumbersString(dbghelp,m);
     if (NOT FileExists(msvcrt)) then begin
       answer := MsgBox('Unreal requires the MS C Runtime 7.0 in order to run, do you wish to install it now?', mbConfirmation, MB_YESNO);
       if answer = IDYES then begin
@@ -132,23 +134,23 @@ begin
       end else
         MsgBox('In order for Unreal to properly function, you must manually install msvcr70.dll. The dll can be downloaded from http://www.unrealircd.com/downloads/msvcr70.dll', mbInformation, MB_OK);
     end;
-    if (NOT FileExists(output)) then begin
-          if (NOT FileExists(dbghelp)) then
-        m := StringOfChar('0',1);
-      if (StrToInt(m[1]) < 5) then begin
-        answer := MsgBox('DbgHelp.dll version 5.0 or higher is required to install Unreal, do you wish to install it now?', mbConfirmation, MB_YESNO);
-        if answer = IDYES then begin
-          tmp := ExpandConstant('{tmp}\dbghelp.dll');
-          isxdl_SetOption('title', 'Downloading DbgHelp.dll');
-          hWnd := StrToInt(ExpandConstant('{wizardhwnd}'));
-          if isxdl_Download(hWnd, dbgurl, tmp) = 0 then begin
-            MsgBox('Download and installation of DbgHelp.Dll failed, the file must be manually installed. The file can be downloaded at http://www.unrealircd.com/downloads/DbgHelp.Dll', mbInformation, MB_OK);
-          end else
-            didDbgDl := true;
-        end else
-        MsgBox('In order for Unreal to properly function you must manually install dbghelp.dll. The dll can be downloaded from http://www.unrealircd.com/downloads/DbgHelp.Dll', mbInformation, MB_OK);
-      end;
-    end;
+//    if (NOT FileExists(output)) then begin
+//          if (NOT FileExists(dbghelp)) then
+//        m := StringOfChar('0',1);
+//      if (StrToInt(m[1]) < 5) then begin
+//        answer := MsgBox('DbgHelp.dll version 5.0 or higher is required to install Unreal, do you wish to install it now?', mbConfirmation, MB_YESNO);
+//        if answer = IDYES then begin
+//          tmp := ExpandConstant('{tmp}\dbghelp.dll');
+//          isxdl_SetOption('title', 'Downloading DbgHelp.dll');
+//          hWnd := StrToInt(ExpandConstant('{wizardhwnd}'));
+//          if isxdl_Download(hWnd, dbgurl, tmp) = 0 then begin
+//            MsgBox('Download and installation of DbgHelp.Dll failed, the file must be manually installed. The file can be downloaded at http://www.unrealircd.com/downloads/DbgHelp.Dll', mbInformation, MB_OK);
+//          end else
+//            didDbgDl := true;
+//        end else
+//        MsgBox('In order for Unreal to properly function you must manually install dbghelp.dll. The dll can be downloaded from http://www.unrealircd.com/downloads/DbgHelp.Dll', mbInformation, MB_OK);
+//      end;
+//    end;
   end;
   Result := true;
 end;

@@ -35,8 +35,11 @@
 #include <string.h>
 #ifdef _WIN32
 #include <io.h>
+#else
+#include <sys/socket.h>
 #endif
 #include <fcntl.h>
+#include "inet.h"
 #include "h.h"
 #include "proto.h"
 #ifdef STRIPBADWORDS
@@ -68,6 +71,7 @@ int _find_shun(aClient *cptr);
 int _find_spamfilter_user(aClient *sptr, int flags);
 aTKline *_find_qline(aClient *cptr, char *nick, int *ishold);
 int _find_tkline_match_zap(aClient *cptr);
+int _find_tkline_match_zap_ex(aClient *cptr, aTKline **rettk);
 void _tkl_stats(aClient *cptr, int type, char *para);
 void _tkl_synch(aClient *sptr);
 int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[]);
@@ -120,6 +124,7 @@ DLLFUNC int MOD_TEST(m_tkl)(ModuleInfo *modinfo)
 	EfunctionAdd(modinfo->handle, EFUNC_FIND_SPAMFILTER_USER, _find_spamfilter_user);
 	EfunctionAddPVoid(modinfo->handle, EFUNC_FIND_QLINE, TO_PVOIDFUNC(_find_qline));
 	EfunctionAdd(modinfo->handle, EFUNC_FIND_TKLINE_MATCH_ZAP, _find_tkline_match_zap);
+	EfunctionAdd(modinfo->handle, EFUNC_FIND_TKLINE_MATCH_ZAP_EX, _find_tkline_match_zap_ex);
 	EfunctionAddVoid(modinfo->handle, EFUNC_TKL_STATS, _tkl_stats);
 	EfunctionAddVoid(modinfo->handle, EFUNC_TKL_SYNCH, _tkl_synch);
 	EfunctionAdd(modinfo->handle, EFUNC_M_TKL, _m_tkl);
@@ -589,33 +594,44 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 	if (!whattodo)
 	{
 		char c;
-		p++;
-		i = 0;
-		while (*p)
+		
+		if (!strchr(usermask, '*') && !strchr(usermask, '?'))
 		{
-			if (*p != '*' && *p != '.' && *p != '?')
-				i++;
+			/* Allow things like clone@*, dsfsf@*, etc.. */
+		} else {
+			/* Check hostmask. */
+			
+			/* STEP 1: Must at least contain 4 non-wildcard/non-dot characters */
 			p++;
-		}
-		if (i < 4)
-		{
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** [error] Too broad mask",
-			    me.name, sptr->name);
-			return 0;
-		}
-		c = tolower(*type);
-		if (c == 'k' || c == 'z' || *type == 'G' || *type == 's')
-		{
-			struct irc_netmask tmp;
-			if ((tmp.type = parse_netmask(hostmask, &tmp)) != HM_HOST)
+			i = 0;
+			while (*p)
 			{
-				if (tmp.bits < 16)
+				if (*p != '*' && *p != '.' && *p != '?')
+					i++;
+				p++;
+			}
+			if (i < 4)
+			{
+				sendto_one(sptr,
+				    ":%s NOTICE %s :*** [error] Too broad mask",
+				    me.name, sptr->name);
+				return 0;
+			}
+
+			/* STEP 2: Check CIDR.. allow x.x/16, but not /15, /14, etc... */
+			c = tolower(*type);
+			if (c == 'k' || c == 'z' || *type == 'G' || *type == 's')
+			{
+				struct irc_netmask tmp;
+				if ((tmp.type = parse_netmask(hostmask, &tmp)) != HM_HOST)
 				{
-					sendto_one(sptr,
-					    ":%s NOTICE %s :*** [error] Too broad mask",
-					    me.name, sptr->name);
-					return 0;
+					if (tmp.bits < 16)
+					{
+						sendto_one(sptr,
+						    ":%s NOTICE %s :*** [error] Too broad mask",
+						    me.name, sptr->name);
+						return 0;
+					}
 				}
 			}
 		}
@@ -804,13 +820,12 @@ int n;
 	 * on 50 characters for the rest... -- Syzop
 	 */
 	n = strlen(reason) + strlen(parv[6]) + strlen(tkllayer[5]) + (NICKLEN * 2) + 40;
-	if (n > 500)
+	if ((n > 500) && (whattodo == 0))
 	{
 		sendnotice(sptr, "Sorry, spamfilter too long. You'll either have to trim down the "
 		                 "reason or the regex (exceeded by %d bytes)", n - 500);
 		return 0;
 	}
-	
 	
 	if (whattodo == 0)
 	{
@@ -897,6 +912,21 @@ aTKline *_tkl_add_line(int type, char *usermask, char *hostmask, char *reason, c
 {
 	aTKline *nl;
 	int index;
+
+	/* Pre-allocate etc check for spamfilters that fail to compile.
+	 * This could happen if for example TRE supports a feature on server X, but not
+	 * on server Y!
+	 */
+	if (type & TKL_SPAMF)
+	{
+		char *myerr = unreal_checkregex(reason, 0, 0);
+		if (myerr)
+		{
+			sendto_realops("[TKL ERROR] ERROR: Spamfilter was added but did not compile. ERROR='%s', Spamfilter='%s'",
+				myerr, reason);
+			return NULL;
+		}
+	}
 
 	nl = (aTKline *) MyMallocEx(sizeof(aTKline));
 
@@ -1463,7 +1493,7 @@ aTKline *_find_qline(aClient *cptr, char *nick, int *ishold)
 }
 
 
-int  _find_tkline_match_zap(aClient *cptr)
+int  _find_tkline_match_zap_ex(aClient *cptr, aTKline **rettk)
 {
 	aTKline *lp;
 	char *cip;
@@ -1471,6 +1501,9 @@ int  _find_tkline_match_zap(aClient *cptr)
 	char msge[1024];
 	ConfigItem_except *excepts;
 	Hook *tmphook;
+
+	if (rettk)
+		*rettk = NULL;
 	
 	if (IsServer(cptr) || IsMe(cptr))
 		return -1;
@@ -1510,11 +1543,18 @@ int  _find_tkline_match_zap(aClient *cptr)
 				    mydummy, MYDUMMY_SIZE), lp->reason);
 #endif
 				strlcpy(zlinebuf, msge, sizeof zlinebuf);
+				if (rettk)
+					*rettk = lp;
 				return (1);
 			}
 		}
 	}
 	return -1;
+}
+
+int  _find_tkline_match_zap(aClient *cptr)
+{
+	return _find_tkline_match_zap_ex(cptr, NULL);
 }
 
 #define BY_MASK 0x1
@@ -1822,6 +1862,20 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  expiry_1 = atol(parv[6]);
 		  setat_1 = atol(parv[7]);
 		  reason = parv[8];
+		  
+		  if (expiry_1 < 0)
+		  {
+		  	sendto_realops("Invalid TKL entry from %s, negative expire time (%ld) -- not added. Clock on other server incorrect?",
+		  		sptr->name, (long)expiry_1);
+		  	return 0;
+		  }
+
+		  if (setat_1 < 0)
+		  {
+		  	sendto_realops("Invalid TKL entry from %s, negative set-at time (%ld) -- not added. Clock on other server incorrect?",
+		  		sptr->name, (long)setat_1);
+		  	return 0;
+		  }
 
 		  found = 0;
 		  if ((type & TKL_SPAMF) && (parc >= 11))
@@ -1927,8 +1981,10 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			tk = tkl_add_line(type, parv[3], parv[4], reason, parv[5],
 				expiry_1, setat_1, 0, NULL);
 
-		  if (tk)
-		  	RunHook5(HOOKTYPE_TKL_ADD, cptr, sptr, tk, parc, parv);
+		  if (!tk)
+		     return 0; /* ERROR on allocate or something else... */
+
+		  RunHook5(HOOKTYPE_TKL_ADD, cptr, sptr, tk, parc, parv);
 
 		  strncpyzt(gmt, asctime(gmtime((TS *)&setat_1)), sizeof(gmt));
 		  strncpyzt(gmt2, asctime(gmtime((TS *)&expiry_1)), sizeof(gmt2));

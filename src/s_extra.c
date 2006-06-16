@@ -177,14 +177,16 @@ int cnt = 0;
 	{
 		if (lp->flags != DCC_LINK_ME)
 			continue;
-		if (++cnt >= MAXDCCALLOW)
-		{
-			sendto_one(sptr, err_str(ERR_TOOMANYDCC), me.name, sptr->name,
-				optr->name, MAXDCCALLOW);
-			return 0;
-		} else
+		cnt++;
 		if (lp->value.cptr == optr)
 			return 0;
+	}
+
+	if (cnt >= MAXDCCALLOW)
+	{
+		sendto_one(sptr, err_str(ERR_TOOMANYDCC), me.name, sptr->name,
+			optr->name, MAXDCCALLOW);
+		return 0;
 	}
 	
 	lp = make_link();

@@ -316,9 +316,8 @@ CMD_FUNC(m_mode)
 			    "*** TS bounce for %s - %lu(ours) %lu(theirs)",
 			    chptr->chname, chptr->creationtime, sendts);
 			bounce_mode(chptr, cptr, parc - 2, parv + 2);
-			return 0;
 		}
-		/* other server will resync soon enough... */
+		return 0;
 	}
 	if (IsServer(sptr) && !sendts && *parv[parc - 1] != '0')
 		sendts = -1;
@@ -2276,8 +2275,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 			MyFree(sptr->user->virthost);
 			sptr->user->virthost = NULL;
 		}
-		sptr->user->virthost = (char *)make_virthost(sptr->user->realhost,
-		    sptr->user->virthost, 1);
+		sptr->user->virthost = strdup(sptr->user->cloakedhost);
 		if (!dontspread)
 			sendto_serv_butone_token_opt(cptr, OPT_VHP, sptr->name,
 				MSG_SETHOST, TOK_SETHOST, "%s", sptr->user->virthost);
@@ -2318,7 +2316,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 		 * for ban-checking... free+recreate here because it could have
 		 * been a vhost for example. -- Syzop
 		 */
-		sptr->user->virthost = (char *)make_virthost(sptr->user->realhost, sptr->user->virthost, 1);
+		sptr->user->virthost = strdup(sptr->user->cloakedhost);
 	}
 	/*
 	 * If I understand what this code is doing correctly...
@@ -2348,18 +2346,21 @@ DLLFUNC CMD_FUNC(_m_umode)
 
 	if (!(setflags & UMODE_OPER) && IsOper(sptr))
 		IRCstats.operators++;
+
+	/* deal with opercounts and stuff */
 	if ((setflags & UMODE_OPER) && !IsOper(sptr))
 	{
 		IRCstats.operators--;
 		VERIFY_OPERCOUNT(sptr, "umode1");
-	}
-	/* FIXME: This breaks something */
+	} else /* YES this 'else' must be here, otherwise we can decrease twice. fixes opercount bug. */
 	if (!(setflags & UMODE_HIDEOPER) && IsHideOper(sptr))
 	{
 		if (IsOper(sptr)) /* decrease, but only if GLOBAL oper */
 			IRCstats.operators--;
 		VERIFY_OPERCOUNT(sptr, "umode2");
 	}
+	/* end of dealing with opercounts */
+
 	if ((setflags & UMODE_HIDEOPER) && !IsHideOper(sptr))
 	{
 		if (IsOper(sptr)) /* increase, but only if GLOBAL oper */

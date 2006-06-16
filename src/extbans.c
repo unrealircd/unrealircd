@@ -250,13 +250,8 @@ char *ban = banin + 3;
 
 	if (type != BANCHK_MSG)
 		return 0;
-	
-	if ((ban_realhost && !match(ban, ban_realhost)) ||
-	     (ban_virthost && !match(ban, ban_virthost)) ||
-	     (ban_ip && !match(ban, ban_ip)))
-		return 1;
 
-	return 0;
+	return extban_is_banned_helper(ban);
 }
 
 int extban_moden_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type)
@@ -269,12 +264,7 @@ char *ban = banin + 3;
 	if (has_voice(sptr, chptr))
 		return 0;
 	
-	if ((ban_realhost && !match(ban, ban_realhost)) ||
-	     (ban_virthost && !match(ban, ban_virthost)) ||
-	     (ban_ip && !match(ban, ban_ip)))
-		return 1;
-
-	return 0;
+	return extban_is_banned_helper(ban);
 }
 
 /** Some kind of general conv_param routine,

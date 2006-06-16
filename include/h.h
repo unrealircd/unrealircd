@@ -123,6 +123,7 @@ ConfigItem_ulines	*Find_uline(char *host);
 ConfigItem_except	*Find_except(aClient *, char *host, short type);
 ConfigItem_tld		*Find_tld(aClient *cptr, char *host);
 ConfigItem_link		*Find_link(char *username, char *hostname, char *ip, char *servername);
+ConfigItem_cgiirc *Find_cgiirc(char *username, char *hostname, char *ip, CGIIRCType type);
 ConfigItem_ban 		*Find_ban(aClient *, char *host, short type);
 ConfigItem_ban 		*Find_banEx(aClient *,char *host, short type, short type2);
 ConfigItem_vhost	*Find_vhost(char *name);
@@ -216,11 +217,11 @@ extern MODFUNC char *sock_strerror(int);
 extern int dgets(int, char *, int);
 extern char *inetntoa(char *);
 
-#if !defined(HAVE_SNPRINTF) || !defined(HAVE_VSNPRINTF)
-/* #ifndef _WIN32 XXX why was this?? -- Syzop. */
+#ifndef HAVE_SNPRINTF
 extern int snprintf (char *str, size_t count, const char *fmt, ...);
+#endif
+#ifndef HAVE_VSNPRINTF
 extern int vsnprintf (char *str, size_t count, const char *fmt, va_list arg);
-/* #endif */
 #endif
 
 #ifdef _WIN32
@@ -264,15 +265,12 @@ extern void send_authports(aClient *);
 
 
 extern void restart(char *);
-extern void send_channel_modes(aClient *, aChannel *);
 extern void server_reboot(char *);
 extern void terminate(), write_pidfile();
 extern void *MyMallocEx(size_t size);
 extern int advanced_check(char *userhost, int ipstat);
 extern int send_queued(aClient *);
 /* i know this is naughty but :P --stskeeps */
-extern void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr);
-extern void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr);
 extern void sendto_locfailops(char *pattern, ...) __attribute__((format(printf,1,2)));
 extern void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnect, char *comment);
 extern void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr, char *nick, int hopcount,
@@ -322,14 +320,7 @@ extern MODVAR int writecalls, writeb[];
 extern int deliver_it(aClient *, char *, int);
 extern int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr);
 extern int  check_for_target_limit(aClient *sptr, void *target, const char *name);
-extern char *stripbadwords_message(char *str, int *);
-extern char *stripbadwords_channel(char *str, int *);
-extern char *stripbadwords_quit(char *str, int *);
-extern char *stripbadwords(char *, ConfigItem_badword *, int *);
-extern unsigned char *StripColors(unsigned char *);
-extern const char *StripControlCodes(unsigned char *text);
 extern char *canonize(char *buffer);
-extern int webtv_parse(aClient *sptr, char *string);
 extern ConfigItem_deny_dcc *dcc_isforbidden(aClient *sptr, char *filename);
 extern ConfigItem_deny_dcc *dcc_isdiscouraged(aClient *sptr, char *filename);
 extern int check_registered(aClient *);
@@ -341,6 +332,7 @@ extern int exit_client(aClient *, aClient *, aClient *, char *);
 extern void initstats(), tstats(aClient *, char *);
 extern char *check_string(char *);
 extern char *make_nick_user_host(char *, char *, char *);
+extern inline char *make_nick_user_host_r(char *namebuf, char *nick, char *name, char *host);
 extern char *make_user_host(char *, char *);
 extern int parse(aClient *, char *, char *);
 extern int do_numeric(int, aClient *, aClient *, int, char **);
@@ -348,7 +340,6 @@ extern int hunt_server(aClient *, aClient *, char *, int, int, char **);
 extern int hunt_server_token(aClient *, aClient *, char *, char *, char *, int, int, char **);
 extern int hunt_server_token_quiet(aClient *, aClient *, char *, char *, char *, int, int, char **);
 extern aClient *next_client(aClient *, char *);
-extern int m_names(aClient *, aClient *, int, char **);
 extern int m_server_estab(aClient *);
 extern void umode_init(void);
 extern long umode_get(char, int, int (*)(aClient *, int));
@@ -386,7 +377,7 @@ extern struct hostent *get_res(char *);
 extern struct hostent *gethost_byaddr(char *, Link *);
 extern struct hostent *gethost_byname(char *, Link *);
 extern void flush_cache();
-extern void init_resolver(void);
+extern void init_resolver(int firsttime);
 extern time_t timeout_query_list(time_t);
 extern time_t expire_cache(time_t);
 extern void del_queries(char *);
@@ -486,7 +477,6 @@ extern int dopacket(aClient *, char *, int);
 extern void debug(int, char *, ...);
 #if defined(DEBUGMODE)
 extern void send_usage(aClient *, char *);
-extern void send_listinfo(aClient *, char *);
 extern void count_memory(aClient *, char *);
 extern int checkprotoflags(aClient *, int, char *, int);
 #endif
@@ -551,10 +541,9 @@ extern aClient *find_server_b64_or_real(char *name);
 extern aClient *find_server_by_base64(char *b64);
 extern int is_chanownprotop(aClient *cptr, aChannel *chptr);
 extern int is_skochanop(aClient *cptr, aChannel *chptr);
-extern char *make_virthost(char *curr, char *new, int mode);
+extern char *make_virthost(aClient *sptr, char *curr, char *new, int mode);
 extern int  channel_canjoin(aClient *sptr, char *name);
 extern char *collapse(char *pattern);
-extern void send_list(aClient *cptr, int numsend);
 extern void dcc_sync(aClient *sptr);
 extern void report_flines(aClient *sptr);
 extern void report_network(aClient *sptr);
@@ -733,12 +722,19 @@ extern MODVAR int (*find_shun)(aClient *cptr);
 extern MODVAR int (*find_spamfilter_user)(aClient *sptr, int flags);
 extern MODVAR aTKline *(*find_qline)(aClient *cptr, char *nick, int *ishold);
 extern MODVAR int  (*find_tkline_match_zap)(aClient *cptr);
+extern MODVAR int  (*find_tkline_match_zap_ex)(aClient *cptr, aTKline **rettk);
 extern MODVAR void (*tkl_stats)(aClient *cptr, int type, char *para);
 extern MODVAR void (*tkl_synch)(aClient *sptr);
 extern MODVAR int (*m_tkl)(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 extern MODVAR int (*place_host_ban)(aClient *sptr, int action, char *reason, long duration);
 extern MODVAR int (*dospamfilter)(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
 extern MODVAR int (*dospamfilter_viruschan)(aClient *sptr, aTKline *tk, int type);
+extern MODVAR void (*send_list)(aClient *cptr, int numsend);
+extern MODVAR char *(*stripbadwords_channel)(char *str, int *blocked);
+extern MODVAR char *(*stripbadwords_message)(char *str, int *blocked);
+extern MODVAR char *(*stripbadwords_quit)(char *str, int *blocked);
+extern MODVAR unsigned char *(*StripColors)(unsigned char *text);
+extern MODVAR const char *(*StripControlCodes)(unsigned char *text);
 /* /Efuncs */
 extern MODVAR aMotd *opermotd, *svsmotd, *motd, *botmotd, *smotd;
 extern MODVAR int max_connection_count;
@@ -768,9 +764,15 @@ extern int isipv6(struct IN_ADDR *addr);
 extern void inet4_to_inet6(const void *src_in, void *dst_in);
 extern void unrealdns_delreq_bycptr(aClient *cptr);
 extern void inet6_to_inet4(const void *src, void *dst);
-extern void sendtxtnumeric(aClient *to, char *pattern, ...);
+extern void sendtxtnumeric(aClient *to, char *pattern, ...) __attribute__((format(printf,2,3)));;
 extern void unrealdns_gethostbyname_link(char *name, ConfigItem_link *conf);
 extern void unrealdns_delasyncconnects(void);
 extern int is_autojoin_chan(char *chname);
 extern void unreal_free_hostent(struct hostent *he);
 extern int match_esc(const char *mask, const char *name);
+extern int iplist_onlist(IPList *iplist, char *ip);
+extern struct hostent *unreal_create_hostent(char *name, struct IN_ADDR *addr);
+extern char *unreal_time_synch_error(void);
+extern int unreal_time_synch(int timeout);
+extern int extban_is_banned_helper(char *buf);
+extern char *getcloak(aClient *sptr);

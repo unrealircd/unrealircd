@@ -75,19 +75,64 @@ static DNSCache *cache_hashtbl[DNS_HASH_SIZE]; /**< Hash table of cache */
 
 static unsigned int unrealdns_num_cache = 0; /**< # of cache entries in memory */
 
-void init_resolver(void)
+void init_resolver(int firsttime)
 {
 struct ares_options options;
+int n;
 
 	if (requests)
 		abort(); /* should never happen */
-	memset(&cache_hashtbl, 0, sizeof(cache_hashtbl));
-	memset(&dnsstats, 0, sizeof(dnsstats));
+		
+	if (firsttime)
+	{
+		memset(&cache_hashtbl, 0, sizeof(cache_hashtbl));
+		memset(&dnsstats, 0, sizeof(dnsstats));
+	}
 
 	options.timeout = 3;
 	options.tries = 2;
 	options.flags = ARES_FLAG_NOALIASES;
-	ares_init_options(&resolver_channel, &options, ARES_OPT_TIMEOUT|ARES_OPT_TRIES|ARES_OPT_FLAGS);
+#ifdef _WIN32
+	/* for windows, keep using the hosts file for now, until I'm sure it's safe to disable */
+	n = ares_init_options(&resolver_channel, &options, ARES_OPT_TIMEOUT|ARES_OPT_TRIES|ARES_OPT_FLAGS);
+#else
+	options.lookups = "b"; /* no hosts file shit plz */
+	n = ares_init_options(&resolver_channel, &options, ARES_OPT_TIMEOUT|ARES_OPT_TRIES|ARES_OPT_FLAGS|ARES_OPT_LOOKUPS);
+#endif
+	if (n != ARES_SUCCESS)
+	{
+		config_error("resolver: ares_init_options() failed with error code %d [%s]", n, ares_strerror(n));
+#ifdef _WIN32
+		win_error();
+#endif
+		exit(-7);
+	}
+}
+
+void reinit_resolver(aClient *sptr)
+{
+#ifdef CHROOTDIR
+	/* Prevent people from killing their ircd accidently if in CHROOTDIR mode... */
+FILE *fd;
+
+	fd = fopen("/etc/resolv.conf", "r");
+	if (!fd)
+	{
+		sendnotice(sptr, "Rehashing DNS with CHROOTDIR enabled seems a BAD idea since /etc/resolv.conf "
+		                 "is missing in your chroot. This is usually perfectly fine and normal, but "
+		                 "prevents this exact rehash feature from working for obvious technical reasons "
+		                 "(HINT: it is impossible to read the system /etc/resolv.conf since it's outside the chroot).");
+		return;
+	}
+	fclose(fd);
+#endif
+
+	sendto_realops("%s requested reinitalization of resolver!", sptr->name);
+	sendto_realops("Destroying resolver channel, along with all currently pending queries...");
+	ares_destroy(resolver_channel);
+	sendto_realops("Initializing resolver again...");
+	init_resolver(0);
+	sendto_realops("Reinitalization finished successfully.");
 }
 
 void unrealdns_addreqtolist(DNSReq *r)
@@ -206,6 +251,22 @@ char ipv6 = r->ipv6;
 #endif
 }
 
+int verify_hostname(char *name)
+{
+char *p;
+
+	if (strlen(name) > HOSTLEN)
+		return 0; 
+
+	/* No underscores or other illegal characters */
+	for (p = name; *p; p++)
+		if (!isalnum(*p) && !strchr(".-", *p))
+			return 0;
+
+	return 1;
+}
+
+
 void unrealdns_cb_nametoip_verify(void *arg, int status, struct hostent *he)
 {
 DNSReq *r = (DNSReq *)arg;
@@ -260,6 +321,13 @@ u_int32_t ipv4_addr;
 	if (!he->h_addr_list[i])
 	{
 		/* Failed name <-> IP mapping */
+		proceed_normal_client_handshake(acptr, NULL);
+		return;
+	}
+
+	if (!verify_hostname(he->h_name))
+	{
+		/* Hostname is bad, don't cache and consider unresolved */
 		proceed_normal_client_handshake(acptr, NULL);
 		return;
 	}
@@ -623,9 +691,21 @@ char *param;
 	} else
 	if (*param == 'i') /* INFORMATION */
 	{
-		sendtxtnumeric(sptr, "DNS Configuration info:");
-		sendtxtnumeric(sptr, " c-ares version %s",ares_version(NULL));
-		/* TODO: hmm... we cannot get the nameservers from c-ares, can we? */
+		struct ares_config_info inf;
+		int i;
+		
+		ares_get_config(&inf, resolver_channel);
+
+		sendtxtnumeric(sptr, "****** DNS Configuration Information ******");
+		sendtxtnumeric(sptr, " c-ares version: %s",ares_version(NULL));
+		sendtxtnumeric(sptr, "        timeout: %d", inf.timeout);
+		sendtxtnumeric(sptr, "          tries: %d", inf.tries);
+		sendtxtnumeric(sptr, "   # of servers: %d", inf.numservers);
+		for (i = 0; i < inf.numservers; i++)
+			sendtxtnumeric(sptr, "      server #%d: %s", i+1, inf.servers[i] ? inf.servers[i] : "[???]");
+			
+		/* TODO: free or get memleak ! */
+		sendtxtnumeric(sptr, "****** End of DNS Configuration Info ******");
 	} else /* STATISTICS */
 	{
 		sendtxtnumeric(sptr, "DNS CACHE Stats:");

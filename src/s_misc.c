@@ -227,9 +227,8 @@ char *make_user_host(char *name, char *host)
  * create a string of form "foo!bar@fubar" given foo, bar and fubar
  * as the parameters.  If NULL, they become "*".
  */
-char *make_nick_user_host(char *nick, char *name, char *host)
+inline char *make_nick_user_host_r(char *namebuf, char *nick, char *name, char *host)
 {
-	static char namebuf[NICKLEN + USERLEN + HOSTLEN + 6];
 	char *s = namebuf;
 
 	bzero(namebuf, sizeof(namebuf));
@@ -247,6 +246,18 @@ char *make_nick_user_host(char *nick, char *name, char *host)
 	*s = '\0';
 	return (namebuf);
 }
+
+/*
+ * create a string of form "foo!bar@fubar" given foo, bar and fubar
+ * as the parameters.  If NULL, they become "*".
+ */
+char *make_nick_user_host(char *nick, char *name, char *host)
+{
+	static char namebuf[NICKLEN + USERLEN + HOSTLEN + 24];
+
+	return make_nick_user_host_r(namebuf, nick, name, host);
+}
+
 
 /**
  ** myctime()
@@ -1113,4 +1124,15 @@ char *p, *name;
 	}
 
 	return 0;
+}
+
+char *getcloak(aClient *sptr)
+{
+	if (!*sptr->user->cloakedhost)
+	{
+		/* need to calculate (first-time) */
+		make_virthost(sptr, sptr->user->realhost, sptr->user->cloakedhost, 0);
+	}
+
+	return sptr->user->cloakedhost;
 }

@@ -290,8 +290,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		} else
 		if (IsHidden(sptr) && !sptr->user->virthost) {
 			/* +x has just been set by modes-on-oper and iNAH is off */
-			sptr->user->virthost = (char *)make_virthost(sptr->user->realhost,
-			                                             sptr->user->virthost, 1);
+			sptr->user->virthost = strdup(sptr->user->cloakedhost);
 		}
 
 		if (!IsOper(sptr))

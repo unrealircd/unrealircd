@@ -42,7 +42,13 @@
 #endif
 #include "version.h"
 
+void send_channel_modes(aClient *cptr, aChannel *chptr);
+void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr);
+void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr);
 DLLFUNC int m_server(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+
+static char buf[BUFSIZE];
+
 
 #define MSG_SERVER 	"SERVER"	
 #define TOK_SERVER 	"'"	
@@ -811,9 +817,9 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 					{
 						sendto_one(cptr,
 						    ((cptr->proto & PROTO_SJB64) ?
-						    "%s %s %d %B %s %s %b %lu %s %s %s%s:%s"
+						    "%s %s %d %B %s %s %b %lu %s %s %s%s%s%s:%s"
 						    :
-						    "%s %s %d %lu %s %s %b %lu %s %s %s%s:%s"),
+						    "%s %s %d %lu %s %s %b %lu %s %s %s%s%s%s:%s"),
 						    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
 						    acptr->name,
 						    acptr->hopcount + 1,
@@ -824,16 +830,19 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 						    (unsigned long)acptr->user->servicestamp,
 						    (!buf || *buf == '\0' ? "+" : buf),
 						    ((IsHidden(acptr) && (acptr->umodes & UMODE_SETHOST)) ? acptr->user->virthost : "*"),
+						    SupportCLK(cptr) ? getcloak(acptr) : "",
+						    SupportCLK(cptr) ? " " : "",
 						    SupportNICKIP(cptr) ? encode_ip(acptr->user->ip_str) : "",
-					            SupportNICKIP(cptr) ? " " : "", acptr->info);
+					        SupportNICKIP(cptr) ? " " : "",
+					        acptr->info);
 					}
 					else
 					{
 						sendto_one(cptr,
 						    (cptr->proto & PROTO_SJB64 ?
-						    "%s %s %d %B %s %s %s %lu %s %s %s%s:%s"
+						    "%s %s %d %B %s %s %s %lu %s %s %s%s%s%s:%s"
 						    :
-						    "%s %s %d %lu %s %s %s %lu %s %s %s%s:%s"),
+						    "%s %s %d %lu %s %s %s %lu %s %s %s%s%s%s:%s"),
 						    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
 						    acptr->name,
 						    acptr->hopcount + 1,
@@ -844,8 +853,11 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 						    (unsigned long)acptr->user->servicestamp,
 						    (!buf || *buf == '\0' ? "+" : buf),
 						    ((IsHidden(acptr) && (acptr->umodes & UMODE_SETHOST)) ? acptr->user->virthost : "*"),
+						    SupportCLK(cptr) ? getcloak(acptr) : "",
+						    SupportCLK(cptr) ? " " : "",
 						    SupportNICKIP(cptr) ? encode_ip(acptr->user->ip_str) : "",
-					            SupportNICKIP(cptr) ? " " : "", acptr->info);
+					        SupportNICKIP(cptr) ? " " : "",
+					        acptr->info);
 					}
 				}
 				else
@@ -931,5 +943,590 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 			cptr->name);
 #endif
 	return 0;
+}
 
+static int send_mode_list(aClient *cptr, char *chname, TS creationtime, Member *top, int mask, char flag)
+{
+	Member *lp;
+	char *cp, *name;
+	int  count = 0, send = 0, sent = 0;
+
+	cp = modebuf + strlen(modebuf);
+	if (*parabuf)		/* mode +l or +k xx */
+		count = 1;
+	for (lp = top; lp; lp = lp->next)
+	{
+		/* 
+		 * Okay, since ban's are stored in their own linked
+		 * list, we won't even bother to check if CHFL_BAN
+		 * is set in the flags. This should work as long
+		 * as only ban-lists are feed in with CHFL_BAN mask.
+		 * However, we still need to typecast... -Donwulff 
+		 */
+		if ((mask == CHFL_BAN) || (mask == CHFL_EXCEPT) || (mask == CHFL_INVEX))
+		{
+/*			if (!(((Ban *)lp)->flags & mask)) continue; */
+			name = ((Ban *) lp)->banstr;
+		}
+		else
+		{
+			if (!(lp->flags & mask))
+				continue;
+			name = lp->cptr->name;
+		}
+		if (strlen(parabuf) + strlen(name) + 11 < (size_t)MODEBUFLEN)
+		{
+			if (*parabuf)
+				(void)strlcat(parabuf, " ", sizeof parabuf);
+			(void)strlcat(parabuf, name, sizeof parabuf);
+			count++;
+			*cp++ = flag;
+			*cp = '\0';
+		}
+		else if (*parabuf)
+			send = 1;
+		if (count == RESYNCMODES)
+			send = 1;
+		if (send)
+		{
+			/* cptr is always a server! So we send creationtimes */
+			sendmodeto_one(cptr, me.name, chname, modebuf,
+			    parabuf, creationtime);
+			sent = 1;
+			send = 0;
+			*parabuf = '\0';
+			cp = modebuf;
+			*cp++ = '+';
+			if (count != RESYNCMODES)
+			{
+				(void)strlcpy(parabuf, name, sizeof parabuf);
+				*cp++ = flag;
+			}
+			count = 0;
+			*cp = '\0';
+		}
+	}
+	return sent;
+}
+
+/* A little kludge to prevent sending double spaces -- codemastr */
+static inline void send_channel_mode(aClient *cptr, char *from, aChannel *chptr)
+{
+	if (*parabuf)
+		sendto_one(cptr, ":%s %s %s %s %s %lu", from,
+			(IsToken(cptr) ? TOK_MODE : MSG_MODE), chptr->chname,
+			modebuf, parabuf, chptr->creationtime);
+	else
+		sendto_one(cptr, ":%s %s %s %s %lu", from,
+			(IsToken(cptr) ? TOK_MODE : MSG_MODE), chptr->chname,
+			modebuf, chptr->creationtime);
+}
+
+/*
+ * send "cptr" a full list of the modes for channel chptr.
+ */
+void send_channel_modes(aClient *cptr, aChannel *chptr)
+{
+	int  sent;
+/* fixed a bit .. to fit halfops --sts */
+	if (*chptr->chname != '#')
+		return;
+
+	*parabuf = '\0';
+	*modebuf = '\0';
+	channel_modes(cptr, modebuf, parabuf, chptr);
+	sent = send_mode_list(cptr, chptr->chname, chptr->creationtime,
+	    chptr->members, CHFL_CHANOP, 'o');
+	if (!sent && chptr->creationtime)
+		send_channel_mode(cptr, me.name, chptr);
+	else if (modebuf[1] || *parabuf)
+		sendmodeto_one(cptr, me.name,
+		    chptr->chname, modebuf, parabuf, chptr->creationtime);
+
+	*parabuf = '\0';
+	*modebuf = '+';
+	modebuf[1] = '\0';
+
+	sent = send_mode_list(cptr, chptr->chname, chptr->creationtime,
+	    chptr->members, CHFL_HALFOP, 'h');
+	if (!sent && chptr->creationtime)
+		send_channel_mode(cptr, me.name, chptr);
+	else if (modebuf[1] || *parabuf)
+		sendmodeto_one(cptr, me.name,
+		    chptr->chname, modebuf, parabuf, chptr->creationtime);
+
+	*parabuf = '\0';
+	*modebuf = '+';
+	modebuf[1] = '\0';
+	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
+	    (Member *)chptr->banlist, CHFL_BAN, 'b');
+	if (modebuf[1] || *parabuf)
+		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
+		    parabuf, chptr->creationtime);
+
+	*parabuf = '\0';
+	*modebuf = '+';
+	modebuf[1] = '\0';
+	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
+	    (Member *)chptr->exlist, CHFL_EXCEPT, 'e');
+	if (modebuf[1] || *parabuf)
+		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
+		    parabuf, chptr->creationtime);
+
+	*parabuf = '\0';
+	*modebuf = '+';
+	modebuf[1] = '\0';
+	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
+	    (Member *)chptr->invexlist, CHFL_INVEX, 'I');
+	if (modebuf[1] || *parabuf)
+		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
+		    parabuf, chptr->creationtime);
+
+	*parabuf = '\0';
+	*modebuf = '+';
+	modebuf[1] = '\0';
+	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
+	    chptr->members, CHFL_VOICE, 'v');
+	if (modebuf[1] || *parabuf)
+		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
+		    parabuf, chptr->creationtime);
+
+	*parabuf = '\0';
+	*modebuf = '+';
+	modebuf[1] = '\0';
+	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
+	    chptr->members, CHFL_CHANOWNER, 'q');
+	if (modebuf[1] || *parabuf)
+		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
+		    parabuf, chptr->creationtime);
+
+	*parabuf = '\0';
+	*modebuf = '+';
+	modebuf[1] = '\0';
+	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
+	    chptr->members, CHFL_CHANPROT, 'a');
+	if (modebuf[1] || *parabuf)
+		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
+		    parabuf, chptr->creationtime);
+}
+
+
+static int send_ban_list(aClient *cptr, char *chname, TS creationtime, aChannel *channel)
+{
+	Ban *top;
+
+	Ban *lp;
+	char *cp, *name;
+	int  count = 0, send = 0, sent = 0;
+
+	cp = modebuf + strlen(modebuf);
+	if (*parabuf)		/* mode +l or +k xx */
+		count = 1;
+	top = channel->banlist;
+	for (lp = top; lp; lp = lp->next)
+	{
+		name = ((Ban *) lp)->banstr;
+
+		if (strlen(parabuf) + strlen(name) + 11 < (size_t)MODEBUFLEN)
+		{
+			if (*parabuf)
+				(void)strcat(parabuf, " ");
+			(void)strcat(parabuf, name);
+			count++;
+			*cp++ = 'b';
+			*cp = '\0';
+		}
+		else if (*parabuf)
+			send = 1;
+		if (count == MODEPARAMS)
+			send = 1;
+		if (send)
+		{
+			/* cptr is always a server! So we send creationtimes */
+			sendto_one(cptr, "%s %s %s %s %lu",
+			    (IsToken(cptr) ? TOK_MODE : MSG_MODE),
+			    chname, modebuf, parabuf, creationtime);
+			sent = 1;
+			send = 0;
+			*parabuf = '\0';
+			cp = modebuf;
+			*cp++ = '+';
+			if (count != MODEPARAMS)
+			{
+				(void)strlcpy(parabuf, name, sizeof parabuf);
+				*cp++ = 'b';
+			}
+			count = 0;
+			*cp = '\0';
+		}
+	}
+	top = channel->exlist;
+	for (lp = top; lp; lp = lp->next)
+	{
+		name = ((Ban *) lp)->banstr;
+
+		if (strlen(parabuf) + strlen(name) + 11 < (size_t)MODEBUFLEN)
+		{
+			if (*parabuf)
+				(void)strcat(parabuf, " ");
+			(void)strcat(parabuf, name);
+			count++;
+			*cp++ = 'e';
+			*cp = '\0';
+		}
+		else if (*parabuf)
+			send = 1;
+		if (count == MODEPARAMS)
+			send = 1;
+		if (send)
+		{
+			/* cptr is always a server! So we send creationtimes */
+			sendto_one(cptr, "%s %s %s %s %lu",
+			    (IsToken(cptr) ? TOK_MODE : MSG_MODE),
+			    chname, modebuf, parabuf, creationtime);
+			sent = 1;
+			send = 0;
+			*parabuf = '\0';
+			cp = modebuf;
+			*cp++ = '+';
+			if (count != MODEPARAMS)
+			{
+				(void)strlcpy(parabuf, name, sizeof parabuf);
+				*cp++ = 'e';
+			}
+			count = 0;
+			*cp = '\0';
+		}
+	}
+	top = channel->invexlist;
+	for (lp = top; lp; lp = lp->next)
+	{
+		name = ((Ban *) lp)->banstr;
+
+		if (strlen(parabuf) + strlen(name) + 11 < (size_t)MODEBUFLEN)
+		{
+			if (*parabuf)
+				(void)strcat(parabuf, " ");
+			(void)strcat(parabuf, name);
+			count++;
+			*cp++ = 'I';
+			*cp = '\0';
+		}
+		else if (*parabuf)
+			send = 1;
+		if (count == MODEPARAMS)
+			send = 1;
+		if (send)
+		{
+			/* cptr is always a server! So we send creationtimes */
+			sendto_one(cptr, "%s %s %s %s %lu",
+			    (IsToken(cptr) ? TOK_MODE : MSG_MODE),
+			    chname, modebuf, parabuf, creationtime);
+			sent = 1;
+			send = 0;
+			*parabuf = '\0';
+			cp = modebuf;
+			*cp++ = '+';
+			if (count != MODEPARAMS)
+			{
+				(void)strlcpy(parabuf, name, sizeof parabuf);
+				*cp++ = 'I';
+			}
+			count = 0;
+			*cp = '\0';
+		}
+	}
+	return sent;
+}
+
+
+/* 
+ * This will send "cptr" a full list of the modes for channel chptr,
+ */
+
+void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
+{
+
+	Member *members;
+	Member *lp;
+	char *name;
+	char *bufptr;
+
+	int  n = 0;
+
+	if (*chptr->chname != '#')
+		return;
+
+	members = chptr->members;
+
+	/* First we'll send channel, channel modes and members and status */
+
+	*modebuf = *parabuf = '\0';
+	channel_modes(cptr, modebuf, parabuf, chptr);
+
+	if (*parabuf)
+	{
+	}
+	else
+	{
+		if (!SupportSJOIN2(cptr))
+			strlcpy(parabuf, "<none>", sizeof parabuf);
+		else
+			strlcpy(parabuf, "<->", sizeof parabuf);
+	}
+	ircsprintf(buf, "%s %ld %s %s %s :",
+	    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
+	    chptr->creationtime, chptr->chname, modebuf, parabuf);
+
+	bufptr = buf + strlen(buf);
+
+	for (lp = members; lp; lp = lp->next)
+	{
+
+		if (lp->flags & MODE_CHANOP)
+			*bufptr++ = '@';
+
+		if (lp->flags & MODE_VOICE)
+			*bufptr++ = '+';
+
+		if (lp->flags & MODE_HALFOP)
+			*bufptr++ = '%';
+		if (lp->flags & MODE_CHANOWNER)
+			*bufptr++ = '*';
+		if (lp->flags & MODE_CHANPROT)
+			*bufptr++ = '~';
+
+
+
+		name = lp->cptr->name;
+
+		strcpy(bufptr, name);
+		bufptr += strlen(bufptr);
+		*bufptr++ = ' ';
+		n++;
+
+		if (bufptr - buf > BUFSIZE - 80)
+		{
+			*bufptr++ = '\0';
+			if (bufptr[-1] == ' ')
+				bufptr[-1] = '\0';
+			sendto_one(cptr, "%s", buf);
+
+			ircsprintf(buf, "%s %ld %s %s %s :",
+			    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
+			    chptr->creationtime, chptr->chname, modebuf,
+			    parabuf);
+			n = 0;
+
+			bufptr = buf + strlen(buf);
+		}
+	}
+	if (n)
+	{
+		*bufptr++ = '\0';
+		if (bufptr[-1] == ' ')
+			bufptr[-1] = '\0';
+		sendto_one(cptr, "%s", buf);
+	}
+	/* Then we'll send the ban-list */
+
+	*parabuf = '\0';
+	*modebuf = '+';
+	modebuf[1] = '\0';
+	send_ban_list(cptr, chptr->chname, chptr->creationtime, chptr);
+
+	if (modebuf[1] || *parabuf)
+		sendto_one(cptr, "%s %s %s %s %lu",
+		    (IsToken(cptr) ? TOK_MODE : MSG_MODE),
+		    chptr->chname, modebuf, parabuf, chptr->creationtime);
+
+	return;
+}
+
+char *mystpcpy(char *dst, const char *src)
+{
+	for (; *src; src++)
+		*dst++ = *src;
+	*dst = '\0';
+	return dst;
+}
+
+
+
+/** This will send "cptr" a full list of the modes for channel chptr,
+ *
+ * Half of it recoded by Syzop: the whole buffering and size checking stuff
+ * looked weird and just plain inefficient. We now fill up our send-buffer
+ * really as much as we can, without causing any overflows of course.
+ */
+void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
+{
+	Member *members;
+	Member *lp;
+	Ban *ban;
+	char *name;
+	short nomode, nopara;
+	char tbuf[512]; /* work buffer, for temporary data */
+	char buf[1024]; /* send buffer */
+	char *bufptr; /* points somewhere in 'buf' */
+	char *p; /* points to somewhere in 'tbuf' */
+	int prebuflen = 0; /* points to after the <sjointoken> <TS> <chan> <fixmodes> <fixparas <..>> : part */
+
+	if (*chptr->chname != '#')
+		return;
+
+	nomode = 0;
+	nopara = 0;
+	members = chptr->members;
+
+	/* First we'll send channel, channel modes and members and status */
+
+	*modebuf = *parabuf = '\0';
+	channel_modes(cptr, modebuf, parabuf, chptr);
+
+	if (!modebuf[1])
+		nomode = 1;
+	if (!(*parabuf))
+		nopara = 1;
+
+
+	if (nomode && nopara)
+	{
+		ircsprintf(buf,
+		    (cptr->proto & PROTO_SJB64 ? "%s %B %s :" : "%s %ld %s :"),
+		    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
+		    (long)chptr->creationtime, chptr->chname);
+	}
+	if (nopara && !nomode)
+	{
+		ircsprintf(buf, 
+		    (cptr->proto & PROTO_SJB64 ? "%s %B %s %s :" : "%s %ld %s %s :"),
+		    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
+		    (long)chptr->creationtime, chptr->chname, modebuf);
+	}
+	if (!nopara && !nomode)
+	{
+		ircsprintf(buf,
+		    (cptr->proto & PROTO_SJB64 ? "%s %B %s %s %s :" : "%s %ld %s %s %s :"),
+		    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
+		    (long)chptr->creationtime, chptr->chname, modebuf, parabuf);
+	}
+
+	prebuflen = strlen(buf);
+	bufptr = buf + prebuflen;
+
+	/* RULES:
+	 * - Use 'tbuf' as a working buffer, use 'p' to advance in 'tbuf'.
+	 *   Thus, be sure to do a 'p = tbuf' at the top of the loop.
+	 * - When one entry has been build, check if strlen(buf) + strlen(tbuf) > BUFSIZE - 8,
+	 *   if so, do not concat but send the current result (buf) first to the server
+	 *   and reset 'buf' to only the prebuf part (all until the ':').
+	 *   Then, in both cases, concat 'tbuf' to 'buf' and continue
+	 * - Be sure to ALWAYS zero terminate (*p = '\0') when the entry has been build.
+	 * - Be sure to add a space after each entry ;)
+	 *
+	 * For a more illustrated view, take a look at the first for loop, the others
+	 * are pretty much the same.
+	 *
+	 * Follow these rules, and things would be smooth and efficient (network-wise),
+	 * if you ignore them, expect crashes and/or heap corruption, aka: HELL.
+	 * You have been warned.
+	 *
+	 * Side note: of course things would be more efficient if the prebuf thing would
+	 * not be sent every time, but that's another story
+	 *      -- Syzop
+	 */
+
+	for (lp = members; lp; lp = lp->next)
+	{
+		p = tbuf;
+		if (lp->flags & MODE_CHANOP)
+			*p++ = '@';
+		if (lp->flags & MODE_VOICE)
+			*p++ = '+';
+		if (lp->flags & MODE_HALFOP)
+			*p++ = '%';
+		if (lp->flags & MODE_CHANOWNER)
+			*p++ = '*';
+		if (lp->flags & MODE_CHANPROT)
+			*p++ = '~';
+
+		p = mystpcpy(p, lp->cptr->name);
+		*p++ = ' ';
+		*p = '\0';
+
+		/* this is: if (strlen(tbuf) + strlen(buf) > BUFSIZE - 8) */
+		if ((p - tbuf) + (bufptr - buf) > BUFSIZE - 8)
+		{
+			/* Would overflow, so send our current stuff right now (except new stuff) */
+			sendto_one(cptr, "%s", buf);
+			bufptr = buf + prebuflen;
+			*bufptr = '\0';
+		}
+		/* concat our stuff.. */
+		bufptr = mystpcpy(bufptr, tbuf);
+	}
+
+	for (ban = chptr->banlist; ban; ban = ban->next)
+	{
+		p = tbuf;
+		*p++ = '&';
+		p = mystpcpy(p, ban->banstr);
+		*p++ = ' ';
+		*p = '\0';
+		
+		/* this is: if (strlen(tbuf) + strlen(buf) > BUFSIZE - 8) */
+		if ((p - tbuf) + (bufptr - buf) > BUFSIZE - 8)
+		{
+			/* Would overflow, so send our current stuff right now (except new stuff) */
+			sendto_one(cptr, "%s", buf);
+			bufptr = buf + prebuflen;
+			*bufptr = '\0';
+		}
+		/* concat our stuff.. */
+		bufptr = mystpcpy(bufptr, tbuf);
+	}
+
+	for (ban = chptr->exlist; ban; ban = ban->next)
+	{
+		p = tbuf;
+		*p++ = '"';
+		p = mystpcpy(p, ban->banstr);
+		*p++ = ' ';
+		*p = '\0';
+		
+		/* this is: if (strlen(tbuf) + strlen(buf) > BUFSIZE - 8) */
+		if ((p - tbuf) + (bufptr - buf) > BUFSIZE - 8)
+		{
+			/* Would overflow, so send our current stuff right now (except new stuff) */
+			sendto_one(cptr, "%s", buf);
+			bufptr = buf + prebuflen;
+			*bufptr = '\0';
+		}
+		/* concat our stuff.. */
+		bufptr = mystpcpy(bufptr, tbuf);
+	}
+
+	for (ban = chptr->invexlist; ban; ban = ban->next)
+	{
+		p = tbuf;
+		*p++ = '\'';
+		p = mystpcpy(p, ban->banstr);
+		*p++ = ' ';
+		*p = '\0';
+		
+		/* this is: if (strlen(tbuf) + strlen(buf) > BUFSIZE - 8) */
+		if ((p - tbuf) + (bufptr - buf) > BUFSIZE - 8)
+		{
+			/* Would overflow, so send our current stuff right now (except new stuff) */
+			sendto_one(cptr, "%s", buf);
+			bufptr = buf + prebuflen;
+			*bufptr = '\0';
+		}
+		/* concat our stuff.. */
+		bufptr = mystpcpy(bufptr, tbuf);
+	}
+
+	if (buf[prebuflen])
+		sendto_one(cptr, "%s", buf);
 }

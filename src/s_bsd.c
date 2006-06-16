@@ -345,7 +345,7 @@ int  inetport(aClient *cptr, char *name, int port)
 {
 	static struct SOCKADDR_IN server;
 	int  ad[4], len = sizeof(server);
-	char ipname[20];
+	char ipname[64];
 
 	if (BadPtr(name))
 		name = "*";
@@ -363,7 +363,7 @@ int  inetport(aClient *cptr, char *name, int port)
 	if (*name == '*')
 		ircsprintf(ipname, "::");
 	else
-		ircsprintf(ipname, "%s", name);
+		strlcpy(ipname, name, sizeof(ipname));
 #endif
 
 	if (cptr != &me)
@@ -452,17 +452,6 @@ int  inetport(aClient *cptr, char *name, int port)
 		--OpenFiles;
 		return -1;
 	}
-
-#ifndef _WIN32
-	if (cptr == &me)	/* KLUDGE to get it work... */
-	{
-		char buf[1024];
-
-		(void)ircsprintf(buf, rpl_str(RPL_MYPORTIS), me.name, "*",
-		    ntohs(server.SIN_PORT));
-		(void)write(0, buf, strlen(buf));
-	}
-#endif
 
 #ifdef INET6
 	bcopy(server.sin6_addr.s6_addr, cptr->ip.s6_addr, IN6ADDRSZ);
@@ -669,7 +658,9 @@ init_dgram:
 
 #endif /*_WIN32*/
 
-	init_resolver();
+#ifndef CHROOTDIR
+	init_resolver(1);
+#endif
 	return;
 }
 
@@ -706,6 +697,11 @@ static int check_init(aClient *cptr, char *sockn, size_t size)
 	struct SOCKADDR_IN sk;
 	int  len = sizeof(struct SOCKADDR_IN);
 
+	if (IsCGIIRC(cptr))
+	{
+		strlcpy(sockn, GetIP(cptr), size); /* use already set value */
+		return 0;
+	}
 
 	/* If descriptor is a tty, special checking... */
 #ifndef _WIN32
@@ -1360,6 +1356,8 @@ struct hostent *he;
 
 	if (!DONT_RESOLVE)
 	{
+		if (!acptr->serv)
+			sendto_one(acptr, "%s", REPORT_DO_DNS);
 		dns_special_flag = 1;
 		he = unrealdns_doclient(acptr);
 		dns_special_flag = 0;

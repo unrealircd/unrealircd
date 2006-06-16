@@ -79,7 +79,7 @@ void chanfloodtimer_stopchantimers(aChannel *chptr);
  * some buffers for rebuilding channel/nick lists with ,'s
  */
 static char nickbuf[BUFSIZE], buf[BUFSIZE];
-char modebuf[BUFSIZE], parabuf[BUFSIZE];
+MODVAR char modebuf[BUFSIZE], parabuf[BUFSIZE];
 #include "sjoin.h"
 
 #define MODESYS_LINKOK		/* We do this for a TEST  */
@@ -438,10 +438,10 @@ int del_listmode(Ban **list, aChannel *chptr, char *banid)
  * Moved to struct.h
  */
 
-/* Those 3 pointers can be used by extended ban modules so they
- * don't have to do 3 make_nick_user_host()'s all the time:
+/* Those pointers can be used by extended ban modules so they
+ * don't have to do 4 make_nick_user_host()'s all the time:
  */
-char *ban_realhost = NULL, *ban_virthost = NULL, *ban_ip = NULL;
+char *ban_realhost = NULL, *ban_virthost = NULL, *ban_cloakhost, *ban_ip = NULL;
 
 /** is_banned - Check if a user is banned on a channel.
  * @param sptr   Client to check (can be remote client)
@@ -466,43 +466,39 @@ Ban *is_banned_with_nick(aClient *sptr, aChannel *chptr, int type, char *nick)
 {
 	Ban *tmp, *tmp2;
 	char *s;
-	static char realhost[NICKLEN + USERLEN + HOSTLEN + 6];
-	static char virthost[NICKLEN + USERLEN + HOSTLEN + 6];
-	static char     nuip[NICKLEN + USERLEN + HOSTLEN + 6];
+	static char realhost[NICKLEN + USERLEN + HOSTLEN + 24];
+	static char cloakhost[NICKLEN + USERLEN + HOSTLEN + 24];
+	static char virthost[NICKLEN + USERLEN + HOSTLEN + 24];
+	static char     nuip[NICKLEN + USERLEN + HOSTLEN + 24];
 	int dovirt = 0, mine = 0;
 	Extban *extban;
 
-	if (!IsPerson(sptr))
+	if (!IsPerson(sptr) || !chptr->banlist)
 		return NULL;
 
 	ban_realhost = realhost;
-	ban_ip = ban_virthost = NULL;
-
-	if (MyConnect(sptr)) {
+	ban_ip = ban_virthost = ban_cloakhost = NULL;
+	
+	if (MyConnect(sptr))
+	{
 		mine = 1;
-		s = make_nick_user_host(nick, sptr->user->username, GetIP(sptr));
-		strlcpy(nuip, s, sizeof nuip);
+		make_nick_user_host_r(nuip, nick, sptr->user->username, GetIP(sptr));
 		ban_ip = nuip;
+		make_nick_user_host_r(cloakhost, nick, sptr->user->username, sptr->user->cloakedhost);
+		ban_cloakhost = cloakhost;
 	}
 
-	if (sptr->user->virthost)
-		if (strcmp(sptr->user->realhost, sptr->user->virthost))
-		{
-			dovirt = 1;
-		}
-
-	s = make_nick_user_host(nick, sptr->user->username,
-	    sptr->user->realhost);
-	strlcpy(realhost, s, sizeof realhost);
-
-	if (dovirt)
+	if (IsSetHost(sptr) && strcmp(sptr->user->realhost, sptr->user->virthost))
 	{
-		s = make_nick_user_host(nick, sptr->user->username,
-		    sptr->user->virthost);
-		strlcpy(virthost, s, sizeof virthost);
+		dovirt = 1;
+		make_nick_user_host_r(virthost, nick, sptr->user->username, sptr->user->virthost);
 		ban_virthost = virthost;
 	}
-		/* We now check +b first, if a +b is found we then see if there is a +e.
+
+
+	make_nick_user_host_r(realhost, nick, sptr->user->username, sptr->user->realhost);
+
+/* We now check +b first, if a +b is found we then see if there is a +e.
  * If a +e was found we return NULL, if not, we return the ban.
  */
 	for (tmp = chptr->banlist; tmp; tmp = tmp->next)
@@ -517,7 +513,8 @@ Ban *is_banned_with_nick(aClient *sptr, aChannel *chptr, int type, char *nick)
 		} else {
 			if ((match(tmp->banstr, realhost) == 0) ||
 			    (dovirt && (match(tmp->banstr, virthost) == 0)) ||
-			    (mine && (match(tmp->banstr, nuip) == 0)))
+			    (mine && (match(tmp->banstr, nuip) == 0)) ||
+			    (mine && (match(tmp->banstr, cloakhost) == 0)) )
 			{
 				/* matches.. do nothing */
 			} else
@@ -537,7 +534,8 @@ Ban *is_banned_with_nick(aClient *sptr, aChannel *chptr, int type, char *nick)
 			} else {
 				if ((match(tmp2->banstr, realhost) == 0) ||
 					(dovirt && (match(tmp2->banstr, virthost) == 0)) ||
-					(mine && (match(tmp2->banstr, nuip) == 0)) )
+					(mine && (match(tmp2->banstr, nuip) == 0)) ||
+					(mine && (match(tmp2->banstr, cloakhost) == 0)) )
 					return NULL;
 			}
 		}
@@ -545,6 +543,17 @@ Ban *is_banned_with_nick(aClient *sptr, aChannel *chptr, int type, char *nick)
 	}
 
 	return (tmp);
+}
+
+int extban_is_banned_helper(char *buf)
+{
+	if ((match(buf, ban_realhost) == 0) ||
+	    (ban_virthost && (match(buf, ban_virthost) == 0)) ||
+	    (ban_ip && (match(buf, ban_ip) == 0)) ||
+	    (ban_cloakhost && (match(buf, ban_cloakhost) == 0)) )
+		return 1;
+	
+	return 0;
 }
 
 /*
@@ -983,174 +992,6 @@ void channel_modes(aClient *cptr, char *mbuf, char *pbuf, aChannel *chptr)
 	return;
 }
 
-static int send_mode_list(aClient *cptr, char *chname, TS creationtime, Member *top, int mask, char flag)
-{
-	Member *lp;
-	char *cp, *name;
-	int  count = 0, send = 0, sent = 0;
-
-	cp = modebuf + strlen(modebuf);
-	if (*parabuf)		/* mode +l or +k xx */
-		count = 1;
-	for (lp = top; lp; lp = lp->next)
-	{
-		/* 
-		 * Okay, since ban's are stored in their own linked
-		 * list, we won't even bother to check if CHFL_BAN
-		 * is set in the flags. This should work as long
-		 * as only ban-lists are feed in with CHFL_BAN mask.
-		 * However, we still need to typecast... -Donwulff 
-		 */
-		if ((mask == CHFL_BAN) || (mask == CHFL_EXCEPT) || (mask == CHFL_INVEX))
-		{
-/*			if (!(((Ban *)lp)->flags & mask)) continue; */
-			name = ((Ban *) lp)->banstr;
-		}
-		else
-		{
-			if (!(lp->flags & mask))
-				continue;
-			name = lp->cptr->name;
-		}
-		if (strlen(parabuf) + strlen(name) + 11 < (size_t)MODEBUFLEN)
-		{
-			if (*parabuf)
-				(void)strlcat(parabuf, " ", sizeof parabuf);
-			(void)strlcat(parabuf, name, sizeof parabuf);
-			count++;
-			*cp++ = flag;
-			*cp = '\0';
-		}
-		else if (*parabuf)
-			send = 1;
-		if (count == RESYNCMODES)
-			send = 1;
-		if (send)
-		{
-			/* cptr is always a server! So we send creationtimes */
-			sendmodeto_one(cptr, me.name, chname, modebuf,
-			    parabuf, creationtime);
-			sent = 1;
-			send = 0;
-			*parabuf = '\0';
-			cp = modebuf;
-			*cp++ = '+';
-			if (count != RESYNCMODES)
-			{
-				(void)strlcpy(parabuf, name, sizeof parabuf);
-				*cp++ = flag;
-			}
-			count = 0;
-			*cp = '\0';
-		}
-	}
-	return sent;
-}
-
-/* A little kludge to prevent sending double spaces -- codemastr */
-static inline void send_channel_mode(aClient *cptr, char *from, aChannel *chptr)
-{
-	if (*parabuf)
-		sendto_one(cptr, ":%s %s %s %s %s %lu", from,
-			(IsToken(cptr) ? TOK_MODE : MSG_MODE), chptr->chname,
-			modebuf, parabuf, chptr->creationtime);
-	else
-		sendto_one(cptr, ":%s %s %s %s %lu", from,
-			(IsToken(cptr) ? TOK_MODE : MSG_MODE), chptr->chname,
-			modebuf, chptr->creationtime);
-}
-
-/*
- * send "cptr" a full list of the modes for channel chptr.
- */
-void send_channel_modes(aClient *cptr, aChannel *chptr)
-{
-	int  sent;
-/* fixed a bit .. to fit halfops --sts */
-	if (*chptr->chname != '#')
-		return;
-
-	*parabuf = '\0';
-	*modebuf = '\0';
-	channel_modes(cptr, modebuf, parabuf, chptr);
-	sent = send_mode_list(cptr, chptr->chname, chptr->creationtime,
-	    chptr->members, CHFL_CHANOP, 'o');
-	if (!sent && chptr->creationtime)
-		send_channel_mode(cptr, me.name, chptr);
-	else if (modebuf[1] || *parabuf)
-		sendmodeto_one(cptr, me.name,
-		    chptr->chname, modebuf, parabuf, chptr->creationtime);
-
-	*parabuf = '\0';
-	*modebuf = '+';
-	modebuf[1] = '\0';
-
-	sent = send_mode_list(cptr, chptr->chname, chptr->creationtime,
-	    chptr->members, CHFL_HALFOP, 'h');
-	if (!sent && chptr->creationtime)
-		send_channel_mode(cptr, me.name, chptr);
-	else if (modebuf[1] || *parabuf)
-		sendmodeto_one(cptr, me.name,
-		    chptr->chname, modebuf, parabuf, chptr->creationtime);
-
-	*parabuf = '\0';
-	*modebuf = '+';
-	modebuf[1] = '\0';
-	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
-	    (Member *)chptr->banlist, CHFL_BAN, 'b');
-	if (modebuf[1] || *parabuf)
-		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
-		    parabuf, chptr->creationtime);
-
-	*parabuf = '\0';
-	*modebuf = '+';
-	modebuf[1] = '\0';
-	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
-	    (Member *)chptr->exlist, CHFL_EXCEPT, 'e');
-	if (modebuf[1] || *parabuf)
-		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
-		    parabuf, chptr->creationtime);
-
-	*parabuf = '\0';
-	*modebuf = '+';
-	modebuf[1] = '\0';
-	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
-	    (Member *)chptr->invexlist, CHFL_INVEX, 'I');
-	if (modebuf[1] || *parabuf)
-		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
-		    parabuf, chptr->creationtime);
-
-	*parabuf = '\0';
-	*modebuf = '+';
-	modebuf[1] = '\0';
-	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
-	    chptr->members, CHFL_VOICE, 'v');
-	if (modebuf[1] || *parabuf)
-		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
-		    parabuf, chptr->creationtime);
-
-	*parabuf = '\0';
-	*modebuf = '+';
-	modebuf[1] = '\0';
-	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
-	    chptr->members, CHFL_CHANOWNER, 'q');
-	if (modebuf[1] || *parabuf)
-		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
-		    parabuf, chptr->creationtime);
-
-	*parabuf = '\0';
-	*modebuf = '+';
-	modebuf[1] = '\0';
-	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
-	    chptr->members, CHFL_CHANPROT, 'a');
-	if (modebuf[1] || *parabuf)
-		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
-		    parabuf, chptr->creationtime);
-
-
-
-
-}
 
 int  DoesOp(char *modebuf)
 {
@@ -1272,7 +1113,7 @@ char *clean_ban_mask(char *mask, int what, aClient *cptr)
 	}
 
 	if ((*mask == '~') && !strchr(mask, '@'))
-		return NULL; /* not and extended ban and not a ~user@host ban either. */
+		return NULL; /* not an extended ban and not a ~user@host ban either. */
 
 	if ((user = index((cp = mask), '!')))
 		*user++ = '\0';
@@ -1566,146 +1407,6 @@ void sub1_from_channel(aChannel *chptr)
 	}
 }
 
-/*
- * The function which sends the actual channel list back to the user.
- * Operates by stepping through the hashtable, sending the entries back if
- * they match the criteria.
- * cptr = Local client to send the output back to.
- * numsend = Number (roughly) of lines to send back. Once this number has
- * been exceeded, send_list will finish with the current hash bucket,
- * and record that number as the number to start next time send_list
- * is called for this user. So, this function will almost always send
- * back more lines than specified by numsend (though not by much,
- * assuming CH_MAX is was well picked). So be conservative in your choice
- * of numsend. -Rak
- */
-
-/* Taken from bahamut, modified for Unreal by codemastr */
-
-void send_list(aClient *cptr, int numsend)
-{
-	aChannel *chptr;
-	LOpts *lopt = cptr->user->lopt;
-	unsigned int  hashnum;
-
-	/* Begin of /list? then send official channels. */
-	if ((lopt->starthash == 0) && conf_offchans)
-	{
-		ConfigItem_offchans *x;
-		for (x = conf_offchans; x; x = (ConfigItem_offchans *)x->next)
-		{
-			if (find_channel(x->chname, (aChannel *)NULL))
-				continue; /* exists, >0 users.. will be sent later */
-			sendto_one(cptr,
-			    rpl_str(RPL_LIST), me.name,
-			    cptr->name, x->chname,
-			    0,
-#ifdef LIST_SHOW_MODES
-			    "",
-#endif					    
-			    x->topic ? x->topic : "");
-		}
-	}
-
-	for (hashnum = lopt->starthash; hashnum < CH_MAX; hashnum++)
-	{
-		if (numsend > 0)
-			for (chptr =
-			    (aChannel *)hash_get_chan_bucket(hashnum);
-			    chptr; chptr = chptr->hnextch)
-			{
-				if (SecretChannel(chptr)
-				    && !IsMember(cptr, chptr)
-				    && !IsAnOper(cptr))
-					continue;
-
-				/* Much more readable like this -- codemastr */
-				if ((!lopt->showall))
-				{
-					/* User count must be in range */
-					if ((chptr->users < lopt->usermin) || 
-					    ((lopt->usermax >= 0) && (chptr->users > 
-					    lopt->usermax)))
-						continue;
-
-					/* Creation time must be in range */
-					if ((chptr->creationtime && (chptr->creationtime <
-					    lopt->chantimemin)) || (chptr->creationtime >
-					    lopt->chantimemax))
-						continue;
-
-					/* Topic time must be in range */
-					if ((chptr->topic_time < lopt->topictimemin) ||
-					    (chptr->topic_time > lopt->topictimemax))
-						continue;
-
-					/* Must not be on nolist (if it exists) */
-					if (lopt->nolist && find_str_match_link(lopt->nolist,
-					    chptr->chname))
-						continue;
-
-					/* Must be on yeslist (if it exists) */
-					if (lopt->yeslist && !find_str_match_link(lopt->yeslist,
-					    chptr->chname))
-						continue;
-				}
-#ifdef LIST_SHOW_MODES
-				modebuf[0] = '[';
-				channel_modes(cptr, &modebuf[1], parabuf, chptr);
-				if (modebuf[2] == '\0')
-					modebuf[0] = '\0';
-				else
-					strlcat(modebuf, "]", sizeof modebuf);
-#endif
-				if (!IsAnOper(cptr))
-					sendto_one(cptr,
-					    rpl_str(RPL_LIST), me.name,
-					    cptr->name,
-					    ShowChannel(cptr,
-					    chptr) ? chptr->chname :
-					    "*", chptr->users,
-#ifdef LIST_SHOW_MODES
-					    ShowChannel(cptr, chptr) ?
-					    modebuf : "",
-#endif
-					    ShowChannel(cptr,
-					    chptr) ? (chptr->topic ?
-					    chptr->topic : "") : "");
-				else
-					sendto_one(cptr,
-					    rpl_str(RPL_LIST), me.name,
-					    cptr->name, chptr->chname,
-					    chptr->users,
-#ifdef LIST_SHOW_MODES
-					    modebuf,
-#endif					    
-					    (chptr->topic ? chptr->topic : ""));
-				numsend--;
-			}
-		else
-			break;
-	}
-
-	/* All done */
-	if (hashnum == CH_MAX)
-	{
-		sendto_one(cptr, rpl_str(RPL_LISTEND), me.name, cptr->name);
-		free_str_list(cptr->user->lopt->yeslist);
-		free_str_list(cptr->user->lopt->nolist);
-		MyFree(cptr->user->lopt);
-		cptr->user->lopt = NULL;
-		return;
-	}
-
-	/* 
-	 * We've exceeded the limit on the number of channels to send back
-	 * at once.
-	 */
-	lopt->starthash = hashnum;
-	return;
-}
-
-
 int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
 {
 	Membership *lp;
@@ -1782,135 +1483,6 @@ int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
 	return 0;
 }
 
-/************************************************************************
- * m_names() - Added by Jto 27 Apr 1989
- * 12 Feb 2000 - geesh, time for a rewrite -lucas
- ************************************************************************/
-/*
-** m_names
-**	parv[0] = sender prefix
-**	parv[1] = channel
-*/
-#define TRUNCATED_NAMES 64
-CMD_FUNC(m_names)
-{
-	int  mlen = strlen(me.name) + NICKLEN + 7;
-	aChannel *chptr;
-	aClient *acptr;
-	int  member;
-	Member *cm;
-	int  idx, flag = 1, spos;
-	char *s, *para = parv[1];
-
-
-	if (parc < 2 || !MyConnect(sptr))
-	{
-		sendto_one(sptr, rpl_str(RPL_ENDOFNAMES), me.name,
-		    parv[0], "*");
-		return 0;
-	}
-
-	if (parc > 1 &&
-	    hunt_server_token(cptr, sptr, MSG_NAMES, TOK_NAMES, "%s %s", 2, parc, parv))
-		return 0;
-
-	for (s = para; *s; s++)
-	{
-		if (*s == ',')
-		{
-			if (strlen(para) > TRUNCATED_NAMES)
-				para[TRUNCATED_NAMES] = '\0';
-			sendto_realops("names abuser %s %s",
-			    get_client_name(sptr, FALSE), para);
-			sendto_one(sptr, err_str(ERR_TOOMANYTARGETS),
-			    me.name, sptr->name, "NAMES");
-			return 0;
-		}
-	}
-
-	chptr = find_channel(para, (aChannel *)NULL);
-
-	if (!chptr || (!ShowChannel(sptr, chptr) && !IsAnOper(sptr)))
-	{
-		sendto_one(sptr, rpl_str(RPL_ENDOFNAMES), me.name,
-		    parv[0], para);
-		return 0;
-	}
-
-	/* cache whether this user is a member of this channel or not */
-	member = IsMember(sptr, chptr);
-
-	if (PubChannel(chptr))
-		buf[0] = '=';
-	else if (SecretChannel(chptr))
-		buf[0] = '@';
-	else
-		buf[0] = '*';
-
-	idx = 1;
-	buf[idx++] = ' ';
-	for (s = chptr->chname; *s; s++)
-		buf[idx++] = *s;
-	buf[idx++] = ' ';
-	buf[idx++] = ':';
-
-	/* If we go through the following loop and never add anything,
-	   we need this to be empty, otherwise spurious things from the
-	   LAST /names call get stuck in there.. - lucas */
-	buf[idx] = '\0';
-
-	spos = idx;		/* starting point in buffer for names! */
-
-	for (cm = chptr->members; cm; cm = cm->next)
-	{
-		acptr = cm->cptr;
-		if (IsInvisible(acptr) && !member && !IsNetAdmin(sptr))
-			continue;
-		if (chptr->mode.mode & MODE_AUDITORIUM)
-			if (!is_chan_op(sptr, chptr)
-			    && !is_chanprot(sptr, chptr)
-			    && !is_chanowner(sptr, chptr))
-				if (!(cm->
-				    flags & (CHFL_CHANOP | CHFL_CHANPROT |
-				    CHFL_CHANOWNER)) && acptr != sptr)
-					continue;
-
-#ifdef PREFIX_AQ
-		if (cm->flags & CHFL_CHANOWNER)
-			buf[idx++] = '~';
-		else if (cm->flags & CHFL_CHANPROT)
-			buf[idx++] = '&';
-		else
-#endif
-		if (cm->flags & CHFL_CHANOP)
-			buf[idx++] = '@';
-		else if (cm->flags & CHFL_HALFOP)
-			buf[idx++] = '%';
-		else if (cm->flags & CHFL_VOICE)
-			buf[idx++] = '+';
-		for (s = acptr->name; *s; s++)
-			buf[idx++] = *s;
-		buf[idx++] = ' ';
-		buf[idx] = '\0';
-		flag = 1;
-		if (mlen + idx + NICKLEN > BUFSIZE - 3)
-		{
-			sendto_one(sptr, rpl_str(RPL_NAMREPLY), me.name,
-			    parv[0], buf);
-			idx = spos;
-			flag = 0;
-		}
-	}
-
-	if (flag)
-		sendto_one(sptr, rpl_str(RPL_NAMREPLY), me.name, parv[0], buf);
-
-	sendto_one(sptr, rpl_str(RPL_ENDOFNAMES), me.name, parv[0], para);
-
-	return 0;
-
-}
-
 void send_user_joins(aClient *cptr, aClient *user)
 {
 	Membership *lp;
@@ -1956,477 +1528,6 @@ void send_user_joins(aClient *cptr, aClient *user)
 		sendto_one(cptr, "%s", buf);
 
 	return;
-}
-
-static int send_ban_list(aClient *cptr, char *chname, TS creationtime, aChannel *channel)
-{
-	Ban *top;
-
-	Ban *lp;
-	char *cp, *name;
-	int  count = 0, send = 0, sent = 0;
-
-	cp = modebuf + strlen(modebuf);
-	if (*parabuf)		/* mode +l or +k xx */
-		count = 1;
-	top = channel->banlist;
-	for (lp = top; lp; lp = lp->next)
-	{
-		name = ((Ban *) lp)->banstr;
-
-		if (strlen(parabuf) + strlen(name) + 11 < (size_t)MODEBUFLEN)
-		{
-			if (*parabuf)
-				(void)strcat(parabuf, " ");
-			(void)strcat(parabuf, name);
-			count++;
-			*cp++ = 'b';
-			*cp = '\0';
-		}
-		else if (*parabuf)
-			send = 1;
-		if (count == MODEPARAMS)
-			send = 1;
-		if (send)
-		{
-			/* cptr is always a server! So we send creationtimes */
-			sendto_one(cptr, "%s %s %s %s %lu",
-			    (IsToken(cptr) ? TOK_MODE : MSG_MODE),
-			    chname, modebuf, parabuf, creationtime);
-			sent = 1;
-			send = 0;
-			*parabuf = '\0';
-			cp = modebuf;
-			*cp++ = '+';
-			if (count != MODEPARAMS)
-			{
-				(void)strlcpy(parabuf, name, sizeof parabuf);
-				*cp++ = 'b';
-			}
-			count = 0;
-			*cp = '\0';
-		}
-	}
-	top = channel->exlist;
-	for (lp = top; lp; lp = lp->next)
-	{
-		name = ((Ban *) lp)->banstr;
-
-		if (strlen(parabuf) + strlen(name) + 11 < (size_t)MODEBUFLEN)
-		{
-			if (*parabuf)
-				(void)strcat(parabuf, " ");
-			(void)strcat(parabuf, name);
-			count++;
-			*cp++ = 'e';
-			*cp = '\0';
-		}
-		else if (*parabuf)
-			send = 1;
-		if (count == MODEPARAMS)
-			send = 1;
-		if (send)
-		{
-			/* cptr is always a server! So we send creationtimes */
-			sendto_one(cptr, "%s %s %s %s %lu",
-			    (IsToken(cptr) ? TOK_MODE : MSG_MODE),
-			    chname, modebuf, parabuf, creationtime);
-			sent = 1;
-			send = 0;
-			*parabuf = '\0';
-			cp = modebuf;
-			*cp++ = '+';
-			if (count != MODEPARAMS)
-			{
-				(void)strlcpy(parabuf, name, sizeof parabuf);
-				*cp++ = 'e';
-			}
-			count = 0;
-			*cp = '\0';
-		}
-	}
-	top = channel->invexlist;
-	for (lp = top; lp; lp = lp->next)
-	{
-		name = ((Ban *) lp)->banstr;
-
-		if (strlen(parabuf) + strlen(name) + 11 < (size_t)MODEBUFLEN)
-		{
-			if (*parabuf)
-				(void)strcat(parabuf, " ");
-			(void)strcat(parabuf, name);
-			count++;
-			*cp++ = 'I';
-			*cp = '\0';
-		}
-		else if (*parabuf)
-			send = 1;
-		if (count == MODEPARAMS)
-			send = 1;
-		if (send)
-		{
-			/* cptr is always a server! So we send creationtimes */
-			sendto_one(cptr, "%s %s %s %s %lu",
-			    (IsToken(cptr) ? TOK_MODE : MSG_MODE),
-			    chname, modebuf, parabuf, creationtime);
-			sent = 1;
-			send = 0;
-			*parabuf = '\0';
-			cp = modebuf;
-			*cp++ = '+';
-			if (count != MODEPARAMS)
-			{
-				(void)strlcpy(parabuf, name, sizeof parabuf);
-				*cp++ = 'I';
-			}
-			count = 0;
-			*cp = '\0';
-		}
-	}
-	return sent;
-}
-
-
-/* 
- * This will send "cptr" a full list of the modes for channel chptr,
- */
-
-void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
-{
-
-	Member *members;
-	Member *lp;
-	char *name;
-	char *bufptr;
-
-	int  n = 0;
-
-	if (*chptr->chname != '#')
-		return;
-
-	members = chptr->members;
-
-	/* First we'll send channel, channel modes and members and status */
-
-	*modebuf = *parabuf = '\0';
-	channel_modes(cptr, modebuf, parabuf, chptr);
-
-	if (*parabuf)
-	{
-	}
-	else
-	{
-		if (!SupportSJOIN2(cptr))
-			strlcpy(parabuf, "<none>", sizeof parabuf);
-		else
-			strlcpy(parabuf, "<->", sizeof parabuf);
-	}
-	ircsprintf(buf, "%s %ld %s %s %s :",
-	    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
-	    chptr->creationtime, chptr->chname, modebuf, parabuf);
-
-	bufptr = buf + strlen(buf);
-
-	for (lp = members; lp; lp = lp->next)
-	{
-
-		if (lp->flags & MODE_CHANOP)
-			*bufptr++ = '@';
-
-		if (lp->flags & MODE_VOICE)
-			*bufptr++ = '+';
-
-		if (lp->flags & MODE_HALFOP)
-			*bufptr++ = '%';
-		if (lp->flags & MODE_CHANOWNER)
-			*bufptr++ = '*';
-		if (lp->flags & MODE_CHANPROT)
-			*bufptr++ = '~';
-
-
-
-		name = lp->cptr->name;
-
-		strcpy(bufptr, name);
-		bufptr += strlen(bufptr);
-		*bufptr++ = ' ';
-		n++;
-
-		if (bufptr - buf > BUFSIZE - 80)
-		{
-			*bufptr++ = '\0';
-			if (bufptr[-1] == ' ')
-				bufptr[-1] = '\0';
-			sendto_one(cptr, "%s", buf);
-
-			ircsprintf(buf, "%s %ld %s %s %s :",
-			    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
-			    chptr->creationtime, chptr->chname, modebuf,
-			    parabuf);
-			n = 0;
-
-			bufptr = buf + strlen(buf);
-		}
-	}
-	if (n)
-	{
-		*bufptr++ = '\0';
-		if (bufptr[-1] == ' ')
-			bufptr[-1] = '\0';
-		sendto_one(cptr, "%s", buf);
-	}
-	/* Then we'll send the ban-list */
-
-	*parabuf = '\0';
-	*modebuf = '+';
-	modebuf[1] = '\0';
-	send_ban_list(cptr, chptr->chname, chptr->creationtime, chptr);
-
-	if (modebuf[1] || *parabuf)
-		sendto_one(cptr, "%s %s %s %s %lu",
-		    (IsToken(cptr) ? TOK_MODE : MSG_MODE),
-		    chptr->chname, modebuf, parabuf, chptr->creationtime);
-
-	return;
-}
-
-char *mystpcpy(char *dst, const char *src)
-{
-	for (; *src; src++)
-		*dst++ = *src;
-	*dst = '\0';
-	return dst;
-}
-
-
-
-/** This will send "cptr" a full list of the modes for channel chptr,
- *
- * Half of it recoded by Syzop: the whole buffering and size checking stuff
- * looked weird and just plain inefficient. We now fill up our send-buffer
- * really as much as we can, without causing any overflows of course.
- */
-void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
-{
-	Member *members;
-	Member *lp;
-	Ban *ban;
-	char *name;
-	short nomode, nopara;
-	char tbuf[512]; /* work buffer, for temporary data */
-	char buf[1024]; /* send buffer */
-	char *bufptr; /* points somewhere in 'buf' */
-	char *p; /* points to somewhere in 'tbuf' */
-	int prebuflen = 0; /* points to after the <sjointoken> <TS> <chan> <fixmodes> <fixparas <..>> : part */
-
-	if (*chptr->chname != '#')
-		return;
-
-	nomode = 0;
-	nopara = 0;
-	members = chptr->members;
-
-	/* First we'll send channel, channel modes and members and status */
-
-	*modebuf = *parabuf = '\0';
-	channel_modes(cptr, modebuf, parabuf, chptr);
-
-	if (!modebuf[1])
-		nomode = 1;
-	if (!(*parabuf))
-		nopara = 1;
-
-
-	if (nomode && nopara)
-	{
-		ircsprintf(buf,
-		    (cptr->proto & PROTO_SJB64 ? "%s %B %s :" : "%s %ld %s :"),
-		    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
-		    (long)chptr->creationtime, chptr->chname);
-	}
-	if (nopara && !nomode)
-	{
-		ircsprintf(buf, 
-		    (cptr->proto & PROTO_SJB64 ? "%s %B %s %s :" : "%s %ld %s %s :"),
-		    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
-		    (long)chptr->creationtime, chptr->chname, modebuf);
-	}
-	if (!nopara && !nomode)
-	{
-		ircsprintf(buf,
-		    (cptr->proto & PROTO_SJB64 ? "%s %B %s %s %s :" : "%s %ld %s %s %s :"),
-		    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
-		    (long)chptr->creationtime, chptr->chname, modebuf, parabuf);
-	}
-
-	prebuflen = strlen(buf);
-	bufptr = buf + prebuflen;
-
-	/* RULES:
-	 * - Use 'tbuf' as a working buffer, use 'p' to advance in 'tbuf'.
-	 *   Thus, be sure to do a 'p = tbuf' at the top of the loop.
-	 * - When one entry has been build, check if strlen(buf) + strlen(tbuf) > BUFSIZE - 8,
-	 *   if so, do not concat but send the current result (buf) first to the server
-	 *   and reset 'buf' to only the prebuf part (all until the ':').
-	 *   Then, in both cases, concat 'tbuf' to 'buf' and continue
-	 * - Be sure to ALWAYS zero terminate (*p = '\0') when the entry has been build.
-	 * - Be sure to add a space after each entry ;)
-	 *
-	 * For a more illustrated view, take a look at the first for loop, the others
-	 * are pretty much the same.
-	 *
-	 * Follow these rules, and things would be smooth and efficient (network-wise),
-	 * if you ignore them, expect crashes and/or heap corruption, aka: HELL.
-	 * You have been warned.
-	 *
-	 * Side note: of course things would be more efficient if the prebuf thing would
-	 * not be sent every time, but that's another story
-	 *      -- Syzop
-	 */
-
-	for (lp = members; lp; lp = lp->next)
-	{
-		p = tbuf;
-		if (lp->flags & MODE_CHANOP)
-			*p++ = '@';
-		if (lp->flags & MODE_VOICE)
-			*p++ = '+';
-		if (lp->flags & MODE_HALFOP)
-			*p++ = '%';
-		if (lp->flags & MODE_CHANOWNER)
-			*p++ = '*';
-		if (lp->flags & MODE_CHANPROT)
-			*p++ = '~';
-
-		p = mystpcpy(p, lp->cptr->name);
-		*p++ = ' ';
-		*p = '\0';
-
-		/* this is: if (strlen(tbuf) + strlen(buf) > BUFSIZE - 8) */
-		if ((p - tbuf) + (bufptr - buf) > BUFSIZE - 8)
-		{
-			/* Would overflow, so send our current stuff right now (except new stuff) */
-			sendto_one(cptr, "%s", buf);
-			bufptr = buf + prebuflen;
-			*bufptr = '\0';
-		}
-		/* concat our stuff.. */
-		bufptr = mystpcpy(bufptr, tbuf);
-	}
-
-	for (ban = chptr->banlist; ban; ban = ban->next)
-	{
-		p = tbuf;
-		*p++ = '&';
-		p = mystpcpy(p, ban->banstr);
-		*p++ = ' ';
-		*p = '\0';
-		
-		/* this is: if (strlen(tbuf) + strlen(buf) > BUFSIZE - 8) */
-		if ((p - tbuf) + (bufptr - buf) > BUFSIZE - 8)
-		{
-			/* Would overflow, so send our current stuff right now (except new stuff) */
-			sendto_one(cptr, "%s", buf);
-			bufptr = buf + prebuflen;
-			*bufptr = '\0';
-		}
-		/* concat our stuff.. */
-		bufptr = mystpcpy(bufptr, tbuf);
-	}
-
-	for (ban = chptr->exlist; ban; ban = ban->next)
-	{
-		p = tbuf;
-		*p++ = '"';
-		p = mystpcpy(p, ban->banstr);
-		*p++ = ' ';
-		*p = '\0';
-		
-		/* this is: if (strlen(tbuf) + strlen(buf) > BUFSIZE - 8) */
-		if ((p - tbuf) + (bufptr - buf) > BUFSIZE - 8)
-		{
-			/* Would overflow, so send our current stuff right now (except new stuff) */
-			sendto_one(cptr, "%s", buf);
-			bufptr = buf + prebuflen;
-			*bufptr = '\0';
-		}
-		/* concat our stuff.. */
-		bufptr = mystpcpy(bufptr, tbuf);
-	}
-
-	for (ban = chptr->invexlist; ban; ban = ban->next)
-	{
-		p = tbuf;
-		*p++ = '\'';
-		p = mystpcpy(p, ban->banstr);
-		*p++ = ' ';
-		*p = '\0';
-		
-		/* this is: if (strlen(tbuf) + strlen(buf) > BUFSIZE - 8) */
-		if ((p - tbuf) + (bufptr - buf) > BUFSIZE - 8)
-		{
-			/* Would overflow, so send our current stuff right now (except new stuff) */
-			sendto_one(cptr, "%s", buf);
-			bufptr = buf + prebuflen;
-			*bufptr = '\0';
-		}
-		/* concat our stuff.. */
-		bufptr = mystpcpy(bufptr, tbuf);
-	}
-
-	if (buf[prebuflen])
-		sendto_one(cptr, "%s", buf);
-}
-
-void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, char *param) {
-	static char *modes = modebuf, lastwhat;
-	static short count = 0;
-	short send = 0;
-	if (!modebuf[0]) {
-		modes = modebuf;
-		*modes++ = what;
-		*modes = 0;
-		lastwhat = what;
-		*parabuf = 0;
-		count = 0;
-	}
-	if (lastwhat != what) {
-		*modes++ = what;
-		*modes = 0;
-		lastwhat = what;
-	}
-	if (strlen(parabuf) + strlen(param) + 11 < MODEBUFLEN) {
-		if (*parabuf) 
-			strcat(parabuf, " ");
-		strcat(parabuf, param);
-		*modes++ = mode;
-		*modes = 0;
-		count++;
-	}
-	else if (*parabuf) 
-		send = 1;
-
-	if (count == MAXMODEPARAMS)
-		send = 1;
-
-	if (send) {
-		sendto_channel_butserv(chptr, from, ":%s MODE %s %s %s",
-			from->name, chptr->chname, modebuf, parabuf);
-		sendto_serv_butone(NULL, ":%s MODE %s %s %s", from->name, chptr->chname, modebuf, parabuf);
-		send = 0;
-		*parabuf = 0;
-		modes = modebuf;
-		*modes++ = what;
-		lastwhat = what;
-		if (count != MAXMODEPARAMS) {
-			strcpy(parabuf, param);
-			*modes++ = mode;
-			count = 1;
-		}
-		else 
-			count = 0;
-		*modes = 0;
-	}
 }
 
 /*

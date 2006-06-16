@@ -116,6 +116,7 @@ void CommandDel(Command *command) {
 		if (!*tmp)
 		{
 			IsupportDel(IsupportFind("CMDS"));
+			free(tmp);
 			cmdstr = NULL;
 		}
 		else

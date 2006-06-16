@@ -42,12 +42,20 @@
 #ifdef _WIN32
 #include "version.h"
 #endif
+#include "badwords.h"
 
 static int is_silenced(aClient *, aClient *);
+char *_stripbadwords_channel(char *str, int *blocked);
+char *_stripbadwords_message(char *str, int *blocked);
+char *_stripbadwords_quit(char *str, int *blocked);
+char *_StripColors(unsigned char *text);
+char *_StripControlCodes(unsigned char *text);
 
 DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice);
 DLLFUNC int  m_notice(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 DLLFUNC int  m_private(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+
+extern int webtv_parse(aClient *sptr, char *string);
 
 /* Place includes here */
 #define MSG_PRIVATE     "PRIVMSG"       /* PRIV */
@@ -63,6 +71,17 @@ ModuleHeader MOD_HEADER(m_message)
 	"3.2-b8-1",
 	NULL 
     };
+
+DLLFUNC int MOD_TEST(m_message)(ModuleInfo *modinfo)
+{
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	EfunctionAddPChar(modinfo->handle, EFUNC_STRIPBADWORDS_CHANNEL, _stripbadwords_channel);
+	EfunctionAddPChar(modinfo->handle, EFUNC_STRIPBADWORDS_MESSAGE, _stripbadwords_message);
+	EfunctionAddPChar(modinfo->handle, EFUNC_STRIPBADWORDS_QUIT, _stripbadwords_quit);
+	EfunctionAddPChar(modinfo->handle, EFUNC_STRIPCOLORS, _StripColors);
+	EfunctionAddPChar(modinfo->handle, EFUNC_STRIPCONTROLCODES, _StripControlCodes);
+	return MOD_SUCCESS;
+}
 
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_message)(ModuleInfo *modinfo)
@@ -102,6 +121,111 @@ DLLFUNC int MOD_UNLOAD(m_message)(int module_unload)
 static int check_dcc(aClient *sptr, char *target, aClient *targetcli, char *text);
 static int check_dcc_soft(aClient *from, aClient *to, char *text);
 
+#define CANPRIVMSG_CONTINUE		100
+#define CANPRIVMSG_SEND			101
+/** Check if PRIVMSG's are permitted from a person to another person.
+ * cptr:	..
+ * sptr:	..
+ * acptr:	target client
+ * notice:	1 if notice, 0 if privmsg
+ * text:	Pointer to a pointer to a text [in, out]
+ * cmd:		Pointer to a pointer which contains the command to use [in, out]
+ *
+ * RETURN VALUES:
+ * CANPRIVMSG_CONTINUE: issue a 'continue' in target nickname list (aka: skip further processing this target)
+ * CANPRIVMSG_SEND: send the message (use text/newcmd!)
+ * Other: return with this value (can be anything like 0, -1, FLUSH_BUFFER, etc)
+ */
+static int can_privmsg(aClient *cptr, aClient *sptr, aClient *acptr, int notice, char **text, char **cmd)
+{
+char *ctcp;
+int ret;
+
+	if (IsVirus(sptr))
+	{
+		sendnotice(sptr, "You are only allowed to talk in '%s'", SPAMFILTER_VIRUSCHAN);
+		return CANPRIVMSG_CONTINUE;
+	}
+	/* Umode +R (idea from Bahamut) */
+	if (IsRegNickMsg(acptr) && !IsRegNick(sptr) && !IsULine(sptr) && !IsOper(sptr) && !IsServer(sptr)) {
+		sendto_one(sptr, err_str(ERR_NONONREG), me.name, sptr->name,
+			acptr->name);
+		return 0;
+	}
+	if (IsNoCTCP(acptr) && !IsOper(sptr) && **text == 1 && acptr != sptr)
+	{
+		ctcp = *text + 1; /* &*text[1]; */
+		if (myncmp(ctcp, "ACTION ", 7) && myncmp(ctcp, "DCC ", 4))
+		{
+			sendto_one(sptr, err_str(ERR_NOCTCP), me.name, sptr->name, acptr->name);
+			return 0;
+		}
+	}
+
+	if (MyClient(sptr) && !strncasecmp(*text, "\001DCC", 4))
+	{
+		ret = check_dcc(sptr, acptr->name, acptr, *text);
+		if (ret < 0)
+			return ret;
+		if (ret == 0)
+			return CANPRIVMSG_CONTINUE;
+	}
+	if (MyClient(acptr) && !strncasecmp(*text, "\001DCC", 4) &&
+	    !check_dcc_soft(sptr, acptr, *text))
+		return CANPRIVMSG_CONTINUE;
+
+	if (MyClient(sptr) && check_for_target_limit(sptr, acptr, acptr->name))
+		return CANPRIVMSG_CONTINUE;
+
+	if (!is_silenced(sptr, acptr))
+	{
+#ifdef STRIPBADWORDS
+		int blocked = 0;
+#endif
+		Hook *tmphook;
+		
+		if (notice && IsWebTV(acptr) && **text != '\1')
+			*cmd = MSG_PRIVATE;
+		if (!notice && MyConnect(sptr) &&
+		    acptr->user && acptr->user->away)
+			sendto_one(sptr, rpl_str(RPL_AWAY),
+			    me.name, sptr->name, acptr->name,
+			    acptr->user->away);
+
+#ifdef STRIPBADWORDS
+		if (MyClient(sptr) && !IsULine(acptr) && IsFilteringWords(acptr))
+		{
+			*text = stripbadwords_message(*text, &blocked);
+			if (blocked)
+			{
+				if (!notice && MyClient(sptr))
+					sendto_one(sptr, rpl_str(ERR_NOSWEAR),
+						me.name, sptr->name, acptr->name);
+				return CANPRIVMSG_CONTINUE;
+			}
+		}
+#endif
+
+		if (MyClient(sptr))
+		{
+			ret = dospamfilter(sptr, *text, (notice ? SPAMF_USERNOTICE : SPAMF_USERMSG), acptr->name, 0, NULL);
+			if (ret < 0)
+				return ret;
+		}
+
+		for (tmphook = Hooks[HOOKTYPE_USERMSG]; tmphook; tmphook = tmphook->next) {
+			*text = (*(tmphook->func.pcharfunc))(cptr, sptr, acptr, *text, notice);
+			if (!*text)
+				break;
+		}
+		if (!*text)
+			return CANPRIVMSG_CONTINUE;
+		
+		return CANPRIVMSG_SEND;
+	}
+	return CANPRIVMSG_CONTINUE;
+}
+
 /*
 ** m_message (used in m_private() and m_notice())
 ** the general function to deliver MSG's between users/channels
@@ -117,10 +241,10 @@ static int check_dcc_soft(aClient *from, aClient *to, char *text);
 static int recursive_webtv = 0;
 DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice)
 {
-	aClient *acptr;
+	aClient *acptr, *srvptr;
 	char *s;
 	aChannel *chptr;
-	char *nick, *server, *p, *cmd, *ctcp, *p2, *pc, *text;
+	char *nick, *server, *p, *cmd, *ctcp, *p2, *pc, *text, *newcmd;
 	int  cansend = 0;
 	int  prefix = 0;
 	char pfixchan[CHANNELLEN + 4];
@@ -197,96 +321,21 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				return ret;
 			}
 		}
+		
 		if (*nick != '#' && (acptr = find_person(nick, NULL)))
 		{
-			if (IsVirus(sptr))
+			text = parv[2];
+			newcmd = cmd;
+			ret = can_privmsg(cptr, sptr, acptr, notice, &text, &newcmd);
+			if (ret == CANPRIVMSG_SEND)
 			{
-				sendnotice(sptr, "You are only allowed to talk in '%s'", SPAMFILTER_VIRUSCHAN);
+				sendto_message_one(acptr, sptr, parv[0], newcmd, nick, text);
 				continue;
-			}
-			/* Umode +R (idea from Bahamut) */
-			if (IsRegNickMsg(acptr) && !IsRegNick(sptr) && !IsULine(sptr) && !IsOper(sptr) && !IsServer(sptr)) {
-				sendto_one(sptr, err_str(ERR_NONONREG), me.name, parv[0],
-					acptr->name);
-				return 0;
-			}
-			if (IsNoCTCP(acptr) && !IsOper(sptr) && *parv[2] == 1 && acptr != sptr)
-			{
-				ctcp = &parv[2][1];
-				if (myncmp(ctcp, "ACTION ", 7) && myncmp(ctcp, "DCC ", 4))
-				{
-					sendto_one(sptr, err_str(ERR_NOCTCP), me.name, parv[0],
-						acptr->name);
-					return 0;
-				}
-			}
-
-			if (MyClient(sptr) && !strncasecmp(parv[2], "\001DCC", 4))
-			{
-				ret = check_dcc(sptr, acptr->name, acptr, parv[2]);
-				if (ret < 0)
-					return ret;
-				if (ret == 0)
-					continue;
-			}
-			if (MyClient(acptr) && !strncasecmp(parv[2], "\001DCC", 4) &&
-			    !check_dcc_soft(sptr, acptr, parv[2]))
+			} else
+			if (ret == CANPRIVMSG_CONTINUE)
 				continue;
-
-			if (MyClient(sptr) && check_for_target_limit(sptr, acptr, acptr->name))
-				continue;
-
-			if (!is_silenced(sptr, acptr))
-			{
-#ifdef STRIPBADWORDS
-				int blocked = 0;
-#endif
-				char *newcmd = cmd, *text;
-				Hook *tmphook;
-				
-				if (notice && IsWebTV(acptr) && *parv[2] != '\1')
-					newcmd = MSG_PRIVATE;
-				if (!notice && MyConnect(sptr) &&
-				    acptr->user && acptr->user->away)
-					sendto_one(sptr, rpl_str(RPL_AWAY),
-					    me.name, parv[0], acptr->name,
-					    acptr->user->away);
-
-#ifdef STRIPBADWORDS
-				if (MyClient(sptr) && !IsULine(acptr) && IsFilteringWords(acptr))
-				{
-					text = stripbadwords_message(parv[2], &blocked);
-					if (blocked)
-					{
-						if (!notice && MyClient(sptr))
-							sendto_one(sptr, rpl_str(ERR_NOSWEAR),
-								me.name, parv[0], acptr->name);
-						continue;
-					}
-				}
-				else
-#endif
-					text = parv[2];
-
-				if (MyClient(sptr))
-				{
-					ret = dospamfilter(sptr, text, (notice ? SPAMF_USERNOTICE : SPAMF_USERMSG), acptr->name, 0, NULL);
-					if (ret < 0)
-						return ret;
-				}
-
-				for (tmphook = Hooks[HOOKTYPE_USERMSG]; tmphook; tmphook = tmphook->next) {
-					text = (*(tmphook->func.pcharfunc))(cptr, sptr, acptr, text, notice);
-					if (!text)
-						break;
-				}
-				if (!text)
-					continue;
-				
-				sendto_message_one(acptr,
-				    sptr, parv[0], newcmd, nick, text);
-			}
-			continue;
+			else
+				return ret;
 		}
 
 		p2 = (char *)strchr(nick, '#');
@@ -546,49 +595,37 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 			/* There is always a \0 if its a string */
 			if (*(server + 1) != '\0')
 			{
-				acptr = find_server_quick(server + 1);
-				if (acptr)
+				char fulltarget[NICKLEN + HOSTLEN + 1];
+				
+				strlcpy(fulltarget, nick, sizeof(fulltarget)); /* lame.. I know.. */
+				
+				srvptr = find_server_quick(server + 1);
+				if (srvptr)
 				{
-					/*
-					   ** Not destined for a user on me :-(
-					 */
-					if (!IsMe(acptr))
+					acptr = find_nickserv(nick, NULL);
+					if (acptr && (acptr->srvptr == srvptr))
 					{
-						if (IsToken(acptr->from))
-							sendto_one(acptr,
-							    ":%s %s %s :%s", parv[0],
-							    notice ? TOK_NOTICE : TOK_PRIVATE,
-							    nick, parv[2]);
-						else
-							sendto_one(acptr,
-							    ":%s %s %s :%s", parv[0],
-							    cmd, nick, parv[2]);
-						continue;
-					}
+						text = parv[2];
+						newcmd = cmd;
+						ret = can_privmsg(cptr, sptr, acptr, notice, &text, &newcmd);
+						if (ret == CANPRIVMSG_CONTINUE)
+							continue;
+						else if (ret != CANPRIVMSG_SEND)
+							return ret;
+						/* If we end up here, we have to actually send it... */
 
-					/* Find the nick@server using hash. */
-					acptr =
-					    find_nickserv(nick,
-					    (aClient *)NULL);
-					if (acptr)
-					{
-						sendto_prefix_one(acptr, sptr,
-						    ":%s %s %s :%s",
-						    parv[0], cmd,
-						    acptr->name, parv[2]);
+						if (IsMe(acptr))
+							sendto_prefix_one(acptr, sptr, ":%s %s %s :%s", sptr->name, newcmd, acptr->name, text);
+						else
+							sendto_message_one(acptr, sptr, sptr->name, newcmd, fulltarget, text);
 						continue;
 					}
 				}
-				if (server
-				    && strncasecmp(server + 1, SERVICES_NAME,
-				    strlen(SERVICES_NAME)) == 0)
-					sendto_one(sptr,
-					    err_str(ERR_SERVICESDOWN), me.name,
-					    parv[0], nick);
+				/* NICK@SERVER NOT FOUND: */
+				if (server && strncasecmp(server + 1, SERVICES_NAME, strlen(SERVICES_NAME)) == 0)
+					sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name, parv[0], nick);
 				else
-					sendto_one(sptr,
-					    err_str(ERR_NOSUCHNICK), me.name,
-					    parv[0], nick);
+					sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, parv[0], fulltarget);
 
 				continue;
 			}
@@ -887,3 +924,427 @@ int size_string;
 
 	return 1; /* allowed */
 }
+
+/* This was modified a bit in order to use newconf. The loading functions
+ * have been trashed and integrated into the config parser. The striping
+ * function now only uses REPLACEWORD if no word is specifically defined
+ * for the word found. Also the freeing function has been ditched. -- codemastr
+ */
+
+#ifdef FAST_BADWORD_REPLACE
+/*
+ * our own strcasestr implementation because strcasestr is often not
+ * available or is not working correctly (??).
+ */
+char *our_strcasestr(char *haystack, char *needle) {
+int i;
+int nlength = strlen (needle);
+int hlength = strlen (haystack);
+
+	if (nlength > hlength) return NULL;
+	if (hlength <= 0) return NULL;
+	if (nlength <= 0) return haystack;
+	for (i = 0; i <= (hlength - nlength); i++) {
+		if (strncasecmp (haystack + i, needle, nlength) == 0)
+			return haystack + i;
+	}
+  return NULL; /* not found */
+}
+inline int fast_badword_match(ConfigItem_badword *badword, char *line)
+{
+ 	char *p;
+	int bwlen = strlen(badword->word);
+	if ((badword->type & BADW_TYPE_FAST_L) && (badword->type & BADW_TYPE_FAST_R))
+		return (our_strcasestr(line, badword->word) ? 1 : 0);
+
+	p = line;
+	while((p = our_strcasestr(p, badword->word)))
+	{
+		if (!(badword->type & BADW_TYPE_FAST_L))
+		{
+			if ((p != line) && !iswseperator(*(p - 1))) /* aaBLA but no *BLA */
+				goto next;
+		}
+		if (!(badword->type & BADW_TYPE_FAST_R))
+		{
+			if (!iswseperator(*(p + bwlen)))  /* BLAaa but no BLA* */
+				goto next;
+		}
+		/* Looks like it matched */
+		return 1;
+next:
+		p += bwlen;
+	}
+	return 0;
+}
+/* fast_badword_replace:
+ * a fast replace routine written by Syzop used for replacing badwords.
+ * searches in line for huntw and replaces it with replacew,
+ * buf is used for the result and max is sizeof(buf).
+ * (Internal assumptions: max > 0 AND max > strlen(line)+1)
+ */
+inline int fast_badword_replace(ConfigItem_badword *badword, char *line, char *buf, int max)
+{
+/* Some aliases ;P */
+char *replacew = badword->replace ? badword->replace : REPLACEWORD;
+char *pold = line, *pnew = buf; /* Pointers to old string and new string */
+char *poldx = line;
+int replacen = -1; /* Only calculated if needed. w00t! saves us a few nanosecs? lol */
+int searchn = -1;
+char *startw, *endw;
+char *c_eol = buf + max - 1; /* Cached end of (new) line */
+int run = 1;
+int cleaned = 0;
+
+	Debug((DEBUG_NOTICE, "replacing %s -> %s in '%s'", badword->word, replacew, line));
+
+	while(run) {
+		pold = our_strcasestr(pold, badword->word);
+		if (!pold)
+			break;
+		if (replacen == -1)
+			replacen = strlen(replacew);
+		if (searchn == -1)
+			searchn = strlen(badword->word);
+		/* Hunt for start of word */
+ 		if (pold > line) {
+			for (startw = pold; (!iswseperator(*startw) && (startw != line)); startw--);
+			if (iswseperator(*startw))
+				startw++; /* Don't point at the space/seperator but at the word! */
+		} else {
+			startw = pold;
+		}
+
+		if (!(badword->type & BADW_TYPE_FAST_L) && (pold != startw)) {
+			/* not matched */
+			pold++;
+			continue;
+		}
+
+		/* Hunt for end of word */
+		for (endw = pold; ((*endw != '\0') && (!iswseperator(*endw))); endw++);
+
+		if (!(badword->type & BADW_TYPE_FAST_R) && (pold+searchn != endw)) {
+			/* not matched */
+			pold++;
+			continue;
+		}
+
+		cleaned = 1; /* still too soon? Syzop/20050227 */
+
+		/* Do we have any not-copied-yet data? */
+		if (poldx != startw) {
+			int tmp_n = startw - poldx;
+			if (pnew + tmp_n >= c_eol) {
+				/* Partial copy and return... */
+				memcpy(pnew, poldx, c_eol - pnew);
+				*c_eol = '\0';
+				return 1;
+			}
+
+			memcpy(pnew, poldx, tmp_n);
+			pnew += tmp_n;
+		}
+		/* Now update the word in buf (pnew is now something like startw-in-new-buffer */
+
+		if (replacen) {
+			if ((pnew + replacen) >= c_eol) {
+				/* Partial copy and return... */
+				memcpy(pnew, replacew, c_eol - pnew);
+				*c_eol = '\0';
+				return 1;
+			}
+			memcpy(pnew, replacew, replacen);
+			pnew += replacen;
+		}
+		poldx = pold = endw;
+	}
+	/* Copy the last part */
+	if (*poldx) {
+		strncpy(pnew, poldx, c_eol - pnew);
+		*(c_eol) = '\0';
+	} else {
+		*pnew = '\0';
+	}
+	return cleaned;
+}
+#endif
+
+/*
+ * Returns a string, which has been filtered by the words loaded via
+ * the loadbadwords() function.  It's primary use is to filter swearing
+ * in both private and public messages
+ */
+
+char *stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked)
+{
+	regmatch_t pmatch[MAX_MATCH];
+	static char cleanstr[4096];
+	char buf[4096];
+	char *ptr;
+	int  matchlen, m, stringlen, cleaned;
+	ConfigItem_badword *this_word;
+	
+	*blocked = 0;
+
+	if (!start_bw)
+		return str;
+
+	/*
+	 * work on a copy
+	 */
+	stringlen = strlcpy(cleanstr, StripControlCodes(str), sizeof cleanstr);
+	memset(&pmatch, 0, sizeof pmatch);
+	matchlen = 0;
+	buf[0] = '\0';
+	cleaned = 0;
+
+	for (this_word = start_bw; this_word; this_word = (ConfigItem_badword *)this_word->next)
+	{
+#ifdef FAST_BADWORD_REPLACE
+		if (this_word->type & BADW_TYPE_FAST)
+		{
+			if (this_word->action == BADWORD_BLOCK)
+			{
+				if (fast_badword_match(this_word, cleanstr))
+				{
+					*blocked = 1;
+					return NULL;
+				}
+			}
+			else
+			{
+				int n;
+				/* fast_badword_replace() does size checking so we can use 512 here instead of 4096 */
+				n = fast_badword_replace(this_word, cleanstr, buf, 512);
+				if (!cleaned && n)
+					cleaned = n;
+				strcpy(cleanstr, buf);
+				memset(buf, 0, sizeof(buf)); /* regexp likes this somehow */
+			}
+		} else
+		if (this_word->type & BADW_TYPE_REGEX)
+		{
+#endif
+			if (this_word->action == BADWORD_BLOCK)
+			{
+				if (!regexec(&this_word->expr, cleanstr, 0, NULL, 0))
+				{
+					*blocked = 1;
+					return NULL;
+				}
+			}
+			else
+			{
+				ptr = cleanstr; /* set pointer to start of string */
+				while (regexec(&this_word->expr, ptr, MAX_MATCH, pmatch,0) != REG_NOMATCH)
+				{
+					if (pmatch[0].rm_so == -1)
+						break;
+					m = pmatch[0].rm_eo - pmatch[0].rm_so;
+					if (m == 0)
+						break; /* anti-loop */
+					cleaned = 1;
+					matchlen += m;
+					strlncat(buf, ptr, sizeof buf, pmatch[0].rm_so);
+					if (this_word->replace)
+						strlcat(buf, this_word->replace, sizeof buf); 
+					else
+						strlcat(buf, REPLACEWORD, sizeof buf);
+					ptr += pmatch[0].rm_eo;	/* Set pointer after the match pos */
+					memset(&pmatch, 0, sizeof(pmatch));
+				}
+
+				/* All the better to eat you with! */
+				strlcat(buf, ptr, sizeof buf);	
+				memcpy(cleanstr, buf, sizeof cleanstr);
+				memset(buf, 0, sizeof(buf));
+				if (matchlen == stringlen)
+					break;
+			}
+#ifdef FAST_BADWORD_REPLACE
+		}
+#endif
+	}
+
+	cleanstr[511] = '\0'; /* cutoff, just to be sure */
+
+	return (cleaned) ? cleanstr : str;
+}
+
+#ifdef STRIPBADWORDS
+char *_stripbadwords_channel(char *str, int *blocked)
+{
+	return stripbadwords(str, conf_badword_channel, blocked);
+}
+
+char *_stripbadwords_message(char *str, int *blocked)
+{
+	return stripbadwords(str, conf_badword_message, blocked);
+}
+char *_stripbadwords_quit(char *str, int *blocked)
+{
+	return stripbadwords(str, conf_badword_quit, blocked);
+}
+#else
+char *_stripbadwords_channel(char *str, int *blocked)
+{
+	return NULL;
+}
+
+char *_stripbadwords_message(char *str, int *blocked)
+{
+	return NULL;
+}
+char *_stripbadwords_quit(char *str, int *blocked)
+{
+	return NULL;
+}
+#endif
+
+/* Taken from xchat by Peter Zelezny
+ * changed very slightly by codemastr
+ * RGB color stripping support added -- codemastr
+ */
+
+char *_StripColors(unsigned char *text) {
+	int i = 0, len = strlen(text), save_len=0;
+	char nc = 0, col = 0, rgb = 0, *save_text=NULL;
+	static unsigned char new_str[4096];
+
+	while (len > 0) 
+	{
+		if ((col && isdigit(*text) && nc < 2) || (col && *text == ',' && nc < 3)) 
+		{
+			nc++;
+			if (*text == ',')
+				nc = 0;
+		}
+		/* Syntax for RGB is ^DHHHHHH where H is a hex digit.
+		 * If < 6 hex digits are specified, the code is displayed
+		 * as text
+		 */
+		else if ((rgb && isxdigit(*text) && nc < 6) || (rgb && *text == ',' && nc < 7))
+		{
+			nc++;
+			if (*text == ',')
+				nc = 0;
+		}
+		else 
+		{
+			if (col)
+				col = 0;
+			if (rgb)
+			{
+				if (nc != 6)
+				{
+					text = save_text+1;
+					len = save_len-1;
+					rgb = 0;
+					continue;
+				}
+				rgb = 0;
+			}
+			if (*text == '\003') 
+			{
+				col = 1;
+				nc = 0;
+			}
+			else if (*text == '\004')
+			{
+				save_text = text;
+				save_len = len;
+				rgb = 1;
+				nc = 0;
+			}
+			else 
+			{
+				new_str[i] = *text;
+				i++;
+			}
+		}
+		text++;
+		len--;
+	}
+	new_str[i] = 0;
+	return new_str;
+}
+
+/* strip color, bold, underline, and reverse codes from a string */
+char *_StripControlCodes(unsigned char *text) 
+{
+	int i = 0, len = strlen(text), save_len=0;
+	char nc = 0, col = 0, rgb = 0, *save_text=NULL;
+	static unsigned char new_str[4096];
+	while (len > 0) 
+	{
+		if ( col && ((isdigit(*text) && nc < 2) || (*text == ',' && nc < 3)))
+		{
+			nc++;
+			if (*text == ',')
+				nc = 0;
+		}
+		/* Syntax for RGB is ^DHHHHHH where H is a hex digit.
+		 * If < 6 hex digits are specified, the code is displayed
+		 * as text
+		 */
+		else if ((rgb && isxdigit(*text) && nc < 6) || (rgb && *text == ',' && nc < 7))
+		{
+			nc++;
+			if (*text == ',')
+				nc = 0;
+		}
+		else 
+		{
+			if (col)
+				col = 0;
+			if (rgb)
+			{
+				if (nc != 6)
+				{
+					text = save_text+1;
+					len = save_len-1;
+					rgb = 0;
+					continue;
+				}
+				rgb = 0;
+			}
+			switch (*text)
+			{
+			case 3:
+				/* color */
+				col = 1;
+				nc = 0;
+				break;
+			case 4:
+				/* RGB */
+				save_text = text;
+				save_len = len;
+				rgb = 1;
+				nc = 0;
+				break;
+			case 2:
+				/* bold */
+				break;
+			case 31:
+				/* underline */
+				break;
+			case 22:
+				/* reverse */
+				break;
+			case 15:
+				/* plain */
+				break;
+			default:
+				new_str[i] = *text;
+				i++;
+				break;
+			}
+		}
+		text++;
+		len--;
+	}
+	new_str[i] = 0;
+	return new_str;
+}
+

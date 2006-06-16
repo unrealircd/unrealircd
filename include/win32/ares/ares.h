@@ -20,6 +20,7 @@
 
 #include <sys/types.h>
 
+
 #if defined(_AIX) || defined(NETWARE)
 /* HP-UX systems version 9, 10 and 11 lack sys/select.h and so does oldish
    libc5-based Linux systems. Only include it on system that are known to
@@ -122,6 +123,14 @@ struct ares_options {
   char *lookups;
 };
 
+/** Public available config (readonly) interface for ares_get_config(). */
+struct ares_config_info {
+	int timeout;
+	int tries;
+	int numservers;
+	char **servers;
+};
+
 struct hostent;
 struct timeval;
 struct sockaddr;
@@ -172,7 +181,7 @@ int ares_parse_ptr_reply(const unsigned char *abuf, int alen, const void *addr,
 void ares_free_string(void *str);
 void ares_free_hostent(struct hostent *host);
 const char *ares_strerror(int code);
-
+int ares_get_config(struct ares_config_info *d, ares_channel c);
 #ifdef  __cplusplus
 }
 #endif

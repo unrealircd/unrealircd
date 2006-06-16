@@ -468,8 +468,12 @@ DLLFUNC CMD_FUNC(m_stats)
 		else
 			stat->func(sptr, NULL);
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, parv[0], stat->flag);
-		sendto_snomask(SNO_EYES, "Stats \'%c\' requested by %s (%s@%s)",
-			stat->flag, sptr->name, sptr->user->username, GetHost(sptr));
+		if (!IsULine(sptr))
+			sendto_snomask(SNO_EYES, "Stats \'%c\' requested by %s (%s@%s)",
+				stat->flag, sptr->name, sptr->user->username, GetHost(sptr));
+		else
+			sendto_snomask(SNO_JUNK, "Stats \'%c\' requested by %s (%s@%s) [ulined]",
+				stat->flag, sptr->name, sptr->user->username, GetHost(sptr));
 	}
 	else
 	{
@@ -983,10 +987,8 @@ int stats_mem(aClient *sptr, char *para)
 	sendto_one(sptr, ":%s %d %s :Dbuf blocks %d(%ld)",
 	    me.name, RPL_STATSDEBUG, sptr->name, dbufblocks, db);
 
-	link = freelink;
-	while ((link = link->next))
+	for (link = freelink; link; link = link->next)
 		fl++;
-	fl++;
 	sendto_one(sptr, ":%s %d %s :Link blocks free %d(%ld) total %d(%ld)",
 	    me.name, RPL_STATSDEBUG, sptr->name,
 	    fl, (long)(fl * sizeof(Link)),

@@ -86,11 +86,14 @@ DLLFUNC CMD_FUNC(m_userip)
 
 	char *p;		/* scratch end pointer */
 	char *cn;		/* current name */
-	char *ip;
+	char *ip, ipbuf[HOSTLEN+1];
 	struct Client *acptr;
 	char response[5][NICKLEN * 2 + CHANNELLEN + USERLEN + HOSTLEN + 30];
 	int  i;			/* loop counter */
 
+	if (!MyClient(sptr))
+		return -1;
+		
 	if (parc < 2)
 	{
 		sendto_one(sptr, rpl_str(ERR_NEEDMOREPARAMS),
@@ -119,7 +122,10 @@ DLLFUNC CMD_FUNC(m_userip)
 			if (!(ip = GetIP(acptr)))
 				ip = "<unknown>";
 			if (sptr != acptr && !IsOper(sptr) && IsHidden(acptr))
-				ip = RCallbacks[CALLBACKTYPE_CLOAK]->func.pcharfunc(ip);
+			{
+				make_virthost(sptr, GetIP(sptr), ipbuf, 0);
+				ip = ipbuf;
+			}
 
 			ircsprintf(response[i], "%s%s=%c%s@%s",
 			    acptr->name,
@@ -127,6 +133,8 @@ DLLFUNC CMD_FUNC(m_userip)
 				? "*" : "",
 			    (acptr->user->away) ? '-' : '+',
 			    acptr->user->username, ip);
+			/* add extra fakelag (penalty) because of all the work we need to do: 1s per entry: */
+			sptr->since += 1;
 		}
 		if (p)
 			p++;

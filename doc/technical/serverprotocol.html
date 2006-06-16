@@ -7,7 +7,7 @@
 	</head>
 	<body>
 		<h1 style="text-align: center;">Unreal 3.2 Protocol Documentation</h1>
-		<h3 style="text-align: center;">Last update: 6 January 2005</h3>
+		<h3 style="text-align: center;">Last update: 13 May 2006</h3>
 		<h1>Table of Contents</h1>
 		<p><a href="#S1">1 Introduction</a></p>
 		<p><a href="#S2">2 Server Negotiation</a></p>
@@ -29,6 +29,8 @@
 		<blockquote><p><a href="#S4_1">4.1 SERVER - Server Introduction</a></p></blockquote>
 		<blockquote><p><a href="#S4_2">4.2 SQUIT - Server Removal</a></p></blockquote>
 		<blockquote><p><a href="#S4_3">4.3 SDESC - Server Description</a></p></blockquote>
+		<blockquote><p><a href="#S4_4">4.4 PING - Live Connection Query</a></p></blockquote>
+		<blockquote><p><a href="#S4_5">4.5 PONG - Live Connection Reply</a></p></blockquote>
 		<p><a href="#S5">5 Channel Operations</a></p>
 		<blockquote><p><a href="#S5_1">5.1 SJOIN - Channel Burst</a></p></blockquote>
 		<blockquote><p><a href="#S5_2">5.2 JOIN - Channel Join</a></p></blockquote>
@@ -99,6 +101,7 @@
 			<li>NICKIP : Adds an IP parameter to the NICK message, which is the base64 encoding of the user's ip address (in network byte order). Requires NICKv2.</li>
 			<li>NICKCHARS : Indicates the set of enabled nickchar options (see the regular documention for info about this).</li>
 			<li>CHANMODES : (Not required to be sent) This is the same as the CHANMODES value in the 005 for client connections. Useful for autodetecting things like what modes are valid for ChanServ MLOCK, for example.</li>
+			<li>CLK : Supports an extra field in NICK for sending the cloaked host (not vhost).</li>
 		</ul>
 		<p>The syntax examples here follow the conventions for TOKEN and also NS in cases of server-only messages.</p>
 		<h2><a name="S2_3"></a>2.3 SERVER - Server Negotiation</h2>
@@ -136,7 +139,7 @@
 			<li>P : Server is using poll().</li>
 			<li>e : Server has SSL Support (#define USE_SSL or answer "yes" (and have ssl libraries installed) to relevant ./Config prompt).</li>
 			<li>O : Server has OperOverride enabled (#undef NO_OPEROVERRIDE or answer "no" to relevant ./Config prompt).</li>
-			<li>o : Server has enabled Oper verify (#define OPEROVERRIDE_VERIFY or answer "yes" to relevant ./Config prompt).</li>
+			<li>o : Server has disabled Oper verify (#undef OPEROVERRIDE_VERIFY or answer "no" to relevant ./Config prompt).</li>
 			<li>Z : Server has ziplink support (#define ZIP_LINKS or answer "yes" to relevant ./Config prompt AND have the zlib dev libraries).</li>
 			<li>E : Server has extended channel mode support.</li>
 			<li>3 : 3rd party modules are loaded or some system libraries are wonky.</li>
@@ -148,8 +151,8 @@
 		<p><b>Syntax:</b> ES</p>
 		<p>Marks the end of the synching process. This is really optionally, but it might be a good idea to send it anyway when you really are done synching.</p>
 		<h2><a name="S2_5"></a>2.5 NETINFO - Network Information (TOKEN: AO)</h2>
-		<p><b>Syntax:</b> AO <i>currenttime</i> <i>protocolversion</i> <i>cloakhash</i> 0 0 0 :<i>networkname</i></p>
-		<p>This tells the other server your current network configuration. The current time is a timestamp value. Protocolversion is the same as that in the SERVER command. Cloakhash is a hash representing the configured cloak keys. It may be a * if you are implementing services. The network name is that specified in set::network-name. The cloak-prefix is currently not sent here (and thus unreal won't generate warning for mismatching cloak prefixes, but they should be the same anyway).</p>
+		<p><b>Syntax:</b> AO <i>maxglobal</i> <i>currenttime</i> <i>protocolversion</i> <i>cloakhash</i> 0 0 0 :<i>networkname</i></p>
+		<p>This tells the other server your current network configuration. The max global is the highest number of concurrent users network-wide that this server has seen. The current time is a timestamp value. Protocolversion is the same as that in the SERVER command. Cloakhash is a hash representing the configured cloak keys. It may be a * if you are implementing services. The network name is that specified in set::network-name. The cloak-prefix is currently not sent here (and thus unreal won't generate warning for mismatching cloak prefixes, but they should be the same anyway).</p>
 		<hr/>
 		<h1><a name="S3"></a>3 User Operations</h1>
 		<p>One important function of servers is it must notify all other servers about all of the users behind it. These commands represent the operations that can result in the change of a user's global state.</p>
@@ -158,8 +161,11 @@
 		<p>This format of the NICK message indicates an existing user is changing his or her nickname. If a collision occurs, see the section on Nick Collisions below. The timestamp is the new nickname's timestamp.</p>
 		<p><b>Syntax (normal):</b> <tt>:<i>source.server</i> &amp; <i>nick</i> <i>hopcount</i> <i>timestamp</i>	<i>username</i> <i>hostname</i> <i>server</i> <i>servicestamp</i> :<i>realname</i></tt></p>
 		<p><b>Syntax (NICKv2):</b> <tt>:<i>source.server</i> &amp; <i>nick</i> <i>hopcount</i> <i>timestamp</i>	<i>username</i> <i>hostname</i> <i>server</i> <i>servicestamp</i> <i>+usermodes</i> <i>virtualhost</i> :<i>realname</i></tt></p>
+		<p><b>Syntax (NICKv2+CLK):</b> <tt>:<i>source.server</i> &amp; <i>nick</i> <i>hopcount</i> <i>timestamp</i>	<i>username</i> <i>hostname</i> <i>server</i> <i>servicestamp</i> <i>+usermodes</i> <i>virtualhost</i> <i>cloakhost</i> :<i>realname</i></tt>
 		<p><b>Syntax (NICKv2+NICKIP):</b> <tt>:<i>source.server</i> &amp; <i>nick</i> <i>hopcount</i> <i>timestamp</i> <i>username</i> <i>hostname</i> <i>server</i> <i>servicestamp</i> <i>+usermodes</i> <i>virtualhost</i> <i>nickipaddr</i> :<i>realname</i></tt></p>
-		<p>This format of the NICK message introduces a new user to the network. If PROTOCTL VHP is enabled, the user's cloaked host is put in the virtualhost field, otherwise it'll be * unless the user is +t.</p>
+		<p><b>Syntax (NICKv2+NICKIP+CLK):</b> <tt>:<i>source.server</i> &amp; <i>nick</i> <i>hopcount</i> <i>timestamp</i>	<i>username</i> <i>hostname</i> <i>server</i> <i>servicestamp</i> <i>+usermodes</i> <i>virtualhost</i> <i>cloakhost</i> <i>nickipaddr</i> :<i>realname</i></tt>
+		<p><b>Note:</b> Because each server normally does its own cloak generation, Unreal does not expect to receive NICK messages with the CLK info, so do not send it. It will send this info to a server it has received a PROTOCTL CLK from however.</p>
+		<p>This format of the NICK message introduces a new user to the network. If PROTOCTL VHP is enabled, the user's cloaked host is put in the virtualhost field, otherwise it'll be * unless the user is +t. With the addition of CLK, VHP is no longer necessary for determining the cloak host.</p>
 		<h3><a name="S3_1_1"></a>3.1.1 Nick Collisions</h3>
 		<p>A nick collision occurs when a server receives a NICK message (or &amp; token) introducing a user that the server already sees on the network. When a collision occurs, one or both of the colliding clients must be disconnected. The timestamp is examined to determine which client loses. The client with the earlier timestamp remains. If both clients have equal timestamps, both are removed. Currently, Unreal handles NICK collisions both passively and agressively:</p>
 		<ul>
@@ -208,11 +214,22 @@
 		<h2><a name="S4_3"></a>4.3 SDESC - Server Description (TOKEN: AG)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> AG :<i>newdesc</i></tt></p>
 		<p>The server to which source is connected to should have it's description updated to newdesc. This does NOT include the VL inforamtion.</p>
+		<h2><a name="S4_4">4.4 PING - Live Connection Query (TOKEN: 8)</a></h2>
+		<p><b>Syntax:</b> <tt>8 <i>source</i>[ :<i>destination</i>]</tt></p>
+		<p>Used to check if a connection is still live if it has been &quot;quiet&quot; for a certain amount of time. Typically, unreal will send PING requests at intervals determined by the class::pingfreq setting. PINGs originating from the direct uplink will use the token, but it seems PINGs originating from a distant server will not.</p>
+		<p>The response to a PING is sent with the <a href="#S4_5">PONG</a> command.</p>
+		<p>When receiving a two-parameter PING, the second parameter is the target. If the target isn't you, you can either reply on behalf of that target (using its name instead of yours), or if there is a real connection representing the target, forward the PING to the target.</p>
+		<h2><a name="S4_5">4.5 PONG - Live Connection Reply (TOKEN: 9)</a></h2>
+		<p><b>Syntax:</b> <tt>9 <i>source</i>[ :<i>destination</i>]</tt></p>
+		<p>Used to respond to a <a href="#S4_4">PING</a> query.</p>
+		<p><b>Responding to a ping:</b> Once a PING is received, you usually have an amount of time to respond equal to your class::pingfreq. The correct response will always have two parameters. If you received one parameter, then the received parameter becomes the second parameter of your response, and the first parameter is your server name. If you received two parameters, the response returns both parameters in reverse order.</p>
+		<p>For example, the response to <tt>8 uplink.server</tt> is <tt>9 my.name uplink.server</tt>, while the response to <tt>PING distant.server your.server</tt> is <tt>9 your.server distant.server</tt>. Unreal typically includes a : prior to the last parameter. This isn't required if that parameter contains no spaces, but it is especially important to not include the colon when reversing the parameters, or else Unreal mistake it for a single-parameter PONG.
+		<p>If a two-parameter PONG is received, the second parameter names the target. If the target is not you, and a real connection represents that target, you should forward the PONG message via that connection.</p>
 		<hr/>
 		<h1><a name="S5"></a>5 Channel Operations</h1>
 		<p>These commands deal with the state of channels across the network. Unreal only supports Network Channels, where the first character is a # character.</p>
 		<h2><a name="S5_1"></a>5.1 SJOIN - Channel Burst (TOKEN: ~)</h2>
-		<p><b>Syntax:</b> @<i>servernumeric</i> ~ <i>timestamp</i> <i>channel</i> +<i>modes</i>[ <i>modeparams</i>] :<i>memberlist</i> <i>&amp;ban</i> <i>"exempt</i> <i>'invex</i></p>
+		<p><b>Syntax:</b> <tt>@<i>servernumeric</i> ~ <i>timestamp</i> <i>channel</i> +<i>modes</i>[ <i>modeparams</i>] :<i>memberlist</i> <i>&amp;ban</i> <i>"exempt</i> <i>'invex</i></tt></p>
 		<p>Timestamp is the channel timestamp and can be !b64 as defined by PROTOCTL SJB64. Modes should only include those in the last three mode sets listed in CHANMODES. Modeparams is one parameter for each mode character that requires one. Memberlist is a series of users (all of which must at least be behind the server sending the SJOIN), each user is prefixed with one or more characters indicating their status. Owners (+q) are prefixed with *, admins (+a) ~, ops (+o) @, halfops (+h) %, voices (+v) +. Normal users are not prefixed with anything. Ban, ban exception, and invite exception masks are also included, with bans prefixed with &amp;, ban exceptions prefixed with ", and invite exceptions with '. Note that when a &amp;, " or ' is encountered as the first character, further processing of ~, *, @, %, or + characters must not continue because ban, exempt, and invite masks can contain any of those characters. (Plus it's just not right for a ban mask to be marked as a channel admin...)</p>
 		<p>If the channel didn't already exist it is created with the information given in the SJOIN. Otherwise the timestamp is used to determine how the SJOIN information is handled. As a given, all members are joined into the channel, regardless. The mode information (modes, modeparams, memberlist prefixes, bans, exempts, and invites) is subject to the timestamp rules:</p>
 		<ul>

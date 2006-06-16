@@ -12,7 +12,7 @@
  .block_old { font-size: 14; }
  .set { font-weight: bold; }
  .desc { margin-left: 15px; }
- pre { font: "times new roman"; font-style: normal;}
+ pre { font: "times new roman"; font-style: normal; background-color: #eeeeee;}
 </style>
 </head>
 
@@ -26,21 +26,20 @@ English |
 <a href="unreal32docs.fr.html">French</a> | 
 <a href="unreal32docs.gr.html">Greek</a> | 
 <a href="unreal32docs.nl.html">Dutch</a> | 
-<a href="unreal32docs.ru.html">Russian</a>
+<a href="unreal32docs.ru.html">Russian</a> | 
+<a href="unreal32docs.tk.html">Turkish</a>
 <br><br>
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
-  <font size="4">Version: 3.2.4</font><br>
-  <b>Last doc update:</b> 2006-01-17</div>
+  <font size="4">Version: 3.2.5</font><br>
+  <b>Last doc update:</b> 2006-06-15</div>
 <br>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
-<p>Due to the increasing complexity of UnrealIRCd3.2 We have switched to an easier 
-  to navigate, more inclusive documentation set. To view this documentation you 
-  must have a compatible browser, which are listed below. Up to date docs are 
-  available at <a href="http://www.vulnscan.org/UnrealIrcd/unreal32docs.html">http://www.vulnscan.org/UnrealIrcd/unreal32docs.html</a>
-  and a FAQ at <a href="http://www.vulnscan.org/UnrealIrcd/faq/" TARGET="_blank">http://www.vulnscan.org/UnrealIrcd/faq/</a>.
+<p>To view this documentation you must have a compatible browser, which are listed below. Up to date docs are 
+  available at <a href="http://www.vulnscan.org/UnrealIRCd/unreal32docs.html">http://www.vulnscan.org/UnrealIRCd/unreal32docs.html</a>
+  and a FAQ at <a href="http://www.vulnscan.org/UnrealIRCd/faq/" TARGET="_blank">http://www.vulnscan.org/UnrealIRCd/faq/</a>.
 </p>
 <p><b>Compatible Browsers: </b><br>
 <ul>
@@ -73,7 +72,9 @@ English |
   -- 3.14. <a href="#feature_spamfilter">Spamfilter</a><br>
   -- 3.15. <a href="#feature_cidr">CIDR</a><br>
   -- 3.16. <a href="#feature_nickchars">Nick Character Sets</a><br>
-  -- 3.17. <a href="#feature_other">Other features</a><br>
+  -- 3.17. <a href="#feature_cgiirc">CGI:IRC Support</a><br>
+  -- 3.18. <a href="#feature_timesync">Time Synchronization</a><br>
+  -- 3.19. <a href="#feature_other">Other features</a><br>
   4. <a href="#configuringyourunrealircdconf">Configuring your unrealircd.conf 
   file</a><br>
   ---4.1. <a href="#configurationfileexplained">Configuration file explained</a><br>
@@ -111,7 +112,8 @@ English |
   ---4.33. <a href="#helpblock">Help Block</a><br>
   ---4.34. <a href="#officialchannels">Official Channels Block</a><br>
   ---4.35. <a href="#spamfilter">Spamfilter Block</a><br>
-  ---4.36. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
+  ---4.36. <a href="#cgiirc">Cgiirc Block</a><br> 
+  ---4.37. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
   5. <a href="#addtlfiles">Additional Files</a><br>
   6. <a href="#userchannelmodes">User & Channel Modes</a><br>
   7. <a href="#useropercommands">User & Oper Commands</a><br>
@@ -125,7 +127,7 @@ English |
   ---8.7. <a href="#secinformation">Information disclosure</a><br>
   ---8.8. <a href="#secantiexploit">Protecting against exploits</a><br>
   ---8.9. <a href="#secsummary">Summary</a><br>
-  9. <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">Frequently Asked Questions (FAQ)</a><br> 
+  9. <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">Frequently Asked Questions (FAQ)</a><br> 
   A. <a href="#regex">Regular Expressions</a><br>
   ---A.1. <a href="#regexlit">Literals</a><br>
   ---A.2. <a href="#regexdot">Dot Operator</a><br>
@@ -144,9 +146,9 @@ English |
   another software package is strictly prohibited without the written permission 
   of the UnrealIRCd Development Team. This document may be copied/printed/reproduced/published 
   as many times as you like, provided it is for use with UnrealIRCd and it is not 
-  modified in anyway. &#8211; Copyright UnrealIRCd Development Team 2002-2004</p>
+  modified in anyway. &#8211; Copyright UnrealIRCd Development Team 2002-2006</p>
 <p>Please read this manual before asking for help, you also REALLY want to take a look at the 
-   <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">FAQ</a> since over 80% of your questions/problems are answered in it. If you still
+   <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">FAQ</a> since over 80% of your questions/problems are answered in it. If you still
    need help you can ask for support at irc.ircsystems.net (port 6667) channel #unreal-support (note 
    that we REQUIRE you to read the docs and faq and we only help with UnrealIRCd, not with services!). 
    If you have a real bug (like a crash) then report it at 
@@ -211,8 +213,8 @@ Windows:<br>
 <p><b>Installation Instructions</b><br>
 Linux:<br>
 <ol>
-<li>gunzip -d Unreal3.2.2.tar.gz
-<li>tar xvf Unreal3.2.2.tar
+<li>gunzip -d Unreal3.2.X.tar.gz
+<li>tar xvf Unreal3.2.X.tar
 <li>cd Unreal3.2
 <li>./Config
 <li>Answer these questions to the best of your knowledge. Generally if your not 
@@ -232,7 +234,8 @@ Windows:<br>
   <a name="features"></a></p><div class="desc">
 <p>Some major/nice features are explained in this section. It provides a general overview,
    and sometimes refers to the config file (something which you might know nothing about yet).</p>
-<p>You can skip this section, however it's suggested to read it before/after installing.</p></div>
+<p>You can skip this section, however it's very much suggested to read it before/after installing
+because otherwise you will not understand concepts such as 'cloaking', 'snomasks', etc.</p></div>
 
 <p><font size="+2"><b>3.1 - Cloaking</b></font><a name="feature_cloaking"></a></p><div class="desc">
 <p>Cloaking is a way to hide the real hostname of users, for example if your real host is <i>d5142341.cable.wanadoo.nl</i>,
@@ -290,7 +293,7 @@ Windows:<br>
    You can for example let "/ns identify blah" be forwarded to nickserv (it will be 
    translated to: privmsg nickserv identify blah). You can even make more complex aliases such as /register can forward to 
    ChanServ if the first parameter begins with a # and forwarded to NickServ if it doesn't.</p>
-<p>Aliases are configured by alias blocks in the configuration file, and you can also include
+<p>Aliases are configured by <a href="#aliasblock">alias blocks</a> in the configuration file, and you can also include
    a file with default aliases for most commonly used services.</p></div>
    
 <p><font size="+2"><b>3.5 - Helpop</b></font><a name="feature_helpop"></a></p><div class="desc">
@@ -628,17 +631,39 @@ Example 2, if you have mainly chinese users and want to allow "normal" chinese c
 <pre>set { allowed-nickchars { chinese-simp; chinese-trad; }; };</pre>
 </p></div>
 
-<p><font size="+2"><b>3.17 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
+<p><font size="+2"><b>3.17 - CGI:IRC Support</b></font><a name="feature_cgiirc"></a></p><div class="desc">
+<p>UnrealIRCd has support for CGI:IRC host spoofing, which means you can mark specific CGI:IRC
+gateways as "trusted" which will cause the IRCd to show the users' real host/ip everywhere on
+IRC, instead of the host/ip of the CGI:IRC-gateway.</p>
+<p>See the <a href="#cgiirc">cgiirc block</a> for information on how to configure this.</p>
+</div>
+
+<p><font size="+2"><b>3.18 - Time Synchronization</b></font><a name="feature_timesync"></a></p><div class="desc">
+<p>Having correct time is extremely important for IRC servers. Without correct time, channels can desynch, innocent
+users can be killed, channels might not show up properly in /LIST, in short: huge trouble will arrise.</p>
+<p>UnrealIRCd has some build-in time synchronization support.
+Although not optimal (time can still be off a few seconds), it should get rid of most time differences.
+If you can, you are still recommended to run time synchronization software such as ntpd on *NIX or 
+the time synchronization service on Windows (in that case, you can turn off Unreal's time synchronization, more on that later).</p>
+<p>What UnrealIRCd does (by default) is do a one-shot timesync attempt when booting. It sends (by default) a request
+to multiple time servers and when it gets the first (fastest) reply, it will adjust the internal ircd clock
+(NOT the system clock). If, for some reason, Unreal does not get a reply from the timeserver within 3 seconds,
+the IRCd will continue to boot regardlessly (should rarely happen).</p>
+<p>Time synchronization is configured (and can be turned off) through the <b>set::timesynch</b> block, see
+   the <a href="#setblock">set documentation</a> for more information.</p>
+</div>
+
+<p><font size="+2"><b>3.19 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
 <p>UnrealIRCd has a lot of features so not everything is covered here... You'll find that out by yourself.</p></div>
 
 <p> </p>
 <p><font size="+2"><b>4.0 - Configuring your unrealircd.conf</b></font> 
   <a name="configuringyourunrealircdconf"></a></p><div class="desc">
-<p>First of all, creating a good unrealircd.conf will take some time, probably
-   something like 10 - 60m. You can try to get it booted up as quickly as you can and
-   tweak later, or you can learn the major sections directly step-by-step which is 
-   the recommended method ;P. If you have any problems, check your syntax, check the manual 
-   and check the FAQ before asking for help/reporting a bug.</p></div>
+<p>First of all, creating your first unrealircd.conf will take time (say, 15-60
+minutes). Creating a <u>good</u> unrealircd.conf will take even more time.
+You should not rush to get the IRCd booted, but rather go through things
+step-by-step. If you have any problems, check your syntax, check this manual 
+and check the <a href="http://www.vulnscan.org/UnrealIRCd/faq/">FAQ</a> before asking for help/reporting a bug.</p></div>
 <p><b><font size="+2">4.1 Configuration File Explained</font></b><a name="configurationfileexplained"></a><br><div class="desc">
 </p>
 <p>The new system uses a block-based format. Each entry, or block, in the new 
@@ -662,8 +687,8 @@ Example 2, if you have mainly chinese users and want to allow "normal" chinese c
   Also note that there is no set format, meaning the whole block can appear on 
   one line or over multiple lines. The format above is what is normally used (and 
   what will be used in this file) because it is easy to read. </p>
-<p>Note: the configuration file is currently case sensitive so BLOCK-NAME is not 
-  the same as block-name. There is a special notation used to talk about entries 
+<p>Note: the configuration file is currently case sensitive so <i>BLOCK-NAME</i> is not 
+  the same as <i>block-name</i>. There is a special notation used to talk about entries 
   in the config file. For example, to talk about &lt;directive-name&gt; in the 
   example above, you'd say &lt;block-name&gt;::&lt;block-directive&gt;, and if 
   that directive has a sub block you want to reverence, you would add another 
@@ -677,9 +702,11 @@ Example 2, if you have mainly chinese users and want to allow "normal" chinese c
     /* Multi line<br>
        &nbsp;&nbsp;&nbsp;&nbsp;comment */<br>
  </p>
-<p>Now that you know how it works, create your unrealircd.conf from scratch or
-   copy doc/example.conf and start editing. It's recommended to walk step by step
-   through all block types and use this manual as a reference.</p>
+<p>Now that you know how it works, copy <i>doc/example.conf</i> to your UnrealIRCd
+   directory (eg: /home/user/Unreal3.2) and rename it to <i>unrealircd.conf</i>
+   (OR create your <i>unrealircd.conf</i> from scratch).
+   It's recommended to walk step by step through all block types and
+   settings in your conf and use this manual as a reference.</p>
 <p></p></div>
 <p><font class="block_section">4.2 - </font><font class="block_name">Me Block</font>
    <font class="block_required">REQUIRED</font> <font class="block_old">(Previously known as the M:Line)</font><a name="meblock"></a><div class="desc">
@@ -1996,11 +2023,19 @@ alias &lt;name&gt; {
 <p>Syntax [command alias]:<br>
 <pre>
 alias &lt;name&gt; {
+	/* For aliases to be sent to users/channels */
 	format &lt;regex-expression&gt; {
 		target &lt;nick-to-forward-to&gt;;
 		type &lt;type-of-alias&gt;;
 		parameters &lt;parameter-string&gt;;
 	};
+	/* For 'real aliases' */
+	format &lt;regex-expression&gt; {
+		command &lt;command&gt;;
+		type real;
+		parameters &lt;parameter-string&gt;;
+	};
+	/* Etc... You can have as many format blocks as you wish.. */
 	format &lt;regex-expression&gt; {
 		...
 	};
@@ -2009,20 +2044,23 @@ alias &lt;name&gt; {
 };</pre></p>
 <p>When the alias block is used in this format, it allows you a much broader range 
   of usage. For example you can create aliases such as /identify. The alias:: 
-  is the same as above, the name of the alias command. The alias::format specifies 
+  is the same as above, the name of the alias command. The <b>alias::format</b> specifies 
   a regular expression that compares against the text sent to the alias command, 
   when matched the sub-entries of that alias::format will be used, you may have 
   multiple alias::format's to make the command do different things depending on 
-  the text sent to it. The alias::format::target is the target to forward this
-  alias to. The alias::format::type specifies the type of the alias that the
-  message should be forwarded to. The alias::format::parameters is what will 
+  the text sent to it. The <b>alias::format::target</b> is the target to forward this
+  alias to, however in case of a "real alias" <b>alias::format::command</b> is used instead.
+  The <b>alias::format::type</b> specifies the type of the alias that the
+  message should be forwarded to, besides the types mentioned previously in
+"Syntax [standard alias]", we also allow the type "real" here, for "real
+aliases". The <b>alias::format::parameters</b> is what will 
   be sent as the parameters to this alias. To specify one of the parameters given 
   to the command alias specify % followed by a number, for example, %1 is the 
   first parameter. To specify all parameters from a given parameter to the end 
   do % followed by the number and a -, for example %2- returns all parameters 
   from the second till the last. Additionally, you may specify %n which will be replaced 
-  by the nickname of the user who executed the command. For examples of using the alias
-  block in the command format, consult doc/example.conf.</p>
+  by the nickname of the user who executed the command.<br><br>
+  For examples of using the alias block in the command format, consult doc/example.conf.</p>
 <p></p></div>
 <p><font class="block_section">4.33 - </font><font class="block_name">Help Block</font>
    <font class="block_optional">OPTIONAL</font><a name="helpblock"></a>
@@ -2106,7 +2144,63 @@ spamfilter {
 </pre></p>
 </div>
 
-<p><font class="block_section">4.36 - </font><font class="block_name">Set Block</font>
+<p><font class="block_section">4.36 - </font><font class="block_name">Cgiirc Block</font>
+   <font class="block_optional">OPTIONAL</font><a name="cgiirc"></a>
+</p><div class="desc">
+<p>
+The cgiirc block allows you to configure host spoofing for CGI:IRC gateways you trust 
+(<a href="#feature_cgiirc">more info</a>).</p>
+
+<p>Syntax:<br>
+<pre>
+cgiirc {
+	type &lt;webirc|old&gt;;
+	username &lt;mask&gt;; /* optional */
+	hostname &lt;mask&gt;;
+	password &lt;password&gt;; /* only for type webirc */
+};</pre></p>
+<p><b>type</b> is either 'webirc' or 'old'.<br>
+   <b>username</b> is matched against the ident (if present). If not specified, "*" is assumed.<br>
+   <b>hostname</b> is the hostmask to match against.<br>
+   <b>password</b> is the webirc password, only used for type 'webirc'.<br>
+</p>
+
+<p><b>How to configure with method 'webirc' (recommended method)</b><br>
+In your CGI:IRC configuration file (cgiirc.conf) you set webirc_password to a good password.<br>
+Then, in your unrealircd.conf you add a cgiirc block to allow this host and password and you set
+cgiirc::type to "webirc".<br>
+<br>
+Example:<br>
+In your CGI:IRC configuration file (cgiirc.conf) you add:
+<pre>webirc_password = LpT4xqPI5</pre>
+Then, in your unrealircd.conf you add a cgiirc block:
+<pre>cgiirc {
+	type webirc;
+	hostname "1.2.3.4";
+	password "LpT4xqPI5";
+};</pre></p>
+
+<p><b>How to configure with method 'old'</b><br>
+NOTE: This is not the recommended method since it has two disadvantages: 
+this method will send the IP/host to spoof as a server password, meaning you cannot
+specify a server password as a CGI:IRC user. Additionally, access control is only
+IP-based and does not require an extra password like the 'webirc' method. In short,
+you probably should not be using this method unless you have a good reason to do so.<br>
+<br>
+In your CGI:IRC configuration file (cgiirc.conf) you set realhost_as_password to 1.<br>
+Then, in your unrealircd.conf you add a cgiirc block to allow this host.<br>
+<br>
+Example:<br>
+In your CGI:IRC configuration file (cgiirc.conf) you add:
+<pre>realhost_as_password = 1</pre>
+Then, in your unrealircd.conf you add a cgiirc block:
+<pre>cgiirc {
+	type old;
+	hostname "1.2.3.4";
+};</pre></p>
+</div>
+
+<p><font class="block_section">4.37 - </font><font class="block_name">Set Block</font>
    <font class="block_required">REQUIRED</font> <font class="block_old">(Previously known as unrealircd.conf/networks file)</font><a name="setblock"></a>
 </p><div class="desc">
 <p>The set file is what use to be our networks/unrealircd.conf and our networks 
@@ -2394,6 +2488,16 @@ set {
  <p><font class="set">set::check-target-nick-bans &lt;yes|no&gt;</font><br>
   Whenever the user changes his/her nick, check if the NEW nick would be
   banned. If so, do not allow the nickchange. Default is yes.</p>
+ <p><font class="set">set::timesynch::enabled &lt;yes|no&gt;</font><br>
+  Enable or disable time synchronization on-boot. Default is yes.</p>
+ <p><font class="set">set::timesynch::server &lt;IP&gt;</font><br>
+  Server to synchronize time with. This can be up to 4 IP's seperated by comma's.
+  The servers must support NTP protocol version 4. The default is to use 3 time servers (US, EU,
+AU). Requests to these servers are sent in parallel, fastest reply wins.</p>
+ <p><font class="set">set::timesynch::timeout &lt;time&gt;</font><br>
+  Maximum time to wait for a time server reply. This is a value between 1 and 5, more is not possible
+  because it causes too much inaccuracy. This setting is 3 by default and there's probably
+  no good reason to change it.</p>
 <p></p> </div>
 <p><b><font size="+2">5 &#8211; Additional Files<a name="addtlfiles"></a>
   </font></b></p><div class="desc">
@@ -3374,7 +3478,7 @@ It will however make it more difficult / increase the effort needed to attack/ha
 
 <p><b><font size="+2">8.8 Protecting against exploits</font></b><a name="secantiexploit"></a><br><div class="desc">
 There are kernel patches that make it more difficult for stack- and heap-based exploits to 
-work. This should however not be your main focus point, you have a far more bigger risk 
+work. This is nice, but should not be your main focus point, you have a far more bigger risk 
 of getting exploited through the other points than this... for various reasons.<br>
 <br>
 There's one thing you should do however, which is to ALWAYS USE THE LATEST VERSION, 
@@ -3394,7 +3498,7 @@ security until they got hacked, try to avoid that :).
 
 
 <p><font size="+2"><b>9 &#8211; Frequently Asked Questions (FAQ)<a name="faq"></a></b></font></p>
-<div class="desc"><p>The FAQ is available online <a href="http://www.vulnscan.org/UnrealIrcd/faq/" TARGET="_blank">here</a></p></div>
+<div class="desc"><p>The FAQ is available online <a href="http://www.vulnscan.org/UnrealIRCd/faq/" TARGET="_blank">here</a></p></div>
 <p></p>
 
 <p><font size="+2"><b>A Regular Expressions<a name="regex"></a></b></font></p>

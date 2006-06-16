@@ -147,6 +147,7 @@ void isupport_init(void)
 	IsupportAdd(NULL, "MAXCHANNELS", my_itoa(MAXCHANNELSPERUSER));
 	IsupportAdd(NULL, "HCN", NULL);
 	IsupportAdd(NULL, "SAFELIST", NULL);
+	IsupportAdd(NULL, "NAMESX", NULL);
 	if (cmdstr)
 		IsupportAdd(NULL, "CMDS", cmdstr);
 }

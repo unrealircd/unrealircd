@@ -103,6 +103,7 @@ void start_auth(aClient *cptr)
 	set_non_blocking(cptr->authfd, cptr);
 
 	/* Bind to the IP the user got in */
+	memset(&sock, 0, sizeof(sock));
 	len = sizeof(us);
 	if (!getsockname(cptr->fd, (struct SOCKADDR *)&us, &len))
 	{

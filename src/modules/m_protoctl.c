@@ -130,7 +130,12 @@ CMD_FUNC(m_protoctl)
 			equal[0] = '\0';
 		}
 */
-		if (strcmp(s, "NOQUIT") == 0)
+		if (!strcmp(s, "NAMESX"))
+		{
+			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
+			SetNAMESX(cptr);
+		}
+		else if (strcmp(s, "NOQUIT") == 0)
 		{
 #ifndef PROTOCTL_MADNESS
 			if (remove)
@@ -264,6 +269,13 @@ CMD_FUNC(m_protoctl)
 			    "Chose protocol %s for link %s",
 			    proto, cptr->name));
 			SetVHP(cptr);
+		}
+		else if (strcmp(s, "CLK") == 0)
+		{
+			Debug((DEBUG_ERROR,
+			    "Chose protocol %s for link %s",
+			    proto, cptr->name));
+			SetCLK(cptr);
 		}
 		else if (strcmp(s, "SJ3") == 0)
 		{

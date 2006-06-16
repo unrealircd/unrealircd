@@ -148,6 +148,9 @@ struct zConfiguration {
 	char *spamexcept_line;
 	int maxbans;
 	int maxbanlength;
+	int timesynch_enabled;
+	int timesynch_timeout;
+	char *timesynch_server;
 	aNetwork network;
 };
 
@@ -254,7 +257,12 @@ extern MODVAR aConfiguration iConf;
 #define MAXBANS		iConf.maxbans
 #define MAXBANLENGTH	iConf.maxbanlength
 
-/* Used for duplicate checking */
+#define TIMESYNCH	iConf.timesynch_enabled
+#define TIMESYNCH_TIMEOUT	iConf.timesynch_timeout
+#define TIMESYNCH_SERVER	iConf.timesynch_server
+
+
+/* Used for "is present?" and duplicate checking */
 struct SetCheck {
 	unsigned has_show_opermotd:1;
 	unsigned has_hide_ulines:1;
@@ -353,6 +361,9 @@ struct SetCheck {
 	unsigned has_options_show_connect_info:1;
 	unsigned has_options_mkpasswd_for_everyone:1;
 	unsigned has_options_allow_part_if_shunned:1;
+	int cgiirc_type; /* cheat :( */
+	unsigned has_cgiirc_hosts:1;
+	unsigned has_cgiirc_webpass:1;
 };
 
 
