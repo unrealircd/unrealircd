@@ -4,6 +4,9 @@ Unreal3.2.5 Release Notes
 If you are upgrading, please take a minute to read these release notes.
 *NIX Users: PREFIX_AQ is now enabled by default. See under 'CHANGED' below.
 
+If you are a coder and want to help out with Unreal3.3* development, then check out
+http://dev.unrealircd.com/ and http://dev.unrealircd.com/wiki/Coders_Contest
+
 ==[ GENERAL INFORMATION ]==
 - If you are upgrading on *NIX, make sure you run 'make clean' and './Config'
   first before doing 'make'
@@ -50,7 +53,7 @@ If you are upgrading, please take a minute to read these release notes.
 - If channel is +m but -t, you now need at least voice (+v) to change the topic.
 - When checking if someone is banned, we now always verify bans against the cloaked host,
   even if the user has a vhost and the cloaked host is not visible / unused.
-- Extra binary compatability checks: (gcc) compiler version
+- Extra binary compatibility checks: (gcc) compiler version
 - Allow /*LINE'ing of literalident@* (eg: gline clones@*). Things like *clones@* are
   still denied though, and this will not be changed. Use services AKILL instead.
 - Command aliases: made empty parameters work if the alias allows it (eg, the alias
