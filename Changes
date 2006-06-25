@@ -1257,4 +1257,8 @@
 - Updated doc/technical/005.txt
 - Mass version change (no code changes)
 ** 3.2.5 release **
-bleh
+- c-ares resolver: upgrade from 1.3.0 to 1.3.1. This mainly fixes compile problems,
+  including one reported by frigola on an old Sun Cobalt RAQ3.
+  It will probably also fix an issue with the just released curl 7.15.4, if compiling
+  with remote includes.
+  TODO: Update win32 (not urgent)
