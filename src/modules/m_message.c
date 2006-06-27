@@ -222,6 +222,9 @@ int ret;
 			return CANPRIVMSG_CONTINUE;
 		
 		return CANPRIVMSG_SEND;
+	} else {
+		/* Silenced */
+		RunHook4(HOOKTYPE_SILENCED, cptr, sptr, acptr, notice);
 	}
 	return CANPRIVMSG_CONTINUE;
 }

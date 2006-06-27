@@ -1262,3 +1262,5 @@
   It will probably also fix an issue with the just released curl 7.15.4, if compiling
   with remote includes.
   TODO: Update win32 (not urgent)
+- Added HOOKTYPE_SILENCED: this is called whenever a message did not get delivered to a user
+  because the user was on the silence list.
