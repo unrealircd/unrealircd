@@ -214,7 +214,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				if (!invis && HiddenChannel(chptr) &&
 				    !SecretChannel(chptr))
 					showperson = 1;
-				else if (IsAnOper(sptr) && SecretChannel(chptr)) {
+				else if (OPCanSeeSecret(sptr) && SecretChannel(chptr)) {
 					showperson = 1;
 					showsecret = 1;
 				}
@@ -266,11 +266,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				showchannel = 0;
 				if (ShowChannel(sptr, chptr))
 					showchannel = 1;
-#ifndef SHOW_SECRET
-				if (IsAnOper(sptr) && !SecretChannel(chptr))
-#else
-				if (IsAnOper(sptr))
-#endif
+				if (OPCanSeeSecret(sptr))
 					showchannel = 1;
 				if ((acptr->umodes & UMODE_HIDEWHOIS) && !IsMember(sptr, chptr) && !IsAnOper(sptr))
 					showchannel = 0;

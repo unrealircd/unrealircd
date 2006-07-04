@@ -613,6 +613,11 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPIsNetAdmin(x) ((x)->oflag & OFLAG_NETADMIN)
 #define OPIsCoAdmin(x)	((x)->oflag & OFLAG_COADMIN)
 #define OPIsWhois(x)    ((x)->oflag & OFLAG_WHOIS)
+#ifdef SHOW_SECRET
+#define OPCanSeeSecret(x) IsAnOper(x)
+#else
+#define OPCanSeeSecret(x) IsNetAdmin(x)
+#endif
 
 #define OPSetRehash(x)	((x)->oflag |= OFLAG_REHASH)
 #define OPSetDie(x)	((x)->oflag |= OFLAG_DIE)

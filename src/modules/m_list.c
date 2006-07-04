@@ -269,7 +269,7 @@ DLLFUNC CMD_FUNC(m_list)
 			  else	/* Just a normal channel */
 			  {
 				  chptr = find_channel(name, NullChn);
-				  if (chptr && (ShowChannel(sptr, chptr) || IsAnOper(sptr))) {
+				  if (chptr && (ShowChannel(sptr, chptr) || OPCanSeeSecret(sptr))) {
 #ifdef LIST_SHOW_MODES
 					modebuf[0] = '[';
 					channel_modes(sptr, &modebuf[1], parabuf, chptr);
@@ -364,7 +364,7 @@ void _send_list(aClient *cptr, int numsend)
 			{
 				if (SecretChannel(chptr)
 				    && !IsMember(cptr, chptr)
-				    && !IsAnOper(cptr))
+				    && !OPCanSeeSecret(cptr))
 					continue;
 
 				/* Much more readable like this -- codemastr */
@@ -405,7 +405,7 @@ void _send_list(aClient *cptr, int numsend)
 				else
 					strlcat(modebuf, "]", sizeof modebuf);
 #endif
-				if (!IsAnOper(cptr))
+				if (!OPCanSeeSecret(cptr))
 					sendto_one(cptr,
 					    rpl_str(RPL_LIST), me.name,
 					    cptr->name,
