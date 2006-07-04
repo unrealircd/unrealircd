@@ -1264,3 +1264,4 @@
   TODO: Update win32 (not urgent)
 - Added HOOKTYPE_SILENCED: this is called whenever a message did not get delivered to a user
   because the user was on the silence list.
+- Added OpenBSD 3.9 to the supported OS list.
