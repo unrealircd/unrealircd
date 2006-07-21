@@ -1267,3 +1267,4 @@
 - Added OpenBSD 3.9 to the supported OS list.
 - Made it so undefining SHOW_SECRET (not the default) properly hides +s channels from ircops
   (except netadmins), as it should. Reported and patch supplied by Jason (#0002965).
+- Fixed tld::options:: not working properly, reported by DelGurth (#0003003).

@@ -3845,9 +3845,9 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 			ConfigEntry *cepp;
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
-				if (!strcmp(cep->ce_varname, "ssl"))
+				if (!strcmp(cepp->ce_varname, "ssl"))
 					ca->options |= TLD_SSL;
-				else if (!strcmp(cep->ce_varname, "remote"))
+				else if (!strcmp(cepp->ce_varname, "remote"))
 					ca->options |= TLD_REMOTE;
 			}
 		}
