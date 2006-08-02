@@ -39,3 +39,48 @@ Some minor rules about patches & modifications to UnrealIRCd
 8. We do NOT rip people off. If we use other people's code, it MUST be
    properly credited.
 
+9. We generally use tabsize 4 and 8. In any case, use tabs and NOT spaces.
+   Some code is old and horrible and has a mix of tabs and spaces used for
+   spacing, that's something we do not want to have ;)
+
+10. Be careful about overflows. As you know a line from a user can never be longer
+    than 511 (510?) characters, sometimes you can use this knowledge to your
+    advantage. Whenever it's not safe or when you don't know what input size you
+    can expect, use strlcpy instead of strcpy. Do not ever use strncpy, this is
+    older, slower, and does not add proper zero termination.
+    For the same reason, use snprintf if really needed. Note though, that using
+    ircsprintf with a bigger buffer (eg: 1024 bytes) is MUCH faster, so preferably
+    use that instead of snprintf. The same can be true for strcpy vs strlcpy in
+    some circumstances as well.
+
+11. Speed.  When optimizing or writing code, keep in mind that readability and
+    stability comes first, and after that comes speed. So we'd rather prefer some
+    readable code (even if difficult) over some odd highly optimized routine which
+    nobody understands, is difficult to extend, and might have several bugs.
+    As mentioned earlier: use ircsprintf, not sprintf (this is because ircsprintf
+    is optimized for simple strings like the ones we use).
+    Prefer ircsprintf with a bigger buffer over the use of snprintf, since
+    ircsprintf is much faster.
+
+12. Initialize your structs and use the proper memory calls.
+    In UnrealIRCd we use MyMalloc, MyMallocEx and MyFree (so not malloc/free).
+    MyMalloc usually maps to malloc, and MyMallocEx is a malloc plus filling
+    the memory area (eg: the struct) with zero's (a la calloc).
+    Use of MyMallocEx is suggested. In general you should not be using MyMalloc.
+    "But MyMalloc is faster!" you might say. This is true, but using MyMallocEx
+    has very little speed impact and enourmous benefits: people tend to forget
+    to set certain fields in the struct to NULL, or much more common: when
+    someone later on (eg: 1 year later) adds a field to a struct, there could
+    be several places he/she needs to update to make sure x->something is NULL
+    after allocating a new struct. Bad idea.
+    Little speed impact, huge stability benefits, easy decision ;).
+
+13. Comment your code! This should speak for itself...
+    Put comments wherever you think they are needed, to aid any further coders
+    with reading your code.. and, in fact, it will aid yourself as well if you
+    would look back at your code 2 years later.
+    If there's some obscure pitfall, do mention it! Don't just "hope" a next
+    author will see it like you did.
+
+14. Use enums whenever possible, rather than #define constants. Besides making
+    things more clean, it also aids debugging.
