@@ -190,6 +190,9 @@ CMD_FUNC(m_kick)
 						"*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
 						sptr->name, sptr->user->username, sptr->user->realhost,
 						chptr->chname, who->name, comment);
+					ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) KICK %s %s (%s)",
+						sptr->name, sptr->user->username, sptr->user->realhost,
+						chptr->chname, who->name, comment);
 					goto attack; /* No reason to continue.. */
 				}
 				/* Store "who" access flags */
