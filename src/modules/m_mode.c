@@ -1942,8 +1942,15 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 				{
                           if ((Halfop_mode(modetype) == FALSE) && opermode == 2 && htrig != 1)
                           {
-				opermode = 0;
-				htrig = 1;
+                          	/* YUCK! */
+				if ((foundat.flag == 'h') && !(parc <= paracount) && parv[paracount] &&
+				    (find_person(parv[paracount], NULL) == cptr))
+				{
+					/* ircop with halfop doing a -h on himself. no warning. */
+				} else {
+					opermode = 0;
+					htrig = 1;
+				}
                           }
 				}
 #ifdef EXTCMODE

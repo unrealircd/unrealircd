@@ -1274,3 +1274,4 @@
 - Updated doc/coding-guidelines
 - Added bugs.* url to /info, was still showing some email address.
 - Fixed forgotten operoverride logmessage (kick if chan +Q), reported in #2889.
+- Fixed operoverride message if oper is +h and -h's himself, reported by Bock (#2889).
