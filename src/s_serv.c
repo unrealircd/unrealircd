@@ -257,9 +257,9 @@ void m_info_send(aClient *sptr)
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| This is an UnrealIRCD-style server",
 	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| If you find any bugs, please mail",
+	sendto_one(sptr, ":%s %d %s :| If you find any bugs, please report them at:",
 	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :|  bugs@lists.unrealircd.org",
+	sendto_one(sptr, ":%s %d %s :|  http://bugs.unrealircd.org/",
 	    me.name, RPL_INFO, sptr->name);
 
 	sendto_one(sptr,

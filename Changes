@@ -1268,3 +1268,8 @@
 - Made it so undefining SHOW_SECRET (not the default) properly hides +s channels from ircops
   (except netadmins), as it should. Reported and patch supplied by Jason (#0002965).
 - Fixed tld::options:: not working properly, reported by DelGurth (#0003003).
+- Fixed problem with oper as chanadmin kicking himself causing an operoverride notice,
+  reported by Bock (as part of #2889).
+- Fixed desynch problem with +Q, reported by tabrisnet (#0002992).
+- Updated doc/coding-guidelines
+- Added bugs.* url to /info, was still showing some email address.
