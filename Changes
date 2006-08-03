@@ -1275,3 +1275,6 @@
 - Added bugs.* url to /info, was still showing some email address.
 - Fixed forgotten operoverride logmessage (kick if chan +Q), reported in #2889.
 - Fixed operoverride message if oper is +h and -h's himself, reported by Bock (#2889).
+- Fixed SVSMODE -b [user] not always removing all bans (specificly, bans on the cloaked
+  host when you have a vhost), a code cleanup was also done. Based on patch from tabrisnet.
+  Reported by Rob (#0002981).
