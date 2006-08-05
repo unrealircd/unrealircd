@@ -4,15 +4,3 @@ src/modules/Makefile
 src/ssl.rnd
 src/win32/devel/StackTrace.lib
 src/win32/gnu_regex.lib
-Makefile
-config.log
-config.status
-unreal
-extras/regexp
-extras/tre-0.7.2
-extras/tre.tar
-include/setup.h
-ircdcron/ircdchk
-src/ircd
-src/version.c
-src/modules/Makefile

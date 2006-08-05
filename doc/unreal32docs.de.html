@@ -12,7 +12,7 @@
  .block_old { font-size: 14; }
  .set { font-weight: bold; }
  .desc { margin-left: 15px; }
- pre { font: "times new roman"; font-style: normal;}
+ pre { font: "times new roman"; font-style: normal; background-color: #eeeeee;}
 </style>
 </head>
 
@@ -21,23 +21,24 @@
 <a href="unreal32docs.es.html">Spanish</a> | 
 <a href="unreal32docs.hu.html">Hungarian</a> | 
 <a href="unreal32docs.fr.html">French</a> |
-<a href="unreal32docs.gr.html">Greek</a>
+<a href="unreal32docs.gr.html">Greek</a> |
+<a href="unreal32docs.nl.html">Dutch</a> |
+<a href="unreal32docs.ru.html">Russian</a> |
+<a href="unreal32docs.tk.html">Turkish</a>
 <br><br>
 
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
-  <font size="4">Version: 3.2.3 </font><br>
-  <b>Letztes Dokumentation Update:</b>            2005-03-13</div>
+  <font size="4">Version: 3.2.5 </font><br>
+  <b>Letztes Update dieses Handbuchs:</b>                2006-06-15</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b>  McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
 <b>Dokumentation</b><b>:</b> CKnight^ / Syzop<br>
 <b>Deutsche Übersetzung:</b> Stylus740 (irc.smart-irc.net)<br>
-<p>Aufgrund des wachsenden Umfangs der Dokumentation von UnrealIRCd3.2 wurde das
-Dokument auf HTML umgestellt, um leichter navigieren und besser
-Querverweisen folgen zu können. Um diese Dokumentation zu lesen, wird einer der
-nachfolgenden Browser benötigt. Aktuelle Dokumentationen sind erhältlich&nbsp; @ <a href="http://www.vulnscan.org/UnrealIrcd/unreal32docs.html">http://www.vulnscan.org/UnrealIrcd/unreal32docs.html</a>
-und&nbsp; eine FAQ @
-<a href="http://www.vulnscan.org/UnrealIrcd/faq/.">http://www.vulnscan.org/UnrealIrcd/faq</a>/.</p>
+<p>Um diese Dokumentation zu lesen, ist einer der unten aufgeführten
+kompatiblen Browser erforderlich. Aktuelle Dokumentationen sind erhältlich&nbsp; @
+<a href="http://www.vulnscan.org/UnrealIRCd/unreal32docs.html">http://www.vulnscan.org/UnrealIRCd/unreal32docs.html</a>
+und&nbsp; eine FAQ @ <a href="http://www.vulnscan.org/UnrealIRCd/faq/.">http://www.vulnscan.org/UnrealIRCd/faq</a>/.</p>
 <p><b>Kompatible Browser: </b><br>
 <ul>
 <li>Opera 6.02
@@ -68,9 +69,11 @@ und&nbsp; eine FAQ @
 -- 3.14. <a href="#feature_spamfilter"> Spamfilter</a><br>
 -- 3.15. <a href="#feature_cidr">CIDR<br>
 </a>
--- 3.16. <a href="#feature_nickchars">Nick Zeichensätze</a><a href="#feature_cidr"><br>
+-- 3.16. <a href="#feature_nickchars">Nick Zeichensätze<br>
+</a>-- 3.17 <a href="#feature_cgiirc">CGI:IRC Unterstützung<br>
+</a>-- 3.18 <a href="#feature_timesync">Zeitsynchronisation</a><a href="#feature_cidr"><br>
 </a>
-  -- 3.17. <a href="#feature_other">Andere Features</a> <a href="#feature_other"><br>
+  -- 3.19. <a href="#feature_other">Andere Features</a> <a href="#feature_other"><br>
 </a>
   4. <a href="#configuringyourunrealircdconf">Konfiguration der unrealircd.conf
 Datei</a><br>
@@ -109,8 +112,9 @@ Konfigurationsdatei</a><br>
 ---4.32. <a href="#aliasblock">Alias Block</a><br>
 ---4.33. <a href="#helpblock">Help Block<br>
 </a>---4.34. <a href="#officialchannels"> Official Channels Block</a><br>
----4.35. <a href="#spamfilter"> Spamfilter Block</a><br>
----4.36. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
+---4.35. <a href="#spamfilter"> Spamfilter Block<br>
+</a>---4.36. <a href="#cgiirc">Cgiirc Block</a><br>
+---4.37. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
   5. <a href="#addtlfiles">Additional Files</a><br>
   6. <a href="#userchannelmodes">User & Channel Modi</a><br>
   7. <a href="#useropercommands">User & Oper Befehlsliste<br>
@@ -148,15 +152,15 @@ Verwendung des Textes mit anderer Software oder das Anbieten zusammen mit
 anderer Software ohne schriftliche Genehmigung des UnrealIRCd Entwicklungsteams
 ist streng verboten. Solange es der Benutzung von UnrealIRCd dient, darf dieses
 Dokument beliebig kopiert/gedruckt/veröffentlicht, jedoch nicht verändert
-werden. &#8211; Copyright UnrealIRCd Development Team 2002-2005</p>
+werden. &#8211; Copyright UnrealIRCd Development Team 2002-2006</p>
 <p>Bitte lesen Sie diese Anleitung, bevor Sie um Hilfe bitten und schauen Sie
-WIRKLICH erst ein mal in die <a href="#faq">FAQ</a>, da rund 80% der Fragen dort
+WIRKLICH erst einmal in die <a href="#faq">FAQ</a>, da rund 80% der Fragen dort
 beantwortet sind. Hilft
 dies alles nicht, kann bzgl. Support bei irc.ircsystems.net
 (Port 6667) Channel #unreal-support 
 nach Unterstützung gefragt werden (Wir erwarten UNBEDINGT, dass zuvor Dokumentation
-und
-FAQ gelesen wurden und wir helfen nur zu UnrealIRCd, nicht zu Services!). Im Falle eines echten Bugs (z.B. einem Crash) bitte Nachricht an 
+und <a href="#faq">
+FAQ</a> gelesen wurden und wir helfen nur zu UnrealIRCd, nicht zu Services!). Im Falle eines echten Bugs (z.B. einem Crash) bitte Nachricht an 
    <a href="http://bugs.unrealircd.org" TARGET="_blank">http://bugs.unrealircd.org</a>.</p></div>
 
 <p><font size="+2"><b><a name="notesonolder">1.1 &#8211; Anmerkungen zu Upgrade/Mixing 3.1.x -&gt; 3.2</a>&nbsp; </b></font><br>
@@ -179,7 +183,7 @@ Upgrade von 3.2 Versionen</a></b></font><br>
 <p>Der empfohlene Weg für ein Upgrade ist:<br>
 Linux:<br>
 <ul>
-<li>Altes UnrealIRCd Verzeichnis umbenennen (oder es wird im nächsten Schritt
+<li>Altes UnrealIRCd Verzeichnis umbenennen (ansonsten wird es im nächsten Schritt
   überschrieben)
 <li>Neue UnrealIRCd Version entpacken und &quot;./Config&quot; und &quot;make&quot;
   laufen lassen (*NIX).
@@ -205,6 +209,8 @@ Bug gemeldet wird!</p></div>
 <ul>
 <li>Linux (2.2.*, 2.4.*, 2.6.*)
 <li>FreeBSD (4.*, 5.*)
+<li>NetBSD (2.*)
+<li>OpenBSD (3.7, 3.8, 3.9)
 <li>Solaris (9,10)
 </ul>
 <li><b>Windows Versionen:</b>
@@ -223,12 +229,12 @@ Bug gemeldet wird!</p></div>
 </ul>
   <br>
   Im Falle, dass Unreal3.2 korrekt unter anderen Betriebssystemen läuft, bitte
-  Details an <a href="mailto:coders@lists.unrealircd.com">coders@lists.unrealircd.com
+  Details an <a href="mailto:coders@lists.unrealircd.org">coders@lists.unrealircd.org
   </a>  senden. <p><b>Installationsanleitungen</b><br>
 Linux:<br>
 <ol>
-<li>gunzip -d Unreal3.2.2.tar.gz
-<li>tar xvf Unreal3.2.2.tar
+<li>gunzip -d Unreal3.2.X.tar.gz
+<li>tar xvf Unreal3.2.X.tar
 <li>cd Unreal3.2
 <li>./Config
 <li>Die hierbei angezeigten Fragen nach bestem Wissen beantworten. Allgemein ist
@@ -252,7 +258,8 @@ erläutert. Es wird ein genereller Überblick gegeben, in dem sich manchmal auf
 die .conf Datei bezogen wird (die Neuanfängern momentan noch unbekannt sein
 dürfte).</p>
 <p>Dieser Abschnitt kann auch übersprungen werden, obwohl es sinnvoll ist ihn
-vor oder nach der Installation zu lesen.</p></div>
+vor oder nach der Installation zu lesen, weil man ansonsten Konzepte wie
+cloaking, snowmask etc. nicht verstehen wird..</p></div>
 
 <p><font size="+2"><b><a name="feature_cloaking">3.1 - Cloaking</a></b></font></p><div class="desc">
 <p>Das Cloaking ist eine Möglichkeit, den echten Hostnamen vor Usern zu verbergen.
@@ -269,7 +276,7 @@ einstellen können.</p>
 Modul mitgeliefert:<br>
 <b>cloak:</b><br>
 Hierbei handelt es sich um das neue offizielle Cloaking Modul, welches viel
-sicherer, als der alte Algorithmis ist. Es verwendet intern md5 und erfordert, dass 3
+sicherer, als der alte Algorithmus ist. Es verwendet intern md5 und erfordert, dass 3
 <b>set::cloak-keys::</b>
 gesetzt sind, die gemischt Kleinbuchstaben (a-z), Großbuchstaben (A-Z) und
 Ziffern (0-9) enthalten [z.B. "AopAS6WQH2Os6hfosh4SFJHs"] . Siehe auch
@@ -283,13 +290,13 @@ Host ermitteln (was dem Usermodus +x sinnlos macht).</p>
 <p>UnrealIRCd unterstützt Module, was sehr nützlich
 ist, weil:<br>
    - Module können bei laufendem ircd geladen/ersetzt/gelöscht werden (durch /rehash). Dadurch können verschiedene Bugs gefixt
-oder neue Module hinzugefügt werden, ohne dass ein Neustart erforderlich ist!<br>
+oder neue Module hinzugefügt werden, ohne dass ein Neustart erforderlich ist.<br>
    - Andere Entwickler können weitere Module mit neuen Befehlen oder anderen
 Usermodi erstellen.<br>
    UnrealIRCd selbst enthält nur wenige Module. Durch eine Suche auf <a href="http://www.unrealircd.com"> www.unrealircd.com</a>
  (modules) oder per Google können weitere 3rd party Module gefunden werden.</p>
 <p>Achtung: Minimal müssen zwei Module geladen sein, oder der ircd wird nicht
-starten!<br>
+starten:<br>
 - das commands Modul: commands.so (oder commands.dll bei Windows)<br>
 - das cloaking Modul: üblicherweise cloak.so (oder cloak.dll bei Windows)</p>
 </div>
@@ -338,7 +345,7 @@ die beispielsweise den Befehl <font face="Courier New" size="2">/register</font>
 an Chanserv weiterleitet, wenn der erste Parameter mit einem # beginnt oder an
 Nickserv, wenn der erste Parameter nicht mit einem # beginnt. (Im ersten Fall
 soll ein Channel registriert werden, im zweiten Fall ein Nickname)</p>
-<p>Aliases werden in alias Blocks in der Konfigurationsdatei definiert oder in
+<p>Aliases werden in <a href="#aliasblock"> alias Blocks</a> in der Konfigurationsdatei definiert oder in
 einer Include Datei mit den häufigsten Default Aliassen.&nbsp;</p></div>
    
 <p><font size="+2"><b><a name="feature_helpop">3.5 - Helpop</a></b></font></p><div class="desc">
@@ -1002,45 +1009,51 @@ und fe80:0:0:123::/64 (passt auf fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:f
 Zeichensätze/Sprachen in Nicknamen gestattet sein sollen. Dies wird festgelegt
 in <b> set::allowed-nickchars</b>.<br>
 Hier eine Liste der möglichen Einstellungen:<br>
-<table border="1" width="868">
-<tr><td width="98"><b>Name:</b></td>	<td width="494"><b>Beschreibung:</b></td>	<td width="254"><b>Character set/encoding:</b></td></tr>
-<tr><td width="98">catalan</td> <td width="494">Katalanische Zeichen</td> <td width="254">iso8859-1 (latin1)</td></tr>
-<tr><td width="98">danish</td> <td width="494">	Dänische Zeichen</td> <td width="254">	iso8859-1
+<table border="1" width="868" height="902">
+<tr><td width="98" height="19"><b>Name:</b></td>	<td width="494" height="19"><b>Beschreibung:</b></td>	<td width="254" height="19"><b>Character set/encoding:</b></td></tr>
+<tr><td width="98" height="19">catalan</td> <td width="494" height="19">Katalanische Zeichen</td> <td width="254" height="19">iso8859-1 (latin1)</td></tr>
+<tr><td width="98" height="19">danish</td> <td width="494" height="19">	Dänische Zeichen</td> <td width="254" height="19">	iso8859-1
     (latin1)</td></tr>
-<tr><td width="98">dutch</td> <td width="494">	Niederländische Zeichen</td> <td width="254">	iso8859-1 (latin1)</td></tr>
-<tr><td width="98">french</td> <td width="494">	Französische Zeichen</td> <td width="254">	iso8859-1 (latin1)</td></tr>
-<tr><td width="98">german</td> <td width="494">	Deutsche Zeichen	</td> <td width="254">iso8859-1 (latin1)</td></tr>
-<tr><td width="98">swiss-german</td> <td width="494">	Schweiz-Deutsche Zeichen
-    (kein 'ß')</td> <td width="254">	iso8859-1 (latin1)</td></tr>
-<tr><td width="98">icelandic	</td> <td width="494">Isländische Zeichen</td> <td width="254">	iso8859-1 (latin1)</td></tr>
-<tr><td width="98">italian</td> <td width="494">	Italienische Zeichen</td> <td width="254">	iso8859-1 (latin1)</td></tr>
-<tr><td width="98">spanish</td> <td width="494">	Spanische Zeichen</td> <td width="254">	iso8859-1 (latin1)</td></tr>
-<tr><td width="98">swedish</td> <td width="494">	Schwedische Zeichen</td> <td width="254">	iso8859-1 (latin1)</td></tr>
-<tr><td width="98"><b>latin1</b></td> <td width="494">	katalanisch, dänisch, niederländisch, französisch, deutsch, schweizer deutsch, spanisch,
-    isländisch, italienisch, schwedisch</td> <td width="254">	iso8859-1 (latin1)
-<tr><td width="98">hungarian</td> <td width="494">	Ungarische Zeichen	</td> <td width="254">	iso8859-2 (latin2), windows-1250</td></tr>
-<tr><td width="98">polish</td> <td width="494">		Polnische Zeichen&nbsp; <td width="254">	iso8859-2 (latin2)</td></tr>
-<tr><td width="98">romanian</td> <td width="494">		Rumänische Zeichen <td width="254">	iso8859-2 (latin2), windows-1250, iso8859-16</td></tr>
-<tr><td width="98"><b>latin2</b></td> <td width="494">		ungarisch, polnisch,
-    rumänisch <td width="254">	iso8859-2 (latin2)</td></tr>
-<tr><td width="98">polish-w1250</td> <td width="494">	Polnische Zeichen,
-    Windows Variante (leider mehr allgemein, als iso)<td width="254">	windows-1250</td></tr>
-<tr><td width="98">slovak-w1250</td> <td width="494">	Slowakische Zeichen,
-    Windows Variante<td width="254">	windows-1250</td></tr>
-<tr><td width="98">czech-w1250</td> <td width="494">	Tschechische Zeichen,
-    Windows Variante	<td width="254">windows-1250</td></tr>
-<tr><td width="98"><b>windows-1250</b></td> <td width="494">	polnisch-w1250,
-    slowakisch-w1250, tschechisch-w1250, ungarisch, rumänisch	<td width="254">windows-1250</td></tr>
-<tr><td width="98">greek</td> <td width="494">	Griechische Zeichen	<td width="254">iso8859-7</td></tr>
-<tr><td width="98">turkish</td> <td width="494">	Türkische Zeichen	<td width="254">iso8859-9</td></tr>
-<tr><td width="98">russian-w1251</td> <td width="494">	Russische Zeichen	<td width="254">windows-1251</td></tr>
-<tr><td width="98">hebrew</td> <td width="494">	Hebräische Zeichen	<td width="254">iso8859-8-I/windows-1255</td></tr>
-<tr><td width="98">chinese-simp</td> <td width="494">	Einfaches Chinesisch	<td width="254">Multibyte: GBK/GB2312</td></tr>
-<tr><td width="98">chinese-trad</td> <td width="494">	Traditionelles
-    Chinesisch	<td width="254">Multibyte: GBK</td></tr>
-<tr><td width="98">chinese-ja</td> <td width="494">	Japanisch Hiragana/Pinyin	<td width="254">Multibyte: GBK</td></tr>
-<tr><td width="98"><b>chinese</b></td> <td width="494">	chinese-*	<td width="254">Multibyte: GBK</td></tr>
-<tr><td width="98"><b>gbk</b></td> <td width="494">	chinese-*	<td width="254">Multibyte: GBK</td></tr>
+<tr><td width="98" height="19">dutch</td> <td width="494" height="19">	Niederländische Zeichen</td> <td width="254" height="19">	iso8859-1 (latin1)</td></tr>
+<tr><td width="98" height="19">french</td> <td width="494" height="19">	Französische Zeichen</td> <td width="254" height="19">	iso8859-1 (latin1)</td></tr>
+<tr><td width="98" height="19">german</td> <td width="494" height="19">	Deutsche Zeichen	</td> <td width="254" height="19">iso8859-1 (latin1)</td></tr>
+<tr><td width="98" height="19">swiss-german</td> <td width="494" height="19">	Schweiz-Deutsche Zeichen
+    (kein 'ß')</td> <td width="254" height="19">	iso8859-1 (latin1)</td></tr>
+<tr><td width="98" height="19">icelandic	</td> <td width="494" height="19">Isländische Zeichen</td> <td width="254" height="19">	iso8859-1 (latin1)</td></tr>
+<tr><td width="98" height="19">italian</td> <td width="494" height="19">	Italienische Zeichen</td> <td width="254" height="19">	iso8859-1 (latin1)</td></tr>
+<tr><td width="98" height="19">spanish</td> <td width="494" height="19">	Spanische Zeichen</td> <td width="254" height="19">	iso8859-1 (latin1)</td></tr>
+<tr><td width="98" height="19">swedish</td> <td width="494" height="19">	Schwedische Zeichen</td> <td width="254" height="19">	iso8859-1 (latin1)</td></tr>
+<tr><td width="98" height="57"><b>latin1</b></td> <td width="494" height="57">	katalanisch, dänisch, niederländisch, französisch, deutsch, schweizer deutsch, spanisch,
+    isländisch, italienisch, schwedisch</td> <td width="254" height="57">	iso8859-1 (latin1)
+<tr><td width="98" height="19">hungarian</td> <td width="494" height="19">	Ungarische Zeichen	</td> <td width="254" height="19">	iso8859-2 (latin2), windows-1250</td></tr>
+<tr><td width="98" height="19">polish</td> <td width="494" height="19">		Polnische Zeichen&nbsp; <td width="254" height="19">	iso8859-2 (latin2)</td></tr>
+<tr><td width="98" height="38">romanian</td> <td width="494" height="38">		Rumänische Zeichen <td width="254" height="38">	iso8859-2 (latin2), windows-1250, iso8859-16</td></tr>
+<tr><td width="98" height="19"><b>latin2</b></td> <td width="494" height="19">		ungarisch, polnisch,
+    rumänisch <td width="254" height="19">	iso8859-2 (latin2)</td></tr>
+<tr><td width="98" height="38">polish-w1250</td> <td width="494" height="38">	Polnische Zeichen,
+    Windows Variante (leider mehr allgemein, als iso)<td width="254" height="38">	windows-1250</td></tr>
+<tr><td width="98" height="19">slovak-w1250</td> <td width="494" height="19">	Slowakische Zeichen,
+    Windows Variante<td width="254" height="19">	windows-1250</td></tr>
+<tr><td width="98" height="19">czech-w1250</td> <td width="494" height="19">	Tschechische Zeichen,
+    Windows Variante	<td width="254" height="19">windows-1250</td></tr>
+<tr><td width="98" height="38"><b>windows-1250</b></td> <td width="494" height="38">	polnisch-w1250,
+    slowakisch-w1250, tschechisch-w1250, ungarisch, rumänisch	<td width="254" height="38">windows-1250</td></tr>
+<tr><td width="98" height="19">greek</td> <td width="494" height="19">	Griechische Zeichen	<td width="254" height="19">iso8859-7</td></tr>
+<tr><td width="98" height="19">turkish</td> <td width="494" height="19">	Türkische Zeichen	<td width="254" height="19">iso8859-9</td></tr>
+<tr><td width="98" height="19">russian-w1251</td> <td width="494" height="19">	Russische Zeichen	<td width="254" height="19">windows-1251</td></tr>
+<tr><td width="98" height="19">belarussian-w1251</td> <td width="494" height="19">	Belarussische
+    Zeichen	<td width="254" height="19">windows-1251</td></tr>
+<tr><td width="98" height="19">ukrainian-w1251</td> <td width="494" height="19">	Ukrainische
+    Zeichen	<td width="254" height="19">windows-1251</td></tr>
+<tr><td width="98" height="1"><b>windows-1251</b></td> <td width="494" height="26">	russisch-w1251,
+    belarussisch-w1251, ukrainisch-w1251	<td width="254" height="26">windows-1251</td></tr>
+<tr><td width="98" height="19">hebrew</td> <td width="494" height="19">	Hebräische Zeichen	<td width="254" height="19">iso8859-8-I/windows-1255</td></tr>
+<tr><td width="98" height="19">chinese-simp</td> <td width="494" height="19">	Einfaches Chinesisch	<td width="254" height="19">Multibyte: GBK/GB2312</td></tr>
+<tr><td width="98" height="19">chinese-trad</td> <td width="494" height="19">	Traditionelles
+    Chinesisch	<td width="254" height="19">Multibyte: GBK</td></tr>
+<tr><td width="98" height="19">chinese-ja</td> <td width="494" height="19">	Japanisch Hiragana/Pinyin	<td width="254" height="19">Multibyte: GBK</td></tr>
+<tr><td width="98" height="19"><b>chinese</b></td> <td width="494" height="19">	chinese-*	<td width="254" height="19">Multibyte: GBK</td></tr>
+<tr><td width="98" height="19"><b>gbk</b></td> <td width="494" height="19">	chinese-*	<td width="254" height="19">Multibyte: GBK</td></tr>
 </table>
 &nbsp;
 <p>Anmerkung 1: Zu beachten ist, dass einige Kombinationen Probleme verursachen können.
@@ -1054,15 +1067,16 @@ Anmerkung 2: Die Übereinstimmung von Zeichen, also welcher Großbuchstabe zu
 welchem Kleinbuchstaben gehört, erfolgt nach dem US-ASCII, was bedeutet, dass
 ö und Ö nicht als 'gleiches Zeichen' erkannt werden und deswegen jemand
 beispielsweise den Nick Bär haben kann, während jemand anderes gleichzeitig
-den Nick BÄr hat. Das ist eine Einschränkung durch das aktuelle SDystem und IRCd
+den Nick BÄr hat. Das ist eine Einschränkung durch das aktuelle System und IRCd
 Standards, die nicht binnen kurzer Zeit gelöst werden können. Den Usern sollte
-diese Enschränkung klar sein. Zu beachten dabei ist, dass es diese
+diese Einschränkung klar sein. Zu beachten dabei ist, dass es diese
 Einschränkung schon immer bei den Channelnamen gegeben hat, in denen ja fast
 alle Zeichen erlaubt sind und schon immer die US-ASCII Regeln der
 Zeichenübereinstimmung gegolten haben.<br>
 <br>
 Anmerkung 3: Die Basis Nick Zeichen (a-z A-Z 0-9 [ \ ] ^ _ - { | }) sind immer
 erlaubt/aktiviert.<br>
+<br>
 <br>
 Beispiel 1, für West-Europäer:<br>
 <br>
@@ -1076,7 +1090,41 @@ Schriftzeichen gestatten will:<br>
 <font face="Courier">
 set { allowed-nickchars { chinese-simp; chinese-trad; }; };</font></div>
 
-<p><font size="+2"><b><a name="feature_other">3.17 - Andere Features</a></b></font></p><div class="desc">
+<p><font size="+2"><b><a name="feature_cgiirc">3.17 - CGI:IRC Unterstützung</a></b></font></p><div class="desc">
+UnrealIRCD unterstützt eine CGI:IRC Host Manipulation. Das bedeutet: Man kann
+bestimmte CGI:IRC Gateways als &quot;trusted&quot; (&quot;vertraut&quot;)
+festlegen, wodurch der IRCd veranlasst wird, statt Host/IP des CGI:IRC Gatewäys
+überall im IRC die reale Host/IP des Users anzuzeigen.
+<p>Nähere Informationen, wie dies konfiguriert wird, stehen im <a href="#cgiirc">cgiirc
+Block</a>&nbsp;</div>
+
+<p><font size="+2"><b><a name="feature_timesync">3.18 - Zeitsynchronisation</a></b></font></p>
+<div class="desc">
+  <p>Es ist für die IRC Server sehr wichtig, immer die korrekte Zeit
+  eingestellt zu haben. Ohne korrekte - insbesondere unterschiedliche Zeit
+  zwischen Servern - können Channel desynchronisieren (auf verschiedenen
+  Servern wird etwas anderes im gleichen Channel angezeigt), ahnungslose User
+  grundlos gekillt werden, Channels gar nicht oder falsch in der /List Anzeige
+  eingetragen sein. Kurzum: es entstehen sehr große Probleme.´</p>
+  <p>UnrealIRCd hat eine eine Unterstützung zur Zeitsybchronisation integriert.
+  Obwohl sie nicht optimal ist (die Zeiten können weiterhin um wenige Sekunden
+  differieren), sollten damit die meisten Zeitunterschiede beseitigt werden.
+  Soweit möglich ist es weiterhin empfehlenswert, eine Zeitsynchronisations
+  Software wie 'ntpd' auf&nbsp; *NIX Systemen oder den Zeit Synchonisations
+  Service von Windosws laufen zu haben. In diesem Fall kann man die Unreal Zeitsynchronisation
+  abschalten. (mehr dazu später)</p>
+  <p>Per Default versucht UnrealIRCd beim Start einen Versuch der
+  Zeitsynchronisation. Es werden hierzu einige Anforderungen an Zeitserver
+  gesendet und sobald die erste (schnellste) Antwort empfangen wird die interne
+  IRCD Uhr (NICHT die Systemuhr) danach eingestellt. Wenn aus irgendwelchen
+  Gründen nicht binnen 3 Sekunden eine Zeitabfrage beantwortet wird, startet
+  der IRCD ohne Zeitsynchronisation (sollte nur selten passieren).</p>
+  <p>Zeitsynchronisation wird im <b>set::timesynch</b> Block konfiguriert (oder
+  abgeschaltet). Siehe in der <a href="#setblock">Set-Block Beschreibung</a>
+  für weitere Informationen.</p>
+</div>
+
+<p><font size="+2"><b><a name="feature_other">3.18 - Andere Features</a></b></font></p><div class="desc">
 <p>UnrealIRCd hat eine Reihe weiterer Features, die hier nicht alle einzeln
 aufgeführt sind. Man wird sie während der Konfiguration selbst herausfinden ;)</p></div>
 
@@ -1085,11 +1133,11 @@ aufgeführt sind. Man wird sie während der Konfiguration selbst herausfinden ;)</
 der unrealircd.conf</a></b></font> 
 <a name="configuringyourunrealircdconf">&nbsp;</a></p><div class="desc">
 <p>Beim ersten Mal wird das Erstellen einer guten unrealircd.conf Datei eine
-gewisse Zeit in Anspruch nehmen - je nach Vorerfahrung etwa 10 - 60 Minuten. Man
-kann versuchen, so rasch wie möglich den ircd zu starten und später zu
-verfeinern oder man kann die Haupt Abschnitte Schritt für Schritt erlernen (was
-der empfohlene Weg ist ;P). Im Falle auftretender Probleme zuerst die Syntax
-überprüfen, diese Anleitung und auch die FAQ bevor man nach Hilfe fragt oder
+gewisse Zeit in Anspruch nehmen - je nach Vorerfahrung etwa 15 - 60 Minuten.
+Eine <u>gute</u> unrealircd.conf zu erstellen, wird bedeutend länger dauern.
+Man sollte nicht hetzen, um den IRCd rasch gestartet zu bekommen, sondern lieber
+Schritt für Schritt vorangehen.&nbsp; Im Falle auftretender Probleme zuerst die Syntax
+überprüfen, diese Anleitung und auch die <a href="#faq"> FAQ</a> bevor man nach Hilfe fragt oder
 einen Bug meldet.</p></div>
 <p><b><font size="+2"><a name="configurationfileexplained">4.1 Erklärung der
 Konfigurationsdatei<br>
@@ -1122,7 +1170,7 @@ werden oder in mehreren Zeilen. Normalerweise wird das oben angegebene Format
 benutzt, welches leicht zu lesen ist und auch in der mitgelieferten
 unrealircd.conf benutzt wird. </p>
 <p>Achtung: Die Konfigurationsdatei ist derzeit &quot;case sensitive&quot;,
-daher ist &quot;BLOCK-NAME&quot; nicht dasselbe wie &quot;block-name&quot;. Es
+daher ist &quot;<i>BLOCK-NAME</i>&quot; nicht dasselbe wie &quot;<i>block-name</i>&quot;. Es
 gibt eine spezielle Notation wie Einträge in der Konfigurationsdatei als
 Beschreibung angegeben werden. Spricht man z.B. über &quot;&lt;directive-name&gt;&quot;
 im obigen Beispiel, so wird angegeben &quot;&lt;block-name&gt;::&lt;block-directive&gt;&quot;
@@ -1140,10 +1188,10 @@ einem Unterblock sein, der keinen Namen hat.</p>
 &nbsp;&nbsp;&nbsp; über mehrere<br>
        &nbsp;&nbsp;&nbsp;&nbsp;Zeilen */<br>
  </p>
-<p>Es sollte nun klar sein, wie das Block Format der .conf funktioniert und nun
-kann begonnen werden, eine eigene unrealircd.conf zu erstellen. Hierzu kann man
-auch dei Beispielsdatei oder Teile der Dokumentation verwenden und sich die
-entsprechenden Blöcke in die eigene Datei kopieren und editieren. Es ist
+<p>Nachdem nun klar ist, wie das funktioniert, sollte man die <i>doc/example.conf</i>
+in das UnrealIRCd Verzeichnis kopieren (z.B.: /home/user/Unreal3.2) und in <i>unrealircd.conf</i>
+umbenennen. (Oder man erstellt eine unrealircd.conf und kopiert sich die
+entsprechenden Blöcke und editieret sie). Es ist
 empfehlenswert, sich Schritt für Schritt durch alle Blöcke und diese Anleitung
 als Referenz durchzuarbeiten.</p>
 <p></p></div>
@@ -2188,6 +2236,9 @@ angegeben, welcher Bann Typ ausgenommen werden soll. Gültige Typen sind hier:
 gline, gzline, qline, gqline und shun, für Ausnahmen von Glines, Global Zlines,
 Qlines, Global Qlines und Shuns. Wenn das {} Format benutzt wird, können
 unterschiedliche Typen angegeben werden.</p>
+<p>Anm. des Übersetzers: Die Ausnahmen funktionieren wirklich nur bei gebanntem
+<b>breiteren </b>Host (123.123.* oder *@url). Man kann damit z.B. nicht einen
+versehentlichen Bann auf Localhost verhindern.</p>
 <p>Beispiel:
 <pre>except tkl {
 	mask myident@my.isp.com;
@@ -2290,7 +2341,7 @@ bekannt als D/d:Line)</font><div class="desc">
 Linken ausschliessen kann.<br>
 <b>deny::mask</b> definiert eine Wildcard Maske auf den Servernamen, für den
 die Regel gelten soll.<br>
-<b>deny::rule</b> ist ein sehr komplexer Ausdruck. Ein crule Ausdruck erlaubt
+<b>deny::rule</b> ist ein sehr komplexer Ausdruck. Ein rule Ausdruck erlaubt
 es, den Link sehr detailliert zu steuern und ist aufgebaut wie eine Programm
 Anweisung. Vier Operatoren werden unterstützt:<br>
 &nbsp;&nbsp;&nbsp; connected(&lt;servermask&gt;) ergibt 'wahr', wenn ein Server
@@ -2439,7 +2490,7 @@ im Oper Block bei &quot;oper::svhost&quot;.</p>
 </a>
    <font class="block_optional">OPTIONAL</font>  <font class="block_old">(Früher
 bekannt als badwords.*.conf)</font>
-</p><div class="desc">
+</p><div class="desc" style="width: 1195; height: 374">
 <p>Syntax:
 <pre>badword &lt;type&gt; {
 	word &lt;text-to-match&gt;;
@@ -2447,14 +2498,15 @@ bekannt als badwords.*.conf)</font>
 	action &lt;replace|block&gt;;
 };</pre>
 <p>Mit dem Badword Block kann die Liste für User- und Channelmodus +G
-bearbeitet werden, um bestimmte &quot;badwords&quot; zu beahandeln. <b>badword::</b>
-legt den Typ fest, wobei gültige Werte hier sind: channel, message und quit. channel
-gilt für Channel Modus +G list, message gilt für User Modus +G list, und quit
+bearbeitet werden, um bestimmte &quot;badwords&quot; zu behandeln. <b>badword::</b>
+legt den Typ fest, wobei hier gültige Werte sind: 'channel', 'message' und 'quit'.
+'channel'
+gilt für Channel Modus +G Liste, 'message' gilt für User Modus +G Liste, und 'quit'
 gilt für die quit Meldung. <b> badword::word</b> kann ein einfaches Wort sein
 oder ein Ausdruck, nach dem gesucht werden soll. <b>badword::replace</b> ist ein
 Ersetzungstext, der anstelle des gefundenen Badwords angezeigt wird. Wird hier
 nichts eingetragen, so wird ein gefundenes Badword durch&nbsp; &lt;censored&gt;
-erstezt. Bei <b> badword::action</b> wird angegeben, was im Falle eines
+ersezt. Bei <b> badword::action</b> wird angegeben, was im Falle eines
 gefundenen Badwords geschehen soll. Wird hier das Wort &quot;replace&quot;
 eingetragen, dann wird das Badword ersetzt. Falls hier &quot;block&quot;
 angegeben wird, wird die gesamte Nachricht gar nicht erst angezeigt. Falls
@@ -2598,7 +2650,8 @@ nicht benötigt.<br>
     cache speichern, wird bei oft wechselndem Host benutzt (wie dyndns.org)</td></tr>
 <tr><td><b>nohostcheck</b></td><td> den entfernten Host nicht überprüfen (link::hostname),
     wird bei oft wechselndem Host benutzt (wie dyndns.org)</td></tr>
-<tr><td><b>quarantine</b></td><td> Opers auf diesem Server behalten locop Status bei</td></tr>
+<tr><td><b>quarantine</b></td><td> Opers auf diesem Server können keine GLOBAL
+    Oper Privilegien erhalten (sie werden gekilled), dient zu Test Links etc.</td></tr>
 </table>
 <p>Beispiel:</p>
 <pre>link hub.mynet.com {
@@ -2626,6 +2679,7 @@ nicht vorhanden)</font>
 <pre>alias &lt;name&gt; {
 	target &lt;nick-to-forward-to&gt;;
 	type &lt;type-of-alias&gt;;
+	spamfilter &lt;yes|no|&gt;
 };</pre>
 <p>(Hinweis: siehe auch <a href="#includedirective">hier</a> , welche Standard
 Alias Dateien bei UnrealIRCd mitgeliefert werden.)</p>
@@ -2637,20 +2691,32 @@ der Nickname, an den weitergeleitet wird. Wenn &quot;alias::&quot; identisch mit
 dem Nick ist, an den weitergeleitet wird, kann &quot;alias::target&quot;
 weggelassen werden. <b> alias::type</b> gibt den Typ des Alias an, gültige
 Typen sind hier &quot;services&quot; (der User ist auf dem Services Server),
-&quot;stats&quot; (der User ist auf dem Stats Server), und &quot;normal&quot; (der
-User ist normaler User auf irgendeinem Server). Der &quot;alias block&quot; hat
-auch einen weiteren Zweck, der nachfolgend erklärt ist.</p>
+&quot;stats&quot; (der User ist auf dem Stats Server) &quot;normal&quot; (der
+User ist normaler User auf irgendeinem Server) und &quot;channel&quot; (das Ziel
+ist ein Channel Name). Wenn <b>alias::spampfilter</b> (optional) auf 'yes'
+eingestellt ist, werden auch Spamfilter geprüft (Default ist 'no'). Der &quot;alias block&quot; hat
+auch einen weiteren nachfolgend erklärten Zweck.</p>
 <p>Syntax [Befehl alias]:
 <pre>alias &lt;name&gt; {
+</pre>
+<pre>	/* Für Aliase, die an User/Channels gesendet werden */
 	format &lt;regex-expression&gt; {
 		target &lt;nick-to-forward-to&gt;;
 		type &lt;type-of-alias&gt;;
 		parameters &lt;parameter-string&gt;;
 	};
+	/* For 'echte Aliase' */
 	format &lt;regex-expression&gt; {
+		command &lt;command&gt;;
+		type real;
+		parameters &lt;parameter-string&gt;;
+	};
+	/* Etc... You can have as many format blocks as you wish.. */</pre>
+<pre>	format &lt;regex-expression&gt; {
 		...
 	};
 	type command;
+	spamfilter &lt;yes|no&gt;
 };</pre>
 <p>Wird der &quot;alias Block&quot; in diesem Format benutzt, ermöglicht er
 eine breitere Anwendungsweise. Beispielsweise kann man einen Alias wie /identify
@@ -2660,15 +2726,19 @@ einen regulären Ausdruck fest, der mit dem Text verglichen wird, der als Alias
 Befehl gesandt wurde. Es können mehrere &quot;alias::format&quot; angegeben
 werden, um unterschiedliche Dinge in Abhängigkeit vom gesandten Text
 durchführen zu lassen. <b>alias::format::target</b> ist das Ziel (der Name), an den der
-Alias weitergeleitet wird. <b> alias::format::type</b> definiert den Typ des
-Alias, zu dem die Nachricht geleitet wird. <b> alias::format::parameters</b>
+Alias weitergeleitet wird, bei &quot;realen Aliasen&quot; wird allerdings <b>alias::format::command</b>
+benutzt. <b> alias::format::type</b> definiert den Typ des
+Alias, zu dem die Nachricht geleitet wird. Neben den zuvor erwähnten Typen in
+der Syntax bein Standard Alias, kann hier auch der Typ &quot;Real&quot; für
+reale Aliase angegeben werden. <b>alias::format::parameters</b>
 ist, was als Parameter an den Alias geschickt wird. Um Parameter für einen
 Befehl an den Alias anzugeben, wird ein &quot;%&quot; gefolgt von einer Nummer
 angegeben. So ist z.B. %1 der erste Parameter, %2 der zweite Parameter usw.&nbsp;
 Man kann auch festlegen, dass ab einem Parameter alle bis zum Ende gelten
 sollen, dann gibt man z.B. an:&nbsp; %1- (das Minuszeichen bedeutet: &quot;alle
 weiteren&quot;) Zusätzlich kann man %n angeben, was durch den Nicknamen des
-Users ersetzt wird, der den befehl ausgeführt hat. Um Beispiele zum Alias Block
+Users ersetzt wird, der den Befehl ausgeführt hat.&nbsp;</p>
+<p> Um Beispiele zum Alias Block
 zu sehen, schaue man in doc/example.conf.</p>
 <p>&nbsp;</p>
 </div>
@@ -2758,7 +2828,66 @@ spamfilter {<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; reason &quot;Kein Spam erlaubt&quot;<br>
 };<br>
 </font></div>
-<p><font class="block_section"><a name="setblock">4.36 - </a> </font><a name="setblock"><font class="block_name">Set Block</font>
+<p><font class="block_section"><a name="cgiirc">4.36 - </a></font><a name="cgiirc"><font class="block_name">Cgiirc
+Block</font></a> <font class="block_optional">OPTIONAL</font></p>
+<div class="desc">
+  <p>Im Cgiirc Block können Host Manipulationen für vertraute CGI:IRC Gateways
+  konfiguriert werden (<a href="#feature_cgiirc">weitere Informationen</a>).</p>
+  <p>Syntax:<br>
+  </p>
+  <pre>cgiirc {
+	type &lt;webirc|old&gt;;
+	username &lt;mask&gt;; /* optional */
+	hostname &lt;mask&gt;;
+	password &lt;password&gt;; /* only for type webirc */
+};</pre>
+  <p>&nbsp;</p>
+  <p><b>type</b> ist entweder 'webirc' oder 'old'.<br>
+  <b>username</b> wird auf die Ident geprüft (wenn angegeben). Falls nicht
+  definiert, wird '*' angenommen.<br>
+  <b>hostname</b> ist die Hostmaske, auf die geprüft wird.<br>
+  <b>password</b> ist das webirc Passwort, wird nur beim Typ 'webirc' benutzt.<br>
+  </p>
+  <p><b>Konfiguration mit der 'webirc' Methode (empfohlene Methode)</b><br>
+  In der CGI:IRC Konfigurationsdatei (cgiirc.conf) wird für &quot;webirc_password&quot;
+  ein gutes Passwort festgelegt.<br>
+  Danach wird in der unrealircd.conf ein cgiirc block eingetragen, um diesen
+  Host mit diesem Passwort zu erlauben.<br>
+  Dann wird für '<b>set cgiirc::type'</b>&nbsp; &quot;webirc&quot; eingetragen.<br>
+  <br>
+  Beispiel:<br>
+  In die CGI:IRC Konfigurationsdatei (cgiirc.conf) wird eingetragen:</p>
+  <pre>webirc_password = LpT4xqPI5</pre>
+  Danach wird die unrealircd.conf um einen Cgiirc Block erweitert:
+  <pre>cgiirc {
+	type webirc;
+	hostname &quot;1.2.3.4&quot;;
+	password &quot;LpT4xqPI5&quot;;
+};</pre>
+  <p>&nbsp;</p>
+  <p><b>Konfiguration mit Methode 'old'</b><br>
+  ACHTUNG: Dies ist nicht die empfohlene Methode, da sie zwei Nachteile hat:
+  Diese Methode sendet den IP/Host, der zu verändern ist, als ein Server
+  Passwort, was bedeutet,&nbsp; als&nbsp; CGI:IRC User kein Server Passwort
+  angeben kann. Außerdem ist die Zugriffskontrolle nur IP-basiert und erfordert
+  kein Extra Passwort, wie die 'webirc' Methode. Kurz gesagt sollten Sie nicht
+  diese Methode nur verwenden, wenn es einen triftigen Grund dazu gibt.<br>
+  <br>
+  In der CGI:IRC Konfigurationsdatei (cgiirc.conf) wird 'realhost_as_password'
+  auf 1 gesetzt.<br>
+  Danach wird die unrealircd.conf um einen Cgiirc Block erweitert, um diesen
+  Host zu erlauben.<br>
+  <br>
+  Beispiel:<br>
+  In die CGI:IRC Konfigurationsdatei (cgiirc.conf) wird eingetragen:</p>
+  <pre>realhost_as_password = 1</pre>
+  Danach wird die unrealircd.conf um einen Cgiirc Block erweitert:
+  <pre>cgiirc {
+	type old;
+	hostname &quot;1.2.3.4&quot;;
+};</pre>
+</div>
+<p><font class="block_section"><a name="setblock">4.37 - </a> </font><a name="setblock"><font class="block_name">Set Block</font>
 </a> <font class="block_required">ERFORDERLICH</font> <font class="block_old">(Früher
 bekannt als unrealircd.conf/networks file)</font>
 </p><div class="desc">
@@ -2883,6 +3012,17 @@ belästigend empfunden werden kann, sollte man dies mit Bedacht wählen.</p>
 angezeigt werden sollen. Ohne Eintrag hier gibt es kein Limit.</p>
 <p><font class="set">set::silence-limit &lt;limit&gt;;<br>
 </font>Stellt den Maximalwert der anzeigbaren SILENCE Einträge ein. Ohne Eintrag ist hier ein Limit von 15 voreingestellt.</p>
+<b><font face="Helvetica,Arial" size="-1">set::maxbans &lt;limit&gt;;<br>
+</font></b>Stellt den Maximalwert der je Channel erlaubten Banns (+b) ein. Der
+Defaultwert beträgt 60. Wenn dieser Wert geändert wird, sollte man sich
+versichern, dass auch der Wert für 'maxbanlength' (siehe nächster Punkt)
+sinnvoll eingestellt ist.
+<p><b>set::maxbanlength &lt;limit&gt;;</b><br>
+Ähnliche Funktion wie im Punkt zuvor, aber legt den Maximalwert der Zeichen
+für alle Banns zusammen fest. Dadurch wird festgelegt, wie viel Speicherplatz
+für alle Banns in einem Channel zusammen benutzt wird. Der Default beträgt
+2048 (Bytes). Bei einem Default von 'set::maxbans 60' gestattet dies 2048:60=34
+Zeichen je Bann im Durchschnitt.</p>
 <p><font class="set">set::oper-only-stats &lt;stats-list&gt;;</font><br>
 Definiert eine Liste von Stats-Flags, die nur von Opers benutzt werden können.
 Die Flags sind ohne Trennungen (keine Kommata, keine Leerzeichen) anzugeben.
@@ -2890,7 +3030,7 @@ Wird hier nichts angegeben, können alle User sämtliche Flags benutzen, bei
 Angabe von '*' keines. Es dürfen nur <b> kurze Operflags</b> angegeben werden.</p>
 <p><b>set::oper-only-stats {&lt;stats-flag>; &lt;stats-flag&gt;;};</b><br>
 Definiert eine Liste von Stats Flags, die nur von Opers benutzt werden können.
-In dieser Syntax dürfen nur <b>lange Operflags</b> angegeben wwerden.</p>
+In dieser Syntax dürfen nur <b>lange Operflags</b> angegeben werden.</p>
 <p><font class="set">set::maxchannelsperuser &lt;amount-of-channels&gt;;</font><br>
 Einstellung, in wie vielen Channels ein User gleichzeitig sein darf.</p>
 <p><b>set::maxdccallow &lt;amount-of-entries&gt;;</b><br>
@@ -2901,7 +3041,7 @@ Zeichensätze</a></p>
 <p><font class="set">set::channel-command-prefix &lt;command-prefixes&gt;;<br>
 </font>Stellt das Vorzeichen für Services in &quot;channel Befehlen&quot; ein.
 Nachrichten, die mit einem dieser Zeichen beginnen, werden auch noch gesendet,
-wenn der Client +d ist. Die Voreinstellung lautet "`".</p>
+wenn der Client +d ist. Die Voreinstellung lautet &quot;`!.&quot;.</p>
 <p><font class="set">set::allow-userhost-change [never|always|not-on-channels|force-rejoin]</font><br>
 Einstellung, was passiert, wenn sich der user@host ändert (+x/-x/chghost/chgident/setident/vhost/etc).<br>
   <i>never</i>  schaltet sämtliche Befehle ab, <i>always</i>  gestattet so
@@ -3081,7 +3221,23 @@ joinen.</p>
 <b>set::spamfilter::except &lt;target(s)&gt;</b><br>
 Diese Ziele werden vom Spamfilter ausgenommen (es wird also keine Aktion
 durchgeführt). Es sind einzelne Ziele oder eine durch Kommata getrennte Liste
-möglich. Beispiel: except "#help,#spamreport"</p> </div>
+möglich. Beispiel: except &quot;#help,#spamreport&quot;</p> <p><b>set::<font face="Helvetica,Arial" size="-1">check-target-nick-bans</font> &lt;yes|no&gt;</b><br>
+Wann immer ein User seinen Nick ändert, wird überprüft, ob der NEUE Nick zu
+bannen wäre. Ist das der Fall, wird der Nickwechsel nicht erlaubt. Default ist
+'yes'.</p> <p><b>set::timesynch::enabled&lt;yes|no&gt;</b><br>
+Aktiviert oder deaktiviert die Zeitsynchronisation beim Start des IRCd. Default
+ist 'yes'.</p> 
+<p><font class="set">set::timesynch::server &lt;IP&gt;</font><br>
+Server mit dem die Zeit synchronisiert werden soll. Hier können bis zu 4 IP's
+angegeben werden, die durch Komma zu trennen sind. Die Server müssen das NTP Protokoll
+Version 4 unterstützen. Default ist die Benutzung von 3 Zeitservern (US, EU,
+AU). Die Anforderungen an diese Server erfolgen zeitgleich, die schnellste
+Antwort gewinnt.</p>
+<p><font class="set">set::timesynch::timeout &lt;time&gt;</font><br>
+Maximale Zeit, die auf eine Zeitserverantwort gewartet wird. Möglich ist ein
+Wert von 1 bis 5, mehr ist nicht möglich, weil das Ergebnis sonst zu ungenau
+wäre. Default Einstellung ist hier 3 und normalerweise sollte es keinen Grund
+geben, dies zu ändern. </div>
 <p><b><font size="+2"><a name="addtlfiles">5 &#8211; Additional Files</a></font></b></p><div class="desc">
   Zusätzlich zu den Konfigurationsdateien hat Unreal einige weitere Dateien,
   wie MOTD, OperMOTD, BotMOTD, und Rules. In der nachfolgenden Liste stehen die
@@ -3299,7 +3455,8 @@ möglich. Beispiel: except "#help,#spamreport"</p> </div>
   </tr>
   <tr>
     <td height="19"><div align="center">d</div></td>
-    <td height="19">User kann keine Channel PRIVMSGs empfangen</td>
+    <td height="19">User kann keine Channel PRIVMSGs empfangen (mit der Ausnahme
+      von Text, dem bestimmte Zeichen vorangestellt sind. Siehe hierzu: 'set::channel-command-prefix'.</td>
   </tr>
   <tr>
     <td height="19"><div align="center">G</div></td>
@@ -4177,7 +4334,7 @@ Datei</a></b></font></p>
   erhöht den Aufwand für einen Angriff oder hack.</div>
 <p><font size="+2"><b><a name="secantiexpolit">8.8 Schutz gegen Expolits</a></b></font></p>
 <div class="desc">Es gibt Kernel Patches, die es Stack- oder Heap-basierenden
-  Expolits erschweren, zu arbeiten. Allerdings sollte man nicht nur primär
+  Expolits erschweren, zu arbeiten. Das ist schön, allerdings sollte man nicht nur primär
   hierauf achten, es gibt weit größere Risiken mit Expolits, die andere
   Punkte, als den Kernel angreifen.... aus verschiedenen Gründen.<br>
   <br>

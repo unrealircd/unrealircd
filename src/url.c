@@ -111,8 +111,7 @@ static void set_curl_ssl_options(CURL *curl)
 	if (SSLKeyPasswd)
 		curl_easy_setopt(curl, CURLOPT_SSLKEYPASSWD, SSLKeyPasswd);
 	curl_easy_setopt(curl, CURLOPT_SSLKEY, SSL_SERVER_KEY_PEM);
-	if (iConf.trusted_ca_file)
-		curl_easy_setopt(curl, CURLOPT_CAINFO, iConf.trusted_ca_file);
+	curl_easy_setopt(curl, CURLOPT_CAINFO, "curl-ca-bundle.crt");
 }
 #endif
 
@@ -171,6 +170,10 @@ char *download_file(char *url, char **error)
  	curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
  	curl_easy_setopt(curl, CURLOPT_TIMEOUT, 45);
  	curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 15);
+#if LIBCURL_VERSION_NUM >= 0x070f01
+ 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
+ 	curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);
+#endif
 
 #ifdef USE_SSL
 	set_curl_ssl_options(curl);
@@ -272,6 +275,11 @@ void download_file_async(char *url, time_t cachetime, vFP callback)
 		curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
 		curl_easy_setopt(curl, CURLOPT_TIMEOUT, 45);
 		curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 15);
+#if LIBCURL_VERSION_NUM >= 0x070f01
+	 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
+ 		curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);
+#endif
+
 
 		curl_multi_add_handle(multihandle, curl);
 	}

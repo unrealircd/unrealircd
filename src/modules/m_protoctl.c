@@ -130,7 +130,12 @@ CMD_FUNC(m_protoctl)
 			equal[0] = '\0';
 		}
 */
-		if (strcmp(s, "NOQUIT") == 0)
+		if (!strcmp(s, "NAMESX"))
+		{
+			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
+			SetNAMESX(cptr);
+		}
+		else if (strcmp(s, "NOQUIT") == 0)
 		{
 #ifndef PROTOCTL_MADNESS
 			if (remove)
@@ -265,6 +270,13 @@ CMD_FUNC(m_protoctl)
 			    proto, cptr->name));
 			SetVHP(cptr);
 		}
+		else if (strcmp(s, "CLK") == 0)
+		{
+			Debug((DEBUG_ERROR,
+			    "Chose protocol %s for link %s",
+			    proto, cptr->name));
+			SetCLK(cptr);
+		}
 		else if (strcmp(s, "SJ3") == 0)
 		{
 #ifndef PROTOCTL_MADNESS
@@ -320,11 +332,10 @@ CMD_FUNC(m_protoctl)
 			/* Compare... */
 			if (strcmp(s+10, langsinuse))
 			{
-				sendto_one(cptr, "ERROR :My nick charset='%s', yours='%s'",
-					langsinuse, s+10);
-				sendto_realops("Link error %s: Nick charset mismatch, our='%s', theirs='%s'",
+				sendto_realops("\002WARNING!!!!\002 Link %s does not have the same set::allowed-nickchars settings (or is "
+							"a different UnrealIRCd version), this MAY cause display issues. Our charset: '%s', theirs: '%s'",
 					get_client_name(cptr, FALSE), langsinuse, s+10);
-				return exit_client(cptr, cptr, &me, "Nick charset mismatch");
+				/* return exit_client(cptr, cptr, &me, "Nick charset mismatch"); */
 			}
 		}
 		/*

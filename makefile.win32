@@ -54,11 +54,19 @@ RC=rc
 #
 ######### END SSL ########
 
-###### RELEASE BUILD #####
-#To make a release build comment out the next line a release build
-#does not contain debugging symbols and can not be used to locate
-#the source of a crash or bug
-DEBUG=1
+###### _EXTRA_ DEBUGGING #####
+# We always build releases with debugging information, since otherwise
+# we cannot trace the source of a crash. Plus we do not mind the extra
+# performance hit caused by not enabling super-optimization, tracing
+# crashes properly is more important.
+# You can choose (at your own risk) to enable EVEN MORE debugging,
+# note that this causes /MDd to be used instead of /MD which can make
+# libraries incompatible, plus all the other side-effects such as
+# requiring a different dll we do not ship (and maybe you are not even
+# allowed to ship due to license agreements), etc...
+# In any case, this probably should not be used, unless debugging a
+# problem locally, in which case it can be useful.
+#DEBUGEXTRA=1
 #
 #
 #### END RELEASE BUILD ###
@@ -100,25 +108,26 @@ OPENSSL_LIB=/LIBPATH:"$(OPENSSL_LIB_DIR)"
 !ENDIF
 !ENDIF
 
-!IFDEF DEBUG
-DBGCFLAG=/MD /Zi
-DBGLFLAG=/debug /debugtype:BOTH
-MODDBGCFLAG=/LDd /MD /Zi
+!IFDEF DEBUGEXTRA
+DBGCFLAG=/MDd /Zi /Od
+DBGLFLAG=/debug
+MODDBGCFLAG=/LDd /MDd /Zi
 !ELSE
-DBGCFLAG=/MD /O2 /G5
-MODDBGCFLAG=/LD /MD
+DBGCFLAG=/MD /Zi
+DBGLFLAG=/debug
+MODDBGCFLAG=/LDd /MD /Zi
 !ENDIF 
 
 FD_SETSIZE=/D FD_SETSIZE=16384
-CFLAGS=$(DBGCFLAG) $(LIBCURL_INC) $(ZLIB_INC) $(OPENSSL_INC) /J /I ./INCLUDE /Fosrc/ /nologo \
- $(ZIPCFLAGS) $(CURLCFLAGS) $(FD_SETSIZE) $(SSLCFLAGS) $(NS_ADDRESS) /D NOSPOOF=1 /c 
+CFLAGS=$(DBGCFLAG) $(LIBCURL_INC) $(ZLIB_INC) $(OPENSSL_INC) /J /I ./INCLUDE /I ./INCLUDE/WIN32/ARES /Fosrc/ /nologo \
+ $(ZIPCFLAGS) $(CURLCFLAGS) $(FD_SETSIZE) $(SSLCFLAGS) $(NS_ADDRESS) /D NOSPOOF=1 /c /D _CRT_SECURE_NO_DEPRECATE /D _USE_32BIT_TIME_T
 LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib advapi32.lib \
  dbghelp.lib oldnames.lib comctl32.lib comdlg32.lib $(ZLIB_LIB) $(ZIPLIB) \
  $(OPENSSL_LIB) $(SSLLIBS) $(LIBCURL_LIB) $(CURLLIB) /def:wircd.def /implib:wircd.lib \
  /nologo $(DBGLFLAG) /out:WIRCD.EXE
 MODCFLAGS=$(MODDBGCFLAG) $(SSLCFLAGS) $(ZIPCFLAGS) $(CURLCFLAGS) /J /Fesrc/modules/ \
  /Fosrc/modules/ /nologo $(LIBCURL_INC) $(ZLIB_INC) $(OPENSSL_INC) /I ./INCLUDE /D \
- DYNAMIC_LINKING /D NOSPOOF /D MODULE_COMPILE
+ DYNAMIC_LINKING /D NOSPOOF /D MODULE_COMPILE /D _CRT_SECURE_NO_DEPRECATE /D _USE_32BIT_TIME_T
 MODLFLAGS=/link /def:src/modules/module.def wircd.lib $(OPENSSL_LIB) $(SSLLIBS) \
  $(ZLIB_LIB) $(ZIPLIB) $(LIBCURL_LIB) $(CURLLIB)
 
@@ -134,12 +143,11 @@ EXP_OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/S_DEBUG.OBJ  SRC/SUPPORT.OBJ SRC/LIST.OBJ \
  SRC/S_ERR.OBJ SRC/PACKET.OBJ SRC/S_BSD.OBJ \
  SRC/S_SERV.OBJ SRC/S_USER.OBJ SRC/CHARSYS.OBJ \
- SRC/VERSION.OBJ SRC/RES_INIT.OBJ SRC/RES_COMP.OBJ SRC/RES_MKQUERY.OBJ SRC/RES_SKIPNAME.OBJ \
- SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ \
- SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ \
+ SRC/VERSION.OBJ SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ \
+ SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/RES.OBJ SRC/MODULES.OBJ \
  SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ \
  SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/MD5.OBJ SRC/API-ISUPPORT.OBJ SRC/API-COMMAND.OBJ \
- SRC/EXTBANS.OBJ $(ZIPOBJ) $(CURLOBJ)
+ SRC/EXTBANS.OBJ SRC/TIMESYNCH.OBJ $(ZIPOBJ) $(CURLOBJ)
 
 OBJ_FILES=$(EXP_OBJ_FILES) SRC/GUI.OBJ SRC/SERVICE.OBJ SRC/DEBUG.OBJ SRC/RTF.OBJ \
  SRC/EDITOR.OBJ SRC/WIN32.OBJ 
@@ -151,7 +159,7 @@ MOD_FILES=SRC/MODULES/L_COMMANDS.C SRC/MODULES/M_CHGHOST.C SRC/MODULES/M_SDESC.C
  SRC/MODULES/M_SVSNOOP.C SRC/MODULES/M_MKPASSWD.C SRC/MODULES/M_SVSO.C \
  SRC/MODULES/M_SVSNICK.C SRC/MODULES/M_ADMINCHAT.C SRC/MODULES/M_AKILL.C \
  SRC/MODULES/M_CHGNAME.C SRC/MODULES/M_GUEST.C SRC/MODULES/M_HTM.C SRC/MODULES/M_LAG.C \
- SRC/MODULES/M_MESSAGE.C SRC/MODULES/M_NACHAT.C SRC/MODULES/M_OPER.C \
+ SRC/MODULES/M_MESSAGE.C SRC/MODULES/WEBTV.C SRC/MODULES/M_NACHAT.C SRC/MODULES/M_OPER.C \
  SRC/MODULES/M_PINGPONG.C SRC/MODULES/M_QUIT.C SRC/MODULES/M_RAKILL.C SRC/MODULES/M_RPING.C \
  SRC/MODULES/M_SENDUMODE.C SRC/MODULES/M_SQLINE.C SRC/MODULES/M_KILL.C \
  SRC/MODULES/M_TSCTL.C SRC/MODULES/M_UNKLINE.C SRC/MODULES/M_UNSQLINE.C \
@@ -175,7 +183,7 @@ MOD_FILES=SRC/MODULES/L_COMMANDS.C SRC/MODULES/M_CHGHOST.C SRC/MODULES/M_SDESC.C
  SRC/MODULES/M_NICK.C SRC/MODULES/M_USER.C SRC/MODULES/M_MODE.C \
  SRC/MODULES/M_WATCH.C SRC/MODULES/M_PART.C SRC/MODULES/M_JOIN.C \
  SRC/MODULES/M_MOTD.C SRC/MODULES/M_OPERMOTD.C SRC/MODULES/M_BOTMOTD.C \
- SRC/MODULES/M_LUSERS.C
+ SRC/MODULES/M_LUSERS.C SRC/MODULES/M_NAMES.C
 
 DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDENT.DLL \
  SRC/MODULES/M_SETNAME.DLL SRC/MODULES/M_SETHOST.DLL SRC/MODULES/M_CHGIDENT.DLL \
@@ -210,7 +218,7 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/M_NICK.DLL SRC/MODULES/M_USER.DLL SRC/MODULES/M_MODE.DLL \
  SRC/MODULES/M_WATCH.DLL SRC/MODULES/M_PART.DLL SRC/MODULES/M_JOIN.DLL \
  SRC/MODULES/M_MOTD.DLL SRC/MODULES/M_OPERMOTD.DLL SRC/MODULES/M_BOTMOTD.DLL \
- SRC/MODULES/M_LUSERS.DLL \
+ SRC/MODULES/M_LUSERS.DLL SRC/MODULES/M_NAMES.DLL \
  SRC/MODULES/CLOAK.DLL
 
 
@@ -231,7 +239,7 @@ CLEAN:
 	-@erase src\modules\*.ilk >NUL
 
 ./UNREAL.EXE: SRC/UNREAL.OBJ SRC/WIN32/UNREAL.RES
-	$(LINK) advapi32.lib src/unreal.obj src/win32/unreal.res
+	$(LINK) $(DBGLFLAG) advapi32.lib src/unreal.obj src/win32/unreal.res
 
 CONF:
 	-@copy include\win32\setup.h include\setup.h >NUL
@@ -241,12 +249,12 @@ CONF:
 	
 
 ./WIRCD.EXE: $(OBJ_FILES) SRC/win32/WIN32.RES
-        $(LINK) $(LFLAGS) $(OBJ_FILES) SRC/win32/WIN32.RES SRC/WIN32/TRE.LIB /MAPINFO:LINES /MAP
+        $(LINK) $(LFLAGS) $(OBJ_FILES) SRC/win32/WIN32.RES SRC/WIN32/TRE.LIB SRC/WIN32/ARESLIB.LIB /MAPINFO:LINES /MAP
 	-@erase src\win32\win32.res
-!IFNDEF DEBUG
- @echo Non Debug version built 
+!IFNDEF DEBUGEXTRA
+ @echo Standard version built 
 !ELSE
- @echo Debug version built ... 
+ @echo Extra-Debug version built ... 
 !ENDIF
 
 #Source files
@@ -256,12 +264,6 @@ src/version.obj: src/version.c
 
 src/parse.obj: src/parse.c $(INCLUDES)
         $(CC) $(CFLAGS) src/parse.c
-
-src/badwords.obj: src/badwords.c $(INCLUDES)
-        $(CC) $(CFLAGS) src/badwords.c
-
-src/webtv.obj: src/webtv.c $(INCLUDES)
-        $(CC) $(CFLAGS) src/webtv.c
 
 src/socket.obj: src/socket.c $(INCLUDES)
         $(CC) $(CFLAGS) src/socket.c
@@ -312,11 +314,8 @@ src/list.obj: src/list.c $(INCLUDES)
 src/res.obj: src/res.c $(INCLUDES)
         $(CC) $(CFLAGS) src/res.c
 
-src/res_mkquery.obj: src/res_mkquery.c $(INCLUDES)
-        $(CC) $(CFLAGS) src/res_mkquery.c
-
-src/res_skipname.obj: src/res_skipname.c $(INCLUDES)
-        $(CC) $(CFLAGS) src/res_skipname.c
+src/timesynch.obj: src/timesynch.c $(INCLUDES)
+        $(CC) $(CFLAGS) src/timesynch.c
 
 src/s_bsd.obj: src/s_bsd.c $(INCLUDES)
         $(CC) $(CFLAGS) src/s_bsd.c
@@ -396,12 +395,6 @@ src/win32.obj: src/win32/win32.c $(INCLUDES)
 src/unreal.obj: src/win32/unreal.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/win32/unreal.c
 
-src/res_comp.obj: src/res_comp.c $(INCLUDES)
-        $(CC) $(CFLAGS) src/res_comp.c
-
-src/res_init.obj: src/res_init.c $(INCLUDES)
-        $(CC) $(CFLAGS) src/res_init.c
-
 src/help.obj: src/help.c $(INCLUDES)
         $(CC) $(CFLAGS) src/help.c
 
@@ -471,8 +464,9 @@ MODULES: $(DLL_FILES)
 src/modules/commands.dll: $(MOD_FILES) $(INCLUDES)
 	$(CC) $(MODDBGCFLAG) $(LIBCURL_INC) $(ZLIB_INC) $(OPENSSL_INC) /nologo \
 	      $(SSLCFLAGS) $(ZIPCFLAGS) $(CURLCFLAGS) /Fosrc/modules/ \
-	      /I ./INCLUDE /D NOSPOOF /D MODULE_COMPILE $(MOD_FILES) \
-	      $(MODLFLAGS) /OUT:src/modules/commands.dll
+	      /I ./INCLUDE /D NOSPOOF /D MODULE_COMPILE /D _CRT_SECURE_NO_DEPRECATE \
+	      /D _USE_32BIT_TIME_T $(MOD_FILES) \
+	      $(MODLFLAGS) src/win32/tre.lib /OUT:src/modules/commands.dll
 
 src/modules/m_chghost.dll: src/modules/m_chghost.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/m_chghost.c $(MODLFLAGS)
@@ -499,7 +493,7 @@ src/modules/m_svsmode.dll: src/modules/m_svsmode.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/m_svsmode.c $(MODLFLAGS)
 
 src/modules/m_tkl.dll: src/modules/m_tkl.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/m_tkl.c $(MODLFLAGS)
+        $(CC) $(MODCFLAGS) src/modules/m_tkl.c $(MODLFLAGS) src/win32/tre.lib
 
 src/modules/m_swhois.dll: src/modules/m_swhois.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/m_swhois.c $(MODLFLAGS)
@@ -547,7 +541,7 @@ src/modules/m_lag.dll: src/modules/m_lag.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/m_lag.c $(MODLFLAGS)
 
 src/modules/m_message.dll: src/modules/m_message.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/m_message.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/m_message.c src/modules/webtv.c $(MODLFLAGS) src/win32/tre.lib
 
 src/modules/m_nachat.dll: src/modules/m_nachat.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/m_nachat.c $(MODLFLAGS)
@@ -773,6 +767,9 @@ src/modules/m_botmotd.dll: src/modules/m_botmotd.c $(INCLUDES)
 
 src/modules/m_lusers.dll: src/modules/m_lusers.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/m_lusers.c $(MODLFLAGS)
+
+src/modules/m_names.dll: src/modules/m_names.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/m_names.c $(MODLFLAGS)
 
 src/modules/cloak.dll: src/modules/cloak.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/cloak.c $(MODLFLAGS)

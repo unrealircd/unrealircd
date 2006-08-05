@@ -150,7 +150,7 @@ unsigned long our_crc32(const unsigned char *s, unsigned int len)
 }
 
 /* mode = 0, just use strncpyzt, 1 = Realloc new and return new pointer */
-char *make_virthost(char *curr, char *new, int mode)
+char *make_virthost(aClient *sptr, char *curr, char *new, int mode)
 {
 char host[256], *mask, *x, *p, *q;
 
@@ -163,7 +163,10 @@ char host[256], *mask, *x, *p, *q;
 	*q = '\0';
 
 	/* Call the cloaking layer */
-	mask = RCallbacks[CALLBACKTYPE_CLOAK]->func.pcharfunc(host);
+	if (RCallbacks[CALLBACKTYPE_CLOAK_EX])
+		mask = RCallbacks[CALLBACKTYPE_CLOAK]->func.pcharfunc(sptr, host);
+	else
+		mask = RCallbacks[CALLBACKTYPE_CLOAK]->func.pcharfunc(host);
 
 	if (mode == 0)
 	{

@@ -108,7 +108,7 @@ DLLFUNC int m_admins(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 #ifdef ADMINCHAT
-	if (MyClient(sptr) && !IsAdmin(sptr))
+	if (MyClient(sptr) && !IsAdmin(sptr) && !IsCoAdmin(sptr))
 #else
 	if (MyClient(sptr))
 #endif

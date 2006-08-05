@@ -1,6 +1,6 @@
-; dlltool --output-def wircd.def.in --export-all-symbols SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ SRC/S_CONF.OBJ SRC/FDLIST.OBJ SRC/DBUF.OBJ SRC/CLOAK.OBJ SRC/HASH.OBJ SRC/PARSE.OBJ SRC/IRCD.OBJ SRC/S_NUMERIC.OBJ SRC/WHOWAS.OBJ SRC/S_AUTH.OBJ SRC/HELP.OBJ SRC/S_MISC.OBJ SRC/MATCH.OBJ SRC/CRULE.OBJ SRC/S_DEBUG.OBJ SRC/SUPPORT.OBJ SRC/LIST.OBJ SRC/S_ERR.OBJ SRC/PACKET.OBJ SRC/S_BSD.OBJ SRC/S_SERV.OBJ SRC/S_USER.OBJ SRC/CHARSYS.OBJ SRC/VERSION.OBJ SRC/RES_INIT.OBJ SRC/RES_COMP.OBJ SRC/RES_MKQUERY.OBJ SRC/RES_SKIPNAME.OBJ SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/MD5.OBJ SRC/API-ISUPPORT.OBJ SRC/API-COMMAND.OBJ SRC/EXTBANS.OBJ
+; dlltool --output-def wircd.def.in --export-all-symbols SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ SRC/S_CONF.OBJ SRC/FDLIST.OBJ SRC/DBUF.OBJ SRC/CLOAK.OBJ SRC/HASH.OBJ SRC/PARSE.OBJ SRC/IRCD.OBJ SRC/S_NUMERIC.OBJ SRC/WHOWAS.OBJ SRC/S_AUTH.OBJ SRC/HELP.OBJ SRC/S_MISC.OBJ SRC/MATCH.OBJ SRC/CRULE.OBJ SRC/S_DEBUG.OBJ SRC/SUPPORT.OBJ SRC/LIST.OBJ SRC/S_ERR.OBJ SRC/PACKET.OBJ SRC/S_BSD.OBJ SRC/S_SERV.OBJ SRC/S_USER.OBJ SRC/CHARSYS.OBJ SRC/VERSION.OBJ SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/MD5.OBJ SRC/API-ISUPPORT.OBJ SRC/API-COMMAND.OBJ SRC/EXTBANS.OBJ
 EXPORTS
-	zlinebuf
+	extcmode_cmodeT_requirechop
 	AllUmodes
 	AllowClient
 	AuthTypes
@@ -197,7 +197,6 @@ EXPORTS
 	WHOWAS
 	WHOWASHASH
 	WSAErrors
-	__ircd_dn_skipname
 	_match
 	add_Command
 	add_CommandX
@@ -214,6 +213,7 @@ EXPORTS
 	add_listmode
 	add_local_client
 	add_local_domain
+	add_remote_include
 	add_send_mode_param
 	add_server_to_table
 	add_silence
@@ -294,6 +294,7 @@ EXPORTS
 	close_connection
 	close_connections
 	close_listeners
+	cmdname_by_spamftarget
 	cmdstr
 	cmodej_addentry
 	cmodej_cleanup_structs
@@ -368,7 +369,6 @@ EXPORTS
 	create_snomask
 	create_tkl_except
 	creation
-	cres_mem
 	crule__andor
 	crule__not
 	crule_connected
@@ -412,14 +412,12 @@ EXPORTS
 	default_fdlist
 	del_Command
 	del_ListItem
-	del_async_connects
 	del_dccallow
 	del_from_channel_hash_table
 	del_from_client_hash_table
 	del_from_watch_hash_table
 	del_invite
 	del_listmode
-	del_queries
 	del_silence
 	del_throttling_bucket
 	delete_classblock
@@ -427,7 +425,7 @@ EXPORTS
 	delfrom_fdlist
 	deliver_it
 	dgets
-	dn_skipname
+	dnsstats
 	do_chanflood
 	do_chanflood_action
 	do_cmd
@@ -439,6 +437,7 @@ EXPORTS
 	dontspread
 	dopacket
 	dospamfilter
+	dospamfilter_viruschan
 	e_check_fdlists
 	e_clean_out_throttling_buckets
 	e_unload_module_delayed
@@ -447,17 +446,18 @@ EXPORTS
 	encode_ip
 	events
 	exit_client
-	expire_cache
 	extban_conv_param_nuh
 	extban_init
 	extban_modec_conv_param
 	extban_modec_is_banned
+	extban_modec_is_ok
 	extban_moden_is_banned
 	extban_modeq_is_banned
 	extban_moder_conv_param
 	extban_moder_is_banned
 	extbanstr
 	extchmstr
+	extcmode_cmodeG_requirechop
 	extcmode_default_requirechop
 	extcmode_default_requirehalfop
 	extcmode_duplicate_paramlist
@@ -474,6 +474,7 @@ EXPORTS
 	find_chasing
 	find_client
 	find_invex
+	find_loaded_remote_include
 	find_match_server
 	find_member_link
 	find_membership_link
@@ -482,6 +483,7 @@ EXPORTS
 	find_or_add
 	find_person
 	find_qline
+	find_remote_include
 	find_server
 	find_server_b64_or_real
 	find_server_by_base64
@@ -501,7 +503,6 @@ EXPORTS
 	flag_add
 	flag_del
 	flinks
-	flush_cache
 	flush_connections
 	flush_fdlist_connections
 	free_ban
@@ -531,18 +532,10 @@ EXPORTS
 	get_history
 	get_mode_str
 	get_modestr
-	get_res
-	get_res_from_reg_9x
-	get_res_from_reg_nt
-	get_res_interfaces_nt
-	get_res_nt
 	get_sno_str
 	get_snostr
 	get_sockerr
 	get_sockhost
-	gethost_byaddr
-	gethost_byname
-	gethost_byname_revquery
 	getrandom16
 	getrandom32
 	getrandom8
@@ -575,6 +568,8 @@ EXPORTS
 	ident_failed
 	ilanglist
 	illegalnickchars
+	inet4_to_inet6
+	inet6_to_inet4
 	inet_netof
 	inet_ntop
 	inet_pton
@@ -597,28 +592,21 @@ EXPORTS
 	initwhowas
 	int6_to_base64_map
 	ipport_seperate
-	ircd__putlong
-	ircd__putshort
-	ircd_dn_comp
-	ircd_dn_expand
-	ircd_getlong
-	ircd_getshort
 	ircd_log
-	ircd_res
-	ircd_res_init
-	ircd_res_mkquery
-	ircd_res_randomid
 	ircsprintf
 	ircst
 	ircstp
 	ircvsprintf
+	is_autojoin_chan
 	is_banned
+	is_banned_with_nick
 	is_chan_op
 	is_chanowner
 	is_chanownprotop
 	is_chanprot
 	is_half_op
 	is_skochanop
+	isipv6
 	isupport_init
 	join_channel
 	langsinuse
@@ -659,7 +647,6 @@ EXPORTS
 	m_umode
 	m_users
 	m_version
-	m_watch
 	make_ban
 	make_class
 	make_client
@@ -696,6 +683,7 @@ EXPORTS
 	myargv
 	myctime
 	myncmp
+	mystpcpy
 	next_client
 	nextconnect
 	nextdnscheck
@@ -718,6 +706,7 @@ EXPORTS
 	opermotd
 	our_crc32
 	our_dlerror
+	our_mod_version
 	our_strcasestr
 	outofmemory
 	parabuf
@@ -726,12 +715,12 @@ EXPORTS
 	parse_help
 	parse_modsys_version
 	parse_netmask
-	parse_tkl_para
 	place_host_ban
 	port_range
 	portnum
 	pretty_mask
 	pretty_time_val
+	proceed_normal_client_handshake
 	read_authports
 	read_file
 	read_file_ex
@@ -743,6 +732,7 @@ EXPORTS
 	rehash_motdrules
 	rejoin_dojoinandmode
 	rejoin_doparts
+	remote_include
 	remove_client_from_list
 	remove_dcc_references
 	remove_local_client
@@ -755,7 +745,7 @@ EXPORTS
 	requiredstuff
 	reread_motdsandrules
 	reset_help
-	resfd
+	resolver_channel
 	restart
 	rfc2time
 	rfctime
@@ -824,6 +814,7 @@ EXPORTS
 	sendto_snomask_normal_global
 	sendto_umode
 	sendto_umode_raw
+	sendtxtnumeric
 	sentalong_marker
 	serv_fdlist
 	server_reboot
@@ -845,8 +836,8 @@ EXPORTS
 	spamf_ugly_vchanoverride
 	spamfilter_getconftargets
 	spamfilter_gettargets
-	spamfilter_inttostring_long
 	spamfilter_target_inttostring
+	spamfiltertargettable
 	start_auth
 	start_of_normal_client_handshake
 	stripbadwords
@@ -861,13 +852,12 @@ EXPORTS
 	sub1_from_channel
 	svsmotd
 	tainted
-	target_is_spamexcept
 	tempiConf
 	throttle_can_connect
 	timeofday
-	timeout_query_list
 	tkl_add_line
 	tkl_check_expire
+	tkl_check_local_remove_shun
 	tkl_del_line
 	tkl_expire
 	tkl_hash
@@ -896,14 +886,26 @@ EXPORTS
 	unreal_checkregex
 	unreal_copyfile
 	unreal_copyfileex
+	unreal_create_hostent
 	unreal_decodespace
 	unreal_encodespace
+	unreal_free_hostent
 	unreal_getfilemodtime
 	unreal_getfilename
 	unreal_getpathname
 	unreal_mktemp
 	unreal_setfilemodtime
 	unrealcredits
+	unrealdns_addreqtolist
+	unrealdns_cb_iptoname
+	unrealdns_cb_nametoip_link
+	unrealdns_cb_nametoip_verify
+	unrealdns_delasyncconnects
+	unrealdns_delreq_bycptr
+	unrealdns_doclient
+	unrealdns_gethostbyname_link
+	unrealdns_removecacherecord
+	unrealdns_removeoldrecords
 	unreallogo
 	valid_host
 	verify_opercount
@@ -916,3 +918,4 @@ EXPORTS
 	webtv_parse
 	whowas_next
 	write_pidfile
+	zlinebuf

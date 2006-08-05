@@ -17,13 +17,15 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "config.h"
+#undef DYNAMIC_LINKING
 #include "struct.h"
+#define DYNAMIC_LINKING
 #include "common.h"
 #include "sys.h"
 #include "numeric.h"
 #include "msg.h"
 #include "channel.h"
-#include "version.h"
 #include <time.h>
 #include <sys/stat.h>
 #include <stdio.h>
@@ -35,10 +37,12 @@
 #include <fcntl.h>
 #include "h.h"
 #include "proto.h"
-
-ID_Copyright("(C) Carsten Munk 2000");
-
-extern ircstats IRCstats;
+#ifdef STRIPBADWORDS
+#include "badwords.h"
+#endif
+#ifdef _WIN32
+#include "version.h"
+#endif
 
 typedef struct zMessage aMessage;
 struct zMessage {
@@ -54,7 +58,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[]);
  */
 int	ban_version(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
-MODVAR aMessage	webtv_cmds[] = 
+aMessage webtv_cmds[] = 
 {
 	{"WHOIS", w_whois, 15},
 	{"\1VERSION", ban_version, 1},
@@ -210,7 +214,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				if (!invis && HiddenChannel(chptr) &&
 				    !SecretChannel(chptr))
 					showperson = 1;
-				else if (IsAnOper(sptr) && SecretChannel(chptr)) {
+				else if (OPCanSeeSecret(sptr) && SecretChannel(chptr)) {
 					showperson = 1;
 					showsecret = 1;
 				}
@@ -262,11 +266,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				showchannel = 0;
 				if (ShowChannel(sptr, chptr))
 					showchannel = 1;
-#ifndef SHOW_SECRET
-				if (IsAnOper(sptr) && !SecretChannel(chptr))
-#else
-				if (IsAnOper(sptr))
-#endif
+				if (OPCanSeeSecret(sptr))
 					showchannel = 1;
 				if ((acptr->umodes & UMODE_HIDEWHOIS) && !IsMember(sptr, chptr) && !IsAnOper(sptr))
 					showchannel = 0;

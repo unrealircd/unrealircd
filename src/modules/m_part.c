@@ -105,12 +105,14 @@ DLLFUNC CMD_FUNC(m_part)
 		{
 			if (!strcasecmp(STATIC_PART, "yes") || !strcmp(STATIC_PART, "1"))
 				commentx = NULL;
+			else if (!strcasecmp(STATIC_PART, "no") || !strcmp(STATIC_PART, "0"))
+				; /* keep original reason */
 			else
 				commentx = STATIC_PART;
 		}
 		if (commentx)
 		{
-			n = dospamfilter(sptr, commentx, SPAMF_PART, parv[1]);
+			n = dospamfilter(sptr, commentx, SPAMF_PART, parv[1], 0, NULL);
 			if (n == FLUSH_BUFFER)
 				return n;
 			if (n < 0)

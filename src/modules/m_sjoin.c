@@ -194,7 +194,7 @@ CMD_FUNC(m_sjoin)
 	char invexbuf[1024];
 	char cbuf[1024];
 	char buf[1024];
-	char nick[NICKLEN + 1];
+	char nick[1024];
 	char *s = NULL;
 	aClient *acptr;
 	aChannel *chptr;
@@ -953,10 +953,10 @@ docontinue:
 	    parv[parc - 1]));
 	sendto_serv_butone_token_opt(cptr, OPT_SJOIN | OPT_SJ3 | OPT_NOT_SJB64, sptr->name,
 	    MSG_SJOIN, TOK_SJOIN, "%li %s :%s", ts, parabuf, parv[parc - 1]);
-	Debug((DEBUG_DEBUG, "Sending '%B %s :%s' to sj3-sjb64", ts, parabuf,
+	Debug((DEBUG_DEBUG, "Sending '%B %s :%s' to sj3-sjb64", (long)ts, parabuf,
 	    parv[parc - 1]));
 	sendto_serv_butone_token_opt(cptr, OPT_SJOIN | OPT_SJ3 | OPT_SJB64, sptr->name,
-	    MSG_SJOIN, TOK_SJOIN, "%B %s :%s", ts, parabuf, parv[parc - 1]);
+	    MSG_SJOIN, TOK_SJOIN, "%B %s :%s", (long)ts, parabuf, parv[parc - 1]);
 	 
 	return 0;
 }

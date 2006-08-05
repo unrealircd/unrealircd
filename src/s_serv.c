@@ -257,9 +257,9 @@ void m_info_send(aClient *sptr)
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| This is an UnrealIRCD-style server",
 	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| If you find any bugs, please mail",
+	sendto_one(sptr, ":%s %d %s :| If you find any bugs, please report them at:",
 	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :|  bugs@lists.unrealircd.org",
+	sendto_one(sptr, ":%s %d %s :|  http://bugs.unrealircd.org/",
 	    me.name, RPL_INFO, sptr->name);
 
 	sendto_one(sptr,
@@ -379,228 +379,6 @@ CMD_FUNC(m_credits)
 		sendto_one(sptr, ":%s %d %s :On-line since %s",
 		    me.name, RPL_INFO, parv[0], myctime(me.firsttime));
 		sendto_one(sptr, rpl_str(RPL_ENDOFINFO), me.name, parv[0]);
-	}
-
-	return 0;
-}
-
-
-/*
- * RPL_NOWON	- Online at the moment (Succesfully added to WATCH-list)
- * RPL_NOWOFF	- Offline at the moement (Succesfully added to WATCH-list)
- * RPL_WATCHOFF	- Succesfully removed from WATCH-list.
- * ERR_TOOMANYWATCH - Take a guess :>  Too many WATCH entries.
- */
-static void show_watch(aClient *cptr, char *name, int rpl1, int rpl2)
-{
-	aClient *acptr;
-
-
-	if ((acptr = find_person(name, NULL)))
-	{
-		if (IsWebTV(cptr))
-			sendto_one(cptr, ":IRC!IRC@%s PRIVMSG %s :%s (%s@%s) is on IRC", 
-			    me.name, cptr->name, acptr->name, acptr->user->username,
-			    IsHidden(acptr) ? acptr->user->virthost : acptr->user->
-			    realhost);
-		else
-			sendto_one(cptr, rpl_str(rpl1), me.name, cptr->name,
-			    acptr->name, acptr->user->username,
-			    IsHidden(acptr) ? acptr->user->virthost : acptr->user->
-			    realhost, acptr->lastnick);
-	}
-	else
-	{
-		if (IsWebTV(cptr))
-			sendto_one(cptr, ":IRC!IRC@%s PRIVMSG %s :%s is not on IRC", me.name, 
-				cptr->name, name);
-		else	
-			sendto_one(cptr, rpl_str(rpl2), me.name, cptr->name,
-			    name, "*", "*", 0);
-	}
-}
-
-/*
- * m_watch
- */
-CMD_FUNC(m_watch)
-{
-	aClient *acptr;
-	char *s, **pav = parv, *user;
-	char *p = NULL, *def = "l";
-
-
-
-	if (parc < 2)
-	{
-		/*
-		 * Default to 'l' - list who's currently online
-		 */
-		parc = 2;
-		parv[1] = def;
-	}
-
-	for (s = (char *)strtoken(&p, *++pav, " "); s;
-	    s = (char *)strtoken(&p, NULL, " "))
-	{
-		if ((user = (char *)index(s, '!')))
-			*user++ = '\0';	/* Not used */
-
-		/*
-		 * Prefix of "+", they want to add a name to their WATCH
-		 * list.
-		 */
-		if (*s == '+')
-		{
-			if (!*(s+1))
-				continue;
-			if (do_nick_name(s + 1))
-			{
-				if (sptr->watches >= MAXWATCH)
-				{
-					sendto_one(sptr,
-					    err_str(ERR_TOOMANYWATCH), me.name,
-					    cptr->name, s + 1);
-
-					continue;
-				}
-
-				add_to_watch_hash_table(s + 1, sptr);
-			}
-
-			show_watch(sptr, s + 1, RPL_NOWON, RPL_NOWOFF);
-			continue;
-		}
-
-		/*
-		 * Prefix of "-", coward wants to remove somebody from their
-		 * WATCH list.  So do it. :-)
-		 */
-		if (*s == '-')
-		{
-			if (!*(s+1))
-				continue;
-			del_from_watch_hash_table(s + 1, sptr);
-			show_watch(sptr, s + 1, RPL_WATCHOFF, RPL_WATCHOFF);
-
-			continue;
-		}
-
-		/*
-		 * Fancy "C" or "c", they want to nuke their WATCH list and start
-		 * over, so be it.
-		 */
-		if (*s == 'C' || *s == 'c')
-		{
-			hash_del_watch_list(sptr);
-
-			continue;
-		}
-
-		/*
-		 * Now comes the fun stuff, "S" or "s" returns a status report of
-		 * their WATCH list.  I imagine this could be CPU intensive if its
-		 * done alot, perhaps an auto-lag on this?
-		 */
-		if (*s == 'S' || *s == 's')
-		{
-			Link *lp;
-			aWatch *anptr;
-			int  count = 0;
-
-			/*
-			 * Send a list of how many users they have on their WATCH list
-			 * and how many WATCH lists they are on.
-			 */
-			anptr = hash_get_watch(sptr->name);
-			if (anptr)
-				for (lp = anptr->watch, count = 1;
-				    (lp = lp->next); count++)
-					;
-			sendto_one(sptr, rpl_str(RPL_WATCHSTAT), me.name,
-			    parv[0], sptr->watches, count);
-
-			/*
-			 * Send a list of everybody in their WATCH list. Be careful
-			 * not to buffer overflow.
-			 */
-			if ((lp = sptr->watch) == NULL)
-			{
-				sendto_one(sptr, rpl_str(RPL_ENDOFWATCHLIST),
-				    me.name, parv[0], *s);
-				continue;
-			}
-			*buf = '\0';
-			strlcpy(buf, lp->value.wptr->nick, sizeof buf);
-			count =
-			    strlen(parv[0]) + strlen(me.name) + 10 +
-			    strlen(buf);
-			while ((lp = lp->next))
-			{
-				if (count + strlen(lp->value.wptr->nick) + 1 >
-				    BUFSIZE - 2)
-				{
-					sendto_one(sptr, rpl_str(RPL_WATCHLIST),
-					    me.name, parv[0], buf);
-					*buf = '\0';
-					count =
-					    strlen(parv[0]) + strlen(me.name) +
-					    10;
-				}
-				strcat(buf, " ");
-				strcat(buf, lp->value.wptr->nick);
-				count += (strlen(lp->value.wptr->nick) + 1);
-			}
-			sendto_one(sptr, rpl_str(RPL_WATCHLIST), me.name,
-			    parv[0], buf);
-
-			sendto_one(sptr, rpl_str(RPL_ENDOFWATCHLIST), me.name,
-			    parv[0], *s);
-			continue;
-		}
-
-		/*
-		 * Well that was fun, NOT.  Now they want a list of everybody in
-		 * their WATCH list AND if they are online or offline? Sheesh,
-		 * greedy arn't we?
-		 */
-		if (*s == 'L' || *s == 'l')
-		{
-			Link *lp = sptr->watch;
-
-			while (lp)
-			{
-				if ((acptr =
-				    find_person(lp->value.wptr->nick, NULL)))
-				{
-					sendto_one(sptr, rpl_str(RPL_NOWON),
-					    me.name, parv[0], acptr->name,
-					    acptr->user->username,
-					    IsHidden(acptr) ? acptr->user->
-					    virthost : acptr->user->realhost,
-					    acptr->lastnick);
-				}
-				/*
-				 * But actually, only show them offline if its a capital
-				 * 'L' (full list wanted).
-				 */
-				else if (isupper(*s))
-					sendto_one(sptr, rpl_str(RPL_NOWOFF),
-					    me.name, parv[0],
-					    lp->value.wptr->nick, "*", "*",
-					    lp->value.wptr->lasttime);
-				lp = lp->next;
-			}
-
-			sendto_one(sptr, rpl_str(RPL_ENDOFWATCHLIST), me.name,
-			    parv[0], *s);
-
-			continue;
-		}
-
-		/*
-		 * Hmm.. unknown prefix character.. Ignore it. :-)
-		 */
 	}
 
 	return 0;
@@ -802,6 +580,8 @@ void reread_motdsandrules()
 	opermotd = (aMotd *) read_file(OPATH, &opermotd);
 }
 
+extern void reinit_resolver(aClient *sptr);
+
 /*
 ** m_rehash
 ** remote rehash by binary
@@ -829,7 +609,7 @@ CMD_FUNC(m_rehash)
 	}
 	x = 0;
 
-	if (BadPtr(parv[2])) {
+	if ((parc < 3) || BadPtr(parv[2])) {
 		/* If the argument starts with a '-' (like -motd, -opermotd, etc) then it's
 		 * assumed not to be a server. -- Syzop
 		 */
@@ -885,6 +665,11 @@ CMD_FUNC(m_rehash)
 			{
 				loop.do_garbage_collect = 1;
 				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
+				return 0;
+			}
+			if (!strnicmp("-dns", parv[1], 4))
+			{
+				reinit_resolver(sptr);
 				return 0;
 			}
 			if (!_match("-o*motd", parv[1]))
@@ -957,67 +742,50 @@ CMD_FUNC(m_rehash)
 */
 CMD_FUNC(m_restart)
 {
-	char *reason = NULL;
+char *reason = parv[1];
+
 	/* Check permissions */
-        if (MyClient(sptr) && !OPCanRestart(sptr))
-        {
-                sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-                return 0;
-        }
-        if (!MyClient(sptr) && !IsNetAdmin(sptr)
-            && !IsULine(sptr))
-        {
-                sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-                return 0;
-        }
+	if (MyClient(sptr) && !OPCanRestart(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		return 0;
+	}
+	if (!MyClient(sptr) && !IsNetAdmin(sptr) && !IsULine(sptr))
+	{
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		return 0;
+	}
+
+#ifdef CHROOTDIR
+	sendnotice(sptr, "/RESTART does not work on chrooted servers");
+	return 0;
+#endif
 
 	/* Syntax: /restart */
 	if (parc == 1)
 	{
 		if (conf_drpass)
 		{
-			sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name,
-                            parv[0], "RESTART");
-                        return 0;
+			sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0], "RESTART");
+			return 0;
 		}
-	}
-	else if (parc == 2)
+	} else
+	if (parc >= 2)
 	{
-		/* Syntax: /restart <pass> */
+		/* Syntax: /restart <pass> [reason] */
 		if (conf_drpass)
 		{
 			int ret;
 			ret = Auth_Check(cptr, conf_drpass->restartauth, parv[1]);
 			if (ret == -1)
 			{
-				sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name,
-					   parv[0]);
+				sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name, parv[0]);
 				return 0;
 			}
 			if (ret < 1)
 				return 0;
+			reason = parv[2];
 		}
-		/* Syntax: /rehash <reason> */
-		else 
-			reason = parv[1];
-	}
-	else if (parc > 2)
-	{
-		/* Syntax: /restart <pass> <reason> */
-		if (conf_drpass)
-		{
-			int ret;
-			ret = Auth_Check(cptr, conf_drpass->restartauth, parv[1]);
-			if (ret == -1)
-			{
-				sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name,
-					   parv[0]);
-				return 0;
-			}
-			if (ret < 1)
-				return 0;
-		}
-		reason = parv[2];
 	}
 	sendto_ops("Server is Restarting by request of %s", parv[0]);
 	server_reboot(reason ? reason : "No reason");

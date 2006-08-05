@@ -260,7 +260,7 @@ static char *replies[] = {
 /* 224    RPL_STATSTLINE */ ":%s 224 %s T %s %s %s",
 /* 225    RPL_STATSELINE */ ":%s 225 %s e %s",
 /* 226    RPL_STATSNLINE */ ":%s 226 %s n %s %s",
-/* 227    RPL_STATSVLINE */ ":%s 227 %s V %s %s %s",
+/* 227    RPL_STATSVLINE */ ":%s 227 %s v %s %s %s",
 /* 228    RPL_STATSBANVER */ ":%s 228 %s %s %s",
 /* 229    RPL_STATSSPAMF */  ":%s 229 %s %c %s %s %li %li %li %s %s :%s",
 /* 230    RPL_STATSEXCEPTTKL */ ":%s 230 %s %c %s",
@@ -715,7 +715,7 @@ static char *replies[] = {
 /* 656 */ NULL,
 /* 657 */ NULL,
 /* 658 */ NULL,
-/* 659 */ NULL,
+/* 659 RPL_SPAMCMDFWD */ ":%s 659 %s %s :Command processed, but a copy has been sent to ircops for evaluation (anti-spam) purposes. [%s]",
 /* 660 */ NULL, /* kineircd */
 /* 661 */ NULL, /* kineircd */
 /* 662 */ NULL, /* kineircd */

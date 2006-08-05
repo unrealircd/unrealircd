@@ -24,7 +24,6 @@ static char sccsid[] = "@(#)s_auth.c	1.18 4/18/94 (C) 1992 Darren Reed";
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
-#include "res.h"
 #include "numeric.h"
 #include "version.h"
 #ifndef _WIN32
@@ -41,6 +40,7 @@ static char sccsid[] = "@(#)s_auth.c	1.18 4/18/94 (C) 1992 Darren Reed";
 #include "sock.h"		/* If FD_ZERO isn't define up to this point,  */
 			/* define it (BSD4.2 needs this) */
 #include "h.h"
+#include "res.h"
 #include "proto.h"
 #include <string.h>
 
@@ -103,6 +103,7 @@ void start_auth(aClient *cptr)
 	set_non_blocking(cptr->authfd, cptr);
 
 	/* Bind to the IP the user got in */
+	memset(&sock, 0, sizeof(sock));
 	len = sizeof(us);
 	if (!getsockname(cptr->fd, (struct SOCKADDR *)&us, &len))
 	{

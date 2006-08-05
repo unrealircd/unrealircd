@@ -303,8 +303,6 @@ extern int m_error();
 extern int m_dns();
 extern int m_info(), m_summon();
 extern int m_users(), m_version();
-extern int m_names();
-extern int m_service();
 extern int m_dalinfo();
 extern int m_credits();
 extern int m_license();

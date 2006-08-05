@@ -81,6 +81,7 @@ struct zConfiguration {
 	unsigned use_ban_version:1;
 	unsigned mkpasswd_for_everyone:1;
 	unsigned allow_part_if_shunned:1;
+	unsigned check_target_nick_bans:1;
 	unsigned use_egd;
 	long host_timeout;
 	int  host_retries;
@@ -145,6 +146,11 @@ struct zConfiguration {
 	char spamfilter_vchan_deny;
 	SpamExcept *spamexcept;
 	char *spamexcept_line;
+	int maxbans;
+	int maxbanlength;
+	int timesynch_enabled;
+	int timesynch_timeout;
+	char *timesynch_server;
 	aNetwork network;
 };
 
@@ -246,8 +252,17 @@ extern MODVAR aConfiguration iConf;
 #define SPAMFILTER_VIRUSCHAN	iConf.spamfilter_virus_help_channel
 #define SPAMFILTER_VIRUSCHANDENY	iConf.spamfilter_vchan_deny
 #define SPAMFILTER_EXCEPT		iConf.spamexcept_line
+#define CHECK_TARGET_NICK_BANS	iConf.check_target_nick_bans
 
-/* Used for duplicate checking */
+#define MAXBANS		iConf.maxbans
+#define MAXBANLENGTH	iConf.maxbanlength
+
+#define TIMESYNCH	iConf.timesynch_enabled
+#define TIMESYNCH_TIMEOUT	iConf.timesynch_timeout
+#define TIMESYNCH_SERVER	iConf.timesynch_server
+
+
+/* Used for "is present?" and duplicate checking */
 struct SetCheck {
 	unsigned has_show_opermotd:1;
 	unsigned has_hide_ulines:1;
@@ -277,6 +292,7 @@ struct SetCheck {
 	unsigned has_snomask_on_oper:1;
 	unsigned has_auto_join:1;
 	unsigned has_oper_auto_join:1;
+	unsigned has_check_target_nick_bans:1;
 	unsigned has_oper_only_stats:1;
 	unsigned has_maxchannelsperuser:1;
 	unsigned has_maxdccallow:1;
@@ -307,6 +323,8 @@ struct SetCheck {
 	unsigned has_ident_read_timeout:1;
 	unsigned has_default_bantime:1;
 	unsigned has_who_limit:1;
+	unsigned has_maxbans:1;
+	unsigned has_maxbanlength:1;
 	unsigned has_silence_limit:1;
 #ifdef NEWCHFLOODPROT
 	unsigned has_modef_default_unsettime:1;
@@ -343,6 +361,9 @@ struct SetCheck {
 	unsigned has_options_show_connect_info:1;
 	unsigned has_options_mkpasswd_for_everyone:1;
 	unsigned has_options_allow_part_if_shunned:1;
+	int cgiirc_type; /* cheat :( */
+	unsigned has_cgiirc_hosts:1;
+	unsigned has_cgiirc_webpass:1;
 };
 
 

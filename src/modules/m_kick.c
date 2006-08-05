@@ -179,6 +179,8 @@ CMD_FUNC(m_kick)
 				{
 					if (!op_can_override(sptr))
 					{
+						if (!MyClient(sptr))
+							goto attack; /* lag? yes.. kick crossing +Q... allow */
 						sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND),
 							   me.name, sptr->name, "KICK",
 							   "channel is +Q");
@@ -186,6 +188,9 @@ CMD_FUNC(m_kick)
 					}
 					sendto_snomask(SNO_EYES,
 						"*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
+						sptr->name, sptr->user->username, sptr->user->realhost,
+						chptr->chname, who->name, comment);
+					ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) KICK %s %s (%s)",
 						sptr->name, sptr->user->username, sptr->user->realhost,
 						chptr->chname, who->name, comment);
 					goto attack; /* No reason to continue.. */
@@ -219,6 +224,8 @@ CMD_FUNC(m_kick)
 				/* victim is +a or +q, we are not +q */
 				if ((who_flags & (CHFL_CHANOWNER|CHFL_CHANPROT) || IsServices(who))
 					 && !(sptr_flags & CHFL_CHANOWNER)) {
+					if (sptr == who)
+						goto attack; /* kicking self == ok */
 					if (op_can_override(sptr)) /* (and f*ck local ops) */
 					{	/* IRCop kicking owner/prot */
 						sendto_snomask(SNO_EYES,

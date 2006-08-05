@@ -34,11 +34,11 @@ FROMDOS=/home/cmunk/bin/4dos
 #
 
 #XCFLAGS=-O -g -export-dynamic
-IRCDLIBS=@IRCDLIBS@ @TRELIBS@
+IRCDLIBS=@IRCDLIBS@ @TRELIBS@ @CARESLIBS@
 CRYPTOLIB=@CRYPTOLIB@
 OPENSSLINCLUDES=
 
-XCFLAGS=-I@TREINCDIR@ @CFLAGS@
+XCFLAGS=-I@TREINCDIR@ -I@CARESINCDIR@ @CARESLIBDIR@ @CFLAGS@
 #
 # use the following on MIPS:
 #CFLAGS= -systype bsd43 -DSYSTYPE_BSD43 -I$(INCLUDEDIR)
@@ -131,7 +131,8 @@ MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 		'RM=${RM}' 'CP=${CP}' 'TOUCH=${TOUCH}' \
 		'SHELL=${SHELL}' 'STRTOUL=${STRTOUL}' \
 		'CRYPTOLIB=${CRYPTOLIB}' \
-		'CRYPTOINCLUDES=${CRYPTOINCLUDES}' 'URL=${URL}'
+		'CRYPTOINCLUDES=${CRYPTOINCLUDES}' \
+		'URL=${URL}'
 
 custommodule:
 	cd src; ${MAKE} ${MAKEARGS} MODULEFILE=${MODULEFILE} 'EXLIBS=${EXLIBS}' custommodule
@@ -218,6 +219,9 @@ install: all
 	$(INSTALL) -m 0700 unreal $(IRCDDIR)
 	$(INSTALL) -m 0700 -d $(IRCDDIR)/modules
 	$(INSTALL) -m 0700 src/modules/*.so $(IRCDDIR)/modules
+	-@if [ ! -f "$(IRCDDIR)/curl-ca-bundle.crt" ] ; then \
+		$(INSTALL) -m 0700 curl-ca-bundle.crt $(IRCDDIR) ; \
+	fi
 
 pem:	src/ssl.cnf
 	@echo "Generating certificate request .. "

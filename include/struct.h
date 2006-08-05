@@ -109,6 +109,7 @@ typedef struct _configitem_allow_dcc ConfigItem_allow_dcc;
 typedef struct _configitem_vhost ConfigItem_vhost;
 typedef struct _configitem_except ConfigItem_except;
 typedef struct _configitem_link	ConfigItem_link;
+typedef struct _configitem_cgiirc ConfigItem_cgiirc;
 typedef struct _configitem_ban ConfigItem_ban;
 typedef struct _configitem_badword ConfigItem_badword;
 typedef struct _configitem_deny_dcc ConfigItem_deny_dcc;
@@ -177,8 +178,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	BUFSIZE		512	/* WARNING: *DONT* CHANGE THIS!!!! */
 #define	MAXRECIPIENTS 	20
 #define	MAXKILLS	20
-#define	MAXBANS		60
-#define	MAXBANLENGTH	1024
 #define	MAXSILELENGTH	NICKLEN+USERLEN+HOSTLEN+10
 #define UMODETABLESZ (sizeof(long) * 8)
 /*
@@ -290,6 +289,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPT_NOT_TKLEXT	0x8000
 #define OPT_NICKIP	0x10000
 #define OPT_NOT_NICKIP  0x20000
+#define OPT_CLK	0x10000
+#define OPT_NOT_CLK  0x20000
 
 /* client->flags (32 bits): 28 used, 4 free */
 #define	FLAGS_PINGSENT   0x0001	/* Unreplied ping sent */
@@ -307,7 +308,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	FLAGS_GOTID      0x1000	/* successful ident lookup achieved */
 #define	FLAGS_DOID       0x2000	/* I-lines say must use ident return */
 #define	FLAGS_NONL       0x4000	/* No \n in buffer */
-#define FLAGS_TS8        0x8000	/* Why do you want to know? */
+#define FLAGS_CGIIRC     0x8000 /* CGI IRC host: flag set = ip/host data has been filled in already */
 #define FLAGS_ULINE      0x10000	/* User/server is considered U-lined */
 #define FLAGS_SQUIT      0x20000	/* Server has been /squit by an oper */
 #define FLAGS_PROTOCTL   0x40000	/* Received a PROTOCTL message */
@@ -358,8 +359,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define PROTO_SJB64		0x0800
 #define PROTO_TKLEXT	0x1000	/* TKL extension: 10 parameters instead of 8 (3.2RC2) */
 #define PROTO_NICKIP	0x2000  /* Send IP addresses in the NICK command */
-
-/* note: client->proto is currently a 'short' (max is 0x8000) */
+#define PROTO_NAMESX	0x4000  /* Send all rights in NAMES output */
+#define PROTO_CLK		0x8000	/* Send cloaked host in the NICK command (regardless of +x/-x) */
 
 /*
  * flags macros.
@@ -405,14 +406,14 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define IsOutgoing(x)		((x)->flags & FLAGS_OUTGOING)
 #define GotNetInfo(x) 		((x)->flags & FLAGS_NETINFO)
 #define SetNetInfo(x)		((x)->flags |= FLAGS_NETINFO)
+#define IsCGIIRC(x)			((x)->flags & FLAGS_CGIIRC)
 
 #define IsShunned(x)		((x)->flags & FLAGS_SHUNNED)
 #define SetShunned(x)		((x)->flags |= FLAGS_SHUNNED)
 #define ClearShunned(x)		((x)->flags &= ~FLAGS_SHUNNED)
 #define IsVirus(x)			((x)->flags & FLAGS_VIRUS)
 #define SetVirus(x)			((x)->flags |= FLAGS_VIRUS)
-#define ClearVirus(x)		((x)->flags |= FLAGS_VIRUS)
-
+#define ClearVirus(x)		((x)->flags &= ~FLAGS_VIRUS)
 #ifdef USE_SSL
 #define IsSecure(x)		((x)->flags & FLAGS_SSL)
 #else
@@ -431,6 +432,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SetHybNotice(x)         ((x)->flags |= FLAGS_HYBNOTICE)
 #define ClearHybNotice(x)	((x)->flags &= ~FLAGS_HYBNOTICE)
 #define IsHidden(x)             ((x)->umodes & UMODE_HIDE)
+#define IsSetHost(x)			((x)->umodes & UMODE_SETHOST)
 #define IsHideOper(x)		((x)->umodes & UMODE_HIDEOPER)
 #ifdef USE_SSL
 #define IsSSL(x)		IsSecure(x)
@@ -462,6 +464,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	SetAccess(x)		((x)->flags |= FLAGS_CHKACCESS); Debug((DEBUG_DEBUG, "SetAccess(%s)", (x)->name))
 #define SetBlocked(x)		((x)->flags |= FLAGS_BLOCKED)
 #define SetOutgoing(x)		do { x->flags |= FLAGS_OUTGOING; } while(0)
+#define SetCGIIRC(x)		do { x->flags |= FLAGS_CGIIRC; } while(0)
 #define	DoingAuth(x)		((x)->flags & FLAGS_AUTH)
 #define	NoNewLine(x)		((x)->flags & FLAGS_NONL)
 #define IsDCCNotice(x)		((x)->flags & FLAGS_DCCNOTICE)
@@ -517,6 +520,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SupportSJ3(x)		(CHECKPROTO(x, PROTO_SJ3))
 #define SupportVHP(x)		(CHECKPROTO(x, PROTO_VHP))
 #define SupportTKLEXT(x)	(CHECKPROTO(x, PROTO_TKLEXT))
+#define SupportNAMESX(x)	(CHECKPROTO(x, PROTO_NAMESX))
+#define SupportCLK(x)		(CHECKPROTO(x, PROTO_CLK))
 
 #define SetSJOIN(x)		((x)->proto |= PROTO_SJOIN)
 #define SetNoQuit(x)		((x)->proto |= PROTO_NOQUIT)
@@ -529,6 +534,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SetSJ3(x)		((x)->proto |= PROTO_SJ3)
 #define SetVHP(x)		((x)->proto |= PROTO_VHP)
 #define SetTKLEXT(x)	((x)->proto |= PROTO_TKLEXT)
+#define SetNAMESX(x)	((x)->proto |= PROTO_NAMESX)
+#define SetCLK(x)		((x)->proto |= PROTO_CLK)
 
 #define ClearSJOIN(x)		((x)->proto &= ~PROTO_SJOIN)
 #define ClearNoQuit(x)		((x)->proto &= ~PROTO_NOQUIT)
@@ -606,6 +613,11 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPIsNetAdmin(x) ((x)->oflag & OFLAG_NETADMIN)
 #define OPIsCoAdmin(x)	((x)->oflag & OFLAG_COADMIN)
 #define OPIsWhois(x)    ((x)->oflag & OFLAG_WHOIS)
+#ifdef SHOW_SECRET
+#define OPCanSeeSecret(x) IsAnOper(x)
+#else
+#define OPCanSeeSecret(x) IsNetAdmin(x)
+#endif
 
 #define OPSetRehash(x)	((x)->oflag |= OFLAG_REHASH)
 #define OPSetDie(x)	((x)->oflag |= OFLAG_DIE)
@@ -741,6 +753,7 @@ struct User {
 	unsigned short joined;		/* number of channels joined */
 	char username[USERLEN + 1];
 	char realhost[HOSTLEN + 1];
+	char cloakedhost[HOSTLEN + 1]; /* cloaked host (masked host for caching). NOT NECESSARILY THE SAME AS virthost. */
 	char *virthost;
 	char *server;
 	char *swhois;		/* special whois thing */
@@ -817,6 +830,9 @@ struct Server {
 #define SPAMF_USER			0x0080 /* u */
 #define SPAMF_AWAY			0x0100 /* a */
 #define SPAMF_TOPIC			0x0200 /* t */
+
+/* Other flags only for function calls: */
+#define SPAMFLAG_NOWARN		0x0001
 
 struct _spamfilter {
 	unsigned short action; /* see BAN_ACT* */
@@ -947,7 +963,7 @@ struct Client {
 #ifdef NOSPOOF
 	u_int32_t nospoof;	/* Anti-spoofing random number */
 #endif
-	short proto;		/* ProtoCtl options */
+	int proto;		/* ProtoCtl options */
 	long sendM;		/* Statistics: protocol messages send */
 	long sendK;		/* Statistics: total k-bytes send */
 	long receiveM;		/* Statistics: protocol messages received */
@@ -1063,6 +1079,7 @@ struct _configflag_tld
 #define BAN_ACT_BLOCK		8
 #define BAN_ACT_DCCBLOCK	9
 #define BAN_ACT_VIRUSCHAN	10
+#define BAN_ACT_WARN		11
 
 
 #define CRULE_ALL		0
@@ -1089,6 +1106,8 @@ struct _configitem_admin {
 	char	   *line; 
 };
 
+#define CLASS_OPT_NOFAKELAG		0x1
+
 struct _configitem_class {
 	ConfigItem *prev, *next;
 	ConfigFlag flag;
@@ -1097,6 +1116,7 @@ struct _configitem_class {
 	int xrefcount; /* EXTRA reference count, 'clients' also acts as a reference count but
 	                * link blocks also refer to classes so a 2nd ref. count was needed.
 	                */
+	unsigned int options;
 };
 
 struct _configflag_allow {
@@ -1198,6 +1218,19 @@ struct _configitem_link {
 #endif
 };
 
+typedef enum {
+	CGIIRC_PASS=1, CGIIRC_WEBIRC=2
+} CGIIRCType;
+
+struct _configitem_cgiirc {
+	ConfigItem  *prev, *next;
+	ConfigFlag  flag;
+	CGIIRCType type;
+	char *username;
+	char *hostname;
+	anAuthStruct *auth;
+};
+
 struct _configitem_except {
 	ConfigItem      *prev, *next;
 	ConfigFlag_except      flag;
@@ -1212,6 +1245,13 @@ struct _configitem_ban {
 	char			*mask, *reason;
 	struct irc_netmask	*netmask;
 	unsigned short action;
+};
+
+typedef struct _iplist IPList;
+struct _iplist {
+	IPList *prev, *next;
+	char *mask;
+/*	struct irc_netmask  *netmask; */
 };
 
 #ifdef FAST_BADWORD_REPLACE
@@ -1298,7 +1338,7 @@ struct _configitem_unknown_ext {
 
 
 typedef enum { 
-	ALIAS_SERVICES=1, ALIAS_STATS, ALIAS_NORMAL, ALIAS_COMMAND, ALIAS_CHANNEL
+	ALIAS_SERVICES=1, ALIAS_STATS, ALIAS_NORMAL, ALIAS_COMMAND, ALIAS_CHANNEL, ALIAS_REAL
 } AliasType;
 
 struct _configitem_alias {
@@ -1307,6 +1347,7 @@ struct _configitem_alias {
 	ConfigItem_alias_format *format;
 	char *alias, *nick;
 	AliasType type;
+	unsigned int spamfilter:1;
 };
 
 struct _configitem_alias_format {

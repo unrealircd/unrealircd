@@ -34,7 +34,10 @@
 #include <string.h>
 #ifdef _WIN32
 #include <io.h>
+#else
+#include <sys/socket.h>
 #endif
+#include "inet.h"
 #include <fcntl.h>
 #include "h.h"
 #ifdef STRIPBADWORDS
@@ -45,9 +48,14 @@
 #endif
 
 DLLFUNC int m_pass(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+DLLFUNC int m_webirc(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+
+extern MODVAR char zlinebuf[BUFSIZE];
 
 #define MSG_PASS 	"PASS"	
 #define TOK_PASS 	"<"	
+
+#define MSG_WEBIRC	"WEBIRC"
 
 ModuleHeader MOD_HEADER(m_pass)
   = {
@@ -61,6 +69,7 @@ ModuleHeader MOD_HEADER(m_pass)
 DLLFUNC int MOD_INIT(m_pass)(ModuleInfo *modinfo)
 {
 	add_CommandX(MSG_PASS, TOK_PASS, m_pass, 1, M_UNREGISTERED|M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_WEBIRC, NULL, m_webirc, MAXPARA, M_UNREGISTERED);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -80,10 +89,140 @@ DLLFUNC int MOD_UNLOAD(m_pass)(int module_unload)
 	return MOD_SUCCESS;
 }
 
+/** Handles zlines/gzlines/throttling/unknown connections */
+static int my_check_banned(aClient *cptr)
+{
+int i, j;
+aTKline *tk;
+ConfigItem_ban *bconf;
+
+	j = 1;
+	for (i = LastSlot; i >= 0; i--)
+	{
+		if (local[i] && IsUnknown(local[i]) &&
+#ifndef INET6
+			local[i]->ip.S_ADDR == cptr->ip.S_ADDR)
+#else
+			!bcmp(local[i]->ip.S_ADDR, cptr->ip.S_ADDR, sizeof(cptr->ip.S_ADDR)))
+#endif
+		{
+			j++;
+			if (j > MAXUNKNOWNCONNECTIONSPERIP)
+				return exit_client(cptr, cptr, &me, "Too many unknown connections from your IP");
+		}
+	}
+
+	if ((bconf = Find_ban(cptr, Inet_ia2p(&cptr->ip), CONF_BAN_IP)))
+	{
+		ircsprintf(zlinebuf,
+			"You are not welcome on this server: %s. Email %s for more information.",
+			bconf->reason ? bconf->reason : "no reason", KLINE_ADDRESS);
+		return exit_client(cptr, cptr, &me, zlinebuf);
+	}
+	else if (find_tkline_match_zap_ex(cptr, &tk) != -1)
+	{
+		ircsprintf(zlinebuf, "Z:Lined (%s)", tk->reason);
+		return exit_client(cptr, cptr, &me, zlinebuf);
+	}
+#ifdef THROTTLING
+	else
+	{
+		int val;
+		if (!(val = throttle_can_connect(cptr, &cptr->ip)))
+		{
+			ircsprintf(zlinebuf, "Throttled: Reconnecting too fast - Email %s for more information.",
+					KLINE_ADDRESS);
+			return exit_client(cptr, cptr, &me, zlinebuf);
+		}
+		else if (val == 1)
+			add_throttling_bucket(&cptr->ip);
+	}
+#endif
+	return 0;
+}
+
+#define CGIIRC_STRING     "CGIIRC_"
+#define CGIIRC_STRINGLEN  (sizeof(CGIIRC_STRING)-1)
+
+/* Does the CGI:IRC host spoofing work */
+int docgiirc(aClient *cptr, char *ip, char *host)
+{
+
+	if (IsCGIIRC(cptr))
+		return exit_client(cptr, cptr, &me, "Double CGI:IRC request (already identified)");
+
+	if (host && !strcmp(ip, host))
+		host = NULL; /* host did not resolve, make it NULL */
+
+	/* STEP 1: Update cptr->ip */
+	if (inet_pton(AFINET, ip, &cptr->ip) <= 0)
+		return exit_client(cptr, cptr, &me, "Invalid IP address");
+
+	/* STEP 2: Update GetIP() */
+	if (cptr->user)
+	{
+		/* Kinda unsure if this is actually used.. But maybe if USER, PASS, NICK ? */
+		if (cptr->user->ip_str)
+			MyFree(cptr->user->ip_str);
+		cptr->user->ip_str = strdup(ip);
+	}
+		
+	/* STEP 3: Update cptr->hostp */
+	/* (free old) */
+	if (cptr->hostp)
+	{
+		unreal_free_hostent(cptr->hostp);
+		cptr->hostp = NULL;
+	}
+	/* (create new) */
+	if (host)
+		cptr->hostp = unreal_create_hostent(host, &cptr->ip);
+
+	/* STEP 4: Update sockhost */		
+	strlcpy(cptr->sockhost, ip, sizeof(cptr->sockhost));
+
+	SetCGIIRC(cptr);
+
+	/* Check (g)zlines right now; these are normally checked upon accept(),
+	 * but since we know the IP only now after PASS/WEBIRC, we have to check
+	 * here again...
+	 */
+	return my_check_banned(cptr);
+}
+
+/* WEBIRC <pass> "cgiirc" <hostname> <ip> */
+DLLFUNC int m_webirc(aClient *cptr, aClient *sptr, int parc, char *parv[])
+{
+char *ip, *host, *password;
+size_t ourlen;
+ConfigItem_cgiirc *e;
+
+	if ((parc < 5) || BadPtr(parv[4]))
+	{
+		sendto_one(cptr, err_str(ERR_NEEDMOREPARAMS), me.name, "*", "WEBIRC");
+		return -1;
+	}
+
+	password = parv[1];
+	host = parv[3];
+	ip = parv[4];
+
+	/* Check if allowed host */
+	e = Find_cgiirc(sptr->username, sptr->sockhost, GetIP(sptr), CGIIRC_WEBIRC);
+	if (!e)
+		return exit_client(cptr, sptr, &me, "CGI:IRC -- No access");
+
+	/* Check password */
+	if (Auth_Check(sptr, e->auth, password) == -1)
+		return exit_client(cptr, sptr, &me, "CGI:IRC -- Invalid password");
+
+	/* And do our job.. */
+	return docgiirc(cptr, ip, host);
+}
+
 /***************************************************************************
  * m_pass() - Added Sat, 4 March 1989
  ***************************************************************************/
-
 /*
 ** m_pass
 **	parv[0] = sender prefix
@@ -106,6 +245,30 @@ DLLFUNC CMD_FUNC(m_pass)
 		return 0;
 	}
 
+	if (!strncmp(password, CGIIRC_STRING, CGIIRC_STRINGLEN))
+	{
+		char *ip, *host;
+		ConfigItem_cgiirc *e;
+
+		e = Find_cgiirc(sptr->username, sptr->sockhost, GetIP(sptr), CGIIRC_PASS);
+		if (e)
+		{
+			/* Ok now we got that sorted out, proceed:
+			 * Syntax: CGIIRC_<ip>_<resolvedhostname>
+			 * The <resolvedhostname> has been checked ip->host AND host->ip by CGI:IRC itself
+			 * already so we trust it.
+			 */
+			ip = password + CGIIRC_STRINGLEN;
+			host = strchr(ip, '_');
+			if (!host)
+				return exit_client(cptr, sptr, &me, "Invalid CGI:IRC IP received");
+			*host++ = '\0';
+		
+			return docgiirc(cptr, ip, host);
+		}
+	}
+
+	
 	PassLen = strlen(password);
 	if (cptr->passwd)
 		MyFree(cptr->passwd);

@@ -420,6 +420,7 @@ struct _Module
 	unsigned char errorcode;
 	char *tmp_file;
 	unsigned long mod_sys_version;
+	unsigned int compiler_version;
 };
 /*
  * Symbol table
@@ -635,6 +636,7 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define HOOKTYPE_REMOTE_PART 44
 #define HOOKTYPE_REMOTE_KICK 45
 #define HOOKTYPE_LOCAL_SPAMFILTER 46
+#define HOOKTYPE_SILENCED 47
 
 /* Hook return values */
 #define HOOK_CONTINUE 0
@@ -644,6 +646,7 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 /* Callback types */
 #define CALLBACKTYPE_CLOAK 1
 #define CALLBACKTYPE_CLOAKKEYCSUM 2
+#define CALLBACKTYPE_CLOAK_EX 3
 
 /* Efunction types */
 #define EFUNC_DO_JOIN       				1
@@ -670,6 +673,14 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define EFUNC_M_TKL							22
 #define EFUNC_PLACE_HOST_BAN				23
 #define EFUNC_DOSPAMFILTER					24
+#define EFUNC_DOSPAMFILTER_VIRUSCHAN		25
+#define EFUNC_FIND_TKLINE_MATCH_ZAP_EX		26
+#define EFUNC_SEND_LIST						27
+#define EFUNC_STRIPBADWORDS_CHANNEL			28
+#define EFUNC_STRIPBADWORDS_MESSAGE			29
+#define EFUNC_STRIPBADWORDS_QUIT			30
+#define EFUNC_STRIPCOLORS					31
+#define EFUNC_STRIPCONTROLCODES				32
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000

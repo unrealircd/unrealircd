@@ -80,6 +80,19 @@ DLLFUNC int MOD_UNLOAD(m_topic)(int module_unload)
 	return MOD_SUCCESS;
 }
 
+void topicoverride(aClient *sptr, aChannel *chptr, char *topic)
+{
+	sendto_snomask(SNO_EYES,
+	    "*** OperOverride -- %s (%s@%s) TOPIC %s \'%s\'",
+	    sptr->name, sptr->user->username, sptr->user->realhost,
+	    chptr->chname, topic);
+						
+	/* Logging implementation added by XeRXeS */
+	ircd_log(LOG_OVERRIDE, "OVERRIDE: %s (%s@%s) TOPIC %s \'%s\'",
+		sptr->name, sptr->user->username, sptr->user->realhost,
+		chptr->chname, topic);
+}
+
 /*
 ** m_topic
 **	parv[0] = sender prefix
@@ -94,11 +107,13 @@ DLLFUNC int MOD_UNLOAD(m_topic)(int module_unload)
 */
 DLLFUNC CMD_FUNC(m_topic)
 {
-	aChannel *chptr = NullChn;
-	char *topic = NULL, *name, *tnick = NULL;
-	TS   ttime = 0;
-	int  topiClen = 0;
-	int  nicKlen = 0;
+aChannel *chptr = NullChn;
+char *topic = NULL, *name, *tnick = NULL;
+TS   ttime = 0;
+int  topiClen = 0;
+int  nicKlen = 0;
+int ismember; /* cache: IsMember() */
+long flags = 0; /* cache: membership flags */
 
 	if (parc < 2)
 	{
@@ -123,10 +138,15 @@ DLLFUNC CMD_FUNC(m_topic)
 			    me.name, parv[0], name);
 			return 0;
 		}
+		
+		ismember = IsMember(sptr, chptr); /* CACHE */
+		if (ismember)
+			flags = get_access(sptr, chptr); /* CACHE */
+		
 		if (parc > 2 || SecretChannel(chptr))
 		{
-			if (!IsMember(sptr, chptr) && !IsServer(sptr)
-			    && !IsOper(sptr) && !IsULine(sptr))
+			if (!ismember && !IsServer(sptr)
+			    && !OPCanSeeSecret(sptr) && !IsULine(sptr))
 			{
 				sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
 				    me.name, parv[0], name);
@@ -145,9 +165,9 @@ DLLFUNC CMD_FUNC(m_topic)
 
 		if (!topic)	/* only asking  for topic  */
 		{
-			if ((chptr->mode.mode & MODE_OPERONLY && !IsAnOper(sptr) && !IsMember(sptr, chptr)) ||
-			    (chptr->mode.mode & MODE_ADMONLY && !IsAdmin(sptr) && !IsMember(sptr, chptr)) ||
-			    (is_banned(sptr,chptr,BANCHK_JOIN) && !IsAnOper(sptr) && !IsMember(sptr, chptr))) {
+			if ((chptr->mode.mode & MODE_OPERONLY && !IsAnOper(sptr) && !ismember) ||
+			    (chptr->mode.mode & MODE_ADMONLY && !IsAdmin(sptr) && !ismember) ||
+			    (is_banned(sptr,chptr,BANCHK_JOIN) && !IsAnOper(sptr) && !ismember)) {
 				sendto_one(sptr, err_str(ERR_NOTONCHANNEL), me.name, parv[0], name);
 				return 0;
 			}
@@ -229,26 +249,45 @@ DLLFUNC CMD_FUNC(m_topic)
 #ifndef NO_OPEROVERRIDE
 					}
 					else
-						sendto_snomask(SNO_EYES,
-						    "*** OperOverride -- %s (%s@%s) TOPIC %s \'%s\'",
-						    sptr->name, sptr->user->username, sptr->user->realhost,
-						    chptr->chname, topic);
-						
-						/* Logging implementation added by XeRXeS */
-						ircd_log(LOG_OVERRIDE, "OVERRIDE: %s (%s@%s) TOPIC %s \'%s\'",
-							sptr->name, sptr->user->username, sptr->user->realhost,
-							chptr->chname, topic);
-
+						topicoverride(sptr, chptr, topic);
 #endif
 				}
-			}				
+			} else
+			if (MyClient(sptr) && !is_chan_op(sptr, chptr) && !is_halfop(sptr, chptr) && is_banned(sptr, chptr, BANCHK_MSG))
+			{
+				char buf[512];
+				
+				if (IsOper(sptr) && OPCanOverride(sptr))
+				{
+					topicoverride(sptr, chptr, topic);
+				} else {
+					ircsprintf(buf, "You cannot change the topic on %s while being banned", chptr->chname);
+					sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.name, parv[0], "TOPIC",  buf);
+					return -1;
+				}
+			} else
+			if (MyClient(sptr) && ((flags&CHFL_OVERLAP) == 0) && (chptr->mode.mode & MODE_MODERATED))
+			{
+				char buf[512];
+				
+				if (IsOper(sptr) && OPCanOverride(sptr))
+				{
+					topicoverride(sptr, chptr, topic);
+				} else {
+					/* With +m and -t, only voice and higher may change the topic */
+					ircsprintf(buf, "Voice (+v) or higher is required in order to change the topic on %s (channel is +m)", chptr->chname);
+					sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.name, parv[0], "TOPIC",  buf);
+					return -1;
+				}
+			}
+			
 			/* ready to set... */
 			if (MyClient(sptr))
 			{
 				Hook *tmphook;
 				int n;
 				
-				if ((n = dospamfilter(sptr, topic, SPAMF_TOPIC, chptr->chname)) < 0)
+				if ((n = dospamfilter(sptr, topic, SPAMF_TOPIC, chptr->chname, 0, NULL)) < 0)
 					return n;
 
 				for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_TOPIC]; tmphook; tmphook = tmphook->next) {

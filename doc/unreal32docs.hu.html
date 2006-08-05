@@ -12,7 +12,7 @@
  .block_old { font-size: 14; }
  .set { font-weight: bold; }
  .desc { margin-left: 15px; }
- pre { font: "times new roman"; font-style: normal;}
+ pre { font: "times new roman"; font-style: normal; background-color: #eeeeee;}
 </style>
 </head>
 
@@ -24,22 +24,23 @@
 <a href="unreal32docs.es.html">Spanish</a> | 
 Hungarian | 
 <a href="unreal32docs.fr.html">French</a> | 
-<a href="unreal32docs.gr.html">Greek</a>
+<a href="unreal32docs.gr.html">Greek</a> | 
+<a href="unreal32docs.nl.html">Dutch</a> | 
+<a href="unreal32docs.ru.html">Russian</a> | 
+<a href="unreal32docs.tk.html">Turkish</a>
 <br><br>
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com/">http://www.unrealircd.com</a></font><br>
-  <font size="4">Verzió: 3.2.3</font><br>
-  <b>Utolsó dokumentáció módosítás:</b> 2005-03-13</div>
+  <font size="4">Verzió: 3.2.5</font><br>
+  <b>Utolsó dokumentáció frissítés:</b> 2006-06-15</div>
 <br>
   <b>Fõ fejlesztõk:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Munkatársak:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Dokumentáció:</b> CKnight^ / Syzop<br>
   <b>Magyar fordítás:</b> <a href="mailto:angrywolf@flashmail.com">AngryWolf</a><br>
-<p>Az UnrealIRCd 3.2 egyre nagyobb összetettsége miatt átváltottunk egy könnyebben
-  kezelhetõ, teljesebb körû dokumentációkészletre. Ezen leírás megtekintéséhez
-  a lent felsorolt kompatibilis böngészõk egyikére van szükséged. Friss dokumentációkat
-  találsz a <a href="http://www.vulnscan.org/UnrealIrcd/unreal32docs.html">http://www.vulnscan.org/UnrealIrcd/unreal32docs.html</a>
-  címen, és egy GYIK-et a <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">http://www.vulnscan.org/UnrealIrcd/faq/</a> oldalon.
+<p>E dokumentáció megtekintéséhez az alábbiakban felsorolt kompatibilis böngészõk egyikére van szükséged. Friss dokumentációkat
+  találsz a <a href="http://www.vulnscan.org/UnrealIRCd/unreal32docs.html">http://www.vulnscan.org/UnrealIRCd/unreal32docs.html</a>
+  címen, és egy GYIK-et a <a href="http://www.vulnscan.org/UnrealIRCd/faq/" TARGET="_blank">http://www.vulnscan.org/UnrealIRCd/faq/</a> oldalon.
 </p>
 <p><b>Kompatibilis böngészõk: </b><br>
 <ul>
@@ -55,7 +56,7 @@ Hungarian |
   ---1.1. <a href="#notesonolder">Megjegyzések a 3.1.x-rõl 3.2-re frissítésrõl és a verziók keverésérõl</a><br>
   ---1.2. <a href="#notesonupgrade">Megjegyzések a 3.2-es verziók közötti frissítésrõl</a><br>
   2. <a href="#installation">Telepítés</a><br>
-  3. <a href="#features">Featúrák</a><br>
+  3. <a href="#features">Jellegzetességek</a><br>
   -- 3.1. <a href="#feature_cloaking">Álcázás</a><br>
   -- 3.2. <a href="#feature_modules">Modulok</a><br>
   -- 3.3. <a href="#feature_snomasks">Snomaszkok</a><br>
@@ -67,12 +68,14 @@ Hungarian |
   -- 3.9. <a href="#feature_ipv6">IPv6</a><br>
   -- 3.10. <a href="#feature_ziplinks">Zip linkek</a><br>
   -- 3.11. <a href="#feature_dyndns">Dinamikus DNS-sel/IP-vel linkelések támogatása</a><br>
-  -- 3.12. <a href="#feature_antiflood">Árasztásvédelmi featúrák</a><br>
+  -- 3.12. <a href="#feature_antiflood">Árasztásvédelmi lehetõségek</a><br>
   -- 3.13. <a href="#feature_bantypes">Ban típusok</a><br>
   -- 3.14. <a href="#feature_spamfilter">A spamszûrõ</a><br>
   -- 3.15. <a href="#feature_cidr">CIDR</a><br>
   -- 3.16. <a href="#feature_nickchars">Karakterkészletek nicknevekhez</a><br>
-  -- 3.17. <a href="#feature_other">További featúrák</a><br>
+  -- 3.17. <a href="#feature_cgiirc">CGI:IRC támogatás</a><br>
+  -- 3.18. <a href="#feature_timesync">Idõszinkronizáció</a><br>
+  -- 3.19. <a href="#feature_other">További jellegzetességek</a><br>
   4. <a href="#configuringyourunrealircdconf">Az unrealircd.conf fájlod
   beállítása</a><br>
   ---4.1. <a href="#configurationfileexplained">A konfigurációs formátumról</a><br>
@@ -110,7 +113,8 @@ Hungarian |
   ---4.33. <a href="#helpblock">Help blokk</a><br>
   ---4.34. <a href="#officialchannels">Official channels blokk</a><br>
   ---4.35. <a href="#spamfilter">Spamfilter blokk</a><br>
-  ---4.36. <a href="#setblock">Set blokk -=- (networks/unrealircd.conf)</a><br>
+  ---4.36. <a href="#cgiirc">Cgiirc blokk</a><br> 
+  ---4.37. <a href="#setblock">Set blokk -=- (networks/unrealircd.conf)</a><br>
   5. <a href="#addtlfiles">További fájlok</a><br>
   6. <a href="#userchannelmodes">Felhasználói és csatornamódok</a><br>
   7. <a href="#useropercommands">Felhasználói és operátori parancsok</a><br>
@@ -124,7 +128,7 @@ Hungarian |
   ---8.7. <a href="#secinformation">Információközlés</a><br>
   ---8.8. <a href="#secantiexploit">Sebezhetõségek elleni védelem</a><br>
   ---8.9. <a href="#secsummary">Összegzés</a><br>
-  9. <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">Gyakran Ismételt Kérdések (FAQ)</a><br>
+  9. <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">Gyakran Ismételt Kérdések (FAQ)</a><br>
   A. <a href="#regex">Reguláris kifejezések</a><br>
   ---A.1. <a href="#regexlit">Konstansok</a><br>
   ---A.2. <a href="#regexdot">A pont operátor</a><br>
@@ -143,9 +147,9 @@ Hungarian |
   terjesztése szigorúan tilos az UnrealIRCd Fejlesztõi Csapat írásos engedélye nélkül.
   Ez a dokumentum másolható, nyomtatható, sokszorosítható és közzétehetõ
   tetszés szerinti alkalommal, feltéve, hogy azt az UnrealIRCD-hez használod, és
-  nem módosítod. &#8211; Copyright UnrealIRCd Fejlesztõi Csapat 2002-2005</p>
+  nem módosítod. &#8211; Copyright UnrealIRCd Fejlesztõi Csapat 2002-2006</p>
 <p>Kérlek, olvasd el ezt a kézikönyvet, mielõtt segítséget kérsz, és BIZTOSAN bele akarsz nézni a
-   <a href="http://www.vulnscan.org/UnrealIrcd/faq/" target="_blank">GYIK</a>-ba is, mivel a kérdéseid/problémáid 80%-a meg van válaszolva benne. Ha az nem
+   <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">GYIK</a>-ba is, mivel a kérdéseid/problémáid 80%-a meg van válaszolva benne. Ha az nem
    oldotta meg a problémádat, segítséget kérhetsz az irc.ircsystems.net-en (6667-es port) az #unreal-support csatornán. (Megjegyzendõ,
    hogy MEGKÖVETELJÜK a dokumentáció és a GYIK elolvasását, és csak az UnrealIRCd-vel kapcsolatban segítünk, nem a Servicessel!).
    Ha találsz egy valódi hibát (például egy ütközést), jelentsd a
@@ -156,7 +160,7 @@ Hungarian |
 <div class="desc">
 <p>Abban az esetben, ha az Unreal3.1.x-rõl Unreal3.2-re frissítesz, észre fogod venni, hogy az egész konfigurációs
    fájl megváltozott, és talán nehéznek látod elõször, de ha egyszer átváltottál, sokkal jobbnak fogod találni!</p>
-<p>Ezenkívül ne felejtsd el elolvasni a featúrákról szóló 3. részt, mert bár néhányukról tudsz, amelyek az Unreal3.1.x-ben is megtalálhatóak, de van számos új featúra is!</p>
+<p>Ezenkívül ne felejtsd el elolvasni a jellegzetességekrõl szóló 3. részt, mert bár néhányukról tudsz, amelyek az Unreal3.1.x-ben is megtalálhatóak, de van számos újdonság is!</p>
 <p>A legjobb, ha nem keversz/linkelsz 3.1.x-et 3.2-vel, de ha nagyon akarod, legaláb egy 3.1.4-es vagy 3.1.5.1-ös erõsen ajánlott.</p></div>
 
 <p><font size="+2"><b>1.2 &#8211; Megjegyzések a 3.2-es verziók közötti frissítésrõl</b></font><a name="notesonupgrade"></a><br>
@@ -183,32 +187,35 @@ Windows:<br>
 <ul>
 <li><b>*NIX verziók:</b>
 <ul>
-<li>Linux 2.2.x
-<li>Linux 2.4.x
-<li>FreeBSD 4.6-STABLE
-<li>FreeBSD 4.5-STABLE
-<li>Solaris 2.x
+<li>Linux (2.2.*, 2.4.*, 2.6.*)
+<li>FreeBSD (4.*, 5.*)
+<li>NetBSD (2.*)
+<li>OpenBSD (3.7, 3.8, 3.9)
+<li>Solaris (9, 10)
 </ul>
 <li><b>Windows verzió:</b>
 <ul> 
-<li>WindowsXP Home
-<li>WindowsXP Pro
-<li>Windows 2000 Pro
-<li>Windows 2000 Server
-<li>Windows 2000 Advanced Server
-<li>Windows 98
-<li>Windows Me
+<li>Windows 2000 (Pro, Server, Advanced Server)
+<li>Windows XP (Home, Pro)
+<li>Windows 2003 
+</ul>
+<li><b>Tesztelt architektúrák:</b>
+<ul>
+<li>ia32 (i386, i486, i586, i686)
+<li>ia64
+<li>amd64
+<li>alpha
 </ul>
 </ul>
   <br>
   Ha van egy mûködõ Unreal3.2-d más operációs rendszereken, kérlek, küldd
-  a részleteket a <a href="mailto://docs@unrealircd.com">docs@unrealircd.com</a> címre.<br>
+  a részleteket a <a href="mailto:coders@lists.unrealircd.org">coders@lists.unrealircd.org</a> címre.<br>
   </p>
 <p><b>Telepítési útmutatások</b><br>
 Linux:<br>
 <ol>
-<li>gunzip -d Unreal3.2.2.tar.gz
-<li>tar xvf Unreal3.2.2.tar
+<li>gunzip -d Unreal3.2.X.tar.gz
+<li>tar xvf Unreal3.2.X.tar
 <li>cd Unreal3.2
 <li>./Config
 <li>Válaszolj ezekre a kérdésekre a legjobb tudásod szerint. Általában, ha nem vagy biztos
@@ -224,16 +231,17 @@ Windows:<br>
 </ol>
 </p>
 <p> </p></div>
-<p><font size="+2"><b>3.0 - Featúrák</b></font>
+<p><font size="+2"><b>3.0 - Jellegzetességek</b></font>
   <a name="features"></a></p><div class="desc">
-<p>Néhány fõbb és hasznosabb featúráról adunk magyarázatot ebben a részben. Általános áttekintést nyújt,
+<p>Néhány fõbb és hasznosabb jellegzetességrõl adunk magyarázatot ebben a részben. Általános áttekintést nyújt,
    és néha utal a konfigurációs fájlra is (olyasmire, amirõl talán még semmit sem tudsz).</p>
-<p>Ezt a részt kihagyhatod, azonban ajánlott elolvasni a telepítés elõtt vagy után.</p></div>
+<p>Ezt a részt kihagyhatod, azonban erõsen ajánlott elolvasni a telepítés elõtt vagy után,
+mert máskülönben nem fogsz megérteni olyan fogalmakat, mint az "álcázás", "snomaszkok" stb.</p></div>
 
 <p><font size="+2"><b>3.1 - Álcázás</b></font><a name="feature_cloaking"></a></p><div class="desc">
 <p>Az álcázás (cloaking) egy módszer a felhasználók valós gazdaneveinek elrejtésére. Például, ha a valódi gazdaneved <i>d5142341.cable.wanadoo.nl</i>,
    (a join, part, whois stb. üzenetekben) <i>rox-2DCA3201.cable.wanadoo.nl</i>-ként lesz megjelenítve.
-   Ez a featúra hasznos annak a megelõzésére, hogy a felhasználók egymást árasszák (floodolják), mivel így nem látják a valódi gazdanevet ill. IP címet.</p>
+   Ez a funkció hasznos annak a megelõzésére, hogy a felhasználók egymást árasszák (floodolják), mivel így nem látják a valódi gazdanevet ill. IP címet.</p>
 <p>Ez a +x felhasználói móddal vezérelhetõ (például: /mode nickneved +x), az adminok erõltethetik a +x alapértelemzésbeli
    engedélyezését is, vagy beállíthatják, hogy a mód soha ne legyen eltávolítható.</p>
 <p>Az álcázott gazdanevet egy álcázó modul állítja elõ (egyet szükséges betöltened), az Unreal jelenleg 1 ilyen hivatalos modult tartalmaz:<br>
@@ -282,12 +290,12 @@ Windows:<br>
 <p>Alapértelmezésben, ha a felhasználó egyszerûen csak a +s módot állítja be, bizonyos snomaszkok lesznek beállítva. Közönséges felhasználóknak a +ks, operátoroknak a +kscfvGqo snomaszkok.</p></div>
 
 <p><font size="+2"><b>3.4 - Álnevek</b></font><a name="feature_aliases"></a></p><div class="desc">
-<p>Az álnevek (alias) szolgálnak szerverszintû álparancsok beállítására.
-   Például az "/ns identify blah" parancsot továbbíthatod a nickservnek (úgy lesz
-   lefordítva, hogy "privmsg nickserv identify blah"). Ennél összetettebb álneveket is készíthetsz, mint a /register,
+<p>Az álnevek (alias) szerverszintû álparancsok beállítására szolgálnak.
+   Például az "/ns identify blah" parancsot továbbíthatjuk a nickservnek (úgy lesz
+   lefordítva, hogy "privmsg nickserv identify blah"). Ennél összetettebb álneveket is készíthetünk, mint pl. a /register,
    amely a ChanServhez továbbítódik, ha az elsõ paraméter #-tel kezdõdik, és a NickServ-hez, ha nem.</p>
-<p>Az álnevek az alias blokkban állíthatóak be a konfigurációs fájlban, és egy külön fájlt is betölthetsz, amely
-   alapértelmezett álneveket tartalmaz a leggyakrabban használt szolgáltatásokhoz.</p></div>
+<p>Álnevek az <a href="#aliasblock">alias blokkban</a> állíthatóak be a konfigurációs fájlban, és külön betölthetünk egy olyan fájlt is, amiben
+   alapértelmezett álnevek vannak a leggyakrabban használt szolgáltatásokhoz.</p></div>
    
 <p><font size="+2"><b>3.5 - Helpop</b></font><a name="feature_helpop"></a></p><div class="desc">
 <p>Az UnrealIRCd rendelkezik egy beépített súgórendszerrel, ami elérhetõ a /helpop-pal. A /helpop parancs teljes mértékben
@@ -345,11 +353,11 @@ Windows:<br>
    link::options::zip opciót (mindkét oldalon).</p></div>
 
 <p><font size="+2"><b>3.11 - Dinamikus DNS-sel/IP-vel linkelések támogatása</b></font><a name="feature_dyndns"></a></p><div class="desc">
-<p>Az UnrealIRCd néhány (új) hasznos featúrával segíti azokat a felhasználókat, akiknek dinamikus IP-jük van, és dinamikus DNS-t használnak
+<p>Az UnrealIRCd néhány (új) hasznos funkcióval segíti azokat a felhasználókat, akiknek dinamikus IP-jük van, és dinamikus DNS-t használnak
    (mint a valami.dyndns.org). Ha két dinamikus DNS-sel rendelkezõ gépet linkelsz, állítsd be a link::options::nodnscache és a link::options::nohostcheck opciókat.
 </p></div>
 
-<p><font size="+2"><b>3.12 - Árasztásvédelmi featúrák</b></font><a name="feature_antiflood"></a></p><div class="desc">
+<p><font size="+2"><b>3.12 - Árasztásvédelmi lehetõségek</b></font><a name="feature_antiflood"></a></p><div class="desc">
 <p>
 <b>Elfojtás</b><br>
 Az elfojtás (throttling) egy módszer annak korlátozására, hogy egy felhasználó milyen gyorsan bonthatja a kapcsolatot
@@ -410,7 +418,7 @@ Bizonyos árasztástípusoknál az alapértelmezett tevékenység helyett egy másikat i
 Ez a csatornát +R-re állítja, ha a belépési határt elérték (&gt;20 belépés 15 másodperc alatt),
 és +M-re, ha a megengedett üzenetek számát elérték (&gt;50 üzenet 15 másodperc alatt).<br>
 <br>
-Van egy &quot;töröld a módot X perc után&quot; featúra is: a <i>+f [20j#R5]:15</i> +R-re állítja a csatornát, ha
+Van egy &quot;töröld a módot X perc után&quot; funkció is: a <i>+f [20j#R5]:15</i> +R-re állítja a csatornát, ha
 elérték a határt, és -R-et állít be 5 perc után.<br>
 A szervernek lehet alapértelmezett módtörlési ideje (set::modef-default-unsettime), vagyis ha azt írod be, hogy <i>+f [20j]:15</i>,
 átváltozhat <i>+f [20j#i10]:15</i>-re. Ez csak egy alapértelmezés, továbbra is beállíthatsz [20j#i2]:15-öt vagy bármi ehhez hasonlót,
@@ -418,7 +426,7 @@ A szervernek lehet alapértelmezett módtörlési ideje (set::modef-default-unsettim
 <br>
 A régi +f mód (felhasználónkénti üzenetáradat) szintén elérhetõ a 't' tevékenységként, a +f 10:6-ot most már úgy hívjuk, hogy +f [10t]:6, és
 a +f *20:10 most már +f [20t#b]:10. Jelenleg az ircd automatikusan átalakítja a régi +f módtípusokat az újakra.
-Megjegyzendõ, hogy nincs alapértelmezett törlési idõ featúra a 't' banokra (a [20t#b30]:15 nem fog mûködni).<br>
+Megjegyzendõ, hogy nincs alapértelmezett törlési idõ funkció a 't' banokra (a [20t#b30]:15 nem fog mûködni).<br>
 <br>
 Az, hogy mi a legjobb +f mód, nagymértékben függ a csatornától... Hány felhasználója van? Van-e rajta olyan játék, ami a felhasználókat
 sok üzenet küldésére készteti (pl.: trivia), vagy használnak-e gyakran popupokat? Ez egy valamiféle fõcsatorna-e, vagy benne van-e az auto-join-ban? Stb.<br>
@@ -595,6 +603,9 @@ Egy táblázat az összes választási lehetõségrõl:<br>
 <tr><td>greek</td><td>Görög karakterek</td><td>iso8859-7</td></tr>
 <tr><td>turkish</td><td>Török karakterek</td><td>iso8859-9</td></tr>
 <tr><td>russian-w1251</td><td>Orosz karakterek</td><td>windows-1251</td></tr>
+<tr><td>belarussian-w1251</td><td>Fehérorosz karakterek</td><td>windows-1251</td></tr>
+<tr><td>ukrainian-w1251</td><td>Ukrán karakterek</td><td>windows-1251</td></tr>
+<tr><td><b>windows-1251</b></td><td>russian-w1251, belarussian-w1251, ukrainian-w1251</td><td>windows-1251</td></tr>
 <tr><td>hebrew</td><td>Héber karakterek</td><td>iso8859-8-I/windows-1255</td></tr>
 <tr><td>chinese-simp</td><td>Egyszerûsített kínai</td><td>Több-bájtos: GBK/GB2312</td></tr>
 <tr><td>chinese-trad</td><td>Hagyományos kínai</td><td>Több-bájtos: GBK</td></tr>
@@ -621,17 +632,39 @@ engedélyezett volt, és mindig US-ASCII kis- és nagybetû leképezés volt végrehajt
 <pre>set { allowed-nickchars { chinese-simp; chinese-trad; }; };</pre>
 </p></div>
 
-<p><font size="+2"><b>3.17 - További featúrák</b></font><a name="feature_other"></a></p><div class="desc">
-<p>Az UnrealIRCd-nek rengeteg featúrája van, ezért itt nincs minden megemlítve... Rájössz majd magadtól is.</p></div>
+<p><font size="+2"><b>3.17 - CGI:IRC támogatás</b></font><a name="feature_cgiirc"></a></p><div class="desc">
+<p>Az UnrealIRCd támogatja a CGI:IRC gazdanév hamisítást, ami azt jelenti, hogy megjelölhetünk bizonyos CGI:IRC
+átjárókat "megbízhatóként", ezáltal az IRCd a felhasználók valódi gazdanevét/IP címét jeleníti meg mindenhol
+az IRC-n, és nem a CGI:IRC átjáróét.</p>
+<p>Lásd a <a href="#cgiirc">cgiirc blokkot</a> a beállításának hogyanjáról.</p>
+</div>
+
+<p><font size="+2"><b>3.18 - Idõszinkronizáció</b></font><a name="feature_timesync"></a></p><div class="desc">
+<p>A pontos idõ nagyon fontos az IRC szervereken. Pontos idõ nélkül a csatornákon desynch problémák léphetnek fel, ártatlan
+felhasználók kaphatnak kilövést, helytelenül jelenhetnek meg csatornák a /LIST-ben, egyszóval: óriási baj származhat belõle.</p>
+<p>Az UnrealIRCd-nek van egy kis beépített idõszinkronizáció támogatása.
+Bár nem optimális (az idõ még mindig eltérhet néhány másodpercet), a legtöbb esetben megszabadít az idõkülönbségtõl.
+Lehetõség szerint még mindig javasolt valamilyen idõszinkronizáló szoftver futtatása, pl. *NIX alatt az ntpd vagy 
+a Windows idõszinkronizáló szolgáltatása (ebben az esetben kikapcsolhatjuk az Unreal idõszinkronizálását, errõl bõvebben késõbb).</p>
+<p>Az UnrealIRCd (alapból) azt csinálja, hogy indításkor végrehajt egy egyszeri idõszinkronizálást. Elküld (alapértelmezésben) egy lekérdezést
+több idõszervernek, és amikor megkapja a legelsõ (leggyorsabb) választ, hozzáigazítja a belsõ ircd órát
+(NEM a rendszerórát). Ha valamilyen okból az idõszervertõl nem kap választ 3 másodpercen belül,
+az IRCd ennek ellenére folytatja az indulást (ilyennek ritkán kellene történnie).</p>
+<p>Az idõszinkronizáció beállítható (és kikapcsolható) a <b>set::timesynch</b> blokkban, lásd
+   a <a href="#setblock">set leírását</a> további információkért.</p>
+</div>
+
+<p><font size="+2"><b>3.19 - További jellegzetességek</b></font><a name="feature_other"></a></p><div class="desc">
+<p>Az UnrealIRCd-nek rengeteg funkciója van, ezért itt nincs minden megemlítve... Rájössz majd magadtól is.</p></div>
 
 <p> </p>
 <p><font size="+2"><b>4.0 - Az unrealircd.conf fájlod beállítása</b></font>
   <a name="configuringyourunrealircdconf"></a></p><div class="desc">
-<p>Elõször is, egy jó unrealircd.conf készítése komoly idõt vesz igénybe, talán
-   körülbelül 10 - 60 percet. Megpróbálhatod a lehetõ leggyorsabban üzemkésszé tenni és
-   trükközgetni vele késõbb, vagy rögtön, lépésrõl lépésre megtanulhatod a legfõbb részeket,
-   ami a javasolt módszer ;P. Ha problémáid vannak, ellenõrizd a szintaktikát, nézd át a kézikönyvet,
-   és nézz bele a FAQ-ba is, mielõtt segítségért fordulsz/hibát jelentesz.</p></div>
+<p>Elõször is, az elsõ unrealircd.conf-unk elkészítése komoly idõt vesz igénybe (mondjuk, 15-60
+percet). Egy <u>jó</u> unrealircd.conf még ennél is többet.
+Nem érdemes kapkodnunk, hogy az IRCd-nk minél hamarabb elinduljon, inkább menjünk végig a dolgokon
+lépésrõl lépésre. Ha problémánk van, ellenõrizzük a szintaktikát, nézzük át ezt a kézikönyvet,
+és nézzünk bele a <a href="http://www.vulnscan.org/UnrealIRCd/faq/">GYIK</a>-ba is, mielõtt segítségért fordulnánk vagy hibát jelentenénk.</p></div>
 <p><b><font size="+2">4.1 A konfigurációs formátumról</font></b><a name="configurationfileexplained"></a><br><div class="desc">
 </p>
 <p>Az új rendszer egy blokk alapú formátumot használ. Az új formátumban minden bejegyzésnek vagy blokknak
@@ -647,21 +680,21 @@ engedélyezett volt, és mindig US-ASCII kis- és nagybetû leképezés volt végrehajt
 <p>A &lt;blokk-direktíva&gt; egy egyszerû változó, amelyet a blokk határoz meg, és
   a  &lt;direktívaérték&gt; a hozzátartozó érték. Ha a &lt;directívaérték&gt;
   szóközöket tartalmaz vagy olyan karaktereket, amelyek megjegyzéseket fejeznek ki, idézõjelek közé
-  kell tenni. Ha az idézett szövegen belül egy idézõjel karaktert szeretnél használni,
-  használj \"-t, és idézõjelként lesz értelmezve.</p>
+  kell tenni. Ha az idézett szövegen belül egy idézõjel karaktert szeretnénk írni,
+  használjunk \"-t, és idézõjelként lesz értelmezve.</p>
 <p>Egy &lt;blokk-direktíva&gt; is tartalmazhat direktívákat saját magán belül, ilyen esetben
   lesz egy saját pár kapcsoszárójele maga körül. Néhány blokknak nincs direktívája,
   és csak &lt;blokkérték&gt; formában határozzuk meg, mint az "include"-t.
   Az is megjegyzendõ, hogy nincs kötött forma, tehát az egész blokk megjelenhet egy sorban vagy akár
   több sorban is. A fenti formát használják általában (és ebben a fájlban is ezt alkalmazzuk),
   mert könnyen olvasható. </p>
-<p>Megjegyzés: a konfigurációs fájl jelenleg kis- és nagybetûérzékeny, eképpen a "BLOKKNÉV" nem
-  ugyanaz, mint a "blokknév". Van egy általános jelölési rendszer, amit arra használunk, hogy
+<p>Megjegyzés: a konfigurációs fájl jelenleg kis- és nagybetûérzékeny, eképpen a <i>BLOKKNÉV</i> nem
+  ugyanaz, mint a <i>blokknév</i>. Van egy általános jelölési rendszer, amit arra használunk, hogy
   a konfigurációs fájl bejegyzéseirõl beszéljünk. Például, hogy a fenti példabeli &lt;direktívanév&gt;-rõl
   beszéljünk, azt mondjuk, hogy &lt;blokknév&gt;::&lt;blokk-direktíva&gt;, és ha a direktívának van egy
-  alblokkja, amire utalni szeretnél, tegyél hozzá egy másik dupla kettõspontot (::)
+  alblokkja, amire utalni szeretnénk, tegyünk hozzá egy másik dupla kettõspontot (::)
   és az aldirektíva nevét. </p>
-<p>Ha egy névtelen direktíváról szeretnél beszléni, mondd azt, hogy &lt;blokknév&gt;::, ami
+<p>Ha egy névtelen direktíváról szeretnénk beszléni, írjuk azt, hogy &lt;blokknév&gt;::, ami
   ebben az esetben &lt;blokkérték&gt;-et jelent, vagy lehet egy alblokk
   névtelen bejegyzése is.</p>
 <p>Háromféle megjegyzéstípus támogatott:</p>
@@ -670,9 +703,11 @@ engedélyezett volt, és mindig US-ASCII kis- és nagybetû leképezés volt végrehajt
     /* Többsoros<br>
        &nbsp;&nbsp;&nbsp;&nbsp;megjegyzés */<br>
  </p>
-<p>Most, hogy tudod, hogyan mûködik, készítsd el a saját unrealircd.conf-odat teljesen a semmibõl, vagy
-   másold le a doc/example.conf-ot, és kezdd el szerkeszteni. Javasolt, hogy lépésrõl lépésre haladj
-   át az egyes blokktípusokon, és használd ezt a kézikönyvet segédletnek.</p>
+<p>Most, hogy tudjuk, hogyan mûködik, másoljuk a <i>doc/example.conf</i>-ot az UnrealIRCd
+   könyvtárba (pl.: /home/felhasznalo/Unreal3.2) és nevezzük át <i>unrealircd.conf</i>-ra
+   (VAGY készítsünk egy saját <i>unrealircd.conf</i>-ot a semmibõl).
+   Javasolt, hogy menjünk végig lépésrõl lépésre az egyes blokktípusokon és
+   a konfigurációs fájlunk beállításain, valamint használjuk ezt a kézikönyvet segédletként.</p>
 <p></p></div>
 <p><font class="block_section">4.2 - </font><font class="block_name">Me blokk</font>
    <font class="block_required">KÖTELEZÕ</font> <font class="block_old">(Elõzõleg M:Line néven ismert)</font><a name="meblock"></a></p><div class="desc">
@@ -1943,7 +1978,8 @@ link &lt;szervernév&gt; {
  gazdanevek (például dyndns.org) esetén.</td></tr>
 <tr><td><b>nohostcheck</b></td><td> ne érvényesítse a távoli gazdanevet (link::hostname); használd ezt gyakran változó
  gazdanevek (például dyndns.org) esetén.</td></tr>
-<tr><td><b>quarantine</b></td><td> az operátorok ezen a szerveren helyi operátorokként funkcionálnak</td></tr>
+<tr><td><b>quarantine</b></td><td> a szerver operátorai nem kaphatnak GLOBÁLIS jogosultságokat
+(ki lesznek lõve), teszt linkekre meg hasonlókra szokás használni</td></tr>
 </table>
 </p>
 <p>Példa:</p>
@@ -1972,46 +2008,60 @@ link hub.sajatnet.com {
 alias &lt;név&gt; {
 	target &lt;ahová-továbbítsa&gt;;
 	type &lt;álparancs-típusa&gt;;
+	spamfilter &lt;yes|no&gt;;
 };</pre></p>
 <p>(Megjegyzés: lásd még az <a href="#includedirective">include</a> direktívát az UnrealIRCd szabványos álparancsokat tartalmazó fájljairól.)</p>
-<p>Az alias blokk [szabványos álparancsokra] lehetõvé teszi, hogy parancsokat továbbíts egy
+<p>Az alias blokk [szabványos álparancsokra] lehetõvé teszi, hogy parancsokat továbbítsunk egy
   felhasználóhoz, például hogy a /chanserv üzenetet küldjön a chanserv felhasználónak.
-  Az alias:: meghatározza azt a parancsnevet, ami lesz az álnév (pl.: chanserv).
+  Az alias:: megadja azt a parancsnevet, ami lesz az álnév (pl.: chanserv).
   Az alias::target egy nick- vagy csatornanév, ahová a parancs továbbítva lesz. Ha az alias:: ugyanaz,
   mint a továbbítási célpont, az alias::target elhagyható. Az alias::type meghatározza
   az álparancs típusát; érvényes típusok: services (a felhasználó egy szolgáltatás szerveren van), stats
   (a felhasználó egy statisztikai szerveren van), normal (a felhasználó egy közönséges felhasználó
-  bármilyen szerveren), és channel (a célpont egy csatornanév). Az alias blokknak van más célja is,
-  amit az alábbiakban magyarázunk el.</p>
+  bármilyen szerveren), és channel (a célpont egy csatornanév). Az alias::spamfilter (nem kötelezõ)
+  "yes"-re állításával bekapcsolható a spamszûrés erre az álparancsra (az alapértelmezés "no").<br>
+  Az alias blokknak van egy másik célja is, amit az alábbiakban magyarázunk el.</p>
 <p>Szintaktika [formázott álparancsokra]:<br>
 <pre>
 alias &lt;név&gt; {
+	/* Felhasználóknak/csatornára küldendõ álparancsokra */
 	format &lt;reguláris-kifejezés&gt; {
 		target &lt;ahová-továbbítsa&gt;;
 		type &lt;álparancs-típusa&gt;;
 		parameters &lt;paraméter-sztring&gt;;
 	};
+	/* "Valódi" álparancsokra */
+	format &lt;reguláris-kifejezés&gt; {
+		command &lt;parancs&gt;;
+		type real;
+		parameters &lt;paraméter-sztring&gt;;
+	};
+	/* Stb... Annyi format blokkunk lehet, ahányat szeretnénk.. */
 	format &lt;reguláris-kifejezés&gt; {
 		...
 	};
 	type command;
+	spamfilter &lt;yes|no&gt;;
 };</pre></p>
-<p>Amikor az alias blokkot ebben a formában használod, lehetõséget ad egy sokkal szélesebb körû
-  alkalmazásra. Például készíthetsz olyan álparancsokat is, mint az /identify. Az alias::
-  ugyanaz, mint fent, az álparancs neve. Az alias::format blokkok értékei reguláris kifejezések,
+<p>Amikor az alias blokkot ebben a formában használjuk, lehetõséget ad egy sokkal szélesebb körû
+  alkalmazására. Például készíthetünk olyan álparancsokat is, mint az /identify. Az alias::
+  ugyanaz, mint fent, az álparancs neve. Az <b>alias::format</b> blokkok értékei reguláris kifejezések,
   amelyek az álparancshoz küldött szöveggel lesznek összehasonlítva, és ha az egyik illik rá,
   annak az alias::format-nak az albejegyzései lesznek használatban. Lehet egyszerre több
-  alias::format-od is, hogy a parancs különbözõ dolgokat tegyen a neki küldött szövegtõl
-  függõen. Az alias::format::target az álparancs továbbításának célpontja.
-  Az alias::format::type meghatározza az elõbbi nicknevû felhasználó típusát.
-  Az alias::format::parameters az, ami megmondja, milyen paraméterek legyenek elküldve
-  a felhasználóhoz. Hogy hivatkozz az álparancshoz küldött paraméterek egyikére,
-  írj egy % jelet egy azt követõ számmal, például %1 az elsõ paraméter. Lehetõséged van arra is,
-  hogy hivatkozz egy adott paramétertõl kezdõdõen az üzenet végéig tartó összes paraméterre,
-  ehhez írj be egy % jelet, majd egy számot és egy - jelet, például a %2- visszaadja az összes
+  alias::format-unk is, így a parancs különbözõ dolgokat tehet a neki küldött szövegtõl
+  függõen. Az <b>alias::format::target</b> az álparancs továbbításának célpontja,
+  de "valódi" álparancsok esetében az <b>alias::format::command</b> használandó.
+  Az <b>alias::format::type</b> megadja, hogy az üzenet milyen típusú célponthoz
+  legyen elküldve; a "Szintaktika [szabványos álparancsokra]" részben korábban említett
+  típusok mellett itt megengedett még a "real" is, "valódi" álparancsokra.
+  Az <b>alias::format::parameters</b> mondja meg, milyen paraméterek legyenek elküldve
+  a felhasználóhoz. Ahhoz, hogy az álparancshoz küldött paraméterek egyikére hivatkozzunk,
+  írjunk egy % jelet egy azt követõ számmal, például %1 az elsõ paraméter. Lehetõség van arra is,
+  hogy hivatkozzunk egy adott paramétertõl kezdõdõen az üzenet végéig tartó összes paraméterre,
+  ehhez írjunk be egy % jelet, majd egy számot és egy - jelet, például a %2- visszaadja az összes
   paramétert a másodiktól kezdõdõen az utolsóig. Hasonló különleges célt szolgál még a %n is,
-  amit helyettesíteni fog annak a felhasználónak a neve, aki kiadta a parancsot. A formázott
-  álparancsokra vonatkozóan példákat találhatsz a doc/example.conf-ban.</p>
+  ami helyettesíti annak a felhasználónak a nevét, aki kiadta a parancsot.<br><br>
+  A formázott álparancsokra vonatkozóan példákat találunk a doc/example.conf-ban.</p>
 <p></p></div>
 <p><font class="block_section">4.33 - </font><font class="block_name">Help blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font><a name="helpblock"></a>
@@ -2023,7 +2073,7 @@ help &lt;név&gt; {
 	&lt;szövegsor&gt;;
 	...
 };</pre></p>
-<p>(Megjegyzés: szokás csak betölteni a help.conf-ot)</p>
+<p>(Megjegyzés: általában elég csak betölteni a help.conf-ot)</p>
 <p>A help blokkal készíthetsz bejegyzéseket a /helpop parancshoz. A help:: az az érték,
   amit a /helpop-nak kell átadni paraméterként; ha a help:: ki van hagyva, a blokk akkor
   lesz használatban, amikor a /helpop-nak semmilyen paraméter nincs átadva. A help blokk
@@ -2057,7 +2107,7 @@ official-channels {
 </p><div class="desc">
 <p>
 A spamfilter blokkal vehetsz fel helyi spamszûrõket (nem hálózati szintûeket).<br>
-Lásd a <a href="#feature_spamfilter">Featúrák - A spamszûrõ</a> szekciót további információért.<br>
+Lásd a <a href="#feature_spamfilter">Jellegzetességek - A spamszûrõ</a> szekciót további információért.<br>
 </p>
 <p>Szintaktika:<br>
 <pre>
@@ -2095,7 +2145,63 @@ spamfilter {
 </pre></p>
 </div>
 
-<p><font class="block_section">4.36 - </font><font class="block_name">Set blokk</font>
+<p><font class="block_section">4.36 - </font><font class="block_name">Cgiirc blokk</font>
+   <font class="block_optional">SZABADON VÁLASZTHATÓ</font><a name="cgiirc"></a>
+</p><div class="desc">
+<p>
+A cgiirc blokkal gazdanév-hamisítást állíthatunk be megbízható CGI:IRC átjárókra 
+(<a href="#feature_cgiirc">további információ</a>).</p>
+
+<p>Szintaktika:<br>
+<pre>
+cgiirc {
+	type &lt;webirc|old&gt;;
+	username &lt;maszk&gt;; /* nem kötelezõ */
+	hostname &lt;maszk&gt;;
+	password &lt;jelszó&gt;; /* csak a webirc típusra */
+};</pre></p>
+<p>A <b>type</b> lehet akár "webirc" vagy "old" (azaz "régi").<br>
+   A <b>username</b> egyeztetésre kerül az azonosítónévvel (ha van ilyen). Ha nincs megadva, "*" lesz feltételezve.<br>
+   A <b>hostname</b> a gazdanévre illeszkedõ maszk.<br>
+   A <b>password</b> a webirc jelszó, csak a "webirc" típus esetén használjuk.<br>
+</p>
+
+<p><b>Hogyan állítsuk be a 'webirc' módot? (javasolt mód)</b><br>
+A CGI:IRC konfigurációs fájlunkban (cgiirc.conf) beállítjuk a webirc_password-öt egy alkalmas jelszóra.<br>
+Ezután az unrealircd.conf-ba teszünk egy cgiirc blokkot, mellyel engedélyezzük ezt a gazdanevet és jelszót, valamint beállítjuk
+a cgiirc::type-ot "webirc"-re.<br>
+<br>
+Példa:<br>
+A CGI:IRC konfigurációs fájlba (cgiirc.conf) írjuk a következõt:
+<pre>webirc_password = LpT4xqPI5</pre>
+Majd az unrealircd.conf-ba tegyünk egy cgiirc blokkot:
+<pre>cgiirc {
+	type webirc;
+	hostname "1.2.3.4";
+	password "LpT4xqPI5";
+};</pre></p>
+
+<p><b>Hogyan állítsuk be az "old" (régi) módot?</b><br>
+MEGJEGYZÉS: Ez nem javasolt mód, mivel két hátránya van: 
+ez a mód szerverjelszóként küldi el a hamisítandó IP-t/gazdanevet, emiatt nem
+adhatunk meg szerverjelszót CGI:IRC felhasználóként. Továbbá a hozzáférés-szabályozás csak
+IP alapú, és nem igényel külön jelszót, mint a 'webirc' mód. Röviden,
+nem kellene ezt használnunk, hacsak nincs nyomós indokunk rá.<br>
+<br>
+A CGI:IRC beállításfájlban (cgiirc.conf) beállítjuk a realhost_as_password-öt 1-re.<br>
+Ezután az unrealircd.conf-ba teszünk egy cgiirc blokkot, hogy engedélyezzük ezt a gazdanevet.<br>
+<br>
+Példa:<br>
+A CGI:IRC konfigurációs fájlba (cgiirc.conf) írjuk a következõt:
+<pre>realhost_as_password = 1</pre>
+Majd az unrealircd.conf-ba tegyünk egy cgiirc blokkot:
+<pre>cgiirc {
+	type old;
+	hostname "1.2.3.4";
+};</pre></p>
+</div>
+
+<p><font class="block_section">4.37 - </font><font class="block_name">Set blokk</font>
    <font class="block_required">KÖTELEZÕ</font> <font class="block_old">(Elõzõleg unrealircd.conf-ként/hálózati fájlként ismert)</font><a name="setblock"></a>
 </p><div class="desc">
 <p>A set fájl az, ami régebben a networks/unrealircd.conf-unk és a hálózati
@@ -2166,7 +2272,7 @@ set {
   ily módon minden (új) csatornára ráeröltetheted a +G módot úgy, hogy ne tudják törölni.<br>
   MEGJEGYZÉS: lehet, hogy ezek a csatornamódok még mindig használhatóak IRC szolgáltatásokon keresztül
   az MLOCK alkalmazásával. Sajnos mi nem tudunk sokat tenni ezügyben, a szolgáltatás fejlesztõket
-  kellene megkérned, hogy megvalósítsanak egy restrict-channelmodes featúrát is.</p>
+  kellene megkérned, hogy megvalósítsanak egy restrict-channelmodes funkciót is.</p>
 <p><font class="set">set::restrict-extendedbans &lt;típusok|*&gt;</font><br>
   Nem ad engedélyt a felhasználóknak egyetlen kiterjesztett ban típus használatára sem ("*"), vagy csak bizonyos típusokat utasít vissza (pl.: "qc").</p>
 <p><font class="set">set::auto-join &lt;csatornák&gt;;</font><br>
@@ -2199,6 +2305,14 @@ set {
 <p><font class="set">set::silence-limit &lt;határ&gt;;</font><br>
   Beállítja a SILENCE lista bejegyzéseinek legnagyobb megengedett számát. Ha ez a direktíva nincs jelen,
   15 lesz beállítva.</p>
+<p><font class="set">set::maxbans &lt;határ&gt;;</font><br>
+  Beállítja, hogy csatornánként legfeljebb hány kitiltás (+b) megengedett. Az alapértelmezés 60.
+  Ha ezen változtatsz, ne felejts ránézni a maxbanlength direktívára is (lásd alább)!</p>
+<p><font class="set">set::maxbanlength &lt;határ&gt;;</font><br>
+  Hasonló a fentihez, de ez a kitiltások karaktereinek számára összesen határoz meg felsõ határt,
+  vagyis tulajdonképpen korlátozást tesz arra, kb. mekkora lehet az a legnagyobb mennyiségû memória,
+  amit a kitiltások csatornánként lefoglalhatnak. Az alapértelmezés 2048 (bájt). A set::maxbans
+  60-as alapértékével ez átlagosan 2048:60=34 karaktert enged kitiltásonként.</p>
 <p><font class="set">set::oper-only-stats &lt;flaglista&gt;;</font><br>
   Megad egy elválasztójelek nélküli, stats flagekbõl álló felsorolást, amely meghatározza, mely stats flageket
   használhatnak csak operátorok. Hagyd ki ezt az értéket, hogy engedélyezd a felhasználóknak az összes
@@ -2214,7 +2328,7 @@ set {
 <p><font class="set">set::channel-command-prefix &lt;parancs-elõtagok&gt;;</font><br>
   Meghatározza a csatornabeli services parancsok elõtag karaktereit. Azok az üzenetek, amelyek az
   itt megadott karakterek bármelyikével kezdõdnek, még olyan kliensekhez is el lesznek küldve, amelyek
-  a +d móddal rendelkeznek. Az alapérték "`".</p>
+  a +d móddal rendelkeznek. Az alapérték "`!.".</p>
 <p><font class="set">set::allowed-nickchars { &lt;felsorolás&gt; };</font><br>
   Nicknevekben engedélyezendõ karakterkészletek / nyelvek, lásd: <a href="#feature_nickchars">Karakterkészletek nicknevekben</a>.</p>
 <p><font class="set">set::allow-userhost-change [never|always|not-on-channels|force-rejoin]</font><br>
@@ -2372,6 +2486,19 @@ set {
  <p><font class="set">set::spamfilter::except &lt;célpont(ok)&gt;</font><br>
   Ezek a célpontok kivételek a spamszûrések alól (nem lesz tevékenység végrehajtva),
   lehet egyetlen célpont vagy egy vesszõvel elválaszott felsorolás. Pl.: except "#help,#spamreport"</p>
+ <p><font class="set">set::check-target-nick-bans &lt;yes|no&gt;</font><br>
+  Valahányszor a felhasználó nicknevet változtat, ellenõrzi, hogy az ÚJ név le van-e
+  tiltva. Ha igen, nem engedélyezi a nickváltást. Az alapértelmezés "yes".</p>
+ <p><font class="set">set::timesynch::enabled &lt;yes|no&gt;</font><br>
+  Engedélyezi vagy letiltja az ircd indításkori idõszinkronizálását. Az alapértelmezés "yes".</p>
+ <p><font class="set">set::timesynch::server &lt;IP&gt;</font><br>
+  Ezzel a szerverrel szinkronizálja az idõt. Legfeljebb négy IP lehet, vesszõkkel elválasztva.
+  A szervereknek támogatniuk kell az NTP protokoll 4-es verzióját. Az alapértelmezés 3 idõszervert használ (US, EU,
+AU). A lekérdezések párhuzamosan kerülnek elküldésre, a leggyorsabb válasz nyer.</p>
+ <p><font class="set">set::timesynch::timeout &lt;idõtartam&gt;</font><br>
+  Legfeljebb ennyi ideig vár az idõszerverek válaszára. Ez egy érték 1 és 5 között; több nem lehet,
+  mert túl nagy pontatlanságot okozna. Ez az érték alapértelmezésben 3, és nem valószínû, hogy
+  érdemes megváltoztatni.</p>
 <p></p> </div>
 <p><b><font size="+2">5 &#8211; További fájlok<a name="addtlfiles"></a>
   </font></b></p><div class="desc">
@@ -2577,7 +2704,8 @@ set {
   </tr>
   <tr> 
     <td><div align="center">d</div></td>
-    <td>Nem fogadsz csatornabeli PRIVMSG-ket</td>
+    <td>Nem fogadsz csatornabeli PRIVMSG-ket (kivéve az olyan szövegûeket,
+        amelyek bizonyos karakterrel kezdõdnek, lásd: set::channel-command-prefix)</td>
   </tr>
   <tr> 
     <td><div align="center">G</div></td>
@@ -3339,7 +3467,7 @@ Ha történik egy szakadás (split), valaki még mindig láthatja, melyik szerver hov
 és ez érvényes még néhány más dologra is.<br>
 <br>
 <b>KÖZÖNSÉGES FELHASZNÁLÓK ÉS SNOMASKOK</b><br>
-Van egy featúra, amit nem ismernek széles körben; ez az, hogy közönséges felhasználók is beállíthatnak néhány korlátozott snomaskot,
+Van egy funkció, melyet nem ismernek széles körben; ez az, hogy közönséges felhasználók is beállíthatnak néhány korlátozott snomaskot,
 mégpedig azt, hogy "+s +sk". Ezzel láthatnak olyan dolgokat, mint a beállítások újratöltése, killek és egyéb más üzenetek.<br>
 Ennek letiltására használhatod a "set::restrict-usermodes"-t a következõképpen: <i>set { restrict-usermodes "s"; };</i>.<br>
 
@@ -3351,7 +3479,7 @@ Viszont a támadásokat, feltöréseket nehezebbé teszi, több fáradságukba kerül.<br
 
 <p><b><font size="+2">8.8. Sebezhetõségek elleni védelem</font></b><a name="secantiexploit"></a><br><div class="desc">
 Vannak kernel patchek, amelyek nehezebbé teszik a szegmens és verem alapú sebezhetõségek mûködését.
-Azonban ne ez legyen a figyelmed középpontja, sokkal nagyobb veszély van arra, hogy más módon
+Ez szép és jó, azonban ne ez legyen a figyelmed középpontja, sokkal nagyobb veszély van arra, hogy más módon
 aknázzák ki a szervere(i)det... különbözõ okok miatt.<br>
 <br>
 Van egy dolog viszont, amit meg kellene tenned, ez pedig az, hogy MINDIG HASZNÁLD A LEGFRISSEBB VERZIÓT, és
@@ -3371,7 +3499,7 @@ Nagyon sokan nem is törõdnek a biztonsággal, egészen addíg, amíg bajba nem kerül
 
 
 <p><font size="+2"><b>9 &#8211; Gyakran Ismételt Kérdések (FAQ)<a name="faq"></a></b></font></p>
-<div class="desc"><p>A FAQ online elérhetõ <a href="http://www.vulnscan.org/UnrealIrcd/faq/" TARGET="_blank">innen</a>.</p></div>
+<div class="desc"><p>A FAQ online elérhetõ <a href="http://www.vulnscan.org/UnrealIRCd/faq/" TARGET="_blank">innen</a>.</p></div>
 <p></p>
 
 <p><font size="+2"><b>A Reguláris kifejezések<a name="regex"></a></b></font></p>

@@ -1,5 +1,4 @@
 Numeric 005 Documentation (c) 2002-2005 codemastr (Dominick Meglio) [codemastr@unrealircd.com]
-(As of Unreal3.2.3)
 
 Numeric 005 allows the server to inform the client of any protocol specific features in the
 IRCd.  The numeric is sent at connection time immediately after numeric 004. Additionally
@@ -107,7 +106,7 @@ CASEMAPPING   string          ascii                        Specifies what defini
                                                            characters are upper/lowercase
                                                            of eachother.
 
-EXTBAN        prefix,types    ~,cqr                        Specifies what extbans are
+EXTBAN        prefix,types    ~,cqnr                       Specifies what extbans are
                                                            supported by the server. The prefix
                                                            defines which character indicates
                                                            an extban and the types defines
@@ -124,7 +123,7 @@ ELIST         flags           MNUCT                        Specifies the set of 
                                                            flag allows topic set time 
                                                            searching.
 
-CMDS          commands         MAP,KNOCK,DCCALLOW,USERIP   Specifies a series of commands that
+CMDS          commands        MAP,KNOCK,DCCALLOW,USERIP    Specifies a series of commands that
                                                            can be useful for the client to know
                                                            exist as they may provide a more
                                                            efficient means for the client to
@@ -132,29 +131,37 @@ CMDS          commands         MAP,KNOCK,DCCALLOW,USERIP   Specifies a series of
                                                            token replaces the MAP and KNOCK
                                                            tokens.
 
-STATUSMSG     flags            ~&@%+                       Specifies the mode flags that may
+STATUSMSG     flags           ~&@%+                        Specifies the mode flags that may
                                                            prefix a channel name in a PRIVMSG
                                                            or NOTICE to limit who receives the
                                                            message to only those with a certain
                                                            level of access. This token will
                                                            replace the WALLCHOPS token.
 
-EXCEPTS       none             none                        Indicates that channel ban exceptions
+EXCEPTS       none            none                         Indicates that channel ban exceptions
                                                            (+e) are supported by the server.
 
-INVEX         none             none                        Indicates that channel invite
+INVEX         none            none                         Indicates that channel invite
                                                            exceptions (+I) are supported by
                                                            the server.
 
-MAXLIST       mode:num,...     b:60,e:60,I:60              Specifies the maximum number of 
+MAXLIST       mode:num,...    b:60,e:60,I:60               Specifies the maximum number of 
                                                            entries that may be added to a 
                                                            particular mode list (type A modes).
                                                            This token replaces MAXBANS.
 
-CHANLIMIT     pfx:num,...      #:10                        Specifies the maximum number of 
+CHANLIMIT     pfx:num,...     #:10                         Specifies the maximum number of 
                                                            channels with the specified prefix
                                                            that a user may join at one time.
                                                            This token will replace MAXCHANNELS.
 
-CHANNELLEN    number           32                          Provides the maximum length of a
+CHANNELLEN    number          32                           Provides the maximum length of a
                                                            channel name that a user can create.
+
+NAMESX        none            none                         Indicates that extended /NAMES info
+                                                           is available on this server. If the
+                                                           client sends "PROTOCTL NAMESX" then
+                                                           the server will, from then on, send
+                                                           all channel rights in a NAMES reply
+                                                           instead of only the highest right
+                                                           (eg: @+Person instead of @Person).

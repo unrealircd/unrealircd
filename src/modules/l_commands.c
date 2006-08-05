@@ -74,7 +74,8 @@ ModuleHeader l_commands_Header
 
 extern int m_htm_Test(ModuleInfo *modinfo), m_join_Test(ModuleInfo *modinfo);
 extern int m_mode_Test(ModuleInfo *modinfo), m_nick_Test(ModuleInfo *modinfo);
-extern int m_tkl_Test(ModuleInfo *modinfo);
+extern int m_tkl_Test(ModuleInfo *modinfo), m_list_Test(ModuleInfo *modinfo);
+extern int m_message_Test(ModuleInfo *modinfo);
 
 extern int m_sethost_Init(ModuleInfo *modinfo), m_setname_Init(ModuleInfo *modinfo), m_chghost_Init(ModuleInfo *modinfo);
 extern int m_chgident_Init(ModuleInfo *modinfo), m_setident_Init(ModuleInfo *modinfo), m_sdesc_Init(ModuleInfo *modinfo);
@@ -119,6 +120,7 @@ extern int m_mode_Init(ModuleInfo *modinfo), m_watch_Init(ModuleInfo *modinfo);
 extern int m_part_Init(ModuleInfo *modinfo), m_join_Init(ModuleInfo *modinfo);
 extern int m_motd_Init(ModuleInfo *modinfo), m_opermotd_Init(ModuleInfo *modinfo);
 extern int m_botmotd_Init(ModuleInfo *modinfo), m_lusers_Init(ModuleInfo *modinfo);
+extern int m_names_Init(ModuleInfo *modinfo);
 #ifdef GUEST
 extern int m_guest_Init(ModuleInfo *modinfo);
 #endif
@@ -166,6 +168,7 @@ extern int m_mode_Load(int module_load), m_watch_Load(int module_load);
 extern int m_part_Load(int module_load), m_join_Load(int module_load);
 extern int m_motd_Load(int module_load), m_opermotd_Load(int module_load);
 extern int m_botmotd_Load(int module_load), m_lusers_Load(int module_load);
+extern int m_names_Load(int module_load);
 #ifdef GUEST
 extern int m_guest_Load(int module_load);
 #endif
@@ -183,7 +186,7 @@ extern int m_sqline_Unload(), m_unsqline_Unload(), m_tkl_Unload(), m_vhost_Unloa
 extern int m_cycle_Unload(), m_svsjoin_Unload(), m_svspart_Unload(), m_svslusers_Unload();
 extern int m_svswatch_Unload(), m_svssilence_Unload(), m_svskill_Unload();
 extern int m_sendsno_Unload(), m_svssno_Unload(), m_time_Unload();
-extern int m_sajoin_Unload(), m_sapart_Unload(), m_knock_Umload();
+extern int m_sajoin_Unload(), m_sapart_Unload();
 extern int m_kick_Unload(), m_topic_Unload(), m_umode2_Unload();
 extern int m_invite_Unload(), m_list_Unload(), m_squit_Unload();
 extern int m_samode_Unload(), m_sjoin_Unload(), m_protoctl_Unload();
@@ -200,7 +203,7 @@ extern int m_whowas_Unload(), m_connect_Unload(), m_dccallow_Unload();
 extern int m_nick_Unload(), m_user_Unload(), m_mode_Unload();
 extern int m_watch_Unload(), m_part_Unload(), m_join_Unload();
 extern int m_motd_Unload(), m_opermotd_Unload(), m_botmotd_Unload();
-extern int m_lusers_Unload();
+extern int m_lusers_Unload(), m_names_Unload();
 #ifdef GUEST
 extern int m_guest_Unload();
 #endif
@@ -221,6 +224,8 @@ int l_commands_Test(ModuleInfo *modinfo)
 	m_mode_Test(ModCmdsInfo);
 	m_nick_Test(ModCmdsInfo);
 	m_tkl_Test(ModCmdsInfo);
+	m_list_Test(ModCmdsInfo);
+	m_message_Test(ModCmdsInfo);
 	return MOD_SUCCESS;
 }
 
@@ -338,6 +343,7 @@ int    l_commands_Init(ModuleInfo *modinfo)
 	m_opermotd_Init(ModCmdsInfo);
 	m_botmotd_Init(ModCmdsInfo);
 	m_lusers_Init(ModCmdsInfo);
+	m_names_Init(ModCmdsInfo);
 #ifdef GUEST
 	m_guest_Init(ModCmdsInfo);
 #endif
@@ -449,6 +455,7 @@ int    l_commands_Load(int module_load)
 	m_opermotd_Load(module_load);
 	m_botmotd_Load(module_load);
 	m_lusers_Load(module_load);
+	m_names_Load(module_load);
 #ifdef GUEST
 	m_guest_Load(module_load);
 #endif
@@ -560,6 +567,7 @@ int	l_commands_Unload(int module_unload)
 	m_opermotd_Unload();
 	m_botmotd_Unload();
 	m_lusers_Unload();
+	m_names_Unload();
 #ifdef GUEST
 	m_guest_Unload();
 #endif

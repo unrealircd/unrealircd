@@ -1,116 +1,103 @@
-
-Unreal3.2.3 Release Notes
+Unreal3.2.5 Release Notes
 ==========================
+
+If you are upgrading, please take a minute to read these release notes.
+*NIX Users: PREFIX_AQ is now enabled by default. See under 'CHANGED' below.
+
+If you are a coder and want to help out with Unreal3.3* development, then check out
+http://dev.unrealircd.com/ and http://dev.unrealircd.com/wiki/Coders_Contest
 
 ==[ GENERAL INFORMATION ]==
 - If you are upgrading on *NIX, make sure you run 'make clean' and './Config'
   first before doing 'make'
 - The official UnrealIRCd documentation is doc/unreal32docs.html
-  online version at: http://www.vulnscan.org/UnrealIrcd/unreal32docs.html
-  FAQ: http://www.vulnscan.org/UnrealIrcd/faq/
+  online version at: http://www.vulnscan.org/UnrealIRCd/unreal32docs.html
+  FAQ: http://www.vulnscan.org/UnrealIRCd/faq/
   Read them before asking for help.
 - Report bugs at http://bugs.unrealircd.org/
 - When upgrading a network, we assume you are upgrading from the previous
-  version (3.2.2). If you got a net running with servers that are several
-  versions behind (eg: 3.2.1) then you might experience (desynch) problems.
-  Also, if you try to use the new features, some might not work properly
-  until all your servers are upgraded. It is therefore recommended to
-  upgrade all servers in a 'short' time span (x day[s], not weeks).
+  version (3.2.4). Upgrading from 3.2.3 is ok as well.
+  However, if you have a network running with servers that are several versions behind
+  (eg: 3.2.1) then you might experience small (desynch) problems.
+  Please also minimize the time you have multiple versions running, a few days or
+  one week is generally not a problem, but having mixed versions on a network for several
+  weeks or months is not recommended.
 
 ==[ NEW ]==
-- Channel mode +I (invex, invite exceptions). Users on this list can join +i channels
-  without needing an /invite.
-- Channel mode +j (jointhrottle). If you set +j X:Y you limit each user (individually)
-  to X joins per Y seconds to the channel.
-- Nick Character System: this allows you to choose which additional characters to
-  allow in nicknames by language (and codepage). Currently available are:
-  catalan, dutch, french, german, swiss-german, icelandic, italian, spanish,
-  swedish, hungarian, polish, romanian, slovak, czech, greek, turkish, russian,
-  hebrew and chinese. There are also several 'groups' available, for more info see:
-  http://www.vulnscan.org/UnrealIrcd/unreal32docs.html#feature_nickchars
-- *NIX: ./Config -advanced, allows you to choose more options
-- tld::botmotd and tld::opermotd
-- Using /INVITE with no parameters will a list of channels you are invited to
-  but have not yet joined.
-- set::gline-address, works just like set::kline-address but then for glines.
-- Added a basic regex tutorial in unreal32docs.html
-- /SAJOIN now supports multiple channels (and '0') again.
-- Spamfilter topic support ('t' in spamfilter, 'topic' in conf).
-- Added a feature to +b/+e ~c: ~c:[prefix]<#channel>. This can be used if you for
-  example trust all ops of #leet: mode #x +e ~c:@#leet.
-- Various translated documents in doc/: unreal32docs.gr.html (Greek), help.fr.conf
-  and example.fr.conf (French), help.de.conf & example.de.conf (German), and
-  example.hu.conf (Hungarian).
+- CGI:IRC Host spoofing support. This means you can mark certain CGI:IRC gateways
+  as trusted, and then the IRCd will show the real IP/host everywhere for those
+  users, instead of the IP/host of the CGI:IRC gateway. See docs section 4.36.
+- Time synchronization support. This is enabled by default and will synch the IRCd
+  clock when Unreal is started. This should get rid of most time differences, though
+  the clock can still be off 1-3 seconds. If for some reason no reply from the time
+  servers is received within 3 seconds, then the IRCd will continue to boot as usual.
+  Several set::timesynch::* settings have been added, including set::timesynch::enabled
+  which you can set to 'no' to disable time synching (eg: because you already run ntpd).
+- NAMESX support. This (mostly) fixes a long-standing IRC protocol bug. If, for
+  example, a user was +vo and then deops (-o), other clients could not always
+  know the user was then still +v, now they can. Supported by XChat and newest mIRC.
+- Chained SSL certificates support
+- Russian doc/example.ru.conf and Turkish doc/unreal32docs.tk.html
 
 ==[ CHANGED ]==
-- Updated auspice.conf
-- The usual doc updates, help.conf, spamfilter.conf, dccallow.conf, etc.
-- The config parser got (mostly) recoded. This makes it rehash much faster,
-  additionally "duplicate item" checking is now available.
-- Added a 'B' flag to /who output for bots. Also normal users can now /who +m B.
-- Support in configfiles for \\ (= a \)
-- set::dns::bind::ip, hardly useful for anyone
-- If a user is +b on a channel, and set::allow-userhost-change force-rejoin is
-  in use, then a part/join is not sent in order to prevent flooding.
-- OperOverride INVITE notices are now sent out globally to all +s +e users.
-- User mode 'g' is now operonly, it hardly did anything for non-opers.
-- Made CIDR no longer accept bitmasks with less than 16bits for /*line commands.
-- Modulized a lot of commands (~5000 lines of code).
-- Made channel modes +c/+S deal with RGB color codes.
-- If no log { } block is present, then a warning will be printed and we will log
-  by default to ircd.log (errors only).
-- If an invalid character is found in a nick then the whole nick is rejected now.
-- Changed numeric&text of 'is a Secure Connection' to 'is using a Secure Connection',
-  client coders are encouraged to add support for this new numeric 671. Until then,
-  in-window-/whois's will probably be broken.
-- A locops with can_override/can_gkline/can_gzline is now automatically converted
-  to a globop, just like we do with can_globalroute/can_gkline. These privileges
-  are GLOBAL and therefore are not meant to be granted to locops.
-- A warning is now sent to an oper if (s)he tries to use /(G)ZLINE on a host.
-  (G)ZLINES should be placed on *@ipmasks because they are processed before any
-  ident and host lookups.
-- Made (fast) badwords work better with word boundaries, in practice this means
-  blocking of words with accents/umlauts/es-zett/etc now works properly.
-- Made it so halfops can now -h themselves and chanadmins can -a themselves.
-- Made spamfilter 'u' also check nickchanges.
+- PREFIX_AQ (the ~ and & symbols for +q and +a) are now ENABLED BY DEFAULT on *NIX.
+  They have always been enabled on Windows, so it made sense to do the same for *NIX.
+  Pretty much all major clients support it now (mIRC, xchat, irssi, epic, PJIRC,
+  CGI:IRC, etc).
+- If DNS info (*NIX: /etc/resolv.conf, Win: registry) is updated, a '/REHASH -dns'
+  now rereads this info, no restart needed anymore.
+- me::numeric can now be changed without a restart, if no servers are linked.
+- Improved windows crash info: we now create minidumps, this should aid debugging.
+- '/quote dns i' (as an oper) now shows nameserver info again
+- Local oper may now use /TRACE
+- If channel is +m but -t, you now need at least voice (+v) to change the topic.
+- When checking if someone is banned, we now always verify bans against the cloaked host,
+  even if the user has a vhost and the cloaked host is not visible / unused.
+- Extra binary compatibility checks: (gcc) compiler version
+- Allow /*LINE'ing of literalident@* (eg: gline clones@*). Things like *clones@* are
+  still denied though, and this will not be changed. Use services AKILL instead.
+- Command aliases: made empty parameters work if the alias allows it (eg, the alias
+  uses .* as a regex and not .+)
+- Moved another 2K lines from core to modules, this means 31K lines are now in modules
+  and can be upgraded on the fly.
+- Real Command Aliases: This makes it possible to, for example, alias '/GLINEBOT' to
+  'GLINE <param> 2d Bots are not permitted on this network, etcetc'. For more information,
+  see the docs on the alias block and/or search for "glinebot" in doc/example.conf.
+- /etc/hosts is no longer checked (it never did before 3.2.3 either)
 
 ==[ MAJOR BUGS FIXED ]==
-- Serious crashbug [this is the same fix that was fixed by the hotfix/3.2.2b]
-- TRE mem corruption- & crash-bugs (eg: in backreferences).
+- Spamfilter was not always working properly
+- MS Visual studio 2005 (8.x) was unable to compile Unreal and/or caused crashes
+- Certain IPv6 listen blocks could crash the ircd on-boot/on-rehash
 
 ==[ MINOR BUGS FIXED ]==
-- Made kline/shun/zline/gzline without parameters report the correct stats(flag).
-- Made a few more errors send out to all opers, such as link::bind-ip problems.
-- A few missing operflags in /STATS O (and SVSO)
-- DCC Spamfilter was not always working correctly
-- OperOverriding to, for example, a +zi channel did not print the special join notice.
-- Servers behind ulines were not properly ulined, one effect that had was causing
-  an odd view in /MAP if you had flat-map + hide ulines + a juped server in services.
-- Made SVSMODE -b/-e remove bans/excepts placed on IPs
-- The set::htm::incoming-rate config item was not working correctly
-- If a user was +R then remote server notices were accidently also filtered.
-- A locop setting MODE #CHAN +O caused a desynch
-- Resolver sometimes incorrectly aliased names, causing incorect TTLs etc.
-- Fixed SVSNOOP not removing ALL oper status properly.
-- 'shun' target was not working for spamfilter and ban version { }
-- Removing of shuns placed on IP's did not take effect immediately (had to reconnect).
-- Fixed a bug in mode skipping (eg: '+qk a b' if not +q) and error msgs.
-- Chanmode +f #t (per-user text limit) now no longer affects halfops.
-- Opers w/can_override can now +qa/-qa if they are not netadmins, also affected +L/+u.
-  Be sure you upgrade all servers to 3.2.3 if using these new abilities, or else you
-  will get desynch issues.
-- Fixed several /SAMODE bugs as well, regarding non-netadmins, being halfop'ed, etc.
-- /GZLINE [nick] was placing a *line on *@host instead of *@IP, fixed.
-- alias::format in combination with ::type 'command' caused a crash
-- zlib upgraded to 1.2.2, curl upgraded to 7.13.1, both fix various issues.
-- Win32 installer now also installs doc\technical\*.*
-- Desynch issues regarding +s/+p and +c/+S
-- /SAMODE causing a 'fishy timestamp' if a cmode with a digit parameter was used.
+- "Looking up your hostname" message was missing if set::options::show-connect-notice
+  was enabled (other messages, like "looking up ident" were shown, however)
+- It was sometimes impossible to update a link { } block: all old settings would still
+  be used, this happened if connfreq was low. This might also have caused crashes.
+- Netsynch problem, which could cause the wrong modes to be applied to a channel in
+  some rare cases.
+- Setting set::maxdccallow to 0 (or lower) still allowed one entry to be added
+- Spamfilter oversized-checking is no longer done when removing a spamfilter
+- Operator count bug (there might still be others...)
+- Some chinese-* charsets could not be selected individually
+- No longer requiring a C++ compiler (was caused by resolver in 3.2.4)
+- Added workaround for "make: Permission denied" bug in some FreeBSD's
 
 ==[ REMOVED ]==
-- NAZIISH_CHBAN_HANDLING (did not work at all)
-- The 'oldcloak' cloaking module is now removed, since this old algorithm got broken
-  8 months ago, nobody should be using it anymore.
+- MS Visual Studio 6 support, but this did not work anymore anyway...
+
+==[ KNOWN ISSUES ]==
+- Windows 2003: Crashes directly on-boot have been reported, while other W2003 servers
+  work perfectly fine (including the one we used for testing). No pattern in this has
+  been found yet, but the bug is somewhere in the resolver (c-ares).
+- Regexes: Be careful with backreferences (\1, etc), certain regexes can slow the IRCd
+  down considerably and even bring it to a near-halt. In the spamfilter user target it's
+  usually safe though.
+- Regexes: Possessive quantifiers such as, for example, "++" (not to be confused with "+")
+  are not safe to use, they can easily freeze the IRCd.
+- Windows: The /RESTART command will work, but the second time you do a /RESTART the
+  IRCd will "crash" with a dialogbox.
 
 ==[ ADDITIONAL INFO ]==
 * See Changelog for more details

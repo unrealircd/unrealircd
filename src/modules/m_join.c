@@ -219,7 +219,7 @@ Ban *banned;
 #ifndef NO_OPEROVERRIDE
 #ifdef OPEROVERRIDE_VERIFY
         if (IsOper(sptr) && (chptr->mode.mode & MODE_SECRET ||
-            chptr->mode.mode & MODE_PRIVATE))
+            chptr->mode.mode & MODE_PRIVATE) && !is_autojoin_chan(chptr->chname))
                 return (ERR_OPERSPVERIFY);
 #endif
 #endif
@@ -377,7 +377,7 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 		   a SJOIN bug --stskeeps */
 		sendto_serv_butone_token_opt(cptr, OPT_SJ3|OPT_SJB64,
 			me.name, MSG_SJOIN, TOK_SJOIN,
-			"%B %s :%s%s ", chptr->creationtime, 
+			"%B %s :%s%s ", (long)chptr->creationtime, 
 			chptr->chname, flags & CHFL_CHANOP ? "@" : "", sptr->name);
 		sendto_serv_butone_token_opt(cptr, OPT_SJ3|OPT_NOT_SJB64,
 			me.name, MSG_SJOIN, TOK_SJOIN,
@@ -461,7 +461,7 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 		}
 		parv[0] = sptr->name;
 		parv[1] = chptr->chname;
-		(void)m_names(cptr, sptr, 2, parv);
+		do_cmd(cptr, sptr, "NAMES", 2, parv);
 		RunHook4(HOOKTYPE_LOCAL_JOIN, cptr, sptr,chptr,parv);
 	} else {
 		RunHook4(HOOKTYPE_REMOTE_JOIN, cptr, sptr, chptr, parv); /* (rarely used) */

@@ -191,7 +191,7 @@ char mydummy2[MYDUMMY_SIZE];
 #  endif
 # endif
 
-# if defined(linux)
+# if defined(linux) && defined(NO_IN6ADDR_ANY)
 static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0
 };

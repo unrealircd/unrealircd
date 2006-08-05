@@ -5,7 +5,7 @@
 <META http-equiv=Content-Type content="text/html; charset=iso-8859-7">
 <STYLE>
 <!--
-.Normal {FONT-SIZE: 12pt; MARGIN: 0cm 0cm 0pt; FONT-FAMILY: "Times New Roman";}
+.Normal {FONT-SIZE: 12pt; FONT-FAMILY: "Times New Roman";}
 .desc {FONT-SIZE: 12pt; MARGIN-LEFT: 11.25pt; MARGIN-RIGHT: 0cm; FONT-FAMILY: "Times New Roman";}
 .desc {FONT-SIZE: 12pt; MARGIN-LEFT: 11.25pt; MARGIN-RIGHT: 0cm; FONT-FAMILY: "Times New Roman";}
 .desc {FONT-SIZE: 12pt; MARGIN-LEFT: 11.25pt; MARGIN-RIGHT: 0cm; FONT-FAMILY: "Times New Roman";}
@@ -14,7 +14,7 @@
 <!-- $Id$ -->
 </HEAD>
 <BODY class="Normal"> 
-<DIV class=Section1> <a href="unreal32docs.html">English</a> | <a href="unreal32docs.de.html">German</a> | <a href="unreal32docs.es.html">Spanish</a> | <a href="unreal32docs.hu.html">Hungarian</a> | <a href="unreal32docs.fr.html">French</a> | Greek <br> 
+<DIV class=Section1> <a href="unreal32docs.html">English</a> | <a href="unreal32docs.de.html">German</a> | <a href="unreal32docs.es.html">Spanish</a> | <a href="unreal32docs.hu.html">Hungarian</a> | <a href="unreal32docs.fr.html">French</a> | Greek | <a href="unreal32docs.nl.html">Dutch</a> | <a href="unreal32docs.ru.html">Russian</a> | <a href="unreal32docs.tk.html">Turkish</a><br> 
   <br> 
   <P style="TEXT-ALIGN: center" align=center><B><SPAN 
 
@@ -26,14 +26,14 @@ style="FONT-SIZE: 13.5pt"><A
 href="http://www.unrealircd.com/">http://www.unrealircd.com/</A></SPAN><BR> 
     <SPAN 
 
-style="FONT-SIZE: 13.5pt">Version: 3.2.3</SPAN><BR> 
-    <B>Last doc update:</B> 2005-03-13</P> 
+style="FONT-SIZE: 13.5pt">Version: 3.2.5</SPAN><BR> 
+    <B>Last doc update:</B> 2006-06-15</P> 
   <P><BR> 
     <B>Head Coders:</B> Stskeeps / codemastr / Syzop / Luke<BR> 
     <B>Contributors:</B> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<BR> 
     <B>Documentation:</B> CKnight^ / Syzop</P> 
   <P><B>Μετάφραση:</B> <a href="mailto:GSF19@altecnet.gr">GSF</a> - UnReaL.mirc.gr on HellenicNet</P> 
-  <P> Λόγω της αυξανόμενης περιπλοκότητας του UnrealIRCd3.2 στραφήκαμε σε ένα πιο έυκολο, πιο περιεκτικό βοηθητικό έγγραφο. Για να μπορέσετε να δείτε αυτο το έγγραφο πρέπει να έχετε έναν συμβατό περιηγητή, όπως αυτοί που υπάρχουν παρακάτω: Τα τελευταία βοηθητικά έγγραφα βρίσκονται στο <A 
+  <P> Για να μπορέσετε να δείτε αυτο το έγγραφο πρέπει να έχετε έναν συμβατό περιηγητή, όπως αυτοί που υπάρχουν παρακάτω: Τα τελευταία βοηθητικά έγγραφα βρίσκονται στο <A 
 
 href="http://www.vulnscan.org/UnrealIrcd/unreal32docs.html">http://www.vulnscan.org/UnrealIrcd/unreal32docs.html</A> και το FAQ στο <A href="http://www.vulnscan.org/UnrealIrcd/faq/" 
 
@@ -108,8 +108,11 @@ href="#feature_spamfilter">Spamfilter</A><BR>
 
 href="#feature_cidr">CIDR</A><br> 
     -- 3.16. <a href="#feature_nickchars">Σετ χαρακτήρων Nick</a><br> 
-    -- 3.17. <A 
-
+	-- 3.17. <A 
+href="#feature_cgiirc">Υποστήριξη CGI:IRC</A><BR> 
+    -- 3.18. <A 
+href="#feature_timesync">Συγχρονισμός Ώρας</A><BR> 
+    -- 3.19. <A 
 href="#feature_other">Άλλα χαρακτηριστικά</A><BR> 
     4. <A 
 
@@ -221,6 +224,9 @@ href="#officialchannels">Επιλογή Official Channels</A><BR>
 href="#spamfilter">Επιλογή Spamfilter</A><BR> 
     ---4.36. <A 
 
+href="#cgiirc">Επιλογή CGI:IRC</A><BR> 
+    ---4.37. <A 
+
 href="#setblock">Επιλογή Set -=- (networks/unrealircd.conf)</A><BR> 
     5. <A 
 
@@ -261,7 +267,7 @@ href="#secantiexploit">Protecting against exploits</A><BR>
     ---8.9. <A 
 
 href="#secsummary">Summary</A><BR> 
-    9. <A href="http://www.vulnscan.org/UnrealIrcd/faq/" target=_blank>Frequently Asked Questions (FAQ)</A><br> 
+    9. <A href="http://www.vulnscan.org/UnrealIRCd/faq/" target=_blank>Frequently Asked Questions (FAQ)</A><br> 
     A. <a href="#regex">Κανονικές εκφράσεις</a><br> 
     ---A.1. <a href="#regexlit">Literals</a><br> 
     ---A.2. <a href="#regexdot">Τελεστής Τελεία(.)</a><br> 
@@ -277,10 +283,10 @@ href="#secsummary">Summary</A><BR>
 
 name=IntroductionNotes></A></P> 
   <DIV style="MARGIN-LEFT: 11.25pt"> 
-    <P>Αυτό το έγγραφο έχει γραφτεί για αποκλειστική χρήση με το UnrealIRCd. Η χρήση του εγγράφου με άλλο πρόγραμμα , ή η διανομή&nbsp; αυτου του εγγράφου μαζι με άλλο πρόγραμμα απαγορέυεται αυστηρά χωρίς την γραπτή άδεια της ομάδας προγραμματισμού του UnrealIRCd. Αυτο το έγγραφο μπορει να αντιγραφεί/εκτυπωθεί/επαναδημιουργηθεί/εκδοθεί όσες φορές θέλετε, όσο παρέχεται για χρήση με το UnrealIRCd και δεν έχει τροποποιηθεί με κανέναν τρόπο. &#8211; Copyright UnrealIRCd Development Team 2002-2004</P> 
+    <P>Αυτό το έγγραφο έχει γραφτεί για αποκλειστική χρήση με το UnrealIRCd. Η χρήση του εγγράφου με άλλο πρόγραμμα , ή η διανομή&nbsp; αυτου του εγγράφου μαζι με άλλο πρόγραμμα απαγορέυεται αυστηρά χωρίς την γραπτή άδεια της ομάδας προγραμματισμού του UnrealIRCd. Αυτο το έγγραφο μπορει να αντιγραφεί/εκτυπωθεί/επαναδημιουργηθεί/εκδοθεί όσες φορές θέλετε, όσο παρέχεται για χρήση με το UnrealIRCd και δεν έχει τροποποιηθεί με κανέναν τρόπο. &#8211; Copyright UnrealIRCd Development Team 2002-2006</P> 
     <P>Παρακαλούμε διαβάστε αυτό το εγχειρίδιο πριν ζητήσετε οποιαδήποτε βοήθεια, και επισης ΣΙΓΟΥΡΑ πρέπει να ρίξετε μια ματιά και στο <A 
 
-href="http://www.vulnscan.org/UnrealIrcd/faq/" target=_blank>FAQ</A> αφου περισσότερο απο το 80% απο τις ερωτήσεις/προβλήματα έχουν απαντηθεί εκεί. Αν συνεχίζετε να χρειάζεστε βοήθεια μπορείτε να ζητήσετε υποστήριξη στο irc.ircsystems.net (port 6667) κανάλι&nbsp; #unreal-support (να γνωρίζετε οτι ΑΠΑΙΤΟΥΜΕ να έχετε διαβάσει το εγχειρίδιο και το <SPAN lang=EN-US>FAQ</SPAN>, και οτι προσφέρουεμ βοήθεια μόνο για το UnrealIRCd, όχι με τα services!). Αν έχετε βρεί κάποιο σφάλμα στο πρόγραμμα (όπως crash) τότε υποβάλετέ το στο <A 
+href="http://www.vulnscan.org/UnrealIRCd/faq/" target=_blank>FAQ</A> αφου περισσότερο απο το 80% απο τις ερωτήσεις/προβλήματα έχουν απαντηθεί εκεί. Αν συνεχίζετε να χρειάζεστε βοήθεια μπορείτε να ζητήσετε υποστήριξη στο irc.ircsystems.net (port 6667) κανάλι&nbsp; #unreal-support (να γνωρίζετε οτι ΑΠΑΙΤΟΥΜΕ να έχετε διαβάσει το εγχειρίδιο και το <SPAN lang=EN-US>FAQ</SPAN>, και οτι προσφέρουεμ βοήθεια μόνο για το UnrealIRCd, όχι με τα services!). Αν έχετε βρεί κάποιο σφάλμα στο πρόγραμμα (όπως crash) τότε υποβάλετέ το στο <A 
 
 href="http://bugs.unrealircd.org/" 
 
@@ -321,11 +327,11 @@ name=installation></A>Εγκατάσταση</SPAN></B></P>
     </UL> 
     <UL type=disc> 
       <UL type=circle> 
-        <LI>Linux 2.2.x
-        <LI>Linux 2.4.x
-        <LI>FreeBSD 4.6-STABLE
-        <LI>FreeBSD 4.5-STABLE
-        <LI>Solaris 2.x </LI> 
+        <LI>Linux (2.2.*, 2.4.*, 2.6.*)
+        <LI>FreeBSD (4.*, 5.*)
+		<LI>NetBSD (2.*)
+		<LI>OpenBSD (3.7, 3.8, 3.9)
+        <LI>Solaris (9, 10) </LI> 
       </UL> 
     </UL> 
     <UL type=disc> 
@@ -333,25 +339,28 @@ name=installation></A>Εγκατάσταση</SPAN></B></P>
     </UL> 
     <UL type=disc> 
       <UL type=circle> 
-        <LI>WindowsXP Home
-        <LI>WindowsXP Pro
-        <LI>Windows 2000 Pro
-        <LI>Windows 2000 Server
-        <LI>Windows 2000 Advanced Server
-        <LI>Windows 98
-        <LI>Windows Me </LI> 
+        <LI>Windows 2000 (Pro, Server, Advanced Server)
+        <LI>Windows XP (Home, Pro)
+        <LI>Windows 2003
+	  </UL>
+		<LI><b> Δοκιμασμένες Αρχιτεκτονικές: </b>
+		<UL>
+		<LI>ia32 (i386, i486, i586, i686)
+		<LI>ia64
+		<LI>amd64
+		<LI>alpha
       </UL> 
     </UL> 
     <P><BR> 
       Αν γνωρίζετε οτι το Unreal3.2 λειτουργεί σωστά και σε άλλα λειτουργικά συστήματα, παρακαλούμε στείλτε τις λεπτομέριες στο <A 
 
-href="mailto://docs@unrealircd.com">docs@unrealircd.com<BR> 
+href="mailto://coders@lists.unrealircd.org">coders@lists.unrealircd.org<BR> 
       </A></P> 
-    <P><B>Installation Instructions</B><BR> 
+    <P><B>Οδηγείες Εγκατάστασης</B><BR> 
       Linux:</P> 
     <OL type=1> 
-      <LI>gunzip -d Unreal3.2.2.tar.gz
-      <LI>tar xvf Unreal3.2.2.tar
+      <LI>gunzip -d Unreal3.2.X.tar.gz
+      <LI>tar xvf Unreal3.2.X.tar
       <LI>cd Unreal3.2
       <LI>./Config
       <LI>Απαντήστε τις ερωτήσεις με τον καλύτερο τρόπο που σας επιτρέπουν οι γνώσεις σας. Ψενικά αν δεν είστε σίγουροι, οι προεπιλεγμένες απαντήσεις θα λειτουργήσουν μια χαρα!
@@ -369,7 +378,7 @@ href="mailto://docs@unrealircd.com">docs@unrealircd.com<BR>
 name=features></A></P> 
   <DIV style="MARGIN-LEFT: 11.25pt"> 
     <P>Μερικά απο τα πιο βασικά/ωραία χαρακτηριστικά αναλύονται σε αυτήν την παράγραφο. Παρέχει μια γενική κάτοψη, και μερικές φορές αναφέρεται στο αρχείο επιλογών (κατι που ίσως για το οποίο δεν γνωρίζετε τίποτα ακομα).</P> 
-    <P>Μπορείτε να αγνοήσετε αυτήν την παράγραφο, όμως προτείνεται να την διαβάσετε πρίν/μετά απο την εγκατάσταση.</P> 
+    <P>Μπορείτε να αγνοήσετε αυτήν την παράγραφο, όμως προτείνουμε ανεπιφύλακτα να την διαβάσετε πρίν/μετά απο την εγκατάσταση γιατι αλλιώς δεν θα μπορέσετε να καταλάβετε ιδέες όπως cloaking','snomasks',κτλπ.</P> 
   </DIV> 
   <P><B><SPAN style="FONT-SIZE: 18pt">3.1 - Cloaking</SPAN></B><A 
 
@@ -425,7 +434,7 @@ name=feature_snomasks></A></P>
 name=feature_aliases></A></P> 
   <DIV style="MARGIN-LEFT: 11.25pt"> 
     <P>Με τις συντομεύσεις (<SPAN lang=EN-US>Aliases) </SPAN>μπορείτε να σετάρετε server-side εντολές συντομεύσης. Μπορείτε για παράδειγμα να κάνετε το "/ns identify blah" να προωθείται στον nickserv (θα μεταφραστεί σε: privmsg nickserv identify blah). Μπορείτε ακόμα να δημιουργήσετε πιο πολύπλοκες συντομεύσεις όπως το /register να προωθείται στον ChanServ μόνο αν το πρώτο όρισμα αρχίζει με # αλλιώς να προωθείται στον NickServ.</P> 
-    <P>Οι συντομεύσεις (Aliases) ορίζονται με την επιλογή alias στο αρχείο επιλογών, και μπορείτε επίσης να συμπεριλάβετε ένα αρχείο με αρχικές συντομεύσεις για τις υπηρεσίες που χρησιμοποιούνται συχνότερα.</P> 
+    <P>Οι συντομεύσεις (Aliases) ορίζονται με την επιλογή <a href="#aliasblock">alias blocks</a> στο αρχείο επιλογών, και μπορείτε επίσης να συμπεριλάβετε ένα αρχείο με αρχικές συντομεύσεις για τις υπηρεσίες που χρησιμοποιούνται συχνότερα.</P> 
   </DIV> 
   <P><B><SPAN style="FONT-SIZE: 18pt">3.5 - Helpop</SPAN></B><A 
 
@@ -942,7 +951,7 @@ lang=EN-US>ban </SPAN>βασισμένο στο CIDR σας επιτρέπει να κάνετε ban μια εταιρία
 <tr><td>hungarian</td><td>Χαρακτήρες Ουγγρικών</td><td>iso8859-2 (latin2), windows-1250</td></tr>
  <tr><td>polish</td><td>Χαρακτήρες Πολωνικών</td><td>iso8859-2 (latin2)</td></tr>
 <tr><td>romanian</td><td>Χαρακτήρες Ρουμάνικων</td><td>iso8859-2 (latin2), windows-1250, iso8859-16</td></tr> 
-   <tr><td><b>latin2</b></td><td>hungarian, polish, romanian</td><td>iso8859-2 (latin2)</td></tr> 
+   <tr><td><b>latin2</b></td><td>Ουγγρικά, Πολωνικά, Ρουμάνικα</td><td>iso8859-2 (latin2)</td></tr> 
    <tr><td>polish-w1250</td><td>Χαρακτήρες Πολωνικών, windows variant (unfortunately more common than iso)</td><td>windows-1250</td></tr> 
    <tr><td>slovak-w1250</td><td>Χαρακτήρες Σλοβακικών, windows variant</td><td>windows-1250</td></tr> 
    <tr><td>czech-w1250</td><td>Χαρακτήρες Τσέχικων, windows variant</td><td>windows-1250</td></tr> 
@@ -952,9 +961,15 @@ lang=EN-US>ban </SPAN>βασισμένο στο CIDR σας επιτρέπει να κάνετε ban μια εταιρία
         <td class="Normal">Χαρακτήρες Ελληνικών</td> 
         <td class="Normal">iso8859-7</td> 
       </tr> 
-<tr><td>turkish</td><td>Turkish characters</td><td>iso8859-9</td></tr> 
-   <tr><td>russian-w1251</td><td>Russian characters</td><td>windows-1251</td></tr> 
-   <tr><td>hebrew</td><td>Hebrew characters</td><td>iso8859-8-I/windows-1255</td></tr> 
+<tr><td>turkish</td><td>Χαρακτήρες Τούρκικων</td><td>iso8859-9</td></tr> 
+   <tr><td>russian-w1251</td><td>Χαρακτήρες Ρωσσικών</td><td>windows-1251</td></tr> 
+     <tr><td>belarussian-w1251</td><td>Χαρακτήρες Belarussian</td><td>windows-1251</td></tr> 
+   <tr><td>ukrainian-w1251</td><td>Χαρακτήρες Ουκρανικών</td><td>windows-1251</td></tr> 
+   <tr><td><b>windows-1251</b></td><td>russian-w1251, belarussian-w1251, ukrainian-w1251</td><td>windows-1251</td></tr> 
+
+   <tr><td>hebrew</td>
+   <td>Χαρακτήρες Εβραϊκών</td>
+   <td>iso8859-8-I/windows-1255</td></tr> 
       <tr> 
         <td class="Normal">chinese-simp</td> 
         <td class="Normal">Απλοποιοημένα Κινέζικα</td> 
@@ -997,10 +1012,28 @@ lang=EN-US>ban </SPAN>βασισμένο στο CIDR σας επιτρέπει να κάνετε ban μια εταιρία
     Παράδειγμα 2, αν έχετε περισσότερο κινέζους χρήστες και θέλετε να επιτρέψετε "κανονικούς" κινέζικους χαρακτήρες:<br> 
     <pre>set { allowed-nickchars { chinese-simp; chinese-trad; }; };</pre>  
   </div> 
-  <P><B><SPAN 
-
-style="FONT-SIZE: 18pt"><br> 
-    3.17&#8211; <A name=feature_other></A>Άλλα Χαρακτηριστικά</SPAN></B></P> 
+  <P><br> 
+  <p><font size="+2"><b>3.17 - Υποστίρηξη CGI:IRC</b></font><a name="feature_cgiirc"></a></p><div class="desc">
+  	 <p>Το UnrealIRCd υποστιρίζει τις κρυπτογραφημένες διευθύνσεις CGI:IRC, που σημαίνει οτι μπορείτε να σημειώσετε συγκεκριμένους διαύλους επικοινωνίας CGI:IRC
+  	 ώς "εμπιστευόμενες" που θα αναγκάσει το IRCd να εμφανίσει την πραγματική διεύθυνση του χρήστη παντού στο
+  	 IRC, αντι για την διεύθυνση του διαύλου επικοινωνίας CGI:IRC.</p>
+  	 <p>Δείτε επίσης <a href="#cgiirc">Επιλογή cgiirc</a> για πληροφορίες στο πώς να το προγραμματίσετε.</p>
+  	 </div>
+  	 
+  	 <p><font size="+2"><b>3.18 - Συγχρονισμός Ώρας</b></font><a name="feature_timesync"></a></p><div class="desc">
+  	 <p>Το να υπάρχει σωστή ώρα στο σύστημα είναι πολύ σημαντικό για τους διακομιστές IRC. Χωρίς σωστή ώρα, τα κανάλια μπορούν να αποσυγχρονιστούν, αθώοι χρήστες να αποσυνδεθούν, τα κανάλια ίσως δεν εμφανιστούν σωστά στην εντολή /LIST, με λίγα λόγια: τεράστιο πρόβλημα θα δημιουργηθεί.</p>
+  	 <p>Το UnrealIRCd έχει ενσωματωμένη κάποια υποστίριξη για τον συγχρονισμό της ώρας.
+  	 Αν και αυτή δεν είναι η ιδανική(η ώρα μπορεί να είναι ακόμα λανθασμένη κατα μερικά δευτερόλεπτα), θα ξεφορτωθεί τις περισσότερες διαφορές ώρας.
+  	 Αν μπορείτε, συνηστάται ακόμα να χρησιμοποιείσετε προγράμματα συγχρονισμού ώρας όπως το ntpd στο *NIX ή
+  	 την υπηρεσία συγχρονισμού της ώρας στα Windows (σε αυτήν την περίπτωση, μπορείτε να κλείσετε τον συγχρονισμό ώρας του Unreal, περισσότερα γιαυτό παρακάτω).</p>
+  	 <p>Αυτό που κάνει το UnrealIRCd (ώς αρχική επιλογή) είναι να κάνει μια μοναδική προσπάθεια συγχρονισμού την ώρα που φορτώνει. Στέλνει (ώς αρχική επιλογή) μια αίτηση
+  	 σε πολλαπλούς διακομιστές συγχρονισμού και όταν δεχτεί την πρώτη (γρηγορότερη) απάντηση, θα προσαρμόσει το εσωτερικό ρολόι του ircd
+  	 (ΟΧΙ το ρολόι του συστήματος). Αν, για κάποιον λόγο, το Unreal δεν δεχτεί κάποια απάντηση απο κάποιον διακομιστή μέσα σε 3 δευτερόλεπτα,
+  	 το IRCd θα συνεχίσει να φορτώνει αγνοώντας το (συμβαίνει σπάνια).</p>
+  	 <p>Ο Συγχρονισμός της ώρας προσαρμόζεται (και μπορεί να απενεργοποιηθεί) μέσα απο την επιλογή <b>set::timesynch</b>, δείτε
+  	    το <a href="#setblock">set documentation</a> για περισσότερες πληροφορίες.</p>
+  	 </div>
+    <p><font size="+2">3.19 <b><A name=feature_other></A>Άλλα Χαρακτηριστικά</b></font></P> 
   <DIV style="MARGIN-LEFT: 11.25pt"> 
     <P>Το UnrealIRCd έχει πολλά χαρακτηριστικά οπότε δεν καλύπτονται όλα εδώ... Θα το καταλάβετε και απο μόνοι σας.</P> 
   </DIV> 
@@ -1010,8 +1043,10 @@ style="FONT-SIZE: 18pt">4.0 &#8211; Διαμορφώνοντας το unrealircd.conf</SPAN></B>
 
 name=configuringyourunrealircdconf></A></P> 
   <DIV style="MARGIN-LEFT: 11.25pt"> 
-    <P>Πρώτα απ&#8217;όλα, το να δημιουργήσετε ένα καλό unrealircd.conf θα πάρει αρκετό χρόνο, πιθανότατα περίπου 10 &#8211; 60 λεπτά. Μπορείτε να προσπαθήσετε να το ξεκινήσετε όσο πιο γρήγορα μπορείτε και να το βελτιστοποιήσετε αργότερα, ή μπορείτε να μάθετε τις σημαντικότερες παραγράφους βήμα βήμα κάτι που προτείνεται ;P. Αν έχετε κάποιο πρόβλημα, ελέγξτε την σύνταξη, ελέγξτε το εγχειρίδιο και ελέγξτε το FAQ πριν ζητήσετε οποιαδήποτε βοήθεια/το υποβάλετε ώς bug.</P> 
-  </DIV> 
+    <P>Πρώτα απ&#8217;όλα, το να δημιουργήσετε ένα καλό unrealircd.conf θα πάρει αρκετό χρόνο, πιθανότατα περίπου 15 &#8211; 60 λεπτά. Η δημιουργια ενός <u>"σωστού"</u> unrealircd.conf θα πάρει ακόμα περισσότερη ώρα.
+   Δεν πρέπει να βιαστείτε να φορτώσετε το IRCd, αλλα καλύτερα να ελέγξετε τα πράγματα γραμμή-γραμμή. Αν έχετε κανένα πρόβλημα, ελέξτε το συντακτικό,ελέξτε αυτό το εγχειρίδιο
+    και επίσης ελέξτε το <a href="http://www.vulnscan.org/UnrealIRCd/faq/">FAQ</a> πρίν ζητήσετε βοήθεια/επισημάνετε ένα bug.</p>
+  </div>
   <P><B><SPAN 
 
 style="FONT-SIZE: 18pt">4.1 Το αρχείο Επιλογών αναλυτικά</SPAN></B><A 
@@ -1026,14 +1061,14 @@ name=configurationfileexplained></A></P>
     <P>&lt;block-name&gt; Είναι ο τύπος της επιλογής, όπως το me, ή το admin. &lt;block-value&gt; μερικές φορές ορίζει μια τιμή, όπως στο /oper login, αλλα άλλες φορές θα είναι ένας υπο-τύπος όπως στο ban user.</P> 
     <P>&lt;block-directive&gt; Είναι μια χωριστή μεταβλητή αποκλειστικά για την επιλογή, και το &lt;directive-value&gt; είναι η τιμή με την οποία σχετιζεται. Αν το &lt;directive-value&gt; περιέχει κενά, ή χαρακτήρες που αντιπροσωπεύουν ένα σχόλιο πρέπει να περιέχεται μέσα σε λατινικά εισαγωγικά. Αν θέλετε να χρησιμοποιήσετε έναν εισαγωγικό χαρακτήρα μέσα σε μιά εισαγωγική φράση χρησιμοποιήστε \" και το πρόγραμμα θα το δεχτεί ώς εισαγωγικό χαρακτήρα.</P> 
     <P>Το &lt;block-directive&gt; μπορεί να έχει ορίσματα μέσα του, σε αυτήν την περίπτωση θα έχει περιέχεται μέσα σε αγκύλες. Μερικές επιλογές δέν έχουν ορίσματα και ορίζονται απλώς με το &lt;block-value&gt;, όπως το include. Ακόμα σημειώστε οτι δεν υπάρχει μορφοποίηση με set, που σημαίνει οτι όλη η επιλογή μπορεί να εμφανίζεται σε μιά γραμμή ή σε περισσότερες. Η μορφοποίηση πιο πάνω είναι αυτή που κανονικά χρησιμοποιείται (και που θα χρησιμοποιείται στο αρχείο) γιατί είναι εύκολο να διαβαστεί. </P> 
-    <P>Σημείωση: Το αρχείο επιλογών είναι ευαίσθητο στα κεφαλαία δηλαδή το BLOCK-NAME δεν είναι το ίδιο με το&nbsp; block-name. Υπάρχει ειδική σημείωση που αναφέρεται στις καταχωρήσεις στο αρχείο επιλογών. Ψια παράδειγμα, μιλώντας για το &lt;directive-name&gt; στο παράδειγμα παραπάνω, θα λέγατε &lt;block-name&gt;::&lt;block-directive&gt;, και αν αυτό το όρισμα έχει υπο-επιλογή που θέλετε να συμπεριλάβετε, θα προσθέτατε άλλο ένα :: και το όνομα του υπο ορίσματος. </P> 
+    <P>Σημείωση: Το αρχείο επιλογών είναι ευαίσθητο στα κεφαλαία δηλαδή το <i>BLOCK-NAME</i> δεν είναι το ίδιο με το&nbsp; <i>block-name</i>. Υπάρχει ειδική σημείωση που αναφέρεται στις καταχωρήσεις στο αρχείο επιλογών. Ψια παράδειγμα, μιλώντας για το &lt;directive-name&gt; στο παράδειγμα παραπάνω, θα λέγατε &lt;block-name&gt;::&lt;block-directive&gt;, και αν αυτό το όρισμα έχει υπο-επιλογή που θέλετε να συμπεριλάβετε, θα προσθέτατε άλλο ένα :: και το όνομα του υπο ορίσματος. </P> 
     <P>Ψια να αναφερθείτε σε ένα ανώνυμο όρισμα θα κάνατε &lt;block-name&gt;:: που θα σήμαινε σε αυτην την περίπτωση &lt;block-value&gt;, ή θα μπορούσε να είναι μια καταχώρηση σε μια υπο-επιλογή χωρίς όνομα.</P> 
     <P>Τρείς τύποι σχολίων υποστιρίζονται:</P> 
     <P># Σχόλιο μιάς γραμμής<BR> 
       // Σχόλιο μιάς γραμμής<BR> 
       /* Σχόλιο πολλών<BR> 
 &nbsp;&nbsp;&nbsp;&nbsp;γραμμών */</P> 
-    <P>Τώρα που γνωρίζετε πώς λειτουργεί, δημιουργήστε το δικό σας unrealircd.conf απο την αρχή η αντιγράψτε το doc/example.conf και αρχίστε να το επεξεργάζεστε. Συστήνεται να προχωρήσετε βήμα-βήμα όλες τις επιλογές και να χρησιμοποιήσετε αυτο το εγχειρίδιο για αναφορά.</P> 
+    <P>Τώρα που γνωρίζετε πώς λειτουργεί, αντιγράψτε το <i>doc/example.conf</i> στον φάκελο του UnrealIRCd (π.χ: /home/user/Unreal3.2) και μετονομάστε το σε <i>unrealircd.conf</i> (Η δημιουργήστε το δικό σας <i>unrealircd.conf</i> απτην αρχή). Συστήνεται να προχωρήσετε βήμα-βήμα όλες τις επιλογές και ρυθμίσεις του αρχείου επιλογών και να χρησιμοποιήσετε αυτο το εγχειρίδιο για αναφορά.</P> 
   </DIV> 
   <P><B><SPAN 
 
@@ -2429,7 +2464,7 @@ cellPadding=0 border=0>
         </TR> 
         <TR> 
           <TD class="Normal"> <P><B>quarantine</B></P></TD> 
-          <TD class="Normal"> <P>οι διαχειριστές σε αυτόν τον server θα έχουν τοπικά δικαιώματα μόνο status</P></TD> 
+          <TD class="Normal"> <P>οι διαχειριστές σε αυτόν τον server δεν μπορούν να αποκτήσουν δικαιώματα GLOBAL διαχειριστή(θα γίνουν KILL), χρησιμοποιείται για δοκιμαστικούς διακομιστές κτλ.</P></TD> 
         </TR> 
       </TBODY> 
     </TABLE> 
@@ -2462,25 +2497,35 @@ style="COLOR: blue">ΠΡΟΑΙΡΕΤΙΚΟ</SPAN></B><A name=aliasblock></A> </P>
     alias &lt;name&gt; { 
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; target &lt;nick-to-forward-to&gt;; 
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; type &lt;type-of-alias&gt;; 
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; spamfilter &lt;yes|no&gt;;
     };</PRE> 
     <P>(Σημείωση: επίσης δείτε <A 
 
 href="#includedirective">εδώ</A> για τα standard αρχεία alias που περιέχονται στο UnrealIRCd)</P> 
-    <P>Η επιλογή alias [standard alias] σας επιτρέπει να προωθήσετε μια εντολή σε έναν χρήστη, για παράδειγμα /chanserv στέλνει ένα μήνυμα στον χρήστη chanserv. Το alias:: ορίζει το όνομα της εντολής η οποία θα είναι η συντόμευση (π.χ: chanserv), το alias::target είναι το όνομα η το κανάλι στο οποίο θα προωθηθεί το μήνυμα, άν το alias:: είναι το ίδιο με το όνομα, στο οποίο θα προωθηθεί, το alias::target είναι προαιρετικό. Το alias::type ορίζει τον τύπο της συντόμευσης, έγκυροι τύποι είναι services (ο χρήστης είναι στον server των services), stats (ο χρήστης βρίσκεται στον server των stats), normal (ο χρήστης είναι κανονικός χρήστης σε οποιονδήποτε server), και channel (ο στόχος είναι όνομα καναλιού). Η επιλογή alias έχει ακόμα μια χρήση της οποίας ο σκοπός επεξηγήται παρακάτω.</P> 
+    <P>Η επιλογή alias [standard alias] σας επιτρέπει να προωθήσετε μια εντολή σε έναν χρήστη, για παράδειγμα /chanserv στέλνει ένα μήνυμα στον χρήστη chanserv. Το alias:: ορίζει το όνομα της εντολής η οποία θα είναι η συντόμευση (π.χ: chanserv), το alias::target είναι το όνομα η το κανάλι στο οποίο θα προωθηθεί το μήνυμα, άν το alias:: είναι το ίδιο με το όνομα, στο οποίο θα προωθηθεί, το alias::target είναι προαιρετικό. Το alias::type ορίζει τον τύπο της συντόμευσης, έγκυροι τύποι είναι services (ο χρήστης είναι στον server των services), stats (ο χρήστης βρίσκεται στον server των stats), normal (ο χρήστης είναι κανονικός χρήστης σε οποιονδήποτε server), και channel (ο στόχος είναι όνομα καναλιού). Αν το alias::spamfilter (μή απαραίτητο) έχει οριστεί σε 'yes', τότε τα spamfilters θα ελέγχονται (η αρχική επιλογή ειναι 'no').<br> Η επιλογή alias έχει επίσης και άλλον έναν σκοπό που εξηγείται λεπτομερώς παρακάτω.</P> 
     <P>Σύνταξη [command alias]:</P> 
     <PRE>&nbsp; 
-    alias &lt;name&gt; { 
+    alias &lt;name&gt; {
+	 /* Για aliases που στέλνονται σε χρήστες/κανάλια */
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; format &lt;regex-expression&gt; { 
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; target &lt;nick-to-forward-to&gt;; 
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; type &lt;type-of-alias&gt;; 
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; parameters &lt;parameter-string&gt;; 
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }; 
+    /* Για 'πραγματικά aliases' */
+  	         format &lt;regex-expression&gt; {
+  	                 command &lt;command&gt;;
+  	                 type real;
+  	                 parameters &lt;parameter-string&gt;;
+  	         };
+  	         /* Κτλπ... μπορείτε να έχετε όσες επιλογές διαμόρφωσης επιθυμείτε.. */
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; format &lt;regex-expression&gt; { 
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ... 
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }; 
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; type command; 
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; type command;
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; spamfilter &lt;yes|no&gt;; 
     };</PRE> 
-    <P>Όταν η επιλογή alias χρησιμοποιείται με αυτήν την μορφή, σας επιτρέπει να έχετε μια πιο ευρεία περιοχή χρήσης. Για παράδειγμα μπορείτε να δημιουργήσετε συντομεύσεις όπως το /identify. Το alias:: είναι το ίδιο με παραπάνω, το όνομα της εντολής συντόμευσης. Το alias::format ορίζει μια κανονική έκφραση που ελέγχεται με την πρόταση που στέλνεται στην εντολή alias, και αφού ταιριάξει με την υπο-καταχώρηση της συντόμευσης το alias::format θα χρησιμοποιηθεί, μπορείτε να έχετε πολλαπλά alias::format's για να ορίσετε την εντολή να κάνει διαφορετικά πράγματα ανάλογα με την πρόταση που στέλνεται σε αυτήν. Το alias::format::target είναι ο στόχος στον οποίο θα προωθηθεί αυτή η συντόμευση. Το alias::format::type ορίζει τον τύπο της συντόμευσης με τον οποίο αυτό το μήνυμα θα προωθηθεί. Το alias::format::parameters είναι τια θα σταλθεί σάν παράμετρος σε αυτήν την συντόμευση. Για να ορίσετε μιά απο τις παραμέτρους που θα δωθεί στην συντόμευση εντολής ορίστε ένα % ακολουθούμενο απο έναν αριθμό, για παράδειγμα, %1 είναι η πρώτη παράμετρος. Για να ορίσετε όλες τις παραμέτρους απο μία παράμετρο μέχρι το τέλος δώστε % ακολουθούμενο απο έναν αριθμό και ένα -, για παράδειγμα το %2- επιστρέφει όλες τις παραμέτρους απο το δεύτερο μέχρι και το τελευταίο. Επιπλέον, μπορείτε να ορίσετε %n το οποίο θα αντικατασταθεί με το nickname του χρήστη που έδωσε την εντολή. Για παραδείγματα χρήσης της επιλογής συντόμευσης alias σε μορφή εντολών, συμβουλευτείτε το doc/example.conf.</P> 
+    <P>Όταν η επιλογή alias χρησιμοποιείται με αυτήν την μορφή, σας επιτρέπει να έχετε μια πιο ευρεία περιοχή χρήσης. Για παράδειγμα μπορείτε να δημιουργήσετε συντομεύσεις όπως το /identify. Το alias:: είναι το ίδιο με παραπάνω, το όνομα της εντολής συντόμευσης. Το <b>alias::format</b> ορίζει μια κανονική έκφραση που ελέγχεται με την πρόταση που στέλνεται στην εντολή alias, και αφού ταιριάξει με την υπο-καταχώρηση της συντόμευσης το alias::format θα χρησιμοποιηθεί, μπορείτε να έχετε πολλαπλά alias::format's για να ορίσετε την εντολή να κάνει διαφορετικά πράγματα ανάλογα με την πρόταση που στέλνεται σε αυτήν. Το <b>alias::format::target</b> είναι ο στόχος στον οποίο θα προωθηθεί αυτή η συντόμευση,όμως στην περίπτωση χρήσης ενός "πραγματικού alias" το <b>alias::format::command</b> χρησιμοποιείται αντίστοιχα. Το <b>alias::format::type</b> ορίζει τον τύπο της συντόμευσης με τον οποίο αυτό το μήνυμα θα προωθηθεί. Εκτώς απο τους τύπους που αναφέρθηκαν πριν στο "Syntax [standard alias]", επιτρέπουμε επίσης τον "πραγματικό" τύπο εδώ, για τα "πραγματικά aliases". Το <b>alias::format::parameters</b> είναι τι θα σταλθεί σάν παράμετρος σε αυτήν την συντόμευση. Για να ορίσετε μιά απο τις παραμέτρους που θα δωθεί στην συντόμευση εντολής ορίστε ένα % ακολουθούμενο απο έναν αριθμό, για παράδειγμα, %1 είναι η πρώτη παράμετρος. Για να ορίσετε όλες τις παραμέτρους απο μία παράμετρο μέχρι το τέλος δώστε % ακολουθούμενο απο έναν αριθμό και ένα -, για παράδειγμα το %2- επιστρέφει όλες τις παραμέτρους απο το δεύτερο μέχρι και το τελευταίο. Επιπλέον, μπορείτε να ορίσετε %n το οποίο θα αντικατασταθεί με το nickname του χρήστη που έδωσε την εντολή.<br><br> Για παραδείγματα χρήσης της επιλογής συντόμευσης alias σε μορφή εντολών, συμβουλευτείτε το doc/example.conf.</P> 
   </DIV> 
   <P><B><SPAN 
 
@@ -2564,9 +2609,61 @@ href="#feature_spamfilter">εδώ</A> για μια λίστα με τις πιθανές ενέργειες (π.χ: 
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; reason "No spamming allowed"; 
     };</PRE> 
   </DIV> 
+  	 <p><font class="block_section">4.36 - </font><font class="block_name">Επιλογή Cgiirc</font>
+  	    <font class="block_optional">ΠΡΟΑΙΡΕΤΙΚΟ</font><a name="cgiirc"></a>
+  	 </p><div class="desc">
+  	 <p>
+  	 Η επιλογή cgiirc σας επιτρέπει να ρυθμίσετε το spoofing διευθύνσεων για τις πύλες CGI:IRC που εμπιστεύεστε
+  	 (<a href="#feature_cgiirc">more info</a>).</p>
+  	 
+  	 <p>Σύνταξη:<br>
+  	 <pre>
+  	 cgiirc {
+  	         type &lt;webirc|old&gt;;
+  	         username &lt;mask&gt;; /* προαιρετικό */
+  	         hostname &lt;mask&gt;;
+  	         password &lt;password&gt;; /* μόνο για τύπου webirc */
+  	 };</pre></p>
+  	 <p><b>type</b> μπορεί να πάρει την τιμή 'webirc' ή 'old'.<br>
+  	    <b>username</b> συγκρίνεται με το ident (αν υπάρχει). Αν δεν ορισθεί, παίρνει την τιμή "*".<br>
+  	    <b>hostname</b> είναι η διεύθυνση με την οποία πρέπει να ταιριάζει.<br>
+  	    <b>password</b> είναι ο κωδικός webirc, χρησιμοποιείται μόνο για τον τύπο 'webirc'.<br>
+  	 </p>
+  	 
+  	 <p><b>Πώς να το ρυθμίσετε με την μέθοδο 'webirc' (προτεινόμενη μέθοδος)</b><br>
+  	 Στο αρχείο ρυθμίσεων CGI:IRC (cgiirc.conf) ορίζετε το webirc_password σε ένα καλό κωδικό.<br>
+  	 Έπειτα, στο unrealircd.conf προσθέτετε μια επιλογή cgiirc για να επιτρέψετε αυτην την διεύθυνση και τον κωδικό και ορίζετε το
+  	 cgiirc::type σε "webirc".<br>
+  	 <br>
+  	 Παράδειγμα:<br>
+  	 Στο αρχείο ρυθμίσεων CGI:IRC (cgiirc.conf) προσθέτετε:
+  	 <pre>webirc_password = LpT4xqPI5</pre>
+  	 Έπειτα, στο unrealircd.conf προσθέτετε την επιλογή cgiirc:
+  	 <pre>cgiirc {
+  	         type webirc;
+  	         hostname "1.2.3.4";
+  	         password "LpT4xqPI5";
+  	 };</pre></p>
+  	 
+  	 <p><b>Πώς να το ρυθμίσετε με την μέθοδο 'old'</b><br>
+  	 ΣΗΜΕΙΩΣΗ: Αυτή δεν ειναι η προτεινόμενη μέθοδος αφου έχει δύο μειονεκτήματα:
+  	 αυτή η μέθοδος θα στείλει την IP/διεύθυνση που θα γίνει spoof ώς κωδικός διακομιστή, που σημαίνει οτι δεν μπορείτε να ορίσετε έναν κωδικό διακομιστή ώς ένας CGI:IRC χρήστης. Επιπλέον, ο έλεγχος της πρόσβασης είναι μόνο βασισμένος στην διεύθυνση και δεν χρειάζεται κωδικό όπως η μέθοδος 'webirc'. Με λίγα λόγια,
+  	 ίσως δεν πρέπει να χρησιμοποιήσετε αυτήν την μέθοδο εκτώς και αν υπάρχει καλός λόγος για να το κάνετε.<br>
+  	 <br>
+  	 Στο αρχείο επιλογών CGI:IRC (cgiirc.conf) ορίζετε realhost_as_password σε 1.<br>
+  	 Έπειτα, στο unrealircd.conf προσθέτετε μια επιλογή cgiirc για να επιτρέψετε αυτήν την διεύθυνση.<br>
+  	 <br>
+  	 Παράδειγμα:<br>
+  	 Στο αρχείο επιλογών CGI:IRC (cgiirc.conf) προσθέτετε:
+  	 <pre>realhost_as_password = 1</pre>
+  	 Έπειτα, στο unrealircd.conf προσθέτετε μια επιλογή cgiirc:
+  	 <pre>cgiirc {
+  	         type old;
+  	         hostname "1.2.3.4";
+  	 };</pre></p>
+  	 </div>
   <P><B><SPAN 
-
-style="FONT-SIZE: 18pt">4.36 - Επιλογή Set</SPAN></B> <B><SPAN 
+style="FONT-SIZE: 18pt">4.37 - Επιλογή Set</SPAN></B> <B><SPAN 
 
 style="COLOR: red">REQUIRED</SPAN></B> <SPAN 
 
@@ -2641,7 +2738,12 @@ href="#includedirective">include</A>. Παρακάτω μπορείτε να βρείτε μια λίστα με ό
     <P><B>set::who-limit &lt;limit&gt;;</B><BR> 
       Ορίζει το όριο για τον μέγιστο αριθμό των αποτελεσμάτων που θα επιστραφούν απο ένα /who. Αν αυτή η επιλογή δεν επιλεχθεί, δεν θα εφαρμοστεί κανένα όριο.</P> 
     <P><B>set::silence-limit &lt;limit&gt;;</B><BR> 
-      Ορίζει το όριο για τον μέγιστο αριθμό των SILENCE επιλογών. Αν αυτη η επιλογή δεν οριστεί, ορίζεται αυτόματα το όριο των 15.</P> 
+      Ορίζει το όριο για τον μέγιστο αριθμό των SILENCE επιλογών. Αν αυτη η επιλογή δεν οριστεί, ορίζεται αυτόματα το όριο των 15.</P>
+	  <p><B>set::maxbans &lt;limit&gt;;</B><br> 
+     Ορίζει το όριο των μέγιστων bans (+b) που επιτρέπονται σε κάθε κανάλι. Η αρχική επιλογή είναι 60. 
+     Αν το αλλάξετε, σιγουρευτείτε οτι ρίξατε μια ματιά και στο maxbanlength (δείτε παρακάτω)!</p> 
+   <p><b>set::maxbanlength &lt;limit&gt;;</b><br> 
+     Παρόμοιο με το παραπάνω, αλλά ορίζει τον μέγιστο αριθμό χαρακτήρων για όλα τα bans συγκεντρωμένα μαζί, κάτι που βασικά θέτει ένα όριο στην (ήμη-)μέγιστο μέγεθος μνήμης την οποία μπορούν να καταλάβουν όλα τα bans σε ένα κανάλι. Η αρχική επιλογή είναι 2048 (bytes). Με την αρχική επιλογή set::maxbans στα 60 αυτο επιτρέπει 2048:60=34 χαρακτήρες για κάθε ban σε μέσο όρο.</p> 
     <P><B>set::oper-only-stats &lt;stats-list&gt;;</B><BR> 
       Ορίζει μια λίστα με τα stats flags χωρίς διαχωριστικό που καθορίζει ποια stats flags μπορούν να χρησιμοποιήσουν μόνο οι διαχειριστές. Αγνοήστε αυτό το όρισμα για να επιτρέψετε στους χρήστες να χρησιμοποιήσουν όλα τα flags, η ορίστε * ωστε να μην μπορούν οι απλοί χρήστες να χρησιμοποιήσουν κανένα flag. Μόνο η σύντομη μορφή των stats flags μπορεί να οριστεί εδώ.</P> 
     <P><B>set::oper-only-stats {&lt;stats-flag&gt;; &lt;stats-flag&gt;;};</B><BR> 
@@ -2651,7 +2753,7 @@ href="#includedirective">include</A>. Παρακάτω μπορείτε να βρείτε μια λίστα με ό
     <P><B>set::maxdccallow &lt;amount-of-entries&gt;;</B><BR> 
       Ορίζει τον μέγιστο αριθμό επιλογών που μπορεί να έχει ένας χρήστης στην λίστα DCCALLOW του.</P> 
     <P><B>set::channel-command-prefix &lt;command-prefixes&gt;;</B><BR> 
-      Ορίζει το πρόθεμα χαρακτήρων για υπηρεσίες "εντολών καναλιών". Μηνύματα που αρχίζουν με οποιονδήποτε απο τους καθορισμένους χαρακτήρες θα στέλνονται ακόμα και αν ο χρήστης είναι +d. Η αρχική τιμή είναι "`".</P> 
+      Ορίζει το πρόθεμα χαρακτήρων για υπηρεσίες "εντολών καναλιών". Μηνύματα που αρχίζουν με οποιονδήποτε απο τους καθορισμένους χαρακτήρες θα στέλνονται ακόμα και αν ο χρήστης είναι +d. Η αρχική τιμή είναι "`!.".</P> 
     <p><b>set::allowed-nickchars { &lt;list&gt; };</b><br> 
       Σέτ χαρακτήρων / γλωσσών που επιτρέπονται στα nicks, δείτε <a href="#feature_nickchars">Σετ χαρακτήρων Nick</a>.</p> 
     <P><B>set::allow-userhost-change [never|always|not-on-channels|force-rejoin]</B><BR> 
@@ -2760,7 +2862,16 @@ href="#includedirective">include</A>. Παρακάτω μπορείτε να βρείτε μια λίστα με ό
       Αν οριστεί σε yes (ή '1') επιστρέφει 'invite only' σε όποιον απλό χρήστη προσπαθήσει να εισέρθει στο virus-help-channel. Μόνο διαχειριστές, άτομα που ταιριάζουν με τα spamfilters και άτομα που προσκλήθησαν στο κανάλι μπορούν να εισέρθουν.</P> 
     <P><B>set::spamfilter::except &lt;target(s)&gt;</B><BR> 
       Αυτοί οι στόχοι είναι εξαιρέσεις απο το spam filtering (καμία ενέργεια δεν θα γίνει), μπορεί να είναι ένας στόχος ή μια λίστα διαχωρισμένη απο κόμματα.. π.χ: except "#help,#spamreport"</P> 
-  </DIV> 
+	   <p><b>set::check-target-nick-bans &lt;yes|no&gt;</b><br> 
+     Όποτε κάποιος χρήστης αλλάζει το ψευδώνυμο του/της, ελέγχει αν το ΝΕΟ ψευδώνυμο πρέπει να γίνει ban. Αν πρέπει, δεν επιτρέπει την αλλαγή του ψευδωνύμου. Η αρχική επιλογή είναι yes.</p>  
+    <p><font class="set">set::timesynch::enabled &lt;yes|no&gt;</font><br>
+  	   Ενεργοποιεί η απενεργοποιεί τον συγχρονισμό ώρας στο φόρτωμα. Default is yes.</p>
+  	  <p><font class="set">set::timesynch::server &lt;IP&gt;</font><br>
+  	   Οι διακομιστές με τους οποίους θα συγχρονίζει την ώρα. Αυτό μπορεί να αποτελείται απο μέχρι 4 IP's χωρισμένες με κόμμα.
+  	   Οι διακομιστές πρέπει να υποστιρίζουν το προτόκολο NTP έκδοση 4. Η αρχική τιμή είναι να χρησιμοποιούνται 3 διακομιστές συγχρονισμού (US, EU,
+  	 AU). Αιτήσεις σε αυτούς τους διακομιστές στέλνονται παράλληλα,ενω η γρηγορότερη απάντηση κερδίζει.</p>
+  	  <p><font class="set">set::timesynch::timeout &lt;time&gt;</font><br>
+  	   Ο μεγαλύτερος χρόνος που θα περιμένει έναν διακομιστή για να απαντήσει. Αυτό είναι μια τιμή μεταξύ του 1 και του 5, περισσότερο δεν είναι δυνατόν γιατι προκαλεί μεγάλη ανακρίβεια. Αυτή η επιλογή έχει αρχική τιμή 3 και μάλλον δεν υπάρχει καλός λόγος για να την αλλάξετε.</p></DIV>
   <P><B><SPAN 
 
 style="FONT-SIZE: 18pt">5 &#8211; Επιπλέον αρχεία<A name=addtlfiles></A> </SPAN></B></P> 
@@ -2990,7 +3101,7 @@ cellPadding=0 width="75%" border=1>
         </TR> 
         <TR> 
           <TD class="Normal"> <P style="TEXT-ALIGN: center" align=center>d</P></TD> 
-          <TD class="Normal"> <P>Ορίζει να μην δέχεστε μηνύματα καναλιών PRIVMSGs</P></TD> 
+          <TD class="Normal"> <P>Ορίζει να μην δέχεστε μηνύματα καναλιών PRIVMSGs (με την εξέρεση αυτών που αρχίζουν με συγκεκριμένους χαρακτήρες,δείτε set::channel-command-prefix)</P></TD> 
         </TR> 
         <TR> 
           <TD class="Normal"> <P style="TEXT-ALIGN: center" align=center>G</P></TD> 
@@ -3692,7 +3803,7 @@ style="FONT-SIZE: 18pt">8.8 Protecting against exploits</SPAN></B><A
 
 name=secantiexploit></A></P> 
   <DIV style="MARGIN-LEFT: 11.25pt"> 
-    <P>Υπάρχουν τα kernel patches τα οποία κάνουν πολύ δύσκολη την λειτουργία κάποιων stack- και heap-based exploits. Αυτό βέβαια δεν πρέπει να είναι το κύριο σημείο εστίασης της προσοχής σας, έχετε έναν πολυ μεγαλύτερο κίνδυνο να γίνετε exploited μέσω άλλων σημείων εκτώς απο αυτά... για διάφορους λόγους.<BR> 
+    <P>Υπάρχουν τα kernel patches τα οποία κάνουν πολύ δύσκολη την λειτουργία κάποιων stack- και heap-based exploits. Αυτό είναι καλό, όμως δεν πρέπει να είναι το κύριο σημείο εστίασης της προσοχής σας, έχετε έναν πολυ μεγαλύτερο κίνδυνο να γίνετε exploited μέσω άλλων σημείων εκτώς απο αυτά... για διάφορους λόγους.<BR> 
       <BR> 
       Υπάρχει κάτι που πρέπει να κάνετε βέβαια, δηλαδή να ΧΡΗΣΙΜΟΠΟΙΕΙΤΕ ΠΑΝΤΑ ΤΗΝ ΤΕΛΕΥΤΑΙΑ ΕΚΔΟΣΗ, εγγραφείτε στην <A 
 
@@ -3712,7 +3823,7 @@ style="FONT-SIZE: 18pt">9 &#8211; Frequently Asked Questions (FAQ)</SPAN></B><A
 
 name=faq></A></P> 
   <DIV style="MARGIN-LEFT: 11.25pt"> 
-    <P>Το FAQ είναι διαθέσημο <A href="http://www.vulnscan.org/UnrealIrcd/faq/" 
+    <P>Το FAQ είναι διαθέσημο <A href="http://www.vulnscan.org/UnrealIRCd/faq/" 
 
 target=_blank>εδώ</A></P> 
   </DIV> 

@@ -52,14 +52,29 @@ AC_DEFUN(CHECK_LIBCURL,
 	[AC_HELP_STRING([--enable-libcurl=DIR],[enable libcurl (remote include) support])],
 	[
 		CURLCFLAG=`$enableval/bin/curl-config --cflags`
-		CFLAGS="$CFLAGS $CURLCFLAG -DUSE_LIBCURL"
 		CURLLIBS=`$enableval/bin/curl-config --libs`
 
-		dnl curl-7.11.0 and up will include the ares info, older versions do not
-		if test "x`echo $CURLLIBS |grep .*ares.*`" = x ; then
-			CURLLIBS="$CURLLIBS -lares"
+		dnl Ok this is ugly, basically we need to strip the version of c-ares that curl uses
+		dnl because we want to use our own version (which is hopefully fully binary
+		dnl compatible with the curl one as well).
+		dnl Therefore we need to strip the cares libs in a weird way...
+		dnl If anyone can come up with something better and still portable (no awk!?)
+		dnl then let us know.
+		if test "x`echo $CURLLIBS |grep ares`" != x ; then
+			dnl Attempt one: Linux sed
+			XCURLLIBS="`echo "$CURLLIBS"|sed -r 's/(@<:@^ @:>@+ @<:@^ @:>@+ )(@<:@^ @:>@+ @<:@^ @:>@+ )(.+)/\1\3/g' 2>/dev/null`"
+			if test x"$XCURLLIBS" = x; then
+				dnl Attempt two: FreeBSD (and others?) sed
+				XCURLLIBS="`echo "$CURLLIBS"|sed -E 's/(@<:@^ @:>@+ @<:@^ @:>@+ )(@<:@^ @:>@+ @<:@^ @:>@+ )(.+)/\1\3/g' 2>/dev/null`"
+				if test x"$XCURLLIBS" = x; then
+					AC_MSG_ERROR([sed appears to be broken. It is needed for a remote includes compile hack.])
+				fi
+			fi
+			CURLLIBS="$XCURLLIBS"
 		fi
+		
 		IRCDLIBS="$IRCDLIBS $CURLLIBS"
+		CFLAGS="$CFLAGS $CURLCFLAG -DUSE_LIBCURL"
 		URL="url.o"
 		AC_SUBST(URL)
 	])
@@ -94,7 +109,16 @@ AC_MSG_CHECKING(for openssl)
     done
     if test x_$found_ssl != x_yes; then
 	AC_MSG_RESULT(not found)
-	AC_WARN(disabling ssl support)
+	echo ""
+	echo "Apparently you do not have both the openssl binary and openssl development libraries installed."
+	echo "You have two options:"
+	echo "a) Install the needed binaries and libraries"
+	echo "   and run ./Config"
+	echo "OR"
+	echo "b) If you don't need SSL..."
+	echo "   Run ./Config and say 'no' when asked about SSL"
+	echo ""
+	exit 1
     else
         CRYPTOLIB="-lssl -lcrypto";
 	if test ! "$ssldir" = "/usr" ; then
@@ -127,7 +151,16 @@ AC_MSG_CHECKING(for zlib)
     done
     if test x_$found_zlib != x_yes; then
 	AC_MSG_RESULT(not found)
-	AC_WARN(disabling ziplink support)
+	echo ""
+	echo "Apparently you do not have the zlib development library installed."
+	echo "You have two options:"
+	echo "a) Install the zlib development library"
+	echo "   and run ./Config"
+	echo "OR"
+	echo "b) If you don't need compressed links..."
+	echo "   Run ./Config and say 'no' when asked about ziplinks support"
+	echo ""
+	exit 1
     else
         IRCDLIBS="$IRCDLIBS -lz";
 	if test "$zlibdir" != "/usr" ; then

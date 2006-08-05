@@ -468,8 +468,12 @@ DLLFUNC CMD_FUNC(m_stats)
 		else
 			stat->func(sptr, NULL);
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, parv[0], stat->flag);
-		sendto_snomask(SNO_EYES, "Stats \'%c\' requested by %s (%s@%s)",
-			stat->flag, sptr->name, sptr->user->username, GetHost(sptr));
+		if (!IsULine(sptr))
+			sendto_snomask(SNO_EYES, "Stats \'%c\' requested by %s (%s@%s)",
+				stat->flag, sptr->name, sptr->user->username, GetHost(sptr));
+		else
+			sendto_snomask(SNO_JUNK, "Stats \'%c\' requested by %s (%s@%s) [ulined]",
+				stat->flag, sptr->name, sptr->user->username, GetHost(sptr));
 	}
 	else
 	{
@@ -496,6 +500,9 @@ int stats_banversion(aClient *sptr, char *para)
 int stats_links(aClient *sptr, char *para)
 {
 	ConfigItem_link *link_p;
+#ifdef DEBUGMODE
+	aClient *acptr;
+#endif
 	for (link_p = conf_link; link_p; link_p = (ConfigItem_link *) link_p->next)
 	{
 		sendto_one(sptr, ":%s 213 %s C %s@%s * %s %i %s %s%s%s%s%s%s",
@@ -510,7 +517,8 @@ int stats_links(aClient *sptr, char *para)
 			(link_p->options & CONNECT_NOHOSTCHECK) ? "h" : "",
 			(link_p->flag.temporary == 1) ? "T" : "");
 #ifdef DEBUGMODE
-		sendnotice(sptr, "%s has refcount %d", link_p->servername, link_p->refcount);
+		sendnotice(sptr, "%s (%p) has refcount %d",
+			link_p->servername, link_p, link_p->refcount);
 #endif
 		if (link_p->hubmask)
 			sendto_one(sptr, ":%s 244 %s H %s * %s",
@@ -521,6 +529,21 @@ int stats_links(aClient *sptr, char *para)
 				me.name, sptr->name,
 				link_p->leafmask, link_p->servername, link_p->leafdepth);
 	}
+#ifdef DEBUGMODE
+	for (acptr = client; acptr; acptr = acptr->next)
+		if (MyConnect(acptr) && IsServer(acptr))
+		{
+			if (!acptr->serv->conf)
+				sendnotice(sptr, "client '%s' (%p) has NO CONF attached (? :P)",
+					acptr->name, acptr);
+			else
+				sendnotice(sptr, "client '%s' (%p) has conf %p attached, refcount: %d, temporary: %s",
+					acptr->name, acptr,
+					acptr->serv->conf,
+					acptr->serv->conf->refcount,
+					acptr->serv->conf->flag.temporary ? "YES" : "NO");
+		}
+#endif
 	return 0;
 }
 
@@ -964,16 +987,15 @@ int stats_mem(aClient *sptr, char *para)
 	sendto_one(sptr, ":%s %d %s :Dbuf blocks %d(%ld)",
 	    me.name, RPL_STATSDEBUG, sptr->name, dbufblocks, db);
 
-	link = freelink;
-	while ((link = link->next))
+	for (link = freelink; link; link = link->next)
 		fl++;
-	fl++;
 	sendto_one(sptr, ":%s %d %s :Link blocks free %d(%ld) total %d(%ld)",
 	    me.name, RPL_STATSDEBUG, sptr->name,
 	    fl, (long)(fl * sizeof(Link)),
 	    flinks, (long)(flinks * sizeof(Link)));
 
-	rm = cres_mem(sptr,sptr->name);
+/*	rm = cres_mem(sptr,sptr->name); */
+	rm = 0; /* syzop: todo ?????????? */
 
 	tot = totww + totch + totcl + com + cl * sizeof(aClass) + db + rm;
 	tot += fl * sizeof(Link);
@@ -1372,6 +1394,8 @@ int stats_set(aClient *sptr, char *para)
 	if (SPAMFILTER_EXCEPT)
 		sendto_one(sptr, ":%s %i %s :spamfilter::except: %s", me.name, RPL_TEXT,
 			sptr->name, SPAMFILTER_EXCEPT);
+	sendto_one(sptr, ":%s %i %s :check-target-nick-bans: %s", me.name, RPL_TEXT,
+		sptr->name, CHECK_TARGET_NICK_BANS ? "yes" : "no");
 	sendto_one(sptr, ":%s %i %s :hosts::global: %s", me.name, RPL_TEXT,
 	    sptr->name, oper_host);
 	sendto_one(sptr, ":%s %i %s :hosts::admin: %s", me.name, RPL_TEXT,

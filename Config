@@ -84,7 +84,8 @@ ARG="$ARG--enable-dynamic-linking "
 ARG="$ARG $EXTRAPARA "
 CONF="./configure $ARG"
 echo $CONF
-$CONF
+$CONF || exit 1
+cd "$UNREALCWD"
 if [  "$CRYPTOIRCD" = "1" ] ; then
 if [ ! -f server.req.pem ]; then
 export OPENSSLPATH
@@ -277,6 +278,7 @@ done
 }
 c=""
 n=""
+UNREALCWD="`pwd`"
 NOSPOOF=""
 DPATH="`pwd`"
 SPATH="`pwd`/src/ircd"
@@ -295,7 +297,7 @@ MAXCONNECTIONS="1024"
 INET6=""
 REMOTEINC=""
 CURLDIR=""
-PREFIXAQ=""
+PREFIXAQ="1"
 SHOWLISTMODES="1"
 TOPICNICKISNUH=""
 SHUNNOTICES=""
@@ -336,6 +338,7 @@ while [ $# -ge 1 ] ; do
 			. ./config.settings
 		fi
 		RUN_CONFIGURE
+		cd "$UNREALCWD"
 		exit 0
 	elif [ $1 = "-clean" -o $1 = "-C" ] ; then
 		CLEAN="1"
@@ -670,8 +673,8 @@ while [ -z "$TEST" ] ; do
     echo ""
     echo "Do you want to enable prefixes for chanadmin and chanowner?"
     echo "This will give +a the & prefix and ~ for +q (just like +o is @)"
-    echo "Supported by the major clients (mIRC, xchat, epic, eggdrop, Klient, PJIRC, etc.)"
-    echo "with the notable exceptions of irssi, KVIrc and CGI:IRC."
+    echo "Supported by the major clients (mIRC, xchat, epic, eggdrop, Klient,"
+    echo "PJIRC, irssi, CGI:IRC, etc.)"
     echo "This feature should be enabled/disabled network-wide."
     echo $n "[$TEST] -> $c"
 	read cc
@@ -853,6 +856,7 @@ EXTRAPARA="$EXTRAPARA"
 ADVANCED="$ADVANCED"
 __EOF__
 RUN_CONFIGURE
+cd "$UNREALCWD"
 cat << __EOF__
 
  _______________________________________________________________________

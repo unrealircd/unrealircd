@@ -45,6 +45,7 @@
 #endif
 
 DLLFUNC int m_list(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+void _send_list(aClient *cptr, int numsend);
 
 #define MSG_LIST 	"LIST"	
 #define TOK_LIST 	"("	
@@ -57,6 +58,13 @@ ModuleHeader MOD_HEADER(m_list)
 	"3.2-b8-1",
 	NULL 
     };
+
+DLLFUNC int MOD_TEST(m_list)(ModuleInfo *modinfo)
+{
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	EfunctionAddVoid(modinfo->handle, EFUNC_SEND_LIST, _send_list);
+	return MOD_SUCCESS;
+}
 
 DLLFUNC int MOD_INIT(m_list)(ModuleInfo *modinfo)
 {
@@ -261,7 +269,7 @@ DLLFUNC CMD_FUNC(m_list)
 			  else	/* Just a normal channel */
 			  {
 				  chptr = find_channel(name, NullChn);
-				  if (chptr && (ShowChannel(sptr, chptr) || IsAnOper(sptr))) {
+				  if (chptr && (ShowChannel(sptr, chptr) || OPCanSeeSecret(sptr))) {
 #ifdef LIST_SHOW_MODES
 					modebuf[0] = '[';
 					channel_modes(sptr, &modebuf[1], parabuf, chptr);
@@ -305,4 +313,142 @@ DLLFUNC CMD_FUNC(m_list)
 	sendto_one(sptr, rpl_str(RPL_LISTEND), me.name, parv[0]);
 
 	return 0;
+}
+/*
+ * The function which sends the actual channel list back to the user.
+ * Operates by stepping through the hashtable, sending the entries back if
+ * they match the criteria.
+ * cptr = Local client to send the output back to.
+ * numsend = Number (roughly) of lines to send back. Once this number has
+ * been exceeded, send_list will finish with the current hash bucket,
+ * and record that number as the number to start next time send_list
+ * is called for this user. So, this function will almost always send
+ * back more lines than specified by numsend (though not by much,
+ * assuming CH_MAX is was well picked). So be conservative in your choice
+ * of numsend. -Rak
+ */
+
+/* Taken from bahamut, modified for Unreal by codemastr */
+
+void _send_list(aClient *cptr, int numsend)
+{
+	aChannel *chptr;
+	LOpts *lopt = cptr->user->lopt;
+	unsigned int  hashnum;
+
+	/* Begin of /list? then send official channels. */
+	if ((lopt->starthash == 0) && conf_offchans)
+	{
+		ConfigItem_offchans *x;
+		for (x = conf_offchans; x; x = (ConfigItem_offchans *)x->next)
+		{
+			if (find_channel(x->chname, (aChannel *)NULL))
+				continue; /* exists, >0 users.. will be sent later */
+			sendto_one(cptr,
+			    rpl_str(RPL_LIST), me.name,
+			    cptr->name, x->chname,
+			    0,
+#ifdef LIST_SHOW_MODES
+			    "",
+#endif					    
+			    x->topic ? x->topic : "");
+		}
+	}
+
+	for (hashnum = lopt->starthash; hashnum < CH_MAX; hashnum++)
+	{
+		if (numsend > 0)
+			for (chptr =
+			    (aChannel *)hash_get_chan_bucket(hashnum);
+			    chptr; chptr = chptr->hnextch)
+			{
+				if (SecretChannel(chptr)
+				    && !IsMember(cptr, chptr)
+				    && !OPCanSeeSecret(cptr))
+					continue;
+
+				/* Much more readable like this -- codemastr */
+				if ((!lopt->showall))
+				{
+					/* User count must be in range */
+					if ((chptr->users < lopt->usermin) || 
+					    ((lopt->usermax >= 0) && (chptr->users > 
+					    lopt->usermax)))
+						continue;
+
+					/* Creation time must be in range */
+					if ((chptr->creationtime && (chptr->creationtime <
+					    lopt->chantimemin)) || (chptr->creationtime >
+					    lopt->chantimemax))
+						continue;
+
+					/* Topic time must be in range */
+					if ((chptr->topic_time < lopt->topictimemin) ||
+					    (chptr->topic_time > lopt->topictimemax))
+						continue;
+
+					/* Must not be on nolist (if it exists) */
+					if (lopt->nolist && find_str_match_link(lopt->nolist,
+					    chptr->chname))
+						continue;
+
+					/* Must be on yeslist (if it exists) */
+					if (lopt->yeslist && !find_str_match_link(lopt->yeslist,
+					    chptr->chname))
+						continue;
+				}
+#ifdef LIST_SHOW_MODES
+				modebuf[0] = '[';
+				channel_modes(cptr, &modebuf[1], parabuf, chptr);
+				if (modebuf[2] == '\0')
+					modebuf[0] = '\0';
+				else
+					strlcat(modebuf, "]", sizeof modebuf);
+#endif
+				if (!OPCanSeeSecret(cptr))
+					sendto_one(cptr,
+					    rpl_str(RPL_LIST), me.name,
+					    cptr->name,
+					    ShowChannel(cptr,
+					    chptr) ? chptr->chname :
+					    "*", chptr->users,
+#ifdef LIST_SHOW_MODES
+					    ShowChannel(cptr, chptr) ?
+					    modebuf : "",
+#endif
+					    ShowChannel(cptr,
+					    chptr) ? (chptr->topic ?
+					    chptr->topic : "") : "");
+				else
+					sendto_one(cptr,
+					    rpl_str(RPL_LIST), me.name,
+					    cptr->name, chptr->chname,
+					    chptr->users,
+#ifdef LIST_SHOW_MODES
+					    modebuf,
+#endif					    
+					    (chptr->topic ? chptr->topic : ""));
+				numsend--;
+			}
+		else
+			break;
+	}
+
+	/* All done */
+	if (hashnum == CH_MAX)
+	{
+		sendto_one(cptr, rpl_str(RPL_LISTEND), me.name, cptr->name);
+		free_str_list(cptr->user->lopt->yeslist);
+		free_str_list(cptr->user->lopt->nolist);
+		MyFree(cptr->user->lopt);
+		cptr->user->lopt = NULL;
+		return;
+	}
+
+	/* 
+	 * We've exceeded the limit on the number of channels to send back
+	 * at once.
+	 */
+	lopt->starthash = hashnum;
+	return;
 }

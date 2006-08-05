@@ -1,5 +1,4 @@
 Token List (c) 2002-2004 codemastr (Dominick Meglio) [codemastr@unrealircd.com]
-(As of Unreal3.2.3)
 
 Command     Token 
 ------------------------------------------------------------------------------------------------

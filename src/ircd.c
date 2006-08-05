@@ -450,7 +450,7 @@ static TS try_connections(TS currenttime)
 		/*
 		 * Also when already connecting! (update holdtimes) --SRB 
 		 */
-		if (!(aconf->options & CONNECT_AUTO))
+		if (!(aconf->options & CONNECT_AUTO) || (aconf->flag.temporary == 1))
 			continue;
 
 		cltmp = aconf->class;
@@ -586,12 +586,11 @@ extern TS check_pings(TS currenttime)
 					    reason : "no reason");
 				if (bconf->reason) {
 					if (IsPerson(cptr))
-						snprintf(banbuf,
-						    sizeof banbuf - 1,
-						    "User has been banned (%s)",
-						    bconf->reason);
-					snprintf(banbuf, sizeof banbuf - 1,
-					    "Banned (%s)", bconf->reason);
+						snprintf(banbuf, sizeof banbuf - 1,
+						         "User has been banned (%s)", bconf->reason);
+					else
+						snprintf(banbuf, sizeof banbuf - 1,
+						         "Banned (%s)", bconf->reason);
 					(void)exit_client(cptr, cptr, &me,
 					    banbuf);
 				} else {
@@ -610,12 +609,12 @@ extern TS check_pings(TS currenttime)
 		/* Do spamfilter 'user' banchecks.. */
 		if (loop.do_bancheck_spamf_user && IsPerson(cptr))
 		{
-			if (find_spamfilter_user(cptr) == FLUSH_BUFFER)
+			if (find_spamfilter_user(cptr, SPAMFLAG_NOWARN) == FLUSH_BUFFER)
 				continue;
 		}
 		if (loop.do_bancheck_spamf_away && IsPerson(cptr) && cptr->user->away)
 		{
-			if (dospamfilter(cptr, cptr->user->away, SPAMF_AWAY, NULL) == FLUSH_BUFFER)
+			if (dospamfilter(cptr, cptr->user->away, SPAMF_AWAY, NULL, SPAMFLAG_NOWARN, NULL) == FLUSH_BUFFER)
 				continue;
 		}
 		/*
@@ -662,7 +661,7 @@ extern TS check_pings(TS currenttime)
 					Debug((DEBUG_NOTICE,
 					    "DNS/AUTH timeout %s",
 					    get_client_name(cptr, TRUE)));
-					del_queries((char *)cptr);
+					unrealdns_delreq_bycptr(cptr);
 					ClearAuth(cptr);
 					ClearDNS(cptr);
 					SetAccess(cptr);
@@ -754,14 +753,8 @@ extern TS check_pings(TS currenttime)
 static int bad_command(void)
 {
 #ifndef _WIN32
-#ifdef CMDLINE_CONFIG
-#define CMDLINE_CFG "[-f config] "
-#else
-#define CMDLINE_CFG ""
-#endif
 	(void)printf
-	    ("Usage: ircd %s[-h servername] [-p portnumber] [-x loglevel] [-t] [-H]\n",
-	    CMDLINE_CFG);
+	    ("Usage: ircd [-f config] [-h servername] [-p portnumber] [-x loglevel] [-t] [-H]\n");
 	(void)printf("Server not started\n\n");
 #else
 	if (!IsService) {
@@ -906,6 +899,8 @@ int error = 0;
 
 extern time_t TSoffset;
 
+extern int unreal_time_synch(int timeout);
+
 #ifndef _WIN32
 int main(int argc, char *argv[])
 #else
@@ -917,6 +912,7 @@ int InitwIRCD(int argc, char *argv[])
 	WSADATA wsaData;
 #else
 	uid_t uid, euid;
+	gid_t gid, egid;
 	TS   delay = 0;
 #endif
 #ifdef HAVE_PSTAT
@@ -937,6 +933,8 @@ int InitwIRCD(int argc, char *argv[])
 	sbrk0 = (char *)sbrk((size_t)0);
 	uid = getuid();
 	euid = geteuid();
+	gid = getgid();
+	egid = getegid();
 # ifdef	PROFIL
 	(void)monstartup(0, etext);
 	(void)moncontrol(1);
@@ -949,7 +947,10 @@ int InitwIRCD(int argc, char *argv[])
 		fprintf(stderr, "ERROR: Unable to change to directory '%s'\n", dpath);
 		exit(-1);
 	}
-	ircd_res_init();
+	if (geteuid() != 0)
+		fprintf(stderr, "WARNING: IRCd compiled with CHROOTDIR but effective user id is not root!? "
+		                "Booting is very likely to fail...\n");
+	init_resolver(1);
 	{
 		struct stat sb;
 		mode_t umaskold;
@@ -1062,12 +1063,17 @@ int InitwIRCD(int argc, char *argv[])
 			  bootopt |= BOOT_NOFORK;
 			  break;
 #ifndef _WIN32
-#ifdef CMDLINE_CONFIG
 		  case 'f':
+#ifndef CMDLINE_CONFIG
+		      if ((uid == euid) && (gid == egid))
+			       configfile = p;
+			  else
+			       printf("ERROR: Command line config with a setuid/setgid ircd is not allowed");
+#else
 			  (void)setuid((uid_t) uid);
 			  configfile = p;
-			  break;
 #endif
+			  break;
 		  case 'h':
 			  if (!strchr(p, '.')) {
 
@@ -1204,8 +1210,13 @@ int InitwIRCD(int argc, char *argv[])
 	}
 #endif
 
+	/* HACK! This ifndef should be removed when the restart-on-w32-brings-up-dialog bug
+	 * is fixed. This is just an ugly "ignore the invalid parameter" thing ;). -- Syzop
+	 */
+#ifndef _WIN32
 	if (argc > 0)
 		return bad_command();	/* This should exit out */
+#endif
 #ifndef _WIN32
 	fprintf(stderr, "%s", unreallogo);
 	fprintf(stderr, "                           v%s\n", VERSIONONLY);
@@ -1400,24 +1411,35 @@ int InitwIRCD(int argc, char *argv[])
 		if ((IRC_UID == 0) || (IRC_GID == 0)) {
 			(void)fprintf(stderr,
 			    "ERROR: SETUID and SETGID have not been set properly"
-			    "\nPlease read your documentation\n(HINT:SETUID or SETGID can not be 0)\n");
+			    "\nPlease read your documentation\n(HINT: IRC_UID and IRC_GID in include/config.h can not be 0)\n");
 			exit(-1);
 		} else {
 			/*
 			 * run as a specified user 
 			 */
 
-			(void)fprintf(stderr,
-			    "WARNING: ircd invoked as root\n");
-			(void)fprintf(stderr, "         changing to uid %d\n",
-			    IRC_UID);
-			(void)fprintf(stderr, "         changing to gid %d\n",
-			    IRC_GID);
-			(void)setgid(IRC_GID);
-			(void)setuid(IRC_UID);
+			(void)fprintf(stderr, "WARNING: ircd invoked as root\n");
+			(void)fprintf(stderr, "         changing to uid %d\n", IRC_UID);
+			(void)fprintf(stderr, "         changing to gid %d\n", IRC_GID);
+			if (setgid(IRC_GID))
+			{
+				fprintf(stderr, "ERROR: Unable to change group: %s\n", strerror(errno));
+				exit(-1);
+			}
+			if (setuid(IRC_UID))
+			{
+				fprintf(stderr, "ERROR: Unable to change userid: %s\n", strerror(errno));
+				exit(-1);
+			}
 		}
 	}
 #endif
+	if (TIMESYNCH)
+	{
+		if (!unreal_time_synch(TIMESYNCH_TIMEOUT))
+			ircd_log(LOG_ERROR, "TIME SYNCH: Unable to synchronize time: %s. This happens sometimes, no error on your part.",
+				unreal_time_synch_error());
+	}
 	write_pidfile();
 	Debug((DEBUG_NOTICE, "Server ready..."));
 	SetupEvents();
@@ -1505,13 +1527,7 @@ void SocketLoop(void *dummy)
 		 */
 		if (nextconnect && timeofday >= nextconnect)
 			nextconnect = try_connections(timeofday);
-		/*
-		 * ** DNS checks. One to timeout queries, one for cache expiries.
-		 */
-		if (timeofday >= nextdnscheck)
-			nextdnscheck = timeout_query_list(timeofday);
-		if (timeofday >= nextexpire)
-			nextexpire = expire_cache(timeofday);
+
 		/*
 		 * ** take the smaller of the two 'timed' event times as
 		 * ** the time of next event (stops us being late :) - avalon

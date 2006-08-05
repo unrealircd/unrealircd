@@ -1,0 +1,3771 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>UnrealIRCd - 3.2 - Officiële Documentatie</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<style type="text/css">
+ .block_section { font-size: 24; font-weight: bold; }
+ .block_name { font-size: 24; font-weight: bold; }
+ .block_required { color: red; font-weight: bold; }
+ .block_recommended { color: green; font-weight: bold; }
+ .block_optional { color: blue; font-weight: bold; }
+ .block_old { font-size: 14; }
+ .set { font-weight: bold; }
+ .desc { margin-left: 15px; }
+ pre { font: "times new roman"; font-style: normal; background-color: #eeeeee;}
+</style>
+</head>
+
+<body>
+<a href="unreal32docs.html">English</a> |
+<a href="unreal32docs.de.html">German</a> | 
+<a href="unreal32docs.es.html">Spanish</a> | 
+<a href="unreal32docs.hu.html">Hungarian</a> | 
+<a href="unreal32docs.fr.html">French</a> | 
+<a href="unreal32docs.gr.html">Greek</a> |
+Dutch | 
+<a href="unreal32docs.ru.html">Russian</a> | 
+<a href="unreal32docs.tk.html">Turkish</a>
+<br><br>
+<div align="center"><b><font size="7">UnrealIRCd</font></b><br>
+  <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
+  <font size="4">Version: 3.2.5</font><br>
+  <b>Laatste documentatie wijziging:</b> 2006-06-15</div>
+
+<br>
+  <b>Hoofd programmeurs:</b> Stskeeps / codemastr / Syzop / Luke<br>
+  <b>Medewerkers:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
+  <b>Documentatie:</b> CKnight^ / Syzop<br>
+  <b>Nederlandse vertaling:</b> Mark (<a href="irc://irc.unrealircd.com/unreal-dutch">#unreal-dutch op irc.unrealircd.com</a>)<br>
+<p>Om dit document te bekijken heb je een geschikte browser nodig, welke hier beneden staan. De meest
+ recente documentatie staat op <a href="http://www.vulnscan.org/UnrealIRCd/unreal32docs.html">
+ http://www.vulnscan.org/UnrealIRCd/unreal32docs.html</a> en een FAQ staat op
+ <a href="http://www.vulnscan.org/UnrealIRCd/faq/" TARGET="_blank">http://www.vulnscan.org/UnrealIRCd/faq/</a>.
+</p>
+
+<p><b>Geschikte browsers: </b><br>
+<ul>
+<li>Opera 6.02
+<li>Microsoft Internet Explorer 6.X / 5.5
+<li>Netscape Navigator 6.X
+<li>Mozilla 1.2.X
+<li>Lynx (gedeeltelijk)
+</ul>
+</p>
+<p><font size="+2"><b>INDEX / INHOUD</b></font><br>
+  1. <a href="#IntroductionNotes">Introductie & Opmerkingen</a><br>
+  ---1.1. <a href="#notesonolder">Opmerkingen voor upgraden/mengen 3.1.x -&gt; 3.2</a><br>
+  ---1.2. <a href="#notesonupgrade">Opmerkingen voor upgraden tussen 3.2 versies</a><br>
+  2. <a href="#installation">Installatie</a><br>
+  3. <a href="#features">Mogelijkheden</a><br>
+  -- 3.1. <a href="#feature_cloaking">Cloaking</a><br>
+  -- 3.2. <a href="#feature_modules">Modules</a><br>
+  -- 3.3. <a href="#feature_snomasks">Snomasks</a><br>
+  -- 3.4. <a href="#feature_aliases">Aliases</a><br>
+  -- 3.5. <a href="#feature_helpop">Helpop</a><br>
+  -- 3.6. <a href="#feature_operaccesslevels">Oper toegangsniveau's</a><br>
+  -- 3.7. <a href="#feature_opercmds">Oper commando's</a><br>
+  -- 3.8. <a href="#feature_ssl">SSL</a><br>
+  -- 3.9. <a href="#feature_ipv6">IPv6</a><br>
+  -- 3.10. <a href="#feature_ziplinks">Zip links</a><br>
+  -- 3.11. <a href="#feature_dyndns">Dynamische DNS/IP linking ondersteuning</a><br>
+  -- 3.12. <a href="#feature_antiflood">Anti-flood mogelijkheden</a><br>
+  -- 3.13. <a href="#feature_bantypes">Ban types</a><br>
+  -- 3.14. <a href="#feature_spamfilter">Spamfilter</a><br>
+  -- 3.15. <a href="#feature_cidr">CIDR</a><br>
+  -- 3.16. <a href="#feature_nickchars">Nick Character Sets</a><br>
+  -- 3.17. <a href="#feature_cgiirc">CGI:IRC ondersteuning</a><br>
+  -- 3.18. <a href="#feature_timesync">Tijd synchronisatie</a><br>
+  -- 3.19. <a href="#feature_other">Andere mogelijkheden</a><br>
+  4. <a href="#configuringyourunrealircdconf">Aanpassen van je unrealircd.conf</a><br>
+  ---4.1. <a href="#configurationfileexplained">Configuratie bestand uitgelegd</a><br>
+  ---4.2. <a href="#meblock"> Me Block -=- (M:Line)</a><br>
+  ---4.3. <a href="#adminblock">Admin Block -=- (A:Line)</a><br>
+  ---4.4. <a href="#classblock">Class Block -=- (Y:Line)</a><br>
+  ---4.5. <a href="#allowblock">Allow Block -=- (I:Line)</a><br>
+  ---4.6. <a href="#listenblock">Listen Block -=- (P:Line)</a><br>
+  ---4.7. <a href="#operblock">Oper Block -=- (O:Line)</a><br>
+  ---4.8. <a href="#drpassblock">DRpass Block -=-(X:Line)</a><br>
+  ---4.9. <a href="#includedirective">Include Directive</a><br>
+  ---4.10. <a href="#loadmoduledirective">Loadmodule Directive</a><br>
+  ---4.11. <a href="#logblock">Log Block</a><br>
+  ---4.12. <a href="#tldblock">TLD Block -=- (T:Line)</a><br>
+  ---4.13. <a href="#bannickblock">Ban Nick Block -=- (Q:Line)</a><br>
+  ---4.14. <a href="#banuserblock">Ban User Block -=- (K:Line)</a><br>
+  ---4.15. <a href="#banipblock">Ban IP Block -=- (Z:Line)</a><br>
+  ---4.16. <a href="#banserverblock">Ban Server Block -=-(q:Line)</a><br>
+  ---4.17. <a href="#banrealnameblock">Ban Realname Block -=- (n:Line)</a><br>
+  ---4.18. <a href="#banversionblock">Ban Version Block</a><br>
+  ---4.19. <a href="#banexceptionblock">Ban Exception Block -=- (E:Line)</a><br>
+  ---4.20. <a href="#tklexceptionblock">TKL Exception Block</a><br>
+  ---4.21. <a href="#throttleexceptionblock">Throttle Exception Block</a><br>
+  ---4.22. <a href="#denydccblock">Deny DCC Block -=- (dccdeny.conf)</a><br>
+  ---4.23. <a href="#denyversionblock">Deny Version Block -=- (V:Line)</a><br>
+  ---4.24. <a href="#denylinkblock">Deny Link Block -=- (D:Line / d:Line)</a><br>
+  ---4.25. <a href="#denychannelblock">Deny Channel Block -=- (chrestrict.conf)</a><br>
+  ---4.26. <a href="#allowchannelblock">Allow Channel Block</a><br>
+  ---4.27. <a href="#allowdccblock">Allow DCC Block</a><br>
+  ---4.28. <a href="#vhostblock">Vhost Block -=- (vhost.conf)</a><br>
+  ---4.29. <a href="#badwordsblock">Badword Block -=- (badwords.conf)</a><br>
+  ---4.30. <a href="#ulinesblock">Uline Block -=- (U:Line)</a><br>
+  ---4.31. <a href="#linkblock">Link Block -=- (C/N/H:Lines)</a><br>
+  ---4.32. <a href="#aliasblock">Alias Block</a><br>
+  ---4.33. <a href="#helpblock">Help Block</a><br>
+  ---4.34. <a href="#officialchannels">Official Channels Block</a><br>
+  ---4.35. <a href="#spamfilter">Spamfilter Block</a><br>
+  ---4.36. <a href="#cgiirc">Cgiirc Block</a><br>
+  ---4.37. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
+  5. <a href="#addtlfiles">Aanvullende bestanden</a><br>
+  6. <a href="#userchannelmodes">Gebruikers & Kanaal Modes</a><br>
+  7. <a href="#useropercommands">Gebruikers & Opers commando's</a><br>
+  8. <a href="#security">Veiligheids tips/checklist</a><br>
+  ---8.1. <a href="#secpasswords">Wachtwoorden</a><br>
+  ---8.2. <a href="#secnonircd">Niet-IRCd gerelateerde lekken</a><br>
+  ---8.3. <a href="#secpermissions">Rechten en het configuratiebestand</a><br>
+  ---8.4. <a href="#secuser">Gebruikers gerelateerde problemen</a><br>
+  ---8.5. <a href="#secsnif">SSL/SSH & sniffing</a><br>
+  ---8.6. <a href="#secDoS">Denial of Service attacks (DoS) [of: hoe bescherm ik mijn hub]</a><br>
+  ---8.7. <a href="#secinformation">Extra informatie</a><br>
+  ---8.8. <a href="#secantiexploit">Bescherming tegen exploits</a><br>
+  ---8.9. <a href="#secsummary">Samenvatting</a><br>
+  9. <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">Veel gestelde vragen (FAQ)</a><br> 
+  A. <a href="#regex">Regular Expressions</a><br>
+  ---A.1. <a href="#regexlit">Letters</a><br>
+  ---A.2. <a href="#regexdot">Dot Operator</a><br>
+  ---A.3. <a href="#regexrep">Repetition Operators</a><br>
+  ---A.4. <a href="#regexbracket">Bracket Expressions</a><br>
+  ---A.5. <a href="#regexassert">Assertions</a><br>
+  ---A.6. <a href="#regexalt">Alternation</a><br>
+  ---A.7. <a href="#regexsub">Subexpressions</a><br>
+  ---A.8. <a href="#regexbackref">Back References</a><br>
+  ---A.9. <a href="#regexcase">Case Sensitivity</a><br>
+</p>
+<p><b><font size="+2">1.0 &#8211; Introductie & Opmerkingen <a name="IntroductionNotes"></a></font></b><br>
+</p><div class="desc">
+<p>Dit document is uitsluitend geschreven voor gebruik met UnrealIRCd. Gebruik van dit document
+ voor andere software, of verspreiding van dit document samen met andere software is strikt
+ verboden zonder geschreven toestemming van het UnrealIRCd Ontwikkelings Team. Dit document
+ mag zo vaak je wil gekopieërd/geprint/geherproduceerd/gepubliceerd worden, gegeven dat het
+ gebruikt wordt voor UnrealIRCd en er niets aangepast is in welke vorm dan ook.
+ &#8211; Copyright UnrealIRCd Development Team 2002-2006</p>
+<p>Lees dit document voordat je om hulp vraagt. We raden je ook ten zeerste aan de 
+ <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">FAQ</a> te lezen, omdat
+ meer dan 80% van je problemen/vragen hierin behandeld worden. Wanneer je nog steeds hulp
+ nodig hebt, kun je hulp vragen op irc.ircsystems.net (poort 6667), kanaal #unreal-support
+ (Opmerking: We achten het nodig dat je de documentatie en de FAQ leest en we helpen alleen
+ met UnrealIRCd, niet met Services!).
+ Wanneer je een echte bug (zoals een crash) hebt gevonden, meldt deze dan op
+ <a href="http://bugs.unrealircd.org" TARGET="_blank">http://bugs.unrealircd.org</a>.</p></div>
+
+<p><font size="+2"><b>1.1 &#8211; Opmerkingen voor upgraden/mengen 3.1.x -&gt; 3.2 </b></font><a name="notesonolder"></a><br>
+</p>
+<div class="desc">
+<p>Wanneer je upgrade van Unreal3.1.x naar Unreal3.2 merk je dat het hele configuratiebestand
+ aangepast is. Wellicht vind je dit in het begin moeilijk, maar zodra je omgeschakeld bent,
+ snap je het veel makkelijker!</p>
+<p>Vergeet ook niet sectie 3 over Mogelijkheden te lezen. Ondanks dat je sommige wellicht al
+ kent van 3.1.x zijn er ook nieuwe mogelijkheden!</p>
+<p>Het is beter om 3.1.x niet te mengen/linken met 3.2, maar wanneer je dit echt wilt, heb je
+ minstens 3.1.4 nodig. Maar 3.1.5.1 wordt ten zeerste aangeraden!</p></div>
+
+<p><font size="+2"><b>1.2 &#8211; Opmerkingen voor upgraden tussen 3.2 versies</b></font><a name="notesonupgrade"></a><br>
+</p><div class="desc">
+<p>De aangeraden manier om te upgraden is:<br>
+Linux:<br>
+<ul>
+<li>Hernoem je oude UnrealIRCd map (anders schrijf je deze in de volgende stap over).
+<li>Pak de nieuwe UnrealIRCd versie uit en voer ./Config en make uit.
+<li>Kopieer je oude configuratiebestanden naar de nieuwe map (unrealircd.conf, motd, rules, server* [SSL certs], network file, etc).
+</ul></p>
+Windows:<br>
+<ul>
+<li>Kopieer al je configuratiebestanden naar een tijdelijke locatie.
+<li>Voer de deinstallatie uit voor oudere versies van Unreal die je geinstalleerd hebt.
+<li>Voer de installatie van de nieuwe versie uit.
+<li>Kopieer je oude configuratiebestanden naar de nieuwe map.
+</ul>
+<p>Zie ook .RELEASE.NOTES voor de veranderingen.
+ Wanneer je veranderingen (of bugs) tussen verschillende versies merkt, LEES EERST DE RELEASE NOTES VOORDAT JE HET ALS EEN BUG MELDT!</p></div>
+
+<p><font size="+2"><b>2.0 - Installatie</b></font><a name="installation" id="installation"></a><br><div class="desc">
+  <br>
+  <b>Getest &amp; Ondersteunde Operating Systems:</b><br>
+<ul>
+ <li><b>*NIX versions:</b>
+  <ul>
+   <li>Linux (2.2.*, 2.4.*, 2.6.*)
+   <li>FreeBSD (4.*, 5.*)
+   <li>NetBSD (2.*)
+   <li>OpenBSD (3.7, 3.8, 3.9)
+   <li>Solaris (9, 10)
+  </ul>
+ <li><b>Windows versie:</b>
+  <ul> 
+   <li>Windows 2000 (Pro, Server, Advanced Server)
+   <li>Windows XP (Home, Pro)
+   <li>Windows 2003 
+  </ul>
+ <li><b>Architectures tested:</b>
+  <ul>
+   <li>ia32 (i386, i486, i586, i686)
+   <li>ia64
+   <li>amd64
+   <li>alpha
+  </ul>
+</ul>
+ <br>
+ Wanneer je Unreal3.2 correct werkend hebt lopen op een ander systeem, meldt de
+ details dan alstublieft naar<a href="mailto:coders@lists.unrealircd.org">coders@lists.unrealircd.org</a>
+ </p>
+<p><b>Installation Instructions</b><br>
+Linux:<br>
+<ol>
+<li>gunzip -d Unreal3.2.X.tar.gz
+<li>tar xvf Unreal3.2.X.tar
+<li>cd Unreal3.2
+<li>./Config
+<li>Beantwoord deze vragen zo goed als mogelijk. Wanneer je het niet weet, kun je het beste
+ de standaardwaarde gebruiken.
+<li>make
+<li>Maak nu je unrealircd.conf en andere configuratiebstanden, zie sectie 4.
+</ol>
+<p>
+Windows:<br>
+<ol>
+<li>Voer de Unreal installatie uit.
+<li>Maak nu je unrealircd.conf en andere configuratiebstanden, zie sectie 4.
+</ol>
+</p>
+<p> </p></div>
+<p><font size="+2"><b>3.0 - Mogelijkheden</b></font> 
+  <a name="features"></a></p><div class="desc">
+<p>De voornaamste/leuke mogelijkheden worden uitgelegd in deze sectie. Het zorgt voor een
+ algemeen overzicht, en verwijst soms naar het configuratiebestand (iets waar je wellicht
+ nog niets over weet)</p>
+<p>Je kan deze sectie overslaan, hoewel het aangeraden wordt om deze toch te lezen voor
+ of na installatie zodat je de begrippen 'cloaking', 'snomasks' etc kent.</p>
+</div>
+
+<p><font size="+2"><b>3.1 - Cloaking</b></font><a name="feature_cloaking"></a></p><div class="desc">
+<p>Cloaking is een manier om de echte hostname van gebruikers te verbergen. Als de echte host
+ bijvoorbeeld <i>d5142341.cable.wanadoo.nl</i> is, zal <i>rox-2DCA3201.cable.wanadoo.nl</i>
+ worden gezien (bij joins, parts, whois, etc). Dit is een manier om de gebruikers tegen het flooden
+ door anderen te beschermen, omdat ze de echte host/IP niet kunnen zien.</p>
+
+<p>Dit wordt te werk gesteld door gebruikersmode +x (zoals: /mode jenaam +x). Admins kunnen ook
+ instellen dat +x automatish gezet wordt, of dat gebruikers nooit -x kunnen zetten.</p>
+
+<p>Een verborgen host wordt gemaakt door een "cloaking" module (je moet er een laden). Momenteel wordt
+ er 1 module geleverd:<br>
+ <b>cloak:</b> Dit is de officiële module sinds 3.2.1. Het is veel veiliger dan het oude algoritme, het
+ gebruikt md5 intern en het eist dat je 3 set::cloak-keys:: gebruikt, bestaande uit een mix van
+ kleine letters (a-z), grote letters (A-Z) en getallen (0-9) [bv: "AopAS6WQH2Os6hfosh4SFJHs"]. Zie
+ Voorbeeld.conf voor een voorbeeld.<br>
+<p>Cloak keys MOETEN hetzelfde zijn op ALLE servers in een network. Ook moeten cloak keys geheim blijven,
+ omdat het mogelijk is om de echte hostname te achterhalen wanneer je de keys weet (wat gebruikersmode +x
+ onbruikabar maakt).</p>
+</div>
+
+<p><font size="+2"><b>3.2 - Modules</b></font><a name="feature_modules"></a></p><div class="desc">
+<p>UnrealIRCd maakt gebruik van modules, wat handig is omdat:<br>
+ - Je kan ze laden/herladen/uitladen terwijl de ircd nog loopt (d.m.v. /rehash). Hiermee kun je bugs fixen of nieuwe mogelijkheden toevoegen
+ zonder dat er een herstart nodig is!<br>
+ - Andere mensen kunnen modules maken met nieuwe commandos, gebruikersmodi en zelfs kanaalmodi<br>
+ - UnrealIRCd wordt geleverd met maar een paar modules. Kijk eens op www.unrealircd.com -&gt; modules
+ of gebruikt Google om aan modules te komen.<br>
+<p>Je moet minstens 2 modules laden, anders start je ircd niet!:<br>
+ - De commando module: commands.so (commands.dll in Windows).<br>
+ - Een cloaking module: normaal cloak.so (cloak.dll in Windows).</p>
+</div>
+
+<p><font size="+2"><b>3.3 - Snomasks</b></font><a name="feature_snomasks"></a></p><div class="desc">
+<p>Snomasks zijn server aankondigingen, het is een speciaal soort gebruikersmodes die bepaald
+ welke aankondigingen je krijgt (voornamelijk gebruikt door opers)</p>
+<p>Je kan ze instellen door: /mode jenaam +s SNOMASK, bijvoorbeeld: /mode jenaam +s +cF<br>
+ Om bepaalde snomasks weg te halen, gebruik: /mode jenaam +s -c<br>
+ Om alle snomasks weg te halen, gebruik: /mode jenaam -s</p>
+
+<p>De op dit moment bruikbare snomasks zijn:<br>
+ c - lokale connecties<br>
+ F - "verre" connecties (connecties naar andere servers, behalve U:lined servers)<br>
+ f - flood aankondigingen<br>
+ k - kill aankondigingen<br>
+ e - "eyes" aankondingen<br>
+ j - "junk" aankondigingen<br>
+ v - vhost aankondingingen<br>
+ G - gline/shun aankondingingen<br>
+ n - lokale verandering van naam aankondingingen<br>
+ N - "verre" verandering van naam aankondingingen<br>
+ q - verboden nick (Q:line) aankondingingen<br>
+ s - ontvang server aankondingingen [*]<br>
+ S - ontvang spamfilter aankondingingen<br>
+ o - ontvang oper-worden aankondingingen<br>
+ [*: deze snomask kan ook gebruikt worden door niet-opers]<br>
+   </p>
+
+<p>Je kan instellen welke snomasks je automatisch krijgt (set::snomask-on-connect) en welke je krijgt
+ zodra je oper wordt (set::snomask-on-oper, oper::snomask)</p>
+<p>Standaard wordt, zodra een gebruiker modes +s zet, bepaalde snomasks gezet. Voor niet-opers, snomasks +ks, en voor
+ opers snomasks +kscfvGqo.</p></div>
+
+<p><font size="+2"><b>3.4 - Aliases</b></font><a name="feature_aliases"></a></p><div class="desc">
+<p>Met aliases kun je alias commando's instellen voor de server.
+ Je kan bijvoorbeeld "/ns identify blah" doorsturen naar NickServ (het wordt dan: PRIVMSG NickServ identify blah).
+ Je kan het ook nog complexer maken, zodat bijvoorbeeld /register naar ChanServ doorgestuurd wordt wanneer het
+ eerste woord met een # begint, en doorgestuurd naar NickServ wanneer dit niet het geval is</p>
+ Aliassen worden ingesteld door een <a href="#aliasblock">alias-blok</a> in het configuratiebestand. Je kan ook een standaard
+ bestand laten laden, met de meest gebruikte aliassen bij vaak gebruikte Services</p></div>
+
+   
+<p><font size="+2"><b>3.5 - Helpop</b></font><a name="feature_helpop"></a></p><div class="desc">
+
+<p>UnrealIRCd heeft een ingebouwd help-systeem, raadpleegbaar door /helpop. Het /helpop commando is volledig
+ in te stellen door het help-blok in het configuratiebestand. Bijkomend, een help.conf wordt geladen, waarin
+ wat basis hulp staat voro alle commando's.<br>
+ Bijvoorbeeld <i>/helpop chmodes</i> geeft je een overzicht van alle kanaalmodi die UnrealIRCd heeft.<br>
+ Vergeet niet dat wanneer je een ircop (helpop) bent, je een vraagteken ('?') moet gebruiken voor elk
+ commando. Dus <i>/helpop chmodes</i> wordt <i>/helpop ?chmodes</i></p></div>
+
+
+<p><font size="+2"><b>3.6 - Oper access levels</b></font><a name="feature_operaccesslevels"></a></p><div class="desc">
+
+<p>Er zijn verschillende oper niveaus in UnrealIRCd, en je kan extra rechten (zoals het gebruik van /gline) toevoegen
+ voor elk niveau. Op deze manier kun je een oper voorzien van alles wat hij/zij nodig heeft.</p>
+<p>Dit wordt gedaan door de oper flags in het oper-blok. Zie het oper-blok voor meer informatie</p></div>
+
+<p><font size="+2"><b>3.7 - Oper commands</b></font><a name="feature_opercmds"></a></p><div class="desc">
+<p>UnrealIRCd heeft veel machtige oper commando's welke uitgelegd worden in <a href="#useropercommands">User &amp; Oper Commands</a>.
+ Je zult deze waarschijnlijk willen doornemen na installatie</p></div>
+
+<p><font size="+2"><b>3.8 - SSL</b></font><a name="feature_ssl"></a></p><div class="desc">
+
+<p>SSL staat voor Secure Socket Layer. Met SSL kun je beveiligde verbinden opzetten.
+ Het kan gebruikt worden om server&lt;-&gt;server verkeer te beveiligen, maar ook client&lt;-&gt;server
+ kan beveiligd worden.
+ Je gebruikt SSL normaal gesproken om sniffen van wachtwoorden tegen te gaan.</p>
+<p>Je moet je IRC server compilen (opbouwen) met SSL support. Om een SSL poort in te stellen, moet je set listen::options::ssl
+ gebruiken.</p>
+<p>Je kan geen gewone verbinding maken op een SSL poort (dus maak poort 6667 geen SSL!), je hebt een programma nodig dat het
+ SSL protocol snapt.</p>
+<p>Programma's die SSL ondersteunen: <A HREF="http://www.xchat.org/" TARGET="_blank">XChat</a>,
+                             <A HREF="http://www.irssi.org/" TARGET="_blank">irssi</a>,
+                             <A HREF="http://www.mirc.com/" TARGET="_blank">mIRC</a> (6.14 en hoger, 
+                             maar heeft wat <a href="http://www.mirc.co.uk/ssl.html" target="_blank">extra stappen</a> nodig)</p>
+<p>Voor programma's die SSL niet ondersteunen, kun je een tunnel gebruiken zoals
+   <A HREF="http://www.stunnel.org/" TARGET="_blank">stunnel</A>. Hieronder vind je een stunnel.conf voorbeeld (voor stunnel 4.x):<br>
+   <pre>
+   client = yes
+   [irc]
+   accept = 127.0.0.1:6667
+   connect = irc.myserv.com:6697
+</pre>
+ Wanneer je nu een connectie naar 127.0.0.1 poort 6667 maakt, zal al je verkeer ge-encrypt worden en doorgestuurd
+ naar irc.myserv.com poort 6697 (een SSL poort).</p>
+
+<p>Je zult ook de certificaten moeten valideren, en ze niet zomaar moeten accepteren (zoals in het stunnel voorbeeld), anders
+ ben je nog steeds kwetsbaar voor "actief sniffen" (SSL omleidingen). Maar dit dwaalt te ver af om hier uit te leggen (leer
+ over SSL, vraag het ons niet). [mIRC and XChat laten een venster zien wanneer je een certificaat moet accepteren of
+ afwijzen, dus dat is goed].</p></div>
+
+<p><font size="+2"><b>3.9 - IPv6</b></font><a name="feature_ipv6"></a></p><div class="desc">
+<p>UnrealIRCd ondersteunt IPv6, en sinds beta15 is het stabiel.<br>
+ Je systeem moet ook IPv6 ondersteunen, en je moet IPv6 ondersteuning aanzetten tijdens ./Config.<br>
+<p>Hoewel Microsoft een experimentele IPv6 toepassing heeft voor W2K/XP, wordt dit (nog) niet ondersteund
+ door UnrealIRCd</p></div>
+
+
+<p><font size="+2"><b>3.10 - Zip links</b></font><a name="feature_ziplinks"></a></p><div class="desc">
+<p>Zip links kunnen worden aangezet voor server&lt;-&gt;server links. Het comprimeert data door gebruik te
+ maken van zlib. Het kan 60 tot 80% bandbreedte besparen.. Dus het is handig voor lage bandbreedte links
+ of links met veel gebruikers. Het kan veel helpen wanneer je linkt vanwege de vele data die verstuurd wordt
+ over elk(e) gebruiker/kanaal/etc.</p>
+<p>Om Zip link ondersteuning aan te zetten, moet je "yes" antwoorden voor de zlib vraag in ./Config en link::options::zip
+ gebruiken van beide kanten.</p></div>
+
+<p><font size="+2"><b>3.11 - Dynamische DNS/IP linking ondersteuning</b></font><a name="feature_dyndns"></a></p><div class="desc">
+<p>UnrealIRCd heeft enkele (nieuwe) mogelijkheden, welke mensen met een dynamisch IP helpen (zoals blah.dyndns.org).
+ Wanneer je twee dynamische DNS hosts linkt, gebruik dan link::options::nodnscache en link::options::nohostcheck.
+</p></div>
+
+
+<p><font size="+2"><b>3.12 - Anti-Flood mogelijkheden</b></font><a name="feature_antiflood"></a></p><div class="desc">
+<p>
+<b>Throttling ("Onderdrukken")</b><br>
+ Door gebruik te maken van throttling kun je een limiet instellen op hoe vaak een gebruiker een connectie naar je
+ server mag maken en verbreken. Je kan dat er X connecties in YY seconden gemaakt mogen worden vanaf hetzelfde IP
+ door middel van het set::throttle blok.
+
+<b>Kanaal modi</b><br>
+ Er zijn verschillende kanaal modi welke zeer effectief werken tegen flooden. Om een paar te noemen:<br>
+ <b>K</b> = /knock niet toegestaan, <b>N</b> = geen naamsveranderingen toegestaan, <b>C</b> = geen CTCPs toegestaan,
+ <b>M</b> = alleen geregistreerde gebruikers mogen praten, <b>j</b> = join throttling (per gebruiker)<br>
+ Sinds beta18 is er ook een geavanceerdere kanaalmodus +f...<br>
+
+<b>Kanaal modus f</b><br>
+ In plaats van het gebruik van scripts of bots om je te beschermen tegen kanaal floods, zit het nu in de ircd ingebouwd.<br>
+ Bijvoorbeeld: <i>*** Blah sets mode: +f [10j]:15</i><br>
+ Dit betekent dat er 10 joins per 15 seconden zijn toegestaan in dit kanaal. Wanneer dit limiet wordt overschreden, wordt
+ het kanaal automatisch op +j gezet.<br>
+ De volgende floodtypes zijn beschikbaar:<br>
+<table border=1 cellpadding=3 cellspacing=1>
+<tr><td>type:</td><td>naam:</td><td>standaard actie:</td><td>andere beschikbare opties:</td><td>opmerkingen</td></tr>
+<tr><td>c</td><td>CTCPs</td><td>auto +C</td><td>m, M</td><td>&nbsp;</td></tr>
+<tr><td>j</td><td>joins</td><td>auto +i</td><td>R</td><td>&nbsp;</td></tr>
+<tr><td>k</td><td>knocks</td><td>auto +K</td><td>&nbsp;</td><td><font size=-1>(alleen voor lokale gebruikers)</font></td></tr>
+<tr><td>m</td><td>messages/notices</td><td>auto +m</td><td>M</td><td>&nbsp;</td></tr>
+<tr><td>n</td><td>nickchanges</td><td>auto +N</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+<tr><td>t</td><td>text</td><td>kick</td><td>b</td><td>per bericht/notice per user, zoals de oude +f. Zal de gebruiker kicken of bannen.</td></tr>
+</table>
+
+<p />&nbsp;
+voorbeeld::
+<pre>
+<font color=green>*** ChanOp sets mode: +f [20j,50m,7n]:15</font>
+&lt;ChanOp&gt; lalala
+<font color=green>*** Evil1 (~fdsdsfddf@Clk-17B4D84B.blah.net) has joined #test
+*** Evil2 (~jcvibhcih@Clk-3472A942.xx.someispcom) has joined #test
+*** Evil3 (~toijhlihs@Clk-38D374A3.aol.com) has joined #test
+*** Evil4 (~eihjifihi@Clk-5387B42F.dfdfd.blablalba.be) has joined #test</font>
+-- XX regels weggehaald --
+<font color=green>*** Evil21 (~jiovoihew@Clk-48D826C3.e.something.org) has joined #test</font>
+<font color=brown>-server1.test.net:#test *** Channel joinflood detected (limit is 20 per 15 seconds), putting +i</font>
+<font color=green>*** server1.test.net sets mode: +i</font>
+&lt;Evil2&gt; fsdjfdshfdkjfdkjfdsgdskjgsdjgsdsdfsfdujsflkhsfdl
+&lt;Evil12&gt; fsdjfdshfdkjfdkjfdsgdskjgsdjgsdsdfsfdujsflkhsfdl
+&lt;Evil15&gt; fsdjfdshfdkjfdkjfdsgdskjgsdjgsdsdfsfdujsflkhsfdl
+&lt;Evil10&gt; fsdjfdshfdkjfdkjfdsgdskjgsdjgsdsdfsfdujsflkhsfdl
+&lt;Evil8&gt; fsdjfdshfdkjfdkjfdsgdskjgsdjgsdsdfsfdujsflkhsfdl
+-- snip XX lines --
+<font color=brown>-server1.test.net:#test *** Channel msg/noticeflood detected (limit is 50 per 15 seconds), putting +m</font>
+<font color=green>*** server1.test.net sets mode: +m</font>
+<font color=green>*** Evil1 is now known as Hmmm1</font>
+<font color=green>*** Evil2 is now known as Hmmm2</font>
+<font color=green>*** Evil3 is now known as Hmmm3</font>
+<font color=green>*** Evil4 is now known as Hmmm4</font>
+<font color=green>*** Evil5 is now known as Hmmm5</font>
+<font color=green>*** Evil6 is now known as Hmmm6</font>
+<font color=green>*** Evil7 is now known as Hmmm7</font>
+<font color=green>*** Evil8 is now known as Hmmm8</font>
+<font color=brown>-server1.test.net:#test *** Channel nickflood detected (limit is 7 per 15 seconds), putting +N</font>
+<font color=green>*** server1.test.net sets mode: +N</font>
+</pre>
+
+Het kan zelfs nog geavanceerder/complexer:<br>
+In plaats van de standaard actie kun je voor sommige floodtypes nog een andere actie instellen, bijvoorbeeld: <i>+f [20j#R,50m#M]:15</i><br>
+Dit zal het kanaal op +R zetten wanneer het joinlimiet is overschreden (&gt;20 joins in 15 seconden),
+en zal het kanaal op +M zetten wanneer het berichtlimiet is overschreven (&gt;50 messages in 15 seconden).<br>
+<br>
+Er is ook een "verwijder modus na x minuten" mogelijkheid: <i>+f [20j#R5]:15</i> zal het kenaal +R zetten wanneer het
+limiet bereikt is, en zal het weer -R zetten na 5 minuten.<br>
+Een server kan een standaard unsettime hebben (set::modef-default-unsettime), dus wanneer je <i>+f [20j]:15</i> gebruikt
+kan het veranderen in <i>+f [20j#i10]:15</i>, het is gewoon een standaard waarde. Je kan nog altijd [20j#i2]:15 of iets anders
+gebruiken. Je kan zelfs de standaard waarde niet gebruiken, door +f [20j#i0]:15 (een expliciete 0) te gebruiken.
+<br>
+De oude +f modus (msgflood per gebruiker) is nog steeds beschikbaar als 't', +f 10:6 is nu +f [10t]:6 en
++f *20:10 is nu +f [20t#b]:10. Op dit moment zal de ircd automatisch de oude +f modi typen converteren naar
+de nieuwe.
+Let op dat er geen unsettime is voor 't' bans ([20t#b30]:15 werkt niet).<br>
+<br>
+Welke +f modus het beste te gebruiken is, hangt af van het kanaal... Hoeveel gebruikers zijn er? Heb je een spel dat
+de gebruikers veel berichten laat zenden (bv Trivia)? Of gebruiken mensen vaak popups? Is het een standaard kanaal, of
+joint iedereen automatisch? etc..<br>
+Er is geen perfecte kanaalmodus +f dat goed is voor alle kanalen, maar het helpt wanneer je naar het volgende voorbeeld
+kijkt en het aanpast naar je eigen smaak:<br>
++f [30j#i10,40m#m10,7c#C15,10n#N15,30k#K10]:15<br>
+30 joins per 15 seconden, wanneer het limiet overschreden wordt, zet +i gedurende 10 minuten<br>
+40 berichten per 15 seconden, wanneer het limiet overschreven wordt, zet +m gedurende 10 minuten<br>
+7 ctcps per 15 seconden, wanneer het limiet overschreven wordt, zet +C gedurende 15 minuten<br>
+10 naamsveranderingen per 15 secondsen, wanneer het limiet overschreden wordt, zet +N gedurende 15 minuten<br>
+30 knocks per 15 seconden, wanneer het limiet overschreven wordt, zet +K gedurende 10 minuten<br>
+Wanneer het een groter kanaal betrefd (&gt; 75 gebruikers?), wil je wellicht het join limiet (bijv. naar 50) en het
+berichtlimiet (bijv naar 60 of 75) verhogen.<br>
+Met name de verwijder-modus tijd zijn een kwestie van eigen smaak.. Je moet je bedenken.. Wat als er geen op aanwezig
+is om te handelen in de situatie, wil ik dan dat het kanaal voor 15 minuten op slot gaat (wat niet leuk is voor de
+gebruikers), of voor 5 minuten (wellicht wachten de flooders dan gewoon 5 minuten en starten ze weer). Het ligt ook aan
+het floodtype, gebruikers die niet kunnen joinen (+i) of niet kunnen spreken (+m) is erger dan dat ze hun naam niet kunnen
+veranderen (+N) of dat ze geen CTCPs naar het kanaal kunnen zenden (+C). Dus wellicht wil je verschillende verwijder-tijden
+gebruiken.<br>
+<b>Kanaal modus j</b><br>
+De modus +f gaat join floods tegen, maar deze mogelijkheid is "global". Bijvoorbeeld, wanneer het gezet is op 5:10
+en 5 <u>verschillende</u> gebruikers joinen in 10 seconden, wordt de flood protectie geactiveerd. Kanaal modus +j
+is anders. Deze werkt per gebruiker. In plaats van het beschermen tegen join floods, is het ontworpen om te
+beschermen tegen join-part floods ("draaideur floods"). De modus accepteert een parameter in de vorm van X:Y, waar
+X het aantal joins is, en Y het aantal seconden. Wanneer een gebruiker dit limiet overschrijdt, wordt hem/haar
+het onmogelijk gemaakt het kanaal opnieuw te joinnen.
+</p></div>
+
+
+<p><font size="+2"><b>3.13 - Ban types</b></font><a name="feature_bantypes"></a></p><div class="desc">
+<p>
+<b>Basis bantypes en cloaked hosts</b><br>
+UnrealIRCd ondersteunt de basis bantypes, zoals <i>+b nick!user@host</i>.<br>
+Tevens, wanneer de host van iemand 'rox-ACB17294.isp.com' is, kun je een ban plaatsen op *!*@rox-ACB17294.isp.com.
+Wanneer de gebruiker zichzelf -x zet (en zijn host bijvoorbeeld dial-123.isp.com wordt), dan is de gezette
+ban nog steeds effectief. Bans worden altijd gecontroleerd op echte host EN cloaked host.<br>
+Ook IP bans zijn mogelijk (bijv: *!*@128.*) en worden ook altijd gecontroleerd.<br>
+<br>
+Bans op cloaked IPs hebben wat uitleg nodig:<br>
+Wanneer een gebruiker het IP 1.2.3.4 heeft, zijn cloaked host zou 341C6CEC.8FC6128B.303AEBC6.IP kunnen zijn.<br>
+Wanneer je *!*@341C6CEC.8FC6128B.303AEBC6.IP banned, ban je in feite *!*@1.2.3.4 (vanzelfsprekend...)<br>
+Wanneer je *!*@*.8FC6128B.303AEBC6.IP banned, ban je *!*@1.2.3.*<br>
+Wanneer je *!*@*.303AEBC6.IP banned, ban je *!*@1.2.*<br>
+Deze informatie is wellicht hulpzaam wanneer je wilt bepalen hoe ver een ban moet gaan.<br>
+<br>
+<b>Uitgebreide bantypes</b><br>
+Uitgebreide bans zien eruit als ~[!]&lt;type&gt;:&lt;stuff&gt;. Op dit moment zijn de volgende mogelijkheden bescikbaar:<br>
+<table border=1>
+<tr><td>type:</td><td>naam</td><td>uitleg:</td></tr>
+<tr><td>~q</td><td>stilte</td><td>Mensen die voldoen aan deze ban kunnen het kanaal joinen, maar kunnen niet spreken, tenzij ze +v of hoger hebben.
+ <i>Bijv: ~q:*!*@blah.blah.com</i></td></tr>
+<tr><td>~n</td><td>naamsverandering</td><td>Mensen die voldoen aan deze ban kunnen hun naam niet veranderen, tenzij ze +v of hoger hebben.
+ <i>Bijv: ~n:*!*@*.aol.com</i></td></tr>
+<tr><td>~c</td><td>[prefix]kanaal</td><td>Wanneer de gebruiker in het betreffende kanaal zit, kan hij/zij niet joinen.
+ Een voorvoegsel kan tevens gebruikt worden (+/%/@/&amp;/~) wat erop neer komt dat wanneer de gebruiker bepaalde rechten (of hoger) in
+ het kanaal heeft, hij/zij niet kan joinen
+<i>Bijv: +b ~c:#lamers, +e ~c:@#trusted </i></td></tr>
+<tr><td>~r</td><td>echte naam</td><td>Wanneer de echte naam van de gebruiker hieraan voldoet, kan hij/zij niet joinen.<br>
+ <i>Bijv: ~r:*Stupid_bot_script*</i><br>
+ Opmerking: een underscore ('_') geldt voor een spatie (' ') en een underscore ('_'), dus deze ban werkt tevens als
+ 'Stupid bot script v1.4'.</td></tr>
+</table>
+Deze bantypes worden ook ondersteund in de kanaal exceptie lijst (+e).<br>
+Modules kunnen ook andere uitgebreide ban types toevoegen.<br>
+</p></div>
+
+<p><font size="+2"><b>3.14 - Spamfilter</b></font><a name="feature_spamfilter"></a></p><div class="desc">
+<p>Spamfilter is een nieuw systeem om tegen spam, adverteren, worms en andere dingen te vechten. Het werkt
+ ongeveer zoals het "badword" systeem, maar met enkele voordelen.</p>
+<p>Spamfilters worden toegevoegd door het /spamfilter commando, wat de volgende syntax gebruikt:<br>
+ <b>/spamfilter [add|del|remove|+|-] [type] [action] [tkltime] [reason] [regex]</b><br>
+   <table border=0>
+   <tr valign="top"><td><b>[type]</b></td><td>Specificeert het doel type:<br>
+   <table>
+   <tr><td><b>Teken:</b></td><td><b>Heeft nut op:</b></td><td><b>Beschrijving:</b></td></tr>
+   <tr><td>c</td><td>kanaal</td><td>Kanaal bericht</td></tr>
+   <tr><td>p</td><td>prive</td><td>Prive bericht (user-&gt;user)</td></tr>
+   <tr><td>n</td><td>prive-notice</td><td>Prive notice</td></tr>
+   <tr><td>N</td><td>kanaal-notice</td><td>Kanaal notice</td></tr>
+   <tr><td>P</td><td>part</td><td>Part reden</td></tr>
+   <tr><td>q</td><td>quit</td><td>Quit reden</td></tr>
+   <tr><td>d</td><td>dcc</td><td>DCC bestandsnaam</td></tr>
+   <tr><td>a</td><td>away</td><td>Away bericht</td></tr>
+   <tr><td>t</td><td>topic</td><td>Een topic instellen</td></tr>
+   <tr><td>u</td><td>gebruiker</td><td>gebruikersban ban, zal gecontroleerd worden tegen nick!user@host:realname</td></tr>
+   </table>
+   Je kan meerdere doelen opgeven, zoals: cpNn</td></tr>
+   <tr valign="top"><td><b>[action]</b></td><td>Specificeert de te ondernemen actie (slechts 1 action is mogelijk)<br>
+<table>
+<tr><td>kill</td><td>killt de gebruiker</td></tr>
+<tr><td>tempshun</td><td>shuns de huidige sessie van de gebruiker (wanneer hij/zij opnieuw verbindt, is de shun weg)</td></tr>
+<tr><td>shun</td><td>zet een shun op de host</td></tr>
+<tr><td>kline</td><td>zet een kline op de host</td></tr>
+<tr><td>gline</td><td>zet een gline op de host</td></tr>
+<tr><td>zline</td><td>zet een zline op de host</td></tr>
+<tr><td>gzline</td><td>zet een gzline (global zline) op de host</td></tr>
+<tr><td>block</td><td>blokkeer het bericht enkel</td></tr>
+<tr><td>dccblock</td><td>markeer de gebruiker zodat hij/zij geen DCCs kan verzenden</td></tr>
+<tr valign="top"><td>viruschan</td><td>part alle kanalen, join set::spamfilter::virus-help-channel, maak alle commando's behalve
+ PONG, ADMIN en berichten/notices gericht aan set::spamfilter::virus-help-channel onbruikbaar</td></tr>
+</table></tr></td>
+   <tr valign="top"><td><b>[tkltime]</b></td><td> De duur van een *line/shun toegevoegd door het filter, gebruik '-' om de standaardwaarde 
+   te gebruiken (bijv: wanneer action = 'block')</td></tr>
+   <tr valign="top"><td><b>[reason]</b></td><td> Block/*line/shun reden.. Je kunt GEEN spaties hierin gebruiken, maar een underscore ('_') zal een spatie
+   worden zodra het uitgevoerd wordt. Een dubbele underscore ('__') zal een underscore ('_') worden. Weer, gebruik '-' voor de standaard reden.</td></tr>
+   <tr valign="top"><td><b>[regex]</b></td><td>Dit is de echte regex of "bad word" waarop we actie willen ondernemen</td></tr>
+   </table>
+   <br>
+   Hier is een voorbeeld: <i>/spamfilter add pc gline - - Come watch me on my webcam</i><br>
+   Wanneer de tekst<i>come watch me on my webcam</i> gevonden wordt in of een prive bericht, of een kanaal bericht,
+   wordt deze geblokkeerd en een gline zal meteen gezet worden.<br>
+   Nog een voorbeeld: <i>/spamfilter add pc block - - come to irc\..+\..+</i><br>
+   Dit is een regex dat voldoet aan <i>Hi, come to irc.blah.net</i> etc...<br>
+   Nu een voorbeeld met een gespecificeerde tijd/reden:<br>
+   <i>/spamfilter add p gline 3h Please_go_to_www.viruscan.xx/nicepage/virus=blah Come watch me on my webcam</i><br>
+   Wanner <i>come watch me on my webcam</i> gevonden wordt in een prive bericht, zal de gebruiker voor 3 uur een
+   gline krijgen met de reden <i>Please go to www.viruscan.xx/nicepage/virus=blah</i>.<br>
+   <br>
+   Spamfilters toegevoerd met behulp van /spamfilter gelden op het gehele netwerk. Ze werken altijd, of een
+   gebruiker of kanaal nu modus +G heeft of niet. Alleen opers en U:Lines (Services) vormen een uitzondering.
+</p>
+<p>Je kan ook spamfilters in het configuratiebestand toevoegen, maar deze werken alleen lokaal (niet over het
+ gehele netwerk, hoewel je hiervoor remote includes ("van afstand ingeladen") kunt gebruiken).
+ De syntax van deze spamfilter { } blokken worden <a href="#spamfilter">hier</a> uitgelegd<br>
+ Voorbeeld:
+   <pre>spamfilter {
+	regex "//write \$decode\(.+\|.+load -rs";
+	target { private; channel; };
+	reason "Generic $decode exploit";
+	action block;
+};</pre></p>
+
+<p><b>set::spamfilter::ban-time</b> geeft je de mogelijkheid om de standaardtijd voor *lines/shuns aan te passen (standaard: 1 day)<br>
+   <b>set::spamfilter::ban-reason</b> geeft je de mogelijkheid een standaardreden op te geven (standaard: 'Spam/advertising')<br>
+   <b>set::spamfilter::virus-help-channel</b> geeft je de mogelijkheid een kanaal te specificeren dat gejoined wordt door 'viruschan' (standaard: #help)<br>
+   <b>set::spamfilter::virus-help-channel-deny</b> geeft je de mogelijkheid om normale joins in virus-help-channel te blokkeren (standaard: no)<br>
+</p></div>
+
+<p><font size="+2"><b>3.15 - CIDR</b></font><a name="feature_cidr"></a></p><div class="desc">
+<p>UnrealIRCD geeft je nu ook de mogelijkheid om IP reeksen te bannen, door middel van CIDR
+(Classess Interdomain Routing). IPs worden door ISPs uitgedeeld door middel van CIRD. Dit geeft
+je de mogelijkheid om heel makkelijk een ISP te bannen. CIDR wordt ondersteund voor zowel IPv4
+als IPv6. CIDR masks zijn toegestaan in allow::ip, ban user::mask, ban ip::mask, except ban::mask
+except throttle::mask, en except tkl::mask (for gzline, gline en shun). Tevens kan CIDR gebruikt
+worden met /kline, /gline, /zline, /gzline en shun. UnrealIRCd gebruikt de standaard syntax van
+IP/bits, zoals 127.0.0.0/8 (komt overeen met 127.0.0.0 - 127.255.255.255), en fe80:0:0:123::/64
+(komt overeen met fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p></div>
+
+<p><font size="+2"><b>3.16 - Nick Character Sets</b></font><a name="feature_nickchars"></a></p><div class="desc">
+<p>UnrealIRCd geeft je nu ook de mogelijkheid om te specificeren welke charsets/talen gebruikt morgen
+ worden in namen. Dit doe je door middel van <b>set::allowed-nickchars</b>.<br>
+
+Een tabel met alle mogelijke keuzes:<br>
+<table border="1">
+<tr><td><b>Naam:</b></td><td><b>Beschrijving:</b></td><td><b>Character set/encoding:</b></td></tr>
+<tr><td>catalan</td><td>Catalaanse letters</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>danish</td><td>Deense letters</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>dutch</td><td>Nederlandse letters</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>french</td><td>Franse letters</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>german</td><td>Duitse letters</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>swiss-german</td><td>Zweeds-Duitse letters (geen es-zett)</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>icelandic</td><td>IJslandse letters</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>italian</td><td>Italiaanse letters/td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>spanish</td><td>Spaanse letters</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>swedish</td><td>Zweedse letters</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td><b>latin1</b></td><td>Catalaanse, Deense, Nederlandse, Franse, Duitse, Zweeds-Duitse, Spaanse, IJslandse, Italiaanse en Zweedse letters</td><td>iso8859-1 (latin1)</td></tr>
+<tr><td>hungarian</td><td>Hongaarse letters</td><td>iso8859-2 (latin2), windows-1250</td></tr>
+<tr><td>polish</td><td>Poolse letters</td><td>iso8859-2 (latin2)</td></tr>
+<tr><td>romanian</td><td>Roemeense letters</td><td>iso8859-2 (latin2), windows-1250, iso8859-16</td></tr>
+<tr><td><b>latin2</b></td><td>Hongaarse, Poolse en Roemeense</td><td>iso8859-2 (latin2)</td></tr>
+<tr><td>polish-w1250</td><td>Poolse letters, Windows variant (helaas meer voorkomend dan iso)</td><td>windows-1250</td></tr>
+<tr><td>slovak-w1250</td><td>Slowaakse letters, Windows variant</td><td>windows-1250</td></tr>
+<tr><td>czech-w1250</td><td>Tsjechisch characters, Windows variant</td><td>windows-1250</td></tr>
+<tr><td><b>windows-1250</b></td><td>polish-w1250, slovak-w1250, czech-w1250, Hongaars, Roemeens</td><td>windows-1250</td></tr>
+<tr><td>greek</td><td>Griekse letters</td><td>iso8859-7</td></tr>
+<tr><td>turkish</td><td>Turkse letters</td><td>iso8859-9</td></tr>
+<tr><td>russian-w1251</td><td>Russische letters</td><td>windows-1251</td></tr>
+<tr><td>belarussian-w1251</td><td>Wit-Russische letters</td><td>windows-1251</td></tr>
+<tr><td>ukrainian-w1251</td><td>Oekrainse letters</td><td>windows-1251</td></tr>
+<tr><td><b>windows-1251</b></td><td>russian-w1251, belarussian-w1251, ukrainian-w1251</td><td>windows-1251</td></tr>
+<tr><td>hebrew</td><td>Hebreeuwse letters</td><td>iso8859-8-I/windows-1255</td></tr>
+<tr><td>chinese-simp</td><td>Vereenvoudigd Chinees</td><td>Multibyte: GBK/GB2312</td></tr>
+<tr><td>chinese-trad</td><td>Traditioneel Chinees</td><td>Multibyte: GBK</td></tr>
+<tr><td>chinese-ja</td><td>Japans Hiragana/Pinyin</td><td>Multibyte: GBK</td></tr>
+<tr><td><b>chinese</b></td><td>Chinese-*</td><td>Multibyte: GBK</td></tr>
+<tr><td><b>gbk</b></td><td>Chinese-*</td><td>Multibyte: GBK</td></tr>
+</table>
+<p>Opmerking 1: Let op dat het combineren voor problemen kan zorgen. Bijvoorbeeld het mengen van
+ latin* en chinese-* kan niet goed afgehandeld worden door de IRCd en Unreal zal dan ook een error geven.
+ Het door elkaar gebruiken van andere charsets kan voor problemen worden. UnrealIRCd zal hierom een
+ waarschuwing weergeven wanneer je latin1/latin2/greek/en andere tegenstelde charsets wilt gebruiken.</p>
+<p>Opmerking 2: Het herkennen van kleine en grote letters wordt gedaan volgens het US-ASCII systeem. Dit
+Betekent dat o" en O" niet als dezelfde letter herkend wordt. Daarom kan iemand de naam B"ar hebben, en
+iemand anders de naam BA"r. Dit is een limitatie van het huidige systeem, en kan op dit moment niet
+opgelost worden. Let hier goed op.
+Merk op dat deze limitatie altijd al geeft gegolden voor de namen van kanalen, waarin bijna alle letters
+zijn toegestaan en US-ASCII altijd is uitgevoerd.</p>
+<p>Opmerking 3: De basis letters (a-z A-Z 0-9 [ \ ] ^ _ - { | }) zijn altijd toegestaan.</p>
+Voorbeeld 1, voor mensen uit West-Europa:<br>
+<pre>set { allowed-nickchars { latin1; }; };</pre>
+Voorbeeld 2, voor wanneer je voornamelijk Chinese gebruikers hebt, en de "normale" chinese letters wil toestaan:<br>
+<pre>set { allowed-nickchars { chinese-simp; chinese-trad; }; };</pre>
+</p></div>
+
+<p><font size="+2"><b>3.17 - CGI:IRC ondersteuning</b></font><a name="feature_cgiirc"></a></p><div class="desc">
+<p>UnrealIRCd ondersteunt voor CGI:IRC host spoofing, wat inhoudt dat je bepaalde CGI:IRC
+gateways als "trusted" kan bestempelen, zodat de IRCd overal de echte host/ip van de gebruiker
+laat zien, in plaats van de CGI:IRC gateway.</p>
+<p>Zie het <a href="#cgiirc">cgiirc block</a> voor informatie over het configureren</p>	
+</div>
+
+<p><font size="+2"><b>3.18 - Tijd Synchronisatie</b></font><a name="feature_timesync"></a></p><div class="desc">	
+<p>Heb hebben van de juiste tijd is enorm belangrijk voor IRC servers. Zonder de correcte tijd kunnen channels desynchen,
+ongeschuldige gebruikers gekilled worden, channels komen niet goed in /LIST, samengevat: grote problemen ontstaan.</p>
+<p>UnrealIRCd heeft een ingebouwde tijd synchronisatie ondersteuning.
+Hoewel deze niet optimaal is (kan nog enkele seconden speling zijn), lost het de meeste tijd-gerelateerde problemen op.
+Als het mogelijk is, wordt je nog steeds aangeraden een tijdsynchronisatie programma te gebruiken zoals ntpd op *UNIX of
+de tijdsynchronisatie service van Windows (in dat geval kun je Unreals tijdsynchronisatie uitzetten, meer volgt later).</p>
+<p>Wat UnrealIRCd probeert (standaard) is het eenmaling instellen van de tijd wanneer ze gestart wordt. Ze stuurt (standaard)
+een verzoek naar verschillende tijdservers en wanneer ze het eerste (snelste) antwoord ontvangt, past ze de interne IRCd clock
+aan (NIET de systeem clock). Als, voor welke reden dan ook, Unreal geen antwoord krijgt van de tijdserver binnen 3 seconden, start
+ze gewoon op zonder tijdsaanpassing (zal vrijwel nooit gebeuren).</p>
+<p>Tijd synchronisatie wordt ingesteld (en kan uitgezet worden) door het <b>set::timesynch</b> block, zie de
+<a href="#setblock">set documentatie</a> voor meer informatie.</p>	
+</div>
+
+<p><font size="+2"><b>3.19 - Andere mogelijkheden</b></font><a name="feature_other"></a></p><div class="desc">
+<p>UnrealIRCd heeft heel veel mogelijkheden, dus niet alles staat beschreven hier... Je vindt het vanzelf wel.</p></div>
+
+<p> </p>
+<p><font size="+2"><b>4.0 - Aanpassen van je unrealircd.conf</b></font> 
+  <a name="configuringyourunrealircdconf"></a></p><div class="desc">
+<p>
+ Ten eerste, het maken van je eerste unrealircd.conf kost tijd (zeg 15 tot 60 minuten). Het
+ maken van een <u>goede</u> kost nog meer tijd. Haast je niet om je IRCd online te krijgen,
+ maar doe alles stap voor stap. Wanneer je tegen problemen aanloopt, controleer je syntax,
+ controleer deze handleiding en de <a href="http://www.vulnscan.org/UnrealIRCd/faq/">FAQ</a>
+ voordat je hulp zoekt of een bug meldt.</p></div>
+
+<p><b><font size="+2">4.1 Configuratie bestand uitgelegd</font></b><a name="configurationfileexplained"></a><br><div class="desc">
+</p>
+<p>Het nieuwe systeem gebruikt een indeling op basis van blokken. Elke invoer, of blok, heeft een nieuw
+ en specifiek format. Hieronder een voorbeeld:</p>
+<pre>
+&lt;block-name&gt; &lt;block-value&gt; {
+	&lt;block-directive&gt; &lt;directive-value&gt;;
+};
+</pre></p>
+
+
+<p>&lt;block-name&gt; staat voor het type blok, zoals me of admin. &lt;block-value&gt; heeft soms een waarde,
+ zoals bij een /oper login. Andere keren is het een onderverdeling, zoals in ban user</p>
+
+<p>&lt;block-directive&gt; is een individuele, specifieke variabele voor het blok, en 
+  &lt;directive-value&gt; is de bijhorende waarde. Wanneer &lt;directive-value&gt; 
+  spaties, of tekens die een opmerking voorstellen, bevat, moet het tussen aanhalingstekens
+  (" en ") geplaatst worden. Wanneer je een (") wil gebruiken binnen de string, gebruik dan
+  (\").</p>
+
+
+<p> Een &lt;block-directive&gt; kan verschillende waardes in zich hebben. Wanneer dat zo is,
+ zullen deze waardes tussen accolades geplaatst worden. Sommige blokken hebben geen waardes,
+ en worden alleen gevolgd door &lt;block-value&gt;, bijvoorbeeld een include.
+ Merk ook op dat er geen vaste indeling is, een blok kan op 1 regel of over verschillende
+ regels verdeeld worden. De indeling hierboven is het meest gebruikelijk (en overzichtelijk).</p>
+
+<p>Opmerking: het configuratiebestand is op dit moment hoofdlettergevoelig, dus <i>BLOCK-NAME</i>
+ is niet hetzelfde als <i>block-name</i>. Er is een speciale manier om aan te duiden hoe iets
+ gebruikt moet worden in het configuratiebestand. In het bovenstaande voorbeeld zeg je
+ bijvoorbeeld &lt;block-name&gt;::&lt;block-directive&gt;. Wanneer er nog een waarde bij
+ hoort, voeg je gewoon nog een :: en de naam van de waarde toe.</p>
+
+
+<p>Wanneer je spreekt over een waarde zonder naam, doe je &lt;block-name&gt;::. Dit betekent
+ in dit geval &lt;block-value&gt;, of het is een waarde die geen naam heeft.</p>
+<p>Drie soorten commentaren worden ondersteund:</p>
+<p> # Een-lijns commentaar<br>
+    // Een-lijnscommentaar<br>
+    /* Meerdere lijnen<br>
+       &nbsp;&nbsp;&nbsp;&nbsp;commentaar */<br>
+</p>
+<p>Nu je weet hoe het werkt, kopieer <i>doc/example.conf</i> naar je UnrealIRCd map (bv:
+ /home/user/Unreal3.2) en hernoem het naar <i>unrealircd.conf</i> (OF je maakt een compleet
+ nieuwe <i>unrealircd.conf</i>).
+ Het wordt ten zeerste aangeraden om stap voor stap alle blocken door te werken en de
+ instellingen in je conf. Gebruik deze handleiding als leidraad.</p>
+<p></p></div>
+
+<p><font class="block_section">4.2 - </font><font class="block_name">Me Block</font>
+   <font class="block_required">BENODIGD</font> <font class="block_old">(Dit was de M:Line)</font><a name="meblock"></a><div class="desc">
+</p>
+<p>Syntax:<br>
+<pre>
+me {
+	name &lt;name-of-server&gt;;
+	info &lt;server-description&gt;;
+	numeric &lt;server-numeric&gt;;
+};
+</pre></p>
+<p>De waardes zijn nogal duidelijk. De <b>naam</b> staat voor de naam van de server,
+ <b>info</b> staat voor de informatie lijn van de server, <b>numeric</b> staat voor
+ de numerieke representatie van de server. Dit moet een waarde tussen 0 en 254 zijn,
+ die UNIEK is. Dit betekent dat geen enkele server in je netwerk dezelfde numeric mag hebben.</p>
+
+<p>Voorbeeld:<br>
+<pre>
+me {
+	name "irc.foonet.com";
+	info "FooNet Server";
+	numeric 1;
+};
+</pre></p></div>
+<p></p>
+<p><font class="block_section">4.3 - </font><font class="block_name">Admin Block</font>
+   <font class="block_required">BENODIGD</font> <font class="block_old">(Dit was de A:Line)</font><a name="adminblock"></a><div class="desc">
+</p>
+<p>Syntax:<br>
+<pre>
+admin {
+	&lt;text-line&gt;;
+	&lt;text-line&gt;;
+};
+</pre></p>
+<p> </p>
+<p>Het admin blok vormt de tekst afgebeeld in een /admin commando. Je kan zoveel
+ regels opgeven als je wilt, en ze kunnen bevatten wat je wilt. Het is echter
+ standaard om de naam en het email adres van de admin als minimun te gebruiken.</p>
+
+<p>Voorbeeld:<br>
+<pre>
+admin {
+	"Bob Smith";
+	"bob";
+	"widely@used.name";
+};
+</pre></p></div>
+<p></p>
+<p><font class="block_section">4.4 - </font><font class="block_name">Class Block</font>
+   <font class="block_required">BENODIGD</font> <font class="block_old">(Dit was de Y:Line)</font><a name="classblock"></a><div class="desc">
+</p>
+<p>Syntax:<br>
+<pre>
+class &lt;name&gt; {
+	pingfreq &lt;ping-frequency&gt;;
+	connfreq &lt;connect-frequency&gt;;
+	maxclients &lt;maximum-clients&gt;;
+	sendq &lt;send-queue&gt;;
+	recvq &lt;recv-queue&gt;;
+};
+</pre></p>
+<p> </p>
+<p>Class blokken zijn klassen waarin connections geplaatst worden (bijvoorbeeld vanuit allow blocks, of servers
+ vanuit link blocks). Normaal gesproken heb je meerdere class blocks (bijv: voor servers, gebruikers en opers).</p>
+<p><b>name</b> is de naam van de class, bijvoorbeeld "clients" of "servers". Deze naam wordt gebruikt om deze class aan te duiden
+ in allow/link/oper/etc blocks.</p>
+
+<p><b>pingfreq</b> is het aantal seconden tussen PINGs van de server (een waarde tussen 90 en 180 wordt aangeraden).</p>
+<p><b>connfreq</b> wordt alleen gebruikt voor servers en is het aantal seconden tussen het proberen te verbinden, wanneer autoconnect aan staat.</p>
+<p><b>maxclients</b> stelt het maximale (totale) aantal van clients/servers in deze class in.</p>
+<p><b>sendq</b> stelt de grootte van data dat in de send queue mag zijn (zeer hoog voor servers met lage bandwidth, gemiddeld voor gebruikers).</p>
+<p><b>recvq</b> stelt de grootte van data dat in de receive queue mag zijn en wordt gebruikt voor flood-controle
+ (alleen van toepassing op gewone gebruikers, probeer waardes tussen 3000 en 8000. 8000 is de standaardwaarde).</p>
+
+<p>Voorbeelden:<br>
+<pre>
+class clients {
+	pingfreq 90;
+	maxclients 500;
+	sendq 100000;
+	recvq 8000;
+};
+
+class servers{
+	pingfreq 90;
+	maxclients 10; /* Maximaal aantal servers dat we tegelijk gelinkt kunnnen hebben */
+	sendq 1000000;
+	connfreq 100; /* Hoeveel seconden tussen elke poging om een verbinding te maken */
+};
+</pre></p>
+<p> </p></div>
+<p><font class="block_section">4.5 - </font><font class="block_name">Allow Block</font>
+   <font class="block_required">BENODIGD</font> <font class="block_old">(Dit was de I:Line)</font><a name="allowblock"></a><div class="desc">
+</p>
+<p>Syntax:<br>
+<pre>
+allow {
+	ip &lt;user@ip-connection-mask&gt;;
+	hostname &lt;user@host-connection-mask&gt;;
+	class &lt;connection-class&gt;;
+	password &lt;connection-password&gt; { &lt;auth-type&gt;; };
+	maxperip &lt;max-connections-per-ip&gt;;
+	redirect-server &lt;server-to-forward-to&gt;;
+	redirect-port &lt;port-to-forward-to&gt;;
+	options {
+		&lt;option&gt;;
+		&lt;option&gt;;
+		...
+	};
+};
+</pre></p>
+<p>Door middel van een allow class geef je aan wie er allemaal een connectie mag maken met je server. Je mag meerdere allow blocks hebben.</p>
+<p><b>Matches</b><br>
+ De toegangscontrole werkt als volgt: ip komt OF host komt overeen, dus "hostname *@*"; en "ip *@1.2.3.4" betekent
+ dat er altijd een overeenkomst is. Tevens worden de allow blocks van boven naar beneden gelezen, dus je moet de
+ specifieke host/IP allow blocks NA je algemene *@* allow block plaatsen. Wanneer je een allow block wilt dat alleen
+ werkt met een overeenkomstig IP, stel hostname dan in als iets ongeldigs zoals "hostname NOBODY;".</p>
+<p><b>ip</b><br>
+ De vorm van de IP mask is user@ip. User is de ident, meestal wordt * gebruikt. IP is de IPmask.
+ Enkele voorbeelden: *@* (iedereen), *@192.168.* (alleen vanaf IPs startende met 192.168), etc.</p>
+
+<p><b>host</b><br>
+ Ook weer een user@host mask. Voor user wordt meestal * gebruikt. Enkele voorbeelden:
+ *@* (iedereen), *@*.planet.nl (alleen vanaf planet.nl).</p>
+
+<p><b>password</b> (optioneel)<br>
+ Er is een wachtwoord nodig om een verbinding te maken. Je kan ook een wachtwoord
+ met encryptie gebruiken.
+</p>
+<p><b>class</b><br>
+ De naam van de class waarin de connectie thuis hoort.
+</p>
+<p><b>maxperip</b> (optioneel, maar wordt aangeraden)<br>
+ Je kunt een maximaal aantal connecties per IP instellen (bijv. maxperip 4;)
+</p>
+<p><b>redirect-server</b> (optioneel)<br>
+ Wanneer de class vol is, worden de gebruikers naar deze server gestuurd (wanneer het programma het ondersteunt [mIRC 6+ does]).</p>
+<p><b>redirect-port</b> (optioneel)<br>
+ Wanneer je een redirect-server hebt opgegeven, kun je ook een aparte poort opgeven. Wanneer je dit veld leeg laat, wordt poort 6667 genomen.</p>
+<p><b>options block</b> (optional)<br>
+   geldige opties zijn::<br>
+&nbsp;&nbsp;&nbsp;<b>useip</b> laat altijd het IP zien in plaats van de hostnaam<br>
+&nbsp;&nbsp;&nbsp;<b>noident</b> gebruik geen ident maar gebruik de gebruikersnaam van de client<br>
+&nbsp;&nbsp;&nbsp;<b>ssl</b> alleen geldig wanneer de gebruiker een connectie via SSL gebruikt<br>
+&nbsp;&nbsp;&nbsp;<b>nopasscont</b> ga door met controle wanneer geen wachtwoord opgegeven is (zodat je gebruikers in speciale classes kan stoppen
+wanneer ze wel een wachtwoord geven).
+
+<p>Voorbeelden:<br>
+<pre>
+allow {
+	ip *;
+	hostname *;
+	class clients;
+	maxperip 5;
+};
+
+allow {
+	ip *@*;
+	hostname *@*.passworded.ugly.people;
+	class clients;
+	password "f00Ness";
+	maxperip 1;
+};
+</pre></p></div>
+<p>&nbsp;</p>
+<p><font class="block_section">4.6 - </font><font class="block_name">Listen Block</font>
+   <font class="block_required">BENODIGD</font> <font class="block_old">(Dit was de P:Line)</font><a name="listenblock"></a><div class="desc">
+</p>
+<p>Syntax:<br>
+<pre>
+listen &lt;ip:port&gt; {
+	options {
+		&lt;option&gt;;
+		&lt;option&gt;;
+		...
+	};
+};
+</pre></p>
+<p> </p>
+<p>Dit blok geeft je de mogelijkheid in te stellen op welke poorten de IRCd moet luisteren.
+ Wanneer geen opties nodig zijn, hoef je geen andere waardes te gebruiken. Je kan dan gewoon
+ "listen &lt;ip:port&gt;;" gebruiken.</p>
+<p><b>ip and port</b><br>
+ Je kan het IP instellen als *, zodat er op beschikbare IPs geluisterd wordt. Of je geeft 1 IP op (meestal nodig bij shell providers).
+ De poort is de poort waarop geluisterd moet worden. Je kan ook een poortreeks opgeven. Bijvoorbeeld 6660-6669 zal luisteren
+ op de poorten 6660 tot en met 6669. IPv6 gebruikers, zie lager.</p>
+
+<p><b>Info for IPv6 users</b><br>
+ Wanneer je een server met IPv6 ondersteuning hebt, moet je het IP insluiten in haken.
+ zoals [::1]:66667 (luister op localhost op poort 6667). Wanneer je IPv6 gebruikt en
+ je wilt luisteren op een bepaald IPv4 address, moet je ::ffff:IPv4IP gebruiken.
+ Bijvoorbeeld: [::ffff:203.123.67.1]:6667. Dit zorgt ervoor dat je IRCd luistert op
+ 203.123.67.1 op poort 6667. Natuurlijk kun je ook gewoon * gebruiken.</p>
+
+<p><b>options block</b> (optional)<br>
+ Je kan ook speciale opties opgeven met betrekking tot de poort. Geldige opties zijn:<br>
+<table border="0">
+<TR><TD><center><b>clientsonly</b></center></TD><TD> poort kan alleen gebruikt worden door gebruikers</TD></TR>
+<TR><TD><center><b>serversonly</b></center></TD><TD> poort kan alleen gebruikt worden door servers</TD></TR>
+<TR><TD><center><b>java</b></center></TD><TD> CR javachat ondersteuning</TD></TR>
+<TR><TD><center><b>ssl</b></center></TD><TD> SSL encrypted poort</TD></TR>
+</table>
+</p>
+
+<p>Voorbeelden:</p>
+<pre>
+listen *:6601 {
+	options {
+		ssl;
+		clientsonly;
+	};
+};
+
+</pre></p>
+<p>Of wanneer er geen opties zijn:</p>
+<p>listen *:8067;<br>
+  listen 213.12.31.126:6667;<br>
+  listen *:6660-6669;</p></div>
+
+<p><font class="block_section">4.7 - </font><font class="block_name">Oper Block</font>
+   <font class="block_recommended">AANBEVOLEN</font> <font class="block_old">(Dit was de O:Line)</font><a name="operblock"></a><div class="desc">
+</p>
+<p>
+<pre>oper &lt;name&gt; {
+	from {
+		userhost &lt;hostmask&gt;;
+		userhost &lt;hostmask&gt;;
+	};
+	password &lt;password&gt; { &lt;auth-type&gt;; };
+	class &lt;class-name&gt;;
+	flags &lt;flags&gt;;
+	flags {
+		&lt;flag&gt;;
+		&lt;flag&gt;;
+		...
+	};
+	swhois &lt;whois info&gt;;
+	snomask &lt;snomask&gt;;
+	modes &lt;modes&gt;;
+	maxlogins &lt;num&gt;;
+};
+</pre></p>
+<p>Het oper block geeft je de mogelijkheid om IRC Operators aan te duiden voor je server.
+ De <b>oper::</b> geeft de inlog naam voor /oper. De <b>oper::from::userhost</b> is een
+ user@host mask welke de gebruiker moet matchen. Je kan meerdere hostmasks opgeven door
+ meerdere opers::from::userhost toe te voegen. De <b>oper::password></b> is het wachtwoord
+ van de gebruiker. oper::password:: geeft je de mogelijkheid om een authenticatie-methode
+ op te geven voor het betreffende wachtwoord. Wanneer je een tekst-wachtwoord wilt
+ gebruiken, laat je oper::password:: weg.</p>
+<p>Merk op dat zowel de loginnaam als het wachtwoord hoofdlettergevoelig zijn.</p>
+<p><b>oper::class</b> zegt in welke class een oper zich bevindt. Deze class moet boven
+ het oper block zelf staan.</p>
+<p><b>oper::flags</b> heeft 2 verschillende indelingen. Wanneer je de oude manier wilt 
+ gebruiken, bijvoorbeeld OAa, gebruik je de flags &lt;flags&gt; methode. Wanneer je
+ de nieuwe manier wilt gebruiken, bijvoorbeeld services-admin, dan moet je de flags
+ { &lt;flag&gt;; } methode gebruiken. Hieronder volgt een lijst met alle mogelijke
+ flags, in beide methodes, en wat ze doen.</p>
+
+<table width="75%" border="1">
+  <tr> 
+    <td width="10%"><div align="center"><b>Oude Flag</b></div></td>
+    <td width="16%"><div align="center"><b>Nieuwe Flag</b></div></td>
+    <td width="74%"><b>Beschrijving</b></td>
+  </tr>
+  <tr> 
+    <td height="24"><div align="center">o</div></td>
+    <td><div align="center">local</div></td>
+    <td>Maakt je een lokale Operator</td>
+  </tr>
+  <tr> 
+    <td><div align="center">O</div></td>
+    <td><div align="center">global</div></td>
+    <td>Maakt je een globale Operator</td>
+  </tr>
+  <tr> 
+    <td><div align="center">C</div></td>
+    <td><div align="center">coadmin</div></td>
+    <td>Maakt je een Co-Admin</td>
+  </tr>
+  <tr> 
+    <td><div align="center">A</div></td>
+    <td><div align="center">admin</div></td>
+    <td>Maakt je een Admin</td>
+  </tr>
+  <tr> 
+    <td><div align="center">a</div></td>
+    <td><div align="center">services-admin</div></td>
+    <td>Maakt je een Services Admin</td>
+  </tr>
+  <tr> 
+    <td><div align="center">N</div></td>
+    <td><div align="center">netadmin</div></td>
+    <td>Maakt je een Netwerk Admin</td>
+  </tr>
+  <tr> 
+    <td><div align="center">r</div></td>
+    <td><div align="center">can_rehash</div></td>
+    <td>Je mag /rehash gebruiken</td>
+  </tr>
+  <tr> 
+    <td><div align="center">D</div></td>
+    <td><div align="center">can_die</div></td>
+    <td>Je mag /die gebruiken</td>
+  </tr>
+  <tr> 
+    <td><div align="center">R</div></td>
+    <td><div align="center">can_restart</div></td>
+    <td>Je mag /restart gebruiken</td>
+  </tr>
+  <tr> 
+    <td><div align="center">h</div></td>
+    <td><div align="center">helpop</div></td>
+    <td>Je krijgt de gebruikersmodus +h (Helpop)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">w</div></td>
+    <td><div align="center">can_wallops</div></td>
+    <td>Je kan een /wallops zenden</td>
+  </tr>
+  <tr> 
+    <td><div align="center">g</div></td>
+    <td><div align="center">can_globops</div></td>
+    <td>Je kan een /globops zenden</td>
+  </tr>
+  <tr> 
+    <td><div align="center">c</div></td>
+    <td><div align="center">can_localroute</div></td>
+    <td>Je kan lokale servers laten verbinden</td>
+  </tr>
+  <tr> 
+    <td><div align="center">L</div></td>
+    <td><div align="center">can_globalroute</div></td>
+    <td>Je kan globale servers laten verbinden</td>
+  </tr>
+  <tr> 
+    <td><div align="center">k</div></td>
+    <td><div align="center">can_localkill</div></td>
+    <td>Je kan een /kill uitoefenen op lokale gebruikers</td>
+  </tr>
+  <tr> 
+    <td><div align="center">K</div></td>
+    <td><div align="center">can_globalkill</div></td>
+    <td>Je kan een /kill uitoefenen op globale gebruikers</td>
+  </tr>
+  <tr> 
+    <td><div align="center">b</div></td>
+    <td><div align="center">can_kline</div></td>
+    <td>Je kan /kline gebruiken</td>
+  </tr>
+  <tr> 
+    <td><div align="center">B</div></td>
+    <td><div align="center">can_unkline</div></td>
+    <td>Je kan /kline -user@host gebruiken</td>
+  </tr>
+  <tr> 
+    <td><div align="center">n</div></td>
+    <td><div align="center">can_localnotice</div></td>
+    <td>Je kan lokale server berichten zenden</td>
+  </tr>
+  <tr> 
+    <td><div align="center">G</div></td>
+    <td><div align="center">can_globalnotice</div></td>
+    <td>Je kan globale server berichten zenden</td>
+  </tr>
+  <tr> 
+    <td><div align="center">z</div></td>
+    <td><div align="center">can_zline</div></td>
+    <td>Je kan /zline gebruiken</td>
+  </tr>
+  <tr> 
+    <td><div align="center">t</div></td>
+    <td><div align="center">can_gkline</div></td>
+    <td>Je kan /gline, /shun en /spamfilter gebruiken</td>
+  </tr>
+  <tr> 
+    <td><div align="center">Z</div></td>
+    <td><div align="center">can_gzline</div></td>
+    <td>Je kan /gzline gebruiken</td>
+  </tr>
+  <tr> 
+    <td><div align="center">W</div></td>
+    <td><div align="center">get_umodew</div></td>
+    <td>Je krijgt gebruikersmodus +W wanneer je /oper doet</td>
+  </tr>
+  <tr> 
+    <td><div align="center">H</div></td>
+    <td><div align="center">get_host</div></td>
+    <td>Je krijgt de speciale oper host</td>
+  </tr>
+  <tr> 
+    <td><div align="center">v</div></td>
+    <td><div align="center">can_override</div></td>
+    <td>Je kan <a href="#operoverride">OperOverride</a> gebruiken</td>
+  </tr>
+  <tr>
+    <td><div align="center">q</div></td>
+    <td><div align="center">can_setq</div></td>
+    <td>Je kan gebruikersmodus +q gebruiken</td>
+  </tr>
+  <tr>
+    <td><div align="center">X</div></td>
+    <td><div align="center">can_addline</div></td>
+    <td>Je kan /addline gebruiken</td>
+  </tr>
+  <tr>
+    <td><div align="center">d</div></td>
+    <td><div align="center">can_dccdeny</div></td>
+    <td>Je kan /dccdeny en /undccdeny gebruiken</td>
+  </tr>
+</table>
+<p>Bepaalde flags geven je standaard ook andere flags:</p>
+<table width="59%" border="1">
+  <tr> 
+    <td width="19%"><b>local</b></td>
+    <td width="17%"><b>global</b></td>
+    <td width="19%"><b>admin/coadmin</b></td>
+    <td width="22%"><b>services-admin</b></td>
+    <td width="23%"><b>netadmin</b></td>
+  </tr>
+  <tr> 
+    <td>can_rehash</td>
+    <td>can_rehash</td>
+    <td>can_rehash</td>
+    <td>can_rehash</td>
+    <td>can_rehash</td>
+  </tr>
+  <tr> 
+    <td>helpop</td>
+    <td>helpop</td>
+    <td>helpop</td>
+    <td>helpop</td>
+    <td>helpop</td>
+  </tr>
+  <tr> 
+    <td>can_globops</td>
+    <td>can_globops</td>
+    <td>can_globops</td>
+    <td>can_globops</td>
+    <td>can_globops</td>
+  </tr>
+  <tr> 
+    <td>can_wallops</td>
+    <td>can_wallops</td>
+    <td>can_wallops</td>
+    <td>can_wallops</td>
+    <td>can_wallops</td>
+  </tr>
+  <tr> 
+    <td>can_localroute</td>
+    <td>can_localroute</td>
+    <td>can_localroute</td>
+    <td>can_localroute</td>
+    <td>can_localroute</td>
+  </tr>
+  <tr> 
+    <td>can_localkill</td>
+    <td>can_localkill</td>
+    <td>can_localkill</td>
+    <td>can_localkill</td>
+    <td>can_localkill</td>
+  </tr>
+  <tr> 
+    <td>can_kline</td>
+    <td>can_kline</td>
+    <td>can_kline</td>
+    <td>can_kline</td>
+    <td>can_kline</td>
+  </tr>
+  <tr> 
+    <td>can_unkline</td>
+    <td>can_unkline</td>
+    <td>can_unkline</td>
+    <td>can_unkline</td>
+    <td>can_unkline</td>
+  </tr>
+  <tr> 
+    <td>can_localnotice</td>
+    <td>can_localnotice</td>
+    <td>can_localnotice</td>
+    <td>can_localnotice</td>
+    <td>can_localnotice</td>
+  </tr>
+  <tr> 
+    <td>&nbsp;</td>
+    <td>can_globalroute</td>
+    <td>can_globalroute</td>
+    <td>can_globalroute</td>
+    <td>can_globalroute</td>
+  </tr>
+  <tr> 
+    <td>&nbsp;</td>
+    <td>can_globalkill</td>
+    <td>can_globalkill</td>
+    <td>can_globalkill</td>
+    <td>can_globalkill</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>can_globalnotice</td>
+    <td>can_globalnotice</td>
+    <td>can_globalnotice</td>
+    <td>can_globalnotice</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>global</td>
+    <td>global</td>
+    <td>global</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>can_dccdeny</td>
+    <td>can_dccdeny</td>
+    <td>can_dccdeny</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>can_setq</td>
+    <td>can_setq</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>admin</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>services-admin</td>
+  </tr>
+</table>
+<p><b>oper::swhois</b> geeft je de mogelijkheid een extra regel to the voegen aan de whois
+ van de betreefende oper <font color=blue>[optioneel]</font></p>
+<p><b>oper::snomask</b> geeft je de mogelijkheid in te stellen welke server berichten een oper
+ automatisch ontvangt wanneer hij /oper doet. Voor een lijst van de snomasks, zie
+ <a href="#feature_snomasks">Sectie 3.3</a> <font color=blue>[optioneel]</font></p>
+<p><b>oper::modes</b> geeft je de mogelijkheid een oper verschillende modi te geven wanneer hij
+ /oper doet. <color=blue>[optioneel]</font></p>
+<p><b>oper::maxlogins</b> limiteert het aantal logins van de betreffende oper. Wanneer je dit
+ bijvoorbeeld op 1 zet, kan maar 1 persoon oper zijn via dit blok. <font color=blue>[optioneel]</font></p>
+
+<p>Voorbeeld:<br>
+<pre>
+oper bobsmith {
+	class clients;
+	from {
+		userhost bob@smithco.com;
+		userhost boblaptop@somedialupisp.com;
+	};
+	password "f00";
+	flags {
+		netadmin;
+		can_gkline;
+		can_gzline;
+		can_zline;
+		can_restart;
+		can_die;
+		global;
+	};
+	swhois "Voorbeeld van een whois mask";
+	snomask frebWqFv;
+};
+</pre></p>
+<a name="operoverride"><b>Wat informatie over OperOverride:</b><br>
+OperOverride geeft je de mogelijkheid om bijvoorbeeld een +ikl kanaal te joinen,
+om bans te omzeilen (je moet jezelf wel eerst /invite'n), jezelf oppen in een kanaal, etc.<br>
+De can_override flag is toegevoegd om te proberen het oper-misbruik te stoppen.
+Geen enkele oper kan standaard overriden, je moet ze dus expliciet de can_override flag geven.
+
+<p> </p></div>
+<p><font class="block_section">4.8 - </font><font class="block_name">DRpass Block</font>
+   <font class="block_recommended">AANBEVOLEN</font> <font class="block_old">(Dit was de X:Line)</font><a name="drpassblock"></a><div class="desc">
+</p>
+<p>Syntax:<br>
+<pre>
+drpass {
+	restart &lt;restart-password&gt; { &lt;auth-type&gt;; };
+	die &lt;die-password&gt; { &lt;auth-type&gt;; };
+};</pre></p>
+<p>Dit blok zet de benodigde wachtwoorden voor /restart en /die. drpass::restart:: en
+ ::drpass:die:: geven je de mogelijkheid om een authenticatie methode op te geven.
+ crypt, md5, sha1 en ripemd-160 worden ondersteund.</p>
+
+<p>Voorbeeld:</p>
+<pre>
+drpass {
+	restart "I-love-to-restart";
+	die "die-you-stupid";
+};
+</pre></p>
+<p> </p></div>
+<p><font class="block_section">4.9 - </font><font class="block_name">Include Directive</font><a name="includedirective"></a><div class="desc">
+</p>
+<p>Syntax:<br>
+  include &lt;file-name&gt;;</p>
+<p>Hiermee kun je externe configuratiebestanden laden. Het bestand mag elk type
+ blok bevatten, en mag ook andere bestanden laden. Wildcards zijn ook toegestaan,
+ zodat je meerdere bestanden tegelijk kan laden.</p>
+<p><b>Voorbeeld 1: een netwerk bestand</b></p>
+  <pre>include mynetwork.network;</pre></p>
+<p>Dit heb je nodig wanneer je een apart netwerk bestand wilt gebruiken. Deze
+ is echter niet meer nodig, je kan alle informatie nu gewoon in unrealircd.conf
+ plaatsen.</p>
+<p><b>Voorbeeld 2: aliases</b><br>
+  <pre>include aliases/ircservices.conf</pre></p>
+<p>Nog een voorbeeld is deze manier om alias blocks te laden. UnrealIRCd wordt
+ geleverd met enkele bestanden welke de juiste aliases voor de meeste
+ services bezitten:<br>
+<ul>
+<li>aliases/ircservices.conf (IRCServices, Daylight)
+<li>aliases/epona.conf (Epona)
+<li>aliases/anope.conf (Anope)
+<li>aliases/auspice.conf (Auspice)
+<li>aliases/generic.conf (Magick, Sirius, Wrecked)
+<li>aliases/cygnus.conf (Cygnus)
+<li>aliases/operstats.conf (OperStats)
+<li>aliases/genericstats.conf (GeoStats, NeoStats)
+</ul>
+</p>
+<p></p></div>
+<p><font class="block_section">4.10 - </font><font class="block_name">LoadModule Directive</font>
+   <font class="block_required">BENODIGD</font><a name="loadmoduledirective"></a><div class="desc">
+</p>
+<p>Syntax:<br>
+  loadmodule &lt;file-name&gt;;</p>
+<p>Kijk <a href="#feature_modules">hier</a> waarom modules handig zijn.</p>
+<p>Modules die standaard bij Unreal3.2 geleverd worden:</p>
+<p>commands.so / commands.dll - Alle / commando's (nou, nog niet alle, maar binnenkort wel) <font color="red">BENODIGD</font><br>
+   cloak.so / cloak.dll - Cloaking module <font color="red">BENODIGD</font> (of een andere cloaking module)</p>
+<p>Je moet deze modules laden:</p>
+<pre>
+loadmodule "src/modules/commands.so";
+loadmodule "src/modules/cloak.so";
+</pre>
+<p>of voor Windows:</p>
+<pre>
+loadmodule "modules/commands.dll";
+loadmodule "modules/cloak.dll";
+</pre>
+</div>
+<p><font class="block_section">4.11 - </font><font class="block_name">Log Block</font>
+   <font class="block_recommended">AANBEVOLEN</font><a name="logblock"></a><div class="desc">
+</p>
+<p>Syntax:<br>
+<pre>
+log &lt;file-name&gt; {
+	maxsize &lt;max-file-size&gt;;
+	flags {
+		&lt;flag&gt;;
+		&lt;flag&gt;;
+		...
+	};
+};
+</pre></p>
+<p>Het log blok geeft je de mogelijkheid om verschillende dingen naar verschillende logbestanden
+ weg te schrijven. <b>log::</b> bevat de naam van het bestand. <b>log::maxsize</b> is optioneel.
+ Het geeft je de mogelijkheid aan te geven hoe groot een logbestand maximaal mag worden. Je kan
+ hier een afkorting gebruiken, MB voor megabytes, KB voor kilobytes, GB voor gigabytes. De
+ <b>log::flags</b> geven aan welke gebeurtenissen gelogd moeten worden. Zie de lijst hier beneden</p>
+
+<p>Je mag ook verschillende log blokken hebben, om verschillende dingen op te slaan
+ in verschillende logbestanden.</p>
+<p><b>Beschikbare flags:</b><br>
+  <table border=0>
+  <tr><td>errors</td><td>logt errors</td></tr>
+  <tr><td>kills</td><td>logt /kill berichten</td></tr>
+  <tr><td>tkl</td><td>logt informatie over *lines, shuns en spamfilters (toevoegen/verwijderen/verlopen)</td></tr>
+  <tr><td>connects</td><td>logt gebruikers die verbinding maken/verbreken</td></tr>
+  <tr><td>server-connects</td><td>logt server verbindingen/verbrekingen</td></tr>
+  <tr><td>kline</td><td>logt het gebruik van /kline</td></tr>
+  <tr><td>oper</td><td>logt /oper pogingen (succesvolle en mislukte)</td></tr>
+  <tr><td>sadmin-commands</td><td>logt het gebruik van /sa* (samode, sajoin, sapart, etc.)</td></tr>
+  <tr><td>chg-commands</td><td>logt het gebruik van /chg* (chghost, chgname, chgident, etc.)</td></tr>
+  <tr><td>oper-override</td><td>logt het gebruik van operoverride</td></tr>
+  <tr><td>spamfilter</td><td>logt spamfilter matches</td></tr>
+ </table>
+</p>
+
+<p>Voorbeeld:</p>
+<pre>
+log ircd.log {
+	maxsize 5MB;
+	flags {
+		errors;
+		kills;
+		oper;
+		kline;
+		tkl;
+	};
+};
+</pre></p>
+<p></p></div>
+<p><font class="block_section">4.12 - </font><font class="block_name">TLD Block</font>
+   <font class="block_optional">OPTIONEEL</font> <font class="block_old">(Dit was de T:Line)</font><a name="tldblock"></a><div class="desc">
+</p>
+<p>Syntax:<br>
+<pre>
+tld {
+	mask &lt;hostmask&gt;;
+	motd &lt;motd-file&gt;;
+	rules &lt;rules-file&gt;;
+	shortmotd &lt;shortmotd-file&gt;;
+	opermotd &lt;opermotd-file&gt;;
+	botmotd &lt;botmotd-file&gt;;
+	channel &lt;channel-name&gt;;
+	options {
+		ssl;
+	}
+};</pre></p>
+<p>Het TLD blok geeft je de mogelijkheid om een MOTD, rules en kanaal op te geven
+ voor een gebruiker op basis van zijn/haar host. Dit is handig wanneer je MOTDs
+ in verschillende talen wilt gebruiken. De <b>tld::mask</b> is een user@host mask
+ welke de gebruiker moet matchen. De <b>tld::motd</b>, <b>tld::shortmotd</b>,
+ <b>tld::opermotd</b>, <b>tld::botmotd</b> en <b>tld::rules</b> specificeren
+ de motd, shortmotd, opermotd, botmotd en rules bestand welke gebruikt moeten
+ worden voor een bepaalde host. De tld::shortmotd, tld::opermotd en tld::botmotd
+ zijn optioneel. <b>tld::channel</b> is tevens optioneel. Het geeft je de
+ mogelijkheid een gebruiker een kanaal te laten joinen wanneer hij/zij verbinding
+ maakt met je server. Wanneer deze bestaat, zal het standaard auto-join kanaal
+ overschreven worden. Het <b>tld::options</b> blok geeft je de mogelijkheid
+ om extra benodigdheden op te stellen. Op dit moment kun je tld::options::ssl,
+ voor die gebruik maken van een SSL connectie, en tld::options::remote, voor
+ mensen die van een andere server de MOTD vragen, gebruiken.</p>
+<p>TLD blokken worden van onder naar boven gelezen.</p>
+<p>Voorbeeld:<br>
+<pre>
+tld {
+	mask *@*.fr;
+	motd "ircd.motd.fr";
+	rules "ircd.rules.fr";
+};</pre></p>
+<p></p></div>
+<p><font class="block_section">4.13 - </font><font class="block_name">Ban Nick Block</font>
+   <font class="block_optional">OPTIONEEL</font> <font class="block_old">(Dit was de Q:Line)</font><a name="bannickblock"></a><div class="desc">
+</p>
+<p>Syntax:<br>
+<pre>
+ban nick {<br>
+	mask &lt;nickname&gt;;
+	reason &lt;reason-for-ban&gt;;
+};</pre></p>
+<p>Het ban nick blok zorgt ervoor dat een bepaalde naam niet gebruikt mag worden op
+ de server. Wildcards zijn toegestaan in de ban::mask, om meerdere namen in te stellen.
+ ban::reason geeft je de mogelijkheid om een reden te gebruiken. Meestal wordt dit
+ block gebruikt om de namen van meest gebruikte Services te beschermen.</p>
+
+<p>Voorbeeld:<br>
+<pre>
+ban nick {
+	mask "*C*h*a*n*S*e*r*v*";
+	reason "Gereserveerd voor Services";
+};</pre></p>
+<p></p></div>
+<p><font class="block_section">4.14 - </font><font class="block_name">Ban User Block</font>
+   <font class="block_optional">OPTIONEEL</font> <font class="block_old">(Dit was de K:Line)</font><a name="banuserblock"></a><div class="desc">
+</p>
+<p>Syntax:<br>
+<pre>
+ban user {
+	mask &lt;hostmask&gt;;
+	reason &lt;reason-for-ban&gt;;
+};</pre></p>
+<p>Dit blok zorgt ervoor dat je een user@host kan beletten tot het verbinden met
+ de server. Wildcards zijn toegestaan in ban::mask, en ban::reason is de reden
+ tot de ban. Let op; dit is alleen lokaal, dus de gebruiker kan nog wel verbinden
+ met een server elders in het netwerk.</p>
+<p>Voorbeeld:<br>
+<pre>
+ban user {
+	mask *tirc@*.saturn.bbn.com;
+	reason "Idiot";
+};</pre></p>
+<p></p></div>
+<p><font class="block_section">4.15 - </font><font class="block_name">Ban IP Block</font>
+   <font class="block_optional">OPTIONEEL</font> <font class="block_old">(Dit was de Z:Line)</font><a name="banipblock"></a><div class="desc">
+</p>
+<p>Syntax:<br>
+<pre>
+ban ip {
+	mask &lt;ipmask&gt;;
+	reason &lt;reason-for-ban&gt;;
+};</pre></p>
+<p>Dit blok zorgt ervoor dat je een bepaald IP kan beletten tot het verbinden met
+ de server. Gebruikers en servers zijn hierbij inbegrepen. ban::mask bevat het IP
+ dat je wil bannen, wildcards zijn toegestaan. ban::reason is de reden.
+ Omdat deze ban ook betrekking heeft op servers, moet je voorzichtig zijn met
+ het gebruik ervan.</p>
+
+<p>Voorbeeld:<br>
+<pre>
+ban ip {
+	mask 192.168.1.*;
+	reason "Get a real ip u lamer!";
+};</pre></p>
+<p> </p></div>
+<p><font class="block_section">4.16 - </font><font class="block_name">Ban Server Block</font>
+   <font class="block_optional">OPTIONEEL</font> <font class="block_old">(Dit was de q:Line)</font><a name="banserverblock"></a><div class="desc">
+</p>
+<p>Syntax:<br>
+<pre>
+ban server {
+	mask &lt;server-name&gt;;
+	reason &lt;reason-for-ban&gt;;
+};</pre></p>
+<p>Dit blok zorgt ervoor dat een server niet meer kan verbinden met het netwerk. Wanneer
+ de server naar jouw server linkt, zal de connectie geweigerd worden. Wanneer de server
+ naar een andere server in het netwerk linkt, zal de lokale server de verbinding met het
+ netwerk verbreken. ban::server is de naam van de server die je wil bannen, wildcards
+ zijn toegestaan. ban::reason is de reden van plaatsing.</p>
+
+<p>Voorbeeld:<br>
+<pre>
+ban server {
+	mask broken.server.my.network.com;
+	reason "Its broken!";
+};</pre></p>
+<p> </p></div>
+<p><font class="block_section">4.17 - </font><font class="block_name">Ban RealName Block</font>
+   <font class="block_optional">OPTIONEEL</font> <font class="block_old">(Dit was de n:Line)</font><a name="banrealnameblock"></a><div class="desc">
+</p>
+<p>Syntax:<br>
+<pre>
+ban realname {
+	mask &lt;realname-mask&gt;;
+	reason &lt;reason-for-ban&gt;;
+};</pre></p>
+<p>Het ban realname blok geeft je de mogelijkheid om een gebruiker te bannen op basis
+ van zijn/haar GECOS (realname, echte naam). Dit is bruikbaar om clone floods te stoppen,
+ omdat clones meestal dezelfde realname gebruiken. ban::mask is de realname die je wil bannen,
+ wildcards zijn toegestaan. ban::reason is de reden.</p>
+
+<p>Voorbeeld:<br>
+<pre>
+ban realname {
+	mask "Bob*";
+	reason "Bob sucks!";
+};</pre></p>
+<p></p></div>
+<p><font class="block_section">4.18 - </font><font class="block_name">Ban Version Block</font>
+   <font class="block_optional">OPTIONEEL</font> <a name="banversionblock"></a><div class="desc">
+</p>
+<p>Syntax:<br>
+<pre>
+ban version {
+	mask &lt;version-mask&gt;;
+	reason &lt;reason-for-ban&gt;;
+	action [kill|tempshun|shun|kline|zline|gline|gzline];
+};</pre></p>
+<p>Dit blok zorgt ervoor dat je een gebruiker op basis van het IRC programma kan bannen. Het
+ vraagt de CTCP version van de gebruiker, en controleert dan of deze is toegestaan. Wanneer
+ een gebruiker geen CTCP version antwoord heeft, zal de ban niet werken. Dit blok geeft je
+ alleen de mogelijkheid om boosaardige scripts te bannen. ban::mask is de versie die je wil
+ bannen, wildcards zijn toegestaan. ban::Reason is de reden. Je kan ook een actie die
+ ondernomen moet worden instellen, door middel van ban::action. Een <i>kill</i> is de standaardwaarde.
+ <i>tempshun</i> zal de gebruiker alleen deze verbinding /shun'n, wat zeer effectief is
+ zombies/bots met dynamische IPs omdat het geen onschuldige gebruikers zal schaden.
+ <i>shun/kline/zline/gline/gzline</i> zal een ban plaatsen van het opgegeven type op het
+ IP (*@IP). De duur van deze bans kan ingesteld worden door set::ban-version-tkl-time. De
+ standaardwaarde is 1 day.</p>
+<p>Voorbeeld:<br>
+<pre>
+ban version {
+	mask "*SomeLameScript*";
+	reason "SomeLameScript contains backdoors";
+};</pre>
+<pre>
+ban version {
+	mask "*w00tZombie*";
+	reason "I hate those hundreds of zombies";
+	action zline;
+};</pre>
+</p>
+<p></p></div>
+<p><font class="block_section">4.19 - </font><font class="block_name">Ban Exceptions Block</font>
+   <font class="block_optional">OPTIONEEL</font> <font class="block_old">(Dit was de E:Line)</font><a name="banexceptionblock"></a><div class="desc">
+</p>
+<p>Syntax:<br>
+<pre>
+except ban {
+	mask &lt;hostmask&gt;;
+};</pre></p>
+<p>Door middel van dit blok kun je een user@host opgeven, welke een ban zal
+ overslaan. Dit is handig wanneer je een ISP wilt bannen, maar enkele gebruikers
+ nog steeds op je netwerk wil toestaan. except::mask bevat de user@host van de
+ gebruiker die je niet wil bannen.</p>
+
+<p>Voorbeeld:<br>
+<pre>
+except ban {
+	mask myident@my.isp.com;
+};</pre></p>
+<p></p></div>
+<p><font class="block_section">4.20 - </font><font class="block_name">TKL Exceptions Block</font>
+   <font class="block_optional">OPTIONEEL</font><a name="tklexceptionblock"></a><div class="desc">
+</p>
+<p>Syntax:<br>
+<pre>
+except tkl {
+	mask &lt;hostmask&gt;;
+	type &lt;type&gt;;
+	type { 
+		&lt;type&gt;;
+		&lt;type&gt;;
+		...
+	};
+};</pre></p>
+<p>Dit blok zorgt ervoor dat de user@host een tkl ban op een bredere host zal overslaan.
+ Dit is handig wanneer je een ISP wil bannen, maar enkele gebruikers nog steeds op je
+ netwerk wil toestaan. except::mask is de user@host die je wil toestaan. except::type
+ is het type ban dat je wil overslaan. Geldige types zijn gline, gzline, qline, gqline
+ en shun (Glines, Global Zlines, Qlines, Global Qlines, shuns). Wanneer je het formaat
+ { } gebruikt, zijn meerdere types toegestaan.</p>
+
+<p>Voorbeeld:<br>
+<pre>
+except tkl {
+	mask myident@my.isp.com;
+	type gline;
+};</pre></p>
+<p></p></div>
+<p><font class="block_section">4.21 - </font><font class="block_name">Throttle Exceptions Block</font>
+   <font class="block_optional">OPTIONEEL</font> <a name="throttleexceptionblock"></a>
+</p><div class="desc">
+<p>Syntax:<br>
+<pre>
+except throttle {
+	mask &lt;ipmask&gt;;
+};</pre></p>
+
+<p>Met dit blok kun je een IP mask instellen dat het throttling systeem zal overslaan.
+ Het werkt alleen wanneer je throttling ingeschakeld hebt. except::mask bevat het IP
+ dat niet gebanned moet worden.</p>
+<p>Voorbeeld<br>
+<pre>
+except throttle {
+	mask 192.168.1.*;
+};</pre></p>
+<p></p></div>
+<p><font class="block_section">4.22 - </font><font class="block_name">Deny DCC Block</font>
+   <font class="block_optional">OPTIONEEL</font> <font class="block_old">(Dit was dccdeny.conf)</font><a name="denydccblock"></a>
+</p><div class="desc">
+<p>Syntax:<br>
+<pre>
+deny dcc {
+	filename &lt;file-to-block&gt;;
+	reason &lt;reason-for-ban&gt;;
+	soft [yes|no];
+};</pre></p>
+<p>Door middel van dit blok kun je instellen welke bestandsnamen niet verzonden mogen
+ worden via DCC over de server. Dit is zeer effectief om de verspreiding van
+ trojans en virii te stoppen.</p>
+<p><b>deny::filename</b> geeft aan welke bestandsnaam niet is toegestaan. Wildcards hierin
+ zijn toegestaan. <b>deny::reason</b> is de reden tot het blokkeren.</p>
+<p>Er is ook een <b>deny::soft</b> optie; wanneer deze op ýes' staat, wordt de DCC
+ geblokkeerd, tenzij de gebruiker het expliciet toelaat door middel van
+ /DCCALLOW +naam-van-degene-die-zendt. Zie dccallow.conf voor een goede
+ voorbeeld configuratie.</p>
+
+<p>Voorbeeld<br>
+<pre>
+deny dcc {
+	filename virus.exe;
+	reason "This is a GD Virus";
+};
+
+deny dcc {
+	filename "*.exe";
+	reason "Executable content";
+	soft yes;
+};</pre>
+</p></div>
+<p></p>
+<p><font class="block_section">4.23 - </font><font class="block_name">Deny Version Block</font>
+   <font class="block_optional">OPTIONEEL</font> <font class="block_old">(Dit was de V:Line)</font><a name="denyversionblock"></a><div class="desc">
+</p>
+<p> Syntax:<br>
+<pre>
+deny version {
+	mask &lt;server-name&gt;;
+	version &lt;version-number&gt;;
+	flags &lt;compile-flags&gt;;
+};</pre></p>
+<p>Dit blok geeft je de mogelijkheid om een server te blokkeren, op basis van de
+ versie die de server draait of welke compile opties gebruikt zijn. Het formaat
+ is misschien een beetje moeilijk, maar makkelijk te snappen. deny::mask is een
+ wildcard op de naam van de server die niet mag linken. deny::version is de
+ protocol-versie die geweigerd moet worden.</p>
+ Als voorbeeld, 3.0 is 2302, 3.1.1/3.1.2 is 2302 en 3.2 is 2303. Het eerste teken
+ van deze parameter mag &gt;, &lt;, =, of ! zijn. Dit eerste teken zegt
+ UnrealIRCd hoe ze moet omgaan met de versie. Als het eerste teken een &gt; is,
+ worden alle versies groter dan de opgegeven versie geweigerd. Wanneer het een
+ &lt; is, worden alle versies lager geweigerd. Wanneer het een = is, wordt alleen
+ die versie geweigerd. Wanneer je een ! opgeeft, worden alle versies behalve deze
+ geweigerd. deny::flags geeft je de mogelijkheid om aan te geven welke flags
+ wel of niet gebruikt mogen zijn ten tijde van het compilen. De flags moeten achter
+ elkaar geplaatst worden, zonder tussenkomst van andere tekens. Wanneer je een !
+ als voorvoegsel gebruikt, mag de flag niet gebruikt worden. Wanneer je geen !
+ gebruikt, moet de server deze flag wel bezitten.</p>
+<p></p></div>
+<p><font class="block_section">4.24 - </font><font class="block_name">Deny Link Block</font>
+   <font class="block_optional">OPTIONEEL</font> <font class="block_old">(Dit was de D/d:Line)</font><a name="denylinkblock"></a><div class="desc">
+</p>
+<p>Syntax:<br>
+<pre>
+deny link {
+	mask &lt;server-name&gt;;
+	rule &lt;crule-expression&gt;;
+	type &lt;type-of-denial&gt;;
+};</pre></p>
+<p>Dit blok geeft je de mogelijkheid om een server te weigeren aan de hand van
+ enkele voorwaardes. deny::mask is een wildcard op de servernaam waarop de regels
+ betrekking moeten hebben. deny::rule is zeer complex. Je krijgt de mogelijkheid
+ om in groot detail op te geven wat je wil. connected(&lt;servermask&gt;) geeft
+ true wanneer een server verbonden is met een server die servermask matcht.
+ directcon(&lt;servermask&gt;) geeft true wanneer de server, die met servermask
+ matcht, direct verbonden is met deze server. via(&lt;viamask&gt;,&lt;servermask&gt;)
+ geeft true wanneer een server, die met servermask matcht, verbonden is met een
+ server die matcht met viamask. Tenslotte, directop() geeft true wanneer een
+ oper die de /connect heeft gegeven daadwerkelijk op deze server zit. Je kan deze
+ 4 vormen door elkaar gebruiken met behulp van && (and/en) en || (or/of). Je kan
+ ze ook tussen haakjes ( '(  )' ) zetten, om groepen te vormen. Wanneer een van de
+ vormen vooraf gegaan wordt door een !, wordt er gecontroleerd of de vorm false
+ is. Wanneer de vorm true geeft, wordt de server geweigerd. deny::type bestaat
+ uit 2 vormen, auto (van toepassing op autoconnects, /connect werkt nog steeds),
+ en all (van toepassing op alle verbindingspogingen).</p>
+<p></p></div>
+<p><font class="block_section">4.25 - </font><font class="block_name">Deny Channel Block</font>
+   <font class="block_optional">OPTIONEEL</font> <font class="block_old">(Previously known as chrestrict.conf)</font><a name="denychannelblock"></a>
+</p><div class="desc">
+<p>Syntax:<br>
+<pre>
+deny channel {
+	channel "&lt;channel-mask&gt;";
+	reason &lt;reason-for-ban&gt;;
+	redirect "&lt;channel-name&gt;";
+	warn [on|off];
+};</pre></p>
+<p> </p>
+<p>Je kan met dit blok instellen dat gebruikers sommige kanalen niet mogen gebruiken.
+ <b>deny::channel</b> is de naam van het kanaal dat geweigerd moet worden, en mag
+ wildcards bevatten. <b>deny::reason</b> is de reden tot het weigeren. Optioneel
+ kun je ook <b>deny::redirect</b> instellen. De gebruiker wordt dan naar dit kanaal
+ gestuurd in plaats van naar deny::channel. <b>deny::warn</b> zal, mits het aangezet
+ is, een bericht zenden naar alle opers (door middel van EYES snomask) wanneer een
+ gebruiker het verboden kanaal wil joinen.</p>
+
+</p>
+<p>Voorbeeld</p>
+<pre>
+deny channel {
+	channel "#unrealsucks";
+	reason "No it don't!";
+};
+
+deny channel {
+	channel "#*teen*sex*";
+	reason "You == dead";
+	warn on;
+};
+
+deny channel {
+	channel "#operhelp";
+	reason "Our network help channel is #help, not #operhelp";
+	redirect "#help";
+};</pre></p>
+
+<p></p></div>
+<p><font class="block_section">4.26 - </font><font class="block_name">Allow Channel Block</font>
+   <font class="block_optional">OPTIONEEL</font><a name="allowchannelblock"></a>
+</p><div class="desc">
+<p>Syntax:<br>
+<pre>
+allow channel {
+	channel "&lt;channel-mask&gt;";
+};</pre></p>
+<p>Door dit blok geef je gebruikers de mogelijkheid om bepaalde kanalen wel toe
+ te staan. allow::channel is het kanaal dat wel gejoined mag worden, wildcards
+ zijn toegestaan</p>
+
+<p>Voorbeeld:<br>
+<pre>
+allow channel {
+	channel "#something";
+};</pre></p>
+<p></p></div>
+<p><font class="block_section">4.27 - </font><font class="block_name">Allow DCC Block</font>
+   <font class="block_optional">OPTIONEEL</font><a name="allowdccblock"></a>
+</p><div class="desc">
+<p>Syntax:<br>
+<pre>
+allow dcc {
+	filename "&lt;filename-mask&gt;";
+	soft [yes|no];
+};</pre></p>
+<p>Hiermee kun je uitzonderingen voor het denydcc block instellen. Wildcards zijn
+ toegestaan. Wanneer <b>allow dcc:soft</b> op 'yes' staat, valt het onder
+ 'soft dcc bans'. Wanneer het op 'no' staat, valt het onder de normale ('hard') dcc bans.</p>
+
+<p>Voorbeeld:<br>
+<pre>
+allow dcc {
+	filename "*.jpg"; /* Images are usually safe */
+	soft yes;
+};</pre></p>
+<p></p></div>
+<p><font class="block_section">4.28 - </font><font class="block_name">Vhost Block</font>
+   <font class="block_optional">OPTIONEEL</font> <font class="block_old">(Dit was vhosts.conf)</font><a name="vhostblock"></a>
+</p><div class="desc">
+<p>Syntax:<br>
+<pre>
+vhost {
+	vhost &lt;vhost&gt;;
+	from {
+		userhost &lt;hostmask&gt;;
+		userhost &lt;hostmask&gt;;
+		...
+	};
+	login &lt;login-name&gt;;
+	password &lt;password&gt; { &lt;auth-type&gt;; };
+	swhois "&lt;swhois info&gt;";
+};</pre></p>
+<p>Je kan een inlognaam en wachtwoord opgeven, zodat iemand het /vhost commando
+ kan gebruiken. vhost::vhost kan een user@host zijn, of gewoon een host die de
+ gebruiker zal krijgen wanneer hij met succes /vhost uitvoert. vhost::from::userhost
+ bevat een user@host welke de gebruiker moet matchen om in aanmerking te komen
+ voor deze vhost. Je mag meerdere userhosts invoeren. vhost::login is de inlognaam
+ die gebruikt moet worden, en vhost::password is het wachtwoord. Door middel van
+ vhost::password:: kun je een authenticatie type opgeven. Op dit moment kan dat zijn;
+ crypt, md5, sha1 en ripemd-160. Als laatste kun je met vhost::swhois een extra regel
+ toevoegen aan een whois, net zoals de oper::swhois.</p>
+
+<p>Voorbeeld:<br>
+<pre>
+vhost {
+	vhost my.own.personal.vhost.com;
+	from {
+		userhost my@isp.com;
+		userhost myother@isp.com;
+	};
+	login mynick;
+	password mypassword;
+	swhois "Im Special";
+};</pre></p>
+<p></p></div>
+<p><font class="block_section">4.29 - </font><font class="block_name">Badword Block</font>
+   <font class="block_optional">OPTIONEEL</font> <font class="block_old">(Dit was badwords.*.conf)</font><a name="badwordsblock"></a>
+</p><div class="desc">
+<p>Syntax:<br>
+<pre>
+badword &lt;type&gt; {
+	word &lt;text-to-match&gt;;
+	replace &lt;replace-with&gt;;
+	action &lt;replace|block&gt;;
+};</pre></p>
+<p>Met dit blok kun je een lijst opstellen van woorden die vervangen moeten worden wanneer
+ gebruikers +G hebben of een kanaal +G heeft. badword:: geeft het type aan; geldige types
+ zijn channel, message, quit en all. channel is voor kanalen met +G, message voor gebruikers
+ met +G, quit om quit berichten te censureren en all voor alle drie deze dingen.
+ badword::word kan gewoon een woord zijn, of een reguliere expressie waarnaar we zoeken.
+ badword::replace is het woord waarmee we badword::word moeten vervangen. Wanneer
+ badword::replace leeg is, zal het woord vervangen worden door &lt;censored&gt;.
+ Met badword::action kun je een actie instellen die ondernomen moet worden wanneer een
+ woord gevonden wordt. Wanneer je hier replace invult, wordt het woord vervangen. Wanneer
+ je block invult, wordt het hele bericht geblokkeerd. Wanneer je badword::action leeg laat,
+ wordt er uitgegaan van replace.</p>
+
+<p>Voorbeeld:<br>
+<pre>
+badword channel {
+	word shit;
+	replace shoot;
+};</pre></p>
+<p></p></div>
+<p><font class="block_section">4.30 - </font><font class="block_name">ULines Block</font>
+   <font class="block_optional">OPTIONEEL</font> <font class="block_old">(Dit was de U:Line)</font><a name="ulinesblock"></a><div class="desc">
+</p>
+<p>Syntax:<br>
+<pre>
+ulines {
+	&lt;server-name&gt;;
+	&lt;server-name&gt;;
+	...
+};</pre></p>
+<p>U:lines geven bepaalde servers extra mogelijkheden. Dit moet gebruikt worden
+ voor Services en Stats, dus niet voor normale servers. Elke regel is de naam
+ van de server die extra mogelijkheden ontvangen moet.</p>
+<p>Voorbeeld<br>
+<pre>
+ulines {
+	services.mynetwork.com;
+	stats.mynetwork.com;
+};</pre></p>
+<p></p></div>
+<p><font class="block_section">4.31 - </font><font class="block_name">Link Block</font>
+   <font class="block_optional">OPTIONEEL</font> <font class="block_old">(Previously known as C/N/H:Lines)</font><a name="linkblock"></a>
+</p><div class="desc">
+<p>Syntax:<br>
+<pre>
+link &lt;server-name&gt; {
+	username &lt;usermask&gt;;
+	hostname &lt;ipmask&gt;;
+	bind-ip &lt;ip-to-bind-to&gt;;
+	port &lt;port-to-connect-on&gt;;
+	password-connect &lt;password-to-connect-with&gt;;
+	password-receive &lt;password-to-receive&gt; { &lt;auth-type&gt;; };
+	hub &lt;hub-mask&gt;;
+	leaf &lt;leaf-mask&gt;;
+	leafdepth &lt;depth&gt;;
+	class &lt;class-name&gt;;
+	ciphers &lt;ssl-ciphers&gt;;
+	options {
+		&lt;option&gt;;
+		&lt;option&gt;;
+		...
+	};
+};</pre></p>
+<p>Dit blok is nodig voor het linken van servers. Neem de tijd om dit door te nemen,
+ dit is een van de moeilijkste dingen en gebruikers maken hier vaak fouten.</p>
+<p><b>server-name</b> is de naam van de andere server, de naam die de server in zijn
+ me { } block heeft, zoals hub.blah.com (niet het IP en kan verschillen van de hostnaam).</p>
+<p><b>username</b><br>
+ Je kan een ident opgeven voor authenticatie, normaal zet je dit op "*".
+</p>
+<p><b>hostname</b><br>
+ De hostnaam of het IP van de andere server. Dit wordt gebruikt voor het verbinden EN
+ de authenticatie van de inkomende connectie. Enkele voorbeelden:<br>
+  <table border="0">
+  <tr><td><i>1.2.3.4</i></td><td> gewone IP</td></tr>
+  <tr><td><i>hub.blah.com</i></td><td> host: alleen voor uitgaand, kan geen _inkomende_ connecties accepteren tenzij
+  link::options::nohostcheck is ingesteld</td></tr>
+  <tr><td><i>*</i></td><td> kan niet verbinden NAAR maar zal alle server connecties (met het juiste wachtwoord) accepteren</td></tr>
+  <tr><td><i>::ffff:1.2.3.4</i></td><td> voor het linken van IPv6 naar IPv4</td></tr>
+  </table>
+</p>
+<p><b>bind-ip</b> (optional)<br>
+ Kan gebruikt worden om een specifiek IP te binden (bijv. 192.168.0.1) van waaruit
+ we moeten verbinden. Wordt zelden gebruikt.
+ </p>
+<p><b>port</b><br>
+ Poort waar naartoe we moeten verbinden (op welke de andere server luistert).
+ </p>
+<p><b>password-connect</b><br>
+ Het wachtwoord voor het verbinden met de andere server, moet gewone tekst zijn.
+ </p>
+<p><b>password-receive</b><br>
+ Het wachtwoord dat we ontvangen van de andere server. Kan encrypted zijn (crypt,
+ md5, sha1 of ripemd-160). Je kan de authenticatie parameter weglaten wanneer je
+ gewone tekst wilt gebruiken. Dit wachtwoord is meestal hetzelfde als password-connect.
+</p>
+<p><b>hub vs leaf</b><br>
+ Een hub heeft meerdere servers aan zich gelinkt, een leaf heeft maar 1 server.. naar jou.
+ Een server is of een hub, of een leaf, je kan ze niet mengen.
+</p>
+<p><b>hub</b> (optioneel)<br>
+ De waarde is de mask van de servers waarmee deze hub mag verbinden (bijv. *.my.net)
+</p>
+<p><b>leaf</b> (optioneel)<br>
+ De waarde is de mask van waartegen deze server zich als een leaf zal gedragen.
+</p>
+<p><b>leaf-depth</b> (optioneel)<br>
+ Wanneer leaf ingesteld is, moet dit ook worden ingesteld. De waarde is het aantal
+ hops (aantal servers) welke deze server onder zich mag hebben.
+</p>
+<p><b>class</b><br>
+ De class waarin de server geplaatst wordt. Meestal is er een aparte server-class.
+</p>
+<p><b>compression-level</b> (optioneel)<br>
+ De waarde is het compressie-level (1-9). Wordt alleen gebruikt wanneer link::options::zip
+ ook wordt gebruikt.
+</p>
+<p><b>ciphers</b> (optioneel)<br>
+ Zegt welke SSL sleutels gebruikt moeten worden voor deze link. Om een lijst te krijgen van
+ de beschikbare sleutels, gebruik "openssl ciphers". Sleutels moeten gescheiden worden door
+ een :.
+</p>
+<p><b>options block</b><br>
+ Je kan een of meerdere opties gebruiken. Soms is dit niet nodig.<br>
+<table border="0">
+<tr><td><b>ssl</b></td><td> wanneer je op een SSL poort verbindt.</td></tr>
+<tr><td><b>autoconnect</b></td><td> de server zal automatisch proberen te verbinden, tijd staat in je class::connfreq 
+ (het werkt het beste wanneer dit van 1 kant wordt ingesteld, zoals leaf-&gt;hub).</td></tr>
+<tr><td><b>zip</b></td><td> wanneer je gecomprimeerde links wil gebruiken, moet je hiermee compilen + gezet worden op beide servers.</td></tr>
+<tr><td><b>nodnscache</b></td><td> sla het IP voor de uitgaande server connectie niet op.
+ Gebruik dit wanneer de host vaak verandert (zoals dyndns.org).</td></tr>
+<tr><td><b>nohostcheck</b></td><td> valideer de andere host (link::hostname) niet.
+ Gebruik dit wanneer de host vaak verandert (zoals dyndns.org)</td></tr>
+<tr><td><b>quarantine</b></td><td> opers op deze server kunnen geen globale rechten krijgen
+(alleen lokale), anders worden ze gekilled. Handig voor test servers e.d.</td></tr>
+</table>
+</p>
+<p>Voorbeeld:</p>
+<pre>
+link hub.mynet.com {
+	username *;
+	hostname 1.2.3.4;
+	bind-ip *;
+	port 7029;
+	hub *;
+	password-connect "LiNk";
+	password-receive "LiNk";
+	class servers;
+	options {
+		autoconnect;
+		ssl;
+		zip;
+	};
+};</pre></p>
+<p> </p></div>
+<p><font class="block_section">4.32 - </font><font class="block_name">Alias Block</font>
+   <font class="block_optional">OPTIONEEL</font><a name="aliasblock"></a>
+</p><div class="desc">
+<p>Syntax [standard alias]:<br>
+<pre>
+alias &lt;name&gt; {
+	target &lt;nick-to-forward-to&gt;;
+	type &lt;type-of-alias&gt;;
+	spamfilter &lt;yes|no&gt;;
+};</pre></p>
+<p>(Opmerking: kijk ook <a href="#includedirective">hier</a> voor informatie over de standaard alias files van UnrealIRCd)</p>
+<p>Met alias blok [standaard alias] kun je een commando van een gebruiker doorsturen naar iemand
+ anders. Bijvoorbeeld /chanserv zendt een bericht naar ChanServ. alias:: is de naam van het
+ commando dat je wil doorsturen (bv chanserv), alias::target is het doel waarnaar het commando
+ gestuurd moet worden. Dit kan een gebruiker of een kanaal zijn. Wanneer alias:: hetzelfde is
+ als het doel, kun je alias::target ook weglaten. alias::type is het type. Geldige types zijn
+ services (doel zit op de services-server), stats (doel zit op de stats-server), normal
+ (doel zit op een willekeurige server) of channel (doel is een kanaal). Wanneer alias::spamfilter
+ (optioneel) op 'yes' staat, worden spamfilters gecontroleerd. Standaard staat dit uit ('no').<br>
+ Het alias blok heeft nog een doel, wat hieronder wordt uitgelegd.</p>
+
+<p>Syntax [command alias]:<br>
+<pre>
+alias &lt;name&gt; {
+	/* Voor aliases die gezonden moeten worden naar gebruikers/channels */
+	format &lt;regex-expression&gt; {
+		target &lt;nick-to-forward-to&gt;;
+		type &lt;type-of-alias&gt;;
+		parameters &lt;parameter-string&gt;;
+	};
+
+	/* Voor 'echte aliases' */	
+         format &lt;regex-expression&gt; {	
+                 command &lt;command&gt;;	
+                 type real;	
+                 parameters &lt;parameter-string&gt;;	
+         };	
+         /* Etc... Je kan zoveel blokken als je wilt instellen.. */
+
+
+	format &lt;regex-expression&gt; {
+		...
+	};
+	type command;
+	spamfilter &lt;yes|no&gt;;
+};</pre></p>
+<p>Wanneer het alias block gebruikt wordt in dit formaat, heeft het een veel bredere
+ functie. Je kan bijvoorbeeld /identify maken. alias:: is hetzelfde als hierboven,
+ de naam van het alias commando. <b>alias::format</b> is de reguliere expressie die de tekst,
+ meegegeven door het commando, controleert. Wanneer dit matcht, worden de regels eronder
+ uitgevoerd. Je kan meerdere formats opgeven, zodat hetzelfde commando meerdere functies
+ krijgt, afhangend van de tekst die gezonden wordt. <b>alias::format::target</b> is het doel
+ waarnaar het bericht gezonden moet worden. Als een 'echte alias' gebruikt wordt, zal het bericht
+ echter naar <b>alias::format::command</b> gezonden worden. <b>alias::format::type</b> is het type.
+ Behalve de types die we in "Syntax [standard alias" behandeld hebben, is ook het type "real" toegestaan
+ voor "echte aliases". <b>alias::format::parameters</b> is de tekst die gezonden moet worden. Dit is een
+ % gevolgd door een nummer. Wanneer je alles na een bepaald nummer wil zenden, doe het nummer dat
+ je wilt (bijv 2), met een - erachter, dus %2-. Dit stuurt alle tekst vanaf het tweede
+ tot het laatste woord. Je kan ook %n gebruiken om de naam van degene die het commando
+ mee te sturen.<br><br>
+ Voor voorbeelden betreffende het gebruik van het alias block, zie doc/example.nl.conf.</p>
+<p></p></div>
+<p><font class="block_section">4.33 - </font><font class="block_name">Help Block</font>
+   <font class="block_optional">OPTIONEEL</font><a name="helpblock"></a>
+</p><div class="desc">
+<p>Syntax:<br>
+<pre>
+help &lt;name&gt; {
+	&lt;text-line&gt;;
+	&lt;text-line&gt;;
+	...
+};</pre></p>
+<p>(Note: normally you just include help.conf)</p>
+<p>Met het help blok kun je dingen toevoegen aan /helpop. help:: is de waarde die
+ moet worden meegegeven aan /helpop, als parameter. Wanneer help:: leeg wordt gelaten,
+ hoeft geen parameter aan /helpop te worden meegegeven. De waardes voor het help blok
+ zijn de teksten die moeten worden weergegeven.</p>
+<p></p></div>
+
+<p><font class="block_section">4.34 - </font><font class="block_name">Official Channels Block</font>
+   <font class="block_optional">OPTIONEEL</font><a name="officialchannels"></a>
+</p><div class="desc">
+<p>Syntax:<br>
+<pre>
+official-channels {
+	"#channel" { topic "The default topic"; };
+};</pre></p>
+<p>Officiële kanalen worden weergegeven in /list, ook als er geen gebruikers in het kanaal
+ zitten. <b>topic</b> is optioneel, en wordt alleen weergegeven in /list wanneer er 0
+ gebruikers zijn.</p>
+
+<p>Voorbeeld:<br>
+<pre>
+official-channels {
+	"#Help" { topic "The official help channel, if nobody is present type /helpop helpme"; };
+	"#Home";
+	"#Main" { topic "The main channel"; };
+};</pre></p>
+</div>
+
+<p><font class="block_section">4.35 - </font><font class="block_name">Spamfilter Block</font>
+   <font class="block_optional">OPTIONEEL</font><a name="spamfilter"></a>
+</p><div class="desc">
+<p>
+Het spamfilter blok laat je lokale spamfilters toevoegen (dus niet over het gehele netwerk).<br>
+Zie <a href="#feature_spamfilter">Features - Spamfilter</a> voor meer informatie over spamfilters.<br>
+</p>
+<p>Syntax:<br>
+<pre>
+spamfilter {
+	regex &lt;word&gt;;
+	target { &lt;target(s)&gt; };
+	action &lt;action&gt;;
+	reason &lt;reason&gt;;
+	ban-time &lt;time&gt;;
+};</pre></p>
+<p><b>regex</b> is de regex waaraan voldaan moet worden<br>
+   <b>target</b> is het doel, zie <a href="#feature_spamfilter">hier</a> voor een lijst (bijv: 'channel').<br>
+   <b>action</b> sis de actie die ondernomen moet worden, zie <a href="#feature_spamfilter">hier</a> voor een lijst (bijv: 'gline').<br>
+   <b>reason</b> optioneel: geeft een reden, anders wordt de standaardwaarde gebruikt.<br>
+   <b>ban-time</b> optioneel: geeft de duur aan, standaard 1 dag.<br>
+</p>
+
+<p>Voorbeelden:<br>
+<pre>
+spamfilter {
+	regex "Come watch me on my webcam";
+	target { private; channel; };
+	action gline;
+	reason "You are infected, please go to www.antivirus.xx/blah/virus=GrrTrojan";
+	ban-time 6h;
+};
+
+spamfilter {
+	regex "come to irc\..+\..+";
+	target { private; channel; };
+	action gline;
+	action gline;
+	reason "No spamming allowed";
+};
+</pre></p>
+</div>
+
+
+<p><font class="block_section">4.36 - </font><font class="block_name">Cgiirc Block</font>	
+<font class="block_optional">OPTIONEEL</font><a name="cgiirc"></a>	
+</p><div class="desc">	
+<p>	
+The cgiirc block allows you to configure host spoofing for CGI:IRC gateways you trust	
+(<a href="#feature_cgiirc">more info</a>).</p>	
+	
+<p>Syntax:<br>	
+<pre>	
+cgiirc {	
+        type &lt;webirc|old&gt;;	
+        username &lt;mask&gt;; /* optioneel */	
+        hostname &lt;mask&gt;;	
+        password &lt;password&gt;; /* alleen voor het type webirc */	
+};</pre></p>	
+<p><b>type</b> is ofwel 'webirc' ofwel 'old'.<br>	
+   <b>username</b> wordt gecontroleerd op de ident (als deze er is. Zo niet, dan wordt "*" aangenomen.<br>	
+   <b>hostname</b> wordt de hostnaam op gematched.<br>	
+   <b>password</b> is het webirc wachtwoord, alleen gebruiken bij type 'webirc'.<br>	
+</p>	
+ 	
+<p><b>Hoe te configureren met 'webirc' (aangeraden methode)</b><br>
+In je CGI:IRC configuratiebestand (cgiirc.conf) stel je webirc_password in op een goed wachtwoord.<br>
+Daarna voeg je aan unrealircd.conf een cgiirc block toe, om de host en het wachtwoord toe te staan, en
+stel je cgiirc::type in op 'webirc'.<br>
+<br>	
+Voorbeeld:<br>	
+In je CGI:IRC configuratiebstand (cgiirc.conf) voeg je toe:
+<pre>webirc_password = LpT4xqPI5</pre>
+Daarna voeg je dit cgiirc block toe aan je unrealircd.conf:
+<pre>cgiirc {	
+        type webirc;	
+        hostname "1.2.3.4";	
+        password "LpT4xqPI5";	
+};</pre></p>	
+ 	 	
+<p><b>Hoe te configureren met de methode 'old'</b><br>
+Opmerking: Deze methode wordt niet aangeraden omdat ze 2 nadelen heeft:
+Deze methode zendt de IP/host om te spoofen als server wachtwoord, wat inhoudt
+dat je geen server wachtwoord als CGI:IRC gebruiker kan opgegeven. Bijkomend is
+dat de toegang alleen per IP te bepalen is, en niet met een wachtwoord zoals met
+de 'webirc' methode. Je moet deze methode dus niet gebruiken, alleen als je er
+een goede reden voor hebt.<br>
+<br>
+In je CGI:IRC configuratiebestand (cgiirc.conf) zet je realhost_as_password op 1.<br>
+Daarna voeg je een cgiirc block toe aan je unrealircd.conf om deze host toe te staan.<br>
+<br>	
+Voorbeeld:<br>	
+In je CGI:IRC configuratiebstand (cgiirc.conf) voeg je toe:
+<pre>realhost_as_password = 1</pre>	
+Daarna voeg je dit cgiirc block toe aan je unrealircd.conf:
+<pre>cgiirc {	
+        type old;	
+        hostname "1.2.3.4";	
+};</pre></p>	
+</div>	
+ 	 	
+
+<p><font class="block_section">4.37 - </font><font class="block_name">Set Block</font>
+   <font class="block_required">BENODIGD</font> <font class="block_old">(Dit was unrealircd.conf/networks file)</font><a name="setblock"></a>
+</p><div class="desc">
+<p>Dit blok was eerder ons networks/unrealircd.conf en ons netwerk bestand. Op een netwerk
+ met maar 1 server  is het makkelijker om deze 3 bestanden te combineren in 1 bestand door
+ middel van de set:: in unrealircd.conf. Op netwerken met meerdere servers kun je het beste
+ aparte netwerk bestanden gebruiken.<p>
+<p>Wanneer je server deel uitmaakt van een netwerk, zullen de meeste instellingen hetzelfde
+ zijn. Daarom is het handig om 1 netwerk bestand te kunnen laden. Zie
+ <a href="#includedirective">include</a> voor meer informatie. Nu volgt een lijst
+ met beschikbare opties voor set::.</p>
+<p>Syntax:<br>
+<pre>
+set {
+	&lt;entry&gt; &lt;value&gt;;
+	&lt;entry&gt; &lt;value&gt;;
+	...
+};</pre></p>
+<p>Met het set blok kun je individuele opties instellen voor je server. Elk ding doet
+ iets anders, en zal om deze reden hieronder beschreven worden. Sommige dingen hebben
+ nog dingen onder zich, welke ook beschreven zullen worden. Er zijn veel set opties
+ om te beschreven, alles hieronder kan geschreven worden in EEN set block.</p>
+
+  Voorbeeld:<br>
+<pre>
+set {
+	kline-address my@emailaddress.com;
+	auto-join #welcome;
+	options {
+		hide-ulines;
+	};
+	hosts {
+		local LocalOp.MyNet.com;
+		global globalop.mynet.com;
+	};
+};</pre></p>
+<p>Je kan een set block ook op 1 regel zetten. Dit maakt het wel onoverzichtelijk.<br>
+  Voorbeeld:<br>
+  set { options { hide-ulines; no-stealth; }; };<br>
+</p>
+<p><font class="set">set::kline-address &lt;email-address&gt;;</font><br>
+ Het email adres naar waar K:Line vragen gezonden kunnen worden. Deze waarde
+ moet ingevuld worden.</p>
+<p><font class="set">set::gline-address &lt;email-address&gt;;</font><br>
+ Het email adres naar waar G:Line vragen gezonden kunnen worden.</p>
+<p><font class="set">set::modes-on-connect &lt;+modes&gt;;</font><br>
+ De modi die de gebruiker ontvangt zodra hij verbindt.</p>
+<p><font class="set">set::snomask-on-connect &lt;+modes&gt;</font><br>
+ De snomask die een gebruiker ontvangt zodra hij verbindt.<p>
+<p><font class="set">set::modes-on-oper &lt;+modes&gt;;</font><br>
+ De modi die een gebruiker ontvangt wanneer hij /oper't.</p>
+<p><font class="set">set::snomask-on-oper &lt;+modes&gt;;</font><br>
+ De snomask die een gebruiker ontvangt wanneer hij /oper't.</p>
+<p><font class="set">set::modes-on-join &lt;+modes&gt;;</font><br>
+ De modi die op een kanaal worden gezet zodra deze wordt gemaakt. Niet alle modi kunnen gebruikt worden.
+ +qaohvbeOAzlLk kunnen NIET gezet worden door dit commando.</p>
+<p><font class="set">set::restrict-usermodes &lt;modes&gt;</font><br>
+ Weerhoudt gebruikers ervan om deze modi te zetten/verwijderen (gebuik geen + of -).<br>
+ Voorbeeld: je kan +G in modes-on-connect zetten en G in retrict-usermodes. Op deze manier
+ behouden gebruikers altijd +G.</p>
+<p><font class="set">set::restrict-channelmodes &lt;modes&gt;</font><br>
+ Weerhoudt gebruikers ervan deze modi te zetten/verwijderen op een kanaal (gebruik geen + of -).<br>
+ voorbeeld: je kan +G in modes-on-join zetten en G in restrict-channelmodes. Op deze manier
+ zal een kanaal altijd +G houden.<br>
+ Opmerking: Je kan deze modi wel nog aanpassen via MLOCK in Services. Helaas kunnen
+ wij hier niets aan doen.</p>
+<p><font class="set">set::restrict-extendedbans &lt;types|*&gt;</font><br>
+ Weerhoudt gebruikers ervan om uitgebreide bans ("*") te zetten, of sta bepaalde bans (bijv. "gc") niet toe.</p>
+<p><font class="set">set::auto-join &lt;channels&gt;;</font><br>
+ Het/De kanaal/kanalen welke gebruikers automatisch joinen wanneer ze verbinden.
+ Wanneer je meerdere kanelen wilt gebruiken, scheidt ze door een komma.<br>
+ [Opmerking: vergeet de aanhalingstekens niet, dus: autojoin "#chan";]</p>
+<p><font class="set">set::oper-auto-join &lt;channels&gt;;</font><br>
+ Het/De kanaal/kanalen welke een oper automatisch joint wanneer hij /oper't. Om
+ meerdere kanelen in stellen, scheidt ze door een komma.<br>
+ [Opmerking: vergeet de aanhalingstekens niet, dus: autojoin "#chan";]</p>
+<p><font class="set">set::anti-spam-quit-message-time &lt;timevalue&gt;;</font><br>
+ Een tijdswaarde die zegt hoelang een gebruiker verbonden moet zijn voordat een
+ /quit bericht wordt afgebeeld. Gebruikt om spam tegen te gaan. De waarde is een
+ numerieke string waarin d voor dag staan, h voor uur, m voor minute en s voor
+ seconde. Voorbeeld: 1d2h3m betekent 1 dag, 2 uur en 3 minuten.</p>
+<p><font class="set">set::prefix-quit &lt;text-to-prefix-quit&gt;;</font><br>
+ Stelt een voorvoegsel in voor quit berichten. Wanneer deze ingesteld wordt op 0,
+ zal er "Quit: " gebruikt worden.</p>
+<p><font class="set">set::static-quit &lt;quit message&gt;;</font><br>
+ Zet een standaard quit bericht, dat altijd gezonden wordt wanneer een gebruiker
+ de verbinding verbreekt. anit-spam-quit-message-time is niet meer nodig, evenals
+ set::prefix-quit, wanneer je dit gebruikt. Het vervangt GEEN problemen met
+ static-quit berichten.</p>
+<p><font class="set">set::static-part &lt;no|yes|part message&gt;;</font><br>
+ Wanneer dit op 'yes' staat, worden alle part berichten weggehaald. Wanneer het op
+ 'no' staat, werkt het zoals gewoon. Al het andere kan ook gebruikt worden,
+ bijvoorbeeld static-part "Bye!". Dit kan irritant worden, dus gebruik het wijs.</p>
+<p><font class="set">set::who-limit &lt;limit&gt;;</font><br>
+ Zet een limiet op het maximaal aantal resultaten dat een /who geeft. Wanneer je dit
+ weglaat, is er geen limiet.</p>
+<p><font class="set">set::silence-limit &lt;limit&gt;;</font><br>
+ Zet een limiet op de maximale grootte van de SILENCE lijst. Wanneer je dit weglaat,
+ staat het limiet op 15.</p>
+<p><font class="set">set::maxbans &lt;limit&gt;;</font><br>
+Stelt het maximum toegestane aantal bans per kanaal in. Standaard staat dit op 60.
+Indien je dit wijzigt, vergeet dan niet ook naar de maxbanlength instelling te kijken 
+(zie volgende)!</p>
+<p><font class="set">set::maxbanlength &lt;limit&gt;;</font><br>
+Lijkt op voorgaande, maar dit stelt het maximum aantal tekens van alle bans tezamen in,
+kortgezegd zet je d.m.v. deze instelling dus een (semi-)maximum op de hoeveelheid
+geheugen die gebruikt kan worden voor alle bans per kanaal. Standaard staat dit op
+2048 (bytes). Tezamen met de set::maxbans standaard instelling van 60 laat dit dus
+gemiddeld 2048:60=34 tekens per ban toe.</p>
+<p><font class="set">set::oper-only-stats &lt;stats-list&gt;;</font><br>
+ Stelt de modi in die alleen door opers gebruikt mogen worden. De flags worden door
+ niets gescheiden. Je kan dit leeg laten als je wilt dat iedereen alle flags mag
+ gebruiken, of een * wanneer je wilt dat gebruikers geen enkele modus mogen
+ gebruiken. Alleen korte flags mogen gebruikt worden hier.</p>
+<p><font class="set">set::oper-only-stats {&lt;stats-flag&gt;; &lt;stats-flag&gt;;};</font><br>
+ Stelt de stats flags in die alleen gebruikt mogen worden door opers. Dit werkt alleen met
+ lange stats flags.</p>
+<p><font class="set">set::maxchannelsperuser &lt;amount-of-channels&gt;;</font><br>
+ Stelt het aantal kanalen in waarin een gebruiker zich tegelijk mag bevinden.</p>
+<p><font class="set">set::maxdccallow &lt;amount-of-entries&gt;;</font><br>
+ Stelt het maximaal aantal invoeringen in dat een gebruiker mag hebben in zijn/haar DCCALLOW lijst.</p>
+<p><font class="set">set::channel-command-prefix &lt;command-prefixes&gt;;</font><br>
+ Stelt het voorvoegsel dat nodig is voor Services "in kanaal commando's". Berichten die starten
+ met het ingestelde teken worden nog steeds gezonden zelfs als de gebruiker +d heeft. De
+ standaardwaarde is "`!.".</p>
+<p><font class="set">set::allowed-nickchars { &lt;list&gt; };</font><br>
+ Character sets / talen die toegestaan zijn in namen, zie <a href="#feature_nickchars">Nick Character Sets</a>.</p>
+<p><font class="set">set::allow-userhost-change [never|always|not-on-channels|force-rejoin]</font><br>
+ Geeft aan wanneer een user@host mag veranderen (+x/-x/chghost/chgident/setident/vhost/etc).<br>
+ <i>never</i> blokkeert alle commando's, <i>always</i> betekent altijd zelfs in kanalen (kan
+ een desync veroorzaken) [default], <i>not-on-channels</i> betekent dat het toegestaan is
+ wanneer een gebruiker zich niet op een kanaal bevindt, <i>force-rejoin</i> zal een rejoin voor
+ alle kanalen doen, en de status (voice/op etc) teruggeven.</p>
+<p><font class="set">set::options::hide-ulines;</font><br>
+ Wanneer dit aanstaat, zullen U:Lined servers niet zichtbaar zijn in /links voor non-opers.</p>
+<p><font class="set">set::options::flat-map;</font><br>
+ Wanneer dit aanstaat, zullen alle servers als direct gelinkt staat in /map en /links,
+ dus je kan niet zien welke server aan welke gelinkt is. Dit helpt een beetje tegen
+ (D)DoS aanvallen, omdat de gemene mensen geen zwakke punten kunnen zien.</p>
+<p><font class="set">set::options::show-opermotd;</font><br>
+ Wanneer dit aanstaat, zal de opermotd getoond worden na een successvolle /oper.</p>
+<p><font class="set">set::options::identd-check;</font><br>
+ Wanneer dit aanstaat, zal de aanwezigheid van een ident server gecontroleerd worden,
+ en de gegeven waarde zal als gebruikersnaam gebruikt worden. Wanneer er niets terug
+ gegeven wordt, zal de door de gebruiker gespecificeerde naam gebruikt worden, met
+ het voorvoegsel ~. Wanneer dit uitstaat, zal er niet gecontroleerd worden op een ident server.</p>
+<p><font class="set">set::options::show-connect-info;</font><br>
+ Als dit aanstaat, zullen de berichten "ident request", "hostname lookup" etc
+ weergegeven worden zodra een gebruiker een verbinding maakt.</p>
+<p><font class="set">set::options::dont-resolve;</font><br>
+ Wanneer dit aanstaat zal de host van gebruikers niet geresolved worden. Dit kan handig zijn
+ als vele gebruikers een host hebben die niet snel verbindt.<p/>
+ Let op dat je geen op host gebaseerde blokken kan hebben, omdat de host niet geresolved wordt.</p>
+<p><font class="set">set::options::mkpasswd-for-everyone;</font><br>
+ Stelt in dat /mkpasswd door iedereen gebruikt kan worden, in plaats van door opers alleen. Het
+ gebruik van dit commando door normale gebruikers zal door middel van een EYES snomask kenbaar
+ worden gemaakt.</p>
+<p><font class="set">set::options::allow-part-if-shunned;</font><br>
+ Staat een shunned gebruiker toe /part te gebruiken.</p>
+<p><font class="set">set::options::fail-oper-warn;</font><br>
+ Als dit aanstaat, zal een gebruiker erop geattendeerd worden dat de mislukte /oper
+ wordt gelogd.</p>
+<p><font class="set">set::dns::timeout &lt;timevalue&gt;;</font><br>
+ Een tijdsduur die specificeert hoelang een DNS server erover mag doen voordat
+ er een timeout volgt. De tijd is een numerieke waarde, waarin de d voor dag staat,
+ de h voor uur, m voor minute en s voor seconde. Voorbeeld: 1d2h3m betekent
+ 1 dag, 2 uur en 3 minuten.</p>
+<p><font class="set">set::dns::retries &lt;number-of-retries&gt;;</font><br>
+ Een numerieke waarde die instelt hoeveel keer er opnieuw geprobeerd moet worden
+ een DNS lookup te voltooien.</p>
+<p><font class="set">set::dns::nameserver &lt;name-of-dns-server&gt;;</font><br>
+ De hostnaam die gebruikt moet worden voor een DNS lookup.</p>
+<p><font class="set">set::dns::bind-ip &lt;ip&gt;;</font><br>
+ Het IP waaraan gebonden moet worden voor het resolven. Bijna nooit nodig.</p>
+<p><font class="set">set::network-name &lt;name-of-network&gt;;</font><br>
+ De naam van het netwerk waar deze server deel van uitmaakt. Deze waarde moet
+ precies gelijk zijn op alle servers.</p>
+<p><font class="set">set::default-server &lt;server-name&gt;;</font><br>
+ De standaardserver waarnaar verbonden moet worden wanneer deze server vol is.</p>
+<p><font class="set">set::services-server &lt;server-name&gt;;</font><br>
+ De naam van de server waar de Services op lopen. Benodigd, maak er services.yournet.com
+ van wanneer je geen Services hebt.</p>
+<p><font class="set">set::stats-server &lt;server-name&gt;;</font><br>
+ De naam van de server waar de Stats bot op loopt. Als er geen Stats bot is, kan
+ deze waarde worden weggelaten.</p>
+<p><font class="set">set::help-channel &lt;network-help-channel&gt;;</font><br>
+ De naam van het help kanaal op dit netwerk.</p>
+<p><font class="set">set::cloak-keys { &quot;key1&quot;; &quot;key2&quot;; &quot;key3&quot;; };</font><br>
+ De sleutels die gebruikt worden om een +x host te generen. De sleutels moeten op alle
+ servers binnen het netwerk hezelfde zijn, anders linken de servers niet. Elk van de
+ 3 sleutels moet een string van 5 tot 100 tekens zijn (10 tot 20 is goed genoeg), bestaande
+ uit een mix van kleine letters (a-z), grote letters (A-Z) en getallen (0-9). Merk op dat
+ het ligt aan de cloaking module die je hebt geladen hoe je deze sleutels moet instellen.</p>
+<p><font class="set">set::hiddenhost-prefix &lt;prefix-value&gt;;</font><br>
+ Het voorvoegsel voor een verborgen host (+x). Dit zijn meestal 3 tot 4 letters
+ die de netwerk naam voorstellen.</p>
+<p><font class="set">set::hosts::local &lt;locop-host-name&gt;;</font><br>
+ De hostnaam die lokale opers krijgen wanneer ze +x zetten. Je kan ook user@host
+ hier gebruiken.</p>
+<p><font class="set">set::hosts::global &lt;globop-host-name&gt;;</font><br>
+ De hostnaam die globale opers krijgen wanneer ze +x zetten. Je kan ook user@host
+ hier gebruiken.</p>
+<p><font class="set">set::hosts::coadmin &lt;coadmin-host-name&gt;;</font><br>
+ De hostnaam die co-admins krijgen wanneer ze +x zetten. Je kan ook user@host
+ hier gebruiken.</p>
+<p><font class="set">set::hosts::admin &lt;admin-host-name&gt;;</font><br>
+ De hostnaam die admins krijgen wanneer ze +x zetten. Je kan ook user@host
+ hier gebruiken.</p>
+<p><font class="set">set::hosts::servicesadmin &lt;servicesadmin-host-name&gt;;</font><br>
+ De hostnaam die service-admins krijgen wanneer ze +x zetten. Je kan ook user@host
+ hier gebruiken.</p>
+<p><font class="set">set::hosts::netadmin &lt;netadmin-host-name&gt;;</font><br>
+ De hostnaam die netadmins krijgen wanneer ze +x zetten. Je kan ook user@host
+ hier gebruiken.</p>
+<p><font class="set">set::hosts::host-on-oper-up &lt;yes/no&gt;;</font><br>
+ Wanneer dit op 'yes' staat, zal de oper automatisch +x krijgen en de bovenstaande
+ host krijgen. Wanneer dit op 'no' staat, moet de gebruiker handmatig +x zetten
+ om bovenstaande host te krijgen.</p>
+<p><font class="set">set::ssl::egd &lt;filename&gt;;</font><br>
+ Stelt in of EGD (Entropy Gathering Daemon) ondersteuning gebruikt moet worden. Wanneer je
+ OpenSSL 0.9.7 of hoger draait, zullen /var/run/egd-pool, /dev/egd-pool, /etc/egd-pool en
+ /etc/entropy automatisch doorzocht worden, dus er is geen bestandsnaam nodig. Wanneer je
+ een eerdere versie van OpenSSL gebruikt, of wanneer je een EGD socket wil gebruiken die
+ ergens anders staat, moet je de bestandsnaam van de UNIX Domain socket opgeven waarop
+ EGD luistert.</p>
+<p><font class="set">set::ssl::certificate &lt;filename&gt;;</font><br>
+ Stelt in waar het SSL certificaat van de server staat.</p>
+<p><font class="set">set::ssl::key &lt;filename&gt;;</font><br>
+ Stelt in waar de SSL sleutel van de server staat.</p>
+<p><font class="set">set::ssl::trusted-ca-file &lt;filename&gt;;</font><br>
+ Stelt in waar de certificaten van de vertrouwde CAs staan.</p>
+<p><font class="set">set::ssl::options::fail-if-no-clientcert;</font><br>
+ Gebruikers zonder certificaat worden geweigerd.</p>
+<p><font class="set">set::ssl::options::no-self-signed;</font><br>
+ Verbindingen met zelf getekende certificaten worden geweigerd.</p>
+<p><font class="set">set::ssl::options::verify-certificate;</font><br>
+ Stelt in dat UnrealIRCd bepaalt of een SSL certificaat geldig is alvorens de connectie
+ te accepteren.</p>
+<p><font class="set">set::throttle::period &lt;timevalue&gt;</font><br>
+ Stelt in hoelang een gebruiker moet wachten voordat hij/zij opnieuw kan verbinden na
+ set::throttle::connections pogingen.</p>
+<p><font class="set">set::throttle::connections &lt;amount&gt;;</font><br>
+ Stelt in hoeveel keer een gebruiker met dezelfde host moet verbinden alvorens
+ tegengehouden te worden.</p>
+<p><font class="set">set::ident::connect-timeout &lt;amount&gt;;</font><br>
+ Aantal seconden waarna het verbinden met een ident server opgegeven moet worden (standaard: 10s).</p>
+<p><font class="set">set::ident::read-timeout &lt;amount&gt;;</font><br>
+ Stelt in hoeveel seconden er gewacht moet worden op een antwoord (standaard: 30s).</p>
+<p><font class="set">set::anti-flood::unknown-flood-bantime &lt;timevalue&gt;;</font><br>
+ Stelt in hoelang de ban van een onbekende verbindings flooder duurt.</p>
+ <p><font class="set">set::anti-flood::unknown-flood-amount &lt;amount&gt;;</font><br>
+ Stelt in hoeveel data (in KiloBytes) een onbekende verbinding moet zenden alvorens
+ deze gekilled wordt.</p>
+ <p><font class="set">set::anti-flood::away-flood &lt;count&gt;:&lt;period&gt;</font><br>
+ Away flood bescherming: Stelt een limiet aan /away. 'count' keer per 'period' secondes.
+ NO_FLOOD_AWAY moet aanstaan in config. Voorbeeld: <i>away-flood 5:60s;</i> betekent dat
+ er maximaal 5 keer per 60 seconden van status veranderd mag worden.</p>
+ <p><font class="set">set::anti-flood::nick-flood &lt;count&gt;:&lt;period&gt;</font><br>
+ Nickname flood bescherming: Stelt een limiet aan het aantal naamsveranderen. Voorbeeld:
+ <i>nick-flood 4:90</i> Er zijn 4 naamsveranderingen in 90 seconden toegestaan. De
+ standaardwaarde is 3 per 60.</p>
+ <p><font class="set">set::default-bantime &lt;time&gt;</font><br>
+ Standaard duur van een /kline, /gline, /zline, /shun etc zonder tijdsindicatie. (zoals
+ /gline *@some.nasty.isp). De standaardwaarde is permanent (0). Voorbeeld:
+ <i>default-bantime 90d;</i>.</p>
+ <p><font class="set">set::modef-default-unsettime &lt;value&gt;</font><br>
+ Voor kanaalmodus +f kun je een standaard unsettime instellen. Wanneer je bijvoorbeeld
+ 10 instelt, zal +f [5j]:15 veranderen in [5j#i10]:15. Er is geen standaardwaarde.</p>
+ <p><font class="set">set::modef-max-unsettime &lt;value&gt;</font><br>
+ De maximale waarde van een modus +f unsettime (in +f [5j#i&lt;TIME&gt;]:15). Dit is een
+ waarde tussen 0 en 255. Standaard is het 60 (= 1 uur).</p>
+ <p><font class="set">set::ban-version-tkl-time &lt;value&gt;</font><br>
+ Wanneer je /zline/gline/etc uitvoert in het ban version block, kun je hier instellen
+ hoelang het IP gebanned moet worden. Standaard is dit 86400 (1 day).</p>
+ <p><font class="set">set::spamfilter::ban-time &lt;value&gt;</font><br>
+ Hetzelfde als bovenstaande, maar voor *lines/shuns toegevoegd door spamfilter.</p>
+ <p><font class="set">set::spamfilter::ban-reason &lt;reason&gt;</font><br>
+ De reden die gebruikt moet worden door spamfilter.</p>
+ <p><font class="set">set::spamfilter::virus-help-channel &lt;channel&gt;</font><br>
+ Het kanaal dat gebruikt moet worden voor de'viruschan' actie in spamfilter.</p>
+ <p><font class="set">set::spamfilter::virus-help-channel-deny &lt;yes|no&gt;</font><br>
+ Wanneer dit op 'yes' (of '1') staat, wordt er "invite only" tegen gebruikers gezegd die
+ het virus-help-channel proberen te joinen. Alleen opers, mensen die een spamfilter matchen,
+ of mensen die ge-/invite zijn, kunnen joinen.</p>
+ <p><font class="set">set::spamfilter::except &lt;target(s)&gt;</font><br>
+ Deze kanalen worden niet gecontroleerd door spamfilters. Dit kan 1 kanaal zijn, of
+ een reeks kanalen gescheiden door een komma (bijv: except "#help,#spamreport";).</p>
+ <p><font class="set">set::check-target-nick-bans &lt;yes|no&gt;</font><br>
+ Wanneer de gebruiker zijn naam verandert, controleer of de NIEUWE nick gebanned zou
+ worden. Zo ja, sta de naamsverandering niet toe. Standaard is dit 'yes'.</p>
+<p><font class="set">set::timesynch::enabled &lt;yes|no&gt;</font><br>
+ Activeer of deactiveer de tijd synchronisatie bij het opstarten. Standaard is yes.</p>
+<p><font class="set">set::timesynch::server &lt;IP&gt;</font><br>
+ Server waarmee gesynchroniseerd moet worden. Dit kunnen maximaal 4 IPs zijn, gescheiden door
+ commas. De servers moeten NTP protocol versie 4 ondersteunen. Standaard worden 3 servers
+ gebruikt (US,EU,AU). De verzoeken worden parallel verzonden, het snelste antwoord wint.</p>
+<p><font class="set">set::timesynch::timeout &lt;time&gt;</font><br>	
+ Maximale wachttijd voor een antwoord. Dit is een waarde tussen 1 en 5, hoger kan niet vanwege
+ een te hoge incorrectheid. Standaard is dit 3, en er is waarschijnlijk geen goede reden
+ om dit aan te passen.</p>
+<p></p> </div>
+
+<p><b><font size="+2">5 &#8211; Aanvullende bestanden<a name="addtlfiles"></a>
+  </font></b></p><div class="desc">
+ Als aanvulling op het configuariebestand heeft Unreal nog een aantal andere bestanden, zoals
+ MOTD, OperMOTD, BotMOTD en Rules. Hieronder staan de bestanden en hun functie.<br>
+ Merk op dat MOTDs (alle) en Rules bestanden apart kunnen worden ingestel door het tld block.
+ Dit zijn slechts de standaard bestanden (en voor MOTD/Rules vanaf andere servers).<p />&nbsp;
+<table width="83%" border="1">
+  <tr>
+    <td>ircd.motd</td><td>Wordt afgebeeld wanneer een /motd wordt uitgevoerd (en wanneer ircd.smotd niet bestaat) wanneer een gebruiker verbindt.</td>
+  </tr>
+  <tr>
+    <td>ircd.smotd</td><td>Wordt alleen afgebeeld wanneer een gebruiker verbindt (short MOTD/korte MOTD)</td>
+  </tr>
+  <tr>
+    <td>ircd.rules</td><td>Wordt afgebeeld wanneer een /rules wordt uitgevoerd</td>
+  </tr>
+  <tr>
+    <td>oper.motd</td><td>wordt afgebeeld wanneer je /opermotd uitvoert of wanneer je /oper'd</td>
+  </tr>
+  <tr>
+    <td>bot.motd</td><td>Wordt afgebeeld wanneer je /botmotd uitvoert of wanneer je gebruikersmode +B doet</td>
+  </tr>
+</table>
+<p></p></div>
+<p><b><font size="+2">6 &#8211; Gebruiker & Kanaal modus<a name="userchannelmodes"></a>
+  </font></b></p><div class="desc">
+<table width="83%" border="1">
+  <tr> 
+    <td><div align="center"><b>Mode</b></div></td>
+    <td><div align="center"><b>Beschrijving</b></div></td>
+  </tr>
+  <tr> 
+    <td colspan="2"><div align="center"><b>Kanaal Modes</b></div></td>
+  </tr>
+  <tr> 
+    <td><div align="center">A</div></td>
+    <td>Alleen Administrators mogen joinen</td>
+  </tr>
+  <tr> 
+    <td><div align="center">a &lt;nick&gt;</div></td>
+    <td>Maakt nick een kanaal admin</td>
+  </tr>
+  <tr> 
+    <td><div align="center">b &lt;nick!user@host&gt;<br>
+      </div></td>
+    <td>Bant de gegeven gebruiker van het kanaal</td>
+  </tr>
+  <tr> 
+    <td><div align="center">c</div></td>
+    <td>ANSI kleuren kunnen niet naar het kanaal gezonden worden</td>
+  </tr>
+  <tr> 
+    <td><div align="center">C</div></td>
+    <td>CTCPs zijn niet toegestaan in het kanaal</td>
+  </tr>
+  <tr> 
+    <td><div align="center">e &lt;nick!user@host&gt;</div></td>
+    <td>Uitzonderingsban &#8211; Wanneer iemand dit matcht, kunnen ze het kanaal wel joinen, zelfs als ze gebanned zijn</td>
+  </tr>
+  <tr> 
+    <td><div align="center">f [&lt;number&gt;&lt;type&gt;]:&lt;seconds&gt;</div></td>
+    <td>Kanaal flood bescherming. Zie <a href="#feature_antiflood">section 3.12</a> voor een uitgebreide beschrijving</td>
+  </tr>
+  <tr> 
+    <td><div align="center">G</div></td>
+    <td>Woorden in het kanaal worden gecontroleerd door de badword blocks, en zo nodig vervangen</td>
+  </tr>
+  <tr> 
+    <td><div align="center">h &lt;nick&gt;</div></td>
+    <td>Geeft half-op status aan de nick</td>
+  </tr>
+  <tr> 
+    <td><div align="center">i</div></td>
+    <td>Een uitnodiging is nodig</td>
+  </tr>
+  <tr> 
+    <td><div align="center">I &lt;nick!user@host&gt;<br></div></td>
+    <td>Uitnodigings uitzonderingen ("invex") - Wanneer iemand dit matcht, gaan ze om een +i op het kanaal heen</td>
+  </tr>
+  <tr> 
+    <td><div align="center">j &lt;joins:seconds&gt;</div></td>
+    <td><i>joins</i> per <i>seconds</i> seconden zijn toegestaan per gebruiker</td>
+  </tr>
+  <tr> 
+    <td><div align="center">K</div></td>
+    <td>/knock is niet toegestaan</td>
+  </tr>
+  <tr> 
+    <td><div align="center">k &lt;key&gt;</div></td>
+    <td>Een wachtwoord is nodig om het kanaal te joinen</td>
+  </tr>
+  <tr> 
+    <td><div align="center">l &lt;##&gt;</div></td>
+    <td>Zet een limiet op het aantal mensen</td>
+  </tr>
+  <tr> 
+    <td><div align="center">L &lt;Chan&gt;</div></td>
+    <td>Wanneer het limiet van +l bereikt is, worden mensen naar dit kanaal gestuurd</td>
+  </tr>
+  <tr> 
+    <td><div align="center">M</div></td>
+    <td>Je hebt een geregistreerde naam (+r) nodig om te praten</td>
+  </tr>
+  <tr> 
+    <td><div align="center">m</div></td>
+    <td>Gemodereerd kanaal. Alleen mensen met +v of hoger mogen praten</td>
+  </tr>
+  <tr> 
+    <td><div align="center">N</div></td>
+    <td>Naamsveranderingen zijn niet toegestaan</td>
+  </tr>
+  <tr> 
+    <td><div align="center">n</div></td>
+    <td>Berichten van buiten het kanaal zijn niet toegestaan</td>
+  </tr>
+  <tr> 
+    <td><div align="center">O</div></td>
+    <td>Alleen IRCOps mogen joinen</td>
+  </tr>
+  <tr> 
+    <td><div align="center">o &lt;nick&gt;</div></td>
+    <td>Geeft nick kanaal operator status</td>
+  </tr>
+  <tr> 
+    <td><div align="center">p</div></td>
+    <td>Maakt een kanaal prive</td>
+  </tr>
+  <tr> 
+    <td><div align="center">q &lt;nick&gt;</div></td>
+    <td>Maakt nick de kanaal eigenaar</td>
+  </tr>
+  <tr> 
+    <td><div align="center">Q</div></td>
+    <td>Alleen U:Lined servers kunnen mensen kicken</td>
+  </tr>
+  <tr> 
+    <td><div align="center">R</div></td>
+    <td>Je hebt een geregistreerde naam nodig om te joinen</td>
+  </tr>
+  <tr> 
+    <td><div align="center">S</div></td>
+    <td>Haalt alle kleuren weg</td>
+  </tr>
+  <tr> 
+    <td><div align="center">s</div></td>
+    <td>Maakt een kanaal geheim</td>
+  </tr>
+   <tr> 
+    <td><div align="center">t</div></td>
+    <td>Alleen kanaal operators kunnen de topic veranderen</td>
+  </tr>
+  </tr>
+   <tr> 
+    <td><div align="center">T</div></td>
+    <td>NOTICE's gericht aan het kanaal zijn niet toegestaan</td>
+  </tr>
+  <tr> 
+    <td><div align="center">u</div></td>
+    <td>Auditorium &#8211; /names en /who #kanaal worden alleen getoond aan ops</td>
+  </tr>
+  <tr> 
+    <td><div align="center">V</div></td>
+    <td>/invite is niet toegestaan</td>
+  </tr>
+  <tr> 
+    <td><div align="center">v &lt;nick&gt;</div></td>
+    <td>Geeft nick voice (kan spreken in +m kanalen)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">z</div></td>
+    <td>Alleen mensen met een SSL verbinding mogen joinen</td>
+  </tr>
+</table>
+<p>&nbsp;</p>
+<table width="75%" border="1">
+  <tr> 
+    <td><div align="center"><b>Mode</b></div></td>
+    <td><div align="center"><b>Beschrijving</b></div></td>
+  </tr>
+  <tr> 
+    <td colspan="2"><div align="center"><b>Gebruiker Modes</b></div></td>
+  </tr>
+  <tr> 
+    <td><div align="center">A</div></td>
+    <td>Server Admin (te zetten in het Oper Block)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">a</div></td>
+    <td>Services Admin (te zetten in het Oper Block)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">B</div></td>
+    <td>Markeert je als een Bot</td>
+  </tr>
+  <tr> 
+    <td><div align="center">C</div></td>
+    <td>Co-Admin (te zetten in het Oper Block)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">d</div></td>
+    <td>Je ontvangt geen kanaal PRIVMSGs (uitgezonderd berichten die vooraf gaan met bepaalde tekens,
+        zie set::channel-command-prefix)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">G</div></td>
+    <td>Filtert alle badwords die ingesteld zijn</td>
+  </tr>
+  <tr> 
+    <td><div align="center">g</div></td>
+    <td>Kan globops en locops verzenden & lezen</td>
+  </tr>
+  <tr> 
+    <td><div align="center">H</div></td>
+    <td>Verbergt IRCOp status (alleen voor IRCops)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">h</div></td>
+    <td>Beschikbaar voor hulp (Helpop) (te zetten in het Oper Block)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">i</div></td>
+    <td>Onzichtbaar (niet te zien in /who)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">N</div></td>
+    <td>Network Administrator (te zetten in het Block)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">O</div></td>
+    <td>Lokale IRC Operator (te zetten in het Oper Block)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">o</div></td>
+    <td>Globale IRC Operator (te zetten in het Oper Block)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">p</div></td>
+    <td>Verbergt de kanalen waarin je je bevindt in een /whois</td>
+  </tr>
+  <tr> 
+    <td><div align="center">q</div></td>
+    <td>Alleen U:Lined servers kunnen je kicken (alleen voor Services Admins)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">R</div></td>
+    <td>Je kunt alleen PRIVMSGS/NOTICES van geregistreerde (+r) gebruikers ontvangen</td>
+  </tr>
+  <tr> 
+    <td><div align="center">r</div></td>
+    <td>Identificeert je naam als geregistreerd</td>
+  </tr>
+  <tr> 
+    <td><div align="center">S</div></td>
+    <td>Wordt gebruikt om Services Daemons te beschermen</td>
+  </tr>
+  <tr> 
+    <td><div align="center">s</div></td>
+    <td>Kan server notices zien (zie <a href="#feature_snomasks">sectie 3.3</a> voor meer informatie)</td>
+  </tr>
+  <tr>
+    <td><div align="center">T</div></td>
+    <td>Je kan geen CTCPs ontvangen</td>
+  </tr>
+  <tr> 
+    <td><div align="center">t</div></td>
+    <td>Zegt dat je een /vhost gebruikt</td>
+  </tr>
+  <tr> 
+    <td><div align="center">V</div></td>
+    <td>Zegt dat je een WebTV gebruiker bent</td>
+  </tr>
+  <tr> 
+    <td><div align="center">v</div></td>
+    <td>Ontvang geinfecteerde DCC Zend afwijzingen</td>
+  </tr>
+  <tr> 
+    <td><div align="center">W</div></td>
+    <td>Laat je zien dat mensen een /whois op je doen (Alleen voor IRCOps)</td>
+  </tr>
+  <tr> 
+    <td><div align="center">w</div></td>
+    <td>Je kan wallop berichten zien</td>
+  </tr>
+  <tr> 
+    <td><div align="center">x</div></td>
+    <td>Geeft je een verborgen hostnaam</td>
+  </tr>
+  <tr>
+    <td><div align="center">z</div></td>
+    <td>Geeft aan dat je een SSL verbinding gebruikt</td>
+  </tr>
+</table>
+<p></p></div>
+<p><font size="+2"><b>7 &#8211; Gebruikers & Opers commando's<a name="useropercommands" id="useropercommands"></a></b></font></p><div class="desc">
+<p>Opmerking: de /helpop documentatie is recenter. Gebruik <i>/helpop commando</i> (of <i>/helpop?commando</i> wanneer je een oper bent) om meer
+ informatie over het commando te krijgen.</p>
+
+<table width="90%" border="1">
+  <tr> 
+    <td width="33%"><div align="center"><b>Commando</b></div></td>
+    <td width="57%"><div align="center"><b>Beschrijving</b></div></td>
+    <td width="10%"><div align="center"><b>Wie kan het gebruiken</b></div></td>
+  </tr>
+  <tr> 
+    <td>nick &lt;newnickname&gt;</td>
+    <td>Verandert je naam naar newnickname. Andere mensen zien je naamsverandering<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td>whois &lt;nick&gt;</td>
+    <td>Laat informatie over nick zien. Dit houdt in de volleidge naam, de host, de kanalen waarin de persoon
+        zich bevindt, en of hij Oper is<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">who &lt;mask&gt;</td>
+    <td>Met who kun je gebruikers zoeken. Masks zijn: naam; #kanaal, hostmask (*.attbi.com)<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">whowas &lt;nick&gt; &lt;maxreplies&gt;</td>
+    <td>Geeft je informatie over een persoon die niet meer online is. &lt;max replies&gt;
+        is optioneel, en geeft aan hoeveel resultaten weergegeven moeten worden<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">ison &lt;nick1 nick2 nick3 ...&gt;</td>
+    <td>Controleert of een gebruiker of een lijst van gebruikers online is/zijn. Zeer
+        handig voor scripts.<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">join &lt;channel1,channel2, ...&gt;</td>
+    <td>Hiermee kun je een kanaal binnengaan. Door /join #chan1,#chan2,#chan3 ga je
+        meerdere kanalen tegelijk binnen. /join 0 zorgt ervoor dat je alle kanalen
+        verlaat (PART)<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">cycle &lt;channel1, channel2, ...&gt;</td>
+    <td>Door een /cycle PART je het kanaal, om daarna weer te JOINen<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">motd &lt;server&gt;</td>
+    <td>Laat de servers MOTD zien. Wanneer je een servernaam toevoegd, krijg je
+        de MOTD van de betreffende server<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">rules &lt;server&gt;</td>
+    <td>Geeft de ircd.rules van de server weer. Wanneer je een servernaam
+        tovoegd, krijg je de regels van de betreffende server<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">lusers &lt;server&gt; </td>
+    <td>Laat het huidige en maximale aantal gebruikers zien, zowel lokaal als globaal.
+        Als je een servernaam toevoegd, krijg je de informatie van de betreffende server<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">map</td>
+    <td>Laat de netwerkmap zien</td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">quit &lt;reason&gt;</td>
+    <td>Verbreek de verbinding met de server. Wanneer je een reden opgeeft,
+        wordt deze getoond op alle kanalen waarin je je bevond<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">ping &lt;user&gt;</td>
+    <td>Zendt een PING aanvraag naar een gebruiker. Wordt gebruikt om te kijken of
+        de verbinding er nog is of om te kijken of er lag is. Servers zenden elke
+        XX seconden een ping om te kijken of de gebruiker nog steeds verbonden is<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">version &lt;nick&gt;</td>
+    <td>Zendt een CTCP VERSION aanvraag naar een gebruiker. Wanneer ingesteld staat
+        dat er een antwoord gegeven moet worden, zul je dit krijgen<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">links</td>
+    <td>Geeft een lijst van alle servers gelinkt in het netwerk<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">Admin &lt;server&gt;</td>
+    <td>Laat de admin informatie zien van de server. Wanneer de servernaam is toegevoegd,
+        krijg je informatie over de betreffende server<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">userhost &lt;nick&gt;</td>
+    <td>Laat de userhost van de nick zien. Meestal gebruikt door scripts<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">topic &lt;channel&gt; &lt;topic&gt;</td>
+    <td>/topic &lt;channel&gt; laat het huidige topic zien van het kanaal. /topic 
+        &lt;channel&gt; &lt;topic&gt; zal het topic veranderen.<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">invite &lt;nick&gt; &lt;channel&gt;</td>
+    <td>Nodigt de gebruiker uit naar het kanaal.<br></td>
+    <td>Kanaal Operator</td>
+  </tr>
+  <tr> 
+    <td height="39">kick &lt;channel, channel&gt; &lt;user, user&gt; &lt;reason&gt;</td>
+    <td>Kickt de persoon of pesonen van het kanaal of kanalen. Een reden kan gegeven worden<br></td>
+    <td>Kanaal Operator</td>
+  </tr>
+  <tr> 
+    <td height="39">away &lt;reason&gt;</td>
+    <td>Markeert je als zijnde weg. Een reden kan ook gegeven worden<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">Watch +-&lt;nick&gt; +-&lt;nick&gt;<br></td>
+    <td>Watch is een nieuw systeem in UnrealIRCd wat sneller is en minder resources gebruikt.
+        De server zendt je een bericht wanneer een naam op je watch-lijst inlogt of uitlogt.
+        De watch-lijst wordt NIET onthouden. Jij, of je script, moet de namen steeds opnieuw
+        toevoegen wanneer je opnieuw verbindt met een server<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">helpop ?&lt;topic&gt; or !&lt;topic&gt;<br></td>
+    <td>HelpOp is een nieuw systeem om hulp te krijgen over de IRC Server. Je typt of /HELPOP ?
+        &lt;help system topic&gt; or /HELPOP ! &lt;vraag&gt;. De ? betekent dat je het helpsysteem
+        wil raadplegen. Wanneer je geen antwoord krijgt, kun je de ! gebruiken, je vraag wordt dan
+        gezonden naar alle Help Operators die online zijn. Wanneer je geen ? of ! gebruikt, zal eerst
+        het helpsysteem geraadpleegd worden. Wanneer er niets gevonden wordt, wordt het bericht gestuurd
+        naar de Help Operators<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">list &lt;search string&gt;</td>
+    <td>Wanneer je geen search string opgeeft, krijg je een lijst met alle kanalen. Hieronder
+        staan de opties die je gebruiken kunt.<br>
+        &gt;nummer - geeft een lijst met meer dan &lt;nummer&gt; mensen<br>
+        &lt;nummer - geeft een lijst met minder dan &lt;nummer&gt; mensen<br>
+        C&gt;nummer - geeft een lijst met kanalen die tussen nu en &lt;nummer&gt; minuten geleden gemaakt zijn<br>
+        C&lt;nummer - geeft een lijst met kanalen die ouder dan &lt;nummer&gt; minuten zijn<br>
+        T&gt;nummer - geeft een lijst met kanalen waarvan de topic ouder is dan &lt;nummer&gt; minuten<br>
+        T&lt;nummer - geeft een lijst met kanalen waarvan de topic jonger is dan &lt;nummer&gt;minuten<br>
+        *mask* - geeft een lijst met kanalen die *mask* matchen<br>
+        !*mask* - geeft een lijst met kanalen die *mask* niet matchen<br></td>
+      <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">Knock &lt;channel&gt; &lt;message&gt;<br></td>
+    <td>Hiermee kun je 'kloppen' op een invite-only kanaal, en vragen om binnen te
+        komen. Werkt niet wanneer het kanaal op +K of +V staat. Werkt ook niet wanneer
+        je gebanned bent<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">setname</td>
+    <td>Hiermee kun je je Real Name (echte naam) veranderen, zonder opnieuw te verbinden<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">vhost &lt;login&gt; &lt;password&gt;</td>
+    <td>Verbergt je hostnaam door een vhost van de server te gebruiken<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">mode &lt;chan/nick&gt; &lt;mode&gt;<br></td>
+    <td>Hiermee kun je kanaal en gebruiker modi zien. Zie 
+        <a href="#userchannelmodes">Gebruikers &amp; Kanaal Modi</a> voor een lijst<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">credits</td>
+    <td>Laat een lijst zien van wie allemaal heeft meegeholpen aan het maken van UnrealIRCd<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">license</td>
+    <td>Laat de GNU License zien</td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">time &lt;server&gt;</td>
+    <td>Laat de datum en tijd van de server zien. Wanneer je een servernaam opgeeft,
+        krijg je de datum en tijd van de betreffende server<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">botmotd &lt;server&gt;<br></td>
+    <td>Laat je de BOTMOTD van de server zien. Wanneer je een servernaam opgeeft,
+        krijg je de BOTMOTD van de betreffende server<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">identify &lt;password&gt;</td>
+    <td>Zendt je wachtwoord naar de Services om je nick te identificeren<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">identify &lt;channel&gt; &lt;password&gt;</td>
+    <td>Zendt je wachtwoord naar de Services om je als kanaal eigenaar te
+        identificeren<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">dns &lt;option&gt;</td>
+    <td>Geeft informatie over de servers DNS cache.
+        Opmerking: omdat bijna alle programmas een ingebouwd DNS commando hebben,
+        is het mogelijk dat je /raw DNS moet gebruiken. Opers kunnen een l opgeven
+        als eerste parameter wanneer ze een lijst willen ontvangen van alle ingevingen.<br</td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">userip &lt;nick&gt;<br></td>
+    <td>Geeft het IP adres van nick<br></td>
+    <td>Iedereen</td>
+  </tr>
+  <tr> 
+    <td height="39">oper &lt;userid&gt; &lt;password&gt;<br></td>
+    <td>Geeft je IRC Operator status wanneer userid en password goed zijn volgens een Oper block<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">wallops &lt;message&gt;</td>
+    <td>Zendt een bericht naar iedereen met gebruikersmodus +w<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">globops &lt;message&gt;</td>
+    <td>Zendt een bericht naar alle IRCOps<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">chatops &lt;message&gt;</td>
+    <td>Zendt een bericht naar alle IRCOps met gebruikersmodus +c<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">locops &lt;message&gt;</td>
+    <td>Zendt een bericht naar alle lokale IRCOps<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">adchat &lt;message&gt;</td>
+    <td>Zendt een bericht naar alle Admins<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">nachat &lt;message&gt;</td>
+    <td>Zendt een bericht naar alle Net Admins<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">kill &lt;nick&gt; &lt;reason&gt;</td>
+    <td>Killt een gebruiker op het netwerk<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">kline [+|-]&lt;user@host | nick&gt; [&lt;time to ban&gt; &lt;reason&gt;]</td>
+    <td>Bant de hostmask van de server waarop het wordt uitgevoerd. Een kline is geen globale ban<br>
+        <b>time to ban</b> is: a) een waarde in secondes, b) een tijdswaarde, zoals '1d' voor 1 dag of
+        c) 0 voor permanent. Tijd en reden zijn optioneel. Wanneer ze niet opgegeven worden, worden
+        set::default-bantime en 'no reason' gebruikt.<br>
+        Om een kline weg te halen, gebruik /kline -user@host<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">zline [+|-]&lt;*@ip&gt; [&lt;time to ban&gt; &lt;reason&gt;]</td>
+    <td>Bant een IP adres op de server waarop het wordt uitgevoerd. Dit is geen globale ban. Zie
+        kline voor de syntax. Gebruik /zline -*@IP om een zline te verwijderen<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">gline [+|-]&lt;user@host | nick&gt; [&lt;time to ban&gt; &lt;reason&gt;]<br></td>
+    <td>Voegt een globale ban toe voor iedereen die matcht. Zie kline voor de syntax. Gebruik /gline
+        -user@host om een gline te verwijderen<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">shun [+|-]&lt;user@host | nick&gt; [&lt;time to shun&gt; &lt;reason&gt;]<br></td>
+    <td>Belet een gebruik om commando's te gebruiken en om te spreken. Shuns zijn globaal (zoals glines).
+        Zie kline voor de syntax. Gebruik /shun -user@host om een shun weg te halen<br></td>
+      <br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">gzline [+|-]&lt;ip&gt; &lt;time to ban&gt; :&lt;reason&gt;<br></td>
+    <td>Voegt een globale zline toe. Zie kline voor de syntax. Gebruik /gzline
+        -*@IP om een gzline weg te halen<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">rehash &lt;server&gt; &#8211;&lt;flags&gt;</td>
+    <td>Herlaadt het configuratiebestand. Wanneer je een servernaam opgeeft,
+        herlaad je het bestand van de betreffende server. Je kan ook verschillende
+        flags opgeven.<br>
+        -motd - Herlaad alleen de MOTD en RULES bestanden<br>
+        -opermotd - Herlaad alleen de OPERMOTD<br>
+        -botmotd - Herlaad alleen de BOTMOTD<br>
+        -garbage - Forceer een garbage collection<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">restart &lt;password&gt; &lt;reason&gt;<br></td>
+    <td>Herstart het IRCd proces. Wachtwoord is benodigd wanneer drpass { }
+        gezet is. Je kan ook een reden opgeven<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">die &lt;password&gt;<br></td>
+    <td>Beeindigt het IRCd proces. Een wachtwoord is benodigd wanneer drpass { }
+        gezet is<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">lag &lt;server&gt; <br></td>
+    <td>Dit commando is zoals Sonar of Traceroute, maar dan voor IRC. Je typt
+        /LAG &lt;server&gt; en krijgt een overzicht van alle servers die je langs moet
+        plus de tijden. Handig wanneer je lag wil onderzoeken.<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">sethost &lt;newhost&gt;</td>
+    <td>Verandert je vhost naar wat je zelf wil<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">setident &lt;newident&gt;<br></td>
+    <td>Verandert je ident naar wat je zelf wil<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">chghost &lt;nick&gt; &lt;newhost&gt;<br></td>
+    <td>Verandert de hostnaam van een gebruiker die verbonden is<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">chgident &lt;nick&gt; &lt;newident&gt;<br></td>
+    <td>Verandert de ident van een gebruiker die verbonden is<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">chgname &lt;nick&gt; &lt;newname&gt;<br></td>
+    <td>Verandert de realname van een gebruiker die verbonden is<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">squit &lt;server&gt;<br></td>
+    <td>Verbreekt de verbinding van een server in het netwerk<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">connect &lt;server&gt; &lt;port&gt; &lt;server&gt;</td>
+    <td>Wanneer een server gegeven is, zal geprobeerd worden een verbinding te
+        maken met deze server. Wanneer twee servers gegeven zijn, zal er
+        geprobeerd worden een verbinding te maken tussen beide servers. Zet de
+        leaf op de eerste plaats, de hub op de tweede<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">dccdeny &lt;filemask&gt; &lt;reason&gt;<br></td>
+    <td>Voegt een DCCDENY toe zodat het bestand niet verzonden kan worden<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">undccdeny &lt;filemask&gt;<br></td>
+    <td>Verwijdert een DCCDENYY</td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">sajoin &lt;nick&gt; &lt;channel&gt;, &lt;channel&gt;<br></td>
+    <td>Dwingt een gebruiker ertoe een kanaal te joinen. Alleen beschikbaar voor 
+        Services en Network Admins<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">sapart &lt;nick&gt; &lt;channel&gt;, &lt;channel&gt;<br></td>
+    <td>Dwingt een gebruiker een kanaal te verlaten. Alleen beschikbaar voor
+        Services en Network Admins<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">samode &lt;channel&gt; &lt;mode&gt;<br></td>
+    <td>Network en Services Admins kunnen een modus in een kanaal veranderen
+        zonder kanaal operator te zijn<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">rping &lt;servermask&gt;<br></td>
+    <td>Berekent de lag in miliseconden tussen servers<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">trace &lt;servermask|nickname&gt;<br></td>
+    <td>Wanneer gebruikt op een gebruiker, kun je de class en lag zien.
+        Wanneer je het gebruikt op een server, krijg je de class/versie/link
+        informatie te zien<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">opermotd <br></td>
+    <td>Laat de OPERMOTD zien<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="39">addmotd :&lt;text&gt;<br></td>
+    <td>Voegt de gegeven tekst toe aan het einde van de MOTD<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="36">addomotd :&lt;text&gt;<br></td>
+    <td>Voegt de gegeven tekst toe aan het einde van de OPERMOTD<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="36">sdesc &lt;newdescription&gt;<br></td>
+    <td>Server Admins kunnen de beschrijving van hun server aanpassen zonder
+        de server te herstarten<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="36">addline &lt;text&gt;<br></td>
+    <td>Voegt regels aan unrealircd.conf toe<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="36">mkpasswd &lt;password&gt;<br></td>
+    <td>Zal een tekst wachtwoord encrypten welke toegevoegd kan worden aan unrealircd.conf<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="36">tsctl offset +/- &lt;time&gt;<br></td>
+    <td>Past de interne IRCd klok aan (NIET gebruiken wanneer je niet weet
+        wat het precies doet!)<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="36">tsctl time<br></td>
+    <td>Geeft je een TS rapport</td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="36">tsctl alltime</td>
+    <td>Geeft je een TS rapport van ALLE servers</td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="36">tsctl svstime &lt;timestamp&gt;<br></td>
+    <td>Zet de TS tijd op alle servers (NIET gebruiken wanneer je niet weet wat
+        dit doet)<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr> 
+    <td height="36">htm &lt;option&gt;<br></td>
+    <td>Instellingen met betrekking tot "high traffic mode" (HTM).  HTM zal sommige
+        commando's, zoals list, whois, who etc uitzetten wanneer er sprake is van
+        veel verkeer op de server. De Opties zijn: <br>
+        -ON Dwingt de server HTM aan te zetten<br>
+        -OFF Dwingt de server HTM uit te zetten<br>
+        -NOISY Server zendt een bericht wanneer HTM aan/uit gaat<br>
+        -QUIET Server zendt GEEN bericht wanneer HTM aan/uit gaat<br>
+        -TO &lt;value&gt; Zeg HTM wanneer hij geactiveerd moet worden<br></td>
+    <td>IRCop</td>
+  </tr>
+  <tr>
+    <td height="36">stats &lt;option&gt;<br></td>
+	<td>
+	B - banversion - Zend de banversion lijst<br>
+	b - badword - Zend de badword lijst<br>
+	C - link - Zend de link block lijst<br>
+	d - denylinkauto - Zend de deny link (auto) block lijst<br>
+	D - denylinkall - Zend de deny link (all) block lijst<br>
+	e - exceptthrottle - Zend De except throttle block lijst<br>
+	E - exceptban - Zend de except ban en except tkl block lijst<br>
+	f - spamfilter - Zend de spamfilter lijst<br>
+	F - denydcc - Zend de deny dcc block lijst<br>
+	G - gline - Zend de gline and gzline lijst<br>
+	&nbsp;&nbsp;Extended flags: [+/-mrs] [mask] [reason] [setby]<br>
+	&nbsp;&nbsp;&nbsp;&nbsp;m Geeft glines die matchen/niet matchen met de mask<br>
+	&nbsp;&nbsp;&nbsp;&nbsp;r Geeft glines met een reden die matcht/niet matcht met de gegeven reden<br>
+   	&nbsp;&nbsp;&nbsp;&nbsp;s Geeft glines (niet) gezet door gebruikers met de gegeven naam<br>
+	I - allow - Zend de allow block lijst<br>
+        j - officialchans - Zend de offical channels lijst<br>
+	K - kline - Zend de ban user/ban ip/except ban block lijst<br>
+	l - linkinfo - Zend link informatie<br>
+	L - linkinfoall - Zend alle link informatie<br>
+	M - command - Zend een lijst met hoe vaak elk commando gebruikt is<br>
+	n - banrealname - Zend de ban realname block lijst<br>
+	O - oper - Zend de oper block lijst<br>
+	P - port - Zend informatie over poorten<br>
+	q - sqline - Zend de SQLINE lijst<br>
+	Q - bannick - Zend de ban nick block lijst<br>
+	r - chanrestrict - Zend de channel deny/allow block lijst<br>
+	R - usage - Zend gebruiksinformatie<br>
+	S - set - Zend de set block lijst<br>
+	s - shun - Zend de shun lijst<br>
+  	&nbsp;&nbsp;Extended flags: [+/-mrs] [mask] [reason] [setby]<br>
+	&nbsp;&nbsp;&nbsp;&nbsp;m Geeft shuns die matchen/niet matchen met de maskk<br>
+	&nbsp;&nbsp;&nbsp;&nbsp;r Geeft shuns met een reden die matcht/niet matcht met de gegeven reden<br>
+	&nbsp;&nbsp;&nbsp;&nbsp;s Geeft shuns (niet) gezet door gebruikers met de gegeven naam<br>
+	t - tld - Zend de tld block lijst<br>
+	T - traffic - Zend traffic informatie<br>
+	u - uptime - Zend de server uptime en aantal verbindingen<br>
+	U - uline - Zend de ulines block lijst<br>
+	v - denyver - Zend de deny version block lijst<br>
+	V - vhost - Zend de vhost block lijst<br>
+	X - notlink - Zend de lijst van servers die op dit moment niet verbonden zijn<br>
+	Y - class - Zend de class block lijst<br>
+	z - zip - Zend compressie informatie over ziplinked servers (wanneer ziplink ondersteuning gecompiled is)<br>
+	Z - mem - Zend geheugen gebruik informatie<br>
+	</td>
+    <td>Iedereen</td>
+  </tr>
+  <tr>
+    <td height="36">module<br></td>
+    <td>
+	Geeft een lijst van alle geladen modules
+     </td>
+    <td>Iedereen</td>
+  </tr>
+  <tr>
+    <td height="36">close<br></td>
+    <td>Dit commando verbreekt alle onbekende verbindingen van de IRC server
+    </td>
+    <td>IRCOp</td>
+  </tr>
+</table>
+
+<p></p></div>
+
+<p><font size="+2"><b>8 &#8211; Veiligheids tips/checklist<a name="security"></a></b></font></p>
+<div class="desc">
+<p>Wanneer je bezorgd bent om veiligheid (wat je zou moeten zijn!) geeft deze sectie je een overzicht
+   van de risico's die er zijn. Je kunt dit ook als een "checklist" gebruiken om je netwerk veilig
+   te maken.</p>
+<p>De volgorde van de lijst is populariteit/risico niveau/meest-gebruikte-aanval</p>
+</div></p>
+
+<p><b><font size="+2">8.1 Wachtwoorden</font></b><a name="secpasswords"></a><br><div class="desc">
+-Kies goede oper, link etc wachtwoorden:<br>
+- Gebruik kleine en grote letters, en getallen ("whbv1wf5") en/of iets langs ("blaheeteenvis", "AlphaBeta666").<br>
+- Gebruik oper/link wachtwoorden niet voor iets anders, bijvoorbeeld je email account, bot wachtwoord, forums, etc...<br>
+</div></p>
+
+<p><b><font size="+2">8.2 Niet-IRCd gerelateerde lekken</font></b><a name="secnonircd"></a><br><div class="desc">
+Er is een veel grotere kans dat je systeem gehackt wordt door iets wat niet met IRC te maken heeft dan door een bug in
+UnrealIRCd. Als je bijvoorbeeld http, dns, smtp en ftp servers hebt lopen, loop je een veel grotere kans.
+Wanneer je een multi-user systeem (bijv. een shell) gebruikt, is er een risico dat lokale exploits en verkeerde rechten
+(zie het volgende punt) gebruikt worden. Het is een vrij groot risico, dus pas goed op bij het kiezen van een shell provider.
+</div></p>
+
+<p><b><font size="+2">8.3 Rechten en het configuratiebestand</font></b><a name="secpermissions"></a><br><div class="desc">
+Let erop dat je home en UnrealIRCd directory de juiste rechten hebben. (group/)anderen mogen geen lees-rechten hebben. Anders
+kan een lokale gebruiker je configuratiebestand zo uitlezen en op zoek gaan naar wachtwoorden. doe <i>chmod -R go-rwx
+/path/naar/Unreal3.2</i> wanneer je hier onzeker over bent.<br>
+Andere gerelateerde dingen: plaats UnrealIRCd nooit in je webroot map of een andere shared map. Met betrekking tot backups,
+let erop dat deze ook de juiste rechten hebben! Het gebeurt vaker dat alles veilig is, maar er ergens een backup.tar.gz
+slingert, leesbaar voor iedereen.<br>
+<br>
+Je doet er ook goed aan encrypted wachtwoorden te gebruiken, wanneer mogelijk. Waneer je met OpenSSL ondersteuning compiled
+(wat je doet, want je bent bezorgt om veiligheid, toch?) dan raad ik je aan om <i>sha1</i> of <i>ripemd160</i> wachtwoorden
+te gebruiken. Anders gebruik je <i>md5</i>. Wanneer je oper blocks van Unreal3.2.1 of eerder gebruikt, raad ik je aan om
+de wachtwoorden opnieuw te encrypten, omdat 3.2.1 een nieuw anti-crack beveiliging heeft (het vertraagt het kraken 14x).<br>
+Dit is niet "nog een extra beveiliging", want wanneer je slechte wachtwoorden gebruikt, kan alles nog vrij makkelijk gekraakt
+worden. Wanneer iemand je configuratiebestand te pakken krijgt, zal het de aanvaller vast helpen, bijvoorbeeld 
+link::password-connect.
+</div></p>
+
+<p><b><font size="+2">8.4 Gebruikers gerelateerde problemen</font></b><a name="secuser"></a><br><div class="desc">
+Net zoals de meeste dingen ligt dit niet niet aan UnrealIRCd, maar...<br>
+Wees wijs met het toevoegen van opers en admins, en onthoudt het concept van de zwakste link.
+Hoewel je alles goed hebt gedaan, en dit document hebt uitgevoerd, kan je vriend, die oper is,
+iets stoms doen. Zoals z'n harde schijf delen via netbios/kazaa/morpheus/..., ontvangt een trojan,
+gebruikt een makkelijk wachtwoord, etc etc.. Helaas heb jij het niet altijd voor het zeggen.<br>
+Let altijd op met het geven van rechten aan opers (oper::flags).
+</div></p>
+
+<p><b><font size="+2">8.5 SSL/SSH &amp; sniffing</font></b><a name="secsnif"></a><br><div class="desc">
+Gebruik een SSL connectie tussen servers en als een oper. Dit beschermt je tegen "sniffen".
+Sniffen is mogelijk wanneer iemand een gehacked systeem tussen jou en je IRCd server heeft. Hij kan
+dan ALLE traffic zien dat langskomt. Hij kan gesprekken bekijken, alle wachtwoorden lezen (oper, logins,
+nickserv, etc).. Gebruik daarom altijd ssh in plaats van telnet.
+</div></p>
+
+<p><b><font size="+2">8.6 Denial of Service attacks (DoS) [of: hoe bescherm ik mijn hub]</font></b><a name="secDoS"></a><br><div class="desc">
+Veel netwerken hebben ervaren hoe "leuk" een flood of (D)DoS aanval is. Je kan de gevolgen
+echter beperken. De meeste netwerken hebben een hub server. Wat veel mensen vergeten, is dat
+het vrij makkelijk is om een hub server te beschermen tegen aanvallen.<br>
+Ik zal het hier uitleggen:<br>
+1. Stel de naam van de hub in op een naam die niet bestaat, bijv "hub.yournet.com", maar<br>
+&nbsp;&nbsp;&nbsp; voeg geen dns record toe. Op deze manier kan de aanvaller de host niet resolven en<br>
+&nbsp;&nbsp;&nbsp; kan hij de hub ook niet flooden. Dan link je servers naar de hub door<br>
+&nbsp;&nbsp;&nbsp; het IP of een andere niet-publieke hostnaam<br>
+&nbsp;&nbsp;&nbsp; Voorbeeld 1: <i>link visibiblename.yournet.com { hostname 194.15.123.16; [etc] };</i>.<br>
+&nbsp;&nbsp;&nbsp; Voorbeeld 2: <i>link visibiblename.yournet.com { hostname thehostnamethatworks.yournet.com; [etc] };</i>.<br>
+&nbsp;&nbsp;&nbsp; Let op; bij het laatste voorbeeld moet je er zeker van zijn dat je nameservers geen zone transfers toestaan,
+                   maar dat is veel te off-topic voor deze documentatie.<br>
+2. Een andere belangrijke stap is het verbergen van 'stats C', en andere stats informatie, anders<br>
+&nbsp;&nbsp;&nbsp; kunnen aanvallers gewoon je link block zien. Wanneer je zo paranoide bent (zoals<br>
+&nbsp;&nbsp;&nbsp; Syzop ;)) kun je dat zo oplossen: set { oper-only-stats "*"; }; to restrict all /stats usage.<br>
+&nbsp;&nbsp;&nbsp; Als je dat niet wil doen, verberg dan tenminste "CdDlLXz". Meer hierover in de volgende sectie.<br>
+<br>
+Natuurlijk zijn deze stappen niet bepaald effectief na een aanval omdat de aanvallers<br>
+de IPs toch al weten... Maar het wel raadzaam om ze te volgen.<br>
+Aanvallers kunnen alle non-hub servers nog steeds flooden, maar dan moeten ze meer moeite<br>
+doen dan het aanvallen van 1 of 2 zwakke punten (hubs). Op deze manier blijven je hub en<br>
+Services wel nog online.<br>
+</div></p>
+
+<p><b><font size="+2">8.7 Extra informatie</font></b><a name="secinformation"></a><br><div class="desc">
+<b>STATS</b><br>
+Het /stats commando geeft veel informatie, het is aan te raden het gebruik ervan zoveel
+mogelijk te beschermen. Je moet jezelf de vraag stellen "Wat wil ik dat m'n gebruikers
+kunnen zien?". De meeste grote netwerken kiezen voor niets, daar waar anderen kiezen voor
+'/stats g' en '/stats k'.<br>
+Ik raad je aan om <i>set { open-only-stats "*"; };</i> te zetten zodat non-opers het /stats commando
+niet kunnen gebruiken. Wanneer je dit niet wil, kijk dan in de /stats lijst wat non-opers wel
+mogen zien. Als je twijfelt, stel dan in dat non-opers het niet mogen zien (wat moeten ze
+met de informatie?).<br>
+
+Om een aantal voorbeelden te geven:<br>
+- /stats o: geeft je de namen van opers en hostmasks.<br>
+- /stats c: geeft je een idee van serverlinks, en welke als 'backup' te gebruiken<br>
+- /stats g, /stats k: meestal gebruikt voor het bannen van proxies.. dit geeft aanvallers gewoon een lijst
+ van proxies die ze kunnen gebruiken.<br>
+- /stats E, /stats e: gevoelige informatie, zeker wanneer een aanvaller deze adressen kan gebruiken<br>
+- /stats i, /stats y: kan een aanvaller helpen voor het vinden van hosts<br>
+- /stats P: helpt hem om serveronly poorten te vinden<br>
+etc etc...<br>
+<br>
+<b>MAP / LINKS</b><br>
+Verschillende mensen hebben gevraagd of er een manier was om /map of /links onbruikbaar te maken.
+Wij denken dat het onzinnig is en een vals gevoel van veiligheid geeft. Hieronder de uitleg...
+Het verbergen van servers die gebruikt worden door mensen is dom, omdat ze de servers toch al weten!
+Voor servers die niet gezien morgen worden, zie sectie 8.6.<br>
+Wat kun je WEL doen? Sinds 3.2.1 is er een optie genaamd 'flat map' (set::options::flat-map). Dit zal
+de servers als 'direct gelinkt' laten zien in /map en /links. Gewone gebruikers kunnen dus niet meer
+zien welke server aan welke gelinkt is. Dit kan een extra niveau van veiligheid zijn, zodat een kiddie
+geen zwakke punten meer kan zien. Het gebruik hiervan wordt dan ook aangeraden. Let op dat dit niet
+alles verbergt. Wanneer er een netsplit plaatsvindt, kan men nog steeds zien welke server aan welke
+gelinkt was.<br>
+<br>
+<b>GEWONE GEBRUIKERS &amp; SNOMASKS</b><br>
+Een mogelijkheid die niet bekend is, is dat gewone gebruikers ook een aantal snomasks kunnen gebruiken,
+namelijk +s +sk. Op deze manier zien ze rehashes, killes en verschillende andere berichten.<br>
+Om het gebruik te stoppen, moet je set::restrict-usermodes gebruiken, <i>set { restrict-usermodes "s"; };</i>.<br>
+<br><br>
+Het verbergen van deze informatie is geen "echte" beveiliging.
+Het maakt het echter wel moeilijker om aanvallen te plegen op je servers.<br>
+</div></p>
+
+<p><b><font size="+2">8.8 Bescherming tegen exploits</font></b><a name="secantiexploit"></a><br><div class="desc">
+Er zijn kernel patches die het moeilijker maken om stack- en heap-based exploits te laten
+werken. Dit is aardig, maar moet niet je hoofdpunt zijn, er zijn veel grotere risicos..<br>
+<br>
+Een ding dat je altijd moet doen, is DE LAATSTE NIEUWE VERSIE GEBRUIKEN.
+Je kan je aanmelden op de <a href="http://mail1.sourceforge.net/mailman/listinfo/unreal-notify" target="_blank">unreal-notify mailinglist</a>.
+Op deze manier blijf je op de hoogte van nieuwe versies. Je ontvangt eens in de x maanden een e-mail.
+In deze e-mail wordt ook vermeld of updaten ten zeerste wordt aangeraden in verband met veiligheid.
+</div></p>
+
+<p><b><font size="+2">8.9 Samenvatting</font></b><a name="secsummary"></a><br><div class="desc">
+Zoals je nu hopelijk begrijpt, kun je nooit 100% beveiligd zijn. Jij (en wij) moeten elk gat
+vinden en oplossen, terwijl een aanvaller slechts 1 server met 1 gat hoeft te vinden.
+Alles wat hier uitgelegd is, HELPT wel enorm bij het verkleinen van risico's
+Neem dus je tijd voor het beveiligen van je netwerk, en leer het je opers ook. Veel mensen geven niet
+om veiligheid, totdat ze een keer gehackt worden. Probeer dit te vermijden.
+</div></p>
+
+
+<p><font size="+2"><b>9 &#8211; Veel gestelde vragen (FAQ)<a name="faq"></a></b></font></p>
+<div class="desc"><p>De FAQ staat <a href="http://www.vulnscan.org/UnrealIRCd/faq/" TARGET="_blank">hier</a> online
+(nog niet vertaald naar het Nederlands!).</p></div>
+<p></p>
+
+<p><font size="+2"><b>A Regular Expressions<a name="regex"></a></b></font></p>
+<div class="desc"><p>
+Reguliere expressions worden op veel plaatsen gebruikt in Unreal (badwords, spamfilter, aliases). Reguliere expressies zijn een zeer
+complex instrument voor het vinden van patronen. Ze worden ook wel "regexp" of "regex." genoemd. Unreal gebruikt de TRE regexp library
+voor haar regex. Deze library ondersteunt enkele zeer complexe en geavanceerde expressies die wellicht verwarrend zijn. Hieronder staat
+informatie over het gebruik van regexps. Wanneer je geinteresseerd bent in meer technische details over de regex syntax in Unreal, ga dan
+naar de <a href="http://www.laurikari.net/tre/syntax.html" target="_new">TRE homepage</a>.
+</p></div>
+
+<p><font size="+2"><b>A.1 Letters<a name="regexlit"></a></b></font></p>
+<div class="desc"><p>
+Literals zijn de basis componenten van een regexp. Het zijn letters die behandeld worden als gewone tekst. Het patroon "test" bestaat
+uit vier letters, "t", "e", "s" en "t". In Unreal worden letters niet behandeld als hoofdlettergevoelig, dus "test" zou net zo goed
+"TEST" kunnen zijn. Elk teken dat geen "meta teken" (wordt verderop uitgelegd) is, wordt behandeld als een letter. Je kan een teken
+ook expliciet een letter maken, door een backslash (\) te gebruiken. Bijvoorbeeld, de punt (.) is een metateken. Wanneer je de letter
+. wil gebruiken, moet je \. gebruiken. Unreal zal dit dan zien als een echte punt. Het is ook mogelijk dat je een teken wil gebruiken
+dat niet makkelijk te typen is, bijvoorbeeld ASCII teken 3 (kleur). In plaats van het gebruiken van een IRC client om dit teken te maken,
+kun je ook een speciale tekenvolgorde gebruiken, de \x. Wanneer je \x3 typt, zal dit worden opgevat als ASCII teken 3. Het nummer achter
+\3 is een hexidecimaal getal tussen \x0 en \xFF.</p></div>
+
+
+<p><font size="+2"><b>A.2 Dot Operator<a name="regexdot"></a></b></font></p>
+<div class="desc"><p>
+De punt (.) operator wordt gebruikt om "welk teken dan ook" aan te geven. Het geeft 1 teken aan. Bijvoorbeeld, als je "a.c" gebruikt,
+zal dit "abc", "adc" enz zijn. Het zal echter niet voor "adb" staan, omdat de "a" en "c" erin moeten zitten.</p></div>
+
+
+<p><font size="+2"><b>A.3 Repetition Operators<a name="regexrep"></a></b></font></p>
+<div class="desc"><p>
+Een veel voorkomende fout die gemaakt wordt met regex, is dat mensen aannemen dat ze met wildcards werken.
+Dat houdt in, de * en ? tekens stellen een wildcard voor. Hoewel deze tekens dezelfde functie hebben in een regex,
+zijn ze niet precies hetzelfde. Daarbijkomend, regex ondersteunt veel ingewikkeldere methoden van herhaling.
+<p>
+De basis van een herhalings-operator is de ? operator. Deze operator matcht 0 of 1 van de vorige tekens. Dit
+,"van de vorige tekens", is waar de ? in regex verschilt met een wildcard. In een wildcard, "a?c" zou "a" gevolgd
+door elk teken (of geen teken) matchen, gevolgd door een "c". In regex heeft het een andere betekenis. Het matcht 0
+of 1 letter "a", gevolgd door de letter "c". Het komt erop neer dat de ? de a aanpast, zodanig dat het instelt hoeveel
+a's gebruikt mogen worden. Om een ? na te bootsen in een wildcard, wordt de . operator gebruikt. De regex "a.?c" is
+hetzelfde als de eerder genoemde wildcard. Het matcht de letter "a", gevolgd door 0 of 1 willekeurige letter (de ? heeft
+de . aangepast), gevolgd door een "c".
+<p>
+De volgende herhalende operator is de *. Eveneens, deze operator is gelijk aan een wildcard. Het matcht 0 of meer van de vorige
+tekens. Let op dat "van de vorige tekens" iets is dat kenmerkend is voor herhalende operators.
+De regex "a*c" matcht 9 of meer a's, gevolgd door een "c". "aaaaac" zal dus matchen. Eveneens werkt dit als een wildcard, je moet
+dus "a.*c" gebruiken. Dit zal de . laten veranderen door de *.
+
+<p>
+De + operator lijkt heel veel op de *. Maar in plaats van 0 of meer, matcht deze 1 of meer.
+"a*c" matcht "c" (0 a's gevolgd door een c), waar "a+c" niet zou matchen.
+De "a+" geeft aan dat er minstens 1 a moet zijn. Dus "c" matcht niet, maar "ac" en "aaaaaaaac" wel.
+<p>
+De meest ingewikkelde herharlings operator is de "boundary" (grens). Een boundary geeft je de mogelijkheid
+om precies aan te geven hoeveel van het vorige teken er moeten zijn. Bijvoorbeeld anneer je precies 8 a's wil hebben, of
+minstens 8 a's, of tussen de 3 en 5 a's. Een boundary laat je dit alles instellen.
+De basis syntax is {M,N}, waar M de linkergrens en N de rechtergrens zijn. Een match tussen 3 en 5 a's zou dus zijn
+"a{3,5}". Je hoeft niet beide waardes op te geven. Wanneer je "a{8}" opgeeft, moeten er precies 8 a's zijn.
+Daarom is "a{8}" gelijk aan "aaaaaaaa". Wanneer je enkel het minimale aantal wil opgeven, kun je "a{8,}" gebruiken.
+Er moeten dan minimaal 8 a's aanwezig zijn.
+
+<p>
+Standaard zijn alle herhalingsoperatoren "greedy" (gretig). Dit is een beetje een ingewikkeld idee.
+Het komt erop neer dat een operator zoveel mogelijk tekens zal matchen als mogelijk.
+Dit kan het beste uitgelegd worden aan de hand van een voorbeeld.
+<p>Stel, we hebben de volgende tekst:<br>
+
+HELLO<br>
+En de volgende regex:<br>
+.+L<p>
+
+Je zou misschien denken dat .+ matcht met "HE.". Maar, dit is fout. Omdat de + greedy is, matcht het "HEL.". De achterliggende
+reden is dat het de grootste deel van de ingevoerde tekst die gematched kan worden pakt, terwijl de hele regex nog geldt. In dit
+voorbeeld koos het voor "HEL" omdat de enige andere vereiste achter een bepaalde tekst gematched door .+ een "L" moest zijn.
+Omdat de tekst "HELLO" is, wordt "HEL" gevolgd door een "L", en daarom matcht het. Soms is het handig om een operator niet-greedy
+te maken. Dit doe je door een ? te plaatsen achter de herhalingsoperator. ".+?L" matcht nu "HE" in plaats van "HEL" omdat het op
+niet-greedy gezet is. De ? kan achter elke herhalingsoperator geplaatst worden: ??, *?, +?, {M,N}?.</p></div>
+
+<p><font size="+2"><b>A.4 Bracket Expressions<a name="regexbracket"></a></b></font></p>
+<div class="desc">
+Haken-expressies zijn een handige manier om een "of" operator te maken. Bijvoorbeeld anneer je 
+"matcht een a of een b" wil maken. De naam komt omdat het tussen haken staat ([]). De basis syntax is
+dat er in de expressie een serie tekens staan. Deze tekens worden dan behandeld alsof er een "of" tussenstaat.
+Als voorbeeld; "[abc]" matcht een "a", "b" of "c". Om deze reden matcht de regexp "a[bd]c" wel "abc" en "adc",
+maar niet "acc".
+
+<p>
+Een veel voorkomend geval is het controleren op een letter of een getal. In plaats van "[0123456789]" kun je
+ook ranges gebruiken. Ranges werken met een begin- en eindpunt, met een - ertussen. Een makkelijkere manier
+om te controleren op een getal is dan ook "[0-9]". Je kan hetzelfde doen met letters, zelfs met elke ASCII waarde.
+Wanneer je elke letter wil matchen, gebruik je "[a-z]". Je kan ook meerdere ranges gebruiken in dezelfde expressie.
+Om bijvoorbeeld een getal of letter te matchen, gebruik je "[0-9a-z]". Een probleem dat dit kan veroorzaken is
+dat de - een speciaal teken is. Om zo'n streepje te matchen, plaats je deze gewoon als eerste of laatste teken
+van een expressie. Bijvoorbeeld "[0-9-]" zal een getal of een streepje matchen.
+<p>
+Om het nog makkelijker te maken zijn er verschillende "character classes", die gebruikt mogen worden in bracket expressies.
+
+
+These character classes eliminate the need to define certain ranges. Character classes are written by enclosing their name in :'s. 
+For Voorbeeld, "[0-9]" could also be written as "[:isdigit:]". The list below shows all of the available character classes and what they do:
+<ul>
+<li><tt>alnum</tt> - alphanumerieke tekens</li>
+<li><tt>alpha</tt> - alphabetische tekens</li>
+<li><tt>blank</tt> - lege tekens</li>
+<li><tt>cntrl</tt> - control tekens</li>
+<li><tt>digit</tt> - decimale getallen (0 tot 9)</li>
+<li><tt>graph</tt> - alle afbeeldbare tekens, zonder spatie</li>
+<li><tt>lower</tt> - kleine letters</li>
+<li><tt>print</tt> - alle afbeeldbare tekens, met spatie</li>
+<li><tt>punct</tt> - alle afbeeldbare tekens, zonder spatie of alphanumeriek</li>
+<li><tt>space</tt> - witruimte tekens</li>
+<li><tt>upper</tt> - hoofdletters</li>
+<li><tt>xdigit</tt> - hexadecimale nummers</li>
+</ul>
+Een belangrijke opmerking over teken classes is dat ze het enige element in een expressie MOETEN zijn
+[:isgetal:-] is NIET toegestaan. Je moet dit doen door de expressies in te nestelen. Om "[0-9-]" te
+bereiken, kun je "[[:isgetal:]-]" gebruiken.
+
+<p>
+De laatste mogelijkheid van een bracket expressie is de ontkenning. Soms handig om te zeggen "alles behalve deze tekens".
+Wanneer je bijvoorbeeld wil controleren of een teken "geen letter is", is het makkelijker om a-z te controleren en te
+zeggen "deze niet". Om een ontkenning te maken gebruik je een "^" als eerste teken. Bijvoorbeeld "[^a-z]" matcht elke
+niet-letter. Net als met een streepje, moet je dit teken niet op de eerste plaats zetten, maar achteraan wanneer je 
+letterlijk een ^ wil matchen ("[a-z^]". Tevens, om een character less te ontkennen, moet je ook deze weer nestelen.
+"[^[:isdigit:]]" zou elk niet-getal matchen.</p></div>
+
+
+<p><font size="+2"><b>A.5 Assertions<a name="regexassert"></a></b></font></p>
+<div class="desc">
+Assertions geven je de mogelijkheid om bepaalde voorwaardes die niet uit te drukken zijn in teken strings,
+en bieden shortcuts voor enkele veel gebruikte bracket expressies.
+<p>
+Het ^-teken wordt gezien als het "linker anker" (left anchor). Dit teken slaat terug op het begin van een string.
+Wanneer je een regexp als "test" geeft, matcht het bijvoorbeeld "dit is een test", omdat er "test" in de string zit.
+Soms is het bruikbaar om aan te geven dat een string met een patroon begint.
+Dit kan gedaan worden door ^. "^test" betekent bijvoorbeeld dat de tekst moet beginnen met "test".
+Bijkomend, het $-teken is het "rechter anker". Dit teken slaat terug op het einde van een string.
+Dus wanneer je "^test$" gebruikt, moet de string exact gelijk zijn aan "test".
+<p>
+Overeenkomstige testen bestaan ook voor woorden. Alle andere assertions worden aangegeven door een \ gevolgd door een
+bepaald teken. Bijvoorbeeld, om het begin en einde van een woord te controleren, kun je \< en \> gebruiken.
+<p>
+The remaining assertions all come with two forms, a positive and a negative. These assertions are listed below:
+<ul>
+<li><tt>\b</tt> - Woord grens
+<li><tt>\B</tt> - Niet-woord grens
+<li><tt>\d</tt> - Getal teken (gelijk aan <tt>[[:digit:]]</tt>)</li>
+<li><tt>\D</tt> - Niet-getal teken (gelijk aan <tt>[^[:digit:]]</tt>)</li>
+<li><tt>\s</tt> - Spatie teken (gelijk aan <tt>[[:space:]]</tt>)</li>
+<li><tt>\S</tt> - Niet-spatie teken (gelijk aan <tt>[^[:space:]]</tt>)</li>
+<li><tt>\w</tt> - Woord teken (gelijk aan <tt>[[:alnum:]_]</tt>)</li>
+<li><tt>\W</tt> - Niet-woord teken (gelijk aan <tt>[^[:alnum:]_]</tt>)</li>
+</ul>
+</div>
+<p><font size="+2"><b>A.6 Alternation<a name="regexalt"></a></b></font></p>
+<div class="desc">
+Alternatie is een methode om "of" te zeggen. De alternatie operator is een verticale streep (|). Wanneer je bijvoorbeeld
+"a of b" wil zeggen, kun je "a|b" gebruiken. Voor normale letters kan dit vervangen worden door bracket expressies, maar
+alternatie kan ook gebruikt worden in subexpressies (zie volgende sectie).
+</div>
+
+<p><font size="+2"><b>A.7 Subexpressions<a name="regexsub"></a></b></font></p>
+<div class="desc">
+
+Subexpressies zijn onderdeel van een regex die behandeld wordt als een aparte gedaante. Er zijn twee manieren
+om een subexpressie te maken. De twee methodes verschillen in "back references", wat later uitgelegd wordt.
+Om een subexpressie die een back reference aangeeft aan te geven, sluit je het in met (). Om een subexpressie
+die geen back reference gebruikt, vervang je de open haken door "(?:". Zoals "([a-z])" en "(?:[a-z])".
+De reden waarom subexpressies handig zijn is dat je operators kan toevoegen aan een expressie. Alle herhalingsoperators,
+bijvoorbeeld, die aangaven "X of meer van de vorige tekens" kunnen ook gebruikt worden om "X of meer van de vorige
+subexpressie" aan te geven. Als je bijvoorbeeld de regex "[0-9][a-z][0-9]" hebt om een getal, gevolgd door een letter,
+gevolgd door een getal aan te geven en dan besluit om deze regex twee keer te laten matchen. Normaal zou je
+"[0-9][a-z][0-9][0-9][a-z][0-9]" gebruiken. Maar met behulp van subexpressies kun je simpelweg ([0-9][a-z][0-9]){2}"
+gebruiken.</div>
+
+
+<p><font size="+2"><b>A.8 Back References<a name="regexbackref"></a></b></font></p>
+<div class="desc">
+
+Back references geven je de mogelijkheid om terug te grijpen op een string die gematched was door een van
+de subexpressies van een regex. Je gebruikt een back reference door een backslash (\) gevolgd door een
+nummer, 0-9, te gebruiken. Bijvoorbeeld \1. \0 is een speciale reference die terugslaat op de hele regex,
+in plaats van een subexpressie. Back references zijn handig wanneer je iets dezelfde string twee keer wil
+matchen. Je hebt bijvoorbeeld een nick!user@host. Je weet dat er een trojan is die de nick en username gebruikt
+die "[0-9][a-z]{5}" matcht, en zowel de nickname als de username zijn hetzelfde. Het gebruik van
+"[0-9][a-z]{5}![0-9][a-z]{5}@.+" zal niet werken, omdat het toestaat dat verschillende nicknames en usernames
+mogelijk zijn. De nick zou bijvoorbeeld 1abcde kunnen zijn, en de username 2fghij. Met behulp van back references
+kun je dit omzeilen. Het gebruik van "([0-9][a-z]{5})!\1@.+" werkt precies zoals verwachten.
+Dit zoekt naar de nickname die overeenkomt met de gegeven subexpressie, en gebruikt dan een back reference die zegt
+dat de username precies hetzelfde moet zijn als de nickname.
+
+<p>
+Omdat je maar 9 back references, is de (?:) notatie handig.
+Je kan een subexpressie maken, zonder een back reference te verspillen. Bijkomend,
+omdat back reference informatie niet opgeslagen hoeft te worden, is het ook sneller.
+Om deze redenen zouden niet-back reference expressies gebruikt moet worden wanneer back references
+niet nodig zijn.</div>
+
+<p><font size="+2"><b>A.9 Case Sensitivity<a name="regexcase"></a></b></font></p>
+<div class="desc">
+Zoals al eerder aangegeven was, maakt Unreal alle regexps niet hoofdlettergevoelig.
+De hoofdreden voor dit gedrag is dat er meer redenen zijn dat je niet hoofdlettergevoelig gebruikt
+in plaats van wel. Bijvoorbeeld, wanneer je de tekst "www.test.com" wil blokkeren, wil je "WWW.TEST.COM"
+ook blokkeren. Er zijn ook gevallen waar je juist wel hoofdlettergevoeligheid wil toepassen, bijvoorbeeld
+voor het vinden van bepaalde trojans.
+Om deze reden is er een manier om hoofdlettergevoeligheid dynamisch aan en uit te zetten.
+Om het uit te zetten, gebruik je "(?-i)", en om het aan te zetten "(?i"). Bijvoorbeeld,
+"(?-i)[a-z](?i)[a-z]" zal een kleine letter matchen (hoofdlettergevoeligheid staat uit), gevolgd door of
+een hoofdletter of een kleine letter (hoofdlettergevoeligheid staat aan).
+In plaats van het steeds onthouden om de hoofdlettergevoeligheid weer aan te zetten wanneer je klaar bent,
+kun je ook aangeven dat de gevoeligheid alleen in subexpressies gebruikt moet worden. "(?-i:[a-z])[a-z]"
+is bijvoorbeeld gelijk aan de vorige regexp, omdat de -i alleen van toepassing is op de gegeven
+subexpressie.</div>
+</body>
+</html>

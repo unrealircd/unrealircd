@@ -21,14 +21,13 @@
 
 CC = danger will robinson
 
-OBJS=auth.o aln.o badwords.o channel.o cloak.o crule.o dbuf.o \
+OBJS=timesynch.o res.o s_bsd.o auth.o aln.o channel.o cloak.o crule.o dbuf.o \
 	events.o fdlist.o hash.o help.o ircd.o ircsprintf.o list.o lusers.o \
-	match.o modules.o packet.o parse.o res.o \
-	res_init.o res_comp.o res_mkquery.o res_skipname.o s_auth.o \
-	s_bsd.o s_conf.o s_debug.o s_err.o s_extra.o s_kline.o \
+	match.o modules.o packet.o parse.o s_auth.o \
+	s_conf.o s_debug.o s_err.o s_extra.o s_kline.o \
 	s_misc.o s_numeric.o s_serv.o s_svs.o $(STRTOUL) socket.o \
 	ssl.o s_user.o charsys.o scache.o send.o support.o umodes.o \
-	version.o webtv.o whowas.o zip.o cidr.o random.o extcmodes.o \
+	version.o whowas.o zip.o cidr.o random.o extcmodes.o \
 	extbans.o md5.o api-isupport.o api-command.o $(URL)
 
 SRC=$(OBJS:%.o=%.c)
@@ -50,7 +49,7 @@ INCLUDES = ../include/auth.h ../include/badwords.h ../include/channel.h \
 	../include/hash.h ../include/inet.h ../include/ircsprintf.h \
 	../include/license.h ../include/macros.h ../include/md5.h \
 	../include/modules.h ../include/modversion.h ../include/msg.h ../include/nameser.h \
-	../include/numeric.h ../include/proto.h ../include/res.h ../include/resolv.h \
+	../include/numeric.h ../include/proto.h \
 	../include/resource.h ../include/setup.h ../include/sjoin.h \
 	../include/sock.h ../include/ssl.h ../include/struct.h ../include/sys.h \
 	../include/threads.h ../include/types.h ../include/url.h \
@@ -106,9 +105,6 @@ dbuf.o: dbuf.c $(INCLUDES)
 packet.o: packet.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c packet.c
 
-badwords.o: badwords.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c badwords.c
-
 aln.o: aln.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c aln.c
 
@@ -120,9 +116,6 @@ zip.o: zip.c $(INCLUDES)
 
 send.o: send.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c send.c
-
-webtv.o: webtv.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c webtv.c
 
 ssl.o: ssl.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c ssl.c
@@ -181,8 +174,11 @@ list.o: list.c $(INCLUDES)
 lusers.o: lusers.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c lusers.c
 
-res.o: res.c $(INCLUDES)
+res.o: res.c $(INCLUDES) ../include/res.h
 	$(CC) $(CFLAGS) -c res.c
+
+timesynch.o: timesynch.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c timesynch.c
 
 cloak.o: cloak.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c cloak.c
@@ -190,7 +186,7 @@ cloak.o: cloak.c $(INCLUDES)
 fdlist.o: fdlist.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c fdlist.c
 
-s_bsd.o: s_bsd.c $(INCLUDES)
+s_bsd.o: s_bsd.c $(INCLUDES) ../include/res.h
 	$(CC) $(CFLAGS) -c s_bsd.c
 
 s_auth.o: s_auth.c $(INCLUDES)

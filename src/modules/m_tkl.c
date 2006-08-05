@@ -1,7 +1,7 @@
 /*
  *   Unreal Internet Relay Chat Daemon, src/modules/m_tkl.c
  *   TKL Commands and TKL Layer
- *   (C) 1999-2005 The UnrealIRCd Team
+ *   (C) 1999-2006 The UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers.
@@ -35,8 +35,11 @@
 #include <string.h>
 #ifdef _WIN32
 #include <io.h>
+#else
+#include <sys/socket.h>
 #endif
 #include <fcntl.h>
+#include "inet.h"
 #include "h.h"
 #include "proto.h"
 #ifdef STRIPBADWORDS
@@ -65,14 +68,16 @@ aTKline *_tkl_expire(aTKline * tmp);
 EVENT(_tkl_check_expire);
 int _find_tkline_match(aClient *cptr, int xx);
 int _find_shun(aClient *cptr);
-int _find_spamfilter_user(aClient *sptr);
+int _find_spamfilter_user(aClient *sptr, int flags);
 aTKline *_find_qline(aClient *cptr, char *nick, int *ishold);
 int _find_tkline_match_zap(aClient *cptr);
+int _find_tkline_match_zap_ex(aClient *cptr, aTKline **rettk);
 void _tkl_stats(aClient *cptr, int type, char *para);
 void _tkl_synch(aClient *sptr);
 int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 int _place_host_ban(aClient *sptr, int action, char *reason, long duration);
-int _dospamfilter(aClient *sptr, char *str_in, int type, char *target);
+int _dospamfilter(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
+int _dospamfilter_viruschan(aClient *sptr, aTKline *tk, int type);
 
 extern MODVAR char zlinebuf[BUFSIZE];
 extern MODVAR aTKline *tklines[TKLISTLEN];
@@ -119,11 +124,13 @@ DLLFUNC int MOD_TEST(m_tkl)(ModuleInfo *modinfo)
 	EfunctionAdd(modinfo->handle, EFUNC_FIND_SPAMFILTER_USER, _find_spamfilter_user);
 	EfunctionAddPVoid(modinfo->handle, EFUNC_FIND_QLINE, TO_PVOIDFUNC(_find_qline));
 	EfunctionAdd(modinfo->handle, EFUNC_FIND_TKLINE_MATCH_ZAP, _find_tkline_match_zap);
+	EfunctionAdd(modinfo->handle, EFUNC_FIND_TKLINE_MATCH_ZAP_EX, _find_tkline_match_zap_ex);
 	EfunctionAddVoid(modinfo->handle, EFUNC_TKL_STATS, _tkl_stats);
 	EfunctionAddVoid(modinfo->handle, EFUNC_TKL_SYNCH, _tkl_synch);
 	EfunctionAdd(modinfo->handle, EFUNC_M_TKL, _m_tkl);
 	EfunctionAdd(modinfo->handle, EFUNC_PLACE_HOST_BAN, _place_host_ban);
 	EfunctionAdd(modinfo->handle, EFUNC_DOSPAMFILTER, _dospamfilter);
+	EfunctionAdd(modinfo->handle, EFUNC_DOSPAMFILTER_VIRUSCHAN, _dospamfilter_viruschan);
 	return MOD_SUCCESS;
 }
 
@@ -458,7 +465,7 @@ DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type) {
 	TS   secs;
 	int  whattodo = 0;	/* 0 = add  1 = del */
-	int  i;
+	TS  i;
 	aClient *acptr = NULL;
 	char *mask = NULL;
 	char mo[1024], mo2[1024];
@@ -497,8 +504,14 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 
 	if (strchr(mask, '!'))
 	{
-		sendto_one(sptr, ":%s NOTICE %s :[error] Cannot have ! in masks.", me.name,
+		sendto_one(sptr, ":%s NOTICE %s :[error] Cannot have '!' in masks.", me.name,
 		    sptr->name);
+		return 0;
+	}
+	if (*mask == ':')
+	{
+		sendto_one(sptr, ":%s NOTICE %s :[error] Mask cannot start with a ':'.", me.name,
+			sptr->name);
 		return 0;
 	}
 	if (strchr(mask, ' '))
@@ -521,18 +534,31 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 			hostmask = usermask;
 			usermask = "*";
 		}
-		
+		if (*hostmask == ':')
+		{
+			sendnotice(sptr, "[error] For (weird) technical reasons you cannot start the host with a ':', sorry");
+			return 0;
+		}
 		if (((*type == 'z') || (*type == 'Z')) && !whattodo)
 		{
 			/* It's a (G)ZLINE, make sure the user isn't specyfing a HOST.
-			 * Just a warning for now, but perhaps in 3.2.4 we should make this an error.
+			 * Just a warning in 3.2.3, but an error in 3.2.4.
 			 */
+			if (strcmp(usermask, "*"))
+			{
+				sendnotice(sptr, "ERROR: (g)zlines must be placed at \037*\037@ipmask, not \037user\037@ipmask. This is "
+				                 "because (g)zlines are processed BEFORE dns and ident lookups are done. "
+				                 "If you want to use usermasks, use a KLINE/GLINE instead.");
+				return -1;
+			}
 			for (p=hostmask; *p; p++)
 				if (isalpha(*p))
 				{
-					sendnotice(sptr, "WARNING: (g)zlines should be placed on user@IPMASK, not user@hostmask "
-					                 "(this is because (g)zlines are processed BEFORE a dns lookup is done)");
-					break;
+					sendnotice(sptr, "ERROR: (g)zlines must be placed at *@\037IPMASK\037, not *@\037HOSTMASK\037 "
+					                 "(so for example *@192.168.* is ok, but *@*.aol.com is not). "
+					                 "This is because (g)zlines are processed BEFORE dns and ident lookups are done. "
+					                 "If you want to use hostmasks instead of ipmasks, use a KLINE/GLINE instead.");
+					return -1;
 				}
 		}
 		/* set 'p' right for later... */
@@ -568,33 +594,44 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 	if (!whattodo)
 	{
 		char c;
-		p++;
-		i = 0;
-		while (*p)
+		
+		if (!strchr(usermask, '*') && !strchr(usermask, '?'))
 		{
-			if (*p != '*' && *p != '.' && *p != '?')
-				i++;
+			/* Allow things like clone@*, dsfsf@*, etc.. */
+		} else {
+			/* Check hostmask. */
+			
+			/* STEP 1: Must at least contain 4 non-wildcard/non-dot characters */
 			p++;
-		}
-		if (i < 4)
-		{
-			sendto_one(sptr,
-			    ":%s NOTICE %s :*** [error] Too broad mask",
-			    me.name, sptr->name);
-			return 0;
-		}
-		c = tolower(*type);
-		if (c == 'k' || c == 'z' || *type == 'G' || *type == 's')
-		{
-			struct irc_netmask tmp;
-			if ((tmp.type = parse_netmask(hostmask, &tmp)) != HM_HOST)
+			i = 0;
+			while (*p)
 			{
-				if (tmp.bits < 16)
+				if (*p != '*' && *p != '.' && *p != '?')
+					i++;
+				p++;
+			}
+			if (i < 4)
+			{
+				sendto_one(sptr,
+				    ":%s NOTICE %s :*** [error] Too broad mask",
+				    me.name, sptr->name);
+				return 0;
+			}
+
+			/* STEP 2: Check CIDR.. allow x.x/16, but not /15, /14, etc... */
+			c = tolower(*type);
+			if (c == 'k' || c == 'z' || *type == 'G' || *type == 's')
+			{
+				struct irc_netmask tmp;
+				if ((tmp.type = parse_netmask(hostmask, &tmp)) != HM_HOST)
 				{
-					sendto_one(sptr,
-					    ":%s NOTICE %s :*** [error] Too broad mask",
-					    me.name, sptr->name);
-					return 0;
+					if (tmp.bits < 16)
+					{
+						sendto_one(sptr,
+						    ":%s NOTICE %s :*** [error] Too broad mask",
+						    me.name, sptr->name);
+						return 0;
+					}
 				}
 			}
 		}
@@ -642,7 +679,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 		}
 		/* Blerghhh... */
 		i = atol(mo);
-		t = gmtime((TS *)&i);
+		t = gmtime(&i);
 		if (!t)
 		{
 			sendto_one(sptr,
@@ -690,7 +727,8 @@ char *tkllayer[11] = {
 };
 int targets = 0, action = 0;
 char targetbuf[64], actionbuf[2];
-char reason[512]; 
+char reason[512];
+int n;
 
 	if (IsServer(sptr))
 		return 0;
@@ -742,7 +780,7 @@ char reason[512];
 	}
 	actionbuf[0] = banact_valtochar(action);
 	actionbuf[1] = '\0';
-	
+
 	/* now check the regex... */
 	p = unreal_checkregex(parv[6],0,1);
 	if (p)
@@ -772,6 +810,22 @@ char reason[512];
 
 	tkllayer[9] = reason;
 	tkllayer[10] = parv[6];
+
+	/* SPAMFILTER LENGTH CHECK.
+	 * We try to limit it here so '/stats f' output shows ok, output of that is:
+	 * :servername 229 destname F <target> <action> <num> <num> <num> <reason> <setby> :<regex>
+	 * : ^NICKLEN       ^ NICKLEN                                       ^check   ^check   ^check
+	 * And for the other fields (and spacing/etc) we count on max 40 characters.
+	 * We also do >500 instead of >510, since that looks cleaner ;).. so actually we count
+	 * on 50 characters for the rest... -- Syzop
+	 */
+	n = strlen(reason) + strlen(parv[6]) + strlen(tkllayer[5]) + (NICKLEN * 2) + 40;
+	if ((n > 500) && (whattodo == 0))
+	{
+		sendnotice(sptr, "Sorry, spamfilter too long. You'll either have to trim down the "
+		                 "reason or the regex (exceeded by %d bytes)", n - 500);
+		return 0;
+	}
 	
 	if (whattodo == 0)
 	{
@@ -858,6 +912,21 @@ aTKline *_tkl_add_line(int type, char *usermask, char *hostmask, char *reason, c
 {
 	aTKline *nl;
 	int index;
+
+	/* Pre-allocate etc check for spamfilters that fail to compile.
+	 * This could happen if for example TRE supports a feature on server X, but not
+	 * on server Y!
+	 */
+	if (type & TKL_SPAMF)
+	{
+		char *myerr = unreal_checkregex(reason, 0, 0);
+		if (myerr)
+		{
+			sendto_realops("[TKL ERROR] ERROR: Spamfilter was added but did not compile. ERROR='%s', Spamfilter='%s'",
+				myerr, reason);
+			return NULL;
+		}
+	}
 
 	nl = (aTKline *) MyMallocEx(sizeof(aTKline));
 
@@ -1292,7 +1361,7 @@ int  _find_shun(aClient *cptr)
  * Assumes: only call for clients, possible assume on local clients [?]
  * Return values: see dospamfilter()
  */
-int _find_spamfilter_user(aClient *sptr)
+int _find_spamfilter_user(aClient *sptr, int flags)
 {
 char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64]; /* n!u@h:r */
 
@@ -1301,7 +1370,66 @@ char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64]; /* n!u@h:r */
 
 	ircsprintf(spamfilter_user, "%s!%s@%s:%s",
 		sptr->name, sptr->user->username, sptr->user->realhost, sptr->info);
-	return dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL);
+	return dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, flags, NULL);
+}
+
+int spamfilter_check_users(aTKline *tk)
+{
+char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64]; /* n!u@h:r */
+char buf[1024];
+int i, matches = 0;
+aClient *acptr;
+
+	for (i = LastSlot; i >= 0; i--)
+		if ((acptr = local[i]) && MyClient(acptr))
+		{
+			ircsprintf(spamfilter_user, "%s!%s@%s:%s",
+				acptr->name, acptr->user->username, acptr->user->realhost, acptr->info);
+			if (regexec(&tk->ptr.spamf->expr, spamfilter_user, 0, NULL, 0))
+				continue; /* No match */
+
+			/* matched! */
+			ircsprintf(buf, "[Spamfilter] %s!%s@%s matches filter '%s': [%s: '%s'] [%s]",
+				acptr->name, acptr->user->username, acptr->user->realhost,
+				tk->reason,
+				"user", spamfilter_user,
+				unreal_decodespace(tk->ptr.spamf->tkl_reason));
+
+			sendto_snomask(SNO_SPAMF, "%s", buf);
+			sendto_serv_butone_token(NULL, me.name, MSG_SENDSNO, TOK_SENDSNO, "S :%s", buf);
+			ircd_log(LOG_SPAMFILTER, "%s", buf);
+			RunHook6(HOOKTYPE_LOCAL_SPAMFILTER, acptr, spamfilter_user, spamfilter_user, SPAMF_USER, NULL, tk);
+			matches++;
+		}
+		
+	return matches;
+}
+
+int spamfilter_check_all_users(aClient *from, aTKline *tk)
+{
+char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64]; /* n!u@h:r */
+char buf[1024];
+int i, matches = 0;
+aClient *acptr;
+
+	for (acptr = client; acptr; acptr = acptr->next)
+		if (IsPerson(acptr))
+		{
+			ircsprintf(spamfilter_user, "%s!%s@%s:%s",
+				acptr->name, acptr->user->username, acptr->user->realhost, acptr->info);
+			if (regexec(&tk->ptr.spamf->expr, spamfilter_user, 0, NULL, 0))
+				continue; /* No match */
+
+			/* matched! */
+			sendnotice(from, "[Spamfilter] %s!%s@%s matches filter '%s': [%s: '%s'] [%s]",
+				acptr->name, acptr->user->username, acptr->user->realhost,
+				tk->reason,
+				"user", spamfilter_user,
+				unreal_decodespace(tk->ptr.spamf->tkl_reason));
+			matches++;
+		}
+		
+	return matches;
 }
 
 aTKline *_find_qline(aClient *cptr, char *nick, int *ishold)
@@ -1365,7 +1493,7 @@ aTKline *_find_qline(aClient *cptr, char *nick, int *ishold)
 }
 
 
-int  _find_tkline_match_zap(aClient *cptr)
+int  _find_tkline_match_zap_ex(aClient *cptr, aTKline **rettk)
 {
 	aTKline *lp;
 	char *cip;
@@ -1373,6 +1501,9 @@ int  _find_tkline_match_zap(aClient *cptr)
 	char msge[1024];
 	ConfigItem_except *excepts;
 	Hook *tmphook;
+
+	if (rettk)
+		*rettk = NULL;
 	
 	if (IsServer(cptr) || IsMe(cptr))
 		return -1;
@@ -1412,11 +1543,18 @@ int  _find_tkline_match_zap(aClient *cptr)
 				    mydummy, MYDUMMY_SIZE), lp->reason);
 #endif
 				strlcpy(zlinebuf, msge, sizeof zlinebuf);
+				if (rettk)
+					*rettk = lp;
 				return (1);
 			}
 		}
 	}
 	return -1;
+}
+
+int  _find_tkline_match_zap(aClient *cptr)
+{
+	return _find_tkline_match_zap_ex(cptr, NULL);
 }
 
 #define BY_MASK 0x1
@@ -1724,6 +1862,20 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  expiry_1 = atol(parv[6]);
 		  setat_1 = atol(parv[7]);
 		  reason = parv[8];
+		  
+		  if (expiry_1 < 0)
+		  {
+		  	sendto_realops("Invalid TKL entry from %s, negative expire time (%ld) -- not added. Clock on other server incorrect?",
+		  		sptr->name, (long)expiry_1);
+		  	return 0;
+		  }
+
+		  if (setat_1 < 0)
+		  {
+		  	sendto_realops("Invalid TKL entry from %s, negative set-at time (%ld) -- not added. Clock on other server incorrect?",
+		  		sptr->name, (long)setat_1);
+		  	return 0;
+		  }
 
 		  found = 0;
 		  if ((type & TKL_SPAMF) && (parc >= 11))
@@ -1829,8 +1981,10 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			tk = tkl_add_line(type, parv[3], parv[4], reason, parv[5],
 				expiry_1, setat_1, 0, NULL);
 
-		  if (tk)
-		  	RunHook5(HOOKTYPE_TKL_ADD, cptr, sptr, tk, parc, parv);
+		  if (!tk)
+		     return 0; /* ERROR on allocate or something else... */
+
+		  RunHook5(HOOKTYPE_TKL_ADD, cptr, sptr, tk, parc, parv);
 
 		  strncpyzt(gmt, asctime(gmtime((TS *)&setat_1)), sizeof(gmt));
 		  strncpyzt(gmt2, asctime(gmtime((TS *)&expiry_1)), sizeof(gmt2));
@@ -1872,6 +2026,9 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			      gmt, parv[5]);
 			  sendto_snomask(SNO_TKL, "*** %s", buf);
 			  ircd_log(LOG_TKL, "%s", buf);
+			  
+			  if (tk && (tk->ptr.spamf->action == BAN_ACT_WARN) && (tk->subtype & SPAMF_USER))
+			  	spamfilter_check_users(tk);
 		  } else {
 			char buf[512];
 			  if (expiry_1 != 0)
@@ -1931,6 +2088,8 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	  case '-':
 		  if (!IsServer(sptr) && !IsMe(sptr))
 			  return 0;
+		  if (parc < 6)
+		  	  return 0;
 		  if (*parv[2] == 'G')
 			  type = TKL_KILL | TKL_GLOBAL;
 		  else if (*parv[2] == 'Z')
@@ -2184,9 +2343,48 @@ SpamExcept *e;
 	return 0;
 }
 
+int _dospamfilter_viruschan(aClient *sptr, aTKline *tk, int type)
+{
+char *xparv[3], chbuf[CHANNELLEN + 16], buf[2048];
+aChannel *chptr;
+int ret;
+
+	snprintf(buf, sizeof(buf), "0,%s", SPAMFILTER_VIRUSCHAN);
+	xparv[0] = sptr->name;
+	xparv[1] = buf;
+	xparv[2] = NULL;
+
+	/* RECURSIVE CAUTION in case we ever add blacklisted chans */
+	spamf_ugly_vchanoverride = 1;
+	ret = do_cmd(sptr, sptr, "JOIN", 2, xparv);
+	spamf_ugly_vchanoverride = 0;
+
+	if (ret == FLUSH_BUFFER)
+		return FLUSH_BUFFER; /* don't ask me how we could have died... */
+
+	sendnotice(sptr, "You are now restricted to talking in %s: %s",
+		SPAMFILTER_VIRUSCHAN, unreal_decodespace(tk->ptr.spamf->tkl_reason));
+
+	chptr = find_channel(SPAMFILTER_VIRUSCHAN, NULL);
+	if (chptr)
+	{
+		ircsprintf(chbuf, "@%s", chptr->chname);
+		ircsprintf(buf, "[Spamfilter] %s matched filter '%s' [%s] [%s]",
+			sptr->name, tk->reason, cmdname_by_spamftarget(type),
+			unreal_decodespace(tk->ptr.spamf->tkl_reason));
+		sendto_channelprefix_butone_tok(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+			MSG_NOTICE, TOK_NOTICE, chbuf, buf, 0);
+	}
+	SetVirus(sptr);
+	return 0;
+}
+
 /** dospamfilter: executes the spamfilter onto the string.
- * str:		the text (eg msg text, notice text, part text, quit text, etc
- * type:	the spamfilter type (SPAMF_*)
+ * @param str		The text (eg msg text, notice text, part text, quit text, etc
+ * @param type		The spamfilter type (SPAMF_*)
+ * @param target	The target as a text string (can be NULL, eg: for away)
+ * @param flags		Any flags (SPAMFLAG_*)
+ * @param rettk		Pointer to an aTKLline struct, _used for special circumstances only_
  * RETURN VALUE:
  * 0 if not matched, non-0 if it should be blocked.
  * Return value can be FLUSH_BUFFER (-2) which means 'sptr' is
@@ -2194,10 +2392,13 @@ SpamExcept *e;
  * (like from m_message, m_part, m_quit, etc).
  */
  
-int _dospamfilter(aClient *sptr, char *str_in, int type, char *target)
+int _dospamfilter(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk)
 {
 aTKline *tk;
 char *str;
+
+	if (rettk)
+		*rettk = NULL; /* initialize to NULL */
 
 	if (type == SPAMF_USER)
 		str = str_in;
@@ -2213,6 +2414,8 @@ char *str;
 	for (tk = tklines[tkl_hash('F')]; tk; tk = tk->next)
 	{
 		if (!(tk->subtype & type))
+			continue;
+		if ((flags & SPAMFLAG_NOWARN) && (tk->ptr.spamf->action == BAN_ACT_WARN))
 			continue;
 		if (!regexec(&tk->ptr.spamf->expr, str, 0, NULL, 0))
 		{
@@ -2232,7 +2435,7 @@ char *str;
 			ircsprintf(buf, "[Spamfilter] %s!%s@%s matches filter '%s': [%s%s: '%s'] [%s]",
 				sptr->name, sptr->user->username, sptr->user->realhost,
 				tk->reason,
-				spamfilter_inttostring_long(type), targetbuf, str,
+				cmdname_by_spamftarget(type), targetbuf, str,
 				unreal_decodespace(tk->ptr.spamf->tkl_reason));
 
 			sendto_snomask(SNO_SPAMF, "%s", buf);
@@ -2279,6 +2482,14 @@ char *str;
 				}
 				return -1;
 			} else
+			if (tk->ptr.spamf->action == BAN_ACT_WARN)
+			{
+				if ((type != SPAMF_USER) && (type != SPAMF_QUIT))
+					sendto_one(sptr, rpl_str(RPL_SPAMCMDFWD),
+						me.name, sptr->name, cmdname_by_spamftarget(type),
+						unreal_decodespace(tk->ptr.spamf->tkl_reason));
+				return 0;
+			} else
 			if (tk->ptr.spamf->action == BAN_ACT_DCCBLOCK)
 			{
 				if (type == SPAMF_DCC)
@@ -2293,37 +2504,21 @@ char *str;
 			} else
 			if (tk->ptr.spamf->action == BAN_ACT_VIRUSCHAN)
 			{
-				char *xparv[3], chbuf[CHANNELLEN + 16];
-				aChannel *chptr;
-				int ret;
-				
 				if (IsVirus(sptr)) /* Already tagged */
 					return 0;
-				ircsprintf(buf, "0,%s", SPAMFILTER_VIRUSCHAN);
-				xparv[0] = sptr->name;
-				xparv[1] = buf;
-				xparv[2] = NULL;
-				/* RECURSIVE CAUTION in case we ever add blacklisted chans */
-				spamf_ugly_vchanoverride = 1;
-				ret = do_cmd(sptr, sptr, "JOIN", 2, xparv);
-				spamf_ugly_vchanoverride = 0;
-				if (ret == FLUSH_BUFFER)
-					return FLUSH_BUFFER; /* don't ask me how we could have died... */
-				sendnotice(sptr, "You are now restricted to talking in %s: %s",
-					SPAMFILTER_VIRUSCHAN, unreal_decodespace(tk->ptr.spamf->tkl_reason));
-				/* todo: send notice to channel? */
-				chptr = find_channel(SPAMFILTER_VIRUSCHAN, NULL);
-				if (chptr)
+					
+				/* There's a race condition for SPAMF_USER, so 'rettk' is used for SPAMF_USER
+				 * when a user is currently connecting and filters are checked:
+				 */
+				if (!IsClient(sptr))
 				{
-					ircsprintf(chbuf, "@%s", chptr->chname);
-					ircsprintf(buf, "[Spamfilter] %s matched filter '%s' [%s%s] [%s]",
-						sptr->name, tk->reason, spamfilter_inttostring_long(type), targetbuf,
-						unreal_decodespace(tk->ptr.spamf->tkl_reason));
-					sendto_channelprefix_butone_tok(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-						MSG_NOTICE, TOK_NOTICE, chbuf, buf, 0);
+					if (rettk)
+						*rettk = tk;
+					return -5;
 				}
-				SetVirus(sptr);
-				return -1;
+				
+				dospamfilter_viruschan(sptr, tk, type);
+				return -5;
 			} else
 				return place_host_ban(sptr, tk->ptr.spamf->action,
 					unreal_decodespace(tk->ptr.spamf->tkl_reason), tk->ptr.spamf->tkl_duration);
