@@ -1278,3 +1278,4 @@
 - Fixed SVSMODE -b [user] not always removing all bans (specificly, bans on the cloaked
   host when you have a vhost), a code cleanup was also done. Based on patch from tabrisnet.
   Reported by Rob (#0002981).
+- MARK: 3.3* was forked off from here
