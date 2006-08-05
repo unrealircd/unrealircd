@@ -68,9 +68,6 @@ MODVAR char serveropts[] = {
 #ifdef STRIPBADWORDS
 	'X',
 #endif
-#ifdef USE_POLL
-	'P',
-#endif
 #ifdef USE_SSL
 	'e',
 #endif
