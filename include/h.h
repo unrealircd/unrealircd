@@ -576,7 +576,6 @@ extern void send_proto(aClient *, ConfigItem_link *);
 extern char *xbase64enc(long i);
 extern void unload_all_modules(void);
 extern void flush_fdlist_connections(fdlist * listp);
-extern int set_blocking(int fd);
 extern void set_sock_opts(int fd, aClient *cptr);
 extern void iCstrip(char *line);
 extern time_t rfc2time(char *s);

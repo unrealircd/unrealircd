@@ -1114,33 +1114,6 @@ int get_sockerr(aClient *cptr)
 }
 
 /*
- * set_blocking - Set the client connection into non-blocking mode.
- * If your system doesn't support this, you're screwed, ircd will run like
- * crap.
- * returns true (1) if successful, false (0) otherwise
- */
-int set_blocking(int fd)
-{
-	int  flags;
-#ifdef _WIN32
-	int  nonb;
-#endif
-
-#ifndef _WIN32
-	if ((flags = fcntl(fd, F_GETFL, 0)) < 0
-	    || fcntl(fd, F_SETFL, flags & ~O_NONBLOCK) < 0)
-#else
-	nonb = 0;
-	if (ioctlsocket(fd, FIONBIO, &nonb) < 0)
-#endif
-		return 0;
-	else
-		return 1;
-}
-
-
-
-/*
 ** set_non_blocking
 **	Set the client connection into non-blocking mode. If your
 **	system doesn't support this, you can make this a dummy
