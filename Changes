@@ -1278,3 +1278,6 @@
 - Fixed SVSMODE -b [user] not always removing all bans (specificly, bans on the cloaked
   host when you have a vhost), a code cleanup was also done. Based on patch from tabrisnet.
   Reported by Rob (#0002981).
+- Removed old poll code from s_bsd.c and s_debug.c also do_client_queue function
+from s_bsd.c
+- Removed old set_blocking function from s_bsd.c
