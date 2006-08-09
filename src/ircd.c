@@ -1471,6 +1471,9 @@ int InitwIRCD(int argc, char *argv[])
 
 #ifdef _WIN32
 	return 1;
+#else
+	SocketLoop(NULL);
+#endif
 }
 
 
@@ -1483,7 +1486,7 @@ void SocketLoop(void *dummy)
 	TS   nextfdlistcheck = 0;	/*end of priority code */
 #endif
 	
-	
+#ifdef _WIN32	
 	while (1)
 #else
 	nextping = timeofday;

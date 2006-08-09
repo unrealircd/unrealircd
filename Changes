@@ -1281,3 +1281,4 @@
 - Removed old poll code from s_bsd.c and s_debug.c also do_client_queue function
   from s_bsd.c
 - Removed old set_blocking function from s_bsd.c
+- SocketLoop is become general IO loop for *nix too.
