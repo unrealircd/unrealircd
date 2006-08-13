@@ -330,14 +330,25 @@ char  *Module_Create(char *path_)
 		strcpy(path, "./");
 		strcat(path, path_);
 	}
+
+	if (!file_exists(path))
+	{
+		snprintf(errorbuf, sizeof(errorbuf), "Cannot open module file: %s", strerror(errno));
+		return errorbuf;
+	}
 #ifdef __OpenBSD__
 	/* For OpenBSD, do not do a hardlinkink attempt first because it checks inode
 	 * numbers to see if a certain module is already loaded. -- Syzop
 	 */
-	unreal_copyfileex(path, tmppath, 0);
+	ret = unreal_copyfileex(path, tmppath, 0);
 #else
-	unreal_copyfileex(path, tmppath, 1);
+	ret = unreal_copyfileex(path, tmppath, 1);
 #endif
+	if (!ret)
+	{
+		snprintf(errorbuf, sizeof(errorbuf), "Failed to copy module file.");
+		return errorbuf;
+	}
 	if ((Mod = irc_dlopen(tmppath, RTLD_NOW)))
 	{
 		/* We have engaged the borg cube. Scan for lifesigns. */

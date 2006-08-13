@@ -628,6 +628,7 @@ extern void sendto_chmodemucrap(aClient *, aChannel *, char *);
 extern void verify_opercount(aClient *, char *);
 extern int valid_host(char *host);
 extern int count_oper_sessions(char *);
+extern int file_exists(char* file);
 extern char *unreal_mktemp(char *dir, char *suffix);
 extern char *unreal_getpathname(char *filepath, char *path);
 extern char *unreal_getfilename(char *path);

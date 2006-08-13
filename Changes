@@ -1282,3 +1282,5 @@
   from s_bsd.c
 - Removed old set_blocking function from s_bsd.c
 - SocketLoop is become general IO loop for *nix too.
+- loadmodule now reports proper errors when the actual file can't be found, instead of blaming
+  it on the temp file, reported in #3015.
