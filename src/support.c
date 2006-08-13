@@ -1778,7 +1778,7 @@ int unreal_copyfile(char *src, char *dest)
 
 	if (srcfd < 0)
 	{
-		config_error("Unable to open module file '%s': %s", src, strerror(errno));
+		config_error("Unable to open file '%s': %s", src, strerror(errno));
 		return 0;
 	}
 
