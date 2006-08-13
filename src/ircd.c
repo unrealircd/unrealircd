@@ -1472,7 +1472,7 @@ int InitwIRCD(int argc, char *argv[])
 #ifdef _WIN32
 	return 1;
 #else
-	SocketLoop(NULL);
+	SocketLoop(0);
 #endif
 }
 

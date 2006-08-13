@@ -617,8 +617,8 @@ extern char *get_snostr(long);
 #ifdef _WIN32
 extern void InitDebug(void);
 extern int InitwIRCD(int argc, char **);
-extern void SocketLoop(void *);
 #endif
+extern void SocketLoop(void *);
 #ifdef STATIC_LINKING
 extern int l_commands_Init(ModuleInfo *);
 extern int l_commands_Test(ModuleInfo *);
