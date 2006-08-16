@@ -71,6 +71,11 @@
 #undef NO_FDLIST
 
 /*
+ * system have sockaddr_storage struct. 
+ */
+#define HAVE_STRUCT_SOCKADDR_STORAGE 1
+
+/*
  * Defining this will allow all ircops to see people in +s channels
  * By default, only net/tech admins can see this
  */
