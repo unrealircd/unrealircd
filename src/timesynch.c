@@ -181,7 +181,10 @@ char buf[512], *buf_out;
 			goto end;
 		}
 
+#ifndef NEW_IO
 		set_non_blocking(s[n], &me);
+#else
+#endif
 		n++;
 	}
 	numservers = n;

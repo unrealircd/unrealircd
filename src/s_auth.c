@@ -100,7 +100,10 @@ void start_auth(aClient *cptr)
 	if (SHOWCONNECTINFO && !cptr->serv)
 		sendto_one(cptr, "%s", REPORT_DO_ID);
 
+#ifndef NEW_IO
 	set_non_blocking(cptr->authfd, cptr);
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 
 	/* Bind to the IP the user got in */
 	memset(&sock, 0, sizeof(sock));

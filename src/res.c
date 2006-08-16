@@ -59,9 +59,11 @@ struct hostent *unreal_create_hostent(char *name, struct IN_ADDR *addr);
 static void unrealdns_freeandremovereq(DNSReq *r);
 void unrealdns_removecacherecord(DNSCache *c);
 
+#ifndef NEW_IO
 /* Externs */
 extern void proceed_normal_client_handshake(aClient *acptr, struct hostent *he);
-
+#else /* IFNDEF NEW_IO */
+#endif /* IFNDEF NEW_IO */
 /* Global variables */
 
 ares_channel resolver_channel; /**< The resolver channel. */
@@ -234,7 +236,10 @@ char ipv6 = r->ipv6;
 	if ((status != 0) || !he->h_name || !*he->h_name)
 	{
 		/* Failed */
+#ifndef NEW_IO
 		proceed_normal_client_handshake(acptr, NULL);
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 		return;
 	}
 
@@ -289,7 +294,10 @@ u_int32_t ipv4_addr;
 #endif
 	{
 		/* Failed: error code, or data length is not 4 (nor 16) */
+#ifndef NEW_IO
 		proceed_normal_client_handshake(acptr, NULL);
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 		return;
 	}
 
@@ -321,14 +329,20 @@ u_int32_t ipv4_addr;
 	if (!he->h_addr_list[i])
 	{
 		/* Failed name <-> IP mapping */
+#ifndef NEW_IO
 		proceed_normal_client_handshake(acptr, NULL);
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 		return;
 	}
 
 	if (!verify_hostname(he->h_name))
 	{
 		/* Hostname is bad, don't cache and consider unresolved */
+#ifndef NEW_IO
 		proceed_normal_client_handshake(acptr, NULL);
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 		return;
 	}
 
@@ -336,7 +350,10 @@ u_int32_t ipv4_addr;
 	unrealdns_addtocache(he->h_name, &acptr->ip, sizeof(acptr->ip));
 	
 	he2 = unreal_create_hostent(he->h_name, &acptr->ip);
+#ifndef NEW_IO
 	proceed_normal_client_handshake(acptr, he2);
+#else /* IFNDEF NEW_IO */
+#endif /* IFNDEF NEW_IO */
 }
 
 void unrealdns_cb_nametoip_link(void *arg, int status, struct hostent *he)
@@ -395,6 +412,7 @@ struct hostent *he2;
 
 	he2 = unreal_create_hostent(he->h_name, (struct IN_ADDR *)&he->h_addr_list[0]);
 
+#ifndef NEW_IO
 	switch ((n = connect_server(r->linkblock, r->cptr, he2)))
 	{
 		case 0:
@@ -410,6 +428,8 @@ struct hostent *he2;
 		default:
 			sendto_realops("Connection to %s failed: %s", r->linkblock->servername, STRERROR(n));
 	}
+#else /* IFNDEF NEW_IO */
+#endif
 	
 	unrealdns_freeandremovereq(r);
 	/* DONE */

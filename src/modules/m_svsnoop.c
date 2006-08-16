@@ -106,8 +106,11 @@ long oldumodes;
 						IRCstats.operators--;
 						VERIFY_OPERCOUNT(acptr, "svsnoop");
 					}
+#ifndef NEW_IO
 					if (IsAnOper(acptr))
 						delfrom_fdlist(acptr->slot, &oper_fdlist);
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 					oldumodes = acptr->umodes;
 					acptr->umodes &= ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP |
 					                   UMODE_SERVICES | UMODE_SADMIN | UMODE_ADMIN |

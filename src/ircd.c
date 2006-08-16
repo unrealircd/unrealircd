@@ -112,7 +112,7 @@ extern void CleanUpSegv(int sig);
 extern SERVICE_STATUS_HANDLE IRCDStatusHandle;
 extern SERVICE_STATUS IRCDStatus;
 #endif
-#ifndef NO_FDLIST
+#ifndef NEW_IO
 fdlist default_fdlist;
 fdlist busycli_fdlist;
 fdlist serv_fdlist;
@@ -132,7 +132,21 @@ long lastrecvK = 0;
 long lastsendK = 0;
 
 TS   check_fdlists();
-#endif
+#else /* ifndef NEW_IO */
+/* Are we removing htm mode with new io engine ? */
+int lifesux = 0;
+int HTMLOCK = 0;
+int noisy_htm = 1;
+int LRV = LOADRECV;
+TS LCF = LOADCFREQ;
+float currentrate;
+float currentrate2;   /* outgoing */
+float highest_rate = 0;
+float highest_rate2 = 0;
+int currlife = 0;
+long lastrecvK = 0;
+long lastsendK = 0;
+#endif /* ifndef NEW_IO */
 
 unsigned char conf_debuglevel = 0;
 char trouble_info[1024];
@@ -769,7 +783,7 @@ static int bad_command(void)
 char chess[] = {
 	85, 110, 114, 101, 97, 108, 0
 };
-#ifndef NO_FDLIST
+#ifndef NEW_IO
 inline TS check_fdlists(TS now)
 {
 	aClient *cptr;
@@ -807,7 +821,8 @@ EVENT(e_check_fdlists)
 	check_fdlists(TStime());
 }
 
-#endif
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 
 static void version_check_logerror(char *fmt, ...)
 {
@@ -1309,6 +1324,8 @@ int InitwIRCD(int argc, char *argv[])
 #endif
 	open_debugfile();
 #ifndef NO_FDLIST
+
+#ifndef NEW_IO
 	init_fdlist(&serv_fdlist);
 	init_fdlist(&busycli_fdlist);
 	init_fdlist(&default_fdlist);
@@ -1319,11 +1336,17 @@ int InitwIRCD(int argc, char *argv[])
 		for (i = MAXCONNECTIONS + 1; i > 0; i--)
 			default_fdlist.entry[i] = i;
 	}
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 #endif
 	if (portnum < 0)
 		portnum = PORTNUM;
 	me.port = portnum;
+#ifndef NEW_IO
+	/* Is that have to be in s_bsd.c huh? */
 	(void)init_sys();
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 	me.flags = FLAGS_LISTEN;
 	me.fd = -1;
 	SetMe(&me);
@@ -1346,8 +1369,11 @@ int InitwIRCD(int argc, char *argv[])
 	    *conf_listen->ip != '*' ? inet_addr(conf_listen->ip) : INADDR_ANY;
 */
 	Debug((DEBUG_ERROR, "Port = %d", portnum));
+#ifndef NEW_IO
 	if (inetport(&me, conf_listen->ip, portnum))
 		exit(1);
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 	conf_listen->options |= LISTENER_BOUND;
 	me.umodes = conf_listen->options;
 	conf_listen->listener = &me;
@@ -1440,7 +1466,13 @@ int InitwIRCD(int argc, char *argv[])
 			ircd_log(LOG_ERROR, "TIME SYNCH: Unable to synchronize time: %s. This happens sometimes, no error on your part.",
 				unreal_time_synch_error());
 	}
+#ifndef NEW_IO
+	/*
+	 * Is that really have to be in s_bsd.c ? 
+	 */
 	write_pidfile();
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 	Debug((DEBUG_NOTICE, "Server ready..."));
 	SetupEvents();
 #ifdef THROTTLING
@@ -1465,7 +1497,7 @@ int InitwIRCD(int argc, char *argv[])
 	l_commands_Load(0);
 #endif
 
-#ifndef NO_FDLIST
+#ifndef NEW_IO
 	check_fdlists(TStime());
 #endif
 
@@ -1476,7 +1508,7 @@ int InitwIRCD(int argc, char *argv[])
 #endif
 }
 
-
+#ifndef NEW_IO
 void SocketLoop(void *dummy)
 {
 	TS   delay = 0;
@@ -1636,6 +1668,15 @@ void SocketLoop(void *dummy)
 		}
 	}
 }
+#else /* ifndef NEW_IO */
+void SocketLoop(void *dummy)
+{
+		while (1 == 1)
+		{
+			usleep(500);
+		}
+}
+#endif /* ifndef NEW_IO */
 
 /*
  * open_debugfile

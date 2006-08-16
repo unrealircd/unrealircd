@@ -126,7 +126,7 @@ extern aMotd *Find_file(char *, short);
 **		note:	it is guaranteed that parv[0]..parv[parc-1] are all
 **			non-NULL pointers.
 */
-#ifndef NO_FDLIST
+#ifndef NEW_IO
 extern fdlist serv_fdlist;
 #endif
 

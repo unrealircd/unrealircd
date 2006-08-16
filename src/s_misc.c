@@ -55,12 +55,13 @@ Computing Center and Jarkko Oikarinen";
 #include "channel.h"
 #include <string.h>
 
-#ifndef NO_FDLIST
+#ifndef NEW_IO
 extern fdlist serv_fdlist;
 extern fdlist oper_fdlist;
 extern float currentrate;
 extern float currentrate2;
-#endif
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 extern ircstats IRCstats;
 extern char	*me_hash;
 
@@ -481,7 +482,7 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 
 	if (MyConnect(sptr))
 	{
-#ifndef NO_FDLIST
+#ifndef NEW_IO
 #define FDLIST_DEBUG
 #ifdef FDLIST_DEBUG
 		{
@@ -497,18 +498,24 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 							sptr->slot, sptr->name);
 						ircd_log(LOG_ERROR, "[BUG] exit_client: oper_fdlist entry while not oper, fd=%d, user='%s'",
 							sptr->slot, sptr->name);
+#ifndef NEW_IO
 						delfrom_fdlist(sptr->slot, &oper_fdlist); /* be kind of enough to fix the problem.. */
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 						break; /* MUST break here */
 					}
 				}
 			}
 		}
-#endif
+#endif 
+#ifndef NEW_IO
 		if (IsAnOper(sptr))
 			delfrom_fdlist(sptr->slot, &oper_fdlist);
 		if (IsServer(sptr))
 			delfrom_fdlist(sptr->slot, &serv_fdlist);
-#endif
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 		if (sptr->class)
 		{
 			sptr->class->clients--;
@@ -604,7 +611,10 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 		   ** It also makes sptr->from == NULL, thus it's unnecessary
 		   ** to test whether "sptr != acptr" in the following loops.
 		 */
+#ifndef NEW_IO
 		close_connection(sptr);
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 	}
 
 	/*

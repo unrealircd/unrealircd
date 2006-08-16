@@ -74,6 +74,8 @@ Computing Center and Jarkko Oikarinen";
 #include  "fdlist.h"
 #endif
 
+#ifndef NEW_IO
+
 #ifdef INET6
 static unsigned char minus_one[] =
     { 255, 255, 255, 255, 255, 255, 255, 255, 255,
@@ -2170,3 +2172,25 @@ static struct SOCKADDR *connect_inet(ConfigItem_link * aconf, aClient *cptr,
 	*lenp = sizeof(server);
 	return (struct SOCKADDR *)&server;
 }
+
+#else /* IFNDEF NEW_IO */
+/*
+ * They using hash tables for fast access like
+ * static struct Client *clientTable[HASHSIZE];
+ * but we have local hash table for all stuff 
+ */
+aClient *local[MAXCONNECTIONS];
+
+/* 
+ * At Hybrid its in hash.c and using in different way
+ */
+short LastSlot = -1;    /* GLOBAL - last used slot in local */
+
+/*
+ * For holding opened file descriptor at new io ist necessary ?
+ */
+int  OpenFiles = 0;   /* GLOBAL - number of files currently open */
+
+char zlinebuf[BUFSIZE];
+
+#endif /* IFNDEF NEW_IO */

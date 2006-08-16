@@ -2270,9 +2270,13 @@ int	config_run()
 		}
 	}
 
+#ifndef NEW_IO
+	/* Three close_listeners here is't necessary ? */
 	close_listeners();
 	listen_cleanup();
 	close_listeners();
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 	loop.do_bancheck = 1;
 	free_iConf(&iConf);
 	bcopy(&tempiConf, &iConf, sizeof(aConfiguration));
@@ -2453,7 +2457,7 @@ int count_oper_sessions(char *name)
 int i, count = 0;
 aClient *cptr;
 
-#ifdef NO_FDLIST
+#ifdef NEW_IO
 	for (i = 0; i <= LastSlot; i++)
 #else
 int j;
@@ -2652,7 +2656,10 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 		{
 			hname = hp->h_name;
 			strncpyzt(fullname, hname, sizeof(fullname));
+#ifndef NEW_IO
 			add_local_domain(fullname, HOSTLEN - strlen(fullname));
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 			Debug((DEBUG_DNS, "a_il: %s->%s", sockhost, fullname));
 			if (index(aconf->hostname, '@'))
 			{
@@ -8067,6 +8074,7 @@ void	run_configuration(void)
 	{
 		if (!(listenptr->options & LISTENER_BOUND))
 		{
+#ifndef NEW_IO
 			if (add_listener2(listenptr) == -1)
 			{
 				ircd_log(LOG_ERROR, "Failed to bind to %s:%i", listenptr->ip, listenptr->port);
@@ -8074,6 +8082,8 @@ void	run_configuration(void)
 				else
 			{
 			}
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 		}
 		else
 		{
@@ -9095,8 +9105,11 @@ void	listen_cleanup()
 			i++;
 		}
 	}
+#ifndef NEW_IO
 	if (i)
 		close_listeners();
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 }
 
 #ifdef USE_LIBCURL

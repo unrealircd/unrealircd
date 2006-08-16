@@ -125,7 +125,7 @@ aClient *acptr;
 		}
 	}
 
-#ifdef NO_FDLIST
+#ifdef NEW_IO
 	for(i = 0; i <= LastSlot; i++)
 #else
 	for (i = oper_fdlist.entry[j = 1]; j <= oper_fdlist.last_entry; i = oper_fdlist.entry[++j])

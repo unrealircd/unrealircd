@@ -229,10 +229,13 @@ extern MODVAR int dbufalloc, dbufblocks, debuglevel;
 #else
 extern int dbufalloc, dbufblocks, debuglevel, errno, h_errno;
 #endif
+
 extern MODVAR short LastSlot; /* last used index in local client array */
 extern MODVAR int OpenFiles;  /* number of files currently open */
 extern MODVAR int debuglevel, portnum, debugtty, maxusersperchannel;
 extern MODVAR int readcalls, udpfd, resfd;
+
+#ifndef NEW_IO
 extern aClient *add_connection(aClient *, int);
 extern int add_listener(aConfItem *);
 extern void add_local_domain(char *, int);
@@ -254,9 +257,10 @@ extern int read_message(time_t);
 #else
 extern int read_message(time_t, fdlist *);
 #endif
-
 extern void report_error(char *, aClient *);
 extern void set_non_blocking(int, aClient *);
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 extern int setup_ping();
 
 extern void start_auth(aClient *);
@@ -575,7 +579,10 @@ extern CMD_FUNC(m_server_remote);
 extern void send_proto(aClient *, ConfigItem_link *);
 extern char *xbase64enc(long i);
 extern void unload_all_modules(void);
+#ifndef NEW_IO
 extern void flush_fdlist_connections(fdlist * listp);
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 extern void set_sock_opts(int fd, aClient *cptr);
 extern void iCstrip(char *line);
 extern time_t rfc2time(char *s);
@@ -674,7 +681,10 @@ extern char *unreal_encodespace(char *s);
 extern char *unreal_decodespace(char *s);
 extern MODVAR Link *helpign;
 extern MODVAR aMotd *rules;
+#ifndef NEW_IO
 extern MODVAR fdlist default_fdlist, busycli_fdlist, serv_fdlist, oper_fdlist;
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 extern void DCCdeny_add(char *filename, char *reason, int type, int type2);
 extern void DCCdeny_del(ConfigItem_deny_dcc *deny);
 extern void dcc_wipe_services(void);

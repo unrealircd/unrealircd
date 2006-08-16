@@ -2337,9 +2337,10 @@ DLLFUNC CMD_FUNC(_m_umode)
 	if ((setflags & (UMODE_OPER | UMODE_LOCOP)) && !IsAnOper(sptr) &&
 	    MyConnect(sptr))
 	{
-#ifndef NO_FDLIST
+#ifndef NEW_IO
 		delfrom_fdlist(sptr->slot, &oper_fdlist);
-#endif
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 		sptr->oflag = 0;
 		remove_oper_snomasks(sptr);
 		RunHook2(HOOKTYPE_LOCAL_OPER, sptr, 0);

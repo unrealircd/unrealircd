@@ -191,6 +191,7 @@ DLLFUNC CMD_FUNC(m_connect)
 	}
 	/* Interesting */
 	aconf->port = port;
+#ifndef NEW_IO
 	switch (retval = connect_server(aconf, sptr, NULL))
 	{
 	  case 0:
@@ -211,6 +212,9 @@ DLLFUNC CMD_FUNC(m_connect)
 		      ":%s %s %s :*** Connection to %s failed: %s",
 		      me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], aconf->servername, STRERROR(retval));
 	}
+#else /* ifndef NEW_IO */
+
+#endif /* ifndef NEW_IO */
 	aconf->port = tmpport;
 	return 0;
 }

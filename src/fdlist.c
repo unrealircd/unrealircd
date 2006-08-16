@@ -28,6 +28,7 @@
 #include "proto.h"
 #include <string.h>
 
+#ifndef NEW_IO
 extern fdlist default_fdlist;
 extern fdlist busycli_fdlist;
 extern fdlist serv_fdlist;
@@ -153,4 +154,8 @@ void init_fdlist(fdlist * listp)
 	memset((char *)listp->entry, '\0', sizeof(listp->entry));
 	return;
 }
+
+#else /* IFNDEF NEW_IO */
+
+#endif
 

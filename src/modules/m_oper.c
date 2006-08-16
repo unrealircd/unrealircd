@@ -329,9 +329,10 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		sendto_one(sptr, rpl_str(RPL_SNOMASK),
 			me.name, parv[0], get_sno_str(sptr));
 
-#ifndef NO_FDLIST
+#ifndef NEW_IO
 		addto_fdlist(sptr->slot, &oper_fdlist);
-#endif
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 		RunHook2(HOOKTYPE_LOCAL_OPER, sptr, 1);
 		sendto_one(sptr, rpl_str(RPL_YOUREOPER), me.name, parv[0]);
 		if (IsInvisible(sptr) && !(old & UMODE_INVISIBLE))

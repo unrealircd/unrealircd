@@ -2,7 +2,7 @@
 #define _IRCD_DOG3_FDLIST
 
 /* $Id$ */
-
+#ifndef NEW_IO
 typedef struct fdstruct {
 	int  entry[MAXCONNECTIONS + 2];
 	int  last_entry;
@@ -15,7 +15,8 @@ void init_fdlist(fdlist * b);
 #ifndef NO_FDLIST
 extern MODVAR fdlist oper_fdlist;
 #endif
-
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 
 #ifndef TRUE
 #define TRUE 1

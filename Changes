@@ -1285,3 +1285,5 @@
 - loadmodule now reports proper errors when the actual file can't be found, instead of blaming
   it on the temp file, reported in #3015.
 - Removed warning at SocketLoop
+- Pointed possible code changes with NEW_IO define for future code changes it
+  will also do some resist do broken codes coming with new io engine.

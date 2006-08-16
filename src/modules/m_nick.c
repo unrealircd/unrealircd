@@ -842,7 +842,12 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 	
 	if (MyConnect(sptr))
 	{
+#ifndef NEW_IO
+		/* Is that have to be in s_bsd.c ? */
 		if ((i = check_client(sptr, username))) {
+#else /* ifndef NEW_IO */
+		{
+#endif /* ifndef NEW_IO */
 			/* This had return i; before -McSkaf */
 			if (i == -5)
 				return FLUSH_BUFFER;
