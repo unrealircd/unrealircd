@@ -134,16 +134,16 @@ long lastsendK = 0;
 TS   check_fdlists();
 #else /* ifndef NEW_IO */
 /* Are we removing htm mode with new io engine ? */
-int lifesux = 0;
-int HTMLOCK = 0;
-int noisy_htm = 1;
-int LRV = LOADRECV;
-TS LCF = LOADCFREQ;
+int  lifesux = 0;
+int  HTMLOCK = 0;
+int  noisy_htm = 1;
+int  LRV = LOADRECV;
+TS   LCF = LOADCFREQ;
 float currentrate;
-float currentrate2;   /* outgoing */
+float currentrate2;		/* outgoing */
 float highest_rate = 0;
 float highest_rate2 = 0;
-int currlife = 0;
+int  currlife = 0;
 long lastrecvK = 0;
 long lastsendK = 0;
 #endif /* ifndef NEW_IO */
@@ -179,7 +179,7 @@ static void open_debugfile(), setup_signals();
 extern void init_glines(void);
 extern void tkl_init(void);
 
-MODVAR TS   last_garbage_collect = 0;
+MODVAR TS last_garbage_collect = 0;
 MODVAR char **myargv;
 int  portnum = -1;		/* Server port number, listening this */
 char *configfile = CONFIGFILE;	/* Server configuration file */
@@ -189,19 +189,19 @@ char *debugmode = "";		/*  -"-    -"-   -"-  */
 char *sbrk0;			/* initial sbrk(0) */
 static int dorehash = 0, dorestart = 0;
 static char *dpath = DPATH;
-MODVAR int  booted = FALSE;
-MODVAR TS   nextconnect = 1;		/* time for next try_connections call */
-MODVAR TS   nextping = 1;		/* same as above for check_pings() */
-MODVAR TS   nextdnscheck = 0;		/* next time to poll dns to force timeouts */
-MODVAR TS   nextexpire = 1;		/* next expire run on the dns cache */
-MODVAR TS   lastlucheck = 0;
+MODVAR int booted = FALSE;
+MODVAR TS nextconnect = 1;	/* time for next try_connections call */
+MODVAR TS nextping = 1;		/* same as above for check_pings() */
+MODVAR TS nextdnscheck = 0;	/* next time to poll dns to force timeouts */
+MODVAR TS nextexpire = 1;	/* next expire run on the dns cache */
+MODVAR TS lastlucheck = 0;
 
 #ifdef UNREAL_DEBUG
 #undef CHROOTDIR
 #define CHROOT
 #endif
 
-MODVAR TS   NOW;
+MODVAR TS NOW;
 #if	defined(PROFIL) && !defined(_WIN32)
 extern etext();
 
@@ -238,13 +238,16 @@ VOIDSIG s_die()
 		for (i = LastSlot; i >= 0; i--)
 			if ((cptr = local[i]) && DBufLength(&cptr->sendQ) > 0)
 				(void)send_queued(cptr);
-		
+
 		exit(-1);
 	}
-	else {
+	else
+	{
 		SERVICE_STATUS status;
-		SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
-		SC_HANDLE hService = OpenService(hSCManager, "UnrealIRCd", SERVICE_STOP); 
+		SC_HANDLE hSCManager =
+		    OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+		SC_HANDLE hService =
+		    OpenService(hSCManager, "UnrealIRCd", SERVICE_STOP);
 		ControlService(hService, SERVICE_CONTROL_STOP, &status);
 	}
 #else
@@ -288,7 +291,8 @@ VOIDSIG s_restart()
 #if 0
 	static int restarting = 0;
 
-	if (restarting == 0) {
+	if (restarting == 0)
+	{
 		/*
 		 * Send (or attempt to) a dying scream to oper if present 
 		 */
@@ -332,7 +336,7 @@ VOIDSIG dummy()
 #endif
 }
 
-#endif				/* _WIN32 */
+#endif /* _WIN32 */
 
 
 void server_reboot(char *mesg)
@@ -393,22 +397,23 @@ void server_reboot(char *mesg)
 		IRCDStatus.dwCurrentState = SERVICE_STOP_PENDING;
 		SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
 		GetModuleFileName(GetModuleHandle(NULL), fname, MAX_PATH);
-		CreateProcess(fname, "restartsvc", NULL, NULL, FALSE, 
-			0, NULL, NULL, &si, &pi);
+		CreateProcess(fname, "restartsvc", NULL, NULL, FALSE,
+		    0, NULL, NULL, &si, &pi);
 		IRCDStatus.dwCurrentState = SERVICE_STOPPED;
 		SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
 		ExitProcess(0);
 	}
 	else
 #endif
-	exit(-1);
+		exit(-1);
 }
 
 MODVAR char *areason;
 
 EVENT(loop_event)
 {
-	if (loop.do_garbage_collect == 1) {
+	if (loop.do_garbage_collect == 1)
+	{
 		garbage_collect(NULL);
 	}
 }
@@ -422,15 +427,18 @@ EVENT(garbage_collect)
 
 	if (loop.do_garbage_collect == 1)
 		sendto_realops("Doing garbage collection ..");
-	if (freelinks > HOW_MANY_FREELINKS_ALLOWED) {
+	if (freelinks > HOW_MANY_FREELINKS_ALLOWED)
+	{
 		ii = freelinks;
-		while (freelink && (freelinks > HOW_MANY_FREELINKS_ALLOWED)) {
+		while (freelink && (freelinks > HOW_MANY_FREELINKS_ALLOWED))
+		{
 			freelinks--;
 			p.next = freelink;
 			freelink = freelink->next;
 			MyFree(p.next);
 		}
-		if (loop.do_garbage_collect == 1) {
+		if (loop.do_garbage_collect == 1)
+		{
 			loop.do_garbage_collect = 0;
 			sendto_realops
 			    ("Cleaned up %i garbage blocks", (ii - freelinks));
@@ -460,11 +468,13 @@ static TS try_connections(TS currenttime)
 	connecting = FALSE;
 	Debug((DEBUG_NOTICE, "Connection check at   : %s",
 	    myctime(currenttime)));
-	for (aconf = conf_link; aconf; aconf = (ConfigItem_link *) aconf->next) {
+	for (aconf = conf_link; aconf; aconf = (ConfigItem_link *) aconf->next)
+	{
 		/*
 		 * Also when already connecting! (update holdtimes) --SRB 
 		 */
-		if (!(aconf->options & CONNECT_AUTO) || (aconf->flag.temporary == 1))
+		if (!(aconf->options & CONNECT_AUTO)
+		    || (aconf->flag.temporary == 1))
 			continue;
 
 		cltmp = aconf->class;
@@ -476,7 +486,8 @@ static TS try_connections(TS currenttime)
 		 * ** a bit fuzzy... -- msa >;) ]
 		 */
 
-		if ((aconf->hold > currenttime)) {
+		if ((aconf->hold > currenttime))
+		{
 			if ((next > aconf->hold) || (next == 0))
 				next = aconf->hold;
 			continue;
@@ -490,7 +501,8 @@ static TS try_connections(TS currenttime)
 		 */
 		cptr = find_name(aconf->servername, (aClient *)NULL);
 
-		if (!cptr && (cltmp->clients < cltmp->maxclients)) {
+		if (!cptr && (cltmp->clients < cltmp->maxclients))
+		{
 			/*
 			 * Check connect rules to see if we're allowed to try 
 			 */
@@ -530,7 +542,8 @@ extern TS check_pings(TS currenttime)
 	char banbuf[1024];
 	int  ping = 0;
 
-	for (i = 0; i <= LastSlot; i++) {
+	for (i = 0; i <= LastSlot; i++)
+	{
 		/*
 		 * If something we should not touch .. 
 		 */
@@ -541,23 +554,28 @@ extern TS check_pings(TS currenttime)
 		 * ** Note: No need to notify opers here. It's
 		 * ** already done when "FLAGS_DEADSOCKET" is set.
 		 */
-		if (cptr->flags & FLAGS_DEADSOCKET) {
-			(void)exit_client(cptr, cptr, &me, cptr->error_str ? cptr->error_str : "Dead socket");
+		if (cptr->flags & FLAGS_DEADSOCKET)
+		{
+			(void)exit_client(cptr, cptr, &me,
+			    cptr->error_str ? cptr->error_str : "Dead socket");
 			continue;
 		}
 		killflag = 0;
 		/*
 		 * Check if user is banned
 		 */
-		if (loop.do_bancheck) {
-			if (find_tkline_match(cptr, 0) < 0) {
+		if (loop.do_bancheck)
+		{
+			if (find_tkline_match(cptr, 0) < 0)
+			{
 				/*
 				 * Client exited 
 				 */
 				continue;
 			}
 			find_shun(cptr);
-			if (!killflag && IsPerson(cptr)) {
+			if (!killflag && IsPerson(cptr))
+			{
 				/*
 				 * If it's a user, we check for CONF_BAN_USER
 				 */
@@ -572,7 +590,9 @@ extern TS check_pings(TS currenttime)
 
 				if (!killflag && !IsAnOper(cptr) &&
 				    (bconf =
-				    Find_ban(NULL, cptr->info, CONF_BAN_REALNAME))) {
+				    Find_ban(NULL, cptr->info,
+				    CONF_BAN_REALNAME)))
+				{
 					killflag++;
 				}
 
@@ -585,7 +605,8 @@ extern TS check_pings(TS currenttime)
 				    Find_ban(cptr, Inet_ia2p(&cptr->ip),
 				    CONF_BAN_IP)))
 					killflag++;
-			if (killflag) {
+			if (killflag)
+			{
 				if (IsPerson(cptr))
 					sendto_realops("Ban active for %s (%s)",
 					    get_client_name(cptr, FALSE),
@@ -598,16 +619,23 @@ extern TS check_pings(TS currenttime)
 					    get_client_name(cptr, FALSE),
 					    bconf->reason ? bconf->
 					    reason : "no reason");
-				if (bconf->reason) {
+				if (bconf->reason)
+				{
 					if (IsPerson(cptr))
-						snprintf(banbuf, sizeof banbuf - 1,
-						         "User has been banned (%s)", bconf->reason);
+						snprintf(banbuf,
+						    sizeof banbuf - 1,
+						    "User has been banned (%s)",
+						    bconf->reason);
 					else
-						snprintf(banbuf, sizeof banbuf - 1,
-						         "Banned (%s)", bconf->reason);
+						snprintf(banbuf,
+						    sizeof banbuf - 1,
+						    "Banned (%s)",
+						    bconf->reason);
 					(void)exit_client(cptr, cptr, &me,
 					    banbuf);
-				} else {
+				}
+				else
+				{
 					if (IsPerson(cptr))
 						(void)exit_client(cptr, cptr,
 						    &me,
@@ -623,12 +651,15 @@ extern TS check_pings(TS currenttime)
 		/* Do spamfilter 'user' banchecks.. */
 		if (loop.do_bancheck_spamf_user && IsPerson(cptr))
 		{
-			if (find_spamfilter_user(cptr, SPAMFLAG_NOWARN) == FLUSH_BUFFER)
+			if (find_spamfilter_user(cptr,
+			    SPAMFLAG_NOWARN) == FLUSH_BUFFER)
 				continue;
 		}
-		if (loop.do_bancheck_spamf_away && IsPerson(cptr) && cptr->user->away)
+		if (loop.do_bancheck_spamf_away && IsPerson(cptr)
+		    && cptr->user->away)
 		{
-			if (dospamfilter(cptr, cptr->user->away, SPAMF_AWAY, NULL, SPAMFLAG_NOWARN, NULL) == FLUSH_BUFFER)
+			if (dospamfilter(cptr, cptr->user->away, SPAMF_AWAY,
+			    NULL, SPAMFLAG_NOWARN, NULL) == FLUSH_BUFFER)
 				continue;
 		}
 		/*
@@ -640,31 +671,34 @@ extern TS check_pings(TS currenttime)
 		Debug((DEBUG_DEBUG, "c(%s)=%d p %d k %d a %d", cptr->name,
 		    cptr->status, ping, killflag,
 		    currenttime - cptr->lasttime));
-		
+
 		/* If ping is less than or equal to the last time we received a command from them */
 		if (ping <= (currenttime - cptr->lasttime))
 		{
 			if (
-				/* If we have sent a ping */
-				((cptr->flags & FLAGS_PINGSENT)
-				/* And they had 2x ping frequency to respond */
-				&& ((currenttime - cptr->lasttime) >= (2 * ping)))
-				|| 
-				/* Or isn't registered and time spent is larger than ping .. */
-				(!IsRegistered(cptr) && (currenttime - cptr->since >= ping))
-				)
+			    /* If we have sent a ping */
+			    ((cptr->flags & FLAGS_PINGSENT)
+			    /* And they had 2x ping frequency to respond */
+			    && ((currenttime - cptr->lasttime) >= (2 * ping)))
+			    ||
+			    /* Or isn't registered and time spent is larger than ping .. */
+			    (!IsRegistered(cptr)
+			    && (currenttime - cptr->since >= ping)))
 			{
 				/* if it's registered and doing dns/auth, timeout */
-				if (!IsRegistered(cptr) && (DoingDNS(cptr) || DoingAuth(cptr)))
+				if (!IsRegistered(cptr) && (DoingDNS(cptr)
+				    || DoingAuth(cptr)))
 				{
-					if (cptr->authfd >= 0) {
+					if (cptr->authfd >= 0)
+					{
 						CLOSE_SOCK(cptr->authfd);
 						--OpenFiles;
 						cptr->authfd = -1;
 						cptr->count = 0;
 						*cptr->buffer = '\0';
 					}
-					if (SHOWCONNECTINFO && !cptr->serv) {
+					if (SHOWCONNECTINFO && !cptr->serv)
+					{
 						if (DoingDNS(cptr))
 							sendto_one(cptr,
 							    REPORT_FAIL_DNS);
@@ -686,9 +720,10 @@ extern TS check_pings(TS currenttime)
 				if (IsServer(cptr) || IsConnecting(cptr) ||
 				    IsHandshake(cptr)
 #ifdef USE_SSL
-					|| IsSSLConnectHandshake(cptr)
-#endif	    
-				    ) {
+				    || IsSSLConnectHandshake(cptr)
+#endif
+				    )
+				{
 					sendto_realops
 					    ("No response from %s, closing link",
 					    get_client_name(cptr, FALSE));
@@ -699,15 +734,18 @@ extern TS check_pings(TS currenttime)
 				}
 #ifdef USE_SSL
 				if (IsSSLAcceptHandshake(cptr))
-					Debug((DEBUG_DEBUG, "ssl accept handshake timeout: %s (%li-%li > %li)", cptr->sockhost,
-						currenttime, cptr->since, ping));
+					Debug((DEBUG_DEBUG,
+					    "ssl accept handshake timeout: %s (%li-%li > %li)",
+					    cptr->sockhost, currenttime,
+					    cptr->since, ping));
 #endif
 				exit_client(cptr, cptr, &me, "Ping timeout");
 				continue;
-				
+
 			}
 			else if (IsRegistered(cptr) &&
-			    ((cptr->flags & FLAGS_PINGSENT) == 0)) {
+			    ((cptr->flags & FLAGS_PINGSENT) == 0))
+			{
 				/*
 				 * if we havent PINGed the connection and we havent
 				 * heard from it in a while, PING it to make sure
@@ -729,9 +767,10 @@ extern TS check_pings(TS currenttime)
 		 */
 		if (IsUnknown(cptr)
 #ifdef USE_SSL
-			|| (IsSSLAcceptHandshake(cptr) || IsSSLConnectHandshake(cptr))
-#endif		
-		)
+		    || (IsSSLAcceptHandshake(cptr)
+		    || IsSSLConnectHandshake(cptr))
+#endif
+		    )
 			if (cptr->firsttime ? ((currenttime - cptr->firsttime) >
 			    100) : 0)
 				(void)exit_client(cptr, cptr, &me,
@@ -752,9 +791,10 @@ extern TS check_pings(TS currenttime)
 	 * * - lucas
 	 * *
 	 */
-	loop.do_bancheck = loop.do_bancheck_spamf_user = loop.do_bancheck_spamf_away = 0;
+	loop.do_bancheck = loop.do_bancheck_spamf_user =
+	    loop.do_bancheck_spamf_away = 0;
 	Debug((DEBUG_NOTICE, "Next check_ping() call at: %s, %d %d %d",
-	    myctime(currenttime+9), ping, currenttime+9, currenttime));
+	    myctime(currenttime + 9), ping, currenttime + 9, currenttime));
 
 	return currenttime + 9;
 }
@@ -771,7 +811,8 @@ static int bad_command(void)
 	    ("Usage: ircd [-f config] [-h servername] [-p portnumber] [-x loglevel] [-t] [-H]\n");
 	(void)printf("Server not started\n\n");
 #else
-	if (!IsService) {
+	if (!IsService)
+	{
 		MessageBox(NULL,
 		    "Usage: wircd [-h servername] [-p portnumber] [-x loglevel]\n",
 		    "UnrealIRCD/32", MB_OK);
@@ -783,6 +824,7 @@ static int bad_command(void)
 char chess[] = {
 	85, 110, 114, 101, 97, 108, 0
 };
+
 #ifndef NEW_IO
 inline TS check_fdlists(TS now)
 {
@@ -790,11 +832,13 @@ inline TS check_fdlists(TS now)
 	int  pri;		/* temp. for priority */
 	int  i, j;
 	j = 0;
-	for (i = LastSlot; i >= 0; i--) {
+	for (i = LastSlot; i >= 0; i--)
+	{
 		if (!(cptr = local[i]))
 			continue;
 		if (IsServer(cptr) || IsListening(cptr)
-		    || IsOper(cptr) || DoingAuth(cptr)) {
+		    || IsOper(cptr) || DoingAuth(cptr))
+		{
 			busycli_fdlist.entry[++j] = i;
 			continue;
 		}
@@ -826,9 +870,9 @@ EVENT(e_check_fdlists)
 
 static void version_check_logerror(char *fmt, ...)
 {
-va_list va;
-char buf[1024];
-	
+	va_list va;
+	char buf[1024];
+
 	va_start(va, fmt);
 	vsnprintf(buf, sizeof(buf), fmt, va);
 	va_end(va);
@@ -836,7 +880,7 @@ char buf[1024];
 	fprintf(stderr, "[!!!] %s\n", buf);
 #else
 	win_log("[!!!] %s", buf);
-#endif	
+#endif
 }
 
 /** Ugly version checker that ensures zlib/ssl/curl runtime libraries match the
@@ -844,17 +888,18 @@ char buf[1024];
  */
 static void do_version_check()
 {
-const char *compiledfor, *runtime;
-int error = 0;
+	const char *compiledfor, *runtime;
+	int  error = 0;
 
 #ifdef USE_SSL
 	compiledfor = OPENSSL_VERSION_TEXT;
 	runtime = SSLeay_version(SSLEAY_VERSION);
 	if (strcasecmp(compiledfor, runtime))
 	{
-		version_check_logerror("OpenSSL version mismatch: compiled for '%s', library is '%s'",
-			compiledfor, runtime);
-		error=1;
+		version_check_logerror
+		    ("OpenSSL version mismatch: compiled for '%s', library is '%s'",
+		    compiledfor, runtime);
+		error = 1;
 	}
 #endif
 #ifdef ZIP_LINKS
@@ -862,8 +907,9 @@ int error = 0;
 	compiledfor = ZLIB_VERSION;
 	if (strcasecmp(compiledfor, runtime))
 	{
-		version_check_logerror("Zlib version mismatch: compiled for '%s', library is '%s'",
-			compiledfor, runtime);
+		version_check_logerror
+		    ("Zlib version mismatch: compiled for '%s', library is '%s'",
+		    compiledfor, runtime);
 		error = 1;
 	}
 #endif
@@ -874,20 +920,21 @@ int error = 0;
 	 */
 	{
 		char buf[128], *p;
-		
+
 		runtime = curl_version();
 		compiledfor = LIBCURL_VERSION;
 		if (!strncmp(runtime, "libcurl/", 8))
 		{
-			strlcpy(buf, runtime+8, sizeof(buf));
+			strlcpy(buf, runtime + 8, sizeof(buf));
 			p = strchr(buf, ' ');
 			if (p)
 			{
 				*p = '\0';
 				if (strcmp(compiledfor, buf))
 				{
-					version_check_logerror("Curl version mismatch: compiled for '%s', library is '%s'",
-						compiledfor, buf);
+					version_check_logerror
+					    ("Curl version mismatch: compiled for '%s', library is '%s'",
+					    compiledfor, buf);
 					error = 1;
 				}
 			}
@@ -898,14 +945,16 @@ int error = 0;
 	if (error)
 	{
 #ifndef _WIN32
-		version_check_logerror("Header<->library mismatches can make UnrealIRCd *CRASH*! "
-		                "Make sure you don't have multiple versions of openssl or zlib installed (eg: "
-		                "one in /usr and one in /usr/local). And, if you recently upgraded them, "
-		                "be sure to recompile Unreal.");
+		version_check_logerror
+		    ("Header<->library mismatches can make UnrealIRCd *CRASH*! "
+		    "Make sure you don't have multiple versions of openssl or zlib installed (eg: "
+		    "one in /usr and one in /usr/local). And, if you recently upgraded them, "
+		    "be sure to recompile Unreal.");
 #else
-		version_check_logerror("Header<->library mismatches can make UnrealIRCd *CRASH*! "
-		                "This should never happen with official Windows builds... unless "
-		                "you overwrote any .dll files with newer/older ones or something.");
+		version_check_logerror
+		    ("Header<->library mismatches can make UnrealIRCd *CRASH*! "
+		    "This should never happen with official Windows builds... unless "
+		    "you overwrote any .dll files with newer/older ones or something.");
 		win_error();
 #endif
 		tainted = 1;
@@ -957,63 +1006,80 @@ int InitwIRCD(int argc, char *argv[])
 # endif
 #endif
 #ifdef	CHROOTDIR
-	if (chdir(dpath)) {
+	if (chdir(dpath))
+	{
 		perror("chdir");
-		fprintf(stderr, "ERROR: Unable to change to directory '%s'\n", dpath);
+		fprintf(stderr, "ERROR: Unable to change to directory '%s'\n",
+		    dpath);
 		exit(-1);
 	}
 	if (geteuid() != 0)
-		fprintf(stderr, "WARNING: IRCd compiled with CHROOTDIR but effective user id is not root!? "
-		                "Booting is very likely to fail...\n");
+		fprintf(stderr,
+		    "WARNING: IRCd compiled with CHROOTDIR but effective user id is not root!? "
+		    "Booting is very likely to fail...\n");
 	init_resolver(1);
 	{
 		struct stat sb;
 		mode_t umaskold;
-		
+
 		umaskold = umask(0);
-		if (mkdir("dev", S_IRUSR|S_IWUSR|S_IXUSR|S_IXGRP|S_IXOTH) != 0 && errno != EEXIST)
+		if (mkdir("dev",
+		    S_IRUSR | S_IWUSR | S_IXUSR | S_IXGRP | S_IXOTH) != 0
+		    && errno != EEXIST)
 		{
-			fprintf(stderr, "ERROR: Cannot mkdir dev: %s\n", strerror(errno));
+			fprintf(stderr, "ERROR: Cannot mkdir dev: %s\n",
+			    strerror(errno));
 			exit(5);
 		}
 		if (stat("/dev/urandom", &sb) != 0)
 		{
-			fprintf(stderr, "ERROR: Cannot stat /dev/urandom: %s\n", strerror(errno));
+			fprintf(stderr, "ERROR: Cannot stat /dev/urandom: %s\n",
+			    strerror(errno));
 			exit(5);
 		}
-		if (mknod("dev/urandom", sb.st_mode, sb.st_rdev) != 0 && errno != EEXIST)
+		if (mknod("dev/urandom", sb.st_mode, sb.st_rdev) != 0
+		    && errno != EEXIST)
 		{
-			fprintf(stderr, "ERROR: Cannot mknod dev/urandom: %s\n", strerror(errno));
+			fprintf(stderr, "ERROR: Cannot mknod dev/urandom: %s\n",
+			    strerror(errno));
 			exit(5);
 		}
 		if (stat("/dev/null", &sb) != 0)
 		{
-			fprintf(stderr, "ERROR: Cannot stat /dev/null: %s\n", strerror(errno));
+			fprintf(stderr, "ERROR: Cannot stat /dev/null: %s\n",
+			    strerror(errno));
 			exit(5);
 		}
-		if (mknod("dev/null", sb.st_mode, sb.st_rdev) != 0 && errno != EEXIST)
+		if (mknod("dev/null", sb.st_mode, sb.st_rdev) != 0
+		    && errno != EEXIST)
 		{
-			fprintf(stderr, "ERROR: Cannot mknod dev/null: %s\n", strerror(errno));
+			fprintf(stderr, "ERROR: Cannot mknod dev/null: %s\n",
+			    strerror(errno));
 			exit(5);
 		}
 		if (stat("/dev/tty", &sb) != 0)
 		{
-			fprintf(stderr, "ERROR: Cannot stat /dev/tty: %s\n", strerror(errno));
+			fprintf(stderr, "ERROR: Cannot stat /dev/tty: %s\n",
+			    strerror(errno));
 			exit(5);
 		}
-		if (mknod("dev/tty", sb.st_mode, sb.st_rdev) != 0 && errno != EEXIST)
+		if (mknod("dev/tty", sb.st_mode, sb.st_rdev) != 0
+		    && errno != EEXIST)
 		{
-			fprintf(stderr, "ERROR: Cannot mknod dev/tty: %s\n", strerror(errno));
+			fprintf(stderr, "ERROR: Cannot mknod dev/tty: %s\n",
+			    strerror(errno));
 			exit(5);
 		}
 		umask(umaskold);
 	}
-	if (chroot(DPATH)) {
-		(void)fprintf(stderr, "ERROR:  Cannot (chdir/)chroot to directory '%s'\n", dpath);
+	if (chroot(DPATH))
+	{
+		(void)fprintf(stderr,
+		    "ERROR:  Cannot (chdir/)chroot to directory '%s'\n", dpath);
 		exit(5);
 	}
 #endif	 /*CHROOTDIR*/
-	myargv = argv;
+	    myargv = argv;
 #ifndef _WIN32
 	(void)umask(077);	/* better safe than sorry --SRB */
 #else
@@ -1033,7 +1099,7 @@ int InitwIRCD(int argc, char *argv[])
 	extcmode_init();
 #endif
 	extban_init();
-	init_random(); /* needs to be done very early!! */
+	init_random();		/* needs to be done very early!! */
 	clear_scache_hash_table();
 #ifdef FORCE_CORE
 	corelim.rlim_cur = corelim.rlim_max = RLIM_INFINITY;
@@ -1046,17 +1112,22 @@ int InitwIRCD(int argc, char *argv[])
 	 * ** be empty. Flag characters cannot be concatenated (like
 	 * ** "-fxyz"), it would conflict with the form "-fstring".
 	 */
-	while (--argc > 0 && (*++argv)[0] == '-') {
+	while (--argc > 0 && (*++argv)[0] == '-')
+	{
 		char *p = argv[0] + 1;
 		int  flag = *p++;
-		if (flag == '\0' || *p == '\0') {
-			if (argc > 1 && argv[1][0] != '-') {
+		if (flag == '\0' || *p == '\0')
+		{
+			if (argc > 1 && argv[1][0] != '-')
+			{
 				p = *++argv;
 				argc -= 1;
-			} else
+			}
+			else
 				p = "";
 		}
-		switch (flag) {
+		switch (flag)
+		{
 #ifndef _WIN32
 		  case 'a':
 			  bootopt |= BOOT_AUTODIE;
@@ -1080,17 +1151,19 @@ int InitwIRCD(int argc, char *argv[])
 #ifndef _WIN32
 		  case 'f':
 #ifndef CMDLINE_CONFIG
-		      if ((uid == euid) && (gid == egid))
-			       configfile = p;
+			  if ((uid == euid) && (gid == egid))
+				  configfile = p;
 			  else
-			       printf("ERROR: Command line config with a setuid/setgid ircd is not allowed");
+				  printf
+				      ("ERROR: Command line config with a setuid/setgid ircd is not allowed");
 #else
 			  (void)setuid((uid_t) uid);
 			  configfile = p;
 #endif
 			  break;
 		  case 'h':
-			  if (!strchr(p, '.')) {
+			  if (!strchr(p, '.'))
+			  {
 
 				  (void)printf
 				      ("ERROR: %s is not valid: Server names must contain at least 1 \".\"\n",
@@ -1101,17 +1174,20 @@ int InitwIRCD(int argc, char *argv[])
 			  break;
 #endif
 #ifndef _WIN32
-		  case 'P':{
+		  case 'P':
+		  {
 			  short type;
 			  char *result;
 			  srandom(TStime());
-			  if ((type = Auth_FindType(p)) == -1) {
+			  if ((type = Auth_FindType(p)) == -1)
+			  {
 				  printf("No such auth type %s\n", p);
 				  exit(0);
 			  }
 			  p = *++argv;
 			  argc--;
-			  if (!(result = Auth_Make(type, p))) {
+			  if (!(result = Auth_Make(type, p)))
+			  {
 				  printf("Authentication failed\n");
 				  exit(0);
 			  }
@@ -1152,7 +1228,8 @@ int InitwIRCD(int argc, char *argv[])
 			  (void)printf("%s build %s\n", version, buildid);
 #else
 		  case 'v':
-			  if (!IsService) {
+			  if (!IsService)
+			  {
 				  MessageBox(NULL, version,
 				      "UnrealIRCD/Win32 version", MB_OK);
 			  }
@@ -1176,7 +1253,8 @@ int InitwIRCD(int argc, char *argv[])
 			      "%s: DEBUGMODE must be defined for -x y\n",
 			      myargv[0]);
 # else
-			  if (!IsService) {
+			  if (!IsService)
+			  {
 				  MessageBox(NULL,
 				      "DEBUGMODE must be defined for -x option",
 				      "UnrealIRCD/32", MB_OK);
@@ -1193,12 +1271,15 @@ int InitwIRCD(int argc, char *argv[])
 	do_version_check();
 
 #ifndef	CHROOTDIR
-	if (chdir(dpath)) {
+	if (chdir(dpath))
+	{
 # ifndef _WIN32
 		perror("chdir");
-		fprintf(stderr, "ERROR: Unable to change to directory '%s'\n", dpath);
+		fprintf(stderr, "ERROR: Unable to change to directory '%s'\n",
+		    dpath);
 # else
-		if (!IsService) {
+		if (!IsService)
+		{
 			MessageBox(NULL, strerror(GetLastError()),
 			    "UnrealIRCD/32: chdir()", MB_OK);
 		}
@@ -1207,7 +1288,7 @@ int InitwIRCD(int argc, char *argv[])
 	}
 #endif
 #ifndef _WIN32
-	mkdir("tmp", S_IRUSR|S_IWUSR|S_IXUSR); /* Create the tmp dir, if it doesn't exist */
+	mkdir("tmp", S_IRUSR | S_IWUSR | S_IXUSR);	/* Create the tmp dir, if it doesn't exist */
 #else
 	mkdir("tmp");
 #endif
@@ -1218,7 +1299,8 @@ int InitwIRCD(int argc, char *argv[])
 	/*
 	 * but asked for debugging output to tty 
 	 */
-	if ((debuglevel < 0) && (bootopt & BOOT_TTY)) {
+	if ((debuglevel < 0) && (bootopt & BOOT_TTY))
+	{
 		(void)fprintf(stderr,
 		    "you specified -t without -x. use -x <n>\n");
 		exit(-1);
@@ -1237,7 +1319,8 @@ int InitwIRCD(int argc, char *argv[])
 	fprintf(stderr, "                           v%s\n", VERSIONONLY);
 	fprintf(stderr, "                     using %s\n", tre_version());
 #ifdef USE_SSL
-	fprintf(stderr, "                     using %s\n", OPENSSL_VERSION_TEXT);
+	fprintf(stderr, "                     using %s\n",
+	    OPENSSL_VERSION_TEXT);
 #endif
 #ifdef ZIP_LINKS
 	fprintf(stderr, "                     using zlib %s\n", zlibVersion());
@@ -1295,13 +1378,15 @@ int InitwIRCD(int argc, char *argv[])
 #endif
 	make_extbanstr();
 	isupport_init();
-	if (!find_Command_simple("AWAY") /*|| !find_Command_simple("KILL") ||
-		!find_Command_simple("OPER") || !find_Command_simple("PING")*/)
-	{ 
-		config_error("Someone forgot to load modules with proper commands in them. READ THE DOCUMENTATION");
+	if (!find_Command_simple("AWAY")	/*|| !find_Command_simple("KILL") ||
+						   !find_Command_simple("OPER") || !find_Command_simple("PING") */ )
+	{
+		config_error
+		    ("Someone forgot to load modules with proper commands in them. READ THE DOCUMENTATION");
 #ifdef _WIN32
 		/* Temporary! */
-		config_error("As of Unreal3.2.1 modules are supported on windows, "
+		config_error
+		    ("As of Unreal3.2.1 modules are supported on windows, "
 		    "therefore you MUST load the commands.dll module and a cloaking module. "
 		    "Just add 'loadmodule \"modules/commands.dll\"' and 'loadmodule \"modules/cloak.dll\"' "
 		    "to your unrealircd.conf and be sure to read the release notes!");
@@ -1425,7 +1510,8 @@ int InitwIRCD(int argc, char *argv[])
 	R_fail_id = strlen(REPORT_FAIL_ID);
 
 #if !defined(IRC_UID) && !defined(_WIN32)
-	if ((uid != euid) && !euid) {
+	if ((uid != euid) && !euid)
+	{
 		(void)fprintf(stderr,
 		    "ERROR: do not run ircd setuid root. Make it setuid a normal user.\n");
 		exit(-1);
@@ -1433,28 +1519,39 @@ int InitwIRCD(int argc, char *argv[])
 #endif
 
 #if defined(IRC_UID) && defined(IRC_GID)
-	if ((int)getuid() == 0) {
-		if ((IRC_UID == 0) || (IRC_GID == 0)) {
+	if ((int)getuid() == 0)
+	{
+		if ((IRC_UID == 0) || (IRC_GID == 0))
+		{
 			(void)fprintf(stderr,
 			    "ERROR: SETUID and SETGID have not been set properly"
 			    "\nPlease read your documentation\n(HINT: IRC_UID and IRC_GID in include/config.h can not be 0)\n");
 			exit(-1);
-		} else {
+		}
+		else
+		{
 			/*
 			 * run as a specified user 
 			 */
 
-			(void)fprintf(stderr, "WARNING: ircd invoked as root\n");
-			(void)fprintf(stderr, "         changing to uid %d\n", IRC_UID);
-			(void)fprintf(stderr, "         changing to gid %d\n", IRC_GID);
+			(void)fprintf(stderr,
+			    "WARNING: ircd invoked as root\n");
+			(void)fprintf(stderr, "         changing to uid %d\n",
+			    IRC_UID);
+			(void)fprintf(stderr, "         changing to gid %d\n",
+			    IRC_GID);
 			if (setgid(IRC_GID))
 			{
-				fprintf(stderr, "ERROR: Unable to change group: %s\n", strerror(errno));
+				fprintf(stderr,
+				    "ERROR: Unable to change group: %s\n",
+				    strerror(errno));
 				exit(-1);
 			}
 			if (setuid(IRC_UID))
 			{
-				fprintf(stderr, "ERROR: Unable to change userid: %s\n", strerror(errno));
+				fprintf(stderr,
+				    "ERROR: Unable to change userid: %s\n",
+				    strerror(errno));
 				exit(-1);
 			}
 		}
@@ -1463,11 +1560,12 @@ int InitwIRCD(int argc, char *argv[])
 	if (TIMESYNCH)
 	{
 		if (!unreal_time_synch(TIMESYNCH_TIMEOUT))
-			ircd_log(LOG_ERROR, "TIME SYNCH: Unable to synchronize time: %s. This happens sometimes, no error on your part.",
-				unreal_time_synch_error());
+			ircd_log(LOG_ERROR,
+			    "TIME SYNCH: Unable to synchronize time: %s. This happens sometimes, no error on your part.",
+			    unreal_time_synch_error());
 	}
 	write_pidfile();
-	
+
 	Debug((DEBUG_NOTICE, "Server ready..."));
 	SetupEvents();
 #ifdef THROTTLING
@@ -1512,8 +1610,8 @@ void SocketLoop(void *dummy)
 #ifndef NO_FDLIST
 	TS   nextfdlistcheck = 0;	/*end of priority code */
 #endif
-	
-#ifdef _WIN32	
+
+#ifdef _WIN32
 	while (1)
 #else
 	nextping = timeofday;
@@ -1528,13 +1626,12 @@ void SocketLoop(void *dummy)
 
 		oldtimeofday = timeofday;
 		timeofday = time(NULL) + TSoffset;
-		if (timeofday - oldtimeofday < 0) {
+		if (timeofday - oldtimeofday < 0)
+		{
 			sendto_realops("Time running backwards! %ld - %ld < 0",
 			    timeofday, oldtimeofday);
 		}
-		LockEventSystem();
 		DoEvents();
-		UnlockEventSystem();
 		/*
 		 * ** Run through the hashes and check lusers every
 		 * ** second
@@ -1589,24 +1686,29 @@ void SocketLoop(void *dummy)
 #else
 		(void)read_message(0, &serv_fdlist);	/* servers */
 		(void)read_message(1, &busycli_fdlist);	/* busy clients */
-		if (lifesux) {
+		if (lifesux)
+		{
 			static time_t alllasttime = 0;
 
 			(void)read_message(1, &serv_fdlist);
 			/*
 			 * read servs more often 
 			 */
-			if (lifesux > 9) {	/* life really sucks */
+			if (lifesux > 9)
+			{	/* life really sucks */
 				(void)read_message(1, &busycli_fdlist);
 				(void)read_message(1, &serv_fdlist);
 			}
 			flush_fdlist_connections(&serv_fdlist);
 			timeofday = time(NULL) + TSoffset;
-			if ((alllasttime + (lifesux + 1)) < timeofday) {
+			if ((alllasttime + (lifesux + 1)) < timeofday)
+			{
 				read_message(delay, NULL);	/*  check everything */
 				alllasttime = timeofday;
 			}
-		} else {
+		}
+		else
+		{
 			read_message(delay, NULL);	/*  check everything */
 			timeofday = time(NULL) + TSoffset;
 		}
@@ -1629,7 +1731,7 @@ void SocketLoop(void *dummy)
 		if ((timeofday >= nextping && !lifesux) || loop.do_bancheck)
 #endif
 			nextping = check_pings(timeofday);
-		if (dorehash) 
+		if (dorehash)
 		{
 			(void)rehash(&me, &me, 1);
 			dorehash = 0;
@@ -1666,10 +1768,21 @@ void SocketLoop(void *dummy)
 #else /* ifndef NEW_IO */
 void SocketLoop(void *dummy)
 {
-		while (1 == 1)
+	while (1 == 1)
+	{
+		time_t oldtimeofday;
+
+		oldtimeofday = timeofday;
+		timeofday = time(NULL) + TSoffset;
+		if (timeofday - oldtimeofday < 0)
 		{
-			usleep(500);
+			sendto_realops("Time running backwards! %ld - %ld < 0",
+			    timeofday, oldtimeofday);
 		}
+		DoEvents();
+
+		usleep(500);
+	}
 }
 #endif /* ifndef NEW_IO */
 
@@ -1681,22 +1794,22 @@ void SocketLoop(void *dummy)
 void write_pidfile(void)
 {
 #ifdef IRCD_PIDFILE
-  int  fd;
-  char buff[20];
-  if ((fd = open(IRCD_PIDFILE, O_CREAT | O_WRONLY, 0600)) >= 0)
-  {
-    bzero(buff, sizeof(buff));
-    (void)ircsprintf(buff, "%5d\n", (int)getpid());
-    if (write(fd, buff, strlen(buff)) == -1)
-      Debug((DEBUG_NOTICE, "Error writing to pid file %s",
-          IRCD_PIDFILE));
-    (void)close(fd);
-    return;
-  }
+	int  fd;
+	char buff[20];
+	if ((fd = open(IRCD_PIDFILE, O_CREAT | O_WRONLY, 0600)) >= 0)
+	{
+		bzero(buff, sizeof(buff));
+		(void)ircsprintf(buff, "%5d\n", (int)getpid());
+		if (write(fd, buff, strlen(buff)) == -1)
+			Debug((DEBUG_NOTICE, "Error writing to pid file %s",
+			    IRCD_PIDFILE));
+		(void)close(fd);
+		return;
+	}
 #ifdef  DEBUGMODE
-  else
-    Debug((DEBUG_NOTICE, "Error opening pid file %s",
-        IRCD_PIDFILE));
+	else
+		Debug((DEBUG_NOTICE, "Error opening pid file %s",
+		    IRCD_PIDFILE));
 #endif
 #endif
 }
@@ -1716,7 +1829,8 @@ static void open_debugfile(void)
 #ifdef	DEBUGMODE
 	int  fd;
 	aClient *cptr;
-	if (debuglevel >= 0) {
+	if (debuglevel >= 0)
+	{
 		cptr = make_client(NULL, NULL);
 		cptr->fd = 2;
 		SetLog(cptr);
@@ -1731,17 +1845,20 @@ static void open_debugfile(void)
 # ifndef _WIN32
 		(void)printf("isatty = %d ttyname = %#x\n",
 		    isatty(2), (u_int)ttyname(2));
-		if (!(bootopt & BOOT_TTY)) {	/* leave debugging output on fd 2 */
+		if (!(bootopt & BOOT_TTY))
+		{		/* leave debugging output on fd 2 */
 			(void)truncate(LOGFILE, 0);
 			if ((fd = open(LOGFILE, O_WRONLY | O_CREAT, 0600)) < 0)
 				if ((fd = open("/dev/null", O_WRONLY)) < 0)
 					exit(-1);
-			if (fd != 2) {
+			if (fd != 2)
+			{
 				(void)dup2(fd, 2);
 				(void)close(fd);
 			}
 			strncpyzt(cptr->name, LOGFILE, sizeof(cptr->name));
-		} else if (isatty(2) && ttyname(2))
+		}
+		else if (isatty(2) && ttyname(2))
 			strncpyzt(cptr->name, ttyname(2), sizeof(cptr->name));
 		else
 # endif
@@ -1749,7 +1866,8 @@ static void open_debugfile(void)
 		Debug((DEBUG_FATAL,
 		    "Debug: File <%s> Level: %d at %s", cptr->name,
 		    cptr->port, myctime(time(NULL))));
-	} else
+	}
+	else
 		/*
 		 * local[2] = NULL; winlocal 
 		 */
