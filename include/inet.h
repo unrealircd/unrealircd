@@ -57,3 +57,27 @@ extern __u_l inet_network();
 extern __u_l inet_lnaof();
 #endif
 #undef __u_l
+
+#ifndef HAVE_STRUCT_SOCKADDR_STORAGE
+#ifdef SOCKADDR_IN_HAS_LEN /* BSD style sockaddr_storage for BSD style
+            sockaddr_in */
+struct sockaddr_storage {
+  unsigned char ss_len;
+  sa_family_t ss_family;
+  char __ss_pad1[((sizeof(int64_t)) - sizeof(unsigned char) -
+      sizeof(sa_family_t) )];
+  int64_t __ss_align;
+  char __ss_pad2[(128 - sizeof(unsigned char) - sizeof(sa_family_t) -
+      ((sizeof(int64_t)) - sizeof(unsigned char) -
+       sizeof(sa_family_t)) - (sizeof(int64_t)))];
+};
+#else /* Linux style for everything else (for now) */
+struct sockaddr_storage
+{
+  sa_family_t ss_family;
+  u_int32_t __ss_align;
+  char __ss_padding[(128 - (2 * sizeof (u_int32_t)))];
+};
+#endif /* SOCKADDR_IN_HAS_LEN */
+#endif /* HAVE_STRUCT_SOCKADDR_STORAGE */
+

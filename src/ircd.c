@@ -1466,13 +1466,8 @@ int InitwIRCD(int argc, char *argv[])
 			ircd_log(LOG_ERROR, "TIME SYNCH: Unable to synchronize time: %s. This happens sometimes, no error on your part.",
 				unreal_time_synch_error());
 	}
-#ifndef NEW_IO
-	/*
-	 * Is that really have to be in s_bsd.c ? 
-	 */
 	write_pidfile();
-#else /* ifndef NEW_IO */
-#endif /* ifndef NEW_IO */
+	
 	Debug((DEBUG_NOTICE, "Server ready..."));
 	SetupEvents();
 #ifdef THROTTLING

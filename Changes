@@ -1288,3 +1288,4 @@
 - Pointed possible code changes with NEW_IO define for future code changes it
   will also do some resist do broken codes coming with new io engine.
 - Moved write_pidfile to ircd.c from s_bsd.c.
+- Added new fdlist structure to fdlist.h
