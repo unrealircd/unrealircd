@@ -1289,3 +1289,32 @@
   will also do some resist do broken codes coming with new io engine.
 - Moved write_pidfile to ircd.c from s_bsd.c.
 - Added new fdlist structure to fdlist.h
+- Start of modulizing of channel modes. This basically just means we will be using extcmodes
+  for everything. Recode of extcmodes partially complete (only 30% or something), using a
+  FAST 'slot system' now in the channel structure for paramter modes instead of linked lists.
+  Besides the slot system being faster, it also causes less memory fragmentation (and
+  memory fragmentation actually causes slower CPU as well, especially when running for a
+  long time). Channel modes are still permanent and all.
+  I'm first going to move modes to modules and then later on have a go at making them non-
+  permanent (already know exactly how to do it, but other things go first ;p).
+  Documentation on how all this works will be added later as well. It's really work-in-progress
+  at the moment, which means: the API might (or 'will') change.
+  Channel modes will be in src/modules/chanmodes, named chmode_<modechar>.c, that's the
+  general rule at least.. Some will be 'packed together' like the RFC modes s/n/t/k/l/etc.
+  Channel mode 'j' has been moved to src/modules/chanmodes/chmode_j.c which seems to work ok.
+  Details (aka: documentation) about which loadmodule's will be needed for which modes
+  (like I said, since some will be bundled in for example an 'rfc' module) will also be added
+  later. For now it doesn't matter much, since there's only j ;).
+  Side note: some +j code is still in the core (only eating 4 bytes per-user and 4 bytes
+  per-channel, though), and will remain there for now.
+  I did the work of above in 2 days, so ehm.. it's still far from complete, but I don't want
+  to wait for one BIG commit which changes half of the ircd :P.
+  Added hooks (needs to be documented, like all other hooks, one day ;p):
+  HOOKTYPE_CAN_JOIN: called from can_join(), seems more logical than PRE_LOCAL_JOIN, also
+  more nicely passes the key and link stuff.
+  HOOKTYPE_CAN_SEND: not implemented yet. will be called from can_send()
+  HOOKTYPE_CLEANUP_CLIENT: called from free_client()
+  HOOKTYPE_CLEANUP_USER: called from free_user()
+  HOOKTYPE_CLEANUP_USER2: called from exit_client when freeing a user.. I know, this
+  might sound redundant, but then again.. some things REQUIRE a certain order (like before
+  freeing membership links).. Or at least I don't want to break the current logic ;).

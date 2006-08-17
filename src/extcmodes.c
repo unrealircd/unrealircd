@@ -46,6 +46,9 @@
 
 extern char cmodestring[512];
 
+/* Channel parameter to slot# mapping */
+unsigned char param_to_slot_mapping[256];
+
 extern void make_cmodestr(void);
 
 char extchmstr[4][64];
@@ -53,22 +56,13 @@ char extchmstr[4][64];
 Cmode *Channelmode_Table = NULL;
 unsigned short Channelmode_highest = 0;
 
+Cmode *ParamTable[MAXPARAMMODES+1];
+
 Cmode_t EXTMODE_NONOTICE = 0L;
 #ifdef STRIPBADWORDS
 Cmode_t EXTMODE_STRIPBADWORDS = 0L;
 #endif
 
-#ifdef JOINTHROTTLE
-/* cmode j stuff... */
-Cmode_t EXTMODE_JOINTHROTTLE = 0L;
-int cmodej_is_ok(aClient *sptr, aChannel *chptr, char *para, int type, int what);
-CmodeParam *cmodej_put_param(CmodeParam *r_in, char *param);
-char *cmodej_get_param(CmodeParam *r_in);
-char *cmodej_conv_param(char *param_in);
-void cmodej_free_param(CmodeParam *r);
-CmodeParam *cmodej_dup_struct(CmodeParam *r_in);
-int cmodej_sjoin_check(aChannel *chptr, CmodeParam *ourx, CmodeParam *theirx);
-#endif
 int extcmode_cmodeT_requirechop(aClient *cptr, aChannel *chptr, char *para, int checkt, int what);
 #ifdef STRIPBADWORDS
 int extcmode_cmodeG_requirechop(aClient *cptr, aChannel *chptr, char *para, int checkt, int what);
@@ -116,21 +110,6 @@ static void load_extendedchanmodes(void)
 	req.is_ok = extcmode_cmodeG_requirechop;
 	CmodeAdd(NULL, req, &EXTMODE_STRIPBADWORDS);
 #endif
-	
-#ifdef JOINTHROTTLE
-	/* +j */
-	memset(&req, 0, sizeof(req));
-	req.paracount = 1;
-	req.is_ok = cmodej_is_ok;
-	req.flag = 'j';
-	req.put_param = cmodej_put_param;
-	req.get_param = cmodej_get_param;
-	req.conv_param = cmodej_conv_param;
-	req.free_param = cmodej_free_param;
-	req.dup_struct = cmodej_dup_struct;
-	req.sjoin_check = cmodej_sjoin_check;
-	CmodeAdd(NULL, req, &EXTMODE_JOINTHROTTLE);
-#endif
 }
 
 void	extcmode_init(void)
@@ -139,6 +118,9 @@ void	extcmode_init(void)
 	int	i;
 	Channelmode_Table = (Cmode *)MyMalloc(sizeof(Cmode) * EXTCMODETABLESZ);
 	bzero(Channelmode_Table, sizeof(Cmode) * EXTCMODETABLESZ);
+	
+	memset(&ParamTable, 0, sizeof(ParamTable));
+	
 	for (i = 0; i < EXTCMODETABLESZ; i++)
 	{
 		Channelmode_Table[i].mode = val;
@@ -146,14 +128,26 @@ void	extcmode_init(void)
 	}
 	Channelmode_highest = 0;
 	memset(&extchmstr, 0, sizeof(extchmstr));
+	memset(&param_to_slot_mapping, 0, sizeof(param_to_slot_mapping));
 
 	/* And load the build-in extended chanmodes... */
 	load_extendedchanmodes();
 }
 
+/* Update letter->slot mapping and slot->handler mapping */
+void extcmode_para_addslot(Cmode *c, int slot)
+{
+	if ((slot < 0) || (slot > MAXPARAMMODES))
+		abort();
+	c->slot = slot;
+	ParamTable[slot] = c;
+	param_to_slot_mapping[c->flag] = slot;
+}
+
 Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode)
 {
 	short i = 0, j = 0;
+	int paraslot = -1;
 	char tmpbuf[512];
 
 	while (i < EXTCMODETABLESZ)
@@ -175,6 +169,19 @@ Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode)
 			reserved->errorcode = MODERR_NOSPACE;
 		return NULL;
 	}
+	
+	if (req.paracount == 1)
+	{
+		for (paraslot = 0; ParamTable[paraslot]; paraslot++)
+			if (paraslot == MAXPARAMMODES - 1)
+			{
+				Debug((DEBUG_DEBUG, "CmodeAdd failed, no space for parameter"));
+				if (reserved)
+					reserved->errorcode = MODERR_NOSPACE;
+				return NULL;
+			}
+	}
+	
 	*mode = Channelmode_Table[i].mode;
 	/* Update extended channel mode table highest */
 	Channelmode_Table[i].flag = req.flag;
@@ -190,6 +197,10 @@ Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode)
 		if (Channelmode_Table[j].flag)
 			if (j > Channelmode_highest)
 				Channelmode_highest = j;
+
+	if (Channelmode_Table[i].paracount == 1)
+		extcmode_para_addslot(&Channelmode_Table[i], paraslot);
+
 	if (reserved)
 		reserved->errorcode = MODERR_NOERROR;
 	if (loop.ircd_booted)
@@ -217,73 +228,69 @@ void CmodeDel(Cmode *cmode)
 	IsupportSetValue(IsupportFind("CHANMODES"), tmpbuf);
 }
 
-/** searches in chptr extmode parameters and returns entry or NULL. */
-CmodeParam *extcmode_get_struct(CmodeParam *p, char ch)
-{
-
-	while(p)
-	{
-		if (p->flag == ch)
-			return p;
-		p = p->next;
-	}
-	return NULL;
-}
-
-/* bit inefficient :/ */
-CmodeParam *extcmode_duplicate_paramlist(CmodeParam *lst)
+void extcmode_duplicate_paramlist(void **xi, void **xo)
 {
 	int i;
-	Cmode *tbl;
-	CmodeParam *head = NULL, *n;
+	Cmode *handler;
+	void *inx;
 
-	while(lst)
+	for (i = 0; i < MAXPARAMMODES; i++)
 	{
-		tbl = NULL;
-		for (i=0; i <= Channelmode_highest; i++)
-		{
-			if (Channelmode_Table[i].flag == lst->flag)
-			{
-				tbl = &Channelmode_Table[i]; /* & ? */
-				break;
-			}
-		}
-		n = tbl->dup_struct(lst);
-		if (head)
-		{
-			AddListItem(n, head);
-		} else {
-			head = n;
-		}
-		lst = lst->next;
+		handler = CMP_GETHANDLERBYSLOT(i);
+		if (!handler)
+			continue; /* nothing there.. */
+		inx = xi[handler->slot]; /* paramter data of input is here */
+		xo[handler->slot] = handler->dup_struct(inx); /* call dup_struct with that input and set the output param to that */
 	}
-	return head;
 }
 
-void extcmode_free_paramlist(CmodeParam *lst)
+void extcmode_free_paramlist(void **ar)
 {
-	CmodeParam *n;
-	int i;
-	Cmode *tbl;
+int i;
+Cmode *handler;
 
-	while(lst)
+	for (i = 0; i < MAXPARAMMODES; i++)
 	{
-		/* first remove it from the list... */
-		n = lst;
-		DelListItem(n, lst);
-		/* then hunt for the param free function and let it free */
-		tbl = NULL;
-		for (i=0; i <= Channelmode_highest; i++)
-		{
-			if (Channelmode_Table[i].flag == n->flag)
-			{
-				tbl = &Channelmode_Table[i]; /* & ? */
-				break;
-			}
-		}
-		tbl->free_param(n);
+		handler = GETPARAMHANDLERBYSLOT(i);
+		if (!handler)
+			continue; /* nothing here... */
+		handler->free_param(ar[handler->slot]);
+		ar[handler->slot] = NULL;
 	}
 }
+
+char *cm_getparameter(aChannel *chptr, char mode)
+{
+	return GETPARAMHANDLERBYLETTER(mode)->get_param(GETPARASTRUCT(chptr, mode));
+}
+
+void cm_putparameter(aChannel *chptr, char mode, char *str)
+{
+	GETPARASTRUCT(chptr, mode) = GETPARAMHANDLERBYLETTER(mode)->put_param(GETPARASTRUCT(chptr, mode), str);
+}
+
+void cm_freeparameter(aChannel *chptr, char mode)
+{
+	GETPARAMHANDLERBYLETTER(mode)->free_param(GETPARASTRUCT(chptr, mode));
+	GETPARASTRUCT(chptr, mode) = NULL;
+}
+
+char *cm_getparameter_ex(void **p, char mode)
+{
+	return GETPARAMHANDLERBYLETTER(mode)->get_param(GETPARASTRUCTEX(p, mode));
+}
+
+void cm_putparameter_ex(void **p, char mode, char *str)
+{
+	GETPARASTRUCTEX(p, mode) = GETPARAMHANDLERBYLETTER(mode)->put_param(GETPARASTRUCTEX(p, mode), str);
+}
+
+void cm_freeparameter_ex(void **p, char mode, char *str)
+{
+	GETPARAMHANDLERBYLETTER(mode)->free_param(GETPARASTRUCTEX(p, mode));
+	GETPARASTRUCTEX(p, mode) = NULL;
+}
+
 
 /* Ok this is my mistake @ EXCHK_ACCESS_ERR error msg:
  * the is_ok() thing does not know which mode it belongs to,
@@ -329,155 +336,5 @@ int extcmode_cmodeG_requirechop(aClient *cptr, aChannel *chptr, char *para, int 
 		sendto_one(cptr, err_str(ERR_NOTFORHALFOPS), me.name, cptr->name, 'G');
 	return EX_DENY;
 }
-
-#ifdef JOINTHROTTLE
-/*** CHANNEL MODE +j STUFF ******/
-int cmodej_is_ok(aClient *sptr, aChannel *chptr, char *para, int type, int what)
-{
-	if ((type == EXCHK_ACCESS) || (type == EXCHK_ACCESS_ERR))
-	{
-		if (IsPerson(sptr) && is_chan_op(sptr, chptr))
-			return EX_ALLOW;
-		if (type == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
-			sendto_one(sptr, err_str(ERR_NOTFORHALFOPS), me.name, sptr->name, 'j');
-		return EX_DENY;
-	} else
-	if (type == EXCHK_PARAM)
-	{
-		/* Check parameter.. syntax should be X:Y, X should be 1-255, Y should be 1-999 */
-		char buf[32], *p;
-		int num, t, fail = 0;
-		
-		strlcpy(buf, para, sizeof(buf));
-		p = strchr(buf, ':');
-		if (!p)
-		{
-			fail = 1;
-		} else {
-			*p++ = '\0';
-			num = atoi(buf);
-			t = atoi(p);
-			if ((num < 1) || (num > 255) || (t < 1) || (t > 999))
-				fail = 1;
-		}
-		if (fail)
-		{
-			sendnotice(sptr, "Error in setting +j, syntax: +j <num>:<seconds>, where <num> must be 1-255, and <seconds> 1-999");
-			return EX_DENY;
-		}
-		return EX_ALLOW;
-	}
-
-	/* falltrough -- should not be used */
-	return EX_DENY;
-}
-
-CmodeParam *cmodej_put_param(CmodeParam *r_in, char *param)
-{
-aModejEntry *r = (aModejEntry *)r_in;
-char buf[32], *p;
-int num, t;
-
-	if (!r)
-	{
-		/* Need to create one */
-		r = (aModejEntry *)malloc(sizeof(aModejEntry));
-		memset(r, 0, sizeof(aModejEntry));
-		r->flag = 'j';
-	}
-	strlcpy(buf, param, sizeof(buf));
-	p = strchr(buf, ':');
-	if (p)
-	{
-		*p++ = '\0';
-		num = atoi(buf);
-		t = atoi(p);
-		if (num < 1) num = 1;
-		if (num > 255) num = 255;
-		if (t < 1) t = 1;
-		if (t > 999) t = 999;
-		r->num = num;
-		r->t = t;
-	} else {
-		r->num = 0;
-		r->t = 0;
-	}
-	return (CmodeParam *)r;
-}
-
-char *cmodej_get_param(CmodeParam *r_in)
-{
-aModejEntry *r = (aModejEntry *)r_in;
-static char retbuf[16];
-
-	if (!r)
-		return NULL;
-
-	snprintf(retbuf, sizeof(retbuf), "%hu:%hu", r->num, r->t);
-	return retbuf;
-}
-
-char *cmodej_conv_param(char *param_in)
-{
-static char retbuf[32];
-char param[32], *p;
-int num, t, fail = 0;
-		
-	strlcpy(param, param_in, sizeof(param));
-	p = strchr(param, ':');
-	if (!p)
-		return NULL;
-	*p++ = '\0';
-	num = atoi(param);
-	t = atoi(p);
-	if (num < 1)
-		num = 1;
-	if (num > 255)
-		num = 255;
-	if (t < 1)
-		t = 1;
-	if (t > 999)
-		t = 999;
-	
-	snprintf(retbuf, sizeof(retbuf), "%d:%d", num, t);
-	return retbuf;
-}
-
-void cmodej_free_param(CmodeParam *r)
-{
-	MyFree(r);
-}
-
-CmodeParam *cmodej_dup_struct(CmodeParam *r_in)
-{
-aModejEntry *r = (aModejEntry *)r_in;
-aModejEntry *w = (aModejEntry *)MyMalloc(sizeof(aModejEntry));
-
-	memcpy(w, r, sizeof(aModejEntry));
-	return (CmodeParam *)w;
-}
-
-int cmodej_sjoin_check(aChannel *chptr, CmodeParam *ourx, CmodeParam *theirx)
-{
-aModejEntry *our = (aModejEntry *)ourx;
-aModejEntry *their = (aModejEntry *)theirx;
-
-	if (our->t != their->t)
-	{
-		if (our->t > their->t)
-			return EXSJ_WEWON;
-		else
-			return EXSJ_THEYWON;
-	}
-	else if (our->num != their->num)
-	{
-		if (our->num > their->num)
-			return EXSJ_WEWON;
-		else
-			return EXSJ_THEYWON;
-	} else
-		return EXSJ_SAME;
-}
-#endif /* JOINTHROTTLE */
 
 #endif /* EXTCMODE */

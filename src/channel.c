@@ -977,8 +977,10 @@ void channel_modes(aClient *cptr, char *mbuf, char *pbuf, aChannel *chptr)
 		if (Channelmode_Table[i].flag && Channelmode_Table[i].paracount &&
 		    (chptr->mode.extmode & Channelmode_Table[i].mode))
 		{
-			*mbuf++ = Channelmode_Table[i].flag;
-			strcat(pbuf, Channelmode_Table[i].get_param(extcmode_get_struct(chptr->mode.extmodeparam, Channelmode_Table[i].flag)));
+			char flag = Channelmode_Table[i].flag;
+			*mbuf++ = flag;
+			//strcat(pbuf, Channelmode_Table[i].get_param(CMP_GETSTRUCT(chptr, Channelmode_Table[i].flag)));
+			strcat(pbuf, cm_getparameter(chptr, flag));
 			strcat(pbuf, " ");
 		}
 	}
@@ -1380,16 +1382,12 @@ void sub1_from_channel(aChannel *chptr)
 		}
 #ifdef EXTCMODE
 		/* free extcmode params */
-		extcmode_free_paramlist(chptr->mode.extmodeparam);
-		chptr->mode.extmodeparam = NULL;
+		extcmode_free_paramlist(chptr->mode.extmodeparams);
 #endif
 #ifdef NEWCHFLOODPROT
 		chanfloodtimer_stopchantimers(chptr);
 		if (chptr->mode.floodprot)
 			MyFree(chptr->mode.floodprot);
-#endif
-#ifdef JOINTHROTTLE
-		cmodej_delchannelentries(chptr);
 #endif
 		if (chptr->topic)
 			MyFree(chptr->topic);

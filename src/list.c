@@ -164,6 +164,7 @@ void free_client(aClient *cptr)
 #endif
 		if (cptr->hostp)
 			unreal_free_hostent(cptr->hostp);
+		RunHook(HOOKTYPE_CLEANUP_CLIENT, cptr);
 	}
 	MyFree((char *)cptr);
 }
@@ -247,6 +248,8 @@ void free_user(anUser *user, aClient *cptr)
 			MyFree(user->ip_str);
 		if (user->operlogin)
 			MyFree(user->operlogin);
+		
+		RunHook2(HOOKTYPE_CLEANUP_USER, user, cptr);
 		/*
 		 * sanity check
 		 */
@@ -553,159 +556,4 @@ ListStruct *del_ListItem(ListStruct *item, ListStruct **list) {
 	return NULL;
 }
 
-#ifdef JOINTHROTTLE
-/** Adds a aJFlood entry to user & channel and returns entry.
- * NOTE: Does not check for already-existing-entry
- */
-aJFlood *cmodej_addentry(aClient *cptr, aChannel *chptr)
-{
-aJFlood *e;
-
-#ifdef DEBUGMODE
-	if (!IsPerson(cptr))
-		abort();
-
-	for (e=cptr->user->jflood; e; e=e->next_u)
-		if (e->chptr == chptr)
-			abort();
-
-	for (e=chptr->jflood; e; e=e->next_c)
-		if (e->cptr == cptr)
-			abort();
-#endif
-
-	e = MyMallocEx(sizeof(aJFlood));
-	e->cptr = cptr;
-	e->chptr = chptr;
-	e->prev_u = e->prev_c = NULL;
-	e->next_u = cptr->user->jflood;
-	e->next_c = chptr->jflood;
-	if (cptr->user->jflood)
-		cptr->user->jflood->prev_u = e;
-	if (chptr->jflood)
-		chptr->jflood->prev_c = e;
-	cptr->user->jflood = chptr->jflood = e;
-
-	return e;
-}
-
-/** Removes an individual entry from list and frees it.
- */
-void cmodej_delentry(aJFlood *e)
-{
-	/* remove from user.. */
-	if (e->prev_u)
-		e->prev_u->next_u = e->next_u;
-	else
-		e->cptr->user->jflood = e->next_u; /* new head */
-	if (e->next_u)
-		e->next_u->prev_u = e->prev_u;
-
-	/* remove from channel.. */
-	if (e->prev_c)
-		e->prev_c->next_c = e->next_c;
-	else
-		e->chptr->jflood = e->next_c; /* new head */
-	if (e->next_c)
-		e->next_c->prev_c = e->prev_c;
-
-	/* actually free it */
-	MyFree(e);
-}
-
-/** Removes all entries belonging to user from all lists and free them. */
-void cmodej_deluserentries(aClient *cptr)
-{
-aJFlood *e, *e_next;
-
-	for (e=cptr->user->jflood; e; e=e_next)
-	{
-		e_next = e->next_u;
-
-		/* remove from channel.. */
-		if (e->prev_c)
-			e->prev_c->next_c = e->next_c;
-		else
-			e->chptr->jflood = e->next_c; /* new head */
-		if (e->next_c)
-			e->next_c->prev_c = e->prev_c;
-
-		/* actually free it */
-		MyFree(e);
-	}
-	cptr->user->jflood = NULL;
-}
-
-/** Removes all entries belonging to channel from all lists and free them. */
-void cmodej_delchannelentries(aChannel *chptr)
-{
-aJFlood *e, *e_next;
-
-	for (e=chptr->jflood; e; e=e_next)
-	{
-		e_next = e->next_c;
-		
-		/* remove from user.. */
-		if (e->prev_u)
-			e->prev_u->next_u = e->next_u;
-		else
-			e->cptr->user->jflood = e->next_u; /* new head */
-		if (e->next_u)
-			e->next_u->prev_u = e->prev_u;
-
-		/* actually free it */
-		MyFree(e);
-	}
-	chptr->jflood = NULL;
-}
-
-/** Regulary cleans up cmode-j user/chan structs */
-EVENT(cmodej_cleanup_structs)
-{
-aJFlood *e, *e_next;
-int i;
-aClient *cptr;
-aChannel *chptr;
-int t;
-CmodeParam *cmp;
-#ifdef DEBUGMODE
-int freed=0;
-#endif
-
-	for (chptr = channel; chptr; chptr=chptr->nextch)
-	{
-		if (!chptr->jflood)
-			continue;
-		t=0;
-		/* t will be kept at 0 if not found or if mode not set,
-		 * but DO still check since there are entries left as indicated by ->jflood!
-		 */
-		if (chptr->mode.extmode & EXTMODE_JOINTHROTTLE)
-		{
-			for (cmp = chptr->mode.extmodeparam; cmp; cmp=cmp->next)
-				if (cmp->flag == 'j')
-					t = ((aModejEntry *)cmp)->t;
-		}
-
-		for (e = chptr->jflood; e; e = e_next)
-		{
-			e_next = e->next_c;
-			
-			if (e->firstjoin + t < TStime())
-			{
-				cmodej_delentry(e);
-#ifdef DEBUGMODE
-				freed++;
-#endif
-			}
-		}
-	}
-
-#ifdef DEBUGMODE
-	if (freed)
-		ircd_log(LOG_ERROR, "cmodej_cleanup_structs: %d entries freed [%d bytes]", freed, freed * sizeof(aJFlood));
-#endif
-}
-
-#endif		
 	

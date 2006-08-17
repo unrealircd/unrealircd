@@ -489,6 +489,6 @@ AC_SUBST(CARESLIBS)
 cd $cur_dir
 
 
-AC_OUTPUT(Makefile src/modules/Makefile unreal ircdcron/ircdchk)
+AC_OUTPUT(Makefile src/modules/Makefile src/modules/chanmodes/Makefile unreal ircdcron/ircdchk)
 chmod 0700 unreal
 chmod 0700 ircdcron/ircdchk

@@ -1,0 +1,94 @@
+#************************************************************************
+#*   IRC - Internet Relay Chat, src/modules/Makefile
+#*   Copyright (C) Carsten V. Munk 2001
+#*
+#*   This program is free software; you can redistribute it and/or modify
+#*   it under the terms of the GNU General Public License as published by
+#*   the Free Software Foundation; either version 1, or (at your option)
+#*   any later version.
+#*
+#*   This program is distributed in the hope that it will be useful,
+#*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#*   GNU General Public License for more details.
+#*
+#*   You should have received a copy of the GNU General Public License
+#*   along with this program; if not, write to the Free Software
+#*   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#*   
+#*   $Id$
+#*/
+
+INCLUDES = ../include/auth.h ../include/badwords.h ../include/channel.h \
+	../include/class.h ../include/common.h ../include/config.h ../include/dbuf.h \
+	../include/dynconf.h ../include/events.h ../include/fdlist.h ../include/h.h \
+	../include/hash.h ../include/inet.h ../include/ircsprintf.h \
+	../include/license.h ../include/macros.h ../include/md5.h \
+	../include/modules.h ../include/modversion.h ../include/msg.h ../include/nameser.h \
+	../include/numeric.h ../include/proto.h ../include/res.h \
+	../include/resource.h ../include/setup.h ../include/sjoin.h \
+	../include/sock.h ../include/ssl.h ../include/struct.h ../include/sys.h \
+	../include/threads.h ../include/types.h ../include/url.h \
+	../include/version.h ../include/whowas.h ../include/zip.h
+
+R_MODULES= \
+	 chmode_j.so
+
+#note change of .c to .o
+COMMANDS=m_sethost.o m_chghost.o m_chgident.o m_setname.o m_setident.o \
+	 m_sdesc.o m_svsmode.o m_swhois.o m_svsmotd.o m_svsnline.o \
+	 m_who.o m_mkpasswd.o m_away.o m_svsnoop.o m_svso.o m_svsnick.o \
+	 m_adminchat.o m_akill.o m_chgname.o m_guest.o m_htm.o m_kill.o \
+	 m_lag.o m_message.o webtv.o m_nachat.o m_oper.o m_pingpong.o \
+	 m_quit.o m_rakill.o m_rping.o m_sendumode.o m_sqline.o \
+	 m_tsctl.o m_unkline.o m_unsqline.o m_unzline.o m_whois.o \
+	 m_tkl.o m_vhost.o m_cycle.o m_svsjoin.o m_svspart.o \
+	 m_svslusers.o m_svswatch.o m_svssilence.o m_sendsno.o \
+	 m_svssno.o m_sajoin.o m_sapart.o m_samode.o m_kick.o m_topic.o \
+	 m_invite.o m_list.o m_time.o m_svskill.o m_sjoin.o \
+	 m_pass.o m_userhost.o m_ison.o m_silence.o m_knock.o m_umode2.o \
+	 m_squit.o m_protoctl.o m_addline.o m_addmotd.o m_addomotd.o \
+	 m_wallops.o m_admin.o m_globops.o m_locops.o m_chatops.o \
+	 m_trace.o m_netinfo.o m_links.o m_help.o m_rules.o \
+	 m_close.o m_map.o m_eos.o m_server.o m_stats.o \
+	 m_svsfline.o m_dccdeny.o m_undccdeny.o m_whowas.o \
+	 m_connect.o m_dccallow.o m_userip.o m_nick.o m_user.o \
+	 m_mode.o m_watch.o m_part.o m_join.o m_motd.o m_opermotd.o \
+	 m_botmotd.o m_lusers.o m_names.o
+
+
+MODULES=$(R_MODULES)
+MODULEFLAGS=@MODULEFLAGS@
+
+all: build
+
+build: $(MODULES)
+
+custommodule: $(MODULEFILE).c
+	$(CC) $(CFLAGS) $(MODULEFLAGS) $(EXLIBS) -DDYNAMIC_LINKING \
+		-o $(MODULEFILE).so $(MODULEFILE).c		
+
+commands.so: l_commands.c $(COMMANDS) $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -o commands.so l_commands.c \
+	$(COMMANDS)
+
+#############################################################################
+#             commands.so's .o's section
+#############################################################################
+
+m_adminchat.o: m_adminchat.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_adminchat.c
+
+m_akill.o: m_akill.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_akill.c
+
+#############################################################################
+#             and now the remaining modules...
+#############################################################################
+
+chmode_j.so: chmode_j.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o chmode_j.so chmode_j.c
+
+clean:
+	$(RM) -f *.o *.so *~ core

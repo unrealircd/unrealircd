@@ -86,6 +86,10 @@ MODULEFLAGS=@MODULEFLAGS@
 all: build
 
 build: $(MODULES)
+	@if [ ! -r include ] ; then \
+		ln -s ../include include; \
+	fi
+	cd chanmodes; $(MAKE) all
 
 custommodule: $(MODULEFILE).c
 	$(CC) $(CFLAGS) $(MODULEFLAGS) $(EXLIBS) -DDYNAMIC_LINKING \
@@ -823,3 +827,4 @@ cloak.so: cloak.c $(INCLUDES)
 
 clean:
 	$(RM) -f *.o *.so *~ core
+	cd chanmodes; $(MAKE) clean

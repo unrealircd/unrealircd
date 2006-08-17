@@ -149,13 +149,6 @@ typedef struct {
  */
 typedef unsigned long Cmode_t;
 
-#define EXTCM_PAR_HEADER struct _CmodeParam *prev, *next; char flag;
-
-typedef struct _CmodeParam {
-	EXTCM_PAR_HEADER
-	/** other fields are placed after this header in your own paramstruct */
-} CmodeParam;
-
 typedef struct {
 	/** mode character (like 'Z') */
 	char		flag;
@@ -181,17 +174,17 @@ typedef struct {
 	/** Store parameter in memory for channel.
 	 * aExtCMtableParam *: the list (usually chptr->mode.extmodeparams).
 	 * char *: the parameter.
-	 * return value: the head of the list, RTFS if you wonder why.
+	 * RETURNS: nothing! ;p
 	 * design notes: only alloc a new paramstruct if you need to, search for
 	 * any current one first (like in case of mode +y 5 and then +y 6 later without -y).
 	 */
-	CmodeParam *		(*put_param)(CmodeParam *, char *);
+	void *(*put_param)(void *, char *);
 
 	/** Get readable string version" of the stored parameter.
-	 * aExtCMtableParam *: the list (usually chptr->mode.extmodeparams).
+	 * void *: the param data
 	 * return value: a pointer to the string (temp. storage)
 	 */
-	char *		(*get_param)(CmodeParam *);
+	char *		(*get_param)(void *);
 
 	/** Convert input parameter to output.
 	 * Like +l "1aaa" becomes "1".
@@ -203,14 +196,14 @@ typedef struct {
 	/** free and remove parameter from list.
 	 * aExtCMtableParam *: the list (usually chptr->mode.extmodeparams).
 	 */
-	void		(*free_param)(CmodeParam *);
+	void		(*free_param)(void *);
 
 	/** duplicate a struct and return a pointer to duplicate.
 	 * This is usually just a malloc + memcpy.
 	 * aExtCMtableParam *: source struct itself (no list).
 	 * return value: pointer to newly allocated struct.
 	 */
-	CmodeParam *	(*dup_struct)(CmodeParam *);
+	void * (*dup_struct)(void *);
 
 	/** Compares 2 parameters and decides who wins the sjoin fight.
 	 * When syncing channel modes (m_sjoin) a parameter conflict may occur, things like
@@ -221,20 +214,43 @@ typedef struct {
 	 * aExtCMtableParam *: our parameter
 	 * aExtCMtableParam *: their parameter
 	 */
-	int			(*sjoin_check)(aChannel *, CmodeParam *, CmodeParam *);
+	int			(*sjoin_check)(aChannel *, void *, void *);
+
+	/* Slot#.. Can be used instead of GETPARAMSLOT() */
+	int slot;
 } Cmode;
 
 typedef struct {
 	char		flag;
 	int		paracount;
 	int		(*is_ok)(aClient *,aChannel *, char *para, int, int);
-	CmodeParam *	(*put_param)(CmodeParam *, char *);
-	char *		(*get_param)(CmodeParam *);
+	void *	(*put_param)(void *, char *);
+	char *		(*get_param)(void *);
 	char *		(*conv_param)(char *);
-	void		(*free_param)(CmodeParam *);
-	CmodeParam *	(*dup_struct)(CmodeParam *);
-	int		(*sjoin_check)(aChannel *, CmodeParam *, CmodeParam *);
+	void		(*free_param)(void *);
+	void *	(*dup_struct)(void *);
+	int		(*sjoin_check)(aChannel *, void *, void *);
 } CmodeInfo;
+
+/* Get a slot# for a param.. eg... GETPARAMSLOT('k') ;p */
+#define GETPARAMSLOT(x)	param_to_slot_mapping[x]
+
+/* Get a cmode handler by slot.. for example for [dont use this]: GETPARAMHANDLERBYSLOT(5)->get_param(chptr) */
+#define GETPARAMHANDLERBYSLOT(slotid)	ParamTable[slotid]
+
+/* Same as GETPARAMHANDLERBYSLOT but then by letter.. like [dont use this]: GETPARAMHANDLERBYSLOT('k')->get_param(chptr) */
+#define GETPARAMHANDLERBYLETTER(x)	ParamTable[GETPARAMSLOT(x)]
+
+/* Get paramter data struct.. for like: ((aModejEntry *)GETPARASTRUCT(chptr, 'j'))->t */
+#define GETPARASTRUCT(mychptr, mychar)	chptr->mode.extmodeparams[GETPARAMSLOT(mychar)]
+
+#define GETPARASTRUCTEX(v, mychar)	v[GETPARAMSLOT(mychar)]
+
+#define CMP_GETSLOT(x) GETPARAMSLOT(x)
+#define CMP_GETHANDLERBYSLOT(x) GETPARAMHANDLERBYSLOT(x)
+#define CMP_GETHANDLERBYLETTER(x) GETPARAMHANDLERBYLETTER(x)
+#define CMP_GETSTRUCT(x,y) GETPARASTRUCT(x,y)
+
 #endif
 
 /*** Extended bans ***/
@@ -637,6 +653,11 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define HOOKTYPE_REMOTE_KICK 45
 #define HOOKTYPE_LOCAL_SPAMFILTER 46
 #define HOOKTYPE_SILENCED 47
+#define HOOKTYPE_CAN_JOIN 48
+#define HOOKTYPE_CAN_SEND 49
+#define HOOKTYPE_CLEANUP_CLIENT 50
+#define HOOKTYPE_CLEANUP_USER 51
+#define HOOKTYPE_CLEANUP_USER2 52
 
 /* Hook return values */
 #define HOOK_CONTINUE 0

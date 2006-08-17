@@ -899,7 +899,6 @@ extern void CmodeDel(Cmode *cmode);
 #endif
 
 typedef struct {
-	EXTCM_PAR_HEADER
 	unsigned short num;
 	unsigned short t;
 } aModejEntry;
@@ -1473,12 +1472,17 @@ struct SChanFloodProt {
 	unsigned long	timer_flags; /* if a "-m timer" is running this is & MODE_MODERATED etc.. */
 };
 
+/* Number of maximum paramter modes to allow.
+ * Don't set it unnecessarily high.. we only use k, l, L, j and f at the moment. (FIXME)
+ */
+#define MAXPARAMMODES 12
+
 /* mode structure for channels */
 struct SMode {
 	long mode;
 #ifdef EXTCMODE
 	Cmode_t extmode;
-	CmodeParam *extmodeparam;
+	void *extmodeparams[MAXPARAMMODES+1];
 #endif
 	int  limit;
 	char key[KEYLEN + 1];

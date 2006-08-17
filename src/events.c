@@ -45,9 +45,6 @@ ID_Copyright("(C) Carsten Munk 2001");
 
 MODVAR Event *events = NULL;
 
-#ifdef JOINTHROTTLE
-extern EVENT(cmodej_cleanup_structs);
-#endif
 extern EVENT(unrealdns_removeoldrecords);
 
 void	LockEventSystem(void)
@@ -217,9 +214,6 @@ void	SetupEvents(void)
 	EventAddEx(NULL, "loop", 0, 0, loop_event, NULL);
 #ifndef NEW_IO
 	EventAddEx(NULL, "fdlistcheck", 1, 0, e_check_fdlists, NULL);
-#endif
-#ifdef JOINTHROTTLE
-	EventAddEx(NULL, "cmodej_cleanup_structs", 60, 0, cmodej_cleanup_structs, NULL);
 #endif
 	EventAddEx(NULL, "unrealdns_removeoldrecords", 15, 0, unrealdns_removeoldrecords, NULL);
 	UnlockEventSystem();

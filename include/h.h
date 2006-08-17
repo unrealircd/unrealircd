@@ -610,10 +610,10 @@ extern int extcmode_default_requirechop(aClient *, aChannel *, char *, int, int)
 extern int extcmode_default_requirehalfop(aClient *, aChannel *, char *, int, int);
 extern Cmode_t extcmode_get(Cmode *);
 extern void extcmode_init(void);
-extern CmodeParam *extcmode_get_struct(CmodeParam *, char);
+extern void *extcmode_get_struct(aChannel *, char);
 extern void make_extcmodestr();
-extern CmodeParam *extcmode_duplicate_paramlist(CmodeParam *);
-extern void extcmode_free_paramlist(CmodeParam *);
+extern void extcmode_duplicate_paramlist(void **xi, void **xo);
+extern void extcmode_free_paramlist(void **ar);
 #endif
 extern int do_chanflood(ChanFloodProt *, int);
 extern void do_chanflood_action(aChannel *, int, char *);
@@ -786,3 +786,10 @@ extern char *unreal_time_synch_error(void);
 extern int unreal_time_synch(int timeout);
 extern int extban_is_banned_helper(char *buf);
 extern char *getcloak(aClient *sptr);
+extern unsigned char param_to_slot_mapping[256];
+extern char *cm_getparameter(aChannel *chptr, char mode);
+extern void cm_putparameter(aChannel *chptr, char mode, char *str);
+extern void cm_freeparameter(aChannel *chptr, char mode);
+extern char *cm_getparameter_ex(void **p, char mode);
+extern void cm_putparameter_ex(void **p, char mode, char *str);
+extern void cm_freeparameter_ex(void **p, char mode, char *str);

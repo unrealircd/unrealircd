@@ -590,8 +590,8 @@ docontinue:
 		bcopy(&chptr->mode, &oldmode, sizeof(Mode));
 #ifdef EXTCMODE
 		/* Fun.. we have to duplicate all extended modes too... */
-		oldmode.extmodeparam = NULL;
-		oldmode.extmodeparam = extcmode_duplicate_paramlist(chptr->mode.extmodeparam);
+		memset(&oldmode.extmodeparams, 0, sizeof(oldmode.extmodeparams));
+		extcmode_duplicate_paramlist(chptr->mode.extmodeparams, oldmode.extmodeparams);
 #endif
 #ifdef NEWCHFLOODPROT
 		if (chptr->mode.floodprot)
@@ -662,7 +662,9 @@ docontinue:
 			{
 				if (Channelmode_Table[i].paracount)
 				{
-					char *parax = Channelmode_Table[i].get_param(extcmode_get_struct(oldmode.extmodeparam, Channelmode_Table[i].flag));
+					char *parax = cm_getparameter_ex(oldmode.extmodeparams, Channelmode_Table[i].flag);
+					//Channelmode_Table[i].get_param(oldmode.extmodeparams[Channelmode_Table[i].slot]); <- faster
+					//Channelmode_Table[i].get_param(extcmode_get_struct(oldmode.extmodeparam, Channelmode_Table[i].flag));
 					Addit(Channelmode_Table[i].flag, parax);
 				} else {
 					Addsingle(Channelmode_Table[i].flag);
@@ -760,7 +762,9 @@ docontinue:
 			{
 				if (Channelmode_Table[i].paracount)
 				{
-					char *parax = Channelmode_Table[i].get_param(extcmode_get_struct(chptr->mode.extmodeparam,Channelmode_Table[i].flag));
+					char *parax = cm_getparameter(chptr, Channelmode_Table[i].flag);
+					//char *parax = Channelmode_Table[i].get_param(chptr->mode.extmodeparams[Channelmode_Table[i].slot]); <-- faster
+					//Channelmode_Table[i].get_param(extcmode_get_struct(chptr->mode.extmodeparam,Channelmode_Table[i].flag));
 					Addit(Channelmode_Table[i].flag, parax);
 				} else {
 					Addsingle(Channelmode_Table[i].flag);
@@ -864,26 +868,35 @@ docontinue:
 			{
 				int r;
 				char *parax;
-				CmodeParam *ourm = extcmode_get_struct(oldmode.extmodeparam,Channelmode_Table[i].flag);
-				CmodeParam *theirm = extcmode_get_struct(chptr->mode.extmodeparam, Channelmode_Table[i].flag);
+				char flag = Channelmode_Table[i].flag;
+				//CmodeParam *ourm = extcmode_get_struct(oldmode.extmodeparam,Channelmode_Table[i].flag);
+				//CmodeParam *theirm = extcmode_get_struct(chptr->mode.extmodeparam, Channelmode_Table[i].flag);
+				void *ourm = GETPARASTRUCTEX(oldmode.extmodeparams, flag);
+				void *theirm = GETPARASTRUCT(chptr, flag);
 				
 				r = Channelmode_Table[i].sjoin_check(chptr, ourm, theirm);
 				switch (r)
 				{
 					case EXSJ_WEWON:
 					{
+#if 0
 						CmodeParam *r;
 						parax = Channelmode_Table[i].get_param(ourm);
 						Debug((DEBUG_DEBUG, "sjoin: we won: '%s'", parax));
 						r = Channelmode_Table[i].put_param(theirm, parax);
 						if (r != theirm) /* confusing eh ;) */
 							AddListItem(r, chptr->mode.extmodeparam);
+#else
+						parax = cm_getparameter_ex(oldmode.extmodeparams, flag); /* grab from old */
+						cm_putparameter(chptr, flag, parax); /* put in new (won) */
+#endif
 						break;
 					}
 					case EXSJ_THEYWON:
-						parax = Channelmode_Table[i].get_param(theirm);
+						//parax = Channelmode_Table[i].get_param(theirm);
+						parax = cm_getparameter(chptr, flag);
 						Debug((DEBUG_DEBUG, "sjoin: they won: '%s'", parax));
-						Addit(Channelmode_Table[i].flag, parax);
+						Addit(flag, parax);
 						break;
 					case EXSJ_SAME:
 						Debug((DEBUG_DEBUG, "sjoin: equal"));
@@ -909,8 +922,9 @@ docontinue:
 		}
 #ifdef EXTCMODE
 		/* free the oldmode.* crap :( */
-		extcmode_free_paramlist(oldmode.extmodeparam);
-		oldmode.extmodeparam = NULL; /* just to be sure ;) */
+		extcmode_free_paramlist(oldmode.extmodeparams);
+		memset(&oldmode.extmodeparams, 0, sizeof(oldmode.extmodeparams));
+		//oldmode.extmodeparam = NULL; /* just to be sure ;) */
 #endif
 #ifdef NEWCHFLOODPROT
 		/* and the oldmode.floodprot struct too... :/ */

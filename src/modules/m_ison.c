@@ -90,7 +90,8 @@ DLLFUNC int MOD_UNLOAD(m_ison)(int module_unload)
  * ISON :nicklist
  */
 
-static char buf[BUFSIZE];
+static char buf[BUFSIZE*2];
+
 DLLFUNC CMD_FUNC(m_ison)
 {
 	char namebuf[USERLEN + HOSTLEN + 4];
@@ -107,8 +108,7 @@ DLLFUNC CMD_FUNC(m_ison)
 		return 0;
 	}
 
-	(void)ircsprintf(buf, rpl_str(RPL_ISON), me.name, *parv);
-	len = strlen(buf);
+	ircsprintf(buf, rpl_str(RPL_ISON), me.name, parv[0]);
 #ifndef NO_FDLIST
 	cptr->priority += 30;	/* this keeps it from moving to 'busy' list */
 #endif
@@ -128,10 +128,8 @@ DLLFUNC CMD_FUNC(m_ison)
 				*--user = '!';
 			}
 
-			(void)strncat(buf, s, sizeof(buf) - len);
-			len += strlen(s);
-			(void)strncat(buf, " ", sizeof(buf) - len);
-			len++;
+			strcat(buf, s);
+			strcat(buf, " ");
 		}
 	}
 	sendto_one(sptr, "%s", buf);

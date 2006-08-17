@@ -57,7 +57,7 @@ static void bounce_mode(aChannel *, aClient *, int, char **);
 int do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
     u_int what, aClient *cptr,
      u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char bounce, long my_access);
-int do_extmode_char(aChannel *chptr, int modeindex, char *param, u_int what,
+int do_extmode_char(aChannel *chptr, Cmode *handler, char *param, u_int what,
                     aClient *cptr, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3],
                     char bounce);
 #ifdef EXTCMODE
@@ -1697,11 +1697,11 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
   * note: if bounce is requested then the mode will not be set.
   * @returns amount of params eaten (0 or 1)
   */
-int do_extmode_char(aChannel *chptr, int modeindex, char *param, u_int what,
+int do_extmode_char(aChannel *chptr, Cmode *handler, char *param, u_int what,
                     aClient *cptr, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3],
                     char bounce)
 {
-int paracnt = (what == MODE_ADD) ? Channelmode_Table[modeindex].paracount : 0;
+int paracnt = (what == MODE_ADD) ? handler->paracount : 0;
 int x;
 
 	/* Expected a param and it isn't there? */
@@ -1710,11 +1710,11 @@ int x;
 
 	if (MyClient(cptr))
 	{
-		x = Channelmode_Table[modeindex].is_ok(cptr, chptr, param, EXCHK_ACCESS, what);
+		x = handler->is_ok(cptr, chptr, param, EXCHK_ACCESS, what);
 		if ((x == EX_ALWAYS_DENY) ||
 		    ((x == EX_DENY) && !op_can_override(cptr) && !samode_in_progress))
 		{
-			Channelmode_Table[modeindex].is_ok(cptr, chptr, param, EXCHK_ACCESS_ERR, what);
+			handler->is_ok(cptr, chptr, param, EXCHK_ACCESS_ERR, what);
 			return paracnt; /* Denied & error msg sent */
 		}
 		if (x == EX_DENY)
@@ -1722,14 +1722,14 @@ int x;
 	} else {
 		/* remote user: we only need to check if we need to generate an operoverride msg */
 		if (!IsULine(cptr) && IsPerson(cptr) && op_can_override(cptr) &&
-		    (Channelmode_Table[modeindex].is_ok(cptr, chptr, param, EXCHK_ACCESS, what) != EX_ALLOW))
+		    (handler->is_ok(cptr, chptr, param, EXCHK_ACCESS, what) != EX_ALLOW))
 			opermode = 1; /* override in progress... */
 	}
 
 	/* Check for multiple changes in 1 command (like +y-y+y 1 2, or +yy 1 2). */
 	for (x = 0; x < *pcount; x++)
 	{
-		if (pvar[x][1] == Channelmode_Table[modeindex].flag)
+		if (pvar[x][1] == handler->flag)
 		{
 			/* this is different than the old chanmode system, coz:
 			 * "mode #chan +kkL #a #b #c" will get "+kL #a #b" which is wrong :p.
@@ -1740,29 +1740,39 @@ int x;
 	}
 
 	/* w00t... a parameter mode */
-	if (Channelmode_Table[modeindex].paracount)
+	if (handler->paracount)
 	{
 		if (what == MODE_DEL)
 		{
-			if (!(chptr->mode.extmode & Channelmode_Table[modeindex].mode))
+			if (!(chptr->mode.extmode & handler->mode))
 				return paracnt; /* There's nothing to remove! */
 			/* del means any parameter is ok, the one-who-is-set will be used */
-			ircsprintf(pvar[*pcount], "-%c", Channelmode_Table[modeindex].flag);
+			ircsprintf(pvar[*pcount], "-%c", handler->flag);
 		} else {
 			/* add: is the parameter ok? */
-			if (Channelmode_Table[modeindex].is_ok(cptr, chptr, param, EXCHK_PARAM, what) == FALSE)
+			if (handler->is_ok(cptr, chptr, param, EXCHK_PARAM, what) == FALSE)
 				return paracnt;
 			/* is it already set at the same value? if so, ignore it. */
-			if (chptr->mode.extmode & Channelmode_Table[modeindex].mode)
+			if (chptr->mode.extmode & handler->mode)
 			{
+#if 0
 				char *p, *p2;
-				p = Channelmode_Table[modeindex].get_param(extcmode_get_struct(chptr->mode.extmodeparam,Channelmode_Table[modeindex].flag));
-				p2 = Channelmode_Table[modeindex].conv_param(param);
+				p = handler->get_param(extcmode_get_struct(chptr->mode.extmodeparam,handler->flag));
+				p2 = handler->conv_param(param);
 				if (p && p2 && !strcmp(p, p2))
 					return paracnt; /* ignore... */
+#else
+				char *now, *requested;
+				char flag = handler->flag;
+				now = cm_getparameter(chptr, flag);
+				requested = handler->conv_param(param);
+				if (now && requested && !strcmp(now, requested))
+					return paracnt; /* ignore... */
+#endif
+
 			}
 				ircsprintf(pvar[*pcount], "+%c%s",
-					Channelmode_Table[modeindex].flag, Channelmode_Table[modeindex].conv_param(param));
+					handler->flag, handler->conv_param(param));
 			(*pcount)++;
 		}
 	}
@@ -1772,26 +1782,32 @@ int x;
 	
 	if (what == MODE_ADD)
 	{	/* + */
-		chptr->mode.extmode |= Channelmode_Table[modeindex].mode;
-		if (Channelmode_Table[modeindex].paracount)
+		chptr->mode.extmode |= handler->mode;
+		if (handler->paracount)
 		{
-			CmodeParam *p = extcmode_get_struct(chptr->mode.extmodeparam, Channelmode_Table[modeindex].flag);
+#if 0
+			CmodeParam *p = extcmode_get_struct(chptr->mode.extmodeparam, handler->flag);
 			CmodeParam *r;
-			r = Channelmode_Table[modeindex].put_param(p, param);
+			r = handler->put_param(p, param);
 			if (r != p)
 				AddListItem(r, chptr->mode.extmodeparam);
+#endif
+			cm_putparameter(chptr, handler->flag, param);
 		}
 	} else
 	{	/* - */
-		chptr->mode.extmode &= ~(Channelmode_Table[modeindex].mode);
-		if (Channelmode_Table[modeindex].paracount)
+		chptr->mode.extmode &= ~(handler->mode);
+		if (handler->paracount)
 		{
-			CmodeParam *p = extcmode_get_struct(chptr->mode.extmodeparam, Channelmode_Table[modeindex].flag);
+#if 0
+			CmodeParam *p = extcmode_get_struct(chptr->mode.extmodeparam, handler->flag);
 			if (p)
 			{
 				DelListItem(p, chptr->mode.extmodeparam);
-				Channelmode_Table[modeindex].free_param(p);
+				handler->free_param(p);
 			}
+#endif
+			cm_freeparameter(chptr, handler->flag);
 		}
 	}
 	return paracnt;
@@ -1978,7 +1994,7 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 #ifdef EXTCMODE
 			else if (found == 2)
 			{
-				paracount += do_extmode_char(chptr, extm, parv[paracount],
+				paracount += do_extmode_char(chptr, &Channelmode_Table[extm], parv[paracount],
 				                             what, cptr, pcount, pvar, bounce);
 			}
 #endif /* EXTCMODE */
