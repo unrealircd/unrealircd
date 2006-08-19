@@ -240,6 +240,8 @@ void extcmode_duplicate_paramlist(void **xi, void **xo)
 		if (!handler)
 			continue; /* nothing there.. */
 		inx = xi[handler->slot]; /* paramter data of input is here */
+		if (!inx)
+			continue; /* not set */
 		xo[handler->slot] = handler->dup_struct(inx); /* call dup_struct with that input and set the output param to that */
 	}
 }
