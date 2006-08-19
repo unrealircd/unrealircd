@@ -280,7 +280,10 @@ int  ssl_handshake(aClient *cptr)
 	cptr->ssl = SSL_new(ctx_server);
 	CHK_NULL(cptr->ssl);
 	SSL_set_fd((SSL *) cptr->ssl, cptr->fd);
+#ifndef NEW_IO
 	set_non_blocking(cptr->fd, cptr);
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 	/* 
 	 *  if necessary, SSL_write() will negotiate a TLS/SSL session, if not already explicitly
 	 *  performed by SSL_connect() or SSL_accept(). If the peer requests a
@@ -339,7 +342,10 @@ int  ssl_client_handshake(aClient *cptr, ConfigItem_link *l)
 		return -2;
 #endif
 	}
+#ifndef NEW_IO
 	set_non_blocking(cptr->fd, cptr);
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 	cptr->flags |= FLAGS_SSL;
 	return 1;
 }

@@ -511,9 +511,11 @@ static TS try_connections(TS currenttime)
 				if (!match(deny->mask, aconf->servername)
 				    && crule_eval(deny->rule))
 					break;
-
+#ifndef NEW_IO
 			if (connect_server(aconf, (aClient *)NULL,
 			    (struct hostent *)NULL) == 0)
+#else /* ifndef NEW_IO */
+#endif /* ifndef NEW_IO */
 				sendto_realops
 				    ("Connection to %s[%s] activated.",
 				    aconf->servername, aconf->hostname);

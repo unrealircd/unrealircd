@@ -1318,3 +1318,4 @@
   HOOKTYPE_CLEANUP_USER2: called from exit_client when freeing a user.. I know, this
   might sound redundant, but then again.. some things REQUIRE a certain order (like before
   freeing membership links).. Or at least I don't want to break the current logic ;).
+- Added some new defines which didnt noticed for new io engine.
