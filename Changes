@@ -1322,3 +1322,5 @@
 - Ok now new io code broken, i implementing all helper functions of hybrid and
 	io engine in that way at least we will have working code. Code cleanup sure
 	will take some time at the end.
+- Moved failed oper snotices to snomask +o, and are sent out to all servers. Also now shows
+  the uid attempted (like [FAILEDAUTH] does) for incorrect host or maxlogin.

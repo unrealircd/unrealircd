@@ -186,8 +186,8 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 
 	if (!(aconf = Find_oper(name))) {
 		sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, parv[0]);
-		sendto_realops
-		    ("Failed OPER attempt by %s (%s@%s) [unknown oper]",
+		sendto_snomask_global
+		    (SNO_OPER, "Failed OPER attempt by %s (%s@%s) [unknown oper]",
 		    parv[0], sptr->user->username, sptr->sockhost);
 		ircd_log(LOG_OPER, "OPER UNKNOWNOPER (%s) by (%s!%s@%s)", name, parv[0],
 			sptr->user->username, sptr->sockhost);
@@ -202,9 +202,9 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 			break;
 	if (!oper_from)	{
 		sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, parv[0]);
-		sendto_realops
-		    ("Failed OPER attempt by %s (%s@%s) [host doesnt match]",
-		    parv[0], sptr->user->username, sptr->sockhost);
+		sendto_snomask_global
+		    (SNO_OPER, "Failed OPER attempt by %s (%s@%s) using UID %s [host doesnt match]",
+		    parv[0], sptr->user->username, sptr->sockhost, name);
 		ircd_log(LOG_OPER, "OPER NOHOSTMATCH (%s) by (%s!%s@%s)", name, parv[0],
 			sptr->user->username, sptr->sockhost);
 		sptr->since += 7;
@@ -221,9 +221,9 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 			sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, parv[0]);
 			sendto_one(sptr, ":%s NOTICE %s :Your maximum number of concurrent oper logins has been reached (%d)",
 				me.name, sptr->name, aconf->maxlogins);
-			sendto_realops
-				("Failed OPER attempt by %s (%s@%s) [maxlogins reached]",
-				parv[0], sptr->user->username, sptr->sockhost);
+			sendto_snomask_global
+				(SNO_OPER, "Failed OPER attempt by %s (%s@%s) using UID %s [maxlogins reached]",
+				parv[0], sptr->user->username, sptr->sockhost, name);
 			ircd_log(LOG_OPER, "OPER TOOMANYLOGINS (%s) by (%s!%s@%s)", name, parv[0],
 				sptr->user->username, sptr->sockhost);
 			sptr->since += 4;
@@ -366,13 +366,9 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 			    IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name);
 		ircd_log(LOG_OPER, "OPER FAILEDAUTH (%s) by (%s!%s@%s)", name, parv[0],
 			sptr->user->username, sptr->sockhost);
-		sendto_realops
-		    ("Failed OPER attempt by %s (%s@%s) using UID %s [FAILEDAUTH]",
+		sendto_snomask_global
+		    (SNO_OPER, "Failed OPER attempt by %s (%s@%s) using UID %s [FAILEDAUTH]",
 		    parv[0], sptr->user->username, sptr->sockhost, name);
-		sendto_serv_butone(&me,
-		    ":%s GLOBOPS :Failed OPER attempt by %s (%s@%s) using UID %s [---]",
-		    me.name, parv[0], sptr->user->username, sptr->sockhost,
-		    name);
 		sptr->since += 7;
 	}
 	/* Belay that order, number One. (-2) */
