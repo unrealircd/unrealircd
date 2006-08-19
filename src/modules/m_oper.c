@@ -300,7 +300,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 				iNAH_host(sptr, locop_host);
 				SetHidden(sptr);
 			}
-			sendto_ops("%s (%s@%s) is now a local operator (o)",
+			sendto_snomask(SNO_OPER, "%s (%s@%s) is now a local operator (o)",
 			    parv[0], sptr->user->username, GetHost(sptr));
 		}
 
