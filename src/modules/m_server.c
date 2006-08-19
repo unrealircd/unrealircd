@@ -596,6 +596,7 @@ CMD_FUNC(m_server_remote)
 			    acptr->name, hop + 1, acptr->info);
 		}
 	}
+	RunHook(HOOKTYPE_POST_SERVER_CONNECT, acptr);
 	return 0;
 }
 
@@ -942,6 +943,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	ircd_log(LOG_ERROR, "[EOSDBG] m_server_synch: sending to justlinked '%s' with src ME...",
 			cptr->name);
 #endif
+	RunHook(HOOKTYPE_POST_SERVER_CONNECT, cptr);
 	return 0;
 }
 

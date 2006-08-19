@@ -1279,3 +1279,9 @@
   host when you have a vhost), a code cleanup was also done. Based on patch from tabrisnet.
   Reported by Rob (#0002981).
 - MARK: 3.3* was forked off from here
+- Removed server numeric output from /MAP for normal users (still visible to ircops).
+- Renamed unreal32docs.tk.html to unreal32docs.tr.html
+- Module coders: Added HOOKTYPE_POST_SERVER_CONNECT (1 param: cptr) which is called when
+  a server connects, just like HOOTYPE_SERVER_CONNECT but this is actually called *after*
+  all clients and channels are synched. Obviously needed for some modules which must synch
+  data that refers to clients/channels that would otherwise not exist yet on the other side.

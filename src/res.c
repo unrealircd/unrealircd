@@ -91,7 +91,7 @@ int n;
 
 	options.timeout = 3;
 	options.tries = 2;
-	options.flags = ARES_FLAG_NOALIASES;
+	options.flags = ARES_FLAG_NOALIASES|ARES_FLAG_IGNTC;
 #ifdef _WIN32
 	/* for windows, keep using the hosts file for now, until I'm sure it's safe to disable */
 	n = ares_init_options(&resolver_channel, &options, ARES_OPT_TIMEOUT|ARES_OPT_TRIES|ARES_OPT_FLAGS);

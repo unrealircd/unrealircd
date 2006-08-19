@@ -100,7 +100,7 @@ static void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_leng
 	{
 		sendto_one(cptr, rpl_str(RPL_MAP), me.name, cptr->name, prompt,
 		    length, server->name, server->serv->users,
-		    (server->serv->numeric ? (char *)my_itoa(server->serv->
+		    ((IsAnOper(cptr) && server->serv->numeric) ? (char *)my_itoa(server->serv->
 		    numeric) : ""));
 		cnt = 0;
 	}
