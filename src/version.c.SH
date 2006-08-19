@@ -4,7 +4,8 @@ echo "Extracting src/version.c..."
 
 id=`grep '$Id: Changes,v' ../Changes`
 id=`echo $id |sed 's/.* Changes\,v \(.*\) .* Exp .*/\1/'`
-echo "$id"
+# sorry about that change but it completely ripe some of make parsers 
+# echo "$id"
 
 if test -r version.c
 then

@@ -1319,3 +1319,6 @@
   might sound redundant, but then again.. some things REQUIRE a certain order (like before
   freeing membership links).. Or at least I don't want to break the current logic ;).
 - Added some new defines which didnt noticed for new io engine.
+- Ok now new io code broken, i implementing all helper functions of hybrid and
+	io engine in that way at least we will have working code. Code cleanup sure
+	will take some time at the end.
