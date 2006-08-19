@@ -714,7 +714,7 @@ static char *replies[] = {
 /* 655 */ NULL,
 /* 656 */ NULL,
 /* 657 */ NULL,
-/* 658 */ NULL,
+/* 658 RPL_MODESYNTAX */ ":%s 658 %s %c :%s",
 /* 659 RPL_SPAMCMDFWD */ ":%s 659 %s %s :Command processed, but a copy has been sent to ircops for evaluation (anti-spam) purposes. [%s]",
 /* 660 */ NULL, /* kineircd */
 /* 661 */ NULL, /* kineircd */

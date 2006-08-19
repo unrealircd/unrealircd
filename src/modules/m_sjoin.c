@@ -107,21 +107,6 @@ aParv *mp2parv(char *xmbuf, char *parmbuf)
 	return (&pparv);
 }
 
-/* Checks if 2 ChanFloodProt modes (chmode +f) are different.
- * This is a bit more complicated than 1 simple memcmp(a,b,..) because
- * counters are also stored in this struct so we have to do
- * it manually :( -- Syzop.
- */
-static int compare_floodprot_modes(ChanFloodProt *a, ChanFloodProt *b)
-{
-	if (memcmp(a->l, b->l, sizeof(a->l)) ||
-	    memcmp(a->a, b->a, sizeof(a->a)) ||
-	    memcmp(a->r, b->r, sizeof(a->r)))
-		return 1;
-	else
-		return 0;
-}
-
 /*
    **      m_sjoin  
    **
@@ -186,9 +171,6 @@ CMD_FUNC(m_sjoin)
 	unsigned short merge;	/* same timestamp */
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
 	char paraback[1024];
-#ifndef NEWCHFLOODPROT
-	char modeback[1024];
-#endif
 	char banbuf[1024];
 	char exbuf[1024];
 	char invexbuf[1024];
@@ -503,10 +485,6 @@ CMD_FUNC(m_sjoin)
 							acptr->name, acptr->user->username, GetHost(acptr), chptr->chname);
 				} else
 					sendto_channel_butserv(chptr, acptr, ":%s JOIN :%s", nick, chptr->chname);
-#ifdef NEWCHFLOODPROT
-				if (chptr->mode.floodprot && sptr->serv->flags.synced && !IsULine(sptr))
-			        do_chanflood(chptr->mode.floodprot, FLD_JOIN);
-#endif
 			}
 			sendto_serv_butone_sjoin(cptr, ":%s JOIN %s",
 			    nick, chptr->chname);
@@ -593,13 +571,6 @@ docontinue:
 		memset(&oldmode.extmodeparams, 0, sizeof(oldmode.extmodeparams));
 		extcmode_duplicate_paramlist(chptr->mode.extmodeparams, oldmode.extmodeparams);
 #endif
-#ifdef NEWCHFLOODPROT
-		if (chptr->mode.floodprot)
-		{
-			oldmode.floodprot = MyMalloc(sizeof(ChanFloodProt));
-			memcpy(oldmode.floodprot, chptr->mode.floodprot, sizeof(ChanFloodProt));
-		}
-#endif
 		/* merge the modes */
 		strlcpy(modebuf, parv[3], sizeof modebuf);
 		parabuf[0] = '\0';
@@ -632,23 +603,6 @@ docontinue:
 		{
 			Addit('L', oldmode.link);
 		}
-#ifdef NEWCHFLOODPROT
-		if (oldmode.floodprot && !chptr->mode.floodprot)
-		{
-			char *x = channel_modef_string(oldmode.floodprot);
-			Addit('f', x);
-		}
-#else
-		if ((oldmode.msgs || oldmode.per || oldmode.kmode)
-		    && ((chptr->mode.msgs == 0) && (chptr->mode.per == 0)
-		    && (chptr->mode.kmode == 0)))
-		{
-			ircsprintf(modeback, "%s%i:%i",
-			    (oldmode.kmode == 1 ? "*" : ""),
-			    oldmode.msgs, oldmode.per);
-			Addit('f', modeback);
-		}
-#endif
 
 #ifdef EXTCMODE
 		/* First, check if we have something they don't have..
@@ -732,23 +686,6 @@ docontinue:
 		{
 			Addit('L', chptr->mode.link);
 		}
-#ifdef NEWCHFLOODPROT
-		if (chptr->mode.floodprot && !oldmode.floodprot)
-		{
-			char *x = channel_modef_string(chptr->mode.floodprot);
-			Addit('f', x);
-		}
-#else
-		if (!(oldmode.msgs || oldmode.per || oldmode.kmode)
-		    && (chptr->mode.msgs || chptr->mode.per
-		    || chptr->mode.kmode))
-		{
-			ircsprintf(modeback, "%s%i:%i",
-			    (chptr->mode.kmode == 1 ? "*" : ""),
-			    chptr->mode.msgs, chptr->mode.per);
-			Addit('f', modeback);
-		}
-#endif
 
 #ifdef EXTCMODE
 		/* Now, check if they have something we don't have..
@@ -812,48 +749,6 @@ docontinue:
 				Addit('L', chptr->mode.link);
 			}
 		}
-		/* 
-		 * run a max on each?
-		 */
-#ifdef NEWCHFLOODPROT
-		if (chptr->mode.floodprot && oldmode.floodprot)
-		{
-			char *x;
-			int i;
-
-			if (compare_floodprot_modes(chptr->mode.floodprot, oldmode.floodprot))
-			{
-				chptr->mode.floodprot->per = MAX(chptr->mode.floodprot->per, oldmode.floodprot->per);
-				for (i=0; i < NUMFLD; i++)
-				{
-					chptr->mode.floodprot->l[i] = MAX(chptr->mode.floodprot->l[i], oldmode.floodprot->l[i]);
-					chptr->mode.floodprot->a[i] = MAX(chptr->mode.floodprot->a[i], oldmode.floodprot->a[i]);
-					chptr->mode.floodprot->r[i] = MAX(chptr->mode.floodprot->r[i], oldmode.floodprot->r[i]);
-				}
-				x = channel_modef_string(chptr->mode.floodprot);
-				Addit('f', x);
-			}
-		}
-#else
-		if ((oldmode.kmode != chptr->mode.kmode)
-		    || (oldmode.msgs != chptr->mode.msgs)
-		    || (oldmode.per != chptr->mode.per))
-		{
-			chptr->mode.kmode =
-			    MAX(chptr->mode.kmode, oldmode.kmode);
-			chptr->mode.msgs = MAX(chptr->mode.msgs, oldmode.msgs);
-			chptr->mode.per = MAX(chptr->mode.per, oldmode.per);
-			if ((oldmode.kmode != chptr->mode.kmode)
-			    || (oldmode.msgs != chptr->mode.msgs)
-			    || (oldmode.per != chptr->mode.per))
-			{
-				ircsprintf(modeback, "%s%i:%i",
-				    (chptr->mode.kmode == 1 ? "*" : ""),
-				    chptr->mode.msgs, chptr->mode.per);
-				Addit('f', modeback);
-			}
-		}
-#endif
 
 #ifdef EXTCMODE
 		/* Now, check for any param differences in extended channel modes..
@@ -925,14 +820,6 @@ docontinue:
 		extcmode_free_paramlist(oldmode.extmodeparams);
 		memset(&oldmode.extmodeparams, 0, sizeof(oldmode.extmodeparams));
 		//oldmode.extmodeparam = NULL; /* just to be sure ;) */
-#endif
-#ifdef NEWCHFLOODPROT
-		/* and the oldmode.floodprot struct too... :/ */
-		if (oldmode.floodprot)
-		{
-			free(oldmode.floodprot);
-			oldmode.floodprot = NULL;
-		}
 #endif
 	}
 

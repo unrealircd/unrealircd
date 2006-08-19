@@ -13,7 +13,7 @@
 --braces-on-struct-decl-line
 --paren-indentation0
 --case-brace-indentation0
---line-length80
+--line-length110
 --declaration-indentation5
 -T size_t
 -T aClass

@@ -1325,3 +1325,20 @@
 - Moved failed oper snotices to snomask +o, and are sent out to all servers. Also now shows
   the uid attempted (like [FAILEDAUTH] does) for incorrect host or maxlogin.
 - Documentation (help.conf) fix for svsnline reported in #3025.
+- Moved HOOKTYPE_LOCAL_NICKCHANGE and HOOKTYPE_REMOTE_NICKCHANGE to *after* the nickchange.
+  As a consequence of this the last parameter you get in your hook is now 'oldnick' rather
+  than 'newnick'. So the new nick is in sptr->name now and oldnick in last parameter.
+- Added HOOKTYPE_PRE_CHANMSG, this should now be used for blocking/morphing text.
+  It has the parameters: sptr, chptr, text, notice
+- HOOKTYPE_CHANMSG now no longer allows one to block the text (use HOOKTYPE_PRE_CHANMSG for
+  that). It's also moved to after the message was actually sent.
+- Added HOOKTYPE_KNOCK (sptr, chptr)
+- Added HOOKTYPE_MODECHAR_FIXME. Internal for now, will be replaced with a proper
+  HOOKTYPE_MODECHAR later (and arguments will change). It's just an internal hack for
+  chmode +f for now ;).
+- Updated indent.pro to use length=110. It still does not indent how I want it to be though,
+  so don't use it yet ;).
+- Moved channel mode +f to src/modules/chanmodes/chmode_f.c, interestingly enough this took
+  longer than recoding extcmodes paramter support and moving chan mode +j.
+  It's not only looking like a complex channel mode, it actually *IS* one ;).
+  TODO: make sure it actually works, and fix sjoining (partly not implemented yet->crash) ;p

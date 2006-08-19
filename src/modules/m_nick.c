@@ -120,7 +120,9 @@ DLLFUNC CMD_FUNC(m_nick)
 	Membership *mp;
 	time_t lastnick = (time_t) 0;
 	int  differ = 1, update_watch = 1;
-	unsigned char newusr = 0, removemoder = 1;
+	unsigned char newusr = 0; /* WARNING: not a correct term. is 1 if newly connected, 0 if either notregged yet or already online */
+	int removemoder = 1;
+	char oldnick[NICKLEN + 1];
 	/*
 	 * If the user didn't specify a nickname, complain
 	 */
@@ -644,12 +646,10 @@ DLLFUNC CMD_FUNC(m_nick)
 				sptr->user->flood.nick_c++;
 
 			sendto_snomask(SNO_NICKCHANGE, "*** Notice -- %s (%s@%s) has changed his/her nickname to %s", sptr->name, sptr->user->username, sptr->user->realhost, nick);
-
-			RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, sptr, nick);
 		} else {
 			sendto_snomask(SNO_FNICKCHANGE, "*** Notice -- %s (%s@%s) has changed his/her nickname to %s", sptr->name, sptr->user->username, sptr->user->realhost, nick);
-			RunHook3(HOOKTYPE_REMOTE_NICKCHANGE, cptr, sptr, nick);
 		}
+		strcpy(oldnick, sptr->name); /* safe: both NICKLEN+1 */
 		/*
 		 * Client just changing his/her nick. If he/she is
 		 * on a channel, send note of change to all clients
@@ -760,23 +760,16 @@ DLLFUNC CMD_FUNC(m_nick)
 	else if (IsPerson(sptr) && update_watch)
 		hash_check_watch(sptr, RPL_LOGON);
 
-#ifdef NEWCHFLOODPROT
-	if (sptr->user && !newusr && !IsULine(sptr))
+	if (newusr)
 	{
-		for (mp = sptr->user->channel; mp; mp = mp->next)
-		{
-			aChannel *chptr = mp->chptr;
-			if (chptr && !(mp->flags & (CHFL_CHANOP|CHFL_VOICE|CHFL_CHANOWNER|CHFL_HALFOP|CHFL_CHANPROT)) &&
-			    chptr->mode.floodprot && do_chanflood(chptr->mode.floodprot, FLD_NICK) && MyClient(sptr))
-			{
-				do_chanflood_action(chptr, FLD_NICK, "nick");
-			}
-		}	
-	}
-#endif
-	if (newusr && !MyClient(sptr) && IsPerson(sptr))
+		if (!MyClient(sptr) && IsPerson(sptr))
+			RunHook(HOOKTYPE_REMOTE_CONNECT, sptr);
+	} else if (IsPerson(sptr))
 	{
-		RunHook(HOOKTYPE_REMOTE_CONNECT, sptr);
+		if (MyClient(sptr))
+			RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, sptr, oldnick);
+		else
+			RunHook3(HOOKTYPE_REMOTE_NICKCHANGE, cptr, sptr, oldnick);
 	}
 
 	return 0;

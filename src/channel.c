@@ -70,11 +70,6 @@ void sub1_from_channel(aChannel *);
 void clean_channelname(char *);
 void del_invite(aClient *, aChannel *);
 
-#ifdef NEWCHFLOODPROT
-void chanfloodtimer_del(aChannel *chptr, char mflag, long mbit);
-void chanfloodtimer_stopchantimers(aChannel *chptr);
-#endif
-
 /*
  * some buffers for rebuilding channel/nick lists with ,'s
  */
@@ -110,7 +105,6 @@ aCtab cFlagTab[] = {
 	{MODE_INVEX, 'I', 1, 0},	/* exception ban */
 	{MODE_NOKNOCK, 'K', 0, 0},	/* knock knock (no way!) */
 	{MODE_NOINVITE, 'V', 0, 0},	/* no invites */
-	{MODE_FLOODLIMIT, 'f', 0, 1},	/* flood limiter */
 	{MODE_MODREG, 'M', 0, 0},	/* Need umode +r to talk */
 	{MODE_NOCTCP, 'C', 0, 0},	/* no CTCPs */
 	{MODE_AUDITORIUM, 'u', 0, 0},
@@ -838,58 +832,6 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 	return 0;
 }
 
-/* [just a helper for channel_modef_string()] */
-static inline char *chmodefstrhelper(char *buf, char t, char tdef, unsigned short l, unsigned char a, unsigned char r)
-{
-char *p;
-char tmpbuf[16], *p2 = tmpbuf;
-
-	ircsprintf(buf, "%hd", l);
-	p = buf + strlen(buf);
-	*p++ = t;
-	if (a && ((a != tdef) || r))
-	{
-		*p++ = '#';
-		*p++ = a;
-		if (r)
-		{
-			sprintf(tmpbuf, "%hd", (short)r);
-			while ((*p = *p2++))
-				p++;
-		}
-	}
-	*p++ = ',';
-	return p;
-}
-
-/** returns the channelmode +f string (ie: '[5k,40j]:10') */
-char *channel_modef_string(ChanFloodProt *x)
-{
-static char retbuf[512]; /* overkill :p */
-char *p = retbuf;
-	*p++ = '[';
-
-	/* (alphabetized) */
-	if (x->l[FLD_CTCP])
-		p = chmodefstrhelper(p, 'c', 'C', x->l[FLD_CTCP], x->a[FLD_CTCP], x->r[FLD_CTCP]);
-	if (x->l[FLD_JOIN])
-		p = chmodefstrhelper(p, 'j', 'i', x->l[FLD_JOIN], x->a[FLD_JOIN], x->r[FLD_JOIN]);
-	if (x->l[FLD_KNOCK])
-		p = chmodefstrhelper(p, 'k', 'K', x->l[FLD_KNOCK], x->a[FLD_KNOCK], x->r[FLD_KNOCK]);
-	if (x->l[FLD_MSG])
-		p = chmodefstrhelper(p, 'm', 'm', x->l[FLD_MSG], x->a[FLD_MSG], x->r[FLD_MSG]);
-	if (x->l[FLD_NICK])
-		p = chmodefstrhelper(p, 'n', 'N', x->l[FLD_NICK], x->a[FLD_NICK], x->r[FLD_NICK]);
-	if (x->l[FLD_TEXT])
-		p = chmodefstrhelper(p, 't', '\0', x->l[FLD_TEXT], x->a[FLD_TEXT], x->r[FLD_TEXT]);
-
-	if (*(p - 1) == ',')
-		p--;
-	*p++ = ']';
-	ircsprintf(p, ":%hd", x->per);
-	return retbuf;
-}
-
 /*
  * write the "simple" list of channel modes for channel chptr onto buffer mbuf
  * with the parameters in pbuf.
@@ -949,27 +891,6 @@ void channel_modes(aClient *cptr, char *mbuf, char *pbuf, aChannel *chptr)
 		}
 	}
 	/* if we add more parameter modes, add a space to the strings here --Stskeeps */
-#ifdef NEWCHFLOODPROT
-	if (chptr->mode.floodprot)
-#else
-	if (chptr->mode.per)
-#endif
-	{
-		*mbuf++ = 'f';
-		if (IsMember(cptr, chptr) || IsServer(cptr)
-		    || IsULine(cptr))
-		{
-#ifdef NEWCHFLOODPROT
-			ircsprintf(bcbuf, "%s ", channel_modef_string(chptr->mode.floodprot));
-#else
-			if (chptr->mode.kmode == 1)
-				ircsprintf(bcbuf, "*%i:%i ", chptr->mode.msgs, chptr->mode.per);
-			else
-				ircsprintf(bcbuf, "%i:%i ", chptr->mode.msgs, chptr->mode.per);
-#endif
-			(void)strcat(pbuf, bcbuf);
-		}
-	}
 
 #ifdef EXTCMODE
 	for (i=0; i <= Channelmode_highest; i++)
@@ -1384,11 +1305,6 @@ void sub1_from_channel(aChannel *chptr)
 		/* free extcmode params */
 		extcmode_free_paramlist(chptr->mode.extmodeparams);
 #endif
-#ifdef NEWCHFLOODPROT
-		chanfloodtimer_stopchantimers(chptr);
-		if (chptr->mode.floodprot)
-			MyFree(chptr->mode.floodprot);
-#endif
 		if (chptr->topic)
 			MyFree(chptr->topic);
 		if (chptr->topic_nick)
@@ -1403,82 +1319,6 @@ void sub1_from_channel(aChannel *chptr)
 		IRCstats.channels--;
 		MyFree((char *)chptr);
 	}
-}
-
-int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
-{
-	Membership *lp;
-	MembershipL *lp2;
-	int c_limit, t_limit, banthem;
-
-	if (!MyClient(sptr))
-		return 0;
-	if (IsOper(sptr) || IsULine(sptr))
-		return 0;
-	if (is_skochanop(sptr, chptr))
-		return 0;
-
-	if (!(lp = find_membership_link(sptr->user->channel, chptr)))
-		return 0;
-
-	lp2 = (MembershipL *) lp;
-
-#ifdef NEWCHFLOODPROT
-	if (!chptr->mode.floodprot || !chptr->mode.floodprot->l[FLD_TEXT])
-		return 0;
-	c_limit = chptr->mode.floodprot->l[FLD_TEXT];
-	t_limit = chptr->mode.floodprot->per;
-	banthem = (chptr->mode.floodprot->a[FLD_TEXT] == 'b') ? 1 : 0;
-#else
-	if ((chptr->mode.msgs < 1) || (chptr->mode.per < 1))
-		return 0;
-	c_limit = chptr->mode.msgs;
-	t_limit = chptr->mode.per;
-	banthem = chptr->mode.kmode;
-#endif
-	/* if current - firstmsgtime >= mode.per, then reset,
-	 * if nummsg > mode.msgs then kick/ban
-	 */
-	Debug((DEBUG_ERROR, "Checking for flood +f: firstmsg=%d (%ds ago), new nmsgs: %d, limit is: %d:%d",
-		lp2->flood.firstmsg, TStime() - lp2->flood.firstmsg, lp2->flood.nmsg + 1,
-		c_limit, t_limit));
-	if ((TStime() - lp2->flood.firstmsg) >= t_limit)
-	{
-		/* reset */
-		lp2->flood.firstmsg = TStime();
-		lp2->flood.nmsg = 1;
-		return 0; /* forget about it.. */
-	}
-
-	/* increase msgs */
-	lp2->flood.nmsg++;
-
-	if ((lp2->flood.nmsg) > c_limit)
-	{
-		char comment[1024], mask[1024];
-		ircsprintf(comment,
-		    "Flooding (Limit is %i lines per %i seconds)",
-		    c_limit, t_limit);
-		if (banthem)
-		{		/* ban. */
-			ircsprintf(mask, "*!*@%s", GetHost(sptr));
-			add_listmode(&chptr->banlist, &me, chptr, mask);
-			sendto_serv_butone(&me, ":%s MODE %s +b %s 0",
-			    me.name, chptr->chname, mask);
-			sendto_channel_butserv(chptr, &me,
-			    ":%s MODE %s +b %s", me.name, chptr->chname, mask);
-		}
-		sendto_channel_butserv(chptr, &me,
-		    ":%s KICK %s %s :%s", me.name,
-		    chptr->chname, sptr->name, comment);
-		sendto_serv_butone_token(cptr, me.name,
-			MSG_KICK, TOK_KICK, 
-			"%s %s :%s",
-		   chptr->chname, sptr->name, comment);
-		remove_user_from_channel(sptr, chptr);
-		return 1;
-	}
-	return 0;
 }
 
 void send_user_joins(aClient *cptr, aClient *user)
@@ -1623,216 +1463,3 @@ void rejoin_dojoinandmode(aClient *sptr, char did_parts[])
 	}
 }
 
-#ifdef NEWCHFLOODPROT
-MODVAR RemoveFld *removefld_list = NULL;
-
-RemoveFld *chanfloodtimer_find(aChannel *chptr, char mflag)
-{
-RemoveFld *e;
-
-	for (e=removefld_list; e; e=e->next)
-	{
-		if ((e->chptr == chptr) && (e->m == mflag))
-			return e;
-	}
-	return NULL;
-}
-
-/*
- * Adds a "remove channelmode set by +f" timer.
- * chptr	Channel
- * mflag	Mode flag, eg 'C'
- * mbit		Mode bitflag, eg MODE_NOCTCP
- * when		when it should be removed
- * NOTES:
- * - This function takes care of overwriting of any previous timer
- *   for the same modechar.
- * - The function takes care of chptr->mode.floodprot->timer_flags,
- *   do not modify it yourself.
- * - chptr->mode.floodprot is asumed to be non-NULL.
- */
-void chanfloodtimer_add(aChannel *chptr, char mflag, long mbit, time_t when)
-{
-RemoveFld *e = NULL;
-unsigned char add=1;
-
-	if (chptr->mode.floodprot->timer_flags & mbit)
-	{
-		/* Already exists... */
-		e = chanfloodtimer_find(chptr, mflag);
-		if (e)
-			add = 0;
-	}
-
-	if (add)
-		e = MyMallocEx(sizeof(RemoveFld));
-
-	e->chptr = chptr;
-	e->m = mflag;
-	e->when = when;
-
-	if (add)
-		AddListItem(e, removefld_list);
-
-	chptr->mode.floodprot->timer_flags |= mbit;
-}
-
-void chanfloodtimer_del(aChannel *chptr, char mflag, long mbit)
-{
-RemoveFld *e;
-
-	if (chptr->mode.floodprot && !(chptr->mode.floodprot->timer_flags & mbit))
-		return; /* nothing to remove.. */
-	e = chanfloodtimer_find(chptr, mflag);
-	if (!e)
-		return;
-
-	DelListItem(e, removefld_list);
-
-	if (chptr->mode.floodprot)
-		chptr->mode.floodprot->timer_flags &= ~mbit;
-}
-
-long get_chanbitbychar(char m)
-{
-aCtab *tab = &cFlagTab[0];
-	while(tab->mode != 0x0)
-	{
-		if (tab->flag == m)
-			return tab->mode;
-		tab++;;
-	}
-	return 0;
-}
-
-EVENT(modef_event)
-{
-RemoveFld *e = removefld_list;
-time_t now;
-long mode;
-
-	now = TStime();
-	
-	while(e)
-	{
-		if (e->when <= now)
-		{
-			/* Remove chanmode... */
-#ifdef NEWFLDDBG
-			sendto_realops("modef_event: chan %s mode -%c EXPIRED", e->chptr->chname, e->m);
-#endif
-			mode = get_chanbitbychar(e->m);
-			if (e->chptr->mode.mode & mode)
-			{
-				sendto_serv_butone(&me, ":%s MODE %s -%c 0", me.name, e->chptr->chname, e->m);
-				sendto_channel_butserv(e->chptr, &me, ":%s MODE %s -%c", me.name, e->chptr->chname, e->m);
-				e->chptr->mode.mode &= ~mode;
-			}
-			
-			/* And delete... */
-			e = (RemoveFld *)DelListItem(e, removefld_list);
-		} else {
-#ifdef NEWFLDDBG
-			sendto_realops("modef_event: chan %s mode -%c about %d seconds",
-				e->chptr->chname, e->m, e->when - now);
-#endif
-			e = e->next;
-		}
-	}
-}
-
-void init_modef()
-{
-	EventAddEx(NULL, "modef_event", 10, 0, modef_event, NULL);
-}
-
-void chanfloodtimer_stopchantimers(aChannel *chptr)
-{
-RemoveFld *e = removefld_list;
-	while(e)
-	{
-		if (e->chptr == chptr)
-			e = (RemoveFld *)DelListItem(e, removefld_list);
-		else
-			e = e->next;
-	}
-}
-
-
-
-int do_chanflood(ChanFloodProt *chp, int what)
-{
-
-	if (!chp || !chp->l[what]) /* no +f or not restricted */
-		return 0;
-	if (TStime() - chp->t[what] >= chp->per)
-	{
-		chp->t[what] = TStime();
-		chp->c[what] = 1;
-	} else
-	{
-		chp->c[what]++;
-		if ((chp->c[what] > chp->l[what]) &&
-		    (TStime() - chp->t[what] < chp->per))
-		{
-			/* reset it too (makes it easier for chanops to handle the situation) */
-			/*
-			 *XXchp->t[what] = TStime();
-			 *XXchp->c[what] = 1;
-			 * 
-			 * BAD.. there are some situations where we might 'miss' a flood
-			 * because of this. The reset has been moved to -i,-m,-N,-C,etc.
-			*/
-			return 1; /* flood detected! */
-		}
-	}
-	return 0;
-}
-
-void do_chanflood_action(aChannel *chptr, int what, char *text)
-{
-long modeflag = 0;
-aCtab *tab = &cFlagTab[0];
-char m;
-
-	m = chptr->mode.floodprot->a[what];
-	if (!m)
-		return;
-
-	/* [TODO: add extended channel mode support] */
-	
-	while(tab->mode != 0x0)
-	{
-		if (tab->flag == m)
-		{
-			modeflag = tab->mode;
-			break;
-		}
-		tab++;
-	}
-
-	if (!modeflag)
-		return;
-		
-	if (!(chptr->mode.mode & modeflag))
-	{
-		char comment[1024], target[CHANNELLEN + 8];
-		ircsprintf(comment, "*** Channel %sflood detected (limit is %d per %d seconds), setting mode +%c",
-			text, chptr->mode.floodprot->l[what], chptr->mode.floodprot->per, m);
-		ircsprintf(target, "%%%s", chptr->chname);
-		sendto_channelprefix_butone_tok(NULL, &me, chptr,
-			PREFIX_HALFOP|PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-			MSG_NOTICE, TOK_NOTICE, target, comment, 0);
-		sendto_serv_butone(&me, ":%s MODE %s +%c 0", me.name, chptr->chname, m);
-		sendto_channel_butserv(chptr, &me, ":%s MODE %s +%c", me.name, chptr->chname, m);
-		chptr->mode.mode |= modeflag;
-		if (chptr->mode.floodprot->r[what]) /* Add remove-chanmode timer... */
-		{
-			chanfloodtimer_add(chptr, m, modeflag, TStime() + ((long)chptr->mode.floodprot->r[what] * 60) - 5);
-			/* (since the chanflood timer event is called every 10s, we do -5 here so the accurancy will
-			 *  be -5..+5, without it it would be 0..+10.)
-			 */
-		}
-	}
-}
-#endif

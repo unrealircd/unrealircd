@@ -138,8 +138,6 @@ typedef struct Server aServer;
 typedef struct SLink Link;
 typedef struct SBan Ban;
 typedef struct SMode Mode;
-typedef struct SChanFloodProt ChanFloodProt;
-typedef struct SRemoveFld RemoveFld;
 typedef struct ListOptions LOpts;
 typedef struct FloodOpt aFloodOpt;
 typedef struct MotdItem aMotd;
@@ -1455,23 +1453,6 @@ struct ListOptions {
 
 #define NUMFLD	6 /* 6 flood types */
 
-struct SRemoveFld {
-	struct SRemoveFld *prev, *next;
-	aChannel *chptr;
-	char m; /* mode to be removed */
-	time_t when; /* scheduled at */
-};
-
-struct SChanFloodProt {
-	unsigned short	per; /* setting: per <XX> seconds */
-	time_t			t[NUMFLD]; /* runtime: timers */
-	unsigned short	c[NUMFLD]; /* runtime: counters */
-	unsigned short	l[NUMFLD]; /* setting: limit */
-	unsigned char	a[NUMFLD]; /* setting: action */
-	unsigned char	r[NUMFLD]; /* setting: remove-after <this> minutes */
-	unsigned long	timer_flags; /* if a "-m timer" is running this is & MODE_MODERATED etc.. */
-};
-
 /* Number of maximum paramter modes to allow.
  * Don't set it unnecessarily high.. we only use k, l, L, j and f at the moment. (FIXME)
  */
@@ -1487,9 +1468,7 @@ struct SMode {
 	int  limit;
 	char key[KEYLEN + 1];
 	char link[LINKLEN + 1];
-#ifdef NEWCHFLOODPROT
-	ChanFloodProt *floodprot;
-#else
+#if 0
 	/* x:y */
 	unsigned short  msgs;		/* x */
 	unsigned short  per;		/* y */

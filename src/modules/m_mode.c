@@ -870,47 +870,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  else
 		  {
 			  chptr->mode.mode &= ~modetype;
-#ifdef NEWCHFLOODPROT
-			  /* reset joinflood on -i, reset msgflood on -m, etc.. */
-			  if (chptr->mode.floodprot)
-			  {
-				switch(modetype)
-				{
-				case MODE_NOCTCP:
-					chptr->mode.floodprot->c[FLD_CTCP] = 0;
-					chanfloodtimer_del(chptr, 'C', MODE_NOCTCP);
-					break;
-				case MODE_NONICKCHANGE:
-					chptr->mode.floodprot->c[FLD_NICK] = 0;
-					chanfloodtimer_del(chptr, 'N', MODE_NONICKCHANGE);
-					break;
-				case MODE_MODERATED:
-					chptr->mode.floodprot->c[FLD_MSG] = 0;
-					chptr->mode.floodprot->c[FLD_CTCP] = 0;
-					chanfloodtimer_del(chptr, 'm', MODE_MODERATED);
-					break;
-				case MODE_NOKNOCK:
-					chptr->mode.floodprot->c[FLD_KNOCK] = 0;
-					chanfloodtimer_del(chptr, 'K', MODE_NOKNOCK);
-					break;
-				case MODE_INVITEONLY:
-					chptr->mode.floodprot->c[FLD_JOIN] = 0;
-					chanfloodtimer_del(chptr, 'i', MODE_INVITEONLY);
-					break;
-				case MODE_MODREG:
-					chptr->mode.floodprot->c[FLD_MSG] = 0;
-					chptr->mode.floodprot->c[FLD_CTCP] = 0;
-					chanfloodtimer_del(chptr, 'M', MODE_MODREG);
-					break;
-				case MODE_RGSTRONLY:
-					chptr->mode.floodprot->c[FLD_JOIN] = 0;
-					chanfloodtimer_del(chptr, 'R', MODE_RGSTRONLY);
-					break;
-				default:
-					break;
-				}
-			  }
-#endif
+			  RunHook2(HOOKTYPE_MODECHAR_FIXME, chptr, modetype);
 		  }
 		  break;
 
@@ -1323,371 +1283,6 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		      what == MODE_ADD ? '+' : '-', tmpstr);
 		  (*pcount)++;
 		  break;
-	  case MODE_FLOODLIMIT:
-		  retval = 1;
-		  for (x = 0; x < *pcount; x++)
-		  {
-			  if (pvar[x][1] == 'f')
-			  {	/* don't allow user to change flood
-				 * more than once per command. */
-				  retval = 0;
-				  break;
-			  }
-		  }
-		  if (retval == 0)	/* you can't break a case from loop */
-			  break;
-#ifndef NEWCHFLOODPROT
-		  if (what == MODE_ADD)
-		  {
-			  if (!bounce)	/* don't do the mode at all. */
-			  {
-				  if (!param || *pcount >= MAXMODEPARAMS)
-				  {
-					  retval = 0;
-					  break;
-				  }
-
-				  /* like 1:1 and if its less than 3 chars then ahem.. */
-				  if (strlen(param) < 3)
-				  {
-					  break;
-				  }
-				  /* may not contain other chars 
-				     than 0123456789: & NULL */
-				  hascolon = 0;
-				  for (xp = param; *xp; xp++)
-				  {
-					  if (*xp == ':')
-						hascolon++;
-					  /* fast alpha check */
-					  if (((*xp < '0') || (*xp > '9'))
-					      && (*xp != ':')
-					      && (*xp != '*'))
-						goto break_flood;
-					  /* uh oh, not the first char */
-					  if (*xp == '*' && (xp != param))
-						goto break_flood;
-				  }
-				  /* We can avoid 2 strchr() and a strrchr() like this
-				   * it should be much faster. -- codemastr
-				   */
-				  if (hascolon != 1)
-					break;
-				  if (*param == '*')
-				  {
-					  xzi = 1;
-					  //                      chptr->mode.kmode = 1;
-				  }
-				  else
-				  {
-					  xzi = 0;
-
-					  //                   chptr->mode.kmode = 0;
-				  }
-				  xp = index(param, ':');
-				  *xp = '\0';
-				  xxi =
-				      atoi((*param ==
-				      '*' ? (param + 1) : param));
-				  xp++;
-				  xyi = atoi(xp);
-				  if (xxi > 500 || xyi > 500)
-					break;
-				  xp--;
-				  *xp = ':';
-				  if ((xxi == 0) || (xyi == 0))
-					  break;
-				  if ((chptr->mode.msgs == xxi)
-				      && (chptr->mode.per == xyi)
-				      && (chptr->mode.kmode == xzi))
-					  break;
-				  chptr->mode.msgs = xxi;
-				  chptr->mode.per = xyi;
-				  chptr->mode.kmode = xzi;
-			  }
-			  tmpstr = param;
-			  retval = 1;
-		  }
-		  else
-		  {
-			  if (!chptr->mode.msgs || !chptr->mode.per)
-				  break;	/* no change */
-			  ircsprintf(tmpbuf,
-			      (chptr->mode.kmode > 0 ? "*%i:%i" : "%i:%i"),
-			      chptr->mode.msgs, chptr->mode.per);
-			  tmpstr = tmpbuf;
-			  if (!bounce)
-			  {
-				  chptr->mode.msgs = chptr->mode.per =
-				      chptr->mode.kmode = 0;
-			  }
-			  retval = 0;
-		  }
-#else
-		/* NEW */
-		if (what == MODE_ADD)
-		{
-			if (!bounce)	/* don't do the mode at all. */
-			{
-				ChanFloodProt newf;
-				memset(&newf, 0, sizeof(newf));
-
-				if (!param || *pcount >= MAXMODEPARAMS)
-				{
-					retval = 0;
-					break;
-				}
-
-				/* old +f was like +f 10:5 or +f *10:5
-				 * new is +f [5c,30j,10t#b]:15
-				 * +f 10:5  --> +f [10t]:5
-				 * +f *10:5 --> +f [10t#b]:5
-				 */
-				if (param[0] != '[')
-				{
-					/* <<OLD +f>> */
-				  /* like 1:1 and if its less than 3 chars then ahem.. */
-				  if (strlen(param) < 3)
-				  {
-					  break;
-				  }
-				  /* may not contain other chars 
-				     than 0123456789: & NULL */
-				  hascolon = 0;
-				  for (xp = param; *xp; xp++)
-				  {
-					  if (*xp == ':')
-						hascolon++;
-					  /* fast alpha check */
-					  if (((*xp < '0') || (*xp > '9'))
-					      && (*xp != ':')
-					      && (*xp != '*'))
-						goto break_flood;
-					  /* uh oh, not the first char */
-					  if (*xp == '*' && (xp != param))
-						goto break_flood;
-				  }
-				  /* We can avoid 2 strchr() and a strrchr() like this
-				   * it should be much faster. -- codemastr
-				   */
-				  if (hascolon != 1)
-					break;
-				  if (*param == '*')
-				  {
-					  xzi = 1;
-					  //                      chptr->mode.kmode = 1;
-				  }
-				  else
-				  {
-					  xzi = 0;
-
-					  //                   chptr->mode.kmode = 0;
-				  }
-				  xp = index(param, ':');
-				  *xp = '\0';
-				  xxi =
-				      atoi((*param ==
-				      '*' ? (param + 1) : param));
-				  xp++;
-				  xyi = atoi(xp);
-				  if (xxi > 500 || xyi > 500)
-					break;
-				  xp--;
-				  *xp = ':';
-				  if ((xxi == 0) || (xyi == 0))
-					  break;
-
-				  /* ok, we passed */
-				  newf.l[FLD_TEXT] = xxi;
-				  newf.per = xyi;
-				  if (xzi == 1)
-				      newf.a[FLD_TEXT] = 'b';
-				} else {
-					/* NEW +F */
-					char xbuf[256], c, a, *p, *p2, *x = xbuf+1;
-					int v;
-					unsigned short warnings = 0, breakit;
-					unsigned char r;
-
-					/* '['<number><1 letter>[optional: '#'+1 letter],[next..]']'':'<number> */
-					strlcpy(xbuf, param, sizeof(xbuf));
-					p2 = strchr(xbuf+1, ']');
-					if (!p2)
-						break;
-					*p2 = '\0';
-					if (*(p2+1) != ':')
-						break;
-					breakit = 0;
-					for (x = strtok(xbuf+1, ","); x; x = strtok(NULL, ","))
-					{
-						/* <number><1 letter>[optional: '#'+1 letter] */
-						p = x;
-						while(isdigit(*p)) { p++; }
-						if ((*p == '\0') ||
-						    !((*p == 'c') || (*p == 'j') || (*p == 'k') ||
-						      (*p == 'm') || (*p == 'n') || (*p == 't')))
-						{
-							if (MyClient(cptr) && *p && (warnings++ < 3))
-								sendto_one(cptr, ":%s NOTICE %s :warning: channelmode +f: floodtype '%c' unknown, ignored.",
-									me.name, cptr->name, *p);
-							continue; /* continue instead of break for forward compatability. */
-						}
-						c = *p;
-						*p = '\0';
-						v = atoi(x);
-						if ((v < 1) || (v > 999)) /* out of range... */
-						{
-							if (MyClient(cptr))
-							{
-								sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE),
-									   me.name, cptr->name, 
-									   'f', "value should be from 1-999");
-								breakit = 1;
-								break;
-							} else
-								continue; /* just ignore for remote servers */
-						}
-						p++;
-						a = '\0';
-						r = MyClient(cptr) ? MODEF_DEFAULT_UNSETTIME : 0;
-						if (*p != '\0')
-						{
-							if (*p == '#')
-							{
-								p++;
-								a = *p;
-								p++;
-								if (*p != '\0')
-								{
-									int tv;
-									tv = atoi(p);
-									if (tv <= 0)
-										tv = 0; /* (ignored) */
-									if (tv > (MyClient(cptr) ? MODEF_MAX_UNSETTIME : 255))
-										tv = (MyClient(cptr) ? MODEF_MAX_UNSETTIME : 255); /* set to max */
-									r = (unsigned char)tv;
-								}
-							}
-						}
-
-						switch(c)
-						{
-							case 'c':
-								newf.l[FLD_CTCP] = v;
-								if ((a == 'm') || (a == 'M'))
-									newf.a[FLD_CTCP] = a;
-								else
-									newf.a[FLD_CTCP] = 'C';
-								newf.r[FLD_CTCP] = r;
-								break;
-							case 'j':
-								newf.l[FLD_JOIN] = v;
-								if (a == 'R')
-									newf.a[FLD_JOIN] = a;
-								else
-									newf.a[FLD_JOIN] = 'i';
-								newf.r[FLD_JOIN] = r;
-								break;
-							case 'k':
-								newf.l[FLD_KNOCK] = v;
-								newf.a[FLD_KNOCK] = 'K';
-								newf.r[FLD_KNOCK] = r;
-								break;
-							case 'm':
-								newf.l[FLD_MSG] = v;
-								if (a == 'M')
-									newf.a[FLD_MSG] = a;
-								else
-									newf.a[FLD_MSG] = 'm';
-								newf.r[FLD_MSG] = r;
-								break;
-							case 'n':
-								newf.l[FLD_NICK] = v;
-								newf.a[FLD_NICK] = 'N';
-								newf.r[FLD_NICK] = r;
-								break;
-							case 't':
-								newf.l[FLD_TEXT] = v;
-								if (a == 'b')
-									newf.a[FLD_TEXT] = a;
-								/** newf.r[FLD_TEXT] ** not supported */
-								break;
-							default:
-								breakit=1;
-								break;
-						}
-						if (breakit)
-							break;
-					} /* for */
-					if (breakit)
-						break;
-					/* parse 'per' */
-					p2++;
-					if (*p2 != ':')
-						break;
-					p2++;
-					if (!*p2)
-						break;
-					v = atoi(p2);
-					if ((v < 1) || (v > 999)) /* 'per' out of range */
-					{
-						if (MyClient(cptr))
-							sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), 
-								   me.name, cptr->name, 'f', 
-								   "time range should be 1-999");
-						break;
-					}
-					newf.per = v;
-					
-					/* Is anything turned on? (to stop things like '+f []:15' */
-					breakit = 1;
-					for (v=0; v < NUMFLD; v++)
-						if (newf.l[v])
-							breakit=0;
-					if (breakit)
-						break;
-					
-				} /* if param[0] == '[' */ 
-
-				if (chptr->mode.floodprot &&
-				    !memcmp(chptr->mode.floodprot, &newf, sizeof(ChanFloodProt)))
-					break; /* They are identical */
-
-				/* Good.. store the mode (and alloc if needed) */
-				if (!chptr->mode.floodprot)
-					chptr->mode.floodprot = MyMalloc(sizeof(ChanFloodProt));
-				memcpy(chptr->mode.floodprot, &newf, sizeof(ChanFloodProt));
-				strcpy(tmpbuf, channel_modef_string(chptr->mode.floodprot));
-				tmpstr = tmpbuf;
-			} else {
-				/* bounce... */
-				tmpstr = param;
-			}
-			retval = 1;
-		} else
-		{ /* MODE_DEL */
-			if (!chptr->mode.floodprot)
-				break; /* no change */
-			if (!bounce)
-			{
-				strcpy(tmpbuf, channel_modef_string(chptr->mode.floodprot));
-				tmpstr = tmpbuf;
-				free(chptr->mode.floodprot);
-				chptr->mode.floodprot = NULL;
-				chanfloodtimer_stopchantimers(chptr);
-			} else {
-				/* bounce.. */
-				tmpstr = param;
-			}
-			retval = 0; /* ??? copied from previous +f code. */
-		}
-#endif
-
-		  (void)ircsprintf(pvar[*pcount], "%cf%s",
-		      what == MODE_ADD ? '+' : '-', tmpstr);
-		  (*pcount)++;
-		  break_flood:
-		  break;
 	}
 	return retval;
 }
@@ -1703,6 +1298,7 @@ int do_extmode_char(aChannel *chptr, Cmode *handler, char *param, u_int what,
 {
 int paracnt = (what == MODE_ADD) ? handler->paracount : 0;
 int x;
+char *morphed;
 
 	/* Expected a param and it isn't there? */
 	if (paracnt && (!param || (*pcount >= MAXMODEPARAMS)))
@@ -1752,28 +1348,23 @@ int x;
 			/* add: is the parameter ok? */
 			if (handler->is_ok(cptr, chptr, param, EXCHK_PARAM, what) == FALSE)
 				return paracnt;
+			
+			morphed =  handler->conv_param(param, cptr);
+			
 			/* is it already set at the same value? if so, ignore it. */
 			if (chptr->mode.extmode & handler->mode)
 			{
-#if 0
-				char *p, *p2;
-				p = handler->get_param(extcmode_get_struct(chptr->mode.extmodeparam,handler->flag));
-				p2 = handler->conv_param(param);
-				if (p && p2 && !strcmp(p, p2))
-					return paracnt; /* ignore... */
-#else
 				char *now, *requested;
 				char flag = handler->flag;
 				now = cm_getparameter(chptr, flag);
-				requested = handler->conv_param(param);
+				requested = handler->conv_param(param, cptr);
 				if (now && requested && !strcmp(now, requested))
 					return paracnt; /* ignore... */
-#endif
-
 			}
 				ircsprintf(pvar[*pcount], "+%c%s",
-					handler->flag, handler->conv_param(param));
+					handler->flag, morphed);
 			(*pcount)++;
+			param = morphed; /* set param to converted parameter. */
 		}
 	}
 

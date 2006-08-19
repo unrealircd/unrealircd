@@ -453,13 +453,6 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				int blocked = 0;
 #endif
 				Hook *tmphook;
-#ifdef NEWCHFLOODPROT
-				if (chptr->mode.floodprot && chptr->mode.floodprot->l[FLD_TEXT])
-#else
-				if (chptr->mode.per)
-#endif
-					if (check_for_chan_flood(cptr, sptr, chptr) == 1)
-						continue;
 
 				sendanyways = (strchr(CHANCMDPFX,parv[2][0]) ? 1 : 0);
 				text = parv[2];
@@ -502,8 +495,8 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 						return ret;
 				}
 
-				for (tmphook = Hooks[HOOKTYPE_CHANMSG]; tmphook; tmphook = tmphook->next) {
-					text = (*(tmphook->func.pcharfunc))(cptr, sptr, chptr, text, notice);
+				for (tmphook = Hooks[HOOKTYPE_PRE_CHANMSG]; tmphook; tmphook = tmphook->next) {
+					text = (*(tmphook->func.pcharfunc))(sptr, chptr, text, notice);
 					if (!text)
 						break;
 				}
@@ -518,21 +511,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				    notice ? TOK_NOTICE : TOK_PRIVATE,
 				    nick, text, 1);
 
-#ifdef NEWCHFLOODPROT
-				if (chptr->mode.floodprot && !is_skochanop(sptr, chptr) &&
-				    !IsULine(sptr) && do_chanflood(chptr->mode.floodprot, FLD_MSG) &&
-				    MyClient(sptr))
-				{
-					do_chanflood_action(chptr, FLD_MSG, "msg/notice");
-				}
-				
-				if (chptr->mode.floodprot && !is_skochanop(sptr, chptr) &&
-				    (text[0] == '\001') && strncmp(text+1, "ACTION ", 7) &&
-				    do_chanflood(chptr->mode.floodprot, FLD_CTCP) && MyClient(sptr))
-				{
-					do_chanflood_action(chptr, FLD_CTCP, "CTCP");
-				}
-#endif
+				RunHook4(HOOKTYPE_CHANMSG, sptr, chptr, text, notice);
 				sendanyways = 0;
 				continue;
 			}

@@ -174,10 +174,6 @@ CMD_FUNC(m_knock)
 	sendto_one(sptr, ":%s %s %s :Knocked on %s", me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE",
 	    sptr->name, chptr->chname);
 
-#ifdef NEWCHFLOODPROT
-	if (chptr->mode.floodprot && !IsULine(sptr) &&
-	    do_chanflood(chptr->mode.floodprot, FLD_KNOCK) && MyClient(sptr))
-		do_chanflood_action(chptr, FLD_KNOCK, "knock");
-#endif
+	RunHook2(HOOKTYPE_KNOCK, sptr, chptr);
 	return 0;
 }

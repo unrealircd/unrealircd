@@ -22,9 +22,9 @@
 #define MODULES_H
 #include "types.h"
 #define MAXCUSTOMHOOKS  30
-#define MAXHOOKTYPES	100
+#define MAXHOOKTYPES	150
 #define MAXCALLBACKS	30
-#define MAXEFUNCTIONS	60
+#define MAXEFUNCTIONS	100
 #if defined(_WIN32)
  #define MOD_EXTENSION "dll"
  #define DLLFUNC	_declspec(dllexport)
@@ -135,6 +135,7 @@ typedef struct {
 #define EXSJ_SAME			0 /* Parameters are the same */
 #define EXSJ_WEWON			1 /* We won! w00t */
 #define EXSJ_THEYWON		2 /* They won :( */
+#define EXSJ_MERGE			3 /* Merging of modes.. neither won nor lost (merged params are in 'our' on return) */
 
 /* return values for EXCHK_ACCESS*: */
 #define EX_DENY				0  /* Disallowed, except in case of operoverride */
@@ -189,9 +190,13 @@ typedef struct {
 	/** Convert input parameter to output.
 	 * Like +l "1aaa" becomes "1".
 	 * char *: the input parameter.
+	 * aClient *: the client that the mode request came from:
+	 *            1. Can be NULL (eg: if called for set::modes-on-join
+	 *            2. Probably only used in rare cases, see also next remark
+	 *            3. ERRORS SHOULD NOT BE SENT BY conv_param BUT BY is_ok!
 	 * return value: pointer to output string (temp. storage)
 	 */
-	char *		(*conv_param)(char *);
+	char *		(*conv_param)(char *, aClient *);
 
 	/** free and remove parameter from list.
 	 * aExtCMtableParam *: the list (usually chptr->mode.extmodeparams).
@@ -226,7 +231,7 @@ typedef struct {
 	int		(*is_ok)(aClient *,aChannel *, char *para, int, int);
 	void *	(*put_param)(void *, char *);
 	char *		(*get_param)(void *);
-	char *		(*conv_param)(char *);
+	char *		(*conv_param)(char *, aClient *);
 	void		(*free_param)(void *);
 	void *	(*dup_struct)(void *);
 	int		(*sjoin_check)(aChannel *, void *, void *);
@@ -658,6 +663,9 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define HOOKTYPE_CLEANUP_CLIENT 50
 #define HOOKTYPE_CLEANUP_USER 51
 #define HOOKTYPE_CLEANUP_USER2 52
+#define HOOKTYPE_PRE_CHANMSG 53
+#define HOOKTYPE_KNOCK 54
+#define HOOKTYPE_MODECHAR_FIXME 55
 
 /* Hook return values */
 #define HOOK_CONTINUE 0

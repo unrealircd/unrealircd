@@ -52,13 +52,6 @@ struct ChMode {
 	long extmodes;
 	char *extparams[EXTCMODETABLESZ];
 #endif
-#ifdef NEWCHFLOODPROT
-	ChanFloodProt	floodprot;
-#else
-        unsigned short  msgs;
-        unsigned short  per; 
-        unsigned char   kmode;
-#endif
 };
 
 typedef struct _OperStat {

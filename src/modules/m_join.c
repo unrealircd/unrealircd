@@ -358,17 +358,6 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 			}
 #endif
 			chptr->mode.mode = MODES_ON_JOIN;
-#ifdef NEWCHFLOODPROT
-			if (iConf.modes_on_join.floodprot.per)
-			{
-				chptr->mode.floodprot = MyMalloc(sizeof(ChanFloodProt));
-				memcpy(chptr->mode.floodprot, &iConf.modes_on_join.floodprot, sizeof(ChanFloodProt));
-			}
-#else
-			chptr->mode.kmode = iConf.modes_on_join.kmode;
-			chptr->mode.per = iConf.modes_on_join.per;
-			chptr->mode.msgs = iConf.modes_on_join.msgs;
-#endif
 			*modebuf = *parabuf = 0;
 			channel_modes(sptr, modebuf, parabuf, chptr);
 			/* This should probably be in the SJOIN stuff */
@@ -384,22 +373,6 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 	} else {
 		RunHook4(HOOKTYPE_REMOTE_JOIN, cptr, sptr, chptr, parv); /* (rarely used) */
 	}
-
-#ifdef NEWCHFLOODPROT
-	/* I'll explain this only once:
-	 * 1. if channel is +f
-	 * 2. local client OR synced server
-	 * 3. then, increase floodcounter
-	 * 4. if we reached the limit AND only if source was a local client.. do the action (+i).
-	 * Nr 4 is done because otherwise you would have a noticeflood with 'joinflood detected'
-	 * from all servers.
-	 */
-	if (chptr->mode.floodprot && (MyClient(sptr) || sptr->srvptr->serv->flags.synced) && 
-	    !IsULine(sptr) && do_chanflood(chptr->mode.floodprot, FLD_JOIN) && MyClient(sptr))
-	{
-		do_chanflood_action(chptr, FLD_JOIN, "join");
-	}
-#endif
 }
 
 /** User request to join a channel.

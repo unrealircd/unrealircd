@@ -45,7 +45,7 @@ Cmode_t EXTMODE_JOINTHROTTLE = 0L;
 int cmodej_is_ok(aClient *sptr, aChannel *chptr, char *para, int type, int what);
 void *cmodej_put_param(void *r_in, char *param);
 char *cmodej_get_param(void *r_in);
-char *cmodej_conv_param(char *param_in);
+char *cmodej_conv_param(char *param_in, aClient *sptr);
 void cmodej_free_param();
 void *cmodej_dup_struct(void *r_in);
 int cmodej_sjoin_check(aChannel *chptr, void *ourx, void *theirx);
@@ -126,6 +126,7 @@ int cmodej_is_ok(aClient *sptr, aChannel *chptr, char *para, int type, int what)
 		if (fail)
 		{
 			sendnotice(sptr, "Error in setting +j, syntax: +j <num>:<seconds>, where <num> must be 1-255, and <seconds> 1-999");
+			//sendto_one(sptr, err_str(RPL_MODESYNTAX), chptr->chname, 'j', "Syntax: +j <num>:<seconds>, where <... FIXME ;)
 			return EX_DENY;
 		}
 		return EX_ALLOW;
@@ -178,7 +179,7 @@ static char retbuf[16];
 	return retbuf;
 }
 
-char *cmodej_conv_param(char *param_in)
+char *cmodej_conv_param(char *param_in, aClient *sptr)
 {
 static char retbuf[32];
 char param[32], *p;

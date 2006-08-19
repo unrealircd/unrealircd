@@ -250,7 +250,6 @@ extern void get_my_name(aClient *, char *, int);
 extern int get_sockerr(aClient *);
 extern int inetport(aClient *, char *, int);
 extern void init_sys();
-extern void init_modef();
 
 #ifdef NO_FDLIST
 extern int read_message(time_t);
@@ -322,7 +321,6 @@ extern void sendto_snomask_normal_global(int snomask, char *pattern, ...) __attr
 extern void sendnotice(aClient *to, char *pattern, ...) __attribute__((format(printf,2,3)));
 extern MODVAR int writecalls, writeb[];
 extern int deliver_it(aClient *, char *, int);
-extern int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr);
 extern int  check_for_target_limit(aClient *sptr, void *target, const char *name);
 extern char *canonize(char *buffer);
 extern ConfigItem_deny_dcc *dcc_isforbidden(aClient *sptr, char *filename);
@@ -615,9 +613,6 @@ extern void make_extcmodestr();
 extern void extcmode_duplicate_paramlist(void **xi, void **xo);
 extern void extcmode_free_paramlist(void **ar);
 #endif
-extern int do_chanflood(ChanFloodProt *, int);
-extern void do_chanflood_action(aChannel *, int, char *);
-extern char *channel_modef_string(ChanFloodProt *);
 extern void chmode_str(struct ChMode, char *, char *);
 extern char *get_cptr_status(aClient *);
 extern char *get_snostr(long);
@@ -751,10 +746,7 @@ extern MODVAR int max_connection_count;
 extern int add_listmode(Ban **list, aClient *cptr, aChannel *chptr, char *banid);
 extern int del_listmode(Ban **list, aChannel *chptr, char *banid);
 extern int Halfop_mode(long mode);
-extern void chanfloodtimer_add(aChannel *chptr, char mflag, long mbit, time_t when);
-extern void chanfloodtimer_del(aChannel *chptr, char mflag, long mbit);
 extern char *clean_ban_mask(char *, int, aClient *);
-extern void chanfloodtimer_stopchantimers(aChannel *chptr);
 extern int find_invex(aChannel *chptr, aClient *sptr);
 extern void DoMD5(unsigned char *mdout, unsigned char *src, unsigned long n);
 #ifdef JOINTHROTTLE
