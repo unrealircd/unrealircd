@@ -1324,3 +1324,4 @@
 	will take some time at the end.
 - Moved failed oper snotices to snomask +o, and are sent out to all servers. Also now shows
   the uid attempted (like [FAILEDAUTH] does) for incorrect host or maxlogin.
+- Documentation (help.conf) fix for svsnline reported in #3025.
