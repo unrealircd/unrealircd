@@ -1342,3 +1342,4 @@
   longer than recoding extcmodes paramter support and moving chan mode +j.
   It's not only looking like a complex channel mode, it actually *IS* one ;).
   TODO: make sure it actually works, and fix sjoining (partly not implemented yet->crash) ;p
+- This might fix sjoin for above

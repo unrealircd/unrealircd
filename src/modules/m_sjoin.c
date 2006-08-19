@@ -774,27 +774,22 @@ docontinue:
 				{
 					case EXSJ_WEWON:
 					{
-#if 0
-						CmodeParam *r;
-						parax = Channelmode_Table[i].get_param(ourm);
-						Debug((DEBUG_DEBUG, "sjoin: we won: '%s'", parax));
-						r = Channelmode_Table[i].put_param(theirm, parax);
-						if (r != theirm) /* confusing eh ;) */
-							AddListItem(r, chptr->mode.extmodeparam);
-#else
 						parax = cm_getparameter_ex(oldmode.extmodeparams, flag); /* grab from old */
 						cm_putparameter(chptr, flag, parax); /* put in new (won) */
-#endif
 						break;
 					}
 					case EXSJ_THEYWON:
-						//parax = Channelmode_Table[i].get_param(theirm);
 						parax = cm_getparameter(chptr, flag);
 						Debug((DEBUG_DEBUG, "sjoin: they won: '%s'", parax));
 						Addit(flag, parax);
 						break;
 					case EXSJ_SAME:
 						Debug((DEBUG_DEBUG, "sjoin: equal"));
+						break;
+					case EXSJ_MERGE:
+						parax = cm_getparameter_ex(oldmode.extmodeparams, flag); /* grab from old */
+						cm_putparameter(chptr, flag, parax); /* put in new (won) */
+						Addit(flag, parax);
 						break;
 					default:
 						ircd_log(LOG_ERROR, "channel.c:m_sjoin:param diff checker: got unk. retval 0x%x??", r);
