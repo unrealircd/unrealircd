@@ -1287,3 +1287,4 @@
   data that refers to clients/channels that would otherwise not exist yet on the other side.
 - The server SSL certificate and private key can now be reloaded without requiring a server
   restart, simply use: /REHASH -ssl
+- Small compile fix for above

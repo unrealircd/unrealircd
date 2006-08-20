@@ -674,8 +674,12 @@ CMD_FUNC(m_rehash)
 			}
 			if (!_match("-ssl*", parv[1]))
 			{
+#ifdef USE_SSL
 				extern void reinit_ssl(aClient *);
 				reinit_ssl(sptr);
+#else
+				sendnotice(sptr, "SSL is not enabled on this server");
+#endif
 				return 0;
 			}
 			if (!_match("-o*motd", parv[1]))
