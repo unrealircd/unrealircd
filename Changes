@@ -1345,3 +1345,4 @@
 - Fixed sjoin issue due to modulizing.
 - The server SSL certificate and private key can now be reloaded without requiring a server
   restart, simply use: /REHASH -ssl
+- Small compile fix for above
