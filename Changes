@@ -1288,3 +1288,4 @@
 - The server SSL certificate and private key can now be reloaded without requiring a server
   restart, simply use: /REHASH -ssl
 - Small compile fix for above
+- Fixed /SAJOIN able to join insecure users to +z channels, reported by phedny (#0002601).
