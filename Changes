@@ -1343,3 +1343,5 @@
   It's not only looking like a complex channel mode, it actually *IS* one ;).
   TODO: make sure it actually works, and fix sjoining (partly not implemented yet->crash) ;p
 - Fixed sjoin issue due to modulizing.
+- The server SSL certificate and private key can now be reloaded without requiring a server
+  restart, simply use: /REHASH -ssl

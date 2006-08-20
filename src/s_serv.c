@@ -672,6 +672,12 @@ CMD_FUNC(m_rehash)
 				reinit_resolver(sptr);
 				return 0;
 			}
+			if (!_match("-ssl*", parv[1]))
+			{
+				extern void reinit_ssl(aClient *);
+				reinit_ssl(sptr);
+				return 0;
+			}
 			if (!_match("-o*motd", parv[1]))
 			{
 				sendto_ops
