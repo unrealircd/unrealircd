@@ -1285,3 +1285,5 @@
   a server connects, just like HOOTYPE_SERVER_CONNECT but this is actually called *after*
   all clients and channels are synched. Obviously needed for some modules which must synch
   data that refers to clients/channels that would otherwise not exist yet on the other side.
+- The server SSL certificate and private key can now be reloaded without requiring a server
+  restart, simply use: /REHASH -ssl
