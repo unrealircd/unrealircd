@@ -666,6 +666,7 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define HOOKTYPE_PRE_CHANMSG 53
 #define HOOKTYPE_KNOCK 54
 #define HOOKTYPE_MODECHAR_FIXME 55
+#define HOOKTYPE_CAN_KICK 56
 
 /* Hook return values */
 #define HOOK_CONTINUE 0

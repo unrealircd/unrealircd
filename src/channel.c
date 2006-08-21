@@ -98,7 +98,6 @@ aCtab cFlagTab[] = {
 	{MODE_OPERONLY, 'O', 0, 0},
 	{MODE_ADMONLY, 'A', 0, 0},
 	{MODE_LINK, 'L', 0, 1},
-	{MODE_NOKICKS, 'Q', 0, 0},
 	{MODE_BAN, 'b', 1, 1},
 	{MODE_STRIP, 'S', 0, 0},	/* works? */
 	{MODE_EXCEPT, 'e', 1, 0},	/* exception ban */

@@ -810,7 +810,6 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	  case MODE_RGSTRONLY:
 	  case MODE_MODREG:
 	  case MODE_NOCOLOR:
-	  case MODE_NOKICKS:
 	  case MODE_STRIP:
 	  	goto setthephuckingmode;
 

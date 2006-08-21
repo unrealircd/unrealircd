@@ -1347,3 +1347,7 @@
   restart, simply use: /REHASH -ssl
 - Small compile fix for above
 - Fixed /SAJOIN able to join insecure users to +z channels, reported by phedny (#0002601).
+- Added HOOKTYPE_CAN_KICK (sptr, who, chptr, comment, sptr_flags, who_flags). Returns an
+  error message if the kick should be denied. The upper layer (thus NOT you) takes care
+  of OperOverride.
+- Modulized channel mode +Q (src/modules/chanmodes/chmode_upQ.c)
