@@ -1351,3 +1351,4 @@
   error message if the kick should be denied. The upper layer (thus NOT you) takes care
   of OperOverride.
 - Modulized channel mode +Q (src/modules/chanmodes/chmode_upQ.c)
+- Fixed SSL crash problem due to previous SSL change.
