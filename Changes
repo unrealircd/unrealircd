@@ -1352,3 +1352,5 @@
   of OperOverride.
 - Modulized channel mode +Q (src/modules/chanmodes/chmode_upQ.c)
 - Fixed SSL crash problem due to previous SSL change.
+- Fixed some bugs in webtv code that could have caused trouble in the future (off by one),
+  reported by Ilja van Sprundel.
