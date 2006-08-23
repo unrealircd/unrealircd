@@ -287,7 +287,8 @@ void init_ssl(void)
 	ctx_server = init_ctx_server();
 	if (!ctx_server)
 		exit(7);
-	if (!init_ctx_client())
+	ctx_client = init_ctx_client();
+	if (!ctx_client)
 		exit(8);
 }
 

@@ -1289,3 +1289,4 @@
   restart, simply use: /REHASH -ssl
 - Small compile fix for above
 - Fixed /SAJOIN able to join insecure users to +z channels, reported by phedny (#0002601).
+- Fixed SSL crash problem due to previous SSL change.
