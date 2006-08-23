@@ -1290,3 +1290,5 @@
 - Small compile fix for above
 - Fixed /SAJOIN able to join insecure users to +z channels, reported by phedny (#0002601).
 - Fixed SSL crash problem due to previous SSL change.
+- Fixed some bugs in webtv code that could have caused trouble in the future (off by one),
+  reported by Ilja van Sprundel.
