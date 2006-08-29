@@ -169,7 +169,7 @@ CMD_FUNC(m_mode)
 	    && parv[2][1] == '\0') || (parv[2][1] == 'b' && parv[2][2] == '\0'
 	    && (*parv[2] == '+' || *parv[2] == '-'))))
 	{
-		if (!IsMember(sptr, chptr))
+		if (!IsMember(sptr, chptr) && !IsAnOper(sptr))
 			return 0;
 		/* send ban list */
 		for (ban = chptr->banlist; ban; ban = ban->next)
@@ -186,7 +186,7 @@ CMD_FUNC(m_mode)
 	    && parv[2][1] == '\0') || (parv[2][1] == 'e' && parv[2][2] == '\0'
 	    && (*parv[2] == '+' || *parv[2] == '-'))))
 	{
-		if (!IsMember(sptr, chptr))
+		if (!IsMember(sptr, chptr) && !IsAnOper(sptr))
 			return 0;
 		/* send exban list */
 		for (ban = chptr->exlist; ban; ban = ban->next)
@@ -203,7 +203,7 @@ CMD_FUNC(m_mode)
 	    && parv[2][1] == '\0') || (parv[2][1] == 'q' && parv[2][2] == '\0'
 	    && (*parv[2] == '+' || *parv[2] == '-'))))
 	{
-		if (!IsMember(sptr, chptr))
+		if (!IsMember(sptr, chptr) && !IsAnOper(sptr))
 			return 0;
 		{
 			Member *member;
@@ -229,7 +229,7 @@ CMD_FUNC(m_mode)
 	    && parv[2][1] == '\0') || (parv[2][1] == 'a' && parv[2][2] == '\0'
 	    && (*parv[2] == '+' || *parv[2] == '-'))))
 	{
-		if (!IsMember(sptr, chptr))
+		if (!IsMember(sptr, chptr) && !IsAnOper(sptr))
 			return 0;
 		{
 			Member *member;
@@ -256,7 +256,7 @@ CMD_FUNC(m_mode)
 	    && parv[2][1] == '\0') || (parv[2][1] == 'I' && parv[2][2] == '\0'
 	    && (*parv[2] == '+' || *parv[2] == '-'))))
 	{
-		if (!IsMember(sptr, chptr))
+		if (!IsMember(sptr, chptr) && !IsAnOper(sptr))
 			return 0;
 		for (ban = chptr->invexlist; ban; ban = ban->next)
 			sendto_one(sptr, rpl_str(RPL_INVEXLIST), me.name,

@@ -1293,3 +1293,5 @@
 - Fixed some bugs in webtv code that could have caused trouble in the future (off by one),
   reported by Ilja van Sprundel.
 - Module coders: Fixed CALLBACKTYPE_CLOAK_EX, it was not working properly at all.
+- Fixed bug in MODE #channel showing extended channel mode parameters when not in #channel.
+- Made 'MODE #channel b' and friends show bans to ircops even when not in channel.
