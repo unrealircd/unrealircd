@@ -1357,3 +1357,5 @@
 - Module coders: Fixed CALLBACKTYPE_CLOAK_EX, it was not working properly at all.
 - Kick non-SSL users when the channel turns out to be +z during netmerge, reported by
   Ron2K (#0002942).
+- Fixed bug in MODE #channel showing extended channel mode parameters when not in #channel.
+- Made 'MODE #channel b' and friends show bans to ircops even when not in channel.

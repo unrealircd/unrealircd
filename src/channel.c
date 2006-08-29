@@ -839,9 +839,14 @@ void channel_modes(aClient *cptr, char *mbuf, char *pbuf, aChannel *chptr)
 {
 	aCtab *tab = &cFlagTab[0];
 	char bcbuf[1024];
+	int ismember;
 #ifdef EXTCMODE
 	int i;
 #endif
+
+	ismember = (IsMember(cptr, chptr) || IsServer(cptr) || IsULine(cptr)) ? 1 : 0;
+
+	*pbuf = '\0';
 
 	*mbuf++ = '+';
 	/* Paramless first */
@@ -863,15 +868,13 @@ void channel_modes(aClient *cptr, char *mbuf, char *pbuf, aChannel *chptr)
 	if (chptr->mode.limit)
 	{
 		*mbuf++ = 'l';
-		if (IsMember(cptr, chptr) || IsServer(cptr)
-		    || IsULine(cptr))
+		if (ismember)
 			(void)ircsprintf(pbuf, "%d ", chptr->mode.limit);
 	}
 	if (*chptr->mode.key)
 	{
 		*mbuf++ = 'k';
-		if (IsMember(cptr, chptr) || IsServer(cptr)
-		    || IsULine(cptr))
+		if (ismember)
 		{
 			/* FIXME: hope pbuf is long enough */
 			(void)snprintf(bcbuf, sizeof bcbuf, "%s ", chptr->mode.key);
@@ -881,8 +884,7 @@ void channel_modes(aClient *cptr, char *mbuf, char *pbuf, aChannel *chptr)
 	if (*chptr->mode.link)
 	{
 		*mbuf++ = 'L';
-		if (IsMember(cptr, chptr) || IsServer(cptr)
-		    || IsULine(cptr))
+		if (ismember)
 		{
 			/* FIXME: is pbuf long enough?  */
 			(void)snprintf(bcbuf, sizeof bcbuf, "%s ", chptr->mode.link);
@@ -899,9 +901,11 @@ void channel_modes(aClient *cptr, char *mbuf, char *pbuf, aChannel *chptr)
 		{
 			char flag = Channelmode_Table[i].flag;
 			*mbuf++ = flag;
-			//strcat(pbuf, Channelmode_Table[i].get_param(CMP_GETSTRUCT(chptr, Channelmode_Table[i].flag)));
-			strcat(pbuf, cm_getparameter(chptr, flag));
-			strcat(pbuf, " ");
+			if (ismember)
+			{
+				strcat(pbuf, cm_getparameter(chptr, flag));
+				strcat(pbuf, " ");
+			}
 		}
 	}
 #endif
