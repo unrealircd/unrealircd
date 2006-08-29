@@ -1354,3 +1354,4 @@
 - Fixed SSL crash problem due to previous SSL change.
 - Fixed some bugs in webtv code that could have caused trouble in the future (off by one),
   reported by Ilja van Sprundel.
+- Module coders: Fixed CALLBACKTYPE_CLOAK_EX, it was not working properly at all.
