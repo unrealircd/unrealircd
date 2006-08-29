@@ -785,3 +785,4 @@ extern void cm_freeparameter(aChannel *chptr, char mode);
 extern char *cm_getparameter_ex(void **p, char mode);
 extern void cm_putparameter_ex(void **p, char mode, char *str);
 extern void cm_freeparameter_ex(void **p, char mode, char *str);
+extern void kick_insecure_users(aChannel *);

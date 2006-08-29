@@ -1355,3 +1355,5 @@
 - Fixed some bugs in webtv code that could have caused trouble in the future (off by one),
   reported by Ilja van Sprundel.
 - Module coders: Fixed CALLBACKTYPE_CLOAK_EX, it was not working properly at all.
+- Kick non-SSL users when the channel turns out to be +z during netmerge, reported by
+  Ron2K (#0002942).

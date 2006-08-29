@@ -1144,3 +1144,35 @@ char *getcloak(aClient *sptr)
 
 	return sptr->user->cloakedhost;
 }
+
+/** Kicks all insecure users on a +z channel */
+void kick_insecure_users(aChannel *chptr)
+{
+	Member *member, *mb2;
+	aClient *cptr;
+	char *comment = "Insecure user not allowed on secure channel (+z)";
+	
+	for (member = chptr->members; member; member = mb2)
+	{
+		mb2 = member->next;
+		cptr = member->cptr;
+		if (MyClient(cptr) && !IsSecureConnect(cptr) && !IsULine(cptr))
+		{
+			RunHook5(HOOKTYPE_LOCAL_KICK, &me, &me, cptr, chptr, comment);
+
+			if ((chptr->mode.mode & MODE_AUDITORIUM) && is_chanownprotop(cptr, chptr))
+			{
+				sendto_chanops_butone(cptr, chptr, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
+				sendto_prefix_one(cptr, &me, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
+			} 
+			else
+			{
+				sendto_channel_butserv(chptr, &me, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
+			}
+
+			sendto_serv_butone_token(&me, me.name, MSG_KICK, TOK_KICK, "%s %s :%s", chptr->chname, cptr->name, comment);
+
+			remove_user_from_channel(cptr, chptr);
+		}
+	}
+}
