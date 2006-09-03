@@ -1295,3 +1295,9 @@
 - Module coders: Fixed CALLBACKTYPE_CLOAK_EX, it was not working properly at all.
 - Fixed bug in MODE #channel showing extended channel mode parameters when not in #channel.
 - Made 'MODE #channel b' and friends show bans to ircops even when not in channel.
+- Fix for channel mode +f: It incorrectly didn't eat a paramter on unset (ouch!), even
+  though it always acted like it did in the MODE line sent to the channel. This bug caused
+  desynchs in some cases. Bug reported by Korfio (#0003048).
+- Fixes to SVSNICK: case-change no longer causes a collision, don't return the value from
+  exit_client (which would be FLUSH_BUFFER), fix QUIT not being sent back on collision.
+- Fix for above so it doesn't -r the client.

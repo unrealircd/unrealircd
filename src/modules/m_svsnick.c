@@ -91,6 +91,7 @@ DLLFUNC int MOD_UNLOAD(m_svsnick)(int module_unload)
 int  m_svsnick(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 aClient *acptr;
+aClient *ocptr; /* Other client */
 
 	if (!IsULine(sptr) || parc < 4 || (strlen(parv[2]) > NICKLEN))
 		return -1; /* This looks like an error anyway -Studded */
@@ -104,12 +105,16 @@ aClient *acptr;
 	if (!(acptr = find_person(parv[1], NULL)))
 		return 0; /* User not found, bail out */
 
-	if (find_client(parv[2], NULL)) /* Collision */
-		return exit_client(cptr, acptr, sptr,
+	if ((ocptr = find_client(parv[2], NULL)) && ocptr != acptr) /* Collision */
+	{
+		exit_client(acptr, acptr, sptr,
 		                   "Nickname collision due to Services enforced "
 		                   "nickname change, your nick was overruled");
+		return 0;
+	}
 
-	acptr->umodes &= ~UMODE_REGNICK;
+	if (acptr != ocptr)
+		acptr->umodes &= ~UMODE_REGNICK;
 	acptr->lastnick = TS2ts(parv[3]);
 	sendto_common_channels(acptr, ":%s NICK :%s", parv[1], parv[2]);
 	add_history(acptr, 1);

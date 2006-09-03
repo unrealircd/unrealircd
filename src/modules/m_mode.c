@@ -1679,7 +1679,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				/* bounce.. */
 				tmpstr = param;
 			}
-			retval = 0; /* ??? copied from previous +f code. */
+			retval = 1;
 		}
 #endif
 
