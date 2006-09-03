@@ -113,7 +113,8 @@ aClient *ocptr; /* Other client */
 		return 0;
 	}
 
-	acptr->umodes &= ~UMODE_REGNICK;
+	if (acptr != ocptr)
+		acptr->umodes &= ~UMODE_REGNICK;
 	acptr->lastnick = TS2ts(parv[3]);
 	sendto_common_channels(acptr, ":%s NICK :%s", parv[1], parv[2]);
 	add_history(acptr, 1);
@@ -121,7 +122,8 @@ aClient *ocptr; /* Other client */
 	                         "%s :%ld", parv[2], TS2ts(parv[3]));
 
 	(void)del_from_client_hash_table(acptr->name, acptr);
-	hash_check_watch(acptr, RPL_LOGOFF);
+	if (acptr != ocptr)
+		hash_check_watch(acptr, RPL_LOGOFF);
 
 	sendto_snomask(SNO_NICKCHANGE,
 		"*** Notice -- %s (%s@%s) has been forced to change his/her nickname to %s", 
@@ -130,7 +132,8 @@ aClient *ocptr; /* Other client */
 
 	strlcpy(acptr->name, parv[2], sizeof acptr->name);
 	add_to_client_hash_table(parv[2], acptr);
-	hash_check_watch(acptr, RPL_LOGON);
+	if (acptr != ocptr)
+		hash_check_watch(acptr, RPL_LOGON);
 
 	return 0;
 }

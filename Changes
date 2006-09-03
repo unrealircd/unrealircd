@@ -1361,3 +1361,5 @@
 - Made 'MODE #channel b' and friends show bans to ircops even when not in channel.
 - Fixes to SVSNICK: case-change no longer causes a collision, don't return the value from
   exit_client (which would be FLUSH_BUFFER), fix QUIT not being sent back on collision.
+- Fix for above so it doesn't -r the client.
+- Made WATCH not send a LOGOFF/LOGON for a nickchange with case-change (blah -> BLAH).

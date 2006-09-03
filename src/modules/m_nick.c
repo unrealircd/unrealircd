@@ -376,6 +376,7 @@ DLLFUNC CMD_FUNC(m_nick)
 		{
 			/* Allows change of case in his/her nick */
 			removemoder = 0; /* don't set the user -r */
+			update_watch = 0; /* don't send a watch LOGOFF and LOGON */
 			goto nickkilldone;	/* -- go and process change */
 		} else
 			/*
@@ -742,10 +743,10 @@ DLLFUNC CMD_FUNC(m_nick)
 	/*
 	 *  Finally set new nick name.
 	 */
-	if (update_watch && sptr->name[0])
+	if (sptr->name[0])
 	{
 		(void)del_from_client_hash_table(sptr->name, sptr);
-		if (IsPerson(sptr))
+		if (update_watch && IsPerson(sptr))
 			hash_check_watch(sptr, RPL_LOGOFF);
 	}
 	(void)strcpy(sptr->name, nick);
