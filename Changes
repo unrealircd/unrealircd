@@ -1359,3 +1359,5 @@
   Ron2K (#0002942).
 - Fixed bug in MODE #channel showing extended channel mode parameters when not in #channel.
 - Made 'MODE #channel b' and friends show bans to ircops even when not in channel.
+- Fixes to SVSNICK: case-change no longer causes a collision, don't return the value from
+  exit_client (which would be FLUSH_BUFFER), fix QUIT not being sent back on collision.
