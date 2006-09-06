@@ -1363,3 +1363,7 @@
   exit_client (which would be FLUSH_BUFFER), fix QUIT not being sent back on collision.
 - Fix for above so it doesn't -r the client.
 - Made WATCH not send a LOGOFF/LOGON for a nickchange with case-change (blah -> BLAH).
+- Fixed small memory leak in resolver (~40 bytes when connecting to a server)
+- Made Unreal use the original name in case of a CNAME, instead of the forwarded name,
+  reported by jerrcsnet (#0003054).
+- The "looking up your hostname" message was always sent, regardless of show-connect-info.

@@ -93,7 +93,7 @@ int n;
 
 	options.timeout = 3;
 	options.tries = 2;
-	options.flags = ARES_FLAG_NOALIASES;
+	options.flags = ARES_FLAG_NOALIASES|ARES_FLAG_IGNTC;
 #ifdef _WIN32
 	/* for windows, keep using the hosts file for now, until I'm sure it's safe to disable */
 	n = ares_init_options(&resolver_channel, &options, ARES_OPT_TIMEOUT|ARES_OPT_TRIES|ARES_OPT_FLAGS);
@@ -209,7 +209,6 @@ char ipv4[4];
 #else
 	r->ipv6 = 0;
 #endif
-	r->name = strdup(name);
 	unrealdns_addreqtolist(r);
 	
 	/* Execute it */
@@ -247,6 +246,7 @@ char ipv6 = r->ipv6;
 	newr = MyMallocEx(sizeof(DNSReq));
 	newr->cptr = acptr;
 	newr->ipv6 = ipv6;
+	newr->name = strdup(he->h_name);
 	unrealdns_addreqtolist(newr);
 	
 #ifndef INET6
@@ -281,10 +281,8 @@ int i;
 struct hostent *he2;
 u_int32_t ipv4_addr;
 
-	unrealdns_freeandremovereq(r);
-	
 	if (!acptr)
-		return;
+		goto bad;
 
 	if ((status != 0) ||
 #ifdef INET6
@@ -298,7 +296,7 @@ u_int32_t ipv4_addr;
 		proceed_normal_client_handshake(acptr, NULL);
 #else /* ifndef NEW_IO */
 #endif /* ifndef NEW_IO */
-		return;
+		goto bad;
 	}
 
 	if (!ipv6)
@@ -333,27 +331,31 @@ u_int32_t ipv4_addr;
 		proceed_normal_client_handshake(acptr, NULL);
 #else /* ifndef NEW_IO */
 #endif /* ifndef NEW_IO */
-		return;
+		goto bad;
 	}
 
-	if (!verify_hostname(he->h_name))
+	if (!verify_hostname(r->name))
 	{
 		/* Hostname is bad, don't cache and consider unresolved */
 #ifndef NEW_IO
 		proceed_normal_client_handshake(acptr, NULL);
 #else /* ifndef NEW_IO */
 #endif /* ifndef NEW_IO */
-		return;
+		goto bad;
 	}
 
 	/* Entry was found, verified, and can be added to cache */
-	unrealdns_addtocache(he->h_name, &acptr->ip, sizeof(acptr->ip));
+	unrealdns_addtocache(r->name, &acptr->ip, sizeof(acptr->ip));
 	
-	he2 = unreal_create_hostent(he->h_name, &acptr->ip);
+	he2 = unreal_create_hostent(r->name, &acptr->ip);
 #ifndef NEW_IO
 	proceed_normal_client_handshake(acptr, he2);
 #else /* IFNDEF NEW_IO */
 #endif /* IFNDEF NEW_IO */
+
+	/* (fallthrough) */
+bad:
+	unrealdns_freeandremovereq(r);
 }
 
 void unrealdns_cb_nametoip_link(void *arg, int status, struct hostent *he)
