@@ -1356,7 +1356,7 @@ struct hostent *he;
 
 	if (!DONT_RESOLVE)
 	{
-		if (!acptr->serv)
+		if (SHOWCONNECTINFO && !acptr->serv)
 			sendto_one(acptr, "%s", REPORT_DO_DNS);
 		dns_special_flag = 1;
 		he = unrealdns_doclient(acptr);
