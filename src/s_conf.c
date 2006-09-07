@@ -2547,6 +2547,10 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 		}
 		if ((i = Auth_Check(cptr, aconf->auth, cptr->passwd)) == -1)
 		{
+			if (aconf->flags.wrongpasscont)
+			{
+				continue;
+			}
 			exit_client(cptr, cptr, &me,
 				"Password mismatch");
 			return -5;
@@ -4144,6 +4148,8 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 					allow->flags.ssl = 1;
 				else if (!strcmp(cepp->ce_varname, "nopasscont")) 
 					allow->flags.nopasscont = 1;
+				else if (!strcmp(cepp->ce_varname, "wrongpasscont"))
+					allow->flags.wrongpasscont = 1;
 			}
 		}
 	}
@@ -4308,6 +4314,8 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "ssl")) 
 				{}
 				else if (!strcmp(cepp->ce_varname, "nopasscont")) 
+				{}
+				else if (!strcmp(cepp->ce_varname, "wrongpasscont"))
 				{}
 				else
 				{
