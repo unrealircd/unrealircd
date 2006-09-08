@@ -1370,3 +1370,5 @@
 - Added allow::options::wrongpasscont to pass allow block checking to the next one if the
   password doesn't match.
 - Bugfix for above (wrongpasscont).
+- Setting some version info properly to 3.3-pre-alpha, removing all translated documents
+  (they will be readded around beta1 or so, to easy the work for translators a bit).

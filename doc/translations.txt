@@ -1,3 +1,6 @@
+NOTE: For 3.3* we are not maintaining translated documents until reaching alpha or
+beta1 status.
+
 ==[ Translations ]============================================================
 
 Starting with the release of Unreal 3.2 we have begun accepting translated

@@ -36,11 +36,11 @@
 /** The generation version number (eg: 3 for Unreal3*) */
 #define UNREAL_VERSION_GENERATION   3
 
-/** The major version number (eg: 2 for Unreal3.2*) */
-#define UNREAL_VERSION_MAJOR        2
+/** The major version number (eg: 3 for Unreal3.2*) */
+#define UNREAL_VERSION_MAJOR        3
 
 /** The minor version number (eg: 1 for Unreal3.2.1), negative numbers for unstable/alpha/beta */
-#define UNREAL_VERSION_MINOR        5
+#define UNREAL_VERSION_MINOR        -99
 
 /** Year + week of the year (with Monday as first day of the week).
  * Can be useful if the above 3 versionids are insufficient for you (eg: you want to support CVS).
@@ -50,8 +50,8 @@
 
 #define UnrealProtocol 		2308
 #define PATCH1  		"3"
-#define PATCH2  		".2"
-#define PATCH3  		".5"
+#define PATCH2  		".3"
+#define PATCH3  		"-pre-alpha"
 #define PATCH4  		""
 #define PATCH5  		""
 #define PATCH6  		""
