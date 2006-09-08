@@ -211,78 +211,50 @@ char buf[1024];
  * sends m_info into to sptr
 */
 
+void sendrplinfo(aClient *sptr, char *fmt, ...)
+{
+va_list vl;
+static char buf[1024];
+
+	va_start(vl, fmt);
+	vsprintf(buf, fmt, vl);
+	va_end(vl);
+	sendto_one(sptr, ":%s %d %s :%s", me.name, RPL_INFO, sptr->name, buf);
+}
+
 void m_info_send(aClient *sptr)
 {
-	sendto_one(sptr, ":%s %d %s :=-=-=-= %s =-=-=-=",
-	    me.name, RPL_INFO, sptr->name, IRCDTOTALVERSION);
-	sendto_one(sptr, ":%s %d %s :| Brought to you by the following people:",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| Head coders:", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * Stskeeps     <stskeeps@unrealircd.com>",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * codemastr    <codemastr@unrealircd.com>",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * Syzop        <syzop@unrealircd.com>",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * Luke         <luke@unrealircd.com>",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| Contributors:", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * McSkaf       <mcskaf@unrealircd.com>",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * Zogg         <zogg@unrealircd.org>",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * NiQuiL       <niquil@unrealircd.org>",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * assyrian     <assyrian@unrealircd.org>",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * chasm        <chasm@unrealircd.org>",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * DrBin        <drbin@unrealircd.com>",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * llthangel    <llthangel@unrealircd.com>",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * Griever      <griever@unrealircd.com>",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * nighthawk    <nighthawk@unrealircd.com>",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| Credits - Type /Credits",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| DALnet Credits - Type /DalInfo",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| This is an UnrealIRCD-style server",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| If you find any bugs, please report them at:",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :|  http://bugs.unrealircd.org/",
-	    me.name, RPL_INFO, sptr->name);
-
-	sendto_one(sptr,
-	    ":%s %d %s :| UnrealIRCd Homepage: http://www.unrealircd.com",
-	    me.name, RPL_INFO, sptr->name);
-
-#ifdef _WIN32
-#ifdef WIN32_SPECIFY
-	sendto_one(sptr, ":%s %d %s :| wIRCd porter: | %s",
-	    me.name, RPL_INFO, sptr->name, WIN32_PORTER);
-	sendto_one(sptr, ":%s %d %s :|     >>URL:    | %s",
-	    me.name, RPL_INFO, sptr->name, WIN32_URL);
-#endif
-#endif
-	sendto_one(sptr,
-	    ":%s %d %s :-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=", me.name,
-	    RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :Birth Date: %s, compile # %s", me.name,
-	    RPL_INFO, sptr->name, creation, generation);
-	sendto_one(sptr, ":%s %d %s :On-line since %s", me.name, RPL_INFO,
-	    sptr->name, myctime(me.firsttime));
-	sendto_one(sptr, ":%s %d %s :ReleaseID (%s)", me.name, RPL_INFO,
-	    sptr->name, buildid);
+	sendrplinfo(sptr, "=-=-=-= %s =-=-=-=", IRCDTOTALVERSION);
+	sendrplinfo(sptr, "| Brought to you by the following people:");
+	sendrplinfo(sptr, "|");
+	sendrplinfo(sptr, "| Head coders:");
+	sendrplinfo(sptr, "|");
+	sendrplinfo(sptr, "| * Stskeeps     <stskeeps@unrealircd.com>");
+	sendrplinfo(sptr, "| * Syzop        <syzop@unrealircd.com>");
+	sendrplinfo(sptr, "| * codemastr    <codemastr@unrealircd.com>");
+	sendrplinfo(sptr, "|");
+	sendrplinfo(sptr, "| Coders:");
+	sendrplinfo(sptr, "|");
+	sendrplinfo(sptr, "| * DarkElf      <darkelf@unrealircd.com>");
+	sendrplinfo(sptr, "| * Trocotronic  <trocotronic@unrealircd.com>");
+	sendrplinfo(sptr, "| * aquanight    <aquanight@unrealircd.com>");
+	sendrplinfo(sptr, "|");
+	sendrplinfo(sptr, "| Past coders/contributors:");
+	sendrplinfo(sptr, "|");
+	sendrplinfo(sptr, "| Luke, McSkaf, Zogg, NiQuiL, assyrian, chasm,");
+	sendrplinfo(sptr, "| DrBin, llthangel, Griever, nighthawk");
+	sendrplinfo(sptr, "|");
+	sendrplinfo(sptr, "| Credits - Type /Credits");
+	sendrplinfo(sptr, "| DALnet Credits - Type /DalInfo");
+	sendrplinfo(sptr, "|");
+	sendrplinfo(sptr, "| This is an UnrealIRCd-style server");
+	sendrplinfo(sptr, "| If you find any bugs, please report them at:");
+	sendrplinfo(sptr, "|  http://bugs.unrealircd.org/");
+	sendrplinfo(sptr, "| UnrealIRCd Homepage: http://www.unrealircd.com");
+	sendrplinfo(sptr, "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=");
+	sendrplinfo(sptr, "Birth Date: %s, compile # %s", creation, generation);
+	sendrplinfo(sptr, "On-line since %s", myctime(me.firsttime));
+	sendrplinfo(sptr, "ReleaseID (%s)", buildid);
 	sendto_one(sptr, rpl_str(RPL_ENDOFINFO), me.name, sptr->name);
 }
 
