@@ -1369,4 +1369,4 @@
 - The "looking up your hostname" message was always sent, regardless of show-connect-info.
 - Added allow::options::wrongpasscont to pass allow block checking to the next one if the
   password doesn't match.
-
+- Bugfix for above (wrongpasscont).

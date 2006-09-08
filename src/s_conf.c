@@ -2515,15 +2515,9 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 		}
 		
 		continue;
-	      attach:
-/*		if (index(uhost, '@'))  now flag based -- codemastr */
-		if (!aconf->flags.noident)
-			cptr->flags |= FLAGS_DOID;
-		if (!aconf->flags.useip && hp) 
-			strncpyzt(uhost, fullname, sizeof(uhost));
-		else
-			strncpyzt(uhost, sockhost, sizeof(uhost));
-		get_sockhost(cptr, uhost);
+
+attach:
+
 		/* FIXME */
 		if (aconf->maxperip)
 		{
@@ -2560,6 +2554,17 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 			MyFree(cptr->passwd);
 			cptr->passwd = NULL;
 		}
+
+		if (!aconf->flags.noident)
+			cptr->flags |= FLAGS_DOID;
+
+		if (!aconf->flags.useip && hp) 
+			strncpyzt(uhost, fullname, sizeof(uhost));
+		else
+			strncpyzt(uhost, sockhost, sizeof(uhost));
+
+		get_sockhost(cptr, uhost);
+
 		if (!((aconf->class->clients + 1) > aconf->class->maxclients))
 		{
 			cptr->class = aconf->class;
