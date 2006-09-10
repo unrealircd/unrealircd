@@ -2,7 +2,12 @@
 Some minor rules about patches & modifications to UnrealIRCd
 
 1. When making a change, always add a small description in Changes, in the
-   BOTTOM
+   BOTTOM. Be sure to mention the bugid# (or muliple id's) if you are fixing
+   a bug from a bugtracker, and be sure to credit the reporter. Use:
+   'Fixed blahblahblah, reported by Blah (#0001234).'
+   Or, for example, for features:
+   'Added support for blahbalbvdshd, suggest by Blah (#0001235).'
+   Or something similar ;)
 
 2. If new files are made, it must contain proper copyright headers,
    and a $Id$ somewhere.
@@ -84,3 +89,9 @@ Some minor rules about patches & modifications to UnrealIRCd
 
 14. Use enums whenever possible, rather than #define constants. Besides making
     things more clean, it also aids debugging.
+
+15. Whenever you add a new directive or setting, be sure to add documentation
+    for it in unreal32docs, and for new commands in help.conf as well.
+
+16. Whenever you add a new set:: item, be sure to add it to /stats S
+
