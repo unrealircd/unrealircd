@@ -6,7 +6,7 @@ Some minor rules about patches & modifications to UnrealIRCd
    a bug from a bugtracker, and be sure to credit the reporter. Use:
    'Fixed blahblahblah, reported by Blah (#0001234).'
    Or, for example, for features:
-   'Added support for blahbalbvdshd, suggest by Blah (#0001235).'
+   'Added support for blahbalbvdshd, suggested by Blah (#0001235).'
    Or something similar ;)
 
 2. If new files are made, it must contain proper copyright headers,
