@@ -145,6 +145,7 @@ struct zConfiguration {
 	int timesynch_timeout;
 	char *timesynch_server;
 	aNetwork network;
+	int nicklen;
 };
 
 #ifndef DYNCONF_C
@@ -357,6 +358,7 @@ struct SetCheck {
 	int cgiirc_type; /* cheat :( */
 	unsigned has_cgiirc_hosts:1;
 	unsigned has_cgiirc_webpass:1;
+	unsigned has_nicklen:1;
 };
 
 

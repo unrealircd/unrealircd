@@ -1328,6 +1328,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->timesynch_enabled = 1;
 	i->timesynch_timeout = 3;
 	i->timesynch_server = strdup("193.67.79.202,192.43.244.18,128.250.36.3"); /* nlnet (EU), NIST (US), uni melbourne (AU). All open acces, nonotify, nodns. */
+	i->nicklen = NICKLEN;
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,
@@ -6779,6 +6780,12 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			tempiConf.modef_max_unsettime = (unsigned char)v;
 		}
 #endif
+		else if (!strcmp(cep->ce_varname, "nick-length")) {
+			int v = atoi(cep->ce_vardata);
+			tempiConf.nicklen = v;
+			if (loop.ircd_booted)
+				IsupportSetValue(IsupportFind("NICKLEN"), cep->ce_vardata);
+		}
 		else if (!strcmp(cep->ce_varname, "ssl")) {
 #ifdef USE_SSL
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
@@ -7662,6 +7669,18 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 #endif
+		else if (!strcmp(cep->ce_varname, "nick-length")) {
+			int v;
+			CheckDuplicate(cep, nicklen, "nick-length");
+			CheckNull(cep);
+			v = atoi(cep->ce_vardata);
+			if ((v <= 0) || (v > NICKLEN))
+			{
+				config_error("%s:%i: set::nick-length: value '%d' out of range (should be 1-%d)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, v, NICKLEN);
+				errors++;
+			}
+		}
 		else if (!strcmp(cep->ce_varname, "ssl")) {
 #ifdef USE_SSL
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {

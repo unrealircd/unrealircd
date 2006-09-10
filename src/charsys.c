@@ -291,7 +291,7 @@ char *ch;
 	if ((*nick == '-') || isdigit(*nick))
 		return 0;
 
-	for (ch=nick,len=0; *ch && len <= NICKLEN; ch++, len++)
+	for (ch=nick,len=0; *ch && len < iConf.nicklen; ch++, len++)
 		if (!isvalid(*ch))
 			return 0; /* reject the full nick */
 	*ch = '\0';
@@ -325,7 +325,7 @@ int firstmbchar = 0;
 	if ((*nick == '-') || isdigit(*nick))
 		return 0;
 
-	for (ch=nick,len=0; *ch && len <= NICKLEN; ch++, len++)
+	for (ch=nick,len=0; *ch && len < iConf.nicklen; ch++, len++)
 	{
 		/* Some characters are ALWAYS illegal, so they have to be disallowed here */
 		if ((*ch <= 32) || strchr(illegalnickchars, *ch))

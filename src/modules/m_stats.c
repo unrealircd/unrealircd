@@ -1410,6 +1410,7 @@ int stats_set(aClient *sptr, char *para)
 	    sptr->name, coadmin_host);
 	sendto_one(sptr, ":%s %i %s :hosts::host-on-oper-up: %i", me.name, RPL_TEXT, sptr->name,
 	    iNAH);
+	sendto_one(sptr, ":%s %i %s :nick-length: %i", me.name, RPL_TEXT, sptr->name, iConf.nicklen);
 	RunHook2(HOOKTYPE_STATS, sptr, "S");
 	return 1;
 }

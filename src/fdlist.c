@@ -27,7 +27,9 @@
 #include "fdlist.h"
 #include "proto.h"
 #include <string.h>
+#ifndef _WIN32
 #include <sys/resource.h>
+#endif
 #include <stdio.h>
 #include <fcntl.h>
 #include <assert.h>

@@ -30,7 +30,6 @@ EXPORTS
 	DoEvents
 	DoMD5
 	DoesOp
-	EXTMODE_JOINTHROTTLE
 	EXTMODE_NONOTICE
 	EXTMODE_STRIPBADWORDS
 	EfunctionAddMain
@@ -213,8 +212,6 @@ EXPORTS
 	add_listmode
 	add_local_client
 	add_local_domain
-	add_remote_include
-	add_send_mode_param
 	add_server_to_table
 	add_silence
 	add_throttling_bucket
@@ -231,11 +228,9 @@ EXPORTS
 	b64_decode
 	b64_encode
 	backupbuf
-	badwords_stats
 	ban_flooder
 	ban_ip
 	ban_realhost
-	ban_version
 	ban_virthost
 	banact_chartoval
 	banact_stringtoval
@@ -255,13 +250,8 @@ EXPORTS
 	can_join
 	can_send
 	canonize
-	chanfloodtimer_add
-	chanfloodtimer_del
-	chanfloodtimer_find
-	chanfloodtimer_stopchantimers
 	channel
 	channel_canjoin
-	channel_modef_string
 	channel_modes
 	char_atribs
 	charsys_add_language
@@ -275,7 +265,6 @@ EXPORTS
 	check_channelmask
 	check_client
 	check_fdlists
-	check_for_chan_flood
 	check_for_target_limit
 	check_pings
 	check_registered
@@ -296,18 +285,6 @@ EXPORTS
 	close_listeners
 	cmdname_by_spamftarget
 	cmdstr
-	cmodej_addentry
-	cmodej_cleanup_structs
-	cmodej_conv_param
-	cmodej_delchannelentries
-	cmodej_delentry
-	cmodej_deluserentries
-	cmodej_dup_struct
-	cmodej_free_param
-	cmodej_get_param
-	cmodej_is_ok
-	cmodej_put_param
-	cmodej_sjoin_check
 	cmodestring
 	collapse
 	completed_connection
@@ -426,8 +403,6 @@ EXPORTS
 	deliver_it
 	dgets
 	dnsstats
-	do_chanflood
-	do_chanflood_action
 	do_cmd
 	do_join
 	do_mode
@@ -462,11 +437,8 @@ EXPORTS
 	extcmode_default_requirehalfop
 	extcmode_duplicate_paramlist
 	extcmode_free_paramlist
-	extcmode_get_struct
 	extcmode_init
 	extraflags
-	fast_badword_match
-	fast_badword_replace
 	find_Command
 	find_CommandEx
 	find_Command_simple
@@ -474,7 +446,6 @@ EXPORTS
 	find_chasing
 	find_client
 	find_invex
-	find_loaded_remote_include
 	find_match_server
 	find_member_link
 	find_membership_link
@@ -483,7 +454,6 @@ EXPORTS
 	find_or_add
 	find_person
 	find_qline
-	find_remote_include
 	find_server
 	find_server_b64_or_real
 	find_server_by_base64
@@ -523,7 +493,6 @@ EXPORTS
 	garbage_collect
 	generation
 	get_access
-	get_chanbitbychar
 	get_channel
 	get_client_host
 	get_client_name
@@ -582,7 +551,6 @@ EXPORTS
 	init_dynconf
 	init_fdlist
 	init_ircstats
-	init_modef
 	init_random
 	init_resolver
 	init_sys
@@ -638,7 +606,6 @@ EXPORTS
 	m_license
 	m_module
 	m_motd
-	m_names
 	m_opermotd
 	m_rehash
 	m_restart
@@ -675,7 +642,6 @@ EXPORTS
 	me
 	me_hash
 	modebuf
-	modef_event
 	module_loadall
 	motd
 	motd_tm
@@ -683,7 +649,6 @@ EXPORTS
 	myargv
 	myctime
 	myncmp
-	mystpcpy
 	next_client
 	nextconnect
 	nextdnscheck
@@ -707,7 +672,6 @@ EXPORTS
 	our_crc32
 	our_dlerror
 	our_mod_version
-	our_strcasestr
 	outofmemory
 	parabuf
 	parse
@@ -732,14 +696,12 @@ EXPORTS
 	rehash_motdrules
 	rejoin_dojoinandmode
 	rejoin_doparts
-	remote_include
 	remove_client_from_list
 	remove_dcc_references
 	remove_local_client
 	remove_oper_snomasks
 	remove_server_from_table
 	remove_user_from_channel
-	removefld_list
 	report_baderror
 	report_error
 	requiredstuff
@@ -758,9 +720,6 @@ EXPORTS
 	save_tunefile
 	sbrk0
 	send_authports
-	send_channel_modes
-	send_channel_modes_sjoin
-	send_channel_modes_sjoin3
 	send_list
 	send_proto
 	send_queued
@@ -819,7 +778,6 @@ EXPORTS
 	serv_fdlist
 	server_reboot
 	serveropts
-	set_blocking
 	set_channelmodes
 	set_mode
 	set_non_blocking
@@ -840,7 +798,6 @@ EXPORTS
 	spamfiltertargettable
 	start_auth
 	start_of_normal_client_handshake
-	stripbadwords
 	stripbadwords_channel
 	stripbadwords_message
 	stripbadwords_quit
@@ -913,9 +870,16 @@ EXPORTS
 	vsendto_one
 	vsendto_prefix_one
 	vsnprintf
-	w_whois
-	webtv_cmds
-	webtv_parse
 	whowas_next
 	write_pidfile
 	zlinebuf
+	cm_putparameter
+	cm_getparameter
+	cm_getparameter_ex
+	cm_freeparameter
+	kick_insecure_users
+	param_to_slot_mapping
+	Find_cgiirc
+	find_tkline_match_zap_ex
+	getcloak
+	

@@ -1372,3 +1372,6 @@
 - Bugfix for above (wrongpasscont).
 - Setting some version info properly to 3.3-pre-alpha, removing all translated documents
   (they will be readded around beta1 or so, to easy the work for translators a bit).
+- Some more updates for above, plus updated authors list and all.
+- Added set::nick-length so the nick length can be dynamically changed (from 1-30),
+  requested by various people including IdiotStic (#0003042).
