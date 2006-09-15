@@ -1305,3 +1305,5 @@
 - Made Unreal use the original name in case of a CNAME, instead of the forwarded name,
   reported by jerrcsnet (#0003054).
 - The "looking up your hostname" message was always sent, regardless of show-connect-info.
+- Kick non-SSL users when the channel turns out to be +z during netmerge, reported by
+  Ron2K (#0002942).

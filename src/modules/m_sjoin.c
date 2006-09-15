@@ -583,6 +583,8 @@ docontinue:
 		    chptr->creationtime);
 		sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
 		    sptr->name, chptr->chname, modebuf, paraback);
+		if (chptr->mode.mode & MODE_ONLYSECURE)
+			kick_insecure_users(chptr);
 	}
 	if (merge && !nomode)
 	{
@@ -687,6 +689,8 @@ docontinue:
 			Addsingle('S'); /* - */
 			queue_c = 1;
 		}
+		if (!(oldmode.mode & MODE_ONLYSECURE) && (chptr->mode.mode & MODE_ONLYSECURE))
+			kick_insecure_users(chptr);
 		/* Add single char modes... */
 		for (acp = cFlagTab; acp->mode; acp++)
 		{
