@@ -112,6 +112,8 @@ extern void  module_loadall(int module_load);
 extern long set_usermode(char *umode);
 extern char *get_modestr(long umodes);
 extern void                    config_error(char *format, ...) __attribute__((format(printf,1,2)));
+extern void config_warn(char *format, ...) __attribute__((format(printf,1,2)));
+
 extern MODVAR int config_verbose;
 extern void config_progress(char *format, ...) __attribute__((format(printf,1,2)));
 extern void       ipport_seperate(char *string, char **ip, char **port);

@@ -1307,3 +1307,6 @@
 - The "looking up your hostname" message was always sent, regardless of show-connect-info.
 - Kick non-SSL users when the channel turns out to be +z during netmerge, reported by
   Ron2K (#0002942).
+- Windows 2003: Fixed UnrealIRCd unable to boot if no DNS server is configured, we now
+  fallback to set::dns::nameserver in such a case. Thanks to Romeo (reporter, #0002802)
+  and Bock for tracing this down.
