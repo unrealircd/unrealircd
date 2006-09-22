@@ -738,7 +738,7 @@ static void send_who_reply(aClient *sptr, aClient *acptr,
 	char *host;
 	int flat = (FLAT_MAP && !IsAnOper(sptr)) ? 1 : 0;
 
-	stat = malloc(strlen(status) + strlen(xstat) + 1);
+	stat = malloc(strlen(status) + strlen(xstat) + 1); /* FIXME: make this static instead of stupid malloc+free.. waste WASTEeeee */
 	sprintf(stat, "%s%s", status, xstat);
 
 	if (IsAnOper(sptr))

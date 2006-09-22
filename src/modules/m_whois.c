@@ -284,6 +284,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			if ((IsAnOper(acptr) || IsServices(acptr)) && !hideoper)
 			{
 				buf[0] = '\0';
+				/* FIXME: ok.. WHY are we strlcat'ing?? */
 				if (IsNetAdmin(acptr))
 					strlcat(buf, "a Network Administrator", sizeof buf);
 				else if (IsSAdmin(acptr))
