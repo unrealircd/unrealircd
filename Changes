@@ -1376,3 +1376,4 @@
 - Added set::nick-length so the nick length can be dynamically changed (from 1-30),
   requested by various people including IdiotStic (#0003042).
 - Updated doc/coding-guidelines again
+- Fixed cloak cutoff problem with long hosts.
