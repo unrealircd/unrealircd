@@ -170,7 +170,7 @@ char host[256], *mask, *x, *p, *q;
 
 	if (mode == 0)
 	{
-		strncpyzt(new, mask, HOSTLEN);	/* */
+		strlcpy(new, mask, HOSTLEN + 1);
 		return NULL;
 	}
 	if (new)
