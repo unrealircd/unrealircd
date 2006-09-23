@@ -42,6 +42,7 @@
 #ifdef _WIN32
 #include <io.h>
 #endif
+#include "inet.h"
 #include <fcntl.h>
 #include "h.h"
 
@@ -81,6 +82,7 @@ void init_resolver(int firsttime)
 {
 struct ares_options options;
 int n;
+int optmask;
 
 	if (requests)
 		abort(); /* should never happen */
@@ -91,23 +93,44 @@ int n;
 		memset(&dnsstats, 0, sizeof(dnsstats));
 	}
 
+	memset(&options, 0, sizeof(options));
 	options.timeout = 3;
 	options.tries = 2;
 	options.flags = ARES_FLAG_NOALIASES|ARES_FLAG_IGNTC;
-#ifdef _WIN32
-	/* for windows, keep using the hosts file for now, until I'm sure it's safe to disable */
-	n = ares_init_options(&resolver_channel, &options, ARES_OPT_TIMEOUT|ARES_OPT_TRIES|ARES_OPT_FLAGS);
-#else
-	options.lookups = "b"; /* no hosts file shit plz */
-	n = ares_init_options(&resolver_channel, &options, ARES_OPT_TIMEOUT|ARES_OPT_TRIES|ARES_OPT_FLAGS|ARES_OPT_LOOKUPS);
+	optmask = ARES_OPT_TIMEOUT|ARES_OPT_TRIES|ARES_OPT_FLAGS;
+#ifndef _WIN32
+	/* on *NIX don't use the hosts file, since it causes countless useless reads.
+	 * on Windows we use it for now, this could be changed in the future.
+	 */
+	options.lookups = "b";
+	optmask |= ARES_OPT_LOOKUPS;
 #endif
+	n = ares_init_options(&resolver_channel, &options, optmask);
 	if (n != ARES_SUCCESS)
 	{
-		config_error("resolver: ares_init_options() failed with error code %d [%s]", n, ares_strerror(n));
+		/* Try again with set::dns::nameserver block */
+		optmask |= ARES_OPT_SERVERS;
+		options.servers = MyMallocEx(sizeof(struct in_addr));
+		options.servers[0].s_addr = inet_addr(NAME_SERVER);
+		options.nservers = 1;
+		n = ares_init_options(&resolver_channel, &options, optmask);
+		if (n != ARES_SUCCESS)
+		{
+			/* FATAL */
+			config_error("resolver: ares_init_options() failed with error code %d [%s]", n, ares_strerror(n));
 #ifdef _WIN32
-		win_error();
+			win_error();
 #endif
-		exit(-7);
+			exit(-7);
+		}
+		ircd_log(LOG_ERROR, "[warning] Unable to get DNS server from %s. Using the one from set::dns::nameserver (%s) instead",
+#ifdef _WIN32
+			"registry",
+#else
+			"resolv.conf",
+#endif
+			NAME_SERVER);
+		MyFree(options.servers);
 	}
 }
 
