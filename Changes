@@ -1380,3 +1380,5 @@
 - Windows 2003: Fixed UnrealIRCd unable to boot if no DNS server is configured, we now
   fallback to set::dns::nameserver in such a case. Thanks to Romeo (reporter, #0002802)
   and Bock for tracing this down.
+- Fixed set::allowed-nickchars causing a segfault for some unknown charsets, rportered
+  by avb (#0003069).
