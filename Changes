@@ -1311,3 +1311,4 @@
   fallback to set::dns::nameserver in such a case. Thanks to Romeo (reporter, #0002802)
   and Bock for tracing this down.
 - Fixed cloak cutoff problem with long hosts.
+- Added doc/help.tr.conf (Turkish), translated by Diablo.
