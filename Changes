@@ -1312,4 +1312,4 @@
   and Bock for tracing this down.
 - Fixed cloak cutoff problem with long hosts.
 - Added doc/help.tr.conf (Turkish), translated by Diablo.
-- Added doc/example.tr.conf (Turkish), translated by Emre.
+- Added doc/example.tr.conf (Turkish), translated by ironic.
