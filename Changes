@@ -1313,3 +1313,4 @@
 - Fixed cloak cutoff problem with long hosts.
 - Added doc/help.tr.conf (Turkish), translated by Diablo.
 - Added doc/example.tr.conf (Turkish), translated by ironic.
+- Fixed zlib version check: 1.x is compatible with all 1.*, etc. (#0002966).
