@@ -1382,3 +1382,4 @@
   and Bock for tracing this down.
 - Fixed set::allowed-nickchars causing a segfault for some unknown charsets, rportered
   by avb (#0003069).
+- Fixed zlib version check: 1.x is compatible with all 1.*, etc. (#0002966).

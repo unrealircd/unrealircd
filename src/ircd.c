@@ -907,7 +907,7 @@ static void do_version_check()
 #ifdef ZIP_LINKS
 	runtime = zlibVersion();
 	compiledfor = ZLIB_VERSION;
-	if (strcasecmp(compiledfor, runtime))
+	if (*compiledfor != *runtime)
 	{
 		version_check_logerror
 		    ("Zlib version mismatch: compiled for '%s', library is '%s'",
