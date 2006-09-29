@@ -673,8 +673,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 #ifdef USE_SSL
 	if (IsSecure(cptr))
 	{
-		sendto_serv_butone(&me, ":%s SMO o :(\2link\2) Secure %slink %s -> %s established (%s)",
-			me.name,
+		sendto_serv_butone_token(&me, me.name, MSG_SMO, TOK_SMO, "o :(\2link\2) Secure %slink %s -> %s established (%s)",
 			IsZipped(cptr) ? "ZIP" : "",
 			me.name, inpath, (char *) ssl_get_cipher((SSL *)cptr->ssl));
 		sendto_realops("(\2link\2) Secure %slink %s -> %s established (%s)",
@@ -684,8 +683,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	else
 #endif
 	{
-		sendto_serv_butone(&me, ":%s SMO o :(\2link\2) %sLink %s -> %s established",
-			me.name,
+		sendto_serv_butone_token(&me, me.name, MSG_SMO, TOK_SMO, "o :(\2link\2) %sLink %s -> %s established",
 			IsZipped(cptr) ? "ZIP" : "",
 			me.name, inpath);
 		sendto_realops("(\2link\2) %sLink %s -> %s established",

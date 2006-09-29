@@ -184,9 +184,9 @@ DLLFUNC CMD_FUNC(m_connect)
 	 */
 	if (!IsAnOper(cptr))
 	{
-		sendto_serv_butone(&me,
-		    ":%s GLOBOPS :Remote CONNECT %s %s from %s",
-		    me.name, parv[1], parv[2] ? parv[2] : "",
+		sendto_serv_butone_token(&me, me.name, MSG_GLOBOPS, TOK_GLOBOPS,
+		    ":Remote CONNECT %s %s from %s",
+		    parv[1], parv[2] ? parv[2] : "",
 		    get_client_name(sptr, FALSE));
 	}
 	/* Interesting */

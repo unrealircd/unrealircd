@@ -150,9 +150,9 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				  sendto_ops
 				      ("TS Control - %s set TStime() to be diffed +%li",
 				      sptr->name, timediff);
-				  sendto_serv_butone(&me,
-				      ":%s GLOBOPS :TS Control - %s set TStime to be diffed +%li",
-				      me.name, sptr->name, timediff);
+				  sendto_serv_butone_token(&me, me.name, MSG_GLOBOPS, TOK_GLOBOPS,
+				      ":TS Control - %s set TStime to be diffed +%li",
+				      sptr->name, timediff);
 				  break;
 			  case '-':
 				  timediff = atol(parv[3]);
@@ -162,9 +162,9 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				  sendto_ops
 				      ("TS Control - %s set TStime() to be diffed -%li",
 				      sptr->name, timediff);
-				  sendto_serv_butone(&me,
-				      ":%s GLOBOPS :TS Control - %s set TStime to be diffed -%li",
-				      me.name, sptr->name, timediff);
+				  sendto_serv_butone_token(&me, me.name, MSG_GLOBOPS, TOK_GLOBOPS,
+				      ":TS Control - %s set TStime to be diffed -%li",
+				      sptr->name, timediff);
 				  break;
 			}
 			return 0;
@@ -183,8 +183,7 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    ":%s NOTICE %s :*** Server=%s TStime=%li time()=%li TSoffset=%li",
 			    me.name, sptr->name, me.name, TStime(), time(NULL),
 			    TSoffset);
-			sendto_serv_butone(cptr, ":%s TSCTL alltime",
-			    sptr->name);
+			sendto_serv_butone_token(cptr, sptr->name, MSG_TSCTL, TOK_TSCTL, "alltime");
 			return 0;
 
 		}
@@ -207,7 +206,7 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sendto_ops
 			    ("TS Control - U:line set time to be %li (timediff: %li)",
 			    atol(parv[2]), timediff);
-			sendto_serv_butone(cptr, ":%s TSCTL svstime %li",
+			sendto_serv_butone_token(cptr, sptr->name, MSG_TSCTL, TOK_TSCTL, "svstime %li",
 			    sptr->name, atol(parv[2]));
 			return 0;
 		}

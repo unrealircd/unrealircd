@@ -1965,8 +1965,8 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				 			tk->ptr.spamf->tkl_reason, tk->reason);
 				 	} 
 					else if (type & TKL_GLOBAL)
-				 		sendto_serv_butone(cptr,
-				 			":%s TKL %s %s %s %s %s %ld %ld :%s", sptr->name,
+				 		sendto_serv_butone_token(cptr, sptr->name, MSG_TKL, TOK_TKL,
+				 			"%s %s %s %s %s %ld %ld :%s",
 				 			parv[1], parv[2], parv[3], parv[4],
 				 			tk->setby, tk->expire_at, tk->set_at, tk->reason);
 		      }
@@ -2078,8 +2078,8 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					parv[1], parv[2], parv[3], parv[4], parv[5],
 					parv[6], parv[7], parv[10]);
 			} else
-				sendto_serv_butone(cptr,
-					":%s TKL %s %s %s %s %s %s %s :%s", sptr->name,
+				sendto_serv_butone_token(cptr, sptr->name, MSG_TKL, TOK_TKL,
+					"%s %s %s %s %s %s %s :%s",
 					parv[1], parv[2], parv[3], parv[4], parv[5],
 					parv[6], parv[7], parv[8]);
 		  } /* TKL_GLOBAL */
@@ -2219,13 +2219,13 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					  if (type & TKL_GLOBAL)
 					  {
 					 	  if (parc < 8)
-							  sendto_serv_butone(cptr,
-							      ":%s TKL %s %s %s %s %s",
-							      sptr->name, parv[1], parv[2], parv[3], parv[4], parv[5]);
+							  sendto_serv_butone_token(cptr, sptr->name, MSG_TKL, TOK_TKL
+							      "%s %s %s %s %s",
+							      parv[1], parv[2], parv[3], parv[4], parv[5]);
 						  else
-							  sendto_serv_butone(cptr,
-							      ":%s TKL %s %s %s %s %s %s %s :%s",
-							      sptr->name, parv[1], parv[2], parv[3], parv[4], parv[5],
+							  sendto_serv_butone_token(cptr, sptr->name, MSG_TKL, TOK_TKL
+							      "%s %s %s %s %s %s %s :%s",
+							      parv[1], parv[2], parv[3], parv[4], parv[5],
 							      parv[6], parv[7], reason);
 				      }
 					  break;

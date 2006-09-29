@@ -168,9 +168,9 @@ DLLFUNC CMD_FUNC(m_nick)
 			    nick, cptr->name);
 			if (sptr != cptr)
 			{	/* bad nick change */
-				sendto_serv_butone(cptr,
-				    ":%s KILL %s :%s (%s <- %s!%s@%s)",
-				    me.name, parv[0], me.name,
+				sendto_serv_butone_token(cptr, me.name, MSG_KILL, TOK_KILL,
+				    "%s :%s (%s <- %s!%s@%s)",
+				    parv[0], me.name,
 				    get_client_name(cptr, FALSE),
 				    parv[0],
 				    sptr->user ? sptr->username : "",
@@ -460,9 +460,9 @@ DLLFUNC CMD_FUNC(m_nick)
 		if (!(parc > 3) || (acptr->lastnick == lastnick))
 		{
 			ircstp->is_kill++;
-			sendto_serv_butone(NULL,
-			    ":%s KILL %s :%s (Nick Collision)",
-			    me.name, acptr->name, me.name);
+			sendto_serv_butone_token(NULL, me.name, MSG_KILL, TOK_KILL,
+			    "%s :%s (Nick Collision)",
+			    acptr->name, me.name);
 			acptr->flags |= FLAGS_KILLED;
 			(void)exit_client(NULL, acptr, &me,
 			    "Nick collision with no timestamp/equal timestamps");
@@ -473,9 +473,9 @@ DLLFUNC CMD_FUNC(m_nick)
 		    (!differ && (acptr->lastnick < lastnick)) || acptr->from == cptr)	/* we missed a QUIT somewhere ? */
 		{
 			ircstp->is_kill++;
-			sendto_serv_butone(cptr,
-			    ":%s KILL %s :%s (Nick Collision)",
-			    me.name, acptr->name, me.name);
+			sendto_serv_butone_token(cptr, me.name, MSG_KILL, TOK_KILL,
+			    "%s :%s (Nick Collision)",
+			    acptr->name, me.name);
 			acptr->flags |= FLAGS_KILLED;
 			(void)exit_client(NULL, acptr, &me, "Nick collision");
 			goto nickkilldone;	/* OK, we got rid of the "wrong" user,
@@ -519,12 +519,12 @@ DLLFUNC CMD_FUNC(m_nick)
 		if (!(parc > 2) || lastnick == acptr->lastnick)
 		{
 			ircstp->is_kill += 2;
-			sendto_serv_butone(NULL,	/* First kill the new nick. */
-			    ":%s KILL %s :%s (Self Collision)",
-			    me.name, acptr->name, me.name);
-			sendto_serv_butone(cptr,	/* Tell my servers to kill the old */
-			    ":%s KILL %s :%s (Self Collision)",
-			    me.name, sptr->name, me.name);
+			sendto_serv_butone_token(NULL, me.name, MSG_KILL, TOK_KILL,	/* First kill the new nick. */
+			    "%s :%s (Self Collision)",
+			    acptr->name, me.name);
+			sendto_serv_butone_token(cptr, me.name, MSG_KILL, TOK_KILL,	/* Tell my servers to kill the old */
+			    "%s :%s (Self Collision)",
+			    sptr->name, me.name);
 			sptr->flags |= FLAGS_KILLED;
 			acptr->flags |= FLAGS_KILLED;
 			(void)exit_client(NULL, sptr, &me, "Self Collision");
@@ -536,9 +536,9 @@ DLLFUNC CMD_FUNC(m_nick)
 		{
 			/* sptr (their user) won, let's kill acptr (our user) */
 			ircstp->is_kill++;
-			sendto_serv_butone(cptr,
-			    ":%s KILL %s :%s (Nick collision: %s <- %s)",
-			    me.name, acptr->name, me.name,
+			sendto_serv_butone_token(cptr, me.name, MSG_KILL, TOK_KILL,
+			    "%s :%s (Nick collision: %s <- %s)",
+			    acptr->name, me.name,
 			    acptr->from->name, sptr->from->name);
 			acptr->flags |= FLAGS_KILLED;
 			(void)exit_client(NULL, acptr, &me, "Nick collision");
@@ -552,9 +552,9 @@ DLLFUNC CMD_FUNC(m_nick)
 			 */
 			ircstp->is_kill++;
 			/* Kill the user trying to change their nick. */
-			sendto_serv_butone(cptr,
-			    ":%s KILL %s :%s (Nick collision: %s <- %s)",
-			    me.name, sptr->name, me.name,
+			sendto_serv_butone_token(cptr, me.name, MSG_KILL, TOK_KILL,
+			    "%s :%s (Nick collision: %s <- %s)",
+			    sptr->name, me.name,
 			    sptr->from->name, acptr->from->name);
 			sptr->flags |= FLAGS_KILLED;
 			(void)exit_client(NULL, sptr, &me, "Nick collision");

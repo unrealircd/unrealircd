@@ -273,8 +273,8 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		 */
 		if (!MyConnect(acptr) || !MyConnect(sptr) || !IsAnOper(sptr))
 		{
-			sendto_serv_butone(cptr, ":%s KILL %s :%s!%s",
-			    parv[0], acptr->name, inpath, path);
+			sendto_serv_butone_token(cptr, parv[0], MSG_KILL, TOK_KILL, "%s :%s!%s",
+			    acptr->name, inpath, path);
 			if (chasing && IsServer(cptr))
 				sendto_one(cptr, ":%s KILL %s :%s!%s",
 				    me.name, acptr->name, inpath, path);

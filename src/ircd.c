@@ -729,9 +729,9 @@ extern TS check_pings(TS currenttime)
 					sendto_realops
 					    ("No response from %s, closing link",
 					    get_client_name(cptr, FALSE));
-					sendto_serv_butone(&me,
-					    ":%s GLOBOPS :No response from %s, closing link",
-					    me.name, get_client_name(cptr,
+					sendto_serv_butone_token(&me, me.name, MSG_GLOBOPS, TOK_GLOBOPS,
+					    ":No response from %s, closing link",
+					    get_client_name(cptr,
 					    FALSE));
 				}
 #ifdef USE_SSL

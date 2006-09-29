@@ -1383,3 +1383,5 @@
 - Fixed set::allowed-nickchars causing a segfault for some unknown charsets, rportered
   by avb (#0003069).
 - Fixed zlib version check: 1.x is compatible with all 1.*, etc. (#0002966).
+- Fixed some messages not being sent as token when PROTOCTL TOKEN is in effect, especially
+  MODEs sent back after SVSMODE #channel. Reported by Muisje (#3072) and w00t (#2691).

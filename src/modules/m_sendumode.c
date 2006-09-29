@@ -131,8 +131,8 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 
-	sendto_serv_butone(IsServer(cptr) ? cptr : NULL,
-	    ":%s SMO %s :%s", parv[0], parv[1], message);
+	sendto_serv_butone_token(IsServer(cptr) ? cptr : NULL, parv[0], MSG_SMO, TOK_SMO,
+	    "%s :%s", parv[1], message);
 
 	for (p = parv[1]; *p; p++)
 	{

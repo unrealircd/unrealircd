@@ -374,7 +374,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (*parabuf) {
 		sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", sptr->name, chptr->chname, 
 			modebuf, parabuf);
-		sendto_serv_butone(NULL, ":%s MODE %s %s %s", sptr->name, chptr->chname, modebuf, parabuf);
+		sendto_serv_butone_token(NULL, sptr->name, MSG_MODE, TOK_MODE, "%s %s %s", chptr->chname, modebuf, parabuf);
 		*parabuf = 0;
 	}
 	return 0;
@@ -608,7 +608,7 @@ void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, c
 	if (send) {
 		sendto_channel_butserv(chptr, from, ":%s MODE %s %s %s",
 			from->name, chptr->chname, modebuf, parabuf);
-		sendto_serv_butone(NULL, ":%s MODE %s %s %s", from->name, chptr->chname, modebuf, parabuf);
+		sendto_serv_butone_token(NULL, from->name, MSG_MODE, TOK_MODE, "%s %s %s", chptr->chname, modebuf, parabuf);
 		send = 0;
 		*parabuf = 0;
 		modes = modebuf;

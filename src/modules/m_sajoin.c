@@ -210,8 +210,8 @@ DLLFUNC CMD_FUNC(m_sajoin)
 			sendnotice(acptr, "*** You were forced to join %s", jbuf);
 			sendto_realops("%s used SAJOIN to make %s join %s", sptr->name, acptr->name,
 				       jbuf);
-			sendto_serv_butone(&me, ":%s GLOBOPS :%s used SAJOIN to make %s join %s",
-					   me.name, sptr->name, acptr->name, jbuf);
+			sendto_serv_butone_token(&me, me.name, MSG_GLOBOPS, TOK_GLOBOPS, ":%s used SAJOIN to make %s join %s",
+					   sptr->name, acptr->name, jbuf);
 			/* Logging function added by XeRXeS */
 			ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",
 				sptr->name, parv[1], jbuf);

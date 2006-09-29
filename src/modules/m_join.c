@@ -126,7 +126,7 @@ Link *lp;
 			sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
 				":%s NOTICE @%s :setting channel -%c due to OperOverride request from %s",
 				me.name, chptr->chname, mchar, sptr->name);
-			sendto_serv_butone(&me, ":%s MODE %s -%c 0", me.name, chptr->chname, mchar);
+			sendto_serv_butone_token(&me, me.name, MSG_MODE, TOK_MODE, "%s -%c 0", chptr->chname, mchar);
 			sendto_channel_butserv(chptr, &me, ":%s MODE %s -%c", me.name, chptr->chname, mchar);
 			chptr->mode.mode &= ~mval;
 			return 1;

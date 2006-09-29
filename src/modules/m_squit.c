@@ -190,8 +190,8 @@ CMD_FUNC(m_squit)
 
 		sendto_locfailops("Received SQUIT %s from %s (%s)",
 		    acptr->name, get_client_name(sptr, FALSE), comment);
-		sendto_serv_butone(&me,
-		    ":%s GLOBOPS :Received SQUIT %s from %s (%s)", me.name,
+		sendto_serv_butone_token(&me, me.name, MSG_GLOBOPS, TOK_GLOBOPS,
+		    ":Received SQUIT %s from %s (%s)",
 		    server, get_client_name(sptr, FALSE), comment);
 	}
 	else if (MyConnect(acptr))
@@ -204,15 +204,15 @@ CMD_FUNC(m_squit)
 			sendto_ops
 			    ("%s tried to do a fake kill using SQUIT (%s (%s))",
 			    sptr->name, acptr->name, comment);
-			sendto_serv_butone(&me,
-			    ":%s GLOBOPS :%s tried to fake kill using SQUIT (%s (%s))",
-			    me.name, sptr->name, acptr->name, comment);
+			sendto_serv_butone_token(&me, me.name, MSG_GLOBOPS, TOK_GLOBOPS,
+			    ":%s tried to fake kill using SQUIT (%s (%s))",
+			    sptr->name, acptr->name, comment);
 			return 0;
 		}
 		sendto_locfailops("Received SQUIT %s from %s (%s)",
 		    acptr->name, get_client_name(sptr, FALSE), comment);
-		sendto_serv_butone(&me,
-		    ":%s GLOBOPS :Received SQUIT %s from %s (%s)", me.name,
+		sendto_serv_butone_token(&me, me.name, MSG_GLOBOPS, TOK_GLOBOPS,
+		    ":Received SQUIT %s from %s (%s)",
 		    acptr->name, get_client_name(sptr, FALSE), comment);
 	}
 	if (IsAnOper(sptr))

@@ -132,8 +132,8 @@ DLLFUNC CMD_FUNC(m_silence)
 			sendto_prefix_one(sptr, sptr, ":%s SILENCE %c%s",
 			    parv[0], c, cp);
 			if (c == '-')
-				sendto_serv_butone(NULL, ":%s SILENCE * -%s",
-				    sptr->name, cp);
+				sendto_serv_butone_token(NULL, sptr->name, MSG_SILENCE, TOK_SILENCE, "* -%s",
+				    cp);
 		}
 	}
 	else if (parc < 3 || *parv[2] == '\0')
@@ -147,8 +147,8 @@ DLLFUNC CMD_FUNC(m_silence)
 		if (c == '-')
 		{
 			if (!del_silence(sptr, parv[2] + 1))
-				sendto_serv_butone(cptr, ":%s SILENCE %s :%s",
-				    parv[0], parv[1], parv[2]);
+				sendto_serv_butone_token(cptr, parv[0], "%s :%s",
+				    parv[1], parv[2]);
 		}
 		else
 		{

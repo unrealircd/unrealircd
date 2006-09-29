@@ -146,9 +146,9 @@ DLLFUNC CMD_FUNC(m_netinfo)
 		sendto_realops
 		    ("Possible negative TS split at link %s (%li - %li = %li)%s",
 		    cptr->name, (xx), (endsync), (xx - endsync), emsg);
-		sendto_serv_butone(&me,
-		    ":%s SMO o :\2(sync)\2 Possible negative TS split at link %s (%li - %li = %li)%s",
-		    me.name, cptr->name, (xx), (endsync), (xx - endsync), emsg);
+		sendto_serv_butone_token(&me, me.name, MSG_SMO, TOK_SMO,
+		    "o :\2(sync)\2 Possible negative TS split at link %s (%li - %li = %li)%s",
+		    cptr->name, (xx), (endsync), (xx - endsync), emsg);
 	}
 	sendto_realops
 	    ("Link %s -> %s is now synced [secs: %li recv: %ld.%hu sent: %ld.%hu]",
@@ -166,18 +166,18 @@ DLLFUNC CMD_FUNC(m_netinfo)
 	}
 #endif
 
-	sendto_serv_butone(&me,
-	    ":%s SMO o :\2(sync)\2 Link %s -> %s is now synced [secs: %li recv: %ld.%hu sent: %ld.%hu]",
-	    me.name, cptr->name, me.name, (TStime() - endsync), sptr->receiveK,
+	sendto_serv_butone_token(&me, me.name, MSG_SMO, TOK_SMO,
+	    "o :\2(sync)\2 Link %s -> %s is now synced [secs: %li recv: %ld.%hu sent: %ld.%hu]",
+	    cptr->name, me.name, (TStime() - endsync), sptr->receiveK,
 	    sptr->receiveB, sptr->sendK, sptr->sendB);
 
 	if (!(strcmp(ircnetwork, parv[8]) == 0))
 	{
 		sendto_realops("Network name mismatch from link %s (%s != %s)",
 		    cptr->name, parv[8], ircnetwork);
-		sendto_serv_butone(&me,
-		    ":%s SMO o :\2(sync)\2 Network name mismatch from link %s (%s != %s)",
-		    me.name, cptr->name, parv[8], ircnetwork);
+		sendto_serv_butone_token(&me, me.name, MSG_SMO, TOK_SMO
+		    "o :\2(sync)\2 Network name mismatch from link %s (%s != %s)",
+		    cptr->name, parv[8], ircnetwork);
 	}
 
 	if ((protocol != UnrealProtocol) && (protocol != 0))
@@ -185,9 +185,9 @@ DLLFUNC CMD_FUNC(m_netinfo)
 		sendto_realops
 		    ("Link %s is running Protocol u%li while we are running %d!",
 		    cptr->name, protocol, UnrealProtocol);
-		sendto_serv_butone(&me,
-		    ":%s SMO o :\2(sync)\2 Link %s is running u%li while %s is running %d!",
-		    me.name, cptr->name, protocol, me.name, UnrealProtocol);
+		sendto_serv_butone_token(&me, me.name, MSG_SMO, TOK_SMO
+		    "o :\2(sync)\2 Link %s is running u%li while %s is running %d!",
+		    cptr->name, protocol, me.name, UnrealProtocol);
 
 	}
 	strlcpy(buf, CLOAK_KEYCRC, sizeof(buf));
