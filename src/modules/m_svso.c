@@ -173,7 +173,7 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #endif /* ifndef NEW_IO */
                 acptr->umodes &=
                     ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP |UMODE_SERVICES |
-                    UMODE_SADMIN | UMODE_ADMIN);
+                    UMODE_SADMIN | UMODE_ADMIN | UMODE_COADMIN);
                 acptr->umodes &=
                     ~(UMODE_NETADMIN | UMODE_WHOIS);
                 acptr->umodes &=
