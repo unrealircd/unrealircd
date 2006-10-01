@@ -593,9 +593,9 @@ static void remove_unknown(aClient *cptr, char *sender)
 	 * user on the other server which needs to be removed. -avalon
 	 */
 	if (!index(sender, '.') && !nsprefix)
-		sendto_one(cptr, ":%s KILL %s :%s (%s(?) <- %s)",
-		    me.name, sender, me.name, sender, cptr->name);
+		sendto_one(cptr, ":%s %s %s :%s (%s(?) <- %s)",
+		    me.name, (IsToken(cptr) ? TOK_KILL : MSG_KILL), sender, me.name, sender, cptr->name);
 	else
-		sendto_one(cptr, ":%s SQUIT %s :(Unknown from %s)",
-		    me.name, sender, get_client_name(cptr, FALSE));
+		sendto_one(cptr, ":%s %s %s :(Unknown from %s)",
+		    me.name, (IsToken(cptr) ? TOK_SQUIT : MSG_SQUIT), sender, get_client_name(cptr, FALSE));
 }

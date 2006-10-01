@@ -739,11 +739,11 @@ static void exit_one_client(aClient *cptr, aClient *sptr, aClient *from, char *c
 			 */
 			if (sptr->from == acptr)
 			{
-				sendto_one(acptr, ":%s SQUIT %s :%s", from->name, sptr->name, comment);
+				sendto_one(acptr, ":%s %s %s :%s", from->name, (IsToken(acptr->from) ? TOK_SQUIT : MSG_SQUIT), sptr->name, comment);
 			}
 			else
 			{
-				sendto_one(acptr, "SQUIT %s :%s", sptr->name, comment);
+				sendto_one(acptr, "%s %s :%s", (IsToken(acptr->from) ? TOK_SQUIT : MSG_SQUIT), sptr->name, comment);
 			}
 		}
 	}

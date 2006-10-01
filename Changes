@@ -1386,3 +1386,5 @@
 - Fixed some messages not being sent as token when PROTOCTL TOKEN is in effect, especially
   MODEs sent back after SVSMODE #channel. Reported by Muisje (#3072) and w00t (#2691).
 - Fixed SVSO - not removing coadmin (+C). Reported by Muisje (#0003077).
+- Fixed SQUIT not being sent as token, reported by Muisje (#0003079). Also fixed SQUIT/KILL
+  for unknown not being sent as token.
