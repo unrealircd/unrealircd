@@ -1388,3 +1388,5 @@
 - Fixed SVSO - not removing coadmin (+C). Reported by Muisje (#0003077).
 - Fixed SQUIT not being sent as token, reported by Muisje (#0003079). Also fixed SQUIT/KILL
   for unknown not being sent as token.
+- Fixed deny link {} blocks being ignored by autoconnect. Reported by a couple people, also
+  see #0003084.

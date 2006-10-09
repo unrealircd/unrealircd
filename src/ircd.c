@@ -512,7 +512,7 @@ static TS try_connections(TS currenttime)
 				    && crule_eval(deny->rule))
 					break;
 #ifndef NEW_IO
-			if (connect_server(aconf, (aClient *)NULL,
+			if (!deny && connect_server(aconf, (aClient *)NULL,
 			    (struct hostent *)NULL) == 0)
 #else /* ifndef NEW_IO */
 #endif /* ifndef NEW_IO */
