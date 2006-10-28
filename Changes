@@ -1392,3 +1392,6 @@
   see #0003084.
 - Fixed a couple of add_Command/del_Command lines in m_chgname and m_helpop trying to
   add the same token twice. Didn't cause any trouble, normally, though...
+- Committed watch away notification, I did this more than a month ago but can't be bothered
+  to document it right now, just want to get it off my cvs queue ;P.
+  Syntax is 'WATCH A +TestUser' to have someone with away notification on your watchlist.

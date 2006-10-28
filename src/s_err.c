@@ -654,8 +654,8 @@ static char *replies[] = {
 /* 595 */ NULL,
 /* 596 */ NULL,
 /* 597 */ NULL,
-/* 598 */ NULL,
-/* 599 */ NULL,
+/* 598    RPL_GONEAWAY */ ":%s 598 %s %s %s %s %d :is now away",
+/* 599    RPL_NOTAWAY */ ":%s 599 %s %s %s %s %d :is no longer away",
 /* 600    RPL_LOGON */ ":%s 600 %s %s %s %s %d :logged online",
 /* 601    RPL_LOGOFF */ ":%s 601 %s %s %s %s %d :logged offline",
 /* 602    RPL_WATCHOFF */ ":%s 602 %s %s %s %s %d :stopped watching",
@@ -664,8 +664,8 @@ static char *replies[] = {
 /* 605    RPL_NOWOFF */ ":%s 605 %s %s %s %s %ld :is offline",
 /* 606    RPL_WATCHLIST */ ":%s 606 %s :%s",
 /* 607    RPL_ENDOFWATCHLIST */ ":%s 607 %s :End of WATCH %c",
-/* 608 */ NULL,
-/* 609 */ NULL,
+/* 608    RPL_CLEARWATCH */ ":%s 607 %s :Your WATCH list is now empty",
+/* 609    RPL_NOWISAWAY */ ":%s 604 %s %s %s %s %ld :is away",
 /* 610    RPL_MAPMORE */ ":%s 610 %s :%s%-*s --> *more*",
 /* 611 */ NULL, /* ultimate */
 /* 612 */ NULL, /* ultimate */
