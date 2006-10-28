@@ -1314,3 +1314,5 @@
 - Added doc/help.tr.conf (Turkish), translated by Diablo.
 - Added doc/example.tr.conf (Turkish), translated by ironic.
 - Fixed zlib version check: 1.x is compatible with all 1.*, etc. (#0002966).
+- Fixed a couple of add_Command/del_Command lines in m_chgname and m_helpop trying to
+  add the same token twice. Didn't cause any trouble, normally, though...
