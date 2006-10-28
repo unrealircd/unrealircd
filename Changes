@@ -1390,3 +1390,5 @@
   for unknown not being sent as token.
 - Fixed deny link {} blocks being ignored by autoconnect. Reported by a couple people, also
   see #0003084.
+- Fixed a couple of add_Command/del_Command lines in m_chgname and m_helpop trying to
+  add the same token twice. Didn't cause any trouble, normally, though...
