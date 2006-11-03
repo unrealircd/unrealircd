@@ -54,9 +54,9 @@ typedef struct {
 
 #define CHK_SSL(err) if ((err)==-1) { ERR_print_errors_fp(stderr); }
 #ifdef _WIN32
-static StreamIO *streamp;
+static StreamIO *streamp = NULL;
 LRESULT SSLPassDLG(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam) {
-	StreamIO *stream;
+	StreamIO *stream = NULL;
 	switch (Message) {
 		case WM_INITDIALOG:
 			return TRUE;
