@@ -706,7 +706,8 @@ DLLFUNC CMD_FUNC(m_nick)
 		/* Copy password to the passwd field if it's given after NICK
 		 * - originally by taz, modified by Wizzu
 		 */
-		if ((parc > 2) && (strlen(parv[2]) <= PASSWDLEN))
+		if ((parc > 2) && (strlen(parv[2]) <= PASSWDLEN)
+		    && !(sptr->listener->umodes & LISTENER_JAVACLIENT))
 		{
 			if (sptr->passwd)
 				MyFree(sptr->passwd);
