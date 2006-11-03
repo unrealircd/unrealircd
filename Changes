@@ -1316,3 +1316,5 @@
 - Fixed zlib version check: 1.x is compatible with all 1.*, etc. (#0002966).
 - Fixed a couple of add_Command/del_Command lines in m_chgname and m_helpop trying to
   add the same token twice. Didn't cause any trouble, normally, though...
+- Updated ukrainian-w1251 and belarussian-w1251 charsets: some characters were previously
+  included that shouldn't. Reported by avb (#0003102), patch supplied by Bock.
