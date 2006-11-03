@@ -1325,3 +1325,5 @@
 - Fixed SVSO - not removing coadmin (+C). Reported by Muisje (#0003077).
 - Fixed deny link {} blocks being ignored by autoconnect. Reported by a couple people,
   also see #0003084.
+- Fixed m_names.so not being build (a problem for people not using commands.so),
+  reported by aegis (#0003085).
