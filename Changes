@@ -1322,3 +1322,4 @@
   NICK is not seen as a password on this port. Patch from afolentes (#0003097).
 - Fixed some unitialized pointer things for win32 w/ssl on keyprompt, no idea if it
   helps, though. Would appreciate it if another code looks into this. -- Syzop
+- Fixed SVSO - not removing coadmin (+C). Reported by Muisje (#0003077).
