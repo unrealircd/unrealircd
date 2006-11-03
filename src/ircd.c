@@ -486,7 +486,7 @@ static TS try_connections(TS currenttime)
 				    && crule_eval(deny->rule))
 					break;
 
-			if (connect_server(aconf, (aClient *)NULL,
+			if (!deny && connect_server(aconf, (aClient *)NULL,
 			    (struct hostent *)NULL) == 0)
 				sendto_realops
 				    ("Connection to %s[%s] activated.",
