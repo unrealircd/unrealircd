@@ -1327,3 +1327,8 @@
   also see #0003084.
 - Fixed m_names.so not being build (a problem for people not using commands.so),
   reported by aegis (#0003085).
+- Using SVSMODE (or SVS2MODE) to set -x will now actually remove the vhost from memory,
+  instead of letting it magically reappear whenever +x is set. This means services can
+  now properly "unvhost" a user by sending a "SVSMODE User -x+x" (then any existing vhost
+  will be removed and user will have a cloaked host). Reported by avenger and others
+  (#0002933).
