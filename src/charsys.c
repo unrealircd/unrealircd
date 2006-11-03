@@ -618,18 +618,20 @@ char latin1=0, latin2=0, w1250=0, w1251=0, chinese=0;
 	
 	if (w1251 || !strcmp(name, "belarussian-w1251"))
 	{
-		/* supplied by Anton Samets & ss:
+		/* supplied by Bock (Samets Anton) & ss:
 		 * 128-159, 161, 162, 178, 179 and 223-254
+		 * Corrected 01.11.2006 to more "correct" behavior by Bock
 		 */
-		charsys_addallowed("ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞßàáâãäåæçèéêëìíîïğñòóôõö÷øùúûüışÿ¨¸¡¢²³");
+		charsys_addallowed("ÀÁÂÃÄÅ¨ÆÇ²ÉÊËÌÍÎÏĞÑÒÓ¡ÔÕÖ×ØÛÜİŞßàáâãäå¸æç³éêëìíîïğñòó¢ôõö÷øûüışÿ'");
 	}	
 	
 	if (w1251 || !strcmp(name, "ukrainian-w1251"))
 	{
 		/* supplied by Anton Samets & ss:
 		 * 128-159, 170, 175, 178, 179, 186, 191 and 223-254
+		 * Corrected 01.11.2006 to more "correct" behavior by core
 		 */
-		charsys_addallowed("ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞßàáâãäåæçèéêëìíîïğñòóôõö÷øùúûüışÿ¨¸²³ªº¯¿");
+		charsys_addallowed("ÀÁÂÃ¥ÄÅªÆÇÈ²¯ÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÜŞßàáâã´äåºæçè³¿éêëìíîïğñòóôõö÷øùüşÿ");
 	}	
 
 	/* [GREEK] */	

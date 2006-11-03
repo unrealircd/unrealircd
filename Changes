@@ -1395,3 +1395,5 @@
 - Committed watch away notification, I did this more than a month ago but can't be bothered
   to document it right now, just want to get it off my cvs queue ;P.
   Syntax is 'WATCH A +TestUser' to have someone with away notification on your watchlist.
+- Updated ukrainian-w1251 and belarussian-w1251 charsets: some characters were previously
+  included that shouldn't. Reported by avb (#0003102), patch supplied by Bock.
