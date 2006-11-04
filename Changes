@@ -1339,3 +1339,5 @@
   by aquanight and others (#0003010).
 - Win32: SSL private key prompt should now no longer crash. Patch provided by Alexey
   Markevich (#0002866).
+- Win32: we now no longer crash if no access to write to service.log, suggested and
+  patch by Xuefer (#0002886).
