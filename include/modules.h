@@ -682,6 +682,7 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define EFUNC_STRIPBADWORDS_QUIT			30
 #define EFUNC_STRIPCOLORS					31
 #define EFUNC_STRIPCONTROLCODES				32
+#define EFUNC_SPAMFILTER_BUILD_USER_STRING	33
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000

@@ -737,6 +737,7 @@ extern MODVAR char *(*stripbadwords_message)(char *str, int *blocked);
 extern MODVAR char *(*stripbadwords_quit)(char *str, int *blocked);
 extern MODVAR unsigned char *(*StripColors)(unsigned char *text);
 extern MODVAR const char *(*StripControlCodes)(unsigned char *text);
+extern MODVAR void (*spamfilter_build_user_string)(char *buf, aClient *acptr);
 /* /Efuncs */
 extern MODVAR aMotd *opermotd, *svsmotd, *motd, *botmotd, *smotd;
 extern MODVAR int max_connection_count;

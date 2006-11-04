@@ -114,6 +114,7 @@ char *(*stripbadwords_message)(char *str, int *blocked);
 char *(*stripbadwords_quit)(char *str, int *blocked);
 unsigned char *(*StripColors)(unsigned char *text);
 const char *(*StripControlCodes)(unsigned char *text);
+void (*spamfilter_build_user_string)(char *buf, aClient *acptr);
 
 static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 00 */	{NULL, NULL},
@@ -149,7 +150,7 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 30 */	{"stripbadwords_quit", (void *)&stripbadwords_quit},
 /* 31 */	{"StripColors", (void *)&StripColors},
 /* 32 */	{"StripControlCodes", (void *)&StripControlCodes},
-/* 33 */	{NULL, NULL},
+/* 33 */	{"spamfilter_build_user_string", (void *)&spamfilter_build_user_string},
 /* 34 */	{NULL, NULL},
 /* 35 */	{NULL, NULL}
 };
