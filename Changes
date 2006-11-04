@@ -1417,3 +1417,6 @@
   Markevich (#0002866).
 - Win32: we now no longer crash if no access to write to service.log, suggested and
   patch by Xuefer (#0002886).
+- Services timestamps are now always treated as an unsigned long (0..2^32-1), instead
+  of accidently as signed long during netsynchs. This bug caused issues with values
+  larger than 2147483647. Reported by avenger (#0002980).
