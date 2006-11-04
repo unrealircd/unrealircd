@@ -1408,3 +1408,8 @@
   now properly "unvhost" a user by sending a "SVSMODE User -x+x" (then any existing vhost
   will be removed and user will have a cloaked host). Reported by avenger and others
   (#0002933).
+- [internal] Made a spamfilter_build_user_string function that will build the spamfilter
+  user target string (nick!user@host:info), insteaf of doing it at like 5 places.
+- Spamfilter target 'u' (user): the host field (nick!user@HOST:realname) is now escaped
+  with brackets if it's an IPv6 address, eg: blah!blah@[1:2:3:4:5:6:7:8]:hello, reported
+  by aquanight and others (#0003010).

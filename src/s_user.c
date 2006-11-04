@@ -838,3 +838,4 @@ int add_silence(aClient *sptr, char *mask, int senderr)
 	sptr->user->silence = lp;
 	return 0;
 }
+
