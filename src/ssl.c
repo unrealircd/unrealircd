@@ -54,27 +54,25 @@ typedef struct {
 
 #define CHK_SSL(err) if ((err)==-1) { ERR_print_errors_fp(stderr); }
 #ifdef _WIN32
-static StreamIO *streamp = NULL;
 LRESULT SSLPassDLG(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam) {
-	StreamIO *stream = NULL;
+	static StreamIO *stream;
 	switch (Message) {
 		case WM_INITDIALOG:
+			stream = (StreamIO*)lParam;
 			return TRUE;
 		case WM_COMMAND:
-			stream = (StreamIO *)streamp;
 			if (LOWORD(wParam) == IDCANCEL) {
 				*stream->buffer = NULL;
-				EndDialog(hDlg, TRUE);
+				EndDialog(hDlg, IDCANCEL);
 			}
 			else if (LOWORD(wParam) == IDOK) {
 				GetDlgItemText(hDlg, IDC_PASS, *stream->buffer, *stream->size);
-				EndDialog(hDlg, TRUE);
+				EndDialog(hDlg, IDOK);
 			}
 			return FALSE;
 		case WM_CLOSE:
-			if (stream)
-				*stream->buffer = NULL;
-			EndDialog(hDlg, TRUE);
+			*stream->buffer = NULL;
+			EndDialog(hDlg, IDCANCEL);
 		default:
 			return FALSE;
 	}
@@ -140,8 +138,7 @@ int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 	pass = passbuf;
 	stream.buffer = &pass;
 	stream.size = &passsize;
-	streamp = &stream;
-	DialogBoxParam(hInst, "SSLPass", hwIRCDWnd, (DLGPROC)SSLPassDLG, (LPARAM)NULL); 
+	DialogBoxParam(hInst, "SSLPass", hwIRCDWnd, (DLGPROC)SSLPassDLG, (LPARAM)&stream); 
 #endif
 	if (pass)
 	{

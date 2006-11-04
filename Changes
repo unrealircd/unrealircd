@@ -1413,3 +1413,5 @@
 - Spamfilter target 'u' (user): the host field (nick!user@HOST:realname) is now escaped
   with brackets if it's an IPv6 address, eg: blah!blah@[1:2:3:4:5:6:7:8]:hello, reported
   by aquanight and others (#0003010).
+- Win32: SSL private key prompt should now no longer crash. Patch provided by Alexey
+  Markevich (#0002866).
