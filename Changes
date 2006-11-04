@@ -1420,3 +1420,6 @@
 - Services timestamps are now always treated as an unsigned long (0..2^32-1), instead
   of accidently as signed long during netsynchs. This bug caused issues with values
   larger than 2147483647. Reported by avenger (#0002980).
+- If the 'crypt' algorithm is used, then passwords were/are truncated to 8 characters.
+  We now print a warning when this happens (both on the IRC command and command-line).
+  Suggested by JasonTik (#0002953).

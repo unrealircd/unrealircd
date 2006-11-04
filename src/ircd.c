@@ -1188,6 +1188,14 @@ int InitwIRCD(int argc, char *argv[])
 			  }
 			  p = *++argv;
 			  argc--;
+#ifdef AUTHENABLE_UNIXCRYPT
+              if ((type == AUTHTYPE_UNIXCRYPT) && (strlen(p) > 8))
+              {
+                  printf("WARNING: Password truncated to 8 characters due to 'crypt' algorithm. "
+                         "You are suggested to use the 'md5' algorithm instead.");
+                  p[8] = '\0';
+              }
+#endif
 			  if (!(result = Auth_Make(type, p)))
 			  {
 				  printf("Authentication failed\n");

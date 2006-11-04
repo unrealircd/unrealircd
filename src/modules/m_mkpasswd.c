@@ -128,6 +128,15 @@ int  m_mkpasswd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 
+#ifdef AUTHENABLE_UNIXCRYPT
+	if ((type == AUTHTYPE_UNIXCRYPT) && (strlen(parv[2]) > 8))
+	{
+		sendnotice(sptr, "WARNING: Password truncated to 8 characters due to 'crypt' algorithm. "
+		                 "You are suggested to use the 'md5' algorithm instead.");
+		parv[2][8] = '\0';
+	}
+#endif
+
 	if (!(result = Auth_Make(type, parv[2])))
 	{
 		sendto_one(sptr, 
