@@ -1347,3 +1347,4 @@
 - If the 'crypt' algorithm is used, then passwords were/are truncated to 8 characters.
   We now print a warning when this happens (both on the IRC command and command-line).
   Suggested by JasonTik (#0002953).
+- Win32: Fixed a few compiler warnings, suggested by Zell (#0002890).
