@@ -693,7 +693,7 @@ static int check_init(aClient *cptr, char *sockn, size_t size)
 	}
 
 	/* If descriptor is a tty, special checking... */
-#ifndef _WIN32
+#if defined(DEBUGMODE) && !defined(_WIN32)
 	if (isatty(cptr->fd))
 #else
 	if (0)
@@ -1177,7 +1177,7 @@ aClient *add_connection(aClient *cptr, int fd)
 	 * m_server and m_user instead. Also connection time out help to
 	 * get rid of unwanted connections.
 	 */
-#ifndef _WIN32
+#if defined(DEBUGMODE) && !defined(_WIN32)
 	if (isatty(fd))		/* If descriptor is a tty, special checking... */
 #else
 	if (0)
