@@ -1350,3 +1350,5 @@
 - Win32: Fixed a few compiler warnings, suggested by Zell (#0002890).
 - Moved a couple isatty() calls to DEBUGMODE (#0002945).
 - Made win32 compile again, reported by Bock (#0003106).
+- Moved failed oper snotices to snomask +o, and are sent out to all servers. Also now shows
+  the uid attempted (like [FAILEDAUTH] does) for incorrect host or maxlogin.
