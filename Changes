@@ -1354,3 +1354,4 @@
   the uid attempted (like [FAILEDAUTH] does) for incorrect host or maxlogin.
 - Fixed set::allowed-nickchars causing a segfault for some unknown charsets, reported
   by avb (#0003069).
+- Cutoff webtv whois at MAXTARGETS (#0003004).
