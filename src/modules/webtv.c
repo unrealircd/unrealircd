@@ -148,7 +148,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	char *nick, *tmp, *name;
 	char *p = NULL;
 	char buf[512], query[512];
-	int  found, len, mlen;
+	int  found, len, mlen, cnt = 0;
 
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
@@ -159,9 +159,12 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	strlcpy(query, parv[1], sizeof(query));
 
-	for (tmp = parv[1]; (nick = strtoken(&p, tmp, ",")); tmp = NULL)
+	for (tmp = canonize(parv[1]); (nick = strtoken(&p, tmp, ",")); tmp = NULL)
 	{
 		int  invis, showsecret = 0, showchannel, showperson, member, wilds;
+
+		if (++cnt > MAXTARGETS)
+			break;
 
 		found = 0;
 		(void)collapse(nick);
