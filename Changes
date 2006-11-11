@@ -1355,3 +1355,5 @@
 - Fixed set::allowed-nickchars causing a segfault for some unknown charsets, reported
   by avb (#0003069).
 - Cutoff webtv whois at MAXTARGETS (#0003004).
+- loadmodule now reports proper errors when the actual file can't be found, instead of blaming
+  it on the temp file, reported in #3015.
