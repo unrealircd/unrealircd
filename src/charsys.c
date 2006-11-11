@@ -408,7 +408,7 @@ int mid;
 	while (start <= stop)
 	{
 		mid = (start+stop)/2;
-		if (smycmp(name, langlist[mid].directive) < 0)
+		if (!langlist[mid].directive || smycmp(name, langlist[mid].directive) < 0)
 			stop = mid-1;
 		else if (strcmp(name, langlist[mid].directive) == 0)
 			return &langlist[mid];
