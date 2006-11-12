@@ -18,14 +18,14 @@
 		<A href="unreal32docs.html">English</A> | <A href="unreal32docs.de.html">German</A>
 		| <A href="unreal32docs.es.html">Spanish</A> | <A href="unreal32docs.hu.html">Hungarian</A>
 		| <A href="unreal32docs.fr.html">French</A> | <A href="unreal32docs.gr.html">Greek</A>
-		| <A href="unreal32docs.nl.html">Dutch</A> | Russian |
-		<a href="unreal32docs.tr.html">Turkish</a>
+		| <A href="unreal32docs.nl.html">Dutch</A> | Russian | <a href="unreal32docs.tr.html">
+			Turkish</a>
 		<br>
 		<br>
 		<div align="center"><b><font size="7">UnrealIRCd</font></b><br>
 			<font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
 			<font size="4">Версия: 3.2.5</font><br>
-			<b>Последнее обновление:</b> 2006-06-15</div>
+			<b>Последнее обновление:</b> 2006-11-12</div>
 		<br>
 		<b>Главные программисты:</b> Stskeeps / codemastr / Syzop / Luke<br>
 		<b>Вкладчики:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel 
@@ -3255,13 +3255,13 @@ cgiirc {
 					<p><font class="set">set::dns::timeout &lt;интервал-времени&gt;;</font><br>
 						Интервал времени, определяющий таймаут DNS-сервера. Это строка, где d означает 
 						дни, h - часы, m - минуты и s - секунды. К примеру, 1d2h3m означает 1 день, 2 
-						часа и 3 минуты.</p>
+						часа и 3 минуты (НЕ РЕАЛИЗОВАНО).</p>
 					<p><font class="set">set::dns::retries &lt;количество-повторов&gt;;</font><br>
 						Число, определяющее количество попыток запроса DNS перед выдачей сообщения об 
-						ошибке.</p>
+						ошибке (НЕ РЕАЛИЗОВАНО).</p>
 					<p><font class="set">set::dns::nameserver &lt;имя-dns-сервера&gt;;</font><br>
 						Определяет имя сервера (hostname), который будет использован в качестве DNS 
-						запросов.</p>
+						запросов (НЕ РЕАЛИЗОВАНО).</p>
 					<p><font class="set">set::dns::bind-ip &lt;ip&gt;;</font><br>
 						Привязка к определенному IP для DNS-запросов, очень редко используется.</p>
 					<p><font class="set">set::network-name &lt;имя-сети&gt;;</font><br>
@@ -3408,6 +3408,10 @@ cgiirc {
 						Максимальное время ожидания ответа от сервера. Переменная, принимающая значение 
 						от 1 до 5 (нет смысла величины большей, т.к. возникнет погрешность). По 
 						умолчанию установлено в 3 и, по большому счёту, нет смысла менять это значение.</p>
+					<p><font class="set">set::pingpong-warning &lt;yes|no&gt;</font><br>
+						Когда включён NOSPOOF (обычно в ОС Windows), то он посылает предупреждение каждому
+						пользователю использовать '/quote pong ..', если он имеет проблемы с 
+						подключением. По умолчанию отключено (no).</p>
 				</div>
 				<p><b><font size="+2">5 – Дополнительные файлы<a name="addtlfiles"></a> </font></b>
 				</p>
