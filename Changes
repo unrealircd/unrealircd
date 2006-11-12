@@ -1427,3 +1427,4 @@
 - Moved a couple isatty() calls to DEBUGMODE (#0002945).
 - Made win32 compile again, reported by Bock (#0003106).
 - Cutoff webtv whois at MAXTARGETS (#0003004).
+- Fixed 'SVSMOTD !' not deleting the services motd in memory, reported by avb (#0003110).
