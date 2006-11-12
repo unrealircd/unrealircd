@@ -645,9 +645,12 @@ DLLFUNC CMD_FUNC(m_nick)
 			} else
 				sptr->user->flood.nick_c++;
 
-			sendto_snomask(SNO_NICKCHANGE, "*** Notice -- %s (%s@%s) has changed his/her nickname to %s", sptr->name, sptr->user->username, sptr->user->realhost, nick);
+			sendto_snomask(SNO_NICKCHANGE, "*** Notice -- %s (%s@%s) has changed his/her nickname to %s",
+				sptr->name, sptr->user->username, sptr->user->realhost, nick);
 		} else {
-			sendto_snomask(SNO_FNICKCHANGE, "*** Notice -- %s (%s@%s) has changed his/her nickname to %s", sptr->name, sptr->user->username, sptr->user->realhost, nick);
+			if (!IsULine(sptr))
+				sendto_snomask(SNO_FNICKCHANGE, "*** Notice -- %s (%s@%s) has changed his/her nickname to %s",
+					sptr->name, sptr->user->username, sptr->user->realhost, nick);
 		}
 		strcpy(oldnick, sptr->name); /* safe: both NICKLEN+1 */
 		/*
@@ -682,10 +685,13 @@ DLLFUNC CMD_FUNC(m_nick)
 		 * Generate a random string for them to pong with.
 		 */
 		sptr->nospoof = getrandom32();
-		sendto_one(sptr, ":%s NOTICE %s :*** If you are having problems"
-		    " connecting due to ping timeouts, please"
-		    " type /quote pong %X or /raw pong %X now.",
-		    me.name, nick, sptr->nospoof, sptr->nospoof);
+
+		if (PINGPONG_WARNING)
+			sendto_one(sptr, ":%s NOTICE %s :*** If you are having problems"
+			    " connecting due to ping timeouts, please"
+			    " type /quote pong %X or /raw pong %X now.",
+			    me.name, nick, sptr->nospoof, sptr->nospoof);
+
 		sendto_one(sptr, "PING :%X", sptr->nospoof);
 #endif /* NOSPOOF */
 #ifdef CONTACT_EMAIL

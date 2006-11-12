@@ -2366,12 +2366,12 @@ set {
   A time value specifying the length of time a DNS server has to respond before 
   a timeout. A time value is a numeric string with d meaning days, h meaning hours, 
   m meaning minutes, and s meaning seconds, for example 1d2h3m means 1 day, 2 
-  hours, 3 minutes.</p>
+  hours, 3 minutes. (NOT IMPLEMENTED)</p>
 <p><font class="set">set::dns::retries &lt;number-of-retries&gt;;</font><br>
   A numeric value specifying the number of times the DNS lookup will be retried 
-  if failure occurs.</p>
+  if failure occurs. (NOT IMPLEMENTED)</p>
 <p><font class="set">set::dns::nameserver &lt;name-of-dns-server&gt;;</font><br>
-  Specifies the hostname of the server that will be used for DNS lookups.</p>
+  Specifies the hostname of the server that will be used for DNS lookups. (NOT IMPLEMENTED)</p>
 <p><font class="set">set::dns::bind-ip &lt;ip&gt;;</font><br>
   Specifies the IP to bind to for the resolver, rarely ever needed.</p>
 <p><font class="set">set::network-name &lt;name-of-network&gt;;</font><br>
@@ -2498,6 +2498,9 @@ AU). Requests to these servers are sent in parallel, fastest reply wins.</p>
   Maximum time to wait for a time server reply. This is a value between 1 and 5, more is not possible
   because it causes too much inaccuracy. This setting is 3 by default and there's probably
   no good reason to change it.</p>
+ <p><font class="set">set::pingpong-warning &lt;yes|no&gt;</font><br>
+  When NOSPOOF is enabled (usually on Windows), send a warning to each user to use
+  '/quote pong ..' if they are having problems connecting? The default is no.</p>
 <p></p> </div>
 <p><b><font size="+2">5 &#8211; Additional Files<a name="addtlfiles"></a>
   </font></b></p><div class="desc">
