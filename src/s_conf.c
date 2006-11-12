@@ -1534,6 +1534,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->timesynch_enabled = 1;
 	i->timesynch_timeout = 3;
 	i->timesynch_server = strdup("193.67.79.202,192.43.244.18,128.250.36.3"); /* nlnet (EU), NIST (US), uni melbourne (AU). All open acces, nonotify, nodns. */
+	i->name_server = strdup("127.0.0.1"); /* default, especially needed for w2003+ in some rare cases */
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,
@@ -2195,12 +2196,14 @@ int	config_post_test()
 		Error("set::kline-address is missing");
 	if (!settings.has_maxchannelsperuser)
 		Error("set::maxchannelsperuser is missing");
+#if 0
 	if (!settings.has_dns_nameserver)
 		Error("set::dns::nameserver is missing");
 	if (!settings.has_dns_timeout)
 		Error("set::dns::timeout is missing");
 	if (!settings.has_dns_retries)
 		Error("set::dns::retries is missing");
+#endif
 	if (!settings.has_services_server)
 		Error("set::services-server is missing");
 	if (!settings.has_default_server)
@@ -6656,6 +6659,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "check-target-nick-bans")) {
 			tempiConf.check_target_nick_bans = config_checkval(cep->ce_vardata, CFG_YESNO);
 		}
+		else if (!strcmp(cep->ce_varname, "pingpong-warning")) {
+			tempiConf.pingpong_warning = config_checkval(cep->ce_vardata, CFG_YESNO);
+		}
 		else if (!strcmp(cep->ce_varname, "allow-userhost-change")) {
 			if (!stricmp(cep->ce_vardata, "always"))
 				tempiConf.userhost_allowed = UHALLOW_ALWAYS;
@@ -7372,7 +7378,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 				else if (!strcmp(cepp->ce_varname, "bind-ip")) {
 					struct in_addr in;
-					CheckDuplicate(cepp, dns_retries, "dns::bind-ip");
+					CheckDuplicate(cepp, dns_bind_ip, "dns::bind-ip");
 					if (strcmp(cepp->ce_vardata, "*"))
 					{
 						in.s_addr = inet_addr(cepp->ce_vardata);
