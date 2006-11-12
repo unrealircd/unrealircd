@@ -435,13 +435,6 @@
 #define FAST_BADWORD_REPLACE
 
 /*
- * Only important for people using IPv6 (default should be ok for now) -Onliner
- * Because ip6.arpa is still not delegated for the 6bone (3ffe::/16)
- * this options allows you to still resolve it using ip6.int.
- */
-#define SIXBONE_HACK
-
-/*
  * Forces Unreal to use compressed IPv6 addresses rather than expanding them
  */
 #undef IPV6_COMPRESSED

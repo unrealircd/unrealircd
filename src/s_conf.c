@@ -3137,6 +3137,12 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			/* oper::modes */
 			else if (!strcmp(cep->ce_varname, "modes")) 
 			{
+				if (strchr(cep->ce_vardata, 'z'))
+				{
+					config_error("%s:%i: oper::modes may not have +z",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+					errors++;
+				}
 				if (has_modes)
 				{
 					config_warn_duplicate(cep->ce_fileptr->cf_filename,
@@ -6905,6 +6911,12 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "modes-on-connect")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, modes_on_connect, "modes-on-connect");
+			if (strchr(cep->ce_vardata, 'z'))
+			{
+				config_error("%s:%i: set::modes-on-connect may not have +z",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
 			templong = (long) set_usermode(cep->ce_vardata);
 			if (templong & UMODE_OPER)
 			{
@@ -6971,6 +6983,12 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "modes-on-oper")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, modes_on_oper, "modes-on-oper");
+			if (strchr(cep->ce_vardata, 'z'))
+			{
+				config_error("%s:%i: set::modes-on-oper may not have +z",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
 			templong = (long) set_usermode(cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "snomask-on-oper")) {
@@ -8019,7 +8037,7 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 		del_Command(ce->ce_vardata, NULL, cmptr->func);
 	if (find_Command_simple(ce->ce_vardata))
 	{
-		config_warn("%s:%i: Alias '%s' would conflict with command '%s', alias not added.",
+		config_warn("%s:%i: Alias '%s' would conflict with command (or server token) '%s', alias not added.",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 			ce->ce_vardata, ce->ce_vardata);
 		return 0;

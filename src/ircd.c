@@ -1329,8 +1329,7 @@ int InitwIRCD(int argc, char *argv[])
 	fprintf(stderr, "                           v%s\n", VERSIONONLY);
 	fprintf(stderr, "                     using %s\n", tre_version());
 #ifdef USE_SSL
-	fprintf(stderr, "                     using %s\n",
-	    OPENSSL_VERSION_TEXT);
+	fprintf(stderr, "                     using %s\n", SSLeay_version(SSLEAY_VERSION));
 #endif
 #ifdef ZIP_LINKS
 	fprintf(stderr, "                     using zlib %s\n", zlibVersion());

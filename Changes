@@ -1445,3 +1445,8 @@
   not understand the message anyway. Anyway, you can still turn it on ;). (#2680).
 - /INVITE's from people on the silence list are now (silently) ignored, suggested by
   White_Magic (#0002478).
+- Fixed a couple of typos and other one-line-text fixes at various places: reported by
+  aegis (#3081), DanPMK (#2818), tabrisnet (#2974, #2970, #2467), penna (#2721),
+  Brad (#2488), vonitsanet (#2467).
+- Made OpenSSL version dynamic, reported by buildsmart (#0002975).
+- Rejecting fake +z modes in conf, reported by rve (#0002532).
