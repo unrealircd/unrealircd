@@ -119,6 +119,8 @@ int  m_svsmotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
           case '!':
           {
                   remove(VPATH);
+                  free_motd(svsmotd);
+                  svsmotd = NULL;
                   sendto_ops("Wiped out services motd data");
                   break;
           }

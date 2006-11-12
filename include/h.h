@@ -781,3 +781,4 @@ extern int extban_is_banned_helper(char *buf);
 extern char *getcloak(aClient *sptr);
 extern void kick_insecure_users(aChannel *);
 extern int file_exists(char* file);
+extern void free_motd(aMotd *m);

@@ -1007,6 +1007,18 @@ aMotd *read_file(char *filename, aMotd **list)
 	return read_file_ex(filename, list, NULL);
 }
 
+void free_motd(aMotd *m)
+{
+aMotd *next;
+
+	for (; m; m = next)
+	{
+		next = m->next;
+		MyFree(m->line);
+		MyFree(m);
+	}
+}
+
 /** Read motd-like file, used for rules/motd/botmotd/opermotd/etc.
  * @param filename Filename of file to read.
  * @param list Reference to motd pointer (used for freeing if needed, NULL allowed)
@@ -1027,13 +1039,8 @@ aMotd *read_file_ex(char *filename, aMotd **list, struct tm *t)
 
 	if (list)
 	{
-		while (*list)
-		{
-			old = (*list)->next;
-			MyFree((*list)->line);
-			MyFree(*list);
-			*list  = old;
-		}
+		free_motd(*list);
+		*list = NULL;
 	}
 
 	if (t)

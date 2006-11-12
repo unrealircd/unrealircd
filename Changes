@@ -1350,10 +1350,11 @@
 - Win32: Fixed a few compiler warnings, suggested by Zell (#0002890).
 - Moved a couple isatty() calls to DEBUGMODE (#0002945).
 - Made win32 compile again, reported by Bock (#0003106).
-- Moved failed oper snotices to snomask +o, and are sent out to all servers. Also now shows
-  the uid attempted (like [FAILEDAUTH] does) for incorrect host or maxlogin.
+- Moved failed oper snotices to snomask +o, and are sent out to all servers. Also now
+  shows the uid attempted (like [FAILEDAUTH] does) for incorrect host or maxlogin.
 - Fixed set::allowed-nickchars causing a segfault for some unknown charsets, reported
   by avb (#0003069).
 - Cutoff webtv whois at MAXTARGETS (#0003004).
-- loadmodule now reports proper errors when the actual file can't be found, instead of blaming
-  it on the temp file, reported in #3015.
+- loadmodule now reports proper errors when the actual file can't be found, instead of
+  blaming it on the temp file, reported in #3015.
+- Fixed 'SVSMOTD !' not deleting the services motd in memory, reported by avb (#0003110).
