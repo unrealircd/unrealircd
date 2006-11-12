@@ -44,7 +44,7 @@
 #endif
 #include "badwords.h"
 
-static int is_silenced(aClient *, aClient *);
+int _is_silenced(aClient *, aClient *);
 char *_stripbadwords_channel(char *str, int *blocked);
 char *_stripbadwords_message(char *str, int *blocked);
 char *_stripbadwords_quit(char *str, int *blocked);
@@ -80,6 +80,7 @@ DLLFUNC int MOD_TEST(m_message)(ModuleInfo *modinfo)
 	EfunctionAddPChar(modinfo->handle, EFUNC_STRIPBADWORDS_QUIT, _stripbadwords_quit);
 	EfunctionAddPChar(modinfo->handle, EFUNC_STRIPCOLORS, _StripColors);
 	EfunctionAddPChar(modinfo->handle, EFUNC_STRIPCONTROLCODES, _StripControlCodes);
+	EfunctionAdd(modinfo->handle, EFUNC_IS_SILENCED, _is_silenced);
 	return MOD_SUCCESS;
 }
 
@@ -657,7 +658,7 @@ DLLFUNC int  m_notice(aClient *cptr, aClient *sptr, int parc, char *parv[])
  * but more over, if this is detected on a server not local to sptr
  * the SILENCE mask is sent upstream.
  */
-static int is_silenced(aClient *sptr, aClient *acptr)
+int _is_silenced(aClient *sptr, aClient *acptr)
 {
 	Link *lp;
 	anUser *user;

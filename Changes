@@ -1443,3 +1443,5 @@
   confusion among users. The message was intended for non-confirming clients, but these
   should be fixed by now, and those that were not fixed (self-made bots/etc) did often
   not understand the message anyway. Anyway, you can still turn it on ;). (#2680).
+- /INVITE's from people on the silence list are now (silently) ignored, suggested by
+  White_Magic (#0002478).

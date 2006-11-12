@@ -337,8 +337,9 @@ DLLFUNC CMD_FUNC(m_invite)
 		        add_invite(acptr, chptr);
 			}
 	}
-        sendto_prefix_one(acptr, sptr, ":%s INVITE %s :%s", parv[0],
-            acptr->name, ((chptr) ? (chptr->chname) : parv[2]));
+	if (!is_silenced(sptr, acptr))
+		sendto_prefix_one(acptr, sptr, ":%s INVITE %s :%s", parv[0],
+			acptr->name, ((chptr) ? (chptr->chname) : parv[2]));
 
         return 0;
 }
