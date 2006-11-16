@@ -1450,3 +1450,5 @@
   Brad (#2488), vonitsanet (#2467).
 - Made OpenSSL version dynamic, reported by buildsmart (#0002975).
 - Rejecting fake +z modes in conf, reported by rve (#0002532).
+- Improved description of link::hub/leaf/leafdepth in unreal32docs.html reported by Bugz (#2623),
+  also fixed typo (leafdepth, not leaf-depth), reported by monas (#3083).

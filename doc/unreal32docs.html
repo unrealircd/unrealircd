@@ -1944,17 +1944,16 @@ link &lt;server-name&gt; {
 </p>
 <p><b>hub vs leaf</b><br>
   A hub has multiple servers linked to it, a leaf has only one link... to you. 
-  A server is either a hub or a leaf, you cannot combine these options.
+  A server is a leaf unless it has a hub directive. It is also a leaf if the leaf directive is *, or leafdepth is 1.
 </p>
 <p><b>hub</b> (optional)<br>
   The value is a mask of what servers this hub may connect (ex: *.my.net).
 </p>
 <p><b>leaf</b> (optional)<br>
-  The value is a mask that this server will act like a leaf towards.
+  The value is a mask of what servers this hub may <b>not</b> connect. Saying * here would be the same as not having a hub directive.
 </p>
-<p><b>leaf-depth</b> (optional)<br>
-  If specified then leaf should be specified too. The value specifies the depth 
-  (number of hops) this server may have beneath it.
+<p><b>leafdepth</b> (optional)<br>
+  The value specifies the depth (number of hops) this server may have beneath it. For example, 1 means the server can't have any links under it (a leaf), 2 means it can link servers but those servers can't link anything under them (that is, this hub can only link leaves). A value of 0 means no limit, and is the default.
 </p>
 <p><b>class</b><br>
   The class this server is put into, often a separate server class is used for this.
