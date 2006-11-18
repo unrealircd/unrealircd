@@ -3089,12 +3089,13 @@ Oper Zugriff geloggt wurde.</p>
 Ein Wert, der angibt, innerhalb welcher Zeit ein DNS Server zu antworten hat, bevor
 &quot;timeout&quot; gemeldet wird. Der Zeitwert ist ein numerischer String, in
 dem 'd' Tage bedeutet, 'h' Sunden, 'm' Minuten und 's' Sekunden. Beispiel: '1d2h3m'
-bedeutet 1 Tag, 2 Stunden, 3 Minuten.</p>
+bedeutet 1 Tag, 2 Stunden, 3 Minuten. (NICHT IMPLEMENTIERT)</p>
 <p><font class="set">set::dns::retries &lt;number-of-retries&gt;;</font><br>
 Ein Zahlenwert, durch den festgelegt wird, wie oft versucht werden soll, die DNS
-aufzulösen, bevor ein Fehler gemeldet wird.</p>
+aufzulösen, bevor ein Fehler gemeldet wird. (NICHT IMPLEMENTIERT)</p>
 <p><font class="set">set::dns::nameserver &lt;name-of-dns-server&gt;;</font><br>
-Gibt den Hostnamen des Servers an, der zur DNS Namensauflösungen dient.</p>
+Gibt den Hostnamen des Servers an, der zur DNS Namensauflösungen dient. (NICHT
+IMPLEMENTIERT)</p>
 <p><font class="set">set::network-name &lt;name-of-network&gt;;</font><br>
 Gibt den Namen des Netzwerks an, in dem der Server läuft (also den Namen des
 irc Netzes!) Dieser Eintrag sollte auf allen Servern im Netzwerk absolut
@@ -3237,7 +3238,17 @@ Antwort gewinnt.</p>
 Maximale Zeit, die auf eine Zeitserverantwort gewartet wird. Möglich ist ein
 Wert von 1 bis 5, mehr ist nicht möglich, weil das Ergebnis sonst zu ungenau
 wäre. Default Einstellung ist hier 3 und normalerweise sollte es keinen Grund
-geben, dies zu ändern. </div>
+geben, dies zu ändern.
+<p><font class="set">set::pingpong-warning&lt;yes|no&gt;</font><br>
+Die Versuche von Name-Servern einen falschen Hostnamen zurückzuliefern, werden
+Spoofing (Reinlegen) genannt. Um sich davor zu schützen, kann der Resolver so
+konfiguriert werden, daß er überprüft, ob die gegebene IP-Adresse auch
+tatsächlich zum erhaltenen Hostnamen gehört. Wenn dies nicht der Fall ist,
+wird der Name verworfen und ein Fehler zurückgeliefert. Dieses Verhalten wird
+mit nospoof on eingestellt. Wenn NOSPOOF aktiviert ist (üblicherweise in
+Windows), wird aene Warnung an jeden User geschickt, &nbsp;'/quote pong ..' zu
+benutzen, wenn es beim Verbinden Probleme gibt.&nbsp; Voreingestellt ist 'no'.</p>
+ </div>
 <p><b><font size="+2"><a name="addtlfiles">5 &#8211; Additional Files</a></font></b></p><div class="desc">
   Zusätzlich zu den Konfigurationsdateien hat Unreal einige weitere Dateien,
   wie MOTD, OperMOTD, BotMOTD, und Rules. In der nachfolgenden Liste stehen die
