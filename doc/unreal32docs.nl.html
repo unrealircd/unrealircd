@@ -2439,12 +2439,12 @@ gemiddeld 2048:60=34 tekens per ban toe.</p>
  Een tijdsduur die specificeert hoelang een DNS server erover mag doen voordat
  er een timeout volgt. De tijd is een numerieke waarde, waarin de d voor dag staat,
  de h voor uur, m voor minute en s voor seconde. Voorbeeld: 1d2h3m betekent
- 1 dag, 2 uur en 3 minuten.</p>
+ 1 dag, 2 uur en 3 minuten (NOG NIET INGEVOERD).</p>
 <p><font class="set">set::dns::retries &lt;number-of-retries&gt;;</font><br>
  Een numerieke waarde die instelt hoeveel keer er opnieuw geprobeerd moet worden
- een DNS lookup te voltooien.</p>
+ een DNS lookup te voltooien (NOG NIET INGEVOERD).</p>
 <p><font class="set">set::dns::nameserver &lt;name-of-dns-server&gt;;</font><br>
- De hostnaam die gebruikt moet worden voor een DNS lookup.</p>
+ De hostnaam die gebruikt moet worden voor een DNS lookup (NOG NIET INGEVOERD).</p>
 <p><font class="set">set::dns::bind-ip &lt;ip&gt;;</font><br>
  Het IP waaraan gebonden moet worden voor het resolven. Bijna nooit nodig.</p>
 <p><font class="set">set::network-name &lt;name-of-network&gt;;</font><br>
@@ -2573,8 +2573,11 @@ gemiddeld 2048:60=34 tekens per ban toe.</p>
  Maximale wachttijd voor een antwoord. Dit is een waarde tussen 1 en 5, hoger kan niet vanwege
  een te hoge incorrectheid. Standaard is dit 3, en er is waarschijnlijk geen goede reden
  om dit aan te passen.</p>
-<p></p> </div>
+<p><font class="set">set::pingpong-warning &lt;yes|no&gt;</font><br>
+ Wanneer NOSPOOF aan staat (meestal op Windows), stuur dan een bericht naar de gebruiker
+ om '/quote pong ..' te typen als ze problemen hebben met verbinden? Standaard is no</p>
 
+<p></p> </div>
 <p><b><font size="+2">5 &#8211; Aanvullende bestanden<a name="addtlfiles"></a>
   </font></b></p><div class="desc">
  Als aanvulling op het configuariebestand heeft Unreal nog een aantal andere bestanden, zoals
