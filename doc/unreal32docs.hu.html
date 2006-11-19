@@ -188,7 +188,7 @@ Windows:<br>
 <li><b>*NIX verziók:</b>
 <ul>
 <li>Linux (2.2.*, 2.4.*, 2.6.*)
-<li>FreeBSD (4.*, 5.*)
+<li>FreeBSD (4.*, 5.*, 6.*)
 <li>NetBSD (2.*)
 <li>OpenBSD (3.7, 3.8, 3.9)
 <li>Solaris (9, 10)
@@ -2367,12 +2367,12 @@ set {
   Egy idõérték azon idõhossz meghatározására, ami alatt a DNS szervernek válaszolni kell,
   mielõtt idõkifutás történik. Az idõérték egy numerikus sztring a napot jelentõ "d",
   az órát jelentõ "h", a percet jelentõ "m" és a másodpercet jelentõ "s" karakterekkel.
-  Például az 1d2h3m jelentése 1 nap, 2 óra és 3 perc.</p>
+  Például az 1d2h3m jelentése 1 nap, 2 óra és 3 perc. (NINCS IMPLEMENTÁLVA)</p>
 <p><font class="set">set::dns::retries &lt;próbálkozások-száma&gt;;</font><br>
   Egy számérték, amely meghatározza, hányszor történjen újrapróbálkozás a DNS lekérdezésben,
-  ha hiba fordul elõ.</p>
+  ha hiba fordul elõ. (NINCS IMPLEMENTÁLVA)</p>
 <p><font class="set">set::dns::nameserver &lt;dns-szerver-neve&gt;;</font><br>
-  Meghatározza a DNS lekérdezésekhez használt szerver gazdanevét.</p>
+  Meghatározza a DNS lekérdezésekhez használt szerver gazdanevét. (NINCS IMPLEMENTÁLVA)</p>
 <p><font class="set">set::dns::bind-ip &lt;ip&gt;;</font><br>
   Meghatározza azt az IP címet, amelyre bindeljen a szerver a lekérdezésekhez; a lehetõ legritkábban van szükség rá.</p>
 <p><font class="set">set::network-name &lt;hálózat-neve&gt;;</font><br>
@@ -2499,6 +2499,9 @@ AU). A lekérdezések párhuzamosan kerülnek elküldésre, a leggyorsabb válasz nyer.
   Legfeljebb ennyi ideig vár az idõszerverek válaszára. Ez egy érték 1 és 5 között; több nem lehet,
   mert túl nagy pontatlanságot okozna. Ez az érték alapértelmezésben 3, és nem valószínû, hogy
   érdemes megváltoztatni.</p>
+ <p><font class="set">set::pingpong-warning &lt;yes|no&gt;</font><br>
+  Ha a NOSPOOF engedélyezett (általában Windowson), küldjön egy figyelmeztetést minden felhasználónak, hogy
+  használják a "/quote pong .." parancsot, ha kapcsolódási problémájuk van. Az alapértelmezés "no".</p>
 <p></p> </div>
 <p><b><font size="+2">5 &#8211; További fájlok<a name="addtlfiles"></a>
   </font></b></p><div class="desc">
