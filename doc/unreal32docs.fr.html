@@ -2303,11 +2303,11 @@ Ensuite, dans votre unrealircd.conf vous ajoutez un bloc cgiirc :
 <p><font class="set">set::dns::timeout &lt;timevalue&gt;;</font><br>
   Une valeur de temps sp&eacute;cifie la dur&eacute;e qu'un serveur DNS a pour r&eacute;pondre. 
   Une valeur de temps est un num&eacute;rique avec d pour jour, h pour heure, 
-  m pour minutes, et s pour secondes, par exemple 1d2h3m signifie 1 jour, 2 heures, 3 minutes.</p>
+  m pour minutes, et s pour secondes, par exemple 1d2h3m signifie 1 jour, 2 heures, 3 minutes.(PAS IMPLEMENTE)</p>
 <p><font class="set">set::dns::retries &lt;number-of-retries&gt;;</font><br>
-  Une valeur num&eacute;rique sp&eacute;cifie le nombre de fois que la r&eacute;solution de DNS reprendra en cas d'&eacute;chec.</p>
+  Une valeur num&eacute;rique sp&eacute;cifie le nombre de fois que la r&eacute;solution de DNS reprendra en cas d'&eacute;chec.(PAS IMPLEMENTE)</p>
 <p><font class="set">set::dns::nameserver &lt;name-of-dns-server&gt;;</font><br>
-  Sp&eacute;cifie l'hostname du serveur qui sera utilis&eacute; pour la r&eacute;solution de DNS.</p>
+  Sp&eacute;cifie l'hostname du serveur qui sera utilis&eacute; pour la r&eacute;solution de DNS.(PAS IMPLEMENTE)</p>
 <p><font class="set">set::dns::bind-ip &lt;ip&gt;;</font><br>
   Sp&eacute;cifie l'ip &egrave; relier au r&eacute;solveur; presque jamais requis</p>
 <p><font class="set">set::network-name &lt;name-of-network&gt;;</font><br>
@@ -2439,6 +2439,8 @@ Ensuite, dans votre unrealircd.conf vous ajoutez un bloc cgiirc :
   Dur&eacute;e maximum pendant laquelle attendre la r&eacute;ponse du serveur. Cette valeur est entre 1 et 5,
   plus ce n'est pas possible car cela cr&eacute;e trop d'incoh&eacute;rences. Ce param&egrave;tre est
   r&eacute;gl&eacute; par d&eacute;faut &agrave; 3 et il n'y &agrave; probablement aucune bonne raison de la changer.</p>   
+ <p><font class="set">set::pingpong-warning &lt;yes|no&gt;</font><br>
+  Lorsque NOSPOOF est activ&eacute; (g&eacute;n&eacute;ralement sous Windows), envoye un avertissement &agrave; chaque utilisateur, d'utiliser '/quote pong ...' si ils ont des probl&egrave;mes pour se connecter. La valeur par d&eacute;faut est no.</p>
 <p></p> </div>
 <p><b><font size="+2">5 &#8211; Fichiers additionnels<a name="addtlfiles"></a>
   </font></b></p><div class="desc">
