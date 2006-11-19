@@ -2228,11 +2228,11 @@ set {
 <p><font class="set">set::options::fail-oper-warn;</font><br>
   Si est&aacute; presente, se notificar&aacute; al usuario de que su intento de /oper ha fallado y se ha logueado.</p>
 <p><font class="set">set::dns::timeout &lt;timevalue&gt;;</font><br>
-  Tiempo de espera del servidor DNS si no obtiene respuesta. Si el valor es una cadena alfanum&eacute;rica, use d para d&iacute;as, h para horas, m para minutos y s para segundos. Por ejemplo 1d2h3m significa 1 d&iacute;a, 2 horas y 3 minutos.</p>
+  Tiempo de espera del servidor DNS si no obtiene respuesta. Si el valor es una cadena alfanum&eacute;rica, use d para d&iacute;as, h para horas, m para minutos y s para segundos. Por ejemplo 1d2h3m significa 1 d&iacute;a, 2 horas y 3 minutos (NO IMPLEMENTADO).</p>
 <p><font class="set">set::dns::retries &lt;n&ordm;-intentos&gt;;</font><br>
-  N&uacute;mero de intentos si el servidor DNS no obtiene respuesta.</p>
+  N&uacute;mero de intentos si el servidor DNS no obtiene respuesta (NO IMPLEMENTADO).</p>
 <p><font class="set">set::dns::nameserver &lt;name-of-dns-server&gt;;</font><br>
-  Especifica el host del servidor a usar en las b&uacute;squedas DNS. </p>
+  Especifica el host del servidor a usar en las b&uacute;squedas DNS (NO IMPLEMENTADO).</p>
 <p><font class="set">set::dns::bind-ip &lt;ip&gt;;</font><br>
   Especifica la IP a enlazar para el resolver. Raras veces se usa.</p>
 <p><font class="set">set::network-name &lt;nombre-de-red&gt;;</font><br>
@@ -2323,6 +2323,8 @@ set {
  <p><font class="set">set::timesynch::timeout &lt;time&gt;</font><br>
   M&aacute;ximo tiempo a esperar las respuestas de los servidores de hora. Este valor debe estar entre 1 y 5 segundos. No es posible m&aacute;s alto porque puede causar demasiada diferencia de hora. 
   Por defecto es 3 y no hay ninguna raz&oacute;n para cambiarlo.</p>
+ <p><font class="set">set::pingpong-warning &lt;yes|no&gt;</font><br>
+  Cuando NOSPOOF está activo (normalmente lo está en Windows), envía un mensaje de advertencia a cada usuario para que use '/quote pong ..' si tiene problemas para conectar. Por defecto está en 'no'.</p>
 </div>
 <p><b><font size="+2">5 &#8211; Archivos adicionales <a name="addtlfiles"></a>
   </font></b></p>
