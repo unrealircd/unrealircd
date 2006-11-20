@@ -3207,7 +3207,7 @@ engellemek
 için kullanýlýr. Burada belirtilecek zaman deðeri için; d günü, h saati, m
 dakikayý ve s ise saniyeyi temsil eder. Örneðin 1d2h3m gibi bir deðerin 
 anlamý 1
-gün, 2 saat ve 3 dakikadýr.</P>
+gün, 2 saat ve 3 dakikadýr. </P>
 <P><FONT class=set>set::prefix-quit
 &lt;çýkýþ-mesajý-için-önek&gt;;</FONT><BR>Burda belirtilen
 önek çýkýþ mesaj metninin baþlangýcýna eklenir. Eðer burda deðer 0 olarak
@@ -3338,15 +3338,14 @@ bir zaman dilimi içerisinde yanýt göndermesi gerektiðini belirtmenize olanak
 saðlar. Burada belirtilecek numerik deðerde d günü, h saati, m dakikayý, s 
 ise
 saniyeyi temsil eder, örneðin 1d2h3m olarak belirtilen zaman deðeri 1 gün, 2
-saat ve 3 dakikayý temsil eder.</P>
+saat ve 3 dakikayý temsil eder. (TAMAMLANMADI)</P>
 <P><FONT class=set>set::dns::retries
-&lt;number-of-retries&gt;;</FONT><BR>A numeric value
-specifying the number of times the DNS lookup will be retried if failure
-occurs.</P>
+&lt;number-of-retries&gt;;</FONT><BR>DNS cozumlenmesinin basarisiz
+olmasi durumda DNS cozumlemesinin kac kez tekrarlanacagini belirtir. (TAMAMLANMADI)</P>
 <P><FONT class=set>set::dns::nameserver 
 &lt;dns-sunucu-ismi&gt;;</FONT><BR>DNS aramalarýnda kullanýlacak, sunucunun 
 hostname'ini
-belirtir.</P>
+belirtir. (TAMAMLANMADI)</P>
 <P><FONT class=set>set::dns::bind-ip
 &lt;ip&gt;;</FONT><BR>Çözümleyici için baðlanýlacak IP'yi
 belirtir, genellikle belirtilmeye gerek duyulmaz.</P>
@@ -3562,6 +3561,9 @@ belirtmenize olanak saðlar. Burada 1 ve 5 arasýnda bir deðer
 belirtilmelidir,
 beþten büyük sayýlar belirtilemez. Default deðeri 3’tür ve eðer iyi bir
 sebebiniz yoksa bunu deðiþtirmeyin.</P>
+<p><font class="set">set::pingpong-warning &lt;yes|no&gt;</font><br> 
+NOSPOOF ozelligi aktif iken (genellikle Windows), baglanirken sorun yasayan her kullaniciya '/quote pong ..' uyarisinin
+gonderilmesini ya da gonderilmemesini saglar. Default degeri no'dur.</p> 
 <P></P></DIV>
 <P><B><FONT size=+2>5 – Ek Dosyalar<A name=addtlfiles></A>
 </FONT></B></P>
