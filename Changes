@@ -1455,3 +1455,5 @@
 - Changed some minor Makefile stuff
 - Fixed belarussian-w1251 charset.. accidently copied a "'" which caused an internal
   error.
+- Added TOPIC description to serverprotocol.html, reported by avb (#3105).
+- Fixed PROTOCTL description in serverprotocol.html, shouldn't have had a :. Reported by Muisje (#3013).
