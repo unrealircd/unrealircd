@@ -1452,3 +1452,6 @@
 - Rejecting fake +z modes in conf, reported by rve (#0002532).
 - Improved description of link::hub/leaf/leafdepth in unreal32docs.html reported by Bugz (#2623),
   also fixed typo (leafdepth, not leaf-depth), reported by monas (#3083).
+- Changed some minor Makefile stuff
+- Fixed belarussian-w1251 charset.. accidently copied a "'" which caused an internal
+  error.

@@ -622,7 +622,7 @@ char latin1=0, latin2=0, w1250=0, w1251=0, chinese=0;
 		 * 128-159, 161, 162, 178, 179 and 223-254
 		 * Corrected 01.11.2006 to more "correct" behavior by Bock
 		 */
-		charsys_addallowed("ÀÁÂÃÄÅ¨ÆÇ²ÉÊËÌÍÎÏÐÑÒÓ¡ÔÕÖ×ØÛÜÝÞ‗אבגדהו¸זח³יךכלםמןנסעף¢פץצקרûü‎‏ÿ'");
+		charsys_addallowed("ÀÁÂÃÄÅ¨ÆÇ²ÉÊËÌÍÎÏÐÑÒÓ¡ÔÕÖ×ØÛÜÝÞ‗אבגדהו¸זח³יךכלםמןנסעף¢פץצקרûü‎‏ÿ");
 	}	
 	
 	if (w1251 || !strcmp(name, "ukrainian-w1251"))
