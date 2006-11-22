@@ -1380,3 +1380,6 @@
   Brad (#2488), vonitsanet (#2467).
 - Made OpenSSL version dynamic, reported by buildsmart (#0002975).
 - Rejecting fake +z modes in conf, reported by rve (#0002532).
+- Changed some minor Makefile stuff
+- Fixed belarussian-w1251 charset.. accidently copied a "'" which caused an internal
+  error.
