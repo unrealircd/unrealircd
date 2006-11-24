@@ -1471,3 +1471,5 @@
 - Fixed charsys config error message sometimes saying stuff about set::accept-language,
   which should be set::allowed-nickchars (the former does not exist). Reported and
   patch provided by avb (#0003122).
+- Fixed compile bug on Solaris due to missing INADDR_NONE, fix provided by Schak
+  (#0003125).

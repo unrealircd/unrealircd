@@ -81,3 +81,6 @@ struct sockaddr_storage
 #endif /* SOCKADDR_IN_HAS_LEN */
 #endif /* HAVE_STRUCT_SOCKADDR_STORAGE */
 
+#ifndef INADDR_NONE
+#define INADDR_NONE 0xffffffff
+#endif
