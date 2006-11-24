@@ -372,7 +372,7 @@ int charsys_postconftest(void)
 int x=0;
 	if ((langav & LANGAV_ASCII) && (langav & LANGAV_GBK))
 	{
-		config_error("ERROR: set::accept-language specifies incorrect combination "
+		config_error("ERROR: set::allowed-nickchars specifies incorrect combination "
 		             "of languages: high-ascii languages (such as german, french, etc) "
 		             "cannot be mixed with chinese/..");
 		return -1;
@@ -393,7 +393,7 @@ int x=0;
 	    x++;
 	if (x > 1)
 	{
-		config_status("WARNING: set::accept-language: "
+		config_status("WARNING: set::allowed-nickchars: "
 		            "Mixing of charsets (eg: latin1+latin2) can cause display problems");
 	}
 	return 1;
@@ -430,7 +430,7 @@ LangList *l = charsys_find_language(name);
 	}
 	if (!strcmp(name, "euro-west"))
 	{
-		config_error("set::accept-language: ERROR: 'euro-west' got renamed to 'latin1'");
+		config_error("set::allowed-nickchars: ERROR: 'euro-west' got renamed to 'latin1'");
 		return 0;
 	}
 	return 0;

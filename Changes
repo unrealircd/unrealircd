@@ -1468,3 +1468,6 @@
   like SAJOIN.
 - Finally fixed /RESTART issue on windows for good, should now always restart correctly.
   Patch provided by BuHHunyx and Bock (#0002734).
+- Fixed charsys config error message sometimes saying stuff about set::accept-language,
+  which should be set::allowed-nickchars (the former does not exist). Reported and
+  patch provided by avb (#0003122).
