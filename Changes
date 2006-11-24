@@ -1382,4 +1382,11 @@
 - Rejecting fake +z modes in conf, reported by rve (#0002532).
 - Changed some minor Makefile stuff
 - Fixed belarussian-w1251 charset.. accidently copied a "'" which caused an internal
-  error.
+  error, reported by Bock (#0003114).
+- Added information about extbans to help.conf (/HELPOP ?EXTBANS). Patch from Bock
+  (#0003113).
+- Made SAPART work for mulitple channels, just like SAJOIN. Patch provided by Bock
+  (#0003064). This also fixes SAPART now being announced to all opers globally, just
+  like SAJOIN.
+- Finally fixed /RESTART issue on windows for good, should now always restart correctly.
+  Patch provided by BuHHunyx and Bock (#0002734).

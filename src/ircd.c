@@ -166,7 +166,11 @@ extern void init_glines(void);
 extern void tkl_init(void);
 
 MODVAR TS   last_garbage_collect = 0;
+#ifndef _WIN32
 MODVAR char **myargv;
+#else
+LPCSTR cmdLine;
+#endif
 int  portnum = -1;		/* Server port number, listening this */
 char *configfile = CONFIGFILE;	/* Server configuration file */
 int  debuglevel = 10;		/* Server debug level */
@@ -357,7 +361,7 @@ void server_reboot(char *mesg)
 	if (!IsService)
 	{
 		CleanUp();
-		(void)execv(myargv[0], myargv);
+		WinExec(cmdLine, SW_SHOWDEFAULT);
 	}
 #endif
 #ifndef _WIN32
@@ -998,7 +1002,11 @@ int InitwIRCD(int argc, char *argv[])
 		exit(5);
 	}
 #endif	 /*CHROOTDIR*/
+#ifndef _WIN32
 	myargv = argv;
+#else
+	cmdLine = GetCommandLine();
+#endif
 #ifndef _WIN32
 	(void)umask(077);	/* better safe than sorry --SRB */
 #else
