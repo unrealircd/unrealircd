@@ -1454,10 +1454,17 @@
   also fixed typo (leafdepth, not leaf-depth), reported by monas (#3083).
 - Changed some minor Makefile stuff
 - Fixed belarussian-w1251 charset.. accidently copied a "'" which caused an internal
-  error.
+  error, reported by Bock (#0003114).
 - Added TOPIC description to serverprotocol.html, reported by avb (#3105).
 - Fixed PROTOCTL description in serverprotocol.html, shouldn't have had a :. Reported by Muisje (#3013).
 - Removed all files in networks/, the directory itself may stay for now. Those files were
   old, newest one dating back to 2002 (most of them 2001)... much better if this is handled
   internally by the networks themselves anyway (and then they can put cloak keys in their
   network file too, which they now can't ;p). I wonder if someone actually still used it anyway.
+- Added information about extbans to help.conf (/HELPOP ?EXTBANS). Patch from Bock
+  (#0003113).
+- Made SAPART work for mulitple channels, just like SAJOIN. Patch provided by Bock
+  (#0003064). This also fixes SAPART now being announced to all opers globally, just
+  like SAJOIN.
+- Finally fixed /RESTART issue on windows for good, should now always restart correctly.
+  Patch provided by BuHHunyx and Bock (#0002734).
