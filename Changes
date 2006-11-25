@@ -1401,3 +1401,4 @@
 - Improved description of link::hub/leaf/leafdepth in unreal32docs.html reported by Bugz
   (#2623), also fixed typo (leafdepth, not leaf-depth), reported by monas (#3083).
 - c-ares resolver: upgrade to 1.3.2.
+- upgraded windows c-ares (areslib.lib) as well.
