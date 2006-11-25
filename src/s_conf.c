@@ -3512,6 +3512,8 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 	}
 	ircstrdup(class->name, ce->ce_vardata);
 
+	class->connfreq = 60; /* default */
+
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "pingfreq"))
@@ -3679,12 +3681,6 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 	{
 		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 			"class::pingfreq");
-		errors++;
-	}
-	if (!has_connfreq)
-	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			"class::connfreq");
 		errors++;
 	}
 	if (!has_maxclients)
