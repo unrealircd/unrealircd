@@ -1398,3 +1398,5 @@
 - Fixed bug where omitting class::connfreq would result in a huge connection attempt
   flood when autoconnect was enabled. We now set class::connfreq to 60 if it's not
   specified. Reported by Milliways (#0003018).
+- Improved description of link::hub/leaf/leafdepth in unreal32docs.html reported by Bugz
+  (#2623), also fixed typo (leafdepth, not leaf-depth), reported by monas (#3083).
