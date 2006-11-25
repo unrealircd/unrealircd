@@ -1473,3 +1473,6 @@
   patch provided by avb (#0003122).
 - Fixed compile bug on Solaris due to missing INADDR_NONE, fix provided by Schak
   (#0003125).
+- Fixed bug where ommitting class::connfreq would not give a config error, and would
+  cause a huge connection attempt flood when autoconnect was enabled. Reported by
+  Milliways (#0003018).

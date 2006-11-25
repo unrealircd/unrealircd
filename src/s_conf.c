@@ -3492,6 +3492,12 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 			"class::pingfreq");
 		errors++;
 	}
+	if (!has_connfreq)
+	{
+		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			"class::connfreq");
+		errors++;
+	}
 	if (!has_maxclients)
 	{
 		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
