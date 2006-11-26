@@ -1,4 +1,4 @@
-Unreal3.2.5 Release Notes
+Unreal3.2.5-cvs Release Notes
 ==========================
 
 If you are upgrading, please take a minute to read these release notes.
@@ -16,88 +16,93 @@ http://dev.unrealircd.com/ and http://dev.unrealircd.com/wiki/Coders_Contest
   Read them before asking for help.
 - Report bugs at http://bugs.unrealircd.org/
 - When upgrading a network, we assume you are upgrading from the previous
-  version (3.2.4). Upgrading from 3.2.3 is ok as well.
+  version (3.2.5). Upgrading from 3.2.3 or 3.2.4 should be ok as well.
   However, if you have a network running with servers that are several versions behind
   (eg: 3.2.1) then you might experience small (desynch) problems.
   Please also minimize the time you have multiple versions running, a few days or
   one week is generally not a problem, but having mixed versions on a network for several
   weeks or months is not recommended.
+- The purpose of the sections below (NEW, CHANGED, MINOR, etc) is to be a SUMMARY of
+  the changes in this release. There have been 80+ changes, and trying to mention them
+  all would be useless, see the Changelog for the full list of changes.
 
 ==[ NEW ]==
-- CGI:IRC Host spoofing support. This means you can mark certain CGI:IRC gateways
-  as trusted, and then the IRCd will show the real IP/host everywhere for those
-  users, instead of the IP/host of the CGI:IRC gateway. See docs section 4.36.
-- Time synchronization support. This is enabled by default and will synch the IRCd
-  clock when Unreal is started. This should get rid of most time differences, though
-  the clock can still be off 1-3 seconds. If for some reason no reply from the time
-  servers is received within 3 seconds, then the IRCd will continue to boot as usual.
-  Several set::timesynch::* settings have been added, including set::timesynch::enabled
-  which you can set to 'no' to disable time synching (eg: because you already run ntpd).
-- NAMESX support. This (mostly) fixes a long-standing IRC protocol bug. If, for
-  example, a user was +vo and then deops (-o), other clients could not always
-  know the user was then still +v, now they can. Supported by XChat and newest mIRC.
-- Chained SSL certificates support
-- Russian doc/example.ru.conf and Turkish doc/unreal32docs.tk.html
+- None. Except some behavior changes, see next.
 
 ==[ CHANGED ]==
-- PREFIX_AQ (the ~ and & symbols for +q and +a) are now ENABLED BY DEFAULT on *NIX.
-  They have always been enabled on Windows, so it made sense to do the same for *NIX.
-  Pretty much all major clients support it now (mIRC, xchat, irssi, epic, PJIRC,
-  CGI:IRC, etc).
-- If DNS info (*NIX: /etc/resolv.conf, Win: registry) is updated, a '/REHASH -dns'
-  now rereads this info, no restart needed anymore.
-- me::numeric can now be changed without a restart, if no servers are linked.
-- Improved windows crash info: we now create minidumps, this should aid debugging.
-- '/quote dns i' (as an oper) now shows nameserver info again
-- Local oper may now use /TRACE
-- If channel is +m but -t, you now need at least voice (+v) to change the topic.
-- When checking if someone is banned, we now always verify bans against the cloaked host,
-  even if the user has a vhost and the cloaked host is not visible / unused.
-- Extra binary compatibility checks: (gcc) compiler version
-- Allow /*LINE'ing of literalident@* (eg: gline clones@*). Things like *clones@* are
-  still denied though, and this will not be changed. Use services AKILL instead.
-- Command aliases: made empty parameters work if the alias allows it (eg, the alias
-  uses .* as a regex and not .+)
-- Moved another 2K lines from core to modules, this means 31K lines are now in modules
-  and can be upgraded on the fly.
-- Real Command Aliases: This makes it possible to, for example, alias '/GLINEBOT' to
-  'GLINE <param> 2d Bots are not permitted on this network, etcetc'. For more information,
-  see the docs on the alias block and/or search for "glinebot" in doc/example.conf.
-- /etc/hosts is no longer checked (it never did before 3.2.3 either)
+- SSL: The server certificate and keys can now be reloaded via '/REHASH -ssl', no
+  restart needed anymore.
+- IRCOps can now view the bans of a channel ("MODE #channel b") from the outside
+- Moved failed /OPER attempt notices to snomask +o and made them sent to all servers.
+  This means all failed oper attempts can now be seen globally. Plus, the UID is now
+  always shown (like for incorrect host and maxlogin), unless trying an unknown oper acc.
+- The annoying "please type /quote pong" message is now no longer shown on connect, unless
+  explicitly enabled by setting set::pingpong-warning to 'yes'. (mainly Windows)
+- /INVITE's from people on the silence list are now silently ignored
+- SAPART now works for multiple channels (again)
+- Non-SSL users are now kicked when netsynching and channel is +z (SSL only)
+- No longer showing server numerics in /MAP to non-opers (too confusing anyway)
+- Updated ukrainian-w1251, belarussian-w1251 and catalan character sets
+- Spamfilter + IPv6: for target 'u' (nick!user@host:realname bans), the 'host' part
+  is now in brackets if it's an IPv6 address (eg: blah!blah@[1:2:3:4:5:6:7:8]:hello)
+- loadmodule errors are improved
+- Snomask 'N' will no longer show nickchanges of U-lined servers
+- The set::dns block is now no longer mandatory, because it is actually not used
+  (except for set::dns::bind-ip) and fetched from /etc/resolv.conf (*NIX) or the
+  registry (Windows) instead. This has always been the case, but has never been documented.
+- Various doc updates ('/HELPOP ?EXTBANS', and some unreal32docs improvements)
 
 ==[ MAJOR BUGS FIXED ]==
-- Spamfilter was not always working properly
-- MS Visual studio 2005 (8.x) was unable to compile Unreal and/or caused crashes
-- Certain IPv6 listen blocks could crash the ircd on-boot/on-rehash
+- Fixed a crashbug which could happen in some rare cases
+- Fixed throttling not always being applied correctly
+- Windows 2003: Fixed crash on-boot if no nameserver was set
+- Windows: Fixed /RESTART not always working properly (leaving the ircd dead)
 
 ==[ MINOR BUGS FIXED ]==
-- "Looking up your hostname" message was missing if set::options::show-connect-notice
-  was enabled (other messages, like "looking up ident" were shown, however)
-- It was sometimes impossible to update a link { } block: all old settings would still
-  be used, this happened if connfreq was low. This might also have caused crashes.
-- Netsynch problem, which could cause the wrong modes to be applied to a channel in
-  some rare cases.
-- Setting set::maxdccallow to 0 (or lower) still allowed one entry to be added
-- Spamfilter oversized-checking is no longer done when removing a spamfilter
-- Operator count bug (there might still be others...)
-- Some chinese-* charsets could not be selected individually
-- No longer requiring a C++ compiler (was caused by resolver in 3.2.4)
-- Added workaround for "make: Permission denied" bug in some FreeBSD's
-
-==[ REMOVED ]==
-- MS Visual Studio 6 support, but this did not work anymore anyway...
+- Remote includes: should now work with latest curl again due to c-ares upgrade
+- a bunch of OperOverride bugs.. messages being sent when they shouldn't, some things
+  not being logged or broadcasted, etc.
+- Desynch problem caused by +Q
+- SAJOIN now properly deals with +z channels
+- "MODE #channel" showing extended channel mode parameters if not in channel
+- Channel Mode 'f' did not properly eat a parameter on unset (even though it would
+  show like it did), this could have caused desynchs in some cases.
+- Fixed handling of CNAME's once again (now showing original name instead of fwded name)
+- The "looking up your hostname" message was always sent, regardless of show-connect-info
+- deny link { } blocks were being ignored by autoconnect
+- Windows: SSL private key prompt caused a crash
+- Windows: Unable to write to service.log caused a crash
+- set::allowed-nickchars could cause a segfault for some unknown languages
+- If class::connfreq was omitted and used for a server link, this would cause a huge
+  connection flood when autoconnect was used.
+- set::dns::bind-ip was seen as a duplicate when it actually wasn't
+- And more... see Changelog
 
 ==[ KNOWN ISSUES ]==
-- Windows 2003: Crashes directly on-boot have been reported, while other W2003 servers
-  work perfectly fine (including the one we used for testing). No pattern in this has
-  been found yet, but the bug is somewhere in the resolver (c-ares).
 - Regexes: Be careful with backreferences (\1, etc), certain regexes can slow the IRCd
   down considerably and even bring it to a near-halt. In the spamfilter user target it's
   usually safe though.
 - Regexes: Possessive quantifiers such as, for example, "++" (not to be confused with "+")
   are not safe to use, they can easily freeze the IRCd.
-- Windows: The /RESTART command will work, but the second time you do a /RESTART the
-  IRCd will "crash" with a dialogbox.
+
+==[ SERVICES / CODERS ]==
+- Note: this is a new section, it describes changes specifically for services coders
+  and unreal module coders. Note that other changes (such as new modes, etc) mentioned
+  elsewhere in this document might affect you as well. For more info about a particular
+  change mentioned below (such as a new hooktype), see the Changelog.
+- New hooktype: HOOKTYPE_SILENCED (called when a message is not delivered due to silence)
+- New hooktype: HOOKTYPE_POST_SERVER_CONNECT (called after users synched to remote server)
+- Fixed CALLBACKTYPE_CLOAK_EX, wasn't working properly at all
+- Fixed SVSNICK: cAsE cHaNgE no longer causes a collision, fixed QUIT not being sent
+- SVSMODE/SVS2MODE: when doing -x on a user, the virthost is removed from memory.
+  This means services can now properly "unvhost" a user and give them back their cloaked
+  host by doing "SVSMODE User -x+x".
+- Services timestamps for users are now properly treated as unsigned long, previously
+  some trouble could arrise when netsynching for values larger than 2147483647.
+- 'SVSMOTD !' now removes the svsmotd from memory as well.
+- Fixed SVSMODE -b User not always removing all bans for that user (specifcally, bans on
+  the cloaked host, when the user has a vhost).
+- Fixed SVSO - not removing coadmin (+C)
 
 ==[ ADDITIONAL INFO ]==
 * See Changelog for more details

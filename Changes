@@ -1403,3 +1403,4 @@
 - c-ares resolver: upgrade to 1.3.2.
 - upgraded windows c-ares (areslib.lib) as well.
 - fix for above
+- Added release notes for 3.2.6
