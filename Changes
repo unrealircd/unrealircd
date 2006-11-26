@@ -1477,3 +1477,4 @@
   flood when autoconnect was enabled. We now set class::connfreq to 60 if it's not
   specified. Reported by Milliways (#0003018).
 - c-ares resolver: upgrade to 1.3.2.
+- fix for above (c-ares win32 lib)
