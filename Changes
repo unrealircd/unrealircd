@@ -1463,9 +1463,9 @@
   network file too, which they now can't ;p). I wonder if someone actually still used it anyway.
 - Added information about extbans to help.conf (/HELPOP ?EXTBANS). Patch from Bock
   (#0003113).
-- Made SAPART work for mulitple channels, just like SAJOIN. Patch provided by Bock
-  (#0003064). This also fixes SAPART now being announced to all opers globally, just
-  like SAJOIN.
+- Made SAPART work for mulitple channels, just like SAJOIN. Reported by Snake and
+  SeigHart, patch provided by Bock (#0003064). This also fixes SAPART now being
+  announced to all opers globally, just like SAJOIN.
 - Finally fixed /RESTART issue on windows for good, should now always restart correctly.
   Patch provided by BuHHunyx and Bock (#0002734).
 - Fixed charsys config error message sometimes saying stuff about set::accept-language,
