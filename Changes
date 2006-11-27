@@ -1404,3 +1404,4 @@
 - upgraded windows c-ares (areslib.lib) as well.
 - fix for above
 - Added release notes for 3.2.6
+- Fixed help.conf typo
