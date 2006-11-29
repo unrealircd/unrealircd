@@ -7,7 +7,7 @@
 	</head>
 	<body>
 		<h1 style="text-align: center;">Unreal 3.2 Protocol Documentation</h1>
-		<h3 style="text-align: center;">Last update: 13 May 2006</h3>
+		<h3 style="text-align: center;">Last update: 29 November 2006</h3>
 		<h1>Table of Contents</h1>
 		<p><a href="#S1">1 Introduction</a></p>
 		<p><a href="#S2">2 Server Negotiation</a></p>
@@ -114,6 +114,7 @@
 		<p>The server.name is the same as that in the remote server's link:: block. When received from unreal servers, this will be the value of that server's me::name. The protocol version is the numeric protocol version (2306 for example), and the protocol flags are the server's compilation flags (described below). These two fields are checked against the deny version {} blocks in the remote server's configuration. A value of 0 for either field prevents deny version{} checking for that field. The server description can be anything. When received from unreal servers, it'll be the value of me::description.</p>
 		<p>The following version numbers have been used previously:</p>
 		<ul>
+			<li>2309 - Unreal 3.2.6</li>
 			<li>2308 - Unreal 3.2.5</li>
 			<li>2307 - Unreal 3.2.4</li>
 			<li>2306 - Unreal 3.2.3</li>
