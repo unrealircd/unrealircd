@@ -1,12 +1,6 @@
 Unreal3.2.6-rc1 Release Notes
 ==========================
 
-If you are upgrading, please take a minute to read these release notes.
-*NIX Users: PREFIX_AQ is now enabled by default. See under 'CHANGED' below.
-
-If you are a coder and want to help out with Unreal3.3* development, then check out
-http://dev.unrealircd.com/ and http://dev.unrealircd.com/wiki/Coders_Contest
-
 ==[ GENERAL INFORMATION ]==
 - If you are upgrading on *NIX, make sure you run 'make clean' and './Config'
   first before doing 'make'
