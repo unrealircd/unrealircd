@@ -1408,3 +1408,5 @@
 ** 3.2.6-rc1 release **
 - Get rid of some old stuff in release notes
 - Added donators since 3.2.5
+- Setting set::pingpong-warning didn't work, reported by vonitsanet, patch supplied by
+  avb (#0003131).

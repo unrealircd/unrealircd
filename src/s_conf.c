@@ -7216,6 +7216,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			CheckNull(cep);
 			CheckDuplicate(cep, check_target_nick_bans, "check-target-nick-bans");
 		}
+		else if (!strcmp(cep->ce_varname, "pingpong-warning")) {
+			CheckNull(cep);
+			CheckDuplicate(cep, pingpong_warning, "pingpong-warning");
+		}
 		else if (!strcmp(cep->ce_varname, "channel-command-prefix")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, channel_command_prefix, "channel-command-prefix");
