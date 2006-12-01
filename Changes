@@ -1479,3 +1479,6 @@
 - c-ares resolver: upgrade to 1.3.2.
 - fix for above (c-ares win32 lib)
 - Update serverprotocol.html with info for 3.2.6.
+- Added donators since 3.2.5
+- Setting set::pingpong-warning didn't work, reported by vonitsanet, patch supplied by
+  avb (#0003131).

@@ -290,6 +290,7 @@ struct SetCheck {
 	unsigned has_auto_join:1;
 	unsigned has_oper_auto_join:1;
 	unsigned has_check_target_nick_bans:1;
+	unsigned has_pingpong_warning:1;
 	unsigned has_oper_only_stats:1;
 	unsigned has_maxchannelsperuser:1;
 	unsigned has_maxdccallow:1;
