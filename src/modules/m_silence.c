@@ -103,7 +103,7 @@ DLLFUNC CMD_FUNC(m_silence)
 		if (parc < 2 || *parv[1] == '\0'
 		    || (acptr = find_person(parv[1], NULL)))
 		{
-			if (!(acptr->user))
+			if (acptr != sptr)
 				return 0;
 			for (lp = acptr->user->silence; lp; lp = lp->next)
 				sendto_one(sptr, rpl_str(RPL_SILELIST), me.name,
