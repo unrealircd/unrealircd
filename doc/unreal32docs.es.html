@@ -1873,14 +1873,16 @@ link &lt;nombre-servidor&gt; {
 <p><b>password-receive</b><br>
   Es la contrase&ntilde;a para validar uniones entrantes y puede ser encriptada (m&eacute;todos crypt, md5, sha1 y ripemd-160). Puede dejarlo como texto plano. Generalmente es el mismo que la contrase&ntilde;a anterior.</p>
 <p><b>hub vs leaf</b><br>
-  Un hub es un servidor con varios servidores unidos a &eacute;l. Un leaf s&oacute;lo tiene una uni&oacute;n, a su servidor. Un servidor o es un hub o un leaf, nunca ambos.</p>
+  Un hub es un servidor con varios servidores unidos a &eacute;l. Un leaf s&oacute;lo tiene una uni&oacute;n, a su servidor. 
+  Un servidor se considera leaf si no tiene la directriz hub. También es leaf si la directriz leaf es *, o leafdepth es 1.</p>
 <p><b>hub</b> (opcional)<br>
   Este valor es la m&aacute;scara de los servidores a los que puede conectar (ej: *.mi.red).</p>
 <p><b>leaf</b> (opcional)<br>
-  Este valor es la m&aacute;scara que este servidor actuar&aacute; como leaf.towards.
+  Este valor es una máscara de los servidores que este hub <b>no</b> conectará. Usando * es lo mismo que no usar ninguna directriz hub.
 </p>
 <p><b>leaf-depth</b> (opcional)<br>
-  Si se especifica, la directriz leaf tambi&eacute;n debe especificarse. Este valor es la profundidad o n&uacute;mero de uniones que puede tener.</p>
+  Este valor especifica la profunidad (número de saltos) que este server puede alojar. Por ejemplo, 1 significa que el servidor no puede tener ningún link por debajo de él (un leaf), 2 significa que puede tener servidores linkados pero estos no pueden tener a su vez más servidores linkados por debajo suyo. 
+  Un valor de 0 significa que no hay límite, es el parámetro por defecto.</p>
 <p><b>class</b><br>
   Es la clase a la se relacionar&aacute; este servidor, generalmente la clase server.</p>
 <p><b>compression-level</b> (opcional)<br>
