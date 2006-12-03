@@ -32,7 +32,7 @@ INCLUDES = ../include/auth.h ../include/badwords.h ../include/channel.h \
 	../include/version.h ../include/whowas.h ../include/zip.h
 
 R_MODULES= \
-	 chmode_j.so chmode_f.so chmode_upQ.so chmode_upG.so
+	 jointhrottle.so chanflood.so nokicks.so wordcensor.so
 
 #note change of .c to .o
 COMMANDS=m_sethost.o m_chghost.o m_chgident.o m_setname.o m_setident.o \
@@ -86,21 +86,21 @@ m_akill.o: m_akill.c $(INCLUDES)
 #             and now the remaining modules...
 #############################################################################
 
-chmode_j.so: chmode_j.c $(INCLUDES)
+jointhrottle.so: jointhrottle.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o chmode_j.so chmode_j.c
+		-o jointhrottle.so jointhrottle.c
 
-chmode_f.so: chmode_f.c $(INCLUDES)
+chanflood.so: chanflood.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o chmode_f.so chmode_f.c
+		-o chanflood.so chanflood.c
 
-chmode_upQ.so: chmode_upQ.c $(INCLUDES)
+nokicks.so: nokicks.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o chmode_upQ.so chmode_upQ.c
+		-o nokicks.so nokicks.c
 
-chmode_upG.so: chmode_upG.c $(INCLUDES)
+wordcensor.so: wordcensor.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o chmode_upG.so chmode_upG.c
+		-o wordcensor.so wordcensor.c
 
 clean:
 	$(RM) -f *.o *.so *~ core
