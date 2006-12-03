@@ -1482,3 +1482,4 @@
 - Added donators since 3.2.5
 - Setting set::pingpong-warning didn't work, reported by vonitsanet, patch supplied by
   avb (#0003131).
+- Tagged chanmode modules as official (oops..)

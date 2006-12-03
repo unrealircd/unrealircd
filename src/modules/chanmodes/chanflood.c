@@ -97,6 +97,7 @@ DLLFUNC int MOD_INIT(chmode_f)(ModuleInfo *modinfo)
 {
 	CmodeInfo req;
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM);
+	MARK_AS_OFFICIAL_MODULE(modinfo);
 	memset(&req, 0, sizeof(req));
 	ModInfo = modinfo;
 
