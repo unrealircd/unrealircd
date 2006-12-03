@@ -29,9 +29,9 @@
 #endif
 
 
-ModuleHeader MOD_HEADER(chmode_upQ)
+ModuleHeader MOD_HEADER(nokicks)
   = {
-	"chmode_upQ",
+	"nokicks",
 	"$Id$",
 	"Channel Mode +Q",
 	"3.2-b8-1",
@@ -45,9 +45,9 @@ Cmode_t EXTMODE_NOKICKS = 0L;
 #define IsNoKicks(x)  (x->mode.extmode & EXTMODE_NOKICKS)
 
 
-char *chmode_upQ_can_kick(aClient *sptr, aClient *who, aChannel *chptr, char *comment, long sptr_flags, long who_flags);
+char *nokicks_can_kick(aClient *sptr, aClient *who, aChannel *chptr, char *comment, long sptr_flags, long who_flags);
 
-DLLFUNC int MOD_INIT(chmode_upQ)(ModuleInfo *modinfo)
+DLLFUNC int MOD_INIT(nokicks)(ModuleInfo *modinfo)
 {
 	CmodeInfo req;
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM);
@@ -60,22 +60,22 @@ DLLFUNC int MOD_INIT(chmode_upQ)(ModuleInfo *modinfo)
 	req.is_ok = extcmode_default_requirechop;
 	CmodeAdd(modinfo->handle, req, &EXTMODE_NOKICKS);
 
-	HookAddPCharEx(modinfo->handle, HOOKTYPE_CAN_KICK, chmode_upQ_can_kick);
+	HookAddPCharEx(modinfo->handle, HOOKTYPE_CAN_KICK, nokicks_can_kick);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(chmode_upQ)(int module_load)
+DLLFUNC int MOD_LOAD(nokicks)(int module_load)
 {
 	return MOD_SUCCESS;
 }
 
 
-DLLFUNC int MOD_UNLOAD(chmode_upQ)(int module_unload)
+DLLFUNC int MOD_UNLOAD(nokicks)(int module_unload)
 {
 	return MOD_SUCCESS;
 }
 
-char *chmode_upQ_can_kick(aClient *sptr, aClient *who, aChannel *chptr, char *comment, long sptr_flags, long who_flags)
+char *nokicks_can_kick(aClient *sptr, aClient *who, aChannel *chptr, char *comment, long sptr_flags, long who_flags)
 {
 static char retbuf[512];
 

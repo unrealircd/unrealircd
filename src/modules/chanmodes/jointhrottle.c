@@ -29,9 +29,9 @@
 #endif
 
 
-ModuleHeader MOD_HEADER(chmode_j)
+ModuleHeader MOD_HEADER(jointhrottle)
   = {
-	"chmode_j",
+	"jointhrottle",
 	"$Id$",
 	"Channel Mode +j",
 	"3.2-b8-1",
@@ -49,15 +49,15 @@ char *cmodej_conv_param(char *param_in, aClient *sptr);
 void cmodej_free_param();
 void *cmodej_dup_struct(void *r_in);
 int cmodej_sjoin_check(aChannel *chptr, void *ourx, void *theirx);
-int chmode_j_can_join(aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[]);
-int chmode_j_local_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[]);
+int jointhrottle_can_join(aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[]);
+int jointhrottle_local_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[]);
 static int isjthrottled(aClient *cptr, aChannel *chptr);
 static void cmodej_increase_usercounter(aClient *cptr, aChannel *chptr);
 EVENT(cmodej_cleanup_structs);
 int cmodej_cleanup_user2(aClient *sptr);
 int cmodej_channel_destroy(aChannel *chptr);
 
-DLLFUNC int MOD_INIT(chmode_j)(ModuleInfo *modinfo)
+DLLFUNC int MOD_INIT(jointhrottle)(ModuleInfo *modinfo)
 {
 	CmodeInfo req;
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM);
@@ -76,21 +76,21 @@ DLLFUNC int MOD_INIT(chmode_j)(ModuleInfo *modinfo)
 	req.sjoin_check = cmodej_sjoin_check;
 	CmodeAdd(modinfo->handle, req, &EXTMODE_JOINTHROTTLE);
 
-	HookAddEx(modinfo->handle, HOOKTYPE_CAN_JOIN, chmode_j_can_join);
-	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_JOIN, chmode_j_local_join);
+	HookAddEx(modinfo->handle, HOOKTYPE_CAN_JOIN, jointhrottle_can_join);
+	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_JOIN, jointhrottle_local_join);
 	HookAddEx(modinfo->handle, HOOKTYPE_CLEANUP_USER2, cmodej_cleanup_user2);
 	HookAddEx(modinfo->handle, HOOKTYPE_CHANNEL_DESTROY, cmodej_channel_destroy);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(chmode_j)(int module_load)
+DLLFUNC int MOD_LOAD(jointhrottle)(int module_load)
 {
 	EventAddEx(ModInfo->handle, "cmodej_cleanup_structs", 60, 0, cmodej_cleanup_structs, NULL);
 	return MOD_SUCCESS;
 }
 
 
-DLLFUNC int MOD_UNLOAD(chmode_j)(int module_unload)
+DLLFUNC int MOD_UNLOAD(jointhrottle)(int module_unload)
 {
 	sendto_realops("Mod_Unload was called??? Arghhhhhh..");
 	return MOD_FAILED;
@@ -319,7 +319,7 @@ int num=0, t=0;
 	}
 }
 
-int chmode_j_can_join(aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[])
+int jointhrottle_can_join(aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[])
 {
 	if (!IsAnOper(sptr) &&
 	    (chptr->mode.extmode & EXTMODE_JOINTHROTTLE) && isjthrottled(sptr, chptr))
@@ -328,7 +328,7 @@ int chmode_j_can_join(aClient *sptr, aChannel *chptr, char *key, char *link, cha
 }
 
 
-int chmode_j_local_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[])
+int jointhrottle_local_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[])
 {
 	cmodej_increase_usercounter(cptr, chptr);
 	return 0;

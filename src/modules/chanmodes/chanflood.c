@@ -29,9 +29,9 @@
 #endif
 
 
-ModuleHeader MOD_HEADER(chmode_f)
+ModuleHeader MOD_HEADER(chanflood)
   = {
-	"chmode_f",
+	"chanflood",
 	"$Id$",
 	"Channel Mode +f",
 	"3.2-b8-1",
@@ -83,17 +83,17 @@ char *cmodef_conv_param(char *param_in, aClient *cptr);
 void cmodef_free_param();
 void *cmodef_dup_struct(void *r_in);
 int cmodef_sjoin_check(aChannel *chptr, void *ourx, void *theirx);
-int chmode_f_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[]);
+int chanflood_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[]);
 EVENT(modef_event);
 int cmodef_channel_destroy(aChannel *chptr);
-char *chmode_f_pre_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
-int chmode_f_post_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
-int chmode_f_knock(aClient *sptr, aChannel *chptr);
-int chmode_f_local_nickchange(aClient *sptr, char *oldnick);
-int chmode_f_remote_nickchange(aClient *cptr, aClient *sptr, char *oldnick);
-int chmode_f_chanmode_fixme(aChannel *chptr, long mode);
+char *chanflood_pre_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
+int chanflood_post_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
+int chanflood_knock(aClient *sptr, aChannel *chptr);
+int chanflood_local_nickchange(aClient *sptr, char *oldnick);
+int chanflood_remote_nickchange(aClient *cptr, aClient *sptr, char *oldnick);
+int chanflood_chanmode_fixme(aChannel *chptr, long mode);
 
-DLLFUNC int MOD_INIT(chmode_f)(ModuleInfo *modinfo)
+DLLFUNC int MOD_INIT(chanflood)(ModuleInfo *modinfo)
 {
 	CmodeInfo req;
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM);
@@ -112,26 +112,26 @@ DLLFUNC int MOD_INIT(chmode_f)(ModuleInfo *modinfo)
 	req.sjoin_check = cmodef_sjoin_check;
 	CmodeAdd(modinfo->handle, req, &EXTMODE_FLOODLIMIT);
 
-	HookAddPCharEx(modinfo->handle, HOOKTYPE_PRE_CHANMSG, chmode_f_pre_chanmsg);
-	HookAddEx(modinfo->handle, HOOKTYPE_CHANMSG, chmode_f_post_chanmsg);
-	HookAddEx(modinfo->handle, HOOKTYPE_KNOCK, chmode_f_knock);
-	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_NICKCHANGE, chmode_f_local_nickchange);
-	HookAddEx(modinfo->handle, HOOKTYPE_REMOTE_NICKCHANGE, chmode_f_remote_nickchange);
-	HookAddEx(modinfo->handle, HOOKTYPE_MODECHAR_FIXME, chmode_f_chanmode_fixme);
-	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_JOIN, chmode_f_join);
-	HookAddEx(modinfo->handle, HOOKTYPE_REMOTE_JOIN, chmode_f_join);
+	HookAddPCharEx(modinfo->handle, HOOKTYPE_PRE_CHANMSG, chanflood_pre_chanmsg);
+	HookAddEx(modinfo->handle, HOOKTYPE_CHANMSG, chanflood_post_chanmsg);
+	HookAddEx(modinfo->handle, HOOKTYPE_KNOCK, chanflood_knock);
+	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_NICKCHANGE, chanflood_local_nickchange);
+	HookAddEx(modinfo->handle, HOOKTYPE_REMOTE_NICKCHANGE, chanflood_remote_nickchange);
+	HookAddEx(modinfo->handle, HOOKTYPE_MODECHAR_FIXME, chanflood_chanmode_fixme);
+	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_JOIN, chanflood_join);
+	HookAddEx(modinfo->handle, HOOKTYPE_REMOTE_JOIN, chanflood_join);
 	HookAddEx(modinfo->handle, HOOKTYPE_CHANNEL_DESTROY, cmodef_channel_destroy);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(chmode_f)(int module_load)
+DLLFUNC int MOD_LOAD(chanflood)(int module_load)
 {
 	EventAddEx(ModInfo->handle, "modef_event", 10, 0, modef_event, NULL);
 	return MOD_SUCCESS;
 }
 
 
-DLLFUNC int MOD_UNLOAD(chmode_f)(int module_unload)
+DLLFUNC int MOD_UNLOAD(chanflood)(int module_unload)
 {
 	sendto_realops("Mod_Unload was called??? Arghhhhhh..");
 	return MOD_FAILED;
@@ -756,7 +756,7 @@ int i;
 	return EXSJ_MERGE;
 }
 
-int chmode_f_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[])
+int chanflood_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[])
 {
 	/* I'll explain this only once:
 	 * 1. if channel is +f
@@ -837,14 +837,14 @@ char *p = retbuf;
 	return retbuf;
 }
 
-char *chmode_f_pre_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
+char *chanflood_pre_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
 {
 	if (MyClient(sptr) && (check_for_chan_flood(sptr, chptr) == 1))
 		return NULL; /* don't send it */
 	return text;
 }
 
-int chmode_f_post_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
+int chanflood_post_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
 {
 	if (!IsFloodLimit(chptr) || is_skochanop(sptr, chptr) || IsULine(sptr))
 		return 0;
@@ -864,7 +864,7 @@ int chmode_f_post_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice
 }
 
 #if 0
-int chmode_f_remotejoin(aClient *cptr, aClient *acptr, aChannel *chptr, char *parv[])
+int chanflood_remotejoin(aClient *cptr, aClient *acptr, aChannel *chptr, char *parv[])
 {
 	if (IsFloodLimit(chptr) && acptr->serv->flags.synced && !IsULine(acptr)) /* hope that's correctly copied? acptr/cptr fun */
 		do_chanflood(chptr, FLD_JOIN);
@@ -872,7 +872,7 @@ int chmode_f_remotejoin(aClient *cptr, aClient *acptr, aChannel *chptr, char *pa
 }
 #endif
 
-int chmode_f_knock(aClient *sptr, aChannel *chptr)
+int chanflood_knock(aClient *sptr, aChannel *chptr)
 {
 	if (IsFloodLimit(chptr) && !IsULine(sptr) && do_chanflood(chptr, FLD_KNOCK) && MyClient(sptr))
 		do_chanflood_action(chptr, FLD_KNOCK, "knock");
@@ -896,21 +896,21 @@ Membership *mp;
 	return 0;
 }
 
-int chmode_f_local_nickchange(aClient *sptr, char *oldnick)
+int chanflood_local_nickchange(aClient *sptr, char *oldnick)
 {
 	if (IsULine(sptr))
 		return 0;
 	return gotnickchange(sptr);
 }
 
-int chmode_f_remote_nickchange(aClient *cptr, aClient *sptr, char *oldnick)
+int chanflood_remote_nickchange(aClient *cptr, aClient *sptr, char *oldnick)
 {
 	if (IsULine(sptr))
 		return 0;
 	return gotnickchange(sptr);
 }
 
-int chmode_f_chanmode_fixme(aChannel *chptr, long modetype)
+int chanflood_chanmode_fixme(aChannel *chptr, long modetype)
 {
 ChanFloodProt *chp;
 

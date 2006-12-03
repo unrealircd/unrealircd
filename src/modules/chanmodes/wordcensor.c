@@ -29,9 +29,9 @@
 #endif
 
 
-ModuleHeader MOD_HEADER(chmode_upG)
+ModuleHeader MOD_HEADER(wordcensor)
   = {
-	"chmode_upG",
+	"wordcensor",
 	"$Id$",
 	"Channel Mode +G",
 	"3.2-b8-1",
@@ -50,7 +50,7 @@ char *chmodeG_pre_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice
 char *chmodeG_pre_local_part(aClient *sptr, aChannel *chptr, char *text);
 char *chmodeG_pre_local_quit(aClient *sptr, char *text);
 
-DLLFUNC int MOD_INIT(chmode_upG)(ModuleInfo *modinfo)
+DLLFUNC int MOD_INIT(wordcensor)(ModuleInfo *modinfo)
 {
 	CmodeInfo req;
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM);
@@ -69,13 +69,13 @@ DLLFUNC int MOD_INIT(chmode_upG)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(chmode_upG)(int module_load)
+DLLFUNC int MOD_LOAD(wordcensor)(int module_load)
 {
 	return MOD_SUCCESS;
 }
 
 
-DLLFUNC int MOD_UNLOAD(chmode_upG)(int module_unload)
+DLLFUNC int MOD_UNLOAD(wordcensor)(int module_unload)
 {
 	sendto_realops("Mod_Unload was called??? Arghhhhhh..");
 	return MOD_FAILED;
