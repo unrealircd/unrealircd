@@ -1484,3 +1484,9 @@
   avb (#0003131).
 - Tagged chanmode modules as official (oops..)
 - Modulized channel mode +G (src/modules/chanmodes/chmode_upG.c)
+- Now actually committed +G (different file, see next) ;)
+- Renamed all chanmodule modules:
+  +G = wordcensor
+  +j = jointhrottle
+  +Q = nokicks
+  +f = chanflood
