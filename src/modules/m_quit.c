@@ -99,9 +99,6 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (!IsServer(cptr) && IsPerson(sptr))
 	{
-#ifdef STRIPBADWORDS
-		int blocked = 0;
-#endif
 		int n;
 		char *s = comment;
 		Hook *tmphook;
@@ -113,11 +110,6 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (!prefix_quit || strcmp(prefix_quit, "no"))
 			s = ircsprintf(comment, "%s ",
 		    		BadPtr(prefix_quit) ? "Quit:" : prefix_quit);
-#ifdef STRIPBADWORDS
-		ocomment = (char *)stripbadwords_quit(ocomment, &blocked);
-		if (blocked)
-			ocomment = parv[0];
-#endif
 		n = dospamfilter(sptr, ocomment, SPAMF_QUIT, NULL, 0, NULL);
 		if (n == FLUSH_BUFFER)
 			return n;

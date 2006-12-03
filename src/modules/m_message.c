@@ -45,9 +45,8 @@
 #include "badwords.h"
 
 int _is_silenced(aClient *, aClient *);
-char *_stripbadwords_channel(char *str, int *blocked);
-char *_stripbadwords_message(char *str, int *blocked);
-char *_stripbadwords_quit(char *str, int *blocked);
+char *_stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked);
+char *stripbadwords_message(char *str, int *blocked);
 char *_StripColors(unsigned char *text);
 char *_StripControlCodes(unsigned char *text);
 
@@ -75,9 +74,7 @@ ModuleHeader MOD_HEADER(m_message)
 DLLFUNC int MOD_TEST(m_message)(ModuleInfo *modinfo)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	EfunctionAddPChar(modinfo->handle, EFUNC_STRIPBADWORDS_CHANNEL, _stripbadwords_channel);
-	EfunctionAddPChar(modinfo->handle, EFUNC_STRIPBADWORDS_MESSAGE, _stripbadwords_message);
-	EfunctionAddPChar(modinfo->handle, EFUNC_STRIPBADWORDS_QUIT, _stripbadwords_quit);
+	EfunctionAddPChar(modinfo->handle, EFUNC_STRIPBADWORDS, _stripbadwords);
 	EfunctionAddPChar(modinfo->handle, EFUNC_STRIPCOLORS, _StripColors);
 	EfunctionAddPChar(modinfo->handle, EFUNC_STRIPCONTROLCODES, _StripControlCodes);
 	EfunctionAdd(modinfo->handle, EFUNC_IS_SILENCED, _is_silenced);
@@ -450,44 +447,12 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 			    !IsULine(sptr) ? can_send(sptr, chptr, parv[2], notice) : 0;
 			if (!cansend)
 			{
-#ifdef STRIPBADWORDS
-				int blocked = 0;
-#endif
 				Hook *tmphook;
 
 				sendanyways = (strchr(CHANCMDPFX,parv[2][0]) ? 1 : 0);
 				text = parv[2];
 				if (MyClient(sptr) && (chptr->mode.mode & MODE_STRIP))
 					text = StripColors(parv[2]);
-#ifdef STRIPBADWORDS
-				if (MyClient(sptr))
-				{
- #ifdef STRIPBADWORDS_CHAN_ALWAYS
-					text = stripbadwords_channel(text,& blocked);
-					if (blocked)
-					{
-						if (!notice)
-							sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
-							    me.name, parv[0], chptr->chname,
-							    err_cantsend[6], p2);
-						continue;
-					}
- #else
-					if (chptr->mode.extmode & EXTMODE_STRIPBADWORDS)
-					{
-						text = stripbadwords_channel(text, &blocked);
-						if (blocked)
-						{
-							if (!notice)
-								sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
-								    me.name, parv[0], chptr->chname,
-								    err_cantsend[6], p2);
-							continue;
-						}
-					}
- #endif
-				}
-#endif
 
 				if (MyClient(sptr))
 				{
@@ -1059,7 +1024,7 @@ int cleaned = 0;
  * in both private and public messages
  */
 
-char *stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked)
+char *_stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked)
 {
 	regmatch_t pmatch[MAX_MATCH];
 	static char cleanstr[4096];
@@ -1155,35 +1120,14 @@ char *stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked)
 	return (cleaned) ? cleanstr : str;
 }
 
+char *stripbadwords_message(char *str, int *blocked)
+{
 #ifdef STRIPBADWORDS
-char *_stripbadwords_channel(char *str, int *blocked)
-{
-	return stripbadwords(str, conf_badword_channel, blocked);
-}
-
-char *_stripbadwords_message(char *str, int *blocked)
-{
 	return stripbadwords(str, conf_badword_message, blocked);
-}
-char *_stripbadwords_quit(char *str, int *blocked)
-{
-	return stripbadwords(str, conf_badword_quit, blocked);
-}
 #else
-char *_stripbadwords_channel(char *str, int *blocked)
-{
 	return NULL;
-}
-
-char *_stripbadwords_message(char *str, int *blocked)
-{
-	return NULL;
-}
-char *_stripbadwords_quit(char *str, int *blocked)
-{
-	return NULL;
-}
 #endif
+}
 
 /* Taken from xchat by Peter Zelezny
  * changed very slightly by codemastr

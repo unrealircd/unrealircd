@@ -59,14 +59,8 @@ unsigned short Channelmode_highest = 0;
 Cmode *ParamTable[MAXPARAMMODES+1];
 
 Cmode_t EXTMODE_NONOTICE = 0L;
-#ifdef STRIPBADWORDS
-Cmode_t EXTMODE_STRIPBADWORDS = 0L;
-#endif
 
 int extcmode_cmodeT_requirechop(aClient *cptr, aChannel *chptr, char *para, int checkt, int what);
-#ifdef STRIPBADWORDS
-int extcmode_cmodeG_requirechop(aClient *cptr, aChannel *chptr, char *para, int checkt, int what);
-#endif
 
 void make_extcmodestr()
 {
@@ -105,11 +99,6 @@ static void load_extendedchanmodes(void)
 	req.is_ok = extcmode_cmodeT_requirechop;
 	req.flag = 'T';
 	CmodeAdd(NULL, req, &EXTMODE_NONOTICE);
-#ifdef STRIPBADWORDS
-	req.flag = 'G';
-	req.is_ok = extcmode_cmodeG_requirechop;
-	CmodeAdd(NULL, req, &EXTMODE_STRIPBADWORDS);
-#endif
 }
 
 void	extcmode_init(void)
@@ -327,15 +316,6 @@ int extcmode_cmodeT_requirechop(aClient *cptr, aChannel *chptr, char *para, int 
 		return EX_ALLOW;
 	if (checkt == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
 		sendto_one(cptr, err_str(ERR_NOTFORHALFOPS), me.name, cptr->name, 'T');
-	return EX_DENY;
-}
-
-int extcmode_cmodeG_requirechop(aClient *cptr, aChannel *chptr, char *para, int checkt, int what)
-{
-	if (IsPerson(cptr) && is_chan_op(cptr, chptr))
-		return EX_ALLOW;
-	if (checkt == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
-		sendto_one(cptr, err_str(ERR_NOTFORHALFOPS), me.name, cptr->name, 'G');
 	return EX_DENY;
 }
 

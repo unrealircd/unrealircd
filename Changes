@@ -1483,3 +1483,4 @@
 - Setting set::pingpong-warning didn't work, reported by vonitsanet, patch supplied by
   avb (#0003131).
 - Tagged chanmode modules as official (oops..)
+- Modulized channel mode +G (src/modules/chanmodes/chmode_upG.c)

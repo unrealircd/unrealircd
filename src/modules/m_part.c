@@ -168,19 +168,6 @@ DLLFUNC CMD_FUNC(m_part)
 			if ((chptr->mode.mode & MODE_STRIP) && comment) {
 				comment = (char *)StripColors(comment);
 			}
-#ifdef STRIPBADWORDS
- #ifdef STRIPBADWORDS_CHAN_ALWAYS
-			if (comment)
-			{
-				comment = (char *)stripbadwords_channel(comment, &blocked);
-			}
- #else
-			if ((chptr->mode.extmode & EXTMODE_STRIPBADWORDS) && comment) {
-				comment = (char *)stripbadwords_channel(comment, &blocked);
-			}
- #endif
-#endif
-			
 		}
 		/* +M and not +r? */
 		if ((chptr->mode.mode & MODE_MODREG) && !IsRegNick(sptr) && !IsAnOper(sptr))

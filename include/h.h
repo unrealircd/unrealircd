@@ -735,9 +735,7 @@ extern MODVAR int (*place_host_ban)(aClient *sptr, int action, char *reason, lon
 extern MODVAR int (*dospamfilter)(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
 extern MODVAR int (*dospamfilter_viruschan)(aClient *sptr, aTKline *tk, int type);
 extern MODVAR void (*send_list)(aClient *cptr, int numsend);
-extern MODVAR char *(*stripbadwords_channel)(char *str, int *blocked);
-extern MODVAR char *(*stripbadwords_message)(char *str, int *blocked);
-extern MODVAR char *(*stripbadwords_quit)(char *str, int *blocked);
+extern MODVAR char *(*stripbadwords)(char *str, ConfigItem_badword *start_bw, int *blocked);
 extern MODVAR unsigned char *(*StripColors)(unsigned char *text);
 extern MODVAR const char *(*StripControlCodes)(unsigned char *text);
 extern MODVAR void (*spamfilter_build_user_string)(char *buf, aClient *acptr);
