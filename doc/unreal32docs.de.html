@@ -2608,19 +2608,23 @@ wie bei &quot;password-connect&quot;.
 </p>
 <p><b>hub oder leaf</b><br>
 Zu einem hub sind mehrere Server verbunden, ein leaf hat immer nur eine
-Verbindung. Ein Server ist entweder ein hub oder ein leaf - die beiden Optionen
-können nicht kombiniert werden.
+Verbindung. Ein Server ist solange ein leaf, wie es keine hub Anweisung gibt.
+Ebenso ist er ein leaf, wenn in der Anweisung lediglich * definiert ist oder die
+leaf Tiefe (Anzahl der hops) 1 ist.
 </p>
 <p><b>hub</b> (optional)<br>
 Der Wert ist eine Maske, auf welche Server dieser hub connecten darf (z.B.: *.my.net).
 </p>
 <p><b>leaf</b> (optional)<br>
-Der Wert ist eine Maske, dass dieser Server wie ein leaf in Richtung zum eigenen
-Server fungiert.
+Dieser Wert gibt an, zu welchen Servern dieser Hub <b>nicht</b> verbindet. Hier
+einen * anzugeben ist das selbe, wie keine hub Anweisung zu haben.
 </p>
 <p><b>leaf-depth</b> (optional)<br>
-Falls dies angegeben ist, sollte auch &quot;leaf&quot; angegeben sein. Angegeben
-wird die Tiefe (Anzahl der hops) die dieser Server darunter haben darf.
+Dieser Wert gibt die&nbsp; Tiefe (Anzahl der hops)an, die dieser Server darunter haben darf.
+Beispielsweise bedeutet 1, dass der Server keine Links hat (ist ein leaf), 2
+bedeutet, es kann zu Servern gelinkt werden, aber diese können zu keinem
+anderen linken (dieser Hub kann also nur zu leafs linken). Ein Wert von 0
+bedeutet, dass es kein Limit gibt und das ist auch Default.
 </p>
 <p><b>class</b><br>
 Die Klasse, in die der Server kommt, oft ist eine eigene Klasse für Server
