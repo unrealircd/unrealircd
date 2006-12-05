@@ -1411,3 +1411,6 @@
 - Setting set::pingpong-warning didn't work, reported by vonitsanet, patch supplied by
   avb (#0003131).
 - Don't show silence list to others
+- Improved detection of bad set::modes-on-oper and oper::modes, now rejecting things like
+  'o', 'z', and more.
+- Fix from above fixes an /OPER announce problem reported by Bock (#0003135).
