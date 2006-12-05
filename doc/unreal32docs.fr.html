@@ -1886,17 +1886,21 @@ deny channel {
 </p>
 <p><b>hub vs leaf</b><br>
   Un hub a plusieurs serveurs link&eacute; &agrave; lui, un leaf n'a qu'un seul link... le vôtre. 
-  Un serveur est soit un hub, soit un leaf, vous ne pouvez combiner ces options.
+  Un serveur est un leaf à moins qu'il n'ait une directive hub. C'est &eacute;galement un leaf si la directive est *, ou si leafdepth a comme valeur 1.
 </p>
 <p><b>hub</b> (optionnel)<br>
   Cette valeur est un masque des serveurs auquel ce hub peut se connecter (ex. : *.my.net).
 </p>
 <p><b>leaf</b> (optionnel)<br>
-  Cette valeur est un masque que ce serveur interpr&eacute;tera comme un leaf.
+  Cette valeur est un masque correspondant aux serveurs auquels ce hub <b>ne peut pas</b> se connecter.
+  Mettre * ici sera pareil &agrave; ne pas avoir de directive hub.
 </p>
-<p><b>leaf-depth</b> (optionnel)<br>
-  Si celui-ci est sp&eacute;cifier, alors leaf doit l'&ecirc;tre aussi. 
+<p><b>leafdepth</b> (optionnel)<br> 
   Cette valeur sp&eacute;cifie la profondeur (nombre de sauts) que ce serveur peut avoir derri&egrave;re lui.
+  Par exemple, 1 signifie que le serveur ne peut avoir aucun lien en dessous de lui (un leaf), 
+  2 signifie qu'il peut &ecric;tre li&eacute; &agrave; des serveurs mais que ceux-ci ne peuvent avoir rien du tout
+  derri&egrave;re eux (cela signifie que ce hub peut uniquement &ecirc;tre reli&eacute; &agrave des leaves).
+  Une valeur de O signifie aucune limite, et c'est la valeur par d&eacute;faut. 
 </p>
 <p><b>class</b><br>
   La classe dont ce serveur fait partie, souvent une classe de serveurs s&eacute;par&eacute;s est utilis&eacute; pour ceci.
