@@ -3137,12 +3137,14 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			/* oper::modes */
 			else if (!strcmp(cep->ce_varname, "modes")) 
 			{
-				if (strchr(cep->ce_vardata, 'z'))
-				{
-					config_error("%s:%i: oper::modes may not have +z",
-						cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-					errors++;
-				}
+				char *p;
+				for (p = cep->ce_vardata; *p; p++)
+					if (strchr("oOaANCrzS", *p))
+					{
+						config_error("%s:%i: oper::modes may not include mode '%c'",
+							cep->ce_fileptr->cf_filename, cep->ce_varlinenum, *p);
+						errors++;
+					}
 				if (has_modes)
 				{
 					config_warn_duplicate(cep->ce_fileptr->cf_filename,
@@ -6983,14 +6985,16 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			
 		}
 		else if (!strcmp(cep->ce_varname, "modes-on-oper")) {
+			char *p;
 			CheckNull(cep);
 			CheckDuplicate(cep, modes_on_oper, "modes-on-oper");
-			if (strchr(cep->ce_vardata, 'z'))
-			{
-				config_error("%s:%i: set::modes-on-oper may not have +z",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-				errors++;
-			}
+			for (p = cep->ce_vardata; *p; p++)
+				if (strchr("oOaANCrzS", *p))
+				{
+					config_error("%s:%i: set::modes-on-oper may not include mode '%c'",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, *p);
+					errors++;
+				}
 			templong = (long) set_usermode(cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "snomask-on-oper")) {

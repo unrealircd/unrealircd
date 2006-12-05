@@ -1490,3 +1490,6 @@
   +j = jointhrottle
   +Q = nokicks
   +f = chanflood
+- Improved detection of bad set::modes-on-oper and oper::modes, now rejecting things like
+  'o', 'z', and more.
+- Fix from above fixes an /OPER announce problem reported by Bock (#0003135).
