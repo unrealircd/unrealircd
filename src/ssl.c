@@ -644,6 +644,13 @@ static int fatal_ssl_error(int ssl_error, int where, aClient *sptr)
 	    break;
 	case SSL_ERROR_SYSCALL:
 	    ssl_errstr = "Underlying syscall error";
+	    /* TODO: then show the REAL socktet error instead...
+	     * unfortunately that means we need to have the 'untouched errno',
+	     * which is not always present since our function is not always
+	     * called directly after a failure. Hence, we should add a new
+	     * parameter to fatal_ssl_error which is called errno, and use
+	     * that here... Something for 3.2.7 ;) -- Syzop
+	     */
 	    break;
 	case SSL_ERROR_ZERO_RETURN:
 	    ssl_errstr = "Underlying socket operation returned zero";
@@ -663,6 +670,15 @@ static int fatal_ssl_error(int ssl_error, int where, aClient *sptr)
     sptr->flags |= FLAGS_DEADSOCKET;
     sendto_snomask(SNO_JUNK, "Exiting ssl client %s: %s: %s",
     	get_client_name(sptr, TRUE), ssl_func, ssl_errstr);
+	
+	if (where == SAFE_SSL_CONNECT)
+	{
+		char *myerr = ssl_errstr;
+		if (ssl_error == SSL_ERROR_SYSCALL)
+			myerr = STRERROR(errtmp);
+		sendto_failops_whoare_opers("Closing link: SSL_connect(): %s - %s", myerr, get_client_name(sptr, FALSE));
+	}
+	
 	if (errtmp)
 	{
 		SET_ERRNO(errtmp);
