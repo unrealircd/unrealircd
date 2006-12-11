@@ -1417,3 +1417,4 @@
 - Fixed SSL bug where an outgoing connect (either autoconnect, or /connect), would not
   show any error message when it failed. Error information has also been slightly
   improved. Reported by vonitsanet (#0003138).
+- Updated SVSNLINE syntax in help.conf (the remove-syntax).
