@@ -112,7 +112,7 @@ void (*send_list)(aClient *cptr, int numsend);
 char *(*stripbadwords)(char *str, ConfigItem_badword *start_bw, int *blocked);
 unsigned char *(*StripColors)(unsigned char *text);
 const char *(*StripControlCodes)(unsigned char *text);
-void (*spamfilter_build_user_string)(char *buf, aClient *acptr);
+void (*spamfilter_build_user_string)(char *buf, char *nick, aClient *acptr);
 int (*is_silenced)(aClient *sptr, aClient *acptr);
 
 static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {

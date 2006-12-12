@@ -1496,3 +1496,6 @@
 - Fixed SSL bug where an outgoing connect (either autoconnect, or /connect), would not
   show any error message when it failed. Error information has also been slightly
   improved. Reported by vonitsanet (#0003138).
+- Post-3.2.5 CVS-only bug: Fixed spamfilter on user target not working properly when
+  changing nicks (was still trying to match on the old nick), reported by vonitsanet
+  (#0003143).

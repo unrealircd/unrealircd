@@ -738,7 +738,7 @@ extern MODVAR void (*send_list)(aClient *cptr, int numsend);
 extern MODVAR char *(*stripbadwords)(char *str, ConfigItem_badword *start_bw, int *blocked);
 extern MODVAR unsigned char *(*StripColors)(unsigned char *text);
 extern MODVAR const char *(*StripControlCodes)(unsigned char *text);
-extern MODVAR void (*spamfilter_build_user_string)(char *buf, aClient *acptr);
+extern MODVAR void (*spamfilter_build_user_string)(char *buf, char *nick, aClient *acptr);
 extern MODVAR int (*is_silenced)(aClient *sptr, aClient *acptr);
 /* /Efuncs */
 extern MODVAR aMotd *opermotd, *svsmotd, *motd, *botmotd, *smotd;

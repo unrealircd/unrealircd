@@ -250,7 +250,7 @@ DLLFUNC CMD_FUNC(m_nick)
 	if (MyClient(sptr)) /* local client changin nick afterwards.. */
 	{
 		int xx;
-		spamfilter_build_user_string(spamfilter_user, sptr);
+		spamfilter_build_user_string(spamfilter_user, nick, sptr);
 		xx = dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, NULL);
 		if (xx < 0)
 			return xx;
@@ -1010,7 +1010,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		 *    yet (at all).
 		 *  -- Syzop
 		 */
-		spamfilter_build_user_string(spamfilter_user, sptr);
+		spamfilter_build_user_string(spamfilter_user, sptr->name, sptr);
 		xx = dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, &savetkl);
 		if ((xx < 0) && (xx != -5))
 			return xx;

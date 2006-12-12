@@ -78,7 +78,7 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 int _place_host_ban(aClient *sptr, int action, char *reason, long duration);
 int _dospamfilter(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
 int _dospamfilter_viruschan(aClient *sptr, aTKline *tk, int type);
-void _spamfilter_build_user_string(char *buf, aClient *acptr);
+void _spamfilter_build_user_string(char *buf, char *nick, aClient *acptr);
 
 extern MODVAR char zlinebuf[BUFSIZE];
 extern MODVAR aTKline *tklines[TKLISTLEN];
@@ -1369,10 +1369,10 @@ static char buf[256];
 	return buf;
 }
 
-void _spamfilter_build_user_string(char *buf, aClient *acptr)
+void _spamfilter_build_user_string(char *buf, char *nick, aClient *acptr)
 {
 	ircsprintf(buf, "%s!%s@%s:%s",
-		acptr->name, acptr->user->username, SpamfilterMagicHost(acptr->user->realhost), acptr->info);
+		nick, acptr->user->username, SpamfilterMagicHost(acptr->user->realhost), acptr->info);
 }
 
 
@@ -1389,7 +1389,7 @@ char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64]; /* n!u@h:r */
 	if (IsAnOper(sptr))
 		return 0;
 
-	spamfilter_build_user_string(spamfilter_user, sptr);
+	spamfilter_build_user_string(spamfilter_user, sptr->name, sptr);
 	return dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, flags, NULL);
 }
 
@@ -1403,7 +1403,7 @@ aClient *acptr;
 	for (i = LastSlot; i >= 0; i--)
 		if ((acptr = local[i]) && MyClient(acptr))
 		{
-			spamfilter_build_user_string(spamfilter_user, acptr);
+			spamfilter_build_user_string(spamfilter_user, acptr->name, acptr);
 			if (regexec(&tk->ptr.spamf->expr, spamfilter_user, 0, NULL, 0))
 				continue; /* No match */
 
@@ -1434,7 +1434,7 @@ aClient *acptr;
 	for (acptr = client; acptr; acptr = acptr->next)
 		if (IsPerson(acptr))
 		{
-			spamfilter_build_user_string(spamfilter_user, acptr);
+			spamfilter_build_user_string(spamfilter_user, acptr->name, acptr);
 			if (regexec(&tk->ptr.spamf->expr, spamfilter_user, 0, NULL, 0))
 				continue; /* No match */
 
