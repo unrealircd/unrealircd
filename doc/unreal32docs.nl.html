@@ -2014,17 +2014,20 @@ link &lt;server-name&gt; {
 </p>
 <p><b>hub vs leaf</b><br>
  Een hub heeft meerdere servers aan zich gelinkt, een leaf heeft maar 1 server.. naar jou.
- Een server is of een hub, of een leaf, je kan ze niet mengen.
+ Een server is altijd een leaf, tenzij je hub instelt. Ze is ook een leaf als je leaf * hebt, of leafdepth 1 is.
 </p>
 <p><b>hub</b> (optioneel)<br>
  De waarde is de mask van de servers waarmee deze hub mag verbinden (bijv. *.my.net)
 </p>
 <p><b>leaf</b> (optioneel)<br>
- De waarde is de mask van waartegen deze server zich als een leaf zal gedragen.
+ De waarde is de mask waartegen deze hub <b>niet> mag verbinden. Als je * instelt krijg je hetzelfde
+ effect als geen hub directive instellen.
 </p>
 <p><b>leaf-depth</b> (optioneel)<br>
- Wanneer leaf ingesteld is, moet dit ook worden ingesteld. De waarde is het aantal
- hops (aantal servers) welke deze server onder zich mag hebben.
+ Deze waarde geeft aan hoeveel hops (aantal servers) deze server onder zich mag hebben. Bijvoorbeeld,
+ 1 betekent dat deze server geen enkele andere server onder zich mag hebben (een leaf). 2 betekent dat
+ er gelinkt mag worden naar servers die geen servers onder zich hebben (een hub die alleen leafs linkt).
+ De waarde 0 betekent geen limiet en is de standaard waarde.
 </p>
 <p><b>class</b><br>
  De class waarin de server geplaatst wordt. Meestal is er een aparte server-class.
