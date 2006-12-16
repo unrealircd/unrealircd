@@ -40,7 +40,7 @@ Unreal3.2.6-rc1 Release Notes
 - Spamfilter + IPv6: for target 'u' (nick!user@host:realname bans), the 'host' part
   is now in brackets if it's an IPv6 address (eg: blah!blah@[1:2:3:4:5:6:7:8]:hello)
 - loadmodule errors are improved
-- Snomask 'N' will no longer show nickchanges of U-lined servers
+- Snomask 'N' will no longer show nick changes of U-lined servers
 - The set::dns block is now no longer mandatory, because it is actually not used
   (except for set::dns::bind-ip) and fetched from /etc/resolv.conf (*NIX) or the
   registry (Windows) instead. This has always been the case, but has never been documented.
@@ -93,9 +93,9 @@ Unreal3.2.6-rc1 Release Notes
   This means services can now properly "unvhost" a user and give them back their cloaked
   host by doing "SVSMODE User -x+x".
 - Services timestamps for users are now properly treated as unsigned long, previously
-  some trouble could arrise when netsynching for values larger than 2147483647.
+  some trouble could arise when netsynching for values larger than 2147483647.
 - 'SVSMOTD !' now removes the svsmotd from memory as well.
-- Fixed SVSMODE -b User not always removing all bans for that user (specifcally, bans on
+- Fixed SVSMODE -b User not always removing all bans for that user (specifically, bans on
   the cloaked host, when the user has a vhost).
 - Fixed SVSO - not removing coadmin (+C)
 
