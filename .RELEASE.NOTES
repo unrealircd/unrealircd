@@ -56,6 +56,7 @@ Unreal3.2.6-rc1 Release Notes
 - Remote includes: should now work with latest curl again due to c-ares upgrade
 - a bunch of OperOverride bugs.. messages being sent when they shouldn't, some things
   not being logged or broadcasted, etc.
+- Sometimes no error message was shown when linking to an SSL server failed
 - Desynch problem caused by +Q
 - SAJOIN now properly deals with +z channels
 - "MODE #channel" showing extended channel mode parameters if not in channel
