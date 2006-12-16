@@ -1421,3 +1421,4 @@
 - Post-3.2.5 CVS-only bug: Fixed spamfilter on user target not working properly when
   changing nicks (was still trying to match on the old nick), reported by vonitsanet
   (#0003143).
+** 3.2.6-rc2 release **
