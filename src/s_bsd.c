@@ -1260,7 +1260,6 @@ aClient *add_connection(aClient *cptr, int fd)
 			send(fd, zlinebuf, strlen(zlinebuf), 0);
 			goto add_con_refuse;
 		}
-#ifdef THROTTLING
 		else
 		{
 			int  val;
@@ -1278,7 +1277,6 @@ aClient *add_connection(aClient *cptr, int fd)
 			else if (val == 1)
 				add_throttling_bucket(&acptr->ip);
 		}
-#endif
 		acptr->port = ntohs(addr.SIN_PORT);
 	}
 

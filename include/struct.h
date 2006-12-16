@@ -1253,13 +1253,11 @@ struct _iplist {
 /*	struct irc_netmask  *netmask; */
 };
 
-#ifdef FAST_BADWORD_REPLACE
 #define BADW_TYPE_INVALID 0x0
 #define BADW_TYPE_FAST    0x1
 #define BADW_TYPE_FAST_L  0x2
 #define BADW_TYPE_FAST_R  0x4
 #define BADW_TYPE_REGEX   0x8
-#endif
 
 #define BADWORD_REPLACE 1
 #define BADWORD_BLOCK 2
@@ -1268,9 +1266,7 @@ struct _configitem_badword {
 	ConfigItem      *prev, *next;
 	ConfigFlag	flag;
 	char		*word, *replace;
-#ifdef FAST_BADWORD_REPLACE
 	unsigned short	type;
-#endif
 	char		action;
 	regex_t 	expr;
 };
@@ -1761,8 +1757,6 @@ struct _cmdoverride {
 	int			(*func)();
 };
 
-#ifdef THROTTLING
-
 struct ThrottlingBucket
 {
 	struct ThrottlingBucket *prev, *next;
@@ -1820,8 +1814,6 @@ struct	ThrottlingBucket	*find_throttling_bucket(struct IN_ADDR *in);
 void	add_throttling_bucket(struct IN_ADDR *in);
 void	del_throttling_bucket(struct ThrottlingBucket *bucket);
 int	throttle_can_connect(aClient *, struct IN_ADDR *in);
-
-#endif
 
 #define VERIFY_OPERCOUNT(clnt,tag) { if (IRCstats.operators < 0) verify_opercount(clnt,tag); } while(0)
 

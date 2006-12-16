@@ -31,7 +31,6 @@ EXPORTS
 	DoMD5
 	DoesOp
 	EXTMODE_NONOTICE
-	EXTMODE_STRIPBADWORDS
 	EfunctionAddMain
 	EfunctionDel
 	Efunctions
@@ -432,7 +431,6 @@ EXPORTS
 	extban_moder_is_banned
 	extbanstr
 	extchmstr
-	extcmode_cmodeG_requirechop
 	extcmode_default_requirechop
 	extcmode_default_requirehalfop
 	extcmode_duplicate_paramlist
@@ -646,7 +644,6 @@ EXPORTS
 	motd
 	motd_tm
 	my_itoa
-	myargv
 	myctime
 	myncmp
 	next_client
@@ -669,7 +666,6 @@ EXPORTS
 	oper_fdlist
 	opermode
 	opermotd
-	our_crc32
 	our_dlerror
 	our_mod_version
 	outofmemory
@@ -798,9 +794,6 @@ EXPORTS
 	spamfiltertargettable
 	start_auth
 	start_of_normal_client_handshake
-	stripbadwords_channel
-	stripbadwords_message
-	stripbadwords_quit
 	strlcat
 	strlcpy
 	strlncat
@@ -882,4 +875,8 @@ EXPORTS
 	Find_cgiirc
 	find_tkline_match_zap_ex
 	getcloak
+	is_silenced
+	stripbadwords
+	spamfilter_build_user_string
+	free_motd
 	

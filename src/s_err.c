@@ -496,7 +496,7 @@ static char *replies[] = {
 /* 445    ERR_SUMMONDISABLED */ ":%s 445 %s :SUMMON has been disabled",
 /* 446    ERR_USERSDISABLED */ ":%s 446 %s :USERS has been disabled",
 /* 447    ERR_NONICKCHANGE */ ":%s 447 %s :Can not change nickname while on %s (+N)",
-/* 448 */ NULL,
+/* 448 	ERR_FORBIDDENCHANNEL */ ":%s 448 %s %s :Channel is forbidden: %s",
 /* 449 */ NULL, /* ircu */
 /* 450 */ NULL,
 /* 451    ERR_NOTREGISTERED */ ":%s 451 %s :You have not registered",

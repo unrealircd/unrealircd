@@ -183,9 +183,6 @@
 /* Define if you have crypt */
 #undef HAVE_CRYPT
 
-/* Local hostname of the server */
-#undef DOMAINNAME
-
 /* The OS name and version of the server */
 #undef MYOSNAME
 

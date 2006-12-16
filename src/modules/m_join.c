@@ -387,8 +387,9 @@ DLLFUNC CMD_FUNC(_do_join)
 	Membership *lp;
 	aChannel *chptr;
 	char *name, *key = NULL, *link = NULL;
-	int  i, flags = 0;
+	int  i, flags = 0, ishold;
 	char *p = NULL, *p2 = NULL;
+	aTKline *tklban;
 
 #define RET(x) { bouncedtimes--; return x; }
 
@@ -524,9 +525,7 @@ DLLFUNC CMD_FUNC(_do_join)
 								get_client_name(sptr, 1), name);
 						}
 						if (d->reason)
-							sendto_one(sptr, 
-							":%s %s %s :*** Can not join %s: %s",
-							me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, name, d->reason);
+							sendto_one(sptr, err_str(ERR_FORBIDDENCHANNEL), me.name, BadPtr(parv[0]) ? "*" : parv[0], name, d->reason);
 						if (d->redirect)
 						{
 							sendto_one(sptr,
@@ -539,6 +538,11 @@ DLLFUNC CMD_FUNC(_do_join)
 						continue;
 					}
 				}
+			}
+			if (!IsOper(sptr) && !IsULine(sptr) && (tklban = find_qline(sptr, name, &ishold)))
+			{
+				sendto_one(sptr, err_str(ERR_FORBIDDENCHANNEL), me.name, BadPtr(parv[0]) ? "*" : parv[0], name, tklban->reason);
+				continue;
 			}
 			/* ugly set::spamfilter::virus-help-channel-deny hack.. */
 			if (SPAMFILTER_VIRUSCHANDENY && SPAMFILTER_VIRUSCHAN &&

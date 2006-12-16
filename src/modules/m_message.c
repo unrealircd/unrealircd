@@ -879,7 +879,6 @@ int size_string;
  * for the word found. Also the freeing function has been ditched. -- codemastr
  */
 
-#ifdef FAST_BADWORD_REPLACE
 /*
  * our own strcasestr implementation because strcasestr is often not
  * available or is not working correctly (??).
@@ -1016,7 +1015,6 @@ int cleaned = 0;
 	}
 	return cleaned;
 }
-#endif
 
 /*
  * Returns a string, which has been filtered by the words loaded via
@@ -1049,7 +1047,6 @@ char *_stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked)
 
 	for (this_word = start_bw; this_word; this_word = (ConfigItem_badword *)this_word->next)
 	{
-#ifdef FAST_BADWORD_REPLACE
 		if (this_word->type & BADW_TYPE_FAST)
 		{
 			if (this_word->action == BADWORD_BLOCK)
@@ -1073,7 +1070,6 @@ char *_stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked)
 		} else
 		if (this_word->type & BADW_TYPE_REGEX)
 		{
-#endif
 			if (this_word->action == BADWORD_BLOCK)
 			{
 				if (!regexec(&this_word->expr, cleanstr, 0, NULL, 0))
@@ -1110,9 +1106,7 @@ char *_stripbadwords(char *str, ConfigItem_badword *start_bw, int *blocked)
 				if (matchlen == stringlen)
 					break;
 			}
-#ifdef FAST_BADWORD_REPLACE
 		}
-#endif
 	}
 
 	cleanstr[511] = '\0'; /* cutoff, just to be sure */

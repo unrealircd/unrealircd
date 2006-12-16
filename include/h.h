@@ -104,9 +104,7 @@ extern MODVAR ConfigItem_offchans	*conf_offchans;
 extern int		completed_connection(aClient *);
 extern void clear_unknown();
 extern EVENT(e_unload_module_delayed);
-#ifdef THROTTLING
 extern EVENT(e_clean_out_throttling_buckets);
-#endif
 
 extern void  module_loadall(int module_load);
 extern long set_usermode(char *umode);

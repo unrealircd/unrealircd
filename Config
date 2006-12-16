@@ -77,7 +77,6 @@ ARG="$ARG--with-spath=$SPATH "
 ARG="$ARG--with-nick-history=$NICKNAMEHISTORYLENGTH "
 ARG="$ARG--with-sendq=$MAXSENDQLENGTH "
 ARG="$ARG--with-bufferpool=$BUFFERPOOL "
-ARG="$ARG--with-hostname=$DOMAINNAME "
 ARG="$ARG--with-permissions=$DEFPERM "
 ARG="$ARG--with-fd-setsize=$MAXCONNECTIONS "
 ARG="$ARG--enable-dynamic-linking "
@@ -283,7 +282,6 @@ NOSPOOF=""
 DPATH="`pwd`"
 SPATH="`pwd`/src/ircd"
 HUB="1"
-DOMAINNAME=`hostname`
 DEFPERM="0600"
 CRYPTOIRCD=""
 SSLDIR=""
@@ -463,17 +461,6 @@ while [ -z "$TEST" ] ; do
 	    ;;
     esac
 done
-
-TEST="$DOMAINNAME"
-echo ""
-echo "What is the hostname of the server running your IRCd?"
-echo $n "[$TEST] -> $c"
-    read cc
-if [ -z "$cc" ] ; then
-    DOMAINNAME=$TEST
-else
-DOMAINNAME=`eval echo $cc` # modified
-fi
 
 TEST=""
 while [ -z "$TEST" ] ; do
@@ -838,7 +825,6 @@ BUFFERPOOL="$BUFFERPOOL"
 MAXCONNECTIONS="$MAXCONNECTIONS"
 NICKNAMEHISTORYLENGTH="$NICKNAMEHISTORYLENGTH"
 HUB="$HUB"
-DOMAINNAME="$DOMAINNAME"
 DEFPERM="$DEFPERM"
 CRYPTOIRCD="$CRYPTOIRCD"
 SSLDIR="$SSLDIR"

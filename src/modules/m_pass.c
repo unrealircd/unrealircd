@@ -124,7 +124,6 @@ ConfigItem_ban *bconf;
 		ircsprintf(zlinebuf, "Z:Lined (%s)", tk->reason);
 		return exit_client(cptr, cptr, &me, zlinebuf);
 	}
-#ifdef THROTTLING
 	else
 	{
 		int val;
@@ -137,7 +136,6 @@ ConfigItem_ban *bconf;
 		else if (val == 1)
 			add_throttling_bucket(&cptr->ip);
 	}
-#endif
 	return 0;
 }
 

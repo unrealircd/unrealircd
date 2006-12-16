@@ -1029,48 +1029,28 @@ int stats_badwords(aClient *sptr, char *para)
 	  ConfigItem_badword *words;
 
 	  for (words = conf_badword_channel; words; words = (ConfigItem_badword *) words->next) {
- #ifdef FAST_BADWORD_REPLACE
 		  sendto_one(sptr, ":%s %i %s :c %c %s%s%s %s",
 		      me.name, RPL_TEXT, sptr->name, words->type & BADW_TYPE_REGEX ? 'R' : 'F',
 		      (words->type & BADW_TYPE_FAST_L) ? "*" : "", words->word,
 		      (words->type & BADW_TYPE_FAST_R) ? "*" : "",
 		      words->action == BADWORD_REPLACE ? 
 		      (words->replace ? words->replace : "<censored>") : "");
- #else
-		  sendto_one(sptr, ":%s %i %s :c %s %s", me.name, RPL_TEXT,
-			sptr->name,  words->word, words->action == BADWORD_REPLACE ? 
-			(words->replace ? words->replace : "<censored>") : "");
- #endif
 	  }
 	  for (words = conf_badword_message; words; words = (ConfigItem_badword *) words->next) {
- #ifdef FAST_BADWORD_REPLACE
 		  sendto_one(sptr, ":%s %i %s :m %c %s%s%s %s",
 		      me.name, RPL_TEXT, sptr->name, words->type & BADW_TYPE_REGEX ? 'R' : 'F',
 		      (words->type & BADW_TYPE_FAST_L) ? "*" : "", words->word,
 		      (words->type & BADW_TYPE_FAST_R) ? "*" : "",
 		      words->action == BADWORD_REPLACE ? 
 		      (words->replace ? words->replace : "<censored>") : "");
- #else
-		  sendto_one(sptr, ":%s %i %s :m %s %s", me.name, RPL_TEXT, sptr->name,
-			words->word, words->action == BADWORD_REPLACE ? 
-			(words->replace ? words->replace : "<censored>") : "");
-
- #endif
 	  }
 	  for (words = conf_badword_quit; words; words = (ConfigItem_badword *) words->next) {
- #ifdef FAST_BADWORD_REPLACE
 		  sendto_one(sptr, ":%s %i %s :q %c %s%s%s %s",
 		      me.name, RPL_TEXT, sptr->name, words->type & BADW_TYPE_REGEX ? 'R' : 'F',
 		      (words->type & BADW_TYPE_FAST_L) ? "*" : "", words->word,
 		      (words->type & BADW_TYPE_FAST_R) ? "*" : "",
 		      words->action == BADWORD_REPLACE ? 
 		      (words->replace ? words->replace : "<censored>") : "");
- #else
-		  sendto_one(sptr, ":%s %i %s :q %s %s", me.name, RPL_TEXT, sptr->name,
-			words->word, words->action == BADWORD_REPLACE ? 
-			(words->replace ? words->replace : "<censored>") : "");
-
- #endif
 	  }
 #endif
 	return 0;
@@ -1356,12 +1336,10 @@ int stats_set(aClient *sptr, char *para)
 		    sptr->name, DNS_BINDIP);
 	sendto_one(sptr, ":%s %i %s :ban-version-tkl-time: %s", me.name, RPL_TEXT,
 	    sptr->name, pretty_time_val(BAN_VERSION_TKL_TIME));
-#ifdef THROTTLING
 	sendto_one(sptr, ":%s %i %s :throttle::period: %s", me.name, RPL_TEXT,
 			sptr->name, THROTTLING_PERIOD ? pretty_time_val(THROTTLING_PERIOD) : "disabled");
 	sendto_one(sptr, ":%s %i %s :throttle::connections: %d", me.name, RPL_TEXT,
 			sptr->name, THROTTLING_COUNT ? THROTTLING_COUNT : -1);
-#endif
 	sendto_one(sptr, ":%s %i %s :anti-flood::unknown-flood-bantime: %s", me.name, RPL_TEXT,
 			sptr->name, pretty_time_val(UNKNOWN_FLOOD_BANTIME));
 	sendto_one(sptr, ":%s %i %s :anti-flood::unknown-flood-amount: %ldKB", me.name, RPL_TEXT,

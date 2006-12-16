@@ -257,7 +257,8 @@ int found = 0;
 int  channel_canjoin(aClient *sptr, char *name)
 {
 	ConfigItem_deny_channel *p;
-
+	aTKline *tklban;
+	int ishold;
 	if (IsOper(sptr))
 		return 1;
 	if (IsULine(sptr))
@@ -267,8 +268,12 @@ int  channel_canjoin(aClient *sptr, char *name)
 	p = Find_channel_allowed(name);
 	if (p)
 	{
-		sendto_one(sptr, ":%s NOTICE %s :*** %s",
-			me.name, sptr->name, p->reason);
+		sendto_one(sptr, err_str(ERR_FORBIDDENCHANNEL), me.name, sptr->name, name, p->reason);
+		return 0;
+	}
+	if ((tklban = find_qline(sptr, name, &ishold)))
+	{
+		sendto_one(sptr, err_str(ERR_FORBIDDENCHANNEL), me.name, sptr->name, name, tklban->reason);
 		return 0;
 	}
 	return 1;

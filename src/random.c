@@ -148,11 +148,12 @@ u_int32_t val;
 
 void add_entropy_configfile(struct stat st, char *buf)
 {
-unsigned int i;
+	unsigned int i;
+	char res[16];
 	arc4_addrandom(&st.st_size, sizeof(st.st_size));
 	arc4_addrandom(&st.st_mtime, sizeof(st.st_mtime));
-	i = our_crc32(buf, strlen(buf));
-	arc4_addrandom(&i, sizeof(i));
+	DoMD5(res, buf, strlen(buf));
+	arc4_addrandom(res, sizeof(res));
 }
 
 /*

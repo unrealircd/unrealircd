@@ -80,10 +80,8 @@ struct zConfiguration {
 	int  host_retries;
 	char *name_server;
 	char *dns_bindip;
-#ifdef THROTTLING
 	long throttle_period;
 	char throttle_count;
-#endif
 	char *kline_address;
 	char *gline_address;
 	long conn_modes;
@@ -207,10 +205,8 @@ extern MODVAR aConfiguration iConf;
 #define RESTRICT_USERMODES		iConf.restrict_usermodes
 #define RESTRICT_CHANNELMODES		iConf.restrict_channelmodes
 #define RESTRICT_EXTENDEDBANS		iConf.restrict_extendedbans
-#ifdef THROTTLING
 #define THROTTLING_PERIOD		iConf.throttle_period
 #define THROTTLING_COUNT		iConf.throttle_count
-#endif
 #define USE_BAN_VERSION			iConf.use_ban_version
 #define UNKNOWN_FLOOD_BANTIME		iConf.unknown_flood_bantime
 #define UNKNOWN_FLOOD_AMOUNT		iConf.unknown_flood_amount
@@ -277,10 +273,8 @@ struct SetCheck {
 	unsigned has_dns_retries:1;
 	unsigned has_dns_nameserver:1;
 	unsigned has_dns_bind_ip:1;
-#ifdef THROTTLING
 	unsigned has_throttle_period:1;
 	unsigned has_throttle_connections:1;
-#endif
 	unsigned has_kline_address:1;
 	unsigned has_gline_address:1;
 	unsigned has_modes_on_connect:1;

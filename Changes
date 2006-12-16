@@ -1499,3 +1499,9 @@
 - Post-3.2.5 CVS-only bug: Fixed spamfilter on user target not working properly when
   changing nicks (was still trying to match on the old nick), reported by vonitsanet
   (#0003143).
+- CRC32 is ripped out reported by Trocotronic (#0002963).
+- DOMAINNAME is removed from ./Config reported by satmd (#0003063).
+- THROTTLING and FAST_BADWORD_REPLACE cannot be configured in config.h reported by raymondvrolijk (#0002937).
+- /sqline supports sqlining for channels. #*ble* will forbid channels and *ble* will forbid only nicks (not channels).
+  Forbid message showed by numeric ERR_FORBIDDENCHANNEL (448) reported by aragon and Jase (#0000935, #0003012).
+- conf_deny NOTICE message is replace by ERR_FORBIDDENCHANNEL.

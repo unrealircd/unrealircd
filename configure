@@ -860,7 +860,6 @@ Optional Packages:
                           Specify the length of the nickname history
   --with-sendq=maxsendq   Specify the max sendq for the server
   --with-bufferpool=size  Specify the size of the buffer pool
-  --with-hostname=host    Specify the local hostname of the server
   --with-permissions=permissions
                           Specify the default permissions for configuration
                           files
@@ -11889,19 +11888,6 @@ _ACEOF
 
 fi;
 
-# Check whether --with-hostname or --without-hostname was given.
-if test "${with_hostname+set}" = set; then
-  withval="$with_hostname"
-  cat >>confdefs.h <<_ACEOF
-#define DOMAINNAME "$withval"
-_ACEOF
-
-else
-  cat >>confdefs.h <<_ACEOF
-#define DOMAINNAME "`hostname`"
-_ACEOF
-
-fi;
 cat >>confdefs.h <<_ACEOF
 #define MYOSNAME "`uname -a`"
 _ACEOF

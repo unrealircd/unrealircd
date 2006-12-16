@@ -1587,9 +1587,7 @@ int InitwIRCD(int argc, char *argv[])
 
 	Debug((DEBUG_NOTICE, "Server ready..."));
 	SetupEvents();
-#ifdef THROTTLING
 	init_throttling_hash();
-#endif
 	loop.do_bancheck = 0;
 	loop.ircd_booted = 1;
 #if defined(HAVE_SETPROCTITLE)
