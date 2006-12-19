@@ -183,6 +183,20 @@ DLLFUNC CMD_FUNC(m_nick)
 		return 0;
 	}
 
+	/* Kill quarantined opers early... */
+	if (IsServer(cptr) && (sptr->from->flags & FLAGS_QUARANTINE) &&
+	    (parc >= 11) && strchr(parv[8], 'o'))
+	{
+		ircstp->is_kill++;
+		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
+		sendto_one(cptr, ":%s KILL %s :%s (Quarantined: no global oper privileges allowed)",
+			me.name, parv[1], me.name);
+		sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine",
+			parv[1], sptr->name);
+		/* (nothing to exit_client or to free, since user was never added) */
+		return 0;
+	}
+
 	/*
 	   ** Protocol 4 doesn't send the server as prefix, so it is possible
 	   ** the server doesn't exist (a lagged net.burst), in which case

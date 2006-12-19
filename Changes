@@ -1505,3 +1505,4 @@
 - /sqline supports sqlining for channels. #*ble* will forbid channels and *ble* will forbid only nicks (not channels).
   Forbid message showed by numeric ERR_FORBIDDENCHANNEL (448) reported by aragon and Jase (#0000935, #0003012).
 - conf_deny NOTICE message is replace by ERR_FORBIDDENCHANNEL.
+- Fixed possible crash with using quarantine, reported by Sephiroth (#0003151).
