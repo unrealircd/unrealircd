@@ -676,7 +676,19 @@ static int fatal_ssl_error(int ssl_error, int where, aClient *sptr)
 		char *myerr = ssl_errstr;
 		if (ssl_error == SSL_ERROR_SYSCALL)
 			myerr = STRERROR(errtmp);
-		sendto_failops_whoare_opers("Closing link: SSL_connect(): %s - %s", myerr, get_client_name(sptr, FALSE));
+		/* sendto_failops_whoare_opers("Closing link: SSL_connect(): %s - %s", myerr, get_client_name(sptr, FALSE)); */
+		sendto_umode(UMODE_OPER, "Lost connection to %s: %s: %s",
+			get_client_name(sptr, FALSE), ssl_func, myerr);
+	} else
+	if ((IsServer(sptr) || (sptr->serv && sptr->serv->conf)) && (where != SAFE_SSL_WRITE))
+	{
+		/* if server (either judged by IsServer() or clearly an outgoing connect),
+		 * and not writing (since otherwise deliver_it will take care of the error), THEN
+		 * send a closing link error...
+		 */
+		sendto_umode(UMODE_OPER, "Lost connection to %s: %s: %s",
+			get_client_name(sptr, FALSE), ssl_func, ssl_errstr);
+		/* sendto_failops_whoare_opers("Closing link: %s: %s - %s", ssl_func, ssl_errstr, get_client_name(sptr, FALSE)); */
 	}
 	
 	if (errtmp)
