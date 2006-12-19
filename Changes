@@ -1423,3 +1423,6 @@
   (#0003143).
 ** 3.2.6-rc2 release **
 - Fixed possible crash with using quarantine, reported by Sephiroth (#0003151).
+- Showing even more SSL server errors now, hopefully all of them, also changed the
+  error notice a bit so it's much more like non-SSL server link errors. Reported by
+  vonitsanet (#0003150).
