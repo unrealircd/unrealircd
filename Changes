@@ -1422,3 +1422,4 @@
   changing nicks (was still trying to match on the old nick), reported by vonitsanet
   (#0003143).
 ** 3.2.6-rc2 release **
+- Fixed possible crash with using quarantine, reported by Sephiroth (#0003151).
