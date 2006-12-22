@@ -47,16 +47,17 @@ Unreal3.2.6-rc3 Release Notes
 - Various doc updates ('/HELPOP ?EXTBANS', and some unreal32docs improvements)
 
 ==[ MAJOR BUGS FIXED ]==
-- Fixed a crashbug which could happen in some rare cases
-- Fixed throttling not always being applied correctly
+- Crash if link::options::quarantine was used
+- Another crash which could happen in some rare cases
+- Throttling was not always being applied correctly
 - Windows 2003: Fixed crash on-boot if no nameserver was set
 - Windows: Fixed /RESTART not always working properly (leaving the ircd dead)
 
 ==[ MINOR BUGS FIXED ]==
-- Remote includes: should now work with latest curl again due to c-ares upgrade
+- Remote includes: should now work with latest curl again, due to c-ares upgrade
 - a bunch of OperOverride bugs.. messages being sent when they shouldn't, some things
-  not being logged or broadcasted, etc.
-- Sometimes no error message was shown when linking to an SSL server failed
+  not being logged or broadcasted, and more.
+- Sometimes no message was shown when a link to an SSL server failed
 - Desynch problem caused by +Q
 - SAJOIN now properly deals with +z channels
 - "MODE #channel" showing extended channel mode parameters if not in channel
