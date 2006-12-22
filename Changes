@@ -1427,3 +1427,5 @@
   error notice a bit so it's much more like non-SSL server link errors. Reported by
   vonitsanet (#0003150).
 ** 3.2.6-rc3 release **
+- Updated release notes, mass-change of version number, no code changes.
+** 3.2.6 release **
