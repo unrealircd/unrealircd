@@ -1047,8 +1047,17 @@ void win_log(unsigned char *format, ...)
 	else 
 	{
 		FILE *fd = fopen("service.log", "a");
-		fprintf(fd, "%s\n", buf);
-		fclose(fd);
+		if (fd)
+		{
+			fprintf(fd, "%s\n", buf);
+			fclose(fd);
+		}
+#ifdef _DEBUG
+		else
+		{
+		    OutputDebugString(buf);
+		}
+#endif
 	}
         va_end(ap);
 }

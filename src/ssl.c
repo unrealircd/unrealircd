@@ -54,27 +54,25 @@ typedef struct {
 
 #define CHK_SSL(err) if ((err)==-1) { ERR_print_errors_fp(stderr); }
 #ifdef _WIN32
-static StreamIO *streamp;
 LRESULT SSLPassDLG(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam) {
-	StreamIO *stream;
+	static StreamIO *stream;
 	switch (Message) {
 		case WM_INITDIALOG:
+			stream = (StreamIO*)lParam;
 			return TRUE;
 		case WM_COMMAND:
-			stream = (StreamIO *)streamp;
 			if (LOWORD(wParam) == IDCANCEL) {
 				*stream->buffer = NULL;
-				EndDialog(hDlg, TRUE);
+				EndDialog(hDlg, IDCANCEL);
 			}
 			else if (LOWORD(wParam) == IDOK) {
 				GetDlgItemText(hDlg, IDC_PASS, *stream->buffer, *stream->size);
-				EndDialog(hDlg, TRUE);
+				EndDialog(hDlg, IDOK);
 			}
 			return FALSE;
 		case WM_CLOSE:
-			if (stream)
-				*stream->buffer = NULL;
-			EndDialog(hDlg, TRUE);
+			*stream->buffer = NULL;
+			EndDialog(hDlg, IDCANCEL);
 		default:
 			return FALSE;
 	}
@@ -140,8 +138,7 @@ int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 	pass = passbuf;
 	stream.buffer = &pass;
 	stream.size = &passsize;
-	streamp = &stream;
-	DialogBoxParam(hInst, "SSLPass", hwIRCDWnd, (DLGPROC)SSLPassDLG, (LPARAM)NULL); 
+	DialogBoxParam(hInst, "SSLPass", hwIRCDWnd, (DLGPROC)SSLPassDLG, (LPARAM)&stream); 
 #endif
 	if (pass)
 	{
@@ -174,14 +171,27 @@ static int ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 		return 1;
 }
 
-
-void init_ctx_server(void)
+static void mylog(char *fmt, ...)
 {
+va_list vl;
+static char buf[2048];
+
+	va_start(vl, fmt);
+	ircvsprintf(buf, fmt, vl);
+	va_end(vl);
+	sendto_realops("[SSL rehash] %s", buf);
+	ircd_log(LOG_ERROR, "%s", buf);
+}
+
+SSL_CTX *init_ctx_server(void)
+{
+SSL_CTX *ctx_server;
+
 	ctx_server = SSL_CTX_new(SSLv23_server_method());
 	if (!ctx_server)
 	{
-		ircd_log(LOG_ERROR, "Failed to do SSL CTX new");
-		exit(2);
+		mylog("Failed to do SSL CTX new");
+		return NULL;
 	}
 	SSL_CTX_set_default_passwd_cb(ctx_server, ssl_pem_passwd_cb);
 	SSL_CTX_set_options(ctx_server, SSL_OP_NO_SSLv2);
@@ -191,57 +201,67 @@ void init_ctx_server(void)
 
 	if (SSL_CTX_use_certificate_chain_file(ctx_server, SSL_SERVER_CERT_PEM) <= 0)
 	{
-		ircd_log(LOG_ERROR, "Failed to load SSL certificate %s", SSL_SERVER_CERT_PEM);
-		exit(3);
+		mylog("Failed to load SSL certificate %s", SSL_SERVER_CERT_PEM);
+		goto fail;
 	}
 	if (SSL_CTX_use_PrivateKey_file(ctx_server, SSL_SERVER_KEY_PEM, SSL_FILETYPE_PEM) <= 0)
 	{
-		ircd_log(LOG_ERROR, "Failed to load SSL private key %s", SSL_SERVER_KEY_PEM);
-		exit(4);
+		mylog("Failed to load SSL private key %s", SSL_SERVER_KEY_PEM);
+		goto fail;
 	}
 
 	if (!SSL_CTX_check_private_key(ctx_server))
 	{
-		ircd_log(LOG_ERROR, "Failed to check SSL private key");
-		exit(5);
+		mylog("Failed to check SSL private key");
+		goto fail;
 	}
 	if (iConf.trusted_ca_file)
 	{
 		if (!SSL_CTX_load_verify_locations(ctx_server, iConf.trusted_ca_file, NULL))
 		{
-			ircd_log(LOG_ERROR, "Failed to load Trusted CA's from %s", iConf.trusted_ca_file);
-			exit(6);
+			mylog("Failed to load Trusted CA's from %s", iConf.trusted_ca_file);
+			goto fail;
 		}
 	}
+	return ctx_server;
+fail:
+	SSL_CTX_free(ctx_server);
+	return NULL;
 }
 
 
-void init_ctx_client(void)
+SSL_CTX *init_ctx_client(void)
 {
+SSL_CTX *ctx_client;
+
 	ctx_client = SSL_CTX_new(SSLv3_client_method());
 	if (!ctx_client)
 	{
-		ircd_log(LOG_ERROR, "Failed to do SSL CTX new client");
-		exit(2);
+		mylog("Failed to do SSL CTX new client");
+		return NULL;
 	}
 	SSL_CTX_set_default_passwd_cb(ctx_client, ssl_pem_passwd_cb);
 	SSL_CTX_set_session_cache_mode(ctx_client, SSL_SESS_CACHE_OFF);
 	if (SSL_CTX_use_certificate_file(ctx_client, SSL_SERVER_CERT_PEM, SSL_FILETYPE_PEM) <= 0)
 	{
-		ircd_log(LOG_ERROR, "Failed to load SSL certificate %s (client)", SSL_SERVER_CERT_PEM);
-		exit(3);
+		mylog("Failed to load SSL certificate %s (client)", SSL_SERVER_CERT_PEM);
+		goto fail;
 	}
 	if (SSL_CTX_use_PrivateKey_file(ctx_client, SSL_SERVER_KEY_PEM, SSL_FILETYPE_PEM) <= 0)
 	{
-		ircd_log(LOG_ERROR, "Failed to load SSL private key %s (client)", SSL_SERVER_KEY_PEM);
-		exit(4);
+		mylog("Failed to load SSL private key %s (client)", SSL_SERVER_KEY_PEM);
+		goto fail;
 	}
 
 	if (!SSL_CTX_check_private_key(ctx_client))
 	{
-		ircd_log(LOG_ERROR, "Failed to check SSL private key (client)");
-		exit(5);
+		mylog("Failed to check SSL private key (client)");
+		goto fail;
 	}
+	return ctx_client;
+fail:
+	SSL_CTX_free(ctx_client);
+	return NULL;
 }
 
 void init_ssl(void)
@@ -261,8 +281,46 @@ void init_ssl(void)
 #endif
 			RAND_egd(EGD_PATH);		
 	}
-	init_ctx_server();
-	init_ctx_client();
+	ctx_server = init_ctx_server();
+	if (!ctx_server)
+		exit(7);
+	ctx_client = init_ctx_client();
+	if (!ctx_client)
+		exit(8);
+}
+
+void reinit_ssl(aClient *acptr)
+{
+SSL_CTX *tmp;
+
+	if (IsPerson(acptr))
+		mylog("%s (%s@%s) requested a reload of all SSL related data (/rehash -ssl)",
+			acptr->name, acptr->user->username, acptr->user->realhost);
+	else
+		mylog("%s requested a reload of all SSL related data (/rehash -ssl)",
+			acptr->name);
+
+	tmp = init_ctx_server();
+	if (!tmp)
+	{
+		mylog("SSL Reload failed.");
+		return;
+	}
+	/* free and do it for real */
+	SSL_CTX_free(tmp);
+	SSL_CTX_free(ctx_server);
+	ctx_server = init_ctx_server();
+	
+	tmp = init_ctx_client();
+	if (!tmp)
+	{
+		mylog("SSL Reload partially failed. Server context is reloaded, client context failed");
+		return;
+	}
+	/* free and do it for real */
+	SSL_CTX_free(tmp);
+	SSL_CTX_free(ctx_client);
+	ctx_client = init_ctx_client();
 }
 
 #define CHK_NULL(x) if ((x)==NULL) {\
@@ -580,6 +638,13 @@ static int fatal_ssl_error(int ssl_error, int where, aClient *sptr)
 	    break;
 	case SSL_ERROR_SYSCALL:
 	    ssl_errstr = "Underlying syscall error";
+	    /* TODO: then show the REAL socktet error instead...
+	     * unfortunately that means we need to have the 'untouched errno',
+	     * which is not always present since our function is not always
+	     * called directly after a failure. Hence, we should add a new
+	     * parameter to fatal_ssl_error which is called errno, and use
+	     * that here... Something for 3.2.7 ;) -- Syzop
+	     */
 	    break;
 	case SSL_ERROR_ZERO_RETURN:
 	    ssl_errstr = "Underlying socket operation returned zero";
@@ -599,6 +664,27 @@ static int fatal_ssl_error(int ssl_error, int where, aClient *sptr)
     sptr->flags |= FLAGS_DEADSOCKET;
     sendto_snomask(SNO_JUNK, "Exiting ssl client %s: %s: %s",
     	get_client_name(sptr, TRUE), ssl_func, ssl_errstr);
+	
+	if (where == SAFE_SSL_CONNECT)
+	{
+		char *myerr = ssl_errstr;
+		if (ssl_error == SSL_ERROR_SYSCALL)
+			myerr = STRERROR(errtmp);
+		/* sendto_failops_whoare_opers("Closing link: SSL_connect(): %s - %s", myerr, get_client_name(sptr, FALSE)); */
+		sendto_umode(UMODE_OPER, "Lost connection to %s: %s: %s",
+			get_client_name(sptr, FALSE), ssl_func, myerr);
+	} else
+	if ((IsServer(sptr) || (sptr->serv && sptr->serv->conf)) && (where != SAFE_SSL_WRITE))
+	{
+		/* if server (either judged by IsServer() or clearly an outgoing connect),
+		 * and not writing (since otherwise deliver_it will take care of the error), THEN
+		 * send a closing link error...
+		 */
+		sendto_umode(UMODE_OPER, "Lost connection to %s: %s: %s",
+			get_client_name(sptr, FALSE), ssl_func, ssl_errstr);
+		/* sendto_failops_whoare_opers("Closing link: %s: %s - %s", ssl_func, ssl_errstr, get_client_name(sptr, FALSE)); */
+	}
+	
 	if (errtmp)
 	{
 		SET_ERRNO(errtmp);

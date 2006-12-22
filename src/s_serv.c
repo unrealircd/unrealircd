@@ -257,9 +257,9 @@ void m_info_send(aClient *sptr)
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| This is an UnrealIRCD-style server",
 	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| If you find any bugs, please mail",
+	sendto_one(sptr, ":%s %d %s :| If you find any bugs, please report them at:",
 	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :|  bugs@lists.unrealircd.org",
+	sendto_one(sptr, ":%s %d %s :|  http://bugs.unrealircd.org/",
 	    me.name, RPL_INFO, sptr->name);
 
 	sendto_one(sptr,
@@ -672,6 +672,16 @@ CMD_FUNC(m_rehash)
 				reinit_resolver(sptr);
 				return 0;
 			}
+			if (!_match("-ssl*", parv[1]))
+			{
+#ifdef USE_SSL
+				extern void reinit_ssl(aClient *);
+				reinit_ssl(sptr);
+#else
+				sendnotice(sptr, "SSL is not enabled on this server");
+#endif
+				return 0;
+			}
 			if (!_match("-o*motd", parv[1]))
 			{
 				sendto_ops
@@ -997,6 +1007,18 @@ aMotd *read_file(char *filename, aMotd **list)
 	return read_file_ex(filename, list, NULL);
 }
 
+void free_motd(aMotd *m)
+{
+aMotd *next;
+
+	for (; m; m = next)
+	{
+		next = m->next;
+		MyFree(m->line);
+		MyFree(m);
+	}
+}
+
 /** Read motd-like file, used for rules/motd/botmotd/opermotd/etc.
  * @param filename Filename of file to read.
  * @param list Reference to motd pointer (used for freeing if needed, NULL allowed)
@@ -1017,13 +1039,8 @@ aMotd *read_file_ex(char *filename, aMotd **list, struct tm *t)
 
 	if (list)
 	{
-		while (*list)
-		{
-			old = (*list)->next;
-			MyFree((*list)->line);
-			MyFree(*list);
-			*list  = old;
-		}
+		free_motd(*list);
+		*list = NULL;
 	}
 
 	if (t)

@@ -286,10 +286,21 @@ LONG __stdcall ExceptionFilter(EXCEPTION_POINTERS *e)
 	{
 		FILE *fd = fopen("service.log", "a");
 
-		fprintf(fd, "UnrealIRCd has encountered a fatal error. Debugging information "
-			    "has been dumped to wircd.%d.core, please email this file to "
-			    "coders@lists.unrealircd.org.", getpid());
-		fclose(fd);
+		if (fd)
+		{
+			fprintf(fd, "UnrealIRCd has encountered a fatal error. Debugging information "
+					"has been dumped to wircd.%d.core, please email this file to "
+					"coders@lists.unrealircd.org.", getpid());
+			fclose(fd);
+		}
+#ifdef _DEBUG
+		else
+		{
+			OutputDebugString("UnrealIRCd has encountered a fatal error. Debugging information "
+					"has been dumped to wircd.%d.core, please email this file to "
+					"coders@lists.unrealircd.org.", getpid());
+		}
+#endif
 	}
 	CleanUp();
 	return EXCEPTION_EXECUTE_HANDLER;

@@ -151,6 +151,7 @@ struct zConfiguration {
 	int timesynch_enabled;
 	int timesynch_timeout;
 	char *timesynch_server;
+	int pingpong_warning;
 	aNetwork network;
 };
 
@@ -261,6 +262,7 @@ extern MODVAR aConfiguration iConf;
 #define TIMESYNCH_TIMEOUT	iConf.timesynch_timeout
 #define TIMESYNCH_SERVER	iConf.timesynch_server
 
+#define PINGPONG_WARNING	iConf.pingpong_warning
 
 /* Used for "is present?" and duplicate checking */
 struct SetCheck {
@@ -280,6 +282,7 @@ struct SetCheck {
 	unsigned has_dns_timeout:1;
 	unsigned has_dns_retries:1;
 	unsigned has_dns_nameserver:1;
+	unsigned has_dns_bind_ip:1;
 #ifdef THROTTLING
 	unsigned has_throttle_period:1;
 	unsigned has_throttle_connections:1;
@@ -293,6 +296,7 @@ struct SetCheck {
 	unsigned has_auto_join:1;
 	unsigned has_oper_auto_join:1;
 	unsigned has_check_target_nick_bans:1;
+	unsigned has_pingpong_warning:1;
 	unsigned has_oper_only_stats:1;
 	unsigned has_maxchannelsperuser:1;
 	unsigned has_maxdccallow:1;

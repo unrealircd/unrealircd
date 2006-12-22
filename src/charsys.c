@@ -372,7 +372,7 @@ int charsys_postconftest(void)
 int x=0;
 	if ((langav & LANGAV_ASCII) && (langav & LANGAV_GBK))
 	{
-		config_error("ERROR: set::accept-language specifies incorrect combination "
+		config_error("ERROR: set::allowed-nickchars specifies incorrect combination "
 		             "of languages: high-ascii languages (such as german, french, etc) "
 		             "cannot be mixed with chinese/..");
 		return -1;
@@ -393,7 +393,7 @@ int x=0;
 	    x++;
 	if (x > 1)
 	{
-		config_status("WARNING: set::accept-language: "
+		config_status("WARNING: set::allowed-nickchars: "
 		            "Mixing of charsets (eg: latin1+latin2) can cause display problems");
 	}
 	return 1;
@@ -408,7 +408,7 @@ int mid;
 	while (start <= stop)
 	{
 		mid = (start+stop)/2;
-		if (smycmp(name, langlist[mid].directive) < 0)
+		if (!langlist[mid].directive || smycmp(name, langlist[mid].directive) < 0)
 			stop = mid-1;
 		else if (strcmp(name, langlist[mid].directive) == 0)
 			return &langlist[mid];
@@ -430,7 +430,7 @@ LangList *l = charsys_find_language(name);
 	}
 	if (!strcmp(name, "euro-west"))
 	{
-		config_error("set::accept-language: ERROR: 'euro-west' got renamed to 'latin1'");
+		config_error("set::allowed-nickchars: ERROR: 'euro-west' got renamed to 'latin1'");
 		return 0;
 	}
 	return 0;
@@ -553,8 +553,8 @@ char latin1=0, latin2=0, w1250=0, w1251=0, chinese=0;
 	if (latin1 || !strcmp(name, "catalan"))
 	{
 		/* supplied by Trocotronic */
-		/* a`, A`, e`, E`, e', E', i', I', o`, O`, o', O', u', U', i", I", u", U" */
-		charsys_addallowed("àÀèÈéÉíÍòÒóÓúÚïÏüÜ");
+		/* a`, A`, e`, weird-c, weird-C, E`, e', E', i', I', o`, O`, o', O', u', U', i", I", u", U", weird-dot */
+		charsys_addallowed("àÀçÇèÈéÉíÍòÒóÓúÚïÏüÜ");
 	}
 	if (latin1 || !strcmp(name, "swedish"))
 	{
@@ -618,18 +618,20 @@ char latin1=0, latin2=0, w1250=0, w1251=0, chinese=0;
 	
 	if (w1251 || !strcmp(name, "belarussian-w1251"))
 	{
-		/* supplied by Anton Samets & ss:
+		/* supplied by Bock (Samets Anton) & ss:
 		 * 128-159, 161, 162, 178, 179 and 223-254
+		 * Corrected 01.11.2006 to more "correct" behavior by Bock
 		 */
-		charsys_addallowed("ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ¨¸¡¢²³");
+		charsys_addallowed("ÀÁÂÃÄÅ¨ÆÇ²ÉÊËÌÍÎÏÐÑÒÓ¡ÔÕÖ×ØÛÜÝÞßàáâãäå¸æç³éêëìíîïðñòó¢ôõö÷øûüýþÿ");
 	}	
 	
 	if (w1251 || !strcmp(name, "ukrainian-w1251"))
 	{
 		/* supplied by Anton Samets & ss:
 		 * 128-159, 170, 175, 178, 179, 186, 191 and 223-254
+		 * Corrected 01.11.2006 to more "correct" behavior by core
 		 */
-		charsys_addallowed("ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ¨¸²³ªº¯¿");
+		charsys_addallowed("ÀÁÂÃ¥ÄÅªÆÇÈ²¯ÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÜÞßàáâã´äåºæçè³¿éêëìíîïðñòóôõö÷øùüþÿ");
 	}	
 
 	/* [GREEK] */	

@@ -130,14 +130,14 @@ DLLFUNC CMD_FUNC(m_user)
 	if (parc == 6 && IsServer(cptr))
 	{
 		if (isdigit(*parv[4]))
-			sstamp = atol(parv[4]);
+			sstamp = strtoul(parv[4], NULL, 10);
 		realname = (BadPtr(parv[5])) ? "<bad-realname>" : parv[5];
 		umodex = NULL;
 	}
 	else if (parc == 8 && IsServer(cptr))
 	{
 		if (isdigit(*parv[4]))
-			sstamp = atol(parv[4]);
+			sstamp = strtoul(parv[4], NULL, 10);
 		realname = (BadPtr(parv[7])) ? "<bad-realname>" : parv[7];
 		umodex = parv[5];
 		virthost = parv[6];
@@ -145,7 +145,7 @@ DLLFUNC CMD_FUNC(m_user)
 	else if (parc == 9 && IsServer(cptr))
 	{
 		if (isdigit(*parv[4]))
-			sstamp = atol(parv[4]);
+			sstamp = strtoul(parv[4], NULL, 10);
 		realname = (BadPtr(parv[8])) ? "<bad-realname>" : parv[8];
 		umodex = parv[5];
 		virthost = parv[6];

@@ -7,7 +7,7 @@
 	</head>
 	<body>
 		<h1 style="text-align: center;">Unreal 3.2 Protocol Documentation</h1>
-		<h3 style="text-align: center;">Last update: 13 May 2006</h3>
+		<h3 style="text-align: center;">Last update: 29 November 2006</h3>
 		<h1>Table of Contents</h1>
 		<p><a href="#S1">1 Introduction</a></p>
 		<p><a href="#S2">2 Server Negotiation</a></p>
@@ -41,6 +41,7 @@
 		<blockquote><p><a href="#S5_7">5.7 SAJOIN - Channel Force Join</a></p></blockquote>
 		<blockquote><p><a href="#S5_8">5.8 SAPART - Channel Force Part</a></p></blockquote>
 		<blockquote><p><a href="#S5_9">5.9 SAMODE - Channel Force Mode</a></p></blockquote>
+		<blockquote><p><a href="#S5_10">5.10 TOPIC - Chanel Topic</a></p></blockquote>
 		<p><a href="#S6">6 Services Commands</a></p>
 		<blockquote><p><a href="#S6_1">6.1 SVSKILL - Force Disconnect by Service</a></p></blockquote>
 		<blockquote><p><a href="#S6_2">6.2 SVSMODE, SVS2MODE - Force User Mode Change</a></p></blockquote>
@@ -83,7 +84,7 @@
 		<p><b>Syntax:</b> <tt>PASS :<i>link password</i></tt></p>
 		<p>The PASS command is used to transmit the password required for a server link. It must match the password specified in the remote server's link::password-receive (which can be crypted), otherwise the link will be rejected. This should be the first message sent.</p>
 		<h2><a name="S2_2"></a>2.2 PROTOCTL - Server Protocol Negotiation</h2>
-		<p><b>Syntax:</b> <tt>PROTOCTL :<i>protocol options</i></tt></p>
+		<p><b>Syntax:</b> <tt>PROTOCTL <i>protocol options</i></tt></p>
 		<p>The PROTOCTL command sets several protocol options. The tokens supported are listed below.</p>
 		<ul>
 			<li>NOQUIT : When a netsplit occurs, only send a SQUIT message for each server lost. This server will assume that clients on these servers were also lost and will send the appropriate QUIT messages to local clients and to any non-NOQUIT servers.</li>
@@ -93,7 +94,7 @@
 			<li>SJOIN : Supports SJOIN version 1 which is no longer in use. Use with SJ3.</li>
 			<li>SJOIN2 : Supports SJOIN version 2 which is no longer in use. Use with SJ3.</li>
 			<li>UMODE2 : Supports the UMODE2 command, which is a shortened version of MODE for usermode changes.</li>
-			<li>VL : Supports V:Line information. Extends the SERVER message to include version information used in deny version{} blocks. Note that this is assumed - unreal will always send it's own version information.</li>
+			<li>VL : Supports V:Line information. Extends the SERVER message to include version information used in deny version{} blocks. Note that this is assumed - unreal will always send its own version information.</li>
 			<li>SJ3 : Supports SJOIN version 3.</li>
 			<li>NS : Supports server numerics which provides a shorthand for server names. In any circumstance where a :server.name is permitted (the server is the message's real source), @servernumeric may be used instead. In addition, the server.name parameter in the NICK message may be simply the server's numeric. Requires VL support.</li>
 			<li>SJB64 : Timestamps in NICK and SJOIN are expressed in base64 rather than base10.</li>
@@ -113,6 +114,8 @@
 		<p>The server.name is the same as that in the remote server's link:: block. When received from unreal servers, this will be the value of that server's me::name. The protocol version is the numeric protocol version (2306 for example), and the protocol flags are the server's compilation flags (described below). These two fields are checked against the deny version {} blocks in the remote server's configuration. A value of 0 for either field prevents deny version{} checking for that field. The server description can be anything. When received from unreal servers, it'll be the value of me::description.</p>
 		<p>The following version numbers have been used previously:</p>
 		<ul>
+			<li>2309 - Unreal 3.2.6</li>
+			<li>2308 - Unreal 3.2.5</li>
 			<li>2307 - Unreal 3.2.4</li>
 			<li>2306 - Unreal 3.2.3</li>
 			<li>2305 - Unreal 3.2.2</li>
@@ -149,21 +152,23 @@
 		</ul>
 		<h2><a name="S2_4"></a>2.4 EOS - End Of Synch (TOKEN: ES)</h2>
 		<p><b>Syntax:</b> ES</p>
-		<p>Marks the end of the synching process. This is really optionally, but it might be a good idea to send it anyway when you really are done synching.</p>
+		<p>Marks the end of the synching process. This is really optional, but it might be a good idea to send it anyway when you really are done synching. Once you send this, unreal will announce &quot;Client connecting&quot; or &quot;Client exiting&quot; notices (to those with snomask +F) for users (unless your server is U:Lined), and joins will be counted toward channel flood controls (chanmode +f).</p>
+		<p>Sending EOS only marks your server as synched, but does not do so for servers behind you. EOS would need to be sent on those servers' behalf as well.</p>
 		<h2><a name="S2_5"></a>2.5 NETINFO - Network Information (TOKEN: AO)</h2>
 		<p><b>Syntax:</b> AO <i>maxglobal</i> <i>currenttime</i> <i>protocolversion</i> <i>cloakhash</i> 0 0 0 :<i>networkname</i></p>
 		<p>This tells the other server your current network configuration. The max global is the highest number of concurrent users network-wide that this server has seen. The current time is a timestamp value. Protocolversion is the same as that in the SERVER command. Cloakhash is a hash representing the configured cloak keys. It may be a * if you are implementing services. The network name is that specified in set::network-name. The cloak-prefix is currently not sent here (and thus unreal won't generate warning for mismatching cloak prefixes, but they should be the same anyway).</p>
+		<p>It is NETINFO, not EOS, that triggers the &quot;Link bla bla bla is now synched&quot; notices, but NETINFO does not imply synching is actually complete (see EOS).</p>
 		<hr/>
 		<h1><a name="S3"></a>3 User Operations</h1>
 		<p>One important function of servers is it must notify all other servers about all of the users behind it. These commands represent the operations that can result in the change of a user's global state.</p>
 		<h2><a name="S3_1"></a>3.1 NICK - User Introduction and Nick Change (TOKEN: &amp;)</h2>
 		<p><b>Syntax (nick change):</b> <tt>:<i>oldnick</i> &amp; <i>newnick</i> :<i>timestamp</i></tt></p>
 		<p>This format of the NICK message indicates an existing user is changing his or her nickname. If a collision occurs, see the section on Nick Collisions below. The timestamp is the new nickname's timestamp.</p>
-		<p><b>Syntax (normal):</b> <tt>:<i>source.server</i> &amp; <i>nick</i> <i>hopcount</i> <i>timestamp</i>	<i>username</i> <i>hostname</i> <i>server</i> <i>servicestamp</i> :<i>realname</i></tt></p>
-		<p><b>Syntax (NICKv2):</b> <tt>:<i>source.server</i> &amp; <i>nick</i> <i>hopcount</i> <i>timestamp</i>	<i>username</i> <i>hostname</i> <i>server</i> <i>servicestamp</i> <i>+usermodes</i> <i>virtualhost</i> :<i>realname</i></tt></p>
-		<p><b>Syntax (NICKv2+CLK):</b> <tt>:<i>source.server</i> &amp; <i>nick</i> <i>hopcount</i> <i>timestamp</i>	<i>username</i> <i>hostname</i> <i>server</i> <i>servicestamp</i> <i>+usermodes</i> <i>virtualhost</i> <i>cloakhost</i> :<i>realname</i></tt>
-		<p><b>Syntax (NICKv2+NICKIP):</b> <tt>:<i>source.server</i> &amp; <i>nick</i> <i>hopcount</i> <i>timestamp</i> <i>username</i> <i>hostname</i> <i>server</i> <i>servicestamp</i> <i>+usermodes</i> <i>virtualhost</i> <i>nickipaddr</i> :<i>realname</i></tt></p>
-		<p><b>Syntax (NICKv2+NICKIP+CLK):</b> <tt>:<i>source.server</i> &amp; <i>nick</i> <i>hopcount</i> <i>timestamp</i>	<i>username</i> <i>hostname</i> <i>server</i> <i>servicestamp</i> <i>+usermodes</i> <i>virtualhost</i> <i>cloakhost</i> <i>nickipaddr</i> :<i>realname</i></tt>
+		<p><b>Syntax (normal):</b> <tt>&amp; <i>nick</i> <i>hopcount</i> <i>timestamp</i>	<i>username</i> <i>hostname</i> <i>server</i> <i>servicestamp</i> :<i>realname</i></tt></p>
+		<p><b>Syntax (NICKv2):</b> <tt>&amp; <i>nick</i> <i>hopcount</i> <i>timestamp</i>	<i>username</i> <i>hostname</i> <i>server</i> <i>servicestamp</i> <i>+usermodes</i> <i>virtualhost</i> :<i>realname</i></tt></p>
+		<p><b>Syntax (NICKv2+CLK):</b> <tt>&amp; <i>nick</i> <i>hopcount</i> <i>timestamp</i>	<i>username</i> <i>hostname</i> <i>server</i> <i>servicestamp</i> <i>+usermodes</i> <i>virtualhost</i> <i>cloakhost</i> :<i>realname</i></tt>
+		<p><b>Syntax (NICKv2+NICKIP):</b> <tt>&amp; <i>nick</i> <i>hopcount</i> <i>timestamp</i> <i>username</i> <i>hostname</i> <i>server</i> <i>servicestamp</i> <i>+usermodes</i> <i>virtualhost</i> <i>nickipaddr</i> :<i>realname</i></tt></p>
+		<p><b>Syntax (NICKv2+NICKIP+CLK):</b> <tt>&amp; <i>nick</i> <i>hopcount</i> <i>timestamp</i>	<i>username</i> <i>hostname</i> <i>server</i> <i>servicestamp</i> <i>+usermodes</i> <i>virtualhost</i> <i>cloakhost</i> <i>nickipaddr</i> :<i>realname</i></tt>
 		<p><b>Note:</b> Because each server normally does its own cloak generation, Unreal does not expect to receive NICK messages with the CLK info, so do not send it. It will send this info to a server it has received a PROTOCTL CLK from however.</p>
 		<p>This format of the NICK message introduces a new user to the network. If PROTOCTL VHP is enabled, the user's cloaked host is put in the virtualhost field, otherwise it'll be * unless the user is +t. With the addition of CLK, VHP is no longer necessary for determining the cloak host.</p>
 		<h3><a name="S3_1_1"></a>3.1.1 Nick Collisions</h3>
@@ -275,6 +280,9 @@
 		<h2><a name="S5_9"></a>5.9 SAMODE - Channel Force Mode (TOKEN: o)</h2>
 		<p><b>Syntax:</b> <tt>:<i>source</i> o <i>#channel</i> <i>modechange</i> <i>modeparams</i></tt></p>
 		<p>This has the same parameters as for MODE. The only difference is that servers probably will never receive this (but is best to document just in case), and that absolutely NO permission checking is done on anything.</p>
+		<h2><a name="S5_10"></a>5.10 TOPIC - Channel Topic (TOKEN: ) )</h2>
+		<p><b>Syntax:</b> <tt>:<i>source</i> ) <i>#channel</i> <i>nick</i> <i>timestamp</i> :<i>topic</i></p>
+		<p>Changes the channel topic information. This format is used when synching, as well as when a topic is changed normally. Nick is the user who changed the topic (depending on compile options, it can be just nick or a full nick!user@host), timestamp is when the change occured, and topic is the new topic text. Normally, only a newer timestamp will actually change the topic, but a U:Lined server can use an older timestamp as well (such as for TOPICLOCK).
 		<hr/>
 		<h1><a name="S6"></a>6 Services Commands</h1>
 		<p>These are commands typically employed by a service implementation, in addition to some of the normal commands. All of the commands listed here require the sender to be correctly U:Lined. This means that the services server name must appear within a ulines {} block in the unrealircd.conf configuration for ALL servers in the network. All servers and clients behind a U:Lined server are themselves U:Lined.</p>

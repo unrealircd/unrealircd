@@ -42,6 +42,7 @@
 #ifdef _WIN32
 #include <io.h>
 #endif
+#include "inet.h"
 #include <fcntl.h>
 #include "h.h"
 
@@ -79,6 +80,7 @@ void init_resolver(int firsttime)
 {
 struct ares_options options;
 int n;
+int optmask;
 
 	if (requests)
 		abort(); /* should never happen */
@@ -89,23 +91,44 @@ int n;
 		memset(&dnsstats, 0, sizeof(dnsstats));
 	}
 
+	memset(&options, 0, sizeof(options));
 	options.timeout = 3;
 	options.tries = 2;
-	options.flags = ARES_FLAG_NOALIASES;
-#ifdef _WIN32
-	/* for windows, keep using the hosts file for now, until I'm sure it's safe to disable */
-	n = ares_init_options(&resolver_channel, &options, ARES_OPT_TIMEOUT|ARES_OPT_TRIES|ARES_OPT_FLAGS);
-#else
-	options.lookups = "b"; /* no hosts file shit plz */
-	n = ares_init_options(&resolver_channel, &options, ARES_OPT_TIMEOUT|ARES_OPT_TRIES|ARES_OPT_FLAGS|ARES_OPT_LOOKUPS);
+	options.flags = ARES_FLAG_NOALIASES|ARES_FLAG_IGNTC;
+	optmask = ARES_OPT_TIMEOUT|ARES_OPT_TRIES|ARES_OPT_FLAGS;
+#ifndef _WIN32
+	/* on *NIX don't use the hosts file, since it causes countless useless reads.
+	 * on Windows we use it for now, this could be changed in the future.
+	 */
+	options.lookups = "b";
+	optmask |= ARES_OPT_LOOKUPS;
 #endif
+	n = ares_init_options(&resolver_channel, &options, optmask);
 	if (n != ARES_SUCCESS)
 	{
-		config_error("resolver: ares_init_options() failed with error code %d [%s]", n, ares_strerror(n));
+		/* Try again with set::dns::nameserver block */
+		optmask |= ARES_OPT_SERVERS;
+		options.servers = MyMallocEx(sizeof(struct in_addr));
+		options.servers[0].s_addr = inet_addr(NAME_SERVER);
+		options.nservers = 1;
+		n = ares_init_options(&resolver_channel, &options, optmask);
+		if (n != ARES_SUCCESS)
+		{
+			/* FATAL */
+			config_error("resolver: ares_init_options() failed with error code %d [%s]", n, ares_strerror(n));
 #ifdef _WIN32
-		win_error();
+			win_error();
 #endif
-		exit(-7);
+			exit(-7);
+		}
+		ircd_log(LOG_ERROR, "[warning] Unable to get DNS server from %s. Using the one from set::dns::nameserver (%s) instead",
+#ifdef _WIN32
+			"registry",
+#else
+			"resolv.conf",
+#endif
+			NAME_SERVER);
+		MyFree(options.servers);
 	}
 }
 
@@ -207,7 +230,6 @@ char ipv4[4];
 #else
 	r->ipv6 = 0;
 #endif
-	r->name = strdup(name);
 	unrealdns_addreqtolist(r);
 	
 	/* Execute it */
@@ -242,6 +264,7 @@ char ipv6 = r->ipv6;
 	newr = MyMallocEx(sizeof(DNSReq));
 	newr->cptr = acptr;
 	newr->ipv6 = ipv6;
+	newr->name = strdup(he->h_name);
 	unrealdns_addreqtolist(newr);
 	
 #ifndef INET6
@@ -276,10 +299,8 @@ int i;
 struct hostent *he2;
 u_int32_t ipv4_addr;
 
-	unrealdns_freeandremovereq(r);
-	
 	if (!acptr)
-		return;
+		goto bad;
 
 	if ((status != 0) ||
 #ifdef INET6
@@ -290,7 +311,7 @@ u_int32_t ipv4_addr;
 	{
 		/* Failed: error code, or data length is not 4 (nor 16) */
 		proceed_normal_client_handshake(acptr, NULL);
-		return;
+		goto bad;
 	}
 
 	if (!ipv6)
@@ -322,21 +343,24 @@ u_int32_t ipv4_addr;
 	{
 		/* Failed name <-> IP mapping */
 		proceed_normal_client_handshake(acptr, NULL);
-		return;
+		goto bad;
 	}
 
-	if (!verify_hostname(he->h_name))
+	if (!verify_hostname(r->name))
 	{
 		/* Hostname is bad, don't cache and consider unresolved */
 		proceed_normal_client_handshake(acptr, NULL);
-		return;
+		goto bad;
 	}
 
 	/* Entry was found, verified, and can be added to cache */
-	unrealdns_addtocache(he->h_name, &acptr->ip, sizeof(acptr->ip));
+	unrealdns_addtocache(r->name, &acptr->ip, sizeof(acptr->ip));
 	
-	he2 = unreal_create_hostent(he->h_name, &acptr->ip);
+	he2 = unreal_create_hostent(r->name, &acptr->ip);
 	proceed_normal_client_handshake(acptr, he2);
+
+bad:
+	unrealdns_freeandremovereq(r);
 }
 
 void unrealdns_cb_nametoip_link(void *arg, int status, struct hostent *he)

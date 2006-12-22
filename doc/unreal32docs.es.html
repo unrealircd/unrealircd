@@ -27,12 +27,12 @@ Spanish |
 <a href="unreal32docs.gr.html">Greek</a> | 
 <a href="unreal32docs.nl.html">Dutch</a> |
 <a href="unreal32docs.ru.html">Russian</a> | 
-<a href="unreal32docs.tk.html">Turkish</a>
+<a href="unreal32docs.tr.html">Turkish</a>
 <br><br>
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
-  <font size="4">Versi&oacute;n: 3.2.5</font><br>
-  <b>&Uacute;ltima actualizaci&oacute;n del documento:</b> 15-06-2006</div>
+  <font size="4">Versi&oacute;n: 3.2.6</font><br>
+  <b>&Uacute;ltima actualizaci&oacute;n del documento:</b> 22-12-2006</div>
 <br>
   <b>Programadores:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contribuciones:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -191,9 +191,9 @@ Windows:<br>
 <li><b>Versiones *NIX:</b>
 <ul>
 <li>Linux (2.2.*, 2.4.*, 2.6.*)
-<li>FreeBSD (4.*, 5.*)
+<li>FreeBSD (4.*, 5.*, 6.*)
 <li>NetBSD (2.*)
-<li>OpenBSD (3.7, 3.8)
+<li>OpenBSD (3.7, 3.8, 3.9)
 <li>Solaris (9, 10)
 </ul>
 <li><b>Versiones Windows:</b>
@@ -1873,14 +1873,16 @@ link &lt;nombre-servidor&gt; {
 <p><b>password-receive</b><br>
   Es la contrase&ntilde;a para validar uniones entrantes y puede ser encriptada (m&eacute;todos crypt, md5, sha1 y ripemd-160). Puede dejarlo como texto plano. Generalmente es el mismo que la contrase&ntilde;a anterior.</p>
 <p><b>hub vs leaf</b><br>
-  Un hub es un servidor con varios servidores unidos a &eacute;l. Un leaf s&oacute;lo tiene una uni&oacute;n, a su servidor. Un servidor o es un hub o un leaf, nunca ambos.</p>
+  Un hub es un servidor con varios servidores unidos a &eacute;l. Un leaf s&oacute;lo tiene una uni&oacute;n, a su servidor. 
+  Un servidor se considera leaf si no tiene la directriz hub. También es leaf si la directriz leaf es *, o leafdepth es 1.</p>
 <p><b>hub</b> (opcional)<br>
   Este valor es la m&aacute;scara de los servidores a los que puede conectar (ej: *.mi.red).</p>
 <p><b>leaf</b> (opcional)<br>
-  Este valor es la m&aacute;scara que este servidor actuar&aacute; como leaf.towards.
+  Este valor es una máscara de los servidores que este hub <b>no</b> conectará. Usando * es lo mismo que no usar ninguna directriz hub.
 </p>
 <p><b>leaf-depth</b> (opcional)<br>
-  Si se especifica, la directriz leaf tambi&eacute;n debe especificarse. Este valor es la profundidad o n&uacute;mero de uniones que puede tener.</p>
+  Este valor especifica la profunidad (número de saltos) que este server puede alojar. Por ejemplo, 1 significa que el servidor no puede tener ningún link por debajo de él (un leaf), 2 significa que puede tener servidores linkados pero estos no pueden tener a su vez más servidores linkados por debajo suyo. 
+  Un valor de 0 significa que no hay límite, es el parámetro por defecto.</p>
 <p><b>class</b><br>
   Es la clase a la se relacionar&aacute; este servidor, generalmente la clase server.</p>
 <p><b>compression-level</b> (opcional)<br>
@@ -2228,11 +2230,11 @@ set {
 <p><font class="set">set::options::fail-oper-warn;</font><br>
   Si est&aacute; presente, se notificar&aacute; al usuario de que su intento de /oper ha fallado y se ha logueado.</p>
 <p><font class="set">set::dns::timeout &lt;timevalue&gt;;</font><br>
-  Tiempo de espera del servidor DNS si no obtiene respuesta. Si el valor es una cadena alfanum&eacute;rica, use d para d&iacute;as, h para horas, m para minutos y s para segundos. Por ejemplo 1d2h3m significa 1 d&iacute;a, 2 horas y 3 minutos.</p>
+  Tiempo de espera del servidor DNS si no obtiene respuesta. Si el valor es una cadena alfanum&eacute;rica, use d para d&iacute;as, h para horas, m para minutos y s para segundos. Por ejemplo 1d2h3m significa 1 d&iacute;a, 2 horas y 3 minutos (NO IMPLEMENTADO).</p>
 <p><font class="set">set::dns::retries &lt;n&ordm;-intentos&gt;;</font><br>
-  N&uacute;mero de intentos si el servidor DNS no obtiene respuesta.</p>
+  N&uacute;mero de intentos si el servidor DNS no obtiene respuesta (NO IMPLEMENTADO).</p>
 <p><font class="set">set::dns::nameserver &lt;name-of-dns-server&gt;;</font><br>
-  Especifica el host del servidor a usar en las b&uacute;squedas DNS. </p>
+  Especifica el host del servidor a usar en las b&uacute;squedas DNS (NO IMPLEMENTADO).</p>
 <p><font class="set">set::dns::bind-ip &lt;ip&gt;;</font><br>
   Especifica la IP a enlazar para el resolver. Raras veces se usa.</p>
 <p><font class="set">set::network-name &lt;nombre-de-red&gt;;</font><br>
@@ -2323,6 +2325,8 @@ set {
  <p><font class="set">set::timesynch::timeout &lt;time&gt;</font><br>
   M&aacute;ximo tiempo a esperar las respuestas de los servidores de hora. Este valor debe estar entre 1 y 5 segundos. No es posible m&aacute;s alto porque puede causar demasiada diferencia de hora. 
   Por defecto es 3 y no hay ninguna raz&oacute;n para cambiarlo.</p>
+ <p><font class="set">set::pingpong-warning &lt;yes|no&gt;</font><br>
+  Cuando NOSPOOF está activo (normalmente lo está en Windows), envía un mensaje de advertencia a cada usuario para que use '/quote pong ..' si tiene problemas para conectar. Por defecto está en 'no'.</p>
 </div>
 <p><b><font size="+2">5 &#8211; Archivos adicionales <a name="addtlfiles"></a>
   </font></b></p>

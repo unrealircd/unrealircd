@@ -112,6 +112,8 @@ extern void  module_loadall(int module_load);
 extern long set_usermode(char *umode);
 extern char *get_modestr(long umodes);
 extern void                    config_error(char *format, ...) __attribute__((format(printf,1,2)));
+extern void config_warn(char *format, ...) __attribute__((format(printf,1,2)));
+
 extern MODVAR int config_verbose;
 extern void config_progress(char *format, ...) __attribute__((format(printf,1,2)));
 extern void       ipport_seperate(char *string, char **ip, char **port);
@@ -735,6 +737,8 @@ extern MODVAR char *(*stripbadwords_message)(char *str, int *blocked);
 extern MODVAR char *(*stripbadwords_quit)(char *str, int *blocked);
 extern MODVAR unsigned char *(*StripColors)(unsigned char *text);
 extern MODVAR const char *(*StripControlCodes)(unsigned char *text);
+extern MODVAR void (*spamfilter_build_user_string)(char *buf, char *nick, aClient *acptr);
+extern MODVAR int (*is_silenced)(aClient *sptr, aClient *acptr);
 /* /Efuncs */
 extern MODVAR aMotd *opermotd, *svsmotd, *motd, *botmotd, *smotd;
 extern MODVAR int max_connection_count;
@@ -776,3 +780,6 @@ extern char *unreal_time_synch_error(void);
 extern int unreal_time_synch(int timeout);
 extern int extban_is_banned_helper(char *buf);
 extern char *getcloak(aClient *sptr);
+extern void kick_insecure_users(aChannel *);
+extern int file_exists(char* file);
+extern void free_motd(aMotd *m);

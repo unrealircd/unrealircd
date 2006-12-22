@@ -114,6 +114,8 @@ char *(*stripbadwords_message)(char *str, int *blocked);
 char *(*stripbadwords_quit)(char *str, int *blocked);
 unsigned char *(*StripColors)(unsigned char *text);
 const char *(*StripControlCodes)(unsigned char *text);
+void (*spamfilter_build_user_string)(char *buf, char *nick, aClient *acptr);
+int (*is_silenced)(aClient *sptr, aClient *acptr);
 
 static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 00 */	{NULL, NULL},
@@ -149,8 +151,8 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 30 */	{"stripbadwords_quit", (void *)&stripbadwords_quit},
 /* 31 */	{"StripColors", (void *)&StripColors},
 /* 32 */	{"StripControlCodes", (void *)&StripControlCodes},
-/* 33 */	{NULL, NULL},
-/* 34 */	{NULL, NULL},
+/* 33 */	{"spamfilter_build_user_string", (void *)&spamfilter_build_user_string},
+/* 34 */	{"is_silenced", (void *)&is_silenced},
 /* 35 */	{NULL, NULL}
 };
 
@@ -330,14 +332,25 @@ char  *Module_Create(char *path_)
 		strcpy(path, "./");
 		strcat(path, path_);
 	}
+
+	if (!file_exists(path))
+	{
+		snprintf(errorbuf, sizeof(errorbuf), "Cannot open module file: %s", strerror(errno));
+		return errorbuf;
+	}
 #ifdef __OpenBSD__
 	/* For OpenBSD, do not do a hardlinkink attempt first because it checks inode
 	 * numbers to see if a certain module is already loaded. -- Syzop
 	 */
-	unreal_copyfileex(path, tmppath, 0);
+	ret = unreal_copyfileex(path, tmppath, 0);
 #else
-	unreal_copyfileex(path, tmppath, 1);
+	ret = unreal_copyfileex(path, tmppath, 1);
 #endif
+	if (!ret)
+	{
+		snprintf(errorbuf, sizeof(errorbuf), "Failed to copy module file.");
+		return errorbuf;
+	}
 	if ((Mod = irc_dlopen(tmppath, RTLD_NOW)))
 	{
 		/* We have engaged the borg cube. Scan for lifesigns. */

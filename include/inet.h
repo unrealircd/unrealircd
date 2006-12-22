@@ -57,3 +57,7 @@ extern __u_l inet_network();
 extern __u_l inet_lnaof();
 #endif
 #undef __u_l
+
+#ifndef INADDR_NONE
+#define INADDR_NONE 0xffffffff
+#endif

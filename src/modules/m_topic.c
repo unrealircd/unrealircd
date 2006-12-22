@@ -146,7 +146,7 @@ long flags = 0; /* cache: membership flags */
 		if (parc > 2 || SecretChannel(chptr))
 		{
 			if (!ismember && !IsServer(sptr)
-			    && !IsOper(sptr) && !IsULine(sptr))
+			    && !OPCanSeeSecret(sptr) && !IsULine(sptr))
 			{
 				sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
 				    me.name, parv[0], name);

@@ -89,13 +89,18 @@ DLLFUNC int MOD_UNLOAD(m_sapart)(int module_unload)
 	parv[2] - channel(s) to part
 	parv[3] - comment
 */
+
 DLLFUNC CMD_FUNC(m_sapart)
 {
 	aClient *acptr;
 	aChannel *chptr;
 	Membership *lp;
+	char *name, *p = NULL;
+	int i;
 	char *comment = (parc > 3 && parv[3] ? parv[3] : NULL);
 	char commentx[512];
+	char jbuf[BUFSIZE];
+
 	if (!IsSAdmin(sptr) && !IsULine(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
@@ -113,23 +118,42 @@ DLLFUNC CMD_FUNC(m_sapart)
 		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, parv[0], parv[1]);
 		return 0;
 	}
-	if (!(chptr = get_channel(acptr, parv[2], 0)))
+
+	/* Now works like m_join */
+	*jbuf = 0;
+
+	for (i = 0, name = strtoken(&p, parv[2], ","); name; name = strtoken(&p,
+	     NULL, ","))
 	{
-		sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL), me.name, parv[0],
-			parv[2]);
-		return 0;
+		if (!(chptr = get_channel(acptr, name, 0)))
+		{
+			sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL), me.name, parv[0],
+				name);
+			continue;
+		}
+		if (!(lp = find_membership_link(acptr->user->channel, chptr)))
+		{
+			sendto_one(sptr, err_str(ERR_USERNOTINCHANNEL), me.name, parv[0], 
+				parv[1], name);
+			continue;
+		}
+		if (*jbuf)
+			(void)strlcat(jbuf, ",", sizeof jbuf);
+		(void)strlncat(jbuf, name, sizeof jbuf, sizeof(jbuf) - i - 1);
+		i += strlen(name) + 1;
 	}
-	if (!(lp = find_membership_link(acptr->user->channel, chptr)))
-	{
-		sendto_one(sptr, err_str(ERR_USERNOTINCHANNEL), me.name, parv[0], 
-			   parv[1], parv[2]);
-		return 0;
-	}
+
+	if (!*jbuf)
+		return -1;
+
+	strcpy(parv[2], jbuf);
 	
 	if (comment)
 	{
 		sendto_realops("%s used SAPART to make %s part %s (%s)", sptr->name, parv[1],
 		               parv[2], comment);
+		sendto_serv_butone(&me, ":%s GLOBOPS :%s used SAPART to make %s part %s (%s)",
+				   me.name, sptr->name, parv[1], parv[2], comment);
 		/* Logging function added by XeRXeS */
 		ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s (%s)", 
 			 sptr->name, parv[1], parv[2], comment);
@@ -140,6 +164,8 @@ DLLFUNC CMD_FUNC(m_sapart)
 	{
 		sendto_realops("%s used SAPART to make %s part %s", sptr->name, parv[1],
 			        parv[2]);
+		sendto_serv_butone(&me, ":%s GLOBOPS :%s used SAPART to make %s part %s",
+				   me.name, sptr->name, parv[1], parv[2]);
 		/* Logging function added by XeRXeS */
 		ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s",
 			 sptr->name, parv[1], parv[2]);

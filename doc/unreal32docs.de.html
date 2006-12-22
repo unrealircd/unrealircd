@@ -24,13 +24,13 @@
 <a href="unreal32docs.gr.html">Greek</a> |
 <a href="unreal32docs.nl.html">Dutch</a> |
 <a href="unreal32docs.ru.html">Russian</a> |
-<a href="unreal32docs.tk.html">Turkish</a>
+<a href="unreal32docs.tr.html">Turkish</a>
 <br><br>
 
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
-  <font size="4">Version: 3.2.5 </font><br>
-  <b>Letztes Update dieses Handbuchs:</b>                2006-06-15</div>
+  <font size="4">Version: 3.2.6 </font><br>
+  <b>Letztes Update dieses Handbuchs:</b>                2006-12-22</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b>  McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
 <b>Dokumentation</b><b>:</b> CKnight^ / Syzop<br>
@@ -183,7 +183,7 @@ Upgrade von 3.2 Versionen</a></b></font><br>
 <p>Der empfohlene Weg für ein Upgrade ist:<br>
 Linux:<br>
 <ul>
-<li>Altes UnrealIRCd Verzeichnis umbenennen (oder es wird im nächsten Schritt
+<li>Altes UnrealIRCd Verzeichnis umbenennen (ansonsten wird es im nächsten Schritt
   überschrieben)
 <li>Neue UnrealIRCd Version entpacken und &quot;./Config&quot; und &quot;make&quot;
   laufen lassen (*NIX).
@@ -208,9 +208,9 @@ Bug gemeldet wird!</p></div>
 <li><b>*NIX Versionen:</b>
 <ul>
 <li>Linux (2.2.*, 2.4.*, 2.6.*)
-<li>FreeBSD (4.*, 5.*)
+<li>FreeBSD (4.*, 5.*, 6.*)
 <li>NetBSD (2.*)
-<li>OpenBSD (3.7, 3.8)
+<li>OpenBSD (3.7, 3.8, 3.9)
 <li>Solaris (9,10)
 </ul>
 <li><b>Windows Versionen:</b>
@@ -2324,7 +2324,7 @@ angegebenen abgelehnt.<br>
 haben oder nicht haben darf. Die Flags müssen direkt nacheinander ohne
 Zwischenräume angegeben sein. Wird einem Zeichen ein &quot;!&quot;
 vorangestellt, darf der Server dieses Flag nicht haben, steht kein &quot;!&quot;
-davor, so muss der Server dieses Flag haben, um vom Linken ausgeschlossen zu
+davor, muss der Server dieses Flag haben, um vom Linken ausgeschlossen zu
 sein.</p>
 </div>
 <p><font class="block_section"><a name="denylinkblock">4.24 - </a> </font><a name="denylinkblock"><font class="block_name">Deny Link Block</font>
@@ -2608,19 +2608,23 @@ wie bei &quot;password-connect&quot;.
 </p>
 <p><b>hub oder leaf</b><br>
 Zu einem hub sind mehrere Server verbunden, ein leaf hat immer nur eine
-Verbindung. Ein Server ist entweder ein hub oder ein leaf - die beiden Optionen
-können nicht kombiniert werden.
+Verbindung. Ein Server ist solange ein leaf, wie es keine hub Anweisung gibt.
+Ebenso ist er ein leaf, wenn in der Anweisung lediglich * definiert ist oder die
+leaf Tiefe (Anzahl der hops) 1 ist.
 </p>
 <p><b>hub</b> (optional)<br>
 Der Wert ist eine Maske, auf welche Server dieser hub connecten darf (z.B.: *.my.net).
 </p>
 <p><b>leaf</b> (optional)<br>
-Der Wert ist eine Maske, dass dieser Server wie ein leaf in Richtung zum eigenen
-Server fungiert.
+Dieser Wert gibt an, zu welchen Servern dieser Hub <b>nicht</b> verbindet. Hier
+einen * anzugeben ist das selbe, wie keine hub Anweisung zu haben.
 </p>
 <p><b>leaf-depth</b> (optional)<br>
-Falls dies angegeben ist, sollte auch &quot;leaf&quot; angegeben sein. Angegeben
-wird die Tiefe (Anzahl der hops) die dieser Server darunter haben darf.
+Dieser Wert gibt die&nbsp; Tiefe (Anzahl der hops)an, die dieser Server darunter haben darf.
+Beispielsweise bedeutet 1, dass der Server keine Links hat (ist ein leaf), 2
+bedeutet, es kann zu Servern gelinkt werden, aber diese können zu keinem
+anderen linken (dieser Hub kann also nur zu leafs linken). Ein Wert von 0
+bedeutet, dass es kein Limit gibt und das ist auch Default.
 </p>
 <p><b>class</b><br>
 Die Klasse, in die der Server kommt, oft ist eine eigene Klasse für Server
@@ -3030,7 +3034,7 @@ Wird hier nichts angegeben, können alle User sämtliche Flags benutzen, bei
 Angabe von '*' keines. Es dürfen nur <b> kurze Operflags</b> angegeben werden.</p>
 <p><b>set::oper-only-stats {&lt;stats-flag>; &lt;stats-flag&gt;;};</b><br>
 Definiert eine Liste von Stats Flags, die nur von Opers benutzt werden können.
-In dieser Syntax dürfen nur <b>lange Operflags</b> angegeben wwerden.</p>
+In dieser Syntax dürfen nur <b>lange Operflags</b> angegeben werden.</p>
 <p><font class="set">set::maxchannelsperuser &lt;amount-of-channels&gt;;</font><br>
 Einstellung, in wie vielen Channels ein User gleichzeitig sein darf.</p>
 <p><b>set::maxdccallow &lt;amount-of-entries&gt;;</b><br>
@@ -3089,12 +3093,13 @@ Oper Zugriff geloggt wurde.</p>
 Ein Wert, der angibt, innerhalb welcher Zeit ein DNS Server zu antworten hat, bevor
 &quot;timeout&quot; gemeldet wird. Der Zeitwert ist ein numerischer String, in
 dem 'd' Tage bedeutet, 'h' Sunden, 'm' Minuten und 's' Sekunden. Beispiel: '1d2h3m'
-bedeutet 1 Tag, 2 Stunden, 3 Minuten.</p>
+bedeutet 1 Tag, 2 Stunden, 3 Minuten. (NICHT IMPLEMENTIERT)</p>
 <p><font class="set">set::dns::retries &lt;number-of-retries&gt;;</font><br>
 Ein Zahlenwert, durch den festgelegt wird, wie oft versucht werden soll, die DNS
-aufzulösen, bevor ein Fehler gemeldet wird.</p>
+aufzulösen, bevor ein Fehler gemeldet wird. (NICHT IMPLEMENTIERT)</p>
 <p><font class="set">set::dns::nameserver &lt;name-of-dns-server&gt;;</font><br>
-Gibt den Hostnamen des Servers an, der zur DNS Namensauflösungen dient.</p>
+Gibt den Hostnamen des Servers an, der zur DNS Namensauflösungen dient. (NICHT
+IMPLEMENTIERT)</p>
 <p><font class="set">set::network-name &lt;name-of-network&gt;;</font><br>
 Gibt den Namen des Netzwerks an, in dem der Server läuft (also den Namen des
 irc Netzes!) Dieser Eintrag sollte auf allen Servern im Netzwerk absolut
@@ -3237,7 +3242,17 @@ Antwort gewinnt.</p>
 Maximale Zeit, die auf eine Zeitserverantwort gewartet wird. Möglich ist ein
 Wert von 1 bis 5, mehr ist nicht möglich, weil das Ergebnis sonst zu ungenau
 wäre. Default Einstellung ist hier 3 und normalerweise sollte es keinen Grund
-geben, dies zu ändern. </div>
+geben, dies zu ändern.
+<p><font class="set">set::pingpong-warning&lt;yes|no&gt;</font><br>
+Die Versuche von Name-Servern einen falschen Hostnamen zurückzuliefern, werden
+Spoofing (Reinlegen) genannt. Um sich davor zu schützen, kann der Resolver so
+konfiguriert werden, daß er überprüft, ob die gegebene IP-Adresse auch
+tatsächlich zum erhaltenen Hostnamen gehört. Wenn dies nicht der Fall ist,
+wird der Name verworfen und ein Fehler zurückgeliefert. Dieses Verhalten wird
+mit nospoof on eingestellt. Wenn NOSPOOF aktiviert ist (üblicherweise in
+Windows), wird aene Warnung an jeden User geschickt, &nbsp;'/quote pong ..' zu
+benutzen, wenn es beim Verbinden Probleme gibt.&nbsp; Voreingestellt ist 'no'.</p>
+ </div>
 <p><b><font size="+2"><a name="addtlfiles">5 &#8211; Additional Files</a></font></b></p><div class="desc">
   Zusätzlich zu den Konfigurationsdateien hat Unreal einige weitere Dateien,
   wie MOTD, OperMOTD, BotMOTD, und Rules. In der nachfolgenden Liste stehen die

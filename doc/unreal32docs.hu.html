@@ -27,12 +27,12 @@ Hungarian |
 <a href="unreal32docs.gr.html">Greek</a> | 
 <a href="unreal32docs.nl.html">Dutch</a> | 
 <a href="unreal32docs.ru.html">Russian</a> | 
-<a href="unreal32docs.tk.html">Turkish</a>
+<a href="unreal32docs.tr.html">Turkish</a>
 <br><br>
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com/">http://www.unrealircd.com</a></font><br>
-  <font size="4">Verzió: 3.2.5</font><br>
-  <b>Utolsó dokumentáció frissítés:</b> 2006-06-15</div>
+  <font size="4">Verzió: 3.2.6</font><br>
+  <b>Utolsó dokumentáció frissítés:</b> 2006-12-22</div>
 <br>
   <b>Fõ fejlesztõk:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Munkatársak:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -188,9 +188,9 @@ Windows:<br>
 <li><b>*NIX verziók:</b>
 <ul>
 <li>Linux (2.2.*, 2.4.*, 2.6.*)
-<li>FreeBSD (4.*, 5.*)
+<li>FreeBSD (4.*, 5.*, 6.*)
 <li>NetBSD (2.*)
-<li>OpenBSD (3.7, 3.8)
+<li>OpenBSD (3.7, 3.8, 3.9)
 <li>Solaris (9, 10)
 </ul>
 <li><b>Windows verzió:</b>
@@ -1910,10 +1910,10 @@ link &lt;szervernév&gt; {
 		...
 	};
 };</pre></p>
-<p>Erre a blokkra van szükséged szerverek linkeléséhez. Kérlek, szakíts egy kis idõt ennek az egésznek az
-   elolvasására, mert ez egyike azon legnehezebb dolgoknak, amelyeket a felhasználók gyakran elhibáznak ;P</p>
+<p>Szerverek linkeléséhez erre a blokkra van szükséged. Kérlek, szakíts egy kis idõt ennek az egésznek az
+   elolvasására, mert ez az egyik legnehezebb dolog, amit a felhasználók gyakran elhibáznak ;P</p>
 <p>Elõször is, a <b>szervernév</b> a távoli szervered neve, az a név, amely a távoli szerver
-   me { } blokkjában van beállítva, mint a hub.blah.com (nem az IP cím, és a gazdanévtõl is eltérõ lehet).</p>
+   me { } blokkjában van beállítva, mint a hub.valami.com (nem az IP cím, és a gazdanévtõl is eltérõ lehet).</p>
 <p><b>username</b><br>
    Megadhatod ezt, ha identet használsz a felhasználónevek hitelesítésre, közönséges esetben állítsd "*"-ra.
 </p>
@@ -1929,39 +1929,37 @@ link &lt;szervernév&gt; {
   </table>
 </p>
 <p><b>bind-ip</b> (szabadon választható)<br>
-  Arra használható, hogy a szerver egy megadott IP-re bindeljen (pl. 192.168.0.1-re), ahonnan kellene
-  kapcsolódnia, szinte soha nincs szükség rá.
+  Ezzel megadhatjuk, hogy a helyi szerver milyen IP címrõl kapcsolódjon (pl. 192.168.0.1-rõl), szinte soha nincs szükség rá.
  </p>
 <p><b>port</b><br>
   Azon port száma, ahová kapcsolódjon a szerver (amelyen a távoli szerver figyeli a kapcsolódásokat).
  </p>
 <p><b>password-connect</b><br>
-  A távoli szerverre kapcsolódáskor használt jelszó, egyszerû szövegnek kell lennie.
+  A távoli szerverre kapcsolódáskor használt jelszó; egyszerû szövegnek kell lennie.
  </p>
 <p><b>password-receive</b><br>
-  A beérkezõ linkek érvényesítéséhez használt jelszó, lehet titkosított (érvényes kódolási típusok
+  A beérkezõ linkek érvényesítéséhez használt jelszó; lehet titkosított (érvényes kódolási típusok
   a crypt, md5, sha1 és ripemd-160). A kódolás-típusa paramétert kihagyhatod, hogy csak egyszerû szöveget
   használj. Gyakran megegyezik ez a jelszó a password-connect-tel.
 </p>
 <p><b>hub vs leaf</b><br>
-  A hub linkelhet egyszerre több szervert is, amíg a leafnek csak egy linkje lehet... hozzád. 
-  Egy szerver vagy hub, vagy leaf, ezek együtt nem használhatóak.
+  A hub egyszerre több szervert is linkelhet, míg a leafnek csak egy linkje lehet... hozzád.
+  Egy szerver leaf, ha nincs hub direktívája. Akkor is leaf, ha a leaf direktíva értéke *, vagy a leafdepth értéke 1.
 </p>
 <p><b>hub</b> (szabadon választható)<br>
-  Az értéke egy maszk azokra a szerverekre, amelyekre ez a hub kapcsolódhat (pl: *.sajat.net).
+  Értéke egy maszk olyan szerverekre, amelyekre ez a hub kapcsolódhat (pl: *.sajat.net).
 </p>
 <p><b>leaf</b> (szabadon választható)<br>
-  Az értéke egy maszk azokra a szerverekre, amelyek felé ez a szerver leafként viselkedik.
+  Értéke egy maszk olyan szerverekre, amelyekre ez a hub <b>nem</b> kapcsolódhat. A *-nak ugyanolyan hatása van, mintha nem lenne hub direktíva.
 </p>
-<p><b>leaf-mélység</b> (szabadon választható)<br>
-  Ha ezt megadod, a leaf opciót is célszerû megadnod. Ez az érték azt a mélységet
-  (ugrások számát) határozza meg, amely alá ez a szerver nem léphet.
+<p><b>leafdepth</b> (szabadon választható)<br>
+  Ez a direktíva meghatározza, hogy mekkora mélység lehet ezen szerver alatt (csomópontok száma). Például az 1 azt jelenti, hogy a szervernek nem lehet egy linkje sem (vagyis egy leaf), a 2 azt jelenti, hogy õ még linkelhet szervereket, de a hozzá kapcsolódók már nem (vagyis csak leaf szervereket linkelhet). A 0 érték azt jelenti, nincs korlátozás, és ez az alapértelmezés is.
 </p>
 <p><b>class</b><br>
-  Azon kapcsolati osztály, ahová helyezzük a szervert. Ehhez gyakran egy külön szerver osztályt szokás használni.
+  Megadja, melyik kapcsolati osztályba helyezzük a linkelt szervert. Ehhez gyakran egy külön szerver osztályt szokás használni.
 </p>
 <p><b>compression-level</b> (szabadon választható)<br>
-  Megadja ezen link tömörítési szintjét (1-9). Csak akkor szokás használni, ha a link::options::zip be van állítva.
+  Megadja a kapcsolat tömörítési szintjét (1-9). Csak akkor szokás használni, ha a link::options::zip be van állítva.
 </p>
 <p><b>ciphers</b> (szabadon választható)<br>
   Meghatározza, milyen SSL kódoló/visszafejtõ algoritmusok (cipherek) legyenek használatban ehhez a linkhez. A rendelkezésre álló
@@ -1971,9 +1969,9 @@ link &lt;szervernév&gt; {
   Egy vagy több opció használatának beállítására szolgál. Néha nincs szükség rá.<br>
 <table border="0">
 <tr><td><b>ssl</b></td><td> ha SSL portra kapcsolódsz.</td></tr>
-<tr><td><b>autoconnect</b></td><td> a szerver próbálkozni fog az automatikus kapcsolódással, a class::connfreq-ben
+<tr><td><b>autoconnect</b></td><td> a szerver automatikusan fog próbálkozni a kapcsolódással a class::connfreq-ben
  beállított idõközönként (a legjobb, ha ezt csak egy oldalról engedélyezed, mint a leaf-&gt;hub linkeléseknél)</td></tr>
-<tr><td><b>zip</b></td><td> ha tömörített (zip) linkeket akarsz; ehhez szükség van a szerverbe belefordítt zip link támogatásra + ezen opció beállítására mindkét oldalon</td></tr>
+<tr><td><b>zip</b></td><td> ha tömörített (zip) linkeket szeretnél; ehhez szükség van a szerverbe belefordítt zip link támogatásra + ezen opció beállítására mindkét oldalon</td></tr>
 <tr><td><b>nodnscache</b></td><td> ne használjon gyorsítótárat a kimenõ szerverkapcsolat IP címére; használd ezt gyakran változó
  gazdanevek (például dyndns.org) esetén.</td></tr>
 <tr><td><b>nohostcheck</b></td><td> ne érvényesítse a távoli gazdanevet (link::hostname); használd ezt gyakran változó
@@ -2367,12 +2365,12 @@ set {
   Egy idõérték azon idõhossz meghatározására, ami alatt a DNS szervernek válaszolni kell,
   mielõtt idõkifutás történik. Az idõérték egy numerikus sztring a napot jelentõ "d",
   az órát jelentõ "h", a percet jelentõ "m" és a másodpercet jelentõ "s" karakterekkel.
-  Például az 1d2h3m jelentése 1 nap, 2 óra és 3 perc.</p>
+  Például az 1d2h3m jelentése 1 nap, 2 óra és 3 perc. (NINCS IMPLEMENTÁLVA)</p>
 <p><font class="set">set::dns::retries &lt;próbálkozások-száma&gt;;</font><br>
   Egy számérték, amely meghatározza, hányszor történjen újrapróbálkozás a DNS lekérdezésben,
-  ha hiba fordul elõ.</p>
+  ha hiba fordul elõ. (NINCS IMPLEMENTÁLVA)</p>
 <p><font class="set">set::dns::nameserver &lt;dns-szerver-neve&gt;;</font><br>
-  Meghatározza a DNS lekérdezésekhez használt szerver gazdanevét.</p>
+  Meghatározza a DNS lekérdezésekhez használt szerver gazdanevét. (NINCS IMPLEMENTÁLVA)</p>
 <p><font class="set">set::dns::bind-ip &lt;ip&gt;;</font><br>
   Meghatározza azt az IP címet, amelyre bindeljen a szerver a lekérdezésekhez; a lehetõ legritkábban van szükség rá.</p>
 <p><font class="set">set::network-name &lt;hálózat-neve&gt;;</font><br>
@@ -2499,6 +2497,9 @@ AU). A lekérdezések párhuzamosan kerülnek elküldésre, a leggyorsabb válasz nyer.
   Legfeljebb ennyi ideig vár az idõszerverek válaszára. Ez egy érték 1 és 5 között; több nem lehet,
   mert túl nagy pontatlanságot okozna. Ez az érték alapértelmezésben 3, és nem valószínû, hogy
   érdemes megváltoztatni.</p>
+ <p><font class="set">set::pingpong-warning &lt;yes|no&gt;</font><br>
+  Ha a NOSPOOF engedélyezett (általában Windowson), küldjön egy figyelmeztetést minden felhasználónak, hogy
+  használják a "/quote pong .." parancsot, ha kapcsolódási problémájuk van. Az alapértelmezés "no".</p>
 <p></p> </div>
 <p><b><font size="+2">5 &#8211; További fájlok<a name="addtlfiles"></a>
   </font></b></p><div class="desc">

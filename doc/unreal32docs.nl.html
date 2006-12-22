@@ -25,18 +25,18 @@
 <a href="unreal32docs.gr.html">Greek</a> |
 Dutch | 
 <a href="unreal32docs.ru.html">Russian</a> | 
-<a href="unreal32docs.tk.html">Turkish</a>
+<a href="unreal32docs.tr.html">Turkish</a>
 <br><br>
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
-  <font size="4">Version: 3.2.5</font><br>
-  <b>Laatste documentatie wijziging:</b> 2006-06-15</div>
+  <font size="4">Version: 3.2.6</font><br>
+  <b>Laatste documentatie wijziging:</b> 2006-12-22</div>
 
 <br>
   <b>Hoofd programmeurs:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Medewerkers:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentatie:</b> CKnight^ / Syzop<br>
-  <b>Nederlandse vertaling:</b> Mark (<a href="irc://irc.irc-chatters.net/dutch">#dutch op irc.irc-chatters.net</a>)<br>
+  <b>Nederlandse vertaling:</b> Mark (<a href="irc://irc.unrealircd.com/unreal-dutch">#unreal-dutch op irc.unrealircd.com</a>)<br>
 <p>Om dit document te bekijken heb je een geschikte browser nodig, welke hier beneden staan. De meest
  recente documentatie staat op <a href="http://www.vulnscan.org/UnrealIRCd/unreal32docs.html">
  http://www.vulnscan.org/UnrealIRCd/unreal32docs.html</a> en een FAQ staat op
@@ -194,9 +194,9 @@ Windows:<br>
  <li><b>*NIX versions:</b>
   <ul>
    <li>Linux (2.2.*, 2.4.*, 2.6.*)
-   <li>FreeBSD (4.*, 5.*)
+   <li>FreeBSD (4.*, 5.*, 6.*)
    <li>NetBSD (2.*)
-   <li>OpenBSD (3.7, 3.8)
+   <li>OpenBSD (3.7, 3.8, 3.9)
    <li>Solaris (9, 10)
   </ul>
  <li><b>Windows versie:</b>
@@ -2014,17 +2014,20 @@ link &lt;server-name&gt; {
 </p>
 <p><b>hub vs leaf</b><br>
  Een hub heeft meerdere servers aan zich gelinkt, een leaf heeft maar 1 server.. naar jou.
- Een server is of een hub, of een leaf, je kan ze niet mengen.
+ Een server is altijd een leaf, tenzij je hub instelt. Ze is ook een leaf als je leaf * hebt, of leafdepth 1 is.
 </p>
 <p><b>hub</b> (optioneel)<br>
  De waarde is de mask van de servers waarmee deze hub mag verbinden (bijv. *.my.net)
 </p>
 <p><b>leaf</b> (optioneel)<br>
- De waarde is de mask van waartegen deze server zich als een leaf zal gedragen.
+ De waarde is de mask waartegen deze hub <b>niet> mag verbinden. Als je * instelt krijg je hetzelfde
+ effect als geen hub directive instellen.
 </p>
 <p><b>leaf-depth</b> (optioneel)<br>
- Wanneer leaf ingesteld is, moet dit ook worden ingesteld. De waarde is het aantal
- hops (aantal servers) welke deze server onder zich mag hebben.
+ Deze waarde geeft aan hoeveel hops (aantal servers) deze server onder zich mag hebben. Bijvoorbeeld,
+ 1 betekent dat deze server geen enkele andere server onder zich mag hebben (een leaf). 2 betekent dat
+ er gelinkt mag worden naar servers die geen servers onder zich hebben (een hub die alleen leafs linkt).
+ De waarde 0 betekent geen limiet en is de standaard waarde.
 </p>
 <p><b>class</b><br>
  De class waarin de server geplaatst wordt. Meestal is er een aparte server-class.
@@ -2439,12 +2442,12 @@ gemiddeld 2048:60=34 tekens per ban toe.</p>
  Een tijdsduur die specificeert hoelang een DNS server erover mag doen voordat
  er een timeout volgt. De tijd is een numerieke waarde, waarin de d voor dag staat,
  de h voor uur, m voor minute en s voor seconde. Voorbeeld: 1d2h3m betekent
- 1 dag, 2 uur en 3 minuten.</p>
+ 1 dag, 2 uur en 3 minuten (NOG NIET INGEVOERD).</p>
 <p><font class="set">set::dns::retries &lt;number-of-retries&gt;;</font><br>
  Een numerieke waarde die instelt hoeveel keer er opnieuw geprobeerd moet worden
- een DNS lookup te voltooien.</p>
+ een DNS lookup te voltooien (NOG NIET INGEVOERD).</p>
 <p><font class="set">set::dns::nameserver &lt;name-of-dns-server&gt;;</font><br>
- De hostnaam die gebruikt moet worden voor een DNS lookup.</p>
+ De hostnaam die gebruikt moet worden voor een DNS lookup (NOG NIET INGEVOERD).</p>
 <p><font class="set">set::dns::bind-ip &lt;ip&gt;;</font><br>
  Het IP waaraan gebonden moet worden voor het resolven. Bijna nooit nodig.</p>
 <p><font class="set">set::network-name &lt;name-of-network&gt;;</font><br>
@@ -2573,8 +2576,11 @@ gemiddeld 2048:60=34 tekens per ban toe.</p>
  Maximale wachttijd voor een antwoord. Dit is een waarde tussen 1 en 5, hoger kan niet vanwege
  een te hoge incorrectheid. Standaard is dit 3, en er is waarschijnlijk geen goede reden
  om dit aan te passen.</p>
-<p></p> </div>
+<p><font class="set">set::pingpong-warning &lt;yes|no&gt;</font><br>
+ Wanneer NOSPOOF aan staat (meestal op Windows), stuur dan een bericht naar de gebruiker
+ om '/quote pong ..' te typen als ze problemen hebben met verbinden? Standaard is no</p>
 
+<p></p> </div>
 <p><b><font size="+2">5 &#8211; Aanvullende bestanden<a name="addtlfiles"></a>
   </font></b></p><div class="desc">
  Als aanvulling op het configuariebestand heeft Unreal nog een aantal andere bestanden, zoals

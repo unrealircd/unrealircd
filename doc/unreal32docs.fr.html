@@ -25,12 +25,12 @@ French |
 <a href="unreal32docs.gr.html">Greek</a> | 
 <a href="unreal32docs.nl.html">Dutch</a> | 
 <a href="unreal32docs.ru.html">Russian</a> |
-<a href="unreal32docs.tk.html">Turkish</a>
+<a href="unreal32docs.tr.html">Turkish</a>
 <br><br>
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com/">http://www.unrealircd.com</a></font><br>
-  <font size="4">Version: 3.2.5</font><br>
-  <b>Derni&egrave;re mise &agrave; jour de la documentation:</b> 2006-06-15</div>
+  <font size="4">Version: 3.2.6</font><br>
+  <b>Derni&egrave;re mise &agrave; jour de la documentation:</b> 2006-12-22</div>
 <br>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -190,9 +190,9 @@ Windows:<br>
 <li><b>*NIX versions:</b>
 <ul>
 <li>Linux (2.2.*, 2.4.*, 2.6.*)
-<li>FreeBSD (4.*, 5.*)
+<li>FreeBSD (4.*, 5.*, 6.*)
 <li>NetBSD (2.*)
-<li>OpenBSD (3.7, 3.8)
+<li>OpenBSD (3.7, 3.8, 3.9)
 <li>Solaris (9, 10)
 </ul>
 <b>Windows version:</b>
@@ -1886,17 +1886,21 @@ deny channel {
 </p>
 <p><b>hub vs leaf</b><br>
   Un hub a plusieurs serveurs link&eacute; &agrave; lui, un leaf n'a qu'un seul link... le vôtre. 
-  Un serveur est soit un hub, soit un leaf, vous ne pouvez combiner ces options.
+  Un serveur est un leaf à moins qu'il n'ait une directive hub. C'est &eacute;galement un leaf si la directive est *, ou si leafdepth a comme valeur 1.
 </p>
 <p><b>hub</b> (optionnel)<br>
   Cette valeur est un masque des serveurs auquel ce hub peut se connecter (ex. : *.my.net).
 </p>
 <p><b>leaf</b> (optionnel)<br>
-  Cette valeur est un masque que ce serveur interpr&eacute;tera comme un leaf.
+  Cette valeur est un masque correspondant aux serveurs auquels ce hub <b>ne peut pas</b> se connecter.
+  Mettre * ici sera pareil &agrave; ne pas avoir de directive hub.
 </p>
-<p><b>leaf-depth</b> (optionnel)<br>
-  Si celui-ci est sp&eacute;cifier, alors leaf doit l'&ecirc;tre aussi. 
+<p><b>leafdepth</b> (optionnel)<br> 
   Cette valeur sp&eacute;cifie la profondeur (nombre de sauts) que ce serveur peut avoir derri&egrave;re lui.
+  Par exemple, 1 signifie que le serveur ne peut avoir aucun lien en dessous de lui (un leaf), 
+  2 signifie qu'il peut &ecric;tre li&eacute; &agrave; des serveurs mais que ceux-ci ne peuvent avoir rien du tout
+  derri&egrave;re eux (cela signifie que ce hub peut uniquement &ecirc;tre reli&eacute; &agrave des leaves).
+  Une valeur de O signifie aucune limite, et c'est la valeur par d&eacute;faut. 
 </p>
 <p><b>class</b><br>
   La classe dont ce serveur fait partie, souvent une classe de serveurs s&eacute;par&eacute;s est utilis&eacute; pour ceci.
@@ -2303,11 +2307,11 @@ Ensuite, dans votre unrealircd.conf vous ajoutez un bloc cgiirc :
 <p><font class="set">set::dns::timeout &lt;timevalue&gt;;</font><br>
   Une valeur de temps sp&eacute;cifie la dur&eacute;e qu'un serveur DNS a pour r&eacute;pondre. 
   Une valeur de temps est un num&eacute;rique avec d pour jour, h pour heure, 
-  m pour minutes, et s pour secondes, par exemple 1d2h3m signifie 1 jour, 2 heures, 3 minutes.</p>
+  m pour minutes, et s pour secondes, par exemple 1d2h3m signifie 1 jour, 2 heures, 3 minutes.(PAS IMPLEMENTE)</p>
 <p><font class="set">set::dns::retries &lt;number-of-retries&gt;;</font><br>
-  Une valeur num&eacute;rique sp&eacute;cifie le nombre de fois que la r&eacute;solution de DNS reprendra en cas d'&eacute;chec.</p>
+  Une valeur num&eacute;rique sp&eacute;cifie le nombre de fois que la r&eacute;solution de DNS reprendra en cas d'&eacute;chec.(PAS IMPLEMENTE)</p>
 <p><font class="set">set::dns::nameserver &lt;name-of-dns-server&gt;;</font><br>
-  Sp&eacute;cifie l'hostname du serveur qui sera utilis&eacute; pour la r&eacute;solution de DNS.</p>
+  Sp&eacute;cifie l'hostname du serveur qui sera utilis&eacute; pour la r&eacute;solution de DNS.(PAS IMPLEMENTE)</p>
 <p><font class="set">set::dns::bind-ip &lt;ip&gt;;</font><br>
   Sp&eacute;cifie l'ip &egrave; relier au r&eacute;solveur; presque jamais requis</p>
 <p><font class="set">set::network-name &lt;name-of-network&gt;;</font><br>
@@ -2439,6 +2443,8 @@ Ensuite, dans votre unrealircd.conf vous ajoutez un bloc cgiirc :
   Dur&eacute;e maximum pendant laquelle attendre la r&eacute;ponse du serveur. Cette valeur est entre 1 et 5,
   plus ce n'est pas possible car cela cr&eacute;e trop d'incoh&eacute;rences. Ce param&egrave;tre est
   r&eacute;gl&eacute; par d&eacute;faut &agrave; 3 et il n'y &agrave; probablement aucune bonne raison de la changer.</p>   
+ <p><font class="set">set::pingpong-warning &lt;yes|no&gt;</font><br>
+  Lorsque NOSPOOF est activ&eacute; (g&eacute;n&eacute;ralement sous Windows), envoye un avertissement &agrave; chaque utilisateur, d'utiliser '/quote pong ...' si ils ont des probl&egrave;mes pour se connecter. La valeur par d&eacute;faut est no.</p>
 <p></p> </div>
 <p><b><font size="+2">5 &#8211; Fichiers additionnels<a name="addtlfiles"></a>
   </font></b></p><div class="desc">

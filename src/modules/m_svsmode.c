@@ -87,6 +87,120 @@ DLLFUNC int MOD_UNLOAD(m_svsmode)(int module_unload)
 	return MOD_SUCCESS;
 }
 
+void unban_user(aClient *sptr, aChannel *chptr, aClient *acptr, char chmode)
+{
+	Extban *extban;
+	Ban *ban, *bnext;
+	Ban **banlist;
+	char uhost[NICKLEN+USERLEN+HOSTLEN+6], vhost[NICKLEN+USERLEN+HOSTLEN+6];
+	char ihost[NICKLEN+USERLEN+HOSTLEN+6], chost[NICKLEN+USERLEN+HOSTLEN+6];
+
+	/* BUILD HOSTS */
+
+	*uhost = *vhost = *ihost = *chost = '\0';
+
+	strlcpy(uhost, make_nick_user_host(acptr->name, 
+		acptr->user->username, acptr->user->realhost),
+		sizeof uhost);
+
+	if (GetIP(acptr)) /* only if we actually have an IP */
+		strlcpy(ihost, make_nick_user_host(acptr->name,
+			acptr->user->username, GetIP(acptr)),
+			sizeof ihost);
+
+	/* The next could have been an IsSetHost(), but I'm playing it safe with regards to backward compat. */
+	if (IsHidden(acptr) &&
+	    !(*acptr->user->cloakedhost && !strcasecmp(acptr->user->virthost, acptr->user->cloakedhost))) 
+	{
+		strlcpy(vhost, make_nick_user_host(acptr->name,
+			acptr->user->username, acptr->user->virthost),
+			sizeof vhost);
+	}
+
+	if (*acptr->user->cloakedhost) /* only if we know the cloaked host */
+		strlcpy(chost, make_nick_user_host(acptr->name, 
+			acptr->user->username, acptr->user->cloakedhost),
+			sizeof chost);
+
+	/* SELECT BANLIST */
+
+	switch (chmode)
+	{
+		case 'b':
+			banlist = &chptr->banlist;
+			break;
+		case 'e':
+			banlist = &chptr->exlist;
+			break;
+		case 'I':
+			banlist = &chptr->invexlist;
+			break;
+		default:
+			abort();
+	}
+
+	/* DO THE ACTUAL WORK */
+
+	for (ban = *banlist; ban; ban = bnext)
+	{
+		bnext = ban->next;
+		if (!match(ban->banstr, uhost) ||
+		    (*vhost && !match(ban->banstr, vhost)) ||
+		    (*ihost && !match(ban->banstr, ihost)) ||
+		    (*chost && !match(ban->banstr, chost)))
+		{
+			add_send_mode_param(chptr, sptr, '-',  chmode, 
+				ban->banstr);
+			del_listmode(banlist, chptr, ban->banstr);
+		}
+		else if (chmode != 'I' && *ban->banstr == '~' && (extban = findmod_by_bantype(ban->banstr[1])))
+		{
+			if (extban->options & EXTBOPT_CHSVSMODE) 
+			{
+				if (extban->is_banned(acptr, chptr, ban->banstr, BANCHK_JOIN))
+				{
+					add_send_mode_param(chptr, acptr, '-', chmode, ban->banstr);
+					del_listmode(banlist, chptr, ban->banstr);
+				}
+			}
+		}
+	}
+}
+
+void clear_bans(aClient *sptr, aChannel *chptr, char chmode)
+{
+	Extban *extban;
+	Ban *ban, *bnext;
+	Ban **banlist;
+
+	switch (chmode)
+	{
+		case 'b':
+			banlist = &chptr->banlist;
+			break;
+		case 'e':
+			banlist = &chptr->exlist;
+			break;
+		case 'I':
+			banlist = &chptr->invexlist;
+			break;
+		default:
+			abort();
+	}
+	
+	for (ban = *banlist; ban; ban = bnext)
+	{
+		bnext = ban->next;
+		if (chmode != 'I' && (*ban->banstr == '~') && (extban = findmod_by_bantype(ban->banstr[1])))
+		{
+			if (!(extban->options & EXTBOPT_CHSVSMODE))							
+				continue;
+		}
+		add_send_mode_param(chptr, sptr, '-',  chmode, ban->banstr);
+		del_listmode(banlist, chptr, ban->banstr);
+	}
+}
+
 int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[]) 
 {
 	aChannel *chptr;
@@ -197,8 +311,6 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				Extban *extban;
 				Ban *ban, *bnext;
 				if (parc >= i) {
-					char uhost[NICKLEN+USERLEN+HOSTLEN+6], vhost[NICKLEN+USERLEN+HOSTLEN+6];
-					char ihost[NICKLEN+USERLEN+HOSTLEN+6];
 					if (!(acptr = find_person(parv[i-1], NULL))) {
 						i++;
 						break;
@@ -209,53 +321,10 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					}
 					i++;
 
-					strlcpy(uhost, make_nick_user_host(acptr->name, 
-						acptr->user->username, acptr->user->realhost),
-						sizeof uhost);
-					strlcpy(vhost, make_nick_user_host(acptr->name,
-						acptr->user->username, GetHost(acptr)),
-						sizeof vhost);
-					strlcpy(ihost, make_nick_user_host(acptr->name,
-						acptr->user->username, GetIP(acptr)),
-						sizeof ihost);
-					ban = chptr->banlist;
-					while (ban) {
-						bnext = ban->next;
-						if (*ban->banstr == '~' && (extban = findmod_by_bantype(ban->banstr[1])))
-						{
-							if (extban->options & EXTBOPT_CHSVSMODE) 
-							{
-								if (extban->is_banned(acptr, chptr, ban->banstr, BANCHK_JOIN))
-								{
-									add_send_mode_param(chptr, acptr, '-', 'b', ban->banstr);
-									del_listmode(&chptr->banlist, chptr, ban->banstr);
-								}
-							}
-						}
-						else if (!match(ban->banstr, uhost) || !match(ban->banstr, vhost) || !match(ban->banstr, ihost)) {
-							add_send_mode_param(chptr, sptr, '-',  'b', 
-								ban->banstr);
-							del_listmode(&chptr->banlist, chptr, ban->banstr);
-						}
-						ban = bnext;
-					}
+					unban_user(sptr, chptr, acptr, 'b');
 				}
 				else {
-					ban = chptr->banlist;
-					while (ban) {
-						bnext = ban->next;
-						if (*ban->banstr == '~' && (extban = findmod_by_bantype(ban->banstr[1])))
-						{
-							if (!(extban->options & EXTBOPT_CHSVSMODE))							
-							{
-								ban = bnext;
-								continue;
-							}
-						}
-						add_send_mode_param(chptr, sptr, '-',  'b', ban->banstr);
-						del_listmode(&chptr->banlist, chptr, ban->banstr);
-						ban = bnext;
-					}
+					clear_bans(sptr, chptr, 'b');
 				}
 			}
 			break;
@@ -263,8 +332,6 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				Extban *extban;
 				Ban *ban, *bnext;
 				if (parc >= i) {
-					char uhost[NICKLEN+USERLEN+HOSTLEN+6], vhost[NICKLEN+USERLEN+HOSTLEN+6];
-					char ihost[NICKLEN+USERLEN+HOSTLEN+6];
 					if (!(acptr = find_person(parv[i-1], NULL))) {
 						i++;
 						break;
@@ -275,62 +342,16 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					}
 					i++;
 
-					strlcpy(uhost, make_nick_user_host(acptr->name, 
-						acptr->user->username, acptr->user->realhost),
-						sizeof uhost);
-					strlcpy(vhost, make_nick_user_host(acptr->name,
-						acptr->user->username, GetHost(acptr)),
-						sizeof vhost);
-					strlcpy(ihost, make_nick_user_host(acptr->name,
-						acptr->user->username, GetIP(acptr)),
-						sizeof ihost);
-
-					ban = chptr->exlist;
-					while (ban) {
-						bnext = ban->next;
-						if (*ban->banstr == '~' && (extban = findmod_by_bantype(ban->banstr[1])))
-						{
-							if (extban->options & EXTBOPT_CHSVSMODE) 
-							{
-								if (extban->is_banned(acptr, chptr, ban->banstr, BANCHK_JOIN))
-								{
-									add_send_mode_param(chptr, acptr, '-', 'b', ban->banstr);
-									del_listmode(&chptr->exlist, chptr, ban->banstr);
-								}
-							}
-						}
-						else if (!match(ban->banstr, uhost) || !match(ban->banstr, vhost) || !match(ban->banstr, ihost)) {
-							add_send_mode_param(chptr, sptr, '-',  'e', 
-								ban->banstr);
-							del_listmode(&chptr->exlist, chptr, ban->banstr);
-						}
-						ban = bnext;
-					}
+					unban_user(sptr, chptr, acptr, 'e');
 				}
 				else {
-					ban = chptr->exlist;
-					while (ban) {
-						bnext = ban->next;
-						if (*ban->banstr == '~' && (extban = findmod_by_bantype(ban->banstr[1])))
-						{
-							if (!(extban->options & EXTBOPT_CHSVSMODE))							
-							{
-								ban = bnext;
-								continue;
-							}
-						}
-						add_send_mode_param(chptr, sptr, '-',  'e', ban->banstr);
-						del_listmode(&chptr->exlist, chptr, ban->banstr);
-						ban = bnext;
-					}
+					clear_bans(sptr, chptr, 'e');
 				}
 			}
 			break;
 			case 'I': {
 				Ban *ban, *bnext;
 				if (parc >= i) {
-					char uhost[NICKLEN+USERLEN+HOSTLEN+6], vhost[NICKLEN+USERLEN+HOSTLEN+6];
-					char ihost[NICKLEN+USERLEN+HOSTLEN+6];
 					if (!(acptr = find_person(parv[i-1], NULL))) {
 						i++;
 						break;
@@ -341,35 +362,10 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					}
 					i++;
 
-					strlcpy(uhost, make_nick_user_host(acptr->name, 
-						acptr->user->username, acptr->user->realhost),
-						sizeof uhost);
-					strlcpy(vhost, make_nick_user_host(acptr->name,
-						acptr->user->username, GetHost(acptr)),
-						sizeof vhost);
-					strlcpy(ihost, make_nick_user_host(acptr->name,
-						acptr->user->username, GetIP(acptr)),
-						sizeof ihost);
-
-					ban = chptr->invexlist;
-					while (ban) {
-						bnext = ban->next;
-						if (!match(ban->banstr, uhost) || !match(ban->banstr, vhost) || !match(ban->banstr, ihost)) {
-							add_send_mode_param(chptr, sptr, '-',  'I', 
-								ban->banstr);
-							del_listmode(&chptr->invexlist, chptr, ban->banstr);
-						}
-						ban = bnext;
-					}
+					unban_user(sptr, chptr, acptr, 'I');
 				}
 				else {
-					ban = chptr->invexlist;
-					while (ban) {
-						bnext = ban->next;
-						add_send_mode_param(chptr, sptr, '-',  'I', ban->banstr);
-						del_listmode(&chptr->invexlist, chptr, ban->banstr);
-						ban = bnext;
-					}
+					clear_bans(sptr, chptr, 'I');
 				}
 			}
 			break;
@@ -509,6 +505,38 @@ char *xtok = show_change ? TOK_SVS2MODE : TOK_SVSMODE;
 				{
 					acptr->user->servicestamp = strtoul(parv[3], NULL, 10);
 					break;
+				}
+			case 'x':
+				if (what == MODE_DEL)
+				{
+					/* -x */
+					if (acptr->user->virthost)
+					{
+						/* Removing mode +x and virthost set... recalculate host then (but don't activate it!) */
+						MyFree(acptr->user->virthost);
+						acptr->user->virthost = strdup(acptr->user->cloakedhost);
+					}
+				} else
+				{
+					/* +x */
+					if (!acptr->user->virthost)
+					{
+						/* Hmm... +x but no virthost set, that's bad... use cloakedhost.
+						 * Not sure if this could ever happen, but just in case... -- Syzop
+						 */
+						acptr->user->virthost = strdup(acptr->user->cloakedhost);
+					}
+					/* Announce the new host to VHP servers if we're setting the virthost to the cloakedhost.
+					 * In other cases, we can assume that the host has been broadcasted already (after all,
+					 * how else could it have been changed...?).
+					 * NOTES: we're doing a strcasecmp here instead of simply checking if it's a "+x but
+					 * not -t"-case. The reason for this is that the 't' might follow ("+xt" instead of "+tx"),
+					 * in which case we would have needlessly announced it. Ok I didn't test it but that's
+					 * the idea behind it :P. -- Syzop
+					 */
+					if (MyClient(acptr) && !strcasecmp(acptr->user->virthost, acptr->user->cloakedhost))
+						sendto_serv_butone_token_opt(NULL, OPT_VHP, acptr->name,
+							MSG_SETHOST, TOK_SETHOST, "%s", acptr->user->virthost);
 				}
 			default:
 				setmodex:

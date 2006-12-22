@@ -72,7 +72,7 @@ int	webtv_parse(aClient *sptr, char *string)
 	char *cmd = NULL, *s = NULL;
 	int i, n;
 	aMessage *message = webtv_cmds;
-	static char *para[16];
+	static char *para[MAXPARA + 2];
 	
 	if (!string || !*string)
 	{
@@ -103,8 +103,8 @@ int	webtv_parse(aClient *sptr, char *string)
 	s = strtok(NULL, "");
 	if (s)
 	{
-		if (message->maxpara > 15)
-			message->maxpara = 15;
+		if (message->maxpara > MAXPARA)
+			message->maxpara = MAXPARA; /* paranoid ? ;p */
 		for (;;)
 		{
 			/*
@@ -134,6 +134,8 @@ int	webtv_parse(aClient *sptr, char *string)
 	}
 	para[++i] = NULL;
 
+	para[0] = sptr->name;
+
 	return (*message->func) (sptr->from, sptr, i, para);
 }
 
@@ -145,19 +147,24 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	aChannel *chptr;
 	char *nick, *tmp, *name;
 	char *p = NULL;
-	char buf[512];
-	int  found, len, mlen;
+	char buf[512], query[512];
+	int  found, len, mlen, cnt = 0;
 
-	if (parc < 2)
+	if ((parc < 2) || BadPtr(parv[1]))
 	{
 		sendto_one(sptr, ":IRC %s %s :Syntax error, correct is WHOIS <nick>", 
 			MSG_PRIVATE, sptr->name);
 		return 0;
 	}
 
-	for (tmp = parv[1]; (nick = strtoken(&p, tmp, ",")); tmp = NULL)
+	strlcpy(query, parv[1], sizeof(query));
+
+	for (tmp = canonize(parv[1]); (nick = strtoken(&p, tmp, ",")); tmp = NULL)
 	{
 		int  invis, showsecret = 0, showchannel, showperson, member, wilds;
+
+		if (++cnt > MAXTARGETS)
+			break;
 
 		found = 0;
 		(void)collapse(nick);
@@ -214,7 +221,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				if (!invis && HiddenChannel(chptr) &&
 				    !SecretChannel(chptr))
 					showperson = 1;
-				else if (IsAnOper(sptr) && SecretChannel(chptr)) {
+				else if (OPCanSeeSecret(sptr) && SecretChannel(chptr)) {
 					showperson = 1;
 					showsecret = 1;
 				}
@@ -266,11 +273,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				showchannel = 0;
 				if (ShowChannel(sptr, chptr))
 					showchannel = 1;
-#ifndef SHOW_SECRET
-				if (IsAnOper(sptr) && !SecretChannel(chptr))
-#else
-				if (IsAnOper(sptr))
-#endif
+				if (OPCanSeeSecret(sptr))
 					showchannel = 1;
 				if ((acptr->umodes & UMODE_HIDEWHOIS) && !IsMember(sptr, chptr) && !IsAnOper(sptr))
 					showchannel = 0;
@@ -402,11 +405,9 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sendto_one(sptr, ":IRC PRIVMSG %s :%s - No such nick",
 				sptr->name, nick);
 		}
-		if (p)
-			p[-1] = ',';
 	}
 	sendto_one(sptr, ":IRC PRIVMSG %s :End of whois information for %s",
-		sptr->name, parv[1]);
+		sptr->name, query);
 
 	return 0;
 }

@@ -181,6 +181,20 @@ DLLFUNC CMD_FUNC(m_nick)
 		return 0;
 	}
 
+	/* Kill quarantined opers early... */
+	if (IsServer(cptr) && (sptr->from->flags & FLAGS_QUARANTINE) &&
+	    (parc >= 11) && strchr(parv[8], 'o'))
+	{
+		ircstp->is_kill++;
+		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
+		sendto_one(cptr, ":%s KILL %s :%s (Quarantined: no global oper privileges allowed)",
+			me.name, parv[1], me.name);
+		sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine",
+			parv[1], sptr->name);
+		/* (nothing to exit_client or to free, since user was never added) */
+		return 0;
+	}
+
 	/*
 	   ** Protocol 4 doesn't send the server as prefix, so it is possible
 	   ** the server doesn't exist (a lagged net.burst), in which case
@@ -248,8 +262,7 @@ DLLFUNC CMD_FUNC(m_nick)
 	if (MyClient(sptr)) /* local client changin nick afterwards.. */
 	{
 		int xx;
-		ircsprintf(spamfilter_user, "%s!%s@%s:%s",
-			nick, sptr->user->username, sptr->user->realhost, sptr->info);
+		spamfilter_build_user_string(spamfilter_user, nick, sptr);
 		xx = dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, NULL);
 		if (xx < 0)
 			return xx;
@@ -643,11 +656,15 @@ DLLFUNC CMD_FUNC(m_nick)
 			} else
 				sptr->user->flood.nick_c++;
 
-			sendto_snomask(SNO_NICKCHANGE, "*** Notice -- %s (%s@%s) has changed his/her nickname to %s", sptr->name, sptr->user->username, sptr->user->realhost, nick);
+			sendto_snomask(SNO_NICKCHANGE, "*** Notice -- %s (%s@%s) has changed his/her nickname to %s",
+				sptr->name, sptr->user->username, sptr->user->realhost, nick);
 
 			RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, sptr, nick);
 		} else {
-			sendto_snomask(SNO_FNICKCHANGE, "*** Notice -- %s (%s@%s) has changed his/her nickname to %s", sptr->name, sptr->user->username, sptr->user->realhost, nick);
+			if (!IsULine(sptr))
+				sendto_snomask(SNO_FNICKCHANGE, "*** Notice -- %s (%s@%s) has changed his/her nickname to %s",
+					sptr->name, sptr->user->username, sptr->user->realhost, nick);
+
 			RunHook3(HOOKTYPE_REMOTE_NICKCHANGE, cptr, sptr, nick);
 		}
 		/*
@@ -682,10 +699,13 @@ DLLFUNC CMD_FUNC(m_nick)
 		 * Generate a random string for them to pong with.
 		 */
 		sptr->nospoof = getrandom32();
-		sendto_one(sptr, ":%s NOTICE %s :*** If you are having problems"
-		    " connecting due to ping timeouts, please"
-		    " type /quote pong %X or /raw pong %X now.",
-		    me.name, nick, sptr->nospoof, sptr->nospoof);
+
+		if (PINGPONG_WARNING)
+			sendto_one(sptr, ":%s NOTICE %s :*** If you are having problems"
+			    " connecting due to ping timeouts, please"
+			    " type /quote pong %X or /raw pong %X now.",
+			    me.name, nick, sptr->nospoof, sptr->nospoof);
+
 		sendto_one(sptr, "PING :%X", sptr->nospoof);
 #endif /* NOSPOOF */
 #ifdef CONTACT_EMAIL
@@ -706,7 +726,8 @@ DLLFUNC CMD_FUNC(m_nick)
 		/* Copy password to the passwd field if it's given after NICK
 		 * - originally by taz, modified by Wizzu
 		 */
-		if ((parc > 2) && (strlen(parv[2]) <= PASSWDLEN))
+		if ((parc > 2) && (strlen(parv[2]) <= PASSWDLEN)
+		    && !(sptr->listener->umodes & LISTENER_JAVACLIENT))
 		{
 			if (sptr->passwd)
 				MyFree(sptr->passwd);
@@ -1005,7 +1026,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		 *    yet (at all).
 		 *  -- Syzop
 		 */
-		ircsprintf(spamfilter_user, "%s!%s@%s:%s", sptr->name, sptr->user->username, sptr->user->realhost, sptr->info);
+		spamfilter_build_user_string(spamfilter_user, sptr->name, sptr);
 		xx = dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, &savetkl);
 		if ((xx < 0) && (xx != -5))
 			return xx;

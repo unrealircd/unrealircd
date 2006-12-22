@@ -92,6 +92,7 @@ DLLFUNC CMD_FUNC(m_sajoin)
 {
 	aClient *acptr;
 	char jbuf[BUFSIZE];
+	int did_anything = 0;
 
 	if (!IsSAdmin(sptr) && !IsULine(sptr))
 	{
@@ -168,6 +169,7 @@ DLLFUNC CMD_FUNC(m_sajoin)
 
 			if (*name == '0' && !atoi(name))
 			{
+				did_anything = 1;
 				while ((lp = acptr->user->channel))
 				{
 					chptr = lp->chptr;
@@ -189,21 +191,31 @@ DLLFUNC CMD_FUNC(m_sajoin)
 			chptr = get_channel(acptr, name, CREATE);
 			if (chptr && (lp = find_membership_link(acptr->user->channel, chptr)))
 				continue;
-
+			if ((chptr->mode.mode & MODE_ONLYSECURE) && !IsSecure(acptr))
+			{
+				sendnotice(sptr, "You cannot SAJOIN %s to %s because the channel is +z and the user is not connected via SSL",
+					acptr->name, chptr->chname);
+				continue;
+			}
 			join_channel(chptr, acptr, acptr, flags);
+			did_anything = 1;
 			if (*jbuf)
 				(void)strlcat(jbuf, ",", sizeof jbuf);
 			(void)strlncat(jbuf, name, sizeof jbuf, sizeof(jbuf) - i - 1);
 			i += strlen(name) + 1;
 		}
-		sendnotice(acptr, "*** You were forced to join %s", jbuf);
-		sendto_realops("%s used SAJOIN to make %s join %s", sptr->name, acptr->name,
-			       jbuf);
-		sendto_serv_butone(&me, ":%s GLOBOPS :%s used SAJOIN to make %s join %s",
-				   me.name, sptr->name, acptr->name, jbuf);
-		/* Logging function added by XeRXeS */
-		ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",
-			sptr->name, parv[1], jbuf);
+		
+		if (did_anything)
+		{
+			sendnotice(acptr, "*** You were forced to join %s", jbuf);
+			sendto_realops("%s used SAJOIN to make %s join %s", sptr->name, acptr->name,
+				       jbuf);
+			sendto_serv_butone(&me, ":%s GLOBOPS :%s used SAJOIN to make %s join %s",
+					   me.name, sptr->name, acptr->name, jbuf);
+			/* Logging function added by XeRXeS */
+			ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",
+				sptr->name, parv[1], jbuf);
+		}
 	}
 	else
 	{

@@ -166,7 +166,11 @@ extern void init_glines(void);
 extern void tkl_init(void);
 
 MODVAR TS   last_garbage_collect = 0;
+#ifndef _WIN32
 MODVAR char **myargv;
+#else
+LPCSTR cmdLine;
+#endif
 int  portnum = -1;		/* Server port number, listening this */
 char *configfile = CONFIGFILE;	/* Server configuration file */
 int  debuglevel = 10;		/* Server debug level */
@@ -357,7 +361,7 @@ void server_reboot(char *mesg)
 	if (!IsService)
 	{
 		CleanUp();
-		(void)execv(myargv[0], myargv);
+		WinExec(cmdLine, SW_SHOWDEFAULT);
 	}
 #endif
 #ifndef _WIN32
@@ -486,7 +490,7 @@ static TS try_connections(TS currenttime)
 				    && crule_eval(deny->rule))
 					break;
 
-			if (connect_server(aconf, (aClient *)NULL,
+			if (!deny && connect_server(aconf, (aClient *)NULL,
 			    (struct hostent *)NULL) == 0)
 				sendto_realops
 				    ("Connection to %s[%s] activated.",
@@ -845,7 +849,7 @@ int error = 0;
 #ifdef ZIP_LINKS
 	runtime = zlibVersion();
 	compiledfor = ZLIB_VERSION;
-	if (strcasecmp(compiledfor, runtime))
+	if (*compiledfor != *runtime)
 	{
 		version_check_logerror("Zlib version mismatch: compiled for '%s', library is '%s'",
 			compiledfor, runtime);
@@ -998,7 +1002,11 @@ int InitwIRCD(int argc, char *argv[])
 		exit(5);
 	}
 #endif	 /*CHROOTDIR*/
+#ifndef _WIN32
 	myargv = argv;
+#else
+	cmdLine = GetCommandLine();
+#endif
 #ifndef _WIN32
 	(void)umask(077);	/* better safe than sorry --SRB */
 #else
@@ -1096,6 +1104,14 @@ int InitwIRCD(int argc, char *argv[])
 			  }
 			  p = *++argv;
 			  argc--;
+#ifdef AUTHENABLE_UNIXCRYPT
+			  if ((type == AUTHTYPE_UNIXCRYPT) && (strlen(p) > 8))
+			  {
+			      printf("WARNING: Password truncated to 8 characters due to 'crypt' algorithm. "
+		                 "You are suggested to use the 'md5' algorithm instead.");
+				  p[8] = '\0';
+			  }
+#endif
 			  if (!(result = Auth_Make(type, p))) {
 				  printf("Authentication failed\n");
 				  exit(0);
@@ -1222,7 +1238,7 @@ int InitwIRCD(int argc, char *argv[])
 	fprintf(stderr, "                           v%s\n", VERSIONONLY);
 	fprintf(stderr, "                     using %s\n", tre_version());
 #ifdef USE_SSL
-	fprintf(stderr, "                     using %s\n", OPENSSL_VERSION_TEXT);
+	fprintf(stderr, "                     using %s\n", SSLeay_version(SSLEAY_VERSION));
 #endif
 #ifdef ZIP_LINKS
 	fprintf(stderr, "                     using zlib %s\n", zlibVersion());

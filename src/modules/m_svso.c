@@ -170,7 +170,7 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
                         delfrom_fdlist(acptr->slot, &oper_fdlist);
                 acptr->umodes &=
                     ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP |UMODE_SERVICES |
-                    UMODE_SADMIN | UMODE_ADMIN);
+                    UMODE_SADMIN | UMODE_ADMIN | UMODE_COADMIN);
                 acptr->umodes &=
                     ~(UMODE_NETADMIN | UMODE_WHOIS);
                 acptr->umodes &=

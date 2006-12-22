@@ -62,7 +62,7 @@ ModuleHeader MOD_HEADER(m_help)
 DLLFUNC int MOD_INIT(m_help)(ModuleInfo *modinfo)
 {
 	add_Command(MSG_HELP, TOK_HELP, m_help, 1);
-	add_Command(MSG_HELPOP, TOK_HELP, m_help, 1);
+	add_Command(MSG_HELPOP, NULL, m_help, 1);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -79,7 +79,7 @@ DLLFUNC int MOD_UNLOAD(m_help)(int module_unload)
 		sendto_realops("Failed to delete commands when unloading %s",
 			MOD_HEADER(m_help).name);
 	}
-	if (del_Command(MSG_HELPOP, TOK_HELP, m_help) < 0)
+	if (del_Command(MSG_HELPOP, NULL, m_help) < 0)
 	{
 		sendto_realops("Failed to delete commands when unloading %s",
 			MOD_HEADER(m_help).name);

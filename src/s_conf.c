@@ -1534,6 +1534,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->timesynch_enabled = 1;
 	i->timesynch_timeout = 3;
 	i->timesynch_server = strdup("193.67.79.202,192.43.244.18,128.250.36.3"); /* nlnet (EU), NIST (US), uni melbourne (AU). All open acces, nonotify, nodns. */
+	i->name_server = strdup("127.0.0.1"); /* default, especially needed for w2003+ in some rare cases */
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,
@@ -2195,12 +2196,14 @@ int	config_post_test()
 		Error("set::kline-address is missing");
 	if (!settings.has_maxchannelsperuser)
 		Error("set::maxchannelsperuser is missing");
+#if 0
 	if (!settings.has_dns_nameserver)
 		Error("set::dns::nameserver is missing");
 	if (!settings.has_dns_timeout)
 		Error("set::dns::timeout is missing");
 	if (!settings.has_dns_retries)
 		Error("set::dns::retries is missing");
+#endif
 	if (!settings.has_services_server)
 		Error("set::services-server is missing");
 	if (!settings.has_default_server)
@@ -3323,6 +3326,14 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			/* oper::modes */
 			else if (!strcmp(cep->ce_varname, "modes")) 
 			{
+				char *p;
+				for (p = cep->ce_vardata; *p; p++)
+					if (strchr("oOaANCrzS", *p))
+					{
+						config_error("%s:%i: oper::modes may not include mode '%c'",
+							cep->ce_fileptr->cf_filename, cep->ce_varlinenum, *p);
+						errors++;
+					}
 				if (has_modes)
 				{
 					config_warn_duplicate(cep->ce_fileptr->cf_filename,
@@ -3502,6 +3513,8 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 		class->options = 0; /* RESET OPTIONS */
 	}
 	ircstrdup(class->name, ce->ce_vardata);
+
+	class->connfreq = 60; /* default */
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -3845,9 +3858,9 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 			ConfigEntry *cepp;
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
-				if (!strcmp(cep->ce_varname, "ssl"))
+				if (!strcmp(cepp->ce_varname, "ssl"))
 					ca->options |= TLD_SSL;
-				else if (!strcmp(cep->ce_varname, "remote"))
+				else if (!strcmp(cepp->ce_varname, "remote"))
 					ca->options |= TLD_REMOTE;
 			}
 		}
@@ -6656,6 +6669,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "check-target-nick-bans")) {
 			tempiConf.check_target_nick_bans = config_checkval(cep->ce_vardata, CFG_YESNO);
 		}
+		else if (!strcmp(cep->ce_varname, "pingpong-warning")) {
+			tempiConf.pingpong_warning = config_checkval(cep->ce_vardata, CFG_YESNO);
+		}
 		else if (!strcmp(cep->ce_varname, "allow-userhost-change")) {
 			if (!stricmp(cep->ce_vardata, "always"))
 				tempiConf.userhost_allowed = UHALLOW_ALWAYS;
@@ -7078,6 +7094,12 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "modes-on-connect")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, modes_on_connect, "modes-on-connect");
+			if (strchr(cep->ce_vardata, 'z'))
+			{
+				config_error("%s:%i: set::modes-on-connect may not have +z",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
 			templong = (long) set_usermode(cep->ce_vardata);
 			if (templong & UMODE_OPER)
 			{
@@ -7142,8 +7164,16 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			
 		}
 		else if (!strcmp(cep->ce_varname, "modes-on-oper")) {
+			char *p;
 			CheckNull(cep);
 			CheckDuplicate(cep, modes_on_oper, "modes-on-oper");
+			for (p = cep->ce_vardata; *p; p++)
+				if (strchr("oOaANCrzS", *p))
+				{
+					config_error("%s:%i: set::modes-on-oper may not include mode '%c'",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, *p);
+					errors++;
+				}
 			templong = (long) set_usermode(cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "snomask-on-oper")) {
@@ -7189,6 +7219,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "check-target-nick-bans")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, check_target_nick_bans, "check-target-nick-bans");
+		}
+		else if (!strcmp(cep->ce_varname, "pingpong-warning")) {
+			CheckNull(cep);
+			CheckDuplicate(cep, pingpong_warning, "pingpong-warning");
 		}
 		else if (!strcmp(cep->ce_varname, "channel-command-prefix")) {
 			CheckNull(cep);
@@ -7372,7 +7406,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 				else if (!strcmp(cepp->ce_varname, "bind-ip")) {
 					struct in_addr in;
-					CheckDuplicate(cepp, dns_retries, "dns::bind-ip");
+					CheckDuplicate(cepp, dns_bind_ip, "dns::bind-ip");
 					if (strcmp(cepp->ce_vardata, "*"))
 					{
 						in.s_addr = inet_addr(cepp->ce_vardata);
@@ -8177,7 +8211,7 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 		del_Command(ce->ce_vardata, NULL, cmptr->func);
 	if (find_Command_simple(ce->ce_vardata))
 	{
-		config_warn("%s:%i: Alias '%s' would conflict with command '%s', alias not added.",
+		config_warn("%s:%i: Alias '%s' would conflict with command (or server token) '%s', alias not added.",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 			ce->ce_vardata, ce->ce_vardata);
 		return 0;

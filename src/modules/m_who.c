@@ -796,7 +796,7 @@ static char *first_visible_channel(aClient *sptr, aClient *acptr, int *flg)
 			cansee = 0;
 		if (!cansee)
 		{
-			if (IsAnOper(sptr))
+			if (OPCanSeeSecret(sptr))
 				*flg |= FVC_HIDDEN;
 			else
 				continue;

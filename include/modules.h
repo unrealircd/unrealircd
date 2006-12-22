@@ -636,6 +636,8 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define HOOKTYPE_REMOTE_PART 44
 #define HOOKTYPE_REMOTE_KICK 45
 #define HOOKTYPE_LOCAL_SPAMFILTER 46
+#define HOOKTYPE_SILENCED 47
+#define HOOKTYPE_POST_SERVER_CONNECT 48
 
 /* Hook return values */
 #define HOOK_CONTINUE 0
@@ -680,6 +682,8 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define EFUNC_STRIPBADWORDS_QUIT			30
 #define EFUNC_STRIPCOLORS					31
 #define EFUNC_STRIPCONTROLCODES				32
+#define EFUNC_SPAMFILTER_BUILD_USER_STRING	33
+#define EFUNC_IS_SILENCED					34
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000
