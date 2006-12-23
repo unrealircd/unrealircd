@@ -1509,3 +1509,4 @@
 - Showing even more SSL server errors now, hopefully all of them, also changed the
   error notice a bit so it's much more like non-SSL server link errors. Reported by
   vonitsanet (#0003150).
+- Added TOKEN (#) and STATS (2) to serverprotocol.html.
