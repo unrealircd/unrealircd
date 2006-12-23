@@ -25,12 +25,14 @@
 		<blockquote><p><a href="#S3_5">3.5 SETHOST/CHGHOST - Change virtual host</a></p></blockquote>
 		<blockquote><p><a href="#S3_6">3.6 SETIDENT/CHGIDENT - Change a user's username</a></p></blockquote>
 		<blockquote><p><a href="#S3_7">3.7 SETNAME/CHGNAME - Change a user's realname</a></p></blockquote>
+		<blockquote><p><a href="#S3_8">3.8 WHOIS - User Information</a></p></blockquote>
 		<p><a href="#S1">4 Server Operations</a></p>
 		<blockquote><p><a href="#S4_1">4.1 SERVER - Server Introduction</a></p></blockquote>
 		<blockquote><p><a href="#S4_2">4.2 SQUIT - Server Removal</a></p></blockquote>
 		<blockquote><p><a href="#S4_3">4.3 SDESC - Server Description</a></p></blockquote>
 		<blockquote><p><a href="#S4_4">4.4 PING - Live Connection Query</a></p></blockquote>
 		<blockquote><p><a href="#S4_5">4.5 PONG - Live Connection Reply</a></p></blockquote>
+		<blockquote><p><a href="#S4_6">4.6 STATS - Server Stats</a></p></blockquote>
 		<p><a href="#S5">5 Channel Operations</a></p>
 		<blockquote><p><a href="#S5_1">5.1 SJOIN - Channel Burst</a></p></blockquote>
 		<blockquote><p><a href="#S5_2">5.2 JOIN - Channel Join</a></p></blockquote>
@@ -202,6 +204,10 @@
 		<p><b>Syntax (SETNAME):</b> <tt>:<i>source</i> AE :<i>newrealname</i></tt></p>
 		<p><b>Syntax (CHGNAME):</b> <tt>:<i>source</i> BK <i>target</i> :<i>newrealname</i></tt></p>
 		<p>Indicates the change of a user's realname. No usermode change is associated with this. Unreal does not use a distinguished virtual realname, so servers should only keep the original realname (from the NICK message) if they intend to allow the user to reset the original realname. Servers can use CHGNAME to change a user's username. Note that servers must NOT check that the sender be an IRCop in SETNAME - normal users are permitted to use SETNAME.</p>
+		<h2><a name="#S3_8"></a>3.8 WHOIS - User Information (TOKEN: #)</h2>
+		<p><b>Syntax:</b> <tt>:<i>source</i> # [<i>from-server</i> ]<i>nick</i></tt></p>
+		<p>Requests the information on a user. This works exactly like the user /whois command - in fact, the source parameter must be a user, or the command will do nothing. <i>from-server</i> is the server to request the information from; if a server recives a WHOIS message without this parameter, it should return its own information on the user, otherwise it should pass the message to the given server. Note that <i>from-server</i> may name a user instead of a server (such as when a user uses /whois nick nick), in which case the the nick should be interpreted as naming the server that user is on. <i>nick</i> may be several users seperated by commas, but may not contain wildcards.</p>
+		<p>The reply to a WHOIS message uses the same numeric replies as the user command.</p>
 		<hr/>
 		<h1><a name="S4"></a>4 Server Operations</h1>
 		<p>This is different from server negotiation. Negotiation is when you are first connecting. Server introduction is used for introducing additional servers behind an existing server (aka hubbing). Hubbing is limited as specified by the hub, leaf, and leafdepth parameters in the link block and attempted violation of a hub restriction results in termination of the link. If no hub or leaf directive is given your server is a leaf by default, so any introduction of any server behind you would be an automatic drop. U:Lines don't matter here; services must be configured as a hub in the link block. The reason is U:Line is a permission rule, but hub privilege is a network structure rule.</p>
@@ -230,6 +236,10 @@
 		<p><b>Responding to a ping:</b> Once a PING is received, you usually have an amount of time to respond equal to your class::pingfreq. The correct response will always have two parameters. If you received one parameter, then the received parameter becomes the second parameter of your response, and the first parameter is your server name. If you received two parameters, the response returns both parameters in reverse order.</p>
 		<p>For example, the response to <tt>8 uplink.server</tt> is <tt>9 my.name uplink.server</tt>, while the response to <tt>PING distant.server your.server</tt> is <tt>9 your.server distant.server</tt>. Unreal typically includes a : prior to the last parameter. This isn't required if that parameter contains no spaces, but it is especially important to not include the colon when reversing the parameters, or else Unreal mistake it for a single-parameter PONG.
 		<p>If a two-parameter PONG is received, the second parameter names the target. If the target is not you, and a real connection represents that target, you should forward the PONG message via that connection.</p>
+		<h2><a name="#S4_6"></a>4.6 STATS - Server Stats (TOKEN: 2)</h2>
+		<p><b>Syntax:</b> <tt>:<i>source</i> 2 [<i>type</i> [<i>server</i>] [<i>extended-params</i>]]<i></tt></p>
+		<p>Requests statistics or configuration information from a server. This command is used to transport cross-server STATS requests from users (eg: /stats o other.server), but requests from a server will be accepted and processed as well. With no parameters, this will cause unreal to simply dump its help output. <i>type</i> is the type of stats to request, <i>server</i> names a server (or a user on that server) to request stats from, and <i>extended-params</i> is used to filter output from STATS G, etc. When received, it is up to the receiver to determine what stats to support and how to reply, but generally numeric replies are used. For the list of unreal's stats types, type /stats in a client for the helptext dump.</p>
+		<p><b>Note:</b> Stats set as oper-only (see set::oper-only-stats) will be refused from a server. In this case, it will be necessary to send the stats request from a psuedo-oper (such as a services agent, etc) for services/stats/etc.</p>
 		<hr/>
 		<h1><a name="S5"></a>5 Channel Operations</h1>
 		<p>These commands deal with the state of channels across the network. Unreal only supports Network Channels, where the first character is a # character.</p>
