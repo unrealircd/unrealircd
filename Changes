@@ -1510,3 +1510,4 @@
   error notice a bit so it's much more like non-SSL server link errors. Reported by
   vonitsanet (#0003150).
 - Added TOKEN (#) and STATS (2) to serverprotocol.html.
+- Fixed STATS protocol description - servers must not do /stats themselves.
