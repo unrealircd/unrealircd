@@ -2787,8 +2787,8 @@ parametresini kullanmayýn. Bu þifre genellikle uzak sunucuya baðlanmak için
 gerekli olan þifre ile aynýdýr. </P>
 <P><B>hub vs leaf</B><BR>Birçok sunucunun linklendiði sunucu bir hubdur, 
 leaf ise
-tek bir linke sahiptir...Bir sunucu ya hubdur, yada leafdir, bu 2 seçeneði
-beraber kullanamazsýnýz. </P>
+tek bir linke sahiptir...Bu blokta eðer hub direktifi belirtilmediyse sunucu leaf olarak algýlanýr,
+Ayný zamanda leaf * direktifi belirtilirse de yada leafdepth 1 direktifi belirtilirse de sunucu leaf olarak algýlanýr.</P>
 <P><B>hub</B> (isteðe baðlý)<BR>hub olarak baðlanacak sunucularýn maskesidir 
 (ör:
 *.my.net). </P>
@@ -2796,7 +2796,10 @@ beraber kullanamazsýnýz. </P>
 maskesidir. </P>
 <P><B>leafdepth</B> (isteðe baðlý)<BR>Eðer bu belirtilirse leaf de 
 belirtilmelidir. Belirtilen
-sunucu için sýçrama sayýsýdýr. </P>
+sunucu için sýçrama sayýsýdýr.  Örneðin bu sayý 1 olarak belirtilirse, sunucunun bu bloktaki sunucudan baska
+ bir linke sahip olmadýgý bildirilir, eðer 2 olarak belirtilirse bu bloktaki link diðer sunuculara linklenebilir
+ ancak linklenilecek sunucular baþka sunuculara linklenemez. 0 ise herhangi bir limit olmadýgý anlamýný taþýr ve
+ baþlangýç deðeridir.</P>
 <P><B>class</B><BR>Sunucunun bulunacaðý sýnýftýr (class), genellikle bunun
 için ayrý bir sunucu sýnýfý kullanýlýr (server class). </P>
 <P><B>compression-level</B> (isteðe
