@@ -1511,3 +1511,4 @@
   vonitsanet (#0003150).
 - Added TOKEN (#) and STATS (2) to serverprotocol.html.
 - Fixed STATS protocol description - servers must not do /stats themselves.
+- Italic fix in serverprotocol
