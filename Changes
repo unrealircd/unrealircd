@@ -1431,3 +1431,6 @@
 ** 3.2.6 release **
 - Fixed bug where SVSO was unable to give various operflags such as q, d, X, reported
   by prodigy2k7 (#0003203).
+- /WHOIS now shows the ident of local users - if ident enabled and they had an ident -
+  instead of always "*" in the 'is connecting from' line. Suggested and patch provided
+  by djGrrr (#0002888).
