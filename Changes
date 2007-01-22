@@ -1429,3 +1429,5 @@
 ** 3.2.6-rc3 release **
 - Updated release notes, mass-change of version number, no code changes.
 ** 3.2.6 release **
+- Fixed bug where SVSO was unable to give various operflags such as q, d, X, reported
+  by prodigy2k7 (#0003203).
