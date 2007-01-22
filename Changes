@@ -1434,3 +1434,8 @@
 - /WHOIS now shows the ident of local users - if ident enabled and they had an ident -
   instead of always "*" in the 'is connecting from' line. Suggested and patch provided
   by djGrrr (#0002888).
+- Added ability to enable "no fake lag" for a user through through services via the
+  new commands SVSNOLAG/SVS2NOLAG (syntax: SVSNOLAG [+|-] NickName). Obviously, care
+  should be taken when giving such access to a user since he/she will be able to flood
+  at full speed and could possibly take down the entire IRCd (well, everyone on it).
+  Suggested by avb, coded by djGrrr.
