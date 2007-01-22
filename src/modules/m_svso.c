@@ -81,7 +81,10 @@ static int oper_access[] = {
         OFLAG_HIDE, 'H',
 	OFLAG_TKL, 't',
 	OFLAG_GZL, 'Z',
-	OFLAG_OVERRIDE, 'v', 
+	OFLAG_OVERRIDE, 'v',
+	OFLAG_UMODEQ, 'q',
+	OFLAG_DCCDENY, 'd',
+	OFLAG_ADDLINE, 'X',
         0, 0
 };
 

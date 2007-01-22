@@ -1512,3 +1512,5 @@
 - Added TOKEN (#) and STATS (2) to serverprotocol.html.
 - Fixed STATS protocol description - servers must not do /stats themselves.
 - Italic fix in serverprotocol
+- Fixed bug where SVSO was unable to give various operflags such as q, d, X, reported
+  by prodigy2k7 (#0003203).
