@@ -1514,3 +1514,9 @@
 - Italic fix in serverprotocol
 - Fixed bug where SVSO was unable to give various operflags such as q, d, X, reported
   by prodigy2k7 (#0003203).
+- /WHOIS now shows the ident of local users - if ident enabled and they had an ident -
+  instead of always "*" in the 'is connecting from' line. Suggested and patch provided
+  by djGrrr (#0002888).
+  NOTE: This needs checking, this patch changed the 'unknown' stuff to ~.. doublecheck
+  the allow block and everything.. didn't we use unknown@ there sometimes? I'll leave this
+  to someone else...

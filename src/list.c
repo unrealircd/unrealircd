@@ -133,7 +133,7 @@ aClient *make_client(aClient *from, aClient *servr)
 	cptr->srvptr = servr;
 	cptr->status = STAT_UNKNOWN;
 	
-	(void)strcpy(cptr->username, "unknown");
+	(void)strcpy(cptr->username, "~");
 	if (size == CLIENT_LOCAL_SIZE)
 	{
 		cptr->since = cptr->lasttime =

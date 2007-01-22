@@ -195,6 +195,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			{
 				sendto_one(sptr, rpl_str(RPL_WHOISHOST),
 				    me.name, parv[0], acptr->name,
+				    (MyConnect(acptr) && *acptr->username != '~') ? acptr->username : "*",
 				    user->realhost, user->ip_str ? user->ip_str : "");
 			}
 
