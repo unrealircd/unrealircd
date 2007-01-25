@@ -1532,3 +1532,4 @@
 - Booting ircd waits for 1 second to check if runs correctly. If not, waits for 4 more seconds 
   to check again, suggested by vonitsanet (#0003136).
 - Fixed a typo in help.conf, reported by Sakkath (#0003196).
+- Added extended ban ~j, reported by Shining Phoenix (#0003192).

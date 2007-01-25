@@ -267,6 +267,16 @@ char *ban = banin + 3;
 	return extban_is_banned_helper(ban);
 }
 
+int extban_modej_is_banned(aClient* sptr, aChannel* chptr, char* banin, int type)
+{
+char* ban = banin + 3;
+
+	if (type != BANCHK_JOIN)
+		return 0;
+
+	return extban_is_banned_helper(ban);
+}
+
 /** Some kind of general conv_param routine,
  * to ensure the parameter is nick!user@host.
  * most of the code is just copied from clean_ban_mask.
@@ -343,6 +353,12 @@ void extban_init(void)
 	req.flag = 'n';
 	req.conv_param = extban_conv_param_nuh;
 	req.is_banned = extban_moden_is_banned;
+	ExtbanAdd(NULL, req);
+
+	memset(&req, 0, sizeof(ExtbanInfo));
+	req.flag = 'j';
+	req.conv_param = extban_conv_param_nuh;
+	req.is_banned = extban_modej_is_banned;
 	ExtbanAdd(NULL, req);
 
 	memset(&req, 0, sizeof(ExtbanInfo));
