@@ -1533,3 +1533,4 @@
   to check again, suggested by vonitsanet (#0003136).
 - Fixed a typo in help.conf, reported by Sakkath (#0003196).
 - Added extended ban ~j, reported by Shining Phoenix (#0003192).
+- Made ./unreal configtest to test config file, suggested by djGrrr (#0003164).

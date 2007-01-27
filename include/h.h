@@ -566,6 +566,7 @@ extern void      flag_del(char ch);
 extern void init_dynconf(void);
 extern char *pretty_time_val(long);
 extern int        init_conf(char *filename, int rehash);
+extern int global_test();
 extern void       validate_configuration(void);
 extern void       run_configuration(void);
 extern void rehash_motdrules();

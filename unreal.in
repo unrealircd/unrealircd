@@ -37,6 +37,8 @@ elif [ "$1" = "mkpasswd" ] ; then
 	@BINDIR@ -P $2 $3
 elif [ "$1" = "version" ] ; then
 	@BINDIR@ -v
+elif [ "$1" = "configtest" ] ; then
+	@BINDIR@ -e
 elif [ "$1" = "backtrace" ] ; then
 	cd @IRCDDIR@
 

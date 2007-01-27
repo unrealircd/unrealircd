@@ -1432,7 +1432,13 @@ void applymeblock(void)
 		}
 	}
 }
-
+int global_test()
+{
+	charsys_reset_pretest();
+	if ((config_test() < 0) || (callbacks_check() < 0) || (efunctions_check() < 0) || (charsys_postconftest() < 0))
+		return 0;
+	return 1;
+}
 int	init_conf(char *rootconf, int rehash)
 {
 	config_status("Loading IRCd configuration ..");
@@ -1447,9 +1453,7 @@ int	init_conf(char *rootconf, int rehash)
 	config_setdefaultsettings(&tempiConf);
 	if (load_conf(rootconf) > 0)
 	{
-		charsys_reset_pretest();
-		if ((config_test() < 0) || (callbacks_check() < 0) || (efunctions_check() < 0) ||
-		    (charsys_postconftest() < 0))
+		if (!global_test())
 		{
 			config_error("IRCd configuration failed to pass testing");
 #ifdef _WIN32

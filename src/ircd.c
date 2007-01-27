@@ -95,6 +95,7 @@ extern MODVAR aMotd *motd;
 extern MODVAR aMotd *rules;
 extern MODVAR aMotd *botmotd;
 extern MODVAR aMotd *smotd;
+extern MODVAR ConfigFile *conf;
 MODVAR MemoryInfo StatsZ;
 
 int  R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns, R_do_id, R_fin_id, R_fail_id;
@@ -1282,6 +1283,33 @@ int InitwIRCD(int argc, char *argv[])
 # endif
 			  exit(0);
 #endif
+		case 'e':
+			if (load_conf(configfile) > 0)
+			{
+				if (!global_test())
+				{
+					config_error("IRCd configuration failed to pass testing");
+#ifdef _WIN32
+					win_error();
+#endif
+				}
+				else
+					config_status("Configuration tested without any problems ..");
+#ifndef STATIC_LINKING
+				Unload_all_testing_modules();
+#endif
+				unload_notloaded_includes();
+				config_free(conf);
+				conf = NULL;
+			}
+			else
+			{
+				config_error("IRCd configuration failed to load");
+#ifdef _WIN32
+				win_error();
+#endif
+			}
+			exit(0);
 		  default:
 			  bad_command();
 			  break;
