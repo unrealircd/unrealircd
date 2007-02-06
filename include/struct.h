@@ -172,7 +172,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	REALLEN	 	50
 #define	TOPICLEN	307
 #define	CHANNELLEN	32
-#define	PASSWDLEN 	32	/* orig. 20, changed to 32 for nickpasswords */
+#define	PASSWDLEN 	48	/* was 20, then 32, now 48. */
 #define	KEYLEN		23
 #define LINKLEN		32
 #define	BUFSIZE		512	/* WARNING: *DONT* CHANGE THIS!!!! */
