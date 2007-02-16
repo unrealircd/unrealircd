@@ -1536,3 +1536,8 @@
 - Made ./unreal configtest to test config file, suggested by djGrrr (#0003164).
 - Added info on /rehash -dns and /rehash -ssl to unreal32docs.html and help.conf, reported by Bricker and djGrrr (#0003186).
 - Changed password length from 32 to 48, is allocated dynamically anyway.
+- Fixed file descriptor leakage on rehash. This resulted in [number of modules loaded]
+  file descriptors being leaked upon every /REHASH.
+  So if you, for example, had 3 modules loaded and rehashed 30 times, it would cause
+  the ircd to consume 60 useless file descriptors (which often means 60 less file
+  descriptors being available to clients).
