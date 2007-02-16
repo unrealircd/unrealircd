@@ -1444,3 +1444,8 @@
 - Fixed SAPART causing a flood of notices from all servers, fun. Reported and patch
   provided by djGrrr.
 - Changed password length from 32 to 48, is allocated dynamically anyway.
+- Fixed file descriptor leakage on rehash. This resulted in [number of modules loaded]
+  file descriptors being leaked upon every /REHASH.
+  So if you, for example, had 3 modules loaded and rehashed 30 times, it would cause
+  the ircd to consume 60 useless file descriptors (which often means 60 less file
+  descriptors being available to clients).

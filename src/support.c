@@ -1680,9 +1680,8 @@ int file_exists(char* file)
 	FILE *fd;
 	fd = fopen(file, "r");
 	if (!fd)
-	{
 		return 0;
-	}
+	fclose(fd);
 	return 1;
 }
 
