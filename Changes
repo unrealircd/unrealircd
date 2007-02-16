@@ -1539,5 +1539,5 @@
 - Fixed file descriptor leakage on rehash. This resulted in [number of modules loaded]
   file descriptors being leaked upon every /REHASH.
   So if you, for example, had 3 modules loaded and rehashed 30 times, it would cause
-  the ircd to consume 60 useless file descriptors (which often means 60 less file
+  the ircd to consume 90 useless file descriptors (which often means 90 less file
   descriptors being available to clients).
