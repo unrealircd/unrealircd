@@ -291,7 +291,7 @@
 		<p><b>Syntax:</b> <tt>:<i>source</i> o <i>#channel</i> <i>modechange</i> <i>modeparams</i></tt></p>
 		<p>This has the same parameters as for MODE. The only difference is that servers probably will never receive this (but is best to document just in case), and that absolutely NO permission checking is done on anything.</p>
 		<h2><a name="S5_10"></a>5.10 TOPIC - Channel Topic (TOKEN: ) )</h2>
-		<p><b>Syntax:</b> <tt>:<i>source</i> ) <i>#channel</i> <i>nick</i> <i>timestamp</i> :<i>topic</i></p>
+		<p><b>Syntax:</b> <tt>:<i>source</i> ) <i>#channel</i> <i>nick</i> <i>timestamp</i> :<i>topic</i></tt></p>
 		<p>Changes the channel topic information. This format is used when synching, as well as when a topic is changed normally. Nick is the user who changed the topic (depending on compile options, it can be just nick or a full nick!user@host), timestamp is when the change occured, and topic is the new topic text. Normally, only a newer timestamp will actually change the topic, but a U:Lined server can use an older timestamp as well (such as for TOPICLOCK).
 		<hr/>
 		<h1><a name="S6"></a>6 Services Commands</h1>
