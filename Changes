@@ -1541,3 +1541,4 @@
   So if you, for example, had 3 modules loaded and rehashed 30 times, it would cause
   the ircd to consume 90 useless file descriptors (which often means 90 less file
   descriptors being available to clients).
+- Fixed serverprotocol.html typo.
