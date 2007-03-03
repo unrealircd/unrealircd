@@ -1108,8 +1108,10 @@ struct _configitem_admin {
 	ConfigFlag flag;
 	char	   *line; 
 };
-
+#ifdef FAKELAG_CONFIGURABLE
 #define CLASS_OPT_NOFAKELAG		0x1
+#endif
+#define CLASS_OPT_NOTARGETLAG		0x2
 
 struct _configitem_class {
 	ConfigItem *prev, *next;

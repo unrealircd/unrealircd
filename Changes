@@ -1542,3 +1542,4 @@
   the ircd to consume 90 useless file descriptors (which often means 90 less file
   descriptors being available to clients).
 - Fixed serverprotocol.html typo.
+- Added class::options::notargetlag to prevent to lag to users from this class, suggested by djGrrr (#0003145).

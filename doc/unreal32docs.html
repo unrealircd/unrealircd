@@ -768,6 +768,11 @@ class &lt;name&gt; {
 	maxclients &lt;maximum-clients&gt;;
 	sendq &lt;send-queue&gt;;
 	recvq &lt;recv-queue&gt;;
+	options {
+		&lt;option&gt;;
+		&lt;option&gt;;
+		...
+	};
 };
 </pre></p>
 <p> </p>
@@ -781,6 +786,10 @@ class &lt;name&gt; {
 <p><b>sendq</b> specifies the amount of data which can be in the send queue (very high for servers with low bandwidth, medium for clients)</p>
 <p><b>recvq</b> specifies the amount of data which can be in the receive queue and is used for flood control 
  (this only applies to normal users, try experimenting with values 3000-8000, 8000 is the default).</p>
+<p><b>options block</b> (optional)<br>
+   Valid options are:<br>
+&nbsp;&nbsp;&nbsp;<b>notargetlag</b> users are not artificialy lagged. So, they will not get "Message target change too fast." anymore<br>
+</p>
 <p>Examples:<br>
 <pre>
 class clients {
@@ -849,7 +858,7 @@ allow {
 &nbsp;&nbsp;&nbsp;<b>noident</b> don't use ident but use username specified by client<br>
 &nbsp;&nbsp;&nbsp;<b>ssl</b> only match if this client is connected via SSL<br>
 &nbsp;&nbsp;&nbsp;<b>nopasscont</b> continue matching if no password was given (so you can put clients in special classes 
-if they supply a password).
+if they supply a password).</p>
 <p>Examples:<br>
 <pre>
 allow {
