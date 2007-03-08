@@ -1373,6 +1373,7 @@ struct _configitem_include {
 #ifdef USE_LIBCURL
 	char *url;
 	char *errorbuf;
+	char *bind_ip;
 #endif
 };
 

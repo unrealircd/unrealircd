@@ -133,7 +133,7 @@ static size_t do_download(void *ptr, size_t size, size_t nmemb, void *stream)
  * message. The returned filename is malloc'ed and must be freed by
  * the caller.
  */
-char *download_file(char *url, char **error)
+char *download_file(char *url, char **error, char *bind_ip)
 {
 	static char errorbuf[CURL_ERROR_SIZE];
 	CURL *curl = curl_easy_init();
@@ -174,6 +174,8 @@ char *download_file(char *url, char **error)
  	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
  	curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);
 #endif
+	if (bind_ip)
+		curl_easy_setopt(curl, CURLOPT_INTERFACE, bind_ip);
 
 #ifdef USE_SSL
 	set_curl_ssl_options(curl);
@@ -231,7 +233,7 @@ void url_init(void)
  * cached 1 if the specified cachetime is >= the current file on the server,
  *        if so, both filename and errorbuf will be NULL
  */
-void download_file_async(char *url, time_t cachetime, vFP callback)
+void download_file_async(char *url, time_t cachetime, vFP callback, char *bind_ip)
 {
 	static char errorbuf[CURL_ERROR_SIZE];
 	CURL *curl = curl_easy_init();
@@ -279,8 +281,8 @@ void download_file_async(char *url, time_t cachetime, vFP callback)
 	 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
  		curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);
 #endif
-
-
+		if (bind_ip)
+			curl_easy_setopt(curl, CURLOPT_INTERFACE, bind_ip);
 		curl_multi_add_handle(multihandle, curl);
 	}
 }

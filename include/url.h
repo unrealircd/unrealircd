@@ -4,8 +4,8 @@
 
 int MODFUNC url_is_valid(char *);
 char MODFUNC *url_getfilename(char *);
-char MODFUNC *download_file(char *, char **);
-void MODFUNC download_file_async(char *, time_t, vFP);
+char MODFUNC *download_file(char *, char **, char *);
+void MODFUNC download_file_async(char *, time_t, vFP, char *);
 void MODFUNC url_do_transfers_async(void);
 void MODFUNC url_init(void);
 

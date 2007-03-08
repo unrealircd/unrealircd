@@ -1543,3 +1543,4 @@
   descriptors being available to clients).
 - Fixed serverprotocol.html typo.
 - Added class::options::notargetlag to prevent to lag to users from this class, suggested by djGrrr (#0003145).
+- Added include::bind-ip to bind an ip to download in case of having defined LIBCURL, suggested by djGrrr (#00003185).

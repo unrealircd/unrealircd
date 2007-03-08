@@ -393,7 +393,7 @@ int			config_verbose = 0;
 
 void add_include(char *);
 #ifdef USE_LIBCURL
-void add_remote_include(char *, char *, int, char *);
+void add_remote_include(char *, char *, int, char *, char *);
 int remote_include(ConfigEntry *ce);
 #endif
 void unload_notloaded_includes(void);
@@ -2775,6 +2775,49 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 
 int	_test_include(ConfigFile *conf, ConfigEntry *ce)
 {
+	ConfigEntry	*cep;
+	int		errors = 0;
+	if (!ce->ce_vardata)
+	{
+		config_error("%s:%i: include without file",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return 1;
+	}
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname)
+		{
+			config_error_blank(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				"include");
+			errors++;
+			continue;
+		}
+#ifdef USE_LIBCURL
+		if (!strcmp(cep->ce_varname, "bind-ip")) 
+		{
+			struct in_addr in;
+			if (strcmp(cep->ce_vardata, "*"))
+			{
+				in.s_addr = inet_addr(cep->ce_vardata);
+				if (strcmp((char *)inet_ntoa(in), cep->ce_vardata))
+				{
+					config_error("%s:%i: include::bind-ip (%s) is not a valid IP",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+						cep->ce_vardata);
+					errors++;
+					continue;
+				}
+			}
+		}
+		else
+#endif
+		{
+			config_error_unknownopt(cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum, "include", 
+				cep->ce_varname);
+				errors++;
+		}
+	}
 	return 0;
 }
 
@@ -8782,7 +8825,7 @@ static void conf_download_complete(char *url, char *file, char *errorbuf, int ca
 		}
 	}
 	if (!file && !cached)
-		add_remote_include(file, url, 0, errorbuf);
+		add_remote_include(file, url, 0, errorbuf, inc->bind_ip);
 	else
 	{
 		if (cached)
@@ -8791,11 +8834,11 @@ static void conf_download_complete(char *url, char *file, char *errorbuf, int ca
 			char *file = unreal_getfilename(urlfile);
 			char *tmp = unreal_mktemp("tmp", file);
 			unreal_copyfileex(inc->file, tmp, 1);
-			add_remote_include(tmp, url, 0, NULL);
+			add_remote_include(tmp, url, 0, NULL, inc->bind_ip);
 			free(urlfile);
 		}
 		else
-			add_remote_include(file, url, 0, NULL);
+			add_remote_include(file, url, 0, NULL, inc->bind_ip);
 	}
 	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
 	{
@@ -8834,7 +8877,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		found_remote = 1;
 		modtime = unreal_getfilemodtime(inc->file);
 		inc->flag.type |= INCLUDE_DLQUEUED;
-		download_file_async(inc->url, modtime, conf_download_complete);
+		download_file_async(inc->url, modtime, conf_download_complete, inc->bind_ip);
 	}
 	if (!found_remote)
 		return rehash_internal(cptr, sptr, sig);
@@ -8983,13 +9026,20 @@ int remote_include(ConfigEntry *ce)
 {
 	char *errorbuf = NULL;
 	char *file = find_remote_include(ce->ce_vardata, &errorbuf);
+	char *bind_ip = NULL;
 	int ret;
+	ConfigEntry *cep;
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "bind-ip"))
+			bind_ip = cep->ce_vardata;
+	}
 	if (!loop.ircd_rehashing || (loop.ircd_rehashing && !file && !errorbuf))
 	{
 		char *error;
 		if (config_verbose > 0)
 			config_status("Downloading %s", ce->ce_vardata);
-		file = download_file(ce->ce_vardata, &error);
+		file = download_file(ce->ce_vardata, &error, bind_ip);
 		if (!file)
 		{
 			config_error("%s:%i: include: error downloading '%s': %s",
@@ -9000,7 +9050,7 @@ int remote_include(ConfigEntry *ce)
 		else
 		{
 			if ((ret = load_conf(file)) >= 0)
-				add_remote_include(file, ce->ce_vardata, INCLUDE_USED, NULL);
+				add_remote_include(file, ce->ce_vardata, INCLUDE_USED, NULL, bind_ip);
 			free(file);
 			return ret;
 		}
@@ -9017,7 +9067,7 @@ int remote_include(ConfigEntry *ce)
 		if (config_verbose > 0)
 			config_status("Loading %s from download", ce->ce_vardata);
 		if ((ret = load_conf(file)) >= 0)
-			add_remote_include(file, ce->ce_vardata, INCLUDE_USED, NULL);
+			add_remote_include(file, ce->ce_vardata, INCLUDE_USED, NULL, bind_ip);
 		return ret;
 	}
 	return 0;
@@ -9046,7 +9096,7 @@ void add_include(char *file)
 }
 
 #ifdef USE_LIBCURL
-void add_remote_include(char *file, char *url, int flags, char *errorbuf)
+void add_remote_include(char *file, char *url, int flags, char *errorbuf, char *bind_ip)
 {
 	ConfigItem_include *inc;
 
@@ -9067,6 +9117,8 @@ void add_remote_include(char *file, char *url, int flags, char *errorbuf)
 	if (file)
 		inc->file = strdup(file);
 	inc->url = strdup(url);
+	if (bind_ip)
+		inc->bind_ip = strdup(bind_ip);
 	inc->flag.type = (INCLUDE_NOTLOADED|INCLUDE_REMOTE|flags);
 	if (errorbuf)
 		inc->errorbuf = strdup(errorbuf);
@@ -9088,6 +9140,7 @@ void unload_notloaded_includes(void)
 			{
 				remove(inc->file);
 				free(inc->url);
+				free(inc->bind_ip);
 				if (inc->errorbuf)
 					free(inc->errorbuf);
 			}
@@ -9113,6 +9166,7 @@ void unload_loaded_includes(void)
 			{
 				remove(inc->file);
 				free(inc->url);
+				free(inc->bind_ip);
 				if (inc->errorbuf)
 					free(inc->errorbuf);
 			}

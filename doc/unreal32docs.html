@@ -1309,11 +1309,18 @@ drpass {
 <p><font class="block_section">4.9 - </font><font class="block_name">Include Directive</font><a name="includedirective"></a><div class="desc">
 </p>
 <p>Syntax:<br>
-  include &lt;file-name&gt;;</p>
+<pre>
+include &lt;file-name&gt; {
+	bind-ip &lt;ip-to-bind-to&gt;;
+};</pre></p>
 <p>This directive specifies a filename to be loaded as a separate configuration 
   file. This file may contain any type of config block and can even include other 
   files. Wildcards are supported in the file name to allow you to load multiple 
   files at once.</p>
+<p><b>bind-ip</b> (optional)<br>
+  Can be used to bind to a specific IP (ex: 192.168.0.1) from where we should 
+  connect from to download file-name in case of having LIBCURL defined.
+ </p>
 <p><b>example 1: a network file</b><br>
   <pre>include mynetwork.network;</pre></p>
 <p>That would be the statement to use if you wanted to use a separate network 
@@ -1340,7 +1347,7 @@ drpass {
    <font class="block_required">REQUIRED</font><a name="loadmoduledirective"></a><div class="desc">
 </p>
 <p>Syntax:<br>
-  loadmodule &lt;file-name&gt;;</p>
+<pre>loadmodule &lt;file-name&gt;;</pre></p>
 <p>See <a href="#feature_modules">here</a> why modules are nice/useful.</p>
 <p>Modules that come standard with Unreal3.2:</p>
 <p>commands.so / commands.dll - All the / commands (well not all yet, but will eventually be all) <font color="red">REQUIRED</font><br>
