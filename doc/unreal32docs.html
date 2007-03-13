@@ -568,11 +568,11 @@ into spaces at runtime. And double underscore ('__') gets an underscore ('_'). A
 <p>UnrealIRCd now has support for CIDR (Classless Interdomain Routing). CIDR allows you to ban
 IP ranges. IPs are allocated to ISPs using CIDR, therefore, being able to set a CIDR based ban 
 allows you to easily ban an ISP. Unreal supports CIDR for both IPv4 and IPv6. CIDR masks may be
-used in the allow::ip, ban user::mask, ban ip::mask, except ban::mask, except throttle::mask,
-and except tkl::mask (for gzline, gline, and shun). Additionally, CIDR can be used in /kline,
-/gline, /zline, /gzline, and /shun. Unreal uses the standard syntax of IP/bits, e.g., 
-127.0.0.0/8 (matches 127.0.0.0 - 127.255.255.255), and fe80:0:0:123::/64 (matches 
-fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p></div>
+used in the allow::ip, oper::from::userhost, ban user::mask, ban ip::mask, except ban::mask,
+except throttle::mask, and except tkl::mask (for gzline, gline, and shun). Additionally, CIDR
+can be used in /kline, /gline, /zline, /gzline, and /shun. Unreal uses the standard syntax of
+IP/bits, e.g., 127.0.0.0/8 (matches 127.0.0.0 - 127.255.255.255), and fe80:0:0:123::/64
+(matches fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p></div>
 
 <p><font size="+2"><b>3.16 - Nick Character Sets</b></font><a name="feature_nickchars"></a></p><div class="desc">
 <p>UnrealIRCd now has the ability to specify which charsets/languages should be allowed

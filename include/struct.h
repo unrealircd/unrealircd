@@ -1160,6 +1160,7 @@ struct _configitem_oper_from {
 	ConfigItem       *prev, *next;
 	ConfigFlag 	 flag;
 	char		 *name;
+	struct irc_netmask	*netmask;
 };
 
 struct _configitem_drpass {
