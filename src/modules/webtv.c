@@ -367,7 +367,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					strcat(buf, "a Local IRC Operator");
 				if (buf[0])
 					sendto_one(sptr,
-						":IRC PRIVMSG %s :%s is an %s on %s",
+						":IRC PRIVMSG %s :%s is %s on %s",
 						sptr->name, name, buf, ircnetwork);
 			}
 
@@ -378,7 +378,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 			if (acptr->umodes & UMODE_BOT)
 			{
-				sendto_one(sptr, ":IRC PRIVMSG %s :%s is an Bot on %s",
+				sendto_one(sptr, ":IRC PRIVMSG %s :%s is a Bot on %s",
 					sptr->name, name, ircnetwork);
 			}
 			if (acptr->umodes & UMODE_SECURE)

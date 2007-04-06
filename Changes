@@ -1545,3 +1545,4 @@
 - Added class::options::notargetlag to prevent to lag to users from this class, suggested by djGrrr (#0003145).
 - Added include::bind-ip to bind an ip to download in case of having defined LIBCURL, suggested by djGrrr (#00003185).
 - oper::from::userhost now accepts a CIDR address (eg *me@1.2.3.0/24), requested by djGrrr (#0003234).
+- Corrected a couple of grammar errors in WebTV whois (/msg IRC WHOIS nick) output, reported by CuLpA (#0003244).
