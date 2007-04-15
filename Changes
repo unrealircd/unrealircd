@@ -1565,4 +1565,7 @@
  authentication for services, you can probably use the code in here to do it
  quite simple.
  .. please mind any errors, it's been years since I (Stskeeps) last committed to here :)
-         
+- Patch to remove lusers.c and change from bzero to memset in ircd.c
+  by w00t
+- Patch to remove curses leftover (I am going to assume SIGWINCH isn't a
+  problem) by w00t
