@@ -103,7 +103,7 @@ int  R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns, R_do_id, R_fin_id, R_fail_id;
 char REPORT_DO_DNS[256], REPORT_FIN_DNS[256], REPORT_FIN_DNSC[256],
     REPORT_FAIL_DNS[256], REPORT_DO_ID[256], REPORT_FIN_ID[256],
     REPORT_FAIL_ID[256];
-extern ircstats IRCstats;
+ircstats IRCstats;
 aClient me;			/* That's me */
 MODVAR char *me_hash;
 aClient *client = &me;		/* Pointer to beginning of Client list */
@@ -315,11 +315,6 @@ VOIDSIG dummy()
 #ifndef HAVE_RELIABLE_SIGNALS
 	(void)signal(SIGALRM, dummy);
 	(void)signal(SIGPIPE, dummy);
-#ifndef HPUX			/* Only 9k/800 series require this, but don't know how to.. */
-# ifdef SIGWINCH
-	(void)signal(SIGWINCH, dummy);
-# endif
-#endif
 #else
 # ifdef POSIX_SIGNALS
 	struct sigaction act;
@@ -329,14 +324,8 @@ VOIDSIG dummy()
 	(void)sigemptyset(&act.sa_mask);
 	(void)sigaddset(&act.sa_mask, SIGALRM);
 	(void)sigaddset(&act.sa_mask, SIGPIPE);
-#  ifdef SIGWINCH
-	(void)sigaddset(&act.sa_mask, SIGWINCH);
-#  endif
 	(void)sigaction(SIGALRM, &act, (struct sigaction *)NULL);
 	(void)sigaction(SIGPIPE, &act, (struct sigaction *)NULL);
-#  ifdef SIGWINCH
-	(void)sigaction(SIGWINCH, &act, (struct sigaction *)NULL);
-#  endif
 # endif
 #endif
 }
@@ -1098,11 +1087,11 @@ int InitwIRCD(int argc, char *argv[])
 #else
 	WSAStartup(wVersionRequested, &wsaData);
 #endif
-	bzero((char *)&me, sizeof(me));
-	bzero(&StatsZ, sizeof(StatsZ));
+	memset(&me, 0, sizeof(me));
+	memset(&StatsZ, 0, sizeof(StatsZ));
 	setup_signals();
 	charsys_reset();
-	init_ircstats();
+	memset(&IRCstats, 0, sizeof(IRCstats));
 #ifdef USE_LIBCURL
 	url_init();
 #endif
@@ -1927,10 +1916,6 @@ static void setup_signals()
 	(void)sigemptyset(&act.sa_mask);
 	(void)sigaddset(&act.sa_mask, SIGPIPE);
 	(void)sigaddset(&act.sa_mask, SIGALRM);
-# ifdef	SIGWINCH
-	(void)sigaddset(&act.sa_mask, SIGWINCH);
-	(void)sigaction(SIGWINCH, &act, NULL);
-# endif
 	(void)sigaction(SIGPIPE, &act, NULL);
 	act.sa_handler = dummy;
 	(void)sigaction(SIGALRM, &act, NULL);
@@ -1947,13 +1932,7 @@ static void setup_signals()
 #else
 # ifndef	HAVE_RELIABLE_SIGNALS
 	(void)signal(SIGPIPE, dummy);
-#  ifdef	SIGWINCH
-	(void)signal(SIGWINCH, dummy);
-#  endif
 # else
-#  ifdef	SIGWINCH
-	(void)signal(SIGWINCH, SIG_IGN);
-#  endif
 	(void)signal(SIGPIPE, SIG_IGN);
 # endif
 	(void)signal(SIGALRM, dummy);

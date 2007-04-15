@@ -26,9 +26,6 @@
 int  sendmodeto_one(aClient *cptr, char *from, char *name, char *mode, char *param, TS creationtime);
 void make_cmodestr(void);
 
-/* lusers.c */
-void init_ircstats(void);
-
 /* match.c */
 char *collapse(char *pattern);
 

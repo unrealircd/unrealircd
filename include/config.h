@@ -535,16 +535,6 @@ error You stuffed up config.h signals
  * whatever else.  -4 allows "safety" margin of 1 and space reserved.
  */
 #define	MAXCLIENTS	(MAXCONNECTIONS-4)
-#ifdef HAVECURSES
-# define DOCURSES
-#else
-# undef DOCURSES
-#endif
-#ifdef HAVETERMCAP
-# define DOTERMCAP
-#else
-# undef DOTERMCAP
-#endif
 # define stricmp strcasecmp
 # define strnicmp strncasecmp
 #if defined(CLIENT_FLOOD)

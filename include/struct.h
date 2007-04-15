@@ -681,13 +681,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 /* blah */
 #define IsSkoAdmin(sptr) (IsAdmin(sptr) || IsNetAdmin(sptr) || IsSAdmin(sptr))
 
-/*
- * defines for curses in client
- */
-#define	DUMMY_TERM	0
-#define	CURSES_TERM	1
-#define	TERMCAP_TERM	2
-
 /* Dcc deny types (see src/s_extra.c) */
 #define DCCDENY_HARD	0
 #define DCCDENY_SOFT	1
