@@ -283,32 +283,6 @@ int  dgets(int fd, char *buf, int num)
 
 		tail += nr;
 		*tail = '\0';
-
-		for (t = head; (s = (char *)strchr(t, '\n'));)
-		{
-			if ((s > head) && (s > dgbuf))
-			{
-				t = s - 1;
-				for (nr = 0; *t == '\\'; nr++)
-					t--;
-				if (nr & 1)
-				{
-					t = s + 1;
-					s--;
-					nr = tail - t;
-					while (nr--)
-						*s++ = *t++;
-					tail -= 2;
-					*tail = '\0';
-				}
-				else
-					s++;
-			}
-			else
-				s++;
-			t = s;
-		}
-		*tail = '\0';
 	}
 }
 

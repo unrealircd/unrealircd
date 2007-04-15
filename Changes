@@ -1569,3 +1569,6 @@
   by w00t
 - Patch to remove curses leftover (I am going to assume SIGWINCH isn't a
   problem) by w00t 
+- Fixed #0003002 reported by DelGurth, fixed by WolfSage regarding trailing \'s in
+MOTDs 
+- Fixed #0003171 reported by danieldg (typo)
