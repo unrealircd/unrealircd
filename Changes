@@ -1546,3 +1546,23 @@
 - Added include::bind-ip to bind an ip to download in case of having defined LIBCURL, suggested by djGrrr (#00003185).
 - oper::from::userhost now accepts a CIDR address (eg *me@1.2.3.0/24), requested by djGrrr (#0003234).
 - Corrected a couple of grammar errors in WebTV whois (/msg IRC WHOIS nick) output, reported by CuLpA (#0003244).
+- Implemented #0003254 - Auth type 'sslcertfingerprint-sha1', suggested by
+  djGrr. There are reservations regarding the security of this, but for most
+   purposes it should be okay. Cryptographically minded people may comment. 
+  This may also be used to allow remote included opers with SSL certificate
+  fingerprints as we cannot as of yet remote include client certificates
+  (#0002832, suggested by Stealth)
+  Example use:
+  $ openssl x509 -in cert.pem -noout -sha1 -fingerprint
+   (where cert.pem is the oper's/server's/etc SSL client certificate)
+  SHA1 Fingerprint=FA:A6:A3:42:95:34:15:68:26:35:40:18:8D:50:68:D4:15:C8:12:9E
+	
+ translating into this auth block:
+ password "FA:A6:A3:42:95:34:15:68:26:35:40:18:8D:50:68:D4:15:C8:12:9E" { sslcertfingerprint-sha1; };
+ (the auth code is case sensitive).
+
+ If anyone is interested in making a module for SSL client certificate
+ authentication for services, you can probably use the code in here to do it
+ quite simple.
+ .. please mind any errors, it's been years since I (Stskeeps) last committed to here :)
+         

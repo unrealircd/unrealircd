@@ -58,6 +58,9 @@ anAuthStruct MODVAR AuthTypes[] = {
 	/* sure, this is ugly, but it's our fault. -- Syzop */
 	{"ripemd-160",	AUTHTYPE_RIPEMD160},
 #endif
+#ifdef AUTHENABLE_SSL_CERTFINGERPRINT
+	{"sslcertfingerprint-sha1",   AUTHTYPE_SSL_CERTFINGERPRINT_SHA1},
+#endif
 	{NULL,		0}
 };
 
@@ -454,8 +457,17 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 	extern	char *crypt();
 #endif
 
-#ifdef AUTHENABLE_SSL_CLIENTCERT
+#if defined(AUTHENABLE_SSL_CLIENTCERT) || defined(AUTHENABLE_SSL_CERTFINGERPRINT)
 	X509 *x509_clientcert = NULL;
+#endif
+#ifdef AUTHENABLE_SSL_CERTFINGERPRINT
+	unsigned int ssl_certfingerprint_n;
+        unsigned char ssl_certfingerprint_md[EVP_MAX_MD_SIZE];
+	char *ssl_certfingerprint_res = NULL;
+	int ssl_certfingerprint_j;
+#endif
+
+#ifdef AUTHENABLE_SSL_CERTFINGERPRINT
 	X509 *x509_filecert = NULL;
 	FILE *x509_f = NULL;
 #endif
@@ -530,6 +542,44 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 			X509_free(x509_filecert);
 			return 2;	
 #endif
+#ifdef AUTHENABLE_SSL_CERTFINGERPRINT
+		case AUTHTYPE_SSL_CERTFINGERPRINT_SHA1:
+			if (!para)
+				return -1;
+			if (!cptr->ssl)
+				return -1;
+			x509_clientcert = SSL_get_peer_certificate((SSL *)cptr->ssl);
+			if (!x509_clientcert)
+				return -1;
+                        if (!X509_digest(x509_clientcert,EVP_sha1(), ssl_certfingerprint_md,&ssl_certfingerprint_n))
+                        {
+				X509_free(x509_clientcert);	
+				return -1;
+                        }
+                        ssl_certfingerprint_res = (char *)MyMalloc(ssl_certfingerprint_n*3 + 1);
+			for (ssl_certfingerprint_j=0; ssl_certfingerprint_j<(int)ssl_certfingerprint_n; ssl_certfingerprint_j++)
+			{
+				ircsprintf(&ssl_certfingerprint_res[ssl_certfingerprint_j * 3],
+					"%02X%c",
+					ssl_certfingerprint_md[ssl_certfingerprint_j],	
+					(ssl_certfingerprint_j+1 == (int)ssl_certfingerprint_n)
+					?'\0':':');
+			}
+			if (strcmp(as->data, ssl_certfingerprint_res))
+			{
+				/* sendto_one(cptr, ":%s NOTICE %s :*** Wrong SSL certificate fingerprint '%s'", 
+					me.name, cptr->name, ssl_certfingerprint_res); */
+				/* sendto_one(cptr, ":%s NOTICE %s :*** Needed fingerprint is '%s'", 
+					me.name, cptr->name, as->data); */
+				MyFree(ssl_certfingerprint_res);
+				X509_free(x509_clientcert);
+				return -1;
+			}
+			MyFree(ssl_certfingerprint_res);
+			X509_free(x509_clientcert);
+			return 2;	
+#endif
+
 	}
 	return -1;
 }
