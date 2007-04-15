@@ -1572,3 +1572,4 @@
 - Fixed #0003002 reported by DelGurth, fixed by WolfSage regarding trailing \'s in
 MOTDs 
 - Fixed #0003171 reported by danieldg (typo)
+- #0003118 reported by vonitsanet (typo in ADDOMOTD), fixed by WolfSage
