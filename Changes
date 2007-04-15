@@ -1568,4 +1568,4 @@
 - Patch to remove lusers.c and change from bzero to memset in ircd.c
   by w00t
 - Patch to remove curses leftover (I am going to assume SIGWINCH isn't a
-  problem) by w00t
+  problem) by w00t 
