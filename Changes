@@ -1576,3 +1576,5 @@ MOTDs
 - #0003272 reported and fixed by WolfSage (addmotd, addomotd in help.conf)
 - #0003274 reported by Stealth regarding using actual nick and not given
   nick in SAPART
+- #0002842 reported by Zell, fixed by WolfSage regarding glitch in rehash
+  output glitch
