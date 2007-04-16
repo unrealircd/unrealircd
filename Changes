@@ -1574,3 +1574,5 @@ MOTDs
 - Fixed #0003171 reported by danieldg (typo)
 - #0003118 reported by vonitsanet (typo in ADDOMOTD), fixed by WolfSage
 - #0003272 reported and fixed by WolfSage (addmotd, addomotd in help.conf)
+- #0003274 reported by Stealth regarding using actual nick and not given
+  nick in SAPART

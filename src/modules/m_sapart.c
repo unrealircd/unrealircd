@@ -156,7 +156,7 @@ DLLFUNC CMD_FUNC(m_sapart)
 			strlcat(commentx, comment, 512);
 		}
 
-		parv[0] = parv[1]; // nick
+		parv[0] = acptr->name; // nick
 		parv[1] = parv[2]; // chan
 		parv[2] = comment ? commentx : NULL; // comment
 		if (comment)
