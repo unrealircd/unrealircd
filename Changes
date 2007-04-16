@@ -1579,3 +1579,4 @@ MOTDs
 - #0002842 reported by Zell, fixed by WolfSage regarding glitch in rehash
   output glitch
 - #0003159 reported by aegis and Bock, regarding typos in documentation
+- #0002560 reported and patched by w00t, regarding a typo in /SAMODE
