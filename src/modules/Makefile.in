@@ -46,7 +46,7 @@ R_MODULES= \
 	 m_sajoin.so m_sapart.so m_samode.so m_kick.so m_topic.so \
 	 m_invite.so m_list.so m_time.so m_svskill.so m_sjoin.so \
 	 m_pass.so m_userhost.so m_ison.so m_silence.so m_knock.so \
-	 m_umode2.so m_squit.so m_protoctl.so m_addline.so m_addomotd.so \
+	 m_umode2.so m_squit.so m_protoctl.so m_addomotd.so \
 	 m_wallops.so m_admin.so m_globops.so m_locops.so m_chatops.so \
 	 m_trace.so m_netinfo.so m_links.so m_help.so m_rules.so \
 	 m_close.so m_map.so m_eos.so m_server.so m_stats.so \
@@ -68,7 +68,7 @@ COMMANDS=m_sethost.o m_chghost.o m_chgident.o m_setname.o m_setident.o \
 	 m_svssno.o m_sajoin.o m_sapart.o m_samode.o m_kick.o m_topic.o \
 	 m_invite.o m_list.o m_time.o m_svskill.o m_sjoin.o \
 	 m_pass.o m_userhost.o m_ison.o m_silence.o m_knock.o m_umode2.o \
-	 m_squit.o m_protoctl.o m_addline.o m_addmotd.o m_addomotd.o \
+	 m_squit.o m_protoctl.o m_addmotd.o m_addomotd.o \
 	 m_wallops.o m_admin.o m_globops.o m_locops.o m_chatops.o \
 	 m_trace.o m_netinfo.o m_links.o m_help.o m_rules.o \
 	 m_close.o m_map.o m_eos.o m_server.o m_stats.o \
@@ -298,9 +298,6 @@ m_squit.o: m_squit.c $(INCLUDES)
 
 m_protoctl.o: m_protoctl.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_protoctl.c
-
-m_addline.o: m_addline.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_addline.c
 
 m_addmotd.o: m_addmotd.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_addmotd.c
@@ -673,10 +670,6 @@ m_squit.so: m_squit.c $(INCLUDES)
 m_protoctl.so: m_protoctl.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_protoctl.so m_protoctl.c
-
-m_addline.so: m_addline.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o m_addline.so m_addline.c
 
 m_addmotd.so: m_addmotd.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \

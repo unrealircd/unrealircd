@@ -1581,3 +1581,5 @@ MOTDs
 - #0003159 reported by aegis and Bock, regarding typos in documentation
 - #0002560 reported and patched by w00t, regarding a typo in /SAMODE
 - #0002844 reported by RandomNumber: Spamfilter bawks on capitalizing actions 
+- #0002404 reported by White_Magic, patched by w00t, removing /addline
+  (which the bug report wasnt about)

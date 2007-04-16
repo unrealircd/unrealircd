@@ -47,7 +47,7 @@ COMMANDS=m_sethost.o m_chghost.o m_chgident.o m_setname.o m_setident.o \
 	 m_svssno.o m_sajoin.o m_sapart.o m_samode.o m_kick.o m_topic.o \
 	 m_invite.o m_list.o m_time.o m_svskill.o m_sjoin.o \
 	 m_pass.o m_userhost.o m_ison.o m_silence.o m_knock.o m_umode2.o \
-	 m_squit.o m_protoctl.o m_addline.o m_addmotd.o m_addomotd.o \
+	 m_squit.o m_protoctl.o m_addmotd.o m_addomotd.o \
 	 m_wallops.o m_admin.o m_globops.o m_locops.o m_chatops.o \
 	 m_trace.o m_netinfo.o m_links.o m_help.o m_rules.o \
 	 m_close.o m_map.o m_eos.o m_server.o m_stats.o \
