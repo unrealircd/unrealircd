@@ -1583,4 +1583,6 @@ MOTDs
 - #0002844 reported by RandomNumber: Spamfilter bawks on capitalizing actions 
 - #0002404 reported by White_Magic, patched by w00t, removing /addline
   (which the bug report wasnt about)
-- #0002420 reported by KnuX fixed by .. not sure
+- #0002420 reported by KnuX fixed by WolfSage
+- #0003147 reported by vonitsanet, fixed by djGrrr regarding making
+  spamfilters work in case of /setname
