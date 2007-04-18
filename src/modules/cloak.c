@@ -175,7 +175,7 @@ char *keys[3];
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum, keycnt);
 		errors++;
 	}
-	if ((keycnt == 3) && (!strcmp(keys[0], keys[1]) || !strcmp(keys[1], keys[2])))
+	if ((keycnt == 3) && (!stricmp(keys[0], keys[1]) || !stricmp(keys[0], keys[2]) || !stricmp(keys[1], keys[2])))
 	{
 		config_error("%s:%i: set::cloak-keys: All your 3 keys should be RANDOM, they should not be equal",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);

@@ -1586,3 +1586,5 @@ MOTDs
 - #0002420 reported by KnuX fixed by WolfSage
 - #0003147 reported by vonitsanet, fixed by djGrrr regarding making
   spamfilters work in case of /setname
+- #0002157 repoted by Dukat, fixed by djGrrr regarding cloaking module
+  allows cloakkey 1 and 3 to be identical. 

@@ -62,6 +62,9 @@ build: ircd mods
 custommodule:
 	cd modules; $(MAKE) MODULEFILE=$(MODULEFILE) 'EXLIBS=$(EXLIBS)' custommodule
 
+custommodulecpp:
+	cd modules; $(MAKE) MODULEFILE=$(MODULEFILE) 'EXLIBS=$(EXLIBS)' custommodulecpp
+
 ircd: $(OBJS)
 	$(CC) $(CFLAGS) $(CRYPTOLIB) -o ircd $(OBJS) $(LDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
 
