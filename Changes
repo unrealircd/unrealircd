@@ -1619,3 +1619,4 @@ MOTDs
   max link pass length. This now -WARNS- when there is a password bigger
   than PASSWDLEN. 
 - Patch by WolfSage to make /rehash -all case insensitive.
+- #0003000 reported and patched by Stealth, regarding Send TKL updates to G snomask 
