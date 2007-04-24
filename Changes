@@ -1615,3 +1615,6 @@ MOTDs
 - Implemented #0002990, changing 432 into: /* 432    ERR_ERRONEUSNICKNAME */ ":%s 432 %s %s :%s",
 - #0002301 reported by vonitsanet patched by WolfSage, regarding adding oper
   username to /whois, visible if you are an oper
+- #0003223 reported by JasonTik patched by WolfSage, regarding undocumented
+  max link pass length. This now -WARNS- when there is a password bigger
+  than PASSWDLEN. 

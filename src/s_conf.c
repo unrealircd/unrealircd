@@ -5941,6 +5941,12 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 			has_passwordreceive = 1;
+			if (strlen(cep->ce_vardata) > PASSWDLEN)
+			{
+				config_warn("%s:%i: link::password-receive cannot exceed %d characters in length",
+					     ce->ce_fileptr->cf_filename, ce->ce_varlinenum, PASSWDLEN);
+				errors++;
+			}
 			if (Auth_CheckError(cep) < 0)
 				errors++;
 		}
@@ -5957,6 +5963,12 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 			{
 				config_error("%s:%i: link::password-connect cannot be encrypted",
 					     ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+				errors++;
+			}
+			if (strlen(cep->ce_vardata) > PASSWDLEN) 
+			{
+				config_warn("%s:%i: link::password-connect cannot exceed %d characters in length",
+					     ce->ce_fileptr->cf_filename, ce->ce_varlinenum, PASSWDLEN);
 				errors++;
 			}
 		}
