@@ -158,6 +158,13 @@ int  legalident = 1;
 
 	if ((acptr = find_person(parv[1], NULL)))
 	{
+		if (MyClient(sptr) && (IsLocOp(sptr) && !MyClient(acptr)))
+		{
+			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+				parv[0]);
+			return 0;
+		}
+
 		DYN_LOCAL(char, did_parts, acptr->user->joined);
 		switch (UHOST_ALLOWED)
 		{

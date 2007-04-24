@@ -146,6 +146,13 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if ((acptr = find_person(parv[1], NULL)))
 	{
+		if (MyClient(sptr) && (IsLocOp(sptr) && !MyClient(acptr)))
+		{
+			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+				parv[0]);
+			return 0;
+		}
+			
 		DYN_LOCAL(char, did_parts, acptr->user->joined);
 		if (!strcmp(GetHost(acptr), parv[2]))
 		{

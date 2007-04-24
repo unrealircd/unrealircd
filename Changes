@@ -1591,3 +1591,6 @@ MOTDs
 - #0003146 reported by vonitsanet, regarding Modes O,S (etc) not rejected for modes-on-connect 
   fixed by djGrrr
 - #0003289 suggested and patched by fbi, adding (Ping timeout: 182 seconds)
+- #0002932 reported by therock247uk, patched by WolfSage, regarding Local
+  opers can /chghost /chgident /chgname on someone thats on another server on
+  the network 
