@@ -336,8 +336,9 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (!found)
 			sendto_one(sptr, err_str(ERR_NOSUCHNICK),
 			    me.name, parv[0], nick);
+		else
+			sendto_one(sptr, rpl_str(RPL_ENDOFWHOIS), me.name, parv[0], nick);
 	}
-	sendto_one(sptr, rpl_str(RPL_ENDOFWHOIS), me.name, parv[0], querybuf);
 
 	return 0;
 }

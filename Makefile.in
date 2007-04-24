@@ -203,7 +203,7 @@ depend:
 
 install: all
 	$(INSTALL) -m 0700 -d $(IRCDDIR)
-	$(INSTALL) -m 0700 -d $(BINDDIR)
+	$(INSTALL) -m 0700 -d $(BINDIR)
 	$(INSTALL) -m 0700 src/ircd $(BINDIR)
 	$(INSTALL) -m 0700 -d $(IRCDDIR)/doc
 	$(INSTALL) -m 0600 doc/Authors doc/example.conf doc/coding-guidelines doc/tao.of.irc doc/unreal32docs.html $(IRCDDIR)/doc

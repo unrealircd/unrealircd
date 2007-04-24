@@ -1605,3 +1605,6 @@ MOTDs
 - #0003216 patched by djGrrr, regarding when you run ./Config for a second
   time after settings are saved in config.settings, the SSLDIR and ZIPLINKSDIR
   defaults are basically completely ignored.
+- #0003287 reported and patched by satmd regarding 318 end of /whois list
+  breaks RFC 
+- Fixed a typo in #003091 related patch
