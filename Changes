@@ -1612,3 +1612,4 @@ MOTDs
 - #0002685 reported by w00t, patched by WolfSage, regarding useless if () in m_help.c 
 - #0003232 reported by vonitsanet patched by djGrr, regarding /map is not shown u:lined servers to local opers and /links does. 
 - #0003272 patched by w00t, regarding remove restrictions on NOTICE/PRIVMSG $* for opers. 
+- Implemented #0002990, changing 432 into: /* 432    ERR_ERRONEUSNICKNAME */ ":%s 432 %s %s :%s",

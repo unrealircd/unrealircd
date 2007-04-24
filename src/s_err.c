@@ -480,7 +480,7 @@ static char *replies[] = {
 #endif
 /* 430 */ NULL, /* austhex */
 /* 431    ERR_NONICKNAMEGIVEN */ ":%s 431 %s :No nickname given",
-/* 432    ERR_ERRONEUSNICKNAME */ ":%s 432 %s %s :Erroneous Nickname: %s",
+/* 432    ERR_ERRONEUSNICKNAME */ ":%s 432 %s %s :%s",
 /* 433    ERR_NICKNAMEINUSE */ ":%s 433 %s %s :Nickname is already in use.",
 /* 434    ERR_NORULES */ ":%s 434 %s :RULES File is missing",
 /* 435 */ NULL, /* bahamut */
