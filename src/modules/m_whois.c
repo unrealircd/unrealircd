@@ -302,9 +302,19 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				else
 					strlcat(buf, "a Local IRC Operator", sizeof buf);
 				if (buf[0])
-					sendto_one(sptr,
-					    rpl_str(RPL_WHOISOPERATOR), me.name,
-					    parv[0], name, buf);
+				{
+					if (IsOper(sptr) && MyClient(acptr))
+						sendto_one(sptr,
+					    		":%s 313 %s %s :is %s (%s)", 
+							me.name, parv[0], 
+							name, buf, 
+							acptr->user->operlogin);
+					else
+						sendto_one(sptr,
+							rpl_str(RPL_WHOISOPERATOR), 
+							me.name, parv[0],
+							name, buf);
+				}
 			}
 
 			if (IsHelpOp(acptr) && !hideoper && !user->away)

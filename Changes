@@ -1613,3 +1613,5 @@ MOTDs
 - #0003232 reported by vonitsanet patched by djGrr, regarding /map is not shown u:lined servers to local opers and /links does. 
 - #0003272 patched by w00t, regarding remove restrictions on NOTICE/PRIVMSG $* for opers. 
 - Implemented #0002990, changing 432 into: /* 432    ERR_ERRONEUSNICKNAME */ ":%s 432 %s %s :%s",
+- #0002301 reported by vonitsanet patched by WolfSage, regarding adding oper
+  username to /whois, visible if you are an oper
