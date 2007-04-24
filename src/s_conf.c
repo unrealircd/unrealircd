@@ -2455,10 +2455,6 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 		{
 			hname = hp->h_name;
 			strncpyzt(fullname, hname, sizeof(fullname));
-#ifndef NEW_IO
-			add_local_domain(fullname, HOSTLEN - strlen(fullname));
-#else /* ifndef NEW_IO */
-#endif /* ifndef NEW_IO */
 			Debug((DEBUG_DNS, "a_il: %s->%s", sockhost, fullname));
 			if (index(aconf->hostname, '@'))
 			{

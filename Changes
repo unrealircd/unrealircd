@@ -1594,3 +1594,5 @@ MOTDs
 - #0002932 reported by therock247uk, patched by WolfSage, regarding Local
   opers can /chghost /chgident /chgname on someone thats on another server on
   the network 
+- #0003285 patched by w00t, removing add_local_domain and other useless
+  stuff

@@ -236,7 +236,6 @@ extern MODVAR int readcalls, udpfd, resfd;
 #ifndef NEW_IO
 extern aClient *add_connection(aClient *, int);
 extern int add_listener(aConfItem *);
-extern void add_local_domain(char *, int);
 extern int check_client(aClient *, char *);
 extern int check_server(aClient *, struct hostent *, aConfItem *,
     aConfItem *, int);

@@ -216,33 +216,6 @@ void close_connections(void)
 }
 
 /*
-** add_local_domain()
-** Add the domain to hostname, if it is missing
-** (as suggested by eps@TOASTER.SFSU.EDU)
-*/
-
-void add_local_domain(char *hname, int size)
-{
-#if 0
-	/* try to fix up unqualified names */
-	if (!index(hname, '.'))
-	{
-		if (!(ircd_res.options & RES_INIT))
-		{
-			Debug((DEBUG_DNS, "res_init()"));
-			ircd_res_init();
-		}
-		if (ircd_res.defdname[0])
-		{
-			(void)strncat(hname, ".", size - 1);
-			(void)strncat(hname, ircd_res.defdname, size - 2);
-		}
-	}
-#endif
-	return;
-}
-
-/*
 ** Cannot use perror() within daemon. stderr is closed in
 ** ircd and cannot be used. And, worse yet, it might have
 ** been reassigned to a normal connection...
@@ -948,53 +921,6 @@ void close_connection(aClient *cptr)
 	}
 
 	cptr->from = NULL;	/* ...this should catch them! >:) --msa */
-	/*
-	 * fd remap to keep local[i] filled at the bottom.
-	 */
-#if 0
-#ifdef DO_REMAPPING
-	if (empty > 0)
-		if ((j = LastSlot) > (i = empty) &&
-		    (local[j]->status != STAT_LOG))
-		{
-			if (dup2(j, i) == -1)
-				return;
-			local[i] = local[j];
-			local[i]->fd = i;
-#ifdef USE_SSL
-			/* I didn't know the code above existed, which
-			   fucked up SSL -Stskeeps
-			 */
-			if ((local[i]->flags & FLAGS_SSL) && local[i]->ssl)
-			{
-				/* !! RISKY !! --Stskeeps */
-				SSL_change_fd((SSL *) local[i]->ssl,
-				    local[i]->fd);
-			}
-#endif
-			local[j] = NULL;
-#ifndef NO_FDLIST
-			/* update server list */
-			if (IsServer(local[i]))
-			{
-				delfrom_fdlist(j, &busycli_fdlist);
-				delfrom_fdlist(j, &serv_fdlist);
-				addto_fdlist(i, &busycli_fdlist);
-				addto_fdlist(i, &serv_fdlist);
-			}
-			if (IsAnOper(local[i]))
-			{
-				delfrom_fdlist(j, &busycli_fdlist);
-				delfrom_fdlist(j, &oper_fdlist);
-				addto_fdlist(i, &busycli_fdlist);
-				addto_fdlist(i, &oper_fdlist);
-			}
-#endif
-			CLOSE_SOCK(j);
-			--OpenFiles;
-		}
-#endif
-#endif
 	return;
 }
 
