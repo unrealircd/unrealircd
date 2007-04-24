@@ -1609,3 +1609,4 @@ MOTDs
   breaks RFC 
 - Fixed a typo in #003091 related patch
 - #0002846 reported by alex323, patched by WolfSage, regarding local ircop cannot issue CLOSE command 
+- #0002685 reported by w00t, patched by WolfSage, regarding useless if () in m_help.c 

@@ -103,10 +103,6 @@ CMD_FUNC(m_help)
    at least it won't do that gracefully, whatever it is it does - but
    checking whether or not it's a person _is_ good... -Donwulff */
 
-	if (!IsServer(sptr) && MyConnect(sptr) && !IsPerson(sptr))
-	{
-	}
-
 	if (IsServer(sptr) || IsHelpOp(sptr))
 	{
 		if (BadPtr(message)) {
