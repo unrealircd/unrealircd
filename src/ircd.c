@@ -537,6 +537,7 @@ extern TS check_pings(TS currenttime)
 	int  i = 0;
 	char banbuf[1024];
 	int  ping = 0;
+	char scratch[32];
 
 	for (i = 0; i <= LastSlot; i++)
 	{
@@ -735,7 +736,9 @@ extern TS check_pings(TS currenttime)
 					    cptr->sockhost, currenttime,
 					    cptr->since, ping));
 #endif
-				exit_client(cptr, cptr, &me, "Ping timeout");
+				ircsprintf(scratch, "Ping timeout: %d seconds",
+				    (int)(TStime() - cptr->lasttime));
+				    exit_client(cptr, cptr, &me, scratch);
 				continue;
 
 			}

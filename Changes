@@ -1590,3 +1590,4 @@ MOTDs
   allows cloakkey 1 and 3 to be identical. 
 - #0003146 reported by vonitsanet, regarding Modes O,S (etc) not rejected for modes-on-connect 
   fixed by djGrrr
+- #0003289 suggested and patched by fbi, adding (Ping timeout: 182 seconds)
