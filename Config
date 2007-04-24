@@ -280,7 +280,7 @@ n=""
 UNREALCWD="`pwd`"
 NOSPOOF=""
 DPATH="`pwd`"
-SPATH="`pwd`/src/ircd"
+SPATH="`pwd`/src"
 HUB="1"
 DEFPERM="0600"
 CRYPTOIRCD=""
@@ -412,7 +412,7 @@ done
 
 TEST="$DPATH"
 echo ""
-echo "What directory are all the server configuration files in?"
+echo "Where do you want to install the server configuration files?"
 echo $n "[$TEST] -> $c"
 read cc
 if [ -z "$cc" ] ; then
@@ -423,7 +423,7 @@ fi
 
 TEST="$SPATH"
 echo ""
-echo "What is the path to the ircd binary including the name of the binary?"
+echo "Where do you want to install the server binary?"
 echo $n "[$TEST] -> $c"
     read cc
 if [ -z "$cc" ] ; then

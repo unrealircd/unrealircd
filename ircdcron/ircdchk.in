@@ -22,7 +22,7 @@
 # These values shouldn't need to be changed
 
 # The path to the ircd binary
-ircdexe="@BINDIR@"
+ircdexe="@BINDIR@/ircd"
 
 # The path to the ircd pid file
 ircdname="@IRCDDIR@/ircd.pid"

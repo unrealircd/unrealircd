@@ -1598,3 +1598,7 @@ MOTDs
   stuff
 - #0003212 patched by Grunt, regarding /userip <someone_else> seemingly
   shows my (cloaked) IP 
+- #0003091,#0003068,#003290 reported by Bock, aegis, WolfSage and patched by aegis, regarding
+  Makefile.in includes networks* files/dirs, Problems when specifying
+  different directory for binary in Config, error on 'make install' if path
+  to binary not exist
