@@ -1618,3 +1618,4 @@ MOTDs
 - #0003223 reported by JasonTik patched by WolfSage, regarding undocumented
   max link pass length. This now -WARNS- when there is a password bigger
   than PASSWDLEN. 
+- Patch by WolfSage to make /rehash -all case insensitive.
