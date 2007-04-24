@@ -1596,3 +1596,5 @@ MOTDs
   the network 
 - #0003285 patched by w00t, removing add_local_domain and other useless
   stuff
+- #0003212 patched by Grunt, regarding /userip <someone_else> seemingly
+  shows my (cloaked) IP 

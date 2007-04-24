@@ -123,7 +123,7 @@ DLLFUNC CMD_FUNC(m_userip)
 				ip = "<unknown>";
 			if (sptr != acptr && !IsOper(sptr) && IsHidden(acptr))
 			{
-				make_virthost(sptr, GetIP(sptr), ipbuf, 0);
+				make_virthost(acptr, GetIP(acptr), ipbuf, 0);
 				ip = ipbuf;
 			}
 
