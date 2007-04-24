@@ -1620,3 +1620,7 @@ MOTDs
   than PASSWDLEN. 
 - Patch by WolfSage to make /rehash -all case insensitive.
 - #0003000 reported and patched by Stealth, regarding Send TKL updates to G snomask 
+- #0003288 patched by fbi, read error prefix in quit msg if socket error on
+  read and write for write
+
+

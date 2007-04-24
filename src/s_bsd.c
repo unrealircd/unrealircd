@@ -1446,6 +1446,7 @@ int read_message(time_t delay, fdlist * listp)
 	int  auth = 0;
 
 	int  sockerr;
+	char errmsg[512];
 
 #ifndef NO_FDLIST
 	/* if it is called with NULL we check all active fd's */
@@ -1751,10 +1752,18 @@ int read_message(time_t delay, fdlist * listp)
 					nfds--;
 					FD_CLR(cptr->fd, &read_set);
 				}
-				(void)exit_client(cptr, cptr, &me,
-				    ((sockerr = get_sockerr(cptr))
-				    ? STRERROR(sockerr) : "Client exited"));
-				continue;
+			if (!(sockerr = get_sockerr(cptr)))
+			{
+			ircsprintf(errmsg, "%s", "Remote host closed the connection");
+			exit_client(cptr, cptr, &me, errmsg);
+			    continue;
+			} else {
+			ircsprintf(errmsg, "Read error: %s",
+			    STRERROR(sockerr));
+			exit_client(cptr, cptr, &me, errmsg);
+			    continue;
+			}
+				
 			}
 		}
 		length = 1;	/* for fall through case */
@@ -1847,9 +1856,15 @@ int read_message(time_t delay, fdlist * listp)
 				    cptr);
 		}
 		if (length != FLUSH_BUFFER)
-			(void)exit_client(cptr, cptr, &me,
-			    ((sockerr = get_sockerr(cptr))
-			    ? STRERROR(sockerr) : "Client exited"));
+			if (!(sockerr = get_sockerr(cptr)))
+			{
+			ircsprintf(errmsg, "%s", "Remote host closed the connection");
+			exit_client(cptr, cptr, &me, errmsg);
+			} else {
+			ircsprintf(errmsg, "Read error: %s",
+			    STRERROR(sockerr));
+			exit_client(cptr, cptr, &me, errmsg);
+			}
 	}
 	return 0;
 }
