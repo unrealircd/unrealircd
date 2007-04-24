@@ -1608,3 +1608,4 @@ MOTDs
 - #0003287 reported and patched by satmd regarding 318 end of /whois list
   breaks RFC 
 - Fixed a typo in #003091 related patch
+- #0002846 reported by alex323, patched by WolfSage, regarding local ircop cannot issue CLOSE command 

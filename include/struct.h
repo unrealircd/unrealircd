@@ -1670,7 +1670,7 @@ struct liststruct {
  */
 #define	MyConnect(x)			((x)->fd != -256)
 #define	MyClient(x)			(MyConnect(x) && IsClient(x))
-#define	MyOper(x)			(MyConnect(x) && IsOper(x))
+#define	MyOper(x)			(MyConnect(x) && IsAnOper(x))
 
 #ifdef CLEAN_COMPILE
 #define TStime() (time(NULL) + TSoffset)
