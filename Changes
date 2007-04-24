@@ -1602,3 +1602,6 @@ MOTDs
   Makefile.in includes networks* files/dirs, Problems when specifying
   different directory for binary in Config, error on 'make install' if path
   to binary not exist
+- #0003216 patched by djGrrr, regarding when you run ./Config for a second
+  time after settings are saved in config.settings, the SSLDIR and ZIPLINKSDIR
+  defaults are basically completely ignored.
