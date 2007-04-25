@@ -1622,5 +1622,6 @@ MOTDs
 - #0003000 reported and patched by Stealth, regarding Send TKL updates to G snomask 
 - #0003288 patched by fbi, read error prefix in quit msg if socket error on
   read and write for write
-
-
+- #0003294 reported by Bock, patched by aegis regarding a problem with make
+  install, that also cleans up the stuff to install a bit, with adding a
+  variable to determine what should be copied.
