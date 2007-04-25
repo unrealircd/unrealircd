@@ -149,8 +149,6 @@ CMD_FUNC(m_mode)
 
 	if (MyConnect(sptr))
 		clean_channelname(parv[1]);
-	if (check_channelmask(sptr, cptr, parv[1]))
-		return 0;
 
 	if (parc < 3)
 	{

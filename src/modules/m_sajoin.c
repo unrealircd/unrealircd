@@ -135,8 +135,7 @@ DLLFUNC CMD_FUNC(m_sajoin)
 				parted = 1;
 				continue;
 			}
-			if (check_channelmask(sptr, cptr, name) == -1 || *name == '0' ||
-			    !IsChannelName(name))
+			if (*name == '0' || !IsChannelName(name))
 			{
 				sendto_one(sptr,
 				    err_str(ERR_NOSUCHCHANNEL), me.name,

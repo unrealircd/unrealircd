@@ -1625,3 +1625,5 @@ MOTDs
 - #0003294 reported by Bock, patched by aegis regarding a problem with make
   install, that also cleans up the stuff to install a bit, with adding a
   variable to determine what should be copied.
+- #0003281 regarding removing masked channels, this will make channels with
+  :'s in them not be backwards compatible with 3.2.*, patch by WolfSage
