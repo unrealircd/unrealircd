@@ -7092,23 +7092,17 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "modes-on-connect")) {
+			char *p;
 			CheckNull(cep);
 			CheckDuplicate(cep, modes_on_connect, "modes-on-connect");
-			if (strchr(cep->ce_vardata, 'z'))
-			{
-				config_error("%s:%i: set::modes-on-connect may not have +z",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-				errors++;
-			}
+			for (p = cep->ce_vardata; *p; p++)
+				if (strchr("oOaANCrzSgHhqtW", *p))
+				{
+					config_error("%s:%i: set::modes-on-connect may not include mode '%c'",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, *p);
+					errors++;
+				}
 			templong = (long) set_usermode(cep->ce_vardata);
-			if (templong & UMODE_OPER)
-			{
-				config_error("%s:%i: set::modes-on-connect contains +o",
-					cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum);
-				errors++;
-				continue;
-			}
 		}
 		else if (!strcmp(cep->ce_varname, "modes-on-join")) {
 			char *c;

@@ -1450,3 +1450,5 @@
   the ircd to consume 90 useless file descriptors (which often means 90 less file
   descriptors being available to clients).
 - Fixed #0003171 reported by danieldg (typo) doc/technical
+- #0003146 reported by vonitsanet, regarding Modes O,S (etc) not rejected for modes-on-connect
+  fixed by djGrrr
