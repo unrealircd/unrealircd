@@ -2,7 +2,7 @@ Token List (c) 2002-2004 codemastr (Dominick Meglio) [codemastr@unrealircd.com]
 
 Command     Token 
 ------------------------------------------------------------------------------------------------
-PRIVATE     !
+PRIVMSG     !
 WHOIS       #
 NICK        &
 SERVER      '
