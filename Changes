@@ -1455,3 +1455,5 @@
 - #0002932 reported by therock247uk, patched by WolfSage, regarding Local
   opers can /chghost /chgident /chgname on someone thats on another server on
   the network.
+- #0003212 patched by Grunt, regarding /userip <someone_else> seemingly
+  shows your own (cloaked) IP.
