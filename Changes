@@ -1457,3 +1457,4 @@
   the network.
 - #0003212 patched by Grunt, regarding /userip <someone_else> seemingly
   shows your own (cloaked) IP.
+- #0002846 reported by alex323, patched by WolfSage, regarding local ircop cannot issue CLOSE command
