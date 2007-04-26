@@ -1632,3 +1632,6 @@ MOTDs
   Devel.WolfSage.org[192.168.2.97] closed the connection. This would
   probably have caused netsplits to go unnoticed.
 - #0002095 removing /helpop broadcasting
+- #0003298 reported by Stealth patched by WolfSage, regarding KICK now sends
+  proper channel name to other servers, Local KICK now displays proper
+  channel name from other servers

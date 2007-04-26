@@ -149,10 +149,10 @@ CMD_FUNC(m_kick)
 					goto attack;
 
 				/* Note for coders regarding oper override:
-				 * always let a remote kick (=from a user on another server) trough or
+				 * always let a remote kick (=from a user on another server) through or
 				 * else we will get desynched. In short this means all the denying should
 				 * always contain a && MyClient(sptr) [or sptr!=cptr] and at the end
-				 * a remote kick should always be allowed (pass trough). -- Syzop
+				 * a remote kick should always be allowed (pass through). -- Syzop
 				 */
 
 				/* applies to everyone (well except remote/ulines :p) */
@@ -336,12 +336,12 @@ CMD_FUNC(m_kick)
 						/* NORMAL */
 						sendto_channel_butserv(chptr,
 						    sptr, ":%s KICK %s %s :%s",
-						    parv[0], name, who->name, comment);
+						    parv[0], chptr->chname, who->name, comment);
 					}
 				}
 				sendto_serv_butone_token(cptr, parv[0],
 				    MSG_KICK, TOK_KICK, "%s %s :%s",
-				    name, who->name, comment);
+				    chptr->chname, who->name, comment);
 				if (lp)
 				{
 					remove_user_from_channel(who, chptr);
