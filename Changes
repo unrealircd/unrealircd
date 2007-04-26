@@ -1627,3 +1627,8 @@ MOTDs
   variable to determine what should be copied.
 - #0003281 regarding removing masked channels, this will make channels with
   :'s in them not be backwards compatible with 3.2.*, patch by WolfSage
+- #0003301 regarding sending @1 ]:Server %s closed the connection
+  Devel.WolfSage.org[192.168.2.97] instead of @1 ] :Server
+  Devel.WolfSage.org[192.168.2.97] closed the connection. This would
+  probably have caused netsplits to go unnoticed.
+

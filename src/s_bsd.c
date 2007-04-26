@@ -1847,7 +1847,7 @@ int read_message(time_t delay, fdlist * listp)
 				sendto_locfailops
 				    ("Server %s closed the connection",
 				    get_client_name(cptr, FALSE));
-				sendto_serv_butone_token(&me, me.name, MSG_GLOBOPS, TOK_GLOBOPS
+				sendto_serv_butone_token(&me, me.name, MSG_GLOBOPS, TOK_GLOBOPS,
 				    ":Server %s closed the connection",
 				    get_client_name(cptr, FALSE));
 			}
