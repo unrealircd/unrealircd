@@ -301,9 +301,7 @@ because otherwise you will not understand concepts such as 'cloaking', 'snomasks
    the help block in the configuration file. Additionally, a help.conf is included which contains some basic help for
    all commands.<br>
    For example <i>/helpop chmodes</i> gives you a overview of all channel modes UnrealIRCd has.<br>
-   Remember that if you are an ircop (helpop) you will have to prefix the keyword with a '?' character, 
-   so <i>/helpop</i> becomes <i>/helpop ?</i> and 
-   <i>/helpop chmodes</i> becomes <i>/helpop ?chmodes</i> etc..</p></div>
+</p></div>
 
 <p><font size="+2"><b>3.6 - Oper access levels</b></font><a name="feature_operaccesslevels"></a></p><div class="desc">
 <p>There are several oper levels in UnrealIRCd and you can add additional rights (like to use /gline) to
@@ -1019,7 +1017,7 @@ listen *:6601 {
   <tr> 
     <td><div align="center">h</div></td>
     <td><div align="center">helpop</div></td>
-    <td>Oper receives umode +h (helpop)</td>
+    <td>Oper is marked as "availiable for help" when he/she is not away</td>
   </tr>
   <tr> 
     <td><div align="center">w</div></td>
@@ -2810,7 +2808,7 @@ AU). Requests to these servers are sent in parallel, fastest reply wins.</p>
 </table>
 <p></p></div>
 <p><font size="+2"><b>7 &#8211; User & Oper Commands Table<a name="useropercommands" id="useropercommands"></a></b></font></p><div class="desc">
-<p>NOTE: the /helpop documentation is more up to date, use <i>/helpop command</i> (or <i>/helpop ?command</i> if you are oper) 
+<p>NOTE: the /helpop documentation is more up to date, use <i>/helpop command</i>  
 to get more information on a command.</p>
 
 <table width="90%" border="1">
@@ -2948,16 +2946,6 @@ to get more information on a command.</p>
       off. The watch list DOES NOT REMAIN BETWEEN SESSIONS - you (or your script 
       or client) must add the nicknames to your watch list every time you connect 
       to an IRC server.<br></td>
-    <td>All</td>
-  </tr>
-  <tr> 
-    <td height="39">helpop ?&lt;topic&gt; or !&lt;topic&gt;<br></td>
-    <td>HelpOp is a new system of getting IRC Server help. You type either /HELPOP 
-      ? &lt;help system topic&gt; or /HELPOP ! &lt;question&gt; The "?" 
-      in /HELPOP means query the help system and if you get no response you can 
-      choose '!' to send it to the Help Operators online. Using neither ? nor ! 
-      will mean the command will be first queried within the help system and if 
-      no match if found , it will be forwarded to the help operators</td>
     <td>All</td>
   </tr>
   <tr> 

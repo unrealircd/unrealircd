@@ -1631,4 +1631,4 @@ MOTDs
   Devel.WolfSage.org[192.168.2.97] instead of @1 ] :Server
   Devel.WolfSage.org[192.168.2.97] closed the connection. This would
   probably have caused netsplits to go unnoticed.
-
+- #0002095 removing /helpop broadcasting

@@ -705,7 +705,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 int spamfilter_usage(aClient *sptr)
 {
 	sendnotice(sptr, "Use: /spamfilter [add|del|remove|+|-] [type] [action] [tkltime] [tklreason] [regex]");
-	sendnotice(sptr, "See '/helpop ?spamfilter' for more information.");
+	sendnotice(sptr, "See '/helpop spamfilter' for more information.");
 	return 0;
 }
 
