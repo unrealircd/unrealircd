@@ -1635,3 +1635,4 @@ MOTDs
 - #0003298 reported by Stealth patched by WolfSage, regarding KICK now sends
   proper channel name to other servers, Local KICK now displays proper
   channel name from other servers
+- Fixed SVSKILL sending an illegal (wrong direction) QUIT right after, #0003307
