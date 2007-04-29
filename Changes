@@ -1636,3 +1636,6 @@ MOTDs
   proper channel name to other servers, Local KICK now displays proper
   channel name from other servers
 - Fixed SVSKILL sending an illegal (wrong direction) QUIT right after, #0003307
+- Disallowing channels with : in them, it's not worth to risk breakage of 32* to 33*,
+  services, and other things like odd-extbans and things we haven't thought about,
+  all for allowing one silly character.
