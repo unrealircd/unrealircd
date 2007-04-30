@@ -1462,3 +1462,4 @@
 - Fixed SVSKILL sending an illegal (wrong direction) QUIT right after, #0003307
 - xx reported and fixed by WolfSage (addmotd, addomotd in help.conf)
 - #0003159 reported by aegis and Bock, regarding typos in documentation
+- #0002560 reported and patched by w00t, regarding a typo in /SAMODE

@@ -106,7 +106,7 @@ DLLFUNC CMD_FUNC(m_samode)
 	else
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "MODE");
+		    me.name, parv[0], "SAMODE");
 		return 0;
 	}
 	opermode = 0;
