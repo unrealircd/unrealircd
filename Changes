@@ -1461,3 +1461,4 @@
 - #3272 patched by w00t, regarding remove restrictions on NOTICE/PRIVMSG $* for opers.
 - Fixed SVSKILL sending an illegal (wrong direction) QUIT right after, #0003307
 - xx reported and fixed by WolfSage (addmotd, addomotd in help.conf)
+- #0003159 reported by aegis and Bock, regarding typos in documentation

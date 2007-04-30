@@ -790,7 +790,7 @@ class clients {
 	recvq 8000;
 };
 
-class servers{
+class servers {
 	pingfreq 90;
 	maxclients 10; /* Max servers we can have linked at a time */
 	sendq 1000000;
@@ -1414,7 +1414,7 @@ tld {
 	channel &lt;channel-name&gt;;
 	options {
 		ssl;
-	}
+	};
 };</pre></p>
 <p>The tld block allows you to specify a motd, rules, and channel for a user based 
   on their host. This is useful if you want different motds for different languages. 
