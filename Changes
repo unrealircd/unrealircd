@@ -1463,3 +1463,4 @@
 - xx reported and fixed by WolfSage (addmotd, addomotd in help.conf)
 - #0003159 reported by aegis and Bock, regarding typos in documentation
 - #0002560 reported and patched by w00t, regarding a typo in /SAMODE
+- #0002844 reported by RandomNumber: make spamfilter actions case insensitive

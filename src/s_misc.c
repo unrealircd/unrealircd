@@ -963,7 +963,7 @@ int banact_stringtoval(char *s)
 BanActTable *b;
 
 	for (b = &banacttable[0]; b->value; b++)
-		if (!strcmp(s, b->name))
+		if (!strcasecmp(s, b->name))
 			return b->value;
 	return 0;
 }
