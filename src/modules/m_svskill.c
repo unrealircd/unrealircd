@@ -119,6 +119,8 @@ CMD_FUNC(m_svskill)
 	sendto_serv_butone_token(cptr, parv[0],
 	    MSG_SVSKILL, TOK_SVSKILL, "%s :%s", parv[1], comment);
 
+	acptr->flags |= FLAGS_KILLED;
+
 	return exit_client(cptr, acptr, sptr, comment);
 
 }
