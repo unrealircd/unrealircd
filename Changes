@@ -1460,3 +1460,4 @@
 - #0002846 reported by alex323, patched by WolfSage, regarding local ircop cannot issue CLOSE command
 - #3272 patched by w00t, regarding remove restrictions on NOTICE/PRIVMSG $* for opers.
 - Fixed SVSKILL sending an illegal (wrong direction) QUIT right after, #0003307
+- xx reported and fixed by WolfSage (addmotd, addomotd in help.conf)
