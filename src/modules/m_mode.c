@@ -1021,6 +1021,9 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  }
 		  else
 		  {
+			if (what == MODE_DEL && modetype == MODE_LIMIT && (chptr->mode.mode & MODE_LINK))
+				chptr->mode.mode &= ~MODE_LINK;
+
 			  retval = 0;
 			  if (!chptr->mode.limit)
 				  break;

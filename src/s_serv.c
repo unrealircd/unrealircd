@@ -588,7 +588,7 @@ CMD_FUNC(m_rehash)
 		if (parv[1] && (parv[1][0] == '-'))
 			x = HUNTED_ISME;
 		else
-			x = hunt_server_token(cptr, sptr, MSG_REHASH, TOK_REHASH, "%s %s", 1, parc, parv);
+			x = hunt_server_token(cptr, sptr, MSG_REHASH, TOK_REHASH, "%s", 1, parc, parv);
 	} else {
 		x = hunt_server_token(cptr, sptr, MSG_REHASH, TOK_REHASH, "%s %s", 1, parc, parv);
 	}
@@ -635,18 +635,27 @@ CMD_FUNC(m_rehash)
 		{
 			if (!strnicmp("-gar", parv[1], 4))
 			{
+				if (cptr != sptr)
+					sendto_serv_butone_token(&me, me.name, MSG_GLOBOPS, TOK_GLOBOPS, ":%s is remotely doing garbage collection", sptr->name);
+
 				loop.do_garbage_collect = 1;
 				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
 				return 0;
 			}
 			if (!strnicmp("-dns", parv[1], 4))
 			{
+				if (cptr != sptr)
+					sendto_serv_butone_token(&me, me.name, MSG_GLOBOPS, TOK_GLOBOPS, ":%s is remotely reinitializing the resolver!", sptr->name);
+
 				reinit_resolver(sptr);
 				return 0;
 			}
 			if (!_match("-ssl*", parv[1]))
 			{
 #ifdef USE_SSL
+				if (cptr != sptr)
+					sendto_serv_butone_token(&me, me.name, MSG_GLOBOPS, TOK_GLOBOPS, ":%s is remotely rehashing SSL data", sptr->name);
+					
 				extern void reinit_ssl(aClient *);
 				reinit_ssl(sptr);
 #else

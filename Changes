@@ -1639,3 +1639,6 @@ MOTDs
 - Disallowing channels with : in them, it's not worth to risk breakage of 32* to 33*,
   services, and other things like odd-extbans and things we haven't thought about,
   all for allowing one silly character.
+- #0003060 reported by Robby22, patched by WolfSage, regarding remote
+  rehashing -ssl / -garbage is not Global'd, and a bugfix to an earlier
+  WolfSage patch
