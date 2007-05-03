@@ -6059,12 +6059,6 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 			"link::hostname");
 		errors++;
 	}
-	if (!has_bindip)
-	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			"link::bind-ip");
-		errors++;
-	}
 	if (!has_port)
 	{
 		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,

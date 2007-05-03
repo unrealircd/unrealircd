@@ -1642,3 +1642,5 @@ MOTDs
 - #0003060 reported by Robby22, patched by WolfSage, regarding remote
   rehashing -ssl / -garbage is not Global'd, and a bugfix to an earlier
   WolfSage patch
+- #0003092 reported by tabrisnet, patched by WolfSage, regarding documentation says
+  link::bind-ip is optional, but not specifying it produces an error
