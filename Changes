@@ -1651,3 +1651,5 @@ MOTDs
   doesn't either in case of a server sending it. So this will be just a
   client protocol modification. Also pulled out a modification that got in
   accidentially.
+- #0002318 reported by Stealth, regarding small error in oper block
+  documentation
