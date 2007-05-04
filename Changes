@@ -1657,4 +1657,5 @@ MOTDs
   when trying to /connect to a server with wildcards (* and ?) in the link 
   block. We also raise an error if link::options::autoconnect is used
   together with wildcards in hostname.
-
+- #0002549 reported by Ostdeutschland, regarding lacking information
+  about SQUIT in help.conf
