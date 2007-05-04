@@ -1021,9 +1021,6 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  }
 		  else
 		  {
-			if (what == MODE_DEL && modetype == MODE_LIMIT && (chptr->mode.mode & MODE_LINK))
-				chptr->mode.mode &= ~MODE_LINK;
-
 			  retval = 0;
 			  if (!chptr->mode.limit)
 				  break;
@@ -1201,12 +1198,6 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			break;
 		  }
 
-		  if (!chptr->mode.limit && what == MODE_ADD)
-		  {
-			sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), 
-				   me.name, cptr->name, 'L', "+l must be set");
-			break;
-		  }
 		linkok:
 		  retval = 1;
 		  for (x = 0; x < *pcount; x++)

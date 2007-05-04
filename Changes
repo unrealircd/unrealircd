@@ -1646,3 +1646,8 @@ MOTDs
   link::bind-ip is optional, but not specifying it produces an error
 - #0003313 reported by Stealth, regarding not erroring/warning when me::name
   is bigger than HOSTLEN, from now it will error on config read.
+- #0002040 reported by aquanight, removing dependancy on +l for +L. This
+  will be backwards compatible as well, SJOIN doesn't care (TM) and mode
+  doesn't either in case of a server sending it. So this will be just a
+  client protocol modification. Also pulled out a modification that got in
+  accidentially.
