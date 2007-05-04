@@ -1644,3 +1644,5 @@ MOTDs
   WolfSage patch
 - #0003092 reported by tabrisnet, patched by WolfSage, regarding documentation says
   link::bind-ip is optional, but not specifying it produces an error
+- #0003313 reported by Stealth, regarding not erroring/warning when me::name
+  is bigger than HOSTLEN, from now it will error on config read.

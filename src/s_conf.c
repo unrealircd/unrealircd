@@ -2927,6 +2927,13 @@ int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_varlinenum);
 				errors++;
 			}
+			if (strlen(cep->ce_vardata) > HOSTLEN)
+			{
+				config_error("%s:%i: illegal me::name, must be less or equal to %i characters",
+					cep->ce_fileptr->cf_filename, 
+					cep->ce_varlinenum, HOSTLEN);
+				errors++;
+			}
 		}
 		/* me::info */
 		else if (!strcmp(cep->ce_varname, "info"))
