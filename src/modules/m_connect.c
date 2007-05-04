@@ -169,16 +169,25 @@ DLLFUNC CMD_FUNC(m_connect)
 		return 0;
 	}
 
+
+
 /* Evaluate deny link */
 	for (deny = conf_deny_link; deny; deny = (ConfigItem_deny_link *) deny->next) {
 		if (deny->flag.type == CRULE_ALL && !match(deny->mask, aconf->servername)
 			&& crule_eval(deny->rule)) {
 			sendto_one(sptr,
-				":%s %s %s :Connect: Disallowed by connection rule",
+				":%s %s %s :*** Connect: Disallowed by connection rule",
 				me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0]);
 			return 0;
 		}
 	}
+	if (strchr(aconf->hostname, '*') != NULL || strchr(aconf->hostname, '?') != NULL)
+	{
+		sendto_one(sptr,
+			":%s %s %s :*** Connect: You cannot connect to a server with wildcards (* and ?) in the hostname",
+			me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0]);
+		return 0;
+	}	
 	/*
 	   ** Notify all operators about remote connect requests
 	 */

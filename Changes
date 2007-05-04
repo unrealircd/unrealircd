@@ -1653,3 +1653,8 @@ MOTDs
   accidentially.
 - #0002318 reported by Stealth, regarding small error in oper block
   documentation
+- #0003139 reported by vonitsanet, improving error messages on /connect
+  when trying to /connect to a server with wildcards (* and ?) in the link 
+  block. We also raise an error if link::options::autoconnect is used
+  together with wildcards in hostname.
+
