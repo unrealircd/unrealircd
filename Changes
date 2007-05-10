@@ -1659,3 +1659,5 @@ MOTDs
   together with wildcards in hostname.
 - #0002549 reported by Ostdeutschland, regarding lacking information
   about SQUIT in help.conf
+- #0003327 reported by fbi, regarding a unreferenced and duplicate
+  m_opermotd/m_motd in core
