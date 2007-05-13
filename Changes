@@ -1667,3 +1667,5 @@ MOTDs
 - #0002533 reported by Dodge_Ram, patched by WolfSage, regarding notices 
   not being sent when /*line and /shun are used to request stats 
 - Removed class.h and minor references to aClass. Patched by WolfSage
+- Changed all references to 'class' to 'cclass' (connection class) - to 
+  avoid some keyword confusion and other wacky ideas

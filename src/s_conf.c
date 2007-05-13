@@ -2566,10 +2566,10 @@ attach:
 
 		get_sockhost(cptr, uhost);
 
-		if (!((aconf->class->clients + 1) > aconf->class->maxclients))
+		if (!((aconf->cclass->clients + 1) > aconf->cclass->maxclients))
 		{
-			cptr->class = aconf->class;
-			cptr->class->clients++;
+			cptr->cclass = aconf->cclass;
+			cptr->cclass->clients++;
 		}
 		else
 		{
@@ -3036,13 +3036,13 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 			oper->auth = Auth_ConvertConf2AuthStruct(cep);
 		else if (!strcmp(cep->ce_varname, "class"))
 		{
-			oper->class = Find_class(cep->ce_vardata);
-			if (!oper->class || (oper->class->flag.temporary == 1))
+			oper->cclass = Find_class(cep->ce_vardata);
+			if (!oper->cclass || (oper->cclass->flag.temporary == 1))
 			{
 				config_status("%s:%i: illegal oper::class, unknown class '%s' using default of class 'default'",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 					cep->ce_vardata);
-				oper->class = default_class;
+				oper->cclass = default_class;
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "flags"))
@@ -3362,52 +3362,52 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cep2;
-	ConfigItem_class *class;
+	ConfigItem_class *cclass;
 	unsigned char isnew = 0;
 
-	if (!(class = Find_class(ce->ce_vardata)))
+	if (!(cclass = Find_class(ce->ce_vardata)))
 	{
-		class = MyMallocEx(sizeof(ConfigItem_class));
-		ircstrdup(class->name, ce->ce_vardata);
+		cclass = MyMallocEx(sizeof(ConfigItem_class));
+		ircstrdup(cclass->name, ce->ce_vardata);
 		isnew = 1;
 	}
 	else
 	{
 		isnew = 0;
-		class->flag.temporary = 0;
-		class->options = 0; /* RESET OPTIONS */
+		cclass->flag.temporary = 0;
+		cclass->options = 0; /* RESET OPTIONS */
 	}
-	ircstrdup(class->name, ce->ce_vardata);
+	ircstrdup(cclass->name, ce->ce_vardata);
 
-	class->connfreq = 60; /* default */
+	cclass->connfreq = 60; /* default */
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "pingfreq"))
-			class->pingfreq = atol(cep->ce_vardata);
+			cclass->pingfreq = atol(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "connfreq"))
-			class->connfreq = atol(cep->ce_vardata);
+			cclass->connfreq = atol(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "maxclients"))
-			class->maxclients = atol(cep->ce_vardata);
+			cclass->maxclients = atol(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "sendq"))
-			class->sendq = atol(cep->ce_vardata);
+			cclass->sendq = atol(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "recvq"))
-			class->recvq = atol(cep->ce_vardata);
+			cclass->recvq = atol(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "options"))
 		{
 			for (cep2 = cep->ce_entries; cep2; cep2 = cep2->ce_next)
 			{
 				if (!strcmp(cep2->ce_varname, "notargetlag"))
-					class->options |= CLASS_OPT_NOTARGETLAG;
+					cclass->options |= CLASS_OPT_NOTARGETLAG;
 #ifdef FAKELAG_CONFIGURABLE
 				else if (!strcmp(cep2->ce_varname, "nofakelag"))
-					class->options |= CLASS_OPT_NOFAKELAG;
+					cclass->options |= CLASS_OPT_NOFAKELAG;
 #endif
 			}
 		}
 	}
 	if (isnew)
-		AddListItem(class, conf_class);
+		AddListItem(cclass, conf_class);
 	return 1;
 }
 
@@ -4201,14 +4201,14 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 			allow->auth = Auth_ConvertConf2AuthStruct(cep);
 		else if (!strcmp(cep->ce_varname, "class"))
 		{
-			allow->class = Find_class(cep->ce_vardata);
-			if (!allow->class || (allow->class->flag.temporary == 1))
+			allow->cclass = Find_class(cep->ce_vardata);
+			if (!allow->cclass || (allow->cclass->flag.temporary == 1))
 			{
 				config_status("%s:%i: illegal allow::class, unknown class '%s' using default of class 'default'",
 					cep->ce_fileptr->cf_filename,
 					cep->ce_varlinenum,
 					cep->ce_vardata);
-					allow->class = default_class;
+					allow->cclass = default_class;
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "maxperip"))
@@ -5761,16 +5761,16 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 			link->connpwd = strdup(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "class"))
 		{
-			link->class = Find_class(cep->ce_vardata);
-			if (!link->class || (link->class->flag.temporary == 1))
+			link->cclass = Find_class(cep->ce_vardata);
+			if (!link->cclass || (link->cclass->flag.temporary == 1))
 			{
 				config_status("%s:%i: illegal link::class, unknown class '%s' using default of class 'default'",
 					cep->ce_fileptr->cf_filename,
 					cep->ce_varlinenum,
 					cep->ce_vardata);
-				link->class = default_class;
+				link->cclass = default_class;
 			}
-			link->class->xrefcount++;
+			link->cclass->xrefcount++;
 		}
 		else if (!strcmp(cep->ce_varname, "options"))
 		{
@@ -8957,15 +8957,15 @@ void delete_linkblock(ConfigItem_link *link_ptr)
 {
 	Debug((DEBUG_ERROR, "delete_linkblock: deleting %s, refcount=%d",
 		link_ptr->servername, link_ptr->refcount));
-	if (link_ptr->class)
+	if (link_ptr->cclass)
 	{
-		link_ptr->class->xrefcount--;
+		link_ptr->cclass->xrefcount--;
 		/* Perhaps the class is temporary too and we need to free it... */
-		if (link_ptr->class->flag.temporary && 
-		    !link_ptr->class->clients && !link_ptr->class->xrefcount)
+		if (link_ptr->cclass->flag.temporary && 
+		    !link_ptr->cclass->clients && !link_ptr->cclass->xrefcount)
 		{
-			delete_classblock(link_ptr->class);
-			link_ptr->class = NULL;
+			delete_classblock(link_ptr->cclass);
+			link_ptr->cclass = NULL;
 		}
 	}
 	link_cleanup(link_ptr);

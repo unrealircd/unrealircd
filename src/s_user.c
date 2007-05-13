@@ -468,7 +468,7 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 
 	if (IsAnOper(sptr))
 		return 0;
-	if (sptr->class && (sptr->class->options & CLASS_OPT_NOTARGETLAG))
+	if (sptr->cclass && (sptr->cclass->options & CLASS_OPT_NOTARGETLAG))
 		return 0;
 	if (sptr->targets[0] == hash)
 		return 0;

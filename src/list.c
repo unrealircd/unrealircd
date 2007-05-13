@@ -137,7 +137,7 @@ aClient *make_client(aClient *from, aClient *servr)
 	{
 		cptr->since = cptr->lasttime =
 		    cptr->lastnick = cptr->firsttime = TStime();
-		cptr->class = NULL;
+		cptr->cclass = NULL;
 		cptr->passwd = NULL;
 		cptr->sockhost[0] = '\0';
 		cptr->buffer[0] = '\0';

@@ -471,7 +471,7 @@ static TS try_connections(TS currenttime)
 		    || (aconf->flag.temporary == 1))
 			continue;
 
-		cltmp = aconf->class;
+		cltmp = aconf->cclass;
 		/*
 		 * ** Skip this entry if the use of it is still on hold until
 		 * ** future. Otherwise handle this entry (and set it on hold
@@ -663,8 +663,8 @@ extern TS check_pings(TS currenttime)
 		 * We go into ping phase 
 		 */
 		ping =
-		    IsRegistered(cptr) ? (cptr->class ? cptr->
-		    class->pingfreq : CONNECTTIMEOUT) : CONNECTTIMEOUT;
+		    IsRegistered(cptr) ? (cptr->cclass ? cptr->
+		    cclass->pingfreq : CONNECTTIMEOUT) : CONNECTTIMEOUT;
 		Debug((DEBUG_DEBUG, "c(%s)=%d p %d k %d a %d", cptr->name,
 		    cptr->status, ping, killflag,
 		    currenttime - cptr->lasttime));
@@ -1516,7 +1516,7 @@ int InitwIRCD(int argc, char *argv[])
 	me.next = NULL;
 	me.user = NULL;
 	me.from = &me;
-	me.class = (ConfigItem_class *) conf_listen;
+	me.cclass = (ConfigItem_class *) conf_listen;
 	/*
 	 * This listener will never go away 
 	 */

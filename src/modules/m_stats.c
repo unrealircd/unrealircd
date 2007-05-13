@@ -509,7 +509,7 @@ int stats_links(aClient *sptr, char *para)
 			me.name, sptr->name, IsOper(sptr) ? link_p->username : "*",
 			IsOper(sptr) ? link_p->hostname : "*", link_p->servername,
 			link_p->port,
-			link_p->class->name,
+			link_p->cclass->name,
 			(link_p->options & CONNECT_AUTO) ? "a" : "",
 			(link_p->options & CONNECT_SSL) ? "S" : "",
 			(link_p->options & CONNECT_ZIP) ? "z" : "",
@@ -595,7 +595,7 @@ int stats_allow(aClient *sptr, char *para)
 	for (allows = conf_allow; allows; allows = (ConfigItem_allow *) allows->next) 
 		sendto_one(sptr, rpl_str(RPL_STATSILINE), me.name,
 			sptr->name, allows->ip, allows->hostname, allows->maxperip, 
-			allows->class->name, allows->server ? allows->server 
+			allows->cclass->name, allows->server ? allows->server 
 			: defserv, allows->port ? allows->port : 6667);
 	return 0;
 }
@@ -647,14 +647,14 @@ int stats_oper(aClient *sptr, char *para)
 		  		me.name, sptr->name, 
 		  		'O', "(none)", oper_p->name,
 		  		oflagstr(oper_p->oflags),
-		  		oper_p->class->name ? oper_p->class->name : "");
+		  		oper_p->cclass->name ? oper_p->cclass->name : "");
 		else
 			for (from = (ConfigItem_oper_from *) oper_p->from; from; from = (ConfigItem_oper_from *) from->next)
 		  		sendto_one(sptr, rpl_str(RPL_STATSOLINE),
 		  			me.name, sptr->name, 
 		  			'O', from->name, oper_p->name,
 		  			oflagstr(oper_p->oflags),
-		  			oper_p->class->name? oper_p->class->name : "");
+		  			oper_p->cclass->name? oper_p->cclass->name : "");
 	}
 	return 0;
 }
@@ -686,10 +686,10 @@ int stats_port(aClient *sptr, char *para)
 	  		continue;
 	  	sendto_one(sptr, ":%s %s %s :*** Listener on %s:%i, clients %i. is %s %s",
 	  		me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name,
-	  		((ConfigItem_listen *)acptr->class)->ip,
-			((ConfigItem_listen *)acptr->class)->port,
-			((ConfigItem_listen *)acptr->class)->clients,
-			((ConfigItem_listen *)acptr->class)->flag.temporary ? "TEMPORARY" : "PERM",
+	  		((ConfigItem_listen *)acptr->cclass)->ip,
+			((ConfigItem_listen *)acptr->cclass)->port,
+			((ConfigItem_listen *)acptr->cclass)->clients,
+			((ConfigItem_listen *)acptr->cclass)->flag.temporary ? "TEMPORARY" : "PERM",
 			stats_port_helper(acptr));
 	}
 	return 0;

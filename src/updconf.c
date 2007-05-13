@@ -134,7 +134,7 @@ struct oper {
 	char *login;
 	char *pass;
 	char *flags;
-	char *class;
+	char *cclass;
 	struct host *hosts;
 	struct oper *next;
 };
@@ -163,7 +163,7 @@ struct link {
 	short 	type;
 	int  	port;
 	char	*flags;
-	char 	*class;
+	char 	*cclass;
 	char 	*connpass;
 	char 	*recpass;
 	int  	leafdepth;
@@ -444,7 +444,7 @@ int main(int argc, char *argv[]) {
 					AllocCpy(op->flags, tmp);
 				}
 				tmp = getfield(NULL);
-				AllocCpy(op->class, tmp);
+				AllocCpy(op->cclass, tmp);
 				break;
 			}
 			case 'U':
@@ -569,7 +569,7 @@ int main(int argc, char *argv[]) {
 				else
 					lk->port = 0;
 				tmp = getfield(NULL);
-				AllocCpy(lk->class, tmp);
+				AllocCpy(lk->cclass, tmp);
 				tmp = getfield(NULL);
 				if (!BadPtr(tmp)) {
 					AllocCpy(lk->flags, tmp);
@@ -716,7 +716,7 @@ int main(int argc, char *argv[]) {
 			}
 		}
 		fprintf(fd2, "\t};\n");
-		fprintf(fd2, "\tclass %s;\n", op->class);
+		fprintf(fd2, "\tclass %s;\n", op->cclass);
 		fprintf(fd2, "};\n\n");
 	}
 
@@ -750,7 +750,7 @@ int main(int argc, char *argv[]) {
 		}
 		fprintf(fd2, "\tpassword-connect %s;\n", lk->connpass);
 		fprintf(fd2, "\tpassword-receive %s;\n", lk->recpass);
-		fprintf(fd2, "\tconnect-class %s;\n", lk->class);
+		fprintf(fd2, "\tconnect-class %s;\n", lk->cclass);
 		if (lk->flags != NULL || lk->port) 
 			fprintf(fd2, "\toptions {\n");
 		if (lk->flags != NULL) {

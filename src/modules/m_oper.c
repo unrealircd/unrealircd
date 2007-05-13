@@ -236,11 +236,11 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		sptr->user->operlogin = strdup(aconf->name);
 
 		/* Put in the right class */
-		if (sptr->class)
-			sptr->class->clients--;
+		if (sptr->cclass)
+			sptr->cclass->clients--;
 
-		sptr->class = aconf->class;
-		sptr->class->clients++;
+		sptr->cclass = aconf->cclass;
+		sptr->cclass->clients++;
 		sptr->oflag = 0;
 		if (aconf->swhois) {
 			if (sptr->user->swhois)

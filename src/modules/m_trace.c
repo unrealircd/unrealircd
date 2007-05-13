@@ -167,7 +167,7 @@ DLLFUNC CMD_FUNC(m_trace)
 	for (i = 0; i <= LastSlot; i++)
 	{
 		char *name;
-		char *class;
+		char *cclass;
 
 		if (!(acptr = local[i]))	/* Local Connection? */
 			continue;
@@ -182,24 +182,24 @@ DLLFUNC CMD_FUNC(m_trace)
 		if (!dow && mycmp(tname, acptr->name))
 			continue;
 		name = get_client_name(acptr, FALSE);
-		class = acptr->class ? acptr->class->name : "default";
+		cclass = acptr->cclass ? acptr->cclass->name : "default";
 		switch (acptr->status)
 		{
 		  case STAT_CONNECTING:
 			  sendto_one(sptr, rpl_str(RPL_TRACECONNECTING),
-			      me.name, parv[0], class, name);
+			      me.name, parv[0], cclass, name);
 			  cnt++;
 			  break;
 		  case STAT_HANDSHAKE:
 			  sendto_one(sptr, rpl_str(RPL_TRACEHANDSHAKE), me.name,
-			      parv[0], class, name);
+			      parv[0], cclass, name);
 			  cnt++;
 			  break;
 		  case STAT_ME:
 			  break;
 		  case STAT_UNKNOWN:
 			  sendto_one(sptr, rpl_str(RPL_TRACEUNKNOWN),
-			      me.name, parv[0], class, name);
+			      me.name, parv[0], cclass, name);
 			  cnt++;
 			  break;
 		  case STAT_CLIENT:
@@ -218,13 +218,13 @@ DLLFUNC CMD_FUNC(m_trace)
 					  sendto_one(sptr,
 					      rpl_str(RPL_TRACEOPERATOR),
 					      me.name,
-					      parv[0], class, acptr->name,
+					      parv[0], cclass, acptr->name,
 					      GetHost(acptr),
 					      now - acptr->lasttime);
 				  else
 					  sendto_one(sptr,
 					      rpl_str(RPL_TRACEUSER), me.name,
-					      parv[0], class, acptr->name,
+					      parv[0], cclass, acptr->name,
 					      acptr->user->realhost,
 					      now - acptr->lasttime);
 				  cnt++;
@@ -233,14 +233,14 @@ DLLFUNC CMD_FUNC(m_trace)
 		  case STAT_SERVER:
 			  if (acptr->serv->user)
 				  sendto_one(sptr, rpl_str(RPL_TRACESERVER),
-				      me.name, parv[0], class, link_s[i],
+				      me.name, parv[0], cclass, link_s[i],
 				      link_u[i], name, acptr->serv->by,
 				      acptr->serv->user->username,
 				      acptr->serv->user->realhost,
 				      now - acptr->lasttime);
 			  else
 				  sendto_one(sptr, rpl_str(RPL_TRACESERVER),
-				      me.name, parv[0], class, link_s[i],
+				      me.name, parv[0], cclass, link_s[i],
 				      link_u[i], name, *(acptr->serv->by) ?
 				      acptr->serv->by : "*", "*", me.name,
 				      now - acptr->lasttime);

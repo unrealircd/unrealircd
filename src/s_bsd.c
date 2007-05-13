@@ -455,7 +455,7 @@ int add_listener2(ConfigItem_listen * conf)
 	strncpyzt(cptr->name, conf->ip, sizeof(cptr->name));
 	if (inetport(cptr, conf->ip, conf->port))
 		cptr->fd = -2;
-	cptr->class = (ConfigItem_class *) conf;
+	cptr->cclass = (ConfigItem_class *) conf;
 	cptr->umodes = conf->options ? conf->options : LISTENER_NORMAL;
 	if (cptr->fd >= 0)
 	{
@@ -498,7 +498,7 @@ void close_listeners(void)
 				continue;
 			if (!IsMe(cptr) || cptr == &me || !IsListening(cptr))
 				continue;
-			aconf = (ConfigItem_listen *) cptr->class;
+			aconf = (ConfigItem_listen *) cptr->cclass;
 
 			if (aconf->flag.temporary && (aconf->clients == 0))
 			{
@@ -886,7 +886,7 @@ void close_connection(aClient *cptr)
 		 */
 		aconf->hold = TStime();
 		aconf->hold += (aconf->hold - cptr->since > HANGONGOODLINK) ?
-		    HANGONRETRYDELAY : aconf->class->connfreq;
+		    HANGONRETRYDELAY : aconf->cclass->connfreq;
 		if (nextconnect > aconf->hold)
 			nextconnect = aconf->hold;
 	}
@@ -1209,13 +1209,13 @@ aClient *add_connection(aClient *cptr, int fd)
 	acptr->fd = fd;
 	add_local_client(acptr);
 	acptr->listener = cptr;
-	if (!acptr->listener->class)
+	if (!acptr->listener->cclass)
 	{
-		sendto_ops("ERROR: !acptr->listener->class");
+		sendto_ops("ERROR: !acptr->listener->cclass");
 	}
 	else
 	{
-		((ConfigItem_listen *) acptr->listener->class)->clients++;
+		((ConfigItem_listen *) acptr->listener->cclass)->clients++;
 	}
 	add_client_to_list(acptr);
 	set_non_blocking(acptr->fd, acptr);

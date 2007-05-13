@@ -49,9 +49,9 @@ extern TS check_pings(TS now);
 extern TS TS2ts(char *s);
 extern MODVAR time_t timeofday;
 /* newconf */
-#define get_sendq(x) ((x)->class ? (x)->class->sendq : MAXSENDQLENGTH) 
+#define get_sendq(x) ((x)->cclass ? (x)->cclass->sendq : MAXSENDQLENGTH) 
 /* get_recvq is only called in send.c for local connections */
-#define get_recvq(x) ((x)->class->recvq ? (x)->class->recvq : CLIENT_FLOOD) 
+#define get_recvq(x) ((x)->cclass->recvq ? (x)->cclass->recvq : CLIENT_FLOOD) 
 
 #define CMD_FUNC(x) int (x) (aClient *cptr, aClient *sptr, int parc, char *parv[])
 

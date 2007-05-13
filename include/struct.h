@@ -979,7 +979,7 @@ struct Client {
 	u_short sendB;		/* counters to count upto 1-k lots of bytes */
 	u_short receiveB;	/* sent and received. */
 	aClient *listener;
-	ConfigItem_class *class;		/* Configuration record associated */
+	ConfigItem_class *cclass;		/* Configuration record associated */
 	int authfd;		/* fd for rfc931 authentication */
         short slot;         /* my offset in the local fd table */
 	struct IN_ADDR ip;	/* keep real ip# too */
@@ -1130,7 +1130,7 @@ struct _configitem_allow {
 	anAuthStruct		*auth;	
 	unsigned short		maxperip;
 	int					port;
-	ConfigItem_class	*class;
+	ConfigItem_class	*cclass;
 	struct irc_netmask	*netmask;
 	ConfigFlag_allow	flags;
 };
@@ -1140,7 +1140,7 @@ struct _configitem_oper {
 	ConfigFlag 	 flag;
 	char		 *name, *swhois, *snomask;
 	anAuthStruct	 *auth;
-	ConfigItem_class *class;
+	ConfigItem_class *cclass;
 	ConfigItem	 *from;
 	unsigned long	 modes;
 	long		 oflags;
@@ -1203,7 +1203,7 @@ struct _configitem_link {
 	u_short		port, options;
 	unsigned char 	leafdepth;
 	int		refcount;
-	ConfigItem_class	*class;
+	ConfigItem_class	*cclass;
 	struct IN_ADDR 		ipnum;
 	time_t			hold;
 #ifdef USE_SSL

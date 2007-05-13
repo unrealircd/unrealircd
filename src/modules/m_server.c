@@ -289,7 +289,7 @@ nohostcheck:
 			sendto_one(cptr, "ERROR :Banned server (%s)", bconf->reason ? bconf->reason : "no reason");
 			return exit_client(cptr, cptr, &me, "Banned server");
 		}
-		if (aconf->class->clients + 1 > aconf->class->maxclients)
+		if (aconf->cclass->clients + 1 > aconf->cclass->maxclients)
 		{
 			sendto_realops
 				("Cancelling link %s, full class",
@@ -703,8 +703,8 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 		Debug((DEBUG_ERROR, "reference count for %s (%s) is now %d",
 			cptr->name, cptr->serv->conf->servername, cptr->serv->conf->refcount));
 	}
-	cptr->serv->conf->class->clients++;
-	cptr->class = cptr->serv->conf->class;
+	cptr->serv->conf->cclass->clients++;
+	cptr->cclass = cptr->serv->conf->cclass;
 	add_server_to_table(cptr);
 	RunHook(HOOKTYPE_SERVER_CONNECT, cptr);
 	for (i = 0; i <= LastSlot; i++)

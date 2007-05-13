@@ -1862,7 +1862,7 @@ void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnec
 		ircsprintf(connectd,
 		    "*** Notice -- Client connecting on port %d: %s (%s@%s) [%s] %s%s%s",
 		    sptr->listener->port, nick, user->username, user->realhost,
-		    sptr->class ? sptr->class->name : "",
+		    sptr->cclass ? sptr->cclass->name : "",
 #ifdef USE_SSL
 		IsSecure(sptr) ? "[secure " : "",
 		IsSecure(sptr) ? SSL_get_cipher((SSL *)sptr->ssl) : "",
@@ -1873,7 +1873,7 @@ void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnec
 		ircsprintf(connecth,
 		    "*** Notice -- Client connecting: %s (%s@%s) [%s] {%s}", nick,
 		    user->username, user->realhost, Inet_ia2p(&sptr->ip),
-		    sptr->class ? sptr->class->name : "0");
+		    sptr->cclass ? sptr->cclass->name : "0");
 	}
 	else 
 	{

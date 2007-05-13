@@ -516,13 +516,13 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 #else /* ifndef NEW_IO */
 #endif /* ifndef NEW_IO */
 #endif /* ifndef NEW_IO */
-		if (sptr->class)
+		if (sptr->cclass)
 		{
-			sptr->class->clients--;
-			if ((sptr->class->flag.temporary) && !sptr->class->clients && !sptr->class->xrefcount)
+			sptr->cclass->clients--;
+			if ((sptr->cclass->flag.temporary) && !sptr->cclass->clients && !sptr->cclass->xrefcount)
 			{
-				delete_classblock(sptr->class);
-				sptr->class = NULL;
+				delete_classblock(sptr->cclass);
+				sptr->cclass = NULL;
 			}
 		}
 		if (IsClient(sptr))
@@ -547,9 +547,9 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 		}
 
 		if (sptr->listener)
-			if (sptr->listener->class && !IsOutgoing(sptr))
+			if (sptr->listener->cclass && !IsOutgoing(sptr))
 			{
-				listen_conf = (ConfigItem_listen *) sptr->listener->class;
+				listen_conf = (ConfigItem_listen *) sptr->listener->cclass;
 				listen_conf->clients--;
 				if (listen_conf->flag.temporary
 				    && (listen_conf->clients == 0))
