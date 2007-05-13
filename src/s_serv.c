@@ -948,52 +948,6 @@ aMotd *read_file_ex(char *filename, aMotd **list, struct tm *t)
 
 }
 
-/*
- * Modified from comstud by codemastr
- */
-CMD_FUNC(m_botmotd)
-{
-	aMotd *temp;
-	ConfigItem_tld *ptr;
-	char userhost[HOSTLEN + USERLEN + 6];
-
-	if (hunt_server_token(cptr, sptr, MSG_BOTMOTD, TOK_BOTMOTD, ":%s", 1, parc,
-	    parv) != HUNTED_ISME)
-		return 0;
-
-	if (!IsPerson(sptr))
-		return 0;
-
-	strlcpy(userhost,make_user_host(sptr->user->username, sptr->user->realhost), sizeof userhost);
-	ptr = Find_tld(sptr, userhost);
-
-	if (ptr)
-	{
-		if (ptr->botmotd)
-			temp = ptr->botmotd;
-		else
-			temp = botmotd;
-	}
-	else
-		temp = botmotd;
-
-	if (!temp)
-	{
-		sendto_one(sptr, ":%s NOTICE %s :BOTMOTD File not found",
-		    me.name, sptr->name);
-		return 0;
-	}
-	sendto_one(sptr, ":%s NOTICE %s :- %s Bot Message of the Day - ",
-	    me.name, sptr->name, me.name);
-
-	while (temp)
-	{
-		sendto_one(sptr, ":%s NOTICE %s :- %s", me.name, sptr->name, temp->line);
-		temp = temp->next;
-	}
-	sendto_one(sptr, ":%s NOTICE %s :End of /BOTMOTD command.", me.name, sptr->name);
-	return 0;
-}
 
 /* m_die, this terminates the server, and it intentionally does not
  * have a reason. If you use it you should first do a GLOBOPS and

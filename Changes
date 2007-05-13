@@ -1661,3 +1661,5 @@ MOTDs
   about SQUIT in help.conf
 - #0003327 reported by fbi, regarding a unreferenced and duplicate
   m_opermotd/m_motd in core
+- #0003333 reported by fbi, regarding a unreferenced and duplicate
+  m_botmotd in core and modules
