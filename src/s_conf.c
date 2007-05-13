@@ -6100,7 +6100,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 			"link::class");
 		errors++;
 	}
-	if (has_autoconnect || has_hostname_wildcards)
+	if (has_autoconnect && has_hostname_wildcards)
 	{
 		config_error("%s:%i: link block with autoconnect and wildcards (* and/or ? in hostname)",
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
