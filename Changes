@@ -1663,3 +1663,5 @@ MOTDs
   m_opermotd/m_motd in core
 - #0003333 reported by fbi, regarding a unreferenced and duplicate
   m_botmotd in core and modules
+- A bug was introduced in the patch for #0003139. Patched by WolfSage
+
