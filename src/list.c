@@ -57,7 +57,7 @@ ID_Notes("2.24 4/20/94");
 #ifdef	DEBUGMODE
 static struct liststats {
 	int  inuse;
-} cloc, crem, users, servs, links, classs, aconfs;
+} cloc, crem, users, servs, links, aconfs;
 
 #endif
 
@@ -79,7 +79,6 @@ void initlists(void)
 	bzero((char *)&users, sizeof(users));
 	bzero((char *)&servs, sizeof(servs));
 	bzero((char *)&links, sizeof(links));
-	bzero((char *)&classs, sizeof(classs));
 #endif
 }
 
@@ -471,25 +470,6 @@ void free_ban(Ban *lp)
 #endif
 }
 
-aClass *make_class(void)
-{
-	aClass *tmp;
-
-	tmp = (aClass *)MyMalloc(sizeof(aClass));
-#ifdef	DEBUGMODE
-	classs.inuse++;
-#endif
-	return tmp;
-}
-
-void free_class(aClass *tmp)
-{
-	MyFree((char *)tmp);
-#ifdef	DEBUGMODE
-	classs.inuse--;
-#endif
-}
-
 #ifdef	DEBUGMODE
 void send_listinfo(aClient *cptr, char *name)
 {
@@ -518,12 +498,7 @@ void send_listinfo(aClient *cptr, char *name)
 	    me.name, RPL_STATSDEBUG, name, links.inuse,
 	    tmp = links.inuse * sizeof(Link));
 	mem += tmp;
-	inuse += links.inuse,
-	    sendto_one(cptr, ":%s %d %s :Classes: inuse: %d(%d)",
-	    me.name, RPL_STATSDEBUG, name, classs.inuse,
-	    tmp = classs.inuse * sizeof(aClass));
-	mem += tmp;
-	inuse += aconfs.inuse,
+	inuse += links.inuse + aconfs.inuse,
 	    sendto_one(cptr, ":%s %d %s :Totals: inuse %d %d",
 	    me.name, RPL_STATSDEBUG, name, inuse, mem);
 }

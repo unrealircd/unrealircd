@@ -158,7 +158,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #endif
 
 #ifndef VMSP
-#include "class.h"
 #include "dbuf.h"		/* THIS REALLY SHOULDN'T BE HERE!!! --msa */
 #endif
 

@@ -296,9 +296,6 @@ src/support.obj: src/support.c $(INCLUDES)
 src/channel.obj: src/channel.c $(INCLUDES) ./include/channel.h
         $(CC) $(CFLAGS) src/channel.c
 
-src/class.obj: src/class.c $(INCLUDES) ./include/class.h
-        $(CC) $(CFLAGS) src/class.c
-
 src/lusers.obj: src/lusers.c $(INCLUDES)
         $(CC) $(CFLAGS) src/lusers.c
 

@@ -843,7 +843,6 @@ int stats_mem(aClient *sptr, char *para)
 	     chb = 0,		/* channel bans */
 	     wwu = 0,		/* whowas users */
 	     fl = 0,		/* free links */
-	     cl = 0,		/* classes */
 	     co = 0;		/* conf lines */
 
 	int  usi = 0,		/* users invited */
@@ -997,7 +996,7 @@ int stats_mem(aClient *sptr, char *para)
 /*	rm = cres_mem(sptr,sptr->name); */
 	rm = 0; /* syzop: todo ?????????? */
 
-	tot = totww + totch + totcl + com + cl * sizeof(aClass) + db + rm;
+	tot = totww + totch + totcl + com + db + rm;
 	tot += fl * sizeof(Link);
 	tot += sizeof(aHashEntry) * U_MAX;
 	tot += sizeof(aHashEntry) * CH_MAX;

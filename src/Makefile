@@ -44,7 +44,7 @@ MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 MAKE = make $(MAKEARGS)
 
 INCLUDES = ../include/auth.h ../include/badwords.h ../include/channel.h \
-	../include/class.h ../include/common.h ../include/config.h ../include/dbuf.h \
+	../include/common.h ../include/config.h ../include/dbuf.h \
 	../include/dynconf.h ../include/events.h ../include/fdlist.h ../include/h.h \
 	../include/hash.h ../include/inet.h ../include/ircsprintf.h \
 	../include/license.h ../include/macros.h ../include/md5.h \
