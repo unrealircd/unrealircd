@@ -186,6 +186,11 @@ extern long get_access(aClient *, aChannel *);
 extern int is_chan_op(aClient *, aChannel *);
 extern int has_voice(aClient *, aChannel *);
 extern int is_chanowner(aClient *, aChannel *);
+#ifndef DISABLE_EXTBAN_STACKING
+extern int ban_check_mask(aClient *, aChannel *, char *, int, int);
+extern int extban_is_ok_nuh_extban(aClient *, aChannel *, char *, int, int, int);
+extern char* extban_conv_param_nuh_extban(char *);
+#endif
 extern Ban *is_banned(aClient *, aChannel *, int);
 extern Ban *is_banned_with_nick(aClient *, aChannel *, int, char *);
 extern int parse_help(aClient *, char *, char *);

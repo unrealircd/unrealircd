@@ -447,6 +447,46 @@ inline Ban *is_banned(aClient *sptr, aChannel *chptr, int type)
 	return is_banned_with_nick(sptr, chptr, type, sptr->name);
 }
 
+#ifndef DISABLE_STACKED_EXTBANS
+/** ban_check_mask - Checks if the current user in ban checking (ban_ip, etc) matches the specified n!u@h mask -or- run an extended ban.
+ * @param sptr         Client to check (can be remote client)
+ * @param chptr        Channel to check
+ * @param banstr       Mask string to check user
+ * @param type         Type of ban to check for (BANCHK_*)
+ * @param no_extbans   0 to check extbans, nonzero to disable extban checking.
+ * @returns            Nonzero if the mask/extban succeeds. Zero if it doesn't.
+ * @comments           This is basically extracting the mask and extban check from is_banned_with_nick, but with being a bit more strict in what an extban is.
+ *                     Strange things could happen if this is called outside standard ban checking.
+ */
+inline int ban_check_mask(aClient* sptr, aChannel* chptr, char* banstr, int type, int no_extbans)
+{
+	Extban *extban = NULL;
+	if (!no_extbans && banstr[0] == '~' && banstr[1] != '\0' && banstr[2] == ':')
+	{
+		/* Is an extended ban. */
+		extban = findmod_by_bantype(banstr[1]);
+		if (!extban)
+		{
+			return 0;
+		}
+		else
+		{
+			return extban->is_banned(sptr, chptr, banstr, type);
+		}
+	}
+	else
+	{
+		/* Is a n!u@h mask. */
+		return (
+			(match(banstr, ban_realhost) == 0) || /* nick!user@realhost */
+			(!BadPtr(ban_virthost) && (match(banstr, ban_virthost) == 0)) || /* nick!user@virthost - if he's been sethost/chghost/vhost */
+			(!BadPtr(ban_ip) && (match(banstr, ban_ip) == 0)) || /* nick!user@IP (1.2.3.4, 1234:5678::90AB:CDEF, ::ffff:1.2.3.4, etc) */
+			(!BadPtr(ban_cloakhost) && (match(banstr, ban_cloakhost) == 0)) /* nick!user@cloakhost - if +x */
+			);
+	}
+}
+#endif
+
 /** is_banned_with_nick - Check if a user is banned on a channel.
  * @param sptr   Client to check (can be remote client)
  * @param chptr  Channel to check
@@ -470,7 +510,8 @@ Ban *is_banned_with_nick(aClient *sptr, aChannel *chptr, int type, char *nick)
 
 	ban_realhost = realhost;
 	ban_ip = ban_virthost = ban_cloakhost = NULL;
-	
+
+	/* Might it be possible in the future to include the possiblity for SupportNICKIP(sptr->from), SupportCLK(sptr->from)? -- aquanight */
 	if (MyConnect(sptr))
 	{
 		mine = 1;
@@ -495,6 +536,7 @@ Ban *is_banned_with_nick(aClient *sptr, aChannel *chptr, int type, char *nick)
  */
 	for (tmp = chptr->banlist; tmp; tmp = tmp->next)
 	{
+#ifdef DISABLE_STACKED_EXTBANS
 		if (*tmp->banstr == '~')
 		{
 			extban = findmod_by_bantype(tmp->banstr[1]);
@@ -512,10 +554,15 @@ Ban *is_banned_with_nick(aClient *sptr, aChannel *chptr, int type, char *nick)
 			} else
 				continue;
 		}
+#else
+		if (!ban_check_mask(sptr, chptr, tmp->banstr, type, 0))
+			continue;
+#endif
 
 		/* Ban found, now check for +e */
 		for (tmp2 = chptr->exlist; tmp2; tmp2 = tmp2->next)
 		{
+#ifdef DISABLE_STACKED_EXTBANS
 			if (*tmp2->banstr == '~')
 			{
 				extban = findmod_by_bantype(tmp2->banstr[1]);
@@ -530,6 +577,10 @@ Ban *is_banned_with_nick(aClient *sptr, aChannel *chptr, int type, char *nick)
 					(mine && (match(tmp2->banstr, cloakhost) == 0)) )
 					return NULL;
 			}
+#else
+			if (!ban_check_mask(sptr, chptr, tmp2->banstr, type, 0))
+				return NULL;
+#endif
 		}
 		break; /* ban found and not on except */
 	}

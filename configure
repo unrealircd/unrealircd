@@ -874,6 +874,8 @@ Optional Packages:
   --with-disableusermod   Disable /set* and /chg*
   --with-operoverride-verify
                           Require opers to invite themselves to +s/+p channels
+  --with-disable-extendedban-stacking
+                          Disable extended ban stacking (~q:~c:#chan) support
 
 Some influential environment variables:
   CC          C compiler command
@@ -12021,6 +12023,15 @@ if test "${with_operoverride_verify+set}" = set; then
   withval="$with_operoverride_verify"
   cat >>confdefs.h <<\_ACEOF
 #define OPEROVERRIDE_VERIFY 1
+_ACEOF
+
+fi;
+
+# Check whether --with-disable-extendedban-stacking or --without-disable-extendedban-stacking was given.
+if test "${with_disable_extendedban_stacking+set}" = set; then
+  withval="$with_disable_extendedban_stacking"
+  cat >>confdefs.h <<\_ACEOF
+#define DISABLE_STACKED_EXTBANS 1
 _ACEOF
 
 fi;
