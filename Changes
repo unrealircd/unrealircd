@@ -1664,4 +1664,5 @@ MOTDs
 - #0003333 reported by fbi, regarding a unreferenced and duplicate
   m_botmotd in core and modules
 - A bug was introduced in the patch for #0003139. Patched by WolfSage
-
+- #0002533 reported by Dodge_Ram, patched by WolfSage, regarding notices 
+  not being sent when /*line and /shun are used to request stats 
