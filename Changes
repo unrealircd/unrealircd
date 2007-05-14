@@ -1694,3 +1694,4 @@ MOTDs
 - Changed make_virthost prototype to not include a C++ keyword
 - More cleanup - this may potentially break some OS'es, but let us catch
   this in testing
+- Fixed CommandAdd prototype a bit
