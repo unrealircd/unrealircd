@@ -93,6 +93,11 @@ custommodule: $(MODULEFILE).c
 	$(CC) $(CFLAGS) $(MODULEFLAGS) $(EXLIBS) -DDYNAMIC_LINKING \
 		-o $(MODULEFILE).so $(MODULEFILE).c		
 
+custommodulecpp: $(MODULEFILE).cpp
+	$(CXX) $(CFLAGS) $(MODULEFLAGS) $(EXLIBS) -DDYNAMIC_LINKING \
+		-o $(MODULEFILE).so $(MODULEFILE).cpp		
+
+
 commands.so: l_commands.c $(COMMANDS) $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -o commands.so l_commands.c \
 	$(COMMANDS)

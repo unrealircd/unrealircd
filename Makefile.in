@@ -20,6 +20,7 @@
 #*/
 
 CC=@CC@
+CXX=@CXX@
 INCLUDEDIR=../include
 NETWORKSDIR=
 FROMDOS=/home/cmunk/bin/4dos
@@ -132,7 +133,7 @@ MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 		'SHELL=${SHELL}' 'STRTOUL=${STRTOUL}' \
 		'CRYPTOLIB=${CRYPTOLIB}' \
 		'CRYPTOINCLUDES=${CRYPTOINCLUDES}' \
-		'URL=${URL}'
+		'URL=${URL}' 'CXX=${CXX}'
 
 INSTALL_CONFS = badwords.channel.conf badwords.message.conf \
 		badwords.quit.conf dccallow.conf help.conf \
@@ -143,6 +144,9 @@ INSTALL_DOCS  = doc/Authors doc/example.conf doc/coding-guidelines \
 
 custommodule:
 	cd src; ${MAKE} ${MAKEARGS} MODULEFILE=${MODULEFILE} 'EXLIBS=${EXLIBS}' custommodule
+
+custommodulecpp:
+	cd src; ${MAKE} ${MAKEARGS} MODULEFILE=${MODULEFILE} 'EXLIBS=${EXLIBS}' custommodulecpp
 
 server:
 build:

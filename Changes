@@ -1695,3 +1695,8 @@ MOTDs
 - More cleanup - this may potentially break some OS'es, but let us catch
   this in testing
 - Fixed CommandAdd prototype a bit
+- Made autoconf detect c++ compiler, now availiable in CXX
+- Made the actual ircd be compiled by c++ compiler (linking, not source)
+- Added m_template.cpp and 'make custommodulecpp MODULEFILE=m_template'
+  ability - meaning, C++ modules for Unreal. This is mostly a proof of
+  concept, so please tell me if some OS'es break bigtime.

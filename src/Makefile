@@ -38,7 +38,7 @@ MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 		'INCLUDEDIR=${INCLUDEDIR}' 'IRCDDIR=${IRCDDIR}' \
 		'MANDIR=${MANDIR}' 'RM=${RM}' 'CP=${CP}' 'TOUCH=${TOUCH}' \
 		'RES=${RES}' 'SHELL=${SHELL}' 'STRTOUL=${STRTOUL}' \
-		'CRYPTOLIB=${CRYPTOLIB}' \
+		'CRYPTOLIB=${CRYPTOLIB}' 'CXX=${CXX}' \
 		'CRYPTOINCLUDES=${CRYPTOINCLUDES}' 'URL=${URL}' \
 
 MAKE = make $(MAKEARGS)
@@ -66,10 +66,10 @@ custommodulecpp:
 	cd modules; $(MAKE) MODULEFILE=$(MODULEFILE) 'EXLIBS=$(EXLIBS)' custommodulecpp
 
 ircd: $(OBJS)
-	$(CC) $(CFLAGS) $(CRYPTOLIB) -o ircd $(OBJS) $(LDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
+	${CXX} $(CFLAGS) $(CRYPTOLIB) -o ircd $(OBJS) $(LDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
 
 staticircd: $(OBJS)
-	$(CC) $(CFLAGS) $(CRYPTOLIB) -DSTATIC_LINKING -o ircd.static $(OBJS) \
+	$(CXX) $(CFLAGS) $(CRYPTOLIB) -DSTATIC_LINKING -o ircd.static $(OBJS) \
 	modules/l_commands.c \
 	modules/m_sethost.c \
 	modules/m_chghost.c \

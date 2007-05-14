@@ -33,7 +33,7 @@ dnl to enable this without -Wall should be shot on sight.
 case "`$CC -v --help 2>&1`" in
 	*-Wpointer-sign* ) CFLAGS="$CFLAGS -Wno-pointer-sign" ;;
 esac
-
+AC_PROG_CXX 
 AC_PATH_PROG(RM,rm)
 AC_PATH_PROG(CP,cp)
 AC_PATH_PROG(TOUCH,touch)
