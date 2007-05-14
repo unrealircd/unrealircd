@@ -1692,3 +1692,5 @@ MOTDs
 - Changed IRCCommand::friend into IRCCommand::partner
 - Removed an odd declaration in common.h regarding find_user_link
 - Changed make_virthost prototype to not include a C++ keyword
+- More cleanup - this may potentially break some OS'es, but let us catch
+  this in testing

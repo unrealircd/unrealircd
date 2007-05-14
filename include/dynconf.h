@@ -19,7 +19,7 @@
  *   $Id$
  */
 
-
+#ifndef DYNCONF_H
 #define DYNCONF_H
 /* config level */
 #define DYNCONF_CONF_VERSION "1.5"
@@ -359,4 +359,6 @@ struct SetCheck {
 	unsigned has_nicklen:1;
 };
 
+
+#endif
 

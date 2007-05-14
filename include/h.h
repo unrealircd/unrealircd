@@ -212,9 +212,7 @@ extern void reset_help();
 extern MODVAR char *debugmode, *configfile, *sbrk0;
 extern char *getfield(char *);
 extern void get_sockhost(aClient *, char *);
-#ifndef _WIN32
-extern char *strerror(int);
-#else
+#ifdef _WIN32
 extern MODFUNC char *sock_strerror(int);
 #endif
 extern int dgets(int, char *, int);
@@ -230,7 +228,7 @@ extern int vsnprintf (char *str, size_t count, const char *fmt, va_list arg);
 #ifdef _WIN32
 extern MODVAR int dbufalloc, dbufblocks, debuglevel;
 #else
-extern int dbufalloc, dbufblocks, debuglevel, errno, h_errno;
+extern int dbufalloc, dbufblocks, debuglevel;
 #endif
 
 extern MODVAR short LastSlot; /* last used index in local client array */
