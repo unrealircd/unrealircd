@@ -283,11 +283,11 @@ void	add_Command(char *name, char *token, int (*func)(), unsigned char parameter
 	if (token)
 	{
 		tok = add_Command_backend(token, func, parameters, 1, 0);
-		tok->friend = cmd;
-		cmd->friend = tok;
+		tok->partner = cmd;
+		cmd->partner = tok;
 	}
 	else
-		cmd->friend = NULL;
+		cmd->partner = NULL;
 }
 
 void    add_CommandX(char *name, char *token, int (*func)(), unsigned char parameters, int flags) 
@@ -297,11 +297,11 @@ void    add_CommandX(char *name, char *token, int (*func)(), unsigned char param
 	if (token != NULL)
 	{
 		tok = add_Command_backend(token, func, parameters, 1, flags);
-		tok->friend = cmd;
-		cmd->friend = tok;
+		tok->partner = cmd;
+		cmd->partner = tok;
 	}
 	else
-		cmd->friend = NULL;
+		cmd->partner = NULL;
 }
 
 inline aCommand *find_CommandEx(char *cmd, int (*func)(), int token)

@@ -58,12 +58,12 @@ Command *CommandAdd(Module *module, char *cmd, char *tok, int (*func)(), unsigne
 	command->cmd->owner = module;
 	if (tok) {
 		command->tok = add_Command_backend(tok,func,params,1,flags);
-		command->cmd->friend = command->tok;
-		command->tok->friend = command->cmd;
+		command->cmd->partner = command->tok;
+		command->tok->partner = command->cmd;
 		command->tok->owner = module;
 	}
 	else
-		command->cmd->friend = NULL;
+		command->cmd->partner = NULL;
 	if (module) {
 		ModuleObject *cmdobj = (ModuleObject *)MyMallocEx(sizeof(ModuleObject));
 		cmdobj->object.command = command;

@@ -1480,11 +1480,11 @@ Cmdoverride *CmdoverrideAdd(Module *module, char *name, iFP function)
 	if (!p->overriders)
 		p->overridetail = ovr;
 	AddListItem(ovr, p->overriders);
-	if (p->friend)
+	if (p->partner)
 	{
-		if (!p->friend->overriders)
-			p->friend->overridetail = ovr;
-		AddListItem(ovr, p->friend->overriders);
+		if (!p->partner->overriders)
+			p->partner->overridetail = ovr;
+		AddListItem(ovr, p->partner->overriders);
 	}
 	return ovr;
 }
@@ -1496,11 +1496,11 @@ void CmdoverrideDel(Cmdoverride *cmd)
 	DelListItem(cmd, cmd->command->overriders);
 	if (!cmd->command->overriders)
 		cmd->command->overridetail = NULL;
-	if (cmd->command->friend)
+	if (cmd->command->partner)
 	{
 		if (!cmd->prev)
-			cmd->command->friend->overridetail = NULL;
-		DelListItem(cmd, cmd->command->friend->overriders);
+			cmd->command->partner->overridetail = NULL;
+		DelListItem(cmd, cmd->command->partner->overriders);
 	}
 	if (cmd->owner)
 	{

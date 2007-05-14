@@ -142,7 +142,7 @@ typedef struct ListOptions LOpts;
 typedef struct FloodOpt aFloodOpt;
 typedef struct MotdItem aMotd;
 typedef struct trecord aTrecord;
-typedef struct Command aCommand;
+typedef struct IRCCommand aCommand;
 typedef struct _cmdoverride Cmdoverride;
 typedef struct SMember Member;
 typedef struct SMembership Membership;
@@ -1732,7 +1732,7 @@ extern MODVAR char *gnulicense[];
 #endif
 #define EVENT_HASHES EVENT_DRUGS
 #include "events.h"
-struct Command {
+struct IRCCommand {
 	aCommand		*prev, *next;
 	char 			*cmd;
 	int			(*func) ();
@@ -1741,7 +1741,7 @@ struct Command {
 	unsigned		parameters : 5;
 	unsigned long   	bytes;
 	Module 			*owner;
-	aCommand		*friend; /* cmd if token, token if cmd */
+	aCommand		*partner; /* cmd if token, token if cmd */
 	Cmdoverride		*overriders;
 	Cmdoverride		*overridetail;
 #ifdef DEBUGMODE

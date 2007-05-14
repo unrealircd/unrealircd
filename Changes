@@ -1688,3 +1688,5 @@ MOTDs
   functions above) if DISABLE_STACKED_EXTBANS is #defined (this is controled by Config). Modules will
   not compile/load if they try to use them anyway.
   This change should not break extban modules, and should need some more extensive testing.
+- Removed some more confusion in source (module IRC commands vs IRC commands)
+- Changed IRCCommand::friend into IRCCommand::partner
