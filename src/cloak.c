@@ -34,7 +34,7 @@ static char sccxid[] = "@(#)cloak.c		9.00 7/12/99 UnrealIRCd";
 #include "h.h"
 
 /* mode = 0, just use strncpyzt, 1 = Realloc new and return new pointer */
-char *make_virthost(aClient *sptr, char *curr, char *new, int mode)
+char *make_virthost(aClient *sptr, char *curr, char *newhost, int mode)
 {
 char host[256], *mask, *x, *p, *q;
 
@@ -54,11 +54,11 @@ char host[256], *mask, *x, *p, *q;
 
 	if (mode == 0)
 	{
-		strlcpy(new, mask, HOSTLEN + 1);
+		strlcpy(newhost, mask, HOSTLEN + 1);
 		return NULL;
 	}
-	if (new)
-		MyFree(new);
+	if (newhost)
+		MyFree(newhost);
 	x = strdup(mask);
 	return x;
 }

@@ -230,8 +230,6 @@ static char *StsMalloc(size_t size, char *file, long line)
 
 #endif
 
-extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
-
 /*
  * Protocol support text.  DO NO CHANGE THIS unless you know what
  * you are doing.

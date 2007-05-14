@@ -543,7 +543,7 @@ extern aClient *find_server_b64_or_real(char *name);
 extern aClient *find_server_by_base64(char *b64);
 extern int is_chanownprotop(aClient *cptr, aChannel *chptr);
 extern int is_skochanop(aClient *cptr, aChannel *chptr);
-extern char *make_virthost(aClient *sptr, char *curr, char *new, int mode);
+extern char *make_virthost(aClient *sptr, char *curr, char *newhost, int mode);
 extern int  channel_canjoin(aClient *sptr, char *name);
 extern char *collapse(char *pattern);
 extern void dcc_sync(aClient *sptr);
