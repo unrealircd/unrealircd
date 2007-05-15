@@ -1700,3 +1700,5 @@ MOTDs
 - Added m_template.cpp and 'make custommodulecpp MODULEFILE=m_template'
   ability - meaning, C++ modules for Unreal. This is mostly a proof of
   concept, so please tell me if some OS'es break bigtime.
+- #003075 - reported by aquanight regarding log block failing silently 
+  for non-creatable log files. Now fails with an error message.
