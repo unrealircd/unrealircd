@@ -6877,6 +6877,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				{
 					ircstrdup(tempiConf.x_server_cipher_list, cepp->ce_vardata);
 				}
+				else if (!strcmp(cepp->ce_varname, "dh"))
+				{
+					ircstrdup(tempiConf.x_dh_pem, cepp->ce_varname);
+				}
 				else if (!strcmp(cepp->ce_varname, "certificate"))
 				{
 					ircstrdup(tempiConf.x_server_cert_pem, cepp->ce_vardata);	
@@ -7805,6 +7809,11 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				{
 					CheckNull(cepp);
 					CheckDuplicate(cep, ssl_certificate, "ssl::certificate");
+				}
+				else if (!strcmp(cepp->ce_varname, "dh"))
+				{
+					CheckNull(cepp);
+					CheckDuplicate(cep, ssl_dh, "ssl::dh");
 				}
 				else if (!strcmp(cepp->ce_varname, "key"))
 				{

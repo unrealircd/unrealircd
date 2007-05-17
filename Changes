@@ -1710,3 +1710,6 @@ MOTDs
 - Added set::ssl::server-cipher-list, #002368 requested by Beastie
 - Added set::ssl::renegotiate-bytes, set::ssl:renegotiate-timeout, #0002971
   suggested by tabrisnet. Gets activated when >0. Please set sane values.
+- Added set::ssl::dh to indicate DH parameters. These are needed to support
+  DSA certificates and should probably make them work from now on. Code
+  originally by the inspircd team.

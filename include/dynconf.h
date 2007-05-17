@@ -102,13 +102,14 @@ struct zConfiguration {
 	char *x_server_cert_pem;
 	char *x_server_key_pem;
 	char *x_server_cipher_list;
+	char *x_dh_pem;
 	char *trusted_ca_file;
 	long ssl_options;
 	int ssl_renegotiate_bytes;
 	int ssl_renegotiate_timeout;
 	
 #elif defined(_WIN32)
-	void *bogus1, *bogus2, *bogus3, *bogus5;
+	void *bogus1, *bogus2, *bogus3, *bogus5, *bogus8;
 	long bogus4;
 	int bogus6, bogus7;
 #endif
@@ -303,6 +304,7 @@ struct SetCheck {
 	unsigned has_ssl_key:1;
 	unsigned has_ssl_trusted_ca_file:1;
 	unsigned has_ssl_options:1;
+	unsigned has_ssl_dh:1;
 	unsigned has_renegotiate_timeout : 1;
 	unsigned has_renegotiate_bytes : 1;
 #endif
