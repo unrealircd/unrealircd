@@ -1496,11 +1496,13 @@ int InitwIRCD(int argc, char *argv[])
 #ifndef NEW_IO
 	if (inetport(&me, conf_listen->ip, portnum))
 		exit(1);
+	set_non_blocking(me.fd, &me);
 #else /* ifndef NEW_IO */
 #endif /* ifndef NEW_IO */
 	conf_listen->options |= LISTENER_BOUND;
 	me.umodes = conf_listen->options;
 	conf_listen->listener = &me;
+	
 	run_configuration();
 	botmotd = (aMotd *) read_file(BPATH, NULL);
 	rules = (aMotd *) read_file(RPATH, NULL);

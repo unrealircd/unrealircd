@@ -1440,7 +1440,7 @@ int read_message(time_t delay, fdlist * listp)
 #else
 	fd_set read_set, write_set, excpt_set;
 #endif
-	int  j;
+	int  j,k;
 	time_t delay2 = delay, now;
 	int  res, length, fd, i;
 	int  auth = 0;
@@ -1663,20 +1663,22 @@ int read_message(time_t delay, fdlist * listp)
 			 ** point, just assume that connections cannot
 			 ** be accepted until some old is closed first.
 			 */
-			if ((fd = accept(cptr->fd, NULL, NULL)) < 0)
+			for (k = 0; k < LISTEN_SIZE; k++)
 			{
+  			  if ((fd = accept(cptr->fd, NULL, NULL)) < 0)
+  			  {
 				if ((ERRNO != P_EWOULDBLOCK)
 				    && (ERRNO != P_ECONNABORTED))
 					report_baderror
 					    ("Cannot accept connections %s:%s",
 					    cptr);
 				break;
-			}
-			ircstp->is_ac++;
-			if (++OpenFiles >= MAXCLIENTS)
-			{
-				ircstp->is_ref++;
-				if (last_allinuse < TStime() - 15)
+                          }
+		  	  ircstp->is_ac++;
+		  	  if (++OpenFiles >= MAXCLIENTS)
+		  	  {
+			  	ircstp->is_ref++;
+			  	if (last_allinuse < TStime() - 15)
 				{
 					sendto_realops
 					    ("All connections in use. (%s)",
@@ -1694,15 +1696,17 @@ int read_message(time_t delay, fdlist * listp)
 				CLOSE_SOCK(fd);
 				--OpenFiles;
 				break;
-			}
-			/*
-			 * Use of add_connection (which never fails :) meLazy
-			 */
-			(void)add_connection(cptr, fd);
-			nextping = TStime();
-			if (!cptr->listener)
+                          }
+			  /*
+			  * Use of add_connection (which never fails :) meLazy
+			  */
+			  (void)add_connection(cptr, fd);
+			  }
+			   nextping = TStime();
+			   if (!cptr->listener)
 				cptr->listener = &me;
-		}
+		        
+                      }
 #ifndef NO_FDLIST
 	for (i = listp->entry[j = 1]; (j <= listp->last_entry);
 	    i = listp->entry[++j])
