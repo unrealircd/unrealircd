@@ -1234,6 +1234,16 @@ aClient *add_connection(aClient *cptr, int fd)
 		acptr->flags |= FLAGS_SSL;
 		SSL_set_fd(acptr->ssl, fd);
 		SSL_set_nonblocking(acptr->ssl);
+		if (iConf.ssl_renegotiate_bytes > 0)
+		{
+		   BIO_set_ssl_renegotiate_bytes(SSL_get_rbio(acptr->ssl), iConf.ssl_renegotiate_bytes);
+		   BIO_set_ssl_renegotiate_bytes(SSL_get_wbio(acptr->ssl), iConf.ssl_renegotiate_bytes);
+		}
+		if (iConf.ssl_renegotiate_timeout > 0)
+		{
+		   BIO_set_ssl_renegotiate_timeout(SSL_get_rbio(acptr->ssl), iConf.ssl_renegotiate_timeout);
+		   BIO_set_ssl_renegotiate_timeout(SSL_get_wbio(acptr->ssl), iConf.ssl_renegotiate_timeout);
+		}
 		if (!ircd_SSL_accept(acptr, fd))
 		{
 			Debug((DEBUG_DEBUG,

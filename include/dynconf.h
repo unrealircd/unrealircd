@@ -104,9 +104,13 @@ struct zConfiguration {
 	char *x_server_cipher_list;
 	char *trusted_ca_file;
 	long ssl_options;
+	int ssl_renegotiate_bytes;
+	int ssl_renegotiate_timeout;
+	
 #elif defined(_WIN32)
 	void *bogus1, *bogus2, *bogus3, *bogus5;
 	long bogus4;
+	int bogus6, bogus7;
 #endif
 	enum UHAllowed userhost_allowed;
 	char *restrict_usermodes;
@@ -299,6 +303,8 @@ struct SetCheck {
 	unsigned has_ssl_key:1;
 	unsigned has_ssl_trusted_ca_file:1;
 	unsigned has_ssl_options:1;
+	unsigned has_renegotiate_timeout : 1;
+	unsigned has_renegotiate_bytes : 1;
 #endif
 	unsigned has_allow_userhost_change:1;
 	unsigned has_restrict_usermodes:1;

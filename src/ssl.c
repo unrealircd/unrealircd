@@ -346,6 +346,8 @@ int  ssl_handshake(aClient *cptr)
 	cptr->ssl = SSL_new(ctx_server);
 	CHK_NULL(cptr->ssl);
 	SSL_set_fd((SSL *) cptr->ssl, cptr->fd);
+	
+	
 #ifndef NEW_IO
 	set_non_blocking(cptr->fd, cptr);
 #else /* ifndef NEW_IO */
@@ -519,6 +521,17 @@ int ircd_SSL_client_handshake(aClient *acptr)
 	SSL_set_fd(acptr->ssl, acptr->fd);
 	SSL_set_connect_state(acptr->ssl);
 	SSL_set_nonblocking(acptr->ssl);
+        if (iConf.ssl_renegotiate_bytes > 0)
+	{
+          BIO_set_ssl_renegotiate_bytes(SSL_get_rbio(acptr->ssl), iConf.ssl_renegotiate_bytes);
+          BIO_set_ssl_renegotiate_bytes(SSL_get_wbio(acptr->ssl), iConf.ssl_renegotiate_bytes);
+        }
+        if (iConf.ssl_renegotiate_timeout > 0)
+        {
+          BIO_set_ssl_renegotiate_timeout(SSL_get_rbio(acptr->ssl), iConf.ssl_renegotiate_timeout);
+          BIO_set_ssl_renegotiate_timeout(SSL_get_wbio(acptr->ssl), iConf.ssl_renegotiate_timeout);
+        }
+
 	if (acptr->serv && acptr->serv->conf->ciphers)
 	{
 		if (SSL_set_cipher_list((SSL *)acptr->ssl, 
