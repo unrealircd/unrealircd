@@ -1707,3 +1707,4 @@ MOTDs
   through this under load, and speeding up connection).
 - IRCd now also sets the &me fd as being non blocking (wasn't before, that
   was odd..)
+- Added set::ssl::server-cipher-list, #002368 requested by Beastie

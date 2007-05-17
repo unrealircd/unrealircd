@@ -215,6 +215,14 @@ SSL_CTX *ctx_server;
 		mylog("Failed to check SSL private key");
 		goto fail;
 	}
+	if (iConf.x_server_cipher_list)
+	{
+                if (SSL_CTX_set_cipher_list(ctx_server, iConf.x_server_cipher_list) == 0)
+                {
+                    mylog("Failed to set SSL cipher list for clients");
+                    goto fail;
+                }
+	}
 	if (iConf.trusted_ca_file)
 	{
 		if (!SSL_CTX_load_verify_locations(ctx_server, iConf.trusted_ca_file, NULL))
