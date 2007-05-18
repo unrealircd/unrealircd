@@ -206,15 +206,15 @@ SSL_CTX *ctx_server;
 	    mylog("Failed to load DH parameters %s", iConf.x_dh_pem);
 	    goto fail;
 	}
-	ret = PEM_read_DHparams(dhpfile, NULL, NULL, NULL);
 	if (dhpfile != NULL)
 	{
+    	    ret = PEM_read_DHparams(dhpfile, NULL, NULL, NULL);
 	    fclose(dhpfile);
-	}
-	if (SSL_CTX_set_tmp_dh(ctx_server, ret) < 0)
-	{
-	    mylog("Failed to use DH parameters %s", iConf.x_dh_pem);
-	    goto fail;
+	    if (SSL_CTX_set_tmp_dh(ctx_server, ret) < 0)
+	    {
+	      mylog("Failed to use DH parameters %s", iConf.x_dh_pem);
+	      goto fail;
+            }
 	}
 	if (SSL_CTX_use_certificate_chain_file(ctx_server, SSL_SERVER_CERT_PEM) <= 0)
 	{
@@ -274,15 +274,15 @@ SSL_CTX *ctx_client;
 	    mylog("Failed to load DH parameters %s", iConf.x_dh_pem);
 	    goto fail;
 	}
-	ret = PEM_read_DHparams(dhpfile, NULL, NULL, NULL);
 	if (dhpfile != NULL)
 	{
+  	    ret = PEM_read_DHparams(dhpfile, NULL, NULL, NULL);
 	    fclose(dhpfile);
-	}
-	if (SSL_CTX_set_tmp_dh(ctx_client, ret) < 0)
-	{
-	    mylog("Failed to use DH parameters %s", iConf.x_dh_pem);
-	    goto fail;
+	    if (SSL_CTX_set_tmp_dh(ctx_client, ret) < 0)
+	    {
+	      mylog("Failed to use DH parameters %s", iConf.x_dh_pem);
+	      goto fail;
+            }
 	}
 	if (SSL_CTX_use_certificate_file(ctx_client, SSL_SERVER_CERT_PEM, SSL_FILETYPE_PEM) <= 0)
 	{

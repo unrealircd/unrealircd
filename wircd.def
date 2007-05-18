@@ -1,4 +1,4 @@
-; dlltool --output-def wircd.def.in --export-all-symbols SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ SRC/S_CONF.OBJ SRC/FDLIST.OBJ SRC/DBUF.OBJ SRC/CLOAK.OBJ SRC/HASH.OBJ SRC/PARSE.OBJ SRC/IRCD.OBJ SRC/S_NUMERIC.OBJ SRC/WHOWAS.OBJ SRC/S_AUTH.OBJ SRC/HELP.OBJ SRC/S_MISC.OBJ SRC/MATCH.OBJ SRC/CRULE.OBJ SRC/S_DEBUG.OBJ SRC/SUPPORT.OBJ SRC/LIST.OBJ SRC/S_ERR.OBJ SRC/PACKET.OBJ SRC/S_BSD.OBJ SRC/S_SERV.OBJ SRC/S_USER.OBJ SRC/CHARSYS.OBJ SRC/VERSION.OBJ SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/MD5.OBJ SRC/API-ISUPPORT.OBJ SRC/API-COMMAND.OBJ SRC/EXTBANS.OBJ
+; dlltool --output-def wircd.def.in --export-all-symbols SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ SRC/S_CONF.OBJ SRC/FDLIST.OBJ SRC/DBUF.OBJ SRC/CLOAK.OBJ SRC/HASH.OBJ SRC/PARSE.OBJ SRC/IRCD.OBJ SRC/S_NUMERIC.OBJ SRC/WHOWAS.OBJ SRC/S_AUTH.OBJ SRC/HELP.OBJ SRC/S_MISC.OBJ SRC/MATCH.OBJ SRC/CRULE.OBJ SRC/S_DEBUG.OBJ SRC/SUPPORT.OBJ SRC/LIST.OBJ SRC/S_ERR.OBJ SRC/PACKET.OBJ SRC/S_BSD.OBJ SRC/S_SERV.OBJ SRC/S_USER.OBJ SRC/CHARSYS.OBJ SRC/VERSION.OBJ SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/MD5.OBJ SRC/API-ISUPPORT.OBJ SRC/API-COMMAND.OBJ SRC/EXTBANS.OBJ
 EXPORTS
 	extcmode_cmodeT_requirechop
 	AllUmodes
@@ -210,7 +210,6 @@ EXPORTS
 	add_listener2
 	add_listmode
 	add_local_client
-	add_local_domain
 	add_server_to_table
 	add_silence
 	add_throttling_bucket
@@ -261,7 +260,6 @@ EXPORTS
 	charsys_reset
 	charsys_reset_pretest
 	charsys_test_language
-	check_channelmask
 	check_client
 	check_fdlists
 	check_for_target_limit
@@ -474,7 +472,6 @@ EXPORTS
 	flush_connections
 	flush_fdlist_connections
 	free_ban
-	free_class
 	free_client
 	free_iConf
 	free_link
@@ -548,7 +545,6 @@ EXPORTS
 	init_conf
 	init_dynconf
 	init_fdlist
-	init_ircstats
 	init_random
 	init_resolver
 	init_sys
@@ -593,7 +589,6 @@ EXPORTS
 	loop
 	loop_event
 	m_alias
-	m_botmotd
 	m_credits
 	m_dalinfo
 	m_die
@@ -603,8 +598,6 @@ EXPORTS
 	m_info_send
 	m_license
 	m_module
-	m_motd
-	m_opermotd
 	m_rehash
 	m_restart
 	m_summon
@@ -613,7 +606,6 @@ EXPORTS
 	m_users
 	m_version
 	make_ban
-	make_class
 	make_client
 	make_cmodestr
 	make_extbanstr

@@ -1713,3 +1713,6 @@ MOTDs
 - Added set::ssl::dh to indicate DH parameters. These are needed to support
   DSA certificates and should probably make them work from now on. Code
   originally by the inspircd team.
+- Fixed a number of compile errors/runtime errors on win32 (also a SSL
+  brainfart regarding DH), #0003345, patched by fez
+
