@@ -90,7 +90,9 @@ static char buf[BUFSIZE];
 #define TRUNCATED_NAMES 64
 DLLFUNC CMD_FUNC(m_names)
 {
-	int  mlen = strlen(me.name) + NICKLEN + 7;
+	int uhnames = SupportUHNAMES(sptr); // cache UHNAMES support
+	int bufLen = NICKLEN + (!uhnames ? 0 : 1 + USERLEN + 1 + HOSTLEN);
+	int  mlen = strlen(me.name) + bufLen + 7;
 	aChannel *chptr;
 	aClient *acptr;
 	int  member;
@@ -202,12 +204,20 @@ DLLFUNC CMD_FUNC(m_names)
 			if (cm->flags & CHFL_VOICE)
 				buf[idx++] = '+';
 		}
-		for (s = acptr->name; *s; s++)
+		char nuhBuffer[bufLen + 1];
+		if(!uhnames) {
+			strlcpy(nuhBuffer, acptr->name, sizeof(nuhBuffer));
+		} else {
+			strlcpy(nuhBuffer, make_nick_user_host(acptr->name, 
+				acptr->user->username, GetHost(acptr)),
+				sizeof(nuhBuffer));
+		}
+		for (s = nuhBuffer; *s; s++)
 			buf[idx++] = *s;
 		buf[idx++] = ' ';
 		buf[idx] = '\0';
 		flag = 1;
-		if (mlen + idx + NICKLEN > BUFSIZE - 7)
+		if (mlen + idx + bufLen > BUFSIZE - 7)
 		{
 			sendto_one(sptr, rpl_str(RPL_NAMREPLY), me.name,
 			    parv[0], buf);

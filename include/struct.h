@@ -358,6 +358,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define PROTO_NICKIP	0x2000  /* Send IP addresses in the NICK command */
 #define PROTO_NAMESX	0x4000  /* Send all rights in NAMES output */
 #define PROTO_CLK		0x8000	/* Send cloaked host in the NICK command (regardless of +x/-x) */
+#define PROTO_UHNAMES	0x10000  /* Send n!u@h in NAMES */
 
 /*
  * flags macros.
@@ -524,6 +525,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SupportTKLEXT(x)	(CHECKPROTO(x, PROTO_TKLEXT))
 #define SupportNAMESX(x)	(CHECKPROTO(x, PROTO_NAMESX))
 #define SupportCLK(x)		(CHECKPROTO(x, PROTO_CLK))
+#define SupportUHNAMES(x)	(CHECKPROTO(x, PROTO_UHNAMES))
 
 #define SetSJOIN(x)		((x)->proto |= PROTO_SJOIN)
 #define SetNoQuit(x)		((x)->proto |= PROTO_NOQUIT)
@@ -538,6 +540,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SetTKLEXT(x)	((x)->proto |= PROTO_TKLEXT)
 #define SetNAMESX(x)	((x)->proto |= PROTO_NAMESX)
 #define SetCLK(x)		((x)->proto |= PROTO_CLK)
+#define SetUHNAMES(x)	((x)->proto |= PROTO_UHNAMES)
 
 #define ClearSJOIN(x)		((x)->proto &= ~PROTO_SJOIN)
 #define ClearNoQuit(x)		((x)->proto &= ~PROTO_NOQUIT)

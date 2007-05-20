@@ -1721,3 +1721,4 @@ MOTDs
   random keys 10 ~ 20 characters in length (doesn't (yet) work for Win32).
 - Misc fix for disabling extban chains, should've done stuff in our autoconf
   stuff instead of hacking configure directly :P .
+- #0002833 reported and patched by tabrisnet, implementing UHNAMES
