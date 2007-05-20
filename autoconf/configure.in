@@ -392,6 +392,8 @@ AC_ARG_WITH(disableusermod, [AC_HELP_STRING([--with-disableusermod], [Disable /s
 	AC_DEFINE(DISABLE_USERMOD))
 AC_ARG_WITH(operoverride-verify, [AC_HELP_STRING([--with-operoverride-verify], [Require opers to invite themselves to +s/+p channels])],
 	AC_DEFINE(OPEROVERRIDE_VERIFY))
+AC_ARG_WITH(disable-extendedban-stacking, [AC_HELP_STRING([--with-disable-extendedban-stacking], [Disable extended ban stacking])],
+	AC_DEFINE(DISABLE_STACKED_EXTBANS))
 CHECK_SSL
 CHECK_ZLIB
 CHECK_LIBCURL

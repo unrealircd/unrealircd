@@ -1717,3 +1717,7 @@ MOTDs
   brainfart regarding DH), #0003345, patched by fez
 - #0003350 - reported by aquanight regarding ./unreal restart not 
   working in 3.3*. Now works properly again.
+- #0001924 - requested by syzop: Added ./unreal gencloak, which generates
+  random keys 10 ~ 20 characters in length (doesn't (yet) work for Win32).
+- Misc fix for disabling extban chains, should've done stuff in our autoconf
+  stuff instead of hacking configure directly :P .
