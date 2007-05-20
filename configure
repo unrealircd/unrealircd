@@ -12406,7 +12406,7 @@ _ACEOF
 if test "${with_spath+set}" = set; then
   withval="$with_spath"
   cat >>confdefs.h <<_ACEOF
-#define SPATH "$withval"
+#define SPATH "$withval/ircd"
 _ACEOF
  BINDIR="$withval"
 else

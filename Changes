@@ -1715,4 +1715,5 @@ MOTDs
   originally by the inspircd team.
 - Fixed a number of compile errors/runtime errors on win32 (also a SSL
   brainfart regarding DH), #0003345, patched by fez
-
+- #0003350 - reported by aquanight regarding ./unreal restart not 
+  working in 3.3*. Now works properly again.
