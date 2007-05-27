@@ -25,14 +25,65 @@ if [ "$1" = "start" ] ; then
 		fi
 	fi
 elif [ "$1" = "stop" ] ; then
+	if [ ! -e $PID_FILE ]; then
+		echo "UnrealIRCd is not running"
+		exit 1
+	fi
+	if [ ! -r $PID_FILE -o \( "$UID" != "0" -a ! -O $PID_FILE \) ]; then
+		echo "Must be ircd owner or root to stop this ircd."
+		exit 1
+	fi
+	PID=`cat $PID_FILE`
+	if [ "`ps -p $PID | wc -l`" == "0" ]; then
+		echo "UnrealIRCd is not running"
+		rm -f $PID_FILE # Kill stale PID.
+		exit 1
+	fi
 	echo "Stopping UnrealIRCd"
-	kill -9 `cat $PID_FILE`
+	if ! kill -9 `cat $PID_FILE`; then
+		echo "Failed to kill UnrealIRCd"
+		exit 1
+	fi
 elif [ "$1" = "rehash" ] ; then
+	if [ ! -e $PID_FILE ]; then
+		echo "UnrealIRCd is not running"
+		exit 1
+	fi
+	if [ ! -r $PID_FILE -o \( "$UID" != "0" -a ! -O $PID_FILE \) ]; then
+		echo "Must be ircd owner or root to rehash this ircd."
+		exit 1
+	fi
+	PID=`cat $PID_FILE`
+	if [ "`ps -p $PID | wc -l`" == "0" ]; then
+		echo "UnrealIRCd is not running"
+		rm -f $PID_FILE # Kill stale PID.
+		exit 1
+	fi
 	echo "Rehashing UnrealIRCd"
-	kill -1 `cat $PID_FILE`
+	if ! kill -1 `cat $PID_FILE`; then
+		echo "Failed to rehash UnrealIRCd"
+		exit 1
+	fi
 elif [ "$1" = "restart" ] ; then
+	if [ ! -e $PID_FILE ]; then
+		echo "UnrealIRCd is not running - Starting."
+		exec $0 start
+	fi
+	if [ ! -r $PID_FILE -o \( "$UID" != "0" -a ! -O $PID_FILE \) ]; then
+		echo "Must be ircd owner or root to restart this ircd."
+		exit 1
+	fi
+	PID=`cat $PID_FILE`
+	if [ "`ps -p $PID | wc -l`" == "0" ]; then
+		echo "UnrealIRCd is not running - Starting."
+		rm -f $PID_FILE # Kill stale PID.
+		exec $0 start
+	fi
 	echo "Restarting UnrealIRCd"
-	kill -2 `cat $PID_FILE`
+	if ! kill -2 `cat $PID_FILE`; then
+		echo "Failed to restart UnrealIRCd"
+		exit 1
+	fi
 elif [ "$1" = "mkpasswd" ] ; then
 	@BINDIR@/ircd -P $2 $3
 elif [ "$1" = "version" ] ; then
