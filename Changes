@@ -1722,3 +1722,5 @@ MOTDs
 - Misc fix for disabling extban chains, should've done stuff in our autoconf
   stuff instead of hacking configure directly :P .
 - #0002833 reported and patched by tabrisnet, implementing UHNAMES
+- Made ./unreal dump some nicer errors eg "UnrealIRCd is not running" as opposed
+  to "kill: 3426: no such process" etc.
