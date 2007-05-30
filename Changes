@@ -1724,3 +1724,5 @@ MOTDs
 - #0002833 reported and patched by tabrisnet, implementing UHNAMES
 - #0003156 reported by Bricker: Made ./unreal dump some nicer errors eg
   "UnrealIRCd is not running" as opposed to "kill: 3426: no such process" etc.
+- #0003368 patched by Stealth giving users access to do /module on remote
+  servers
