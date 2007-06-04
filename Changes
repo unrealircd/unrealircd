@@ -1726,3 +1726,5 @@ MOTDs
   "UnrealIRCd is not running" as opposed to "kill: 3426: no such process" etc.
 - #0003368 patched by Stealth giving users access to do /module on remote
   servers
+- #0002677 reported by aquanight, removing listen::options::remoteadmin, 
+  listen::options::mask, set::options::no-stealth
