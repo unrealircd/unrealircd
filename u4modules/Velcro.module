@@ -1,0 +1,318 @@
+/*
+ * Velcro Module Language
+ * Copyright (c) 2006, Carsten Valdemar Munk
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *   Redistributions of source code must retain the above copyright notice, this
+ *   list of conditions and the following disclaimer.
+ *
+ *   Redistributions in binary form must reproduce the above copyright notice,
+ *   this list of conditions and the following disclaimer in the documentation
+ *   and/or other materials provided with the distribution.
+ *
+ *   The name of Carsten Valdemar Munk may not be used to endorse or promote products derived
+ *   from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * $Id$
+ */
+@version $Id$
+@copyright (C) Copyright 2006 Carsten Valdemar Munk
+
+#include <dlfcn.h>
+#include <cstring>
+#include <cstdio>
+#include <errno.h>
+#include <string>
+#include <iostream>
+#include <list>
+#include <map>
+
+typedef void *(VoidFunctionPointer) (void);
+typedef void *(VoidIntParaFunctionPointer) (int *ret);
+
+class Velcro
+{
+	public:
+	@hook errorOccoured(std::string& error);
+	@hook progressNotice(std::string& progress);
+	@hook initialStartup();
+
+	bool dependsOnModule(const char *who, const char *module);
+	bool unloadModule(const char *module);
+	std::list<std::string> modulesLoaded;	
+	std::list<std::string> modulesLoading;
+	std::map<std::string, void *> modules;
+	bool isLoaded(std::string &module);
+	bool isLoading(std::string& module);
+
+	static Velcro& instanceOf()
+	{
+		static Velcro modules;
+		return modules;
+	}
+};
+
+
+class IClassExtension
+{
+	public:
+	virtual ~IClassExtension() {}
+};
+
+class ExtensionMap
+{
+	public:
+	std::map<std::string, IClassExtension *> _extensibles;
+	~ExtensionMap()
+	{
+		std::map<std::string, IClassExtension *>::iterator
+			it = _extensibles.begin();
+		while (it != _extensibles.end())
+		{
+			// we assume it is a 1:1 mapping.
+			delete (*it).second;
+			it++;
+		}
+	}
+};
+
+class ExtensionHolder
+{
+	public:
+	@extensible
+};
+
+implementation:
+
+using namespace std;
+
+@on this_Module::onInit()
+{
+	FILE *f = fopen("modules.conf", "r");
+	if (f == NULL)
+	{
+		std::string s = "Error opening modules.conf: ";
+		s += strerror(errno);
+		Velcro::errorOccoured(s);
+		@yield;
+	}
+	char buf[2048], *s;
+	while ((s = fgets(buf, 2047, f)) != NULL)
+	{
+		char *p = strchr(s, '\r');
+		if (p != NULL)
+			*p = 0;
+		p = strchr(s, '\n');
+		if (p != NULL)
+			*p = 0;
+		if (*s == 0)
+			continue;
+		if (!Velcro::instanceOf().dependsOnModule("Velcro", s))
+		{
+			std::string s = "Error loading from modules.conf: module dependancy failed: ";
+			s += p;
+			Velcro::errorOccoured(s);
+			@yield;
+		}
+	}
+	fclose(f);
+	std::string stpn = "Running initial startup";
+	Velcro::progressNotice(stpn);
+	Velcro::initialStartup();
+	@yield;
+}
+
+@on this_Module::onFini()
+{
+	@yield;
+}
+
+/* basic implementation, feel free to @stop; before this .. */
+@on Velcro::errorOccoured(std::string& error)
+{
+	std::cerr << "Velcro: " << error << "\n";
+	exit(-1);
+}
+
+@on Velcro::progressNotice(std::string& progress)
+{
+	std::cerr << "Velcro: " << progress << "\n";
+	@yield;
+}
+
+bool Velcro::isLoaded(std::string& module)
+{
+	std::list<std::string>::iterator it =
+		modulesLoaded.begin();
+	while (it != modulesLoaded.end())
+	{
+		if (module == (*it))
+			return true;
+		it++;
+	}
+	return false;
+}
+
+bool Velcro::isLoading(std::string& module)
+{
+	std::list<std::string>::iterator it =
+		modulesLoading.begin();
+	while (it != modulesLoading.end())
+	{
+		if (module == (*it))
+			return true;
+		it++;
+	}
+	return false;
+}
+
+bool Velcro::dependsOnModule(const char *who, const char *module)
+{
+	std::string ms = module;
+	if (isLoaded(ms))
+		return true; // Already loaded
+	if (isLoading(ms))
+	{
+		std::string s = "Error loading dependancy ";
+		s += ms;
+		s += " for ";
+		s += who;
+		s += ": module is currently being loaded - circle dependancy?";
+		errorOccoured(s);
+		return false;
+	}
+	modulesLoading.push_back(ms);
+	{
+		std::string prog = "Loading module ";
+		prog += ms;
+		prog += " as dependancy of ";
+		prog += who;
+		progressNotice(prog);
+	}
+	char buf[1024];
+	snprintf(buf, 1024, "modules/%s.so", module);
+		
+	void *dl = dlopen(buf, RTLD_LAZY|RTLD_LOCAL);
+	if (dl == NULL)
+	{
+		std::string s = "Error loading dependancy ";
+		s += ms;
+		s += " for ";
+		s += who;
+		s += ": ";
+		s += dlerror();
+		s += ", possible dependancy error/RTLD_LAZY broken";
+		s += " trying old fashioned dependancy loading and trying again afterwards";
+		Velcro::progressNotice(s);
+		snprintf(buf, 1024, "modules/%s.depends", module);
+		FILE *f = fopen(buf, "r");
+		if (f == NULL)
+		{
+			std::string s = "Error opening depends file for ";
+			s += module;
+			s += ": ";
+			s += strerror(errno);
+			Velcro::errorOccoured(s);
+			return false;
+		}
+		char *ss;
+		while ((ss = fgets(buf, 1023, f)) != NULL)
+		{
+			char *p = strchr(ss, '\r');
+			if (p != NULL)
+				*p = 0;
+			p = strchr(ss, '\n');
+			if (p != NULL)
+				*p = 0;
+			if (*ss == 0)
+				continue;
+			if (!dependsOnModule(module, ss))
+				return false;
+		}
+	}
+	else
+	{
+		snprintf(buf, 1024, "%s_checkDepends", module);
+
+		VoidIntParaFunctionPointer *depend = (VoidIntParaFunctionPointer *) dlsym(dl, buf);
+		if (depend == NULL)
+		{
+			std::string s = "Error loading dependancy ";
+			s += ms;
+			s += " for ";
+			s += who;
+			s += ": unable to find ";
+			s += ms;
+			s += "_depends method";
+			errorOccoured(s);
+			return false;
+		}
+		// kludge.. no idea why it doesn't work with int *
+		int ret = 0;
+		(*depend)(&ret);
+		if (ret == -1)
+		{
+			dlclose(dl);
+			return false;
+		}
+		dlclose(dl);
+	}
+	/* now done loading dependancies, reopen with RTLD_GLOBAL|RTLD_NOW .. */
+	snprintf(buf, 1024, "modules/%s.so", module);
+		
+	dl = dlopen(buf, RTLD_GLOBAL|RTLD_NOW);
+	if (dl == NULL)
+	{
+		std::string s = "Error loading reopening dependancy ";
+		s += ms;
+		s += " for ";
+		s += who;
+		s += ": ";
+		s += dlerror();
+		errorOccoured(s);
+		return false;
+	}		
+
+	snprintf(buf, 1024, "%s_init", module);
+	VoidFunctionPointer *init = (VoidFunctionPointer *)dlsym(dl, buf); 	
+	if (init == NULL)
+	{
+		std::string s = "Error loading dependancy ";
+		s += ms;
+		s += " for ";
+		s += who;
+		s += ": unable to find ";
+		s += ms;
+		s += "_init method";
+		errorOccoured(s);
+		return false;
+	}
+	modulesLoading.remove(ms);
+	modulesLoaded.push_back(ms);
+	modules[ms] = dl;
+	(*init)();	
+	{
+		std::string prog = "Loaded module ";
+		prog += ms;
+		prog += " as dependancy of ";
+		prog += who;
+		progressNotice(prog);
+	}
+	return true;
+}
+

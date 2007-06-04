@@ -1,0 +1,24 @@
+#!/bin/sh
+COPYRIGHT=`awk -f ../velcro/copyrights.awk < $1.module | head -n 1 | sed "s/@copyright //g"`
+VERSION=`awk -f ../velcro/version.awk < $1.module | head -n 1 | sed "s/@version //g"`
+../velcro/createhooks $1.module | sed s/this_Module/$1_Module/g > .tmp
+sed s/_MODULE_/$1/g ../velcro/stdmodule.tmpl > .tmp2
+printf "\nconst char *$1_Module::getVersion()\n{\n\treturn \"$VERSION\";\n}\n" >> .tmp
+printf "\nconst char *$1_Module::getCopyright()\n{\n\treturn \"$COPYRIGHT\";\n}\n" >> .tmp
+sed s/_MODULE_/$1/g ../velcro/stdmodule_impl.tmpl >> .tmp 
+printf "\nextern \"C\" void $1_checkDepends(int *ret) {\n" >> .tmp
+grep @use $1.module | awk -f ../velcro/generateDepends.awk Module=$1 >> .tmp
+printf "\t*ret = 0; return;\n" >>.tmp
+printf "}\n" >> .tmp
+cat .tmp >> .tmp2
+rm -f .tmp
+../velcro/converton $1 .tmp2 | \
+awk -f ../velcro/extensibles.awk | \
+../velcro/extensibleUse | \
+awk -f ../velcro/changeuse.awk | \
+sed "s/@yield;/return true;/g" | \
+sed "s/@stop;/return false;/g" | \
+grep -v @copyright | \
+grep -v @version
+rm -f .tmp2
+grep @use $1.module | awk '{ print $2 }' > $1.depends

@@ -1,0 +1,26 @@
+	public:
+	ExtensionMap _extensionMap;
+	template<class X> X *_findExtensible(std::string& what)
+	{
+		std::map<std::string, IClassExtension *>::iterator it = 
+			_extensionMap._extensibles.find(what);
+		if (it == _extensionMap._extensibles.end())
+			return NULL;
+		return ((X *) it->second);
+	}
+
+	template<class X> void _setExtensible(std::string& what, X *contents)
+	{
+		_extensionMap._extensibles[what] = (IClassExtension *) contents;
+	}
+
+	template<class X> X *_getExtensible(std::string what)
+	{
+		X *f = _findExtensible<X>(what);
+		if (f == NULL)
+		{
+			f = X::construct(this);
+			_setExtensible<X>(what, f);
+		}
+		return f;
+	}

@@ -1,0 +1,2 @@
+echo "#include \"$1.h\"" > $1.cc
+../velcro/part2 $1.preprocessed implementation: >> $1.cc

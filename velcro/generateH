@@ -1,0 +1,9 @@
+#!/bin/sh
+echo "#ifndef __GUARD_$1_H" > $1.h
+echo "#define __GUARD_$1_H" >> $1.h
+if [ x"$1" != x"Velcro" ]; then 
+	echo "#include \"Velcro.h\"" >> $1.h
+fi
+../velcro/part2 $1.preprocessed interface: implementation: >> $1.h
+echo "#endif" >> $1.h
+

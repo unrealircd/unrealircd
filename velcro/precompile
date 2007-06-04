@@ -1,0 +1,5 @@
+#!/bin/sh
+echo interface: > $1.preprocessed
+../velcro/preprocess $1 >> $1.preprocessed
+../velcro/generateH $1
+../velcro/generateCC $1

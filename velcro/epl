@@ -1,0 +1,9 @@
+#!/bin/sh
+var1=DONTSTOPTHEMUSIC
+until [ "$var1" = "" ]
+do
+	read var1
+	if [ "$var1" != "" ]; then
+		$1 $2 $3 $4 $5 $var1;
+	fi
+done

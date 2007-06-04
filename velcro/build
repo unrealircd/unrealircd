@@ -1,0 +1,7 @@
+#!/bin/sh
+echo --- Preprocessing $1 ..
+../velcro/precompile $1
+echo --- Building dependancies for $1
+cat $1.depends | ../velcro/epl ../velcro/build
+echo --- Building $1 
+g++ -fPIC -DPIC -shared -export-dynamic -o $1.so $1.cc
