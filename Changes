@@ -1732,3 +1732,6 @@ MOTDs
   with a new module API. Is currently not autoconf'ied, makefile'ed, etc.
   May the screaming commence.
 - Changed Velcro/build script to fix a bug
+- Changed Velcro/build to actually be able to compile to get included into
+  u3 space
+- Patched #002531 by Stealth, removing /stats H

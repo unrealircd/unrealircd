@@ -4,5 +4,5 @@ echo --- Preprocessing $1 ..
 echo --- Building dependancies for $1
 cat $1.depends | ../velcro/epl ../velcro/build
 echo --- Building $1 
-g++ -fPIC -DPIC -shared -export-dynamic -o $1.so $1.cc
+g++ -DDYNAMIC_LINKING -fPIC -DPIC -shared -export-dynamic -I../extras/regexp/include -I../include -o $1.so $1.cc
 echo --- Done building $1
