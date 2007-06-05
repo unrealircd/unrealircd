@@ -1731,3 +1731,4 @@ MOTDs
 - Adding Velcro (the build system from unreal4), for some experimentation
   with a new module API. Is currently not autoconf'ied, makefile'ed, etc.
   May the screaming commence.
+- Changed Velcro/build script to fix a bug
