@@ -1735,3 +1735,5 @@ MOTDs
 - Changed Velcro/build to actually be able to compile to get included into
   u3 space
 - Patched #002531 by Stealth, removing /stats H
+- Fixed a bug introduced by another patch that caused log files to be 
+  created without any permissions

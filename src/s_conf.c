@@ -5730,7 +5730,7 @@ int _test_log(ConfigFile *conf, ConfigEntry *ce) {
 			"log::flags");
 		errors++;
 	}
-	if (fd = open(ce->ce_vardata, O_WRONLY|O_CREAT|O_APPEND) == -1)
+	if (fd = open(ce->ce_vardata, O_WRONLY|O_CREAT|O_APPEND, 0600) == -1)
 	{
 		config_error("%s:%i: Couldn't open logfile (%s) for writing: %s",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
