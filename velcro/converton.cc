@@ -75,14 +75,19 @@ void parse(char *module, char *path)
         it++;
   }
   printf("}\n");
-  printf("\nextern \"C\" void %s_init()\n", module);
+  printf("\nextern \"C\" void %s_init(int isReload)\n", module);
   printf("{\n");
   printf("\t%s_registerHookers();\n", module);
-  printf("\t%s_Module::onInit();\n", module);
+  printf("\t%s_Module::onInit(isReload);\n", module);
   printf("}\n");
-  printf("\nextern \"C\" void %s_fini()\n", module);
+  printf("\nextern \"C\" void %s_unload()\n", module);
   printf("{\n");
-  printf("\t%s_Module::onFini();\n", module);
+  printf("\t%s_Module::onUnload();\n", module);
+  printf("\t%s_deregisterHookers();\n", module);
+  printf("}\n");
+  printf("\nextern \"C\" void %s_reload()\n", module);
+  printf("{\n");
+  printf("\t%s_Module::onReload();\n", module);
   printf("\t%s_deregisterHookers();\n", module);
   printf("}\n");
 }

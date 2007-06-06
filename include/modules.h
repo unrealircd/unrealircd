@@ -547,6 +547,7 @@ Isupport *IsupportFind(const char *token);
 #define add_HookX(hooktype, func1, func2, func3) HookAddMain(NULL, hooktype, func1, func2, func3)
 
 Hook	*HookAddMain(Module *module, int hooktype, int (*intfunc)(), void (*voidfunc)(), char *(*pcharfunc)());
+Hook	*HookAddCfg(Module *module, int hooktype, int (*intfunc)(ConfigFile *cf, ConfigEntry *ce, int type, int *errs));
 Hook	*HookDel(Hook *hook);
 
 Hooktype *HooktypeAdd(Module *module, char *string, int *type);

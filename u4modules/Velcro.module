@@ -30,74 +30,37 @@
  *
  * $Id$
  */
+
 @version $Id$
 @copyright (C) Copyright 2006 Carsten Valdemar Munk
-
-#include <dlfcn.h>
-#include <cstring>
-#include <cstdio>
-#include <errno.h>
-#include <string>
-#include <iostream>
 #include <list>
 #include <map>
+#include <string>
 
 typedef void *(VoidFunctionPointer) (void);
-typedef void *(VoidIntParaFunctionPointer) (int *ret);
+typedef void *(VoidIntParaFunctionPointer) (int value);
+typedef void *(VoidIntPointerParaFunctionPointer) (int *ret);
 
 class Velcro
 {
 	public:
-	@hook errorOccoured(std::string& error);
-	@hook progressNotice(std::string& progress);
-	@hook initialStartup();
-
 	bool dependsOnModule(const char *who, const char *module);
-	bool unloadModule(const char *module);
-	std::list<std::string> modulesLoaded;	
-	std::list<std::string> modulesLoading;
-	std::map<std::string, void *> modules;
-	bool isLoaded(std::string &module);
-	bool isLoading(std::string& module);
-
+	
+	
+	@hook initialStartup();
+		
 	static Velcro& instanceOf()
 	{
 		static Velcro modules;
 		return modules;
 	}
-};
 
-
-class IClassExtension
-{
-	public:
-	virtual ~IClassExtension() {}
-};
-
-class ExtensionMap
-{
-	public:
-	std::map<std::string, IClassExtension *> _extensibles;
-	~ExtensionMap()
-	{
-		std::map<std::string, IClassExtension *>::iterator
-			it = _extensibles.begin();
-		while (it != _extensibles.end())
-		{
-			// we assume it is a 1:1 mapping.
-			delete (*it).second;
-			it++;
-		}
-	}
-};
-
-class ExtensionHolder
-{
-	public:
-	@extensible
+	std::list<const char *> modulesToLoad;
 };
 
 implementation:
+
+// Glue for Unreal3
 extern "C"
 {
 #include "config.h"
@@ -125,12 +88,8 @@ extern "C"
 #include "version.h"
 #endif
 }
-extern "C" DLLFUNC CMD_FUNC(m_COMMAND);
 
-#define MSG_UCOMMAND 	"UCOMMAND"	
-#define TOK_UCOMMAND 	"%%"	
-
-ModuleHeader MOD_HEADER(m_COMMAND)
+ModuleHeader MOD_HEADER(Velcro)
   = {
 	"Velcro",
 	"$Id$",
@@ -139,243 +98,90 @@ ModuleHeader MOD_HEADER(m_COMMAND)
 	NULL 
     };
 
-extern "C" DLLFUNC int MOD_INIT(m_COMMAND)(ModuleInfo *modinfo)
-{
-	CommandAdd(modinfo->handle, MSG_UCOMMAND, TOK_UCOMMAND, m_COMMAND, MAXPARA, M_USER|M_SERVER);
-	MARK_AS_OFFICIAL_MODULE(modinfo);
-	return MOD_SUCCESS;
-}
+static Hook *HookConfTest = NULL;
+static Hook *HookConfRun = NULL;
+static Hook *HookConfRehash = NULL;
 
-extern "C" DLLFUNC int MOD_LOAD(m_COMMAND)(int module_load)
-{
-	return MOD_SUCCESS;
-}
+DLLFUNC int h_velcro_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs) {
+        ConfigEntry *cep;
+        int errors = 0;
 
-extern "C" DLLFUNC int MOD_UNLOAD(m_COMMAND)(int module_unload)
-{
-	return MOD_SUCCESS;
-}
+        if(type != CONFIG_MAIN)
+                return 0;
 
-extern "C" DLLFUNC CMD_FUNC(m_COMMAND) 
-{
+        if(!strcmp(ce->ce_varname, "loadmodule4")) {
+                if (!ce->ce_vardata)
+                {
+                        config_status("%s:%i: loadmodule4 without filename",
+                                ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+                        errors=1;
+                        *errs=errors;
+                        return -1;
+                }
+
+        }
+        return 0;
+}
+DLLFUNC int h_velcro_configrun(ConfigFile *cf, ConfigEntry *ce, int type, int *errs) {
+        ConfigEntry *cep;
+        int errors = 0;
+
+        if(type != CONFIG_MAIN)
+                return 0;
+
+        if(!strcmp(ce->ce_varname, "loadmodule4")) {
+
+                return 1;
+        }
+        return 0;
+}
+DLLFUNC int h_velcro_configrehash() {
 	return 0;
 }
 
 
-using namespace std;
-
-@on this_Module::onInit()
+extern "C" DLLFUNC int MOD_INIT(Velcro)(ModuleInfo *modinfo)
 {
-	FILE *f = fopen("modules.conf", "r");
-	if (f == NULL)
-	{
-		std::string s = "Error opening modules.conf: ";
-		s += strerror(errno);
-		Velcro::errorOccoured(s);
-		@yield;
-	}
-	char buf[2048], *s;
-	while ((s = fgets(buf, 2047, f)) != NULL)
-	{
-		char *p = strchr(s, '\r');
-		if (p != NULL)
-			*p = 0;
-		p = strchr(s, '\n');
-		if (p != NULL)
-			*p = 0;
-		if (*s == 0)
-			continue;
-		if (!Velcro::instanceOf().dependsOnModule("Velcro", s))
-		{
-			std::string s = "Error loading from modules.conf: module dependancy failed: ";
-			s += p;
-			Velcro::errorOccoured(s);
-			@yield;
-		}
-	}
-	fclose(f);
-	std::string stpn = "Running initial startup";
-	Velcro::progressNotice(stpn);
-	Velcro::initialStartup();
-	@yield;
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM);
+        HookConfRun     = HookAddCfg(modinfo->handle, HOOKTYPE_CONFIGRUN, h_velcro_configrun);
+        HookConfRehash  = HookAddEx(modinfo->handle, HOOKTYPE_REHASH, h_velcro_configrehash);
+
+	return MOD_SUCCESS;
 }
 
-@on this_Module::onFini()
+extern "C" DLLFUNC int MOD_TEST(Velcro)(ModuleInfo *modinfo)
+{
+	HookConfTest = HookAddCfg(modinfo->handle, HOOKTYPE_CONFIGTEST, h_velcro_configtest);
+	return MOD_SUCCESS;
+}
+
+extern "C" DLLFUNC int MOD_LOAD(Velcro)(int module_load)
+{
+	Velcro_init(false);
+	return MOD_SUCCESS;
+}
+
+extern "C" DLLFUNC int MOD_UNLOAD(Velcro)(int module_unload)
+{
+	// does not happen	
+	return MOD_FAILED;
+}
+
+
+// Actual Velcro
+
+@on this_Module::onInit(bool reloading)
 {
 	@yield;
 }
-
-/* basic implementation, feel free to @stop; before this .. */
-@on Velcro::errorOccoured(std::string& error)
+@on this_Module::onUnload()
 {
-	std::cerr << "Velcro: " << error << "\n";
-	exit(-1);
-}
-
-@on Velcro::progressNotice(std::string& progress)
-{
-	std::cerr << "Velcro: " << progress << "\n";
 	@yield;
 }
 
-bool Velcro::isLoaded(std::string& module)
+@on this_Module::onReload()
 {
-	std::list<std::string>::iterator it =
-		modulesLoaded.begin();
-	while (it != modulesLoaded.end())
-	{
-		if (module == (*it))
-			return true;
-		it++;
-	}
-	return false;
-}
-
-bool Velcro::isLoading(std::string& module)
-{
-	std::list<std::string>::iterator it =
-		modulesLoading.begin();
-	while (it != modulesLoading.end())
-	{
-		if (module == (*it))
-			return true;
-		it++;
-	}
-	return false;
-}
-
-bool Velcro::dependsOnModule(const char *who, const char *module)
-{
-	std::string ms = module;
-	if (isLoaded(ms))
-		return true; // Already loaded
-	if (isLoading(ms))
-	{
-		std::string s = "Error loading dependancy ";
-		s += ms;
-		s += " for ";
-		s += who;
-		s += ": module is currently being loaded - circle dependancy?";
-		errorOccoured(s);
-		return false;
-	}
-	modulesLoading.push_back(ms);
-	{
-		std::string prog = "Loading module ";
-		prog += ms;
-		prog += " as dependancy of ";
-		prog += who;
-		progressNotice(prog);
-	}
-	char buf[1024];
-	snprintf(buf, 1024, "modules/%s.so", module);
-		
-	void *dl = dlopen(buf, RTLD_LAZY|RTLD_LOCAL);
-	if (dl == NULL)
-	{
-		std::string s = "Error loading dependancy ";
-		s += ms;
-		s += " for ";
-		s += who;
-		s += ": ";
-		s += dlerror();
-		s += ", possible dependancy error/RTLD_LAZY broken";
-		s += " trying old fashioned dependancy loading and trying again afterwards";
-		Velcro::progressNotice(s);
-		snprintf(buf, 1024, "modules/%s.depends", module);
-		FILE *f = fopen(buf, "r");
-		if (f == NULL)
-		{
-			std::string s = "Error opening depends file for ";
-			s += module;
-			s += ": ";
-			s += strerror(errno);
-			Velcro::errorOccoured(s);
-			return false;
-		}
-		char *ss;
-		while ((ss = fgets(buf, 1023, f)) != NULL)
-		{
-			char *p = strchr(ss, '\r');
-			if (p != NULL)
-				*p = 0;
-			p = strchr(ss, '\n');
-			if (p != NULL)
-				*p = 0;
-			if (*ss == 0)
-				continue;
-			if (!dependsOnModule(module, ss))
-				return false;
-		}
-	}
-	else
-	{
-		snprintf(buf, 1024, "%s_checkDepends", module);
-
-		VoidIntParaFunctionPointer *depend = (VoidIntParaFunctionPointer *) dlsym(dl, buf);
-		if (depend == NULL)
-		{
-			std::string s = "Error loading dependancy ";
-			s += ms;
-			s += " for ";
-			s += who;
-			s += ": unable to find ";
-			s += ms;
-			s += "_depends method";
-			errorOccoured(s);
-			return false;
-		}
-		// kludge.. no idea why it doesn't work with int *
-		int ret = 0;
-		(*depend)(&ret);
-		if (ret == -1)
-		{
-			dlclose(dl);
-			return false;
-		}
-		dlclose(dl);
-	}
-	/* now done loading dependancies, reopen with RTLD_GLOBAL|RTLD_NOW .. */
-	snprintf(buf, 1024, "modules/%s.so", module);
-		
-	dl = dlopen(buf, RTLD_GLOBAL|RTLD_NOW);
-	if (dl == NULL)
-	{
-		std::string s = "Error loading reopening dependancy ";
-		s += ms;
-		s += " for ";
-		s += who;
-		s += ": ";
-		s += dlerror();
-		errorOccoured(s);
-		return false;
-	}		
-
-	snprintf(buf, 1024, "%s_init", module);
-	VoidFunctionPointer *init = (VoidFunctionPointer *)dlsym(dl, buf); 	
-	if (init == NULL)
-	{
-		std::string s = "Error loading dependancy ";
-		s += ms;
-		s += " for ";
-		s += who;
-		s += ": unable to find ";
-		s += ms;
-		s += "_init method";
-		errorOccoured(s);
-		return false;
-	}
-	modulesLoading.remove(ms);
-	modulesLoaded.push_back(ms);
-	modules[ms] = dl;
-	(*init)();	
-	{
-		std::string prog = "Loaded module ";
-		prog += ms;
-		prog += " as dependancy of ";
-		prog += who;
-		progressNotice(prog);
-	}
-	return true;
+	@yield;
 }
 

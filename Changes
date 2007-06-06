@@ -1737,3 +1737,7 @@ MOTDs
 - Patched #002531 by Stealth, removing /stats H
 - Fixed a bug introduced by another patch that caused log files to be 
   created without any permissions
+- Added HookAddCfg as a more typesafe way to add
+  HOOKTYPE_CONFIGRUN/CONFIGTEST. Was needed for Velcro and possibly other
+  situations
+- Some more Velcro changes to make it fit into 3.3

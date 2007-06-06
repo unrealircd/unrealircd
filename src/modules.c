@@ -1287,7 +1287,10 @@ void HooktypeDel(Hooktype *hooktype, Module *module) {
 	}
 }
 		
-	
+Hook	*HookAddCfg(Module *module, int hooktype, int (*func)(ConfigFile *cf, ConfigEntry *ce, int type, int *errs))
+{
+	return HookAddMain(module, hooktype, func, NULL, NULL);
+}	
 Hook	*HookAddMain(Module *module, int hooktype, int (*func)(), void (*vfunc)(), char *(*cfunc)())
 {
 	Hook *p;

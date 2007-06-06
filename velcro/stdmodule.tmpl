@@ -11,15 +11,15 @@ class _MODULE__Module
 		return "_MODULE_";
 	}
 
-        typedef bool (*onInit_hooker)();
+        typedef bool (*onInit_hooker)(bool reloading);
 
-        static void onInit()
+        static void onInit(bool reloading)
         {
                 std::list<onInit_hooker>::iterator it = onInit_hookers().begin();
 
                 while (it != onInit_hookers().end())
                 {
-                        if ((*(*it))())
+                        if ((*(*it))(reloading))
                         {
                                 it++;
                         }
@@ -40,13 +40,13 @@ class _MODULE__Module
                 onInit_hookers().remove(hooker);
         }
 
-        typedef bool (*onFini_hooker)();
+        typedef bool (*onUnload_hooker)();
 
-        static void onFini()
+        static void onUnload()
         {
-                std::list<onFini_hooker>::iterator it = onFini_hookers().begin();
+                std::list<onUnload_hooker>::iterator it = onUnload_hookers().begin();
 
-                while (it != onFini_hookers().end())
+                while (it != onUnload_hookers().end())
                 {
                         if ((*(*it))())
                         {
@@ -55,18 +55,18 @@ class _MODULE__Module
                         else break;
                 }
         }
-        static std::list<onFini_hooker>& onFini_hookers()
+        static std::list<onUnload_hooker>& onUnload_hookers()
         {
-                static std::list<onFini_hooker> hookers;
+                static std::list<onUnload_hooker> hookers;
                 return hookers;
         }
-        static void onFini_registerHooker(onFini_hooker hooker)
+        static void onUnload_registerHooker(onUnload_hooker hooker)
         {
-                onFini_hookers().push_front(hooker);
+                onUnload_hookers().push_front(hooker);
         }
-        static void onFini_deregisterHooker(onFini_hooker hooker)
+        static void onUnload_deregisterHooker(onUnload_hooker hooker)
         {
-                onFini_hookers().remove(hooker);
+                onUnload_hookers().remove(hooker);
         }
 
         typedef bool (*onReload_hooker)();
@@ -100,3 +100,6 @@ class _MODULE__Module
 
 }; 
 
+extern "C" void _MODULE__init(int isReload);
+extern "C" void _MODULE__reload();
+extern "C" void _MODULE__unload();
