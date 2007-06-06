@@ -46,7 +46,6 @@ class Velcro
 	public:
 	bool dependsOnModule(const char *who, const char *module);
 	
-	
 	@hook initialStartup();
 		
 	static Velcro& instanceOf()
@@ -55,11 +54,15 @@ class Velcro
 		return modules;
 	}
 
-	std::list<const char *> modulesToLoad;
+	std::list<std::string> modulesLoading;
+	std::list<std::string> modulesLoaded;
+	std::map<std::string, void *> modules;	
+	bool isModuleLoaded(const char *module);
+	bool isModuleLoading(const char *module);	
 };
 
 implementation:
-
+#include <dlfcn.h>
 // Glue for Unreal3
 extern "C"
 {
@@ -118,10 +121,11 @@ DLLFUNC int h_velcro_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *
                         *errs=errors;
                         return -1;
                 }
-
+		return 1;
         }
         return 0;
 }
+
 DLLFUNC int h_velcro_configrun(ConfigFile *cf, ConfigEntry *ce, int type, int *errs) {
         ConfigEntry *cep;
         int errors = 0;
@@ -130,11 +134,14 @@ DLLFUNC int h_velcro_configrun(ConfigFile *cf, ConfigEntry *ce, int type, int *e
                 return 0;
 
         if(!strcmp(ce->ce_varname, "loadmodule4")) {
-
+		config_status("%s:%i: loadmodule4: %s",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+		Velcro::instanceOf().dependsOnModule("Velcro", ce->ce_vardata);
                 return 1;
         }
         return 0;
 }
+
 DLLFUNC int h_velcro_configrehash() {
 	return 0;
 }
@@ -146,12 +153,13 @@ extern "C" DLLFUNC int MOD_INIT(Velcro)(ModuleInfo *modinfo)
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM);
         HookConfRun     = HookAddCfg(modinfo->handle, HOOKTYPE_CONFIGRUN, h_velcro_configrun);
         HookConfRehash  = HookAddEx(modinfo->handle, HOOKTYPE_REHASH, h_velcro_configrehash);
-
+	config_status("velcro init");
 	return MOD_SUCCESS;
 }
 
 extern "C" DLLFUNC int MOD_TEST(Velcro)(ModuleInfo *modinfo)
 {
+	config_status("velcro test");
 	HookConfTest = HookAddCfg(modinfo->handle, HOOKTYPE_CONFIGTEST, h_velcro_configtest);
 	return MOD_SUCCESS;
 }
@@ -159,12 +167,13 @@ extern "C" DLLFUNC int MOD_TEST(Velcro)(ModuleInfo *modinfo)
 extern "C" DLLFUNC int MOD_LOAD(Velcro)(int module_load)
 {
 	Velcro_init(false);
+	config_status("velcro load");
 	return MOD_SUCCESS;
 }
 
 extern "C" DLLFUNC int MOD_UNLOAD(Velcro)(int module_unload)
 {
-	// does not happen	
+	config_status("velcro unload");
 	return MOD_FAILED;
 }
 
@@ -175,6 +184,7 @@ extern "C" DLLFUNC int MOD_UNLOAD(Velcro)(int module_unload)
 {
 	@yield;
 }
+
 @on this_Module::onUnload()
 {
 	@yield;
@@ -185,3 +195,125 @@ extern "C" DLLFUNC int MOD_UNLOAD(Velcro)(int module_unload)
 	@yield;
 }
 
+bool Velcro::dependsOnModule(const char *who, const char *module)
+{
+	char buf[1024];
+	std::string ms = module;
+	if (isModuleLoaded(module))
+		return true; // Already loaded
+	if (isModuleLoading(module))
+	{	
+		config_error("Velcro: Error loading dependancy %s for %s: module is currently being loaded - Circle dependancy?",
+			module, who);
+		return false;
+	}
+	modulesLoading.push_back(ms);
+	config_status("Loading module %s as a dependancy of %s", module, who);
+	snprintf(buf, 1024, "u4modules/%s.so", module);
+	void *dl = dlopen(buf, RTLD_LAZY|RTLD_LOCAL);
+	if (dl == NULL)
+	{
+		config_status("Velcro: Error loading dependancy %s for %s: %s, possible error/RTLD_LAZY broken, trying old fashioned dependancy loading and trying again afterwards",
+			module, who, dlerror());
+		snprintf(buf, 1024, "u4modules/%s.depends", module);
+		FILE *f = fopen(buf, "r");
+		if (f == NULL)
+		{
+			config_error("Velcro: Error opening depends file for %s: %s",
+				module, strerror(errno));
+			return false;
+		}
+		char *ss;
+		while ((ss = fgets(buf, 1023, f)) != NULL)
+		{
+			char *p = strchr(ss, '\r');
+			if (p != NULL)
+				*p = 0;
+			p = strchr(ss, '\n');
+			if (p != NULL)
+				*p = 0;
+			if (*ss == 0)
+				continue;
+			if (!dependsOnModule(module, ss))
+				return false;
+		}
+	}
+	else
+	{
+		snprintf(buf, 1024, "%s_checkDepends", module);
+
+		VoidIntPointerParaFunctionPointer *depend = (VoidIntPointerParaFunctionPointer *) dlsym(dl, buf);
+		if (depend == NULL)
+		{
+			config_error("Velcro: Error loading dependancy %s for %s: Unable to find %s_checkDepends",
+				module, who, module);
+			return false;
+		}
+		// kludge.. no idea why it doesn't work with int *
+		int ret = 0;
+		(*depend)(&ret);
+		if (ret == -1)
+		{
+			dlclose(dl);
+			return false;
+		}
+		dlclose(dl);
+	}
+	/* now done loading dependancies, reopen with RTLD_GLOBAL|RTLD_NOW .. */
+	snprintf(buf, 1024, "u4modules/%s.so", module);
+		
+	dl = dlopen(buf, RTLD_GLOBAL|RTLD_NOW);
+	if (dl == NULL)
+	{
+		config_error("Velcro: Error loading reopening dependancy %s for %s: %s",
+			module, who, dlerror());
+		return false;
+	}		
+
+	snprintf(buf, 1024, "%s_init", module);
+	VoidIntParaFunctionPointer *init = (VoidIntParaFunctionPointer *)dlsym(dl, buf); 	
+	if (init == NULL)
+	{
+		config_error("Velcro: Error loading dependancy %s for %s: Unable to find %s_init"
+			, module, who, module);
+		return false;
+	}
+	modulesLoading.remove(ms);
+	modulesLoaded.push_back(ms);
+	modules[ms] = dl;
+	(*init)(false);	
+	{
+		config_status("Velcro: Loaded module %s as dependancy of %s",
+			module, who);
+	}
+
+	return true;
+}
+
+bool Velcro::isModuleLoaded(const char *moduleName)
+{
+	std::string module = moduleName;
+	std::list<std::string>::iterator it =
+		modulesLoaded.begin();
+	while (it != modulesLoaded.end())
+	{
+		if (module == (*it))
+			return true;
+		it++;
+	}
+	return false;
+}
+
+bool Velcro::isModuleLoading(const char *moduleName)
+{
+	std::string module = moduleName;
+	std::list<std::string>::iterator it =
+		modulesLoading.begin();
+	while (it != modulesLoading.end())
+	{
+		if (module == (*it))
+			return true;
+		it++;
+	}
+	return false;
+}

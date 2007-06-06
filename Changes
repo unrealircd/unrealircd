@@ -1741,3 +1741,6 @@ MOTDs
   HOOKTYPE_CONFIGRUN/CONFIGTEST. Was needed for Velcro and possibly other
   situations
 - Some more Velcro changes to make it fit into 3.3
+- Some more actual working Velcro code, adding "loadmodule4" config
+  directive which loads velcro modules
+
