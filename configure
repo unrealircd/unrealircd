@@ -13136,7 +13136,7 @@ IRCDLIBS="$IRCDLIBS -lresolv "
 ;;
 esac
 
-tre_version="0.7.2"
+tre_version="0.7.5"
 echo "$as_me:$LINENO: result: extracting TRE regex library" >&5
 echo "${ECHO_T}extracting TRE regex library" >&6
 cur_dir=`pwd`
