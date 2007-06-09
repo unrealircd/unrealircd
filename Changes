@@ -1748,3 +1748,4 @@ MOTDs
 - #0003107 feature request by Sakkath regarding new WHO flag: +p <port>
 - #0003340 bug regarding compile warnings for lib/tre-parse.c. Upgraded 
   tre to latest release (0.7.5)
+- Updated c-ares to latest release (1.4.0)
