@@ -1745,3 +1745,4 @@ MOTDs
   directive which loads velcro modules
 - #0003382 reported by stealth regarding nested C-style comments messing 
 - up example.conf parsing
+- #0003107 feature request by Sakkath regarding new WHO flag: +p <port>
