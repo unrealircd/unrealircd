@@ -129,6 +129,8 @@ struct {
 	char *user;
 	int want_ip;
 	char *ip;
+	int want_port;
+	int port;
 	int want_umode;
 	int umodes_dontwant;
 	int umodes_want;
@@ -236,6 +238,8 @@ static void who_sendhelp(aClient *sptr)
     "                        wildcards accepted",
     "Flag i <ip>:            user has string <ip> in their IP address,",
     "                        wildcards accepted",
+    "Flag p <port>:          user is connecting on port <port>,",
+    "                        local connections only",
     "Flag m <usermodes>:     user has <usermodes> set",
     "Flag n <nick>:          user has string <nick> in their nickname,",
     "                        wildcards accepted",
@@ -362,6 +366,14 @@ int i = 1;
 				}
 				i++;
 				break;
+			case 'p':
+				REQUIRE_PARAM()
+				if (!IsAnOper(sptr))
+					break; /* oper-only */
+				wfl.port = atoi(argv[i]);
+				SET_OPTION(wfl.want_port);
+				i++;
+				break;
 			case 'M':
 				SET_OPTION(wfl.common_channels_only);
 				break;
@@ -482,6 +494,23 @@ char has_common_chan = 0;
 
 			if (((wfl.want_ip == WHO_WANT) && match(wfl.ip, ip)) ||
 			    ((wfl.want_ip == WHO_DONTWANT) && !match(wfl.ip, ip)))
+			{
+				return WHO_CANTSEE;
+			}
+		}
+
+		/* if they only want people connecting on a certain port */
+		if (wfl.want_port != WHO_DONTCARE)
+		{
+			int port;
+			
+			if (!MyClient(acptr))
+				return WHO_CANTSEE;
+
+			port = acptr->listener->port;
+
+			if (((wfl.want_port == WHO_WANT) && wfl.port != port) ||
+			    ((wfl.want_port == WHO_DONTWANT) && wfl.port == port))
 			{
 				return WHO_CANTSEE;
 			}
