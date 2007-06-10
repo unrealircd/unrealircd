@@ -458,18 +458,21 @@ char has_common_chan = 0;
 			{
 				int flg;
 				char *channel = first_visible_channel(sptr, acptr, &flg);
-				if (*channel == '*')
-					return WHO_CANSEE;
-				else
+				if (*channel == '*' && wfl.want_channel == WHO_WANT)
+					return WHO_CANTSEE;
+				if (*channel != '*' && wfl.want_channel == WHO_DONTWANT)
 					return WHO_CANTSEE;
 			}
-			aChannel *chan = find_channel(wfl.channel, NULL);
-			if (!chan && wfl.want_channel == WHO_WANT)
-				return WHO_CANTSEE;
-			if ((wfl.want_channel == WHO_WANT) && !IsMember(acptr, chan))
-				return WHO_CANTSEE;
-			if ((wfl.want_channel == WHO_DONTWANT) && IsMember(acptr, chan))
-				return WHO_CANTSEE;
+			else
+			{
+				aChannel *chan = find_channel(wfl.channel, NULL);
+				if (!chan && wfl.want_channel == WHO_WANT)
+					return WHO_CANTSEE;
+				if ((wfl.want_channel == WHO_WANT) && !IsMember(acptr, chan))
+					return WHO_CANTSEE;
+				if ((wfl.want_channel == WHO_DONTWANT) && IsMember(acptr, chan))
+					return WHO_CANTSEE;
+			}
 		}
 
 		/* if they only want people with a certain gecos */
