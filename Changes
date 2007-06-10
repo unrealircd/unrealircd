@@ -1755,3 +1755,6 @@ MOTDs
 - #0001518 reported by Cnils regarding new WHO functionality: -c with 
   no args now shows all users not in a channel if you are an IRCOp,
   and +c shows all users in at least 1 channel.
+- #0002451 reported by GSF19 regarding *** Q: %s tried to kick you, when 
+  it should be *** q: %s. (Actually that's ugly too but at least it
+  matches the umode for now)
