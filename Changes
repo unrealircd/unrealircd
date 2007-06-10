@@ -1746,8 +1746,8 @@ MOTDs
 - #0003382 reported by stealth regarding nested C-style comments messing 
 - up example.conf parsing
 - #0003107 feature request by Sakkath regarding new WHO flag: +p <port>
-- #0003340 bug regarding compile warnings for lib/tre-parse.c. Upgraded 
-  tre to latest release (0.7.5)
+- #0003340 reported by vonitsanet regarding compile warnings for 
+  lib/tre-parse.c. Upgraded tre to latest release (0.7.5)
 - Updated c-ares to latest release (1.4.0)
 - #0001317 reported by thilo regarding removal of (username) being 
   appended to topics set by U:Lined servers. 
