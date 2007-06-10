@@ -237,7 +237,8 @@ static void who_sendhelp(aClient *sptr)
     "Flags are specified like channel modes, the flags chigmnsu all have arguments",
     "Flags are set to a positive check by +, a negative check by -",
     "The flags work as follows:",
-    "Flag a: user is away",
+    "Flag a:                 user is away",
+    "Flag c:                 user isn't a member of any channels",
     "Flag c <channel>:       user is on <channel>,",
     "                        no wildcards accepted",
     "Flag g <gcos/realname>: user has string <gcos> in his/her GCOS,",
@@ -314,7 +315,14 @@ int i = 1;
 				SET_OPTION(wfl.want_away);
 				break;
 			case 'c':
-				DOIT(wfl.channel, wfl.want_channel);
+				if (IsAnOper(sptr) && i >= argc)
+				{
+					SET_OPTION(wfl.want_channel);
+				}
+				else
+				{
+					DOIT(wfl.channel, wfl.want_channel);
+				}
 				break;
 			case 'g':
 				REQUIRE_PARAM()
@@ -445,6 +453,16 @@ char has_common_chan = 0;
 		/* if they only want people on a certain channel. */
 		if (wfl.want_channel != WHO_DONTCARE)
  		{
+			/* Opers only - show users not on any channels */
+			if (!wfl.channel)
+			{
+				int flg;
+				char *channel = first_visible_channel(sptr, acptr, &flg);
+				if (*channel == '*')
+					return WHO_CANSEE;
+				else
+					return WHO_CANTSEE;
+			}
 			aChannel *chan = find_channel(wfl.channel, NULL);
 			if (!chan && wfl.want_channel == WHO_WANT)
 				return WHO_CANTSEE;
@@ -630,7 +648,7 @@ static void do_channel_who(aClient *sptr, aChannel *channel, char *mask)
 
 		make_who_status(sptr, acptr, channel, cm, status, cansee);
 		send_who_reply(sptr, acptr, channel->chname, status, "");
-    }
+	}
 }
 
 static void make_who_status(aClient *sptr, aClient *acptr, aChannel *channel, 

@@ -1752,3 +1752,5 @@ MOTDs
 - #0001317 reported by thilo regarding removal of (username) being 
   appended to topics set by U:Lined servers. 
 - Added missing semicolons to some help.conf entries
+- #0001518 reported by Cnils regarding new WHO functionality: +c with 
+  no args now shows all users not in a channel if you are an IRCOp
