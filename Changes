@@ -1751,3 +1751,4 @@ MOTDs
 - Updated c-ares to latest release (1.4.0)
 - #0001317 reported by thilo regarding removal of (username) being 
   appended to topics set by U:Lined servers. 
+- Added missing semicolons to some help.conf entries
