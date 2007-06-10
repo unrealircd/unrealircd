@@ -264,8 +264,6 @@ EXPORTS
 	check_fdlists
 	check_for_target_limit
 	check_pings
-	check_registered
-	check_registered_user
 	check_string
 	checklist
 	chess

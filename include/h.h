@@ -325,8 +325,6 @@ extern int  check_for_target_limit(aClient *sptr, void *target, const char *name
 extern char *canonize(char *buffer);
 extern ConfigItem_deny_dcc *dcc_isforbidden(aClient *sptr, char *filename);
 extern ConfigItem_deny_dcc *dcc_isdiscouraged(aClient *sptr, char *filename);
-extern int check_registered(aClient *);
-extern int check_registered_user(aClient *);
 extern char *get_client_name(aClient *, int);
 extern char *get_client_host(aClient *);
 extern char *myctime(time_t), *date(time_t);

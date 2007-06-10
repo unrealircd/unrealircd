@@ -285,45 +285,6 @@ char *myctime(time_t value)
 }
 
 /*
-** check_registered_user is used to cancel message, if the
-** originator is a server or not registered yet. In other
-** words, passing this test, *MUST* guarantee that the
-** sptr->user exists (not checked after this--let there
-** be coredumps to catch bugs... this is intentional --msa ;)
-**
-** There is this nagging feeling... should this NOT_REGISTERED
-** error really be sent to remote users? This happening means
-** that remote servers have this user registered, althout this
-** one has it not... Not really users fault... Perhaps this
-** error message should be restricted to local clients and some
-** other thing generated for remotes...
-*/
-int  check_registered_user(aClient *sptr)
-{
-	if (!IsRegisteredUser(sptr))
-	{
-		sendto_one(sptr, err_str(ERR_NOTREGISTERED), me.name, "*");
-		return -1;
-	}
-	return 0;
-}
-
-/*
-** check_registered user cancels message, if 'x' is not
-** registered (e.g. we don't know yet whether a server
-** or user)
-*/
-int  check_registered(aClient *sptr)
-{
-	if (!IsRegistered(sptr))
-	{
-		sendto_one(sptr, err_str(ERR_NOTREGISTERED), me.name, "*");
-		return -1;
-	}
-	return 0;
-}
-
-/*
 ** get_client_name
 **      Return the name of the client for various tracking and
 **      admin purposes. The main purpose of this function is to
