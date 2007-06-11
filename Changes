@@ -1466,3 +1466,4 @@
 - #0002844 reported by RandomNumber: make spamfilter actions case insensitive
 - help.conf updates... #0002420 reported by KnuX fixed by WolfSage
 - #0003264 reported by Robby22 regarding help.conf typo
+- Updated c-ares to version 1.4.0
