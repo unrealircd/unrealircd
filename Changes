@@ -1766,3 +1766,6 @@ MOTDs
   patched by BuHHunyx. Syntax: wircd.exe -P|-p authmethod password.
   If it is -p, it will get shown in a MessageBox, -P it will get copied
   to clipboard.
+- Broke compile with portnum fix, fixed
+- #0003027 reported by Trocotronic, regarding doing -l <para> on SJOIN, 
+  and not -l as supposed. This may have caused desyncs

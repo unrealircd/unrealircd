@@ -233,7 +233,7 @@ extern int dbufalloc, dbufblocks, debuglevel;
 
 extern MODVAR short LastSlot; /* last used index in local client array */
 extern MODVAR int OpenFiles;  /* number of files currently open */
-extern MODVAR int debuglevel, portnum, debugtty, maxusersperchannel;
+extern MODVAR int debuglevel, debugtty, maxusersperchannel;
 extern MODVAR int readcalls, udpfd, resfd;
 
 #ifndef NEW_IO

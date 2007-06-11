@@ -1569,16 +1569,15 @@ int InitwIRCD(int argc, char *argv[])
 	/*
 	 * We accept the first listen record 
 	 */
-	portnum = conf_listen->port;
-	me.port = portnum;
+	me.port = conf_listen->port;
 /*
  *      This is completely unneeded-Sts
    	me.ip.S_ADDR =
 	    *conf_listen->ip != '*' ? inet_addr(conf_listen->ip) : INADDR_ANY;
 */
-	Debug((DEBUG_ERROR, "Port = %d", portnum));
+	Debug((DEBUG_ERROR, "Port = %d", me.port));
 #ifndef NEW_IO
-	if (inetport(&me, conf_listen->ip, portnum))
+	if (inetport(&me, conf_listen->ip, me.port))
 		exit(1);
 	set_non_blocking(me.fd, &me);
 #else /* ifndef NEW_IO */
