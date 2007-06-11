@@ -136,7 +136,7 @@ DLLFUNC int h_velcro_configrun(ConfigFile *cf, ConfigEntry *ce, int type, int *e
         if(!strcmp(ce->ce_varname, "loadmodule4")) {
 		config_status("%s:%i: loadmodule4: %s",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
-		Velcro::instanceOf().dependsOnModule("Velcro", ce->ce_vardata);
+		Velcro::instanceOf().dependsOnModule(".conf", ce->ce_vardata);
                 return 1;
         }
         return 0;
@@ -317,3 +317,4 @@ bool Velcro::isModuleLoading(const char *moduleName)
 	}
 	return false;
 }
+

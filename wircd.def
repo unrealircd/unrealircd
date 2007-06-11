@@ -667,7 +667,6 @@ EXPORTS
 	parse_netmask
 	place_host_ban
 	port_range
-	portnum
 	pretty_mask
 	pretty_time_val
 	proceed_normal_client_handshake

@@ -2098,7 +2098,7 @@ static struct SOCKADDR *connect_inet(ConfigItem_link * aconf, aClient *cptr,
 	bcopy((char *)&aconf->ipnum, (char *)&server.SIN_ADDR,
 	    sizeof(struct IN_ADDR));
 	bcopy((char *)&aconf->ipnum, (char *)&cptr->ip, sizeof(struct IN_ADDR));
-	server.SIN_PORT = htons(((aconf->port > 0) ? aconf->port : portnum));
+	server.SIN_PORT = htons(aconf->port);
 	*lenp = sizeof(server);
 	return (struct SOCKADDR *)&server;
 }

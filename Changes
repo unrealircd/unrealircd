@@ -1760,3 +1760,9 @@ MOTDs
   matches the umode for now)
 - #0002695 reported by w00t regarding unused check_registered and 
   check_registered_user calls in s_misc.c
+- Removed anything involving portnum global variable. Not proper in 
+  newconf world
+- #0002920 reported by aquanight, regarding command line mkpasswd, 
+  patched by BuHHunyx. Syntax: wircd.exe -P|-p authmethod password.
+  If it is -p, it will get shown in a MessageBox, -P it will get copied
+  to clipboard.

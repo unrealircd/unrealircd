@@ -186,7 +186,6 @@ MODVAR char **myargv;
 #else
 LPCSTR cmdLine;
 #endif
-int  portnum = -1;		/* Server port number, listening this */
 char *configfile = CONFIGFILE;	/* Server configuration file */
 int  debuglevel = 10;		/* Server debug level */
 int  bootopt = 0;		/* Server boot option flags */
@@ -807,13 +806,13 @@ static int bad_command(void)
 {
 #ifndef _WIN32
 	(void)printf
-	    ("Usage: ircd [-f config] [-h servername] [-p portnumber] [-x loglevel] [-t] [-H]\n");
+	    ("Usage: ircd [-f config] [-h servername] [-x loglevel] [-t] [-H]\n");
 	(void)printf("Server not started\n\n");
 #else
 	if (!IsService)
 	{
 		MessageBox(NULL,
-		    "Usage: wircd [-h servername] [-p portnumber] [-x loglevel]\n",
+		    "Usage: wircd [-h servername] [-x loglevel]\n",
 		    "UnrealIRCD/32", MB_OK);
 	}
 #endif
@@ -1217,6 +1216,7 @@ int InitwIRCD(int argc, char *argv[])
 			  break;
 #endif
 #ifndef _WIN32
+		  case 'p':
 		  case 'P':
 		  {
 			  short type;
@@ -1245,12 +1245,55 @@ int InitwIRCD(int argc, char *argv[])
 			  printf("Encrypted password is: %s\n", result);
 			  exit(0);
 		  }
+#else /* _WIN32 */
+		  case 'p':
+		  case 'P':{
+			  short type;
+			  char *result;
+			  srand(TStime());
+			  if ((type = Auth_FindType(p)) == -1) {
+				  MessageBox(NULL, p, "No such auth type", MB_ICONERROR | MB_OK);
+				  return 0;
+			  }
+			  p = *++argv;
+			  argc--;
+#ifdef AUTHENABLE_UNIXCRYPT
+			  if ((type == AUTHTYPE_UNIXCRYPT) && (strlen(p) > 8))
+			  {
+			      MessageBox(NULL, "Password truncated to 8 characters due to 'crypt' algorithm. "
+		                 "You are suggested to use the 'md5' algorithm instead.", "WARNING", MB_ICONWARNING | MB_OK);
+				  p[8] = '\0';
+			  }
+#endif
+			  if (!(result = Auth_Make(type, p))) {
+				  MessageBox(NULL, "Authentication failed\n", "ERROR", MB_ICONERROR | MB_OK);
+				  return 0;
+			  }
+			  
+			  if (flag == 'p')
+				  MessageBox(NULL, result, "Encrypted password", MB_ICONINFORMATION | MB_OK);*/
+			  else
+			  if (OpenClipboard(NULL))
+			  {
+			      LPTSTR lptstrCopy; 
+			      HGLOBAL hglbCopy;
+			      hglbCopy = GlobalAlloc(GMEM_MOVEABLE, lstrlen(result) + 1);
+			      if(hglbCopy != NULL)
+			      {
+			          lptstrCopy = GlobalLock(hglbCopy); 
+			          lstrcpy(lptstrCopy, result);
+			          GlobalUnlock(hglbCopy);
+			          EmptyClipboard();
+			          SetClipboardData(CF_TEXT, hglbCopy); 
+			          MessageBox(NULL, "Encrypted password copied to the clipboard",
+					"Encrypted password", MB_ICONINFORMATION | MB_OK);
+			      }
+			      CloseClipboard();
+			  }
+			  exit 0;
+		  }
 #endif
 
-		  case 'p':
-			  if ((portarg = atoi(p)) > 0)
-				  portnum = portarg;
-			  break;
 		  case 's':
 			  (void)printf("sizeof(aClient) == %ld\n",
 			      (long)sizeof(aClient));
@@ -1506,9 +1549,6 @@ int InitwIRCD(int argc, char *argv[])
 #else /* ifndef NEW_IO */
 #endif /* ifndef NEW_IO */
 #endif
-	if (portnum < 0)
-		portnum = PORTNUM;
-	me.port = portnum;
 #ifndef NEW_IO
 	/* Is that have to be in s_bsd.c huh? */
 	(void)init_sys();
@@ -1530,6 +1570,7 @@ int InitwIRCD(int argc, char *argv[])
 	 * We accept the first listen record 
 	 */
 	portnum = conf_listen->port;
+	me.port = portnum;
 /*
  *      This is completely unneeded-Sts
    	me.ip.S_ADDR =
