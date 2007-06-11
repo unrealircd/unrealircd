@@ -318,6 +318,7 @@ ConfigEntry		*config_find_entry(ConfigEntry *ce, char *name);
  * Error handling
 */
 
+void			config_warn(char *format, ...);
 void 			config_error(char *format, ...);
 void 			config_status(char *format, ...);
 void 			config_progress(char *format, ...);
@@ -792,7 +793,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 {
 	char		*ptr;
 	char		*start;
-	int			linenumber = 1;
+	int		linenumber = 1;
 	ConfigEntry	*curce;
 	ConfigEntry	**lastce;
 	ConfigEntry	*cursection;
@@ -926,6 +927,17 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 				}
 				break;
 			case '\"':
+				if (curce && curce->ce_varlinenum != linenumber && cursection)
+				{
+					config_warn("%s:%i: Missing semicolon at end of line\n",
+						filename, curce->ce_varlinenum);
+					
+					*lastce = curce;
+					lastce = &(curce->ce_next);
+					curce->ce_fileposend = (ptr - confdata);
+					curce = NULL;
+				}
+
 				start = ++ptr;
 				for(;*ptr;ptr++)
 				{
