@@ -1468,3 +1468,4 @@
 - #0003264 reported by Robby22 regarding help.conf typo
 - Updated c-ares to version 1.4.0
 - Updated tre to version 0.7.5
+- help.conf updates. Missing some ;'s.
