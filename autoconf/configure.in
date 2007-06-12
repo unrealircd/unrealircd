@@ -426,7 +426,7 @@ IRCDLIBS="$IRCDLIBS -lresolv "
 esac
 
 dnl REMEMBER TO CHANGE WITH A NEW TRE RELEASE!
-tre_version="0.7.2"
+tre_version="0.7.5"
 AC_MSG_RESULT(extracting TRE regex library)
 cur_dir=`pwd`
 cd extras
