@@ -339,6 +339,7 @@ void server_reboot(char *mesg)
 	aClient *cptr;
 #endif
 	sendto_realops("Aieeeee!!!  Restarting server... %s", mesg);
+
 	Debug((DEBUG_NOTICE, "Restarting server... %s", mesg));
 #ifndef _WIN32
 	flush_connections(&me);

@@ -1778,3 +1778,5 @@ MOTDs
   without warning.
 - #0002475 reported by aquanight on detecting \'s in module filenames on
   win32 and not do ./module for it
+- #0001740 reported by Trocotronic, making the IRCd send ERROR : to all
+  links with possible reason for RESTART; like /die does it.
