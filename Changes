@@ -1776,3 +1776,5 @@ MOTDs
   CommandAdd's through a huge patch. This may break some things, so heads
   up. From now on add_Command is unsafe land for modules and may be removed
   without warning.
+- #0002475 reported by aquanight on detecting \'s in module filenames on
+  win32 and not do ./module for it
