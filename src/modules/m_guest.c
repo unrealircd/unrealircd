@@ -63,7 +63,7 @@ ModuleInfo *ModGuestInfo;
 DLLFUNC int MOD_INIT(m_guest)(ModuleInfo *modinfo)
 {
 	/*
-	 * We call our add_Command crap here
+	 * We call our CommandAdd crap here
 	*/
 #ifdef GUEST
 	ModGuestInfo = modinfo;

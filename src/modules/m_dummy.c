@@ -47,9 +47,9 @@ ModuleHeader MOD_HEADER(m_dummy)
 DLLFUNC int MOD_INIT(m_dummy)(ModuleInfo *modinfo)
 {
 	/*
-	 * We call our add_Command crap here
+	 * We call our CommandAdd crap here
 	*/
-	add_Command(MSG_DUMMY, TOK_DUMMY, m_dummy, MAXPARA);
+	CommandAdd(modinfo->handle, MSG_DUMMY, TOK_DUMMY, m_dummy, MAXPARA, M_USER|M_SERVER);
 	return MOD_SUCCESS;
 }
 
@@ -63,11 +63,6 @@ DLLFUNC int MOD_LOAD(m_dummy)(int module_load)
 /* Called when module is unloaded */
 DLLFUNC int MOD_UNLOAD(m_dummy)(int module_unload)
 {
-	if (del_Command(MSG_DUMMY, TOK_DUMMY, m_dummy) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-				MOD_HEADER(m_dummy).name);
-	}
 	return MOD_SUCCESS;
 }
 

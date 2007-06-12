@@ -1772,3 +1772,7 @@ MOTDs
 - #0002172 reported by Stealth, patched by WolfSage, fixing if you have an
   admin block, and forget a semicolon on a line, Unreal will proceed to use
   the block with no error, but the information will be incorrect/incomplete.
+- #0003177 patched by aegis, changing non-modular add_Command to
+  CommandAdd's through a huge patch. This may break some things, so heads
+  up. From now on add_Command is unsafe land for modules and may be removed
+  without warning.

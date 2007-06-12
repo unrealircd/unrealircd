@@ -62,9 +62,9 @@ ModuleHeader MOD_HEADER(m_quit)
 DLLFUNC int MOD_INIT(m_quit)(ModuleInfo *modinfo)
 {
 	/*
-	 * We call our add_Command crap here
+	 * We call our CommandAdd crap here
 	*/
-	add_CommandX(MSG_QUIT, TOK_QUIT, m_quit, 1, M_UNREGISTERED|M_USER|M_VIRUS);
+	CommandAdd(modinfo->handle, MSG_QUIT, TOK_QUIT, m_quit, 1, M_UNREGISTERED|M_USER|M_VIRUS);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -78,11 +78,6 @@ DLLFUNC int MOD_LOAD(m_quit)(int module_load)
 /* Called when module is unloaded */
 DLLFUNC int MOD_UNLOAD(m_quit)(int module_unload)
 {
-	if (del_Command(MSG_QUIT, TOK_QUIT, m_quit) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-				MOD_HEADER(m_quit).name);
-	}
 	return MOD_SUCCESS;
 }
 

@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_silence)
 
 DLLFUNC int MOD_INIT(m_silence)(ModuleInfo *modinfo)
 {
-	add_Command(MSG_SILENCE, TOK_SILENCE, m_silence, MAXPARA);
+	CommandAdd(modinfo->handle, MSG_SILENCE, TOK_SILENCE, m_silence, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -72,11 +72,6 @@ DLLFUNC int MOD_LOAD(m_silence)(int module_load)
 
 DLLFUNC int MOD_UNLOAD(m_silence)(int module_unload)
 {
-	if (del_Command(MSG_SILENCE, TOK_SILENCE, m_silence) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-			MOD_HEADER(m_silence).name);
-	}
 	return MOD_SUCCESS;
 }
 

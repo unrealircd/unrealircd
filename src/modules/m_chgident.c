@@ -74,9 +74,9 @@ DLLFUNC int MOD_INIT(m_chgident)(ModuleInfo *modinfo)
 	   list
 	*/
 	/*
-	 * We call our add_Command crap here
+	 * We call our CommandAdd crap here
 	*/
-	add_Command(MSG_CHGIDENT, TOK_CHGIDENT, m_chgident, MAXPARA);
+	CommandAdd(modinfo->handle, MSG_CHGIDENT, TOK_CHGIDENT, m_chgident, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -88,11 +88,6 @@ DLLFUNC int MOD_LOAD(m_chgident)(int module_load)
 
 DLLFUNC int MOD_UNLOAD(m_chgident)(int module_unload)
 {
-	if (del_Command(MSG_CHGIDENT, TOK_CHGIDENT, m_chgident) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-				MOD_HEADER(m_chgident).name);
-	}
 	return MOD_SUCCESS;
 }
 

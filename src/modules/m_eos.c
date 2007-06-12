@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_eos)
 
 DLLFUNC int MOD_INIT(m_eos)(ModuleInfo *modinfo)
 {
-	add_CommandX(MSG_EOS, TOK_EOS, m_eos, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_EOS, TOK_EOS, m_eos, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -72,11 +72,6 @@ DLLFUNC int MOD_LOAD(m_eos)(int module_load)
 
 DLLFUNC int MOD_UNLOAD(m_eos)(int module_unload)
 {
-	if (del_Command(MSG_EOS, TOK_EOS, m_eos) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-			MOD_HEADER(m_eos).name);
-	}
 	return MOD_SUCCESS;
 }
 

@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_ison)
 
 DLLFUNC int MOD_INIT(m_ison)(ModuleInfo *modinfo)
 {
-	add_Command(MSG_ISON, TOK_ISON, m_ison, 1);
+	CommandAdd(modinfo->handle, MSG_ISON, TOK_ISON, m_ison, 1, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -72,11 +72,6 @@ DLLFUNC int MOD_LOAD(m_ison)(int module_load)
 
 DLLFUNC int MOD_UNLOAD(m_ison)(int module_unload)
 {
-	if (del_Command(MSG_ISON, TOK_ISON, m_ison) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-			MOD_HEADER(m_ison).name);
-	}
 	return MOD_SUCCESS;
 }
 

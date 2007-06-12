@@ -62,9 +62,9 @@ ModuleHeader MOD_HEADER(m_nachat)
 DLLFUNC int MOD_INIT(m_nachat)(ModuleInfo *modinfo)
 {
 	/*
-	 * We call our add_Command crap here
+	 * We call our CommandAdd crap here
 	*/
-	add_Command(MSG_NACHAT, TOK_NACHAT, m_nachat, 1);
+	CommandAdd(modinfo->handle, MSG_NACHAT, TOK_NACHAT, m_nachat, 1, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -78,11 +78,6 @@ DLLFUNC int MOD_LOAD(m_nachat)(int module_load)
 /* Called when module is unloaded */
 DLLFUNC int MOD_UNLOAD(m_nachat)(int module_unload)
 {
-	if (del_Command(MSG_NACHAT, TOK_NACHAT, m_nachat) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-				MOD_HEADER(m_nachat).name);
-	}
 	return MOD_SUCCESS;
 	
 }

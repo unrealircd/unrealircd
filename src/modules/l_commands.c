@@ -243,7 +243,7 @@ int    l_commands_Init(ModuleInfo *modinfo)
 	Module p;
 #endif
 	/*
-	 * We call our add_Command crap here
+	 * We call our CommandAdd crap here
 	*/
 	module_load = ModCmdsInfo->module_load;
 	m_sethost_Init(ModCmdsInfo);

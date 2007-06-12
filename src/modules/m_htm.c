@@ -72,7 +72,7 @@ ModuleHeader MOD_HEADER(m_htm)
 DLLFUNC int MOD_TEST(m_htm)(ModuleInfo *modinfo)
 {
 	/*
-	 * We call our add_Command crap here
+	 * We call our CommandAdd crap here
 	*/
 	HtmModInfo = modinfo;
 	ConfTest = HookAddEx(HtmModInfo->handle, HOOKTYPE_CONFIGTEST, htm_config_test);
@@ -84,9 +84,9 @@ DLLFUNC int MOD_TEST(m_htm)(ModuleInfo *modinfo)
 DLLFUNC int MOD_INIT(m_htm)(ModuleInfo *modinfo)
 {
 	/*
-	 * We call our add_Command crap here
+	 * We call our CommandAdd crap here
 	*/
-	add_Command(MSG_HTM, TOK_HTM, m_htm, MAXPARA);
+	CommandAdd(modinfo->handle, MSG_HTM, TOK_HTM, m_htm, MAXPARA, M_USER|M_SERVER);
 	ConfRun = HookAddEx(HtmModInfo->handle, HOOKTYPE_CONFIGRUN, htm_config_run);
 	ServerStats = HookAddEx(HtmModInfo->handle, HOOKTYPE_STATS, htm_stats);
 #ifndef NO_FDLIST
@@ -109,11 +109,6 @@ DLLFUNC int MOD_LOAD(m_htm)(int module_load)
 /* Called when module is unloaded */
 DLLFUNC int MOD_UNLOAD(m_htm)(int module_unload)
 {
-	if (del_Command(MSG_HTM, TOK_HTM, m_htm) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-				MOD_HEADER(m_htm).name);
-	}
 #ifndef NO_FDLIST
 	LockEventSystem();
 	EventDel(e_lcf);

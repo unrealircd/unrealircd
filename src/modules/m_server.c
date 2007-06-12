@@ -64,7 +64,7 @@ ModuleHeader MOD_HEADER(m_server)
 
 DLLFUNC int MOD_INIT(m_server)(ModuleInfo *modinfo)
 {
-	add_CommandX(MSG_SERVER, TOK_SERVER, m_server, MAXPARA, M_UNREGISTERED|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SERVER, TOK_SERVER, m_server, MAXPARA, M_UNREGISTERED|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -76,11 +76,6 @@ DLLFUNC int MOD_LOAD(m_server)(int module_load)
 
 DLLFUNC int MOD_UNLOAD(m_server)(int module_unload)
 {
-	if (del_Command(MSG_SERVER, TOK_SERVER, m_server) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-			MOD_HEADER(m_server).name);
-	}
 	return MOD_SUCCESS;
 }
 

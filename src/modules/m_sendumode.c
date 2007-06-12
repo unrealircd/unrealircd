@@ -64,10 +64,10 @@ ModuleHeader MOD_HEADER(m_sendumode)
 DLLFUNC int MOD_INIT(m_sendumode)(ModuleInfo *modinfo)
 {
 	/*
-	 * We call our add_Command crap here
+	 * We call our CommandAdd crap here
 	*/
-	add_Command(MSG_SENDUMODE, TOK_SENDUMODE, m_sendumode, MAXPARA);
-	add_Command(MSG_SMO, TOK_SMO, m_sendumode, MAXPARA);
+	CommandAdd(modinfo->handle, MSG_SENDUMODE, TOK_SENDUMODE, m_sendumode, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SMO, TOK_SMO, m_sendumode, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -81,19 +81,7 @@ DLLFUNC int MOD_LOAD(m_sendumode)(int module_load)
 /* Called when module is unloaded */
 DLLFUNC int MOD_UNLOAD(m_sendumode)(int module_unload)
 {
-	if (del_Command(MSG_SENDUMODE, TOK_SENDUMODE, m_sendumode) < 0)
-	{
-		sendto_realops("Failed to delete command sendumode when unloading %s",
-				MOD_HEADER(m_sendumode).name);
-	}
-	if (del_Command(MSG_SMO, TOK_SMO, m_sendumode) < 0)
-	{
-		sendto_realops("Failed to delete command smo when unloading %s",
-				MOD_HEADER(m_sendumode).name);
-	}
 	return MOD_SUCCESS;
-	
-
 }
 
 /*

@@ -61,7 +61,7 @@ ModuleHeader MOD_HEADER(m_whowas)
 
 DLLFUNC int MOD_INIT(m_whowas)(ModuleInfo *modinfo)
 {
-	add_Command(MSG_WHOWAS, TOK_WHOWAS, m_whowas, MAXPARA);
+	CommandAdd(modinfo->handle, MSG_WHOWAS, TOK_WHOWAS, m_whowas, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -73,11 +73,6 @@ DLLFUNC int MOD_LOAD(m_whowas)(int module_load)
 
 DLLFUNC int MOD_UNLOAD(m_whowas)(int module_unload)
 {
-	if (del_Command(MSG_WHOWAS, TOK_WHOWAS, m_whowas) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-			MOD_HEADER(m_whowas).name);
-	}
 	return MOD_SUCCESS;
 }
 

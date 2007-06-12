@@ -66,11 +66,11 @@ ModuleHeader MOD_HEADER(m_pingpong)
 DLLFUNC int MOD_INIT(m_pingpong)(ModuleInfo *modinfo)
 {
 	/*
-	 * We call our add_Command crap here
+	 * We call our CommandAdd crap here
 	*/
 	Debug((DEBUG_NOTICE, "INIT"));
-	add_Command(MSG_PING, TOK_PING, m_ping, MAXPARA);
-	add_CommandX(MSG_PONG, TOK_PONG, m_pong, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER|M_SHUN|M_VIRUS);
+	CommandAdd(modinfo->handle, MSG_PING, TOK_PING, m_ping, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_PONG, TOK_PONG, m_pong, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER|M_SHUN|M_VIRUS);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -85,16 +85,6 @@ DLLFUNC int MOD_LOAD(m_pingpong)(int module_load)
 /* Called when module is unloaded */
 DLLFUNC int MOD_UNLOAD(m_pingpong)(int module_unload)
 {
-	if (del_Command(MSG_PING, TOK_PING, m_ping) < 0)
-	{
-		sendto_realops("Failed to delete command ping when unloading %s",
-				MOD_HEADER(m_pingpong).name);
-	}
-	if (del_Command(MSG_PONG, TOK_PONG, m_pong) < 0)
-	{
-		sendto_realops("Failed to delete command pong when unloading %s",
-				MOD_HEADER(m_pingpong).name);
-	}
 	return MOD_SUCCESS;
 }
 

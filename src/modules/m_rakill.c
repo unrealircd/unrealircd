@@ -62,9 +62,9 @@ ModuleHeader MOD_HEADER(m_rakill)
 DLLFUNC int MOD_INIT(m_rakill)(ModuleInfo *modinfo)
 {
 	/*
-	 * We call our add_Command crap here
+	 * We call our CommandAdd crap here
 	*/
-	add_Command(MSG_RAKILL, TOK_RAKILL, m_rakill, MAXPARA);
+	CommandAdd(modinfo->handle, MSG_RAKILL, TOK_RAKILL, m_rakill, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -78,11 +78,6 @@ DLLFUNC int MOD_LOAD(m_rakill)(int module_load)
 /* Called when module is unloaded */
 DLLFUNC int MOD_UNLOAD(m_rakill)(int module_unload)
 {
-	if (del_Command(MSG_RAKILL, TOK_RAKILL, m_rakill) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-				MOD_HEADER(m_rakill).name);
-	}
 	return MOD_SUCCESS;
 }
 
