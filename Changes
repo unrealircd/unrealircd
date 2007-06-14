@@ -1495,3 +1495,4 @@
 - #0002420 reported by KnuX fixed by WolfSage
 - #0003147 reported by vonitsanet, fixed by djGrrr regarding making
   spamfilters work in case of /setname
+- Added oper CIDR

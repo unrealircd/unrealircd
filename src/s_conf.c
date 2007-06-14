@@ -1845,6 +1845,10 @@ void	config_rehash()
 		{
 			next2 = (ListStruct *)oper_from->next;
 			ircfree(oper_from->name);
+			if (oper_from->netmask)
+			{
+				MyFree(oper_from->netmask);
+			}
 			DelListItem(oper_from, oper_ptr->from);
 			MyFree(oper_from);
 		}
@@ -3167,6 +3171,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_oper *oper = NULL;
 	ConfigItem_oper_from *from;
 	OperFlag *ofp = NULL;
+	struct irc_netmask tmp;
 
 	oper =  MyMallocEx(sizeof(ConfigItem_oper));
 	oper->name = strdup(ce->ce_vardata);
@@ -3236,6 +3241,12 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 				{
 					from = MyMallocEx(sizeof(ConfigItem_oper_from));
 					ircstrdup(from->name, cepp->ce_vardata);
+					tmp.type = parse_netmask(from->name, &tmp);
+					if (tmp.type != HM_HOST)
+					{
+						from->netmask = MyMallocEx(sizeof(struct irc_netmask));
+						bcopy(&tmp, from->netmask, sizeof(struct irc_netmask));
+					}
 					AddListItem(from, oper->from);
 				}
 			}
