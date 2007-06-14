@@ -1484,3 +1484,7 @@
   when trying to /connect to a server with wildcards (* and ?) in the link
   block. We also raise an error if link::options::autoconnect is used
   together with wildcards in hostname.
+- #0002040 reported by aquanight, removing dependancy on +l for +L. This
+  will be backwards compatible as well, SJOIN doesn't care (TM) and mode
+  doesn't either in case of a server sending it. So this will be just a
+  client protocol modification. 
