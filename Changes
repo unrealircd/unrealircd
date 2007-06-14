@@ -1471,3 +1471,5 @@
 - help.conf updates. Missing some ;'s.
 - #0003027 reported by Trocotronic, regarding doing -l <para> on SJOIN,
   and not -l as supposed. This may have caused desyncs
+- #0003368 patched by Stealth giving users access to do /module on remote
+  servers
