@@ -1469,3 +1469,5 @@
 - Updated c-ares to version 1.4.0
 - Updated tre to version 0.7.5
 - help.conf updates. Missing some ;'s.
+- #0003027 reported by Trocotronic, regarding doing -l <para> on SJOIN,
+  and not -l as supposed. This may have caused desyncs

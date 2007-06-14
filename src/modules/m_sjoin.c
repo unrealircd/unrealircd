@@ -624,7 +624,7 @@ docontinue:
 		/* however, is this really going to happen at all? may be unneeded */
 		if (oldmode.limit && !chptr->mode.limit)
 		{
-			Addit('l', (char *)my_itoa(oldmode.limit));
+			Addsingle('l');
 		}
 		if (oldmode.key[0] && !chptr->mode.key[0])
 		{
