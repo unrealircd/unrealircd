@@ -1492,3 +1492,6 @@
 - #0003216 patched by djGrrr, regarding when you run ./Config for a second
   time after settings are saved in config.settings, the SSLDIR and ZIPLINKSDIR
   defaults are basically completely ignored.
+- #0002420 reported by KnuX fixed by WolfSage
+- #0003147 reported by vonitsanet, fixed by djGrrr regarding making
+  spamfilters work in case of /setname
