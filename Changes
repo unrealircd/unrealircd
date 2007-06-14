@@ -1488,3 +1488,4 @@
   will be backwards compatible as well, SJOIN doesn't care (TM) and mode
   doesn't either in case of a server sending it. So this will be just a
   client protocol modification. 
+- Fixed SVSKILL sending an illegal QUIT

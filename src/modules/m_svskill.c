@@ -121,6 +121,8 @@ CMD_FUNC(m_svskill)
 
 	acptr->flags |= FLAGS_KILLED;
 
+	acptr->flags |= FLAGS_KILLED;
+
 	return exit_client(cptr, acptr, sptr, comment);
 
 }
