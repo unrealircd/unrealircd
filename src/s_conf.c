@@ -5962,6 +5962,8 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 	char has_passwordreceive = 0, has_passwordconnect = 0, has_class = 0;
 	char has_hub = 0, has_leaf = 0, has_leafdepth = 0, has_ciphers = 0;
 	char has_options = 0;
+	char has_autoconnect = 0;
+	char has_hostname_wildcards = 0;
 #ifdef ZIP_LINKS
 	char has_compressionlevel = 0;
 #endif
@@ -6028,7 +6030,11 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, ce->ce_vardata);
 					errors++;
 				}
-#endif
+#endif				
+				if (ofp->flag == CONNECT_AUTO)
+				{
+					has_autoconnect = 1;
+				}
 			}
 			continue;
 		}
@@ -6071,6 +6077,10 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 			}
 #endif
+			if (strchr(cep->ce_vardata, '*') != NULL || strchr(cep->ce_vardata, '?'))
+			{
+				has_hostname_wildcards = 1;
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "bind-ip"))
 		{
@@ -6235,6 +6245,12 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 	{
 		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 			"link::class");
+		errors++;
+	}
+	if (has_autoconnect || has_hostname_wildcards)
+	{
+		config_error("%s:%i: link block with autoconnect and wildcards (* and/or ? in hostname)",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		errors++;
 	}
 	if (errors > 0)

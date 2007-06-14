@@ -1480,3 +1480,7 @@
   through this under load, and speeding up connection).
 - IRCd now also sets the &me fd as being non blocking (wasn't before, that
   was odd..)
+- #0003139 reported by vonitsanet, improving error messages on /connect
+  when trying to /connect to a server with wildcards (* and ?) in the link
+  block. We also raise an error if link::options::autoconnect is used
+  together with wildcards in hostname.
