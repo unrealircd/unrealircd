@@ -1475,3 +1475,8 @@
   servers
 - #0002533 reported by Dodge_Ram, patched by WolfSage, regarding notices
   not being sent when /*line and /shun are used to request stats
+- Now using #0003028, with more intelligent accept() handling. The IRCd
+  will now attempt to accept() up to LISTEN_SIZE (possibly saving CPU
+  through this under load, and speeding up connection).
+- IRCd now also sets the &me fd as being non blocking (wasn't before, that
+  was odd..)
