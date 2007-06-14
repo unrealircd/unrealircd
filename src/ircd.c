@@ -1364,6 +1364,7 @@ int InitwIRCD(int argc, char *argv[])
 	Debug((DEBUG_ERROR, "Port = %d", portnum));
 	if (inetport(&me, conf_listen->ip, portnum))
 		exit(1);
+	set_non_blocking(me.fd, &me);
 	conf_listen->options |= LISTENER_BOUND;
 	me.umodes = conf_listen->options;
 	conf_listen->listener = &me;

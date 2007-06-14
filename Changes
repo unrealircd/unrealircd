@@ -1473,3 +1473,5 @@
   and not -l as supposed. This may have caused desyncs
 - #0003368 patched by Stealth giving users access to do /module on remote
   servers
+- #0002533 reported by Dodge_Ram, patched by WolfSage, regarding notices
+  not being sent when /*line and /shun are used to request stats
