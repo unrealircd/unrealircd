@@ -1489,3 +1489,6 @@
   doesn't either in case of a server sending it. So this will be just a
   client protocol modification. 
 - Fixed SVSKILL sending an illegal QUIT
+- #0003216 patched by djGrrr, regarding when you run ./Config for a second
+  time after settings are saved in config.settings, the SSLDIR and ZIPLINKSDIR
+  defaults are basically completely ignored.

@@ -530,14 +530,14 @@ while [ -z "$TEST" ] ; do
 done
 
 if [ "$CRYPTOIRCD" = "1" ] ; then
-TEST=""
+TEST="$SSLDIR"
 echo ""
 echo "If you know the path to OpenSSL on your system, enter it here. If not"
 echo "leave this blank"
 echo $n "[$TEST] -> $c"
     read cc
 if [ -z "$cc" ] ; then
-    SSLDIR=""
+    SSLDIR="$TEST"
 else 
     SSLDIR=`eval echo $cc` # modified
 fi
@@ -602,14 +602,14 @@ while [ -z "$TEST" ] ; do
 done
 
 if [ "$ZIPLINKS" = "1" ] ; then
-TEST=""
+TEST="$ZIPLINKSDIR"
 echo ""
 echo "If you know the path to zlib on your system, enter it here. If not"
 echo "leave this blank"
 echo $n "[$TEST] -> $c"
     read cc
 if [ -z "$cc" ] ; then
-    ZIPLINKSDIR=""
+    ZIPLINKSDIR="$TEST"
 else 
     ZIPLINKSDIR=`eval echo $cc` # modified
 fi
