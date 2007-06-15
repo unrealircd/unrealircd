@@ -224,9 +224,8 @@ long flags = 0; /* cache: membership flags */
 				    chptr->chname, chptr->topic_nick,
 				    chptr->topic_time, chptr->topic);
 				sendto_channel_butserv(chptr, sptr,
-				    ":%s TOPIC %s :%s (%s)", parv[0],
-				    chptr->chname, chptr->topic,
-				    chptr->topic_nick);
+				    ":%s TOPIC %s :%s", parv[0],
+				    chptr->chname, chptr->topic);
 			}
 		}
 		else if (((chptr->mode.mode & MODE_TOPICLIMIT) == 0 ||

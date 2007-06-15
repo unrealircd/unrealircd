@@ -1496,3 +1496,5 @@
 - #0003147 reported by vonitsanet, fixed by djGrrr regarding making
   spamfilters work in case of /setname
 - Added oper CIDR
+- #0001317 reported by thilo regarding removal of (username) being
+  appended to topics set by U:Lined servers.
