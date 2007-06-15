@@ -130,7 +130,7 @@ static void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_leng
 	for (lp = Servers; lp; lp = lp->next)
 	{
 		acptr = lp->value.cptr;
-		if (IsULine(acptr) && HIDE_ULINES && !IsOper(cptr))
+		if (IsULine(acptr) && HIDE_ULINES && !IsAnOper(cptr))
 			continue;
 		if (acptr->srvptr != server)
 			continue;

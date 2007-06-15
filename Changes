@@ -1503,3 +1503,5 @@
 - #0003092 reported by tabrisnet, patched by WolfSage, regarding
   documentation says
   link::bind-ip is optional, but not specifying it produces an error
+- #0003232 reported by vonitsanet patched by djGrr, regarding /map is not
+  shown u:lined servers to local opers and /links does
