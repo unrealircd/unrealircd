@@ -1498,3 +1498,5 @@
 - Added oper CIDR
 - #0001317 reported by thilo regarding removal of (username) being
   appended to topics set by U:Lined servers.
+- #0003382 reported by stealth regarding nested C-style comments messing
+  up example.conf parsing
