@@ -905,12 +905,12 @@
 				позволяет банить диапазоны IP. Т.к. IP адреса провайдера размещены посредством 
 				CIDR, устанавливая баны с помощью CIDR, можно легко забанить провайдера. Unreal 
 				поддерживает CIDR для протоколов IPv4 и IPv6. CIDR маски можно использовать в 
-				allow::ip, ban user::mask, ban ip::mask, except ban::mask, except 
-				throttle::mask, и except tkl::mask (для gzline, gline и shun). Дополнительно, 
-				CIDR может быть использован в /kline, /gline, /zline, /gzline и /shun. Unreal 
-				использует стандартный синтакс для IP/bits, т.е., 127.0.0.0/8 (влияет на 
-				127.0.0.0 - 127.255.255.255), и fe80:0:0:123::/64 (влияет на 
-				fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p>
+				allow::ip, oper::from::userhost, ban user::mask, ban ip::mask, except ban::mask, 
+				except throttle::mask, и except tkl::mask (для gzline, gline и shun).
+				Дополнительно, CIDR может быть использован в /kline, /gline, /zline, /gzline и 
+				/shun. Unreal использует стандартный синтакс для IP/bits, т.е., 
+				127.0.0.0/8 (влияет на 127.0.0.0 - 127.255.255.255), и fe80:0:0:123::/64 
+				(влияет на fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p>
 		</div>
 		<p><font size="+2"><b>3.16 - Использование национальных наборов символов в никах</b></font><a name="feature_nickchars"></a></p>
 		<div class="desc">
@@ -2159,7 +2159,7 @@ loadmodule "modules/cloak.dll";
     channel &lt;имя-канала&gt;;
     options {
         ssl;
-    }
+    };
 };</pre>
 						<P></P>
 						<p>Блок tld позволяет вам определить сообщение дня(motd), правила и канал для 
