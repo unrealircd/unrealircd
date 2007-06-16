@@ -998,7 +998,7 @@ ermöglicht es, IP Bereiche zu bannen. IPs werden an Internet Service Provider (I
 unter Verwendung von CIDR vergeben. Daher ist es möglich unter Verwendung eines
 CIDR basierten Banns auf einfache Weise ganze ISPs zu sperren. Unreal
 unterstützt CIDR sowohl für IPv4 als auch für IPv6. CIDR Masken können
-benutzt werden bei: allow::ip, ban user::mask, ban ip::mask, except ban::mask, except
+benutzt werden bei: allow::ip, oper::from::userhost, ban user::mask, ban ip::mask, except ban::mask, except
 throttle::mask, und except tkl::mask (für gzline, gline, and shun). Zusätzlich
 kann&nbsp; CIDR bei /kline, /gline, /zline, /gzline, und /shun benutzt werden. Unreal
 verwendet die Standard Syntax von IP/bits, z.B. 127.0.0.0/8 (passt auf 127.0.0.0 - 127.255.255.255),
