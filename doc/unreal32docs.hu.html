@@ -566,13 +566,13 @@ lesznek alakítva futásidõben. Egy dupla aláhúzás ('__') jelent egy aláhúzást ('_
 </p></div>
 
 <p><font size="+2"><b>3.15 - CIDR</b></font><a name="feature_cidr"></a></p><div class="desc">
-<p>Az UnrealIRCd-nek most már van támogatása CIDR-re (Classless Interdomain Routing; osztály nélküli, tartományon belüli útvonalválasztás). A CIDR alkalmas
-IP tartományok kitiltására. Az IP-ket CIDR használatával osztják ki ISP-k (Internet Service Provider, Internetszolgáltató) között, ezért a CIDR alapú kitiltások
-beállításának képességével egyszerûen kitiltható egy ISP. Az Unreal mind IPv4-re és IPv6-ra is támogatja a CIDR-t. A CIDR maszkok
-használhatóak az allow::ip, a ban user::mask, a ban ip::mask, az except ban::mask, az except throttle::mask
-és az except tkl::mask direktívákban (ez utóbbinál gzline-ra, gline-ra és shun-ra). Azonfelül a CIDR használható még a /kline,
-/gline, /zline, /gzline, and /shun parancsokban. Az Unreal a szabványos IP/bitek szintaktikát használja, pl.
-127.0.0.0/8 (illeszkedési tartománya 127.0.0.0 - 127.255.255.255) és fe80:0:0:123::/64 (illeszkedési tartománya
+<p>Az UnrealIRCd most már támogatja a CIDR-t is (Classless Interdomain Routing - osztálynélküli körzetek közti forgalomirányítás). A CIDR alkalmas
+IP tartományok kitiltására. Az egyes ISP-knek (Internet Service Provider - internet-szolgáltató) CIDR használatával osztanak ki IP-ket, ezért azzal, hogy CIDR alapú kitiltásokat lehet beállítani,
+egyszerûen kitilthatunk egy ISP-t. Az Unreal IPv4-re és IPv6-ra is támogatja a CIDR-t. CIDR maszkokat
+a következõ direktívákban használhatunk: allow::ip, oper::from::userhost, ban user::mask, ban ip::mask, except ban::mask,
+except throttle::mask és except tkl::mask (ez utóbbinál gzline-ra, gline-ra és shun-ra). Ezenkívül a CIDR használható még
+a /kline, a /gline, a /zline, a /gzline és a /shun parancsokban. Az Unreal a szabványos, IP/bitek alakú szintaktikát használja,
+pl. 127.0.0.0/8 (illeszkedési tartománya 127.0.0.0 - 127.255.255.255) és fe80:0:0:123::/64 (illeszkedési tartománya
 fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p></div>
 
 <p><font size="+2"><b>3.16 - Karakterkészletek nicknevekhez</b></font><a name="feature_nickchars"></a></p><div class="desc">
@@ -1583,7 +1583,7 @@ except ban {
 	mask &lt;hostmaszk&gt;;
 };</pre></p>
 <p>Az except ban blokkal határozhatod meg, mely user@host-ok bírálhatnak felül egy szélesebb maszkra
-  beállított kitiltást. Hasznos, ha egy Internet szolgáltató ki van tiltva, de
+  beállított kitiltást. Hasznos, ha egy internet-szolgáltató ki van tiltva, de
   onnan bizonyos felhasználókat még mindig szeretnél kapcsolódni engedni. Az except::mask direktíva
   a kapcsolódásra engedélyezett kliens user@host maszkját határozza meg.</p>
 <p>Példa:<br>
@@ -1607,7 +1607,7 @@ except tkl {
 	};
 };</pre></p>
 <p>Az except tkl blokkal meghatározhatod, mely user@host-ok bírálhatnak felül egy szélesebb
-  maszkra beállított tkl kitiltást. Hasznos, ha egy Internet szolgáltató ki van tiltva,
+  maszkra beállított tkl kitiltást. Hasznos, ha egy internet-szolgáltató ki van tiltva,
   de még mindig szeretnéd, hogy onnan kapcsolódhassanak bizonyos felhasználók.
   Az except::mask direktíva a kapcsolódásra engedélyezett felhasználó user@host maszkja.
   Az except::type meghatározza, hogy milyen letiltást bírálhat felül a kliens. Érvényes típusok:
