@@ -29,6 +29,11 @@
 extern char *SSLKeyPasswd;
 #endif
 
+#ifndef _WIN32
+extern uid_t irc_uid;
+extern gid_t irc_gid;
+#endif
+
 CURLM *multihandle;
 
 /* Stores information about the async transfer.
@@ -182,9 +187,9 @@ char *download_file(char *url, char **error)
 	curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorbuf);
 	res = curl_easy_perform(curl);
 	fclose(fd);
-#if defined(IRC_UID) && defined(IRC_GID)
+#if defined(IRC_USER) && defined(IRC_GROUP)
 	if (!loop.ircd_booted)
-		chown(tmp, IRC_UID, IRC_GID);
+		chown(tmp, irc_uid, irc_gid);
 #endif
 	if (file)
 		free(file);
@@ -338,9 +343,9 @@ void url_do_transfers_async(void)
 			curl_easy_getinfo(easyhand, CURLINFO_EFFECTIVE_URL, &url);
 			curl_easy_getinfo(easyhand, CURLINFO_FILETIME, &last_mod);
 			fclose(handle->fd);
-#if defined(IRC_UID) && defined(IRC_GID)
+#if defined(IRC_USER) && defined(IRC_GROUP)
 			if (!loop.ircd_booted)
-				chown(handle->filename, IRC_UID, IRC_GID);
+				chown(handle->filename, irc_uid, irc_gid);
 #endif
 			if (msg->data.result == CURLE_OK)
 			{

@@ -1505,3 +1505,9 @@
   link::bind-ip is optional, but not specifying it produces an error
 - #0003232 reported by vonitsanet patched by djGrr, regarding /map is not
   shown u:lined servers to local opers and /links does
+- #0003363 patched by adrianp, changing IRC_UID and IRC_GID into
+  defines IRC_USER, IRC_GROUP which is a string specifiying what user name/
+  group name that should be changed into, instead of a hardcoded gid/uid.
+  This should make it easier for packaged binary releases to work (even
+  though this probably means Debian will take us in, ick .. Can't we pull
+  a new fight with debian-legal again?)
