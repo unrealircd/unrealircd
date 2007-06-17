@@ -74,6 +74,9 @@ extern BOOL IsService;
 #ifdef USE_LIBCURL
 #include <curl/curl.h>
 #endif
+#ifndef _WIN32
+#include <sys/utsname.h>
+#endif
 ID_Copyright
     ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
 ID_Notes("2.48 3/9/94");
@@ -1008,6 +1011,26 @@ static inline /* Only called in one place */ void generate_cloakkeys()
 #endif
 
 #ifndef _WIN32
+char OSName[256]; /* Defined in win32/ stuff under _WIN32. */
+/* Fill in OSName from uname() */
+void GetOSName()
+{
+	struct utsname un;
+	int ret;
+	ret = uname(&un);
+	if (ret)
+	{
+		config_warn("Failed to get OSName: %s", strerror(errno));
+		strcpy(OSName, "POSIX");
+	}
+	else
+	{
+		snprintf(OSName, 256, "%s %s", un.sysname, un.release);
+	}
+}
+#endif
+
+#ifndef _WIN32
 int main(int argc, char *argv[])
 #else
 int InitwIRCD(int argc, char *argv[])
@@ -1048,6 +1071,9 @@ int InitwIRCD(int argc, char *argv[])
 	(void)moncontrol(1);
 	(void)signal(SIGUSR1, s_monitor);
 # endif
+#endif
+#ifndef _WIN32
+	GetOSName();
 #endif
 #ifdef	CHROOTDIR
 	if (chdir(dpath))

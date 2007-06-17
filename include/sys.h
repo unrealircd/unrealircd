@@ -143,9 +143,9 @@ typedef unsigned long u_long;
 typedef unsigned int u_int;
 #endif
 
-#ifdef _WIN32
 #define MYOSNAME OSName
 extern char OSName[256];
+#ifdef _WIN32
 #define PATH_MAX MAX_PATH
 #endif
 #ifdef DEBUGMODE

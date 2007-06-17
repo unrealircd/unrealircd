@@ -12359,10 +12359,6 @@ else
 _ACEOF
 
 fi;
-cat >>confdefs.h <<_ACEOF
-#define MYOSNAME "`uname -a`"
-_ACEOF
-
 
 # Check whether --with-permissions or --without-permissions was given.
 if test "${with_permissions+set}" = set; then

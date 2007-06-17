@@ -1788,3 +1788,11 @@ MOTDs
   though this probably means Debian will take us in, ick .. Can't we pull
   a new fight with debian-legal again?)
 - Made m_tkl use NULL instead of TOK_NONE
+- #0001438 reported by Mouse, to use uname() syscall on ircd start instead of
+  uname tool at Config/configure to fill in MYOSNAME. As with the #0003363 patch
+  this will make binary packages a bit more reasonable. As a side effect, the
+  amount of information in /version has been reduced to just the OS name (eg: Linux,
+  FreeBSD, etc) and release (2.6.17, 6.0-RELEASE, etc), which is about the same amount
+  of information given by Win32 IRCds. If for some reason uname() can't get this
+  info, we just config_warn and set MYOSNAME to "POSIX" as this data is only ever
+  used in /version.

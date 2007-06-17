@@ -183,9 +183,6 @@
 /* Define if you have crypt */
 #undef HAVE_CRYPT
 
-/* The OS name and version of the server */
-#undef MYOSNAME
-
 /* The default permissions for configuration files */
 #undef DEFAULT_PERMISSIONS
 
