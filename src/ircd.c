@@ -37,6 +37,7 @@ Computing Center and Jarkko Oikarinen";
 #ifndef _WIN32
 #include <sys/file.h>
 #include <pwd.h>
+#include <grp.h>
 #include <sys/time.h>
 #else
 #include <io.h>
@@ -97,6 +98,10 @@ extern MODVAR aMotd *botmotd;
 extern MODVAR aMotd *smotd;
 extern MODVAR ConfigFile *conf;
 MODVAR MemoryInfo StatsZ;
+#ifndef _WIN32
+uid_t irc_uid = 0;
+gid_t irc_gid = 0; 
+#endif
 
 int  R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns, R_do_id, R_fin_id, R_fail_id;
 
@@ -1015,6 +1020,8 @@ int InitwIRCD(int argc, char *argv[])
 	uid_t uid, euid;
 	gid_t gid, egid;
 	TS   delay = 0;
+	struct passwd *pw;
+	struct group *gr;
 #endif
 #ifdef HAVE_PSTAT
 	union pstun pstats;
@@ -1634,7 +1641,7 @@ int InitwIRCD(int argc, char *argv[])
 	R_fin_id = strlen(REPORT_FIN_ID);
 	R_fail_id = strlen(REPORT_FAIL_ID);
 
-#if !defined(IRC_UID) && !defined(_WIN32)
+#if !defined(IRC_USER) && !defined(_WIN32)
 	if ((uid != euid) && !euid)
 	{
 		(void)fprintf(stderr,
@@ -1643,17 +1650,27 @@ int InitwIRCD(int argc, char *argv[])
 	}
 #endif
 
-#if defined(IRC_UID) && defined(IRC_GID)
+#if defined(IRC_USER) && defined(IRC_GROUP)
 	if ((int)getuid() == 0)
 	{
-		if ((IRC_UID == 0) || (IRC_GID == 0))
-		{
-			(void)fprintf(stderr,
-			    "ERROR: SETUID and SETGID have not been set properly"
-			    "\nPlease read your documentation\n(HINT: IRC_UID and IRC_GID in include/config.h can not be 0)\n");
-			exit(-1);
-		}
-		else
+ 
+ 		pw = getpwnam(IRC_USER);
+ 		gr = getgrnam(IRC_GROUP);
+ 
+ 		if ((pw == NULL) || (gr == NULL)) {
+ 			fprintf(stderr, "ERROR: Unable to change to specified user or group: %s\n", strerror(errno));
+ 			exit(-1);
+ 		} else {
+			irc_uid = pw->pw_uid;
+ 			irc_gid = gr->gr_gid;
+ 		}
+ 
+ 		if ((irc_uid == 0) || (irc_gid == 0)) {
+ 			(void)fprintf(stderr,
+  			    "ERROR: SETUID and SETGID have not been set properly"
+ 			    "\nPlease read your documentation\n(HINT: IRC_USER and IRC_GROUP in include/config.h cannot be root/wheel)\n");
+  			exit(-1);
+  		} else {
 		{
 			/*
 			 * run as a specified user 
@@ -1662,17 +1679,17 @@ int InitwIRCD(int argc, char *argv[])
 			(void)fprintf(stderr,
 			    "WARNING: ircd invoked as root\n");
 			(void)fprintf(stderr, "         changing to uid %d\n",
-			    IRC_UID);
+			    irc_uid);
 			(void)fprintf(stderr, "         changing to gid %d\n",
-			    IRC_GID);
-			if (setgid(IRC_GID))
+			    irc_gid);
+			if (setgid(irc_gid))
 			{
 				fprintf(stderr,
 				    "ERROR: Unable to change group: %s\n",
 				    strerror(errno));
 				exit(-1);
 			}
-			if (setuid(IRC_UID))
+			if (setuid(irc_uid))
 			{
 				fprintf(stderr,
 				    "ERROR: Unable to change userid: %s\n",

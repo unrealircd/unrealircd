@@ -37,6 +37,8 @@ static char sccsid[] = "@(#)support.c	2.21 4/13/94 1990, 1991 Armin Gruner;\
 #ifdef _WIN32
 #include <io.h>
 #else
+extern uid_t irc_uid;
+extern gid_t irc_gid;
 #include <sys/socket.h>
 #include <string.h>
 #include <utime.h>
@@ -1783,9 +1785,9 @@ int unreal_copyfile(char *src, char *dest)
 	close(srcfd);
 	close(destfd);
 	unreal_setfilemodtime(dest, mtime);
-#if defined(IRC_UID) && defined(IRC_GID)
+#if defined(IRC_USER) && defined(IRC_GROUP)
 	if (!loop.ircd_booted)
-		chown(dest, IRC_UID, IRC_GID);
+		chown(dest, irc_uid, irc_gid);
 #endif
 	return 1;
 fail:
