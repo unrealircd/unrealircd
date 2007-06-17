@@ -1787,3 +1787,4 @@ MOTDs
   This should make it easier for packaged binary releases to work (even
   though this probably means Debian will take us in, ick .. Can't we pull
   a new fight with debian-legal again?)
+- Made m_tkl use NULL instead of TOK_NONE

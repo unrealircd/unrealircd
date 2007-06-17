@@ -46,6 +46,7 @@ int CommandExists(char *name)
 Command *CommandAdd(Module *module, char *cmd, char *tok, int (*func)(), unsigned char params, int flags) {
 	Command *command;
 
+	
 	if (find_Command_simple(cmd) || (tok && find_Command_simple(tok)))
 	{
 		if (module)

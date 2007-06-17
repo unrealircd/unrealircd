@@ -94,7 +94,6 @@ extern int MODVAR spamf_ugly_vchanoverride;
 #define MSG_KLINE "KLINE"
 #define MSG_ZLINE "ZLINE"
 #define MSG_SPAMFILTER	"SPAMFILTER"
-#define TOK_NONE ""
 #define MSG_TEMPSHUN "TEMPSHUN"
 #define TOK_TEMPSHUN "Tz"
 
@@ -146,10 +145,10 @@ DLLFUNC int MOD_INIT(m_tkl)(ModuleInfo *modinfo)
 	CommandAdd(modinfo->handle, MSG_GLINE, TOK_GLINE, m_gline, 3, M_USER|M_SERVER);
 	CommandAdd(modinfo->handle, MSG_SHUN, TOK_SHUN, m_shun, 3, M_USER|M_SERVER);
 	CommandAdd(modinfo->handle, MSG_TEMPSHUN, TOK_TEMPSHUN, m_tempshun, 2, M_USER|M_SERVER);
-	CommandAdd(modinfo->handle, MSG_ZLINE, TOK_NONE, m_tzline, 3, M_USER|M_SERVER);
-	CommandAdd(modinfo->handle, MSG_KLINE, TOK_NONE, m_tkline, 3, M_USER|M_SERVER);
-	CommandAdd(modinfo->handle, MSG_GZLINE, TOK_NONE, m_gzline, 3, M_USER|M_SERVER);
-	CommandAdd(modinfo->handle, MSG_SPAMFILTER, TOK_NONE, m_spamfilter, 6, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_ZLINE, NULL, m_tzline, 3, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_KLINE, NULL, m_tkline, 3, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_GZLINE, NULL, m_gzline, 3, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SPAMFILTER, NULL, m_spamfilter, 6, M_USER|M_SERVER);
 	CommandAdd(modinfo->handle, MSG_TKL, TOK_TKL, _m_tkl, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
