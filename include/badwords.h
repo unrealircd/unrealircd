@@ -6,7 +6,7 @@
 #include <string.h>
 
 #ifndef _WIN32
-#include "tre/regex.h"
+#include "pcreposix.h"
 #else
 #include "win32/regex.h"
 #endif

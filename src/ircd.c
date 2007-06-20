@@ -1018,7 +1018,7 @@ void GetOSName()
 	struct utsname un;
 	int ret;
 	ret = uname(&un);
-	if (ret)
+	if (ret < 0)
 	{
 		config_warn("Failed to get OSName: %s", strerror(errno));
 		strcpy(OSName, "POSIX");
@@ -1477,7 +1477,7 @@ int InitwIRCD(int argc, char *argv[])
 #ifndef _WIN32
 	fprintf(stderr, "%s", unreallogo);
 	fprintf(stderr, "                           v%s\n", VERSIONONLY);
-	fprintf(stderr, "                     using %s\n", tre_version());
+	fprintf(stderr, "                     using PCRE %s\n", pcre_version());
 #ifdef USE_SSL
 	fprintf(stderr, "                     using %s\n", SSLeay_version(SSLEAY_VERSION));
 #endif

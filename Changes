@@ -1796,3 +1796,8 @@ MOTDs
   of information given by Win32 IRCds. If for some reason uname() can't get this
   info, we just config_warn and set MYOSNAME to "POSIX" as this data is only ever
   used in /version.
+- Fixed a MYOSNAME bug (ret is <0 if failure)
+- Changed regexp engine to PCRE. Heads up: May severely break things. You
+  need to ./Config -q; make clean all to get this working.
+- Laid groundwork for seperated build (onlycommands, commandsandmodules,
+  onlymodules)

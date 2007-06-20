@@ -78,7 +78,7 @@ COMMANDS=m_sethost.o m_chghost.o m_chgident.o m_setname.o m_setident.o \
 	 m_botmotd.o m_lusers.o m_names.o m_svsnolag.o
 
 
-MODULES=commands.so cloak.so $(R_MODULES)
+MODULES=cloak.so commandsandmodules
 MODULEFLAGS=@MODULEFLAGS@
 
 all: build
@@ -88,6 +88,12 @@ build: $(MODULES)
 		ln -s ../include include; \
 	fi
 	cd chanmodes; $(MAKE) all
+
+onlycommands: commands.so
+
+commandsandmodules: commands.so ${R_MODULES}
+
+onlymodules: ${R_MODULES}
 
 custommodule: $(MODULEFILE).c
 	$(CC) $(CFLAGS) $(MODULEFLAGS) $(EXLIBS) -DDYNAMIC_LINKING \

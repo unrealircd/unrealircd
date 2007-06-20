@@ -425,34 +425,34 @@ IRCDLIBS="$IRCDLIBS -lresolv "
 ;;
 esac
 
-dnl REMEMBER TO CHANGE WITH A NEW TRE RELEASE!
-tre_version="0.7.5"
-AC_MSG_RESULT(extracting TRE regex library)
+dnl REMEMBER TO CHANGE WITH A NEW PCRE RELEASE!
+tre_version="7.2"
+AC_MSG_RESULT(extracting PCRE regex library)
 cur_dir=`pwd`
 cd extras
 dnl remove old tre directory to force a recompile...
-rm -rf tre-$tre_version
+rm -rf pcre-$tre_version
 if test "x$ac_cv_path_GUNZIP" = "x" ; then
-	tar xfz tre.tar.gz
+	tar xfz pcre.tar.gz
 else
-	cp tre.tar.gz tre.tar.gz.bak
-	gunzip -f tre.tar.gz
-	cp tre.tar.gz.bak tre.tar.gz
-	tar xf tre.tar
+	cp pcre.tar.gz pcre.tar.gz.bak
+	gunzip -f pcre.tar.gz
+	cp pcre.tar.gz.bak pcre.tar.gz
+	tar xf pcre.tar
 fi
-AC_MSG_RESULT(configuring TRE regex library)
-cd tre-$tre_version
-./configure --disable-agrep --disable-shared --disable-system-abi --disable-wchar --disable-multibyte --prefix=$cur_dir/extras/regexp || exit 1
-AC_MSG_RESULT(compiling TRE regex library)
+AC_MSG_RESULT(configuring PCRE regex library)
+cd pcre-$tre_version
+./configure --disable-shared --disable-system-abi --disable-utf8 --prefix=$cur_dir/extras/regexp || exit 1
+AC_MSG_RESULT(compiling PCRE regex library)
 $ac_cv_prog_MAKER || exit 1
-AC_MSG_RESULT(installing TRE regex library)
+AC_MSG_RESULT(installing PCRE regex library)
 $ac_cv_prog_MAKER install || exit 1
 TREINCDIR="$cur_dir/extras/regexp/include"
 AC_SUBST(TREINCDIR)
 if test "x$ac_cv_path_PKGCONFIG" = "x" ; then
-	TRELIBS="-L../extras/regexp/lib -ltre"
+	TRELIBS="-L../extras/regexp/lib -lpcreposix -lpcre"
 else
-	TRELIBS=`$ac_cv_path_PKGCONFIG --libs tre.pc`
+	TRELIBS="`$ac_cv_path_PKGCONFIG --libs libpcre.pc` -lpcreposix -lpcre" 
 fi
 AC_SUBST(TRELIBS)
 cd $cur_dir
