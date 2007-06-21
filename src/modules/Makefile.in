@@ -78,7 +78,7 @@ COMMANDS=m_sethost.o m_chghost.o m_chgident.o m_setname.o m_setident.o \
 	 m_botmotd.o m_lusers.o m_names.o m_svsnolag.o
 
 
-MODULES=cloak.so commandsandmodules
+MODULES=cloak.so @MODULES_WHICH@
 MODULEFLAGS=@MODULEFLAGS@
 
 all: build

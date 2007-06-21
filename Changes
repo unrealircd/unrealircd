@@ -1802,3 +1802,8 @@ MOTDs
 - Laid groundwork for seperated build (onlycommands, commandsandmodules,
   onlymodules)
 - #0003399 changing numeric 307 to "has identified for this nickname"
+- Added configure --with-moduleswhich=PARA where PARA can be:
+  onlycommands = only build commands.so (plus chanmodes)
+  onlymodules = only build m_* modules (plus chanmodes)
+  commandsandmodules = build both. We still need to add this as a default or
+  a ./Config option. Default is commandsandmodules. Any takers?

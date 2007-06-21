@@ -309,7 +309,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CXX CXXFLAGS ac_ct_CXX RM CP TOUCH OPENSSLPATH INSTALL MAKER GMAKE GUNZIP PKGCONFIG IRCDLIBS MKPASSWDLIBS CPP EGREP ALLOCA STRTOUL CRYPTOLIB MODULEFLAGS HAVE_ZLIB URL IRCDDIR BINDIR FD_SETSIZE TREINCDIR TRELIBS CARESINCDIR CARESLIBDIR CARESLIBS LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CXX CXXFLAGS ac_ct_CXX RM CP TOUCH OPENSSLPATH INSTALL MAKER GMAKE GUNZIP PKGCONFIG IRCDLIBS MKPASSWDLIBS CPP EGREP ALLOCA STRTOUL CRYPTOLIB MODULEFLAGS MODULES_WHICH HAVE_ZLIB URL IRCDDIR BINDIR FD_SETSIZE TREINCDIR TRELIBS CARESINCDIR CARESLIBDIR CARESLIBS LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -884,6 +884,7 @@ Optional Packages:
                           Require opers to invite themselves to +s/+p channels
   --with-disable-extendedban-stacking
                           Disable extended ban stacking
+  --with-moduleswhich=onlycommands|onlymodules|onlycommands      What modules to build
 
 Some influential environment variables:
   CC          C compiler command
@@ -12390,6 +12391,24 @@ if test "${with_disable_extendedban_stacking+set}" = set; then
 _ACEOF
 
 fi;
+MODULES_WHICH=commandsandmodules
+echo "$as_me:$LINENO: checking for how much module building work we need to do" >&5
+echo $ECHO_N "checking for how much module building work we need to do... $ECHO_C" >&6
+
+# Check whether --with-moduleswhich or --without-moduleswhich was given.
+if test "${with_moduleswhich+set}" = set; then
+  withval="$with_moduleswhich"
+   case "$withval" in
+  yes|no)
+  ;;
+  * )
+    MODULES_WHICH="$withval"
+    ;;
+  esac
+fi;
+
+echo "$as_me:$LINENO: result: $MODULES_WHICH" >&5
+echo "${ECHO_T}$MODULES_WHICH" >&6
 
 # Check whether --enable-ssl or --disable-ssl was given.
 if test "${enable_ssl+set}" = set; then
@@ -13728,6 +13747,7 @@ s,@ALLOCA@,$ALLOCA,;t t
 s,@STRTOUL@,$STRTOUL,;t t
 s,@CRYPTOLIB@,$CRYPTOLIB,;t t
 s,@MODULEFLAGS@,$MODULEFLAGS,;t t
+s,@MODULES_WHICH@,$MODULES_WHICH,;t t
 s,@HAVE_ZLIB@,$HAVE_ZLIB,;t t
 s,@URL@,$URL,;t t
 s,@IRCDDIR@,$IRCDDIR,;t t
