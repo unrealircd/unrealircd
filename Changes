@@ -1801,3 +1801,4 @@ MOTDs
   need to ./Config -q; make clean all to get this working.
 - Laid groundwork for seperated build (onlycommands, commandsandmodules,
   onlymodules)
+- #0003399 changing numeric 307 to "has identified for this nickname"

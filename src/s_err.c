@@ -340,7 +340,7 @@ static char *replies[] = {
 /* 304 */ NULL, /* RPL_TEXT */
 /* 305    RPL_UNAWAY */ ":%s 305 %s :You are no longer marked as being away",
 /* 306    RPL_NOWAWAY */ ":%s 306 %s :You have been marked as being away",
-/* 307    RPL_WHOISREGNICK */ ":%s 307 %s %s :is a registered nick",
+/* 307    RPL_WHOISREGNICK */ ":%s 307 %s %s :has identified for this nickname",
 /* 308    RPL_RULESSTART */ ":%s 308 %s :- %s Server Rules - ",
 /* 309    RPL_ENDOFRULES */ ":%s 309 %s :End of RULES command.",
 /* 310    RPL_WHOISHELPOP */ ":%s 310 %s %s :is available for help.",
