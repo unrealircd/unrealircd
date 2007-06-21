@@ -1406,6 +1406,7 @@ ConfigItem_log *ca = MyMallocEx(sizeof(ConfigItem_log));
 	config_status("No log { } block found -- using default: errors will be logged to 'ircd.log'");
 
 	ca->file = strdup("ircd.log");
+	ca->logfd = -1;
 	ca->flags |= LOG_ERROR;
 	AddListItem(ca, conf_log);
 }
@@ -1917,6 +1918,8 @@ void	config_rehash()
 	}
 	for (log_ptr = conf_log; log_ptr; log_ptr = (ConfigItem_log *)next) {
 		next = (ListStruct *)log_ptr->next;
+		if (log_ptr->logfd != -1)
+			close(log_ptr->logfd);
 		ircfree(log_ptr->file);
 		DelListItem(log_ptr, conf_log);
 		MyFree(log_ptr);
@@ -5632,7 +5635,7 @@ int     _conf_log(ConfigFile *conf, ConfigEntry *ce)
 
 	ca = MyMallocEx(sizeof(ConfigItem_log));
 	ircstrdup(ca->file, ce->ce_vardata);
-
+	ca->logfd = -1;
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "maxsize")) 

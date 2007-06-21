@@ -285,7 +285,6 @@ void ircd_log(int flags, char *format, ...)
 	va_list ap;
 	ConfigItem_log *logs;
 	char buf[2048], timebuf[128];
-	int fd;
 	struct stat fstats;
 
 	va_start(ap, format);
@@ -308,27 +307,34 @@ void ircd_log(int flags, char *format, ...)
 #endif
 		if (logs->flags & flags) {
 			if (stat(logs->file, &fstats) != -1 && logs->maxsize && fstats.st_size >= logs->maxsize) {
+				if (logs->logfd != -1)
+					close(logs->logfd);
 #ifndef _WIN32
-				fd = open(logs->file, O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR);
+				logs->logfd = open(logs->file, O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR);
 #else
-				fd = open(logs->file, O_CREAT|O_WRONLY|O_TRUNC, S_IREAD|S_IWRITE);
+				logs->logfd = open(logs->file, O_CREAT|O_WRONLY|O_TRUNC, S_IREAD|S_IWRITE);
 #endif
-				if (fd == -1)
+				if (logs->logfd == -1)
 					continue;
-				write(fd, "Max file size reached, starting new log file\n", 45);
+				write(logs->logfd, "Max file size reached, starting new log file\n", 45);
 			}
 			else {
+				if (logs->logfd == -1)
+				{
 #ifndef _WIN32
-			fd = open(logs->file, O_CREAT|O_APPEND|O_WRONLY, S_IRUSR|S_IWUSR);
+					logs->logfd = open(logs->file, O_CREAT|O_APPEND|O_WRONLY, S_IRUSR|S_IWUSR);
 #else
-			fd = open(logs->file, O_CREAT|O_APPEND|O_WRONLY, S_IREAD|S_IWRITE);
+					logs->logfd = open(logs->file, O_CREAT|O_APPEND|O_WRONLY, S_IREAD|S_IWRITE);
 #endif
-			if (fd == -1)
-				continue;
-			}	
-			write(fd, timebuf, strlen(timebuf));
-			write(fd, buf, strlen(buf));
-			close(fd);
+				}
+				if (logs->logfd == -1)
+					continue;
+				}	
+				write(logs->logfd, timebuf, strlen(timebuf));
+				write(logs->logfd, buf, strlen(buf));
+#ifndef _WIN32
+				fsync(logs->logfd);
+#endif
 		}
 	}
 	va_end(ap);

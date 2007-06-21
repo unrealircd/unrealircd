@@ -1807,3 +1807,5 @@ MOTDs
   onlymodules = only build m_* modules (plus chanmodes)
   commandsandmodules = build both. We still need to add this as a default or
   a ./Config option. Default is commandsandmodules. Any takers?
+- Changed logging into not open/close constantly, #0002943. This may leaks
+  fds and cause problems, so its a heads up
