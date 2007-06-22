@@ -34,7 +34,7 @@ elif [ "$1" = "stop" ] ; then
 		exit 1
 	fi
 	PID=`cat $PID_FILE`
-	if [ "`ps -p $PID | wc -l`" == "0" ]; then
+	if [ "`ps -p $PID | wc -l`" = "1" ]; then
 		echo "UnrealIRCd is not running"
 		rm -f $PID_FILE # Kill stale PID.
 		exit 1
@@ -54,7 +54,7 @@ elif [ "$1" = "rehash" ] ; then
 		exit 1
 	fi
 	PID=`cat $PID_FILE`
-	if [ "`ps -p $PID | wc -l`" == "0" ]; then
+	if [ "`ps -p $PID | wc -l`" = "1" ]; then
 		echo "UnrealIRCd is not running"
 		rm -f $PID_FILE # Kill stale PID.
 		exit 1
@@ -74,7 +74,7 @@ elif [ "$1" = "restart" ] ; then
 		exit 1
 	fi
 	PID=`cat $PID_FILE`
-	if [ "`ps -p $PID | wc -l`" == "0" ]; then
+	if [ "`ps -p $PID | wc -l`" = "1" ]; then
 		echo "UnrealIRCd is not running - Starting."
 		rm -f $PID_FILE # Kill stale PID.
 		exec $0 start

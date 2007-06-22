@@ -1809,3 +1809,5 @@ MOTDs
   a ./Config option. Default is commandsandmodules. Any takers?
 - Changed logging into not open/close constantly, #0002943. This may leaks
   fds and cause problems, so its a heads up
+- Some minor changes to unreal.in, to fix unreal stop, start, and 
+  restart a bit.
