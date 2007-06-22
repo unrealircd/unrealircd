@@ -137,7 +137,7 @@ MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 
 INSTALL_CONFS = badwords.channel.conf badwords.message.conf \
 		badwords.quit.conf dccallow.conf help.conf \
-		spamfilter.conf LICENSE Donation
+		spamfilters.conf.sample LICENSE Donation
 
 INSTALL_DOCS  = doc/Authors doc/example.conf doc/coding-guidelines \
 		doc/tao.of.irc doc/unreal32docs.html
@@ -215,23 +215,23 @@ depend:
 install: all
 	$(INSTALL) -m 0700 -d $(IRCDDIR)
 	$(INSTALL) -m 0700 -d $(BINDIR)
-	$(INSTALL) -m 0700 src/ircd $(BINDIR)
+	$(INSTALL) -b -m 0700 src/ircd $(BINDIR)
 	$(INSTALL) -m 0700 -d $(IRCDDIR)/doc
 	$(INSTALL) -m 0600 $(INSTALL_DOCS) $(IRCDDIR)/doc
 	$(INSTALL) -m 0700 -d $(IRCDDIR)/aliases
 	$(INSTALL) -m 0600 aliases/*.conf $(IRCDDIR)/aliases
 	$(TOUCH) $(IRCDDIR)/unrealircd.conf
 	chmod 0600 $(IRCDDIR)/unrealircd.conf
-	$(INSTALL) -m 0600 $(INSTALL_CONFS) $(IRCDDIR)
-	$(INSTALL) -m 0700 unreal $(IRCDDIR)
+	$(INSTALL) -b -m 0600 $(INSTALL_CONFS) $(IRCDDIR)
+	$(INSTALL) -b -m 0700 unreal $(IRCDDIR)
 	$(INSTALL) -m 0700 -d $(IRCDDIR)/modules
-	$(INSTALL) -m 0700 src/modules/*.so $(IRCDDIR)/modules
+	$(INSTALL) -b -m 0700 src/modules/*.so $(IRCDDIR)/modules
 	-@if [ ! -f "$(IRCDDIR)/curl-ca-bundle.crt" ] ; then \
-		$(INSTALL) -m 0700 curl-ca-bundle.crt $(IRCDDIR) ; \
+		$(INSTALL) -b -m 0700 curl-ca-bundle.crt $(IRCDDIR) ; \
 	fi
 	-@if [ -f server.key.pem ] ; then \
 		if [ ! -f "$(IRCDDIR)/server.key.pem" ] ; then \
-		$(INSTALL) -m 0600 server.*.pem $(IRCDDIR) ; \
+		$(INSTALL) -b -m 0600 server.*.pem $(IRCDDIR) ; \
 		fi ; \
 	fi
 

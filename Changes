@@ -1815,3 +1815,5 @@ MOTDs
   on "make install" 
 - Renamed spamfilter.conf to spamfilters.conf.sample, to have one less
   problem with overwriting during install
+- Added -b flag to install in make install, so src/ircd, INSTALL_CONFS,
+  src/modules/*.so and *.pem is backed up to name~ if already exists
