@@ -59,6 +59,8 @@ class Velcro
 	std::map<std::string, void *> modules;	
 	bool isModuleLoaded(const char *module);
 	bool isModuleLoading(const char *module);	
+
+	
 };
 
 implementation:

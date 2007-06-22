@@ -1817,3 +1817,7 @@ MOTDs
   problem with overwriting during install
 - Added -b flag to install in make install, so src/ircd, INSTALL_CONFS,
   src/modules/*.so and *.pem is backed up to name~ if already exists
+- Added Command *CommandAdd_Alias(Module *module, char *cmd, char *tok, int
+  (*func)(aClient*, aClient*, int, char**, char *sentcmd), unsigned char
+  params, int flags), which will add a command that gets the command that
+  the user sent along in "sentcmd". 

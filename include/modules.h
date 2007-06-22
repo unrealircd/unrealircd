@@ -604,6 +604,7 @@ extern Efunction	*EfunctionAddMain(Module *module, int eftype, int (*intfunc)(),
 extern Efunction	*EfunctionDel(Efunction *cb);
 
 Command *CommandAdd(Module *module, char *cmd, char *tok, int (*func)(aClient*, aClient*, int, char**), unsigned char params, int flags);
+Command *CommandAdd_Alias(Module *module, char *cmd, char *tok, int (*func)(aClient*, aClient*, int, char**, char *sentcmd), unsigned char params, int flags);
 void CommandDel(Command *command);
 int CommandExists(char *name);
 Cmdoverride *CmdoverrideAdd(Module *module, char *cmd, iFP function);

@@ -43,6 +43,11 @@ int CommandExists(char *name)
 	return 0;
 }
 
+Command *CommandAdd_Alias(Module *module, char *cmd, char *tok, int (*func)(aClient *cptr, aClient *sptr, int parc, char *parv[], char *sentcmd), unsigned char params, int flags) {
+	return CommandAdd(module, cmd, tok, (iFP) func, params, flags|M_ALIAS);
+}
+
+
 Command *CommandAdd(Module *module, char *cmd, char *tok, int (*func)(), unsigned char params, int flags) {
 	Command *command;
 
