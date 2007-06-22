@@ -44,6 +44,7 @@ fi
 if [ "$DISABLEEXTBANSTACKING" = "1" ]; then
 	ARG="$ARG--with-disable-extendedban-stacking ";
 fi
+ARG="$ARG--with-moduleswhich=$MODULESWHICH "
 fi
 if [ "$NOSPOOF" = "1" ] ; then
 ARG="$ARG--enable-nospoof "
@@ -306,6 +307,38 @@ while [ -z "$TEST" ] ; do
     esac
 done
 
+TEST=""
+while [ -z "$TEST" ]; do
+    if [ "$MODULESWHICH" = "onlycommands" ]; then
+        TEST="commands"
+    elif [ "$MODULESWHICH" = "onlymodules" ]; then
+        TEST="modules"
+    else
+        TEST="both"
+    fi
+    echo ""
+    echo "Do you wish to compile commands.so, the m_*.so modules, or both?"
+    echo $n "[$TEST] -> $c"
+        read cc
+    if [ -z "$cc" ]; then
+        cc=$TEST
+    fi
+    case "$cc" in
+        commands|commands.so|onlycommands|commandsonly)
+            MODULESWHICH="onlycommands"
+            ;;
+        modules|m_\*.so|onlymodules|modulesonly)
+            MODULESWHICH="onlymodules"
+            ;;
+        both|commandsandmodules|modulesandcommands)
+            MODULESWHICH="commandsandmodules"
+            ;;
+        *)
+            echo ""
+            echo "Unrecognized response"
+            TEST=""
+    esac
+done
 }
 c=""
 n=""
@@ -335,6 +368,7 @@ NOOPEROVERRIDE=""
 DISABLEUSERMOD=""
 OPEROVERRIDEVERIFY=""
 DISABLEEXTBANSTACKING=""
+MODULESWHICH=""
 EXTRAPARA=""
 if [ "`eval echo -n 'a'`" = "-n a" ] ; then
         c="\c"
@@ -872,6 +906,7 @@ NOOPEROVERRIDE="$NOOPEROVERRIDE"
 DISABLEUSERMOD="$DISABLEUSERMOD"
 OPEROVERRIDEVERIFY="$OPEROVERRIDEVERIFY"
 DISABLEEXTBANSTACKING="$DISABLEEXTBANSTACKING"
+MODULESWHICH="$MODULESWHICH"
 EXTRAPARA="$EXTRAPARA"
 ADVANCED="$ADVANCED"
 __EOF__
