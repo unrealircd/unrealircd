@@ -1821,3 +1821,4 @@ MOTDs
   (*func)(aClient*, aClient*, int, char**, char *sentcmd), unsigned char
   params, int flags), which will add a command that gets the command that
   the user sent along in "sentcmd". 
+- Fixed typo in new module build switch

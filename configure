@@ -884,7 +884,7 @@ Optional Packages:
                           Require opers to invite themselves to +s/+p channels
   --with-disable-extendedban-stacking
                           Disable extended ban stacking
-  --with-moduleswhich=onlycommands|onlymodules|onlycommands      What modules to build
+  --with-moduleswhich=onlycommands|onlymodules|commandsandmodules      What modules to build
 
 Some influential environment variables:
   CC          C compiler command

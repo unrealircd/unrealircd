@@ -396,7 +396,7 @@ AC_ARG_WITH(disable-extendedban-stacking, [AC_HELP_STRING([--with-disable-extend
 MODULES_WHICH=commandsandmodules
 AC_MSG_CHECKING(for how much module building work we need to do)
 AC_ARG_WITH(moduleswhich,
-[  --with-moduleswhich=onlycommands|onlymodules|onlycommands      What modules to build],
+[  --with-moduleswhich=onlycommands|onlymodules|commandsandmodules      What modules to build],
 [ case "$withval" in
   yes|no)
   ;;
