@@ -1813,3 +1813,5 @@ MOTDs
   restart a bit.
 - #0003396 reported and patched by Bock regarding not copying server.*.pem
   on "make install" 
+- Renamed spamfilter.conf to spamfilters.conf.sample, to have one less
+  problem with overwriting during install
