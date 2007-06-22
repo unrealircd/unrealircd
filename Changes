@@ -1811,3 +1811,5 @@ MOTDs
   fds and cause problems, so its a heads up
 - Some minor changes to unreal.in, to fix unreal stop, start, and 
   restart a bit.
+- #0003396 reported and patched by Bock regarding not copying server.*.pem
+  on "make install" 
