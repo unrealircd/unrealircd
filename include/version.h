@@ -51,8 +51,8 @@
 #define UnrealProtocol 		2309
 #define PATCH1  		"3"
 #define PATCH2  		".2"
-#define PATCH3  		".6"
-#define PATCH4  		""
+#define PATCH3  		".7"
+#define PATCH4  		"-RC1"
 #define PATCH5  		""
 #define PATCH6  		""
 #define PATCH7  		""
