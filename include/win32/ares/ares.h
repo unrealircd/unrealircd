@@ -20,7 +20,6 @@
 
 #include <sys/types.h>
 
-
 #if defined(_AIX) || defined(NETWARE)
 /* HP-UX systems version 9, 10 and 11 lack sys/select.h and so does oldish
    libc5-based Linux systems. Only include it on system that are known to
@@ -70,6 +69,10 @@ extern "C" {
 /* ares_getnameinfo error codes */
 #define ARES_EBADFLAGS          18
 
+/* ares_getaddrinfo error codes */
+#define ARES_ENONAME            19
+#define ARES_EBADHINTS          20
+
 /* Flag values */
 #define ARES_FLAG_USEVC         (1 << 0)
 #define ARES_FLAG_PRIMARY       (1 << 1)
@@ -90,6 +93,8 @@ extern "C" {
 #define ARES_OPT_SERVERS        (1 << 6)
 #define ARES_OPT_DOMAINS        (1 << 7)
 #define ARES_OPT_LOOKUPS        (1 << 8)
+#define ARES_OPT_SOCK_STATE_CB  (1 << 9)
+#define ARES_OPT_SORTLIST       (1 << 10)
 
 /* Nameinfo flag values */
 #define ARES_NI_NOFQDN                  (1 << 0)
@@ -106,8 +111,61 @@ extern "C" {
 #define ARES_NI_LOOKUPSERVICE           (1 << 9)
 /* Reserved for future use */
 #define ARES_NI_IDN                     (1 << 10)
-#define ARES_NI_ALLOW_UNASSIGNED        (1 << 11)
-#define ARES_NI_USE_STD3_ASCII_RULES    (1 << 12)
+#define ARES_NI_IDN_ALLOW_UNASSIGNED    (1 << 11)
+#define ARES_NI_IDN_USE_STD3_ASCII_RULES (1 << 12)
+
+/* Addrinfo flag values */
+#define ARES_AI_CANONNAME               (1 << 0)
+#define ARES_AI_NUMERICHOST             (1 << 1)
+#define ARES_AI_PASSIVE                 (1 << 2)
+#define ARES_AI_NUMERICSERV             (1 << 3)
+#define ARES_AI_V4MAPPED                (1 << 4)
+#define ARES_AI_ALL                     (1 << 5)
+#define ARES_AI_ADDRCONFIG              (1 << 6)
+/* Reserved for future use */
+#define ARES_AI_IDN                     (1 << 10)
+#define ARES_AI_IDN_ALLOW_UNASSIGNED    (1 << 11)
+#define ARES_AI_IDN_USE_STD3_ASCII_RULES (1 << 12)
+#define ARES_AI_CANONIDN                (1 << 13)
+
+#define ARES_AI_MASK (ARES_AI_CANONNAME|ARES_AI_NUMERICHOST|ARES_AI_PASSIVE| \
+                      ARES_AI_NUMERICSERV|ARES_AI_V4MAPPED|ARES_AI_ALL| \
+                      ARES_AI_ADDRCONFIG)
+#define ARES_GETSOCK_MAXNUM 16 /* ares_getsock() can return info about this
+                                  many sockets */
+#define ARES_GETSOCK_READABLE(bits,num) (bits & (1<< (num)))
+#define ARES_GETSOCK_WRITABLE(bits,num) (bits & (1 << ((num) + \
+                                         ARES_GETSOCK_MAXNUM)))
+
+
+/*
+ * Typedef our socket type
+ */
+
+#ifndef ares_socket_typedef
+#ifdef WIN32
+typedef SOCKET ares_socket_t;
+#define ARES_SOCKET_BAD INVALID_SOCKET
+#else
+typedef int ares_socket_t;
+#define ARES_SOCKET_BAD -1
+#endif
+#define ares_socket_typedef
+#endif /* ares_socket_typedef */
+
+#ifdef WIN32
+typedef void (*ares_sock_state_cb)(void *data,
+                                   SOCKET socket,
+                                   int readable,
+                                   int writable);
+#else
+typedef void (*ares_sock_state_cb)(void *data,
+                                   int socket,
+                                   int readable,
+                                   int writable);
+#endif
+
+struct apattern;
 
 struct ares_options {
   int flags;
@@ -121,9 +179,12 @@ struct ares_options {
   char **domains;
   int ndomains;
   char *lookups;
+  ares_sock_state_cb sock_state_cb;
+  void *sock_state_cb_data;
+  struct apattern *sortlist;
+  int nsort;
 };
 
-/** Public available config (readonly) interface for ares_get_config(). */
 struct ares_config_info {
 	int timeout;
 	int tries;
@@ -146,6 +207,8 @@ typedef void (*ares_nameinfo_callback)(void *arg, int status,
 int ares_init(ares_channel *channelptr);
 int ares_init_options(ares_channel *channelptr, struct ares_options *options,
                       int optmask);
+int ares_save_options(ares_channel channel, struct ares_options *options, int *optmask);
+void ares_destroy_options(struct ares_options *options);
 void ares_destroy(ares_channel channel);
 void ares_cancel(ares_channel channel);
 void ares_send(ares_channel channel, const unsigned char *qbuf, int qlen,
@@ -159,12 +222,16 @@ void ares_gethostbyname(ares_channel channel, const char *name, int family,
 void ares_gethostbyaddr(ares_channel channel, const void *addr, int addrlen,
                         int family, ares_host_callback callback, void *arg);
 void ares_getnameinfo(ares_channel channel, const struct sockaddr *sa,
-                      socklen_t salen, int flags, ares_nameinfo_callback callback,
+                      socklen_t salen, int flags,
+                      ares_nameinfo_callback callback,
                       void *arg);
 int ares_fds(ares_channel channel, fd_set *read_fds, fd_set *write_fds);
+int ares_getsock(ares_channel channel, int *socks, int numsocks);
 struct timeval *ares_timeout(ares_channel channel, struct timeval *maxtv,
                              struct timeval *tv);
 void ares_process(ares_channel channel, fd_set *read_fds, fd_set *write_fds);
+void ares_process_fd(ares_channel channel, ares_socket_t read_fd,
+                     ares_socket_t write_fd);
 
 int ares_mkquery(const char *name, int dnsclass, int type, unsigned short id,
                  int rd, unsigned char **buf, int *buflen);
@@ -178,6 +245,8 @@ int ares_parse_aaaa_reply(const unsigned char *abuf, int alen,
                        struct hostent **host);
 int ares_parse_ptr_reply(const unsigned char *abuf, int alen, const void *addr,
                          int addrlen, int family, struct hostent **host);
+int ares_parse_ns_reply(const unsigned char *abuf, int alen,
+                       struct hostent **host);
 void ares_free_string(void *str);
 void ares_free_hostent(struct hostent *host);
 const char *ares_strerror(int code);

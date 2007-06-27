@@ -1517,3 +1517,4 @@
 - #0003405 repoted by Stealth regarding wildcards and autoconnect being an 
   ||
 - Fixed irc_uid|gid being defined on win32
+- Win32 library updates from Bock
