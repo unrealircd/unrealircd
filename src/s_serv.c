@@ -66,6 +66,12 @@ struct tm smotd_tm;
 aMotd *read_file(char *filename, aMotd **list);
 aMotd *read_file_ex(char *filename, aMotd **list, struct tm *);
 extern aMotd *Find_file(char *, short);
+
+#ifdef USE_SSL
+extern void reinit_ssl(aClient *);
+#endif
+
+
 /*
 ** m_functions execute protocol messages on this server:
 **      CMD_FUNC(functionname) causes it to use the header
@@ -675,7 +681,6 @@ CMD_FUNC(m_rehash)
 			if (!_match("-ssl*", parv[1]))
 			{
 #ifdef USE_SSL
-				extern void reinit_ssl(aClient *);
 				reinit_ssl(sptr);
 #else
 				sendnotice(sptr, "SSL is not enabled on this server");
