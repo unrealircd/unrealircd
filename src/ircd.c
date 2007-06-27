@@ -97,8 +97,10 @@ extern MODVAR aMotd *rules;
 extern MODVAR aMotd *botmotd;
 extern MODVAR aMotd *smotd;
 MODVAR MemoryInfo StatsZ;
+#ifndef _WIN32
 uid_t irc_uid = 0;
 gid_t irc_gid = 0; 
+#endif
 
 int  R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns, R_do_id, R_fin_id, R_fail_id;
 

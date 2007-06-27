@@ -1513,4 +1513,7 @@
   a new fight with debian-legal again?)
 - #0003244 reported by CuLpA about grammar errors in webtv outputs
 - Entering 3.2.7 RC1 phase
-- Applied patch to fix some win32 problems reported by Bock, fixed by fez
+- Applied patch to fix some win32 problems reported by Bock, fixed by fez 
+- #0003405 repoted by Stealth regarding wildcards and autoconnect being an 
+  ||
+- Fixed irc_uid|gid being defined on win32
