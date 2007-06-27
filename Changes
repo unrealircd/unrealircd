@@ -1823,3 +1823,4 @@ MOTDs
   the user sent along in "sentcmd". 
 - Fixed typo in new module build switch
 - Added a Config -advanced prompt for --with-moduleswhich=
+- Small fix in s_conf.c and Velcro

@@ -5948,7 +5948,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 			}
 #endif
-			if (strchr(cep->ce_vardata, '*') != NULL || strchr(cep->ce_vardata, '?'))
+			if (strchr(cep->ce_vardata, '*') != NULL || strchr(cep->ce_vardata, '?') != NULL)
 			{
 				has_hostname_wildcards = 1;
 			}

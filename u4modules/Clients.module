@@ -1,0 +1,97 @@
+
+@version $Id$
+@copyright (C) 2007 Carsten Valdemar Munk
+
+class ILocalClient;
+class IServer;
+
+class IClient
+{
+	public:
+	virtual char *getName() = 0;
+	virtual void *getInternal() = 0;
+	virtual IServer& getIServer() = 0;
+	virtual ILocalClient *getILocalClient() = 0;
+	virtual ~IClient() {}
+};
+
+class ILocalClient : public IClient
+{
+	public:
+	virtual ILocalClient *getILocalClient();
+	virtual ~ILocalClient() {}
+};
+
+
+
+implementation:
+
+// Glue for Unreal3
+extern "C"
+{
+#include "config.h"
+#include "struct.h"
+#include "common.h"
+#include "sys.h"
+#include "numeric.h"
+#include "msg.h"
+#include "proto.h"
+#include "channel.h"
+#include <time.h>
+#include <sys/stat.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#ifdef _WIN32
+#include <io.h>
+#endif
+#include <fcntl.h>
+#include "h.h"
+#ifdef STRIPBADWORDS
+#include "badwords.h"
+#endif
+#ifdef _WIN32
+#include "version.h"
+#endif
+}
+
+class U3Client : public ILocalClient
+{
+	public:
+	U3Client(aClient *instance)
+	{
+		acptr = instance;
+	}
+	
+	virtual void *getInternal()
+	{
+		return (void *) acptr;
+	}
+	
+	virtual char *getName()
+	{
+		return acptr->name;
+	}
+	
+	virtual ILocalClient *getILocalClient()
+	{
+		if (acptr->from == &me)
+			return this;
+		else return NULL;
+	}
+	
+	virtual IServer *getServer()
+	{
+		return NULL;
+	}
+	
+	private:
+	aClient *acptr;
+};
+
+
+ILocalClient* ILocalClient::getILocalClient()
+{
+	return this;
+}
+

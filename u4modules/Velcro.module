@@ -210,55 +210,28 @@ bool Velcro::dependsOnModule(const char *who, const char *module)
 	}
 	modulesLoading.push_back(ms);
 	config_status("Loading module %s as a dependancy of %s", module, who);
-	snprintf(buf, 1024, "u4modules/%s.so", module);
-	void *dl = dlopen(buf, RTLD_LAZY|RTLD_LOCAL);
-	if (dl == NULL)
+	snprintf(buf, 1024, "u4modules/%s.depends", module);
+	void *dl;
+	FILE *f = fopen(buf, "r");
+	if (f == NULL)
 	{
-		config_status("Velcro: Error loading dependancy %s for %s: %s, possible error/RTLD_LAZY broken, trying old fashioned dependancy loading and trying again afterwards",
-			module, who, dlerror());
-		snprintf(buf, 1024, "u4modules/%s.depends", module);
-		FILE *f = fopen(buf, "r");
-		if (f == NULL)
-		{
-			config_error("Velcro: Error opening depends file for %s: %s",
-				module, strerror(errno));
-			return false;
-		}
-		char *ss;
-		while ((ss = fgets(buf, 1023, f)) != NULL)
-		{
-			char *p = strchr(ss, '\r');
-			if (p != NULL)
-				*p = 0;
-			p = strchr(ss, '\n');
-			if (p != NULL)
-				*p = 0;
-			if (*ss == 0)
-				continue;
-			if (!dependsOnModule(module, ss))
-				return false;
-		}
+		config_error("Velcro: Error opening depends file for %s: %s",
+			module, strerror(errno));
+		return false;
 	}
-	else
+	char *ss;
+	while ((ss = fgets(buf, 1023, f)) != NULL)
 	{
-		snprintf(buf, 1024, "%s_checkDepends", module);
-
-		VoidIntPointerParaFunctionPointer *depend = (VoidIntPointerParaFunctionPointer *) dlsym(dl, buf);
-		if (depend == NULL)
-		{
-			config_error("Velcro: Error loading dependancy %s for %s: Unable to find %s_checkDepends",
-				module, who, module);
+		char *p = strchr(ss, '\r');
+		if (p != NULL)
+			*p = 0;
+		p = strchr(ss, '\n');
+		if (p != NULL)
+			*p = 0;
+		if (*ss == 0)
+			continue;
+		if (!dependsOnModule(module, ss))
 			return false;
-		}
-		// kludge.. no idea why it doesn't work with int *
-		int ret = 0;
-		(*depend)(&ret);
-		if (ret == -1)
-		{
-			dlclose(dl);
-			return false;
-		}
-		dlclose(dl);
 	}
 	/* now done loading dependancies, reopen with RTLD_GLOBAL|RTLD_NOW .. */
 	snprintf(buf, 1024, "u4modules/%s.so", module);
