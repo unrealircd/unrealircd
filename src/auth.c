@@ -94,6 +94,12 @@ int		Auth_CheckError(ConfigEntry *ce)
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return -1;
 	}
+	if (ce->ce_entries && ce->ce_entries->ce_next)
+	{
+		config_error("%s:%i: you may not have multiple authentication methods",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}
 	if (ce->ce_entries)
 	{
 		if (ce->ce_entries->ce_varname)
