@@ -1525,3 +1525,4 @@
 - Applied #0003144 patch by Bock, fixing win32 install and such
 - Applied #0003392 patch by Bock, adding some stuff to help.conf
 - Entering 3.2.7 RC2 phase
+- Fix, fix #0003421 patch
