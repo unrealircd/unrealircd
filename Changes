@@ -1519,3 +1519,4 @@
 - Fixed irc_uid|gid being defined on win32
 - Win32 library updates from Bock
 - #0003429 reported by Bock about appearing to accept multiple auth blocks.
+- Fixed fixed #003244 fix.

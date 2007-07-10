@@ -351,7 +351,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			{
 				buf[0] = '\0';
 				if (IsNetAdmin(acptr))
-					strcat(buf, "a Network Administrator");
+					strcat(buf, "an Network Administrator");
 				else if (IsSAdmin(acptr))
 					strcat(buf, "a Services Administrator");
 				else if (IsAdmin(acptr) && !IsCoAdmin(acptr))
@@ -359,7 +359,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				else if (IsCoAdmin(acptr))
 					strcat(buf, "a Co Administrator");
 				else if (IsServices(acptr))
-					strcat(buf, "a Network Service");
+					strcat(buf, "an Network Service");
 				else if (IsOper(acptr))
 					strcat(buf, "an IRC Operator");
 
@@ -367,7 +367,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					strcat(buf, "a Local IRC Operator");
 				if (buf[0])
 					sendto_one(sptr,
-						":IRC PRIVMSG %s :%s is a %s on %s",
+						":IRC PRIVMSG %s :%s is %s on %s",
 						sptr->name, name, buf, ircnetwork);
 			}
 
