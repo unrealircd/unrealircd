@@ -1523,3 +1523,4 @@
 - Applied #0003422 help.conf patches by Bock
 - Applied #0002999 patch by Bock, fixing a fd leak.
 - Applied #0003144 patch by Bock, fixing win32 install and such
+- Applied #0003392 patch by Bock, adding some stuff to help.conf
