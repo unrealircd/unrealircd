@@ -349,7 +349,7 @@ void url_do_transfers_async(void)
 #endif
 			if (msg->data.result == CURLE_OK)
 			{
-				if (code == 304 || (last_mod != -1 && last_mod < handle->cachetime))
+				if (code == 304 || (last_mod != -1 && last_mod <= handle->cachetime))
 				{
 					handle->callback(url, NULL, NULL, 1);
 					remove(handle->filename);

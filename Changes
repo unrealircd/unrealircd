@@ -1521,3 +1521,4 @@
 - #0003429 reported by Bock about appearing to accept multiple auth blocks.
 - Fixed fixed #003244 fix.
 - Applied #0003422 help.conf patches by Bock
+- Applied #0002999 patch by Bock, fixing a fd leak.
