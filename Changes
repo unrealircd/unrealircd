@@ -1526,3 +1526,4 @@
 - Applied #0003392 patch by Bock, adding some stuff to help.conf
 - Entering 3.2.7 RC2 phase
 - Fix, fix #0003421 patch
+- Fixed wolfsage eff-up in c-ares.tar.gz, not running make distclean
