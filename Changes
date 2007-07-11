@@ -1527,3 +1527,5 @@
 - Entering 3.2.7 RC2 phase
 - Fix, fix #0003421 patch
 - Fixed wolfsage eff-up in c-ares.tar.gz, not running make distclean
+- Updated /info
+- Updated release notes

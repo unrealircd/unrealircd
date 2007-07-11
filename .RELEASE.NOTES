@@ -1,3 +1,71 @@
 Unreal3.2.7 Release Notes
 ==========================
 
+[ New stuff and known issues is listed below ]
+
+
+[ Strategy change ]
+
+Unreal3.2.7 will be released on 14th July 2007 - marking 8 years since the first UnrealIRCd
+release. With this, we've decided to do a rather big change in strategy. Fact is, the Unreal3 
+code base has gone stale and is not suitable to service you IRC networks for 8 more years.
+
+We've been working to improve this code base but run into serious issues constantly due to old
+code laying about and design decisions in the past by previous coders that has locked us into 
+an IRCd that can hardly evolve.
+
+In light of this, and through that people have worked on a IRCd from scratch, in C++ - InspIRCd.
+InspIRCd was made by people who initially used Unreal, but foresaw that something radical was 
+needed to fix the IRCd code base so many IRCds share. 
+
+InspIRCd was partly inspired by Unreal and this means that it will be easier for us to move on
+to the logical step - we're forking InspIRCd (through a tight cooperation with them), to give 
+you Unreal4.0
+
+The target is for both development teams to work what's their speciality - we're dedicated
+to give our users service, implement features and maintain stability and innovate, where
+InspIRCd also has some of these qualities, but focuses more on a base IRCd that can be extended 
+with new features through modularity and maintaining a stable core that just works and performs
+well. 
+
+The fork will not be a hostile one - the idea is to have a shared core (InspIRCd) and we work
+together on inventing and implementing new ideas that can be added through the module system,
+and we will work alone on features that InspIRCd coders may not want to touch and reverse.
+
+We hope to shape InspIRCd in our image and provide a Unreal4 that feels like an Unreal3 - same 
+configuration format, same quality documentation, support, etc, and in the progress give you
+users the ability to have a "modern" IRCd that can handle loads and loads of users, and still
+give you the choice to choose what features your network wants to use.
+
+The Unreal3.2 branch will continue mostly as bug fixes - and adding ability to link to Unreal4,
+so we're not giving up on you people who want to keep on running Unreal3, but when this link is
+stable (in 3.2.8 - based off 3.3), and Unreal4 is as feature complete with Unreal3, we stop
+supporting Unreal3.
+
+So, how will this affect you? We could need a hand. Enter the development wiki on 
+http://dev.unrealircd.com/unreal4_development - aid out and find out what we're missing in 
+Unreal4 to make it an IRCd you'd switch to. Test the SVN, find bugs we introduce, and we hope
+this cooperation between InspIRCd and UnrealIRCd will lead to a new age in IRCd development
+and for IRC networks in general - since we have many new ideas we can try out together.
+
+Hang out in #unreal-devel on irc.unrealircd.com - we're interested in having you along. Making
+modules should be slightly easier from now on.
+
+[ New stuff ]
+
+- Updated c-ares to 1.4.0, TRE to 0.7.5
+- chmode +L does no longer require chmode +l
+- Oper blocks now can have CIDR, as in "userhost *@127.0.0.1/32";
+- Services coders: SVSNOLAG/SVS2NOLAG (described in Changes) will allow a user 
+  to avoid fake lag (ie, flood as much as he/she wants).
+- More intelligent accept() handling - that is, take in multiple times at a time instead of one
+  per I/O loop
+- A lot of bug fixes, basically.
+
+[ Known issues found in testing ]
+
+- CHROOTDIR does not work nicely together with the new patch where you can do hardcoded
+IRC_USER / IRC_GROUP (setuid / setgid with names), due to having to look up password files.
+- Spamfilter warn does not work with /setname
+- Documentation is not complete
+
