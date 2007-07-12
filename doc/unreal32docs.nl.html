@@ -608,11 +608,11 @@ Modules kunnen ook andere uitgebreide ban types toevoegen.<br>
 <p>UnrealIRCD geeft je nu ook de mogelijkheid om IP reeksen te bannen, door middel van CIDR
 (Classess Interdomain Routing). IPs worden door ISPs uitgedeeld door middel van CIRD. Dit geeft
 je de mogelijkheid om heel makkelijk een ISP te bannen. CIDR wordt ondersteund voor zowel IPv4
-als IPv6. CIDR masks zijn toegestaan in allow::ip, ban user::mask, ban ip::mask, except ban::mask
-except throttle::mask, en except tkl::mask (for gzline, gline en shun). Tevens kan CIDR gebruikt
-worden met /kline, /gline, /zline, /gzline en shun. UnrealIRCd gebruikt de standaard syntax van
-IP/bits, zoals 127.0.0.0/8 (komt overeen met 127.0.0.0 - 127.255.255.255), en fe80:0:0:123::/64
-(komt overeen met fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p></div>
+als IPv6. CIDR masks zijn toegestaan in allow::ip, oper::from::userhost, ban user::mask, ban ip::mask,
+except ban::mask, except throttle::mask, en except tkl::mask (for gzline, gline en shun). 
+Tevens kan CIDR gebruikt worden met /kline, /gline, /zline, /gzline en shun.
+UnrealIRCd gebruikt de standaard syntax van IP/bits, zoals 127.0.0.0/8 (komt overeen met 127.0.0.0 - 127.255.255.255), 
+en fe80:0:0:123::/64 (komt overeen met fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p></div>
 
 <p><font size="+2"><b>3.16 - Nick Character Sets</b></font><a name="feature_nickchars"></a></p><div class="desc">
 <p>UnrealIRCd geeft je nu ook de mogelijkheid om te specificeren welke charsets/talen gebruikt morgen
