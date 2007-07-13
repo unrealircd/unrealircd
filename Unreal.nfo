@@ -1,29 +1,29 @@
 ===============================================
-=            UnrealIRCd v3.2.6                =
+=            UnrealIRCd v3.2.7                =
 ===============================================
- Was brought to you by:
+ This release was brought to you by:
 
-  The core team:
-  ==============
-  * Stskeeps  <stskeeps@tspre.org>
-  * codemastr <codemastr@unrealircd.com>
-  * Syzop     <syzop@unrealircd.org>
-  * Luke      <luke@unrealircd.com>
-
-  Contributors
+  Committers:
   ============
-  * McSkaf    <mcskaf@unrealircd.org>
-  * Zogg      <zogg@unrealircd.org>
-  * NiQuiL    <niquil@unrealircd.org>
-  * assyrian  <assyrian@unrealircd.org>
-  * nighthawk <nighthawk@unrealircd.com>
-  * DrBin     <drbin@unrealircd.com>
-  * llthangel <llthangel@unrealircd.org>
-  * Griever   <griever@unrealircd.com>
-  
-  Documentation:
-  ==============
-  * CKnight^ <cknight@unrealircd.com>
+  * Stskeeps
+  * Syzop
+  * aquanight
+  * WolfSage
+
+  Contributors:
+  =============
+  * djGrrr
+  * w00t
+  * Stealth
+  * adrianp
+  * Bock
+  * fez
+  * Trocotronic  
+
+  RC Testers:
+  ===========
+  * Grunt, Bock, craftsman, Stealth, vonitsanet
+
 
  Precenses on the Internet:
   * http://www.unrealircd.com
@@ -57,9 +57,6 @@
           base so we are volunteeringly helping you, but we are humans
           like you, and we got to have peace at times as well.]
  * Forum: http://forums.unrealircd.com/
- * Mailing list: unreal-users@lists.sourceforge.net
-   (http://lists.sourceforge.net/lists/listinfo/unreal-users also
-    has links to the archive).
 
  UnrealIRCd Bugtracker (Where to report bugs or make suggestions)
  ==================================================================
