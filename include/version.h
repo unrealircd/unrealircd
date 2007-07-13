@@ -40,7 +40,7 @@
 #define UNREAL_VERSION_MAJOR        2
 
 /** The minor version number (eg: 1 for Unreal3.2.1), negative numbers for unstable/alpha/beta */
-#define UNREAL_VERSION_MINOR        6
+#define UNREAL_VERSION_MINOR        7
 
 /** Year + week of the year (with Monday as first day of the week).
  * Can be useful if the above 3 versionids are insufficient for you (eg: you want to support CVS).
