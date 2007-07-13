@@ -1529,3 +1529,4 @@
 - Fixed wolfsage eff-up in c-ares.tar.gz, not running make distclean
 - Updated /info
 - Updated release notes
+*** 3.2.7 release ***

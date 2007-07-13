@@ -8,7 +8,7 @@ Unreal3.2.7 Release Notes
 
 Unreal3.2.7 will be released on 14th July 2007 - marking 8 years since the first UnrealIRCd
 release. With this, we've decided to do a rather big change in strategy. Fact is, the Unreal3 
-code base has gone stale and is not suitable to service you IRC networks for 8 more years.
+code base has gone stale and is not suitable to service your IRC networks for 8 more years.
 
 We've been working to improve this code base but run into serious issues constantly due to old
 code laying about and design decisions in the past by previous coders that has locked us into 
@@ -20,7 +20,10 @@ needed to fix the IRCd code base so many IRCds share.
 
 InspIRCd was partly inspired by Unreal and this means that it will be easier for us to move on
 to the logical step - we're forking InspIRCd (through a tight cooperation with them), to give 
-you Unreal4.0
+you Unreal4.0. For more information on the new core, see http://www.inspircd.org - any documents
+dealing with module coding, server protocol, etc, works for Unreal4 too - as we will be 
+the project that extends from bare (InspIRCd) to colourful and featureful (UnrealIRCd),
+and the goal is to be able to move modules from Unreal to InspIRCd without problems.
 
 The target is for both development teams to work what's their speciality - we're dedicated
 to give our users service, implement features and maintain stability and innovate, where
@@ -32,7 +35,7 @@ The fork will not be a hostile one - the idea is to have a shared core (InspIRCd
 together on inventing and implementing new ideas that can be added through the module system,
 and we will work alone on features that InspIRCd coders may not want to touch and reverse.
 
-We hope to shape InspIRCd in our image and provide a Unreal4 that feels like an Unreal3 - same 
+We hope to shape InspIRCd in our image and provide an Unreal4 that feels like an Unreal3 - same 
 configuration format, same quality documentation, support, etc, and in the progress give you
 users the ability to have a "modern" IRCd that can handle loads and loads of users, and still
 give you the choice to choose what features your network wants to use.
@@ -68,4 +71,7 @@ modules should be slightly easier from now on.
 IRC_USER / IRC_GROUP (setuid / setgid with names), due to having to look up password files.
 - Spamfilter warn does not work with /setname
 - Documentation is not complete
+- There is a problem with bans getting truncated we are still trying to investigate. Happens
+  in 3.2.6 too.
+
 
