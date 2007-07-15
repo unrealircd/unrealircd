@@ -105,6 +105,7 @@ FARPROC lpfnOldWndProc;
 HMENU hContext;
 OSVERSIONINFO VerInfo;
 char OSName[256];
+char CPATH[262];
 #ifdef USE_LIBCURL
 extern char *find_loaded_remote_include(char *url);
 #endif 
@@ -216,13 +217,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	VerInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 	GetVersionEx(&VerInfo);
 	GetOSName(VerInfo, OSName);
+	strlcpy(CPATH, "unrealircd.conf", sizeof(CPATH));
 	if (VerInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) 
 	{
 		SC_HANDLE hService, hSCManager = OpenSCManager(NULL, NULL, GENERIC_EXECUTE);
+		StartServiceCtrlDispatcher(DispatchTable); 
 		if ((hService = OpenService(hSCManager, "UnrealIRCd", GENERIC_EXECUTE))) 
 		{
 			int save_err = 0;
-			StartServiceCtrlDispatcher(DispatchTable); 
 			if (GetLastError() == ERROR_FAILED_SERVICE_CONTROLLER_CONNECT)
 			{ 
 				SERVICE_STATUS status;

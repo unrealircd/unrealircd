@@ -100,7 +100,7 @@ VOID WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
 {
 	WSADATA WSAData;
 	DWORD error = 0;
-	char path[MAX_PATH], *folder;
+	char path[MAX_PATH], *folder, *c;
 
 	IsService = TRUE;
 
@@ -117,9 +117,13 @@ VOID WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
 	folder = strrchr(path, '\\');
 	*folder = 0;
 	chdir(path);
+	
+	_snprintf(CPATH, sizeof(CPATH)-1, "%s.conf", lpszArgv[0]);
+	for (c = CPATH; !BadPtr(c); c++)
+		*c = tolower(*c);
 
 	/* Register the service controller */
-	IRCDStatusHandle = RegisterServiceCtrlHandler("UnrealIRCd", IRCDCtrlHandler); 
+	IRCDStatusHandle = RegisterServiceCtrlHandler(lpszArgv[0], IRCDCtrlHandler); 
  
 	VerInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 	GetVersionEx(&VerInfo);

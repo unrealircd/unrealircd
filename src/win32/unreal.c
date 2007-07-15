@@ -27,7 +27,8 @@ UCHANGESERVICECONFIG2 uChangeServiceConfig2;
 
 #define IRCD_SERVICE_CONTROL_REHASH 128
 void show_usage() {
-	fprintf(stderr, "unreal start|stop|rehash|restart|install|uninstall|config <option> <value>");
+	fprintf(stderr, "unreal start|stop|rehash|restart|install|uninstall|config [-n name] <option> <value>");
+	fprintf(stderr, "\n-n parameter specifies the name of the service. It is useful if you want to install more than one service on the same machine\n");
 	fprintf(stderr, "\nValid config options:\nstartup auto|manual\n");
 	if (VerInfo.dwMajorVersion == 5) 
 		fprintf(stderr, "crashrestart delay\n");
@@ -41,12 +42,29 @@ char *show_error(DWORD code) {
 
 
 int main(int argc, char *argv[]) {
-	char *bslash;
+	char *bslash, sname[257], *opt = NULL, *value = NULL;
 	VerInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 	GetVersionEx(&VerInfo);
 	if (argc < 2) {
 		show_usage();
 		return -1;
+	}
+	strcpy(sname, "UnrealIRCd");
+	if (argc > 2)
+	{
+		if (!strcmp(argv[2], "-n"))
+		{
+			if (argc < 4)
+			{
+				show_usage();
+				return -1;
+			}
+			_snprintf(sname, sizeof(sname)-1, "UnrealIRCd-%s", argv[3]);
+			if (argc > 4)
+				opt = argv[4];
+			if (argc > 5)
+				value = argv[5];
+		}
 	}
 	hAdvapi = LoadLibrary("advapi32.dll");
 	uChangeServiceConfig2 = (UCHANGESERVICECONFIG2)GetProcAddress(hAdvapi, "ChangeServiceConfig2A");
@@ -65,7 +83,7 @@ int main(int argc, char *argv[]) {
 		
 		strcpy(binpath,path);
 		strcat(binpath, "\\wircd.exe");
-		hService = CreateService(hSCManager, "UnrealIRCd", "UnrealIRCd",
+		hService = CreateService(hSCManager, sname, sname,
 				 SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS,
 				 SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, binpath,
 				 NULL, NULL, NULL, NULL, NULL); 
@@ -85,7 +103,7 @@ int main(int argc, char *argv[]) {
 	}
 	else if (!stricmp(argv[1], "uninstall")) {
 		SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
-		SC_HANDLE hService = OpenService(hSCManager, "UnrealIRCd", DELETE); 
+		SC_HANDLE hService = OpenService(hSCManager, sname, DELETE); 
 		if (DeleteService(hService)) 
 			printf("UnrealIRCd NT Service successfully uninstalled");
 		else
@@ -96,7 +114,7 @@ int main(int argc, char *argv[]) {
 	}
 	else if (!stricmp(argv[1], "start")) {
 		SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
-		SC_HANDLE hService = OpenService(hSCManager, "UnrealIRCd", SERVICE_START); 
+		SC_HANDLE hService = OpenService(hSCManager, sname, SERVICE_START); 
 		if (StartService(hService, 0, NULL)) 
 			printf("UnrealIRCd NT Service successfully started");
 		else
@@ -108,7 +126,7 @@ int main(int argc, char *argv[]) {
 	else if (!stricmp(argv[1], "stop")) {
 		SERVICE_STATUS status;
 		SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
-		SC_HANDLE hService = OpenService(hSCManager, "UnrealIRCd", SERVICE_STOP); 
+		SC_HANDLE hService = OpenService(hSCManager, sname, SERVICE_STOP); 
 		ControlService(hService, SERVICE_CONTROL_STOP, &status);
 		printf("UnrealIRCd NT Service successfully stopped");
 		CloseServiceHandle(hService);
@@ -118,7 +136,7 @@ int main(int argc, char *argv[]) {
 	else if (!stricmp(argv[1], "restart")) {
 		SERVICE_STATUS status;
 		SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
-		SC_HANDLE hService = OpenService(hSCManager, "UnrealIRCd", SERVICE_STOP|SERVICE_START); 
+		SC_HANDLE hService = OpenService(hSCManager, sname, SERVICE_STOP|SERVICE_START); 
 		ControlService(hService, SERVICE_CONTROL_STOP, &status);
 		if (StartService(hService, 0, NULL)) 
 			printf("UnrealIRCd NT Service successfully restarted");
@@ -129,37 +147,37 @@ int main(int argc, char *argv[]) {
 	else if (!stricmp(argv[1], "rehash")) {
 		SERVICE_STATUS status;
 		SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
-		SC_HANDLE hService = OpenService(hSCManager, "UnrealIRCd", SERVICE_USER_DEFINED_CONTROL); 
+		SC_HANDLE hService = OpenService(hSCManager, sname, SERVICE_USER_DEFINED_CONTROL); 
 		ControlService(hService, IRCD_SERVICE_CONTROL_REHASH, &status);
 		printf("UnrealIRCd NT Service successfully rehashed");
 	}
 	else if (!stricmp(argv[1], "config")) {
 		SERVICE_STATUS status;
 		SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
-		SC_HANDLE hService = OpenService(hSCManager, "UnrealIRCd",
+		SC_HANDLE hService = OpenService(hSCManager, sname,
 						 SERVICE_CHANGE_CONFIG|SERVICE_START); 
-		if (argc < 3) {
+		if (!opt) {
 			show_usage();
 			return -1;
 		}
-		if (!stricmp(argv[2], "startup")) {
+		if (!stricmp(opt, "startup")) {
 			if (ChangeServiceConfig(hService, SERVICE_NO_CHANGE,
-					    !stricmp(argv[3], "auto") ? SERVICE_AUTO_START
+					    value && !stricmp(value, "auto") ? SERVICE_AUTO_START
 						: SERVICE_DEMAND_START, SERVICE_NO_CHANGE,
 					    NULL, NULL, NULL, NULL, NULL, NULL, NULL)) 
 				printf("UnrealIRCd NT Service configuration changed");
 			else
 				printf("UnrealIRCd NT Service configuration change failed - %s", show_error(GetLastError()));	
 		}
-		else if (!stricmp(argv[2], "crashrestart") && VerInfo.dwMajorVersion == 5) {
+		else if (!stricmp(opt, "crashrestart") && VerInfo.dwMajorVersion == 5) {
 			SERVICE_FAILURE_ACTIONS hFailActions;
 			SC_ACTION hAction;
 			memset(&hFailActions, 0, sizeof(hFailActions));
-			if (argc >= 4) {
+			if (value) {
 				hFailActions.dwResetPeriod = 30;
 				hFailActions.cActions = 1;
 				hAction.Type = SC_ACTION_RESTART;
-				hAction.Delay = atoi(argv[3])*60000;
+				hAction.Delay = atoi(value)*60000;
 				hFailActions.lpsaActions = &hAction;
 				if (uChangeServiceConfig2(hService, SERVICE_CONFIG_FAILURE_ACTIONS, 	
 						     &hFailActions))

@@ -1824,3 +1824,29 @@ MOTDs
 - Fixed typo in new module build switch
 - Added a Config -advanced prompt for --with-moduleswhich=
 - Small fix in s_conf.c and Velcro
+- Implementing #0003239 suggested by Siyavash, patched by Trocotronic, patch
+  details:
+    added -n parameter to unreal.exe. So, if you want, you could specify a
+name of service. It will receive all command. For example:
+
+unreal install -n Deimos
+
+It will install a service called UnrealIRCd-Deimos. Then, the configfile
+must be named unrealircd-deimos.conf. This way gave you chance to install
+more than one service on the same machine using only one installation. 
+
+unreal start -n Deimos // it will start service with
+unrealircd-deimos.conf file
+unreal uninstall -n Deimos
+
+Although, -n parameter is optional, so you can use "unreal install" as
+usual.
+
+If you run service from console (double click to wircd.exe for example),
+it will only start one service, main service, called UnrealIRCd (install
+without -n). If you only install services with name (-n), double click will
+start wircd.exe as usual (window mode).
+-n will affect to all command (install, uninstall, start, stop, etc)
+
+Remember to use different listening ports (or interfaces) on every
+unrealircd-*.conf files.

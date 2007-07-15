@@ -200,7 +200,11 @@
  * these are only the recommened names and paths. Change as needed.
  * You must define these to something, even if you don't really want them.
  */
+#ifndef _WIN32
 #define	CPATH		"unrealircd.conf"	/* server configuration file */
+#else
+extern char CPATH[262];
+#endif
 #define	MPATH		"ircd.motd"	/* server MOTD file */
 #define SMPATH          "ircd.smotd"    /* short MOTD file */
 #define RPATH   	"ircd.rules"	/* server rules file */
