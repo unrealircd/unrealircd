@@ -230,7 +230,7 @@ void m_info_send(aClient *sptr)
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| * Syzop        <syzop@unrealircd.com>",
 	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * aquanight    <wolfsage@unrealircd.com>",
+	sendto_one(sptr, ":%s %d %s :| * aquanight    <aquanight@unrealircd.com>",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| * WolfSage     <wolfsage@unrealircd.com>",
 	    me.name, RPL_INFO, sptr->name);
