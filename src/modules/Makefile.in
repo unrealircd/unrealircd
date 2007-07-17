@@ -53,7 +53,8 @@ R_MODULES= \
 	 m_svsfline.so m_dccdeny.so m_undccdeny.so m_whowas.so \
 	 m_connect.so m_dccallow.so m_userip.so m_nick.so m_user.so \
 	 m_mode.so m_watch.so m_part.so m_join.so m_motd.so m_opermotd.so \
-	 m_botmotd.so m_lusers.so m_names.so m_svsnolag.so
+	 m_botmotd.so m_lusers.so m_names.so m_svsnolag.so m_addmotd.so \
+	 m_svslusers.so
 
 #note change of .c to .o
 COMMANDS=m_sethost.o m_chghost.o m_chgident.o m_setname.o m_setident.o \

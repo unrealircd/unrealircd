@@ -1531,3 +1531,5 @@
 - Updated release notes
 *** 3.2.7 release ***
 - Fix aquanight's email
+- #0003351 reported by Mareo regarding m_addmotd.so and m_svslusers.so 
+  not being created
