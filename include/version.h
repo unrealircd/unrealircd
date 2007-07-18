@@ -50,9 +50,9 @@
 
 #define UnrealProtocol 		2308
 #define PATCH1  		"3"
-#define PATCH2  		".3"
-#define PATCH3  		"-pre-alpha"
-#define PATCH4  		""
+#define PATCH2  		".2"
+#define PATCH3  		".8"
+#define PATCH4  		"-devel"
 #define PATCH5  		""
 #define PATCH6  		""
 #define PATCH7  		""

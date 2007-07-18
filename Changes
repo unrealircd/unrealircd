@@ -1850,3 +1850,4 @@ start wircd.exe as usual (window mode).
 
 Remember to use different listening ports (or interfaces) on every
 unrealircd-*.conf files.
+- Changed version into 3.2.8 as this will be the target for devel branch
