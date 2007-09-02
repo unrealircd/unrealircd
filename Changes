@@ -1533,3 +1533,5 @@
 - Fix aquanight's email
 - #0003351 reported by Mareo regarding m_addmotd.so and m_svslusers.so 
   not being created
+- Fixed bug in SJOIN, possibly causing things like odd bans showing up in
+  some circumstances. Reported by Hurga, patch provided by fbi.
