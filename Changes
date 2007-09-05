@@ -1535,3 +1535,8 @@
   not being created
 - Fixed bug in SJOIN, possibly causing things like odd bans showing up in
   some circumstances. Reported by Hurga, patch provided by fbi.
+- Now allowing '1.2.3.4' ips again in IPv6 mode as well (instead of enforcing
+  '::ffff:1.2.3.4' ips in the conf, they are now auto-converted to that).
+  Based on patch from tabrisnet.
+- Fixed issue where the cgiirc block did not work with IPv6, reported by
+  djGrrr, fixed by previous change.
