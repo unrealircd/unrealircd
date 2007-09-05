@@ -244,6 +244,12 @@ void m_info_send(aClient *sptr)
 	sendto_one(sptr, ":%s %d %s :| * Grunt, Bock, craftsman, Stealth, vonitsanet",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
+	sendto_one(sptr, ":%s %d %s :| Past UnrealIRCd3.2* coders/contributors:", me.name, RPL_INFO, sptr->name);
+	sendto_one(sptr, ":%s %d %s :| * codemastr (ret. u3.2 head coder)",
+	    me.name, RPL_INFO, sptr->name);
+	sendto_one(sptr, ":%s %d %s :| * McSkaf, Zogg, NiQuiL, chasm, llthangel, nighthawk, ..",
+	    me.name, RPL_INFO, sptr->name);
+	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| Credits - Type /Credits",
 	    me.name, RPL_INFO, sptr->name);
