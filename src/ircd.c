@@ -952,6 +952,21 @@ int InitwIRCD(int argc, char *argv[])
 	(void)signal(SIGUSR1, s_monitor);
 # endif
 #endif
+#if defined(IRC_USER) && defined(IRC_GROUP)
+	if ((int)getuid() == 0) {
+
+		pw = getpwnam(IRC_USER);
+		gr = getgrnam(IRC_GROUP);
+
+		if ((pw == NULL) || (gr == NULL)) {
+			fprintf(stderr, "ERROR: Unable to lookup to specified user (IRC_USER) or group (IRC_GROUP): %s\n", strerror(errno));
+			exit(-1);
+		} else {
+			irc_uid = pw->pw_uid;
+			irc_gid = gr->gr_gid;
+		}
+	}
+#endif
 #ifdef	CHROOTDIR
 	if (chdir(dpath)) {
 		perror("chdir");
@@ -1432,17 +1447,7 @@ int InitwIRCD(int argc, char *argv[])
 
 #if defined(IRC_USER) && defined(IRC_GROUP)
 	if ((int)getuid() == 0) {
-
-		pw = getpwnam(IRC_USER);
-		gr = getgrnam(IRC_GROUP);
-
-		if ((pw == NULL) || (gr == NULL)) {
-			fprintf(stderr, "ERROR: Unable to change to specified user or group: %s\n", strerror(errno));
-			exit(-1);
-		} else {
-			irc_uid = pw->pw_uid;
-			irc_gid = gr->gr_gid;
-		}
+		/* NOTE: irc_uid/irc_gid have been looked up earlier, before the chrooting code */
 
 		if ((irc_uid == 0) || (irc_gid == 0)) {
 			(void)fprintf(stderr,
