@@ -199,7 +199,8 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 	for (oper_from = (ConfigItem_oper_from *) aconf->from;
 	    oper_from; oper_from = (ConfigItem_oper_from *) oper_from->next)
 		/* if (!match(oper_from->name, nuhhost) || !match(oper_from->name, nuhhost2)) */
-		if (match_ip(sptr->ip, nuhhost, oper_from->name, oper_from->netmask))
+		if (match_ip(sptr->ip, nuhhost, oper_from->name, oper_from->netmask) ||
+		    !match(oper_from->name, nuhhost2))
 			break;
 	if (!oper_from)	{
 		sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, parv[0]);
