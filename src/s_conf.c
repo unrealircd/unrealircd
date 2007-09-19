@@ -2562,6 +2562,16 @@ ConfigItem_link *Find_link(char *username,
 
 }
 
+/* ugly ugly ugly */
+int match_ip46(char *a, char *b)
+{
+#ifdef INET6
+	if (!strncmp(a, "::ffff:", 7) && !strcmp(a+7, b))
+		return 0; // match
+#endif
+	return 1; //nomatch
+}
+
 ConfigItem_cgiirc *Find_cgiirc(char *username, char *hostname, char *ip, CGIIRCType type)
 {
 ConfigItem_cgiirc *e;
@@ -2572,7 +2582,7 @@ ConfigItem_cgiirc *e;
 	for (e = conf_cgiirc; e; e = (ConfigItem_cgiirc *)e->next)
 	{
 		if ((e->type == type) && (!e->username || !match(e->username, username)) &&
-		    (!match(e->hostname, hostname) || !match(e->hostname, ip)))
+		    (!match(e->hostname, hostname) || !match(e->hostname, ip) || !match_ip46(e->hostname, ip)))
 			return e;
 	}
 

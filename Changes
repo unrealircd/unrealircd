@@ -1545,3 +1545,8 @@
 - Fixed oper block bug where ip masks in oper::from::userhost did not always
   work succesfully (ex: 192.168.* worked, but 192.168.*.* didn't). Issue was
   introduced in 3.2.7, reported by tabrisnet (#0003494).
+- CGI:IRC + IPv6: Fixed cgiirc block hostname never matching ipv4 gateway
+  properly (..again..), this was previously reported by pv2b.
+- CGI:IRC + IPv6: Fixed issue where all cgiirc ipv4 clients were rejected with
+  the message 'Invalid IP address', reported by stskeeps (#0003311), nate
+  (#0003533) and others.
