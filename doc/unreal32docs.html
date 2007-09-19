@@ -3482,8 +3482,13 @@ It will however make it more difficult / increase the effort needed to attack/ha
 There are kernel patches that make it more difficult for stack- and heap-based exploits to 
 work. This is nice, but should not be your main focus point, you have a far more bigger risk 
 of getting exploited through the other points than this... for various reasons.<br>
+Another option is enabling chrooting (*NIX only), which means upon a succesfull exploit,
+the user is confined to the UnrealIRCd directory and cannot touch any other
+files. This requires root privileges, modifying of include/config.h
+(search for CHROOTDIR, and also set IRC_USER and IRC_GROUP), and a
+recompile.<br>
 <br>
-There's one thing you should do however, which is to ALWAYS USE THE LATEST VERSION, 
+There's one thing you should definately do, which is to ALWAYS USE THE LATEST VERSION, 
 subscribe to the <a href="http://mail1.sourceforge.net/mailman/listinfo/unreal-notify" target="_blank">unreal-notify mailinglist</a> 
 right now so you receive the release announcements (unreal-notify is for release announcements only, 
 so only 1 mail per X months). Usually it's explicitly mentioned in the release announcement if the 

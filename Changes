@@ -1550,3 +1550,4 @@
 - CGI:IRC + IPv6: Fixed issue where all cgiirc ipv4 clients were rejected with
   the message 'Invalid IP address', reported by stskeeps (#0003311), nate
   (#0003533) and others.
+- Document CHROOTDIR in unreal32docs, reported by Beastie (#0002446).
