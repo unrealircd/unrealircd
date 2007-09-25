@@ -3417,8 +3417,12 @@ Cela rendra plus difficiles / importants les efforts requis pour attaquer / pira
 
 <p><b><font size="+2">8.8 Se prot&eacute;ger des exploits</font></b><a name="secantiexploit"></a><br></p><div class="desc">
 Il y a des patches de kernel qui rendent plus difficiles les stack- et heap-based exploits. Ceci est tr&egrave; bien mais ne doit pas &ecirc;tre votre principal point d'inqui&eacute;tude, vous avez des risques de loin plus importants d'&ecirc;tre attaqu&eacute; par d'autres points que celui-ci... Pour des raisons vari&eacute;es.<br>
+Une autre option est l'activation du chrooting (*NIX uniquement), ce qui signifie que lors d'un exploit r&eacute;ussi,
+L'utiliateur est confin&eacute; dans le dossier UnrealIRCd et ne peut acc&egrave;der &agrave; aucun autre fichier.
+Ceci requi&egrave;re un acc&egrave;s root, la modification de include/config.h (la recherche du CHROOTDIR ainsi que la d&eacute;finition de IRC_USER et IRC_GROUP),
+et une recompilation.<br>
 <br>
-Il y a en tout cas une chose que vous devez faire, qui est TOUJOURS UTILISER LA DERNI&egrave;RE VERSION, 
+Il y a une chose que vous devez toujours faire, c'est TOUJOURS UTILISER LA DERNI&egrave;RE VERSION, 
 inscrivez vous &agrave; la <a href="http://mail1.sourceforge.net/mailman/listinfo/unreal-notify" target="_blank">unreal-notify mailinglist</a> 
 tout de suite et vous recevrez les annonces de release (la unreal-notify est pour les annonces de release uniquement, 
 d'où seulement 1 mail tout les X mois). En g&eacute;n&eacute;ral il est explicitement mentionn&eacute; dans l'annonce si la release permet 
