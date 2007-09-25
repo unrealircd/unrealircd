@@ -1551,3 +1551,6 @@
   the message 'Invalid IP address', reported by stskeeps (#0003311), nate
   (#0003533) and others.
 - Document CHROOTDIR in unreal32docs, reported by Beastie (#0002446).
+- Fixed Mac OS X issue where "access denied" errors were encountered when 
+  trying to read unrealircd.conf. All due to strange chmod() behavior. We now no
+  longer try to set permissions on Mac OS X. Patch provided by Tibby (#3489).

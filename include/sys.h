@@ -132,6 +132,13 @@ extern	char	*rindex(char *, char);
 #define dn_skipname  __dn_skipname
 #endif
 
+/*
+ * Mac OS X Tiger Support (Intel Only)
+ */
+#if defined(macosx) || (defined(__APPLE__) && defined(__MACH__))
+#define OSXTIGER
+#endif
+
 #ifndef _WIN32
 extern VOIDSIG dummy();
 #endif

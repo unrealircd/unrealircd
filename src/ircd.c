@@ -1281,7 +1281,7 @@ int InitwIRCD(int argc, char *argv[])
 	DeleteTempModules();
 	booted = FALSE;
 /* Hack to stop people from being able to read the config file */
-#if !defined(_WIN32) && !defined(_AMIGA) && DEFAULT_PERMISSIONS != 0
+#if !defined(_WIN32) && !defined(_AMIGA) && !defined(OSXTIGER) && DEFAULT_PERMISSIONS != 0
 	chmod(CPATH, DEFAULT_PERMISSIONS);
 #endif
 	init_dynconf();

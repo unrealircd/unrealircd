@@ -2876,7 +2876,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 	if (url_is_valid(ce->ce_vardata))
 		return remote_include(ce);
 #endif
-#if !defined(_WIN32) && !defined(_AMIGA) && DEFAULT_PERMISSIONS != 0
+#if !defined(_WIN32) && !defined(_AMIGA) && !defined(OSXTIGER) && DEFAULT_PERMISSIONS != 0
 	chmod(ce->ce_vardata, DEFAULT_PERMISSIONS);
 #endif
 #ifdef GLOBH
