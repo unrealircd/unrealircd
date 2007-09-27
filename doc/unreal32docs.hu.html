@@ -3482,10 +3482,14 @@ Viszont a támadásokat, feltöréseket nehezebbé teszi, több fáradságukba kerül.<br
 Vannak kernel patchek, amelyek nehezebbé teszik a szegmens és verem alapú sebezhetõségek mûködését.
 Ez szép és jó, azonban ne ez legyen a figyelmed középpontja, sokkal nagyobb veszély van arra, hogy más módon
 aknázzák ki a szervere(i)det... különbözõ okok miatt.<br>
+Egy másik lehetõség, hogy engedélyezed a chroot-olást (csak *NIX esetén), ami biztosíték arra, hogy ha sikerül is a kiaknázás,
+a támadót bezártad az UnrealIRCd könyvtárba, és nem módosíthat más
+fájlokat. Ehhez a módszerhez rendszergazdai jogosultságokon kellenek, valamint hogy módosítsd az include/config.h-t
+(keress rá a CHROOTDIR-re, és állítsd be az IRC_USER és IRC_GROUP makrókat is), aztán fordítsd újra.<br>
 <br>
-Van egy dolog viszont, amit meg kellene tenned, ez pedig az, hogy MINDIG HASZNÁLD A LEGFRISSEBB VERZIÓT, és
+Van egy dolog, amit határozottan érdemes megtenned, ez pedig, hogy MINDIG HASZNÁLD A LEGFRISSEBB VERZIÓT, és
 jelentkezz fel az <a href="http://mail1.sourceforge.net/mailman/listinfo/unreal-notify" target="_blank">unreal-notify levelezõlistára</a> most rögtön,
-hogy megkaphasd a a kiadási közleményeket (az unreal-notify csak kiadási közleményekre
+hogy megkaphasd a kiadási közleményeket (az unreal-notify csak kiadási közleményekre
 van, így csak 1 levelet jelent X havonta). A kiadási közleményben rendszerint világosan fel van tüntetve, ha
 a kiadás (nagyobb veszélyességû) biztonsági hibák javítását tartalmazza, de egyébként is jó, ha frissítesz.<br>
 </div></p>
