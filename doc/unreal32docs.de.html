@@ -4353,6 +4353,13 @@ Datei</a></b></font></p>
   Expolits erschweren, zu arbeiten. Das ist schön, allerdings sollte man nicht nur primär
   hierauf achten, es gibt weit größere Risiken mit Expolits, die andere
   Punkte, als den Kernel angreifen.... aus verschiedenen Gründen.<br>
+  Eine andere Option ist es chrooting zu aktivieren (gibt es nur in *nix
+  Systemen), was bedeutet, dass bei einem erfolgreichen expolit der User auf auf
+  das UnrealIRCd Verzeichnis begrenzt ist und keinen Zugriff auf andere Dateien
+  hat. Dies erfordert root Rechte und Änderungen in der include/config.h (suche
+  nach CHROOTDIR und setze sowohl IRC_USER als auch IRC_GROUP und compiliere
+  neu.)
+  <p>
   <br>
   Eines allerdings sollte man tun: IMMER DIE NEUESTE VERSION BENUTZEN. Wenn man
   sich in die <a href="http://mail1.sourceforge.net/mailman/listinfo/unreal-notify"> Unreal-notify mailinglist</a> einträgt, erhält man die Ankündigung
