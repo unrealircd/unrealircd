@@ -1554,3 +1554,5 @@
 - Fixed Mac OS X issue where "access denied" errors were encountered when 
   trying to read unrealircd.conf. All due to strange chmod() behavior. We now no
   longer try to set permissions on Mac OS X. Patch provided by Tibby (#3489).
+- Hopefully fixed 'Overflowed unzipbuf increase UNZIP_BUFFER_SIZE' issue,
+  reported by Monk (#0003453). It should be large enough now.
