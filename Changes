@@ -1555,4 +1555,7 @@
   trying to read unrealircd.conf. All due to strange chmod() behavior. We now no
   longer try to set permissions on Mac OS X. Patch provided by Tibby (#3489).
 - Hopefully fixed 'Overflowed unzipbuf increase UNZIP_BUFFER_SIZE' issue,
-  reported by Monk (#0003453). It should be large enough now.
+  reported by Monk (#0003453). It should be large enough now. Also changed the
+  way we deal with this when it happens (if it ever happens again..): we now
+  close the server connection, instead of trying to continue, because continueing
+  is too dangerous.

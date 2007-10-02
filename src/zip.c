@@ -26,6 +26,7 @@
 #include "channel.h"
 #include "version.h"
 #include "proto.h"
+#include "h.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -215,6 +216,13 @@ char *unzip_packet(aClient *cptr, char *buffer, int *length)
                * will not return until its all parsed. -db
                */
               sendto_realops("Overflowed unzipbuf increase UNZIP_BUFFER_SIZE");
+              /* We now give up again, continueing was a nice idea but is too dangerous
+               * and often leads to crashes!
+               * Note that any code below the two lines will not be executed.
+               */
+              *length = -1;
+              return((char *)NULL);
+#if 0
               /*
                * I used to just give up here....
                * length = -1;
@@ -264,6 +272,7 @@ char *unzip_packet(aClient *cptr, char *buffer, int *length)
                   memcpy((void *)cptr->zip->inbuf,
                          (void *)p,cptr->zip->incount);
                 }
+#endif
             }
           else
             {
