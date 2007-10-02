@@ -1559,3 +1559,4 @@
   way we deal with this when it happens (if it ever happens again..): we now
   close the server connection, instead of trying to continue, because continueing
   is too dangerous.
+- Remove part reason when user is banned, suggested by vonitsanet (#0003354).
