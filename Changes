@@ -1560,3 +1560,5 @@
   close the server connection, instead of trying to continue, because continueing
   is too dangerous.
 - Remove part reason when user is banned, suggested by vonitsanet (#0003354).
+- Fixed set::modes-on-join: could crash or disfunction with certain
+  parameter mode combinations.

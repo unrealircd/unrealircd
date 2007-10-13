@@ -624,12 +624,16 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 	char *params = strchr(modes, ' ');
 	char *parambuf = NULL;
 	char *param = NULL;
+	char *save = NULL;
+	
+	warn = 0; // warn is broken
+	
 	if (params)
 	{
 		params++;
 		parambuf = MyMalloc(strlen(params)+1);
 		strcpy(parambuf, params);
-		param = strtok(parambuf, " ");
+		param = strtoken(&save, parambuf, " ");
 	}		
 
 	for (; *modes && *modes != ' '; modes++)
@@ -658,7 +662,7 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 				if (!myparam)
 					break;
 				/* Go to next parameter */
-				param = strtok(NULL, " ");
+				param = strtoken(&save, NULL, " ");
 
 				if (myparam[0] != '[')
 				{
@@ -802,7 +806,7 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 				if (!myparam)
 					break;
 				/* Go to next parameter */
-				param = strtok(NULL, " ");
+				param = strtoken(&save, NULL, " ");
 
 				if (*myparam == '*')
 					kmode = 1;
@@ -841,6 +845,11 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 				{
 					if (tab->flag == *modes)
 					{
+						if (tab->parameters)
+						{
+							/* INCOMPATIBLE */
+							break;
+						}
 						store->mode |= tab->mode;
 						break;
 					}
@@ -860,9 +869,12 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 							{
 								if (!param)
 									break;
-								store->extparams[i] = strdup(Channelmode_Table[i].conv_param(param));
+								param = Channelmode_Table[i].conv_param(param);
+								if (!param)
+									break; /* invalid parameter fmt, do not set mode. */
+								store->extparams[i] = strdup(param);
 								/* Get next parameter */
-								param = strtok(NULL, " ");
+								param = strtoken(&save, NULL, " ");
 							}
 							store->extmodes |= Channelmode_Table[i].mode;
 							break;
