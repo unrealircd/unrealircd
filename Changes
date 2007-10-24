@@ -1562,3 +1562,4 @@
 - Remove part reason when user is banned, suggested by vonitsanet (#0003354).
 - Fixed set::modes-on-join: could crash or disfunction with certain
   parameter mode combinations.
+- Minor source cleanup in src/modules/m_map.c, suggested by fez (#0003540).

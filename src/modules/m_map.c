@@ -75,10 +75,6 @@ DLLFUNC int MOD_UNLOAD(m_map)(int module_unload)
 	return MOD_SUCCESS;
 }
 
-char servername[128][128];
-int  server_usercount[128];
-int  numservers = 0;
-
 /*
  * New /MAP format -Potvin
  * dump_map function.
