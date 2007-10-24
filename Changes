@@ -1851,3 +1851,14 @@ start wircd.exe as usual (window mode).
 Remember to use different listening ports (or interfaces) on every
 unrealircd-*.conf files.
 - Changed version into 3.2.8 as this will be the target for devel branch
+- Undid that. Version is now 3.3-willneverbereleased.
+
+*****
+
+THIS WAS THE DEVELOPMENT BRANCH FOR UNREAL3.3*. HOWEVER, 3.3* HAS BEEN
+DISCONTINUED. FOCUS IS ON 4.* (NEXT-GEN IRCD) AND 3.2* (CURRENT STABLE IRCD).
+FOR 3.2* USE THE BRANCH 'unreal3_2_fixes'
+DO NOT USE THIS 3.3* BRANCH FOR ANYTHING OTHER THAN COPYING FEATURES/FIXES
+FROM 3.3* TO 3.2* !!
+
+*****
