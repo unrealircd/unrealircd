@@ -1566,3 +1566,6 @@
 - Usermode modules now no longer have to be permanent (#3174), this was
   simply a bug that was introduced when adding remote includes support years
   ago.
+- Channelmode modules without parameters (like: +X, but not: +X 1) no longer
+  have to be permanent. Channelmodes with parameters still have to be PERM
+  however, and there are currently no plans to change it.

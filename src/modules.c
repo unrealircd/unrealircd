@@ -607,6 +607,9 @@ void Unload_all_loaded_modules(void)
 			else if (objs->type == MOBJ_UMODE) {
 				UmodeDel(objs->object.umode);
 			}
+			else if (objs->type == MOBJ_CMODE) {
+				CmodeDel(objs->object.cmode);
+			}
 			else if (objs->type == MOBJ_CMDOVERRIDE) {
 				CmdoverrideDel(objs->object.cmdoverride);
 			}
@@ -674,6 +677,9 @@ void Unload_all_testing_modules(void)
 			}
 			else if (objs->type == MOBJ_UMODE) {
 				UmodeDel(objs->object.umode);
+			}
+			else if (objs->type == MOBJ_CMODE) {
+				CmodeDel(objs->object.cmode);
 			}
 			else if (objs->type == MOBJ_CMDOVERRIDE) {
 				CmdoverrideDel(objs->object.cmdoverride);
@@ -746,6 +752,9 @@ int    Module_free(Module *mod)
 		}
 		else if (objs->type == MOBJ_UMODE) {
 			UmodeDel(objs->object.umode);
+		}
+		else if (objs->type == MOBJ_CMODE) {
+			CmodeDel(objs->object.cmode);
 		}
 		else if (objs->type == MOBJ_CMDOVERRIDE) {
 			CmdoverrideDel(objs->object.cmdoverride);

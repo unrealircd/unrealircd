@@ -333,6 +333,7 @@ extern void		win_error();
 extern void add_entropy_configfile(struct stat st, char *buf);
 extern void unload_all_unused_snomasks();
 extern void unload_all_unused_umodes();
+extern void unload_all_unused_extcmodes(void);
 
 extern int charsys_test_language(char *name);
 extern void charsys_add_language(char *name);
@@ -9119,6 +9120,7 @@ int	rehash_internal(aClient *cptr, aClient *sptr, int sig)
 		reread_motdsandrules();
 	unload_all_unused_snomasks();
 	unload_all_unused_umodes();
+	unload_all_unused_extcmodes();
 	loop.ircd_rehashing = 0;	
 	return 1;
 }
