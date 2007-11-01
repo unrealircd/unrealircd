@@ -1563,3 +1563,6 @@
 - Fixed set::modes-on-join: could crash or disfunction with certain
   parameter mode combinations.
 - Minor source cleanup in src/modules/m_map.c, suggested by fez (#0003540).
+- Usermode modules now no longer have to be permanent (#3174), this was
+  simply a bug that was introduced when adding remote includes support years
+  ago.

@@ -9095,6 +9095,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		return rehash_internal(cptr, sptr, sig);
 	return 0;
 #else
+	loop.ircd_rehashing = 1;
 	return rehash_internal(cptr, sptr, sig);
 #endif
 }
@@ -9111,6 +9112,7 @@ int	rehash_internal(aClient *cptr, aClient *sptr, int sig)
 		write_pidfile();
 #endif
 	}
+	loop.ircd_rehashing = 1; /* double checking.. */
 	if (init_conf(configfile, 1) == 0)
 		run_configuration();
 	if (sig == 1)
