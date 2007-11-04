@@ -318,6 +318,7 @@ CmodeParam *extcmode_duplicate_paramlist(CmodeParam *lst)
 			}
 		}
 		n = tbl->dup_struct(lst);
+		n->next = n->prev = NULL; /* safety (required!) */
 		if (head)
 		{
 			AddListItem(n, head);
@@ -523,6 +524,7 @@ aModejEntry *r = (aModejEntry *)r_in;
 aModejEntry *w = (aModejEntry *)MyMalloc(sizeof(aModejEntry));
 
 	memcpy(w, r, sizeof(aModejEntry));
+	w->next = w->prev = NULL;
 	return (CmodeParam *)w;
 }
 

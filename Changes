@@ -1569,3 +1569,5 @@
 - Channelmode modules without parameters (like: +X, but not: +X 1) no longer
   have to be permanent. Channelmodes with parameters still have to be PERM
   however, and there are currently no plans to change it.
+- Fixed bug (in all Unreal versions) with parameter channelmodes, any 3rd
+  party module which adds an extra parameter chanmode could cause crashes.
