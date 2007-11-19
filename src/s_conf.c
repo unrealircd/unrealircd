@@ -940,6 +940,15 @@ void chmode_str(struct ChMode modes, char *mbuf, char *pbuf)
 	*mbuf++=0;
 }
 
+int channellevel_to_int(char *s)
+{
+	if (!strcmp(s, "none"))
+		return CHFL_DEOPPED;
+	if (!strcmp(s, "op") || !strcmp(s, "chanop"))
+		return CHFL_CHANOP;
+	return 0; /* unknown or unsupported */
+}
+
 ConfigFile *config_load(char *filename)
 {
 	struct stat sb;
@@ -1548,6 +1557,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->timesynch_timeout = 3;
 	i->timesynch_server = strdup("193.67.79.202,192.43.244.18,128.250.36.3"); /* nlnet (EU), NIST (US), uni melbourne (AU). All open acces, nonotify, nodns. */
 	i->name_server = strdup("127.0.0.1"); /* default, especially needed for w2003+ in some rare cases */
+	i->level_on_join = CHFL_CHANOP;
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,
@@ -6711,6 +6721,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "snomask-on-connect")) {
 			ircstrdup(tempiConf.user_snomask, cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "level-on-join")) {
+			tempiConf.level_on_join = channellevel_to_int(cep->ce_vardata);
+		}
 		else if (!strcmp(cep->ce_varname, "static-quit")) {
 			ircstrdup(tempiConf.static_quit, cep->ce_vardata);
 		}
@@ -7248,6 +7261,17 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "snomask-on-connect")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, snomask_on_connect, "snomask-on-connect");
+		}
+		else if (!strcmp(cep->ce_varname, "level-on-join")) {
+			char *p;
+			CheckNull(cep);
+			CheckDuplicate(cep, level_on_join, "level-on-join");
+			if (!channellevel_to_int(cep->ce_vardata))
+			{
+				config_error("%s:%i: set::level-on-join: unknown value '%s', should be one of: none, op",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
+				errors++;
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "static-quit")) {
 			CheckNull(cep);

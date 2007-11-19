@@ -1571,3 +1571,5 @@
   however, and there are currently no plans to change it.
 - Fixed bug (in all Unreal versions) with parameter channelmodes, any 3rd
   party module which adds an extra parameter chanmode could cause crashes.
+- Added set::level-on-join: which level should the user get when (s)he's is
+  the first to enter a channel. Currently only 'none' and 'op' are supported.

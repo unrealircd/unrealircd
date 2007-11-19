@@ -608,7 +608,7 @@ DLLFUNC CMD_FUNC(_do_join)
 			 */
 
 			flags =
-			    (ChannelExists(name)) ? CHFL_DEOPPED : CHFL_CHANOP;
+			    (ChannelExists(name)) ? CHFL_DEOPPED : LEVEL_ON_JOIN;
 
 			if (!IsAnOper(sptr))	/* opers can join unlimited chans */
 				if (sptr->user->joined >= MAXCHANNELSPERUSER)
