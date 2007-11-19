@@ -2260,6 +2260,9 @@ set {
   The snomask that will be set on a user when they /oper.</p>
 <p><font class="set">set::modes-on-join &lt;+modes&gt;;</font><br>
   The modes that will be set on a channel when it is first created. Not all modes can be set using this command. +qaohvbeOAzlLk can NOT be set using this command.</p>
+<p><font class="set">set::level-on-join &lt;op|none&gt;;</font><br>
+  The mode that a user will get when he's the first to join a channel. This
+  is either 'op' (channel operator, the default) or 'none'.</p>
 <p><font class="set">set::restrict-usermodes &lt;modes&gt;</font><br>
   Restrict users to set/unset the modes listed here (don't use + or -).<br>
   For example you can set +G in modes-on-connect and G in restrict-usermodes,
