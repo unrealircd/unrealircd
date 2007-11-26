@@ -2271,6 +2271,9 @@ set {
   MEGJEGYZÉS: lehet, hogy ezek a csatornamódok még mindig használhatóak IRC szolgáltatásokon keresztül
   az MLOCK alkalmazásával. Sajnos mi nem tudunk sokat tenni ezügyben, a szolgáltatás fejlesztõket
   kellene megkérned, hogy megvalósítsanak egy restrict-channelmodes funkciót is.</p>
+<p><font class="set">set::level-on-join &lt;op|none&gt;;</font><br>
+  Milyen módot kapjon az a felhasználó, aki elsõként lép be egy csatornára.
+  Lehet 'op' (csatorna operátor, az alapértelmezés) vagy 'none' (nincs mód).</p>
 <p><font class="set">set::restrict-extendedbans &lt;típusok|*&gt;</font><br>
   Nem ad engedélyt a felhasználóknak egyetlen kiterjesztett ban típus használatára sem ("*"), vagy csak bizonyos típusokat utasít vissza (pl.: "qc").</p>
 <p><font class="set">set::auto-join &lt;csatornák&gt;;</font><br>
