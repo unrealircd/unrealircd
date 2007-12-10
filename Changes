@@ -1573,3 +1573,5 @@
   party module which adds an extra parameter chanmode could cause crashes.
 - Added set::level-on-join: which level should the user get when (s)he's is
   the first to enter a channel. Currently only 'none' and 'op' are supported.
+- unreal32docs.html: doubt it will help much but at least this makes it a
+  little bit more clear (#3548), chatops vs globops.
