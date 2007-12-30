@@ -1575,3 +1575,5 @@
   the first to enter a channel. Currently only 'none' and 'op' are supported.
 - unreal32docs.html: doubt it will help much but at least this makes it a
   little bit more clear (#3548), chatops vs globops.
+- ChanMode +S/+c: reverse is now stripped/blocked as well, because it's
+  similar to color, and is just as annoying (..if not worse).

@@ -1243,7 +1243,7 @@ char *_StripColors(unsigned char *text) {
 				rgb = 1;
 				nc = 0;
 			}
-			else 
+			else if (*text != '\026') /* (strip reverse too) */
 			{
 				new_str[i] = *text;
 				i++;

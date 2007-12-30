@@ -788,7 +788,7 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 		char *c;
 		for (c = msgtext; *c; c++)
 		{
-			if (*c == 3 || *c == 27 || *c == 4)
+			if (*c == 3 || *c == 27 || *c == 4 || *c == 22) /* mirc color, ansi, rgb, reverse */
 				return (CANNOT_SEND_NOCOLOR);
 		}
 	}
