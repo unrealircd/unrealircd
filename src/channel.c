@@ -387,10 +387,14 @@ int add_listmode(Ban **list, aClient *cptr, aChannel *chptr, char *banid)
 			}
 			else
 			{
+#ifdef SOCALLEDSMARTBANNING
 			  /* Temp workaround added in b19. -- Syzop */
 			  if (!mycmp(ban->banstr, banid) || (!strchr(banid, '\\') && !strchr(ban->banstr, '\\')))
 				if (!match(ban->banstr, banid))
 					return -1;
+#endif
+			  if (!mycmp(ban->banstr, banid))
+			  	return -1;
 			}
 		else if (!mycmp(ban->banstr, banid))
 			return -1;

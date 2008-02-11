@@ -1577,3 +1577,8 @@
   little bit more clear (#3548), chatops vs globops.
 - ChanMode +S/+c: reverse is now stripped/blocked as well, because it's
   similar to color, and is just as annoying (..if not worse).
+- So called 'smart' banning is now disabled by default, this means you can
+  now set a ban on *!*@*h.com and then later add one on *!*@*blah.com without
+  any trouble. Previously the second one was rejected due to the former
+  already matching it. To change it back edit the include/config.h setting
+  SOCALLEDSMARTBANNING.

@@ -142,6 +142,13 @@
 #undef JOIN_INSTEAD_OF_SJOIN_ON_REMOTEJOIN
 
 /*
+ * So called 'smart' banning: if this is enabled and a ban on like *!*@*h.com is present,
+ * then you cannot add a ban like *!*@*blah.com. In other words.. the ircd tries to be "smart".
+ * In general this is considered quite annoying. This was on by default until Unreal 3.2.8.
+ */
+#undef SOCALLEDSMARTBANNING
+
+/*
 ** Freelinks garbage collector -Stskeeps
 **
 ** GARBAGE_COLLECT_EVERY - how many seconds between every garbage collect
