@@ -564,7 +564,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 				return -1;
 			}
 			for (p=hostmask; *p; p++)
-				if (isalpha(*p))
+				if (isalpha(*p) && !isxdigit(*p))
 				{
 					sendnotice(sptr, "ERROR: (g)zlines must be placed at *@\037IPMASK\037, not *@\037HOSTMASK\037 "
 					                 "(so for example *@192.168.* is ok, but *@*.aol.com is not). "

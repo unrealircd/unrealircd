@@ -1582,3 +1582,5 @@
   any trouble. Previously the second one was rejected due to the former
   already matching it. To change it back edit the include/config.h setting
   SOCALLEDSMARTBANNING.
+- Fixed (G)ZLINE check.. it was incorrectly rejecting many IPv6 bans.
+  Reported by guigui (#0003572).
