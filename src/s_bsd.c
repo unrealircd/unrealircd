@@ -1409,6 +1409,7 @@ static int read_packet(aClient *cptr, fd_set *rfd)
 	if (FD_ISSET(cptr->fd, rfd) &&
 	    !(IsPerson(cptr) && DBufLength(&cptr->recvQ) > 6090))
 	{
+		Hook *h;
 		SET_ERRNO(0);
 #ifdef USE_SSL
 		if (cptr->flags & FLAGS_SSL)
@@ -1427,6 +1428,12 @@ static int read_packet(aClient *cptr, fd_set *rfd)
 		    return 1;
 		if (length <= 0)
 			return length;
+		for (h = Hooks[HOOKTYPE_RAWPACKET_IN]; h; h = h->next)
+		{
+			int v = (*(h->func.intfunc))(cptr, readbuf, length);
+			if (v <= 0)
+				return v;
+		}
 	}
 	/*
 	   ** For server connections, we process as many as we can without
