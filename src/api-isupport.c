@@ -132,6 +132,7 @@ void isupport_init(void)
 	IsupportAdd(NULL, "CHANTYPES", "#");
 	IsupportAdd(NULL, "MODES", my_itoa(MAXMODEPARAMS));
 	IsupportAdd(NULL, "SILENCE", my_itoa(SILENCE_LIMIT));
+	IsupportAdd(NULL, "WATCHOPTS", "A");
 	IsupportAdd(NULL, "WATCH", my_itoa(MAXWATCH));
 	IsupportAdd(NULL, "WALLCHOPS", NULL);
 	IsupportAdd(NULL, "MAXTARGETS", my_itoa(MAXTARGETS));

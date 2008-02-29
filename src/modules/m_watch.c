@@ -81,13 +81,28 @@ DLLFUNC int MOD_UNLOAD(m_watch)(int module_unload)
  * RPL_WATCHOFF	- Succesfully removed from WATCH-list.
  * ERR_TOOMANYWATCH - Take a guess :>  Too many WATCH entries.
  */
-static void show_watch(aClient *cptr, char *name, int rpl1, int rpl2)
+static void show_watch(aClient *cptr, char *name, int rpl1, int rpl2, int awaynotify)
 {
 	aClient *acptr;
 
 
 	if ((acptr = find_person(name, NULL)))
 	{
+		if (awaynotify && acptr->user->away)
+		{
+			if (IsWebTV(cptr))
+				sendto_one(cptr, ":IRC!IRC@%s PRIVMSG %s :%s (%s@%s) is on IRC, but away", 
+				    me.name, cptr->name, acptr->name, acptr->user->username,
+				    IsHidden(acptr) ? acptr->user->virthost : acptr->user->
+				    realhost);
+			else
+				sendto_one(cptr, rpl_str(RPL_NOWISAWAY), me.name, cptr->name,
+				    acptr->name, acptr->user->username,
+				    IsHidden(acptr) ? acptr->user->virthost : acptr->user->
+				    realhost, acptr->user->lastaway);
+			return;
+		}
+		
 		if (IsWebTV(cptr))
 			sendto_one(cptr, ":IRC!IRC@%s PRIVMSG %s :%s (%s@%s) is on IRC", 
 			    me.name, cptr->name, acptr->name, acptr->user->username,
@@ -120,7 +135,7 @@ DLLFUNC CMD_FUNC(m_watch)
 	aClient *acptr;
 	char *s, **pav = parv, *user;
 	char *p = NULL, *def = "l";
-
+	int awaynotify = 0;
 
 
 	if (parc < 2)
@@ -137,6 +152,9 @@ DLLFUNC CMD_FUNC(m_watch)
 	{
 		if ((user = (char *)index(s, '!')))
 			*user++ = '\0';	/* Not used */
+			
+		if (!strcmp(s, "A"))
+			awaynotify = 1;
 
 		/*
 		 * Prefix of "+", they want to add a name to their WATCH
@@ -157,10 +175,10 @@ DLLFUNC CMD_FUNC(m_watch)
 					continue;
 				}
 
-				add_to_watch_hash_table(s + 1, sptr);
+				add_to_watch_hash_table(s + 1, sptr, awaynotify);
 			}
 
-			show_watch(sptr, s + 1, RPL_NOWON, RPL_NOWOFF);
+			show_watch(sptr, s + 1, RPL_NOWON, RPL_NOWOFF, awaynotify);
 			continue;
 		}
 
@@ -173,7 +191,7 @@ DLLFUNC CMD_FUNC(m_watch)
 			if (!*(s+1))
 				continue;
 			del_from_watch_hash_table(s + 1, sptr);
-			show_watch(sptr, s + 1, RPL_WATCHOFF, RPL_WATCHOFF);
+			show_watch(sptr, s + 1, RPL_WATCHOFF, RPL_WATCHOFF, 0);
 
 			continue;
 		}

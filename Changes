@@ -1584,3 +1584,5 @@
   SOCALLEDSMARTBANNING.
 - Fixed (G)ZLINE check.. it was incorrectly rejecting many IPv6 bans.
   Reported by guigui (#0003572).
+- Backport from 3.3 away notification from Oct 2006, this is v0, a further
+  patch will follow soon and the numerics will be changed.

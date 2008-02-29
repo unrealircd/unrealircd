@@ -781,6 +781,7 @@ struct User {
 #ifdef JOINTHROTTLE
 	aJFlood *jflood;
 #endif
+	TS lastaway;
 };
 
 struct Server {
