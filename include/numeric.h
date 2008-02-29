@@ -336,6 +336,7 @@
  * These are also in the range 600-799.
  */
 
+#define RPL_REAWAY           597
 #define RPL_GONEAWAY         598
 #define RPL_NOTAWAY          599
 #define RPL_LOGON            600

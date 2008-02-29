@@ -1586,3 +1586,40 @@
   Reported by guigui (#0003572).
 - Backport from 3.3 away notification from Oct 2006, this is v0, a further
   patch will follow soon and the numerics will be changed.
+- Ok, finished away notification in WATCH. It now shows the away reasons too.
+  This new feature (away notify) is announced in 005 (ISUPPORT) as: WATCHOPTS=A
+
+  Format is: WATCH A +UserOne +UserTwo
+  
+  New numerics to cope with away notification in WATCH are:
+  RPL_NOWISAWAY: to indicate the user is away _when adding_ it to WATCH list
+  RPL_GONEAWAY:  user was not away, but is now
+  RPL_NOTAWAY:   user was away, but is no longer away
+  RPL_NOWISAWAY: user was away, and still is, but the reason changed
+  Example:
+
+  WATCH A +Target
+  Request to add user 'Target' to the watch list with away notification
+
+  :maintest.test.net 609 MySelf Target ~blih test.testnet 1204309588 :not here atm
+  Reply to watch add: user is online and away, reason is provided
+
+  :maintest.test.net 599 MySelf Target ~blih test.testnet 1204309588 :is no longer away
+  User is back (no longer away)
+
+  :maintest.test.net 598 MySelf Target ~blih test.testnet 1204309722 :lunch
+  State change: user is now away, reason is provided
+
+  :maintest.test.net 597 MySelf Target ~blih test.testnet 1204309738 :shopping, bbl
+  User is still away, but reason changed.
+
+  The syntax for each numeric is:
+  <nickname> <username> <hostname> <awaysince> :<away reason>
+  In case of 599 (RPL_NOTAWAY) it is:
+  <nickname> <username> <hostname> <awaysince> :is no longer away
+
+  For the record, this is all based on a draft from codemastr from 2004, which was
+  implemented in Unreal3.3 (devel branch) in 2006. Today, in 2008 it was updated
+  with away reason support and backported to Unreal3.2. Because away notification
+  hasn't been used until now (due to it only being in Unreal3.3) we felt it was
+  safe to break some numerics.

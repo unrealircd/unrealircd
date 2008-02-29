@@ -100,7 +100,7 @@ DLLFUNC int MOD_UNLOAD(m_away)(int module_unload)
 int  m_away(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 char *away, *awy2 = parv[1];
-int n;
+int n, wasaway = 0;
 
 	if (IsServer(sptr))
 		return 0;
@@ -157,14 +157,17 @@ int n;
         sendto_serv_butone_token(cptr, parv[0], MSG_AWAY, TOK_AWAY, ":%s", awy2);
 
 	if (away)
+	{
 		MyFree(away);
+		wasaway = 1;
+        }
 	
 	away = sptr->user->away = strdup(awy2);
 
         if (MyConnect(sptr))
                 sendto_one(sptr, rpl_str(RPL_NOWAWAY), me.name, parv[0]);
 
-	hash_check_watch(cptr, RPL_GONEAWAY);
+	hash_check_watch(cptr, wasaway ? RPL_REAWAY : RPL_GONEAWAY);
 	
         return 0;
 }

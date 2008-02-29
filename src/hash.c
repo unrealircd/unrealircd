@@ -540,7 +540,7 @@ int   hash_check_watch(aClient *cptr, int reply)
 	Link  *lp;
 	int awaynotify = 0;
 	
-	if ((reply == RPL_GONEAWAY) || (reply == RPL_NOTAWAY))
+	if ((reply == RPL_GONEAWAY) || (reply == RPL_NOTAWAY) || (reply == RPL_REAWAY))
 		awaynotify = 1;
 	
 	
@@ -585,22 +585,20 @@ int   hash_check_watch(aClient *cptr, int reply)
 			if (!lp->flags)
 				continue; /* skip away/unaway notification for users not interested in them */
 
-			if (IsWebTV(lp->value.cptr))
-				sendto_one(lp->value.cptr, ":IRC!IRC@%s PRIVMSG %s :%s (%s@%s) "
-					" %s IRC",
-					me.name, lp->value.cptr->name, cptr->name,
-				    	(IsPerson(cptr) ? cptr->user->username : "<N/A>"),
-					(IsPerson(cptr) ?
-				    	(IsHidden(cptr) ? cptr->user->virthost : cptr->
-				    	user->realhost) : "<N/A>"), reply == RPL_GONEAWAY ? 
-					"is now away" : "is no longer away");
-			else
+			if (reply == RPL_NOTAWAY)
 				sendto_one(lp->value.cptr, rpl_str(reply), me.name,
 				    lp->value.cptr->name, cptr->name,
 				    (IsPerson(cptr) ? cptr->user->username : "<N/A>"),
 				    (IsPerson(cptr) ?
 				    (IsHidden(cptr) ? cptr->user->virthost : cptr->
-				    user->realhost) : "<N/A>"), cptr->user->lastaway, cptr->info);
+				    user->realhost) : "<N/A>"), cptr->user->lastaway);
+			else /* RPL_GONEAWAY / RPL_REAWAY */
+				sendto_one(lp->value.cptr, rpl_str(reply), me.name,
+				    lp->value.cptr->name, cptr->name,
+				    (IsPerson(cptr) ? cptr->user->username : "<N/A>"),
+				    (IsPerson(cptr) ?
+				    (IsHidden(cptr) ? cptr->user->virthost : cptr->
+				    user->realhost) : "<N/A>"), cptr->user->lastaway, cptr->user->away);
 		}
 	}
 	
