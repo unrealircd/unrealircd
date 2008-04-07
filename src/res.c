@@ -49,9 +49,9 @@
 #include <res.h>
 
 /* Forward declerations */
-void unrealdns_cb_iptoname(void *arg, int status, struct hostent *he);
-void unrealdns_cb_nametoip_verify(void *arg, int status, struct hostent *he);
-void unrealdns_cb_nametoip_link(void *arg, int status, struct hostent *he);
+void unrealdns_cb_iptoname(void *arg, int status, int timeouts, struct hostent *he);
+void unrealdns_cb_nametoip_verify(void *arg, int status, int timeouts, struct hostent *he);
+void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct hostent *he);
 void unrealdns_delasyncconnects(void);
 static unsigned int unrealdns_haship(void *binaryip, int length);
 static void unrealdns_addtocache(char *name, void *binaryip, int length);
@@ -240,7 +240,7 @@ char ipv4[4];
 #endif
 }
 
-void unrealdns_cb_iptoname(void *arg, int status, struct hostent *he)
+void unrealdns_cb_iptoname(void *arg, int status, int timeouts, struct hostent *he)
 {
 DNSReq *r = (DNSReq *)arg;
 DNSReq *newr;
@@ -290,7 +290,7 @@ char *p;
 }
 
 
-void unrealdns_cb_nametoip_verify(void *arg, int status, struct hostent *he)
+void unrealdns_cb_nametoip_verify(void *arg, int status, int timeouts, struct hostent *he)
 {
 DNSReq *r = (DNSReq *)arg;
 aClient *acptr = r->cptr;
@@ -363,7 +363,7 @@ bad:
 	unrealdns_freeandremovereq(r);
 }
 
-void unrealdns_cb_nametoip_link(void *arg, int status, struct hostent *he)
+void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct hostent *he)
 {
 DNSReq *r = (DNSReq *)arg;
 int n;

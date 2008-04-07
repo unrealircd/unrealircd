@@ -1623,3 +1623,5 @@
   with away reason support and backported to Unreal3.2. Because away notification
   hasn't been used until now (due to it only being in Unreal3.3) we felt it was
   safe to break some numerics.
+- Upgraded c-ares to 1.5.1, thanks to aegis for the partial patch (#0003671).
+  This also fixed a curl compile/run issue, reported by static-x (#0003545).
