@@ -48,6 +48,24 @@
 #ifdef _WIN32
 #include "version.h"
 #endif
+/* This is all for getrusage and friends.. taken from src/s_debug.c so should be safe. */
+#ifdef HPUX
+# include <sys/syscall.h>
+# define getrusage(a,b) syscall(SYS_GETRUSAGE, a, b)
+#endif
+#ifdef GETRUSAGE_2
+# ifdef _SOLARIS
+#  include <sys/time.h>
+#  ifdef RUSAGEH
+#   include <sys/rusage.h>
+#  endif
+# endif
+# include <sys/resource.h>
+#else
+#  ifdef TIMES_2
+#   include <sys/times.h>
+#  endif
+#endif
 
 DLLFUNC int m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 DLLFUNC int m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[]);
@@ -2424,7 +2442,11 @@ int _dospamfilter(aClient *sptr, char *str_in, int type, char *target, int flags
 {
 aTKline *tk;
 char *str;
-
+int ret;
+#ifdef SPAMFILTER_DETECTSLOW
+struct rusage rnow, rprev;
+long ms_past;
+#endif
 	if (rettk)
 		*rettk = NULL; /* initialize to NULL */
 
@@ -2445,7 +2467,35 @@ char *str;
 			continue;
 		if ((flags & SPAMFLAG_NOWARN) && (tk->ptr.spamf->action == BAN_ACT_WARN))
 			continue;
-		if (!regexec(&tk->ptr.spamf->expr, str, 0, NULL, 0))
+#ifdef SPAMFILTER_DETECTSLOW
+		memset(&rnow, 0, sizeof(rnow));
+		memset(&rprev, 0, sizeof(rnow));
+
+		getrusage(RUSAGE_SELF, &rprev);
+#endif
+
+		ret = regexec(&tk->ptr.spamf->expr, str, 0, NULL, 0);
+
+#ifdef SPAMFILTER_DETECTSLOW
+		getrusage(RUSAGE_SELF, &rnow);
+		
+		ms_past = ((rnow.ru_utime.tv_sec - rprev.ru_utime.tv_sec) * 1000) +
+		          ((rnow.ru_utime.tv_usec - rprev.ru_utime.tv_usec) / 1000);
+
+		if ((SPAMFILTER_DETECTSLOW_FATAL > 0) && (ms_past > SPAMFILTER_DETECTSLOW_FATAL))
+		{
+			sendto_realops("[Spamfilter] WARNING: Too slow spamfilter detected (took %ld msec to execute) "
+			               "-- spamfilter will be \002REMOVED!\002: %s", ms_past, tk->reason);
+			tkl_del_line(tk);
+			return 0; /* Act as if it didn't match, even if it did.. it's gone now anyway.. */
+		} else
+		if ((SPAMFILTER_DETECTSLOW_WARN > 0) && (ms_past > SPAMFILTER_DETECTSLOW_WARN))
+		{
+			sendto_realops("[Spamfilter] WARNING: SLOW Spamfilter detected (took %ld msec to execute): %s",
+				ms_past, tk->reason);
+		}
+#endif
+		if (!ret)
 		{
 			/* matched! */
 			char buf[1024];

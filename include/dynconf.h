@@ -147,6 +147,8 @@ struct zConfiguration {
 	char spamfilter_vchan_deny;
 	SpamExcept *spamexcept;
 	char *spamexcept_line;
+	long spamfilter_detectslow_warn;
+	long spamfilter_detectslow_fatal;
 	int maxbans;
 	int maxbanlength;
 	int timesynch_enabled;
@@ -255,6 +257,9 @@ extern MODVAR aConfiguration iConf;
 #define SPAMFILTER_VIRUSCHAN	iConf.spamfilter_virus_help_channel
 #define SPAMFILTER_VIRUSCHANDENY	iConf.spamfilter_vchan_deny
 #define SPAMFILTER_EXCEPT		iConf.spamexcept_line
+#define SPAMFILTER_DETECTSLOW_WARN	iConf.spamfilter_detectslow_warn
+#define SPAMFILTER_DETECTSLOW_FATAL	iConf.spamfilter_detectslow_fatal
+
 #define CHECK_TARGET_NICK_BANS	iConf.check_target_nick_bans
 
 #define MAXBANS		iConf.maxbans

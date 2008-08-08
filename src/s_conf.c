@@ -1548,6 +1548,8 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->spamfilter_ban_time = 86400; /* 1d */
 	i->spamfilter_ban_reason = strdup("Spam/advertising");
 	i->spamfilter_virus_help_channel = strdup("#help");
+	i->spamfilter_detectslow_warn = 250;
+	i->spamfilter_detectslow_fatal = 500;
 	i->maxdccallow = 10;
 	i->channel_command_prefix = strdup("`!.");
 	i->check_target_nick_bans = 1;
@@ -7022,13 +7024,13 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			{
 				if (!strcmp(cepp->ce_varname, "ban-time"))
 					tempiConf.spamfilter_ban_time = config_checkval(cepp->ce_vardata,CFG_TIME);
-				if (!strcmp(cepp->ce_varname, "ban-reason"))
+				else if (!strcmp(cepp->ce_varname, "ban-reason"))
 					ircstrdup(tempiConf.spamfilter_ban_reason, cepp->ce_vardata);
-				if (!strcmp(cepp->ce_varname, "virus-help-channel"))
+				else if (!strcmp(cepp->ce_varname, "virus-help-channel"))
 					ircstrdup(tempiConf.spamfilter_virus_help_channel, cepp->ce_vardata);
-				if (!strcmp(cepp->ce_varname, "virus-help-channel-deny"))
+				else if (!strcmp(cepp->ce_varname, "virus-help-channel-deny"))
 					tempiConf.spamfilter_vchan_deny = config_checkval(cepp->ce_vardata,CFG_YESNO);
-				if (!strcmp(cepp->ce_varname, "except"))
+				else if (!strcmp(cepp->ce_varname, "except"))
 				{
 					char *name, *p;
 					SpamExcept *e;
@@ -7044,6 +7046,14 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 							AddListItem(e, tempiConf.spamexcept);
 						}
 					}
+				}
+				else if (!strcmp(cepp->ce_varname, "detect-slow-warn"))
+				{
+					tempiConf.spamfilter_detectslow_warn = atol(cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "detect-slow-fatal"))
+				{
+					tempiConf.spamfilter_detectslow_fatal = atol(cepp->ce_vardata);
 				}
 			}
 		}
@@ -7910,6 +7920,14 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				{ 
 					CheckDuplicate(cepp, spamfilter_except, "spamfilter::except");
 				} else
+#ifdef SPAMFILTER_DETECTSLOW
+				if (!strcmp(cepp->ce_varname, "detect-slow-warn"))
+				{ 
+				} else
+				if (!strcmp(cepp->ce_varname, "detect-slow-fatal"))
+				{ 
+				} else
+#endif
 				{
 					config_error_unknown(cepp->ce_fileptr->cf_filename,
 						cepp->ce_varlinenum, "set::spamfilter",

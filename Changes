@@ -1625,3 +1625,16 @@
   safe to break some numerics.
 - Upgraded c-ares to 1.5.1, thanks to aegis for the partial patch (#0003671).
   This also fixed a curl compile/run issue, reported by static-x (#0003545).
+- Added slow spamfilter detection. For each spamfilter, Unreal will check,
+  each time it executes, how LONG it takes to execute. When a certain threshold
+  is reached the IRCd will warn or even remove the spamfilter. This will prevent
+  a spamfilter (regex) from slowing down the IRCd too much, though it's still not
+  a guarantee that it will never go to a halt (eg: in case it takes several
+  minutes to execute a regex or loops forever).
+  Warning can be configured via set::spamfilter::slowdetect-warn (default:
+  250 milliseconds) and automatic deletion of spamfilters if it takes too
+  long is set through set::spamfilter::slowdetect-fatal (default: 500 ms).
+  NOTE: slow spamfilter detection is currently not available on Windows.
+  NOTE 2: to disable slow detection you can set the warn and fatal settings
+  to 0 (zero). OR to really disable all code, remove SPAMFILTER_DETECTSLOW
+  from include/config.h and recompile.

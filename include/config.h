@@ -462,6 +462,16 @@
  */
 #define JOINTHROTTLE
 
+/* Detect slow spamfilters? This requires a little more cpu time when processing
+ * any spamfilter (like on text/connect/..) but will save you from slowing down
+ * your IRCd to a near-halt (well, in most cases.. there are still cases like when
+ * it goes into a loop that it will still stall completely... forever..).
+ * This is kinda experimental, and requires getrusage.
+ */
+#ifndef _WIN32
+#define SPAMFILTER_DETECTSLOW
+#endif
+
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #define MOTD MPATH
 #define RULES RPATH
