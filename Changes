@@ -1638,3 +1638,7 @@
   NOTE 2: to disable slow detection you can set the warn and fatal settings
   to 0 (zero). OR to really disable all code, remove SPAMFILTER_DETECTSLOW
   from include/config.h and recompile.
+- Added another Mac OS X hack, such as one that should help against
+  'error setting max fd's to 9223372036854775807' which prevents the ircd
+  from booting up. Reported by btcentral and Bock. This hack might not be
+  totally correct though ;).

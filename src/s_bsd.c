@@ -560,6 +560,8 @@ void init_sys(void)
 	limit.rlim_cur = limit.rlim_max;	/* make soft limit the max */
 	if (setrlimit(RLIMIT_FD_MAX, &limit) == -1)
 	{
+/* HACK: if it's mac os X then don't error... */
+#ifndef OSXTIGER
 #ifndef LONG_LONG_RLIM_T
 		(void)fprintf(stderr, "error setting max fd's to %ld\n",
 #else
@@ -567,6 +569,7 @@ void init_sys(void)
 #endif
 		    limit.rlim_cur);
 		exit(-1);
+#endif
 	}
 }
 #endif
