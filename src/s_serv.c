@@ -46,6 +46,10 @@ static char sccsid[] =
 #ifdef USE_LIBCURL
 #include <curl/curl.h>
 #endif
+#ifndef _WIN32
+/* for uname(), is POSIX so should be OK... */
+#include <sys/utsname.h>
+#endif
 extern VOIDSIG s_die();
 
 static char buf[BUFSIZE];
@@ -135,6 +139,31 @@ extern void reinit_ssl(aClient *);
 #ifndef NO_FDLIST
 extern fdlist serv_fdlist;
 #endif
+
+char *getosname(void)
+{
+static char buf[1024];
+struct utsname osinf;
+char *p;
+
+	memset(&osinf, 0, sizeof(osinf));
+	if (uname(&osinf) != 0)
+		return "<unknown>";
+	snprintf(buf, sizeof(buf), "%s %s %s %s %s",
+		osinf.sysname,
+		osinf.nodename,
+		osinf.release,
+		osinf.version,
+		osinf.machine);
+	/* get rid of cr/lf */
+	for (p=buf; *p; p++)
+		if ((*p == '\n') || (*p == '\r'))
+		{
+			*p = '\0';
+			break;
+		}
+	return buf;
+}
 
 /*
 ** m_version

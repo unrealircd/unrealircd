@@ -154,6 +154,8 @@ typedef unsigned int u_int;
 #define MYOSNAME OSName
 extern char OSName[256];
 #define PATH_MAX MAX_PATH
+#else
+#define MYOSNAME getosname()
 #endif
 #ifdef DEBUGMODE
 // #define ircsprintf sprintf
