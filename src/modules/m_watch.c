@@ -136,7 +136,7 @@ DLLFUNC CMD_FUNC(m_watch)
 	char *s, **pav = parv, *user;
 	char *p = NULL, *def = "l";
 	int awaynotify = 0;
-
+	int did_l=0, did_s=0;
 
 	if (parc < 2)
 	{
@@ -212,12 +212,14 @@ DLLFUNC CMD_FUNC(m_watch)
 		 * their WATCH list.  I imagine this could be CPU intensive if its
 		 * done alot, perhaps an auto-lag on this?
 		 */
-		if (*s == 'S' || *s == 's')
+		if ((*s == 'S' || *s == 's') && !did_s)
 		{
 			Link *lp;
 			aWatch *anptr;
 			int  count = 0;
-
+			
+			did_s = 1;
+			
 			/*
 			 * Send a list of how many users they have on their WATCH list
 			 * and how many WATCH lists they are on.
@@ -274,9 +276,11 @@ DLLFUNC CMD_FUNC(m_watch)
 		 * their WATCH list AND if they are online or offline? Sheesh,
 		 * greedy arn't we?
 		 */
-		if (*s == 'L' || *s == 'l')
+		if ((*s == 'L' || *s == 'l') && !did_l)
 		{
 			Link *lp = sptr->watch;
+
+			did_l = 1;
 
 			while (lp)
 			{

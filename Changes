@@ -1642,3 +1642,5 @@
   'error setting max fd's to 9223372036854775807' which prevents the ircd
   from booting up. Reported by btcentral and Bock. This hack might not be
   totally correct though ;).
+- Limit watch status requests to one per time, more will often flood you off
+  and is stupid/useless.
