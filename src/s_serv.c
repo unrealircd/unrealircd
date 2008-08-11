@@ -784,7 +784,8 @@ CMD_FUNC(m_rehash)
 CMD_FUNC(m_restart)
 {
 char *reason = parv[1];
-
+	aClient *acptr;
+	int i;
 	/* Check permissions */
 	if (MyClient(sptr) && !OPCanRestart(sptr))
 	{
@@ -829,6 +830,20 @@ char *reason = parv[1];
 		}
 	}
 	sendto_ops("Server is Restarting by request of %s", parv[0]);
+	
+	for (i = 0; i <= LastSlot; i++)
+	{
+		if (!(acptr = local[i]))
+			continue;
+		if (IsClient(acptr))
+			sendto_one(acptr,
+			    ":%s %s %s :Server Restarting. %s",
+			    me.name, IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, sptr->name);
+		else if (IsServer(acptr))
+			sendto_one(acptr, ":%s ERROR :Restarted by %s: %s",
+			    me.name, get_client_name(sptr, TRUE), reason ? reason : "No reason");
+	}
+
 	server_reboot(reason ? reason : "No reason");
 	return 0;
 }
