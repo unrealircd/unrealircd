@@ -82,7 +82,7 @@ struct zConfiguration {
 	unsigned mkpasswd_for_everyone:1;
 	unsigned allow_part_if_shunned:1;
 	unsigned check_target_nick_bans:1;
-	unsigned use_egd;
+	unsigned use_egd : 1;
 	long host_timeout;
 	int  host_retries;
 	char *name_server;
@@ -110,11 +110,16 @@ struct zConfiguration {
 #ifdef USE_SSL
 	char *x_server_cert_pem;
 	char *x_server_key_pem;
+	char *x_server_cipher_list;
 	char *trusted_ca_file;
 	long ssl_options;
+	int ssl_renegotiate_bytes;
+	int ssl_renegotiate_timeout;
+	
 #elif defined(_WIN32)
-	void *bogus1, *bogus2, *bogus3;
+	void *bogus1, *bogus2, *bogus3, *bogus5;
 	long bogus4;
+	int bogus6, bogus7;
 #endif
 	enum UHAllowed userhost_allowed;
 	char *restrict_usermodes;
@@ -286,6 +291,7 @@ struct SetCheck {
 	unsigned has_mkpasswd_for_everyone:1;
 	unsigned has_allow_part_if_shunned:1;
 	unsigned has_ssl_egd:1;
+	unsigned has_ssl_server_cipher_list :1;
 	unsigned has_dns_timeout:1;
 	unsigned has_dns_retries:1;
 	unsigned has_dns_nameserver:1;
@@ -316,6 +322,8 @@ struct SetCheck {
 	unsigned has_ssl_key:1;
 	unsigned has_ssl_trusted_ca_file:1;
 	unsigned has_ssl_options:1;
+	unsigned has_renegotiate_timeout : 1;
+	unsigned has_renegotiate_bytes : 1;
 #endif
 	unsigned has_allow_userhost_change:1;
 	unsigned has_restrict_usermodes:1;

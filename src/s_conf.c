@@ -1503,6 +1503,7 @@ void	free_iConf(aConfiguration *i)
 #ifdef USE_SSL
 	ircfree(i->x_server_cert_pem);
 	ircfree(i->x_server_key_pem);
+	ircfree(i->x_server_cipher_list);
 	ircfree(i->trusted_ca_file);
 #endif	
 	ircfree(i->restrict_usermodes);
@@ -7083,6 +7084,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					if (cepp->ce_vardata)
 						tempiConf.egd_path = strdup(cepp->ce_vardata);
 				}
+				else if (!strcmp(cepp->ce_varname, "server-cipher-list"))
+				{
+					ircstrdup(tempiConf.x_server_cipher_list, cepp->ce_vardata);
+				}
 				else if (!strcmp(cepp->ce_varname, "certificate"))
 				{
 					ircstrdup(tempiConf.x_server_cert_pem, cepp->ce_vardata);	
@@ -7094,6 +7099,14 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "trusted-ca-file"))
 				{
 					ircstrdup(tempiConf.trusted_ca_file, cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "renegotiate-bytes"))
+				{
+					tempiConf.ssl_renegotiate_bytes = config_checkval(cepp->ce_vardata, CFG_TIME);
+				}
+				else if (!strcmp(cepp->ce_varname, "renegotiate-timeout"))
+				{
+					tempiConf.ssl_renegotiate_timeout = config_checkval(cepp->ce_vardata, CFG_TIME);
 				}
 				else if (!strcmp(cepp->ce_varname, "options"))
 				{
@@ -7994,6 +8007,19 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				if (!strcmp(cepp->ce_varname, "egd")) {
 					CheckDuplicate(cep, ssl_egd, "ssl::egd");
+				}
+				else if (!strcmp(cepp->ce_varname, "renegotiate-timeout"))
+				{
+					CheckDuplicate(cep, renegotiate_timeout, "ssl::renegotiate-timeout");
+				}
+				else if (!strcmp(cepp->ce_varname, "renegotiate-bytes"))
+				{
+					CheckDuplicate(cep, renegotiate_bytes, "ssl::renegotiate-bytes");
+				}
+				else if (!strcmp(cepp->ce_varname, "server-cipher-list"))
+				{
+					CheckNull(cepp);
+					CheckDuplicate(cep, ssl_server_cipher_list, "ssl::server-cipher-list");
 				}
 				else if (!strcmp(cepp->ce_varname, "certificate"))
 				{
