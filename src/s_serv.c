@@ -140,6 +140,7 @@ extern void reinit_ssl(aClient *);
 extern fdlist serv_fdlist;
 #endif
 
+#ifndef _WIN32
 char *getosname(void)
 {
 static char buf[1024];
@@ -164,6 +165,7 @@ char *p;
 		}
 	return buf;
 }
+#endif
 
 /*
 ** m_version
