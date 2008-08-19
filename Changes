@@ -1667,3 +1667,5 @@
   [Backport, only slightly modified for speed]
 - #0001924 - requested by syzop: Added ./unreal gencloak, which generates
   random keys 10 ~ 20 characters in length (*NIX only). [Backport, aquanight]
+- #0003313 reported by Stealth, regarding not erroring/warning when me::name
+  is bigger than HOSTLEN, from now it will error on config read. [Backport, sts]
