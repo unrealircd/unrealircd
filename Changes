@@ -1663,3 +1663,5 @@
   admin block, and forget a semicolon on a line, Unreal will proceed to use
   the block with no error, but the information will be incorrect/incomplete.
   [Backport, WolfSage]
+- #0002833 reported and patched by tabrisnet, implementing UHNAMES
+  [Backport, only slightly modified for speed]
