@@ -682,7 +682,7 @@ CMD_FUNC(m_rehash)
 		parv[1] = parv[2];
 	}
 
-	if (!BadPtr(parv[1]) && strcmp(parv[1], "-all"))
+	if (!BadPtr(parv[1]) && stricmp(parv[1], "-all"))
 	{
 
 		if (!IsAdmin(sptr) && !IsCoAdmin(sptr))
