@@ -911,6 +911,42 @@ extern time_t TSoffset;
 extern int unreal_time_synch(int timeout);
 
 #ifndef _WIN32
+static void generate_cloakkeys()
+{
+	/* Generate 3 cloak keys */
+#define GENERATE_CLOAKKEY_MINLEN 10
+#define GENERATE_CLOAKKEY_MAXLEN 20 /* Length of cloak keys to generate. */
+	char keyBuf[GENERATE_CLOAKKEY_MAXLEN + 1];
+	int keyNum;
+	int keyLen;
+	int charIndex;
+	int value;
+
+	for (keyNum = 0; keyNum < 3; ++keyNum)
+	{
+		keyLen = (getrandom8() % (GENERATE_CLOAKKEY_MAXLEN - GENERATE_CLOAKKEY_MINLEN + 1)) + GENERATE_CLOAKKEY_MINLEN;
+		for (charIndex = 0; charIndex < keyLen; ++charIndex)
+		{
+			switch (getrandom8() % 3)
+			{
+				case 0: /* Uppercase. */
+					keyBuf[charIndex] = (char)('A' + (getrandom8() % ('Z' - 'A')));
+					break;
+				case 1: /* Lowercase. */
+					keyBuf[charIndex] = (char)('a' + (getrandom8() % ('z' - 'a')));
+					break;
+				case 2: /* Digit. */
+					keyBuf[charIndex] = (char)('0' + (getrandom8() % ('9' - '0')));
+					break;
+			}
+		}
+		keyBuf[keyLen] = '\0';
+		(void)fprintf(stderr, "%s\n", keyBuf);
+	}
+}
+#endif
+
+#ifndef _WIN32
 int main(int argc, char *argv[])
 #else
 int InitwIRCD(int argc, char *argv[])
@@ -1205,6 +1241,11 @@ int InitwIRCD(int argc, char *argv[])
 				      "UnrealIRCD/32", MB_OK);
 			  }
 # endif
+			  exit(0);
+#endif
+#ifndef _WIN32
+		  case 'k':
+			  generate_cloakkeys();
 			  exit(0);
 #endif
 		  default:

@@ -1665,3 +1665,5 @@
   [Backport, WolfSage]
 - #0002833 reported and patched by tabrisnet, implementing UHNAMES
   [Backport, only slightly modified for speed]
+- #0001924 - requested by syzop: Added ./unreal gencloak, which generates
+  random keys 10 ~ 20 characters in length (*NIX only). [Backport, aquanight]

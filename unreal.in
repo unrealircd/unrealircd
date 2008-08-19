@@ -34,6 +34,8 @@ elif [ "$1" = "mkpasswd" ] ; then
 	@BINDIR@ -P $2 $3
 elif [ "$1" = "version" ] ; then
 	@BINDIR@ -v
+elif [ "$1" = "gencloak" ] ; then
+	@BINDIR@/ircd -k
 elif [ "$1" = "backtrace" ] ; then
 	cd @IRCDDIR@
 
@@ -130,5 +132,5 @@ __EOF__
 	echo ""
 	echo "Thanks!"
 else
-	echo "Usage: unreal start|stop|rehash|restart|mkpasswd|version"
+	echo "Usage: unreal start|stop|rehash|restart|mkpasswd|version|gencloak"
 fi
