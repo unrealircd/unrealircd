@@ -326,7 +326,11 @@ char  *Module_Create(char *path_)
 	tmppath = unreal_mktemp("tmp", unreal_getfilename(path));
 	if (!tmppath)
 		return "Unable to create temporary file!";
+#ifndef _WIN32
 	if(!strchr(path, '/'))
+#else
+	if (!strchr(path, '\\') && !strchr(path, '/')
+#endif
 	{
 		path = MyMalloc(strlen(path) + 3);
 		strcpy(path, "./");

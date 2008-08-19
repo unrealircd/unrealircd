@@ -1657,3 +1657,5 @@
 - Added set::ssl::renegotiate-bytes, set::ssl:renegotiate-timeout, #0002971
   suggested by tabrisnet. Gets activated when >0. Please set sane values.
   [Backport, sts]
+- #0002475 reported by aquanight on detecting \'s in module filenames on
+  win32 and not do ./module for it [Backport]
