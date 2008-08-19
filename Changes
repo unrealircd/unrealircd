@@ -1659,3 +1659,7 @@
   [Backport, sts]
 - #0002475 reported by aquanight on detecting \'s in module filenames on
   win32 and not do ./module for it [Backport]
+- #0002172 reported by Stealth, patched by WolfSage, fixing if you have an
+  admin block, and forget a semicolon on a line, Unreal will proceed to use
+  the block with no error, but the information will be incorrect/incomplete.
+  [Backport, WolfSage]
