@@ -1670,3 +1670,12 @@
 - #0003313 reported by Stealth, regarding not erroring/warning when me::name
   is bigger than HOSTLEN, from now it will error on config read. [Backport, sts]
 - /REHASH -all not case sensitive
+- Win32 makefile: removed /MAPINFO:LINES, since visual studio 2005 and up
+  don't support this and will fail to compile UnrealIRCd. This fixes #3680,
+  reported by therock247uk.
+- Upgraded c-ares to 1.6.0 (also now using pkg-config).
+  If you get a "undefined reference to `clock_gettime'" error, then you
+  might consider installing 'pkg-config' on your system, and then simply re-run
+  ./Config and make, should fix things.
+__TODO__: win32 c-ares upgrade to 1.6.0 (and copy & fix header files).
+__TODO__: testing! testing! i'd like to be sure this c-ares is stable!

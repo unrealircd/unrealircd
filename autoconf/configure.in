@@ -458,7 +458,7 @@ cd $cur_dir
 
 
 dnl REMEMBER TO CHANGE WITH A NEW C-ARES RELEASE!
-cares_version="1.5.1"
+cares_version="1.6.0"
 AC_MSG_RESULT(extracting c-ares resolver library)
 cur_dir=`pwd`
 cd extras
@@ -483,7 +483,11 @@ CARESINCDIR="$cur_dir/extras/c-ares/include"
 AC_SUBST(CARESINCDIR)
 CARESLIBDIR="-L../extras/c-ares/lib"
 AC_SUBST(CARESLIBDIR)
-CARESLIBS="-lcares"
+if test "x$ac_cv_path_PKGCONFIG" = "x" ; then
+	CARESLIBS="-lcares -lrt"
+else
+	CARESLIBS=`$ac_cv_path_PKGCONFIG --static --libs libcares.pc`
+fi
 AC_SUBST(CARESLIBS)
 cd $cur_dir
 

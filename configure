@@ -12992,7 +12992,7 @@ fi
 cd $cur_dir
 
 
-cares_version="1.5.1"
+cares_version="1.6.0"
 { echo "$as_me:$LINENO: result: extracting c-ares resolver library" >&5
 echo "${ECHO_T}extracting c-ares resolver library" >&6; }
 cur_dir=`pwd`
@@ -13020,7 +13020,11 @@ CARESINCDIR="$cur_dir/extras/c-ares/include"
 
 CARESLIBDIR="-L../extras/c-ares/lib"
 
-CARESLIBS="-lcares"
+if test "x$ac_cv_path_PKGCONFIG" = "x" ; then
+	CARESLIBS="-lcares -lrt"
+else
+	CARESLIBS=`$ac_cv_path_PKGCONFIG --static --libs libcares.pc`
+fi
 
 cd $cur_dir
 
