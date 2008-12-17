@@ -99,7 +99,7 @@ DLLFUNC CMD_FUNC(m_names)
 	Member *cm;
 	int  idx, flag = 1, spos;
 	char *s, *para = parv[1];
-	char nuhBuffer[bufLen + 1];
+	char nuhBuffer[NICKLEN+USERLEN+HOSTLEN+3];
 
 
 	if (parc < 2 || !MyConnect(sptr))
@@ -211,7 +211,7 @@ DLLFUNC CMD_FUNC(m_names)
 		} else {
 			strlcpy(nuhBuffer,
 			        make_nick_user_host(acptr->name, acptr->user->username, GetHost(acptr)),
-				sizeof(nuhBuffer));
+				sizeof(bufLen + 1));
 			s = nuhBuffer;
 		}
 		/* 's' is intialized above to point to either acptr->name (normal),

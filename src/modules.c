@@ -329,7 +329,7 @@ char  *Module_Create(char *path_)
 #ifndef _WIN32
 	if(!strchr(path, '/'))
 #else
-	if (!strchr(path, '\\') && !strchr(path, '/')
+	if (!strchr(path, '\\') && !strchr(path, '/'))
 #endif
 	{
 		path = MyMalloc(strlen(path) + 3);
