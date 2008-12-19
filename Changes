@@ -1677,6 +1677,6 @@
   If you get a "undefined reference to `clock_gettime'" error, then you
   might consider installing 'pkg-config' on your system, and then simply re-run
   ./Config and make, should fix things.
+  TODO: testing! testing! i'd like to be sure this c-ares is stable!
 - Win32 compile fixes.
-__TODO__: win32 c-ares upgrade to 1.6.0 (and copy & fix header files).
-__TODO__: testing! testing! i'd like to be sure this c-ares is stable!
+- Upgraded c-ares on windows to 1.6.0 as well.

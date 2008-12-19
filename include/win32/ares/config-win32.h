@@ -3,7 +3,7 @@
 
 /* $Id$ */
 
-/* Copyright (C) 2004 - 2006 by Daniel Stenberg et al
+/* Copyright (C) 2004 - 2008 by Daniel Stenberg et al
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose and without fee is hereby granted, provided
@@ -54,10 +54,10 @@
 #define HAVE_WINSOCK_H 1
 
 /* Define if you have the <winsock2.h> header file.  */
-// #define HAVE_WINSOCK2_H 1
+//#define HAVE_WINSOCK2_H 1
 
 /* Define if you have the <ws2tcpip.h> header file.  */
-// #define HAVE_WS2TCPIP_H 1
+//#define HAVE_WS2TCPIP_H 1
 
 /* ---------------------------------------------------------------- */
 /*                        OTHER HEADER INFO                         */
@@ -76,8 +76,29 @@
 /*                             FUNCTIONS                            */
 /* ---------------------------------------------------------------- */
 
-/* Define if you have the ioctlsocket function.  */
+/* Define if you have the ioctlsocket function. */
 #define HAVE_IOCTLSOCKET 1
+
+/* Define if you have a working ioctlsocket FIONBIO function. */
+#define HAVE_IOCTLSOCKET_FIONBIO 1
+
+/* Define if you have the strcasecmp function. */
+/* #define HAVE_STRCASECMP 1 */
+
+/* Define if you have the strdup function. */
+#define HAVE_STRDUP 1
+
+/* Define if you have the stricmp function. */
+#define HAVE_STRICMP 1
+
+/* Define if you have the strncasecmp function. */
+/* #define HAVE_STRNCASECMP 1 */
+
+/* Define if you have the strnicmp function. */
+#define HAVE_STRNICMP 1
+
+/* Define if you have the gethostname function.  */
+#define HAVE_GETHOSTNAME 1
 
 /* Define if you have the recv function. */
 #define HAVE_RECV 1
@@ -96,6 +117,30 @@
 
 /* Define to the function return type for recv. */
 #define RECV_TYPE_RETV int
+
+/* Define if you have the recvfrom function. */
+#define HAVE_RECVFROM 1
+
+/* Define to the type of arg 1 for recvfrom. */
+#define RECVFROM_TYPE_ARG1 SOCKET
+
+/* Define to the type pointed by arg 2 for recvfrom. */
+#define RECVFROM_TYPE_ARG2 char
+
+/* Define to the type of arg 3 for recvfrom. */
+#define RECVFROM_TYPE_ARG3 int
+
+/* Define to the type of arg 4 for recvfrom. */
+#define RECVFROM_TYPE_ARG4 int
+
+/* Define to the type pointed by arg 5 for recvfrom. */
+#define RECVFROM_TYPE_ARG5 struct sockaddr
+
+/* Define to the type pointed by arg 6 for recvfrom. */
+#define RECVFROM_TYPE_ARG6 int
+
+/* Define to the function return type for recvfrom. */
+#define RECVFROM_TYPE_RETV int
 
 /* Define if you have the send function. */
 #define HAVE_SEND 1
@@ -123,6 +168,15 @@
   #define SOCKET              int
   #define NS_INADDRSZ         4
   #define HAVE_ARPA_NAMESER_H 1
+  #define HAVE_ARPA_INET_H    1
+  #define HAVE_NETDB_H        1
+  #define HAVE_NETINET_IN_H   1
+  #define HAVE_SYS_SOCKET_H   1
+  #define HAVE_NETINET_TCP_H  1
+  #define HAVE_AF_INET6       1
+  #define HAVE_PF_INET6       1
+  #define HAVE_STRUCT_IN6_ADDR     1
+  #define HAVE_STRUCT_SOCKADDR_IN6 1
   #undef HAVE_WINSOCK_H
   #undef HAVE_WINSOCK2_H
   #undef HAVE_WS2TCPIP_H
@@ -146,11 +200,6 @@
 #define ssize_t int
 #endif
 
-/* Define to 'int' if socklen_t is not an available 'typedefed' type */
-#ifndef HAVE_WS2TCPIP_H
-#define socklen_t int
-#endif
-
 /* ---------------------------------------------------------------- */
 /*                          STRUCT RELATED                          */
 /* ---------------------------------------------------------------- */
@@ -165,23 +214,71 @@
 #define HAVE_STRUCT_TIMEVAL 1
 
 /* ---------------------------------------------------------------- */
+/*                        COMPILER SPECIFIC                         */
+/* ---------------------------------------------------------------- */
+
+/* Define to avoid VS2005 complaining about portable C functions */
+#if defined(_MSC_VER) && (_MSC_VER >= 1400)
+#define _CRT_SECURE_NO_DEPRECATE 1
+#define _CRT_NONSTDC_NO_DEPRECATE 1
+#endif
+
+/* VS2008 does not support Windows build targets prior to WinXP, */
+/* so, if no build target has been defined we will target WinXP. */
+#if defined(_MSC_VER) && (_MSC_VER >= 1500)
+#  ifndef _WIN32_WINNT
+#    define _WIN32_WINNT 0x0501
+#  endif
+#  ifndef WINVER
+#    define WINVER 0x0501
+#  endif
+#  if (_WIN32_WINNT < 0x0501) || (WINVER < 0x0501)
+#    error VS2008 does not support Windows build targets prior to WinXP
+#  endif
+#endif
+
+/* Availability of freeaddrinfo, getaddrinfo and getnameinfo functions is quite */
+/* convoluted, compiler dependant and in some cases even build target dependat. */
+#if defined(HAVE_WS2TCPIP_H)
+#  if defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0501)
+#    define HAVE_FREEADDRINFO 1
+#    define HAVE_GETADDRINFO  1
+#    define HAVE_GETNAMEINFO  1
+#  elif defined(_MSC_VER) && (_MSC_VER >= 1200)
+#    define HAVE_FREEADDRINFO 1
+#    define HAVE_GETADDRINFO  1
+#    define HAVE_GETNAMEINFO  1
+#  endif
+#endif
+
+/* ---------------------------------------------------------------- */
 /*                         IPV6 COMPATIBILITY                       */
 /* ---------------------------------------------------------------- */
 
 /* Define this if you have address family AF_INET6 */
+#ifdef HAVE_WINSOCK2_H
 #define HAVE_AF_INET6 1
+#endif
 
 /* Define this if you have protocol family PF_INET6 */
+#ifdef HAVE_WINSOCK2_H
 #define HAVE_PF_INET6 1
+#endif
 
 /* Define this if you have struct in6_addr */
+#ifdef HAVE_WS2TCPIP_H
 #define HAVE_STRUCT_IN6_ADDR 1
+#endif
 
 /* Define this if you have struct sockaddr_in6 */
+#ifdef HAVE_WS2TCPIP_H
 #define HAVE_STRUCT_SOCKADDR_IN6 1
+#endif
 
 /* Define this if you have sockaddr_in6 with scopeid */
+#ifdef HAVE_WS2TCPIP_H
 #define HAVE_SOCKADDR_IN6_SIN6_SCOPE_ID 1
+#endif
 
 
 #endif  /* __ARES_CONFIG_WIN32_H */

@@ -3,7 +3,7 @@
 
 /* $Id$ */
 
-/* Copyright (C) 2004 - 2007 by Daniel Stenberg et al
+/* Copyright (C) 2004 - 2008 by Daniel Stenberg et al
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose and without fee is hereby granted, provided
@@ -88,9 +88,33 @@ struct timeval {
 #define SEND_4TH_ARG MSG_NOSIGNAL
 #else
 #define SEND_4TH_ARG 0
-#endif 
+#endif
 
 
+/*
+ * Windows build targets have socklen_t definition in
+ * ws2tcpip.h but some versions of ws2tcpip.h do not
+ * have the definition. It seems that when the socklen_t
+ * definition is missing from ws2tcpip.h the definition
+ * for INET_ADDRSTRLEN is also missing, and that when one
+ * definition is present the other one also is available.
+ */
+
+#if defined(WIN32) && !defined(HAVE_CONFIG_H)
+#  if ( defined(_MSC_VER) && !defined(INET_ADDRSTRLEN) ) || \
+      (!defined(_MSC_VER) && !defined(HAVE_WS2TCPIP_H) )
+#    define socklen_t int
+#  endif
+#endif
+
+
+#if defined(__minix)
+/* Minix doesn't support recv on TCP sockets */
+#define sread(x,y,z) (ssize_t)read((RECV_TYPE_ARG1)(x), \
+                                   (RECV_TYPE_ARG2)(y), \
+                                   (RECV_TYPE_ARG3)(z))
+
+#elif defined(HAVE_RECV)
 /*
  * The definitions for the return type and arguments types
  * of functions recv() and send() belong and come from the
@@ -113,7 +137,6 @@ struct timeval {
  * SEND_TYPE_RETV must also be defined.
  */
 
-#ifdef HAVE_RECV
 #if !defined(RECV_TYPE_ARG1) || \
     !defined(RECV_TYPE_ARG2) || \
     !defined(RECV_TYPE_ARG3) || \
@@ -136,7 +159,14 @@ struct timeval {
 #endif
 #endif /* HAVE_RECV */
 
-#ifdef HAVE_SEND
+
+#if defined(__minix)
+/* Minix doesn't support send on TCP sockets */
+#define swrite(x,y,z) (ssize_t)write((SEND_TYPE_ARG1)(x), \
+                                    (SEND_TYPE_ARG2)(y), \
+                                    (SEND_TYPE_ARG3)(z))
+
+#elif defined(HAVE_SEND)
 #if !defined(SEND_TYPE_ARG1) || \
     !defined(SEND_QUAL_ARG2) || \
     !defined(SEND_TYPE_ARG2) || \
@@ -161,8 +191,48 @@ struct timeval {
 #endif /* HAVE_SEND */
 
 
+#if 0
+#if defined(HAVE_RECVFROM)
 /*
- * Uppercase macro versions of ANSI/ISO is*() functions/macros which 
+ * Currently recvfrom is only used on udp sockets.
+ */
+#if !defined(RECVFROM_TYPE_ARG1) || \
+    !defined(RECVFROM_TYPE_ARG2) || \
+    !defined(RECVFROM_TYPE_ARG3) || \
+    !defined(RECVFROM_TYPE_ARG4) || \
+    !defined(RECVFROM_TYPE_ARG5) || \
+    !defined(RECVFROM_TYPE_ARG6) || \
+    !defined(RECVFROM_TYPE_RETV)
+  /* */
+  Error Missing_definition_of_return_and_arguments_types_of_recvfrom
+  /* */
+#else
+#define sreadfrom(s,b,bl,f,fl) (ssize_t)recvfrom((RECVFROM_TYPE_ARG1)  (s),  \
+                                                 (RECVFROM_TYPE_ARG2 *)(b),  \
+                                                 (RECVFROM_TYPE_ARG3)  (bl), \
+                                                 (RECVFROM_TYPE_ARG4)  (0),  \
+                                                 (RECVFROM_TYPE_ARG5 *)(f),  \
+                                                 (RECVFROM_TYPE_ARG6 *)(fl))
+#endif
+#else /* HAVE_RECVFROM */
+#ifndef sreadfrom
+  /* */
+  Error Missing_definition_of_macro_sreadfrom
+  /* */
+#endif
+#endif /* HAVE_RECVFROM */
+
+
+#ifdef RECVFROM_TYPE_ARG6_IS_VOID
+#  define RECVFROM_ARG6_T int
+#else
+#  define RECVFROM_ARG6_T RECVFROM_TYPE_ARG6
+#endif
+#endif /* if 0 */
+
+
+/*
+ * Uppercase macro versions of ANSI/ISO is*() functions/macros which
  * avoid negative number inputs with argument byte codes > 127.
  */
 
@@ -273,13 +343,13 @@ typedef int sig_atomic_t;
  * (or equivalent) on this platform to hide platform details to code using it.
  */
 
-#ifdef WIN32
+/*UNREALUNREALUNREALEDIT#ifdef WIN32
 #define ERRNO         ((int)GetLastError())
 #define SET_ERRNO(x)  (SetLastError((DWORD)(x)))
 #else
 #define ERRNO         (errno)
 #define SET_ERRNO(x)  (errno = (x))
-#endif
+#endif*/
 
 
 /*
@@ -356,6 +426,97 @@ typedef int sig_atomic_t;
 #else
 #define argv_item_t  char *
 #endif
+
+
+/*
+ * We use this ZERO_NULL to avoid picky compiler warnings,
+ * when assigning a NULL pointer to a function pointer var.
+ */
+
+#define ZERO_NULL 0
+
+
+#if defined (__LP64__) && defined(__hpux) && !defined(_XOPEN_SOURCE_EXTENDED)
+#include <sys/socket.h>
+/* HP-UX has this oddity where it features a few functions that don't work
+   with socklen_t so we need to convert to ints
+
+   This is due to socklen_t being a 64bit int under 64bit ABI, but the
+   pre-xopen (default) interfaces require an int, which is 32bits.
+
+   Therefore, Anytime socklen_t is passed by pointer, the libc function
+   truncates the 64bit socklen_t value by treating it as a 32bit value.
+
+
+   Note that some socket calls are allowed to have a NULL pointer for
+   the socklen arg.
+*/
+
+inline static int Curl_hp_getsockname(int s, struct sockaddr *name,
+                                      socklen_t *namelen)
+{
+  int rc;
+  if(namelen) {
+     int len = *namelen;
+     rc = getsockname(s, name, &len);
+     *namelen = len;
+   }
+  else
+     rc = getsockname(s, name, 0);
+  return rc;
+}
+
+inline static int Curl_hp_getsockopt(int  s, int level, int optname,
+                                     void *optval, socklen_t *optlen)
+{
+  int rc;
+  if(optlen) {
+    int len = *optlen;
+    rc = getsockopt(s, level, optname, optval, &len);
+    *optlen = len;
+  }
+  else
+    rc = getsockopt(s, level, optname, optval, 0);
+  return rc;
+}
+
+inline static int Curl_hp_accept(int sockfd, struct sockaddr *addr,
+                                 socklen_t *addrlen)
+{
+  int rc;
+  if(addrlen) {
+     int len = *addrlen;
+     rc = accept(sockfd, addr, &len);
+     *addrlen = len;
+  }
+  else
+     rc = accept(sockfd, addr, 0);
+  return rc;
+}
+
+
+inline static ssize_t Curl_hp_recvfrom(int s, void *buf, size_t len, int flags,
+                                       struct sockaddr *from,
+                                       socklen_t *fromlen)
+{
+  ssize_t rc;
+  if(fromlen) {
+    int fromlen32 = *fromlen;
+    rc = recvfrom(s, buf, len, flags, from, &fromlen32);
+    *fromlen = fromlen32;
+  }
+  else {
+    rc = recvfrom(s, buf, len, flags, from, 0);
+  }
+  return rc;
+}
+
+#define getsockname(a,b,c) Curl_hp_getsockname((a),(b),(c))
+#define getsockopt(a,b,c,d,e) Curl_hp_getsockopt((a),(b),(c),(d),(e))
+#define accept(a,b,c) Curl_hp_accept((a),(b),(c))
+#define recvfrom(a,b,c,d,e,f) Curl_hp_recvfrom((a),(b),(c),(d),(e),(f))
+
+#endif /* HPUX work-around */
 
 
 #endif /* __SETUP_ONCE_H */
