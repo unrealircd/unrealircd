@@ -1680,3 +1680,4 @@
   TODO: testing! testing! i'd like to be sure this c-ares is stable!
 - Win32 compile fixes.
 - Upgraded c-ares on windows to 1.6.0 as well.
+- Win32: build w/manifest. Looks like Unreal@Win32 now actually works again :).
