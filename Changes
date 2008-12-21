@@ -1684,3 +1684,7 @@
 - except ban { } is now also effective against Z:lines. It already protected
   when the user was connected, but not once he/she tried to reconnect, this
   is now fixed. Reported several times, last by Stealth in #0003377.
+- Fix crash if settime/expirytime is out of range in TKL, set by another server.
+  Should never happen except when using faulty services or when something else
+  got horrible wrong (like a date which is 40 years ahead). Reported by
+  Darth Android (#0003738).

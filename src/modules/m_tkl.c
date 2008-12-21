@@ -1871,7 +1871,7 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	char gmt[256], gmt2[256];
 	char txt[256];
 	TS   expiry_1, setat_1, spamf_tklduration = 0;
-	char *reason = NULL;
+	char *reason = NULL, *timeret;
 
 	if (!IsServer(sptr) && !IsOper(sptr) && !IsMe(sptr))
 		return 0;
@@ -2036,12 +2036,27 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  if (!tk)
 		     return 0; /* ERROR on allocate or something else... */
 
-		  RunHook5(HOOKTYPE_TKL_ADD, cptr, sptr, tk, parc, parv);
-
-		  strncpyzt(gmt, asctime(gmtime((TS *)&setat_1)), sizeof(gmt));
-		  strncpyzt(gmt2, asctime(gmtime((TS *)&expiry_1)), sizeof(gmt2));
+		  timeret = asctime(gmtime((TS *)&setat_1));
+		  if (!timeret)
+		  {
+		  	sendto_realops("Invalid TKL entry from %s, set-at time is out of range (%ld) -- not added. Clock on other server incorrect or bogus entry.",
+		  		sptr->name, (long)setat_1);
+		  	return 0;
+		  }
+		  strncpyzt(gmt, timeret, sizeof(gmt));
+		  timeret = asctime(gmtime((TS *)&expiry_1));
+		  if (!timeret)
+		  {
+		  	sendto_realops("Invalid TKL entry from %s, expiry time is out of range (%ld) -- not added. Clock on other server incorrect or bogus entry.",
+		  		sptr->name, (long)expiry_1);
+			return 0;
+		  }
+		  strncpyzt(gmt2, timeret, sizeof(gmt2));
 		  iCstrip(gmt);
 		  iCstrip(gmt2);
+
+		  RunHook5(HOOKTYPE_TKL_ADD, cptr, sptr, tk, parc, parv);
+
 		  switch (type)
 		  {
 		    case TKL_KILL:
