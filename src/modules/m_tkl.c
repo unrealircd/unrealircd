@@ -1566,7 +1566,13 @@ int  _find_tkline_match_zap_ex(aClient *cptr, aTKline **rettk)
 			{
 
 				for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) {
-					if (excepts->flag.type != CONF_EXCEPT_TKL || excepts->type != lp->type)
+					/* This used to be:
+					 * if (excepts->flag.type != CONF_EXCEPT_TKL || excepts->type != lp->type)
+					 * It now checks for 'except ban', hope this is what most people want,
+					 * it is at least the same as in find_tkline_match, which is how it currently
+					 * is when a user is connected. -- Syzop/20081221
+					 */
+					if (excepts->flag.type != CONF_EXCEPT_BAN)
 						continue;
 					if (excepts->netmask)
 					{

@@ -1681,3 +1681,6 @@
 - Win32 compile fixes.
 - Upgraded c-ares on windows to 1.6.0 as well.
 - Win32: build w/manifest. Looks like Unreal@Win32 now actually works again :).
+- except ban { } is now also effective against Z:lines. It already protected
+  when the user was connected, but not once he/she tried to reconnect, this
+  is now fixed. Reported several times, last by Stealth in #0003377.
