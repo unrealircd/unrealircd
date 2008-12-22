@@ -1599,6 +1599,8 @@ char *encoded;
 	}
 
 	encoded = unreal_encodespace(SPAMFILTER_BAN_REASON);
+	if (!encoded)
+		abort(); /* hack to trace 'impossible' bug... */
 	for (tk = tklines[tkl_hash('q')]; tk; tk = tk->next)
 	{
 		if (tk->type != TKL_NICK)
@@ -5610,7 +5612,7 @@ int _conf_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 	nl->ptr.spamf = unreal_buildspamfilter(word);
 	nl->ptr.spamf->action = action;
 
-	if (has_reason)
+	if (has_reason && reason)
 		nl->ptr.spamf->tkl_reason = strdup(unreal_encodespace(reason));
 	else
 		nl->ptr.spamf->tkl_reason = strdup("<internally added by ircd>");

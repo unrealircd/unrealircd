@@ -1691,3 +1691,5 @@
 - Fix NAMES with UHNAMES support, screwed it up at 'Win32 compile fixes' a
   few lines up...
 - Fix OOB read caused by UHNAMES support.
+- Added some countermeasures against crash-on-boot, #0003725 and #0003653,
+  reported by Ablom2008 and mist26.
