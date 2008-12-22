@@ -90,7 +90,7 @@ static char buf[BUFSIZE];
 #define TRUNCATED_NAMES 64
 DLLFUNC CMD_FUNC(m_names)
 {
-	int uhnames = SupportUHNAMES(sptr); // cache UHNAMES support
+	int uhnames = (MyConnect(sptr) && SupportUHNAMES(sptr)); // cache UHNAMES support
 	int bufLen = NICKLEN + (!uhnames ? 0 : (1 + USERLEN + 1 + HOSTLEN));
 	int  mlen = strlen(me.name) + bufLen + 7;
 	aChannel *chptr;

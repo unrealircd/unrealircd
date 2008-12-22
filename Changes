@@ -1690,3 +1690,4 @@
   Darth Android (#0003738).
 - Fix NAMES with UHNAMES support, screwed it up at 'Win32 compile fixes' a
   few lines up...
+- Fix OOB read caused by UHNAMES support.
