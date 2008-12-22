@@ -211,7 +211,7 @@ DLLFUNC CMD_FUNC(m_names)
 		} else {
 			strlcpy(nuhBuffer,
 			        make_nick_user_host(acptr->name, acptr->user->username, GetHost(acptr)),
-				sizeof(bufLen + 1));
+				bufLen + 1);
 			s = nuhBuffer;
 		}
 		/* 's' is intialized above to point to either acptr->name (normal),
