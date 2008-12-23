@@ -226,12 +226,12 @@ void debug(int level, char *form, ...)
 		(void)fprintf(stderr, "%s", debugbuf);
 		(void)fputc('\n', stderr);
 #else
-# ifndef _WIN32GUI
-		Cio_Puts(hCio, debugbuf, strlen(debugbuf));
-# else
+//# ifndef _WIN32GUI
+//		Cio_Puts(hCio, debugbuf, strlen(debugbuf));
+//# else
 		strcat(debugbuf, "\r\n");
 		OutputDebugString(debugbuf);
-# endif
+//# endif
 #endif
 	}
 	va_end(vl);
