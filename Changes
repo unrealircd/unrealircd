@@ -1693,7 +1693,3 @@
 - Fix OOB read caused by UHNAMES support.
 - Added some countermeasures against crash-on-boot, #0003725 and #0003653,
   reported by Ablom2008 and mist26.
-- Win32: Made UnrealIRCd run as a service under non-privileged accounts
-  (ones that do not belong to the Administrator group). Reported by
-  skyflash, Bock, zer, etc... Thanks to BuHHunyx for some hints on how to
-  fix this.

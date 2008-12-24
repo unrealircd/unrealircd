@@ -109,12 +109,6 @@ char OSName[256];
 extern char *find_loaded_remote_include(char *url);
 #endif 
 
-char *show_error(DWORD code) {
-	static char buf[1024];
-	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, code, 0, buf, 1024, NULL);
-	return buf;
-}
-
 void TaskBarCreated() 
 {
 	HICON hIcon = (HICON)LoadImage(hInst, MAKEINTRESOURCE(ICO_MAIN), IMAGE_ICON,16, 16, 0);
@@ -224,20 +218,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	GetOSName(VerInfo, OSName);
 	if (VerInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) 
 	{
-		DWORD new_save_err = 0;
-		SC_HANDLE hService, hSCManager;
-
-		hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
-		Debug((DEBUG_DEBUG, "OpenSCManager(): ERR = %ld / %s\n", GetLastError(), show_error(GetLastError())));
-
-		if (hSCManager)
-		{
-		new_save_err = StartServiceCtrlDispatcher(DispatchTable);
-
-		if ((hService = OpenService(hSCManager, "UnrealIRCd", SERVICE_START|SERVICE_STOP|SERVICE_QUERY_STATUS))) 
+		SC_HANDLE hService, hSCManager = OpenSCManager(NULL, NULL, GENERIC_EXECUTE);
+		if ((hService = OpenService(hSCManager, "UnrealIRCd", GENERIC_EXECUTE))) 
 		{
 			int save_err = 0;
-			if (new_save_err == ERROR_FAILED_SERVICE_CONTROLLER_CONNECT)
+			StartServiceCtrlDispatcher(DispatchTable); 
+			if (GetLastError() == ERROR_FAILED_SERVICE_CONTROLLER_CONNECT)
 			{ 
 				SERVICE_STATUS status;
 				/* Restart handling, it's ugly but it's as 
@@ -268,7 +254,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 				exit(0);
 		} else {
 			CloseServiceHandle(hSCManager);
-		}
 		}
 	}
 	InitCommonControls();
