@@ -1694,3 +1694,4 @@
 - Added some countermeasures against crash-on-boot, #0003725 and #0003653,
   reported by Ablom2008 and mist26.
 - Win32: rebuild TRE for Vstudio 2008 (and ditch C++ / MSVCP... dependency).
+- Added release notes (not finished yet).
