@@ -1697,3 +1697,5 @@
 - Added release notes (not finished yet).
 - Added set::watch-away-notification which can be set to 'no' to disable
   WATCH away notification. The default is 'yes' (=enabled).
+- Fixed crash which could happen when rehashing while linking to a server,
+  this could be #0003689 reported by Monk.

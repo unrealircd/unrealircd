@@ -390,9 +390,11 @@ struct hostent *he2;
 		/* fatal error while resolving */
 		sendto_realops("Unable to resolve hostname '%s', when trying to connect to server %s.",
 			r->name, r->linkblock->servername);
+		r->linkblock->refcount--;
 		unrealdns_freeandremovereq(r);
 		return;
 	}
+	r->linkblock->refcount--;
 
 #ifdef INET6
 	if (((he->h_length != 4) && (he->h_length != 16)) || !he->h_addr_list[0])
