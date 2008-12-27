@@ -1695,3 +1695,5 @@
   reported by Ablom2008 and mist26.
 - Win32: rebuild TRE for Vstudio 2008 (and ditch C++ / MSVCP... dependency).
 - Added release notes (not finished yet).
+- Added set::watch-away-notification which can be set to 'no' to disable
+  WATCH away notification. The default is 'yes' (=enabled).

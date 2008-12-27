@@ -29,6 +29,7 @@ Unreal3.2.8-cvs Release Notes
   when someone goes away or comes back, along with a reason, a bit like IM's.
   There's probably no current client supporting this but it would be a nice feature
   in notify lists. Client developers: see Changes file for full protocol details.
+  This feature can be disabled by setting set::watch-away-notification to 'no'.
 - Spamfilter: Slow spamfilter detection: For each spamfilter, Unreal will check,
   each time it executes, how long it takes to execute. When a certain threshold is
   reached the IRCd will warn or even remove the spamfilter. This could prevent a

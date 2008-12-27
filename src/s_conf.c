@@ -1573,6 +1573,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->timesynch_server = strdup("193.67.79.202,192.43.244.18,128.250.36.3"); /* nlnet (EU), NIST (US), uni melbourne (AU). All open acces, nonotify, nodns. */
 	i->name_server = strdup("127.0.0.1"); /* default, especially needed for w2003+ in some rare cases */
 	i->level_on_join = CHFL_CHANOP;
+	i->watch_away_notification = 1;
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,
@@ -1631,6 +1632,17 @@ char *encoded;
 				tk->setby = strdup(me.name);
 			else
 				tk->setby = strdup(conf_me->name ? conf_me->name : "~server~");
+		}
+	}
+	if (loop.ircd_booted) /* only has to be done for rehashes, api-isupport takes care of boot */
+	{
+		if (WATCH_AWAY_NOTIFICATION)
+		{
+			IsupportAdd(NULL, "WATCHOPTS", "A");
+		} else {
+			Isupport *hunted = IsupportFind("WATCHOPTS");
+			if (hunted)
+				IsupportDel(hunted);
 		}
 	}
 }
@@ -6780,6 +6792,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "pingpong-warning")) {
 			tempiConf.pingpong_warning = config_checkval(cep->ce_vardata, CFG_YESNO);
 		}
+		else if (!strcmp(cep->ce_varname, "watch-away-notification")) {
+			tempiConf.watch_away_notification = config_checkval(cep->ce_vardata, CFG_YESNO);
+		}
 		else if (!strcmp(cep->ce_varname, "allow-userhost-change")) {
 			if (!stricmp(cep->ce_vardata, "always"))
 				tempiConf.userhost_allowed = UHALLOW_ALWAYS;
@@ -7356,6 +7371,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "pingpong-warning")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, pingpong_warning, "pingpong-warning");
+		}
+		else if (!strcmp(cep->ce_varname, "watch-away-notification")) {
+			CheckNull(cep);
+			CheckDuplicate(cep, watch_away_notification, "watch-away-notification");
 		}
 		else if (!strcmp(cep->ce_varname, "channel-command-prefix")) {
 			CheckNull(cep);

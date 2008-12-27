@@ -153,7 +153,7 @@ DLLFUNC CMD_FUNC(m_watch)
 		if ((user = (char *)index(s, '!')))
 			*user++ = '\0';	/* Not used */
 			
-		if (!strcmp(s, "A"))
+		if (!strcmp(s, "A") && WATCH_AWAY_NOTIFICATION)
 			awaynotify = 1;
 
 		/*
