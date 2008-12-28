@@ -12,7 +12,7 @@ Unreal3.2.8-cvs Release Notes
   Read them before asking for help.
 - Report bugs at http://bugs.unrealircd.org/
 - When upgrading a network, we assume you are upgrading from the previous
-  version (3.2.7). Upgrading from 3.2.6 or 3.2.5 should be ok as well.
+  version (3.2.7). Upgrading from 3.2.6 or 3.2.5 should also be no problem.
   However, if you have a network running with servers that are several versions behind
   (eg: 3.2.1) then you might experience small (desynch) problems.
   Please also minimize the time you have multiple versions running, a few days or
@@ -44,7 +44,7 @@ Unreal3.2.8-cvs Release Notes
 - UHNAMES support: This sends the full nick!ident@host in NAMES which can be
   used by clients for their IAL. mIRC, Klient, etc support this.
 - There have also been some behavior changes, which can be considered NEW, see
-  next section.
+  next section (CHANGED).
 
 ==[ CHANGED ]==
 - IPv6: On IPv6 servers you no longer have to use ::ffff:1.2.3.4 IP's for IPv4 in the
@@ -61,7 +61,7 @@ Unreal3.2.8-cvs Release Notes
 - Zip links issue (Overflowed unzipbuf)
 - Crash issue with 3rd party modules that introduce new channelmodes w/parameters
 - Mac OS X: Various issues which prevented the IRCd from booting up
-- A few rare crash issues
+- A few rare crash issues, including a crash when linking to another server
 
 ==[ MINOR BUGS FIXED ]==
 - CGI:IRC: Several IPv6 issues, both on IPv6 IRCd's and CGI:IRC gateways

@@ -1181,10 +1181,23 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 	{
 		char userhost[USERLEN + HOSTLEN + 6];
 		if (sptr->passwd && (nsptr = find_person(NickServ, NULL)))
-			sendto_one(nsptr, ":%s %s %s@%s :IDENTIFY %s",
-			    sptr->name,
-			    (IsToken(nsptr->from) ? TOK_PRIVATE : MSG_PRIVATE),
-			    NickServ, SERVICES_NAME, sptr->passwd);
+		{
+			int do_identify = 1;
+			for (h = Hooks[HOOKTYPE_LOCAL_NICKPASS]; h; h = h->next)
+			{
+				i = (*(h->func.intfunc))(sptr,nsptr);
+				if (i == HOOK_DENY)
+				{
+					do_identify = 0;
+					break;
+				}
+			}
+			if (do_identify)
+				sendto_one(nsptr, ":%s %s %s@%s :IDENTIFY %s",
+				    sptr->name,
+				    (IsToken(nsptr->from) ? TOK_PRIVATE : MSG_PRIVATE),
+				    NickServ, SERVICES_NAME, sptr->passwd);
+		}
 		if (buf[0] != '\0' && buf[1] != '\0')
 			sendto_one(cptr, ":%s MODE %s :%s", cptr->name,
 			    cptr->name, buf);
