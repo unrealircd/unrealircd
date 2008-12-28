@@ -1699,3 +1699,7 @@
   WATCH away notification. The default is 'yes' (=enabled).
 - Fixed crash which could happen when rehashing while linking to a server,
   this could be #0003689 reported by Monk.
+- New HOOKTYPE_LOCAL_NICKPASS: the 2 parameters are: sptr (client) and nsptr
+  (NickServ client, NULL if not present). You can return 1 (HOOK_DENY) to
+  make the IRCd not send IDENTIFY to NickServ. Suggested by tabrisnet
+  (#0003739).

@@ -1183,6 +1183,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		if (sptr->passwd && (nsptr = find_person(NickServ, NULL)))
 		{
 			int do_identify = 1;
+			Hook *h;
 			for (h = Hooks[HOOKTYPE_LOCAL_NICKPASS]; h; h = h->next)
 			{
 				i = (*(h->func.intfunc))(sptr,nsptr);
