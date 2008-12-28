@@ -1703,3 +1703,6 @@
   (NickServ client, NULL if not present). You can return 1 (HOOK_DENY) to
   make the IRCd not send IDENTIFY to NickServ. Suggested by tabrisnet
   (#0003739).
+- A notice is now sent when listing spamfilters through /SPAMFILTER just
+  like /stats f. Bug #0003752 reported by Strawberry_Kittens, similar to
+  #0002533.

@@ -774,6 +774,8 @@ int n;
 		tkl_stats(sptr, TKL_SPAMF, NULL);
 		tkl_stats(sptr, TKL_SPAMF|TKL_GLOBAL, NULL);
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'F');
+		sendto_snomask(SNO_EYES, "Stats \'f\' requested by %s (%s@%s)",
+			sptr->name, sptr->user->username, GetHost(sptr));
 		return 0;
 	}
 	if ((parc < 7) || BadPtr(parv[4]))
