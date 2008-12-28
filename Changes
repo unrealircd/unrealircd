@@ -1706,3 +1706,4 @@
 - A notice is now sent when listing spamfilters through /SPAMFILTER just
   like /stats f. Bug #0003752 reported by Strawberry_Kittens, similar to
   #0002533.
+** 3.2.8-rc1 release **

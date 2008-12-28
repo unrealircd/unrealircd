@@ -1,7 +1,5 @@
-Unreal3.2.8-cvs Release Notes
-==========================
-
-<<FIXME>>
+Unreal3.2.8-RC1 Release Notes
+==============================
 
 ==[ GENERAL INFORMATION ]==
 - If you are upgrading on *NIX, make sure you run 'make clean' and './Config'

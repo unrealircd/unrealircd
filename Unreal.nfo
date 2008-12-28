@@ -1,5 +1,5 @@
 ===============================================
-=            UnrealIRCd v3.2.7                =
+=            UnrealIRCd v3.2.8-rc1            =
 ===============================================
  This release was brought to you by:
 
@@ -31,16 +31,16 @@
  CVS
  ====
  To get anonymous access: (read only)
- "cvs -d :pserver:anonymous@cvs.ircsystems.net:/home/cmunk/ircsystems/cvsroot login"
+ "cvs -d :pserver:anonymous@cvs.unrealircd.com:/home/cmunk/ircsystems/cvsroot login"
 
  press enter when asked for password
  Then, choose the appropiate branch you want:
 
  latest 3.2 release ("stable"):
- "cvs -d :pserver:anonymous@cvs.ircsystems.net:/home/cmunk/ircsystems/cvsroot checkout -r stable -d Unreal-stable unreal"
+ "cvs -d :pserver:anonymous@cvs.unrealircd.com:/home/cmunk/ircsystems/cvsroot checkout -r stable -d Unreal-stable unreal"
 
  latest 3.2 fixes / development ("unreal3_2_fixes"):
- "cvs -d :pserver:anonymous@cvs.ircsystems.net:/home/cmunk/ircsystems/cvsroot checkout -r unreal3_2_fixes -d Unreal-stable unreal"
+ "cvs -d :pserver:anonymous@cvs.unrealircd.com:/home/cmunk/ircsystems/cvsroot checkout -r unreal3_2_fixes -d Unreal-stable unreal"
 
  To get support
  ================
@@ -49,7 +49,7 @@
  * check the FAQ (www.vulnscan.org/UnrealIrcd/faq/)
 
  Means of support:
- * IRC: /server irc.ircsystems.net 6667 - /join #unreal-support
+ * IRC: /server irc.unrealircd.com 6667 - /join #unreal-support
    [Note: Follow the bots instructions in order to get voice.
           Please be patient after asking questions, we may do other stuff
           or we're away. Don't repeat questions, we heard you first time,
@@ -64,4 +64,4 @@
 
  Want to discuss, chat, etc?
  =============================
- * IRC: /server irc.ircsystems.net 6667 - /join #UnrealIRCd
+ * IRC: /server irc.unrealircd.com 6667 - /join #UnrealIRCd
