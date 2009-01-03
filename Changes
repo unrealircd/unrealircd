@@ -1717,3 +1717,4 @@
 - Fix typo in user mode q notice, reported by Strawberry_Kittens and others
   (#0003761). Patch provided by Stealth.
 - Possible fix for MAC OS X compile problem - UNCONFIRMED.
+- Bump docdate..
