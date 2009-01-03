@@ -1715,5 +1715,5 @@
 - set::ssl::renegotiate-bytes: fix when specifying a value such as 10m.
 - './unreal gencloak' now actually works
 - Fix typo in user mode q notice, reported by Strawberry_Kittens and others
-  (#0003761).
+  (#0003761). Patch provided by Stealth.
 - Possible fix for MAC OS X compile problem - UNCONFIRMED.
