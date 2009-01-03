@@ -35,7 +35,7 @@ elif [ "$1" = "mkpasswd" ] ; then
 elif [ "$1" = "version" ] ; then
 	@BINDIR@ -v
 elif [ "$1" = "gencloak" ] ; then
-	@BINDIR@/ircd -k
+	@BINDIR@ -k
 elif [ "$1" = "backtrace" ] ; then
 	cd @IRCDDIR@
 

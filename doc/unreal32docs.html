@@ -249,6 +249,8 @@ because otherwise you will not understand concepts such as 'cloaking', 'snomasks
    uppercase (A-Z) and digit (0-9) charachters [eg: "AopAS6WQH2Os6hfosh4SFJHs"]. See example.conf for an example.<br>
 <p>Cloak keys MUST be the same on ALL SERVERS in a network. Also cloak keys should be kept SECRET 
    because it's possible to decode the original host if you know the keys (which makes umode +x useless).</p>
+<p>Hint: If you are on *NIX and have to create new cloak keys, you can run './unreal gencloak' 
+   in your shell, which will output 3 random strings that you can use.</p>
 </div>
 <p><font size="+2"><b>3.2 - Modules</b></font><a name="feature_modules"></a></p><div class="desc">
 <p>UnrealIRCd supports modules which is nice because:<br>
@@ -562,7 +564,23 @@ into spaces at runtime. And double underscore ('__') gets an underscore ('_'). A
    <b>set::spamfilter::ban-reason</b> allows you to specify a default reason (default: 'Spam/advertising')<br>
    <b>set::spamfilter::virus-help-channel</b> allows you to specify the channel to join for action 'viruschan' (default: #help)<br>
    <b>set::spamfilter::virus-help-channel-deny</b> allows you to block any normal joins to virus-help-channel (default: no)<br>
-</p></div>
+</p>
+<p>
+<font size="+1"><B>Slow Spamfilter Detection</B></font><a name="feature_spamfilter_slow"></a><br>
+A spamfilter regex can slow down the IRCd considerably. This really depends
+on the regex you use (and how the regex engine handles it), some are very
+fast and UnrealIRCd can execute thousands of them per second. Others can be
+extremely slow, take several seconds to execute, and could freeze the IRCd.<br>
+To help against this, Unreal comes with Slow Spamfilter Detection: For each
+spamfilter, Unreal checks, each time it executes, how long it takes to
+execute. Once a certain threshold is reached the IRCd will warn or even remove
+the spamfilter.<br>
+Warning is configured through <b>set::spamfilter::slowdetect-warn</b> (default: 250ms)
+and automatic deletion is configured by <b>set::spamfilter::slowdetect-fatal</b> (default: 500ms).
+You can set both settings to 0 (zero) to disable slow spamfilter detection.<br>
+This feature is currently not available on Windows.<br>
+</p>
+</div>
 
 <p><font size="+2"><b>3.15 - CIDR</b></font><a name="feature_cidr"></a></p><div class="desc">
 <p>UnrealIRCd now has support for CIDR (Classless Interdomain Routing). CIDR allows you to ban
@@ -2435,6 +2453,14 @@ set {
   Specifies the filename where the server's SSL private key is located.</p>
 <p><font class="set">set::ssl::trusted-ca-file &lt;filename&gt;;</font><br>
   Specifies the filename where the certificates of the trusted CAs are located.</p>
+<p><font class="set">set::ssl::server-cipher-list &lt;cipherlist&gt;;</font><br>
+  Specifies which ciphers to be allowed, by default we leave this up to OpenSSL.
+  See <a href="http://www.openssl.org/docs/apps/ciphers.html#CIPHER_LIST_FORMAT">http://www.openssl.org/docs/apps/ciphers.html</a>
+  on how to specify the list of ciphers.</p>
+<p><font class="set">set::ssl::renegotiate-bytes &lt;value&gt;;</font><br>
+  Specifies after how many bytes an SSL session should be renegotiated (eg: 20m for 20 megabytes).</p>
+<p><font class="set">set::ssl::renegotiate-timeout &lt;timevalue&gt;;</font><br>
+  Specifies after how much time an SSL session should be renegotiated (eg: 1h for 1 hour).</p>
 <p><font class="set">set::ssl::options::fail-if-no-clientcert;</font><br>
   Forces clients that do not have a certificate to be denied.</p>
 <p><font class="set">set::ssl::options::no-self-signed;</font><br>
@@ -2487,6 +2513,14 @@ set {
  <p><font class="set">set::spamfilter::except &lt;target(s)&gt;</font><br>
   These targets are exempt from spam filtering (no action will be taken),
   can be single target or comma seperated list.. Ex: except "#help,#spamreport"</p>
+ <p><font class="set">set::spamfilter::slowdetect-warn &lt;value&gt;</font><br>
+  If a spamfilter takes longer than this amount of milliseconds to execute
+  (1000ms = 1 second), then a warning notice will be sent to all opers (default: 250).
+  See also <a href="#feature_spamfilter_slow">Slow Spamfilter Detection</a>.</p>
+ <p><font class="set">set::spamfilter::slowdetect-fatal &lt;value&gt;</font><br>
+  If a spamfilter takes longer than this amount of milliseconds to execute
+  (1000ms = 1 second), then the spamfilter will be removed (default: 500).
+  See also <a href="#feature_spamfilter_slow">Slow Spamfilter Detection</a>.</p>
  <p><font class="set">set::check-target-nick-bans &lt;yes|no&gt;</font><br>
   Whenever the user changes his/her nick, check if the NEW nick would be
   banned. If so, do not allow the nickchange. Default is yes.</p>
@@ -2503,6 +2537,8 @@ AU). Requests to these servers are sent in parallel, fastest reply wins.</p>
  <p><font class="set">set::pingpong-warning &lt;yes|no&gt;</font><br>
   When NOSPOOF is enabled (usually on Windows), send a warning to each user to use
   '/quote pong ..' if they are having problems connecting? The default is no.</p>
+ <p><font class="set">set::watch-away-notification &lt;yes|no&gt;</font><br>
+  Allows you to enable/disable AWAY notification in WATCH. The default is yes.</p>
 <p></p> </div>
 <p><b><font size="+2">5 &#8211; Additional Files<a name="addtlfiles"></a>
   </font></b></p><div class="desc">

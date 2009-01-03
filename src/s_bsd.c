@@ -638,7 +638,7 @@ if ((bootopt & BOOT_CONSOLE) || isatty(0))
 #endif
 
 #if defined(HPUX) || defined(_SOLARIS) || \
-    defined(_POSIX_SOURCE) || defined(SVR4) || defined(SGI)
+    defined(_POSIX_SOURCE) || defined(SVR4) || defined(SGI) || defined(OSXTIGER)
 	(void)setsid();
 #else
 	(void)setpgrp(0, (int)getpid());

@@ -7138,7 +7138,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 				else if (!strcmp(cepp->ce_varname, "renegotiate-bytes"))
 				{
-					tempiConf.ssl_renegotiate_bytes = config_checkval(cepp->ce_vardata, CFG_TIME);
+					tempiConf.ssl_renegotiate_bytes = config_checkval(cepp->ce_vardata, CFG_SIZE);
 				}
 				else if (!strcmp(cepp->ce_varname, "renegotiate-timeout"))
 				{

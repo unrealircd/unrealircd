@@ -922,6 +922,8 @@ static void generate_cloakkeys()
 	int charIndex;
 	int value;
 
+	fprintf(stderr, "Here are 3 random cloak keys:\n");
+
 	for (keyNum = 0; keyNum < 3; ++keyNum)
 	{
 		keyLen = (getrandom8() % (GENERATE_CLOAKKEY_MAXLEN - GENERATE_CLOAKKEY_MINLEN + 1)) + GENERATE_CLOAKKEY_MINLEN;

@@ -1707,3 +1707,13 @@
   like /stats f. Bug #0003752 reported by Strawberry_Kittens, similar to
   #0002533.
 ** 3.2.8-rc1 release **
+- Added documentation for set::spamfilter::slowdetect-warn,
+  set::spamfilter::slowdetect-fatal, set::ssl::server-cipher-list,
+  set::ssl::renegotiate-bytes, set::ssl::renegotiate-timeout,
+  set::watch-away-notification and ./unreal gencloak. Reported by Bock
+  (#0003764).
+- set::ssl::renegotiate-bytes: fix when specifying a value such as 10m.
+- './unreal gencloak' now actually works
+- Fix typo in user mode q notice, reported by Strawberry_Kittens and others
+  (#0003761).
+- Possible fix for MAC OS X compile problem - UNCONFIRMED.
