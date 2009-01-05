@@ -21,9 +21,9 @@ Unreal3.2.8-RC1 Release Notes
   all would be useless, see the Changelog for the full list of changes.
 
 ==[ NEW ]==
-- set::level-on-join: this defines which privilegs a user receives when creating a
+- set::level-on-join: this defines which privileges a user receives when creating a
   channel, default is 'chanop', the only other available setting is 'none' (opless).
-- Away notification through WATCH: This allows clients to recieve a notification
+- Away notification through WATCH: This allows clients to receive a notification
   when someone goes away or comes back, along with a reason, a bit like IM's.
   There's probably no current client supporting this but it would be a nice feature
   in notify lists. Client developers: see Changes file for full protocol details.
@@ -57,7 +57,7 @@ Unreal3.2.8-RC1 Release Notes
 
 ==[ MAJOR BUGS FIXED ]==
 - Zip links issue (Overflowed unzipbuf)
-- Crash issue with 3rd party modules that introduce new channelmodes w/parameters
+- Crash issue with 3rd party modules that introduce new channel modes w/parameters
 - Mac OS X: Various issues which prevented the IRCd from booting up
 - A few rare crash issues, including a crash when linking to another server
 
