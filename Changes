@@ -1720,3 +1720,5 @@
   (#0003767).
 - Possible fix for MAC OS X compile problem - UNCONFIRMED.
 - Bump docdate..
+- Fixed OperOverride bug: if you are halfop you couldn't -q/-a, reported
+  by Strawberry_Kittens (#0003758).
