@@ -59,6 +59,7 @@ Unreal3.2.8-RC1 Release Notes
 - Zip links issue (Overflowed unzipbuf)
 - Crash issue with 3rd party modules that introduce new channel modes w/parameters
 - Mac OS X: Various issues which prevented the IRCd from booting up
+- Remote includes (constant) crash with new curl/c-ares versions
 - A few rare crash issues, including a crash when linking to another server
 
 ==[ MINOR BUGS FIXED ]==
