@@ -32,7 +32,7 @@ Hungarian |
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com/">http://www.unrealircd.com</a></font><br>
   <font size="4">Verzió: 3.2.8-rc1</font><br>
-  <b>Utolsó dokumentáció frissítés:</b> 2007-07-10</div>
+  <b>Utolsó dokumentáció frissítés:</b> 2009-01-03</div>
 <br>
   <b>Fejlesztõk:</b> Stskeeps / codemastr / Syzop / Luke / aquanight / WolfSage <br>
   <b>Munkatársak:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -250,6 +250,8 @@ mert máskülönben nem fogsz megérteni olyan fogalmakat, mint az "álcázás", "snoma
    nagybetû (A-Z) valamint szám (0-9) karakterekbõl áll [pl.: "AopAS6WQH2Os6hfosh4SFJHs"]. Az example.conf-ban találsz példát.<br>
 <p>Az álcázási kulcsoknak egy hálózat MINDEN SZERVERÉN azonosnak KELL lenniük. Továbbá a kulcsokat tartsd TITOKBAN,
    mert ha valaki ismeri a kulcsokat, visszafejtheti az eredeti gazdanevet (ami a +x felhasználói módot hasznavehetetlenné teszi).</p>
+<p>Tipp: Ha *NIX alatt vagy, és új álcázási kulcsokat kell készítened, futtathatod az './unreal gencloak' parancsot is
+   a parancsértelmezõdben, ami 3 véletlenszerû sztringet írat ki erre a célra.</p>
 </div>
 <p><font size="+2"><b>3.2 - Modulok</b></font><a name="feature_modules"></a></p><div class="desc">
 <p>Az UnrealIRCd támogatja a modulokat, ami hasznos, mert:<br>
@@ -563,7 +565,23 @@ lesznek alakítva futásidõben. Egy dupla aláhúzás ('__') jelent egy aláhúzást ('_
    A <b>set::spamfilter::ban-reason</b>-nel meghatározhatsz egy alapértelmezett indokot (alapértelmezés: 'Spam/advertising')<br>
    A <b>set::spamfilter::virus-help-channel</b>-lel meghatározhatod, hogy milyen csatornára történjen a belépés a 'viruschan' tevékenység esetén (alapértelmezés: #help)<br>
    A <b>set::spamfilter::virus-help-channel-deny</b> segítségével pedig letilthatod a normál belépéseket a "virus-help-channel"-ben (alapértelmezés: no)<br>
-</p></div>
+</p>
+<p>
+<font size="+1"><B>Lassú spamszûrõk érzékelése</B></font><a name="feature_spamfilter_slow"></a><br>
+A spamszûrõ regexek jelentõsen lelassíthatják az IRCd-t. Ez attól függ,
+milyen regexet használsz (és a regex motor hogyan kezeli). Némelyek elég
+gyorsak, és az UnrealIRCd ezret is lefuttat belõlük másodpercenként. Mások
+túlságosan lassúak lehetnek, több másodperc futtatási idõt is igényelhetnek, és lefagyaszthatják az IRCd-t.<br>
+Ennek megóvása érdekében az Unreal-nak van lassú spamszûrõ érzékelõje (Slow Spamfilter Detection):
+valahányszor egy spamszûrõ lefut, az UnrealIRCd ellenõrzi, mennyi idõ kell neki, hogy
+lefusson. Ha átlép egy bizonyos küszöbszintet, az IRCd figyelmeztetést küld, esetleg le is törli
+a spamszûrõt.<br>
+A figyelmeztetést a <b>set::spamfilter::slowdetect-warn</b> direktívával állíthatjuk be (alapértelmezés: 250ms),
+az automatikus törlést pedig a <b>set::spamfilter::slowdetect-fatal</b> direktívával (alapértelmezés: 500ms).
+Mindkét direktíva beállítható 0-ra (nullára), ami letiltja a lassú spamszûrõk érzékelését.<br>
+Jelenleg ez a funkció nem elérhetõ Windows alatt.<br>
+</p>
+</div>
 
 <p><font size="+2"><b>3.15 - CIDR</b></font><a name="feature_cidr"></a></p><div class="desc">
 <p>Az UnrealIRCd most már támogatja a CIDR-t is (Classless Interdomain Routing - osztálynélküli körzetek közti forgalomirányítás). A CIDR alkalmas
@@ -2435,6 +2453,14 @@ set {
   Meghatározza azt a fájlnevet, ahol a szerver privát SSL kulcsa tartozkodik.</p>
 <p><font class="set">set::ssl::trusted-ca-file &lt;fájlnév&gt;;</font><br>
   Meghatározza azt a fájlnevet, ahol a megbízható CA-k tanúsítványai tartózkodnak.</p>
+<p><font class="set">set::ssl::server-cipher-list &lt;kódoló-algoritmusok&gt;;</font><br>
+  Meghatározza, milyen kódoló algoritmusok legyenek engedélyezve, alapértelmezésben az OpenSSL dönti el.
+  Lásd a <a href="http://www.openssl.org/docs/apps/ciphers.html#CIPHER_LIST_FORMAT">http://www.openssl.org/docs/apps/ciphers.html</a>
+  oldalt a kódoló algoritmusok meghatározásának hogyanjáról.</p>
+<p><font class="set">set::ssl::renegotiate-bytes &lt;érték&gt;;</font><br>
+  Meghatározza, hogy hány bájt után kelljen az SSL viszonynak új kézfogás (pl.: 20m a 20 megabájthoz).</p>
+<p><font class="set">set::ssl::renegotiate-timeout &lt;idõérték&gt;;</font><br>
+  Meghatározza, hogy mennyi idõ múlva kelljen az SSL viszonynak új kézfogás (pl.: 1h az 1 órához).</p>
 <p><font class="set">set::ssl::options::fail-if-no-clientcert;</font><br>
   Letiltja a tanúsítvány nélküli kliensek kapcsolódását.</p>
 <p><font class="set">set::ssl::options::no-self-signed;</font><br>
@@ -2487,6 +2513,14 @@ set {
  <p><font class="set">set::spamfilter::except &lt;célpont(ok)&gt;</font><br>
   Ezek a célpontok kivételek a spamszûrések alól (nem lesz tevékenység végrehajtva),
   lehet egyetlen célpont vagy egy vesszõvel elválaszott felsorolás. Pl.: except "#help,#spamreport"</p>
+ <p><font class="set">set::spamfilter::slowdetect-warn &lt;érték&gt;</font><br>
+  Ha egy spamszûrõ lefutása több ideig tart, mint a megadott ezredmásodpercek száma,
+  (1000ms = 1 másodperc), akkor minden operátor kap egy figyelmeztetõ üzenetet (alapérték: 250).
+  Lásd még: <a href="#feature_spamfilter_slow">Lassú spamszûrõk érzékelése</a>.</p>
+ <p><font class="set">set::spamfilter::slowdetect-fatal &lt;érték&gt;</font><br>
+  Ha egy spamszûrõ lefutása több ideig tart, mint a megadott ezredmásodpercek száma,
+  (1000ms = 1 másodperc), akkor a spamszûrõ le lesz törölve (alapérték: 500).
+  Lásd még: <a href="#feature_spamfilter_slow">Lassú spamszûrõk érzékelése</a>.</p>
  <p><font class="set">set::check-target-nick-bans &lt;yes|no&gt;</font><br>
   Valahányszor a felhasználó nicknevet változtat, ellenõrzi, hogy az ÚJ név le van-e
   tiltva. Ha igen, nem engedélyezi a nickváltást. Az alapértelmezés "yes".</p>
@@ -2503,6 +2537,8 @@ AU). A lekérdezések párhuzamosan kerülnek elküldésre, a leggyorsabb válasz nyer.
  <p><font class="set">set::pingpong-warning &lt;yes|no&gt;</font><br>
   Ha a NOSPOOF engedélyezett (általában Windowson), küldjön egy figyelmeztetést minden felhasználónak, hogy
   használják a "/quote pong .." parancsot, ha kapcsolódási problémájuk van. Az alapértelmezés "no".</p>
+ <p><font class="set">set::watch-away-notification &lt;yes|no&gt;</font><br>
+  Engedélyezi vagy letiltja az AWAY értesítéseket a WATCH-ban. Az alapértelmezés "yes".</p>
 <p></p> </div>
 <p><b><font size="+2">5 &#8211; További fájlok<a name="addtlfiles"></a>
   </font></b></p><div class="desc">
