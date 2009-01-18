@@ -1722,3 +1722,5 @@
 - Bump docdate..
 - Fixed OperOverride bug: if you are halfop you couldn't -q/-a, reported
   by Strawberry_Kittens (#0003758).
+- Added note to release notes regarding Suse 10.3 on amd64 causing a crash
+  on-boot. #0003725, #0003653, #0003791.

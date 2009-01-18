@@ -76,6 +76,8 @@ Unreal3.2.8-RC1 Release Notes
   but might not work in worst-case scenario's.
 - Regexes: Possessive quantifiers such as, for example, "++" (not to be confused with "+")
   are not safe to use, they can easily freeze the IRCd.
+- Suse 10.3 in 64 bit mode (amd64, x64) is known to crash UnrealIRCd on-boot, this is
+  likely to be a Suse 10.3 bug as over 3 people reported it with that exact OS / arch.
 
 ==[ ADDITIONAL INFO ]==
 * See Changelog for more details
