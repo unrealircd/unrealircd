@@ -1724,3 +1724,5 @@
   by Strawberry_Kittens (#0003758).
 - Added note to release notes regarding Suse 10.3 on amd64 causing a crash
   on-boot. #0003725, #0003653, #0003791.
+- Updated regex documentation in unreal32docs, it had some incorrect
+  statements regarding wildcards. Reported by james2vegas (#0003800).
