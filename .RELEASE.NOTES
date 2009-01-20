@@ -67,6 +67,7 @@ Unreal3.2.8-RC1 Release Notes
 - IP masks in oper::from::userhost sometimes didn't match when they should
 - (G)ZLINE's on IPv6 users were sometimes rejected
 - CHROOTDIR works again
+- OperOverride fixes
 - And more... see Changelog
 
 ==[ KNOWN ISSUES ]==
