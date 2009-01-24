@@ -1726,3 +1726,19 @@
   on-boot. #0003725, #0003653, #0003791.
 - Updated regex documentation in unreal32docs, it had some incorrect
   statements regarding wildcards. Reported by james2vegas (#0003800).
+- Added some big warnings regarding big timeshifts. 
+  In the IRCd world correct time is very important. This means that time
+  should be correct when the IRCd is booted, either by running ntpd/ntpdate
+  on the system or some other synchronization software, or by using the
+  built-in timesync feature.
+  Whenever the clock is adjusted for more than a few seconds AFTER the IRCd
+  has booted, it can lead to dangerous effects ranging from unfair timestamps
+  for nicks and channels (and hence the possibility to takeover channels),
+  to even completely stalling the IRCd (negative timeshift) or making it so
+  nobody can connect anymore due to throttling (positive timeshift).
+  We now try to 'fix' the worst effects such as the IRCd freeze and
+  throttling. This does not fix the whole problem, so I've added some big
+  warnings when the clock is adjusted, including an annoying one every 5
+  minutes if the clock was set backwards, until the time is OK again
+  (catches up with the original time).
+  This fixes #0003230 reported by Stealth, and #0002521 reported by durrie.

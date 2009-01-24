@@ -146,6 +146,9 @@ char trouble_info[1024];
 extern void url_init(void);
 #endif
 
+time_t highesttimeofday=0, oldtimeofday=0, lasthighwarn=0;
+
+
 void save_stats(void)
 {
 	FILE *stats = fopen("ircd.stats", "w");
@@ -910,6 +913,99 @@ extern time_t TSoffset;
 
 extern int unreal_time_synch(int timeout);
 
+extern MODVAR Event *events;
+extern struct MODVAR ThrottlingBucket *ThrottlingHash[THROTTLING_HASH_SIZE+1];
+
+/** This functions resets a couple of timers and does other things that
+ * are absolutely cruicial when the clock is adjusted - particularly
+ * when the clock goes backwards. -- Syzop
+ */
+void fix_timers(void)
+{
+int i, cnt;
+aClient *acptr;
+Event *e;
+struct ThrottlingBucket *n;
+struct ThrottlingBucket z = { NULL, NULL, {0}, 0, 0};
+
+	/* Client time stuff */
+	for (i = 0; i <= LastSlot; i++)
+	{
+	
+	        if (!(acptr = local[i]) || IsMe(acptr))
+	        	continue;
+
+		/* all (servers AND users) */
+		if (MyConnect(acptr))
+		{
+			if (acptr->since > TStime())
+			{
+				Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->since %ld -> %ld",
+					acptr->name, acptr->since, TStime()));
+				acptr->since = TStime();
+			}
+			if (acptr->lasttime > TStime())
+			{
+				Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->lasttime %ld -> %ld",
+					acptr->name, acptr->lasttime, TStime()));
+				acptr->lasttime = TStime();
+			}
+			if (acptr->last > TStime())
+			{
+				Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->last %ld -> %ld",
+					acptr->name, acptr->last, TStime()));
+				acptr->last = TStime();
+			}
+		}
+		
+		/* users */
+		if (MyClient(acptr))
+		{
+			if (acptr->nextnick > TStime())
+			{
+				Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->nextnick %ld -> %ld",
+					acptr->name, acptr->nextnick, TStime()));
+				acptr->nextnick = TStime();
+			}
+			if (acptr->nexttarget > TStime())
+			{
+				Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->nexttarget %ld -> %ld",
+					acptr->name, acptr->nexttarget, TStime()));
+				acptr->nexttarget = TStime();
+			}
+			
+		}
+	}
+
+	/* Reset all event timers */
+	for (e = events; e; e = e->next)
+	{
+		if (e->last > TStime())
+		{
+			Debug((DEBUG_DEBUG, "fix_timers(): %s: e->last %ld -> %ld",
+				e->name, e->last, TStime()-1));
+			e->last = TStime()-1;
+		}
+	}
+
+	/* Just flush all throttle stuff... */
+	cnt = 0;
+	for (i = 0; i < THROTTLING_HASH_SIZE; i++)
+		for (n = ThrottlingHash[i]; n; n = n->next)
+		{
+			z.next = (struct ThrottlingBucket *) DelListItem(n, ThrottlingHash[i]);
+			cnt++;
+			MyFree(n);
+			n = &z;
+		}
+	Debug((DEBUG_DEBUG, "fix_timers(): removed %d throttling item(s)", cnt));
+	
+	Debug((DEBUG_DEBUG, "fix_timers(): updating nextping/nextconnect/nextdnscheck/nextexpire (%ld/%ld/%ld/%ld)",
+		nextping, nextconnect, nextdnscheck, nextexpire));	
+	nextping = nextconnect = nextdnscheck = nextexpire = 0;
+}
+
+
 #ifndef _WIN32
 static void generate_cloakkeys()
 {
@@ -1580,12 +1676,65 @@ void SocketLoop(void *dummy)
 	{
 		time_t oldtimeofday;
 
-		oldtimeofday = timeofday;
+#define NEGATIVE_SHIFT_WARN	-15
+#define POSITIVE_SHIFT_WARN	20
+
 		timeofday = time(NULL) + TSoffset;
-		if (timeofday - oldtimeofday < 0) {
-			sendto_realops("Time running backwards! %ld - %ld < 0",
-			    timeofday, oldtimeofday);
+		if (timeofday - oldtimeofday < NEGATIVE_SHIFT_WARN) {
+			/* tdiff = # of seconds of time set backwards (positive number! eg: 60) */
+			long tdiff = oldtimeofday - timeofday;
+			ircd_log(LOG_ERROR, "WARNING: Time running backwards! Clock set back ~%ld seconds (%ld -> %ld)",
+				tdiff, oldtimeofday, oldtimeofday);
+			ircd_log(LOG_ERROR, "[TimeShift] Resetting a few timers to prevent IRCd freeze!");
+			sendto_realops("WARNING: Time running backwards! Clock set back ~%ld seconds (%ld -> %ld)",
+				tdiff, oldtimeofday, oldtimeofday);
+			sendto_realops("Incorrect time for IRC servers is a serious problem. "
+			               "Time being set backwards (either by TSCTL or by resetting the clock) is "
+			               "even more serious and can cause clients to freeze, channels to be "
+			               "taken over, and other issues.");
+			sendto_realops("Please be sure your clock is always synchronized before "
+			               "the IRCd is started or use the built-in timesynch feature.");
+			sendto_realops("[TimeShift] Resetting a few timers to prevent IRCd freeze!");
+			fix_timers();
+			nextfdlistcheck = 0;
+		} else
+		if (timeofday - oldtimeofday > POSITIVE_SHIFT_WARN) /* do not set too low or you get false positives */
+		{
+			/* tdiff = # of seconds of time set forward (eg: 60) */
+			long tdiff = timeofday - oldtimeofday;
+			ircd_log(LOG_ERROR, "WARNING: Time jumped ~%ld seconds ahead! (%ld -> %ld)",
+				tdiff, oldtimeofday, oldtimeofday);
+			ircd_log(LOG_ERROR, "[TimeShift] Resetting some timers!");
+			sendto_realops("WARNING: Time jumped ~%ld seconds ahead! (%ld -> %ld)",
+			        tdiff, oldtimeofday, oldtimeofday);
+			sendto_realops("Incorrect time for IRC servers is a serious problem. "
+			               "Time being adjusted (either by TSCTL or by resetting the clock) "
+			               "more than a few seconds forward/backward can lead to serious issues.");
+			sendto_realops("Please be sure your clock is always synchronized before "
+			               "the IRCd is started or use the built-in timesynch feature.");
+			sendto_realops("[TimeShift] Resetting some timers!");
+			fix_timers();
+			nextfdlistcheck = 0;
 		}
+		if (highesttimeofday+NEGATIVE_SHIFT_WARN > timeofday)
+		{
+			if (lasthighwarn > timeofday)
+				lasthighwarn = timeofday;
+			if (timeofday - lasthighwarn > 300)
+			{
+				ircd_log(LOG_ERROR, "[TimeShift] The (IRCd) clock was set backwards. "
+					"Waiting for time to be OK again. This will be in %ld seconds",
+					highesttimeofday - timeofday);
+				sendto_realops("[TimeShift] The (IRCd) clock was set backwards. Timers, nick- "
+				               "and channel-timestamps are possibly incorrect. This message will "
+				               "repeat itself until we catch up with the original time, which will be "
+				               "in %ld seconds", highesttimeofday - timeofday);
+				lasthighwarn = timeofday;
+			}
+		} else {
+			highesttimeofday = timeofday;
+		}
+		oldtimeofday = timeofday;
 		LockEventSystem();
 		DoEvents();
 		UnlockEventSystem();

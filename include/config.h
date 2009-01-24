@@ -388,6 +388,7 @@
  * users this value is completely irrelevant.
  * The original value here was 60 (which was [hopefuly] never reached and was
  * stupid anyway), changed to 2.
+ * DO NOT SET THIS TO ANYTHING MORE THAN 5. BETTER YET, JUST LEAVE IT AT 2!
  */
 #define TIMESEC  2
 

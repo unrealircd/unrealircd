@@ -61,6 +61,11 @@ Unreal3.2.8-RC1 Release Notes
 - Mac OS X: Various issues which prevented the IRCd from booting up
 - Remote includes (constant) crash with new curl/c-ares versions
 - A few rare crash issues, including a crash when linking to another server
+- In case of clock adjustments, the IRCd will no longer freeze when the time is
+  adjusted backwards, nor will it deny clients to connect when adjusted forwards.
+  However, because clock adjustments (time shifts) bigger than a few seconds are 
+  so dangerous, big warnings are now printed when they happen.
+  Morale: synchronize your clocks, always!
 
 ==[ MINOR BUGS FIXED ]==
 - CGI:IRC: Several IPv6 issues, both on IPv6 IRCd's and CGI:IRC gateways
