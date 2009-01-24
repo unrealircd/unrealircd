@@ -1742,3 +1742,6 @@
   minutes if the clock was set backwards, until the time is OK again
   (catches up with the original time).
   This fixes #0003230 reported by Stealth, and #0002521 reported by durrie.
+- Throttling time is now more accurate, especially with larger time values
+  such as 3 connections per 60 seconds. Previously that could result in 3 per
+  90 seconds due to timer inaccuracy, now max 65 seconds (max 5s inaccuracy).

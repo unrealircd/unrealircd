@@ -2339,8 +2339,17 @@ int	config_run()
 #ifdef THROTTLING
 	{
 		EventInfo eInfo;
+		long v;
 		eInfo.flags = EMOD_EVERY;
-		eInfo.every = THROTTLING_PERIOD ? THROTTLING_PERIOD/2 : 86400;
+		if (!THROTTLING_PERIOD)
+			v = 120;
+		else
+		{
+			v = THROTTLING_PERIOD/2;
+			if (v > 5)
+				v = 5; /* accuracy, please */
+		}
+		eInfo.every = v;
 		EventMod(EventFind("bucketcleaning"), &eInfo);
 	}
 #endif

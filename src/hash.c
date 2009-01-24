@@ -781,9 +781,17 @@ struct	MODVAR ThrottlingBucket	*ThrottlingHash[THROTTLING_HASH_SIZE+1];
 
 void	init_throttling_hash()
 {
+long v;
 	bzero(ThrottlingHash, sizeof(ThrottlingHash));	
-	EventAddEx(NULL, "bucketcleaning", (THROTTLING_PERIOD ? THROTTLING_PERIOD : 120)/2, 0,
-		e_clean_out_throttling_buckets, NULL);		
+	if (!THROTTLING_PERIOD)
+		v = 120;
+	else
+	{
+		v = THROTTLING_PERIOD/2;
+		if (v > 5)
+			v = 5; /* accuracy, please */
+	}
+	EventAddEx(NULL, "bucketcleaning", v, 0, e_clean_out_throttling_buckets, NULL);
 }
 
 int	hash_throttling(struct IN_ADDR *in)
