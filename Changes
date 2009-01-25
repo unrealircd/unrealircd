@@ -1718,7 +1718,7 @@
   (#0003761). Patch provided by Stealth.
 - Fix for Mac OS X compile problem (in setpgrp), reported by Bock / Jckf
   (#0003767).
-- Possible fix for MAC OS X compile problem - UNCONFIRMED.
+- Possible fix for MAC OS X compile problem
 - Bump docdate..
 - Fixed OperOverride bug: if you are halfop you couldn't -q/-a, reported
   by Strawberry_Kittens (#0003758).
@@ -1743,5 +1743,7 @@
   (catches up with the original time).
   This fixes #0003230 reported by Stealth, and #0002521 reported by durrie.
 - Throttling time is now more accurate, especially with larger time values
-  such as 3 connections per 60 seconds. Previously that could result in 3 per
-  90 seconds due to timer inaccuracy, now max 65 seconds (max 5s inaccuracy).
+  such as 3 connections per 60 seconds. Previously that -could- result in
+  3 per 90 seconds due to timer inaccuracy (which was max <time>*1.5), now
+  it would be max 65 seconds (max 5s inaccuracy, lower with lower times).
+** 3.2.8-rc2 release **

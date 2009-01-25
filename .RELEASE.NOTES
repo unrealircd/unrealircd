@@ -1,4 +1,4 @@
-Unreal3.2.8-RC1 Release Notes
+Unreal3.2.8-rc2 Release Notes
 ==============================
 
 ==[ GENERAL INFORMATION ]==
@@ -62,10 +62,11 @@ Unreal3.2.8-RC1 Release Notes
 - Remote includes (constant) crash with new curl/c-ares versions
 - A few rare crash issues, including a crash when linking to another server
 - In case of clock adjustments, the IRCd will no longer freeze when the time is
-  adjusted backwards, nor will it deny clients to connect when adjusted forwards.
-  However, because clock adjustments (time shifts) bigger than a few seconds are 
-  so dangerous, big warnings are now printed when they happen.
-  Morale: synchronize your clocks, always!
+  adjusted backwards, nor will it incorrectly throttle clients when adjusted forward.
+  However, because clock adjustments (time shifts) of more than xx seconds are 
+  so dangerous (and will still cause a number of issues), big warnings are now
+  printed when they happen.
+  Morale: synchronize your system clock, or use the built-in timesync feature.
 
 ==[ MINOR BUGS FIXED ]==
 - CGI:IRC: Several IPv6 issues, both on IPv6 IRCd's and CGI:IRC gateways
@@ -73,6 +74,7 @@ Unreal3.2.8-RC1 Release Notes
 - (G)ZLINE's on IPv6 users were sometimes rejected
 - CHROOTDIR works again
 - OperOverride fixes
+- Throttling is now more accurate
 - And more... see Changelog
 
 ==[ KNOWN ISSUES ]==

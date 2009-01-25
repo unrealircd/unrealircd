@@ -52,7 +52,7 @@
 #define PATCH1  		"3"
 #define PATCH2  		".2"
 #define PATCH3  		".8"
-#define PATCH4  		"-rc1"
+#define PATCH4  		"-rc2"
 #define PATCH5  		""
 #define PATCH6  		""
 #define PATCH7  		""
