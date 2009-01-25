@@ -4486,16 +4486,14 @@ Datei</a></b></font></p>
   Übereinstimmung mit 0 oder 1 der vorhergehenden Zeichen. Dieses
   &quot;vorhergehende Zeichen&quot; ist auch der Punkt, worin sich das '?' in
   einer regex von einer Wildcard unterscheidet. In Wildcards bedeutet die Angabe
-  von "a?c" eine Übereinstimmung mit einem "a", gefolgt von irgend einem (oder
-  keinem) anderen Zeichen, gefolgt von einem "c." In Regex hat dies eine andere
+  von "a?c" eine Übereinstimmung mit einem "a", gefolgt von irgend einem anderen Zeichen, gefolgt von einem "c." In Regex hat dies eine andere
   Bedeutung. Es wird auf Übereinstimmung geprüft mit 0 oder einem
   &quot;a&quot;, gefolgt von dem Buchstaben &quot;c&quot;.&nbsp; Damit
   kann&nbsp; durch das ? angegeben werden, wie viele &quot;a&quot; vorhanden
   sein dürfen. Soll das ? in einer Wildcard emuliert werden, wird der Punkt
-  Operator verwendet. Der Ausdruck "a.?c" ist gleichbedeutend mit der zuvor
+  Operator verwendet. Der Ausdruck &quot;a.c&quot; ist gleichbedeutend mit der zuvor
   beschrieben Wildcard. Geprüft wird auf Übereinstimmung mit einem
-  &quot;a&quot;, gefolgt von irgend einem oder keinen anderen Zeichen (das ?
-  modifiziert den .), gefolgt von einem "c."</p><p>Der nächste
+  &quot;a&quot;, gefolgt von irgend einem anderen Zeichen, gefolgt von einem "c."</p><p>Der nächste
   Wiederholungsoperator ist der *. Auch dieser ist wieder ähnlich zum Wildcard
   Zeichen. Geprüft wird die Übereinstimmung mit 0 oder mehr der voranstehenden
   Zeichen. Zu beachten ist, dass dieses &quot;vornstehende Zeichen&quot; das
