@@ -1674,7 +1674,6 @@ void SocketLoop(void *dummy)
 	for (;;)
 #endif
 	{
-		time_t oldtimeofday;
 
 #define NEGATIVE_SHIFT_WARN	-15
 #define POSITIVE_SHIFT_WARN	20

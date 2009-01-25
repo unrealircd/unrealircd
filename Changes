@@ -1746,4 +1746,5 @@
   such as 3 connections per 60 seconds. Previously that -could- result in
   3 per 90 seconds due to timer inaccuracy (which was max <time>*1.5), now
   it would be max 65 seconds (max 5s inaccuracy, lower with lower times).
+- Smallll fix for time shift protection
 ** 3.2.8-rc2 release **
