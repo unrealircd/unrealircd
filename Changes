@@ -1749,3 +1749,10 @@
 - Smallll fix for time shift protection
 ** 3.2.8-rc2 release **
 - Some text fixes regarding time shift feature
+- Fix for compile problem on FreeBSD (and possibly other OS's):
+  - When pkg-config is present but does not recognize --static, use
+    default c-ares library options.
+  - Set default c-ares library options to -lcares on FreeBSD and others.
+    Set to -lcares -lrt on Linux (previously was -lcares -lrt for all).
+  Thanks to goldenwolf for the bugreport (#0003803) and providing a test-
+  shell to trace this issue down.

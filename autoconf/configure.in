@@ -483,10 +483,28 @@ CARESINCDIR="$cur_dir/extras/c-ares/include"
 AC_SUBST(CARESINCDIR)
 CARESLIBDIR="-L../extras/c-ares/lib"
 AC_SUBST(CARESLIBDIR)
+
+dnl Set default library parameters for when pkg-config is not available
+CARESLIBSALT="-lcares"
+case `uname -s` in
+*FreeBSD*)
+CARESLIBSALT="-lcares"
+;;
+*Linux*)
+CARESLIBSALT="-lcares -lrt"
+;;
+esac
+
+dnl Use pkg-config for c-ares libraries, and if not available use defaults
+dnl from above. Also, if pkg-config returns an empty result (ex: on fbsd
+dnl or older versions it might be missing --static) then also use defaults.
 if test "x$ac_cv_path_PKGCONFIG" = "x" ; then
-	CARESLIBS="-lcares -lrt"
+	CARESLIBS="$CARESLIBSALT"
 else
-	CARESLIBS=`$ac_cv_path_PKGCONFIG --static --libs libcares.pc`
+	CARESLIBS="`$ac_cv_path_PKGCONFIG --static --libs libcares.pc`"
+	if test "x$CARESLIBS" = "x" ; then
+		CARESLIBS="$CARESLIBSALT"
+	fi
 fi
 AC_SUBST(CARESLIBS)
 cd $cur_dir

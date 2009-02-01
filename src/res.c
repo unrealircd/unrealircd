@@ -48,6 +48,11 @@
 
 #include <res.h>
 
+/* Prevent crashes due to invalid prototype/ABI */
+#if ARES_VERSION < 0x010600
+ #error "You have an old c-ares version on your system and/or Unreals c-ares failed to compile!"
+#endif
+
 /* Forward declerations */
 void unrealdns_cb_iptoname(void *arg, int status, int timeouts, struct hostent *he);
 void unrealdns_cb_nametoip_verify(void *arg, int status, int timeouts, struct hostent *he);

@@ -13020,10 +13020,24 @@ CARESINCDIR="$cur_dir/extras/c-ares/include"
 
 CARESLIBDIR="-L../extras/c-ares/lib"
 
+
+CARESLIBSALT="-lcares"
+case `uname -s` in
+*FreeBSD*)
+CARESLIBSALT="-lcares"
+;;
+*Linux*)
+CARESLIBSALT="-lcares -lrt"
+;;
+esac
+
 if test "x$ac_cv_path_PKGCONFIG" = "x" ; then
-	CARESLIBS="-lcares -lrt"
+	CARESLIBS="$CARESLIBSALT"
 else
-	CARESLIBS=`$ac_cv_path_PKGCONFIG --static --libs libcares.pc`
+	CARESLIBS="`$ac_cv_path_PKGCONFIG --static --libs libcares.pc`"
+	if test "x$CARESLIBS" = "x" ; then
+		CARESLIBS="$CARESLIBSALT"
+	fi
 fi
 
 cd $cur_dir
