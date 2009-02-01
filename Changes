@@ -1748,3 +1748,4 @@
   it would be max 65 seconds (max 5s inaccuracy, lower with lower times).
 - Smallll fix for time shift protection
 ** 3.2.8-rc2 release **
+- Some text fixes regarding time shift feature
