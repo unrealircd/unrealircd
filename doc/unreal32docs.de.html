@@ -999,15 +999,15 @@ den virus-help-channel zu blockieren (Default: no)
 <font size="+1"><b><a name="feature_spamfilter_slow">Erkennung langsamer
 Spamfilter</a></b></font><br>
 Ein Spamfilter Ausdruck (regex) kann einen IRCd beträchtlich verlangsamen. Das
-hängt davon ab, welcher Ausdruck verwandt wird (und wie dieser Ausdruck
+hängt davon ab, welcher Ausdruck verwendet wird (und wie dieser Ausdruck
 ausgewertet wird). Einige Spamfilter Ausdrücke sind sehr schnell und UnrealIRCd
 kann Tausende von ihnen pro Sekunde verarbeiten. Andere können extrem langsam
 sein und mehrere Sekunden für die Ausführung benötigen und dadurch den IRCd
 regelrecht einfrieren..<br>
 Zur Unterstützung gegen dieses Problem stellt Unreal eine Erkennung langsamer
-Spamfilter ('Slow Spamfilter Detection' nereit: Für jeden Spamfilter,
-überprüft bei jeder Ausführung die hierzu benötigte Zeit. Wird ein
-bestimmter Grenzwert erreicht warnt der IRCd oder entfernt einfach diesen Spamfilter.<br>
+Spamfilter ('Slow Spamfilter Detection' bereit: Für jeden Spamfilter wird bei jeder Ausführung die hierzu benötigte
+Zeit überprüft. Wird ein
+bestimmter Grenzwert erreicht, warnt der IRCd oder entfernt einfach diesen Spamfilter.<br>
 Warnungen werden durch <b>set::spamfilter::slowdetect-warn</b> konfiguriert (Default:
 250ms) und die automatische Löschung durch <b>set::spamfilter::slowdetect-fatal</b>
 (Default: 500ms). Man kann beide Werte auf 0 setzen um die Erkennung langsamer
