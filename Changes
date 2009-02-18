@@ -1757,3 +1757,6 @@
   Thanks to goldenwolf for the bugreport (#0003803) and providing a test-
   shell to trace this issue down.
 ** 3.2.8-rc2 *NIX downloads replaced **
+- 'link xx with SSL option enabled on non-SSL compile' was incorrectly
+  printed out as a warning, when in fact it's an error (and was treated as
+  such). Same for ZIP on non-zip compile. Reported by Stealth (#0003833).
