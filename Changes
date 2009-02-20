@@ -1760,3 +1760,5 @@
 - 'link xx with SSL option enabled on non-SSL compile' was incorrectly
   printed out as a warning, when in fact it's an error (and was treated as
   such). Same for ZIP on non-zip compile. Reported by Stealth (#0003833).
+- Fixed very silly 'time jumped .. seconds ahead (0 -> ..)' message which
+  happened on every IRCd boot.

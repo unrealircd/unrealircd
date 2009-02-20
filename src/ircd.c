@@ -1697,7 +1697,7 @@ void SocketLoop(void *dummy)
 			fix_timers();
 			nextfdlistcheck = 0;
 		} else
-		if (timeofday - oldtimeofday > POSITIVE_SHIFT_WARN) /* do not set too low or you get false positives */
+		if ((oldtimeofday > 0) && (timeofday - oldtimeofday > POSITIVE_SHIFT_WARN)) /* do not set too low or you get false positives */
 		{
 			/* tdiff = # of seconds of time set forward (eg: 60) */
 			long tdiff = timeofday - oldtimeofday;
