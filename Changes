@@ -1762,3 +1762,4 @@
   such). Same for ZIP on non-zip compile. Reported by Stealth (#0003833).
 - Fixed harmless (but silly) message which happened on every IRCd boot
   (time jump message).
+- Updated credits (donations)
