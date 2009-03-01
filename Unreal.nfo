@@ -1,12 +1,11 @@
 ===============================================
-=            UnrealIRCd v3.2.8-rc2            =
+=            UnrealIRCd v3.2.8                =
 ===============================================
  This release was brought to you by:
 
   Coders:
   =======
   * Syzop
-  * Stskeeps
 
   Contributors:
   =============
@@ -21,6 +20,11 @@
   ===========
   * Bock, Apocalypse, StrawberryKittens, wax, Elemental, and many more
 
+  Previous coders:
+  ================
+  * Stskeeps
+  * codemastr
+  * Many more..
 
  Precenses on the Internet:
   * http://www.unrealircd.com
@@ -28,16 +32,16 @@
  CVS
  ====
  To get anonymous access: (read only)
- "cvs -d :pserver:anonymous@cvs.unrealircd.com:/home/cmunk/ircsystems/cvsroot login"
+ "cvs -d :pserver:anonymous@cvs.unrealircd.com:/cvs login"
 
  press enter when asked for password
  Then, choose the appropiate branch you want:
 
  latest 3.2 release ("stable"):
- "cvs -d :pserver:anonymous@cvs.unrealircd.com:/home/cmunk/ircsystems/cvsroot checkout -r stable -d Unreal-stable unreal"
+ "cvs -z3 -d :pserver:anonymous@cvs.unrealircd.com:/cvs checkout -r stable -d Unreal-stable unreal"
 
  latest 3.2 fixes / development ("unreal3_2_fixes"):
- "cvs -d :pserver:anonymous@cvs.unrealircd.com:/home/cmunk/ircsystems/cvsroot checkout -r unreal3_2_fixes -d Unreal-stable unreal"
+ "cvs -z3 -d :pserver:anonymous@cvs.unrealircd.com:/cvs checkout -r unreal3_2_fixes -d Unreal-stable unreal"
 
  To get support
  ================

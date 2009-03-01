@@ -1763,3 +1763,4 @@
 - Fixed harmless (but silly) message which happened on every IRCd boot
   (time jump message).
 - Updated credits (donations)
+** 3.2.8 release **
