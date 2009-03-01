@@ -1,4 +1,6 @@
-Numeric 005 Documentation (c) 2002-2005 codemastr (Dominick Meglio) [codemastr@unrealircd.com]
+Numeric 005 Documentation
+(c) 2002-2005 codemastr (Dominick Meglio) [codemastr@unrealircd.com]
+(c) 2005-2009 syzop (Bram Matthys) [syzop@vulnscan.org]
 
 Numeric 005 allows the server to inform the client of any protocol specific features in the
 IRCd.  The numeric is sent at connection time immediately after numeric 004. Additionally
@@ -22,9 +24,9 @@ impractical and technically impossible to correctly implement due to existing li
 in the standard. Therefore, this token is not currently supported. 
 
 Unreal does additionally provide a few tokens which are not specified in the standard, these
-include: HCN, AWAYLEN, WATCH, SILENCE, EXTBAN, ELIST, and CMDS. Unreal also maintains a few
-legacy tokens such as MAXCHANNELS and WALLCHOPS to ensure compatibility until the ISupport
-standard is more widely accepted by clients.
+include: HCN, AWAYLEN, WATCH, SILENCE, EXTBAN, ELIST, CMDS, NAMESX, UHNAMES, and WATCHOPTS.
+Unreal also maintains a few legacy tokens such as MAXCHANNELS and WALLCHOPS to ensure
+compatibility until the ISupport standard is more widely accepted by clients.
 
 Token         Value           Default Value                Description
 ------------------------------------------------------------------------------------------------
@@ -165,3 +167,14 @@ NAMESX        none            none                         Indicates that extend
                                                            all channel rights in a NAMES reply
                                                            instead of only the highest right
                                                            (eg: @+Person instead of @Person).
+
+UHNAMES       none            none                         Indicates that (other) extended
+                                                           /NAMES info is available on the
+                                                           server. If the client sends
+                                                           "PROTOCTL UHNAMES" then the server
+                                                           will, from then on, send user@host
+                                                           information in a NAMES reply
+                                                           (eg: @nick!ident@hostname).
+
+WATCHOPTS     flags           A                            WATCH options supported. 'A' means
+                                                           Away Notification is available.
