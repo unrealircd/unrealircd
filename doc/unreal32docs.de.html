@@ -29,12 +29,13 @@
 
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
-  <font size="4">Version: 3.2.6 </font><br>
-  <b>Letztes Update dieses Handbuchs:</b>                2006-12-22</div>
-  <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
+  <font size="4">Version: 3.2.8</font><br>
+  <b>Letztes Update dieses Handbuchs:</b>                  2009-01-03</div>
+  <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<font face="Helvetica,Arial" size="-1">/
+aquanight / WolfSage</font><br>
   <b>Contributors:</b>  McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
 <b>Dokumentation</b><b>:</b> CKnight^ / Syzop<br>
-<b>Deutsche Übersetzung:</b> Stylus740 (irc.smart-irc.net)<br>
+<b>Deutsche Übersetzung:</b> Stylus740 (irc.insiderZ.de)<br>
 <p>Um diese Dokumentation zu lesen, ist einer der unten aufgeführten
 kompatiblen Browser erforderlich. Aktuelle Dokumentationen sind erhältlich&nbsp; @
 <a href="http://www.vulnscan.org/UnrealIRCd/unreal32docs.html">http://www.vulnscan.org/UnrealIRCd/unreal32docs.html</a>
@@ -285,6 +286,10 @@ example.conf für ein Beispiel.&nbsp;</p>
 GEHEIM gehalten werden. Wenn jemand
 diese drei Keys kennt, kann er den geschützten Host erkennen und den realen
 Host ermitteln (was dem Usermodus +x sinnlos macht).</p>
+<p>Tipp: Wenn man auf *NIX Systemen arbeitet und Cloak Keys neu erstellt werden
+müssen, kann man in der Shell eingeben: '<font face="Courier New">./unreal
+gencloak</font>' und erhält als Ausgabe 3 zufällig erzeugte Strings, die man
+verwenden kann.</p>
 </div>
 <p><font size="+2"><b><a name="feature_modules">3.2 - Module</a></b></font></p><div class="desc">
 <p>UnrealIRCd unterstützt Module, was sehr nützlich
@@ -990,6 +995,24 @@ die *lines/shuns (Default: 'Spam/advertising'). Mehrere Worte sind durch Undersc
 Channels, in den bei der Action 'viruschan' gejoined wird (Default: #help)<br>
 <b>set::spamfilter::virus-help-channel-deny</b> ermöglicht es, normale Joins in
 den virus-help-channel zu blockieren (Default: no)
+<p>
+<font size="+1"><b><a name="feature_spamfilter_slow">Erkennung langsamer
+Spamfilter</a></b></font><br>
+Ein Spamfilter Ausdruck (regex) kann einen IRCd beträchtlich verlangsamen. Das
+hängt davon ab, welcher Ausdruck verwendet wird (und wie dieser Ausdruck
+ausgewertet wird). Einige Spamfilter Ausdrücke sind sehr schnell und UnrealIRCd
+kann Tausende von ihnen pro Sekunde verarbeiten. Andere können extrem langsam
+sein und mehrere Sekunden für die Ausführung benötigen und dadurch den IRCd
+regelrecht einfrieren..<br>
+Zur Unterstützung gegen dieses Problem stellt Unreal eine Erkennung langsamer
+Spamfilter ('Slow Spamfilter Detection' bereit: Für jeden Spamfilter wird bei jeder Ausführung die hierzu benötigte
+Zeit überprüft. Wird ein
+bestimmter Grenzwert erreicht, warnt der IRCd oder entfernt einfach diesen Spamfilter.<br>
+Warnungen werden durch <b>set::spamfilter::slowdetect-warn</b> konfiguriert (Default:
+250ms) und die automatische Löschung durch <b>set::spamfilter::slowdetect-fatal</b>
+(Default: 500ms). Man kann beide Werte auf 0 setzen um die Erkennung langsamer
+Spamfilter zu deaktivieren.<br>
+Dieses Feature steht unter Windows derzeit noch nicht zur Verfügung.
 </div>
 
 <p><font size="+2"><b><a name="feature_cidr">3.15 - CIDR</a></b></font></p><div class="desc">
@@ -998,7 +1021,7 @@ ermöglicht es, IP Bereiche zu bannen. IPs werden an Internet Service Provider (I
 unter Verwendung von CIDR vergeben. Daher ist es möglich unter Verwendung eines
 CIDR basierten Banns auf einfache Weise ganze ISPs zu sperren. Unreal
 unterstützt CIDR sowohl für IPv4 als auch für IPv6. CIDR Masken können
-benutzt werden bei: allow::ip, ban user::mask, ban ip::mask, except ban::mask, except
+benutzt werden bei: allow::ip, oper::from::userhost, ban user::mask, ban ip::mask, except ban::mask, except
 throttle::mask, und except tkl::mask (für gzline, gline, and shun). Zusätzlich
 kann&nbsp; CIDR bei /kline, /gline, /zline, /gzline, und /shun benutzt werden. Unreal
 verwendet die Standard Syntax von IP/bits, z.B. 127.0.0.0/8 (passt auf 127.0.0.0 - 127.255.255.255),
@@ -2025,7 +2048,7 @@ bekannt als T:Line)</font><div class="desc">
 	channel &lt;channel-name&gt;;
 	options {
 		ssl;
-	}
+	};
 };</pre>
 <p>Mit dem TLD Block kann man eine motd (Messageoftheday), rules und channels für
 User basierend auf deren Host festlegen. Das ist nützlich, falls man
@@ -2179,7 +2202,7 @@ Maske kann Wildcards enthalten.<br>
 <b>ban::reason</b> legt den Grund fest, der dem User angezeigt wird.<br>
 <b>ban::action</b> kann ebenfalls festgelegt werden. Dabei ist der Default auf
 &quot;kill&quot;. <i>tempshun</i> setzt ein shun auf die Verbindung des Users
-und arbeitet effektiv gegen zombies und/oder Bots mit dynamischer IP, weil sie
+und arbeitet effektiv gegen Zombies und/oder Bots mit dynamischer IP, weil sie
 unschuldige User nicht beeinträchtigen. <i>shun/kline/zline/gzline</i> setzen
 einen Bann auf die IP (*@IPADDR). Die Dauer dieser Banns kann mit 'set::ban-version-tkl-time'
 konfiguriert werden und beträgt per Default 1 Tag.</p>
@@ -2968,6 +2991,10 @@ eingeschränkt. (kein + oder - angeben!).<br>
 Beispielsweise kann man&nbsp; +G in 'modes-on-connect' setzen und G in 'restrict-usermodes',
 wodurch erreicht wird, dass sämtliche User&nbsp; +G erhalten, aber kein -G
 anwenden können.</p>
+<p><font class="set">set::level-on-join &lt;op|none&gt;</font><br>
+Die Modus, der einem User beim ersten joinen eines Channels gegeben wird. Das
+ist entweder 'op' (Channel Operator, Default) oder 'none', wenn kein Level
+gegeben werden soll.</p>
 <p><font class="set">set::restrict-channelmodes &lt;modes&gt;</font><br>
 Die Channel-Modi, die User wählen können werden auf die hier angegebenen Modi
 eingeschränkt. (kein + oder - angeben!).<br>
@@ -3164,6 +3191,17 @@ Gibt den Dateinamen an, wo das SSL Zertifikat des Servers liegt.</p>
 Gibt den Dateinamen an, wo der private SSL Key des Servers liegt.</p>
 <p><font class="set">set::ssl::trusted-ca-file &lt;filename&gt;;</font><br>
 Gibt den Dateinamen der Zertifikate der vertrauten CAs an.</p>
+<p><font class="set">set::ssl::server-cipher-list &lt;cipherlist&gt;;</font><br>
+Legt fest, welche Verschlüsselungen erlaubt sind, was per Default für OpenSSL
+eingestellt ist. Siehe <a href="http://www.openssl.org/docs/apps/ciphers.html#CIPHER_LIST_FORMAT">http://www.openssl.org/docs/apps/ciphers.html</a>
+wie eine Liste von Verschlüsselungen&nbsp; erstellt wird (englische Seite,
+nicht übersetzt!).</p>
+<p><font class="set">set::ssl::renegotiate-bytes &lt;value&gt;;</font><br>
+Legt fest, wieviele Bytes bei einer SSL Session neu ausgehandelt werden sollen (z.B.:
+20m für 20 Megabyte).</p>
+<p><font class="set">set::ssl::renegotiate-timeout &lt;timevalue&gt;;</font><br>
+Legt fest, nach welcher Zeit eine SSL Session neu ausgehandelt werden soll (z.B.:
+1h für 1 Stunde).</p>
 <p><font class="set">set::ssl::options::fail-if-no-clientcert;</font><br>
 Stellt ein, dass Clients ohne Zertifikat nicht connecten können.</p>
 <p><font class="set">set::ssl::options::no-self-signed;</font><br>
@@ -3226,10 +3264,21 @@ joinen.</p>
 <b>set::spamfilter::except &lt;target(s)&gt;</b><br>
 Diese Ziele werden vom Spamfilter ausgenommen (es wird also keine Aktion
 durchgeführt). Es sind einzelne Ziele oder eine durch Kommata getrennte Liste
-möglich. Beispiel: except &quot;#help,#spamreport&quot;</p> <p><b>set::<font face="Helvetica,Arial" size="-1">check-target-nick-bans</font> &lt;yes|no&gt;</b><br>
+möglich. Beispiel: except &quot;#help,#spamreport&quot;</p> 
+<p><font class="set">set::spamfilter::slowdetect-warn &lt;value&gt;</font><br>
+Wenn ein Spamfilter zur Ausführung länger als der hier festgelegte Wert dauert
+(in Millisekunden,&nbsp; 1000ms = 1 Sekunde), wird eine Warnung per Notice an
+alle Opers versandt. (Default: 250). Siehe auch <a href="#feature_spamfilter_slow">Erkennung
+langsamer Spamfilter</a>.</p>
+<p><font class="set">set::spamfilter::slowdetect-fatal &lt;value&gt;</font><br>
+Wenn ein Spamfilter zur Ausführung länger als der hier festgelegte Wert dauert
+(in Millisekunden,&nbsp; 1000ms = 1 Sekunde), wird er gelöscht50o). Siehe auch <a href="#feature_spamfilter_slow">Erkennung
+langsamer Spamfilter</a>.</p>
+<p><b>set::check-target-nick-bans &lt;yes|no&gt;</b><br>
 Wann immer ein User seinen Nick ändert, wird überprüft, ob der NEUE Nick zu
 bannen wäre. Ist das der Fall, wird der Nickwechsel nicht erlaubt. Default ist
-'yes'.</p> <p><b>set::timesynch::enabled&lt;yes|no&gt;</b><br>
+'yes'.</p>
+ <p><b>set::timesynch::enabled&lt;yes|no&gt;</b><br>
 Aktiviert oder deaktiviert die Zeitsynchronisation beim Start des IRCd. Default
 ist 'yes'.</p> 
 <p><font class="set">set::timesynch::server &lt;IP&gt;</font><br>
@@ -3252,6 +3301,8 @@ wird der Name verworfen und ein Fehler zurückgeliefert. Dieses Verhalten wird
 mit nospoof on eingestellt. Wenn NOSPOOF aktiviert ist (üblicherweise in
 Windows), wird aene Warnung an jeden User geschickt, &nbsp;'/quote pong ..' zu
 benutzen, wenn es beim Verbinden Probleme gibt.&nbsp; Voreingestellt ist 'no'.</p>
+<p><font class="set">set::watch-away-notification &lt;yes|no&gt;</font><br>
+Ermöglicht eine AWAY Meldung in WATCH. Der Default is yes.</p>
  </div>
 <p><b><font size="+2"><a name="addtlfiles">5 &#8211; Additional Files</a></font></b></p><div class="desc">
   Zusätzlich zu den Konfigurationsdateien hat Unreal einige weitere Dateien,
@@ -3844,13 +3895,13 @@ Befehlsliste</a></b></font></p><div class="desc">
   </tr>
   <tr> 
     <td height="33" width="267">globops &lt;message&gt;</td>
-    <td width="486" height="33">Schickt eine Nachricht an alle IRCops</td>
+    <td width="486" height="33">Schickt eine Nachricht an alle globalen IRCops</td>
     <td width="93" height="33">IRCop</td>
   </tr>
   <tr> 
     <td height="33" width="267">chatops &lt;message&gt;</td>
-    <td width="486" height="33">Schickt eine Nachricht an alle IRCops mit dem
-      Usermode +c</td>
+    <td width="486" height="33">Schickt eine Nachricht an alle IRCops (lokal und
+      global)</td>
     <td width="93" height="33">IRCop</td>
   </tr>
   <tr> 
@@ -4352,6 +4403,13 @@ Datei</a></b></font></p>
   Expolits erschweren, zu arbeiten. Das ist schön, allerdings sollte man nicht nur primär
   hierauf achten, es gibt weit größere Risiken mit Expolits, die andere
   Punkte, als den Kernel angreifen.... aus verschiedenen Gründen.<br>
+  Eine andere Option ist es chrooting zu aktivieren (gibt es nur in *nix
+  Systemen), was bedeutet, dass bei einem erfolgreichen expolit der User auf auf
+  das UnrealIRCd Verzeichnis begrenzt ist und keinen Zugriff auf andere Dateien
+  hat. Dies erfordert root Rechte und Änderungen in der include/config.h (suche
+  nach CHROOTDIR und setze sowohl IRC_USER als auch IRC_GROUP und compiliere
+  neu.)
+  <p>
   <br>
   Eines allerdings sollte man tun: IMMER DIE NEUESTE VERSION BENUTZEN. Wenn man
   sich in die <a href="http://mail1.sourceforge.net/mailman/listinfo/unreal-notify"> Unreal-notify mailinglist</a> einträgt, erhält man die Ankündigung
@@ -4428,16 +4486,14 @@ Datei</a></b></font></p>
   Übereinstimmung mit 0 oder 1 der vorhergehenden Zeichen. Dieses
   &quot;vorhergehende Zeichen&quot; ist auch der Punkt, worin sich das '?' in
   einer regex von einer Wildcard unterscheidet. In Wildcards bedeutet die Angabe
-  von "a?c" eine Übereinstimmung mit einem "a", gefolgt von irgend einem (oder
-  keinem) anderen Zeichen, gefolgt von einem "c." In Regex hat dies eine andere
+  von "a?c" eine Übereinstimmung mit einem "a", gefolgt von irgend einem anderen Zeichen, gefolgt von einem "c." In Regex hat dies eine andere
   Bedeutung. Es wird auf Übereinstimmung geprüft mit 0 oder einem
   &quot;a&quot;, gefolgt von dem Buchstaben &quot;c&quot;.&nbsp; Damit
   kann&nbsp; durch das ? angegeben werden, wie viele &quot;a&quot; vorhanden
   sein dürfen. Soll das ? in einer Wildcard emuliert werden, wird der Punkt
-  Operator verwendet. Der Ausdruck "a.?c" ist gleichbedeutend mit der zuvor
+  Operator verwendet. Der Ausdruck &quot;a.c&quot; ist gleichbedeutend mit der zuvor
   beschrieben Wildcard. Geprüft wird auf Übereinstimmung mit einem
-  &quot;a&quot;, gefolgt von irgend einem oder keinen anderen Zeichen (das ?
-  modifiziert den .), gefolgt von einem "c."</p><p>Der nächste
+  &quot;a&quot;, gefolgt von irgend einem anderen Zeichen, gefolgt von einem "c."</p><p>Der nächste
   Wiederholungsoperator ist der *. Auch dieser ist wieder ähnlich zum Wildcard
   Zeichen. Geprüft wird die Übereinstimmung mit 0 oder mehr der voranstehenden
   Zeichen. Zu beachten ist, dass dieses &quot;vornstehende Zeichen&quot; das

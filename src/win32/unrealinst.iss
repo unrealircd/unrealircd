@@ -11,7 +11,7 @@
 
 [Setup]
 AppName=UnrealIRCd
-AppVerName=UnrealIRCd3.2.6
+AppVerName=UnrealIRCd3.2.8
 AppPublisher=UnrealIRCd Team
 AppPublisherURL=http://www.unrealircd.com
 AppSupportURL=http://www.unrealircd.com
@@ -104,53 +104,46 @@ function isxdl_Download(hWnd: Integer; URL, Filename: PChar): Integer;
 external 'isxdl_Download@files:isxdl.dll stdcall';
 function isxdl_SetOption(Option, Value: PChar): Integer;
 external 'isxdl_SetOption@files:isxdl.dll stdcall';
-const dbgurl = 'http://www.unrealircd.com/downloads/DbgHelp.Dll';
-const crturl = 'http://www.unrealircd.com/downloads/msvcr70.dll';
+const crturl = 'http://www.unrealircd.com/downloads/msvcr71.dll';
+const cpturl = 'http://www.unrealircd.com/downloads/msvcp71.dll';
 var didDbgDl,didCrtDl: Boolean;
 
 function NextButtonClick(CurPage: Integer): Boolean;
 var
-dbghelp,tmp,output: String;
-msvcrt: String;
-m: String;
+tmp, msvcrt, msvcpt: String;
 hWnd,answer: Integer;
 begin
 
     if ((CurPage = wpReady)) then begin
-//      dbghelp := ExpandConstant('{sys}\DbgHelp.Dll');
-//      output := ExpandConstant('{app}\DbgHelp.Dll');
-      msvcrt := ExpandConstant('{sys}\msvcr70.Dll');
-//      GetVersionNumbersString(dbghelp,m);
+      msvcrt := ExpandConstant('{sys}\msvcr71.Dll');
+      msvcpt := ExpandConstant('{sys}\msvcp71.Dll');
     if (NOT FileExists(msvcrt)) then begin
-      answer := MsgBox('Unreal requires the MS C Runtime 7.0 in order to run, do you wish to install it now?', mbConfirmation, MB_YESNO);
+      answer := MsgBox('Unreal requires the MS C Runtime 7.1 in order to run, do you wish to install it now?', mbConfirmation, MB_YESNO);
       if answer = IDYES then begin
-        tmp := ExpandConstant('{tmp}\msvcr70.Dll');
-        isxdl_SetOption('title', 'Downloading msvcr70.dll');
+        tmp := ExpandConstant('{tmp}\msvcr71.Dll');
+        isxdl_SetOption('title', 'Downloading msvcr71.dll');
         hWnd := StrToInt(ExpandConstant('{wizardhwnd}'));
         if isxdl_Download(hWnd, crturl, tmp) = 0 then begin
-          MsgBox('Download and installation of msvcr70.dll failed, the file must be manually installed. The file can be downloaded at http://www.unrealircd.com/downloads/mscvr70.dll', mbInformation, MB_OK);
+          MsgBox('Download and installation of msvcr71.dll failed, the file must be manually installed. The file can be downloaded at http://www.unrealircd.com/downloads/mscvr71.dll', mbInformation, MB_OK);
         end else
           didCrtDl := true;
       end else
-        MsgBox('In order for Unreal to properly function, you must manually install msvcr70.dll. The dll can be downloaded from http://www.unrealircd.com/downloads/msvcr70.dll', mbInformation, MB_OK);
+        MsgBox('In order for Unreal to properly function, you must manually install msvcr71.dll. The dll can be downloaded from http://www.unrealircd.com/downloads/msvcr71.dll', mbInformation, MB_OK);
     end;
-//    if (NOT FileExists(output)) then begin
-//          if (NOT FileExists(dbghelp)) then
-//        m := StringOfChar('0',1);
-//      if (StrToInt(m[1]) < 5) then begin
-//        answer := MsgBox('DbgHelp.dll version 5.0 or higher is required to install Unreal, do you wish to install it now?', mbConfirmation, MB_YESNO);
-//        if answer = IDYES then begin
-//          tmp := ExpandConstant('{tmp}\dbghelp.dll');
-//          isxdl_SetOption('title', 'Downloading DbgHelp.dll');
-//          hWnd := StrToInt(ExpandConstant('{wizardhwnd}'));
-//          if isxdl_Download(hWnd, dbgurl, tmp) = 0 then begin
-//            MsgBox('Download and installation of DbgHelp.Dll failed, the file must be manually installed. The file can be downloaded at http://www.unrealircd.com/downloads/DbgHelp.Dll', mbInformation, MB_OK);
-//          end else
-//            didDbgDl := true;
-//        end else
-//        MsgBox('In order for Unreal to properly function you must manually install dbghelp.dll. The dll can be downloaded from http://www.unrealircd.com/downloads/DbgHelp.Dll', mbInformation, MB_OK);
-//      end;
-//    end;
+    if (NOT FileExists(msvcpt)) then begin
+      answer := MsgBox('Unreal requires the MS C++ Runtime 7.1 in order to run, do you wish to install it now?', mbConfirmation, MB_YESNO);
+      if answer = IDYES then begin
+        tmp := ExpandConstant('{tmp}\msvcp71.Dll');
+        isxdl_SetOption('title', 'Downloading msvcp71.dll');
+        hWnd := StrToInt(ExpandConstant('{wizardhwnd}'));
+        if isxdl_Download(hWnd, cpturl, tmp) = 0 then begin
+          MsgBox('Download and installation of msvcp71.dll failed, the file must be manually installed. The file can be downloaded at http://www.unrealircd.com/downloads/mscvp71.dll', mbInformation, MB_OK);
+        end else
+          didCrtDl := true;
+      end else
+        MsgBox('In order for Unreal to properly function, you must manually install msvcp71.dll. The dll can be downloaded from http://www.unrealircd.com/downloads/msvcp71.dll', mbInformation, MB_OK);
+    end;
+
   end;
   Result := true;
 end;
@@ -166,8 +159,11 @@ begin
       FileCopy(input, output, true);
     end;
     if (didCrtDl) then begin
-      input := ExpandConstant('{tmp}\msvcr70.dll');
-      output := ExpandConstant('{sys}\msvcr70.dll');
+      input := ExpandConstant('{tmp}\msvcr71.dll');
+      output := ExpandConstant('{sys}\msvcr71.dll');
+      FileCopy(input, output, true);
+      input := ExpandConstant('{tmp}\msvcp71.dll');
+      output := ExpandConstant('{sys}\msvcp71.dll');
       FileCopy(input, output, true);
     end;
   end;
@@ -194,8 +190,8 @@ Filename: "{app}\unreal.exe"; Parameters: "config startup manual"; Flags: runmin
 Filename: "{app}\unreal.exe"; Parameters: "config startup auto"; Flags: runminimized nowait; Tasks: installservice/startboot
 Filename: "{app}\unreal.exe"; Parameters: "config crashrestart 2"; Flags: runminimized nowait; Tasks: installservice/crashrestart
 #ifdef USE_SSL
-Filename: "{app}\makecert.bat"; Tasks: makecert
-Filename: "{app}\encpem.bat"; WorkingDir: "{app}"; Tasks: enccert
+Filename: "{app}\makecert.bat"; Tasks: makecert; Flags: postinstall;
+Filename: "{app}\encpem.bat"; WorkingDir: "{app}"; Tasks: enccert; Flags: postinstall;
 #endif
 
 [UninstallRun]

@@ -48,6 +48,24 @@
 #ifdef _WIN32
 #include "version.h"
 #endif
+/* This is all for getrusage and friends.. taken from src/s_debug.c so should be safe. */
+#ifdef HPUX
+# include <sys/syscall.h>
+# define getrusage(a,b) syscall(SYS_GETRUSAGE, a, b)
+#endif
+#ifdef GETRUSAGE_2
+# ifdef _SOLARIS
+#  include <sys/time.h>
+#  ifdef RUSAGEH
+#   include <sys/rusage.h>
+#  endif
+# endif
+# include <sys/resource.h>
+#else
+#  ifdef TIMES_2
+#   include <sys/times.h>
+#  endif
+#endif
 
 DLLFUNC int m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 DLLFUNC int m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[]);
@@ -208,6 +226,8 @@ DLLFUNC int m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		tkl_stats(sptr, TKL_KILL|TKL_GLOBAL, NULL);
 		tkl_stats(sptr, TKL_ZAP|TKL_GLOBAL, NULL);
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
+		sendto_snomask(SNO_EYES, "Stats \'g\' requested by %s (%s@%s)",
+			sptr->name, sptr->user->username, GetHost(sptr));
 		return 0;
 	}
 
@@ -232,6 +252,8 @@ DLLFUNC int m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		tkl_stats(sptr, TKL_GLOBAL|TKL_KILL, NULL);
 		tkl_stats(sptr, TKL_GLOBAL|TKL_ZAP, NULL);
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
+		sendto_snomask(SNO_EYES, "Stats \'g\' requested by %s (%s@%s)",
+			sptr->name, sptr->user->username, GetHost(sptr));
 		return 0;
 	}
 
@@ -255,6 +277,8 @@ DLLFUNC int m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		tkl_stats(sptr, TKL_GLOBAL|TKL_SHUN, NULL);
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 's');
+		sendto_snomask(SNO_EYES, "Stats \'s\' requested by %s (%s@%s)",
+			sptr->name, sptr->user->username, GetHost(sptr));
 		return 0;
 	}
 
@@ -386,6 +410,8 @@ DLLFUNC int m_tkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					me.name, sptr->name, "E", excepts->mask, "");
 		}
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'k');
+		sendto_snomask(SNO_EYES, "Stats \'k\' requested by %s (%s@%s)",
+			sptr->name, sptr->user->username, GetHost(sptr));
 		return 0;
 	}
 	if (!OPCanUnKline(sptr) && *parv[1] == '-')
@@ -447,6 +473,8 @@ DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					me.name, sptr->name, "E", excepts->mask, "");
 		}
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'k');
+		sendto_snomask(SNO_EYES, "Stats \'k\' requested by %s (%s@%s)",
+			sptr->name, sptr->user->username, GetHost(sptr));
 		return 0;
 	}
 
@@ -554,7 +582,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 				return -1;
 			}
 			for (p=hostmask; *p; p++)
-				if (isalpha(*p))
+				if (isalpha(*p) && !isxdigit(*p))
 				{
 					sendnotice(sptr, "ERROR: (g)zlines must be placed at *@\037IPMASK\037, not *@\037HOSTMASK\037 "
 					                 "(so for example *@192.168.* is ok, but *@*.aol.com is not). "
@@ -746,6 +774,8 @@ int n;
 		tkl_stats(sptr, TKL_SPAMF, NULL);
 		tkl_stats(sptr, TKL_SPAMF|TKL_GLOBAL, NULL);
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'F');
+		sendto_snomask(SNO_EYES, "Stats \'f\' requested by %s (%s@%s)",
+			sptr->name, sptr->user->username, GetHost(sptr));
 		return 0;
 	}
 	if ((parc < 7) || BadPtr(parv[4]))
@@ -1538,7 +1568,13 @@ int  _find_tkline_match_zap_ex(aClient *cptr, aTKline **rettk)
 			{
 
 				for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) {
-					if (excepts->flag.type != CONF_EXCEPT_TKL || excepts->type != lp->type)
+					/* This used to be:
+					 * if (excepts->flag.type != CONF_EXCEPT_TKL || excepts->type != lp->type)
+					 * It now checks for 'except ban', hope this is what most people want,
+					 * it is at least the same as in find_tkline_match, which is how it currently
+					 * is when a user is connected. -- Syzop/20081221
+					 */
+					if (excepts->flag.type != CONF_EXCEPT_BAN)
 						continue;
 					if (excepts->netmask)
 					{
@@ -1837,7 +1873,7 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	char gmt[256], gmt2[256];
 	char txt[256];
 	TS   expiry_1, setat_1, spamf_tklduration = 0;
-	char *reason = NULL;
+	char *reason = NULL, *timeret;
 
 	if (!IsServer(sptr) && !IsOper(sptr) && !IsMe(sptr))
 		return 0;
@@ -2002,12 +2038,27 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  if (!tk)
 		     return 0; /* ERROR on allocate or something else... */
 
-		  RunHook5(HOOKTYPE_TKL_ADD, cptr, sptr, tk, parc, parv);
-
-		  strncpyzt(gmt, asctime(gmtime((TS *)&setat_1)), sizeof(gmt));
-		  strncpyzt(gmt2, asctime(gmtime((TS *)&expiry_1)), sizeof(gmt2));
+		  timeret = asctime(gmtime((TS *)&setat_1));
+		  if (!timeret)
+		  {
+		  	sendto_realops("Invalid TKL entry from %s, set-at time is out of range (%ld) -- not added. Clock on other server incorrect or bogus entry.",
+		  		sptr->name, (long)setat_1);
+		  	return 0;
+		  }
+		  strncpyzt(gmt, timeret, sizeof(gmt));
+		  timeret = asctime(gmtime((TS *)&expiry_1));
+		  if (!timeret)
+		  {
+		  	sendto_realops("Invalid TKL entry from %s, expiry time is out of range (%ld) -- not added. Clock on other server incorrect or bogus entry.",
+		  		sptr->name, (long)expiry_1);
+			return 0;
+		  }
+		  strncpyzt(gmt2, timeret, sizeof(gmt2));
 		  iCstrip(gmt);
 		  iCstrip(gmt2);
+
+		  RunHook5(HOOKTYPE_TKL_ADD, cptr, sptr, tk, parc, parv);
+
 		  switch (type)
 		  {
 		    case TKL_KILL:
@@ -2414,7 +2465,11 @@ int _dospamfilter(aClient *sptr, char *str_in, int type, char *target, int flags
 {
 aTKline *tk;
 char *str;
-
+int ret;
+#ifdef SPAMFILTER_DETECTSLOW
+struct rusage rnow, rprev;
+long ms_past;
+#endif
 	if (rettk)
 		*rettk = NULL; /* initialize to NULL */
 
@@ -2435,7 +2490,35 @@ char *str;
 			continue;
 		if ((flags & SPAMFLAG_NOWARN) && (tk->ptr.spamf->action == BAN_ACT_WARN))
 			continue;
-		if (!regexec(&tk->ptr.spamf->expr, str, 0, NULL, 0))
+#ifdef SPAMFILTER_DETECTSLOW
+		memset(&rnow, 0, sizeof(rnow));
+		memset(&rprev, 0, sizeof(rnow));
+
+		getrusage(RUSAGE_SELF, &rprev);
+#endif
+
+		ret = regexec(&tk->ptr.spamf->expr, str, 0, NULL, 0);
+
+#ifdef SPAMFILTER_DETECTSLOW
+		getrusage(RUSAGE_SELF, &rnow);
+		
+		ms_past = ((rnow.ru_utime.tv_sec - rprev.ru_utime.tv_sec) * 1000) +
+		          ((rnow.ru_utime.tv_usec - rprev.ru_utime.tv_usec) / 1000);
+
+		if ((SPAMFILTER_DETECTSLOW_FATAL > 0) && (ms_past > SPAMFILTER_DETECTSLOW_FATAL))
+		{
+			sendto_realops("[Spamfilter] WARNING: Too slow spamfilter detected (took %ld msec to execute) "
+			               "-- spamfilter will be \002REMOVED!\002: %s", ms_past, tk->reason);
+			tkl_del_line(tk);
+			return 0; /* Act as if it didn't match, even if it did.. it's gone now anyway.. */
+		} else
+		if ((SPAMFILTER_DETECTSLOW_WARN > 0) && (ms_past > SPAMFILTER_DETECTSLOW_WARN))
+		{
+			sendto_realops("[Spamfilter] WARNING: SLOW Spamfilter detected (took %ld msec to execute): %s",
+				ms_past, tk->reason);
+		}
+#endif
+		if (!ret)
 		{
 			/* matched! */
 			char buf[1024];

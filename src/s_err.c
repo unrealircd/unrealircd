@@ -415,7 +415,7 @@ static char *replies[] = {
 /* 375    RPL_MOTDSTART */ ":%s 375 %s :- %s Message of the Day - ",
 /* 376    RPL_ENDOFMOTD */ ":%s 376 %s :End of /MOTD command.",
 /* 377 */ NULL, /* aircd, austhex */
-/* 378    RPL_WHOISHOST */ ":%s 378 %s %s :is connecting from *@%s %s",
+/* 378    RPL_WHOISHOST */ ":%s 378 %s %s :is connecting from %s@%s %s",
 /* 379    RPL_WHOISMODES */ ":%s 379 %s %s :is using modes %s %s",
 /* 380 */ NULL, /* aircd, austhex */
 /* 381    RPL_YOUREOPER */ ":%s 381 %s :You are now an IRC Operator",
@@ -653,9 +653,9 @@ static char *replies[] = {
 /* 594 */ NULL,
 /* 595 */ NULL,
 /* 596 */ NULL,
-/* 597 */ NULL,
-/* 598 */ NULL,
-/* 599 */ NULL,
+/* 597    RPL_REAWAY */ ":%s 597 %s %s %s %s %d :%s",
+/* 598    RPL_GONEAWAY */ ":%s 598 %s %s %s %s %d :%s",
+/* 599    RPL_NOTAWAY */ ":%s 599 %s %s %s %s %d :is no longer away",
 /* 600    RPL_LOGON */ ":%s 600 %s %s %s %s %d :logged online",
 /* 601    RPL_LOGOFF */ ":%s 601 %s %s %s %s %d :logged offline",
 /* 602    RPL_WATCHOFF */ ":%s 602 %s %s %s %s %d :stopped watching",
@@ -664,8 +664,8 @@ static char *replies[] = {
 /* 605    RPL_NOWOFF */ ":%s 605 %s %s %s %s %ld :is offline",
 /* 606    RPL_WATCHLIST */ ":%s 606 %s :%s",
 /* 607    RPL_ENDOFWATCHLIST */ ":%s 607 %s :End of WATCH %c",
-/* 608 */ NULL,
-/* 609 */ NULL,
+/* 608    RPL_CLEARWATCH */ ":%s 608 %s :Your WATCH list is now empty",
+/* 609    RPL_NOWISAWAY */ ":%s 609 %s %s %s %s %ld :is away",
 /* 610    RPL_MAPMORE */ ":%s 610 %s :%s%-*s --> *more*",
 /* 611 */ NULL, /* ultimate */
 /* 612 */ NULL, /* ultimate */

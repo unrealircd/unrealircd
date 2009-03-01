@@ -29,14 +29,14 @@ Dutch |
 <br><br>
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
-  <font size="4">Version: 3.2.6</font><br>
-  <b>Laatste documentatie wijziging:</b> 2006-12-22</div>
+  <font size="4">Version: 3.2.8</font><br>
+  <b>Laatste documentatie wijziging:</b> 2009-01-03</div>
 
 <br>
   <b>Hoofd programmeurs:</b> Stskeeps / codemastr / Syzop / Luke<br>
   <b>Medewerkers:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentatie:</b> CKnight^ / Syzop<br>
-  <b>Nederlandse vertaling:</b> Mark (<a href="irc://irc.unrealircd.com/unreal-dutch">#unreal-dutch op irc.unrealircd.com</a>)<br>
+  <b>Nederlandse vertaling:</b> Mark<br>
 <p>Om dit document te bekijken heb je een geschikte browser nodig, welke hier beneden staan. De meest
  recente documentatie staat op <a href="http://www.vulnscan.org/UnrealIRCd/unreal32docs.html">
  http://www.vulnscan.org/UnrealIRCd/unreal32docs.html</a> en een FAQ staat op
@@ -261,9 +261,11 @@ Windows:<br>
  gebruikt md5 intern en het eist dat je 3 set::cloak-keys:: gebruikt, bestaande uit een mix van
  kleine letters (a-z), grote letters (A-Z) en getallen (0-9) [bv: "AopAS6WQH2Os6hfosh4SFJHs"]. Zie
  Voorbeeld.conf voor een voorbeeld.<br>
-<p>Cloak keys MOETEN hetzelfde zijn op ALLE servers in een network. Ook moeten cloak keys geheim blijven,
+<p>Cloak keys MOETEN hetzelfde zijn op ALLE servers in een netwerk. Ook moeten cloak keys geheim blijven,
  omdat het mogelijk is om de echte hostname te achterhalen wanneer je de keys weet (wat gebruikersmode +x
  onbruikabar maakt).</p>
+ <p>Tip: Wanneer je met een *NIX systeem werkt, kun je './unreal gencloak' gebruiken in
+ je shell. Dit genereert 3 willekeurige strings die je kunt gebruiken.</p>
 </div>
 
 <p><font size="+2"><b>3.2 - Modules</b></font><a name="feature_modules"></a></p><div class="desc">
@@ -602,17 +604,34 @@ Modules kunnen ook andere uitgebreide ban types toevoegen.<br>
    <b>set::spamfilter::ban-reason</b> geeft je de mogelijkheid een standaardreden op te geven (standaard: 'Spam/advertising')<br>
    <b>set::spamfilter::virus-help-channel</b> geeft je de mogelijkheid een kanaal te specificeren dat gejoined wordt door 'viruschan' (standaard: #help)<br>
    <b>set::spamfilter::virus-help-channel-deny</b> geeft je de mogelijkheid om normale joins in virus-help-channel te blokkeren (standaard: no)<br>
-</p></div>
+</p>
+<p>
+<font size="+1"><b>Slow Spamfilter Detection</b><a name="feature_spamfilter_slow"></a><br>
+Een spamfilter regex kan de IRCd aanzienlijk trager maken. Dit hangt
+sterk af van de regex die je gebruikt (en hoe de regex engine deze
+gebruikt). Sommige zijn erg snel en UnrealIRCd kan er duizenden
+uitvoeren per seconde. Anderen kunnen enorm traag zijn en de IRCd
+bevriezen.<br>
+Om dit tegen te gaan, heeft Unreal Slow Spamfilter Detection:
+voor elke spamfilter checkt Unreal, elke keer wanneer het uitgevoerd
+wordt, hoelang het uitvoeren duurt. Wanneer een bepaalde grens bereikt
+wordt, waarschuwt de IRCd of verwijdert de IRCd de complete spamfilter.<br>
+De waarschuwing wordt ingesteld door <b>set::spamfilter::slowdetect-warn</b>
+(standaard: 250ms) en het automatisch verwijderen wordt ingesteld door <b>set::spamfilter::slowdetect-fatal</b> (standaard: 500ms).
+Je kunt ze beiden op 0 (nul) zetten om de functies uit te schakelen.<br>
+Deze feature is momenteel niet beschikbaar voor Windows.<br>
+</p>
+</div>
 
 <p><font size="+2"><b>3.15 - CIDR</b></font><a name="feature_cidr"></a></p><div class="desc">
 <p>UnrealIRCD geeft je nu ook de mogelijkheid om IP reeksen te bannen, door middel van CIDR
 (Classess Interdomain Routing). IPs worden door ISPs uitgedeeld door middel van CIRD. Dit geeft
 je de mogelijkheid om heel makkelijk een ISP te bannen. CIDR wordt ondersteund voor zowel IPv4
-als IPv6. CIDR masks zijn toegestaan in allow::ip, ban user::mask, ban ip::mask, except ban::mask
-except throttle::mask, en except tkl::mask (for gzline, gline en shun). Tevens kan CIDR gebruikt
-worden met /kline, /gline, /zline, /gzline en shun. UnrealIRCd gebruikt de standaard syntax van
-IP/bits, zoals 127.0.0.0/8 (komt overeen met 127.0.0.0 - 127.255.255.255), en fe80:0:0:123::/64
-(komt overeen met fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p></div>
+als IPv6. CIDR masks zijn toegestaan in allow::ip, oper::from::userhost, ban user::mask, ban ip::mask,
+except ban::mask, except throttle::mask, en except tkl::mask (for gzline, gline en shun). 
+Tevens kan CIDR gebruikt worden met /kline, /gline, /zline, /gzline en shun.
+UnrealIRCd gebruikt de standaard syntax van IP/bits, zoals 127.0.0.0/8 (komt overeen met 127.0.0.0 - 127.255.255.255), 
+en fe80:0:0:123::/64 (komt overeen met fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p></div>
 
 <p><font size="+2"><b>3.16 - Nick Character Sets</b></font><a name="feature_nickchars"></a></p><div class="desc">
 <p>UnrealIRCd geeft je nu ook de mogelijkheid om te specificeren welke charsets/talen gebruikt morgen
@@ -1470,7 +1489,7 @@ tld {
 	channel &lt;channel-name&gt;;
 	options {
 		ssl;
-	}
+	};
 };</pre></p>
 <p>Het TLD blok geeft je de mogelijkheid om een MOTD, rules en kanaal op te geven
  voor een gebruiker op basis van zijn/haar host. Dit is handig wanneer je MOTDs
@@ -2020,7 +2039,7 @@ link &lt;server-name&gt; {
  De waarde is de mask van de servers waarmee deze hub mag verbinden (bijv. *.my.net)
 </p>
 <p><b>leaf</b> (optioneel)<br>
- De waarde is de mask waartegen deze hub <b>niet> mag verbinden. Als je * instelt krijg je hetzelfde
+ De waarde is de mask waartegen deze hub <b>niet</b> mag verbinden. Als je * instelt krijg je hetzelfde
  effect als geen hub directive instellen.
 </p>
 <p><b>leaf-depth</b> (optioneel)<br>
@@ -2507,6 +2526,14 @@ gemiddeld 2048:60=34 tekens per ban toe.</p>
  Stelt in waar de SSL sleutel van de server staat.</p>
 <p><font class="set">set::ssl::trusted-ca-file &lt;filename&gt;;</font><br>
  Stelt in waar de certificaten van de vertrouwde CAs staan.</p>
+<p><font class="set">set::ssl::server-cipher-list &lt;cipherlist&gt;;</font><br>
+ Stelt in welke ciphers toegestaan worden, standaard laten we dit over aan OpenSSL.
+ Zie <a href="http://www.openssl.org/docs/apps/ciphers.html#CIPHER_LIST_FORMAT">http://www.openssl.org/docs/apps/ciphers.html</a>
+  hoe je een lijst van ciphers instelt.</p>
+<p><font class="set">set::ssl::renegotiate-bytes &lt;value&gt;;</font><br>
+ Stelt in na hoeveel bytes een SSL sessie opnieuw moet worden ingesteld (bijv: 20m voor 20 megabytes).</p>
+<p><font class="set">set::ssl::renegotiate-timeout &lt;timevalue&gt;;</font><br>
+ Stelt in na welke periode een SSL sessie opnieuw moet worden ingesteld (bijv: 1h voor 1 uur).</p>
 <p><font class="set">set::ssl::options::fail-if-no-clientcert;</font><br>
  Gebruikers zonder certificaat worden geweigerd.</p>
 <p><font class="set">set::ssl::options::no-self-signed;</font><br>
@@ -2563,7 +2590,16 @@ gemiddeld 2048:60=34 tekens per ban toe.</p>
  <p><font class="set">set::spamfilter::except &lt;target(s)&gt;</font><br>
  Deze kanalen worden niet gecontroleerd door spamfilters. Dit kan 1 kanaal zijn, of
  een reeks kanalen gescheiden door een komma (bijv: except "#help,#spamreport";).</p>
- <p><font class="set">set::check-target-nick-bans &lt;yes|no&gt;</font><br>
+<p><font class="set">set::spamfilter::slowdetect-warn &lt;value&gt;</font><br>
+ Wanneer het uitvoeren van een spamfilter langer duurt dan de hier opgegeven tijd
+ in milliseconden (1000ms = 1 seconde), wordt er een waarschuwing gestuurd naar alle
+ opers (standaard: 250).
+ Zie ook <a href="#feature_spamfilter_slow">Slow Spamfilter Detection</a>.</p>
+<p><font class="set">set::spamfilter::slowdetect-fatal &lt;value&gt;</font><br>
+ Wanneer het uitvoeren van een spamfilter langer duurt dan de hier opgegeven tijd
+ in milliseconden (1000ms = 1 seconde), wordt de spamfilter verwijderd (standaard: 500).
+ Zie ook <a href="#feature_spamfilter_slow">Slow Spamfilter Detection</a>.</p>
+<p><font class="set">set::check-target-nick-bans &lt;yes|no&gt;</font><br>
  Wanneer de gebruiker zijn naam verandert, controleer of de NIEUWE nick gebanned zou
  worden. Zo ja, sta de naamsverandering niet toe. Standaard is dit 'yes'.</p>
 <p><font class="set">set::timesynch::enabled &lt;yes|no&gt;</font><br>
@@ -2579,7 +2615,9 @@ gemiddeld 2048:60=34 tekens per ban toe.</p>
 <p><font class="set">set::pingpong-warning &lt;yes|no&gt;</font><br>
  Wanneer NOSPOOF aan staat (meestal op Windows), stuur dan een bericht naar de gebruiker
  om '/quote pong ..' te typen als ze problemen hebben met verbinden? Standaard is no</p>
-
+<p><font class="set">set::watch-away-notification &lt;yes|no&gt;</font><br>
+ Geeft je de mogelijkheid AWAY notificaties in WATCH aan/uit te zetten. Standaard is yes (ja).</p>
+ 
 <p></p> </div>
 <p><b><font size="+2">5 &#8211; Aanvullende bestanden<a name="addtlfiles"></a>
   </font></b></p><div class="desc">

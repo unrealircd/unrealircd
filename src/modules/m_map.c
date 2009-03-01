@@ -75,10 +75,6 @@ DLLFUNC int MOD_UNLOAD(m_map)(int module_unload)
 	return MOD_SUCCESS;
 }
 
-char servername[128][128];
-int  server_usercount[128];
-int  numservers = 0;
-
 /*
  * New /MAP format -Potvin
  * dump_map function.
@@ -130,7 +126,7 @@ static void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_leng
 	for (lp = Servers; lp; lp = lp->next)
 	{
 		acptr = lp->value.cptr;
-		if (IsULine(acptr) && HIDE_ULINES && !IsOper(cptr))
+		if (IsULine(acptr) && HIDE_ULINES && !IsAnOper(cptr))
 			continue;
 		if (acptr->srvptr != server)
 			continue;

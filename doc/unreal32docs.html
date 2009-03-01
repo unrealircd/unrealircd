@@ -31,10 +31,10 @@ English |
 <br><br>
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
-  <font size="4">Version: 3.2.6</font><br>
-  <b>Last doc update:</b> 2006-12-22</div>
+  <font size="4">Version: 3.2.8</font><br>
+  <b>Last doc update:</b> 2009-01-03</div>
 <br>
-  <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<br>
+  <b>Coders:</b> Stskeeps / codemastr / Syzop / Luke / aquanight / WolfSage <br>
   <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
   <b>Documentation:</b> CKnight^ / Syzop<br>
 <p>To view this documentation you must have a compatible browser, which are listed below. Up to date docs are 
@@ -249,6 +249,8 @@ because otherwise you will not understand concepts such as 'cloaking', 'snomasks
    uppercase (A-Z) and digit (0-9) charachters [eg: "AopAS6WQH2Os6hfosh4SFJHs"]. See example.conf for an example.<br>
 <p>Cloak keys MUST be the same on ALL SERVERS in a network. Also cloak keys should be kept SECRET 
    because it's possible to decode the original host if you know the keys (which makes umode +x useless).</p>
+<p>Hint: If you are on *NIX and have to create new cloak keys, you can run './unreal gencloak' 
+   in your shell, which will output 3 random strings that you can use.</p>
 </div>
 <p><font size="+2"><b>3.2 - Modules</b></font><a name="feature_modules"></a></p><div class="desc">
 <p>UnrealIRCd supports modules which is nice because:<br>
@@ -562,17 +564,33 @@ into spaces at runtime. And double underscore ('__') gets an underscore ('_'). A
    <b>set::spamfilter::ban-reason</b> allows you to specify a default reason (default: 'Spam/advertising')<br>
    <b>set::spamfilter::virus-help-channel</b> allows you to specify the channel to join for action 'viruschan' (default: #help)<br>
    <b>set::spamfilter::virus-help-channel-deny</b> allows you to block any normal joins to virus-help-channel (default: no)<br>
-</p></div>
+</p>
+<p>
+<font size="+1"><B>Slow Spamfilter Detection</B></font><a name="feature_spamfilter_slow"></a><br>
+A spamfilter regex can slow down the IRCd considerably. This really depends
+on the regex you use (and how the regex engine handles it), some are very
+fast and UnrealIRCd can execute thousands of them per second. Others can be
+extremely slow, take several seconds to execute, and could freeze the IRCd.<br>
+To help against this, Unreal comes with Slow Spamfilter Detection: For each
+spamfilter, Unreal checks, each time it executes, how long it takes to
+execute. Once a certain threshold is reached the IRCd will warn or even remove
+the spamfilter.<br>
+Warning is configured through <b>set::spamfilter::slowdetect-warn</b> (default: 250ms)
+and automatic deletion is configured by <b>set::spamfilter::slowdetect-fatal</b> (default: 500ms).
+You can set both settings to 0 (zero) to disable slow spamfilter detection.<br>
+This feature is currently not available on Windows.<br>
+</p>
+</div>
 
 <p><font size="+2"><b>3.15 - CIDR</b></font><a name="feature_cidr"></a></p><div class="desc">
 <p>UnrealIRCd now has support for CIDR (Classless Interdomain Routing). CIDR allows you to ban
 IP ranges. IPs are allocated to ISPs using CIDR, therefore, being able to set a CIDR based ban 
 allows you to easily ban an ISP. Unreal supports CIDR for both IPv4 and IPv6. CIDR masks may be
-used in the allow::ip, ban user::mask, ban ip::mask, except ban::mask, except throttle::mask,
-and except tkl::mask (for gzline, gline, and shun). Additionally, CIDR can be used in /kline,
-/gline, /zline, /gzline, and /shun. Unreal uses the standard syntax of IP/bits, e.g., 
-127.0.0.0/8 (matches 127.0.0.0 - 127.255.255.255), and fe80:0:0:123::/64 (matches 
-fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p></div>
+used in the allow::ip, oper::from::userhost, ban user::mask, ban ip::mask, except ban::mask,
+except throttle::mask, and except tkl::mask (for gzline, gline, and shun). Additionally, CIDR
+can be used in /kline, /gline, /zline, /gzline, and /shun. Unreal uses the standard syntax of
+IP/bits, e.g., 127.0.0.0/8 (matches 127.0.0.0 - 127.255.255.255), and fe80:0:0:123::/64
+(matches fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p></div>
 
 <p><font size="+2"><b>3.16 - Nick Character Sets</b></font><a name="feature_nickchars"></a></p><div class="desc">
 <p>UnrealIRCd now has the ability to specify which charsets/languages should be allowed
@@ -790,7 +808,7 @@ class clients {
 	recvq 8000;
 };
 
-class servers{
+class servers {
 	pingfreq 90;
 	maxclients 10; /* Max servers we can have linked at a time */
 	sendq 1000000;
@@ -1414,7 +1432,7 @@ tld {
 	channel &lt;channel-name&gt;;
 	options {
 		ssl;
-	}
+	};
 };</pre></p>
 <p>The tld block allows you to specify a motd, rules, and channel for a user based 
   on their host. This is useful if you want different motds for different languages. 
@@ -2260,6 +2278,9 @@ set {
   The snomask that will be set on a user when they /oper.</p>
 <p><font class="set">set::modes-on-join &lt;+modes&gt;;</font><br>
   The modes that will be set on a channel when it is first created. Not all modes can be set using this command. +qaohvbeOAzlLk can NOT be set using this command.</p>
+<p><font class="set">set::level-on-join &lt;op|none&gt;;</font><br>
+  The mode that a user will get when he's the first to join a channel. This
+  is either 'op' (channel operator, the default) or 'none'.</p>
 <p><font class="set">set::restrict-usermodes &lt;modes&gt;</font><br>
   Restrict users to set/unset the modes listed here (don't use + or -).<br>
   For example you can set +G in modes-on-connect and G in restrict-usermodes,
@@ -2432,6 +2453,14 @@ set {
   Specifies the filename where the server's SSL private key is located.</p>
 <p><font class="set">set::ssl::trusted-ca-file &lt;filename&gt;;</font><br>
   Specifies the filename where the certificates of the trusted CAs are located.</p>
+<p><font class="set">set::ssl::server-cipher-list &lt;cipherlist&gt;;</font><br>
+  Specifies which ciphers to be allowed, by default we leave this up to OpenSSL.
+  See <a href="http://www.openssl.org/docs/apps/ciphers.html#CIPHER_LIST_FORMAT">http://www.openssl.org/docs/apps/ciphers.html</a>
+  on how to specify the list of ciphers.</p>
+<p><font class="set">set::ssl::renegotiate-bytes &lt;value&gt;;</font><br>
+  Specifies after how many bytes an SSL session should be renegotiated (eg: 20m for 20 megabytes).</p>
+<p><font class="set">set::ssl::renegotiate-timeout &lt;timevalue&gt;;</font><br>
+  Specifies after how much time an SSL session should be renegotiated (eg: 1h for 1 hour).</p>
 <p><font class="set">set::ssl::options::fail-if-no-clientcert;</font><br>
   Forces clients that do not have a certificate to be denied.</p>
 <p><font class="set">set::ssl::options::no-self-signed;</font><br>
@@ -2484,6 +2513,14 @@ set {
  <p><font class="set">set::spamfilter::except &lt;target(s)&gt;</font><br>
   These targets are exempt from spam filtering (no action will be taken),
   can be single target or comma seperated list.. Ex: except "#help,#spamreport"</p>
+ <p><font class="set">set::spamfilter::slowdetect-warn &lt;value&gt;</font><br>
+  If a spamfilter takes longer than this amount of milliseconds to execute
+  (1000ms = 1 second), then a warning notice will be sent to all opers (default: 250).
+  See also <a href="#feature_spamfilter_slow">Slow Spamfilter Detection</a>.</p>
+ <p><font class="set">set::spamfilter::slowdetect-fatal &lt;value&gt;</font><br>
+  If a spamfilter takes longer than this amount of milliseconds to execute
+  (1000ms = 1 second), then the spamfilter will be removed (default: 500).
+  See also <a href="#feature_spamfilter_slow">Slow Spamfilter Detection</a>.</p>
  <p><font class="set">set::check-target-nick-bans &lt;yes|no&gt;</font><br>
   Whenever the user changes his/her nick, check if the NEW nick would be
   banned. If so, do not allow the nickchange. Default is yes.</p>
@@ -2500,6 +2537,8 @@ AU). Requests to these servers are sent in parallel, fastest reply wins.</p>
  <p><font class="set">set::pingpong-warning &lt;yes|no&gt;</font><br>
   When NOSPOOF is enabled (usually on Windows), send a warning to each user to use
   '/quote pong ..' if they are having problems connecting? The default is no.</p>
+ <p><font class="set">set::watch-away-notification &lt;yes|no&gt;</font><br>
+  Allows you to enable/disable AWAY notification in WATCH. The default is yes.</p>
 <p></p> </div>
 <p><b><font size="+2">5 &#8211; Additional Files<a name="addtlfiles"></a>
   </font></b></p><div class="desc">
@@ -3049,12 +3088,12 @@ to get more information on a command.</p>
   </tr>
   <tr> 
     <td height="39">globops &lt;message&gt;</td>
-    <td>Sends a message to all IRCops</td>
+    <td>Sends a message to all global IRCops</td>
     <td>IRCop</td>
   </tr>
   <tr> 
     <td height="39">chatops &lt;message&gt;</td>
-    <td>Send a message to all IRCops with umode +c</td>
+    <td>Sends a message to all IRCops (local and global)</td>
     <td>IRCop</td>
   </tr>
   <tr> 
@@ -3482,8 +3521,13 @@ It will however make it more difficult / increase the effort needed to attack/ha
 There are kernel patches that make it more difficult for stack- and heap-based exploits to 
 work. This is nice, but should not be your main focus point, you have a far more bigger risk 
 of getting exploited through the other points than this... for various reasons.<br>
+Another option is enabling chrooting (*NIX only), which means upon a succesfull exploit,
+the user is confined to the UnrealIRCd directory and cannot touch any other
+files. This requires root privileges, modifying of include/config.h
+(search for CHROOTDIR, and also set IRC_USER and IRC_GROUP), and a
+recompile.<br>
 <br>
-There's one thing you should do however, which is to ALWAYS USE THE LATEST VERSION, 
+There's one thing you should definately do, which is to ALWAYS USE THE LATEST VERSION, 
 subscribe to the <a href="http://mail1.sourceforge.net/mailman/listinfo/unreal-notify" target="_blank">unreal-notify mailinglist</a> 
 right now so you receive the release announcements (unreal-notify is for release announcements only, 
 so only 1 mail per X months). Usually it's explicitly mentioned in the release announcement if the 
@@ -3515,9 +3559,9 @@ security until they got hacked, try to avoid that :).
 <p><font size="+2"><b>A.3 Repetition Operators<a name="regexrep"></a></b></font></p>
 <div class="desc"><p>One of the common mistakes people make with regex is assuming that they work just like wildcards. That is, the * and ? characters will match just like in a wildcard. While these characters do have similar meaning in a regex, they are not exactly the same. Additionaly, regular expressions also support other, more advanced methods of repetition.
 <p>
-The most basic repetition operator is the ? operator. This operator matches 0 or 1 of the previous character. This, "of the previous character," is where the ? in regex differs from a wildcard. In a wildcard, the expression, "a?c" matches an "a" followed by any character (or no character), followed by a "c." In regex it has a different meaning. It matches 0 or 1 of the letter "a" followed by the letter "c." Basically, the ? is modifying the a by specifying how many a's may be present. To emulate the ? in a wildcard, the . operator is used. The regex "a.?c" is equivilent to the previously mentioned wildcard. It matches the letter "a" followed by 0 or 1 of any character (the ? is modifying the .), followed by a "c."
+The most basic repetition operator is the ? operator. This operator matches 0 or 1 of the previous character. This, "of the previous character," is where the ? in regex differs from a wildcard. In a wildcard, the expression, "a?c" matches an "a" followed by any character, followed by a "c". In regex it has a different meaning. It matches 0 or 1 of the letter "a" followed by the letter "c". Basically, the ? is modifying the a by specifying how many a's may be present. To emulate the ? in a wildcard, the . operator is used. The regex "a.c" is equivilent to the previously mentioned wildcard. It matches the letter "a" followed by any character, followed by a "c".
 <p>
-The next repetition operator is the *. Again, this operator is similar to a wildcard. It matches 0 or more of the previous character. Note that this "of the previous character" is something that is characteristic of all repetition operators. The regex "a*c" matches 0 or more a's followed by a "c." For example, "aaaaaac" matches. Once again, to make this work like a wildcard, you would use "a.*c" which will cause the * to modify the . (any character) rather than the "a."
+The next repetition operator is the *. Again, this operator is similar to a wildcard. It matches 0 or more of the previous character. Note that this "of the previous character" is something that is characteristic of all repetition operators. The regex "a*c" matches 0 or more a's followed by a "c". For example, "aaaaaac" matches. Once again, to make this work like a wildcard, you would use "a.*c" which will cause the * to modify the . (any character) rather than the "a."
 <p>
 The + operator is very similar to the *. However, instead of matching 0 or more, it matches 1 or more. Basically, "a*c" will match "c" (0 a's followed by a c), where as "a+c" would not. The "a+" states that there must be "at least" 1 a. So "c" does not match but "ac" and "aaaaaaaaac" do.
 <p>

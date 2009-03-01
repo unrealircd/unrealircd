@@ -94,6 +94,10 @@ DLLFUNC int MOD_UNLOAD(m_setname)(int module_unload)
 */ 
 DLLFUNC CMD_FUNC(m_setname)
 {
+    int xx;
+    char tmpinfo[REALLEN + 1];
+    char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64];
+
  	if ((parc < 2) || BadPtr(parv[1]))
  	{
  		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0], "SETNAME");
@@ -110,8 +114,17 @@ DLLFUNC CMD_FUNC(m_setname)
 		return 0;
 	}
 
-	/* set the new name before we check, but don't send to servers unless it is ok */
-	strcpy(sptr->info, parv[1]);
+    /* set temp info for spamfilter check*/
+    strcpy(tmpinfo, sptr->info);
+    /* set the new name before we check, but don't send to servers unless it is ok */
+    strcpy(sptr->info, parv[1]);
+    spamfilter_build_user_string(spamfilter_user, sptr->name, sptr);
+    xx = dospamfilter(sptr, spamfilter_user, SPAMF_USER, NULL, 0, NULL);
+    if (xx < 0) {
+        if (sptr)
+            strcpy(sptr->info, tmpinfo);
+        return xx;
+    }
 
 	/* Check for n:lines here too */
 	if (!IsAnOper(sptr) && Find_ban(NULL, sptr->info, CONF_BAN_REALNAME))

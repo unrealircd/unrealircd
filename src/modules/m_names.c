@@ -90,13 +90,16 @@ static char buf[BUFSIZE];
 #define TRUNCATED_NAMES 64
 DLLFUNC CMD_FUNC(m_names)
 {
-	int  mlen = strlen(me.name) + NICKLEN + 7;
+	int uhnames = (MyConnect(sptr) && SupportUHNAMES(sptr)); // cache UHNAMES support
+	int bufLen = NICKLEN + (!uhnames ? 0 : (1 + USERLEN + 1 + HOSTLEN));
+	int  mlen = strlen(me.name) + bufLen + 7;
 	aChannel *chptr;
 	aClient *acptr;
 	int  member;
 	Member *cm;
 	int  idx, flag = 1, spos;
 	char *s, *para = parv[1];
+	char nuhBuffer[NICKLEN+USERLEN+HOSTLEN+3];
 
 
 	if (parc < 2 || !MyConnect(sptr))
@@ -202,12 +205,24 @@ DLLFUNC CMD_FUNC(m_names)
 			if (cm->flags & CHFL_VOICE)
 				buf[idx++] = '+';
 		}
-		for (s = acptr->name; *s; s++)
+
+		if (!uhnames) {
+			s = acptr->name;
+		} else {
+			strlcpy(nuhBuffer,
+			        make_nick_user_host(acptr->name, acptr->user->username, GetHost(acptr)),
+				bufLen + 1);
+			s = nuhBuffer;
+		}
+		/* 's' is intialized above to point to either acptr->name (normal),
+		 * or to nuhBuffer (for UHNAMES).
+		 */
+		for (; *s; s++)
 			buf[idx++] = *s;
 		buf[idx++] = ' ';
 		buf[idx] = '\0';
 		flag = 1;
-		if (mlen + idx + NICKLEN > BUFSIZE - 7)
+		if (mlen + idx + bufLen > BUFSIZE - 7)
 		{
 			sendto_one(sptr, rpl_str(RPL_NAMREPLY), me.name,
 			    parv[0], buf);

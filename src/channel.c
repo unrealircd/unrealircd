@@ -387,10 +387,14 @@ int add_listmode(Ban **list, aClient *cptr, aChannel *chptr, char *banid)
 			}
 			else
 			{
+#ifdef SOCALLEDSMARTBANNING
 			  /* Temp workaround added in b19. -- Syzop */
 			  if (!mycmp(ban->banstr, banid) || (!strchr(banid, '\\') && !strchr(ban->banstr, '\\')))
 				if (!match(ban->banstr, banid))
 					return -1;
+#endif
+			  if (!mycmp(ban->banstr, banid))
+			  	return -1;
 			}
 		else if (!mycmp(ban->banstr, banid))
 			return -1;
@@ -788,7 +792,7 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 		char *c;
 		for (c = msgtext; *c; c++)
 		{
-			if (*c == 3 || *c == 27 || *c == 4)
+			if (*c == 3 || *c == 27 || *c == 4 || *c == 22) /* mirc color, ansi, rgb, reverse */
 				return (CANNOT_SEND_NOCOLOR);
 		}
 	}

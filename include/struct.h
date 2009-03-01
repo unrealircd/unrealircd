@@ -172,7 +172,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	REALLEN	 	50
 #define	TOPICLEN	307
 #define	CHANNELLEN	32
-#define	PASSWDLEN 	32	/* orig. 20, changed to 32 for nickpasswords */
+#define	PASSWDLEN 	48	/* was 20, then 32, now 48. */
 #define	KEYLEN		23
 #define LINKLEN		32
 #define	BUFSIZE		512	/* WARNING: *DONT* CHANGE THIS!!!! */
@@ -326,7 +326,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #ifdef USE_SSL
 #define FLAGS_SSL        0x10000000
 #endif
-#define FLAGS_UNOCCUP4   0x20000000 /* [FREE] */
+#define FLAGS_NOFAKELAG  0x20000000 /* Exception from fake lag */
 #define FLAGS_DCCBLOCK   0x40000000 /* Block all DCC send requests */
 #define FLAGS_MAP        0x80000000	/* Show this entry in /map */
 /* Dec 26th, 1997 - added flags2 when I ran out of room in flags -DuffJ */
@@ -361,6 +361,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define PROTO_NICKIP	0x2000  /* Send IP addresses in the NICK command */
 #define PROTO_NAMESX	0x4000  /* Send all rights in NAMES output */
 #define PROTO_CLK		0x8000	/* Send cloaked host in the NICK command (regardless of +x/-x) */
+#define PROTO_UHNAMES	0x10000  /* Send n!u@h in NAMES */
 
 /*
  * flags macros.
@@ -427,6 +428,11 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define IsZipped(x)		(0)
 #define IsZipStart(x)	(0)
 #endif
+
+/* Fake lag exception */
+#define IsNoFakeLag(x)      ((x)->flags & FLAGS_NOFAKELAG)
+#define SetNoFakeLag(x)     ((x)->flags |= FLAGS_NOFAKELAG)
+#define ClearNoFakeLag(x)   ((x)->flags &= ~FLAGS_NOFAKELAG)
 
 #define IsHybNotice(x)		((x)->flags & FLAGS_HYBNOTICE)
 #define SetHybNotice(x)         ((x)->flags |= FLAGS_HYBNOTICE)
@@ -522,6 +528,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SupportTKLEXT(x)	(CHECKPROTO(x, PROTO_TKLEXT))
 #define SupportNAMESX(x)	(CHECKPROTO(x, PROTO_NAMESX))
 #define SupportCLK(x)		(CHECKPROTO(x, PROTO_CLK))
+#define SupportUHNAMES(x)	(CHECKPROTO(x, PROTO_UHNAMES))
 
 #define SetSJOIN(x)		((x)->proto |= PROTO_SJOIN)
 #define SetNoQuit(x)		((x)->proto |= PROTO_NOQUIT)
@@ -536,6 +543,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SetTKLEXT(x)	((x)->proto |= PROTO_TKLEXT)
 #define SetNAMESX(x)	((x)->proto |= PROTO_NAMESX)
 #define SetCLK(x)		((x)->proto |= PROTO_CLK)
+#define SetUHNAMES(x)	((x)->proto |= PROTO_UHNAMES)
 
 #define ClearSJOIN(x)		((x)->proto &= ~PROTO_SJOIN)
 #define ClearNoQuit(x)		((x)->proto &= ~PROTO_NOQUIT)
@@ -776,6 +784,7 @@ struct User {
 #ifdef JOINTHROTTLE
 	aJFlood *jflood;
 #endif
+	TS lastaway;
 };
 
 struct Server {
@@ -1154,6 +1163,7 @@ struct _configitem_oper_from {
 	ConfigItem       *prev, *next;
 	ConfigFlag 	 flag;
 	char		 *name;
+	struct irc_netmask	*netmask;
 };
 
 struct _configitem_drpass {
@@ -1690,7 +1700,7 @@ struct liststruct {
  */
 #define	MyConnect(x)			((x)->fd != -256)
 #define	MyClient(x)			(MyConnect(x) && IsClient(x))
-#define	MyOper(x)			(MyConnect(x) && IsOper(x))
+#define	MyOper(x)			(MyConnect(x) && IsAnOper(x))
 
 #ifdef CLEAN_COMPILE
 #define TStime() (time(NULL) + TSoffset)

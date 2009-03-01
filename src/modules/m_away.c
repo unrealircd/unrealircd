@@ -100,7 +100,7 @@ DLLFUNC int MOD_UNLOAD(m_away)(int module_unload)
 int  m_away(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 char *away, *awy2 = parv[1];
-int n;
+int n, wasaway = 0;
 
 	if (IsServer(sptr))
 		return 0;
@@ -115,6 +115,7 @@ int n;
                         sptr->user->away = NULL;
 			/* Only send this if they were actually away -- codemastr */
 	                sendto_serv_butone_token(cptr, parv[0], MSG_AWAY, TOK_AWAY, "");
+	                hash_check_watch(cptr, RPL_NOTAWAY);
                 }
                 /* hope this works XX */
                 if (MyConnect(sptr))
@@ -151,17 +152,22 @@ int n;
                 if (strcmp(away, parv[1]) == 0)
                         return 0;
 
-        sendto_serv_butone_token(cptr, parv[0], MSG_AWAY, TOK_AWAY, ":%s",
-            awy2);
+	sptr->user->lastaway = TStime();
+	
+        sendto_serv_butone_token(cptr, parv[0], MSG_AWAY, TOK_AWAY, ":%s", awy2);
 
-        if (away)
-                away = (char *)MyRealloc(away, strlen(awy2) + 1);
-        else
-                away = (char *)MyMalloc(strlen(awy2) + 1);
+	if (away)
+	{
+		MyFree(away);
+		wasaway = 1;
+        }
+	
+	away = sptr->user->away = strdup(awy2);
 
-        sptr->user->away = away;
-        (void)strcpy(away, awy2);
         if (MyConnect(sptr))
                 sendto_one(sptr, rpl_str(RPL_NOWAWAY), me.name, parv[0]);
+
+	hash_check_watch(cptr, wasaway ? RPL_REAWAY : RPL_GONEAWAY);
+	
         return 0;
 }

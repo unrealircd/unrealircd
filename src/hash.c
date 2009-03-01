@@ -480,7 +480,7 @@ void  clear_watch_hash_table(void)
 /*
  * add_to_watch_hash_table
  */
-int   add_to_watch_hash_table(char *nick, aClient *cptr)
+int   add_to_watch_hash_table(char *nick, aClient *cptr, int awaynotify)
 {
 	unsigned int   hashv;
 	aWatch  *anptr;
@@ -516,11 +516,13 @@ int   add_to_watch_hash_table(char *nick, aClient *cptr)
 		lp = anptr->watch;
 		anptr->watch = make_link();
 		anptr->watch->value.cptr = cptr;
+		anptr->watch->flags = awaynotify;
 		anptr->watch->next = lp;
 		
 		lp = make_link();
 		lp->next = cptr->watch;
 		lp->value.wptr = anptr;
+		lp->flags = awaynotify;
 		cptr->watch = lp;
 		cptr->watches++;
 	}
@@ -536,6 +538,10 @@ int   hash_check_watch(aClient *cptr, int reply)
 	unsigned int   hashv;
 	aWatch  *anptr;
 	Link  *lp;
+	int awaynotify = 0;
+	
+	if ((reply == RPL_GONEAWAY) || (reply == RPL_NOTAWAY) || (reply == RPL_REAWAY))
+		awaynotify = 1;
 	
 	
 	/* Get us the right bucket */
@@ -554,22 +560,46 @@ int   hash_check_watch(aClient *cptr, int reply)
 	/* Send notifies out to everybody on the list in header */
 	for (lp = anptr->watch; lp; lp = lp->next)
 	{
-		if (IsWebTV(lp->value.cptr))
-			sendto_one(lp->value.cptr, ":IRC!IRC@%s PRIVMSG %s :%s (%s@%s) "
-				" %s IRC",
-				me.name, lp->value.cptr->name, cptr->name,
-			    	(IsPerson(cptr) ? cptr->user->username : "<N/A>"),
-				(IsPerson(cptr) ?
-			    	(IsHidden(cptr) ? cptr->user->virthost : cptr->
-			    	user->realhost) : "<N/A>"), reply == RPL_LOGON ? 
-				"is now on" : "has left");
-		else
-			sendto_one(lp->value.cptr, rpl_str(reply), me.name,
-			    lp->value.cptr->name, cptr->name,
-			    (IsPerson(cptr) ? cptr->user->username : "<N/A>"),
-			    (IsPerson(cptr) ?
-			    (IsHidden(cptr) ? cptr->user->virthost : cptr->
-			    user->realhost) : "<N/A>"), anptr->lasttime, cptr->info);
+		if (!awaynotify)
+		{
+			/* Most common: LOGON or LOGOFF */
+			if (IsWebTV(lp->value.cptr))
+				sendto_one(lp->value.cptr, ":IRC!IRC@%s PRIVMSG %s :%s (%s@%s) "
+					" %s IRC",
+					me.name, lp->value.cptr->name, cptr->name,
+				    	(IsPerson(cptr) ? cptr->user->username : "<N/A>"),
+					(IsPerson(cptr) ?
+				    	(IsHidden(cptr) ? cptr->user->virthost : cptr->
+				    	user->realhost) : "<N/A>"), reply == RPL_LOGON ? 
+					"is now on" : "has left");
+			else
+				sendto_one(lp->value.cptr, rpl_str(reply), me.name,
+				    lp->value.cptr->name, cptr->name,
+				    (IsPerson(cptr) ? cptr->user->username : "<N/A>"),
+				    (IsPerson(cptr) ?
+				    (IsHidden(cptr) ? cptr->user->virthost : cptr->
+				    user->realhost) : "<N/A>"), anptr->lasttime, cptr->info);
+		} else
+		{
+			/* AWAY or UNAWAY */
+			if (!lp->flags)
+				continue; /* skip away/unaway notification for users not interested in them */
+
+			if (reply == RPL_NOTAWAY)
+				sendto_one(lp->value.cptr, rpl_str(reply), me.name,
+				    lp->value.cptr->name, cptr->name,
+				    (IsPerson(cptr) ? cptr->user->username : "<N/A>"),
+				    (IsPerson(cptr) ?
+				    (IsHidden(cptr) ? cptr->user->virthost : cptr->
+				    user->realhost) : "<N/A>"), cptr->user->lastaway);
+			else /* RPL_GONEAWAY / RPL_REAWAY */
+				sendto_one(lp->value.cptr, rpl_str(reply), me.name,
+				    lp->value.cptr->name, cptr->name,
+				    (IsPerson(cptr) ? cptr->user->username : "<N/A>"),
+				    (IsPerson(cptr) ?
+				    (IsHidden(cptr) ? cptr->user->virthost : cptr->
+				    user->realhost) : "<N/A>"), cptr->user->lastaway, cptr->user->away);
+		}
 	}
 	
 	return 0;
@@ -751,9 +781,17 @@ struct	MODVAR ThrottlingBucket	*ThrottlingHash[THROTTLING_HASH_SIZE+1];
 
 void	init_throttling_hash()
 {
+long v;
 	bzero(ThrottlingHash, sizeof(ThrottlingHash));	
-	EventAddEx(NULL, "bucketcleaning", (THROTTLING_PERIOD ? THROTTLING_PERIOD : 120)/2, 0,
-		e_clean_out_throttling_buckets, NULL);		
+	if (!THROTTLING_PERIOD)
+		v = 120;
+	else
+	{
+		v = THROTTLING_PERIOD/2;
+		if (v > 5)
+			v = 5; /* accuracy, please */
+	}
+	EventAddEx(NULL, "bucketcleaning", v, 0, e_clean_out_throttling_buckets, NULL);
 }
 
 int	hash_throttling(struct IN_ADDR *in)
@@ -813,10 +851,14 @@ EVENT(e_clean_out_throttling_buckets)
 		{ p = strchr(serveropts, 'm'); *p = '\0'; }
 		if (!Hooks[18] && strchr(serveropts, 'M'))
 		{ p = strchr(serveropts, 'M'); *p = '\0'; }
+		if (!Hooks[49] && strchr(serveropts, 'R'))
+		{ p = strchr(serveropts, 'R'); *p = '\0'; }
 		if (Hooks[17] && !strchr(serveropts, 'm'))
 			*p++ = 'm';
 		if (Hooks[18] && !strchr(serveropts, 'M'))
 			*p++ = 'M';
+		if (Hooks[49] && !strchr(serveropts, 'R'))
+			*p++ = 'R';
 		*p = '\0';
 		for (mi = Modules; mi; mi = mi->next)
 			if (!(mi->options & MOD_OPT_OFFICIAL))

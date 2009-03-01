@@ -322,6 +322,7 @@ ConfigEntry		*config_find_entry(ConfigEntry *ce, char *name);
  * Error handling
 */
 
+void			config_warn(char *format, ...);
 void 			config_error(char *format, ...);
 void 			config_status(char *format, ...);
 void 			config_progress(char *format, ...);
@@ -333,6 +334,7 @@ extern void		win_error();
 extern void add_entropy_configfile(struct stat st, char *buf);
 extern void unload_all_unused_snomasks();
 extern void unload_all_unused_umodes();
+extern void unload_all_unused_extcmodes(void);
 
 extern int charsys_test_language(char *name);
 extern void charsys_add_language(char *name);
@@ -624,12 +626,16 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 	char *params = strchr(modes, ' ');
 	char *parambuf = NULL;
 	char *param = NULL;
+	char *save = NULL;
+	
+	warn = 0; // warn is broken
+	
 	if (params)
 	{
 		params++;
 		parambuf = MyMalloc(strlen(params)+1);
 		strcpy(parambuf, params);
-		param = strtok(parambuf, " ");
+		param = strtoken(&save, parambuf, " ");
 	}		
 
 	for (; *modes && *modes != ' '; modes++)
@@ -658,7 +664,7 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 				if (!myparam)
 					break;
 				/* Go to next parameter */
-				param = strtok(NULL, " ");
+				param = strtoken(&save, NULL, " ");
 
 				if (myparam[0] != '[')
 				{
@@ -802,7 +808,7 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 				if (!myparam)
 					break;
 				/* Go to next parameter */
-				param = strtok(NULL, " ");
+				param = strtoken(&save, NULL, " ");
 
 				if (*myparam == '*')
 					kmode = 1;
@@ -841,6 +847,11 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 				{
 					if (tab->flag == *modes)
 					{
+						if (tab->parameters)
+						{
+							/* INCOMPATIBLE */
+							break;
+						}
 						store->mode |= tab->mode;
 						break;
 					}
@@ -860,9 +871,12 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 							{
 								if (!param)
 									break;
-								store->extparams[i] = strdup(Channelmode_Table[i].conv_param(param));
+								param = Channelmode_Table[i].conv_param(param);
+								if (!param)
+									break; /* invalid parameter fmt, do not set mode. */
+								store->extparams[i] = strdup(param);
 								/* Get next parameter */
-								param = strtok(NULL, " ");
+								param = strtoken(&save, NULL, " ");
 							}
 							store->extmodes |= Channelmode_Table[i].mode;
 							break;
@@ -925,6 +939,15 @@ void chmode_str(struct ChMode modes, char *mbuf, char *pbuf)
 	}
 #endif
 	*mbuf++=0;
+}
+
+int channellevel_to_int(char *s)
+{
+	if (!strcmp(s, "none"))
+		return CHFL_DEOPPED;
+	if (!strcmp(s, "op") || !strcmp(s, "chanop"))
+		return CHFL_CHANOP;
+	return 0; /* unknown or unsupported */
 }
 
 ConfigFile *config_load(char *filename)
@@ -1002,7 +1025,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 {
 	char		*ptr;
 	char		*start;
-	int			linenumber = 1;
+	int		linenumber = 1;
 	ConfigEntry	*curce;
 	ConfigEntry	**lastce;
 	ConfigEntry	*cursection;
@@ -1136,6 +1159,17 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 				}
 				break;
 			case '\"':
+				if (curce && curce->ce_varlinenum != linenumber && cursection)
+				{
+					config_warn("%s:%i: Missing semicolon at end of line\n",
+						filename, curce->ce_varlinenum);
+					
+					*lastce = curce;
+					lastce = &(curce->ce_next);
+					curce->ce_fileposend = (ptr - confdata);
+					curce = NULL;
+				}
+
 				start = ++ptr;
 				for(;*ptr;ptr++)
 				{
@@ -1481,6 +1515,7 @@ void	free_iConf(aConfiguration *i)
 #ifdef USE_SSL
 	ircfree(i->x_server_cert_pem);
 	ircfree(i->x_server_key_pem);
+	ircfree(i->x_server_cipher_list);
 	ircfree(i->trusted_ca_file);
 #endif	
 	ircfree(i->restrict_usermodes);
@@ -1526,6 +1561,8 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->spamfilter_ban_time = 86400; /* 1d */
 	i->spamfilter_ban_reason = strdup("Spam/advertising");
 	i->spamfilter_virus_help_channel = strdup("#help");
+	i->spamfilter_detectslow_warn = 250;
+	i->spamfilter_detectslow_fatal = 500;
 	i->maxdccallow = 10;
 	i->channel_command_prefix = strdup("`!.");
 	i->check_target_nick_bans = 1;
@@ -1535,6 +1572,8 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->timesynch_timeout = 3;
 	i->timesynch_server = strdup("193.67.79.202,192.43.244.18,128.250.36.3"); /* nlnet (EU), NIST (US), uni melbourne (AU). All open acces, nonotify, nodns. */
 	i->name_server = strdup("127.0.0.1"); /* default, especially needed for w2003+ in some rare cases */
+	i->level_on_join = CHFL_CHANOP;
+	i->watch_away_notification = 1;
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,
@@ -1561,6 +1600,8 @@ char *encoded;
 	}
 
 	encoded = unreal_encodespace(SPAMFILTER_BAN_REASON);
+	if (!encoded)
+		abort(); /* hack to trace 'impossible' bug... */
 	for (tk = tklines[tkl_hash('q')]; tk; tk = tk->next)
 	{
 		if (tk->type != TKL_NICK)
@@ -1591,6 +1632,17 @@ char *encoded;
 				tk->setby = strdup(me.name);
 			else
 				tk->setby = strdup(conf_me->name ? conf_me->name : "~server~");
+		}
+	}
+	if (loop.ircd_booted) /* only has to be done for rehashes, api-isupport takes care of boot */
+	{
+		if (WATCH_AWAY_NOTIFICATION)
+		{
+			IsupportAdd(NULL, "WATCHOPTS", "A");
+		} else {
+			Isupport *hunted = IsupportFind("WATCHOPTS");
+			if (hunted)
+				IsupportDel(hunted);
 		}
 	}
 }
@@ -1845,6 +1897,10 @@ void	config_rehash()
 		{
 			next2 = (ListStruct *)oper_from->next;
 			ircfree(oper_from->name);
+			if (oper_from->netmask)
+			{
+				MyFree(oper_from->netmask);
+			}
 			DelListItem(oper_from, oper_ptr->from);
 			MyFree(oper_from);
 		}
@@ -2283,8 +2339,17 @@ int	config_run()
 #ifdef THROTTLING
 	{
 		EventInfo eInfo;
+		long v;
 		eInfo.flags = EMOD_EVERY;
-		eInfo.every = THROTTLING_PERIOD ? THROTTLING_PERIOD/2 : 86400;
+		if (!THROTTLING_PERIOD)
+			v = 120;
+		else
+		{
+			v = THROTTLING_PERIOD/2;
+			if (v > 5)
+				v = 5; /* accuracy, please */
+		}
+		eInfo.every = v;
 		EventMod(EventFind("bucketcleaning"), &eInfo);
 	}
 #endif
@@ -2558,6 +2623,16 @@ ConfigItem_link *Find_link(char *username,
 
 }
 
+/* ugly ugly ugly */
+int match_ip46(char *a, char *b)
+{
+#ifdef INET6
+	if (!strncmp(a, "::ffff:", 7) && !strcmp(a+7, b))
+		return 0; // match
+#endif
+	return 1; //nomatch
+}
+
 ConfigItem_cgiirc *Find_cgiirc(char *username, char *hostname, char *ip, CGIIRCType type)
 {
 ConfigItem_cgiirc *e;
@@ -2568,7 +2643,7 @@ ConfigItem_cgiirc *e;
 	for (e = conf_cgiirc; e; e = (ConfigItem_cgiirc *)e->next)
 	{
 		if ((e->type == type) && (!e->username || !match(e->username, username)) &&
-		    (!match(e->hostname, hostname) || !match(e->hostname, ip)))
+		    (!match(e->hostname, hostname) || !match(e->hostname, ip) || !match_ip46(e->hostname, ip)))
 			return e;
 	}
 
@@ -2862,7 +2937,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 	if (url_is_valid(ce->ce_vardata))
 		return remote_include(ce);
 #endif
-#if !defined(_WIN32) && !defined(_AMIGA) && DEFAULT_PERMISSIONS != 0
+#if !defined(_WIN32) && !defined(_AMIGA) && !defined(OSXTIGER) && DEFAULT_PERMISSIONS != 0
 	chmod(ce->ce_vardata, DEFAULT_PERMISSIONS);
 #endif
 #ifdef GLOBH
@@ -3076,6 +3151,13 @@ int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_varlinenum);
 				errors++;
 			}
+			if (strlen(cep->ce_vardata) > HOSTLEN)
+			{
+				config_error("%s:%i: illegal me::name, must be less or equal to %i characters",
+					cep->ce_fileptr->cf_filename, 
+					cep->ce_varlinenum, HOSTLEN);
+				errors++;
+			}
 		}
 		/* me::info */
 		else if (!strcmp(cep->ce_varname, "info"))
@@ -3167,6 +3249,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_oper *oper = NULL;
 	ConfigItem_oper_from *from;
 	OperFlag *ofp = NULL;
+	struct irc_netmask tmp;
 
 	oper =  MyMallocEx(sizeof(ConfigItem_oper));
 	oper->name = strdup(ce->ce_vardata);
@@ -3236,6 +3319,12 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 				{
 					from = MyMallocEx(sizeof(ConfigItem_oper_from));
 					ircstrdup(from->name, cepp->ce_vardata);
+					tmp.type = parse_netmask(from->name, &tmp);
+					if (tmp.type != HM_HOST)
+					{
+						from->netmask = MyMallocEx(sizeof(struct irc_netmask));
+						bcopy(&tmp, from->netmask, sizeof(struct irc_netmask));
+					}
 					AddListItem(from, oper->from);
 				}
 			}
@@ -4187,10 +4276,18 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 #ifdef INET6
 	if ((strlen(ip) > 6) && !strchr(ip, ':') && isdigit(ip[strlen(ip)-1]))
 	{
-		config_error("%s:%i: listen: ip set to '%s' (ipv4) on an IPv6 compile, "
-		              "use the ::ffff:1.2.3.4 form instead",
+		char crap[32];
+		if (inet_pton(AF_INET, ip, crap) != 0)
+		{
+			char ipv6buf[128];
+			snprintf(ipv6buf, sizeof(ipv6buf), "[::ffff:%s]:%s", ip, port);
+			ce->ce_vardata = strdup(ipv6buf);
+		} else {
+		/* Insert IPv6 validation here */
+			config_error("%s:%i: listen: '%s' looks like it might be IPv4, but is not a valid address.",
 					ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ip);
-		return 1;
+			return 1;
+		}
 	}
 #endif
 	port_range(port, &start, &end);
@@ -5536,7 +5633,7 @@ int _conf_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 	nl->ptr.spamf = unreal_buildspamfilter(word);
 	nl->ptr.spamf->action = action;
 
-	if (has_reason)
+	if (has_reason && reason)
 		nl->ptr.spamf->tkl_reason = strdup(unreal_encodespace(reason));
 	else
 		nl->ptr.spamf->tkl_reason = strdup("<internally added by ircd>");
@@ -5962,6 +6059,8 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 	char has_passwordreceive = 0, has_passwordconnect = 0, has_class = 0;
 	char has_hub = 0, has_leaf = 0, has_leafdepth = 0, has_ciphers = 0;
 	char has_options = 0;
+	char has_autoconnect = 0;
+	char has_hostname_wildcards = 0;
 #ifdef ZIP_LINKS
 	char has_compressionlevel = 0;
 #endif
@@ -6016,7 +6115,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 #ifndef USE_SSL
 				if (ofp->flag == CONNECT_SSL)
 				{
-					config_warn("%s:%i: link %s with SSL option enabled on a non-SSL compile",
+					config_error("%s:%i: link %s with SSL option enabled on a non-SSL compile",
 						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, ce->ce_vardata);
 					errors++;
 				}
@@ -6024,11 +6123,15 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 #ifndef ZIP_LINKS
 				if (ofp->flag == CONNECT_ZIP)
 				{
-					config_warn("%s:%i: link %s with ZIP option enabled on a non-ZIP compile",
+					config_error("%s:%i: link %s with ZIP option enabled on a non-ZIP compile",
 						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, ce->ce_vardata);
 					errors++;
 				}
-#endif
+#endif				
+				if (ofp->flag == CONNECT_AUTO)
+				{
+					has_autoconnect = 1;
+				}
 			}
 			continue;
 		}
@@ -6064,13 +6167,26 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 			if (cep->ce_vardata && (strlen(cep->ce_vardata) > 6) && !strchr(cep->ce_vardata, ':') &&
 			    isdigit(cep->ce_vardata[strlen(cep->ce_vardata)-1]))
 			{
-				config_error("%s:%i: link %s has link::hostname set to '%s' (IPv4) on a IPv6 compile, "
-				              "use the ::ffff:1.2.3.4 form instead",
-							cep->ce_fileptr->cf_filename, cep->ce_varlinenum, ce->ce_vardata,
-							cep->ce_vardata);
-				errors++;
+				char crap[32];
+				if (inet_pton(AF_INET, cep->ce_vardata, crap) != 0)
+				{
+					char ipv6buf[48];
+					snprintf(ipv6buf, sizeof(ipv6buf), "::ffff:%s", cep->ce_vardata);
+					cep->ce_vardata = strdup(ipv6buf);
+				} else {
+				/* Insert IPv6 validation here */
+					config_error( "%s:%i: listen: '%s' looks like "
+						"it might be IPv4, but is not a valid address.",
+						ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+						cep->ce_vardata);
+					errors++;
+				}
 			}
 #endif
+			if (strchr(cep->ce_vardata, '*') != NULL || strchr(cep->ce_vardata, '?'))
+			{
+				has_hostname_wildcards = 1;
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "bind-ip"))
 		{
@@ -6207,12 +6323,6 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 			"link::hostname");
 		errors++;
 	}
-	if (!has_bindip)
-	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			"link::bind-ip");
-		errors++;
-	}
 	if (!has_port)
 	{
 		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
@@ -6235,6 +6345,12 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 	{
 		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 			"link::class");
+		errors++;
+	}
+	if (has_autoconnect && has_hostname_wildcards)
+	{
+		config_error("%s:%i: link block with autoconnect and wildcards (* and/or ? in hostname)",
+				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		errors++;
 	}
 	if (errors > 0)
@@ -6331,10 +6447,20 @@ int	_test_cgiirc(ConfigFile *conf, ConfigEntry *ce)
 			if (cep->ce_vardata && (strlen(cep->ce_vardata) > 6) && !strchr(cep->ce_vardata, ':') &&
 			    isdigit(cep->ce_vardata[strlen(cep->ce_vardata)-1]))
 			{
-				config_error("%s:%i: cgiirc block has cgiirc::hostname set to '%s' (IPv4) on a IPv6 compile, "
-				              "use the ::ffff:1.2.3.4 form instead",
-							cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
-				errors++;
+				char crap[32];
+				if (inet_pton(AF_INET, cep->ce_vardata, crap) != 0)
+				{
+					char ipv6buf[48];
+					snprintf(ipv6buf, sizeof(ipv6buf), "::ffff:%s", cep->ce_vardata);
+					cep->ce_vardata = strdup(ipv6buf);
+				} else {
+				/* Insert IPv6 validation here */
+					config_error( "%s:%i: cgiirc::hostname: '%s' looks like "
+						"it might be IPv4, but is not a valid address.",
+						ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+						cep->ce_vardata);
+					errors++;
+				}
 			}
 #endif
 		}
@@ -6640,6 +6766,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "snomask-on-connect")) {
 			ircstrdup(tempiConf.user_snomask, cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "level-on-join")) {
+			tempiConf.level_on_join = channellevel_to_int(cep->ce_vardata);
+		}
 		else if (!strcmp(cep->ce_varname, "static-quit")) {
 			ircstrdup(tempiConf.static_quit, cep->ce_vardata);
 		}
@@ -6671,6 +6800,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "pingpong-warning")) {
 			tempiConf.pingpong_warning = config_checkval(cep->ce_vardata, CFG_YESNO);
+		}
+		else if (!strcmp(cep->ce_varname, "watch-away-notification")) {
+			tempiConf.watch_away_notification = config_checkval(cep->ce_vardata, CFG_YESNO);
 		}
 		else if (!strcmp(cep->ce_varname, "allow-userhost-change")) {
 			if (!stricmp(cep->ce_vardata, "always"))
@@ -6938,13 +7070,13 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			{
 				if (!strcmp(cepp->ce_varname, "ban-time"))
 					tempiConf.spamfilter_ban_time = config_checkval(cepp->ce_vardata,CFG_TIME);
-				if (!strcmp(cepp->ce_varname, "ban-reason"))
+				else if (!strcmp(cepp->ce_varname, "ban-reason"))
 					ircstrdup(tempiConf.spamfilter_ban_reason, cepp->ce_vardata);
-				if (!strcmp(cepp->ce_varname, "virus-help-channel"))
+				else if (!strcmp(cepp->ce_varname, "virus-help-channel"))
 					ircstrdup(tempiConf.spamfilter_virus_help_channel, cepp->ce_vardata);
-				if (!strcmp(cepp->ce_varname, "virus-help-channel-deny"))
+				else if (!strcmp(cepp->ce_varname, "virus-help-channel-deny"))
 					tempiConf.spamfilter_vchan_deny = config_checkval(cepp->ce_vardata,CFG_YESNO);
-				if (!strcmp(cepp->ce_varname, "except"))
+				else if (!strcmp(cepp->ce_varname, "except"))
 				{
 					char *name, *p;
 					SpamExcept *e;
@@ -6960,6 +7092,14 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 							AddListItem(e, tempiConf.spamexcept);
 						}
 					}
+				}
+				else if (!strcmp(cepp->ce_varname, "detect-slow-warn"))
+				{
+					tempiConf.spamfilter_detectslow_warn = atol(cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "detect-slow-fatal"))
+				{
+					tempiConf.spamfilter_detectslow_fatal = atol(cepp->ce_vardata);
 				}
 			}
 		}
@@ -6989,6 +7129,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					if (cepp->ce_vardata)
 						tempiConf.egd_path = strdup(cepp->ce_vardata);
 				}
+				else if (!strcmp(cepp->ce_varname, "server-cipher-list"))
+				{
+					ircstrdup(tempiConf.x_server_cipher_list, cepp->ce_vardata);
+				}
 				else if (!strcmp(cepp->ce_varname, "certificate"))
 				{
 					ircstrdup(tempiConf.x_server_cert_pem, cepp->ce_vardata);	
@@ -7000,6 +7144,14 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "trusted-ca-file"))
 				{
 					ircstrdup(tempiConf.trusted_ca_file, cepp->ce_vardata);
+				}
+				else if (!strcmp(cepp->ce_varname, "renegotiate-bytes"))
+				{
+					tempiConf.ssl_renegotiate_bytes = config_checkval(cepp->ce_vardata, CFG_SIZE);
+				}
+				else if (!strcmp(cepp->ce_varname, "renegotiate-timeout"))
+				{
+					tempiConf.ssl_renegotiate_timeout = config_checkval(cepp->ce_vardata, CFG_TIME);
 				}
 				else if (!strcmp(cepp->ce_varname, "options"))
 				{
@@ -7092,23 +7244,17 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "modes-on-connect")) {
+			char *p;
 			CheckNull(cep);
 			CheckDuplicate(cep, modes_on_connect, "modes-on-connect");
-			if (strchr(cep->ce_vardata, 'z'))
-			{
-				config_error("%s:%i: set::modes-on-connect may not have +z",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-				errors++;
-			}
+			for (p = cep->ce_vardata; *p; p++)
+				if (strchr("oOaANCrzSgHhqtW", *p))
+				{
+					config_error("%s:%i: set::modes-on-connect may not include mode '%c'",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, *p);
+					errors++;
+				}
 			templong = (long) set_usermode(cep->ce_vardata);
-			if (templong & UMODE_OPER)
-			{
-				config_error("%s:%i: set::modes-on-connect contains +o",
-					cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum);
-				errors++;
-				continue;
-			}
 		}
 		else if (!strcmp(cep->ce_varname, "modes-on-join")) {
 			char *c;
@@ -7184,6 +7330,17 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			CheckNull(cep);
 			CheckDuplicate(cep, snomask_on_connect, "snomask-on-connect");
 		}
+		else if (!strcmp(cep->ce_varname, "level-on-join")) {
+			char *p;
+			CheckNull(cep);
+			CheckDuplicate(cep, level_on_join, "level-on-join");
+			if (!channellevel_to_int(cep->ce_vardata))
+			{
+				config_error("%s:%i: set::level-on-join: unknown value '%s', should be one of: none, op",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
+				errors++;
+			}
+		}
 		else if (!strcmp(cep->ce_varname, "static-quit")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, static_quit, "static-quit");
@@ -7223,6 +7380,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "pingpong-warning")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, pingpong_warning, "pingpong-warning");
+		}
+		else if (!strcmp(cep->ce_varname, "watch-away-notification")) {
+			CheckNull(cep);
+			CheckDuplicate(cep, watch_away_notification, "watch-away-notification");
 		}
 		else if (!strcmp(cep->ce_varname, "channel-command-prefix")) {
 			CheckNull(cep);
@@ -7821,6 +7982,14 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				{ 
 					CheckDuplicate(cepp, spamfilter_except, "spamfilter::except");
 				} else
+#ifdef SPAMFILTER_DETECTSLOW
+				if (!strcmp(cepp->ce_varname, "detect-slow-warn"))
+				{ 
+				} else
+				if (!strcmp(cepp->ce_varname, "detect-slow-fatal"))
+				{ 
+				} else
+#endif
 				{
 					config_error_unknown(cepp->ce_fileptr->cf_filename,
 						cepp->ce_varlinenum, "set::spamfilter",
@@ -7887,6 +8056,19 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				if (!strcmp(cepp->ce_varname, "egd")) {
 					CheckDuplicate(cep, ssl_egd, "ssl::egd");
+				}
+				else if (!strcmp(cepp->ce_varname, "renegotiate-timeout"))
+				{
+					CheckDuplicate(cep, renegotiate_timeout, "ssl::renegotiate-timeout");
+				}
+				else if (!strcmp(cepp->ce_varname, "renegotiate-bytes"))
+				{
+					CheckDuplicate(cep, renegotiate_bytes, "ssl::renegotiate-bytes");
+				}
+				else if (!strcmp(cepp->ce_varname, "server-cipher-list"))
+				{
+					CheckNull(cepp);
+					CheckDuplicate(cep, ssl_server_cipher_list, "ssl::server-cipher-list");
 				}
 				else if (!strcmp(cepp->ce_varname, "certificate"))
 				{
@@ -9031,6 +9213,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		return rehash_internal(cptr, sptr, sig);
 	return 0;
 #else
+	loop.ircd_rehashing = 1;
 	return rehash_internal(cptr, sptr, sig);
 #endif
 }
@@ -9047,12 +9230,14 @@ int	rehash_internal(aClient *cptr, aClient *sptr, int sig)
 		write_pidfile();
 #endif
 	}
+	loop.ircd_rehashing = 1; /* double checking.. */
 	if (init_conf(configfile, 1) == 0)
 		run_configuration();
 	if (sig == 1)
 		reread_motdsandrules();
 	unload_all_unused_snomasks();
 	unload_all_unused_umodes();
+	unload_all_unused_extcmodes();
 	loop.ircd_rehashing = 0;	
 	return 1;
 }

@@ -26,6 +26,7 @@
 #include "channel.h"
 #include "version.h"
 #include "proto.h"
+#include "h.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -60,19 +61,26 @@
 **
 **      I'm assuming that at best, ratio will be 25%. (tests show that
 **      best ratio is around 40%).
-*/
+**
+** ------
+**
+** On an hybrid test net, we kept filling up unzipbuf
+** original was 4*ZIP_BUFFER_SIZE
+** -Dianora
+**
+** ------
+**
+** And even that (6x) is not enough, now set to 16x and made it
+** dynamically allocated on the heap upon the first zip_init()
+** since the size of this is getting a bit out hand (ahem..).
+** -Syzop
+**/
 
-/*
- * On an hybrid test net, we kept filling up unzipbuf
- * original was 4*ZIP_BUFFER_SIZE
- *
- * -Dianora
- */
-
-#define UNZIP_BUFFER_SIZE       6 * ZIP_BUFFER_SIZE
+#define UNZIP_BUFFER_SIZE       16 * ZIP_BUFFER_SIZE
 
 /* buffers */
-static  char    unzipbuf[UNZIP_BUFFER_SIZE];
+static char *unzipbuf = NULL;
+/* static  char    unzipbuf[UNZIP_BUFFER_SIZE]; */
 static  char    zipbuf[ZIP_BUFFER_SIZE];
 
 /*
@@ -108,6 +116,18 @@ int     zip_init(aClient *cptr, int compressionlevel)
   cptr->zip->out->data_type = Z_ASCII;
   if (deflateInit(cptr->zip->out, compressionlevel) != Z_OK)
     return -1;
+
+  if (!unzipbuf)
+  {
+  	unzipbuf = MyMallocEx(UNZIP_BUFFER_SIZE); /* big chunk! */
+  	if (!unzipbuf)
+  	{
+  		ircd_log(LOG_ERROR, "zip_init(): out of memory (trying to alloc %d bytes)!", UNZIP_BUFFER_SIZE);
+  		sendto_realops("zip_init(): out of memory (trying to alloc %d bytes)!", UNZIP_BUFFER_SIZE);
+  		return -1;
+  	}
+  }
+
 
   return 0;
 }
@@ -196,6 +216,13 @@ char *unzip_packet(aClient *cptr, char *buffer, int *length)
                * will not return until its all parsed. -db
                */
               sendto_realops("Overflowed unzipbuf increase UNZIP_BUFFER_SIZE");
+              /* We now give up again, continueing was a nice idea but is too dangerous
+               * and often leads to crashes!
+               * Note that any code below the two lines will not be executed.
+               */
+              *length = -1;
+              return((char *)NULL);
+#if 0
               /*
                * I used to just give up here....
                * length = -1;
@@ -245,6 +272,7 @@ char *unzip_packet(aClient *cptr, char *buffer, int *length)
                   memcpy((void *)cptr->zip->inbuf,
                          (void *)p,cptr->zip->incount);
                 }
+#endif
             }
           else
             {

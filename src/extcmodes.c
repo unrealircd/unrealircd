@@ -1,6 +1,6 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, s_unreal.c
- *   (C) 2003 Bram Matthys (Syzop) and the UnrealIRCd Team
+ *   IRC - Internet Relay Chat, extcmodes.c
+ *   (C) 2003-2007 Bram Matthys (Syzop) and the UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers. 
@@ -151,7 +151,7 @@ void	extcmode_init(void)
 	load_extendedchanmodes();
 }
 
-Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode)
+Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 {
 	short i = 0, j = 0;
 	char tmpbuf[512];
@@ -162,17 +162,23 @@ Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode)
 			break;
 		else if (Channelmode_Table[i].flag == req.flag)
 		{
-			if (reserved)
-				reserved->errorcode = MODERR_EXISTS;
-			return NULL;
+			if (Channelmode_Table[i].unloaded)
+			{
+				Channelmode_Table[i].unloaded = 0;
+				break;
+			} else {
+				if (module)
+					module->errorcode = MODERR_EXISTS;
+				return NULL;
+			}
 		}
 		i++;
 	}
 	if (i == EXTCMODETABLESZ)
 	{
 		Debug((DEBUG_DEBUG, "CmodeAdd failed, no space"));
-		if (reserved)
-			reserved->errorcode = MODERR_NOSPACE;
+		if (module)
+			module->errorcode = MODERR_NOSPACE;
 		return NULL;
 	}
 	*mode = Channelmode_Table[i].mode;
@@ -186,12 +192,20 @@ Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode)
 	Channelmode_Table[i].free_param = req.free_param;
 	Channelmode_Table[i].dup_struct = req.dup_struct;
 	Channelmode_Table[i].sjoin_check = req.sjoin_check;
+	Channelmode_Table[i].owner = module;
+	
 	for (j = 0; j < EXTCMODETABLESZ; j++)
 		if (Channelmode_Table[j].flag)
 			if (j > Channelmode_highest)
 				Channelmode_highest = j;
-	if (reserved)
-		reserved->errorcode = MODERR_NOERROR;
+	if (module)
+	{
+		ModuleObject *cmodeobj = MyMallocEx(sizeof(ModuleObject));
+		cmodeobj->object.cmode = &Channelmode_Table[i];
+		cmodeobj->type = MOBJ_CMODE;
+		AddListItem(cmodeobj, module->objects);
+		module->errorcode = MODERR_NOERROR;
+	}
 	if (loop.ircd_booted)
 	{
 		make_cmodestr();
@@ -203,18 +217,73 @@ Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode)
 	return &(Channelmode_Table[i]);
 }
 
-void CmodeDel(Cmode *cmode)
+void unload_extcmode_commit(Cmode *cmode)
 {
-	char tmpbuf[512];
-	/* TODO: remove from all channel */
-	if (cmode)
-		cmode->flag = '\0';
+char tmpbuf[512];
+aChannel *chptr;
+
+	if (!cmode)
+		return;	
+	if (cmode->paracount == 1)
+	{
+		/* If we don't do this, we will crash anyway.. but then with severe corruption / suckyness */
+		ircd_log(LOG_ERROR, "FATAL ERROR: ChannelMode module for chanmode +%c is misbehaving: "
+		                    "all chanmode modules with parameters should be tagged PERManent.", cmode->flag);
+		abort();
+	}
+
+	for (chptr = channel; chptr; chptr = chptr->nextch)
+		if (chptr->mode.extmode && cmode->mode)
+		{
+			/* Unset channel mode and send MODE -<char> to other servers */
+			sendto_channel_butserv(chptr, &me, ":%s MODE %s -%c",
+				me.name, chptr->chname, cmode->flag);
+			sendto_serv_butone(NULL, ":%s MODE %s -%c 0",
+				me.name, chptr->chname, cmode->flag);
+			chptr->mode.extmode &= ~cmode->mode;
+		}	
+
+	cmode->flag = '\0';
 	make_cmodestr();
 	make_extcmodestr();
-	/* Not unloadable, so module object support is not needed (yet) */
 	ircsprintf(tmpbuf, CHPAR1 "%s," CHPAR2 "%s," CHPAR3 "%s," CHPAR4 "%s",
 			EXPAR1, EXPAR2, EXPAR3, EXPAR4);
 	IsupportSetValue(IsupportFind("CHANMODES"), tmpbuf);
+}
+
+void CmodeDel(Cmode *cmode)
+{
+	/* It would be nice if we could abort() here if a parameter module is trying to unload which is extremely dangerous/crashy/disallowed */
+
+	if (loop.ircd_rehashing)
+		cmode->unloaded = 1;
+	else
+		unload_extcmode_commit(cmode);
+
+	if (cmode->owner)
+	{
+		ModuleObject *cmodeobj;
+		for (cmodeobj = cmode->owner->objects; cmodeobj; cmodeobj = cmodeobj->next) {
+			if (cmodeobj->type == MOBJ_CMODE && cmodeobj->object.cmode == cmode) {
+				DelListItem(cmodeobj, cmode->owner->objects);
+				MyFree(cmodeobj);
+				break;
+			}
+		}
+		cmode->owner = NULL;
+	}
+}
+
+void unload_all_unused_extcmodes(void)
+{
+int i;
+
+	for (i = 0; i < EXTCMODETABLESZ; i++)
+		if (Channelmode_Table[i].flag && Channelmode_Table[i].unloaded)
+		{
+			unload_extcmode_commit(&Channelmode_Table[i]);
+		}
+
 }
 
 /** searches in chptr extmode parameters and returns entry or NULL. */
@@ -249,6 +318,7 @@ CmodeParam *extcmode_duplicate_paramlist(CmodeParam *lst)
 			}
 		}
 		n = tbl->dup_struct(lst);
+		n->next = n->prev = NULL; /* safety (required!) */
 		if (head)
 		{
 			AddListItem(n, head);
@@ -454,6 +524,7 @@ aModejEntry *r = (aModejEntry *)r_in;
 aModejEntry *w = (aModejEntry *)MyMalloc(sizeof(aModejEntry));
 
 	memcpy(w, r, sizeof(aModejEntry));
+	w->next = w->prev = NULL;
 	return (CmodeParam *)w;
 }
 

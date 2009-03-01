@@ -135,6 +135,11 @@ CMD_FUNC(m_protoctl)
 			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
 			SetNAMESX(cptr);
 		}
+		if (!strcmp(s, "UHNAMES"))
+		{
+			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
+			SetUHNAMES(cptr);
+		}
 		else if (strcmp(s, "NOQUIT") == 0)
 		{
 #ifndef PROTOCTL_MADNESS

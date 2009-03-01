@@ -37,6 +37,7 @@ Computing Center and Jarkko Oikarinen";
 #ifndef _WIN32
 #include <sys/file.h>
 #include <pwd.h>
+#include <grp.h>
 #include <sys/time.h>
 #else
 #include <io.h>
@@ -96,6 +97,10 @@ extern MODVAR aMotd *rules;
 extern MODVAR aMotd *botmotd;
 extern MODVAR aMotd *smotd;
 MODVAR MemoryInfo StatsZ;
+#ifndef _WIN32
+uid_t irc_uid = 0;
+gid_t irc_gid = 0; 
+#endif
 
 int  R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns, R_do_id, R_fin_id, R_fail_id;
 
@@ -140,6 +145,9 @@ char trouble_info[1024];
 #ifdef USE_LIBCURL
 extern void url_init(void);
 #endif
+
+time_t highesttimeofday=0, oldtimeofday=0, lasthighwarn=0;
+
 
 void save_stats(void)
 {
@@ -905,6 +913,137 @@ extern time_t TSoffset;
 
 extern int unreal_time_synch(int timeout);
 
+extern MODVAR Event *events;
+extern struct MODVAR ThrottlingBucket *ThrottlingHash[THROTTLING_HASH_SIZE+1];
+
+/** This functions resets a couple of timers and does other things that
+ * are absolutely cruicial when the clock is adjusted - particularly
+ * when the clock goes backwards. -- Syzop
+ */
+void fix_timers(void)
+{
+int i, cnt;
+aClient *acptr;
+Event *e;
+struct ThrottlingBucket *n;
+struct ThrottlingBucket z = { NULL, NULL, {0}, 0, 0};
+
+	/* Client time stuff */
+	for (i = 0; i <= LastSlot; i++)
+	{
+	
+	        if (!(acptr = local[i]) || IsMe(acptr))
+	        	continue;
+
+		/* all (servers AND users) */
+		if (MyConnect(acptr))
+		{
+			if (acptr->since > TStime())
+			{
+				Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->since %ld -> %ld",
+					acptr->name, acptr->since, TStime()));
+				acptr->since = TStime();
+			}
+			if (acptr->lasttime > TStime())
+			{
+				Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->lasttime %ld -> %ld",
+					acptr->name, acptr->lasttime, TStime()));
+				acptr->lasttime = TStime();
+			}
+			if (acptr->last > TStime())
+			{
+				Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->last %ld -> %ld",
+					acptr->name, acptr->last, TStime()));
+				acptr->last = TStime();
+			}
+		}
+		
+		/* users */
+		if (MyClient(acptr))
+		{
+			if (acptr->nextnick > TStime())
+			{
+				Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->nextnick %ld -> %ld",
+					acptr->name, acptr->nextnick, TStime()));
+				acptr->nextnick = TStime();
+			}
+			if (acptr->nexttarget > TStime())
+			{
+				Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->nexttarget %ld -> %ld",
+					acptr->name, acptr->nexttarget, TStime()));
+				acptr->nexttarget = TStime();
+			}
+			
+		}
+	}
+
+	/* Reset all event timers */
+	for (e = events; e; e = e->next)
+	{
+		if (e->last > TStime())
+		{
+			Debug((DEBUG_DEBUG, "fix_timers(): %s: e->last %ld -> %ld",
+				e->name, e->last, TStime()-1));
+			e->last = TStime()-1;
+		}
+	}
+
+	/* Just flush all throttle stuff... */
+	cnt = 0;
+	for (i = 0; i < THROTTLING_HASH_SIZE; i++)
+		for (n = ThrottlingHash[i]; n; n = n->next)
+		{
+			z.next = (struct ThrottlingBucket *) DelListItem(n, ThrottlingHash[i]);
+			cnt++;
+			MyFree(n);
+			n = &z;
+		}
+	Debug((DEBUG_DEBUG, "fix_timers(): removed %d throttling item(s)", cnt));
+	
+	Debug((DEBUG_DEBUG, "fix_timers(): updating nextping/nextconnect/nextdnscheck/nextexpire (%ld/%ld/%ld/%ld)",
+		nextping, nextconnect, nextdnscheck, nextexpire));	
+	nextping = nextconnect = nextdnscheck = nextexpire = 0;
+}
+
+
+#ifndef _WIN32
+static void generate_cloakkeys()
+{
+	/* Generate 3 cloak keys */
+#define GENERATE_CLOAKKEY_MINLEN 10
+#define GENERATE_CLOAKKEY_MAXLEN 20 /* Length of cloak keys to generate. */
+	char keyBuf[GENERATE_CLOAKKEY_MAXLEN + 1];
+	int keyNum;
+	int keyLen;
+	int charIndex;
+	int value;
+
+	fprintf(stderr, "Here are 3 random cloak keys:\n");
+
+	for (keyNum = 0; keyNum < 3; ++keyNum)
+	{
+		keyLen = (getrandom8() % (GENERATE_CLOAKKEY_MAXLEN - GENERATE_CLOAKKEY_MINLEN + 1)) + GENERATE_CLOAKKEY_MINLEN;
+		for (charIndex = 0; charIndex < keyLen; ++charIndex)
+		{
+			switch (getrandom8() % 3)
+			{
+				case 0: /* Uppercase. */
+					keyBuf[charIndex] = (char)('A' + (getrandom8() % ('Z' - 'A')));
+					break;
+				case 1: /* Lowercase. */
+					keyBuf[charIndex] = (char)('a' + (getrandom8() % ('z' - 'a')));
+					break;
+				case 2: /* Digit. */
+					keyBuf[charIndex] = (char)('0' + (getrandom8() % ('9' - '0')));
+					break;
+			}
+		}
+		keyBuf[keyLen] = '\0';
+		(void)fprintf(stderr, "%s\n", keyBuf);
+	}
+}
+#endif
+
 #ifndef _WIN32
 int main(int argc, char *argv[])
 #else
@@ -918,6 +1057,8 @@ int InitwIRCD(int argc, char *argv[])
 	uid_t uid, euid;
 	gid_t gid, egid;
 	TS   delay = 0;
+	struct passwd *pw;
+	struct group *gr;
 #endif
 #ifdef HAVE_PSTAT
 	union pstun pstats;
@@ -944,6 +1085,21 @@ int InitwIRCD(int argc, char *argv[])
 	(void)moncontrol(1);
 	(void)signal(SIGUSR1, s_monitor);
 # endif
+#endif
+#if defined(IRC_USER) && defined(IRC_GROUP)
+	if ((int)getuid() == 0) {
+
+		pw = getpwnam(IRC_USER);
+		gr = getgrnam(IRC_GROUP);
+
+		if ((pw == NULL) || (gr == NULL)) {
+			fprintf(stderr, "ERROR: Unable to lookup to specified user (IRC_USER) or group (IRC_GROUP): %s\n", strerror(errno));
+			exit(-1);
+		} else {
+			irc_uid = pw->pw_uid;
+			irc_gid = gr->gr_gid;
+		}
+	}
 #endif
 #ifdef	CHROOTDIR
 	if (chdir(dpath)) {
@@ -1185,6 +1341,11 @@ int InitwIRCD(int argc, char *argv[])
 # endif
 			  exit(0);
 #endif
+#ifndef _WIN32
+		  case 'k':
+			  generate_cloakkeys();
+			  exit(0);
+#endif
 		  default:
 			  bad_command();
 			  break;
@@ -1259,7 +1420,7 @@ int InitwIRCD(int argc, char *argv[])
 	DeleteTempModules();
 	booted = FALSE;
 /* Hack to stop people from being able to read the config file */
-#if !defined(_WIN32) && !defined(_AMIGA) && DEFAULT_PERMISSIONS != 0
+#if !defined(_WIN32) && !defined(_AMIGA) && !defined(OSXTIGER) && DEFAULT_PERMISSIONS != 0
 	chmod(CPATH, DEFAULT_PERMISSIONS);
 #endif
 	init_dynconf();
@@ -1364,6 +1525,7 @@ int InitwIRCD(int argc, char *argv[])
 	Debug((DEBUG_ERROR, "Port = %d", portnum));
 	if (inetport(&me, conf_listen->ip, portnum))
 		exit(1);
+	set_non_blocking(me.fd, &me);
 	conf_listen->options |= LISTENER_BOUND;
 	me.umodes = conf_listen->options;
 	conf_listen->listener = &me;
@@ -1414,7 +1576,7 @@ int InitwIRCD(int argc, char *argv[])
 	R_fin_id = strlen(REPORT_FIN_ID);
 	R_fail_id = strlen(REPORT_FAIL_ID);
 
-#if !defined(IRC_UID) && !defined(_WIN32)
+#if !defined(IRC_USER) && !defined(_WIN32)
 	if ((uid != euid) && !euid) {
 		(void)fprintf(stderr,
 		    "ERROR: do not run ircd setuid root. Make it setuid a normal user.\n");
@@ -1422,12 +1584,14 @@ int InitwIRCD(int argc, char *argv[])
 	}
 #endif
 
-#if defined(IRC_UID) && defined(IRC_GID)
+#if defined(IRC_USER) && defined(IRC_GROUP)
 	if ((int)getuid() == 0) {
-		if ((IRC_UID == 0) || (IRC_GID == 0)) {
+		/* NOTE: irc_uid/irc_gid have been looked up earlier, before the chrooting code */
+
+		if ((irc_uid == 0) || (irc_gid == 0)) {
 			(void)fprintf(stderr,
 			    "ERROR: SETUID and SETGID have not been set properly"
-			    "\nPlease read your documentation\n(HINT: IRC_UID and IRC_GID in include/config.h can not be 0)\n");
+			    "\nPlease read your documentation\n(HINT: IRC_USER and IRC_GROUP in include/config.h cannot be root/wheel)\n");
 			exit(-1);
 		} else {
 			/*
@@ -1435,14 +1599,14 @@ int InitwIRCD(int argc, char *argv[])
 			 */
 
 			(void)fprintf(stderr, "WARNING: ircd invoked as root\n");
-			(void)fprintf(stderr, "         changing to uid %d\n", IRC_UID);
-			(void)fprintf(stderr, "         changing to gid %d\n", IRC_GID);
-			if (setgid(IRC_GID))
+			(void)fprintf(stderr, "         changing to uid %d\n", irc_uid);
+			(void)fprintf(stderr, "         changing to gid %d\n", irc_gid);
+			if (setgid(irc_gid))
 			{
 				fprintf(stderr, "ERROR: Unable to change group: %s\n", strerror(errno));
 				exit(-1);
 			}
-			if (setuid(IRC_UID))
+			if (setuid(irc_uid))
 			{
 				fprintf(stderr, "ERROR: Unable to change userid: %s\n", strerror(errno));
 				exit(-1);
@@ -1510,14 +1674,66 @@ void SocketLoop(void *dummy)
 	for (;;)
 #endif
 	{
-		time_t oldtimeofday;
 
-		oldtimeofday = timeofday;
+#define NEGATIVE_SHIFT_WARN	-15
+#define POSITIVE_SHIFT_WARN	20
+
 		timeofday = time(NULL) + TSoffset;
-		if (timeofday - oldtimeofday < 0) {
-			sendto_realops("Time running backwards! %ld - %ld < 0",
-			    timeofday, oldtimeofday);
+		if (timeofday - oldtimeofday < NEGATIVE_SHIFT_WARN) {
+			/* tdiff = # of seconds of time set backwards (positive number! eg: 60) */
+			long tdiff = oldtimeofday - timeofday;
+			ircd_log(LOG_ERROR, "WARNING: Time running backwards! Clock set back ~%ld seconds (%ld -> %ld)",
+				tdiff, oldtimeofday, timeofday);
+			ircd_log(LOG_ERROR, "[TimeShift] Resetting a few timers to prevent IRCd freeze!");
+			sendto_realops("WARNING: Time running backwards! Clock set back ~%ld seconds (%ld -> %ld)",
+				tdiff, oldtimeofday, timeofday);
+			sendto_realops("Incorrect time for IRC servers is a serious problem. "
+			               "Time being set backwards (either by TSCTL or by resetting the clock) is "
+			               "even more serious and can cause clients to freeze, channels to be "
+			               "taken over, and other issues.");
+			sendto_realops("Please be sure your clock is always synchronized before "
+			               "the IRCd is started or use the built-in timesynch feature.");
+			sendto_realops("[TimeShift] Resetting a few timers to prevent IRCd freeze!");
+			fix_timers();
+			nextfdlistcheck = 0;
+		} else
+		if ((oldtimeofday > 0) && (timeofday - oldtimeofday > POSITIVE_SHIFT_WARN)) /* do not set too low or you get false positives */
+		{
+			/* tdiff = # of seconds of time set forward (eg: 60) */
+			long tdiff = timeofday - oldtimeofday;
+			ircd_log(LOG_ERROR, "WARNING: Time jumped ~%ld seconds ahead! (%ld -> %ld)",
+				tdiff, oldtimeofday, timeofday);
+			ircd_log(LOG_ERROR, "[TimeShift] Resetting some timers!");
+			sendto_realops("WARNING: Time jumped ~%ld seconds ahead! (%ld -> %ld)",
+			        tdiff, oldtimeofday, timeofday);
+			sendto_realops("Incorrect time for IRC servers is a serious problem. "
+			               "Time being adjusted (either by TSCTL or by resetting the clock) "
+			               "more than a few seconds forward/backward can lead to serious issues.");
+			sendto_realops("Please be sure your clock is always synchronized before "
+			               "the IRCd is started or use the built-in timesynch feature.");
+			sendto_realops("[TimeShift] Resetting some timers!");
+			fix_timers();
+			nextfdlistcheck = 0;
 		}
+		if (highesttimeofday+NEGATIVE_SHIFT_WARN > timeofday)
+		{
+			if (lasthighwarn > timeofday)
+				lasthighwarn = timeofday;
+			if (timeofday - lasthighwarn > 300)
+			{
+				ircd_log(LOG_ERROR, "[TimeShift] The (IRCd) clock was set backwards. "
+					"Waiting for time to be OK again. This will be in %ld seconds",
+					highesttimeofday - timeofday);
+				sendto_realops("[TimeShift] The (IRCd) clock was set backwards. Timers, nick- "
+				               "and channel-timestamps are possibly incorrect. This message will "
+				               "repeat itself until we catch up with the original time, which will be "
+				               "in %ld seconds", highesttimeofday - timeofday);
+				lasthighwarn = timeofday;
+			}
+		} else {
+			highesttimeofday = timeofday;
+		}
+		oldtimeofday = timeofday;
 		LockEventSystem();
 		DoEvents();
 		UnlockEventSystem();

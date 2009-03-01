@@ -119,82 +119,93 @@ DLLFUNC CMD_FUNC(m_sapart)
 		return 0;
 	}
 
-	/* Now works like m_join */
-	*jbuf = 0;
-
-	for (i = 0, name = strtoken(&p, parv[2], ","); name; name = strtoken(&p,
-	     NULL, ","))
-	{
-		if (!(chptr = get_channel(acptr, name, 0)))
-		{
-			sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL), me.name, parv[0],
-				name);
-			continue;
-		}
-		if (!(lp = find_membership_link(acptr->user->channel, chptr)))
-		{
-			sendto_one(sptr, err_str(ERR_USERNOTINCHANNEL), me.name, parv[0], 
-				parv[1], name);
-			continue;
-		}
-		if (*jbuf)
-			(void)strlcat(jbuf, ",", sizeof jbuf);
-		(void)strlncat(jbuf, name, sizeof jbuf, sizeof(jbuf) - i - 1);
-		i += strlen(name) + 1;
-	}
-
-	if (!*jbuf)
-		return -1;
-
-	strcpy(parv[2], jbuf);
-	
-	if (comment)
-	{
-		sendto_realops("%s used SAPART to make %s part %s (%s)", sptr->name, parv[1],
-		               parv[2], comment);
-		sendto_serv_butone(&me, ":%s GLOBOPS :%s used SAPART to make %s part %s (%s)",
-				   me.name, sptr->name, parv[1], parv[2], comment);
-		/* Logging function added by XeRXeS */
-		ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s (%s)", 
-			 sptr->name, parv[1], parv[2], comment);
-		strcpy(commentx, "SAPart: ");
-		strlcat(commentx, comment, 512);
-	}
-	else
-	{
-		sendto_realops("%s used SAPART to make %s part %s", sptr->name, parv[1],
-			        parv[2]);
-		sendto_serv_butone(&me, ":%s GLOBOPS :%s used SAPART to make %s part %s",
-				   me.name, sptr->name, parv[1], parv[2]);
-		/* Logging function added by XeRXeS */
-		ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s",
-			 sptr->name, parv[1], parv[2]);
-	}
-
 	if (MyClient(acptr))
 	{
-		parv[0] = parv[1];
-		parv[1] = parv[2];
-		parv[2] = comment ? commentx : NULL;
+		/* Now works like m_join */
+		*jbuf = 0;
+
+		for (i = 0, name = strtoken(&p, parv[2], ","); name; name = strtoken(&p,
+			NULL, ","))
+		{
+			if (!(chptr = get_channel(acptr, name, 0)))
+			{
+				sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL), me.name, parv[0],
+					name);
+				continue;
+			}
+			if (!(lp = find_membership_link(acptr->user->channel, chptr)))
+			{
+				sendto_one(sptr, err_str(ERR_USERNOTINCHANNEL), me.name, parv[0],
+					parv[1], name);
+				continue;
+			}
+			if (*jbuf)
+				(void)strlcat(jbuf, ",", sizeof jbuf);
+			(void)strlncat(jbuf, name, sizeof jbuf, sizeof(jbuf) - i - 1);
+			i += strlen(name) + 1;
+		}
+
+		if (!*jbuf)
+			return -1;
+
+		strcpy(parv[2], jbuf);
+
 		if (comment)
+		{
+			strcpy(commentx, "SAPart: ");
+			strlcat(commentx, comment, 512);
+		}
+
+		parv[0] = parv[1]; // nick
+		parv[1] = parv[2]; // chan
+		parv[2] = comment ? commentx : NULL; // comment
+		if (comment)
+		{
 			sendto_one(acptr,
 			    ":%s %s %s :*** You were forced to part %s (%s)", me.name,
 			    IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, parv[1], 
 			    commentx);
+			sendto_realops("%s used SAPART to make %s part %s (%s)", sptr->name, parv[0],
+				parv[1], comment);
+			sendto_serv_butone(&me, ":%s GLOBOPS :%s used SAPART to make %s part %s (%s)",
+				me.name, sptr->name, parv[0], parv[1], comment);
+			/* Logging function added by XeRXeS */
+			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s (%s)",
+				sptr->name, parv[0], parv[1], comment);
+		}
 		else
+		{
 			sendto_one(acptr,
 			    ":%s %s %s :*** You were forced to part %s", me.name,
 			    IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, parv[1]);
+			sendto_realops("%s used SAPART to make %s part %s", sptr->name, parv[0],
+				parv[1]);
+			sendto_serv_butone(&me, ":%s GLOBOPS :%s used SAPART to make %s part %s",
+				me.name, sptr->name, parv[0], parv[1]);
+			/* Logging function added by XeRXeS */
+			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s",
+				sptr->name, parv[0], parv[1]);
+		}
 		do_cmd(acptr, acptr, "PART", comment ? 3 : 2, parv);
 	}
 	else
 	{
 		if (comment)
+		{
 			sendto_one(acptr, ":%s SAPART %s %s :%s", parv[0],
 			    parv[1], parv[2], comment);
+			/* Logging function added by XeRXeS */
+			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s (%s)",
+				sptr->name, parv[1], parv[2], comment);
+		}
 		else
+		{
 			sendto_one(acptr, ":%s SAPART %s %s", parv[0], parv[1],
 				   parv[2]);
+			/* Logging function added by XeRXeS */
+			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s",
+				sptr->name, parv[1], parv[2]);
+		}
 	}
 
 	return 0;

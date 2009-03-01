@@ -82,7 +82,7 @@ struct zConfiguration {
 	unsigned mkpasswd_for_everyone:1;
 	unsigned allow_part_if_shunned:1;
 	unsigned check_target_nick_bans:1;
-	unsigned use_egd;
+	unsigned use_egd : 1;
 	long host_timeout;
 	int  host_retries;
 	char *name_server;
@@ -110,11 +110,16 @@ struct zConfiguration {
 #ifdef USE_SSL
 	char *x_server_cert_pem;
 	char *x_server_key_pem;
+	char *x_server_cipher_list;
 	char *trusted_ca_file;
 	long ssl_options;
+	int ssl_renegotiate_bytes;
+	int ssl_renegotiate_timeout;
+	
 #elif defined(_WIN32)
-	void *bogus1, *bogus2, *bogus3;
+	void *bogus1, *bogus2, *bogus3, *bogus5;
 	long bogus4;
+	int bogus6, bogus7;
 #endif
 	enum UHAllowed userhost_allowed;
 	char *restrict_usermodes;
@@ -124,6 +129,7 @@ struct zConfiguration {
 	long unknown_flood_bantime;
 	long unknown_flood_amount;
 	struct ChMode modes_on_join;
+	int level_on_join;
 #ifdef NO_FLOOD_AWAY
 	unsigned char away_count;
 	long away_period;
@@ -146,12 +152,15 @@ struct zConfiguration {
 	char spamfilter_vchan_deny;
 	SpamExcept *spamexcept;
 	char *spamexcept_line;
+	long spamfilter_detectslow_warn;
+	long spamfilter_detectslow_fatal;
 	int maxbans;
 	int maxbanlength;
 	int timesynch_enabled;
 	int timesynch_timeout;
 	char *timesynch_server;
 	int pingpong_warning;
+	int watch_away_notification;
 	aNetwork network;
 };
 
@@ -221,6 +230,7 @@ extern MODVAR aConfiguration iConf;
 #define UNKNOWN_FLOOD_BANTIME		iConf.unknown_flood_bantime
 #define UNKNOWN_FLOOD_AMOUNT		iConf.unknown_flood_amount
 #define MODES_ON_JOIN			iConf.modes_on_join.mode
+#define LEVEL_ON_JOIN			iConf.level_on_join
 
 #ifdef NO_FLOOD_AWAY
 #define AWAY_PERIOD			iConf.away_period
@@ -253,6 +263,9 @@ extern MODVAR aConfiguration iConf;
 #define SPAMFILTER_VIRUSCHAN	iConf.spamfilter_virus_help_channel
 #define SPAMFILTER_VIRUSCHANDENY	iConf.spamfilter_vchan_deny
 #define SPAMFILTER_EXCEPT		iConf.spamexcept_line
+#define SPAMFILTER_DETECTSLOW_WARN	iConf.spamfilter_detectslow_warn
+#define SPAMFILTER_DETECTSLOW_FATAL	iConf.spamfilter_detectslow_fatal
+
 #define CHECK_TARGET_NICK_BANS	iConf.check_target_nick_bans
 
 #define MAXBANS		iConf.maxbans
@@ -263,6 +276,8 @@ extern MODVAR aConfiguration iConf;
 #define TIMESYNCH_SERVER	iConf.timesynch_server
 
 #define PINGPONG_WARNING	iConf.pingpong_warning
+
+#define WATCH_AWAY_NOTIFICATION	iConf.watch_away_notification
 
 /* Used for "is present?" and duplicate checking */
 struct SetCheck {
@@ -279,6 +294,7 @@ struct SetCheck {
 	unsigned has_mkpasswd_for_everyone:1;
 	unsigned has_allow_part_if_shunned:1;
 	unsigned has_ssl_egd:1;
+	unsigned has_ssl_server_cipher_list :1;
 	unsigned has_dns_timeout:1;
 	unsigned has_dns_retries:1;
 	unsigned has_dns_nameserver:1;
@@ -297,6 +313,7 @@ struct SetCheck {
 	unsigned has_oper_auto_join:1;
 	unsigned has_check_target_nick_bans:1;
 	unsigned has_pingpong_warning:1;
+	unsigned has_watch_away_notification:1;
 	unsigned has_oper_only_stats:1;
 	unsigned has_maxchannelsperuser:1;
 	unsigned has_maxdccallow:1;
@@ -309,6 +326,8 @@ struct SetCheck {
 	unsigned has_ssl_key:1;
 	unsigned has_ssl_trusted_ca_file:1;
 	unsigned has_ssl_options:1;
+	unsigned has_renegotiate_timeout : 1;
+	unsigned has_renegotiate_bytes : 1;
 #endif
 	unsigned has_allow_userhost_change:1;
 	unsigned has_restrict_usermodes:1;
@@ -318,6 +337,7 @@ struct SetCheck {
 	unsigned has_anti_flood_unknown_flood_bantime:1;
 	unsigned has_anti_flood_unknown_flood_amount:1;
 	unsigned has_modes_on_join:1;
+	unsigned has_level_on_join:1;
 #ifdef NO_FLOOD_AWAY
 	unsigned has_anti_flood_away_count:1;
 	unsigned has_anti_flood_away_period:1;

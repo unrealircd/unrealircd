@@ -368,7 +368,6 @@ AC_DEFINE_UNQUOTED(MAXSENDQLENGTH,$withval),AC_DEFINE(MAXSENDQLENGTH,3000000))
 AC_ARG_WITH(bufferpool, [AC_HELP_STRING([--with-bufferpool=size],[Specify the size of the buffer pool])],
 AC_DEFINE_UNQUOTED(BUFFERPOOL,[($withval * MAXSENDQLENGTH)]),AC_DEFINE(BUFFERPOOL,[(18 * MAXSENDQLENGTH)]))
 AC_ARG_WITH(hostname, [AC_HELP_STRING([--with-hostname=host],[Specify the local hostname of the server])], AC_DEFINE_UNQUOTED(DOMAINNAME,"$withval"),AC_DEFINE_UNQUOTED(DOMAINNAME,"`hostname`"))
-AC_DEFINE_UNQUOTED(MYOSNAME,"`uname -a`")
 AC_ARG_WITH(permissions, [AC_HELP_STRING([--with-permissions=permissions],[Specify the default permissions for
 configuration files])], AC_DEFINE_UNQUOTED(DEFAULT_PERMISSIONS,$withval), AC_DEFINE(DEFAULT_PERMISSIONS, 0600)) 
 AC_ARG_WITH(dpath, [AC_HELP_STRING([--with-dpath=path],[Specify the path where configuration files are stored])],
@@ -426,7 +425,7 @@ IRCDLIBS="$IRCDLIBS -lresolv "
 esac
 
 dnl REMEMBER TO CHANGE WITH A NEW TRE RELEASE!
-tre_version="0.7.2"
+tre_version="0.7.5"
 AC_MSG_RESULT(extracting TRE regex library)
 cur_dir=`pwd`
 cd extras
@@ -459,7 +458,7 @@ cd $cur_dir
 
 
 dnl REMEMBER TO CHANGE WITH A NEW C-ARES RELEASE!
-cares_version="1.3.2"
+cares_version="1.6.0"
 AC_MSG_RESULT(extracting c-ares resolver library)
 cur_dir=`pwd`
 cd extras
@@ -484,7 +483,29 @@ CARESINCDIR="$cur_dir/extras/c-ares/include"
 AC_SUBST(CARESINCDIR)
 CARESLIBDIR="-L../extras/c-ares/lib"
 AC_SUBST(CARESLIBDIR)
-CARESLIBS="-lcares"
+
+dnl Set default library parameters for when pkg-config is not available
+CARESLIBSALT="-lcares"
+case `uname -s` in
+*FreeBSD*)
+CARESLIBSALT="-lcares"
+;;
+*Linux*)
+CARESLIBSALT="-lcares -lrt"
+;;
+esac
+
+dnl Use pkg-config for c-ares libraries, and if not available use defaults
+dnl from above. Also, if pkg-config returns an empty result (ex: on fbsd
+dnl or older versions it might be missing --static) then also use defaults.
+if test "x$ac_cv_path_PKGCONFIG" = "x" ; then
+	CARESLIBS="$CARESLIBSALT"
+else
+	CARESLIBS="`$ac_cv_path_PKGCONFIG --static --libs libcares.pc`"
+	if test "x$CARESLIBS" = "x" ; then
+		CARESLIBS="$CARESLIBSALT"
+	fi
+fi
 AC_SUBST(CARESLIBS)
 cd $cur_dir
 

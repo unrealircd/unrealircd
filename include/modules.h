@@ -110,6 +110,7 @@ typedef struct {
 #define MOBJ_CALLBACK     0x0200
 #define MOBJ_ISUPPORT	  0x0400
 #define MOBJ_EFUNCTION    0x0800
+#define MOBJ_CMODE        0x1000
 
 typedef struct {
         long mode;
@@ -222,6 +223,17 @@ typedef struct {
 	 * aExtCMtableParam *: their parameter
 	 */
 	int			(*sjoin_check)(aChannel *, CmodeParam *, CmodeParam *);
+
+	/** Is this mode being unloaded?
+	 * This is set to 1 if the chanmode module providing this mode is unloaded
+	 * and we are waiting to see if in our new round of loads a "new" chanmode
+	 * module will popup to take this mode. This only happens during a rehash,
+	 * should never be 0 outside an internal rehash.
+	 */
+	char unloaded;
+	
+	/** Module owner */
+        Module *owner;
 } Cmode;
 
 typedef struct {
@@ -334,6 +346,7 @@ typedef struct _ModuleObject {
 		Callback *callback;
 		Efunction *efunction;
 		Isupport *isupport;
+		Cmode *cmode;
 	} object;
 } ModuleObject;
 
@@ -638,6 +651,8 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define HOOKTYPE_LOCAL_SPAMFILTER 46
 #define HOOKTYPE_SILENCED 47
 #define HOOKTYPE_POST_SERVER_CONNECT 48
+#define HOOKTYPE_RAWPACKET_IN 49
+#define HOOKTYPE_LOCAL_NICKPASS 50
 
 /* Hook return values */
 #define HOOK_CONTINUE 0

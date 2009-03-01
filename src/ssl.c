@@ -215,6 +215,14 @@ SSL_CTX *ctx_server;
 		mylog("Failed to check SSL private key");
 		goto fail;
 	}
+	if (iConf.x_server_cipher_list)
+	{
+                if (SSL_CTX_set_cipher_list(ctx_server, iConf.x_server_cipher_list) == 0)
+                {
+                    mylog("Failed to set SSL cipher list for clients");
+                    goto fail;
+                }
+	}
 	if (iConf.trusted_ca_file)
 	{
 		if (!SSL_CTX_load_verify_locations(ctx_server, iConf.trusted_ca_file, NULL))
@@ -505,6 +513,17 @@ int ircd_SSL_client_handshake(aClient *acptr)
 	SSL_set_fd(acptr->ssl, acptr->fd);
 	SSL_set_connect_state(acptr->ssl);
 	SSL_set_nonblocking(acptr->ssl);
+        if (iConf.ssl_renegotiate_bytes > 0)
+	{
+          BIO_set_ssl_renegotiate_bytes(SSL_get_rbio(acptr->ssl), iConf.ssl_renegotiate_bytes);
+          BIO_set_ssl_renegotiate_bytes(SSL_get_wbio(acptr->ssl), iConf.ssl_renegotiate_bytes);
+        }
+        if (iConf.ssl_renegotiate_timeout > 0)
+        {
+          BIO_set_ssl_renegotiate_timeout(SSL_get_rbio(acptr->ssl), iConf.ssl_renegotiate_timeout);
+          BIO_set_ssl_renegotiate_timeout(SSL_get_wbio(acptr->ssl), iConf.ssl_renegotiate_timeout);
+        }
+
 	if (acptr->serv && acptr->serv->conf->ciphers)
 	{
 		if (SSL_set_cipher_list((SSL *)acptr->ssl, 

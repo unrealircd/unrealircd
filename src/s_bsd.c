@@ -560,6 +560,8 @@ void init_sys(void)
 	limit.rlim_cur = limit.rlim_max;	/* make soft limit the max */
 	if (setrlimit(RLIMIT_FD_MAX, &limit) == -1)
 	{
+/* HACK: if it's mac os X then don't error... */
+#ifndef OSXTIGER
 #ifndef LONG_LONG_RLIM_T
 		(void)fprintf(stderr, "error setting max fd's to %ld\n",
 #else
@@ -567,6 +569,7 @@ void init_sys(void)
 #endif
 		    limit.rlim_cur);
 		exit(-1);
+#endif
 	}
 }
 #endif
@@ -635,7 +638,7 @@ if ((bootopt & BOOT_CONSOLE) || isatty(0))
 #endif
 
 #if defined(HPUX) || defined(_SOLARIS) || \
-    defined(_POSIX_SOURCE) || defined(SVR4) || defined(SGI)
+    defined(_POSIX_SOURCE) || defined(SVR4) || defined(SGI) || defined(OSXTIGER)
 	(void)setsid();
 #else
 	(void)setpgrp(0, (int)getpid());
@@ -1409,6 +1412,7 @@ static int read_packet(aClient *cptr, fd_set *rfd)
 	if (FD_ISSET(cptr->fd, rfd) &&
 	    !(IsPerson(cptr) && DBufLength(&cptr->recvQ) > 6090))
 	{
+		Hook *h;
 		SET_ERRNO(0);
 #ifdef USE_SSL
 		if (cptr->flags & FLAGS_SSL)
@@ -1427,6 +1431,12 @@ static int read_packet(aClient *cptr, fd_set *rfd)
 		    return 1;
 		if (length <= 0)
 			return length;
+		for (h = Hooks[HOOKTYPE_RAWPACKET_IN]; h; h = h->next)
+		{
+			int v = (*(h->func.intfunc))(cptr, readbuf, length);
+			if (v <= 0)
+				return v;
+		}
 	}
 	/*
 	   ** For server connections, we process as many as we can without
@@ -1657,7 +1667,7 @@ int  read_message(time_t delay, fdlist *listp)
 #else
 	fd_set read_set, write_set, excpt_set;
 #endif
-	int  j;
+	int  j,k;
 	time_t delay2 = delay, now;
 	int  res, length, fd, i;
 	int  auth = 0;
@@ -1862,7 +1872,10 @@ int  read_message(time_t delay, fdlist *listp)
 			   ** Thus no specific errors are tested at this
 			   ** point, just assume that connections cannot
 			   ** be accepted until some old is closed first.
+			 *
 			 */
+			for (k = 0; k < LISTEN_SIZE; k++)
+{			{
 			if ((fd = accept(cptr->fd, NULL, NULL)) < 0)
 			{
 		        if ((ERRNO != P_EWOULDBLOCK) && (ERRNO != P_ECONNABORTED))
@@ -1890,15 +1903,18 @@ int  read_message(time_t delay, fdlist *listp)
 				CLOSE_SOCK(fd);
 				--OpenFiles;
 				break;
-			}
-			/*
-			 * Use of add_connection (which never fails :) meLazy
-			 */
-			(void)add_connection(cptr, fd);
-			nextping = TStime();
-			if (!cptr->listener)
+                          }
+			  /*
+			  * Use of add_connection (which never fails :) meLazy
+			  */
+			  (void)add_connection(cptr, fd);
+			  }
+			 }
+			   nextping = TStime();
+			   if (!cptr->listener)
 				cptr->listener = &me;
-		}
+		        
+                      }
 #ifndef NO_FDLIST
 	for (i = listp->entry[j = 1];  (j <= listp->last_entry); i = listp->entry[++j])
 #else
@@ -2407,6 +2423,12 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 #else
 			aconf->ipnum.S_ADDR = 0;
 #endif
+			/* We need this 'aconf->refcount++' or else there's a race condition between
+			 * starting resolving the host and the result of the resolver (we could
+			 * REHASH in that timeframe) leading to an invalid (freed!) 'aconf'.
+			 * -- Syzop, bug #0003689.
+			 */
+			aconf->refcount++;
 			unrealdns_gethostbyname_link(aconf->hostname, aconf);
 			return -2;
 		}

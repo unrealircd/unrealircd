@@ -46,6 +46,10 @@ static char sccsid[] =
 #ifdef USE_LIBCURL
 #include <curl/curl.h>
 #endif
+#ifndef _WIN32
+/* for uname(), is POSIX so should be OK... */
+#include <sys/utsname.h>
+#endif
 extern VOIDSIG s_die();
 
 static char buf[BUFSIZE];
@@ -66,6 +70,12 @@ struct tm smotd_tm;
 aMotd *read_file(char *filename, aMotd **list);
 aMotd *read_file_ex(char *filename, aMotd **list, struct tm *);
 extern aMotd *Find_file(char *, short);
+
+#ifdef USE_SSL
+extern void reinit_ssl(aClient *);
+#endif
+
+
 /*
 ** m_functions execute protocol messages on this server:
 **      CMD_FUNC(functionname) causes it to use the header
@@ -128,6 +138,33 @@ extern aMotd *Find_file(char *, short);
 */
 #ifndef NO_FDLIST
 extern fdlist serv_fdlist;
+#endif
+
+#ifndef _WIN32
+char *getosname(void)
+{
+static char buf[1024];
+struct utsname osinf;
+char *p;
+
+	memset(&osinf, 0, sizeof(osinf));
+	if (uname(&osinf) != 0)
+		return "<unknown>";
+	snprintf(buf, sizeof(buf), "%s %s %s %s %s",
+		osinf.sysname,
+		osinf.nodename,
+		osinf.release,
+		osinf.version,
+		osinf.machine);
+	/* get rid of cr/lf */
+	for (p=buf; *p; p++)
+		if ((*p == '\n') || (*p == '\r'))
+		{
+			*p = '\0';
+			break;
+		}
+	return buf;
+}
 #endif
 
 /*
@@ -215,47 +252,42 @@ void m_info_send(aClient *sptr)
 {
 	sendto_one(sptr, ":%s %d %s :=-=-=-= %s =-=-=-=",
 	    me.name, RPL_INFO, sptr->name, IRCDTOTALVERSION);
-	sendto_one(sptr, ":%s %d %s :| Brought to you by the following people:",
+	sendto_one(sptr, ":%s %d %s :| This release was brought to you by the following people:",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| Head coders:", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * Stskeeps     <stskeeps@unrealircd.com>",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * codemastr    <codemastr@unrealircd.com>",
-	    me.name, RPL_INFO, sptr->name);
+	sendto_one(sptr, ":%s %d %s :| Coders:", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| * Syzop        <syzop@unrealircd.com>",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * Luke         <luke@unrealircd.com>",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| Contributors:", me.name, RPL_INFO, sptr->name);
+	sendto_one(sptr, ":%s %d %s :| * aquanight    <aquanight@unrealircd.com>",
+	    me.name, RPL_INFO, sptr->name);
+	sendto_one(sptr, ":%s %d %s :| * WolfSage     <wolfsage@unrealircd.com>",
+	    me.name, RPL_INFO, sptr->name);
+	sendto_one(sptr, ":%s %d %s :| * Stealth, tabrisnet, Bock, fbi",
+	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * McSkaf       <mcskaf@unrealircd.com>",
+	sendto_one(sptr, ":%s %d %s :| RC Testers:", me.name, RPL_INFO, sptr->name);
+	sendto_one(sptr, ":%s %d %s :| * Bock, Apocalypse, StrawberryKittens, wax, Elemental,",
 	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * Zogg         <zogg@unrealircd.org>",
+	sendto_one(sptr, ":%s %d %s :|   Golden|Wolf, and everyone else who tested the RC's",
 	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * NiQuiL       <niquil@unrealircd.org>",
+	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
+	sendto_one(sptr, ":%s %d %s :| Past UnrealIRCd3.2* coders/contributors:", me.name, RPL_INFO, sptr->name);
+	sendto_one(sptr, ":%s %d %s :| * Stskeeps (ret. head coder / project leader)",
 	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * assyrian     <assyrian@unrealircd.org>",
+	sendto_one(sptr, ":%s %d %s :| * codemastr (ret. u3.2 head coder)",
 	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * chasm        <chasm@unrealircd.org>",
+	sendto_one(sptr, ":%s %d %s :| * McSkaf, Zogg, NiQuiL, chasm, llthangel, nighthawk, ..",
 	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * DrBin        <drbin@unrealircd.com>",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * llthangel    <llthangel@unrealircd.com>",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * Griever      <griever@unrealircd.com>",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * nighthawk    <nighthawk@unrealircd.com>",
-	    me.name, RPL_INFO, sptr->name);
+	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| Credits - Type /Credits",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| DALnet Credits - Type /DalInfo",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| This is an UnrealIRCD-style server",
+	sendto_one(sptr, ":%s %d %s :| This is an UnrealIRCd-style server",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| If you find any bugs, please report them at:",
 	    me.name, RPL_INFO, sptr->name);
@@ -650,7 +682,7 @@ CMD_FUNC(m_rehash)
 		parv[1] = parv[2];
 	}
 
-	if (!BadPtr(parv[1]) && strcmp(parv[1], "-all"))
+	if (!BadPtr(parv[1]) && stricmp(parv[1], "-all"))
 	{
 
 		if (!IsAdmin(sptr) && !IsCoAdmin(sptr))
@@ -675,7 +707,6 @@ CMD_FUNC(m_rehash)
 			if (!_match("-ssl*", parv[1]))
 			{
 #ifdef USE_SSL
-				extern void reinit_ssl(aClient *);
 				reinit_ssl(sptr);
 #else
 				sendnotice(sptr, "SSL is not enabled on this server");
@@ -753,7 +784,8 @@ CMD_FUNC(m_rehash)
 CMD_FUNC(m_restart)
 {
 char *reason = parv[1];
-
+	aClient *acptr;
+	int i;
 	/* Check permissions */
 	if (MyClient(sptr) && !OPCanRestart(sptr))
 	{
@@ -798,6 +830,20 @@ char *reason = parv[1];
 		}
 	}
 	sendto_ops("Server is Restarting by request of %s", parv[0]);
+	
+	for (i = 0; i <= LastSlot; i++)
+	{
+		if (!(acptr = local[i]))
+			continue;
+		if (IsClient(acptr))
+			sendto_one(acptr,
+			    ":%s %s %s :Server Restarting. %s",
+			    me.name, IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, sptr->name);
+		else if (IsServer(acptr))
+			sendto_one(acptr, ":%s ERROR :Restarted by %s: %s",
+			    me.name, get_client_name(sptr, TRUE), reason ? reason : "No reason");
+	}
+
 	server_reboot(reason ? reason : "No reason");
 	return 0;
 }

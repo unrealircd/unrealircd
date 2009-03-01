@@ -1429,3 +1429,338 @@
 ** 3.2.6-rc3 release **
 - Updated release notes, mass-change of version number, no code changes.
 ** 3.2.6 release **
+- Fixed bug where SVSO was unable to give various operflags such as q, d, X, reported
+  by prodigy2k7 (#0003203).
+- /WHOIS now shows the ident of local users - if ident enabled and they had an ident -
+  instead of always "*" in the 'is connecting from' line. Suggested and patch provided
+  by djGrrr (#0002888).
+- Added ability to enable "no fake lag" for a user through through services via the
+  new commands SVSNOLAG/SVS2NOLAG (syntax: SVSNOLAG [+|-] NickName). Obviously, care
+  should be taken when giving such access to a user since he/she will be able to flood
+  at full speed and could possibly take down the entire IRCd (well, everyone on it).
+  Suggested by avb, coded by djGrrr.
+- Fixed SDESC not messaging +s +s clients on local server when it is used, reported by
+  dre, patch provided by djGrrr.
+- Fixed SAPART causing a flood of notices from all servers, fun. Reported and patch
+  provided by djGrrr.
+- Changed password length from 32 to 48, is allocated dynamically anyway.
+- Fixed file descriptor leakage on rehash. This resulted in [number of modules loaded]
+  file descriptors being leaked upon every /REHASH.
+  So if you, for example, had 3 modules loaded and rehashed 30 times, it would cause
+  the ircd to consume 90 useless file descriptors (which often means 90 less file
+  descriptors being available to clients).
+- Fixed #0003171 reported by danieldg (typo) doc/technical
+- #0003146 reported by vonitsanet, regarding Modes O,S (etc) not rejected for modes-on-connect
+  fixed by djGrrr
+- #0002932 reported by therock247uk, patched by WolfSage, regarding Local
+  opers can /chghost /chgident /chgname on someone thats on another server on
+  the network.
+- #0003212 patched by Grunt, regarding /userip <someone_else> seemingly
+  shows your own (cloaked) IP.
+- #0002846 reported by alex323, patched by WolfSage, regarding local ircop cannot issue CLOSE command
+- #3272 patched by w00t, regarding remove restrictions on NOTICE/PRIVMSG $* for opers.
+- Fixed SVSKILL sending an illegal (wrong direction) QUIT right after, #0003307
+- xx reported and fixed by WolfSage (addmotd, addomotd in help.conf)
+- #0003159 reported by aegis and Bock, regarding typos in documentation
+- #0002560 reported and patched by w00t, regarding a typo in /SAMODE
+- #0002844 reported by RandomNumber: make spamfilter actions case insensitive
+- help.conf updates... #0002420 reported by KnuX fixed by WolfSage
+- #0003264 reported by Robby22 regarding help.conf typo
+- Updated c-ares to version 1.4.0
+- Updated tre to version 0.7.5
+- help.conf updates. Missing some ;'s.
+- #0003027 reported by Trocotronic, regarding doing -l <para> on SJOIN,
+  and not -l as supposed. This may have caused desyncs
+- #0003368 patched by Stealth giving users access to do /module on remote
+  servers
+- #0002533 reported by Dodge_Ram, patched by WolfSage, regarding notices
+  not being sent when /*line and /shun are used to request stats
+- Now using #0003028, with more intelligent accept() handling. The IRCd
+  will now attempt to accept() up to LISTEN_SIZE (possibly saving CPU
+  through this under load, and speeding up connection).
+- IRCd now also sets the &me fd as being non blocking (wasn't before, that
+  was odd..)
+- #0003139 reported by vonitsanet, improving error messages on /connect
+  when trying to /connect to a server with wildcards (* and ?) in the link
+  block. We also raise an error if link::options::autoconnect is used
+  together with wildcards in hostname.
+- #0002040 reported by aquanight, removing dependancy on +l for +L. This
+  will be backwards compatible as well, SJOIN doesn't care (TM) and mode
+  doesn't either in case of a server sending it. So this will be just a
+  client protocol modification. 
+- Fixed SVSKILL sending an illegal QUIT
+- #0003216 patched by djGrrr, regarding when you run ./Config for a second
+  time after settings are saved in config.settings, the SSLDIR and ZIPLINKSDIR
+  defaults are basically completely ignored.
+- #0002420 reported by KnuX fixed by WolfSage
+- #0003147 reported by vonitsanet, fixed by djGrrr regarding making
+  spamfilters work in case of /setname
+- Added oper CIDR
+- #0001317 reported by thilo regarding removal of (username) being
+  appended to topics set by U:Lined servers, patched by WolfSage
+- #0003382 reported by stealth regarding nested C-style comments messing
+  up example.conf parsing
+- #0003092 reported by tabrisnet, patched by WolfSage, regarding
+  documentation says
+  link::bind-ip is optional, but not specifying it produces an error
+- #0003232 reported by vonitsanet patched by djGrr, regarding /map is not
+  shown u:lined servers to local opers and /links does
+- #0003363 patched by adrianp, changing IRC_UID and IRC_GID into
+  defines IRC_USER, IRC_GROUP which is a string specifiying what user name/
+  group name that should be changed into, instead of a hardcoded gid/uid.
+  This should make it easier for packaged binary releases to work (even
+  though this probably means Debian will take us in, ick .. Can't we pull
+  a new fight with debian-legal again?)
+- #0003244 reported by CuLpA about grammar errors in webtv outputs
+- Entering 3.2.7 RC1 phase
+- Applied patch to fix some win32 problems reported by Bock, fixed by fez 
+- #0003405 repoted by Stealth regarding wildcards and autoconnect being an 
+  ||
+- Fixed irc_uid|gid being defined on win32
+- Win32 library updates from Bock
+- #0003429 reported by Bock about appearing to accept multiple auth blocks.
+- Fixed fixed #003244 fix.
+- Applied #0003422 help.conf patches by Bock
+- Applied #0002999 patch by Bock, fixing a fd leak.
+- Applied #0003144 patch by Bock, fixing win32 install and such
+- Applied #0003392 patch by Bock, adding some stuff to help.conf
+- Entering 3.2.7 RC2 phase
+- Fix, fix #0003421 patch
+- Fixed wolfsage eff-up in c-ares.tar.gz, not running make distclean
+- Updated /info
+- Updated release notes
+*** 3.2.7 release ***
+- Fix aquanight's email
+- #0003351 reported by Mareo regarding m_addmotd.so and m_svslusers.so 
+  not being created
+- Fixed bug in SJOIN, possibly causing things like odd bans showing up in
+  some circumstances. Reported by Hurga, patch provided by fbi.
+- Now allowing '1.2.3.4' ips again in IPv6 mode as well (instead of enforcing
+  '::ffff:1.2.3.4' ips in the conf, they are now auto-converted to that).
+  Based on patch from tabrisnet.
+- Fixed issue where the cgiirc block did not work with IPv6, reported by
+  djGrrr, fixed by previous change.
+- Fixed CHROOTDIR, which was broken in 3.2.7: IRC_USER/IRC_GROUP did not work
+  properly when CHROOTDIR was in use (#0003454).
+- Fixed oper block bug where ip masks in oper::from::userhost did not always
+  work succesfully (ex: 192.168.* worked, but 192.168.*.* didn't). Issue was
+  introduced in 3.2.7, reported by tabrisnet (#0003494).
+- CGI:IRC + IPv6: Fixed cgiirc block hostname never matching ipv4 cgiirc
+  gateway properly (..again..), this was previously reported by pv2b.
+- CGI:IRC + IPv6: Fixed issue where all cgiirc ipv4 clients were rejected with
+  the message 'Invalid IP address', reported by stskeeps (#0003311), nate
+  (#0003533) and others.
+- Document CHROOTDIR in unreal32docs, reported by Beastie (#0002446).
+- Fixed Mac OS X issue where "access denied" errors were encountered when 
+  trying to read unrealircd.conf. All due to strange chmod() behavior. We now no
+  longer try to set permissions on Mac OS X. Patch provided by Tibby (#3489).
+- Hopefully fixed 'Overflowed unzipbuf increase UNZIP_BUFFER_SIZE' issue,
+  reported by Monk (#0003453). It should be large enough now. Also changed the
+  way we deal with this when it happens (if it ever happens again..): we now
+  close the server connection, instead of trying to continue, because continueing
+  is too dangerous.
+- Remove part reason when user is banned, suggested by vonitsanet (#0003354).
+- Fixed set::modes-on-join: could crash or disfunction with certain
+  parameter mode combinations.
+- Minor source cleanup in src/modules/m_map.c, suggested by fez (#0003540).
+- Usermode modules now no longer have to be permanent (#3174), this was
+  simply a bug that was introduced when adding remote includes support years
+  ago.
+- Channelmode modules without parameters (like: +X, but not: +X 1) no longer
+  have to be permanent. Channelmodes with parameters still have to be PERM
+  however, and there are currently no plans to change it.
+- Fixed bug (in all Unreal versions) with parameter channelmodes, any 3rd
+  party module which adds an extra parameter chanmode could cause crashes.
+- Added set::level-on-join: which level should the user get when (s)he's is
+  the first to enter a channel. Currently only 'none' and 'op' are supported.
+- unreal32docs.html: doubt it will help much but at least this makes it a
+  little bit more clear (#3548), chatops vs globops.
+- ChanMode +S/+c: reverse is now stripped/blocked as well, because it's
+  similar to color, and is just as annoying (..if not worse).
+- So called 'smart' banning is now disabled by default, this means you can
+  now set a ban on *!*@*h.com and then later add one on *!*@*blah.com without
+  any trouble. Previously the second one was rejected due to the former
+  already matching it. To change it back edit the include/config.h setting
+  SOCALLEDSMARTBANNING.
+- Fixed (G)ZLINE check.. it was incorrectly rejecting many IPv6 bans.
+  Reported by guigui (#0003572).
+- Backport from 3.3 away notification from Oct 2006, this is v0, a further
+  patch will follow soon and the numerics will be changed.
+- Ok, finished away notification in WATCH. It now shows the away reasons too.
+  This new feature (away notify) is announced in 005 (ISUPPORT) as: WATCHOPTS=A
+
+  Format is: WATCH A +UserOne +UserTwo
+  
+  New numerics to cope with away notification in WATCH are:
+  RPL_NOWISAWAY: to indicate the user is away _when adding_ it to WATCH list
+  RPL_GONEAWAY:  user was not away, but is now
+  RPL_NOTAWAY:   user was away, but is no longer away
+  RPL_NOWISAWAY: user was away, and still is, but the reason changed
+  Example:
+
+  WATCH A +Target
+  Request to add user 'Target' to the watch list with away notification
+
+  :maintest.test.net 609 MySelf Target ~blih test.testnet 1204309588 :not here atm
+  Reply to watch add: user is online and away, reason is provided
+
+  :maintest.test.net 599 MySelf Target ~blih test.testnet 1204309588 :is no longer away
+  User is back (no longer away)
+
+  :maintest.test.net 598 MySelf Target ~blih test.testnet 1204309722 :lunch
+  State change: user is now away, reason is provided
+
+  :maintest.test.net 597 MySelf Target ~blih test.testnet 1204309738 :shopping, bbl
+  User is still away, but reason changed.
+
+  The syntax for each numeric is:
+  <nickname> <username> <hostname> <awaysince> :<away reason>
+  In case of 599 (RPL_NOTAWAY) it is:
+  <nickname> <username> <hostname> <awaysince> :is no longer away
+
+  For the record, this is all based on a draft from codemastr from 2004, which was
+  implemented in Unreal3.3 (devel branch) in 2006. Today, in 2008 it was updated
+  with away reason support and backported to Unreal3.2. Because away notification
+  hasn't been used until now (due to it only being in Unreal3.3) we felt it was
+  safe to break some numerics.
+- Upgraded c-ares to 1.5.1, thanks to aegis for the partial patch (#0003671).
+  This also fixed a curl compile/run issue, reported by static-x (#0003545).
+- Added slow spamfilter detection. For each spamfilter, Unreal will check,
+  each time it executes, how LONG it takes to execute. When a certain threshold
+  is reached the IRCd will warn or even remove the spamfilter. This will prevent
+  a spamfilter (regex) from slowing down the IRCd too much, though it's still not
+  a guarantee that it will never go to a halt (eg: in case it takes several
+  minutes to execute a regex or loops forever).
+  Warning can be configured via set::spamfilter::slowdetect-warn (default:
+  250 milliseconds) and automatic deletion of spamfilters if it takes too
+  long is set through set::spamfilter::slowdetect-fatal (default: 500 ms).
+  NOTE: slow spamfilter detection is currently not available on Windows.
+  NOTE 2: to disable slow detection you can set the warn and fatal settings
+  to 0 (zero). OR to really disable all code, remove SPAMFILTER_DETECTSLOW
+  from include/config.h and recompile.
+- Added another Mac OS X hack, such as one that should help against
+  'error setting max fd's to 9223372036854775807' which prevents the ircd
+  from booting up. Reported by btcentral and Bock. This hack might not be
+  totally correct though ;).
+- Limit watch status requests to one per time, more will often flood you off
+  and is stupid/useless. Reported by ash11.
+- The OS version output is now taken from uname() at runtime instead of
+  'uname -a' at compile time. This fixes bug #1438 and #3320 reported by
+  Mouse and Monk, where because of previous behavior the IRCd sometimes would
+  not compile in certain environments.
+- configure script is now generated by autoconf 2.61 (was: 2.59), hopefully
+  that won't cause any issues, perhaps it even helps to fix some bugs...
+- #0001740 reported by Trocotronic, making the IRCd send ERROR : to all
+  links with possible reason for RESTART; like /die does it. [Backport, sts]
+- Added set::ssl::server-cipher-list, #002368 requested by Beastie
+  [Backport, sts]
+- Added set::ssl::renegotiate-bytes, set::ssl:renegotiate-timeout, #0002971
+  suggested by tabrisnet. Gets activated when >0. Please set sane values.
+  [Backport, sts]
+- #0002475 reported by aquanight on detecting \'s in module filenames on
+  win32 and not do ./module for it [Backport]
+- #0002172 reported by Stealth, patched by WolfSage, fixing if you have an
+  admin block, and forget a semicolon on a line, Unreal will proceed to use
+  the block with no error, but the information will be incorrect/incomplete.
+  [Backport, WolfSage]
+- #0002833 reported and patched by tabrisnet, implementing UHNAMES
+  [Backport, only slightly modified for speed]
+- #0001924 - requested by syzop: Added ./unreal gencloak, which generates
+  random keys 10 ~ 20 characters in length (*NIX only). [Backport, aquanight]
+- #0003313 reported by Stealth, regarding not erroring/warning when me::name
+  is bigger than HOSTLEN, from now it will error on config read. [Backport, sts]
+- /REHASH -all not case sensitive
+- Win32 makefile: removed /MAPINFO:LINES, since visual studio 2005 and up
+  don't support this and will fail to compile UnrealIRCd. This fixes #3680,
+  reported by therock247uk.
+- Upgraded c-ares to 1.6.0 (also now using pkg-config).
+  If you get a "undefined reference to `clock_gettime'" error, then you
+  might consider installing 'pkg-config' on your system, and then simply re-run
+  ./Config and make, should fix things.
+  TODO: testing! testing! i'd like to be sure this c-ares is stable!
+- Win32 compile fixes.
+- Upgraded c-ares on windows to 1.6.0 as well.
+- Win32: build w/manifest. Looks like Unreal@Win32 now actually works again :).
+- except ban { } is now also effective against Z:lines. It already protected
+  when the user was connected, but not once he/she tried to reconnect, this
+  is now fixed. Reported several times, last by Stealth in #0003377.
+- Fix crash if settime/expirytime is out of range in TKL, set by another server.
+  Should never happen except when using faulty services or when something else
+  got horrible wrong (like a date which is 40 years ahead). Reported by
+  Darth Android (#0003738).
+- Fix NAMES with UHNAMES support, screwed it up at 'Win32 compile fixes' a
+  few lines up...
+- Fix OOB read caused by UHNAMES support.
+- Added some countermeasures against crash-on-boot, #0003725 and #0003653,
+  reported by Ablom2008 and mist26.
+- Win32: rebuild TRE for Vstudio 2008 (and ditch C++ / MSVCP... dependency).
+- Added release notes (not finished yet).
+- Added set::watch-away-notification which can be set to 'no' to disable
+  WATCH away notification. The default is 'yes' (=enabled).
+- Fixed crash which could happen when rehashing while linking to a server,
+  this could be #0003689 reported by Monk.
+- New HOOKTYPE_LOCAL_NICKPASS: the 2 parameters are: sptr (client) and nsptr
+  (NickServ client, NULL if not present). You can return 1 (HOOK_DENY) to
+  make the IRCd not send IDENTIFY to NickServ. Suggested by tabrisnet
+  (#0003739).
+- A notice is now sent when listing spamfilters through /SPAMFILTER just
+  like /stats f. Bug #0003752 reported by Strawberry_Kittens, similar to
+  #0002533.
+** 3.2.8-rc1 release **
+- Added documentation for set::spamfilter::slowdetect-warn,
+  set::spamfilter::slowdetect-fatal, set::ssl::server-cipher-list,
+  set::ssl::renegotiate-bytes, set::ssl::renegotiate-timeout,
+  set::watch-away-notification and ./unreal gencloak. Reported by Bock
+  (#0003764).
+- set::ssl::renegotiate-bytes: fix when specifying a value such as 10m.
+- './unreal gencloak' now actually works
+- Fix typo in user mode q notice, reported by Strawberry_Kittens and others
+  (#0003761). Patch provided by Stealth.
+- Fix for Mac OS X compile problem (in setpgrp), reported by Bock / Jckf
+  (#0003767).
+- Possible fix for MAC OS X compile problem
+- Bump docdate..
+- Fixed OperOverride bug: if you are halfop you couldn't -q/-a, reported
+  by Strawberry_Kittens (#0003758).
+- Added note to release notes regarding Suse 10.3 on amd64 causing a crash
+  on-boot. #0003725, #0003653, #0003791.
+- Updated regex documentation in unreal32docs, it had some incorrect
+  statements regarding wildcards. Reported by james2vegas (#0003800).
+- Added some big warnings regarding big timeshifts. 
+  In the IRCd world correct time is very important. This means that time
+  should be correct when the IRCd is booted, either by running ntpd/ntpdate
+  on the system or some other synchronization software, or by using the
+  built-in timesync feature.
+  Whenever the clock is adjusted for more than a few seconds AFTER the IRCd
+  has booted, it can lead to dangerous effects ranging from unfair timestamps
+  for nicks and channels (and hence the possibility to takeover channels),
+  to even completely stalling the IRCd (negative timeshift) or making it so
+  nobody can connect anymore due to throttling (positive timeshift).
+  We now try to 'fix' the worst effects such as the IRCd freeze and
+  throttling. This does not fix the whole problem, so I've added some big
+  warnings when the clock is adjusted, including an annoying one every 5
+  minutes if the clock was set backwards, until the time is OK again
+  (catches up with the original time).
+  This fixes #0003230 reported by Stealth, and #0002521 reported by durrie.
+- Throttling time is now more accurate, especially with larger time values
+  such as 3 connections per 60 seconds. Previously that -could- result in
+  3 per 90 seconds due to timer inaccuracy (which was max <time>*1.5), now
+  it would be max 65 seconds (max 5s inaccuracy, lower with lower times).
+- Smallll fix for time shift protection
+** 3.2.8-rc2 release **
+- Some text fixes regarding time shift feature
+- Fix for compile problem on FreeBSD (and possibly other OS's):
+  - When pkg-config is present but does not recognize --static, use
+    default c-ares library options.
+  - Set default c-ares library options to -lcares on FreeBSD and others.
+    Set to -lcares -lrt on Linux (previously was -lcares -lrt for all).
+  Thanks to goldenwolf for the bugreport (#0003803) and providing a test-
+  shell to trace this issue down.
+** 3.2.8-rc2 *NIX downloads replaced **
+- 'link xx with SSL option enabled on non-SSL compile' was incorrectly
+  printed out as a warning, when in fact it's an error (and was treated as
+  such). Same for ZIP on non-zip compile. Reported by Stealth (#0003833).
+- Fixed harmless (but silly) message which happened on every IRCd boot
+  (time jump message).
+- Updated credits (donations)
+** 3.2.8 release **

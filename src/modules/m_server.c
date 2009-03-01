@@ -1395,21 +1395,21 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 	if (nomode && nopara)
 	{
 		ircsprintf(buf,
-		    (cptr->proto & PROTO_SJB64 ? "%s %B %s :" : "%s %ld %s :"),
+		    (cptr->proto & PROTO_SJB64 ? ":%s %s %B %s :" : ":%s %s %ld %s :"), me.name,
 		    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
 		    (long)chptr->creationtime, chptr->chname);
 	}
 	if (nopara && !nomode)
 	{
 		ircsprintf(buf, 
-		    (cptr->proto & PROTO_SJB64 ? "%s %B %s %s :" : "%s %ld %s %s :"),
+		    (cptr->proto & PROTO_SJB64 ? ":%s %s %B %s %s :" : ":%s %s %ld %s %s :"), me.name,
 		    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
 		    (long)chptr->creationtime, chptr->chname, modebuf);
 	}
 	if (!nopara && !nomode)
 	{
 		ircsprintf(buf,
-		    (cptr->proto & PROTO_SJB64 ? "%s %B %s %s %s :" : "%s %ld %s %s %s :"),
+		    (cptr->proto & PROTO_SJB64 ? ":%s %s %B %s %s %s :" : ":%s %s %ld %s %s %s :"), me.name,
 		    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
 		    (long)chptr->creationtime, chptr->chname, modebuf, parabuf);
 	}

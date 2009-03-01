@@ -130,13 +130,11 @@ int m_sdesc(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	    parv[1]);
 
 	if (MyConnect(sptr))
-	{
 		sendto_one(sptr,
-		    ":%s NOTICE %s :Your \"server description\" is now set to be %s - you have to set it manually to undo it",
-		    me.name, parv[0], parv[1]);
-		return 0;
-	}
+			":%s NOTICE %s :Your \"server description\" is now set to be %s - you have to set it manually to undo it",
+			me.name, parv[0], parv[1]);
+
 	sendto_ops("Server description for %s is now '%s' changed by %s",
-	    sptr->srvptr->name, sptr->srvptr->info, parv[0]);
+		sptr->srvptr->name, sptr->srvptr->info, parv[0]);
 	return 0;
 }

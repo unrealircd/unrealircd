@@ -186,9 +186,6 @@
 /* Local hostname of the server */
 #undef DOMAINNAME
 
-/* The OS name and version of the server */
-#undef MYOSNAME
-
 /* The default permissions for configuration files */
 #undef DEFAULT_PERMISSIONS
 

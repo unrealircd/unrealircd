@@ -963,7 +963,7 @@ int banact_stringtoval(char *s)
 BanActTable *b;
 
 	for (b = &banacttable[0]; b->value; b++)
-		if (!strcmp(s, b->name))
+		if (!strcasecmp(s, b->name))
 			return b->value;
 	return 0;
 }
@@ -1073,6 +1073,10 @@ static char buf[512], *i, *o;
 char *unreal_encodespace(char *s)
 {
 static char buf[512], *i, *o;
+
+	if (!s)
+		return NULL; /* NULL in = NULL out */
+
 	for (i = s, o = buf; (*i) && (o < buf+509); i++)
 	{
 		if (*i == ' ')

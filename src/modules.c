@@ -326,7 +326,11 @@ char  *Module_Create(char *path_)
 	tmppath = unreal_mktemp("tmp", unreal_getfilename(path));
 	if (!tmppath)
 		return "Unable to create temporary file!";
+#ifndef _WIN32
 	if(!strchr(path, '/'))
+#else
+	if (!strchr(path, '\\') && !strchr(path, '/'))
+#endif
 	{
 		path = MyMalloc(strlen(path) + 3);
 		strcpy(path, "./");
@@ -607,6 +611,9 @@ void Unload_all_loaded_modules(void)
 			else if (objs->type == MOBJ_UMODE) {
 				UmodeDel(objs->object.umode);
 			}
+			else if (objs->type == MOBJ_CMODE) {
+				CmodeDel(objs->object.cmode);
+			}
 			else if (objs->type == MOBJ_CMDOVERRIDE) {
 				CmdoverrideDel(objs->object.cmdoverride);
 			}
@@ -674,6 +681,9 @@ void Unload_all_testing_modules(void)
 			}
 			else if (objs->type == MOBJ_UMODE) {
 				UmodeDel(objs->object.umode);
+			}
+			else if (objs->type == MOBJ_CMODE) {
+				CmodeDel(objs->object.cmode);
 			}
 			else if (objs->type == MOBJ_CMDOVERRIDE) {
 				CmdoverrideDel(objs->object.cmdoverride);
@@ -746,6 +756,9 @@ int    Module_free(Module *mod)
 		}
 		else if (objs->type == MOBJ_UMODE) {
 			UmodeDel(objs->object.umode);
+		}
+		else if (objs->type == MOBJ_CMODE) {
+			CmodeDel(objs->object.cmode);
 		}
 		else if (objs->type == MOBJ_CMDOVERRIDE) {
 			CmdoverrideDel(objs->object.cmdoverride);
@@ -1030,10 +1043,9 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #endif
 
 	/* Opers can do /module <servername> */
-	if ((parc > 1) && (IsServer(cptr) || IsOper(sptr)) &&
-	    (hunt_server_token(cptr, sptr, MSG_MODULE, TOK_MODULE, ":%s", 1, parc, parv) != HUNTED_ISME))
-		return 0;
-	
+        if ((parc > 1) && (hunt_server_token(cptr, sptr, MSG_MODULE, TOK_MODULE, ":%s", 1, parc,
+             parv) != HUNTED_ISME))
+		return 0;	
 	if (!Modules)
 	{
 		sendto_one(sptr, ":%s NOTICE %s :*** No modules loaded", me.name, sptr->name);

@@ -564,24 +564,6 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 		if ((*nick == '$' || *nick == '#') && (IsAnOper(sptr)
 		    || IsULine(sptr)))
 		{
-			if (IsULine(sptr))
-				goto itsokay;
-			if (!(s = (char *)rindex(nick, '.')))
-			{
-				sendto_one(sptr, err_str(ERR_NOTOPLEVEL),
-				    me.name, parv[0], nick);
-				continue;
-			}
-			while (*++s)
-				if (*s == '.' || *s == '*' || *s == '?')
-					break;
-			if (*s == '*' || *s == '?')
-			{
-				sendto_one(sptr, err_str(ERR_WILDTOPLEVEL),
-				    me.name, parv[0], nick);
-				continue;
-			}
-		      itsokay:
 			sendto_match_butone(IsServer(cptr) ? cptr : NULL,
 			    sptr, nick + 1,
 			    (*nick == '#') ? MATCH_HOST :
@@ -1261,7 +1243,7 @@ char *_StripColors(unsigned char *text) {
 				rgb = 1;
 				nc = 0;
 			}
-			else 
+			else if (*text != '\026') /* (strip reverse too) */
 			{
 				new_str[i] = *text;
 				i++;
