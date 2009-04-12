@@ -210,7 +210,8 @@ DLLFUNC CMD_FUNC(m_user)
 		if (USE_BAN_VERSION && MyConnect(sptr))
 			sendto_one(sptr, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
 				me.name, sptr->name);
-
+		if (strlen(username) > USERLEN)
+			username[USERLEN] = '\0'; /* cut-off */
 		return(
 		    register_user(cptr, sptr, sptr->name, username, umodex,
 		    virthost,ip));

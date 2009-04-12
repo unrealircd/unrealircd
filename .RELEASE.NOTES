@@ -1,5 +1,9 @@
-Unreal3.2.8 Release Notes
-==========================
+Unreal3.2.8.1 Release Notes
+============================
+
+==[ ABOUT 3.2.8.1 RELEASE ]==
+This Unreal3.2.8.1 release fixes a (serious) security issue regarding
+allow::options::noident. The original release notes for 3.2.8 are below.
 
 ==[ GENERAL INFORMATION ]==
 - If you are upgrading on *NIX, make sure you run 'make clean' and './Config'
