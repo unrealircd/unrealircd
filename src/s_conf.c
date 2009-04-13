@@ -2734,25 +2734,15 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 			Debug((DEBUG_DNS, "a_il: %s->%s", sockhost, fullname));
 			if (index(aconf->hostname, '@'))
 			{
-				/*
-				 * Doing strlcpy / strlcat here
-				 * would simply be a waste. We are
-				 * ALREADY sure that it is proper 
-				 * lengths
-				*/
 				if (aconf->flags.noident)
-					strcpy(uhost, username);
+					strlcpy(uhost, username, sizeof(uhost));
 				else
-					strcpy(uhost, cptr->username);
-				strcat(uhost, "@");
+					strlcpy(uhost, cptr->username, sizeof(uhost));
+				strlcat(uhost, "@", sizeof(uhost));
 			}
 			else
 				*uhost = '\0';
-			/* 
-			 * Same here as above
-			 * -Stskeeps 
-			*/
-			strncat(uhost, fullname, sizeof(uhost) - strlen(uhost));
+			strlcat(uhost, fullname, sizeof(uhost));
 			if (!match(aconf->hostname, uhost))
 				goto attach;
 		}
@@ -2763,11 +2753,11 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 				strncpyzt(uhost, username, sizeof(uhost));
 			else
 				strncpyzt(uhost, cptr->username, sizeof(uhost));
-			(void)strcat(uhost, "@");
+			(void)strlcat(uhost, "@", sizeof(uhost));
 		}
 		else
 			*uhost = '\0';
-		(void)strncat(uhost, sockhost, sizeof(uhost) - strlen(uhost));
+		strlcat(uhost, sockhost, sizeof(uhost));
 		/* Check the IP */
 		if (match_ip(cptr->ip, uhost, aconf->ip, aconf->netmask))
 			goto attach;

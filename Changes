@@ -1764,3 +1764,6 @@
   (time jump message).
 - Updated credits (donations)
 ** 3.2.8 release **
+- Fixed (serious) security issue regarding allow::options::noident,
+  reported by meepmeep (#0003852).
+** 3.2.8.1 release **
