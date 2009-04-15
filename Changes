@@ -1767,3 +1767,7 @@
 - Fixed (serious) security issue regarding allow::options::noident,
   reported by meepmeep (#0003852).
 ** 3.2.8.1 release **
+- Fixed compile issue on Solaris regarding c-ares (-lrt), reported and
+  test shell provided by fraggeln (#0003854).
+- Improved automatic SSL detection on Solaris (/usr/sfw), reported by
+  fraggeln (also #0003854).

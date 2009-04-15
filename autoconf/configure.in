@@ -493,6 +493,9 @@ CARESLIBSALT="-lcares"
 *Linux*)
 CARESLIBSALT="-lcares -lrt"
 ;;
+*SunOS*)
+CARESLIBSALT="-lcares -lrt"
+;;
 esac
 
 dnl Use pkg-config for c-ares libraries, and if not available use defaults

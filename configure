@@ -1269,7 +1269,7 @@ Optional Features:
   --enable-prefixaq       Enable chanadmin and chanowner prefixes
   --enable-hub            Compile as a hub server
   --enable-ssl=           enable ssl will check /usr/local/ssl /usr/lib/ssl
-                          /usr/ssl /usr/pkg /usr/local /usr
+                          /usr/ssl /usr/pkg /usr/sfw /usr/local /usr
   --enable-ziplinks       enable ziplinks will check /usr/local /usr /usr/pkg
   --enable-libcurl=DIR    enable libcurl (remote include) support
   --enable-dynamic-linking
@@ -12328,7 +12328,7 @@ if test "${enable_ssl+set}" = set; then
   enableval=$enable_ssl;
 { echo "$as_me:$LINENO: checking for openssl" >&5
 echo $ECHO_N "checking for openssl... $ECHO_C" >&6; }
-    for dir in $enableval /usr/local/ssl /usr/lib/ssl /usr/ssl /usr/pkg /usr/local /usr; do
+    for dir in $enableval /usr/local/ssl /usr/lib/ssl /usr/ssl /usr/pkg /usr/sfw /usr/local /usr; do
         ssldir="$dir"
         if test -f "$dir/include/openssl/ssl.h"; then
 	    { echo "$as_me:$LINENO: result: found in $ssldir/include/openssl" >&5
@@ -13027,6 +13027,9 @@ case `uname -s` in
 CARESLIBSALT="-lcares"
 ;;
 *Linux*)
+CARESLIBSALT="-lcares -lrt"
+;;
+*SunOS*)
 CARESLIBSALT="-lcares -lrt"
 ;;
 esac
