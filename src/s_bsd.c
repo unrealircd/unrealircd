@@ -1359,7 +1359,7 @@ struct hostent *he;
 
 	if (!DONT_RESOLVE)
 	{
-		if (SHOWCONNECTINFO && !acptr->serv)
+		if (SHOWCONNECTINFO && !acptr->serv && !IsServersOnlyListener(acptr->listener))
 			sendto_one(acptr, "%s", REPORT_DO_DNS);
 		dns_special_flag = 1;
 		he = unrealdns_doclient(acptr);
@@ -1375,7 +1375,7 @@ struct hostent *he;
 		} else {
 			/* Host was in our cache */
 			acptr->hostp = he;
-			if (SHOWCONNECTINFO && !acptr->serv)
+			if (SHOWCONNECTINFO && !acptr->serv && !IsServersOnlyListener(acptr->listener))
 				sendto_one(acptr, "%s", REPORT_FIN_DNSC);
 		}
 	}
@@ -1388,7 +1388,7 @@ void proceed_normal_client_handshake(aClient *acptr, struct hostent *he)
 {
 	ClearDNS(acptr);
 	acptr->hostp = he;
-	if (SHOWCONNECTINFO && !acptr->serv)
+	if (SHOWCONNECTINFO && !acptr->serv && !IsServersOnlyListener(acptr->listener))
 		sendto_one(acptr, "%s", acptr->hostp ? REPORT_FIN_DNS : REPORT_FAIL_DNS);
 	
 	if (!dns_special_flag && !DoingAuth(acptr))

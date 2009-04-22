@@ -922,6 +922,8 @@ typedef struct {
 #define LISTENER_SSL		0x000040
 #define LISTENER_BOUND		0x000080
 
+#define IsServersOnlyListener(x)	((x) && ((x)->umodes & LISTENER_SERVERSONLY))
+
 #define CONNECT_SSL		0x000001
 #define CONNECT_ZIP		0x000002 
 #define CONNECT_AUTO		0x000004

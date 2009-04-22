@@ -57,7 +57,7 @@ void ident_failed(aClient *cptr)
 	cptr->flags &= ~(FLAGS_WRAUTH | FLAGS_AUTH);
 	if (!DoingDNS(cptr))
 		SetAccess(cptr);
-	if (SHOWCONNECTINFO && !cptr->serv)
+	if (SHOWCONNECTINFO && !cptr->serv && !IsServersOnlyListener(cptr->listener))
 		sendto_one(cptr, "%s", REPORT_FAIL_ID);
 }
 
@@ -97,7 +97,7 @@ void start_auth(aClient *cptr)
 		return;
 	}
 
-	if (SHOWCONNECTINFO && !cptr->serv)
+	if (SHOWCONNECTINFO && !cptr->serv && !IsServersOnlyListener(cptr->listener))
 		sendto_one(cptr, "%s", REPORT_DO_ID);
 
 	set_non_blocking(cptr->authfd, cptr);
@@ -240,7 +240,7 @@ void read_authports(aClient *cptr)
 	if (len > 0)
 		Debug((DEBUG_INFO, "ident reply: [%s]", cptr->buffer));
 
-	if (SHOWCONNECTINFO && !cptr->serv)
+	if (SHOWCONNECTINFO && !cptr->serv && !IsServersOnlyListener(cptr->listener))
 		sendto_one(cptr, "%s", REPORT_FIN_ID);
 
 	if (!locp || !remp || !*ruser)

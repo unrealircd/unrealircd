@@ -1771,3 +1771,4 @@
   test shell provided by fraggeln (#0003854).
 - Improved automatic SSL detection on Solaris (/usr/sfw), reported by
   fraggeln (also #0003854).
+- Don't do show-connect-info on servers-only ports
