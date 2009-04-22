@@ -1772,3 +1772,5 @@
 - Improved automatic SSL detection on Solaris (/usr/sfw), reported by
   fraggeln (also #0003854).
 - Don't do show-connect-info on serversonly ports
+- Fixed crash on Linux when a module has been updated and then reloaded.
+  From now on we just copy to a tempfile, and never hardlink. (bug #???????).

@@ -342,14 +342,11 @@ char  *Module_Create(char *path_)
 		snprintf(errorbuf, sizeof(errorbuf), "Cannot open module file: %s", strerror(errno));
 		return errorbuf;
 	}
-#ifdef __OpenBSD__
 	/* For OpenBSD, do not do a hardlinkink attempt first because it checks inode
 	 * numbers to see if a certain module is already loaded. -- Syzop
+	 * EDIT (2009): Looks like Linux got smart too, from now on we always copy....
 	 */
 	ret = unreal_copyfileex(path, tmppath, 0);
-#else
-	ret = unreal_copyfileex(path, tmppath, 1);
-#endif
 	if (!ret)
 	{
 		snprintf(errorbuf, sizeof(errorbuf), "Failed to copy module file.");
