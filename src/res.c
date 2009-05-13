@@ -48,7 +48,10 @@
 
 #include <res.h>
 
-/* Prevent crashes due to invalid prototype/ABI */
+/* Prevent crashes due to invalid prototype/ABI.
+ * And force the use of at least the version shipped with Unreal
+ * (or at least one without known security issues).
+ */
 #if ARES_VERSION < 0x010600
  #error "You have an old c-ares version on your system and/or Unreals c-ares failed to compile!"
 #endif
