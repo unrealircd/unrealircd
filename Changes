@@ -1774,7 +1774,7 @@
 - Don't do show-connect-info on serversonly ports
 - Fixed crash on Linux (with a 'new' dynamic linker) when a module has
   been updated and then reloaded. From now on we just copy to a tempfile,
-  and never hardlink. (bug #???????).
+  and never hardlink. (bug #3557).
 - Print out an error if a user uses standard ./configure stuff instead of
   ./Config. Won't catch all cases, but will definitely catch most problems.
 - Update some urls
