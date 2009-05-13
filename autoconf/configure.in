@@ -393,6 +393,7 @@ AC_ARG_WITH(disableusermod, [AC_HELP_STRING([--with-disableusermod], [Disable /s
 	AC_DEFINE(DISABLE_USERMOD))
 AC_ARG_WITH(operoverride-verify, [AC_HELP_STRING([--with-operoverride-verify], [Require opers to invite themselves to +s/+p channels])],
 	AC_DEFINE(OPEROVERRIDE_VERIFY))
+AC_ARG_WITH(system-tre, [AC_HELP_STRING([--with-system-tre], [Use the system tre package instead of bundled, discovered using pkg-config])], [], [with_system_tre=no ])
 CHECK_SSL
 CHECK_ZLIB
 CHECK_LIBCURL
@@ -425,6 +426,7 @@ IRCDLIBS="$IRCDLIBS -lresolv "
 ;;
 esac
 
+AS_IF([test "x$with_system_tre" = "xno"],[
 dnl REMEMBER TO CHANGE WITH A NEW TRE RELEASE!
 tre_version="0.7.5"
 AC_MSG_RESULT(extracting TRE regex library)
@@ -447,16 +449,19 @@ AC_MSG_RESULT(compiling TRE regex library)
 $ac_cv_prog_MAKER || exit 1
 AC_MSG_RESULT(installing TRE regex library)
 $ac_cv_prog_MAKER install || exit 1
-TREINCDIR="$cur_dir/extras/regexp/include"
-AC_SUBST(TREINCDIR)
+TRE_CFLAGS="-I$cur_dir/extras/regexp/include"
+AC_SUBST(TRE_CFLAGS)
 if test "x$ac_cv_path_PKGCONFIG" = "x" ; then
-	TRELIBS="-L../extras/regexp/lib -ltre"
+	TRE_LIBS="-L../extras/regexp/lib -ltre"
 else
-	TRELIBS=`$ac_cv_path_PKGCONFIG --libs tre.pc`
+	TRE_LIBS=`$ac_cv_path_PKGCONFIG --libs tre.pc`
 fi
-AC_SUBST(TRELIBS)
+AC_SUBST(TRE_LIBS)
 cd $cur_dir
-
+],[
+dnl use pkgconfig for tre:
+PKG_CHECK_MODULES([TRE], tre >= 0.7.5)
+])
 
 dnl REMEMBER TO CHANGE WITH A NEW C-ARES RELEASE!
 cares_version="1.6.0"

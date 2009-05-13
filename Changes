@@ -1778,3 +1778,6 @@
 - Print out an error if a user uses standard ./configure stuff instead of
   ./Config. Won't catch all cases, but will definitely catch most problems.
 - Update some urls
+- Added ./configure option called --with-system-tre by which you can specify
+  a path to the TRE library (instead of using the TRE we ship with Unreal).
+  Patch provided by ohnobinki (#0003842).

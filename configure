@@ -680,8 +680,9 @@ URL
 IRCDDIR
 BINDIR
 FD_SETSIZE
-TREINCDIR
-TRELIBS
+TRE_CFLAGS
+TRE_LIBS
+PKG_CONFIG
 CARESINCDIR
 CARESLIBDIR
 CARESLIBS
@@ -696,7 +697,10 @@ CFLAGS
 LDFLAGS
 LIBS
 CPPFLAGS
-CPP'
+CPP
+PKG_CONFIG
+TRE_CFLAGS
+TRE_LIBS'
 
 
 # Initialize some variables set by options.
@@ -1300,6 +1304,8 @@ Optional Packages:
   --with-disableusermod   Disable /set* and /chg*
   --with-operoverride-verify
                           Require opers to invite themselves to +s/+p channels
+  --with-system-tre       Use the system tre package instead of bundled,
+                          discovered using pkg-config
 
 Some influential environment variables:
   CC          C compiler command
@@ -1310,6 +1316,9 @@ Some influential environment variables:
   CPPFLAGS    C/C++/Objective C preprocessor flags, e.g. -I<include dir> if
               you have headers in a nonstandard directory <include dir>
   CPP         C preprocessor
+  PKG_CONFIG  path to pkg-config utility
+  TRE_CFLAGS  C compiler flags for TRE, overriding pkg-config
+  TRE_LIBS    linker flags for TRE, overriding pkg-config
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -12324,6 +12333,14 @@ _ACEOF
 fi
 
 
+# Check whether --with-system-tre was given.
+if test "${with_system_tre+set}" = set; then
+  withval=$with_system_tre;
+else
+  with_system_tre=no
+fi
+
+
 # Check whether --enable-ssl was given.
 if test "${enable_ssl+set}" = set; then
   enableval=$enable_ssl;
@@ -12958,6 +12975,128 @@ IRCDLIBS="$IRCDLIBS -lresolv "
 ;;
 esac
 
+
+
+if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
+	if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}pkg-config", so it can be a program name with args.
+set dummy ${ac_tool_prefix}pkg-config; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_path_PKG_CONFIG+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  case $PKG_CONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_PKG_CONFIG="$PKG_CONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_path_PKG_CONFIG="$as_dir/$ac_word$ac_exec_ext"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+  ;;
+esac
+fi
+PKG_CONFIG=$ac_cv_path_PKG_CONFIG
+if test -n "$PKG_CONFIG"; then
+  { echo "$as_me:$LINENO: result: $PKG_CONFIG" >&5
+echo "${ECHO_T}$PKG_CONFIG" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_path_PKG_CONFIG"; then
+  ac_pt_PKG_CONFIG=$PKG_CONFIG
+  # Extract the first word of "pkg-config", so it can be a program name with args.
+set dummy pkg-config; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_path_ac_pt_PKG_CONFIG+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  case $ac_pt_PKG_CONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_ac_pt_PKG_CONFIG="$ac_pt_PKG_CONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_path_ac_pt_PKG_CONFIG="$as_dir/$ac_word$ac_exec_ext"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+  ;;
+esac
+fi
+ac_pt_PKG_CONFIG=$ac_cv_path_ac_pt_PKG_CONFIG
+if test -n "$ac_pt_PKG_CONFIG"; then
+  { echo "$as_me:$LINENO: result: $ac_pt_PKG_CONFIG" >&5
+echo "${ECHO_T}$ac_pt_PKG_CONFIG" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+  if test "x$ac_pt_PKG_CONFIG" = x; then
+    PKG_CONFIG=""
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ echo "$as_me:$LINENO: WARNING: In the future, Autoconf will not detect cross-tools
+whose name does not start with the host triplet.  If you think this
+configuration is useful to you, please write to autoconf@gnu.org." >&5
+echo "$as_me: WARNING: In the future, Autoconf will not detect cross-tools
+whose name does not start with the host triplet.  If you think this
+configuration is useful to you, please write to autoconf@gnu.org." >&2;}
+ac_tool_warned=yes ;;
+esac
+    PKG_CONFIG=$ac_pt_PKG_CONFIG
+  fi
+else
+  PKG_CONFIG="$ac_cv_path_PKG_CONFIG"
+fi
+
+fi
+if test -n "$PKG_CONFIG"; then
+	_pkg_min_version=0.9.0
+	{ echo "$as_me:$LINENO: checking pkg-config is at least version $_pkg_min_version" >&5
+echo $ECHO_N "checking pkg-config is at least version $_pkg_min_version... $ECHO_C" >&6; }
+	if $PKG_CONFIG --atleast-pkgconfig-version $_pkg_min_version; then
+		{ echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6; }
+	else
+		{ echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+		PKG_CONFIG=""
+	fi
+
+fi
+if test "x$with_system_tre" = "xno"; then
+
 tre_version="0.7.5"
 { echo "$as_me:$LINENO: result: extracting TRE regex library" >&5
 echo "${ECHO_T}extracting TRE regex library" >&6; }
@@ -12982,15 +13121,131 @@ $ac_cv_prog_MAKER || exit 1
 { echo "$as_me:$LINENO: result: installing TRE regex library" >&5
 echo "${ECHO_T}installing TRE regex library" >&6; }
 $ac_cv_prog_MAKER install || exit 1
-TREINCDIR="$cur_dir/extras/regexp/include"
+TRE_CFLAGS="-I$cur_dir/extras/regexp/include"
 
 if test "x$ac_cv_path_PKGCONFIG" = "x" ; then
-	TRELIBS="-L../extras/regexp/lib -ltre"
+	TRE_LIBS="-L../extras/regexp/lib -ltre"
 else
-	TRELIBS=`$ac_cv_path_PKGCONFIG --libs tre.pc`
+	TRE_LIBS=`$ac_cv_path_PKGCONFIG --libs tre.pc`
 fi
 
 cd $cur_dir
+
+else
+
+
+pkg_failed=no
+{ echo "$as_me:$LINENO: checking for TRE" >&5
+echo $ECHO_N "checking for TRE... $ECHO_C" >&6; }
+
+if test -n "$PKG_CONFIG"; then
+    if test -n "$TRE_CFLAGS"; then
+        pkg_cv_TRE_CFLAGS="$TRE_CFLAGS"
+    else
+        if test -n "$PKG_CONFIG" && \
+    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"tre >= 0.7.5\"") >&5
+  ($PKG_CONFIG --exists --print-errors "tre >= 0.7.5") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  pkg_cv_TRE_CFLAGS=`$PKG_CONFIG --cflags "tre >= 0.7.5" 2>/dev/null`
+else
+  pkg_failed=yes
+fi
+    fi
+else
+	pkg_failed=untried
+fi
+if test -n "$PKG_CONFIG"; then
+    if test -n "$TRE_LIBS"; then
+        pkg_cv_TRE_LIBS="$TRE_LIBS"
+    else
+        if test -n "$PKG_CONFIG" && \
+    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"tre >= 0.7.5\"") >&5
+  ($PKG_CONFIG --exists --print-errors "tre >= 0.7.5") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  pkg_cv_TRE_LIBS=`$PKG_CONFIG --libs "tre >= 0.7.5" 2>/dev/null`
+else
+  pkg_failed=yes
+fi
+    fi
+else
+	pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        TRE_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "tre >= 0.7.5"`
+        else
+	        TRE_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "tre >= 0.7.5"`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$TRE_PKG_ERRORS" >&5
+
+	{ { echo "$as_me:$LINENO: error: Package requirements (tre >= 0.7.5) were not met:
+
+$TRE_PKG_ERRORS
+
+Consider adjusting the PKG_CONFIG_PATH environment variable if you
+installed software in a non-standard prefix.
+
+Alternatively, you may set the environment variables TRE_CFLAGS
+and TRE_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&5
+echo "$as_me: error: Package requirements (tre >= 0.7.5) were not met:
+
+$TRE_PKG_ERRORS
+
+Consider adjusting the PKG_CONFIG_PATH environment variable if you
+installed software in a non-standard prefix.
+
+Alternatively, you may set the environment variables TRE_CFLAGS
+and TRE_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&2;}
+   { (exit 1); exit 1; }; }
+elif test $pkg_failed = untried; then
+	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
+is in your PATH or set the PKG_CONFIG environment variable to the full
+path to pkg-config.
+
+Alternatively, you may set the environment variables TRE_CFLAGS
+and TRE_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+
+To get pkg-config, see <http://pkg-config.freedesktop.org/>.
+See \`config.log' for more details." >&5
+echo "$as_me: error: The pkg-config script could not be found or is too old.  Make sure it
+is in your PATH or set the PKG_CONFIG environment variable to the full
+path to pkg-config.
+
+Alternatively, you may set the environment variables TRE_CFLAGS
+and TRE_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+
+To get pkg-config, see <http://pkg-config.freedesktop.org/>.
+See \`config.log' for more details." >&2;}
+   { (exit 1); exit 1; }; }
+else
+	TRE_CFLAGS=$pkg_cv_TRE_CFLAGS
+	TRE_LIBS=$pkg_cv_TRE_LIBS
+        { echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6; }
+	:
+fi
+
+fi
 
 
 cares_version="1.6.0"
@@ -13734,8 +13989,9 @@ URL!$URL$ac_delim
 IRCDDIR!$IRCDDIR$ac_delim
 BINDIR!$BINDIR$ac_delim
 FD_SETSIZE!$FD_SETSIZE$ac_delim
-TREINCDIR!$TREINCDIR$ac_delim
-TRELIBS!$TRELIBS$ac_delim
+TRE_CFLAGS!$TRE_CFLAGS$ac_delim
+TRE_LIBS!$TRE_LIBS$ac_delim
+PKG_CONFIG!$PKG_CONFIG$ac_delim
 CARESINCDIR!$CARESINCDIR$ac_delim
 CARESLIBDIR!$CARESLIBDIR$ac_delim
 CARESLIBS!$CARESLIBS$ac_delim
@@ -13743,7 +13999,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 74; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 75; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
