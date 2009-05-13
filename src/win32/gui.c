@@ -104,7 +104,7 @@ UINT WM_TASKBARCREATED, WM_FINDMSGSTRING;
 FARPROC lpfnOldWndProc;
 HMENU hContext;
 OSVERSIONINFO VerInfo;
-char OSName[256];
+char OSName[OSVER_SIZE];
 #ifdef USE_LIBCURL
 extern char *find_loaded_remote_include(char *url);
 #endif 
@@ -215,7 +215,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	
 	VerInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 	GetVersionEx(&VerInfo);
-	GetOSName(VerInfo, OSName);
+	GetOSName(OSName);
 	if (VerInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) 
 	{
 		SC_HANDLE hService, hSCManager = OpenSCManager(NULL, NULL, GENERIC_EXECUTE);

@@ -123,7 +123,7 @@ VOID WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
  
 	VerInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 	GetVersionEx(&VerInfo);
-	GetOSName(VerInfo, OSName);
+	GetOSName(OSName);
 
 	InitDebug();
 

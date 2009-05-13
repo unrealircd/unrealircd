@@ -38,3 +38,6 @@ extern LRESULT RESubClassFunc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lPa
 extern DWORD CALLBACK SplitIt(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb);
 extern DWORD CALLBACK BufferIt(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb);
 extern DWORD CALLBACK RTFToIRC(int fd, unsigned char *pbBuff, long cb);
+
+#define OSVER_SIZE 256
+

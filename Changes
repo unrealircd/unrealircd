@@ -1786,3 +1786,5 @@
 - Comitted Windows Installer fix that was put in 3.2.8.1, fixing
   #0003845 and #0003809 (MS Visual Studio Redistributable package automatic
   installation).
+- Fix /VERSION output on Windows, especially for Vista and newer Windows,
+  patch from BuHHunyx and Bock (#0003846).
