@@ -1777,3 +1777,4 @@
   and never hardlink. (bug #???????).
 - Print out an error if a user uses standard ./configure stuff instead of
   ./Config. Won't catch all cases, but will definitely catch most problems.
+- Update some urls
