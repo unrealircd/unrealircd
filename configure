@@ -683,9 +683,8 @@ FD_SETSIZE
 TRE_CFLAGS
 TRE_LIBS
 PKG_CONFIG
-CARESINCDIR
-CARESLIBDIR
-CARESLIBS
+CARES_CFLAGS
+CARES_LIBS
 LIBOBJS
 LTLIBOBJS'
 ac_subst_files=''
@@ -700,7 +699,9 @@ CPPFLAGS
 CPP
 PKG_CONFIG
 TRE_CFLAGS
-TRE_LIBS'
+TRE_LIBS
+CARES_CFLAGS
+CARES_LIBS'
 
 
 # Initialize some variables set by options.
@@ -1306,6 +1307,9 @@ Optional Packages:
                           Require opers to invite themselves to +s/+p channels
   --with-system-tre       Use the system tre package instead of bundled,
                           discovered using pkg-config
+  --with-system-cares     Use the system c-ares (at least version 1.6.0)
+                          package instead of bundled c-ares, discovered using
+                          pkg-config
 
 Some influential environment variables:
   CC          C compiler command
@@ -1319,6 +1323,9 @@ Some influential environment variables:
   PKG_CONFIG  path to pkg-config utility
   TRE_CFLAGS  C compiler flags for TRE, overriding pkg-config
   TRE_LIBS    linker flags for TRE, overriding pkg-config
+  CARES_CFLAGS
+              C compiler flags for CARES, overriding pkg-config
+  CARES_LIBS  linker flags for CARES, overriding pkg-config
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -12341,6 +12348,14 @@ else
 fi
 
 
+# Check whether --with-system-cares was given.
+if test "${with_system_cares+set}" = set; then
+  withval=$with_system_cares;
+else
+  with_system_cares=no
+fi
+
+
 # Check whether --enable-ssl was given.
 if test "${enable_ssl+set}" = set; then
   enableval=$enable_ssl;
@@ -13248,6 +13263,8 @@ fi
 fi
 
 
+if test "x$with_system_cares" = "xno"; then
+
 cares_version="1.6.0"
 { echo "$as_me:$LINENO: result: extracting c-ares resolver library" >&5
 echo "${ECHO_T}extracting c-ares resolver library" >&6; }
@@ -13272,10 +13289,9 @@ $ac_cv_prog_MAKER || exit 1
 { echo "$as_me:$LINENO: result: installing c-ares resolver library" >&5
 echo "${ECHO_T}installing c-ares resolver library" >&6; }
 $ac_cv_prog_MAKER install || exit 1
-CARESINCDIR="$cur_dir/extras/c-ares/include"
+CARES_CFLAGS="$cur_dir/extras/c-ares/include"
 
-CARESLIBDIR="-L../extras/c-ares/lib"
-
+CARES_LIBS="-L../extras/c-ares/lib"
 
 CARESLIBSALT="-lcares"
 case `uname -s` in
@@ -13291,15 +13307,133 @@ CARESLIBSALT="-lcares -lrt"
 esac
 
 if test "x$ac_cv_path_PKGCONFIG" = "x" ; then
-	CARESLIBS="$CARESLIBSALT"
+	CARES_LIBS="$CARES_LIBS $CARESLIBSALT"
 else
-	CARESLIBS="`$ac_cv_path_PKGCONFIG --static --libs libcares.pc`"
-	if test "x$CARESLIBS" = "x" ; then
-		CARESLIBS="$CARESLIBSALT"
+	CARES_LIBSPRE="$CARES_LIBS"
+	CARES_LIBS="$CARES_LIBS `$ac_cv_path_PKGCONFIG --static --libs libcares.pc`"
+	if test "$CARES_LIBS" = "$CARES_LIBSPRE " ; then
+		CARES_LIBS="$CARES_LIBS $CARESLIBSALT"
 	fi
 fi
 
 cd $cur_dir
+
+else
+
+
+pkg_failed=no
+{ echo "$as_me:$LINENO: checking for CARES" >&5
+echo $ECHO_N "checking for CARES... $ECHO_C" >&6; }
+
+if test -n "$PKG_CONFIG"; then
+    if test -n "$CARES_CFLAGS"; then
+        pkg_cv_CARES_CFLAGS="$CARES_CFLAGS"
+    else
+        if test -n "$PKG_CONFIG" && \
+    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"libcares >= 1.6.0\"") >&5
+  ($PKG_CONFIG --exists --print-errors "libcares >= 1.6.0") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  pkg_cv_CARES_CFLAGS=`$PKG_CONFIG --cflags "libcares >= 1.6.0" 2>/dev/null`
+else
+  pkg_failed=yes
+fi
+    fi
+else
+	pkg_failed=untried
+fi
+if test -n "$PKG_CONFIG"; then
+    if test -n "$CARES_LIBS"; then
+        pkg_cv_CARES_LIBS="$CARES_LIBS"
+    else
+        if test -n "$PKG_CONFIG" && \
+    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"libcares >= 1.6.0\"") >&5
+  ($PKG_CONFIG --exists --print-errors "libcares >= 1.6.0") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  pkg_cv_CARES_LIBS=`$PKG_CONFIG --libs "libcares >= 1.6.0" 2>/dev/null`
+else
+  pkg_failed=yes
+fi
+    fi
+else
+	pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        CARES_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "libcares >= 1.6.0"`
+        else
+	        CARES_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "libcares >= 1.6.0"`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$CARES_PKG_ERRORS" >&5
+
+	{ { echo "$as_me:$LINENO: error: Package requirements (libcares >= 1.6.0) were not met:
+
+$CARES_PKG_ERRORS
+
+Consider adjusting the PKG_CONFIG_PATH environment variable if you
+installed software in a non-standard prefix.
+
+Alternatively, you may set the environment variables CARES_CFLAGS
+and CARES_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&5
+echo "$as_me: error: Package requirements (libcares >= 1.6.0) were not met:
+
+$CARES_PKG_ERRORS
+
+Consider adjusting the PKG_CONFIG_PATH environment variable if you
+installed software in a non-standard prefix.
+
+Alternatively, you may set the environment variables CARES_CFLAGS
+and CARES_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+" >&2;}
+   { (exit 1); exit 1; }; }
+elif test $pkg_failed = untried; then
+	{ { echo "$as_me:$LINENO: error: The pkg-config script could not be found or is too old.  Make sure it
+is in your PATH or set the PKG_CONFIG environment variable to the full
+path to pkg-config.
+
+Alternatively, you may set the environment variables CARES_CFLAGS
+and CARES_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+
+To get pkg-config, see <http://pkg-config.freedesktop.org/>.
+See \`config.log' for more details." >&5
+echo "$as_me: error: The pkg-config script could not be found or is too old.  Make sure it
+is in your PATH or set the PKG_CONFIG environment variable to the full
+path to pkg-config.
+
+Alternatively, you may set the environment variables CARES_CFLAGS
+and CARES_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+
+To get pkg-config, see <http://pkg-config.freedesktop.org/>.
+See \`config.log' for more details." >&2;}
+   { (exit 1); exit 1; }; }
+else
+	CARES_CFLAGS=$pkg_cv_CARES_CFLAGS
+	CARES_LIBS=$pkg_cv_CARES_LIBS
+        { echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6; }
+	:
+fi
+
+fi
+
 
 
 ac_config_files="$ac_config_files Makefile src/modules/Makefile unreal ircdcron/ircdchk"
@@ -13992,14 +14126,13 @@ FD_SETSIZE!$FD_SETSIZE$ac_delim
 TRE_CFLAGS!$TRE_CFLAGS$ac_delim
 TRE_LIBS!$TRE_LIBS$ac_delim
 PKG_CONFIG!$PKG_CONFIG$ac_delim
-CARESINCDIR!$CARESINCDIR$ac_delim
-CARESLIBDIR!$CARESLIBDIR$ac_delim
-CARESLIBS!$CARESLIBS$ac_delim
+CARES_CFLAGS!$CARES_CFLAGS$ac_delim
+CARES_LIBS!$CARES_LIBS$ac_delim
 LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 75; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 74; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

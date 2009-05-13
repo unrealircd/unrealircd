@@ -394,6 +394,7 @@ AC_ARG_WITH(disableusermod, [AC_HELP_STRING([--with-disableusermod], [Disable /s
 AC_ARG_WITH(operoverride-verify, [AC_HELP_STRING([--with-operoverride-verify], [Require opers to invite themselves to +s/+p channels])],
 	AC_DEFINE(OPEROVERRIDE_VERIFY))
 AC_ARG_WITH(system-tre, [AC_HELP_STRING([--with-system-tre], [Use the system tre package instead of bundled, discovered using pkg-config])], [], [with_system_tre=no ])
+AC_ARG_WITH(system-cares, [AC_HELP_STRING([--with-system-cares], [Use the system c-ares (at least version 1.6.0) package instead of bundled c-ares, discovered using pkg-config])], [], [with_system_cares=no ])
 CHECK_SSL
 CHECK_ZLIB
 CHECK_LIBCURL
@@ -463,6 +464,7 @@ dnl use pkgconfig for tre:
 PKG_CHECK_MODULES([TRE], tre >= 0.7.5)
 ])
 
+AS_IF([test "x$with_system_cares" = "xno"],[
 dnl REMEMBER TO CHANGE WITH A NEW C-ARES RELEASE!
 cares_version="1.6.0"
 AC_MSG_RESULT(extracting c-ares resolver library)
@@ -485,10 +487,9 @@ AC_MSG_RESULT(compiling c-ares resolver library)
 $ac_cv_prog_MAKER || exit 1
 AC_MSG_RESULT(installing c-ares resolver library)
 $ac_cv_prog_MAKER install || exit 1
-CARESINCDIR="$cur_dir/extras/c-ares/include"
-AC_SUBST(CARESINCDIR)
-CARESLIBDIR="-L../extras/c-ares/lib"
-AC_SUBST(CARESLIBDIR)
+CARES_CFLAGS="$cur_dir/extras/c-ares/include"
+AC_SUBST(CARES_CFLAGS)
+CARES_LIBS="-L../extras/c-ares/lib"
 
 dnl Set default library parameters for when pkg-config is not available
 CARESLIBSALT="-lcares"
@@ -508,15 +509,20 @@ dnl Use pkg-config for c-ares libraries, and if not available use defaults
 dnl from above. Also, if pkg-config returns an empty result (ex: on fbsd
 dnl or older versions it might be missing --static) then also use defaults.
 if test "x$ac_cv_path_PKGCONFIG" = "x" ; then
-	CARESLIBS="$CARESLIBSALT"
+	CARES_LIBS="$CARES_LIBS $CARESLIBSALT"
 else
-	CARESLIBS="`$ac_cv_path_PKGCONFIG --static --libs libcares.pc`"
-	if test "x$CARESLIBS" = "x" ; then
-		CARESLIBS="$CARESLIBSALT"
+	CARES_LIBSPRE="$CARES_LIBS"
+	CARES_LIBS="$CARES_LIBS `$ac_cv_path_PKGCONFIG --static --libs libcares.pc`"
+	if test "$CARES_LIBS" = "$CARES_LIBSPRE " ; then
+		CARES_LIBS="$CARES_LIBS $CARESLIBSALT"
 	fi
 fi
-AC_SUBST(CARESLIBS)
+AC_SUBST(CARES_LIBS)
 cd $cur_dir
+],[
+dnl use pkg-config for system c-ares:
+PKG_CHECK_MODULES([CARES], libcares >= 1.6.0)
+])
 
 
 AC_OUTPUT(Makefile src/modules/Makefile unreal ircdcron/ircdchk)

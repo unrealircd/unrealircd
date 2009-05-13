@@ -1781,3 +1781,5 @@
 - Added ./configure option called --with-system-tre by which you can specify
   a path to the TRE library (instead of using the TRE we ship with Unreal).
   Patch provided by ohnobinki (#0003842).
+- Applied another patch from ohnobinki which adds --with-system-cares
+  (#0003847).
