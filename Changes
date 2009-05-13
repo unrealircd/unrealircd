@@ -1783,3 +1783,4 @@
   Patch provided by ohnobinki (#0003842).
 - Applied another patch from ohnobinki which adds --with-system-cares
   (#0003847).
+- Comitted windows fix that was put in 3.2.8.1 for installer

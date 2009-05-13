@@ -1,7 +1,7 @@
 ; UnrealIRCd Win32 Installation Script for My Inno Setup Extensions
 ; Requires Inno Setup 4.1.6 and ISX 3.0.4 to work
 
-; #define USE_SSL
+;#define USE_SSL
 ; Uncomment the above line to package an SSL build
 #define USE_ZIP
 ; Uncomment the above line to package with ZIP support
@@ -11,7 +11,7 @@
 
 [Setup]
 AppName=UnrealIRCd
-AppVerName=UnrealIRCd3.2.8
+AppVerName=UnrealIRCd3.2.8.1
 AppPublisher=UnrealIRCd Team
 AppPublisherURL=http://www.unrealircd.com
 AppSupportURL=http://www.unrealircd.com
@@ -100,74 +100,155 @@ Name: "{app}\tmp"
 Type: files; Name: "{app}\DbgHelp.Dll"
 
 [Code]
-function isxdl_Download(hWnd: Integer; URL, Filename: PChar): Integer;
-external 'isxdl_Download@files:isxdl.dll stdcall';
+procedure isxdl_AddFile(URL, Filename: PChar);
+external 'isxdl_AddFile@files:isxdl.dll stdcall';
+function isxdl_DownloadFiles(hWnd: Integer): Integer;
+external 'isxdl_DownloadFiles@files:isxdl.dll stdcall';
 function isxdl_SetOption(Option, Value: PChar): Integer;
 external 'isxdl_SetOption@files:isxdl.dll stdcall';
-const crturl = 'http://www.unrealircd.com/downloads/msvcr71.dll';
-const cpturl = 'http://www.unrealircd.com/downloads/msvcp71.dll';
-var didDbgDl,didCrtDl: Boolean;
+
+var
+	MSVSRedistPath: string;
+	downloadNeeded: boolean;
+	MSVSNeeded: boolean;
+	memoDependenciesNeeded: string;
+  uninstaller: String;
+  ErrorCode: Integer;
+
+const
+	MSVSRedistURL = 'http://download.microsoft.com/download/1/1/1/1116b75a-9ec3-481a-a3c8-1777b5381140/vcredist_x86.exe';
+
+//*********************************************************************************
+// This is where all starts.
+//*********************************************************************************
+function InitializeSetup(): Boolean;
+
+begin
+
+	Result := true;
+	MSVSNeeded := false;
+	
+  //************************************************************************************
+	// Check for the existance of .NET 2.0  on client machine before installing sync app
+	//************************************************************************************
+    if ((not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{3C3D696B-0DB7-3C6D-A356-3DB8CE541918}')) and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{FF66E9F6-83E7-3A3E-AF14-8DE9A809A6A4}'))) then
+		begin
+			MSVSNeeded := true;
+				
+
+			if (not IsAdminLoggedOn()) then
+				begin
+					MsgBox('Application needs the Microsoft Visual C++ Redistributable Package to be installed by an Administrator', mbInformation, MB_OK);
+					Result := false;
+				end
+			else
+				begin
+					memoDependenciesNeeded := memoDependenciesNeeded + '      Microsoft Visual C++ Redist. Package' #13;
+					MSVSRedistPath := ExpandConstant('{src}\vcredist_x86.exe');
+					if not FileExists(MSVSRedistPath) then
+						begin
+							MSVSRedistPath := ExpandConstant('{tmp}\vcredist_x86.exe');
+							if not FileExists(MSVSRedistPath) then
+								begin
+									isxdl_AddFile(MSVSRedistURL, MSVSRedistPath);
+									downloadNeeded := true;
+								end
+						end
+
+					//SetIniString('install', 'MSVSRedist', MSVSRedistPath, ExpandConstant('{tmp}\dep.ini'));
+					// wth is that?
+				end
+		end;
+
+end;
 
 function NextButtonClick(CurPage: Integer): Boolean;
+
 var
-tmp, msvcrt, msvcpt: String;
-hWnd,answer: Integer;
+  hWnd: Integer;
+  ResultCode: Integer;
+  ResultXP: boolean;
+  Result2003: boolean;
+  Res: Integer;
 begin
 
-    if ((CurPage = wpReady)) then begin
-      msvcrt := ExpandConstant('{sys}\msvcr71.Dll');
-      msvcpt := ExpandConstant('{sys}\msvcp71.Dll');
-    if (NOT FileExists(msvcrt)) then begin
-      answer := MsgBox('Unreal requires the MS C Runtime 7.1 in order to run, do you wish to install it now?', mbConfirmation, MB_YESNO);
-      if answer = IDYES then begin
-        tmp := ExpandConstant('{tmp}\msvcr71.Dll');
-        isxdl_SetOption('title', 'Downloading msvcr71.dll');
-        hWnd := StrToInt(ExpandConstant('{wizardhwnd}'));
-        if isxdl_Download(hWnd, crturl, tmp) = 0 then begin
-          MsgBox('Download and installation of msvcr71.dll failed, the file must be manually installed. The file can be downloaded at http://www.unrealircd.com/downloads/mscvr71.dll', mbInformation, MB_OK);
-        end else
-          didCrtDl := true;
-      end else
-        MsgBox('In order for Unreal to properly function, you must manually install msvcr71.dll. The dll can be downloaded from http://www.unrealircd.com/downloads/msvcr71.dll', mbInformation, MB_OK);
-    end;
-    if (NOT FileExists(msvcpt)) then begin
-      answer := MsgBox('Unreal requires the MS C++ Runtime 7.1 in order to run, do you wish to install it now?', mbConfirmation, MB_YESNO);
-      if answer = IDYES then begin
-        tmp := ExpandConstant('{tmp}\msvcp71.Dll');
-        isxdl_SetOption('title', 'Downloading msvcp71.dll');
-        hWnd := StrToInt(ExpandConstant('{wizardhwnd}'));
-        if isxdl_Download(hWnd, cpturl, tmp) = 0 then begin
-          MsgBox('Download and installation of msvcp71.dll failed, the file must be manually installed. The file can be downloaded at http://www.unrealircd.com/downloads/mscvp71.dll', mbInformation, MB_OK);
-        end else
-          didCrtDl := true;
-      end else
-        MsgBox('In order for Unreal to properly function, you must manually install msvcp71.dll. The dll can be downloaded from http://www.unrealircd.com/downloads/msvcp71.dll', mbInformation, MB_OK);
-    end;
-
-  end;
   Result := true;
+  ResultXP := true;
+  Result2003 := true;
+
+  //*********************************************************************************
+  // Only run this at the "Ready To Install" wizard page.
+  //*********************************************************************************
+  if CurPage = wpReady then
+	begin
+
+		hWnd := StrToInt(ExpandConstant('{wizardhwnd}'));
+
+		// don't try to init isxdl if it's not needed because it will error on < ie 3
+
+		//********************************************************************************************************
+		// Download the .NET 2.0 redistribution file. Can change the MS link to application development site to avoid dead link
+		//*********************************************************************************************************
+		if downloadNeeded and (MSVSNeeded = true) then
+			begin
+				isxdl_SetOption('label', 'Downloading Microsoft Visual C++ Redist. Package');
+				isxdl_SetOption('description', 'This app needs to install the Microsoft Visual C++ Redist. Package. Please wait while Setup is downloading extra files to your computer.');
+				if isxdl_DownloadFiles(hWnd) = 0 then Result := false;
+			end;
+
+		//***********************************************************************************
+		// Run the install file...
+		//***********************************************************************************
+      if (MSVSNeeded = true) then
+			begin
+
+				if Exec(ExpandConstant(MSVSRedistPath), '', '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then
+					begin
+
+						// handle success if necessary; ResultCode contains the exit code
+						if not (ResultCode = 0) then
+							begin
+
+	 						  Res := MsgBox('UnrealIRCd requires the Microsoft Visual C++ 2008 Redistributable Package, and tried to download & install it for you. However, this failed. This could be for a number of reasons, such as it already being installed, or you are using a 64 bit Operating System. If it is not installed yet, or you do not know, then you are suggested to manually download and install the "Microsoft Visual C++ 2008 Redistributable package" from www.microsoft.com. Do you want to continue installing UnrealIRCd anyway?', mbConfirmation, MB_YESNO);
+  							if (Res = IDNO) then
+  							begin
+                  Result := false;
+                end
+
+							end
+					end
+					else
+						begin
+
+							// handle failure if necessary; ResultCode contains the error code
+							Res := MsgBox('UnrealIRCd requires the Microsoft Visual C++ 2008 Redistributable Package, and tried to download & install it for you. However, this failed. This could be for a number of reasons, such as it already being installed, or you are using a 64 bit Operating System. If it is not installed yet, or you do not know, then you are suggested to manually download and install the "Microsoft Visual C++ 2008 Redistributable package" from www.microsoft.com. Do you want to continue installing UnrealIRCd anyway?', mbConfirmation, MB_YESNO);
+							if (Res = IDNO) then
+							begin
+                  Result := false;
+              end
+						end
+			end;
+
+
+end;
 end;
 
-procedure CurStepChanged(CurStep: TSetupStep);
+//*********************************************************************************
+// Updates the memo box shown right before the install actuall starts.
+//*********************************************************************************
+function UpdateReadyMemo(Space, NewLine, MemoUserInfoInfo, MemoDirInfo, MemoTypeInfo, MemoComponentsInfo, MemoGroupInfo, MemoTasksInfo: String): String;
 var
-input,output: String;
+  s: string;
+
 begin
-  if (CurStep = ssPostInstall) then begin
-    if (didDbgDl) then begin
-      input := ExpandConstant('{tmp}\dbghelp.dll');
-      output := ExpandConstant('{app}\dbghelp.dll');
-      FileCopy(input, output, true);
-    end;
-    if (didCrtDl) then begin
-      input := ExpandConstant('{tmp}\msvcr71.dll');
-      output := ExpandConstant('{sys}\msvcr71.dll');
-      FileCopy(input, output, true);
-      input := ExpandConstant('{tmp}\msvcp71.dll');
-      output := ExpandConstant('{sys}\msvcp71.dll');
-      FileCopy(input, output, true);
-    end;
-  end;
+
+  if memoDependenciesNeeded <> '' then s := s + 'Dependencies that will be automatically downloaded And installed:' + NewLine + memoDependenciesNeeded + NewLine;
+  s := s + MemoDirInfo + NewLine + NewLine;
+
+  Result := s
+
 end;
+
 
 [Icons]
 Name: "{group}\UnrealIRCd"; Filename: "{app}\wircd.exe"; WorkingDir: "{app}"
