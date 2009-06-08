@@ -1788,3 +1788,7 @@
   installation).
 - Fix /VERSION output on Windows, especially for Vista and newer Windows,
   patch from BuHHunyx and Bock (#0003846).
+- Fixed issue where a negative time offset (either caused by ircd.tune or
+  timesynch) made autoconnect not work for the duration of the offset
+  (eg: -60 would make autoconnect wait 60 seconds after boot, instead of
+  autoconnecting almost immediately). Reported by aragon (#0003853).

@@ -1002,7 +1002,7 @@ struct ThrottlingBucket z = { NULL, NULL, {0}, 0, 0};
 	
 	Debug((DEBUG_DEBUG, "fix_timers(): updating nextping/nextconnect/nextdnscheck/nextexpire (%ld/%ld/%ld/%ld)",
 		nextping, nextconnect, nextdnscheck, nextexpire));	
-	nextping = nextconnect = nextdnscheck = nextexpire = 0;
+	nextping = nextconnect = nextdnscheck = nextexpire = 1;
 }
 
 
@@ -1620,6 +1620,7 @@ int InitwIRCD(int argc, char *argv[])
 			ircd_log(LOG_ERROR, "TIME SYNCH: Unable to synchronize time: %s. This happens sometimes, no error on your part.",
 				unreal_time_synch_error());
 	}
+	fix_timers(); /* Fix timers AFTER reading tune file AND timesynch */
 	write_pidfile();
 	Debug((DEBUG_NOTICE, "Server ready..."));
 	SetupEvents();
