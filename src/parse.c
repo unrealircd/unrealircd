@@ -287,6 +287,8 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 		ircstp->is_empt++;
 		Debug((DEBUG_NOTICE, "Empty message from host %s:%s",
 		    cptr->name, from->name));
+		if (!IsServer(cptr))
+			cptr->since++; /* 1s fake lag */
 		return (-1);
 	}
 	/*
