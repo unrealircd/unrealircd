@@ -3631,6 +3631,12 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 		config_error_noname(ce->ce_fileptr->cf_filename, ce->ce_varlinenum, "class");
 		errors++;
 	}
+	if (!strcasecmp(ce->ce_vardata, "default"))
+	{
+		config_error("%s:%d: Class cannot be named 'default', this class name is reserved for internal use.",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	}
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "options"))

@@ -1792,3 +1792,5 @@
   timesynch) made autoconnect not work for the duration of the offset
   (eg: -60 would make autoconnect wait 60 seconds after boot, instead of
   autoconnecting almost immediately). Reported by aragon (#0003853).
+- class name 'default' is reserved. Using it caused the ircd to crash
+  on-boot, reported by Dragon_Legion (#0003864).
