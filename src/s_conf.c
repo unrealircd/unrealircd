@@ -6168,6 +6168,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 				{
 					char ipv6buf[48];
 					snprintf(ipv6buf, sizeof(ipv6buf), "::ffff:%s", cep->ce_vardata);
+					MyFree(cep->ce_vardata);
 					cep->ce_vardata = strdup(ipv6buf);
 				} else {
 				/* Insert IPv6 validation here */
@@ -6193,6 +6194,29 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 			has_bindip = 1;
+#ifdef INET6
+			/* I'm nice... I'll help those poor ipv6 users. -- Syzop */
+			/* [ not null && len>6 && has not a : in it && last character is a digit ] */
+			if (cep->ce_vardata && (strlen(cep->ce_vardata) > 6) && !strchr(cep->ce_vardata, ':') &&
+			    isdigit(cep->ce_vardata[strlen(cep->ce_vardata)-1]))
+			{
+				char crap[32];
+				if (inet_pton(AF_INET, cep->ce_vardata, crap) != 0)
+				{
+					char ipv6buf[48];
+					snprintf(ipv6buf, sizeof(ipv6buf), "::ffff:%s", cep->ce_vardata);
+					MyFree(cep->ce_vardata);
+					cep->ce_vardata = strdup(ipv6buf);
+				} else {
+				/* Insert IPv6 validation here */
+					config_error( "%s:%i: bind-ip: '%s' looks like "
+						"it might be IPv4, but is not a valid address.",
+						ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+						cep->ce_vardata);
+					errors++;
+				}
+			}
+#endif
 		}
 		else if (!strcmp(cep->ce_varname, "port"))
 		{
@@ -6448,6 +6472,7 @@ int	_test_cgiirc(ConfigFile *conf, ConfigEntry *ce)
 				{
 					char ipv6buf[48];
 					snprintf(ipv6buf, sizeof(ipv6buf), "::ffff:%s", cep->ce_vardata);
+					MyFree(cep->ce_vardata);
 					cep->ce_vardata = strdup(ipv6buf);
 				} else {
 				/* Insert IPv6 validation here */

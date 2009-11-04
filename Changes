@@ -1794,3 +1794,7 @@
   autoconnecting almost immediately). Reported by aragon (#0003853).
 - class name 'default' is reserved. Using it caused the ircd to crash
   on-boot, reported by Dragon_Legion (#0003864).
+- Fixed IPv4 ip's in link::bind-ip on IPv6 builds. This caused issues ranging
+  from not binding to that ip when linking, to not being able to link at
+  all. Also fixed a very small memory leak upon /REHASH. Bug reported by
+  Mr_Smoke (#0003858).
