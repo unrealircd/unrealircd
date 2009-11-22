@@ -207,8 +207,12 @@
 
 /*
  * Full pathnames and defaults of irc system's support files. Please note that
- * these are only the recommened names and paths. Change as needed.
- * You must define these to something, even if you don't really want them.
+ * these are only the recommened names and paths.  You must define PPATH if you 
+ * want a pidfile written. Also, IRCDTUNE should be defined because it is needed for
+ * operation. All of these options are runtime-configurable (except for CPATH and LPATH)
+ * in the files block of unrealircd.conf. CPATH is runtime-configurable as a command-
+ * line argument. These used as the default values for options absent from the user's
+ * unrealircd.conf.
  */
 #define	CPATH		"unrealircd.conf"	/* server configuration file */
 #define	MPATH		"ircd.motd"	/* server MOTD file */

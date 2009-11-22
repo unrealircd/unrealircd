@@ -106,7 +106,7 @@ DLLFUNC CMD_FUNC(m_addomotd)
 		    me.name, parv[0], "ADDMOTD");
 		return 0;
 	}
-	conf = fopen(OPATH, "a");
+	conf = fopen(conf_files->opermotd_file, "a");
 	if (conf == NULL)
 	{
 		return 0;

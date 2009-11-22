@@ -551,7 +551,7 @@ EVENT(save_tunefile)
 {
 	FILE *tunefile;
 
-	tunefile = fopen(IRCDTUNE, "w");
+	tunefile = fopen(conf_files->tune_file, "w");
 	if (!tunefile)
 	{
 #if !defined(_WIN32) && !defined(_AMIGA)
@@ -571,7 +571,7 @@ void load_tunefile(void)
 	FILE *tunefile;
 	char buf[1024];
 
-	tunefile = fopen(IRCDTUNE, "r");
+	tunefile = fopen(conf_files->tune_file, "r");
 	if (!tunefile)
 		return;
 	fprintf(stderr, "* Loading tunefile..\n");
@@ -582,14 +582,14 @@ void load_tunefile(void)
 	fclose(tunefile);
 }
 
-/** Rehash motd and rule files (MPATH/RPATH and all tld entries). */
+/** Rehash motd and rule files (motd_file/rules_file and all tld entries). */
 void rehash_motdrules()
 {
 ConfigItem_tld *tlds;
 
-	motd = (aMotd *) read_file_ex(MPATH, &motd, &motd_tm);
-	rules = (aMotd *) read_file(RPATH, &rules);
-	smotd = (aMotd *) read_file_ex(SMPATH, &smotd, &smotd_tm);
+	motd = (aMotd *) read_file_ex(conf_files->motd_file, &motd, &motd_tm);
+	rules = (aMotd *) read_file(conf_files->rules_file, &rules);
+	smotd = (aMotd *) read_file_ex(conf_files->smotd_file, &smotd, &smotd_tm);
 	for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *) tlds->next)
 	{
 		tlds->motd = read_file_ex(tlds->motd_file, &tlds->motd, &tlds->motd_tm);
@@ -605,11 +605,12 @@ ConfigItem_tld *tlds;
 
 void reread_motdsandrules()
 {
-	motd = (aMotd *) read_file_ex(MPATH, &motd, &motd_tm);
-	rules = (aMotd *) read_file(RPATH, &rules);
-	smotd = (aMotd *) read_file_ex(SMPATH, &smotd, &smotd_tm);
-	botmotd = (aMotd *) read_file(BPATH, &botmotd);
-	opermotd = (aMotd *) read_file(OPATH, &opermotd);
+	motd = (aMotd *) read_file_ex(conf_files->motd_file, &motd, &motd_tm);
+	rules = (aMotd *) read_file(conf_files->rules_file, &rules);
+	smotd = (aMotd *) read_file_ex(conf_files->smotd_file, &smotd, &smotd_tm);
+	botmotd = (aMotd *) read_file(conf_files->botmotd_file, &botmotd);
+	opermotd = (aMotd *) read_file(conf_files->opermotd_file, &opermotd);
+	svsmotd = (aMotd *) read_file(conf_files->svsmotd_file, &svsmotd);
 }
 
 extern void reinit_resolver(aClient *sptr);
@@ -721,7 +722,7 @@ CMD_FUNC(m_rehash)
 				    sptr->name);
 				if (cptr != sptr)
 					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing OperMOTD", me.name, sptr->name);
-				opermotd = (aMotd *) read_file(OPATH, &opermotd);
+				opermotd = (aMotd *) read_file(conf_files->opermotd_file, &opermotd);
 				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
 				return 0;
 			}
@@ -733,7 +734,7 @@ CMD_FUNC(m_rehash)
 				    sptr->name);
 				if (cptr != sptr)
 					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing BotMOTD", me.name, sptr->name);
-				botmotd = (aMotd *) read_file(BPATH, &botmotd);
+				botmotd = (aMotd *) read_file(conf_files->botmotd_file, &botmotd);
 				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
 				return 0;
 			}
@@ -766,10 +767,11 @@ CMD_FUNC(m_rehash)
 	}
 
 	/* Normal rehash, rehash motds&rules too, just like the on in the tld block will :p */
-	reread_motdsandrules();
 	if (cptr == sptr)
 		sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], configfile);
-	return rehash(cptr, sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
+	x = rehash(cptr, sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
+	reread_motdsandrules();
+	return x;
 }
 
 /*

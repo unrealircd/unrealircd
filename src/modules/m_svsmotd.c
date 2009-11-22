@@ -113,12 +113,12 @@ int  m_svsmotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
         switch (*parv[1])
         {
           case '#':
-                  conf = fopen(VPATH, "a");
+                  conf = fopen(conf_files->svsmotd_file, "a");
                   sendto_ops("Added '%s' to services motd", parv[2]);
                   break;
           case '!':
           {
-                  remove(VPATH);
+                  remove(conf_files->svsmotd_file);
                   free_motd(svsmotd);
                   svsmotd = NULL;
                   sendto_ops("Wiped out services motd data");
@@ -150,6 +150,6 @@ int  m_svsmotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
         fclose(conf);
         /* We editted it, so rehash it -- codemastr */
-        svsmotd = read_file(VPATH, &svsmotd);
+        svsmotd = read_file(conf_files->svsmotd_file, &svsmotd);
         return 1;
 }

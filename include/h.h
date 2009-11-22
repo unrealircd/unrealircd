@@ -73,6 +73,7 @@ extern MODVAR long lastsendK, lastrecvK;
  * Configuration linked lists
 */
 extern MODVAR ConfigItem_me		*conf_me;
+extern MODVAR ConfigItem_files		*conf_files;
 extern MODVAR ConfigItem_class 	*conf_class;
 extern MODVAR ConfigItem_class		*default_class;
 extern MODVAR ConfigItem_admin 	*conf_admin;

@@ -389,11 +389,11 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 						}
 						AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
 					}
-					AppendMenu(hConfig, MF_STRING, IDM_MOTD, MPATH);
-					AppendMenu(hConfig, MF_STRING, IDM_SMOTD, SMPATH);
-					AppendMenu(hConfig, MF_STRING, IDM_OPERMOTD, OPATH);
-					AppendMenu(hConfig, MF_STRING, IDM_BOTMOTD, BPATH);
-					AppendMenu(hConfig, MF_STRING, IDM_RULES, RPATH);
+					AppendMenu(hConfig, MF_STRING, IDM_MOTD, conf_files->motd_file);
+					AppendMenu(hConfig, MF_STRING, IDM_SMOTD, conf_files->smotd_file);
+					AppendMenu(hConfig, MF_STRING, IDM_OPERMOTD, conf_files->opermotd_file);
+					AppendMenu(hConfig, MF_STRING, IDM_BOTMOTD, conf_files->botmotd_file);
+					AppendMenu(hConfig, MF_STRING, IDM_RULES, conf_files->rules_file);
 						
 					if (conf_tld) 
 					{
@@ -494,11 +494,11 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 					AppendMenu(hConfig, MF_SEPARATOR, 0, NULL);
 				}
 
-				AppendMenu(hConfig, MF_STRING, IDM_MOTD, MPATH);
-				AppendMenu(hConfig, MF_STRING, IDM_SMOTD, SMPATH);
-				AppendMenu(hConfig, MF_STRING, IDM_OPERMOTD, OPATH);
-				AppendMenu(hConfig, MF_STRING, IDM_BOTMOTD, BPATH);
-				AppendMenu(hConfig, MF_STRING, IDM_RULES, RPATH);
+				AppendMenu(hConfig, MF_STRING, IDM_MOTD, conf_files->motd_file);
+				AppendMenu(hConfig, MF_STRING, IDM_SMOTD, conf_files->smotd_file);
+				AppendMenu(hConfig, MF_STRING, IDM_OPERMOTD, conf_files->opermotd_file);
+				AppendMenu(hConfig, MF_STRING, IDM_BOTMOTD, conf_files->botmotd_file);
+				AppendMenu(hConfig, MF_STRING, IDM_RULES, conf_files->rules_file);
 				
 				if (conf_tld) 
 				{
@@ -582,12 +582,12 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				}
 				case IDM_RHOMOTD:
 					MessageBox(NULL, "Rehashing the OperMOTD", "Rehashing", MB_OK);
-					opermotd = (aMotd *) read_file(OPATH, &opermotd);
+					opermotd = (aMotd *) read_file(conf_files->opermotd_file, &opermotd);
 					sendto_realops("Rehashing the OperMOTD via the console");
 					break;
 				case IDM_RHBMOTD:
 					MessageBox(NULL, "Rehashing the BotMOTD", "Rehashing", MB_OK);
-					botmotd = (aMotd *) read_file(BPATH, &botmotd);
+					botmotd = (aMotd *) read_file(conf_files->botmotd_file, &botmotd);
 					sendto_realops("Rehashing the BotMOTD via the console");
 					break;
 				case IDM_LICENSE: 
@@ -608,23 +608,23 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 					break;
 				case IDM_MOTD:
 					DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, 
-						(LPARAM)MPATH);
+						(LPARAM)conf_files->motd_file);
 					break;
 				case IDM_SMOTD:
 					DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, 
-						(LPARAM)SMPATH);
+						(LPARAM)conf_files->smotd_file);
 					break;
 				case IDM_OPERMOTD:
 					DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG,
-						(LPARAM)OPATH);
+						(LPARAM)conf_files->opermotd_file);
 					break;
 				case IDM_BOTMOTD:
 					DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG,
-						(LPARAM)BPATH);
+						(LPARAM)conf_files->botmotd_file);
 					break;
 				case IDM_RULES:
 					DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG,
-						(LPARAM)RPATH);
+						(LPARAM)conf_files->rules_file);
 					break;
 				case IDM_NEW:
 					DialogBoxParam(hInst, "FromFile", hDlg, (DLGPROC)FromFileDLG, (LPARAM)NULL);

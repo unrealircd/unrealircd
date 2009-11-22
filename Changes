@@ -1802,3 +1802,5 @@
   (HOOKTYPE_PACKET). Replacing the 'text to be sent' to a client is
   supported, which allows character(set) conversion in a module.
   Note that modifying an incoming message by the hook is not supported.
+- Applied patch from ohnobinki (#0003863) which makes run-time configuration
+  of files (tune, pid, motd) possible.

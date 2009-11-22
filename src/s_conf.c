@@ -79,6 +79,7 @@ struct _conf_operflag
 
 static int	_conf_admin		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_me		(ConfigFile *conf, ConfigEntry *ce);
+static int	_conf_files		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_oper		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_class		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_drpass		(ConfigFile *conf, ConfigEntry *ce);
@@ -116,6 +117,7 @@ static int	_conf_cgiirc	(ConfigFile *conf, ConfigEntry *ce);
 
 static int	_test_admin		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_me		(ConfigFile *conf, ConfigEntry *ce);
+static int	_test_files		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_oper		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_class		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_drpass		(ConfigFile *conf, ConfigEntry *ce);
@@ -157,6 +159,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "deny",		_conf_deny,		_test_deny	},
 	{ "drpass",		_conf_drpass,		_test_drpass	},
 	{ "except",		_conf_except,		_test_except	},
+	{ "files",		_conf_files,		_test_files	},
 	{ "help",		_conf_help,		_test_help	},
 	{ "include",		NULL,	  		_test_include	},
 	{ "link", 		_conf_link,		_test_link	},
@@ -354,6 +357,7 @@ int			config_run();
  * Configuration linked lists
 */
 ConfigItem_me		*conf_me = NULL;
+ConfigItem_files	*conf_files = NULL;
 ConfigItem_class 	*conf_class = NULL;
 ConfigItem_class	*default_class = NULL;
 ConfigItem_admin 	*conf_admin = NULL;
@@ -1445,6 +1449,59 @@ static void inline config_warn_duplicate(const char *filename, int line, const c
 	config_warn("%s:%d: Duplicate %s directive", filename, line, entry);
 }
 
+/* returns 1 if the test fails */
+int config_test_openfile(ConfigEntry *cep, int flags, mode_t mode, const char *entry, int fatal)
+{
+	int fd;
+	
+	if(!cep->ce_vardata)
+	{
+		if(fatal)
+			config_error("%s:%i: %s: <no file specified>: no file specified",
+				     cep->ce_fileptr->cf_filename,
+				     cep->ce_varlinenum,
+				     entry);
+		else
+			
+			config_warn("%s:%i: %s: <no file specified>: no file specified",
+				    cep->ce_fileptr->cf_filename,
+				    cep->ce_varlinenum,
+				    entry);
+		return 1;
+	}
+	/* 
+	 * Make sure that files are created with the correct mode. This is 
+	 * because we don't feel like unlink()ing them...which would require
+	 * stat()ing them to make sure that we don't delete existing ones
+	 * and that we deal with all of the bugs that come with complexity. 
+	 * The only files we may be creating are the tunefile and pidfile so far.
+	 */
+	if(flags & O_CREAT)
+		fd = open(cep->ce_vardata, flags, mode);
+	else
+		fd = open(cep->ce_vardata, flags);
+	if(fd == -1)
+	{
+		if(fatal)
+			config_error("%s:%i: %s: %s: %s",
+				     cep->ce_fileptr->cf_filename,
+				     cep->ce_varlinenum,
+				     entry,
+				     cep->ce_vardata,
+				     strerror(errno));
+		else
+			config_warn("%s:%i: %s: %s: %s",
+				     cep->ce_fileptr->cf_filename,
+				     cep->ce_varlinenum,
+				     entry,
+				     cep->ce_vardata,
+				     strerror(errno));
+		return 1;
+	}
+	close(fd);
+	return 0;
+}
+
 void config_progress(char *format, ...)
 {
 	va_list		ap;
@@ -1692,6 +1749,8 @@ void applymeblock(void)
 
 int	init_conf(char *rootconf, int rehash)
 {
+	char *old_pid_file = NULL;
+  
 	config_status("Loading IRCd configuration ..");
 	if (conf)
 	{
@@ -1727,6 +1786,7 @@ int	init_conf(char *rootconf, int rehash)
 		if (rehash)
 		{
 			Hook *h;
+			old_pid_file = conf_files->pid_file;
 			unrealdns_delasyncconnects();
 			config_rehash();
 #ifndef STATIC_LINKING
@@ -1770,7 +1830,17 @@ int	init_conf(char *rootconf, int rehash)
 		}
 		charsys_finish();
 		applymeblock();
-	}
+		if(old_pid_file &&
+		   strcmp(old_pid_file, conf_files->pid_file))
+			{
+				sendto_ops("pidfile is being rewritten to %s, please delete %s",
+					   conf_files->pid_file,
+					   old_pid_file);
+				ircfree(old_pid_file);
+				
+				write_pidfile();
+			}
+		   }
 	else	
 	{
 		config_error("IRCd configuration failed to load");
@@ -2234,6 +2304,25 @@ void	config_rehash()
 		next = (ListStruct *)cgiirc_ptr->next;
 		delete_cgiircblock(cgiirc_ptr);
 	}
+
+	/*
+	  reset conf_files -- should this be in its own function? no, because
+	  it's only used here
+	 */
+	ircfree(conf_files->motd_file);
+	ircfree(conf_files->smotd_file);
+	ircfree(conf_files->opermotd_file);
+	ircfree(conf_files->svsmotd_file);
+	ircfree(conf_files->botmotd_file);
+	ircfree(conf_files->rules_file);
+	ircfree(conf_files->tune_file);
+	/* 
+	   Don't free conf_files->pid_file here; the old value is used to determine if 
+	   the pidfile location has changed and write_pidfile() needs to be called 
+	   again.
+	*/
+	ircfree(conf_files);
+	conf_files = NULL;
 }
 
 int	config_post_test()
@@ -2353,6 +2442,10 @@ int	config_run()
 		EventMod(EventFind("bucketcleaning"), &eInfo);
 	}
 #endif
+
+	/* initialize conf_files with defaults if the block isn't set: */
+	if(!conf_files)
+	  _conf_files(NULL, NULL);
 
 	if (errors > 0)
 	{
@@ -3225,6 +3318,175 @@ int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 		errors++;
 	}
 	requiredstuff.conf_me = 1;
+	return errors;
+}
+
+/*
+ * The files {} block
+ */
+int	_conf_files(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+
+	if (!conf_files)
+	{
+		conf_files = MyMallocEx(sizeof(ConfigItem_files));
+
+		/* set defaults */
+		conf_files->motd_file = strdup(MPATH);
+		conf_files->rules_file = strdup(RPATH);
+		conf_files->smotd_file = strdup(SMPATH);
+		conf_files->botmotd_file = strdup(BPATH);
+		conf_files->opermotd_file = strdup(OPATH);
+		conf_files->svsmotd_file = strdup(VPATH);
+		
+		conf_files->pid_file = strdup(IRCD_PIDFILE);
+		conf_files->tune_file = strdup(IRCDTUNE);
+		
+		/* we let actual files get read in later by the motd caching mechanism */
+		fprintf(stderr, "files {} got initilized!\n");
+	}
+	/*
+	 * hack to allow initialization of conf_files (above) when there is no files block in 
+	 * CPATH. The caller calls _conf_files(NULL, NULL); to do this. We return here because 
+	 * the for loop's initialization of cep would segfault otherwise. We return 1 because
+	 * if config_run() calls us with a NULL ce, it's got a bug...but we can't detect that.
+	 */
+	if(!ce)
+	  return 1;
+	
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "motd"))
+			ircstrdup(conf_files->motd_file, cep->ce_vardata);
+		else if (!strcmp(cep->ce_varname, "shortmotd"))
+			ircstrdup(conf_files->smotd_file, cep->ce_vardata);
+		else if (!strcmp(cep->ce_varname, "opermotd"))
+			ircstrdup(conf_files->opermotd_file, cep->ce_vardata);
+		else if (!strcmp(cep->ce_varname, "svsmotd"))
+			ircstrdup(conf_files->svsmotd_file, cep->ce_vardata);
+		else if (!strcmp(cep->ce_varname, "botmotd"))
+			ircstrdup(conf_files->botmotd_file, cep->ce_vardata);
+		else if (!strcmp(cep->ce_varname, "rules"))
+			ircstrdup(conf_files->rules_file, cep->ce_vardata);
+		else if (!strcmp(cep->ce_varname, "tunefile"))
+			ircstrdup(conf_files->tune_file, cep->ce_vardata);
+		else if (!strcmp(cep->ce_varname, "pidfile"))
+			ircstrdup(conf_files->pid_file, cep->ce_vardata);
+	}
+	return 1;
+}
+
+int	_test_files(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	int	    errors = 0;
+	char has_motd = 0, has_smotd = 0, has_rules = 0;
+	char has_botmotd = 0, has_opermotd = 0, has_svsmotd = 0;
+	char has_pidfile = 0, has_tunefile = 0;
+	
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		/* files::motd */
+		if (!strcmp(cep->ce_varname, "motd"))
+		{
+			if (has_motd)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
+					cep->ce_varlinenum, "files::motd");
+				continue;
+			}
+			config_test_openfile(cep, O_RDONLY, 0, "files::motd", 0);
+			has_motd = 1;
+		}
+		/* files::smotd */
+		else if (!strcmp(cep->ce_varname, "smotd")) 
+		{
+			if (has_smotd)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "files::smotd");
+				continue;
+			}
+			config_test_openfile(cep, O_RDONLY, 0, "files::smotd", 0);
+			has_smotd = 1;
+		}
+		/* files::rules */
+		else if (!strcmp(cep->ce_varname, "rules")) 
+		{
+			if (has_rules)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "files::rules");
+				continue;
+			}
+			config_test_openfile(cep, O_RDONLY, 0, "files::rules", 0);
+			has_rules = 1;
+		}
+		/* files::botmotd */
+		else if (!strcmp(cep->ce_varname, "botmotd")) 
+		{
+			if (has_botmotd)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "files::botmotd");
+				continue;
+			}
+			config_test_openfile(cep, O_RDONLY, 0, "files::botmotd", 0);
+			has_botmotd = 1;
+		}
+		/* files::opermotd */
+		else if (!strcmp(cep->ce_varname, "opermotd")) 
+		{
+			if (has_opermotd)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "files::opermotd");
+				continue;
+			}
+			config_test_openfile(cep, O_RDONLY, 0, "files::opermotd", 0);
+			has_opermotd = 1;
+		}
+		/* files::svsmotd 
+		 * This config stuff should somehow be inside of modules/m_svsmotd.c!!!... right?
+		 */
+		else if (!strcmp(cep->ce_varname, "svsmotd")) 
+		{
+			if (has_svsmotd)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "files::svsmotd");
+				continue;
+			}
+			config_test_openfile(cep, O_RDONLY, 0, "files::svsmotd", 0);
+			has_svsmotd = 1;
+		}
+		/* files::pidfile */
+		else if (!strcmp(cep->ce_varname, "pidfile")) 
+		{
+			if (has_pidfile)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "files::pidfile");
+				continue;
+			}
+			
+			errors += config_test_openfile(cep, O_WRONLY | O_CREAT, 0600, "files::pidfile", 1);
+			has_pidfile = 1;
+		}
+		/* files::tunefile */
+		else if (!strcmp(cep->ce_varname, "tunefile")) 
+		{
+			if (has_tunefile)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "files::tunefile");
+				continue;
+			}
+			errors += config_test_openfile(cep, O_RDWR | O_CREAT, 0600, "files::tunefile", 1);
+			has_tunefile = 1;
+		}
+	}
 	return errors;
 }
 

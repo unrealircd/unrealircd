@@ -94,6 +94,7 @@ typedef struct _configflag_ban ConfigFlag_ban;
 typedef struct _configflag_tld ConfigFlag_tld;
 typedef struct _configitem ConfigItem;
 typedef struct _configitem_me ConfigItem_me;
+typedef struct _configitem_files ConfigItem_files;
 typedef struct _configitem_admin ConfigItem_admin;
 typedef struct _configitem_class ConfigItem_class;
 typedef struct _configitem_oper ConfigItem_oper;
@@ -1109,6 +1110,12 @@ struct _configitem {
 struct _configitem_me {
 	char	   *name, *info;
 	unsigned short	   numeric;
+};
+
+struct _configitem_files {
+	char	   *motd_file, *rules_file, *smotd_file;
+	char	   *botmotd_file, *opermotd_file, *svsmotd_file;
+	char	   *pid_file, *tune_file;
 };
 
 struct _configitem_admin {

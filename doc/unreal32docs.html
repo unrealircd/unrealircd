@@ -32,7 +32,7 @@ English |
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2.8</font><br>
-  <b>Last doc update:</b> 2009-01-03</div>
+  <b>Last doc update:</b> 2009-09-14</div>
 <br>
   <b>Coders:</b> Stskeeps / codemastr / Syzop / Luke / aquanight / WolfSage <br>
   <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -114,6 +114,7 @@ English |
   ---4.35. <a href="#spamfilter">Spamfilter Block</a><br>
   ---4.36. <a href="#cgiirc">Cgiirc Block</a><br> 
   ---4.37. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
+  ---4.38. <a href="#filesblock">Files Block</a><br />
   5. <a href="#addtlfiles">Additional Files</a><br>
   6. <a href="#userchannelmodes">User & Channel Modes</a><br>
   7. <a href="#useropercommands">User & Oper Commands</a><br>
@@ -2540,11 +2541,44 @@ AU). Requests to these servers are sent in parallel, fastest reply wins.</p>
  <p><font class="set">set::watch-away-notification &lt;yes|no&gt;</font><br>
   Allows you to enable/disable AWAY notification in WATCH. The default is yes.</p>
 <p></p> </div>
+<p id="filesblock"><font class="block_section">4.38 - </font><font class="block_name">Files Block</font>
+   <font class="block_optional">OPTIONAL</font><div class="desc">
+</p>
+<p>
+You don't need to use a <a href="#tldblock">TLD block</a> to specify default locations for your MOTDs and rules files. This block controls default settings for those in addition to the pidfile and irc.tune file. Anything not specified here will default to the value documented in <a href="#addtlfiles">Additional Files</a>.
+</p>
+<p>
+Relative pathnames will be interpreted relative to unrealIRCD's root directory which is normally the directory containing <tt>unrealircd.conf</tt>. This block may be used to facilitate running more than one IRCd out of the same directory/root. In that case, you should at least specify multiple pidfiles and tunefiles&mdash;one for each server.
+</p>
+<p>Syntax:<br>
+<pre>
+files {
+	motd &lt;motd file&gt;;
+	shortmotd &lt;short motd file&gt;;
+	opermotd &lt;oper motd file&gt;;
+	svsmotd &lt;services motd file&gt;;
+	botmotd &lt;bot motd file&gt;;
+
+	rules &lt;rules file&gt;;
+
+	tunefile &lt;tune file&gt;;
+	pidfile &lt;pid file&gt;;
+};
+</pre></p>
+<p>Example:<br />
+<pre>
+files {
+	motd /etc/motd;
+
+	pidfile /var/lib/run/unrealircd.pid;
+};
+</pre>
+</p>
 <p><b><font size="+2">5 &#8211; Additional Files<a name="addtlfiles"></a>
   </font></b></p><div class="desc">
   In addition to the configuration files, Unreal has a few other files, such as MOTD, OperMOTD, 
   BotMOTD, and Rules. Listed below are the names of these files and their uses.<br>
-  Note that the motd files (all types) and rules files can also be specified in a tld block, 
+  Note that the motd files (all types) and rules files can also be specified in a <a href="#tldblock">tld</a> or <a href="#filesblock">files</a> block, 
   these are just the files used by default (and for remote MOTD/RULES's).<p />&nbsp;
 <table width="83%" border="1">
   <tr>

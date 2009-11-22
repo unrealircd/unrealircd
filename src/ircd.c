@@ -1530,12 +1530,12 @@ int InitwIRCD(int argc, char *argv[])
 	me.umodes = conf_listen->options;
 	conf_listen->listener = &me;
 	run_configuration();
-	botmotd = (aMotd *) read_file(BPATH, NULL);
-	rules = (aMotd *) read_file(RPATH, NULL);
-	opermotd = (aMotd *) read_file(OPATH, NULL);
-	motd = (aMotd *) read_file_ex(MPATH, NULL, &motd_tm);
-	smotd = (aMotd *) read_file_ex(SMPATH, NULL, &smotd_tm);
-	svsmotd = (aMotd *) read_file(VPATH, NULL);
+	botmotd = (aMotd *) read_file(conf_files->botmotd_file, NULL);
+	rules = (aMotd *) read_file(conf_files->rules_file, NULL);
+	opermotd = (aMotd *) read_file(conf_files->opermotd_file, NULL);
+	motd = (aMotd *) read_file_ex(conf_files->motd_file, NULL, &motd_tm);
+	smotd = (aMotd *) read_file_ex(conf_files->smotd_file, NULL, &smotd_tm);
+	svsmotd = (aMotd *) read_file(conf_files->svsmotd_file, NULL);
 	strncpy(me.sockhost, conf_listen->ip, sizeof(me.sockhost) - 1);
 	if (me.name[0] == '\0')
 		strncpyzt(me.name, me.sockhost, sizeof(me.name));
