@@ -851,13 +851,13 @@ EVENT(e_clean_out_throttling_buckets)
 		{ p = strchr(serveropts, 'm'); *p = '\0'; }
 		if (!Hooks[18] && strchr(serveropts, 'M'))
 		{ p = strchr(serveropts, 'M'); *p = '\0'; }
-		if (!Hooks[49] && strchr(serveropts, 'R'))
+		if (!Hooks[49] && !Hooks[51] && strchr(serveropts, 'R'))
 		{ p = strchr(serveropts, 'R'); *p = '\0'; }
 		if (Hooks[17] && !strchr(serveropts, 'm'))
 			*p++ = 'm';
 		if (Hooks[18] && !strchr(serveropts, 'M'))
 			*p++ = 'M';
-		if (Hooks[49] && !strchr(serveropts, 'R'))
+		if ((Hooks[49] || Hooks[51]) && !strchr(serveropts, 'R'))
 			*p++ = 'R';
 		*p = '\0';
 		for (mi = Modules; mi; mi = mi->next)

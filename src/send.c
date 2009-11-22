@@ -259,6 +259,7 @@ void vsendto_one(aClient *to, char *pattern, va_list vl)
 void sendbufto_one(aClient *to, char *msg, unsigned int quick)
 {
 	int  len;
+	Hook *h;
 	
 	Debug((DEBUG_ERROR, "Sending [%s] to %s", msg, to->name));
 
@@ -309,6 +310,10 @@ void sendbufto_one(aClient *to, char *msg, unsigned int quick)
 		ircd_log(LOG_ERROR, "%s", tmp_msg);
 		sendto_ops("%s", tmp_msg); /* recursion? */
 		return;
+	}
+        for(h = Hooks[HOOKTYPE_PACKET]; h; h = h->next) {
+		(*(h->func.intfunc))(&me, to, &msg, &len);
+		if(!msg) return;
 	}
 	if (DBufLength(&to->sendQ) > get_sendq(to))
 	{

@@ -179,6 +179,8 @@ inline void parse_addlag(aClient *cptr, int cmdbytes)
  */
 int  parse(aClient *cptr, char *buffer, char *bufend)
 {
+	Hook *h;
+	int buf_len = 0;
 	aClient *from = cptr;
 	char *ch, *s;
 	int  len, i, numeric = 0, paramcount, noprefix = 0;
@@ -187,6 +189,13 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 	int  retval;
 #endif
 	aCommand *cmptr = NULL;
+
+	for(h = Hooks[HOOKTYPE_PACKET]; h; h = h->next) {
+		buf_len = (int)(bufend - buffer);
+		(*(h->func.intfunc))(from, &me, &buffer, &buf_len);
+		if(!buffer) return 0;
+		bufend = buffer + buf_len;
+	}
 
 	Debug((DEBUG_ERROR, "Parsing: %s (from %s)", buffer,
 	    (*cptr->name ? cptr->name : "*")));

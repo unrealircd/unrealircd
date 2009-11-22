@@ -1798,3 +1798,7 @@
   from not binding to that ip when linking, to not being able to link at
   all. Also fixed a very small memory leak upon /REHASH. Bug reported by
   Mr_Smoke (#0003858).
+- Applied patch from k4be (#0003866) which introduces a new packet hook
+  (HOOKTYPE_PACKET). Replacing the 'text to be sent' to a client is
+  supported, which allows character(set) conversion in a module.
+  Note that modifying an incoming message by the hook is not supported.
