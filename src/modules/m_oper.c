@@ -143,6 +143,23 @@ DLLFUNC int MOD_UNLOAD(m_oper)(int module_unload)
 	return MOD_SUCCESS;
 }
 
+void set_oper_host(aClient *sptr, char *host)
+{
+	char *c;
+	char *vhost = host;
+
+	if ((c = strchr(host, '@')))
+	{
+		vhost =	c+1;
+		strncpy(sptr->user->username, host, c-host);
+		sptr->user->username[c-host] = 0;
+		sendto_serv_butone_token(NULL, sptr->name, MSG_SETIDENT, 
+					 TOK_SETIDENT, "%s", 
+					 sptr->user->username);
+	}
+	iNAH_host(sptr, vhost);
+	SetHidden(sptr);
+}
 
 /*
 ** m_oper
@@ -275,20 +292,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 
 		sptr->oflag = aconf->oflags;
 		if ((aconf->oflags & OFLAG_HIDE) && iNAH && !BadPtr(host)) {
-			char *c;
-			char *vhost = host;
-
-			if ((c = strchr(host, '@')))
-			{
-				vhost =	c+1;
-				strncpy(sptr->user->username, host, c-host);
-				sptr->user->username[c-host] = 0;
-				sendto_serv_butone_token(NULL, sptr->name, MSG_SETIDENT, 
-							 TOK_SETIDENT, "%s", 
-							 sptr->user->username);
-			}
-			iNAH_host(sptr, vhost);
-			SetHidden(sptr);
+			set_oper_host(sptr, host);
 		} else
 		if (IsHidden(sptr) && !sptr->user->virthost) {
 			/* +x has just been set by modes-on-oper and iNAH is off */
@@ -299,8 +303,11 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		{
 			sptr->umodes |= UMODE_LOCOP;
 			if ((aconf->oflags & OFLAG_HIDE) && iNAH && !BadPtr(locop_host)) {
-				iNAH_host(sptr, locop_host);
-				SetHidden(sptr);
+				set_oper_host(sptr, locop_host);
+			} else
+			if (IsHidden(sptr) && !sptr->user->virthost) {
+				 /* +x has just been set by modes-on-oper and iNAH is off */
+				  sptr->user->virthost = strdup(sptr->user->cloakedhost);
 			}
 			sendto_snomask(SNO_OPER, "%s (%s@%s) is now a local operator (o)",
 			    parv[0], sptr->user->username, GetHost(sptr));

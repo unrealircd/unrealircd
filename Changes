@@ -1804,3 +1804,6 @@
   Note that modifying an incoming message by the hook is not supported.
 - Applied patch from ohnobinki (#0003863) which makes run-time configuration
   of files (tune, pid, motd) possible.
+- Fixed bug reported by mut80r (#0003867) where locops didn't get a
+  proper vhost when set::hosts::local had a 'user@host' syntax instead of
+  just 'host'. Also fixed a bug with regards to +x on-oper with locops.
