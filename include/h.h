@@ -635,6 +635,8 @@ extern int count_oper_sessions(char *);
 extern char *unreal_mktemp(char *dir, char *suffix);
 extern char *unreal_getpathname(char *filepath, char *path);
 extern char *unreal_getfilename(char *path);
+extern char *unreal_mkcache(char *url);
+extern int has_cached_version(char *url);
 extern int unreal_copyfile(char *src, char *dest);
 extern int unreal_copyfileex(char *src, char *dest, int tryhardlink);
 extern time_t unreal_getfilemodtime(char *filename);
@@ -752,6 +754,7 @@ extern char *clean_ban_mask(char *, int, aClient *);
 extern void chanfloodtimer_stopchantimers(aChannel *chptr);
 extern int find_invex(aChannel *chptr, aClient *sptr);
 extern void DoMD5(unsigned char *mdout, unsigned char *src, unsigned long n);
+extern char *md5hash(unsigned char *dst, unsigned char *src, unsigned long n);
 #ifdef JOINTHROTTLE
 aJFlood *cmodej_addentry(aClient *cptr, aChannel *chptr);
 void cmodej_delentry(aJFlood *e);

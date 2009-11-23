@@ -1760,6 +1760,24 @@ char *unreal_getfilename(char *path)
         return end;
 }
 
+/* Returns a consistent filename for the cache/ directory.
+ * Returned value will be like: cache/<hash of url>
+ */
+char *unreal_mkcache(char *url)
+{
+static char tempbuf[PATH_MAX+1];
+char tmp2[33];
+	
+	snprintf(tempbuf, PATH_MAX, "cache/%s", md5hash(tmp2, url, strlen(url)));
+	return tempbuf;
+}
+
+/* Returns 1 if a cached version of the url exists, otherwise 0. */
+int has_cached_version(char *url)
+{
+	return file_exists(unreal_mkcache(url));
+}
+
 /* Copys the contents of the src file to the dest file.
  * The dest file will have permissions r-x------
  */

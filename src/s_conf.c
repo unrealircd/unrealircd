@@ -9438,7 +9438,7 @@ static void conf_download_complete(char *url, char *file, char *errorbuf, int ca
 		}
 	}
 	if (!file && !cached)
-		add_remote_include(file, url, 0, errorbuf);
+		add_remote_include(file, url, 0, errorbuf); /* DOWNLOAD FAILED */
 	else
 	{
 		if (cached)
@@ -9447,11 +9447,18 @@ static void conf_download_complete(char *url, char *file, char *errorbuf, int ca
 			char *file = unreal_getfilename(urlfile);
 			char *tmp = unreal_mktemp("tmp", file);
 			unreal_copyfileex(inc->file, tmp, 1);
+#ifdef REMOTEINC_SPECIALCACHE
+			unreal_copyfileex(inc->file, unreal_mkcache(url), 0);
+#endif
 			add_remote_include(tmp, url, 0, NULL);
 			free(urlfile);
 		}
-		else
+		else {
 			add_remote_include(file, url, 0, NULL);
+#ifdef REMOTEINC_SPECIALCACHE
+			unreal_copyfileex(file, unreal_mkcache(url), 0);
+#endif
+		}
 	}
 	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
 	{
@@ -9648,27 +9655,50 @@ int remote_include(ConfigEntry *ce)
 		file = download_file(ce->ce_vardata, &error);
 		if (!file)
 		{
-			config_error("%s:%i: include: error downloading '%s': %s",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-				 ce->ce_vardata, error);
-			return -1;
+#ifdef REMOTEINC_SPECIALCACHE
+			if (has_cached_version(ce->ce_vardata))
+			{
+				config_warn("%s:%i: include: error downloading '%s': %s -- using cached version instead.",
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+					ce->ce_vardata, error);
+				file = strdup(unreal_mkcache(ce->ce_vardata));
+				/* Let it pass to load_conf()... */
+			} else {
+#endif
+				config_error("%s:%i: include: error downloading '%s': %s",
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+					 ce->ce_vardata, error);
+				return -1;
+#ifdef REMOTEINC_SPECIALCACHE
+			}
+#endif
 		}
-		else
-		{
-			if ((ret = load_conf(file)) >= 0)
-				add_remote_include(file, ce->ce_vardata, INCLUDE_USED, NULL);
-			free(file);
-			return ret;
-		}
+		if ((ret = load_conf(file)) >= 0)
+			add_remote_include(file, ce->ce_vardata, INCLUDE_USED, NULL);
+		free(file);
+		return ret;
 	}
 	else
 	{
 		if (errorbuf)
 		{
-			config_error("%s:%i: include: error downloading '%s': %s",
-                                ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-                                ce->ce_vardata, errorbuf);
-			return -1;
+#ifdef REMOTEINC_SPECIALCACHE
+			if (has_cached_version(ce->ce_vardata))
+			{
+				config_warn("%s:%i: include: error downloading '%s': %s -- using cached version instead.",
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+					ce->ce_vardata, errorbuf);
+				/* Let it pass to load_conf()... */
+				file = strdup(unreal_mkcache(ce->ce_vardata));
+			} else {
+#endif
+				config_error("%s:%i: include: error downloading '%s': %s",
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+					ce->ce_vardata, errorbuf);
+				return -1;
+#ifdef REMOTEINC_SPECIALCACHE
+			}
+#endif
 		}
 		if (config_verbose > 0)
 			config_status("Loading %s from download", ce->ce_vardata);
