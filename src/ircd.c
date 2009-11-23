@@ -1347,7 +1347,7 @@ int InitwIRCD(int argc, char *argv[])
 			  exit(0);
 #endif
 		  default:
-			  bad_command();
+			  return bad_command();
 			  break;
 		}
 	}

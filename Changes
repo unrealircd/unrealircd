@@ -1807,3 +1807,6 @@
 - Fixed bug reported by mut80r (#0003867) where locops didn't get a
   proper vhost when set::hosts::local had a 'user@host' syntax instead of
   just 'host'. Also fixed a bug with regards to +x on-oper with locops.
+- When an incorrect command line argument is passed, the IRCd will no longer
+  boot. Previously it said 'Server not started' but started anyway.
+  Reported and patch provided by ohnobinki (#0003870).
