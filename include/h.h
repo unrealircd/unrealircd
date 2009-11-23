@@ -788,3 +788,5 @@ extern void kick_insecure_users(aChannel *);
 extern int file_exists(char* file);
 extern void free_motd(aMotd *m);
 extern void fix_timers(void);
+extern char *chfl_to_sjoin_symbol(int s);
+extern char chfl_to_chanmode(int s);

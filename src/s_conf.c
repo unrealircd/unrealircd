@@ -947,11 +947,82 @@ void chmode_str(struct ChMode modes, char *mbuf, char *pbuf)
 
 int channellevel_to_int(char *s)
 {
+	/* Requested at http://bugs.unrealircd.org/view.php?id=3852 */
 	if (!strcmp(s, "none"))
 		return CHFL_DEOPPED;
+	if (!strcmp(s, "voice")) 
+		return CHFL_VOICE;
+	if (!strcmp(s, "halfop"))
+		return CHFL_HALFOP;
 	if (!strcmp(s, "op") || !strcmp(s, "chanop"))
 		return CHFL_CHANOP;
+	if (!strcmp(s, "protect") || !strcmp(s, "chanprot"))
+#ifdef PREFIX_AQ
+		return CHFL_CHANPROT;
+#else
+		return CHFL_CHANOP|CHFL_CHANPROT;
+#endif
+	if (!strcmp(s, "owner") || !strcmp(s, "chanowner"))
+#ifdef PREFIX_AQ
+		return CHFL_CHANOWNER;
+#else
+		return CHFL_CHANOP|CHFL_CHANOWNER;
+#endif
+	
 	return 0; /* unknown or unsupported */
+}
+
+/* Channel flag (eg: CHFL_CHANOWNER) to SJOIN symbol (eg: *).
+ * WARNING: Do not confuse SJOIN symbols with prefixes in /NAMES!
+ */
+char *chfl_to_sjoin_symbol(int s)
+{
+	switch(s)
+	{
+		case CHFL_VOICE:
+			return "+";
+		case CHFL_HALFOP:
+			return "%";
+		case CHFL_CHANOP:
+			return "@";
+		case CHFL_CHANPROT:
+#ifdef PREFIX_AQ
+			return "~";
+#else
+			return "~@";
+#endif
+		case CHFL_CHANOWNER:
+#ifdef PREFIX_AQ
+			return "*";
+#else
+			return "*@";
+#endif
+		case CHFL_DEOPPED:
+		default:
+			return "";
+	}
+	/* NOT REACHED */
+}
+
+char chfl_to_chanmode(int s)
+{
+	switch(s)
+	{
+		case CHFL_VOICE:
+			return 'v';
+		case CHFL_HALFOP:
+			return 'h';
+		case CHFL_CHANOP:
+			return 'o';
+		case CHFL_CHANPROT:
+			return 'a';
+		case CHFL_CHANOWNER:
+			return 'q';
+		case CHFL_DEOPPED:
+		default:
+			return '\0';
+	}
+	/* NOT REACHED */
 }
 
 ConfigFile *config_load(char *filename)
@@ -7619,7 +7690,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			CheckDuplicate(cep, level_on_join, "level-on-join");
 			if (!channellevel_to_int(cep->ce_vardata))
 			{
-				config_error("%s:%i: set::level-on-join: unknown value '%s', should be one of: none, op",
+				config_error("%s:%i: set::level-on-join: unknown value '%s', should be one of: none, voice, halfop, op, protect, owner",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
 				errors++;
 			}

@@ -1824,3 +1824,6 @@
   the path of a remote include and it's trying to fetch it for the first time.
   To disable this new behavior, check out REMOTEINC_SPECIALCACHE in
   include/config.h.
+- set::level-on-join now also supports voice, halfop, protect and owner.
+  Requested by katsklaw (#0003852). Partial patch provided by katsklaw and
+  morpheus_pl.
