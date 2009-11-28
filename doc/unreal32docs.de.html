@@ -2995,7 +2995,7 @@ anwenden können.</p>
 <p><font class="set">set::level-on-join &lt;op|none&gt;</font><br>
 Die Modus, der einem User beim ersten joinen eines Channels gegeben wird. Das
 ist entweder 'op' (Channel Operator, Default) oder 'none', wenn kein Level
-gegeben werden soll.</p>
+gegeben werden soll. Default ist Op.</p>
 <p><font class="set">set::restrict-channelmodes &lt;modes&gt;</font><br>
 Die Channel-Modi, die User wählen können werden auf die hier angegebenen Modi
 eingeschränkt. (kein + oder - angeben!).<br>
@@ -3348,9 +3348,10 @@ pidfiles und tunefiles definiert werden - eines für jeden Server.</p>
   wie MOTD, OperMOTD, BotMOTD, und Rules. In der nachfolgenden Liste stehen die
   Namen dieser dateien und ihr Verwendungszweck.<br>
   Zu beachten ist, dass die motd Dateien (alle Typen) und die rules Dateien auch
-  in einem speziellen tld Block angegeben sein können. Dies sind nur die
+  in einem speziellen <a href="#tldblock"> tld Block </a>oder einem <a href="#filesblock">files
+  Block</a> angegeben sein können. Dies sind nur die
   Dateien, die per Default benutzt werden (und für Anforderungen von
-  MOTD/RULES).
+  MOTD/RULES).<br>
 <table width="83%" border="1">
   <tr>
     <td>ircd.motd</td><td>Wird angezeigt, wenn der /motd Befehl ausgeführt wird
