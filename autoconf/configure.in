@@ -393,6 +393,8 @@ AC_ARG_WITH(disableusermod, [AC_HELP_STRING([--with-disableusermod], [Disable /s
 	AC_DEFINE(DISABLE_USERMOD))
 AC_ARG_WITH(operoverride-verify, [AC_HELP_STRING([--with-operoverride-verify], [Require opers to invite themselves to +s/+p channels])],
 	AC_DEFINE(OPEROVERRIDE_VERIFY))
+AC_ARG_WITH(disable-extendedban-stacking, [AC_HELP_STRING([--with-disable-extendedban-stacking], [Disable extended ban stacking])],
+       AC_DEFINE(DISABLE_STACKED_EXTBANS))
 AC_ARG_WITH(system-tre, [AC_HELP_STRING([--with-system-tre], [Use the system tre package instead of bundled, discovered using pkg-config])], [], [with_system_tre=no ])
 AC_ARG_WITH(system-cares, [AC_HELP_STRING([--with-system-cares], [Use the system c-ares (at least version 1.6.0) package instead of bundled c-ares, discovered using pkg-config])], [], [with_system_cares=no ])
 CHECK_SSL

@@ -1305,6 +1305,8 @@ Optional Packages:
   --with-disableusermod   Disable /set* and /chg*
   --with-operoverride-verify
                           Require opers to invite themselves to +s/+p channels
+  --with-disable-extendedban-stacking
+                          Disable extended ban stacking
   --with-system-tre       Use the system tre package instead of bundled,
                           discovered using pkg-config
   --with-system-cares     Use the system c-ares (at least version 1.6.0)
@@ -12335,6 +12337,15 @@ fi
 if test "${with_operoverride_verify+set}" = set; then
   withval=$with_operoverride_verify; cat >>confdefs.h <<\_ACEOF
 #define OPEROVERRIDE_VERIFY 1
+_ACEOF
+
+fi
+
+
+# Check whether --with-disable-extendedban-stacking was given.
+if test "${with_disable_extendedban_stacking+set}" = set; then
+  withval=$with_disable_extendedban_stacking; cat >>confdefs.h <<\_ACEOF
+#define DISABLE_STACKED_EXTBANS 1
 _ACEOF
 
 fi

@@ -1827,3 +1827,24 @@
 - set::level-on-join now also supports voice, halfop, protect and owner.
   Requested by katsklaw (#0003852). Partial patch provided by katsklaw and
   morpheus_pl.
+- Added support for "chained" extbans. Put simply this allows extban combinations
+  such as ~q:~c:#test to only silence users on #test, for example. This feature
+  is enabled by default, but can be disabled during ./Config -advanced. Module
+  support for this feature must note the following:
+  - For is_ok function, the extban can either assign extban_is_ok_nuh_extban, which
+    will deal checking a chained extban (including checking for restricted extbans),
+    or it can call that function from its own is_ok routine. For the latter case,
+    remember to pass only the mask part of your ban format (ie, don't just pass para as
+    otherwise it'll just call your is_ok again).
+  - For conv_param function, the extban can either assign extban_conv_param_nuh_or_extban,
+    which will automatically call conv_param for a chained extban, or pretty up a n!u@h mask.
+  - For is_banned, the extban should call ban_check_mask with the mask part of the parameter.
+    This will automatically call is_banned for a stacked extban, or match against a n!u@h. n!u@h
+    is checked against the current user (ie, with the info in the globals ban_ip, etc), so things
+    can get weird if you call this outside a normal ban check.
+  Modules must keep in mind that chained extban support is not available (and neither are the three
+  functions above) if DISABLE_STACKED_EXTBANS is #defined (this is controled by Config). Modules will
+  not compile/load if they try to use them anyway.
+  This change should not break extban modules, and should need some more extensive testing.
+- Misc fix for disabling extban chains, should've done stuff in our autoconf
+  stuff instead of hacking configure directly :P .

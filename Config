@@ -41,6 +41,9 @@ fi
 if [ "$OPEROVERRIDEVERIFY" = "1" ] ; then
 	ARG="$ARG--with-operoverride-verify "
 fi
+if [ "$DISABLEEXTBANSTACKING" = "1" ]; then
+	ARG="$ARG--with-disable-extendedban-stacking ";
+fi
 fi
 if [ "$NOSPOOF" = "1" ] ; then
 ARG="$ARG--enable-nospoof "
@@ -275,6 +278,35 @@ while [ -z "$TEST" ] ; do
     esac
 done
 
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$DISABLEEXTBANSTACKING" = "1" ] ; then
+        TEST="Yes"
+    else
+        TEST="No"
+    fi
+    echo ""
+    echo "Do you want to disable extended ban stacking (~q:~c:#test, etc) support?"
+    echo $n "[$TEST] -> $c"
+        read cc
+    if [ -z "$cc" ] ; then
+        cc=$TEST
+    fi
+    case "$cc" in
+        [Yy]*)
+            DISABLEEXTBANSTACKING="1"
+            ;;
+        [Nn]*)
+            DISABLEEXTBANSTACKING="0"
+            ;;
+        *)
+            echo ""
+            echo "You must enter either Yes or No"
+            TEST=""
+            ;;
+    esac
+done
+
 }
 c=""
 n=""
@@ -304,6 +336,7 @@ SHUNNOTICES=""
 NOOPEROVERRIDE=""
 DISABLEUSERMOD=""
 OPEROVERRIDEVERIFY=""
+DISABLEEXTBANSTACKING=""
 EXTRAPARA=""
 if [ "`eval echo -n 'a'`" = "-n a" ] ; then
         c="\c"
@@ -852,6 +885,7 @@ SHUNNOTICES="$SHUNNOTICES"
 NOOPEROVERRIDE="$NOOPEROVERRIDE"
 DISABLEUSERMOD="$DISABLEUSERMOD"
 OPEROVERRIDEVERIFY="$OPEROVERRIDEVERIFY"
+DISABLEEXTBANSTACKING="$DISABLEEXTBANSTACKING"
 EXTRAPARA="$EXTRAPARA"
 ADVANCED="$ADVANCED"
 __EOF__

@@ -240,6 +240,9 @@
 /* Define if you want to disable /set* and /chg* */
 #undef DISABLE_USERMOD
 
+/* Define to disable extended ban stacking (~q:~c:#chan, etc) */
+#undef DISABLE_STACKED_EXTBANS
+
 /* Define if your system prepends an underscore to symbols */
 #undef UNDERSCORE
 
