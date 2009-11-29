@@ -413,6 +413,8 @@ static char retbuf[REALLEN + 8];
 	mask = retbuf+3;
 	if (strlen(mask) > REALLEN + 3)
 		mask[REALLEN + 3] = '\0';
+	if (*mask == '~')
+		*mask = '?'; /* Is this good? No ;) */
 	return retbuf;
 }
 
