@@ -490,6 +490,9 @@ int ircd_SSL_write(aClient *acptr, const void *buf, int sz)
           case SSL_ERROR_WANT_WRITE:
                    SET_ERRNO(P_EWOULDBLOCK);
                    return -1;
+          case SSL_ERROR_WANT_READ:
+                   SET_ERRNO(P_EWOULDBLOCK); /* is this correct? next write will block if not read, so sounds right... */
+                   return -1;
            case SSL_ERROR_SSL:
                if(ERRNO == EAGAIN)
                    return -1;

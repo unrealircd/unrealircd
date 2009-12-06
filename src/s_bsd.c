@@ -1972,21 +1972,24 @@ deadsocket:
 		    !(DoingDNS(cptr) || DoingAuth(cptr))
 #ifdef USE_SSL
 			&& 
-			!(IsSSLAcceptHandshake(cptr) || IsSSLConnectHandshake(cptr))
+			!(IsSSLHandshake(cptr))
 #endif		
 			)
 			length = read_packet(cptr, &read_set);
 #ifdef USE_SSL
 		if ((length != FLUSH_BUFFER) && (cptr->ssl != NULL) && 
-			(IsSSLAcceptHandshake(cptr) || IsSSLConnectHandshake(cptr)) &&
+			IsSSLHandshake(cptr) &&
 			FD_ISSET(cptr->fd, &read_set))
 		{
 			if (!SSL_is_init_finished(cptr->ssl))
 			{
-				if (IsDead(cptr) || IsSSLAcceptHandshake(cptr) ? !ircd_SSL_accept(cptr, cptr->fd) : ircd_SSL_connect(cptr) < 0)
+				if (IsDead(cptr) ||
+				    (IsSSLAcceptHandshake(cptr) || IsSSLStartTLSHandshake(cptr)) ? !ircd_SSL_accept(cptr, cptr->fd) : ircd_SSL_connect(cptr) < 0)
 				{
 					length = -1;
 				}
+				/* if (IsSSLStartTLSHandshake(cptr))
+					length = read_packet(cptr, &read_set); */
 			}
 			if (SSL_is_init_finished(cptr->ssl))
 			{
@@ -1995,10 +1998,14 @@ deadsocket:
 					Debug((DEBUG_ERROR, "ssl: start_of_normal_client_handshake(%s)", cptr->sockhost));
 					start_of_normal_client_handshake(cptr);
 				}
-				else
+				else if (IsSSLConnectHandshake(cptr))
 				{
 					Debug((DEBUG_ERROR, "ssl: completed_connection", cptr->name));
 					completed_connection(cptr);
+				} else if (IsSSLStartTLSHandshake(cptr))
+				{
+					SetUnknown(cptr);
+					/* STARTTLS is now complete. We could send something, but I don't know why... */
 				}
 
 			}

@@ -1850,3 +1850,11 @@
   stuff instead of hacking configure directly :P .
 - Made the timesynch log output more clear and understandable.
 - Added an 'UnrealIRCd started' log message on startup.
+- Added support for STARTTLS. This allows users to switch to SSL without
+  having to use a special SSL-only port, they can simply switch to SSL on
+  any port. This is currently only supported by few clients (such as KVIrc 4).
+  This functionality can be disabled by setting set::ssl::options::no-starttls,
+  for example if you don't want to offer SSL to your users and only want it
+  to be used for server to server links.
+  Naturally, the IRCd must be compiled with SSL support for STARTTLS to work.
+- Fixed SSL_ERROR_WANT_READ in IRCd_ssl_write()

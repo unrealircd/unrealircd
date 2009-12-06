@@ -726,7 +726,7 @@ static char *replies[] = {
 /* 667 */ NULL,
 /* 668 */ NULL,
 /* 669 */ NULL,
-/* 670 */ NULL, /* kineircd */
+/* 670 RPL_STARTTLS */ ":%s 670 %s :STARTTLS successful, go ahead with TLS handshake", /* kineircd */
 /* 671 RPL_WHOISSECURE */ ":%s 671 %s %s :%s", /* our variation on the kineircd numeric */
 /* 672 */ NULL, /* ithildin */
 /* 673 */ NULL, /* ithildin */
@@ -747,7 +747,7 @@ static char *replies[] = {
 /* 688 */ NULL, /* kineircd */
 /* 689 */ NULL, /* kineircd */
 /* 690 */ NULL, /* kineircd */
-/* 691 */ NULL,
+/* 691 ERR_STARTTLS */ ":%s 691 %s :%s",
 /* 692 */ NULL,
 /* 693 */ NULL,
 /* 694 */ NULL,

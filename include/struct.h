@@ -232,6 +232,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 
 #define	STAT_LOG	-7	/* logfile for -x */
 #define	STAT_CONNECTING	-6
+#define STAT_SSL_STARTTLS_HANDSHAKE -8
 #define STAT_SSL_CONNECT_HANDSHAKE -5
 #define STAT_SSL_ACCEPT_HANDSHAKE -4
 #define	STAT_HANDSHAKE	-3
@@ -254,9 +255,11 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	IsLog(x)		((x)->status == STAT_LOG)
 
 #ifdef USE_SSL
+#define IsSSLStartTLSHandshake(x)	((x)->status == STAT_SSL_STARTTLS_HANDSHAKE)
 #define IsSSLAcceptHandshake(x)	((x)->status == STAT_SSL_ACCEPT_HANDSHAKE)
 #define IsSSLConnectHandshake(x)	((x)->status == STAT_SSL_CONNECT_HANDSHAKE)
-#define IsSSLHandshake(x) (IsSSLAcceptHandshake(x) || IsSSLConnectHandshake(x))
+#define IsSSLHandshake(x) (IsSSLAcceptHandshake(x) || IsSSLConnectHandshake(x) | IsSSLStartTLSHandshake(x))
+#define SetSSLStartTLSHandshake(x)	((x)->status = STAT_SSL_STARTTLS_HANDSHAKE)
 #define SetSSLAcceptHandshake(x)	((x)->status = STAT_SSL_ACCEPT_HANDSHAKE)
 #define SetSSLConnectHandshake(x)	((x)->status = STAT_SSL_CONNECT_HANDSHAKE)
 #endif
@@ -935,6 +938,8 @@ typedef struct {
 #define SSLFLAG_FAILIFNOCERT 	0x1
 #define SSLFLAG_VERIFYCERT 	0x2
 #define SSLFLAG_DONOTACCEPTSELFSIGNED 0x4
+#define SSLFLAG_NOSTARTTLS	0x8
+
 struct Client {
 	struct Client *next, *prev, *hnext;
 	anUser *user;		/* ...defined, if this is a User */

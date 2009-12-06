@@ -54,7 +54,7 @@ R_MODULES= \
 	 m_connect.so m_dccallow.so m_userip.so m_nick.so m_user.so \
 	 m_mode.so m_watch.so m_part.so m_join.so m_motd.so m_opermotd.so \
 	 m_botmotd.so m_lusers.so m_names.so m_svsnolag.so m_addmotd.so \
-	 m_svslusers.so
+	 m_svslusers.so m_starttls.so
 
 #note change of .c to .o
 COMMANDS=m_sethost.o m_chghost.o m_chgident.o m_setname.o m_setident.o \
@@ -76,7 +76,7 @@ COMMANDS=m_sethost.o m_chghost.o m_chgident.o m_setname.o m_setident.o \
 	 m_svsfline.o m_dccdeny.o m_undccdeny.o m_whowas.o \
 	 m_connect.o m_dccallow.o m_userip.o m_nick.o m_user.o \
 	 m_mode.o m_watch.o m_part.o m_join.o m_motd.o m_opermotd.o \
-	 m_botmotd.o m_lusers.o m_names.o m_svsnolag.o
+	 m_botmotd.o m_lusers.o m_names.o m_svsnolag.o m_starttls.o
 
 
 MODULES=commands.so cloak.so $(R_MODULES)
@@ -406,6 +406,9 @@ m_names.o: m_names.c $(INCLUDES)
 
 m_svsnolag.o: m_svsnolag.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_svsnolag.c
+
+m_starttls.o: m_starttls.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_starttls.c
 
 #############################################################################
 #             .so's section
@@ -818,6 +821,10 @@ m_names.so: m_names.c $(INCLUDES)
 m_svsnolag.so: m_svsnolag.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_svsnolag.so m_svsnolag.c
+
+m_starttls.so: m_starttls.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_starttls.so m_starttls.c
 
 #############################################################################
 #             and now the remaining modules...
