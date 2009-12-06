@@ -156,6 +156,7 @@ int n, addrlen, i, highestfd = 0;
 fd_set r;
 struct timeval tv;
 char buf[512], *buf_out;
+int succesfully_sent = 0;
 
 	strlcpy(tmptimeservbuf, TIMESYNCH_SERVER, sizeof(tmptimeservbuf));
 
@@ -193,10 +194,18 @@ char buf[512], *buf_out;
 	{
 		n = sendto(s[i], buf_out, TSPKTLEN, 0, (struct sockaddr *)&addr[i], sizeof(struct sockaddr_in));
 		if (n < 0)
-			ircd_log(LOG_ERROR, "TimeSync: WARNING: Was unable to send message to server #%d...", i);
+			ircd_log(LOG_ERROR, "TimeSync: WARNING: Was unable to send packet to server #%d... ", i);
+		else
+			succesfully_sent++;
 	}
 
-	
+	if (!succesfully_sent)
+	{
+		ircd_log(LOG_ERROR, "TimeSync: WARNING: Unable to send time synchronization packets to ANY time server. "
+		                    "Perhaps your firewall is blocking outgoing packets to UDP port 123?");
+		strcpy(tserr, "Unable to send packets");
+		goto end;
+	}
 
 	start = time(NULL); /* yes, indeed.. not TStime() here.. that is correct */
 	
@@ -260,8 +269,11 @@ gotit:
 	now = time(NULL);
 	offset = t - now;
 
-	ircd_log(LOG_ERROR, "TIME SYNCH: timeserver=%ld, our=%ld, offset = %ld [old offset: %ld]\n",
-		(long)t, (long)now, (long)offset, (long)TSoffset);
+	if ((offset >= -1) && (offset <= 1)) /* no offset (or only +1/-1) */
+		ircd_log(LOG_ERROR, "TIME SYNCH: IRCd clock succesfully synchronized to known good time source.");
+	else
+		ircd_log(LOG_ERROR, "TIME SYNCH: IRCd clock succesfully synchronized to known good time source [offset: %ld, was: %ld].",
+			(long)offset, (long)TSoffset);
 	
 	TSoffset = offset;
 

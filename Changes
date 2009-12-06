@@ -1848,3 +1848,5 @@
   This change should not break extban modules, and should need some more extensive testing.
 - Misc fix for disabling extban chains, should've done stuff in our autoconf
   stuff instead of hacking configure directly :P .
+- Made the timesynch log output more clear and understandable.
+- Added an 'UnrealIRCd started' log message on startup.

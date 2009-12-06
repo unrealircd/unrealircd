@@ -1536,6 +1536,7 @@ int InitwIRCD(int argc, char *argv[])
 	me.umodes = conf_listen->options;
 	conf_listen->listener = &me;
 	run_configuration();
+	ircd_log(LOG_ERROR, "UnrealIRCd started.");
 	botmotd = (aMotd *) read_file(conf_files->botmotd_file, NULL);
 	rules = (aMotd *) read_file(conf_files->rules_file, NULL);
 	opermotd = (aMotd *) read_file(conf_files->opermotd_file, NULL);
@@ -1623,7 +1624,9 @@ int InitwIRCD(int argc, char *argv[])
 	if (TIMESYNCH)
 	{
 		if (!unreal_time_synch(TIMESYNCH_TIMEOUT))
-			ircd_log(LOG_ERROR, "TIME SYNCH: Unable to synchronize time: %s. This happens sometimes, no error on your part.",
+			ircd_log(LOG_ERROR, "TIME SYNCH: Unable to synchronize time: %s. "
+			                    "This means UnrealIRCd was unable to synchronize the IRCd clock to a known good time source. "
+			                    "As long as the server owner keeps the server clock synchronized through NTP, everything will be fine.",
 				unreal_time_synch_error());
 	}
 	fix_timers(); /* Fix timers AFTER reading tune file AND timesynch */
