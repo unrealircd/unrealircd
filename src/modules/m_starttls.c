@@ -92,12 +92,11 @@ DLLFUNC CMD_FUNC(m_starttls)
 	}
 	if (IsSecure(sptr))
 	{
-		sendto_one(sptr, ":%s 691 %s :STARTTLS failed. Already using TLS.", me.name, sptr->name);
+		sendto_one(sptr, err_str(ERR_STARTTLS), me.name, sptr->name, "STARTTLS failed. Already using TLS.");
 		return 0;
 	}
 	dbuf_delete(&sptr->recvQ, 1000000); /* Clear up any remaining plaintext commands */
-	sendto_one(sptr, ":%s 670 %s :STARTTLS successful, go ahead with TLS handshake", me.name, sptr->name);
-	// ^^ FIXME, use: RPL_STARTTLS
+	sendto_one(sptr, rpl_str(RPL_STARTTLS), me.name, sptr->name);
 	send_queued(sptr);
 
 	SetSSLStartTLSHandshake(sptr);
@@ -119,7 +118,7 @@ DLLFUNC CMD_FUNC(m_starttls)
 	return 0;
 fail:
 	/* Failure */
-	sendto_one(sptr, ":%s 691 %s :STARTTLS failed", me.name, sptr->name); // FIXME, use: ERR_STARTTLS
+	sendto_one(sptr, err_str(ERR_STARTTLS), me.name, sptr->name, "STARTTLS failed");
 	sptr->ssl = NULL;
 	sptr->flags &= ~FLAGS_SSL;
 	SetUnknown(sptr);

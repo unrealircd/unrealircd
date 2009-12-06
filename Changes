@@ -1858,3 +1858,4 @@
   to be used for server to server links.
   Naturally, the IRCd must be compiled with SSL support for STARTTLS to work.
 - Fixed SSL_ERROR_WANT_READ in IRCd_ssl_write()
+- Use RPL_STARTTLS/ERR_STARTTLS numerics

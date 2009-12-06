@@ -361,8 +361,13 @@
 
 #define RPL_SPAMCMDFWD       659
 
+#define RPL_STARTTLS         670
+
 #define RPL_WHOISSECURE      671
 
 #define ERR_CANNOTDOCOMMAND 972
 #define ERR_CANNOTCHANGECHANMODE 974
+
+#define ERR_STARTTLS            691
+
 #define ERR_NUMERICERR       999
