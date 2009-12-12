@@ -35,7 +35,7 @@
 aquanight / WolfSage</font><br>
   <b>Contributors:</b>  McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
 <b>Dokumentation</b><b>:</b> CKnight^ / Syzop<br>
-<b>Deutsche Übersetzung:</b> Stylus740 (irc.insiderZ.de)<br>
+<b>Deutsche Übersetzung:</b> Stylus740 (irc.iZ-smart.de)<br>
 <p>Um diese Dokumentation zu lesen, ist einer der unten aufgeführten
 kompatiblen Browser erforderlich. Aktuelle Dokumentationen sind erhältlich&nbsp; @
 <a href="http://www.vulnscan.org/UnrealIRCd/unreal32docs.html">http://www.vulnscan.org/UnrealIRCd/unreal32docs.html</a>
@@ -3210,6 +3210,9 @@ Verbietet Verbindungen von Usern mit selbst erstellten Zertifikaten.</p>
 <p><font class="set">set::ssl::options::verify-certificate;</font><br>
 Stellt ein, dass Unreal&nbsp; SSL Zertifikate auf Gültigkeit überprüft, bevor
 eine Verbindung akzeptiert wird.</p>
+<p><font class="set">set::ssl::options::no-starttls;</font><br>
+Deaktiviert STARTTLS. STARTTLS ermöglicht es Clients, über reguläere (nicht
+SSL) Ports zu verbinden.</p>
 <p><font class="set">set::throttle::period &lt;timevalue&gt;</font><br>
 Wie lange muss ein User zum erneuten Connecten warten, wenn er häufiger, als
 unter 'set::throttle::connections' eingestellt, verbunden war.</p>
