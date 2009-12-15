@@ -115,6 +115,7 @@ Hungarian |
   ---4.35. <a href="#spamfilter">Spamfilter blokk</a><br>
   ---4.36. <a href="#cgiirc">Cgiirc blokk</a><br> 
   ---4.37. <a href="#setblock">Set blokk -=- (networks/unrealircd.conf)</a><br>
+  ---4.38. <a href="#filesblock">Files blokk</a><br />
   5. <a href="#addtlfiles">További fájlok</a><br>
   6. <a href="#userchannelmodes">Felhasználói és csatornamódok</a><br>
   7. <a href="#useropercommands">Felhasználói és operátori parancsok</a><br>
@@ -150,7 +151,7 @@ Hungarian |
   nem módosítod. &#8211; Copyright UnrealIRCd Fejlesztõi Csapat 2002-2006</p>
 <p>Kérlek, olvasd el ezt a kézikönyvet, mielõtt segítséget kérsz, és BIZTOSAN bele akarsz nézni a
    <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">GYIK</a>-ba is, mivel a kérdéseid/problémáid 80%-a meg van válaszolva benne. Ha az nem
-   oldotta meg a problémádat, segítséget kérhetsz az irc.unrealircd.org-en (6667-es port) az #unreal-support csatornán. (Megjegyzendõ,
+   oldotta meg a problémádat, segítséget kérhetsz az irc.unrealircd.org címen (6667-es port) az #unreal-support csatornán. (Megjegyzendõ,
    hogy MEGKÖVETELJÜK a dokumentáció és a GYIK elolvasását, és csak az UnrealIRCd-vel kapcsolatban segítünk, nem a Servicessel!).
    Ha találsz egy valódi hibát (például egy ütközést), jelentsd a
    <a href="http://bugs.unrealircd.org" TARGET="_blank">http://bugs.unrealircd.org</a>-on!</p></div>
@@ -2289,9 +2290,9 @@ set {
   MEGJEGYZÉS: lehet, hogy ezek a csatornamódok még mindig használhatóak IRC szolgáltatásokon keresztül
   az MLOCK alkalmazásával. Sajnos mi nem tudunk sokat tenni ezügyben, a szolgáltatás fejlesztõket
   kellene megkérned, hogy megvalósítsanak egy restrict-channelmodes funkciót is.</p>
-<p><font class="set">set::level-on-join &lt;op|none&gt;;</font><br>
-  Milyen módot kapjon az a felhasználó, aki elsõként lép be egy csatornára.
-  Lehet 'op' (csatorna operátor, az alapértelmezés) vagy 'none' (nincs mód).</p>
+<p><font class="set">set::level-on-join &lt;none|voice|halfop|op|protect|owner&gt;;</font><br>
+  Milyen módot kapjon az a felhasználó, aki elsõként lép be egy csatornára. Az
+  alapértelmezés 'op' (csatorna operátor).</p>
 <p><font class="set">set::restrict-extendedbans &lt;típusok|*&gt;</font><br>
   Nem ad engedélyt a felhasználóknak egyetlen kiterjesztett ban típus használatára sem ("*"), vagy csak bizonyos típusokat utasít vissza (pl.: "qc").</p>
 <p><font class="set">set::auto-join &lt;csatornák&gt;;</font><br>
@@ -2542,6 +2543,39 @@ AU). A lekérdezések párhuzamosan kerülnek elküldésre, a leggyorsabb válasz nyer.
  <p><font class="set">set::watch-away-notification &lt;yes|no&gt;</font><br>
   Engedélyezi vagy letiltja az AWAY értesítéseket a WATCH-ban. Az alapértelmezés "yes".</p>
 <p></p> </div>
+<p id="filesblock"><font class="block_section">4.38 - </font><font class="block_name">Files blokk</font>
+   <font class="block_optional">SZABADON VÁLASZTHATÓ</font><div class="desc">
+</p>
+<p>
+Nem kell <a href="#tldblock">TLD blokkot</a> használnunk az MOTD-ket és a szabályokat leíró fájlok alapértelmezett helyeinek megadásához. Ez a blokk szabályozza az alapértelmezett beállításokat rájuk vonatkozóan a PID fájl és az irc.tune fájl mellett. Mindenre, ami itt nincs megadva, a <a href="#addtlfiles">További fájlok</a> szekcióban leírt alapértékek érvényesek.
+</p>
+<p>
+A relatív útvonalnevek az unrealIRCD gyökérkönyvtárából kiindulva értendõek, amely rendszerint az <tt>unrealircd.conf</tt> fájl tartalmazó könyvtár. Ez a blokk felhasználható arra, hogy több mint egy IRCd-t futtassunk ugyanabból a könyvtárból/gyökérbõl. Ilyen esetben minden szervernek állítsunk be legalább egy-egy PID fájlt, illetve behangoló (tune) fájlt!
+</p>
+<p>Szintaxis:<br>
+<pre>
+files {
+	motd &lt;motd fájl&gt;;
+	shortmotd &lt;rövid motd fájl&gt;;
+	opermotd &lt;motd fájl az operátoroknak&gt;;
+	svsmotd &lt;motd fájl a szolgáltatásoknak&gt;;
+	botmotd &lt;motd fájl a botoknak&gt;;
+
+	rules &lt;szabályokat leíró fájl&gt;;
+
+	tunefile &lt;behangoló fájl&gt;;
+	pidfile &lt;PID fájl&gt;;
+};
+</pre></p>
+<p>Példa:<br />
+<pre>
+files {
+	motd /etc/motd;
+
+	pidfile /var/lib/run/unrealircd.pid;
+};
+</pre>
+</p>
 <p><b><font size="+2">5 &#8211; További fájlok<a name="addtlfiles"></a>
   </font></b></p><div class="desc">
   A konfigurációs fájlok mellett az Unreal néhány egyéb fájllal is rendelkezik, mint pl. az MOTD (a nap üzenete),
