@@ -1392,10 +1392,9 @@ log &lt;file-name&gt; {
   <table border=0>
   <tr><td>errors</td><td>self explanatory</td></tr>
   <tr><td>kills</td><td>logs /kill notices</td></tr>
-  <tr><td>tkl</td><td>logs info on *lines, shuns and spamfilters (adding/removing/expire)</td></tr>
+  <tr><td>tkl</td><td>logs info on *lines (/kline, /zline, etc), shuns and spamfilters (adding/removing/expire)</td></tr>
   <tr><td>connects</td><td>logs user connects/disconnects</td></tr>
   <tr><td>server-connects</td><td>logs server connects/squits</td></tr>
-  <tr><td>kline</td><td>logs /kline usage</td></tr>
   <tr><td>oper</td><td>logs oper attempts (both failed and successful)</td></tr>
   <tr><td>sadmin-commands</td><td>logs /sa* (samode, sajoin, sapart, etc.) usage</td></tr>
   <tr><td>chg-commands</td><td>logs /chg* (chghost, chgname, chgident, etc.) usage</td></tr>
@@ -1412,7 +1411,6 @@ log ircd.log {
 		errors;
 		kills;
 		oper;
-		kline;
 		tkl;
 	};
 };

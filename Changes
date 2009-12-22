@@ -1859,3 +1859,5 @@
   Naturally, the IRCd must be compiled with SSL support for STARTTLS to work.
 - Fixed SSL_ERROR_WANT_READ in IRCd_ssl_write()
 - Use RPL_STARTTLS/ERR_STARTTLS numerics
+- Removed log target 'kline' from documentation, as it didn't do anything
+  (use 'tkl' instead). Reported by nephilim and Stealth (#0003849).
