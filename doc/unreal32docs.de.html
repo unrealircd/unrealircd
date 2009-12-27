@@ -30,7 +30,7 @@
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.2.8</font><br>
-  <b>Letztes Update dieses Handbuchs:</b>                   2009-09-14</div>
+  <b>Letztes Update dieses Handbuchs:</b>                    2009-12-24</div>
   <b>Head Coders:</b> Stskeeps / codemastr / Syzop / Luke<font face="Helvetica,Arial" size="-1">/
 aquanight / WolfSage</font><br>
   <b>Contributors:</b>  McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -162,7 +162,9 @@ dies alles nicht, kann bzgl. Support bei irc.unrealircd.org
 (Port 6667) im Channel #unreal-support 
 nach Unterstützung gefragt werden (Wir erwarten UNBEDINGT, dass zuvor Dokumentation
 und <a href="#faq">
-FAQ</a> gelesen wurden und wir helfen nur zu UnrealIRCd, nicht zu Services!). Im Falle eines echten Bugs (z.B. einem Crash) bitte Nachricht an 
+FAQ</a> gelesen wurden und wir helfen nur zu UnrealIRCd, nicht zu Services!).
+Ebenso können Sie das Forum nutzen, welches über <a href="http://forums.unrealircd.com/" target="_blank">http://forums.unrealircd.com</a>
+erreichbar ist. Im Falle eines echten Bugs (z.B. einem Crash) bitte Nachricht an 
    <a href="http://bugs.unrealircd.org" TARGET="_blank">http://bugs.unrealircd.org</a>.</p></div>
 
 <p><font size="+2"><b><a name="notesonolder">1.1 &#8211; Anmerkungen zu Upgrade/Mixing 3.1.x -&gt; 3.2</a>&nbsp; </b></font><br>
@@ -1953,7 +1955,7 @@ in verschiedenen Dateien zu loggen.</p>
   tkl</p>
     </td>
     <td width="484">
-<p>zeichnet Infos auf über *lines, shuns und Spamfilter (setzen, löschen,
+<p>zeichnet Infos auf über *lines (kline, zline etc), shuns und Spamfilter (setzen, löschen,
 Ablauf)</p>
     </td>
   </tr>
@@ -1972,14 +1974,6 @@ Ablauf)</p>
     </td>
     <td width="484">
 <p>Zeichnet connects/squits der Server auf</p>
-    </td>
-  </tr>
-  <tr>
-    <td width="113">
-<p>
-  kline</p>
-    </td>
-    <td width="484"><p>Zeichnet Infos /kline auf</p>
     </td>
   </tr>
   <tr>
@@ -2028,7 +2022,6 @@ spamfilter
 		errors;
 		kills;
 		oper;
-		kline;
 		tkl;
 	};
 };
@@ -4455,7 +4448,7 @@ Datei</a></b></font></p>
   <p>
   <br>
   Eines allerdings sollte man tun: IMMER DIE NEUESTE VERSION BENUTZEN. Wenn man
-  sich in die <a href="http://mail1.sourceforge.net/mailman/listinfo/unreal-notify"> Unreal-notify mailinglist</a> einträgt, erhält man die Ankündigung
+  sich in die <a href="http://lists.sourceforge.net/mailman/listinfo/unreal-notify"> Unreal-notify mailinglist</a> einträgt, erhält man die Ankündigung
   über neue Versionen (unreal-notify ist nur für Ankündigungen und man
   erhält nur alle X Monate 1 Mail). Üblicherweise gibt es neue Releases, wenn
   es (bedeutende) Sicherheits Fixes gibt, aber eigentlich ist es gut, in jedem
