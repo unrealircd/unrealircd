@@ -116,6 +116,8 @@ unsigned char *(*StripColors)(unsigned char *text);
 const char *(*StripControlCodes)(unsigned char *text);
 void (*spamfilter_build_user_string)(char *buf, char *nick, aClient *acptr);
 int (*is_silenced)(aClient *sptr, aClient *acptr);
+void (*send_protoctl_servers)(aClient *sptr, int response);
+int (*verify_link)(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link **link_out);
 
 static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 00 */	{NULL, NULL},
@@ -153,7 +155,9 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 32 */	{"StripControlCodes", (void *)&StripControlCodes},
 /* 33 */	{"spamfilter_build_user_string", (void *)&spamfilter_build_user_string},
 /* 34 */	{"is_silenced", (void *)&is_silenced},
-/* 35 */	{NULL, NULL}
+/* 35 */	{"send_protoctl_servers", (void *)&send_protoctl_servers},
+/* 36 */	{"verify_link", (void *)&verify_link},
+/* 37 */	{NULL, NULL}
 };
 
 

@@ -139,3 +139,18 @@ NICKCHARS     This specifies a list of language characters that are allowed in n
               The items in the list sent as NICKCHARS=.. must always be sorted.
               If a server sends NICKCHARS= and if the remote parameters do not match the
               charsets in use locally, then the server link is rejected.
+
+CHANMODES     Like CHANMODES from the 005 numeric. Useful to see which channel modes are
+              supported/used, and can also be used to properly eat parameters in parameter
+              modes in the MODE command (for eg: +jk 1:1 a).
+
+EAUTH         Early Authorization. This makes it possible for servers to authenticate each
+              other before the regular SERVER command. Needs to be done prior to using the
+              SERVERS token, and possibly other tokens or commands in the future. Hence,
+              is recommended to be sent as first (or early) PROTOCTL token. Note also that
+              the PASS command should be sent prior to this PROTOCTL token.
+              EAUTH=my.server.name[,options]
+
+SERVERS       Informs the other server about the other servers (numerics) on this network
+              (including our own numeric).
+              Syntax: SERVERS=numeric1,numeric2,numeric3,etc

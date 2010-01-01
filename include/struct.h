@@ -151,6 +151,7 @@ typedef struct SMember Member;
 typedef struct SMembership Membership;
 typedef struct SMembershipL MembershipL;
 typedef struct JFlood aJFlood;
+typedef struct PendingNet aPendingNet;
 
 #ifdef ZIP_LINKS
 typedef struct  Zdata   aZdata;
@@ -317,7 +318,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define FLAGS_SQUIT      0x20000	/* Server has been /squit by an oper */
 #define FLAGS_PROTOCTL   0x40000	/* Received a PROTOCTL message */
 #define FLAGS_PING       0x80000
-#define FLAGS_ASKEDPING  0x100000
+#define FLAGS_EAUTH      0x100000
 #define FLAGS_NETINFO    0x200000
 #define FLAGS_HYBNOTICE  0x400000
 #define FLAGS_QUARANTINE 0x800000
@@ -412,7 +413,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define GotNetInfo(x) 		((x)->flags & FLAGS_NETINFO)
 #define SetNetInfo(x)		((x)->flags |= FLAGS_NETINFO)
 #define IsCGIIRC(x)			((x)->flags & FLAGS_CGIIRC)
-
+#define SetEAuth(x)		((x)->flags |= FLAGS_EAUTH)
+#define IsEAuth(x)		((x)->flags & FLAGS_EAUTH)
 #define IsShunned(x)		((x)->flags & FLAGS_SHUNNED)
 #define SetShunned(x)		((x)->flags |= FLAGS_SHUNNED)
 #define ClearShunned(x)		((x)->flags &= ~FLAGS_SHUNNED)
@@ -1854,6 +1856,13 @@ struct JFlood {
 	unsigned short numjoins;
 };
 #endif
+
+struct PendingNet {
+        aPendingNet *prev, *next; /* Previous and next in list */
+        aClient *sptr; /**< Client to which these servers belong */
+        int numservers; /**< Amount of servers in list */
+        int servers[1]; /** The list of servers (array of integer server numerics) */
+};
 
 void	init_throttling_hash();
 int	hash_throttling(struct IN_ADDR *in);

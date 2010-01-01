@@ -1861,3 +1861,31 @@
 - Use RPL_STARTTLS/ERR_STARTTLS numerics
 - Removed log target 'kline' from documentation, as it didn't do anything
   (use 'tkl' instead). Reported by nephilim and Stealth (#0003849).
+- Server protocol: added PROTOCTL EATH=servername, which allows us to
+  authenticate the server very early in the handshake process. That way,
+  certain commands and PROTOCTL tokens can 'trust' the server.
+  See doc/technical/protoctl.txt for details.
+- Server protocol: between new Unreal servers we now do the handshake a
+  little bit different, so it waits with sending the SERVER command until
+  the first PROTOCTL is received. Needed for next.
+- Server protocol: added PROTOCTL SERVERS=1,2,3,4,etc by which a server can
+  inform the other server which servers (server numeric, actually) it has
+  linked. See doc/technical/protoctl.txt and next for details.
+- When our server was trying to link to some server, and at the same time
+  another server was also trying to link with us, this would lead to a
+  server collision: the server would link (twice) ok at first, but then a
+  second later or so both would quit with 'Server Exists' with quite some
+  mess as a result. This isn't unique to Unreal, btw.
+  This happened more often when you had a low connfreq in your link blocks
+  (aka: quick reconnects), or had multiple hubs on autoconnect (with same
+  connfreq), or when you (re)started all servers at the same time.
+  This should now be solved by a new server handshake design, which detects
+  this race condition and solves it by closing one of the two (or more)
+  connections to avoid the issue.
+  This also means that it should now be safe to have multiple hubs with low
+  connfreq's (eg: 10s) without risking that your network falls apart.
+  This new server handshake (protocol updates, etc) was actually quite some
+  work, especially for something that only happened sporadically. I felt it
+  was needed though, because (re)linking stability is extremely important.
+  This new feature/design/fix requires extensive testing.
+  This feature can be disabled by: set { new-linking-protocol 0; };

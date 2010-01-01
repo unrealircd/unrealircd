@@ -46,6 +46,8 @@ void send_channel_modes(aClient *cptr, aChannel *chptr);
 void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr);
 void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr);
 DLLFUNC int m_server(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+int _verify_link(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link **link_out);
+void _send_protoctl_servers(aClient *sptr, int response);
 
 static char buf[BUFSIZE];
 
@@ -61,6 +63,14 @@ ModuleHeader MOD_HEADER(m_server)
 	"3.2-b8-1",
 	NULL 
     };
+
+DLLFUNC int MOD_TEST(m_server)(ModuleInfo *modinfo)
+{
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	EfunctionAddVoid(modinfo->handle, EFUNC_SEND_PROTOCTL_SERVERS, _send_protoctl_servers);
+	EfunctionAdd(modinfo->handle, EFUNC_VERIFY_LINK, _verify_link);
+	return MOD_SUCCESS;
+}
 
 DLLFUNC int MOD_INIT(m_server)(ModuleInfo *modinfo)
 {
@@ -86,6 +96,190 @@ DLLFUNC int MOD_UNLOAD(m_server)(int module_unload)
 
 int m_server_synch(aClient *cptr, long numeric, ConfigItem_link *conf);
 
+/** Send our PROTOCTL SERVERS=x,x,x,x stuff.
+ * When response is set, it will be PROTOCTL SERVERS=*x,x,x (mind the asterisk).
+ */
+void _send_protoctl_servers(aClient *sptr, int response)
+{
+Link *lp;
+char buf[512];
+
+	if (!NEW_LINKING_PROTOCOL)
+		return;
+
+	ircsprintf(buf, "PROTOCTL EAUTH=%s SERVERS=%s",
+		me.name, response ? "*" : "");
+
+	for (lp = Servers; lp; lp = lp->next)
+	{
+		int numeric = lp->value.cptr->serv->numeric;
+		if (numeric <= 0)
+			continue;
+		ircsprintf(buf+strlen(buf),"%d,", numeric);
+		if (strlen(buf) > sizeof(buf)-12)
+		{
+			/* This should only happen if you have like more than 120 servers.. that would be a tad extreme... */
+			sendto_realops("send_protoctl_servers: Ehm.. you have a whole lot of servers linked, don't you?");
+			break; /* prevent overflow */
+		}
+	}
+	
+	/* Remove final comma */
+	if (buf[strlen(buf)-1] == ',')
+		buf[strlen(buf)-1] = '\0';
+	
+	sendto_one(sptr, "%s", buf);
+}
+
+
+
+/** Verify server link.
+ * This does authentication and authorization checks.
+ * @param cptr The client directly connected to us (cptr).
+ * @param sptr The client which (originally) issued the server command (sptr).
+ * @param servername The server name provided by the client.
+ * @param link_out Pointer-to-pointer-to-link block. Will be set when auth OK. Caller may pass NULL if he doesn't care.
+ * @returns This function returns 0 on succesful auth, other values should be returned by
+ *          the calling function, as it will always be FLUSH_BUFFER due to exit_client().
+ */
+int _verify_link(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link **link_out)
+{
+char xerrmsg[256];
+ConfigItem_link *link;
+char *inpath = get_client_name(cptr, TRUE);
+aClient *acptr = NULL, *ocptr = NULL;
+ConfigItem_ban *bconf;
+
+	if (link_out)
+		*link_out = NULL;
+	
+	strcpy(xerrmsg, "No matching link configuration");
+
+	if (!cptr->passwd)
+	{
+		sendto_one(cptr, "ERROR :Missing password");
+		return exit_client(cptr, sptr, &me, "Missing password");
+	}
+
+
+	/* First check if the server is in the list */
+	if (!servername) {
+		strcpy(xerrmsg, "Null servername");
+		goto errlink;
+	}
+	if (cptr->serv && cptr->serv->conf)
+	{
+		/* We already know what block we are dealing with (outgoing connect!) */
+		link = cptr->serv->conf;
+	} else {
+		/* Hunt the linkblock down ;) */
+		for(link = conf_link; link; link = (ConfigItem_link *) link->next)
+			if (!match(link->servername, servername))
+				break;
+	}
+	if (!link) {
+		snprintf(xerrmsg, 256, "No link block named '%s'", servername);
+		goto errlink;
+	}
+	if (link->username && match(link->username, cptr->username)) {
+		snprintf(xerrmsg, 256, "Username '%s' didn't match '%s'",
+			cptr->username, link->username);
+		/* I assume nobody will have 2 link blocks with the same servername
+		 * and different username. -- Syzop
+		 */
+		goto errlink;
+	}
+	/* For now, we don't check based on DNS, it is slow, and IPs are better.
+	 * We also skip checking if link::options::nohostcheck is set.
+	 */
+	if (link->options & CONNECT_NOHOSTCHECK)
+		goto nohostcheck;
+	link = Find_link(cptr->username, cptr->sockhost, cptr->sockhost, servername);
+	
+#ifdef INET6
+	/*  
+	 * We first try match on uncompressed form ::ffff:192.168.1.5 thing included
+	*/
+	if (!link)
+		link = Find_link(cptr->username, cptr->sockhost, Inet_ia2pNB(&cptr->ip, 0), servername);
+	/* 
+	 * Then on compressed 
+	*/
+	if (!link)
+		link = Find_link(cptr->username, cptr->sockhost, Inet_ia2pNB(&cptr->ip, 1), servername);
+#endif		
+	if (!link)
+	{
+		snprintf(xerrmsg, 256, "Server is in link block but IP/host didn't match");
+errlink:
+		/* Send the "simple" error msg to the server */
+		sendto_one(cptr,
+		    "ERROR :Link denied (No matching link configuration) %s",
+		    inpath);
+		/* And send the "verbose" error msg only to local failops */
+		sendto_locfailops
+		    ("Link denied for %s(%s@%s) (%s) %s",
+		    servername, cptr->username, cptr->sockhost, xerrmsg, inpath);
+		return exit_client(cptr, sptr, &me,
+		    "Link denied (No matching link configuration)");
+	}
+nohostcheck:
+	/* Now for checking passwords */
+	if (Auth_Check(cptr, link->recvauth, cptr->passwd) == -1)
+	{
+		sendto_one(cptr,
+		    "ERROR :Link denied (Authentication failed) %s",
+		    inpath);
+		sendto_locfailops
+		    ("Link denied (Authentication failed [Bad password?]) %s", inpath);
+		return exit_client(cptr, sptr, &me,
+		    "Link denied (Authentication failed)");
+	}
+
+	/*
+	 * Third phase, we check that the server does not exist
+	 * already
+	 */
+	if ((acptr = find_server(servername, NULL)))
+	{
+		/* Found. Bad. Quit. */
+		acptr = acptr->from;
+		ocptr =
+		    (cptr->firsttime > acptr->firsttime) ? acptr : cptr;
+		acptr =
+		    (cptr->firsttime > acptr->firsttime) ? cptr : acptr;
+		sendto_one(acptr,
+		    "ERROR :Server %s already exists from %s",
+		    servername,
+		    (ocptr->from ? ocptr->from->name : "<nobody>"));
+		sendto_realops
+		    ("Link %s cancelled, server %s already exists from %s",
+		    get_client_name(acptr, TRUE), servername,
+		    (ocptr->from ? ocptr->from->name : "<nobody>"));
+		return exit_client(acptr, acptr, acptr,
+		    "Server Exists");
+	}
+	if ((bconf = Find_ban(NULL, servername, CONF_BAN_SERVER)))
+	{
+		sendto_realops
+			("Cancelling link %s, banned server",
+			get_client_name(cptr, TRUE));
+		sendto_one(cptr, "ERROR :Banned server (%s)", bconf->reason ? bconf->reason : "no reason");
+		return exit_client(cptr, cptr, &me, "Banned server");
+	}
+	if (link->class->clients + 1 > link->class->maxclients)
+	{
+		sendto_realops
+			("Cancelling link %s, full class",
+				get_client_name(cptr, TRUE));
+		return exit_client(cptr, cptr, &me, "Full class");
+	}
+	if (link_out)
+		*link_out = link;
+	return 0;
+}
+
+
 /*
 ** m_server
 **	parv[0] = sender prefix
@@ -104,8 +298,6 @@ DLLFUNC CMD_FUNC(m_server)
  /*	char *password = NULL; */
 	char *ch = NULL;	/* */
 	char *inpath = get_client_name(cptr, TRUE);
-	aClient *acptr = NULL, *ocptr = NULL;
-	ConfigItem_ban *bconf;
 	int  hop = 0, numeric = 0;
 	char info[REALLEN + 61];
 	ConfigItem_link *aconf = NULL;
@@ -177,125 +369,11 @@ DLLFUNC CMD_FUNC(m_server)
 	if (IsUnknown(cptr) || IsHandshake(cptr))
 	{
 		char xerrmsg[256];
-		ConfigItem_link *link;
-		
-		strcpy(xerrmsg, "No matching link configuration");
-		/* First check if the server is in the list */
-		if (!servername) {
-			strcpy(xerrmsg, "Null servername");
-			goto errlink;
-		}
-		if (cptr->serv && cptr->serv->conf)
-		{
-			/* We already know what block we are dealing with (outgoing connect!) */
-			link = cptr->serv->conf;
-		} else {
-			/* Hunt the linkblock down ;) */
-			for(link = conf_link; link; link = (ConfigItem_link *) link->next)
-				if (!match(link->servername, servername))
-					break;
-		}
-		if (!link) {
-			snprintf(xerrmsg, 256, "No link block named '%s'", servername);
-			goto errlink;
-		}
-		if (link->username && match(link->username, cptr->username)) {
-			snprintf(xerrmsg, 256, "Username '%s' didn't match '%s'",
-				cptr->username, link->username);
-			/* I assume nobody will have 2 link blocks with the same servername
-			 * and different username. -- Syzop
-			 */
-			goto errlink;
-		}
-		/* For now, we don't check based on DNS, it is slow, and IPs are better.
-		 * We also skip checking if link::options::nohostcheck is set.
-		 */
-		if (link->options & CONNECT_NOHOSTCHECK)
-		{
-			aconf = link;
-			goto nohostcheck;
-		}
-		aconf = Find_link(cptr->username, cptr->sockhost, cptr->sockhost,
-		    servername);
-		
-#ifdef INET6
-		/*  
-		 * We first try match on uncompressed form ::ffff:192.168.1.5 thing included
-		*/
-		if (!aconf)
-			aconf = Find_link(cptr->username, cptr->sockhost, Inet_ia2pNB(&cptr->ip, 0), servername);
-		/* 
-		 * Then on compressed 
-		*/
-		if (!aconf)
-			aconf = Find_link(cptr->username, cptr->sockhost, Inet_ia2pNB(&cptr->ip, 1), servername);
-#endif		
-		if (!aconf)
-		{
-			snprintf(xerrmsg, 256, "Server is in link block but IP/host didn't match");
-errlink:
-			/* Send the "simple" error msg to the server */
-			sendto_one(cptr,
-			    "ERROR :Link denied (No matching link configuration) %s",
-			    inpath);
-			/* And send the "verbose" error msg only to local failops */
-			sendto_locfailops
-			    ("Link denied for %s(%s@%s) (%s) %s",
-			    servername, cptr->username, cptr->sockhost, xerrmsg, inpath);
-			return exit_client(cptr, sptr, &me,
-			    "Link denied (No matching link configuration)");
-		}
-nohostcheck:
-		/* Now for checking passwords */
-		if (Auth_Check(cptr, aconf->recvauth, cptr->passwd) == -1)
-		{
-			sendto_one(cptr,
-			    "ERROR :Link denied (Authentication failed) %s",
-			    inpath);
-			sendto_locfailops
-			    ("Link denied (Authentication failed [Bad password?]) %s", inpath);
-			return exit_client(cptr, sptr, &me,
-			    "Link denied (Authentication failed)");
-		}
-
-		/*
-		 * Third phase, we check that the server does not exist
-		 * already
-		 */
-		if ((acptr = find_server(servername, NULL)))
-		{
-			/* Found. Bad. Quit. */
-			acptr = acptr->from;
-			ocptr =
-			    (cptr->firsttime > acptr->firsttime) ? acptr : cptr;
-			acptr =
-			    (cptr->firsttime > acptr->firsttime) ? cptr : acptr;
-			sendto_one(acptr,
-			    "ERROR :Server %s already exists from %s",
-			    servername,
-			    (ocptr->from ? ocptr->from->name : "<nobody>"));
-			sendto_realops
-			    ("Link %s cancelled, server %s already exists from %s",
-			    get_client_name(acptr, TRUE), servername,
-			    (ocptr->from ? ocptr->from->name : "<nobody>"));
-			return exit_client(acptr, acptr, acptr,
-			    "Server Exists");
-		}
-		if ((bconf = Find_ban(NULL, servername, CONF_BAN_SERVER)))
-		{
-			sendto_realops
-				("Cancelling link %s, banned server",
-				get_client_name(cptr, TRUE));
-			sendto_one(cptr, "ERROR :Banned server (%s)", bconf->reason ? bconf->reason : "no reason");
-			return exit_client(cptr, cptr, &me, "Banned server");
-		}
-		if (aconf->class->clients + 1 > aconf->class->maxclients)
-		{
-			sendto_realops
-				("Cancelling link %s, full class",
-					get_client_name(cptr, TRUE));
-			return exit_client(cptr, cptr, &me, "Full class");
-		}
+		int ret;
+		ret = verify_link(cptr, sptr, servername, &aconf);
+		if (ret < 0)
+			return ret; /* FLUSH_BUFFER / failure */
+			
 		/* OK, let us check in the data now now */
 		hop = TS2ts(parv[2]);
 		numeric = (parc > 4) ? TS2ts(parv[3]) : 0;
@@ -621,8 +699,8 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 		/* If this is an incomming connection, then we have just received
 		 * their stuff and now send our stuff back.
 		 */
-		send_proto(cptr, aconf);
 		sendto_one(cptr, "PASS :%s", aconf->connpwd);
+		send_proto(cptr, aconf);
 		sendto_one(cptr, "SERVER %s 1 :U%d-%s-%i %s",
 			    me.name, UnrealProtocol,
 			    serveropts, me.serv->numeric,
@@ -659,6 +737,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	}
 #endif
 	/* Set up server structure */
+	free_pending_net(cptr);
 	SetServer(cptr);
 	IRCstats.me_servers++;
 	IRCstats.servers++;

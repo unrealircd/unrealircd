@@ -835,10 +835,14 @@ int completed_connection(aClient *cptr)
 	if (!BadPtr(aconf->connpwd))
 		sendto_one(cptr, "PASS :%s", aconf->connpwd);
 
+	send_protoctl_servers(cptr, 0);
 	send_proto(cptr, aconf);
-	sendto_one(cptr, "SERVER %s 1 :U%d-%s%s-%i %s",
-	    me.name, UnrealProtocol, serveropts, extraflags ? extraflags : "", me.serv->numeric,
-	    me.info);
+	/* Sending SERVER message moved to m_protoctl, so it's send after the first PROTOCTL
+	 * we receive from the remote server. Of course, this assumes that the remote server
+	 * to which we are connecting will at least send one PROTOCTL... but since it's an
+	 * outgoing connect, we can safely assume it's a remote UnrealIRCd server (or some
+	 * other advanced server..). -- Syzop
+	 */
 	if (!IsDead(cptr))
 		start_auth(cptr);
 

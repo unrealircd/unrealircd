@@ -1703,6 +1703,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->name_server = strdup("127.0.0.1"); /* default, especially needed for w2003+ in some rare cases */
 	i->level_on_join = CHFL_CHANOP;
 	i->watch_away_notification = 1;
+	i->new_linking_protocol = 1;
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,
@@ -7203,6 +7204,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "restrict-extendedbans")) {
 			ircstrdup(tempiConf.restrict_extendedbans, cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "new-linking-protocol")) {
+			tempiConf.new_linking_protocol = atoi(cep->ce_vardata);
+		}
 		else if (!strcmp(cep->ce_varname, "anti-spam-quit-message-time")) {
 			tempiConf.anti_spam_quit_message_time = config_checkval(cep->ce_vardata,CFG_TIME);
 		}
@@ -7895,6 +7899,11 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "restrict-extendedbans"))
 		{
 			CheckDuplicate(cep, restrict_extendedbans, "restrict-extendedbans");
+			CheckNull(cep);
+		}
+		else if (!strcmp(cep->ce_varname, "new-linking-protocol"))
+		{
+			CheckDuplicate(cep, new_linking_protocol, "new-linking-protocol");
 			CheckNull(cep);
 		}
 		else if (!strcmp(cep->ce_varname, "dns")) {

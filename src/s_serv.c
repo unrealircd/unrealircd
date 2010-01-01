@@ -1276,3 +1276,131 @@ aClient *find_match_server(char *mask)
 	}
 	return acptr;
 }
+
+aPendingNet *pendingnet = NULL;
+
+void add_pending_net(aClient *sptr, char *str)
+{
+aPendingNet *e = NULL;
+int num = 1;
+char *p, *name;
+
+	if (BadPtr(str) || !sptr)
+		return;
+
+	/* First, count them */
+	for (p = str; *p; p++)
+		if (*p == ',')
+			num++;
+	
+	/* Allocate */
+	e = MyMallocEx(sizeof(aPendingNet) + (sizeof(int) * num));
+	
+	e->numservers = num;
+	e->sptr = sptr;
+
+	/* Fill in */
+	num = 0;
+	for (name = strtoken(&p, str, ","); name; name = strtoken(&p, NULL, ","))
+	{
+		if (!*name)
+			continue;
+
+		/* skip any non-digit prefixes, if necessary. Possibly needed in the future. */
+		while (*name && !isdigit(*name))
+			name++; 
+
+		e->servers[num++] = atoi(name);
+	}
+	
+	AddListItem(e, pendingnet);
+}
+
+void free_pending_net(aClient *sptr)
+{
+aPendingNet *e, *e_next;
+
+	for (e = pendingnet; e; e = e_next)
+	{
+		e_next = e->next;
+		if (e->sptr == sptr)
+		{
+			DelListItem(e, pendingnet);
+			MyFree(e);
+			/* Don't break, there can be multiple objects */
+		}
+	}
+}
+
+aPendingNet *find_pending_net_by_numeric_butone(int numeric, aClient *exempt)
+{
+aPendingNet *e;
+int i;
+
+	if (numeric <= 0)
+		return NULL;
+
+	for (e = pendingnet; e; e = e->next)
+	{
+		if (e->sptr == exempt)
+			continue;
+		for (i = 0; i < e->numservers; i++)
+			if (e->servers[i] == numeric)
+				return e;
+	}
+	return NULL;
+}
+
+/** Search the pending connections list for any identical numerics */
+aClient *find_pending_net_duplicates(aClient *cptr, aClient **srv, int *numeric)
+{
+aPendingNet *e, *other;
+int i;
+
+	*srv = NULL;
+	*numeric = 0;
+	
+	for (e = pendingnet; e; e = e->next)
+	{
+		if (e->sptr != cptr)
+			continue;
+		/* Ok, found myself */
+		for (i = 0; i < e->numservers; i++)
+		{
+			int curr_numeric = e->servers[i];
+			other = find_pending_net_by_numeric_butone(curr_numeric, cptr);
+			if (other)
+			{
+				*srv = e->sptr;
+				*numeric = curr_numeric;
+				return other->sptr; /* Found another (pending) server with identical numeric */
+			}
+		}
+	}
+	
+	return NULL;
+}
+
+aClient *find_non_pending_net_duplicates(aClient *cptr)
+{
+aPendingNet *e;
+int i;
+aClient *acptr;
+
+	for (e = pendingnet; e; e = e->next)
+	{
+		if (e->sptr != cptr)
+			continue;
+		/* Ok, found myself */
+		for (i = 0; i < e->numservers; i++)
+		{
+			int numeric = e->servers[i];
+			acptr = find_server_by_numeric(numeric);
+			if (acptr)
+				return acptr; /* Found another (fully CONNECTED) server with identical numeric */
+		}
+	}
+	
+	return NULL;
+}
+

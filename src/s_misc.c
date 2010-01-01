@@ -538,7 +538,7 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 			IRCstats.me_servers--;
 			ircd_log(LOG_SERVER, "SQUIT %s (%s)", sptr->name, comment);
 		}
-
+		free_pending_net(sptr);
 		if (sptr->listener)
 			if (sptr->listener->class && !IsOutgoing(sptr))
 			{
