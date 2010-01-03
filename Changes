@@ -1889,3 +1889,8 @@
   was needed though, because (re)linking stability is extremely important.
   This new feature/design/fix requires extensive testing.
   This feature can be disabled by: set { new-linking-protocol 0; };
+- Made ./Config description about remote includes a bit more clear.
+- When you now answer Yes to Remote includes in ./Config and $HOME/curl does
+  not exist, it now asks you if you want to automatically download and
+  install curl (which is done by ./curlinstall).
+  This has been tested on Linux, further testing on f.e. FreeBSD is required.

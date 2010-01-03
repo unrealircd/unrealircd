@@ -86,6 +86,9 @@ ARG="$ARG--with-fd-setsize=$MAXCONNECTIONS "
 ARG="$ARG--enable-dynamic-linking "
 ARG="$ARG $EXTRAPARA "
 CONF="./configure $ARG"
+if [ "x$INSTALLCURL" = "x1" ]; then
+	./curlinstall || exit 1
+fi
 echo $CONF
 $CONF || exit 1
 cd "$UNREALCWD"
@@ -657,6 +660,8 @@ while [ -z "$TEST" ] ; do
     fi
     echo ""
     echo "Do you want to enable remote includes?"
+    echo "This allows stuff like this in your configuration file:"
+    echo "include \"http://www.somesite.org/files/opers.conf\";"
     echo $n "[$TEST] -> $c"
 	read cc
     if [ -z "$cc" ] ; then
@@ -679,20 +684,69 @@ while [ -z "$TEST" ] ; do
 done
 
 if [ "$REMOTEINC" = "1" ] ; then
-	TEST=""
-	while [ -z "$TEST" ] ; do
-		TEST="$CURLDIR"
-		echo ""
-		echo "Specify the directory you installed libcurl to"
-		echo $n "[$TEST] -> $c"
-		read cc
-		if [ -z "$cc" ] ; then
-		    cc=$TEST
-		else
-		    TEST=$cc
-		    CURLDIR=`eval echo $cc` # modified
-		fi
-	done
+	if [ ! -d "$CURLDIR" ]; then
+		# Reset any previous CURLDIR if it doesn't exist (anymore)
+		CURLDIR=""
+	fi
+
+
+	INSTALLCURL="0"
+        if [ "$CURLDIR" = "" ]; then
+                # First, let's make shell admins happy...
+                if [ -d "/usr/share/unreal-curl" ]; then
+                        CURLDIR="/usr/share/unreal-curl"
+                fi
+                # Second, use the local curl if it exists (overrides above)
+                if [ -d "$HOME/curl" ]; then
+                        CURLDIR="$HOME/curl"
+                fi
+        fi
+        if [ "$CURLDIR" = "" ]; then
+        	# Still empty?
+        	TEST=""
+                while [ -z "$TEST" ] ; do
+                    TEST="Yes"
+                    echo ""
+        	    echo "Do you want me to automatically download and install curl for you?"
+        	    echo "(will install in $HOME/curl)"
+                    echo $n "[$TEST] -> $c"
+                        read cc
+                    if [ -z "$cc" ] ; then
+                        cc=$TEST
+                    fi
+                    case "$cc" in
+                        [Yy]*)
+                            INSTALLCURL="1"
+                            CURLDIR="$HOME/curl"
+                            ;;
+                        [Nn]*)
+                            INSTALLCURL="0"
+                            ;;
+                        *)
+                            echo ""
+                            echo "You must enter either Yes or No"
+                            TEST=""
+                            ;;
+                    esac
+                done
+        fi
+
+	if [ "$INSTALLCURL" != "1" ]; then
+	  TEST=""
+          while [ -z "$TEST" ] ; do
+                  TEST="$CURLDIR"
+                  echo ""
+                  echo "Specify the directory you installed libcurl to"
+                  echo $n "[$TEST] -> $c"
+                  read cc
+                  if [ -z "$cc" ] ; then
+                      cc=$TEST
+                  else
+                      TEST=$cc
+                      CURLDIR=`eval echo $cc` # modified
+                  fi
+          done
+        fi
 fi
 
 

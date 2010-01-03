@@ -1,11 +1,59 @@
 #!/bin/sh
-
-if test "x$1" = x -o "x$2" = x ; then
-	echo "Syntax:"
-	echo "curlinstall ares_path libcurl_path"
-	echo ""
+URL="http://www.unrealircd.com/files/curl-latest.tar.gz"
+OUTF="curl-latest.tar.gz"
+OUTD="curl-latest"
+ARESPATH="`pwd`/extras/c-ares"
+CARESVERSION="1.6.0"
+set -x
+if [ ! -f "Unreal.nfo" ]; then
+	echo "Please run this program from your UnrealIRCd directory"
+	echo "(usually $HOME/Unreal3.2 or something like that)"
 	exit 1
 fi
+
+wget --version 1>/dev/null 2>&1
+if [ "$?" = 0 ]; then
+	FETCHER="wget"
+else
+	fetch --version 1>/dev/null 2>&1
+	if [ "$?" = 0 ]; then
+		FETCHER="fetch"
+	else
+		lynx --version 1>/dev/null 2>&1
+		if [ "$?" = 0 ]; then
+			FETCHER="lynx"
+		else
+			echo "ERROR: unable to find wget/fetch/lynx, please install at least one of these programs"
+			exit 1
+		fi
+	fi
+fi
+
+if [ ! -d tmp ]; then
+	mkdir tmp || exit 1
+fi
+
+cd tmp || exit 1
+
+rm -f "$OUTF"
+
+if [ "$FETCHER" = "wget" ]; then
+	wget -O "$OUTF" "$URL"
+elif [ "$FETCHER" = "lynx" ]; then
+	lynx -dump "$URL" >"$OUTF"
+elif [ "$FETCHER" = "fetch" ]; then
+	cd tmp #todo: find out the cmd line parameter ;)
+	fetch "$URL"
+fi
+
+if [ "$?" != 0 ]; then
+	echo "ERROR: Something went wrong while trying to download $URL"
+	exit 1
+fi
+
+rm -rf "$OUTD" # remove old directory prior to extracting
+tar xzf "$OUTF" || exit 1
+
 
 if [ "`eval echo -n 'a'`" = "-n a" ] ; then
         c="\c"
@@ -13,54 +61,26 @@ else
         n="-n"
 fi
 
-save_PWD=`pwd`
-echo "Installing ares"
-cd $1
-./configure --prefix=$HOME/ares && make && make install
-
-SSLFLAG=""
-while [ -z "$SSLFLAG" ] ; do
+if [ ! -d "$ARESPATH/lib" ]; then
+	echo "c-ares has not been build yet, let's do that now..."
+	cd ../extras/
+	tar xzf c-ares.tar.gz || exit 1
+	cd c-ares-$CARESVERSION || exit 1
+	./configure --prefix=$ARESPATH || exit 1
+	(make && make install) || exit 1
+	cd ../../tmp/
+	echo "c-ares built."
 	echo ""
-	echo "Should libcurl be built with SSL support?"
-	echo $n "-> " $c
-	read cc
-	case "$cc" in
-		[Yy]*)
-			SSLFLAG="--with-ssl"
-			;;
-		[Nn]*)
-			SSLFLAG="--without-ssl"
-			;;
-		*)
-			echo ""
-		        echo "You must enter either Yes or No"
-			;;
-	esac
-done
-if [ -f $HOME/ares/lib/libcares.a ] ; then
-	if [ -f $HOME/ares/lib/libares.a ] ; then
-		rm -f $HOME/ares/lib/libares.a
-	fi
-	cp $HOME/ares/lib/libcares.a $HOME/ares/lib/libares.a
 fi
 
-echo "Installing libcurl"
-cd $2
-CPPFLAGS="-I$HOME/ares/include" ./configure --prefix=$HOME/curl --disable-shared \
- --disable-thread --enable-ares=$HOME/ares --disable-ipv6 $SSLFLAG
-cp -R $HOME/ares/lib ares
+# We assume curl has been packaged in a way it will extract to "$OUTD"/
+cd "$OUTD" || exit 1
+
+echo "Building and installing libcurl"
+CPPFLAGS="-I$ARESPATH/include" ./configure --prefix=$HOME/curl --disable-shared \
+ --disable-thread --enable-ares=$ARESPATH --disable-ipv6 $SSLFLAG
+cp -R $ARESPATH/lib ares
 make && make install
 
-if [ -f $HOME/curl/lib/libares.a ] ; then
-	rm -f $HOME/curl/lib/libares.a
-fi
-cp $HOME/ares/lib/libares.a $HOME/curl/lib
-
-cd $save_PWD
-
-echo ""
-echo ""
-echo "libcurl has been installed. When running ./Config specify:"
-echo "$HOME/curl"
-echo "for the directory you installed libcurl to."
-
+#cp $ARESPATH/lib/libcares.a $HOME/curl/lib
+# that isn't needed anymore as the lib is already in unreal...
