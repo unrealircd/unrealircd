@@ -605,6 +605,9 @@ char logbuf[BUFSIZ];
 # endif
 #endif
 #ifndef _WIN32
+#ifdef HAVE_SYSLOG
+closelog(); /* temporary close syslog, as we mass close() fd's below... */
+#endif
 #ifndef NOCLOSEFD
 for (fd = 3; fd < MAXCONNECTIONS; fd++)
 {
@@ -655,6 +658,9 @@ init_dgram:
 	close(fileno(stdout));
 	if (!(bootopt & BOOT_DEBUG))
 	close(fileno(stderr));
+#endif
+#ifdef HAVE_SYSLOG
+openlog("ircd", LOG_PID | LOG_NDELAY, LOG_DAEMON); /* reopened now */
 #endif
 	memset(local, 0, sizeof(aClient*) * MAXCONNECTIONS);
 	LastSlot = -1;

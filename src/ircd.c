@@ -361,8 +361,7 @@ void server_reboot(char *mesg)
 	if (!(bootopt & (BOOT_TTY | BOOT_DEBUG)))
 		(void)close(2);
 	(void)close(1);
-	if ((bootopt & BOOT_CONSOLE) || isatty(0))
-		(void)close(0);
+	(void)close(0);
 	(void)execv(MYNAME, myargv);
 #else
 	close_connections();
