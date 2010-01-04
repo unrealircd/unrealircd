@@ -1897,6 +1897,7 @@
 - Fixed a /RESTART issue on Linux: Unreal did not properly close all file-
   descriptors. Because of this, Unreal did not restart properly as you would
   get an "Address already in use" error. This only seemed to happen when
-  logging to syslog. Reported by Mouse (#0003882).
+  logging to syslog, or when there was something wrong with syslogd.
+  Reported by Mouse (#0003882).
 - Fixed a similar issue with syslog (and debugmode) and closing fd's as well:
   the first port we listened on would not open up, ircd did not log any error.
