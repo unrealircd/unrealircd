@@ -1901,3 +1901,8 @@
   Reported by Mouse (#0003882).
 - Fixed a similar issue with syslog (and debugmode) and closing fd's as well:
   the first port we listened on would not open up, ircd did not log any error.
+- Added set::uhnames setting which can be used to disable uhnames by setting
+  it to 'no', the default is 'yes' (on). Requested by Robin (#0003885) as
+  UHNAMES may increase the time of the nick list being loaded from 1 to 4
+  seconds when joining several channels with more than 1000 users. As this 
+  problem is only present on some networks, we keep UHNAMES enabled by default.

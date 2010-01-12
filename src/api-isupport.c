@@ -150,7 +150,8 @@ void isupport_init(void)
 	IsupportAdd(NULL, "HCN", NULL);
 	IsupportAdd(NULL, "SAFELIST", NULL);
 	IsupportAdd(NULL, "NAMESX", NULL);
-	IsupportAdd(NULL, "UHNAMES", NULL);
+	if (UHNAMES_ENABLED)
+		IsupportAdd(NULL, "UHNAMES", NULL);
 	if (cmdstr)
 		IsupportAdd(NULL, "CMDS", cmdstr);
 }

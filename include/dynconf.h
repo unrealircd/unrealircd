@@ -162,6 +162,7 @@ struct zConfiguration {
 	char *timesynch_server;
 	int pingpong_warning;
 	int watch_away_notification;
+	int uhnames;
 	aNetwork network;
 };
 
@@ -281,6 +282,8 @@ extern MODVAR aConfiguration iConf;
 
 #define WATCH_AWAY_NOTIFICATION	iConf.watch_away_notification
 
+#define UHNAMES_ENABLED	iConf.uhnames
+
 /* Used for "is present?" and duplicate checking */
 struct SetCheck {
 	unsigned has_show_opermotd:1;
@@ -316,6 +319,7 @@ struct SetCheck {
 	unsigned has_check_target_nick_bans:1;
 	unsigned has_pingpong_warning:1;
 	unsigned has_watch_away_notification:1;
+	unsigned has_uhnames:1;
 	unsigned has_oper_only_stats:1;
 	unsigned has_maxchannelsperuser:1;
 	unsigned has_maxdccallow:1;

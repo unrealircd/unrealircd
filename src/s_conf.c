@@ -1704,6 +1704,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->level_on_join = CHFL_CHANOP;
 	i->watch_away_notification = 1;
 	i->new_linking_protocol = 1;
+	i->uhnames = 1;
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,
@@ -1771,6 +1772,14 @@ char *encoded;
 			IsupportAdd(NULL, "WATCHOPTS", "A");
 		} else {
 			Isupport *hunted = IsupportFind("WATCHOPTS");
+			if (hunted)
+				IsupportDel(hunted);
+		}
+		if (UHNAMES_ENABLED)
+		{
+			IsupportAdd(NULL, "UHNAMES", NULL);
+		} else {
+			Isupport *hunted = IsupportFind("UHNAMES");
 			if (hunted)
 				IsupportDel(hunted);
 		}
@@ -7160,6 +7169,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "watch-away-notification")) {
 			tempiConf.watch_away_notification = config_checkval(cep->ce_vardata, CFG_YESNO);
 		}
+		else if (!strcmp(cep->ce_varname, "uhnames")) {
+			tempiConf.uhnames = config_checkval(cep->ce_vardata, CFG_YESNO);
+		}
 		else if (!strcmp(cep->ce_varname, "allow-userhost-change")) {
 			if (!stricmp(cep->ce_vardata, "always"))
 				tempiConf.userhost_allowed = UHALLOW_ALWAYS;
@@ -7743,6 +7755,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "watch-away-notification")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, watch_away_notification, "watch-away-notification");
+		}
+		else if (!strcmp(cep->ce_varname, "uhnames")) {
+			CheckNull(cep);
+			CheckDuplicate(cep, uhnames, "uhnames");
 		}
 		else if (!strcmp(cep->ce_varname, "channel-command-prefix")) {
 			CheckNull(cep);

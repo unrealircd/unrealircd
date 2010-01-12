@@ -139,7 +139,7 @@ CMD_FUNC(m_protoctl)
 			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
 			SetNAMESX(cptr);
 		}
-		if (!strcmp(s, "UHNAMES"))
+		if (!strcmp(s, "UHNAMES") && UHNAMES_ENABLED)
 		{
 			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
 			SetUHNAMES(cptr);
