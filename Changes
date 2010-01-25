@@ -1906,3 +1906,12 @@
   UHNAMES may increase the time of the nick list being loaded from 1 to 4
   seconds when joining several channels with more than 1000 users. As this 
   problem is only present on some networks, we keep UHNAMES enabled by default.
+- Added patch from ohnobinki (#0003888), only slightly edited, which improves
+  curl detection, added checks to see if curl actually works (print out a
+  clear curl error during configure, instead of getting an error during
+  'make'), and we now error when using --enable-libcurl without
+  --with-system-cares if the system curl depends on c-ares. This is because
+  this can cause ABI incompatability between curl's c-ares and our c-ares,
+  which leads to odd issues such as:
+  Could not resolve host: www.example.net (Successful completion)
+  And possibly other weird issues, perhaps even crashes.

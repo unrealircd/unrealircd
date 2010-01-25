@@ -692,6 +692,14 @@ if [ "$REMOTEINC" = "1" ] ; then
 
 	INSTALLCURL="0"
         if [ "$CURLDIR" = "" ]; then
+	        # There is no reason to support this:
+	        if [ -d "/usr/local/include/curl" ]; then
+		    CURLDIR="/usr/local"
+		fi
+	        # Zeroeth, let's act SANE
+	        if [ -d "/usr/include/curl" ]; then
+		    CURLDIR="/usr"
+		fi
                 # First, let's make shell admins happy...
                 if [ -d "/usr/share/unreal-curl" ]; then
                         CURLDIR="/usr/share/unreal-curl"
