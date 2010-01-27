@@ -1915,3 +1915,4 @@
   which leads to odd issues such as:
   Could not resolve host: www.example.net (Successful completion)
   And possibly other weird issues, perhaps even crashes.
+- Patch from above is (temp.) reverted, Unreal wouldn't compile without curl.

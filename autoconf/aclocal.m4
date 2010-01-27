@@ -50,107 +50,34 @@ AC_DEFUN(CHECK_LIBCURL,
 [
 	AC_ARG_ENABLE(libcurl,
 	[AC_HELP_STRING([--enable-libcurl=DIR],[enable libcurl (remote include) support])],
-	[enable_curl=$enableval],
-	[enable_curl=no])
-
-	AS_IF([test "x$enable_curl" != "xno"],
 	[
-		dnl sane, default directory for Operating System-managed libcURL
-		dnl (when --enable-libcurl is passed without any arguments). On
-		dnl systems with stuff in /usr/local, /usr/local/bin should already
-		dnl be in PATH. On sane systems, this will invoke the curl-config
-		dnl installed by the package manager.
-		CURLCONFIG="curl-config"
-		AS_IF([test "x$enable_curl" != "xyes"],
-		[CURLCONFIG="$enable_curl/bin/curl-config"])
-
-		AC_MSG_CHECKING([$CURLCONFIG])
-		AS_IF([$CURLCONFIG --version 2>/dev/null >/dev/null],
-			[AC_MSG_RESULT([yes])],
-			[AC_MSG_RESULT([no])
-				AC_MSG_FAILURE([Could not find curl-config, try editing --enable-libcurl])])
-
-		CURLCFLAG="`$CURLCONFIG --cflags`"
-		CURLLIBS="`$CURLCONFIG --libs`"
-		
-		CURLUSESCARES="`echo $CURLLIBS|grep c-ares|wc -l`"
-		AS_IF([test "$CURLUSESCARES" = "0"],
-		[AC_MSG_WARN([cURL is compiled without c-ares support. Your IRCd will possibly stall when REHASHing!])])
-
-		dnl sanity warnings
-		AS_IF([test -z "${CURLLIBS}"],
-		[AC_MSG_WARN([CURLLIBS is empty, that probably means that I could not find $enableval/bin/curl-config])])
+		CURLCFLAG=`$enableval/bin/curl-config --cflags`
+		CURLLIBS=`$enableval/bin/curl-config --libs`
 
 		dnl Ok this is ugly, basically we need to strip the version of c-ares that curl uses
 		dnl because we want to use our own version (which is hopefully fully binary
 		dnl compatible with the curl one as well).
 		dnl Therefore we need to strip the cares libs in a weird way...
 		dnl If anyone can come up with something better and still portable (no awk!?)
-		dnl then let us know. -- Syzop
-		dnl
-		dnl It is dangerous to mix and match cURL with potentially ABI-incompatible versions of
-		dnl c-ares, just use --with-system-cares.
-		dnl Thus, make sure to use --with-system-cares when using system-cURL. If the user
-		dnl wants bundled c-ares + system libcURL, then we should filter out c-ares
-		dnl flags. _Only_ in that case should we mess with the flags. -- ohnobinki
-
-		AS_IF([test "x$with_system_cares" = "xno" && test "x$HOME/curl" != "x$enable_curl" && test "x/usr/share/unreal-curl" != "x$enable_curl" && test "$CURLUSESCARES" != "0" ],
-		[
-			AC_MSG_ERROR([[
-
-  You have decided to build unrealIRCd with libcURL (remote includes) support.
-  However, you have disabled system-installed c-ares support (--with-system-cares).
-  Because UnrealIRCd will use a bundled copy of c-ares which may be incompatible
-  with the system-installed libcURL, this is a bad idea which may result in error
-  messages looking like:
-
-  	\`\`[error] unrealircd.conf:9: include: error downloading '(http://example.net/ex.conf)': Could not resolve host: example.net (Successful completion)''
-
-  Or UnrealIRCd might even crash.
-
-  Please build UnrealIRCd with --with-system-cares when enabling --enable-libcurl
-]])
-		])
-
-		AS_IF([test "x`echo $CURLLIBS |grep ares`" != x && test "x$with_system_cares" = "xno"],
-		[
+		dnl then let us know.
+		if test "x`echo $CURLLIBS |grep ares`" != x ; then
 			dnl Attempt one: Linux sed
 			XCURLLIBS="`echo "$CURLLIBS"|sed -r 's/(@<:@^ @:>@+ @<:@^ @:>@+ )(@<:@^ @:>@+ @<:@^ @:>@+ )(.+)/\1\3/g' 2>/dev/null`"
-			AS_IF([test x"$XCURLLIBS" = x],
-			[
+			if test x"$XCURLLIBS" = x; then
 				dnl Attempt two: FreeBSD (and others?) sed
 				XCURLLIBS="`echo "$CURLLIBS"|sed -E 's/(@<:@^ @:>@+ @<:@^ @:>@+ )(@<:@^ @:>@+ @<:@^ @:>@+ )(.+)/\1\3/g' 2>/dev/null`"
-				AS_IF([test x"$XCURLLIBS" = x],
-				[
+				if test x"$XCURLLIBS" = x; then
 					AC_MSG_ERROR([sed appears to be broken. It is needed for a remote includes compile hack.])
-				])
-			])
+				fi
+			fi
 			CURLLIBS="$XCURLLIBS"
-		])
+		fi
 		
-		dnl Make sure that linking against cURL works rather than letting the user
-		dnl find out after compiling most of his program. ~ohnobinki
 		IRCDLIBS="$IRCDLIBS $CURLLIBS"
 		CFLAGS="$CFLAGS $CURLCFLAG -DUSE_LIBCURL"
-
-		AC_MSG_CHECKING([curl_easy_init() in $CURLLIBS])
-		LIBS_SAVEDA="$LIBS"
-		LIBS="$IRCDLIBS"
-		AC_LINK_IFELSE(
-		    [
-			AC_LANG_PROGRAM(
-			    [[#include <curl/curl.h>]],
-			    [[CURL *curl = curl_easy_init();]])
-			],
-		    [AC_MSG_RESULT([yes])],
-		    [AC_MSG_RESULT([no])
-			AC_MSG_FAILURE([You asked for libcURL (remote includes) support, but it can't be found at $enable_curl]) dnl for emac's sh-mode ])
-		])
-		LIBS="$LIBS_SAVEDA"
-
 		URL="url.o"
 		AC_SUBST(URL)
-	]) dnl AS_IF(enable_curl) 
+	])
 ])
 
 dnl the following 2 macros are based on CHECK_SSL by Mark Ethan Trostler <trostler@juniper.net> 

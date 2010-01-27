@@ -12468,174 +12468,29 @@ fi
 
 	# Check whether --enable-libcurl was given.
 if test "${enable_libcurl+set}" = set; then
-  enableval=$enable_libcurl; enable_curl=$enableval
-else
-  enable_curl=no
-fi
+  enableval=$enable_libcurl;
+		CURLCFLAG=`$enableval/bin/curl-config --cflags`
+		CURLLIBS=`$enableval/bin/curl-config --libs`
 
-
-	if test "x$enable_curl" != "xno"; then
-
-												CURLCONFIG="curl-config"
-		if test "x$enable_curl" != "xyes"; then
-  CURLCONFIG="$enable_curl/bin/curl-config"
-fi
-
-
-		{ echo "$as_me:$LINENO: checking $CURLCONFIG" >&5
-echo $ECHO_N "checking $CURLCONFIG... $ECHO_C" >&6; }
-		if $CURLCONFIG --version 2>/dev/null >/dev/null; then
-  { echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6; }
-else
-  { echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6; }
-				{ { echo "$as_me:$LINENO: error: Could not find curl-config, try editing --enable-libcurl
-See \`config.log' for more details." >&5
-echo "$as_me: error: Could not find curl-config, try editing --enable-libcurl
-See \`config.log' for more details." >&2;}
-   { (exit 1); exit 1; }; }
-fi
-
-
-		CURLCFLAG="`$CURLCONFIG --cflags`"
-		CURLLIBS="`$CURLCONFIG --libs`"
-
-		CURLUSESCARES="`echo $CURLLIBS|grep c-ares|wc -l`"
-		if test "$CURLUSESCARES" = "0"; then
-  { echo "$as_me:$LINENO: WARNING: cURL is compiled without c-ares support. Your IRCd will possibly stall when REHASHing!" >&5
-echo "$as_me: WARNING: cURL is compiled without c-ares support. Your IRCd will possibly stall when REHASHing!" >&2;}
-fi
-
-
-				if test -z "${CURLLIBS}"; then
-  { echo "$as_me:$LINENO: WARNING: CURLLIBS is empty, that probably means that I could not find $enableval/bin/curl-config" >&5
-echo "$as_me: WARNING: CURLLIBS is empty, that probably means that I could not find $enableval/bin/curl-config" >&2;}
-fi
-
-
-
-		if test "x$with_system_cares" = "xno" && test "x$HOME/curl" != "x$enable_curl" && test "x/usr/share/unreal-curl" != "x$enable_curl" && test "$CURLUSESCARES" != "0" ; then
-
-			{ { echo "$as_me:$LINENO: error:
-
-  You have decided to build unrealIRCd with libcURL (remote includes) support.
-  However, you have disabled system-installed c-ares support (--with-system-cares).
-  Because UnrealIRCd will use a bundled copy of c-ares which may be incompatible
-  with the system-installed libcURL, this is a bad idea which may result in error
-  messages looking like:
-
-  	\`\`[error] unrealircd.conf:9: include: error downloading '(http://example.net/ex.conf)': Could not resolve host: example.net (Successful completion)''
-
-  Or UnrealIRCd might even crash.
-
-  Please build UnrealIRCd with --with-system-cares when enabling --enable-libcurl
-" >&5
-echo "$as_me: error:
-
-  You have decided to build unrealIRCd with libcURL (remote includes) support.
-  However, you have disabled system-installed c-ares support (--with-system-cares).
-  Because UnrealIRCd will use a bundled copy of c-ares which may be incompatible
-  with the system-installed libcURL, this is a bad idea which may result in error
-  messages looking like:
-
-  	\`\`[error] unrealircd.conf:9: include: error downloading '(http://example.net/ex.conf)': Could not resolve host: example.net (Successful completion)''
-
-  Or UnrealIRCd might even crash.
-
-  Please build UnrealIRCd with --with-system-cares when enabling --enable-libcurl
-" >&2;}
-   { (exit 1); exit 1; }; }
-
-fi
-
-
-		if test "x`echo $CURLLIBS |grep ares`" != x && test "x$with_system_cares" = "xno"; then
-
+														if test "x`echo $CURLLIBS |grep ares`" != x ; then
 						XCURLLIBS="`echo "$CURLLIBS"|sed -r 's/([^ ]+ [^ ]+ )([^ ]+ [^ ]+ )(.+)/\1\3/g' 2>/dev/null`"
 			if test x"$XCURLLIBS" = x; then
-
 								XCURLLIBS="`echo "$CURLLIBS"|sed -E 's/([^ ]+ [^ ]+ )([^ ]+ [^ ]+ )(.+)/\1\3/g' 2>/dev/null`"
 				if test x"$XCURLLIBS" = x; then
-
 					{ { echo "$as_me:$LINENO: error: sed appears to be broken. It is needed for a remote includes compile hack." >&5
 echo "$as_me: error: sed appears to be broken. It is needed for a remote includes compile hack." >&2;}
    { (exit 1); exit 1; }; }
-
-fi
-
-
-fi
-
+				fi
+			fi
 			CURLLIBS="$XCURLLIBS"
+		fi
 
-fi
-
-
-						IRCDLIBS="$IRCDLIBS $CURLLIBS"
+		IRCDLIBS="$IRCDLIBS $CURLLIBS"
 		CFLAGS="$CFLAGS $CURLCFLAG -DUSE_LIBCURL"
+		URL="url.o"
 
-		{ echo "$as_me:$LINENO: checking curl_easy_init() in $CURLLIBS" >&5
-echo $ECHO_N "checking curl_easy_init() in $CURLLIBS... $ECHO_C" >&6; }
-		LIBS_SAVEDA="$LIBS"
-		LIBS="$IRCDLIBS"
-		cat >conftest.$ac_ext <<_ACEOF
-
-			/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-#include <curl/curl.h>
-int
-main ()
-{
-CURL *curl = curl_easy_init();
-  ;
-  return 0;
-}
-
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_c_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  { echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6; }
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	{ echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6; }
-			{ { echo "$as_me:$LINENO: error: You asked for libcURL (remote includes) support, but it can't be found at $enable_curl
-See \`config.log' for more details." >&5
-echo "$as_me: error: You asked for libcURL (remote includes) support, but it can't be found at $enable_curl
-See \`config.log' for more details." >&2;}
-   { (exit 1); exit 1; }; } fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
 
 fi
-
-		LIBS="$LIBS_SAVEDA"
-
-		URL="url.o"
 
 
 # Check whether --enable-dynamic-linking was given.
