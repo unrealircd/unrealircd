@@ -429,6 +429,11 @@ IRCDLIBS="$IRCDLIBS -lresolv "
 ;;
 esac
 
+dnl c-ares needs PATH_SEPARATOR set or it will
+dnl fail on certain solaris boxes. We might as
+dnl well set it here.
+export PATH_SEPARATOR
+
 AS_IF([test "x$with_system_tre" = "xno"],[
 dnl REMEMBER TO CHANGE WITH A NEW TRE RELEASE!
 tre_version="0.7.5"

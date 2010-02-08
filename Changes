@@ -1919,3 +1919,6 @@
 - Reverted the revert and updated one line to fix the fix.
 - Fix for --with-system-cares, reported and patch provided by ohnobinki
   (#0003890).
+- Another c-ares fix for Solaris 10, this time it had to do with
+  PATH_SEPARATOR, the exact error was: error: PATH_SEPARATOR not set.
+  Reported by j0inty, patch provided by ohnobinki (#0003887).

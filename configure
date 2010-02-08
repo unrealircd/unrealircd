@@ -13147,6 +13147,8 @@ IRCDLIBS="$IRCDLIBS -lresolv "
 ;;
 esac
 
+export PATH_SEPARATOR
+
 
 
 if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
