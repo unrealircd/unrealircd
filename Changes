@@ -1917,3 +1917,5 @@
   And possibly other weird issues, perhaps even crashes.
 - Patch from above is (temp.) reverted, Unreal wouldn't compile without curl.
 - Reverted the revert and updated one line to fix the fix.
+- Fix for --with-system-cares, reported and patch provided by ohnobinki
+  (#0003890).

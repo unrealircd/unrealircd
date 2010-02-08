@@ -491,7 +491,7 @@ AC_MSG_RESULT(compiling c-ares resolver library)
 $ac_cv_prog_MAKER || exit 1
 AC_MSG_RESULT(installing c-ares resolver library)
 $ac_cv_prog_MAKER install || exit 1
-CARES_CFLAGS="$cur_dir/extras/c-ares/include"
+CARES_CFLAGS="-I$cur_dir/extras/c-ares/include"
 AC_SUBST(CARES_CFLAGS)
 CARES_LIBS="-L../extras/c-ares/lib"
 

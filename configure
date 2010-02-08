@@ -13446,7 +13446,7 @@ $ac_cv_prog_MAKER || exit 1
 { echo "$as_me:$LINENO: result: installing c-ares resolver library" >&5
 echo "${ECHO_T}installing c-ares resolver library" >&6; }
 $ac_cv_prog_MAKER install || exit 1
-CARES_CFLAGS="$cur_dir/extras/c-ares/include"
+CARES_CFLAGS="-I$cur_dir/extras/c-ares/include"
 
 CARES_LIBS="-L../extras/c-ares/lib"
 
