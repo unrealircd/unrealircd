@@ -968,8 +968,6 @@ cat << __EOF__
 |_______________________________________________________________________|
 |                        - The UnrealIRCd Team -                        |
 |                                                                       |
-| * Stskeeps  stskeeps@unrealircd.com                                   |
-| * codemastr codemastr@unrealircd.com                                  |
 | * Syzop     syzop@unrealircd.com                                      |
 |_______________________________________________________________________|
 __EOF__
