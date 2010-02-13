@@ -1922,3 +1922,5 @@
 - Another c-ares fix for Solaris 10, this time it had to do with
   PATH_SEPARATOR, the exact error was: error: PATH_SEPARATOR not set.
   Reported by j0inty, patch provided by ohnobinki (#0003887).
+- Updated pkg-config m4 macro (now 0.23) for configure, patch from ohnobinki
+  (#0003889).

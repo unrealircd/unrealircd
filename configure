@@ -13312,11 +13312,10 @@ pkg_failed=no
 { echo "$as_me:$LINENO: checking for TRE" >&5
 echo $ECHO_N "checking for TRE... $ECHO_C" >&6; }
 
-if test -n "$PKG_CONFIG"; then
-    if test -n "$TRE_CFLAGS"; then
-        pkg_cv_TRE_CFLAGS="$TRE_CFLAGS"
-    else
-        if test -n "$PKG_CONFIG" && \
+if test -n "$TRE_CFLAGS"; then
+    pkg_cv_TRE_CFLAGS="$TRE_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"tre >= 0.7.5\"") >&5
   ($PKG_CONFIG --exists --print-errors "tre >= 0.7.5") 2>&5
   ac_status=$?
@@ -13326,15 +13325,13 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
-else
-	pkg_failed=untried
+ else
+    pkg_failed=untried
 fi
-if test -n "$PKG_CONFIG"; then
-    if test -n "$TRE_LIBS"; then
-        pkg_cv_TRE_LIBS="$TRE_LIBS"
-    else
-        if test -n "$PKG_CONFIG" && \
+if test -n "$TRE_LIBS"; then
+    pkg_cv_TRE_LIBS="$TRE_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"tre >= 0.7.5\"") >&5
   ($PKG_CONFIG --exists --print-errors "tre >= 0.7.5") 2>&5
   ac_status=$?
@@ -13344,9 +13341,8 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
-else
-	pkg_failed=untried
+ else
+    pkg_failed=untried
 fi
 
 
@@ -13359,9 +13355,9 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        TRE_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "tre >= 0.7.5"`
+	        TRE_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors "tre >= 0.7.5" 2>&1`
         else
-	        TRE_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "tre >= 0.7.5"`
+	        TRE_PKG_ERRORS=`$PKG_CONFIG --print-errors "tre >= 0.7.5" 2>&1`
         fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$TRE_PKG_ERRORS" >&5
@@ -13484,11 +13480,10 @@ pkg_failed=no
 { echo "$as_me:$LINENO: checking for CARES" >&5
 echo $ECHO_N "checking for CARES... $ECHO_C" >&6; }
 
-if test -n "$PKG_CONFIG"; then
-    if test -n "$CARES_CFLAGS"; then
-        pkg_cv_CARES_CFLAGS="$CARES_CFLAGS"
-    else
-        if test -n "$PKG_CONFIG" && \
+if test -n "$CARES_CFLAGS"; then
+    pkg_cv_CARES_CFLAGS="$CARES_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"libcares >= 1.6.0\"") >&5
   ($PKG_CONFIG --exists --print-errors "libcares >= 1.6.0") 2>&5
   ac_status=$?
@@ -13498,15 +13493,13 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
-else
-	pkg_failed=untried
+ else
+    pkg_failed=untried
 fi
-if test -n "$PKG_CONFIG"; then
-    if test -n "$CARES_LIBS"; then
-        pkg_cv_CARES_LIBS="$CARES_LIBS"
-    else
-        if test -n "$PKG_CONFIG" && \
+if test -n "$CARES_LIBS"; then
+    pkg_cv_CARES_LIBS="$CARES_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
     { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"libcares >= 1.6.0\"") >&5
   ($PKG_CONFIG --exists --print-errors "libcares >= 1.6.0") 2>&5
   ac_status=$?
@@ -13516,9 +13509,8 @@ if test -n "$PKG_CONFIG"; then
 else
   pkg_failed=yes
 fi
-    fi
-else
-	pkg_failed=untried
+ else
+    pkg_failed=untried
 fi
 
 
@@ -13531,9 +13523,9 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        CARES_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "libcares >= 1.6.0"`
+	        CARES_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors "libcares >= 1.6.0" 2>&1`
         else
-	        CARES_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "libcares >= 1.6.0"`
+	        CARES_PKG_ERRORS=`$PKG_CONFIG --print-errors "libcares >= 1.6.0" 2>&1`
         fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$CARES_PKG_ERRORS" >&5
