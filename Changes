@@ -1928,3 +1928,8 @@
   redundant and confusing. Also removed an old statement saying k-lines would
   be erased on rehash which is not true. Documented '/rehash -dns'.
   Reported by ohnobinki (#0003881).
+- We now no longer treat \ (backslash) in *MOTD and RULES files as special.
+  Previously this caused some really odd behavior. Backslashes are now
+  treated as-is, so no special escaping is necessary. Reported by DelGurth
+  (#0003002).
+- Removed old dgets() function

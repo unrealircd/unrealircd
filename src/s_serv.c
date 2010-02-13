@@ -1067,6 +1067,7 @@ aMotd *next;
 	}
 }
 
+#define MOTD_LINE_LEN 81
 /** Read motd-like file, used for rules/motd/botmotd/opermotd/etc.
  * @param filename Filename of file to read.
  * @param list Reference to motd pointer (used for freeing if needed, NULL allowed)
@@ -1075,14 +1076,13 @@ aMotd *next;
  */
 aMotd *read_file_ex(char *filename, aMotd **list, struct tm *t)
 {
-
-	int  fd = open(filename, O_RDONLY);
+	FILE *fd = fopen(filename, "r");
 	aMotd *temp, *newmotd, *last, *old;
-	char line[82];
+	char line[512];
 	char *tmp;
 	int  i;
 
-	if (fd == -1)
+	if (!fd)
 		return NULL;
 
 	if (list)
@@ -1095,7 +1095,7 @@ aMotd *read_file_ex(char *filename, aMotd **list, struct tm *t)
 	{
 		struct tm *ttmp;
 		struct stat sb;
-		if (!fstat(fd, &sb))
+		if (!stat(filename, &sb))
 		{
 			ttmp = localtime(&sb.st_mtime);
 			memcpy(t, ttmp, sizeof(struct tm));
@@ -1105,16 +1105,15 @@ aMotd *read_file_ex(char *filename, aMotd **list, struct tm *t)
 		}
 	}
 
-	(void)dgets(-1, NULL, 0);	/* make sure buffer is at empty pos */
-
 	newmotd = last = NULL;
-	while ((i = dgets(fd, line, 81)) > 0)
+	while (fgets(line, sizeof(line), fd))
 	{
-		line[i] = '\0';
-		if ((tmp = (char *)strchr(line, '\n')))
+		if ((tmp = strchr(line, '\n')))
 			*tmp = '\0';
-		if ((tmp = (char *)strchr(line, '\r')))
+		if ((tmp = strchr(line, '\r')))
 			*tmp = '\0';
+		if (strlen(line) > MOTD_LINE_LEN)
+			line[MOTD_LINE_LEN] = '\0';
 		temp = (aMotd *) MyMalloc(sizeof(aMotd));
 		if (!temp)
 			outofmemory();
@@ -1126,7 +1125,7 @@ aMotd *read_file_ex(char *filename, aMotd **list, struct tm *t)
 			last->next = temp;
 		last = temp;
 	}
-	close(fd);
+	fclose(fd);
 	return newmotd;
 
 }
