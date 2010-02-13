@@ -31,8 +31,8 @@ English |
 <br><br>
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
-  <font size="4">Version: 3.2.8</font><br>
-  <b>Last doc update:</b> 2009-12-24</div>
+  <font size="4">Version: 3.2.8-cvs</font><br>
+  <b>Last doc update:</b> 2010-02-13</div>
 <br>
   <b>Coders:</b> Stskeeps / codemastr / Syzop / Luke / aquanight / WolfSage <br>
   <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
@@ -3186,14 +3186,14 @@ to get more information on a command.</p>
     <td>IRCop</td>
   </tr>
   <tr> 
-    <td height="39">rehash &lt;server&gt; &#8211;&lt;flags&gt;</td>
+    <td height="39">rehash &lt;server&gt; &lt;flags&gt;</td>
     <td>Rehashes the servers config file. Including a server name allows you to 
       rehash a remote servers config file. Several flags are also available. They 
       Include <br>
-      -motd - Only rehash all MOTD and RULES files (including tld {})<br>
-      -opermotd - Only rehash the OPERMOTD file<br>
-      -botmotd - Only rehash the BOTMOTD file<br>
+      -dns - Reinitializes and reloads the resolver<br>
+      -motd - Only re-read all MOTD, BOTMOTD, OPERMOTD and RULES files (including those in tld{} blocks)<br>
       -garbage - Force garbage collection<br>
+      -ssl - Reloads SSL certificates<br>
     <td>IRCop</td>
   </tr>
   <tr> 

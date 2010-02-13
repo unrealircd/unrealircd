@@ -1924,3 +1924,7 @@
   Reported by j0inty, patch provided by ohnobinki (#0003887).
 - Updated pkg-config m4 macro (now 0.23) for configure, patch from ohnobinki
   (#0003889).
+- Better document /REHASH flags. No longer document some flags as they are
+  redundant and confusing. Also removed an old statement saying k-lines would
+  be erased on rehash which is not true. Documented '/rehash -dns'.
+  Reported by ohnobinki (#0003881).
