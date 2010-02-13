@@ -1932,4 +1932,4 @@
   Previously this caused some really odd behavior. Backslashes are now
   treated as-is, so no special escaping is necessary. Reported by DelGurth
   (#0003002).
-- Removed old dgets() function
+- Removed old dgets() and crc32 function (code cleanup)

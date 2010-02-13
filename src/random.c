@@ -1,6 +1,6 @@
 /************************************************************************
  *   IRC - Internet Relay Chat, random.c
- *   (C) 2004 Bram Matthys (Syzop) and the UnrealIRCd Team
+ *   (C) 2004-2010 Bram Matthys (Syzop) and the UnrealIRCd Team
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers. 
@@ -148,11 +148,12 @@ u_int32_t val;
 
 void add_entropy_configfile(struct stat st, char *buf)
 {
-unsigned int i;
+unsigned char mdbuf[16];
+
 	arc4_addrandom(&st.st_size, sizeof(st.st_size));
 	arc4_addrandom(&st.st_mtime, sizeof(st.st_mtime));
-	i = our_crc32(buf, strlen(buf));
-	arc4_addrandom(&i, sizeof(i));
+	DoMD5(mdbuf, buf, strlen(buf));
+	arc4_addrandom(&mdbuf, sizeof(mdbuf));
 }
 
 /*
