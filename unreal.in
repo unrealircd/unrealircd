@@ -2,6 +2,12 @@
 
 PID_FILE="@IRCDDIR@/ircd.pid"
 PID_BACKUP="@IRCDDIR@/ircd.pid.bak"
+if [ ! -f @BINDIR@ ]; then
+	echo "ERROR: Could not find the IRCd binary (@BINDIR@)"
+	echo "This usually means you did not answer the question correctly"
+	echo "during './Config', or you forgot to run 'make install'."
+	exit
+fi
 if [ "$1" = "start" ] ; then
 	echo "Starting UnrealIRCd"
 	if [ -r $PID_FILE ] ; then

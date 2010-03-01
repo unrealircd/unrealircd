@@ -1933,3 +1933,12 @@
   treated as-is, so no special escaping is necessary. Reported by DelGurth
   (#0003002).
 - Removed old dgets() and crc32 function (code cleanup)
+- Updated ./Config description for NOSPOOF, it already said it protects
+  against HTTP POST proxies, now added some extra text to say it also
+  protects against the Firefox XPS IRC Attack. Also made NOSPOOF enabled by
+  default on *NIX (this was already the case on Windows).
+- Updated ./Config description for DPATH. Seems quite some people answer
+  this question wrong, and when that happens, you only get some obscure
+  error when running './unreal start'.
+- Fixed 'unreal' script to give a better error if it cannot find the IRCd
+  binary.

@@ -314,7 +314,7 @@ done
 c=""
 n=""
 UNREALCWD="`pwd`"
-NOSPOOF=""
+NOSPOOF="1"
 DPATH="`pwd`"
 SPATH="`pwd`/src/ircd"
 HUB="1"
@@ -424,8 +424,10 @@ while [ -z "$TEST" ] ; do
     echo "Many older operating systems have an insecure TCP/IP stack"
     echo "which may be vulnerable to IP spoofing attacks, if you run"
     echo "an operating system that is vulnerable to such attacks"
-    echo "enable this option. This option can also be useful to prevent"
-    echo "blind proxies from connecting (eg: HTTP POST proxies)."
+    echo "enable this option."
+    echo "This option also prevents blind proxies (eg: HTTP POST proxies)"
+    echo "and other blind clients from connecting (eg: protects against"
+    echo "the Firefox XPS IRC Attack)."
     echo ""
     echo "Do you want to enable the server anti-spoof protection?"
     echo $n "[$TEST] -> $c"
@@ -459,16 +461,27 @@ else
    DPATH=`eval echo $cc` # modified
 fi
 
-TEST="$SPATH"
-echo ""
-echo "What is the path to the ircd binary including the name of the binary?"
-echo $n "[$TEST] -> $c"
-    read cc
-if [ -z "$cc" ] ; then
-    SPATH=$TEST
-else 
-    SPATH=`eval echo $cc` # modified
-fi
+TEST=""
+SAVEME="$SPATH"
+while [ -z "$TEST" ] ; do
+    TEST="$SAVEME"
+    echo ""
+    echo "What is the path to the ircd binary including the name of the binary?"
+    echo $n "[$TEST] -> $c"
+        read cc
+    if [ -z "$cc" ] ; then
+        SPATH=$TEST
+    else 
+        SPATH=`eval echo $cc` # modified
+    fi
+    if [ "$SPATH" = "$DPATH" ]; then
+    	echo ""
+    	echo "You need to specify the path to the BINARY, not to a directory."
+	echo "The answer to this question can never be identical to the previous one."
+    	echo "HINT: perhaps you want $DPATH/ircd ?"
+    	TEST=""
+    fi
+done
 
 TEST=""
 while [ -z "$TEST" ] ; do
