@@ -74,6 +74,7 @@ extern aMotd *Find_file(char *, short);
 #ifdef USE_SSL
 extern void reinit_ssl(aClient *);
 #endif
+void reread_motdsandrules();
 
 
 /*
@@ -587,9 +588,7 @@ void rehash_motdrules()
 {
 ConfigItem_tld *tlds;
 
-	motd = (aMotd *) read_file_ex(conf_files->motd_file, &motd, &motd_tm);
-	rules = (aMotd *) read_file(conf_files->rules_file, &rules);
-	smotd = (aMotd *) read_file_ex(conf_files->smotd_file, &smotd, &smotd_tm);
+	reread_motdsandrules();
 	for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *) tlds->next)
 	{
 		tlds->motd = read_file_ex(tlds->motd_file, &tlds->motd, &tlds->motd_tm);

@@ -1942,3 +1942,5 @@
   error when running './unreal start'.
 - Fixed 'unreal' script to give a better error if it cannot find the IRCd
   binary.
+- Made '/REHASH -motd' really rehash *all* MOTD, OPERMOTD, BOTMOTD and RULES
+  files. Reported by bitmaster (#0003894).
