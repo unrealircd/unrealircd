@@ -274,6 +274,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	SetLog(x)		((x)->status = STAT_LOG)
 
 #define IsSynched(x)	(x->serv->flags.synced)
+#define IsServerSent(x) (x->serv && x->serv->flags.server_sent)
 
 /* opt.. */
 #define OPT_SJOIN	0x0001
@@ -807,6 +808,7 @@ struct Server {
 #endif
 	struct {
 		unsigned synced:1;		/* Server linked? (3.2beta18+) */
+		unsigned server_sent:1;		/* SERVER message sent to this link? (for outgoing links) */
 	} flags;
 };
 

@@ -843,12 +843,20 @@ int completed_connection(aClient *cptr)
 
 	send_protoctl_servers(cptr, 0);
 	send_proto(cptr, aconf);
-	/* Sending SERVER message moved to m_protoctl, so it's send after the first PROTOCTL
-	 * we receive from the remote server. Of course, this assumes that the remote server
-	 * to which we are connecting will at least send one PROTOCTL... but since it's an
-	 * outgoing connect, we can safely assume it's a remote UnrealIRCd server (or some
-	 * other advanced server..). -- Syzop
-	 */
+	if (NEW_LINKING_PROTOCOL)
+	{
+		/* Sending SERVER message moved to m_protoctl, so it's send after the first PROTOCTL
+		 * we receive from the remote server. Of course, this assumes that the remote server
+		 * to which we are connecting will at least send one PROTOCTL... but since it's an
+		 * outgoing connect, we can safely assume it's a remote UnrealIRCd server (or some
+		 * other advanced server..). -- Syzop
+		 */
+		
+		/* Use this nasty hack, to make 3.2.9<->pre-3.2.9 linking work */
+		sendto_one(cptr, "__PANGPANG__");
+	} else {
+		send_server_message(cptr);
+	}
 	if (!IsDead(cptr))
 		start_auth(cptr);
 
@@ -1028,6 +1036,18 @@ void set_sock_opts(int fd, aClient *cptr)
 	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (OPT_TYPE *)&opt,
 	    sizeof(opt)) < 0)
 			report_error("setsockopt(SO_REUSEADDR) %s:%s", cptr);
+#endif
+#if defined(INET6) && defined(IPV6_V6ONLY)
+	/* We deal with both IPv4 and IPv6 in one (listen) socket.
+	 * This used to be on by default, but FreeBSD, and much later Linux
+	 * sometimes as well, seem to default it to IPv6 only ('1').
+	 * We now have this new fancy option to turn it on in Unreal,
+	 * instead of requiring our users to sysctl.
+	 */
+	opt = 0;
+	if (setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (OPT_TYPE *)&opt,
+	    sizeof(opt)) < 0)
+			report_error("setsockopt(IPV6_V6ONLY) %s:%s", cptr);
 #endif
 #if  defined(SO_DEBUG) && defined(DEBUGMODE) && 0
 /* Solaris with SO_DEBUG writes to syslog by default */

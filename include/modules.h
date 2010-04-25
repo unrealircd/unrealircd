@@ -702,6 +702,7 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define EFUNC_IS_SILENCED					34
 #define EFUNC_SEND_PROTOCTL_SERVERS	35
 #define EFUNC_VERIFY_LINK		36
+#define EFUNC_SEND_SERVER_MESSAGE	37
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000

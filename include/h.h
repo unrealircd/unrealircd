@@ -750,6 +750,7 @@ extern MODVAR void (*spamfilter_build_user_string)(char *buf, char *nick, aClien
 extern MODVAR int (*is_silenced)(aClient *sptr, aClient *acptr);
 extern MODVAR void (*send_protoctl_servers)(aClient *sptr, int response);
 extern MODVAR int (*verify_link)(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link **link_out);
+extern MODVAR void (*send_server_message)(aClient *sptr);
 /* /Efuncs */
 extern MODVAR aMotd *opermotd, *svsmotd, *motd, *botmotd, *smotd;
 extern MODVAR int max_connection_count;
@@ -774,6 +775,7 @@ extern void charsys_addmultibyterange(char s1, char e1, char s2, char e2);
 extern void charsys_addallowed(char *s);
 extern void charsys_reset(void);
 extern MODVAR char langsinuse[4096];
+extern MODVAR char *casemapping[2];
 extern MODVAR aTKline *tklines[TKLISTLEN];
 extern char *cmdname_by_spamftarget(int target);
 extern int isipv6(struct IN_ADDR *addr);

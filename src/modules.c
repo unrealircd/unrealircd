@@ -118,6 +118,7 @@ void (*spamfilter_build_user_string)(char *buf, char *nick, aClient *acptr);
 int (*is_silenced)(aClient *sptr, aClient *acptr);
 void (*send_protoctl_servers)(aClient *sptr, int response);
 int (*verify_link)(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link **link_out);
+void (*send_server_message)(aClient *sptr);
 
 static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 00 */	{NULL, NULL},
@@ -157,7 +158,8 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 34 */	{"is_silenced", (void *)&is_silenced},
 /* 35 */	{"send_protoctl_servers", (void *)&send_protoctl_servers},
 /* 36 */	{"verify_link", (void *)&verify_link},
-/* 37 */	{NULL, NULL}
+/* 37 */	{"send_server_message", (void *)&send_server_message},
+/* 38 */	{NULL, NULL}
 };
 
 

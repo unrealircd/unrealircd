@@ -1944,3 +1944,15 @@
   binary.
 - Made '/REHASH -motd' really rehash *all* MOTD, OPERMOTD, BOTMOTD and RULES
   files. Reported by bitmaster (#0003894).
+- IPv6: it seems some recent Linux dists decided to make IPv6 sockets
+  IPv6-only, instead of accepting both IPv4&IPv6 on them like until now.
+  FreeBSD (and other *BSD's) already did that move a few years back,
+  requiring server admins to sysctl.
+  We now make use of a new option to explicitly disable "IPv6-only".
+  This should work fine on Linux.
+  Whether it provides a complete solution for FreeBSD, I don't know, testing
+  is welcome! In theory setting net.inet6.ip6.v6only to 0 should no longer
+  be needed, but you might still need to enable ipv6_ipv4mapping.
+- Fix stupid issue where current CVS would no longer link TO an earlier
+  Unreal server (eg: outgoing connect to a 3.2.8 hub). Reported by ohnobinki
+  (#0003901).

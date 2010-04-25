@@ -58,6 +58,18 @@ int  do_numeric(int numeric, aClient *cptr, aClient *sptr, int parc, char *parv[
 	char *nick, *p;
 	int  i;
 
+	/* Is this an outgoing connect, and we get a numeric 451 (not registered) back for the
+	 * magic command __PANGPANG__ and we did not send a SERVER message yet?
+	 * Then this means we are dealing with an Unreal server <3.2.9 and we should send the
+	 * SERVER command right now.
+	 */
+	if (!IsServer(sptr) && !IsPerson(sptr) && (numeric == 451) && (parc > 2) && strstr(parv[1], "__PANGPANG__") &&
+	    IsHandshake(cptr) && sptr->serv && !IsServerSent(sptr))
+	{
+		send_server_message(sptr);
+		return 0;
+	}
+
 	if (parc < 1 || !IsServer(sptr))
 		return 0;
 	/* Remap low number numerics. */

@@ -48,6 +48,7 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr);
 DLLFUNC int m_server(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 int _verify_link(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link **link_out);
 void _send_protoctl_servers(aClient *sptr, int response);
+void _send_server_message(aClient *sptr);
 
 static char buf[BUFSIZE];
 
@@ -68,13 +69,14 @@ DLLFUNC int MOD_TEST(m_server)(ModuleInfo *modinfo)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddVoid(modinfo->handle, EFUNC_SEND_PROTOCTL_SERVERS, _send_protoctl_servers);
+	EfunctionAddVoid(modinfo->handle, EFUNC_SEND_SERVER_MESSAGE, _send_server_message);
 	EfunctionAdd(modinfo->handle, EFUNC_VERIFY_LINK, _verify_link);
 	return MOD_SUCCESS;
 }
 
 DLLFUNC int MOD_INIT(m_server)(ModuleInfo *modinfo)
 {
-	add_CommandX(MSG_SERVER, TOK_SERVER, m_server, MAXPARA, M_UNREGISTERED|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SERVER, TOK_SERVER, m_server, MAXPARA, M_UNREGISTERED|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -86,11 +88,6 @@ DLLFUNC int MOD_LOAD(m_server)(int module_load)
 
 DLLFUNC int MOD_UNLOAD(m_server)(int module_unload)
 {
-	if (del_Command(MSG_SERVER, TOK_SERVER, m_server) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-			MOD_HEADER(m_server).name);
-	}
 	return MOD_SUCCESS;
 }
 
@@ -131,6 +128,23 @@ char buf[512];
 	sendto_one(sptr, "%s", buf);
 }
 
+void _send_server_message(aClient *sptr)
+{
+extern char serveropts[];
+
+	if (sptr->serv->flags.server_sent)
+	{
+#ifdef DEBUGMODE
+		abort();
+#endif
+		return;
+	}
+		
+	sendto_one(sptr, "SERVER %s 1 :U%d-%s%s-%i %s",
+		me.name, UnrealProtocol, serveropts, extraflags ? extraflags : "", me.serv->numeric,
+		me.info);
+	sptr->serv->flags.server_sent = 1;
+}
 
 
 /** Verify server link.

@@ -442,15 +442,14 @@ CMD_FUNC(m_protoctl)
 		 */
 	}
 
-	if (first_protoctl && IsHandshake(cptr) && sptr->serv) /* first & outgoing connection to server */
+	if (first_protoctl && IsHandshake(cptr) && sptr->serv && !IsServerSent(sptr)) /* first & outgoing connection to server */
 	{
 		/* SERVER message moved from completed_connection() to here due to EAUTH/SERVERS PROTOCTL stuff,
 		 * which needed to be delayed until after both sides have received SERVERS=xx (..or not.. in case
 		 * of older servers).
+		 * Actually, this is often not reached, as the PANGPANG stuff in numeric.c is reached first.
 		 */
-		sendto_one(cptr, "SERVER %s 1 :U%d-%s%s-%i %s",
-		    me.name, UnrealProtocol, serveropts, extraflags ? extraflags : "", me.serv->numeric,
-		    me.info);
+		send_server_message(cptr);
 	}
 
 	return 0;
