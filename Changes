@@ -1956,3 +1956,4 @@
 - Fix stupid issue where current CVS would no longer link TO an earlier
   Unreal server (eg: outgoing connect to a 3.2.8 hub). Reported by ohnobinki
   (#0003901).
+- Update Unreal.nfo with information about new support network setup (#0003904)
