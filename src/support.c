@@ -1680,10 +1680,14 @@ int unreal_copyfile(char *src, char *dest)
 	}
 
 #ifndef _WIN32
+#if DEFAULT_PERMISSIONS
 	destfd  = open(dest, O_WRONLY|O_CREAT, DEFAULT_PERMISSIONS);
 #else
+	destfd  = open(dest, O_WRONLY|O_CREAT, S_IRUSR | S_IXUSR);
+#endif /* DEFAULT_PERMISSIONS */
+#else
 	destfd = open(dest, _O_BINARY|_O_WRONLY|_O_CREAT, _S_IWRITE);
-#endif
+#endif /* _WIN32 */
 	if (destfd < 0)
 	{
 		config_error("Unable to create file '%s': %s", dest, strerror(errno));

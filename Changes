@@ -1961,3 +1961,5 @@
   actually do anything (#0003891)
 - Clarify/expand alias block documentation, especially for alias::type=command;
   (#0003902)
+- Fix -DDEFAULT_PERMISSIONS=0 support. Previously, support.c:unreal_copyfile()
+  would create files with no permissions, breaking loadmodule. (#0003905)
