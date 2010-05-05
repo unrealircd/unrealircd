@@ -1957,3 +1957,5 @@
   Unreal server (eg: outgoing connect to a 3.2.8 hub). Reported by ohnobinki
   (#0003901).
 - Update Unreal.nfo with information about new support network setup (#0003904)
+- Remove the ``Compile as hub/leaf'' concept as I'm quite sure this doesn't
+  actually do anything (#0003891)

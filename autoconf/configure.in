@@ -380,7 +380,6 @@ AC_ARG_WITH(spath, [AC_HELP_STRING([--with-spath],[Specify the location of the e
 AC_DEFINE_UNQUOTED(SPATH,"$withval") BINDIR="$withval",AC_DEFINE_UNQUOTED(SPATH,"`pwd`/src/ircd") BINDIR="`pwd`/src/ircd")
 AC_ARG_ENABLE(nospoof, [AC_HELP_STRING([--enable-nospoof],[Enable spoofing protection])], AC_DEFINE(NOSPOOF))
 AC_ARG_ENABLE(prefixaq, [AC_HELP_STRING([--enable-prefixaq],[Enable chanadmin and chanowner prefixes])], AC_DEFINE(PREFIX_AQ))
-AC_ARG_ENABLE(hub, [AC_HELP_STRING([--enable-hub],[Compile as a hub server])], AC_DEFINE(HUB))
 AC_ARG_WITH(showlistmodes, [AC_HELP_STRING([--with-showlistmodes], [Specify whether modes are shown in /list])],
 	AC_DEFINE(LIST_SHOW_MODES))
 AC_ARG_WITH(topicisnuhost, [AC_HELP_STRING([--with-topicisnuhost], [Display nick!user@host as the topic setter])],

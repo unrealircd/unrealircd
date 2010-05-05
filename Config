@@ -48,9 +48,6 @@ fi
 if [ "$NOSPOOF" = "1" ] ; then
 ARG="$ARG--enable-nospoof "
 fi
-if [ -n "$HUB" ] ; then
-ARG="$ARG--enable-hub "
-fi
 if [  "$CRYPTOIRCD" = "1" ] ; then
 if test x"$SSLDIR" = "x" ; then
 ARG="$ARG--enable-ssl "
@@ -317,7 +314,6 @@ UNREALCWD="`pwd`"
 NOSPOOF="1"
 DPATH="`pwd`"
 SPATH="`pwd`/src/ircd"
-HUB="1"
 DOMAINNAME=`hostname`
 DEFPERM="0600"
 CRYPTOIRCD=""
@@ -481,36 +477,6 @@ while [ -z "$TEST" ] ; do
     	echo "HINT: perhaps you want $DPATH/ircd ?"
     	TEST=""
     fi
-done
-
-TEST=""
-while [ -z "$TEST" ] ; do
-    if [ "$HUB" = "1" ] ; then
-	TEST="Hub"
-    else
-	TEST="Leaf"
-    fi
-    echo ""
-    echo "Would you like to compile as a hub or as a leaf?"
-    echo "Type Hub to select hub and Leaf to select leaf."
-    echo $n "[$TEST] -> $c"
-	read cc
-    if [ -z "$cc" ] ; then
-	cc=$TEST
-    fi
-    case "$cc" in
-	[Hh]*)
-	    HUB="1"
-	    ;;
-	[Ll]*)
-	    HUB=""
-	    ;;
-	*)
-	    echo ""
-	    echo "You must enter either Hub or Leaf"
-	    TEST=""
-	    ;;
-    esac
 done
 
 TEST="$DOMAINNAME"
@@ -945,7 +911,6 @@ MAXSENDQLENGTH="$MAXSENDQLENGTH"
 BUFFERPOOL="$BUFFERPOOL"
 MAXCONNECTIONS="$MAXCONNECTIONS"
 NICKNAMEHISTORYLENGTH="$NICKNAMEHISTORYLENGTH"
-HUB="$HUB"
 DOMAINNAME="$DOMAINNAME"
 DEFPERM="$DEFPERM"
 CRYPTOIRCD="$CRYPTOIRCD"

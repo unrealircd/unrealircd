@@ -44,9 +44,12 @@ MODVAR char serveropts[] = {
 #ifndef	NO_FDLIST
 	'F',
 #endif
-#ifdef	HUB
+	/*
+	 * Marks that the ircd is ``compiled as'' a hub.
+	 * Now always defined as it's impossible to build unrealircd
+	 * without hub support AFAIK. (#0003891) --binki
+	 */
 	'h',
-#endif
 #ifdef	SHOW_INVISIBLE_LUSERS
 	'i',
 #endif
