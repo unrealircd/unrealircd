@@ -12,7 +12,8 @@
  .block_old { font-size: 14; }
  .set { font-weight: bold; }
  .desc { margin-left: 15px; }
- pre { font: "times new roman"; font-style: normal; background-color: #eeeeee;}
+ .inline_pre { font-family: monospace; font-style: normal; background-color: #eeeeee;}
+ pre { font-family: monospace; font-style: normal; background-color: #eeeeee;}
 </style>
 </head>
 
@@ -31,12 +32,12 @@ English |
 <br><br>
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
-  <font size="4">Version: 3.2.8-cvs</font><br>
-  <b>Last doc update:</b> 2010-02-13</div>
+  <font size="4">Version: 3.2.9_pre</font><br>
+  <b>Last doc update:</b> 2010-04-15</div>
 <br>
   <b>Coders:</b> Stskeeps / codemastr / Syzop / Luke / aquanight / WolfSage <br>
   <b>Contributors:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
-  <b>Documentation:</b> CKnight^ / Syzop<br>
+  <b>Documentation:</b> CKnight^ / Syzop / binki<br>
 <p>To view this documentation you must have a compatible browser, which are listed below. Up to date docs are 
   available at <a href="http://www.vulnscan.org/UnrealIRCd/unreal32docs.html">http://www.vulnscan.org/UnrealIRCd/unreal32docs.html</a>
   and a FAQ at <a href="http://www.vulnscan.org/UnrealIRCd/faq/" TARGET="_blank">http://www.vulnscan.org/UnrealIRCd/faq/</a>.
@@ -2026,18 +2027,34 @@ alias &lt;name&gt; {
 	type &lt;type-of-alias&gt;;
 	spamfilter &lt;yes|no&gt;;
 };</pre></p>
-<p>(Note: also see <a href="#includedirective">here</a> about the standard alias files UnrealIRCd has)</p>
+<p>(Note that <span class="inline_pre">&lt;name&gt;</span> is referred to using "<b>alias::</b>")</p>
+<p>(Note: see <a href="#includedirective">a description</a> of the standard alias files UnrealIRCd has)</p>
 <p>The alias block [standard alias] allows you to forward a command to a user, 
-  for example /chanserv sends a message to the user chanserv. The alias:: specifies 
-  the name of the command that will be the alias (eg: chanserv), alias::target is 
-  the nickname or channel it will forward to, if the alias:: is the same as the target, it will 
-  forward to, alias::target can be left out. The alias::type specifies the type 
-  of alias, valid types are services (the user is on the services server), stats 
-  (the user is on the stats server), normal (the user is a normal user on 
-  any server), and channel (the target is a channel name). If alias::spamfilter (optional)
-  is set to 'yes', then the spamfilters will be checked (default is 'no').<br>
-  The alias block also has another purpose which is explained below.</p>
-<p>Syntax [command alias]:<br>
+  for example /chanserv sends a message to the user chanserv.
+</p>
+<ul>
+  <li>
+    <b>alias::</b> specifies the name of the command that will be the alias (eg: chanserv)
+  </li>
+  <li>
+    <b>alias::target</b> is the nickname or channel it will forward to. If <b>alias::</b>
+    would be the same as the target, <b>alias::target</b> may be left out.
+  </li>
+  <li>
+    <b>alias::type</b> specifies the type of alias, valid types are
+    <ul>
+      <li><span class="inline_pre">services</span> (the user is on the <a href="#set-services-server">services server</a>),</li>
+      <li><span class="inline_pre">stats</span> (the user is on the <a href="#set-stats-server">stats server</a>),</li>
+      <li><span class="inline_pre">normal</span> (the user is a normal user on any server),</li>
+      <li><span class="inline_pre">channel</span> (the target is a channel name), and</li>
+      <li><span class="inline_pre">command</span> (this is not a "standard alias", see <a href="#aliasblock-command">below</a>).</li>
+    </ul>
+  </li>
+  <li>
+    <b>alias::spamfilter</b> (optional) causes the spamfilters will be checked if set to "yes" (default is 'no').
+    </li>
+</ul>
+<p id="aliasblock-command">Syntax [command alias]:<br>
 <pre>
 alias &lt;name&gt; {
 	/* For aliases to be sent to users/channels */
@@ -2059,25 +2076,49 @@ alias &lt;name&gt; {
 	type command;
 	spamfilter &lt;yes|no&gt;;
 };</pre></p>
-<p>When the alias block is used in this format, it allows you a much broader range 
-  of usage. For example you can create aliases such as /identify. The alias:: 
-  is the same as above, the name of the alias command. The <b>alias::format</b> specifies 
-  a regular expression that compares against the text sent to the alias command, 
-  when matched the sub-entries of that alias::format will be used, you may have 
-  multiple alias::format's to make the command do different things depending on 
-  the text sent to it. The <b>alias::format::target</b> is the target to forward this
-  alias to, however in case of a "real alias" <b>alias::format::command</b> is used instead.
-  The <b>alias::format::type</b> specifies the type of the alias that the
-  message should be forwarded to, besides the types mentioned previously in
-"Syntax [standard alias]", we also allow the type "real" here, for "real
-aliases". The <b>alias::format::parameters</b> is what will 
+<p>
+  When an alias block has <b>alias::type</b> set to <span class="inline_pre">command</span>,
+  as shown <a href="#aliasblock-command">above</a>, it becomes a command alias.
+  When the alias block is used in this format, it is much more flexible.
+  For example, you could create an /identify alias.
+</p>
+<ul>
+  <li>
+    <b>alias::</b> is the name of the alias command as in standard alias block form
+    (<a href="#aliasblock">above</a>).
+  </li>
+  <li>
+    <b>alias::format</b> specifies a <a href="#regex">regular expression</a> which is matched against the
+    text sent to the alias command. The sub-entries of the first matching <b>alias::format</b>
+    will be used. Thus, you may have multiple <b>alias::format</b>s to make a command
+    do different things depending on the text sent to it.
+  </li>
+  <li>
+    <b>alias::format::target</b> is the target to forward this alias to.
+    This value is not used if <b>alias::format::type</b> is "<span class="inline_pre">real</span>".
+  </li>
+  <li>
+    <b>alias::format::type</b> specifies the type of the alias that the
+    message should be forwarded to. In addition to the types mentioned previously in
+    "<a href="#aliasblock">Syntax [standard alias]</a>", "<span class="inline_pre">real</span>"
+    may be specified here for a "real alias" (a "real alias" is an alias that
+    may be rewritten to something other than a PRIVMSG).
+  </li>
+  <li>
+    <b>alias::format::parameters</b> (for "real aliases") is what will 
   be sent as the parameters to this alias. To specify one of the parameters given 
-  to the command alias specify % followed by a number, for example, %1 is the 
-  first parameter. To specify all parameters from a given parameter to the end 
-  do % followed by the number and a -, for example %2- returns all parameters 
-  from the second till the last. Additionally, you may specify %n which will be replaced 
-  by the nickname of the user who executed the command.<br><br>
-  For examples of using the alias block in the command format, consult doc/example.conf.</p>
+    to the command alias specify <span class="inline_pre">%</span> followed by a number.
+    For example, <span class="inline_pre">%1</span> is the first parameter. To specify
+    all parameters from a given parameter to the end, use <span class="inline_pre">%</span>
+    followed by the number and a <span class="inline_pre">-</span>. For example,
+    <span class="inline_pre">%2-</span> returns all parameters from the second through the
+    last. Additionally, you may specify <span class="inline_pre">%n</span> which will be
+    replaced by the nickname of the user who executed the command.
+  </li>
+</ul>
+<p>
+  For examples of using the alias block in the command format, consult doc/example.conf.
+</p>
 <p></p></div>
 <p><font class="block_section">4.33 - </font><font class="block_name">Help Block</font>
    <font class="block_optional">OPTIONAL</font><a name="helpblock"></a>
@@ -2400,10 +2441,10 @@ set {
 <p><font class="set">set::default-server &lt;server-name&gt;;</font><br>
   Defines the name of the default server to tell users to connect to if this server 
   is full.</p>
-<p><font class="set">set::services-server &lt;server-name&gt;;</font><br>
+<p id="set-services-server"><font class="set">set::services-server &lt;server-name&gt;;</font><br>
   Specifies the name of the server that the services bots are connected to. Required, 
   set it to something like services.yournet.com if you don't have services.</p>
-<p><font class="set">set::stats-server &lt;server-name&gt;;</font><br>
+<p id="set-stats-server"><font class="set">set::stats-server &lt;server-name&gt;;</font><br>
   Sets the name of the server on which the stats bot is located. If stats are 
   not run this value may be left out.</p>
 <p><font class="set">set::help-channel &lt;network-help-channel&gt;;</font><br>

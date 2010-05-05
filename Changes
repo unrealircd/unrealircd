@@ -1959,3 +1959,5 @@
 - Update Unreal.nfo with information about new support network setup (#0003904)
 - Remove the ``Compile as hub/leaf'' concept as I'm quite sure this doesn't
   actually do anything (#0003891)
+- Clarify/expand alias block documentation, especially for alias::type=command;
+  (#0003902)
