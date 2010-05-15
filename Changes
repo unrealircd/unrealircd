@@ -1963,3 +1963,4 @@
   (#0003902)
 - Fix -DDEFAULT_PERMISSIONS=0 support. Previously, support.c:unreal_copyfile()
   would create files with no permissions, breaking loadmodule. (#0003905)
+- Remove m_addline from commands.so
