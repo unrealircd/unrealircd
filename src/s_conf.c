@@ -3426,7 +3426,6 @@ int	_conf_files(ConfigFile *conf, ConfigEntry *ce)
 		conf_files->tune_file = strdup(IRCDTUNE);
 		
 		/* we let actual files get read in later by the motd caching mechanism */
-		fprintf(stderr, "files {} got initilized!\n");
 	}
 	/*
 	 * hack to allow initialization of conf_files (above) when there is no files block in 
