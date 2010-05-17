@@ -417,8 +417,7 @@ DLLFUNC void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, c
 					sendto_snomask(SNO_EYES, "*** TS fix for %s - %lu(ours) %lu(theirs)",
 					chptr->chname, chptr->creationtime, sendts);			
 					*/
-				chptr->
-creationtime = sendts;
+				chptr->creationtime = sendts;
 #if 0
 				if (sendts < 750000)
 					sendto_realops(

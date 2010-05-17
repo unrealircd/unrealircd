@@ -1965,3 +1965,4 @@
   would create files with no permissions, breaking loadmodule. (#0003905)
 - Remove m_addline from commands.so
 - Removed ugly ``files {} got initialized!'' message.
+- SVSMODE now triggers HOOKTYPE_UMODE_CHANGE and HOOKTYPE_REMOTE_CHANMODE.
