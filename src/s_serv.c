@@ -256,15 +256,14 @@ void m_info_send(aClient *sptr)
 	sendto_one(sptr, ":%s %d %s :| This release was brought to you by the following people:",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| Coders:", me.name, RPL_INFO, sptr->name);
+	sendto_one(sptr, ":%s %d %s :| Head coder:", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| * Syzop        <syzop@unrealircd.com>",
+	    me.name, RPL_INFO, sptr->name);
+	sendto_one(sptr, ":%s %d %s :| Coders:", me.name, RPL_INFO, sptr->name);
+	sendto_one(sptr, ":%s %d %s :| * binki        <binki@unrealircd.com>",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| Contributors:", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * aquanight    <aquanight@unrealircd.com>",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * WolfSage     <wolfsage@unrealircd.com>",
-	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| * Stealth, tabrisnet, Bock, fbi",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
@@ -278,6 +277,8 @@ void m_info_send(aClient *sptr)
 	sendto_one(sptr, ":%s %d %s :| * Stskeeps (ret. head coder / project leader)",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| * codemastr (ret. u3.2 head coder)",
+	    me.name, RPL_INFO, sptr->name);
+	sendto_one(sptr, ":%s %d %s :| * aquanight, WolfSage, ..",
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| * McSkaf, Zogg, NiQuiL, chasm, llthangel, nighthawk, ..",
 	    me.name, RPL_INFO, sptr->name);
