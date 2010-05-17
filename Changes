@@ -1967,3 +1967,4 @@
 - Removed ugly ``files {} got initialized!'' message.
 - SVSMODE now triggers HOOKTYPE_UMODE_CHANGE and HOOKTYPE_REMOTE_CHANMODE.
 - Added chmode +r to HTML documentation.
+- ./Config now remembers extra/custom ./configure parameters.

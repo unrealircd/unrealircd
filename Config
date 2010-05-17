@@ -892,11 +892,16 @@ done
 if [ -n "$ADVANCED" ] ; then
 	RUN_ADVANCED
 fi
+
+TEST="$EXTRAPARA"
 echo ""
-echo "Would you like any more parameters to configure?"
-echo "Write them here:"
-echo $n "[]-> $c"
+echo "Would you like to pass any custom parameters to configure?"
+echo "See  \`./configure --help' and write them here:"
+echo $n "[$TEST]-> $c"
 read EXTRAPARA
+if [ -z "$EXTRAPARA" ]; then
+    EXTRAPARA="$TEST"
+fi
 
 rm -f config.settings
 cat > config.settings << __EOF__
