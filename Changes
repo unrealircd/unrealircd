@@ -1968,3 +1968,6 @@
 - SVSMODE now triggers HOOKTYPE_UMODE_CHANGE and HOOKTYPE_REMOTE_CHANMODE.
 - Added chmode +r to HTML documentation.
 - ./Config now remembers extra/custom ./configure parameters.
+- Fixed bug in CVS where the ban exempt (+e) handling was reversed: if a
+  non-matching +e was present, one could walk through bans. Reported by
+  tabrisnet (#0003909). Bug was caused by chained/stacked extbans.

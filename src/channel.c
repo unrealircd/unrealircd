@@ -590,8 +590,8 @@ Ban *is_banned_with_nick(aClient *sptr, aChannel *chptr, int type, char *nick)
 					return NULL;
 			}
 #else
-			if (!ban_check_mask(sptr, chptr, tmp2->banstr, type, 0))
-				return NULL;
+			if (ban_check_mask(sptr, chptr, tmp2->banstr, type, 0))
+				return NULL; /* except matched */
 #endif
 		}
 		break; /* ban found and not on except */
