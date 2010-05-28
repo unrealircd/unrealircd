@@ -173,6 +173,9 @@ char	*Inet_si2pB(struct SOCKADDR_IN *sin, char *buf, int sz)
 #ifdef INET6
 	u_char	*cp;
 	
+	/*
+	  Hack to rerepresent ::ffff:x.x.x.x as x.x.x.x
+	 */
 	cp = (u_char *)sin->SIN_ADDR.s6_addr;
 	if (cp[0] == 0 && cp[1] == 0 && cp[2] == 0 && cp[3] == 0 && cp[4] == 0
 	    && cp[5] == 0 && cp[6] == 0 && cp[7] == 0 && cp[8] == 0

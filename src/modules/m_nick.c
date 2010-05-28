@@ -883,14 +883,15 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 
 		if (sptr->hostp)
 		{
-			/* reject ascci < 32 and ascii >= 127 (note: upper resolver might be even more strict) */
+			/* reject ASCII < 32 and ASCII >= 127 (note: upper resolver might be even more strict). */
 			for (tmpstr = sptr->sockhost; *tmpstr > ' ' && *tmpstr < 127; tmpstr++);
 			
 			/* if host contained invalid ASCII _OR_ the DNS reply is an IP-like reply
-			 * (like: 1.2.3.4), then reject it and use IP instead.
+			 * (like: 1.2.3.4 or ::ffff:1.2.3.4), then reject it and use IP instead.
 			 */
-			if (*tmpstr || !*user->realhost || (isdigit(*sptr->sockhost) && isdigit(*tmpstr - 1)))
-				strncpyzt(sptr->sockhost, (char *)Inet_ia2p((struct IN_ADDR*)&sptr->ip), sizeof(sptr->sockhost));
+			if (*tmpstr || !*user->realhost || (isdigit(*sptr->sockhost) && (sptr->sockhost > tmpstr && isdigit(*(tmpstr - 1))) )
+			    || (sptr->sockhost[0] == ':'))
+				strncpyzt(sptr->sockhost, Inet_ia2p(&sptr->ip), sizeof(sptr->sockhost));
 		}
 		strncpyzt(user->realhost, sptr->sockhost, sizeof(sptr->sockhost)); /* SET HOSTNAME */
 

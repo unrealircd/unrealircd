@@ -1975,3 +1975,5 @@
   cgiirc code, resulting in the sockhost/hostmask being set to something like
   ::ffff:127.0.0.1, which confused the s2s protocol. Reported by tabrisnet
   (#0003907). Also, reject incorrectly formed hostnames from WEBIRC command.
+- More strict sockhost (hostmask) checking in m_nick.c:_register_user(). Fixed
+  some bad string handling as well. See comments in bug (#0003907).
