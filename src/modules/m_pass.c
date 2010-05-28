@@ -148,8 +148,9 @@ ConfigItem_ban *bconf;
 int docgiirc(aClient *cptr, char *ip, char *host)
 {
 #ifdef INET6
-char ipbuf[64], crap[32];
+	char ipbuf[64];
 #endif
+	char *sockhost;
 
 	if (IsCGIIRC(cptr))
 		return exit_client(cptr, cptr, &me, "Double CGI:IRC request (already identified)");
@@ -157,18 +158,20 @@ char ipbuf[64], crap[32];
 	if (host && !strcmp(ip, host))
 		host = NULL; /* host did not resolve, make it NULL */
 
-	/* STEP 1: Update cptr->ip */
-#ifdef INET6
-	/* Transform ipv4 to ::ffff:ipv4 if needed */
-	if (inet_pton(AF_INET, ip, crap) != 0)
+	/* STEP 1: Update cptr->ip
+	   inet_pton() returns 1 on success, 0 on bad input, -1 on bad AF */
+	if(inet_pton(AFINET, ip, &cptr->ip) != 1)
 	{
-		snprintf(ipbuf, sizeof(ipbuf), "::ffff:%s", ip);
-		ip = ipbuf;
-	}
-#endif
-
-	if (inet_pton(AFINET, ip, &cptr->ip) <= 0)
+#ifndef INET6
+		/* then we have an invalid IP */
 		return exit_client(cptr, cptr, &me, "Invalid IP address");
+#else
+		/* The address may be IPv4. We have to try ::ffff:ipv4 */
+		snprintf(ipbuf, sizeof(ipbuf), "::ffff:%s", ip);
+		if(inet_pton(AFINET, ipbuf, &cptr->ip) != 1)
+			return exit_client(cptr, cptr, &me, "Invalid IP address");
+#endif
+	}
 
 	/* STEP 2: Update GetIP() */
 	if (cptr->user)
@@ -187,11 +190,19 @@ char ipbuf[64], crap[32];
 		cptr->hostp = NULL;
 	}
 	/* (create new) */
-	if (host)
+	if (host && verify_hostname(host))
 		cptr->hostp = unreal_create_hostent(host, &cptr->ip);
 
-	/* STEP 4: Update sockhost */		
-	strlcpy(cptr->sockhost, ip, sizeof(cptr->sockhost));
+	/* STEP 4: Update sockhost
+	   Make sure that if this any IPv4 address is _not_ prefixed with
+	   "::ffff:" by using Inet_ia2p().
+	 */
+	sockhost = Inet_ia2p(&cptr->ip);
+	if(!sockhost)
+	{
+		return exit_client(cptr, cptr, &me, "Error processing CGI:IRC IP address.");
+	}
+	strlcpy(cptr->sockhost, sockhost, sizeof(cptr->sockhost));
 
 	SetCGIIRC(cptr);
 

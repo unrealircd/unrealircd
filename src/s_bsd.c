@@ -1041,7 +1041,7 @@ void set_sock_opts(int fd, aClient *cptr)
 	/* We deal with both IPv4 and IPv6 in one (listen) socket.
 	 * This used to be on by default, but FreeBSD, and much later Linux
 	 * sometimes as well, seem to default it to IPv6 only ('1').
-	 * We now have this new fancy option to turn it on in Unreal,
+	 * We now have this new fancy option to turn it off in Unreal,
 	 * instead of requiring our users to sysctl.
 	 */
 	opt = 0;

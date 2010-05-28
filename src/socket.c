@@ -199,6 +199,9 @@ char	*Inet_si2p(struct SOCKADDR_IN *sin)
 	return (Inet_si2pB(sin, buf, sizeof(buf)));
 }
 
+/*
+  May return NULL if inet_ntop() fails.
+ */
 char	*Inet_ia2p(struct IN_ADDR *ia)
 {
 #ifndef INET6

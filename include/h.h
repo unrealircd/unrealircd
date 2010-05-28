@@ -256,6 +256,7 @@ extern int get_sockerr(aClient *);
 extern int inetport(aClient *, char *, int);
 extern void init_sys();
 extern void init_modef();
+extern int verify_hostname(char *name);
 
 #ifdef NO_FDLIST
 extern int read_message(time_t);

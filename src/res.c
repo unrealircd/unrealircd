@@ -282,6 +282,11 @@ char ipv6 = r->ipv6;
 #endif
 }
 
+/*
+  returns:
+  1 = good hostname
+  0 = bad hostname
+ */
 int verify_hostname(char *name)
 {
 char *p;

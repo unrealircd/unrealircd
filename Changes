@@ -1971,3 +1971,7 @@
 - Fixed bug in CVS where the ban exempt (+e) handling was reversed: if a
   non-matching +e was present, one could walk through bans. Reported by
   tabrisnet (#0003909). Bug was caused by chained/stacked extbans.
+- Partially fixed bug where IPv4 addresses were randomly mishandled by the
+  cgiirc code, resulting in the sockhost/hostmask being set to something like
+  ::ffff:127.0.0.1, which confused the s2s protocol. Reported by tabrisnet
+  (#0003907). Also, reject incorrectly formed hostnames from WEBIRC command.
