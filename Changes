@@ -1977,3 +1977,6 @@
   (#0003907). Also, reject incorrectly formed hostnames from WEBIRC command.
 - More strict sockhost (hostmask) checking in m_nick.c:_register_user(). Fixed
   some bad string handling as well. See comments in bug (#0003907).
+- Throw out old USE_POLL code which 1. has no buildsystem support and 2.
+  has comments which claim it doesn't work.
+- Removed extraneous apostrophe from a module loader error message.

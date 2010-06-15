@@ -386,7 +386,7 @@ char  *Module_Create(char *path_)
 			make_compiler_string(theyhad, *compiler_version);
 			make_compiler_string(wehave, expectedcompilerversion);
 			snprintf(errorbuf, sizeof(errorbuf),
-			         "Module was compiled with GCC %s, core was compiled with GCC %s. SOLUTION: Recompile your UnrealIRCd and all it's modules by doing a 'make clean; ./Config -quick && make'.",
+			         "Module was compiled with GCC %s, core was compiled with GCC %s. SOLUTION: Recompile your UnrealIRCd and all its modules by doing a 'make clean; ./Config -quick && make'.",
 			         theyhad, wehave);
 			irc_dlclose(Mod);
 			remove(tmppath);
