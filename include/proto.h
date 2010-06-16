@@ -58,8 +58,7 @@ char *my_itoa(int i);
 /* s_serv.c */
 void load_tunefile(void);
 extern EVENT(save_tunefile);
-aMotd *read_rules(char *filename);
-aMotd *read_motd(char *filename);
+extern void read_motd(const char *filename, aMotdFile *motd);
 
 /* s_user.c */
 int  check_for_target_limit(aClient *sptr, void *target, const char *name);

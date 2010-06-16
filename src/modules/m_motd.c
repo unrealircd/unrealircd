@@ -82,10 +82,11 @@ DLLFUNC int MOD_UNLOAD(m_motd)(int module_unload)
 DLLFUNC CMD_FUNC(m_motd)
 {
 	ConfigItem_tld *ptr;
-	aMotd *temp, *temp2;
-	struct tm *tm = &motd_tm;
+	aMotdFile *themotd;
+	aMotdLine *motdline;
 	int  svsnofile = 0;
 	char userhost[HOSTLEN + USERLEN + 6];
+
 
 	if (IsServer(sptr))
 		return 0;
@@ -95,52 +96,58 @@ HUNTED_ISME)
 #ifndef TLINE_Remote
 	if (!MyConnect(sptr))
 	{
-		temp = motd;
+		themotd = &motd;
 		goto playmotd;
 	}
 #endif
-	strlcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost), sizeof userhost);
+	strlcpy(userhost, make_user_host(cptr->user->username, cptr->user->realhost), sizeof(userhost));
 	ptr = Find_tld(sptr, userhost);
 
 	if (ptr)
-	{
-		temp = ptr->motd;
-		tm = &ptr->motd_tm;
-	}
+		themotd = &ptr->motd;
 	else
-		temp = motd;
+		themotd = &motd;
 
       playmotd:
-	if (temp == NULL)
+	if (themotd == NULL || themotd->lines == NULL)
 	{
 		sendto_one(sptr, err_str(ERR_NOMOTD), me.name, parv[0]);
 		svsnofile = 1;
 		goto svsmotd;
-
 	}
 
-	if (tm)
+	sendto_one(sptr, rpl_str(RPL_MOTDSTART), me.name, parv[0],
+		   me.name);
+
+	/* tm_year should be zero only if the struct is zero-ed */
+	if (themotd && themotd->lines && themotd->last_modified.tm_year)
 	{
-		sendto_one(sptr, rpl_str(RPL_MOTDSTART), me.name, parv[0],
-		    me.name);
-		sendto_one(sptr, ":%s %d %s :- %d/%d/%d %d:%02d", me.name,
-		    RPL_MOTD, parv[0], tm->tm_mday, tm->tm_mon + 1,
-		    1900 + tm->tm_year, tm->tm_hour, tm->tm_min);
+		sendto_one(sptr, ":%s %d %s :- %d/%d/%d %d:%02d",
+			me.name, RPL_MOTD, parv[0],
+			themotd->last_modified.tm_mday,
+			themotd->last_modified.tm_mon + 1,
+			themotd->last_modified.tm_year + 1900,
+			themotd->last_modified.tm_hour,
+			themotd->last_modified.tm_min);
 	}
 
-	while (temp)
+	motdline = NULL;
+	if(themotd)
+		motdline = themotd->lines;
+	while (motdline)
 	{
 		sendto_one(sptr, rpl_str(RPL_MOTD), me.name, parv[0],
-		    temp->line);
-		temp = temp->next;
+		    motdline->line);
+		motdline = motdline->next;
 	}
       svsmotd:
-	temp2 = svsmotd;
-	while (temp2)
+
+	motdline = svsmotd.lines;
+	while (motdline)
 	{
 		sendto_one(sptr, rpl_str(RPL_MOTD), me.name, parv[0],
-		    temp2->line);
-		temp2 = temp2->next;
+		    motdline->line);
+		motdline = motdline->next;
 	}
 	if (svsnofile == 0)
 		sendto_one(sptr, rpl_str(RPL_ENDOFMOTD), me.name, parv[0]);

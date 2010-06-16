@@ -43,8 +43,10 @@ CURLM *multihandle;
 typedef struct
 {
 	vFP callback;
+	void *callback_data;
 	FILE *fd;
 	char filename[PATH_MAX];
+	char *url; /*< must be free()d by url_do_transfers_async() */
 	char errorbuf[CURL_ERROR_SIZE];
 	time_t cachetime;
 } FileHandle;
@@ -55,7 +57,7 @@ typedef struct
  * invalid URLs here since we don't want them supported in
  * unreal.
  */
-int url_is_valid(char *string)
+int url_is_valid(const char *string)
 {
 	if (strstr(string, "telnet://") == string ||
             strstr(string, "ldap://") == string ||
@@ -69,9 +71,9 @@ int url_is_valid(char *string)
  * is malloc()'ed and must be freed by the caller. If the specified
  * URL does not contain a filename, a '-' is allocated and returned.
  */
-char *url_getfilename(char *url)
+char *url_getfilename(const char *url)
 {
-        char *c, *start;
+	const char *c, *start;
 
         if ((c = strstr(url, "://")))
                 c += 3;
@@ -138,7 +140,7 @@ static size_t do_download(void *ptr, size_t size, size_t nmemb, void *stream)
  * message. The returned filename is malloc'ed and must be freed by
  * the caller.
  */
-char *download_file(char *url, char **error)
+char *download_file(const char *url, char **error)
 {
 	static char errorbuf[CURL_ERROR_SIZE];
 	CURL *curl = curl_easy_init();
@@ -229,14 +231,21 @@ void url_init(void)
  * called when the download completes, or the download fails. The 
  * callback function is defined as:
  *
- * void callback(char *url, char *filename, char *errorbuf, int cached);
- * url will contain the URL that was downloaded
- * filename will contain the name of the file (if successful, NULL otherwise)
- * errorbuf will contain the error message (if failed, NULL otherwise)
- * cached 1 if the specified cachetime is >= the current file on the server,
- *        if so, both filename and errorbuf will be NULL
+ * void callback(const char *url, const char *filename, char *errorbuf, int cached, void *data);
+ *  - url will contain the original URL used to download the file.
+ *  - filename will contain the name of the file (if successful, NULL on error or if cached).
+ *        This file will be cleaned up after the callback returns, so save a copy to support caching.
+ *  - errorbuf will contain the error message (if failed, NULL otherwise).
+ *  - cached 1 if the specified cachetime is >= the current file on the server,
+ *        if so, errorbuf will be NULL, filename will contain the path to the file.
+ *  - data will be the value of callback_data, allowing you to figure
+ *        out how to use the data contained in the downloaded file ;-).
+ *        Make sure that if you access the contents of this pointer, you
+ *        know that this pointer will persist. A download could take more
+ *        than 10 seconds to happen and the config file can be rehashed
+ *        multiple times during that time.
  */
-void download_file_async(char *url, time_t cachetime, vFP callback)
+void download_file_async(const char *url, time_t cachetime, vFP callback, void *callback_data)
 {
 	static char errorbuf[CURL_ERROR_SIZE];
 	CURL *curl = curl_easy_init();
@@ -250,17 +259,20 @@ void download_file_async(char *url, time_t cachetime, vFP callback)
 		if (!handle->fd)
 		{
 			snprintf(errorbuf, sizeof(errorbuf), "Cannot create '%s': %s", tmp, strerror(ERRNO));
-			callback(url, NULL, errorbuf, 0);
+			callback(url, NULL, errorbuf, 0, callback_data);
 			if (file)
 				MyFree(file);
 			MyFree(handle);
 			return;
 		}
 		handle->callback = callback;
+		handle->callback_data = callback_data;
 		handle->cachetime = cachetime;
-		strcpy(handle->filename, tmp);
+		handle->url = strdup(url);
+		strlcpy(handle->filename, tmp, sizeof(handle->filename));
 		if (file)
 			free(file);
+
 		curl_easy_setopt(curl, CURLOPT_URL, url);
                 curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download);
                 curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)handle->fd);
@@ -334,13 +346,11 @@ void url_do_transfers_async(void)
 		if (msg->msg == CURLMSG_DONE)
 		{
 			FileHandle *handle;
-			char *url;
 			long code;
 			long last_mod;
 			CURL *easyhand = msg->easy_handle;
 			curl_easy_getinfo(easyhand, CURLINFO_RESPONSE_CODE, &code);
 			curl_easy_getinfo(easyhand, CURLINFO_PRIVATE, (char*)&handle);
-			curl_easy_getinfo(easyhand, CURLINFO_EFFECTIVE_URL, &url);
 			curl_easy_getinfo(easyhand, CURLINFO_FILETIME, &last_mod);
 			fclose(handle->fd);
 #if defined(IRC_USER) && defined(IRC_GROUP)
@@ -351,7 +361,7 @@ void url_do_transfers_async(void)
 			{
 				if (code == 304 || (last_mod != -1 && last_mod <= handle->cachetime))
 				{
-					handle->callback(url, NULL, NULL, 1);
+					handle->callback(handle->url, NULL, NULL, 1, handle->callback_data);
 					remove(handle->filename);
 
 				}
@@ -360,14 +370,16 @@ void url_do_transfers_async(void)
 					if (last_mod != -1)
 						unreal_setfilemodtime(handle->filename, last_mod);
 
-					handle->callback(url, handle->filename, NULL, 0);
+					handle->callback(handle->url, handle->filename, NULL, 0, handle->callback_data);
+					remove(handle->filename);
 				}
 			}
 			else
 			{
-				handle->callback(url, NULL, handle->errorbuf, 0);
+				handle->callback(handle->url, NULL, handle->errorbuf, 0, handle->callback_data);
 				remove(handle->filename);
 			}
+			free(handle->url);
 			free(handle);
 			curl_multi_remove_handle(multihandle, easyhand);
 			/* NOTE: after curl_multi_remove_handle() you cannot use

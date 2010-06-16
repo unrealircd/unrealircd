@@ -45,8 +45,7 @@
 #ifdef _WIN32
 #include "version.h"
 #endif
-extern MODVAR aMotd *svsmotd;
-extern aMotd *read_file(char *, aMotd **);
+
 DLLFUNC int m_svsmotd(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_SVSMOTD 	"SVSMOTD"	
@@ -119,8 +118,7 @@ int  m_svsmotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
           case '!':
           {
                   remove(conf_files->svsmotd_file);
-                  free_motd(svsmotd);
-                  svsmotd = NULL;
+                  free_motd(&svsmotd);
                   sendto_ops("Wiped out services motd data");
                   break;
           }
@@ -150,6 +148,6 @@ int  m_svsmotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
         fclose(conf);
         /* We editted it, so rehash it -- codemastr */
-        svsmotd = read_file(conf_files->svsmotd_file, &svsmotd);
+        read_motd(conf_files->svsmotd_file, &svsmotd);
         return 1;
 }

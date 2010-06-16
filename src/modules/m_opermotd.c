@@ -80,21 +80,9 @@ DLLFUNC int MOD_UNLOAD(m_opermotd)(int module_unload)
  */
 DLLFUNC CMD_FUNC(m_opermotd)
 {
-	aMotd *temp;
-	ConfigItem_tld *ptr;
+	aMotdLine *motdline;
+	ConfigItem_tld *tld;
 	char userhost[HOSTLEN + USERLEN + 6];
-	strlcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost), sizeof userhost);
-	ptr = Find_tld(sptr, userhost);
-
-	if (ptr)
-	{
-		if (ptr->opermotd)
-			temp = ptr->opermotd;
-		else
-			temp = opermotd;
-	}
-	else
-		temp = opermotd;
 
 	if (!IsAnOper(sptr))
 	{
@@ -102,7 +90,16 @@ DLLFUNC CMD_FUNC(m_opermotd)
 		return 0;
 	}
 
-	if (!temp)
+	strlcpy(userhost, make_user_host(cptr->user->username, cptr->user->realhost), sizeof(userhost));
+	tld = Find_tld(sptr, userhost);
+
+	motdline = NULL;
+	if (tld)
+		motdline = tld->opermotd.lines;
+	if (!motdline)
+		motdline = opermotd.lines;
+
+	if (!motdline)
 	{
 		sendto_one(sptr, err_str(ERR_NOOPERMOTD), me.name, parv[0]);
 		return 0;
@@ -111,11 +108,11 @@ DLLFUNC CMD_FUNC(m_opermotd)
 	sendto_one(sptr, rpl_str(RPL_MOTD), me.name, parv[0],
 	    "IRC Operator Message of the Day");
 
-	while (temp)
+	while (motdline)
 	{
 		sendto_one(sptr, rpl_str(RPL_MOTD), me.name, parv[0],
-		    temp->line);
-		temp = temp->next;
+			   motdline->line);
+		motdline = motdline->next;
 	}
 	sendto_one(sptr, rpl_str(RPL_ENDOFMOTD), me.name, parv[0]);
 	return 0;

@@ -1980,3 +1980,14 @@
 - Throw out old USE_POLL code which 1. has no buildsystem support and 2.
   has comments which claim it doesn't work.
 - Removed extraneous apostrophe from a module loader error message.
+- Added error message for unknown directives in the "files" block
+- Remote MOTD support. Not adequately tested. Required restructuring of the
+  asynchronous download callback and handler. (#)
+- Added some consts throughout url.c, etc.
+- Fix segfault where the an include directive specifies a URL and cURL follows
+  redirects, resulting in a different resultant URL. The remote includes code
+  would look for the an include block using the resultant URL and assume that
+  it would be found. The new code searches differently, has new checks, and
+  ignores the resultant URL.
+- Removed duplicated m_motd() and friends that were both in modules and s_serv.c.
+  The copies in s_serv.c (core) were overriding the in-module functions.

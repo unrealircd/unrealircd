@@ -44,6 +44,7 @@ static char sccsid[] =
 #include "proto.h"
 #include <string.h>
 #ifdef USE_LIBCURL
+#include "url.h"
 #include <curl/curl.h>
 #endif
 #ifndef _WIN32
@@ -59,17 +60,20 @@ extern ircstats IRCstats;
 extern int do_garbage_collect;
 /* We need all these for cached MOTDs -- codemastr */
 extern char *buildid;
-aMotd *opermotd;
-aMotd *rules;
-aMotd *motd;
-aMotd *svsmotd;
-aMotd *botmotd;
-aMotd *smotd;
-struct tm motd_tm;
-struct tm smotd_tm;
-aMotd *read_file(char *filename, aMotd **list);
-aMotd *read_file_ex(char *filename, aMotd **list, struct tm *);
-extern aMotd *Find_file(char *, short);
+aMotdFile opermotd;
+aMotdFile rules;
+aMotdFile motd;
+aMotdFile svsmotd;
+aMotdFile botmotd;
+aMotdFile smotd;
+
+void read_motd(const char *filename, aMotdFile *motd);
+void do_read_motd(const char *filename, aMotdFile *themotd);
+#ifdef USE_LIBCURL
+void read_motd_asynch_downloaded(const char *url, const char *filename, const char *errorbuf, int cached, aMotdDownload *motd_download);
+#endif
+
+extern aMotdLine *Find_file(char *, short);
 
 #ifdef USE_SSL
 extern void reinit_ssl(aClient *);
@@ -592,25 +596,23 @@ ConfigItem_tld *tlds;
 	reread_motdsandrules();
 	for (tlds = conf_tld; tlds; tlds = (ConfigItem_tld *) tlds->next)
 	{
-		tlds->motd = read_file_ex(tlds->motd_file, &tlds->motd, &tlds->motd_tm);
-		tlds->rules = read_file(tlds->rules_file, &tlds->rules);
-		if (tlds->smotd_file)
-			tlds->smotd = read_file_ex(tlds->smotd_file, &tlds->smotd, &tlds->smotd_tm);
-		if (tlds->opermotd_file)
-			tlds->opermotd = read_file(tlds->opermotd_file, &tlds->opermotd);
-		if (tlds->botmotd_file)
-			tlds->botmotd = read_file(tlds->botmotd_file, &tlds->botmotd);
+		/* read_motd() accepts NULL in first arg and acts sanely */
+		read_motd(tlds->motd_file, &tlds->motd);
+		read_motd(tlds->rules_file, &tlds->rules);
+		read_motd(tlds->smotd_file, &tlds->smotd);
+		read_motd(tlds->opermotd_file, &tlds->opermotd);
+		read_motd(tlds->botmotd_file, &tlds->botmotd);
 	}
 }
 
 void reread_motdsandrules()
 {
-	motd = (aMotd *) read_file_ex(conf_files->motd_file, &motd, &motd_tm);
-	rules = (aMotd *) read_file(conf_files->rules_file, &rules);
-	smotd = (aMotd *) read_file_ex(conf_files->smotd_file, &smotd, &smotd_tm);
-	botmotd = (aMotd *) read_file(conf_files->botmotd_file, &botmotd);
-	opermotd = (aMotd *) read_file(conf_files->opermotd_file, &opermotd);
-	svsmotd = (aMotd *) read_file(conf_files->svsmotd_file, &svsmotd);
+	read_motd(conf_files->motd_file, &motd);
+	read_motd(conf_files->rules_file, &rules);
+	read_motd(conf_files->smotd_file, &smotd);
+	read_motd(conf_files->botmotd_file, &botmotd);
+	read_motd(conf_files->opermotd_file, &opermotd);
+	read_motd(conf_files->svsmotd_file, &svsmotd);
 }
 
 extern void reinit_resolver(aClient *sptr);
@@ -722,7 +724,7 @@ CMD_FUNC(m_rehash)
 				    sptr->name);
 				if (cptr != sptr)
 					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing OperMOTD", me.name, sptr->name);
-				opermotd = (aMotd *) read_file(conf_files->opermotd_file, &opermotd);
+				read_motd(conf_files->opermotd_file, &opermotd);
 				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
 				return 0;
 			}
@@ -734,7 +736,7 @@ CMD_FUNC(m_rehash)
 				    sptr->name);
 				if (cptr != sptr)
 					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing BotMOTD", me.name, sptr->name);
-				botmotd = (aMotd *) read_file(conf_files->botmotd_file, &botmotd);
+				read_motd(conf_files->botmotd_file, &botmotd);
 				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
 				return 0;
 			}
@@ -854,190 +856,76 @@ char *reason = parv[1];
  * Heavily modified from the ircu m_motd by codemastr
  * Also svsmotd support added
  */
-int short_motd(aClient *sptr) {
-	ConfigItem_tld *ptr;
-	aMotd *temp;
-	struct tm *tm = &smotd_tm;
-	char userhost[HOSTLEN + USERLEN + 6];
-	char is_short = 1;
-	strlcpy(userhost,make_user_host(sptr->user->username, sptr->user->realhost), sizeof userhost);
-	ptr = Find_tld(sptr, userhost);
-
-	if (ptr)
-	{
-		if (ptr->smotd)
-		{
-			temp = ptr->smotd;
-			tm = &ptr->smotd_tm;
-		}
-		else if (smotd)
-			temp = smotd;
-		else
-		{
-			temp = ptr->motd;
-			tm = &ptr->motd_tm;
-			is_short = 0;
-		}
-	}
-	else
-	{
-		if (smotd)
-			temp = smotd;
-		else
-		{
-			temp = motd;
-			tm = &motd_tm;
-			is_short = 0;
-		}
-	}
-
-	if (!temp)
-	{
-		sendto_one(sptr, err_str(ERR_NOMOTD), me.name, sptr->name);
-		return 0;
-	}
-	if (tm)
-	{
-		sendto_one(sptr, rpl_str(RPL_MOTDSTART), me.name, sptr->name,
-		    me.name);
-		sendto_one(sptr, ":%s %d %s :- %d/%d/%d %d:%02d", me.name,
-		    RPL_MOTD, sptr->name, tm->tm_mday, tm->tm_mon + 1,
-		    1900 + tm->tm_year, tm->tm_hour, tm->tm_min);
-	}
-	if (is_short)
-	{
-		sendto_one(sptr, rpl_str(RPL_MOTD), me.name, sptr->name,
-			"This is the short MOTD. To view the complete MOTD type /motd");
-		sendto_one(sptr, rpl_str(RPL_MOTD), me.name, sptr->name, "");
-	}
-
-	while (temp)
-	{
-		sendto_one(sptr, rpl_str(RPL_MOTD), me.name, sptr->name,
-		    temp->line);
-		temp = temp->next;
-	}
-	sendto_one(sptr, rpl_str(RPL_ENDOFMOTD), me.name, sptr->name);
-	return 0;
-}
-
-
-/*
- * Heavily modified from the ircu m_motd by codemastr
- * Also svsmotd support added
- */
-CMD_FUNC(m_motd)
+int short_motd(aClient *sptr)
 {
-	ConfigItem_tld *ptr;
-	aMotd *temp, *temp2;
-	struct tm *tm = &motd_tm;
-	int  svsnofile = 0;
-	char userhost[HOSTLEN + USERLEN + 6];
+       ConfigItem_tld *tld;
+       aMotdFile *themotd;
+       aMotdLine *motdline;
+       struct tm *tm;
+       char userhost[HOSTLEN + USERLEN + 6];
+       char is_short;
 
-	if (IsServer(sptr))
-		return 0;
-	if (hunt_server_token(cptr, sptr, MSG_MOTD, TOK_MOTD, ":%s", 1, parc, parv) !=
-HUNTED_ISME)
-		return 0;
-#ifndef TLINE_Remote
-	if (!MyConnect(sptr))
-	{
-		temp = motd;
-		goto playmotd;
-	}
-#endif
-	strlcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost), sizeof userhost);
-	ptr = Find_tld(sptr, userhost);
+       tm = NULL;
+       is_short = 1;
 
-	if (ptr)
-	{
-		temp = ptr->motd;
-		tm = &ptr->motd_tm;
-	}
-	else
-		temp = motd;
+       strlcpy(userhost,make_user_host(sptr->user->username, sptr->user->realhost), sizeof userhost);
+       tld = Find_tld(sptr, userhost);
 
-      playmotd:
-	if (temp == NULL)
-	{
-		sendto_one(sptr, err_str(ERR_NOMOTD), me.name, parv[0]);
-		svsnofile = 1;
-		goto svsmotd;
+       /*
+	  Try different sources of short MOTDs, falling back to
+	  the long MOTD.
+       */
+       themotd = NULL;
+       if (tld)
+	       themotd = &tld->smotd;
+       if (!themotd)
+	       themotd = &smotd;
 
-	}
+       /* try long MOTDs */
+       if (!themotd)
+       {
+	       is_short = 0;
+	       if (tld)
+		       themotd = &tld->motd;
+       }
+       if (!themotd)
+	       themotd = &motd;
 
-	if (tm)
-	{
-		sendto_one(sptr, rpl_str(RPL_MOTDSTART), me.name, parv[0],
-		    me.name);
-		sendto_one(sptr, ":%s %d %s :- %d/%d/%d %d:%02d", me.name,
-		    RPL_MOTD, parv[0], tm->tm_mday, tm->tm_mon + 1,
-		    1900 + tm->tm_year, tm->tm_hour, tm->tm_min);
-	}
+       if (!themotd)
+       {
+               sendto_one(sptr, err_str(ERR_NOMOTD), me.name, sptr->name);
+               return 0;
+       }
+       if (themotd->last_modified.tm_year)
+       {
+	       tm = &themotd->last_modified; /* for readability */
+               sendto_one(sptr, rpl_str(RPL_MOTDSTART), me.name, sptr->name,
+                   me.name);
+               sendto_one(sptr, ":%s %d %s :- %d/%d/%d %d:%02d", me.name,
+                   RPL_MOTD, sptr->name, tm->tm_mday, tm->tm_mon + 1,
+                   1900 + tm->tm_year, tm->tm_hour, tm->tm_min);
+       }
+       if (is_short)
+       {
+               sendto_one(sptr, rpl_str(RPL_MOTD), me.name, sptr->name,
+                       "This is the short MOTD. To view the complete MOTD type /motd");
+               sendto_one(sptr, rpl_str(RPL_MOTD), me.name, sptr->name, "");
+       }
 
-	while (temp)
-	{
-		sendto_one(sptr, rpl_str(RPL_MOTD), me.name, parv[0],
-		    temp->line);
-		temp = temp->next;
-	}
-      svsmotd:
-	temp2 = svsmotd;
-	while (temp2)
-	{
-		sendto_one(sptr, rpl_str(RPL_MOTD), me.name, parv[0],
-		    temp2->line);
-		temp2 = temp2->next;
-	}
-	if (svsnofile == 0)
-		sendto_one(sptr, rpl_str(RPL_ENDOFMOTD), me.name, parv[0]);
-	return 0;
+       motdline = NULL;
+       if (themotd)
+	       motdline = themotd->lines;
+       while (motdline)
+       {
+               sendto_one(sptr, rpl_str(RPL_MOTD), me.name, sptr->name,
+                   motdline->line);
+               motdline = motdline->next;
+       }
+       sendto_one(sptr, rpl_str(RPL_ENDOFMOTD), me.name, sptr->name);
+       return 0;
 }
-/*
- * Modified from comstud by codemastr
- */
-CMD_FUNC(m_opermotd)
-{
-	aMotd *temp;
-	ConfigItem_tld *ptr;
-	char userhost[HOSTLEN + USERLEN + 6];
-	strlcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost), sizeof userhost);
-	ptr = Find_tld(sptr, userhost);
 
-	if (ptr)
-	{
-		if (ptr->opermotd)
-			temp = ptr->opermotd;
-		else
-			temp = opermotd;
-	}
-	else
-		temp = opermotd;
 
-	if (!IsAnOper(sptr))
-	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-		return 0;
-	}
-
-	if (!temp)
-	{
-		sendto_one(sptr, err_str(ERR_NOOPERMOTD), me.name, parv[0]);
-		return 0;
-	}
-	sendto_one(sptr, rpl_str(RPL_MOTDSTART), me.name, parv[0], me.name);
-	sendto_one(sptr, rpl_str(RPL_MOTD), me.name, parv[0],
-	    "IRC Operator Message of the Day");
-
-	while (temp)
-	{
-		sendto_one(sptr, rpl_str(RPL_MOTD), me.name, parv[0],
-		    temp->line);
-		temp = temp->next;
-	}
-	sendto_one(sptr, rpl_str(RPL_ENDOFMOTD), me.name, parv[0]);
-	return 0;
-}
 
 /*
  * A merge from ircu and bahamut, and some extra stuff added by codemastr
@@ -1045,67 +933,156 @@ CMD_FUNC(m_opermotd)
  * Merged read_motd/read_rules stuff into this -- Syzop
  */
 
-/** Read motd-like file, used for rules/motd/botmotd/opermotd/etc.
- * @param filename Filename of file to read.
- * @param list Reference to motd pointer (used for freeing if needed, can be NULL)
- * @returns Pointer to MOTD or NULL if reading failed.
- */
-aMotd *read_file(char *filename, aMotd **list)
-{
-	return read_file_ex(filename, list, NULL);
-}
-
-void free_motd(aMotd *m)
-{
-aMotd *next;
-
-	for (; m; m = next)
-	{
-		next = m->next;
-		MyFree(m->line);
-		MyFree(m);
-	}
-}
-
 #define MOTD_LINE_LEN 81
+
+
 /** Read motd-like file, used for rules/motd/botmotd/opermotd/etc.
- * @param filename Filename of file to read.
- * @param list Reference to motd pointer (used for freeing if needed, NULL allowed)
- * @param t Pointer to struct tm to store filedatetime info in (NULL allowed)
- * @returns Pointer to MOTD or NULL if reading failed.
+ *  Multiplexes to either directly reading the MOTD or downloading it asynchronously.
+ * @param filename Filename of file to read or URL. NULL is accepted and causes the *motd to be free()d.
+ * @param motd Reference to motd pointer (used for freeing if needed and for asynchronous remote MOTD support)
  */
-aMotd *read_file_ex(char *filename, aMotd **list, struct tm *t)
+void read_motd(const char *filename, aMotdFile *themotd)
 {
-	FILE *fd = fopen(filename, "r");
-	aMotd *temp, *newmotd, *last, *old;
+#ifdef USE_LIBCURL
+	time_t modtime;
+	aMotdDownload *motd_download;
+	char *url_filename;
+#endif
+
+	/* TODO: if themotd points to a tld's motd,
+	   could a rehash disrupt this pointer?*/
+#ifdef USE_LIBCURL
+	if(themotd->motd_download)
+		themotd->motd_download->themotd = NULL;
+
+	/* if filename is NULL, do_read_motd will catch it */
+	if(filename && url_is_valid(filename))
+	{
+		/* prepare our payload for read_motd_asynch_downloaded() */
+		motd_download = MyMallocEx(sizeof(aMotdDownload));
+		if(!motd_download)
+			outofmemory();
+		motd_download->themotd = themotd;
+		themotd->motd_download = motd_download;
+
+		/* determine where to the MOTD should be stored after it's downloaded */
+		url_filename = url_getfilename(filename);
+		strlcpy(motd_download->url_filename, url_filename, sizeof(motd_download->url_filename));
+		motd_download->url_filename[PATH_MAX] = '\0';
+
+		modtime = unreal_getfilemodtime(url_filename);
+
+		MyFree(url_filename);
+
+		download_file_async(filename, modtime, (vFP)read_motd_asynch_downloaded, motd_download);
+		return;
+	}
+#endif /* USE_LIBCURL */
+
+	do_read_motd(filename, themotd);
+
+	return;
+}
+
+#ifdef USE_LIBCURL
+/**
+   Callback for download_file_async() called from read_motd()
+   below.
+   @param url the URL curl groked or NULL if the MOTD is stored locally.
+   @param filename the path to the local copy of the MOTD or NULL if either cached=1 or there's an error.
+   @param errorbuf NULL or an errorstring if there was an error while downloading the MOTD.
+   @param cached 0 if the URL was downloaded freshly or 1 if the last download was canceled and the local copy should be used.
+ */
+void read_motd_asynch_downloaded(const char *url, const char *filename, const char *errorbuf, int cached, aMotdDownload *motd_download)
+{
+	aMotdFile *themotd;
+
+	themotd = motd_download->themotd;
+	/*
+	  check if the download was soft-canceled. See struct.h's docs on
+	  struct MotdDownload for details.
+	*/
+	if(!themotd)
+	{
+		MyFree(motd_download);
+		return;
+	}
+
+	/* errors -- check for specialcached version if applicable */
+	if(!cached && !filename)
+	{
+#ifdef REMOTEINC_SPECIALCACHE
+		if(has_cached_version(url))
+		{
+			
+			config_warn("Error downloading MOTD file from \"%s\": %s", url, errorbuf);
+			filename = motd_download->url_filename;
+			unreal_copyfileex(unreal_mkcache(url), filename, 0);
+		} else {
+#endif
+			config_error("Error downloading MOTD file from \"%s\": %s", url, errorbuf);
+			MyFree(motd_download);
+			return;
+#ifdef REMOTEINF_SPECIALCACHE
+		}
+#endif
+	}
+
+	/*
+	  We need to move our newly downloaded file to the place specified
+	  by url_filename if it's not cached.
+	*/
+	if(!cached)
+	{
+		unreal_copyfileex(filename, motd_download->url_filename, 0);
+#ifdef REMOTEINC_SPECIALCACHE
+		/* create specialcached version for later */
+		unreal_copyfileex(filename, unreal_mkcache(url), 1);
+#endif
+	} else {
+		/*
+		  The file is cached. Thus we must look for it at
+		  motd_download->url_filename, where be placed it earlier.
+		 */
+		filename = motd_download->url_filename;
+	}
+
+	do_read_motd(filename, themotd);
+	MyFree(motd_download);
+}
+#endif /* USE_LIBCURL */
+
+
+/**
+   Does the actual reading of the MOTD. To be called only by
+   read_motd() or read_motd_asynch_downloaded().
+ */
+void do_read_motd(const char *filename, aMotdFile *themotd)
+{
+	FILE *fd;
+	struct tm *tm_tmp;
+	time_t modtime;
+
 	char line[512];
 	char *tmp;
-	int  i;
 
+	aMotdLine *last, *temp;
+
+	free_motd(themotd);
+
+	if(!filename)
+		return;
+
+	fd = fopen(filename, "r");
 	if (!fd)
-		return NULL;
+		return;
 
-	if (list)
-	{
-		free_motd(*list);
-		*list = NULL;
-	}
+	/* record file modification time */
+	modtime = unreal_getfilemodtime(filename);
+	tm_tmp = localtime(&modtime);
+	memcpy(&themotd->last_modified, tm_tmp, sizeof(struct tm));
 
-	if (t)
-	{
-		struct tm *ttmp;
-		struct stat sb;
-		if (!stat(filename, &sb))
-		{
-			ttmp = localtime(&sb.st_mtime);
-			memcpy(t, ttmp, sizeof(struct tm));
-		} else {
-			/* Sure, fstat() shouldn't fail, but... */
-			memset(t, 0, sizeof(struct tm));
-		}
-	}
-
-	newmotd = last = NULL;
+	last = NULL;
 	while (fgets(line, sizeof(line), fd))
 	{
 		if ((tmp = strchr(line, '\n')))
@@ -1114,68 +1091,58 @@ aMotd *read_file_ex(char *filename, aMotd **list, struct tm *t)
 			*tmp = '\0';
 		if (strlen(line) > MOTD_LINE_LEN)
 			line[MOTD_LINE_LEN] = '\0';
-		temp = (aMotd *) MyMalloc(sizeof(aMotd));
+
+		temp = MyMalloc(sizeof(aMotdLine));
 		if (!temp)
 			outofmemory();
 		AllocCpy(temp->line, line);
-		temp->next = NULL;
-		if (!newmotd)
-			newmotd = temp;
-		else
+
+		if(last)
 			last->next = temp;
+		else
+			/* handle the special case of the first line */
+			themotd->lines = temp;
+
 		last = temp;
 	}
+	/* the file could be zero bytes long? */
+	if(last)
+		last->next = NULL;
+
 	fclose(fd);
-	return newmotd;
-
+	
+	return;
 }
 
-/*
- * Modified from comstud by codemastr
+/**
+   Frees the contents of a aMotdFile structure.
+   The aMotdFile structure itself should be statically
+   allocated and deallocated. If the caller wants, it must
+   manually free the aMotdFile structure itself.
  */
-CMD_FUNC(m_botmotd)
+void free_motd(aMotdFile *themotd)
 {
-	aMotd *temp;
-	ConfigItem_tld *ptr;
-	char userhost[HOSTLEN + USERLEN + 6];
+	aMotdLine *next, *motdline;
 
-	if (hunt_server_token(cptr, sptr, MSG_BOTMOTD, TOK_BOTMOTD, ":%s", 1, parc,
-	    parv) != HUNTED_ISME)
-		return 0;
+	if(!themotd)
+		return;
 
-	if (!IsPerson(sptr))
-		return 0;
-
-	strlcpy(userhost,make_user_host(sptr->user->username, sptr->user->realhost), sizeof userhost);
-	ptr = Find_tld(sptr, userhost);
-
-	if (ptr)
+	for (motdline = themotd->lines; motdline; motdline = next)
 	{
-		if (ptr->botmotd)
-			temp = ptr->botmotd;
-		else
-			temp = botmotd;
+		next = motdline->next;
+		MyFree(motdline->line);
+		MyFree(motdline);
 	}
-	else
-		temp = botmotd;
 
-	if (!temp)
-	{
-		sendto_one(sptr, ":%s NOTICE %s :BOTMOTD File not found",
-		    me.name, sptr->name);
-		return 0;
-	}
-	sendto_one(sptr, ":%s NOTICE %s :- %s Bot Message of the Day - ",
-	    me.name, sptr->name, me.name);
+	themotd->lines = NULL;
+	memset(&themotd->last_modified, '\0', sizeof(struct tm));
 
-	while (temp)
-	{
-		sendto_one(sptr, ":%s NOTICE %s :- %s", me.name, sptr->name, temp->line);
-		temp = temp->next;
-	}
-	sendto_one(sptr, ":%s NOTICE %s :End of /BOTMOTD command.", me.name, sptr->name);
-	return 0;
+#ifdef USE_LIBCURL
+	/* see struct.h for more information about motd_download */
+	themotd->motd_download = NULL;
+#endif
 }
+
 
 /* m_die, this terminates the server, and it intentionally does not
  * have a reason. If you use it you should first do a GLOBOPS and

@@ -582,12 +582,12 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				}
 				case IDM_RHOMOTD:
 					MessageBox(NULL, "Rehashing the OperMOTD", "Rehashing", MB_OK);
-					opermotd = (aMotd *) read_file(conf_files->opermotd_file, &opermotd);
+					read_motd(conf_files->opermotd_file, &opermotd);
 					sendto_realops("Rehashing the OperMOTD via the console");
 					break;
 				case IDM_RHBMOTD:
 					MessageBox(NULL, "Rehashing the BotMOTD", "Rehashing", MB_OK);
-					botmotd = (aMotd *) read_file(conf_files->botmotd_file, &botmotd);
+					read_motd(conf_files->botmotd_file, &botmotd);
 					sendto_realops("Rehashing the BotMOTD via the console");
 					break;
 				case IDM_LICENSE: 

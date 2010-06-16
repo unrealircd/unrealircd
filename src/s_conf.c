@@ -400,7 +400,7 @@ int			config_verbose = 0;
 
 void add_include(char *);
 #ifdef USE_LIBCURL
-void add_remote_include(char *, char *, int, char *);
+void add_remote_include(const char *, const char *, int, const char *);
 int remote_include(ConfigEntry *ce);
 #endif
 void unload_notloaded_includes(void);
@@ -1522,10 +1522,10 @@ static void inline config_warn_duplicate(const char *filename, int line, const c
 }
 
 /* returns 1 if the test fails */
-int config_test_openfile(ConfigEntry *cep, int flags, mode_t mode, const char *entry, int fatal)
+int config_test_openfile(ConfigEntry *cep, int flags, mode_t mode, const char *entry, int fatal, int allow_url)
 {
 	int fd;
-	
+
 	if(!cep->ce_vardata)
 	{
 		if(fatal)
@@ -1541,6 +1541,26 @@ int config_test_openfile(ConfigEntry *cep, int flags, mode_t mode, const char *e
 				    entry);
 		return 1;
 	}
+
+	/* There's not much checking that can be done for asynchronously downloaded files */
+#ifdef USE_LIBCURL
+	if(url_is_valid(cep->ce_vardata))
+	{
+		if(allow_url)
+			return 0;
+
+		/* but we can check if a URL is used wrongly :-) */
+		config_warn("%s:%i: %s: %s: URL used where not allowed",
+			    cep->ce_fileptr->cf_filename,
+			    cep->ce_varlinenum,
+			    entry, cep->ce_vardata);
+		if(fatal)
+			return 1;
+		else
+			return 0;
+	}
+#endif /* USE_LIBCURL */
+
 	/* 
 	 * Make sure that files are created with the correct mode. This is 
 	 * because we don't feel like unlink()ing them...which would require
@@ -2133,47 +2153,19 @@ void	config_rehash()
 	}
 	for (tld_ptr = conf_tld; tld_ptr; tld_ptr = (ConfigItem_tld *) next)
 	{
-		aMotd *motd;
 		next = (ListStruct *)tld_ptr->next;
 		ircfree(tld_ptr->motd_file);
 		ircfree(tld_ptr->rules_file);
 		ircfree(tld_ptr->smotd_file);
 		ircfree(tld_ptr->opermotd_file);
 		ircfree(tld_ptr->botmotd_file);
-		if (!tld_ptr->flag.motdptr) {
-			while (tld_ptr->motd) {
-				motd = tld_ptr->motd->next;
-				ircfree(tld_ptr->motd->line);
-				ircfree(tld_ptr->motd);
-				tld_ptr->motd = motd;
-			}
-		}
-		if (!tld_ptr->flag.rulesptr) {
-			while (tld_ptr->rules) {
-				motd = tld_ptr->rules->next;
-				ircfree(tld_ptr->rules->line);
-				ircfree(tld_ptr->rules);
-				tld_ptr->rules = motd;
-			}
-		}
-		while (tld_ptr->smotd) {
-			motd = tld_ptr->smotd->next;
-			ircfree(tld_ptr->smotd->line);
-			ircfree(tld_ptr->smotd);
-			tld_ptr->smotd = motd;
-		}
-		while (tld_ptr->opermotd) {
-			motd = tld_ptr->opermotd->next;
-			ircfree(tld_ptr->opermotd->line);
-			ircfree(tld_ptr->opermotd);
-			tld_ptr->opermotd = motd;
-		}
-		while (tld_ptr->botmotd) {
-			motd = tld_ptr->botmotd->next;
-			ircfree(tld_ptr->botmotd->line);
-			ircfree(tld_ptr->botmotd);
-			tld_ptr->botmotd = motd;
-		}
+
+		free_motd(&tld_ptr->motd);
+		free_motd(&tld_ptr->rules);
+		free_motd(&tld_ptr->smotd);
+		free_motd(&tld_ptr->opermotd);
+		free_motd(&tld_ptr->botmotd);
+
 		DelListItem(tld_ptr, conf_tld);
 		MyFree(tld_ptr);
 	}
@@ -2340,7 +2332,7 @@ void	config_rehash()
 		MyFree(alias_ptr);
 	}
 	for (help_ptr = conf_help; help_ptr; help_ptr = (ConfigItem_help *)next) {
-		aMotd *text;
+		aMotdLine *text;
 		next = (ListStruct *)help_ptr->next;
 		ircfree(help_ptr->command);
 		while (help_ptr->text) {
@@ -3477,7 +3469,7 @@ int	_test_files(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_varlinenum, "files::motd");
 				continue;
 			}
-			config_test_openfile(cep, O_RDONLY, 0, "files::motd", 0);
+			config_test_openfile(cep, O_RDONLY, 0, "files::motd", 0, 1);
 			has_motd = 1;
 		}
 		/* files::smotd */
@@ -3489,7 +3481,7 @@ int	_test_files(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_varlinenum, "files::smotd");
 				continue;
 			}
-			config_test_openfile(cep, O_RDONLY, 0, "files::smotd", 0);
+			config_test_openfile(cep, O_RDONLY, 0, "files::smotd", 0, 1);
 			has_smotd = 1;
 		}
 		/* files::rules */
@@ -3501,7 +3493,7 @@ int	_test_files(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_varlinenum, "files::rules");
 				continue;
 			}
-			config_test_openfile(cep, O_RDONLY, 0, "files::rules", 0);
+			config_test_openfile(cep, O_RDONLY, 0, "files::rules", 0, 1);
 			has_rules = 1;
 		}
 		/* files::botmotd */
@@ -3513,7 +3505,7 @@ int	_test_files(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_varlinenum, "files::botmotd");
 				continue;
 			}
-			config_test_openfile(cep, O_RDONLY, 0, "files::botmotd", 0);
+			config_test_openfile(cep, O_RDONLY, 0, "files::botmotd", 0, 1);
 			has_botmotd = 1;
 		}
 		/* files::opermotd */
@@ -3525,7 +3517,7 @@ int	_test_files(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_varlinenum, "files::opermotd");
 				continue;
 			}
-			config_test_openfile(cep, O_RDONLY, 0, "files::opermotd", 0);
+			config_test_openfile(cep, O_RDONLY, 0, "files::opermotd", 0, 1);
 			has_opermotd = 1;
 		}
 		/* files::svsmotd 
@@ -3539,7 +3531,8 @@ int	_test_files(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_varlinenum, "files::svsmotd");
 				continue;
 			}
-			config_test_openfile(cep, O_RDONLY, 0, "files::svsmotd", 0);
+			/* svsmotd can't be a URL because we have to be able to write to it */
+			config_test_openfile(cep, O_RDONLY, 0, "files::svsmotd", 0, 0);
 			has_svsmotd = 1;
 		}
 		/* files::pidfile */
@@ -3552,7 +3545,7 @@ int	_test_files(ConfigFile *conf, ConfigEntry *ce)
 				continue;
 			}
 			
-			errors += config_test_openfile(cep, O_WRONLY | O_CREAT, 0600, "files::pidfile", 1);
+			errors += config_test_openfile(cep, O_WRONLY | O_CREAT, 0600, "files::pidfile", 1, 0);
 			has_pidfile = 1;
 		}
 		/* files::tunefile */
@@ -3564,8 +3557,15 @@ int	_test_files(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_varlinenum, "files::tunefile");
 				continue;
 			}
-			errors += config_test_openfile(cep, O_RDWR | O_CREAT, 0600, "files::tunefile", 1);
+			errors += config_test_openfile(cep, O_RDWR | O_CREAT, 0600, "files::tunefile", 1, 0);
 			has_tunefile = 1;
+		}
+		/* <random directive here> */
+		else
+		{
+			config_error("%s:%d: Unknown directive: \"%s\" in files {}", cep->ce_fileptr->cf_filename,
+				     cep->ce_varlinenum, cep->ce_varname);
+			errors ++;
 		}
 	}
 	return errors;
@@ -4259,27 +4259,27 @@ int     _conf_tld(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "motd"))
 		{
 			ca->motd_file = strdup(cep->ce_vardata);
-			ca->motd = read_file_ex(cep->ce_vardata, NULL, &ca->motd_tm);
+			read_motd(cep->ce_vardata, &ca->motd);
 		}
 		else if (!strcmp(cep->ce_varname, "shortmotd"))
 		{
 			ca->smotd_file = strdup(cep->ce_vardata);
-			ca->smotd = read_file_ex(cep->ce_vardata, NULL, &ca->smotd_tm);
+			read_motd(cep->ce_vardata, &ca->smotd);
 		}
 		else if (!strcmp(cep->ce_varname, "opermotd"))
 		{
 			ca->opermotd_file = strdup(cep->ce_vardata);
-			ca->opermotd = read_file(cep->ce_vardata, NULL);
+			read_motd(cep->ce_vardata, &ca->opermotd);
 		}
 		else if (!strcmp(cep->ce_varname, "botmotd"))
 		{
 			ca->botmotd_file = strdup(cep->ce_vardata);
-			ca->botmotd = read_file(cep->ce_vardata, NULL);
+			read_motd(cep->ce_vardata, &ca->botmotd);
 		}
 		else if (!strcmp(cep->ce_varname, "rules"))
 		{
 			ca->rules_file = strdup(cep->ce_vardata);
-			ca->rules = read_file(cep->ce_vardata, NULL);
+			read_motd(cep->ce_vardata, &ca->rules);
 		}
 		else if (!strcmp(cep->ce_varname, "options"))
 		{
@@ -6156,7 +6156,7 @@ int     _conf_help(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
 	ConfigItem_help *ca;
-	aMotd *last = NULL, *temp;
+	aMotdLine *last = NULL, *temp;
 	ca = MyMallocEx(sizeof(ConfigItem_help));
 
 	if (!ce->ce_vardata)
@@ -6166,7 +6166,7 @@ int     _conf_help(ConfigFile *conf, ConfigEntry *ce)
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		temp = MyMalloc(sizeof(aMotd));
+		temp = MyMalloc(sizeof(aMotdLine));
 		temp->line = strdup(cep->ce_varname);
 		temp->next = NULL;
 		if (!ca->text)
@@ -9513,26 +9513,36 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 }
 
 #ifdef USE_LIBCURL
-static void conf_download_complete(char *url, char *file, char *errorbuf, int cached)
+static void conf_download_complete(const char *url, const char *file, const char *errorbuf, int cached, void *inc_key)
 {
 	ConfigItem_include *inc;
 	if (!loop.ircd_rehashing)
-	{
-		remove(file);
 		return;
-	}
+
+	/*
+	  use inc_key to find the correct include block. This
+	  should be cheaper than using the full URL.
+	 */
 	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
 	{
+		if ( inc_key != (void *)inc )
+			continue;
 		if (!(inc->flag.type & INCLUDE_REMOTE))
 			continue;
 		if (inc->flag.type & INCLUDE_NOTLOADED)
 			continue;
-		if (!stricmp(url, inc->url))
-		{
-			inc->flag.type &= ~INCLUDE_DLQUEUED;
-			break;
-		}
+		if (stricmp(url, inc->url))
+			continue;
+
+		inc->flag.type &= ~INCLUDE_DLQUEUED;
+		break;
 	}
+	if (!inc)
+	{
+		ircd_log(LOG_ERROR, "Downloaded remote include which matches no include statement.");
+		return;
+	}
+
 	if (!file && !cached)
 		add_remote_include(file, url, 0, errorbuf); /* DOWNLOAD FAILED */
 	else
@@ -9593,7 +9603,12 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 		found_remote = 1;
 		modtime = unreal_getfilemodtime(inc->file);
 		inc->flag.type |= INCLUDE_DLQUEUED;
-		download_file_async(inc->url, modtime, conf_download_complete);
+
+		/*
+		  use (void *)inc as the key for finding which
+		  include block conf_download_complete() should use.
+		*/
+		download_file_async(inc->url, modtime, conf_download_complete, (void *)inc);
 	}
 	if (!found_remote)
 		return rehash_internal(cptr, sptr, sig);
@@ -9828,7 +9843,7 @@ void add_include(char *file)
 }
 
 #ifdef USE_LIBCURL
-void add_remote_include(char *file, char *url, int flags, char *errorbuf)
+void add_remote_include(const char *file, const char *url, int flags, const char *errorbuf)
 {
 	ConfigItem_include *inc;
 

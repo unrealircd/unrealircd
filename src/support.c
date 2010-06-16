@@ -1659,7 +1659,7 @@ int has_cached_version(char *url)
 /* Copys the contents of the src file to the dest file.
  * The dest file will have permissions r-x------
  */
-int unreal_copyfile(char *src, char *dest)
+int unreal_copyfile(const char *src, const char *dest)
 {
 	char buf[2048];
 	time_t mtime;
@@ -1724,7 +1724,7 @@ fail:
 }
 
 /* Same as unreal_copyfile, but with an option to try hardlinking first */
-int unreal_copyfileex(char *src, char *dest, int tryhardlink)
+int unreal_copyfileex(const char *src, const char *dest, int tryhardlink)
 {
 #ifndef _WIN32
 	/* Try a hardlink first... */
@@ -1735,7 +1735,7 @@ int unreal_copyfileex(char *src, char *dest, int tryhardlink)
 }
 
 
-void unreal_setfilemodtime(char *filename, time_t mtime)
+void unreal_setfilemodtime(const char *filename, time_t mtime)
 {
 #ifndef _WIN32
 	struct utimbuf utb;
@@ -1757,7 +1757,7 @@ void unreal_setfilemodtime(char *filename, time_t mtime)
 #endif
 }
 
-time_t unreal_getfilemodtime(char *filename)
+time_t unreal_getfilemodtime(const char *filename)
 {
 #ifndef _WIN32
 	struct stat sb;

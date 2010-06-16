@@ -24,6 +24,7 @@
 #define __struct_include__
 
 #include "config.h"
+#include "sys.h"
 /* need to include ssl stuff here coz otherwise you get
  * conflicting types with isalnum/isalpha/etc @ redhat. -- Syzop
  */
@@ -143,7 +144,12 @@ typedef struct SChanFloodProt ChanFloodProt;
 typedef struct SRemoveFld RemoveFld;
 typedef struct ListOptions LOpts;
 typedef struct FloodOpt aFloodOpt;
-typedef struct MotdItem aMotd;
+typedef struct Motd aMotdFile; /* represents a whole MOTD, including remote MOTD support info */
+typedef struct MotdItem aMotdLine; /* one line of a MOTD stored as a linked list */
+#ifdef USE_LIBCURL
+typedef struct MotdDownload aMotdDownload; /* used to coordinate download of a remote MOTD */
+#endif
+
 typedef struct trecord aTrecord;
 typedef struct Command aCommand;
 typedef struct _cmdoverride Cmdoverride;
@@ -720,6 +726,47 @@ struct FloodOpt {
 	TS   firstmsg;
 };
 
+#ifdef USE_LIBCURL
+struct Motd;
+struct MotdDownload
+{
+	struct Motd *themotd;
+	char url_filename[PATH_MAX+1]; /*< Where the downloaded file should be stored */
+};
+#endif /* USE_LIBCURL */
+
+struct Motd 
+{
+	struct MotdItem *lines;
+	struct tm last_modified; /* store the last modification time */
+
+#ifdef USE_LIBCURL
+	/*
+	  This pointer is used to communicate with an asynchronous MOTD
+	  download. The problem is that a download may take 10 seconds or
+	  more to complete and, in that time, the IRCd could be rehashed.
+	  This would mean that TLD blocks are reallocated and thus the
+	  aMotd structs would be free()d in the meantime.
+
+	  To prevent such a situation from leading to a segfault, we
+	  introduce this remote control pointer. It works like this:
+	  1. read_motd() is called with a URL. A new MotdDownload is
+	     allocated and the pointer is placed here. This pointer is
+	     also passed to the asynchrnous download handler.
+	  2.a. The download is completed and read_motd_asynch_downloaded()
+	       is called with the same pointer. From this function, this pointer
+	       if free()d. No other code may free() the pointer. Not even free_motd().
+	    OR
+	  2.b. The user rehashes the IRCd before the download is completed.
+	       free_motd() is called, which sets motd_download->themotd to NULL
+	       to signal to read_motd_asynch_downloaded() that it should ignore
+	       the download. read_motd_asynch_downloaded() is eventually called
+	       and frees motd_download.
+	 */
+	struct MotdDownload *motd_download;
+#endif /* USE_LIBCURL */
+};
+
 struct MotdItem {
 	char *line;
 	struct MotdItem *next;
@@ -1122,9 +1169,9 @@ struct _configitem_me {
 };
 
 struct _configitem_files {
-	char	   *motd_file, *rules_file, *smotd_file;
-	char	   *botmotd_file, *opermotd_file, *svsmotd_file;
-	char	   *pid_file, *tune_file;
+	char	*motd_file, *rules_file, *smotd_file;
+	char	*botmotd_file, *opermotd_file, *svsmotd_file;
+	char	*pid_file, *tune_file;
 };
 
 struct _configitem_admin {
@@ -1201,10 +1248,10 @@ struct _configitem_ulines {
 struct _configitem_tld {
 	ConfigItem 	*prev, *next;
 	ConfigFlag_tld 	flag;
-	char 		*mask, *motd_file, *rules_file, *smotd_file;
-	char 		*botmotd_file, *opermotd_file, *channel;
-	struct tm	motd_tm, smotd_tm;
-	aMotd		*rules, *motd, *smotd, *botmotd, *opermotd;
+	char 		*mask, *channel;
+	char 		*motd_file, *rules_file, *smotd_file;
+	char 		*botmotd_file, *opermotd_file;
+	aMotdFile	rules, motd, smotd, botmotd, opermotd;
 	u_short		options;
 };
 
@@ -1406,7 +1453,7 @@ struct _configitem_help {
 	ConfigItem *prev, *next;
 	ConfigFlag flag;
 	char *command;
-	aMotd *text;
+	aMotdLine *text;
 };
 
 struct _configitem_offchans {

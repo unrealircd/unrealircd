@@ -90,12 +90,6 @@ extern MODVAR char *buildid;
 time_t timeofday = 0;
 int  tainted = 0;
 LoopStruct loop;
-extern MODVAR aMotd *opermotd;
-extern MODVAR aMotd *svsmotd;
-extern MODVAR aMotd *motd;
-extern MODVAR aMotd *rules;
-extern MODVAR aMotd *botmotd;
-extern MODVAR aMotd *smotd;
 MODVAR MemoryInfo StatsZ;
 #ifndef _WIN32
 uid_t irc_uid = 0;
@@ -1069,6 +1063,14 @@ int InitwIRCD(int argc, char *argv[])
 #ifndef NO_FDLIST
 	TS   nextfdlistcheck = 0;	/*end of priority code */
 #endif
+
+	memset(&botmotd, '\0', sizeof(aMotdFile));
+	memset(&rules, '\0', sizeof(aMotdFile));
+	memset(&opermotd, '\0', sizeof(aMotdFile));
+	memset(&motd, '\0', sizeof(aMotdFile));
+	memset(&smotd, '\0', sizeof(aMotdFile));
+	memset(&svsmotd, '\0', sizeof(aMotdFile));
+
 #ifdef _WIN32
 	CreateMutex(NULL, FALSE, "UnrealMutex");
 	SetErrorMode(SEM_FAILCRITICALERRORS);
@@ -1536,12 +1538,14 @@ int InitwIRCD(int argc, char *argv[])
 	conf_listen->listener = &me;
 	run_configuration();
 	ircd_log(LOG_ERROR, "UnrealIRCd started.");
-	botmotd = (aMotd *) read_file(conf_files->botmotd_file, NULL);
-	rules = (aMotd *) read_file(conf_files->rules_file, NULL);
-	opermotd = (aMotd *) read_file(conf_files->opermotd_file, NULL);
-	motd = (aMotd *) read_file_ex(conf_files->motd_file, NULL, &motd_tm);
-	smotd = (aMotd *) read_file_ex(conf_files->smotd_file, NULL, &smotd_tm);
-	svsmotd = (aMotd *) read_file(conf_files->svsmotd_file, NULL);
+
+	read_motd(conf_files->botmotd_file, &botmotd);
+	read_motd(conf_files->rules_file, &rules);
+	read_motd(conf_files->opermotd_file, &opermotd);
+	read_motd(conf_files->motd_file, &motd);
+	read_motd(conf_files->smotd_file, &smotd);
+	read_motd(conf_files->svsmotd_file, &svsmotd);
+
 	strncpy(me.sockhost, conf_listen->ip, sizeof(me.sockhost) - 1);
 	if (me.name[0] == '\0')
 		strncpyzt(me.name, me.sockhost, sizeof(me.name));

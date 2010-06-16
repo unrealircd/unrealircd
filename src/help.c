@@ -47,7 +47,7 @@ ConfigItem_help *Find_Help(char *command) {
 int  parse_help(aClient *sptr, char *name, char *help)
 {
 	ConfigItem_help *helpitem;
-	aMotd *text;
+	aMotdLine *text;
 	if (BadPtr(help))
 	{
 		helpitem = Find_Help(NULL);

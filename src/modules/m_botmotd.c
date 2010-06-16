@@ -80,8 +80,8 @@ DLLFUNC int MOD_UNLOAD(m_botmotd)(int module_unload)
  */
 DLLFUNC CMD_FUNC(m_botmotd)
 {
-	aMotd *temp;
-	ConfigItem_tld *ptr;
+	aMotdLine *motdline;
+	ConfigItem_tld *tld;
 	char userhost[HOSTLEN + USERLEN + 6];
 
 	if (hunt_server_token(cptr, sptr, MSG_BOTMOTD, TOK_BOTMOTD, ":%s", 1, parc,
@@ -91,20 +91,16 @@ DLLFUNC CMD_FUNC(m_botmotd)
 	if (!IsPerson(sptr))
 		return 0;
 
-	strlcpy(userhost,make_user_host(sptr->user->username, sptr->user->realhost), sizeof userhost);
-	ptr = Find_tld(sptr, userhost);
+	strlcpy(userhost, make_user_host(sptr->user->username, sptr->user->realhost), sizeof(userhost));
+	tld = Find_tld(sptr, userhost);
 
-	if (ptr)
-	{
-		if (ptr->botmotd)
-			temp = ptr->botmotd;
-		else
-			temp = botmotd;
-	}
-	else
-		temp = botmotd;
+	motdline = NULL;
+	if (tld)
+		motdline = tld->botmotd.lines;
+	if (!motdline)
+		motdline = botmotd.lines;
 
-	if (!temp)
+	if (!motdline)
 	{
 		sendto_one(sptr, ":%s NOTICE %s :BOTMOTD File not found",
 		    me.name, sptr->name);
@@ -113,10 +109,10 @@ DLLFUNC CMD_FUNC(m_botmotd)
 	sendto_one(sptr, ":%s NOTICE %s :- %s Bot Message of the Day - ",
 	    me.name, sptr->name, me.name);
 
-	while (temp)
+	while (motdline)
 	{
-		sendto_one(sptr, ":%s NOTICE %s :- %s", me.name, sptr->name, temp->line);
-		temp = temp->next;
+		sendto_one(sptr, ":%s NOTICE %s :- %s", me.name, sptr->name, motdline->line);
+		motdline = motdline->next;
 	}
 	sendto_one(sptr, ":%s NOTICE %s :End of /BOTMOTD command.", me.name, sptr->name);
 	return 0;

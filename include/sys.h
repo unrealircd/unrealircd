@@ -22,6 +22,9 @@
 #ifndef	__sys_include__
 #define __sys_include__
 
+/* PATH_MAX */
+#include <limits.h>
+
 /* alloca stuff */
 #ifdef _WIN32
 # include <malloc.h>
