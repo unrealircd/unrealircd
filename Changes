@@ -1993,3 +1993,4 @@
   The copies in s_serv.c (core) were overriding the in-module functions.
 - Forgot to commit the REMOTEINC_SPECIALCACHE stuff to config.h which means
   it wasn't actually enabled until now...
+- Fix typo

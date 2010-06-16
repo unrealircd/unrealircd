@@ -1023,7 +1023,7 @@ void read_motd_asynch_downloaded(const char *url, const char *filename, const ch
 			config_error("Error downloading MOTD file from \"%s\": %s", url, errorbuf);
 			MyFree(motd_download);
 			return;
-#ifdef REMOTEINF_SPECIALCACHE
+#ifdef REMOTEINC_SPECIALCACHE
 		}
 #endif
 	}
