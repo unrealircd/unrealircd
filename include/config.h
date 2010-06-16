@@ -100,6 +100,24 @@
 #define REMOTE_REHASH
 
 /*
+ * Special remote include caching, see this Changelog item:
+ * - Added special caching of remote includes. When a remote include fails to
+ *   load (for example when the webserver is down), then the most recent
+ *   version of that remote include will be used, and the ircd will still boot
+ *   and be able to rehash. Even though this is quite a simple feature, it
+ *   can make a key difference when deciding to roll out remote includes on
+ *   your network. Previously, servers would be unable to boot or rehash when
+ *   the webserver was down, which would be a big problem (often unacceptable).
+ *   The latest version of fetched urls are cached in the cache/ directory as
+ *   cache/<md5 hash of url>.
+ *   Obviously, if there's no 'latest version' and an url fails, the ircd will
+ *   still not be able to boot. This would be the case if you added or changed
+ *   the path of a remote include and it's trying to fetch it for the first time.
+ * There usually is no reason to disable this.
+ */
+#define REMOTEINC_SPECIALCACHE
+
+/*
   Stripbadwords patch
 */
 #define STRIPBADWORDS
