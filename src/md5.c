@@ -70,9 +70,9 @@
  * This processes one or more 64-byte data blocks, but does NOT update
  * the bit counters.  There're no alignment requirements.
  */
-static void *body(MD5_CTX *ctx, void *data, unsigned long size)
+static void *body(MD5_CTX *ctx, const void *data, unsigned long size)
 {
-	unsigned char *ptr;
+	const unsigned char *ptr;
 	MD5_u32plus a, b, c, d;
 	MD5_u32plus saved_a, saved_b, saved_c, saved_d;
 
@@ -188,7 +188,7 @@ void MD5_Init(MD5_CTX *ctx)
 	ctx->hi = 0;
 }
 
-void MD5_Update(MD5_CTX *ctx, void *data, unsigned long size)
+void MD5_Update(MD5_CTX *ctx, const void *data, unsigned long size)
 {
 	MD5_u32plus saved_lo;
 	unsigned long used, free;
@@ -285,7 +285,7 @@ void MD5_Final(unsigned char *result, MD5_CTX *ctx)
  * @param src[in]    The input data used to generate the checksum.
  * @param n[in]      Length of data.
  */
-void DoMD5(unsigned char *mdout, unsigned char *src, unsigned long n)
+void DoMD5(unsigned char *mdout, const unsigned char *src, unsigned long n)
 {
 MD5_CTX hash;
 
@@ -300,7 +300,7 @@ MD5_CTX hash;
  * @param src[in]   The input data used to generate the checksum.
  * @param n[in]     Length of data.
  */
-char *md5hash(unsigned char *dst, unsigned char *src, unsigned long n)
+char *md5hash(unsigned char *dst, const unsigned char *src, unsigned long n)
 {
 unsigned char tmp[16];
 	

@@ -1994,3 +1994,6 @@
 - Forgot to commit the REMOTEINC_SPECIALCACHE stuff to config.h which means
   it wasn't actually enabled until now...
 - Fix typo
+- Fix files::shortmotd to by accepted by unrealircd like the docs say it is.
+- Fix remote includes download handling which I broke for remote includes ;-).
+- Recursively add more consts.

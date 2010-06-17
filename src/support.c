@@ -1569,7 +1569,7 @@ int file_exists(char* file)
  * using the specified suffix. The returned value will
  * be of the form <dir>/<random-hex>.<suffix>
  */
-char *unreal_mktemp(char *dir, char *suffix)
+char *unreal_mktemp(const char *dir, const char *suffix)
 {
 	FILE *fd;
 	unsigned int i;
@@ -1641,17 +1641,17 @@ char *unreal_getfilename(char *path)
 /* Returns a consistent filename for the cache/ directory.
  * Returned value will be like: cache/<hash of url>
  */
-char *unreal_mkcache(char *url)
+char *unreal_mkcache(const char *url)
 {
-static char tempbuf[PATH_MAX+1];
-char tmp2[33];
+	static char tempbuf[PATH_MAX+1];
+	char tmp2[33];
 	
 	snprintf(tempbuf, PATH_MAX, "cache/%s", md5hash(tmp2, url, strlen(url)));
 	return tempbuf;
 }
 
 /* Returns 1 if a cached version of the url exists, otherwise 0. */
-int has_cached_version(char *url)
+int has_cached_version(const char *url)
 {
 	return file_exists(unreal_mkcache(url));
 }

@@ -3473,15 +3473,15 @@ int	_test_files(ConfigFile *conf, ConfigEntry *ce)
 			has_motd = 1;
 		}
 		/* files::smotd */
-		else if (!strcmp(cep->ce_varname, "smotd")) 
+		else if (!strcmp(cep->ce_varname, "shortmotd")) 
 		{
 			if (has_smotd)
 			{
 				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "files::smotd");
+					cep->ce_varlinenum, "files::shortmotd");
 				continue;
 			}
-			config_test_openfile(cep, O_RDONLY, 0, "files::smotd", 0, 1);
+			config_test_openfile(cep, O_RDONLY, 0, "files::shortmotd", 0, 1);
 			has_smotd = 1;
 		}
 		/* files::rules */
@@ -9547,20 +9547,27 @@ static void conf_download_complete(const char *url, const char *file, const char
 		add_remote_include(file, url, 0, errorbuf); /* DOWNLOAD FAILED */
 	else
 	{
+		char *urlfile = url_getfilename(url);
+		char *file_basename = unreal_getfilename(urlfile);
+		char *tmp = unreal_mktemp("tmp", file_basename);
+		free(urlfile);
+
 		if (cached)
 		{
-			char *urlfile = url_getfilename(url);
-			char *file = unreal_getfilename(urlfile);
-			char *tmp = unreal_mktemp("tmp", file);
 			unreal_copyfileex(inc->file, tmp, 1);
 #ifdef REMOTEINC_SPECIALCACHE
 			unreal_copyfileex(inc->file, unreal_mkcache(url), 0);
 #endif
 			add_remote_include(tmp, url, 0, NULL);
-			free(urlfile);
 		}
-		else {
-			add_remote_include(file, url, 0, NULL);
+		else
+		{
+			/*
+			  copy/hardlink file to another file because our caller will
+			  remove(file).
+			*/
+			unreal_copyfileex(file, tmp, 1);
+			add_remote_include(tmp, url, 0, NULL);
 #ifdef REMOTEINC_SPECIALCACHE
 			unreal_copyfileex(file, unreal_mkcache(url), 0);
 #endif
