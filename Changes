@@ -1998,3 +1998,4 @@
 - Fix remote includes download handling which I broke for remote includes ;-).
 - Recursively add more consts.
 - Rename configure.in to configure.ac and modernize AC_INIT.
+- Handle bad flags in set::ssl::options better (#0003896).
