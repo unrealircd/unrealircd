@@ -1,12 +1,13 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(src/ircd.c)
+AC_INIT([unrealircd], [3.2.8.1], [http://bugs.unrealircd.org/], [], [http://unrealircd.org/])
+AC_CONFIG_SRCDIR([src/ircd.c])
+AC_CONFIG_HEADER([include/setup.h])
 
 if test "x$enable_dynamic_linking" = "x"; then
 	echo "Please use ./Config instead of ./configure"
 	exit 1
 fi
 
-AC_CONFIG_HEADER(include/setup.h)
 AC_PROG_CC
 if test "$ac_cv_prog_gcc" = "yes"; then
 CFLAGS="$CFLAGS -funsigned-char"

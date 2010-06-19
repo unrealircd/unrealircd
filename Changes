@@ -1997,3 +1997,4 @@
 - Fix files::shortmotd to by accepted by unrealircd like the docs say it is.
 - Fix remote includes download handling which I broke for remote includes ;-).
 - Recursively add more consts.
+- Rename configure.in to configure.ac and modernize AC_INIT.
