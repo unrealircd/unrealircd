@@ -7528,14 +7528,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					tempiConf.ssl_options = 0;
 					for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
 					{
-						for (ofl = _SSLFlags; ofl->name; ofl++)
-						{
-							if (!strcmp(ceppp->ce_varname, ofl->name))
-							{	
-								tempiConf.ssl_options |= ofl->flag;
-								break;
-							}
-						}
+						ofl = config_binary_flags_search(_SSLFlags, ceppp->ce_varname, ARRAY_SIZEOF(_SSLFlags));
+						if (ofl) /* this should always be true */
+							tempiConf.ssl_options |= ofl->flag;
 					}
 					if (tempiConf.ssl_options & SSLFLAG_DONOTACCEPTSELFSIGNED)
 						if (!tempiConf.ssl_options & SSLFLAG_VERIFYCERT)
@@ -7543,7 +7538,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				}	
 				
 			}
-#endif
+#endif /* USE_SSL */
 		}
 		else 
 		{
@@ -7562,7 +7557,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp, *ceppp;
-	OperFlag 	*ofl = NULL;
 	long		templong;
 	int		tempi;
 	int	    errors = 0;
@@ -8468,21 +8462,13 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				{
 					CheckDuplicate(cep, ssl_options, "ssl::options");
 					for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
-					{
-						for (ofl = _SSLFlags; ofl->name; ofl++)
+						if (!config_binary_flags_search(_SSLFlags, ceppp->ce_varname, ARRAY_SIZEOF(_SSLFlags)))
 						{
-							if (!strcmp(ceppp->ce_varname, ofl->name))
-							{	
-								break;
-							}
+							config_error("%s:%i: unknown SSL flag '%s'",
+								     ceppp->ce_fileptr->cf_filename, 
+								     ceppp->ce_varlinenum, ceppp->ce_varname);
+							errors ++;
 						}
-					}
-					if (ofl && !ofl->name)
-					{
-						config_error("%s:%i: unknown SSL flag '%s'",
-							ceppp->ce_fileptr->cf_filename, 
-							ceppp->ce_varlinenum, ceppp->ce_varname);
-					}
 				}	
 				
 			}
