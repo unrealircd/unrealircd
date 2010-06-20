@@ -1999,3 +1999,6 @@
 - Recursively add more consts.
 - Rename configure.in to configure.ac and modernize AC_INIT.
 - Handle bad flags in set::ssl::options better (#0003896).
+- When removing a SHUN, check if users who were blocked by this SHUN are still
+  blocked by another SHUN. Previously, if multiple shuns covered a single user,
+  removing one of these shuns would mark the user as un-SHUN-ed. (#0003906)

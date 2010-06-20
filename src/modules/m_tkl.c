@@ -492,7 +492,8 @@ DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 ** parv[3] = reason
 */
 
-DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type) {
+DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], char* type)
+{
 	TS   secs;
 	int  whattodo = 0;	/* 0 = add  1 = del */
 	TS  i;
@@ -547,7 +548,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 	if (strchr(mask, ' '))
 		return 0;
 
-	/* Check if its a hostmask and legal .. */
+	/* Check if it's a hostmask and legal .. */
 	p = strchr(mask, '@');
 	if (p) {
 		if ((p == mask) || !p[1])
@@ -1045,10 +1046,13 @@ aTKline *_tkl_del_line(aTKline *tkl)
  */
 void _tkl_check_local_remove_shun(aTKline *tmp)
 {
-long i1, i;
-char *chost, *cname, *cip;
-int  is_ip;
-aClient *acptr;
+	long i1, i;
+	char *chost, *cname, *cip;
+	int  is_ip;
+	aClient *acptr;
+
+	aTKline *tk;
+	int keep_shun;
 
 	for (i1 = 0; i1 <= 5; i1++)
 	{
@@ -1076,13 +1080,38 @@ aClient *acptr;
 					    (!match(tmp->hostmask, chost) || !match(tmp->hostmask, cip))
 					    && !match(tmp->usermask, cname))
 					{
-						ClearShunned(acptr);
+						/*
+						  before blindly marking this user as un-shunned, we need to check
+						  if the user is under any other existing shuns. (#0003906)
+						  Unfortunately, this requires crazy amounts of indentation ;-).
+
+						  This enumeration code is based off of _tkl_stats()
+						 */
+						keep_shun = 0;
+						for(tk = tklines[tkl_hash('s')]; tk && !keep_shun; tk = tk->next)
+							if(tk != tmp && !match(tk->usermask, cname))
+							{
+								if ((*tk->hostmask >= '0') && (*tk->hostmask <= '9')
+								    /* the hostmask is an IP */
+								    && (!match(tk->hostmask, chost) || !match(tk->hostmask, cip)))
+									keep_shun = 1;
+								
+								else
+									/* the hostmask is not an IP */
+									if (!match(tk->hostmask, chost) && !match(tk->usermask, cname))
+										keep_shun = 1;
+							}						
+
+						if(!keep_shun)
+						{
+							ClearShunned(acptr);
 #ifdef SHUN_NOTICES
-						sendto_one(acptr,
-						    ":%s NOTICE %s :*** You are no longer shunned",
-						    me.name,
-						    acptr->name);
+							sendto_one(acptr,
+								   ":%s NOTICE %s :*** You are no longer shunned",
+								   me.name,
+								   acptr->name);
 #endif
+						}
 					}
 				}
 		}
