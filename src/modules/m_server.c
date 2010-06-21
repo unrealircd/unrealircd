@@ -791,7 +791,8 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	cptr->serv->up = me.name;
 	cptr->srvptr = &me;
 	cptr->serv->numeric = numeric;
-	cptr->serv->conf = aconf;
+	if (!cptr->serv->conf)
+		cptr->serv->conf = aconf; /* Only set serv->conf to aconf if not set already! Bug #0003913 */
 	if (incoming)
 	{
 		cptr->serv->conf->refcount++;

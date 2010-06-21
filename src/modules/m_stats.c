@@ -531,7 +531,7 @@ int stats_links(aClient *sptr, char *para)
 	}
 #ifdef DEBUGMODE
 	for (acptr = client; acptr; acptr = acptr->next)
-		if (MyConnect(acptr) && IsServer(acptr))
+		if (MyConnect(acptr) && acptr->serv && !IsMe(acptr))
 		{
 			if (!acptr->serv->conf)
 				sendnotice(sptr, "client '%s' (%p) has NO CONF attached (? :P)",
