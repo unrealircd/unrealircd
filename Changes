@@ -2004,3 +2004,4 @@
   removing one of these shuns would mark the user as un-SHUN-ed. (#0003906)
 - Fixed race condition / reference count issue where an outgoing server connect
   would cause the IRCd to crash. Reported by Monk (#0003913).
+- Replaced some coders@lists.unrealircd.org references with bugs.unrealircd.org

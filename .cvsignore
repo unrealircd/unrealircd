@@ -1,6 +1,10 @@
-ircdcron/ircd.cron
-ircdcron/ircdchk
-src/modules/Makefile
 src/ssl.rnd
 src/win32/devel/StackTrace.lib
 src/win32/gnu_regex.lib
+
+Makefile
+config.log
+config.status
+config.settings
+ssl.rnd
+unreal
