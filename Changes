@@ -2006,3 +2006,4 @@
   would cause the IRCd to crash. Reported by Monk (#0003913).
 - Replaced some coders@lists.unrealircd.org references with bugs.unrealircd.org
 - Fixed desynchronized prototype.
+- Fixed a few trivial compilation warnings.

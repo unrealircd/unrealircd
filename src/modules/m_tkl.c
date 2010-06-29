@@ -1486,8 +1486,7 @@ aClient *acptr;
 int spamfilter_check_all_users(aClient *from, aTKline *tk)
 {
 char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64]; /* n!u@h:r */
-char buf[1024];
-int i, matches = 0;
+int matches = 0;
 aClient *acptr;
 
 	for (acptr = client; acptr; acptr = acptr->next)

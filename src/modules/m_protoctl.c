@@ -361,7 +361,7 @@ CMD_FUNC(m_protoctl)
 			if (strlen(servername) > HOSTLEN)
 				servername[HOSTLEN] = '\0';
 
-			for (p = servername; *p; *p++)
+			for (p = servername; *p; p ++)
 			{
 				if (*p == ',')
 				{
