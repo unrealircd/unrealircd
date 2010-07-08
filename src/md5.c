@@ -70,7 +70,7 @@
  * This processes one or more 64-byte data blocks, but does NOT update
  * the bit counters.  There're no alignment requirements.
  */
-static void *body(MD5_CTX *ctx, const void *data, unsigned long size)
+static const void *body(MD5_CTX *ctx, const void *data, unsigned long size)
 {
 	const unsigned char *ptr;
 	MD5_u32plus a, b, c, d;

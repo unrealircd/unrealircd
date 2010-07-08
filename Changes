@@ -2007,3 +2007,10 @@
 - Replaced some coders@lists.unrealircd.org references with bugs.unrealircd.org
 - Fixed desynchronized prototype.
 - Fixed a few trivial compilation warnings.
+- Move configure.ac to the project's root.
+- Separate m4 macros into *.m4 files (it is much easier to run aclocal now).
+- Remove unused DOMAINNAME macro and --with-hostname= options as the DOMAINNAME
+  macro isn't used anywheres and its use shouldn't be encouraged.
+- autogen.sh to bootstrap the buildsystem. We now maintain setup.h with autoheader.
+- --disable-blah now does the opposite of --enable-blah. The same for --with-blah
+  and --without-blah. (This makes Gentoo users happier).
