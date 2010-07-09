@@ -2016,3 +2016,4 @@
   and --without-blah. (This makes Gentoo users happier).
 - Attempt to make up for Windows not having mode_t and not complying to POSIX.
 - Fix references in src/win32 to aMotd to now be to aMotdFile.
+- Fix references to motd and friends in src/win32.

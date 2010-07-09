@@ -84,7 +84,6 @@ void win_map(aClient *, HWND, short);
 extern Link *Servers;
 extern ircstats IRCstats;
 unsigned char *errors = NULL;
-extern aMotdFile *botmotd, *opermotd, *motd, *rules;
 extern VOID WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv);
 extern BOOL IsService;
 void CleanUp(void)
