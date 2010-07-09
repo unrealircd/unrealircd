@@ -84,7 +84,7 @@ void win_map(aClient *, HWND, short);
 extern Link *Servers;
 extern ircstats IRCstats;
 unsigned char *errors = NULL;
-extern aMotd *botmotd, *opermotd, *motd, *rules;
+extern aMotdFile *botmotd, *opermotd, *motd, *rules;
 extern VOID WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv);
 extern BOOL IsService;
 void CleanUp(void)
@@ -573,8 +573,6 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 					break;
 				case IDM_RHMOTD: 
 				{
-					ConfigItem_tld *tlds;
-					aMotd *amotd;
 					MessageBox(NULL, "Rehashing all MOTD and Rules files", "Rehashing", MB_OK);
 					rehash_motdrules();
 					sendto_realops("Rehashing all MOTD and Rules files via the console");
