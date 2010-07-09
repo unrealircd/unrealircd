@@ -21,6 +21,7 @@
 
 #ifndef __setup_include__
 #define __setup_include__
+
 #undef  PARAMH
 #undef  UNISTDH
 #define STRINGH
@@ -55,4 +56,14 @@
 #define NEED_U_INT32_T
 #define PREFIX_AQ
 #define LIST_SHOW_MODES
+
+#ifndef mode_t
+/*
+  Needed in s_conf.c for the third argument of open(3p).
+
+  Should be an int because of http://msdn.microsoft.com/en-us/library/z0kc8e3z(VS.71).aspx
+ */
+#define mode_t int
+#endif
+
 #endif

@@ -2014,3 +2014,4 @@
 - autogen.sh to bootstrap the buildsystem. We now maintain setup.h with autoheader.
 - --disable-blah now does the opposite of --enable-blah. The same for --with-blah
   and --without-blah. (This makes Gentoo users happier).
+- Attempt to make up for Windows not having mode_t and not complying to POSIX.
