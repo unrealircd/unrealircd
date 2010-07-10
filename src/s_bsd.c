@@ -60,12 +60,6 @@ Computing Center and Jarkko Oikarinen";
 #include <stdio.h>
 #include <signal.h>
 #include <fcntl.h>
-#ifdef	AIX
-# include <time.h>
-# include <arpa/nameser.h>
-#else
-# include "nameser.h"
-#endif
 #include "sock.h"		/* If FD_ZERO isn't define up to this point,  */
 #include <string.h>
 #include "proto.h"
