@@ -357,7 +357,8 @@ char* extban_conv_param_nuh_or_extban(char* para)
 #if (USERLEN + NICKLEN + HOSTLEN + 32) > 256
  #error "wtf?"
 #endif
-static char retbuf[256];
+       static char retbuf[256];
+       static char printbuf[256];
 	char* mask;
 	char tmpbuf[USERLEN + NICKLEN + HOSTLEN + 32];
 	char bantype = para[1];
@@ -379,7 +380,12 @@ static char retbuf[256];
 		{
 			if (ret = p->conv_param(mask))
 			{
-				ircsprintf(retbuf, "~%c:%s", bantype, ret); /* Make sure our extban prefix sticks. */
+                               /*
+                                * If bans are stacked, then we have to use two buffers
+                                * to prevent ircsprintf() from going into a loop.
+                                */
+                               ircsprintf(printbuf, "~%c:%s", bantype, ret); /* Make sure our extban prefix sticks. */
+                               memcpy(retbuf, printbuf, sizeof(retbuf));
 				return retbuf;
 			}
 			else
