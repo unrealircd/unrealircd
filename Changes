@@ -2023,3 +2023,4 @@
 - Prevent stacked bans (like +b ~q:~q:~n:~c:#chanel) from crashing unrealircd due
   to over-recycling a static buffer. Discovered by syzop.
 - helpop documentation for stacked extbans.
+- Updated doc/coding-guidelines

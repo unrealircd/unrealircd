@@ -1,21 +1,81 @@
-
-Some minor rules about patches & modifications to UnrealIRCd
+Rules about patches & modifications to UnrealIRCd
 
 1. When making a change, always add a small description in Changes, in the
-   BOTTOM
+   BOTTOM. Don't forget to mention the bug# and credit the reporter (if any).
 
 2. If new files are made, it must contain proper copyright headers,
    and a $Id$ somewhere.
 
-3. /*  
-    * These kind of comments
-   */
+3. If you want to submit patches (f.e. if you don't have CVS write access)
+   then submit them to http://bugs.unrealircd.org/ (shortly called bugs*)
+   using "cvs diff -u > patchname". A submission must contain description of
+   what it does, etc.
+
+4. Each bug or feature should have a bug# so people can have a discussion
+   about it. This has a few implications (read!!):
+   * People must report bugs/feature requests to bugs* and not on
+     IRC, e-mail, etc.
+   * That means other people can see the bug# and comment on it. This means
+     discussion is easy to read back for each issue and not spread between
+     several IRC logs.
+     Furthermore, by using the bugtracker instead of directly committing,
+     people could point out that there might be a better way to do things
+     than you originally thought, or it might be that other devs don't like
+     it at all.
+   * If a head coder has 'acknowledged' or 'confirmed' the bug or stated in
+     a comment that it's OK to implement, then a dev may take the issue.
+     The dev should change the status to 'assigned' and work on it, then
+     commit and change it to 'resolved', set 'fixed in version' to next
+     release, and add a comment pasting the relevant Changelog item and the
+     releaseid (.XYZ).
+     Of course other guidelines, like #7 and #8 still apply.
+
+5. Do not commit changes that do not have an associated bug# and have not
+   had any discussion.
+   Small/tiny bugfixes that do not change any functionality, are very
+   unlikely to break anything and definitely don't require any prior
+   discussion may be exempted.
+
+6. Regarding reidenting, restructuring or other code cleanups: please
+   discuss before doing so. The other devs might not agree with you on the
+   particular cleanup you have in mind which would result in another
+   clean-up-the-cleanup commit.
+   You may, however reindent and clean up individual sections when you are
+   working on fixing a particular bug# or implementing a new feature. In fact
+   you're encouraged to do so if the code is confusing without it. However,
+   obey the style of Unreal's code (mostly outlined in this document)
+   and do not introduce yet another (new) style. Also, be careful with doing
+   any cleanup: if you're unsure in any way about the use of something,
+   or something that looks redundant on first sight, then look more
+   carefully... it might indeed be useless and/or redundant, but it might
+   also be a subtle thing that can create great bugs when 'cleaned up'.
+
+7. Prior to a release: be very careful with any restructuring of a subsystem
+   or doing any major commits that may break things. Stuff like this can be
+   perfectly fine if there are many months to go, but are not good to do a
+   month before release. The head coder may impose additional restrictions
+   during such a period.
+
+8. During the Release Candidate stage (from RC1 until the final release)
+   only the head coder may commit directly, all others should ask and
+   present their patch before committing. Yes, even if you are changing only
+   1 line of code or text.
+
+9. UnrealIRCd should compile on all supported operating systems and
+   platforms, using GCC 3 or higher on *NIX, and Visual Studio 2008 or
+   higher on Windows. This means you cannot blindly use all C99 extensions.
+
+10. Coders should test their code before committing.
+
+11. /*  
+     * These kind of comments
+     */
  
    NOT
  
    // These kind of comments
 
-4. 	if (something == 1) 
+12. 	if (something == 1) 
    	{
 		moo; /* comment */
 		/* This does what what what */
@@ -27,23 +87,19 @@ Some minor rules about patches & modifications to UnrealIRCd
 	if (something == 1) {
 	}
 	
-5. Do not touch version.c.SH or version.h, unless you are a head coder
-   if you need a credit in, contact us
+13. Do not touch version.c.SH or version.h, unless you are a head coder
+    if you need a credit in, contact us
    
-6. Patches are submitted to http://bugs.unrealircd.org/
-   using "cvs diff -u > patchname". A submission must contain description of
-   what it does, etc.
- 
-7. Protocol changes must be discussed before making patches for it.
+14. Protocol changes must be discussed before making patches for it.
 
-8. We do NOT rip people off. If we use other people's code, it MUST be
-   properly credited.
+15. We do NOT rip people off. If we use other people's code, it MUST be
+    properly credited.
 
-9. We generally use tabsize 4 and 8. In any case, use tabs and NOT spaces.
-   Some code is old and horrible and has a mix of tabs and spaces used for
-   spacing, that's something we do not want to have ;)
+16. We generally use tabsize 4 and 8. In any case, use tabs and NOT spaces.
+    Some code is old and horrible and has a mix of tabs and spaces used for
+    spacing, that's something we do not want to have ;)
 
-10. Be careful about overflows. As you know a line from a user can never be longer
+17. Be careful about overflows. As you know a line from a user can never be longer
     than 511 (510?) characters, sometimes you can use this knowledge to your
     advantage. Whenever it's not safe or when you don't know what input size you
     can expect, use strlcpy instead of strcpy. Do not ever use strncpy, this is
@@ -53,8 +109,8 @@ Some minor rules about patches & modifications to UnrealIRCd
     use that instead of snprintf. The same can be true for strcpy vs strlcpy in
     some circumstances as well.
 
-11. Speed.  When optimizing or writing code, keep in mind that readability and
-    stability comes first, and after that comes speed. So we'd rather prefer some
+18. Speed.  When optimizing or writing code, keep in mind that readability and
+    stability comes FIRST, and after that comes speed. So we'd rather prefer some
     readable code (even if difficult) over some odd highly optimized routine which
     nobody understands, is difficult to extend, and might have several bugs.
     As mentioned earlier: use ircsprintf, not sprintf (this is because ircsprintf
@@ -62,25 +118,25 @@ Some minor rules about patches & modifications to UnrealIRCd
     Prefer ircsprintf with a bigger buffer over the use of snprintf, since
     ircsprintf is much faster.
 
-12. Initialize your structs and use the proper memory calls.
+19. Initialize your structs and use the proper memory calls.
     In UnrealIRCd we use MyMalloc, MyMallocEx and MyFree (so not malloc/free).
     MyMalloc usually maps to malloc, and MyMallocEx is a malloc plus filling
     the memory area (eg: the struct) with zero's (a la calloc).
     Use of MyMallocEx is suggested. In general you should not be using MyMalloc.
     "But MyMalloc is faster!" you might say. This is true, but using MyMallocEx
-    has very little speed impact and enourmous benefits: people tend to forget
+    has very little speed impact and enormous benefits: people tend to forget
     to set certain fields in the struct to NULL, or much more common: when
     someone later on (eg: 1 year later) adds a field to a struct, there could
     be several places he/she needs to update to make sure x->something is NULL
     after allocating a new struct. Bad idea.
     Little speed impact, huge stability benefits, easy decision ;).
 
-13. Comment your code! This should speak for itself...
+20. Comment your code! This should speak for itself...
     Put comments wherever you think they are needed, to aid any further coders
     with reading your code.. and, in fact, it will aid yourself as well if you
     would look back at your code 2 years later.
     If there's some obscure pitfall, do mention it! Don't just "hope" a next
     author will see it like you did.
 
-14. Use enums whenever possible, rather than #define constants. Besides making
+21. Use enums whenever possible, rather than #define constants. Besides making
     things more clean, it also aids debugging.
