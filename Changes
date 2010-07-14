@@ -2024,3 +2024,5 @@
   to over-recycling a static buffer. Discovered by syzop.
 - helpop documentation for stacked extbans.
 - Updated doc/coding-guidelines
+- Fixed some odd behavior with SVSMODE and +z/-z, reported by TehRes (#0003498),
+  fixed a strange SVSMODE +d <non-number> bug where it would act as a +x too.

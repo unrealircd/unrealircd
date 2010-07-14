@@ -514,10 +514,8 @@ char *xtok = show_change ? TOK_SVS2MODE : TOK_SVSMODE;
 				goto setmodex;
 			case 'd':
 				if (parv[3] && isdigit(*parv[3]))
-				{
 					acptr->user->servicestamp = strtoul(parv[3], NULL, 10);
-					break;
-				}
+				break;
 			case 'x':
 				if (what == MODE_DEL)
 				{
@@ -550,6 +548,10 @@ char *xtok = show_change ? TOK_SVS2MODE : TOK_SVSMODE;
 						sendto_serv_butone_token_opt(NULL, OPT_VHP, acptr->name,
 							MSG_SETHOST, TOK_SETHOST, "%s", acptr->user->virthost);
 				}
+				goto setmodex;
+			case 'z':
+				/* Setting and unsetting user mode 'z' remotely is not supported */
+				break;
 			default:
 				setmodex:
 				for (i = 0; i <= Usermode_highest; i++)
