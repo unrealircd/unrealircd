@@ -2026,3 +2026,7 @@
 - Updated doc/coding-guidelines
 - Fixed some odd behavior with SVSMODE and +z/-z, reported by TehRes (#0003498),
   fixed a strange SVSMODE +d <non-number> bug where it would act as a +x too.
+- The patch from #0003888 made ./Config favor the curl in /usr, even if it
+  was not compiled with c-ares, which is clearly a bad idea as then the
+  entire IRCd can hang for several seconds or more...
+  We now check if they support asynch DNS, and skip them if they don't.

@@ -535,7 +535,7 @@ if [ "$CRYPTOIRCD" = "1" ] ; then
 TEST="$SSLDIR"
 echo ""
 echo "If you know the path to OpenSSL on your system, enter it here. If not"
-echo "leave this blank"
+echo "leave this blank (in most cases it will be detected automatically)."
 echo $n "[$TEST] -> $c"
     read cc
 if [ -z "$cc" ] ; then
@@ -657,7 +657,7 @@ if [ "$REMOTEINC" = "1" ] ; then
 
 
 	INSTALLCURL="0"
-        if [ "$CURLDIR" = "" ]; then
+        if [ "x$CURLDIR" = "x" ]; then
 	        # There is no reason to support this:
 	        if [ -d "/usr/local/include/curl" ]; then
 		    CURLDIR="/usr/local"
@@ -670,12 +670,31 @@ if [ "$REMOTEINC" = "1" ] ; then
                 if [ -d "/usr/share/unreal-curl" ]; then
                         CURLDIR="/usr/share/unreal-curl"
                 fi
+
+                GOTASYNC=0
+                if [ "x$CURLDIR" != "x" ]; then
+                  # Check if it's of any use: a curl without async dns (cares) hangs the entire ircd..
+                  # normally this is done in ./configure but now we're forced to do it also here..
+                  GOTASYNC="`$CURLDIR/bin/curl-config --features|grep AsynchDNS|wc -l`"
+                  if [ "$GOTASYNC" != "1" ]; then
+                          PREVCURLDIR="$CURLDIR"
+                          CURLDIR=""
+                  fi
+                fi
+                
                 # Second, use the local curl if it exists (overrides above)
                 if [ -d "$HOME/curl" ]; then
                         CURLDIR="$HOME/curl"
                 fi
+                
+                # Need to output it here, as the HOME check from above may cause this to be no longer relevant.
+                if [ "x$CURLDIR" = "x" -a "$GOTASYNC" != "1" ]; then
+                	echo "Curl library was found in $PREVCURLDIR, but it does not support Asynchronous DNS (not compiled with c-ares)"
+                	echo "so it's of no use to us."
+                fi
+                	
         fi
-        if [ "$CURLDIR" = "" ]; then
+        if [ "x$CURLDIR" = "x" ]; then
         	# Still empty?
         	TEST=""
                 while [ -z "$TEST" ] ; do
