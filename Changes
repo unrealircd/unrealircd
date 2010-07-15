@@ -2030,3 +2030,4 @@
   was not compiled with c-ares, which is clearly a bad idea as then the
   entire IRCd can hang for several seconds or more...
   We now check if they support asynch DNS, and skip them if they don't.
+- Remove extraneous `I' from configure.ac, run ./autogen.sh. (#3930)

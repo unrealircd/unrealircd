@@ -436,7 +436,7 @@ configuration files])],
 	[AC_DEFINE([DEFAULT_PERMISSIONS], [0600], [The default permissions for configuration files. Set to 0 to prevent unrealircd from calling chmod() on the files.])]) 
 AC_ARG_WITH(dpath, [AS_HELP_STRING([--with-dpath=path],[Specify the path where configuration files are stored])],
 	[AC_DEFINE_UNQUOTED([DPATH], ["$withval"], [Define the location of the configuration files])
-	I	IRCDDIR="$withval"],
+		IRCDDIR="$withval"],
 	[AC_DEFINE_UNQUOTED([DPATH], ["`pwd`"], [Define the location of the configuration files])
 		IRCDDIR="`pwd`"])
 
