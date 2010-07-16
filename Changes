@@ -2036,3 +2036,5 @@
   incompatible. If the self-compiled curl version is (too) outdated, then we
   now suggest to rename it and have the installer re-download and compile
   it automatically. This avoids some potential crashes.
+- Give more clear error to users who use ``make custommodule'' without
+  MODULEFILE. (#3935)
