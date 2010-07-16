@@ -107,7 +107,7 @@ AC_DEFUN([CHECK_LIBCURL],
 		[
 			dnl Attempt one: Linux sed
 			XCURLLIBS="`echo "$CURLLIBS"|sed -r 's/(@<:@^ @:>@+ @<:@^ @:>@+ )(@<:@^ @:>@+ @<:@^ @:>@+ )(.+)/\1\3/g' 2>/dev/null`"
-			AS_IF([test x"$XCURLLIBS" = x],
+			AS_IF([test "x$XCURLLIBS" = "x"],
 			[
 				dnl Attempt two: FreeBSD (and others?) sed
 				XCURLLIBS="`echo "$CURLLIBS"|sed -E 's/(@<:@^ @:>@+ @<:@^ @:>@+ )(@<:@^ @:>@+ @<:@^ @:>@+ )(.+)/\1\3/g' 2>/dev/null`"
@@ -117,6 +117,9 @@ AC_DEFUN([CHECK_LIBCURL],
 				])
 			])
 			CURLLIBS="$XCURLLIBS"
+
+			IRCDLIBS_CURL_CARES="$CARES_LIBS"
+			CFLAGS_CURL_CARES="$CARES_CFLAGS"
 		])
 		
 		dnl Make sure that linking against cURL works rather than letting the user
@@ -126,7 +129,10 @@ AC_DEFUN([CHECK_LIBCURL],
 
 		AC_MSG_CHECKING([curl_easy_init() in $CURLLIBS])
 		LIBS_SAVEDA="$LIBS"
-		LIBS="$IRCDLIBS"
+		CFLAGS_SAVEDA="$CFLAGS"
+
+		LIBS="$IRCDLIBS $IRCDLIBS_CURL_CARES"
+		CFLAGS="$CFLAGS $CFLAGS_CURL_CARES"
 		AC_LINK_IFELSE(
 		    [
 			AC_LANG_PROGRAM(
@@ -138,6 +144,7 @@ AC_DEFUN([CHECK_LIBCURL],
 			AC_MSG_FAILURE([You asked for libcURL (remote includes) support, but it can't be found at $enable_curl])
 		])
 		LIBS="$LIBS_SAVEDA"
+		CFLAGS="$CFLAGS_SAVEDA"
 
 		URL="url.o"
 		AC_SUBST(URL)

@@ -496,7 +496,6 @@ AC_ARG_WITH(system-tre, [AS_HELP_STRING([--with-system-tre], [Use the system tre
 AC_ARG_WITH(system-cares, [AS_HELP_STRING([--with-system-cares], [Use the system c-ares (at least version 1.6.0) package instead of bundled c-ares, discovered using pkg-config])], [], [with_system_cares=no])
 CHECK_SSL
 CHECK_ZLIB
-CHECK_LIBCURL
 AC_ARG_ENABLE(dynamic-linking, [AS_HELP_STRING([--disable-dynamic-linking], [Make the IRCd statically link with shared objects rather than dynamically (noone knows if disabling dynamic linking actually does anything or not)])],
 	[enable_dynamic_linking=$enableval], [enable_dynamic_linking="yes"])
 AS_IF([test $enable_dynamic_linking = "yes"],
@@ -638,6 +637,7 @@ dnl use pkg-config for system c-ares:
 PKG_CHECK_MODULES([CARES], libcares >= 1.6.0)
 ])
 
+CHECK_LIBCURL
 
 AC_OUTPUT(Makefile src/modules/Makefile unreal ircdcron/ircdchk)
 chmod 0700 unreal

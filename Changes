@@ -2038,3 +2038,4 @@
   it automatically. This avoids some potential crashes.
 - Give more clear error to users who use ``make custommodule'' without
   MODULEFILE. (#3935)
+- Support compiling with a bundled c-ares again, the hacky way. (#3931)
