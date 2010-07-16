@@ -2031,3 +2031,8 @@
   entire IRCd can hang for several seconds or more...
   We now check if they support asynch DNS, and skip them if they don't.
 - Remove extraneous `I' from configure.ac, run ./autogen.sh. (#3930)
+- Added some checks in ./Config which (often) ensures that the self-compiled
+  curl version is new enough and is not using a c-ares which is binary
+  incompatible. If the self-compiled curl version is (too) outdated, then we
+  now suggest to rename it and have the installer re-download and compile
+  it automatically. This avoids some potential crashes.

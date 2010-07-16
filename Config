@@ -685,6 +685,47 @@ if [ "$REMOTEINC" = "1" ] ; then
                 # Second, use the local curl if it exists (overrides above)
                 if [ -d "$HOME/curl" ]; then
                         CURLDIR="$HOME/curl"
+                        
+                        # Check if it's recent enough...
+                        $CURLDIR/bin/curl-config --checkfor 7.21.0
+                        if [ "$?" != 0 ]; then
+                        	echo ""
+                        	echo "Your self-compiled CURL library in $CURLDIR is slightly outdated."
+                        	echo "This probably means you had the library from a previous installation of UnrealIRCd."
+                        	echo "Because previous versions may be linked to a previous version to c-ares which"
+                        	echo "were not ABI compatible it is highly recommended to remove the version"
+                        	echo "and recompile it. We now have an automatic downloader and installer to compile"
+                        	echo "and install curl for you (in $CURLDIR). You can choose to do so in the question"
+                        	echo "after this one."
+                        	TEST=""
+                                while [ -z "$TEST" ] ; do
+                                    TEST="Yes"
+	                            echo "Shall I rename $CURLDIR to $CURLDIR.old so it can be rebuild later on?"
+                                    echo $n "[$TEST] -> $c"
+                                    read cc
+                                    if [ -z "$cc" ] ; then
+                                        cc=$TEST
+                                    fi
+                                    case "$cc" in
+                                        [Yy]*)
+                                            rm -rf $CURLDIR.old
+                                            mv $CURLDIR $CURLDIR.old
+                                            CURLDIR=""
+                                            GOTASYNC=1
+                                            # wow the GOTASYNC=1 is hackish, but we need to prevent the error from later on
+                                            ;;
+                                        [Nn]*)
+                                            echo "Uh, ok... I hope you know what you are doing..."
+                                            echo ""
+                                            ;;
+                                        *)
+                                            echo ""
+                                            echo "You must enter either Yes or No"
+                                            TEST=""
+                                            ;;
+                                    esac
+                                done
+                        fi
                 fi
                 
                 # Need to output it here, as the HOME check from above may cause this to be no longer relevant.
