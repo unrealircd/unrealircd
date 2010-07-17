@@ -2044,3 +2044,4 @@
   and it was always enabled.
 - Initialize ARG parameter properly in ./Config, otherwise everything fails.
 - Fixed similar bug like nospoof with ./Config, but now with prefixaq.
+- Same for IPv6

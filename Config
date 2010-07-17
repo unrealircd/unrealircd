@@ -65,8 +65,8 @@ fi
 if [ "$REMOTEINC" = "1" ] ; then
 ARG="$ARG--enable-libcurl=$CURLDIR "
 fi
-if [ "$INET6" = "1" ] ; then
-ARG="$ARG--enable-inet6 "
+if [ "$INET6" != "1" ] ; then
+ARG="$ARG--disable-inet6 "
 fi
 if [ "$PREFIXAQ" != "1" ]; then
 ARG="$ARG--disable-prefixaq "
