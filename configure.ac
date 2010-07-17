@@ -322,7 +322,7 @@ fi
 
 dnl This check doesn't need to be in ./configure, we can
 dnl write the sourcecode to actually handle the return value
-dnl of setrlimit if necessary...
+dnl of setrlimit if necessary... -- ohnobinki
 AC_CACHE_CHECK([if we can set the core size to unlimited], [ac_cv_force_core], [
 AC_TRY_RUN([
 #include <sys/time.h>
@@ -446,9 +446,7 @@ AC_ARG_WITH(fd-setsize, [AS_HELP_STRING([--with-fd-setsize=size], [Specify the m
 AC_DEFINE_UNQUOTED([MAXCONNECTIONS], [$ac_fd], [Set to the max connections you want])
 
 dnl It would be nice if this could just respect --bindir like every other
-dnl program does someday...
-dnl Also, there's no reason to call unrealircd ``ircd'' when there are so many other
-dnl IRCds out there ;-)
+dnl program does someday... -- ohnobinki
 AC_ARG_WITH(spath, [AS_HELP_STRING([--with-spath],[Specify the location of the executable])],
 	[AC_DEFINE_UNQUOTED([SPATH], ["$withval"], [Define the location of the executable])
 		BINDIR="$withval"],
