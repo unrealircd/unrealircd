@@ -45,8 +45,8 @@ if [ "$DISABLEEXTBANSTACKING" = "1" ]; then
 	ARG="$ARG--with-disable-extendedban-stacking ";
 fi
 fi
-if [ "$NOSPOOF" = "1" ] ; then
-ARG="$ARG--enable-nospoof "
+if [ "$NOSPOOF" != "1" ] ; then
+ARG="$ARG--disable-nospoof "
 fi
 if [  "$CRYPTOIRCD" = "1" ] ; then
 if test x"$SSLDIR" = "x" ; then

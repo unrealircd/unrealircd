@@ -2039,3 +2039,6 @@
 - Give more clear error to users who use ``make custommodule'' without
   MODULEFILE. (#3935)
 - Support compiling with a bundled c-ares again, the hacky way. (#3931)
+- The configure.ac change silently changed the nospoof parameter in
+  ./configure. This meant that the answer to NOSPOOF in ./Config was ignored
+  and it was always enabled.
