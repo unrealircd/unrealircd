@@ -2043,3 +2043,4 @@
   ./configure. This meant that the answer to NOSPOOF in ./Config was ignored
   and it was always enabled.
 - Initialize ARG parameter properly in ./Config, otherwise everything fails.
+- Fixed similar bug like nospoof with ./Config, but now with prefixaq.

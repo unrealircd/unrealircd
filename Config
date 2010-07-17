@@ -68,8 +68,8 @@ fi
 if [ "$INET6" = "1" ] ; then
 ARG="$ARG--enable-inet6 "
 fi
-if [ "$PREFIXAQ" = "1" ]; then
-ARG="$ARG--enable-prefixaq "
+if [ "$PREFIXAQ" != "1" ]; then
+ARG="$ARG--disable-prefixaq "
 fi
 ARG="$ARG--with-listen=$LISTEN_SIZE "
 ARG="$ARG--with-dpath=$DPATH "
