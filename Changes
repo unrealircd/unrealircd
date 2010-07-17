@@ -2042,3 +2042,4 @@
 - The configure.ac change silently changed the nospoof parameter in
   ./configure. This meant that the answer to NOSPOOF in ./Config was ignored
   and it was always enabled.
+- Initialize ARG parameter properly in ./Config, otherwise everything fails.

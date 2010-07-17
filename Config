@@ -20,7 +20,7 @@
 
 
 RUN_CONFIGURE () {
-ARG=""
+ARG=" "
 # Do this even if we're not in advanced mode
 if [ "$SHOWLISTMODES" = "1" ] ; then
 	ARG="$ARG--with-showlistmodes "
