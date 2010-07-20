@@ -125,7 +125,8 @@ AC_DEFUN([CHECK_LIBCURL],
 		dnl Make sure that linking against cURL works rather than letting the user
 		dnl find out after compiling most of his program. ~ohnobinki
 		IRCDLIBS="$IRCDLIBS $CURLLIBS"
-		CFLAGS="$CFLAGS $CURLCFLAG -DUSE_LIBCURL"
+		CFLAGS="$CFLAGS $CURLCFLAG"
+		AC_DEFINE([USE_LIBCURL], [], [Define if you have libcurl installed to get remote includes and MOTD support])
 
 		AC_MSG_CHECKING([curl_easy_init() in $CURLLIBS])
 		LIBS_SAVEDA="$LIBS"
@@ -218,11 +219,10 @@ AS_IF([test $enable_ziplinks != "no"],
 		if test -f "$dir/include/zlib.h"; then
 			AC_MSG_RESULT(found in $zlibdir)
 			found_zlib="yes";
-			if test "$zlibdir" = "/usr" ; then
-				CFLAGS="$CFLAGS -DZIP_LINKS";
-			else
-				CFLAGS="$CFLAGS -I$zlibdir/include -DZIP_LINKS";
+			if test "$zlibdir" != "/usr" ; then
+				CFLAGS="$CFLAGS -I$zlibdir/include";
 			fi
+			AC_DEFINE([ZIP_LINKS], [], [Define if you have zlib and want zip links support.])
 		break
 		fi
 	done

@@ -352,8 +352,18 @@
 /* Define if you have the <unistd.h> header file. */
 #undef UNISTDH
 
+/* Define if you have libcurl installed to get remote includes and MOTD
+   support */
+#undef USE_LIBCURL
+
 /* Define if you want to allow SSL connections */
 #undef USE_SSL
+
+/* Define if you have zlib and want zip links support. */
+#undef ZIP_LINKS
+
+/* Define if you are compiling unrealircd on Sun's (or Oracle's?) Solaris */
+#undef _SOLARIS
 
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const

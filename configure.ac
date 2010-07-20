@@ -516,19 +516,17 @@ int main() {
 exit(0);
 }
 ], AC_MSG_RESULT([yes]), [
+# must be passed on the commandline to avoid a ``warning, you redefined something''
 FD_SETSIZE="-DFD_SETSIZE=$ac_fd"
 AC_MSG_RESULT(no)
 ])
 AC_SUBST([FD_SETSIZE])
+
 case `uname -s` in
-*SunOS*)
-CFLAGS="$CFLAGS -D_SOLARIS"
-IRCDLIBS="$IRCDLIBS -lresolv "
-;;
-*solaris*)
-CFLAGS="$CFLAGS -D_SOLARIS"
-IRCDLIBS="$IRCDLIBS -lresolv "
-;;
+	*SunOS*|*solaris*)
+		AC_DEFINE([_SOLARIS], [], [Define if you are compiling unrealircd on Sun's (or Oracle's?) Solaris])
+		IRCDLIBS="$IRCDLIBS -lresolv "
+		;;
 esac
 
 dnl c-ares needs PATH_SEPARATOR set or it will

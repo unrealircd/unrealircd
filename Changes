@@ -2045,3 +2045,6 @@
 - Initialize ARG parameter properly in ./Config, otherwise everything fails.
 - Fixed similar bug like nospoof with ./Config, but now with prefixaq.
 - Same for IPv6
+- Now define _SOLARIS, USE_LIBCURL, and ZIP_LINKS in setup.h instead
+  of the Makefiles. This means better automatic rebuilds if the latter
+  settings change.

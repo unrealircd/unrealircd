@@ -599,6 +599,8 @@ LIBOBJS
 URL
 CARES_LIBS
 CARES_CFLAGS
+PKG_CONFIG_LIBDIR
+PKG_CONFIG_PATH
 PKG_CONFIG
 TRE_LIBS
 TRE_CFLAGS
@@ -707,6 +709,8 @@ LIBS
 CPPFLAGS
 CPP
 PKG_CONFIG
+PKG_CONFIG_PATH
+PKG_CONFIG_LIBDIR
 TRE_CFLAGS
 TRE_LIBS
 CARES_CFLAGS
@@ -1377,6 +1381,10 @@ Some influential environment variables:
               you have headers in a nonstandard directory <include dir>
   CPP         C preprocessor
   PKG_CONFIG  path to pkg-config utility
+  PKG_CONFIG_PATH
+              directories to add to pkg-config's search path
+  PKG_CONFIG_LIBDIR
+              path overriding pkg-config's built-in search path
   TRE_CFLAGS  C compiler flags for TRE, overriding pkg-config
   TRE_LIBS    linker flags for TRE, overriding pkg-config
   CARES_CFLAGS
@@ -6170,11 +6178,12 @@ $as_echo_n "checking for zlib... " >&6; }
 			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: found in $zlibdir" >&5
 $as_echo "found in $zlibdir" >&6; }
 			found_zlib="yes";
-			if test "$zlibdir" = "/usr" ; then
-				CFLAGS="$CFLAGS -DZIP_LINKS";
-			else
-				CFLAGS="$CFLAGS -I$zlibdir/include -DZIP_LINKS";
+			if test "$zlibdir" != "/usr" ; then
+				CFLAGS="$CFLAGS -I$zlibdir/include";
 			fi
+
+$as_echo "#define ZIP_LINKS /**/" >>confdefs.h
+
 		break
 		fi
 	done
@@ -6469,6 +6478,7 @@ if ac_fn_c_try_compile "$LINENO"; then :
 $as_echo "yes" >&6; }
 else
 
+# must be passed on the commandline to avoid a ``warning, you redefined something''
 FD_SETSIZE="-DFD_SETSIZE=$ac_fd"
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
@@ -6476,18 +6486,21 @@ $as_echo "no" >&6; }
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 
+
 case `uname -s` in
-*SunOS*)
-CFLAGS="$CFLAGS -D_SOLARIS"
-IRCDLIBS="$IRCDLIBS -lresolv "
-;;
-*solaris*)
-CFLAGS="$CFLAGS -D_SOLARIS"
-IRCDLIBS="$IRCDLIBS -lresolv "
-;;
+	*SunOS*|*solaris*)
+
+$as_echo "#define _SOLARIS /**/" >>confdefs.h
+
+		IRCDLIBS="$IRCDLIBS -lresolv "
+		;;
 esac
 
 export PATH_SEPARATOR
+
+
+
+
 
 
 
@@ -6603,7 +6616,6 @@ $as_echo "yes" >&6; }
 $as_echo "no" >&6; }
 		PKG_CONFIG=""
 	fi
-
 fi
 if test "x$with_system_tre" = "xno"; then :
 
@@ -6684,6 +6696,8 @@ fi
 
 
 if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
         _pkg_short_errors_supported=yes
@@ -6707,9 +6721,10 @@ installed software in a non-standard prefix.
 
 Alternatively, you may set the environment variables TRE_CFLAGS
 and TRE_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" "$LINENO" 5
+See the pkg-config man page for more details." "$LINENO" 5
 elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
 	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error "The pkg-config script could not be found or is too old.  Make sure it
@@ -6727,7 +6742,7 @@ else
 	TRE_LIBS=$pkg_cv_TRE_LIBS
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
-	:
+
 fi
 
 fi
@@ -6830,6 +6845,8 @@ fi
 
 
 if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
         _pkg_short_errors_supported=yes
@@ -6853,9 +6870,10 @@ installed software in a non-standard prefix.
 
 Alternatively, you may set the environment variables CARES_CFLAGS
 and CARES_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" "$LINENO" 5
+See the pkg-config man page for more details." "$LINENO" 5
 elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
 	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error "The pkg-config script could not be found or is too old.  Make sure it
@@ -6873,7 +6891,7 @@ else
 	CARES_LIBS=$pkg_cv_CARES_LIBS
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
-	:
+
 fi
 
 fi
@@ -6963,7 +6981,10 @@ fi
 fi
 
 						IRCDLIBS="$IRCDLIBS $CURLLIBS"
-		CFLAGS="$CFLAGS $CURLCFLAG -DUSE_LIBCURL"
+		CFLAGS="$CFLAGS $CURLCFLAG"
+
+$as_echo "#define USE_LIBCURL /**/" >>confdefs.h
+
 
 		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking curl_easy_init() in $CURLLIBS" >&5
 $as_echo_n "checking curl_easy_init() in $CURLLIBS... " >&6; }
