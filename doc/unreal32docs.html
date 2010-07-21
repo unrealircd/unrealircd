@@ -45,15 +45,6 @@ English |
   available at <a href="http://www.vulnscan.org/UnrealIRCd/unreal32docs.html">http://www.vulnscan.org/UnrealIRCd/unreal32docs.html</a>
   and a FAQ at <a href="http://www.vulnscan.org/UnrealIRCd/faq/" TARGET="_blank">http://www.vulnscan.org/UnrealIRCd/faq/</a>.
 </p>
-<p><b>Compatible Browsers: </b><br>
-<ul>
-<li>Opera 6.02
-<li>Microsoft Internet Explorer 6.X / 5.5
-<li>Netscape Navigator 6.X
-<li>Mozilla 1.2.X
-<li>Lynx (to a point)
-</ul>
-</p>
 <p><font size="+2"><b>INDEX / TABLE OF CONTENTS</b></font><br>
   1. <a href="#IntroductionNotes">Introduction & Notes</a><br>
   ---1.1. <a href="#notesonolder">Notes on upgrading/mixing 3.1.x -&gt; 3.2</a><br>
@@ -313,8 +304,8 @@ because otherwise you will not understand concepts such as 'cloaking', 'snomasks
    so <i>/helpop</i> becomes <i>/helpop ?</i> and 
    <i>/helpop chmodes</i> becomes <i>/helpop ?chmodes</i> etc..</p></div>
 
-<p><font size="+2"><b>3.6 - Oper access levels</b></font><a name="feature_operaccesslevels"></a></p><div class="desc">
-<p>There are several oper levels in UnrealIRCd and you can add additional rights (like to use /gline) to
+<p id="feature_operaccesslevels"><font size="+2"><b>3.6 - Oper access levels</b></font></p><div class="desc">
+<p>There are several <a href="#operblock_flags">oper levels</a> in UnrealIRCd and you can add additional rights (like to use /gline) to
    each of them, that way you can give each oper the privileges they need.</p>
 <p>This is controlled by the oper flags in the oper block, see the oper block for more information.</p></div>
 
@@ -943,8 +934,8 @@ listen *:6601 {
 <p>listen *:8067;<br>
   listen 213.12.31.126:6667;<br>
   listen *:6660-6669;</p></div>
-<p><font class="block_section">4.7 - </font><font class="block_name">Oper Block</font>
-   <font class="block_recommended">RECOMMENDED</font> <font class="block_old">(Previously known as the O:Line)</font><a name="operblock"></a><div class="desc">
+<p><font class="block_section">4.7 - </font><font id="operblock" class="block_name">Oper Block</font>
+   <font class="block_recommended">RECOMMENDED</font> <font class="block_old">(Previously known as the O:Line)</font><div class="desc">
 </p>
 <p>
 <pre>oper &lt;name&gt; {
@@ -969,18 +960,47 @@ listen *:6601 {
 <p>The oper block allows you to assign IRC Operators for your server. The <b>oper::</b> 
   specifies the login name for the /oper. The <b>oper::from::userhost</b> is a user@host 
   mask that the user must match, you can specify more than one hostmask by creating 
-  more than one oper::from::userhost. The <b>oper::password</b> is the password the user 
-  must specify, oper::password:: allows you to specify an authentication method 
-  for this password, valid auth-types are crypt, md5, and sha1, ripemd-160. If 
-  you want to use a plain-text password leave this sub-block out.</p>
-<p>Please note that BOTH the login name and password are case sensitive</p>
+  more than one oper::from::userhost.
+</p>
+<p id="operblock_password">The <b>oper::password::</b> is the password the oper must specify.
+  <b>oper::password::auth-type</b> allows you to specify an authentication method 
+  for this password. Don't specify <b>oper::password::auth-type</b> for plaintext password.
+  Valid auth-types are <tt>crypt</tt>, <tt>md5</tt>, <tt>sha1</tt>, <tt>ripemd160</tt>,
+  and <tt>sslclientcert</tt>. Specifying any one of these types means that the
+  value of <b>oper::password::</b> is a hash generated with
+  <a href="#cmd_mkpasswd">mkpasswd</a>.
+</p>
+<p id="operblock_password_sslclientcert">
+  <tt>sslclientcert</tt> is an exceptional auth-type. When this is
+  chosen as the auth-type, <b>oper::password::</b> should be a file
+  path (relative to unrealIRCd's installation directory). The file
+  should be a PEM-encoded SSL certificate (the public certificate, not
+  a key). This specifies that only an IRC client that
+  <ol>
+    <li>is connected using SSL</li>
+    <li>presented the matching client certficate when connecting</li>
+    <li>has access to the private key associated with the certficiate file</li>
+  </ol>
+  may connect. Of course, this feature requires that unrealIRCd be
+  compiled with SSL support. Also, as any SSL certificate's associated
+  key is much longer than a normal human's password and much more
+  random, this is the securest authentication option. To oper
+  up when you have specified a client SSL certificate as the oper's
+  password, just ensure that the client is set up correctly and issue
+  <pre>/oper &lt;name&gt; :</pre>. The <tt>sslclientcert</tt>
+  auth-type may also be used
+  for <a href="#linkblock_passwordreceive">link::password-receive</a>
+  to secure <a href="#linkblock">link block</a>s.
+  </ol>
+</p>
+<p>Please note that BOTH the password and login name are case sensitive.</p>
 <p>The <b>oper::class</b> directive specifies the name of a preexisting (appears before 
   this in the config file) class name that the oper block will use.</p>
 <p>The <b>oper::flags</b> directive has two formats. If you wish to use the old style 
   oper flags i.e., OAa, you use the flags &lt;flags&gt; method, if you want to 
   use the new style,i.e., services-admin, then you use the flags { &lt;flag&gt;; 
   } method. Below is a list of all the flags (in both formats) and what they do.</p>
-<table width="75%" border="1">
+<table width="75%" border="1" id="operblock_flags">
   <tr> 
     <td width="10%"><div align="center"><b>Old Flag</b></div></td>
     <td width="16%"><div align="center"><b>New Flag</b></div></td>
@@ -1908,8 +1928,8 @@ ulines {
 	stats.mynetwork.com;
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.31 - </font><font class="block_name">Link Block</font>
-   <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as C/N/H:Lines)</font><a name="linkblock"></a>
+<p id="linkblock"><font class="block_section">4.31 - </font><font class="block_name">Link Block</font>
+   <font class="block_optional">OPTIONAL</font> <font class="block_old">(Previously known as C/N/H:Lines)</font>
 </p><div class="desc">
 <p>Syntax:<br>
 <pre>
@@ -1959,10 +1979,13 @@ link &lt;server-name&gt; {
 <p><b>password-connect</b><br>
   The password used for connecting to the remote server, must be plain-text.
  </p>
-<p><b>password-receive</b><br>
-  The password used for validating incoming links, can be encrypted (valid methods 
-  are crypt, md5, sha1,  ripemd-160). You can leave the auth-type parameter out to
-  just use plain-text. Often this password is the same as your password-connect.
+<p id="linkblock_passwordreceive"><b>password-receive</b><br> The password used for validating
+  incoming links. This may be encrypted in the same manner
+  as <a href="#operblock_password"><b>oper::password</b></a>. It may,
+  notably, be set up to use
+  the <a href="#operblock_password_sslclientcert"><tt>sslclientcert</tt></a>
+  auth-type. In fact, this is strongly recommended as it is infinitely
+  more resilient against brute-force attacks.
 </p>
 <p><b>hub vs leaf</b><br>
   A hub has multiple servers linked to it, a leaf has only one link... to you. 
@@ -3363,12 +3386,20 @@ to get more information on a command.</p>
   </tr>
   <tr> 
     <td height="36">addline &lt;text&gt;<br></td>
-    <td>Allows you to add lines to the unrealircd.conf<br></td>
+    <td>Appends the specified text to unrealircd.conf. You must load the m_addline
+      module to use this command since unrealircd-3.2.9.<br></td>
     <td>IRCop</td>
   </tr>
-  <tr> 
-    <td height="36">mkpasswd &lt;password&gt;<br></td>
-    <td>Will encrypt a clear text password to add it to the unrealircd.conf<br></td>
+  <tr id="cmd_mkpasswd"> 
+    <td height="36">mkpasswd &lt;auth-type&gt; &lt;password&gt;<br></td>
+    <td>Will encrypt &lt;password&gt; using the &lt;auth-type&gt; hashing method. Available hash methods:
+      <ul>
+	<li>md5</li>
+	<li>sha1      [<em>requires SSL</em>]</li>
+	<li>ripemd160 [<em>requires SSL</em>]</li>
+	<li>crypt     [<em>Windows support requires SSL</em>]</li>
+      </ul>
+<br></td>
     <td>IRCop</td>
   </tr>
   <tr> 
@@ -3502,13 +3533,14 @@ kind of shared directory. And for backups, make sure they get the correct permis
 (it happens quite frequently everything is secured fine but there's a backup.tar.gz lying 
 around readable by everyone).<br>
 <br>
-You also want to use encrypted passwords wherever possible, if you compile with OpenSSL 
+You also want to use <a href="#passwords" title="Password Types">encrypted passwords</a> wherever possible, if you compile with OpenSSL 
 support (which you do, since you are concerned with security, right?) then I suggest to 
 use <i>sha1</i> or <i>ripemd160</i> password encryption, else use <i>md5</i>. Also if 
 you still have encrypted (oper) blocks left from Unreal3.2.1 or before I suggest you to 
 re-enrypt these (just re-run /mkpasswd), because 3.2.1 introduced some considerable 
 anti-crack improvements (basically a 14x slowdown of active cracks, and making 
-stored-plain-ciphertext cracks impossible).<br>
+stored-plain-ciphertext cracks impossible).
+<br>
 Still, do note that this is just 'yet another layer of security', since if you have weak 
 passwords they can still be cracked relatively easily and if someone manages to get your 
 configfile there are usually other interesting things in it that may aid an attacker, 
