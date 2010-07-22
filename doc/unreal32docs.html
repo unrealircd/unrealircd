@@ -973,7 +973,7 @@ listen *:6601 {
 <p id="operblock_password_sslclientcert">
   <tt>sslclientcert</tt> is an exceptional auth-type. When this is
   chosen as the auth-type, <b>oper::password::</b> should be a file
-  path (relative to unrealIRCd's installation directory). The file
+  path (relative to UnrealIRCd's installation directory). The file
   should be a PEM-encoded SSL certificate (the public certificate, not
   a key). This specifies that only an IRC client that
   <ol>
@@ -981,7 +981,7 @@ listen *:6601 {
     <li>presented the matching client certficate when connecting</li>
     <li>has access to the private key associated with the certficiate file</li>
   </ol>
-  may connect. Of course, this feature requires that unrealIRCd be
+  may connect. Of course, this feature requires that UnrealIRCd be
   compiled with SSL support. Also, as any SSL certificate's associated
   key is much longer than a normal human's password and much more
   random, this is the securest authentication option. To oper
@@ -2616,7 +2616,7 @@ AU). Requests to these servers are sent in parallel, fastest reply wins.</p>
 You don't need to use a <a href="#tldblock">TLD block</a> to specify default locations for your MOTDs and rules files. This block controls default settings for those in addition to the pidfile and irc.tune file. Anything not specified here will default to the value documented in <a href="#addtlfiles">Additional Files</a>.
 </p>
 <p>
-Relative pathnames will be interpreted relative to unrealIRCD's root directory which is normally the directory containing <tt>unrealircd.conf</tt>. This block may be used to facilitate running more than one IRCd out of the same directory/root. In that case, you should at least specify multiple pidfiles and tunefiles&mdash;one for each server.
+Relative pathnames will be interpreted relative to UnrealIRCd's root directory which is normally the directory containing <tt>unrealircd.conf</tt>. This block may be used to facilitate running more than one IRCd out of the same directory/root. In that case, you should at least specify multiple pidfiles and tunefiles&mdash;one for each server.
 </p>
 <p>Syntax:<br>
 <pre>
@@ -3394,10 +3394,10 @@ to get more information on a command.</p>
     <td height="36">mkpasswd &lt;auth-type&gt; &lt;password&gt;<br></td>
     <td>Will encrypt &lt;password&gt; using the &lt;auth-type&gt; hashing method. Available hash methods:
       <ul>
+	<li>crypt     [<em>Windows support requires SSL</em>]</li>
 	<li>md5</li>
 	<li>sha1      [<em>requires SSL</em>]</li>
 	<li>ripemd160 [<em>requires SSL</em>]</li>
-	<li>crypt     [<em>Windows support requires SSL</em>]</li>
       </ul>
 <br></td>
     <td>IRCop</td>

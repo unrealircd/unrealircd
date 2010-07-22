@@ -2048,8 +2048,10 @@
 - Now define _SOLARIS, USE_LIBCURL, and ZIP_LINKS in setup.h instead
   of the Makefiles. This means better automatic rebuilds if the latter
   settings change.
-- Remove browser compatibility listing from HTML docs.
-- Added information about ``oper::password::auth-type sslclientcert''
-  and the same for link::password-receive::auth-type.
-- A little bit more of interlinking and using id="" instead of <a
-  name="" />
+- Updated unreal32docs:
+  - Remove browser compatibility listing.
+  - Added information about ``oper::password::auth-type sslclientcert''
+    and the same for link::password-receive::auth-type.
+  - A little bit more of interlinking and using id="" instead of <a
+    name="" />
+  - Some minor tweaks
