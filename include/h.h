@@ -193,7 +193,7 @@ extern int is_chanowner(aClient *, aChannel *);
 #ifndef DISABLE_EXTBAN_STACKING
 extern int ban_check_mask(aClient *, aChannel *, char *, int, int);
 extern int extban_is_ok_nuh_extban(aClient *, aChannel *, char *, int, int, int);
-extern char* extban_conv_param_nuh_extban(char *);
+extern char* extban_conv_param_nuh_or_extban(char *);
 #endif
 extern Ban *is_banned(aClient *, aChannel *, int);
 extern Ban *is_banned_with_nick(aClient *, aChannel *, int, char *);

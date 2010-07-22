@@ -275,6 +275,23 @@ char *ban = banin + 3;
 #endif
 }
 
+/* a ban that affects JOINs only */
+int extban_modej_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type)
+{
+	char *sub_ban;
+
+	if (type != BANCHK_JOIN)
+		return 0;
+
+	sub_ban = banin + 3;
+
+#ifdef DISABLE_STACKED_EXTBANS
+	return extban_is_banned_helper(sub_ban);
+#else
+	return ban_check_mask(sptr, chptr, sub_ban, type, 0);
+#endif
+}
+
 #ifndef DISABLE_STACKED_EXTBANS
 /** General is_ok for n!u@h stuff that also deals with recursive extbans.
  */
@@ -452,6 +469,17 @@ void extban_init(void)
 	req.is_ok = extban_is_ok_nuh_extban;
 #endif
 	req.is_banned = extban_modeq_is_banned;
+	ExtbanAdd(NULL, req);
+
+	memset(&req, 0, sizeof(ExtbanInfo));
+	req.flag = 'j';
+#ifdef DISABLE_STACKED_EXTBANS
+	req.conv_param = extban_conv_param_nuh;
+#else
+	req.conv_param = extban_conv_param_nuh_or_extban;
+#endif
+	req.is_banned = extban_modej_is_banned;
+	req.is_ok = extban_is_ok_nuh_extban;
 	ExtbanAdd(NULL, req);
 
 	memset(&req, 0, sizeof(ExtbanInfo));

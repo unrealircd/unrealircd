@@ -2056,3 +2056,5 @@
     name="" />
   - Some minor tweaks
 - Fix the detection for curl-without-c-ares a little (#0003940).
+- Add an extban of the schema +b ~j:*!*@* which _only_ prevents a user
+  from joining a channel.
