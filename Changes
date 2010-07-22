@@ -2055,3 +2055,4 @@
   - A little bit more of interlinking and using id="" instead of <a
     name="" />
   - Some minor tweaks
+- Fix the detection for curl-without-c-ares a little (#0003940).

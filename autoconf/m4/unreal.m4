@@ -64,9 +64,9 @@ AC_DEFUN([CHECK_LIBCURL],
 		CURLCFLAG="`$CURLCONFIG --cflags`"
 		CURLLIBS="`$CURLCONFIG --libs`"
 		
-		CURLUSESCARES="`echo $CURLLIBS|grep c-ares|wc -l`"
+		CURLUSESCARES="`$CURLCONFIG --features|grep AsynchDNS|wc -l`"
 		AS_IF([test "$CURLUSESCARES" = "0"],
-			[AC_MSG_WARN([cURL is compiled without c-ares support. Your IRCd will possibly stall when REHASHing!])])
+			[AC_MSG_WARN([cURL seems compiled without c-ares support. Your IRCd will possibly stall when REHASHing!])])
 
 		dnl sanity warnings
 		AS_IF([test -z "${CURLLIBS}"],
