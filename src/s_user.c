@@ -460,7 +460,7 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 #ifndef _WIN32			/* This is not windows compatible */
 	u_char *p;
 #ifndef __alpha
-	u_int tmp = ((u_int)target & 0xffff00) >> 8;
+	u_int tmp = ((u_int)(intptr_t)target & 0xffff00) >> 8;
 #else
 	u_int tmp = ((u_long)target & 0xffff00) >> 8;
 #endif

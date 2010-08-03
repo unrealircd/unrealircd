@@ -2060,3 +2060,5 @@
   from joining a channel. (#3192)
 - Fix src/Makefile's lack of depencencies for modules.c, related to
   #3938.
+- Fix a few compiler warnings with some double-casting and another
+  const. (#3939)

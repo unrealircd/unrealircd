@@ -428,7 +428,7 @@ char	*ssl_get_cipher(SSL *ssl)
 {
 	static char buf[400];
 	int bits;
-	SSL_CIPHER *c; 
+	const SSL_CIPHER *c; 
 	
 	buf[0] = '\0';
 	strcpy(buf, SSL_get_version(ssl));

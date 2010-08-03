@@ -1821,8 +1821,7 @@ char	*encode_ip(u_char *ip)
 	else
 	{
 		ia.s_addr = inet_addr(ip);
-		cp = (u_char *)ia.s_addr;
-		b64_encode((char *)&cp, sizeof(struct in_addr), buf, 25);
+		b64_encode((char *)&ia.s_addr, sizeof(struct in_addr), buf, 25);
 	}
 	return buf;
 }
