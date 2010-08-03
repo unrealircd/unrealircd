@@ -123,6 +123,8 @@ ssl.o: ssl.c $(INCLUDES)
 match.o: match.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c match.c
 
+modules.o: modules.c $(INCLUDES)
+
 support.o: support.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c support.c
 
