@@ -6786,7 +6786,7 @@ fi
 
 if test "x$with_system_cares" = "xno"; then :
 
-cares_version="1.6.0"
+cares_version="1.7.3"
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: extracting c-ares resolver library" >&5
 $as_echo "extracting c-ares resolver library" >&6; }
 cur_dir=`pwd`

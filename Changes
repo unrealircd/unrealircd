@@ -2063,3 +2063,5 @@
 - Fix a few compiler warnings with some double-casting and another
   const. (#3939)
 - Define intptr_t in win32's setup.h. (#3939)
+- Upgraded c-ares to 1.7.3. API seems compatible with
+  c-ares-1.6.3. (#3932)
