@@ -66,4 +66,11 @@
 #define mode_t int
 #endif
 
+/*
+  make up for win32 (and win64?) users not being able to run ./configure.
+ */
+#ifndef intptr_t
+#define intptr_t long
+#endif
+
 #endif
