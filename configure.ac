@@ -544,7 +544,7 @@ AC_MSG_RESULT(extracting TRE regex library)
 cur_dir=`pwd`
 cd extras
 dnl remove old tre directory to force a recompile...
-rm -rf tre-$tre_version
+rm -rf tre-$tre_version rege[]xp
 if test "x$ac_cv_path_GUNZIP" = "x" ; then
 	tar xfz tre.tar.gz
 else
@@ -593,8 +593,8 @@ else
 	tar xf c-ares.tar
 fi
 AC_MSG_RESULT(configuring c-ares library)
-cd c-ares-$cares_version
-./configure --prefix=$cur_dir/extras/c-ares || exit 1
+cd c-ares-$cares_version c-ares
+./configure --prefix=$cur_dir/extras/c-ares --disable-shared || exit 1
 AC_MSG_RESULT(compiling c-ares resolver library)
 $ac_cv_prog_MAKER || exit 1
 AC_MSG_RESULT(installing c-ares resolver library)
@@ -604,17 +604,17 @@ AC_SUBST(CARES_CFLAGS)
 CARES_LIBS="-L../extras/c-ares/lib"
 
 dnl Set default library parameters for when pkg-config is not available
-CARESLIBSALT="-lcares"
+CARESLIBSALT="../extras/c-ares/lib/libcares.a"
 case `uname -s` in
-*FreeBSD*)
-CARESLIBSALT="-lcares"
-;;
-*Linux*)
-CARESLIBSALT="-lcares -lrt"
-;;
-*SunOS*)
-CARESLIBSALT="-lcares -lrt"
-;;
+	*FreeBSD*)
+		CARESLIBSALT="$CARESLIBSALT"
+		;;
+	*Linux*)
+		CARESLIBSALT="$CARESLIBSALT -lrt"
+		;;
+	*SunOS*)
+		CARESLIBSALT="$CARESLIBSALT -lrt"
+		;;
 esac
 
 dnl Use pkg-config for c-ares libraries, and if not available use defaults
@@ -624,7 +624,11 @@ if test "x$ac_cv_path_PKGCONFIG" = "x" ; then
 	CARES_LIBS="$CARES_LIBS $CARESLIBSALT"
 else
 	CARES_LIBSPRE="$CARES_LIBS"
-	CARES_LIBS="$CARES_LIBS `$ac_cv_path_PKGCONFIG --static --libs libcares.pc`"
+	dnl the sed expression forces an absolute path to the .a file to be generated
+	dnl because this is what libtool would do. If this wasn't done and /usr/lib*/libcares.so
+	dnl exists, then unrealircd would still try to link against the system c-ares.
+	dnl The [] quotation is needed because the sed expression has [] in it.
+	[CARES_LIBS="$CARES_LIBS `$ac_cv_path_PKGCONFIG --static --libs libcares.pc | sed -e 's,-L\([^ ]\+lib\) -lcares,\1/libcares.a,'`"]
 	if test "$CARES_LIBS" = "$CARES_LIBSPRE " ; then
 		CARES_LIBS="$CARES_LIBS $CARESLIBSALT"
 	fi
