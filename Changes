@@ -2067,3 +2067,4 @@
   c-ares-1.6.0. (#3932)
 - Force compilation with bundled c-ares to statically link using more
   sed hackery in configure.ac.
+- Remove extras/c-ares before each time c-ares is compiled.

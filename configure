@@ -6791,7 +6791,7 @@ cares_version="1.7.3"
 $as_echo "extracting c-ares resolver library" >&6; }
 cur_dir=`pwd`
 cd extras
-rm -rf c-ares-$cares_version
+rm -rf c-ares-$cares_version c-ares
 if test "x$ac_cv_path_GUNZIP" = "x" ; then
 	tar xfz c-ares.tar.gz
 else
@@ -6802,7 +6802,7 @@ else
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: configuring c-ares library" >&5
 $as_echo "configuring c-ares library" >&6; }
-cd c-ares-$cares_version c-ares
+cd c-ares-$cares_version
 ./configure --prefix=$cur_dir/extras/c-ares --disable-shared || exit 1
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: compiling c-ares resolver library" >&5
 $as_echo "compiling c-ares resolver library" >&6; }

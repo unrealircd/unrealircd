@@ -583,7 +583,7 @@ AC_MSG_RESULT(extracting c-ares resolver library)
 cur_dir=`pwd`
 cd extras
 dnl remove old c-ares directory to force a recompile...
-rm -rf c-ares-$cares_version
+rm -rf c-ares-$cares_version c-ares
 if test "x$ac_cv_path_GUNZIP" = "x" ; then
 	tar xfz c-ares.tar.gz
 else
@@ -593,7 +593,7 @@ else
 	tar xf c-ares.tar
 fi
 AC_MSG_RESULT(configuring c-ares library)
-cd c-ares-$cares_version c-ares
+cd c-ares-$cares_version
 ./configure --prefix=$cur_dir/extras/c-ares --disable-shared || exit 1
 AC_MSG_RESULT(compiling c-ares resolver library)
 $ac_cv_prog_MAKER || exit 1
