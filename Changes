@@ -2069,3 +2069,7 @@
   sed hackery in configure.ac.
 - Remove extras/c-ares before each time c-ares is compiled.
 - Uniform naming for 'stacked extbans' in Changelog/etc.
+- Make extended bans documentation more clear by splitting the extbans in
+  two groups: one that specifies ban actions (~q/~n/~j) and one that
+  introduces new criteria (~c/~r). Also added documentation for ~R which
+  does not exist yet, but will soon...

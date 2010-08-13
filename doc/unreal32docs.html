@@ -471,14 +471,28 @@ If you ban *!*@*.303AEBC6.IP you ban *!*@1.2.*<br>
 This information might be helpful to you when deciding how broad a ban should be.<br>
 <br>
 <b>Extended bantypes</b><br>
-Extended bans look like ~[!]&lt;type&gt;:&lt;stuff&gt;. Currently the following types are available:<br>
+Extended bans look like ~&lt;type&gt;:&lt;parameter&gt;.<br>
+They let you ban (or exempt) based on things other than the traditional nick!user@host mask.
+They also provide support for things like 'quieting' users.<br>
+<br>
+These bantypes specify which actions are affected by a ban:<br>
+<br>
 <table border=1>
 <tr><td>type:</td><td>name</td><td>explanation:</td></tr>
 <tr><td>~q</td><td>quiet</td><td>People matching these bans can join but are unable to speak, 
  unless they have +v or higher. <i>Ex: ~q:*!*@blah.blah.com</i></td></tr>
 <tr><td>~n</td><td>nickchange</td><td>People matching these bans cannot change nicks, 
  unless they have +v or higher. <i>Ex: ~n:*!*@*.aol.com</i></td></tr>
-<tr><td>~c</td><td>[prefix]channel</td><td>If the user is in this channel then (s)he is unable to join. 
+<tr><td>~j</td><td>join</td><td>If a user matches this, he may not join the channel.
+ He may perform all other activities if he is already on the channel, such as speaking and changing his nick.
+ <i>Ex: ~j:*!*@*.aol.com</i></td></tr>
+</table>
+<br>
+These bantypes introduce new criteria which can be used:<br>
+<br>
+<table border=1>
+<tr><td>type:</td><td>name</td><td>explanation:</td></tr>
+<tr><td>~c</td><td>channel</td><td>If the user is in this channel then (s)he is unable to join. 
  A prefix can also be specified (+/%/@/&amp;/~) which means that it will only match if the user has
  that rights or higher on the specified channel.
 <i>Ex: +b ~c:#lamers, +e ~c:@#trusted </i></td></tr>
@@ -486,9 +500,18 @@ Extended bans look like ~[!]&lt;type&gt;:&lt;stuff&gt;. Currently the following 
  <i>Ex: ~r:*Stupid_bot_script*</i><br>
  NOTE: an underscore ('_') matches both a space (' ') and an underscore ('_'), so this ban would match 
  'Stupid bot script v1.4'.</td></tr>
+<tr><td>~R</td><td>registered</td><td>If a user has identified to services (usually NickServ)
+  and matches this nickname, then this ban will match. This means this ban is really only useful for ban
+  exemptions (+e).<br>
+  Ex: <i>+e ~R:Nick</i> will allow Nick in the channel, regardless of other bans, if he identified to
+  NickServ and is using the nickname Nick.<br>
+  </td></tr>
 </table>
-These bantypes are also supported in the channel exception list (+e).<br>
-Modules can also add other extended ban types.<br>
+<br>
+You may stack extended bans from the 1st group with the 2nd, such as <i>+b ~q:~c:#lamers</i>, which 
+would quiet all users who have joined #lamers.<br>
+<br>
+Modules can add other extended ban types.<br>
 </p></div>
 
 <p><font size="+2"><b>3.14 - Spamfilter</b></font><a name="feature_spamfilter"></a></p><div class="desc">
