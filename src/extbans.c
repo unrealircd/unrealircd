@@ -297,12 +297,17 @@ int extban_modej_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type
  */
 int extban_is_ok_nuh_extban(aClient* sptr, aChannel* chptr, char* para, int checkt, int what, int what2)
 {
-	char* mask = (para + 3);
-	Extban* p = NULL;
+	char *mask = (para + 3);
+	Extban *p = NULL;
+	int isok;
+	static int extban_is_ok_recursion = 0;
 
 	/* Mostly copied from clean_ban_mask - but note MyClient checks aren't needed here: extban->is_ok() according to m_mode isn't called for nonlocal. */
 	if ((*mask == '~') && mask[1] && (mask[2] == ':'))
 	{
+		if (extban_is_ok_recursion)
+			return 0; /* Fail: more than one stacked extban */
+
 		/* We can be sure RESTRICT_EXTENDEDBANS is not *. Else this extended ban wouldn't be happening at all. */
 		if (what == EXBCHK_PARAM && RESTRICT_EXTENDEDBANS && !IsAnOper(sptr))
 		{
@@ -322,10 +327,11 @@ int extban_is_ok_nuh_extban(aClient* sptr, aChannel* chptr, char* para, int chec
 			return 0; /* Don't add unknown extbans. */
 		}
 		/* Now we have to ask the stacked extban if it's ok. */
-		if (p->is_ok)
-		{
+		extban_is_ok_recursion++;
+		isok = p->is_ok;
+		extban_is_ok_recursion--;
+		if (isok)
 			return p->is_ok(sptr, chptr, mask, checkt, what, what2);
-		}
 	}
 	return 1; /* Either not an extban, or extban has NULL is_ok. Good to go. */
 }
@@ -374,16 +380,41 @@ char* extban_conv_param_nuh_or_extban(char* para)
 #if (USERLEN + NICKLEN + HOSTLEN + 32) > 256
  #error "wtf?"
 #endif
-       static char retbuf[256];
-       static char printbuf[256];
-	char* mask;
+	static char retbuf[256];
+	static char printbuf[256];
+	char *mask;
 	char tmpbuf[USERLEN + NICKLEN + HOSTLEN + 32];
 	char bantype = para[1];
-	char* ret = NULL;
-	Extban* p = NULL;
+	char *ret = NULL;
+	Extban *p = NULL;
+	static int extban_recursion = 0;
 
 	if (para[3] == '~' && para[4] && para[5] == ':')
 	{
+		/* We're dealing with a stacked extended ban.
+		 * Rules:
+		 * 1) You can only stack once, so: ~x:~y:something and not ~x:~y:~z...
+		 * 2) The first item must be an action modifier, such as ~q/~n/~j
+		 * 3) The second item may never be an action modifier, nor have the
+		 *    EXTBOPT_NOSTACKCHILD flag set (for things like a textban).
+		 */
+		 
+		/* Rule #1. Yes the recursion check is also in extban_is_ok_nuh_extban,
+		 * but it's possible to get here without the is_ok() function ever
+		 * being called (think: non-local client). And no, don't delete it
+		 * there either. It needs to be in BOTH places. -- Syzop
+		 */
+		if (extban_recursion)
+			return NULL;
+
+		/* Rule #2 */
+		p = findmod_by_bantype(para[1]);
+		if (p && !(p->options & EXTBOPT_ACTMODIFIER))
+		{
+			/* Rule #2 violation */
+			return NULL;
+		}
+		
 		strncpyzt(tmpbuf, para, sizeof(tmpbuf));
 		mask = tmpbuf + 3;
 		/* Already did restrict-extended bans check. */
@@ -393,16 +424,25 @@ char* extban_conv_param_nuh_or_extban(char* para)
 			/* Handling unknown bantypes in is_ok. Assume that it's ok here. */
 			return para;
 		}
+		if ((p->options & EXTBOPT_ACTMODIFIER) || (p->options & EXTBOPT_NOSTACKCHILD))
+		{
+			/* Rule #3 violation */
+			return NULL;
+		}
+		
 		if (p->conv_param)
 		{
-			if (ret = p->conv_param(mask))
+			extban_recursion++;
+			ret = p->conv_param(mask);
+			extban_recursion--;
+			if (ret)
 			{
-                               /*
-                                * If bans are stacked, then we have to use two buffers
-                                * to prevent ircsprintf() from going into a loop.
-                                */
-                               ircsprintf(printbuf, "~%c:%s", bantype, ret); /* Make sure our extban prefix sticks. */
-                               memcpy(retbuf, printbuf, sizeof(retbuf));
+				/*
+				 * If bans are stacked, then we have to use two buffers
+				 * to prevent ircsprintf() from going into a loop.
+				 */
+				ircsprintf(printbuf, "~%c:%s", bantype, ret); /* Make sure our extban prefix sticks. */
+				memcpy(retbuf, printbuf, sizeof(retbuf));
 				return retbuf;
 			}
 			else
@@ -449,16 +489,29 @@ char *ban = banin+3;
 	return 0;
 }
 
+/** Registered user ban */
+char *extban_modeR_conv_param(char *para)
+{
+static char retbuf[NICKLEN + 4];
+
+	strlcpy(retbuf, para, sizeof(retbuf));
+	if (do_nick_name(retbuf+3) == 0)
+		return NULL;
+	return retbuf;
+}
+
+int extban_modeR_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type)
+{
+char *ban = banin+3;
+
+	if (IsRegNick(sptr) && !strcasecmp(ban, sptr->name))
+		return 1;
+	return 0;
+}
+
 void extban_init(void)
 {
 	ExtbanInfo req;
-
-	memset(&req, 0, sizeof(ExtbanInfo));
-	req.flag = 'c';
-	req.conv_param = extban_modec_conv_param;
-	req.is_banned = extban_modec_is_banned;
-	req.is_ok = extban_modec_is_ok;
-	ExtbanAdd(NULL, req);
 
 	memset(&req, 0, sizeof(ExtbanInfo));
 	req.flag = 'q';
@@ -468,6 +521,7 @@ void extban_init(void)
 	req.conv_param = extban_conv_param_nuh_or_extban;
 	req.is_ok = extban_is_ok_nuh_extban;
 #endif
+	req.options = EXTBOPT_ACTMODIFIER;
 	req.is_banned = extban_modeq_is_banned;
 	ExtbanAdd(NULL, req);
 
@@ -480,6 +534,7 @@ void extban_init(void)
 #endif
 	req.is_banned = extban_modej_is_banned;
 	req.is_ok = extban_is_ok_nuh_extban;
+	req.options = EXTBOPT_ACTMODIFIER;
 	ExtbanAdd(NULL, req);
 
 	memset(&req, 0, sizeof(ExtbanInfo));
@@ -491,13 +546,29 @@ void extban_init(void)
 	req.is_ok = extban_is_ok_nuh_extban;
 #endif
 	req.is_banned = extban_moden_is_banned;
+	req.options = EXTBOPT_ACTMODIFIER;
+	ExtbanAdd(NULL, req);
+
+	memset(&req, 0, sizeof(ExtbanInfo));
+	req.flag = 'c';
+	req.conv_param = extban_modec_conv_param;
+	req.is_banned = extban_modec_is_banned;
+	req.is_ok = extban_modec_is_ok;
+	req.options = EXTBOPT_INVEX;
 	ExtbanAdd(NULL, req);
 
 	memset(&req, 0, sizeof(ExtbanInfo));
 	req.flag = 'r';
 	req.conv_param = extban_moder_conv_param;
 	req.is_banned = extban_moder_is_banned;
-	req.options = EXTBOPT_CHSVSMODE;
+	req.options = EXTBOPT_CHSVSMODE|EXTBOPT_INVEX;
+	ExtbanAdd(NULL, req);
+
+	memset(&req, 0, sizeof(ExtbanInfo));
+	req.flag = 'R';
+	req.conv_param = extban_modeR_conv_param;
+	req.is_banned = extban_modeR_is_banned;
+	req.options = EXTBOPT_INVEX;
 	ExtbanAdd(NULL, req);
 
 	/* When adding new extbans, be sure to always add a prior memset like above

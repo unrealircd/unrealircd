@@ -257,10 +257,11 @@ typedef struct {
 
 #define EXBTYPE_BAN			0 /* a ban */
 #define EXBTYPE_EXCEPT		1 /* an except */
+#define EXBTYPE_INVEX		2 /* an invite exception */
 
 #define EXTBANTABLESZ		32
 
-typedef enum ExtbanOptions { EXTBOPT_CHSVSMODE=0x1 } ExtbanOptions;
+typedef enum ExtbanOptions { EXTBOPT_CHSVSMODE=0x1, EXTBOPT_ACTMODIFIER=0x2, EXTBOPT_NOSTACKCHILD=0x4, EXTBOPT_INVEX=0x8 } ExtbanOptions;
 
 typedef struct {
 	/** extbans module */

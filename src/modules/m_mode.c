@@ -68,6 +68,7 @@ void make_mode_str(aChannel *chptr, long oldm, long oldl, int pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf, char bounce);
 #endif
 static void mode_cutoff(char *s);
+static void mode_cutoff2(aClient *sptr, aChannel *chptr, int *parc_out, char *parv[]);
 
 static int samode_in_progress = 0;
 
@@ -337,7 +338,10 @@ CMD_FUNC(m_mode)
 
 	/* This is to prevent excess +<whatever> modes. -- Syzop */
 	if (MyClient(sptr) && parv[2])
+	{
 		mode_cutoff(parv[2]);
+		mode_cutoff2(sptr, chptr, &parc, parv);
+	}
 
 	/* Filter out the unprivileged FIRST. *
 	 * Now, we can actually do the mode.  */
@@ -362,6 +366,66 @@ unsigned short modesleft = MAXMODEPARAMS * 2; /* be generous... */
 	*s = '\0';
 }
 
+/** Another mode cutoff routine - this one for the server-side
+ * amplification/enlargement problem that happens with bans/exempts/invex
+ * as explained in #2837. -- Syzop
+ */
+static void mode_cutoff2(aClient *sptr, aChannel *chptr, int *parc_out, char *parv[])
+{
+int modes = 0;
+char *s;
+int len, i;
+int parc = *parc_out;
+
+	if (parc-2 <= 3)
+		return; /* Less than 3 mode parameters? Then we don't even have to check */
+
+	/* Calculate length of MODE if it would go through fully as-is */
+	/* :nick!user@host MODE #channel +something param1 param2 etc... */
+	len = strlen(sptr->name) + strlen(sptr->user->username) + strlen(GetHost(sptr)) +
+	      strlen(chptr->chname) + 11;
+	
+	len += strlen(parv[2]);
+
+	if (*parv[2] != '+' && *parv[2] != '-')
+		len++;
+	
+	for (i = 3; parv[i]; i++)
+	{
+		len += strlen(parv[i]) + 1; /* (+1 for the space character) */
+		/* +4 is another potential amplification (per-param).
+		 * If we were smart we would only check this for b/e/I and only for
+		 * relevant cases (not for all extended), but this routine is dumb,
+		 * so we just +4 for any case where the full mask is missing.
+		 * It's better than assuming +4 for all cases, though...
+		 */
+		if (match("*!*@*", parv[i]))
+			len += 4;
+	}
+
+	/* Now check if the result is acceptable... */	
+	if (len < 510)
+		return; /* Ok, no problem there... */
+
+	/* Ok, we have a potential problem...
+	 * we just dump the last parameter... check how much space we saved...
+	 * and try again if that did not help
+	 */
+	for (i = parc-1; parv[i] && (i > 3); i--)
+	{
+		len -= strlen(parv[i]);
+		if (match("*!*@*", parv[i]))
+			len -= 4; /* must adjust accordingly.. */
+		parv[i] = NULL;
+		*parc_out--;
+		if (len < 510)
+			break;
+	}
+	/* This may be reached if like the first parameter is really insane long..
+	 * which is no problem, as other layers (eg: ban) takes care of that.
+	 * We're done...
+	 */
+}
 
 /* bounce_mode -- written by binary
  *	User or server is NOT authorized to change the mode.  This takes care
@@ -1235,6 +1299,29 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  tmpstr = clean_ban_mask(param, what, cptr);
 		  if (BadPtr(tmpstr))
 		     break; /* ignore except, but eat param */
+		  if ((tmpstr[0] == '~') && MyClient(cptr) && !bounce)
+		  {
+		      /* extban: check access if needed */
+		      Extban *p = findmod_by_bantype(tmpstr[1]);
+		      if (p)
+       		      {
+       		        if (!(p->options & EXTBOPT_INVEX))
+				break; /* this extended ban type does not support INVEX */
+       		        
+			if (p->is_ok && !p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_EXCEPT))
+		        {
+		            if (IsAnOper(cptr))
+		            {
+		                /* TODO: send operoverride notice */
+		            } else {
+		                p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS_ERR, what, EXBTYPE_EXCEPT);
+		                break;
+		            }
+		        }
+			if (p->is_ok && !p->is_ok(cptr, chptr, tmpstr, EXBCHK_PARAM, what, EXBTYPE_EXCEPT))
+		            break;
+		     }
+		  }
 		  /* For bounce, we don't really need to worry whether
 		   * or not it exists on our server.  We'll just always
 		   * bounce it. */

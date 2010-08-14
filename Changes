@@ -1827,25 +1827,9 @@
 - set::level-on-join now also supports voice, halfop, protect and owner.
   Requested by katsklaw (#0003852). Partial patch provided by katsklaw and
   morpheus_pl.
-- Added support for "stacked" extbans. Put simply this allows extban combinations
-  such as ~q:~c:#test to only silence users on #test, for example. This feature
-  is enabled by default, but can be disabled during ./Config -advanced. Module
-  support for this feature must note the following:
-  - For is_ok function, the extban can either assign extban_is_ok_nuh_extban, which
-    will deal checking a stacked extban (including checking for restricted extbans),
-    or it can call that function from its own is_ok routine. For the latter case,
-    remember to pass only the mask part of your ban format (ie, don't just pass para as
-    otherwise it'll just call your is_ok again).
-  - For conv_param function, the extban can either assign extban_conv_param_nuh_or_extban,
-    which will automatically call conv_param for a stacked extban, or pretty up a n!u@h mask.
-  - For is_banned, the extban should call ban_check_mask with the mask part of the parameter.
-    This will automatically call is_banned for a stacked extban, or match against a n!u@h. n!u@h
-    is checked against the current user (ie, with the info in the globals ban_ip, etc), so things
-    can get weird if you call this outside a normal ban check.
-  Modules must keep in mind that stacked extban support is not available (and neither are the three
-  functions above) if DISABLE_STACKED_EXTBANS is #defined (this is controled by Config). Modules will
-  not compile/load if they try to use them anyway.
-  This change should not break extban modules, and should need some more extensive testing.
+- Added initial support for "stacked" extbans. Please see the Changelog item
+  further down (250 lines or so) for more information, as it was heavily
+  reworked later on and the API was changed.
 - Misc fix for disabling stacked extbans, should've done stuff in our autoconf
   stuff instead of hacking configure directly :P .
 - Made the timesynch log output more clear and understandable.
@@ -2073,3 +2057,45 @@
   two groups: one that specifies ban actions (~q/~n/~j) and one that
   introduces new criteria (~c/~r). Also added documentation for ~R which
   does not exist yet, but will soon...
+- This is actually an update of earlier code from CVS, but now it works ok:
+- Added support for "stacked" extbans. Put simply this allows extban combinations
+  such as ~q:~c:#test to only silence users on #test, for example. This feature
+  is enabled by default, but can be disabled during ./Config -advanced.
+  This feature was suggested by Shining Phoenix (#0003193), was then coded
+  by aquanight for U3.3, and later on backported and partially redone by Syzop.
+  Module coders:
+  In an extban ~x:~y:something where we call ~x the 1st, and ~y the 2nd extban:
+  Since stacked extbans only makes sense where the 1st one is an action
+  extended ban like ~q/~n/~j, most modules won't have to be changed, as 
+  their extban never gets extended (just like ~c:~q: makes no sense).
+  However, you may still want to indicate in some cases that the extban your
+  module introduces also shouldn't be used as 2nd extban.
+  For example with a textban extban ~T it makes no sense to have ~n:~T.
+  The module can indicate this by setting EXTBOPT_NOSTACKCHILD in
+  the ExtbanInfo struct used by ExtbanAdd().
+  For completeness I note that action modifier extbans are indicated by
+  EXTBOPT_ACTMODIFIER. However, note that we currently assume all such
+  extbans use the extban_is_ok_nuh_extban and extban_conv_param_nuh_or_extban
+  functions. If you don't use these and use EXTBOPT_ACTMODIFIER, then things
+  will go wrong with regards to stack-counting.
+  Module coders should also note that stacked extbans are not available if
+  DISABLE_STACKED_EXTBANS is defined.
+- Added extended ban ~R:<nick>, which only matches if <nick> is a registered
+  user (has identified to services). This is really only useful in ban
+  exemptions, like: +e ~R:Nick would allow Nick to go through all bans if he
+  has identified to NickServ. This is often safer than using +e n!u@h.
+- Added Extended Invex. This is very much like extended bans, in fact it
+  supports some of the same flags. Syntax: +I ~character:mask
+  Currently supported are: ~c (channel), ~r (realname) and ~R (registered).
+  This can be useful when setting a channel invite only (+i) and then
+  setting invite exceptions such as +I ~c:#chan (or even ~c:+#chan), while
+  still being able to ban users.
+  Because action modifiers (~q/~n/~j) make no sense here, extended invex
+  stacking (+I ~a:~b:c) makes no sense either, and is not supported.
+  Suggested by DanPMK (#0002817), parts based on patch from ohnobinki.
+  Module coders: set EXTBOPT_INVEX in the ExtbanInfo struct used by
+  ExtbanAdd() to indicate that your extban may also be used in +I.
+- Invex (+I) now always checks cloaked hosts as well. Just like with bans,
+  it checks them also when the user is not currently cloaked (eg: did -x, or
+  is currently using some VHOST).
+- Fixed client desynch caused by (un)banning, reported by Sephiroth (#2837).
