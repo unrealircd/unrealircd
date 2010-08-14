@@ -2099,4 +2099,3 @@
   it checks them also when the user is not currently cloaked (eg: did -x, or
   is currently using some VHOST).
 - Fixed client desynch caused by (un)banning, reported by Sephiroth (#2837).
-hai frienz
