@@ -1725,6 +1725,9 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->watch_away_notification = 1;
 	i->new_linking_protocol = 1;
 	i->uhnames = 1;
+#ifdef INET6
+	i->default_ipv6_clone_mask = 64;
+#endif /* INET6 */
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,
@@ -2469,6 +2472,9 @@ int	config_run()
 	ConfigCommand	*cc;
 	int		errors = 0;
 	Hook *h;
+#ifdef INET6
+	ConfigItem_allow *allow;
+#endif /* INET6 */
 	for (cfptr = conf; cfptr; cfptr = cfptr->cf_next)
 	{
 		if (config_verbose > 1)
@@ -2491,6 +2497,17 @@ int	config_run()
 			}
 		}
 	}
+#ifdef INET6
+	/*
+	 * transfer default values from set::ipv6_clones_mask into
+	 * each individual allow block. If other similar things like
+	 * this stack up here, perhaps this shoul be moved to another
+	 * function.
+	 */
+	for(allow = conf_allow; allow; allow = (ConfigItem_allow *)allow->next)
+		if(!allow->ipv6_clone_mask)
+			allow->ipv6_clone_mask = tempiConf.default_ipv6_clone_mask;
+#endif /* INET6 */
 
 	close_listeners();
 	listen_cleanup();
@@ -2884,6 +2901,9 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 	int  i, ii = 0;
 	static char uhost[HOSTLEN + USERLEN + 3];
 	static char fullname[HOSTLEN + 1];
+#ifdef INET6
+	short is_ipv4;
+#endif /* INET6 */
 
 	for (aconf = conf_allow; aconf; aconf = (ConfigItem_allow *) aconf->next)
 	{
@@ -2958,16 +2978,27 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 		else
 			strncpyzt(uhost, sockhost, sizeof(uhost));
 		get_sockhost(cptr, uhost);
+#ifdef INET6
+		is_ipv4 = IN6_IS_ADDR_V4MAPPED(&cptr->ip);
+#endif /* INET6 */
+
 		/* FIXME */
 		if (aconf->maxperip)
 		{
 			ii = 1;
 			for (i = LastSlot; i >= 0; i--)
-				if (local[i] && MyClient(local[i]) &&
+				if (local[i] && MyClient(local[i])
 #ifndef INET6
-				    local[i]->ip.S_ADDR == cptr->ip.S_ADDR)
+				    && local[i]->ip.S_ADDR == cptr->ip.S_ADDR)
 #else
-				    !bcmp(local[i]->ip.S_ADDR, cptr->ip.S_ADDR, sizeof(cptr->ip.S_ADDR)))
+				    /*
+				     * match IPv4 exactly and the ipv6
+				     * based on ipv6_clone_mask.
+				     */
+				    && (is_ipv4
+					? !bcmp(local[i]->ip.S_ADDR, cptr->ip.S_ADDR, sizeof(cptr->ip.S_ADDR))
+					: match_ipv6(&local[i]->ip, &cptr->ip, aconf->ipv6_clone_mask)))
+						
 #endif
 				{
 					ii++;
@@ -4780,6 +4811,17 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 			allow->server = strdup(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "redirect-port"))
 			allow->port = atoi(cep->ce_vardata);
+		else if (!strcmp(cep->ce_varname, "ipv6-clone-mask"))
+		{
+#ifdef INET6
+			/*
+			 * If this item isn't set explicitly by the
+			 * user, the value will temporarily be
+			 * zero. Defaults are applied in config_run().
+			 */
+			allow->ipv6_clone_mask = atoi(cep->ce_vardata);
+#endif /* INET6 */
+		}
 		else if (!strcmp(cep->ce_varname, "options"))
 		{
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) 
@@ -4883,6 +4925,30 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 				config_error("%s:%i: allow::maxperip with illegal value (must be 1-65535)",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "ipv6-clone-mask"))
+		{
+			/* keep this in sync with _test_set() */
+			int ipv6mask;
+			ipv6mask = atoi(cep->ce_vardata);
+			if (ipv6mask == 0)
+			{
+				config_error("%s:%d: allow::ipv6-clone-mask given a value of zero. This cannnot be correct, as it would treat all IPv6 hosts as one host.",
+					     cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
+			if (ipv6mask > 128)
+			{
+				config_error("%s:%d: set::default-ipv6-clone-mask was set to %d. The maximum value is 128.",
+					     cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+					     ipv6mask);
+				errors++;
+			}
+			if (ipv6mask <= 32)
+			{
+				config_warn("%s:%d: allow::ipv6-clone-mask was given a very small value.",
+					    cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "hostname"))
@@ -7540,6 +7606,12 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			}
 #endif /* USE_SSL */
 		}
+		else if (!strcmp(cep->ce_varname, "default-ipv6-clone-mask"))
+		{
+#ifdef INET6
+			tempiConf.default_ipv6_clone_mask = atoi(cep->ce_vardata);
+#endif /* INET6 */
+		}
 		else 
 		{
 			int value;
@@ -8472,7 +8544,31 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				}	
 				
 			}
-#endif
+#endif /* USE_SSL */
+		}
+		else if (!strcmp(cep->ce_varname, "default-ipv6-clone-mask"))
+		{
+			/* keep this in sync with _test_allow() */
+			int ipv6mask;
+			ipv6mask = atoi(cep->ce_vardata);
+			if (ipv6mask == 0)
+			{
+				config_error("%s:%d: set::default-ipv6-clone-mask given a value of zero. This cannnot be correct, as it would treat all IPv6 hosts as one host.",
+					     cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
+			if (ipv6mask > 128)
+			{
+				config_error("%s:%d: set::default-ipv6-clone-mask was set to %d. The maximum value is 128.",
+					     cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+					     ipv6mask);
+				errors++;
+			}
+			if (ipv6mask <= 32)
+			{
+				config_warn("%s:%d: set::default-ipv6-clone-mask was given a very small value.",
+					    cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			}
 		}
 		else
 		{

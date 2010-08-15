@@ -2099,3 +2099,9 @@
   it checks them also when the user is not currently cloaked (eg: did -x, or
   is currently using some VHOST).
 - Fixed client desynch caused by (un)banning, reported by Sephiroth (#2837).
+- IPv6 clones detection support (#2321). allow::ipv6-clone-mask determines
+  the number of bits used when comparing two IPv6 addresses to determine if
+  allow::maxperip is exceeded. This allows an admin to recognize that most
+  IPv6 blocks are allocated to individuals, who might each get a /64 IPv6
+  block. set::default-ipv6-clone-mask defaults to 64 and provides default
+  value for the allow blocks.

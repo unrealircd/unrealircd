@@ -1210,6 +1210,9 @@ struct _configitem_allow {
 	ConfigItem_class	*class;
 	struct irc_netmask	*netmask;
 	ConfigFlag_allow	flags;
+#ifdef INET6
+	unsigned short ipv6_clone_mask;
+#endif /* INET6 */
 };
 
 struct _configitem_oper {

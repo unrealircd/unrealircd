@@ -136,6 +136,9 @@ ConfigItem_help 	*Find_Help(char *command);
 int			AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *username);
 int parse_netmask(const char *text, struct irc_netmask *netmask);
 int match_ip(struct IN_ADDR addr, char *uhost, char *mask, struct irc_netmask *netmask);
+#ifdef INET6
+int match_ipv6(struct IN_ADDR *addr, struct IN_ADDR *mask, int bits);
+#endif
 ConfigItem_ban  *Find_ban_ip(aClient *sptr);
 extern MODVAR Link	*Servers;
 void add_ListItem(ListStruct *, ListStruct **);

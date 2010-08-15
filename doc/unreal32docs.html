@@ -849,6 +849,7 @@ allow {
 	class &lt;connection-class&gt;;
 	password &lt;connection-password&gt; { &lt;auth-type&gt;; };
 	maxperip &lt;max-connections-per-ip&gt;;
+	ipv6-clone-mask &lt;number-of-bits&gt;;
 	redirect-server &lt;server-to-forward-to&gt;;
 	redirect-port &lt;port-to-forward-to&gt;;
 	options {
@@ -878,6 +879,16 @@ allow {
 </p>
 <p><b>maxperip</b> (optional, but recommended)<br>
    Allows you to specify how many connections per IP are allowed to this server (ex: maxperip 4;).
+</p>
+<p id="allowblock_ipv6clonemask"><b>ipv6-clone-mask</b>
+  (optional, defaults to <a href="#set_defaultipv6clonemask">set::default-ipv6-clone-mask</a>)<br />
+  This option controls clone detection. If two clients connect from different IPv6 addresses
+  but only the last few bits are different, there is almost a guarantee that both clients
+  are really one person. This option only affects the enforcement of
+  <a href="#allowblock_maxperip">allow::maxperip</a>. For example, if you set this option to
+  128, then each IPv6 address will be considered unique. Because of current IP allocation
+  policies, it is recommended that your most general <a href="#allowblock">allow block</a>
+  use a value of 64.
 </p>
 <p><b>redirect-server</b> (optional)<br>
    If the class is full, redirect users to this server (if clients supports it [mIRC 6 does]).</p>
@@ -2492,6 +2503,12 @@ set {
 <p><font class="set">set::default-server &lt;server-name&gt;;</font><br>
   Defines the name of the default server to tell users to connect to if this server 
   is full.</p>
+<p id="set_defaultipv6clonemask">
+  <font class="set">set::default-ipv6-clone-mask</font><br />
+  The default IPv6 clone detection mask. See
+  <a href="#allowblock_ipv6clonemask">allow::ipv6-clone-mask</a>. The default value for this
+  setting is 64.
+  </p>
 <p id="set-services-server"><font class="set">set::services-server &lt;server-name&gt;;</font><br>
   Specifies the name of the server that the services bots are connected to. Required, 
   set it to something like services.yournet.com if you don't have services.</p>
