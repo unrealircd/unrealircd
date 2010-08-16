@@ -6656,7 +6656,7 @@ $as_echo "no" >&6; }
 fi
 if test "x$with_system_tre" = "xno"; then :
 
-tre_version="0.7.5"
+tre_version="0.8.0"
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: extracting TRE regex library" >&5
 $as_echo "extracting TRE regex library" >&6; }
 cur_dir=`pwd`
@@ -6683,9 +6683,9 @@ $ac_cv_prog_MAKER install || exit 1
 TRE_CFLAGS="-I$cur_dir/extras/regexp/include"
 
 if test "x$ac_cv_path_PKGCONFIG" = "x" ; then
-	TRE_LIBS="-L../extras/regexp/lib -ltre"
+		TRE_LIBS="../extras/regexp/lib/libtre.a"
 else
-	TRE_LIBS=`$ac_cv_path_PKGCONFIG --libs tre.pc`
+				TRE_LIBS=`$ac_cv_path_PKGCONFIG --static --libs tre.pc | sed -e 's,-L\(^ \+lib\) -ltre,\1/libtre.a,'`
 fi
 
 cd $cur_dir

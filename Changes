@@ -2105,3 +2105,6 @@
   IPv6 blocks are allocated to individuals, who might each get a /64 IPv6
   block. set::default-ipv6-clone-mask defaults to 64 and provides default
   value for the allow blocks.
+- Upgrade to tre-0.8.0, adding hack similar to the one for c-ares to
+  ensure that the bundled tre is compiled against even when a system
+  libtre is installed. (#3916)

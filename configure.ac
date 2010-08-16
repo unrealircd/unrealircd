@@ -539,11 +539,12 @@ export PATH_SEPARATOR
 
 AS_IF([test "x$with_system_tre" = "xno"],[
 dnl REMEMBER TO CHANGE WITH A NEW TRE RELEASE!
-tre_version="0.7.5"
+tre_version="0.8.0"
 AC_MSG_RESULT(extracting TRE regex library)
 cur_dir=`pwd`
 cd extras
 dnl remove old tre directory to force a recompile...
+dnl and remove its installation prefix just to clean things up.
 rm -rf tre-$tre_version rege[]xp
 if test "x$ac_cv_path_GUNZIP" = "x" ; then
 	tar xfz tre.tar.gz
@@ -563,9 +564,13 @@ $ac_cv_prog_MAKER install || exit 1
 TRE_CFLAGS="-I$cur_dir/extras/regexp/include"
 AC_SUBST(TRE_CFLAGS)
 if test "x$ac_cv_path_PKGCONFIG" = "x" ; then
-	TRE_LIBS="-L../extras/regexp/lib -ltre"
+	dnl for when pkg-config isn't available
+	TRE_LIBS="../extras/regexp/lib/libtre.a"
 else
-	TRE_LIBS=`$ac_cv_path_PKGCONFIG --libs tre.pc`
+	dnl See c-ares's compilation section for more info on this hack.
+	dnl ensure that we're linking against the bundled version of tre
+	dnl (we only reach this code if linking against the bundled version is desired).
+	TRE_LIBS=`$ac_cv_path_PKGCONFIG --static --libs tre.pc | sed -e 's,-L\([^ ]\+lib\) -ltre,\1/libtre.a,'`
 fi
 AC_SUBST(TRE_LIBS)
 cd $cur_dir
