@@ -2110,3 +2110,4 @@
   libtre is installed. (#3916)
 - Install ircdcron scripts. (#2620)
 - Autogenerate ircdcron/ircd.cron based on ./configure settings.
+- Get rid of any setsockopt(IPV6_V6ONLY) errors in ircd.log (#3944).

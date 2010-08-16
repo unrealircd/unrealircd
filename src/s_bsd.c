@@ -1033,9 +1033,7 @@ void set_sock_opts(int fd, aClient *cptr)
 	 * instead of requiring our users to sysctl.
 	 */
 	opt = 0;
-	if (setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (OPT_TYPE *)&opt,
-	    sizeof(opt)) < 0)
-			report_error("setsockopt(IPV6_V6ONLY) %s:%s", cptr);
+	setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (OPT_TYPE *)&opt, sizeof(opt));
 #endif
 #if  defined(SO_DEBUG) && defined(DEBUGMODE) && 0
 /* Solaris with SO_DEBUG writes to syslog by default */
