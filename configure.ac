@@ -647,6 +647,11 @@ PKG_CHECK_MODULES([CARES], libcares >= 1.6.0)
 
 CHECK_LIBCURL
 
-AC_OUTPUT(Makefile src/modules/Makefile unreal ircdcron/ircdchk)
+AC_CONFIG_FILES([Makefile
+	src/modules/Makefile
+	unreal
+	ircdcron/ircdchk
+	ircdcron/ircd.cron])
+AC_OUTPUT
 chmod 0700 unreal
 chmod 0700 ircdcron/ircdchk

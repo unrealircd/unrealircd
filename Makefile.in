@@ -220,6 +220,9 @@ install: all
 	$(INSTALL) -m 0700 unreal $(IRCDDIR)
 	$(INSTALL) -m 0700 -d $(IRCDDIR)/modules
 	$(INSTALL) -m 0700 src/modules/*.so $(IRCDDIR)/modules
+	$(INSTALL) -m 0700 -d $(IRCDDIR)/ircdcron
+	$(INSTALL) -m 0600 ircdcron/ircd.cron $(IRCDDIR)/ircdcron
+	$(INSTALL) -m 0700 ircdcron/ircdchk $(IRCDDIR)/ircdcron
 	-@if [ ! -f "$(IRCDDIR)/curl-ca-bundle.crt" ] ; then \
 		$(INSTALL) -m 0700 curl-ca-bundle.crt $(IRCDDIR) ; \
 	fi

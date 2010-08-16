@@ -2108,3 +2108,5 @@
 - Upgrade to tre-0.8.0, adding hack similar to the one for c-ares to
   ensure that the bundled tre is compiled against even when a system
   libtre is installed. (#3916)
+- Install ircdcron scripts. (#2620)
+- Autogenerate ircdcron/ircd.cron based on ./configure settings.
