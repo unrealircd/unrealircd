@@ -5964,7 +5964,7 @@ fi
 if test "${with_permissions+set}" = set; then :
   withval=$with_permissions;
 cat >>confdefs.h <<_ACEOF
-#define DEFAULT_PERMISSIONS $withval
+#define DEFAULT_PERMISSIONS 0$withval
 _ACEOF
 
 else

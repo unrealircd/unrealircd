@@ -2112,3 +2112,6 @@
 - Autogenerate ircdcron/ircd.cron based on ./configure settings.
 - Get rid of any setsockopt(IPV6_V6ONLY) errors in ircd.log (#3944).
 - Actually initialize m_starttls when it's included into commands.so.
+- Prepend a `0' to the begining of --with-permission, working around a
+  Mac OS X bug and hiding the fact that chmod()'s params are octal
+  from users. (#3189)

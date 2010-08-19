@@ -435,7 +435,10 @@ AC_ARG_WITH(bufferpool, [AS_HELP_STRING([--with-bufferpool=size],[Specify the si
 	[AC_DEFINE([BUFFERPOOL],[(18 * MAXSENDQLENGTH)], [Set to the bufferpool size you want])])
 AC_ARG_WITH(permissions, [AS_HELP_STRING([--with-permissions=permissions], [Specify the default permissions for
 configuration files])],
-	[AC_DEFINE_UNQUOTED([DEFAULT_PERMISSIONS], [$withval], [The default permissions for configuration files. Set to 0 to prevent unrealircd from calling chmod() on the files.])],
+	dnl We have an apparently out-of-place 0 here because of a MacOSX bug and because
+	dnl we assume that a user thinks that `chmod 0600 blah' is the same as `chmod 600 blah'
+	dnl (#3189)
+	[AC_DEFINE_UNQUOTED([DEFAULT_PERMISSIONS], [0$withval], [The default permissions for configuration files. Set to 0 to prevent unrealircd from calling chmod() on the files.])],
 	[AC_DEFINE([DEFAULT_PERMISSIONS], [0600], [The default permissions for configuration files. Set to 0 to prevent unrealircd from calling chmod() on the files.])]) 
 AC_ARG_WITH(dpath, [AS_HELP_STRING([--with-dpath=path],[Specify the path where configuration files are stored])],
 	[AC_DEFINE_UNQUOTED([DPATH], ["$withval"], [Define the location of the configuration files])
