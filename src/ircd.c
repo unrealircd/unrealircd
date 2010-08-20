@@ -1092,7 +1092,7 @@ int InitwIRCD(int argc, char *argv[])
 			"         giving a cracker root SSH access to your box.\n"
 			"         You should either start UnrealIRCd under a different\n"
 			"         account than root, or set IRC_USER in include/config.h\n"
-			"         to a nonprivileged username and recompile.\n");
+			"         to a nonprivileged username and recompile.\n"); 
 	}
 #endif /* IRC_USER */
 
