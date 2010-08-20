@@ -1081,6 +1081,20 @@ int InitwIRCD(int argc, char *argv[])
 	euid = geteuid();
 	gid = getgid();
 	egid = getegid();
+
+#ifndef IRC_USER
+	if (!euid)
+	{
+		fprintf(stderr,
+			"WARNING: You are running UnrealIRCd as root and it is not\n"
+			"         configured to drop priviliges. This is _very_ dangerous,\n"
+			"         as any compromise of your UnrealIRCd is the same as\n"
+			"         giving a cracker root SSH access to your box. You should\n"
+			"         either set IRC_USER in include/config.h to a nonprivileged\n"
+			"         username or drop priviliges before starting UnrealIRCd\n");
+	}
+#endif /* IRC_USER */
+
 # ifdef	PROFIL
 	(void)monstartup(0, etext);
 	(void)moncontrol(1);

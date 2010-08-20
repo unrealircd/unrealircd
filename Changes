@@ -2115,3 +2115,5 @@
 - Prepend a `0' to the begining of --with-permission, working around a
   Mac OS X bug and hiding the fact that chmod()'s params are octal
   from users. (#3189)
+- Warn users against running UnrealIRCd as root without setting
+  IRC_USER. (#3053 reported by Stealth)
