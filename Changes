@@ -2117,3 +2117,5 @@
   from users. (#3189)
 - Warn users against running UnrealIRCd as root without setting
   IRC_USER. (#3053 reported by Stealth)
+- Remove snomasks upon deopering when it seems like the user shouldn't
+  have snomasks. (#3329)

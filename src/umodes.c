@@ -484,12 +484,32 @@ int umode_delete(char ch, long val)
 	return -1;
 }
 
-/* Simply non-perfect function to remove all oper-snomasks, 
+/**
+ * Simply non-perfect function to remove all oper-snomasks, 
  * it's at least better than manually doing a .. &= ~SNO_BLAH everywhere.
+ *
+ * Also unsets all snomasks and UMODE_SERVNOTICE if it would seem the
+ * user doesn't deserve to have snomask after being deopered. This is
+ * simpler, but hackier, than actually recording whether or not the
+ * user already had some snomasks set before OPERing and then reset
+ * his stuff to that... --binki
  */
 void remove_oper_snomasks(aClient *sptr)
 {
 int i;
+	/*
+	 * See #3329
+	 */
+	if (sptr->umodes & UMODE_SERVNOTICE
+	    && strchr(RESTRICT_USERMODES, 's')
+	    && !(CONN_MODES & UMODE_SERVNOTICE))
+	{
+		sptr->umodes &= ~UMODE_SERVNOTICE;
+		sptr->user->snomask = 0;
+		/* we unset all snomasks, so short-circuit */
+		return;
+	}
+
 	for (i = 0; i <= Snomask_highest; i++)
 	{
 		if (!Snomask_Table[i].flag)
