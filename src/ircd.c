@@ -1089,9 +1089,10 @@ int InitwIRCD(int argc, char *argv[])
 			"WARNING: You are running UnrealIRCd as root and it is not\n"
 			"         configured to drop priviliges. This is _very_ dangerous,\n"
 			"         as any compromise of your UnrealIRCd is the same as\n"
-			"         giving a cracker root SSH access to your box. You should\n"
-			"         either set IRC_USER in include/config.h to a nonprivileged\n"
-			"         username or drop priviliges before starting UnrealIRCd\n");
+			"         giving a cracker root SSH access to your box.\n"
+			"         You should either start UnrealIRCd under a different\n"
+			"         account than root, or set IRC_USER in include/config.h\n"
+			"         to a nonprivileged username and recompile.\n");
 	}
 #endif /* IRC_USER */
 
