@@ -2119,3 +2119,4 @@
   IRC_USER. (#3053 reported by Stealth)
 - Remove snomasks upon deopering when it seems like the user shouldn't
   have snomasks. (#3329)
+- Fix /msg IRC WHOIS response for persons with secure connections. (#3947)

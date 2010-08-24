@@ -383,7 +383,7 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			}
 			if (acptr->umodes & UMODE_SECURE)
 			{
-				sendto_one(sptr, ":IRC PRIVMSG %s :%s is a Secure Connection",
+				sendto_one(sptr, ":IRC PRIVMSG %s :%s is using a Secure Connection",
 					sptr->name, acptr->name);
 			}
 			if (acptr->user->swhois)
