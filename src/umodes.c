@@ -501,6 +501,7 @@ int i;
 	 * See #3329
 	 */
 	if (sptr->umodes & UMODE_SERVNOTICE
+	    && RESTRICT_USERMODES
 	    && strchr(RESTRICT_USERMODES, 's')
 	    && !(CONN_MODES & UMODE_SERVNOTICE))
 	{

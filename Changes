@@ -2120,3 +2120,5 @@
 - Remove snomasks upon deopering when it seems like the user shouldn't
   have snomasks. (#3329)
 - Fix /msg IRC WHOIS response for persons with secure connections. (#3947)
+- Fix segfault by checking if RESTRICT_USERMODES is NULL in the code
+  for bug #3329.
