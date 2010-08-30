@@ -30,7 +30,8 @@ PRE {
 }
 </STYLE>
 <!-- $Id$ -->
-<META content="MSHTML 6.00.2900.2180" name=GENERATOR></HEAD>
+<META content="MSHTML 6.00.2900.2180" name=GENERATOR>
+</HEAD>
 <BODY><A
 href="unreal32docs.html">English</A> | <A
 href="unreal32docs.de.html">German</A> | 
@@ -50,13 +51,16 @@ Turkish
 <BR><BR>
 <DIV align=center><B><FONT size=7>UnrealIRCd</FONT></B><BR><FONT size=4><A
 href="http://www.unrealircd.com/">http://www.unrealircd.com/</A></FONT><BR><FONT
-size=4>Versiyon: 3.2.8</FONT><BR><B>En Son Güncelleme:</B>
-13.07.2007</DIV><BR><B>Head Coders:</B> Stskeeps / codemastr / Syzop /
-Luke<BR><B>Katkýda Bulunanlar:</B> McSkaf / Zogg / NiQuiL / assyrian / chasm 
-/ DrBin /
-llthangel / Griever / nighthawk<BR><B>Dökümantasyon:</B> CKnight^ / 
-Syzop<BR>
-<B>Çeviri:</B> oepidus (tt`), Strathmore (Timaeus) - irc.trsohbet.com<BR>
+size=4>Version: post-3.2.8 (CVS)</FONT><BR><B>En Son Güncelleme:</B>
+2010-05-17</DIV><BR>
+<B>Baþ Kodlayýcý/Devam Ettiren:</b> Syzop<br>
+<b>Kodlayýcýlar:</b> binki<br>
+<b>Önceki Kodlayýcýlar &amp; Katkýda bulunanlar:</b> Stskeeps, codemastr, Luke, aquanight, 
+WolfSage, McSkaf, Zogg,
+NiQuiL,  assyrian,  chasm,  DrBin,  llthangel, Griever,  nighthawk<br> 
+<b><strong>Belgeleme</strong>:</b> CKnight^ (ilk belgeleyen), Syzop (yeniden yazan), codemastr, ve daha çok katkýda bulunanlar<br>
+<B>Önceki Çevirmenler:</B> oepidus (tt`), Strathmore (Timaeus) - irc.trsohbet.com<br>
+<B>Türkçe Çeviri:</B> <a href="mailto:diablo@unrealircd.org">Diablo</a> & <a href="irc://irc.sohbetce.net">irc.sohbetce.net</a><br>
 <P>Bu dökümaný görüntüleyebilmeniz için aþaðýda listelenmiþ olan 
 tarayýcýlardan birine sahip olmanýz gerekir. Güncellenmiþ dökümanlara <A
 href="http://www.vulnscan.org/UnrealIRCd/unreal32docs.tr.html">http://www.vulnscan.org/UnrealIRCd/unreal32docs.tr.html</A>
@@ -65,7 +69,6 @@ de
 <A href="http://www.vulnscan.org/UnrealIRCd/faq/"
 target=_blank>http://www.vulnscan.org/UnrealIRCd/faq/</A>
 adresinden ulaþabilirsiniz. </P>
-<p><font color="red">WARNING: The translation of this document is not up to date, the English version is more recent.</font></p>
 <P><B>Uyumlu Tarayýcýlar: </B><BR>
 <UL>
   <LI>Opera 6.02
@@ -172,7 +175,8 @@ href="#helpblock">Help Bloðu</A><BR>---4.34. <A
 href="#officialchannels">Official Channels Bloðu</A><BR>---4.35. <A
 href="#spamfilter">Spamfilter Bloðu</A><BR>---4.36. <A
 href="#cgiirc">Cgiirc Bloðu</A><BR>---4.37. <A
-href="#setblock">Set Bloðu -=- (networks/unrealircd.conf)</A><BR>5. <A
+href="#setblock">Set Bloðu -=- (networks/unrealircd.conf)</A><BR>---4.38. <A
+href="#filesblock">Dosya Bloðu</A><BR/>5. <A 
 href="#addtlfiles">Ek Dosyalar</A><BR>6. <A
 href="#userchannelmodes">Kullanýcý &amp; Kanal Modlarý</A><BR>7. <A
 href="#useropercommands">Kullanýcý &amp; Oper Komutlarý</A><BR>8. <A
@@ -218,12 +222,14 @@ yayýnlayabilirsiniz. - Copyright (telif Hakký) UnrealIRCd Geliþtirme Grubu
 (Sýkça Sorulan Sorular) kýsmýna GERÇEKTEN göz atýn
 ki bu kýsýmda sorularýnýzýn/sorunlarýnýzýn yaklaþýk olarak %80 'i
 cevaplanmýþtýr/çözülmüþtür. Eðer hala yardýma ihtiyacýnýz varsa,
-irc.ircsystem.net (port 6667) sunucusunda #unreal-support kanalýndan yardým 
+irc.unrealircd.org (port 6667) sunucusunda #unreal-support kanalýndan yardým 
 için
 istekte bulunabilirsiniz. (not: belgeleri ve faq kýsmýný okumuþ olduðunuzu 
 kabul
 ediyoruz ve UnrealIRCd hakkýnda yardým edebiliriz, servisler hakkýnda 
 deðil!).
+Ayrýca forumlarýmýzý kullanabilirsiniz <a href="http://forums.unrealircd.com/"
+TARGET="_blank">http://forums.unrealircd.com</a>. 
 Eðer bir açýk varsa (bug, hata) bunu <A href="http://bugs.unrealircd.org/"
 target=_blank>http://bugs.unrealircd.org/</A> adresine
 bildirin.</P></DIV>
@@ -335,7 +341,7 @@ görülecektir. Bu özellik kullanýcýlarýn, gerçek host/IP’yi
 göremeyeceklerinden,
 birbirlerine saldýrý yapmalarýný engellemeye yardýmcý olur..</P>
 <P>Bu +x kullanýcý modu ile kontrol edilir. (örnek: /mode
-nickiniz +x), ayný zamanda adminler, +x kipini default kipi olarak veya
+nickiniz +x), ayný zamanda adminler, +x kipini varsayýlan kipi olarak veya
 kullanýcýlarýn –x yapamamalarý için belirtebilirler.</P>
 <P>Gizlenmiþ bir host, gizleme (cloaking) modülü tarafýndan
 oluþturulur (en az bir tane yüklenmesi zorunludur), þu an için sadece 1 
@@ -356,7 +362,9 @@ sunucular için ayný olmak zorundadýr. Ayný zamanda gizleme anahtarlarý
 (cloak
 keys) gizli tutulmalýdýr, çünkü gizleme anahtarlarýnýn bilinmesi halinde 
 gerçek
-hostun bulunabilmesi olasýdýr.</P></DIV>
+hostun bulunabilmesi olasýdýr.</P>
+<p>Ýpucu: If you are on *NIX and have to create new cloak keys, you can run './unreal gencloak'  
+in your shell, which will output 3 random strings that you can use.</p></DIV>
 <P><FONT size=+2><B>3.2 - Moduller</B></FONT><A 
 name=feature_modules></A></P>
 <DIV class=desc>
@@ -443,7 +451,7 @@ name=feature_operaccesslevels></A></P>
 <P>UnrealIRCd ‘de birkaç oper seviyesi vardýr ve bunlarýn
 herbirine yetki eklemesi (örneðin /gline kullanma yetkisi gibi) 
 yapabilirsiniz,
-böylelikle her opere ihtiyacý olduðu eriþimi saðlayabilirsiniz.</P>
+böylece her opere ihtiyacý olduðu eriþimi saðlayabilirsiniz.</P>
 <P>Bu oper bloðundaki oper flaglarý ile kontrol edilir.
 Daha fazla bilgi için oper bloðuna bakýn.</P></DIV>
 <P><FONT size=+2><B>3.7 - Oper komutlarý</B></FONT><A 
@@ -704,15 +712,17 @@ name=feature_bantypes></A></P>
 <P><B>Ana bantipleri ve gizlenmiþ
 (cloaked) hostlar</B><BR>UnrealIRCd <I>+b nick!user@host</I> gibi ana 
 bantiplerini
-desteklemektedir.<BR>Ayný zamanda, eðer bir kullanýcý
+desteklemektedir.<BR>
+Ayný zamanda, eðer bir kullanýcý
 'rox-ACB17294.isp.com' gibi bir gizlenmiþ hosta sahipse ve siz
 *!*@rox-ACB17294.isp.com þeklinde bir ban belirtmiþseniz, bu durumda 
 kullanýcý
--x (böylelikle hostu 'dial-123.isp.com' olacaktýr(örneðin)) moduna geçse 
+-x (böylece hostu 'dial-123.isp.com' olacaktýr(örneðin)) moduna geçse 
 dahi
 belirtilen ban hala eþleþecektir. Banlar herzaman gerçek ve gizlenmiþ 
 hostlarla
-eþleþir.<BR>Bununla birlikte IP ban da vardýr (ör :
+eþleþir.<BR>
+Bununla birlikte IP ban da vardýr (ör :
 *!*@128.*).<BR><BR>Gizlenmiþ IP’lere
 ban için birkaç açýklama gereklidir:<BR>Eðer kullanýcýnýn
 IP’si 1.2.3.4 ise gizlenmiþ IP’si 341C6CEC.8FC6128B.303AEBC6.IP 
@@ -723,48 +733,50 @@ ban *!*@1.2.3.* þekline eþdeðerdir.<BR>Eðer
 *!*@*.303AEBC6.IP þeklinde ban atarsanýz bu ban *!*@1.2.* þekline 
 eþdeðerdir.<BR>Bu bilgilendirme atýlacak bir banýn ne kadarlýk bir
 kapsamasý olduðuna karar verirken size yardýmcý 
-olacaktýr.<BR><BR><B>Geniþletilmiþ bantipleri</B><BR>Geniþletilmiþ banlar 
-~[!]&lt;tip&gt;:&lt;parametre&gt;
-þeklindedir. Mevcut tipler:<BR>
-<TABLE border=1>
-  <TBODY>
-  <TR>
-    <TD>tip:</TD>
-    <TD>isim</TD>
-    <TD>açýklama:</TD></TR>
-  <TR>
-    <TD>~q</TD>
-    <TD>quiet</TD>
-    <TD>Bu ban ile eþleþen kullanýcý kanala girebilir
-      ancak +v veya daha yükseðine sahip deðilse konuþamaz. <I
-      >Ör: ~q:*!*@blah.blah.com</I></TD></TR>
-  <TR>
-    <TD>~n</TD>
-    <TD>nickchange</TD>
-    <TD>Bu ban ile eþleþen kullanýcý +v veya daha
-      yükseðine sahip deðilse nick deðiþtiremez. <I>Ör:
-      ~n:*!*@*.aol.com</I></TD></TR>
-  <TR>
-    <TD>~c</TD>
-    <TD>[prefix]channel</TD>
-    <TD>Eðer kullanýcý belirtilen kanalda ise ban konulan
-      kanala giremez. Bununla birlikte burada önek olarak (+/%/@/&amp;/~)
-      belirtilebilir.Önek belirtilirse kanalda belirtilen öneke sahip veya 
-daha
-      yükseðine sahip olan kullanýcý kanala giremez. <I>Ör:
-      +b ~c:#lamers, +e ~c:@#trusted </I></TD></TR>
-  <TR>
-    <TD>~r</TD>
-    <TD>realname</TD>
-    <TD>Eðer kullanýcýnýn realname kýsmý eþleþirse
-      kullanýcý kanala giremez.<BR><I
-      >Ör: ~r:*Stupid_bot_script*</I><BR
-      >NOT: alt çizgi ('_') hem boþluk (' ') hemde ('_') ile
-      eþleþir, bu sebepten bu ban 'Stupid bot script v1.4' ile
-  eþleþecektir.</TD></TR></TBODY></TABLE>Bu ban tipleri ayný zamanda kanal 
-kabul
-modunda da (+e) desteklenmektedir.<BR>Ayný zamanda Moduller
-ile de baþka ban tipleri de eklenebilir.<BR></P></DIV>
+olacaktýr.<BR><BR><b>Geniþletilmiþ ban tipleri</b><br>
+Geniþletilmiþ banlar ~&lt;tip&gt;:&lt;parametre&gt;. þeklindedir.<br>
+nick!user@host haricinde diðer þekillerde ban ve muafiyet eklemenizi saðlar.
+Ayrýca kullanýcýlarý 'quieting' (sakinleþtirmek) gibi þeyleri de destekler.<br>
+<br>
+Bu ban tipleri, hangi hareketlerin bir ban ile etkilendiðini belirtir:<br>
+<br>
+<table border=1>
+<tr><td>tip:</td><td>isim</td><td>açýklama:</td></tr>
+<tr><td>~q</td><td>quiet</td><td>Kullanýcý kanala girebilir fakat yazý yazamaz, 
+ yazabilmesi için +v veya daha yükseði gerekmektedir. <i>Örnek: +bb ~q:*!*@blah.blah.com ~q:nick*!*@*</i></td></tr>
+<tr><td>~n</td><td>nickchange</td><td>Kullanýcý nick deðiþemez, deðiþebilmesi için 
+ +v veya daha yükseði gerekmektedir. <i>Örnek: +bb ~n:*!*@*.aol.com ~n:nick*!*@*</i></td></tr>
+<tr><td>~j</td><td>join</td>
+<td>Eðer bir kullanýcý, bu banla eþleþiyorsa kanala giremez.
+ Eðer kanal içerisinde ise, tüm faaliyetleri yapabilir.Kanal içerisinde konuþabilme, nick deðiþtirme ve /INVITE komutunu kullanabilme gibi.
+ <i>Örnek: +bb ~j:*!*@*.aol.com ~j:nick*!*@*</i></td>
+</tr>
+</table>
+<br>
+Bu ban tipleri kullanýlabilen yeni kriterleri gösterir:<br>
+<br>
+<table border=1>
+<tr><td>tip:</td><td>isim</td><td>açýklama:</td></tr>
+<tr><td>~c</td><td>channel</td><td>Eðer kullanýcý bu kanalda olduðunda diðer kanallara giriþ yapamaz. 
+ Öneki (+/%/@/&amp;/~) olan kullanýcýlar veya daha üst yetkilere sahip olan kullanýcýlar kanala
+ giriþ yapacaklardýr.
+<i>Örnek: +b ~c:#lamers, +e ~c:@#trusted </i></td></tr>
+<tr><td>~r</td><td>realname</td><td>Kullanýcýlarýn realnameleri eþleþiyorsa, diðer kanallara giriþ gerçekleþtiremez.<br>
+ <i>Örnek: ~r:*Stupid_bot_script*</i><br>
+ NOT: ('_') Karakteri (' ') karakterine denk gelir ve dolayýsý ile ('_') karekteri, bu ban 
+ 'Stupid bot script v1.4' ile eþleþir.</td></tr>
+<tr><td>~R</td><td>registered</td><td>Eðer bir kullanýcý kendini servislere tanýtmýþsa
+  (Genellikle NickServ) ve nicki eþleþiyorsa bu ban da eþleþir. Yani bu ban çeþidi yalnýzca ban yollarýnda
+  geçerlidir (+e).<br>
+  Örnek: <i>+e ~R:Nick</i> Nick veya rumuzlu kullanýcýnýn diðer banlarýna bakýlmaksýzýn eðer kendini NickServ'e tanýtmýþsa
+  kanalda bulunmasýna izin verir.<br>
+  </td></tr>
+</table>
+<br>
+Sen 1. gruptan olan banlarý 2. bir grupa yönlendirebilirsin <i>+b ~q:~c:#lamers</i>, yapýlan ban, 'Quiet' olan bütün kullanýcýlarý #lamers kanalýna girmelerini saðlayacaktýr.<br>
+<br>
+Modüllerden baþka ban tipleri de ekleyebilirsiniz.<br>
+</p></div>
 <P><FONT size=+2><B>3.14 - Spamfilter</B></FONT><A 
 name=feature_spamfilter></A></P>
 <DIV class=desc>
@@ -864,8 +876,9 @@ belirtebilirsiniz,
           <TD>Sadece mesaj bloklanýr</TD></TR>
         <TR>
           <TD>dccblock</TD>
-          <TD>Kullanýcý iþaretlenir böylelikle kullanýcý
-            DCC gönderimi yapamaz</TD></TR>
+          <TD>Kullanýcý iþaretlenir böylece kullanýcý
+            DCC gönderimi yapamaz</TD>
+        </TR>
         <TR vAlign=top>
           <TD>viruschan</TD>
           <TD>Bütün kanallardan çýkartýlýr,
@@ -900,11 +913,13 @@ block - - come to irc\..+\..+</I><BR>Burda belirtilen ifade <I>Hi, come to
 irc.blah.net</I> metniyle eþleþecektir.vs..<BR>Ve
 süre/sebep belirtilmiþ bir örnek:<BR><I>/spamfilter add p gline 3h
 Please_go_to_www.viruscan.xx/nicepage/virus=blah Come watch me on my
-webcam</I><BR>Eðer özel mesajda <I>come watch me on my webcam</I> metnine 
+webcam</I><BR>
+Eðer özel mesajda <I>come watch me on my webcam</I> metnine 
 rastlanýrsa
 kullanýcý 3 saat süreliðine belirtilen <I>Please go to
-www.viruscan.xx/nicepage/virus=blah</I>sebebinden dolayý gline'lý olarak
-kalacaktýr .<BR><BR>/spamfilter
+www.viruscan.xx/nicepage/virus=blah</I> sebebinden dolayý gline'lý olarak
+kalacaktýr.<BR>
+<BR>/spamfilter
 komutuyla eklenmiþ spam filtreleri bütün að boyunca geçerlidir. 
 Kullanýcý/kanal
 +G modunda olsun olmasýn muhakkak çalýþacaktýr, sadece operler ve servisler
@@ -920,24 +935,42 @@ href="#spamfilter">burada</A> açýklanmýþtýr.<BR>Örnek:<BR><PRE>spamfilter {
 };</PRE>
 <P></P>
 <P><B>set::spamfilter::ban-time</B>
-spamfilter ile eklenen *line/shun için ban süresinin default deðerini
-deðiþtirebilmenize olanak saðlar.(default deðeri: 1 
-gün)<BR><B>set::spamfilter::ban-reason</B>
-Default deðeri olarak bir sebep belirtmenize olanak saðlar.(default deðeri:
+spamfilter ile eklenen *line/shun için ban süresinin varsayýlan deðerini
+deðiþtirebilmenize olanak saðlar.(varsayýlan deðeri: 1 
+gün)<BR>
+<B>set::spamfilter::ban-reason</B>
+Varsayýlan deðeri olarak bir sebep belirtmenize olanak saðlar.(varsayýlan deðeri:
 'Spam/advertising')<BR><B>set::spamfilter::virus-help-channel</B> belirtilen
-'viruschan' eylemi için bir kanal belirtmenize olanak saðlar. (default:
+'viruschan' eylemi için bir kanal belirtmenize olanak saðlar. (varsayýlan:
 #help)<BR><B>set::spamfilter::virus-help-channel-deny</B> yukarýda
 belirttiðiniz kanala yapýlacak bütün normal giriþleri bloklamanýza olanak
-saðlar.(default deðeri: no)<BR></P></DIV>
+saðlar.(varsayýlan deðeri: no)<BR></p>
+<p> 
+<font size="+1"><B>Yavaþ Spamfilter Algýlama</B></font><a name="feature_spamfilter_slow"></a><br> 
+Bir spamfilter regex, ölçüsüz olduðunda IRCd'i yavaþlatabilir. Bu sadece 
+kullandýðýnýz regexe (nasýl regex motoru ve o kollarýna) baðlýdýr. Bazen çok hýzlýdýr 
+ve UnrealIRCd saniye baþýna onlarýn binlercesini uygulayabilir. Diðerleri aþýrý
+derecede yavaþ olabilir, uygulamasý için bir kaç saniyeyi alablir ve IRCd'i dondurabilir.<br> 
+Buna karþý yardýmcý olmak için, Unreal Yavaþ Spamfilter Algýlama ile gelir: Her spamfilter 
+için, Unreal her çalýþma sýrasýnda çalýþmanýn ne kadar sürdüðünü kontrol 
+eder. Belli bir kez eðik olduðu andan itibaren IRCd uyaracak ve spamfilteri  
+silecektir.<br>
+<b>set::spamfilter::slowdetect-warn</b> ile uyarý yapýlandýrýlýr (varsayýlan: 250ms) 
+ve <b>set::spamfilter::slowdetect-fatal</b> ile otomatik silme yapýlandýrýlýr (varsayýlan: 500ms). 
+Sen her iki yavaþ spamfilter algýlama ayarlarýný devre dýþý býrakmak için 0 (sýfýr) yapabilirsin.<br> 
+Bu özellik þu anda Windows üzerinde kullanýlamaz.<br> 
+</p> 
+</div> 
 <P><FONT size=+2><B>3.15 - CIDR</B></FONT><A name=feature_cidr></A></P>
 <DIV class=desc>
 <P>UnrealIRCd þimdi CIDR (Classless Interdomain Routing)
 özelliðini de desteklemektedir. CIDR IP dizilerine ban atmanýza olanak 
 saðlar.
 Unreal CIDR desteði hem IPv4 hem de IPv6 için geçerlidir. CIDR maskeleri
-allow::ip, oper::from::userhost, ban user::mask, ban ip::mask, except ban::mask,
-ve except throttle::mask ve except throttle (gzline, gline ve shun için) yönergeleri içinde
-kullanýlabilir. Ek olarak yine CIDR maskeleri /kline, /gline, /zline, /gzline ve 
+allow::ip, ban user::mask, ban ip::mask, except ban::mask, except 
+throttle::mask
+ve except tkl::mask (gzline, gline ve shun için) yönergeleri içinde
+kullanýlabilir. Ek olarak yine CIDR maskeleri /kline, /gline, /zline ve 
 /shun
 komutlarý kullanýlýrken de belirtilebilir. Unreal standart IP/bit 
 sözdizimini
@@ -1011,8 +1044,8 @@ seçeneklerin tablosu:<BR>
     <TD>Macarcaya iliþkin karakterler</TD>
     <TD>iso8859-2 (latin2), windows-1250</TD></TR>
   <TR>
-    <TD>polish</TD>
-    <TD>Lehçeye iliþkin karakterler</TD>
+    <TD>polish-iso</TD>
+    <TD>Lehçeye iliþkin karakterler (unutmayýn polish-w1250 daha yaygýndýr!)</TD>
     <TD>iso8859-2 (latin2)</TD></TR>
   <TR>
     <TD>romanian</TD>
@@ -1021,13 +1054,13 @@ seçeneklerin tablosu:<BR>
 iso8859-16</TD></TR>
   <TR>
     <TD><B>latin2</B></TD>
-    <TD>hungarian, polish, romanian karakter gruplarýna
+    <TD>hungarian, polish-iso, romanian karakter gruplarýna
       iliþkin bütün karakterler</TD>
     <TD>iso8859-2 (latin2)</TD></TR>
   <TR>
     <TD>polish-w1250</TD>
     <TD>Lehçeye iliþkin karakterler, windows
-      biçiminde(maalesef iso'ya nazaran daha çok karþýlaþýlýr)</TD>
+      biçiminde</TD>
     <TD>windows-1250</TD></TR>
   <TR>
     <TD>slovak-w1250</TD>
@@ -1122,7 +1155,7 @@ name=feature_cgiirc></A></P>
 <P>UnrealIRCd CGI:IRC baðlantýlarý için host yanýltma
 özelliðini destekler. Bunun manasý belirli CGI:IRC að geçitlerini 
 "güvenilir"
-olarak iþaretleyebilirsiniz böylelikle belirtilen að geçidinden baðlanan
+olarak iþaretleyebilirsiniz böylece belirtilen að geçidinden baðlanan
 kullanýcýlarýn kullandýklarý CGI:IRC að geçidinin sahip olduðu host/ip'si 
 yerine
 kullanýcýlarýn gerçek host/ip'si görülecektir.</P>
@@ -1146,7 +1179,7 @@ platformunda ntpd gibi veya Windowsta zaman senkronizyon servisi gibi. (eðer
 böyle bir yazýlým kullanýrsanýz, Unreal’in zaman senkronizasyon özelliðini 
 devre
 dýþý býrakabilirsiniz).</P>
-<P>UnrealIRCd (default olarak) baþlatýldýðý anda zaman
+<P>UnrealIRCd (varsayýlan olarak) baþlatýldýðý anda zaman
 senkronizyonunu saðlar. Çoklu zaman sunucularýna istek gönderir ve ilk 
 aldýðý
 cevaba göre (en hýzlý olaný) dahili ircd saatini ayarlar (sistem saatini 
@@ -1227,7 +1260,7 @@ alt bloklardan herhangi birini de belirtebilir.</P>
 satýrlýk açýklama<BR>/* 1 veya daha fazla 
 <BR>&nbsp;&nbsp;&nbsp;&nbsp;satýrlýk açýklama */<BR></P>
 <P>Þimdi konfigürasyon dosyasýnýn nasýl iþlediðini
-biliyorsunuz, <I>doc/example.conf</I> dosyasýný UnrealIRCd
+biliyorsunuz, <I>doc/example.tr.conf</I> dosyasýný UnrealIRCd
 'in bulunduðu klasöre (ör: /home/user/Unreal3.2) kopyalayýn ve 
 <I>unrealircd.conf</I> olarak yeniden isimlendirin.
 Konfigürasyon dosyanýzý oluþturmak için bütün blok tipleri ve ayarlamalar 
@@ -1330,7 +1363,7 @@ için çok yüksektir, istemciler (clients) için ise orta bir deðerdir.)</P>
 ne kadar miktarda veri olabileceðini belirler ve bu flood kontrolu için
 kullanýlýr. (bu deðer sadece normal kullanýcýlara uygulanýr, 3000-8000 
 arasýnda
-bir deðeri deneyebilirsiniz, default deðer 8000'dir.).</P>
+bir deðeri deneyebilirsiniz, varsayýlan deðer 8000'dir.).</P>
 <P>Örnekler:<BR><PRE>class clients {
 	pingfreq 90;
 	maxclients 500;
@@ -1359,6 +1392,7 @@ I:Line)</FONT><A name=allowblock></A>
 	class &lt;baðlantý-sýnýfý&gt;;
 	password &lt;baðlantý-þifresi&gt; { &lt;auth-tipi&gt;; };
 	maxperip &lt;ip-baþýna-max-baðlantý&gt;;
+	ipv6-clone-mask &lt;bit-sayýsý&gt;;
 	redirect-server &lt;yönlendirilecek-sunucu&gt;;
 	redirect-port &lt;yönlendirilecek-port&gt;;
 	options {
@@ -1402,6 +1436,13 @@ sýnýfý belirtir. </P>
 <P><B>maxperip</B> (isteðe baðlý,
 ancak önerilir)<BR>Sunucu için IP baþýna nekadar baðlantýya
 izin verileceðini belirtir.(ör: maxperip 4;). </P>
+<p id="allowblock_ipv6clonemask"><b>ipv6-clone-mask</b>
+(isteðe baðlý, varsayýlan <a href="#set_defaultipv6clonemask">set::default-ipv6-clone-mask</a>)<br>
+Bu seçenek clone tespiti denetimi yapar. Eðer 2 kullanýcý farlý IPv6 adreslerle baðlanýrsa, 
+ancak son birkaç bitleri farklýdýr. Neredeyse her iki müþterinin, gerçekten bir kiþi olduðu bir garantisi vardýr. 
+Bu seçenek <a href="#allowblock_maxperip">allow::maxperip</a> sadece uygulamaný etkiler. 
+Eðer bu seçeneði 128 olarak ayarlarsanýz, sonra her IPv6 adresi benzersiz dikkate alýnacaktýr. 
+Güncel IP tahsis politikalarýndan dolayý, <a href="#allowblock">allow block</a> en çok 64 deðeri kullanýlmasý tavsiye edilir.</p> 
 <P><B>redirect-server</B> (isteðe
 baðlý)<BR>Eðer belirtilen sýnýf full ise, kullanýcýlar
 burada belirtilen sunucuya yönlendirilirler.(eðer istemci yazýlýmý da
@@ -1766,7 +1807,7 @@ verir</TD></TR>
       <DIV align=center>can_dccdeny</DIV></TD>
     <TD>/dccdeny ve /undccdeny komutlarýný kullanabilme
       yetkisi verir</TD></TR></TBODY></TABLE>
-<P>Belirli flaglar default olarak diðer flaglarý da
+<P>Belirli flaglar varsayýlan olarak diðer flaglarý da
 verir:</P>
 <TABLE width="59%" border=1>
   <TBODY>
@@ -1923,9 +1964,10 @@ bilgilendirme:</B><BR>OperOverride ile: +ikl modlarýnda olan kanallara
 girebilirsiniz veya banlarý yok sayýp kanallara giriþ yapabilirsiniz (ilk 
 önce
 /invite komutuyla kendinizi davet etmeniz gerekir), bir kanalda kendinizi op
-yapabilirsiniz vs.<BR>can_override oper flagý, oper
+yapabilirsiniz vs.<BR>
+can_override oper flagý, oper
 yetkisini kötüye kullanma giriþimlerinin önüne geçmek için eklenmiþtir. 
-Default
+Varsayýlan
 ayarý olarak can_override flagýný eklemedikçe, hiç bir oper override yapma
 yetkisine sahip deðildir.
 <P></P></DIV>
@@ -2052,7 +2094,7 @@ tutmak için birden fazla log bloðu oluþturabilirsiniz.</P>
     <TD>/kill noticelerini kaydeder</TD></TR>
   <TR>
     <TD>tkl</TD>
-    <TD>*line, shun ve spamfilter
+    <TD>*lines (/kline, /zline, vs), shuns ve spamfilter
       (ekleme/kaldýrma/zamanaþýmý) bilgilerini kaydeder</TD></TR>
   <TR>
     <TD>connects</TD>
@@ -2060,9 +2102,6 @@ tutmak için birden fazla log bloðu oluþturabilirsiniz.</P>
   <TR>
     <TD>server-connects</TD>
     <TD>sunucu baðlantýlarýný/çýkýþlarýný kaydeder</TD></TR>
-  <TR>
-    <TD>kline</TD>
-    <TD>/kline komutunun kullanýmlarýný kaydeder</TD></TR>
   <TR>
     <TD>oper</TD>
     <TD>oper açma denemelerini kaydeder (hem baþarýlý
@@ -2088,7 +2127,6 @@ kaydeder</TD></TR></TBODY></TABLE></P>
 		errors;
 		kills;
 		oper;
-		kline;
 		tkl;
 	};
 };
@@ -2125,12 +2163,12 @@ uyuþmalýdýr.
 Belirttiðiniz hostmaskesine görüntülenecek motd, kýsamotd, opermotd, botmotd 
 ve
 kurallar dosyalarýný sýrasýyla <B>tld::motd</B>, <B>tld::shortmotd</B>, 
-<B>tld::opermotd</B>, <B>tld::botmotd</B>, and <B>tld::rules</B> 
+<B>tld::opermotd</B>, <B>tld::botmotd</B>, ve <B>tld::rules</B> 
 kýsýmlarýnda belirleyebilirsiniz.
 tld::shortmotd, tld::opermotd ve tld::botmotd kýsýmlarý isteðe baðlýdýr. 
 <B>tld::channel</B> kýsmý da isteðe baðlýdýr, bu belirtilen
 hostmaskesine sahip kullanýcýlarýn baðlandýklarý anda girecekleri kanalý
-belirler. Eðer bu belirtilirse default oto giriþ kanalý, belirtilen
+belirler. Eðer bu belirtilirse varsayýlan oto giriþ kanalý, belirtilen
 hostmaskesinde ki kullanýcýlar için geçerli olmayacaktýr. 
 <B>tld::options</B> bloðu ise ek olarak seçenek belirtmenizi
 saðlar, þu an için tek mevcut seçenek ssl seçeneðidir.</P>
@@ -2212,7 +2250,7 @@ da
 kapsadýðýndan çok dikkatli kullanýlmalýdýr.</P>
 <P>Örnek:<BR><PRE>ban ip {
 	mask 192.168.1.*;
-	reason "Get a real ip u lamer!";
+	reason "Gerçek bir IP al.Sen lamer misin!";
 };</PRE>
 <P></P>
 <P></P></DIV>
@@ -2289,19 +2327,19 @@ niyetli scriptleri bloke etmek için tasarlanmýþtýr. <B>ban::mask</B>
 kýsmýnda banlanacak versiyon belirtilir. Bu
 kýsýmda (?), (*), (!) iþaretleri kullanýlabilir. <B>ban::reason</B> kýsmýnda 
 ise ban gerekçesi belirtilir. Ayný
-zamanda <B>ban::action</B> kýsmýnda, <I>kill</I> default deðeri olmak üzere, 
+zamanda <B>ban::action</B> kýsmýnda, <I>kill</I> varsayýlan deðeri olmak üzere, 
 <I>tempshun/shun/kline/zline/gline/gzline</I> eylemlerini de,
 (*@IPADDR) þeklinde uygulanmak üzere belirtebilirsiniz. Burada atýlacak 
 banýn
-süresi set::ban-version-tkl-time kýsmýnda belirtilen deðerdir ve default 
+süresi set::ban-version-tkl-time kýsmýnda belirtilen deðerdir ve varsayýlan 
 deðeri
 1 gündür.</P>
 <P>Örnek:<BR><PRE>ban version {
 	mask "*SomeLameScript*";
-	reason "SomeLameScript contains backdoors";
+	reason "SomeLameScript arka kapýlarý içerir";
 };</PRE><PRE>ban version {
 	mask "*w00tZombie*";
-	reason "I hate those hundreds of zombies";
+	reason "Ben o zombilerin yüzlercesinden nefret ederim";
 	action zline;
 };</PRE>
 <P></P>
@@ -2540,20 +2578,21 @@ yönergesinde belirttiðiniz kanala yönlendirilecektir. Ayný zamanda
 <B>deny::warn</B> yönergesini de ,belirtilen kanala girme
 denendiðinde, operlere uyarý gitmesi için (eðer on olarak belirtirseniz)
 kullanabilirsiniz. </P>
-<P>Örnek</P><PRE>deny channel {
+<P>Örnek</P>
+<PRE>deny channel {
 	channel "#unrealsucks";
-	reason "No it don't!";
+	reason "Hayýr yok!";
 };
 
 deny channel {
 	channel "#*teen*sex*";
-	reason "You == dead";
+	reason "Sen == Ölü";
 	warn on;
 };
 
 deny channel {
 	channel "#operhelp";
-	reason "Our network help channel is #help, not #operhelp";
+	reason "Aðýmýzýn yardým kanalý #help, #operhelp deðil";
 	redirect "#help";
 };</PRE>
 <P></P>
@@ -2787,8 +2826,8 @@ parametresini kullanmayýn. Bu þifre genellikle uzak sunucuya baðlanmak için
 gerekli olan þifre ile aynýdýr. </P>
 <P><B>hub vs leaf</B><BR>Birçok sunucunun linklendiði sunucu bir hubdur, 
 leaf ise
-tek bir linke sahiptir...Bu blokta eðer hub direktifi belirtilmediyse sunucu leaf olarak algýlanýr,
-Ayný zamanda leaf * direktifi belirtilirse de yada leafdepth 1 direktifi belirtilirse de sunucu leaf olarak algýlanýr.</P>
+tek bir linke sahiptir...Bir sunucu ya hubdur, yada leafdir, bu 2 seçeneði
+beraber kullanamazsýnýz. </P>
 <P><B>hub</B> (isteðe baðlý)<BR>hub olarak baðlanacak sunucularýn maskesidir 
 (ör:
 *.my.net). </P>
@@ -2796,10 +2835,7 @@ Ayný zamanda leaf * direktifi belirtilirse de yada leafdepth 1 direktifi belirti
 maskesidir. </P>
 <P><B>leafdepth</B> (isteðe baðlý)<BR>Eðer bu belirtilirse leaf de 
 belirtilmelidir. Belirtilen
-sunucu için sýçrama sayýsýdýr.  Örneðin bu sayý 1 olarak belirtilirse, sunucunun bu bloktaki sunucudan baska
- bir linke sahip olmadýgý bildirilir, eðer 2 olarak belirtilirse bu bloktaki link diðer sunuculara linklenebilir
- ancak linklenilecek sunucular baþka sunuculara linklenemez. 0 ise herhangi bir limit olmadýgý anlamýný taþýr ve
- baþlangýç deðeridir.</P>
+sunucu için sýçrama sayýsýdýr. </P>
 <P><B>class</B><BR>Sunucunun bulunacaðý sýnýftýr (class), genellikle bunun
 için ayrý bir sunucu sýnýfý kullanýlýr (server class). </P>
 <P><B>compression-level</B> (isteðe
@@ -2876,29 +2912,36 @@ class=block_optional>ÝSTEÐE BAÐLI</FONT><A name=aliasblock></A> </P>
 	spamfilter &lt;yes|no&gt;;
 };</PRE>
 <P></P>
-<P>(Not: ayný zamanda UnrealIRCd'in sahip olduðu standart
-alias dosyalarýný görmek için <A
-href="#includedirective">buraya</A> týklayýn.)</P>
-<P>Alias bloðu [standard alias] bir kullanýcýya bir komutu
-yönlendirmenize olanak saðlar, örneðin /chanserv komutu chanserv nickli
-kullanýcýya mesaj gönderir. alias:: ile alias olacak komut ismi 
-belirtilir(ör:
-chanserv), alias::target yönergesi ile hedef olarak komutun yönlendirileceði
-nick veya kanal belirtilir, eðer alias:: kýsmý belirtilen hedef ile ayný
-olacaksa, bu durumda alias::target belirtilmeyebilir. alias::type yönergesi 
-ile
-alias'ýn tipi belirtilir, geçerli tipler: services (hedef servisler 
-kullanýcýsý
-ise), stats (hedef istatistik sunucusu kullanýcýsý ise), normal (hedef 
-aðdaki
-herhangi bir sunucudaki herhangi bir kullanýcý ise), ve channel (hedef bir 
-kanal
-ismi ise). Eðer alias::spamfilter (isteðe baðlý) yönergesi deðeri 'yes' 
-olarak
-belirtilirse, spam filtre sistemi gönderilecek mesajý kontrol edecektir, bu
-yönerge için default deðeri 'no' 'dur.<BR>Alias bloðunun,
-aþaðýda açýklandýðý üzere, diðer bir formatý da vardýr.</P>
-<P>Kullanýmý [command alias]:<BR><PRE>alias &lt;isim&gt; {
+<p>(Note that <span class="inline_pre">&lt;name&gt;</span> is referred to using "<b>alias::</b>")</p>
+<p>(Not: ayný zamanda UnrealIRCd'in sahip olduðu standart alias dosyalarýný görmek için <a href="#includedirective">buraya</a> týklayýn.)</p>
+<p>Alias bloðu [standard alias] bir kullanýcýya bir komutu yönlendirmenize olanak saðlar, 
+  örneðin /chanserv komutu chanserv nickli kullanýcýya mesaj gönderir.
+</p>
+<ul>
+  <li>
+    <b>alias::</b> ile alias olacak komut ismi belirtilir. (ör: chanserv)
+  </li>
+  <li>
+    <b>alias::target</b> yönergesi ile hedef olarak komutun yönlendirileceði nick veya kanal belirtilir. Eðer <b>alias::</b>
+    kýsmý belirtilen hedef ile ayný olacaksa, bu durumda, <b>alias::target</b> belirtilmeyebilir.
+  </li>
+  <li>
+    <b>alias::type</b> yönergesi ile alias'ýn tipi belirtilir, geçerli tipler;
+    <ul>
+      <li><span class="inline_pre">services</span> (hedef servisler kullanýcýsý ise <a href="#set-services-server">services server</a>),</li>
+      <li><span class="inline_pre">stats</span> (hedef istatistik sunucu kullanýcýsý ise <a href="#set-stats-server">stats server</a>),</li>
+      <li><span class="inline_pre">normal</span> (hedef aðdaki herhangi bir sunucudaki herhangi bir kullanýcý ise),</li>
+      <li><span class="inline_pre">channel</span> (hedef bir kanal ismi ise), ve</li>
+      <li><span class="inline_pre">command</span> (bu bir "standard alias" ise, bakmak için <a href="#aliasblock-command">týklayýnýz</a>).</li>
+    </ul>
+  </li>
+  <li>
+    <b>alias::spamfilter</b> (isteðe baðlý) yönergesi deðeri 'yes' olarak belirtilirse, spamfilter sistemi gönderilecek mesajý kontrol edecektir. bu yönerge için varsayýlan (deðeri 'no')'dur.
+    </li>
+</ul>
+<p id="aliasblock-command">Kullanýmý [command alias]:<br>
+<pre>
+  alias &lt;isim&gt; {
 	format &lt;düzenli-ifade&gt; {
 		target &lt;yönlenilecek-nick&gt;;
 		type &lt;alias-tipi&gt;;
@@ -2916,32 +2959,43 @@ aþaðýda açýklandýðý üzere, diðer bir formatý da vardýr.</P>
 	spamfilter &lt;yes|no&gt;;
 };</PRE>
 <P></P>
-<P>Alias bloðunun bu formatta kullanýmý size daha geniþ bir
-etki alaný saðlar. Örneðin /identify gibi bir alias oluþturabilirsiniz. 
-alias::
-yukarýda anlatýldýðý ile ayný formdadýr, alias komutunun ismidir. 
-alias::format
-ile, alias komutuna gönderilecek metinle karþýlaþtýrýlmasý yapýlacak ifade
-belirtilir, alias komutunun, gönderilecek metine göre farklý þeyler 
-yapmasýný
-birden fazla <B>alias::format</B> yönergesi belirterek
-saðlayabilirsiniz. <B>alias::format::target</B>
-yönergesiyle bu alias komutunun yönlendirileceði hedef belirtilir, "gerçek
-alias" ta bu yönerge yerine <B>alias::format::command</B>
-yönergesi kullanýlýr. <B>alias::format::type</B> ile
-yönlendirilecek mesajýn tipini belirtebilirsiniz, burada ayný zamanda tip 
-olarak
-"gerçek alias" için "real" olarak belirtme yapabiliriz. 
-<B>alias::format::parameters</B> bu aliasa gönderilecek
-parametreleri belirtmenizi saðlar. Bu parametreleri % iþaretini takip eden 
-bir
-sayýyla belirtebilirsiniz, örneðin %1 ilk parametreyi temsil eder. Bütün
-parametreleri belirli bir parametreden sona doðru belirtmek için % iþareti,
-ardýndan gelen bir sayý ve ardýndan da - iþaretini belirterek 
-saðlayabilirsiniz,
-örneðin %2- bütün parametreleri 2. parçadan itibaren sona doðru belirtir.
-Komutlar için alias bloðunun kullanýmýna örnekler için, doc/example.conf
-dosyasýna bakýn.</P>
+<p>
+  Bir alias bloðunun <b>alias::type</b> <a href="#aliasblock-command">yukarýda</a> gösterildiði gibi
+  <span class="inline_pre">komut</span> ayarlandýðýnda, o komuta alias olur.
+  Alias bloðu bu formatta kullanýlýr, çok daha fazla esnektir.
+  Örneðin, /identify gibi bir alias oluþturabilirsiniz.
+</p>
+<ul>
+  <li>
+    <b>alias::</b> (<a href="#aliasblock">yukarýda</a>) anlatýldýðý ile ayný formdadýr,
+    alias komutunun ismidir.
+  </li>
+  <li>
+    <b>alias::format</b> ile alias komutuna gönderilecek metinle karþýlaþtýrýlmasý <a href="#regex">düzenli ifade</a> belirtilir,
+    alias komutunun, gönderilecek metine göre farklý þeyler yapmasýný birden fazla. <b>alias::format</b> yönergesi belirterek saðlayabilirsiniz.
+  </li>
+  <li>
+    <b>alias::format::target</b> yönergesiyle bu alias komutunun yönlendirileceði hedef belirtilir.
+    "<span class="inline_pre">gerçek</span>" aliasta bu yönerge yerine <b>alias::format::type</b> yönergesi kullanýlýr..
+  </li>
+  <li>
+    <b>alias::format::type</b> ile yönlendirilecek mesajýn tipini belirtebilirsiniz. Daha önce bahsedilen tipleri
+    "<a href="#aliasblock">Kullanýmý [standard alias]</a>", "gerçek alias" için "<span class="inline_pre">real</span>"
+    olarak belirtme yapabiliriz. ("gerçek alias" birine PRIVMSG atmak için kullanýlandan baþka bir yere yeniden yazýlmýþ bir takma isimdir).
+  </li>
+  <li>
+    <b>alias::format::parameters</b> ("gerçek aliases" için ) bu aliasa gönderilecek parametreleri belirtmenizi saðlar. 
+	Bu parametreleri <span class="inline_pre">%</span> iþaretini takip eden bir sayýyla belirtebilirsiniz.
+    Örneðin, <span class="inline_pre">%1</span> ilk parametreyi temsil eder. Bütün parametreleri belirli bir parametreden 
+	sona doðru belirtmek için <span class="inline_pre">%</span>
+    iþareti, ardýndan gelen bir sayý ve ardýndan da <span class="inline_pre">-</span> iþaretini belirterek saðlayabilirsiniz. 
+	Örneðin, <span class="inline_pre">%2-</span> bütün parametreleri 2. parçadan itibaren sona doðru belirtir.
+	Ayrýca, sen komutu uygulayan kullanýcýnýn rumuzu ile deðiþtirirerek <span class="inline_pre">%n</span> olarak belirtebilirsin.
+  </li>
+</ul>
+<p>
+  Alias bloðunun komut formatýnda kullanýmýna örnekler için, doc/example.tr.conf dosyasýna bakýnýz.
+</p>
 <P></P></DIV>
 <P><FONT class=block_section>4.33 -
 </FONT><FONT class=block_name>Help Bloðu</FONT> <FONT
@@ -3010,12 +3064,12 @@ href="#feature_spamfilter">buraya</A> týklayýnýz. (ör:
 belirtilir, olasý eylem tiplerini görmek için <A
 href="#feature_spamfilter">buraya</A> týklayýnýz. (ör: 
 'gline').<BR><B>reason</B> isteðe baðlý: yasaklama
-(ban) veya bloke etme gerekçesi belirtilir. eðer belirtilmezse default 
+(ban) veya bloke etme gerekçesi belirtilir. eðer belirtilmezse varsayýlan 
 deðeri
 gerekçe olarak görüntülenecektir.<BR><B>ban-time</B> isteðe baðlý: *line ban 
 veya shun için süre
-belirtmenize olanak saðlar, eðer belirtilmezse default deðeri 
-uygulanýr.(default
+belirtmenize olanak saðlar, eðer belirtilmezse varsayýlan deðeri 
+uygulanýr.(varsayýlan
 deðeri: 1 gün).<BR></P>
 <P>Örnekler:<BR><PRE>spamfilter {
 	regex "Come watch me on my webcam";
@@ -3239,15 +3293,17 @@ maksimum giriþ sayýsýný belirler. Eðer bu yönerge belirtilmezse limit 15
 olarak
 varsayýlýr.</P>
 <P><FONT class=set>set::maxbans
-&lt;limit&gt;;</FONT><BR>Her kanal için izin verilen max
-ban (+b) sayýsýný belirtir. Default deðeri 60'dýr. Eðer bunu 
+&lt;limit&gt;;</FONT><BR>
+Her kanal için izin verilen max
+ban (+b) sayýsýný belirtir. Varsayýlan deðeri 60'dýr. Eðer bunu 
 deðiþtirirseniz,
 set::maxbanlength yönergesini de gözden geçirdiðinize emin olun.(bir sonraki
 yönerge).</P>
 <P><FONT class=set>set::maxbanlength
-&lt;limit&gt;;</FONT><BR>Yukarýdaki yönergeye benzerdir,
+&lt;limit&gt;;</FONT><BR>
+Yukarýdaki yönergeye benzerdir,
 ancak bütün banlarýn toplamý için maksimum karakter sayýsýný belirtir,
-böylelikle basit bir þekilde kanalda belirtilen bir banýn (ortalama olarak)
+böylece basit bir þekilde kanalda belirtilen bir banýn (ortalama olarak)
 maksimum bellekte ne kadar yer kaplayacaðýný sýnýrlar.</P>
 <P><FONT class=set>set::oper-only-stats 
 &lt;stats-listesi&gt;;</FONT><BR>/stats komutunda kullanýlacak, sadece oper 
@@ -3259,7 +3315,8 @@ belirtilirse bütün flaglar sadece operler tarafýndan kullanýlabilir. Sadece
 kýsa
 stats flaglarýnda kullanýlabilir.</P>
 <P><FONT class=set>set::oper-only-stats {&lt;stats-flagý&gt;;
-&lt;stats-flagý&gt;;};</FONT><BR>/stats komutunda
+&lt;stats-flaðý&gt;;};</FONT><BR>
+/stats komutunda
 kullanýlacak, sadece oper statüsünde olan kullanýcýlarýn kullanabileceði
 flaglarý belirtir. Sadece uzun stats flaglarý belirtilebilir.</P>
 <P><FONT class=set>set::maxchannelsperuser 
@@ -3270,12 +3327,13 @@ sayýsýný belirler.</P>
 &lt;giriþ-sayýsý&gt;;</FONT><BR>Kullanýcýnýn DCCALLOW
 listesinde bulunabilecek maksimum giriþ sayýsýný belirler.</P>
 <P><FONT class=set>set::channel-command-prefix
-&lt;komut-önekleri&gt;;</FONT><BR>Servisler için "kanal
+&lt;komut-önekleri&gt;;</FONT><BR>
+Servisler için "kanal
 komutlarýnda" kullanýlacak önek karakterlerini belirtmenize olanak saðlar. 
 Burda
 belirtilen karakterlerden herhangi biriyle baþlayacak mesaj kullanýcý +d 
 modunda
-dahi olsa gönderilecektir. Default deðeri "`!" olarak belirlenmiþtir.</P>
+dahi olsa gönderilecektir. Varsayýlan deðeri "`!" olarak belirlenmiþtir.</P>
 <P><FONT class=set>set::allowed-nickchars { &lt;liste&gt; 
 };</FONT><BR>Nicklerde farklý karakter gruplarýnýn / dillerin
 kullanýmýna olanak saðlar, <A
@@ -3296,10 +3354,11 @@ zorlanacaktýr.</P>
 Uline olarak belirtilen sunucular, oper
 statusunde olmayan kullanýcýlar tarafýndan yapýlan /links komutu sorgusunda
 görüntülenmeyecektir.</P>
-<P><FONT class=set>set::options::flat-map;</FONT><BR>Eðer
+<P><FONT class=set>set::options::flat-map;</FONT><BR>
+Eðer
 belirtilirse, aðdaki bütün sunucular /map ve /links komutlarý sorgusunda 
 direkt
-linkli olarak görünecektir, böylelikle hangi sunucunun hangisine linkli 
+linkli olarak görünecektir, böylece hangi sunucunun hangisine linkli 
 olduðunu
 göremezsiniz. Bu (D)DoS ataklarýna karþý ufak bi önlemdir çünkü kötü niyetli
 kiþiler bu yönergenin belirtilmesiyle 'zayýf nokta'larý kolaylýkla
@@ -3341,4 +3400,1852 @@ bir zaman dilimi içerisinde yanýt göndermesi gerektiðini belirtmenize olanak
 saðlar. Burada belirtilecek numerik deðerde d günü, h saati, m dakikayý, s 
 ise
 saniyeyi temsil eder, örneðin 1d2h3m olarak belirtilen zaman deðeri 1 gün, 2
-saat ve 3 daki
+saat ve 3 dakikayý temsil eder. (TAMAMLANMADI)</P>
+<P><FONT class=set>set::dns::retries
+&lt;deneme-sayýsý&gt;;</FONT><BR>
+DNS cozumlenmesinin basarisiz
+olmasi durumda DNS cozumlemesinin kac kez tekrarlanacagini belirtir. (TAMAMLANMADI)</P>
+<P><FONT class=set>set::dns::nameserver 
+&lt;dns-sunucu-ismi&gt;;</FONT><BR>DNS aramalarýnda kullanýlacak, sunucunun 
+hostname'ini
+belirtir. (TAMAMLANMADI)</P>
+<P><FONT class=set>set::dns::bind-ip
+&lt;ip&gt;;</FONT><BR>Çözümleyici için baðlanýlacak IP'yi
+belirtir, genellikle belirtilmeye gerek duyulmaz.</P>
+<P><FONT class=set>set::network-name
+&lt;að-ismi&gt;;</FONT><BR>Sunucunun bulunduðu að adýný
+belirtmeye olanak saðlar. Burda belirtilen að ismi að üzerinde ki bütün
+sunucularda ayný belirtilmek zorundadýr.</P>
+<P id="set-services-server"><FONT class=set>set::default-server
+&lt;sunucu-ismi&gt;;</FONT><BR>
+Sunucu full kapasitede
+kullanýcýya sahip olduðunda, baðlanmayý deneyecek kullanýcýlara varsayýlan 
+sunucu
+adýnýn gösterilmesine olanak saðlar.</P>
+<p id="set_defaultipv6clonemask"> 
+<font class="set">set::default-ipv6-clone-mask</font><br /> 
+Varsayýlan IPv6 clone algýlama maskesi. Görmek için; 
+<a href="#allowblock_ipv6clonemask">allow::ipv6-clone-mask</a>. Bu ayarýn varsayýlan deðeri 64'dür.</p> 
+<p id="set-stats-server"><FONT class=set>set::services-server 
+&lt;sunucu-ismi&gt;;</FONT><BR>Servisler sunucusunun ismini belirtir. 
+Gereklidir, eðer
+servis sunucunuz yoksa, services.sizinaginiz.com gibi bir sunucu ismi
+belirtmeniz gerekir.</P>
+<P><FONT class=set>set::stats-server
+&lt;sunucu-ismi&gt;;</FONT><BR>Stats sunucusu botlarýnýn
+yerleþtirileceði sunucu ismini belirtir. Eðer stats sunucunuz yoksa burayý
+belirtmeyebilirsiniz.</P>
+<P><FONT class=set>set::help-channel
+&lt;að-yardým-kanalý&gt;;</FONT><BR>Aðýnýz için yardým
+kanalýný (help) belirtmenize olanak saðlar.</P>
+<P><FONT class=set>set::cloak-keys {
+"anahtar1"; "anahtar2"; "anahtar3"; };</FONT><BR>Hostun
+gizlenmesi için, yeni hostlarýn oluþturulmasýnda kullanýlacak anahtarlarý
+belirtir. Bu anahtarlar aðdaki bütün sunucular için ayný olarak 
+belirtilmelidir.
+Her bir anahtar en az 5 en çok 100 karakter içerebilir (10-20 arasý 
+önerilir) ve
+anahtarlar küçük karakter olarak (a-z) arasý harfleri, büyük karakter olarak
+(A-Z) arasý harfleri ve rakam olarak da (0-9) arasý rakamlarý içerebilir. Bu
+kriterlerin yüklediðiniz gizleme modülüne göre deðiþebileceðine dikkat 
+edin.</P>
+<P><FONT class=set>set::hiddenhost-prefix 
+&lt;önek-deðeri&gt;;</FONT><BR>Gizlenmiþ hostlara eklenecek (+x) öneki 
+belirtmenize olanak
+saðlar. Burada genellikle að ismini simgeleyen 3 veya 4 harf belirtilir.</P>
+<P><FONT class=set>set::hosts::local
+&lt;locop-hostu&gt;;</FONT><BR>Yerel operatör statüsüne
+eriþen bir kullanýcýnýn alacaðý hostu belirtmenize olanak saðlar. Ýsteðe 
+baðlý
+olarak buradaki deðeri kullanýcý@host olarak belirtebilirsiniz.</P>
+<P><FONT class=set>set::hosts::global
+&lt;globop-hostu&gt;;</FONT><BR>Global operatör statüsüne
+eriþen bir kullanýcýnýn alacaðý hostu belirtmenize olanak saðlar. Ýsteðe 
+baðlý
+olarak buradaki deðeri kullanýcý@host olarak belirtebilirsiniz.</P>
+<P><FONT class=set>set::hosts::coadmin
+&lt;coadmin-hostu&gt;;</FONT><BR>Co-admin statüsüne eriþen
+bir kullanýcýnýn alacaðý hostu belirtmenize olanak saðlar. Ýsteðe baðlý 
+olarak
+buradaki deðeri kullanýcý@host olarak belirtebilirsiniz.</P>
+<P><FONT class=set>set::hosts::admin
+&lt;admin-hostu&gt;;</FONT><BR>Admin statüsüne eriþen bir
+kullanýcýnýn alacaðý hostu belirtmenize olanak saðlar. Ýsteðe baðlý olarak
+buradaki deðeri kullanýcý@host olarak belirtebilirsiniz.</P>
+<P><FONT class=set>set::hosts::servicesadmin
+&lt;servicesadmin-hostu&gt;;</FONT><BR>Services
+Administrator statüsüne eriþen bir kullanýcýnýn alacaðý hostu belirtmenize
+olanak saðlar. Ýsteðe baðlý olarak buradaki deðeri kullanýcý@host olarak
+belirtebilirsiniz.</P>
+<P><FONT class=set>set::hosts::netadmin 
+&lt;netadmin-hostu&gt;;</FONT><BR>Net Administrator statüsüne eriþen bir 
+kullanýcýn alacaðý
+hostu belirtmenize olanak saðlar.Ýsteðe baðlý olarak burdaki deðeri
+kullanýcý@host olarak belirtebilirsiniz.</P>
+<P><FONT class=set>set::hosts::host-on-oper-up 
+&lt;yes/no&gt;;</FONT><BR>Eðer yes olarak belirtilirse, oper yetkisini açan 
+kullanýcý
+(eðer H/get_host flagýna sahipse), otomatik olarak, statüsüne göre hostunu
+alacaktýr. Eðer no olarak belirtilirse host alma iþlemini oper yetkisini
+açtýktan sonra manual olarak gerçekleþtirecektir.</P>
+<P><FONT class=set>set::ssl::egd
+&lt;dosya-ismi&gt;;</FONT><BR>
+EGD (Entropy Gathering
+Daemon) desteðinin aktif olduðunu belirtir. Eðer OpenSSL 0.9.7 veya daha üst 
+bir
+versiyonunu kullanýyorsanýz bu durumda /var/run/egd-pool, /dev/egd-pool,
+/etc/egd-pool ve /etc/entropy buradaki dosya ismi için varsayýlan konumlar 
+olarak
+kabul edilip aranacaktýr. Dolayýsýyla burada herhangi bir dosya ismi 
+belirtmeyip
+set::ssl::egd yönergesine herhangi bir deðer atamadan kullanabilirsiniz. 
+Eðer
+OpenSSL 0.9.7 'den daha önceki bir versiyonu kullanýyorsanýz yukarýda ki
+belirtilen yerler haricinde dosya için baþka yerlerde belirtebilirsiniz.</P>
+<P><FONT class=set>set::ssl::certificate 
+&lt;dosya-ismi&gt;;</FONT><BR>Sunucu SSL sertifikasý dosyasýnýn yerini 
+belirtmenizi
+saðlar.</P>
+<P><FONT class=set>set::ssl::key
+&lt;dosya-ismi&gt;;</FONT><BR>Sunucu SSL anahtarý
+dosyasýnýn yerini belirtmenizi saðlar.</P>
+<P><FONT class=set>set::ssl::trusted-ca-file 
+&lt;dosya-ismi&gt;;</FONT><BR>Güvenilen CA sertifika dosyasýnýn yerini 
+belirtmenizi
+saðlar.</P>
+<p><font class="set">set::ssl::server-cipher-list &lt;þifre-listesi&gt;;</font><br>
+  Belirtilen þifrelere izin verilmesi için, biz bunu varsayýlan olarak OpenSSL'ye býrakýrýz.
+  Þifrelerin nasýl listelendiðini görmek için, <a href="http://www.openssl.org/docs/apps/ciphers.html#CIPHER_LIST_FORMAT">http://www.openssl.org/docs/apps/ciphers.html</a>
+  adresine bakýn.</p>
+<p><font class="set">set::ssl::renegotiate-bytes &lt;deðer&gt;;</font><br>
+  Bir SSL oturmunun kaç bayt sonra tekrar görüþülebilir olduðunu belirtir. (ör: 20 megabyte için 20m).</p>
+<p><font class="set">set::ssl::renegotiate-timeout &lt;zaman-deðeri&gt;;</font><br>
+  Bir SSL oturmunun ne kadar süre sonra tekrar görüþülebilir olduðunu belirtir. (ör: 1 saat için 1h).</p>
+<P><FONT 
+class=set>set::ssl::options::fail-if-no-clientcert;</FONT><BR>Sertifakaya 
+sahip olmayan kullanýcýlarýn baðlantýsýnýn
+reddedilmeye zorlanmasýný saðlar.</P>
+<P><FONT class=set>set::ssl::options::no-self-signed;</FONT><BR>Self-signed 
+sertifikalý kullanýcýlarýn baðlantýlarýna izin
+vermemenizi saðlar.</P>
+<P><FONT class=set>set::ssl::options::verify-certificate;</FONT><BR>Baðlantý 
+yetkilendirilmeden önce Unreal'in kullanýlan SSL
+sertifikasýnýn geçerliliðini doðrulamasýna olanak verir.</P>
+<P><FONT class=set>set::throttle::period 
+&lt;zaman-deðeri&gt;</FONT><BR>set::throttle::connections yönergesinde 
+belirtilen baðlantý
+sayýsý aþýldýðýnda kullanýcýnýn yeniden baðlanabilmesi için ne kadar süre
+beklemek zorunda olduðunu belirtir.</P>
+<P><FONT class=set>set::throttle::connections 
+&lt;miktar&gt;;</FONT><BR>Baðlantýnýn throttle sistemine takýlmasý için ayný 
+hosttan
+kaç kez baðlantý isteði gelmesi gerektiðini belirtir.</P>
+<P><FONT class=set>set::ident::connect-timeout &lt;miktar&gt;;</FONT><BR>
+  Ne 
+kadar saniye beklendikten sonra ident sunucu
+baðlantýsýnýn iptal edileceðini belirtir.(varsayýlan: 10s).</P>
+<P><FONT class=set>set::ident::read-timeout &lt;miktar&gt;;</FONT><BR>
+  Ne 
+kadar saniye geçtikten sonra yanýt için vazgeçileceðini
+belirtir. (varsayýlan: 30s).</P>
+<P><FONT class=set>set::anti-flood::unknown-flood-bantime
+&lt;zaman-deðeri&gt;;</FONT><BR>Bilinmeyen bir baðlantýdan
+flood saldýrýsý algýlandýðý zaman atýlacak banýn süresini belirler.</P>
+<P><FONT class=set>set::anti-flood::unknown-flood-amount
+&lt;miktar&gt;;</FONT><BR>Bilinmeyen bir baðlantýnýn
+gönderdiði veri miktarý burada belirtilen miktarý (KiloByte cinsinden) 
+aþtýðý
+zaman sunucudan baðlantýsý kesilecektir.(kill)</P>
+<P><FONT class=set>set::anti-flood::away-flood
+&lt;miktar&gt;:&lt;periyot&gt;</FONT><BR>Away flood
+korumasý: belirtilen 'periyot' baþýna /away komutu kullanýmýný belirtilen
+'sayý'ya sýnýrlar. Ancak bu korumanýn aktif olabilmesi için config.h 
+dosyasýnda
+NO_FLOOD_AWAY'in aktif edilmesi gereklidir. Örnek: <I>away-flood 5:60s;</I> 
+60 saniye süresince 5 /away komutu
+kullanýlabilir.</P>
+<P><FONT class=set>set::anti-flood::nick-flood
+&lt;miktar&gt;:&lt;periyot&gt;</FONT><BR>Nickflood
+korumasý: belirtilen 'periyot' baþýna nick deðiþimini belirtilen 'sayý'ya
+sýnýrlar. Örnek: <I>nick-flood 4:90</I> 90 saniye süresince
+4 kez nick deðiþtirilebilir, varsayýlan deðeri 60 saniye süresince 3 nick
+deðiþimidir.</P>
+<P><FONT class=set>set::default-bantime &lt;süre&gt;</FONT><BR>/kline, 
+/gline, /zline, /shun, vs gibi yasaklama (ban)
+komutlarýnýn zaman belirtilmeden kullanýldýðýnda (/gline *@some.nasty.isp 
+gibi),
+banýn ne kadar süre geçerli olacaðýný belirtir. Örnek: <I>default-bantime 
+90d;</I></P>
+<P><FONT class=set>set::modef-default-unsettime 
+&lt;deðer&gt;</FONT><BR>Kanalmodu +f için deðiþikliðin ne kadar süre 
+süreceðini
+belirtmenizi saðlar. Eðer deðer olarak örneðin 10 belirtirseniz bu durumda 
++f
+[5j]:15 gibi bir mod uygulamasý [5j#i10]:15 þeklinde yorumlanacaktýr.</P>
+<P><FONT class=set>set::modef-max-unsettime 
+&lt;deðer&gt;</FONT><BR>
+Kanalmodu +f kullanýlýrken (ör. +f 
+[5j#i&lt;süre&gt;]:15)
+belirtilebilecek maksimum süre miktarýný (dakika cinsinden) belirlemenizi
+saðlar. Bu deðer 0 ile 255 arasýnda olabilir. Varsayýlan deðeri ise 60'dýr (=1
+saat).</P>
+<P><FONT class=set>set::ban-version-tkl-time &lt;deðer&gt;</FONT><BR>
+  Ban 
+version bloðunda zline/gline/vs. gibi bir 'eylem'
+belirtildiðinde bu eylem ile atýlacak yasaklamanýn (ban) ne kadar süreli 
+aktif
+kalacaðýný belirtmenize olanak saðlar. Varsayýlan deðeri 86400'dür (1 gün).</P>
+<P><FONT class=set>set::spamfilter::ban-time 
+&lt;deðer&gt;</FONT><BR>Yukarýda anlatýlan ile aynýdýr ancak bu sefer 
+belirtilecek
+deðer spamfilter tarafýndan *line/shun eylemleri uygulandýðýnda 
+geçerlidir.</P>
+<P><FONT class=set>set::spamfilter::ban-reason 
+&lt;gerekçe&gt;</FONT><BR>Spamfilter tarafýndan eklenen giriþlerde 
+gösterilecek
+sebebi belirlemenize olanak saðlar.</P>
+<P><FONT class=set>set::spamfilter::virus-help-channel 
+&lt;kanal&gt;</FONT><BR>Spamfilter'da 'viruschan' eylemi için kullanýlacak 
+kanalý
+belirtir.</P>
+<P><FONT class=set>set::spamfilter::virus-help-channel-deny
+&lt;yes|no&gt;</FONT><BR>Eðer yes (veya 1) olarak
+belirtilirse, virus-help-channel ile belirtilen kanala normal bir kullanýcý
+girmeyi denerse kullanýcýya 'invite only' gibi bir ibare gönderilir. Sadece
+operler, spamfilter sistemi tarafýndan saptanan kullanýcýlar ve kanala 
+/invite
+komutuyla davet edilecek kullanýcýlar giriþ yapabilir.</P>
+<P><FONT class=set>set::spamfilter::except &lt;hedef(ler)&gt;</FONT><BR>Bu 
+yönergeyle belirtilecek hedef(ler) spam filtrelemesinden
+muaf tutulacak(lar)dýr, aralarýna virgül konularak birden fazla hedef
+belirtilebilir. Ör: except "#help,#spamreport"</P>
+<p><font class="set">set::spamfilter::slowdetect-warn &lt;deðer&gt;</font><br>
+  Eðer bir spamfilterin, uygulanmasý için milisaniyelerin bu miktarýndan daha uzun olursa
+  (1000ms = 1 saniye) daha sonra bir uyarý bildirimi tüm operlere gönderilecektir (varsayýlan: 250).
+  Ayrýca görmek için; <a href="#feature_spamfilter_slow">Yavaþ Spamfilter Algýlama</a>.</p>
+ <p><font class="set">set::spamfilter::slowdetect-fatal &lt;deðer&gt;</font><br>
+  Eðer bir spamfilterin, uygulanmasý için milisaniyelerin bu miktarýndan daha uzun olursa
+  (1000ms = 1 saniye) sonra spamfilter silinir. (varsayýlan: 500).
+  Ayrýca görmek için; <a href="#feature_spamfilter_slow">Yavaþ Spamfilter Algýlama</a>.</p>
+<P><FONT class=set>set::check-target-nick-bans 
+&lt;yes|no&gt;</FONT><BR>
+Kullanýcý(lar) nick(ler)ini deðiþtirdiði zaman, 
+yeni nick
+için yasaklama (ban) olup olmadýðýnýn kontrol edilmesine olanak saðlar. Eðer
+yeni nick adýna yasaklama mevcutsa nick deðiþimine izin verilmeyecektir. 
+Varsayýlan
+deðeri yes 'dir.</P>
+<P><FONT class=set>set::timesynch::enabled &lt;yes|no&gt;</FONT><BR>
+  Sunucu 
+baþlatýlýrken zaman senkronizasyonu özelliðini açýk
+ya da kapalý olarak belirtmenize olanak saðlar. Varsayýlan deðeri yes’dir.</P>
+<P><FONT class=set>set::timesynch::server 
+&lt;IP&gt;</FONT><BR>
+Senkronizasyonun saðlanacaðý sunucularý belirtmenizi
+saðlar. Burada 4 IP’yi aralarýnda virgül kullanarak belirtebilirsiniz. 
+Burada
+belirtilen sunucular NTP protokolu versiyon 4’ü desteklemek zorundadýrlar.
+Varsayýlan olarak 3 zaman sunucusu kullanýlýr (US, EU, AU). Bu sunuculara istek
+paralel olarak gönderilir, en hýzlý cevap gönderen kazanýr.</P>
+<P><FONT class=set>set::timesynch::timeout &lt;süre&gt;</FONT><BR>
+  Sunucudan 
+gelecek cevap için maksimum bekleme süresini
+belirtmenize olanak saðlar. Burada 1 ve 5 arasýnda bir deðer 
+belirtilmelidir,
+beþten büyük sayýlar belirtilemez. Varsayýlan deðeri 3’tür ve eðer iyi bir
+sebebiniz yoksa bunu deðiþtirmeyin.</P>
+<p><font class="set">set::pingpong-warning &lt;yes|no&gt;</font><br> 
+NOSPOOF özelliði aktif iken (genellikle Windows), baðlanýrken sorun yasayan her kullanýcýya '/quote pong ..' uyarýsýnýn
+gönderilmesini ya da gönderilmemesini saðlar. Varsayýlan deðeri no'dur.</p>
+<p><font class="set">set::watch-away-notification &lt;yes|no&gt;</font><br>
+  WATCH içerisindeki AWAY bildirimini açmanýzý/kapatmanýzý saðlar. Varsayýlan deðeri yes'dir.</p> 
+<P></P></DIV>
+<p id="filesblock"><font class="block_section">4.38 - </font><font class="block_name">Dosya Bloðu</font>
+   <font class="block_optional">ÝSTEÐE BAÐLI</font><div class="desc">
+</p>
+<p>
+Eðer sizin varsayýlan MOTDs ve kurallarý dosyalarýný kullanmak için <a href="#tldblock">TLD block</a>'da belirtmek gerekmez. Bu bloða varsayýlan kontrol ayarlarýna pidfile ve irc.tune dosyalarý eklenebilir.
+Burada varsayýlan ayar olarak belirtilmeyen deðerli dökümanlarý <a href="#addtlfiles">Ek Dosyalar</a> kýsmýndan bakabilirsiniz.
+</p>
+<p>
+Ýlgili yol adlarý <tt>unrealircd.conf</tt> 'un genelde içerisinde bulunduðu UnrealIRCd ana diziniyle iliþkilendirilir. Bu block ayný ana dizinde birden çok IRCd çalýþtýrmak için kullanýlabilir. Bu durumda en azýndan her bir sunucu için birden fazla pid dosyalarý ve tune (ayar) dosyalarý belirtmelisiniz.
+</p>
+<p>Kullaným:<br>
+<pre>
+files {
+	motd &lt;motd dosyasý&gt;;
+	shortmotd &lt;short motd dosyasý&gt;;
+	opermotd &lt;oper motd dosyasý&gt;;
+	svsmotd &lt;services motd dosyasý&gt;;
+	botmotd &lt;bot motd dosyasý&gt;;
+
+	rules &lt;rules dosyasý&gt;;
+
+	tunefile &lt;tune dosyasý&gt;;
+	pidfile &lt;pid dosyasý&gt;;
+};
+</pre></p>
+<p>Örnek:<br />
+<pre>
+files {
+	motd /etc/motd;
+
+	pidfile /var/lib/run/unrealircd.pid;
+};
+</pre>
+</p>
+<P><B><FONT size=+2>5 – Ek Dosyalar<A name=addtlfiles></A>
+</FONT></B></P>
+<DIV class=desc>Konfigürasyon dosyasýna ek olarak MOTD,
+OperMOTD, BotMOTD ve Rules dosyalarý gibi birkaç dosya daha vardýr. Aþaðýda 
+bu
+dosyalar ve kullanýmlarý listelenmiþtir.<BR>Motd dosyalarý
+(bütün tiplerde ki) ve kurallar (rules) dosyalarý ayný zamanda bir tld bloðu 
+ile
+de belirtilebilir.
+<P>
+<TABLE width="83%" border=1>
+  <TBODY>
+  <TR>
+    <TD>ircd.motd</TD>
+    <TD>/motd komutu sorgusunda ve kullanýcý sunucuya
+      baðlandýðý an görüntülenir.(eðer ircd.smotd belirtilmediyse)</TD></TR>
+  <TR>
+    <TD>ircd.smotd</TD>
+    <TD>Sadece sunucuya baðlantý sýrasýnda
+      görüntülenir.(kýsa MOTD)</TD></TR>
+  <TR>
+    <TD>ircd.rules</TD>
+    <TD>/rules komutu sorgusunda görüntülenir</TD></TR>
+  <TR>
+    <TD>oper.motd</TD>
+    <TD>/opermotd sorgusunda ve kullanýcý oper açtýðýnda
+      görüntülenir</TD></TR>
+  <TR>
+    <TD>bot.motd</TD>
+    <TD>/botmotd komutu sorgusunda
+  görüntülenir</TD></TR></TBODY></TABLE>
+<P></P></DIV>
+<P><B><FONT size=+2>6 – Kullanýcý &amp; Kanal Modlarý<A 
+name=userchannelmodes></A> </FONT></B></P>
+<DIV class=desc>
+<TABLE width="83%" border=1>
+  <TBODY>
+  <TR>
+    <TD>
+      <DIV align=center><B
+      >Mod</B></DIV></TD>
+    <TD>
+      <DIV align=center><B
+      >Açýklama</B></DIV></TD></TR>
+  <TR>
+    <TD colSpan=2>
+      <DIV align=center><B>Kanal
+      Modlarý</B></DIV></TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>A</DIV></TD>
+    <TD>Sadece +A kullanýcý moduna sahip kullanýcýlar
+      (admin) girebilir</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>a &lt;nick&gt;</DIV></TD>
+    <TD>Belirtilen nick kanalda kick komutuna karþý
+      korumaya sahip olur.</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>b &lt;nick!kullanýcý@host&gt;<BR
+      ></DIV></TD>
+    <TD>Belirtilen maske kanalda yasaklanýr (ban)</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>c</DIV></TD>
+    <TD>Kanal icerisinde renk kullanimini engeller</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>C</DIV></TD>
+    <TD>CTCP içerikli metinlerin gönderimini
+  engeller</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>e
+    &lt;nick!kullanýcý@host&gt;</DIV></TD>
+    <TD>Belirtilen maske kanalda yasaklý (ban) listesinde
+      olsa dahi kanala girebilir</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>f
+      [&lt;numara&gt;&lt;tip&gt;]:&lt;saniye&gt;</DIV></TD>
+    <TD>Kanal flood koruma modu. Daha fazla açýklama
+      için. Daha fazla bilgi için <A
+      href="#feature_antiflood"
+      >bölüm 3.12</A>'ye bakýn</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>G</DIV></TD>
+    <TD>Badword Bloðunda belirtilen kötü kelimelerin
+      (badwords) sansürleneceði kanal</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>h &lt;nick&gt;</DIV></TD>
+    <TD>Belirtilen nick halfop statüsüne sahip olur</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>i</DIV></TD>
+    <TD>Sadece davetle girilebilen kanal</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>I &lt;nick!kullanýcý@host&gt;<BR
+      ></DIV></TD>
+    <TD>Belirtilen maskeye sahip olan kullanýcýlar, kanal
+      +i modunda olsa dahi kanala girebilirler</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>j &lt;giriþ:saniye&gt;</DIV></TD>
+    <TD>Belirtilen saniyede bir kanala giris yapilmasini
+      saglar</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>K</DIV></TD>
+    <TD>/knock komutu kullanýlamaz kanal</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>k &lt;anahtar&gt;</DIV></TD>
+    <TD>Kanala giriþ için anahtar gereken kanal</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>l &lt;##&gt;</DIV></TD>
+    <TD>Kanala girebilecek maksimum kullanýcý sayýsýný
+      belirler</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>L &lt;kanal&gt;</DIV></TD>
+    <TD>+l ile belirtilen kanala girebilecek maksimum
+      kullanýcý sayýsý aþýldýðýnda, kullanýcýlarýn yönlendirileceði kanalý
+      belirtir</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>M</DIV></TD>
+    <TD>Yalnýzca kayýtlý ve tanýtýlmýþ nick (+r) kullanan
+      kullanýcýlarýn konuþabileceði kanal</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>m</DIV></TD>
+    <TD>Yalnýzca +v/o/h modlarýna sahip kullanýcýlarýn
+      konuþabileceði kanal</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>N</DIV></TD>
+    <TD>Nick deðiþtirilemez kanal</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>n</DIV></TD>
+    <TD>Dýþarýdan gönderilen mesajlarýn kabul edilmediði
+      kanal</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>O</DIV></TD>
+    <TD>Yalnýzca +O modunda ki kullanýcýlarýn (IRCOp)
+      girebileceði kanal</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>o &lt;nick&gt;</DIV></TD>
+    <TD>Kanalda belirtilen kullanýcýya operatör statüsü
+      verir</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>p</DIV></TD>
+    <TD>Özel bir kanal</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>q &lt;nick&gt;</DIV></TD>
+    <TD>Kanalda belirtilen nicke founder (kanal sahibi)
+      statüsü verir</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>Q</DIV></TD>
+    <TD>Kick atýlamayan kanal (U:Line sunucular
+    atabilir)</TD></TR>
+  <tr> 
+       <td><div align="center">r</div></td> 
+       <td>Bu kanal kayýtlýdýr. (sadece services tarafýndan ayarlanabilir)</td> 
+     </tr> 	
+  <TR>
+    <TD>
+      <DIV align=center>R</DIV></TD>
+    <TD>Sadece kayýtlý (+r) kullanýcýlarýn girebileceði
+      kanal</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>S</DIV></TD>
+    <TD>Renkli yazýlarýn, renk kodlarýndan arýndýrýlýp
+      kanala gönderilmesini saðlar</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>s</DIV></TD>
+    <TD>Gizli kanal</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>t</DIV></TD>
+    <TD>Topiðin sadece operatör statüsünde ki
+      kullanýcýlar tarafýndan deðiþtirilebileceði kanal</TD></TR></TR>
+  <TR>
+    <TD>
+      <DIV align=center>T</DIV></TD>
+    <TD>NOTICE komutunun kullanýlamayacaðý kanal</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>u</DIV></TD>
+    <TD>Auditorium – /names ve /who #kanal komutlarý
+      sorgusunda yalnýzca kanal operatörleri görüntülenir</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>V</DIV></TD>
+    <TD>/invite komutu kullanýlamaz kanal</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>v &lt;nick&gt;</DIV></TD>
+    <TD>Kanal +m modunda olsa dahi konuþabilecek
+      kullanýcýlarý belirtmenizi saðlar</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>z</DIV></TD>
+    <TD>Sadece Güvenli Baðlantý (SSL) kullananlarýn
+      girebileceði kanal</TD></TR></TBODY></TABLE>
+<P>&nbsp;</P>
+<TABLE width="75%" border=1>
+  <TBODY>
+  <TR>
+    <TD>
+      <DIV align=center><B
+      >Mod</B></DIV></TD>
+    <TD>
+      <DIV align=center><B
+      >Açýklama</B></DIV></TD></TR>
+  <TR>
+    <TD colSpan=2>
+      <DIV align=center><B>Kullanýcý
+      Modlarý</B></DIV></TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>A</DIV></TD>
+    <TD>Server Administrator Statüsündeki kullanýcý (Oper
+      Bloðunda belirtilir)</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>a</DIV></TD>
+    <TD>Services Administrator Statüsündeki kullanýcý
+      (Oper Bloðunda belirtilir)</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>B</DIV></TD>
+    <TD>Bot statüsündeki kullanýcý</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>C</DIV></TD>
+    <TD>Co Administrator Statüsündeki kullanýcý (Oper
+      Bloðunda belirtilir)</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>d</DIV></TD>
+    <TD>Kanalda yazýlan mesajlarý görmenizi
+engeller</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>G</DIV></TD>
+    <TD>Badwords bloðunda belirtilen kötü kelimeler
+      kullanýldýðýnda sansürlenir</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>g</DIV></TD>
+    <TD>GlobOps ve LocOps mesajlarýný görmenizi
+  saðlar</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>H</DIV></TD>
+    <TD>IRCOp statüsüne sahipseniz /whois /who sorgusunda
+      bu statünüz görünmez.(Sadece IRCop)</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>h</DIV></TD>
+    <TD>Yardim görevlisi statüsü verir.(HelpOp)(Oper
+      Bloðunda belirtilir)</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>i</DIV></TD>
+    <TD>Görünmez kullanýcý (/who sorgusunda görünmeyen
+      kullanýcý)</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>N</DIV></TD>
+    <TD>Network Administrator Statüsündeki kullanýcý
+      (Oper Bloðunda belirtilir)</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>O</DIV></TD>
+    <TD>Local IRC Operator Statüsündeki kullanýcý (Oper
+      Bloðunda belirtilir)</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>o</DIV></TD>
+    <TD>Global IRC Operator Statüsündeki kullanýcý (Oper
+      Bloðunda belirtilir)</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>p</DIV></TD>
+    <TD>/whois sorgusunda bulunduðunuz kanallarý
+  gizler</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>q</DIV></TD>
+    <TD>Sadece U:Lines ile belirtilen sunucular
+      tarafýndan kanallardan atýlabilirsiniz.(Sadece Services Administrator
+      Statüsündeki kullanýcýlar kullanabilir)</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>R</DIV></TD>
+    <TD>Sadece nicki kayitli (+r) olan kullanýcýlardan
+      mesaj almanýzý saðlar</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>r</DIV></TD>
+    <TD>Kayýtlý kullanýcý</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>S</DIV></TD>
+    <TD>Servisler için koruma modu</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>s</DIV></TD>
+    <TD>Sunucu mesajlarýný görmenizi saðlar (daha fazla
+      bilgi için <A
+      href="#feature_snomasks"
+      >bölüm 3.3</A>'e bakýn)</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>T</DIV></TD>
+    <TD>CTCP metinlerinin size gönderimini engeller</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>t</DIV></TD>
+    <TD>/vhost kullandýðýnýzý belirtir</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>V</DIV></TD>
+    <TD>Kullanýcýnýn WebTV kullandýðýný belirtir</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>v</DIV></TD>
+    <TD>Bloke edilmiþ DCC mesajlarýný görmenizi
+  saðlar</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>W</DIV></TD>
+    <TD>Size /whois çekildiðinde whois çekeni görmenizi
+      saðlar. (Sadece IRCOp statüsündeki kullanýcýlar 
+kullanabilir)</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>w</DIV></TD>
+    <TD>Wallop mesajlarýný görmenizi saðlar</TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>x</DIV></TD>
+    <TD>Gizlenmiþ host kullandýðýnýzý belirtir </TD></TR>
+  <TR>
+    <TD>
+      <DIV align=center>z</DIV></TD>
+    <TD>Güvenli baðlantý (SSL) kullanýldýðýný
+  belirtir</TD></TR></TBODY></TABLE>
+<P></P></DIV>
+<P><FONT size=+2><B>7 – Kullanýcý &amp; Oper Komutlarý Tablosu<A
+id=useropercommands name=useropercommands></A></B></FONT></P>
+<DIV class=desc>
+<P>NOT: /helpop dökümaný bu dökümandan daha günceldir, bir
+komut hakkýnda bilgi almak için the /helpop komut (veya operseniz /helpop
+?komut) komutunu kullanýn.</P>
+<TABLE width="90%" border=1>
+  <TBODY>
+  <TR>
+    <TD width="33%">
+      <DIV align=center><B
+      >Komut</B></DIV></TD>
+    <TD width="57%">
+      <DIV align=center><B
+      >Açýklama</B></DIV></TD>
+    <TD width="10%">
+      <DIV align=center><B>Kimler
+      Kullanabilir</B></DIV></TD></TR>
+  <TR>
+    <TD>nick &lt;yeninick&gt;</TD>
+    <TD>Sunucudaki rumuzunuzu degistirir. Bulundugunuz
+      butun kanallarda rumuzunuzun degisimi haber verilir<BR
+      ></TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD>whois &lt;nick&gt;</TD>
+    <TD>Belirtilen nick için; kullanýcý ismi, host,
+      bulunduðu kanallar vs. gibi bilgileri görüntüler<BR
+    ></TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>who &lt;maske&gt;</TD>
+    <TD>Kullanýcýlarla ilgili bilgileri gösterir. Maske
+      kýsmýna nick, #kanal, hostmaskesi (*.attbi.com gibi) belirtilebilir<BR
+      ></TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>whowas &lt;nick&gt; &lt;max cevap
+      sayýsý&gt;</TD>
+    <TD>Sunucudan çýkmýþ bir nick için geçmiþ whois
+      bilgilerini görüntüler. &lt;max cevap sayýsý&gt; kýsmý isteðe göre
+      belirtilebilir ve kaç tane kaydýn görüntüleneceðini belirler.<BR
+      ></TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>ison &lt;nick1 nick2 nick3 ...&gt;</TD>
+    <TD>Belirtilen kullanýcý veya kullanýcýlarýn online
+      olup olmadýklarýný gösterir<BR></TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>join &lt;kanal1,kanal2, ...&gt;</TD>
+    <TD>Belirtilen kanal yada kanallara girmenize olanak
+      saðlar. Birden fazla kanal belirterek birdefada belirttiðiniz bütün
+      kanallara girebilirsiniz. /join 0 komutu ise bütün kanallardan 
+ayrýlmanýzý
+      saðlar.</TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>cycle &lt;kanal1, kanal2, ...&gt;</TD>
+    <TD>Belirtilen kanal(lar)da çýk-gir (cycle) yapmanýza
+      olanak saðlar.</TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>motd &lt;sunucu&gt;</TD>
+    <TD>Belirtilen sunucu için motd dosyasýnýn
+      görüntülenmesine olanak saðlar.<BR></TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>rules &lt;sunucu&gt;</TD>
+    <TD>Belirtilen sunucunun kurallar(rules) dosyasýnýn
+      görüntülenmesine olanak saðlar</TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>lusers &lt;sunucu&gt; </TD>
+    <TD>Belirtilen sunucu için çevrimiçi (online)
+      kullanýcý sayýsý, en fazla baglanan kullanýcý sayýsý bilgileri yerel
+      sunucu ve de tum að icin belirtir.<BR></TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>map</TD>
+    <TD>Að haritasýný görüntüler</TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>quit &lt;sebep&gt;</TD>
+    <TD>Belirtilen sebep ile IRC oturumunuzun
+      sonlandýrýlmasýna olanak saðlar. Eðer bir sebep belirtirseniz bu
+      bulundugunuz bütün kanalda görüntülenir</TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>ping &lt;kullanýcý&gt;</TD>
+    <TD>Belirtilen kullanýcýya PING göndermenize olanak
+      saðlar. Baðlantýyý ve gecikmeyi kontrol etmek için kullanýlýr.<BR
+      ></TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>version &lt;nick&gt;</TD>
+    <TD>Belirtilen nicke CTCP Version sorgusu gönderir.
+      Eðer client bunun için yapýlandýrýlmýþsa nickden versiyon cevabý
+      alýnýr.<BR></TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>links</TD>
+    <TD>Aða linkli bütün sunucularýn listesini
+    görüntüler</TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>Admin &lt;sunucu&gt;</TD>
+    <TD>Belirtilen sunucu hakkýnda yöentimsel bilgi
+      görüntülenir.<BR></TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>userhost &lt;nick&gt;</TD>
+    <TD>Belirtilen nickin kullanýcý hostu görüntülenir<BR
+      ></TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>topic &lt;kanal&gt; &lt;topic&gt;</TD>
+    <TD>Topic &lt;kanal&gt; belirtilen kanalýn o anki
+      topic bilgisini görüntüler. Topic &lt;kanal&gt; &lt;topic&gt; ise
+      belirtilen kanalýn topic bilgisinin deðiþtirilmesine olanak saðlar.<BR
+      ></TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>invite &lt;nick&gt; &lt;kanal&gt;</TD>
+    <TD>Belirtilen kanala belirtilen nicki davet etmek
+      için kullanýlýr. (komutu kullanýn kanalda operator olmasý þarttýr.)<BR
+      ></TD>
+    <TD>Kanal Operatorleri</TD></TR>
+  <TR>
+    <TD height=39>kick &lt;kanal, kanal&gt;
+      &lt;kullanýcý, kullanýcý&gt; &lt;sebep&gt;</TD>
+    <TD>Belirtilen kullanýcýyý yada kullanýcýlarý
+      belirtilen kanaldan yada kanallardan belirtilen sebepten dolayý 
+atmanýza
+      olanak saðlar. <BR></TD>
+    <TD>Kanal Operatorleri</TD></TR>
+  <TR>
+    <TD height=39>away &lt;sebep&gt;</TD>
+    <TD>Sebep ile kullanýldýðýnda sizi (away), yani
+      uzakta olarak belirtir. Eðer sebep belirtmezseniz (away) den çýkmýþ
+      olursunuz.<BR></TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>Watch +-&lt;nick&gt; +-&lt;nick&gt;<BR
+      ></TD>
+    <TD>Watch UnrealIRCd 'de yeni bir uyarý sistemidir.
+      Bu sistem eski-stil uyarý sistemine nazaran daha hýzlýdýr ve að
+      kaynaklarýný daha az kullanýr. Watch (izleme) listenize eklediðiniz 
+nick
+      IRC oturumu açtýðýnda veya kapadýðýnda sunucu size uyarý mesajý
+      gönderecektir. Ýzleme listeniz her oturum açýp kapamanýzda sýfýrlanýr, 
+bu
+      sebepten sunucuya her baðlandýðýnýzda izleme listenizi yeniden
+      düzenlemelisiniz.<BR></TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>helpop ?&lt;komut&gt; or
+      !&lt;komut&gt;<BR></TD>
+    <TD>HelpOp IRC Sunucu yardýmý almak için yeni bir
+      sistemdir. /HELPOP ? &lt;komut&gt; veya /HELPOP ! &lt;soru&gt; 
+þeklinde
+      kullanabilirsiniz. /HELPOP komutunda "?" kullanýlmasýyla yardým 
+sistemine
+      bilgi isteði gönderilir eðer bir sonuca ulaþamazsanýz '!' iþareti ile
+      kullanmayý deneyin. Bu durumda belirttiðiniz konu veya soru direkt 
+olarak
+      çevirimiçi help operatörlerine iletilecektir. Eðer ne ? iþareti ne de 
+!
+      iþareti kullanmazsanýz, bu durumda bilgi isteðiniz yardým sistemine
+      gönderilecek ve eðer sonuç alýnamazsa direkt olarak çevirimiçi help
+      operatörlerine iletilecektir.</TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>list &lt;dizgi&gt;</TD>
+    <TD>Eðer bir maske belirtmezseniz, aktüel kanal
+      listesi görüntülenir. Aþaðýda kullanabileceðiniz dizgiler ve bunlarýn
+      kullanýlmasý durumunda görüntülenecek kanal listesinde hangi 
+kanallarýn
+      görüntüleneceði açýklanmýþtýr.<BR>&gt;sayý içerisinde
+      belirttiðiniz &lt;sayý&gt;'dan fazla kullanýcýya sahip olan kanallar
+      listelenir.<BR>&lt;sayý içerisinde belirttiðiniz
+      &lt;sayý&gt;'dan az kullanýcýya sahip olan kanallar listelenir.<BR
+      >C&gt;sayý son &lt;sayý&gt; dakika içerisinde
+      oluþturulmuþ kanallarý listeler.<BR>C&lt;sayý son
+      &lt;sayý&gt; dakikanýn öncesinde oluþturulmuþ kanallarý listeler.<BR
+      >T&gt;sayý kanal topiði son &lt;sayý&gt; dakikadan
+      önce atýlmýþ kanallarý listeler.<BR>T&lt;sayý kanal
+      topiði son &lt;sayý&gt; dakika içerisinde atýlmýþ olan kanallarý
+      listeler.<BR>*maske* belirtilen *maske* ile eþleþen
+      kanallarý listeler<BR>!*maske* belirtilen *maske* ile
+      eþleþmeyen kanallarý listeler<BR></TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>Knock &lt;kanal&gt; &lt;mesaj&gt;<BR
+      ></TD>
+    <TD>Davetsel (invite only) konumunda olan bir kanal
+      için knock komutunu kullanarak, kanala giriþ için sizi kanala davet
+      etmelerini isteyebilirsiniz. Eðer kanal +K +V modlarýnda ise bu komut
+      iþlem görmeyecektir. Ayný zamanda kanaldan banlý iseniz bu komut yine
+      iþlem görmeyecektir<BR></TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>setname</TD>
+    <TD>Sunucuya tekrar baðlanmaya gerek kalmadan
+      kullanýcýlarýn isim kýsýmlarýný deðiþtirmelerine olanak saðlar<BR
+      ></TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>vhost &lt;login&gt; &lt;þifre&gt;</TD>
+    <TD>Hostname kýsmýnýzý daha önceden belirtilen,
+      sunucu tarafýndan saðlanan bir sahte hostla gizlemenize olanak 
+saðlar.<BR
+      ></TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>mode &lt;kanal/nick&gt; &lt;mod&gt;<BR
+      ></TD>
+    <TD>Belirtilen kanal veya nick için kullanýlan
+      modlarý düzenlemeye/deðiþtirmeye olanak saðlar. Mevcut kullanýcý ve 
+kanal
+      modlarý listesi için <A
+      href="#userchannelmodes"
+      >Kullanýcý &amp; Kanal Modlarý</A> kýsmýna bakýn.<BR
+      ></TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>credits</TD>
+    <TD>UnrealIRCd'in oluþturulmasýnda yardýmý bulunan
+      kiþilerin listesini görüntüler<BR></TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>license</TD>
+    <TD>GNU lisansýný görüntüler</TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>time &lt;sunucu&gt;</TD>
+    <TD>Belirtilen sunucunun tarihini ve zamanýný
+      gösterir.<BR></TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>botmotd &lt;sunucu&gt;<BR
+      ></TD>
+    <TD>Sunucunun bot.motd dosyasýný görüntüler</TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>identify &lt;þifre&gt;</TD>
+    <TD>Nickinizi tanýtmanýz için servisler sistemine
+      þifrenizi gönderir.<BR></TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>identify &lt;kanal&gt; &lt;þifre&gt;</TD>
+    <TD>Belirtilen kanalýn founderi olarak tanýtýlmanýz
+      için servisler sistemine þifrenizi gönderir.<BR></TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>dns &lt;tercih&gt;</TD>
+    <TD>Sunucunun DNS önbelleklemesi hakkýnda bilgi
+      görüntülenir. Birçok yazýlým DNS komutuna sahiptir (bu dns komutu 
+deðildir
+      fakat), bu yüzden /raw DNS yazarak kullanýn. Operler l karakterini DNS
+      önbellekleme giriþlerinin listesini görebilmek için ilk parametre 
+olarak
+      belirtebilirler.</TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>userip &lt;nick&gt;<BR
+      ></TD>
+    <TD>Belirtilen nickin IP Adres bilgisini gösterir.</TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=39>oper &lt;kullanýcý adý&gt;
+      &lt;þifre&gt;<BR></TD>
+    <TD>Oper Bloðunda belirtilen nick ve þifre ile bu
+      komutla belirtilen kullanýcý adý ve þifre uyuþtuðu takdirde 
+kullanýcýnýn
+      oper statüsüne geçmesine olanak saðlar<BR></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>wallops &lt;mesaj&gt;</TD>
+    <TD>+w kullanýcý modunda olan bütün kullanýcýlara
+      belirtilen mesajý gönderir</TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>globops &lt;mesaj&gt;</TD>
+    <TD>Bütün IRC Operatörlere belirtilen mesajý
+    gönderir</TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>chatops &lt;mesaj&gt;</TD>
+    <TD>+c kullanýcý modununda olan bütün IRC
+      Operatörlere belirtilen mesajý gönderir</TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>locops &lt;mesaj&gt;</TD>
+    <TD>Yerel (local) IRC Operatörlere belirtilen mesajý
+      gönderir</TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>adchat &lt;mesaj&gt;</TD>
+    <TD>Bütün adminlere belirtilen mesajý gönderir</TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>nachat &lt;mesaj&gt;</TD>
+    <TD>Net Admin statüsündeki bütün adminlere belirtilen
+      mesajý gönderir</TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>kill &lt;nick&gt; &lt;sebep&gt;</TD>
+    <TD>Belirtilen nickin aðdan baðlantýsýný keser</TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>kline [+|-]&lt;kullanýcý@host |
+      nick&gt; [&lt;ban süresi&gt; &lt;gerekçe&gt;]</TD>
+    <TD>Belirtilen hostmaskesini sunucudan banlar. Kline
+      global bir yasaklama (ban) deðildir.<BR><B
+      >ban süresi</B> a) saniye cinsinden bir deðer, b) bir
+      zaman deðeri, '1d' gibi (1 gün) veya c) kalýcý olmasý için '0' gibi 
+bir
+      deðer olabilir. Süre ve sebep isteðe baðlýdýr, eðer belirtilmezlerse
+      set::default-bantime yönergesi ile belirlenmiþ olan süre ban süresi 
+olarak
+      geçerlidir ve sebep olarak da 'no reason' görüntülenecektir. Bir 
+kline'ý
+      kaldýrmak için /kline -kullanýcý@host komutunu kullanýn</TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>zline [+|-]&lt;*@ip&gt; [&lt;ban
+      süresi&gt; &lt;gerekçe&gt;]</TD>
+    <TD>Belirtilen IP adresini yerel sunucudan banlar
+      (global deðildir). Daha fazla kullaným bilgisi için kline kýsmýna 
+bakýn.
+      Bir zline'ý kaldýrmak için /zline -*@ip komutunu kullanýn<BR
+      ></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>gline [+|-]&lt;kullanýcý@host |
+      nick&gt; [&lt;ban süresi&gt; &lt;gerekçe&gt;]<BR></TD>
+    <TD>Belirtilen kullanýcý@host ile eþleþme
+      gerçekleþtiði sürece aðda bulunan hiç bir sunucuya baðlantý 
+saðlanamaz.
+      Daha fazla kullaným bilgisi için kline kýsmýna bakýn. Bir gline'ý
+      kaldýrmak için /gline -kullanýcý@host komutunu kullanýn.<BR
+      ></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>shun [+|-]&lt;kullanýcý@host | nick&gt;
+      [&lt;shun süresi&gt; &lt;gerekçe&gt;]<BR></TD>
+    <TD>Belirtilen maskenin hiçbir komutu kullanamamasýný
+      ve hiçbir þekilde mesaj gönderememesini saðlar. Shun bütün aðýn bütün
+      sunucularýnda geçerlidir (gline gibi). Daha fazla kullaným bilgisi 
+için
+      kline kýsmýna bakýn. Bir shun'ý kaldýrmak için /shun -kullanýcý@host
+      komutunu kullanýn. <BR></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>gzline [+|-]&lt;ip&gt; &lt;ban
+      süresi&gt; :&lt;gerekçe&gt;<BR></TD>
+    <TD>Aðýn bütün sunucularýnda geçerli olacak bir zline
+      ekler. Daha fazla kullaným bilgisi için kline kýsmýna bakýn. Bir 
+gzline'ý
+      kaldýrmak için /gzline -*@ip komutunu kullanýn.<BR></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>rehash &lt;sunucu&gt;
+    &lt;flaglar&gt;</TD>
+    <TD>Belirtilen sunucunun konfigürasyon dosyasýnýn
+      yeniden okunmasýný saðlar. Mevcut flaglar: <BR>-dns - Yeniden baþlatýr ve yeniden yükler, çözümler<br>
+	  -motd - Tüm MOTD, BOTMOTD, OPERMOTD ve RULES dosyalarýný tekrar okumasýný saðlar (tld{}'de dahil olmak üzere bloklar)<br>
+	  -garbage - Deðersiz datalarýn toplanmasýný saðlar<BR>-ssl - SSL Sertifikalarý yeniden okur
+	  </br>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>restart &lt;þifre&gt;
+      &lt;gerekçe&gt;<BR></TD>
+    <TD>IRCD iþlemini yeniden baþlatýr. Eðer drpass { }
+      bloðu belirtilmiþse þifrenin de belirtilmesi gereklidir. Ayný zamanda
+      gerekçe kýsmý ile bir sebep de belirtebilirsiniz.<BR
+    ></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>die &lt;þifre&gt;<BR
+      ></TD>
+    <TD>IRCD iþlemini sonlandýrýr. Eðer drpass { } bloðu
+      belirtilmiþse þifrenin de belirtilmesi gereklidir.</TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>lag &lt;sunucu&gt; <BR
+      ></TD>
+    <TD>Bu komut IRC Sunucusu için bir Traceroute veya
+      Sonar gibi düþünülebilir. Örnek olarak /LAG irc.fyremoon.net olarak bu
+      komutu belirttiðinizde belirtilen sunucuya ulaþmak için geçilen bütün
+      sunuculardan komut cevaplanacaktýr. Bu komut gecikmenin hangi 
+sunucudan
+      kaynaklandýðýný bulmak için faydalýdýr<BR></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>sethost &lt;yenihost&gt;</TD>
+    <TD>Kullandýðýnýz host kýsmýný (vhost) istediðiniz
+      bir host ile deðiþtirebilmenize olanak saðlar.<BR></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>setident &lt;yeniident&gt;<BR
+      ></TD>
+    <TD>Kullandýðýnýz ident kýsmýný istediðiniz bir ident
+      ile deðiþtriebilmenize olanak saðlar<BR></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>chghost &lt;nick&gt;
+      &lt;yenihost&gt;<BR></TD>
+    <TD>Sistemde bulunan bir kullanýcýnýn kullandýðý host
+      kýsmýný deðiþtirebilmenize olanak saðlar<BR></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>chgident &lt;nick&gt;
+      &lt;yeniident&gt;<BR></TD>
+    <TD>Sistemde bulunan bir kullanýcýnýn kullandýðý
+      ident kýsmýný deðiþtirebilmenize olanak saðlar<BR></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>chgname &lt;nick&gt;
+      &lt;yeniisim&gt;<BR></TD>
+    <TD>Sistemde bulunan bir kullanýcýnýn kullandýðý isim
+      kýsmýný deðiþtirebilmenize olanak saðlar<BR></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>squit &lt;sunucu&gt;<BR
+      ></TD>
+    <TD>Belirtilen sunucunun aðdan baðlantýsýný keser<BR
+      ></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>connect &lt;sunucu&gt; &lt;port&gt;
+      &lt;sunucu&gt;</TD>
+    <TD>Eðer sadece tek sunucu belirtilirse bulunduðunuz
+      sunucuyu belirtilen sunucuya baðlamayý deneyecektir. Eðer iki sunucu
+      belirtilirse, belirtilen iki sunucuyu birbirlerine baðlamayý 
+deneyecektir.
+      Ýlk olarak leaf olan sunucuyu ikinci olaraksa hub olan sunucuyu
+      belirtin.<BR></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>dccdeny &lt;dosya-maskesi&gt;
+      &lt;gerekçe&gt;<BR></TD>
+    <TD>Belirtilen maskeyle eþleþen dosya isimleri için
+      DCC engeli koyar. Bu dosyalarýn gönderimi engellenir.<BR
+      ></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>undccdeny &lt;dosya-maskesi&gt;<BR
+      ></TD>
+    <TD>Belirtilen maskeyle eþleþen dosya isimleri için
+      DCC engelini kaldýrýr</TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>sajoin &lt;nick&gt; &lt;kanal&gt;,
+      &lt;kanal&gt;<BR></TD>
+    <TD>Bir kullanýcýyý belirtilen kanal(lar)a girmeye
+      zorlar. Sadece Services &amp; Network Admin statüsünde ki IRC 
+operatörler
+      kullanabilir</TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>sapart &lt;nick&gt; &lt;kanal&gt;,
+      &lt;kanal&gt;<BR></TD>
+    <TD>Bir kullanýcýyý belirtilen kanal(lar)dan
+      ayrýlmaya zorlar. Sadece services &amp; network Admin statüsünde ki 
+IRC
+      operatörler kullanabilir.<BR></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>samode &lt;kanal&gt; &lt;mod&gt;<BR
+      ></TD>
+    <TD>Network &amp; Services Admin statüsünde ki IRC
+      Operatörlerin kanalda operatör olmadan kanal modlarýný
+      deðiþtirebilmelerine olanak saðlar.<BR></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>rping &lt;sunucumaskesi&gt;<BR
+      ></TD>
+    <TD>Sunucular arasýnda ki var olan gecikmeyi
+      milisaniyeler mertebesinde görüntülenmesine olanak saðlar<BR
+      ></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>trace &lt;sunucumaskesi|nick&gt;<BR
+      ></TD>
+    <TD>Bir kullanýcý (nick) için kullanýldýðýnda,
+      belirtilen nick için gecikme ve sýnýf bilgisini görüntüler. Eðer bir
+      sunucu için kullanýlýrsa, belirtilen sunucu için sýnýf/versiyon/link
+      bilgisini görüntüler.<BR></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>opermotd <BR></TD>
+    <TD>Sunucunun OperMotd dosyasýný görüntüler<BR
+      ></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=39>addmotd :&lt;metin&gt;<BR
+      ></TD>
+    <TD>Motd dosyasýnýn sonuna belirtilen metni ekler<BR
+      ></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=36>addomotd :&lt;metin&gt;<BR
+      ></TD>
+    <TD>OperMotd dosyasýnýn sonuna belirtilen metni
+      ekler<BR></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=36>sdesc &lt;açýklama&gt;<BR
+      ></TD>
+    <TD>Server Admin statusunde ki IRC Operatörlerin,
+      sunucunun yeniden baþlatýlmasý gerekmeden, açýklama satýrýný
+      deðiþtirebilmelerine olanak saðlar.<BR></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=36>addline &lt;metin&gt;<BR
+      ></TD>
+    <TD>unrealircd.conf'a belirtilen metni ekler<BR
+      ></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=36>mkpasswd &lt;þifre&gt;<BR
+      ></TD>
+    <TD>Sade metin halindeki bir þifreyi,
+      unrealircd.conf'a eklemek için, yeniden þifreler (encrypt)<BR
+      ></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=36>tsctl offset +/- &lt;zaman&gt;<BR
+      ></TD>
+    <TD>IRCD'in dahili saatini ayarlar (Ne iþe yaradýðýný
+      TAM ANLAMIYLA bilmiyorsanýz KULLANMAYIN)<BR></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=36>tsctl time<BR></TD>
+    <TD>TS Raporunu görüntüler</TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=36>tsctl alltime</TD>
+    <TD>Bütün sunucular için TS Raporunu görüntüler</TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=36>tsctl svstime &lt;timestamp&gt;<BR
+      ></TD>
+    <TD>Bütün sunucular için TS zamanýný belirtmenize
+      saðlar (Ne iþe yaradýðýný TAM ANLAMIYLA bilmiyorsanýz KULLANMAYIN)<BR
+      ></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=36>htm &lt;tercih&gt;<BR
+      ></TD>
+    <TD>Yüksek trafik moduna iliþkin özelliklerin kontrol
+      edilmesini saðlar. Yüksek Trafik Modu (HTM) list whois who vs. gibi
+      belirli kullanýcý komutlarýný deaktif eder. tercih kýsmýnda: <BR
+      >-ON Sunucuyu Yüksek Trafik Moduna (HTM) girmeye
+      zorlar <BR>-OFF Sunucuyu Yüksek Trafik Modundan (HTM)
+      çýkmaya zorlar <BR>-NOISY Sunucunun HTM'ye giriþinde
+      ve HTM'den çýkýþýnda kullanýcýlara/yöneticilere bildiri mesajý
+      gönderilmesini saðlar<BR>-QUIET Sunucunun HTM'ye
+      giriþinde ve HTM'den çýkýþýnda kullanýcýlara/yöneticilere bildiri 
+mesajý
+      gönderilmemesini saðlar<BR>-TO &lt;deðer&gt; Sunucuya
+      HTM'yi hangi gelen veri hýzýnda aktif edeceðini belirtir<BR
+      ></TD>
+    <TD>IRC Operatörler</TD></TR>
+  <TR>
+    <TD height=36>stats &lt;flag&gt;<BR
+      ></TD>
+    <TD>B - banversion - Yasaklý versiyonlarýn
+      listelenmesini saðlar<BR>b - badword - Kötü
+      kelimelerin (badwords) listelenmesini saðlar<BR>C -
+      link - Link bloðunda (bloklarýnda) belirtilmiþ içerikler 
+görüntülenir<BR
+      >d - denylinkauto - deny link (otomatik olarak
+      reddedilen) bloðunda (bloklarýnda) belirtilmiþ içerikler 
+görüntülenir<BR
+      >D - denylinkall - deny link (hepsi) bloðunda
+      (bloklarýnda) belirtilmiþ içerikler görüntülenir<BR>e
+      - exceptthrottle - except throttle bloðunda (bloklarýnda) belirtilmiþ
+      içerikler görüntülenir<BR>E - exceptban - except ban
+      ve except tkl bloklarýnda belirtilmiþ içerikler görüntülenir<BR
+      >f - spamfilter - filtrenen içeriklerin listesi
+      görüntülenir (spamfilter)<BR>F - denydcc - Deny dcc
+      bloðu (bloklarý) içerikleri görüntülenir<BR>G - gline
+      - gline ve gzline listesi görüntülenir<BR
+      >&nbsp;&nbsp;Geniþletilmiþ Flaglar: [+/-mrs] [maske]
+      [sebep] [ekleyen]<BR>&nbsp;&nbsp;&nbsp;&nbsp;m
+      belirtilen maskeyle eþleþen/eþleþmeyen (+ veya - belirtilmesine göre)
+      gline'lar listelenir<BR>&nbsp;&nbsp;&nbsp;&nbsp;r
+      belirtilen sebep ile eþleþen/eþleþmeyen gline'lar listelenir<BR
+      >&nbsp;&nbsp;&nbsp;&nbsp;s belirtilen [ekleyen] ile
+      eþleþen/eþleþmeyen gline'lar listelenir<BR>I - allow
+      - Allow bloðu (bloklarý) içerikleri görüntülenir<BR>j
+      - officialchans - Resmi kanallar (official channels) listesi
+      görüntülenir<BR>K - kline - ban user/ban ip/except
+      ban bloklarý içerikleri listelenir. Ayrýca bu bloklarda belirtilmemiþ
+      ancak kline zline vs. gibi ban komutlarýyla atýlmýþ *line'larda
+      listelenir.<BR>l - linkinfo - link bilgisi
+      görüntülenir<BR>L - linkinfoall - Mevcut bütün
+      linklerin bilgileri görüntülenir<BR>M - command -
+      Kullanýlan her komutun ve kaç kez kullanýldýklarýnýn listesi
+      görüntülenir<BR>n - banrealname - Ban realname bloðu
+      (bloklarý) içeriði görüntülenir<BR>O - oper - Oper
+      bloðu (bloklarý) içeriði görüntülenir<BR>P - port -
+      Portlarla ilgili bilgi görüntülenir<BR>q - sqline -
+      SQLINE listesi görüntülenir<BR>Q - bannick - Ban nick
+      bloðu (bloklarý) içeriði görüntülenir<BR>r -
+      chanrestrict - channel deny/allow bloklarý içerikleri görüntülenir<BR
+      >R - usage - Kullaným bilgisi görüntülenir<BR
+      >S - set - Set bloðu içeriði görüntülenir<BR
+      >s - shun - Shun listesi görüntülenir<BR
+      >&nbsp;&nbsp;Geniþletilmiþ Flaglar: [+/-mrs] [maske]
+      [sebep] [ekleyen]<BR>&nbsp;&nbsp;&nbsp;&nbsp;m
+      belirtilen maskeyle eþleþen/eþleþmeyen (+ veya - belirtilmesine göre)
+      shun'lar listelenir<BR>&nbsp;&nbsp;&nbsp;&nbsp;r
+      belirtilen sebep ile eþleþen/eþleþmeyen shun'lar listelenir<BR
+      >&nbsp;&nbsp;&nbsp;&nbsp;s belirtilen [ekleyen] ile
+      eþleþen/eþleþmeyen shun'lar listelenir<BR>t - tld -
+      tld bloðu (bloklarý) içeriði görüntülenir<BR>T -
+      traffic - Sunucu Trafik bilgisi görüntülenir<BR>u -
+      uptime - Sunucunun ne kadar süredir hizmet verdiði ve baðlantý sayýsý
+      görüntülenir<BR>U - uline - Uline bloðu içeriði
+      görüntülenir<BR>v - denyver - Deny version bloðu
+      içeriði görüntülenir<BR>V - vhost - Vhost bloðu
+      içeriði görüntülenir<BR>X - notlink - Link bloðunda
+      var olan fakat henüz linki gerçekleþmemiþ sunucular listesi
+      görüntülenir<BR>Y - class - Class bloðu içeriði
+      görüntülenir<BR>z - zip - SZiplinked sunucular
+      hakkýnda ki sýkýþtýrma bilgisi görüntülenir<BR>Z -
+      mem - Bellek kullaným bilgisi görüntülenir<BR></TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=36>module<BR></TD>
+    <TD>Yüklü olan bütüm modüllerin listesinin
+      görüntülenmesini saðlar </TD>
+    <TD>Herkes</TD></TR>
+  <TR>
+    <TD height=36>close<BR></TD>
+    <TD>Tanýmlanamayan bütün baðlantýlarýn IRC Sunucusu
+      ile baðlantýlarýný kesmenize olanak saðlar. </TD>
+    <TD>IRC Operatörler</TD></TR></TBODY></TABLE>
+<P></P></DIV>
+<P><FONT size=+2><B>8 – Güvenlik Ýçin Tavsiyeler/Kontrol Listesi<A
+name=security></A></B></FONT></P>
+<DIV class=desc>
+<P>Eðer güvenlik ile ilgileniyorsanýz (ki
+ilgilenmelisiniz!), bu bölüm mevcut riskler hakkýnda genel bir bilgi 
+edinmenize
+yardýmcý olacaktýr. Bu sebeple aðýnýzý daha güvenli bir hale getirmek 
+amacýyla
+adým adým ilerleyeceðiniz bir "kontrol listesi" kullanabilirsiniz.</P>
+<P>Listedeki öðeler popularite/risk düzeyi/genelde
+kullanýlan saldýrý metodlarý sýrasýyla dizilmiþtir:</P></DIV>
+<P></P>
+<P><B><FONT size=+2>8.1 Þifreler</FONT></B><A name=secpasswords></A><BR>
+<DIV class=desc>Belirteceðiniz oper þifrelerinin, link
+þifrelerinin vs. daha güvenli olmasý için:<BR>- harf ve
+rakam kombinasyonlarýndan oluþan þifreler ("Whbviwf5" gibi) veya uzun 
+þifreler
+kullanýn ("blaheatsafish", "AlphaBeta555" gibi).<BR>-
+Link/oper þifrelerini mail hesabýnýzýn þifreleriyle veya bu tarz 
+kullandýðýnýz
+baþka hesaplarýn þifreleriyle ayný þifreler olarak BELÝRTMEYÝN.<BR></DIV>
+<P></P>
+<P><B><FONT size=+2>8.2 Ircd ile alakalý olmayan zayýflýklar</FONT></B><A
+name=secnonircd></A><BR>
+<DIV class=desc>UnrealIRCd 'in ircd ile alakalý olmayan bir
+zayýflýktan dolayý hacklenmesi olasýlýðý, UnrealIRCd'de bulunan bir bugdan
+dolayý hacklenmesi olasýlýðýna nazaran çok daha büyüktür. Örnek olarak http,
+smtp, dns ve ftp sunucularýnýzý ayný konumdan koþturuyorsanýz büyük bir
+hacklenme riskine sahipsiniz demektir. Ayný zamanda eðer çok kullanýcýlý bir
+sistemde iseniz (ör: shell aldýysanýz) bu durumda ise yerel exploitlere 
+karþý
+hacklenme riskiniz olacaktýr. Bu sebepten dolayý shell saðlayýcýnýzý 
+seçerken
+dikkatli olun. </DIV>
+<P></P>
+<P><B><FONT size=+2>8.3 Konfigürasyon dosyasý ve yetkilendirme</FONT></B><A
+name=secpermissions></A><BR>
+<DIV class=desc>Herzaman home dizininizin ve UnrealIRCd'in
+bulunduðu dizinin doðru yetkilendirmeye sahip olduðundan emin olun. Aksi
+takdirde yerel bir kullanýcý konfigürasyon dosyanýzý basitlikle elde 
+edebilir ve
+þifreleri görebilir...Eðer bundan emin deðilseniz kýsaca: <I>chmod -R go-rwx 
+/path/to/Unreal3.2</I> komutunu
+kullanýn.Hiçbir zaman UnrealIRCd'i webroot veya bu türden paylaþtýrýlmýþ bir
+dizinde bulundurmayýn ve yedekleme için doðru yetkilendirmeye sahip 
+olduðunuzdan
+da emin olun.<BR>Ayný zamanda mümkün olduðunca yeniden
+þifrelenmiþ (encrypted) þifreler kullanýn, Eðer OpenSSL desteði ile derleme
+yaptýysanýz size þifreleme metodu olarak sha1 veya ripemd160 metodunu
+kullanmanýzý öneririm, diðer bir metod olarak md5 metodunu da 
+kullanabilirsiniz.
+Eðer daha önce kullandýðýnýz 3.2.1 veya daha önceki versiyonlarda 
+belirttiðiniz
+yeniden þifrelenmiþ þifreler varsa (oper bloklarýnda) size bu þifreleri 
+yeniden
+þifrelemenizi (sadece /mkpasswd komutunu kullanarak) öneririm, çünkü 3.2.1 
+'de
+bazý önemli anti-crack özellikleri ilk kez kullanýldý.<BR><BR>Bu 
+anlatýlanlarýn 'güvenlik için
+diðer bir katman' olduðunu unutmayýn, eðer zayýf þifreler kullanýyorsanýz,
+bunlar kolaylýkla çözülebilir. Eðer birisi konfigürasyon dosyanýzý eline
+geçirirmeyi baþarýrsa, bu dosyada bir saldýrganýn saldýrýyý yapmasýna 
+yardýmcý
+olacak bir çok bilginin mevcut olduðunu da unutmayýn. 
+(link::password-connect
+gibi).</DIV>
+<P></P>
+<P><B><FONT size=+2>8.4 Kullanýcý kaynaklý problemler</FONT></B><A 
+name=secuser></A><BR>
+<DIV class=desc>Yöneticinizleri herzaman akýllýca seçin, ve
+bir zincirin zayýf halkasý kavramýný da unutmayýn. Çok dikkatli 
+olabilirsiniz ve
+hatta bu dökümanda yazýlan herþeyi uygulamýþ olabilirsiniz, fakat yönetici
+olarak seçtiðiniz arkadaþlarýnýzdan birisi aptalca bir hareket yapabilir. Bu
+hareket sizin kontrolunuz altýnda geliþmeyebilir. Bu hareket apaçýk olarak 
+þifre
+belirtmesi, harddiskini netbios/kazaa/morpheus aracýlýðýyla paylaþýma açmasý
+gibi eylemler olabilir. Sadece yapmanýz gereken kime hangi yetkileri
+vereceðinizi belirlerken dikkatli olmak. (oper::flags). </DIV>
+<P></P>
+<P><B><FONT size=+2>8.5 SSL/SSH &amp; sniffing</FONT></B><A 
+name=secsnif></A><BR>
+<DIV class=desc>Bir oper olarak ve sunucular arasý
+baðlantýlarda SSL kullanmanýz sizi "veri korsanlýðý"na karþý koruyacaktýr. 
+Veri
+korsanlýðý saldýrganýn kullanýcý ile sunucu arasýnda bir konumu 
+hacklemesiyle
+mümkün olur, böylece saldýrgan bütün að trafiðini görebilir, bütün
+konuþmalarý görebilir ve bütün þifreleri yaklayabilir. Yine ayný sebepten 
+dolayý
+herzaman telnet yerine SSH kullanýn. </DIV>
+<P></P>
+<P><B><FONT size=+2>8.6 Denial of Service attacks (DoS) [or: veya: hubumu 
+nasýl
+koruyabilirim?]</FONT></B><A name=secDoS></A><BR>
+<DIV class=desc>Birçok að bir floodun veya (D)DoS
+saldýrýsýnýn ne kadar "eðlenceli" olduðu konusunda tecrübe sahibi olmuþtur,
+yinede bu saldýrýlardan doðacak zararý azaltmak için birþeyler 
+yapabilirsiniz.
+Birçok að bir hub sunucusuna sahiptir, ve birçok kiþinin gözden kaçýrdýðý 
+nokta
+hub olan sunucunun saldýrýlara karþý korunmasýnýn oldukça kolay 
+olduðudur.<BR>Burada açýklayacaðým:<BR>1. Hub ismini
+varolmayan bir hostname olarak belirtin, ör 'hub.yournet.com', 
+fakat<BR>
+&nbsp;&nbsp;&nbsp; bu belirttiðiniz hostname için bir dns
+kaydý eklemeyin. Böylece saldýrgan hostu<BR>
+&nbsp;&nbsp;&nbsp; 
+çözemeyecek ve böylece flood
+yapamayacaktýr. Daha sonra huba sunucularý sadece<BR>
+&nbsp;&nbsp;&nbsp; 
+IP'yi belirterek linkleyin.<BR>&nbsp;&nbsp;&nbsp; Örnek 1: <I>link
+visibiblename.yournet.com { hostname 194.15.123.16; [vs] 
+};</I>.<BR>&nbsp;&nbsp;&nbsp; Örnek 2: <I>link
+visibiblename.yournet.com { hostname thehostnamethatworks.yournet.com; [vs]
+};</I>.<BR>&nbsp;&nbsp;&nbsp; Bir dipnot düþmek gerekirse,
+son örnekte belirttiðiniz sunucu isimlerinin zone transferlerine izin
+vermeyeceðinden emin olun, fakat bu bu konunun çok dýþýnda bir olay 
+;).<BR>2. Diðer bir önemli adým ise, normal kullanýcýlarýn '/stats
+c' komutunu kullanmalarýný engellemenizdir<BR>&nbsp;&nbsp;&nbsp; aksi 
+takdirde saldýrgan kolaylýkla link
+bloðunun içeriðini listeleyebilecektir. Eðer bu konuda 
+endiþeleriniz<BR>
+&nbsp;&nbsp;&nbsp; varsa (benim gibi) bunu set {
+oper-only-stats "*"; }; yönergesiyle kolaylýkla saðlayabilirsiniz. 
+Böylece<BR>
+&nbsp;&nbsp;&nbsp; normal kullanýcýlar tarafýndan bütün
+stats flaglarýnýn kullanýmýný engellemiþ olacaksýnýz. Eðer böyle yapmak
+istemiyorsanýz en azýndan "CdDlLXz" flaglarýnýn kullanýmýný engelleyin. Bu
+konuyla ilgili daha fazla bilgi bir sonraki bölümde 
+bulunmaktadýr.<BR><BR>
+Elbette bu anlatýlan adýmlar bu
+ataklarýn sürekli olarak uygulanmasý halinde (ör: bir kaç ay) baþlangýca 
+göre
+daha düþük oranda yararlý olacaktýr, çünkü IP'ler bazý kötü niyetli 
+kullanýcýlar
+tarafýndan bilinebilir.. Ayný zamanda saldýrganlarýn, bu adýmlarý 
+uygulasanýz
+dahi, hala hub olmayan sunuculara saldýrabileceklerini gözardý etmeyin, 
+fakat bu
+1 veya 2 zayýf noktadan (hublara) saldýrmaya kýyasla daha fazla çaba 
+gerektirir,
+ayný zamanda böylece hubunuz &amp; servisleriniz canlý kalacaktýr 
+:).</DIV>
+<P></P>
+<P><B><FONT size=+2>8.7 Bilgilendirme</FONT></B><A 
+name=secinformation></A><BR>
+<DIV class=desc><B>STATS</B><BR>/stats komutu çok bilgi verici bir komuttur, 
+olabildiðince
+bu komutun kullanýmýný kýsýtlamak isteyebilirsiniz. Bu konuda kendinize 
+sormanýz
+gereken soru "kullanýcýlarýmýn görmelerini istediklerim bilgiler neler?"
+sorusudur. Birçok büyük að bu soruya "hiçbir þey" olarak cevap verir, 
+bazýlarý
+ise '/stats g' ve '/stats k' harici kullanýmlarý kýsýtlar. Size bütün stats
+flaglarýnýn oper olmayanlar tarafýndan kullanýmýný engellemek için set {
+oper-only-stats "*"; }; yapmanýzý öneririm, fakat bunu yapmak 
+istemiyorsanýz,
+'/stats' yazarak mevcut bütün flaglarýn listesine bir göz atmanýzý
+öneririm.(eðer kuþkucuysanýz, sadece kýsýtlayýn.. neden bütün bilgileri 
+görme
+ihtiyacý duysunlar?)<BR>Birkaç örnek vermek gerekirse:<BR>- /stats o: oper 
+nicklerini ve hostmaskelerini gösterir.<BR>- /stats c: sunucu linkleri 
+hakkýnda bilgi verir.<BR>- /stats g, /stats k: genellikle proxy ile 
+baðlanmayý
+deneyen saldýrganlarýn listesini görüntüler.<BR>- /stats E,
+/stats e: bir saldýrgan bu flagý kullanabilirse buradaki hostmaskelerini
+kullanabilir<BR>- /stats i, /stats y: izinli baðlantý
+saðlayan hostlarý bulmasýnda saldýrgana yardýmcý olabilir.<BR>- /stats P: 
+Sadece sunucu baðlantýlarýnýn gerçekleþtiði
+portlarý bulmasýnda saldýrgana yardýmcý olabilir<BR>vs
+vs...<BR><BR><B>MAP / LINKS</B><BR>Birçok kiþi /map
+veya /links komutunu deaktif etmenin bir yolu olup olmadýðýný sormuþtur. 
+Bizim
+buna cevabýmýz; böyle bir þey yapmak saçmadýr ve güvenlik için yanlýþ bir
+yaklaþýmdýr, açýklamama izin verin... Kullanýcýlar tarafýndan kullanýlan
+sunucularý gizlemek, kullanýcýlarýn zaten üzerinde bulunduklarý sunucularý
+bilmelerinden dolayý yararsýzdýr. Bu konu için bölüm 8.6'ya bakýn.<BR>Þimdi 
+ne yapaBÝLÝRSÝNÝZ? 3.2.1 verisyonundan beri 'flat
+map' özelliði mevcuttur (set::options::flat-map), bu özellik bütün 
+sunucularý
+/map be /links komutu uygulamalarýnda direkt linkli olarak gösterecektir,
+böylece kullanýcýlar hangi sunucunun hangisine linkli olduðunu
+anlayamayacaklardýr... Bu korunma ve güvenlik için iyi bir özelliktir çünkü 
+bu
+özellikle ayný zamanda 'zayýf nokta'lar kolaylýkla belirlenemeyecektir. Bu
+yüzden bu özelliði kullanmanýz önerilir. Fakat bu korumanýnda kusursuz
+olmadýðýný unutmayýn... Eðer bir ayrýlma (split) meydana gelirse bu durumda 
+kötü
+niyetli kullanýcýlar hangi sunucunun hangisine linkli olduðunu 
+görebilir.<BR><BR><B>NORMAL
+KULLANICILAR &amp; SNOMASK</B><BR>Birçok kiþi tarafýndan
+bilinmeyen bir özellikte, normal kullanýcýlarýn bazý snomasklarý
+kullanabilmesidir, +s +sk gibi. Bu yolla kullanýcýlar rehash, kill ve diðer
+tipte bazý mesajlarý görebilirler.<BR>Bunu önlemek için
+set::restrict-usermodes yönergesini: <I>set {
+restrict-usermodes "s"; };</I> þeklinde 
+belirtebilirsiniz.<BR><BR><BR>Elbette
+bu anlatýlarýn hepsi "bilgi gizleme" olarak nitelendirilir, dolayýsýyla bu
+"gerçek" güvenlik deðildir. Fakat bu sunucunuzun hacklenmesi için gerekecek
+çabayý arttýrmaya yöneliktir.<BR></DIV>
+<P></P>
+<P><B><FONT size=+2>8.8 Exploitlere karþý korunma</FONT></B><A
+name=secantiexploit></A><BR>
+<DIV class=desc>Yýðýn tabanlý exploitlerin çalýþmasýný
+zorlaþtýracak kernel yamalarý vardýr. Bu iyidir, fakat bu sizin ana odak
+noktanýz olmamalýdýr, diðer baþka yollarla exploit saldýrýlarýna
+uðrayabileceðinizi unutmayýn ve bu büyük bir risktir.. çeþitli 
+sebeplerle.<BR><BR>
+Yapmanýz gereken tek þey vardýr,
+HERZAMAN EN SON VERSÝYONU KULLANIN, bunun için <A
+href="http://mail1.sourceforge.net/mailman/listinfo/unreal-notify" 
+target=_blank>unreal-notify mailinglist</A> listesine abone olun
+böylece yayýnlanan yeni versiyon duyurularýný alabilirsiniz. 
+(unreal-uyarýsý
+sadece yeni versiyon duyurularý içindir, dolayýsýyla her X ayda 1 mail
+gönderilir.)<BR>
+</DIV>
+<P></P>
+<P><B><FONT size=+2>8.9 Özet</FONT></B><A name=secsummary></A><BR>
+<DIV class=desc>Umarým, hiçbir zaman %100 güvende
+olamayacaðýnýzý anlamýþsýnýzdýr. Siz (ve biz) burda belirtilmeyen bütün 
+açýklarý
+bulup&amp;onaracaðýz, bir saldýrganýn ihtiyacý olduðu tek þey sadece 1 
+açýkla
+bir sunucu bulmaktýr. Burada açýklananlar mevcut riskleri minimuma 
+indirmenize
+yardýmcý olacaktýr. Að güvenliðiniz için zaman ayýrýn ve yöneticilerinizi
+eðitin. Birçok kiþi hacklenene kadar güvenliðe önem vermez, böyle bir tutum
+sergilemeyin :). </DIV>
+<P></P>
+<P><FONT size=+2><B>9 – Sýkça sorulan Sorular (FAQ)<A 
+name=faq></A></B></FONT></P>
+<DIV class=desc>
+<P>FAQ kýsmýna çevirimiçi olarak <A
+href="http://www.vulnscan.org/UnrealIRCd/faq/" target=_blank>buradan</A> 
+ulaþabilirsiniz.</P></DIV>
+<P></P>
+<P><FONT size=+2><B>A Düzenli Ýfadeler<A name=regex></A></B></FONT></P>
+<DIV class=desc>
+<P>Düzenli ifadeler Unreal'de bir çok yerde kullanýlýr,
+badwords, spamfilter ve aliases'lerde olduðu gibi. Düzenli ifadeler kalýp
+eþleþmesi için kullanýlan çok kompleks araçlardýr. Bunlar bazen "regexp" 
+bazen
+de "regex" olarak kullanýlýr. Unreal bu ifadeler için TRE düzenli ifadeler
+kütüphanesini kullanýr. Bu kütüphane çok kompleks ve kimi zaman karýþýk
+olabilecek ileri düzey ifadeleri destekler. Aþaðýda anlatýlanlar regexp'nin
+çalýþma mantýðý hakkýnda size bilgi verecektir. Eðer regexp kullanýmý 
+hakkýnda
+daha fazla bilgiye sahip olmak istiyorsanýz ve bu konuyla ilgileniyorsanýz 
+<A
+href="http://www.laurikari.net/tre/syntax.html" target=_new>burayý týklayýn 
+(TRE homepage)</A>.</P></DIV>
+<P><FONT size=+2><B>A.1 Deðiþmezler<A name=regexlit></A></B></FONT></P>
+<DIV class=desc>
+<P>Deðiþmezler bir regexp'nin en temel bileþenidir. Basit
+olarak deðiþmezler sade-metinde görülen karakterlerdir. Örneðin; "test" 
+ifadesi
+4 adet deðiþmez içerir: "t", "e", "s", "t". Unreal'de deðiþmezler 
+büyük-küçük
+karakter duyarlý deðildir, dolayýsýyla örnekde verilen ifade "TEST" ile de
+eþdeðerdir. "Meta karakter" olmayan bütün karakterler deðiþmez sayýlýr. Ayný
+zamanda bir karakteri tersbölü (\) karakterini kullanarak da deðiþmez
+yapabilirsiniz. Örneðin nokta (.) bir metakarakterdir. Eðer . 'yý bir 
+deðiþmez
+olarak kullanmak isterseniz yapmanýz gereken .'yý \. olarak belirtmektir ve
+Unreal bunu nokta olarak yorumlayacaktýr. Ayný zamanda ASCII karakter 3 
+(renk)
+gibi bir karakteri de kontrol etmek isteyebilirsiniz. Bunu \x þeklinde 
+bildiri
+yaparak saðlayabilirsiniz. Örneðin \x3 olarak bildiri yaptýðýnýzda bu ASCII
+karakter 3'e (renk). Burada \x ifadesinden sonra onaltýlýk bir sayýda
+belirtebilirsiniz ve bu \x0'dan \xFF 'e kadar belirtilebilir.</P></DIV>
+<P><FONT size=+2><B>A.2 Nokta Ýþleci<A name=regexdot></A></B></FONT></P>
+<DIV class=desc>
+<P>Nokta iþleci (.) "herhangi bir karakter"le eþleþme için
+kullanýlýr. Herhangi bir deðere sahip tek bir karakterle eþleþir. Örneðin, 
+"a.c"
+düzenli ifadesi "abc", "adc" vs. gibi ifadelerle eþleþecektir. Fakat "abd" 
+ile
+eþleþemeyecektir çünkü "a" ve "c" birer deðiþmezdir ve karþýlaþtýracak 
+ifadeyle
+bunlarýn eþleþmesi zorunludur.</P></DIV>
+<P><FONT size=+2><B>A.3 Yineleme Ýþleçleri<A 
+name=regexrep></A></B></FONT></P>
+<DIV class=desc>
+<P>Regex'de ençok yapýlan hatalardan biri yineleme
+iþleçlerinin tam anlamýyla joker karakterler olarak kullanýlmasýdýr. Bu
+doðrudur, * ve ? karakterleri joker karakterler olarak kullanýlabilir ancak
+bunlarýn regexdeki manasý tam anlamýyla joker karakterler deðildir. Ek 
+olarak,
+düzenli ifadeler daha ileri düzeyde yineleme metodlarýný da destekler.
+<P>En temel yineleme iþleci ? iþlecidir. Sýfýr veya bir
+kere eþleþme iþlecidir. Joker karakter olarak kullanýmýnda, örneðin "a?c"
+ifadesinde yineleme iþleci "a"yý takip eden ve "c"den önce gelen herhangi 
+bir
+karakterle eþleþecektir. Fakat regexdeki kullanýmýnda anlamý farklýdýr. Bu
+durumda "a?c" ifadesi "ac" ifadesi ve "c" ifadesi haricinde hiçbir ifadeyle
+eþleþmeyecektir. Dolayýsýyle ? iþleci; belirtilen düzenli ifadede kendinden 
+önce
+gelen karakterin eþeleþecek ifadede var olup olmamasýna göre eþleþme 
+yapacaktýr.
+Eðer düzenli ifadede bu iþleç joker karakter olarak kullanýlmak istenirse bu
+durumda ayný ifadeyi "a.?c" þeklinde belirtmeniz gerekir. Bu durumda ? 
+iþleci
+"a"yý takip eden ve "c"den önce gelen herhangi bir karakterle eþleþecektir.
+<P>Bir yineleme iþleci de * iþlecidir. Ayný þekilde bu
+iþleçte joker karakter olarak kullanýlabilir. Ayný zamanda sýfýr veya daha
+fazlasýyla eþleþtirme iþlecidir. * iþleci; belirtilen düzenli ifadede 
+kendinden
+önce gelen karakterin 0 ya da daha fazla bulunmasý durumlarýyla eþleþir. 
+Örneðin
+"a*c" düzenli ifadesi "c" ile sonlandýrýlmýþ 0 veya daha fazla "a" içeren
+ifadelerle iþleþecektir. Misal "aaaaaac" ifadesiyle eþleþir. Eðer joker 
+karakter
+olarak kullanýlmak istenirse "a.*c" þeklinde belirtmeniz gerekecektir.
+<P>+ iþlecinin yorumlanmasý * iþlecinin yorumlanmasýna çok
+benzer. Ancak sýfýr veya daha fazlazýyla deðil 1 veya daha fazlasýyla 
+eþleþtirme
+iþlecidir. "a+c" düzenli ifadesi "ac" veya daha fazla ardarda "a" içeren
+"aaaaaaaaac" gibi bir ifadeyle eþleþecektir.
+<P>En ileri düzeyde yineleme iþleci ise sýnýrlý sayýda
+yineleme iþlecidir. Bir sýnýrlý sayýda yineleme iþleciyle kendinden önce 
+gelen
+karakterin kaç kez tekrarlanacaðýný kesin olarak belirtebilirsiniz. Örneðin, 
+8 a
+içeren veya en az 8 a bulunduran veya 3-5 a bulunduran bir ifadeyle 
+eþleþtirme
+yapabilirsiniz. Temel kullanýmý {M,N} þeklindedir, burada M sýnýrlamada
+belirtilecek sayýlardan küçüðünü, N ise büyüðünü temsil etmektedir. Örneðin 
+3 ve
+5 arasýndaki bir sayýda a içeren bir eþleþme için "a{3,5}" þeklinde
+belirtmelisiniz. Bununla birlikte M sayýsý N sayýsýna eþit olamaz. Bu 
+durumda
+eðer tam 8 a içeren bir eþleþme için "a{8]" þeklinde belirtmelisiniz. Bu
+"aaaaaaaa" ile eþleþmeye denktir. En az 8 a içeren bir ifadeyle eþleþme için
+"a{8,}" þeklinde belirtmelisiniz.
+<P>Varsayýlan olarak, bütün yineleme iþleçleri aç gözlüdür.
+Temel olarak bunun anlamý bir yineleme iþleci olabildiðince çok karakterle
+eþleþir. Bu bir örnekle daha iyi açýklanabilir.
+<P>Aþaðýdaki ifade gibi bir metnimiz olsun:<BR>HELLO<BR>Belirtilen düzenli 
+ifade de
+aþaðýdaki olsun:<BR>.+L
+<P>Bu örnekte, .+ iþlecinin "HE." ile eþleþeceðini
+düþünmelisiniz. Bununla birlikte bu doðru deðildir. Çünkü + iþleci aç 
+gözlüdür,
+dolayýsýyla "HEL." ile eþleþecektir. Bunun sebebi, bu iþlecin giriþ metninde
+bulunan eþleþecek en büyük parçayý seçmesidir. Bu örnekte bu iþleç "HEL"
+parçasýyla eþleþti. Metin "HELLO" olduðundan, "HEL" ifadesini bir "L" takip
+ettiðinden, eþleþme gerçekleþti. Bununla birlikte bazen de bir iþleç, 
+yineleme
+iþlecinden sonra ? karakteri kullanýlarak bu durumdan kurtarýlabilir. 
+Yukarýdaki
+örneðe göre düzenli ifade ".+?L" þeklinde deðiþtirilirse bu durumda .+? 
+iþleci
+"HE" ile eþleþecektir. ? karakteri herhangi bir yineleme iþlecine 
+eklenebilir:
+??, *?, +?, {M,N}?.</P></DIV>
+<P><FONT size=+2><B>A.4 Parantez Ýfadeleri<A 
+name=regexbracket></A></B></FONT></P>
+<DIV class=desc>Parantez ifadeleri kullanmak "veya"
+operatörü oluþturmak için uygun bir yoldur. Örneðin, eðer "bir a ile veya a 
+b
+ile eþleþ" þeklinde söylemek istiyorsanýz. Parantez ifadeleri ismini ([])
+karakterlerinin kullanýlmasýndan alýr. Temel kullanýmýyla parantez ifadeleri 
+bir
+seri karakteri içerebilir. Böylece bu karakterler aralarýnda "veya" 
+operatörü
+varmýþ gibi deðerlendirilir. Bir örnek olarak, "[abc]" ifadesi "a,", "b," 
+veya
+"c." ile eþleþir. Bu nedenle "a[bd]c" düzenli ifadesi ise "abc" ve "adc" 
+eþleþir
+fakat "acc." ile eþleþmez.
+<P>Bu ifadeler uygulamada ençok bir harf veya bir rakam
+kontrolunde kullanýlýr. Birer birer belirtmekten, yani "[0123456789]" 
+þeklinde
+belirtmekten daha ziyade parantez ifadeleri içinde aralýk belirtebilirsiniz. 
+Bu
+aralýklarý baþlangýç deðeri ve bitiþ deðeri arasýna - karakteri koyarak
+belirtebilirsiniz. Böylece bir rakam kontrolu için en basit þekliyle 
+"[0-9]"
+þeklinde belirtme yapabilirsiniz. Bu türdeki belirtme harfler için ve ASCII
+deðerleri içinde geçerlidir. Eðer bir harf eþleþmesi yapmak istiyorsanýz 
+basitçe
+"[a-z]" þeklinde belirtebilirsiniz, Unreal büyük-küçük harf duyarlýlýðýna 
+sahip
+olmadýðýndan bu bütün (büyük/küçük) karakterleri kapsayacaktýr. Ayný zamanda
+ayný ifadede çoklu aralýklar da belirtebilirsiniz. Bir harfle veya bir 
+rakamla
+eþleþme yapmak istiyorsanýz, "[0-9a-z]" þeklinde belirtmelisiniz. - 
+karakterinin
+parantez ifadelerinde özel bir karakter olduðunu unutmayýn. - deðiþmeziyle 
+bir
+eþleþme yapmak istiyorsanýz, bu deðiþmezi parantez ifadesinin ya ilk 
+karakteri
+olarak ya da son karakteri olarak belirtin. Örneðin "[0-9-]" ifadesi 
+herhangi
+bir rakam veya - karakteriyle eþleþecektir.
+<P>Bunlarý daha da sadeleþtirmek için, parantez
+ifadelerinde kullanýlmak üzere "karakter sýnýflarý" vardýr. Bu karakter
+sýnýflarý ihtiyaç duyulan belirli aralýklarý tanýmlamak için kullanýlýr.
+Karakter sýnýflarý parantez ifadesi içinde, isimlerinin baþýna ve sonuna :
+karakteri eklenerek kullanýlýr. Örneðin "[0-9]" gibi bir ifade "[:isdigit:]"
+þeklinde yazýlabilir. Aþaðýda mevcut karakter sýnýflarý ve iþlevler
+belirtilmiþtir:
+<UL>
+  <LI><TT>alnum</TT> - sadece
+  alfanumerik karakterler
+  <LI><TT>alpha</TT> - alfabetik
+  karakterler
+  <LI><TT>blank</TT> - boþluk
+  karakterleri
+  <LI><TT>cntrl</TT> - kontrol
+  karakterleri
+  <LI><TT>digit</TT> - onluk tabanda
+  rakam deðerleri (0 'dan 9 'a kadar)
+  <LI><TT>graph</TT> - boþluk
+  karakteri hariç bütün basýlabilir karakterler
+  <LI><TT>lower</TT> - sadece küçük
+  harfleri gözönünde bulunduran kriter
+  <LI><TT>print</TT> - boþluk
+  karakteri dahil bütün basýlabilir karakterler
+  <LI><TT>punct</TT> - boþluk
+  karakteri ve alfanumerik karakterler hariç basýlabilir karakterler
+  <LI><TT>space</TT> - white-space
+  characters
+  <LI><TT>upper</TT> - sadece büyük
+  harfleri göz önünde bulunduran kriter
+  <LI><TT>xdigit</TT> - onaltýlýk
+  tabanda rakam deðerleri </LI></UL>Karakter sýnýflarý ile ilgili bir diðer 
+önemli
+nokta ise, karakter sýnýflarý parantez ifadesi içinde tek eleman olmalý, 
+yani
+baþka bir elemanla birlikte kullanýlamaz. Örneðin, "[:isdigit:-]" geçersiz 
+bir
+kullanýmdýr. Bunun için "[[:isdigit:]-]" þeklinde kullanýn.
+<P>Parantez ifadelerinin son özelliði olumsuzlamadýr. Bazý
+zamanlarda "bu karakterler haricinde herhangi bir karakter" gibi bir ifadeyi
+belirtmek isteyebilirsiniz. Örneðin eðer "harf olmayan" bir karakteri 
+kontrol
+etmek isterseniz, burada a-z harici karakterlerden bahsedildiði açýktýr, 
+bunu
+ifadenin baþýna ^ karakterini ekleyerek belirtebilirsiniz. Dolayýsýyla bu
+durumda "[^a-z]" ifadesi harf olmayan herhangi bir karakterle eþleþir. -
+karakterinde olduðu gibi, eðer ^ karakterini bir deðiþmez olarak belirtmek
+isterseniz, bu deðiþmezi ilk karakter pozisyonunda kullanmayýn, "[a-z^]"
+ifadesinde olduðu gibi kullanýn. Karakter sýnýflarý içinde ayný uygulama
+geçerlidir, "[^[:isdigit:]]" ifadesiyle rakam olmayan bütün karakterler
+belirtilmiþtir.</P></DIV>
+<P><FONT size=+2><B>A.5 Demirleme Ýþleçleri<A 
+name=regexassert></A></B></FONT></P>
+<DIV class=desc>Demirleme iþleçleri dizilerinin
+belirtilemeyeceði koþullarda, bazý genel parantez ifadeleri için kýsayollar
+belirtmek için kullanýlýr.
+<P>^ karakteri belirtilecek düzenli ifadenin baþýnda
+kullanýldýðýnda, eþleþme yalnýzca kontrol edilen metnin belirtilen düzenli 
+ifade
+ile baþlamasýyla gerçekleþecektir. Örneðin düzenli ifade "test" olarak
+belirtilirse bu ifade "test" ifadesini içerdiðinden, "this is a test" metni 
+ile
+eþleþecektir. Ancak düzenli ifadeyi "^test" olarak belirtirseniz bu sefer
+eþleþme gerçekleþebilmesi için metin "test" ile baþlamak zorundadýr. Ek 
+olarak $
+karakteri ise belirtilecek düzenli ifadenin sonunda kullanýldýðýnda, eþleþme
+yalnýzca kontrol edilen metnin belirtilen düzenli ifade ile sonlandýðý
+durumlarda gerçekleþecektir. Örnek olarak "^test$" düzenli ifadesi, yalnýzca
+"test." metniyle eþleþecektir.
+<P>Diðer bütün demirleme iþleçleri belirli bir karakterin
+baþýna \ konulmasýyla kullanýlýr. Örneðin, bir kelimenin baþýný ve sonunu
+kontrol etmek için, \&lt; ve \&gt; kullanabilirsiniz.
+<P>Geriye kalan demirleme iþleçleri ise biri pozitif biri
+negatif deðeri temsil etmek üzere 2 formdadýr. Bu iþleçler aþaðýda
+listelenmiþtir:
+<UL>
+  <LI><TT>\b</TT> - Kelime sýnýrý
+  <LI><TT>\B</TT> - Non-word boundary
+  <LI><TT>\d</TT> - Rakam karakterleri
+  (<TT>[[:digit:]]</TT> ifadesine denktir)
+  <LI><TT>\D</TT> - Rakam olmayan
+  karakterler (<TT>[^[:digit:]]</TT> ifadesine denktir)
+  <LI><TT>\s</TT> - Boþluk karakteri
+  (<TT>[[:space:]]</TT> ifadesine denktir)
+  <LI><TT>\S</TT> - Boþluk-olmayan
+  karakter (<TT>[^[:space:]]</TT> ifadesine denktir)
+  <LI><TT>\w</TT> - Ýþaret
+  karakterleri (<TT>[[:alnum:]_]</TT> ifadesine denktir)
+  <LI><TT>\W</TT> - Ýþaret-olamayan
+  karakterler (<TT>[^[:alnum:]_]</TT> ifadesine denktir)
+  </LI></UL></DIV>
+<P><FONT size=+2><B>A.6 Veya Ýþleci<A name=regexalt></A></B></FONT></P>
+<DIV class=desc>Veya iþleci | karakteridir. Örneðin "a veya
+b" gibi bir ifade belirtmek için "a|b" bildirimini yapabilirsiniz. </DIV>
+<P><FONT size=+2><B>A.7 Gruplama Ýþleçleri (Alt Ýfadeler)<A 
+name=regexsub></A></B></FONT></P>
+<DIV class=desc>Gruplama iþleçleri alt ifadelerdir. Bir alt
+ifade oluþturmanýn 2 yolu vardýr. 2 metod "grup adresleme iþleci" açýsýndan
+bakýldýðýnda farklýlýk göstermektedir. Grup adresleme iþleci kullanan bir 
+alt
+ifade bildirmek için, açýk parantez yerine "(?:" ifadesini kullanýn. Örneðin
+"([a-z])" ifadesini bir alt ifade olarak bildirmek için "(?:[a-z])" þeklinde
+belirtmelisiniz. Bütün yineleme iþleçleri alt ifadelerde "alt ifadenin 1 
+veya
+daha fazla tekrarlanmasý" þeklinde kullanýlabilir. Örneðin "[0-9][a-z][0-9]"
+gibi bir düzenli ifademiz varsa ve bu ifadenin iki kez tekrarlanmasý
+durumlarýnda eþleþme yapmak istiyorsak bunu "([0-9][a-z][0-9]){2}" þeklinde
+belirtebilirsiniz.</DIV>
+<P><FONT size=+2><B>A.8 Grup Adresleme Ýþleci<A 
+name=regexbackref></A></B></FONT></P>
+<DIV class=desc>Grup adresleme iþleçleri düzenli ifadenin
+önceden belirtilmiþ bir alt ifadesiyle bir adresi eþleþtirmenize olanak 
+saðlar.
+Bir grup adresleme iþlecini tersbölü karakteri (\) ve ardýndan da 0-9 
+arasýnda
+bir rakam belirterek kullanabilirsiniz, örneðin \1. \0 grup adresleme iþleci
+özel bir iþleçtir, bu iþleçle düzenli ifadenin tamamýný kapsatabilirsiniz. 
+Grup
+adresleme iþleçlerinden, ayný diziyi 2 kere içeren bir metni eþleþtirmek
+istediðinizde faydalanabilirsiniz. Örneðin, nick!user@host gibi bir maske 
+olsun.
+Ve "[0-9][a-z]{5}" düzenli ifadesi ile eþleþen bir nick ve kullanýcý adý
+kullanan bir trojan olsun ve ayný nicki ve identi kullansýn. Bu durumda
+"[0-9][a-z]{5}![0-9][a-z]{5}@.+" ifadesi ile eþleþme yapamazsýnýz çünkü bu 
+ifade
+nick ve ident kýsmýnýn farklý oldugu durumlara izin verebilir. Örneðin nick
+labcde ve identte 2fghij olabilir. Grup adresleme iþleçleri ile bu 
+limtlemenin
+üstesinden gelebilirsiniz. Bunun için (bu örnek için) 
+"([0-9][a-z]{5})!\1@.+"
+þeklinde ifade belirtmeniz yeterli olacaktýr.
+<P>9 tane grup adresleme iþleci olduðundan (?:) notasyonu
+kullanýþlýdýr. Bu size grup adresleme iþleci boþa kullanýlmaksýzýn alt ifade
+oluþturmanýza izin verir.</P></DIV>
+<P><FONT size=+2><B>A.9 Büyük/Küçük Harf Duyarlýlýðý<A 
+name=regexcase></A></B></FONT></P>
+<DIV class=desc>Bahsedildiði üzere, Unreal bütün düzenli
+ifadeleri büyük/küçük harf duyarsýz olarak kullanýr. Bunun için temel 
+gerekçe;
+bir ifadeyle daha fazla eþleþme yapmak isteyebilirsiniz. Örneðin 
+"www.test.com"
+metnini bloklamak isteyebilirsiniz, bunun için “WWW.TEST.COM” ifadesini
+belirtmek zorunda kalmayacaksýnýz.. Bununla birlikte, büyük/küçük harf
+duyarlýlýðýnýn aktif olmasý gereken durumlar da olabilir. Örneðin belirli
+trojanlarýn eþleþmesinde. Bu durumda büyük/küçük harf duyarlýlýðýný aktif
+edebilirsiniz. Bu duyarlýlýðý açmak için "(?-i)" ifadesini, kapamak için ise
+"(?i)" ifadesini kullanabilirsiniz. Örneðin, "(?-i)[a-z](?i)[a-z]" ifadesi
+yalnýzca küçük harflerle eþleþecektir. </DIV></BODY></HTML>
+
+</div>
