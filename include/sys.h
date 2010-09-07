@@ -46,11 +46,7 @@
 #ifdef ISC202
 #include <net/errno.h>
 #else
-# ifndef _WIN32
-#include <sys/errno.h>
-# else
 #include <errno.h>
-# endif
 #endif
 #include "setup.h"
 #include <stdio.h>

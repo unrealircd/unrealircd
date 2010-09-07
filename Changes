@@ -2122,3 +2122,4 @@
 - Fix /msg IRC WHOIS response for persons with secure connections. (#3947)
 - Fix segfault by checking if RESTRICT_USERMODES is NULL in the code
   for bug #3329.
+- Don't use sys/errno.h, as it's not POSIX and breaks on QNX-6.5.0. (#3955)
