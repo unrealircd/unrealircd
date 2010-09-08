@@ -2123,3 +2123,6 @@
 - Fix segfault by checking if RESTRICT_USERMODES is NULL in the code
   for bug #3329.
 - Don't use sys/errno.h, as it's not POSIX and breaks on QNX-6.5.0. (#3955)
+- Fixed another compile problem on QNX, reported by chotaire (#3955 too).
+- Fixed incorrect messages regarding clock going backwards on QNX 6 and
+  later, reported by chotaire (#0003956).

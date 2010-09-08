@@ -1037,6 +1037,12 @@ static void generate_cloakkeys()
 }
 #endif
 
+/* MY tdiff... because 'double' sucks.
+ * This should work until 2038, and very likely after that as well
+ * because 'long' should be 64 bit on all systems by then... -- Syzop
+ */
+#define mytdiff(a, b)   ((long)a - (long)b)
+
 #ifndef _WIN32
 int main(int argc, char *argv[])
 #else
@@ -1707,7 +1713,9 @@ void SocketLoop(void *dummy)
 #define POSITIVE_SHIFT_WARN	20
 
 		timeofday = time(NULL) + TSoffset;
-		if (timeofday - oldtimeofday < NEGATIVE_SHIFT_WARN) {
+		if (oldtimeofday == 0)
+			oldtimeofday = timeofday; /* pretend everything is ok the first time.. */
+		if (mytdiff(timeofday, oldtimeofday) < NEGATIVE_SHIFT_WARN) {
 			/* tdiff = # of seconds of time set backwards (positive number! eg: 60) */
 			long tdiff = oldtimeofday - timeofday;
 			ircd_log(LOG_ERROR, "WARNING: Time running backwards! Clock set back ~%ld seconds (%ld -> %ld)",
@@ -1725,7 +1733,7 @@ void SocketLoop(void *dummy)
 			fix_timers();
 			nextfdlistcheck = 0;
 		} else
-		if ((oldtimeofday > 0) && (timeofday - oldtimeofday > POSITIVE_SHIFT_WARN)) /* do not set too low or you get false positives */
+		if (mytdiff(timeofday, oldtimeofday) > POSITIVE_SHIFT_WARN) /* do not set too low or you get false positives */
 		{
 			/* tdiff = # of seconds of time set forward (eg: 60) */
 			long tdiff = timeofday - oldtimeofday;
