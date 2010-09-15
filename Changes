@@ -2127,3 +2127,4 @@
 - Fixed incorrect messages regarding clock going backwards on QNX 6 and
   later, reported by chotaire (#0003956).
 - Reverted an IPv6/Config fix I did on July 17. Reported by chotaire (#3958).
+- Document the badword block more explicitly and clearly. (#3959)

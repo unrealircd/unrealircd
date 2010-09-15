@@ -1927,16 +1927,22 @@ badword &lt;type&gt; {
 	action &lt;replace|block&gt;;
 };</pre></p>
 <p>The badword block allows you to manipulate the list used for user and channel 
-  mode +G to strip "badwords". The badword:: specifies the type, valid 
-  types are channel, message, quit, and all. channel is for the channel +G list, message 
-  is for the user +G list, quit is for quit message censoring, and all adds it to all three lists. 
-  The badword::word can be a simple word or a regular expression we should search for. The 
-  badword::replace is what we should replace this match with. If badword::replace 
-  is left out, the word is replaced with &lt;censored&gt;. The badword::action defines
+  mode +G to strip "badwords". The <b>badword::</b> specifies the type, which decides
+  what messages this badword filter applies to. The valid types are:</p>
+<ul>
+  <li><tt>channel</tt> applies to channels with mode +G.</li>
+  <li><tt>message</tt> applies to private messages (not in-channel messages) sent by a user with the +G usermode.</li>
+  <li><tt>quit</tt> applies to all quit messages.</li>
+  <li><tt>all</tt> applies to all three of the above situations.</li>
+</ul>
+<p>
+  The <b>badword::word</b> can be a simple word or a regular expression we should search for. The 
+  <b>badword::replace</b> is what we should replace this match with. If <b>badword::replace</b>
+  is left out, the word is replaced with &lt;censored&gt;. The <b>badword::action</b> defines
   what action should be taken if this badword is found. If you specify replace, then the
   badword is replaced, if you specify block, then the entire message is blocked. If you do
-  not specify a badword::action, replace is assumed.</p>
-<p>Example:<br>
+  not specify a <b>badword::action</b>, replace is assumed.</p>
+<p>Example:<br />
 <pre>
 badword channel {
 	word shit;
