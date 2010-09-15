@@ -123,7 +123,9 @@ English |
   ---8.7. <a href="#secinformation">Information disclosure</a><br>
   ---8.8. <a href="#secantiexploit">Protecting against exploits</a><br>
   ---8.9. <a href="#secsummary">Summary</a><br>
-  9. <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">Frequently Asked Questions (FAQ)</a><br> 
+  9. <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">Frequently Asked Questions (FAQ)</a><br />
+  10. <a href="#modules">Modules</a><br />
+  ---10.1. <a href="#modules_m_nopost">m_nopost</a><br />
   A. <a href="#regex">Regular Expressions</a><br>
   ---A.1. <a href="#regexlit">Literals</a><br>
   ---A.2. <a href="#regexdot">Dot Operator</a><br>
@@ -253,7 +255,7 @@ because otherwise you will not understand concepts such as 'cloaking', 'snomasks
 <p>UnrealIRCd supports modules which is nice because:<br>
    - You can load/reload/unload them while the ircd is running (by /rehash). This allows some bugs to be fixed or new features to be added without requiring a restart!<br>
    - Other people can create (3rd party) modules with new commands, usermodes and even channelmodes.<br>
-   UnrealIRCd only comes with a few modules. Take a look at www.unrealircd.com -&gt; modules
+   UnrealIRCd only comes with a few <a href="#modules">modules</a>. Take a look at www.unrealircd.com -&gt; modules
    or use google to find 3rd party modules.<br>
 <p>You need to load at least 2 modules or else you won't be able to boot!:<br>
    - the commands module: commands.so (commands.dll on windows)<br>
@@ -2326,8 +2328,8 @@ Then, in your unrealircd.conf you add a cgiirc block:
 };</pre></p>
 </div>
 
-<p><font class="block_section">4.37 - </font><font class="block_name">Set Block</font>
-   <font class="block_required">REQUIRED</font> <font class="block_old">(Previously known as unrealircd.conf/networks file)</font><a name="setblock"></a>
+<p id="setblock"><font class="block_section">4.37 - </font><font class="block_name">Set Block</font>
+   <font class="block_required">REQUIRED</font> <font class="block_old">(Previously known as unrealircd.conf/networks file)</font>
 </p><div class="desc">
 <p>The set file is what use to be our networks/unrealircd.conf and our networks 
   file. On single server networks, rather than having 3 files you can just put all
@@ -2491,6 +2493,22 @@ set {
   Allow shunned user to use /part.</p>
 <p><font class="set">set::options::fail-oper-warn;</font><br>
   If present, a user will be notified that his/her failed /oper attempt has been logged.</p>
+<p id="set_nopost_ban_action"><font class="set">set::nopost::ban-action</font> (requires <a href="#modules_m_nopost">m_nopost</a>)<br />
+  Action to take on a user if he tries to perform an HTTP POST command.
+  The allowed values are: kill, gline, gzline, kline, zline, shun, and tempshun.
+  The default value is kill. If you use a *line value or shun, then note
+  that if gullible user who is tricked into visiting a website exhibiting
+  the XPS IRC spamming attack will experience the shun or *line on his existing
+  connections. The default value of kill protects against such user accidents,
+  but use of *line and especially gzline may be needed in some situations.</p>
+<p id="set_nopost_ban_reason"><font class="set">set::nopost::ban-reason</font> (requires <a href="#modules_m_nopost">m_nopost</a>)<br />
+  The ban reason to set when m_nopost kills or bans a user.</p>
+<p id="set_nopost_ban_time"><font class="set">set::nopost::ban-time</font> (requires <a href="#modules_m_nopost">m_nopost</a>)<br />
+  The duration for shuns, glines, gzlines, klines, and zlines set by m_nopost.
+  Default is 4h.</p>
+<p id="set_nopost_except_hosts"><font class="set">set::nopost::except-hosts</font> (requires <a href="#modules_m_nopost">m_nopost</a>)<br />
+  A list of hostmasks to exempt from m_nopost's killing or *-lining. You should
+  neve need to place any hostmasks in this option.</p>
 <p><font class="set">set::dns::timeout &lt;timevalue&gt;;</font><br>
   A time value specifying the length of time a DNS server has to respond before 
   a timeout. A time value is a numeric string with d meaning days, h meaning hours, 
@@ -3705,6 +3723,22 @@ Do take the time to secure your network and educate your opers. A lot of people 
 security until they got hacked, try to avoid that :).
 </div></p>
 
+<p id="modules"><font size="+2"><b>10 &#8211; Modules</font></p>
+<div class="desc">
+  <p>The following are some descriptions of modules shipped with
+  UnrealIRCd.  Unfortunately, only one of the modules shipped with
+  UnrealIRCd is documented at the moment.</p>
+</div>
+<p id="modules_m_nopost"><font size="+2"><b>10.1 <a href="#modules_m_nopost">m_nopost</a></b></font><br />
+  This module automatically bans any user who tries to issue an HTTP-style request.
+  This module was written by Syzop in response to the Firefox XPS attack through which
+  AJAX-capable browsers were able to act as IRC spambots. To choose what m_nopost
+  does when it receives such a request, configure the <a href="#set_nopost_ban_action">
+    set::nopost::ban-action</a> and <a href="#set_nopost_ban_time">set::nopost::ban-time</a>
+  settings (and their friends).<br />
+  This module is new as of UnrealIRCd 3.2.9 and is compiled into commands.so. Thus,
+  it is loaded by default in most cases.
+</p>
 
 <p><font size="+2"><b>9 &#8211; Frequently Asked Questions (FAQ)<a name="faq"></a></b></font></p>
 <div class="desc"><p>The FAQ is available online <a href="http://www.vulnscan.org/UnrealIRCd/faq/" TARGET="_blank">here</a></p></div>

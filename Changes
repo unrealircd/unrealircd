@@ -2128,3 +2128,11 @@
   later, reported by chotaire (#0003956).
 - Reverted an IPv6/Config fix I did on July 17. Reported by chotaire (#3958).
 - Document the badword block more explicitly and clearly. (#3959)
+- Add the m_nopost module written by syzop and compile it into
+  commands.so. This module was written to help IRCd maintainers deal
+  with some sort of ``XPS'' attack in which javascript-initiated HTTP
+  POST form submissions were able to act as dummy IRC bots. These
+  simple bots were the cause of much spam. (#3893)
+- Add a modules section to the documentation. This was created to put
+  all documentation specific to the m_post module in one, easy to find
+  place. The documentation on m_post is likely incomplete, however.

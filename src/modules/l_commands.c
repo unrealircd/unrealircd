@@ -76,6 +76,7 @@ extern int m_htm_Test(ModuleInfo *modinfo), m_join_Test(ModuleInfo *modinfo);
 extern int m_mode_Test(ModuleInfo *modinfo), m_nick_Test(ModuleInfo *modinfo);
 extern int m_tkl_Test(ModuleInfo *modinfo), m_list_Test(ModuleInfo *modinfo);
 extern int m_message_Test(ModuleInfo *modinfo), m_server_Test(ModuleInfo *modinfo);
+extern int m_nopost_Test(ModuleInfo *modinfo);
 
 extern int m_sethost_Init(ModuleInfo *modinfo), m_setname_Init(ModuleInfo *modinfo), m_chghost_Init(ModuleInfo *modinfo);
 extern int m_chgident_Init(ModuleInfo *modinfo), m_setident_Init(ModuleInfo *modinfo), m_sdesc_Init(ModuleInfo *modinfo);
@@ -123,6 +124,7 @@ extern int m_botmotd_Init(ModuleInfo *modinfo), m_lusers_Init(ModuleInfo *modinf
 extern int m_names_Init(ModuleInfo *modinfo);
 extern int m_svsnolag_Init(ModuleInfo *modinfo);
 extern int m_starttls_Init(ModuleInfo *modinfo);
+extern int m_nopost_Init(ModuleInfo *modinfo);
 #ifdef GUEST
 extern int m_guest_Init(ModuleInfo *modinfo);
 #endif
@@ -173,6 +175,7 @@ extern int m_botmotd_Load(int module_load), m_lusers_Load(int module_load);
 extern int m_names_Load(int module_load);
 extern int m_svsnolag_Load(int module_load);
 extern int m_starttls_Load(int module_load);
+extern int m_nopost_Load(int module_load);
 #ifdef GUEST
 extern int m_guest_Load(int module_load);
 #endif
@@ -210,6 +213,7 @@ extern int m_watch_Unload(), m_part_Unload(), m_join_Unload();
 extern int m_motd_Unload(), m_opermotd_Unload(), m_botmotd_Unload();
 extern int m_lusers_Unload(), m_names_Unload(), m_svsnolag_Unload();
 extern int m_starttls_Unload();
+extern int m_nopost_Unload();
 #ifdef GUEST
 extern int m_guest_Unload();
 #endif
@@ -233,6 +237,7 @@ int l_commands_Test(ModuleInfo *modinfo)
 	m_list_Test(ModCmdsInfo);
 	m_message_Test(ModCmdsInfo);
 	m_server_Test(ModCmdsInfo);
+	m_nopost_Test(ModCmdsInfo);
 	return MOD_SUCCESS;
 }
 
@@ -352,6 +357,7 @@ int    l_commands_Init(ModuleInfo *modinfo)
 	m_names_Init(ModCmdsInfo);
 	m_svsnolag_Init(ModCmdsInfo);
 	m_starttls_Init(ModCmdsInfo);
+	m_nopost_Init(ModCmdsInfo);
 #ifdef GUEST
 	m_guest_Init(ModCmdsInfo);
 #endif
@@ -465,6 +471,7 @@ int    l_commands_Load(int module_load)
 	m_names_Load(module_load);
 	m_svsnolag_Load(module_load);
 	m_starttls_Load(module_load);
+	m_nopost_Load(module_load);
 #ifdef GUEST
 	m_guest_Load(module_load);
 #endif
@@ -578,6 +585,7 @@ int	l_commands_Unload(int module_unload)
 	m_names_Unload();
 	m_svsnolag_Unload();
 	m_starttls_Unload();
+	m_nopost_Unload();
 #ifdef GUEST
 	m_guest_Unload();
 #endif
