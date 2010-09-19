@@ -2141,3 +2141,5 @@
 - Add a modules section to the documentation. This was created to put
   all documentation specific to the m_post module in one, easy to find
   place. The documentation on m_post is likely incomplete, however.
+- Fixed notices to opers about server delinks not being broadcasted to all
+  other servers if they were on SSL links. Reported by chotaire (#0003957).
