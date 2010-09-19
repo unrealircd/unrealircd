@@ -2132,7 +2132,12 @@
   commands.so. This module was written to help IRCd maintainers deal
   with some sort of ``XPS'' attack in which javascript-initiated HTTP
   POST form submissions were able to act as dummy IRC bots. These
-  simple bots were the cause of much spam. (#3893)
+  simple bots were the cause of much spam. Note that enabling NOSPOOF,
+  which was the default on Windows and is now also the default on *NIX,
+  already stops the troublemakers from getting on IRC. However, the nopost
+  module kills them right away, rather than have them idle for 30 seconds
+  which could consume all your connections, preventing (legit) users
+  from being able to connect (#3893).
 - Add a modules section to the documentation. This was created to put
   all documentation specific to the m_post module in one, easy to find
   place. The documentation on m_post is likely incomplete, however.
