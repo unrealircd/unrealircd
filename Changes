@@ -2143,6 +2143,7 @@
   place. The documentation on m_post is likely incomplete, however.
 - Fixed notices to opers about server delinks not being broadcasted to all
   other servers if they were on SSL links. Reported by chotaire (#0003957).
-- SSL errors are now more descriptive. 'Underlying syscall error' is now
-  gone and shows the actual (surprise!) underlying syscall error.
+- SSL errors are now more descriptive. In some cases, like server to server
+  links it was still showing 'Underlying syscall error', this has now been
+  replaced to show the actual (surprise!) underlying syscall error instead.
   Reported by vonitsanet, patch from ohnobinki (#0003157).
