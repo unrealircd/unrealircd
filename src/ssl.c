@@ -39,7 +39,7 @@ extern HWND hwIRCDWnd;
 #define SAFE_SSL_ACCEPT 3
 #define SAFE_SSL_CONNECT 4
 
-static int fatal_ssl_error(int ssl_error, int where, aClient *sptr);
+static int fatal_ssl_error(int ssl_error, int where, int my_errno, aClient *sptr);
 
 /* The SSL structures */
 SSL_CTX *ctx_server;
@@ -79,7 +79,13 @@ LRESULT SSLPassDLG(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam) {
 }
 #endif				
 
-char *ssl_error_str(int err)
+/**
+ * Retrieve a static string for the given SSL error.
+ *
+ * \param err The error to look up.
+ * \param my_errno The value of errno to use in case we want to call strerror().
+ */
+char *ssl_error_str(int err, int my_errno)
 {
 static char ssl_errbuf[256];
 
@@ -98,10 +104,10 @@ static char ssl_errbuf[256];
 	    ssl_errstr = "OpenSSL functions requested a write()";
 	    break;
 	case SSL_ERROR_WANT_X509_LOOKUP:
-	    ssl_errstr = "OpenSSL requested a X509 lookup which didn`t arrive";
+	    ssl_errstr = "OpenSSL requested a X509 lookup which didn't arrive";
 	    break;
 	case SSL_ERROR_SYSCALL:
-		snprintf(ssl_errbuf, sizeof(ssl_errbuf), "Underlying syscall error [%s]", STRERROR(ERRNO));
+		snprintf(ssl_errbuf, sizeof(ssl_errbuf), "%s", STRERROR(my_errno));
 		ssl_errstr = ssl_errbuf;
 	    break;
 	case SSL_ERROR_ZERO_RETURN:
@@ -444,7 +450,7 @@ char	*ssl_get_cipher(SSL *ssl)
 
 int ircd_SSL_read(aClient *acptr, void *buf, int sz)
 {
-    int len, ssl_err;
+	int len, ssl_err, ssl_errno;
     len = SSL_read((SSL *)acptr->ssl, buf, sz);
     if (len <= 0)
     {
@@ -463,9 +469,10 @@ int ircd_SSL_read(aClient *acptr, void *buf, int sz)
                if(ERRNO == EAGAIN)
                    return -1;
            default:
+		   ssl_errno = ERRNO;
            	Debug((DEBUG_ERROR, "ircd_SSL_read: returning fatal_ssl_error for %s",
            	 acptr->name));
-		return fatal_ssl_error(ssl_err, SAFE_SSL_READ, acptr);        
+		return fatal_ssl_error(ssl_err, SAFE_SSL_READ, ssl_errno, acptr);
        }
     }
     Debug((DEBUG_ERROR, "ircd_SSL_read for %s (%p, %i): success", acptr->name, buf, sz));
@@ -473,7 +480,7 @@ int ircd_SSL_read(aClient *acptr, void *buf, int sz)
 }
 int ircd_SSL_write(aClient *acptr, const void *buf, int sz)
 {
-    int len, ssl_err;
+	int len, ssl_err, ssl_errno;
 
     len = SSL_write((SSL *)acptr->ssl, buf, sz);
     if (len <= 0)
@@ -497,8 +504,9 @@ int ircd_SSL_write(aClient *acptr, const void *buf, int sz)
                if(ERRNO == EAGAIN)
                    return -1;
            default:
+		   ssl_errno = ERRNO;
 		Debug((DEBUG_ERROR, "ircd_SSL_write: returning fatal_ssl_error for %s", acptr->name));
-		return fatal_ssl_error(ssl_err, SAFE_SSL_WRITE, acptr);
+		return fatal_ssl_error(ssl_err, SAFE_SSL_WRITE, ssl_errno, acptr);
        }
     }
     Debug((DEBUG_ERROR, "ircd_SSL_write for %s (%p, %i): success", acptr->name, buf, sz));
@@ -569,11 +577,11 @@ int ircd_SSL_accept(aClient *acptr, int fd) {
 			|| ERRNO == P_EAGAIN)
 	    case SSL_ERROR_WANT_READ:
 	    case SSL_ERROR_WANT_WRITE:
-		    Debug((DEBUG_DEBUG, "ircd_SSL_accept(%s), - %s", get_client_name(acptr, TRUE), ssl_error_str(ssl_err)));
+		Debug((DEBUG_DEBUG, "ircd_SSL_accept(%s), - %s", get_client_name(acptr, TRUE), ssl_error_str(ssl_err, ERRNO)));
 		    /* handshake will be completed later . . */
 		    return 1;
 	    default:
-		return fatal_ssl_error(ssl_err, SAFE_SSL_ACCEPT, acptr);
+		return fatal_ssl_error(ssl_err, SAFE_SSL_ACCEPT, ERRNO, acptr);
 		
 	}
 	/* NOTREACHED */
@@ -593,12 +601,12 @@ int ircd_SSL_connect(aClient *acptr) {
 	    case SSL_ERROR_WANT_READ:
 	    case SSL_ERROR_WANT_WRITE:
 	    	 {
-		    Debug((DEBUG_DEBUG, "ircd_SSL_connect(%s), - %s", get_client_name(acptr, TRUE), ssl_error_str(ssl_err)));
+		    Debug((DEBUG_DEBUG, "ircd_SSL_connect(%s), - %s", get_client_name(acptr, TRUE), ssl_error_str(ssl_err, ERRNO)));
 		    /* handshake will be completed later . . */
 		    return 0;
 	         }
 	    default:
-		return fatal_ssl_error(ssl_err, SAFE_SSL_CONNECT, acptr);
+		return fatal_ssl_error(ssl_err, SAFE_SSL_CONNECT, ERRNO, acptr);
 		
 	}
 	/* NOTREACHED */
@@ -619,7 +627,15 @@ int SSL_smart_shutdown(SSL *ssl) {
     return rc;
 }
 
-static int fatal_ssl_error(int ssl_error, int where, aClient *sptr)
+/**
+ * Report a fatal SSL error and disconnect the associated client.
+ *
+ * \param ssl_error The error as from OpenSSL.
+ * \param where The location, one of the SAFE_SSL_* defines.
+ * \param my_errno A preserved value of errno to pass to ssl_error_str().
+ * \param sptr The client the error is associated with.
+ */
+static int fatal_ssl_error(int ssl_error, int where, int my_errno, aClient *sptr)
 {
     /* don`t alter ERRNO */
     int errtmp = ERRNO;
@@ -642,41 +658,8 @@ static int fatal_ssl_error(int ssl_error, int where, aClient *sptr)
 	    ssl_func = "undefined SSL func";
     }
 
-    switch(ssl_error) {
-    	case SSL_ERROR_NONE:
-	    ssl_errstr = "SSL: No error";
-	    break;
-	case SSL_ERROR_SSL:
-	    ssl_errstr = "Internal OpenSSL error or protocol error";
-	    break;
-	case SSL_ERROR_WANT_READ:
-	    ssl_errstr = "OpenSSL functions requested a read()";
-	    break;
-	case SSL_ERROR_WANT_WRITE:
-	    ssl_errstr = "OpenSSL functions requested a write()";
-	    break;
-	case SSL_ERROR_WANT_X509_LOOKUP:
-	    ssl_errstr = "OpenSSL requested a X509 lookup which didn`t arrive";
-	    break;
-	case SSL_ERROR_SYSCALL:
-	    ssl_errstr = "Underlying syscall error";
-	    /* TODO: then show the REAL socktet error instead...
-	     * unfortunately that means we need to have the 'untouched errno',
-	     * which is not always present since our function is not always
-	     * called directly after a failure. Hence, we should add a new
-	     * parameter to fatal_ssl_error which is called errno, and use
-	     * that here... Something for 3.2.7 ;) -- Syzop
-	     */
-	    break;
-	case SSL_ERROR_ZERO_RETURN:
-	    ssl_errstr = "Underlying socket operation returned zero";
-	    break;
-	case SSL_ERROR_WANT_CONNECT:
-	    ssl_errstr = "OpenSSL functions wanted a connect()";
-	    break;
-	default:
-	    ssl_errstr = "Unknown OpenSSL error (huh?)";
-    }
+    ssl_errstr = ssl_error_str(ssl_error, my_errno);
+
     /* if we reply() something here, we might just trigger another
      * fatal_ssl_error() call and loop until a stack overflow... 
      * the client won`t get the ERROR : ... string, but this is
@@ -689,12 +672,9 @@ static int fatal_ssl_error(int ssl_error, int where, aClient *sptr)
 	
 	if (where == SAFE_SSL_CONNECT)
 	{
-		char *myerr = ssl_errstr;
-		if (ssl_error == SSL_ERROR_SYSCALL)
-			myerr = STRERROR(errtmp);
 		/* sendto_failops_whoare_opers("Closing link: SSL_connect(): %s - %s", myerr, get_client_name(sptr, FALSE)); */
 		sendto_umode(UMODE_OPER, "Lost connection to %s: %s: %s",
-			get_client_name(sptr, FALSE), ssl_func, myerr);
+			get_client_name(sptr, FALSE), ssl_func, ssl_errstr);
                 /* This is a connect() that fails, we don't broadcast that for non-SSL either (noisy) */
 	} else
 	if ((IsServer(sptr) || (sptr->serv && sptr->serv->conf)) && (where != SAFE_SSL_WRITE))
