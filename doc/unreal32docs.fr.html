@@ -40,7 +40,7 @@
 			<b><font size="7">UnrealIRCd</font></b><br>
   			<font size="4"><a href="http://www.unrealircd.com/">http://www.unrealircd.com</a></font><br>
   			<font size="4">Version: post-3.2.8 (CVS)</font><br>
-  			<b>Derni&egrave;re mise &agrave; jour de la documentation:</b> 2010-09-11
+  			<b>Derni&egrave;re mise &agrave; jour de la documentation:</b> 2010-09-19
 		</div>
 
 		<br>
@@ -54,7 +54,7 @@
 		<b>Pr&eacute;c&eacute;dent traducteur:</b> babass - <a href="irc://irc.rs2i.net/UnrealIRCd">irc.rs2i.net</a><br> 
 
 		<p>Pour lire ce document vous devez avoir un navigateur compatible. Les mises &agrave; jour de ce document sont disponibles ici : 
-			<a href="http://www.unrealircd.com/docs.php">http://www.unrealircd.com/docs.php</a> ainsi qu'une FAQ <a href="http://www.vulnscan.org/UnrealIRCd/faq/">http://www.unrealircd.com/faq.php</a>.
+			<a href="http://www.vulnscan.org/UnrealIRCd/unreal32docs.fr.html">http://www.vulnscan.org/UnrealIRCd/unreal32docs.fr.html</a> ainsi que la FAQ <a href="http://www.vulnscan.org/UnrealIRCd/faq/">http://www.vulnscan.org/UnrealIRCd/faq/</a>.
 		</p>
 
 		<p>
@@ -69,7 +69,7 @@
 			-- 3.3. <a href="#feature_snomasks">Snomasks</a><br>
 			-- 3.4. <a href="#feature_aliases">Alias</a><br>
 			-- 3.5. <a href="#feature_helpop">Helpop</a><br>
-			-- 3.6. <a href="#feature_operaccesslevels">Niveau d'acc&egrave;s des op&eacute;rateurs</a></a><br>
+			-- 3.6. <a href="#feature_operaccesslevels">Niveau d'acc&egrave;s des op&eacute;rateurs</a><br>
 			-- 3.7. <a href="#feature_opercmds">Commandes op&eacute;rateurs</a><br>
 			-- 3.8. <a href="#feature_ssl">SSL</a><br>
 			-- 3.9. <a href="#feature_ipv6">IPv6</a><br>
@@ -112,7 +112,7 @@
 			---4.26. <a href="#allowchannelblock">Allow Channel Block</a><br>
 			---4.27. <a href="#allowdccblock">Allow DCC Block</a><br>
 			---4.28. <a href="#vhostblock">Vhost Block -=- (vhost.conf)</a><br>
-			---4.29. <a href="#badwordsblock">Badword Block -=- (badwords.conf)</a><br>
+			---4.29. <a href="#badwordblock">Badword Block -=- (badwords.conf)</a><br>
 			---4.30. <a href="#ulinesblock">Uline Block -=- (U:Line)</a><br>
 			---4.31. <a href="#linkblock">Link Block -=- (C/N/H:Lines)</a><br>
 			---4.32. <a href="#aliasblock">Alias Block</a><br>
@@ -136,6 +136,8 @@
 			---8.8. <a href="#secantiexploit">Protection contre les exploits</a><br>
 			---8.9. <a href="#secsummary">Conclusion</a><br>
 			9. <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">Foire au questions (FAQ)</a><br>
+			10. <a href="#modules">Modules</a><br>
+			---10.1. <a href="#modules_m_nopost">m_nopost</a><br>
 			A. <a href="#regex">Expressions R&eacute;guli&egrave;res</a><br>
 			---A.1. <a href="#regexlit">Lit&eacute;raux</a><br>
 			---A.2. <a href="#regexdot">L'op&eacute;rateur Point</a><br>
@@ -190,22 +192,27 @@
 		</p>
 		<div class="desc">
 			<p>
-				Le protocole recommand&eacute; pour mettre &agrave; jour est :<br>
-				Linux:<br>
-				<ul>
-					<li>Renommez votre ancien dossier UnrealIRCd (sinon vous &eacute;craserez son contenu dans la prochaine &eacute;tape)</li>
-					<li>Extraire la nouvelle version d'UnrealIRCd et ex&eacute;cutez ./Config puis make</li>
-					<li>Copiez vos anciens fichiers de configuration vers le nouveau r&eacute;pertoire (unrealircd.conf, motd, rules, server.* [SSL certs], network file, etc)</li>
-				</ul>
-				
-				Windows:<br>
-				<ul>
-					<li>Copiez tous vos fichiers de configuration temporairement vers un autre dossier.</li>
-					<li>Lancez le d&eacute;sinstalleur pour toutes les pr&eacute;c&eacute;dentes versions d'Unreal que vous avez install&eacute;es.</li>
-					<li>Lancez l'installeur pour la nouvelle version d'Unreal.</li>
-					<li>Copiez vos anciens fichiers de configuration vers le nouveau dossier. </li>
-				</ul>
+				Nous vous recommandons de proc&eacute;der de la mani&egrave;re suivante pour mettre &agrave; jour :
 			</p>
+			<ul>
+				<li>
+					Linux :
+					<ol>
+						<li>Renommez votre ancien dossier UnrealIRCd (sinon vous &eacute;craserez son contenu dans la prochaine &eacute;tape)</li>
+						<li>Extraire la nouvelle version d'UnrealIRCd et ex&eacute;cutez ./Config puis make</li>
+						<li>Copiez vos anciens fichiers de configuration vers le nouveau r&eacute;pertoire (unrealircd.conf, motd, rules, server.* [SSL certs], network file, etc)</li>
+					</ol>
+				</li>
+				<li>
+					Windows :
+					<ol>
+						<li>Copiez tous vos fichiers de configuration temporairement vers un autre dossier.</li>
+						<li>Lancez le d&eacute;sinstalleur pour toutes les pr&eacute;c&eacute;dentes versions d'Unreal que vous avez install&eacute;es.</li>
+						<li>Lancez l'installeur pour la nouvelle version d'Unreal.</li>
+						<li>Copiez vos anciens fichiers de configuration vers le nouveau dossier. </li>
+					</ol>
+				</li>
+			</ul>
 			<p>
 				Veuillez v&eacute;rifier les RELEASE NOTES pour voir ce qui a chang&eacute;.
 				Si vous notez des changements (ou bug) entre les versions, VOUS DEVEZ &Ecirc;TRE SUR D'AVOIR LU LES RELEASE NOTES EN PREMIER avant de reporter cela comme un bug.
@@ -251,27 +258,32 @@
   			Si vous avez Unreal3.2 et qu'il fonctionne correctement sous un autre syst&egrave;me d'exploitation, envoyer les d&eacute;tails ici : <a href="mailto:coders@lists.unrealircd.org">coders@lists.unrealircd.org</a><br>
  
 			<p>
-				<b>Instructions d'installation:</b><br>
-				Linux:<br>
-				<ol>
-					<li>gunzip -d Unreal3.2.X.tar.gz</li>
-					<li>tar xvf Unreal3.2.X.tar</li>
-					<li>cd Unreal3.2</li>
-					<li>./Config</li>
-					<li>
-						R&eacute;pondez aux questions avec le meilleur de vos connaissances. 
-						G&eacute;n&eacute;ralement, si vous n'&ecirc;tes pas s&ucirc;r, les param&egrave;tres par d&eacute;faut devraient fonctionner !
-					</li>
-					<li>make</li>
-					<li>Maintenant cr&eacute;ez votre unrealircd.conf ainsi que les autres fichiers de configuration, regardez la section 4.</li>
-				</ol>
-				<br>
-				Windows:<br>
-				<ol>
-					<li>Lancez l'installateur d'Unreal</li>
-					<li>Maintenant cr&eacute;ez votre unrealircd.conf ainsi que les autres fichiers de configuration, regardez la section 4.</li>
-				</ol>
+				<b>Instructions d'installation :</b>
 			</p>
+			<ul>
+				<li>
+					Linux :
+					<ol>
+						<li>gunzip -d Unreal3.2.X.tar.gz</li>
+						<li>tar xvf Unreal3.2.X.tar</li>
+						<li>cd Unreal3.2</li>
+						<li>./Config</li>
+						<li>
+							R&eacute;pondez aux questions avec le meilleur de vos connaissances. 
+							G&eacute;n&eacute;ralement, si vous n'&ecirc;tes pas s&ucirc;r, les param&egrave;tres par d&eacute;faut devraient fonctionner !
+						</li>
+						<li>make</li>
+						<li>Maintenant cr&eacute;ez votre unrealircd.conf ainsi que les autres fichiers de configuration, regardez la section 4.</li>
+					</ol>
+				</li>
+				<li>
+					Windows :
+					<ol>
+						<li>Lancez l'installateur d'Unreal</li>
+						<li>Maintenant cr&eacute;ez votre unrealircd.conf ainsi que les autres fichiers de configuration, regardez la section 4.</li>
+					</ol>
+				</li>
+			</ul>
 		</div>
 		
 		
@@ -324,7 +336,9 @@
 				- Vous pouvez les charger/d&eacute;charger pendant que l'ircd est lanc&eacute; (avec /rehash). 
 				Cela vous permet de corriger certains bugs ou d'ajouter de nouvelles fonctionnalit&eacute;s sans &ecirc;tre oblig&eacute; de red&eacute;marrer !<br>
 				- D'autres personnes peuvent cr&eacute;er des modules tiers avec de nouvelles commandes, modes utilisateurs et m&ecirc;me des modes channels.
-				UnrealIRCd contient seulement quelques modules. Regarder ici www.unrealircd.com -&gt; modules ou utiliser Google pour trouver des modules tiers.<br>
+			</p>
+			<p>
+				UnrealIRCd est fourni avec seulement quelques <a href="#modules">modules</a>. Regarder ici www.unrealircd.com -&gt; modules ou utiliser Google pour trouver des modules tiers.<br>
 			</p>
 			<p>
 				Vous avez besoin de charger au moins 2 modules sinon vous n'aurez pas la possibilit&eacute; de lancer ircd :<br>
@@ -555,10 +569,10 @@
 			</table>
 			
 			<p>
-				Exemple:
+				Exemple :
 			</p>
 			
-	<pre>	<font color="green">*** ChanOp sets mode: +f [20j,50m,7n]:15</font>
+<pre>	<font color="green">*** ChanOp sets mode: +f [20j,50m,7n]:15</font>
 	&lt;ChanOp&gt; lalala
 	<font color="green">*** Evil1 (~fdsdsfddf@Clk-17B4D84B.blah.net) has joined #test
 	*** Evil2 (~jcvibhcih@Clk-3472A942.xx.someispcom) has joined #test
@@ -1263,7 +1277,7 @@ class servers {
 				Vous permet de sp&eacute;cifier combien de connexions &agrave; ce serveur sont autoris&eacute;es par une m&ecirc;me ip (exemple : maxperip 4;).
 			</p>
 			<p id="allowblock_ipv6clonemask">
-				<b>ipv6-clone-mask</b> (optionnel, par d&eacute;faut <a href="#set_defaultipv6clonemask">set::default-ipv6-clone-mask</a>)<br />
+				<b>ipv6-clone-mask</b> (optionnel, par d&eacute;faut <a href="#set_defaultipv6clonemask">set::default-ipv6-clone-mask</a>)<br>
 				Cette option contr&ocirc;le la d&eacute;tection des cl&ocirc;nes.
 				Si deux clients se connectent depuis deux adresses IPv6 qui ne diff&egrave;rent que par leurs derniers bits, il est presque garanti que ces deux clients sont une seule et m&ecirc;me personne.
 				Cette option ne fait qu'affecter le fonctionnement de<a href="#allowblock_maxperip">allow::maxperip</a>.
@@ -1425,11 +1439,13 @@ listen *:6660-6669;</pre>
   				Quand elle est choisie comme auth-type, <b>oper::password::</b> doit &ecirc;tre un fichier (chemin relatif depuis le dossier d'installlation d'UnrealIRCd).
   				Le fichier doit &ecirc;tre un certificat SSL encod&eacute; par PEM (le certificat public, pas une cl&eacute;).
   				Cela indique que pour se connecter, le client IRC doit :
-				<ol>
-					<li>&ecirc;tre connect&eacute; en utilisant SSL</li>
-					<li>utiliser le certificat client correspondant au certificat public</li>
-					<li>a acc&egrave;s &agrave; la cl&eacute; priv&eacute;e associ&eacute;ee au fichier du certificat</li>
-				</ol>
+  			</p>
+			<ol>
+				<li>&ecirc;tre connect&eacute; en utilisant SSL</li>
+				<li>utiliser le certificat client correspondant au certificat public</li>
+				<li>a acc&egrave;s &agrave; la cl&eacute; priv&eacute;e associ&eacute;ee au fichier du certificat</li>
+			</ol>
+			<p>
   				Bien s&ucirc;r, cette fonctionnalit&eacute; n&eacute;cessite que UnrealIRCd a &eacute;t&eacute; compil&eacute; avec le support SSL.
   				Aussi, comme n'importe quelle cl&eacute; associ&eacute;e &agrave; un certificat SSL est beaucoup plus longue qu'un mot de pase normal et bien plus al&eacute;atoire, c'est la m&eacute;thode d'authentification la plus s&eacute;curis&eacute;e.
   				Pour se connecter avec /oper lorsque vous avez sp&eacute;cifi&eacute; un certificat SSL, assurez-vous que le client est correctement configur&eacute; et faites : <code>/oper &lt;name&gt; :</code> .
@@ -2391,6 +2407,7 @@ deny dcc {
 				Le deny::mask sp&eacute;cifie un nom de serveur (avec joker) auquel cette r&egrave;gle s'applique. 
 				La directive deny::rules est tr&egrave;s complexe.
 			</p>
+			<p>
 				Une expression "crule" vous permet de contr&ocirc;ler le link en d&eacute;tail, et s'&eacute;crit comme une ligne d'un langage de programmation.
 				Quatre op&eacute;rateurs sont support&eacute;s :
 			</p>
@@ -2550,7 +2567,7 @@ deny channel {
 };</pre>
 		</div>
 
-		<p id="badwordsblock">
+		<p id="badwordblock">
 			<font class="block_section">4.29 - </font><font class="block_name">Badword Block</font> <font class="block_optional">OPTIONNEL</font> <font class="block_old">(connu pr&eacute;c&eacute;demment comme badwords.*.conf)</font>
 		</p>
 		<div class="desc">
@@ -2564,22 +2581,24 @@ deny channel {
 };</pre>
 
 			<p>
-				Le badword block vous permet de manipuler la liste utilis&eacute;e pour le mode utilisateur et salon +G pour cacher les 'mauvais mots'.
+				Le badword block vous permet de manipuler la liste utilis&eacute;e pour le mode utilisateur et salon +G pour censurer les 'mauvais mots'.
 			</p>
 			<p>
-				badword:: sp&eacute;cifie le type : les types valides sont <tt>channel</tt>, <tt>message</tt>, <tt>quit</tt> et <tt>all</tt>.
-				<tt>channel</tt> est pour la censure &agrave; l'int&eacute;rieur des salons +G,
-				<tt>message</tt> est pour la censure des utilisateurs +G,
-				<tt>quit</tt> est pour la censure des messages de quit et
-				<tt>all</tt> correspond &agrave; ces trois listes.
+				<b>badword::</b> sp&eacute;cifie le type de messages auquel ce filtre s'applique. Les types valides sont :
 			</p>
+			<ul>
+				<li><tt>channel</tt> s'applique aux messages &agrave; l'int&eacute;rieur des salons +G</li>
+				<li><tt>message</tt> s'applique aux messages priv&eacute;s envoy&eacute;s par un utilisateur +G</li>
+				<li><tt>quit</tt> s'applique &agrave; tous les messages de quit</li>
+				<li><tt>all</tt> correspond &agrave; ces trois situations</li>
+			</ul>
 			<p>
-				Le badword::word peut &ecirc;tre un simple mot ou une <a href="#regex">expression r&eacute;guli&egrave;re</a> &agrave; rechercher.
-				Le badword::replace est ce par quoi le mot doit &ecirc;tre remplac&eacute;.
-				Si badword::replace n'est pas sp&eacute;cifi&eacute;, le mot est remplac&eacute; par &lt;censored&gt;.
-				Le badword::action d&eacute;fini quelle action doit &ecirc;tre r&eacute;alis&eacute;e si un mauvais mots est trouv&eacute;.
-				Si vous sp&eacute;cifiez replace, alors le mauvais mots est remplac&eacute;, si vous sp&eacute;cifez block, le message entier sera bloqu&eacute;.
-				Si vous ne sp&eacute;cifiez pas un badword::action, le mot sera remplac&eacute;.
+				Le <b>badword::word</b> peut &ecirc;tre un simple mot ou une <a href="#regex">expression r&eacute;guli&egrave;re</a> &agrave; rechercher.
+				Le <b>badword::replace</b> est ce par quoi le mot doit &ecirc;tre remplac&eacute;.
+				Si <b>badword::replace</b> n'est pas sp&eacute;cifi&eacute;, le mot est remplac&eacute; par &lt;censored&gt;.
+				Le <b>badword::action</b> d&eacute;fini quelle action doit &ecirc;tre r&eacute;alis&eacute;e si un mauvais mots est trouv&eacute;.
+				Si vous sp&eacute;cifiez replace, alors seul le mot censur&eacute; est remplac&eacute;, si vous sp&eacute;cifez block, le message entier sera bloqu&eacute;.
+				Si vous ne sp&eacute;cifiez pas de <b>badword::action</b>, le mot sera remplac&eacute;.
 			</p>
 
 			<p>
@@ -3310,7 +3329,28 @@ spamfilter {
 				<font class="set">set::options::fail-oper-warn;</font><br>
 				Si il est pr&eacute;sent, un utilisateur sera pr&eacute;venu que sa tentative de /oper manqu&eacute;e a &eacute;t&eacute; enregistr&eacute;e.
 			</p>
-
+			<p id="set_nopost_ban_action">
+				<font class="set">set::nopost::ban-action</font> (requi&egrave;re <a href="#modules_m_nopost">m_nopost</a>)<br>
+				Action &agrave; effectuer si un utilisateur essaye d'utiliser une commande HTTP POST.
+				Les valeurs autoris&eacute;es sont : kill, gline, gzline, kline, zline, shun et tempshun.
+				La valeur par d&eacute;faut est kill.
+				Si vous utilisez une *line ou shun, prenez note que si un utilisateur cr&eacute;dule s'est fait pi&eacute;ger et visite un site g&eacute;n&eacute;rant une attaque <acronym title="Spam d'IRC par script transprotocole">XPS IRC spamming</acronym>, il sera affect&eacute; par le shun ou la *line sur toutes ses autres connexions.
+				La valeur par d&eacute;faut kill &eacute;vite ce genre d'accidents, mais l'utilisation d'une *line et surtout d'une gzline peut être n&eacute;cessaire dans certains cas.
+			</p>
+			<p id="set_nopost_ban_reason">
+				<font class="set">set::nopost::ban-reason</font> (requi&egrave;re <a href="#modules_m_nopost">m_nopost</a>)<br>
+				La raison du ban &agrave; utiliser lorsque m_nopost d&eacute;connecte ou bannit un utilisateur.
+			</p>
+			<p id="set_nopost_ban_time">
+				<font class="set">set::nopost::ban-time</font> (requi&egrave;re <a href="#modules_m_nopost">m_nopost</a>)<br>
+				La dur&eacute;e des shuns, glines, gzlines, klines et zlines plac&eacute;s par m_nopost.
+				La valeur par d&eacute;faut est 4h.
+			</p>
+			<p id="set_nopost_except_hosts">
+				<font class="set">set::nopost::except-hosts</font> (requi&egrave;re <a href="#modules_m_nopost">m_nopost</a>)<br>
+				Une liste des hostmasks exempt&eacute;s des kill et des *lines de m_nopost.
+				Vous ne devriez jamais avoir besoin d'utiliser cette option.
+			</p>
 			<p>
 				<font class="set">set::dns::timeout &lt;timevalue&gt;;</font> (PAS IMPLEMENTE)<br>
 				Une valeur de temps sp&eacute;cifie la dur&eacute;e qu'un serveur DNS a pour r&eacute;pondre. 
@@ -3495,10 +3535,11 @@ spamfilter {
 			<p>
 				<font class="set">set::modef-default-unsettime &lt;value&gt;</font><br>
 				Pour le chmode +f vous pouvez sp&eacute;cifier un unsettime par d&eacute;faut, si vous sp&eacute;cifiez 10 par exemple, alors +f [5j]:15 sera transform&eacute; en [5j#i10]:15.
-				La valeur par d&eacute;faut est pas d'unsettime.</p>
+				La valeur par d&eacute;faut est pas d'unsettime.
+			</p>
 			<p>
 				<font class="set">set::modef-max-unsettime &lt;value&gt;</font><br>
-				Le nombre maximum de minutes pour l'unsettime du mode +f (dans +f [5j#i<TIME>]:15), c'est une valeur comprise entre 0 et 255.
+				Le nombre maximum de minutes pour l'unsettime du mode +f (dans +f [5j#i&lt;TIME&gt;]:15), c'est une valeur comprise entre 0 et 255.
 				Par d&eacute;faut, ceci est &agrave;  60 (= 1 heure).
 			</p>
 			<p>
@@ -4467,7 +4508,7 @@ spamfilter {
 		</div>
 
 		<p id="secpasswords">
-			<b><font size="+2">8.1 Mots de passe</font></b>
+			<b><font size="+2">8.1 &#8211; Mots de passe</font></b>
 		</p>
 		<div class="desc">
 			<p>
@@ -4478,7 +4519,7 @@ spamfilter {
 		</div>
 		
 		<p id="secnonircd">
-			<b><font size="+2">8.2 Vuln&eacute;rabilit&eacute;s non li&eacute;es &agrave; l'IRCd</font></b>
+			<b><font size="+2">8.2 &#8211; Vuln&eacute;rabilit&eacute;s non li&eacute;es &agrave; l'IRCd</font></b>
 		</p>
 		<div class="desc">
 			<p>
@@ -4490,7 +4531,7 @@ spamfilter {
 		</div>
 
 		<p id="secpermissions">
-			<b><font size="+2">8.3 Permissions et fichier de configuration</font></b>
+			<b><font size="+2">8.3 &#8211; Permissions et fichier de configuration</font></b>
 		</p>
 		<div class="desc">
 			<p>
@@ -4514,7 +4555,7 @@ spamfilter {
 		</div>
 
 		<p id="secuser">
-			<b><font size="+2">8.4 Probl&egrave;mes li&eacute;s aux utilisateurs</font></b>
+			<b><font size="+2">8.4 &#8211; Probl&egrave;mes li&eacute;s aux utilisateurs</font></b>
 		</p>
 		<div class="desc">
 			<p>
@@ -4529,7 +4570,7 @@ spamfilter {
 		</div>
 
 		<p id="secsnif">
-			<b><font size="+2">8.5 SSL/SSH &amp; sniffing</font></b>
+			<b><font size="+2">8.5 &#8211; SSL/SSH &amp; sniffing</font></b>
 		</p>
 		<div class="desc">
 			<p>
@@ -4542,7 +4583,7 @@ spamfilter {
 		</div>
 	
 		<p id="secDoS">
-			<b><font size="+2">8.6 Denial of Service attacks (DoS) [ou: comment prot&eacute;ger mon hub]</font></b>
+			<b><font size="+2">8.6 &#8211; Denial of Service attacks (DoS) [ou: comment prot&eacute;ger mon hub]</font></b>
 		</p>
 		<div class="desc">
 			<p>
@@ -4596,7 +4637,7 @@ spamfilter {
 		</div>
 
 		<p id="secinformation">
-			<b><font size="+2">8.7 Conseils sur la divulgation d'informations</font></b>
+			<b><font size="+2">8.7 &#8211; Conseils sur la divulgation d'informations</font></b>
 		</p>
 		<div class="desc">
 			<p>
@@ -4648,7 +4689,7 @@ spamfilter {
 		</div>
 
 		<p id="secantiexploit">
-			<b><font size="+2">8.8 Se prot&eacute;ger des exploits</font></b>
+			<b><font size="+2">8.8 &#8211; Se prot&eacute;ger des exploits</font></b>
 		</p>
 		<div class="desc">
 			<p>
@@ -4668,7 +4709,7 @@ spamfilter {
 		</div>
 		
 		<p id="secsummary">
-			<b><font size="+2">8.9 Conclusion</font></b>
+			<b><font size="+2">8.9 &#8211; Conclusion</font></b>
 		</p>
 		<div class="desc">
 			<p>
@@ -4687,6 +4728,32 @@ spamfilter {
 		<div class="desc">
 			<p>
 				La FAQ est disponible en ligne <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">ici</a>
+			</p>
+		</div>
+		
+		<p id="modules">
+			<font size="+2"><b>10 &#8211; Modules</b></font>
+		</p>
+		<div class="desc">
+			<p>
+				Voici la description de quelques modules fournis avec UnrealIRCd.
+				Malheureusement, un seul d'entre eux est document&eacute; pour le moment.
+			</p>
+		</div>
+		
+		<p id="modules_m_nopost">
+			<font size="+2"><b>10.1 &#8211; m_nopost</b></font>
+		</p>
+		<div class="desc">
+			<p>
+				Ce module bannit automatiquement les utilisateurs essayant d'envoyer une requ&ecirc;te de type HTTP.
+				Il a &eacute;t&eacute; &eacute;crit par Syzop pour contrer l'attaque XPS touchant Firefox, gr&acirc;ce &agrave; laquelle les navigateurs supportant l'AJAX peuvent agir comme robots spammeurs sur IRC.
+				Pour choisir ce que m_nopost doit faire lorsqu'il reçoit une telle requ&ecirc;te, configurez <a href="#set_nopost_ban_action">
+    set::nopost::ban-action</a> et <a href="#set_nopost_ban_time">set::nopost::ban-time</a> (et leurs amis).
+			</p>
+			<p>
+				Ce module est une nouveaut&eacute; de UnrealIRCd 3.2.9 et est compil&eacute; dans commands.so.
+				Par cons&eacute;quent, il est charg&eacute; par d&eacute; dans la plupart des cas.
 			</p>
 		</div>
 
@@ -4958,7 +5025,7 @@ suivi par un chiffre, et que la vous d&eacute;cidez que vous voulez rechercher c
 			<p>
 				Les r&eacute;f&eacute;rences arri&egrave;res (back references) vous permettent de r&eacute;f&eacute;rencer une cha&icirc;ne qui correspond &agrave; une des sous-expressions ou des regexp.
 				Vous utilisez une r&eacute;f&eacute;rence en sp&eacute;cifiant un backslash (\) suivi par un nombre, 0-9, par exemple \1.
-				\0 est une back r&eacute;f&eacute;rence sp&eacute;ciale qui se r&eacute;ferre au regexp entier, plut&ocirc;t qu'&agrave; une sous-expression.
+				\0 est une back reference sp&eacute;ciale qui se r&eacute;ferre au regexp entier, plut&ocirc;t qu'&agrave; une sous-expression.
 				Les back references sont utilises lorsque vous voulez rechercher quelque chose qui contient la m&ecirc;me cha&icirc;ne deux fois.
 				Par exemple, disons que vous avez un nick!user@host. Vous savez qu'il y a un trojan qui utilise un nickname et un username correspondant &agrave; "[0-9][a-z]{5}", et les deux sont les m&ecirc;mes.
 				Utiliser "[0-9][a-z]{5}![0-9][a-z]{5}@.+" ne fonctionnera pas car il permettra au nickname et &agrave; l'username d'&ecirc;tre diff&eacute;rents.
