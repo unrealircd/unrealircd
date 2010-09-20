@@ -2147,3 +2147,4 @@
   links it was still showing 'Underlying syscall error', this has now been
   replaced to show the actual (surprise!) underlying syscall error instead.
   Reported by vonitsanet, patch from ohnobinki (#0003157).
+- Fix ordering of ``9. FAQ'' and ``10. Modules'' in HTML docs.
