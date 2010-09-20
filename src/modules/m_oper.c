@@ -310,14 +310,14 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 				  sptr->user->virthost = strdup(sptr->user->cloakedhost);
 			}
 			sendto_snomask(SNO_OPER, "%s (%s@%s) is now a local operator (o)",
-			    parv[0], sptr->user->username, GetHost(sptr));
+				       parv[0], sptr->user->username, sptr->sockhost);
 		}
 
 
 		if (announce != NULL)
 			sendto_snomask_global(SNO_OPER,
 			    "%s (%s@%s) [%s] %s",
-			    parv[0], sptr->user->username, GetHost(sptr),
+			    parv[0], sptr->user->username, sptr->sockhost,
 			    parv[1], announce);
 		if (aconf->snomask)
 			set_snomask(sptr, aconf->snomask);
