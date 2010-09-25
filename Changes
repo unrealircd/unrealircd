@@ -2150,3 +2150,4 @@
 - Fix ordering of ``9. FAQ'' and ``10. Modules'' in HTML docs.
 - Always display the real host of successful OPERing up. Reported by
   Josh. (#3950)
+- Fixed braindamage in stacked bans.

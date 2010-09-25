@@ -327,11 +327,13 @@ int extban_is_ok_nuh_extban(aClient* sptr, aChannel* chptr, char* para, int chec
 			return 0; /* Don't add unknown extbans. */
 		}
 		/* Now we have to ask the stacked extban if it's ok. */
-		extban_is_ok_recursion++;
-		isok = p->is_ok;
-		extban_is_ok_recursion--;
-		if (isok)
-			return p->is_ok(sptr, chptr, mask, checkt, what, what2);
+		if (p->is_ok)
+		{
+			extban_is_ok_recursion++;
+			isok = p->is_ok(sptr, chptr, mask, checkt, what, what2);
+			extban_is_ok_recursion--;
+			return isok;
+		}
 	}
 	return 1; /* Either not an extban, or extban has NULL is_ok. Good to go. */
 }
