@@ -2151,3 +2151,4 @@
 - Always display the real host of successful OPERing up. Reported by
   Josh. (#3950)
 - Fixed braindamage in stacked bans.
+- Add m_nopost to makefile.win32 in the hopes that it may work (#3961).
