@@ -90,7 +90,7 @@ href="#features">Özellikler</A><BR>--
 3.1. <A
 href="#feature_cloaking">Gizleme (Cloaking)</A><BR>--
 3.2. <A
-href="#feature_modules">Moduller</A><BR>--
+href="#feature_modules">Modüller</A><BR>--
 3.3. <A
 href="#feature_snomasks">Snomasklar</A><BR>--
 3.4. <A
@@ -193,7 +193,9 @@ href="#secinformation">Bilgilendirme</A><BR>---8.8. <A
 href="#secantiexploit">Exploitlere karþý korunma</A><BR>---8.9. <A
 href="#secsummary">Özet</A><BR>9. <A
 href="http://www.vulnscan.org/UnrealIRCd/faq/" target=_blank>Sýkça Sorulan 
-Sorular (FAQ)</A><BR>A.
+Sorular (FAQ)</A><BR>10.
+<a href="#modules">Moduller</a><BR>---10.1.
+<a href="#modules_m_nopost">m_nopost</a><BR>A.
 <A href="#regex">Düzenli Ýfadeler</A><BR>---A.1. <A
 href="#regexlit">Deðiþmezler</A><BR>---A.2. <A
 href="#regexdot">Nokta Ýþleci</A><BR>---A.3. <A
@@ -345,9 +347,9 @@ nickiniz +x), ayný zamanda adminler, +x kipini varsayýlan kipi olarak veya
 kullanýcýlarýn –x yapamamalarý için belirtebilirler.</P>
 <P>Gizlenmiþ bir host, gizleme (cloaking) modülü tarafýndan
 oluþturulur (en az bir tane yüklenmesi zorunludur), þu an için sadece 1 
-modul
+modül
 içermektedir:<BR><B>cloak:</B> Bu
-modül 3.2.1’den bu yana resmi gizleme modulüdür, eski algoritmaya nazaran 
+modül 3.2.1’den bu yana resmi gizleme modülüdür, eski algoritmaya nazaran 
 daha
 güvenlidir, dahili olarak md5 kullanýr ve 3 adet; küçük karakter olarak 
 (a-z)
@@ -365,7 +367,7 @@ gerçek
 hostun bulunabilmesi olasýdýr.</P>
 <p>Ýpucu: If you are on *NIX and have to create new cloak keys, you can run './unreal gencloak'  
 in your shell, which will output 3 random strings that you can use.</p></DIV>
-<P><FONT size=+2><B>3.2 - Moduller</B></FONT><A 
+<P><FONT size=+2><B>3.2 - Modüller</B></FONT><A 
 name=feature_modules></A></P>
 <DIV class=desc>
 <P>UnrealIRCd modül özelliðini destekler, bu:<BR>- Ircd çalýþýrken 
@@ -373,17 +375,20 @@ yükleyebilirsiniz/yeniden
 yükleyebilirsiniz/iptal edebilirsiniz&nbsp; (/rehash ile). Bu bazý açýklarýn
 saptanmasýný veya yeni özelliklerin restart atmadan eklenmesini
 saðlamaktadýr.<BR>- Diðer kiþiler yeni komutlar,yeni
-kullanýcý modlarý ve hatta yeni kanal modlarý içeren (3. parti) moduller
+kullanýcý modlarý ve hatta yeni kanal modlarý içeren (3. parti) modüller
 oluþturabilirler.<BR>Sebeplerinden dolayý çok iyi bir
-özelliktir. UnrealIRCd sadece birkaç modül ile baþlar. www.unrealircd.com 
+özelliktir. UnrealIRCd sadece birkaç <a href="#modules">modüller</a> ile baþlar. www.unrealircd.com 
 -&gt;
-modules kýsmýna bir göz atýn veya 3. parti modulleri bulabilmek için google
+modüles kýsmýna bir göz atýn veya 3. parti modülleri bulabilmek için google
 arama motorunu kullanýn.
-<P>En az 2 modulü yüklemeniz (load) zorunludur, aksi
-taktirde boot iþlemini gerçekleþtiremezsiniz!:<BR>-
-komutlar modulü: commands.so (windows için commands.dll)<BR>- gizleme 
-modulü: çoðunlukla cloak.so (windows için
-cloak.dll).</P></DIV>
+<P>En az 2 modülü yüklemeniz (load) zorunludur, aksi
+taktirde boot iþlemini gerçekleþtiremezsiniz!:<BR>
+-
+komutlar modülü: commands.so (windows için commands.dll)<BR>
+- gizleme 
+modülü: çoðunlukla cloak.so (windows için
+cloak.dll).</P>
+</DIV>
 <P><FONT size=+2><B>3.3 - Snomasklar</B></FONT><A 
 name=feature_snomasks></A></P>
 <DIV class=desc>
@@ -2705,23 +2710,22 @@ name=badwordsblock></A> </P>
 <P>Badword bloðu, kullanýcý ve kanal modu olan +G modu için
 gönderimi engellenecek "badwords" (kötü kelimeler) listesini yönetmenize 
 olanak
-saðlar. badword:: yönergesi ile tip belirtilir, geçerli tipler: channel,
-message, quit ve all. channel: kanal modu +G için "badwords" listesi için,
-message: kullanýcý modu +G için "badwords" listesi için, quit: çýkýþ 
-mesajlarýný
-sansürlemek için, ve all: her 3 liste için kullanýlabilir. badword::word
-yönergesi ile sade bir kelime belirtebilirsiniz veya bir ifade (regex) de
-belirtebilirsiniz. badword::replace ile badword::word yönergesiyle 
-belirtilen
-ifade veya kelime eþleþmesi gerçekleþmesi durumunda, bu ifade veya metnin 
-yerine
-gönderilecek metni belirtebilirsiniz. Eðer badword::replace yönergesi
-belirtilmezse, metin eþleþmesi durumunda metin &lt;censored&gt; ile
-deðiþtirilecektir. badword::action yönergesi ile, kötü kelimeler listesi 
-içinde
-bulunan bir ifade kullanýlmasý halinde uygulanacak eylem belirtilir. Eðer 
-burda
-replace belirtilirse ifade badword::replace yönergesiyle belirtilen metinle
+saðlar. <b>badword::</b> yönergesi ile tip belirtilir. Geçerli Tipler: 
+<ul> 
+<li><tt>channel</tt> +G moduna sahip kanallar için geçerlidir.</li> 
+<li><tt>message</tt> +G moduna sahip bir kullanýcý tarafýndan gönderilen özel mesajlar için geçerlidir.(kanal mesajlarýný için deðildir)</li> 
+<li><tt>quit</tt> çýkýþ mesajlarýný sansürlemek için geçerlidir.</li> 
+<li><tt>all</tt> yukardaki belirtilen her 3 liste içinde geçerlidir.</li> 
+</ul> 
+<p> 
+<b>badword::word</b> yönergesi ile sade bir kelime veya düzenli bir ifade
+belirtebilirsiniz. <b>badword::replace</b> ile <b>badword::word</b> yönergesiyle 
+belirtilen ifade veya kelime eþleþmesi gerçekleþmesi durumunda, bu ifade veya metnin 
+yerine gönderilecek metni belirtebilirsiniz. Eðer <b>badword::replace</b> yönergesi
+belirtilmezse, metin eþleþmesi durumunda metin <b>&lt;censored&gt;</b> ile
+deðiþtirilecektir. <b>badword::action</b> yönergesi ile, kötü kelimeler listesi 
+içinde bulunan bir ifade kullanýlmasý halinde uygulanacak eylem belirtilir. Eðer 
+burda replace belirtilirse ifade <b>badword::replace</b> yönergesiyle belirtilen metinle
 deðiþtirilecektir, eðer block belirtilirse ifade bloklanacaktýr. Eðer burda
 hiçbirþey belirtmezseniz geçerli eylem replace eylemi olacaktýr.</P>
 <P>Örnek:<BR><PRE>badword channel {
@@ -3146,10 +3150,9 @@ unrealircd.conf dosyanýza ekleyeceðiniz cgiirc bloðu: <PRE>cgiirc {
 	hostname "1.2.3.4";
 };</PRE>
 <P></P></DIV>
-<P><FONT class=block_section>4.37 -
-</FONT><FONT class=block_name>Set Bloðu</FONT> <FONT
-class=block_required>GEREKLÝ</FONT> <FONT class=block_old>(Önceden bilinen 
-unrealircd.conf/networks file)</FONT><A
+<p id="setblock"><font class="block_section">4.37 - </font><font class="block_name">Set Bloðu</font>
+<font class="block_required">GEREKLÝ</font> <font class="block_old">(Önceden bilinen 
+unrealircd.conf/networks dosyasý)</FONT><A
 name=setblock></A> </P>
 <DIV class=desc>
 <P>Tek sunuculu aðlarda, bütün set deyimlerini
@@ -3392,6 +3395,22 @@ saðlar.</P>
 belirtilirse, /oper komutu kullanýmý baþarýsýz olduðu
 takdirde, kullanýcýya oper denemesinin kayýt edildiðine dair uyarý
 gönderilir.</P>
+<p id="set_nopost_ban_action"><font class="set">set::nopost::ban-action</font> (gerekli <a href="#modules_m_nopost">m_nopost</a>)<br /> 
+Kullanýcý HTTP POST komutu gerçekleþtirmek için çalýþýrsa, kullanýcýya belirtilen eylem uygulanýr. 
+Ýzin verilen deðerler: kill, gline, gzline, kline, zline, shun, ve tempshun. 
+Varsayýlan deðer kill. Eðer *line deðeri veya shun kullanýrsanýz, unutmayýn ki 
+web sitesini ziyaret eden bir saf kullanýcýyý XPS IRC spam saldýrýsý yapýldýðýný sanýp
+o anki mevcut baðlantýsýna *line yada shun uygulayabilirsiniz. 
+Varsayýlan deðeri kill olarak yaparsanýz böylece kullanýcýlarý kazalara karþý korumuþ olursunuz. 
+Fakat yinede *line ve gzline kullanýmý bazý durumlarda gerekli olabilir.</p> 
+<p id="set_nopost_ban_reason"><font class="set">set::nopost::ban-reason</font> (gerekli <a href="#modules_m_nopost">m_nopost</a>)<br /> 
+m_nopost tarafýndan kill yada ban atýlan kullanýcý için ban sebebi belirtilir.</p> 
+<p id="set_nopost_ban_time"><font class="set">set::nopost::ban-time</font> (gerekli <a href="#modules_m_nopost">m_nopost</a>)<br /> 
+m_nopost tarafýndan shun, gline, gzline, kline, ve zline için zaman belirtilir. 
+Varsayýlan deðer 4h.</p> 
+<p id="set_nopost_except_hosts"><font class="set">set::nopost::except-hosts</font> (gerekli <a href="#modules_m_nopost">m_nopost</a>)<br /> 
+m_nopost'da belirtilen host maskelerini  kill ve *-line'lerden muaf tutmaya yarar. Bu seçenekde 
+bir yada birden fazla host maskesi eklemeniz gerekmektedir.</p> 
 <P><FONT class=set>set::dns::timeout
 &lt;zaman-deðeri&gt;;</FONT><BR>Bir DNS sunucusunun,
 baðlantýsýnýn zaman aþýmý olarak deðerlendirilip, kesilmemesi için, ne 
@@ -4078,8 +4097,8 @@ komut hakkýnda bilgi almak için the /helpop komut (veya operseniz /helpop
       Kullanabilir</B></DIV></TD></TR>
   <TR>
     <TD>nick &lt;yeninick&gt;</TD>
-    <TD>Sunucudaki rumuzunuzu degistirir. Bulundugunuz
-      butun kanallarda rumuzunuzun degisimi haber verilir<BR
+    <TD>Sunucudaki rumuzunuzu deðiþtirir. Bulunduðunuz
+      bütün kanallarda rumuzunuzun deðiþimi haber verilir<BR
       ></TD>
     <TD>Herkes</TD></TR>
   <TR>
@@ -4939,6 +4958,20 @@ name=faq></A></B></FONT></P>
 href="http://www.vulnscan.org/UnrealIRCd/faq/" target=_blank>buradan</A> 
 ulaþabilirsiniz.</P></DIV>
 <P></P>
+<p id="modules"><font size="+2"><b>10 &#8211; Modüller</b></font></p> 
+<div class="desc"> 
+<p>UnrealIRCd ile birlikte gelen aþaðýdaki modüller açýklamalarýyla
+bulunmaktadýr. Ne yazýk ki, sadece bir modül UnrealIRCd ile birlikte anýnda 
+belgelenmiþtir.</p></div> 
+<p id="modules_m_nopost"><font size="+2"><b>10.1 <a href="#modules_m_nopost">m_nopost</a></b></font></p>
+<div class="desc">Bu modül otomatik olarak bir HTTP-tarzýnda çalýþan herhangi bir kullanýcýyý yasaklar.
+Bu modül AJAX-destekli tarayýcýlarýn IRC spambots olarak görev yapabildiði Firefox XPS
+saldýrýlarýna karþý yanýt olarak Syzop tarafýndan yazýlmýþtýr. Ne zaman m_nopost talep edildiðinde
+<a href="#set_nopost_ban_action"> set::nopost::ban-action</a> ve
+<a href="#set_nopost_ban_time">set::nopost::ban-time</a> ayarlarýný (ve diðer ayarlarýný) yapýlandýrabilirsiniz.<br/>
+Bu modül yeni olup UnrealIRCd 3.2.9 ve commands.so içinde derlenmiþtir. Bu nedenle,
+çoðu durumda varsayýlan olarak yüklenir.
+</P></DIV> 
 <P><FONT size=+2><B>A Düzenli Ýfadeler<A name=regex></A></B></FONT></P>
 <DIV class=desc>
 <P>Düzenli ifadeler Unreal'de bir çok yerde kullanýlýr,
