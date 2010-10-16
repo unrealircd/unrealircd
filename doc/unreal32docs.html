@@ -552,6 +552,9 @@ Modules can add other extended ban types.<br>
 <tr><td>dccblock</td><td>mark the user so (s)he's unable to send any DCCs</td></tr>
 <tr valign="top"><td>viruschan</td><td>part all channels, join set::spamfilter::virus-help-channel, disables all commands 
  except PONG, ADMIN, and msg/notices to set::spamfilter::virus-help-channel</td></tr>
+<tr><td>warn</td><td>send a notice to IRCOps (spamfilter snomask), and
+ inform the user that the message has been intercepted. No further action is
+taken, the message is not blocked.</td></tr>
 </table></tr></td>
    <tr valign="top"><td><b>[tkltime]</b></td><td> The duration of the *line/shun added by the filter, use '-' to use the default or to skip 
    (eg: if action = 'block')</td></tr>
