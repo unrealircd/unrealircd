@@ -817,7 +817,7 @@
 								<td>viruschan</td><td>&Eacute;jecte l'utilisateur de tous les salons, le force &agrave; rejoindre le salon d&eacute;fini par set::spamfilter::virus-help-channel et d&eacute;sactive toutes les commandes sauf PONG, ADMIN et les messages et notices vers le salon set::spamfilter::virus-help-channel</td>
 							</tr>
 							<tr>
-								<td>warn</td><td>Envoie une notice aux IRCOps (avec le snomask spamfilter) et prévient l'utilisateur que son message a été intercepté. Aucune autre action n'est prise et le message n'est pas bloqué.</td>
+								<td>warn</td><td>Envoie une notice aux IRCOps (avec le snomask spamfilter) et pr&eacute;vient l'utilisateur que son message a &eacute;t&eacute; intercept&eacute;. Aucune autre action n'est effectu&eacute;e et le message n'est pas bloqu&eacute;.</td>
 							</tr>
 						</table>
 					</td>
@@ -1184,7 +1184,7 @@ malgr&eacute; tout (cela devrait &ecirc;tre tr&egrave;s rare).
 };
 </pre>
 			<p>
-				Les blocs Class sont les classes dans lequelles les connections seront plac&eacute;es (par exemple pour les allow blocks ou les serveurs des link blocks), vous avez g&eacute;n&eacute;ralement plusieurs class blocks (exemple : pour les serveurs, clients, opers).
+				Les blocs Class sont les classes dans lequelles les connexions seront plac&eacute;es (par exemple pour les allow blocks ou les serveurs des link blocks), vous avez g&eacute;n&eacute;ralement plusieurs class blocks (exemple : pour les serveurs, clients, opers).
 			</p>
 			<p>
 				<b>name</b> est une description, comme "clients" ou "serveurs", ce nom est utilis&eacute; comme r&eacute;f&eacute;rence pour les classes dans les allow/link/oper/etc blocks.
@@ -1193,7 +1193,7 @@ malgr&eacute; tout (cela devrait &ecirc;tre tr&egrave;s rare).
 				<b>pingfreq</b> est le nombre de secondes entres les PINGs depuis le server (quelquechose entre 90 et 180 secondes est recommand&eacute;).
 			</p>
 			<p>
-				<b>connfreq</b> est utilis&eacute; uniquement pour les serveurs et repr&eacute;sente le nombre de secondes entre 2 tentatives de connections si l'autoconnection est activ&eacute;e.
+				<b>connfreq</b> est utilis&eacute; uniquement pour les serveurs et repr&eacute;sente le nombre de secondes entre 2 tentatives de connexions si l'autoconnexion est activ&eacute;e.
 			</p>
 			<p>
 				<b>maxclients</b> sp&eacute;cifie le nombre maximum de clients / serveurs pouvant faire partie de cette classe.
@@ -1273,7 +1273,7 @@ class servers {
 			</p>
 			<p>
 				<b>class</b><br>
-   				Sp&eacute;cifie le nom de la classe dans laquelle les connections relevant de cet allow block sont plac&eacute;es.
+   				Sp&eacute;cifie le nom de la classe dans laquelle les connexions correspondant &agrave; cet allow block sont plac&eacute;es.
 			</p>
 			<p>
 				<b>maxperip</b> (optionnel, mais recommend&eacute;)<br>
@@ -2427,7 +2427,7 @@ deny dcc {
 			</p>
 			<p>
 				Le deny::type permet deux valeurs diff&eacute;rentes, auto (s'applique uniquement aux autoconnexions, /connect fonctionnera toujours), et all 
-				(s'applique &agrave; toutes les tentatives de connections).
+				(s'applique &agrave; toutes les tentatives de connexion).
 			</p>
 		</div>
 
@@ -4472,7 +4472,7 @@ spamfilter {
 						&nbsp;&nbsp;&nbsp;&nbsp;s Renvoie les glines mis / n'ont mis par la personne sp&eacute;cifi&eacute;e<br>
 						t - tld - envoie la liste des tld block<br>
 						T - traffic - envoie les informations sur le traffic<br>
-						u - uptime - envoie l'uptime du serveur et le nombre de connections<br>
+						u - uptime - envoie l'uptime du serveur et le nombre de connexions<br>
 						U - uline - envoie la liste des ulines block<br>
 						v - denyver - envoie la liste des deny version block<br>
 						V - vhost - envoie la liste des vhost block<br>
@@ -4490,7 +4490,7 @@ spamfilter {
 				</tr>
 				<tr>
 					<td>close</td>
-					<td>Cette commande d&eacute;connectera toutes les connections inconnues du serveur IRC.</td>
+					<td>Cette commande d&eacute;connectera toutes les connexions inconnues du serveur IRC.</td>
 					<td>IRCop</td>
 				</tr>
 			</table>
@@ -4577,7 +4577,7 @@ spamfilter {
 		</p>
 		<div class="desc">
 			<p>
-				Utilisez des connections SSL entre les serveurs et pour les opers, cela vous prot&egrave;gera contre le "sniffing". 
+				Utilisez des connexions SSL entre les serveurs et pour les opers, cela vous prot&egrave;gera contre le "sniffing". 
 				Le sniffing est possible si quelqu'un attaque un serveur entre vous et votre serveur ircd, il pourra voir 
 				tout votre trafic qui passe par ce serveur.
 				Lire les conversations, r&eacute;cup&eacute;rer les mots de passe (les logins oper, nickserv, etc ...) ...
@@ -4659,7 +4659,7 @@ spamfilter {
 				<li>/stats c: vous donne une id&eacute;e des links et qui peut &ecirc;tre utilis&eacute;e comme backup, etc ...</li>
 				<li>/stats g, /stats k: en g&eacute;n&eacute;ral utilis&eacute;s pour bannir les proxys ... donc cela donnera juste aux attaquants une liste de proxys qu'ils peuvent utiliser.</li>
 				<li>/stats E, /stats e: informations plus sensibles, sp&eacute;cialement si un attaquant peut utiliser ces adresses.</li>
-				<li>/stats i, /stats y: peut aider un attaquant &agrave; trouver des hosts permettant beaucoup de connections.</li>
+				<li>/stats i, /stats y: peut aider un attaquant &agrave; trouver des hosts permettant beaucoup de connexions.</li>
 				<li>/stats P: aide &agrave; trouver des ports serveronly</li>
 				<li>etc c...</li>
 			</ul>
