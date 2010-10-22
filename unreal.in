@@ -29,12 +29,24 @@ if [ "$1" = "start" ] ; then
 	fi
 elif [ "$1" = "stop" ] ; then
 	echo "Stopping UnrealIRCd"
+	if [ ! -r $PID_FILE ] ; then
+		echo "ERROR: UnrealIRCd is not running"
+		exit 1
+	fi
 	kill -9 `cat $PID_FILE`
 elif [ "$1" = "rehash" ] ; then
 	echo "Rehashing UnrealIRCd"
+	if [ ! -r $PID_FILE ] ; then
+		echo "ERROR: UnrealIRCd is not running"
+		exit 1
+	fi
 	kill -1 `cat $PID_FILE`
 elif [ "$1" = "restart" ] ; then
 	echo "Restarting UnrealIRCd"
+	if [ ! -r $PID_FILE ] ; then
+		echo "ERROR: UnrealIRCd is not running"
+		exit 1
+	fi
 	kill -2 `cat $PID_FILE`
 elif [ "$1" = "mkpasswd" ] ; then
 	@BINDIR@ -P $2 $3
