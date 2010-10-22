@@ -2153,3 +2153,5 @@
 - Fixed braindamage in stacked bans.
 - Add m_nopost to makefile.win32 in the hopes that it may work (#3961).
 - Document spamfilter 'warn' action in unreal32docs.
+- Fix missing OperOverride notices for +u and +L if not chanowner, reported
+  by Mareo (#0003358), partial patch from DJ.

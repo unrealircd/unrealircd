@@ -839,6 +839,10 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				   chptr->chname);
 			break;
 		  }
+		  if (op_can_override(cptr) && !is_chanowner(cptr, chptr))
+		  {
+		  	opermode = 1;
+		  }
 
 		auditorium_ok:
 		  goto setthephuckingmode;
@@ -1415,6 +1419,10 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  {
 				  strcpy(chptr->mode.link, "");
 			  }
+		  }
+		  if (!IsULine(cptr) && IsPerson(cptr) && op_can_override(cptr) && !is_chanowner(cptr, chptr))
+		  {
+		  	opermode = 1;
 		  }
 		  retval = 1;
 
