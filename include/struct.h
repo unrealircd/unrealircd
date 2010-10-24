@@ -73,9 +73,6 @@
 
 #include "channel.h"
 
-#if defined(_WIN32) && !defined(NOSPOOF)
- #error "Compiling win32 without nospoof is VERY insecure and NOT supported"
-#endif
 
 
 extern MODVAR int sendanyways;
