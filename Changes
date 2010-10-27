@@ -2157,3 +2157,4 @@
   by Mareo (#0003358), partial patch from goldenwolf.
 - Updated doc/compiling_win32.txt with current free MS SDK information,
   patch from goldenwolf.
+- And another m_nopost makefile.win32 fix.

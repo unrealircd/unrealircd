@@ -254,7 +254,7 @@ CONF:
 	$(CC) src/win32/config.c
 	-@config.exe
 
-	
+
 
 ./WIRCD.EXE: $(OBJ_FILES) SRC/win32/WIN32.RES
         $(LINK) $(LFLAGS) $(OBJ_FILES) SRC/win32/WIN32.RES SRC/WIN32/TRE.LIB SRC/WIN32/ARESLIB.LIB /MAP
@@ -788,6 +788,9 @@ src/modules/m_svsnolag.dll: src/modules/m_svsnolag.c $(INCLUDES)
 
 src/modules/m_starttls.dll: src/modules/m_starttls.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/m_starttls.c $(MODLFLAGS)
+
+src/modules/m_nopost.dll: src/modules/m_nopost.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/m_nopost.c $(MODLFLAGS)
 
 dummy:
 
