@@ -154,10 +154,17 @@ Ban *banned;
 
 	if ((chptr->mode.mode & MODE_ONLYSECURE) && !(sptr->umodes & UMODE_SECURE))
 	{
-		if (!extended_operoverride(sptr, chptr, key, MODE_ONLYSECURE, 'z'))
-			return (ERR_SECUREONLYCHAN);
-		else
-			return 0;
+		if (IsAnOper(sptr))
+		{
+			/* Yeah yeah.. duplicate code..
+			 * Anyway: if the channel is +z we still allow an ircop to bypass it
+			 * if they are invited.
+			 */
+			for (lp = sptr->user->invited; lp; lp = lp->next)
+				if (lp->value.chptr == chptr)
+					return 0;
+		}
+		return (ERR_SECUREONLYCHAN);
 	}
 
 	if ((chptr->mode.mode & MODE_OPERONLY) && !IsAnOper(sptr))

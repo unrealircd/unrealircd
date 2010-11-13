@@ -224,6 +224,9 @@ typedef struct {
 	 */
 	int			(*sjoin_check)(aChannel *, CmodeParam *, CmodeParam *);
 
+	/** Local channel mode? Prevents remote servers from setting/unsetting this */
+	char local;
+
 	/** Is this mode being unloaded?
 	 * This is set to 1 if the chanmode module providing this mode is unloaded
 	 * and we are waiting to see if in our new round of loads a "new" chanmode
@@ -246,6 +249,7 @@ typedef struct {
 	void		(*free_param)(CmodeParam *);
 	CmodeParam *	(*dup_struct)(CmodeParam *);
 	int		(*sjoin_check)(aChannel *, CmodeParam *, CmodeParam *);
+	char		local;
 } CmodeInfo;
 #endif
 

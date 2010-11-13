@@ -2158,3 +2158,35 @@
 - Updated doc/compiling_win32.txt with current free MS SDK information,
   patch from goldenwolf.
 - And another m_nopost makefile.win32 fix.
+- Some small updates to the extended channel mode system: it now has minimal
+  support for 'local channel modes'. This is really only meant for channel
+  mode +Z (upcase z), see next.
+- Added Channel Mode Z which indicates if a channel is 'secure' or not.
+  This mode works in conjunction with +z (lower case z).
+  If +z is set ('only secure users may join'), then the IRCd scans to see
+  if everyone in the channel is connected through SSL. If so, then the
+  channel is set +Z as well ('channel is secure').
+  Whenever an insecure user manages to join, the channel is -Z. And whenever
+  all insecure users leave, the channel is set +Z.
+  The 'insecure user being present in a +z channel' can be because:
+  - An IRCOp joined the channel, and he's not secure
+  - When servers link together and a user on the other side is not secure
+    This only happens on net merge (equal time stamp).
+    On different time stamp, we still kick insecure users on the new side.
+  - At the time when +z is set, there are insecure users present.
+  This feature was implemented after a heavy discussion in bug #3720 by fez
+  and others, and was suggested by Stealth.
+  Tech note: +Z/-Z is handled locally by each server. Any attempt to
+  remotely set +Z/-Z (eg: by services) will be ignored.
+- As mentioned above, +z can now be set even if any insecure users are
+  present. Previously, this was not permitted. Now, as soon as the last
+  non-SSL user leaves, the channel will be set +Z.
+- An oper not connected through SSL previously had to /INVITE himself
+  to a channel and then /JOIN the channel with the key 'override'.
+  This 'override' key is no longer required, a simple JOIN will suffice.
+- Sorted channel modes in /HELPOP ?CHMODES
+- Re-enabled 'fishy timestamp' errors in MODE. For some reason this was
+  commented out, even though the (more annoying and less useful) code in
+  JOIN was enabled so that did not make a lot of sense. It also now logs to
+  ircd.log (or whatever you configure). This enables people to easier find
+  the cause of any timestamp issues (which usually is badly coded services).

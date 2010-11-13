@@ -482,12 +482,14 @@ DLLFUNC void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, c
 					chptr->chname, chptr->creationtime, sendts);			
 					*/
 				chptr->creationtime = sendts;
-#if 0
 				if (sendts < 750000)
+				{
 					sendto_realops(
-						"Warning! Possible desynch: MODE for channel %s ('%s %s') has fishy timestamp (%ld) (from %s/%s)"
+						"Warning! Possible desynch: MODE for channel %s ('%s %s') has fishy timestamp (%ld) (from %s/%s)",
 						chptr->chname, modebuf, parabuf, sendts, cptr->name, sptr->name);
-#endif
+					ircd_log(LOG_ERROR, "Possible desynch: MODE for channel %s ('%s %s') has fishy timestamp (%ld) (from %s/%s)",
+						chptr->chname, modebuf, parabuf, sendts, cptr->name, sptr->name);
+				}
 				/* new chan or our timestamp is wrong */
 				/* now works for double-bounce prevention */
 
@@ -894,25 +896,6 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		}
 		goto setthephuckingmode;
 	  case MODE_ONLYSECURE:
-	  	notsecure = 0;
-	  	if (what == MODE_ADD && modetype == MODE_ONLYSECURE && !(IsServer(cptr) || IsULine(cptr)))
-		{
-		  for (member = chptr->members; member; member = member->next)
-		  {
-		    if (!IsSecureConnect(member->cptr) && !IsULine(member->cptr))
-		    {
-			sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), 
-				   me.name, cptr->name, 'z', 
-				   "all members must be connected via SSL");
-			notsecure = 1;
-			break;
-		    }
-		  }
-		  member = NULL;
-		  /* first break nailed the for loop, this one nails switch() */
-		  if (notsecure == 1) break;
-		}
-		goto setthephuckingmode;
 	  case MODE_NOCTCP:
 	  case MODE_NONICKCHANGE:
 	  case MODE_NOINVITE:
@@ -1814,6 +1797,10 @@ int x;
 	/* Expected a param and it isn't there? */
 	if (paracnt && (!param || (*pcount >= MAXMODEPARAMS)))
 		return 0;
+
+	/* Prevent remote users from setting local channel modes */
+	if ((Channelmode_Table[modeindex].local) && !MyClient(cptr))
+		return paracnt;
 
 	if (MyClient(cptr))
 	{

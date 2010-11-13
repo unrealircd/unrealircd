@@ -2891,6 +2891,15 @@ files {
     <td><div align="center">z</div></td>
     <td>Only clients on a Secure (SSL) Connection may join</td>
   </tr>
+  <tr> 
+    <td><div align="center">Z</div></td>
+    <td>Set by the server to indicate all users on the channel are on a Secure (SSL)
+    Connection. Only active is +z is also set. ULines (eg: BotServ) are
+    ignored when counting 'insecure users'. It's still up to the server
+    admins to make safe server to server links (which could be with the help
+    of SSL, but also VPN, loopback interface, quantum encryption, etc etc),
+    the IRCd does not and cannot detect this.</td>
+  </tr>
 </table>
 <p>&nbsp;</p>
 <table width="75%" border="1">

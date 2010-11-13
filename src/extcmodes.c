@@ -192,6 +192,7 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 	Channelmode_Table[i].free_param = req.free_param;
 	Channelmode_Table[i].dup_struct = req.dup_struct;
 	Channelmode_Table[i].sjoin_check = req.sjoin_check;
+	Channelmode_Table[i].local = req.local;
 	Channelmode_Table[i].owner = module;
 	
 	for (j = 0; j < EXTCMODETABLESZ; j++)

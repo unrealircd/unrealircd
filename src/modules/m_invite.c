@@ -249,11 +249,6 @@ DLLFUNC CMD_FUNC(m_invite)
                         /* Logging implementation added by XeRXeS */
 			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Secure Mode)",
 				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
-
-				sendto_one(sptr, ":%s NOTICE %s :The channel is +z and you are trying to OperOverride, "
-					"you'll have to override explicitly after this invite with the command '/join %s override'"
-					" (use override as a key) this will set the channel -z and then join you",
-					me.name, sptr->name, chptr->chname);
 	        }
 	        else if (is_banned(sptr, chptr, BANCHK_JOIN))
         	{
