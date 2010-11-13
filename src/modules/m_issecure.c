@@ -120,9 +120,6 @@ DLLFUNC int MOD_UNLOAD(m_issecure)(int module_unload)
 int modeZ_is_ok(aClient *sptr, aChannel *chptr, char *para, int checkt, int what)
 {
 	/* Reject any attempt to set or unset our mode. Even to IRCOps */
-	/* FIXME: I don't think this covers services, the lower layer does not allow
-	 *        us to do this here? PLZ TO CHK & TO FIX (somehow)!
-	 */
 	return EX_ALWAYS_DENY;
 }
 
