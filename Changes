@@ -2208,3 +2208,9 @@
 - Little tweak to +Z: when the last insecure user parts and the channel is
   set +Z (secure), the parting user saw the MODE too, which was silly.
   Reported by Robby22 (#0003720).
+- Added '/REHASH -global' command which will rehash all servers on the
+  network. You can also specify options like '/REHASH -global -motd' to
+  rehash only the MOTD/RULES/etc. Just like /REHASH <servername> this is a
+  NetAdmin-only command. This command is fully backwards compatible with
+  older UnrealIRCd version in the sense that it will also REHASH old
+  Unreal's. Suggested by 'P' in #0001522.

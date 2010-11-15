@@ -653,7 +653,10 @@ CMD_FUNC(m_rehash)
 		else
 			x = hunt_server_token(cptr, sptr, MSG_REHASH, TOK_REHASH, "%s", 1, parc, parv);
 	} else {
-		x = hunt_server_token(cptr, sptr, MSG_REHASH, TOK_REHASH, "%s %s", 1, parc, parv);
+		if (!_match("-glob*", parv[1])) /* This is really ugly... hack to make /rehash -global -something work */
+			x = HUNTED_ISME;
+		else
+			x = hunt_server_token(cptr, sptr, MSG_REHASH, TOK_REHASH, "%s %s", 1, parc, parv);
 	}
 	if (x != HUNTED_ISME)
 		return 0; /* Now forwarded or server didnt exist */
@@ -683,6 +686,48 @@ CMD_FUNC(m_rehash)
 			    (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
 		}
 		parv[1] = parv[2];
+	} else {
+		/* Ok this is in an 'else' because it should be only executed for sptr == cptr,
+		 * but it's totally unrelated to the above ;).
+		 */
+		if (parv[1] && !_match("-glob*", parv[1]))
+		{
+			/* /REHASH -global [options] */
+			Link *lp;
+			aClient *acptr;
+			
+			/* Shift parv's to the left */
+			parv[1] = parv[2];
+			parv[2] = NULL;
+			parc--;
+			/* Only netadmins may use /REHASH -global, which is because:
+			 * a) it makes sense
+			 * b) remote servers don't support remote rehashes by non-netadmins
+			 */
+			if (!IsNetAdmin(sptr))
+			{
+				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+				sendnotice(sptr, "'/REHASH -global' requires you to be NetAdmin");
+				return 0;
+			}
+			if (parv[1] && *parv[1] != '-')
+			{
+				sendnotice(sptr, "You cannot specify a server name after /REHASH -global, for obvious reasons");
+				return 0;
+			}
+			/* Broadcast it in an inefficient, but backwards compatible way. */
+			for (lp = Servers; lp; lp = lp->next)
+			{
+				acptr = lp->value.cptr;
+				if (acptr == &me)
+					continue;
+				sendto_one(acptr, ":%s %s %s",
+					sptr->name,
+					IsToken(acptr->from) ? TOK_REHASH : MSG_REHASH,
+					parv[1] ? parv[1] : "-all");
+			}
+			/* Don't return, continue, because we need to REHASH ourselves as well. */
+		}
 	}
 
 	if (!BadPtr(parv[1]) && stricmp(parv[1], "-all"))

@@ -3335,9 +3335,10 @@ to get more information on a command.</p>
     <td>IRCop</td>
   </tr>
   <tr> 
-    <td height="39">rehash &lt;server&gt; &lt;flags&gt;</td>
+    <td height="39">rehash &lt;server|-global&gt; &lt;flags&gt;</td>
     <td>Rehashes the servers config file. Including a server name allows you to 
-      rehash a remote servers config file. Several flags are also available. They 
+      rehash a remote servers config file, and using -global will rehash all
+      servers on the network (both are NetAdmin-only). Several flags are also available. They 
       Include <br>
       -dns - Reinitializes and reloads the resolver<br>
       -motd - Only re-read all MOTD, BOTMOTD, OPERMOTD and RULES files (including those in tld{} blocks)<br>
