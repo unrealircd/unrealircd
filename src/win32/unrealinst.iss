@@ -41,6 +41,7 @@ Name: "installservice/crashrestart"; Description: "Restart UnrealIRCd if it &cra
 Name: "makecert"; Description: "&Create certificate"; GroupDescription: "SSL options:";
 Name: "enccert"; Description: "&Encrypt certificate"; GroupDescription: "SSL options:"; Flags: unchecked;
 #endif
+Name: "fixperm"; Description: "Make Unreal folder writable by current user";
 
 [Files]
 Source: "..\..\wircd.exe"; DestDir: "{app}"; Flags: ignoreversion
@@ -71,6 +72,7 @@ Source: "tre.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\openssl\bin\openssl.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\openssl\bin\ssleay32.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\openssl\bin\libeay32.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\dev\setacl.exe"; DestDir: "{app}\tmp"; Flags: ignoreversion
 Source: ".\makecert.bat"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\encpem.bat"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\ssl.cnf"; DestDir: "{app}"; Flags: ignoreversion
@@ -176,6 +178,16 @@ begin
   ResultXP := true;
   Result2003 := true;
 
+  // Prevent the user from selecting both 'Install as service' and 'Encrypt SSL certificate'
+  if CurPage = wpSelectTasks then
+  begin
+    if IsTaskSelected('enccert') and IsTaskSelected('installservice') then
+    begin
+      MsgBox('When running UnrealIRCd as a service there is no way to enter the password for an encrypted SSL certificate, therefore you cannot combine the two. Please deselect one of the options.', mbError, MB_OK);
+      Result := False
+    end
+  end;
+
   //*********************************************************************************
   // Only run this at the "Ready To Install" wizard page.
   //*********************************************************************************
@@ -249,6 +261,33 @@ begin
 
 end;
 
+procedure CurStepChanged(CurStep: TSetupStep);
+
+var
+  hWnd: Integer;
+  ResultCode: Integer;
+  ResultXP: boolean;
+  Result2003: boolean;
+  Res: Integer;
+  s: String;
+  d: String;
+begin
+if CurStep = ssPostInstall then
+	begin
+     d := ExpandConstant('{app}');
+	   if IsTaskSelected('fixperm') then
+	   begin
+	     // This fixes the permissions in the Unreal3.2 folder by granting full access to the user
+	     // running the install.
+	     s := '-on "'+d+'" -ot file -actn ace -ace "n:'+GetUserNameString()+';p:full;m:set';
+	     Exec(d+'\tmp\setacl.exe', s, d, SW_HIDE, ewWaitUntilTerminated, Res);
+	   end
+	   else
+	   begin
+	     MsgBox('You have chosen to not have the installer automatically set write access. Please ensure that the user running the IRCd can write to '+d+', otherwise the IRCd will fail to load.',mbConfirmation, MB_OK);
+	   end
+  end;
+end;
 
 [Icons]
 Name: "{group}\UnrealIRCd"; Filename: "{app}\wircd.exe"; WorkingDir: "{app}"

@@ -2190,3 +2190,17 @@
   JOIN was enabled so that did not make a lot of sense. It also now logs to
   ircd.log (or whatever you configure). This enables people to easier find
   the cause of any timestamp issues (which usually is badly coded services).
+- Win32 installer: Make it so a user can no longer accidentally check both
+  'install as service' and 'encrypt SSL certificate', as they are
+  incompatible (a service cannot ask a user to enter a password).
+- Win32 installer: Fixed long outstanding problem with some Vista / Windows 7
+  installations, which has to do with file permissions of the Unreal3.2
+  folder. Symptoms were error messages such as:
+  Unable to create file 'tmp/10D9D743.commands.dll': Permission denied
+  But also failing to create SSL certificates, nothing being logged, etc.
+  This is now fixed by setting write access on the Unreal3.2 folder to the
+  user running the install, unless the user chooses not to use this new
+  option (it can be unchecked), in which case the user is warned that he
+  should take care of this himself.
+  Reported by various persons, special thanks to Bock and goldenwolf for
+  helping us to track down this issue (#0003943).
