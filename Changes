@@ -2204,3 +2204,6 @@
   should take care of this himself.
   Reported by various persons, special thanks to Bock and goldenwolf for
   helping us to track down this issue (#0003943).
+- Little tweak to +Z: when the last insecure user parts and the channel is
+  set +Z (secure), the parting user saw the MODE too, which was silly.
+  Reported by Robby22 (#0003720).

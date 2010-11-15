@@ -182,7 +182,7 @@ void issecure_set(aChannel *chptr, aClient *sptr, int notice)
 			me.name, chptr->chname);
 	}
 	chptr->mode.extmode |= EXTCMODE_ISSECURE;
-	sendto_channel_butserv(chptr, &me, ":%s MODE %s +Z", me.name, chptr->chname);
+	sendto_channel_butserv_butone(chptr, &me, sptr, ":%s MODE %s +Z", me.name, chptr->chname);
 }
 
 /* Note: the routines below (notably the 'if's) are written with speed in mind,
