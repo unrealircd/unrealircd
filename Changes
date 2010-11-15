@@ -2214,3 +2214,8 @@
   NetAdmin-only command. This command is fully backwards compatible with
   older UnrealIRCd version in the sense that it will also REHASH old
   Unreal's. Suggested by 'P' in #0001522.
+- Clarified the difference between 'except ban' (which exempts from KLINE
+  and ZLINE) and 'except tkl' (which can exempt from GLINE, GZLINE, SHUN,
+  QLINE, GQLINE and SHUN). Reported by Digerati (#0002535).
+- Added except tkl::type 'all', which exempts from all TKL types (except
+  KLINE).

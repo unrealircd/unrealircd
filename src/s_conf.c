@@ -282,6 +282,7 @@ static OperFlag _LogFlags[] = {
 
 /* This MUST be alphabetized */
 static OperFlag ExceptTklFlags[] = {
+	{ 0, "all" },
 	{ TKL_GLOBAL|TKL_KILL,	"gline" },
 	{ TKL_GLOBAL|TKL_NICK,	"gqline" },
 	{ TKL_GLOBAL|TKL_ZAP,	"gzline" },
@@ -5177,7 +5178,7 @@ int	_test_allow_dcc(ConfigFile *conf, ConfigEntry *ce)
 	return errors;
 }
 
-void create_tkl_except(char *mask, char *type)
+void create_tkl_except_ii(char *mask, char *type)
 {
 	ConfigItem_except *ca;
 	struct irc_netmask tmp;
@@ -5199,6 +5200,20 @@ void create_tkl_except(char *mask, char *type)
 	}
 	ca->flag.type = CONF_EXCEPT_TKL;
 	AddListItem(ca, conf_except);
+}
+
+void create_tkl_except(char *mask, char *type)
+{
+	if (!strcmp(type, "all"))
+	{
+		/* Special treatment */
+		int i;
+		for (i = 0; i < ARRAY_SIZEOF(ExceptTklFlags); i++)
+			if (ExceptTklFlags[i].flag)
+				create_tkl_except_ii(mask, ExceptTklFlags[i].name);
+	}
+	else
+		create_tkl_except_ii(mask, type);
 }
 
 int     _conf_except(ConfigFile *conf, ConfigEntry *ce)

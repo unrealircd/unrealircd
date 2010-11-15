@@ -1665,9 +1665,11 @@ except ban {
 	mask &lt;hostmask&gt;;
 };</pre></p>
 <p>The except ban block allows you to specify a user@host that will override a 
-  ban placed on a broader host. This is useful when you want an ISP banned, but 
+  ban { } and KLINE/ZLINE placed on a broader host. This is useful when you want an ISP banned, but 
   still want specific users to be able to connect. The except::mask directive 
   specifies the user@host mask of the client who will be allowed to connect.</p>
+<p>NOTE: If you want to exempt a host completely from all possible bans
+  (except spamfilter), then you need both an 'except ban' and an 'except tkl' block</p>
 <p>Example:<br>
 <pre>
 except ban {
@@ -1693,9 +1695,11 @@ except tkl {
   still want specific users to be able to connect. The except::mask directive 
   specifies the user@host mask of the client who will be allowed to connect. The 
   except::type specifies which type of ban this should override. Valid types are
-  gline, gzline, qline, gqline, and shun, which make an exception from Glines, 
-  Global Zlines, Qlines, Global Qlines, and shuns. If the type {} format is used,
-  multiple types may be specified.</p>
+  gline, gzline, qline, gqline, shun, and all, which make an exception from Glines, 
+  Global Zlines, Qlines, Global Qlines, shuns, and all bans except
+  KLINE/ZLINE. If the type {} format is used, multiple types may be specified.</p>
+<p>NOTE: If you want to exempt a host completely from all possible bans
+  (except spamfilter), then you need both an 'except ban' and an 'except tkl' block</p>
 <p>Example:<br>
 <pre>
 except tkl {
