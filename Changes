@@ -2193,6 +2193,7 @@
 - Win32 installer: Make it so a user can no longer accidentally check both
   'install as service' and 'encrypt SSL certificate', as they are
   incompatible (a service cannot ask a user to enter a password).
+  Reported by HotFusionMan (#0003848).
 - Win32 installer: Fixed long outstanding problem with some Vista / Windows 7
   installations, which has to do with file permissions of the Unreal3.2
   folder. Symptoms were error messages such as:
