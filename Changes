@@ -2219,3 +2219,6 @@
   QLINE, GQLINE and SHUN). Reported by Digerati (#0002535).
 - Added except tkl::type 'all', which exempts from all TKL types (except
   KLINE).
+- Added set::options::allow-insane-bans which makes it possible to set
+  really broad bans such as *@*.xx. Needless to say this can be very
+  dangerous. Reported and patch provided by Stealth (#0003963).

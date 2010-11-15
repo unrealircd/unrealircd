@@ -626,9 +626,10 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 	{
 		char c;
 		
-		if (!strchr(usermask, '*') && !strchr(usermask, '?'))
+		if ((!strchr(usermask, '*') && !strchr(usermask, '?')) || (ALLOW_INSANE_BANS))
 		{
 			/* Allow things like clone@*, dsfsf@*, etc.. */
+			/* Also allow insane bans if set::options::allow-insane-bans is set -- Stealth */
 		} else {
 			/* Check hostmask. */
 			

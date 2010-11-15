@@ -80,6 +80,7 @@ struct zConfiguration {
 	unsigned dont_resolve:1;
 	unsigned use_ban_version:1;
 	unsigned mkpasswd_for_everyone:1;
+	unsigned allow_insane_bans;
 	unsigned allow_part_if_shunned:1;
 	unsigned check_target_nick_bans:1;
 	unsigned use_egd : 1;
@@ -249,6 +250,7 @@ extern MODVAR aConfiguration iConf;
 #define IDENT_READ_TIMEOUT		iConf.ident_read_timeout
 
 #define MKPASSWD_FOR_EVERYONE	iConf.mkpasswd_for_everyone
+#define ALLOW_INSANE_BANS		iConf.allow_insane_bans
 #define CHANCMDPFX iConf.channel_command_prefix
 
 #define DEFAULT_BANTIME			iConf.default_bantime
@@ -394,6 +396,7 @@ struct SetCheck {
 	unsigned has_options_dont_resolve:1;
 	unsigned has_options_show_connect_info:1;
 	unsigned has_options_mkpasswd_for_everyone:1;
+	unsigned has_options_allow_insane_bans:1;
 	unsigned has_options_allow_part_if_shunned:1;
 	int cgiirc_type; /* cheat :( */
 	unsigned has_cgiirc_hosts:1;
