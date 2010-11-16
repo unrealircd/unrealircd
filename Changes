@@ -2216,7 +2216,7 @@
   Unreal's. Suggested by 'P' in #0001522.
 - Clarified the difference between 'except ban' (which exempts from KLINE
   and ZLINE) and 'except tkl' (which can exempt from GLINE, GZLINE, SHUN,
-  QLINE, GQLINE and SHUN). Reported by Digerati (#0002535).
+  QLINE and GQLINE). Reported by Digerati (#0002535).
 - Added except tkl::type 'all', which exempts from all TKL types (except
   KLINE).
 - Added set::options::allow-insane-bans which makes it possible to set
