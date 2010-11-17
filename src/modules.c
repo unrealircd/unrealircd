@@ -1754,6 +1754,10 @@ const char *our_dlerror(void)
 	DWORD err = GetLastError();
 	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS, NULL, err,
 		0, errbuf, 512, NULL);
+	if (err == 126)) /* FIXME: find the correct code for 126  */
+		strlcat(errbuf, " This could be because the DLL depends on another DLL, for example if you "
+		               "are trying to load a 3rd party module which was compiled with a different compiler version.",
+		               sizeof(errbuf));
 	return errbuf;
 }
 #endif
