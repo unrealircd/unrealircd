@@ -11,8 +11,8 @@
  .block_optional { color: blue; font-weight: bold; }
  .block_old { font-size: 14; }
  .set { font-weight: bold; }
- .desc { margin-left: 15px; }
- pre { font: "times new roman"; font-style: normal; background-color: #eeeeee;}
+ .inline_pre { font-family: monospace; font-style: normal; background-color: #eeeeee;}
+ pre { font-family: monospace; font-style: normal; background-color: #eeeeee;}
 </style>
 </head>
   
@@ -31,25 +31,19 @@ Hungarian |
 <br><br>
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com/">http://www.unrealircd.com</a></font><br>
-  <font size="4">Verzió: 3.2.8</font><br>
-  <b>Utolsó dokumentáció frissítés:</b> 2009-01-03</div>
+  <font size="4">Verzió: post-3.2.8 (CVS)</font><br>
+  <b>Utolsó dokumentáció frissítés:</b> 2010-05-17</div>
 <br>
-  <b>Fejlesztõk:</b> Stskeeps / codemastr / Syzop / Luke / aquanight / WolfSage <br>
-  <b>Munkatársak:</b> McSkaf / Zogg / NiQuiL / assyrian / chasm / DrBin / llthangel / Griever / nighthawk<br>
-  <b>Dokumentáció:</b> CKnight^ / Syzop<br>
+  <b>Fõ fejlesztõ/karbantartó:</b> Syzop<br>
+  <b>Fejlesztõk:</b> binki<br>
+  <b>Korábbi fejlesztõk és hozzájárulók:</b> Stskeeps, codemastr, Luke, aquanight,
+  WolfSage, McSkaf, Zogg,  NiQuiL,  assyrian,  chasm,  DrBin,  llthangel,
+  Griever,  nighthawk<br>
+  <b>Dokumentáció:</b> CKnight^ (kezdeti dokumentáció), Syzop (jelentõs újraírás), codemastr, és sok más hozzájáruló<br>
   <b>Magyar fordítás:</b> <a href="mailto:angrywolf2009@gmail.com">AngryWolf</a><br>
 <p>E dokumentáció megtekintéséhez az alábbiakban felsorolt kompatibilis böngészõk egyikére van szükséged. Friss dokumentációkat
   találsz a <a href="http://www.vulnscan.org/UnrealIRCd/unreal32docs.html">http://www.vulnscan.org/UnrealIRCd/unreal32docs.html</a>
   címen, és egy GYIK-et a <a href="http://www.vulnscan.org/UnrealIRCd/faq/" TARGET="_blank">http://www.vulnscan.org/UnrealIRCd/faq/</a> oldalon.
-</p>
-<p><b>Kompatibilis böngészõk: </b><br>
-<ul>
-<li>Opera 6.02
-<li>Microsoft Internet Explorer 6.X / 5.5
-<li>Netscape Navigator 6.X
-<li>Mozilla 1.2.X
-<li>Lynx (valamennyire)
-</ul>
 </p>
 <p><font size="+2"><b>TÁRGYMUTATÓ / TARTALOMJEGYZÉK</b></font><br>
   1. <a href="#IntroductionNotes">Bevezetés és megjegyzések</a><br>
@@ -129,7 +123,7 @@ Hungarian |
   ---8.7. <a href="#secinformation">Információközlés</a><br>
   ---8.8. <a href="#secantiexploit">Sebezhetõségek elleni védelem</a><br>
   ---8.9. <a href="#secsummary">Összegzés</a><br>
-  9. <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">Gyakran Ismételt Kérdések (FAQ)</a><br>
+  9. <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">Gyakran ismételt kérdések (GYIK)</a><br />
   A. <a href="#regex">Reguláris kifejezések</a><br>
   ---A.1. <a href="#regexlit">Konstansok</a><br>
   ---A.2. <a href="#regexdot">A pont operátor</a><br>
@@ -152,8 +146,9 @@ Hungarian |
 <p>Kérlek, olvasd el ezt a kézikönyvet, mielõtt segítséget kérsz, és BIZTOSAN bele akarsz nézni a
    <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">GYIK</a>-ba is, mivel a kérdéseid/problémáid 80%-a meg van válaszolva benne. Ha az nem
    oldotta meg a problémádat, segítséget kérhetsz az irc.unrealircd.org címen (6667-es port) az #unreal-support csatornán. (Megjegyzendõ,
-   hogy MEGKÖVETELJÜK a dokumentáció és a GYIK elolvasását, és csak az UnrealIRCd-vel kapcsolatban segítünk, nem a Servicessel!).
-   Ha találsz egy valódi hibát (például egy ütközést), jelentsd a
+   hogy MEGKÖVETELJÜK a dokumentáció és a GYIK elolvasását, és csak az UnrealIRCd-vel kapcsolatban segítünk, nem a Services-zel!).
+   A fórumokat is használhatod a <a href="http://forums.unrealircd.com/" TARGET="_blank">http://forums.unrealircd.com</a> címen. 
+   Ha találsz egy valódi hibát (például egy összeomlást), jelentsd a
    <a href="http://bugs.unrealircd.org" TARGET="_blank">http://bugs.unrealircd.org</a>-on!</p></div>
 
 <p><font size="+2"><b>1.1 &#8211; Megjegyzések a 3.1.x-rõl 3.2-re frissítésrõl és a verziók keverésérõl </b></font><a name="notesonolder"></a><br>
@@ -258,8 +253,8 @@ mert máskülönben nem fogsz megérteni olyan fogalmakat, mint az "álcázás", "snoma
 <p>Az UnrealIRCd támogatja a modulokat, ami hasznos, mert:<br>
    - Betölthetsz, újratöltetsz és eltávolíthatsz modulokat, miközben az ircd fut (a /rehash-sel). Így hibákat lehet javítani illetve új dolgokat hozzáadni az újraindítás szükségessége nélkül!<br>
    - Mások készíthetnek (nem hivatalos, angol nevén: 3rd party) modulokat, amelyek új parancsokat, felhasználói és akár csatornamódokat is tartalmazhatnak.<br>
-   Az UnrealIRCd önmagában csak egy kevés modullal rendelkezik. Vess egy pillantást a www.unrealircd.com -&gt; modules
-   oldalára, vagy használd a google keresõt nemhivatalos modulok keresésére.<br>
+   Az UnrealIRCd önmagában csak kevés <a href="#modules">modult</a> tartalmaz. Vess egy pillantást az www.unrealircd.com -&gt; modules
+   oldalra, vagy használd a google keresõt nemhivatalos modulok keresésére.<br>
 <p>Legalább 2 modult be kell töltened, különben az ircd nem fog elindulni!<br>
    - a commands modult: commands.so (commands.dll windows alatt)<br>
    - egy álcázó modult: rendszerint cloak.so (cloak.dll windows alatt).</p>
@@ -309,8 +304,8 @@ mert máskülönben nem fogsz megérteni olyan fogalmakat, mint az "álcázás", "snoma
    tehát a <i>/helpop</i> helyett <i>/helpop ?</i> lesz és
    a <i>/helpop chmodes</i> helyett <i>/helpop ?chmodes</i> stb..</p></div>
 
-<p><font size="+2"><b>3.6 - Operátori hozzáférési szintek</b></font><a name="feature_operaccesslevels"></a></p><div class="desc">
-<p>Számos operátori szint létezik az UnrealIRCd-ben, és további jogokat tehetsz hozzájuk (például a /gline használatához),
+<p id="feature_operaccesslevels"><font size="+2"><b>3.6 - Operátori hozzáférési szintek</b></font></p><div class="desc">
+<p>Számos <a href="#operblock_flags">operátori szint</a> létezik az UnrealIRCd-ben, és további jogokat is tehetsz hozzájuk (például a /gline használatához),
    így minden operátornak megadhatod a szükséges jogokat.</p>
 <p>Ezeket az oper flagekkel vezérelheted az oper blokkban; további információért lásd az oper blokkot.</p></div>
 
@@ -476,14 +471,30 @@ Ha kitiltod a *!*@*.303AEBC6.IP-t, a *!*@1.2.*-ot bannolod.<br>
 Ez az információ hasznos lehet, amikor elhatározod, milyen széles legyen egy kitiltás.<br>
 <br>
 <b>Kiterjesztett ban típusok</b><br>
-A kiterjesztett ban típusok ~[!]&lt;típus&gt;:&lt;valami&gt; alakúak. Jelenleg a következõ típusok használhatóak:<br>
+
+A kiterjesztett ban típusok ~&lt;típus&gt;:&lt;paraméter&gt; alakúak.<br>
+Ezek a típusok a hagyományos nick!user@host maszktól eltérõ kitiltásokat vagy felmentéseket tesznek lehetõvé.
+Arra is szolgálnak többek között, hogy pl. elnémítsanak felhasználókat.<br>
+<br>
+Az alábbiakban felsoroljuk, hogy mely ban típusok milyen mûveletekre vannak hatással:<br>
+<br>
 <table border=1>
 <tr><td>típus:</td><td>név</td><td>magyarázat:</td></tr>
 <tr><td>~q</td><td>némaság (quiet)</td><td>Az erre a banra illõ emberek beléphetnek, de nem beszélhetnek,
  hacsak nincs +v módjuk vagy annál magasabb. <i>Pl.: ~q:*!*@blah.blah.com</i></td></tr>
 <tr><td>~n</td><td>névváltás</td><td>Az erre a banra illõ emberek nem válthatnak nicknevet, 
  hacsak nincs +v módjuk vagy annál magasabb. <i>Pl.: ~n:*!*@*.aol.com</i></td></tr>
-<tr><td>~c</td><td>[elõtag]csatorna</td><td>Ha a felhasználó ezen a csatornán van, nem léphet be. 
+<tr><td>~j</td><td>join</td><td>Ha illik egy felhasználóra, nem léphet be a csatornára.
+ Minden más megtehet, ha már be volt lépve a csatornára, mint pl. beszélni vagy nevet változtatni.
+ <i>Pl.: ~j:*!*@*.aol.com</i><br>
+ Hasznos lehet, ha meg akarjuk akadályozni egy adott internet-szolgáltatóhoz tartozó felhasználók belépését, miközben megengedjük, hogy a már belépettek szabadon beszélgethessenek/nevet váltsanak, például egy /INVITE után.</td></tr>
+</table>
+<br>
+Az alábbi ban típusok új feltétel használatára adnak lehetõséget:<br>
+<br>
+<table border=1>
+<tr><td>type:</td><td>név</td><td>magyarázat:</td></tr>
+<tr><td>~c</td><td>csatorna</td><td>A felhasználó nem léphet be a csatornára, ha belépett a megadott csatornára. 
  Megadható egy elõtag is (+/%/@/&amp;/~), ami azt jelenti, hogy csak akkor fog illeszkedni, ha a felhasználónak
  olyan vagy annál magasabb jogai vannak a megadott csatornán.
 <i>Pl.: +b ~c:#lamerek, +e ~c:@#megbizhatoak </i></td></tr>
@@ -491,9 +502,17 @@ A kiterjesztett ban típusok ~[!]&lt;típus&gt;:&lt;valami&gt; alakúak. Jelenleg a
  <i>Pl.: ~r:*Stupid_bot_script*</i><br>
  MEGJEGYZÉS: az aláhúzás ('_') mind a szóközre (' ') és az aláhúzásra ('_') is illik, így ez a ban illik a
  'Stupid bot script v1.4'-re.</td></tr>
+<tr><td>~R</td><td>regisztrált</td><td>Ha egy felhasználó azonosította magát a services-ben (általában a NickServnél),
+  és illeszkedik erre a nicknévre, akkor erre a banra is illeszkedik. Vagyis ez igazán csak a 
+  ban felmentésekre jó (+e).<br>
+  Pl.: az <i>+e ~R:Nick</i> engedélyezi a belépést Nick számára, függetlenül más kitiltásoktól, amennyiben azonosította magát a NickServnél, és a Nick nevet használja.<br>
+  </td></tr>
 </table>
-Ezek a ban típusok a csatornabeli kivétellistákon (+e) is támogatottak.<br>
-A modulok bõvíthetik is más típusokkal a kiterjesztett ban típusokat.<br>
+<br>
+Halmozni is lehet az elsõ csoportbeli kiterjesztett banokat a második csoportbeliekkel, pl. a <i>+b ~q:~c:#lamers</i>
+elnémít minden olyan felhasználót, aki a #lamers csatornára lépett be.<br>
+<br>
+Bevezethetünk más kiterjesztett ban típusokat is modulok segítségével.<br>
 </p></div>
 
 <p><font size="+2"><b>3.14 - A spamszûrõ</b></font><a name="feature_spamfilter"></a></p><div class="desc">
@@ -612,10 +631,10 @@ Egy táblázat az összes választási lehetõségrõl:<br>
 <tr><td>swedish</td><td>Svéd karakterek</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td><b>latin1</b></td><td>catalan, danish, dutch, french, german, swiss-german, spanish, icelandic, italian, swedish</td><td>iso8859-1 (latin1)</td></tr>
 <tr><td>hungarian</td><td>Magyar karakterek</td><td>iso8859-2 (latin2), windows-1250</td></tr>
-<tr><td>polish</td><td>Lengyel karakterek</td><td>iso8859-2 (latin2)</td></tr>
+<tr><td>polish-iso</td><td>Lengyel karakterek (megjegyzendõ, hogy a polish-w1250 gyakoribb!)</td><td>iso8859-2 (latin2)</td></tr>
 <tr><td>romanian</td><td>Román karakterek</td><td>iso8859-2 (latin2), windows-1250, iso8859-16</td></tr>
-<tr><td><b>latin2</b></td><td>hungarian, polish, romanian</td><td>iso8859-2 (latin2)</td></tr>
-<tr><td>polish-w1250</td><td>Lengyel karakterek, windowsos változat (sajnos gyakoribb, mint az iso)</td><td>windows-1250</td></tr>
+<tr><td><b>latin2</b></td><td>hungarian, polish-iso, romanian</td><td>iso8859-2 (latin2)</td></tr>
+<tr><td>polish-w1250</td><td>Lengyel karakterek, windowsos változat</td><td>windows-1250</td></tr>
 <tr><td>slovak-w1250</td><td>Szlovák karakterek, windowsos változat</td><td>windows-1250</td></tr>
 <tr><td>czech-w1250</td><td>Cseh karakterek, windowsos változat</td><td>windows-1250</td></tr>
 <tr><td><b>windows-1250</b></td><td>polish-w1250, slovak-w1250, czech-w1250, hungarian, romanian</td><td>windows-1250</td></tr>
@@ -829,6 +848,7 @@ allow {
 	class &lt;kapcsolati-osztály&gt;;
 	password &lt;kapcsolódási-jelszó&gt; { &lt;hitelesítés-típusa&gt;; };
 	maxperip &lt;ip-nkénti-kapcsolatok-száma&gt;;
+	ipv6-clone-mask &lt;bitek-száma&gt;;
 	redirect-server &lt;szerver-az-átirányításhoz&gt;;
 	redirect-port &lt;port-az-átirányításhoz&gt;;
 	options {
@@ -858,6 +878,16 @@ allow {
 </p>
 <p><b>maxperip</b> (optional, but recommended)<br>
    Meghatározza, hogy egy IP címrõl maximum hány kapcsolatot engedélyezzen (például: maxperip 4;).
+</p>
+<p id="allowblock_ipv6clonemask"><b>ipv6-clone-mask</b>
+  (nem kötelezõ, alapértelmezés a <a href="#set_defaultipv6clonemask">set::default-ipv6-clone-mask</a>)<br />
+  A klóndetektálást szabályozza. Ha két kliens különbözõ IPv6 címrõl kapcsolódik,
+  de csak az utolsó néhány bit különbözik, majdnem garantált, hogy mindkét kliens
+  valójában egy személy. Ez az opció csak az
+  <a href="#allowblock_maxperip">allow::maxperip</a> kényszerítésére van hatással. Például ha 128-as értékûre állítod,
+  akkor minden IPv6 cím egyedinek minõsül. A jelenlegi IP lefoglalási
+  irányelv miatt javasolt, hogy a legtöbb általános <a href="#allowblock">allow blokk</a>
+  a 64-es értéket használja.
 </p>
 <p><b>redirect-server</b> (szabadon választható)<br>
    Ha a kapcsolati osztály megtelt, továbbítja a felhasználókat erre a szerverre (ha a kliens támogatja [a mIRC 6 igen]).</p>
@@ -939,8 +969,8 @@ listen *:6601 {
 <p>listen *:8067;<br>
   listen 213.12.31.126:6667;<br>
   listen *:6660-6669;</p></div>
-<p><font class="block_section">4.7 - </font><font class="block_name">Oper blokk</font>
-   <font class="block_recommended">AJÁNLOTT</font> <font class="block_old">(Elõzõleg O:Line néven ismert)</font><a name="operblock"></a><div class="desc">
+<p><font class="block_section">4.7 - </font><font id="operblock" class="block_name">Oper blokk</font>
+   <font class="block_recommended">AJÁNLOTT</font> <font class="block_old">(Elõzõleg O:Line-ként ismert)</font><div class="desc">
 </p>
 <p>
 <pre>oper &lt;name&gt; {
@@ -965,10 +995,38 @@ listen *:6601 {
 <p>Az oper blokkal IRC operátorokat állíthatsz be a szerveredhez. Az <b>oper::</b>
   értéke adja meg az /oper-hez a bejelentkezõ nevet. Az <b>oper::from::userhost</b>
   egy user@host maszk, amelyre a felhasználó kapcsolatának illenie kell. Megadhatsz
-  egynél több hostmaszkot is úgy, hogy több oper::from::userhost-ot használsz. Az <b>oper::password</b>
-  az a jelszó, amit a felhasználónak meg kell adnia, az oper::password:: segítségével kódolhatod
-  a jelszót, érvényes hitelesítési típusok: crypt, md5, sha1, ripemd-160. Ha csak egyszerû szöveg
-  típusú jelszót szeretnél megadni, az alblokkot kihagyhatod.</p>
+  egynél több hostmaszkot is úgy, hogy több oper::from::userhost-ot használsz.
+</p>
+<p id="operblock_password">Az <b>oper::password::</b> az a jelszó, amit az operátornak meg kell adnia.
+  Az <b>oper::password::auth-type</b> segítségével megadhatjuk a hitelesítés módját ehhez a jelszóhoz. Ne adjunk meg <b>oper::password::auth-type</b>-ot egyszerû szöveg típusú jelszóhoz!
+  Érvényes hitelesítési típusok: <tt>crypt</tt>, <tt>md5</tt>, <tt>sha1</tt>, <tt>ripemd160</tt>
+  és <tt>sslclientcert</tt>. Bármelyiket is választjuk,
+  az <b>oper::password::</b> értéke egy hash, amit az
+  <a href="#cmd_mkpasswd">mkpasswd</a> segítségével generálunk.
+</p>
+<p id="operblock_password_sslclientcert">
+  Az <tt>sslclientcert</tt> egy kivételes hitelesítési típus. Amikor ezt
+  választjuk, az <b>oper::password::</b> értéke legyen egy fájl
+  útvonal (az UnrealIRCd telepítési célkönyvtárához relatívan), mely
+  tartalmaz egy PEM kódolású SSL tanúsítványt (a nyilvános tanúsítványt, nem
+  pedig egy kulcsot). Ezzel biztosíthatjuk, hogy csak olyan IRC kliens kapcsolódhasson, aki:
+  <ol>
+    <li>SSL-lel kapcsolódik,</li>
+    <li>benyújtja az egyezõ kliens tanúsítványt a kapcsolódáskor,</li>
+    <li>hozzáférése van a tanúsítványhoz tartozó privát kulcshoz.</li>
+  </ol>
+  Természetesen ez a funkció igényli, hogy az UnrealIRCd SSL támogatással
+  legyen fordítva. Továbbá, mivel az SSL tanúsítványokhoz tartozó jelszavak
+  mindig sokkal hosszabbak, mint egy normális emberi jelszó, és sokkal
+  véletlenszerûbbek is, ez a legbiztonságosabb hitelesítési lehetõség. Ahhoz,
+  hogy így jelentkezzünk be operátorként, miután a kliens SSL tanúsítványát
+  megadtuk operátori jelszóként, elég meggyõzõdni arról, hogy a kliens helyesen
+  lett beállítva, és adjuk ki az <pre>/oper &lt;név&gt; :</pre> parancsot. Az <tt>sslclientcert</tt>
+  hitelesítési típust felhasználhatjuk
+  a <a href="#linkblock_passwordreceive">link::password-receive</a>
+  direktívában is biztonságos <a href="#linkblock">link blokkokra</a>.
+  </ol>
+</p>
 <p>Megjegyzendõ, hogy MIND a bejelentkezõ név és jelszó a kis- és nagybetûkre érzékenyek.</p>
 <p>Az <b>oper::class</b> direktíva meghatározza azt a már létezõ (a konfigurációban ezen blokk
   elõtt beállított) osztálynevet, amit az oper blokk használ.</p>
@@ -976,7 +1034,7 @@ listen *:6601 {
   használni, pl. OAa, használd a <i>flags &lt;flagek&gt;</i> formát, ha pedig az új stílust,
   pl. services-admin, akkor a <i>flags { &lt;flag&gt;; }</i> módszert. Az alábbiakban látható
   a flagek listája (mindkét formában) és amit csinálnak.</p>
-<table width="75%" border="1">
+<table width="75%" border="1" id="operblock_flags">
   <tr>
     <td width="10%"><div align="center"><b>Régi flag</b></div></td>
     <td width="16%"><div align="center"><b>Új flag</b></div></td>
@@ -1393,10 +1451,9 @@ log &lt;fájlnév&gt; {
   <table border=0>
   <tr><td>errors</td><td>nyilvánvaló</td></tr>
   <tr><td>kills</td><td>naplózza a /kill értesítéseket</td></tr>
-  <tr><td>tkl</td><td>naplózza a *line-okat, a shunokat és a spamszûrõket (hozzáadás/törlés/lejárat)</td></tr>
+  <tr><td>tkl</td><td>naplózza a *line-okat (/kline, /zline, etc), a shunokat és a spamszûrõket (hozzáadás/törlés/lejárat)</td></tr>
   <tr><td>connects</td><td>naplózza a felhasználói kapcsolódásokat/kilépéseket</td></tr>
   <tr><td>server-connects</td><td>naplózza a szerverek kapcsolódásait/kilépéseit</td></tr>
-  <tr><td>kline</td><td>naplózza a /kline használatokat</td></tr>
   <tr><td>oper</td><td>naplózza az operelési kísérleteket (a sikerteleneket és a sikereseket is)</td></tr>
   <tr><td>sadmin-commands</td><td>naplózza a /sa* (samode, sajoin, sapart stb.) használatokat</td></tr>
   <tr><td>chg-commands</td><td>naplózza a /chg* (chghost, chgname, chgident stb.) használatokat</td></tr>
@@ -1413,7 +1470,6 @@ log ircd.log {
 		errors;
 		kills;
 		oper;
-		kline;
 		tkl;
 	};
 };
@@ -1868,17 +1924,23 @@ badword &lt;típus&gt; {
 	replace &lt;csereszöveg&gt;;
 	action &lt;replace|block&gt;;
 };</pre></p>
-<p>A badword blokkal kezelheted a +G felhasználói és csatornamódhoz használt, "csúnya szavak"
-  szûrésére szolgáló listát. A badword:: meghatározza csúnya szó a típust; érvényes típusok a
-  channel, message, quit és all. A channel a csatornabeli +G listára vonatkozik, a message a
-  felhasználói +G listára, a quit a kilépõ üzeneteket cenzúrázza, végül az all mindhárom listára
-  felveszi a csúnya szót. A badword::word lehet egy egyszerû (rész)szó vagy egy reguláris
-  kifejezés, amire a keresést végzi a szerver. A badword::replace az, amire a találatot
-  cseréljük. Ha a badword::replace-t  kihagyod, a szó a &lt;censored&gt;-ra lesz cserélve.
-  A badword::action megmondja, mi legyen a teendõ, ha egy csúnya szóra találat van. Ha replace
-  az értéke, csere történik; ha block, az egész üzenet blokkolva lesz. Ha nem adsz meg
-  badword::action-t, a replace lesz feltételezve.</p>
-<p>Példa:<br>
+<p>A badword blokkal szerkesztheted azt a listát, melyet a "csúnya szavak" szûrésére használ
+  a +G felhasználói és csatornamód. A <b>badword::</b> meghatározza a csúnyaszó típusát, ami
+  eldönti, milyen üzenetekre vonatkozik ez a csúnyaszó szûrõ. Az érvényes típusok az alábbiak:</p>
+<ul>
+  <li>A <tt>channel</tt> a +G módú csatonán szûr.</li>
+  <li>A <tt>message</tt> olyan privát üzenetekben szûr (nem csatornára küldött üzenetekben), melyeket egy +G módú felhasználó küldött.</li>
+  <li>A <tt>quit</tt> minden kilépõ üzenetet cenzúrázza.</li>
+  <li>Az <tt>all</tt> a fenti három helyzet mindegyikére vonatkozik.</li>
+</ul>
+<p>
+  A <b>badword::word</b> lehet egy egyszerû szó vagy reguláris kifejezés arra, hogy mire keressünk. A 
+  <b>badword::replace</b> az, amire a találatot cseréljük. Ha a <b>badword::replace</b>-t
+  kihagyjuk, a csereszöveg &lt;censored&gt; lesz. A <b>badword::action</b> megmondja,
+  mi legyen a teendõ, ha egy csúnya szóra találat van. Ha az értéke <code>replace</code>
+  csere történik; ha <code>block</code>, az egész üzenet blokkolva lesz. Ha nem adsz meg
+  <b>badword::action</b>-t, a <code>replace</code> lesz feltételezve.</p>
+<p>Példa:<br />
 <pre>
 badword channel {
 	word szar;
@@ -1906,8 +1968,8 @@ ulines {
 	stats.sajátnet.com;
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.31 - </font><font class="block_name">Link blokk</font>
-   <font class="block_optional">SZABADON VÁLASZTHATÓ</font> <font class="block_old">(Elõzõleg C/N/H:Line-okként ismert)</font><a name="linkblock"></a>
+<p id="linkblock"><font class="block_section">4.31 - </font><font class="block_name">Link blokk</font>
+   <font class="block_optional">SZABADON VÁLASZTHATÓ</font> <font class="block_old">(Elõzõleg C/N/H:Line-okként ismert)</font>
 </p><div class="desc">
 <p>Szintaktika:<br>
 <pre>
@@ -1956,10 +2018,13 @@ link &lt;szervernév&gt; {
 <p><b>password-connect</b><br>
   A távoli szerverre kapcsolódáskor használt jelszó; egyszerû szövegnek kell lennie.
  </p>
-<p><b>password-receive</b><br>
-  A beérkezõ linkek érvényesítéséhez használt jelszó; lehet titkosított (érvényes kódolási típusok
-  a crypt, md5, sha1 és ripemd-160). A kódolás-típusa paramétert kihagyhatod, hogy csak egyszerû szöveget
-  használj. Gyakran megegyezik ez a jelszó a password-connect-tel.
+<p id="linkblock_passwordreceive"><b>password-receive</b><br> A beérkezõ linkek érvényesítéséhez
+  használt jelszó. Hasonló módon titkosítható, mint
+  az <a href="#operblock_password"><b>oper::password</b></a>.
+  Még az is megtehetõ, hogy
+  a <a href="#operblock_password_sslclientcert"><tt>sslclientcert</tt></a>
+  hitelesítési típust használjuk. Sõt, ez erõsen ajánlott is, mivel fényévekkel
+  jobban ellenáll a brute-force támadásoknak.
 </p>
 <p><b>hub vs leaf</b><br>
   A hub egyszerre több szervert is linkelhet, míg a leafnek csak egy linkje lehet... hozzád.
@@ -2027,18 +2092,34 @@ alias &lt;név&gt; {
 	type &lt;álparancs-típusa&gt;;
 	spamfilter &lt;yes|no&gt;;
 };</pre></p>
-<p>(Megjegyzés: lásd még az <a href="#includedirective">include</a> direktívát az UnrealIRCd szabványos álparancsokat tartalmazó fájljairól.)</p>
-<p>Az alias blokk [szabványos álparancsokra] lehetõvé teszi, hogy parancsokat továbbítsunk egy
-  felhasználóhoz, például hogy a /chanserv üzenetet küldjön a chanserv felhasználónak.
-  Az alias:: megadja azt a parancsnevet, ami lesz az álnév (pl.: chanserv).
-  Az alias::target egy nick- vagy csatornanév, ahová a parancs továbbítva lesz. Ha az alias:: ugyanaz,
-  mint a továbbítási célpont, az alias::target elhagyható. Az alias::type meghatározza
-  az álparancs típusát; érvényes típusok: services (a felhasználó egy szolgáltatás szerveren van), stats
-  (a felhasználó egy statisztikai szerveren van), normal (a felhasználó egy közönséges felhasználó
-  bármilyen szerveren), és channel (a célpont egy csatornanév). Az alias::spamfilter (nem kötelezõ)
-  "yes"-re állításával bekapcsolható a spamszûrés erre az álparancsra (az alapértelmezés "no").<br>
-  Az alias blokknak van egy másik célja is, amit az alábbiakban magyarázunk el.</p>
-<p>Szintaktika [formázott álparancsokra]:<br>
+<p>(Megjegyzendõ, hogy a <span class="inline_pre">&lt;name&gt;</span> az "<b>alias::</b>" használatára utal.)</p>
+<p>(Megjegyzés: lásd még az <a href="#includedirective">include</a> direktívát az UnrealIRCd szabványos álparancs fájljairól!)</p>
+<p>Az alias blokk [szabványos álparancsokra] lehetõvé teszi, hogy parancsokat továbbítsunk egy felhasználóhoz,
+  például a /chanserv üzenetet küld a chanserv felhasználónak.
+</p>
+<ul>
+  <li>
+    Az <b>alias::</b> megadja az álparancs nevét (pl.: chanserv).
+  </li>
+  <li>
+    Az <b>alias::target</b> a továbbítás célpontjául szolgáló nick- vagy csatornanév. Ha az <b>alias::</b>
+    értéke ugyanannak adódik, mint a továbbítási célpont, az <b>alias::target</b> elhagyható.
+  </li>
+  <li>
+    Az <b>alias::type</b> meghatározza az álparancs típusát; érvényes típusok:
+    <ul>
+      <li><span class="inline_pre">services</span> (a felhasználó a <a href="#set-services-server">szolgáltatás szerveren</a> van),</li>
+      <li><span class="inline_pre">stats</span> (a felhasználó a <a href="#set-stats-server">statisztikai szerveren</a> van),</li>
+      <li><span class="inline_pre">normal</span> (a felhasználó egy közönséges felhasználó bármilyen szerveren),</li>
+      <li><span class="inline_pre">channel</span> (a célpont egy csatornanév), és</li>
+      <li><span class="inline_pre">command</span> (ez nem egy "szabványos álparancs", lásd <a href="#aliasblock-command">lentebb</a>).</li>
+    </ul>
+  </li>
+  <li>
+    Az <b>alias::spamfilter</b> (nem kötelezõ) "yes"-re állításával bekapcsolható a spamszûrés erre az álparancsra (az alapértelmezés 'no').
+    </li>
+</ul>
+<p id="aliasblock-command">Szintaktika [formázott álparancsokra]:<br>
 <pre>
 alias &lt;név&gt; {
 	/* Felhasználóknak/csatornára küldendõ álparancsokra */
@@ -2060,25 +2141,49 @@ alias &lt;név&gt; {
 	type command;
 	spamfilter &lt;yes|no&gt;;
 };</pre></p>
-<p>Amikor az alias blokkot ebben a formában használjuk, lehetõséget ad egy sokkal szélesebb körû
-  alkalmazására. Például készíthetünk olyan álparancsokat is, mint az /identify. Az alias::
-  ugyanaz, mint fent, az álparancs neve. Az <b>alias::format</b> blokkok értékei reguláris kifejezések,
-  amelyek az álparancshoz küldött szöveggel lesznek összehasonlítva, és ha az egyik illik rá,
-  annak az alias::format-nak az albejegyzései lesznek használatban. Lehet egyszerre több
-  alias::format-unk is, így a parancs különbözõ dolgokat tehet a neki küldött szövegtõl
-  függõen. Az <b>alias::format::target</b> az álparancs továbbításának célpontja,
-  de "valódi" álparancsok esetében az <b>alias::format::command</b> használandó.
-  Az <b>alias::format::type</b> megadja, hogy az üzenet milyen típusú célponthoz
-  legyen elküldve; a "Szintaktika [szabványos álparancsokra]" részben korábban említett
-  típusok mellett itt megengedett még a "real" is, "valódi" álparancsokra.
-  Az <b>alias::format::parameters</b> mondja meg, milyen paraméterek legyenek elküldve
-  a felhasználóhoz. Ahhoz, hogy az álparancshoz küldött paraméterek egyikére hivatkozzunk,
-  írjunk egy % jelet egy azt követõ számmal, például %1 az elsõ paraméter. Lehetõség van arra is,
-  hogy hivatkozzunk egy adott paramétertõl kezdõdõen az üzenet végéig tartó összes paraméterre,
-  ehhez írjunk be egy % jelet, majd egy számot és egy - jelet, például a %2- visszaadja az összes
-  paramétert a másodiktól kezdõdõen az utolsóig. Hasonló különleges célt szolgál még a %n is,
-  ami helyettesíti annak a felhasználónak a nevét, aki kiadta a parancsot.<br><br>
-  A formázott álparancsokra vonatkozóan példákat találunk a doc/example.conf-ban.</p>
+<p>
+  Amikor az alias blokk <b>alias::type</b> direktíváját <span class="inline_pre">command</span> értékûre állítjuk
+  a <a href="#aliasblock-command">fent</a> mutatottak szerint, formázott álparancs lesz belõle.
+  Az ebben a formában használt alias blokk sokkal rugalmasabb.
+  Például készíthetünk vele egy /identify nevû álparancsot.
+</p>
+<ul>
+  <li>
+    Az <b>alias::</b> az álparancs neve, ugyanúgy, mint a szabványos álparancs blokkoknál
+    (lásd <a href="#aliasblock">fentebb</a>).
+  </li>
+  <li>
+    Az <b>alias::format</b> blokkok értékei <a href="#regex">reguláris kifejezések</a>, melyek az álparancs paramétereiként
+    megadott szöveggel való összehasonlítás útján döntik el, hogy mely <b>alias::format</b>
+    blokk albejegyzései legyenek használatban. Eképpen megadhatunk több <b>alias::format</b> blokkot is, hogy a parancs
+    különbözõ dolgokat tegyen a neki küldött szövegtõl függõen.
+  </li>
+  <li>
+    Az <b>alias::format::target</b> az álparancs továbbítási célpontja.
+    Nem használjuk, ha az <b>alias::format::type</b> értéke "<span class="inline_pre">real</span>" (valódi álparancs).
+  </li>
+  <li>
+    Az <b>alias::format::type</b> a továbbítási célpont típusát
+    adja meg.
+    A <a href="#aliasblock">szabványos álparancsok szintaktikájában</a> megadott típusokon kívül megengedett még a "<span class="inline_pre">real</span>"
+    is, ha "valódi álparancsot" szeretnénk ("valódi álparancsok" alatt olyan álparancsot értünk,
+    amely újraírható PRIVMSG-tõl eltérõ parancsra).
+  </li>
+  <li>
+    Az <b>alias::format::parameters</b> ("valódi álparancsokra") megmondja, hogy milyen
+  szöveg legyen elküldve a felhasználóhoz. Ahhoz, hogy az álparancshoz küldött paraméterek
+    egyikére hivatkozzunk, írjunk egy <span class="inline_pre">%</span> jelet egy azt követõ számmal!
+    Például <span class="inline_pre">%1</span> az elsõ paraméter. Lehetõség van arra is,
+    hogy egy adott sorszámú paramétertõl kezdve az üzenet végéig tartó összes paraméterre hivatkozzunk, ehhez írjunk be egy <span class="inline_pre">%</span>
+    jelet, majd azt követõ számot, és egy <span class="inline_pre">-</span> jelet! Például
+    a <span class="inline_pre">%2-</span> visszaadja az összes paramétert a másodiktól kezdve
+    az utolsóig. További különleges célt szolgál még az <span class="inline_pre">%n</span> is, amely
+    helyettesíti annak a felhasználónak a nevét, aki kiadta a parancsot.
+  </li>
+</ul>
+<p>
+  Példákat a formázott álparancsokra vonatkozóan a doc/example.conf-ban találunk.
+</p>
 <p></p></div>
 <p><font class="block_section">4.33 - </font><font class="block_name">Help blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font><a name="helpblock"></a>
@@ -2218,8 +2323,8 @@ Majd az unrealircd.conf-ba tegyünk egy cgiirc blokkot:
 };</pre></p>
 </div>
 
-<p><font class="block_section">4.37 - </font><font class="block_name">Set blokk</font>
-   <font class="block_required">KÖTELEZÕ</font> <font class="block_old">(Elõzõleg unrealircd.conf-ként/hálózati fájlként ismert)</font><a name="setblock"></a>
+<p id="setblock"><font class="block_section">4.37 - </font><font class="block_name">Set blokk</font>
+   <font class="block_required">KÖTELEZÕ</font> <font class="block_old">(Elõzõleg unrealircd.conf-ként ill. hálózati fájlként ismert)</font>
 </p><div class="desc">
 <p>A set fájl az, ami régebben a networks/unrealircd.conf-unk és a hálózati
   fájlunk szokott lenni. Egyszerveres hálózatokon, inkább, mint hogy legyen 3 fájlod,
@@ -2383,6 +2488,22 @@ set {
   Engedélyezi a shunolt felhasználóknak a /part használatát.</p>
 <p><font class="set">set::options::fail-oper-warn;</font><br>
   Ha jelen van, a felhasználók értesülni fognak arról, hogy a sikertelen /oper-elési kísérletük naplózva lett.</p>
+<p id="set_nopost_ban_action"><font class="set">set::nopost::ban-action</font> (igényli az <a href="#modules_m_nopost">m_nopost</a> modult)<br />
+  Megmondja, mit tegyen az olyan felhasználókkal, akik HTTP POST parancsot próbálnak kiadni.
+  Az engedélyezett értékek: kill, gline, gzline, kline, zline, shun és tempshun.
+  Az alapértelmezett érték a kill. Ha valamelyik *line értéket vagy shun-t használjuk,
+  fontos tudni, hogy azok a könnyen becsapható felhasználók, akiket egy XPS IRC spammoló támadásra kiállított webhely meglátogatására csaltak rá,
+  a shun vagy *line jellegû tiltást az összes meglévõ kapcsolatukon
+  tapasztalni fogják. Az alapértelmezett "kill" érték kivédi az ilyen jellegû baleseteket,
+  de a *line használata &#8212; különösen a gzline-é &#8212; szükséges lehet bizonyos szituációkban.</p>
+<p id="set_nopost_ban_reason"><font class="set">set::nopost::ban-reason</font> (igényli az <a href="#modules_m_nopost">m_nopost</a> modult)<br />
+  A kitiltás indoka, amikor az m_nopost killel vagy bannol egy felhasználót.</p>
+<p id="set_nopost_ban_time"><font class="set">set::nopost::ban-time</font> (igényli az <a href="#modules_m_nopost">m_nopost</a> modult)<br />
+  Az m_nopost által beállított shunok, gline-ok, gzline-ok, kline-ok és zline-ok idõtartama.
+  Az alapértelmezés 4h.</p>
+<p id="set_nopost_except_hosts"><font class="set">set::nopost::except-hosts</font> (igényli az <a href="#modules_m_nopost">m_nopost</a> modult)<br />
+  Egy lista az m_nopost killjei és *-line-jai alóli kivételekrõl. Lehetõleg soha ne adjunk meg
+  gazdanév maszkokat ebben az opcióban!</p>
 <p><font class="set">set::dns::timeout &lt;idõérték&gt;;</font><br>
   Egy idõérték azon idõhossz meghatározására, ami alatt a DNS szervernek válaszolni kell,
   mielõtt idõkifutás történik. Az idõérték egy numerikus sztring a napot jelentõ "d",
@@ -2401,10 +2522,16 @@ set {
 <p><font class="set">set::default-server &lt;szervernév&gt;;</font><br>
   Meghatározza, hogy mi legyen annak az alapértelmezett szervernek a neve, ahová legyenek utasítva
   a felhasználók, ha ez a szerver tele van.</p>
-<p><font class="set">set::services-server &lt;szervernév&gt;;</font><br>
+<p id="set_defaultipv6clonemask">
+  <font class="set">set::default-ipv6-clone-mask</font><br />
+  Az alapértelmezett IPv6 klóndetektáló maszk. Lásd az
+  <a href="#allowblock_ipv6clonemask">allow::ipv6-clone-mask</a> direktívát. Az alapértelmezett érték
+  ehhez a beállításhoz 64.
+  </p>
+<p id="set-services-server"><font class="set">set::services-server &lt;szervernév&gt;;</font><br>
   Meghatározza azon szerver nevét, ahová a services botok kapcsolódtak. Kötelezõ; 
   állíts be valami services.sajátnet.com-hoz hasonlóra, ha nincs servicesed.</p>
-<p><font class="set">set::stats-server &lt;szervernév&gt;;</font><br>
+<p id="set-stats-server"><font class="set">set::stats-server &lt;szervernév&gt;;</font><br>
   Beállítja azon szerver nevét, ahol a statisztikai bot tartozkodik. Ha nem fut statisztikai szerver,
   ez az érték kihagyható.</p>
 <p><font class="set">set::help-channel &lt;hálózati-segélycsatorna&gt;;</font><br>
@@ -2550,7 +2677,7 @@ AU). A lekérdezések párhuzamosan kerülnek elküldésre, a leggyorsabb válasz nyer.
 Nem kell <a href="#tldblock">TLD blokkot</a> használnunk az MOTD-ket és a szabályokat leíró fájlok alapértelmezett helyeinek megadásához. Ez a blokk szabályozza az alapértelmezett beállításokat rájuk vonatkozóan a PID fájl és az irc.tune fájl mellett. Mindenre, ami itt nincs megadva, a <a href="#addtlfiles">További fájlok</a> szekcióban leírt alapértékek érvényesek.
 </p>
 <p>
-A relatív útvonalnevek az unrealIRCD gyökérkönyvtárából kiindulva értendõek, amely rendszerint az <tt>unrealircd.conf</tt> fájlt tartalmazó könyvtár. Ez a blokk felhasználható arra, hogy több mint egy IRCd-t futtassunk ugyanabból a könyvtárból/gyökérbõl. Ilyen esetben minden szervernek állítsunk be legalább egy-egy PID fájlt, illetve behangoló (tune) fájlt!
+A relatív útvonalnevek az UnrealIRCD gyökérkönyvtárából kiindulva értendõek, amely rendszerint az <tt>unrealircd.conf</tt> fájlt tartalmazó könyvtár. Ez a blokk felhasználható arra, hogy több mint egy IRCd-t futtassunk ugyanabból a könyvtárból/gyökérbõl. Ilyen esetben minden egyes szerverhez állítsunk be legalább egy-egy PID fájlt, illetve tune fájlt!
 </p>
 <p>Szintaxis:<br>
 <pre>
@@ -2714,6 +2841,10 @@ files {
   <tr>
     <td><div align="center">Q</div></td>
     <td>Csak U:Line-os szerverek rúghatnak ki felhasználókat</td>
+  </tr>
+  <tr>
+    <td><div align="center">r</div></td>
+    <td>Ez a csatorna regisztrált (csak szolgáltatás szerver állíthatja be)</td>
   </tr>
   <tr> 
     <td><div align="center">R</div></td>
@@ -3187,14 +3318,14 @@ további információt kapj.</p>
     <td>IRCop</td>
   </tr>
   <tr>
-    <td height="39">rehash &lt;szerver&gt; &#8211;&lt;flagek&gt;</td>
+    <td height="39">rehash &lt;szerver&gt; &lt;flagek&gt;</td>
     <td>Újratölti a szerver beállításfájlját. Szervernév megadásával távoli szerverek
       beállításait töltheted újra. Néhány flag is rendelkezésre áll. Ezek
       a következõk:<br>
-      -motd - Csak az összes MOTD és RULES fájlt töltse újra (a tld {}-ket is beleértve)<br>
-      -opermotd - Csak az OPERMOTD fájlt töltse újra<br>
-      -botmotd - Csak a BOTMOTD fájlt töltse újra<br>
+      -dns - Újrainicializálja és újratölti a névfeloldót<br>
+      -motd - Csak az összes MOTD, BOTMOTD, OPERMOTD és RULES fájlt töltse újra (beleértve a  tld{} blokkbelieket is)<br>
       -garbage - Kikényszeríti a szemétgyûjtést<br>
+      -ssl - Újratölti az SSL tanúsítványokat<br>
     <td>IRCop</td>
   </tr>
   <tr> 
@@ -3316,12 +3447,20 @@ további információt kapj.</p>
   </tr>
   <tr> 
     <td height="36">addline &lt;szöveg&gt;<br></td>
-    <td>Lehetõséget ad arra, hogy sorokat fûzz az unrealircd.conf-hoz.<br></td>
+    <td>A megadott szöveget hozzáfûzi az unrealircd.conf-hoz. Az az unrealircd-3.2.9 óta
+      ennek a parancsnak a használatához be kell töltenünk az m_addline modult.<br></td>
     <td>IRCop</td>
   </tr>
-  <tr> 
-    <td height="36">mkpasswd &lt;jelszó&gt;<br></td>
-    <td>Titkosít egy tiszta szövegû jelszót, hogy betehesd az unrealircd.conf-ba.<br></td>
+  <tr id="cmd_mkpasswd"> 
+    <td height="36">mkpasswd &lt;hitelesítés-típusa&gt; &lt;jelszó&gt;<br></td>
+    <td>Titkosítja a megadott &lt;jelszót&gt; a &lt;hitelesítés-típusa&gt; típusú hasító módszerrel. Lehetséges hasító módszerek:
+      <ul>
+	<li>crypt     [<em>Windows alatti támogatáshoz SSL szükséges</em>]</li>
+	<li>md5</li>
+	<li>sha1      [<em>SSL-t igényel</em>]</li>
+	<li>ripemd160 [<em>SSL-t igényel</em>]</li>
+      </ul>
+<br></td>
     <td>IRCop</td>
   </tr>
   <tr> 
@@ -3455,13 +3594,14 @@ További ilyen tanácsok: soha ne rakd az UnrealIRCd-t egy weben látható vagy egyé
 gondoskodj, hogy a biztonsági mentéseid is megkapják a megfelelõ engedélybeállításokat. (Elég gyakran megesik, hogy minden
 biztonságos, mégis megbújik valahol egy mindenki számára olvasható mentes.tar.gz.)<br>
 <br>
-Erõsen ajánlott az is, hogy használj titkosított jelszavakat, ahol csak lehetséges. Ha OpenSSL támogatással
+Erõsen ajánlott az is, hogy ahol csak lehetséges, használj <a href="#passwords" title="Password Types">titkosított jelszavakat</a>. Ha OpenSSL támogatással
 fordítasz (és így is teszel, mivel érdekel téged a biztonság, igaz?), akkor javaslom, hogy
 titkosítsd a jelszavaidat <i>sha1</i> vagy <i>ripemd160</i> kódolással, különben <i>md5</i>-tel. Továbbá, ha
 még mindig vannak Unreal3.2.1 vagy késõbbi verziókból megmaradt titkosított (oper) blokkjaid, azt tanácsolom, hogy
 kódold újra ezeket (csak futtasd újra az /mkpasswd parancsot), mert a 3.2.1 bevezetett néhány számottevõ,
 feltörés elleni elõrelépést (alapvetõen az aktív feltöréseket 14-szeresen lelassítja, ezáltal lehetetlenné teszi
 a tárolt/nyílt/titkosított szöveges feltöréseket).
+<br>
 Ennek ellenére vedd figyelembe, hogy ez csak "egy újabb szintje a biztonságnak", mivel ha gyenge
 jelszavaid vannak, még mindig feltörhetõek viszonylag könnyen, és ha valamely támadónak sikerül megszereznie
 a konfigurációs fájlodat, rendszerint más érdekes dolgokat is talál benne, amelyek segítségére lehetnek,
@@ -3563,7 +3703,7 @@ fájlokat. Ehhez a módszerhez rendszergazdai jogosultságokon kellenek, valamint h
 (keress rá a CHROOTDIR-re, és állítsd be az IRC_USER és IRC_GROUP makrókat is), aztán fordítsd újra.<br>
 <br>
 Van egy dolog, amit határozottan érdemes megtenned, ez pedig, hogy MINDIG HASZNÁLD A LEGFRISSEBB VERZIÓT, és
-jelentkezz fel az <a href="http://mail1.sourceforge.net/mailman/listinfo/unreal-notify" target="_blank">unreal-notify levelezõlistára</a> most rögtön,
+jelentkezz fel az <a href="http://lists.sourceforge.net/mailman/listinfo/unreal-notify" target="_blank">unreal-notify levelezõlistára</a> most rögtön,
 hogy megkaphasd a kiadási közleményeket (az unreal-notify csak kiadási közleményekre
 van, így csak 1 levelet jelent X havonta). A kiadási közleményben rendszerint világosan fel van tüntetve, ha
 a kiadás (nagyobb veszélyességû) biztonsági hibák javítását tartalmazza, de egyébként is jó, ha frissítesz.<br>
@@ -3577,10 +3717,26 @@ Minden, amit itt elmagyaráztunk, azonban SEGÍT megfontoltan minimálissá tenni a 
 Nagyon sokan nem is törõdnek a biztonsággal, egészen addíg, amíg bajba nem kerülnek. Próbáld ezt elkerülni. :)
 </div></p>
 
-
 <p><font size="+2"><b>9 &#8211; Gyakran Ismételt Kérdések (FAQ)<a name="faq"></a></b></font></p>
 <div class="desc"><p>A FAQ online elérhetõ <a href="http://www.vulnscan.org/UnrealIRCd/faq/" TARGET="_blank">innen</a>.</p></div>
 <p></p>
+
+<p id="modules"><font size="+2"><b>10 &#8211; Modulok</b></font></p>
+<div class="desc">
+  <p>Az alábbiakban bemutatunk néhány modult, melyeket egybecsomagoltunk az
+  UnrealIRCd-vel.  Jelen pillanatban sajnos csak egy ilyen modul van
+  dokumentálva.</p>
+</div>
+<p id="modules_m_nopost"><font size="+2"><b>10.1 <a href="#modules_m_nopost">m_nopost</a></b></font><br />
+  Ez a modul automatikusan bannol minden olyan felhasználót, aki HTTP-stílusú kéréseket próbál elküldeni.
+  Ezt a modult Syzop írta válaszképpen azokra a Firefox XPS támadásokra, amelyeken keresztül
+  az AJAX-képes böngészõk IRC spambotokként voltak képesek mûködni. Ahhoz, hogy kiválasszuk, mit tegyen az m_nopost,
+  amikor egy ilyen kérést kap, állítsuk be a <a href="#set_nopost_ban_action">
+    set::nopost::ban-action</a> és a <a href="#set_nopost_ban_time">set::nopost::ban-time</a>
+  beállításokat (és barátaikat)!<br />
+  Ez a modul az UnrealIRCd 3.2.9 óta új, és bele van fordítva a commands.so-ba. Ennélfogva
+  a legtöbb esetben alapértelmezésben be van töltve.
+</p>
 
 <p><font size="+2"><b>A Reguláris kifejezések<a name="regex"></a></b></font></p>
 <div class="desc"><p>Reguláris kifejezéseket sok helyen használunk az Unrealben, beleértve a csúnyaszavakat, spamszûrõket és álparancsokat. Ezek segítségével nagyon összetett mintaillesztést tudunk végezni. Néha "regexp"-ként vagy "regex"-ként hivatkozunk rájuk. Az Unreal a TRE reguláris kifejezés könyvtárat használja a regexeihez. Ez a rutinkönyvtár néhány nagyon összetett és haladó kifejezést is támogat, ami zavaró lehet. Az alábbi információk segítenek megérteni, hogyan mûködnek a regexek. Ha szakmaibb és részletesebb információk érdekelnek az Unreal által használt regexp szintaktikával kapcsolatban, látogassunk el a <a href="http://www.laurikari.net/tre/syntax.html" target="_new">TRE honlapjára</a>.</p></div>
