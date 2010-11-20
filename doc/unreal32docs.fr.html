@@ -2243,9 +2243,12 @@ ban version {
 };</pre>
 
 			<p>
-				L'except ban block vous permet de sp&eacute;cifier un user@host qui outrepassera un ban plac&eacute; sur une plage de host. 
+				L'except ban block vous permet de sp&eacute;cifier un user@host qui outrepassera un ban {}, une Kline ou une Zline plac&eacute;s sur une plage de host. 
 				Ceci est tr&egrave;s utile lorsque vous voulez bannir un FAI, mais que vous voulez que certains utilisateurs sp&eacute;cifiques puissent toujours se connecter.
 				La directive except::mask sp&eacute;cifie le masque user@host du client qui sera autoris&eacute; &agrave; se connecter.
+			</p>
+			<p>
+				NOTE : Si vous voulez exempter compl&egrave;tement un host de toutes les formes de bans possibles (sauf un ban de spamfilter), vous aurez besoin &agrave; la fois d'un bloc 'except ban' et d'un bloc 'except tkl'.
 			</p>
 
 			<p>
@@ -2274,13 +2277,16 @@ ban version {
 };</pre>
  
 			<p>
-				L'except tkl block vous permet de sp&eacute;cifier un user@host qui pourra outrepasser un ban tkl plac&eacute; sur une plage de host.
+				L'except tkl block vous permet de sp&eacute;cifier un user@host qui pourra outrepasser un ban TKL plac&eacute; sur une plage de host.
 				Ceci est tr&egrave;s utile lorsque vous voulez bannir un FAI, mais que vous voulez que certains utilisateurs sp&eacute;cifiques puissent toujours se connecter.
 				La directive except::mask sp&eacute;cifie le masque user@host du client qui sera autoris&eacute; &agrave; se connecter. 
 				L' except::type sp&eacute;cifie quel type de ban pourra &ecirc;tre outrepass&eacute;.
-				Les types valides sont gline, gzline, qline, gqline et shun qui feront une exception pour les Glines, Global Zlines, Qlines, Global Qlines et shuns.
-				 Si le format {} est utilis&eacute;, plusieurs types peuvent &ecirc;tre sp&eacute;cifi&eacute;s.
+				Les types valides sont gline, gzline, qline, gqline, shun et all qui feront respectivement une exception pour les Glines, Global Zlines, Qlines, Global Qlines, Shuns et tous les types, sauf les Klines et les Zlines.
+				Si le format {} est utilis&eacute;, plusieurs types peuvent &ecirc;tre sp&eacute;cifi&eacute;s.
   			</p>
+  			<p>
+				NOTE : Si vous voulez exempter compl&egrave;tement un host de toutes les formes de bans possibles (sauf un ban de spamfilter), vous aurez besoin &agrave; la fois d'un bloc 'except ban' et d'un bloc 'except tkl'.
+			</p>
   			
 			<p>
 				Exemple :
@@ -3332,6 +3338,11 @@ spamfilter {
 				<font class="set">set::options::fail-oper-warn;</font><br>
 				Si il est pr&eacute;sent, un utilisateur sera pr&eacute;venu que sa tentative de /oper manqu&eacute;e a &eacute;t&eacute; enregistr&eacute;e.
 			</p>
+			<p>
+				<font class="set">set::options::allow-insane-bans;</font><br>
+ 				Autorise des bans &eacute;tendus d&eacute;raisonables tels que /GLINE *@*.fr
+ 				Avec ceci, vous pouvez très facilement bannir tout le monde de votre r&eacute;seau, donc faites très attention !
+ 			</p>
 			<p id="set_nopost_ban_action">
 				<font class="set">set::nopost::ban-action</font> (requi&egrave;re <a href="#modules_m_nopost">m_nopost</a>)<br>
 				Action &agrave; effectuer si un utilisateur essaye d'utiliser une commande HTTP POST.
@@ -3840,6 +3851,15 @@ spamfilter {
 					<td style="text-align:center;">z</td>
 					<td>Seuls les utilisateurs avec une connexion s&eacute;curis&eacute;e (SSL) peuvent joindre le salon</td>
 				</tr>
+				<tr> 
+					<td style="text-align:center;">Z</td>
+					<td>
+						Mis en place par le serveur pour indiquer que tous les utilisateurs du salon sont sur une connexion s&eacute;curis&eacute;e (SSL).
+						N'est actif que si le mode +z est actif.
+						Les ULines (par exemple : BotServ) sont ignor&eacute;s lors de la v&eacute;rification des utilisateurs "non s&eacute;curis&eacute;s".
+						Les admins des serveurs sont toujours responsables de la s&eacute;curit&eacute; des tranferts entre les serveurs (par exemple en utilisant SSL, mais aussi un VPN, l'interface de loopback, un chiffrement quantique, etc), l'IRCd ne le d&eacute;tecte pas et ne peut pas le faire.
+					</td>
+				</tr>
 			</table>
 
 			<table border="1" width="83%" id="usermodes">
@@ -4259,9 +4279,9 @@ spamfilter {
 					<td>IRCop</td>
 				</tr>
 				<tr> 
-					<td>rehash &lt;server&gt; &#8211;&lt;flags&gt;</td>
+					<td>rehash &lt;server|-global&gt; &#8211;&lt;flags&gt;</td>
 					<td>
-						Rehash le fichier de configuration des serveurs. Sp&eacute;cifier un nom de serveur, vous permet de rehasher le fichier de configuration d'un serveur distant. 
+						Rehash le fichier de configuration des serveurs. Sp&eacute;cifier un nom de serveur, vous permet de rehasher le fichier de configuration d'un serveur distant et sp&eacute;cifier -global le fait sur tous les serveurs du r&eacute;seau (ces deux options sont r&eacute;serv&eacute;es aux NetworkAdmins). 
 						De nombreux flags sont disponibles. Ils incluent :<br>
 						-dns - r&eacute;initialise et recharge le r&eacute;solveur<br>
 						-motd - recharge les fichiers MOTD, BOTMOTD, OPERMOTD et RULES (notamment ceux pr&eacute;cis&eacute;s dans un <a href="#tldblock">TLD blocks</a>)<br>
