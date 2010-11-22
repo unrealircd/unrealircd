@@ -2228,3 +2228,5 @@
   apparently Microsoft decided not to mention that in the error message.
   We now append some small text when such an error happens, saying that it
   could be because of a missing dependency. Reported by Phil.
+- Fixed Windows compile problem with current CVS due to m_issecure,
+  reported and fix provided by therock247uk (#3970).

@@ -792,6 +792,9 @@ src/modules/m_starttls.dll: src/modules/m_starttls.c $(INCLUDES)
 src/modules/m_nopost.dll: src/modules/m_nopost.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/m_nopost.c $(MODLFLAGS)
 
+src/modules/m_issecure.dll: src/modules/m_issecure.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/m_issecure.c $(MODLFLAGS)
+
 dummy:
 
 
