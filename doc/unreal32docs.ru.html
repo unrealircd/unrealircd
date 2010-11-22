@@ -4,16 +4,16 @@
 		<title>UnrealIRCd - 3.2 - Официальная документация</title>
 		<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
 		<style type="text/css"> .block_section { font-size: 24; font-weight: bold; }
-	.block_name { font-size: 24; font-weight: bold; }
-	.block_required { color: red; font-weight: bold; }
-	.block_recommended { color: green; font-weight: bold; }
-	.block_optional { color: blue; font-weight: bold; }
-	.block_old { font-size: 14; }
-	.set { font-weight: bold; }
-	.desc { margin-left: 15px; }
-	.inline_pre { font-family: monospace; font-style: normal; background-color: #eeeeee;}
-	pre { font-family: monospace; font-style: normal; background-color: #eeeeee;}
-	</style>
+		.block_name { font-size: 24; font-weight: bold; }
+		.block_required { color: red; font-weight: bold; }
+		.block_recommended { color: green; font-weight: bold; }
+		.block_optional { color: blue; font-weight: bold; }
+		.block_old { font-size: 14; }
+		.set { font-weight: bold; }
+		.desc { margin-left: 15px; }
+		.inline_pre { font-family: monospace; font-style: normal; background-color: #eeeeee;}
+		pre { font-family: monospace; font-style: normal; background-color: #eeeeee;}
+		</style>
 		<!-- $Id$ -->
 	</head>
 	<body>
@@ -124,7 +124,9 @@
 			---8.8. <A href="#secantiexploit">Защита против эксплоитов</A><br>
 			---8.9. <A href="#secsummary">Итоги</A><br>
 			9. <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">Часто 
-				задаваемые вопросы (ЧАВО)</a><br>
+				задаваемые вопросы (ЧАВО)</a><br />
+			10. <a href="#modules">Модули</a><br />
+			---10.1. <a href="#modules_m_nopost">m_nopost</a><br />
 			A. <A href="#regex">Регулярные выражения</A><br>
 			---A.1. <A href="#regexlit">Литералы</A><br>
 			---A.2. <A href="#regexdot">Оператор Точка</A><br>
@@ -197,7 +199,7 @@
 					<li>
 					Запустите программу установки новой версии Unreal.
 					<li>
-						Скопируйте старые конфигурационные файлы в новую папку.
+					Скопируйте старые конфигурационные файлы в новую папку.
 					</li>
 				</ul>
 			<p>Пожалуйста, проверьте/прочитайте .RELEASE.NOTES чтобы увидеть, что изменилось. 
@@ -220,7 +222,7 @@
 							<li>
 							OpenBSD (3.7, 3.8, 3.9)
 							<li>
-								Solaris (9, 10)
+							Solaris (9, 10)
 							</li>
 						</ul>
 					<li>
@@ -231,7 +233,7 @@
 							<li>
 							Windows XP (Home, Pro)
 							<li>
-								Windows 2003
+							Windows 2003
 							</li>
 						</ul>
 					<li>
@@ -244,7 +246,7 @@
 							<li>
 							amd64
 							<li>
-								alpha
+							alpha
 							</li>
 						</ul>
 						<br>
@@ -269,8 +271,8 @@
 								<li>
 								make
 								<li>
-									Теперь создайте ваш unrealircd.conf и другие конфигурационные файлы так, как 
-									описано в разделе 4.
+								Теперь создайте ваш unrealircd.conf и другие конфигурационные файлы так, как 
+								описано в разделе 4.
 								</li>
 							</ol>
 						<p>Windows:<br>
@@ -278,8 +280,8 @@
 								<li>
 								Запустите программу установки Unreal
 								<li>
-									Теперь создайте ваш unrealircd.conf и другие конфигурационные файлы так, как 
-									описано в разделе 4.
+								Теперь создайте ваш unrealircd.conf и другие конфигурационные файлы так, как 
+								описано в разделе 4.
 								</li>
 							</ol>
 						<P></P>
@@ -316,21 +318,21 @@
 			<p>Эти ключи ДОЛЖНЫ быть одинаковыми на ВСЕХ СЕРВЕРАХ в сети. Также ключи должны 
 				храниться в секрете, потому что возможно получить реальный хост, зная эти ключи 
 				(что делает режим +x бесполезным).</p>
-			<P>Подсказка: Если вы используете&nbsp;*NIX, то у вас есть возможность создать 
-				новые ключи:&nbsp;запустите './unreal gencloak' в шелле, результатом выполнения 
+			<P>Подсказка: Если вы используете *NIX, то у вас есть возможность создать 
+				новые ключи: запустите './unreal gencloak' в шелле, результатом выполнения 
 				станет три строки сгенерированные случайно, которые вы сможете использовать в 
-				качестве&nbsp;ключей.</P>
+				качестве ключей.</P>
 		</div>
 		<p><font size="+2"><b>3.2 - Модули</b></font><a name="feature_modules"></a></p>
 		<div class="desc">
 			<p>UnrealIRCd поддерживает модули, которые хороши тем, что:<br>
-				- Вы можете загружать/перезагружать/выгружать их во время работы ircd(путём 
+				- Вы можете загружать/перезагружать/выгружать их во время работы ircd (путём 
 				команды /rehash). Это позволяет исправлять некоторые ошибки или добавлять новые 
 				возможности без перезапуска сервера!<br>
 				- Сторонние люди могут создавать модули с новыми командами, режимами 
 				пользователей и каналов.<br>
-				UnrealIRCd идёт только с некоторыми модулями. Следите на www.unrealircd.com 
-				-&gt; modules или используйте google.com для поиска сторонних модулей.<br>
+				UnrealIRCd идёт только с <a href="#modules">некоторыми модулями</a>.
+				Следите за модулями на www.unrealircd.com -&gt; или используйте google.com для поиска сторонних модулей.<br>
 			<p>Вам необходимо загрузить как минимум два модуля, иначе вы не сможете запустить 
 				UnrealIRCd:<br>
 				- модуль команд: commands.so (commands.dll в ОС Windows)<br>
@@ -857,6 +859,13 @@
 										set::spamfilter::virus-help-channel, отключает все команды кроме PONG, ADMIN, и 
 										сообщает/уведомляет об этом на set::spamfilter::virus-help-channel</td>
 								</tr>
+								<tr>
+									<td>warn</td>
+									<td>посылает уведомление ирц-операторам (сномаска spamfilter) и уведомляет пользователя о том,
+										что его сообщение было перехвачено. Никаких действией с пользователем не происходит,
+										сообщение не блокируется.</td>
+								</tr>
+								
 							</table>
 						</td>
 					<tr vAlign="top">
@@ -2426,9 +2435,13 @@ loadmodule "modules/cloak.dll";
 };</pre>
 						<P></P>
 						<p>Блок except ban позволяет определить user@host в качестве исключения для бана. 
-							Данный блок используется, если вы хотите забанить провайдера, но так же хотите, 
-							чтобы определённые пользователи могли присоединится. Директива except::mask 
+							Данный блок используется, если вы хотите забанить пользователей конкретного 
+							провайдера (блоком ban { } или KLINE/ZLINE), но так же хотите, 
+							чтобы определённые пользователи смогли подключиться. Директива except::mask 
 							определяет шаблон user@host для клиента, чтобы позволить ему присоединится.</p>
+							<p>Замечание: Если вы желаете стопроцентно исключить хост от всех возможных банов
+						       	(кроме спамфильтра), то вы должны указать оба блока: 'except ban' и 'except tkl'.</p>
+							
 						<p>Пример:<br>
 							<pre>except ban {
     mask myident@my.isp.com;
@@ -2456,8 +2469,8 @@ loadmodule "modules/cloak.dll";
 							забанить провайдера, но так же хотите, чтобы определённые пользователи могли 
 							присоединится. Директива except::mask определяет маску user@host для клиента, 
 							чтобы позволить ему присоединится. except::type определяет, какой тип бана 
-							должен преодолеваться. Возможные типы: gline, gzline, qline, gqline и shun, что 
-							позволяет исключать из Glines, Global Zlines, Qlines, Global Qlines и shuns. 
+							должен преодолеваться. Возможные типы: gline, gzline, qline, gqline, shun и all, что 
+							позволяет исключать из Global Zlines, Qlines, Global Qlines, shuns и all баны (кроме KLINE/ZLINE). 
 							Если используется формат type {}, то можно определить несколько типов.</p>
 						<p>Пример:<br>
 							<pre>except tkl {
@@ -2721,18 +2734,24 @@ deny channel {
 };</pre>
 					<P></P>
 					<p>Блок badword позволяет манипулировать вам списком, используемым для режима +G, 
-						установленного на пользователей и канал, чтобы вырезать матные слова. badword:: 
-						определяет тип, такой, как channel, message, quit и all. channel - это список 
-						+G на канале, message - это список +G пользователя, quit - для цензуры 
-						сообщения при выходе, all - добавляет всё в указанные выше 3 списка. 
-						badword::word может быть просто словом или же регулярным выражением. 
-						badword::replace - чем заменить совпадающее слово.Если badword::replace не 
-						указан, то слово будет заменено на &lt;censored&gt;. badword::action 
+						установленного на пользователей и канал, чтобы вырезать матные слова. 
+						<b>badword::</b> определяет тип, по которому будет судится, где придётся вырезать слова.
+						Правильные типы:
+						<ul>
+							<li><tt>channel</tt> применяется на каналах с установленным режимом +G.</li>
+							<li><tt>message</tt> применяется в личных сообщениях (не в канальных ), отправленных пользователем с режимом +G.</li>
+							<li><tt>quit</tt> применяется во всех сообщениях выхода из сети.</li>
+						      	<li><tt>all</tt> применяется во всех указанных выше ситуациях.</li>
+</ul>
+<p>
+						<b>badword::word</b> может быть просто словом или же регулярным выражением (которое мы заменяем). 
+						<b>badword::replace</b> - чем заменить совпадающее слово. Если <b>badword::replace</b> не 
+						указан, то слово будет заменено на &lt;censored&gt;. <b>badword::action</b> 
 						определяет, какое действие будет предпринято, если будет найден мат. Если вы 
 						определили replace, тогда мат будет заменен, если же вы определили block, то 
-						сообщение будет заблокировано целиком. Если вы не определили badword::action, 
+						сообщение будет заблокировано целиком. Если вы не определили <b>badword::action</b>, 
 						то будет назначен replace.</p>
-					<p>Пример:<br>
+					<p>Пример:<br />
 						<pre>badword channel {
     word shit;
     replace shoot;
@@ -3168,9 +3187,9 @@ cgiirc {
 						<P></P>
 					</div>
 				</div>
-				<p><font class="block_section">4.37 - </font><font class="block_name">Set блок</font>
+				<p  id="setblock"><font class="block_section">4.37 - </font><font class="block_name">Set блок</font>
 					<font class="block_required">НЕОБХОДИМ</font> <font class="block_old">(Ранее 
-						известен как unrealircd.conf/networks)</font><a name="setblock"></a>
+						известен как unrealircd.conf/networks)</font>
 				</p>
 				<div class="desc">
 					<p>Данный блок содержит настройки вашей irc-сети, он может размещаться как в 
@@ -3356,9 +3375,27 @@ cgiirc {
 						использование команды не-операторами отправляется сномаске EYES.</p>
 					<p><font class="set">set::options::allow-part-if-shunned;</font><br>
 						Позволяет пользователям, на которых установлен shun, использовать /part.</p>
-					<p><font class="set">set::options::fail-oper-warn;</font><br>
+						<p><font class="set">set::options::fail-oper-warn;</font><br>
 						При наличии этой опции пользователь будет уведомлён о том, что его неудачная 
 						попытка стать оператором (/oper) была зафиксирована.</p>
+					<p><font class="set">set::options::allow-insane-bans;</font><br>
+						Позволяет банить по указанной маске, например /GLINE *@*.xx. Позволяет легко и 
+						непринуждённо забанить любого в вашей сети, поэтому используйте осторожно!</p>
+					<p id="set_nopost_ban_action"><font class="set">set::nopost::ban-action</font> (требует модуля <a href="#modules_m_nopost">m_nopost</a>)<br />
+						Действие, применяемое к пользователю, если он пытается выполнить команду HTTP POST.
+						Допустимые значения: kill, gline, gzline, kline, zline, shun, tempshun.
+						Значение по умолчанию: kill. Если вы используете значения *line или shun, 
+						просто запомните, что возможно легковерный пользователь посетил сайт, который осуществляет
+						спаммерскую атаку XPS IRC, и пользователя отключит от сети (прибьёт его существующие подключенния).
+						Значение по умолчанию (kill) как раз служит защитой против таких инцидентов, но жёсткие меры (*line, 
+						а особенно gzline) иногда необходимы.</p>
+					<p id="set_nopost_ban_reason"><font class="set">set::nopost::ban-reason</font> (требует модуля <a href="#modules_m_nopost">m_nopost</a>)<br />
+						Указывается причина бана, если модуль m_nopost прибивает или банит пользователя.</p>
+					<p id="set_nopost_ban_time"><font class="set">set::nopost::ban-time</font> (требует модуля <a href="#modules_m_nopost">m_nopost</a>)<br />
+						Длительность для shuns, glines, gzlines, klines и zlines, установленных by m_nopost.
+						По умолчанию 4h (4 часа).</p>
+					<p id="set_nopost_except_hosts"><font class="set">set::nopost::except-hosts</font> (требует модуля <a href="#modules_m_nopost">m_nopost</a>)<br />
+						Список маск хостов для исключения действия модуля m_nopost. Вы можете указать здесь любые хост маски.</p>
 					<p><font class="set">set::dns::timeout &lt;интервал-времени&gt;;</font><br>
 						Интервал времени, определяющий таймаут DNS-сервера. Это строка, где d означает 
 						дни, h - часы, m - минуты и s - секунды. К примеру, 1d2h3m означает 1 день, 2 
@@ -3861,6 +3898,17 @@ files {
 								<div align="center">z</div>
 							</td>
 							<td>Зайти на канал могут только клиенты с защищённым соединением (SSL)</td>
+						</tr>
+						<tr> 
+							<td>
+								<div align="center">Z</div>
+							</td>
+							<td>Устанавливается сервером и сигнализирует о том, что все пользователи, 
+								находящиеся на канале, используют безопасное подключение (SSL).
+								Будет активно, если указано +z. ULines (к примеру BotServ), игнорируются, 
+								при подсчёте "небезопасных пользователей". По прежнему, озаботиться безопасностью
+								межсерверных линков должны администраторы (SSL, VPN, использование loopback интерфейсов 
+								и прочая, прочая), потому что IRCd не может и не сможет определить безопасность.</td>
 						</tr>
 					</table>
 					<p>
@@ -4427,10 +4475,12 @@ files {
 							<td>Оператор</td>
 						</tr>
 						<tr>
-							<td height="39">rehash &lt;сервер&gt; –&lt;флаги&gt;</td>
+							<td height="39">rehash &lt;сервер|global&gt; –&lt;флаги&gt;</td>
 							<td>Осуществляет рехэш (Rehash - перечитать) конфигурационных файлов сервера. Если 
 								указано имя сервера, то позволяет осуществить рехэш конфигурационного файла на 
-								удалённом сервере. Доступны некоторые флаги:<br>
+								удалённом сервере. Если указан -global, то будет произведён рехэш 
+								ВСЕХ серверов в вашей сети (требует прав NetAdmin). 
+								Доступны некоторые флаги:<br>
 								-motd - Осуществляет рехэш всех MOTD и RULES файлов (включая tld {})<br>
 								-opermotd - осуществляет рехэш только файла OPERMOTD<br>
 								-botmotd - осуществляет рехэш только файла BOTMOTD<br>
@@ -4926,6 +4976,20 @@ files {
 							этому адресу</a>.</p>
 				</div>
 				<p></p>
+				<p id="modules"><font size="+2"><b>10 &#8211; Modules</b></font></p>
+				<div class="desc">
+					<p>Данная секция описывает модули, идущие в комплекте с UnrealIRCd. 
+					К сожалению в настоящее время только один модуль, идущий вместе с 
+					UnrealIRCd, документирован.</p>
+				</div>
+				<p id="modules_m_nopost"><font size="+2"><b>10.1 <a href="#modules_m_nopost">m_nopost</a></b></font><br />
+					Данный модуль автоматически банит любого пользователя, кто пытается использовать запрос в стиле HTTP.
+					Модуль был написан Syzop в ответ на использование Firefox XPS атак, которые позволяли AJAX-совместимым
+				        браузерам выступать в роли спамботов в IRC. Выбрать, что будет делать модуль m_nopost, когда получит
+					подобный запрос, можно в секции <a href="#set_nopost_ban_action"> set::nopost::ban-action</a> и 
+					<a href="#set_nopost_ban_time">set::nopost::ban-time</a>.<br />
+					Модуль появился в UnrealIRCd версии 3.2.9 и компилируется в commands.so, так что он загружается автоматически в 
+					большинстве случаев.</p>
 				<p><font size="+2"><b>Регулярные выражения<a name="regex"></a></b></font></p>
 				<div class="desc"><p>Регулярные выражения часто используются в Unreal (например, в 
 						badwords, spamfilter, и aliases), они являются отличным инструментом для поиска 
