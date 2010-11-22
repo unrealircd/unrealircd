@@ -2364,7 +2364,7 @@ name=banexceptionblock></A>
 	mask &lt;hostmaskesi&gt;;
 };</PRE>
 <P></P>
-<P>Except ban bloðu, ban atýlsa dahi, atýlan ban
+<P>Except ban bloðu, ban atýlsa dahi atýlan ban { } ve KLINE/ZLINE
 kaldýrýlmaksýzýn sunucuya giriþ yapabilecek kullanýcý@host 'larý 
 belirtmenizi
 saðlar. Belirli bir ISP için bütün ip'lere ban atmak istediðinizde bu 
@@ -2375,6 +2375,9 @@ mümkün
 olacaktýr. except::mask yönergesi ile sunucuya bu þekilde girmelerine izin
 verilecek kullanýcýlarýn maskelerini kullanýcý@host þeklinde
 belirtebilirsiniz.</P>
+<p>NOT: Eðer mümkün olan bütün yasaklarý tamamen bir host'dan muaf tutmak istiyorsanýz 
+(except spamfilter), 'except ban' ve bir 'except tkl' bloðuna ihtiyaç duyacaksýnýz.</p> 
+
 <P>Örnek:<BR><PRE>except ban {
 	mask myident@my.isp.com;
 };</PRE>
@@ -2408,7 +2411,9 @@ verilecek
 kullanýcý@host maskesi belirtilir. except::type yönergesi ile hangi bandan
 etkilenilmeyeceði belirtilir. Geçerli tipler: gline, gzline, qline, gqline, 
 ve
-shun, eðer type {} formatý kullanýlýrsa birden fazla tip belirtilebilir.</P>
+shun, ve tüm banlarý eðer type {} formatý kullanýlýrsa birden fazla tip belirtilebilir.</P>
+<p>NOT: Eðer mümkün olan bütün yasaklarý tamamen bir host'dan muaf tutmak istiyorsanýz 
+(except spamfilter), 'except ban' ve bir 'except tkl' bloðuna ihtiyaç duyacaksýnýz.</p> 
 <P>Örnek:<BR><PRE>except tkl {
 	mask myident@my.isp.com;
 	type gline;
@@ -3399,6 +3404,9 @@ saðlar.</P>
 belirtilirse, /oper komutu kullanýmý baþarýsýz olduðu
 takdirde, kullanýcýya oper denemesinin kayýt edildiðine dair uyarý
 gönderilir.</P>
+<p><font class="set">set::options::allow-insane-bans;</font><br> 
+Anlamsýz /GLINE *@*.xx gibi geniþ banlara izin verir. Bu yüzden yanlýþlýkla aðýnýzdaki 
+herkesi yasaklar! Böylece büyük bir özenle kullanmaya gerek duyabilirsiniz.</p> 
 <p id="set_nopost_ban_action"><font class="set">set::nopost::ban-action</font> (gerekli <a href="#modules_m_nopost">m_nopost</a>)<br /> 
 Kullanýcý HTTP POST komutu gerçekleþtirmek için çalýþýrsa, kullanýcýya belirtilen eylem uygulanýr. 
 Ýzin verilen deðerler: kill, gline, gzline, kline, zline, shun, ve tempshun. 
@@ -3934,7 +3942,16 @@ name=userchannelmodes></A> </FONT></B></P>
     <TD>
       <DIV align=center>z</DIV></TD>
     <TD>Sadece Güvenli Baðlantý (SSL) kullananlarýn
-      girebileceði kanal</TD></TR></TBODY></TABLE>
+      girebileceði kanal</TD></TR>
+	    <TR>
+    <TD><div align="center">Z</div></TD> 
+       <TD>Sunucu tarafýndan kanaldaki tüm kullanýcýlarý Güvenli (SSL) 
+       baðlantý olduklarýný gösterir. Ayrýca ayarlandýðýnda sadece +z aktiftir. ULines (örn: BotServ) 
+      'Güvenli olmayan kullanýcýlar' olarak göz ardý edilir. Server Admin'leri güvenli sunucu yapmak için, 
+	   (SSL yardýmý ile olabilir ama ayný zamanda VPN, loopback arayüzünü, quantum þifreleme, vs vs), 
+       sunucu baðlantýlarýný IRCd bunu algýlayamaz anlamýna getirmemelidir.</TD> 
+     </TR> 
+</TBODY></TABLE>
 <P>&nbsp;</P>
 <TABLE width="75%" border=1>
   <TBODY>
@@ -4444,10 +4461,13 @@ gzline'ý
       kaldýrmak için /gzline -*@ip komutunu kullanýn.<BR></TD>
     <TD>IRC Operatörler</TD></TR>
   <TR>
-    <TD height=39>rehash &lt;sunucu&gt;
+    <TD height=39>rehash &lt;sunucu|-global&gt;
     &lt;flaglar&gt;</TD>
-    <TD>Belirtilen sunucunun konfigürasyon dosyasýnýn
-      yeniden okunmasýný saðlar. Mevcut flaglar: <BR>-dns - Yeniden baþlatýr ve yeniden yükler, çözümler<br>
+    <TD>Bir sunucunun yapýlandýrma dosyasýnýn yeniden okunmasýný saðlar.
+	  Sunucu adý belirtildiðinde yapýlandýrma dosyasýnýn
+      yeniden okunmasýný, ve -global belirtildiðinde að üzerindeki tüm sunucularýn yapýlandýrma dosyalarý yeniden okunmasýný olanak saðlar.(sadece NETADMIN'ler için)<br>
+      Mevcut flaglar: <BR>
+      -dns - Yeniden baþlatýr ve yeniden yükler, çözümler<br>
 	  -motd - Tüm MOTD, BOTMOTD, OPERMOTD ve RULES dosyalarýný tekrar okumasýný saðlar (tld{}'de dahil olmak üzere bloklar)<br>
 	  -garbage - Deðersiz datalarýn toplanmasýný saðlar<BR>-ssl - SSL Sertifikalarý yeniden okur
 	  </br>
