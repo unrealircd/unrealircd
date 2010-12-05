@@ -78,6 +78,9 @@ Unreal3.2.9-RC1 Release Notes
 - '/REHASH -motd' really rehashes ALL MOTD/OPERMOTD/BOTMOTD/RULES files, both
   the 'normal' files and the ones in tld { } blocks.
 - The 'Compile as hub/leaf' choice is now gone, as it didn't do anything.
+- Better document 'sslclientcert' in the Oper Block documentation.
+  This allows one to authenticate against a SSL certificate for /OPER, instead
+  of using a password.
 
 ==[ MAJOR BUGS FIXED ]==
 - If you have autoconnect with a low connfreq, previously you often risked getting
