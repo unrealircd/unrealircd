@@ -12,8 +12,9 @@ Unreal3.2.9-RC1 Release Notes
 - When upgrading a network, we assume you are upgrading from the previous
   version (3.2.8/3.2.8.1). Upgrading from 3.2.6 or 3.2.7 should also be no problem.
 - The purpose of the sections below (NEW, CHANGED, MINOR, etc) is to be a SUMMARY
-  of the changes in this release. There have been 160+ changes, and trying to
-  mention them all would be useless, see the Changelog for the full list of changes.
+  of the changes in this release. There have been 160+ changes, twice as much
+  as usual for a release, hence this summary is a bit long too.
+  For the FULL list of changes, see the Changelog.
 
 ==[ NEW ]==
 - Extban ~j: this only prevents a user from joining, once in he can speak freely.
@@ -44,7 +45,7 @@ Unreal3.2.9-RC1 Release Notes
   particularly useful if you use remote includes or MOTD's. NetAdmin only command.
 - files { } block by which you can configure the location of the tune file, pid, etc
 - STARTTLS: On an IRCd compiled with SSL support this allows a client to start a SSL
-  session on a regular non-SSL port (like 6667).
+  session on a regular non-SSL port (like 6667). Only supported by a few IRC clients.
   Can be disabled by setting set::ssl::options::no-starttls
 - set::uhnames: this allows one to turn UHNAMES off ('no'), which can be a good idea
   if you have channels with more than 1000 users, as otherwise the nicklist can take
@@ -76,7 +77,7 @@ Unreal3.2.9-RC1 Release Notes
   might mean that you have to change some escaped backslashes (\\) to \.
 - '/REHASH -motd' really rehashes ALL MOTD/OPERMOTD/BOTMOTD/RULES files, both
   the 'normal' files and the ones in tld { } blocks.
-- 'Compile as hub/leaf' is now gone, as it didn't do anything.
+- The 'Compile as hub/leaf' choice is now gone, as it didn't do anything.
 
 ==[ MAJOR BUGS FIXED ]==
 - If you have autoconnect with a low connfreq, previously you often risked getting
