@@ -1845,7 +1845,7 @@
 - Use RPL_STARTTLS/ERR_STARTTLS numerics
 - Removed log target 'kline' from documentation, as it didn't do anything
   (use 'tkl' instead). Reported by nephilim and Stealth (#0003849).
-- Server protocol: added PROTOCTL EATH=servername, which allows us to
+- Server protocol: added PROTOCTL EAUTH=servername, which allows us to
   authenticate the server very early in the handshake process. That way,
   certain commands and PROTOCTL tokens can 'trust' the server.
   See doc/technical/protoctl.txt for details.
