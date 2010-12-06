@@ -2231,3 +2231,4 @@
 - Fixed Windows compile problem with current CVS due to m_issecure,
   reported and fix provided by therock247uk (#3970).
 - Added release notes.
+- Error on zero sendq in class::sendq, reported by jonbeard.

@@ -4104,7 +4104,7 @@ int	_test_class(ConfigFile *conf, ConfigEntry *ce)
 			}
 			has_sendq = 1;
 			l = atol(cep->ce_vardata);
-			if ((l < 0) || (l > 2000000000))
+			if ((l <= 0) || (l > 2000000000))
 			{
 				config_error("%s:%i: class::sendq with illegal value",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
