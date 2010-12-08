@@ -2232,3 +2232,4 @@
   reported and fix provided by therock247uk (#3970).
 - Added release notes.
 - Error on zero sendq in class::sendq, reported by jonbeard.
+- Fix return values in src/auth.c on Win32.

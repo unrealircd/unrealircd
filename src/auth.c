@@ -316,9 +316,9 @@ char *saltstr, *hashstr;
 		SHA1_Update(&hash, para, strlen(para));
 		SHA1_Final(result1, &hash);
 #else
-		if (!CryptCreateHash(hProv, CALG_SHA1, 0, 0, &hHash)) return NULL;
-		if (!CryptHashData(hHash, para, strlen(para), 0)) return NULL;
-		if (!CryptGetHashParam(hHash, HP_HASHVAL, result1, &size, 0)) return NULL;
+		if (!CryptCreateHash(hProv, CALG_SHA1, 0, 0, &hHash)) return -1;
+		if (!CryptHashData(hHash, para, strlen(para), 0)) return -1;
+		if (!CryptGetHashParam(hHash, HP_HASHVAL, result1, &size, 0)) return -1;
 		CryptDestroyHash(hHash);
 #endif
 		/* Add salt to result */
@@ -330,9 +330,9 @@ char *saltstr, *hashstr;
 		SHA1_Update(&hash, result1, rsaltlen+20);
 		SHA1_Final(result2, &hash);
 #else
-		if (!CryptCreateHash(hProv, CALG_SHA1, 0, 0, &hHash)) return NULL;
-		if (!CryptHashData(hHash, result1, 20+rsaltlen, 0)) return NULL;
-		if (!CryptGetHashParam(hHash, HP_HASHVAL, result2, &size, 0)) return NULL;
+		if (!CryptCreateHash(hProv, CALG_SHA1, 0, 0, &hHash)) return -1;
+		if (!CryptHashData(hHash, result1, 20+rsaltlen, 0)) return -1;
+		if (!CryptGetHashParam(hHash, HP_HASHVAL, result2, &size, 0)) return -1;
 		CryptDestroyHash(hHash);
 		CryptReleaseContext(hProv, 0);
 #endif		
