@@ -62,6 +62,7 @@
 #define IDC_PINK                        1176
 #define IDC_DARKGRAY                    1177
 #define IDC_GRAY                        1178
+#define IDM_INFO                        40026
 #define IDM_CREDITS                     40027
 #define IDM_DAL                         40028
 #define IDM_LICENSE                     40029

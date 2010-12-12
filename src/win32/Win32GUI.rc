@@ -385,7 +385,8 @@ MENU_ABOUT MENU DISCARDABLE
 BEGIN
     POPUP "About"
     BEGIN
-        MENUITEM "&Credits",                    IDM_CREDITS
+        MENUITEM "UnrealIRCd &Team",            IDM_INFO
+        MENUITEM "Additional &Credits",         IDM_CREDITS
         MENUITEM "&DALnet Credits",             IDM_DAL
         MENUITEM "&License",                    IDM_LICENSE
         MENUITEM "&Help",                       IDM_HELP

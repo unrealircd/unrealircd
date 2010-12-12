@@ -253,39 +253,40 @@ char buf[1024];
  * sends m_info into to sptr
 */
 
+char *unrealinfo[] =
+{
+	"This release was brought to you by the following people:",
+	"",
+	"Head coder:",
+	"* Syzop        <syzop@unrealircd.com>",
+	"Coders:",
+	"* binki        <binki@unrealircd.com>",
+	"",
+	"Contributors:",
+	"* Stealth, tabrisnet, Bock, fbi",
+	"",
+	"RC Testers:",
+	"* This needs to be updated (FIXME)",
+	"",
+	"Past UnrealIRCd3.2* coders/contributors:",
+	"* Stskeeps (ret. head coder / project leader)",
+	"* codemastr (ret. u3.2 head coder)",
+	"* aquanight, WolfSage, ..",
+	"* McSkaf, Zogg, NiQuiL, chasm, llthangel, nighthawk, ..",
+	NULL
+}
+
 void m_info_send(aClient *sptr)
 {
+char **text = unrealinfotext;
+
 	sendto_one(sptr, ":%s %d %s :=-=-=-= %s =-=-=-=",
 	    me.name, RPL_INFO, sptr->name, IRCDTOTALVERSION);
-	sendto_one(sptr, ":%s %d %s :| This release was brought to you by the following people:",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| Head coder:", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * Syzop        <syzop@unrealircd.com>",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| Coders:", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * binki        <binki@unrealircd.com>",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| Contributors:", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * Stealth, tabrisnet, Bock, fbi",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| RC Testers:", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * Bock, Apocalypse, StrawberryKittens, wax, Elemental,",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :|   Golden|Wolf, and everyone else who tested the RC's",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| Past UnrealIRCd3.2* coders/contributors:", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * Stskeeps (ret. head coder / project leader)",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * codemastr (ret. u3.2 head coder)",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * aquanight, WolfSage, ..",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :| * McSkaf, Zogg, NiQuiL, chasm, llthangel, nighthawk, ..",
-	    me.name, RPL_INFO, sptr->name);
+
+	while (*text)
+		sendto_one(sptr, ":%s %d %s :| %s", 
+		    me.name, RPL_INFO, parv[0], *text++);
+
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| Credits - Type /Credits",
@@ -299,19 +300,9 @@ void m_info_send(aClient *sptr)
 	    me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|  http://bugs.unrealircd.org/",
 	    me.name, RPL_INFO, sptr->name);
-
 	sendto_one(sptr,
 	    ":%s %d %s :| UnrealIRCd Homepage: http://www.unrealircd.com",
 	    me.name, RPL_INFO, sptr->name);
-
-#ifdef _WIN32
-#ifdef WIN32_SPECIFY
-	sendto_one(sptr, ":%s %d %s :| wIRCd porter: | %s",
-	    me.name, RPL_INFO, sptr->name, WIN32_PORTER);
-	sendto_one(sptr, ":%s %d %s :|     >>URL:    | %s",
-	    me.name, RPL_INFO, sptr->name, WIN32_URL);
-#endif
-#endif
 	sendto_one(sptr,
 	    ":%s %d %s :-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=", me.name,
 	    RPL_INFO, sptr->name);

@@ -62,6 +62,7 @@ __inline void ShowDialog(HWND *handle, HINSTANCE inst, char *template, HWND pare
 
 LRESULT CALLBACK MainDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK LicenseDLG(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK InfoDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK CreditsDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK DalDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK HelpDLG(HWND, UINT, WPARAM, LPARAM);
@@ -586,6 +587,9 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				case IDM_LICENSE: 
 					DialogBox(hInst, "FromVar", hDlg, (DLGPROC)LicenseDLG);
 					break;
+				case IDM_INFO:
+					DialogBox(hInst, "FromVar", hDlg, (DLGPROC)InfoDLG);
+					break;
 				case IDM_CREDITS:
 					DialogBox(hInst, "FromVar", hDlg, (DLGPROC)CreditsDLG);
 					break;
@@ -631,6 +635,11 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 LRESULT CALLBACK LicenseDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
 {
 	return FromVarDLG(hDlg, message, wParam, lParam, "UnrealIRCd License", gnulicense);
+}
+
+LRESULT CALLBACK InfoDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
+{
+	return FromVarDLG(hDlg, message, wParam, lParam, "UnrealIRCd Team", unrealinfo);
 }
 
 LRESULT CALLBACK CreditsDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
