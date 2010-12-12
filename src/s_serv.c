@@ -278,7 +278,7 @@ char *unrealinfo[] =
 
 void m_info_send(aClient *sptr)
 {
-char **text = unrealinfotext;
+char **text = unrealinfo;
 
 	sendto_one(sptr, ":%s %d %s :=-=-=-= %s =-=-=-=",
 	    me.name, RPL_INFO, sptr->name, IRCDTOTALVERSION);
