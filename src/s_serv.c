@@ -274,7 +274,7 @@ char *unrealinfo[] =
 	"* aquanight, WolfSage, ..",
 	"* McSkaf, Zogg, NiQuiL, chasm, llthangel, nighthawk, ..",
 	NULL
-}
+};
 
 void m_info_send(aClient *sptr)
 {
@@ -285,7 +285,7 @@ char **text = unrealinfotext;
 
 	while (*text)
 		sendto_one(sptr, ":%s %d %s :| %s", 
-		    me.name, RPL_INFO, parv[0], *text++);
+		    me.name, RPL_INFO, sptr->name, *text++);
 
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
