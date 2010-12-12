@@ -74,7 +74,6 @@
 #include <openssl/ssl.h>
 #endif
 #ifdef INET6
-#ifndef _WIN32
 #include <netinet/in.h>
 #include <sys/socket.h>
 #endif
