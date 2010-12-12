@@ -65,11 +65,7 @@
 #include "zip.h"
 #endif
 #include "auth.h" 
-#ifndef _WIN32
 #include "tre/regex.h"
-#else
-#include "regex.h"
-#endif
 
 #include "channel.h"
 
