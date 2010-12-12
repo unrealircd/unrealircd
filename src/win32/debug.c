@@ -17,11 +17,8 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "sys.h"
 #include "setup.h"
-#ifdef INET6
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#endif
 #include <windows.h>
 #include <dbghelp.h>
 #include "struct.h"

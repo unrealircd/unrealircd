@@ -44,6 +44,8 @@
 #undef  TIMES_2
 #undef  GETRUSAGE_2
 #define HAVE_ALLOCA
+#define HAVE_INET_NTOP
+#define HAVE_INET_PTON
 /* vc 2005 */
 #if defined(_MSC_VER) && _MSC_VER >= 1400
 #	define HAVE_VSNPRINTF

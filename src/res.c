@@ -97,6 +97,7 @@ int optmask;
 	{
 		memset(&cache_hashtbl, 0, sizeof(cache_hashtbl));
 		memset(&dnsstats, 0, sizeof(dnsstats));
+		ares_library_init(ARES_LIB_INIT_ALL);
 	}
 
 	memset(&options, 0, sizeof(options));

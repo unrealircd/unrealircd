@@ -17,6 +17,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "sys.h"
 #include <windows.h>
 #include <windowsx.h>
 #include <commctrl.h>
@@ -30,7 +31,6 @@
 #include "resource.h"
 #include "setup.h"
 #include "win32.h"
-#include "sys.h"
 
 LRESULT CALLBACK GotoDLG(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK ColorDLG(HWND, UINT, WPARAM, LPARAM);

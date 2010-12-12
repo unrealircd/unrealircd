@@ -18,19 +18,15 @@
  */
 
 #define WIN32_VERSION BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5
+#include "sys.h"
 #include "resource.h"
 #include "version.h"
 #include "setup.h"
-#ifdef INET6
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#endif
 #include <windows.h>
 #include <windowsx.h>
 #include <commctrl.h>
 #include "struct.h"
 #include "common.h"
-#include "sys.h"
 #include "numeric.h"
 #include <sys/stat.h>
 #include <fcntl.h>

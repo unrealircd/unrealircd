@@ -2233,3 +2233,11 @@
 - Added release notes.
 - Error on zero sendq in class::sendq, reported by jonbeard.
 - Fix return values in src/auth.c on Win32.
+- Win32: Attempt to move to 100% winsock2 (the include, to be precise),
+  this means includes have to be in a very particular order (!)
+- Win32: #define _WIN32_WINNT 0x0501 and force our own inet_ntop/pton,
+  otherwise you get an ntop runtime error on XP and earlier.
+- Win32: Get rid of c-ares includes and library in our tree, and use the
+  DLL instead of static LIB, just like we do for ssl and zlib.
+- Win32: Get rid of TRE lib and includes
+- Win32: reorder includes to fix winsock errors with curl

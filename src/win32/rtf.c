@@ -17,9 +17,9 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "sys.h"
 #include <windows.h>
 #include "win32.h"
-#include "sys.h"
 #include "common.h"
 #include "struct.h"
 #include "h.h"

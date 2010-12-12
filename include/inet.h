@@ -30,8 +30,10 @@
 #define	__u_l	unsigned long
 #endif
 
+#ifndef _WIN32
 extern int inet_pton(int af, const char *src, void *dst);
 extern const char *inet_ntop(int af, const void *src, char *dst, size_t cnt);
+#endif
 
 #ifdef __STDC__
 # ifndef _WIN32

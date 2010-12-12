@@ -8,6 +8,22 @@ MT=mt
 
 ############################ USER CONFIGURATION ############################
 
+# You are encouraged NOT to set these values here, but instead make a batch file
+# which passes all these arguments to nmake, like:
+# nmake -f makefile.win32 USE_ZIPLINKS=1 ZLIB_INC_DIR="c:\dev\zlib" etc etc...
+# Both ways will work, but if you use a batch file it's easier with
+# upgrading Unreal as you won't have to edit this makefile again.
+
+### TRE ###
+#TRE_LIB_DIR="C:\dev\tre\win32\release"
+#TRE_INC_DIR="C:\dev\tre"
+#TRELIB="tre.lib"
+
+### C-ARES ####
+#CARES_LIB_DIR="C:\dev\c-ares\vc\cares\dll-release"
+#CARES_INC_DIR="C:\dev\c-ares"
+#CARESLIB="cares.lib"
+
 ##### REMOTE INCLUDES ####
 #To enable remote include support you must have libcurl installed on your
 #system and it must have ares support enabled.
@@ -74,10 +90,24 @@ MT=mt
 
 ############################# END CONFIGURATION ############################
 
+!IFDEF CARES_INC_DIR
+CARES_INC=/I "$(CARES_INC_DIR)"
+!ENDIF
+!IFDEF CARES_LIB_DIR
+CARES_LIB=/LIBPATH:"$(CARES_LIB_DIR)"
+!ENDIF
+
+!IFDEF TRE_INC_DIR
+TRE_INC=/I "$(TRE_INC_DIR)"
+!ENDIF
+!IFDEF TRE_LIB_DIR
+TRE_LIB=/LIBPATH:"$(TRE_LIB_DIR)"
+!ENDIF
+
 !IFDEF USE_REMOTEINC
 CURLCFLAGS=/D USE_LIBCURL
 CURLOBJ=SRC/URL.OBJ
-CURLLIB=libcurl.lib
+CURLLIB=libcurl_imp.lib
 !IFDEF LIBCURL_INC_DIR
 LIBCURL_INC=/I "$(LIBCURL_INC_DIR)"
 !ENDIF
@@ -122,18 +152,18 @@ MODDBGCFLAG=/LDd /MD /Zi
 !ENDIF 
 
 FD_SETSIZE=/D FD_SETSIZE=16384
-CFLAGS=$(DBGCFLAG) $(LIBCURL_INC) $(ZLIB_INC) $(OPENSSL_INC) /J /I ./INCLUDE /I ./INCLUDE/WIN32/ARES /Fosrc/ /nologo \
+CFLAGS=$(DBGCFLAG) $(TRE_INC) $(CARES_INC) $(LIBCURL_INC) $(ZLIB_INC) $(OPENSSL_INC) /J /I ./INCLUDE /I ./INCLUDE/WIN32/ARES /Fosrc/ /nologo \
  $(ZIPCFLAGS) $(CURLCFLAGS) $(FD_SETSIZE) $(SSLCFLAGS) $(NS_ADDRESS) /D NOSPOOF=1 /c /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE /D _USE_32BIT_TIME_T
-CFLAGSST=$(DBGCFLAGST) $(LIBCURL_INC) $(ZLIB_INC) $(OPENSSL_INC) /J /I ./INCLUDE /I ./INCLUDE/WIN32/ARES /Fosrc/ /nologo \
+CFLAGSST=$(DBGCFLAGST) $(TRE_INC) $(CARES_INC) $(LIBCURL_INC) $(ZLIB_INC) $(OPENSSL_INC) /J /I ./INCLUDE /I ./INCLUDE/WIN32/ARES /Fosrc/ /nologo \
  $(ZIPCFLAGS) $(CURLCFLAGS) $(FD_SETSIZE) $(SSLCFLAGS) $(NS_ADDRESS) /D NOSPOOF=1 /c /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE /D _USE_32BIT_TIME_T
 LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib advapi32.lib \
- dbghelp.lib oldnames.lib comctl32.lib comdlg32.lib $(ZLIB_LIB) $(ZIPLIB) \
+ dbghelp.lib oldnames.lib comctl32.lib comdlg32.lib $(CARES_LIB) $(CARESLIB) $(TRE_LIB) $(TRELIB) $(ZLIB_LIB) $(ZIPLIB) \
  $(OPENSSL_LIB) $(SSLLIBS) $(LIBCURL_LIB) $(CURLLIB) /def:wircd.def /implib:wircd.lib \
  /nologo $(DBGLFLAG) /out:WIRCD.EXE
 MODCFLAGS=$(MODDBGCFLAG) $(SSLCFLAGS) $(ZIPCFLAGS) $(CURLCFLAGS) /J /Fesrc/modules/ \
- /Fosrc/modules/ /nologo $(LIBCURL_INC) $(ZLIB_INC) $(OPENSSL_INC) /I ./INCLUDE /D \
+ /Fosrc/modules/ /nologo $(TRE_INC) $(CARES_INC) $(LIBCURL_INC) $(ZLIB_INC) $(OPENSSL_INC) /I ./INCLUDE /D \
  DYNAMIC_LINKING /D NOSPOOF /D MODULE_COMPILE /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE /D _USE_32BIT_TIME_T
-MODLFLAGS=/link /def:src/modules/module.def wircd.lib $(OPENSSL_LIB) $(SSLLIBS) \
+MODLFLAGS=/link /def:src/modules/module.def wircd.lib ws2_32.lib $(TRE_LIB) $(TRELIB) $(CARES_LIB) $(OPENSSL_LIB) $(SSLLIBS) \
  $(ZLIB_LIB) $(ZIPLIB) $(LIBCURL_LIB) $(CURLLIB)
 
 INCLUDES=./include/struct.h ./include/config.h ./include/sys.h \
@@ -257,7 +287,7 @@ CONF:
 
 
 ./WIRCD.EXE: $(OBJ_FILES) SRC/win32/WIN32.RES
-        $(LINK) $(LFLAGS) $(OBJ_FILES) SRC/win32/WIN32.RES SRC/WIN32/TRE.LIB SRC/WIN32/ARESLIB.LIB /MAP
+        $(LINK) $(LFLAGS) $(OBJ_FILES) SRC/win32/WIN32.RES /MAP
 	-@erase src\win32\win32.res
 	$(MT) -manifest WIRCD.EXE.manifest -outputresource:WIRCD.EXE;1
 !IFNDEF DEBUGEXTRA
@@ -472,10 +502,10 @@ MODULES: $(DLL_FILES)
 
 src/modules/commands.dll: $(MOD_FILES) $(INCLUDES)
 	$(CC) $(MODDBGCFLAG) $(LIBCURL_INC) $(ZLIB_INC) $(OPENSSL_INC) /nologo \
-	      $(SSLCFLAGS) $(ZIPCFLAGS) $(CURLCFLAGS) /Fosrc/modules/ \
+	      $(SSLCFLAGS) $(ZIPCFLAGS) $(CURLCFLAGS) $(TRE_INC) /Fosrc/modules/ \
 	      /I ./INCLUDE /D NOSPOOF /D MODULE_COMPILE /D _CRT_SECURE_NO_DEPRECATE \
 	      /D _USE_32BIT_TIME_T $(MOD_FILES) \
-	      $(MODLFLAGS) src/win32/tre.lib /OUT:src/modules/commands.dll
+	      $(MODLFLAGS) /OUT:src/modules/commands.dll
 
 src/modules/m_chghost.dll: src/modules/m_chghost.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/m_chghost.c $(MODLFLAGS)
@@ -502,7 +532,7 @@ src/modules/m_svsmode.dll: src/modules/m_svsmode.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/m_svsmode.c $(MODLFLAGS)
 
 src/modules/m_tkl.dll: src/modules/m_tkl.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/m_tkl.c $(MODLFLAGS) src/win32/tre.lib
+        $(CC) $(MODCFLAGS) src/modules/m_tkl.c $(MODLFLAGS)
 
 src/modules/m_swhois.dll: src/modules/m_swhois.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/m_swhois.c $(MODLFLAGS)
@@ -550,7 +580,7 @@ src/modules/m_lag.dll: src/modules/m_lag.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/m_lag.c $(MODLFLAGS)
 
 src/modules/m_message.dll: src/modules/m_message.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/m_message.c src/modules/webtv.c $(MODLFLAGS) src/win32/tre.lib
+	$(CC) $(MODCFLAGS) src/modules/m_message.c src/modules/webtv.c $(MODLFLAGS)
 
 src/modules/m_nachat.dll: src/modules/m_nachat.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/m_nachat.c $(MODLFLAGS)

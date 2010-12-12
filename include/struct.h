@@ -68,7 +68,7 @@
 #ifndef _WIN32
 #include "tre/regex.h"
 #else
-#include "win32/regex.h"
+#include "regex.h"
 #endif
 
 #include "channel.h"

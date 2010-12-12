@@ -19,11 +19,11 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <curl/curl.h>
 #include <struct.h>
 #include <h.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <curl/curl.h>
 
 #ifdef USE_SSL
 extern char *SSLKeyPasswd;
