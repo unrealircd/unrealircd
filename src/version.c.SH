@@ -127,7 +127,7 @@ char *unrealcredits[] =
 	"Current hosters:",
 	"http://www.vulnscan.org/  All WWW sites",
 	"http://FTCNetworks.com/   IRCd shell",
-	"warg                      IRCd shell",
+	"warg/andrew               VPS for IRCd",
 	"Below are people who have donated hosting in the past:",
 	"Phil Veale - email@phillipveale.com - http://www.tiefighter.org",
 	"- Donating webhosting for the project amongst other things",
