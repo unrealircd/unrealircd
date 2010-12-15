@@ -1,5 +1,5 @@
 ===============================================
-=            UnrealIRCd v3.2.8.1              =
+=            UnrealIRCd v3.2.9-RC1            =
 ===============================================
  This release was brought to you by:
 
@@ -13,18 +13,14 @@
 
   Contributors:
   =============
-  __THIS_NEEDS_TO_BE_UPDATED_BEFORE_3.2.9_RELEASE__
-  * aquanight
-  * WolfSage
-  * Stealth
-  * tabrisnet
   * Bock
-  * fbi
+  * goldenwolf
+  * katsklaw
+  * Stealth
 
   RC Testers:
   ===========
   __THIS_NEEDS_TO_BE_UPDATED_BEFORE_3.2.9_RELEASE__
-  * Bock, Apocalypse, StrawberryKittens, wax, Elemental, and many more
 
   Previous coders:
   ================

@@ -2242,3 +2242,4 @@
 - Win32: Get rid of TRE lib and includes
 - Win32: reorder includes to fix winsock errors with curl
 - Win32: show missing /INFO in GUI
+** 3.2.9-rc1 release **
