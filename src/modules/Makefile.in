@@ -82,6 +82,8 @@ COMMANDS=m_sethost.o m_chghost.o m_chgident.o m_setname.o m_setident.o \
 
 MODULES=commands.so cloak.so $(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
+CC=@CC@
+RM=@RM@
 
 all: build
 
