@@ -612,7 +612,11 @@ AC_SUBST(CARES_CFLAGS)
 CARES_LIBS="-L../extras/c-ares/lib"
 
 dnl Set default library parameters for when pkg-config is not available
-CARESLIBSALT="../extras/c-ares/lib/libcares.a"
+dnl Ugly cd'ing out of extras/c-ares-xxx ;)
+dnl Note: must be a full path, not relative path.
+cd ../..
+CARESLIBSALT="`pwd`/extras/c-ares/lib/libcares.a"
+cd -
 case `uname -s` in
 	*FreeBSD*)
 		CARESLIBSALT="$CARESLIBSALT"

@@ -2244,3 +2244,5 @@
 - Win32: show missing /INFO in GUI
 ** 3.2.9-rc1 release **
 - Enable parallel building of modules.
+- Fixed bug with curl not finding libcares, reported by katslaw.
+- Added workaround for 'curl-config' depending on 'bc'.
