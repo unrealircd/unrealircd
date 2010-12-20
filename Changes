@@ -2246,3 +2246,4 @@
 - Enable parallel building of modules.
 - Fixed bug with curl not finding libcares, reported by katslaw.
 - Added workaround for 'curl-config' depending on 'bc'.
+- Fix typo 'alias::spampfilter' in German docs, reported by seraphim (#3978).
