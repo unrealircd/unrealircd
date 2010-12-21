@@ -70,6 +70,16 @@
 # include <string.h>
 # endif
 #endif
+
+/* get intptr_t if the system provides it -- otherwise, ./configure will define it for us */
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#else
+#ifdef HAVE_INTTYPES_H
+#include <inttypes.h>
+#endif /* HAVE_INTTYPES_H */
+#endif /* HAVE_STDINT_H */
+
 #ifdef SSL
 #include <openssl/ssl.h>
 #endif

@@ -188,6 +188,7 @@ AC_CHECK_HEADER(sys/rusage.h,
 	AC_DEFINE([RUSAGEH], [], [Define if you have the <sys/rusage.h> header file.]))
 AC_CHECK_HEADER(glob.h,
 	AC_DEFINE([GLOBH], [], [Define if you have the <glob.h> header file.]))
+AC_CHECK_HEADERS([stdint.h inttypes.h])
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_C_INLINE
