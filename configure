@@ -6982,7 +6982,11 @@ fi
 		CURLCFLAG="`$CURLCONFIG --cflags`"
 		CURLLIBS="`$CURLCONFIG --libs`"
 
-		CURLUSESCARES="`$CURLCONFIG --features|grep AsynchDNS|wc -l`"
+				if $CURLCONFIG --features | grep -q -e AsynchDNS; then :
+  CURLUSESCARES="1"
+else
+  CURLUSESCARES="0"
+fi
 		if test "$CURLUSESCARES" = "0"; then :
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: cURL seems compiled without c-ares support. Your IRCd will possibly stall when REHASHing!" >&5
 $as_echo "$as_me: WARNING: cURL seems compiled without c-ares support. Your IRCd will possibly stall when REHASHing!" >&2;}

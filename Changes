@@ -2249,3 +2249,6 @@
 - Fix typo 'alias::spampfilter' in German docs, reported by seraphim (#3978).
 - Fix missing #include <stdint.h>. Fixes compile error on OpenBSD
   reported by CuleX (#3977).
+- Fix invalid use of 'wc -l' when detecting the AsynchDNS feature of
+  libcurl which breaks compilation on FreeBSD; instead use 'grep
+  -q'. Reported by Jobe (#3981), solution proposed by satmd.

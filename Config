@@ -673,9 +673,11 @@ if [ "$REMOTEINC" = "1" ] ; then
 
                 GOTASYNC=0
                 if [ "x$CURLDIR" != "x" ]; then
-                  # Check if it's of any use: a curl without async dns (cares) hangs the entire ircd..
-                  # normally this is done in ./configure but now we're forced to do it also here..
-                  GOTASYNC="`$CURLDIR/bin/curl-config --features|grep AsynchDNS|wc -l`"
+                    # Check if it's of any use: a curl without async dns (cares) hangs the entire ircd..
+                    # normally this is done in ./configure but now we're forced to do it also here..
+                    if "$CURLDIR"/bin/curl-config --features | grep -q -e AsynchDNS; then
+                        GOTASYNC="1"
+                    fi
                   if [ "$GOTASYNC" != "1" ]; then
                           PREVCURLDIR="$CURLDIR"
                           CURLDIR=""
@@ -691,7 +693,7 @@ if [ "$REMOTEINC" = "1" ] ; then
                         # on 'bc' for some reason and not all systems have that installed!
                         echo "1+1"|bc 1>/dev/null 2>&1
                         if [ "$?" = 0 ]; then
-                            $CURLDIR/bin/curl-config --checkfor 7.21.0
+                            "$CURLDIR"/bin/curl-config --checkfor 7.21.0
                             if [ "$?" != 0 ]; then
                                     echo ""
                                     echo "Your self-compiled CURL library in $CURLDIR is slightly outdated."
@@ -712,8 +714,8 @@ if [ "$REMOTEINC" = "1" ] ; then
                                         fi
                                         case "$cc" in
                                             [Yy]*)
-                                                rm -rf $CURLDIR.old
-                                                mv $CURLDIR $CURLDIR.old
+                                                rm -rf "$CURLDIR".old
+                                                mv "$CURLDIR" "$CURLDIR".old
                                                 CURLDIR=""
                                                 GOTASYNC=1
                                                 # wow the GOTASYNC=1 is hackish, but we need to prevent the error from later on
@@ -949,7 +951,7 @@ TEST="$EXTRAPARA"
 echo ""
 echo "Would you like to pass any custom parameters to configure?"
 echo "See  \`./configure --help' and write them here:"
-echo $n "[$TEST]-> $c"
+echo $n "[$TEST] -> $c"
 read EXTRAPARA
 if [ -z "$EXTRAPARA" ]; then
     EXTRAPARA="$TEST"
