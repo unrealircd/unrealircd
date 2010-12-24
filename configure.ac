@@ -567,15 +567,17 @@ AC_MSG_RESULT(installing TRE regex library)
 $ac_cv_prog_MAKER install || exit 1
 TRE_CFLAGS="-I$cur_dir/extras/regexp/include"
 AC_SUBST(TRE_CFLAGS)
-if test "x$ac_cv_path_PKGCONFIG" = "x" ; then
-	dnl for when pkg-config isn't available
-	TRE_LIBS="../extras/regexp/lib/libtre.a"
-else
-	dnl See c-ares's compilation section for more info on this hack.
-	dnl ensure that we're linking against the bundled version of tre
-	dnl (we only reach this code if linking against the bundled version is desired).
-	TRE_LIBS=`$ac_cv_path_PKGCONFIG --static --libs tre.pc | sed -e 's,-L\([^ ]\+lib\) -ltre,\1/libtre.a,'`
-fi
+
+TRE_LIBS=
+dnl See c-ares's compilation section for more info on this hack.
+dnl ensure that we're linking against the bundled version of tre
+dnl (we only reach this code if linking against the bundled version is desired).
+AS_IF([test -n "$ac_cv_path_PKGCONFIG"],
+       [TRE_LIBS="`$ac_cv_path_PKGCONFIG --static --libs tre.pc | sed ['s,-L\([^ ]\+lib\) -ltre,\1/libtre.a,']`"])
+dnl For when pkg-config isn't available -- or for when pkg-config
+dnl doesn't see the tre.pc file somehow... (#3982)
+AS_IF([test -z "$TRE_LIBS"],
+       [TRE_LIBS="../extras/regexp/lib/libtre.a"])
 AC_SUBST(TRE_LIBS)
 cd $cur_dir
 ],[

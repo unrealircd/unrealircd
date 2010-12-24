@@ -2252,3 +2252,6 @@
 - Fix invalid use of 'wc -l' when detecting the AsynchDNS feature of
   libcurl which breaks compilation on FreeBSD; instead use 'grep
   -q'. Reported by Jobe (#3981), solution proposed by satmd.
+- Fix bundled TRE compilation error on OpenBSD with pkg-config-0.21
+  where pkg-config can't find 'tre.pc'. Reported by CuleX. (#3982)
+  Also properly escape the sed expression used in the pkg-config call.

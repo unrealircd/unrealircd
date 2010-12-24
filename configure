@@ -6696,10 +6696,13 @@ $as_echo "installing TRE regex library" >&6; }
 $ac_cv_prog_MAKER install || exit 1
 TRE_CFLAGS="-I$cur_dir/extras/regexp/include"
 
-if test "x$ac_cv_path_PKGCONFIG" = "x" ; then
-		TRE_LIBS="../extras/regexp/lib/libtre.a"
-else
-				TRE_LIBS=`$ac_cv_path_PKGCONFIG --static --libs tre.pc | sed -e 's,-L\(^ \+lib\) -ltre,\1/libtre.a,'`
+
+TRE_LIBS=
+if test -n "$ac_cv_path_PKGCONFIG"; then :
+  TRE_LIBS="`$ac_cv_path_PKGCONFIG --static --libs tre.pc | sed 's,-L\([^ ]\+lib\) -ltre,\1/libtre.a,'`"
+fi
+if test -z "$TRE_LIBS"; then :
+  TRE_LIBS="../extras/regexp/lib/libtre.a"
 fi
 
 cd $cur_dir
