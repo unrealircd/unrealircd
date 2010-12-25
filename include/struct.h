@@ -724,7 +724,6 @@ struct Motd;
 struct MotdDownload
 {
 	struct Motd *themotd;
-	char url_filename[PATH_MAX+1]; /*< Where the downloaded file should be stored */
 };
 #endif /* USE_LIBCURL */
 

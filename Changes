@@ -2255,3 +2255,6 @@
 - Fix bundled TRE compilation error on OpenBSD with pkg-config-0.21
   where pkg-config can't find 'tre.pc'. Reported by CuleX. (#3982)
   Also properly escape the sed expression used in the pkg-config call.
+- Fix remote MOTDs for URLs whose path components contain
+  subdirectories, in the process much simplifying my remote MOTD
+  code. Reported by goldenwolf (#3986).

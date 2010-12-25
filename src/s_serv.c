@@ -1001,12 +1001,11 @@ void read_motd(const char *filename, aMotdFile *themotd)
 		motd_download->themotd = themotd;
 		themotd->motd_download = motd_download;
 
-		/* determine where to the MOTD should be stored after it's downloaded */
-		url_filename = url_getfilename(filename);
-		strlcpy(motd_download->url_filename, url_filename, sizeof(motd_download->url_filename));
-		motd_download->url_filename[PATH_MAX] = '\0';
-
-		modtime = unreal_getfilemodtime(url_filename);
+#ifdef REMOTEINC_SPECIALCACHE
+		modtime = unreal_getfilemodtime(unreal_mkcache(filename));
+#else
+		modtime = 0;
+#endif
 
 		MyFree(url_filename);
 
@@ -1033,6 +1032,8 @@ void read_motd_asynch_downloaded(const char *url, const char *filename, const ch
 {
 	aMotdFile *themotd;
 
+	char *tmpfile;
+
 	themotd = motd_download->themotd;
 	/*
 	  check if the download was soft-canceled. See struct.h's docs on
@@ -1050,10 +1051,8 @@ void read_motd_asynch_downloaded(const char *url, const char *filename, const ch
 #ifdef REMOTEINC_SPECIALCACHE
 		if(has_cached_version(url))
 		{
-			
-			config_warn("Error downloading MOTD file from \"%s\": %s", url, errorbuf);
-			filename = motd_download->url_filename;
-			unreal_copyfileex(unreal_mkcache(url), filename, 0);
+			config_warn("Error downloading MOTD file from \"%s\": %s -- using cached version instead.", url, errorbuf);
+			filename = unreal_mkcache(url);
 		} else {
 #endif
 			config_error("Error downloading MOTD file from \"%s\": %s", url, errorbuf);
@@ -1064,24 +1063,23 @@ void read_motd_asynch_downloaded(const char *url, const char *filename, const ch
 #endif
 	}
 
+#ifdef REMOTEINC_SPECIALCACHE
 	/*
-	  We need to move our newly downloaded file to the place specified
-	  by url_filename if it's not cached.
-	*/
+	 * We need to move our newly downloaded file to its cache file
+	 * if it isn't there already.
+	 */
 	if(!cached)
 	{
-		unreal_copyfileex(filename, motd_download->url_filename, 0);
-#ifdef REMOTEINC_SPECIALCACHE
 		/* create specialcached version for later */
 		unreal_copyfileex(filename, unreal_mkcache(url), 1);
-#endif
 	} else {
 		/*
-		  The file is cached. Thus we must look for it at
-		  motd_download->url_filename, where be placed it earlier.
+		 * The file is cached. Thus we must look for it at the
+		 * cache location where we placed it earlier.
 		 */
-		filename = motd_download->url_filename;
+		filename = unreal_mkcache(url);
 	}
+#endif
 
 	do_read_motd(filename, themotd);
 	MyFree(motd_download);
