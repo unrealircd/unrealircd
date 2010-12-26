@@ -32,7 +32,7 @@ Hungarian |
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com/">http://www.unrealircd.com</a></font><br>
   <font size="4">Verzió: 3.2.9-RC1</font><br>
-  <b>Utolsó dokumentáció frissítés:</b> 2010-05-17</div>
+  <b>Utolsó dokumentáció frissítés:</b> 2010-11-15</div>
 <br>
   <b>Fõ fejlesztõ/karbantartó:</b> Syzop<br>
   <b>Fejlesztõk:</b> binki<br>
@@ -90,9 +90,9 @@ Hungarian |
   ---4.16. <a href="#banserverblock">Ban server blokk -=-(q:Line)</a><br>
   ---4.17. <a href="#banrealnameblock">Ban realname blokk -=- (n:Line)</a><br>
   ---4.18. <a href="#banversionblock">Ban version blokk</a><br>
-  ---4.19. <a href="#banexceptionblock">Ban exception blokk -=- (E:Line)</a><br>
-  ---4.20. <a href="#tklexceptionblock">TKL exception blokk</a><br>
-  ---4.21. <a href="#throttleexceptionblock">Throttle exception blokk</a><br>
+  ---4.19. <a href="#banexceptionblock">Ban kivétel blokk -=- (E:Line)</a><br>
+  ---4.20. <a href="#tklexceptionblock">TKL kivétel blokk</a><br>
+  ---4.21. <a href="#throttleexceptionblock">Throttle kivétel blokk</a><br>
   ---4.22. <a href="#denydccblock">Deny DCC blokk -=- (dccdeny.conf)</a><br>
   ---4.23. <a href="#denyversionblock">Deny version blokk -=- (V:Line)</a><br>
   ---4.24. <a href="#denylinkblock">Deny link blokk -=- (D:Line / d:Line)</a><br>
@@ -124,6 +124,8 @@ Hungarian |
   ---8.8. <a href="#secantiexploit">Sebezhetõségek elleni védelem</a><br>
   ---8.9. <a href="#secsummary">Összegzés</a><br>
   9. <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">Gyakran ismételt kérdések (GYIK)</a><br />
+  10. <a href="#modules">Modulok</a><br />
+  ---10.1. <a href="#modules_m_nopost">m_nopost</a><br />
   A. <a href="#regex">Reguláris kifejezések</a><br>
   ---A.1. <a href="#regexlit">Konstansok</a><br>
   ---A.2. <a href="#regexdot">A pont operátor</a><br>
@@ -512,7 +514,7 @@ Az alábbi ban típusok új feltétel használatára adnak lehetõséget:<br>
 Halmozni is lehet az elsõ csoportbeli kiterjesztett banokat a második csoportbeliekkel, pl. a <i>+b ~q:~c:#lamers</i>
 elnémít minden olyan felhasználót, aki a #lamers csatornára lépett be.<br>
 <br>
-Bevezethetünk más kiterjesztett ban típusokat is modulok segítségével.<br>
+Modulokkal további kiterjesztett ban típusok is bevezethetõk.<br>
 </p></div>
 
 <p><font size="+2"><b>3.14 - A spamszûrõ</b></font><a name="feature_spamfilter"></a></p><div class="desc">
@@ -549,6 +551,9 @@ Bevezethetünk más kiterjesztett ban típusokat is modulok segítségével.<br>
 <tr><td>dccblock</td><td>megjelöli a felhasználót DCC blokkolásra (nem küldhet DCC-ket)</td></tr>
 <tr valign="top"><td>viruschan</td><td>lelépteti a felhasználót minden csatornáról, belépteti a <tt>set::spamfilter::virus-help-channel</tt> csatornára, letilt minden parancsot,
  kivéve a PONG-ot, az ADMIN-t és a <tt>set::spamfilter::virus-help-channel</tt> csatornára küldött üzeneteket/értesítéseket</td></tr>
+<tr><td>warn</td><td>értesítést küld az IRCOpoknak (spamszûrõ snomask), és
+ tájékoztatja a felhasználót, hogy az üzenetét lehallgatták. További lépéseket
+nem tesz, az üzenetet nem blokkolja.</td></tr>
 </table></td></tr>
    <tr valign="top"><td><b>[idõtartam]</b></td><td> A szûrõ által felvett *line-ok/shunok idõtartama, használj kötõjelet ('-') az alapértelmezéshez vagy a kihagyáshoz
    (pl.: ha a tevékenység = 'block')</td></tr>
@@ -1649,7 +1654,7 @@ ban version {
 };</pre>
 </p>
 <p></p></div>
-<p><font class="block_section">4.19 - </font><font class="block_name">Ban exceptions blokk</font>
+<p><font class="block_section">4.19 - </font><font class="block_name">Ban kivétel blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font> <font class="block_old">(Elõzõleg E:Line néven ismert)</font><a name="banexceptionblock"></a><div class="desc">
 </p>
 <p>Szintaktika:<br>
@@ -1657,17 +1662,19 @@ ban version {
 except ban {
 	mask &lt;hostmaszk&gt;;
 };</pre></p>
-<p>Az except ban blokkal határozhatod meg, mely user@host-ok bírálhatnak felül egy szélesebb maszkra
-  beállított kitiltást. Hasznos, ha egy internet-szolgáltató ki van tiltva, de
-  onnan bizonyos felhasználókat még mindig szeretnél kapcsolódni engedni. Az except::mask direktíva
+<p>Az except ban blokkal határozhatjuk meg, mely user@host-ok bírálhatnak felül egy szélesebb maszkra
+  beállított ban { } blokkot vagy KLINE/ZLINE kitiltást. Hasznos, ha egy internet-szolgáltató ki van tiltva, de
+  bizonyos felhasználók kapcsolódását még mindig szeretnénk onnan engedélyezni. Az except::mask direktíva
   a kapcsolódásra engedélyezett kliens user@host maszkját határozza meg.</p>
+<p>MEGJEGYZÉS: Ha egy hosztot teljesen fel akarunk menteni mindenfajta lehetséges ban alól
+  (kivéve a spamszûrõt), akkor szükségünk van 'except ban' és 'except tkl' blokkokra is.</p>
 <p>Példa:<br>
 <pre>
 except ban {
 	mask identnev@sajat.szolgaltatom.com;
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.20 - </font><font class="block_name">TKL exceptions blokk</font>
+<p><font class="block_section">4.20 - </font><font class="block_name">TKL kivétel blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font><a name="tklexceptionblock"></a><div class="desc">
 </p>
 <p>Szintaktika:<br>
@@ -1686,9 +1693,11 @@ except tkl {
   de még mindig szeretnéd, hogy onnan kapcsolódhassanak bizonyos felhasználók.
   Az except::mask direktíva a kapcsolódásra engedélyezett felhasználó user@host maszkja.
   Az except::type meghatározza, hogy milyen letiltást bírálhat felül a kliens. Érvényes típusok:
-  gline, gzline, qline, gqline és shun, amelyek kivételt képeznek a Gline-okra, globális Zline-okra,
-  Qline-okra, globális Qline-okra és shunokra. Ha a type {} formátumot használod,
-  több típust is megadhatsz.</p>
+  gline, gzline, qline, gqline, shun és all, amelyek kivételt képeznek a Gline-okra,
+  globális Zline-okra, Qline-okra, globális Qline-okra, shunokra, valamint minden banra, kivéve
+  a KLINE/ZLINE-okat. Ha a type {} formátumot használjuk, több típust is megadhatunk.</p>
+<p>MEGJEGYZÉS: Ha egy hosztot fel akarunk menteni mindenfajta lehetséges ban alól
+  (kivéve a spamszûrõt), akkor szükségünk van 'except ban' és 'except tkl' blokkra is.</p>
 <p>Példa:<br>
 <pre>
 except tkl {
@@ -1696,7 +1705,7 @@ except tkl {
 	type gline;
 };</pre></p>
 <p></p></div>
-<p><font class="block_section">4.21 - </font><font class="block_name">Throttle Exceptions blokk</font>
+<p><font class="block_section">4.21 - </font><font class="block_name">Throttle kivétel blokk</font>
    <font class="block_optional">SZABADON VÁLASZTHATÓ</font> <a name="throttleexceptionblock"></a>
 </p><div class="desc">
 <p>Szintaktika:<br>
@@ -2488,6 +2497,9 @@ set {
   Engedélyezi a shunolt felhasználóknak a /part használatát.</p>
 <p><font class="set">set::options::fail-oper-warn;</font><br>
   Ha jelen van, a felhasználók értesülni fognak arról, hogy a sikertelen /oper-elési kísérletük naplózva lett.</p>
+<p><font class="set">set::options::allow-insane-bans;</font><br>
+  Engedélyt ad az olyan õrülten széles banokra is, mint a /GLINE *@*.xx. Ezzel nagyon könnyen elõfordulhat, hogy
+  véletlenül kitiltunk mindenkit a hálózatról, ezért csak nagyon óvatosan használjuk!</p>
 <p id="set_nopost_ban_action"><font class="set">set::nopost::ban-action</font> (igényli az <a href="#modules_m_nopost">m_nopost</a> modult)<br />
   Megmondja, mit tegyen az olyan felhasználókkal, akik HTTP POST parancsot próbálnak kiadni.
   Az engedélyezett értékek: kill, gline, gzline, kline, zline, shun és tempshun.
@@ -2882,6 +2894,15 @@ files {
   <tr> 
     <td><div align="center">z</div></td>
     <td>Csak titkos (SSL) kapcsolatú kliensek léphetnek be</td>
+  </tr>
+  <tr> 
+    <td><div align="center">Z</div></td>
+    <td>A szerver állítja be annak a jelzésére, hogy a csatornán lévõ felhasználók mindegyike titkosított (SSL)
+    kapcsolaton van. Csak akkor aktív, ha a +z is be van állítva. Az ULine-okat (pl.: BotServ) figyelmen kívül
+    hagyja a "nem biztonságos felhasználók" számlálásakor. Az továbbra is a szerver
+    adminokra van bízva, hogy biztonságos, szerverek közötti kapcsolatokat hozzanak létre (amit
+    SSL segítségével tehetnek meg, vagy akár VPN-nel, loopback interfésszel, kvantum-titkosítással stb.),
+    az IRCd maga nem fogja, ill. nem tudja detektálni ezt.</td>
   </tr>
 </table>
 <p>&nbsp;</p>
@@ -3320,7 +3341,8 @@ további információt kapj.</p>
   <tr>
     <td height="39">rehash &lt;szerver&gt; &lt;flagek&gt;</td>
     <td>Újratölti a szerver beállításfájlját. Szervernév megadásával távoli szerverek
-      beállításait töltheted újra. Néhány flag is rendelkezésre áll. Ezek
+      beállításait tölthetjük újra, ill. a -global flaggel a hálózat minden szerverén
+      elvégezhetjük az újratöltést (mindkettõre csak NetAdminok jogosultak). Néhány további flag is rendelkezésre áll. Ezek
       a következõk:<br>
       -dns - Újrainicializálja és újratölti a névfeloldót<br>
       -motd - Csak az összes MOTD, BOTMOTD, OPERMOTD és RULES fájlt töltse újra (beleértve a  tld{} blokkbelieket is)<br>
