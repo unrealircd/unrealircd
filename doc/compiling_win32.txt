@@ -1,13 +1,15 @@
 ==[ GENERAL GUIDELINES ]==
 First of all you need Microsoft Visual C++ (see below), compiling with
-cygwin is not supported (nor is there any good reason to do so).
+cygwin is not supported.
 
 Compatible compilers:
-cygwin      NOT supported. Will not work. Should be no reason to use this anyway.
+cygwin      NOT supported. Will not work. Should be no reason to use this anyway
+            as cygwin is an emulation layer. It's obviously much better to run
+            native (Windows) code on Windows.
 msvc  6.x   Microsoft Visual Studio 6 does not work, this compiler is too old.
-msvc  7.x   Microsoft Visual Studio 7.x (.NET) will work just fine
-msvc  8.x   Microsoft Visual Studio 8.x (.NET 2005), including the free kit,
-            should work fine (since Unreal3.2.5).
+msvc  7.x   Microsoft Visual Studio 7.x (.NET), works.
+msvc  8.x   Microsoft Visual Studio 8.x (.NET 2005), including the free kit, works.
+msvc  9.x   Microsoft Visual Studio 9.x (.NET 2008), is used for official compile.
 mssdk       Microsoft Windows SDK for Windows 7
 
 If you don't have the paid version of Microsoft Visual Studio 7.x, then you can
@@ -21,69 +23,70 @@ use the FREE development kit available for Windows 7 explained below:
    Start Menu under Microsoft Windows SDK v7.0). Users on x64 environment will have
    to change their environment to x86 by typing 'SETENV /x86'.    
 
-== Simple compile (no SSL/ZIP/Remote includes) ==
-1. Start the Visual Studio .NET Command Prompt
-2. Go to your UnrealIRCd dir (like: cd \dev\unreal3.2) and then compile with:
-   nmake -f makefile.win32
-   This will generate a wircd.exe and unreal.exe
-3. Copy the src\win32\tre.dll to your UnrealIRCd main dir.
-4. Done!
+==[ EXTERNAL LIBRARIES ]==
+Fetch the external libraries (c-ares, tre, openssl, zlib, curl) from:
+http://www.vulnscan.org/unrealwin32dev/
 
-== Compiling modules ==
+==[ COMPILING ]==
+1. Start the Visual Studio .NET Command Prompt
+2. Go to your UnrealIRCd dir (like: cd \dev\unreal3.2)
+3. Have a look at 'makefile.win32' to look at what parameters you need to
+   use, this depends on what libraries you want to link in and their location.
+4. Two options, use either one (B is preferred):
+   A. Edit makefile.win32 directly to reflect your configuration and run
+      'nmake -f makefile.win32'
+   B. Don't edit makefile.win32 but instead create a one-line command (which
+      you can put in a batch file), like this (all on one line!):
+      nmake -f makefile.win32 USE_ZIPLINKS=1 ZLIB_INC_DIR="c:\dev\zlib"
+      ZLIB_LIB_DIR="c:\dev\zlib\dll32" USE_SSL=1
+      OPENSSL_INC_DIR="c:\openssl\include" OPENSSL_LIB_DIR="c:\openssl\lib"
+      USE_REMOTEINC=1 LIBCURL_INC_DIR="c:\dev\curl-ssl\include"
+      LIBCURL_LIB_DIR="c:\dev\curl-ssl\lib\dll-release"
+      CARES_LIB_DIR="C:\dev\c-ares\vc\cares\dll-release"
+      CARES_INC_DIR="C:\dev\c-ares" CARESLIB="cares.lib"
+      TRE_LIB_DIR="C:\dev\tre\win32\release" TRE_INC_DIR="C:\dev\tre"
+      TRELIB="tre.lib"
+5. Your compile is now done, you can package unreal if you have InnoSetup,
+   in that case check out src\win32\unrealinst.iss
+   Otherwise, manually copy over the necessary files (and the dll files
+   from the external libraries).
+
+==[ Compiling modules ]==
 1. Put your module (the .c file) in src\modules (eg: c:\dev\unreal3.2\src\modules).
 2. Start the Visual Studio .NET Command Prompt
 3. Go to your UnrealIRCd dir (like: cd \dev\unreal3.2).
 4. Compile the module with:
-   nmake -f makefile.win32 custommodule MODULEFILE=<name>
+   nmake -f makefile.win32 <YOUR OPTIONS> custommodule MODULEFILE=<name>
    <name> is the name of the module WITHOUT the .c suffix, so if your
    module has the filename 'm_crappymod.c', then you use:
-   nmake -f makefile.win32 custommodule MODULEFILE=m_crappymod
+   nmake -f makefile.win32 <YOUR OPTIONS> custommodule MODULEFILE=m_crappymod
+   Note that <YOUR OPTIONS> is the whole lot of options explained in
+   previous section under 4B. If you use method 4A then there aren't any.
+   Note 2: If you get any symbol file errors, see the section 'SYMBOL FILES'
 5. Done. A .dll file should have been created.
 
-If you compiled with VC7 and used the official source (not a CVS version,
-but for example 3.2.1 source) then the module should work on all these
-versions (binary compatible) and you could for example put them on
-your website so users can download them.
-Such a module will work on both SSL and non-SSL, there should be no need
-for separate versions... unless, of course, you use SSL-specific code in your
-mod.
-DO NOT download a CVS version & compile your mod and then start
-distributing the .dll for use at another (non-CVS) version!!
-Every time we change a struct (and in some other cases) it makes the
-binary/module binary incompatible which practically means that your module
-might seem to work fine at first (or not..) but will CRASH or cause memory
-corruption and other subtle errors.
+If you compiled with the same Visual Studio version that we use to compile
+the official UnrealIRCd version, and use the same Unreal3.2.X.tar.gz as the
+official version (and not CVS!), then your module is fully binary compatible
+and you can put it on your website (or ours) so users can use them.
+If you do anything else, this won't work.
+So, again, it will NOT work properly, if:
+1. You use a different UnrealIRCd source (like CVS, or a previous version).
+2. You use another compiler... this might still work but may require an
+   additional .DLL file to be put in your UnrealIRCd directory (MSVxxxxxx.DLL).
+3. You compile with different options, such as compiling with SSL but trying
+   to load the module on non-SSL.
+   NOTE: unless your module uses SSL-specific code, you should compile
+         without SSL as it will run on both SSL and non-SSL UnrealIRCd's.
 
-== COMPILING WITH ZIP LINKS / SSL / REMOTE INCLUDES SUPPORT ==
-First of all, DO NOT use any precompiled libs from the official
-zlib/openssl/curl sites. We require certain compile parameters.
-Versions downloaded from such sites will often CRASH.
-
-The easiest is to download the UnrealIRCd development package
-which contains zlib, openssl and curl precompiled for you.
-See: www.vulnscan.org/unrealwin32dev/
-
-Just extract it somewhere (eg: to c:\dev).
-Then, use compile flags to enable the features + specify where to look.
-Here are examples if you used c:\dev:
-ZIP: nmake -f makefile.win32 USE_ZIPLINKS=1 ZLIB_INC_DIR="c:\dev\zlib" ZLIB_LIB_DIR="c:\dev\zlib\dll32"
-SSL: nmake -f makefile.win32 USE_SSL=1 OPENSSL_INC_DIR="c:\dev\openssl\include" OPENSSL_LIB_DIR="c:\dev\openssl\lib" 
-CURL: nmake -f makefile.win32 USE_REMOTEINC=1 LIBCURL_INC_DIR="c:\dev\curl\include" LIBCURL_LIB_DIR="c:\dev\curl\lib"
-
-Obviously you can (and probably will) combine all these options, like
-to build a zip+ssl+curl version (all in 1 line):
-nmake -f makefile.win32 USE_ZIPLINKS=1 ZLIB_INC_DIR="c:\dev\zlib" ZLIB_LIB_DIR="c:\dev\zlib\dll32"
-USE_SSL=1 OPENSSL_INC_DIR="c:\dev\openssl\include" OPENSSL_LIB_DIR="c:\dev\openssl\lib" USE_REMOTEINC=1
-LIBCURL_INC_DIR="c:\dev\curl\include" LIBCURL_LIB_DIR="c:\dev\curl\lib"
-
-== SYMBOL FILES ==
+==[ SYMBOL FILES ]==
 If you get something like this:
 
   Creating library L_COMMANDS.lib and object L_COMMANDS.exp
 M_OPER.obj : error LNK2019: unresolved external symbol _sendto_snomask_global re
 ferenced in function _m_oper
 
-(note: the exact name of the symbol will vary)
+(note: the exact name of the symbol will vary!)
 
 Then you will have to rebuild the wircd.def symbol file. You do this by
 downloading http://www.vulnscan.org/tmp/dlltool.exe and putting the file somewhere
@@ -96,8 +99,7 @@ nmake -f makefile.win32 [your other options here]
 So basically you just run 'nmake -f makefile.win32 SYMBOLFILE' and then restart
 compiling again.
 
-== COMPILING ZLIB/SSL/CURL YOURSELF ==
+==[ COMPILING ZLIB/SSL/CURL YOURSELF ]==
 This is off-topic and not explained here.
 Again, use the stuff from the win32 development pack unless you have a good
-reason to do otherwise (in which case we might not support your self-compiled version
-because we work with specific versions / compile options).
+reason to do otherwise.

@@ -2260,3 +2260,4 @@
   code. Reported by goldenwolf (#3986).
 - Windows installer: if an SSL certificate already exists, then don't check
   the 'create SSL certificate' by default. Patch from goldenwolf (#3965).
+- Update doc/compiling_win32.txt a bit (#3975).
