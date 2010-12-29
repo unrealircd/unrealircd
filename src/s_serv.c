@@ -259,6 +259,7 @@ char *unrealinfo[] =
 	"",
 	"Head coder:",
 	"* Syzop        <syzop@unrealircd.com>",
+	"",
 	"Coders:",
 	"* binki        <binki@unrealircd.com>",
 	"",
