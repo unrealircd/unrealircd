@@ -2258,3 +2258,5 @@
 - Fix remote MOTDs for URLs whose path components contain
   subdirectories, in the process much simplifying my remote MOTD
   code. Reported by goldenwolf (#3986).
+- Windows installer: if an SSL certificate already exists, then don't check
+  the 'create SSL certificate' by default. Patch from goldenwolf (#3965).

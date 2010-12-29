@@ -30,6 +30,7 @@ SolidCompression=true
 MinVersion=4.0.1111,4.0.1381
 OutputDir=../../
 
+; !!! Make sure to update SSL validation (WizardForm.TasksList.Checked[9]) if tasks are added/removed !!!
 [Tasks]
 Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"
 Name: "quicklaunchicon"; Description: "Create a &Quick Launch icon"; GroupDescription: "Additional icons:"; Flags: unchecked
@@ -290,6 +291,21 @@ if CurStep = ssPostInstall then
   end;
 end;
 
+//*********************************************************************************
+// Checks if ssl cert file exists
+//*********************************************************************************
+
+#ifdef USE_SSL
+procedure CurPageChanged(CurPage: Integer);
+begin
+  if (CurPage = wpSelectTasks)then begin
+     if not FileExists(ExpandConstant('{app}\server.cert.pem')) then begin
+        WizardForm.TasksList.Checked[9]:=true;
+    end;
+  end;
+end;
+#endif
+
 [Icons]
 Name: "{group}\UnrealIRCd"; Filename: "{app}\wircd.exe"; WorkingDir: "{app}"
 Name: "{group}\Uninstall UnrealIRCd"; Filename: "{uninstallexe}"; WorkingDir: "{app}"
@@ -317,4 +333,3 @@ Filename: "{app}\encpem.bat"; WorkingDir: "{app}"; Tasks: enccert; Flags: postin
 
 [UninstallRun]
 Filename: "{app}\unreal.exe"; Parameters: "uninstall"; Flags: runminimized; RunOnceID: "DelService"; Tasks: installservice
-
