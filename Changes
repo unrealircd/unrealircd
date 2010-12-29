@@ -2262,3 +2262,4 @@
   the 'create SSL certificate' by default. Patch from goldenwolf (#3965).
 - Update doc/compiling_win32.txt a bit (#3975).
 - Updated credits a bit (#3980).
+- Fix set::ssl::options::no-starttls not being recognized.
