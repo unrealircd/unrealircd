@@ -2263,3 +2263,5 @@
 - Update doc/compiling_win32.txt a bit (#3975).
 - Updated credits a bit (#3980).
 - Fix set::ssl::options::no-starttls not being recognized.
+- Fix pointer handling in remote MOTD code, fixing a crash on REHASH
+  reported by goldenwolf (#3992).

@@ -983,14 +983,21 @@ void read_motd(const char *filename, aMotdFile *themotd)
 #ifdef USE_LIBCURL
 	time_t modtime;
 	aMotdDownload *motd_download;
-	char *url_filename;
 #endif
 
 	/* TODO: if themotd points to a tld's motd,
 	   could a rehash disrupt this pointer?*/
 #ifdef USE_LIBCURL
 	if(themotd->motd_download)
+	{
 		themotd->motd_download->themotd = NULL;
+		/*
+		 * It is not our job to free() motd_download, the
+		 * read_motd_asynch_downloaded() function will do that
+		 * when it sees that ->themod == NULL.
+		 */
+		themotd->motd_download = NULL;
+	}
 
 	/* if filename is NULL, do_read_motd will catch it */
 	if(filename && url_is_valid(filename))
@@ -1007,8 +1014,6 @@ void read_motd(const char *filename, aMotdFile *themotd)
 #else
 		modtime = 0;
 #endif
-
-		MyFree(url_filename);
 
 		download_file_async(filename, modtime, (vFP)read_motd_asynch_downloaded, motd_download);
 		return;
@@ -1057,6 +1062,9 @@ void read_motd_asynch_downloaded(const char *url, const char *filename, const ch
 		} else {
 #endif
 			config_error("Error downloading MOTD file from \"%s\": %s", url, errorbuf);
+
+			/* remove reference to this chunk of memory about to be freed. */
+			motd_download->themotd->motd_download = NULL;
 			MyFree(motd_download);
 			return;
 #ifdef REMOTEINC_SPECIALCACHE
