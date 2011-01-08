@@ -48,7 +48,7 @@
  */
 #define UNREAL_VERSION_TIME         201101
 
-#define UnrealProtocol 		2309
+#define UnrealProtocol 		2310
 #define PATCH1  		"3"
 #define PATCH2  		".2"
 #define PATCH3  		".9"

@@ -2265,3 +2265,6 @@
 - Fix set::ssl::options::no-starttls not being recognized.
 - Fix pointer handling in remote MOTD code, fixing a crash on REHASH
   reported by goldenwolf (#3992).
+- Bump server protocol version to 2310, due to the various changes and so
+  you can use deny link { } blocks if you want to deny older versions than
+  this release.
