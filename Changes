@@ -2268,3 +2268,4 @@
 - Bump server protocol version to 2310, due to the various changes and so
   you can use deny link { } blocks if you want to deny older versions than
   this release.
+- Fix documentation about channel mode +t and halfops, thanks warg (#4007).
