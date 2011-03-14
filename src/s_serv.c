@@ -1038,8 +1038,6 @@ void read_motd_asynch_downloaded(const char *url, const char *filename, const ch
 {
 	aMotdFile *themotd;
 
-	char *tmpfile;
-
 	themotd = motd_download->themotd;
 	/*
 	  check if the download was soft-canceled. See struct.h's docs on
