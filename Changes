@@ -2269,3 +2269,5 @@
   you can use deny link { } blocks if you want to deny older versions than
   this release.
 - Fix documentation about channel mode +t and halfops, thanks warg (#4007).
+- Fix empty/nonexistent short MOTD being shown instead of the full
+  MOTD on user registration. Thanks WakiMiko (#4011).

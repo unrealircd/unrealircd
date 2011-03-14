@@ -909,26 +909,24 @@ int short_motd(aClient *sptr)
        tld = Find_tld(sptr, userhost);
 
        /*
-	  Try different sources of short MOTDs, falling back to
-	  the long MOTD.
+	* Try different sources of short MOTDs, falling back to the
+	* long MOTD.
        */
-       themotd = NULL;
-       if (tld)
+       themotd = &smotd;
+       if (tld && tld->smotd.lines)
 	       themotd = &tld->smotd;
-       if (!themotd)
-	       themotd = &smotd;
 
        /* try long MOTDs */
-       if (!themotd)
+       if (!themotd->lines)
        {
 	       is_short = 0;
-	       if (tld)
+	       if (tld && tld->motd.lines)
 		       themotd = &tld->motd;
+	       else
+		       themotd = &motd;
        }
-       if (!themotd)
-	       themotd = &motd;
 
-       if (!themotd)
+       if (!themotd->lines)
        {
                sendto_one(sptr, err_str(ERR_NOMOTD), me.name, sptr->name);
                return 0;
