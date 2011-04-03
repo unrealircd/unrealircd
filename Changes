@@ -2271,3 +2271,6 @@
 - Fix documentation about channel mode +t and halfops, thanks warg (#4007).
 - Fix empty/nonexistent short MOTD being shown instead of the full
   MOTD on user registration. Thanks WakiMiko (#4011).
+- Module coders: Added HOOKTYPE_HANDSHAKE which is called before the client
+  handshake, IOTW: as soon as the connection is established. This can be used
+  to do things prior to accepting any commands, such as sending some text.

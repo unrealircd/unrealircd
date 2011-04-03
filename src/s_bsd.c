@@ -1374,6 +1374,8 @@ struct hostent *he;
 
 	acptr->status = STAT_UNKNOWN;
 
+	RunHook(HOOKTYPE_HANDSHAKE, acptr);
+
 	if (!DONT_RESOLVE)
 	{
 		if (SHOWCONNECTINFO && !acptr->serv && !IsServersOnlyListener(acptr->listener))
