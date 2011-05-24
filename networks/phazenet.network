@@ -1,0 +1,27 @@
+/*
+ * PhazeNet (irc.phazenet.com) Network Configuration File
+ * --------------------------------------------------
+ *  Added-at:     01 March 2001 02:00
+ *  Author: Lady_Rusty
+ *  Email: ladyrusty@phazenet.com
+ * -----------------------------------------
+ */
+
+set {
+        network-name            "PhazeNet";
+        default-server          "irc.phazenet.com";
+        services-server         "services.phazenet.com";
+        stats-server            "stats.phazenet.com";
+        help-channel            "#services";
+        hiddenhost-prefix       "PhazeNet";
+        prefix-quit             "Quit:";
+        hosts {
+                local           "locop.phazenet.com";
+                global          "oper.phazenet.com";
+                coadmin         "coadmin.phazenet.com";
+                admin           "admin.phazenet.com";
+                servicesadmin   "csop.phazenet.com";
+                netadmin        "netadmin.phazenet.com";
+                host-on-oper-up "on";
+        };
+};

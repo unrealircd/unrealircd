@@ -1,0 +1,27 @@
+/*
+ * Network Configuration File Template
+ * -----------------------------------------
+ *  Added-at:     August 2000
+ *  Author:       Anonymos
+ *  E-Mail:       Anonymos@Global-IRC.de
+ *  $Id$
+ */
+
+set {
+	network-name		"Global";
+	default-server		"IRC.Global-IRC.de";
+	services-server		"Service.Global-IRC.de";
+	stats-server		"Stats.Global-IRC.de";
+	help-channel		"#Global-IRC-World";
+	hiddenhost-prefix	"GL-IRC";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"Local-IRC-OP.Global-IRC.de";
+		global		"Global-IRC-OP.Global-IRC.de";
+		coadmin		"CoAdmin.Global-IRC.de";
+		admin		"ServerAdmin.Global-IRC.de";
+		servicesadmin	"ServiceAdmin.Global-IRC.de";
+		netadmin	"NetworkAdmin.Global-IRC.de";
+		host-on-oper-up	"on";
+	};
+};

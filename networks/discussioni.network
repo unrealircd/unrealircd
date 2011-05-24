@@ -1,0 +1,26 @@
+/*
+ * Discussioni.Org (IRC.Discussioni.Org) Network Configuration File
+ *
+ * Added-at:     17 January 2002 22:39
+ * Author: Jollino
+ * Email: jollino@discussioni.org
+ */
+
+set {
+	network-name "Discussioni.Org";
+	default-server "IRC.Discussioni.Org"; 
+	services-server "Services.Discussioni.Org";
+	stats-server "Stats.Discussioni.Org";
+	help-channel "#help";
+	hiddenhost-prefix "DISCUSSIONI";
+	hosts {
+		local "LocOp.Discussioni.Org";
+		global "Oper.Discussioni.Org";
+		coadmin "Co-Admin.Discussioni.Org";
+		admin "Admin.Discussioni.Org";
+		servicesadmin "ServOper.Discussioni.Org";
+		netadmin "NetAdmin.Discussioni.Org";
+		host-on-oper-up yes;
+	};
+};
+

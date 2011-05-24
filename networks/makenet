@@ -1,0 +1,250 @@
+#!/bin/sh
+
+# makenet v1.0 - generates a network file for UnrealIRCd
+#
+# you may freely use this file with any other program as
+# long as the credits remain intact
+#
+# (c) 2000 codemastr (Dominick Meglio) and the UnrealIRCd Team
+
+VERSION="2.2"
+DATE=`date "+%d %B %Y %H:%M"`
+FILE="mynet.network"
+EXISTS="y"
+NICK="MyNick"
+EMAIL="me@mynet.org"
+NETWORK="My IRC Network"
+DEFSERV="irc.mynet.org"
+SERVICES_NAME="services.mynet.org"
+OPER_HOST="oper.mynet.org"
+ADMIN_HOST="admin.mynet.org"
+LOCOP_HOST="locop.mynet.org"
+CSOP_HOST="csop.mynet.org"
+NETADMIN_HOST="netadmin.mynet.org"
+COADMIN_HOST="coadmin.mynet.org"
+HIDDEN_HOST="hide"
+NETDOMAIN="mynet.org"
+HELPCHAN="#help"
+STATS_SERVER="stats.mynet.org"
+INAH="1"
+SUBMIT="y"
+
+# Checking out how to specify not to make a new line with the current OS
+c=''
+n=''
+2>/dev/null
+if [ "`eval echo -n 'a'`" = "-n a" ]; then
+c='\c'
+else
+n='-n'
+fi
+
+clear
+echo "Welcome to the UnrealIRCd network file generator" 
+echo "If you need help to set the IRCd up,"
+echo "mail unreal-support@lists.sourceforge.net or ask"
+echo "at IRC: /server irc.ircsystems.net, /join #unrealircd"
+echo ""
+echo "For any sake, read Unreal.nfo and read doc/faq before asking"
+echo "questions"
+echo "[Enter to Begin]"
+read cc
+
+echo ""
+echo "What do you want your network file to be called?"
+echo $n "[$FILE] -> $c"
+read cc
+if [ ! -z $cc ]; then
+	FILE="$cc"
+fi
+
+if [ -f $FILE ]; then
+echo ""
+echo "$FILE already exists do you want to override it?"
+echo $n "[$EXISTS] -> $c"
+read cc
+if [ ! -z $cc ]; then
+	EXISTS="$cc"
+fi
+	case "$EXISTS" in
+	[Nn]*)
+		exit
+		;;
+	*)
+		;;
+	esac
+fi	
+
+echo ""
+echo "What is your IRC nickname?"
+echo $n "[$NICK] -> $c"
+read cc
+if [ ! -z $cc ]; then
+	NICK="$cc"
+fi
+
+echo ""
+echo "What is your email address?"
+echo $n "[$EMAIL] -> $c"
+read cc
+if [ ! -z $cc ]; then
+	EMAIL="$cc"
+fi
+
+echo ""
+echo "What is the name of your IRC network?"
+echo $n "[$NETWORK] -> $c"
+read cc
+if [ ! -z "$cc" ]; then
+	NETWORK="$cc"
+fi
+
+echo ""
+echo "What is the default server for your network?"
+echo $n "[$DEFSERV] -> $c"
+read cc
+if [ ! -z $cc ]; then
+	DEFSERV="$cc"
+fi
+
+echo ""
+echo "What is the name of your services server?"
+echo $n "[$SERVICES_NAME] -> $c"
+read cc
+if [ ! -z $cc ]; then
+	SERVICES_NAME="$cc"
+fi
+
+echo ""
+echo "What is the virtual host opers will get when they oper up?"
+echo $n "[$OPER_HOST] -> $c"
+read cc
+if [ ! -z $cc ]; then
+	OPER_HOST="$cc"
+fi
+
+echo ""
+echo "What is the virtual host services opers will get when they oper up?"
+echo $n "[$CSOP_HOST] -> $c"
+read cc
+if [ ! -z $cc ]; then
+	CSOP_HOST="$cc"
+fi
+
+echo ""
+echo "What is the virtual host admins will get when they oper up?"
+echo $n "[$ADMIN_HOST] -> $c"
+read cc
+if [ ! -z $cc ]; then
+	ADMIN_HOST="$cc"
+fi
+
+echo ""
+echo "What is the virtual host local opers will get when they oper up?"
+echo $n "[$LOCOP_HOST] -> $c"
+read cc
+if [ ! -z $cc ]; then
+	LOCOP_HOST="$cc"
+fi
+
+echo ""
+echo "What is the virtual host coadmins will get when they oper up?"
+echo $n "[$COADMIN_HOST] -> $c"
+read cc
+if [ ! -z $cc ]; then
+	COADMIN_HOST="$cc"
+fi
+
+echo ""
+echo "What is the virtual host netadmins will get when they oper up?"
+echo $n "[$NETADMIN_HOST] -> $c"
+read cc
+if [ ! -z $cc ]; then
+	NETADMIN_HOST="$cc"
+fi
+
+echo ""
+echo "What do you want the prefix for the hidden hosts to be?"
+echo $n "[$HIDDEN_HOST] -> $c"
+read cc
+if [ ! -z $cc ]; then
+	HIDDEN_HOST="$cc"
+fi
+
+echo ""
+echo "What is your network's domain name?" 
+echo $n "[$NETDOMAIN] -> $c"
+read cc
+if [ ! -z $cc ]; then
+	NETDOMAIN="$cc"
+fi
+
+echo ""
+echo "What is your network's help channel?"
+echo $n "[$HELPCHAN] -> $c"
+read cc
+if [ ! -z $cc ]; then
+	HELPCHAN="$cc"
+fi
+
+echo ""
+echo "What is the name of your stats server?"
+echo $n "[$STATS_SERVER] -> $c"
+read cc
+if [ ! -z $cc ]; then
+	STATS_SERVER="$cc"
+fi
+
+echo ""
+echo "Do you want oper's hosts to be changed on /oper?"
+echo "1 = yes 0 = no"
+echo $n "[$INAH] -> $c"
+read cc
+if [ ! -z $cc ]; then
+	INAH="$cc"
+fi
+
+# write the actual conf
+
+cat > $FILE << __EOF__
+/*
+ * $NETWORK ($DEFSERV) Network Configuration File
+ *
+ * Added-at:     $DATE
+ * Author:	 $NICK
+ * Email:	 $EMAIL
+ */
+
+set {
+	network-name 		"$NETWORK";
+	default-server 		"$DEFSERV";	
+	services-server 	"$SERVICES_NAME";
+	stats-server 		"$STATS_SERVER";
+	help-channel 		"$HELPCHAN";
+	hiddenhost-prefix	"$HIDDEN_HOST";
+	hosts {
+		local		"$LOCOP_HOST";
+		global		"$OPER_HOST";
+		coadmin		"$COADMIN_HOST";
+		admin		"$ADMIN_HOST";
+		servicesadmin	"$CSOP_HOST";
+		netadmin	"$NETADMIN_HOST";
+__EOF__
+if [ "$INAH" = "1" ]; then
+	echo "		host-on-oper-up	yes;" >> $FILE
+fi
+if [ "$INAH" = "0" ]; then
+	echo "          host-on-oper-up	no;" >> $FILE
+fi
+echo "	};" >> $FILE		
+echo "};" >> $FILE
+__EOF__
+
+echo ""
+echo "" >> ../unrealircd.conf
+echo "// Added by makenet $DATE" >> ../unrealircd.conf
+echo "include \"networks/$FILE\";" >> ../unrealircd.conf
+echo "All done. I have added \"include \"networks/$FILE\"; to your unrealircd.conf"
+echo "You might want to edit it if you have done makenet before"
+echo "Thank you for choosing UnrealIRCd"
+exit

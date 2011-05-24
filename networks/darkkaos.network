@@ -1,0 +1,26 @@
+/*
+ * Dark Kaos Network (irc.darkkaos.net) Network Configuration File
+ *
+ * Added-at:     04 February 2002 03:15
+ * Author: ka0t1c_m4n
+ * Email: drk_kaos@yahoo.com
+ */
+
+set {
+	network-name "Dark Kaos Network";
+	default-server "irc.darkkaos.net"; 
+	services-server "services.darkkaos.net";
+	stats-server "stats.darkkaos.net";
+	help-channel "#help";
+	hiddenhost-prefix "hide";
+	hosts {
+		local "localop.darkkaos.net";
+		global "would.u.like.to.be.me.com";
+		coadmin "ircop.darkkaos.net";
+		admin "i.hate.terr.oists.net";
+		servicesadmin "Csop.darkkaos.net";
+		netadmin "netadmin.darkkaos.net";
+		host-on-oper-up yes;
+	};
+};
+

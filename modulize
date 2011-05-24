@@ -1,0 +1,31 @@
+#!/bin/sh
+#
+# Syntax:
+# ./modulize m_template.c TOKEN cmd MAXPARA CMDFILE outfile.name(curdir)
+#
+# cmd = LOWERCASE!!
+#
+#
+#
+
+
+UCOMMAND=`echo $3 |tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
+cp $1 $1.tmp
+sed "s/%TOKEN%/$2/g" $1.tmp >$1.tmp.1
+mv $1.tmp.1 $1.tmp
+sed "s/%COMMAND%/$3/g" $1.tmp >$1.tmp.1
+mv $1.tmp.1 $1.tmp
+sed "s/%UCOMMAND%/$UCOMMAND/g" $1.tmp >$1.tmp.1
+mv $1.tmp.1 $1.tmp
+sed "s/%MAXPARA%/$4/g" $1.tmp >$1.tmp.1
+mv $1.tmp.1 $1.tmp
+sed "s/%FILE%/$6/g" $1.tmp >$1.tmp.1
+mv $1.tmp.1 $1.tmp
+sed "s/%DESC%/$7/g" $1.tmp >$1.tmp.1
+mv $1.tmp.1 $1.tmp
+cat >> $1.tmp << __EOF__
+`cat $5`
+__EOF__
+
+mv $1.tmp $6
+

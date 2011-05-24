@@ -1,0 +1,180 @@
+Numeric 005 Documentation
+(c) 2002-2005 codemastr (Dominick Meglio) [codemastr@unrealircd.com]
+(c) 2005-2009 syzop (Bram Matthys) [syzop@vulnscan.org]
+
+Numeric 005 allows the server to inform the client of any protocol specific features in the
+IRCd.  The numeric is sent at connection time immediately after numeric 004. Additionally
+the numeric is sent when a /version request is made by a local user, for remote users
+numeric 105 is used but contains the same information.
+
+Due to the limit imposed by RFC1459 on both the buffer size (512) and the amount of
+parameters that can be sent in a single command (15) a total of 13 parameters may be
+specified in each 005. Because of this, a client must be able to accept multiple 005s
+consecutively. The format for the 005 message is as follows:
+
+":" <servername> "005" SPACE <nickname> SPACE <token[=value]> SPACE ... ":are supported
+by this server"
+
+Currently UnrealIRCd supports several tokens that are included in numeric 005. A list of
+all tokens, their respective value and a brief description are listed below.
+
+Unreal attempts to follow the proposed ISupport standard as much as possible. Unreal only
+ignores the standard in one regard, the TARGMAX token. This token is believed to be 
+impractical and technically impossible to correctly implement due to existing limitations
+in the standard. Therefore, this token is not currently supported. 
+
+Unreal does additionally provide a few tokens which are not specified in the standard, these
+include: HCN, AWAYLEN, WATCH, SILENCE, EXTBAN, ELIST, CMDS, NAMESX, UHNAMES, and WATCHOPTS.
+Unreal also maintains a few legacy tokens such as MAXCHANNELS and WALLCHOPS to ensure
+compatibility until the ISupport standard is more widely accepted by clients.
+
+Token         Value           Default Value                Description
+------------------------------------------------------------------------------------------------
+MAP           none            none                         Informs the client that the /map 
+                                                           command is present. [Obsolete]
+
+KNOCK         none            none                         Informs the client that the /knock
+                                                           command is present. [Obsolete]
+
+SAFELIST      none            none                         The LIST command is sent in 
+                                                           multiple iterations so that the
+                                                           client's queue does not get filled
+                                                           causing the user to be killed.
+
+HCN           none            none                         The server supports the HCN
+                                                           (Hybrid Connect Notice) protocol.
+
+MAXCHANNELS   number          10                           The maximum number of channels a
+                                                           user may join. [Deprecated]
+
+MAXBANS       number          60                           The maximum number of bans that
+                                                           may be placed for a channel.
+                                                           [Obsolete]
+
+NICKLEN       number          30                           Maximum length of a user's
+                                                           nickname.
+
+TOPICLEN      number          307                          Maximum length of a channel's
+                                                           topic.
+
+KICKLEN       number          307                          Maximum length of a kick reason.
+
+MAXTARGETS    number          20                           Maximum targets for the PRIVMSG
+                                                           command.
+
+AWAYLEN       number          307                          Maximum length of an away message.
+
+WALLCHOPS     none            none                         Indicates that you may use
+                                                           NOTICE/PRIVMSG to send to +ohv by
+                                                           using PRIVMSG/NOTICE [@|%|+]#channel.
+                                                           [Deprecated]
+ 
+WATCH         number          128                          Indicates the presence of the
+                                                           WATCH command and specifies the
+                                                           maximum number of watch entries.
+
+SILENCE       number          15                           Indicates the maximum number of
+                                                           entries on the silence list.
+
+MODES         number          13                           Indicates the number of channel
+                                                           modes with parameters that may be
+                                                           sent at one time.
+
+CHANTYPES     chars           #                            Indicates the prefixes available
+                                                           for channels.
+ 
+PREFIX        (modes)prefixes (qaohv)~&@%+                 Indicates the modes on a channel
+                                                           that corespond to the given
+                                                           nickname prefixes.
+
+CHANMODES     A,B,C,D         be,kfL,lj,                   Specifies how each channel mode is
+                              psmntirRcOAQKVHGCuzNSMT      set/unset. The A section specifies
+                                                           modes that add a nick/mask to a
+                                                           list. The B section specifies
+                                                           modes that require a parameter
+                                                           to be both set and unset. The C
+                                                           section specifies modes that
+                                                           only require a parameter to be
+                                                           set, and the D section
+                                                           specifies modes that require no
+                                                           parameters.
+
+NETWORK       string          no default value             Specifies the name of the
+                                                           network that the server is
+                                                           connected to.
+
+CASEMAPPING   string          ascii                        Specifies what definition the
+                                                           server uses when determining if
+                                                           characters are upper/lowercase
+                                                           of eachother.
+
+EXTBAN        prefix,types    ~,cqnr                       Specifies what extbans are
+                                                           supported by the server. The prefix
+                                                           defines which character indicates
+                                                           an extban and the types defines
+                                                           which extbans the server supports.
+
+ELIST         flags           MNUCT                        Specifies the set of extended LIST
+                                                           options supported. The M flag 
+                                                           indicates mask based searching,
+                                                           the N flag indicates negative
+                                                           mask based searching. The U flag
+                                                           means support for user count
+                                                           searching. The C flag allows channel
+                                                           creation time searching, and the T
+                                                           flag allows topic set time 
+                                                           searching.
+
+CMDS          commands        MAP,KNOCK,DCCALLOW,USERIP    Specifies a series of commands that
+                                                           can be useful for the client to know
+                                                           exist as they may provide a more
+                                                           efficient means for the client to
+                                                           accomplish a specific task. This
+                                                           token replaces the MAP and KNOCK
+                                                           tokens.
+
+STATUSMSG     flags           ~&@%+                        Specifies the mode flags that may
+                                                           prefix a channel name in a PRIVMSG
+                                                           or NOTICE to limit who receives the
+                                                           message to only those with a certain
+                                                           level of access. This token will
+                                                           replace the WALLCHOPS token.
+
+EXCEPTS       none            none                         Indicates that channel ban exceptions
+                                                           (+e) are supported by the server.
+
+INVEX         none            none                         Indicates that channel invite
+                                                           exceptions (+I) are supported by
+                                                           the server.
+
+MAXLIST       mode:num,...    b:60,e:60,I:60               Specifies the maximum number of 
+                                                           entries that may be added to a 
+                                                           particular mode list (type A modes).
+                                                           This token replaces MAXBANS.
+
+CHANLIMIT     pfx:num,...     #:10                         Specifies the maximum number of 
+                                                           channels with the specified prefix
+                                                           that a user may join at one time.
+                                                           This token will replace MAXCHANNELS.
+
+CHANNELLEN    number          32                           Provides the maximum length of a
+                                                           channel name that a user can create.
+
+NAMESX        none            none                         Indicates that extended /NAMES info
+                                                           is available on this server. If the
+                                                           client sends "PROTOCTL NAMESX" then
+                                                           the server will, from then on, send
+                                                           all channel rights in a NAMES reply
+                                                           instead of only the highest right
+                                                           (eg: @+Person instead of @Person).
+
+UHNAMES       none            none                         Indicates that (other) extended
+                                                           /NAMES info is available on the
+                                                           server. If the client sends
+                                                           "PROTOCTL UHNAMES" then the server
+                                                           will, from then on, send user@host
+                                                           information in a NAMES reply
+                                                           (eg: @nick!ident@hostname).
+
+WATCHOPTS     flags           A                            WATCH options supported. 'A' means
+                                                           Away Notification is available.

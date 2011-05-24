@@ -1,0 +1,4 @@
+clean:
+default:
+all:
+	echo "."

@@ -1,0 +1,23 @@
+/*
+ * AXEnet (irc.axenet.org) Network Configuration File
+ * --------------------------------------------------
+ */
+
+set {
+	network-name		"Axenet";
+	default-server		"irc.axenet.org";
+	services-server		"services.axenet.org";
+	stats-server		"stats.axenet.org";
+	help-channel		"#axenethelp";
+	hiddenhost-prefix	"axe";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"locop.axenet.org";
+		global		"ircop.axenet.org";
+		coadmin		"coadmin.axenet.org";
+		admin		"admin.axenet.org";
+		servicesadmin	"csop.axenet.org";
+		netadmin	"netadmin.axenet.org";
+		host-on-oper-up	"on";
+	};
+};

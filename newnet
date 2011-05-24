@@ -6,7 +6,7 @@
 	echo "| If you want your networks network file in the  "
 	echo "| next release please attach your network file   "
 	echo "| to an email and mail it to                     "
-	echo" |  unreal-networks@lists.sourceforge.net         "
+	echo "|  unreal-networks@lists.sourceforge.net         "
 	echo "|                                                "
 	echo "|=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= "
 	exit 1

@@ -1,5 +1,5 @@
 /*
- *   IRC - Internet Relay Chat, include/sys.h
+ *   Unreal Internet Relay Chat Daemon, include/sys.h
  *   Copyright (C) 1990 University of Oulu, Computing Center
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -21,16 +21,33 @@
 
 #ifndef	__sys_include__
 #define __sys_include__
+
+/* PATH_MAX */
+#include <limits.h>
+
+/* alloca stuff */
+#ifdef _WIN32
+# include <malloc.h>
+# define alloca _alloca
+#else /* _WIN32 */
+# ifdef HAVE_ALLOCA
+#  if defined(_AIX) && !defined(__GNUC__)
+    #pragma alloca
+#  endif /* _AIX */
+#  if defined(HAVE_ALLOCA_H)
+#   include <alloca.h>
+#  endif /* HAVE_ALLOCA_H */
+#  if defined(__GNUC__) && !defined(HAVE_ALLOCA_H) && !defined(alloca)
+#   define alloca __builtin_alloca
+#  endif /* __GNUC__ */
+# endif /* HAVE_ALLOCA */
+#endif /* !_WIN32 */
+
 #ifdef ISC202
 #include <net/errno.h>
 #else
-# ifndef _WIN32
-#include <sys/errno.h>
-# else
 #include <errno.h>
-# endif
 #endif
-
 #include "setup.h"
 #include <stdio.h>
 #include <sys/types.h>
@@ -46,7 +63,6 @@
 #ifdef	STDLIBH
 #include <stdlib.h>
 #endif
-
 #ifdef	STRINGSH
 #include <strings.h>
 #else
@@ -55,6 +71,27 @@
 # endif
 #endif
 
+/* get intptr_t if the system provides it -- otherwise, ./configure will define it for us */
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#else
+#ifdef HAVE_INTTYPES_H
+#include <inttypes.h>
+#endif /* HAVE_INTTYPES_H */
+#endif /* HAVE_STDINT_H */
+
+#ifdef SSL
+#include <openssl/ssl.h>
+#endif
+#ifdef INET6
+#include <netinet/in.h>
+#include <sys/socket.h>
+#endif
+#ifdef _WIN32
+#define _WIN32_WINNT 0x0501
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#endif
 #ifndef GOT_STRCASECMP
 #define	strcasecmp	mycmp
 #define	strncasecmp	myncmp
@@ -64,8 +101,8 @@
 #define   index   strchr
 #define   rindex  strrchr
 /*
-extern	char	*index PROTO((char *, char));
-extern	char	*rindex PROTO((char *, char));
+extern	char	*index(char *, char);
+extern	char	*rindex(char *, char);
 */
 #endif
 #ifdef NOBCOPY
@@ -85,25 +122,14 @@ extern	char	*rindex PROTO((char *, char));
 #else
 #include <sys/time.h>
 #endif
-
-#if !defined(DEBUGMODE)
-# ifndef _WIN32
-#  define MyFree(x)	if ((x) != NULL) free(x)
-# else
-#  define MyFree(x)       if ((x) != NULL) GlobalFree(x)
-# endif
-#else
-#define	free(x)		MyFree(x)
-#endif
-
 #ifdef NEXT
-#define VOIDSIG int	/* whether signal() returns int of void */
+#define VOIDSIG int		/* whether signal() returns int of void */
 #else
-#define VOIDSIG void	/* whether signal() returns int of void */
+#define VOIDSIG void		/* whether signal() returns int of void */
 #endif
 
-#ifdef SOL20
-#define OPT_TYPE char	/* opt type for get/setsockopt */
+#ifdef _SOLARIS
+#define OPT_TYPE char		/* opt type for get/setsockopt */
 #else
 #define OPT_TYPE void
 #endif
@@ -115,27 +141,157 @@ extern	char	*rindex PROTO((char *, char));
 #define dn_skipname  __dn_skipname
 #endif
 
-#ifndef _WIN32
-extern	VOIDSIG	dummy();
+/*
+ * Mac OS X Tiger Support (Intel Only)
+ */
+#if defined(macosx) || (defined(__APPLE__) && defined(__MACH__))
+#define OSXTIGER
 #endif
 
-#ifdef	DYNIXPTX
-#define	NO_U_TYPES
-typedef unsigned short n_short;         /* short as received from the net */
-typedef unsigned long   n_long;         /* long as received from the net */
-typedef unsigned long   n_time;         /* ms since 00:00 GMT, byte rev */
-#define _NETINET_IN_SYSTM_INCLUDED
+#ifndef _WIN32
+extern VOIDSIG dummy();
 #endif
 
 #ifdef	NO_U_TYPES
-typedef	unsigned char	u_char;
-typedef	unsigned short	u_short;
-typedef	unsigned long	u_long;
-typedef	unsigned int	u_int;
+typedef unsigned char u_char;
+typedef unsigned short u_short;
+typedef unsigned long u_long;
+typedef unsigned int u_int;
 #endif
 
 #ifdef _WIN32
-#define MYOSNAME "Win32"
+#define MYOSNAME OSName
+extern char OSName[256];
+#define PATH_MAX MAX_PATH
+#else
+#define MYOSNAME getosname()
+#endif
+#ifdef DEBUGMODE
+// #define ircsprintf sprintf
+//#define ircvsprintf vsprintf
+#endif
+
+#ifdef _WIN32
+typedef unsigned short u_int16_t;
+#endif
+
+/*
+ *  IPv4 or IPv6 structures?
+ */
+
+# define MYDUMMY_SIZE 128
+
+
+#ifdef INET6
+
+# define AND16(x) ((x)[0]&(x)[1]&(x)[2]&(x)[3]&(x)[4]&(x)[5]&(x)[6]&(x)[7]&(x)[8]&(x)[9]&(x)[10]&(x)[11]&(x)[12]&(x)[13]&(x)[14]&(x)[15])
+# define WHOSTENTP(x) ((x)[0]|(x)[1]|(x)[2]|(x)[3]|(x)[4]|(x)[5]|(x)[6]|(x)[7]|(x)[8]|(x)[9]|(x)[10]|(x)[11]|(x)[12]|(x)[13]|(x)[14]|(x)[15])
+
+# define	AFINET		AF_INET6
+# define	SOCKADDR_IN	sockaddr_in6
+# define	SOCKADDR	sockaddr
+# define	SIN_FAMILY	sin6_family
+# define	SIN_PORT	sin6_port
+# define	SIN_ADDR	sin6_addr
+# define	S_ADDR		s6_addr
+# define	IN_ADDR		in6_addr
+
+// # ifndef uint32_t
+//#  define uint32_t __u32
+// # endif
+
+char mydummy[MYDUMMY_SIZE];
+char mydummy2[MYDUMMY_SIZE];
+
+# if defined(linux) || defined(__NetBSD__) || defined(__FreeBSD__) || defined(bsdi)
+#  ifndef s6_laddr
+#   define s6_laddr        s6_addr32
+#  endif
+# endif
+
+# if defined(linux) && defined(NO_IN6ADDR_ANY)
+static const struct in6_addr in6addr_any = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0
+};
+
+# endif
+
+# define IRCDCONF_DELIMITER '%'
+
+#else
+# define	AFINET		AF_INET
+# define	SOCKADDR_IN	sockaddr_in
+# define	SOCKADDR	sockaddr
+# define	SIN_FAMILY	sin_family
+# define	SIN_PORT	sin_port
+# define	SIN_ADDR	sin_addr
+# define	S_ADDR		s_addr
+# define	IN_ADDR		in_addr
+
+# define WHOSTENTP(x) (x)
+# define IRCDCONF_DELIMITER ':'
+#endif
+
+/*
+ * Socket, File, and Error portability macros
+ */
+#ifndef _WIN32
+#define SET_ERRNO(x) errno = x
+#define READ_SOCK(fd, buf, len) read((fd), (buf), (len))
+#define WRITE_SOCK(fd, buf, len) write((fd), (buf), (len))
+#define CLOSE_SOCK(fd) close(fd)
+#define IOCTL(x, y, z) ioctl((x), (y), (z))
+#define ERRNO errno
+#define STRERROR(x) strerror(x)
+
+/* error constant portability */
+#define P_EMFILE        EMFILE
+#define P_ENOBUFS       ENOBUFS
+#define P_EWOULDBLOCK   EWOULDBLOCK
+#define P_EAGAIN        EAGAIN
+#define P_EINPROGRESS   EINPROGRESS
+#define P_EWORKING		EINPROGRESS
+#define P_EINTR         EINTR
+#define P_ETIMEDOUT     ETIMEDOUT
+#define P_ENOTSOCK	ENOTSOCK
+#define P_EIO		EIO
+#define P_ECONNABORTED	ECONNABORTED
+#define P_ECONNRESET	ECONNRESET
+#define P_ENOTCONN	ENOTCONN
+#define P_EMSGSIZE	EMSGSIZE
+#else
+/* WIN32 */
+
+#define NETDB_INTERNAL  -1  /* see errno */
+#define NETDB_SUCCESS   0   /* no problem */
+
+/* IO and Error portability macros */
+#define READ_SOCK(fd, buf, len) recv((fd), (buf), (len), 0)
+#define WRITE_SOCK(fd, buf, len) send((fd), (buf), (len), 0)
+#define CLOSE_SOCK(fd) closesocket(fd)
+#define IOCTL(x, y, z) ioctlsocket((x), (y), (z))
+#define ERRNO WSAGetLastError()
+#define STRERROR(x) sock_strerror(x)
+#define SET_ERRNO(x) WSASetLastError(x)
+/* Error constant portability */
+#define P_EMFILE        WSAEMFILE
+#define P_ENOBUFS       WSAENOBUFS
+#define P_EWOULDBLOCK   WSAEWOULDBLOCK
+#define P_EAGAIN        WSAEWOULDBLOCK
+#define P_EINPROGRESS   WSAEINPROGRESS
+#define P_EWORKING		WSAEWOULDBLOCK
+#define P_EINTR         WSAEINTR
+#define P_ETIMEDOUT     WSAETIMEDOUT
+#define P_ENOTSOCK	WSAENOTSOCK
+#define P_EIO		EIO
+#define P_ECONNABORTED	WSAECONNABORTED
+#define P_ECONNRESET	WSAECONNRESET
+#define P_ENOTCONN	WSAENOTCONN
+#define P_EMSGSIZE	WSAEMSGSIZE
+#endif
+
+#ifndef __GNUC__
+#define __attribute__(x) /* nothing */
 #endif
 
 #endif /* __sys_include__ */

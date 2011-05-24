@@ -21,6 +21,7 @@
 
 #ifndef __setup_include__
 #define __setup_include__
+
 #undef  PARAMH
 #undef  UNISTDH
 #define STRINGH
@@ -30,7 +31,6 @@
 #undef  SYSSYSLOGH
 #define NOINDEX
 #define NOBCOPY
-#define NEED_STRERROR
 #define NEED_STRTOKEN
 #undef  NEED_STRTOK
 #undef  NEED_INET_ADDR
@@ -43,7 +43,34 @@
 #undef  POSIX_SIGNALS
 #undef  TIMES_2
 #undef  GETRUSAGE_2
-
+#define HAVE_ALLOCA
+/* vc 2005 */
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+#	define HAVE_VSNPRINTF
+#	define HAVE_SNPRINTF
+#	define snprintf _snprintf
+#endif
+#define SPATH "."
+#define DPATH "."
 #define NO_U_TYPES
 #define NEED_U_INT32_T
+#define PREFIX_AQ
+#define LIST_SHOW_MODES
+
+#ifndef mode_t
+/*
+  Needed in s_conf.c for the third argument of open(3p).
+
+  Should be an int because of http://msdn.microsoft.com/en-us/library/z0kc8e3z(VS.71).aspx
+ */
+#define mode_t int
+#endif
+
+/*
+  make up for win32 (and win64?) users not being able to run ./configure.
+ */
+#ifndef intptr_t
+#define intptr_t long
+#endif
+
 #endif

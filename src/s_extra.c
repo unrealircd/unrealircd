@@ -1,6 +1,6 @@
-/************************************************************************
- *   IRC - Internet Relay Chat, s_extra.c
- *   (C) 1999 Carsten Munk (Techie/Stskeeps) <stskeeps@tspre.org>
+/*
+ *   Unreal Internet Relay Chat Daemon, src/s_extra.c
+ *   (C) 1999-2000 Carsten Munk (Techie/Stskeeps) <stskeeps@tspre.org>
  *
  *   See file AUTHORS in IRC package for additional names of
  *   the programmers. 
@@ -26,665 +26,305 @@
 #include "numeric.h"
 #include "msg.h"
 #include "channel.h"
-#include "userload.h"
 #include <time.h>
 #include <sys/stat.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-#ifndef _WIN32
-#include <utmp.h>
-#else
+#ifdef _WIN32
 #include <io.h>
 #endif
 #include <fcntl.h>
 #include "h.h"
+#include "proto.h"
 
-ID_CVS("$Id$");
 ID_Copyright("(C) Carsten Munk 1999");
 
-/*
-    fl->type = 
-       0     = set by dccconf.conf
-       1     = set by services
-       2     = set by ircops by /dccdeny
-*/
+/* e->flag.type2:
+ * CONF_BAN_TYPE_AKILL		banned by SVSFLINE ('global')
+ * CONF_BAN_TYPE_CONF		banned by conf
+ * CONF_BAN_TYPE_TEMPORARY	banned by /DCCDENY ('temporary')
+ * e->flag.type:
+ * DCCDENY_HARD				Fully denied
+ * DCCDENY_SOFT				Denied, but allowed to override via /DCCALLOW
+ */
 
-#define AllocCpy(x,y) x = (char *) MyMalloc(strlen(y) + 1); strcpy(x,y)
-#define IRCD_DCCDENY  "dccdeny.conf"
-#define IRCD_RESTRICT "chrestrict.conf"
-#define IRCD_VHOST    "vhost.conf"
-
-aFline *flines   = NULL;
-aCRline *crlines = NULL;
-aVhost *vhosts = NULL;
-aHush *hushes = NULL;
-
-char   *cannotjoin_msg = NULL;
-
-/* ircd.dcc configuration */
-
-aFline	*dcc_isforbidden(cptr,sptr,target,filename)
-aClient *cptr,*sptr,*target;
-char    *filename;
+/* checks if the dcc is blacklisted.
+ */
+ConfigItem_deny_dcc *dcc_isforbidden(aClient *sptr, char *filename)
 {
-	aFline *p;
-	
-	if (!flines || !target || !filename)
+ConfigItem_deny_dcc *d;
+ConfigItem_allow_dcc *a;
+
+	if (!conf_deny_dcc || !filename)
 		return NULL;
 
-	if (IsOper(sptr) || IsULine(cptr, sptr))
-		return NULL;
-
-	if (IsOper(target))
-		return NULL;
-	if (IsVictim(target))
+	for (d = conf_deny_dcc; d; d = (ConfigItem_deny_dcc *) d->next)
 	{
-		return NULL;
-	}	
-	for (p = flines; p; p = p->next) 
-	{
-		if (!match(p->mask, filename))
-			return p;
-	}
-
-	/* no target found */
-	return NULL;
-}
-
-int	dcc_add_fline(mask, reason, type)
-char *mask, *reason;
-int  type;
-{
-	aFline *fl;
-	
-	fl = (aFline *) MyMalloc(sizeof(aFline));
-	
-	AllocCpy(fl->mask, mask);
-	AllocCpy(fl->reason, reason);
-	fl->type = type;
-	fl->next = flines;
-	fl->prev = NULL;
-	if (flines)
-		flines->prev = fl;
-	flines = fl;
-}
-
-aFline     *dcc_del_fline(fl)
-aFline *fl;
-{
-	aFline *p, *q;
-        for (p = flines; p; p = p->next) {
-                if (p == fl)
-                {
-                        q = p->next;
-                        MyFree((char *) p->mask);
-                        MyFree((char *) p->reason);
-                        /* chain1 to chain3 */
-                        if (p->prev) {
-                                p->prev->next = p->next;
-                        }
-                          else
-                        {
-                                flines = p->next;
-                        }
-                        if (p->next) {
-                                p->next->prev = p->prev;
-                        }
-                        MyFree((aFline *) p);
-                        return q;
-                }
-        }
-        return NULL;
-}
-
-void	dcc_wipe_all(void)
-{
-	aFline *p,q;
-	
-	for (p = flines; p; p = p->next)
-	{
-		q.next = dcc_del_fline(p);
-		p = &q;
-	}
-}
-
-aFline	*dcc_find(mask)
-char *mask;
-{
-	aFline *p,q;
-	
-	for (p = flines; p; p = p->next)
-	{
-		if (!strcmp(p->mask, mask))
-			return(p);
-	}
-	return NULL;
-}
-
-void   dcc_rehash(void)
-{
-	aFline *p,q;
-	
-	for (p = flines; p; p = p->next)
-	{
-		if ((p->type == 0) || (p->type == 2))
+		if ((d->flag.type == DCCDENY_HARD) && !match(d->filename, filename))
 		{
-	                 q.next = dcc_del_fline(p);
-	           	 p = &q;
-		}
-	}
-	dcc_loadconf();
-}
-
-void   dcc_wipe_services(void)
-{
-	aFline *p,q;
-	
-	for (p = flines; p; p = p->next)
-	{
-		if ((p->type == 1))
-		{
-	                 q.next = dcc_del_fline(p);
-	           	 p = &q;
-		}
-	}
-}
-
-void	report_flines(sptr)
-aClient *sptr;
-{
-	aFline *tmp;
-	char	*filemask, *reason;
-	char	a;
-		
-	if (flines)
-	{
-	}
-	for (tmp = flines; tmp; tmp = tmp->next)
-	{
-		filemask = BadPtr(tmp->mask) ? "<NULL>" : tmp->mask;
-		reason  = BadPtr(tmp->reason) ? "<NULL>" : tmp->reason;
-		if (tmp->type == 0)
-			a = 'c';
-		if (tmp->type == 1)
-			a = 's';
-		if (tmp->type == 2)
-			a = 'o';
-		sendto_one(sptr, ":%s NOTICE %s :*** (dcc) [%c] %-22s %s", me.name, sptr->name, a, filemask, reason);
-	}
-	
-}
-
-/* 
-   dccdeny.conf
-   ------------
-# DMSetup trojan
-deny dmsetup.exe - Possible infected file. Please join #nohack for more information
-
-*/
-int	dcc_loadconf(void)
-{
-	char	buf[2048];
-	char	*x,*y,*z;
-	FILE	*f;	
-	
-	f = fopen(IRCD_DCCDENY, "r");
-	if (!f)
-		return -1;	
-		
-	while (fgets(buf, 2048,f))
-	{
-		iCstrip(buf);
-		x = strtok(buf, " ");
-		if (strcmp("deny", x)==0)
-		{
-			y = strtok(NULL, " ");
-			z = strtok(NULL, "");
-			if (!y || !x)
-				continue;
-			dcc_add_fline(y,z,0);
-		}
-	}
-	return 0; 
-}
-
-int     m_svsfline(cptr, sptr, parc, parv)
-aClient *cptr, *sptr;
-int parc;
-char *parv[];
-{
-	if (!IsULine(cptr,sptr))
-		return 0;
-	
-	if (parc < 2)
-		return 0;
-		
-	switch (*parv[1])
-	{
-		case '+': {
-				if (parc < 4)
-					return 0;  			
-				dcc_add_fline(parv[2], parv[3], 1);
-				sendto_serv_butone(cptr, ":%s SVSFLINE + %s :%s",
-			 		sptr->name, parv[2], parv[3]);
-			 	break;
-			}
-		case '-':
+			for (a = conf_allow_dcc; a; a = (ConfigItem_allow_dcc *) a->next)
 			{
-				if (parc < 3)
-					return 0;
-				dcc_del_fline(dcc_find(parv[2]));
-				sendto_serv_butone(cptr, ":%s SVSFLINE - %s",
-					sptr->name, parv[2]);
-				break;
+				if ((a->flag.type == DCCDENY_HARD) && !match(a->filename, filename))
+					return NULL;
 			}
-		case '*':
+			return d;
+		}
+	}
+
+	return NULL;
+}
+
+/* checks if the dcc is discouraged ('soft bans').
+ */
+ConfigItem_deny_dcc *dcc_isdiscouraged(aClient *sptr, char *filename)
+{
+ConfigItem_deny_dcc *d;
+ConfigItem_allow_dcc *a;
+
+	if (!conf_deny_dcc || !filename)
+		return NULL;
+
+	for (d = conf_deny_dcc; d; d = (ConfigItem_deny_dcc *) d->next)
+	{
+		if ((d->flag.type == DCCDENY_SOFT) && !match(d->filename, filename))
 		{
-			dcc_wipe_services();
-			sendto_serv_butone(cptr, ":%s SVSFLINE *", sptr->name);
+			for (a = conf_allow_dcc; a; a = (ConfigItem_allow_dcc *) a->next)
+			{
+				if ((a->flag.type == DCCDENY_SOFT) && !match(a->filename, filename))
+					return NULL;
+			}
+			return d;
+		}
+	}
+
+	return NULL;
+}
+
+void dcc_sync(aClient *sptr)
+{
+	ConfigItem_deny_dcc *p;
+	for (p = conf_deny_dcc; p; p = (ConfigItem_deny_dcc *) p->next)
+	{
+		if (p->flag.type2 == CONF_BAN_TYPE_AKILL)
+			sendto_one(sptr, ":%s %s + %s :%s", me.name,
+			    (IsToken(sptr) ? TOK_SVSFLINE : MSG_SVSFLINE),
+			    p->filename, p->reason);
+	}
+}
+
+void	DCCdeny_add(char *filename, char *reason, int type, int type2)
+{
+	ConfigItem_deny_dcc *deny = NULL;
+	
+	deny = (ConfigItem_deny_dcc *) MyMallocEx(sizeof(ConfigItem_deny_dcc));
+	deny->filename = strdup(filename);
+	deny->reason = strdup(reason);
+	deny->flag.type = type;
+	deny->flag.type2 = type2;
+	AddListItem(deny, conf_deny_dcc);
+}
+
+void	DCCdeny_del(ConfigItem_deny_dcc *deny)
+{
+	DelListItem(deny, conf_deny_dcc);
+	if (deny->filename)
+		MyFree(deny->filename);
+	if (deny->reason)
+		MyFree(deny->reason);
+	MyFree(deny);
+}
+
+void dcc_wipe_services(void)
+{
+	ConfigItem_deny_dcc *dconf, *next;
+	
+	for (dconf = conf_deny_dcc; dconf; dconf = (ConfigItem_deny_dcc *) next)
+	{
+		next = (ConfigItem_deny_dcc *)dconf->next;
+		if ((dconf->flag.type2 == CONF_BAN_TYPE_AKILL))
+		{
+			DelListItem(dconf, conf_deny_dcc);
+			if (dconf->filename)
+				MyFree(dconf->filename);
+			if (dconf->reason)
+				MyFree(dconf->reason);
+			MyFree(dconf);
+		}
+	}
+
+}
+
+/* The dccallow functions below are all taken from bahamut (1.8.1).
+ * Well, with some small modifications of course. -- Syzop
+ */
+int on_dccallow_list(aClient *to, aClient *from)
+{
+Link *lp;
+
+	for(lp = to->user->dccallow; lp; lp = lp->next)
+		if(lp->flags == DCC_LINK_ME && lp->value.cptr == from)
+			return 1;
+	return 0;
+}
+int add_dccallow(aClient *sptr, aClient *optr)
+{
+Link *lp;
+int cnt = 0;
+
+	for (lp = sptr->user->dccallow; lp; lp = lp->next)
+	{
+		if (lp->flags != DCC_LINK_ME)
+			continue;
+		cnt++;
+		if (lp->value.cptr == optr)
+			return 0;
+	}
+
+	if (cnt >= MAXDCCALLOW)
+	{
+		sendto_one(sptr, err_str(ERR_TOOMANYDCC), me.name, sptr->name,
+			optr->name, MAXDCCALLOW);
+		return 0;
+	}
+	
+	lp = make_link();
+	lp->value.cptr = optr;
+	lp->flags = DCC_LINK_ME;
+	lp->next = sptr->user->dccallow;
+	sptr->user->dccallow = lp;
+	
+	lp = make_link();
+	lp->value.cptr = sptr;
+	lp->flags = DCC_LINK_REMOTE;
+	lp->next = optr->user->dccallow;
+	optr->user->dccallow = lp;
+	
+	sendto_one(sptr, rpl_str(RPL_DCCSTATUS), me.name, sptr->name, optr->name, "added to");
+	return 0;
+}
+
+int del_dccallow(aClient *sptr, aClient *optr)
+{
+Link **lpp, *lp;
+int found = 0;
+
+	for (lpp = &(sptr->user->dccallow); *lpp; lpp=&((*lpp)->next))
+	{
+		if ((*lpp)->flags != DCC_LINK_ME)
+			continue;
+		if ((*lpp)->value.cptr == optr)
+		{
+			lp = *lpp;
+			*lpp = lp->next;
+			free_link(lp);
+			found++;
 			break;
 		}
-		
 	}
+	if (!found)
+	{
+		sendto_one(sptr, ":%s %d %s :%s is not in your DCC allow list",
+			me.name, RPL_DCCINFO, sptr->name, optr->name);
+		return 0;
+	}
+	
+	for (found = 0, lpp = &(optr->user->dccallow); *lpp; lpp=&((*lpp)->next))
+	{
+		if ((*lpp)->flags != DCC_LINK_REMOTE)
+			continue;
+		if ((*lpp)->value.cptr == sptr)
+		{
+			lp = *lpp;
+			*lpp = lp->next;
+			free_link(lp);
+			found++;
+			break;
+		}
+	}
+	if (!found)
+		sendto_realops("[BUG!] %s was in dccallowme list of %s but not in dccallowrem list!",
+			optr->name, sptr->name);
+
+	sendto_one(sptr, rpl_str(RPL_DCCSTATUS), me.name, sptr->name, optr->name, "removed from");
+
+	return 0;
 }
 
 /* restrict channel stuff */
 
- 
-int	channel_canjoin(sptr,name)
-aClient *sptr;
-char *name;
+int  channel_canjoin(aClient *sptr, char *name)
 {
-	aCRline *p;
-	
+	ConfigItem_deny_channel *p;
+
 	if (IsOper(sptr))
 		return 1;
-	if (IsULine(sptr,sptr))
-		return 1;	
-	if (!crlines)
+	if (IsULine(sptr))
 		return 1;
-	for (p = crlines; p; p = p->next)
+	if (!conf_deny_channel)
+		return 1;
+	p = Find_channel_allowed(name);
+	if (p)
 	{
-		if (!match(p->channel, name))
-			return 1;
-	}
-	return 0;
-}
-
-int	cr_add(channel, type)
-char *channel;
-int  type;
-{
-	aCRline *fl;
-	
-	fl = (aCRline *) MyMalloc(sizeof(aCRline));
-	
-	AllocCpy(fl->channel, channel);
-	fl->type = type;
-	fl->next = crlines;
-	fl->prev = NULL;
-	if (crlines)
-		crlines->prev = fl;
-	crlines = fl;
-}
-
-aCRline     *cr_del(fl)
-aCRline *fl;
-{
-	aCRline *p, *q;
-        for (p = crlines; p; p = p->next) {
-                if (p == fl)
-                {
-                        q = p->next;
-                        MyFree((char *) p->channel);
-                        /* chain1 to chain3 */
-                        if (p->prev) {
-                                p->prev->next = p->next;
-                        }
-                          else
-                        {
-                                crlines = p->next;
-                        }
-                        if (p->next) {
-                                p->next->prev = p->prev;
-                        }
-                        MyFree((aCRline *) p);
-                        return q;
-                }
-        }
-        return NULL;
-}
-
-/* 
-   chrestrict.conf
-   ------------
-allow #cafe
-allow #teens
-*/
-int	cr_loadconf(void)
-{
-	char	buf[2048];
-	char	*x,*y;
-	FILE	*f;	
-	
-	f = fopen(IRCD_RESTRICT, "r");
-	if (!f)
-		return -1;	
-		
-	while (fgets(buf, 2048,f))
-	{
-		iCstrip(buf);
-		x = strtok(buf, " ");
-		if (strcmp("allow", x)==0)
-		{
-			y = strtok(NULL, " ");
-			if (!y)
-				continue;
-			cr_add(y,0);
-		}
-		else
-		if (strcmp("msg", x)==0)
-		{
-			y = strtok(NULL, "");
-			if (!y)
-				continue;
-			if (cannotjoin_msg)
-				MyFree((char *) cannotjoin_msg);
-			cannotjoin_msg = MyMalloc(strlen(y) + 1);
-			strcpy(cannotjoin_msg, y);
-		}
-
-	}
-	return 0; 
-}
-
-void   cr_rehash(void)
-{
-	aCRline *p,q;
-	
-	for (p = crlines; p; p = p->next)
-	{
-		if ((p->type == 0) || (p->type == 2))
-		{
-	                 q.next = cr_del(p);
-	           	 p = &q;
-		}
-	}
-	cr_loadconf();
-}
-
-void	cr_report(sptr)
-aClient *sptr;
-{
-	aCRline *tmp;
-	char	*filemask, *reason;
-	char	a;
-		
-	if (crlines)
-	{
-	}
-	for (tmp = crlines; tmp; tmp = tmp->next)
-	{
-		filemask = BadPtr(tmp->channel) ? "<NULL>" : tmp->channel;
-		if (tmp->type == 0)
-			a = 'c';
-		if (tmp->type == 1)
-			a = 's';
-		if (tmp->type == 2)
-			a = 'o';
-		sendto_one(sptr, ":%s NOTICE %s :*** (allow) [%c] %s", me.name, sptr->name, a, filemask);
-	}
-	
-}
-
-/* vhost configuration (vhost.conf) 
-   vhost - login password vhost
-*/
-
-int	vhost_add(vhost, login, password, usermask, hostmask)
-char *vhost, *login, *password, *usermask, *hostmask;
-{
-	aVhost *fl;
-	
-	fl = (aVhost *) MyMalloc(sizeof(aVhost));
-	
-	AllocCpy(fl->virthost, vhost);
-	AllocCpy(fl->usermask, usermask);
-	AllocCpy(fl->hostmask, hostmask);
-	AllocCpy(fl->login, login);
-	AllocCpy(fl->password, password);
-	fl->next = vhosts;
-	fl->prev = NULL;
-	if (vhosts)
-		vhosts->prev = fl;
-	vhosts = fl;
-}
-
-aVhost     *vhost_del(fl)
-aVhost *fl;
-{
-	aVhost *p, *q;
-        for (p = vhosts; p; p = p->next) {
-                if (p == fl)
-                {
-                        q = p->next;
-			MyFree((char *) (fl->virthost));
-			MyFree((char *) (fl->usermask));
-			MyFree((char *) (fl->hostmask));
-			MyFree((char *) (fl->login));
-			MyFree((char *) (fl->password));
-                        /* chain1 to chain3 */
-                        if (p->prev) {
-                                p->prev->next = p->next;
-                        }
-                          else
-                        {
-                                vhosts = p->next;
-                        }
-                        if (p->next) {
-                                p->next->prev = p->prev;
-                        }
-                        MyFree((aVhost *) p);
-                        return q;
-                }
-        }
-        return NULL;
-}
-
-/* 
-  vhost.conf
-   ------------
-# vhost virtualhost username password mask
-
-vhost microsoft.com billgates ilovelinux *@*
-*/
-int	vhost_loadconf(void)
-{
-	char	buf[2048];
-	char	*x,*y, *login, *password, *mask, *usermask, *hostmask;
-	FILE	*f;	
-/* _not_ a failsafe routine .. */	
-	f = fopen(IRCD_VHOST, "r");
-	if (!f)
-		return -1;	
-		
-	while (fgets(buf, 2048,f))
-	{
-		iCstrip(buf);
-		x = strtok(buf, " ");
-		if (strcmp("vhost", x)==0)
-		{
-			y = strtok(NULL, " ");
-			if (!y)
-				continue;
-			login = strtok(NULL, " ");
-			password = strtok(NULL, " ");
-			mask = strtok(NULL, "");
-			usermask = strtok(mask, "@");
-			hostmask = strtok(NULL, " ");
-			vhost_add(y, login,password,usermask, hostmask);
-		}
-	}
-	return 0; 
-}
-
-void   vhost_rehash(void)
-{
-	aVhost *p,q;
-	
-	for (p = vhosts; p; p = p->next)
-	{
-	                 q.next = vhost_del(p);
-	           	 p = &q;
-	}
-	vhost_loadconf();
-}
-
-void	vhost_report(sptr)
-aClient *sptr;
-{
-	aVhost *tmp;
-	char	*filemask, *reason;
-	char	a;
-		
-	for (tmp = vhosts; tmp; tmp = tmp->next)
-	{
-		filemask = BadPtr(tmp->virthost) ? "<NULL>" : tmp->virthost;
-		a = 'V';
-		sendto_one(sptr, ":%s NOTICE %s :*** (vhost) [%c] %s %s (%s@%s)", me.name, sptr->name, a, filemask, tmp->login, tmp->usermask, tmp->hostmask);
-	}
-	
-}
-
-int     m_vhost(cptr, sptr, parc, parv)
-aClient *cptr, *sptr;
-int parc;
-char *parv[];
-{
-	aVhost *p;
-	char	*user, *pwd;
-	if (check_registered(sptr))
+		sendto_one(sptr, ":%s NOTICE %s :*** %s",
+			me.name, sptr->name, p->reason);
 		return 0;
-	
-	if (parc < 3)
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-			   me.name, parv[0], "VHOST");
-		return 0;
-
 	}
-	if (!MyClient(sptr))
-		return 0;
-		
-	user = parv[1];
-	pwd  = parv[2];
-	
-	for (p = vhosts; p; p = p->next)
-	{
-		if (!strcmp(p->login, user))
-		{
-			/* First check hostmask.. */
-			if (!match(p->hostmask, sptr->user->realhost) && !match(p->usermask, sptr->user->username))
-			{
-				/* that was okay, lets check password */
-				if (!strcmp(p->password, pwd))
-				{
-					/* let's vhost him .. */
-					strcpy(sptr->user->virthost, p->virthost);
-					sptr->umodes |= UMODE_HIDE;
-					sptr->umodes |= UMODE_SETHOST;
-					sendto_serv_butone(cptr, ":%s SETHOST %s", sptr->name, p->virthost);
-					sendto_one(sptr, ":%s MODE %s :+tx", sptr->name, sptr->name);
-					sendto_one(sptr, ":%s NOTICE %s :*** Your hostname is now %s", me.name, sptr->name, p->virthost);
-					sendto_umode(UMODE_EYES, "[\2vhost\2] %s (%s!%s@%s) is now using vhost %s", 
-						user, sptr->name, sptr->user->username, sptr->user->realhost, p->virthost);
-					return 0;
-				}
-					else
-				{
-					sendto_one(sptr, ":%s NOTICE %s :*** [\2vhost\2] Login for %s failed - password incorrect", me.name, sptr->name, user);
-					return 0;
-				}
-			}
-		}	
-	}
-	sendto_one(sptr, ":%s NOTICE %s :*** No vHost lines available for your host", me.name, sptr->name);
-	return 0;				
+	return 1;
 }
 
-/* hush */
-#ifdef MOO
-int	hush_add(vhost, login, password, usermask, hostmask)
-char *vhost, *login, *password, *usermask, *hostmask;
-{
-	aHush *fl;
-	
-	fl = (aHush *) MyMalloc(sizeof(aHush));
-	
-	AllocCpy(fl->virthost, vhost);
-	AllocCpy(fl->usermask, usermask);
-	AllocCpy(fl->hostmask, hostmask);
-	AllocCpy(fl->login, login);
-	AllocCpy(fl->password, password);
-	fl->next = vhosts;
-	fl->prev = NULL;
-	if (vhosts)
-		vhosts->prev = fl;
-	vhosts = fl;
-}
-
-aVhost     *vhost_del(fl)
-aVhost *fl;
-{
-	aVhost *p, *q;
-        for (p = vhosts; p; p = p->next) {
-                if (p == fl)
-                {
-                        q = p->next;
-			MyFree((char *) (fl->virthost));
-			MyFree((char *) (fl->usermask));
-			MyFree((char *) (fl->hostmask));
-			MyFree((char *) (fl->login));
-			MyFree((char *) (fl->password));
-                        /* chain1 to chain3 */
-                        if (p->prev) {
-                                p->prev->next = p->next;
-                        }
-                          else
-                        {
-                                vhosts = p->next;
-                        }
-                        if (p->next) {
-                                p->next->prev = p->prev;
-                        }
-                        MyFree((aVhost *) p);
-                        return q;
-                }
-        }
-        return NULL;
-}
-#endif
 /* irc logs.. */
-void	ircd_log(char *format, ...)
+void ircd_log(int flags, char *format, ...)
 {
 	va_list ap;
-        FILE	*f;
-              
-        va_start(ap, format);
-	f = fopen(lPATH, "a+");
-	if (!f)
-	{
-#if !defined(_WIN32) && !defined(_AMIGA)
-		sendto_realops("Couldn't write to %s - %s", lPATH, strerror(errno));
-#endif
-		return;
-	}
-	fprintf(f, "(%s) ", myctime(TStime()));
-	vfprintf(f, format, ap);
-	fprintf(f, "\n");
-	fclose(f);
-	va_end(ap);        
-}             
+	ConfigItem_log *logs;
+	char buf[2048], timebuf[128];
+	int fd;
+	struct stat fstats;
 
+	va_start(ap, format);
+	ircvsprintf(buf, format, ap);	
+	snprintf(timebuf, sizeof timebuf, "[%s] - ", myctime(TStime()));
+	RunHook3(HOOKTYPE_LOG, flags, timebuf, buf);
+	strlcat(buf, "\n", sizeof buf);
+
+	for (logs = conf_log; logs; logs = (ConfigItem_log *) logs->next) {
+#ifdef HAVE_SYSLOG
+		if (!stricmp(logs->file, "syslog") && logs->flags & flags) {
+#ifdef HAVE_VSYSLOG
+			vsyslog(LOG_INFO, format, ap);
+#else
+			/* %s just to be safe */
+			syslog(LOG_INFO, "%s", buf);
+#endif
+			continue;
+		}
+#endif
+		if (logs->flags & flags) {
+			if (stat(logs->file, &fstats) != -1 && logs->maxsize && fstats.st_size >= logs->maxsize) {
+#ifndef _WIN32
+				fd = open(logs->file, O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR);
+#else
+				fd = open(logs->file, O_CREAT|O_WRONLY|O_TRUNC, S_IREAD|S_IWRITE);
+#endif
+				if (fd == -1)
+					continue;
+				write(fd, "Max file size reached, starting new log file\n", 45);
+			}
+			else {
+#ifndef _WIN32
+			fd = open(logs->file, O_CREAT|O_APPEND|O_WRONLY, S_IRUSR|S_IWUSR);
+#else
+			fd = open(logs->file, O_CREAT|O_APPEND|O_WRONLY, S_IREAD|S_IWRITE);
+#endif
+			if (fd == -1)
+				continue;
+			}	
+			write(fd, timebuf, strlen(timebuf));
+			write(fd, buf, strlen(buf));
+			close(fd);
+		}
+	}
+	va_end(ap);
+}

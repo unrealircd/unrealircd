@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, ircd/channel.h
+ *   Unreal Internet Relay Chat Daemon, ircd/channel.h
  *   Copyright (C) 1990 Jarkko Oikarinen
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -21,8 +21,8 @@
 
 #ifndef	__channel_include__
 #define __channel_include__
-#define CREATE 1	/* whether a channel should be
-			   created or just tested for existance */
+#define CREATE 1		/* whether a channel should be
+				   created or just tested for existance */
 
 #define	MODEBUFLEN	200
 
@@ -30,15 +30,15 @@
 
 #define ChannelExists(n)	(find_channel(n, NullChn) != NullChn)
 
-#define IsULine(cptr,sptr)	(sptr->flags & FLAGS_ULINE)
+#define IsULine(sptr)	(sptr->flags & FLAGS_ULINE)
 
 /* NOTE: Timestamps will be added to MODE-commands, so never make
  * RESYNCMODES and MODEPARAMS higher than MAXPARA-3. DALnet servers
  * before Dreamforge aren't safe with more than six. -Donwulff
  */
 #include "msg.h"
-#define	MAXMODEPARAMS	(MAXPARA-2)	/* Maximum modes processed */
-#define RESYNCMODES	12		/* Max modes per MODE in resync */
-#define MODEPARAMS	6		/* Max modes from user */
+#define	MAXMODEPARAMS	(MAXPARA-3)	/* Maximum modes processed */
+#define RESYNCMODES	12	/* Max modes per MODE in resync */
+#define MODEPARAMS	6	/* Max modes from user */
 
 #endif

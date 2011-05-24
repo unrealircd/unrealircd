@@ -1,0 +1,26 @@
+/*
+ * LCIrc (irc.lcirc.net) Network Configuration File
+ *
+ * Added-at:     16 June 2001 11:22
+ * Author: RaYmAn
+ * Email: rayman@skumler.net
+ */
+
+set {
+	network-name "LCIrc";
+	default-server "irc.lcirc.net"; 
+	services-server "services.lcirc.net";
+	stats-server "stats.lcirc.net";
+	help-channel "#lcirc";
+	hiddenhost-prefix "lcirc";
+	hosts {
+		local "locop.lcirc.net";
+		global "oper.lcirc.net";
+		coadmin "coadmin.lcirc.net";
+		admin "admin.lcirc.net";
+		servicesadmin "csop.lcirc.net";
+		netadmin "netadmin.lcirc.net";
+		host-on-oper no;
+	};
+};
+

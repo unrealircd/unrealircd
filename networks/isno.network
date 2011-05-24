@@ -1,0 +1,27 @@
+/*
+ * Isno (irc.isno.net) Network Configuration File
+ * --------------------------------------------------
+ *  Added-at:     11 mars 2001 22:05
+ *  Author: Shad
+ *  Email: olivier@isno.net
+ * -----------------------------------------
+ */
+
+set {
+        network-name            "Isno";
+        default-server          "irc.isno.net";
+        services-server         "services.isno.net";
+        stats-server            "stats.isno.net";
+        help-channel            "#aide";
+        hiddenhost-prefix       "isno";
+        prefix-quit             "Quit:";
+        hosts {
+                local           "locop.phazenet.com";
+                global          "oper.isno.net";
+                coadmin         "coadmin.isno.net";
+                admin           "admin.isno.net";
+                servicesadmin   "csop.isno.net";
+                netadmin        "netadmin.isno.net";
+                host-on-oper-up "off";
+        };
+};

@@ -1,0 +1,27 @@
+/*
+ * ChatUniverse (irc.chatuniverse.net) Network Configuration File
+ * --------------------------------------------------
+ *  Added-at:     16 March 2001 13:02
+ *  Author: PeTrArChY
+ *  Email: bradbury@rebeldev.net
+ * -----------------------------------------
+ */
+
+set {
+        network-name            "ChatUniverse";
+        default-server          "irc.chatuniverse.net";
+        services-server         "services.chatuniverse.net";
+        stats-server            "stats.chatuniverse.net";
+        help-channel            "#chatuniverse";
+        hiddenhost-prefix       "CU";
+        prefix-quit             "Quit:";
+        hosts {
+                local           "locop.chatuniverse.net";
+                global          "oper.chatuniverse.net";
+                coadmin         "coadmin.chatuniverse.net";
+                admin           "admin.chatuniverse.net";
+                servicesadmin   "csop.chatuniverse.net";
+                netadmin        "netadmin.chatuniverse.net";
+                host-on-oper-up "on";
+        };
+};

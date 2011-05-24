@@ -22,7 +22,7 @@
  */
 
 /* External definitions for functions in inet(3) */
-#include "config.h" /* for system definitions */
+#include "config.h"		/* for system definitions */
 
 #ifdef	__alpha
 #define	__u_l	unsigned int
@@ -30,12 +30,17 @@
 #define	__u_l	unsigned long
 #endif
 
+extern int inet_pton(int af, const char *src, void *dst);
+extern const char *inet_ntop(int af, const void *src, char *dst, size_t cnt);
+
 #ifdef __STDC__
 # ifndef _WIN32
 extern __u_l inet_addr(char *);
-extern char *inet_ntoa(char *);
+extern char *inet_ntoa(struct in_addr);
+extern int inet_aton(const char *, struct in_addr *);
+extern int  inet_netof(struct in_addr);
 # endif
-extern __u_l inet_makeaddr(int , int);
+extern __u_l inet_makeaddr(int, int);
 extern __u_l inet_network(char *);
 extern __u_l inet_lnaof(struct in_addr);
 #else
@@ -52,3 +57,7 @@ extern __u_l inet_network();
 extern __u_l inet_lnaof();
 #endif
 #undef __u_l
+
+#ifndef INADDR_NONE
+#define INADDR_NONE 0xffffffff
+#endif

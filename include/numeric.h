@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, include/numeric.h
+ *   Unreal Internet Relay Chat Daemon, include/numeric.h
  *   Copyright (C) 1990 Jarkko Oikarinen
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -20,8 +20,6 @@
  */
 
 /*
- * -- Potvin -- Feb 20/98
- *
  * Added numerics 600-799 as numeric_replies2[], we ran out
  */
 
@@ -35,7 +33,11 @@
 #define	RPL_YOURHOST         002
 #define	RPL_CREATED          003
 #define	RPL_MYINFO           004
-#define RPL_PROTOCTL	     005
+#define RPL_ISUPPORT	     005
+
+#define RPL_REDIR	     10
+
+#define RPL_REMOTEISUPPORT 105
 
 /*
  * Errors are in the range from 400-599 currently and are grouped by what
@@ -61,6 +63,9 @@
 #define	ERR_NOADMININFO      423
 #define	ERR_FILEERROR        424
 #define ERR_NOOPERMOTD	     425
+#ifdef NO_FLOOD_AWAY
+#define ERR_TOOMANYAWAY	     429
+#endif
 #define ERR_NONICKNAMEGIVEN  431
 #define ERR_ERRONEUSNICKNAME 432
 #define ERR_NICKNAMEINUSE    433
@@ -78,6 +83,8 @@
 #define ERR_NOLOGIN          444
 #define	ERR_SUMMONDISABLED   445
 #define ERR_USERSDISABLED    446
+#define ERR_NONICKCHANGE     447
+
 
 #define ERR_NOTREGISTERED    451
 
@@ -112,9 +119,17 @@
 #define ERR_ATTACKDENY       484
 #define ERR_KILLDENY	     485
 
+#define ERR_NONONREG	     486
+#define ERR_NOTFORUSERS	    487
+#define ERR_HTMDISABLED		 488
+#define ERR_SECUREONLYCHAN   489
+#define ERR_NOSWEAR	     490
 #define ERR_NOOPERHOST       491
-#define ERR_NOSERVICEHOST    492
+#define ERR_NOCTCP	     492
 
+#define ERR_CHANOWNPRIVNEEDED 499
+
+#define ERR_TOOMANYJOINS     500
 #define ERR_UMODEUNKNOWNFLAG 501
 #define ERR_USERSDONTMATCH   502
 
@@ -122,6 +137,9 @@
 #define ERR_TOOMANYWATCH     512
 #define ERR_NEEDPONG         513
 
+#define ERR_TOOMANYDCC       514
+
+#define ERR_DISABLED         517
 #define ERR_NOINVITE		 518
 #define ERR_ADMONLY			 519
 #define ERR_OPERONLY		 520
@@ -141,7 +159,7 @@
 #define RPL_WHOISREGNICK     307
 #define RPL_RULESSTART       308
 #define RPL_ENDOFRULES       309
-#define RPL_WHOISHELPOP      310 /* -Donwulff */
+#define RPL_WHOISHELPOP      310	/* -Donwulff */
 
 #define RPL_WHOISUSER        311
 #define RPL_WHOISSERVER      312
@@ -151,7 +169,7 @@
 /* rpl_endofwho below (315) */
 #define	RPL_ENDOFWHOWAS      369
 
-#define RPL_WHOISCHANOP      316 /* redundant and not needed but reserved */
+#define RPL_WHOISCHANOP      316	/* redundant and not needed but reserved */
 #define RPL_WHOISIDLE        317
 
 #define RPL_ENDOFWHOIS       318
@@ -166,8 +184,12 @@
 #define RPL_TOPIC            332
 #define RPL_TOPICWHOTIME     333
 
+#define RPL_INVITELIST       336
+#define RPL_ENDOFINVITELIST  337
+
 #define RPL_LISTSYNTAX       334
 #define RPL_WHOISBOT	     335
+#define RPL_USERIP	     340
 #define RPL_INVITING         341
 #define	RPL_SUMMONING        342
 
@@ -177,8 +199,8 @@
 #define RPL_ENDOFWHO         315
 #define RPL_NAMREPLY         353
 #define RPL_ENDOFNAMES       366
-#define RPL_INVITELIST	     346
-#define RPL_ENDOFINVITELIST  347
+#define RPL_INVEXLIST	     346
+#define RPL_ENDOFINVEXLIST   347
 
 #define RPL_EXLIST	     348
 #define RPL_ENDOFEXLIST      349
@@ -206,6 +228,10 @@
 #define RPL_YOURESERVICE     383
 #define RPL_MYPORTIS         384
 #define RPL_NOTOPERANYMORE   385
+#define RPL_QLIST			 386
+#define	RPL_ENDOFQLIST		 387
+#define	RPL_ALIST			 388
+#define	RPL_ENDOFALIST		 389
 
 #define RPL_TIME             391
 #define	RPL_USERSSTART       392
@@ -217,6 +243,7 @@
 #define RPL_TRACECONNECTING  201
 #define RPL_TRACEHANDSHAKE   202
 #define RPL_TRACEUNKNOWN     203
+
 #define RPL_TRACEOPERATOR    204
 #define RPL_TRACEUSER        205
 #define RPL_TRACESERVER      206
@@ -224,10 +251,12 @@
 #define RPL_TRACENEWTYPE     208
 #define RPL_TRACECLASS       209
 
+#define RPL_STATSHELP	     210
 #define RPL_STATSLINKINFO    211
 #define RPL_STATSCOMMANDS    212
 #define RPL_STATSCLINE       213
-#define RPL_STATSNLINE       214
+#define RPL_STATSOLDNLINE    214
+
 #define RPL_STATSILINE       215
 #define RPL_STATSKLINE       216
 #define RPL_STATSQLINE       217
@@ -235,10 +264,17 @@
 #define RPL_ENDOFSTATS       219
 #define RPL_STATSBLINE	     220
 
+
 #define RPL_UMODEIS          221
 #define RPL_SQLINE_NICK      222
 #define RPL_STATSGLINE		 223
 #define RPL_STATSTLINE		 224
+#define RPL_STATSELINE	     225
+#define RPL_STATSNLINE	     226
+#define RPL_STATSVLINE	     227
+#define RPL_STATSBANVER	     228
+#define RPL_STATSSPAMF       229
+#define RPL_STATSEXCEPTTKL   230
 #define RPL_SERVICEINFO      231
 #define RPL_RULES            232
 #define	RPL_SERVICE          233
@@ -251,7 +287,7 @@
 #define	RPL_STATSHLINE       244
 #define	RPL_STATSSLINE       245
 #define RPL_STATSXLINE	     247
-#define RPL_STATSULINE       248	
+#define RPL_STATSULINE       248
 #define	RPL_STATSDEBUG	     249
 #define RPL_STATSCONN        250
 
@@ -266,13 +302,11 @@
 #define	RPL_ADMINEMAIL       259
 
 #define	RPL_TRACELOG         261
-
 #define RPL_LOCALUSERS       265
 #define RPL_GLOBALUSERS      266
 
 #define RPL_SILELIST         271
 #define RPL_ENDOFSILELIST    272
-
 #define RPL_STATSDLINE       275
 
 #define RPL_HELPHDR	     290
@@ -282,6 +316,7 @@
 #define RPL_HELPFWD	     294
 #define RPL_HELPIGN	     295
 
+
 /*
  * New /MAP format.
  */
@@ -289,11 +324,21 @@
 #define RPL_MAPMORE          610
 #define RPL_MAPEND           007
 
+
+#define ERR_WHOSYNTAX 522
+#define ERR_WHOLIMEXCEED 523
+#define ERR_OPERSPVERIFY 524
+
+#define RPL_SNOMASK	     8
+
 /*
  * Numberic replies from server commands.
  * These are also in the range 600-799.
  */
 
+#define RPL_REAWAY           597
+#define RPL_GONEAWAY         598
+#define RPL_NOTAWAY          599
 #define RPL_LOGON            600
 #define RPL_LOGOFF           601
 #define RPL_WATCHOFF         602
@@ -302,6 +347,27 @@
 #define RPL_NOWOFF           605
 #define RPL_WATCHLIST        606
 #define RPL_ENDOFWATCHLIST   607
+#define RPL_CLEARWATCH       608
+#define RPL_NOWISAWAY        609
+
+#define RPL_DCCSTATUS        617
+#define RPL_DCCLIST          618
+#define RPL_ENDOFDCCLIST     619
+#define RPL_DCCINFO          620
+
 #define RPL_DUMPING			 640
 #define RPL_DUMPRPL			 641
 #define RPL_EODUMP           642
+
+#define RPL_SPAMCMDFWD       659
+
+#define RPL_STARTTLS         670
+
+#define RPL_WHOISSECURE      671
+
+#define ERR_CANNOTDOCOMMAND 972
+#define ERR_CANNOTCHANGECHANMODE 974
+
+#define ERR_STARTTLS            691
+
+#define ERR_NUMERICERR       999

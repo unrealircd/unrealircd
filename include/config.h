@@ -1,9 +1,9 @@
 /*
- *   IRC - Internet Relay Chat, include/config.h
+ *   Unreal Internet Relay Chat Daemon, include/config.h
  *   Copyright (C) 1990 Jarkko Oikarinen
  *
  *   $Id$
- * 
+ *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
  *   the Free Software Foundation; either version 1, or (at your option)
@@ -23,7 +23,7 @@
 #define	__config_include__
 
 #include "setup.h"
-#include "settings.h"
+
 /*
  *
  *   NOTICE
@@ -35,23 +35,11 @@
  *
  *
  */
-/*
- * To windows porters:
- *   You can specify name and url for their diff wircd sites
- *   #undef WIN32_SPECIFY for not having any notice about it in the wIRCd
- *    --Techie
- */
-#undef WIN32_SPECIFY
-
-#ifdef WIN32_SPECIFY
-#define WIN32_PORTER ""
-#define WIN32_URL ""
-#endif
 
  /*
- * Define this if you're testing/debugging/programming.
- */
+    * Define this if you're testing/debugging/programming.
 #undef DEBUG
+  */
 
 /* Type of host. These should be made redundant somehow. -avalon */
 
@@ -59,46 +47,21 @@
 /*	HPUX			Nothing needed (A.08/A.09) */
 /*	ULTRIX			Nothing needed (4.2) */
 /*	OSF			Nothing needed (1.2) */
-/* #undef	AIX		/* IBM ugly so-called Unix, AIX */
-/* #undef	MIPS		/* MIPS Unix */
+/* #undef	AIX		IBM ugly so-called Unix, AIX */
+/* #undef	MIPS		MIPS Unix */
 /*	SGI			Nothing needed (IRIX 4.0.4) */
-/* #undef 	SVR3		/* SVR3 stuff - being worked on where poss. */
-/* #undef	DYNIXPTX	/* Sequents Brain-dead Posix implement. */
-/* #undef	SOL20		/* Solaris2 */
-/* #undef	ESIX		/* ESIX */
-/* #undef	NEXT		/* NeXTStep */
-/* #undef	SVR4 /* */
+/* #undef 	SVR3		SVR3 stuff - being worked on where poss. */
+/* #undef	DYNIXPTX	Sequents Brain-dead Posix implement. */
+/* #undef	SOL20		Solaris2 */
+/* #undef	ESIX		ESIX */
+/* #undef	NEXT		NeXTStep */
+/* #undef	SVR4 */
 
 /* Additional flags to give FreeBSD's malloc, only play with this if you
  * know what you're doing.
  */
- 
+
 #define MALLOC_FLAGS_EXTRA ""
-/* 
-   ConferenceRoom Java Client Hack -Fish
-   if you want it to work #define CONFROOM_JAVA_PORT <port>
-   where port MUST be a seperate port java clients connects on .. 
-*/
-#undef CONFROOM_JAVA_PORT
-
-/* 
-   REMOVE_ADVERTISING -ice
-      If you send a text to a user like "irc.roxnet.org" it will show up as "irc.******.org"
-   Off by default --stskeeps
-*/
-#undef REMOVE_ADVERTISING
-
-/* 
-     UnrealIRCd WebTV support
-*/
-#undef WEBTV
-
-#ifdef WEBTV
-/* enable /msg irc user */
-#define WEBTV_IRCUSER
-/* NOTICE's dont exist (except from server) */
-#define WEBTV_NONOTICE
-#endif
 
 /*
     dog3/comstud ircd fdlists
@@ -106,17 +69,30 @@
 */
 
 #undef NO_FDLIST
+
 /*
-   OPER_NO_HIDING
-      This makes +I an unexisting mode
-   On by default --stskeeps
-*/
-#undef OPER_NO_HIDING
+ * Defining this will allow all ircops to see people in +s channels
+ * By default, only net/tech admins can see this
+ */
+#define SHOW_SECRET
 
 /*
  * Admin's chat...
  */
 #define ADMINCHAT 1
+
+/* 
+ * If channel mode is +z, only send to secure links & people
+ *
+*/
+#undef SECURECHANMSGSONLYGOTOSECURE
+
+/*
+   If you want to support chinese and/or japanese nicks
+*/
+#undef NICK_GB2312
+#undef NICK_GBK
+#undef NICK_GBK_JAP
 
 /*
   Remote rehash
@@ -124,76 +100,95 @@
 #define REMOTE_REHASH
 
 /*
+ * Special remote include caching, see this Changelog item:
+ * - Added special caching of remote includes. When a remote include fails to
+ *   load (for example when the webserver is down), then the most recent
+ *   version of that remote include will be used, and the ircd will still boot
+ *   and be able to rehash. Even though this is quite a simple feature, it
+ *   can make a key difference when deciding to roll out remote includes on
+ *   your network. Previously, servers would be unable to boot or rehash when
+ *   the webserver was down, which would be a big problem (often unacceptable).
+ *   The latest version of fetched urls are cached in the cache/ directory as
+ *   cache/<md5 hash of url>.
+ *   Obviously, if there's no 'latest version' and an url fails, the ircd will
+ *   still not be able to boot. This would be the case if you added or changed
+ *   the path of a remote include and it's trying to fetch it for the first time.
+ * There usually is no reason to disable this.
+ */
+#define REMOTEINC_SPECIALCACHE
+
+/*
+  Stripbadwords patch
+*/
+#define STRIPBADWORDS
+
+/*
+ * Always strip badwords in channels? (channel does not have to be +G)
+*/
+#undef STRIPBADWORDS_CHAN_ALWAYS
+
+/*
+ * THROTTLING
+ *   This will only allow 1 connection per ip in set::throttle::period time
+ * NOTE: There's no reason to disable this (anymore) since it can be fully
+ *       configured in the unrealircd.conf. Keep the define...
+ */
+#define THROTTLING
+
+/*
  * No spoof code
  *
  * This enables the spoof protection.
  */
-/* #define NOSPOOF 1 /* */
+/* #define NOSPOOF 1  */
+
 
 /*
- *
- * This controls the "nospoof" system.  These numbers are "seeds" of the
- * "random" number generating formula.  Choose any number you like in the
- * range of 0x00000000 to 0xFFFFFFFF.  Don't tell anyone these numbers, and
- * don't use the default ones.  Change both #define NOSPOOF... lines below.
- *
- * Other data is mixed in as well, but these guarantee a per-server secret.
- * Also, these values need not remain constant over compilations...  Change
- * them as often as you like.
- */
-#ifdef NOSPOOF
-
-#ifndef NOSPOOF_SEED01
-#define NOSPOOF_SEED01 0x12345678
-#endif
-
-#ifndef NOSPOOF_SEED02
-#define NOSPOOF_SEED02 0x87654321
-#endif
-
-#endif /* NOSPOOF */
+ * Enables locops to override the RFC1459 flood control too
+*/
+#undef NO_FAKE_LAG_FOR_LOCOPS
 
 /*
  * HOSTILENAME - Define this if you want the hostile username patch included,
  *		 it will strip characters that are not 0-9,a-z,A-Z,_,- or .
  */
-#define HOSTILENAME	/* */
+#define HOSTILENAME		/* [DO NOT CHANGE!] */
 
 /*
- * Define this to prevent mixed case userids that clonebots use. However
- * this affects the servers running telclients WLD* FIN*  etc.
- */
-#undef	DISALLOW_MIXED_CASE
-
-/*
- * Define this if you wish to ignore the case of the first character of
- * the user id when disallowing mixed case. This allows PC users to
- * enter the more intuitive first name with the first letter capitalised
- */
-#define	IGNORE_CASE_FIRST_CHAR
-
-/*
-** Nick flood limit
-** Minimum time between nick changes.
-** (The first two changes are allowed quickly after another however).
-**
-** Define NICK_DELAY if you want this feature.
+ * Use JOIN instead of SJOIN on every remotely sent JOIN
 */
-
-#define NICK_DELAY 15                   /* recommended value 15 */
+#undef JOIN_INSTEAD_OF_SJOIN_ON_REMOTEJOIN
 
 /*
- * Define this if you wish to output a *file* to a K lined client rather
- * than the K line comment (the comment field is treated as a filename)
+ * So called 'smart' banning: if this is enabled and a ban on like *!*@*h.com is present,
+ * then you cannot add a ban like *!*@*blah.com. In other words.. the ircd tries to be "smart".
+ * In general this is considered quite annoying. This was on by default until Unreal 3.2.8.
  */
-#undef	COMMENT_IS_FILE
+#undef SOCALLEDSMARTBANNING
+
+/*
+** Freelinks garbage collector -Stskeeps
+**
+** GARBAGE_COLLECT_EVERY - how many seconds between every garbage collect
+** HOW_MANY_FREELINKS_ALLOWED - how many freelinks allowed
+*/
+#ifndef GARBAGE_COLLECT_EVERY
+#define GARBAGE_COLLECT_EVERY 		600	/* default: 600 (10 mins) */
+#endif
+
+#define HOW_MANY_FREELINKS_ALLOWED 	200	/* default: 200 */
+
+/*
+ * MAXUNKNOWNCONNECTIONSPERIP
+*/
+#define MAXUNKNOWNCONNECTIONSPERIP 3
 
 
 /* Do these work? I dunno... */
 
-/* #undef	VMS		/* Should work for IRC client, not server */
-/* #undef	MAIL50		/* If you're running VMS 5.0 */
-/* #undef	PCS		/* PCS Cadmus MUNIX, use with BSD flag! */
+/* #undef	VMS		   Should work for IRC client, not server */
+/* #undef	MAIL50		   If you're running VMS 5.0 */
+/* #undef	PCS		   PCS Cadmus MUNIX, use with BSD flag! */
 
 /*
  * NOTE: On some systems, valloc() causes many problems.
@@ -213,67 +208,68 @@
  * If your host supports varargs and has vsprintf(), vprintf() and vscanf()
  * C calls in its library, then you can define USE_VARARGS to use varargs
  * instead of imitation variable arg passing.
+*/
 #define	USE_VARARGS
 
- * NOTE: with current server code, varargs doesn't survive because it can't
+/* NOTE: with current server code, varargs doesn't survive because it can't
  *       be used in a chain of 3 or more funtions which all have a variable
  *       number of params.  If anyone has a solution to this, please notify
  *       the maintainer.
  */
 
-/* #undef	DEBUGMODE	/* define DEBUGMODE to enable debugging mode.*/
-
-/*
- * defining FORCE_CORE will automatically "unlimit core", forcing the
- * server to dump a core file whenever it has a fatal error.  -mlv
+/* DEBUGMODE: This should only be used when tracing a problem. It creates
+ * an insane amount of log output which can be very useful for debugging.
+ * You should *NEVER* enable this setting on production servers.
  */
-#define FORCE_CORE
+/* #undef	DEBUGMODE */
 
 /*
  * Full pathnames and defaults of irc system's support files. Please note that
- * these are only the recommened names and paths. Change as needed.
- * You must define these to something, even if you don't really want them.
+ * these are only the recommened names and paths.  You must define PPATH if you 
+ * want a pidfile written. Also, IRCDTUNE should be defined because it is needed for
+ * operation. All of these options are runtime-configurable (except for CPATH and LPATH)
+ * in the files block of unrealircd.conf. CPATH is runtime-configurable as a command-
+ * line argument. These used as the default values for options absent from the user's
+ * unrealircd.conf.
  */
-#define	CPATH		"ircd.conf"	/* server configuration file */
+#define	CPATH		"unrealircd.conf"	/* server configuration file */
 #define	MPATH		"ircd.motd"	/* server MOTD file */
-#define RPATH   	"ircd.rules"    /* server rules file */
-#define ZPATH		"ircd.notes"	/* server notes */
-#define ZCONF   	"networks/unrealircd.conf" /* ircd configuration .. */
-#define OPATH   	"oper.motd"     /* Operators MOTD file */
+#define SMPATH          "ircd.smotd"    /* short MOTD file */
+#define RPATH   	"ircd.rules"	/* server rules file */
+#define OPATH   	"oper.motd"	/* Operators MOTD file */
 #define	LPATH		"debug.log"	/* Where the debug file lives, if DEBUGMODE */
 #define	PPATH		"ircd.pid"	/* file for server pid */
-#define lPATH		"ircd.log"	/* server log file */
-#define VPATH		"ircd.svsmotd"  /* Services MOTD append. */
-#define IRCDTUNE 	"ircd.tune" 	/* tuning .. */
-
-/*
- * Define this filename to maintain a list of persons who log
- * into this server. Logging will stop when the file does not exist.
- * Logging will be disable also if you do not define this.
- * FNAME_USERLOG just logs user connections, FNAME_OPERLOG logs every
- * successful use of /oper.  These are either full paths or files within DPATH.
- */
-#define FNAME_USERLOG "users.log"
-#define FNAME_OPERLOG "opers.log"
-
-/* FAILOPER_WARN
- *
- * When defined, warns users on a failed oper attempt that it was/is logged
- * Only works when FNAME_OPERLOG is defined, and a logfile exists.
- * NOTE: Failed oper attempts are logged regardless.
- */
-#define FAILOPER_WARN
+#define VPATH		"ircd.svsmotd"	/* Services MOTD append. */
+#define BPATH		"bot.motd"	/* Bot MOTD */
+#define IRCDTUNE 	"ircd.tune"	/* tuning .. */
 
 /* CHROOTDIR
  *
- * Define for value added security if you are a rooter.
+ * This enables running the IRCd chrooted (requires initial root privileges,
+ * but will be dropped to IRC_USER/IRC_GROUP privileges if those are defined).
  *
- * All files you access must be in the directory you define as DPATH.
+ * The directory to chroot to is simply DPATH (which is set via ./Config).
  * (This may effect the PATH locations above, though you can symlink it)
  *
- * You may want to define IRC_UID and IRC_GID
+ * Usually you only simply need to enable this, and set IRC_USER and 
+ * IRC_GROUP, you don't need to create a special chroot environment.. 
+ * UnrealIRCd will do that by itself (Unreal will create /dev/random, 
+ * etc. etc.).
+ *
+ * Change to '#define CHROOTDIR' to enable...
  */
-/* #define CHROOTDIR /* */
+/* #define CHROOTDIR    */
+
+/*
+ * IRC_USER
+ *
+ * If you start the server as root but wish to have it run as another user,
+ * define IRC_USER to that user name.  This should only be defined if you 
+ * are running as root and even then perhaps not.
+ */
+/* #define IRC_USER  "<user name>" */
+/* #define IRC_GROUP "<group name>" */
+
 
 /* SHOW_INVISIBLE_LUSERS
  *
@@ -284,100 +280,33 @@
  */
 #define	SHOW_INVISIBLE_LUSERS
 
-
-/* OPER_* defines
- *
- * See ./docs/example.conf for examples of how to restrict access for
- * your IRC Operators
- */
-
-/* MAXIMUM LINKS
- *
- * This define is useful for leaf nodes and gateways. It keeps you from
- * connecting to too many places. It works by keeping you from
- * connecting to more than "n" nodes which you have C:blah::blah:6667
- * lines for.
- *
- * Note that any number of nodes can still connect to you. This only
- * limits the number that you actively reach out to connect to.
- *
- * Leaf nodes are nodes which are on the edge of the tree. If you want
- * to have a backup link, then sometimes you end up connected to both
- * your primary and backup, routing traffic between them. To prevent
- * this, #define MAXIMUM_LINKS 1 and set up both primary and
- * secondary with C:blah::blah:6667 lines. THEY SHOULD NOT TRY TO
- * CONNECT TO YOU, YOU SHOULD CONNECT TO THEM.
- *
- * Gateways such as the server which connects Australia to the US can
- * do a similar thing. Put the American nodes you want to connect to
- * in with C:blah::blah:6667 lines, and the Australian nodes with
- * C:blah::blah lines. Have the Americans put you in with C:blah::blah
- * lines. Then you will only connect to one of the Americans.
- *
- * This value is only used if you don't have server classes defined, and
- * a server is in class 0 (the default class if none is set).
- *
- */
-
-#define MAXIMUM_LINKS 1
-
 /*
  * NOTE: defining CMDLINE_CONFIG and installing ircd SUID or SGID is a MAJOR
  *       security problem - they can use the "-f" option to read any files
  *       that the 'new' access lets them. Note also that defining this is
  *       a major security hole if your ircd goes down and some other user
  *       starts up the server with a new conf file that has some extra
- *       O-lines. So don't use this unless you're debugging.
+ *       O-lines.
+ *       Naturally, for non-suid/sgid ircds, this setting does not matter,
+ *       hence command line parameters are always permitted then.
  */
-#define	CMDLINE_CONFIG /* allow conf-file to be specified on command line */
+#undef	CMDLINE_CONFIG
+
+/** FAKELAG_CONFIGURABLE makes it possible to make certain classes exempted
+ * from 'fake lag' (that is, the artificial delay that is added by the ircd
+ * to prevent flooding, which causes the messages/commands of the user to
+ * slow down). Naturally, incorrect use of this feature can cause SEVERE
+ * issues, in fact it can easily bring your whole IRCd down if one of the
+ * users with class::options::nofakelag does a good flood at full speed.
+ * Hence, this is disabled by default, and you need to explicitly enable it
+ * here IF YOU KNOW WHAT YOU ARE DOING. People complaining their ircd
+ * ""crashed"" because of this setting will be shot. </DISCLAIMER>
+ * Common usage for this are: a trusted bot ran by an IRCOp, that you only
+ * want to give "flood access" and nothing else, and other such things.
+ */
+#undef FAKELAG_CONFIGURABLE
 
 /*
- * To use m4 as a preprocessor on the ircd.conf file, define M4_PREPROC.
- * The server will then call m4 each time it reads the ircd.conf file,
- * reading m4 output as the server's ircd.conf file.
- */
-#undef	M4_PREPROC
-
-/*
- * If you wish to have the server send 'vital' messages about server
- * through syslog, define USE_SYSLOG. Only system errors and events critical
- * to the server are logged although if this is defined with FNAME_USERLOG,
- * syslog() is used instead of the above file. It is not recommended that
- * this option is used unless you tell the system administrator beforehand
- * and obtain their permission to send messages to the system log files.
- */
-#ifndef _WIN32
-#undef	USE_SYSLOG
-#endif
-
-#ifdef	USE_SYSLOG
-/*
- * If you use syslog above, you may want to turn some (none) of the
- * spurious log messages for KILL/SQUIT off.
- */
-#undef	SYSLOG_KILL	/* log all operator kills to syslog */
-#undef  SYSLOG_SQUIT	/* log all remote squits for all servers to syslog */
-#undef	SYSLOG_CONNECT	/* log remote connect messages for other all servs */
-#undef	SYSLOG_USERS	/* send userlog stuff to syslog */
-#undef	SYSLOG_OPER	/* log all users who successfully become an Op */
-
-/*
- * If you want to log to a different facility than DAEMON, change
- * this define.
- */
-#define LOG_FACILITY LOG_DAEMON
-#endif /* USE_SYSLOG */
-
-/*
- * IDLE_FROM_MSG
- *
- * Idle-time nullified only from privmsg, if undefined idle-time
- * is nullified from everything except ping/pong.
- * Added 3.8.1992, kny@cs.hut.fi (nam)
- */
-#define IDLE_FROM_MSG
-
-/* 
  * Size of the LISTEN request.  Some machines handle this large
  * without problem, but not all.  It defaults to 5, but can be
  * raised if you know your machine handles it.
@@ -397,18 +326,8 @@
  *  Recommended value is 2 * MAXSENDQLENGTH, for hubs, 5 *.
  */
 #ifndef BUFFERPOOL
-#define	BUFFERPOOL     (9 * MAXSENDQLENGTH)
+#define	BUFFERPOOL     (18 * MAXSENDQLENGTH)
 #endif
-
-/*
- * IRC_UID
- *
- * If you start the server as root but wish to have it run as another user,
- * define IRC_UID to that UID.  This should only be defined if you are running
- * as root and even then perhaps not.
- */
-/* #undef	IRC_UID /* */
-/* #undef	IRC_GID /* */
 
 /*
  * CLIENT_FLOOD
@@ -416,27 +335,24 @@
  * this controls the number of bytes the server will allow a client to
  * send to the server without processing before disconnecting the client for
  * flooding it.  Values greater than 8000 make no difference to the server.
+ * NOTE: you can now also set this in class::recvq, if that's not present,
+ *       this default value will be used.
  */
 #define	CLIENT_FLOOD	8000
 
-/* Define this if you want the server to accomplish ircII standard */
-/* Sends an extra NOTICE in the beginning of client connection     */
-#undef	IRCII_KLUDGE
-
-/* 
- * Define your network service names here.
+/* Anti-Flood options
+ * NO_FLOOD_AWAY - enables limiting of how frequently a client can set /away
  */
-#define ChanServ "ChanServ"
-#define MemoServ "MemoServ"
+
+#define NO_FLOOD_AWAY
+
+/* You can define the nickname of NickServ here (usually "NickServ").
+ * This is ONLY used for the ""infamous IDENTIFY feature"", which is:
+ * whenever a user connects with a server password but there isn't
+ * a server password set, the password is sent to NickServ in an
+ * 'IDENTIFY <pass>' message.
+ */
 #define NickServ "NickServ"
-#define OperServ "OperServ"
-#define HelpServ "HelpServ"
-#define StatServ "StatServ"
-
-/*
- * How many seconds in between simultaneous nick changes?
- */
-#define NICK_CHANGE_DELAY	30
 
 /*
  * How many open targets can one nick have for messaging nicks and
@@ -444,34 +360,7 @@
  */
 
 #define MAXTARGETS		20
-#define TARGET_DELAY		120
-
-/* 
- * Would you like all clients to see the progress of their connections?
- */
-
-#define SHOWCONNECTINFO
-
-/*
- * SOCKS proxy checker
- *
- * At the moment this isn't an ideal solution, however it's better
- * than nothing. Smaller servers shouldn't notice much of a performance
- * hit, larger servers might have to reduce their Y-lines. In either
- * case it's advisable to increase the number of FD's you define by
- * about 10%.
- *
- * This determines the port on the local ircd machine that the open
- * SOCKS server test attempts to connect back to. The default should
- * be fine except for those unusual situations where the default
- * port is in use for some reason.
- *
- * Undefining this will eliminate the checker from ircd.
- */
-#define SOCKSPORT 6013
-
-/* Define default Z:line time for SOCKS   -taz */
-#define ZLINE_TIME     300
+#define TARGET_DELAY		15
 
 /*   STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP  */
 
@@ -481,28 +370,16 @@
  * Port where ircd resides. NOTE: This *MUST* be greater than 1024 if you
  * plan to run ircd under any other uid than root.
  */
-#define PORTNUM 6667 		/* 6667 is default */
+#define PORTNUM 6667		/* 6667 is default */
 
 /*
- * Maximum number of network connections your server will allow.  This should
- * never exceed max. number of open file descrpitors and wont increase this.
- * Should remain LOW as possible. Most sites will usually have under 30 or so
- * connections. A busy hub or server may need this to be as high as 50 or 60.
- * Making it over 100 decreases any performance boost gained from it being low.
- * if you have a lot of server connections, it may be worth splitting the load
- * over 2 or more servers.
- * 1 server = 1 connection, 1 user = 1 connection.
- * This should be at *least* 3: 1 listen port, 1 dns port + 1 client
- *
- * Note: this figure will be too high for most systems. If you get an 
- * fd-related error on compile, change this to 256.
- *
- * Windows users: This should be a fairly high number.  Some operations
- * will slow down because of this, but it is _required_ because of the way
- * windows NT(and possibly 95) allocate fd handles. A good number is 16384.
+ * Maximum number of network connections your server will allow.
+ * This is usually configured via ./Config on *NIX,
+ * the setting mentioned below is the default for Windows.
+ * 2004-10-13: 1024 -> 4096
  */
 #ifndef MAXCONNECTIONS
-#define MAXCONNECTIONS	1024
+#define MAXCONNECTIONS	4096
 #endif
 
 /*
@@ -512,7 +389,7 @@
  * 8MB or less  core memory : 500	(at least 1/4 of max users)
  * 8MB-16MB     core memory : 500-750	(1/4 -> 1/2 of max users)
  * 16MB-32MB    core memory : 750-1000	(1/2 -> 3/4 of max users)
- * 32MB or more core memory : 1000+	(> 3/4 if max users)
+ * 32MB or more core memory : 1000+	(> 3/4 of max users)
  * where max users is the expected maximum number of users.
  * (100 nicks/users ~ 25k)
  * NOTE: this is directly related to the amount of memory ircd will use whilst
@@ -522,28 +399,29 @@
  *       chasing possible for mode and kick.
  */
 #ifndef NICKNAMEHISTORYLENGTH
-#define NICKNAMEHISTORYLENGTH 2000 
+#define NICKNAMEHISTORYLENGTH 2000
 #endif
 
 /*
  * Time interval to wait and if no messages have been received, then check for
- * PINGFREQUENCY and CONNECTFREQUENCY 
+ * pings, outgoing connects, events, and a couple of other things.
+ * Imo this is quite useless nowdays, it only saves _some_ cpu on tiny networks
+ * with like 10 users all of them being inactive. On a normal network with >30
+ * users this value is completely irrelevant.
+ * The original value here was 60 (which was [hopefuly] never reached and was
+ * stupid anyway), changed to 2.
+ * DO NOT SET THIS TO ANYTHING MORE THAN 5. BETTER YET, JUST LEAVE IT AT 2!
  */
-#define TIMESEC  60		/* Recommended value: 60 */
+#define TIMESEC  2
 
 /*
  * If daemon doesn't receive anything from any of its links within
  * PINGFREQUENCY seconds, then the server will attempt to check for
  * an active link with a PING message. If no reply is received within
  * (PINGFREQUENCY * 2) seconds, then the connection will be closed.
+ * NOTE: This is simply the class::pingfreq for the default class, nothing fancy ;)
  */
 #define PINGFREQUENCY    120	/* Recommended value: 120 */
-
-/*
- * If the connection to to uphost is down, then attempt to reconnect every 
- * CONNECTFREQUENCY  seconds.
- */
-#define CONNECTFREQUENCY 600	/* Recommended value: 600 */
 
 /*
  * Often net breaks for a short time and it's useful to try to
@@ -568,36 +446,65 @@
  * CONNECTTIMEOUT - 10 seconds for its host to respond to an ident lookup
  * query and for a DNS answer to be retrieved.
  */
-#define	CONNECTTIMEOUT	90	/* Recommended value: 90 */
+#define	CONNECTTIMEOUT	30	/* Recommended value: 60 */
 
 /*
  * Max time from the nickname change that still causes KILL
  * automaticly to switch for the current nick of that user. (seconds)
  */
-#define KILLCHASETIMELIMIT 90   /* Recommended value: 90 */
+#define KILLCHASETIMELIMIT 90	/* Recommended value: 90 */
 
 /*
- * Max number of channels a user is allowed to join.
+ * Use much faster badwords replace routine (>100 times faster).
+ * Disabling this is not supported.
  */
-#define MAXCHANNELSPERUSER  10	/* Recommended value: 10 */
+#define FAST_BADWORD_REPLACE
 
 /*
- * SendQ-Always causes the server to put all outbound data into the sendq and
- * flushing the sendq at the end of input processing. This should cause more
- * efficient write's to be made to the network.
- * There *shouldn't* be any problems with this method.
- * -avalon
+ * Forces Unreal to use compressed IPv6 addresses rather than expanding them
  */
-#define	SENDQ_ALWAYS
+#undef IPV6_COMPRESSED
+
+/*
+ * Extended channel modes. This extends the channel modes with yet another
+ * 32 possible modes which can also be used in modules.
+ * This is now pretty much required.
+ */
+#define EXTCMODE
+
+/*
+ * New channelmode +f system which allows flood control for:
+ * msgs, joins, ctcps, nickchanges and /knock.
+ */
+#define NEWCHFLOODPROT
+
+/* JoinThrottle (chanmode +j): +j x:y throttles users to X joins per Y seconds (per-user).
+ * In peak situations (eg: just after a server restart with thousand clients joining
+ * hundreds of channels) it can use like ~200k, but in normal circumstances you should
+ * count on just ~10-50k.
+ */
+#define JOINTHROTTLE
+
+/* Detect slow spamfilters? This requires a little more cpu time when processing
+ * any spamfilter (like on text/connect/..) but will save you from slowing down
+ * your IRCd to a near-halt (well, in most cases.. there are still cases like when
+ * it goes into a loop that it will still stall completely... forever..).
+ * This is kinda experimental, and requires getrusage.
+ */
+#ifndef _WIN32
+#define SPAMFILTER_DETECTSLOW
+#endif
 
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #define MOTD MPATH
 #define RULES RPATH
-#define SNOTES ZPATH
 #define	MYNAME SPATH
 #define	CONFIGFILE CPATH
 #define	IRCD_PIDFILE PPATH
-#define GLINE_LOG GPATH
+
+#if defined(CHROOTDIR) && !defined(IRC_USER)
+#error "ERROR: It makes no sense to define CHROOTDIR but not IRC_USER and IRC_GROUP! Please define IRC_USER and IRC_GROUP properly as the user/group to change to."
+#endif
 
 #ifdef	__osf__
 #define	OSF
@@ -607,11 +514,6 @@
 #ifndef BSD
 #define BSD
 #endif
-#endif
-
-#ifdef _SEQUENT_		/* Dynix 1.4 or 2.0 Generic Define.. */
-#undef BSD
-#define SYSV			/* Also #define SYSV */
 #endif
 
 #ifdef	ultrix
@@ -634,21 +536,23 @@
 #endif
 
 #ifdef DEBUGMODE
-extern	void	debug();
-# define Debug(x) debug x
-# define LOGFILE LPATH
+#ifndef _WIN32
+		extern void debug(int, char *, ...);
+#define Debug(x) debug x
 #else
-# define Debug(x) ;
-# if VMS
-#	define LOGFILE "NLA0:"
-# else
-#	define LOGFILE "/dev/null"
-# endif
+		extern void debug(int, char *, ...);
+#define Debug(x) debug x
+#endif
+#define LOGFILE LPATH
+#else
+#define Debug(x) ;
+#if VMS
+#define LOGFILE "NLA0:"
+#else
+#define LOGFILE "/dev/null"
+#endif
 #endif
 
-#ifndef ENABLE_SUMMON
-#  undef LEAST_IDLE
-#endif
 
 #if defined(mips) || defined(PCS)
 #undef SYSV
@@ -656,71 +560,53 @@ extern	void	debug();
 
 #ifdef MIPS
 #undef BSD
-#define BSD             1       /* mips only works in bsd43 environment */
-#endif
-
-#ifdef sequent                   /* Dynix (sequent OS) */
-#define SEQ_NOFILE    128        /* set to your current kernel impl, */
-#endif                           /* max number of socket connections */
-
-#ifdef _SEQUENT_
-#define	DYNIXPTX
+#define BSD             1	/* mips only works in bsd43 environment */
 #endif
 
 #ifdef	BSD_RELIABLE_SIGNALS
 # if defined(SYSV_UNRELIABLE_SIGNALS) || defined(POSIX_SIGNALS)
-error You stuffed up config.h signals #defines use only one.
+error You stuffed up config.h signals
+#define use only one.
 # endif
 #define	HAVE_RELIABLE_SIGNALS
 #endif
-
 #ifdef	SYSV_UNRELIABLE_SIGNALS
 # ifdef	POSIX_SIGNALS
-error You stuffed up config.h signals #defines use only one.
+     error You stuffed up config.h signals
+#define use only one.
 # endif
 #undef	HAVE_RELIABLE_SIGNALS
 #endif
-
 #ifdef	POSIX_SIGNALS
 #define	HAVE_RELIABLE_SIGNALS
 #endif
-
 /*
  * safety margin so we can always have one spare fd, for motd/authd or
  * whatever else.  -4 allows "safety" margin of 1 and space reserved.
  */
 #define	MAXCLIENTS	(MAXCONNECTIONS-4)
-
 #ifdef HAVECURSES
 # define DOCURSES
 #else
 # undef DOCURSES
 #endif
-
 #ifdef HAVETERMCAP
 # define DOTERMCAP
 #else
 # undef DOTERMCAP
 #endif
-
 # define stricmp strcasecmp
 # define strnicmp strncasecmp
-
 #if defined(CLIENT_FLOOD)
-#  if	(CLIENT_FLOOD > 8000)
-#    define CLIENT_FLOOD 8000
-#  else
 #    if (CLIENT_FLOOD < 512)
-error CLIENT_FLOOD needs redefining.
+     error CLIENT_FLOOD needs redefining.
 #    endif
-#  endif
 #else
-error CLIENT_FLOOD undefined
+     error CLIENT_FLOOD undefined
 #endif
 #if (NICKNAMEHISTORYLENGTH < 100)
 #  define NICKNAMEHISTORYLENGTH 100
 #endif
-
 /*
  * Some ugliness for AIX platforms.
  */
@@ -737,26 +623,35 @@ error CLIENT_FLOOD undefined
  */
 # define BSD_INCLUDES
 #endif
-
+/*
+ * This is just to make Solaris porting easier -- codemastr
+ */
+#if defined(SOL20) || defined(SOL25) || defined(SOL26) || defined(SOL27)
+#define _SOLARIS
+#endif
 /*
  * Cleaup for WIN32 platform.
  */
 #ifdef _WIN32
 # undef FORCE_CORE
 #endif
-/* use cflag longmodes */
-#define USE_LONGMODE
-#define Reg1 register
-#define Reg2 register
-#define Reg3 register
-#define Reg4 register
-#define Reg5 register
-#define Reg6 register
-#define Reg7 register
-#define Reg8 register
-#define Reg9 register
-#define Reg10 register
+#ifdef NEED_BCMP
+#define bcmp memcmp
+#endif
+#ifdef NEED_BCOPY
+#define bcopy(a,b,c) memcpy(b,a,c)
+#endif
+#ifdef NEED_BZERO
+#define bzero(a,b) memset(a,0,b)
+#endif
+#ifdef HAVE_CRYPT
+#define AUTHENABLE_UNIXCRYPT
+#endif
+#if defined(AIX) && defined(_XOPEN_SOURCE_EXTENDED) && _XOPEN_SOURCE_EXTENDED
+# define SOCK_LEN_TYPE size_t
+#else
+# define SOCK_LEN_TYPE int
+#endif
 
-#endif /* __config_include__ */
-
+#endif				/* __config_include__ */
 

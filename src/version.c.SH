@@ -1,16 +1,10 @@
 # $Id$
-case $CONFIG in
-'')	 if test -r ../config.sh
-	 then 
-	    . ../config.sh ;
-	 else 
-	    spitshell=cat
-	    package=IRC
-	 fi
-	 ;;
-esac
 
-echo "Extracting $package/ircd/version.c..."
+echo "Extracting src/version.c..."
+
+id=`grep '$Id: Changes,v' ../Changes`
+id=`echo $id |sed 's/.* Changes\,v \(.*\) .* Exp .*/\1/'`
+echo "$id"
 
 if test -r version.c
 then
@@ -21,14 +15,13 @@ else
 fi
 
 generation=`expr $generation + 1`
-
 creation=`date | \
 awk '{if (NF == 6) \
          { print $1 " "  $2 " " $3 " "  $6 " at " $4 " " $5 } \
 else \
          { print $1 " "  $2 " " $3 " " $7 " at " $4 " " $5 " " $6 }}'`
 
-$spitshell >version.c <<!SUB!THIS!
+cat >version.c <<!SUB!THIS!
 /*
  *   IRC - Internet Relay Chat, ircd/version.c
  *   Copyright (C) 1990 Chelsea Ashley Dyerman
@@ -62,133 +55,151 @@ char *generation = "$generation";
 char *creation = "$creation";
 #define IRCDTOTALVERSION BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9
 char *version = IRCDTOTALVERSION;
-
+char *buildid = "$id";
 /* moved to s_serv.c */
 char *infotext[] = 
 { 0 };
 
 char *unrealcredits[] =
 {
-	"-=-=-=-=-=-=-=-=-=-= [ " IRCDTOTALVERSION " Credits ] -=-=-=-=-",
-	"The people on this list is people who have helped up through",
-	"the development of UnrealIRCd. The Unreal Team would like to thank",
-	"those people by listing them here:",
-	"-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=",
-	"              \2\37The UnrealIRCd Team would like to thank:\2\37",
-	"Nutcais (Phil Hawkins)",
+	"=-=--=-=-=-=-=-=-=-=-=[" IRCDTOTALVERSION " Credits]=-=-=-=-=-=-=-=-=-=-=-",
+	"The people on this list are people who have helped us with the",
+	"development of UnrealIRCd and who have made remarkable",
+	"contributions to the project.",
+	"=-=-=-=-=-=-=-=-=-=-=-=-=-=[Donations]=-=-=-=-=-=-=-=-=-=-=-=-=-=",
+	"BlueFlame^, [Real] - ChatFIRST.com, Jameno123 - ByteHosting,",
+	"Internet Services, Interlink Access Corp, Jan Knutar, ThePlayer,",
+	"Headband, noriko, powerstorm.net, RedMaxima, IronHelix, xnet.org,",
+	"Pierce - irc.AAcNet.org, Franky75 - Betas-Online.com, irc.vco.se,",
+	"Beldock - irc.coldfront.net, Kusau - chat.tochat.org, Japsclan,",
+	"WolfLord - UplinkCorp, Isaiah - irc.frogstar.us, Kedrin Milborn,",
+	"Dionisios Koutsikos, Tank - irc.scifi-fans.net, irc.P2Pchat.net,",
+	"Leo Zhadanovsky - irc.leozh.net, Lyote - ZodiaCIrC/DecayOnline,",
+	"Jesse Lanning - Secure Technology Networks, HERZ - insiderZ.DE,",
+	"James Yerge - Kronical Internet Solutions, djw - irc.perldev.org,",
+	"MichaelJE2 - irc.xcelor8.com, AfterShock - irc.liquidvoltage.net,",
+	"recycled-irc - www.recycled-irc.org, Alpha - irc.FireWirez.net,",
+	"FrostByghte - irc.coldfront.net, SdgNem - irc.RealmOfGaming.net,",
+	"MagicalTux - irc.FF.st, irc.P2Pchat.net, Ganja51 - irc.lcirc.net,",
+	"^White_Magic^ - irc.chatuniverse.net, Nick - irc.plasmachat.net,",
+	"Matridom - www.WinDrivers.com, anaconda - irc.lightmoon.org,", 
+	"mnslinky - http://www.secure-computing.net, Justin Furnas,",
+	"Andy Hansis - irc.technerd.net, Crimson - www.n00bstories.com",
+	"Devin Reams, Cleggo - irc.ugcentral.net, Tillo - irc.OSirc.net,",
+	"Matthew Burdine - irc.owns.us, Philip Veale - flame.tiefighter.org,",
+	"Latinus - irc.lokanova.com, Vincent Guesnard - irc.rs2i.net,",
+	"Windfyre IRC Network - irc.windfyre.net, SetNine - www.setnine.com,",
+	"|S| - irc.chatuniverse.net, CommTech Inc. - www.commtechusa.com,",
+	"CatNet IRC - irc.catslair.org, IcE-IRC - irc.ice-irc.de,",
+	"Kevin Devaux, Jackal - www.fyrebird.net, Lax - insiderZ.DE,",
+	"The_devil - chat.snyggast.se, Deltaanime Network - deltaanime.net,",
+	"CatNet IRC network - irc.catslair.org, A-Buz.com - a-buz.com,",
+	"LimonCenter Networks - www.limoncenter.com, Jean-Pierre Fournier,",
+	"AloneInTheDark - irc.sleepwalkers.org, El_barto - irc.ircdit.net,",
+	"Pyrexnetworks - www.pyrexnetworks.com, zunnie - www.MP-Gaming.NET,",
+	"All My Data - www.amdwebhost.com, Wulfie - irc.soundsnwaves.net,",
+	"eCoupons.com - www.ecoupons.com, MauritZ - irc.MindForge.org,",
+	"Voodoohosting - www.voodoohosting.com,",
+	"RealityBytez IRC Network - irc.realitybytez.net,",
+	"LFS - www.linuxfromscratch.org, The_devil - chat.snyggast.se,",
+	"Stephen - dirac.betas-online.com, NationWars - www.nationwars.com,",
+	"SurrealChat.net - www.surrealchat.net, NamesDir - www.namesdir.com,",
+	"Muisje - www.elitez0r.com, Jaya Sri - www.krisna.cc,",
+	"DiabloClone.Org - irc.diabloclone.org, RisingNet - www.RisingNet.net,",
+	"DCloneIRC.net - irc.dcloneirc.net, L.E.-Nation - irc.le-nation.de,",
+	"RomeoIRC - irc.romeoirc.net, Comparison Shopping - www.order.com,",
+	"Atak Trucking - www.AtakTrucking.com, www.Gamehostingprovider.com,",
+	"Xzibition.com - irc.xzibition.com, www.TheBookmarkShop.com,",
+	"Compare Prices - www.PriceV.com, Joe Gronlund - www.joegronlund.com,",
+	"Exoware - www.exoware.net, Bitmaster - irc.synIRC.net,",
+	"Angel IRC - irc.angelirc.net,",
+	"Grandview Landscape and Masonry - www.grandviewoutdoor.com",
+	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-[Coders]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=",
+	"For a list of coders & contributors, see /INFO (or: /QUOTE INFO)",
+	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=",
+	"The UnrealIRCd Team would like to thank:",
+	" ",
+	"Nutcais - Phil Hawkins",
 	"- the original shell for Unreal development, useful comments,",
-	"  being a real IRCbrother for me (Stskeeps) :), learning me a lot",
-	"  about IRC stuff, getting me more and more into IRCd business",
-	"  thanks for the *.tspre.org domain as well :)",
-	"",
-	"\37Local Irelands (http://www.local.ie)\37",
-	"- Thanks for sponsoring UnrealIRCd, test facilities,",
-	"  supporting UnrealIRCd, many new ideas, thanks for making",
-	"  Unreal what it is today:)",
-	"Mick and Sp^",
-	"- Amiga port of Unreal (UnrealIRCd/Amiga), continually strange",
-	"  comments on #UnrealIRCd, being great supporters of Unreal",
-	"  and following Unreal development all the way",
-	"DrBin (Dave) drbin@tspre.org",
-	"- Recoded & made the new UnrealIRCd/32 code, support,"
-	"  finding bugs, and tonnes of other stuff:)",
-	"{X} (Laurie) x@tspre.org",
-	"- Making the main code/design of UnrealIRCd/32 gui",
-	"  bugfounds, etc",
-	"SourceForge.net",
-	"- Good hosting, CVS hosting, FTP etc etc:) - thanks for",
-	"  supporting opensource projects",
-	"",
-	"                         \37Donations to Unreal:\37",
-	"BlueFlame^",
-	" - the first UnrealIRCd donation :)",
-	"   (yes your name can be here too;)",
-	"",
-	"              \37These people have helped alpha/betatesting\37",
-	"zshack, Headbang, Mick, Sp^, WonderWal, bomb, BullFrog, JacobD,",
-	"SirDeath, l33, EiniD, uo, RevPsych and the subgenius.net network,",
-	"^RavenX^, Mich[a]el, {X}, Fish, Shmad, Killer, BrainSCAN, RevNull,",
-	"GoNiS (irc.coreplex.org), Mikey, DrBin, and others",
-	"",
-	"",
-        "                   \2\37Stskeeps would like to thank:\2\37", 
-	"Morrigan             Julie Frederiksen",
-	" - Being a friend, thinking I was cute, uhm laying on a recycle",
-	"   thing.. 'Its the wrong recycle box Julie!', 'you got too cold",
-	"   hands *freezing*', etc ;)",
-	"DJBoxy       *unknown*                *unknown*",
-	" - For getting me up from #wIRCd bringing me to Mp3fansNet and",
-	"   after we linked to Global-IRC.net - and made people choose me",
-	"   as netadmin/ircd coder - Thanx!",
-	"TC           Tabita Clausen           (reallife)",
-	" - Making me smile of my life, talking with me, being a friend",
-	"   always got a pen sharpener when needed=/, accepting some",
-	"   wierdnesses from my side, going to the cinema with me",
-	"   and many other stuff. You'll always be in my heart,",
-	"   sorry for all the things I did or maybe didn't",
-	"   love you :(",
-	"KUFO          John MacKenzie",
-	" - Support, helping me always with getting through my life",
-	"   shells, etc etc ;)",
-	"Sporty_McFly  Cedric",
-	" - Comments, helping me when I got problems with my life and so on",
-        "   *toh* to him - Thanks!",
-	"Del_Monte     K. Hawkes               k.hawkes@zombies.force9.net",
-	" - Is just trying to put the lamer side of things across :cP",
-	"   No. I saw 2 moos. - Well having to input in seconds",
-	"   is fine if you're real quick at maths - but if not - it's a PAIN",
-	"   - Comments, bugfixes, moral support etc.;)",
-	"Skywalker     Chris Morley            skywalker@irc.ru.ac.za",
-	" - Helping me start up ROXnet at first (which brought me",
-	"   into IRCd business.. + Numerous kicks /Kills akills and alike;)",
-	"zero9000      Kevin Alford",
-	" - UnrealIRCd logo, graphics, null desu ;), ideas etc.",
-        "                   \2\37codemastr would like to thank:\2\37", 
-	"CaliMonk      Ivo Teel                calimonk@nhn.net",
-	" - Getting me started at NeoHorizon which basically got me",
-	"   started coding IRCd",
-	"Kenpo         Ian Ricci               ianr@nhn.net",
-	" - Starting me out learning *nix and giving me a place",
-	"   to develop Unreal",
-	"[FBI]         Corey Lang              *unknown*",
-	" - Being a good IRC friend and getting me started with",
-	"   IRC through our old little wIRCd net :)",
-	"",                     
-	"                            \2\37Also thanks to:\2\37",
-	"Enforcer, Andy Church, Mick, Sp^, ShadowMastr, Almaris",
-	"}{, Erik/Dr|zzt, Hedge, Kyle, MissKel, jfc, Fish, kore, Syndicate, Bagge,",
-	"#Coder-Com@Undernet, ^NeVeR^, flygirl^, DannyM, JuliuZ, wah-wah^, Lisa,",
-	"Melisa, NonMortal, Andryan, TomaHawk, Lushes, Skywalker, Merlin, Sporty_McFly,", 
-	"zero9000, #wIRCd@DALnet, comstud, dog3, Dianora, Isomer, and others who arent listed here:)",
-	"",
-	"------------------------------------------------------",
-	"Unreal 3.0 and up is dedicated to Morrigan - Julie Frederiksen",
-	"- a girl who have helped me through anything in my life, hugging",
-	"me at the right times, a definate dedication. Thanks for the kisses",
-	"long phonetalks, waste of my mobilephone ;), crying together",
-	"and making life go on for us both. I will never forget you",
-	"never leave you, love ya forever",
-	"------------------------------------------------------",
-	"This IRCd is dedicated to the love that has always been",
-	"and will always be there - Thanks to the girls & friends that kept me up",
-	"when I was down",
+	"  and supporting the project all through its life. Thanks for",
+	"  helping to get this project to take off.",
+	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-[Hosting]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=",
+	"Current hosters:",
+	"http://www.vulnscan.org/  All WWW sites",
+	"http://FTCNetworks.com/   IRCd shell",
+	"warg/andrew               VPS for IRCd",
+	"Below are people who have donated hosting in the past:",
+	"Phil Veale - email@phillipveale.com - http://www.tiefighter.org",
+	"- Donating webhosting for the project amongst other things",
+	"Alcatraz Media - http://www.alcatrazmedia.com",
+	"- Donating more webhosting for the project",
+	"cknight^",
+	"- Donating a FreeBSD box to the Unreal project to host some stuff",
+	"KIREnet.com - http://www.kirenet.com",
+	"- Donating hosting for the above box on their line",
+	"Digital Intensity Webhosting - http://www.digital-intensity.net",
+	"- Creating and donating hosting for the first UnrealIRCd forums",
+	"HawkSites Webhosting - http://www.hawksites.com",
+	"- Donating hosting for the forums",
+	"UGCentral - http://www.ugcentral.com/",
+	"- Donating hosting of the forums and the main site",
+	"=-=-=-=-=-=-=-=-=-=-=-=-=-=[Supporters]=-=-=-=-=-=-=-=-=-=-=-=-=-=",
+	"aquanight, Bricker, Dukat, HERZ, jewles, Nazzy, SciFi, Stealth, w00t",
+	" ",
+	"Thanks to former supporters and anyone who has helped without",
+	"officially joining the staff.",
+	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-",
+	"Stskeeps would primarily like to thank Julie for her support",
+	"through the years.",
+	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-",
+	"This IRCd is dedicated to those who have kept us rocking and", 
+	"in good mood all through the years we've struggled with this",
+	"project. Unreal3.0 and up is dedicated to Morrigan.",
+	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-",
+	"Finally, we would like to thank everyone else who has helped",
+	"UnrealIRCd in any way: reporting bugs, testing releases, helping",
+	"others, recommending UnrealIRCd to friends, or simply just by",
+	"running UnrealIRCd to ensure that we are and will continue to be",
+	"the most used IRC daemon in the world.",
+	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-",
 	0
-};
-char *unrealcreditsold[] = 
+}; 
+
+
+char unreallogo[] = 
 {
-	"------------------------------------------------------",
-	"Unreal 3.0 and up is dedicated to Morrigan - Julie Frederiksen",
-	"- a girl who have helped me through anything in my life, hugging",
-	"me at the right times, a definate dedication. Thanks for the kisses",
-	"long phonetalks, waste of my mobilephone ;), crying together",
-	"and making life go on for us both. I will never forget you",
-	"never leave you, love ya forever",
-	"------------------------------------------------------",
-	"This IRCd is dedicated to the love that has always been",
-	"and will always be there - Thanks to the girls & friends that kept me up",
-	"when I was down",
-	0
-};
+32,95,32,32,32,95,32,32,32,32,32,
+32,32,32,32,32,32,32,32,32,32,32,
+32,32,32,32,32,32,95,32,95,95,95,
+95,95,95,95,95,95,95,95,32,32,95,
+95,95,95,95,32,32,32,32,32,95,32,
+10,124,32,124,32,124,32,124,32,32,32,
+32,32,32,32,32,32,32,32,32,32,32,
+32,32,32,32,32,32,124,32,124,95,32,
+32,32,95,124,32,95,95,95,32,92,47,
+32,32,95,95,32,92,32,32,32,124,32,
+124,10,124,32,124,32,124,32,124,95,32,
+95,95,32,32,95,32,95,95,32,95,95,
+95,32,32,95,95,32,95,124,32,124,32,
+124,32,124,32,124,32,124,95,47,32,47,
+124,32,47,32,32,92,47,32,95,95,124,
+32,124,10,124,32,124,32,124,32,124,32,
+39,95,32,92,124,32,39,95,95,47,32,
+95,32,92,47,32,95,96,32,124,32,124,
+32,124,32,124,32,124,32,32,32,32,47,
+32,124,32,124,32,32,32,32,47,32,95,
+96,32,124,10,124,32,124,95,124,32,124,
+32,124,32,124,32,124,32,124,32,124,32,
+32,95,95,47,32,40,95,124,32,124,32,
+124,95,124,32,124,95,124,32,124,92,32,
+92,32,124,32,92,95,95,47,92,32,40,
+95,124,32,124,10,32,92,95,95,95,47,
+124,95,124,32,124,95,124,95,124,32,32,
+92,95,95,95,124,92,95,95,44,95,124,
+95,124,92,95,95,95,47,92,95,124,32,
+92,95,124,32,92,95,95,95,95,47,92,
+95,95,44,95,124,10,0,85,110,114,
+101,97,108,0};
 
 char *dalinfotext[] =
     {
@@ -206,7 +217,10 @@ char *dalinfotext[] =
 	"Potvin       Chris Wolkowski          potvin@acestar.org",
 	"RogerY       Roger Y.                 rogery@austnet.org",
 	"GZ                                    gz@starchat.net",
-	"binary",
+	"binary                                ",
+	"Dianora      Diane Bruce",
+	"lucas", 
+	"Roar Thronaas <roart@nvg.ntnu.no> added IPv6 support.",
 	"",
 	"",
 	"The following people have helped in making the DALnet ircd",

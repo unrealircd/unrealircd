@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, include/class.h
+ *   Unreal Internet Relay Chat Daemon, include/class.h
  *   Copyright (C) 1990 Darren Reed
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -22,21 +22,13 @@
 #ifndef	__class_include__
 #define __class_include__
 
-#ifndef PROTO
-#if __STDC__
-#       define PROTO(x) x
-#else
-#       define PROTO(x) ()
-#endif
-#endif
-
 typedef struct Class {
-	int	class;
-	int	conFreq;
-	int	pingFreq;
-	int	maxLinks;
-	long	maxSendq;
-	int	links;
+	int  class;
+	int  conFreq;
+	int  pingFreq;
+	int  maxLinks;
+	long maxSendq;
+	int  links;
 	struct Class *next;
 } aClass;
 
@@ -57,15 +49,15 @@ typedef struct Class {
 #define	FirstClass() 	classes
 #define	NextClass(x)	((x)->next)
 
-extern	aClass	*classes;
+extern aClass *classes;
 
-extern	aClass	*find_class PROTO((int));
-extern	int	get_conf_class PROTO((aConfItem *));
-extern	int	get_client_class PROTO((aClient *));
-extern	int	get_client_ping PROTO((aClient *));
-extern	int	get_con_freq PROTO((aClass *));
-extern	void	add_class PROTO((int, int, int, int, long));
-extern	void	check_class PROTO((void));
-extern	void	initclass PROTO((void));
+extern aClass *find_class(int);
+extern int get_conf_class(aConfItem *);
+extern int get_client_class(aClient *);
+extern int get_client_ping(aClient *);
+extern int get_con_freq(aClass *);
+extern void add_class(int, int, int, int, long);
+extern void check_class(void);
+extern void initclass(void);
 
 #endif /* __class_include__ */

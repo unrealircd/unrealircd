@@ -1,0 +1,26 @@
+/*
+ * l33t-irc.com (irc.l33t-irc.com) Network Configuration File
+ *
+ * Added-at:     04 January 2002 15:46
+ * Author: [LW]FlOwBiE
+ * Email: flowbie@l33t-irc.com
+ */
+
+set {
+	network-name "l33t-irc.com";
+	default-server "irc.l33t-irc.com"; 
+	services-server "services.l33t-irc.com";
+	stats-server "stats.l33t-irc.com";
+	help-channel "#l33t-irc.com";
+	hiddenhost-prefix "l33t-irc.com";
+	hosts {
+		local "local.l33t-irc.com";
+		global "l33t-irc";
+		coadmin "coadmin.l33t-irc.com";
+		admin "admin.l33t-irc.com";
+		servicesadmin "servicesadmin.l33t-irc.com";
+		netadmin "netadmin.l33t-irc.com";
+	        host-on-oper no;
+	};
+};
+

@@ -1,0 +1,42 @@
+#!/bin/sh
+#
+# Auto-update script for Unreal3.1 and higher
+# (C) Carsten V. Munk 2000
+#
+# This script may not be modified without consent of the author,
+# or included in any package without permission from the author.
+#
+# NO WARRANTY IS INCLUDED
+
+# TEMP added by Syzop till the new updater thing is finished.
+echo "Please see doc/unreal32docs.html section 1.2 (\"Notes on upgrading between 3.2 versions\")."
+exit 1
+# ORIGINAL CODE FOLLOWS:
+
+CURRENT_VERSION="Unreal3.2-beta12"
+WHATYAWANT="wget"
+clear
+cat .UPDATE
+cd src
+rm -f update.sh
+
+read $WHATYAWANT
+
+if [ "$WHATYAWANT" == "wget" ] ; then
+TMP=`which wget`
+TMP2=`echo $TMP | cut -c1`
+
+if [ "$TMP2" == "/" ] ; then
+	wget http://update.unrealircd.com/update.sh
+else
+	echo "wget not found trying lynx"
+	lynx -source http://update.unrealircd.com/update.sh > update.sh
+fi
+else
+	lynx -source http://update.unrealircd.com/update.sh > update.sh
+fi
+
+chmod +x update.sh
+export CURRENT_VERSION
+./update.sh $*
+exit 1

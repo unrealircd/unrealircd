@@ -1,0 +1,18 @@
+set {
+	network-name		"Thai IRC Network";
+	default-server		"irc.thai.com";
+	services-server		"services.thai.com";
+	stats-server		"stats.thai.com";
+	help-channel		"#Services";
+	hiddenhost-prefix	"ThaiNet";
+	prefix-quit		"Quit:";
+	hosts {
+		local		"locop.thai.com";
+		global		"ircop.thai.com";
+		coadmin		"coadmin.thai.com";
+		admin		"admin.thai.com";
+		servicesadmin	"serviceop.thai.com";
+		netadmin	"netadmin.thai.com";
+		host-on-oper-up	"on";
+	};
+};

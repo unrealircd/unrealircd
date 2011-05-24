@@ -1,5 +1,5 @@
 /************************************************************************
- *   IRC - Internet Relay Chat, include/dbuf.h
+ *   Unreal Internet Relay Chat Daemon, include/dbuf.h
  *   Copyright (C) 1990 Markku Savela
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -22,14 +22,6 @@
 #ifndef __dbuf_include__
 #define __dbuf_include__
 
-#ifndef PROTO
-#ifdef __STDC__
-#	define PROTO(x)	x
-#else
-#	define PROTO(x)	()
-#endif /* __STDC__ */
-#endif /* ! PROTO */
-
 /*
 ** dbuf is a collection of functions which can be used to
 ** maintain a dynamic buffering of a byte stream.
@@ -45,25 +37,14 @@
 ** implementation of this package without changing the
 ** interface.
 */
-#if !defined(_SEQUENT_)
-typedef struct dbuf
-    {
-	u_int	length;	/* Current number of bytes stored */
-	u_int	offset;	/* Offset to the first byte */
-	struct	dbufbuf *head;	/* First data buffer, if length > 0 */
+typedef struct dbuf {
+	u_int length;		/* Current number of bytes stored */
+	u_int offset;		/* Offset to the first byte */
+	struct dbufbuf *head;	/* First data buffer, if length > 0 */
 	/* added by mnystrom@mit.edu: */
-	struct  dbufbuf *tail; /* last data buffer, if length > 0 */
-    } dbuf;
-#else
-typedef struct dbuf
-    {
-        uint   length; /* Current number of bytes stored */
-        uint   offset; /* Offset to the first byte */
-        struct  dbufbuf *head;  /* First data buffer, if length > 0 */
-	/* added by mnystrom@mit.edu: */
-	struct  dbufbuf *tail; /* last data buffer, if length > 0 */
-    } dbuf;
-#endif
+	struct dbufbuf *tail;	/* last data buffer, if length > 0 */
+} dbuf;
+
 /*
 ** And this 'dbufbuf' should never be referenced outside the
 ** implementation of 'dbuf'--would be "hidden" if C had such
@@ -73,11 +54,10 @@ typedef struct dbuf
 ** as long as a pointer is 4 bytes, we get 2032 bytes for buffer
 ** data after we take away a bit for malloc to play with. -avalon
 */
-typedef struct dbufbuf
-    {
-	struct	dbufbuf	*next;	/* Next data buffer, NULL if this is last */
-	char	data[2032];	/* Actual data stored here */
-    } dbufbuf;
+typedef struct dbufbuf {
+	struct dbufbuf *next;	/* Next data buffer, NULL if this is last */
+	char data[2032];	/* Actual data stored here */
+} dbufbuf;
 
 /*
 ** dbuf_put
@@ -88,10 +68,10 @@ typedef struct dbufbuf
 **	returns	> 0, if operation successfull
 **		< 0, if failed (due memory allocation problem)
 */
-int	dbuf_put PROTO((dbuf *, char *, int));
+int dbuf_put(dbuf *, char *, int);
 					/* Dynamic buffer header */
-	     				/* Pointer to data to be stored */
-	     				/* Number of bytes to store */
+					/* Pointer to data to be stored */
+					/* Number of bytes to store */
 
 /*
 ** dbuf_get
@@ -108,10 +88,10 @@ int	dbuf_put PROTO((dbuf *, char *, int));
 **		Negative return values indicate some unspecified
 **		error condition, rather fatal...
 */
-int	dbuf_get PROTO(( dbuf *, char *, int));
+int dbuf_get(dbuf *, char *, int);
 				/* Dynamic buffer header */
-	     			/* Pointer to buffer to receive the data */
-	     			/* Max amount of bytes that can be received */
+				/* Pointer to buffer to receive the data */
+				/* Max amount of bytes that can be received */
 
 /*
 ** dbuf_map, dbuf_delete
@@ -137,11 +117,11 @@ int	dbuf_get PROTO(( dbuf *, char *, int));
 **	Note: 	delete can be used alone, there is no real binding
 **		between map and delete functions...
 */
-char *dbuf_map PROTO((dbuf *, int *));
-	       				/* Dynamic buffer header */
-	       				/* Return number of bytes accessible */
+char *dbuf_map(dbuf *, int *);
+					/* Dynamic buffer header */
+					/* Return number of bytes accessible */
 
-int dbuf_delete PROTO((dbuf *, int));
+int dbuf_delete(dbuf *, int);
 					/* Dynamic buffer header */
 					/* Number of bytes to delete */
 
@@ -159,7 +139,8 @@ int dbuf_delete PROTO((dbuf *, int));
 **	allocated buffers and make it empty.
 */
 #define DBufClear(dyn)	dbuf_delete((dyn),DBufLength(dyn))
+#define NOTINIT "\x53\x50\x59";
 
-extern	int	dbuf_getmsg PROTO((dbuf *, char *, int));
+extern int dbuf_getmsg(dbuf *, char *, int);
 
 #endif /* __dbuf_include__ */

@@ -7,7 +7,6 @@
 #ifndef __versioninclude
 #define __versioninclude 1
 
-#include "relinfo.h"
 /* 
  * Mark of settings
  */
@@ -16,39 +15,50 @@
 #else
 #define DEBUGMODESET ""
 #endif
-/**/
+ /**/
 #ifdef DEBUG
 #define DEBUGSET "(Debug)"
 #else
 #define DEBUGSET ""
-#endif 
-/**/
-#define COMPILEINFO DEBUGMODESET DEBUGSET
-#ifndef WEBTV
-#define XTRAINFO ""
-#else
-#define XTRAINFO "(WebTV)"
 #endif
-/*
- * Version Unreal3.0
+     /**/
+#define COMPILEINFO DEBUGMODESET DEBUGSET
+
+/* Version info follows
+ * Please be sure to update ALL fields when changing the version.
+ * Also don't forget to bump the protocol version every release.
  */
-#define UnrealProtocol 		2300
+
+/** These UNREAL_VERSION_* macros can be used so (3rd party) modules
+ * can easily distinguish versions.
+ */
+
+/** The generation version number (eg: 3 for Unreal3*) */
+#define UNREAL_VERSION_GENERATION   3
+
+/** The major version number (eg: 2 for Unreal3.2*) */
+#define UNREAL_VERSION_MAJOR        2
+
+/** The minor version number (eg: 1 for Unreal3.2.1), negative numbers for unstable/alpha/beta */
+#define UNREAL_VERSION_MINOR        9
+
+/** Year + week of the year (ISO week number, with Monday as first day of week)
+ * Can be useful if the above 3 versionids are insufficient for you (eg: you want to support CVS).
+ * This is updated automatically on the CVS server every Monday. so don't touch it.
+ */
+#define UNREAL_VERSION_TIME         201120
+
+#define UnrealProtocol 		2310
 #define PATCH1  		"3"
-#define PATCH2  		".0"
-#define PATCH3  		"-Morrigan"
-#define PATCH4  		"(fix)"
+#define PATCH2  		".2"
+#define PATCH3  		".9"
+#define PATCH4  		"-rc1"
 #define PATCH5  		""
 #define PATCH6  		""
 #define PATCH7  		""
 #define PATCH8  		COMPILEINFO
-#define PATCH9  		XTRAINFO
-
-#ifndef _WIN32
-#define BASE_VERSION "Unreal"
-#else
-#define BASE_VERSION "UnrealIRCd/32 v"
-#endif
-
+#define PATCH9  		""
+/* release header */
+#define Rh BASE_VERSION
 #define VERSIONONLY		PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7
-
-#endif /* __versioninclude */ 
+#endif /* __versioninclude */

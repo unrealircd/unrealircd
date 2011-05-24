@@ -1,0 +1,26 @@
+/*
+ * IceChat (irc.icechat.net) Network Configuration File
+ *
+ * Added-at:     19 February 2002 16:55
+ * Author: Rosco
+ * Email: pssystem@home.com
+ */
+
+set {
+	network-name "IceChat";
+	default-server "irc.icechat.net"; 
+	services-server "services.icechat.net";
+	stats-server "stats.icechat.net";
+	help-channel "#help";
+	hiddenhost-prefix "00";
+	hosts {
+		local "locop.icechat.net";
+		global "oper.icechat.net";
+		coadmin "coadmin.icechat.net";
+		admin "admin.icechat.net";
+		servicesadmin "csop.icechat.net";
+		netadmin "netadmin.icechat.net";
+		host-on-oper-up yes;
+	};
+};
+

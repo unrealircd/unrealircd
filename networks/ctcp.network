@@ -1,0 +1,26 @@
+/*
+ * CTCP Networks (irc.ctcp.net) Network Configuration File
+ *
+ * Added-at:     12 February 2002 19:54
+ * Author: Mark
+ * Email: mark@ctcp.net
+ */
+
+set {
+	network-name "CTCP Networks";
+	default-server "irc.ctcp.net"; 
+	services-server "services.ctcp.net";
+	stats-server "stats.ctcp.net";
+	help-channel "#opers";
+	hiddenhost-prefix "ctcp";
+	hosts {
+		local "locop.ctcp.net";
+		global "oper.ctcp.net";
+		coadmin "coadmin.ctcp.net";
+		admin "admin.ctcp.net";
+		servicesadmin "csop.ctcp.net";
+		netadmin "netadmin.ctcp.net";
+		host-on-oper-up yes;
+	};
+};
+

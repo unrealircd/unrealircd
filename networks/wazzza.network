@@ -1,0 +1,27 @@
+/*
+ * wazZza (irc.wazzza.org) Network Configuration File
+ * --------------------------------------------------
+ *  Added-at:     08 april 2001 18:33
+ *  Author: [ripper]
+ *  Email: ripper@wazzza.org
+ * -----------------------------------------
+ */
+
+set {
+        network-name            "wazZza";
+        default-server          "irc.wazzza.org";
+        services-server         "services.wazzza.org";
+        stats-server            "stats.wazzza.org";
+        help-channel            "#help";
+        hiddenhost-prefix       "wazzza";
+        prefix-quit             "Quit:";
+        hosts {
+                local           "locop.wazzza.org";
+                global          "oper.wazzza.org";
+                coadmin         "coadmin.wazzza.org";
+                admin           "admin.wazzza.org";
+                servicesadmin   "csop.wazzza.org";
+                netadmin        "netadmin.wazzza.org";
+                host-on-oper-up "on";
+        };
+};
