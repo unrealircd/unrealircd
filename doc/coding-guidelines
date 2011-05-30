@@ -3,8 +3,7 @@ Rules about patches & modifications to UnrealIRCd
 1. When making a change, always add a small description in Changes, in the
    BOTTOM. Don't forget to mention the bug# and credit the reporter (if any).
 
-2. If new files are made, it must contain proper copyright headers,
-   and a $Id$ somewhere.
+2. If new files are made, it must contain proper copyright headers.
 
 3. If you want to submit patches (f.e. if you don't have CVS write access)
    then submit them to http://bugs.unrealircd.org/ (shortly called bugs*)
