@@ -29,21 +29,11 @@
   * Many more..
 
   Internet Presence:
-  * http://unrealircd.com/
+  * http://www.unrealircd.com/
  
- CVS
- ====
- To get anonymous access: (read only)
- "cvs -d :pserver:anonymous@cvs.unrealircd.com:/cvs login"
-
- press enter when asked for password
- Then, choose the appropiate branch you want:
-
- latest 3.2 release ("stable"):
- "cvs -z3 -d :pserver:anonymous@cvs.unrealircd.com:/cvs checkout -r stable -d Unreal-stable unreal"
-
- latest 3.2 fixes / development ("unreal3_2_fixes"):
- "cvs -z3 -d :pserver:anonymous@cvs.unrealircd.com:/cvs checkout -r unreal3_2_fixes -d Unreal-stable unreal"
+ UnrealIRCd Bugtracker (Where to report bugs, make suggestions, and submit patches)
+ ===================================================================================
+ http://bugs.unrealircd.org/
 
  To get support
  ================
@@ -62,10 +52,23 @@
 	  are humans like you. We sometimes just need some peace.]
  * Forum: http://forums.unrealircd.com/
 
- UnrealIRCd Bugtracker (Where to report bugs, make suggestions, and submit patches)
- ==================================================================
- http://bugs.unrealircd.org/
+ Development version
+ ====================
+ To access the latest development version of UnrealIRCd you need to use mercurial (hg).
+ Note that because you are accessing a development version it may not compile, the
+ server may crash, or other problems can occur since the code is likely to be only
+ lightly tested (or not at all). On the other hand, using the development version may
+ help you to get rid of that single nasty bug that is haunting you, plus if you test
+ it and give us feedback (report bugs) then you actually help us with developing Unreal.
+
+ The command to grab the development version is:
+ hg clone http://hg.unrealircd.org/unreal
+
+ If you get something like 'hg: command not found' then you need to install mercurial.
+ Most *NIX systems have such a 'mercurial' package, but if you don't, or you are on
+ Windows or Mac OS X, then see http://mercurial.selenic.com/
 
  Want to discuss, chat, etc?
  =============================
  * IRC: /server irc.unrealircd.com 6667 - /join #chat
+   (NOT for support! If you want support then use #unreal-support instead!)

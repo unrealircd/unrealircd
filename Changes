@@ -2274,3 +2274,12 @@
 - Module coders: Added HOOKTYPE_HANDSHAKE which is called before the client
   handshake, IOTW: as soon as the connection is established. This can be used
   to do things prior to accepting any commands, such as sending some text.
+- Moved from cvs to hg (thanks binki!), this means cvs from this point in
+  time should no longer be used (the lastest CVS version will not compile,
+  this has been done on-purpose).
+  The new way to access the development version of UnrealIRCd is:
+  hg clone http://hg.unrealircd.org/unreal
+  If you get something like 'hg: command not found' then you need to
+  install mercurial. Most *NIX systems have such a 'mercurial' package,
+  but if you don't, or you are on Windows or Mac OS X, then grab it at
+  http://mercurial.selenic.com/
