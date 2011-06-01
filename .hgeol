@@ -1,0 +1,13 @@
+[repository]
+native = LF
+
+[patterns]
+.RELEASE.NOTES = native
+README = native
+Unreal.nfo = native
+makefile.win32 = native
+Changes = native
+**.c = native
+**.conf = native
+**.html = native
+**.txt = native
