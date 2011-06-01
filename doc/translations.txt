@@ -1,4 +1,4 @@
-==[ Translations ]============================================================
+==[ Translations ]===========================================================
 
 Starting with the release of Unreal 3.2 we have begun accepting translated
 documentation files. For now, only translations of unreal32docs.html and
@@ -42,4 +42,4 @@ to translate to.. You will then receive an email back saying you can
 go ahead (or not). This is mainly to avoid multiple persons working 
 on the same translation.
 
-==============================================================================
+=============================================================================
