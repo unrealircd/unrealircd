@@ -2283,3 +2283,4 @@
   install mercurial. Most *NIX systems have such a 'mercurial' package,
   but if you don't, or you are on Windows or Mac OS X, then grab it at
   http://mercurial.selenic.com/
+- Updated doc/compiling_win32.txt a bit.

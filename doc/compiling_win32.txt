@@ -23,6 +23,9 @@ use the FREE development kit available for Windows 7 explained below:
    Start Menu under Microsoft Windows SDK v7.0). Users on x64 environment will have
    to change their environment to x86 by typing 'SETENV /x86'.    
 
+3. Download http://www.vulnscan.org/tmp/dlltool.exe and put the file somewhere
+   in your path (eg: put it in c:\windows\system32).
+
 ==[ EXTERNAL LIBRARIES ]==
 Fetch the external libraries (c-ares, tre, openssl, zlib, curl) from:
 http://www.vulnscan.org/unrealwin32dev/
@@ -32,7 +35,7 @@ http://www.vulnscan.org/unrealwin32dev/
 2. Go to your UnrealIRCd dir (like: cd \dev\unreal3.2)
 3. Have a look at 'makefile.win32' to look at what parameters you need to
    use, this depends on what libraries you want to link in and their location.
-4. Two options, use either one (B is preferred):
+4. Two options, use either one (B is preferred), and read step 5 too:
    A. Edit makefile.win32 directly to reflect your configuration and run
       'nmake -f makefile.win32'
    B. Don't edit makefile.win32 but instead create a one-line command (which
@@ -46,7 +49,17 @@ http://www.vulnscan.org/unrealwin32dev/
       CARES_INC_DIR="C:\dev\c-ares" CARESLIB="cares.lib"
       TRE_LIB_DIR="C:\dev\tre\win32\release" TRE_INC_DIR="C:\dev\tre"
       TRELIB="tre.lib"
-5. Your compile is now done, you can package unreal if you have InnoSetup,
+5. You are likely to encounter an error like
+   M_OPER.obj : error LNK2019: unresolved external symbol _sendto_snomask_global
+   referenced in function _m_oper
+   (the exact name and symbol will differ!!)
+   In that case you need to generate a symbols file:
+   nmake -f makefile.win32 SYMBOLFILE
+   And after that simply re-run your nmake -f makefile.win32 [options]
+   command, the same command you ran before the error occured.
+   You should not get any unresolved external symbol error again.
+   If you still do, then something is wrong.
+6. Your compile is now done, you can package unreal if you have InnoSetup,
    in that case check out src\win32\unrealinst.iss
    Otherwise, manually copy over the necessary files (and the dll files
    from the external libraries).
