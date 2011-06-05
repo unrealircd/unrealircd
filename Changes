@@ -2284,3 +2284,6 @@
   but if you don't, or you are on Windows or Mac OS X, then grab it at
   http://mercurial.selenic.com/
 - Updated doc/compiling_win32.txt a bit.
+- The unreal32docs translations in Greek, Spanish and Dutch are marked as
+  out of date.
+- CRLF conversion of unreal32docs.gr.html
