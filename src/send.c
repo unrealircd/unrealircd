@@ -120,11 +120,11 @@ void flush_connections(aClient* cptr)
 	{
 		for (i = LastSlot; i >= 0; i--)
 			if ((acptr = local[i]) && !(acptr->flags & FLAGS_BLOCKED)
-			    && DBufLength(&acptr->sendQ) > 0)
+			    && ((DBufLength(&cptr->sendQ) > 0) || (IsZipped(cptr) && cptr->zip->outcount)) )
 				send_queued(acptr);
 	}
 	else if (cptr->fd >= 0 && !(cptr->flags & FLAGS_BLOCKED)
-	    && DBufLength(&cptr->sendQ) > 0)
+	    && ((DBufLength(&cptr->sendQ) > 0) || (IsZipped(cptr) && cptr->zip->outcount)) )
 		send_queued(cptr);
 
 }

@@ -2287,3 +2287,7 @@
 - The unreal32docs translations in Greek, Spanish and Dutch are marked as
   out of date.
 - CRLF conversion of unreal32docs.gr.html
+- Zip links: once a link was zipped, the error message when closing the
+  connection was never actually sent (due to buffering). Hence, things like
+  the /SQUIT reason was never seen on the other side (just 'server closed
+  the connection'). This has now been fixed.
