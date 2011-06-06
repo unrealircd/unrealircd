@@ -2291,3 +2291,5 @@
   connection was never actually sent (due to buffering). Hence, things like
   the /SQUIT reason was never seen on the other side (just 'server closed
   the connection'). This has now been fixed.
+- Fix compile failure introduced by last change when zip links are
+  disabled.
