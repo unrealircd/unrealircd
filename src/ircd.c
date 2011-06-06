@@ -1003,18 +1003,26 @@ struct ThrottlingBucket z = { NULL, NULL, {0}, 0, 0};
 static void generate_cloakkeys()
 {
 	/* Generate 3 cloak keys */
-#define GENERATE_CLOAKKEY_MINLEN 10
-#define GENERATE_CLOAKKEY_MAXLEN 20 /* Length of cloak keys to generate. */
+#define GENERATE_CLOAKKEY_MINLEN 16
+#define GENERATE_CLOAKKEY_MAXLEN 32 /* Length of cloak keys to generate. */
 	char keyBuf[GENERATE_CLOAKKEY_MAXLEN + 1];
 	int keyNum;
 	int keyLen;
 	int charIndex;
 	int value;
 
+	short has_upper;
+	short has_lower;
+	short has_num;
+
 	fprintf(stderr, "Here are 3 random cloak keys:\n");
 
 	for (keyNum = 0; keyNum < 3; ++keyNum)
 	{
+		has_upper = 0;
+		has_lower = 0;
+		has_num = 0;
+
 		keyLen = (getrandom8() % (GENERATE_CLOAKKEY_MAXLEN - GENERATE_CLOAKKEY_MINLEN + 1)) + GENERATE_CLOAKKEY_MINLEN;
 		for (charIndex = 0; charIndex < keyLen; ++charIndex)
 		{
@@ -1022,17 +1030,25 @@ static void generate_cloakkeys()
 			{
 				case 0: /* Uppercase. */
 					keyBuf[charIndex] = (char)('A' + (getrandom8() % ('Z' - 'A')));
+					has_upper = 1;
 					break;
 				case 1: /* Lowercase. */
 					keyBuf[charIndex] = (char)('a' + (getrandom8() % ('z' - 'a')));
+					has_lower = 1;
 					break;
 				case 2: /* Digit. */
 					keyBuf[charIndex] = (char)('0' + (getrandom8() % ('9' - '0')));
+					has_num = 1;
 					break;
 			}
 		}
 		keyBuf[keyLen] = '\0';
-		(void)fprintf(stderr, "%s\n", keyBuf);
+
+		if (has_upper && has_lower && has_num)
+			(void)fprintf(stderr, "%s\n", keyBuf);
+		else
+			/* Try again. For this reason, keyNum must be signed. */
+			keyNum--;
 	}
 }
 #endif

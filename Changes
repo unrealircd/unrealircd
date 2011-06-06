@@ -2293,3 +2293,5 @@
   the connection'). This has now been fixed.
 - Fix compile failure introduced by last change when zip links are
   disabled.
+- Check that the automatically-generated cloak keys fit unrealircd's
+  own criteria before printing them out. (#4017)
