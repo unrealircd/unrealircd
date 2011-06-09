@@ -1,10 +1,10 @@
 UnrealIRCd is a free program, but we do put a lot of time, effort, and money
-into creating and maintaining Unreal. To make it easier for user's to show their
+into creating and maintaining Unreal. To make it easier for users to show their
 appreciation, the Unreal team has decided to accept donations through PayPal. If
 you like Unreal, and you'd like to see it continue to exist, please consider making
 a donation. We're not asking for anything huge, whatever you can afford is fine.
 
-PayPal Donation Link: http://www.unrealircd.com/donate
+PayPal Donation Link: http://unrealircd.com/donate.php
 
 If you don't want to use PayPal, or you want to donate something other than money,
 contact Syzop (syzop@unrealircd.com).
@@ -16,5 +16,3 @@ Please check the website for details.
 
 Thank you for your support,
 The UnrealIRCd Team
-
-[ $Id$ ]
