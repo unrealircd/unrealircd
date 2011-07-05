@@ -2298,4 +2298,4 @@
 - Added aliases/atheme.conf, provided by katsklaw (#0003990).
 - Support installing the ircd binary for people who set
   --with-spath=<dpath>/bin/ircd.
-- Add missing quotation to doc/help.ft.conf (#4026 by MewT).
+- Add missing quotation to doc/help.fr.conf (#4026 by MewT).
