@@ -2296,3 +2296,5 @@
 - Check that the automatically-generated cloak keys fit unrealircd's
   own criteria before printing them out. (#4017)
 - Added aliases/atheme.conf, provided by katsklaw (#0003990).
+- Support installing the ircd binary for people who set
+  --with-spath=<dpath>/bin/ircd.
