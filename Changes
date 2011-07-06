@@ -2299,3 +2299,4 @@
 - Support installing the ircd binary for people who set
   --with-spath=<dpath>/bin/ircd.
 - Add missing quotation to doc/help.fr.conf (#4026 by MewT).
+- Remove temporary message (Unreal3.2.1) regarding cloaking modules.
