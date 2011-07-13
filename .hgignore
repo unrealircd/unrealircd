@@ -1,0 +1,22 @@
+syntax: regexp
+
+# particular targets
+^ircdcron/ircdchk$
+^ircdcron/ircd\.cron$
+^src/ircd$
+^src/include$
+^src/version\.c$
+^unreal$
+
+# General
+\.(o|so|orig|rej)$
+~$
+
+# autotools
+^config\.(status|log)$
+
+# not quite autotools
+^config\.settings$
+^include/setup\.h$
+^Makefile$
+^src/modules/Makefile$
