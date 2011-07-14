@@ -996,6 +996,7 @@ listen *:6601 {
 		userhost &lt;hostmask&gt;;
 	};
 	password &lt;password&gt; { &lt;auth-type&gt;; };
+	require-modes &lt;modes&gt;
 	class &lt;class-name&gt;;
 	flags &lt;flags&gt;;
 	flags {
@@ -1012,7 +1013,12 @@ listen *:6601 {
 <p>The oper block allows you to assign IRC Operators for your server. The <b>oper::</b> 
   specifies the login name for the /oper. The <b>oper::from::userhost</b> is a user@host 
   mask that the user must match, you can specify more than one hostmask by creating 
-  more than one oper::from::userhost.
+  more than one oper::from::userhost. The
+  optional <b>oper::require-modes</b> setting lets one specify modes
+  (such as <em>r</em> or <em>z</em>) that a user must have acquired
+  before being allowed to OPER. This might be used to require users
+  to register with nickserv or be using secure connections before
+  being able to become operators.
 </p>
 <p id="operblock_password">The <b>oper::password::</b> is the password the oper must specify.
   <b>oper::password::auth-type</b> allows you to specify an authentication method 

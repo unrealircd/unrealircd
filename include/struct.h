@@ -1227,7 +1227,7 @@ struct _configitem_oper {
 	anAuthStruct	 *auth;
 	ConfigItem_class *class;
 	ConfigItem	 *from;
-	unsigned long	 modes;
+	unsigned long	 modes, require_modes;
 	long		 oflags;
 	int			maxlogins;
 };

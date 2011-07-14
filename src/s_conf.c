@@ -3673,6 +3673,10 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 		{
 			oper->modes = set_usermode(cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "require-modes"))
+		{
+			oper->require_modes = set_usermode(cep->ce_vardata);
+		}
 		else if (!strcmp(cep->ce_varname, "maxlogins"))
 		{
 			oper->maxlogins = atoi(cep->ce_vardata);
@@ -3703,7 +3707,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 {
 	char has_class = 0, has_password = 0, has_flags = 0, has_swhois = 0, has_snomask = 0;
-	char has_modes = 0, has_from = 0, has_maxlogins = 0;
+	char has_modes = 0, has_require_modes = 0, has_from = 0, has_maxlogins = 0;
 	int oper_flags = 0;
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
@@ -3779,7 +3783,7 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 				has_snomask = 1;
 			}
 			/* oper::modes */
-			else if (!strcmp(cep->ce_varname, "modes")) 
+			else if (!strcmp(cep->ce_varname, "modes"))
 			{
 				char *p;
 				for (p = cep->ce_vardata; *p; p++)
@@ -3796,6 +3800,24 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 					continue;
 				}
 				has_modes = 1;
+			}
+			/* oper::require-modes */
+			else if (!strcmp(cep->ce_varname, "require-modes"))
+			{
+				char *p;
+				for (p = cep->ce_vardata; *p; p++)
+					if (strchr("oOaANC", *p))
+					{
+						config_warn("%s:%i: oper::require-modes probably shouldn't include mode '%c'",
+							cep->ce_fileptr->cf_filename, cep->ce_varlinenum, *p);
+					}
+				if (has_require_modes)
+				{
+					config_warn_duplicate(cep->ce_fileptr->cf_filename,
+						cep->ce_varlinenum, "oper::require-modes");
+					continue;
+				}
+				has_require_modes = 1;
 			}
 			/* oper::maxlogins */
 			else if (!strcmp(cep->ce_varname, "maxlogins"))

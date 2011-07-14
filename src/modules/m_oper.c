@@ -211,6 +211,21 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		sptr->since += 7;
 		return 0;
 	}
+
+	/* Check oper::require_modes */
+	if (aconf->require_modes & ~sptr->umodes)
+	{
+		sendto_one(sptr, err_str(ERR_NOOPERMODES), me.name, parv[0]);
+		sendto_snomask_global
+			(SNO_OPER, "Failed OPER attempt by %s (%s@%s) [lacking modes '%s' in oper::require-modes]",
+			 parv[0], sptr->user->username, sptr->sockhost, get_modestr(aconf->require_modes & ~sptr->umodes));
+		ircd_log(LOG_OPER, "OPER MISSINGMODES (%s) by (%s!%s@%s), needs modes=%s",
+			 name, parv[0], sptr->user->username, sptr->sockhost,
+			 get_modestr(aconf->require_modes & ~sptr->umodes));
+		sptr->since += 7;
+		return 0;
+	}
+
 	strlcpy(nuhhost, make_user_host(sptr->user->username, sptr->user->realhost), sizeof(nuhhost));
 	strlcpy(nuhhost2, make_user_host(sptr->user->username, Inet_ia2p(&sptr->ip)), sizeof(nuhhost2));
 	for (oper_from = (ConfigItem_oper_from *) aconf->from;
