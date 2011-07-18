@@ -2303,3 +2303,6 @@
 - Add a self-documented and commented files {} block to example.conf.
 - Another fix-for-fix of zip links buffering from a few weeks ago.
   Reported by fbi (#0004030).
+- Win32: fix rehash from the command line not working, reported by Platzii
+  (#0004028).
+** 3.2.9-rc2 release **

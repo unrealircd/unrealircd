@@ -1,4 +1,4 @@
-Unreal3.2.9-RC1 Release Notes
+Unreal3.2.9-RC2 Release Notes
 ============================
 
 ==[ GENERAL INFORMATION ]==
@@ -15,6 +15,8 @@ Unreal3.2.9-RC1 Release Notes
   of the changes in this release. There have been 160+ changes, twice as much
   as usual for a release, hence this summary is a bit long too.
   For the FULL list of changes, see the Changelog.
+- If you previously used CVS to access the development version of UnrealIRCd,
+  you now need to use Mercurial, see see http://www.unrealircd.com/hgmove
 
 ==[ NEW ]==
 - Extban ~j: this only prevents a user from joining, once in he can speak freely.

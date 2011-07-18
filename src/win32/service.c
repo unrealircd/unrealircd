@@ -87,7 +87,10 @@ VOID WINAPI IRCDCtrlHandler(DWORD opcode)
 	}
 	/* Rehash */
 	else if (opcode == IRCD_SERVICE_CONTROL_REHASH) 
+	{
 		rehash(&me,&me,0);
+		reread_motdsandrules();
+	}
 
 	SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
 } 
