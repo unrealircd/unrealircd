@@ -2301,3 +2301,5 @@
 - Add missing quotation to doc/help.fr.conf (#4026 by MewT).
 - Remove temporary message (Unreal3.2.1) regarding cloaking modules.
 - Add a self-documented and commented files {} block to example.conf.
+- Another fix-for-fix of zip links buffering from a few weeks ago.
+  Reported by fbi (#0004030).
