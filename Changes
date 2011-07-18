@@ -2305,4 +2305,5 @@
   Reported by fbi (#0004030).
 - Win32: fix rehash from the command line not working, reported by Platzii
   (#0004028).
+- Update curl-ca-bundle.crt
 ** 3.2.9-rc2 release **
