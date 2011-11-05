@@ -1818,6 +1818,8 @@ extern MODVAR char *gnulicense[];
 #define PARTFMT		":%s PART %s"
 #define PARTFMT2	":%s PART %s :%s"
 
+#define isexcept void
+
 #ifdef USE_SSL
 #include "ssl.h"
 #endif
