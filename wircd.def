@@ -1,6 +1,5 @@
-; dlltool --output-def wircd.def.in --export-all-symbols SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ SRC/S_CONF.OBJ SRC/FDLIST.OBJ SRC/DBUF.OBJ SRC/CLOAK.OBJ SRC/HASH.OBJ SRC/PARSE.OBJ SRC/IRCD.OBJ SRC/S_NUMERIC.OBJ SRC/WHOWAS.OBJ SRC/S_AUTH.OBJ SRC/HELP.OBJ SRC/S_MISC.OBJ SRC/MATCH.OBJ SRC/CRULE.OBJ SRC/S_DEBUG.OBJ SRC/SUPPORT.OBJ SRC/LIST.OBJ SRC/S_ERR.OBJ SRC/PACKET.OBJ SRC/S_BSD.OBJ SRC/S_SERV.OBJ SRC/S_USER.OBJ SRC/CHARSYS.OBJ SRC/VERSION.OBJ SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/BADWORDS.OBJ SRC/WEBTV.OBJ SRC/RES.OBJ SRC/MODULES.OBJ SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/MD5.OBJ SRC/API-ISUPPORT.OBJ SRC/API-COMMAND.OBJ SRC/EXTBANS.OBJ
+; c:\apps\utils\dlltool.EXE --output-def wircd.def.in --export-all-symbols SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ SRC/S_CONF.OBJ SRC/FDLIST.OBJ SRC/DBUF.OBJ SRC/CLOAK.OBJ SRC/HASH.OBJ SRC/PARSE.OBJ SRC/IRCD.OBJ SRC/S_NUMERIC.OBJ SRC/WHOWAS.OBJ SRC/S_AUTH.OBJ SRC/HELP.OBJ SRC/S_MISC.OBJ SRC/MATCH.OBJ SRC/CRULE.OBJ SRC/S_DEBUG.OBJ SRC/SUPPORT.OBJ SRC/LIST.OBJ SRC/S_ERR.OBJ SRC/PACKET.OBJ SRC/S_BSD.OBJ SRC/S_SERV.OBJ SRC/S_USER.OBJ SRC/CHARSYS.OBJ SRC/VERSION.OBJ SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/RES.OBJ SRC/MODULES.OBJ SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/MD5.OBJ SRC/API-ISUPPORT.OBJ SRC/API-COMMAND.OBJ SRC/EXTBANS.OBJ SRC/TIMESYNCH.OBJ
 EXPORTS
-	extcmode_cmodeT_requirechop
 	AllUmodes
 	AllowClient
 	AuthTypes
@@ -50,6 +49,7 @@ EXPORTS
 	Find_alias
 	Find_ban
 	Find_banEx
+	Find_cgiirc
 	Find_channel_allowed
 	Find_class
 	Find_deny_dcc
@@ -86,9 +86,6 @@ EXPORTS
 	LRV
 	LastSlot
 	LockEventSystem
-	MD5_Final
-	MD5_Init
-	MD5_Update
 	ModuleGetError
 	ModuleGetErrorStr
 	ModuleGetOptions
@@ -140,6 +137,11 @@ EXPORTS
 	SNO_SPAMF
 	SNO_TKL
 	SNO_VHOST
+	SSLKeyPasswd
+	SSLPassDLG
+	SSL_change_fd
+	SSL_set_nonblocking
+	SSL_smart_shutdown
 	SVSNOOP
 	SendUmodes
 	Servers
@@ -213,8 +215,8 @@ EXPORTS
 	add_listmode
 	add_local_client
 	add_local_domain
+	add_pending_net
 	add_remote_include
-	add_send_mode_param
 	add_server_to_table
 	add_silence
 	add_throttling_bucket
@@ -224,6 +226,7 @@ EXPORTS
 	add_user_to_channel
 	addto_fdlist
 	advanced_check
+	applymeblock
 	areason
 	atime
 	atime_exp
@@ -231,11 +234,11 @@ EXPORTS
 	b64_decode
 	b64_encode
 	backupbuf
-	badwords_stats
+	ban_check_mask
+	ban_cloakhost
 	ban_flooder
 	ban_ip
 	ban_realhost
-	ban_version
 	ban_virthost
 	banact_chartoval
 	banact_stringtoval
@@ -263,6 +266,7 @@ EXPORTS
 	channel_canjoin
 	channel_modef_string
 	channel_modes
+	channellevel_to_int
 	char_atribs
 	charsys_add_language
 	charsys_addallowed
@@ -283,6 +287,8 @@ EXPORTS
 	check_string
 	checklist
 	chess
+	chfl_to_chanmode
+	chfl_to_sjoin_symbol
 	chmode_str
 	clean_ban_mask
 	clean_channelname
@@ -294,6 +300,7 @@ EXPORTS
 	close_connection
 	close_connections
 	close_listeners
+	cmdLine
 	cmdname_by_spamftarget
 	cmdstr
 	cmodej_addentry
@@ -322,6 +329,7 @@ EXPORTS
 	conf_badword_message
 	conf_badword_quit
 	conf_ban
+	conf_cgiirc
 	conf_class
 	conf_debuglevel
 	conf_deny_channel
@@ -330,6 +338,7 @@ EXPORTS
 	conf_deny_version
 	conf_drpass
 	conf_except
+	conf_files
 	conf_help
 	conf_include
 	conf_link
@@ -357,6 +366,7 @@ EXPORTS
 	config_setdefaultsettings
 	config_status
 	config_test
+	config_test_openfile
 	config_verbose
 	config_warn
 	configfile
@@ -368,6 +378,7 @@ EXPORTS
 	count_whowas_memory
 	create_snomask
 	create_tkl_except
+	create_tkl_except_ii
 	creation
 	crule__andor
 	crule__not
@@ -389,6 +400,8 @@ EXPORTS
 	crule_parseprimary
 	crule_test
 	crule_via
+	ctx_client
+	ctx_server
 	currentrate
 	currentrate2
 	currlife
@@ -420,11 +433,11 @@ EXPORTS
 	del_listmode
 	del_silence
 	del_throttling_bucket
+	delete_cgiircblock
 	delete_classblock
 	delete_linkblock
 	delfrom_fdlist
 	deliver_it
-	dgets
 	dnsstats
 	do_chanflood
 	do_chanflood_action
@@ -433,6 +446,7 @@ EXPORTS
 	do_mode
 	do_nick_name
 	do_numeric
+	do_read_motd
 	do_remote_nick_name
 	dontspread
 	dopacket
@@ -447,10 +461,16 @@ EXPORTS
 	events
 	exit_client
 	extban_conv_param_nuh
+	extban_conv_param_nuh_or_extban
 	extban_init
+	extban_is_banned_helper
+	extban_is_ok_nuh_extban
+	extban_modeR_conv_param
+	extban_modeR_is_banned
 	extban_modec_conv_param
 	extban_modec_is_banned
 	extban_modec_is_ok
+	extban_modej_is_banned
 	extban_moden_is_banned
 	extban_modeq_is_banned
 	extban_moder_conv_param
@@ -458,15 +478,16 @@ EXPORTS
 	extbanstr
 	extchmstr
 	extcmode_cmodeG_requirechop
+	extcmode_cmodeT_requirechop
 	extcmode_default_requirechop
 	extcmode_default_requirehalfop
 	extcmode_duplicate_paramlist
 	extcmode_free_paramlist
 	extcmode_get_struct
 	extcmode_init
+	extracttime
 	extraflags
-	fast_badword_match
-	fast_badword_replace
+	file_exists
 	find_Command
 	find_CommandEx
 	find_Command_simple
@@ -480,7 +501,10 @@ EXPORTS
 	find_membership_link
 	find_name
 	find_nickserv
+	find_non_pending_net_duplicates
 	find_or_add
+	find_pending_net_by_numeric_butone
+	find_pending_net_duplicates
 	find_person
 	find_qline
 	find_remote_include
@@ -498,8 +522,10 @@ EXPORTS
 	find_throttling_bucket
 	find_tkline_match
 	find_tkline_match_zap
+	find_tkline_match_zap_ex
 	find_user_link
 	findmod_by_bantype
+	fix_timers
 	flag_add
 	flag_del
 	flinks
@@ -512,6 +538,8 @@ EXPORTS
 	free_link
 	free_member
 	free_membership
+	free_motd
+	free_pending_net
 	free_str_list
 	free_synchlist
 	free_user
@@ -536,12 +564,14 @@ EXPORTS
 	get_snostr
 	get_sockerr
 	get_sockhost
+	getcloak
 	getrandom16
 	getrandom32
 	getrandom8
 	getreply
 	global_count
 	gnulicense
+	has_cached_version
 	has_voice
 	hash_channel_name
 	hash_check_watch
@@ -559,6 +589,7 @@ EXPORTS
 	helpign
 	highest_rate
 	highest_rate2
+	highesttimeofday
 	hunt_server
 	hunt_server_token
 	hunt_server_token_quiet
@@ -579,19 +610,28 @@ EXPORTS
 	infotext
 	init_CommandHash
 	init_conf
+	init_ctx_client
+	init_ctx_server
 	init_dynconf
 	init_fdlist
 	init_ircstats
 	init_modef
 	init_random
 	init_resolver
+	init_ssl
 	init_sys
 	init_throttling_hash
 	initlists
 	initstats
 	initwhowas
 	int6_to_base64_map
+	iplist_onlist
 	ipport_seperate
+	ircd_SSL_accept
+	ircd_SSL_client_handshake
+	ircd_SSL_connect
+	ircd_SSL_read
+	ircd_SSL_write
 	ircd_log
 	ircsprintf
 	ircst
@@ -605,13 +645,17 @@ EXPORTS
 	is_chanownprotop
 	is_chanprot
 	is_half_op
+	is_silenced
 	is_skochanop
+	isanyserverlinked
 	isipv6
 	isupport_init
 	join_channel
+	kick_insecure_users
 	langsinuse
 	last_allinuse
 	last_garbage_collect
+	lasthighwarn
 	lastlucheck
 	lastrecvK
 	lastsendK
@@ -627,7 +671,6 @@ EXPORTS
 	loop
 	loop_event
 	m_alias
-	m_botmotd
 	m_credits
 	m_dalinfo
 	m_die
@@ -637,9 +680,6 @@ EXPORTS
 	m_info_send
 	m_license
 	m_module
-	m_motd
-	m_names
-	m_opermotd
 	m_rehash
 	m_restart
 	m_summon
@@ -651,6 +691,7 @@ EXPORTS
 	make_class
 	make_client
 	make_cmodestr
+	make_compiler_string
 	make_extbanstr
 	make_extcmodestr
 	make_isupportstrings
@@ -658,6 +699,7 @@ EXPORTS
 	make_member
 	make_membership
 	make_nick_user_host
+	make_nick_user_host_r
 	make_server
 	make_synchlist
 	make_umodestr
@@ -665,25 +707,25 @@ EXPORTS
 	make_user_host
 	make_virthost
 	match
+	match_esc
 	match_ip
+	match_ip46
 	match_ipv4
 	max_client_count
 	max_connection_count
 	max_global_count
 	mblist
 	mblist_tail
+	md5hash
 	me
 	me_hash
 	modebuf
 	modef_event
 	module_loadall
 	motd
-	motd_tm
 	my_itoa
-	myargv
 	myctime
 	myncmp
-	mystpcpy
 	next_client
 	nextconnect
 	nextdnscheck
@@ -698,16 +740,16 @@ EXPORTS
 	off_history
 	oflagbuf
 	oflagstr
+	oldtimeofday
 	on_dccallow_list
 	op_can_override
 	oper_access
 	oper_fdlist
 	opermode
 	opermotd
-	our_crc32
+	our_compiler_version
 	our_dlerror
 	our_mod_version
-	our_strcasestr
 	outofmemory
 	parabuf
 	parse
@@ -715,6 +757,7 @@ EXPORTS
 	parse_help
 	parse_modsys_version
 	parse_netmask
+	pendingnet
 	place_host_ban
 	port_range
 	portnum
@@ -722,14 +765,16 @@ EXPORTS
 	pretty_time_val
 	proceed_normal_client_handshake
 	read_authports
-	read_file
-	read_file_ex
 	read_message
+	read_motd
+	read_motd_asynch_downloaded
 	readcalls
 	register_user
 	rehash
 	rehash_internal
 	rehash_motdrules
+	reinit_resolver
+	reinit_ssl
 	rejoin_dojoinandmode
 	rejoin_doparts
 	remote_include
@@ -758,12 +803,11 @@ EXPORTS
 	save_tunefile
 	sbrk0
 	send_authports
-	send_channel_modes
-	send_channel_modes_sjoin
-	send_channel_modes_sjoin3
 	send_list
 	send_proto
+	send_protoctl_servers
 	send_queued
+	send_server_message
 	send_umode
 	send_umode_out
 	send_umode_out_nickv2
@@ -829,18 +873,21 @@ EXPORTS
 	settings
 	short_motd
 	smotd
-	smotd_tm
 	smycmp
-	snprintf
 	sock_strerror
 	spamf_ugly_vchanoverride
+	spamfilter_build_user_string
 	spamfilter_getconftargets
 	spamfilter_gettargets
 	spamfilter_target_inttostring
 	spamfiltertargettable
+	ssl_client_handshake
+	ssl_error_str
+	ssl_get_cipher
+	ssl_handshake
+	ssl_pem_passwd_cb
 	start_auth
 	start_of_normal_client_handshake
-	stripbadwords
 	stripbadwords_channel
 	stripbadwords_message
 	stripbadwords_quit
@@ -870,6 +917,7 @@ EXPORTS
 	touppertab
 	trim_str
 	trouble_info
+	ts_buildpacket
 	umode_allow_all
 	umode_allow_opers
 	umode_delete
@@ -878,8 +926,10 @@ EXPORTS
 	umodestring
 	unknown_fdlist
 	unload_all_modules
+	unload_all_unused_extcmodes
 	unload_all_unused_snomasks
 	unload_all_unused_umodes
+	unload_extcmode_commit
 	unload_loaded_includes
 	unload_notloaded_includes
 	unreal_buildspamfilter
@@ -893,8 +943,11 @@ EXPORTS
 	unreal_getfilemodtime
 	unreal_getfilename
 	unreal_getpathname
+	unreal_mkcache
 	unreal_mktemp
 	unreal_setfilemodtime
+	unreal_time_synch
+	unreal_time_synch_error
 	unrealcredits
 	unrealdns_addreqtolist
 	unrealdns_cb_iptoname
@@ -906,16 +959,15 @@ EXPORTS
 	unrealdns_gethostbyname_link
 	unrealdns_removecacherecord
 	unrealdns_removeoldrecords
+	unrealinfo
 	unreallogo
 	valid_host
+	verify_hostname
+	verify_link
 	verify_opercount
 	version
 	vsendto_one
 	vsendto_prefix_one
-	vsnprintf
-	w_whois
-	webtv_cmds
-	webtv_parse
 	whowas_next
 	write_pidfile
 	zlinebuf
