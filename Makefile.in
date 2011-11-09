@@ -140,8 +140,8 @@ custommodule:
 	@if test -z "${MODULEFILE}"; then echo "Please set MODULEFILE when calling \`\`make custommodule''. For example, \`\`make custommodule MODULEFILE=callerid''." >&2; exit 1; fi
 	cd src; ${MAKE} ${MAKEARGS} MODULEFILE=${MODULEFILE} 'EXLIBS=${EXLIBS}' custommodule
 
-server:
-build:
+server: Makefile
+build: Makefile
 	-@if [ ! -f include/setup.h ] ; then \
 		echo "Hmm...doesn't look like you've run Config..."; \
 		echo "Doing so now."; \
@@ -255,3 +255,5 @@ encpem: server.key.pem
 		rm -f server.key.c.pem ; \
 	fi
 
+Makefile: config.status
+	./config.status

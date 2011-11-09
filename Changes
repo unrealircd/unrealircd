@@ -2310,3 +2310,5 @@
 - Updated credits (donations)
 - Updated credits (supporters, coders)
 ** 3.2.9 release **
+- Automatically regenerate Makefile if ./config.status --recheck was
+  run.
