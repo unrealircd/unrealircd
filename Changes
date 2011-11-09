@@ -2312,3 +2312,5 @@
 ** 3.2.9 release **
 - Automatically regenerate Makefile if ./config.status --recheck was
   run.
+- Fix compilation issue when disabling stacked
+  extbans. https://bugs.gentoo.org/389949

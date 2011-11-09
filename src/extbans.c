@@ -533,9 +533,9 @@ void extban_init(void)
 	req.conv_param = extban_conv_param_nuh;
 #else
 	req.conv_param = extban_conv_param_nuh_or_extban;
+	req.is_ok = extban_is_ok_nuh_extban;
 #endif
 	req.is_banned = extban_modej_is_banned;
-	req.is_ok = extban_is_ok_nuh_extban;
 	req.options = EXTBOPT_ACTMODIFIER;
 	ExtbanAdd(NULL, req);
 
