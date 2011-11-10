@@ -60,7 +60,7 @@ all: build
 build: ircd mods
 
 custommodule:
-	cd modules; $(MY_MAKE) MODULEFILE=$(MODULEFILE) 'EXLIBS=$(EXLIBS)' custommodule
+	+cd modules; $(MY_MAKE) MODULEFILE=$(MODULEFILE) 'EXLIBS=$(EXLIBS)' custommodule
 
 ircd: $(OBJS)
 	$(CC) $(CFLAGS) $(CRYPTOLIB) -o ircd $(OBJS) $(LDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
@@ -83,7 +83,7 @@ mods:
 	@if [ ! -r modules ] ; then \
 		echo "You havent done cvs update -P -d"; \
 	fi
-	cd modules; $(MY_MAKE) all
+	+cd modules; $(MY_MAKE) all
 
 version.c: version.c.SH ../Changes
 	$(SHELL) version.c.SH

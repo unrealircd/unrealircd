@@ -2314,3 +2314,4 @@
   run.
 - Fix compilation issue when disabling stacked
   extbans. https://bugs.gentoo.org/389949
+- Attempt to make Makefile rules more parallelism friendly.

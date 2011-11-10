@@ -138,7 +138,7 @@ MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 
 custommodule:
 	@if test -z "${MODULEFILE}"; then echo "Please set MODULEFILE when calling \`\`make custommodule''. For example, \`\`make custommodule MODULEFILE=callerid''." >&2; exit 1; fi
-	cd src; ${MAKE} ${MAKEARGS} MODULEFILE=${MODULEFILE} 'EXLIBS=${EXLIBS}' custommodule
+	+cd src; ${MAKE} ${MAKEARGS} MODULEFILE=${MODULEFILE} 'EXLIBS=${EXLIBS}' custommodule
 
 server: Makefile
 build: Makefile
@@ -147,7 +147,7 @@ build: Makefile
 		echo "Doing so now."; \
 		sh Config; \
 	fi
-	@for i in $(SUBDIRS); do \
+	@+for i in $(SUBDIRS); do \
 		echo "Building $$i";\
 		( cd $$i; ${MAKE} ${MAKEARGS} build; ) \
 	done
@@ -167,7 +167,7 @@ build: Makefile
 
 clean:
 	$(RM) -f *~ \#* core *.orig include/*.orig
-	@for i in $(SUBDIRS); do \
+	@+for i in $(SUBDIRS); do \
 		echo "Cleaning $$i";\
 		( cd $$i; ${MAKE} ${MAKEARGS} clean; ) \
 	done
@@ -199,7 +199,7 @@ stamp: makedist
 	echo "" >> include/stamp.h
 
 depend:
-	@for i in $(SUBDIRS); do \
+	@+for i in $(SUBDIRS); do \
 		echo "Making dependencies in $$i";\
 		( cd $$i; ${MAKE} ${MAKEARGS} depend; ) \
 	done
@@ -255,5 +255,5 @@ encpem: server.key.pem
 		rm -f server.key.c.pem ; \
 	fi
 
-Makefile: config.status
+Makefile: config.status Makefile.in
 	./config.status
