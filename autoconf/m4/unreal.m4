@@ -109,11 +109,11 @@ AC_DEFUN([CHECK_LIBCURL],
 		AS_IF([test "x`echo $CURLLIBS |grep ares`" != x && test "x$with_system_cares" = "xno"],
 		[
 			dnl Attempt one: Linux sed
-			XCURLLIBS="`echo "$CURLLIBS"|sed -r 's/(@<:@^ @:>@+ @<:@^ @:>@+ )(@<:@^ @:>@+ @<:@^ @:>@+ )(.+)/\1\3/g' 2>/dev/null`"
+			[XCURLLIBS="`echo "$CURLLIBS"|sed -r 's/[^ ]*ares[^ ]*//g' 2>/dev/null`"]
 			AS_IF([test "x$XCURLLIBS" = "x"],
 			[
 				dnl Attempt two: FreeBSD (and others?) sed
-				XCURLLIBS="`echo "$CURLLIBS"|sed -E 's/(@<:@^ @:>@+ @<:@^ @:>@+ )(@<:@^ @:>@+ @<:@^ @:>@+ )(.+)/\1\3/g' 2>/dev/null`"
+				[XCURLLIBS="`echo "$CURLLIBS"|sed -E 's/[^ ]*ares[^ ]*//g' 2>/dev/null`"]
 				AS_IF([test x"$XCURLLIBS" = x],
 				[
 					AC_MSG_ERROR([sed appears to be broken. It is needed for a remote includes compile hack.])

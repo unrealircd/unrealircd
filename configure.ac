@@ -573,7 +573,7 @@ dnl See c-ares's compilation section for more info on this hack.
 dnl ensure that we're linking against the bundled version of tre
 dnl (we only reach this code if linking against the bundled version is desired).
 AS_IF([test -n "$ac_cv_path_PKGCONFIG"],
-       [TRE_LIBS="`$ac_cv_path_PKGCONFIG --static --libs tre.pc | sed ['s,-L\([^ ]\+lib\) -ltre,\1/libtre.a,']`"])
+       [TRE_LIBS="`$ac_cv_path_PKGCONFIG --static --libs tre.pc | sed -e ['s,-L\([^ ]*regex[^ ]*lib\)\( .*\)-ltre,\1/libtre.a \2,']`"])
 dnl For when pkg-config isn't available -- or for when pkg-config
 dnl doesn't see the tre.pc file somehow... (#3982)
 AS_IF([test -z "$TRE_LIBS"],

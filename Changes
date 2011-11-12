@@ -2315,3 +2315,5 @@
 - Fix compilation issue when disabling stacked
   extbans. https://bugs.gentoo.org/389949
 - Attempt to make Makefile rules more parallelism friendly.
+- Fix compilation issues with bundled tre and ./curlinstall-ed curl
+  caused by over-generic regexes. Reported by warg.
