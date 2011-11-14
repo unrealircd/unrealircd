@@ -2317,3 +2317,4 @@
 - Attempt to make Makefile rules more parallelism friendly.
 - Fix compilation issues with bundled tre and ./curlinstall-ed curl
   caused by over-generic regexes. Reported by warg.
+- Fix version string in configure.ac.
