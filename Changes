@@ -2318,3 +2318,5 @@
 - Fix compilation issues with bundled tre and ./curlinstall-ed curl
   caused by over-generic regexes. Reported by warg.
 - Fix version string in configure.ac.
+- Include CMDS=STARTTLS in ISUPPORT/numeric 005 to let clients discover STARTTLS
+  support through VERSION, before or after registration (#4064).
