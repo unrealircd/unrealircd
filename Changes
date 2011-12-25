@@ -2321,3 +2321,4 @@
 - Include CMDS=STARTTLS in ISUPPORT/numeric 005 to let clients discover STARTTLS
   support through VERSION, before or after registration (#4064).
 - Added patch from nenotopia to use more modern LUSERS numerics (#3967).
+- Fix small error in oper block documentation, reported by Stealth (#2318).
