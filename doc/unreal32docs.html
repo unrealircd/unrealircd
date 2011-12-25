@@ -510,10 +510,21 @@ These bantypes introduce new criteria which can be used:<br>
   Ex: <i>+e ~R:Nick</i> will allow Nick in the channel, regardless of other bans, if he identified to
   NickServ and is using the nickname Nick.<br>
   </td></tr>
+<tr><td>~a</td><td>account</td><td>If a user is logged in to services with
+this account name, then this ban will match.<br>
+This is slightly different than ~R, in the sense that a user with nick ABC
+may be logged in under account XYZ.<br>
+Not all services packages support this, in which case you will have to use
+~R instead.<br>
+Ex: <i>+e ~a:SomeName</i> will allow the user(s) logged in to services under
+account name SomeName to join the channel, regardless of bans.<br>
+  </td></tr>
 </table>
 <br>
 You may stack extended bans from the 1st group with the 2nd, such as <i>+b ~q:~c:#lamers</i>, which 
 would quiet all users who have joined #lamers.<br>
+Ban types from the second group may also be used for invite exceptions (+I),
+such as <i>+I ~c:#trusted</i> and <i>+I ~a:accountname</i>.<br>
 <br>
 Modules can add other extended ban types.<br>
 </p></div>

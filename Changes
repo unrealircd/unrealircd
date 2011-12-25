@@ -2335,3 +2335,5 @@
 - Added extended ban ~a:<account name> which matches users who are logged
   in to services with that account name. This works only on services that
   support ESVID. Patch from nenotopia (#3966).
+- Updated extended ban documentation in help.conf and unreal32docs:
+  new bantype ~a, and some text about extended bans & invex (+I).
