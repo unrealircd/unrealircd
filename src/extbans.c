@@ -595,6 +595,7 @@ void extban_init(void)
 	req.flag = 'a';
 	req.conv_param = extban_modea_conv_param;
 	req.is_banned = extban_modea_is_banned;
+	req.options = EXTBOPT_INVEX;
 	ExtbanAdd(NULL, req);
 
 	/* When adding new extbans, be sure to always add a prior memset like above
