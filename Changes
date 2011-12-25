@@ -2326,3 +2326,7 @@
   and patch by fbi (#4035).
 - Tweak: send actual channel name and not user supplied channel in KICK,
   reported and patch by Stealth (#3298).
+- Services coders: Added support for ESVID. Instead of a number you can
+  now store a string (of max NICKLEN size) as service stamp. See
+  protoctl.txt and serverprotocol.html in doc/technical for more information.
+  Patch from nenotopia (#3966).

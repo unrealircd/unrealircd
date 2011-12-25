@@ -1950,7 +1950,7 @@ void sendto_fconnectnotice(char *nick, anUser *user, aClient *sptr, int disconne
 void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 			char *nick, int hopcount,
     long lastnick, char *username, char *realhost, char *server,
-    long servicestamp, char *info, char *umodes, char *virthost)
+    char *svid, char *info, char *umodes, char *virthost)
 {
 	int  i;
 	aClient *cptr;
@@ -1992,14 +1992,14 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 					sendto_one(cptr,
 						(cptr->proto & PROTO_SJB64) ?
 					    /* Ugly double %s to prevent excessive spaces */
-					    "%s %s %d %B %s %s %b %lu %s %s %s%s%s%s:%s"
+					    "%s %s %d %B %s %s %b %s %s %s %s%s%s%s:%s"
 					    :
-					    "%s %s %d %lu %s %s %b %lu %s %s %s%s%s%s:%s"
+					    "%s %s %d %lu %s %s %b %s %s %s %s%s%s%s:%s"
 					    ,
 					    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
 					    hopcount, (long)lastnick, username, realhost,
 					    (long)(sptr->srvptr->serv->numeric),
-					    servicestamp, umodes, vhost,
+					    svid, umodes, vhost,
 					    SupportCLK(cptr) ? getcloak(sptr) : "",
 					    SupportCLK(cptr) ? " " : "",
 					    SupportNICKIP(cptr) ? encode_ip(sptr->user->ip_str) : "",
@@ -2007,11 +2007,11 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 					    info);
 				else
 					sendto_one(cptr,
-					    "%s %s %d %d %s %s %s %lu %s %s %s%s%s%s:%s",
+					    "%s %s %d %d %s %s %s %s %s %s %s%s%s%s:%s",
 					    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
 					    hopcount, lastnick, username, realhost,
 					    SupportNS(cptr) && sptr->srvptr->serv->numeric ? base64enc(sptr->srvptr->serv->numeric) : server,
-					    servicestamp, umodes, vhost,
+					    svid, umodes, vhost,
 					    SupportCLK(cptr) ? getcloak(sptr) : "",
 					    SupportCLK(cptr) ? " " : "",
 					    SupportNICKIP(cptr) ? encode_ip(sptr->user->ip_str) : "",
@@ -2021,11 +2021,11 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 			}
 			else
 			{
-				sendto_one(cptr, "%s %s %d %d %s %s %s %lu :%s",
+				sendto_one(cptr, "%s %s %d %d %s %s %s %s :%s",
 				    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
 				    nick, hopcount, lastnick, username,
 				    realhost,
-				    server, servicestamp, info);
+				    server, svid, info);
 				if (strcmp(umodes, "+"))
 				{
 					sendto_one(cptr, ":%s %s %s :%s",
@@ -2081,14 +2081,14 @@ void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes)
 			sendto_one(cptr,
 				(cptr->proto & PROTO_SJB64) ?
 			    /* Ugly double %s to prevent excessive spaces */
-			    "%s %s %d %B %s %s %b %lu %s %s %s%s:%s"
+			    "%s %s %d %B %s %s %b %s %s %s %s%s:%s"
 			    :
-			    "%s %s %d %lu %s %s %b %lu %s %s %s%s:%s"
+			    "%s %s %d %lu %s %s %b %s %s %s %s%s:%s"
 			    ,
 			    (IsToken(cptr) ? TOK_NICK : MSG_NICK), sptr->name,
 			    sptr->hopcount+1, (long)sptr->lastnick, sptr->user->username, 
 			    sptr->user->realhost, (long)(sptr->srvptr->serv->numeric),
-			    sptr->user->servicestamp, umodes, vhost,
+			    sptr->user->svid, umodes, vhost,
 			    SupportNICKIP(cptr) ? encode_ip(sptr->user->ip_str) : "",
 			    SupportNICKIP(cptr) ? " " : "", sptr->info);
 		else
@@ -2098,16 +2098,16 @@ void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes)
 			    sptr->hopcount+1, sptr->lastnick, sptr->user->username, 
 			    sptr->user->realhost, SupportNS(cptr) && 
 			    sptr->srvptr->serv->numeric ? base64enc(sptr->srvptr->serv->numeric)
-			    : sptr->user->server, sptr->user->servicestamp, umodes, vhost,
+			    : sptr->user->server, sptr->user->svid, umodes, vhost,
 			    SupportNICKIP(cptr) ? encode_ip(sptr->user->ip_str) : "",
 			    SupportNICKIP(cptr) ? " " : "", sptr->info);
 	}
 	else
 	{
-		sendto_one(cptr, "%s %s %d %d %s %s %s %lu :%s",
+		sendto_one(cptr, "%s %s %d %d %s %s %s %s :%s",
 		    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
 		    sptr->name, sptr->hopcount+1, sptr->lastnick, sptr->user->username,
-		    sptr->user->realhost, sptr->user->server, sptr->user->servicestamp, 
+		    sptr->user->realhost, sptr->user->server, sptr->user->svid, 
 		    sptr->info);
 		if (strcmp(umodes, "+"))
 		{

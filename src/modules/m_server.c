@@ -886,13 +886,13 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 			if (!SupportNICKv2(cptr))
 			{
 				sendto_one(cptr,
-				    "%s %s %d %ld %s %s %s %lu :%s",
+				    "%s %s %d %ld %s %s %s %s :%s",
 				    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
 				    acptr->name, acptr->hopcount + 1,
 				    acptr->lastnick, acptr->user->username,
 				    acptr->user->realhost,
 				    acptr->user->server,
-				    (unsigned long)acptr->user->servicestamp, acptr->info);
+				    acptr->user->svid, acptr->info);
 				send_umode(cptr, acptr, 0, SEND_UMODES, buf);
 				if (IsHidden(acptr) && acptr->user->virthost)
 					sendto_one(cptr, ":%s %s %s",
@@ -912,9 +912,9 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 					{
 						sendto_one(cptr,
 						    ((cptr->proto & PROTO_SJB64) ?
-						    "%s %s %d %B %s %s %b %lu %s %s %s%s%s%s:%s"
+						    "%s %s %d %B %s %s %b %s %s %s %s%s%s%s:%s"
 						    :
-						    "%s %s %d %lu %s %s %b %lu %s %s %s%s%s%s:%s"),
+						    "%s %s %d %lu %s %s %b %s %s %s %s%s%s%s:%s"),
 						    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
 						    acptr->name,
 						    acptr->hopcount + 1,
@@ -922,7 +922,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 						    acptr->user->username,
 						    acptr->user->realhost,
 						    (long)(acptr->srvptr->serv->numeric),
-						    (unsigned long)acptr->user->servicestamp,
+						    acptr->user->svid,
 						    (!buf || *buf == '\0' ? "+" : buf),
 						    ((IsHidden(acptr) && (acptr->umodes & UMODE_SETHOST)) ? acptr->user->virthost : "*"),
 						    SupportCLK(cptr) ? getcloak(acptr) : "",
@@ -935,9 +935,9 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 					{
 						sendto_one(cptr,
 						    (cptr->proto & PROTO_SJB64 ?
-						    "%s %s %d %B %s %s %s %lu %s %s %s%s%s%s:%s"
+						    "%s %s %d %B %s %s %s %s %s %s %s%s%s%s:%s"
 						    :
-						    "%s %s %d %lu %s %s %s %lu %s %s %s%s%s%s:%s"),
+						    "%s %s %d %lu %s %s %s %s %s %s %s%s%s%s:%s"),
 						    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
 						    acptr->name,
 						    acptr->hopcount + 1,
@@ -945,7 +945,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 						    acptr->user->username,
 						    acptr->user->realhost,
 						    acptr->user->server,
-						    (unsigned long)acptr->user->servicestamp,
+						    acptr->user->svid,
 						    (!buf || *buf == '\0' ? "+" : buf),
 						    ((IsHidden(acptr) && (acptr->umodes & UMODE_SETHOST)) ? acptr->user->virthost : "*"),
 						    SupportCLK(cptr) ? getcloak(acptr) : "",
@@ -957,7 +957,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 				}
 				else
 					sendto_one(cptr,
-					    "%s %s %d %ld %s %s %s %lu %s %s %s%s:%s",
+					    "%s %s %d %ld %s %s %s %s %s %s %s%s:%s",
 					    (IsToken(cptr) ? TOK_NICK :
 					    MSG_NICK), acptr->name,
 					    acptr->hopcount + 1,
@@ -969,7 +969,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 					    base64enc(acptr->srvptr->
 					    serv->numeric) : acptr->
 					    user->server) : acptr->user->
-					    server), (unsigned long)acptr->user->servicestamp,
+					    server), acptr->user->svid,
 					    (!buf
 					    || *buf == '\0' ? "+" : buf),
 					    GetHost(acptr),

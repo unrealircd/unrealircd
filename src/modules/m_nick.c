@@ -1170,7 +1170,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 	/* NICKv2 Servers ! */
 	sendto_serv_butone_nickcmd(cptr, sptr, nick,
 	    sptr->hopcount + 1, sptr->lastnick, user->username, user->realhost,
-	    user->server, user->servicestamp, sptr->info,
+	    user->server, user->svid, sptr->info,
 	    (!buf || *buf == '\0' ? "+" : buf),
 	    sptr->umodes & UMODE_SETHOST ? sptr->user->virthost : NULL);
 

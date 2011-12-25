@@ -226,12 +226,14 @@ char *num = NULL;
  * send_proto:
  * sends PROTOCTL message to server, taking care of whether ZIP
  * should be enabled or not.
+ *
+ * ESVID added to denote support of extended SVID values. --nenolod
  */
 void send_proto(aClient *cptr, ConfigItem_link *aconf)
 {
 char buf[1024];
 
-	sprintf(buf, "CHANMODES=%s%s,%s%s,%s%s,%s%s NICKCHARS=%s",
+	sprintf(buf, "CHANMODES=%s%s,%s%s,%s%s,%s%s NICKCHARS=%s ESVID",
 		CHPAR1, EXPAR1, CHPAR2, EXPAR2, CHPAR3, EXPAR3, CHPAR4, EXPAR4, langsinuse);
 #ifdef ZIP_LINKS
 	if (aconf->options & CONNECT_ZIP)

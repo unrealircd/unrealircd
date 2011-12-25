@@ -154,3 +154,7 @@ EAUTH         Early Authorization. This makes it possible for servers to authent
 SERVERS       Informs the other server about the other servers (numerics) on this network
               (including our own numeric).
               Syntax: SERVERS=numeric1,numeric2,numeric3,etc
+
+ESVID         This token indicates that the traditional services stamp value may take any
+              arbitrary value for the SVID field, such as an account name or other unique
+              identifier, including a traditional timestamp value.

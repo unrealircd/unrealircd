@@ -802,7 +802,15 @@ struct User {
 	Link *silence;		/* chain of silence pointer blocks */
 	Link *dccallow;		/* chain of dccallowed entries */
 	char *away;		/* pointer to away message */
-	u_int32_t servicestamp;	/* Services' time stamp variable */
+
+	/*
+	 * svid: a value that is assigned by services to this user record.
+	 * in previous versions of Unreal, this was strictly a timestamp value,
+	 * which is less useful in the modern world of IRC where nicks are grouped to
+	 * accounts, so it is now a string.
+	 */
+	char svid[NICKLEN + 1];
+
 	signed char refcnt;	/* Number of times this block is referenced */
 	unsigned short joined;		/* number of channels joined */
 	char username[USERLEN + 1];

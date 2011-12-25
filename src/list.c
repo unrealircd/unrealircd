@@ -195,7 +195,7 @@ anUser *make_user(aClient *cptr)
 		user->invited = NULL;
 		user->silence = NULL;
 		user->server = NULL;
-		user->servicestamp = 0;
+		strlcpy(user->svid, "*", sizeof(user->svid));
 		user->lopt = NULL;
 		user->whowas = NULL;
 		user->snomask = 0;
