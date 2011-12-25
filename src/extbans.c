@@ -511,6 +511,24 @@ char *ban = banin+3;
 	return 0;
 }
 
+/** Account bans */
+char *extban_modea_conv_param(char *para)
+{
+char *mask;
+static char retbuf[NICKLEN + 4];
+
+	strlcpy(retbuf, para, sizeof(retbuf)); /* truncate */
+	return retbuf;
+}
+
+int extban_modea_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type)
+{
+char *ban = banin+3;
+	if (!stricmp(ban, sptr->user->svid))
+		return 1;
+	return 0;
+}
+
 void extban_init(void)
 {
 	ExtbanInfo req;
@@ -571,6 +589,12 @@ void extban_init(void)
 	req.conv_param = extban_modeR_conv_param;
 	req.is_banned = extban_modeR_is_banned;
 	req.options = EXTBOPT_INVEX;
+	ExtbanAdd(NULL, req);
+
+	memset(&req, 0, sizeof(ExtbanInfo));
+	req.flag = 'a';
+	req.conv_param = extban_modea_conv_param;
+	req.is_banned = extban_modea_is_banned;
 	ExtbanAdd(NULL, req);
 
 	/* When adding new extbans, be sure to always add a prior memset like above

@@ -2332,3 +2332,6 @@
   Patch from nenotopia (#3966).
 - Show account name in /WHOIS, for ESVID-capable services packages, patch
   from nenotopia (#3966).
+- Added extended ban ~a:<account name> which matches users who are logged
+  in to services with that account name. This works only on services that
+  support ESVID. Patch from nenotopia (#3966).
