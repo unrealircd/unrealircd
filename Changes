@@ -2322,3 +2322,5 @@
   support through VERSION, before or after registration (#4064).
 - Added patch from nenotopia to use more modern LUSERS numerics (#3967).
 - Fix small error in oper block documentation, reported by Stealth (#2318).
+- Config parser failed to check for invalid set::ssl options, reported
+  and patch by fbi (#4035).

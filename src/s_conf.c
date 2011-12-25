@@ -8562,8 +8562,14 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 								     ceppp->ce_varlinenum, ceppp->ce_varname);
 							errors ++;
 						}
-				}	
-				
+				}
+				else
+				{
+					config_error("%s:%i: unknown directive set::ssl::%s",
+						cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
+						cepp->ce_varname);
+					errors++;
+				}
 			}
 #endif /* USE_SSL */
 		}
