@@ -513,8 +513,8 @@ char *xtok = show_change ? TOK_SVS2MODE : TOK_SVSMODE;
 					IRCstats.operators++;
 				goto setmodex;
 			case 'd':
-				if (parv[3] && isdigit(*parv[3]))
-					acptr->user->servicestamp = strtoul(parv[3], NULL, 10);
+				if (parv[3])
+					strlcpy(acptr->user->svid, parv[3], sizeof(acptr->user->svid));
 				break;
 			case 'x':
 				if (what == MODE_DEL)
