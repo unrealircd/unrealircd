@@ -2330,3 +2330,5 @@
   now store a string (of max NICKLEN size) as service stamp. See
   protoctl.txt and serverprotocol.html in doc/technical for more information.
   Patch from nenotopia (#3966).
+- Show account name in /WHOIS, for ESVID-capable services packages, patch
+  from nenotopia (#3966).

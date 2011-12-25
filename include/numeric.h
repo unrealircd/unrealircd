@@ -180,6 +180,9 @@
 #define RPL_LISTEND          323
 #define RPL_CHANNELMODEIS    324
 #define RPL_CREATIONTIME     329
+
+#define RPL_WHOISLOGGEDIN    330	/* ircu/charybdis-family --nenolod */
+
 #define RPL_NOTOPIC          331
 #define RPL_TOPIC            332
 #define RPL_TOPICWHOTIME     333

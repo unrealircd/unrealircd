@@ -322,6 +322,13 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					    name, acptr->user->swhois);
 
 			/*
+			 * display services account name if it's actually a services account name and
+			 * not a legacy timestamp.  --nenolod
+			 */
+			if (!isdigit(*user->svid) && *user->svid != '*')
+				sendto_one(sptr, rpl_str(RPL_WHOISLOGGEDIN), me.name, parv[0], name, user->svid);
+
+			/*
 			 * Fix /whois to not show idle times of
 			 * global opers to anyone except another
 			 * global oper or services.
