@@ -111,9 +111,9 @@ char flatmap;
 	sendto_one(sptr, rpl_str(RPL_LUSERME),
 	    me.name, parv[0], IRCstats.me_clients, flatmap ? 0 : IRCstats.me_servers);
 	sendto_one(sptr, rpl_str(RPL_LOCALUSERS),
-	    me.name, parv[0], IRCstats.me_clients, IRCstats.me_max);
+	    me.name, parv[0], IRCstats.me_clients, IRCstats.me_max, IRCstats.me_clients, IRCstats.me_max);
 	sendto_one(sptr, rpl_str(RPL_GLOBALUSERS),
-	    me.name, parv[0], IRCstats.clients, IRCstats.global_max);
+	    me.name, parv[0], IRCstats.clients, IRCstats.global_max, IRCstats.clients, IRCstats.global_max);
 	if ((IRCstats.me_clients + IRCstats.me_servers) > max_connection_count)
 	{
 		max_connection_count =

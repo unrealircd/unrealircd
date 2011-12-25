@@ -298,8 +298,8 @@ static char *replies[] = {
 /* 262 */ NULL, /* rfc2812 */
 /* 263 */ NULL, /* rfc2812 */
 /* 264 */ NULL,
-/* 265    RPL_LOCALUSERS */ ":%s 265 %s :Current Local Users: %d  Max: %d",
-/* 266    RPL_GLOBALUSERS */ ":%s 266 %s :Current Global Users: %d  Max: %d",
+/* 265    RPL_LOCALUSERS */ ":%s 265 %s %d %d :Current local users %d, max %d",
+/* 266    RPL_GLOBALUSERS */ ":%s 266 %s %d %d :Current global users %d, max %d",
 /* 267 */ NULL, /* aircd */
 /* 268 */ NULL, /* aircd */
 /* 269 */ NULL, /* aircd */
