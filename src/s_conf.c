@@ -6679,6 +6679,12 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 					     ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 				errors++;
 			}
+			if (strlen(cep->ce_vardata) > PASSWDLEN) 
+			{
+				config_error("%s:%i: link::password-connect cannot exceed %d characters in length",
+					     ce->ce_fileptr->cf_filename, ce->ce_varlinenum, PASSWDLEN);
+				errors++;
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "class"))
 		{

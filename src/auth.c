@@ -148,6 +148,13 @@ int		Auth_CheckError(ConfigEntry *ce)
 			}
 		}
 	}
+	
+	if ((type == AUTHTYPE_PLAINTEXT) && (strlen(ce->ce_vardata) > PASSWDLEN))
+	{
+		config_error("%s:%i: passwords length may not exceed %d",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum, PASSWDLEN);
+		return -1;
+	}
 	return 1;	
 }
 

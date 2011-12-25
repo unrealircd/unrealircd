@@ -2337,3 +2337,6 @@
   support ESVID. Patch from nenotopia (#3966).
 - Updated extended ban documentation in help.conf and unreal32docs:
   new bantype ~a, and some text about extended bans & invex (+I).
+- Throw up an error if a password in the configuration file is too long
+  (max 48 characters), reported by JasonTik, based on patch from
+  WolfSage (#3223).
