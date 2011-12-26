@@ -88,7 +88,7 @@ mods:
 version.c: version.c.SH ../Changes
 	$(SHELL) version.c.SH
 
-version.o: version.c ../include/version.h
+version.o: version.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c version.c
 
 parse.o: parse.c $(INCLUDES)

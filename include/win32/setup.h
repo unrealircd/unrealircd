@@ -73,4 +73,17 @@
 #define intptr_t long
 #endif
 
+/* Generation version number (e.g.: 3 for Unreal3*) */
+#define UNREAL_VERSION_GENERATION 3
+
+/* Major version number (e.g.: 2 for Unreal3.2*) */
+#define UNREAL_VERSION_MAJOR 2
+
+/* Minor version number (e.g.: 1 for Unreal3.2.1) */
+#define UNREAL_VERSION_MINOR 9
+
+/* Version suffix such as a beta marker or release candidate marker. (e.g.:
+   -rc2 for unrealircd-3.2.9-rc2) */
+#define UNREAL_VERSION_SUFFIX ""
+
 #endif

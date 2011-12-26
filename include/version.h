@@ -7,6 +7,16 @@
 #ifndef __versioninclude
 #define __versioninclude 1
 
+/*
+ * Utility macros to convert version number constants to strings.
+ * Delayed expansion requires two macros to work. See:
+ *
+ * $ info '(cpp) Stringification'
+ */
+#define _macro_to_str(n) #n
+#define macro_to_str(n) _macro_to_str(n)
+
+
 /* 
  * Mark of settings
  */
@@ -29,18 +39,16 @@
  * Also don't forget to bump the protocol version every release.
  */
 
-/** These UNREAL_VERSION_* macros can be used so (3rd party) modules
+/**
+ * The following code concerns UNREAL_VERSION_GENERATION,
+ * UNREAL_VERSION_MAJOR, and UNREAL_VERSION_MINOR.
+ *
+ * These UNREAL_VERSION_* macros can be used so (3rd party) modules
  * can easily distinguish versions.
+ *
+ * They are set during ./configure, so update ./configure.ac's AC_INIT
+ * line upon a new release.
  */
-
-/** The generation version number (eg: 3 for Unreal3*) */
-#define UNREAL_VERSION_GENERATION   3
-
-/** The major version number (eg: 2 for Unreal3.2*) */
-#define UNREAL_VERSION_MAJOR        2
-
-/** The minor version number (eg: 1 for Unreal3.2.1), negative numbers for unstable/alpha/beta */
-#define UNREAL_VERSION_MINOR        9
 
 /** Year + week of the year (ISO week number, with Monday as first day of week)
  * Can be useful if the above 3 versionids are insufficient for you (eg: you want to support CVS).
@@ -49,10 +57,10 @@
 #define UNREAL_VERSION_TIME         201144
 
 #define UnrealProtocol 		2310
-#define PATCH1  		"3"
-#define PATCH2  		".2"
-#define PATCH3  		".9"
-#define PATCH4  		""
+#define PATCH1  		macro_to_str(UNREAL_VERSION_GENERATION)
+#define PATCH2  		"." macro_to_str(UNREAL_VERSION_MAJOR)
+#define PATCH3  		"." macro_to_str(UNREAL_VERSION_MINOR)
+#define PATCH4  		UNREAL_VERSION_SUFFIX
 #define PATCH5  		""
 #define PATCH6  		""
 #define PATCH7  		""

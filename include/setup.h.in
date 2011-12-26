@@ -355,6 +355,19 @@
 /* Define if you have the <unistd.h> header file. */
 #undef UNISTDH
 
+/* Generation version number (e.g.: 3 for Unreal3*) */
+#undef UNREAL_VERSION_GENERATION
+
+/* Major version number (e.g.: 2 for Unreal3.2*) */
+#undef UNREAL_VERSION_MAJOR
+
+/* Minor version number (e.g.: 1 for Unreal3.2.1) */
+#undef UNREAL_VERSION_MINOR
+
+/* Version suffix such as a beta marker or release candidate marker. (e.g.:
+   -rc2 for unrealircd-3.2.9-rc2) */
+#undef UNREAL_VERSION_SUFFIX
+
 /* Define if you have libcurl installed to get remote includes and MOTD
    support */
 #undef USE_LIBCURL
