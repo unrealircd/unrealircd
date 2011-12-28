@@ -518,6 +518,8 @@ char *mask;
 static char retbuf[NICKLEN + 4];
 
 	strlcpy(retbuf, para, sizeof(retbuf)); /* truncate */
+	if (!strcmp(retbuf+3, "0"))
+		return NULL; /* ~a:0 would mean ban all non-regged, but we already have +R for that. */
 	return retbuf;
 }
 
