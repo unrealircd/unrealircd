@@ -325,7 +325,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			 * display services account name if it's actually a services account name and
 			 * not a legacy timestamp.  --nenolod
 			 */
-			if (!isdigit(*user->svid) && *user->svid != '0')
+			if (!isdigit(*user->svid))
 				sendto_one(sptr, rpl_str(RPL_WHOISLOGGEDIN), me.name, parv[0], name, user->svid);
 
 			/*
