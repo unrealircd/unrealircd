@@ -284,7 +284,8 @@ void ircd_log(int flags, char *format, ...)
 	struct stat fstats;
 
 	va_start(ap, format);
-	ircvsprintf(buf, format, ap);	
+	ircvsprintf(buf, format, ap);
+	va_end(ap);
 	snprintf(timebuf, sizeof timebuf, "[%s] - ", myctime(TStime()));
 	RunHook3(HOOKTYPE_LOG, flags, timebuf, buf);
 	strlcat(buf, "\n", sizeof buf);
@@ -292,14 +293,7 @@ void ircd_log(int flags, char *format, ...)
 	for (logs = conf_log; logs; logs = (ConfigItem_log *) logs->next) {
 #ifdef HAVE_SYSLOG
 		if (!stricmp(logs->file, "syslog") && logs->flags & flags) {
-#ifdef HAVE_VSYSLOG
-			va_end(ap);
-			va_start(ap, format);
-			vsyslog(LOG_INFO, format, ap);
-#else
-			/* %s just to be safe */
 			syslog(LOG_INFO, "%s", buf);
-#endif
 			continue;
 		}
 #endif
@@ -328,5 +322,4 @@ void ircd_log(int flags, char *format, ...)
 			close(fd);
 		}
 	}
-	va_end(ap);
 }

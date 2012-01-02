@@ -2347,3 +2347,4 @@
   introduced by ESVID changes a few days ago. This makes anope happy,
   and also means nothing will change in a non-ESVID scenario.
 - Fix misuse of stdarg.h macros when calling vsyslog() (#4065 by Jimini).
+- Ditch vsyslog() as it's only a waste of CPU, inspired by #4065.

@@ -448,7 +448,6 @@ AC_CHECK_FUNCS(inet_ntoa,,AC_DEFINE([NEED_INET_NTOA], [], [Define if you need in
 AC_CHECK_FUNCS(inet_netof,,AC_DEFINE([NEED_INET_NETOF], [], [Define if you need inet_netof]))
 LIBS="$save_libs"
 AC_CHECK_FUNCS(syslog,AC_DEFINE([HAVE_SYSLOG], [], [Define if you have syslog]))
-AC_CHECK_FUNCS(vsyslog,AC_DEFINE([HAVE_VSYSLOG], [], [Define if you have vsyslog]))
 AC_SUBST(STRTOUL)
 AC_SUBST(CRYPTOLIB)
 AC_SUBST(MODULEFLAGS)
