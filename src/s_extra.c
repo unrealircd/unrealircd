@@ -293,6 +293,8 @@ void ircd_log(int flags, char *format, ...)
 #ifdef HAVE_SYSLOG
 		if (!stricmp(logs->file, "syslog") && logs->flags & flags) {
 #ifdef HAVE_VSYSLOG
+			va_end(ap);
+			va_start(ap, format);
 			vsyslog(LOG_INFO, format, ap);
 #else
 			/* %s just to be safe */
