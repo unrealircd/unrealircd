@@ -172,9 +172,6 @@
 /* Define to 1 if you have the `vsnprintf' function. */
 #undef HAVE_VSNPRINTF
 
-/* Define to 1 if you have the `vsyslog' function. */
-#undef HAVE_VSYSLOG
-
 /* Define if you want IPv6 enabled */
 #undef INET6
 
