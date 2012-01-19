@@ -40,7 +40,7 @@
 			<b><font size="7">UnrealIRCd</font></b><br>
   			<font size="4"><a href="http://www.unrealircd.com/">http://www.unrealircd.com</a></font><br>
   			<font size="4">Version: 3.2.9</font><br>
-  			<b>Derni&egrave;re mise &agrave; jour de la documentation:</b> 2010-09-19
+  			<b>Derni&egrave;re mise &agrave; jour de la documentation:</b> 2011-10-09
 		</div>
 
 		<br>
@@ -708,11 +708,19 @@
 					<td>~R</td><td>registered</td><td>Si l'utilisateur s'est identifi&eacute; aupr&egrave;s des services (habituellement NickServ) et correspond &agrave; ce nick, alors ce ban le d&eacute;signera. Par cons&eacute;quent, ce ban est uniquement utile pour les exceptions (+e).<br>
   					<i>Ex: +e ~R:Nick</i> autorisera Nick sur le salon, m&ecirc;me s'il correspond &agrave; un ban, s'il s'est identifi&eacute; aupr&egrave;s de NickServ et utilise le pseudo Nick.</td>
   				</tr>
+  				<tr>
+					<td>~a</td><td>account</td><td>s'est identifi&eacute; aupr&egrave;s des services (habituellement NickServ) avec ce compte, ce ban le d&eacute;signera.<br>
+					Ce ban est l&eacute;g&egrave;rement diff&eacute;rent de ~R, puisqu'un utilisateur de nick ABC peut &ecirc;tre connect&eacute; avec le compte XYZ. Tous les services ne supportent pas cette option, et dans ce cas, vous devrez utiliser ~R &agrave; la place.<br>
+					<i>Ex: +e ~a:UnCompte</i> autorisera le(s) utilisateur(s) se connectant au compte UnCompte &agrave; rejoindre le salon en ignorant les bans.</td>
+				</tr>
 			</table>
 			
 			<p>
 				Vous pouvez cumuler les bans &eacute;tendus du premier groupe avec ceux du deuxi&egrave;me groupe.
-				Par exemple, <i>+b ~q:~c:#lamers</i> rendra silencieux tous les membres de #lamers.<br><br>
+				Par exemple, <i>+b ~q:~c:#lamers</i> rendra silencieux tous les membres de #lamers.<br>
+				Les bans du second groupe peuvent aussi &egrave;tre utilis&eacute;s avec le mode +I (Invite exceptions),
+				comme par exemple : <i>+I ~c:#trusted</i> et <i>+I ~a:accountname</i>.<br>
+				<br>
 				
 				Certains modules peuvent ajouter d'autres types de ban &eacute;tendus.
 			</p>
@@ -1787,7 +1795,7 @@ listen *:6660-6669;</pre>
 		global;
 	};
 	swhois "Example of a whois mask";
-	snomask frebWqFv;
+	snomask cFfkoSsqNG;
 };</pre>
 
 			<p id="operoverride">
