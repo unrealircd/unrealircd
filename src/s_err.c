@@ -454,7 +454,7 @@ static char *replies[] = {
 /* 407    ERR_TOOMANYTARGETS */ ":%s 407 %s %s :Duplicate recipients. No message delivered",
 /* 408 */ NULL, /* rfc2812, bahamut */
 /* 409    ERR_NOORIGIN */ ":%s 409 %s :No origin specified",
-/* 410 */ NULL, 
+/* 410    ERR_INVALIDCAPCMD */ ":%s 410 %s %s :Invalid CAP subcommand", 
 /* 411    ERR_NORECIPIENT */ ":%s 411 %s :No recipient given (%s)",
 /* 412    ERR_NOTEXTTOSEND */ ":%s 412 %s :No text to send",
 /* 413    ERR_NOTOPLEVEL */ ":%s 413 %s %s :No toplevel domain specified",

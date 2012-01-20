@@ -736,7 +736,7 @@ DLLFUNC CMD_FUNC(m_nick)
 		}
 		/* This had to be copied here to avoid problems.. */
 		(void)strcpy(sptr->name, nick);
-		if (sptr->user && IsNotSpoof(sptr))
+		if (sptr->user && IsNotSpoof(sptr) && !CHECKPROTO(sptr, PROTO_CLICAP))
 		{
 			/*
 			   ** USER already received, now we have NICK.
