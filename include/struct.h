@@ -368,6 +368,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define PROTO_CLK		0x8000	/* Send cloaked host in the NICK command (regardless of +x/-x) */
 #define PROTO_UHNAMES	0x10000  /* Send n!u@h in NAMES */
 #define PROTO_CLICAP	0x20000  /* client capability negotiation in process */
+#define PROTO_STARTTLS	0x40000	 /* client supports STARTTLS */
 
 /*
  * flags macros.
