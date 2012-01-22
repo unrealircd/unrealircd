@@ -446,6 +446,7 @@ extern MODVAR long UMODE_SETHOST;   /* 0x40000000	 used sethost */
 extern MODVAR long UMODE_STRIPBADWORDS; /* 0x80000000	 */
 extern MODVAR long UMODE_HIDEWHOIS; /* hides channels in /whois */
 extern MODVAR long UMODE_NOCTCP;    /* blocks all ctcp (except dcc and action) */
+extern MODVAR long UMODE_HIDLE;     /* hides oper idle times */
 extern MODVAR long AllUmodes, SendUmodes;
 
 extern MODVAR long SNO_KILLS;

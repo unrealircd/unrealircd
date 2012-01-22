@@ -78,6 +78,7 @@ long UMODE_SETHOST = 0L;       /* Used sethost */
 long UMODE_STRIPBADWORDS = 0L; /* Strip badwords */
 long UMODE_HIDEWHOIS = 0L;     /* Hides channels in /whois */
 long UMODE_NOCTCP = 0L;	       /* Blocks ctcp (except dcc and action) */
+long UMODE_HIDLE = 0L;         /* Hides the idle time of opers */
 
 long SNO_KILLS = 0L;
 long SNO_CLIENT = 0L;
@@ -155,6 +156,7 @@ void	umode_init(void)
 	UmodeAdd(NULL, 't', UMODE_GLOBAL, NULL, &UMODE_SETHOST);
 	UmodeAdd(NULL, 'G', UMODE_GLOBAL, NULL, &UMODE_STRIPBADWORDS);
 	UmodeAdd(NULL, 'p', UMODE_GLOBAL, NULL, &UMODE_HIDEWHOIS);
+	UmodeAdd(NULL, 'I', UMODE_GLOBAL, umode_allow_opers, &UMODE_HIDLE);
 	SnomaskAdd(NULL, 'k', umode_allow_all, &SNO_KILLS);
 	SnomaskAdd(NULL, 'c', umode_allow_opers, &SNO_CLIENT);
 	SnomaskAdd(NULL, 'f', umode_allow_opers, &SNO_FLOOD);

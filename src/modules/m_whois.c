@@ -329,15 +329,15 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				sendto_one(sptr, rpl_str(RPL_WHOISLOGGEDIN), me.name, parv[0], name, user->svid);
 
 			/*
-			 * Fix /whois to not show idle times of
-			 * global opers to anyone except another
-			 * global oper or services.
-			 * -CodeM/Barubary
+			 * Umode +I hides an oper's idle time from regular users.
+			 * -Nath.
 			 */
-			if (MyConnect(acptr))
+			if (MyConnect(acptr) && (IsAnOper(sptr) || !(acptr->umodes & UMODE_HIDLE)))
+			{
 				sendto_one(sptr, rpl_str(RPL_WHOISIDLE),
 				    me.name, parv[0], name,
 				    TStime() - acptr->last, acptr->firsttime);
+			}
 		}
 		if (!found)
 			sendto_one(sptr, err_str(ERR_NOSUCHNICK),

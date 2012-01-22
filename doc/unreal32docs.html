@@ -2926,7 +2926,7 @@ files {
     <td><div align="center"><b>Description</b></div></td>
   </tr>
   <tr> 
-    <td colspan="2"><div align="center"><b>User Modes</b></div></td>
+    <td colspan="2" id="usermodes"><div align="center"><b>User Modes</b></div></td>
   </tr>
   <tr> 
     <td><div align="center">A</div></td>
@@ -2964,6 +2964,10 @@ files {
   <tr> 
     <td><div align="center">h</div></td>
     <td>Available for help (HelpOp) (Set in OperBlock)</td>
+  </tr>
+  <tr>
+    <td><div style="text-align: center">I</div></td>
+    <td>Hide an oper's idle time (in /whois output) from regular users.</td>
   </tr>
   <tr> 
     <td><div align="center">i</div></td>
@@ -3054,10 +3058,22 @@ to get more information on a command.</p>
     <td>Changes your online nick name. Alerts others to the change of your nick<br></td>
     <td>All</td>
   </tr>
-  <tr> 
+  <tr id="command_whois"> 
     <td>whois &lt;nick&gt;</td>
     <td>Displays information of user requested. Includes Full Name, Host, Channels 
       User is in, and Oper Status<br></td>
+    <td>All</td>
+  </tr>
+  <tr id="command_whois_nicknick">
+    <td>whois &lt;nick&gt; &lt;nick&gt;</td>
+    <td>
+      Performs a remote <a href="#command_whois">WHOIS</a>. If a
+      person is not on the same server as another person, a simple
+      WHOIS will not display all possible WHOIS responses. For
+      example, idle times are not shown in such a case. To request a
+      remote whois, issue a WHOIS with the remote user's nick as the
+      first and as the second arguments.
+    </td>
     <td>All</td>
   </tr>
   <tr> 

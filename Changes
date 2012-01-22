@@ -2352,3 +2352,5 @@
   userhost-in-names (UHNAMES). Patch from nenotopia (#4018, #4066).
 - Fix issue with CAP & NOSPOOF. Patch from nenolod (#4077).
 - Advertise 'tls' (STARTTLS) capability in CAP. Patch from nenolod (#4081).
+- New user mode +I (IRCOp only) which hides idle times to other users,
+  suggested and patch supplied by Nath & binki (#3953).
