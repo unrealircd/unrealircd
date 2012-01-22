@@ -176,7 +176,7 @@ clean:
 	fi
 
 cleandir: clean
-	rm -rf include/networks.h include/setup.h Makefile Settings
+	rm -rf include/setup.h Makefile Settings
 
 makex:
 	chmod +x Config newnet ircd ircdcron/ircdchk killircd
@@ -207,10 +207,6 @@ depend:
 install: all
 	$(INSTALL) -m 0700 -d $(IRCDDIR)
 	$(INSTALL) -m 0700 src/ircd $(BINDIR) 2>/dev/null || { $(INSTALL) -m 0700 -d "$$(dirname '$(BINDIR)')"; $(INSTALL) -m 0700 src/ircd $(BINDIR); }
-	$(INSTALL) -m 0700 -d $(IRCDDIR)/networks
-	$(INSTALL) -m 0600 networks/*.network $(IRCDDIR)/networks
-	$(INSTALL) -m 0700 networks/makenet $(IRCDDIR)/networks
-	$(INSTALL) -m 0600 networks/networks.ndx $(IRCDDIR)/networks
 	$(INSTALL) -m 0700 -d $(IRCDDIR)/doc
 	$(INSTALL) -m 0600 doc/Authors doc/example.conf doc/coding-guidelines doc/tao.of.irc doc/unreal32docs.html $(IRCDDIR)/doc
 	$(INSTALL) -m 0700 -d $(IRCDDIR)/aliases

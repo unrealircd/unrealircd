@@ -108,7 +108,7 @@ English |
   ---4.34. <a href="#officialchannels">Official Channels Block</a><br>
   ---4.35. <a href="#spamfilter">Spamfilter Block</a><br>
   ---4.36. <a href="#cgiirc">Cgiirc Block</a><br> 
-  ---4.37. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
+  ---4.37. <a href="#setblock">Set Block</a><br>
   ---4.38. <a href="#filesblock">Files Block</a><br />
   5. <a href="#addtlfiles">Additional Files</a><br>
   6. <a href="#userchannelmodes">User & Channel Modes</a><br>
@@ -2349,11 +2349,10 @@ Then, in your unrealircd.conf you add a cgiirc block:
 <p id="setblock"><font class="block_section">4.37 - </font><font class="block_name">Set Block</font>
    <font class="block_required">REQUIRED</font> <font class="block_old">(Previously known as unrealircd.conf/networks file)</font>
 </p><div class="desc">
-<p>The set file is what use to be our networks/unrealircd.conf and our networks 
-  file. On single server networks, rather than having 3 files you can just put all
-  the set statements in the unrealircd.conf itself, on multi-server networks, I
-  recommend using a seperate networks file.</p>
-  <p>Now, if your server is on a network, chances are you will all basically use 
+<p>On single server networks, rather than having 3 files you can just put all
+  the set statements in the unrealircd.conf itself, on multi-server networks, we
+  recommend using a seperate networks file (see next).</p>
+  <p>If your server is on a network, chances are you will all basically use 
     the same Set settings. Therefore it makes more sense to have a network file, 
     which is loaded with an <a href="#includedirective">include</a> directive. 
     Below you will find all of the set directives available.</p>
