@@ -2350,3 +2350,4 @@
 - Ditch vsyslog() as it's only a waste of CPU, inspired by #4065.
 - Add CAP support. Currently implemented are: multi-prefix (NAMESX), and
   userhost-in-names (UHNAMES). Patch from nenotopia (#4018, #4066).
+- Fix issue with CAP & NOSPOOF. Patch from nenolod (#4077).

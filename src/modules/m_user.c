@@ -203,10 +203,9 @@ DLLFUNC CMD_FUNC(m_user)
 		strlcpy(user->svid, sstamp, sizeof(user->svid));
 
 	strlcpy(sptr->info, realname, sizeof(sptr->info));
-	if (sptr->name[0] && 
-	    (IsServer(cptr) ? 1 : IsNotSpoof(sptr)) &&
-	    (!MyConnect(sptr) || (MyConnect(sptr) && !CHECKPROTO(sptr, PROTO_CLICAP)))
-	   )
+	if (*sptr->name &&
+		(IsServer(cptr) || (IsNotSpoof(sptr) && !CHECKPROTO(sptr, PROTO_CLICAP)))
+           )
 		/* NICK and no-spoof already received, now we have USER... */
 	{
 		if (USE_BAN_VERSION && MyConnect(sptr))
