@@ -521,3 +521,21 @@ int i;
 			sptr->user->snomask &= ~Snomask_Table[i].mode;
 	}
 }
+
+/*
+ * Strip all 'oper only modes' from the user.
+ * This function is NOT PERFECT, see comments from the
+ * remove_oper_snomasks above.
+ */
+void remove_oper_modes(aClient *sptr)
+{
+int i;
+
+	for (i = 0; i <= Usermode_highest; i++)
+	{
+		if (!Usermode_Table[i].flag)
+			continue;
+		if (Usermode_Table[i].allowed == umode_allow_opers)
+			sptr->umodes &= ~Usermode_Table[i].mode;
+	}
+}

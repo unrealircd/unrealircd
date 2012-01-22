@@ -2354,3 +2354,7 @@
 - Advertise 'tls' (STARTTLS) capability in CAP. Patch from nenolod (#4081).
 - New user mode +I (IRCOp only) which hides idle times to other users,
   suggested and patch supplied by Nath & binki (#3953).
+- Added remove_oper_modes(), which works just like remove_oper_snomasks(),
+  and ensures that the user does not have any ircop-only user modes after
+  de-opering. This (only) fixes the just added +I umode case, but could
+  also prevent future bugs.

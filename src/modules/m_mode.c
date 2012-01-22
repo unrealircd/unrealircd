@@ -2471,6 +2471,10 @@ DLLFUNC CMD_FUNC(_m_umode)
 		IRCstats.invisible++;
 	if ((setflags & UMODE_INVISIBLE) && !IsInvisible(sptr))
 		IRCstats.invisible--;
+
+	if (!IsAnOper(sptr))
+		remove_oper_modes(sptr);
+
 	/*
 	 * compare new flags with old flags and send string which
 	 * will cause servers to update correctly.
