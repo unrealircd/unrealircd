@@ -120,7 +120,7 @@
 			---4.34. <a href="#officialchannels">Official Channels Block</a><br>
 			---4.35. <a href="#spamfilter">Spamfilter Block</a><br>
 			---4.36. <a href="#cgiirc">Cgiirc Block</a><br>
-			---4.37. <a href="#setblock">Set Block -=- (networks/unrealircd.conf)</a><br>
+			---4.37. <a href="#setblock">Set Block</a><br>
 			---4.38. <a href="#filesblock">Files Block</a><br>
 			5. <a href="#addtlfiles">Fichiers additionnels</a><br>
 			6. <a href="#userchannelmodes">Modes utilisateurs &amp; salons</a><br>
@@ -3107,12 +3107,11 @@ spamfilter {
 		</p>
 		<div class="desc">
 			<p>
-				Le bloc set correspond &agrave; notre ancien networks/unrealircd.conf et &agrave; nos fichiers networks.
 				Sur des r&eacute;seaux compos&eacute;s d'un seul serveur, plut&ocirc;t que d'avoir 3 fichiers idff&eacute;rents, vous pouvez mettre tout mettre dans unrealircd.conf.
-				Sur des r&eacute;seaux de plusieurs serveurs, on vous recommande d'utiliser un fichier networks distint.
+				Sur des r&eacute;seaux de plusieurs serveurs, nous vous recommandons d'utiliser un fichier networks distint (voir ci-dessus).
 			</p>
 			<p>
-				Maintenant, si votre serveur est sur un r&eacute;seau, il y a des chances que vous utilisiez le m&ecirc;me set block pour tous les serveurs.
+				Si votre serveur est sur un r&eacute;seau, il y a des chances que vous utilisiez le m&ecirc;me set block pour tous les serveurs.
 				Par cons&eacute;quent, il est plus logique d'avoir un fichier networks, qui sera inclus avec la directive <a href="#includedirective">include</a>.
 				Vous trouverez la liste de toutes les directives set disponibles ci-dessous.
 			</p>
@@ -3912,6 +3911,10 @@ spamfilter {
 				<tr> 
 					<td style="text-align:center;">h</td>
 					<td>Disponible pour aide (HelpOp) (d&eacute;fini dans Oper Block)</td>
+			 	</tr>
+				<tr>
+					<td style="text-align: center">I</td>
+					<td>Cache le temps d'inactivit&eacute; d'un IRCop dans les WHOIS pour les utilisateurs normaux</td>
 				</tr>
 				<tr> 
 					<td style="text-align:center;">i</td>
@@ -4007,9 +4010,19 @@ spamfilter {
 					<td>Change votre pseudo. Averti les autres de votre changement de pseudo</td>
 					<td>Tous</td>
 				</tr>
-				<tr> 
+				<tr id="command_whois"> 
 					<td>whois &lt;nick&gt;</td>
 					<td>Affiche les informations sur l'utilisateur cibl&eacute;. Inclus le pseudo, l'host, les salons sur lesquels il se trouve et son statut d'Oper. Si vous &ecirc;tes un IRCOP, vous avez acc&egrave;s &agrave; plus d'informations tel que les umodes de l'utilisateur.</td>
+					<td>Tous</td>
+				</tr> 
+				<tr id="command_whois_nicknick">
+					<td>whois &lt;nick&gt; &lt;nick&gt;</td>
+					<td>
+						R&eacute;alise une commande <a href="#command_whois">WHOIS</a> distante.
+						Si un utilisateur n'est pas sur le m&ecirc;me serveur que vous, un WHOIS simple n'affichera pas toutes les informations fournies habituellement par WHOIS.
+						Par exmple, les temps d'inactivit&eacute; ne sont pas affich&eacute;s dans ce cas.
+						Pour ex&eactue;cuter une commande WHOIS distante, faites un WHOIS en pr&eacute;cisant le pseudo de l'utilisateur distant en premier et en deuxi&egrave;me param&egrave;tres.
+					</td>
 					<td>Tous</td>
 				</tr>
 				<tr> 
