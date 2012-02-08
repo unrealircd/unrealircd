@@ -2360,3 +2360,4 @@
   also prevent future bugs.
 - Get rid of networks/ directory, and all references to it. Suggested by
   katsklaw and others (#4056).
+- Added doc/example.es.conf, translated by Severus_Snape.
