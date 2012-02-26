@@ -2373,3 +2373,14 @@
   checked for this one. Reported by and patch from Apocalypse (#4086).
 - Added patch from Adam for poll() support (#1245).
 - Various changes/fixes/enhancements to poll patch
+- UnrealIRCd now supports poll() instead of select().
+  There are some minor speed benefits if you have more than 1K or 2K
+  clients, however the main noticeable difference is that on Linux you can
+  now easily enter a higher maximum connection count than 1024 in ./Config,
+  without having to edit system header files.
+  Of course, you still need to be allowed to use the # of sockets (type
+  'ulimit -n' on the shell).
+  Support for this is experimental at this stage, but enabled by default
+  so it can receive all the testing it deserves. If all goes well, it will
+  be the default for 3.2.10.
+  Stress testing is very much welcomed!
