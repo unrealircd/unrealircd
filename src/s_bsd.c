@@ -163,7 +163,11 @@ extern void url_do_transfers_async(void);
 #ifdef USE_POLL
 static void reset_pollfd()
 {
+	int i;
+	
 	pollfd_count = 0;
+	for (i = 0; i < MAXCONNECTIONS; ++i)
+		pollfd_to_client[i] = -1;
 }
 
 static struct pollfd *get_pollfd(int client_pos, int fd)
@@ -217,9 +221,9 @@ void remove_local_client(aClient* cptr)
 	}
 
 #ifdef USE_POLL
-	if (cptr->fd >= 0 && cptr->fd < MAXCLIENTS && pollfd_to_client[cptr->fd] == cptr->slot)
+	if ((cptr->fd >= 0) && (cptr->fd < MAXCLIENTS) && (pollfd_to_client[cptr->fd] == cptr->slot))
 		pollfd_to_client[cptr->fd] = -1;
-	if (cptr->authfd >= 0 && cptr->authfd < MAXCLIENTS && pollfd_to_client[cptr->authfd] == cptr->slot)
+	if ((cptr->authfd >= 0) && (cptr->authfd < MAXCLIENTS) && (pollfd_to_client[cptr->authfd] == cptr->slot))
 		pollfd_to_client[cptr->authfd] = -1;
 #endif
 
@@ -708,8 +712,7 @@ openlog("ircd", LOG_PID | LOG_NDELAY, LOG_DAEMON); /* reopened now */
 #endif
 	memset(local, 0, sizeof(aClient*) * MAXCONNECTIONS);
 #ifdef USE_POLL
-	for (i = 0; i < MAXCONNECTIONS; ++i)
-		pollfd_to_client[i] = -1;
+	reset_pollfd();
 #endif
 	LastSlot = -1;
 
@@ -1934,17 +1937,25 @@ int  read_message(time_t delay, fdlist *listp)
 			}
 			ircstp->is_ac++;
 			/* We now check:
-			 *  1) The number of open files, which is the limit imposed by the
-			 *     user during ./Config (MAXCONNECTIONS minus a few).
-			 *  2) If the fd number exceeds FD_SETSIZE, which is not
-			 *     permitted as otherwise FD_SET() and FD_CLR() will fail
-			 *     in read_message()
-			 *     Note that the value of FD_SETSIZE may be (much) higher than
-			 *     MAXCLIENTS/MAXCONNECTIONS. They are not necessarily the same!
-			 * Check #2 can be removed if poll() is used.
-			 * FIXME: Figure out why I need a FD_SETSIZE-4 here? still have crashes with -1...
+			 *  1.  The number of open files, which is the limit imposed by the
+			 *      user during ./Config (MAXCONNECTIONS minus a few).
+			 *  2a) When using select(): 
+			 *      If the fd number exceeds FD_SETSIZE, which is not
+			 *      permitted as otherwise FD_SET() and FD_CLR() will fail
+			 *      in read_message()
+			 *      Note that the value of FD_SETSIZE may be (much) higher than
+			 *      MAXCLIENTS/MAXCONNECTIONS. They are not necessarily the same!
+			 *      FIXME: Figure out why I need a FD_SETSIZE-4 here? still have crashes with -1.
+			 *  2b) When using poll():
+			 *      Similar to 2a, check if fd is within 0..MAXCLIENTS bounds, because we
+			 *      use pollfd_to_client[] to map fd's to client slots.
  			 */
-			if ((++OpenFiles >= MAXCLIENTS) || (fd > FD_SETSIZE-4))
+			if ((++OpenFiles >= MAXCLIENTS) ||
+#ifdef USE_POLL
+			    (fd >= MAXCLIENTS))
+#else
+ 			    (fd > FD_SETSIZE-4))
+#endif
 			{
 				ircstp->is_ref++;
 				if (last_allinuse < TStime() - 15)
