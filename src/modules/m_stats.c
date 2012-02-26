@@ -333,7 +333,7 @@ inline int stats_operonly_short(char c)
 	l = tolower(c);
 	/* Hack for the flags that are case insensitive */
 	if (l == 'o' || l == 'y' || l == 'k' || l == 'g' || l == 'x' || l == 'c' || 
-		l =='f' || l == 'i' || l == 'h')
+		l =='f' || l == 'i' || l == 'h' || l == 'm')
 	{
 		if (islower(c) && strchr(OPER_ONLY_STATS, toupper(c)))
 			return 1;

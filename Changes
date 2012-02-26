@@ -2368,3 +2368,6 @@
 - Moved nospoof to config file, suggested by and patch from nenolod (#4078).
   This means ping cookies are now controlled by set::ping-cookie [yes|no].
   The default is 'yes' (enabled).
+- Even when 'M' was listed in set::oper-only-stats you could still do a
+  '/STATS m'. Unlike other stats characters, case insensitivity was not
+  checked for this one. Reported by and patch from Apocalypse (#4086).
