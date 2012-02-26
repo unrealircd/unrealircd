@@ -2361,3 +2361,7 @@
 - Get rid of networks/ directory, and all references to it. Suggested by
   katsklaw and others (#4056).
 - Added doc/example.es.conf, translated by Severus_Snape.
+- Make the accept code check if the fd is within bounds instead of relying
+  on OpenFiles to be correct. This fixes a crash when f.e. 3rd party modules
+  have files open but don't increase OpenFiles. Might also fix a curl crash,
+  though nobody ever reported one.

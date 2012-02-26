@@ -1775,7 +1775,18 @@ int  read_message(time_t delay, fdlist *listp)
 				break;
 			}
 			ircstp->is_ac++;
-			if (++OpenFiles >= MAXCLIENTS)
+			/* We now check:
+			 *  1) The number of open files, which is the limit imposed by the
+			 *     user during ./Config (MAXCONNECTIONS minus a few).
+			 *  2) If the fd number exceeds FD_SETSIZE, which is not
+			 *     permitted as otherwise FD_SET() and FD_CLR() will fail
+			 *     in read_message()
+			 *     Note that the value of FD_SETSIZE may be (much) higher than
+			 *     MAXCLIENTS/MAXCONNECTIONS. They are not necessarily the same!
+			 * Check #2 can be removed if poll() is used.
+			 * FIXME: Figure out why I need a FD_SETSIZE-4 here? still have crashes with -1...
+ 			 */
+			if ((++OpenFiles >= MAXCLIENTS) || (fd > FD_SETSIZE-4))
 			{
 				ircstp->is_ref++;
 				if (last_allinuse < TStime() - 15)
