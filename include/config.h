@@ -71,6 +71,11 @@
 #undef NO_FDLIST
 
 /*
+ * Defining this will enable poll() usage instead of select()
+ */
+#define USE_POLL
+
+/*
  * Defining this will allow all ircops to see people in +s channels
  * By default, only net/tech admins can see this
  */

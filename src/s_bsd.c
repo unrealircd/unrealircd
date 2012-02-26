@@ -39,6 +39,10 @@ static char sccsid[] =
 Computing Center and Jarkko Oikarinen";
 #endif
 
+#ifdef _WIN32
+#include <WinSock2.h>
+#endif
+
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
@@ -67,6 +71,23 @@ Computing Center and Jarkko Oikarinen";
 #include "h.h"
 #ifndef NO_FDLIST
 #include  "fdlist.h"
+#endif
+
+#ifdef USE_POLL
+# ifndef _WIN32
+#  include <sys/poll.h>
+#  include <poll.h>
+#  ifndef POLLRDHUP
+#   define POLLRDHUP 0
+#  endif
+# else
+#  define poll WSAPoll
+#  define POLLRDHUP POLLHUP
+# endif
+
+static struct pollfd pollfds[MAXCONNECTIONS], dummy_pollfd;
+static int pollfd_count = 0;
+static int pollfd_to_client[MAXCONNECTIONS];
 #endif
 
 #ifdef INET6
@@ -138,6 +159,31 @@ extern void url_do_transfers_async(void);
 #  endif
 # endif
 #endif
+
+#ifdef USE_POLL
+static void reset_pollfd()
+{
+	pollfd_count = 0;
+}
+
+static struct pollfd *get_pollfd(int client_pos, int fd)
+{
+	if (pollfd_count >= MAXCONNECTIONS)
+	{
+		memset(&dummy_pollfd, 0, sizeof(dummy_pollfd));
+		return &dummy_pollfd;
+	}
+	else
+	{
+		struct pollfd *p = &pollfds[pollfd_count++];
+		memset(p, 0, sizeof(*p));
+		p->fd = fd;
+		pollfd_to_client[fd] = client_pos;
+		return p;
+	}
+}
+#endif
+
 void start_of_normal_client_handshake(aClient *acptr);
 void proceed_normal_client_handshake(aClient *acptr, struct hostent *he);
 
@@ -169,6 +215,13 @@ void remove_local_client(aClient* cptr)
 		cptr->slot = -1;
 		return;
 	}
+
+#ifdef USE_POLL
+	if (cptr->fd >= 0 && cptr->fd < MAXCLIENTS && pollfd_to_client[cptr->fd] == cptr->slot)
+		pollfd_to_client[cptr->fd] = -1;
+	if (cptr->authfd >= 0 && cptr->authfd < MAXCLIENTS && pollfd_to_client[cptr->authfd] == cptr->slot)
+		pollfd_to_client[cptr->authfd] = -1;
+#endif
 
 	/* Keep LastSlot as the last one
 	 */
@@ -528,7 +581,7 @@ void close_listeners(void)
  */
 void init_sys(void)
 {
-	int  fd;
+	int  fd, i;
 #ifdef RLIMIT_FD_MAX
 	struct rlimit limit;
 
@@ -563,12 +616,14 @@ void init_sys(void)
 }
 #endif
 #ifndef _WIN32
+#ifndef USE_POLL
 	if (MAXCONNECTIONS > FD_SETSIZE)
 	{
 		fprintf(stderr, "MAXCONNECTIONS (%d) is higher than FD_SETSIZE (%d)\n", MAXCONNECTIONS, FD_SETSIZE);
 		fprintf(stderr, "You might need to recompile the IRCd, or if you're running Linux, read the release notes\n");
 		exit(-1);
 	}
+#endif
 #endif
 	/* Startup message
 	   pid = getpid();
@@ -652,6 +707,10 @@ init_dgram:
 openlog("ircd", LOG_PID | LOG_NDELAY, LOG_DAEMON); /* reopened now */
 #endif
 	memset(local, 0, sizeof(aClient*) * MAXCONNECTIONS);
+#ifdef USE_POLL
+	for (i = 0; i < MAXCONNECTIONS; ++i)
+		pollfd_to_client[i] = -1;
+#endif
 	LastSlot = -1;
 
 #endif /*_WIN32*/
@@ -1423,12 +1482,11 @@ void proceed_normal_client_handshake(aClient *acptr, struct hostent *he)
 ** any flooding >:-) -avalon
 */
 
-static int read_packet(aClient *cptr, fd_set *rfd)
+static int read_packet(aClient *cptr)
 {
 	int  dolen = 0, length = 0, done;
 	time_t now = TStime();
-	if (FD_ISSET(cptr->fd, rfd) &&
-	    !(IsPerson(cptr) && DBufLength(&cptr->recvQ) > 6090))
+	if (!(IsPerson(cptr) && DBufLength(&cptr->recvQ) > 6090))
 	{
 		Hook *h;
 		SET_ERRNO(0);
@@ -1553,7 +1611,13 @@ int  read_message(time_t delay, fdlist *listp)
    #undef FD_SET(x,y) do { if (fcntl(x, F_GETFD, &sockerr) == -1) abort(); FD_SET(x,y); } while(0)
 */	aClient *cptr;
 	int  nfds;
+#ifdef USE_POLL
+	struct pollfd *pfd;
+	int poll_fd_count = 0;
+#else
 	struct timeval wait;
+#endif
+
 #ifndef _WIN32
 	fd_set read_set, write_set;
 #else
@@ -1583,9 +1647,14 @@ int  read_message(time_t delay, fdlist *listp)
 #ifdef _WIN32
 		FD_ZERO(&excpt_set);
 #endif
+#ifdef USE_POLL
+		reset_pollfd();
+#endif /* USE_POLL */
+
 #ifdef USE_LIBCURL
 		url_do_transfers_async();
 #endif
+
 #ifdef NO_FDLIST
 		for (i = LastSlot; i >= 0; i--)
 #else
@@ -1613,12 +1682,24 @@ int  read_message(time_t delay, fdlist *listp)
 					Debug((DEBUG_NOTICE, "auth on %x %d %d", cptr, i, s));
 					if (cptr->authfd >= 0)
 					{
+#ifdef USE_POLL
+						pfd = get_pollfd(cptr->slot, cptr->authfd);
+						pfd->events = POLLIN;
+#else
 						FD_SET(cptr->authfd, &read_set);
 #ifdef _WIN32	
 						FD_SET(cptr->authfd, &excpt_set);
 #endif	
+#endif
+
 						if (cptr->flags & FLAGS_WRAUTH)
+						{
+#ifdef USE_POLL
+							pfd->events |= POLLOUT;
+#else
 							FD_SET(cptr->authfd, &write_set);
+#endif
+						}
 					}
 				}
 			}
@@ -1627,17 +1708,36 @@ int  read_message(time_t delay, fdlist *listp)
 			 */
 			if (DoingDNS(cptr) || DoingAuth(cptr))
 				continue;
+#ifdef USE_POLL
+			pfd = NULL;
+#endif
 			if (IsMe(cptr) && IsListening(cptr))
 			{
 				if (cptr->fd >= 0)
+				{
+#ifdef USE_POLL
+					if (pfd == NULL)
+						pfd = get_pollfd(cptr->slot, cptr->fd);
+					pfd->events |= POLLIN;
+#else
 					FD_SET(cptr->fd, &read_set);
+#endif
+				}
 			}
 			else if (!IsMe(cptr))
 			{
 				if (DBufLength(&cptr->recvQ) && delay2 > 2)
 					delay2 = 1;
 				if ((cptr->fd >= 0) && (DBufLength(&cptr->recvQ) < 4088))
+				{
+#ifdef USE_POLL
+					if (pfd == NULL)
+						pfd = get_pollfd(cptr->slot, cptr->fd);
+					pfd->events |= POLLIN;
+#else
 					FD_SET(cptr->fd, &read_set);
+#endif
+				}
 			}
 			if ((cptr->fd >= 0) && (DBufLength(&cptr->sendQ) || IsConnecting(cptr) ||
 			    (DoList(cptr) && IsSendable(cptr))
@@ -1646,15 +1746,36 @@ int  read_message(time_t delay, fdlist *listp)
 #endif
 			    ))
 			{
+#ifdef USE_POLL
+				if (pfd == NULL)
+					pfd = get_pollfd(cptr->slot, cptr->fd);
+				pfd->events |= POLLOUT;
+#else
 				FD_SET(cptr->fd, &write_set);
+#endif
 			}
 		}
 
-		ares_fds(resolver_channel, &read_set, &write_set);
+		nfds = ares_fds(resolver_channel, &read_set, &write_set);
+#ifdef USE_POLL
+		for (k = 0; k < nfds; ++k)
+			if (FD_ISSET(k, &read_set) || FD_ISSET(k, &write_set))
+				get_pollfd(-1, k);
+#endif
 		
 		if (me.fd >= 0)
+		{
+#ifdef USE_POLL
+			pfd = get_pollfd(me.slot, me.fd);
+			pfd->events |= POLLIN;
+#else
 			FD_SET(me.fd, &read_set);
+#endif
+		}
 
+#ifdef USE_POLL
+		nfds = poll(pollfds, pollfd_count, MIN(delay, delay2) * 1000);
+#else /* USE_POLL */
 		wait.tv_sec = MIN(delay, delay2);
 		wait.tv_usec = 0;
 #ifdef	HPUX
@@ -1667,6 +1788,7 @@ int  read_message(time_t delay, fdlist *listp)
 		nfds = select(MAXCONNECTIONS, &read_set, &write_set, &excpt_set, &wait);
 # endif
 #endif
+#endif /* USE_POLL */
 	    if (nfds == -1 && ((ERRNO == P_EINTR) || (ERRNO == P_ENOTSOCK)))
 			return -1;
 		else if (nfds >= 0)
@@ -1690,15 +1812,23 @@ int  read_message(time_t delay, fdlist *listp)
 	 * because these can not be processed using the normal loops below.
 	 * -avalon
 	 */
+#ifdef USE_POLL
+	for (i = 0; i < pollfd_count; ++i)
+#else
 #ifdef NO_FDLIST
 	for (i = LastSlot; (auth > 0) && (i >= 0); i--)
 #else
 	for (i = listp->entry[j = 1]; j <= listp->last_entry; i = listp->entry[++j])
 #endif
+#endif /* USE_POLL */
 	{
-		if (!(cptr = local[i]))
-			continue;
-		if (cptr->authfd < 0)
+#ifdef USE_POLL
+		pfd = &pollfds[i];
+		cptr = local[pollfd_to_client[pfd->fd]];
+#else
+		cptr = local[i];
+#endif
+		if (!cptr || cptr->authfd < 0)
 			continue;
 		auth--;
 #ifdef _WIN32
@@ -1707,7 +1837,11 @@ int  read_message(time_t delay, fdlist *listp)
 		 * the exception FD set to find out when a connection is
 		 * refused.  ie Auth ports and /connect's.  -Cabal95
 		 */
+#ifdef USE_POLL
+		if (pfd->revents & (POLLERR | POLLRDHUP))
+#else
 		if (FD_ISSET(cptr->authfd, &excpt_set))
+#endif
 		{
 			int  err, len = sizeof(err);
 
@@ -1729,29 +1863,53 @@ int  read_message(time_t delay, fdlist *listp)
 #endif
 		if (nfds > 0)
 		{
+#ifdef USE_POLL
+			if (pfd->revents & (POLLIN | POLLOUT))
+#else
 			if (FD_ISSET(cptr->authfd, &read_set) ||
 				FD_ISSET(cptr->authfd, &write_set))
+#endif
 				nfds--;
-			if ((cptr->authfd > 0) && FD_ISSET(cptr->authfd, &write_set))
+			if (cptr->authfd > 0)
 			{
-				send_authports(cptr);
-			}
-			if ((cptr->authfd > 0) && FD_ISSET(cptr->authfd, &read_set))
-			{
-				read_authports(cptr);
+#ifdef USE_POLL
+				if (pfd->revents & POLLOUT)
+					send_authports(cptr);
+				if (pfd->revents & POLLIN)
+					read_authports(cptr);
+#else
+				if (FD_ISSET(cptr->authfd, &write_set))
+					send_authports(cptr);
+				if (FD_ISSET(cptr->authfd, &read_set))
+					read_authports(cptr);
+#endif
 			}
 		}
 	}
 
+#ifdef USE_POLL
+	for (i = 0; i < pollfd_count; ++i)
+#else
 #ifdef NO_FDLIST
 	for (i = LastSlot; i >= 0; i--)
 #else
 	for (i = listp->entry[j = 1];  (j <= listp->last_entry); i = listp->entry[++j])
 #endif
-		if ((cptr = local[i]) && FD_ISSET(cptr->fd, &read_set) &&
+#endif /* USE_POLL */
+	{
+#ifdef USE_POLL
+		pfd = &pollfds[i];
+		cptr = local[pollfd_to_client[pfd->fd]];
+		if (cptr && pfd->revents & POLLIN &&
+#else
+		cptr = local[i];
+		if (cptr && FD_ISSET(cptr->fd, &read_set) &&
+#endif
 		    IsListening(cptr))
 		{
+#ifndef USE_POLL
 			FD_CLR(cptr->fd, &read_set);
+#endif
 			nfds--;
 			cptr->lasttime = TStime();
 			/*
@@ -1818,16 +1976,32 @@ int  read_message(time_t delay, fdlist *listp)
 				cptr->listener = &me;
 		        
                       }
+	}
+
+#ifdef USE_POLL
+	for (i = 0; i < pollfd_count; ++i)
+#else
 #ifndef NO_FDLIST
 	for (i = listp->entry[j = 1];  (j <= listp->last_entry); i = listp->entry[++j])
 #else
 	for (i = LastSlot; i >= 0; i--)
 #endif
+#endif
 	{
-		if (!(cptr = local[i]) || IsMe(cptr))
+#ifdef USE_POLL
+		pfd = &pollfds[i];
+		cptr = local[pollfd_to_client[pfd->fd]];
+#else
+		cptr = local[i];
+#endif
+		if (!cptr || IsMe(cptr))
 			continue;
 
+#ifdef USE_POLL
+		if (pfd->revents & POLLOUT)
+#else
 		if (FD_ISSET(cptr->fd, &write_set))
+#endif
 		{
 			int  write_err = 0;
 			/*
@@ -1855,11 +2029,16 @@ int  read_message(time_t delay, fdlist *listp)
 			if (IsDead(cptr) || write_err)
 			{
 deadsocket:
+#ifdef USE_POLL
+				if (pfd->revents & POLLIN)
+					--nfds;
+#else
 				if (FD_ISSET(cptr->fd, &read_set))
 				{
 					nfds--;
 					FD_CLR(cptr->fd, &read_set);
 				}
+#endif
 				(void)exit_client(cptr, cptr, &me,
 				    ((sockerr = get_sockerr(cptr))
 				    ? STRERROR(sockerr) : "Client exited"));
@@ -1871,18 +2050,35 @@ deadsocket:
 		 * filedescriptor race condition, so don't remove them without
 		 * being sure that has been fixed. -- Syzop
 		 */
-		if ((!NoNewLine(cptr) || FD_ISSET(cptr->fd, &read_set)) &&
-		    !(DoingDNS(cptr) || DoingAuth(cptr))
+		if ((!NoNewLine(cptr) ||
+#ifdef USE_POLL
+		pfd->revents & POLLIN)
+#else
+		FD_ISSET(cptr->fd, &read_set))
+#endif
+		    && !(DoingDNS(cptr) || DoingAuth(cptr))
 #ifdef USE_SSL
 			&& 
 			!(IsSSLHandshake(cptr))
 #endif		
 			)
-			length = read_packet(cptr, &read_set);
+			
+			length = 1;
+#ifdef USE_POLL
+			if (pfd->revents & POLLIN)
+#else
+			if (FD_ISSET(cptr->fd, &read_set))
+#endif
+				length = read_packet(cptr);
+
 #ifdef USE_SSL
 		if ((length != FLUSH_BUFFER) && (cptr->ssl != NULL) && 
 			IsSSLHandshake(cptr) &&
+#ifdef USE_POLL
+			pfd->revents & POLLIN)
+#else
 			FD_ISSET(cptr->fd, &read_set))
+#endif
 		{
 			if (!SSL_is_init_finished(cptr->ssl))
 			{
@@ -1918,8 +2114,13 @@ deadsocket:
 			flush_connections(cptr);
 		if ((length != FLUSH_BUFFER) && IsDead(cptr))
 			goto deadsocket;
-		if ((length > 0) && (cptr->fd >= 0) && !FD_ISSET(cptr->fd, &read_set))
-			continue;
+		if ((length > 0) && (cptr->fd >= 0))
+#ifdef USE_POLL
+			if (!(pfd->revents & POLLIN))
+#else
+			if (!FD_ISSET(cptr->fd, &read_set))
+#endif
+				continue;
 		nfds--;
 		readcalls++;
 		if (length > 0)

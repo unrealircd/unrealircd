@@ -2371,3 +2371,4 @@
 - Even when 'M' was listed in set::oper-only-stats you could still do a
   '/STATS m'. Unlike other stats characters, case insensitivity was not
   checked for this one. Reported by and patch from Apocalypse (#4086).
+- Added patch from Adam for poll() support (#1245).
