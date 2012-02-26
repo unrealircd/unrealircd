@@ -1894,6 +1894,8 @@ int  read_message(time_t delay, fdlist *listp)
 			nfds--;
 			continue;
 		}
+		if (v < 0)
+			continue; /* Hm, shouldn't happen, but still.. */
 		cptr = local[v];
 #else
 		cptr = local[i];
@@ -1966,9 +1968,10 @@ int  read_message(time_t delay, fdlist *listp)
 	{
 #ifdef USE_POLL
 		pfd = &pollfds[i];
-		if (pfd->fd < 0)
-			continue; /* possible with resolver fd */
-		cptr = local[get_client_by_pollfd(pfd->fd)];
+		v = get_client_by_pollfd(pfd->fd);
+		if (v < 0)
+			continue; /* possible with resolver */
+		cptr = local[v];
 		if (cptr && pfd->revents & POLLIN &&
 #else
 		cptr = local[i];
@@ -2067,9 +2070,10 @@ int  read_message(time_t delay, fdlist *listp)
 	{
 #ifdef USE_POLL
 		pfd = &pollfds[i];
-		if (pfd->fd < 0)
-			continue; /* possible with resolver fd */
-		cptr = local[get_client_by_pollfd(pfd->fd)];
+		v = get_client_by_pollfd(pfd->fd);
+		if (v < 0)
+			continue; /* possible with resolver */
+		cptr = local[v];
 #else
 		cptr = local[i];
 #endif
