@@ -2372,3 +2372,4 @@
   '/STATS m'. Unlike other stats characters, case insensitivity was not
   checked for this one. Reported by and patch from Apocalypse (#4086).
 - Added patch from Adam for poll() support (#1245).
+- Various changes/fixes/enhancements to poll patch
