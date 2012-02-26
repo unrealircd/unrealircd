@@ -451,11 +451,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #ifdef USE_SSL
 #define IsSSL(x)		IsSecure(x)
 #endif
-#ifdef NOSPOOF
 #define	IsNotSpoof(x)		((x)->nospoof == 0)
-#else
-#define IsNotSpoof(x)           (1)
-#endif
 
 #define GetHost(x)			(IsHidden(x) ? (x)->user->virthost : (x)->user->realhost)
 #define GetIP(x)			((x->user && x->user->ip_str) ? x->user->ip_str : (MyConnect(x) ? Inet_ia2p(&x->ip) : NULL))
@@ -1030,9 +1026,7 @@ struct Client {
 	short lastsq;		/* # of 2k blocks when sendqueued called last */
 	dbuf sendQ;		/* Outgoing message queue--if socket full */
 	dbuf recvQ;		/* Hold for data incoming yet to be parsed */
-#ifdef NOSPOOF
 	u_int32_t nospoof;	/* Anti-spoofing random number */
-#endif
 	int proto;		/* ProtoCtl options */
 	long sendM;		/* Statistics: protocol messages send */
 	long sendK;		/* Statistics: total k-bytes send */

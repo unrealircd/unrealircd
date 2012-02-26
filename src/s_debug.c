@@ -53,9 +53,8 @@ MODVAR char serveropts[] = {
 #ifdef	SHOW_INVISIBLE_LUSERS
 	'i',
 #endif
-#ifdef NOSPOOF
+	/* NOSPOOF is always compiled in now. --nenolod */
 	'n',
-#endif
 #ifdef	VALLOC
 	'V',
 #endif

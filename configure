@@ -690,7 +690,6 @@ with_permissions
 with_dpath
 with_fd_setsize
 with_spath
-enable_nospoof
 enable_prefixaq
 with_showlistmodes
 with_topicisnuhost
@@ -1334,9 +1333,6 @@ Optional Features:
   --disable-option-checking  ignore unrecognized --enable/--with options
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --disable-nospoof       Disable spoofing protection (requires clients to
-                          respond to a randomly generated PING packet after
-                          USER and NICK but before using other commands)
   --disable-prefixaq      Enable chanadmin (+a) and chanowner (+q) prefixes
   --enable-ssl=           enable ssl will check /usr/local/ssl /usr/lib/ssl
                           /usr/ssl /usr/pkg /usr/sfw /usr/local /usr
@@ -6066,20 +6062,6 @@ _ACEOF
 fi
 
 
-# enable nospoof by default; protects against javascript POST attacks and much more ;-)
-# Check whether --enable-nospoof was given.
-if test "${enable_nospoof+set}" = set; then :
-  enableval=$enable_nospoof;
-else
-  enable_nospoof=yes
-fi
-
-if test $enable_nospoof = "yes"; then :
-
-$as_echo "#define NOSPOOF /**/" >>confdefs.h
-
-fi
-
 # Check whether --enable-prefixaq was given.
 if test "${enable_prefixaq+set}" = set; then :
   enableval=$enable_prefixaq;
@@ -6582,7 +6564,6 @@ export PATH_SEPARATOR
 
 
 
-
 if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
 	if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}pkg-config", so it can be a program name with args.
@@ -6752,7 +6733,6 @@ if test -n "$TRE_CFLAGS"; then
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
   pkg_cv_TRE_CFLAGS=`$PKG_CONFIG --cflags "tre >= 0.7.5" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
 fi
@@ -6769,7 +6749,6 @@ if test -n "$TRE_LIBS"; then
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
   pkg_cv_TRE_LIBS=`$PKG_CONFIG --libs "tre >= 0.7.5" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
 fi
@@ -6789,9 +6768,9 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        TRE_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "tre >= 0.7.5" 2>&1`
+	        TRE_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors "tre >= 0.7.5" 2>&1`
         else
-	        TRE_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "tre >= 0.7.5" 2>&1`
+	        TRE_PKG_ERRORS=`$PKG_CONFIG --print-errors "tre >= 0.7.5" 2>&1`
         fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$TRE_PKG_ERRORS" >&5
@@ -6905,7 +6884,6 @@ if test -n "$CARES_CFLAGS"; then
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
   pkg_cv_CARES_CFLAGS=`$PKG_CONFIG --cflags "libcares >= 1.6.0" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
 fi
@@ -6922,7 +6900,6 @@ if test -n "$CARES_LIBS"; then
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
   pkg_cv_CARES_LIBS=`$PKG_CONFIG --libs "libcares >= 1.6.0" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
 fi
@@ -6942,9 +6919,9 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        CARES_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "libcares >= 1.6.0" 2>&1`
+	        CARES_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors "libcares >= 1.6.0" 2>&1`
         else
-	        CARES_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "libcares >= 1.6.0" 2>&1`
+	        CARES_PKG_ERRORS=`$PKG_CONFIG --print-errors "libcares >= 1.6.0" 2>&1`
         fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$CARES_PKG_ERRORS" >&5

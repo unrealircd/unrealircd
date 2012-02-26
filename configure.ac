@@ -489,14 +489,6 @@ AC_ARG_WITH(spath, [AS_HELP_STRING([--with-spath],[Specify the location of the e
 	[AC_DEFINE_UNQUOTED([SPATH], ["`pwd`/src/ircd"], [Define the location of the executable])
 		BINDIR="`pwd`/src/ircd"])
 
-# enable nospoof by default; protects against javascript POST attacks and much more ;-)
-AC_ARG_ENABLE([nospoof],
-	[AS_HELP_STRING([--disable-nospoof], [Disable spoofing protection (requires clients to respond to a randomly generated PING packet after USER and NICK but before using other commands)])],
-	[],
-	[enable_nospoof=yes])
-AS_IF([test $enable_nospoof = "yes"],
-	[AC_DEFINE([NOSPOOF], [], [Define if you want spoof protection])])
-
 AC_ARG_ENABLE([prefixaq],
 	[AS_HELP_STRING([--disable-prefixaq],[Enable chanadmin (+a) and chanowner (+q) prefixes])],
 	[],

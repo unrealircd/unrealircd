@@ -692,22 +692,24 @@ DLLFUNC CMD_FUNC(m_nick)
 	}
 	else if (!sptr->name[0])
 	{
-#ifdef NOSPOOF
-		/*
-		 * Client setting NICK the first time.
-		 *
-		 * Generate a random string for them to pong with.
-		 */
-		sptr->nospoof = getrandom32();
+		if (iConf.ping_cookie)
+		{
+			/*
+			 * Client setting NICK the first time.
+			 *
+			 * Generate a random string for them to pong with.
+			 */
+			sptr->nospoof = getrandom32();
 
-		if (PINGPONG_WARNING)
-			sendto_one(sptr, ":%s NOTICE %s :*** If you are having problems"
-			    " connecting due to ping timeouts, please"
-			    " type /quote pong %X or /raw pong %X now.",
-			    me.name, nick, sptr->nospoof, sptr->nospoof);
+			if (PINGPONG_WARNING)
+				sendto_one(sptr, ":%s NOTICE %s :*** If you are having problems"
+				    " connecting due to ping timeouts, please"
+				    " type /quote pong %X or /raw pong %X now.",
+				    me.name, nick, sptr->nospoof, sptr->nospoof);
 
-		sendto_one(sptr, "PING :%X", sptr->nospoof);
-#endif /* NOSPOOF */
+			sendto_one(sptr, "PING :%X", sptr->nospoof);
+		}
+
 #ifdef CONTACT_EMAIL
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** If you need assistance with a"
@@ -746,11 +748,10 @@ DLLFUNC CMD_FUNC(m_nick)
 			   ** may reject the client and call exit_client for it
 			   ** --must test this and exit m_nick too!!!
 			 */
-#ifndef NOSPOOF
-			if (USE_BAN_VERSION && MyConnect(sptr))
+			if (!iConf.ping_cookie && USE_BAN_VERSION && MyConnect(sptr))
 				sendto_one(sptr, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
 					me.name, nick);
-#endif
+
 			sptr->lastnick = TStime();	/* Always local client */
 			if (register_user(cptr, sptr, nick,
 			    sptr->user->username, NULL, NULL, NULL) == FLUSH_BUFFER)

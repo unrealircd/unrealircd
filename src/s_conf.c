@@ -1726,6 +1726,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->watch_away_notification = 1;
 	i->new_linking_protocol = 1;
 	i->uhnames = 1;
+	i->ping_cookie = 1;
 #ifdef INET6
 	i->default_ipv6_clone_mask = 64;
 #endif /* INET6 */
@@ -7252,6 +7253,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "pingpong-warning")) {
 			tempiConf.pingpong_warning = config_checkval(cep->ce_vardata, CFG_YESNO);
 		}
+		else if (!strcmp(cep->ce_varname, "ping-cookie")) {
+			tempiConf.ping_cookie = config_checkval(cep->ce_vardata, CFG_YESNO);
+		}
 		else if (!strcmp(cep->ce_varname, "watch-away-notification")) {
 			tempiConf.watch_away_notification = config_checkval(cep->ce_vardata, CFG_YESNO);
 		}
@@ -7840,6 +7844,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "pingpong-warning")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, pingpong_warning, "pingpong-warning");
+		}
+		else if (!strcmp(cep->ce_varname, "ping-cookie")) {
+			CheckNull(cep);
+			CheckDuplicate(cep, ping_cookie, "ping-cookie");
 		}
 		else if (!strcmp(cep->ce_varname, "watch-away-notification")) {
 			CheckNull(cep);

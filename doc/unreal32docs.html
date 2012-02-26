@@ -2689,9 +2689,13 @@ AU). Requests to these servers are sent in parallel, fastest reply wins.</p>
   Maximum time to wait for a time server reply. This is a value between 1 and 5, more is not possible
   because it causes too much inaccuracy. This setting is 3 by default and there's probably
   no good reason to change it.</p>
+ <p><font class="set">set::ping-cookie &lt;yes|no&gt;</font><br>
+  Send a challenge using PING, which clients respond to using PONG. This is helpful for
+  preventing blind HTTP-POST attacks and other things, as well as stopping spoofed TCP on
+  older operating systems with broken TCP stacks. The default is yes.</p>
  <p><font class="set">set::pingpong-warning &lt;yes|no&gt;</font><br>
-  When NOSPOOF is enabled (usually on Windows), send a warning to each user to use
-  '/quote pong ..' if they are having problems connecting? The default is no.</p>
+  When set::ping-cookie is enabled (usually on Windows), send a warning to each user
+  to use '/quote pong ..' if they are having problems connecting? The default is no.</p>
  <p><font class="set">set::watch-away-notification &lt;yes|no&gt;</font><br>
   Allows you to enable/disable AWAY notification in WATCH. The default is yes.</p>
 <p></p> </div>

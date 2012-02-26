@@ -45,9 +45,6 @@ if [ "$DISABLEEXTBANSTACKING" = "1" ]; then
 	ARG="$ARG--with-disable-extendedban-stacking ";
 fi
 fi
-if [ "$NOSPOOF" != "1" ] ; then
-ARG="$ARG--disable-nospoof "
-fi
 if [  "$CRYPTOIRCD" = "1" ] ; then
 if test x"$SSLDIR" = "x" ; then
 ARG="$ARG--enable-ssl "
@@ -310,7 +307,6 @@ done
 c=""
 n=""
 UNREALCWD="`pwd`"
-NOSPOOF="1"
 DPATH="`pwd`"
 SPATH="`pwd`/src/ircd"
 DEFPERM="0600"
@@ -406,43 +402,6 @@ clear
         read cc
         clear
     fi
-
-TEST=""
-while [ -z "$TEST" ] ; do
-    if [ "$NOSPOOF" = "1" ] ; then
-	TEST="Yes"
-    else
-	TEST="No"
-    fi
-    echo ""
-    echo "Many older operating systems have an insecure TCP/IP stack"
-    echo "which may be vulnerable to IP spoofing attacks, if you run"
-    echo "an operating system that is vulnerable to such attacks"
-    echo "enable this option."
-    echo "This option also prevents blind proxies (eg: HTTP POST proxies)"
-    echo "and other blind clients from connecting (eg: protects against"
-    echo "the Firefox XPS IRC Attack)."
-    echo ""
-    echo "Do you want to enable the server anti-spoof protection?"
-    echo $n "[$TEST] -> $c"
-	read cc
-    if [ -z "$cc" ] ; then
-	cc=$TEST
-    fi
-    case "$cc" in
-	[Yy]*)
-	    NOSPOOF="1"
-	    ;;
-	[Nn]*)
-	    NOSPOOF=""
-	    ;;
-	*)
-	    echo ""
-	    echo "You must enter either Yes or No"
-	    TEST=""
-	    ;;
-    esac
-done
 
 TEST="$DPATH"
 echo ""
@@ -960,7 +919,6 @@ fi
 rm -f config.settings
 cat > config.settings << __EOF__
 #
-NOSPOOF="$NOSPOOF"
 DPATH="$DPATH"
 SPATH="$SPATH"
 INET6="$INET6"

@@ -2365,3 +2365,6 @@
   on OpenFiles to be correct. This fixes a crash when f.e. 3rd party modules
   have files open but don't increase OpenFiles. Might also fix a curl crash,
   though nobody ever reported one.
+- Moved nospoof to config file, suggested by and patch from nenolod (#4078).
+  This means ping cookies are now controlled by set::ping-cookie [yes|no].
+  The default is 'yes' (enabled).

@@ -168,6 +168,7 @@ struct zConfiguration {
 #ifdef INET6
 	unsigned short default_ipv6_clone_mask;
 #endif /* INET6 */
+	int ping_cookie;
 };
 
 #ifndef DYNCONF_C
@@ -401,6 +402,7 @@ struct SetCheck {
 	int cgiirc_type; /* cheat :( */
 	unsigned has_cgiirc_hosts:1;
 	unsigned has_cgiirc_webpass:1;
+	unsigned has_ping_cookie:1;
 };
 
 
