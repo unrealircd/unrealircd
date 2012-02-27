@@ -42,6 +42,7 @@ static char sccsid[] =
 
 void vsendto_one(aClient *to, char *pattern, va_list vl);
 void sendbufto_one(aClient *to, char *msg, unsigned int quick);
+int vmakebuf_local_withprefix(char *buf, struct Client *from, const char *pattern, va_list vl);
 
 #define ADD_CRLF(buf, len) { if (len > 510) len = 510; \
                              buf[len++] = '\r'; buf[len++] = '\n'; buf[len] = '\0'; } while(0)
@@ -1142,8 +1143,13 @@ void sendto_common_channels(aClient *user, char *pattern, ...)
 	Membership *channels;
 	Member *users;
 	aClient *cptr;
+	int sendlen;
 
+	/* We now create the buffer _before_ we send it to the clients. -- Syzop */
+	*sendbuf = '\0';
 	va_start(vl, pattern);
+	sendlen = vmakebuf_local_withprefix(sendbuf, user, pattern, vl);
+	va_end(vl);
 
 	++sentalong_marker;
 	if (user->fd >= 0)
@@ -1159,16 +1165,12 @@ void sendto_common_channels(aClient *user, char *pattern, ...)
 				    !(is_chanownprotop(user, channels->chptr) || is_chanownprotop(cptr, channels->chptr)))
 					continue;
 				sentalong[cptr->slot] = sentalong_marker;
-				va_start(vl, pattern);
-				vsendto_prefix_one(cptr, user, pattern, vl);
-				va_end(vl);
+				sendbufto_one(cptr, sendbuf, sendlen);
 			}
+
 	if (MyConnect(user))
-	{
-		va_start(vl, pattern);
-		vsendto_prefix_one(user, user, pattern, vl);
-	}
-	va_end(vl);
+		sendbufto_one(user, sendbuf, sendlen);
+
 	return;
 }
 /*
@@ -1178,21 +1180,25 @@ void sendto_common_channels(aClient *user, char *pattern, ...)
  * server.
  */
 
-//STOPPED HERE
 void sendto_channel_butserv(aChannel *chptr, aClient *from, char *pattern, ...)
 {
 	va_list vl;
 	Member *lp;
 	aClient *acptr;
+	int sendlen;
 
-	for (va_start(vl, pattern), lp = chptr->members; lp; lp = lp->next)
-		if (MyConnect(acptr = lp->cptr))
-		{
-			va_start(vl, pattern);
-			vsendto_prefix_one(acptr, from, pattern, vl);
-			va_end(vl);
-		}
+	/* We now create the buffer _before_ we send it to the clients. Rather than
+	 * rebuilding the buffer 1000 times for a 1000 local-users channel. -- Syzop
+	 */
+	*sendbuf = '\0';
+	va_start(vl, pattern);
+	sendlen = vmakebuf_local_withprefix(sendbuf, from, pattern, vl);
 	va_end(vl);
+
+	for (lp = chptr->members; lp; lp = lp->next)
+		if (MyConnect(acptr = lp->cptr))
+			sendbufto_one(acptr, sendbuf, sendlen);
+
 	return;
 }
 
@@ -1750,53 +1756,65 @@ void sendto_ops_butme(aClient *from, char *pattern, ...)
 	return;
 }
 
+/* Prepare buffer based on format string and 'from' for LOCAL delivery.
+ * The prefix (:<something>) will be expanded to :nick!user@host if 'from'
+ * is a person, taking into account the rules for hidden/cloaked host.
+ * NOTE: Do not send this prepared buffer to remote clients or servers,
+ *       they do not want or need the expanded prefix. In that case, simply
+ *       use ircvsprintf() directly.
+ */
+int vmakebuf_local_withprefix(char *buf, struct Client *from, const char *pattern, va_list vl)
+{
+int len;
+
+	if (from && from->user)
+	{
+		char *par;
+
+		par = va_arg(vl, char *); /* eat first parameter */
+
+		*buf = ':';
+		strcpy(buf+1, from->name);
+
+		if (IsPerson(from))
+		{
+			char *username = from->username;
+			char *host = GetHost(from);
+
+			if (*username)
+			{
+				strcat(buf, "!");
+				strcat(buf, username);
+			}
+			if (*host)
+			{
+				strcat(buf, "@");
+				strcat(buf, host);
+			}
+		}
+
+		/* Assuming 'pattern' always starts with ":%s ..." */
+		if (!strcmp(&pattern[3], "%s"))
+			strcpy(buf + strlen(buf), va_arg(vl, char *)); /* This can speed things up by 30% -- Syzop */
+		else
+			ircvsprintf(buf + strlen(buf), &pattern[3], vl);
+	}
+	else
+		ircvsprintf(buf, pattern, vl);
+
+	len = strlen(buf);
+	ADD_CRLF(buf, len);
+	return len;
+}
+
 void vsendto_prefix_one(struct Client *to, struct Client *from,
     const char *pattern, va_list vl)
 {
 	if (to && from && MyClient(to) && from->user)
-	{
-		static char sender[HOSTLEN + NICKLEN + USERLEN + 5];
-		char *par;
-		int  flag = 0;
-		struct User *user = from->user;
-
-		par = va_arg(vl, char *);
-		strcpy(sender, from->name);
-		if (user)
-		{
-			if (*user->username)
-			{
-				strcat(sender, "!");
-				strcat(sender, user->username);
-			}
-			if ((IsHidden(from) ? *user->virthost : *user->realhost)
-			    && !MyConnect(from))
-			{
-				strcat(sender, "@");
-				(void)strcat(sender, GetHost(from));
-				flag = 1;
-			}
-		}
-		/*
-		 * Flag is used instead of strchr(sender, '@') for speed and
-		 * also since username/nick may have had a '@' in them. -avalon
-		 */
-		if (!flag && MyConnect(from)
-		    && (IsHidden(from) ? *user->virthost : *user->realhost))
-		{
-			strcat(sender, "@");
-			strcat(sender, GetHost(from));
-		}
-		*sendbuf = ':';
-		strcpy(&sendbuf[1], sender);
-		/* Assuming 'pattern' always starts with ":%s ..." */
-		if (!strcmp(&pattern[3], "%s"))
-			strcpy(sendbuf + strlen(sendbuf), va_arg(vl, char *)); /* This can speed things up by 30% -- Syzop */
-		else
-			ircvsprintf(sendbuf + strlen(sendbuf), &pattern[3], vl);
-	}
+		vmakebuf_local_withprefix(sendbuf, from, pattern, vl);
 	else
 		ircvsprintf(sendbuf, pattern, vl);
+
 	sendbufto_one(to, sendbuf, 0);
 }
 

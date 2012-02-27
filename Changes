@@ -2384,3 +2384,17 @@
   so it can receive all the testing it deserves. If all goes well, it will
   be the default for 3.2.10.
   Stress testing is very much welcomed!
+- Speed optimization: First, moved a large part of vsendto_prefix_one into
+  vmakebuf_local_withprefix. Then use this new function - which creates the
+  buffer-to-be-sent - at the top of functions like sendto_channel_butserv
+  and sendto_common_channels and send the prepared buffer in the loop that
+  comes after it. This means we only prepare the buffer once and then send
+  it many times, rather than both building and sending it XYZ times.
+  Benchmarking connect-join-quit of 10k clients:
+  100 users per channel: no noticeable speed improvement
+  1000 users per channel: 18% faster
+  10000 users in one channel: 50% faster
+  As you can see, unfortunately, for a typical irc network there isn't much
+  speed improvement. However, if you have a couple of 500+ user channels or get
+  attacked by clones then you may see some improvement in speed and/or lower
+  CPU usage.
