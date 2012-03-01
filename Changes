@@ -2398,3 +2398,4 @@
   speed improvement. However, if you have a couple of 500+ user channels or get
   attacked by clones then you may see some improvement in speed and/or lower
   CPU usage.
+- Minor documentation typos, thanks warg (#4094).
