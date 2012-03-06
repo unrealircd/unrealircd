@@ -52,7 +52,7 @@ Turkish
 <DIV align=center><B><FONT size=7>UnrealIRCd</FONT></B><BR><FONT size=4><A
 href="http://www.unrealircd.com/">http://www.unrealircd.com/</A></FONT><BR><FONT
 size=4>Version: 3.2.9</FONT><BR><B>En Son Güncelleme:</B>
-2010-11-15</DIV><BR>
+2011-10-09</DIV><BR>
 <B>Baþ Kodlayýcý/Devam Ettiren:</b> Syzop<br>
 <b>Kodlayýcýlar:</b> binki<br>
 <b>Önceki Kodlayýcýlar &amp; Katkýda bulunanlar:</b> Stskeeps, codemastr, Luke, aquanight,
@@ -771,14 +771,23 @@ Bu ban tipleri kullanýlabilen yeni kriterleri gösterir:<br>
  NOT: ('_') Karakteri (' ') karakterine denk gelir ve dolayýsý ile ('_') karekteri, bu ban
  'Stupid bot script v1.4' ile eþleþir.</td></tr>
 <tr><td>~R</td><td>registered</td><td>Eðer bir kullanýcý kendini servislere tanýtmýþsa
-  (Genellikle NickServ) ve nicki eþleþiyorsa bu ban da eþleþir. Yani bu ban çeþidi yalnýzca ban yollarýnda
+  (Genellikle NickServ) ve nicki eþleþiyorsa bu ban ile eþleþecektir. Yani bu ban çeþidi yalnýzca ban yollarýnda
   geçerlidir (+e).<br>
   Örnek: <i>+e ~R:Nick</i> Nick veya rumuzlu kullanýcýnýn diðer banlarýna bakýlmaksýzýn eðer kendini NickServ'e tanýtmýþsa
   kanalda bulunmasýna izin verir.<br>
   </td></tr>
+<tr><td>~a</td><td>account</td><td>Eðer bir kullanýcý, hesap adý ile Servislere oturum açmasý halinde bu ban ile eþleþecektir.<br>
+Bu ~R' den biraz daha farklý olduðunu, yani nicki ABC olan bir kullanýcý hesabý XYZ altýnda kaydedilebilir anlamýndadýr.<br>
+Tüm Servisler bu paketleri desteklemez.Bu durumda, bunun yerine ~R kullanmak zorundadýr.<br>
+Örnek: <i>+e ~a:SomeName</i> Servislerden oturum saðlayan "SomeName" hesap adý altýnda kullanýcý(lar)
+ne olursa olsun kanala giriþi yasaklanacaktýr.<br>
+  </td></tr>
 </table>
 <br>
 Sen 1. gruptan olan banlarý 2. bir grupa yönlendirebilirsin <i>+b ~q:~c:#lamers</i>, yapýlan ban, 'Quiet' olan bütün kullanýcýlarý #lamers kanalýna girmelerini saðlayacaktýr.<br>
+<br>
+Ban tipleri ikinci grup arasýndan invite (+I) durumlarý için kullanýlabilirler.
+Örneðin; <i>+I ~c:#trusted</i> ve <i>+I ~a:accountname</i>.<br>
 <br>
 Modüllerden baþka ban tipleri de ekleyebilirsiniz.<br>
 </p></div>
@@ -1965,7 +1974,7 @@ baðlý]</FONT></P>
 		global;
 	};
 	swhois "Example of a whois mask";
-	snomask frebWqFv;
+	snomask cFfkoSsqNG;
 };
 </PRE>
 <P></P><A name=operoverride><B>OperOverride hakkýnda kýsa bir
@@ -3685,8 +3694,12 @@ belirtmenize olanak saðlar. Burada 1 ve 5 arasýnda bir deðer
 belirtilmelidir,
 beþten büyük sayýlar belirtilemez. Varsayýlan deðeri 3’tür ve eðer iyi bir
 sebebiniz yoksa bunu deðiþtirmeyin.</P>
+<p><font class="set">set::ping-cookie &lt;yes|no&gt;</font><br>
+Kullanýcýlara PING kullanarak cevabýn PONG olarak gönderilmesini saðlar. Bu HTTP-POST saldýrýlarý
+ve diðer þeylerin yaný sýra kýrýk TCP yýðýnlarý ile eski iþletim sistemlerinde
+sahte TCP'i durdurmak ve önlemek için yararlýdýr. Varsayýlan deðeri yes'dir.</p>
 <p><font class="set">set::pingpong-warning &lt;yes|no&gt;</font><br>
-NOSPOOF özelliði aktif iken (genellikle Windows), baðlanýrken sorun yasayan her kullanýcýya '/quote pong ..' uyarýsýnýn
+set::ping-cookie özelliði aktif iken (genellikle Windows), baðlanýrken sorun yasayan her kullanýcýya '/quote pong ..' uyarýsýnýn
 gönderilmesini ya da gönderilmemesini saðlar. Varsayýlan deðeri no'dur.</p>
 <p><font class="set">set::watch-away-notification &lt;yes|no&gt;</font><br>
   WATCH içerisindeki AWAY bildirimini açmanýzý/kapatmanýzý saðlar. Varsayýlan deðeri yes'dir.</p>
@@ -3963,7 +3976,7 @@ name=userchannelmodes></A> </FONT></B></P>
       <DIV align=center><B
       >Açýklama</B></DIV></TD></TR>
   <TR>
-    <TD colSpan=2>
+    <TD colspan="2" id="usermodes">
       <DIV align=center><B>Kullanýcý
       Modlarý</B></DIV></TD></TR>
   <TR>
@@ -4010,6 +4023,10 @@ engeller</TD></TR>
       <DIV align=center>h</DIV></TD>
     <TD>Yardim görevlisi statüsü verir.(HelpOp)(Oper
       Bloðunda belirtilir)</TD></TR>
+  <TR>
+  <TD><div style="text-align: center">I</div></TD>
+    <TD>Oper'lerin boþ (idle) zamanlarýný (/whois'de) normal kullanýcýlardan gizler.</TD>
+  </TR>
   <TR>
     <TD>
       <DIV align=center>i</DIV></TD>
@@ -4122,12 +4139,23 @@ komut hakkýnda bilgi almak için the /helpop komut (veya operseniz /helpop
       bütün kanallarda rumuzunuzun deðiþimi haber verilir<BR
       ></TD>
     <TD>Herkes</TD></TR>
-  <TR>
+  <TR id="command_whois">
     <TD>whois &lt;nick&gt;</TD>
     <TD>Belirtilen nick için; kullanýcý ismi, host,
       bulunduðu kanallar vs. gibi bilgileri görüntüler<BR
     ></TD>
     <TD>Herkes</TD></TR>
+	<tr id="command_whois_nicknick">
+    <td>whois &lt;nick&gt; &lt;nick&gt;</td>
+    <td>
+      Uzak bir <a href="#command_whois">WHOIS</a> gerçekleþtirir. Eðer bir kiþi
+      baþka bir kiþi olarak ayný sunucuda deðilse, basit bir WHOIS
+      bütün WHOIS yanýtlarýný göstermeyecektir. Örneðin,
+	  idle (boþ) zamanlar, bu olayda gösterilmez. Uzak bir whois istemek için,
+	  ilk olarak ve ikinci argüman olarak uzak kullanýcýnýn nicki ile bir WHOIS verir.
+    </td>
+    <td>Herkes</td>
+  </tr>
   <TR>
     <TD height=39>who &lt;maske&gt;</TD>
     <TD>Kullanýcýlarla ilgili bilgileri gösterir. Maske
