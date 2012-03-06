@@ -2399,3 +2399,5 @@
   attacked by clones then you may see some improvement in speed and/or lower
   CPU usage.
 - Minor documentation typos, thanks warg (#4094).
+- Call m_cap_Init() when m_cap is loaded through commands.so. Reported by
+  nenolod.

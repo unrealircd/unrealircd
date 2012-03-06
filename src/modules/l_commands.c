@@ -126,6 +126,7 @@ extern int m_svsnolag_Init(ModuleInfo *modinfo);
 extern int m_starttls_Init(ModuleInfo *modinfo);
 extern int m_nopost_Init(ModuleInfo *modinfo);
 extern int m_issecure_Init(ModuleInfo *modinfo);
+extern int m_cap_Init(ModuleInfo *modinfo);
 #ifdef GUEST
 extern int m_guest_Init(ModuleInfo *modinfo);
 #endif
@@ -364,6 +365,7 @@ int    l_commands_Init(ModuleInfo *modinfo)
 	m_starttls_Init(ModCmdsInfo);
 	m_nopost_Init(ModCmdsInfo);
 	m_issecure_Init(ModCmdsInfo);
+	m_cap_Init(ModCmdsInfo);
 #ifdef GUEST
 	m_guest_Init(ModCmdsInfo);
 #endif
