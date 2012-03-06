@@ -1029,7 +1029,7 @@ ne pas s'afficher correctement dans /LIST, en r&eacute;sum&eacute; : d'&eacute;n
 			</p>
 			<p>
 				Ce que fait UnrealIRCd (par d&eacute;faut) est une seule tentative de synchronisation au lancement. 
-				Il envoye (par d&eacute;faut) une requ&ecirc;te &egrave; de multiples serveurs de temps et lorsqu'il recoit la premi&egrave;re r&eacute;ponse (la plus rapide), il ajuste l'horloge interne de l'ircd (pas l'horloge syst&egrave;me).
+				Il envoie (par d&eacute;faut) une requ&ecirc;te &egrave; de multiples serveurs de temps et lorsqu'il recoit la premi&egrave;re r&eacute;ponse (la plus rapide), il ajuste l'horloge interne de l'ircd (pas l'horloge syst&egrave;me).
 				Si, pour certaines raisons, Unreal ne recoit pas de r&eacute;ponse du serveur dans les 3 secondes, l'IRCd continuera la lancement 
 malgr&eacute; tout (cela devrait &ecirc;tre tr&egrave;s rare).
 			</p>
@@ -3622,14 +3622,20 @@ spamfilter {
 				Ce param&egrave;tre est r&eacute;gl&eacute; par d&eacute;faut &agrave; 3 et il n'y a <i>a priori</i> aucune bonne raison de la changer.
 			</p>   
 			<p>
+				<font class="set">set::ping-cookie &lt;yes|no&gt;</font><br>
+				Envoie un challenge avec PING, auquel les clients r&eacute;pondent par un PONG.
+				Tr&eagrave;s utile pour &eacute;viter entre autres des attaques par HTTP-POST, ainsi que pour emp&ecirc;cher le spoofing TCP sur d'anciens syst&eagrave;mes d'exploitation avec des piles TCP buggu&eacute;es.
+				La valeur par d&eacute;faut est 'yes'.
+			</p>
+			<p>
 				<font class="set">set::pingpong-warning &lt;yes|no&gt;</font><br>
-				Lorsque NOSPOOF est activ&eacute; (g&eacute;n&eacute;ralement sous Windows), envoye un avertissement &agrave; chaque utilisateur, d'utiliser '/quote pong ...' si ils ont des probl&egrave;mes pour se connecter.
-				La valeur par d&eacute;faut est no.
+				Lorsque set::ping-cookie est activ&eacute; (g&eacute;n&eacute;ralement sous Windows), envoie un avertissement &agrave; chaque utilisateur, d'utiliser '/quote pong ...' si ils ont des probl&egrave;mes pour se connecter.
+				La valeur par d&eacute;faut est 'no'.
 			</p>
 			<p>
 				<font class="set">set::watch-away-notification &lt;yes|no&gt;</font><br>
 				Vous permet d'activer et de d&eacute;sactiver les notifications d'AWAY dans WATCH.
-				Le d&eacute;faut est 'yes'.
+				La valeur par d&eacute;faut est 'yes'.
 			</p>
 		</div>
 
@@ -4124,7 +4130,7 @@ spamfilter {
 					<td>Watch +-&lt;nick&gt; +-&lt;nick&gt;</td>
 					<td>
 						Watch est un nouveau syst&egrave;me de "notify-type" dans UnrealIRCd qui est en m&ecirc;me temps plus rapide et moins gourmant en ressources du r&eacute;seau qu'aucun autre ancien syst&egrave;me de notification.
-						Le serveur vous envoye un message lorsqu'un pseudo de votre watch list se connecte ou se d&eacute;connecte.
+						Le serveur vous envoie un message lorsqu'un pseudo de votre watch list se connecte ou se d&eacute;connecte.
 						La watch list NE RESTE PAS ENTRE 2 SESSIONS - vous (ou votre script ou client) devez ajouter les pseudos dans la watch list &agrave; chaque fois que vous vous connectez sur un serveur IRC.
 					</td>
 					<td>Tous</td>
