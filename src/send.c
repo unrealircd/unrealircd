@@ -1778,7 +1778,7 @@ int len;
 
 		if (IsPerson(from))
 		{
-			char *username = from->username;
+			char *username = from->user->username;
 			char *host = GetHost(from);
 
 			if (*username)
