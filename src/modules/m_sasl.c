@@ -143,7 +143,7 @@ encode_puid(aClient *client)
  * parv[3]: ESVID
  */
 static int
-m_svslogin(aClient *client_p, aClient *source_p, int parc, char *parv[])
+m_svslogin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	if (!stricmp(parv[1], me.name))
 	{
@@ -169,7 +169,7 @@ m_svslogin(aClient *client_p, aClient *source_p, int parc, char *parv[])
 	}
 
 	/* not for us; propagate. */
-	sendto_serv_butone_token(client_p, parv[0], MSG_SVSLOGIN, TOK_SVSLOGIN, "%s %s %s",
+	sendto_serv_butone_token(cptr, parv[0], MSG_SVSLOGIN, TOK_SVSLOGIN, "%s %s %s",
 				 parv[1], parv[2], parv[3]);
 
 	return 0;
@@ -186,7 +186,7 @@ m_svslogin(aClient *client_p, aClient *source_p, int parc, char *parv[])
  * parv[5]: out-of-bound data
  */
 static int
-m_sasl(aClient *client_p, aClient *source_p, int parc, char *parv[])
+m_sasl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	if (!stricmp(parv[1], me.name))
 	{
@@ -224,7 +224,7 @@ m_sasl(aClient *client_p, aClient *source_p, int parc, char *parv[])
 	}
 
 	/* not for us; propagate. */
-	sendto_serv_butone_token(client_p, parv[0], MSG_SASL, TOK_SASL, "%s %s %c %s %s",
+	sendto_serv_butone_token(cptr, parv[0], MSG_SASL, TOK_SASL, "%s %s %c %s %s",
 				 parv[1], parv[2], *parv[3], parv[4], parc > 5 ? parv[5] : "");
 
 	return 0;
@@ -237,61 +237,62 @@ m_sasl(aClient *client_p, aClient *source_p, int parc, char *parv[])
  * parv[1]: data
  */
 static int
-m_authenticate(aClient *client_p, aClient *source_p, int parc, char *parv[])
+m_authenticate(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *agent_p;
 
 	/* Failing to use CAP REQ for sasl is a protocol violation. */
-	if (!MyConnect(source_p) || BadPtr(parv[1]) || !CHECKPROTO(source_p, PROTO_SASL))
+	if (!MyConnect(sptr) || BadPtr(parv[1]) || !CHECKPROTO(sptr, PROTO_SASL))
 		return 0;
 
-	if (source_p->sasl_complete)
+	if (sptr->sasl_complete)
 	{
-		sendto_one(source_p, err_str(ERR_SASLALREADY), me.name, BadPtr(source_p->name) ? "*" : source_p->name);
+		sendto_one(sptr, err_str(ERR_SASLALREADY), me.name, BadPtr(sptr->name) ? "*" : sptr->name);
 		return 0;
 	}
 
 	if (strlen(parv[1]) > 400)
 	{
-		sendto_one(source_p, err_str(ERR_SASLTOOLONG), me.name, BadPtr(source_p->name) ? "*" : source_p->name);
+		sendto_one(sptr, err_str(ERR_SASLTOOLONG), me.name, BadPtr(sptr->name) ? "*" : sptr->name);
 		return 0;
 	}
 
-	if (*source_p->sasl_agent)
-		agent_p = find_client(source_p->sasl_agent, NULL);
+	if (*sptr->sasl_agent)
+		agent_p = find_client(sptr->sasl_agent, NULL);
 
 	if (agent_p == NULL)
 		sendto_serv_butone_token(NULL, me.name, MSG_SASL, TOK_SASL, "%s %s S %s",
-					 BadPtr(SERVICES_NAME) ? "*" : SERVICES_NAME, encode_puid(source_p), parv[1]);
+					 BadPtr(SERVICES_NAME) ? "*" : SERVICES_NAME, encode_puid(sptr), parv[1]);
 	else
-		sendto_serv_butone_token(NULL, me.name, MSG_SASL, TOK_SASL, "%s %s C %s", agent_p->user->server, encode_puid(source_p), parv[1]);
+		sendto_serv_butone_token(NULL, me.name, MSG_SASL, TOK_SASL, "%s %s C %s", agent_p->user->server, encode_puid(sptr), parv[1]);
 
-	source_p->sasl_out++;
+	sptr->sasl_out++;
 
 	return 0;
 }
 
 static int
-abort_sasl(struct Client *client_p)
+abort_sasl(struct Client *cptr)
 {
-	if (client_p->sasl_out == 0 || client_p->sasl_complete)
+	if (cptr->sasl_out == 0 || cptr->sasl_complete)
 		return 0;
 
-	client_p->sasl_out = client_p->sasl_complete = 0;
-	sendto_one(client_p, err_str(ERR_SASLABORTED), me.name, BadPtr(client_p->name) ? "*" : client_p->name);
+	cptr->sasl_out = cptr->sasl_complete = 0;
+	sendto_one(cptr, err_str(ERR_SASLABORTED), me.name, BadPtr(cptr->name) ? "*" : cptr->name);
 
-	if (*client_p->sasl_agent)
+	if (*cptr->sasl_agent)
 	{
-		aClient *agent_p = find_client(client_p->sasl_agent, NULL);
+		aClient *agent_p = find_client(cptr->sasl_agent, NULL);
 
 		if (agent_p != NULL)
 		{
-			sendto_serv_butone_token(NULL, me.name, MSG_SASL, TOK_SASL, "%s %s D A", agent_p->user->server, encode_puid(client_p));
+			sendto_serv_butone_token(NULL, me.name, MSG_SASL, TOK_SASL, "%s %s D A", agent_p->user->server, encode_puid(cptr));
 			return 0;
 		}
 	}
 
-	sendto_serv_butone_token(NULL, me.name, MSG_SASL, TOK_SASL, "* %s D A", encode_puid(client_p));
+	sendto_serv_butone_token(NULL, me.name, MSG_SASL, TOK_SASL, "* %s D A", encode_puid(cptr));
+	return 0;
 }
 
 /* This is called on module init, before Server Ready */
