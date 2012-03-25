@@ -123,9 +123,10 @@ decode_puid(char *puid)
 static const char *
 encode_puid(aClient *client)
 {
-	static char buf[BUFSIZE];
+	static char buf[HOSTLEN + 20];
 
-	if (!client->sasl_cookie)
+	/* create a cookie if necessary (and in case getrandom16 returns 0, then run again) */
+	while (!client->sasl_cookie)
 		client->sasl_cookie = getrandom16();
 
 	snprintf(buf, sizeof buf, "%s!%d.%d", me.name, client->slot, client->sasl_cookie);
