@@ -242,7 +242,7 @@ m_authenticate(aClient *client_p, aClient *source_p, int parc, char *parv[])
 	aClient *agent_p;
 
 	/* Failing to use CAP REQ for sasl is a protocol violation. */
-	if (!CHECKPROTO(source_p, PROTO_SASL))
+	if (!MyConnect(source_p) || BadPtr(parv[1]) || !CHECKPROTO(source_p, PROTO_SASL))
 		return 0;
 
 	if (source_p->sasl_complete)

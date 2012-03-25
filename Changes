@@ -2404,3 +2404,4 @@
 - Fix for speed optimization a few lines up, was accidentally using ident
   username (which might have been 'unknown') instead of effective username.
 - Added support for SASL, patch from nenolod (#4079).
+- Fix crash in AUTHENTICATE (SASL commit from an hour or so ago).
