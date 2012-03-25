@@ -369,6 +369,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define PROTO_UHNAMES	0x10000  /* Send n!u@h in NAMES */
 #define PROTO_CLICAP	0x20000  /* client capability negotiation in process */
 #define PROTO_STARTTLS	0x40000	 /* client supports STARTTLS */
+#define PROTO_SASL	0x80000  /* client is doing SASL */
 
 /*
  * flags macros.
@@ -1066,6 +1067,11 @@ struct Client {
 	TS   cputime;
 #endif
 	char *error_str;	/* Quit reason set by dead_link in case of socket/buffer error */
+
+	char sasl_agent[NICKLEN + 1];
+	unsigned char sasl_out;
+	unsigned char sasl_complete;
+	u_short sasl_cookie;
 };
 
 

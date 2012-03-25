@@ -127,6 +127,7 @@ extern int m_starttls_Init(ModuleInfo *modinfo);
 extern int m_nopost_Init(ModuleInfo *modinfo);
 extern int m_issecure_Init(ModuleInfo *modinfo);
 extern int m_cap_Init(ModuleInfo *modinfo);
+extern int m_sasl_Init(ModuleInfo *modinfo);
 #ifdef GUEST
 extern int m_guest_Init(ModuleInfo *modinfo);
 #endif
@@ -180,6 +181,7 @@ extern int m_starttls_Load(int module_load);
 extern int m_nopost_Load(int module_load);
 extern int m_issecure_Load(int module_load);
 extern int m_cap_Load(int module_load);
+extern int m_sasl_Load(int module_load);
 #ifdef GUEST
 extern int m_guest_Load(int module_load);
 #endif
@@ -220,6 +222,7 @@ extern int m_starttls_Unload();
 extern int m_nopost_Unload();
 extern int m_issecure_Unload();
 extern int m_cap_Unload();
+extern int m_sasl_Unload();
 #ifdef GUEST
 extern int m_guest_Unload();
 #endif
@@ -366,6 +369,7 @@ int    l_commands_Init(ModuleInfo *modinfo)
 	m_nopost_Init(ModCmdsInfo);
 	m_issecure_Init(ModCmdsInfo);
 	m_cap_Init(ModCmdsInfo);
+	m_sasl_Init(ModCmdsInfo);
 #ifdef GUEST
 	m_guest_Init(ModCmdsInfo);
 #endif
@@ -482,6 +486,7 @@ int    l_commands_Load(int module_load)
 	m_nopost_Load(module_load);
 	m_issecure_Load(module_load);
 	m_cap_Load(module_load);
+	m_sasl_Load(module_load);
 #ifdef GUEST
 	m_guest_Load(module_load);
 #endif
@@ -598,6 +603,7 @@ int	l_commands_Unload(int module_unload)
 	m_nopost_Unload();
 	m_issecure_Unload();
 	m_cap_Unload();
+	m_sasl_Unload();
 #ifdef GUEST
 	m_guest_Unload();
 #endif

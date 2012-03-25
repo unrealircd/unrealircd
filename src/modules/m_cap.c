@@ -73,6 +73,7 @@ struct clicap {
 
 static struct clicap clicap_table[] = {
 	{"multi-prefix", PROTO_NAMESX, CLICAP_FLAGS_NONE},
+	{"sasl", PROTO_SASL, CLICAP_FLAGS_NONE},
 #ifdef USE_SSL
 	{"tls", PROTO_STARTTLS, CLICAP_FLAGS_NONE},
 #endif
