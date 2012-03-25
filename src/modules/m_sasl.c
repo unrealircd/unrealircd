@@ -80,8 +80,7 @@
  * Decode PUID sent from a SASL agent.  If the servername in the PUID doesn't match
  * ours, we reject the PUID (by returning NULL).
  */
-static aClient *
-decode_puid(char *puid)
+static aClient *decode_puid(char *puid)
 {
 	aClient *client;
 	char *it, *it2;
@@ -120,8 +119,7 @@ decode_puid(char *puid)
  *
  * Encode PUID based on aClient.
  */
-static const char *
-encode_puid(aClient *client)
+static const char *encode_puid(aClient *client)
 {
 	static char buf[HOSTLEN + 20];
 
@@ -142,9 +140,11 @@ encode_puid(aClient *client)
  * parv[2]: target PUID
  * parv[3]: ESVID
  */
-static int
-m_svslogin(aClient *cptr, aClient *sptr, int parc, char *parv[])
+static int m_svslogin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
+	if (MyClient(sptr) || (parc < 3) || !parv[3])
+		return 0;
+	
 	if (!stricmp(parv[1], me.name))
 	{
 		aClient *target_p;
@@ -185,9 +185,11 @@ m_svslogin(aClient *cptr, aClient *sptr, int parc, char *parv[])
  * parv[4]: data
  * parv[5]: out-of-bound data
  */
-static int
-m_sasl(aClient *cptr, aClient *sptr, int parc, char *parv[])
+static int m_sasl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
+	if (MyClient(sptr) || (parc < 4) || !parv[4])
+		return 0;
+	
 	if (!stricmp(parv[1], me.name))
 	{
 		aClient *target_p;
@@ -236,8 +238,7 @@ m_sasl(aClient *cptr, aClient *sptr, int parc, char *parv[])
  * parv[0]: prefix
  * parv[1]: data
  */
-static int
-m_authenticate(aClient *cptr, aClient *sptr, int parc, char *parv[])
+static int m_authenticate(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *agent_p;
 
@@ -271,8 +272,7 @@ m_authenticate(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	return 0;
 }
 
-static int
-abort_sasl(struct Client *cptr)
+static int abort_sasl(struct Client *cptr)
 {
 	if (cptr->sasl_out == 0 || cptr->sasl_complete)
 		return 0;
@@ -302,7 +302,7 @@ DLLFUNC int MOD_INIT(m_sasl)(ModuleInfo *modinfo)
 
 	CommandAdd(modinfo->handle, MSG_SASL, TOK_SASL, m_sasl, MAXPARA, M_USER|M_SERVER);
 	CommandAdd(modinfo->handle, MSG_SVSLOGIN, TOK_SVSLOGIN, m_svslogin, MAXPARA, M_USER|M_SERVER);
-	CommandAdd(modinfo->handle, MSG_AUTHENTICATE, TOK_AUTHENTICATE, m_authenticate, MAXPARA, M_UNREGISTERED|M_USER);
+	CommandAdd(modinfo->handle, MSG_AUTHENTICATE, TOK_AUTHENTICATE, m_authenticate, MAXPARA, M_UNREGISTERED);
 
 	HookAdd(HOOKTYPE_LOCAL_CONNECT, abort_sasl);
 	HookAdd(HOOKTYPE_LOCAL_QUIT, abort_sasl);
