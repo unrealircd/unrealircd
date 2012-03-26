@@ -204,8 +204,7 @@ int v;
 	if ((fd < 0) || (fd >= MAXCONNECTIONS))
 		abort();
 	v = pollfd_to_client[fd];
-	if ((v < 0) && (v != POLL_RESOLVER))
-		abort();
+	/* v may be negative, both when it's POLL_RESOLVER and during a race condition */
 	return v;
 }
 #else
