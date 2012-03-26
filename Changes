@@ -2407,3 +2407,6 @@
 - Fix crash in AUTHENTICATE (SASL commit from an hour or so ago).
 - Tweak SASL code to conform to current coding style.
 - Some more SASL fixes, and more...
+- Split up PROTOCTL line, since with the addition of ESVID we exceeded
+  MAXPARA when using ZIP links.
+  This caused an odd charset warning upon link.

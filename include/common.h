@@ -265,7 +265,8 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 
 
 /* Server-Server PROTOCTL -Stskeeps
- * Please check send_proto() for more. -- Syzop
+ * This is the FIRST line only, please check send_proto() for more. -- Syzop
+ * Also take MAXPARA into account !
  */
 #define PROTOCTL_SERVER "NOQUIT" \
                         " TOKEN" \
@@ -278,7 +279,8 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
                         " NS" \
                         " SJB64" \
                         " TKLEXT" \
-			" NICKIP"
+                        " NICKIP" \
+                        " ESVID"
 
 #ifdef _WIN32
 /*

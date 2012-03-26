@@ -224,27 +224,31 @@ char *num = NULL;
 
 /*
  * send_proto:
- * sends PROTOCTL message to server, taking care of whether ZIP
+ * Sends PROTOCTL message to server, taking care of whether ZIP
  * should be enabled or not.
+ * Now split up into multiple PROTOCTL messages (again), since we have
+ * too many for a single line. If this breaks your services because
+ * you fail to maintain PROTOCTL state, then fix them!
  *
- * ESVID added to denote support of extended SVID values. --nenolod
+ * At this point, we send the 'static' PROTOCTL parameters first, and
+ * then the 'dynamic' ones in the second line. This may change in the
+ * future.
  */
 void send_proto(aClient *cptr, ConfigItem_link *aconf)
 {
 char buf[1024];
 
-	sprintf(buf, "CHANMODES=%s%s,%s%s,%s%s,%s%s NICKCHARS=%s ESVID",
+	/* First line */
+	sendto_one(cptr, "PROTOCTL %s", PROTOCTL_SERVER);
+
+	/* Second line */
+	sprintf(buf, "CHANMODES=%s%s,%s%s,%s%s,%s%s NICKCHARS=%s",
 		CHPAR1, EXPAR1, CHPAR2, EXPAR2, CHPAR3, EXPAR3, CHPAR4, EXPAR4, langsinuse);
 #ifdef ZIP_LINKS
 	if (aconf->options & CONNECT_ZIP)
-	{
-		sendto_one(cptr, "PROTOCTL %s ZIP %s", PROTOCTL_SERVER, buf);
-	} else {
+		strcat(buf, " ZIP");
 #endif
-		sendto_one(cptr, "PROTOCTL %s %s", PROTOCTL_SERVER, buf);
-#ifdef ZIP_LINKS
-	}
-#endif
+	sendto_one(cptr, "PROTOCTL %s", buf);
 }
 
 #ifndef IRCDTOTALVERSION
