@@ -240,7 +240,7 @@ static int m_sasl(aClient *cptr, aClient *sptr, int parc, char *parv[])
  */
 static int m_authenticate(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	aClient *agent_p;
+	aClient *agent_p = NULL;
 
 	/* Failing to use CAP REQ for sasl is a protocol violation. */
 	if (!MyConnect(sptr) || BadPtr(parv[1]) || !CHECKPROTO(sptr, PROTO_SASL))
