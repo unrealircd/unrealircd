@@ -2413,3 +2413,5 @@
 - Poll I/O engine: get_client_by_pollfd() may return -1 when there's a race
   condition. Don't abort, instead just skip those clients.
   This fixes a crash I had on /SQUIT.
+- Fix win32 installer: apparently it sometimes complained about not having the
+  Visual C++ 2008 redistributable package installed when this was not true.

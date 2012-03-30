@@ -133,9 +133,15 @@ begin
 	MSVSNeeded := false;
 	
   //************************************************************************************
-	// Check for the existance of .NET 2.0  on client machine before installing sync app
+	// Check for the existance of the Visual C++ 2008 Redist. Package on client machine before installing
 	//************************************************************************************
-    if ((not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{3C3D696B-0DB7-3C6D-A356-3DB8CE541918}')) and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{FF66E9F6-83E7-3A3E-AF14-8DE9A809A6A4}'))) then
+	// ids: supposedly VC++ 2008 runtime x86, and one from another source, SP1 version, SP1 with ATL security update, similar but MFC upd.
+    if ((not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{3C3D696B-0DB7-3C6D-A356-3DB8CE541918}'))
+         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{FF66E9F6-83E7-3A3E-AF14-8DE9A809A6A4}'))
+         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{9A25302D-30C0-39D9-BD6F-21E6EC160475}'))
+         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{1F1C2DFC-2D24-3E06-BCB8-725134ADF989}'))
+         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{9BE518E6-ECC6-35A9-88E4-87755C07200F}'))
+         ) then
 		begin
 			MSVSNeeded := true;
 				
@@ -201,7 +207,7 @@ begin
 		// don't try to init isxdl if it's not needed because it will error on < ie 3
 
 		//********************************************************************************************************
-		// Download the .NET 2.0 redistribution file. Can change the MS link to application development site to avoid dead link
+		// Download the Visual C++ 2008 Redist. Package. Can change the MS link to application development site to avoid dead link
 		//*********************************************************************************************************
 		if downloadNeeded and (MSVSNeeded = true) then
 			begin
