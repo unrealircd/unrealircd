@@ -277,11 +277,14 @@ int  channel_canjoin(aClient *sptr, char *name)
 /* irc logs.. */
 void ircd_log(int flags, char *format, ...)
 {
+static int last_log_file_warning = 0;
+
 	va_list ap;
 	ConfigItem_log *logs;
 	char buf[2048], timebuf[128];
 	int fd;
 	struct stat fstats;
+	int written = 0, write_failure = 0;
 
 	va_start(ap, format);
 	ircvsprintf(buf, format, ap);
@@ -294,11 +297,14 @@ void ircd_log(int flags, char *format, ...)
 #ifdef HAVE_SYSLOG
 		if (!stricmp(logs->file, "syslog") && logs->flags & flags) {
 			syslog(LOG_INFO, "%s", buf);
+			written++;
 			continue;
 		}
 #endif
-		if (logs->flags & flags) {
-			if (stat(logs->file, &fstats) != -1 && logs->maxsize && fstats.st_size >= logs->maxsize) {
+		if (logs->flags & flags)
+		{
+			if (stat(logs->file, &fstats) != -1 && logs->maxsize && fstats.st_size >= logs->maxsize)
+			{
 #ifndef _WIN32
 				fd = open(logs->file, O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR);
 #else
@@ -310,16 +316,59 @@ void ircd_log(int flags, char *format, ...)
 			}
 			else {
 #ifndef _WIN32
-			fd = open(logs->file, O_CREAT|O_APPEND|O_WRONLY, S_IRUSR|S_IWUSR);
+				fd = open(logs->file, O_CREAT|O_APPEND|O_WRONLY, S_IRUSR|S_IWUSR);
 #else
-			fd = open(logs->file, O_CREAT|O_APPEND|O_WRONLY, S_IREAD|S_IWRITE);
+				fd = open(logs->file, O_CREAT|O_APPEND|O_WRONLY, S_IREAD|S_IWRITE);
 #endif
-			if (fd == -1)
-				continue;
+				if (fd == -1)
+				{
+					if (!loop.ircd_booted)
+					{
+						config_status("WARNING: Unable to write to '%s': %s", logs->file, strerror(ERRNO));
+					} else {
+						if (last_log_file_warning + 300 < TStime())
+						{
+							config_status("WARNING: Unable to write to '%s': %s. This warning will not re-appear for at least 5 minutes.", logs->file, strerror(ERRNO));
+							last_log_file_warning = TStime();
+						}
+					}
+					write_failure = 1;
+					continue;
+				}
 			}	
 			write(fd, timebuf, strlen(timebuf));
-			write(fd, buf, strlen(buf));
+			if (write(fd, buf, strlen(buf)) == strlen(buf))
+			{
+				written++;
+			}
+			else
+			{
+				if (!loop.ircd_booted)
+				{
+					config_status("WARNING: Unable to write to '%s': %s", logs->file, strerror(ERRNO));
+				} else {
+					if (last_log_file_warning + 300 < TStime())
+					{
+						config_status("WARNING: Unable to write to '%s': %s. This warning will not re-appear for at least 5 minutes.", logs->file, strerror(ERRNO));
+						last_log_file_warning = TStime();
+					}
+				}
+				write_failure = 1;
+			}
 			close(fd);
 		}
+	}
+	
+	/* If nothing got written at all AND we had a write failure AND we are booting, then exit.
+	 * Note that we can't just fail when nothing got written, as we might have been called for
+	 * 'tkl' for example, which might not be in our log block.
+	 */
+	if (!written && write_failure && !loop.ircd_booted)
+	{
+		config_status("ERROR: Unable to write to any log file. Please check your log { } blocks and file permissions!");
+#ifdef _WIN32
+		win_error();
+#endif
+		exit(9);
 	}
 }

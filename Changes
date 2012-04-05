@@ -2416,3 +2416,7 @@
 - Fix win32 installer: apparently it sometimes complained about not having the
   Visual C++ 2008 redistributable package installed when this was not true.
 - Win32 compile fix
+- Print out a warning when we can't write to a log file. When booting this
+  goes to the boot screen. When we are already booted it's sent to all
+  IRCOps with a limit of max. 1 message per 5 minutes.
+- Refuse to boot when we can't write to any log file.
