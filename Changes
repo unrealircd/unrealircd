@@ -2426,3 +2426,5 @@
   state changes of users on the same channel. Patch from nenolod (#4097).
 - Add support for account-notify client capability (#4098). This capability
   can be used to request passive notifications for accountname changes.
+- If set::options::dont-resolve is enabled, then use only the IP information
+  from a WEBIRC message, reported by Ismat (#4103).

@@ -227,7 +227,7 @@ ConfigItem_cgiirc *e;
 	}
 
 	password = parv[1];
-	host = parv[3];
+	host = !DONT_RESOLVE ? parv[3] : parv[4];
 	ip = parv[4];
 
 	/* Check if allowed host */
