@@ -2420,3 +2420,5 @@
   goes to the boot screen. When we are already booted it's sent to all
   IRCOps with a limit of max. 1 message per 5 minutes.
 - Refuse to boot when we can't write to any log file.
+- Remove old no-stealth configuration directive from documentation,
+  reported by katsklaw, patch from warg (#4036).
