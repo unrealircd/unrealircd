@@ -116,6 +116,9 @@ int n, wasaway = 0;
 			/* Only send this if they were actually away -- codemastr */
 	                sendto_serv_butone_token(cptr, parv[0], MSG_AWAY, TOK_AWAY, "");
 	                hash_check_watch(cptr, RPL_NOTAWAY);
+
+			sendto_common_channels_local_butone(sptr, PROTO_AWAY_NOTIFY, ":%s!%s@%s AWAY",
+							    sptr->name, sptr->user->username, GetHost(sptr));
                 }
                 /* hope this works XX */
                 if (MyConnect(sptr))
@@ -168,6 +171,9 @@ int n, wasaway = 0;
                 sendto_one(sptr, rpl_str(RPL_NOWAWAY), me.name, parv[0]);
 
 	hash_check_watch(cptr, wasaway ? RPL_REAWAY : RPL_GONEAWAY);
+	sendto_common_channels_local_butone(sptr, PROTO_AWAY_NOTIFY, ":%s!%s@%s AWAY :%s",
+					    sptr->name, sptr->user->username, GetHost(sptr), away);
+
 	
         return 0;
 }

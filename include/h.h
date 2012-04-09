@@ -308,6 +308,7 @@ extern void sendto_serv_butone_quit(aClient *, char *, ...) __attribute__((forma
 extern void sendto_serv_butone_sjoin(aClient *, char *, ...) __attribute__((format(printf,2,3)));
 extern void sendto_serv_sjoin(aClient *, char *, ...) __attribute__((format(printf,2,3)));
 extern void sendto_common_channels(aClient *, char *, ...) __attribute__((format(printf,2,3)));
+extern void sendto_common_channels_local_butone(aClient *, int, char *, ...) __attribute__((format(printf,3,4)));
 extern void sendto_channel_butserv(aChannel *, aClient *, char *, ...) __attribute__((format(printf,3,4)));
 extern void sendto_match_servs(aChannel *, aClient *, char *, ...) __attribute__((format(printf,3,4)));
 extern void sendto_match_butone(aClient *, aClient *, char *, int,

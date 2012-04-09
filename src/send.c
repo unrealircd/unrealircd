@@ -1173,6 +1173,51 @@ void sendto_common_channels(aClient *user, char *pattern, ...)
 
 	return;
 }
+
+/*
+ * sendto_common_channels_local_butone()
+ *
+ * Sends a message to all people on local server who are
+ * in same channel with user and have the specified capability.
+ */
+void sendto_common_channels_local_butone(aClient *user, int cap, char *pattern, ...)
+{
+	va_list vl;
+
+	Membership *channels;
+	Member *users;
+	aClient *cptr;
+	int sendlen;
+
+	/* We now create the buffer _before_ we send it to the clients. -- Syzop */
+	*sendbuf = '\0';
+	va_start(vl, pattern);
+	sendlen = vmakebuf_local_withprefix(sendbuf, user, pattern, vl);
+	va_end(vl);
+
+	++sentalong_marker;
+	if (user->fd >= 0)
+		sentalong[user->slot] = sentalong_marker;
+	if (user->user)
+	{
+		for (channels = user->user->channel; channels; channels = channels->next)
+			for (users = channels->chptr->members; users; users = users->next)
+			{
+				cptr = users->cptr;
+				if (!MyConnect(cptr) || (cptr->slot < 0) || (sentalong[cptr->slot] == sentalong_marker) ||
+				    !CHECKPROTO(cptr, cap))
+					continue;
+				if ((channels->chptr->mode.mode & MODE_AUDITORIUM) &&
+				    !(is_chanownprotop(user, channels->chptr) || is_chanownprotop(cptr, channels->chptr)))
+					continue;
+				sentalong[cptr->slot] = sentalong_marker;
+				sendbufto_one(cptr, sendbuf, sendlen);
+			}
+	}
+
+	return;
+}
+
 /*
  * sendto_channel_butserv
  *

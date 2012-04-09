@@ -2422,3 +2422,5 @@
 - Refuse to boot when we can't write to any log file.
 - Remove old no-stealth configuration directive from documentation,
   reported by katsklaw, patch from warg (#4036).
+- Added 'away-notify' client capability, which informs the client of any AWAY
+  state changes of users on the same channel. Patch from nenolod (#4097).
