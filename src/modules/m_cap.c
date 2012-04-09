@@ -72,6 +72,7 @@ struct clicap {
 #define CLICAP_FLAGS_CLIACK		0x2
 
 static struct clicap clicap_table[] = {
+	{"account-notify", PROTO_ACCOUNT_NOTIFY, CLICAP_FLAGS_NONE},
 	{"away-notify", PROTO_AWAY_NOTIFY, CLICAP_FLAGS_NONE},
 	{"multi-prefix", PROTO_NAMESX, CLICAP_FLAGS_NONE},
 	{"sasl", PROTO_SASL, CLICAP_FLAGS_NONE},

@@ -2424,3 +2424,5 @@
   reported by katsklaw, patch from warg (#4036).
 - Added 'away-notify' client capability, which informs the client of any AWAY
   state changes of users on the same channel. Patch from nenolod (#4097).
+- Add support for account-notify client capability (#4098). This capability
+  can be used to request passive notifications for accountname changes.

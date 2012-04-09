@@ -371,6 +371,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define PROTO_STARTTLS	0x40000	 /* client supports STARTTLS */
 #define PROTO_SASL	0x80000  /* client is doing SASL */
 #define PROTO_AWAY_NOTIFY	0x100000	/* client supports away-notify */
+#define PROTO_ACCOUNT_NOTIFY	0x200000	/* client supports account-notify */
 
 /*
  * flags macros.
