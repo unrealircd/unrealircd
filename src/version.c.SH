@@ -117,6 +117,7 @@ char *unrealcredits[] =
 	"Grandview Landscape and Masonry - www.grandviewoutdoor.com,",
 	"Saibot Technologies - http://saibottechnologies.com/,",
 	"IRC-IRC.de Community - irc.irc-irc.de,",
+	"Mike Meisner - www.hottubcoverdepot.com",
 	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=",
 	"The UnrealIRCd Team would like to thank:",
 	" ",
