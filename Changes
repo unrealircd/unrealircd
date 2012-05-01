@@ -2428,3 +2428,5 @@
   can be used to request passive notifications for accountname changes.
 - If set::options::dont-resolve is enabled, then use only the IP information
   from a WEBIRC message, reported by Ismat (#4103).
+- Moved sendto_connectnotice, and thus the call to HOOKTYPE_LOCAL_CONNECT,
+  so it gets called after the broadcast of NICK to other servers.

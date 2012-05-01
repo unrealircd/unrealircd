@@ -1101,7 +1101,6 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			    sptr->name, olduser, userbad, stripuser);
 #endif
 		nextping = TStime();
-		sendto_connectnotice(nick, user, sptr, 0, NULL);
 		if (IsSecure(sptr))
 			sptr->umodes |= UMODE_SECURE;
 	}
@@ -1175,13 +1174,16 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 	    (!buf || *buf == '\0' ? "+" : buf),
 	    sptr->umodes & UMODE_SETHOST ? sptr->user->virthost : NULL);
 
-	/* Send password from sptr->passwd to NickServ for identification,
-	 * if passwd given and if NickServ is online.
-	 * - by taz, modified by Wizzu
-	 */
 	if (MyConnect(sptr))
 	{
 		char userhost[USERLEN + HOSTLEN + 6];
+
+		sendto_connectnotice(nick, user, sptr, 0, NULL); /* moved down, for modules. */
+
+		/* Send password from sptr->passwd to NickServ for identification,
+		 * if passwd given and if NickServ is online.
+		 * - by taz, modified by Wizzu
+		 */
 		if (sptr->passwd && (nsptr = find_person(NickServ, NULL)))
 		{
 			int do_identify = 1;
