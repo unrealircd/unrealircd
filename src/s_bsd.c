@@ -1509,13 +1509,18 @@ void proceed_normal_client_handshake(aClient *acptr, struct hostent *he)
 ** chunks to give a better performance rating (for server connections).
 ** Do some tricky stuff for client connections to make sure they don't do
 ** any flooding >:-) -avalon
+** If 'doread' is set to 0 then we don't actually read (no recv()),
+** however we still check if we need to dequeue anything from the recvQ.
+** This is necessary, since we may have put something on the recvQ due
+** to fake lag. -- Syzop
 */
 
-static int read_packet(aClient *cptr)
+static int read_packet(aClient *cptr, int doread)
 {
 	int  dolen = 0, length = 0, done;
 	time_t now = TStime();
-	if (!(IsPerson(cptr) && DBufLength(&cptr->recvQ) > 6090))
+	
+	if (doread && !(IsPerson(cptr) && DBufLength(&cptr->recvQ) > 6090))
 	{
 		Hook *h;
 		SET_ERRNO(0);
@@ -1560,7 +1565,7 @@ static int read_packet(aClient *cptr)
 		   ** it on the end of the receive queue and do it when its
 		   ** turn comes around.
 		 */
-		if (!dbuf_put(&cptr->recvQ, readbuf, length))
+		if (length && !dbuf_put(&cptr->recvQ, readbuf, length))
 			return exit_client(cptr, cptr, cptr, "dbuf_put fail");
 
 		if (IsPerson(cptr) && DBufLength(&cptr->recvQ) > get_recvq(cptr))
@@ -2128,30 +2133,20 @@ deadsocket:
 			}
 		}
 		length = 1;	/* for fall through case */
-		/* Note: these DoingDNS/DoingAuth checks are here because of a
-		 * filedescriptor race condition, so don't remove them without
-		 * being sure that has been fixed. -- Syzop
+
+#ifdef USE_POLL
+		if (pfd->revents & POLLIN)
+#else
+		if (FD_ISSET(cptr->fd, &read_set))
+#endif
+			length = read_packet(cptr, 1);
+		/* If we don't have anything to read and we have any recvQ, then
+		 * read_packet must still be called, but this time with the 2nd parameter
+		 * being 0 (=don't read). This is so we check if anything needs to
+		 * be dequeued from the receive queue (due to fake lag). -- Syzop
 		 */
-		if ((!NoNewLine(cptr) ||
-#ifdef USE_POLL
-		pfd->revents & POLLIN)
-#else
-		FD_ISSET(cptr->fd, &read_set))
-#endif
-		    && !(DoingDNS(cptr) || DoingAuth(cptr))
-#ifdef USE_SSL
-			&& 
-			!(IsSSLHandshake(cptr))
-#endif		
-			)
-			
-			length = 1;
-#ifdef USE_POLL
-			if (pfd->revents & POLLIN)
-#else
-			if (FD_ISSET(cptr->fd, &read_set))
-#endif
-				length = read_packet(cptr);
+		else if (DBufLength(&cptr->recvQ) > 0)
+			length = read_packet(cptr, 0);
 
 #ifdef USE_SSL
 		if ((length != FLUSH_BUFFER) && (cptr->ssl != NULL) && 

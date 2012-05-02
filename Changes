@@ -2430,3 +2430,7 @@
   from a WEBIRC message, reported by Ismat (#4103).
 - Moved sendto_connectnotice, and thus the call to HOOKTYPE_LOCAL_CONNECT,
   so it gets called after the broadcast of NICK to other servers.
+- Fix bug caused by new I/O engine (both with and without USE_POLL):
+  queued data on the receive queue (eg: due to fake lag) was not processed
+  unless we got new data from the client.
+  Now, better document this. Also, avoid calling dbuf_put with 0 length.
