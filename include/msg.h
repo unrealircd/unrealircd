@@ -297,6 +297,9 @@
 #define MSG_EOS		"EOS"
 #define TOK_EOS		"ES"
 
+#define MSG_MLOCK	"MLOCK"
+#define TOK_MLOCK	"ML"
+
 #define MAXPARA    	15
 
 extern int m_error();

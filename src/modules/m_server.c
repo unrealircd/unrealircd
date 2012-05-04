@@ -1204,6 +1204,14 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
 	if (modebuf[1] || *parabuf)
 		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
 		    parabuf, chptr->creationtime);
+
+	/* send MLOCK here too... --nenolod */
+	if (CHECKPROTO(cptr, PROTO_MLOCK))
+	{
+		sendto_one(cptr, (CHECKPROTO(cptr, PROTO_SJB64) ? "%s %B %s :%s" : "%s %lu %s :%s"),
+			   (IsToken(cptr) ? TOK_MLOCK : MSG_MLOCK), chptr->creationtime, chptr->chname,
+			   BadPtr(chptr->mode_lock) ? "" : chptr->mode_lock);
+	}
 }
 
 

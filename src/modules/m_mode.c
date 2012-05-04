@@ -47,6 +47,7 @@
 
 /* Forward declarations */
 DLLFUNC CMD_FUNC(m_mode);
+DLLFUNC CMD_FUNC(m_mlock);
 DLLFUNC void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode);
 DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
@@ -96,6 +97,7 @@ DLLFUNC int MOD_TEST(m_mode)(ModuleInfo *modinfo)
 DLLFUNC int MOD_INIT(m_mode)(ModuleInfo *modinfo)
 {
 	CommandAdd(modinfo->handle, MSG_MODE, TOK_MODE, m_mode, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_MLOCK, TOK_MLOCK, m_mlock, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -1935,6 +1937,7 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 	aCtab *tab = &cFlagTab[0];
 	aCtab foundat;
 	int  found = 0;
+	int  sent_mlock_warning = 0;
 	unsigned int htrig = 0;
 	long oldm, oldl;
 	int checkrestr = 0, warnrestr = 1;
@@ -1978,6 +1981,15 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 			  break;
 #endif
 		  default:
+			  if (MyClient(cptr) && chptr->mode_lock && strchr(chptr->mode_lock, *curchr) != NULL)
+			  {
+				  if (!sent_mlock_warning)
+				  {
+					  sendto_one(cptr, err_str(ERR_MLOCKRESTRICTED), me.name, cptr->name, chptr->chname, *curchr, chptr->mode_lock);
+					  sent_mlock_warning++;
+				  }
+				  continue;
+			  }
 			  found = 0;
 			  tab = &cFlagTab[0];
 			  while ((tab->mode != 0x0) && found == 0)
@@ -2487,6 +2499,31 @@ DLLFUNC CMD_FUNC(_m_umode)
 	if (MyConnect(sptr) && setsnomask != sptr->user->snomask)
 		sendto_one(sptr, rpl_str(RPL_SNOMASK),
 			me.name, parv[0], get_sno_str(sptr));
+
+	return 0;
+}
+
+CMD_FUNC(m_mlock)
+{
+	aChannel *chptr = NULL;
+	TS chants;
+
+	if (*parv[1] == '!')
+		chants = (TS) base64dec(parv[1] + 1);
+	else
+		chants = (TS) atol(parv[1]);
+
+	/* Now, try to find the channel in question */
+	chptr = find_channel(parv[2], NullChn);
+	if(chptr == NULL)
+		return 0;
+
+	/* TS is higher, drop it. */
+	if(chants > chptr->creationtime)
+		return 0;
+
+	if(IsServer(sptr))
+		set_channel_mlock(cptr, sptr, chptr, parv[3], TRUE);
 
 	return 0;
 }

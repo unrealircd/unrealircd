@@ -375,6 +375,9 @@ CMD_FUNC(m_sjoin)
 			    sptr->name, chptr->chname, modebuf, parabuf);
 
 		}
+
+		/* since we're dropping our modes, we want to clear the mlock as well. --nenolod */
+		set_channel_mlock(cptr, sptr, chptr, NULL, FALSE);
 	}
 	/* Mode setting done :), now for our beloved clients */
 	parabuf[0] = 0;

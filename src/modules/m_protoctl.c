@@ -432,6 +432,18 @@ CMD_FUNC(m_protoctl)
 			if (s[8] != '*')
 				send_protoctl_servers(sptr, 1);
 		}
+		else if ((strcmp(s, "MLOCK")) == 0)
+		{
+#ifdef PROTOCTL_MADNESS
+			if (remove)
+			{
+				cptr->proto &= ~PROTO_MLOCK;
+				continue;
+			}
+#endif
+			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
+			cptr->proto |= PROTO_MLOCK;
+		}
 		/*
 		 * Add other protocol extensions here, with proto
 		 * containing the base option, and options containing

@@ -274,6 +274,7 @@ extern void start_auth(aClient *);
 extern void read_authports(aClient *);
 extern void send_authports(aClient *);
 
+extern void set_channel_mlock(aClient *, aClient *, aChannel *, const char *, int);
 
 extern void restart(char *);
 extern void server_reboot(char *);

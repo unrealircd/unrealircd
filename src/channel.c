@@ -1416,6 +1416,8 @@ void sub1_from_channel(aChannel *chptr)
 #ifdef JOINTHROTTLE
 		cmodej_delchannelentries(chptr);
 #endif
+		if (chptr->mode_lock)
+			MyFree(chptr->mode_lock);
 		if (chptr->topic)
 			MyFree(chptr->topic);
 		if (chptr->topic_nick)
@@ -1863,3 +1865,24 @@ char m;
 	}
 }
 #endif
+
+/* set_channel_mlock()
+ *
+ * inputs	- client, source, channel, params
+ * output	- 
+ * side effects - channel mlock is changed / MLOCK is propagated
+ */
+void
+set_channel_mlock(aClient *cptr, aClient *sptr, aChannel *chptr, const char *newmlock, int propagate)
+{
+	if (chptr->mode_lock)
+		MyFree(chptr->mode_lock);
+	chptr->mode_lock = newmlock != NULL ? strdup(newmlock) : NULL;
+
+	if (propagate)
+	{
+		sendto_serv_butone_token(cptr, cptr->name, MSG_MLOCK, TOK_MLOCK, "%B %s :%s",
+					 chptr->creationtime, chptr->chname,
+					 BadPtr(chptr->mode_lock) ? "" : chptr->mode_lock);
+	}
+}

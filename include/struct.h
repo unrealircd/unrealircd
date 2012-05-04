@@ -372,6 +372,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define PROTO_SASL	0x80000  /* client is doing SASL */
 #define PROTO_AWAY_NOTIFY	0x100000	/* client supports away-notify */
 #define PROTO_ACCOUNT_NOTIFY	0x200000	/* client supports account-notify */
+#define PROTO_MLOCK		0x400000	/* server supports MLOCK */
 
 /*
  * flags macros.
@@ -1627,6 +1628,7 @@ struct Channel {
 #ifdef JOINTHROTTLE
 	aJFlood *jflood;
 #endif
+	char *mode_lock;
 	char chname[1];
 };
 

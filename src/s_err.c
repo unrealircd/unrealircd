@@ -798,7 +798,7 @@ static char *replies[] = {
 /* 739 */ NULL,
 /* 740 */ NULL,
 /* 741 */ NULL,
-/* 742 */ NULL,
+/* 742 ERR_MLOCKRESTRICTED */ ":%s 742 %s %s %c %s :MODE cannot be set due to channel having an active MLOCK restriction policy",
 /* 743 */ NULL,
 /* 744 */ NULL,
 /* 745 */ NULL,
