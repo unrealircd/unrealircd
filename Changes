@@ -2434,7 +2434,7 @@
   queued data on the receive queue (eg: due to fake lag) was not processed
   unless we got new data from the client.
   Now, better document this. Also, avoid calling dbuf_put with 0 length.
-- Add support for server-enforced mode locks (MLOCK).
-  This allows the IRCd to enforce MLOCKs that are set by services, which
-  eliminates clashes between users setting modes and services enforcing
-  it's mlock on channels. (#3055)
+- Add support for server-enforced mode locks (MLOCK), suggested in #3055
+  back in 2006. This allows the IRCd to enforce MLOCKs that are set by
+  services, which eliminates clashes between users setting modes and
+  services enforcing it's mlock on channels.

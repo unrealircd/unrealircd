@@ -2508,6 +2508,9 @@ CMD_FUNC(m_mlock)
 	aChannel *chptr = NULL;
 	TS chants;
 
+	if ((parc < 3) || BadPtr(parv[2]))
+		return 0;
+		
 	if (*parv[1] == '!')
 		chants = (TS) base64dec(parv[1] + 1);
 	else
@@ -2515,14 +2518,14 @@ CMD_FUNC(m_mlock)
 
 	/* Now, try to find the channel in question */
 	chptr = find_channel(parv[2], NullChn);
-	if(chptr == NULL)
+	if (chptr == NULL)
 		return 0;
 
-	/* TS is higher, drop it. */
-	if(chants > chptr->creationtime)
+	/* Senders' Channel TS is higher, drop it. */
+	if (chants > chptr->creationtime)
 		return 0;
 
-	if(IsServer(sptr))
+	if (IsServer(sptr))
 		set_channel_mlock(cptr, sptr, chptr, parv[3], TRUE);
 
 	return 0;

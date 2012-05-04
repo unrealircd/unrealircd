@@ -1872,12 +1872,11 @@ char m;
  * output	- 
  * side effects - channel mlock is changed / MLOCK is propagated
  */
-void
-set_channel_mlock(aClient *cptr, aClient *sptr, aChannel *chptr, const char *newmlock, int propagate)
+void set_channel_mlock(aClient *cptr, aClient *sptr, aChannel *chptr, const char *newmlock, int propagate)
 {
 	if (chptr->mode_lock)
 		MyFree(chptr->mode_lock);
-	chptr->mode_lock = newmlock != NULL ? strdup(newmlock) : NULL;
+	chptr->mode_lock = (newmlock != NULL) ? strdup(newmlock) : NULL;
 
 	if (propagate)
 	{
