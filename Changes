@@ -2446,3 +2446,5 @@
   If the specified server is not connected, then SASL is off as well.
   This prevents unnecessary delay (and the inability for some clients to
   get online) when SASL is not in use or when the SASL server is down.
+- Changed numeric 307 (RPL_WHOISREGNICK) to 'is identified for this nick',
+  reported by fbi (#3399).
