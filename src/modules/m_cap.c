@@ -130,6 +130,9 @@ static struct clicap *clicap_find(const char *data, int *negate, int *finished)
 	if((s = strchr(p, ' ')))
 		*s++ = '\0';
 
+	if (!strcmp(p, "sasl") && (!SASL_SERVER || !find_server(SASL_SERVER, NULL)))
+		return NULL; /* hack: if SASL is disabled or server not online, then pretend it does not exist. -- Syzop */
+
 	if((cap = bsearch(p, clicap_table, CLICAP_TABLE_SIZE,
 			  sizeof(struct clicap), (bqcmp) clicap_compare)))
 	{
@@ -164,6 +167,9 @@ static void clicap_generate(aClient *sptr, const char *subcmd, int flags, int cl
 
 	for (i = 0; i < CLICAP_TABLE_SIZE; i++)
 	{
+		if ((clicap_table[i].cap == PROTO_SASL) && (!SASL_SERVER || !find_server(SASL_SERVER, NULL)))
+			continue; /* if SASL is disabled or server not online, then pretend it does not exist. -- Syzop */
+
 		if (flags)
 		{
 			if (!CHECKPROTO(sptr, clicap_table[i].cap))

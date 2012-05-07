@@ -42,6 +42,7 @@ struct zNetwork {
 	char *x_prefix_quit;
 	char *x_helpchan;
 	char *x_stats_server;
+	char *x_sasl_server;
 };
 
 enum UHAllowed { UHALLOW_ALWAYS, UHALLOW_NOCHANS, UHALLOW_REJOIN, UHALLOW_NEVER };
@@ -218,6 +219,7 @@ extern MODVAR aConfiguration iConf;
 #define hidden_host			iConf.network.x_hidden_host
 #define helpchan			iConf.network.x_helpchan
 #define STATS_SERVER			iConf.network.x_stats_server
+#define SASL_SERVER			iConf.network.x_sasl_server
 #define iNAH				iConf.network.x_inah
 #define prefix_quit			iConf.network.x_prefix_quit
 #define SSL_SERVER_CERT_PEM		(iConf.x_server_cert_pem ? iConf.x_server_cert_pem : "server.cert.pem")
@@ -377,6 +379,7 @@ struct SetCheck {
 	unsigned has_network_name:1;
 	unsigned has_default_server:1;
 	unsigned has_services_server:1;
+	unsigned has_sasl_server:1;
 	unsigned has_hosts_global:1;
 	unsigned has_hosts_admin:1;
 	unsigned has_hosts_local:1;

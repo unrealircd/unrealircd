@@ -2441,3 +2441,8 @@
 - Fixed another SASL crash bug. Always use HookAddEx, not HookAdd!
   Crash occured after the first quit of a user after a REHASH.
   Reported by Dave (#4108).
+- SASL now needs to be enabled explicitly by setting a set::sasl-server.
+  If this is not set, then SASL is off and not advertised.
+  If the specified server is not connected, then SASL is off as well.
+  This prevents unnecessary delay (and the inability for some clients to
+  get online) when SASL is not in use or when the SASL server is down.

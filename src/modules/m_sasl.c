@@ -142,7 +142,7 @@ static const char *encode_puid(aClient *client)
  */
 static int m_svslogin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	if (MyClient(sptr) || (parc < 3) || !parv[3])
+	if (!SASL_SERVER || MyClient(sptr) || (parc < 3) || !parv[3])
 		return 0;
 	
 	if (!stricmp(parv[1], me.name))
@@ -187,7 +187,7 @@ static int m_svslogin(aClient *cptr, aClient *sptr, int parc, char *parv[])
  */
 static int m_sasl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	if (MyClient(sptr) || (parc < 4) || !parv[4])
+	if (!SASL_SERVER || MyClient(sptr) || (parc < 4) || !parv[4])
 		return 0;
 	
 	if (!stricmp(parv[1], me.name))
@@ -243,7 +243,7 @@ static int m_authenticate(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	aClient *agent_p = NULL;
 
 	/* Failing to use CAP REQ for sasl is a protocol violation. */
-	if (!MyConnect(sptr) || BadPtr(parv[1]) || !CHECKPROTO(sptr, PROTO_SASL))
+	if (!SASL_SERVER || !MyConnect(sptr) || BadPtr(parv[1]) || !CHECKPROTO(sptr, PROTO_SASL))
 		return 0;
 
 	if (sptr->sasl_complete)
@@ -263,7 +263,7 @@ static int m_authenticate(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (agent_p == NULL)
 		sendto_serv_butone_token(NULL, me.name, MSG_SASL, TOK_SASL, "%s %s S %s",
-					 BadPtr(SERVICES_NAME) ? "*" : SERVICES_NAME, encode_puid(sptr), parv[1]);
+					 SASL_SERVER, encode_puid(sptr), parv[1]);
 	else
 		sendto_serv_butone_token(NULL, me.name, MSG_SASL, TOK_SASL, "%s %s C %s", agent_p->user->server, encode_puid(sptr), parv[1]);
 

@@ -7358,6 +7358,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "services-server")) {
 			ircstrdup(tempiConf.network.x_services_name, cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "sasl-server")) {
+			ircstrdup(tempiConf.network.x_sasl_server, cep->ce_vardata);
+		}
 		else if (!strcmp(cep->ce_varname, "stats-server")) {
 			ircstrdup(tempiConf.network.x_stats_server, cep->ce_vardata);
 		}
@@ -7953,6 +7956,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "services-server")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, services_server, "services-server");
+		}
+		else if (!strcmp(cep->ce_varname, "sasl-server")) {
+			CheckNull(cep);
+			CheckDuplicate(cep, sasl_server, "sasl-server");
 		}
 		else if (!strcmp(cep->ce_varname, "stats-server")) {
 			CheckNull(cep);
