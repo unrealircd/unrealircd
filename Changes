@@ -2438,3 +2438,6 @@
   back in 2006. This allows the IRCd to enforce MLOCKs that are set by
   services, which eliminates clashes between users setting modes and
   services enforcing it's mlock on channels.
+- Fixed another SASL crash bug. Always use HookAddEx, not HookAdd!
+  Crash occured after the first quit of a user after a REHASH.
+  Reported by Dave (#4108).
