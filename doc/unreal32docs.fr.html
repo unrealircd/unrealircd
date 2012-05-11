@@ -1029,12 +1029,12 @@ ne pas s'afficher correctement dans /LIST, en r&eacute;sum&eacute; : d'&eacute;n
 			</p>
 			<p>
 				Ce que fait UnrealIRCd (par d&eacute;faut) est une seule tentative de synchronisation au lancement. 
-				Il envoie (par d&eacute;faut) une requ&ecirc;te &egrave; de multiples serveurs de temps et lorsqu'il recoit la premi&egrave;re r&eacute;ponse (la plus rapide), il ajuste l'horloge interne de l'ircd (pas l'horloge syst&egrave;me).
+				Il envoie (par d&eacute;faut) une requ&ecirc;te &agrave; de multiples serveurs de temps et lorsqu'il recoit la premi&egrave;re r&eacute;ponse (la plus rapide), il ajuste l'horloge interne de l'ircd (pas l'horloge syst&egrave;me).
 				Si, pour certaines raisons, Unreal ne recoit pas de r&eacute;ponse du serveur dans les 3 secondes, l'IRCd continuera la lancement 
 malgr&eacute; tout (cela devrait &ecirc;tre tr&egrave;s rare).
 			</p>
 			<p>
-				La synchronisation du temps se configure (et peut &ecirc;tre d&eacute;sactiv&eacute;e) via le bloc <b>set::timesynch</b>, voir la<a href="#setblock">documentation sur les set blocks</a> pour plus d'information.
+				La synchronisation du temps se configure (et peut &ecirc;tre d&eacute;sactiv&eacute;e) via le bloc <b>set::timesynch</b>, voir la <a href="#setblock">documentation sur les set blocks</a> pour plus d'information.
 			</p>
 		</div>
        
@@ -3407,12 +3407,16 @@ spamfilter {
 			<p id="set-services-server">
 				<font class="set">set::services-server &lt;server-name&gt;;</font><br>
 				Indique le nom du serveur auquel les bots des services sont connect&eacute;s.
-				C'est un param&egrave;tre obligatoire, donc mettez quelque chose comme services.votrereseauc.com si vous n'avez pas de services.
+				C'est un param&egrave;tre obligatoire, donc mettez quelque chose comme services.votrereseau.com si vous n'avez pas de services.
 			</p>
 			<p id="set-stats-server">
 				<font class="set">set::stats-server &lt;server-name&gt;;</font><br>
 				Indique le nom du serveur auquel le bot des statistiques se connecte.
 				S'il n'y a pas de statistiques, cette valeur peut &ecirc;tre omise.
+			</p>
+			<p id="set-sasl-server">
+				<font class="set">set::sasl-server &lt;server-name&gt;;</font><br>
+			  	Indique le nom du serveur auquel les messages d'authentification SASL doivent &ecirc;tre envoy&eacute;s.
 			</p>
 			<p>
 				<font class="set">set::help-channel &lt;network-help-channel&gt;;</font><br>
