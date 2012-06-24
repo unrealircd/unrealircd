@@ -27,7 +27,7 @@ LicenseFile=.\gplplusssl.rtf
 #endif
 Compression=lzma
 SolidCompression=true
-MinVersion=4.0.1111,4.0.1381
+MinVersion=5.0
 OutputDir=../../
 
 ; !!! Make sure to update SSL validation (WizardForm.TasksList.Checked[9]) if tasks are added/removed !!!

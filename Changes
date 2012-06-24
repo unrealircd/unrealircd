@@ -2453,3 +2453,5 @@
   You can still change the setting, just the default is correct now.
   The code for this was already there but was not working correctly
   causing users to go through the generation process upon each install.
+- Win32 installer: Latest InnoSetup no longer supports Windows 95/98,
+  so update Minversion to make the .iss compile.
