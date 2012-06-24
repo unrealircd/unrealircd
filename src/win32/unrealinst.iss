@@ -304,11 +304,17 @@ end;
 #ifdef USE_SSL
 procedure CurPageChanged(CurPage: Integer);
 begin
-  if (CurPage = wpSelectTasks)then begin
-     if not FileExists(ExpandConstant('{app}\server.cert.pem')) then begin
+  if (CurPage = wpSelectTasks)then
+  begin
+     if FileExists(ExpandConstant('{app}\server.cert.pem')) then
+     begin
+        WizardForm.TasksList.Checked[9]:=false;
+     end
+     else
+     begin
         WizardForm.TasksList.Checked[9]:=true;
-    end;
-  end;
+     end
+  end
 end;
 #endif
 

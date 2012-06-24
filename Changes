@@ -2448,3 +2448,8 @@
   get online) when SASL is not in use or when the SASL server is down.
 - Changed numeric 307 (RPL_WHOISREGNICK) to 'is identified for this nick',
   reported by fbi (#3399).
+- Win32 installer (SSL): Uncheck 'create certificate' checkbox when
+  server.cert.pem exists, and check it if the file doesn't exist.
+  You can still change the setting, just the default is correct now.
+  The code for this was already there but was not working correctly
+  causing users to go through the generation process upon each install.
