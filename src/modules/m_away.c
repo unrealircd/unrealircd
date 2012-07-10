@@ -123,6 +123,7 @@ int n, wasaway = 0;
                 /* hope this works XX */
                 if (MyConnect(sptr))
                         sendto_one(sptr, rpl_str(RPL_UNAWAY), me.name, parv[0]);
+				RunHook2(HOOKTYPE_AWAY, sptr, NULL);
                 return 0;
         }
 
@@ -174,6 +175,6 @@ int n, wasaway = 0;
 	sendto_common_channels_local_butone(sptr, PROTO_AWAY_NOTIFY, ":%s!%s@%s AWAY :%s",
 					    sptr->name, sptr->user->username, GetHost(sptr), away);
 
-	
+	RunHook2(HOOKTYPE_AWAY, sptr, away);
         return 0;
 }

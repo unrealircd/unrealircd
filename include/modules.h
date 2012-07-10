@@ -660,6 +660,7 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define HOOKTYPE_LOCAL_NICKPASS 50
 #define HOOKTYPE_PACKET 51
 #define HOOKTYPE_HANDSHAKE 52
+#define HOOKTYPE_AWAY 53
 
 /* Hook return values */
 #define HOOK_CONTINUE 0

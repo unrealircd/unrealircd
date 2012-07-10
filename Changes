@@ -2455,3 +2455,4 @@
   causing users to go through the generation process upon each install.
 - Win32 installer: Latest InnoSetup no longer supports Windows 95/98,
   so update Minversion to make the .iss compile.
+- Module coders: added HOOKTYPE_AWAY (sptr, away-reason).
