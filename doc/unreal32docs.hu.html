@@ -502,17 +502,28 @@ Az alábbi ban típusok új feltétel használatára adnak lehetõséget:<br>
 <i>Pl.: +b ~c:#lamerek, +e ~c:@#megbizhatoak </i></td></tr>
 <tr><td>~r</td><td>valós név</td><td>Ha egy felhasználó valós neve illik a banra, nem léphet be.<br>
  <i>Pl.: ~r:*Stupid_bot_script*</i><br>
- MEGJEGYZÉS: az aláhúzás ('_') mind a szóközre (' ') és az aláhúzásra ('_') is illik, így ez a ban illik a
- 'Stupid bot script v1.4'-re.</td></tr>
+ MEGJEGYZÉS: az aláhúzás ("_") mind a szóközre (" ") és az aláhúzásra ("_") is illik, így ez a ban illik a
+ "Stupid bot script v1.4"-re.</td></tr>
 <tr><td>~R</td><td>regisztrált</td><td>Ha egy felhasználó azonosította magát a services-ben (általában a NickServnél),
   és illeszkedik erre a nicknévre, akkor erre a banra is illeszkedik. Vagyis ez igazán csak a 
   ban felmentésekre jó (+e).<br>
   Pl.: az <i>+e ~R:Nick</i> engedélyezi a belépést Nick számára, függetlenül más kitiltásoktól, amennyiben azonosította magát a NickServnél, és a Nick nevet használja.<br>
   </td></tr>
+<tr><td>~a</td><td>hozzáférés</td><td>Ha a felhasználó bejelentkezett a services-be ezzel
+a hozzáférési névvel, ki lesz tiltva.<br>
+Ez kicsit más, mint a ~R, olyan értelemben, hogy egy ABC nicknevû felhasználó
+bejelentkezhet az XYZ hozzáférési név alatt.<br>
+Nem minden services csomag támogatja ezt, ilyen helyzetben
+az ~R használandó inkább.<br>
+Pl.: az <i>+e ~a:ValamilyenNev</i> megengedi a belépést a csatornára olyan felhasználóknak, akik
+a ValamilyenNev hozzáférési névvel jelentkeztek be a services-be, függetlenül a kitiltásoktól.<br>
+  </td></tr>
 </table>
 <br>
 Halmozni is lehet az elsõ csoportbeli kiterjesztett banokat a második csoportbeliekkel, pl. a <i>+b ~q:~c:#lamers</i>
 elnémít minden olyan felhasználót, aki a #lamers csatornára lépett be.<br>
+A második csoportbeli ban típusokat felhasználhatjuk meghívási kivételekként is (+I),
+például: <i>+I ~c:#megbizottak</i> és <i>+I ~a:hozzaferesinev</i>.<br>
 <br>
 Modulokkal további kiterjesztett ban típusok is bevezethetõk.<br>
 </p></div>
@@ -2912,7 +2923,7 @@ files {
     <td><div align="center"><b>Leírás</b></div></td>
   </tr>
   <tr> 
-    <td colspan="2"><div align="center"><b>Felhasználói módok</b></div></td>
+    <td colspan="2" id="usermodes"><div align="center"><b>Felhasználói módok</b></div></td>
   </tr>
   <tr> 
     <td><div align="center">A</div></td>
@@ -2950,6 +2961,10 @@ files {
   <tr>
     <td><div align="center">h</div></td>
     <td>Segítségnyújtásra alkalmas (HelpOp) (az oper blokkban állítható be)</td>
+  </tr>
+  <tr>
+    <td><div style="text-align: center">I</div></td>
+    <td>Elrejti egy operátor tétlenségi idejét (a /whois kimenetbõl) a normál felhasználók elõl.</td>
   </tr>
   <tr> 
     <td><div align="center">i</div></td>
@@ -3040,10 +3055,22 @@ további információt kapj.</p>
     <td>Megváltoztatja az online nick nevedet. Értesíti a többieket a nickváltásodról.<br></td>
     <td>Mindenki</td>
   </tr>
-  <tr> 
+  <tr id="command_whois"> 
     <td>whois &lt;nick&gt;</td>
     <td>Információt jelenít meg a megadott felhasználóról. Tartalmazza a teljes nevet, gazdanevet,
       csatornákat, amelyeken tartózkodik a felhasználó, és az operátori beosztást.<br></td>
+    <td>Mindenki</td>
+  </tr>
+  <tr id="command_whois_nicknick">
+    <td>whois &lt;nick&gt; &lt;nick&gt;</td>
+    <td>
+      Végrehajt egy távoli <a href="#command_whois">WHOIS</a> parancsot. Ha
+      egy személy nem ugyanazon a szerveren van, mint egy másik, a sima
+      WHOIS nem fog minden lehetséges WHOIS választ megjeleníteni.
+      Például, a tétlenségi idõ nem lesz mutatva ilyen esetben. Ahhoz, hogy
+      egy távoli whois-t kérjük, adjunk ki egy WHOIS parancsot a távoli felhasználó nicknevével
+      mint elsõ és második paraméterrel.
+    </td>
     <td>Mindenki</td>
   </tr>
   <tr> 
