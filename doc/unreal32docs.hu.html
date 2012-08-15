@@ -108,7 +108,7 @@ Hungarian |
   ---4.34. <a href="#officialchannels">Official channels blokk</a><br>
   ---4.35. <a href="#spamfilter">Spamfilter blokk</a><br>
   ---4.36. <a href="#cgiirc">Cgiirc blokk</a><br> 
-  ---4.37. <a href="#setblock">Set blokk -=- (networks/unrealircd.conf)</a><br>
+  ---4.37. <a href="#setblock">Set blokk</a><br>
   ---4.38. <a href="#filesblock">Files blokk</a><br />
   5. <a href="#addtlfiles">További fájlok</a><br>
   6. <a href="#userchannelmodes">Felhasználói és csatornamódok</a><br>
@@ -2346,17 +2346,16 @@ Majd az unrealircd.conf-ba tegyünk egy cgiirc blokkot:
 <p id="setblock"><font class="block_section">4.37 - </font><font class="block_name">Set blokk</font>
    <font class="block_required">KÖTELEZÕ</font> <font class="block_old">(Elõzõleg unrealircd.conf-ként ill. hálózati fájlként ismert)</font>
 </p><div class="desc">
-<p>A set fájl az, ami régebben a networks/unrealircd.conf-unk és a hálózati
-  fájlunk szokott lenni. Egyszerveres hálózatokon, inkább, mint hogy legyen 3 fájlod,
-  egyszerûen beillesztheted a set utasításokat az unrealircd.conf-ba, többszerveres
-  hálózatokon viszont még mindig ajánlott a hálózati fájl használata.</p>
-  <p>Ha a szervered egy hálózaton van, igen valószínû, hogy alapvetõen ugyanazokat
-    a Set beállításokat használjátok. Ezért van több értelme, hogy legyen egy hálózati fájlod,
-    amit betöltesz az <a href="#includedirective">include</a> direktívával.
-    Az alábbiakban megtalálod az összes rendelkezésre álló set direktívát.</p>
+<p>Egyszerveres hálózatokon, inkább, mint hogy legyen 3 fájlunk, egyszerûen csak berakhatunk
+  minden set utasítást magába az unrealircd.conf-ba; míg a többszerveres hálózatokon
+  javasoljuk a külön hálózati fájl használatát (lásd lentebb).</p>
+  <p>Ha a szerverünk egy hálózaton van, igen valószínû, hogy alapvetõen ugyanazokat
+    a Set beállításokat használjuk. Ezért több értelme van, hogy legyen egy hálózati fájlunk,
+    amit betöltünk az <a href="#includedirective">include</a> direktívával.
+    Az alábbiakban megtaláljuk az összes rendelkezésre álló set direktívát.</p>
 <p>Ebben a dokumentumban a beállításokra / direktívákra a &lt;blokknév&gt;::&lt;blokk-direktíva&gt; 
-  formában hivatkozunk. Ez NEM az a formátum, amelyet beírhatsz a beállításfájlba! 
-  Át KELL alakítanod az alábbi példa szerint. Azért jelenítjük meg õket ebben a formában,
+  formában hivatkozunk. Ez NEM az a formátum, amelyet beírhatunk a beállításfájlba! 
+  Át KELL alakítanunk az alábbi példa szerint. Azért jelenítjük meg õket ebben a formában,
   hogy könnyebben beszélhessünk róluk.</p>
 <p>Szintaktika:<br>
 <pre>
@@ -2384,10 +2383,10 @@ set {
 		global globalop.sajatnet.com;
 	};
 };</pre></p>
-<p>Ha most a set utasításokat el szeretnéd különíteni, mondjuk, egyetlen sorba akarnád írni
+<p>Ha most a set utasításokat el szeretnénk különíteni, mondjuk, egyetlen sorba akarnánk írni
   az opciókat, így nézne ki:<br>
   Példa:<br>
-  set { options { hide-ulines; no-stealth; }; };<br>
+  set { options { hide-ulines; show-connect-info; }; };<br>
 </p>
 <p><font class="set">set::kline-address &lt;email-cím&gt;;</font><br>
   Az az email cím, ahová küldhetõk a K:line-nal kapcsolatos kérdések. Ezt az értéket
@@ -2557,6 +2556,9 @@ set {
 <p id="set-stats-server"><font class="set">set::stats-server &lt;szervernév&gt;;</font><br>
   Beállítja azon szerver nevét, ahol a statisztikai bot tartozkodik. Ha nem fut statisztikai szerver,
   ez az érték kihagyható.</p>
+<p id="set-sasl-server"><font class="set">set::sasl-server &lt;szervernév&gt;;</font><br>
+  Meghatározza annak a szervernek a nevét, amelyre legyenek küldve az SASL hitelesítési
+  üzenetek.</p>
 <p><font class="set">set::help-channel &lt;hálózati-segélycsatorna&gt;;</font><br>
   Beállítja e hálózat segélycsatornájának nevét.</p>
 <p><font class="set">set::cloak-keys { &quot;kulcs1&quot;; &quot;kulcs2&quot;; &quot;kulcs3&quot;; };</font><br>
@@ -2687,8 +2689,12 @@ AU). A lekérdezések párhuzamosan kerülnek elküldésre, a leggyorsabb válasz nyer.
   Legfeljebb ennyi ideig vár az idõszerverek válaszára. Ez egy érték 1 és 5 között; több nem lehet,
   mert túl nagy pontatlanságot okozna. Ez az érték alapértelmezésben 3, és nem valószínû, hogy
   érdemes megváltoztatni.</p>
+ <p><font class="set">set::ping-cookie &lt;yes|no&gt;</font><br>
+  Felszólítja a klienseket egy PING paranccsal, hogy válaszoljanak PONG paranccsal. Ez arra jó, hogy
+  megóvja a szervert az ún. vak HTTP-POST támadásokatól és hasonlóktól, továbbá megállítsa az átejtõ szándékú TCP
+  forgalmat olyan operációs rendszereken, ahol a TCP verem törött. Az alapértelmezés "yes".</p>
  <p><font class="set">set::pingpong-warning &lt;yes|no&gt;</font><br>
-  Ha a NOSPOOF engedélyezett (általában Windowson), küldjön egy figyelmeztetést minden felhasználónak, hogy
+  Ha a set::ping-cookie engedélyezett (általában Windowson), küldjön egy figyelmeztetést minden felhasználónak, hogy
   használják a "/quote pong .." parancsot, ha kapcsolódási problémájuk van. Az alapértelmezés "no".</p>
  <p><font class="set">set::watch-away-notification &lt;yes|no&gt;</font><br>
   Engedélyezi vagy letiltja az AWAY értesítéseket a WATCH-ban. Az alapértelmezés "yes".</p>
