@@ -519,6 +519,7 @@ extern TS check_pings(TS currenttime)
 	char killflag = 0;
 	int  i = 0;
 	char banbuf[1024];
+	char scratch[32]; /* It's only <26 bytes assuming we use sensible ping here... */
 	int  ping = 0;
 
 	for (i = 0; i <= LastSlot; i++) {
@@ -693,7 +694,9 @@ extern TS check_pings(TS currenttime)
 					Debug((DEBUG_DEBUG, "ssl accept handshake timeout: %s (%li-%li > %li)", cptr->sockhost,
 						currenttime, cptr->since, ping));
 #endif
-				exit_client(cptr, cptr, &me, "Ping timeout");
+				(void)ircsprintf(scratch, "Ping timeout: %ld seconds",
+					(long) (TStime() - cptr->lasttime));
+				exit_client(cptr, cptr, &me, scratch);
 				continue;
 				
 			}
