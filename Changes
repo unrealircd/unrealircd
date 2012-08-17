@@ -2473,3 +2473,4 @@
   certificate when it does not exist (defaults to Yes), instead of
   always generating one.
 - Added missing Mod_Header to m_sasl.c
+- Remove old reference to networks/ directory from Windows installer
