@@ -2472,3 +2472,4 @@
 - The ./Config script will now ask whether to generate an SSL
   certificate when it does not exist (defaults to Yes), instead of
   always generating one.
+- Added missing Mod_Header to m_sasl.c

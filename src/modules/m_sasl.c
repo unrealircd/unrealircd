@@ -54,6 +54,15 @@
 #define MSG_SVSLOGIN "SVSLOGIN"
 #define TOK_SVSLOGIN "SZ"
 
+ModuleHeader MOD_HEADER(m_sasl)
+  = {
+	"m_sasl",
+	"$Id$",
+	"SASL", 
+	"3.2-b8-1",
+	NULL 
+    };
+
 /*
  * This is a "lightweight" SASL implementation/stack which uses psuedo-identifiers
  * to identify connecting clients.  In Unreal 3.3, we should use real identifiers
