@@ -2456,3 +2456,8 @@
 - Win32 installer: Latest InnoSetup no longer supports Windows 95/98,
   so update Minversion to make the .iss compile.
 - Module coders: added HOOKTYPE_AWAY (sptr, away-reason).
+- Add optional oper::require-modes setting to the oper block. Any
+  attempt to /OPER by someone who doesn't have one of the listed
+  usermodes is rejected. This can be used to restrict oper blocks to
+  registered nicks (+r) or secure clients (SSL, +z) (#4008 by
+  katsklaw).
