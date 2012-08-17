@@ -519,7 +519,7 @@ extern TS check_pings(TS currenttime)
 	char killflag = 0;
 	int  i = 0;
 	char banbuf[1024];
-	char scratch[32]; /* It's only <26 bytes assuming we use sensible ping here... */
+	char scratch[64];
 	int  ping = 0;
 
 	for (i = 0; i <= LastSlot; i++) {
