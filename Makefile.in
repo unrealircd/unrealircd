@@ -224,6 +224,11 @@ install: all
 	-@if [ ! -f "$(IRCDDIR)/curl-ca-bundle.crt" ] ; then \
 		$(INSTALL) -m 0700 curl-ca-bundle.crt $(IRCDDIR) ; \
 	fi
+	-@if [ server.cert.pem -nt "$(IRCDDIR)/server.cert.pem" ] ; then \
+		$(INSTALL) -m 0600 server.req.pem $(IRCDDIR) ; \
+		$(INSTALL) -m 0600 server.key.pem $(IRCDDIR) ; \
+		$(INSTALL) -m 0600 server.cert.pem $(IRCDDIR) ; \
+	fi
 
 pem:	src/ssl.cnf
 	@echo "Generating certificate request .. "

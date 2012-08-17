@@ -2468,3 +2468,7 @@
   #4072, patch from warg).
 - Show "Ping timeout: XYZ seconds" instead of just "Ping timeout".
   Patch from darkex (#3960).
+- Install server.*.pem files, patch from katsklaw (#3988).
+- The ./Config script will now ask whether to generate an SSL
+  certificate when it does not exist (defaults to Yes), instead of
+  always generating one.

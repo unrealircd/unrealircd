@@ -88,9 +88,43 @@ cd "$UNREALCWD"
 if [  "$CRYPTOIRCD" = "1" ] ; then
 if [ ! -f server.req.pem ]; then
 export OPENSSLPATH
-make pem
-cat .SICI
-read cc
+TEST=""
+while [ -z "$TEST" ] ; do
+    if [ "$GENCERTIFICATE" = "1" ] ; then
+	TEST="Yes"
+    else
+	TEST="No"
+    fi
+    echo ""
+    echo "Do you want to generate an SSL certificate for the IRCd?"
+    echo "Only answer No if you already have one."
+    echo $n "[$TEST] -> $c"
+	read cc
+    if [ -z "$cc" ] ; then
+	cc=$TEST
+    fi
+    case "$cc" in
+	[Yy]*)
+	    GENCERTIFICATE="1"
+	    ;;
+	[Nn]*)
+	    GENCERTIFICATE=""
+	    ;;
+	*)
+	    echo ""
+	    echo "You must enter either Yes or No"
+	    TEST=""
+	    ;;
+    esac
+done
+if [ "$GENCERTIFICATE" = 1 ]; then
+	make pem
+	cat .SICI
+	read cc
+else
+echo "Ok, not generating SSL certificate. Make sure that the certificate and key"
+echo "are installed as server.crt.pem and server.key.pem prior to starting the IRCd."
+fi
 else
 echo "SSL certificate already existing, no need to regenerate"
 fi
@@ -330,6 +364,7 @@ NOOPEROVERRIDE=""
 DISABLEUSERMOD=""
 OPEROVERRIDEVERIFY=""
 DISABLEEXTBANSTACKING=""
+GENCERTIFICATE="1"
 EXTRAPARA=""
 if [ "`eval echo -n 'a'`" = "-n a" ] ; then
         c="\c"
@@ -942,6 +977,7 @@ NOOPEROVERRIDE="$NOOPEROVERRIDE"
 DISABLEUSERMOD="$DISABLEUSERMOD"
 OPEROVERRIDEVERIFY="$OPEROVERRIDEVERIFY"
 DISABLEEXTBANSTACKING="$DISABLEEXTBANSTACKING"
+GENCERTIFICATE="$GENCERTIFICATE"
 EXTRAPARA="$EXTRAPARA"
 ADVANCED="$ADVANCED"
 __EOF__
