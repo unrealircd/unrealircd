@@ -3200,7 +3200,7 @@ to get more information on a command.</p>
     <td>All</td>
   </tr>
   <tr> 
-    <td height="39">Watch +-&lt;nick&gt; +-&lt;nick&gt;<br></td>
+    <td height="39">Watch [+|-]&lt;nick&gt; [+|-]&lt;nick&gt;<br></td>
     <td>Watch is a new notify-type system in UnrealIRCd which is both faster and 
       uses less network resources than any old-style notify system. The server 
       will send you a message when any nickname in your watch list logs on or 
@@ -3307,6 +3307,10 @@ to get more information on a command.</p>
     <td>Returns the IP address of the user in question.</td>
     <td>All</td>
   </tr>
+  <tr>
+    <td height="39">silence [+|-]&lt;nick&gt;<br></td>
+    <td>Ignores messages from a user or list of users at the Server itself.<br></td>
+    <td>All</td>
   <tr> 
     <td height="39">oper &lt;userid&gt; &lt;password&gt;<br></td>
     <td>Command to give a user operator status if they match an Oper Block<br></td>

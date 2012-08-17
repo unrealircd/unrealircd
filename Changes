@@ -2464,3 +2464,5 @@
 - Clarify that hiddenhost-prefix must be the same on linked servers for
   bans to function properly (#4090, patch from warg, reported in #4043
   by maxb).
+- Add /SILENCE to HTML documentation (reported by Severus_Snape in
+  #4072, patch from warg).
