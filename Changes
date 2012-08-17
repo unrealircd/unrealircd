@@ -2461,3 +2461,6 @@
   usermodes is rejected. This can be used to restrict oper blocks to
   registered nicks (+r) or secure clients (SSL, +z) (#4008 by
   katsklaw).
+- Clarify that hiddenhost-prefix must be the same on linked servers for
+  bans to function properly (#4090, patch from warg, reported in #4043
+  by maxb).
