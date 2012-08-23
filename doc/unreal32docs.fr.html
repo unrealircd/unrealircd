@@ -1419,6 +1419,7 @@ listen *:6660-6669;</pre>
 		userhost &lt;hostmask&gt;;
 	};
 	password &lt;password&gt; { &lt;auth-type&gt;; };
+	require-modes &lt;modes&gt;
 	class &lt;class-name&gt;;
 	flags &lt;flags&gt;;
 	flags {
@@ -1436,6 +1437,8 @@ listen *:6660-6669;</pre>
 				L'oper block vous permet d'assigner des Op&eacute;rateurs IRC (IRCop ou oper) pour votre serveur.
 				Le <b>oper::</b> sp&eacute;cifie le login pour la commande /oper.
 				Le <b>oper::from::userhost</b> est le masque user@host auquel l'utilisateur doit correspondre, vous pouvez sp&eacute;cifier plus qu'un seul hostmask en cr&eacute;ant plusieurs oper::from::userhost.
+				Le param&egrave;tre facultatif <b>oper::require-modes</b> vous permet de sp&eactue;cifier des modes (tels que<em>r</em> ou <em>z</em>) qu'un utilisateur doit avoir avant d'&ecirc;tre autoris&eactue; &agrave; se connecter comme op&eactue;rateur.
+				Ceci peut &ecirc;tre utilis&eactue; pour forcer les utilisateurs &agrave; se connecter avec Nickserv ou d'utiliser des connexions s&eactue;curis&eactue;es avant de pouvoir devenir op&eactue;rateurs.
 			</p>
 			
 			<p id="operblock_password">
@@ -3434,6 +3437,7 @@ spamfilter {
 				<font class="set">set::hiddenhost-prefix &lt;prefix-value&gt;;</font><br>
 				D&eacute;finit le pr&eacute;fixe utilis&eacute; pour les +x hosts.
 				Il est g&eacute;n&eacute;ralement compos&eacute; de trois ou quatre lettres repr&eacute;sentant le nom du r&eacute;seau.
+				Les diff&eactue;rents serveurs d'un r&eacute;seau doivent avoir le m&ecirc;me hiddenhost-prefix pour que les bans des salons fonctionnent correctement.
 			</p>
 			<p>
 				<font class="set">set::hosts::local &lt;locop-host-name&gt;;</font><br>
@@ -4131,7 +4135,7 @@ spamfilter {
 					<td>Tous</td>
 				</tr>
 				<tr> 
-					<td>Watch +-&lt;nick&gt; +-&lt;nick&gt;</td>
+					<td>Watch [+|-]&lt;nick&gt; [+|-]&lt;nick&gt;</td>
 					<td>
 						Watch est un nouveau syst&egrave;me de "notify-type" dans UnrealIRCd qui est en m&ecirc;me temps plus rapide et moins gourmant en ressources du r&eacute;seau qu'aucun autre ancien syst&egrave;me de notification.
 						Le serveur vous envoie un message lorsqu'un pseudo de votre watch list se connecte ou se d&eacute;connecte.
@@ -4222,7 +4226,12 @@ spamfilter {
 				</tr>
 				<tr>
 					<td>userip &lt;nick&gt;</td>
-					<td>Returne l'adresse IP de l'utilisateur en question.</td>
+					<td>Retourne l'adresse IP de l'utilisateur en question.</td>
+					<td>Tous</td>
+				</tr>
+				<tr>
+					<td>silence [+|-]&lt;nick&gt;</td>
+					<td>Permet d'ignorer tous les messages d'un utilisateur ou d'une liste d'utilisateurs depuis le serveur lui-m&ecirc;me.</td>
 					<td>Tous</td>
 				</tr>
 				<tr> 
