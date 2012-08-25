@@ -1582,6 +1582,7 @@ name=operblock></A>
 		userhost &lt;hostmaskesi&gt;;
 	};
 	password &lt;þifre&gt; { &lt;auth-tipi&gt;; };
+	require-modes &lt;modeler&gt;;
 	class &lt;class-ismi&gt;;
 	flags &lt;flaglar&gt;;
 	flags {
@@ -1596,20 +1597,46 @@ name=operblock></A>
 };
 </PRE>
 <P></P>
-<P>Oper bloðu IRC Operatörleri atamanýzý saðlar. <B>oper::</B> kýsmý /oper
-kullanýmýnda ki login ismini
-belirtir. <B>oper::from::userhost</B> kýsmý ile
-belirtilecek kullanýcý@host maskesi kullanýcýnýn eþleþeceði maskedir, burada
-birden çok oper::from::userhost belirtebilirsiniz. <B>oper::password</B>
-kýsmýnda belirttiðiniz þifre ise
-kullanýcýnýn belirteceði þifredir, oper::password:: kýsmýnda ise bu þifre
-için
-bir auth metodu belirtebilirsiniz, kullanýlan auth tipleri: crypt, md5 ve
-sha1,
-ripemd-160. Eðer düz-metin bir þifre kullanmak istiyorsanýz bu alt bloðu
-kullanmayýn.</P>
+<p>Oper bloðu IRC Operatörleri atamanýzý saðlar. <b>oper::</b>
+bölümü /oper kullanýmýnda ki login ismini belirtir.
+<b>oper::from::userhost</b> bölümü ile
+belirtilecek kullanýcý@host maskesi kullanýcýnýn eþleþeceði maskedir. Burada
+birden çok oper::from::userhost belirtebilirsiniz.
+<b>oper::require-modes</b> Opsiyonel ayar olarak tek modlarý belirlemenizi saðlar.
+(örneðin <em>r</em> veya <em>z</em>) kullanýcý OPER izini verilmeden
+önce bu modlara sahip olmalýdýr. Bu modlar kullanýcýlarýn nickserv kayýt veya önce güvenli
+baðlantýlarýný kullanarak olmasýný gerektirecek þekilde kullanýlmýþ olmasý gerekir.
+</p>
+<p id="operblock_password"><b>oper::password::</b> bölümünde belirttiðiniz þifre ise
+kullanýcýnýn belirteceði þifredir. <b>oper::password::auth-type</b> bölümünde ise bu þifre
+için bir auth metodu belirtebilirsiniz. Eðer düz-metin bir þifre kullanmak istiyorsanýz
+<b>oper::password::auth-type</b> bu bloðu kullanmayýn. Auth tipleri;
+<tt>crypt</tt>, <tt>md5</tt>, <tt>sha1</tt>, <tt>ripemd160</tt>,
+ve <tt>sslclientcert</tt>. <b>oper::password::</b> bu bölüme herhangi bir deðeri belirtme anlamýna gelir.
+detaylý bilgi için; <a href="#cmd_mkpasswd">mkpasswd</a>.
+</p>
+<p id="operblock_password_sslclientcert">
+<tt>sslclientcert</tt> istisna olan bir auth tipidir.
+Bu auth-tipi olarak seçilmiþtir. <b>oper::password::</b> bölümüne ekleyeceðiniz auth tipi dosya yolunu
+(UnrealIRCd kurulum dizinine göre) olmasýna dikkat etmelisiniz. Bu dosya PEM kodlu SSL sertifikasý
+(ortak bir sertifika, anahtar deðil) olmalýdýr. Bu sadece onu bir IRC istemcisi olarak belirtir.
+<ol>
+    <li>SSL kullanýlarak baðlandýðýnda</li>
+    <li>Baðlanýrken eþleþen istemci sertifika sunar</li>
+    <li>Sertifika dosyasýyla benzetilen özel anahtara eriþime sahip olup</li>
+  </ol>
+  baðlanabilirsiniz. Tabii ki bu özellik UnrealIRCd SSL desteði ile derlenmiþ olmasý gerekir.
+  Hem de, herhangi þekilde SSL sertifikasýnýn ilgili anahtarýnýn, normal bir insanýn
+  parolasýndan çok daha uzun ve çok daha fazla rasgele olduðu gibi,
+  bu en emniyetli belgeleme seçeneðidir. Eðer oper þifre olarak bir SSL sertifikasý
+  belirtilmemesi durumunda, <pre>/oper &lt;name&gt; :</pre> doðru ayarlanmýþ olduðundan emin olun.
+  <tt>sslclientcert</tt> auth tipi için de kullanýlabilirler.
+  <a href="#linkblock_passwordreceive">link::password-receive</a>
+  olarak sabitlemek için <a href="#linkblock">link block</a>s.
+  </ol>
+</p>
 <P>Lütfen login ismi kýsmýnýn ve þifre kýsmýnýn büyük-küçük
-harfe duyarlý olduðunu unutmayýn</P>
+harfe duyarlý olduðunu unutmayýn.</P>
 <P><B>oper::class</B> yönergesinde ise
 oper bloðunun kullanacaðý daha önceden anlatýlmýþ olan class ismi
 belirtilir.</P>
@@ -3470,7 +3497,7 @@ Varsayýlan IPv6 clone algýlama maskesi. Görmek için;
 &lt;sunucu-ismi&gt;;</FONT><BR>Servisler sunucusunun adý belirtilir.
 Eðer servis sunucunuz yoksa, services.sizinaginiz.com gibi bir sunucu adý
 belirtmeniz gerekir.(GEREKLI)</P>
-<p id="set-sasl-server"><font class="set">set::sasl-server &lt;sunucu-ismi&gt;;</font><br> 
+<p id="set-sasl-server"><font class="set">set::sasl-server &lt;sunucu-ismi&gt;;</font><br>
 SASL kimlik mesajlarýnýn gönderilmesi için gereken sunucunun adýný ayarlar.</p>
 <P><FONT class=set>set::stats-server
 &lt;sunucu-ismi&gt;;</FONT><BR>Stats sunucusu botlarýnýn
@@ -3493,7 +3520,8 @@ edin.</P>
 <P><FONT class=set>set::hiddenhost-prefix
 &lt;önek-deðeri&gt;;</FONT><BR>Gizlenmiþ hostlara eklenecek (+x) öneki
 belirtmenize olanak
-saðlar. Burada genellikle að ismini simgeleyen 3 veya 4 harf belirtilir.</P>
+saðlar. Burada genellikle að ismini simgeleyen 3 veya 4 harf belirtilir.
+Baðlantýlý sunucularda kanal banlarýnýn düzgün çalýþmasý için ayný hidden-host önekine sahip olmalýdýr.</P>
 <P><FONT class=set>set::hosts::local
 &lt;locop-hostu&gt;;</FONT><BR>Yerel operatör statüsüne
 eriþen bir kullanýcýnýn alacaðý hostu belirtmenize olanak saðlar. Ýsteðe
@@ -4270,7 +4298,7 @@ atmanýza
       olursunuz.<BR></TD>
     <TD>Herkes</TD></TR>
   <TR>
-    <TD height=39>Watch +-&lt;nick&gt; +-&lt;nick&gt;<BR
+    <TD height=39>Watch [+|-]&lt;nick&gt; [+|-]&lt;nick&gt;<BR
       ></TD>
     <TD>Watch UnrealIRCd 'de yeni bir uyarý sistemidir.
       Bu sistem eski-stil uyarý sistemine nazaran daha hýzlýdýr ve að
@@ -4396,6 +4424,10 @@ olarak
       ></TD>
     <TD>Belirtilen nickin IP Adres bilgisini gösterir.</TD>
     <TD>Herkes</TD></TR>
+  <TR>
+   <TD height="39">silence [+|-]&lt;nick&gt;<br></TD>
+   <TD>Belirtilen kullanýcýlarýn size mesaj atmamasý için ekler, kaldýrýr veya listeler<br></TD>
+    <TD>Herkes</TD>
   <TR>
     <TD height=39>oper &lt;kullanýcý adý&gt;
       &lt;þifre&gt;<BR></TD>
