@@ -448,78 +448,15 @@ char	*ssl_get_cipher(SSL *ssl)
 	return (buf);
 }
 
-int ircd_SSL_read(aClient *acptr, void *buf, int sz)
+void ircd_SSL_client_handshake(int fd, int revents, void *data)
 {
-	int len, ssl_err, ssl_errno;
-    len = SSL_read((SSL *)acptr->ssl, buf, sz);
-    if (len <= 0)
-    {
-       switch(ssl_err = SSL_get_error((SSL *)acptr->ssl, len)) {
-           case SSL_ERROR_SYSCALL:
-               if (ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN ||
-                       ERRNO == P_EINTR) {
-           case SSL_ERROR_WANT_READ:
-                   SET_ERRNO(P_EWOULDBLOCK);
-		   Debug((DEBUG_ERROR, "ircd_SSL_read: returning EWOULDBLOCK and 0 for %s - %s", acptr->name,
-			ssl_err == SSL_ERROR_WANT_READ ? "SSL_ERROR_WANT_READ" : "SSL_ERROR_SYSCALL"		   
-		   ));
-                   return -1;
-               }
-           case SSL_ERROR_SSL:
-               if(ERRNO == EAGAIN)
-                   return -1;
-           default:
-		   ssl_errno = ERRNO;
-           	Debug((DEBUG_ERROR, "ircd_SSL_read: returning fatal_ssl_error for %s",
-           	 acptr->name));
-		return fatal_ssl_error(ssl_err, SAFE_SSL_READ, ssl_errno, acptr);
-       }
-    }
-    Debug((DEBUG_ERROR, "ircd_SSL_read for %s (%p, %i): success", acptr->name, buf, sz));
-    return len;
-}
-int ircd_SSL_write(aClient *acptr, const void *buf, int sz)
-{
-	int len, ssl_err, ssl_errno;
+	aClient *acptr = data;
 
-    len = SSL_write((SSL *)acptr->ssl, buf, sz);
-    if (len <= 0)
-    {
-       switch(ssl_err = SSL_get_error((SSL *)acptr->ssl, len)) {
-           case SSL_ERROR_SYSCALL:
-               if (ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN ||
-                       ERRNO == P_EINTR)
-		{
-			SET_ERRNO(P_EWOULDBLOCK);
-			return -1;
-		}
-		return -1;
-          case SSL_ERROR_WANT_WRITE:
-                   SET_ERRNO(P_EWOULDBLOCK);
-                   return -1;
-          case SSL_ERROR_WANT_READ:
-                   SET_ERRNO(P_EWOULDBLOCK); /* is this correct? next write will block if not read, so sounds right... */
-                   return -1;
-           case SSL_ERROR_SSL:
-               if(ERRNO == EAGAIN)
-                   return -1;
-           default:
-		   ssl_errno = ERRNO;
-		Debug((DEBUG_ERROR, "ircd_SSL_write: returning fatal_ssl_error for %s", acptr->name));
-		return fatal_ssl_error(ssl_err, SAFE_SSL_WRITE, ssl_errno, acptr);
-       }
-    }
-    Debug((DEBUG_ERROR, "ircd_SSL_write for %s (%p, %i): success", acptr->name, buf, sz));
-    return len;
-}
-
-int ircd_SSL_client_handshake(aClient *acptr)
-{
 	acptr->ssl = SSL_new(ctx_client);
 	if (!acptr->ssl)
 	{
 		sendto_realops("Failed to SSL_new(ctx_client)");
-		return FALSE;
+		return;
 	}
 	SSL_set_fd(acptr->ssl, acptr->fd);
 	SSL_set_connect_state(acptr->ssl);
@@ -550,20 +487,24 @@ int ircd_SSL_client_handshake(aClient *acptr)
 	acptr->flags |= FLAGS_SSL;
 	switch (ircd_SSL_connect(acptr))
 	{
-		case -1: 
-			return -1;
+		case -1:
 		case 0: 
 			Debug((DEBUG_DEBUG, "SetSSLConnectHandshake(%s)", get_client_name(acptr, TRUE)));
 			SetSSLConnectHandshake(acptr);
-			return 0;
-		case 1: 
+			return;
+		case 1:
 			Debug((DEBUG_DEBUG, "SSL_init_finished should finish this job (%s)", get_client_name(acptr, TRUE)));
-			/* SSL_init_finished in s_bsd will finish the job */
-			return 1;
+			return;
 		default:
-			return -1;		
+			return;
 	}
 
+}
+
+static void ircd_SSL_accept_retry(int fd, int revents, void *data)
+{
+	aClient *acptr = data;
+	ircd_SSL_accept(acptr, fd);
 }
 
 int ircd_SSL_accept(aClient *acptr, int fd) {
@@ -575,11 +516,15 @@ int ircd_SSL_accept(aClient *acptr, int fd) {
 	    case SSL_ERROR_SYSCALL:
 		if (ERRNO == P_EINTR || ERRNO == P_EWOULDBLOCK
 			|| ERRNO == P_EAGAIN)
-	    case SSL_ERROR_WANT_READ:
-	    case SSL_ERROR_WANT_WRITE:
-		Debug((DEBUG_DEBUG, "ircd_SSL_accept(%s), - %s", get_client_name(acptr, TRUE), ssl_error_str(ssl_err, ERRNO)));
-		    /* handshake will be completed later . . */
 		    return 1;
+	    case SSL_ERROR_WANT_READ:
+		fd_setselect(fd, FD_SELECT_READ, ircd_SSL_accept_retry, acptr);
+		fd_setselect(fd, FD_SELECT_WRITE, NULL, acptr);
+		return 1;
+	    case SSL_ERROR_WANT_WRITE:
+		fd_setselect(fd, FD_SELECT_READ, NULL, acptr);
+		fd_setselect(fd, FD_SELECT_WRITE, ircd_SSL_accept_retry, acptr);
+		return 1;
 	    default:
 		return fatal_ssl_error(ssl_err, SAFE_SSL_ACCEPT, ERRNO, acptr);
 		
@@ -587,6 +532,9 @@ int ircd_SSL_accept(aClient *acptr, int fd) {
 	/* NOTREACHED */
 	return -1;
     }
+
+    start_of_normal_client_handshake(acptr);
+
     return 1;
 }
 

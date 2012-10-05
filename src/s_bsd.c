@@ -90,8 +90,6 @@ static int pollfd_count = 0;
 static int pollfd_to_client[MAXCONNECTIONS]; /* use get_client_by_pollfd() for grabbing, don't grab from array directly ! */
 #endif
 
-static void read_packet(int fd, int revents, void *data);
-
 #ifdef INET6
 static unsigned char minus_one[] =
     { 255, 255, 255, 255, 255, 255, 255, 255, 255,
@@ -1528,6 +1526,7 @@ struct hostent *he;
 
 doauth:
 	start_auth(acptr);
+	fd_setselect(acptr->fd, FD_SELECT_READ, read_packet, acptr);
 }
 
 void proceed_normal_client_handshake(aClient *acptr, struct hostent *he)
@@ -1539,12 +1538,6 @@ void proceed_normal_client_handshake(aClient *acptr, struct hostent *he)
 
 	if (!dns_special_flag && !DoingAuth(acptr))
 		finish_auth(acptr);
-}
-
-void finish_auth(aClient *acptr)
-{
-	SetAccess(acptr);
-	fd_setselect(acptr->fd, FD_SELECT_READ, read_packet, acptr);
 }
 
 /*
@@ -1624,7 +1617,7 @@ static void parse_client_queued(aClient *cptr)
 	}
 }
 
-static void read_packet(int fd, int revents, void *data)
+void read_packet(int fd, int revents, void *data)
 {
 	aClient *cptr = data;
 	int length = 0;
@@ -1636,16 +1629,48 @@ static void read_packet(int fd, int revents, void *data)
 	while (1)
 	{
 #ifdef USE_SSL
-		if (cptr->flags & FLAGS_SSL)
-	    		length = ircd_SSL_read(cptr, readbuf, sizeof(readbuf));
+		if (IsSSL(cptr) && cptr->ssl != NULL)
+		{
+			fd_setselect(fd, FD_SELECT_READ, read_packet, cptr);
+			fd_setselect(fd, FD_SELECT_WRITE, NULL, cptr);
+
+			length = SSL_read(cptr->ssl, readbuf, sizeof(readbuf));
+
+			if (length < 0)
+			{
+				int err = SSL_get_error(cptr->ssl, length);
+				ircd_log(LOG_ERROR, "error %d", err);
+
+				switch (err)
+				{
+				case SSL_ERROR_WANT_WRITE:
+					fd_setselect(fd, FD_SELECT_READ, NULL, cptr);
+					fd_setselect(fd, FD_SELECT_WRITE, read_packet, cptr);
+					break;
+				case SSL_ERROR_WANT_READ:
+					SET_ERRNO(P_EWOULDBLOCK);
+					break;
+				case SSL_ERROR_SYSCALL:
+					break;
+				case SSL_ERROR_SSL:
+					if (ERRNO == P_EAGAIN)
+						break;
+				default:
+					length = 0;
+					SET_ERRNO(0);
+					break;
+				}
+			}
+		}
 		else
 #endif
 			length = recv(cptr->fd, readbuf, sizeof(readbuf), 0);
 
-		if (length < 0 && ERRNO == P_EWOULDBLOCK)
-			return;
-		if (length == 0)
+		if (length <= 0)
 		{
+			if (length < 0 && (ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN || ERRNO == P_EINTR))
+				return;
+
 			exit_client(cptr, cptr, cptr, "Read error");
 			return;
 		}
@@ -1662,10 +1687,12 @@ static void read_packet(int fd, int revents, void *data)
 				return;
 		}
 
+		ircd_log(LOG_ERROR, "dbuf_put - length %d, ERRNO %d", length, ERRNO);
 		dbuf_put(&cptr->recvQ, readbuf, length);
 
 		/* parse some of what we have (inducing fakelag, etc) */
-		parse_client_queued(cptr);
+		if (!(DoingDNS(cptr) || DoingAuth(cptr)))
+			parse_client_queued(cptr);
 
 		/* excess flood check */
 		if (IsPerson(cptr) && DBufLength(&cptr->recvQ) > get_recvq(cptr))
@@ -1684,6 +1711,13 @@ static void read_packet(int fd, int revents, void *data)
 		if (length < sizeof(readbuf))
 			return;
 	}
+}
+
+/* When auth is finished, go back and parse all prior input. */
+void finish_auth(aClient *acptr)
+{
+	SetAccess(acptr);
+	parse_client_queued(acptr);
 }
 
 /*
@@ -1884,15 +1918,6 @@ int  read_message(time_t delay, fdlist *listp)
 			   ** ...room for writing, empty some queue then...
 			 */
 			ClearBlocked(cptr);
-			if (IsConnecting(cptr)) {
-#ifdef USE_SSL
-				if ((cptr->serv) && (cptr->serv->conf->options & CONNECT_SSL))
-				{
-					Debug((DEBUG_DEBUG, "ircd_SSL_client_handshake(%s)", cptr->name));
-					write_err = ircd_SSL_client_handshake(cptr);
-				}
-#endif
-			}
 			if (!write_err)
 			{
 				if (DoList(cptr) && IsSendable(cptr))
@@ -1948,7 +1973,7 @@ deadsocket:
 				else if (IsSSLConnectHandshake(cptr))
 				{
 					Debug((DEBUG_ERROR, "ssl: completed_connection", cptr->name));
-					completed_connection(cptr);
+					completed_connection(cptr->fd, FD_SELECT_READ, cptr);
 				} else if (IsSSLStartTLSHandshake(cptr))
 				{
 					SetUnknown(cptr);
@@ -2143,7 +2168,7 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	add_client_to_list(cptr);
 	nextping = TStime();
 
-#if 0 // ifdef USE_SSL
+#ifdef USE_SSL
 	if (IsSSL(cptr) && (aconf->options & CONNECT_SSL))
 		fd_setselect(cptr->fd, FD_SELECT_READ, ircd_SSL_client_handshake, cptr);
 	else

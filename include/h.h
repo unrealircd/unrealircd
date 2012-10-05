@@ -808,3 +808,4 @@ extern aPendingNet *find_pending_net_by_numeric_butone(int numeric, aClient *exe
 extern aClient *find_pending_net_duplicates(aClient *cptr, aClient **srv, int *numeric);
 extern aClient *find_non_pending_net_duplicates(aClient *cptr);
 extern void finish_auth(aClient *acptr);
+extern void read_packet(int fd, int revents, void *data);

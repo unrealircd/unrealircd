@@ -85,8 +85,30 @@ int  deliver_it(aClient *cptr, char *str, int len)
 	}
 
 #ifdef USE_SSL
-	if (cptr->flags & FLAGS_SSL)
-		 retval = ircd_SSL_write(cptr, str, len);	
+	if (IsSSL(cptr) && cptr->ssl != NULL)
+	{
+		retval = SSL_write(cptr->ssl, str, len);
+
+		if (retval < 0)
+		{
+			switch (SSL_get_error(cptr->ssl, retval))
+			{
+			case SSL_ERROR_WANT_READ:
+				/* retry later */
+				return 0;
+			case SSL_ERROR_WANT_WRITE:
+				SET_ERRNO(P_EWOULDBLOCK);
+				break;
+			case SSL_ERROR_SYSCALL:
+				break;
+			case SSL_ERROR_SSL:
+				if (ERRNO == P_EAGAIN)
+					break;
+			default:
+				return 0;
+			}
+		}
+	}
 	else
 #endif
 		retval = send(cptr->fd, str, len, 0);
