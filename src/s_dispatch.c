@@ -100,7 +100,7 @@ void fd_setselect(int fd, int flags, IOCallbackFunc iocb, void *data)
 # define POLLRDNORM POLLIN
 #endif
 #ifndef POLLWRNORM
-# define POLLWRNORM POLLIN
+# define POLLWRNORM POLLOUT
 #endif
 
 static struct pollfd pollfds[FD_SETSIZE];
@@ -122,6 +122,9 @@ void fd_refresh(int fd)
 	pollfds[fde->fd].fd = pflags ? fde->fd : -1;
 
 	/* tighten maximum pollfd */
+	if (pflags && nfds < fde->fd)
+		nfds = fde->fd;
+
 	while (nfds > 0 && pollfds[nfds].fd == -1)
 		nfds--;
 }
@@ -130,7 +133,6 @@ void fd_select(time_t delay)
 {
 	int num, p, revents, fd;
 	struct pollfd *pfd;
-	IOCallbackFunc iocb;
 
 	num = poll(pollfds, nfds + 1, delay);
 	if (num <= 0)
@@ -161,24 +163,15 @@ void fd_select(time_t delay)
 
 		if (evflags & FD_SELECT_READ)
 		{
-			iocb = fde->read_callback;
-			fde->read_callback = NULL;
-
-			if (iocb != NULL)
-				iocb(fd, evflags, data);
+			if (fde->read_callback != NULL)
+				fde->read_callback(fd, evflags, data);
 		}
 
 		if (evflags & FD_SELECT_WRITE)
 		{
-			iocb = fde->write_callback;
-			fde->write_callback = NULL;
-
-			if (iocb != NULL)
-				iocb(fd, evflags, data);
+			if (fde->write_callback != NULL)
+				fde->write_callback(fd, evflags, data);
 		}
-
-		if (fde->read_callback == NULL || fde->write_callback == NULL)
-			fd_refresh(fd);
 	}
 }
 
