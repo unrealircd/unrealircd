@@ -105,6 +105,12 @@ static void unrealdns_sock_state_cb(void *data, ares_socket_t fd, int read, int 
 {
 	int selflags = 0;
 
+	/* XXX: HACK HACK HACK: here we assume that a request that has neither
+	 * read or write requested means we should just close the socket out.
+	 */
+	if (!read && !write)
+		fd_close(fd);
+
 	if (read)
 		selflags |= FD_SELECT_READ;
 
