@@ -1567,8 +1567,6 @@ static void parse_client_queued(aClient *cptr)
 	int done;
 	time_t now = TStime();
 
-	ircd_log(LOG_ERROR, "bufferspace %zu newline %d status %d", DBufLength(&cptr->recvQ), !NoNewLine(cptr), cptr->status);
-
 	while (DBufLength(&cptr->recvQ) && !NoNewLine(cptr) &&
 	    ((cptr->status < STAT_UNKNOWN) || (cptr->since - now < 10)))
 	{
@@ -1847,108 +1845,6 @@ int  read_message(time_t delay, fdlist *listp)
 #else
 		Sleep(10000);
 #endif
-	}
-
-#ifdef USE_POLL
-	for (i = 0; i < pollfd_count; ++i)
-#else
-#ifdef NO_FDLIST
-	for (i = LastSlot; i >= 0; i--)
-#else
-	for (i = listp->entry[j = 1];  (j <= listp->last_entry); i = listp->entry[++j])
-#endif
-#endif /* USE_POLL */
-	{
-#ifdef USE_POLL
-		pfd = &pollfds[i];
-		v = get_client_by_pollfd(pfd->fd);
-		if (v < 0)
-			continue; /* possible with resolver */
-		cptr = local[v];
-		if (cptr && pfd->revents & POLLIN &&
-#else
-		cptr = local[i];
-		if (cptr && FD_ISSET(cptr->fd, &read_set) &&
-#endif
-		    IsListening(cptr))
-		{
-#ifndef USE_POLL
-			FD_CLR(cptr->fd, &read_set);
-#endif
-			nfds--;
-			cptr->lasttime = TStime();
-			/*
-			   ** There may be many reasons for error return, but
-			   ** in otherwise correctly working environment the
-			   ** probable cause is running out of file descriptors
-			   ** (EMFILE, ENFILE or others?). The man pages for
-			   ** accept don't seem to list these as possible,
-			   ** although it's obvious that it may happen here.
-			   ** Thus no specific errors are tested at this
-			   ** point, just assume that connections cannot
-			   ** be accepted until some old is closed first.
-			 *
-			 */
-			for (k = 0; k < LISTEN_SIZE; k++)
-{			{
-			if ((fd = fd_accept(cptr->fd)) < 0)
-			{
-		        if ((ERRNO != P_EWOULDBLOCK) && (ERRNO != P_ECONNABORTED))
-					report_baderror("Cannot accept connections %s:%s", cptr);
-				break;
-			}
-			ircstp->is_ac++;
-			/* We now check:
-			 *  1.  The number of open files, which is the limit imposed by the
-			 *      user during ./Config (MAXCONNECTIONS minus a few).
-			 *  2a) When using select(): 
-			 *      If the fd number exceeds FD_SETSIZE, which is not
-			 *      permitted as otherwise FD_SET() and FD_CLR() will fail
-			 *      in read_message()
-			 *      Note that the value of FD_SETSIZE may be (much) higher than
-			 *      MAXCLIENTS/MAXCONNECTIONS. They are not necessarily the same!
-			 *      FIXME: Figure out why I need a FD_SETSIZE-4 here? still have crashes with -1.
-			 *  2b) When using poll():
-			 *      Similar to 2a, check if fd is within 0..MAXCLIENTS bounds, because we
-			 *      use pollfd_to_client[] to map fd's to client slots.
- 			 */
-			if ((++OpenFiles >= MAXCLIENTS) ||
-#ifdef USE_POLL
-			    (fd >= MAXCLIENTS))
-#else
- 			    (fd > FD_SETSIZE-4))
-#endif
-			{
-				ircstp->is_ref++;
-				if (last_allinuse < TStime() - 15)
-				{
-					sendto_realops("All connections in use. (%s)",
-					    get_client_name(cptr, TRUE));
-					last_allinuse = TStime();
-				}
-#ifndef INET6
-				(void)send(fd,
-				    "ERROR :All connections in use\r\n", 31, 0);
-#else
-				(void)sendto(fd,
-				    "ERROR :All connections in use\r\n",
-				    31, 0, 0, 0);
-#endif
-				fd_close(fd);
-				--OpenFiles;
-				break;
-                          }
-			  /*
-			  * Use of add_connection (which never fails :) meLazy
-			  */
-			  (void)add_connection(cptr, fd);
-			  }
-			 }
-			   nextping = TStime();
-			   if (!cptr->listener)
-				cptr->listener = &me;
-		        
-                      }
 	}
 
 #ifdef USE_POLL
