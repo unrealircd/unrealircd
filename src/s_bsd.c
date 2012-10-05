@@ -122,7 +122,7 @@ int readcalls = 0;
 static struct SOCKADDR_IN mysk;
 
 static struct SOCKADDR *connect_inet(ConfigItem_link *, aClient *, int *);
-int completed_connection(aClient *);
+void completed_connection(int, int, void *);
 static int check_init(aClient *, char *, size_t);
 static void do_dns_async();
 void set_sock_opts(int, aClient *);
@@ -943,8 +943,9 @@ int  check_client(aClient *cptr, char *username)
 **	Return	TRUE, if successfully completed
 **		FALSE, if failed and ClientExit
 */
-int completed_connection(aClient *cptr)
+void completed_connection(int fd, int revents, void *data)
 {
+	aClient *cptr = data;
 	ConfigItem_link *aconf = cptr->serv ? cptr->serv->conf : NULL;
 	extern char serveropts[];
 	SetHandshake(cptr);
@@ -952,7 +953,7 @@ int completed_connection(aClient *cptr)
 	if (!aconf)
 	{
 		sendto_ops("Lost configuration for %s", get_client_name(cptr, FALSE));
-		return -1;
+		return;
 	}
 	if (!BadPtr(aconf->connpwd))
 		sendto_one(cptr, "PASS :%s", aconf->connpwd);
@@ -967,7 +968,7 @@ int completed_connection(aClient *cptr)
 		 * outgoing connect, we can safely assume it's a remote UnrealIRCd server (or some
 		 * other advanced server..). -- Syzop
 		 */
-		
+
 		/* Use this nasty hack, to make 3.2.9<->pre-3.2.9 linking work */
 		sendto_one(cptr, "__PANGPANG__");
 	} else {
@@ -975,8 +976,6 @@ int completed_connection(aClient *cptr)
 	}
 	if (!IsDead(cptr))
 		start_auth(cptr);
-
-	return (IsDead(cptr)) ? -1 : 0;
 }
 
 /*
@@ -1892,9 +1891,7 @@ int  read_message(time_t delay, fdlist *listp)
 					Debug((DEBUG_DEBUG, "ircd_SSL_client_handshake(%s)", cptr->name));
 					write_err = ircd_SSL_client_handshake(cptr);
 				}
-				else
 #endif
-					write_err = completed_connection(cptr);
 			}
 			if (!write_err)
 			{
@@ -2137,7 +2134,7 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 		cptr->serv->user = NULL;
 	}
 	cptr->serv->up = me.name;
-    add_local_client(cptr);
+	add_local_client(cptr);
 	cptr->listener = &me;
 	SetConnecting(cptr);
 	SetOutgoing(cptr);
@@ -2145,6 +2142,13 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	get_sockhost(cptr, aconf->hostname);
 	add_client_to_list(cptr);
 	nextping = TStime();
+
+#if 0 // ifdef USE_SSL
+	if (IsSSL(cptr) && (aconf->options & CONNECT_SSL))
+		fd_setselect(cptr->fd, FD_SELECT_READ, ircd_SSL_client_handshake, cptr);
+	else
+#endif
+		fd_setselect(cptr->fd, FD_SELECT_READ, completed_connection, cptr);
 	return 0;
 }
 

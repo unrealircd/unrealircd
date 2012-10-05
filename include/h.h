@@ -102,7 +102,7 @@ extern MODVAR ConfigItem_alias		*conf_alias;
 extern MODVAR ConfigItem_include	*conf_include;
 extern MODVAR ConfigItem_help		*conf_help;
 extern MODVAR ConfigItem_offchans	*conf_offchans;
-extern int		completed_connection(aClient *);
+extern void		completed_connection(int, int, void *);
 extern void clear_unknown();
 extern EVENT(e_unload_module_delayed);
 #ifdef THROTTLING
