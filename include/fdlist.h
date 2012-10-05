@@ -5,7 +5,7 @@
 
 #define FD_DESC_SZ	(100)
 
-typedef void (*IOCallbackFunc)(int fd, void *data);
+typedef void (*IOCallbackFunc)(int fd, int revents, void *data);
 
 typedef struct fd_entry {
 	int fd;

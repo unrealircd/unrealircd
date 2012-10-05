@@ -140,6 +140,7 @@ void fd_select(time_t delay)
 	{
 		FDEntry *fde;
 		void *data;
+		int evflags = 0;
 
 		pfd = &pollfds[p];
 
@@ -153,21 +154,27 @@ void fd_select(time_t delay)
 		fde->data = NULL;
 
 		if (revents & (POLLRDNORM | POLLIN | POLLHUP | POLLERR))
+			evflags |= FD_SELECT_READ;
+
+		if (revents & (POLLWRNORM | POLLOUT | POLLHUP | POLLERR))
+			evflags |= FD_SELECT_WRITE;
+
+		if (evflags & FD_SELECT_READ)
 		{
 			iocb = fde->read_callback;
 			fde->read_callback = NULL;
 
 			if (iocb != NULL)
-				iocb(fd, data);
+				iocb(fd, evflags, data);
 		}
 
-		if (revents & (POLLWRNORM | POLLOUT | POLLHUP | POLLERR))
+		if (evflags & FD_SELECT_WRITE)
 		{
 			iocb = fde->write_callback;
 			fde->write_callback = NULL;
 
 			if (iocb != NULL)
-				iocb(fd, data);
+				iocb(fd, evflags, data);
 		}
 
 		if (fde->read_callback == NULL || fde->write_callback == NULL)
