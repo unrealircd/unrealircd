@@ -81,6 +81,9 @@ void fd_close(int fd)
 
 	memset(fde, 0, sizeof(FDEntry));
 
+	fde->fd = fd;
+	fd_refresh(fd);
+
 	CLOSE_SOCK(fd);
 }
 
