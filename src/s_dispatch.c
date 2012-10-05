@@ -141,7 +141,6 @@ void fd_select(time_t delay)
 	for (p = 0; p < (nfds + 1); p++)
 	{
 		FDEntry *fde;
-		void *data;
 		int evflags = 0;
 
 		pfd = &pollfds[p];
@@ -152,8 +151,6 @@ void fd_select(time_t delay)
 			continue;
 
 		fde = &fd_table[fd];
-		data = fde->data;
-		fde->data = NULL;
 
 		if (revents & (POLLRDNORM | POLLIN | POLLHUP | POLLERR))
 			evflags |= FD_SELECT_READ;
@@ -164,13 +161,13 @@ void fd_select(time_t delay)
 		if (evflags & FD_SELECT_READ)
 		{
 			if (fde->read_callback != NULL)
-				fde->read_callback(fd, evflags, data);
+				fde->read_callback(fd, evflags, fde->data);
 		}
 
 		if (evflags & FD_SELECT_WRITE)
 		{
 			if (fde->write_callback != NULL)
-				fde->write_callback(fd, evflags, data);
+				fde->write_callback(fd, evflags, fde->data);
 		}
 	}
 }
