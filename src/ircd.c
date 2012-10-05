@@ -1840,6 +1840,9 @@ void SocketLoop(void *dummy)
 			delay = 1;
 		else
 			delay = MIN(delay, TIMESEC);
+
+		/* XXX: can't use delay here until read_message() is fully dead. --nenolod */
+		fd_select(0);
 #ifdef NO_FDLIST
 		(void)read_message(delay);
 		timeofday = time(NULL) + TSoffset;

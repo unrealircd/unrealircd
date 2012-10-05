@@ -24,7 +24,7 @@ CC = danger will robinson
 OBJS=timesynch.o res.o s_bsd.o auth.o aln.o channel.o cloak.o crule.o dbuf.o \
 	events.o fdlist.o hash.o help.o ircd.o ircsprintf.o list.o lusers.o \
 	match.o modules.o packet.o parse.o s_auth.o \
-	s_conf.o s_debug.o s_err.o s_extra.o s_kline.o \
+	s_conf.o s_debug.o s_dispatch.o s_err.o s_extra.o s_kline.o \
 	s_misc.o s_numeric.o s_serv.o s_svs.o $(STRTOUL) socket.o \
 	ssl.o s_user.o charsys.o scache.o send.o support.o umodes.o \
 	version.o whowas.o zip.o cidr.o random.o extcmodes.o \
@@ -97,7 +97,8 @@ parse.o: parse.c $(INCLUDES)
 socket.o: socket.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c socket.c
 
-
+s_dispatch.o: s_dispatch.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c s_dispatch.c
 
 dbuf.o: dbuf.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c dbuf.c

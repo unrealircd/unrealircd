@@ -25,6 +25,13 @@ extern int fd_socket(int family, int type, int protocol, const char *desc);
 extern int fd_accept(int sockfd);
 extern void fd_desc(int fd, const char *desc);
 
+#define FD_SELECT_READ	0x1
+#define FD_SELECT_WRITE	0x2
+
+extern void fd_setselect(int fd, int flags, IOCallbackFunc iocb, void *data);
+extern void fd_select(time_t delay);		/* backend-specific */
+extern void fd_refresh(int fd);			/* backend-specific */
+
 typedef struct fdstruct {
 	int  entry[MAXCONNECTIONS + 2];
 	int  last_entry;
