@@ -249,8 +249,6 @@ void remove_local_client(aClient* cptr)
 	/* Using the pollfd_to_client array directly here, as we do proper bounds checks ! */
 	if ((cptr->fd >= 0) && (cptr->fd < MAXCLIENTS) && (pollfd_to_client[cptr->fd] == cptr->slot))
 		pollfd_to_client[cptr->fd] = -1;
-	if ((cptr->authfd >= 0) && (cptr->authfd < MAXCLIENTS) && (pollfd_to_client[cptr->authfd] == cptr->slot))
-		pollfd_to_client[cptr->authfd] = -1;
 #endif
 
 	/* Keep LastSlot as the last one
@@ -1514,7 +1512,6 @@ void proceed_normal_client_handshake(aClient *acptr, struct hostent *he)
 ** This is necessary, since we may have put something on the recvQ due
 ** to fake lag. -- Syzop
 */
-
 static int read_packet(aClient *cptr, int doread)
 {
 	int  dolen = 0, length = 0, done;
@@ -1699,44 +1696,7 @@ int  read_message(time_t delay, fdlist *listp)
 				continue;
 			if (IsLog(cptr))
 				continue;
-			
-			if (DoingAuth(cptr))
-			{
-				int s = TStime() - cptr->firsttime;
-				/* Maybe they should be timed out. -- Syzop. */
-				if ( ((s > IDENT_CONNECT_TIMEOUT) && (cptr->flags & FLAGS_WRAUTH)) ||
-				     (s > IDENT_READ_TIMEOUT))
-				{
-					Debug((DEBUG_NOTICE, "ident timed out (cptr %x, %d sec)", cptr, s));
-					ident_failed(cptr);
-				}
-				else
-				{
-					auth++;
-					Debug((DEBUG_NOTICE, "auth on %x %d %d", cptr, i, s));
-					if (cptr->authfd >= 0)
-					{
-#ifdef USE_POLL
-						pfd = get_pollfd(cptr->slot, cptr->authfd);
-						pfd->events = POLLIN;
-#else
-						FD_SET(cptr->authfd, &read_set);
-#ifdef _WIN32	
-						FD_SET(cptr->authfd, &excpt_set);
-#endif	
-#endif
 
-						if (cptr->flags & FLAGS_WRAUTH)
-						{
-#ifdef USE_POLL
-							pfd->events |= POLLOUT;
-#else
-							FD_SET(cptr->authfd, &write_set);
-#endif
-						}
-					}
-				}
-			}
 			/* (warning: don't merge the DoingAuth() here with the check
 			 *  above coz ident_failed() might have been called -- Syzop.)
 			 */
@@ -1829,88 +1789,6 @@ int  read_message(time_t delay, fdlist *listp)
 #else
 		Sleep(10000);
 #endif
-	}
-
-	/*
-	 * Check fd sets for the auth fd's (if set and valid!) first
-	 * because these can not be processed using the normal loops below.
-	 * -avalon
-	 * UPDATE: if using poll, we now also use this one for our resolver
-	 *         (c-ares). -- Syzop
-	 */
-#ifdef USE_POLL
-	for (i = 0; i < pollfd_count; ++i)
-#else
-#ifdef NO_FDLIST
-	for (i = LastSlot; (auth > 0) && (i >= 0); i--)
-#else
-	for (i = listp->entry[j = 1]; j <= listp->last_entry; i = listp->entry[++j])
-#endif
-#endif /* USE_POLL */
-	{
-#ifdef USE_POLL
-		pfd = &pollfds[i];
-		v = get_client_by_pollfd(pfd->fd);
-		if (v < 0)
-			continue; /* Hm, shouldn't happen, but still.. */
-		cptr = local[v];
-#else
-		cptr = local[i];
-#endif
-		if (!cptr || cptr->authfd < 0)
-			continue;
-		auth--;
-#ifdef _WIN32
-		/*
-		 * Because of the way windows uses select(), we have to use
-		 * the exception FD set to find out when a connection is
-		 * refused.  ie Auth ports and /connect's.  -Cabal95
-		 */
-#ifdef USE_POLL
-		if (pfd->revents & (POLLERR | POLLRDHUP))
-#else
-		if (FD_ISSET(cptr->authfd, &excpt_set))
-#endif
-		{
-			int  err, len = sizeof(err);
-
-			if (getsockopt(cptr->authfd, SOL_SOCKET, SO_ERROR,
-			    (OPT_TYPE *)&err, &len) || err)
-			{
-				ircstp->is_abad++;
-				fd_close(cptr->authfd);
-				cptr->authfd = -1;
-				--OpenFiles;
-				cptr->flags &= ~(FLAGS_AUTH | FLAGS_WRAUTH);
-				if (!DoingDNS(cptr))
-					SetAccess(cptr);
-				if (nfds > 0)
-					nfds--;
-				continue;
-			}
-		}
-#endif
-		if (nfds > 0)
-		{
-#ifdef USE_POLL
-			if (pfd->revents & (POLLIN | POLLOUT))
-#else
-			if (FD_ISSET(cptr->authfd, &read_set) ||
-				FD_ISSET(cptr->authfd, &write_set))
-#endif
-				nfds--;
-#ifdef USE_POLL
-			if ((cptr->authfd > 0) && (pfd->revents & POLLOUT))
-				send_authports(cptr);
-			if ((cptr->authfd > 0) && (pfd->revents & POLLIN))
-				read_authports(cptr);
-#else
-			if ((cptr->authfd > 0) && (FD_ISSET(cptr->authfd, &write_set)))
-				send_authports(cptr);
-			if ((cptr->authfd > 0) && (FD_ISSET(cptr->authfd, &read_set)))
-				read_authports(cptr);
-#endif
-		}
 	}
 
 #ifdef USE_POLL

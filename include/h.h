@@ -271,8 +271,6 @@ extern void set_non_blocking(int, aClient *);
 extern int setup_ping();
 
 extern void start_auth(aClient *);
-extern void read_authports(aClient *);
-extern void send_authports(aClient *);
 
 extern void set_channel_mlock(aClient *, aClient *, aChannel *, const char *, int);
 

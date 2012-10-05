@@ -44,6 +44,9 @@ static char sccsid[] = "@(#)s_auth.c	1.18 4/18/94 (C) 1992 Darren Reed";
 #include "proto.h"
 #include <string.h>
 
+static void send_authports(int fd, int revents, void *data);
+static void read_authports(int fd, int revents, void *data);
+
 void ident_failed(aClient *cptr)
 {
 	Debug((DEBUG_NOTICE, "ident_failed() for %x", cptr));
@@ -131,6 +134,9 @@ void start_auth(aClient *cptr)
 		return;
 	}
 	cptr->flags |= (FLAGS_WRAUTH | FLAGS_AUTH);
+
+	fd_setselect(cptr->authfd, FD_SELECT_WRITE, send_authports, cptr);
+
 	return;
 }
 
@@ -143,11 +149,12 @@ void start_auth(aClient *cptr)
  * problem since the socket should have a write buffer far greater than
  * this message to store it in should problems arise. -avalon
  */
-void send_authports(aClient *cptr)
+static void send_authports(int fd, int revents, void *data)
 {
 	struct SOCKADDR_IN us, them;
 	char authbuf[32];
 	int  ulen, tlen;
+	aClient *cptr = data;
 
 	Debug((DEBUG_NOTICE, "write_authports(%x) fd %d authfd %d stat %d",
 	    cptr, cptr->fd, cptr->authfd, cptr->status));
@@ -172,6 +179,9 @@ authsenderr:
 		ident_failed(cptr);
 	}
 	cptr->flags &= ~FLAGS_WRAUTH;
+
+	fd_setselect(cptr->authfd, FD_SELECT_READ, read_authports, cptr);
+
 	return;
 }
 
@@ -182,12 +192,13 @@ authsenderr:
  * The actual read processijng here is pretty weak - no handling of the reply
  * if it is fragmented by IP.
  */
-void read_authports(aClient *cptr)
+static void read_authports(int fd, int revents, void *userdata)
 {
 	char *s, *t;
 	int  len;
 	char ruser[USERLEN + 1], system[8];
 	u_short remp = 0, locp = 0;
+	aClient *cptr = userdata;
 
 	*system = *ruser = '\0';
 	Debug((DEBUG_NOTICE, "read_authports(%x) fd %d authfd %d stat %d",
