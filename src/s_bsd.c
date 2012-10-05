@@ -1529,7 +1529,6 @@ struct hostent *he;
 
 doauth:
 	start_auth(acptr);
-	fd_setselect(acptr->fd, FD_SELECT_READ, read_packet, acptr);
 }
 
 void proceed_normal_client_handshake(aClient *acptr, struct hostent *he)
@@ -1540,7 +1539,13 @@ void proceed_normal_client_handshake(aClient *acptr, struct hostent *he)
 		sendto_one(acptr, "%s", acptr->hostp ? REPORT_FIN_DNS : REPORT_FAIL_DNS);
 
 	if (!dns_special_flag && !DoingAuth(acptr))
-		SetAccess(acptr);
+		finish_auth(acptr);
+}
+
+void finish_auth(aClient *acptr)
+{
+	SetAccess(acptr);
+	fd_setselect(acptr->fd, FD_SELECT_READ, read_packet, acptr);
 }
 
 /*

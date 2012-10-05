@@ -807,3 +807,4 @@ extern void free_pending_net(aClient *sptr);
 extern aPendingNet *find_pending_net_by_numeric_butone(int numeric, aClient *exempt);
 extern aClient *find_pending_net_duplicates(aClient *cptr, aClient **srv, int *numeric);
 extern aClient *find_non_pending_net_duplicates(aClient *cptr);
+extern void finish_auth(aClient *acptr);

@@ -59,7 +59,7 @@ void ident_failed(aClient *cptr)
 	}
 	cptr->flags &= ~(FLAGS_WRAUTH | FLAGS_AUTH);
 	if (!DoingDNS(cptr))
-		SetAccess(cptr);
+		finish_auth(cptr);
 	if (SHOWCONNECTINFO && !cptr->serv && !IsServersOnlyListener(cptr->listener))
 		sendto_one(cptr, "%s", REPORT_FAIL_ID);
 }
@@ -81,6 +81,8 @@ void start_auth(aClient *cptr)
 
 	if (IDENT_CHECK == 0) {
 		cptr->flags &= ~(FLAGS_WRAUTH | FLAGS_AUTH);
+		if (!DoingDNS(cptr))
+			finish_auth(cptr);
 		return;
 	}
 	Debug((DEBUG_NOTICE, "start_auth(%x) slot=%d, fd=%d, status=%d",
@@ -249,7 +251,7 @@ static void read_authports(int fd, int revents, void *userdata)
 	cptr->count = 0;
 	ClearAuth(cptr);
 	if (!DoingDNS(cptr))
-		SetAccess(cptr);
+		finish_auth(cptr);
 	if (len > 0)
 		Debug((DEBUG_INFO, "ident reply: [%s]", cptr->buffer));
 
