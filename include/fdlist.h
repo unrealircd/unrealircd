@@ -3,6 +3,28 @@
 
 /* $Id$ */
 
+#define FD_DESC_SZ	(100)
+
+typedef void (*IOCallbackFunc)(int fd, void *data);
+
+typedef struct fd_entry {
+	int fd;
+	char desc[FD_DESC_SZ];
+	IOCallbackFunc read_callback;
+	IOCallbackFunc write_callback;
+	void *data;
+	time_t deadline;
+	unsigned char is_open;
+} FDEntry;
+
+extern MODVAR FDEntry fd_table[MAXCONNECTIONS + 1];
+
+extern int fd_open(int fd, const char *desc);
+extern void fd_close(int fd);
+extern int fd_socket(int family, int type, int protocol, const char *desc);
+extern int fd_accept(int sockfd);
+extern void fd_desc(int fd, const char *desc);
+
 typedef struct fdstruct {
 	int  entry[MAXCONNECTIONS + 2];
 	int  last_entry;

@@ -81,13 +81,14 @@ static DNSReq *requests = NULL; /**< Linked list of requests (pending responses)
 
 static DNSCache *cache_list = NULL; /**< Linked list of cache */
 static DNSCache *cache_hashtbl[DNS_HASH_SIZE]; /**< Hash table of cache */
+static ares_socket_t aresfds[ARES_GETSOCK_MAXNUM];
 
 static unsigned int unrealdns_num_cache = 0; /**< # of cache entries in memory */
 
 void init_resolver(int firsttime)
 {
 struct ares_options options;
-int n;
+int n, v, k;
 int optmask;
 
 	if (requests)
@@ -139,10 +140,17 @@ int optmask;
 			NAME_SERVER);
 		MyFree(options.servers);
 	}
+
+	memset(&aresfds, 0, sizeof(aresfds));
+	v = ares_getsock(resolver_channel, aresfds, ARES_GETSOCK_MAXNUM);
+	for (k = 0; k < ARES_GETSOCK_MAXNUM; k++)
+		fd_open(aresfds[k], "DNS Resolver Socket");
 }
 
 void reinit_resolver(aClient *sptr)
 {
+	int k;
+
 #ifdef CHROOTDIR
 	/* Prevent people from killing their ircd accidently if in CHROOTDIR mode... */
 FILE *fd;
@@ -158,6 +166,9 @@ FILE *fd;
 	}
 	fclose(fd);
 #endif
+
+	for (k = 0; k < ARES_GETSOCK_MAXNUM; k++)
+		fd_close(aresfds[k]);
 
 	sendto_realops("%s requested reinitalization of resolver!", sptr->name);
 	sendto_realops("Destroying resolver channel, along with all currently pending queries...");

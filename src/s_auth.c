@@ -50,7 +50,7 @@ void ident_failed(aClient *cptr)
 	ircstp->is_abad++;
 	if (cptr->authfd != -1)
 	{
-		CLOSE_SOCK(cptr->authfd);
+		fd_close(cptr->authfd);
 		--OpenFiles;
 		cptr->authfd = -1;
 	}
@@ -74,14 +74,16 @@ void start_auth(aClient *cptr)
 {
 	struct SOCKADDR_IN sock, us;
 	int len;
-	
+	char buf[BUFSIZE];
+
 	if (IDENT_CHECK == 0) {
 		cptr->flags &= ~(FLAGS_WRAUTH | FLAGS_AUTH);
 		return;
 	}
 	Debug((DEBUG_NOTICE, "start_auth(%x) slot=%d, fd=%d, status=%d",
 	    cptr, cptr->slot, cptr->fd, cptr->status));
-	if ((cptr->authfd = socket(AFINET, SOCK_STREAM, 0)) == -1)
+	snprintf(buf, sizeof buf, "identd: %s", get_client_name(cptr, TRUE));
+	if ((cptr->authfd = fd_socket(AFINET, SOCK_STREAM, 0, buf)) == -1)
 	{
 		Debug((DEBUG_ERROR, "Unable to create auth socket for %s:%s",
 		    get_client_name(cptr, TRUE), strerror(get_sockerr(cptr))));
@@ -91,7 +93,7 @@ void start_auth(aClient *cptr)
     if (++OpenFiles >= (MAXCONNECTIONS - 2))
 	{
 		sendto_ops("Can't allocate fd, too many connections.");
-		CLOSE_SOCK(cptr->authfd);
+		fd_close(cptr->authfd);
 		--OpenFiles;
 		cptr->authfd = -1;
 		return;
@@ -230,7 +232,7 @@ void read_authports(aClient *cptr)
 		Debug((DEBUG_ERROR, "bad auth reply in [%s]", cptr->buffer));
 		*ruser = '\0';
 	}
-    CLOSE_SOCK(cptr->authfd);
+    fd_close(cptr->authfd);
     --OpenFiles;
     cptr->authfd = -1;
 	cptr->count = 0;

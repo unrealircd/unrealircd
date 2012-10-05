@@ -271,12 +271,12 @@ void close_connections(void)
     if ((cptr = local[i]) != 0)
     {
       if (cptr->fd >= 0) {
-        CLOSE_SOCK(cptr->fd);
+        fd_close(cptr->fd);
         cptr->fd = -2;
       }
       if (cptr->authfd >= 0)
       {
-        CLOSE_SOCK(cptr->authfd);
+        fd_close(cptr->authfd);
         cptr->authfd = -1;
       }
     }
@@ -450,7 +450,7 @@ int  inetport(aClient *cptr, char *name, int port)
 	 */
 	if (cptr->fd == -1)
 	{
-		cptr->fd = socket(AFINET, SOCK_STREAM, 0);
+		cptr->fd = fd_socket(AFINET, SOCK_STREAM, 0, "Listener socket");
 	}
 	if (cptr->fd < 0)
 	{
@@ -462,7 +462,7 @@ int  inetport(aClient *cptr, char *name, int port)
 	else if (++OpenFiles >= MAXCLIENTS)
 	{
 		sendto_ops("No more connections allowed (%s)", cptr->name);
-		CLOSE_SOCK(cptr->fd);
+		fd_close(cptr->fd);
 		cptr->fd = -1;
 		--OpenFiles;
 		return -1;
@@ -511,7 +511,7 @@ int  inetport(aClient *cptr, char *name, int port)
 				                    "and/or via sysctl.");
 			}
 #endif
-			CLOSE_SOCK(cptr->fd);
+			fd_close(cptr->fd);
 			cptr->fd = -1;
 			--OpenFiles;
 			return -1;
@@ -520,7 +520,7 @@ int  inetport(aClient *cptr, char *name, int port)
 	if (getsockname(cptr->fd, (struct SOCKADDR *)&server, &len))
 	{
 		report_error("getsockname failed for %s:%s", cptr);
-		CLOSE_SOCK(cptr->fd);
+		fd_close(cptr->fd);
 		cptr->fd = -1;
 		--OpenFiles;
 		return -1;
@@ -1027,7 +1027,7 @@ void close_connection(aClient *cptr)
 
 	if (cptr->authfd >= 0)
 	{
-		CLOSE_SOCK(cptr->authfd);
+		fd_close(cptr->authfd);
 		cptr->authfd = -1;
 		--OpenFiles;
 	}
@@ -1044,7 +1044,7 @@ void close_connection(aClient *cptr)
 			cptr->ssl = NULL;
 		}
 #endif
-		CLOSE_SOCK(cptr->fd);
+		fd_close(cptr->fd);
 		cptr->fd = -2;
 		--OpenFiles;
 		DBufClear(&cptr->sendQ);
@@ -1094,7 +1094,7 @@ void close_connection(aClient *cptr)
 				addto_fdlist(i, &oper_fdlist);
 			}
 #endif
-			CLOSE_SOCK(j);
+			fd_close(j);
 			--OpenFiles;
 		}
 #endif
@@ -1333,7 +1333,7 @@ add_con_refuse:
 			ircstp->is_ref++;
 			acptr->fd = -2;
 			free_client(acptr);
-			CLOSE_SOCK(fd);
+			fd_close(fd);
 			--OpenFiles;
 			return NULL;
 		}
@@ -1925,7 +1925,7 @@ int  read_message(time_t delay, fdlist *listp)
 			    (OPT_TYPE *)&err, &len) || err)
 			{
 				ircstp->is_abad++;
-				closesocket(cptr->authfd);
+				fd_close(cptr->authfd);
 				cptr->authfd = -1;
 				--OpenFiles;
 				cptr->flags &= ~(FLAGS_AUTH | FLAGS_WRAUTH);
@@ -2002,7 +2002,7 @@ int  read_message(time_t delay, fdlist *listp)
 			 */
 			for (k = 0; k < LISTEN_SIZE; k++)
 {			{
-			if ((fd = accept(cptr->fd, NULL, NULL)) < 0)
+			if ((fd = fd_accept(cptr->fd)) < 0)
 			{
 		        if ((ERRNO != P_EWOULDBLOCK) && (ERRNO != P_ECONNABORTED))
 					report_baderror("Cannot accept connections %s:%s", cptr);
@@ -2045,7 +2045,7 @@ int  read_message(time_t delay, fdlist *listp)
 				    "ERROR :All connections in use\r\n",
 				    31, 0, 0, 0);
 #endif
-				CLOSE_SOCK(fd);
+				fd_close(fd);
 				--OpenFiles;
 				break;
                           }
@@ -2300,7 +2300,7 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	{
 		if (cptr->fd >= 0)
 		{
-			CLOSE_SOCK(cptr->fd);
+			fd_close(cptr->fd);
 			--OpenFiles;
 		}
 		cptr->fd = -2;
@@ -2325,7 +2325,7 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 			sendto_one(by,
 			    ":%s NOTICE %s :*** Connect to host %s failed.",
 			    me.name, by->name, cptr->name);
-		CLOSE_SOCK(cptr->fd);
+		fd_close(cptr->fd);
 		--OpenFiles;
 		cptr->fd = -2;
 		free_client(cptr);
@@ -2378,12 +2378,14 @@ static struct SOCKADDR *connect_inet(ConfigItem_link *aconf, aClient *cptr, int 
 {
 	static struct SOCKADDR_IN server;
 	struct hostent *hp;
+	char buf[BUFSIZE];
 
 	/*
 	 * Might as well get sockhost from here, the connection is attempted
 	 * with it so if it fails its useless.
 	 */
-	cptr->fd = socket(AFINET, SOCK_STREAM, 0);
+	snprintf(buf, sizeof buf, "Outgoing connection: %s", get_client_name(cptr, TRUE));
+	cptr->fd = fd_socket(AFINET, SOCK_STREAM, 0, buf);
 	if (cptr->fd < 0)
 	{
 		if (ERRNO == P_EMFILE)

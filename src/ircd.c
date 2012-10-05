@@ -650,7 +650,7 @@ extern TS check_pings(TS currenttime)
 				if (!IsRegistered(cptr) && (DoingDNS(cptr) || DoingAuth(cptr)))
 				{
 					if (cptr->authfd >= 0) {
-						CLOSE_SOCK(cptr->authfd);
+						fd_close(cptr->authfd);
 						--OpenFiles;
 						cptr->authfd = -1;
 						cptr->count = 0;

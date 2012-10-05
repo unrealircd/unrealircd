@@ -116,7 +116,7 @@ DLLFUNC CMD_FUNC(m_nick)
 	int ishold;
 	aClient *acptr, *serv = NULL;
 	aClient *acptrs;
-	char nick[NICKLEN + 2], *s;
+	char nick[NICKLEN + 2], *s, descbuf[BUFSIZE];
 	Membership *mp;
 	time_t lastnick = (time_t) 0;
 	int  differ = 1, update_watch = 1;
@@ -770,6 +770,11 @@ DLLFUNC CMD_FUNC(m_nick)
 		if (IsPerson(sptr))
 			hash_check_watch(sptr, RPL_LOGOFF);
 	}
+
+	/* update fdlist --nenolod */
+	snprintf(descbuf, sizeof descbuf, "Client: %s", nick);
+	fd_desc(sptr->fd, descbuf);
+
 	(void)strcpy(sptr->name, nick);
 	(void)add_to_client_hash_table(nick, sptr);
 	if (IsServer(cptr) && parc > 7)
@@ -1049,6 +1054,11 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 
 	if (MyConnect(sptr))
 	{
+		char descbuf[BUFSIZE];
+
+		snprintf(descbuf, sizeof descbuf, "Client: %s", nick);
+		fd_desc(sptr->fd, descbuf);
+
 		IRCstats.unknown--;
 		IRCstats.me_clients++;
 		if (IsHidden(sptr))

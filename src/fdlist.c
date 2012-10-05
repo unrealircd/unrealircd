@@ -28,6 +28,111 @@
 #include "proto.h"
 #include <string.h>
 
+/* new FD management code, based on mowgli.eventloop from atheme, hammered into Unreal by
+ * me, nenolod.
+ */
+FDEntry fd_table[MAXCONNECTIONS + 1];
+
+int fd_open(int fd, const char *desc)
+{
+	FDEntry *fde;
+
+	if ((fd < 0) || (fd >= MAXCONNECTIONS))
+	{
+		sendto_realops("[BUG] trying to add fd #%d to fd table, but MAXCONNECTIONS is %d",
+				fd, MAXCONNECTIONS);
+		ircd_log(LOG_ERROR, "[BUG] trying to add fd #%d to fd table, but MAXCONNECTIONS is %d",
+				fd, MAXCONNECTIONS);
+		return -1;
+	}
+
+	fde = &fd_table[fd];
+	memset(fde, 0, sizeof(FDEntry));
+
+	fde->fd = fd;
+	fde->is_open = 1;
+	strlcpy(fde->desc, desc, FD_DESC_SZ);
+
+	return fde->fd;
+}
+
+void fd_close(int fd)
+{
+	FDEntry *fde;
+
+	if ((fd < 0) || (fd >= MAXCONNECTIONS))
+	{
+		sendto_realops("[BUG] trying to close fd #%d in fd table, but MAXCONNECTIONS is %d",
+				fd, MAXCONNECTIONS);
+		ircd_log(LOG_ERROR, "[BUG] trying to close fd #%d in fd table, but MAXCONNECTIONS is %d",
+				fd, MAXCONNECTIONS);
+		return;
+	}
+
+	fde = &fd_table[fd];
+	if (!fde->is_open)
+	{
+		sendto_realops("[BUG] trying to close fd #%d in fd table, but this FD isn't reported open",
+				fd, MAXCONNECTIONS);
+		ircd_log(LOG_ERROR, "[BUG] trying to close fd #%d in fd table, but this FD isn't reported open",
+				fd, MAXCONNECTIONS);
+		return;
+	}
+
+	memset(fde, 0, sizeof(FDEntry));
+
+	CLOSE_SOCK(fd);
+}
+
+int fd_socket(int family, int type, int protocol, const char *desc)
+{
+	int fd;
+
+	fd = socket(family, type, protocol);
+	if (fd < 0)
+		return -1;
+
+	return fd_open(fd, desc);
+}
+
+int fd_accept(int sockfd)
+{
+	const char buf[] = "Incoming connection";
+	int fd;
+
+	fd = accept(sockfd, NULL, NULL);
+	if (fd < 0)
+		return -1;
+
+	return fd_open(fd, buf);
+}
+
+void fd_desc(int fd, const char *desc)
+{
+	FDEntry *fde;
+
+	if ((fd < 0) || (fd >= MAXCONNECTIONS))
+	{
+		sendto_realops("[BUG] trying to modify fd #%d in fd table, but MAXCONNECTIONS is %d",
+				fd, MAXCONNECTIONS);
+		ircd_log(LOG_ERROR, "[BUG] trying to modify fd #%d in fd table, but MAXCONNECTIONS is %d",
+				fd, MAXCONNECTIONS);
+		return;
+	}
+
+	fde = &fd_table[fd];
+	if (!fde->is_open)
+	{
+		sendto_realops("[BUG] trying to modify fd #%d in fd table, but this FD isn't reported open",
+				fd, MAXCONNECTIONS);
+		ircd_log(LOG_ERROR, "[BUG] trying to modify fd #%d in fd table, but this FD isn't reported open",
+				fd, MAXCONNECTIONS);
+		return;
+	}
+
+	strlcpy(fde->desc, desc, FD_DESC_SZ);
+}
+
 extern fdlist default_fdlist;
 extern fdlist busycli_fdlist;
 extern fdlist serv_fdlist;

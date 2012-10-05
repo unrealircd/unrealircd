@@ -163,7 +163,9 @@ int succesfully_sent = 0;
 	n = 0;
 	for (servname = strtoken(&p, tmptimeservbuf, ","); servname; servname = strtoken(&p, NULL, ","))
 	{
-		s[n] = socket(AF_INET, SOCK_DGRAM, 0); /* always ipv4 */
+		char buf[BUFSIZE];
+		snprintf(buf, sizeof buf, "ntp client: %s", servname);
+		s[n] = fd_socket(AF_INET, SOCK_DGRAM, 0, buf); /* always ipv4 */
 		if (s[n] < 0)
 		{
 			ircsprintf(tserr, "unable to create socket: %s [%d]", STRERROR(ERRNO), (int)ERRNO);
@@ -281,7 +283,7 @@ gotit:
 
 end:
 	for (i = 0; i < numservers; i++)
-		CLOSE_SOCK(s[i]);
+		fd_close(s[i]);
 
 	return reply;
 }

@@ -119,6 +119,7 @@ int stats_class(aClient *, char *);
 int stats_zip(aClient *, char *);
 int stats_officialchannels(aClient *, char *);
 int stats_spamfilter(aClient *, char *);
+int stats_fdtable(aClient *, char *);
 
 #define SERVER_AS_PARA 0x1
 #define FLAGS_AS_PARA 0x2
@@ -152,6 +153,7 @@ struct statstab StatsTable[] = {
 	{ 'T', "traffic",	stats_traffic,		0 		},
 	{ 'U', "uline",		stats_uline,		0 		},
 	{ 'V', "vhost", 	stats_vhost,		0 		},
+	{ 'W', "fdtable",       stats_fdtable,          0               },
 	{ 'X', "notlink",	stats_notlink,		0 		},	
 	{ 'Y', "class",		stats_class,		0 		},	
 	{ 'Z', "mem",		stats_mem,		0 		},
@@ -309,6 +311,8 @@ inline void stats_help(aClient *sptr)
 		"v - denyver - Send the deny version block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"V - vhost - Send the vhost block list");
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+		"W - fdtable - Send the FD table listing");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"X - notlink - Send the list of servers that are not current linked");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
@@ -799,6 +803,23 @@ int stats_traffic(aClient *sptr, char *para)
 	return 0;
 }
 
+int stats_fdtable(aClient *sptr, char *para)
+{
+	int i;
+
+	for (i = 0; i < MAXCONNECTIONS; i++)
+	{
+		FDEntry *fde = &fd_table[i];
+
+		if (!fde->is_open)
+			continue;
+
+		sendto_one(sptr,
+			":%s %d %s :fd %3d, desc '%s', read-hdl %p, write-hdl %p, cbdata %p",
+			me.name, RPL_STATSDEBUG, sptr->name,
+			fde->fd, fde->desc, fde->read_callback, fde->write_callback, fde->data);
+	}
+}
 
 int stats_uline(aClient *sptr, char *para)
 {

@@ -311,6 +311,7 @@ DLLFUNC CMD_FUNC(m_server)
 	char *servername = NULL;	/* Pointer for servername */
  /*	char *password = NULL; */
 	char *ch = NULL;	/* */
+	char descbuf[BUFSIZE];
 	char *inpath = get_client_name(cptr, TRUE);
 	int  hop = 0, numeric = 0;
 	char info[REALLEN + 61];
@@ -526,6 +527,10 @@ DLLFUNC CMD_FUNC(m_server)
 		}
 		if (aconf->options & CONNECT_QUARANTINE)
 			cptr->flags |= FLAGS_QUARANTINE;
+
+		snprintf(descbuf, sizeof descbuf, "Server: %s", servername);
+		fd_desc(cptr->fd, descbuf);
+
 		/* Start synch now */
 		if (m_server_synch(cptr, numeric, aconf) == FLUSH_BUFFER)
 			return FLUSH_BUFFER;
