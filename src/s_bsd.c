@@ -90,6 +90,8 @@ static int pollfd_count = 0;
 static int pollfd_to_client[MAXCONNECTIONS]; /* use get_client_by_pollfd() for grabbing, don't grab from array directly ! */
 #endif
 
+static void read_packet(int fd, int revents, void *data);
+
 #ifdef INET6
 static unsigned char minus_one[] =
     { 255, 255, 255, 255, 255, 255, 255, 255, 255,
@@ -412,6 +414,42 @@ void report_baderror(char *text, aClient *cptr)
  * depending on the IP# mask given by 'name'.  Returns the fd of the
  * socket created or -1 on error.
  */
+static void listener_accept(int fd, int revents, void *data)
+{
+	aClient *cptr = data;
+	int cli_fd;
+
+	if ((cli_fd = fd_accept(cptr->fd)) < 0)
+	{
+	        if ((ERRNO != P_EWOULDBLOCK) && (ERRNO != P_ECONNABORTED))
+			report_baderror("Cannot accept connections %s:%s", cptr);
+		return;
+	}
+
+	ircstp->is_ac++;
+
+	if ((++OpenFiles >= MAXCLIENTS) || (fd >= MAXCLIENTS))
+	{
+		ircstp->is_ref++;
+		if (last_allinuse < TStime() - 15)
+		{
+			sendto_realops("All connections in use. (%s)", get_client_name(cptr, TRUE));
+			last_allinuse = TStime();
+		}
+
+		(void)send(cli_fd, "ERROR :All connections in use\r\n", 31, 0);
+
+		fd_close(cli_fd);
+		--OpenFiles;
+		return;
+	}
+
+	 /*
+	  * Use of add_connection (which never fails :) meLazy
+	  */
+	(void) add_connection(cptr, cli_fd);
+}
+
 int  inetport(aClient *cptr, char *name, int port)
 {
 	static struct SOCKADDR_IN server;
@@ -532,6 +570,9 @@ int  inetport(aClient *cptr, char *name, int port)
 	cptr->port = (int)ntohs(server.SIN_PORT);
 	(void)listen(cptr->fd, LISTEN_SIZE);
 	add_local_client(cptr);
+
+	fd_setselect(cptr->fd, FD_SELECT_READ, listener_accept, cptr);
+
 	return 0;
 }
 
@@ -1423,6 +1464,7 @@ add_con_refuse:
 		((ConfigItem_listen *) acptr->listener->class)->clients++;
 	}
 	add_client_to_list(acptr);
+
 	set_non_blocking(acptr->fd, acptr);
 	set_sock_opts(acptr->fd, acptr);
 	IRCstats.unknown++;
@@ -1487,6 +1529,7 @@ struct hostent *he;
 
 doauth:
 	start_auth(acptr);
+	fd_setselect(acptr->fd, FD_SELECT_READ, read_packet, acptr);
 }
 
 void proceed_normal_client_handshake(aClient *acptr, struct hostent *he)
@@ -1495,7 +1538,7 @@ void proceed_normal_client_handshake(aClient *acptr, struct hostent *he)
 	acptr->hostp = he;
 	if (SHOWCONNECTINFO && !acptr->serv && !IsServersOnlyListener(acptr->listener))
 		sendto_one(acptr, "%s", acptr->hostp ? REPORT_FIN_DNS : REPORT_FAIL_DNS);
-	
+
 	if (!dns_special_flag && !DoingAuth(acptr))
 		SetAccess(acptr);
 }
@@ -1511,60 +1554,118 @@ void proceed_normal_client_handshake(aClient *acptr, struct hostent *he)
 ** however we still check if we need to dequeue anything from the recvQ.
 ** This is necessary, since we may have put something on the recvQ due
 ** to fake lag. -- Syzop
+** With new I/O code, things work differently.  Surprise!
+** read_one_packet() reads packets in and dumps them as quickly as
+** possible into the client's DBuf.  Then we parse data out of the DBuf,
+** after we're done reading crap.
+**    -- nenolod
 */
-static int read_packet(aClient *cptr, int doread)
+static void parse_client_queued(aClient *cptr)
 {
-	int  dolen = 0, length = 0, done;
+	int dolen = 0;
+	int allow_read;
+	int done;
 	time_t now = TStime();
-	
-	if (doread && !(IsPerson(cptr) && DBufLength(&cptr->recvQ) > 6090))
+
+	ircd_log(LOG_ERROR, "bufferspace %zu newline %d status %d", DBufLength(&cptr->recvQ), !NoNewLine(cptr), cptr->status);
+
+	while (DBufLength(&cptr->recvQ) && !NoNewLine(cptr) &&
+	    ((cptr->status < STAT_UNKNOWN) || (cptr->since - now < 10)))
 	{
-		Hook *h;
-		SET_ERRNO(0);
+		/*
+		   ** If it has become registered as a Service or Server
+		   ** then skip the per-message parsing below.
+		 */
+		if (IsServer(cptr))
+		{
+			dolen = dbuf_get(&cptr->recvQ, readbuf,
+			    sizeof(readbuf));
+			if (dolen <= 0)
+				break;
+			if ((done = dopacket(cptr, readbuf, dolen)))
+				return;
+			break;
+		}
+
+		dolen = dbuf_getmsg(&cptr->recvQ, readbuf,
+		    sizeof(readbuf));
+
+		/*
+		   ** Devious looking...whats it do ? well..if a client
+		   ** sends a *long* message without any CR or LF, then
+		   ** dbuf_getmsg fails and we pull it out using this
+		   ** loop which just gets the next 512 bytes and then
+		   ** deletes the rest of the buffer contents.
+		   ** -avalon
+		 */
+		while (dolen <= 0)
+		{
+			if (dolen < 0)
+			{
+				exit_client(cptr, cptr, cptr,
+				    "dbuf_getmsg fail");
+				return;
+			}
+			if (DBufLength(&cptr->recvQ) < 510)
+			{
+				cptr->flags |= FLAGS_NONL;
+				break;
+			}
+			dolen = dbuf_get(&cptr->recvQ, readbuf, 511);
+			if (dolen > 0 && DBufLength(&cptr->recvQ))
+				DBufClear(&cptr->recvQ);
+		}
+
+		if (dolen > 0 &&
+		    (dopacket(cptr, readbuf, dolen) == FLUSH_BUFFER))
+			return;
+	}
+}
+
+static void read_packet(int fd, int revents, void *data)
+{
+	aClient *cptr = data;
+	int length = 0;
+	time_t now = TStime();
+	Hook *h;
+
+	SET_ERRNO(0);
+
+	while (1)
+	{
 #ifdef USE_SSL
 		if (cptr->flags & FLAGS_SSL)
 	    		length = ircd_SSL_read(cptr, readbuf, sizeof(readbuf));
 		else
 #endif
 			length = recv(cptr->fd, readbuf, sizeof(readbuf), 0);
+
+		if (length < 0 && ERRNO == P_EWOULDBLOCK)
+			return;
+		if (length == 0)
+		{
+			exit_client(cptr, cptr, cptr, "Read error");
+			return;
+		}
+
 		cptr->lasttime = now;
 		if (cptr->lasttime > cptr->since)
 			cptr->since = cptr->lasttime;
 		cptr->flags &= ~(FLAGS_PINGSENT | FLAGS_NONL);
-		/*
-		 * If not ready, fake it so it isnt closed
-		 */
-		if (length < 0 && ERRNO == P_EWOULDBLOCK)
-		    return 1;
-		if (length <= 0)
-			return length;
+
 		for (h = Hooks[HOOKTYPE_RAWPACKET_IN]; h; h = h->next)
 		{
 			int v = (*(h->func.intfunc))(cptr, readbuf, length);
 			if (v <= 0)
-				return v;
+				return;
 		}
-	}
-	/*
-	   ** For server connections, we process as many as we can without
-	   ** worrying about the time of day or anything :)
-	 */
-	if (IsServer(cptr) || IsConnecting(cptr) || IsHandshake(cptr))
-	{
-		if (length > 0)
-			if ((done = dopacket(cptr, readbuf, length)))
-				return done;
-	}
-	else
-	{
-		/*
-		   ** Before we even think of parsing what we just read, stick
-		   ** it on the end of the receive queue and do it when its
-		   ** turn comes around.
-		 */
-		if (length && !dbuf_put(&cptr->recvQ, readbuf, length))
-			return exit_client(cptr, cptr, cptr, "dbuf_put fail");
 
+		dbuf_put(&cptr->recvQ, readbuf, length);
+
+		/* parse some of what we have (inducing fakelag, etc) */
+		parse_client_queued(cptr);
+
+		/* excess flood check */
 		if (IsPerson(cptr) && DBufLength(&cptr->recvQ) > get_recvq(cptr))
 		{
 			sendto_snomask(SNO_FLOOD,
@@ -1573,57 +1674,14 @@ static int read_packet(aClient *cptr, int doread)
 			    cptr->user ? cptr->user->username : "*",
 			    cptr->user ? cptr->user->realhost : "*",
 			    DBufLength(&cptr->recvQ), get_recvq(cptr));
-			return exit_client(cptr, cptr, cptr, "Excess Flood");
+			exit_client(cptr, cptr, cptr, "Excess Flood");
+			return;
 		}
 
-		while (DBufLength(&cptr->recvQ) && !NoNewLine(cptr) &&
-		    ((cptr->status < STAT_UNKNOWN) || (cptr->since - now < 10)))
-		{
-			/*
-			   ** If it has become registered as a Service or Server
-			   ** then skip the per-message parsing below.
-			 */
-			if (IsServer(cptr))
-			{
-				dolen = dbuf_get(&cptr->recvQ, readbuf,
-				    sizeof(readbuf));
-				if (dolen <= 0)
-					break;
-				if ((done = dopacket(cptr, readbuf, dolen)))
-					return done;
-				break;
-			}
-			dolen = dbuf_getmsg(&cptr->recvQ, readbuf,
-			    sizeof(readbuf));
-			/*
-			   ** Devious looking...whats it do ? well..if a client
-			   ** sends a *long* message without any CR or LF, then
-			   ** dbuf_getmsg fails and we pull it out using this
-			   ** loop which just gets the next 512 bytes and then
-			   ** deletes the rest of the buffer contents.
-			   ** -avalon
-			 */
-			while (dolen <= 0)
-			{
-				if (dolen < 0)
-					return exit_client(cptr, cptr, cptr,
-					    "dbuf_getmsg fail");
-				if (DBufLength(&cptr->recvQ) < 510)
-				{
-					cptr->flags |= FLAGS_NONL;
-					break;
-				}
-				dolen = dbuf_get(&cptr->recvQ, readbuf, 511);
-				if (dolen > 0 && DBufLength(&cptr->recvQ))
-					DBufClear(&cptr->recvQ);
-			}
-
-			if (dolen > 0 &&
-			    (dopacket(cptr, readbuf, dolen) == FLUSH_BUFFER))
-				return FLUSH_BUFFER;
-		}
+		/* bail on short read! */
+		if (length < sizeof(readbuf))
+			return;
 	}
-	return 1;
 }
 
 /*
@@ -1965,20 +2023,6 @@ deadsocket:
 		}
 		length = 1;	/* for fall through case */
 
-#ifdef USE_POLL
-		if (pfd->revents & POLLIN)
-#else
-		if (FD_ISSET(cptr->fd, &read_set))
-#endif
-			length = read_packet(cptr, 1);
-		/* If we don't have anything to read and we have any recvQ, then
-		 * read_packet must still be called, but this time with the 2nd parameter
-		 * being 0 (=don't read). This is so we check if anything needs to
-		 * be dequeued from the receive queue (due to fake lag). -- Syzop
-		 */
-		else if (DBufLength(&cptr->recvQ) > 0)
-			length = read_packet(cptr, 0);
-
 #ifdef USE_SSL
 		if ((length != FLUSH_BUFFER) && (cptr->ssl != NULL) && 
 			IsSSLHandshake(cptr) &&
@@ -1995,8 +2039,6 @@ deadsocket:
 				{
 					length = -1;
 				}
-				/* if (IsSSLStartTLSHandshake(cptr))
-					length = read_packet(cptr, &read_set); */
 			}
 			if (SSL_is_init_finished(cptr->ssl))
 			{
