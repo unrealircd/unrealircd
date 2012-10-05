@@ -1648,7 +1648,6 @@ int  read_message(time_t delay, fdlist *listp)
 #ifdef USE_POLL
 	struct pollfd *pfd;
 	int poll_fd_count = 0;
-	ares_socket_t aresfds[ARES_GETSOCK_MAXNUM];
 #else
 	struct timeval wait;
 #endif
@@ -1791,28 +1790,6 @@ int  read_message(time_t delay, fdlist *listp)
 			}
 		}
 
-#ifdef USE_POLL
-		memset(&aresfds, 0, sizeof(aresfds));
-		v = ares_getsock(resolver_channel, aresfds, ARES_GETSOCK_MAXNUM);
-		for (k = 0; k < ARES_GETSOCK_MAXNUM; k++)
-		{
-			pfd = NULL;
-			if (ARES_GETSOCK_READABLE(v, k))
-			{
-				pfd = get_pollfd(POLL_RESOLVER, aresfds[k]);
-				pfd->events |= POLLIN;
-			}
-			if (ARES_GETSOCK_WRITABLE(v, k))
-			{
-				if (!pfd)
-					pfd = get_pollfd(POLL_RESOLVER, aresfds[k]);
-				pfd->events |= POLLOUT;
-			}
-		}
-#else
-		nfds = ares_fds(resolver_channel, &read_set, &write_set);
-#endif
-
 		if (me.fd >= 0)
 		{
 #ifdef USE_POLL
@@ -1854,16 +1831,6 @@ int  read_message(time_t delay, fdlist *listp)
 #endif
 	}
 
-	Debug((DEBUG_DNS, "Doing DNS async.."));
-#ifndef USE_POLL
-	ares_process(resolver_channel, &read_set, &write_set);
-#else
-	/* Ensure that ares processing gets called at least once every loop,
-	 * so it can handle timeouts. -- Syzop
-	 */
-	ares_process_fd(resolver_channel, ARES_SOCKET_BAD, ARES_SOCKET_BAD);
-#endif
-
 	/*
 	 * Check fd sets for the auth fd's (if set and valid!) first
 	 * because these can not be processed using the normal loops below.
@@ -1884,20 +1851,6 @@ int  read_message(time_t delay, fdlist *listp)
 #ifdef USE_POLL
 		pfd = &pollfds[i];
 		v = get_client_by_pollfd(pfd->fd);
-		if (v == POLL_RESOLVER)
-		{
-			/* Handle resolver stuff */
-			int rdfd = ARES_SOCKET_BAD;
-			int wrfd = ARES_SOCKET_BAD;
-			if (pfd->revents & POLLIN)
-				rdfd = pfd->fd;
-			if (pfd->revents & POLLOUT)
-				wrfd = pfd->fd;
-			ares_process_fd(resolver_channel, rdfd, wrfd);
-			/* handled, continue. */
-			nfds--;
-			continue;
-		}
 		if (v < 0)
 			continue; /* Hm, shouldn't happen, but still.. */
 		cptr = local[v];

@@ -81,9 +81,54 @@ static DNSReq *requests = NULL; /**< Linked list of requests (pending responses)
 
 static DNSCache *cache_list = NULL; /**< Linked list of cache */
 static DNSCache *cache_hashtbl[DNS_HASH_SIZE]; /**< Hash table of cache */
-static ares_socket_t aresfds[ARES_GETSOCK_MAXNUM];
 
 static unsigned int unrealdns_num_cache = 0; /**< # of cache entries in memory */
+
+static void unrealdns_io_cb(int fd, int revents, void *data)
+{
+	ares_socket_t read_fd, write_fd;
+	FDEntry *fde;
+
+	read_fd = write_fd = ARES_SOCKET_BAD;
+	fde = &fd_table[fd];
+
+	if (revents & FD_SELECT_READ)
+		read_fd = fde->fd;
+
+	if (revents & FD_SELECT_WRITE)
+		write_fd = fde->fd;
+
+	ares_process_fd(resolver_channel, read_fd, write_fd);
+}
+
+static void unrealdns_sock_state_cb(void *data, ares_socket_t fd, int read, int write)
+{
+	int selflags = 0;
+
+	if (read)
+		selflags |= FD_SELECT_READ;
+
+	if (write)
+		selflags |= FD_SELECT_WRITE;
+
+	fd_setselect(fd, selflags, unrealdns_io_cb, data);
+}
+
+/* Who thought providing a socket OPEN callback without a socket CLOSE callback was
+ * a good idea...?  --nenolod
+ */
+static int unrealdns_sock_create_cb(ares_socket_t fd, int type, void *data)
+{
+	fd_open(fd, "DNS Resolver Socket");
+	return ARES_SUCCESS;
+}
+
+static EVENT(unrealdns_timeout)
+{
+	ares_process_fd(resolver_channel, ARES_SOCKET_BAD, ARES_SOCKET_BAD);
+}
+
+static Event *unrealdns_timeout_hdl = NULL;
 
 void init_resolver(int firsttime)
 {
@@ -105,7 +150,8 @@ int optmask;
 	options.timeout = 3;
 	options.tries = 2;
 	options.flags = ARES_FLAG_NOALIASES|ARES_FLAG_IGNTC;
-	optmask = ARES_OPT_TIMEOUT|ARES_OPT_TRIES|ARES_OPT_FLAGS;
+	options.sock_state_cb = unrealdns_sock_state_cb;
+	optmask = ARES_OPT_TIMEOUT|ARES_OPT_TRIES|ARES_OPT_FLAGS|ARES_OPT_SOCK_STATE_CB;
 #ifndef _WIN32
 	/* on *NIX don't use the hosts file, since it causes countless useless reads.
 	 * on Windows we use it for now, this could be changed in the future.
@@ -141,16 +187,12 @@ int optmask;
 		MyFree(options.servers);
 	}
 
-	memset(&aresfds, 0, sizeof(aresfds));
-	v = ares_getsock(resolver_channel, aresfds, ARES_GETSOCK_MAXNUM);
-	for (k = 0; k < ARES_GETSOCK_MAXNUM; k++)
-		fd_open(aresfds[k], "DNS Resolver Socket");
+	ares_set_socket_callback(resolver_channel, unrealdns_sock_create_cb, NULL);
+	unrealdns_timeout_hdl = EventAddEx(NULL, "unrealdns_timeout", 1, 0, unrealdns_timeout, NULL);
 }
 
 void reinit_resolver(aClient *sptr)
 {
-	int k;
-
 #ifdef CHROOTDIR
 	/* Prevent people from killing their ircd accidently if in CHROOTDIR mode... */
 FILE *fd;
@@ -167,8 +209,7 @@ FILE *fd;
 	fclose(fd);
 #endif
 
-	for (k = 0; k < ARES_GETSOCK_MAXNUM; k++)
-		fd_close(aresfds[k]);
+	EventDel(unrealdns_timeout_hdl);
 
 	sendto_realops("%s requested reinitalization of resolver!", sptr->name);
 	sendto_realops("Destroying resolver channel, along with all currently pending queries...");
@@ -213,7 +254,7 @@ char *cache_name, ipv6;
 	r->cptr = cptr;
 	r->ipv6 = isipv6(&cptr->ip);
 	unrealdns_addreqtolist(r);
-	
+
 	/* Execute it */
 #ifndef INET6
 	/* easy */
@@ -251,7 +292,7 @@ char ipv4[4];
 	r->ipv6 = 0;
 #endif
 	unrealdns_addreqtolist(r);
-	
+
 	/* Execute it */
 #ifndef INET6
 	ares_gethostbyname(resolver_channel, r->name, AF_INET, unrealdns_cb_nametoip_link, r);
@@ -286,7 +327,7 @@ char ipv6 = r->ipv6;
 	newr->ipv6 = ipv6;
 	newr->name = strdup(he->h_name);
 	unrealdns_addreqtolist(newr);
-	
+
 #ifndef INET6
 	ares_gethostbyname(resolver_channel, he->h_name, AF_INET, unrealdns_cb_nametoip_verify, newr);
 #else
@@ -409,6 +450,7 @@ struct hostent *he2;
 			/* Retry for IPv4... */
 			r->ipv6 = 0;
 			ares_gethostbyname(resolver_channel, r->name, AF_INET, unrealdns_cb_nametoip_link, r);
+
 			return;
 		}
 #endif
