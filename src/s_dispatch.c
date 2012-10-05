@@ -72,9 +72,19 @@ void fd_setselect(int fd, int flags, IOCallbackFunc iocb, void *data)
 	fde->data = data;
 
 	if (flags & FD_SELECT_READ)
+	{
 		fde->read_callback = iocb;
+
+		if (flags & FD_SELECT_ONESHOT)
+			fde->read_oneshot = 1;
+	}
 	if (flags & FD_SELECT_WRITE)
+	{
 		fde->write_callback = iocb;
+
+		if (flags & FD_SELECT_ONESHOT)
+			fde->write_oneshot = 1;
+	}
 
 	fd_refresh(fd);
 }
@@ -141,6 +151,7 @@ void fd_select(time_t delay)
 	for (p = 0; p < (nfds + 1); p++)
 	{
 		FDEntry *fde;
+		IOCallbackFunc iocb;
 		int evflags = 0;
 
 		pfd = &pollfds[p];
@@ -160,14 +171,26 @@ void fd_select(time_t delay)
 
 		if (evflags & FD_SELECT_READ)
 		{
-			if (fde->read_callback != NULL)
-				fde->read_callback(fd, evflags, fde->data);
+			iocb = fde->read_callback;
+			if (fde->read_oneshot)
+				fde->read_callback = NULL;
+
+			if (iocb != NULL)
+				iocb(fd, evflags, fde->data);
+
+			fde->read_oneshot = 0;
 		}
 
 		if (evflags & FD_SELECT_WRITE)
 		{
-			if (fde->write_callback != NULL)
-				fde->write_callback(fd, evflags, fde->data);
+			iocb = fde->write_callback;
+			if (fde->write_oneshot)
+				fde->write_callback = NULL;
+
+			if (iocb != NULL)
+				iocb(fd, evflags, fde->data);
+
+			fde->write_oneshot = 0;
 		}
 	}
 }
