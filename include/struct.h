@@ -1380,14 +1380,14 @@ struct _configitem_deny_version {
 struct _configitem_deny_channel {
 	ConfigItem		*prev, *next;
 	ConfigFlag		flag;
-	char			*channel, *reason, *redirect;
+	char			*channel, *reason, *redirect, *class;
 	unsigned char	warn;
 };
 
 struct _configitem_allow_channel {
 	ConfigItem		*prev, *next;
 	ConfigFlag		flag;
-	char			*channel;
+	char			*channel, *class;
 };
 
 struct _configitem_allow_dcc {

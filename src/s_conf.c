@@ -2278,6 +2278,7 @@ void	config_rehash()
 		ircfree(deny_channel_ptr->redirect);
 		ircfree(deny_channel_ptr->channel);
 		ircfree(deny_channel_ptr->reason);
+		ircfree(deny_channel_ptr->class);
 		DelListItem(deny_channel_ptr, conf_deny_channel);
 		MyFree(deny_channel_ptr);
 	}
@@ -2286,6 +2287,7 @@ void	config_rehash()
 	{
 		next = (ListStruct *)allow_channel_ptr->next;
 		ircfree(allow_channel_ptr->channel);
+		ircfree(allow_channel_ptr->class);
 		DelListItem(allow_channel_ptr, conf_allow_channel);
 		MyFree(allow_channel_ptr);
 	}
@@ -3050,21 +3052,21 @@ ConfigItem_vhost *Find_vhost(char *name) {
 
 
 /** returns NULL if allowed and struct if denied */
-ConfigItem_deny_channel *Find_channel_allowed(char *name)
+ConfigItem_deny_channel *Find_channel_allowed(aClient *cptr, char *name)
 {
 	ConfigItem_deny_channel *dchannel;
 	ConfigItem_allow_channel *achannel;
 
 	for (dchannel = conf_deny_channel; dchannel; dchannel = (ConfigItem_deny_channel *)dchannel->next)
 	{
-		if (!match(dchannel->channel, name))
+		if (!match(dchannel->channel, name) && (dchannel->class ? !strcmp(cptr->class->name, dchannel->class) : 1))
 			break;
 	}
 	if (dchannel)
 	{
 		for (achannel = conf_allow_channel; achannel; achannel = (ConfigItem_allow_channel *)achannel->next)
 		{
-			if (!match(achannel->channel, name))
+			if (!match(achannel->channel, name) && (achannel->class ? !strcmp(cptr->class->name, achannel->class) : 1))
 				break;
 		}
 		if (achannel)
@@ -5089,15 +5091,19 @@ int	_conf_allow_channel(ConfigFile *conf, ConfigEntry *ce)
 	ConfigItem_allow_channel 	*allow = NULL;
 	ConfigEntry 	    	*cep;
 
+	allow = MyMallocEx(sizeof(ConfigItem_allow_channel));
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "channel"))
 		{
-			allow = MyMallocEx(sizeof(ConfigItem_allow_channel));
 			ircstrdup(allow->channel, cep->ce_vardata);
-			AddListItem(allow, conf_allow_channel);
+		}
+		else if (!strcmp(cep->ce_varname, "class"))
+		{
+			ircstrdup(allow->class, cep->ce_vardata);
 		}
 	}
+	AddListItem(allow, conf_allow_channel);
 	return 1;
 }
 
@@ -5105,7 +5111,7 @@ int	_test_allow_channel(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry		*cep;
 	int			errors = 0;
-	char			has_channel = 0;	
+	char			has_channel = 0, has_class = 0;
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (config_is_blankorempty(cep, "allow channel"))
@@ -5113,8 +5119,22 @@ int	_test_allow_channel(ConfigFile *conf, ConfigEntry *ce)
 			errors++;
 			continue;
 		}
+
 		if (!strcmp(cep->ce_varname, "channel"))
+		{
 			has_channel = 1;
+		}	
+		else if (!strcmp(cep->ce_varname, "class"))
+		{
+
+			if (has_class)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "allow channel::class");
+				continue;
+			}
+			has_class = 1;
+		}
 		else
 		{
 			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
@@ -9274,6 +9294,10 @@ int	_conf_deny_channel(ConfigFile *conf, ConfigEntry *ce)
 		{
 			deny->warn = config_checkval(cep->ce_vardata,CFG_YESNO);
 		}
+		else if (!strcmp(cep->ce_varname, "class"))
+		{
+			ircstrdup(deny->class, cep->ce_vardata);
+		}
 	}
 	AddListItem(deny, conf_deny_channel);
 	return 0;
@@ -9405,7 +9429,7 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 	}
 	else if (!strcmp(ce->ce_vardata, "channel"))
 	{
-		char has_channel = 0, has_warn = 0, has_reason = 0, has_redirect = 0;
+		char has_channel = 0, has_warn = 0, has_reason = 0, has_redirect = 0, has_class = 0;
 		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 		{
 			if (config_is_blankorempty(cep, "deny channel"))
@@ -9452,6 +9476,16 @@ int     _test_deny(ConfigFile *conf, ConfigEntry *ce)
 					continue;
 				}
 				has_warn = 1;
+			}
+			else if (!strcmp(cep->ce_varname, "class"))
+			{
+				if (has_class)
+				{
+					config_warn_duplicate(cep->ce_fileptr->cf_filename,
+						cep->ce_varlinenum, "deny channel::class");
+					continue;
+				}
+				has_class = 1;
 			}
 			else 
 			{

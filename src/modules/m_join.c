@@ -649,7 +649,7 @@ DLLFUNC CMD_FUNC(_do_join)
 				if (!IsOper(sptr) && !IsULine(sptr))
 				{
 					ConfigItem_deny_channel *d;
-					if ((d = Find_channel_allowed(name)))
+					if ((d = Find_channel_allowed(cptr, name)))
 					{
 						if (d->warn)
 						{
@@ -668,6 +668,11 @@ DLLFUNC CMD_FUNC(_do_join)
 							parv[0] = sptr->name;
 							parv[1] = d->redirect;
 							do_join(cptr, sptr, 2, parv);
+						}
+						if (d->class) {
+							sendto_one(sptr,
+							":%s %s %s :*** Can not join %s: Your class is not allowed",
+							me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, name);
 						}
 						continue;
 					}

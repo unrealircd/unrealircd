@@ -130,7 +130,7 @@ ConfigItem_cgiirc *Find_cgiirc(char *username, char *hostname, char *ip, CGIIRCT
 ConfigItem_ban 		*Find_ban(aClient *, char *host, short type);
 ConfigItem_ban 		*Find_banEx(aClient *,char *host, short type, short type2);
 ConfigItem_vhost	*Find_vhost(char *name);
-ConfigItem_deny_channel *Find_channel_allowed(char *name);
+ConfigItem_deny_channel *Find_channel_allowed(aClient *cptr, char *name);
 ConfigItem_alias	*Find_alias(char *name);
 ConfigItem_help 	*Find_Help(char *command);
 int			AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *username);

@@ -2476,3 +2476,5 @@
 - Remove old reference to networks/ directory from Windows installer
 - Disable sending of UHNAMES when HTM (High Traffic Mode) is ON,
   suggested by driew (#3900).
+- Add 'class' option to allow/deny channel so you can allow/deny
+  users based on their class. Patch from fspijkerman (#4125).

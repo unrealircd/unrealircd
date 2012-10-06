@@ -264,7 +264,7 @@ int  channel_canjoin(aClient *sptr, char *name)
 		return 1;
 	if (!conf_deny_channel)
 		return 1;
-	p = Find_channel_allowed(name);
+	p = Find_channel_allowed(sptr, name);
 	if (p)
 	{
 		sendto_one(sptr, ":%s NOTICE %s :*** %s",
