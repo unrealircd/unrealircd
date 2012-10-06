@@ -2474,3 +2474,5 @@
   always generating one.
 - Added missing Mod_Header to m_sasl.c
 - Remove old reference to networks/ directory from Windows installer
+- Disable sending of UHNAMES when HTM (High Traffic Mode) is ON,
+  suggested by driew (#3900).
