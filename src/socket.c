@@ -127,15 +127,7 @@ int  deliver_it(aClient *cptr, char *str, int len)
 		if (retval < 0 && (WSAGetLastError() == WSAEWOULDBLOCK ||
 		    WSAGetLastError() == WSAENOBUFS))
 # endif
-		{
 			retval = 0;
-			SetBlocked(cptr);
-		}
-		else if (retval > 0)
-		{
-			ClearBlocked(cptr);
-		}
-
 #endif
 #ifdef DEBUGMODE
 	if (retval < 0)

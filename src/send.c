@@ -120,7 +120,7 @@ void flush_connections(aClient* cptr)
 	if (&me == cptr)
 	{
 		for (i = LastSlot; i >= 0; i--)
-			if ((acptr = local[i]) && !(acptr->flags & FLAGS_BLOCKED)
+			if ((acptr = local[i])
 			    && ((DBufLength(&acptr->sendQ) > 0)
 #ifdef ZIP_LINKS
 				|| (IsZipped(acptr) && acptr->zip->outcount)
@@ -128,7 +128,7 @@ void flush_connections(aClient* cptr)
 				) )
 				send_queued(acptr);
 	}
-	else if (cptr->fd >= 0 && !(cptr->flags & FLAGS_BLOCKED)
+	else if (cptr->fd >= 0
 	    && ((DBufLength(&cptr->sendQ) > 0)
 #ifdef ZIP_LINKS
 		|| (IsZipped(cptr) && cptr->zip->outcount)
@@ -146,11 +146,24 @@ void flush_fdlist_connections(fdlist * listp)
 
 	for (fd = listp->entry[i = 1]; i <= listp->last_entry;
 	    fd = listp->entry[++i])
-		if ((cptr = local[fd]) && !(cptr->flags & FLAGS_BLOCKED)
+		if ((cptr = local[fd])
 		    && DBufLength(&cptr->sendQ) > 0)
 			send_queued(cptr);
 }
 #endif
+
+/*
+** write_data_handler
+**	This function is called as a callback when we want to dump
+**	data to a buffer as a function of the eventloop.
+*/
+static void write_data_handler(int fd, int revents, void *data)
+{
+	aClient *to = data;
+
+	if (!IsDead(to))
+		send_queued(to);
+}
 
 /*
 ** send_queued
@@ -165,8 +178,6 @@ int  send_queued(aClient *to)
 #ifdef ZIP_LINKS
 	int more = 0;
 #endif
-	if (IsBlocked(to))
-		return -1;		/* Can't write to already blocked socket */
 
 	/*
 	   ** Once socket is marked dead, we cannot start writing to it,
@@ -181,6 +192,7 @@ int  send_queued(aClient *to)
 		 */
 		return -1;
 	}
+
 #ifdef ZIP_LINKS
 	/*
 	** Here, we must make sure than nothing will be left in to->zip->outbuf
@@ -198,6 +210,7 @@ int  send_queued(aClient *to)
 		}
 	}
 #endif
+
 	while (DBufLength(&to->sendQ) > 0)
 	{
 		msg = dbuf_map(&to->sendQ, &len);
@@ -212,9 +225,8 @@ int  send_queued(aClient *to)
 		to->lastsq = DBufLength(&to->sendQ) / 1024;
 		if (rlen < len)
 		{
-			/* If we can't write full message, mark the socket
-			 * as "blocking" and stop trying. -Donwulff */
-			SetBlocked(to);
+			/* incomplete write due to EWOULDBLOCK, reschedule */
+			fd_setselect(to->fd, FD_SELECT_WRITE | FD_SELECT_ONESHOT, write_data_handler, to);
 			break;
 		}
 #ifdef ZIP_LINKS

@@ -1917,7 +1917,6 @@ int  read_message(time_t delay, fdlist *listp)
 			/*
 			   ** ...room for writing, empty some queue then...
 			 */
-			ClearBlocked(cptr);
 			if (!write_err)
 			{
 				if (DoList(cptr) && IsSendable(cptr))

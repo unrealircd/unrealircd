@@ -1842,7 +1842,8 @@ void SocketLoop(void *dummy)
 			delay = MIN(delay, TIMESEC);
 
 		/* XXX: can't use delay here until read_message() is fully dead. --nenolod */
-		fd_select(0);
+		fd_select(1000);
+#if 0
 #ifdef NO_FDLIST
 		(void)read_message(delay);
 		timeofday = time(NULL) + TSoffset;
@@ -1870,7 +1871,7 @@ void SocketLoop(void *dummy)
 			read_message(delay, NULL);	/*  check everything */
 			timeofday = time(NULL) + TSoffset;
 		}
-
+#endif
 #endif
 		/*
 		 * Debug((DEBUG_DEBUG, "Got message(s)")); 
