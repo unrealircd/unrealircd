@@ -2482,3 +2482,4 @@
   defined (#4091).
 - Fix bug where recursive includes would hang the IRCd, patch from
   binki with some minor modifications, reported by warg (#3919).
+- Upgraded to c-ares 1.9.1. Updated configure & other files.

@@ -3,7 +3,7 @@ URL="http://www.unrealircd.com/files/curl-latest.tar.gz"
 OUTF="curl-latest.tar.gz"
 OUTD="curl-latest"
 ARESPATH="`pwd`/extras/c-ares"
-CARESVERSION="1.7.3"
+CARESVERSION="1.9.1"
 if [ ! -f "Unreal.nfo" ]; then
 	echo "Please run this program from your UnrealIRCd directory"
 	echo "(usually $HOME/Unreal3.2 or something like that)"
