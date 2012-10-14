@@ -1442,9 +1442,21 @@ struct _configitem_alias_format {
 	regex_t expr;
 };
 
+/**
+ * In a rehash scenario, conf_include will contain all of the included
+ * configs that are actually in use. It also will contain includes
+ * that are being processed so that the configuration may be updated.
+ * INCLUDE_NOTLOADED is set on all of the config files that are being
+ * loaded and unset on already-loaded files. See
+ * unload_loaded_includes() and load_includes().
+ */
 #define INCLUDE_NOTLOADED  0x1
 #define INCLUDE_REMOTE     0x2
 #define INCLUDE_DLQUEUED   0x4
+/**
+ * Marks that an include was loaded without error. This seems to
+ * overlap with the INCLUDE_NOTLOADED meaning(?). --binki
+ */
 #define INCLUDE_USED       0x8
 	
 struct _configitem_include {
@@ -1455,6 +1467,8 @@ struct _configitem_include {
 	char *url;
 	char *errorbuf;
 #endif
+	char *included_from;
+	int included_from_line;
 };
 
 struct _configitem_help {

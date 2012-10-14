@@ -352,7 +352,7 @@ void delete_cgiircblock(ConfigItem_cgiirc *e);
  * Config parser (IRCd)
 */
 int			init_conf(char *rootconf, int rehash);
-int			load_conf(char *filename);
+int			load_conf(char *filename, const char *original_path);
 void			config_rehash();
 int			config_run();
 /*
@@ -399,9 +399,10 @@ MODVAR ConfigFile		*conf = NULL;
 MODVAR int			config_error_flag = 0;
 int			config_verbose = 0;
 
-void add_include(char *);
+void add_include(const char *filename, const char *included_from, int included_from_line);
 #ifdef USE_LIBCURL
-void add_remote_include(const char *, const char *, int, const char *);
+void add_remote_include(const char *, const char *, int, const char *, const char *included_from, int included_from_line);
+void update_remote_include(ConfigItem_include *inc, const char *file, int, const char *errorbuf);
 int remote_include(ConfigEntry *ce);
 #endif
 void unload_notloaded_includes(void);
@@ -1868,7 +1869,16 @@ int	init_conf(char *rootconf, int rehash)
 	bzero(&settings, sizeof(settings));
 	bzero(&requiredstuff, sizeof(requiredstuff));
 	config_setdefaultsettings(&tempiConf);
-	if (load_conf(rootconf) > 0)
+	/*
+	 * the rootconf must be listed in the conf_include for include
+	 * recursion prevention code and sanity checking code to be
+	 * made happy :-). Think of it as us implicitly making an
+	 * in-memory config file that looks like:
+	 *
+	 * include "unrealircd.conf";
+	 */
+	add_include(rootconf, "[thin air]", -1);
+	if (load_conf(rootconf, rootconf) > 0)
 	{
 		charsys_reset_pretest();
 		if ((config_test() < 0) || (callbacks_check() < 0) || (efunctions_check() < 0) ||
@@ -1981,14 +1991,95 @@ int	init_conf(char *rootconf, int rehash)
 	return 0;
 }
 
-int	load_conf(char *filename)
+/**
+ * Processes filename as part of the IRCd's configuration.
+ *
+ * One _must_ call add_include() or add_remote_include() before
+ * calling load_conf(). This way, include recursion may be detected
+ * and reported to the user as an error instead of causing the IRCd to
+ * hang in an infinite recursion, eat up memory, and eventually
+ * overflow its stack ;-). (reported by warg).
+ *
+ * This function will set INCLUDE_USED on the config_include list
+ * entry if the config file loaded without error.
+ *
+ * @param filename the file where the conf may be read from
+ * @param original_path the path or URL used to refer to this file.
+ *        (mostly to support remote includes' URIs for recursive include detection).
+ * @return 1 on success, a negative number on error
+ */
+int	load_conf(char *filename, const char *original_path)
 {
 	ConfigFile 	*cfptr, *cfptr2, **cfptr3;
 	ConfigEntry 	*ce;
+	ConfigItem_include *inc, *my_inc;
 	int		ret;
+	int counter;
 
 	if (config_verbose > 0)
 		config_status("Loading config file %s ..", filename);
+
+	/*
+	 * Check if we're accidentally including a file a second
+	 * time. We should expect to find one entry in this list: the
+	 * entry for our current file.
+	 */
+	counter = 0;
+	my_inc = NULL;
+	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
+	{
+		/*
+		 * ignore files which were part of a _previous_
+		 * successful rehash.
+		 */
+		if (!(inc->flag.type & INCLUDE_NOTLOADED))
+			continue;
+
+		if (!counter)
+			my_inc = inc;
+
+		if (!strcmp(filename, inc->file))
+		{
+			counter ++;
+			continue;
+		}
+#ifdef _WIN32
+		if (!stricmp(filename, inc->file))
+		{
+			counter ++;
+			continue;
+		}
+#endif
+#ifdef USE_LIBCURL
+		if (inc->url && !strcmp(original_path, inc->url))
+		{
+			counter ++;
+			continue;
+		}
+#endif
+	}
+	if (counter > 1 || my_inc->flag.type & INCLUDE_USED)
+	{
+		config_error("%s:%d:include: Config file %s has been loaded before %d time."
+			     " You may include each file only once.",
+			     my_inc->included_from, my_inc->included_from_line,
+			     filename, counter - 1);
+		return -1;
+	}
+	if (counter < 1 || !my_inc)
+	{
+		/*
+		 * The following is simply for debugging/[sanity
+		 * checking]. To make sure that functions call
+		 * add_include() or add_remote_include() before
+		 * calling us.
+		 */
+		config_error("I don't have a record for %s being included."
+			     " Perhaps someone forgot to call add_include()?",
+			     filename);
+	}
+	/* end include recursion checking code */
+
 	if ((cfptr = config_load(filename)))
 	{
 		for (cfptr3 = &conf, cfptr2 = conf; cfptr2; cfptr2 = cfptr2->cf_next)
@@ -2012,13 +2103,14 @@ int	load_conf(char *filename)
 				 if (ret < 0) 
 					 	return ret;
 			}
+		my_inc->flag.type |= INCLUDE_USED;
 		return 1;
 	}
 	else
 	{
 		config_error("Could not load config file %s", filename);
 		return -1;
-	}	
+	}
 }
 
 void	config_rehash()
@@ -3146,13 +3238,13 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 		return -1;
 	}	
 	for (i = 0; i < files.gl_pathc; i++) {
-		ret = load_conf(files.gl_pathv[i]);
+		add_include(files.gl_pathv[i], ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		ret = load_conf(files.gl_pathv[i], files.gl_pathv[i]);
 		if (ret < 0)
 		{
 			globfree(&files);
 			return ret;
 		}
-		add_include(files.gl_pathv[i]);
 	}
 	globfree(&files);
 #elif defined(_WIN32)
@@ -3173,19 +3265,18 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 	}
 	if (cPath) {
 		path = MyMalloc(strlen(cPath) + strlen(FindData.cFileName)+1);
-		strcpy(path,cPath);
-		strcat(path,FindData.cFileName);
-		ret = load_conf(path);
-		if (ret >= 0)
-			add_include(path);
+		strcpy(path, cPath);
+		strcat(path, FindData.cFileName);
+
+		add_include(path, ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		ret = load_conf(path, path);
 		free(path);
 
 	}
 	else
 	{
-		ret = load_conf(FindData.cFileName);
-		if (ret >= 0)
-			add_include(FindData.cFileName);
+		add_include(FindData.cFileName, ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		ret = load_conf(FindData.cFileName, FindData.cFileName);
 	}
 	if (ret < 0)
 	{
@@ -3199,32 +3290,25 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 			path = MyMalloc(strlen(cPath) + strlen(FindData.cFileName)+1);
 			strcpy(path,cPath);
 			strcat(path,FindData.cFileName);
-			ret = load_conf(path);
-			if (ret >= 0)
-			{
-				add_include(path);
-				free(path);
-			}
-			else
-			{
-				free(path);
+
+			add_include(path, ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			ret = load_conf(path, path);
+			free(path);
+			if (ret < 0)
 				break;
-			}
 		}
 		else
 		{
-			ret = load_conf(FindData.cFileName);
-			if (ret >= 0)
-				add_include(FindData.cFileName);
+			add_include(FindData.cFileName, ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+			ret = load_conf(FindData.cFileName, FindData.cFileName);
 		}
 	}
 	FindClose(hFind);
 	if (ret < 0)
 		return ret;
 #else
-	ret = load_conf(ce->ce_vardata);
-	if (ret >= 0)
-		add_include(ce->ce_vardata);
+	add_include(ce->ce_vardata, ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+	ret = load_conf(ce->ce_vardata, ce->ce_vardata);
 	return ret;
 #endif
 	return 1;
@@ -9730,7 +9814,7 @@ static void conf_download_complete(const char *url, const char *file, const char
 	}
 
 	if (!file && !cached)
-		add_remote_include(file, url, 0, errorbuf); /* DOWNLOAD FAILED */
+		update_remote_include(inc, file, 0, errorbuf); /* DOWNLOAD FAILED */
 	else
 	{
 		char *urlfile = url_getfilename(url);
@@ -9744,7 +9828,7 @@ static void conf_download_complete(const char *url, const char *file, const char
 #ifdef REMOTEINC_SPECIALCACHE
 			unreal_copyfileex(inc->file, unreal_mkcache(url), 0);
 #endif
-			add_remote_include(tmp, url, 0, NULL);
+			update_remote_include(inc, tmp, 0, NULL);
 		}
 		else
 		{
@@ -9753,7 +9837,7 @@ static void conf_download_complete(const char *url, const char *file, const char
 			  remove(file).
 			*/
 			unreal_copyfileex(file, tmp, 1);
-			add_remote_include(tmp, url, 0, NULL);
+			update_remote_include(inc, tmp, 0, NULL);
 #ifdef REMOTEINC_SPECIALCACHE
 			unreal_copyfileex(file, unreal_mkcache(url), 0);
 #endif
@@ -9946,6 +10030,13 @@ char *find_loaded_remote_include(char *url)
 	return NULL;
 }	
 
+/**
+ * Non-asynchronous remote inclusion to give a user better feedback
+ * when first starting his IRCd.
+ *
+ * The asynchronous friend is rehash() which merely queues remote
+ * includes for download using download_file_async().
+ */
 int remote_include(ConfigEntry *ce)
 {
 	char *errorbuf = NULL;
@@ -9977,8 +10068,8 @@ int remote_include(ConfigEntry *ce)
 			}
 #endif
 		}
-		if ((ret = load_conf(file)) >= 0)
-			add_remote_include(file, ce->ce_vardata, INCLUDE_USED, NULL);
+		add_remote_include(file, ce->ce_vardata, 0, NULL, ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		ret = load_conf(file, ce->ce_vardata);
 		free(file);
 		return ret;
 	}
@@ -10006,64 +10097,94 @@ int remote_include(ConfigEntry *ce)
 		}
 		if (config_verbose > 0)
 			config_status("Loading %s from download", ce->ce_vardata);
-		if ((ret = load_conf(file)) >= 0)
-			add_remote_include(file, ce->ce_vardata, INCLUDE_USED, NULL);
+		add_remote_include(file, ce->ce_vardata, 0, NULL, ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		ret = load_conf(file, ce->ce_vardata);
 		return ret;
 	}
 	return 0;
 }
 #endif
-		
-void add_include(char *file)
+
+/**
+ * Add an item to the conf_include list for the specified file.
+ *
+ * Checks for whether or not we're performing recursive includes
+ * belong in conf_load() because that function is able to return an
+ * error code. Any checks in here will end up being ignored by callers
+ * and thus will gain us nothing.
+ *
+ * @param file path to the include file.
+ */		
+void add_include(const char *file, const char *included_from, int included_from_line)
 {
 	ConfigItem_include *inc;
-	if (!stricmp(file, CPATH))
-		return;
 
-	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
-	{
-		if (!(inc->flag.type & INCLUDE_NOTLOADED))
-			continue;
-		if (inc->flag.type & INCLUDE_REMOTE)
-			continue;
-		if (!stricmp(file, inc->file))
-			return;
-	}
 	inc = MyMallocEx(sizeof(ConfigItem_include));
 	inc->file = strdup(file);
-	inc->flag.type = INCLUDE_NOTLOADED|INCLUDE_USED;
+	inc->flag.type = INCLUDE_NOTLOADED;
+	inc->included_from = strdup(included_from);
+	inc->included_from_line = included_from_line;
 	AddListItem(inc, conf_include);
 }
 
 #ifdef USE_LIBCURL
-void add_remote_include(const char *file, const char *url, int flags, const char *errorbuf)
+/**
+ * Adds a remote include entry to the config_include list.
+ *
+ * This is to be called whenever the included_from and
+ * included_from_line parameters are known. This means that during a
+ * rehash when downloads are done asynchronously, you call this with
+ * the inclued_from and included_from_line information. After the
+ * download is complete and you know there it is stored in the FS,
+ * call update_remote_include().
+ */
+void add_remote_include(const char *file, const char *url, int flags, const char *errorbuf, const char *included_from, int included_from_line)
 {
 	ConfigItem_include *inc;
 
-	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
-	{
-		if (!(inc->flag.type & INCLUDE_REMOTE))
-			continue;
-		if (!(inc->flag.type & INCLUDE_NOTLOADED))
-			continue;
-		if (!stricmp(url, inc->url))
-		{
-			inc->flag.type |= flags;
-			return;
-		}
-	}
-
+	/* we rely on MyMallocEx() zeroing the ConfigItem_include */
 	inc = MyMallocEx(sizeof(ConfigItem_include));
+	if (included_from)
+	{
+		inc->included_from = strdup(included_from);
+		inc->included_from_line = included_from_line;
+	}
+	inc->url = strdup(url);
+
+	update_remote_include(inc, file, INCLUDE_NOTLOADED|INCLUDE_REMOTE|flags, errorbuf);
+	AddListItem(inc, conf_include);
+}
+
+/**
+ * Update certain information in a remote include's config_include list entry.
+ *
+ * @param file the place on disk where the downloaded remote include
+ *        may be found
+ * @param flags additional flags to set on the config_include entry
+ * @param errorbuf non-NULL if there were errors encountered in
+ *        downloading. The error will be stored into the config_include
+ *        entry.
+ */
+void update_remote_include(ConfigItem_include *inc, const char *file, int flags, const char *errorbuf)
+{
+	/*
+	 * file may be NULL when errorbuf is non-NULL and vice-versa.
+	 */
 	if (file)
 		inc->file = strdup(file);
-	inc->url = strdup(url);
-	inc->flag.type = (INCLUDE_NOTLOADED|INCLUDE_REMOTE|flags);
+	inc->flag.type |= flags;
+
 	if (errorbuf)
 		inc->errorbuf = strdup(errorbuf);
-	AddListItem(inc, conf_include);
 }
 #endif
 
+/**
+ * Clean up conf_include after a rehash fails because of a
+ * configuration file error.
+ *
+ * Duplicates some in unload_loaded_include().
+ */
 void unload_notloaded_includes(void)
 {
 	ConfigItem_include *inc, *next;
@@ -10083,12 +10204,17 @@ void unload_notloaded_includes(void)
 			}
 #endif
 			free(inc->file);
+			free(inc->included_from);
 			DelListItem(inc, conf_include);
 			free(inc);
 		}
 	}
 }
 
+/**
+ * Clean up conf_include after a successful rehash to make way for
+ * load_includes().
+ */
 void unload_loaded_includes(void)
 {
 	ConfigItem_include *inc, *next;
@@ -10108,18 +10234,24 @@ void unload_loaded_includes(void)
 			}
 #endif
 			free(inc->file);
+			free(inc->included_from);
 			DelListItem(inc, conf_include);
 			free(inc);
 		}
 	}
 }
-			
+
+/**
+ * Mark loaded includes as loaded by removing the INCLUDE_NOTLOADED
+ * flag. Meant to be called only after calling
+ * unload_loaded_includes().
+ */			
 void load_includes(void)
 {
 	ConfigItem_include *inc;
 
-	/* Doing this for all the modules should actually be faster
-	 * than only doing it for modules that are not-loaded
+	/* Doing this for all the includes should actually be faster
+	 * than only doing it for includes that are not-loaded
 	 */
 	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
 		inc->flag.type &= ~INCLUDE_NOTLOADED; 

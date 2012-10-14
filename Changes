@@ -2480,3 +2480,5 @@
   users based on their class. Patch from fspijkerman (#4125).
 - Use poll() in the remote includes functions when USE_POLL is
   defined (#4091).
+- Fix bug where recursive includes would hang the IRCd, patch from
+  binki with some minor modifications, reported by warg (#3919).
