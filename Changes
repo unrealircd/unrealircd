@@ -2478,3 +2478,5 @@
   suggested by driew (#3900).
 - Add 'class' option to allow/deny channel so you can allow/deny
   users based on their class. Patch from fspijkerman (#4125).
+- Use poll() in the remote includes functions when USE_POLL is
+  defined (#4091).
