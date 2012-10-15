@@ -2519,6 +2519,10 @@ set {
 <p><font class="set">set::options::allow-insane-bans;</font><br>
   Allow insane broad bans like /GLINE *@*.xx. This makes it very easy to
   accidentally ban everyone on your network, so use with great care!</p>
+<p><font class="set">set::options::disable-cap;</font><br>
+  Disable IRC Client Capabilities Extensions (CAP). Note that this makes
+  SASL and various other features unavailable or harder for clients to
+  use.</p>
 <p id="set_nopost_ban_action"><font class="set">set::nopost::ban-action</font> (requires <a href="#modules_m_nopost">m_nopost</a>)<br />
   Action to take on a user if he tries to perform an HTTP POST command.
   The allowed values are: kill, gline, gzline, kline, zline, shun, and tempshun.

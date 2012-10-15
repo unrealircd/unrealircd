@@ -7597,6 +7597,9 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "allow-part-if-shunned")) {
 					tempiConf.allow_part_if_shunned = 1;
 				}
+				else if (!strcmp(cepp->ce_varname, "disable-cap")) {
+					tempiConf.disable_cap = 1;
+				}
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "hosts")) {
@@ -8355,6 +8358,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 				else if (!strcmp(cepp->ce_varname, "allow-part-if-shunned")) {
 					CheckDuplicate(cepp, options_allow_part_if_shunned, "options::allow-part-if-shunned");
+				}
+				else if (!strcmp(cepp->ce_varname, "disable-cap")) {
+					CheckDuplicate(cepp, options_disable_cap, "options::disable-cap");
 				}
 				else
 				{

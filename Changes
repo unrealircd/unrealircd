@@ -2487,3 +2487,5 @@
   no advantage anyway. Reported by nenolod (#4129).
 - Various updates to makefile.win32 and .iss file, found during
   building new versions of zlib, openssl, and curl.
+- Added set::options::disable-cap, which can be used to disable the
+  new CAP support (#4104).

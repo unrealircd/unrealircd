@@ -83,6 +83,7 @@ struct zConfiguration {
 	unsigned mkpasswd_for_everyone:1;
 	unsigned allow_insane_bans;
 	unsigned allow_part_if_shunned:1;
+	unsigned disable_cap:1;
 	unsigned check_target_nick_bans:1;
 	unsigned use_egd : 1;
 	long host_timeout;
@@ -266,6 +267,8 @@ extern MODVAR aConfiguration iConf;
 
 #define ALLOW_PART_IF_SHUNNED	iConf.allow_part_if_shunned
 
+#define DISABLE_CAP	iConf.disable_cap
+
 #define BAN_VERSION_TKL_TIME	iConf.ban_version_tkl_time
 #define SILENCE_LIMIT (iConf.silence_limit ? iConf.silence_limit : 15)
 
@@ -306,6 +309,7 @@ struct SetCheck {
 	unsigned has_dont_resolve:1;
 	unsigned has_mkpasswd_for_everyone:1;
 	unsigned has_allow_part_if_shunned:1;
+	unsigned has_disable_cap:1;
 	unsigned has_ssl_egd:1;
 	unsigned has_ssl_server_cipher_list :1;
 	unsigned has_dns_timeout:1;
@@ -402,6 +406,7 @@ struct SetCheck {
 	unsigned has_options_mkpasswd_for_everyone:1;
 	unsigned has_options_allow_insane_bans:1;
 	unsigned has_options_allow_part_if_shunned:1;
+	unsigned has_options_disable_cap:1;
 	int cgiirc_type; /* cheat :( */
 	unsigned has_cgiirc_hosts:1;
 	unsigned has_cgiirc_webpass:1;
