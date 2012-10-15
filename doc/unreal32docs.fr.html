@@ -3349,6 +3349,11 @@ spamfilter {
 				Autorise des bans étendus déraisonables tels que /GLINE *@*.fr
 				Avec ceci, vous pouvez très facilement bannir tout le monde de votre réseau, donc faites très attention !
 			</p>
+			<p>
+				<font class="set">set::options::disable-cap;</font><br>
+				Désactive les Client Capabilities Extensions (CAP).
+				Notez que ceci rend SASL et d'autres fonctionnalités indisponibles ou plus difficiles à utiliser pour les clients.
+			</p>
 			<p id="set_nopost_ban_action">
 				<font class="set">set::nopost::ban-action</font> (requière <a href="#modules_m_nopost">m_nopost</a>)<br>
 				Action à effectuer si un utilisateur essaye d'utiliser une commande HTTP POST.
