@@ -69,7 +69,8 @@ English |
   -- 3.16. <a href="#feature_nickchars">Nick Character Sets</a><br>
   -- 3.17. <a href="#feature_cgiirc">CGI:IRC Support</a><br>
   -- 3.18. <a href="#feature_timesync">Time Synchronization</a><br>
-  -- 3.19. <a href="#feature_other">Other features</a><br>
+  -- 3.19. <a href="#feature_authtypes">Authentication Types</a><br>
+  -- 3.20. <a href="#feature_other">Other features</a><br>
   4. <a href="#configuringyourunrealircdconf">Configuring your unrealircd.conf 
   file</a><br>
   ---4.1. <a href="#configurationfileexplained">Configuration file explained</a><br>
@@ -709,7 +710,79 @@ the IRCd will continue to boot regardlessly (should rarely happen).</p>
    the <a href="#setblock">set documentation</a> for more information.</p>
 </div>
 
-<p><font size="+2"><b>3.19 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
+<p><font size="+2"><b>3.19 - Authentication Types</b></font><a name="feature_authtypes"></a></p><div class="desc">
+<p>At various places in the configuration file, for example the <a
+href="#operblock">oper block</a>, <a href="#allowblock">allow block</a> and
+<a href="#linkblock">link block</a>, you can authenticate clients by password or other
+means.<br>
+
+You can specify the password as plaintext, but you can also specify an
+authentication type.<br>
+The following auth-types are available:<br>
+<table border="0">
+<TR><TD><b>Auth-type:</b></TD><TD><b>Description:</b></TD><TD><b>Dependencies:</b></TD><TD><b>How to generate:</b></TD></TR>
+<TR><TD><b>crypt</b></TD><TD>UNIX crypt</TD><TD>Windows: OpenSSL required</TD><TD>/MKPASSWD crypt :password</TD></TR>
+<TR><TD><b>md5</b></TD><TD>MD5 with salt</TD><TD>Always available</TD><TD>/MKPASSWD md5 :password</TD></TR>
+<TR><TD><b>sha1</b></TD><TD>SHA1 with salt</TD><TD>OpenSSL required</TD><TD>/MKPASSWD sha1 :password</TD></TR>
+<TR><TD><b>ripemd160</b></TD><TD>RIPEMD160 with salt</TD><TD>OpenSSL required</TD><TD>/MKPASSWD ripemd160 :password</TD></TR>
+<TR><TD><b>sslclientcert</b></TD><TD>SSL Client certificate</TD><TD>OpenSSL required</TD><TD>Path to public certifcate .pem file.</TD></TR>
+<TR><TD><b>sslclientcertfp</b></TD><TD>SSL Client certificate fingerprint</TD><TD>OpenSSL required</TD><TD>openssl x509 -in name-of-pem-file.pem -sha256 -noout -fingerprint</TD></TR>
+</table>
+The /MKPASSWD command can be used online as IRCOp. Alternatively, you can
+use the command line interface from the shell: <i>./unreal mkpasswd hashtype
+password</i>.<br>
+Not all authentication types are available on all systems, see the
+dependencies (prerequisites) in the table of above.<br>
+<br>
+<b>Example: MD5 hashed password in vhost block</b><br>
+1. Say, you want to use the password <i>test</i> and want to use md5 hashed
+passwords.<br>
+ If you are an IRCOp then you can simply type <i>/MKPASSWD md5 :test</i>.<br>
+Alternatively, instead of IRC you can run the following command on the
+shell: <i>./unreal mkpasswd md5 test</i>.<br>
+Using either method, the outputted hashed password will look like <i>$NIV0bSfG$UTMvI/KdMwe4cZqmT/23qw==</i>
+(the exact string will vary!)<br>
+2. Now, put this string in your vhost block and let UnrealIRCd know it's an
+md5 hash. Example:
+<pre>vhost {
+    vhost I.love.Tux;
+    from { userhost *@*; };
+    login Tux;
+    password "$NIV0bSfG$UTMvI/KdMwe4cZqmT/23qw==" { md5; };
+};</pre>
+3. To use this vhost, type /VHOST Tux test<br>
+<br>
+<b>Example: Authentication by SSL Client certificates</b><br>
+<tt>sslclientcert</tt> and <tt>sslclientcertfp</tt> are exceptional
+auth-types which can be used to authenticate SSL users by their client
+certificate.<br>
+With these authentication methods you can be sure the user is using SSL and
+is using the specified client certificate.<br>
+Here's an example of how to use it for the oper block:<br>
+1. Create an SSL client certificate if you don't have one already (search
+   the web for 'create ssl certificate' if you don't know how)<br>
+2. Grab the SHA256 hash of the certificate by running:
+<pre>openssl x509 -in name-of-pem-file.pem -sha256 -noout -fingerprint</pre>
+3. In the configuration file, replace the original password (<i>test</i> in our example) with the hash
+and specify the sslclientcertfp auth-type. Here's an example:<br>
+<pre>oper test {
+     password "E7:4D:46:F1:9F:F4:68:F5:E8:E3:49:CC:28:5D:F9:65:85:BA:4F:16:B6:49:02:E3:34:E6:E7:6A:FE:76:A7:98" { sslclientcertfp; };
+     flags { global; can_override; };
+     class clients;
+   };</pre>
+4. Rehash your server (/REHASH).<br>
+5. Now, connect with your SSL client and make sure it uses your SSL client
+certificate of step #2.<br>
+6. You can now oper up with <i>/oper test x</i>. The password must still
+be specified but may be anything (<i>x</i> in this example), it is ignored
+as the SSL client certificate is used for authentication.<br>
+7. Congratulations, you are now using the most secure authentication method
+available in UnrealIRCd.<br>
+<br>
+Another very useful place to use <tt>sslclientcertfp</tt> is in <a href="#linkblock_passwordreceive">link::password-receive</a>
+</p></div>
+
+<p><font size="+2"><b>3.20 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
 <p>UnrealIRCd has a lot of features so not everything is covered here... You'll find that out by yourself.</p></div>
 
 <p> </p>
@@ -1023,33 +1096,8 @@ listen *:6601 {
 <p id="operblock_password">The <b>oper::password::</b> is the password the oper must specify.
   <b>oper::password::auth-type</b> allows you to specify an authentication method 
   for this password. Don't specify <b>oper::password::auth-type</b> for plaintext password.
-  Valid auth-types are <tt>crypt</tt>, <tt>md5</tt>, <tt>sha1</tt>, <tt>ripemd160</tt>,
-  and <tt>sslclientcert</tt>. Specifying any one of these types means that the
-  value of <b>oper::password::</b> is a hash generated with
-  <a href="#cmd_mkpasswd">mkpasswd</a>.
-</p>
-<p id="operblock_password_sslclientcert">
-  <tt>sslclientcert</tt> is an exceptional auth-type. When this is
-  chosen as the auth-type, <b>oper::password::</b> should be a file
-  path (relative to UnrealIRCd's installation directory). The file
-  should be a PEM-encoded SSL certificate (the public certificate, not
-  a key). This specifies that only an IRC client that
-  <ol>
-    <li>is connected using SSL</li>
-    <li>presented the matching client certficate when connecting</li>
-    <li>has access to the private key associated with the certficiate file</li>
-  </ol>
-  may connect. Of course, this feature requires that UnrealIRCd be
-  compiled with SSL support. Also, as any SSL certificate's associated
-  key is much longer than a normal human's password and much more
-  random, this is the securest authentication option. To oper
-  up when you have specified a client SSL certificate as the oper's
-  password, just ensure that the client is set up correctly and issue
-  <pre>/oper &lt;name&gt; :</pre>. The <tt>sslclientcert</tt>
-  auth-type may also be used
-  for <a href="#linkblock_passwordreceive">link::password-receive</a>
-  to secure <a href="#linkblock">link block</a>s.
-  </ol>
+  Valid auth-types, as was as an example on how to use them with oper
+  blocks, can be found under <a href="#feature_authtypes">Authentication Types</a>.
 </p>
 <p>Please note that BOTH the password and login name are case sensitive.</p>
 <p>The <b>oper::class</b> directive specifies the name of a preexisting (appears before 
@@ -1388,9 +1436,8 @@ drpass {
 	die &lt;die-password&gt; { &lt;auth-type&gt;; };
 };</pre></p>
 <p>This block sets the /restart and /die passwords with drpass::restart and drpass::die 
-  respectively. The drpass::restart:: and drpass::die:: allow you to specify the 
-  type of authentication used by this item. The currently supported authentication 
-  types are crypt, md5, and sha1, ripemd-160.</p>
+  respectively.
+  Instead of a plaintext password, you can also use other <a href="#feature_authtypes">Authentication Types</a>.</p>
 <p>Example:</p>
 <pre>
 drpass {
@@ -1926,8 +1973,10 @@ vhost {
   to be eligible for the vhost. You may specify more than one hostmask. The vhost::login 
   in the login name the user must enter and vhost::password is the password that 
   must be entered. The vhost::password:: allows you to specify the type of 
-  authentication used by this item. The currently supported authentication types 
-  are crypt, md5, and sha1, ripemd-160. Lastly vhost::swhois allows you to add an extra 
+  authentication used by this item. See <a
+  href="#feature_authtypes">Authentication Types</a> for a list of available
+  types.
+  Lastly vhost::swhois allows you to add an extra 
   line to a users whois, exactly as it does in the Oper Block oper::swhois.</p>
 <p>Example:<br>
 <pre>
@@ -2048,12 +2097,9 @@ link &lt;server-name&gt; {
   The password used for connecting to the remote server, must be plain-text.
  </p>
 <p id="linkblock_passwordreceive"><b>password-receive</b><br> The password used for validating
-  incoming links. This may be encrypted in the same manner
-  as <a href="#operblock_password"><b>oper::password</b></a>. It may,
-  notably, be set up to use
-  the <a href="#operblock_password_sslclientcert"><tt>sslclientcert</tt></a>
-  auth-type. In fact, this is strongly recommended as it is infinitely
-  more resilient against brute-force attacks.
+  incoming links. It is strongly recommended to use hashed passwords or
+  the <tt>sslclientcertfp</tt> auth-type. See <a href="#feature_authtypes">Authentication
+  Types</a> for more information.<br>
 </p>
 <p><b>hub vs leaf</b><br>
   A hub has multiple servers linked to it, a leaf has only one link... to you. 
@@ -3526,14 +3572,9 @@ to get more information on a command.</p>
   </tr>
   <tr id="cmd_mkpasswd"> 
     <td height="36">mkpasswd &lt;auth-type&gt; &lt;password&gt;<br></td>
-    <td>Will encrypt &lt;password&gt; using the &lt;auth-type&gt; hashing method. Available hash methods:
-      <ul>
-	<li>crypt     [<em>Windows support requires SSL</em>]</li>
-	<li>md5</li>
-	<li>sha1      [<em>requires SSL</em>]</li>
-	<li>ripemd160 [<em>requires SSL</em>]</li>
-      </ul>
-<br></td>
+    <td>Will encrypt &lt;password&gt; using the &lt;auth-type&gt; hashing method.
+    See <a href="#feature_authtypes">Authentication Types</a> for available
+    hash methods.</td>
     <td>IRCop</td>
   </tr>
   <tr> 

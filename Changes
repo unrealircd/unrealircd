@@ -2489,3 +2489,14 @@
   building new versions of zlib, openssl, and curl.
 - Added set::options::disable-cap, which can be used to disable the
   new CAP support (#4104).
+- Added auth method 'sslclientcertfp' which provides an alternative
+  method to authenticate users with SSL client certificates based
+  on SHA256 fingerprints. This can be used instead of the already
+  existing 'sslclientcert' so you don't have to use an external file.
+  One way to get the SHA256 fingerprint would be:
+  openssl x509 -in name-of-pem-file.pem -sha256 -noout -fingerprint 
+  Suggested and patch supplied by Jobe (#4019).
+- Added documentation on the new sslclientcertfp
+- Moved documentation on authentication types to one place and refer
+  to it from each section (oper::password, vhost::password, 
+  link::password-receive, etc).
