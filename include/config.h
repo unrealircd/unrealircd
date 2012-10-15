@@ -71,9 +71,14 @@
 #undef NO_FDLIST
 
 /*
- * Defining this will enable poll() usage instead of select()
+ * Defining this will enable poll() usage instead of select().
+ * This is the default on *NIX as of 3.2.10.
+ * On Windows this would require Vista or newer so we stick with
+ * select for now.
  */
+#ifndef _WIN32
 #define USE_POLL
+#endif
 
 /*
  * Defining this will allow all ircops to see people in +s channels

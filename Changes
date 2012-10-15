@@ -2483,3 +2483,7 @@
 - Fix bug where recursive includes would hang the IRCd, patch from
   binki with some minor modifications, reported by warg (#3919).
 - Upgraded to c-ares 1.9.1. Updated configure & other files.
+- Disable USE_POLL on Windows, since it doesn't work with XP and has
+  no advantage anyway. Reported by nenolod (#4129).
+- Various updates to makefile.win32 and .iss file, found during
+  building new versions of zlib, openssl, and curl.
