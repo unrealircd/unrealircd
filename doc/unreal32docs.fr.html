@@ -1592,8 +1592,8 @@ listen *:6660-6669;</pre>
 				L'oper block vous permet d'assigner des Opérateurs IRC (IRCop ou oper) pour votre serveur.
 				Le <b>oper::</b> spécifie le login pour la commande /oper.
 				Le <b>oper::from::userhost</b> est le masque user@host auquel l'utilisateur doit correspondre, vous pouvez spécifier plus qu'un seul hostmask en créant plusieurs oper::from::userhost.
-				Le paramètre facultatif <b>oper::require-modes</b> vous permet de sp&eactue;cifier des modes (tels que<em>r</em> ou <em>z</em>) qu'un utilisateur doit avoir avant d'être autoris&eactue; à se connecter comme op&eactue;rateur.
-				Ceci peut être utilis&eactue; pour forcer les utilisateurs à se connecter avec Nickserv ou d'utiliser des connexions s&eactue;curis&eactue;es avant de pouvoir devenir op&eactue;rateurs.
+				Le paramètre facultatif <b>oper::require-modes</b> vous permet de spécifier des modes (tels que<em>r</em> ou <em>z</em>) qu'un utilisateur doit avoir avant d'être autorisé à se connecter comme opérateur.
+				Ceci peut être utilisé pour forcer les utilisateurs à se connecter avec Nickserv ou d'utiliser des connexions sécurisées avant de pouvoir devenir opérateurs.
 			</p>
 
 			<p id="operblock_password">
@@ -3577,7 +3577,7 @@ spamfilter {
 				<font class="set">set::hiddenhost-prefix &lt;prefix-value&gt;;</font><br>
 				Définit le préfixe utilisé pour les +x hosts.
 				Il est généralement composé de trois ou quatre lettres représentant le nom du réseau.
-				Les diff&eactue;rents serveurs d'un réseau doivent avoir le même hiddenhost-prefix pour que les bans des salons fonctionnent correctement.
+				Les différents serveurs d'un réseau doivent avoir le même hiddenhost-prefix pour que les bans des salons fonctionnent correctement.
 			</p>
 			<p>
 				<font class="set">set::hosts::local &lt;locop-host-name&gt;;</font><br>
@@ -3772,7 +3772,7 @@ spamfilter {
 			<p>
 				<font class="set">set::ping-cookie &lt;yes|no&gt;</font><br>
 				Envoie un challenge avec PING, auquel les clients répondent par un PONG.
-				Tr&eagrave;s utile pour éviter entre autres des attaques par HTTP-POST, ainsi que pour empêcher le spoofing TCP sur d'anciens syst&eagrave;mes d'exploitation avec des piles TCP bugguées.
+				Très utile pour éviter entre autres des attaques par HTTP-POST, ainsi que pour empêcher le spoofing TCP sur d'anciens systèmes d'exploitation avec des piles TCP bugguées.
 				La valeur par défaut est 'yes'.
 			</p>
 			<p>
@@ -4175,7 +4175,7 @@ spamfilter {
 						Réalise une commande <a href="#command_whois">WHOIS</a> distante.
 						Si un utilisateur n'est pas sur le même serveur que vous, un WHOIS simple n'affichera pas toutes les informations fournies habituellement par WHOIS.
 						Par exmple, les temps d'inactivité ne sont pas affichés dans ce cas.
-						Pour ex&eactue;cuter une commande WHOIS distante, faites un WHOIS en précisant le pseudo de l'utilisateur distant en premier et en deuxième paramètres.
+						Pour exécuter une commande WHOIS distante, faites un WHOIS en précisant le pseudo de l'utilisateur distant en premier et en deuxième paramètres.
 					</td>
 					<td>Tous</td>
 				</tr>
