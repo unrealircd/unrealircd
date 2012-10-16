@@ -2520,3 +2520,4 @@
   That said, users in your language will greatly appreciate your work!
   Of course, if you want to translate documents in any other language
   then you are welcome to contact us as well.
+- Remove wircd.def, needs to be re-generated almost each build anyway..
