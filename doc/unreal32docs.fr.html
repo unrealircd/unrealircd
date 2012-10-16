@@ -33,7 +33,7 @@
 			<b><font size="7">UnrealIRCd</font></b><br>
 				<font size="4"><a href="http://www.unrealircd.com/">http://www.unrealircd.com</a></font><br>
 				<font size="4">Version: 3.2.10-rc1</font><br>
-				<b>Dernière mise à jour de la documentation:</b> 2011-10-09
+				<b>Dernière mise à jour de la documentation:</b> 2012-10-16
 		</div>
 
 		<br>
@@ -75,7 +75,8 @@
 			-- 3.16. <a href="#feature_nickchars">Caractères admis dans les pseudos</a><br>
 			-- 3.17. <a href="#feature_cgiirc">Support de CGI:IRC</a><br>
 			-- 3.18. <a href="#feature_timesync">Synchronisation de l'heure</a><br>
-			-- 3.19. <a href="#feature_other">Autres fonctionnalités</a><br>
+			-- 3.19. <a href="#feature_authtypes">Types d'Authentification</a><br>
+			-- 3.20. <a href="#feature_other">Autres fonctionnalités</a><br>
 			4. <a href="#configuringyourunrealircdconf">Configurer votre fichier unrealircd.conf</a><br>
 			---4.1. <a href="#configurationfileexplained">Explication du fichier de configuration</a><br>
 			---4.2. <a href="#meblock">Me Block -=- (M:Line)</a><br>
@@ -1031,6 +1032,167 @@ malgré tout (cela devrait être très rare).
 			</p>
 		</div>
 
+		<p id="feature_authtypes">
+				<font size="+2"><b>3.19 - Types d'Authentication</b></font>
+		</p>
+		<div class="desc">
+			<p>
+				En plusieurs endroits du fichier de configuration, par exemple dans les <a href="#operblock">oper block</a>, <a href="#allowblock">allow block</a> et <a href="#linkblock">link block</a>,
+				vous pouvez authentifier des clients par un mot de passe ou d'autres moyens.
+			</p>
+			<p>
+				Vous pouvez spécifier le mot de passe en clair, mais vous pouvez aussi utiliser spécifier un autre type d'authentification.<br />
+				Les auth-types suivants sont disponibles :
+			</p>
+			<table border="0">
+				<tr>
+					<th>Auth-type</th>
+					<th>Description</th>
+					<th>Dépendances</th>
+					<th>Comment générer</th>
+				</tr>
+				<tr>
+					<td><strong>crypt</strong></td>
+					<td>UNIX crypt</td>
+					<td>Windows: OpenSSL requis</td>
+					<td>/MKPASSWD crypt :password</td>
+				</tr>
+				<tr>
+					<td><strong>md5</strong></td>
+					<td>MD5 avec un salt</td>
+					<td>Toujours disponible</td>
+					<td>/MKPASSWD md5 :password</td>
+				</tr>
+				<tr>
+					<td><strong>sha1</strong></td>
+					<td>SHA1 avec un salt</td>
+					<td>OpenSSL requis</td>
+					<td>/MKPASSWD sha1 :password</td>
+				</tr>
+				<tr>
+					<td><strong>ripemd160</strong></td>
+					<td>RIPEMD160 avec un salt</td>
+					<td>OpenSSL requis</td>
+					<td>/MKPASSWD ripemd160 :password</td>
+				</tr>
+				<tr>
+					<td><strong>sslclientcert</strong></td>
+					<td>Certificat client SSL</td>
+					<td>OpenSSL requis</td>
+					<td>Chemin vers le fichier .pem du certificat public.</td>
+				</tr>
+				<tr>
+					<td><strong>sslclientcertfp</strong></td>
+					<td>Empreinte du certificat client SSL</td>
+					<td>OpenSSL requis</td>
+					<td>openssl x509 -in nom-du-fichier-pem.pem -sha256 -noout -fingerprint</td>
+				</tr>
+			</table>
+
+			<p>
+				La commande /MKPASSWD peut être utilisée directement une fois connecté en temps qu'IRCop.
+				Sinon, vous pouvez l'utiliser depuis la ligne de commande du shell : <br/>
+				<code>./unreal mkpasswd hashtype password</code>
+			</p>
+
+			<p>
+				Tous les types d'authentification ne sont pas disponibles sur tous les systèmes,
+				voir les dépendances et prérequis dans la table ci-dessus.
+			</p>
+
+			<p style="text-weight:strong">
+				Exemple : mot de passe hashé en MD5 dans un bloc vhost
+			</p>
+			<ol>
+				<li>
+					<p>
+						Supposons que vous voulez utiliser le mot de passe <i>test</i> et voulez le hasher en md5.<br/>
+						Si vous êtes un IRCop, alors vous pouvez simplement taper <i>/MKPASSWD md5 :test</i><br/>
+						Sinon, vous pouvez exécuter la commande suivante dans le shell : <i>./unreal mkpasswd md5 test</i>
+					</p>
+					<p>
+						Quelque soit la méthode, le hash généré ressemblera à <i>$NIV0bSfG$UTMvI/KdMwe4cZqmT/23qw==</i> (la chaîne exacte peut varier !)
+					</p>
+				</li>
+				<li>
+					<p>
+						Maintenant, mettez cette chaîne dans votre bloc vhost et informez UnrealIRCd qu'il s'agit d'un hash md5.<br/>
+						Exemple :
+					</p>
+<pre>vhost {
+		vhost I.love.Tux;
+		from { userhost *@*; };
+		login Tux;
+		password "$NIV0bSfG$UTMvI/KdMwe4cZqmT/23qw==" { md5; };
+};</pre>
+				</li>
+				<li>
+					Pour utiliser cette vhost, tapez <i>/VHOST Tux test</i>
+				</li>
+			</ol>
+
+			<p style="text-weight:strong">
+				Exemple : authentification par un certificat client SSL
+			</p>
+			<p>
+				<tt>sslclientcert</tt> et <tt>sslclientcertfp</tt> sont deux types d'authentification qui peuvent être utiliser pour authentifier des utilisateurs connectés en SSL par leur certificat client.
+				Voici un exemple de comment l'utiliser pour le bloc oper :
+			</p>
+			<ol>
+				<li>
+					<p>
+						Créez un certificat SSL client si vous n'en avez pas déjà un
+						(cherchez sur le web "create ssl certificate" si vous ne savez pas comment faire).
+					</p>
+				</li>
+				<li>
+					<p>
+						Prenez le hash SHA256 du certificat en exécutant :
+						<code>openssl x509 -in nom-du-fichier-pem.pem -sha256 -noout -fingerprint</code>
+					</p>
+				</li>
+				<li>
+					<p>
+						Dans le fichier de configuration, remplacez le mot de passe d'origine (<i>test</i> dans notre exemple) avec par ce hash et indiquez le type <tt>sslclientcertfp</tt>.<br/>
+						Voici un exemple :
+					</p>
+<pre>oper test {
+  password "E7:4D:46:F1:9F:F4:68:F5:E8:E3:49:CC:28:5D:F9:65:85:BA:4F:16:B6:49:02:E3:34:E6:E7:6A:FE:76:A7:98" { sslclientcertfp; };
+  flags { global; can_override; };
+  class clients;
+};</pre>
+				</li>
+				<li>
+					<p>
+						Rehashez le serveur (/REHASH)
+					</p>
+				</li>
+				<li>
+					<p>
+						Maintenant, connectez vous avec votre client SSL et assurez vous qu'il utilise le certificat de l'étape 2.
+					</p>
+				</li>
+				<li>
+					<p>
+						Vous pouvez maintenant vous connecter comme oper avec <i>/oper test x</i>
+					</p>
+					<p>
+						Vous devez toujours mettre un mot de passe, même s'il ne correspond à rien (par exemple : <i>x</i>).<br/>
+						Il est ignoré car le certificat est utilisé pour l'authentification.
+					</p>
+				</li>
+				<li>
+					<p>
+						Félicitations ! Vous utilisez désormais la méthode d'authentification la plus sécurisée disponible sur UnrealIRCd.
+					</p>
+				</li>
+			</ol>
+
+			<p>
+				Un autre endroit très utile pour utiliser <tt>sslclientcertfp</tt> est dans <a href="#linkblock_passwordreceive">link::password-receive</a>
+			</p>
+		</div>
+
 		<p id="feature_other">
 			<font size="+2"><b>3.19 - Autres fonctionnalités</b></font>
 		</p>
@@ -1437,26 +1599,8 @@ listen *:6660-6669;</pre>
 			<p id="operblock_password">
 				Le <b>oper::password::</b> est le mot de passe que l'opérateur doit indiquer.
 				<b>oper::password::auth-type</b> vous permet de spécifier une méthode d'authentification du mot de passe.
-				Ne précisez pas d'<b>oper::password::auth-type</b> pour un mot de passe en clair.
-				Les méthodes valides sont <tt>crypt</tt>, <tt>md5</tt>, <tt>sha1</tt>, <tt>ripemd160</tt> et <tt>sslclientcert</tt>.
-				Indiquer l'une de ces méthodes signifie que la valeur de <b>oper::password::</b> est un hash généré avec <a href="#cmd_mkpasswd">mkpasswd</a> en utilisant ladite méthode.
-			</p>
-			<p id="operblock_password_sslclientcert">
-					<tt>sslclientcert</tt> est une méthode d'authentification exceptionnelle.
-					Quand elle est choisie comme auth-type, <b>oper::password::</b> doit être un fichier (chemin relatif depuis le dossier d'installlation d'UnrealIRCd).
-					Le fichier doit être un certificat SSL encodé par PEM (le certificat public, pas une clé).
-					Cela indique que pour se connecter, le client IRC doit :
-				</p>
-			<ol>
-				<li>être connecté en utilisant SSL</li>
-				<li>utiliser le certificat client correspondant au certificat public</li>
-				<li>a accès à la clé privée associéee au fichier du certificat</li>
-			</ol>
-			<p>
-					Bien sûr, cette fonctionnalité nécessite que UnrealIRCd a été compilé avec le support SSL.
-					Aussi, comme n'importe quelle clé associée à un certificat SSL est beaucoup plus longue qu'un mot de pase normal et bien plus aléatoire, c'est la méthode d'authentification la plus sécurisée.
-					Pour se connecter avec /oper lorsque vous avez spécifié un certificat SSL, assurez-vous que le client est correctement configuré et faites : <code>/oper &lt;name&gt; :</code> .
-					La méthode d'authentification <tt>sslclientcert</tt> peut aussi être utilisée pour sécuriser les <a href="#linkblock">link blocks</a> avec <a href="#linkblock_passwordreceive">link::password-receive</a>.
+				Ne précisez pas d'<b>oper::password::auth-type</b> pour un mot de passe en clair.<br/>
+				Les auth-types valides, ainsi qu'un exemple de comment les utiliser avec un bloc oper, peuvent être trouvés dans la section <a href="#feature_authtypes">Types d'Authentication</a>.
 			</p>
 			<p>
 				<b>Attention :</b> les login et mot de passe sont tous deux sensibles à la case : les majuscules et les minuscules ont leur importance.
@@ -1816,8 +1960,7 @@ listen *:6660-6669;</pre>
 
 			<p>
 				Ce bloc définit les mots de passe nécessaire pour utiliser les commandes /restart et /die avec respectivement drpass::restart et drpass::die.
-				Les drpass::restart:: et drpass::die:: vous permettent de spécifier le type d'authentification qu'ils utilisent.
-				Les types d'authentification actuellement supportés sont crypt, md5, sha1 et ripemd-160 (voir <a href="#operblock_password">oper::password::</a>).
+				Au lieu d'un mot de passe en clair, vous pouvez aussi utiliser d'autres <a href="#feature_authtypes">Types d'Authentication</a>
 			</p>
 
 			<p>
@@ -2559,7 +2702,7 @@ deny channel {
 			<p>
 				Le vhost::login est le login que l'utilisateur doit rentrer et vhost::password est le mot de passe devant être entré
 				Le vhost::password:: vous permet de spécifier le type d'authentification utilisé par cet élément.
-				Les types d'authentification actuellement supportés sont crypt, md5, sha1 et ripemd-160 (voir <a href="#operblock_password">oper::password::</a>).
+				Voir <a href="#feature_authtypes">Types d'Authentication</a> pour la liste des types disponibles.
 			</p>
 			<p>
 				Enfin, vhost::swhois vous permet d'ajouter un ligne supplémentaire au whois des utilisateurs, exactement comme dans le oper block oper::swhois.
@@ -2727,9 +2870,8 @@ deny channel {
 			<p id="linkblock_passwordreceive">
 				<b>password-receive</b><br>
 				Le mot de passe utilisé pour valider le lien entrant.
-				Il peut être chiffré de la même manière que <a href="#operblock_password"><b>oper::password</b></a>.
-				Il peut, notamment, utiliser la méthode <a href="#operblock_password_sslclientcert"><tt>sslclientcert</tt></a>.
-				En vérité, c'est même vivement conseillé, car c'est infiniment plus résistant aux attaques brute-force.
+				Il est très fortement recommandé d'utiliser des mots de passe hashés ou le type d'authentification <tt>sslclientcertfp</tt>.
+				Voir <a href="#feature_authtypes">Types d'Authentication</a> pour plus d'informations.
 			</p>
 			<p>
 				<b>hub et leaf</b><br>
@@ -4449,13 +4591,7 @@ spamfilter {
 					<td>mkpasswd &lt;auth-type&gt; &lt;password&gt;</td>
 					<td>
 						Va chiffrer &lt;password&gt; en utilisant la méthode de hash &lt;auth-type&gt;.
-						Les méthodes disponibles sont :
-						<ul>
-							<li>crypt [<em>nécessite SSL pour Windows</em>]</li>
-							<li>md5</li>
-							<li>sha1 [<em>nécessite SSL</em>]</li>
-							<li>ripemd160 [<em>nécessite SSL</em>]</li>
-						</ul>
+						Voir la section <a href="#feature_authtypes">Types d'Authentication</a> pour une liste des méthodes de hash disponibles.
 					</td>
 					<td>IRCop</td>
 				</tr>
