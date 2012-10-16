@@ -2503,3 +2503,5 @@
 - Windows: fix MOTD file always showing a date of 1/1/1970, reported
   by maxarturo (#4102).
 - Update version to 3.2.10-rc1
+- Bump version number in all translated docs as well (did not change
+  the 'last update' date, though).
