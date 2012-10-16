@@ -1,117 +1,86 @@
-Unreal3.2.9 Release Notes
-==========================
+Unreal3.2.10-rc1 Release Notes
+===============================
 
 ==[ GENERAL INFORMATION ]==
-- If you are upgrading on *NIX, make sure you run 'make clean' and './Config'
-  first, before doing 'make'
+- If you are upgrading on *NIX, then make sure you run 'make clean' and
+  './Config' first, before running 'make'.
 - The official UnrealIRCd documentation is doc/unreal32docs.html
   online version at: http://www.vulnscan.org/UnrealIRCd/unreal32docs.html
   FAQ: http://www.vulnscan.org/UnrealIRCd/faq/
   Read them before asking for help.
 - Report bugs at http://bugs.unrealircd.org/
-- When upgrading a network, we assume you are upgrading from the previous
-  version (3.2.8/3.2.8.1). Upgrading from 3.2.6 or 3.2.7 should also be no problem.
-- The purpose of the sections below (NEW, CHANGED, MINOR, etc) is to be a SUMMARY
-  of the changes in this release. There have been 160+ changes, twice as much
-  as usual for a release, hence this summary is a bit long too.
-  For the FULL list of changes, see the Changelog.
-- If you previously used CVS to access the development version of UnrealIRCd,
-  you now need to use Mercurial, see see http://www.unrealircd.com/hgmove
+- The purpose of the sections below (NEW, CHANGED, MINOR, etc) is to be a
+  SUMMARY of the changes in this release.  There have been 79 changes in
+  total, for the full list of changes see the Changelog.
 
 ==[ NEW ]==
-- Extban ~j: this only prevents a user from joining, once in he can speak freely.
-- Extban ~R:<nick>: this ban only matches if <nick> is a registered user (has
-  identified to services). Especially useful in cases like: +e ~R:TrustedUser.
-- Stacked Extended Bans:
-  - Extbans are now split in two groups:
-    - Ones that specify which user actions are affected (group 1):
-      ~q (quiet), ~n (nick change), ~j (join)
-    - Ones that introduce new criteria that can be used (group 2):
-      ~c (channel), ~r (realname), ~R (registered)
-  - With stacked extbans you can combine an extban of the first group with the second
-    For example: ~q:~c:#lamers would quiet all users who are also in #lamers
-- Extended Invex: very much like extended bans, but for +I (Invite Exception).
-  Currently supported are: ~c (channel, ~r (realname) and ~R (registered) [=group 2]
-  Possible useful uses are setting a channel +i (invite only) and then setting
-  +I ~c:#trustedchan (or even: +I ~c:+#trustedchan) while still retaining the ability
-  to easily ban users through +b.
-- Channel Mode +Z: indicates whether a channel is 'secure' or not.
-  This channel mode works in conjunction with +z (lower case z).
-  While +z (normally) prevents new non-SSL users from joining, sometimes they
-  can still join, like when after a netsplit the channels merge again.
-  When all users on the channel are connected through SSL, the channel is set +Z
-  by the server. Whenever an insecure user joins, the channel is put -Z.
-- Remote MOTD support: you can now specify an URL instead of a file
-- Automatic installation of curl (w/c-ares) if you answer 'Yes' to remote includes
-- One can now rehash ALL servers with the command '/REHASH -global'. This can be
-  particularly useful if you use remote includes or MOTD's. NetAdmin only command.
-- files { } block by which you can configure the location of the tune file, pid, etc
-- STARTTLS: On an IRCd compiled with SSL support this allows a client to start a SSL
-  session on a regular non-SSL port (like 6667). Only supported by a few IRC clients.
-  Can be disabled by setting set::ssl::options::no-starttls
-- set::uhnames: this allows one to turn UHNAMES off ('no'), which can be a good idea
-  if you have channels with more than 1000 users, as otherwise the nicklist can take
-  several seconds to load. Defaults to on ('yes').
-- IPv6 clones detection support: allow::ipv6-clone-mask determines the number of bits
-  used when comparing two IPv6 addresses to determine if allow::maxperip is exceeded.
-  This allows an admin to recognize that most IPv6 blocks are allocated to individuals,
-  who might each get a /64 IPv6 block. set::default-ipv6-clone-mask defaults to 64 and
-  provides default value for the allow blocks.
-- The m_nopost module is now part of Unreal: this defends against the Firefox/
-  Javascript 'XPS attack' which uses HTTP POST to create dummy IRC bots.
-- There have also been some behavior changes, which can be considered NEW, see
-  next section (CHANGED).
+- Improved socket engine. This brings some performance improvements and
+  also makes it easier to configure a system to hold more than 1024
+  clients (no more editing of header files on Linux!).
+- ESVID support: services can communicate the account name of the user
+  back to the IRCd. This only works on ESVID-capable services:
+  - Extban ~a:<accountname>: matches users who are logged in to services
+    with that account name.
+  - Show account name in /WHOIS
+- CAP support: this enables clients to enable certain features more easily.
+  Can be disabled through set::options::disable-cap.
+- Now that STARTTLS is advertised in CAP it is likely to be used more often.
+- away-notify: informs clients of AWAY state changes of users on the same
+  channels, for clients that support this.
+- account-notify: similar to away-notify, inform clients of changes in the
+  login status and account name used by other clients on the same channels.
+- SASL support. To use this, and if your services support this, you point
+  set::sasl-server to your services server.
+- Server-side MLOCK support: the IRCd will prevent channel mode changes
+  depending on the MLOCK setting in services. Requires special support
+  from services for this feature.
+- User Mode +I (IRCOp only): hide idle time
+- auth-method 'sslclientcertfp': authenticate users using an SSL client
+  certificate by the SHA256 fingerprint of that certificate.
+  The documentation has a new section (3.19) called 'Authentication Types'
+  which contains an (improved) example of how to use SSL client certificate
+  authentication instead of regular passwords.
+- oper::require-modes: an optional setting, which can be used to require
+  users to have certain user modes (such as 'z') before they can /OPER up.
+- allow/deny channel: you can now optionally specify a class here as an
+  extra filter.
+- doc/example.es.conf: Spanish translation of example configuration file.
+- There have also been some behavior changes, which can be considered NEW,
+  see next section (CHANGED).
 
 ==[ CHANGED ]==
-- Channel Mode +z: due to the +z/+Z changes, some things have changed:
-  - +z can now be set even when insecure users are present
-    (the channel will then be set +Z when the last insecure user leaves)
-  - An oper previously had to invite himself and then join the channel
-    with the key 'override' to set -z. This is no longer needed.
-    The channel stays +z, but will be set -Z when the oper joins.
-- Remote includes: if a remote include fails to load (eg: webserver down) then
-  the most recent (cached) version of that remote include will be used, and the
-  IRCd will still boot and be able to REHASH. This means it is now 'safe' to
-  use remote includes on a network, without risking problems like unable to
-  rehash in case of webserver problems.
-- set::level-on-join now supports voice/halfop/protect/owner
-- Backslashes (\) in MOTD/RULES files are no longer considered special, this
-  might mean that you have to change some escaped backslashes (\\) to \.
-- '/REHASH -motd' really rehashes ALL MOTD/OPERMOTD/BOTMOTD/RULES files, both
-  the 'normal' files and the ones in tld { } blocks.
-- The 'Compile as hub/leaf' choice is now gone, as it didn't do anything.
-- Better document 'sslclientcert' in the Oper Block documentation.
-  This allows one to authenticate against a SSL certificate for /OPER, instead
-  of using a password.
+- Anti-spoof protection (ping cookies) can now be enabled/disabled at
+  run-time through set::ping-cookie [yes|no]. The default is 'yes' (enabled).
+- A quit with 'Ping timeout' now shows the number of seconds since the ping.
+- Print out a warning if we can't write to a log file.
+- Refuse to boot if we can't write to ANY log file.
+- Windows: if an SSL certificate exists, then uncheck the 'generate SSL
+  certificate' checkbox by default.
+- *NIX with SSL: We now ask in ./Config if you want to generate an SSL
+  certificate. The certificate is then copied when you run 'make install'.
 
 ==[ MAJOR BUGS FIXED ]==
-- If you have autoconnect with a low connfreq, previously you often risked getting
-  'Server exists' errors and 'breaking' the network. Now, the server handshake has
-  been redesigned which means this will no longer happen. You can now safely have
-  a low connfreq of - for example - 10 seconds.
-- Windows: 'Permission denied' errors when starting Unreal
-- A crash on some new Linux systems when replacing .so files
-- Solaris & QNX: Compile problems
-- IPv6: admins no longer have to tweak sysctl, like on FreeBSD & newer Linux systems
-- IPv6: IPv4 ip's in link::bind-ip did not work properly which made the IRCd either
-  not bind to the correct IP, or - like on FreeBSD - made it unable to link at all.
-- A very rare crash on outgoing connect
+- None?
 
 ==[ MINOR BUGS FIXED ]==
-- autoconnect not working if TS offset was negative (for the duration of the offset)
-- CGI:IRC & IPv6: sometimes a users' IP was incorrectly formatted, causing 'ghosts'
-- Mac OS X: permission problems
-- Several installation issues with curl
-- SSL: No more 'Underlying syscall error', the actual error is now shown
-- And many more... see Changelog
+- Various compile problems, in particular with remote includes enabled.
+- Windows: the installer sometimes insisted that the Visual C++ 2008
+  redistributable package was not installed, when it actually was there.
+- Windows: MOTD file date/time was always showing up as 1/1/1970.
+- And more... see Changelog
+
+==[ REMOVED / DROPPED ]==
+- Windows 9X is no longer supported
+- The networks/ directory has been removed
 
 ==[ KNOWN ISSUES ]==
-- Regexes: Be careful with backreferences (\1, etc), certain regexes can slow the
-  IRCd down considerably and even bring it to a near-halt. In the spamfilter user
-  target it's usually safe though. Slow spamfilter detection can help prevent the
-  slowdown/freeze, but might not work in worst-case scenario's.
-- Regexes: Possessive quantifiers such as, for example, "++" (not to be confused
-  with "+") are not safe to use, they can easily freeze the IRCd.
+- Regexes: Be careful with backreferences (\1, etc), certain regexes can
+  slow the IRCd down considerably and even bring it to a near-halt.
+  In the spamfilter user target it's usually safe though.
+  Slow spamfilter detection can help prevent the slowdown/freeze, but
+  might not work in worst-case scenario's.
+- Regexes: Possessive quantifiers such as, for example, "++" (not to be
+  confused with "+") are not safe to use, they can easily freeze the IRCd.
 
 ==[ ADDITIONAL INFO ]==
 * See Changelog for more details
