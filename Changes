@@ -2505,3 +2505,18 @@
 - Update version to 3.2.10-rc1
 - Bump version number in all translated docs as well (did not change
   the 'last update' date, though).
+- Removed unreal32docs.es.html (outdated since 2006-12-22),
+  unreal32docs.gr.html (outdated since 2006-12-02), and
+  unreal32docs.nl.html (outdated since 2009-01-18, possibly 2007-07-12).
+  These translations are out of date for many years and are causing
+  problems for the people who are reading this out of date information.
+  If you want to update these translations, or (maybe better) redo
+  the translation of unreal32docs in these languages, then send an
+  e-mail to syzop@unrealircd.com.
+  Note that for all these languages we have had people in the past
+  offering to help out, but in the end we never heard back from them,
+  so please ONLY contact us if you: 1) are serious, and 2) have
+  sufficient time available to work on this project.
+  That said, users in your language will greatly appreciate your work!
+  Of course, if you want to translate documents in any other language
+  then you are welcome to contact us as well.
