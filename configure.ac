@@ -10,7 +10,7 @@ dnl Unreal.nfo
 dnl .CHANGES.NEW
 dnl src/version.c.SH
 
-AC_INIT([unrealircd], [3.2.9], [http://bugs.unrealircd.org/], [], [http://unrealircd.org/])
+AC_INIT([unrealircd], [3.2.10-rc1], [http://bugs.unrealircd.org/], [], [http://unrealircd.org/])
 AC_CONFIG_SRCDIR([src/ircd.c])
 AC_CONFIG_HEADER([include/setup.h])
 AC_CONFIG_AUX_DIR([autoconf])

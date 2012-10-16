@@ -61,7 +61,7 @@ ModuleHeader l_commands_Header
 #endif
   = {
 	"commands",	/* Name of module */
-	"3.2.9", /* Version */
+	"3.2.10", /* Version */
 	"Wrapper library for m_ commands", /* Short description of module */
 	"3.2-b8-1",
 	NULL 

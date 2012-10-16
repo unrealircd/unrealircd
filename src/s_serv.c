@@ -266,10 +266,11 @@ char *unrealinfo[] =
 	"* binki        <binki@unrealircd.com>",
 	"",
 	"Contributors:",
-	"* Stealth, tabrisnet, Bock, fbi",
+	"* nenolod, Adam, warg, Stealth, WolfSage, katsklaw, darkex,"
+	"  fspijkerman, fbi, Apocalypse",
 	"",
 	"RC Testers:",
-	"* LqidSkin, goldenwolf, katsklaw, nph, selten, Simplicity,",
+	"* <<TODO>>,",
 	"  and everyone else who downloaded the release candidates.",
 	"",
 	"Past UnrealIRCd3.2* coders/contributors:",

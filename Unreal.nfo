@@ -1,5 +1,5 @@
 ===============================================
-=            UnrealIRCd v3.2.9                =
+=            UnrealIRCd v3.2.10-rc1           =
 ===============================================
  This release was brought to you by:
 
@@ -13,14 +13,20 @@
 
   Contributors:
   =============
-  * Bock
-  * goldenwolf
-  * katsklaw
+  * nenolod
+  * Adam
+  * warg
   * Stealth
+  * WolfSage
+  * katsklaw
+  * darkex
+  * fspijkerman
+  * fbi
+  * Apocalypse
 
   RC Testers:
   ===========
-  LqidSkin, goldenwolf, katsklaw, nph, selten, Simplicity
+  <<TODO>>
 
   Previous coders:
   ================
