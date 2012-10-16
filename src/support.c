@@ -1770,7 +1770,7 @@ time_t unreal_getfilemodtime(const char *filename)
 	SYSTEMTIME sTime, lTime;
 	ULARGE_INTEGER fullTime;
 	time_t result;
-	HANDLE hFile = CreateFile(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING,
+	HANDLE hFile = CreateFile(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
 				  FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hFile == INVALID_HANDLE_VALUE)
 		return 0;

@@ -2500,3 +2500,5 @@
 - Moved documentation on authentication types to one place and refer
   to it from each section (oper::password, vhost::password, 
   link::password-receive, etc).
+- Windows: fix MOTD file always showing a date of 1/1/1970, reported
+  by maxarturo (#4102).
