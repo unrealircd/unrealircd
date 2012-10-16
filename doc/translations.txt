@@ -37,9 +37,8 @@ Upon successful completion you will also receive an @unrealircd.org
 forwarder email address, and of course your name will be in the docs.
 
 If you want to start translating a document, please send an email to
-coders@lists.unrealircd.org and mention the language you are willing
-to translate to.. You will then receive an email back saying you can
-go ahead (or not). This is mainly to avoid multiple persons working 
-on the same translation.
+syzop@unrealircd.com and mention the language you are willing to translate
+to..  You will then receive an email back saying you can go ahead (or not). 
+This is mainly to avoid multiple persons working on the same translation.
 
 =============================================================================
