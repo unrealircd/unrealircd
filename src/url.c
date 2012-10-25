@@ -1,6 +1,7 @@
 /*
  *   Unreal Internet Relay Chat Daemon, src/url.c
  *   (C) 2003 Dominick Meglio and the UnrealIRCd Team
+ *   (C) 2012 William Pitcock <nenolod@dereferenced.org>
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -26,19 +27,6 @@
 #include <sys/stat.h>
 #include <curl/curl.h>
 
-#ifdef USE_POLL
-# ifndef _WIN32
-#  include <sys/poll.h>
-#  include <poll.h>
-#  ifndef POLLRDHUP
-#   define POLLRDHUP 0
-#  endif
-# else
-#  define poll WSAPoll
-#  define POLLRDHUP POLLHUP
-# endif
-#endif
-
 #ifdef USE_SSL
 extern char *SSLKeyPasswd;
 #endif
@@ -49,16 +37,6 @@ extern gid_t irc_gid;
 #endif
 
 CURLM *multihandle;
-
-#ifdef USE_POLL
-/* Maximum concurrent transfers. with poll support the remote include
- * transfers are no longer included in the MAXCONNECTIONS count.
- */
-#define MAXTRANSFERS	256
-static struct pollfd url_pollfds[MAXTRANSFERS];
-static int url_pollfdcount = 0;
-#endif
-
 
 /* Stores information about the async transfer.
  * Used to maintain information about the transfer
@@ -239,80 +217,121 @@ char *download_file(const char *url, char **error)
 	}
 }
 
-#ifdef USE_POLL
-/* Add a new socket to the poll array, or modify an existing entry */
-void url_socket_addormod(curl_socket_t s, int what)
+/*
+ * Interface for new-style evented I/O.
+ *
+ * url_socket_pollcb is the callback from our eventing system into
+ * cURL.
+ *
+ * The other callbacks are for cURL notifying our event system what
+ * it wants to do.
+ */
+static void url_check_multi_handles(void)
 {
-struct pollfd *pfd;
-short events=0;
-int i;
+	CURLMsg *msg;
+	int msgs_left;
 
-	/* convert 'what' from CURL language to 'events' in POSIX language... */
-	if (what == CURL_POLL_IN)
-		events |= POLLIN; /* read */
-	else if (what == CURL_POLL_OUT)
-		events |= POLLOUT; /* write */
-	else if (what == CURL_POLL_INOUT)
-		events |= (POLLIN|POLLOUT); /* both */
-
-	/* Check if the entry already exists... */
-	for (i=0; i < url_pollfdcount; i++)
+	while ((msg = curl_multi_info_read(multihandle, &msgs_left)) != NULL)
 	{
-		pfd = &url_pollfds[i];
-		if (pfd->fd == s)
+		if (msg->msg == CURLMSG_DONE)
 		{
-			/* Modify existing entry */
-			pfd->events = events;
-			return;
+			FileHandle *handle;
+			long code;
+			long last_mod;
+			CURL *easyhand = msg->easy_handle;
+
+			curl_easy_getinfo(easyhand, CURLINFO_RESPONSE_CODE, &code);
+			curl_easy_getinfo(easyhand, CURLINFO_PRIVATE, (char *) &handle);
+			curl_easy_getinfo(easyhand, CURLINFO_FILETIME, &last_mod);
+			fclose(handle->fd);
+#if defined(IRC_USER) && defined(IRC_GROUP)
+			if (!loop.ircd_booted)
+				chown(handle->filename, irc_uid, irc_gid);
+#endif
+
+			if (msg->data.result == CURLE_OK)
+			{
+				if (code == 304 || (last_mod != -1 && last_mod <= handle->cachetime))
+				{
+					handle->callback(handle->url, NULL, NULL, 1, handle->callback_data);
+					remove(handle->filename);
+				}
+				else
+				{
+					if (last_mod != -1)
+						unreal_setfilemodtime(handle->filename, last_mod);
+
+					handle->callback(handle->url, handle->filename, NULL, 0, handle->callback_data);
+					remove(handle->filename);
+				}
+			}
+			else
+			{
+				handle->callback(handle->url, NULL, handle->errorbuf, 0, handle->callback_data);
+				remove(handle->filename);
+			}
+
+			free(handle->url);
+			free(handle);
+			curl_multi_remove_handle(multihandle, easyhand);
+
+			/* NOTE: after curl_multi_remove_handle() you cannot use
+			 * 'msg' anymore because it has freed by curl (as of v7.11.0),
+			 * therefore 'easyhand' is used... fun! -- Syzop
+			 */
+			curl_easy_cleanup(easyhand);
 		}
 	}
-	
-	/* If we get here, the socket does not exist yet. Add it! */
-	if (url_pollfdcount+1 == MAXTRANSFERS)
-	{
-		/* There's no room for any new fd. Throw up an error.
-		 * Since no data will ever be transfered for this session, it wil
-		 * eventually timeout. That's ok, better than a crash...
-		 */
-		ircd_log(LOG_ERROR, "Remote includes: too many concurrent transfers (%d)!!", MAXTRANSFERS);
-		sendto_realops("Remote includes: too many concurrent transfers (%d)!!", MAXTRANSFERS);
-		return;
-	}
-	pfd = &url_pollfds[url_pollfdcount];
-	pfd->fd = s;
-	pfd->events = events;
-	url_pollfdcount++;
 }
 
-void url_socket_remove(curl_socket_t s)
+static void url_socket_pollcb(int fd, int revents, void *data)
 {
-int i;
-struct pollfd *pfd;
+	int flags = 0;
+	int dummy, r;
 
-	for (i=0; i < url_pollfdcount; i++)
-	{
-		pfd = &url_pollfds[i];
-		if (pfd->fd == s)
-		{
-			/* Tag for deletion. But don't actually delete it as we may be in the poll result loop... */
-			pfd->fd = -1;
-			pfd->events = 0;
-			break;
-		}
-	}
+	if (revents & FD_SELECT_READ)
+		flags |= CURL_CSELECT_IN;
+	if (revents & FD_SELECT_WRITE)
+		flags |= CURL_CSELECT_OUT;
+
+	r = curl_multi_socket_action(multihandle, fd, flags, &dummy);
+	url_check_multi_handles();
 }
 
 static int url_socket_cb(CURL *e, curl_socket_t s, int what, void *cbp, void *sockp)
 {
 	Debug((DEBUG_DEBUG, "url_socket_cb: %d (%s)", (int)s, (what == CURL_POLL_REMOVE)?"remove":"add-or-modify"));
 	if (what == CURL_POLL_REMOVE)
-		url_socket_remove(s);
+		fd_close(s);
 	else
-		url_socket_addormod(s, what);
+	{
+		FDEntry *fde = &fd_table[s];
+		int flags = 0;
+
+		if (!fde->is_open)
+			fd_open(s, "CURL transfer");
+
+		if (what == CURL_POLL_IN || what == CURL_POLL_INOUT)
+			flags |= FD_SELECT_READ;
+
+		if (what == CURL_POLL_OUT || what == CURL_POLL_INOUT)
+			flags |= FD_SELECT_WRITE;
+
+		fd_setselect(s, flags, url_socket_pollcb, NULL);
+	}
 
 	return 0;
 }
-#endif
+
+/* Handle timeouts. */
+static EVENT(curl_socket_timeout)
+{
+	int dummy;
+
+	curl_multi_socket_action(multihandle, CURL_SOCKET_TIMEOUT, 0, &dummy);
+}
+
+static Event *curl_socket_timeout_hdl = NULL;
 
 /*
  * Initializes the URL system
@@ -321,10 +340,9 @@ void url_init(void)
 {
 	curl_global_init(CURL_GLOBAL_ALL);
 	multihandle = curl_multi_init();
-#ifdef USE_POLL
+
 	curl_multi_setopt(multihandle, CURLMOPT_SOCKETFUNCTION, url_socket_cb);
-	memset(&url_pollfds, 0, sizeof(url_pollfds));
-#endif
+	curl_socket_timeout_hdl = EventAddEx(NULL, "curl_socket_timeout", 1, 0, curl_socket_timeout, NULL);
 }
 
 /*
@@ -400,273 +418,6 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
  		curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);
 #endif
 
-
 		curl_multi_add_handle(multihandle, curl);
 	}
 }
-
-#ifdef USE_POLL
-/** This function scans through the poll array and moves data around so any
- * entries with -1 fd's will no longer be there.
- * There's room for improvement here ;)
- */
-void fix_poll_array(void)
-{
-int i;
-struct pollfd *pfd;
-size_t sz;
-
-	for (i = 0; i < url_pollfdcount; i++)
-	{
-		if (url_pollfds[i].fd == -1)
-		{
-			if (i < MAXTRANSFERS-1)
-			{
-				/* move the memory to the left, so we overwrite the -1 entry... */
-				sz = &url_pollfds[MAXTRANSFERS-1] - &url_pollfds[i];
-				memmove(&url_pollfds[i], &url_pollfds[i+1], sz);
-				url_pollfdcount--;
-			}
-			/* nullify last entry */
-			memset(&url_pollfds[MAXTRANSFERS-1], 0, sizeof(struct pollfd));
-		}
-	}
-}
-
-/*
- * Called in the select loop. Handles the transferring of any
- * queued asynchronous transfers.
- * This function is for when poll support is enabled.
- * Some extra logic has been implemented to run the loop again if we
- * expect more data (similar to the original non-poll version), but
- * now we ensure that we will not spend too much time in this function
- * since otherwise with a fast data transfer we would still stall the
- * ircd, which defeats the whole asynchronous idea... -- Syzop
- */
-void url_do_transfers_async(void)
-{
-int nfds; /* number of file descriptors active (result) */
-int i;
-struct pollfd *pfd; /* just a pointer to make it easy to work with individual pollfd structs */
-int dummy;
-int r;
-int msgs_left;
-CURLMsg *msg;
-long timeout;
-int didanything;
-int iterations = 0;
-#ifndef _WIN32
-struct timeval tv_start, tv_now;
-#else
-struct _timeb tv_start, tv_now;
-#endif
-long totalduration = 0;
-
-#ifndef _WIN32
-	gettimeofday(&tv_start, NULL);
-#else
-	_ftime(&tv_start);
-#endif
-
-	do {
-		didanything = 0;
-		iterations++;
-
-		if (url_pollfdcount > 0)
-			nfds = poll(url_pollfds, url_pollfdcount, 50);
-		else
-			nfds = 0;
-
-		if (nfds > 0)
-		{
-			for (i = 0; i < url_pollfdcount; i++)
-			{
-				int action = 0;
-				int dummy = 0; /* not interested.. */
-
-				pfd = &url_pollfds[i];
-				
-				if (pfd->fd == -1)
-					continue; /* race condition */
-				
-				if (pfd->revents & POLLIN)
-					action |= CURL_CSELECT_IN;
-				if (pfd->revents & POLLOUT)
-					action |= CURL_CSELECT_OUT;
-				
-				Debug((DEBUG_DEBUG, "url_do_transfers_async() -> curl_multi_socket_action: socket %d (act: 0x%x)", (int)pfd->fd, (int)action));
-				r = curl_multi_socket_action(multihandle, pfd->fd, action, &dummy);
-				if (r == CURLM_OK)
-					didanything = 1;
-			}
-		}
-
-		fix_poll_array();
-
-		/* Handle timeouts. This also initiates the whole transfer process. */
-		r = curl_multi_socket_action(multihandle, CURL_SOCKET_TIMEOUT, 0, &dummy);
-
-		/* now, check the status of things & deal with the results.
-		 * this could also be called in each socket callbacks, but I figured
-		 * we could just as well do them here all at once...
-		 */
-		
-		while ((msg = curl_multi_info_read(multihandle, &msgs_left))) {
-			if (msg->msg == CURLMSG_DONE)
-			{
-				FileHandle *handle;
-				long code;
-				long last_mod;
-				CURL *easyhand = msg->easy_handle;
-				curl_easy_getinfo(easyhand, CURLINFO_RESPONSE_CODE, &code);
-				curl_easy_getinfo(easyhand, CURLINFO_PRIVATE, (char*)&handle);
-				curl_easy_getinfo(easyhand, CURLINFO_FILETIME, &last_mod);
-				fclose(handle->fd);
-	#if defined(IRC_USER) && defined(IRC_GROUP)
-				if (!loop.ircd_booted)
-					chown(handle->filename, irc_uid, irc_gid);
-	#endif
-				if (msg->data.result == CURLE_OK)
-				{
-					if (code == 304 || (last_mod != -1 && last_mod <= handle->cachetime))
-					{
-						handle->callback(handle->url, NULL, NULL, 1, handle->callback_data);
-						remove(handle->filename);
-
-					}
-					else
-					{
-						if (last_mod != -1)
-							unreal_setfilemodtime(handle->filename, last_mod);
-
-						handle->callback(handle->url, handle->filename, NULL, 0, handle->callback_data);
-						remove(handle->filename);
-					}
-				}
-				else
-				{
-					handle->callback(handle->url, NULL, handle->errorbuf, 0, handle->callback_data);
-					remove(handle->filename);
-				}
-				free(handle->url);
-				free(handle);
-				curl_multi_remove_handle(multihandle, easyhand);
-				/* NOTE: after curl_multi_remove_handle() you cannot use
-				 * 'msg' anymore because it has freed by curl (as of v7.11.0),
-				 * therefore 'easyhand' is used... fun! -- Syzop
-				 */
-				curl_easy_cleanup(easyhand);
-			}
-		}
-#ifdef DEBUGMODE
-		if (didanything == 1)
-			Debug((DEBUG_DEBUG, "another url_do_transfers_async iteration.. yay!"));
-#endif
-
-	if (didanything)
-	{
-#ifndef _WIN32
-		gettimeofday(&tv_now, NULL);
-		totalduration += ((tv_now.tv_sec - tv_start.tv_sec) * 1000000) + tv_now.tv_usec - tv_start.tv_usec;
-#else
-		_ftime(&tv_now);
-		totalduration += ((tv_now.tv_time - tv_start.tv_time) * 1000000) + ((tv_now.millitm - tv_start.millitm) * 1000); /* note: reduced accuracy */
-#endif
-		Debug((DEBUG_DEBUG, "url_do_transfers_async: totalduration is now %ld", totalduration));
-	}
-
-	} while(didanything && (totalduration < 250000)); /* repeat our loop if we did anything AND if we have spent less than 0.25s (250000usec) */
-}
-#else
-/* NON-POLL */
-
-/*
- * Called in the select loop. Handles the transferring of any
- * queued asynchronous transfers.
- * This is the select (NON-POLL) variant, which is no longer the default!
- */
-void url_do_transfers_async(void)
-{
-	int cont;
-	int msgs_left;
-	CURLMsg *msg;
-	while(CURLM_CALL_MULTI_PERFORM == curl_multi_perform(multihandle, &cont))
-		;
-
-	while(cont) {
-		struct timeval timeout;
-		int rc;
-
-		fd_set fdread, fdwrite, fdexcep;
-		int maxfd;
-		FD_ZERO(&fdread);
-		FD_ZERO(&fdwrite);
-		FD_ZERO(&fdexcep);
-		timeout.tv_sec = 1;
-		timeout.tv_usec = 0;
-
-		curl_multi_fdset(multihandle, &fdread, &fdwrite, &fdexcep, &maxfd);
-
-		rc = select(maxfd+1, &fdread, &fdwrite, &fdexcep, &timeout);
-
-		switch(rc) {
-			case -1:
-			case 0:
-				cont = 0;
-				break;
-			default:
-				while(CURLM_CALL_MULTI_PERFORM == 
-					curl_multi_perform(multihandle, &cont))
-					;
-		}
-	}
-
-	while ((msg = curl_multi_info_read(multihandle, &msgs_left))) {
-		if (msg->msg == CURLMSG_DONE)
-		{
-			FileHandle *handle;
-			long code;
-			long last_mod;
-			CURL *easyhand = msg->easy_handle;
-			curl_easy_getinfo(easyhand, CURLINFO_RESPONSE_CODE, &code);
-			curl_easy_getinfo(easyhand, CURLINFO_PRIVATE, (char*)&handle);
-			curl_easy_getinfo(easyhand, CURLINFO_FILETIME, &last_mod);
-			fclose(handle->fd);
-#if defined(IRC_USER) && defined(IRC_GROUP)
-			if (!loop.ircd_booted)
-				chown(handle->filename, irc_uid, irc_gid);
-#endif
-			if (msg->data.result == CURLE_OK)
-			{
-				if (code == 304 || (last_mod != -1 && last_mod <= handle->cachetime))
-				{
-					handle->callback(handle->url, NULL, NULL, 1, handle->callback_data);
-					remove(handle->filename);
-
-				}
-				else
-				{
-					if (last_mod != -1)
-						unreal_setfilemodtime(handle->filename, last_mod);
-
-					handle->callback(handle->url, handle->filename, NULL, 0, handle->callback_data);
-					remove(handle->filename);
-				}
-			}
-			else
-			{
-				handle->callback(handle->url, NULL, handle->errorbuf, 0, handle->callback_data);
-				remove(handle->filename);
-			}
-			free(handle->url);
-			free(handle);
-			curl_multi_remove_handle(multihandle, easyhand);
-			/* NOTE: after curl_multi_remove_handle() you cannot use
-			 * 'msg' anymore because it has freed by curl (as of v7.11.0),
-			 * therefore 'easyhand' is used... fun! -- Syzop
-			 */
-			curl_easy_cleanup(easyhand);
-		}
-	}
-}
-#endif

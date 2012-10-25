@@ -1776,10 +1776,6 @@ int  read_message(time_t delay, fdlist *listp)
 		reset_pollfd();
 #endif /* USE_POLL */
 
-#ifdef USE_LIBCURL
-		url_do_transfers_async();
-#endif
-
 #ifdef NO_FDLIST
 		for (i = LastSlot; i >= 0; i--)
 #else
