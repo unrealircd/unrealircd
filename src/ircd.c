@@ -1841,38 +1841,9 @@ void SocketLoop(void *dummy)
 		else
 			delay = MIN(delay, TIMESEC);
 
-		/* XXX: can't use delay here until read_message() is fully dead. --nenolod */
-		fd_select(1000);
-#if 0
-#ifdef NO_FDLIST
-		(void)read_message(delay);
+		fd_select(delay * 1000);
 		timeofday = time(NULL) + TSoffset;
-#else
-		(void)read_message(0, &serv_fdlist);	/* servers */
-		(void)read_message(1, &busycli_fdlist);	/* busy clients */
-		if (lifesux) {
-			static time_t alllasttime = 0;
 
-			(void)read_message(1, &serv_fdlist);
-			/*
-			 * read servs more often 
-			 */
-			if (lifesux > 9) {	/* life really sucks */
-				(void)read_message(1, &busycli_fdlist);
-				(void)read_message(1, &serv_fdlist);
-			}
-			flush_fdlist_connections(&serv_fdlist);
-			timeofday = time(NULL) + TSoffset;
-			if ((alllasttime + (lifesux + 1)) < timeofday) {
-				read_message(delay, NULL);	/*  check everything */
-				alllasttime = timeofday;
-			}
-		} else {
-			read_message(delay, NULL);	/*  check everything */
-			timeofday = time(NULL) + TSoffset;
-		}
-#endif
-#endif
 		/*
 		 * Debug((DEBUG_DEBUG, "Got message(s)")); 
 		 */
