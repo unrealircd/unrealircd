@@ -209,6 +209,101 @@ void fd_select(time_t delay)
 #endif
 
 /***************************************************************************************
+ * kqueue() backend.                                                                   *
+ ***************************************************************************************/
+#ifdef BACKEND_KQUEUE
+
+#warning kqueue support is presently untested.  tell me if it works!
+
+#include <sys/event.h>
+
+static int kqueue_fd = -1;
+static struct kevent kqueue_events[MAXCONNECTIONS * 2];
+
+void fd_refresh(int fd)
+{
+	struct kevent ev;
+	FDEntry *fde = &fd_table[fd];
+
+	if (kqueue_fd == -1)
+		kqueue_fd = kqueue();
+
+	EV_SET(&ev, (uintptr_t) fd, (short) EVFILT_READ, fde->read_callback != NULL ? EV_ADD : EV_DELETE, 0, 0, NULL);
+	if (kevent(kqueue_fd, &ev, 1, NULL, 0, &(const struct timespec){ .tv_sec = 0, .tv_nsec = 0}) != 0)
+	{
+		if (ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN)
+			return;
+
+		ircd_log(LOG_ERROR, "[BUG?] kevent returned %d", errno);
+		return;
+	}
+
+	EV_SET(&ev, (uintptr_t) fd, (short) EVFILT_WRITE, fde->write_callback != NULL ? EV_ADD : EV_DELETE, 0, 0, NULL);
+	if (kevent(kqueue_fd, &ev, 1, NULL, 0, &(const struct timespec){ .tv_sec = 0, .tv_nsec = 0}) != 0)
+	{
+		if (ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN)
+			return;
+
+		ircd_log(LOG_ERROR, "[BUG?] kevent returned %d", errno);
+		return;
+	}
+}
+
+void fd_select(time_t delay)
+{
+	struct timespec ts;
+	int num, p, revents, fd;
+	struct kevent *ke;
+
+	if (kqueue_fd == -1)
+		kqueue_fd = kqueue();
+
+	ts.tv_sec = delay / 1000;
+	ts.tv_nsec = delay % 1000 * 1000000;
+
+	num = kevent(kqueue_fd, NULL, 0, kqueue_events, MAXCONNECTIONS * 2, &ts);
+	if (num <= 0)
+		return;
+
+	for (p = 0; p < num; p++)
+	{
+		FDEntry *fde;
+		IOCallbackFunc iocb;
+		int evflags = 0;
+
+		ke = &kqueue_events[p];
+		fd = ke->ident;
+		revents = ke->filter;
+
+		if (revents == EVFILT_READ)
+		{
+			iocb = fde->read_callback;
+			if (fde->read_oneshot)
+				fde->read_callback = NULL;
+
+			if (iocb != NULL)
+				iocb(fd, FD_SELECT_READ, fde->data);
+
+			fde->read_oneshot = 0;
+		}
+
+		if (revents == EVFILT_WRITE)
+		{
+			iocb = fde->write_callback;
+			if (fde->write_oneshot)
+				fde->write_callback = NULL;
+
+			if (iocb != NULL)
+				iocb(fd, FD_SELECT_WRITE, fde->data);
+
+			fde->write_oneshot = 0;
+		}
+	}
+}
+
+#endif
+
+/***************************************************************************************
  * epoll() backend.                                                                    *
  ***************************************************************************************/
 #ifdef BACKEND_EPOLL
