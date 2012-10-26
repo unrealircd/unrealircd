@@ -17,6 +17,7 @@ typedef struct fd_entry {
 	void *data;
 	time_t deadline;
 	unsigned char is_open;
+	unsigned int backend_flags;
 } FDEntry;
 
 extern MODVAR FDEntry fd_table[MAXCONNECTIONS + 1];

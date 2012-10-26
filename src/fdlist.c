@@ -51,6 +51,7 @@ int fd_open(int fd, const char *desc)
 
 	fde->fd = fd;
 	fde->is_open = 1;
+	fde->backend_flags = 0;
 	strlcpy(fde->desc, desc, FD_DESC_SZ);
 
 	return fde->fd;
