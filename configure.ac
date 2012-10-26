@@ -557,6 +557,9 @@ case `uname -s` in
 		;;
 esac
 
+AC_CHECK_FUNCS([epoll_create epoll_ctl epoll_wait],
+	AC_DEFINE([HAVE_EPOLL], [], [Define if you have epoll]))
+
 dnl c-ares needs PATH_SEPARATOR set or it will
 dnl fail on certain solaris boxes. We might as
 dnl well set it here.

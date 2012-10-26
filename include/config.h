@@ -77,7 +77,11 @@
  * select for now.
  */
 #ifndef _WIN32
+#ifndef HAVE_EPOLL
+#ifndef HAVE_KQUEUE
 #define USE_POLL
+#endif
+#endif
 #endif
 
 /*

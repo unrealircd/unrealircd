@@ -67,6 +67,18 @@
 /* Define to 1 if you don't have `vprintf' but do have `_doprnt.' */
 #undef HAVE_DOPRNT
 
+/* Define if you have epoll */
+#undef HAVE_EPOLL
+
+/* Define to 1 if you have the `epoll_create' function. */
+#undef HAVE_EPOLL_CREATE
+
+/* Define to 1 if you have the `epoll_ctl' function. */
+#undef HAVE_EPOLL_CTL
+
+/* Define to 1 if you have the `epoll_wait' function. */
+#undef HAVE_EPOLL_WAIT
+
 /* Define to 1 if you have the `getrusage' function. */
 #undef HAVE_GETRUSAGE
 

@@ -89,8 +89,126 @@ void fd_setselect(int fd, int flags, IOCallbackFunc iocb, void *data)
 	fd_refresh(fd);
 }
 
-#ifndef USE_POLL
+#ifdef USE_SELECT
 # error select() is not supported by the new code yet
+#endif
+
+/***************************************************************************************
+ * epoll() backend.                                                                    *
+ ***************************************************************************************/
+#ifdef HAVE_EPOLL
+
+#include <sys/epoll.h>
+
+static int epoll_fd = -1;
+static struct epoll_event epfds[MAXCONNECTIONS + 1];
+
+void fd_refresh(int fd)
+{
+	struct epoll_event ep_event;
+	FDEntry *fde = &fd_table[fd];
+	unsigned int pflags = 0;
+	unsigned int i;
+	int op = -1;
+
+	if (epoll_fd == -1)
+		epoll_fd = epoll_create(MAXCONNECTIONS);
+
+	if (fde->read_callback)
+		pflags |= EPOLLIN;
+
+	if (fde->write_callback)
+		pflags |= EPOLLOUT;
+
+	if (fde->read_oneshot || fde->write_oneshot)
+		pflags |= EPOLLONESHOT;
+
+	if (pflags == 0 && fde->backend_flags == 0)
+		return;
+	else if (pflags == 0)
+		op = EPOLL_CTL_DEL;
+	else if (fde->backend_flags == 0 && pflags != 0)
+		op = EPOLL_CTL_ADD;
+	else if (fde->backend_flags != pflags)
+		op = EPOLL_CTL_MOD;
+
+	if (op == -1)
+		return;
+
+	ep_event.events = pflags;
+	ep_event.data.ptr = fde;
+
+	if (epoll_ctl(epoll_fd, op, fd, &ep_event) != 0)
+	{
+		if (ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN)
+			return;
+
+		ircd_log(LOG_ERROR, "[BUG?] epoll returned %d", errno);
+		return;
+	}
+
+	fde->backend_flags = pflags;
+}
+
+void fd_select(time_t delay)
+{
+	int num, p, revents, fd;
+	struct epoll_event *epfd;
+
+	if (epoll_fd == -1)
+		epoll_fd = epoll_create(MAXCONNECTIONS);
+
+	num = epoll_wait(epoll_fd, epfds, MAXCONNECTIONS, delay);
+	if (num <= 0)
+		return;
+
+	for (p = 0; p < num; p++)
+	{
+		FDEntry *fde;
+		IOCallbackFunc iocb;
+		int evflags = 0;
+
+		epfd = &epfds[p];
+
+		revents = epfd->events;
+		if (revents == 0)
+			continue;
+
+		fde = epfd->data.ptr;
+		fd = fde->fd;
+
+		if (revents & (EPOLLIN | EPOLLHUP | EPOLLERR))
+			evflags |= FD_SELECT_READ;
+
+		if (revents & (EPOLLOUT | EPOLLHUP | EPOLLERR))
+			evflags |= FD_SELECT_WRITE;
+
+		if (evflags & FD_SELECT_READ)
+		{
+			iocb = fde->read_callback;
+			if (fde->read_oneshot)
+				fde->read_callback = NULL;
+
+			if (iocb != NULL)
+				iocb(fd, evflags, fde->data);
+
+			fde->read_oneshot = 0;
+		}
+
+		if (evflags & FD_SELECT_WRITE)
+		{
+			iocb = fde->write_callback;
+			if (fde->write_oneshot)
+				fde->write_callback = NULL;
+
+			if (iocb != NULL)
+				iocb(fd, evflags, fde->data);
+
+			fde->write_oneshot = 0;
+		}
+	}
+}
+
 #endif
 
 /***************************************************************************************
