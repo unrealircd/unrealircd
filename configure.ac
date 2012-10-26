@@ -557,6 +557,8 @@ case `uname -s` in
 		;;
 esac
 
+AC_CHECK_FUNCS([poll],
+	AC_DEFINE([HAVE_POLL], [], [Define if you have poll]))
 AC_CHECK_FUNCS([epoll_create epoll_ctl epoll_wait],
 	AC_DEFINE([HAVE_EPOLL], [], [Define if you have epoll]))
 

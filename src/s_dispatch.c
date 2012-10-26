@@ -89,14 +89,129 @@ void fd_setselect(int fd, int flags, IOCallbackFunc iocb, void *data)
 	fd_refresh(fd);
 }
 
-#ifdef USE_SELECT
-# error select() is not supported by the new code yet
+/***************************************************************************************
+ * select() backend.                                                                   *
+ ***************************************************************************************/
+#ifdef BACKEND_SELECT
+
+#ifndef _WIN32
+# include <sys/select.h>
+#endif
+
+static int highest_fd = -1;
+static fd_set read_fds, write_fds, except_fds;
+
+void fd_refresh(int fd)
+{
+	FDEntry *fde = &fd_table[fd];
+	unsigned int flags = 0;
+
+	if (fde->read_callback)
+	{
+		flags |= FD_SELECT_READ;
+
+		FD_SET(fd, &read_fds);
+	}
+	else
+		FD_CLR(fd, &read_fds);
+
+	if (fde->write_callback)
+	{
+		flags |= FD_SELECT_WRITE;
+
+		FD_SET(fd, &write_fds);
+	}
+	else
+		FD_CLR(fd, &write_fds);
+
+	if (flags && highest_fd < fd)
+		highest_fd = fd;
+
+	while (highest_fd > 0 &&
+		!(FD_ISSET(highest_fd, &read_fds) || FD_ISSET(highest_fd, &write_fds)))
+		highest_fd--;
+}
+
+void fd_select(time_t delay)
+{
+	struct timeval to;
+	int num, fd;
+	fd_set work_read_fds, work_write_fds, work_except_fds;
+
+	/* optimization: copy the FD sets so that our master sets are untouched */
+	memcpy(&work_read_fds, &read_fds, sizeof(fd_set));
+	memcpy(&work_write_fds, &write_fds, sizeof(fd_set));
+
+	to.tv_sec = delay % 1000;
+	to.tv_usec = delay * 1000;
+
+	num = select(highest_fd + 1, &work_read_fds, &work_write_fds, NULL, &to);
+	if (num <= 0)
+		return;
+
+	for (fd = 0; fd <= highest_fd && num > 0; fd++)
+	{
+		FDEntry *fde;
+		IOCallbackFunc iocb;
+		int evflags = 0;
+
+		fde = &fd_table[fd];
+		if (!fde->is_open)
+			continue;
+
+		if (FD_ISSET(fd, &work_read_fds))
+			evflags |= FD_SELECT_READ;
+
+		if (FD_ISSET(fd, &work_write_fds))
+			evflags |= FD_SELECT_WRITE;
+
+		/* if exception happens, just dispatch to something so we bail on the FD */
+		if (FD_ISSET(fd, &work_except_fds))
+			evflags |= (FD_SELECT_READ | FD_SELECT_WRITE);
+
+		if (!evflags)
+			continue;
+
+		if (evflags & FD_SELECT_READ)
+		{
+			iocb = fde->read_callback;
+			if (fde->read_oneshot)
+			{
+				FD_CLR(fd, &read_fds);
+				fde->read_callback = NULL;
+			}
+
+			if (iocb != NULL)
+				iocb(fd, evflags, fde->data);
+
+			fde->read_oneshot = 0;
+		}
+
+		if (evflags & FD_SELECT_WRITE)
+		{
+			iocb = fde->write_callback;
+			if (fde->write_oneshot)
+			{
+				FD_CLR(fd, &write_fds);
+				fde->write_callback = NULL;
+			}
+
+			if (iocb != NULL)
+				iocb(fd, evflags, fde->data);
+
+			fde->write_oneshot = 0;
+		}
+
+		num--;
+	}
+}
+
 #endif
 
 /***************************************************************************************
  * epoll() backend.                                                                    *
  ***************************************************************************************/
-#ifdef HAVE_EPOLL
+#ifdef BACKEND_EPOLL
 
 #include <sys/epoll.h>
 
@@ -214,7 +329,7 @@ void fd_select(time_t delay)
 /***************************************************************************************
  * Poll() backend.                                                                     *
  ***************************************************************************************/
-#ifdef USE_POLL
+#ifdef BACKEND_POLL
 
 #ifndef _WIN32
 # include <sys/poll.h>

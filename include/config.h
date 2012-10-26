@@ -71,17 +71,28 @@
 #undef NO_FDLIST
 
 /*
- * Defining this will enable poll() usage instead of select().
- * This is the default on *NIX as of 3.2.10.
- * On Windows this would require Vista or newer so we stick with
- * select for now.
+ * So, the way this works is we determine using the preprocessor
+ * what polling backend to use for the eventloop.  We prefer epoll,
+ * followed by kqueue, followed by poll, and then finally select.
+ * Kind of ugly, but it gets the job done.  You can also fiddle with
+ * this to determine what backend is used.
  */
 #ifndef _WIN32
-#ifndef HAVE_EPOLL
-#ifndef HAVE_KQUEUE
-#define USE_POLL
-#endif
-#endif
+# ifdef HAVE_EPOLL
+#  define BACKEND_EPOLL
+# else
+#  ifdef HAVE_KQUEUE
+#   define BACKEND_KQUEUE
+#  else
+#   ifdef HAVE_POLL
+#    define BACKEND_POLL
+#   else
+#    define BACKEND_SELECT
+#   endif
+#  endif
+# endif
+#else
+# define BACKEND_SELECT
 #endif
 
 /*

@@ -115,6 +115,9 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
+/* Define to 1 if you have the `poll' function. */
+#undef HAVE_POLL
+
 /* Define if you have PS_STRINGS */
 #undef HAVE_PSSTRINGS
 
