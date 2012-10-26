@@ -66,9 +66,6 @@ int  deliver_it(aClient *cptr, char *str, int len)
 #ifdef	DEBUGMODE
 	writecalls++;
 #endif
-#ifdef VMS
-	retval = netwrite(cptr->fd, str, len);
-#else
 	if (IsDead(cptr) || (!IsServer(cptr) && !IsPerson(cptr)
 	    && !IsHandshake(cptr) 
 #ifdef USE_SSL
@@ -128,7 +125,6 @@ int  deliver_it(aClient *cptr, char *str, int len)
 		    WSAGetLastError() == WSAENOBUFS))
 # endif
 			retval = 0;
-#endif
 #ifdef DEBUGMODE
 	if (retval < 0)
 	{
