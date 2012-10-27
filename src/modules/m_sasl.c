@@ -54,6 +54,9 @@
 #define MSG_SVSLOGIN "SVSLOGIN"
 #define TOK_SVSLOGIN "SZ"
 
+/* returns a server identifier given agent_p */
+#define AGENT_SID(agent_p)	(agent_p->user != NULL ? agent_p->user->server : agent_p->name)
+
 ModuleHeader MOD_HEADER(m_sasl)
   = {
 	"m_sasl",
@@ -153,7 +156,7 @@ static int m_svslogin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	if (!SASL_SERVER || MyClient(sptr) || (parc < 3) || !parv[3])
 		return 0;
-	
+
 	if (!stricmp(parv[1], me.name))
 	{
 		aClient *target_p;
@@ -198,7 +201,7 @@ static int m_sasl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	if (!SASL_SERVER || MyClient(sptr) || (parc < 4) || !parv[4])
 		return 0;
-	
+
 	if (!stricmp(parv[1], me.name))
 	{
 		aClient *target_p;
@@ -274,7 +277,7 @@ static int m_authenticate(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_serv_butone_token(NULL, me.name, MSG_SASL, TOK_SASL, "%s %s S %s",
 					 SASL_SERVER, encode_puid(sptr), parv[1]);
 	else
-		sendto_serv_butone_token(NULL, me.name, MSG_SASL, TOK_SASL, "%s %s C %s", agent_p->user->server, encode_puid(sptr), parv[1]);
+		sendto_serv_butone_token(NULL, me.name, MSG_SASL, TOK_SASL, "%s %s C %s", AGENT_SID(agent_p), encode_puid(sptr), parv[1]);
 
 	sptr->sasl_out++;
 
@@ -295,7 +298,7 @@ static int abort_sasl(struct Client *cptr)
 
 		if (agent_p != NULL)
 		{
-			sendto_serv_butone_token(NULL, me.name, MSG_SASL, TOK_SASL, "%s %s D A", agent_p->user->server, encode_puid(cptr));
+			sendto_serv_butone_token(NULL, me.name, MSG_SASL, TOK_SASL, "%s %s D A", AGENT_SID(agent_p), encode_puid(cptr));
 			return 0;
 		}
 	}
