@@ -45,8 +45,8 @@ Turkish
 <BR><BR>
 <DIV align=center><B><FONT size=7>UnrealIRCd</FONT></B><BR><FONT size=4><A
 href="http://www.unrealircd.com/">http://www.unrealircd.com/</A></FONT><BR><FONT
-size=4>Version: 3.2.10-rc1</FONT><BR><B>En Son Güncelleme:</B>
-2011-10-09</DIV><BR>
+size=4>Version: 3.2.10</FONT><BR><B>En Son Güncelleme:</B>
+2012-10-16</DIV><BR>
 <B>Baþ Kodlayýcý/Devam Ettiren:</b> Syzop<br>
 <b>Kodlayýcýlar:</b> binki<br>
 <b>Önceki Kodlayýcýlar &amp; Katkýda bulunanlar:</b> Stskeeps, codemastr, Luke, aquanight,
@@ -54,7 +54,7 @@ WolfSage, McSkaf, Zogg,
 NiQuiL,  assyrian,  chasm,  DrBin,  llthangel, Griever,  nighthawk<br>
 <b><strong>Belgeleme</strong>:</b> CKnight^ (ilk belgeleyen), Syzop (yeniden yazan), codemastr, ve daha çok katkýda bulunanlar<br>
 <B>Önceki Çevirmenler:</B> oepidus (tt`), Strathmore (Timaeus) - irc.trsohbet.com<br>
-<B>Türkçe Çeviri:</B> <a href="mailto:diablo@unrealircd.org">Diablo</a><br>
+<B>Türkçe Çeviri:</B> <a href="mailto:diablo@unrealircd.org">Diablo (Serkan Sepetci)</a><br>
 <P>Bu dökümaný görüntüleyebilmeniz için aþaðýda listelenmiþ olan
 tarayýcýlardan birine sahip olmanýz gerekir. Güncellenmiþ dökümanlara <A
 href="http://www.vulnscan.org/UnrealIRCd/unreal32docs.tr.html">http://www.vulnscan.org/UnrealIRCd/unreal32docs.tr.html</A>
@@ -114,7 +114,9 @@ href="#feature_nickchars">Nick
 Karakter Gruplarý</A><BR>-- 3.17. <A
 href="#feature_cgiirc">CGI:IRC
 Desteði</A><BR>-- 3.18. <A
-href="#feature_timesync">Zaman Senkronizasyonu</A><BR>-- 3.19. <A
+href="#feature_timesync">Zaman Senkronizasyonu</A><BR>
+-- 3.19. <a href="#feature_authtypes">Kimlik Doðrulama Türleri</a><BR>
+-- 3.20. <A
 href="#feature_other">Diðer özellikler</A><BR>4. <A
 href="#configuringyourunrealircdconf">unrealircd.conf dosyasýnýn
 konfigürasyonu</A><BR>---4.1. <A
@@ -1202,12 +1204,92 @@ alýnamazsa, IRCd açýlmaya devam edecektir. (bu olaya nadiren rastlanýr)</P>
 daha fazla
 bilgi için <A
 href="#setblock">set dökümanýna</A> bakýn..</P></DIV>
-<P><FONT size=+2><B>3.19 - Diðer Özellikler</B></FONT><A
-name=feature_other></A></P>
-<DIV class=desc>
-<P>UnrealIRCd buraya sýðamayacak kadar çok özelliðe
-sahiptir... Bu özellikleri kendiniz bulacaksýnýz.</P></DIV>
-<P></P>
+<p><font size="+2"><b>3.19 - Kimlik Doðrulama Türleri</b></font><a name="feature_authtypes"></a></p>
+<div class="desc">
+<p>Yapýlandýrma dosyasý çeþitli yerlerinde, örneðin <a
+href="#operblock">oper block</a>, <a href="#allowblock">allow block</a> ve
+<a href="#linkblock">link block</a>, gibi diðer yollarla þifreleyerek kullanýcý kimliðini doðrulayabilirsiniz.
+<br>Düz metin olarak þifre belirleyebilirsiniz, ama ayný zamanda bir kimlik doðrulama türünü belirtebilirsiniz.<br>
+  Mevcut auth tipleri aþaðýdaki gibidir:<br>
+<table border="0">
+<TR>
+  <TD><b>Auth-tipi:</b></TD>
+  <TD><b>Tanýmlama:</b></TD>
+  <TD><b>Destek Dosyalarý:</b></TD><TD><b>Nasýl oluþturlur:</b></TD></TR>
+<TR><TD><b>crypt</b></TD><TD>UNIX crypt</TD>
+<TD>Windows:OpenSSL gerekir </TD>
+<TD>/MKPASSWD crypt :þifre</TD>
+</TR>
+<TR><TD><b>md5</b></TD>
+<TD>MD5 ile </TD>
+<TD><DIV id="gt-res-content" closure_uid_7ss8mw="163">
+  <DIV dir="ltr" closure_uid_7ss8mw="162"><SPAN id="result_box" lang="tr" closure_uid_7ss8mw="123" c="4" a="undefined" Uc="null"><SPAN closure_uid_7ss8mw="764" Uc="null">Her   zaman kullanýlabilir</SPAN></SPAN></DIV>
+</DIV></TD><TD>/MKPASSWD md5 :þifre</TD>
+</TR>
+<TR><TD><b>sha1</b></TD>
+<TD>SHA1 ile </TD>
+<TD>OpenSSL gerekir</TD>
+<TD>/MKPASSWD sha1 :þifre</TD>
+</TR>
+<TR><TD><b>ripemd160</b></TD>
+<TD>RIPEMD160 ile </TD>
+<TD>OpenSSL gerekir</TD>
+<TD>/MKPASSWD ripemd160 :þifre</TD>
+</TR>
+<TR><TD><b>sslclientcert</b></TD>
+<TD>SSL Kullanýcý sertifikasý </TD>
+<TD>OpenSSL gerekir</TD>
+<TD>Genel .pem uzantýlý sertifika dosyasý.</TD>
+</TR>
+<TR><TD><b>sslclientcertfp</b></TD>
+<TD>SSL Kullanýcý sertifikasý parmak izi </TD>
+<TD>OpenSSL gerekir</TD>
+<TD>openssl x509 -in name-of-pem-file.pem -sha256 -noout -fingerprint</TD></TR>
+</table>
+/MKPASSWD komutunu sadece IRCOp 'lar kullanabilir. Alternatif olarak, shell komut satýrý arabirimini kullanabilirsiniz: <i>./unreal mkpasswd hashtipi þifre
+</i>.<br>
+Tüm kimlik doðrulama türleri tüm sistemlerde bulunmaz, yukarýdaki tabloda destek dosyalarýna (önkoþullara) bakýnýnýz.<br>
+<br>
+<b>Örnek: MD5 methodu vhost bloðunda parolayý þifreler.</b><br>
+1. Farzet, sen þifreni <i>test</i> olarak kullanmak istiyorsun ve md5 hash
+olarak þifreleyeceksin.<br>
+ Eðer IRCOp iseniz bunu basitçe yazabilirsiniz <i>/MKPASSWD md5 :test</i>.<br>
+Alternatif olarak, IRC yerine aþaðýdaki komutu shellinizde çalýþtýrabilirsiniz: <i>./unreal mkpasswd md5 test</i>.<br>
+Bu yöntemlerden birini kullanarak, çýktýlanan hashed parolasý gibi görünecektir. <i>$NIV0bSfG$UTMvI/KdMwe4cZqmT/23qw==</i>
+(dizeyi deðiþecektir!)<br>
+2. Þimdi, elimizde bir md5 hash þifresi var bunu UnrealIRCd satýrýna bildirerek<br>
+vhost dizesine koyacaðýz. Örnek:
+<pre>vhost {
+    vhost I.love.Tux;
+    from { userhost *@*; };
+    login Tux;
+    password "$NIV0bSfG$UTMvI/KdMwe4cZqmT/23qw==" { md5; };
+};</pre>
+3. Bu vhostu kullanmak için <i>/VHOST Tux test</i> yazýnýz.
+<br>
+<b>Örnek: SSL kullanýcý sertifikalarý ile kimlik doðrulama</b><br>
+<tt>sslclientcert</tt> ve <tt>sslclientcertfp</tt> kendi kullanýcý sertifikasý SSL kullanýcýlarýn kimliðini doðrulamak için kullanýlan olaðanüstü auth-tipi vardýr.<br>
+Bu kimlik doðrulama yöntemleri ile kullanýcý SSL kullanarak ve belirtilen kullanýcý sertifikasý kullanarak emin olabilirsiniz.<br>
+Ýþte oper bloðunun nasýl kullanýlacaðýný gösteren bir örnek:<br>
+1. Eðer SSL kullanýcý sertifikasý yoksa bir tane oluþturabilirsiniz (Eðer bilmiyorsanýz, 'ssl sertifikasý oluþturmak' yazarak nasýl oluþturacaðýnýz hakkýnda web'de arama yapabilirsiniz.)<br>
+2. SHA256 hash methodunu çalýþtýrarak hýzlýca sertifikanýzý alabilirsiniz:
+<pre>openssl x509 -in name-of-pem-file.pem -sha256 -noout -fingerprint</pre>
+3. Yapýlandýrma dosyasýnda, orjinal parolayý (<i>test</i> örneðimizdeki gibi) sslclientcertfp auth-tipini belirterek deðiþtiriniz. Ýþte bir örnek:<br>
+<pre>oper test {
+     password "E7:4D:46:F1:9F:F4:68:F5:E8:E3:49:CC:28:5D:F9:65:85:BA:4F:16:B6:49:02:E3:34:E6:E7:6A:FE:76:A7:98" { sslclientcertfp; };
+     flags { global; can_override; };
+     class clients;
+   };</pre>
+<p>4. Sunucun yenileniyor (/REHASH).<br>
+  5. Þimdi, SSL istemci ile baðlandýðýna emin olun ve SSL istemci sertifikasý için bu adýmý kullanýn #2.<br>
+  6. <i>/oper test x</i> yaparak operliðe yükseleceksin. (örnekte <i>x</i>) þifresi gibi parola hala belirtilmelidir. Bu yüzden SSL istemci sertifikasý kimlik doðrulamasý için bunu göz ardý edilir.<br>
+  7. Tebrikler, artýk UnrealIRCd'nin mevcut en güvenli kimlik doðrulama yöntemi kullanýyorsunuz.<br>
+  <br>
+  <tt>sslclientcertfp</tt> <a href="#linkblock_passwordreceive">link::password-receive</a> gibi yararlý baþka yerlerde kullanabilirsiniz.</p>
+<p><FONT size=+2><B>3.20 - Diðer Özellikler</B></FONT></p>
+</div>
+<DIV class=desc><P>UnrealIRCd buraya sýðamayacak kadar çok özelliðe
+sahiptir... Bu özellikleri kendiniz bulacaksýnýz</P></DIV>
 <P><FONT size=+2><B>4.0 - unrealircd.conf dosyasýnýn
 konfigürasyonu</B></FONT>
 <A name=configuringyourunrealircdconf></A></P>
@@ -1218,7 +1300,7 @@ boot
 etmeyi deneyebilirsiniz ve daha sonra geniþ olarak konfigürasyon dosyasýný
 inceleyebilirsiniz, veya adým adým ana kýsýmlarý öðrenebilirsiniz ki bu
 tercih
-edilen yoldur. ;P. Eðer bir sorunla karþýlaþýrsanýz, yardým istemeden önce
+edilen yoldur. Eðer bir sorunla karþýlaþýrsanýz, yardým istemeden önce
 yazýmýnýzý (syntax), klavuzu ve <A
 href="http://www.vulnscan.org/UnrealIRCd/faq/">FAQ</A>
 kýsmýný kontrol edin.</P></DIV>
@@ -1603,31 +1685,8 @@ baðlantýlarýný kullanarak olmasýný gerektirecek þekilde kullanýlmýþ olmasý gerek
 </p>
 <p id="operblock_password"><b>oper::password::</b> bölümünde belirttiðiniz þifre ise
 kullanýcýnýn belirteceði þifredir. <b>oper::password::auth-type</b> bölümünde ise bu þifre
-için bir auth metodu belirtebilirsiniz. Eðer düz-metin bir þifre kullanmak istiyorsanýz
-<b>oper::password::auth-type</b> bu bloðu kullanmayýn. Auth tipleri;
-<tt>crypt</tt>, <tt>md5</tt>, <tt>sha1</tt>, <tt>ripemd160</tt>,
-ve <tt>sslclientcert</tt>. <b>oper::password::</b> bu bölüme herhangi bir deðeri belirtme anlamýna gelir.
-detaylý bilgi için; <a href="#cmd_mkpasswd">mkpasswd</a>.
-</p>
-<p id="operblock_password_sslclientcert">
-<tt>sslclientcert</tt> istisna olan bir auth tipidir.
-Bu auth-tipi olarak seçilmiþtir. <b>oper::password::</b> bölümüne ekleyeceðiniz auth tipi dosya yolunu
-(UnrealIRCd kurulum dizinine göre) olmasýna dikkat etmelisiniz. Bu dosya PEM kodlu SSL sertifikasý
-(ortak bir sertifika, anahtar deðil) olmalýdýr. Bu sadece onu bir IRC istemcisi olarak belirtir.
-<ol>
-    <li>SSL kullanýlarak baðlandýðýnda</li>
-    <li>Baðlanýrken eþleþen istemci sertifika sunar</li>
-    <li>Sertifika dosyasýyla benzetilen özel anahtara eriþime sahip olup</li>
-  </ol>
-  baðlanabilirsiniz. Tabii ki bu özellik UnrealIRCd SSL desteði ile derlenmiþ olmasý gerekir.
-  Hem de, herhangi þekilde SSL sertifikasýnýn ilgili anahtarýnýn, normal bir insanýn
-  parolasýndan çok daha uzun ve çok daha fazla rasgele olduðu gibi,
-  bu en emniyetli belgeleme seçeneðidir. Eðer oper þifre olarak bir SSL sertifikasý
-  belirtilmemesi durumunda, <pre>/oper &lt;name&gt; :</pre> doðru ayarlanmýþ olduðundan emin olun.
-  <tt>sslclientcert</tt> auth tipi için de kullanýlabilirler.
-  <a href="#linkblock_passwordreceive">link::password-receive</a>
-  olarak sabitlemek için <a href="#linkblock">link block</a>s.
-  </ol>
+için bir auth metodu belirtebilirsiniz. Eðer düz metin bir þifre kullanmak istiyorsanýz
+<b>oper::password::auth-type</b> bloðunu kullanmayýn. Geçerli auth-tiplerini, oper bloklarý ile ve bunlarý nasýl kullanýldýðýný görmek için <a href="#feature_authtypes">Kimlik Doðrulama Türleri</a>.
 </p>
 <P>Lütfen login ismi kýsmýnýn ve þifre kýsmýnýn büyük-küçük
 harfe duyarlý olduðunu unutmayýn.</P>
@@ -2023,10 +2082,7 @@ name=drpassblock></A>
 };</PRE>
 <P></P>
 <P>Bu blok ile /restart ve /die þifrelerini drpass::restart
-ve drpass::die yönergeleriyle belirtebilirsiniz. drpass::restart:: ve
-drpass::die:: kýsýmlarý bu þifreler için auth tipini belirtmenize olanak
-verir.
-Geçerli auth tipleri: crypt, md5 ve sha1, ripemd-160.</P>
+ve drpass::die yönergeleriyle belirtebilirsiniz. Ayrýca bunun yerine, bir düz metin parola kullanabilirsiniz <a href="#feature_authtypes">Kimlik Doðrulama Türleri</a>.</p>
 <P>Örnek:</P><PRE>drpass {
 	restart "I-love-to-restart";
 	die "die-you-stupid";
@@ -2716,9 +2772,8 @@ gereken login ismini, vhost::password yönergesi ile kullanýcýnýn girmesi
 gereken
 þifreyi belirtebilirsiniz. vhost::password:: yönergesi ile belirtilen þifre
 için
-auth tipini de belirtebilirsiniz. Geçerli auth tipleri: crypt, md5, and
-sha1,
-ripemd-160. Son olarak vhost::swhois yönergesi, vhost kullanacak
+auth tipini de belirtebilirsiniz. Mevcut <a
+  href="#feature_authtypes">Kimlik Doðrulama Türleri</a> listesine bakýnýz. Son olarak vhost::swhois yönergesi, vhost kullanacak
 kullanýcýnýn
 whois bilgisine ekstra bir satýr eklemenize olanak saðlar, kullanýmý ise
 oper::swhois yönergesindeki kullaným þekli ile aynýdýr.</P>
@@ -2859,14 +2914,10 @@ kullanýlabilir (ör:
 192.168.0.1) , hemen hemen neredeyse hiç kullanýlmaz. </P>
 <P><B>port</B><BR>Link için baðlantý portu. </P>
 <P><B>password-connect</B><BR>Uzak sunucuya baðlanmak için gerekli olan
-þifre, sade-metin
-þeklinde olmalý. </P>
+þifre, düz metin þeklinde olmalý. </P>
 <P><B>password-receive</B><BR>Gelen linkleri doðrulamak (onaylamak) için
-gerekli þifre.
-Geçerli metodlarýn biri ile yeniden þifrelenebilir.(geçerli metodlar: crypt,
-md5, sha1, ripemd-160). Þifre olarak sade-metin belirtmek için auth-tipi
-parametresini kullanmayýn. Bu þifre genellikle uzak sunucuya baðlanmak için
-gerekli olan þifre ile aynýdýr. </P>
+gerekli þifredir.
+<tt>sslclientcertfp</tt> auth-tipi þifreler kullanýlmasý þiddetle tavsiye edilir. Daha fazla bilgi için <a href="#feature_authtypes">Kimlik Doðrulama Türleri</a> bakýnýz.<br> </P>
 <P><B>hub vs leaf</B><BR>Birçok sunucunun linklendiði sunucu bir hubdur,
 leaf ise
 tek bir linke sahiptir...Bir sunucu ya hubdur, yada leafdir, bu 2 seçeneði
@@ -3437,6 +3488,8 @@ gönderilir.</P>
 <p><font class="set">set::options::allow-insane-bans;</font><br>
 Anlamsýz /GLINE *@*.xx gibi geniþ banlara izin verir. Bu yüzden yanlýþlýkla aðýnýzdaki
 herkesi yasaklar! Böylece büyük bir özenle kullanmaya gerek duyabilirsiniz.</p>
+<p><font class="set">set::options::disable-cap;</font><br>
+IRC Client Yetenekler uzantýlarý devre dýþý býrakýr (CAP). Bu SASL ve çeþitli diðer özellikleri kullanýlamaz ve istemciler için kullanmanýn daha zor olduðunu unutmayýn.</p>
 <p id="set_nopost_ban_action"><font class="set">set::nopost::ban-action</font> (gerekli <a href="#modules_m_nopost">m_nopost</a>)<br />
 Kullanýcý HTTP POST komutu gerçekleþtirmek için çalýþýrsa, kullanýcýya belirtilen eylem uygulanýr.
 Ýzin verilen deðerler: kill, gline, gzline, kline, zline, shun, ve tempshun.
@@ -4680,9 +4733,9 @@ IRC
   <TR>
     <TD height=36>mkpasswd &lt;þifre&gt;<BR
       ></TD>
-    <TD>Sade metin halindeki bir þifreyi,
-      unrealircd.conf'a eklemek için, yeniden þifreler (encrypt)<BR
-      ></TD>
+    <TD>Düz metin halindeki bir þifreyi,
+      unrealircd.conf'a eklemek için, yeniden þifreler (encrypt). Mevcut þifreleme
+	   <a href="#feature_authtypes">Kimlik Doðrulama Türleri</a> methodlarýna bakýnýz.</td>
     <TD>IRC Operatörler</TD></TR>
   <TR>
     <TD height=36>tsctl offset +/- &lt;zaman&gt;<BR
