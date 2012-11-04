@@ -2523,3 +2523,5 @@
 - Remove wircd.def, needs to be re-generated almost each build anyway..
 ** 3.2.10-rc1 release **
 - Use our own (v)snprintf if not available.
+- Use a more robust method of learning the server origin for a SASL
+  agent. Fixes crash reported by Adam.
