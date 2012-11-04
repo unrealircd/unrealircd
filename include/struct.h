@@ -69,7 +69,10 @@
 
 #include "channel.h"
 
-
+#if defined(_MSC_VER)
+/* needed to workaround a warning / prototype/dll inconsistency crap */
+#define vsnprintf unrl_vsnprintf
+#endif
 
 extern MODVAR int sendanyways;
 

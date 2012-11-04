@@ -2522,3 +2522,4 @@
   then you are welcome to contact us as well.
 - Remove wircd.def, needs to be re-generated almost each build anyway..
 ** 3.2.10-rc1 release **
+- Use our own (v)snprintf if not available.
