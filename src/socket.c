@@ -31,10 +31,6 @@ extern int errno;		/* ...seems that errno.h doesn't define this everywhere */
 #ifndef _WIN32
 #include <sys/socket.h>
 #endif
-#ifdef DEBUGMODE
-int  writecalls = 0, writeb[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-#endif
-	
 
 /*
 ** deliver_it
@@ -63,9 +59,6 @@ int  deliver_it(aClient *cptr, char *str, int len)
 	int  retval;
 	aClient *acpt = cptr->listener;
 
-#ifdef	DEBUGMODE
-	writecalls++;
-#endif
 	if (IsDead(cptr) || (!IsServer(cptr) && !IsPerson(cptr)
 	    && !IsHandshake(cptr) 
 #ifdef USE_SSL
@@ -125,32 +118,7 @@ int  deliver_it(aClient *cptr, char *str, int len)
 		    WSAGetLastError() == WSAENOBUFS))
 # endif
 			retval = 0;
-#ifdef DEBUGMODE
-	if (retval < 0)
-	{
-		writeb[0]++;
-		Debug((DEBUG_ERROR, "write error (%s) to %s", STRERROR(ERRNO), cptr->name));
 
-	}
-	else if (retval == 0)
-		writeb[1]++;
-	else if (retval < 16)
-		writeb[2]++;
-	else if (retval < 32)
-		writeb[3]++;
-	else if (retval < 64)
-		writeb[4]++;
-	else if (retval < 128)
-		writeb[5]++;
-	else if (retval < 256)
-		writeb[6]++;
-	else if (retval < 512)
-		writeb[7]++;
-	else if (retval < 1024)
-		writeb[8]++;
-	else
-		writeb[9]++;
-#endif
 	if (retval > 0)
 	{
 		cptr->sendB += retval;
@@ -175,6 +143,7 @@ int  deliver_it(aClient *cptr, char *str, int len)
 			me.sendB &= 0x03ff;
 		}
 	}
+
 	return (retval);
 }
 
