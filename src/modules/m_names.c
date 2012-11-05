@@ -206,7 +206,7 @@ DLLFUNC CMD_FUNC(m_names)
 				buf[idx++] = '+';
 		}
 
-		if (lifesux || !uhnames) {
+		if (!uhnames) {
 			s = acptr->name;
 		} else {
 			strlcpy(nuhBuffer,

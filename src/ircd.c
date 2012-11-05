@@ -116,19 +116,6 @@ fdlist default_fdlist;
 fdlist serv_fdlist;
 fdlist oper_fdlist;
 fdlist unknown_fdlist;
-float currentrate;
-float currentrate2;		/* outgoing */
-float highest_rate = 0;
-float highest_rate2 = 0;
-int  lifesux = 0;
-int  LRV = LOADRECV;
-TS   LCF = LOADCFREQ;
-int  currlife = 0;
-int  HTMLOCK = 0;
-int  noisy_htm = 1;
-long lastrecvK = 0;
-long lastsendK = 0;
-
 #endif
 
 unsigned char conf_debuglevel = 0;
@@ -1746,16 +1733,12 @@ void SocketLoop(void *dummy)
 		LockEventSystem();
 		DoEvents();
 		UnlockEventSystem();
+
 		/*
 		 * ** Run through the hashes and check lusers every
 		 * ** second
 		 * ** also check for expiring glines
 		 */
-
-#ifndef NO_FDLIST
-		lastrecvK = me.receiveK;
-		lastsendK = me.sendK;
-#endif
 		if (IRCstats.clients > IRCstats.global_max)
 			IRCstats.global_max = IRCstats.clients;
 		if (IRCstats.me_clients > IRCstats.me_max)
@@ -1809,11 +1792,7 @@ void SocketLoop(void *dummy)
 		 * ** time might be too far away... (similarly with
 		 * ** ping times) --msa
 		 */
-#ifdef NO_FDLIST
 		if (timeofday >= nextping || loop.do_bancheck)
-#else
-		if ((timeofday >= nextping && !lifesux) || loop.do_bancheck)
-#endif
 			nextping = check_pings(timeofday);
 		if (dorehash) 
 		{

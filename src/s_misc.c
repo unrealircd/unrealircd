@@ -58,8 +58,6 @@ Computing Center and Jarkko Oikarinen";
 #ifndef NO_FDLIST
 extern fdlist serv_fdlist;
 extern fdlist oper_fdlist;
-extern float currentrate;
-extern float currentrate2;
 #endif
 extern ircstats IRCstats;
 extern char	*me_hash;

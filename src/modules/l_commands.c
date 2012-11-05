@@ -72,7 +72,7 @@ ModuleHeader l_commands_Header
  * want to
 */
 
-extern int m_htm_Test(ModuleInfo *modinfo), m_join_Test(ModuleInfo *modinfo);
+extern int m_join_Test(ModuleInfo *modinfo);
 extern int m_mode_Test(ModuleInfo *modinfo), m_nick_Test(ModuleInfo *modinfo);
 extern int m_tkl_Test(ModuleInfo *modinfo), m_list_Test(ModuleInfo *modinfo);
 extern int m_message_Test(ModuleInfo *modinfo), m_server_Test(ModuleInfo *modinfo);
@@ -85,7 +85,7 @@ extern int m_svsnline_Init(ModuleInfo *modinfo), m_who_Init(ModuleInfo *modinfo)
 extern int m_away_Init(ModuleInfo *modinfo), m_svsnoop_Init(ModuleInfo *modinfo), m_svso_Init(ModuleInfo *modinfo);
 extern int m_svsnick_Init(ModuleInfo *modinfo), m_adminchat_Init(ModuleInfo *modinfo), m_nachat_Init(ModuleInfo *modinfo);
 extern int m_lag_Init(ModuleInfo *modinfo), m_rping_Init(ModuleInfo *modinfo), m_sendumode_Init(ModuleInfo *modinfo);
-extern int m_tsctl_Init(ModuleInfo *modinfo), m_htm_Init(ModuleInfo *modinfo), m_chgname_Init(ModuleInfo *modinfo);
+extern int m_tsctl_Init(ModuleInfo *modinfo), m_chgname_Init(ModuleInfo *modinfo);
 extern int m_message_Init(ModuleInfo *modinfo), m_whois_Init(ModuleInfo *modinfo), m_quit_Init(ModuleInfo *modinfo);
 extern int m_kill_Init(ModuleInfo *modinfo), m_pingpong_Init(ModuleInfo *modinfo), m_oper_Init(ModuleInfo *modinfo);
 extern int m_akill_Init(ModuleInfo *modinfo), m_rakill_Init(ModuleInfo *modinfo), m_userip_Init(ModuleInfo *modinfo);
@@ -139,7 +139,7 @@ extern int m_svsnline_Load(int module_load), m_who_Load(int module_load), m_mkpa
 extern int m_away_Load(int module_load), m_svsnoop_Load(int module_load), m_svso_Load(int module_load);
 extern int m_svsnick_Load(int module_load), m_adminchat_Load(int module_load), m_nachat_Load(int module_load);
 extern int m_lag_Load(int module_load), m_rping_Load(int module_load), m_sendumode_Load(int module_load);
-extern int m_tsctl_Load(int module_load), m_htm_Load(int module_load), m_chgname_Load(int module_load);
+extern int m_tsctl_Load(int module_load), m_chgname_Load(int module_load);
 extern int m_message_Load(int module_load), m_whois_Load(int module_load), m_quit_Load(int module_load);
 extern int m_kill_Load(int module_load), m_pingpong_Load(int module_load), m_oper_Load(int module_load);
 extern int m_akill_Load(int module_load), m_rakill_Load(int module_load), m_userip_Load(int unused);
@@ -191,7 +191,7 @@ extern int m_setident_Unload(), m_sdesc_Unload(), m_svsmode_Unload(), m_swhois_U
 extern int m_svsmotd_Unload(), m_svsnline_Unload(), m_who_Unload(), m_mkpasswd_Unload();
 extern int m_away_Unload(), m_svsnoop_Unload(), m_svso_Unload(), m_svsnick_Unload();
 extern int m_adminchat_Unload(), m_nachat_Unload(), m_lag_Unload(), m_rping_Unload(); 
-extern int m_sendumode_Unload(), m_tsctl_Unload(), m_htm_Unload(), m_chgname_Unload();
+extern int m_sendumode_Unload(), m_tsctl_Unload(), m_chgname_Unload();
 extern int m_message_Unload(), m_whois_Unload(), m_quit_Unload(), m_kill_Unload();
 extern int m_pingpong_Unload(), m_oper_Unload(), m_akill_Unload(), m_rakill_Unload();
 extern int m_unzline_Unload(), m_unkline_Unload(), m_userip_Unload();
@@ -238,7 +238,6 @@ int l_commands_Test(ModuleInfo *modinfo)
 #endif
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	ModCmdsInfo = modinfo;
-	m_htm_Test(ModCmdsInfo);
 	m_join_Test(ModCmdsInfo);
 	m_mode_Test(ModCmdsInfo);
 	m_nick_Test(ModCmdsInfo);
@@ -287,7 +286,6 @@ int    l_commands_Init(ModuleInfo *modinfo)
 	m_rping_Init(ModCmdsInfo);
 	m_sendumode_Init(ModCmdsInfo);
 	m_tsctl_Init(ModCmdsInfo);
-	m_htm_Init(ModCmdsInfo);
 	m_chgname_Init(ModCmdsInfo);
 	m_message_Init(ModCmdsInfo);
 	m_whois_Init(ModCmdsInfo);
@@ -404,7 +402,6 @@ int    l_commands_Load(int module_load)
 	m_rping_Load(module_load);
 	m_sendumode_Load(module_load);
 	m_tsctl_Load(module_load);
-	m_htm_Load(module_load);
 	m_chgname_Load(module_load);
 	m_message_Load(module_load);
 	m_whois_Load(module_load);
@@ -521,7 +518,6 @@ int	l_commands_Unload(int module_unload)
 	m_rping_Unload();
 	m_sendumode_Unload();
 	m_tsctl_Unload();
-	m_htm_Unload();
 	m_chgname_Unload();
 	m_message_Unload();
 	m_whois_Unload();

@@ -653,15 +653,6 @@ static void do_other_who(aClient *sptr, char *mask)
 {
 int oper = IsAnOper(sptr);
 
-	/* wildcard? */
-#ifndef NO_FDLIST
-	if (lifesux && !IsOper(sptr) && *mask == '*' && *(mask+1) == 0)
-	{
-		sendto_one(sptr, err_str(ERR_HTMDISABLED), me.name,
-                    sptr->name, "/WHO");
-		return;
-	}
-#endif		
 	if (strchr(mask, '*') || strchr(mask, '?'))
 	{
 		int i = 0;

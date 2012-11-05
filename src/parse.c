@@ -49,7 +49,6 @@ char backupbuf[8192];
 /*
  * NOTE: parse() should not be called recursively by other functions!
  */
-extern int lifesux;
 static char *para[MAXPARA + 2];
 
 static char sender[HOSTLEN + 1];

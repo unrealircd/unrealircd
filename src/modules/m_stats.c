@@ -795,11 +795,7 @@ int stats_traffic(aClient *sptr, char *para)
 	    sp->is_ckr, sp->is_cbr, sp->is_skr, sp->is_sbr);
 	sendto_one(sptr, ":%s %d %s :time connected %ld %ld",
 	    me.name, RPL_STATSDEBUG, sptr->name, sp->is_cti, sp->is_sti);
-#ifndef NO_FDLIST
-	sendto_one(sptr,
-	    ":%s %d %s :incoming rate %0.2f kb/s - outgoing rate %0.2f kb/s",
-	    me.name, RPL_STATSDEBUG, sptr->name, currentrate, currentrate2);
-#endif
+
 	return 0;
 }
 

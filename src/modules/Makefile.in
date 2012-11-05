@@ -37,7 +37,7 @@ R_MODULES= \
 	 m_setident.so m_sdesc.so m_svsmode.so m_swhois.so\
 	 m_svsmotd.so m_svsnline.so m_who.so m_mkpasswd.so \
 	 m_away.so m_svsnoop.so m_svso.so m_svsnick.so \
-	 m_adminchat.so m_akill.so m_chgname.so m_guest.so m_htm.so m_kill.so \
+	 m_adminchat.so m_akill.so m_chgname.so m_guest.so m_kill.so \
 	 m_lag.so m_message.so m_nachat.so m_oper.so m_pingpong.so \
 	 m_quit.so m_rakill.so m_rping.so m_sendumode.so m_sqline.so \
 	 m_tsctl.so m_unkline.so m_unsqline.so m_unzline.so m_whois.so \
@@ -61,7 +61,7 @@ R_MODULES= \
 COMMANDS=m_sethost.o m_chghost.o m_chgident.o m_setname.o m_setident.o \
 	 m_sdesc.o m_svsmode.o m_swhois.o m_svsmotd.o m_svsnline.o \
 	 m_who.o m_mkpasswd.o m_away.o m_svsnoop.o m_svso.o m_svsnick.o \
-	 m_adminchat.o m_akill.o m_chgname.o m_guest.o m_htm.o m_kill.o \
+	 m_adminchat.o m_akill.o m_chgname.o m_guest.o m_kill.o \
 	 m_lag.o m_message.o webtv.o m_nachat.o m_oper.o m_pingpong.o \
 	 m_quit.o m_rakill.o m_rping.o m_sendumode.o m_sqline.o \
 	 m_tsctl.o m_unkline.o m_unsqline.o m_unzline.o m_whois.o \
@@ -113,9 +113,6 @@ m_chgname.o: m_chgname.c $(INCLUDES)
 
 m_guest.o: m_guest.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_guest.c
-
-m_htm.o: m_htm.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_htm.c
 
 m_kill.o: m_kill.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS)  -c m_kill.c
@@ -445,10 +442,6 @@ m_chgname.so: m_chgname.c $(INCLUDES)
 m_guest.so: m_guest.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_guest.so m_guest.c
-
-m_htm.so: m_htm.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o m_htm.so m_htm.c
 
 m_kill.so: m_kill.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \

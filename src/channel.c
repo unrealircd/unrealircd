@@ -55,10 +55,6 @@ aChannel *channel = NullChn;
 extern char backupbuf[];
 extern ircstats IRCstats;
 
-#ifndef NO_FDLIST
-extern int lifesux;
-#endif
-
 /* Some forward declarations */
 void add_invite(aClient *, aChannel *);
 char *clean_ban_mask(char *, int, aClient *);

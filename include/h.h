@@ -55,20 +55,6 @@ extern MODVAR time_t timeofday;
 
 #define CMD_FUNC(x) int (x) (aClient *cptr, aClient *sptr, int parc, char *parv[])
 
-#ifndef NO_FDLIST
-extern MODVAR float currentrate;
-extern MODVAR float currentrate2;		/* outgoing */
-extern MODVAR float highest_rate;
-extern MODVAR float highest_rate2;
-extern MODVAR int  lifesux;
-extern MODVAR int  LRV;
-extern MODVAR time_t   LCF;
-extern MODVAR int  currlife;
-extern MODVAR int  HTMLOCK;
-extern MODVAR int  noisy_htm;
-extern MODVAR long lastsendK, lastrecvK;
-#endif
-
 /*
  * Configuration linked lists
 */

@@ -140,17 +140,6 @@ DLLFUNC CMD_FUNC(m_list)
 		return 0;
 	}
 
-	/* if HTM, drop this too */
-#ifndef NO_FDLIST
-	if (lifesux && !IsOper(cptr))
-	{
-		sendto_one(sptr, err_str(ERR_HTMDISABLED), me.name,
-		    sptr->name, "/List");
-		/* We need this for mIRC compatibility -- codemastr */
-		sendto_one(sptr, rpl_str(RPL_LISTEND), me.name, parv[0]);
-		return 0;
-	}
-#endif
 	if (parc < 2 || BadPtr(parv[1]))
 	{
 
