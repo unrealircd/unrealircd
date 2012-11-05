@@ -113,7 +113,6 @@ extern SERVICE_STATUS IRCDStatus;
 #endif
 #ifndef NO_FDLIST
 fdlist default_fdlist;
-fdlist busycli_fdlist;
 fdlist serv_fdlist;
 fdlist oper_fdlist;
 fdlist unknown_fdlist;
@@ -130,7 +129,6 @@ int  noisy_htm = 1;
 long lastrecvK = 0;
 long lastsendK = 0;
 
-TS   check_fdlists();
 #endif
 
 unsigned char conf_debuglevel = 0;
@@ -777,45 +775,6 @@ static int bad_command(void)
 char chess[] = {
 	85, 110, 114, 101, 97, 108, 0
 };
-#ifndef NO_FDLIST
-inline TS check_fdlists(TS now)
-{
-	aClient *cptr;
-	int  pri;		/* temp. for priority */
-	int  i, j;
-	j = 0;
-	for (i = LastSlot; i >= 0; i--) {
-		if (!(cptr = local[i]))
-			continue;
-		if (IsServer(cptr) || IsListening(cptr)
-		    || IsOper(cptr) || DoingAuth(cptr)) {
-			busycli_fdlist.entry[++j] = i;
-			continue;
-		}
-		pri = cptr->priority;
-		if (cptr->receiveM == cptr->lastrecvM)
-			pri += 2;	/* lower a bit */
-		else
-			pri -= 30;
-		if (pri < 0)
-			pri = 0;
-		if (pri > 80)
-			pri = 80;
-		cptr->lastrecvM = cptr->receiveM;
-		cptr->priority = pri;
-		if ((pri < 10) || (!lifesux && (pri < 25)))
-			busycli_fdlist.entry[++j] = i;
-	}
-	busycli_fdlist.last_entry = j;	/* rest of the fdlist is garbage */
-	return (now + FDLISTCHKFREQ + lifesux * FDLISTCHKFREQ);
-}
-
-EVENT(e_check_fdlists)
-{
-	check_fdlists(TStime());
-}
-
-#endif
 
 static void version_check_logerror(char *fmt, ...)
 {
@@ -1534,7 +1493,6 @@ int InitwIRCD(int argc, char *argv[])
 	open_debugfile();
 #ifndef NO_FDLIST
 	init_fdlist(&serv_fdlist);
-	init_fdlist(&busycli_fdlist);
 	init_fdlist(&default_fdlist);
 	init_fdlist(&oper_fdlist);
 	init_fdlist(&unknown_fdlist);
@@ -1696,10 +1654,6 @@ int InitwIRCD(int argc, char *argv[])
 	module_loadall(0);
 #ifdef STATIC_LINKING
 	l_commands_Load(0);
-#endif
-
-#ifndef NO_FDLIST
-	check_fdlists(TStime());
 #endif
 
 #ifdef _WIN32
@@ -1876,14 +1830,6 @@ void SocketLoop(void *dummy)
 		 * ** have data in them (or at least try to flush)
 		 * ** -avalon
 		 */
-
-#ifndef NO_FDLIST
-		/*
-		 * check which clients are active 
-		 */
-		if (timeofday > nextfdlistcheck)
-			nextfdlistcheck = check_fdlists(timeofday);
-#endif
 		flush_connections(&me);
 
 		/* ThA UnReAl TrOuBlE RePoRtInG SyStEm!!! */

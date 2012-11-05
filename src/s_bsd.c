@@ -132,7 +132,6 @@ MODVAR TS last_allinuse = 0;
 
 #ifndef NO_FDLIST
 extern fdlist default_fdlist;
-extern fdlist busycli_fdlist;
 extern fdlist serv_fdlist;
 extern fdlist oper_fdlist;
 extern fdlist socks_fdlist;
@@ -1117,16 +1116,12 @@ void close_connection(aClient *cptr)
 			/* update server list */
 			if (IsServer(local[i]))
 			{
-				delfrom_fdlist(j, &busycli_fdlist);
 				delfrom_fdlist(j, &serv_fdlist);
-				addto_fdlist(i, &busycli_fdlist);
 				addto_fdlist(i, &serv_fdlist);
 			}
 			if (IsAnOper(local[i]))
 			{
-				delfrom_fdlist(j, &busycli_fdlist);
 				delfrom_fdlist(j, &oper_fdlist);
-				addto_fdlist(i, &busycli_fdlist);
 				addto_fdlist(i, &oper_fdlist);
 			}
 #endif

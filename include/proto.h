@@ -49,7 +49,6 @@ void sendto_channel_ntadmins(aClient *from, aChannel *chptr, char *pattern, ...)
 EVENT(lcf_check);
 EVENT(htm_calc);
 /* ircd.c */
-EVENT(e_check_fdlists);
 EVENT(garbage_collect);
 EVENT(loop_event);
 /* support.c */
