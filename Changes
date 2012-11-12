@@ -2525,3 +2525,4 @@
 - Use our own (v)snprintf if not available.
 - Use a more robust method of learning the server origin for a SASL
   agent. Fixes crash reported by Adam.
+- Argh.. silly Windows symbol crap.

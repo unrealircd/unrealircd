@@ -1,6 +1,6 @@
-extern   SSL_CTX * ctx;
-extern	 SSL_CTX *ctx_server;
-extern	 SSL_CTX *ctx_client;
+extern MODVAR SSL_CTX *ctx;
+extern MODVAR SSL_CTX *ctx_server;
+extern MODVAR SSL_CTX *ctx_client;
 
 extern   SSL_METHOD *meth;
 extern   void init_ssl();
