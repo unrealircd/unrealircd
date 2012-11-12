@@ -167,10 +167,6 @@ char *sbrk0;			/* initial sbrk(0) */
 static int dorehash = 0, dorestart = 0;
 static char *dpath = DPATH;
 MODVAR int  booted = FALSE;
-MODVAR TS   nextconnect = 1;		/* time for next try_connections call */
-MODVAR TS   nextping = 1;		/* same as above for check_pings() */
-MODVAR TS   nextdnscheck = 0;		/* next time to poll dns to force timeouts */
-MODVAR TS   nextexpire = 1;		/* next expire run on the dns cache */
 MODVAR TS   lastlucheck = 0;
 
 #ifdef UNREAL_DEBUG
@@ -424,18 +420,15 @@ EVENT(garbage_collect)
 **	function should be made latest. (No harm done if this
 **	is called earlier or later...)
 */
-static TS try_connections(TS currenttime)
+EVENT(try_connections)
 {
 	ConfigItem_link *aconf;
 	ConfigItem_deny_link *deny;
 	aClient *cptr;
 	int  connecting, confrq;
-	TS   next = 0;
 	ConfigItem_class *cltmp;
 
 	connecting = FALSE;
-	Debug((DEBUG_NOTICE, "Connection check at   : %s",
-	    myctime(currenttime)));
 	for (aconf = conf_link; aconf; aconf = (ConfigItem_link *) aconf->next) {
 		/*
 		 * Also when already connecting! (update holdtimes) --SRB 
@@ -452,14 +445,11 @@ static TS try_connections(TS currenttime)
 		 * ** a bit fuzzy... -- msa >;) ]
 		 */
 
-		if ((aconf->hold > currenttime)) {
-			if ((next > aconf->hold) || (next == 0))
-				next = aconf->hold;
+		if ((aconf->hold > TStime()))
 			continue;
-		}
 
 		confrq = cltmp->connfreq;
-		aconf->hold = currenttime + confrq;
+		aconf->hold = TStime() + confrq;
 		/*
 		 * ** Found a CONNECT config with port specified, scan clients
 		 * ** and see if this server is already connected?
@@ -483,21 +473,14 @@ static TS try_connections(TS currenttime)
 				    aconf->servername, aconf->hostname);
 
 		}
-		if ((next > aconf->hold) || (next == 0))
-			next = aconf->hold;
 	}
-	Debug((DEBUG_NOTICE, "Next connection check : %s", myctime(next)));
-	return (next);
 }
 
 
 /* Now find_kill is only called when a kline-related command is used:
    AKILL/RAKILL/KLINE/UNKLINE/REHASH.  Very significant CPU usage decrease.
    -- Barubary */
-
-
-
-extern TS check_pings(TS currenttime)
+EVENT(check_pings)
 {
 	aClient *cptr = NULL;
 	ConfigItem_ban *bconf = NULL;
@@ -506,6 +489,7 @@ extern TS check_pings(TS currenttime)
 	char banbuf[1024];
 	char scratch[64];
 	int  ping = 0;
+	TS   currenttime = TStime();
 
 	for (i = 0; i <= LastSlot; i++) {
 		/*
@@ -716,26 +700,8 @@ extern TS check_pings(TS currenttime)
 				(void)exit_client(cptr, cptr, &me,
 				    "Connection Timed Out");
 	}
-	/*
-	 * EXPLANATION
-	 * * on a server with a large volume of clients, at any given point
-	 * * there may be a client which needs to be pinged the next second,
-	 * * or even right away (a second may have passed while running
-	 * * check_pings). Preserving CPU time is more important than
-	 * * pinging clients out at exact times, IMO. Therefore, I am going to make
-	 * * check_pings always return currenttime + 9. This means that it may take
-	 * * a user up to 9 seconds more than pingfreq to timeout. Oh well.
-	 * * Plus, the number is 9 to 'stagger' our check_pings calls out over
-	 * * time, to avoid doing it and the other tasks ircd does at the same time
-	 * * all the time (which are usually done on intervals of 5 seconds or so). 
-	 * * - lucas
-	 * *
-	 */
-	loop.do_bancheck = loop.do_bancheck_spamf_user = loop.do_bancheck_spamf_away = 0;
-	Debug((DEBUG_NOTICE, "Next check_ping() call at: %s, %d %d %d",
-	    myctime(currenttime+9), ping, currenttime+9, currenttime));
 
-	return currenttime + 9;
+	loop.do_bancheck = loop.do_bancheck_spamf_user = loop.do_bancheck_spamf_away = 0;
 }
 
 /*
@@ -941,10 +907,6 @@ struct ThrottlingBucket z = { NULL, NULL, {0}, 0, 0};
 			n = &z;
 		}
 	Debug((DEBUG_DEBUG, "fix_timers(): removed %d throttling item(s)", cnt));
-	
-	Debug((DEBUG_DEBUG, "fix_timers(): updating nextping/nextconnect/nextdnscheck/nextexpire (%ld/%ld/%ld/%ld)",
-		nextping, nextconnect, nextdnscheck, nextexpire));	
-	nextping = nextconnect = nextdnscheck = nextexpire = 1;
 }
 
 
@@ -1660,7 +1622,6 @@ void SocketLoop(void *dummy)
 	
 	while (1)
 #else
-	nextping = timeofday;
 	/*
 	 * Forever drunk .. forever drunk ..
 	 * * (Sorry Alphaville.)
@@ -1743,27 +1704,7 @@ void SocketLoop(void *dummy)
 			IRCstats.global_max = IRCstats.clients;
 		if (IRCstats.me_clients > IRCstats.me_max)
 			IRCstats.me_max = IRCstats.me_clients;
-		/*
-		 * ** We only want to connect if a connection is due,
-		 * ** not every time through.  Note, if there are no
-		 * ** active C lines, this call to Tryconnections is
-		 * ** made once only; it will return 0. - avalon
-		 */
-		if (nextconnect && timeofday >= nextconnect)
-			nextconnect = try_connections(timeofday);
 
-		/*
-		 * ** take the smaller of the two 'timed' event times as
-		 * ** the time of next event (stops us being late :) - avalon
-		 * ** WARNING - nextconnect can return 0!
-		 */
-		if (nextconnect)
-			delay = MIN(nextping, nextconnect);
-		else
-			delay = nextping;
-		delay = MIN(nextdnscheck, delay);
-		delay = MIN(nextexpire, delay);
-		delay -= timeofday;
 		/*
 		 * ** Adjust delay to something reasonable [ad hoc values]
 		 * ** (one might think something more clever here... --msa)
@@ -1792,8 +1733,6 @@ void SocketLoop(void *dummy)
 		 * ** time might be too far away... (similarly with
 		 * ** ping times) --msa
 		 */
-		if (timeofday >= nextping || loop.do_bancheck)
-			nextping = check_pings(timeofday);
 		if (dorehash) 
 		{
 			(void)rehash(&me, &me, 1);

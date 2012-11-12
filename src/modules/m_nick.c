@@ -1110,7 +1110,6 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			sendto_one(sptr, err_str(ERR_HOSTILENAME), me.name,
 			    sptr->name, olduser, userbad, stripuser);
 #endif
-		nextping = TStime();
 		if (IsSecure(sptr))
 			sptr->umodes |= UMODE_SECURE;
 	}

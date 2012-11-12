@@ -766,7 +766,6 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 #endif
 	if ((Find_uline(cptr->name)))
 		cptr->flags |= FLAGS_ULINE;
-	nextping = TStime();
 	(void)find_or_add(cptr->name);
 #ifdef USE_SSL
 	if (IsSecure(cptr))

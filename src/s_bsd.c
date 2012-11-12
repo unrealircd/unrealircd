@@ -1056,8 +1056,6 @@ void close_connection(aClient *cptr)
 		aconf->hold = TStime();
 		aconf->hold += (aconf->hold - cptr->since > HANGONGOODLINK) ?
 		    HANGONRETRYDELAY : aconf->class->connfreq;
-		if (nextconnect > aconf->hold)
-			nextconnect = aconf->hold;
 	}
 
 	if (cptr->authfd >= 0)
@@ -1740,7 +1738,6 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	 */
 	 if (!WHOSTENTP(aconf->ipnum.S_ADDR))
 	 {
-		nextdnscheck = 1;
 		s = aconf->hostname;
 #ifndef INET6
 		if ((aconf->ipnum.S_ADDR = inet_addr(s)) == -1)
@@ -1846,7 +1843,6 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	IRCstats.unknown++;
 	get_sockhost(cptr, aconf->hostname);
 	add_client_to_list(cptr);
-	nextping = TStime();
 
 #ifdef USE_SSL
 	if (IsSSL(cptr) && (aconf->options & CONNECT_SSL))

@@ -1986,7 +1986,6 @@ int	init_conf(char *rootconf, int rehash)
 	do_weird_shun_stuff();
 	if (!conf_log)
 		make_default_logblock();
-	nextconnect = TStime() + 1; /* check for autoconnects */
 	config_status("Configuration loaded without any problems ..");
 	return 0;
 }

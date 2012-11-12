@@ -51,6 +51,8 @@ EVENT(htm_calc);
 /* ircd.c */
 EVENT(garbage_collect);
 EVENT(loop_event);
+EVENT(check_pings);
+EVENT(try_connections);
 /* support.c */
 char *my_itoa(int i);
 

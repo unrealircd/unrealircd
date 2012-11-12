@@ -38,14 +38,12 @@ extern char *getreply(int);
 extern MODVAR Member *freemember;
 extern MODVAR Membership *freemembership;
 extern MODVAR MembershipL *freemembershipL;
-extern MODVAR TS nextconnect, nextdnscheck, nextping;
 extern MODVAR aClient *client, me, *local[];
 extern MODVAR aChannel *channel;
 extern MODVAR struct stats *ircstp;
 extern MODVAR int bootopt;
 extern MODVAR time_t TSoffset;
 /* Prototype added to force errors -- Barubary */
-extern TS check_pings(TS now);
 extern TS TS2ts(char *s);
 extern MODVAR time_t timeofday;
 /* newconf */

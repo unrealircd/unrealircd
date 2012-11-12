@@ -219,5 +219,8 @@ void	SetupEvents(void)
 	EventAddEx(NULL, "cmodej_cleanup_structs", 60, 0, cmodej_cleanup_structs, NULL);
 #endif
 	EventAddEx(NULL, "unrealdns_removeoldrecords", 15, 0, unrealdns_removeoldrecords, NULL);
+	EventAddEx(NULL, "check_pings", 9, 0, check_pings, NULL);
+	EventAddEx(NULL, "try_connections", 15, 0, try_connections, NULL);
+
 	UnlockEventSystem();
 }
