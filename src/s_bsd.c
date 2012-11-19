@@ -1067,7 +1067,7 @@ void close_connection(aClient *cptr)
 
 	if (cptr->fd >= 0)
 	{
-		flush_connections(cptr);
+		send_queued(cptr);
 		remove_local_client(cptr);
 #ifdef USE_SSL
 		if (IsSSL(cptr) && cptr->ssl) {

@@ -9903,7 +9903,6 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 
 int	rehash_internal(aClient *cptr, aClient *sptr, int sig)
 {
-	flush_connections(&me);
 	if (sig == 1)
 	{
 		sendto_ops("Got signal SIGHUP, reloading %s file", configfile);

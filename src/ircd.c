@@ -222,7 +222,6 @@ VOIDSIG s_die()
 	}
 #else
 	unload_all_modules();
-	flush_connections(&me);
 	exit(-1);
 #endif
 }
@@ -311,18 +310,14 @@ VOIDSIG dummy()
 void server_reboot(char *mesg)
 {
 	int  i;
-#ifdef _WIN32
 	aClient *cptr;
-#endif
 	sendto_realops("Aieeeee!!!  Restarting server... %s", mesg);
 	Debug((DEBUG_NOTICE, "Restarting server... %s", mesg));
-#ifndef _WIN32
-	flush_connections(&me);
-#else
+
 	for (i = LastSlot; i >= 0; i--)
 		if ((cptr = local[i]) && DBufLength(&cptr->sendQ) > 0)
 			(void)send_queued(cptr);
-#endif
+
 	/*
 	 * ** fd 0 must be 'preserved' if either the -d or -i options have
 	 * ** been passed to us before restarting.
@@ -1742,13 +1737,6 @@ void SocketLoop(void *dummy)
 		{
 			server_reboot("SIGINT");
 		}
-
-		/*
-		 * ** Flush output buffers on all connections timeofday if they
-		 * ** have data in them (or at least try to flush)
-		 * ** -avalon
-		 */
-		flush_connections(&me);
 
 		/* ThA UnReAl TrOuBlE RePoRtInG SyStEm!!! */
 		if (trouble_info[0] != '\0')

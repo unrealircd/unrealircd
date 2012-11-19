@@ -520,7 +520,6 @@ extern void remove_local_client(aClient* cptr);
  * WIN32 cleanup winsock lib
  */
 extern void close_connections(void);
-extern void flush_connections(aClient *cptr);
 
 extern int b64_encode(unsigned char const *src, size_t srclength, char *target, size_t targsize);
 extern int b64_decode(char const *src, unsigned char *target, size_t targsize);
@@ -570,7 +569,6 @@ extern CMD_FUNC(m_server_remote);
 extern void send_proto(aClient *, ConfigItem_link *);
 extern char *xbase64enc(long i);
 extern void unload_all_modules(void);
-extern void flush_fdlist_connections(fdlist * listp);
 extern int set_blocking(int fd);
 extern void set_sock_opts(int fd, aClient *cptr);
 extern void iCstrip(char *line);

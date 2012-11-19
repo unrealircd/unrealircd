@@ -104,65 +104,18 @@ static int dead_link(aClient *to, char *notice)
 }
 
 /*
-** flush_connections
-**	Used to empty all output buffers for all connections. Should only
-**	be called once per scan of connections. There should be a select in
-**	here perhaps but that means either forcing a timeout or doing a poll.
-**	When flushing, all we do is empty the obuffer array for each local
-**	client and try to send it. if we cant send it, it goes into the sendQ
-**	-avalon
-*/
-void flush_connections(aClient* cptr)
-{
-	int  i;
-	aClient *acptr;
-
-	if (&me == cptr)
-	{
-		for (i = LastSlot; i >= 0; i--)
-			if ((acptr = local[i])
-			    && ((DBufLength(&acptr->sendQ) > 0)
-#ifdef ZIP_LINKS
-				|| (IsZipped(acptr) && acptr->zip->outcount)
-#endif /* ZIP_LINKS */
-				) )
-				send_queued(acptr);
-	}
-	else if (cptr->fd >= 0
-	    && ((DBufLength(&cptr->sendQ) > 0)
-#ifdef ZIP_LINKS
-		|| (IsZipped(cptr) && cptr->zip->outcount)
-#endif /* ZIP_LINKS */
-		) )
-		send_queued(cptr);
-
-}
-/* flush an fdlist intelligently */
-#ifndef NO_FDLIST
-void flush_fdlist_connections(fdlist * listp)
-{
-	int  i, fd;
-	aClient *cptr;
-
-	for (fd = listp->entry[i = 1]; i <= listp->last_entry;
-	    fd = listp->entry[++i])
-		if ((cptr = local[fd])
-		    && DBufLength(&cptr->sendQ) > 0)
-			send_queued(cptr);
-}
-#endif
-
-/*
 ** write_data_handler
 **	This function is called as a callback when we want to dump
 **	data to a buffer as a function of the eventloop.
 */
-static void write_data_handler(int fd, int revents, void *data)
+static void send_queued_write(int fd, int revents, void *data)
 {
 	aClient *to = data;
 
-	if (!IsDead(to))
-		send_queued(to);
+	if (IsDead(to))
+		return;
+
+	send_queued(to);
 }
 
 /*
@@ -226,7 +179,7 @@ int  send_queued(aClient *to)
 		if (rlen < len)
 		{
 			/* incomplete write due to EWOULDBLOCK, reschedule */
-			fd_setselect(to->fd, FD_SELECT_WRITE | FD_SELECT_ONESHOT, write_data_handler, to);
+			fd_setselect(to->fd, FD_SELECT_WRITE | FD_SELECT_ONESHOT, send_queued_write, to);
 			break;
 		}
 #ifdef ZIP_LINKS
@@ -373,15 +326,8 @@ void sendbufto_one(aClient *to, char *msg, unsigned int quick)
 	me.sendM += 1;
 	if (to->listener != &me)
 		to->listener->sendM += 1;
-	/*
-	 * This little bit is to stop the sendQ from growing too large when
-	 * there is no need for it to. Thus we call send_queued() every time
-	 * 2k has been added to the queue since the last non-fatal write.
-	 * Also stops us from deliberately building a large sendQ and then
-	 * trying to flood that link with data (possible during the net
-	 * relinking done by servers with a large load).
-	 */
-	if (DBufLength(&to->sendQ) / 1024 > to->lastsq)
+
+	if (DBufLength(&to->sendQ) > 0)
 		send_queued(to);
 }
 
