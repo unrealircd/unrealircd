@@ -990,10 +990,6 @@ aTKline *_tkl_add_line(int type, char *usermask, char *hostmask, char *reason, c
 			nl->ptr.spamf->tkl_duration = spamf_tkl_duration;
 			nl->ptr.spamf->tkl_reason = strdup(spamf_tkl_reason); /* already encoded */
 		}
-		if (nl->subtype & SPAMF_USER)
-			loop.do_bancheck_spamf_user = 1;
-		if (nl->subtype & SPAMF_AWAY)
-			loop.do_bancheck_spamf_away = 1;
 	}
 	else if (type & TKL_KILL || type & TKL_ZAP || type & TKL_SHUN)
 	{
@@ -2159,8 +2155,12 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				ircd_log(LOG_TKL, "%s", buf);
 			}
 		  }
-		  loop.do_bancheck = 1;
-		  /* Makes check_pings be run ^^  */
+
+		  /* The TKL check is now run immediately, because there is not much value in postponing
+		   * the check.  It just made check_pings() more complex than it should be.  --nenolod
+		   */
+		  check_tkls();
+
 		  if (type & TKL_GLOBAL)
 		  {
 		  	if ((parc == 11) && (type & TKL_SPAMF))

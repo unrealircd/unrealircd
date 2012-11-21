@@ -147,6 +147,5 @@ DLLFUNC int m_akill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	tkllayer[7] = mo;
 	tkllayer[8] = comment ? comment : "no reason";
 	m_tkl(&me, &me, 9, tkllayer);
-	loop.do_bancheck = 1;
 	return 0;
 }

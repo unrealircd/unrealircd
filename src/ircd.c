@@ -470,6 +470,88 @@ EVENT(try_connections)
 	}
 }
 
+/* I have separated the TKL verification code from the ping checking
+ * code.  This way we can just trigger a TKL check when we need to,
+ * instead of complicating the ping checking code, which is presently
+ * more than sufficiently hairy.  The advantage of checking bans at the
+ * same time as pings is really negligible because we rarely process TKLs
+ * anyway. --nenolod
+ */
+void check_tkls(void)
+{
+	aClient *cptr = NULL;
+	int i = 0;
+	ConfigItem_ban *bconf = NULL;
+	char killflag = 0;
+	char banbuf[1024];
+
+	for (i = 0; i <= LastSlot; i++) {
+		/*
+		 * If something we should not touch .. 
+		 */
+		if (!(cptr = local[i]) || IsMe(cptr) || IsLog(cptr))
+			continue;
+
+		if (find_tkline_match(cptr, 0) < 0)
+				continue;
+
+		find_shun(cptr);
+		if (!killflag && IsPerson(cptr)) {
+			/*
+			 * If it's a user, we check for CONF_BAN_USER
+			 */
+			bconf = Find_ban(cptr, make_user_host(cptr->
+				    user ? cptr->user->username : cptr->
+				    username,
+				    cptr->user ? cptr->user->realhost : cptr->
+				    sockhost), CONF_BAN_USER);
+			if (bconf != NULL)
+				killflag++;
+
+			if (!killflag && !IsAnOper(cptr) && (bconf = Find_ban(NULL, cptr->info, CONF_BAN_REALNAME)))
+				killflag++;
+		}
+
+		/*
+		 * If no cookie, we search for Z:lines
+		 */
+		if (!killflag && (bconf = Find_ban(cptr, Inet_ia2p(&cptr->ip), CONF_BAN_IP)))
+			killflag++;
+
+		if (killflag) {
+			if (IsPerson(cptr))
+				sendto_realops("Ban active for %s (%s)",
+				    get_client_name(cptr, FALSE),
+				    bconf->reason ? bconf->reason : "no reason");
+
+			if (IsServer(cptr))
+				sendto_realops("Ban active for server %s (%s)",
+				    get_client_name(cptr, FALSE),
+				    bconf->reason ? bconf->reason : "no reason");
+
+			if (bconf->reason) {
+				if (IsPerson(cptr))
+					snprintf(banbuf, sizeof banbuf - 1, "User has been banned (%s)", bconf->reason);
+				else
+					snprintf(banbuf, sizeof banbuf - 1, "Banned (%s)", bconf->reason);
+				(void)exit_client(cptr, cptr, &me, banbuf);
+			} else {
+				if (IsPerson(cptr))
+					(void)exit_client(cptr, cptr, &me, "User has been banned");
+				else
+					(void)exit_client(cptr, cptr, &me, "Banned");
+			}
+			continue;
+		}
+
+		if (IsPerson(cptr) && find_spamfilter_user(cptr, SPAMFLAG_NOWARN) == FLUSH_BUFFER)
+			continue;
+
+		if (IsPerson(cptr) && cptr->user->away != NULL &&
+			dospamfilter(cptr, cptr->user->away, SPAMF_AWAY, NULL, SPAMFLAG_NOWARN, NULL) == FLUSH_BUFFER)
+			continue;
+	}
+}
 
 /* Now find_kill is only called when a kline-related command is used:
    AKILL/RAKILL/KLINE/UNKLINE/REHASH.  Very significant CPU usage decrease.
@@ -501,91 +583,7 @@ EVENT(check_pings)
 			continue;
 		}
 		killflag = 0;
-		/*
-		 * Check if user is banned
-		 */
-		if (loop.do_bancheck) {
-			if (find_tkline_match(cptr, 0) < 0) {
-				/*
-				 * Client exited 
-				 */
-				continue;
-			}
-			find_shun(cptr);
-			if (!killflag && IsPerson(cptr)) {
-				/*
-				 * If it's a user, we check for CONF_BAN_USER
-				 */
-				bconf =
-				    Find_ban(cptr, make_user_host(cptr->
-				    user ? cptr->user->username : cptr->
-				    username,
-				    cptr->user ? cptr->user->realhost : cptr->
-				    sockhost), CONF_BAN_USER);
-				if (bconf)
-					killflag++;
 
-				if (!killflag && !IsAnOper(cptr) &&
-				    (bconf =
-				    Find_ban(NULL, cptr->info, CONF_BAN_REALNAME))) {
-					killflag++;
-				}
-
-			}
-			/*
-			 * If no cookie, we search for Z:lines
-			 */
-			if (!killflag)
-				if ((bconf =
-				    Find_ban(cptr, Inet_ia2p(&cptr->ip),
-				    CONF_BAN_IP)))
-					killflag++;
-			if (killflag) {
-				if (IsPerson(cptr))
-					sendto_realops("Ban active for %s (%s)",
-					    get_client_name(cptr, FALSE),
-					    bconf->reason ? bconf->
-					    reason : "no reason");
-
-				if (IsServer(cptr))
-					sendto_realops
-					    ("Ban active for server %s (%s)",
-					    get_client_name(cptr, FALSE),
-					    bconf->reason ? bconf->
-					    reason : "no reason");
-				if (bconf->reason) {
-					if (IsPerson(cptr))
-						snprintf(banbuf, sizeof banbuf - 1,
-						         "User has been banned (%s)", bconf->reason);
-					else
-						snprintf(banbuf, sizeof banbuf - 1,
-						         "Banned (%s)", bconf->reason);
-					(void)exit_client(cptr, cptr, &me,
-					    banbuf);
-				} else {
-					if (IsPerson(cptr))
-						(void)exit_client(cptr, cptr,
-						    &me,
-						    "User has been banned");
-					else
-						(void)exit_client(cptr, cptr,
-						    &me, "Banned");
-				}
-				continue;
-			}
-
-		}
-		/* Do spamfilter 'user' banchecks.. */
-		if (loop.do_bancheck_spamf_user && IsPerson(cptr))
-		{
-			if (find_spamfilter_user(cptr, SPAMFLAG_NOWARN) == FLUSH_BUFFER)
-				continue;
-		}
-		if (loop.do_bancheck_spamf_away && IsPerson(cptr) && cptr->user->away)
-		{
-			if (dospamfilter(cptr, cptr->user->away, SPAMF_AWAY, NULL, SPAMFLAG_NOWARN, NULL) == FLUSH_BUFFER)
-				continue;
-		}
 		/*
 		 * We go into ping phase 
 		 */
@@ -694,8 +692,6 @@ EVENT(check_pings)
 				(void)exit_client(cptr, cptr, &me,
 				    "Connection Timed Out");
 	}
-
-	loop.do_bancheck = loop.do_bancheck_spamf_user = loop.do_bancheck_spamf_away = 0;
 }
 
 /*
@@ -1583,7 +1579,6 @@ int InitwIRCD(int argc, char *argv[])
 #ifdef NEWCHFLOODPROT
 	init_modef();
 #endif
-	loop.do_bancheck = 0;
 	loop.ircd_booted = 1;
 #if defined(HAVE_SETPROCTITLE)
 	setproctitle("%s", me.name);

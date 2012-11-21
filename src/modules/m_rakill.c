@@ -133,6 +133,5 @@ DLLFUNC int m_rakill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	tkllayer[4] = parv[1];	
 	tkllayer[5] = sptr->name;
 	m_tkl(&me, &me, 6, tkllayer);
-	loop.do_bancheck = 1;
 	return 0;
 }

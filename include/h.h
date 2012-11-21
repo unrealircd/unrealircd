@@ -165,6 +165,7 @@ extern void remove_server_from_table(aClient *);
 extern void iNAH_host(aClient *sptr, char *host);
 extern void set_snomask(aClient *sptr, char *snomask);
 extern char *get_sno_str(aClient *sptr);
+extern void check_tkls(void);
 /* for services */
 extern void del_invite(aClient *, aChannel *);
 extern int add_silence(aClient *, char *, int);
