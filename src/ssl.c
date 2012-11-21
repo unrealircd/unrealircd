@@ -135,7 +135,7 @@ int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 #endif
 	if (before)
 	{
-		strncpyzt(buf, (char *)beforebuf, size);
+		strlcpy(buf, (char *)beforebuf, size);
 		return (strlen(buf));
 	}
 #ifndef _WIN32
@@ -148,8 +148,8 @@ int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 #endif
 	if (pass)
 	{
-		strncpyzt(buf, (char *)pass, size);
-		strncpyzt(beforebuf, (char *)pass, sizeof(beforebuf));
+		strlcpy(buf, (char *)pass, size);
+		strlcpy(beforebuf, (char *)pass, sizeof(beforebuf));
 		before = 1;
 		SSLKeyPasswd = beforebuf;
 		return (strlen(buf));

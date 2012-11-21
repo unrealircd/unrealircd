@@ -210,11 +210,11 @@ char *make_user_host(char *name, char *host)
 
 	bzero(namebuf, sizeof(namebuf));
 	name = check_string(name);
-	strncpyzt(s, name, USERLEN + 1);
+	strlcpy(s, name, USERLEN + 1);
 	s += strlen(s);
 	*s++ = '@';
 	host = check_string(host);
-	strncpyzt(s, host, HOSTLEN + 1);
+	strlcpy(s, host, HOSTLEN + 1);
 	s += strlen(s);
 	*s = '\0';
 	return (namebuf);
@@ -231,15 +231,15 @@ inline char *make_nick_user_host_r(char *namebuf, char *nick, char *name, char *
 
 	bzero(namebuf, sizeof(namebuf));
 	nick = check_string(nick);
-	strncpyzt(namebuf, nick, NICKLEN + 1);
+	strlcpy(namebuf, nick, NICKLEN + 1);
 	s += strlen(s);
 	*s++ = '!';
 	name = check_string(name);
-	strncpyzt(s, name, USERLEN + 1);
+	strlcpy(s, name, USERLEN + 1);
 	s += strlen(s);
 	*s++ = '@';
 	host = check_string(host);
-	strncpyzt(s, host, HOSTLEN + 1);
+	strlcpy(s, host, HOSTLEN + 1);
 	s += strlen(s);
 	*s = '\0';
 	return (namebuf);
@@ -401,7 +401,7 @@ void get_sockhost(aClient *cptr, char *host)
 		s++;
 	else
 		s = host;
-	strncpyzt(cptr->sockhost, s, sizeof(cptr->sockhost));
+	strlcpy(cptr->sockhost, s, sizeof(cptr->sockhost));
 }
 
 void remove_dcc_references(aClient *sptr)
@@ -919,14 +919,14 @@ Ilovegotos:
 			errorbufsize = regerror(errorcode, &expr, NULL, 0)+1;
 			errtmp = MyMalloc(errorbufsize);
 			regerror(errorcode, &expr, errtmp, errorbufsize);
-			strncpyzt(errorbuf, errtmp, sizeof(errorbuf));
+			strlcpy(errorbuf, errtmp, sizeof(errorbuf));
 			free(errtmp);
 			regfree(&expr);
 			return errorbuf;
 		}
 		if (check_broadness && !regexec(&expr, "", 0, NULL, 0))
 		{
-			strncpyzt(errorbuf, "Regular expression is too broad", sizeof(errorbuf));
+			strlcpy(errorbuf, "Regular expression is too broad", sizeof(errorbuf));
 			regfree(&expr);
 			return errorbuf;
 		}

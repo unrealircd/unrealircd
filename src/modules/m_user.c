@@ -194,7 +194,7 @@ DLLFUNC CMD_FUNC(m_user)
 	 * this was copying user supplied data directly into user->realhost
 	 * which seemed bad. Not to say this is much better ;p. -- Syzop
 	 */
-	strncpyzt(user->realhost, Inet_ia2p(&sptr->ip), sizeof(user->realhost));
+	strlcpy(user->realhost, Inet_ia2p(&sptr->ip), sizeof(user->realhost));
 	if (!user->ip_str)
 		user->ip_str = strdup(Inet_ia2p(&sptr->ip));
 	user->server = me_hash;
@@ -218,7 +218,7 @@ DLLFUNC CMD_FUNC(m_user)
 		    virthost,ip));
 	}
 	else
-		strncpyzt(sptr->user->username, username, USERLEN + 1);
+		strlcpy(sptr->user->username, username, USERLEN + 1);
 
 	return 0;
 }

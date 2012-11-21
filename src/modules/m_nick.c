@@ -131,7 +131,7 @@ DLLFUNC CMD_FUNC(m_nick)
 		return 0;
 	}
 
-	strncpyzt(nick, parv[1], NICKLEN + 1);
+	strlcpy(nick, parv[1], NICKLEN + 1);
 
 	if (MyConnect(sptr) && sptr->user && !IsAnOper(sptr))
 	{
@@ -897,9 +897,9 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			 */
 			if (*tmpstr || !*user->realhost || (isdigit(*sptr->sockhost) && (sptr->sockhost > tmpstr && isdigit(*(tmpstr - 1))) )
 			    || (sptr->sockhost[0] == ':'))
-				strncpyzt(sptr->sockhost, Inet_ia2p(&sptr->ip), sizeof(sptr->sockhost));
+				strlcpy(sptr->sockhost, Inet_ia2p(&sptr->ip), sizeof(sptr->sockhost));
 		}
-		strncpyzt(user->realhost, sptr->sockhost, sizeof(sptr->sockhost)); /* SET HOSTNAME */
+		strlcpy(user->realhost, sptr->sockhost, sizeof(sptr->sockhost)); /* SET HOSTNAME */
 
 		/*
 		 * I do not consider *, ~ or ! 'hostile' in usernames,
@@ -915,21 +915,21 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		 * Moved the noident stuff here. -OnyxDragon
 		 */
 		if (!(sptr->flags & FLAGS_DOID)) 
-			strncpyzt(user->username, username, USERLEN + 1);
+			strlcpy(user->username, username, USERLEN + 1);
 		else if (sptr->flags & FLAGS_GOTID) 
-			strncpyzt(user->username, sptr->username, USERLEN + 1);
+			strlcpy(user->username, sptr->username, USERLEN + 1);
 		else
 		{
 
 			/* because username may point to user->username */
 			char temp[USERLEN + 1];
-			strncpyzt(temp, username, USERLEN + 1);
+			strlcpy(temp, username, USERLEN + 1);
 			if (IDENT_CHECK == 0) {
-				strncpyzt(user->username, temp, USERLEN + 1);
+				strlcpy(user->username, temp, USERLEN + 1);
 			}
 			else {
 				*user->username = '~';
-				strncpyzt((user->username + 1), temp, USERLEN);
+				strlcpy((user->username + 1), temp, USERLEN);
 #ifdef HOSTILENAME
 				noident = 1;
 #endif
@@ -1042,7 +1042,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 	}
 	else
 	{
-		strncpyzt(user->username, username, USERLEN + 1);
+		strlcpy(user->username, username, USERLEN + 1);
 	}
 	SetClient(sptr);
 	IRCstats.clients++;

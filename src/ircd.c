@@ -1190,7 +1190,7 @@ int InitwIRCD(int argc, char *argv[])
 				      p);
 				  exit(1);
 			  }
-			  strncpyzt(me.name, p, sizeof(me.name));
+			  strlcpy(me.name, p, sizeof(me.name));
 			  break;
 #endif
 #ifndef _WIN32
@@ -1460,8 +1460,8 @@ int InitwIRCD(int argc, char *argv[])
 	/*
 	 * Put in our info 
 	 */
-	strncpyzt(me.info, conf_me->info, sizeof(me.info));
-	strncpyzt(me.name, conf_me->name, sizeof(me.name));
+	strlcpy(me.info, conf_me->info, sizeof(me.info));
+	strlcpy(me.name, conf_me->name, sizeof(me.name));
 	/*
 	 * We accept the first listen record 
 	 */
@@ -1490,7 +1490,7 @@ int InitwIRCD(int argc, char *argv[])
 
 	strncpy(me.sockhost, conf_listen->ip, sizeof(me.sockhost) - 1);
 	if (me.name[0] == '\0')
-		strncpyzt(me.name, me.sockhost, sizeof(me.name));
+		strlcpy(me.name, me.sockhost, sizeof(me.name));
 	me.hopcount = 0;
 	me.authfd = -1;
 	me.next = NULL;
@@ -1787,9 +1787,9 @@ static void open_debugfile(void)
 				(void)dup2(fd, 2);
 				(void)close(fd);
 			}
-			strncpyzt(cptr->name, LOGFILE, sizeof(cptr->name));
+			strlcpy(cptr->name, LOGFILE, sizeof(cptr->name));
 		} else if (isatty(2) && ttyname(2))
-			strncpyzt(cptr->name, ttyname(2), sizeof(cptr->name));
+			strlcpy(cptr->name, ttyname(2), sizeof(cptr->name));
 		else
 # endif
 			(void)strcpy(cptr->name, "FD2-Pipe");

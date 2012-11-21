@@ -298,7 +298,7 @@ DLLFUNC CMD_FUNC(m_pass)
 	if (PassLen > (PASSWDLEN))
 		PassLen = PASSWDLEN;
 	cptr->passwd = MyMalloc(PassLen + 1);
-	strncpyzt(cptr->passwd, password, PassLen + 1);
+	strlcpy(cptr->passwd, password, PassLen + 1);
 
 	/* note: the original non-truncated password is supplied as 2nd parameter. */
 	RunHookReturnInt2(HOOKTYPE_LOCAL_PASS, sptr, password, !=0);

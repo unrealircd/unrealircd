@@ -804,7 +804,7 @@ int n;
 	if (!targets)
 		return spamfilter_usage(sptr);
 
-	strncpyzt(targetbuf, spamfilter_target_inttostring(targets), sizeof(targetbuf));
+	strlcpy(targetbuf, spamfilter_target_inttostring(targets), sizeof(targetbuf));
 
 	action = banact_stringtoval(parv[3]);
 	if (!action)
@@ -970,7 +970,7 @@ aTKline *_tkl_add_line(int type, char *usermask, char *hostmask, char *reason, c
 	nl->type = type;
 	nl->expire_at = expire_at;
 	nl->set_at = set_at;
-	strncpyzt(nl->usermask, usermask, sizeof(nl->usermask));
+	strlcpy(nl->usermask, usermask, sizeof(nl->usermask));
 	nl->hostmask = strdup(hostmask);
 	nl->reason = strdup(reason);
 	nl->setby = strdup(setby);
@@ -1660,7 +1660,7 @@ static void parse_tkl_para(char *para, TKLFlag *flag)
 	char *flags, *tmp;
 	char what = '+';
 
-	strncpyzt(paratmp, para, sizeof(paratmp));
+	strlcpy(paratmp, para, sizeof(paratmp));
 	flags = strtok(paratmp, " ");
 
 	bzero(flag, sizeof(TKLFlag));
@@ -2074,7 +2074,7 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  		sptr->name, (long)setat_1);
 		  	return 0;
 		  }
-		  strncpyzt(gmt, timeret, sizeof(gmt));
+		  strlcpy(gmt, timeret, sizeof(gmt));
 		  timeret = asctime(gmtime((TS *)&expiry_1));
 		  if (!timeret)
 		  {
@@ -2082,7 +2082,7 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  		sptr->name, (long)expiry_1);
 			return 0;
 		  }
-		  strncpyzt(gmt2, timeret, sizeof(gmt2));
+		  strlcpy(gmt2, timeret, sizeof(gmt2));
 		  iCstrip(gmt);
 		  iCstrip(gmt2);
 
@@ -2282,7 +2282,7 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 				  if (match)
 				  {
-					  strncpyzt(gmt, asctime(gmtime((TS *)&tk->set_at)), sizeof(gmt));
+					  strlcpy(gmt, asctime(gmtime((TS *)&tk->set_at)), sizeof(gmt));
 					  iCstrip(gmt);
 					  /* broadcast remove msg to opers... */
 					  if (type & TKL_NICK)

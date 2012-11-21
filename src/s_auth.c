@@ -229,7 +229,7 @@ static void read_authports(int fd, int revents, void *userdata)
 		for (t = (rindex(cptr->buffer, ':') + 1); *t; t++)
 			if (!isspace(*t))
 				break;
-		strncpyzt(system, t, sizeof(system));
+		strlcpy(system, t, sizeof(system));
 		for (t = ruser; *s && *s != '@' && (t < ruser + sizeof(ruser));
 		    s++)
 			if (!isspace(*s) && *s != ':')
@@ -264,7 +264,7 @@ static void read_authports(int fd, int revents, void *userdata)
 		return;
 	}
 	ircstp->is_asuc++;
-	strncpyzt(cptr->username, ruser, USERLEN + 1);
+	strlcpy(cptr->username, ruser, USERLEN + 1);
 	cptr->flags |= FLAGS_GOTID;
 	Debug((DEBUG_INFO, "got username [%s]", ruser));
 	return;

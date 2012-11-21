@@ -399,8 +399,8 @@ DLLFUNC CMD_FUNC(m_server)
 					get_client_name(cptr, TRUE));
 			return exit_client(cptr, cptr, &me, "Invalid numeric");
 		}
-		strncpyzt(info, parv[parc - 1], REALLEN + 61);
-		strncpyzt(cptr->name, servername, sizeof(cptr->name));
+		strlcpy(info, parv[parc - 1], REALLEN + 61);
+		strlcpy(cptr->name, servername, sizeof(cptr->name));
 		cptr->hopcount = hop;
 		/* Add ban server stuff */
 		if (SupportVL(cptr))
@@ -421,7 +421,7 @@ DLLFUNC CMD_FUNC(m_server)
 			if (num)
 				inf = (char *)strtok((char *)NULL, "");
 			if (inf) {
-				strncpyzt(cptr->info, inf[0] ? inf : me.name,
+				strlcpy(cptr->info, inf[0] ? inf : me.name,
 				    sizeof(cptr->info));
 
 				for (vlines = conf_deny_version; vlines; vlines = (ConfigItem_deny_version *) vlines->next) {
@@ -488,12 +488,12 @@ DLLFUNC CMD_FUNC(m_server)
 				}
 			}
 			else
-				strncpyzt(cptr->info, info[0] ? info : me.name,
+				strlcpy(cptr->info, info[0] ? info : me.name,
 				    sizeof(cptr->info));
 
 		}
 		else
-				strncpyzt(cptr->info, info[0] ? info : me.name,
+				strlcpy(cptr->info, info[0] ? info : me.name,
 					sizeof(cptr->info));
 		/* Numerics .. */
 		numeric = num ? atol(num) : numeric;
@@ -601,7 +601,7 @@ CMD_FUNC(m_server_remote)
 			servername);
 		return exit_client(cptr, cptr, &me, "Invalid remote numeric");
 	}
-	strncpyzt(info, parv[parc - 1], REALLEN + 61);
+	strlcpy(info, parv[parc - 1], REALLEN + 61);
 	if (!cptr->serv->conf)
 	{
 		sendto_realops("Lost conf for %s!!, dropping link", cptr->name);
@@ -654,8 +654,8 @@ CMD_FUNC(m_server_remote)
 	(void)make_server(acptr);
 	acptr->serv->numeric = numeric;
 	acptr->hopcount = hop;
-	strncpyzt(acptr->name, servername, sizeof(acptr->name));
-	strncpyzt(acptr->info, info, sizeof(acptr->info));
+	strlcpy(acptr->name, servername, sizeof(acptr->name));
+	strlcpy(acptr->info, info, sizeof(acptr->info));
 	acptr->serv->up = find_or_add(parv[0]);
 	SetServer(acptr);
 	ircd_log(LOG_SERVER, "SERVER %s", acptr->name);

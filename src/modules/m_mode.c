@@ -1175,7 +1175,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				    param[KEYLEN] = '\0';
 				  if (!strcmp(chptr->mode.key, param))
 					break;
-				  strncpyzt(chptr->mode.key, param,
+				  strlcpy(chptr->mode.key, param,
 				      sizeof(chptr->mode.key));
 			  }
 			  tmpstr = param;
@@ -1184,7 +1184,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  {
 			  if (!*chptr->mode.key)
 				  break;	/* no change */
-			  strncpyzt(tmpbuf, chptr->mode.key, sizeof(tmpbuf));
+			  strlcpy(tmpbuf, chptr->mode.key, sizeof(tmpbuf));
 			  tmpstr = tmpbuf;
 			  if (!bounce)
 				  strcpy(chptr->mode.key, "");
@@ -1388,7 +1388,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  }
 			  if (!bounce)	/* don't do the mode at all. */
 			  {
-				  strncpyzt(chptr->mode.link, tmpbuf,
+				  strlcpy(chptr->mode.link, tmpbuf,
 				      sizeof(chptr->mode.link));
 			      tmpstr = tmpbuf;
 			  } else
@@ -1398,7 +1398,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  {
 			  if (!*chptr->mode.link)
 				  break;	/* no change */
-			  strncpyzt(tmpbuf, chptr->mode.link, sizeof(tmpbuf));
+			  strlcpy(tmpbuf, chptr->mode.link, sizeof(tmpbuf));
 			  tmpstr = tmpbuf;
 			  if (!bounce)
 			  {

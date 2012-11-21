@@ -1262,7 +1262,7 @@ aChannel *get_channel(aClient *cptr, char *chname, int flag)
 	{
 		chptr = (aChannel *)MyMalloc(sizeof(aChannel) + len);
 		bzero((char *)chptr, sizeof(aChannel));
-		strncpyzt(chptr->chname, chname, len + 1);
+		strlcpy(chptr->chname, chname, len + 1);
 		if (channel)
 			channel->prevch = chptr;
 		chptr->topic = NULL;

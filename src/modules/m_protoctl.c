@@ -114,7 +114,7 @@ CMD_FUNC(m_protoctl)
 	/* parv[parc - 1] */
 	for (i = 1; i < parc; i++)
 	{
-		strncpyzt(proto, parv[i], sizeof proto);
+		strlcpy(proto, parv[i], sizeof proto);
 		s = proto;
 #ifndef PROTOCTL_MADNESS
 		if (*s == '-')

@@ -157,7 +157,7 @@ char *extban_modec_conv_param(char *para)
 static char retbuf[CHANNELLEN+6];
 char *chan, *p, symbol='\0';
 
-	strncpyzt(retbuf, para, sizeof(retbuf));
+	strlcpy(retbuf, para, sizeof(retbuf));
 	chan = retbuf+3;
 
 	if ((*chan == '+') || (*chan == '%') || (*chan == '%') ||
@@ -351,9 +351,9 @@ static char retbuf[USERLEN + NICKLEN + HOSTLEN + 32];
 char tmpbuf[USERLEN + NICKLEN + HOSTLEN + 32];
 char pfix[8];
 
-	strncpyzt(tmpbuf, para, sizeof(retbuf));
+	strlcpy(tmpbuf, para, sizeof(retbuf));
 	mask = tmpbuf + 3;
-	strncpyzt(pfix, tmpbuf, mask - tmpbuf + 1);
+	strlcpy(pfix, tmpbuf, mask - tmpbuf + 1);
 
 	if ((*mask == '~') && !strchr(mask, '@'))
 		return NULL; /* not a user@host ban, too confusing. */
@@ -417,7 +417,7 @@ char* extban_conv_param_nuh_or_extban(char* para)
 			return NULL;
 		}
 		
-		strncpyzt(tmpbuf, para, sizeof(tmpbuf));
+		strlcpy(tmpbuf, para, sizeof(tmpbuf));
 		mask = tmpbuf + 3;
 		/* Already did restrict-extended bans check. */
 		p = findmod_by_bantype(mask[1]);
@@ -474,7 +474,7 @@ char *extban_moder_conv_param(char *para)
 char *mask;
 static char retbuf[REALLEN + 8];
 
-	strncpyzt(retbuf, para, sizeof(retbuf));
+	strlcpy(retbuf, para, sizeof(retbuf));
 	mask = retbuf+3;
 	if (strlen(mask) > REALLEN + 3)
 		mask[REALLEN + 3] = '\0';

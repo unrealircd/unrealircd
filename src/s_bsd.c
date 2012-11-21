@@ -582,7 +582,7 @@ int add_listener2(ConfigItem_listen *conf)
 	cptr->listener = cptr;
 	cptr->from = cptr;
 	SetMe(cptr);
-	strncpyzt(cptr->name, conf->ip, sizeof(cptr->name));
+	strlcpy(cptr->name, conf->ip, sizeof(cptr->name));
 	if (inetport(cptr, conf->ip, conf->port))
 		cptr->fd = -2;
 	cptr->class = (ConfigItem_class *)conf;
@@ -832,7 +832,7 @@ static int check_init(aClient *cptr, char *sockn, size_t size)
 	if (0)
 #endif
 	{
-		strncpyzt(sockn, me.sockhost, HOSTLEN);
+		strlcpy(sockn, me.sockhost, HOSTLEN);
 		bzero((char *)&sk, sizeof(struct SOCKADDR_IN));
 	}
 	else if (getpeername(cptr->fd, (struct SOCKADDR *)&sk, &len) == -1)
@@ -857,7 +857,7 @@ static int check_init(aClient *cptr, char *sockn, size_t size)
 			unreal_free_hostent(cptr->hostp);
 			cptr->hostp = NULL;
 		}
-		strncpyzt(sockn, "localhost", HOSTLEN);
+		strlcpy(sockn, "localhost", HOSTLEN);
 	}
 	bcopy((char *)&sk.SIN_ADDR, (char *)&cptr->ip, sizeof(struct IN_ADDR));
 
@@ -1765,8 +1765,8 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	/*
 	 * Copy these in so we have something for error detection.
 	 */
-	strncpyzt(cptr->name, aconf->servername, sizeof(cptr->name));
-	strncpyzt(cptr->sockhost, aconf->hostname, HOSTLEN + 1);
+	strlcpy(cptr->name, aconf->servername, sizeof(cptr->name));
+	strlcpy(cptr->sockhost, aconf->hostname, HOSTLEN + 1);
 
 	svp = connect_inet(aconf, cptr, &len);
 	if (!svp)

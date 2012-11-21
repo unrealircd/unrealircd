@@ -3011,7 +3011,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 		if (hp && hp->h_name)
 		{
 			hname = hp->h_name;
-			strncpyzt(fullname, hname, sizeof(fullname));
+			strlcpy(fullname, hname, sizeof(fullname));
 			add_local_domain(fullname, HOSTLEN - strlen(fullname));
 			Debug((DEBUG_DNS, "a_il: %s->%s", sockhost, fullname));
 			if (index(aconf->hostname, '@'))
@@ -3032,9 +3032,9 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 		if (index(aconf->ip, '@'))
 		{
 			if (aconf->flags.noident)
-				strncpyzt(uhost, username, sizeof(uhost));
+				strlcpy(uhost, username, sizeof(uhost));
 			else
-				strncpyzt(uhost, cptr->username, sizeof(uhost));
+				strlcpy(uhost, cptr->username, sizeof(uhost));
 			(void)strlcat(uhost, "@", sizeof(uhost));
 		}
 		else
@@ -3069,9 +3069,9 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 		if (!aconf->flags.noident)
 			cptr->flags |= FLAGS_DOID;
 		if (!aconf->flags.useip && hp) 
-			strncpyzt(uhost, fullname, sizeof(uhost));
+			strlcpy(uhost, fullname, sizeof(uhost));
 		else
-			strncpyzt(uhost, sockhost, sizeof(uhost));
+			strlcpy(uhost, sockhost, sizeof(uhost));
 		get_sockhost(cptr, uhost);
 #ifdef INET6
 		is_ipv4 = IN6_IS_ADDR_V4MAPPED(&cptr->ip);
@@ -3249,7 +3249,7 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 #elif defined(_WIN32)
 	bzero(cPath,MAX_PATH);
 	if (strchr(ce->ce_vardata, '/') || strchr(ce->ce_vardata, '\\')) {
-		strncpyzt(cPath,ce->ce_vardata,MAX_PATH);
+		strlcpy(cPath,ce->ce_vardata,MAX_PATH);
 		cSlash=cPath+strlen(cPath);
 		while(*cSlash != '\\' && *cSlash != '/' && cSlash > cPath)
 			cSlash--; 
@@ -6172,7 +6172,7 @@ int _conf_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 	nl->expire_at = 0;
 	nl->set_at = TStime();
 
-	strncpyzt(nl->usermask, spamfilter_target_inttostring(target), sizeof(nl->usermask));
+	strlcpy(nl->usermask, spamfilter_target_inttostring(target), sizeof(nl->usermask));
 	nl->subtype = target;
 
 	nl->setby = BadPtr(me.name) ? NULL : strdup(me.name); /* Hmm! */
@@ -8831,7 +8831,7 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 #elif defined(_WIN32)
 	bzero(cPath,MAX_PATH);
 	if (strchr(ce->ce_vardata, '/') || strchr(ce->ce_vardata, '\\')) {
-		strncpyzt(cPath,ce->ce_vardata,MAX_PATH);
+		strlcpy(cPath,ce->ce_vardata,MAX_PATH);
 		cSlash=cPath+strlen(cPath);
 		while(*cSlash != '\\' && *cSlash != '/' && cSlash > cPath)
 			cSlash--; 
