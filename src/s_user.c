@@ -206,15 +206,18 @@ aClient *next_client(aClient *next, char *ch)
 	aClient *tmp = next;
 
 	next = find_client(ch, tmp);
-	if (tmp && tmp->prev == next)
+	if (tmp && list_empty(&next->client_list))
 		return NULL;
 	if (next != tmp)
 		return next;
-	for (; next; next = next->next)
+
+	tmp = next;
+	list_for_each_entry(next, &next->client_list, client_list)
 	{
 		if (!match(ch, next->name) || !match(next->name, ch))
 			break;
 	}
+
 	return next;
 }
 
@@ -262,9 +265,7 @@ int  hunt_server(aClient *cptr, aClient *sptr, char *command, int server, int pa
 		if (acptr->from == sptr->from && !MyConnect(acptr))
 			acptr = NULL;
 	if (!acptr)
-		for (acptr = client, (void)collapse(parv[server]);
-		    (acptr = next_client(acptr, parv[server]));
-		    acptr = acptr->next)
+		list_for_each_entry(acptr, &client_list, client_list)
 		{
 			if (acptr->from == sptr->from && !MyConnect(acptr))
 				continue;
@@ -341,9 +342,7 @@ int  hunt_server_token(aClient *cptr, aClient *sptr, char *command, char *token,
 		if (acptr->from == sptr->from && !MyConnect(acptr))
 			acptr = NULL;
 	if (!acptr)
-		for (acptr = client, (void)collapse(parv[server]);
-		    (acptr = next_client(acptr, parv[server]));
-		    acptr = acptr->next)
+		list_for_each_entry(acptr, &acptr->client_list, client_list)
 		{
 			if (acptr->from == sptr->from && !MyConnect(acptr))
 				continue;
@@ -407,9 +406,7 @@ int  hunt_server_token_quiet(aClient *cptr, aClient *sptr, char *command, char *
 		if (acptr->from == sptr->from && !MyConnect(acptr))
 			acptr = NULL;
 	if (!acptr)
-		for (acptr = client, (void)collapse(parv[server]);
-		    (acptr = next_client(acptr, parv[server]));
-		    acptr = acptr->next)
+		list_for_each_entry(acptr, &client_list, client_list)
 		{
 			if (acptr->from == sptr->from && !MyConnect(acptr))
 				continue;

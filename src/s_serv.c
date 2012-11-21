@@ -1275,7 +1275,10 @@ aClient *find_match_server(char *mask)
 
 	if (BadPtr(mask))
 		return NULL;
-	for (acptr = client, collapse(mask); acptr; acptr = acptr->next)
+
+	collapse(mask);
+
+	list_for_each_entry(acptr, &client_list, client_list)
 	{
 		if (!IsServer(acptr) && !IsMe(acptr))
 			continue;
@@ -1283,6 +1286,7 @@ aClient *find_match_server(char *mask)
 			break;
 		continue;
 	}
+
 	return acptr;
 }
 

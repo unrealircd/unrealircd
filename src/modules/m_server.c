@@ -830,7 +830,8 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 			    cptr->name, cptr->info);
 		}
 	}
-	for (acptr = &me; acptr; acptr = acptr->prev)
+
+	list_for_each_entry_reverse(acptr, &client_list, client_list)
 	{
 		/* acptr->from == acptr for acptr == cptr */
 		if (acptr->from == cptr)
@@ -880,7 +881,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 		}
 	}
 	/* Synching nick information */
-	for (acptr = &me; acptr; acptr = acptr->prev)
+	list_for_each_entry_reverse(acptr, &client_list, client_list)
 	{
 		/* acptr->from == acptr for acptr == cptr */
 		if (acptr->from == cptr)

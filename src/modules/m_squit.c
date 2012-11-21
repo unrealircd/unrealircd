@@ -106,15 +106,10 @@ CMD_FUNC(m_squit)
 		{
 			server = parv[1];
 
-			/*
-			   ** The following allows wild cards in SQUIT. Only usefull
-			   ** when the command is issued by an oper.
+			/* We used to allow wildcards here, but this wasn't really a good
+			 * idea because it made the behaviour of SQUIT unpredictable.  --nenolod
 			 */
-			for (acptr = client;
-			    (acptr = next_client(acptr, server));
-			    acptr = acptr->next)
-				if (IsServer(acptr) || IsMe(acptr))
-					break;
+			acptr = find_client(server, NULL);
 			if (acptr && IsMe(acptr))
 			{
 				acptr = cptr;

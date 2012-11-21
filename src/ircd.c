@@ -104,7 +104,6 @@ char REPORT_DO_DNS[256], REPORT_FIN_DNS[256], REPORT_FIN_DNSC[256],
 extern ircstats IRCstats;
 aClient me;			/* That's me */
 MODVAR char *me_hash;
-aClient *client = &me;		/* Pointer to beginning of Client list */
 extern char backupbuf[8192];
 #ifdef _WIN32
 extern void CleanUpSegv(int sig);
@@ -1493,7 +1492,6 @@ int InitwIRCD(int argc, char *argv[])
 		strlcpy(me.name, me.sockhost, sizeof(me.name));
 	me.hopcount = 0;
 	me.authfd = -1;
-	me.next = NULL;
 	me.user = NULL;
 	me.from = &me;
 	me.class = (ConfigItem_class *) conf_listen;
@@ -1504,6 +1502,7 @@ int InitwIRCD(int argc, char *argv[])
 	me_hash = find_or_add(me.name);
 	me.serv->up = me_hash;
 	me.serv->numeric = conf_me->numeric;
+	add_client_to_list(&me);
 	add_server_to_table(&me);
 	timeofday = time(NULL);
 	me.lasttime = me.since = me.firsttime = TStime();

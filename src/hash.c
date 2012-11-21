@@ -30,7 +30,7 @@
 ID_Copyright("(C) 1991 Darren Reed");
 ID_Notes("2.10 7/3/93");
 
-static aHashEntry clientTable[U_MAX];
+static struct list_head clientTable[U_MAX];
 static aHashEntry channelTable[CH_MAX];
 
 /*
@@ -160,7 +160,10 @@ unsigned int hash_whowas_name(char *name)
  */
 void clear_client_hash_table(void)
 {
-	memset((char *)clientTable, '\0', sizeof(aHashEntry) * U_MAX);
+	int i;
+
+	for (i = 0; i < U_MAX; i++)
+		INIT_LIST_HEAD(&clientTable[i]);
 }
 
 void clear_channel_hash_table(void)
@@ -191,10 +194,7 @@ int  add_to_client_hash_table(char *name, aClient *cptr)
 	if (loop.tainted)
 		return 0;
 	hashv = hash_nick_name(name);
-	cptr->hnext = (aClient *)clientTable[hashv].list;
-	clientTable[hashv].list = (void *)cptr;
-	clientTable[hashv].links++;
-	clientTable[hashv].hits++;
+	list_add(&cptr->client_hash, &clientTable[hashv]);
 	return 0;
 }
 /*
@@ -216,33 +216,13 @@ int  add_to_channel_hash_table(char *name, aChannel *chptr)
  */
 int  del_from_client_hash_table(char *name, aClient *cptr)
 {
-	aClient *tmp, *prev = NULL;
-	unsigned int  hashv;
-
-	hashv = hash_nick_name(name);
-	for (tmp = (aClient *)clientTable[hashv].list; tmp; tmp = tmp->hnext)
+	if (!list_empty(&cptr->client_hash))
 	{
-		if (tmp == cptr)
-		{
-			if (prev)
-				prev->hnext = tmp->hnext;
-			else
-				clientTable[hashv].list = (void *)tmp->hnext;
-			tmp->hnext = NULL;
-			if (clientTable[hashv].links > 0)
-			{
-				clientTable[hashv].links--;
-				return 1;
-			}
-			else
-				/*
-				 * Should never actually return from here and if we do it
-				 * is an error/inconsistency in the hash table.
-				 */
-				return -1;
-		}
-		prev = tmp;
+		ircd_log(LOG_ERROR, "cptr->client_hash.next %p .prev %p",
+			cptr->client_hash.next, cptr->client_hash.prev);
+		list_del(&cptr->client_hash);
 	}
+
 	return 0;
 }
 /*
@@ -283,19 +263,15 @@ int  del_from_channel_hash_table(char *name, aChannel *chptr)
 aClient *hash_find_client(char *name, aClient *cptr)
 {
 	aClient *tmp;
-	aHashEntry *tmp3;
 	unsigned int  hashv;
 
 	hashv = hash_nick_name(name);
-	tmp3 = &clientTable[hashv];
-	/*
-	 * Got the bucket, now search the chain.
-	 */
-	for (tmp = (aClient *)tmp3->list; tmp; tmp = tmp->hnext)
+	list_for_each_entry(tmp, &clientTable[hashv], client_hash)
+	{
 		if (smycmp(name, tmp->name) == 0)
-		{
 			return (tmp);
-		}
+	}
+
 	return (cptr);
 	/*
 	 * If the member of the hashtable we found isnt at the top of its
@@ -318,24 +294,25 @@ aClient *hash_find_client(char *name, aClient *cptr)
 aClient *hash_find_nickserver(char *name, aClient *cptr)
 {
 	aClient *tmp;
-	aHashEntry *tmp3;
 	unsigned int  hashv;
 	char *serv;
 
 	serv = (char *)strchr(name, '@');
 	*serv++ = '\0';
 	hashv = hash_nick_name(name);
-	tmp3 = &clientTable[hashv];
+
 	/*
 	 * Got the bucket, now search the chain.
 	 */
-	for (tmp = (aClient *)tmp3->list; tmp; tmp = tmp->hnext)
+	list_for_each_entry(tmp, &clientTable[hashv], client_hash)
+	{
 		if (smycmp(name, tmp->name) == 0 && tmp->user &&
 		    smycmp(serv, tmp->user->server) == 0)
 		{
 			*--serv = '\0';
 			return (tmp);
 		}
+	}
 
 	*--serv = '\0';
 	return (cptr);
@@ -346,18 +323,10 @@ aClient *hash_find_nickserver(char *name, aClient *cptr)
 aClient *hash_find_server(char *server, aClient *cptr)
 {
 	aClient *tmp;
-#if 0
-	char *t;
-	char ch;
-#endif
-	aHashEntry *tmp3;
-
 	unsigned int  hashv;
 
 	hashv = hash_nick_name(server);
-	tmp3 = &clientTable[hashv];
-
-	for (tmp = (aClient *)tmp3->list; tmp; tmp = tmp->hnext)
+	list_for_each_entry(tmp, &clientTable[hashv], client_hash)
 	{
 		if (!IsServer(tmp) && !IsMe(tmp))
 			continue;
@@ -367,42 +336,6 @@ aClient *hash_find_server(char *server, aClient *cptr)
 		}
 	}
 
-	/*
-	 * Whats happening in this next loop ? Well, it takes a name like
-	 * foo.bar.edu and proceeds to earch for *.edu and then *.bar.edu.
-	 * This is for checking full server names against masks although it
-	 * isnt often done this way in lieu of using matches().
-	 */
-
-	/* why in god's name would we ever want to do something like this?
-	 * commented out, probably to be removed sooner or later - lucas 
-	 */
-
-#if 0
-	t = ((char *)server + strlen(server));
-
-	for (;;)
-	{
-		t--;
-		for (; t > server; t--)
-			if (*(t + 1) == '.')
-				break;
-		if (*t == '*' || t == server)
-			break;
-		ch = *t;
-		*t = '*';
-		/*
-		 * Dont need to check IsServer() here since nicknames cant have
-		 * *'s in them anyway.
-		 */
-		if (((tmp = hash_find_client(t, cptr))) != cptr)
-		{
-			*t = ch;
-			return (tmp);
-		}
-		*t = ch;
-	}
-#endif
 	return (cptr);
 }
 

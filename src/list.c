@@ -70,6 +70,7 @@ MODVAR Member *freemember = NULL;
 MODVAR Membership *freemembership = NULL;
 MODVAR MembershipL *freemembershipL = NULL;
 MODVAR int  numclients = 0;
+MODVAR struct list_head client_list;
 
 void initlists(void)
 {
@@ -81,6 +82,8 @@ void initlists(void)
 	bzero((char *)&links, sizeof(links));
 	bzero((char *)&classs, sizeof(classs));
 #endif
+
+	INIT_LIST_HEAD(&client_list);
 }
 
 void outofmemory(void)
@@ -125,14 +128,14 @@ aClient *make_client(aClient *from, aClient *servr)
 
 	/* Note:  structure is zero (calloc) */
 	cptr->from = from ? from : cptr;	/* 'from' of local client is self! */
-	cptr->next = NULL;	/* For machines with NON-ZERO NULL pointers >;) */
-	cptr->prev = NULL;
-	cptr->hnext = NULL;
 	cptr->user = NULL;
 	cptr->serv = NULL;
 	cptr->srvptr = servr;
 	cptr->status = STAT_UNKNOWN;
-	
+
+	INIT_LIST_HEAD(&cptr->client_list);
+	INIT_LIST_HEAD(&cptr->client_hash);
+
 	(void)strcpy(cptr->username, "unknown");
 	if (size == CLIENT_LOCAL_SIZE)
 	{
@@ -296,17 +299,8 @@ void remove_client_from_list(aClient *cptr)
 #endif
 	)
 		IRCstats.unknown--;
+	list_del(&cptr->client_list);
 	checklist();
-	if (cptr->prev)
-		cptr->prev->next = cptr->next;
-	else
-	{
-		client = cptr->next;
-		if (client)
-			client->prev = NULL;
-	}
-	if (cptr->next)
-		cptr->next->prev = cptr->prev;
 	if (IsPerson(cptr))	/* Only persons can have been added before */
 	{
 		add_history(cptr, 0);
@@ -343,15 +337,7 @@ void remove_client_from_list(aClient *cptr)
  */
 void add_client_to_list(aClient *cptr)
 {
-	/*
-	 * since we always insert new clients to the top of the list,
-	 * this should mean the "me" is the bottom most item in the list.
-	 */
-	cptr->next = client;
-	client = cptr;
-	if (cptr->next)
-		cptr->next->prev = cptr;
-	return;
+	list_add(&cptr->client_list, &client_list);
 }
 
 /*

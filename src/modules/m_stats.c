@@ -534,7 +534,7 @@ int stats_links(aClient *sptr, char *para)
 				link_p->leafmask, link_p->servername, link_p->leafdepth);
 	}
 #ifdef DEBUGMODE
-	for (acptr = client; acptr; acptr = acptr->next)
+	list_for_each_entry(acptr, &client_list, client_list)
 		if (MyConnect(acptr) && acptr->serv && !IsMe(acptr))
 		{
 			if (!acptr->serv->conf)
@@ -893,7 +893,7 @@ int stats_mem(aClient *sptr, char *para)
 	count_watch_memory(&wlh, &wlhm);
 	wwm = sizeof(aName) * NICKNAMEHISTORYLENGTH;
 
-	for (acptr = client; acptr; acptr = acptr->next)
+	list_for_each_entry(acptr, &client_list, client_list)
 	{
 		if (MyConnect(acptr))
 		{
@@ -1647,7 +1647,7 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 #endif
 	}
 #ifdef DEBUGMODE
-	for (acptr = client; acptr; acptr = acptr->next)
+	list_for_each_entry(acptr, &client_list, client_list)
 	{
 		if (IsServer(acptr))
 			sendto_one(sptr, ":%s NOTICE %s :Server %s is %s",

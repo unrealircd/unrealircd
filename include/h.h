@@ -38,7 +38,7 @@ extern char *getreply(int);
 extern MODVAR Member *freemember;
 extern MODVAR Membership *freemembership;
 extern MODVAR MembershipL *freemembershipL;
-extern MODVAR aClient *client, me, *local[];
+extern MODVAR aClient me, *local[];
 extern MODVAR aChannel *channel;
 extern MODVAR struct stats *ircstp;
 extern MODVAR int bootopt;
@@ -151,6 +151,7 @@ extern MODVAR int R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns,
     R_do_id, R_fin_id, R_fail_id;
 
 #endif
+extern struct list_head client_list;
 extern inline aCommand *find_Command(char *cmd, short token, int flags);
 extern aCommand *find_Command_simple(char *cmd);
 extern aChannel *find_channel(char *, aChannel *);

@@ -128,7 +128,7 @@ DLLFUNC CMD_FUNC(m_trace)
 	  {
 		  aClient *ac2ptr;
 
-		  ac2ptr = next_client(client, tname);
+		  ac2ptr = find_client(tname, NULL);
 		  sendto_one(sptr, rpl_str(RPL_TRACELINK), me.name, parv[0],
 		      version, debugmode, tname, ac2ptr->from->name);
 		  return 0;
@@ -148,7 +148,7 @@ DLLFUNC CMD_FUNC(m_trace)
 
 
 	if (doall) {
-		for (acptr = client; acptr; acptr = acptr->next)
+		list_for_each_entry(acptr, &client_list, client_list)
 #ifdef	SHOW_INVISIBLE_LUSERS
 			if (IsPerson(acptr))
 				link_u[acptr->from->slot]++;

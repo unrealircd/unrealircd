@@ -172,8 +172,8 @@ int	w_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (wilds)
 			continue;
 
-		for (acptr = client; (acptr = next_client(acptr, nick));
-		    acptr = acptr->next)
+		acptr = find_client(nick, NULL);
+
 		{
 			if (IsServer(acptr))
 				continue;

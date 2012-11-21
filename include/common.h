@@ -47,7 +47,7 @@
 #endif
 
 #include "ircsprintf.h"
-
+#include "list.h"
 
 #ifdef DEVELOP_CVS
 #define ID_Copyright(x) static char id_copyright[] = x

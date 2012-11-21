@@ -97,7 +97,7 @@ long oldumodes;
 		{
 			SVSNOOP = 1;
 			sendto_ops("This server has been placed in NOOP mode");
-			for (acptr = &me; acptr; acptr = acptr->prev)
+			list_for_each_entry(acptr, &client_list, client_list)
 			{
 				if (MyClient(acptr) && IsAnOper(acptr))
 				{

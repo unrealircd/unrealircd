@@ -94,7 +94,7 @@ ModuleHeader MOD_HEADER(m_sasl)
  */
 static aClient *decode_puid(char *puid)
 {
-	aClient *client;
+	aClient *cptr;
 	char *it, *it2;
 	unsigned int slot;
 	int cookie = 0;
@@ -118,12 +118,12 @@ static aClient *decode_puid(char *puid)
 	if (slot >= MAXCONNECTIONS)
 		return NULL;
 
-	client = local[slot];
+	cptr = local[slot];
 
-	if (cookie && client->sasl_cookie != cookie)
+	if (cookie && cptr->sasl_cookie != cookie)
 		return NULL;
 
-	return client;
+	return cptr;
 }
 
 /*
