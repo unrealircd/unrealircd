@@ -1800,10 +1800,6 @@ struct liststruct {
 #define IsSendable(x)		(DBufLength(&x->sendQ) < 2048)
 #define DoList(x)		((x)->user && (x)->user->lopt)
 
-/* String manipulation macros */
-
-#define	StrEq(x,y)	(!strcmp((x),(y)))
-
 /* used in SetMode() in channel.c and m_umode() in s_msg.c */
 
 #define	MODE_NULL      0
