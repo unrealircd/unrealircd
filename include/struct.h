@@ -993,8 +993,8 @@ typedef struct {
 #define SSLFLAG_NOSTARTTLS	0x8
 
 struct Client {
-	struct list_head client_list;
-	struct list_head client_hash;
+	struct list_head client_node; 	/* for global client list (client_list) */
+	struct list_head client_hash;	/* for clientTable */
 	anUser *user;		/* ...defined, if this is a User */
 	aServer *serv;		/* ...defined, if this is a server */
 	TS   lastnick;		/* TimeStamp on nick */

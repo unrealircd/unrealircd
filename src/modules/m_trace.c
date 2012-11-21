@@ -148,7 +148,7 @@ DLLFUNC CMD_FUNC(m_trace)
 
 
 	if (doall) {
-		list_for_each_entry(acptr, &client_list, client_list)
+		list_for_each_entry(acptr, &client_list, client_node)
 #ifdef	SHOW_INVISIBLE_LUSERS
 			if (IsPerson(acptr))
 				link_u[acptr->from->slot]++;

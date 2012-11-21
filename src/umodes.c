@@ -262,7 +262,7 @@ void UmodeDel(Umode *umode)
 	else	
 	{
 		aClient *cptr;
-		list_for_each_entry(cptr, &client_list, client_list)
+		list_for_each_entry(cptr, &client_list, client_node)
 		{
 			long oldumode = 0;
 			if (!IsPerson(cptr))
@@ -410,7 +410,7 @@ void unload_all_unused_umodes()
 	}
 	if (!removed_umode) /* Nothing was unloaded */
 		return;
-	list_for_each_entry(cptr, &client_list, client_list)
+	list_for_each_entry(cptr, &client_list, client_node)
 	{
 		long oldumode = 0;
 		if (!IsPerson(cptr))

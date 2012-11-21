@@ -1321,7 +1321,7 @@ void sendto_match_butone(aClient *one, aClient *from, char *mask, int what,
 		{
 			if (!cansendglobal)
 				continue;
-			list_for_each_entry(acptr, &client_list, client_list)
+			list_for_each_entry(acptr, &client_list, client_node)
 				if (IsRegisteredUser(acptr)
 				    && match_it(acptr, mask, what)
 				    && acptr->from == cptr)
@@ -1676,7 +1676,7 @@ void sendto_ops_butone(aClient *one, aClient *from, char *pattern, ...)
 	va_start(vl, pattern);
 
 	++sentalong_marker;
-	list_for_each_entry(cptr, &client_list, client_list)
+	list_for_each_entry(cptr, &client_list, client_node)
 	{
 		if (!SendWallops(cptr))
 			continue;
@@ -1710,7 +1710,7 @@ void sendto_opers_butone(aClient *one, aClient *from, char *pattern, ...)
 	va_start(vl, pattern);
 
 	++sentalong_marker;
-	list_for_each_entry(cptr, &client_list, client_list)
+	list_for_each_entry(cptr, &client_list, client_node)
 	{
 		if (!IsAnOper(cptr))
 			continue;
@@ -1741,7 +1741,7 @@ void sendto_ops_butme(aClient *from, char *pattern, ...)
 	va_start(vl, pattern);
 
 	++sentalong_marker;
-	list_for_each_entry(cptr, &client_list, client_list)
+	list_for_each_entry(cptr, &client_list, client_node)
 	{
 		if (!SendWallops(cptr))
 			continue;

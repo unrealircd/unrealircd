@@ -831,7 +831,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 		}
 	}
 
-	list_for_each_entry_reverse(acptr, &client_list, client_list)
+	list_for_each_entry_reverse(acptr, &client_list, client_node)
 	{
 		/* acptr->from == acptr for acptr == cptr */
 		if (acptr->from == cptr)
@@ -881,7 +881,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 		}
 	}
 	/* Synching nick information */
-	list_for_each_entry_reverse(acptr, &client_list, client_list)
+	list_for_each_entry_reverse(acptr, &client_list, client_node)
 	{
 		/* acptr->from == acptr for acptr == cptr */
 		if (acptr->from == cptr)

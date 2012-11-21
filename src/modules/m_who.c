@@ -660,7 +660,7 @@ int oper = IsAnOper(sptr);
 		aClient *acptr;
 		who_flags |= WF_WILDCARD;
 
-		list_for_each_entry(acptr, &client_list, client_list)
+		list_for_each_entry(acptr, &client_list, client_node)
 		{
 		int cansee;
 		char status[20];

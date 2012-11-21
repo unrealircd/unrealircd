@@ -116,7 +116,7 @@ aClient inline *find_name(char *name, aClient *cptr)
 		return (c2ptr);
 	if (!index(name, '*'))
 		return c2ptr;
-	list_for_each_entry(c2ptr, &client_list, client_list)
+	list_for_each_entry(c2ptr, &client_list, client_node)
 	{
 		if (!IsServer(c2ptr) && !IsMe(c2ptr))
 			continue;

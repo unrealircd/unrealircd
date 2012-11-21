@@ -1278,7 +1278,7 @@ aClient *find_match_server(char *mask)
 
 	collapse(mask);
 
-	list_for_each_entry(acptr, &client_list, client_list)
+	list_for_each_entry(acptr, &client_list, client_node)
 	{
 		if (!IsServer(acptr) && !IsMe(acptr))
 			continue;

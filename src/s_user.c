@@ -206,13 +206,13 @@ aClient *next_client(aClient *next, char *ch)
 	aClient *tmp = next;
 
 	next = find_client(ch, tmp);
-	if (tmp && list_empty(&next->client_list))
+	if (tmp && list_empty(&next->client_node))
 		return NULL;
 	if (next != tmp)
 		return next;
 
 	tmp = next;
-	list_for_each_entry(next, &next->client_list, client_list)
+	list_for_each_entry(next, &next->client_node, client_node)
 	{
 		if (!match(ch, next->name) || !match(next->name, ch))
 			break;
@@ -265,7 +265,7 @@ int  hunt_server(aClient *cptr, aClient *sptr, char *command, int server, int pa
 		if (acptr->from == sptr->from && !MyConnect(acptr))
 			acptr = NULL;
 	if (!acptr)
-		list_for_each_entry(acptr, &client_list, client_list)
+		list_for_each_entry(acptr, &client_list, client_node)
 		{
 			if (acptr->from == sptr->from && !MyConnect(acptr))
 				continue;
@@ -342,7 +342,7 @@ int  hunt_server_token(aClient *cptr, aClient *sptr, char *command, char *token,
 		if (acptr->from == sptr->from && !MyConnect(acptr))
 			acptr = NULL;
 	if (!acptr)
-		list_for_each_entry(acptr, &acptr->client_list, client_list)
+		list_for_each_entry(acptr, &acptr->client_node, client_node)
 		{
 			if (acptr->from == sptr->from && !MyConnect(acptr))
 				continue;
@@ -406,7 +406,7 @@ int  hunt_server_token_quiet(aClient *cptr, aClient *sptr, char *command, char *
 		if (acptr->from == sptr->from && !MyConnect(acptr))
 			acptr = NULL;
 	if (!acptr)
-		list_for_each_entry(acptr, &client_list, client_list)
+		list_for_each_entry(acptr, &client_list, client_node)
 		{
 			if (acptr->from == sptr->from && !MyConnect(acptr))
 				continue;

@@ -133,7 +133,7 @@ aClient *make_client(aClient *from, aClient *servr)
 	cptr->srvptr = servr;
 	cptr->status = STAT_UNKNOWN;
 
-	INIT_LIST_HEAD(&cptr->client_list);
+	INIT_LIST_HEAD(&cptr->client_node);
 	INIT_LIST_HEAD(&cptr->client_hash);
 
 	(void)strcpy(cptr->username, "unknown");
@@ -299,7 +299,7 @@ void remove_client_from_list(aClient *cptr)
 #endif
 	)
 		IRCstats.unknown--;
-	list_del(&cptr->client_list);
+	list_del(&cptr->client_node);
 	checklist();
 	if (IsPerson(cptr))	/* Only persons can have been added before */
 	{
@@ -337,7 +337,7 @@ void remove_client_from_list(aClient *cptr)
  */
 void add_client_to_list(aClient *cptr)
 {
-	list_add(&cptr->client_list, &client_list);
+	list_add(&cptr->client_node, &client_list);
 }
 
 /*

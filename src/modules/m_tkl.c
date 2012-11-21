@@ -1490,7 +1490,7 @@ char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64]; /* n!u@h:r */
 int matches = 0;
 aClient *acptr;
 
-	list_for_each_entry(acptr, &client_list, client_list)
+	list_for_each_entry(acptr, &client_list, client_node)
 		if (IsPerson(acptr))
 		{
 			spamfilter_build_user_string(spamfilter_user, acptr->name, acptr);

@@ -633,7 +633,7 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 		/*
 		 * First, remove the clients on the server itself.
 		 */
-		list_for_each_entry_safe(acptr, next, &client_list, client_list)
+		list_for_each_entry_safe(acptr, next, &client_list, client_node)
 		{
 			if (IsClient(acptr) && (acptr->srvptr == sptr))
 				exit_one_client(NULL, acptr,
@@ -645,7 +645,7 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 		 * the one we just lost.
 		 */
 		recurse++;
-		list_for_each_entry_safe(acptr, next, &client_list, client_list)
+		list_for_each_entry_safe(acptr, next, &client_list, client_node)
 		{
 			if (IsServer(acptr) && acptr->srvptr == sptr)
 				exit_client(sptr, acptr, sptr, comment1); /* RECURSION */
@@ -851,7 +851,7 @@ int counted = 0;
 aClient *acptr;
 char text[2048];
 
-	list_for_each_entry(acptr, &client_list, client_list)
+	list_for_each_entry(acptr, &client_list, client_node)
 	{
 		if (IsOper(acptr) && !IsHideOper(acptr))
 			counted++;
