@@ -70,7 +70,8 @@ MODVAR Member *freemember = NULL;
 MODVAR Membership *freemembership = NULL;
 MODVAR MembershipL *freemembershipL = NULL;
 MODVAR int  numclients = 0;
-MODVAR struct list_head client_list;
+
+MODVAR struct list_head client_list, lclient_list;
 
 void initlists(void)
 {
@@ -84,6 +85,7 @@ void initlists(void)
 #endif
 
 	INIT_LIST_HEAD(&client_list);
+	INIT_LIST_HEAD(&lclient_list);
 }
 
 void outofmemory(void)
@@ -139,6 +141,8 @@ aClient *make_client(aClient *from, aClient *servr)
 	(void)strcpy(cptr->username, "unknown");
 	if (size == CLIENT_LOCAL_SIZE)
 	{
+		INIT_LIST_HEAD(&cptr->lclient_node);
+
 		cptr->since = cptr->lasttime =
 		    cptr->lastnick = cptr->firsttime = TStime();
 		cptr->class = NULL;
@@ -299,7 +303,13 @@ void remove_client_from_list(aClient *cptr)
 #endif
 	)
 		IRCstats.unknown--;
-	list_del(&cptr->client_node);
+
+	/* delink ourselves from various lists */
+	if (!list_empty(&cptr->client_node))
+		list_del(&cptr->client_node);
+	if (!list_empty(&cptr->lclient_node))
+		list_del(&cptr->lclient_node);
+
 	checklist();
 	if (IsPerson(cptr))	/* Only persons can have been added before */
 	{
@@ -338,6 +348,9 @@ void remove_client_from_list(aClient *cptr)
 void add_client_to_list(aClient *cptr)
 {
 	list_add(&cptr->client_node, &client_list);
+
+	if (MyConnect(cptr))
+		list_add(&cptr->lclient_node, &lclient_list);
 }
 
 /*

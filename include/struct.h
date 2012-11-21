@@ -995,6 +995,7 @@ typedef struct {
 struct Client {
 	struct list_head client_node; 	/* for global client list (client_list) */
 	struct list_head client_hash;	/* for clientTable */
+
 	anUser *user;		/* ...defined, if this is a User */
 	aServer *serv;		/* ...defined, if this is a server */
 	TS   lastnick;		/* TimeStamp on nick */
@@ -1016,6 +1017,8 @@ struct Client {
 	   ** these fields, if (from != self).
 	 */
 	int  count;		/* Amount of data in buffer */
+	struct list_head lclient_node;	/* for local client list (lclient_list) */
+
 #if 1
 	int  oflag;		/* oper access flags (removed from anUser for mem considerations) */
 	TS   since;		/* time they will next be allowed to send something */
