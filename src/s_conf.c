@@ -337,8 +337,8 @@ extern void 	win_log(char *format, ...);
 extern void		win_error();
 #endif
 extern void add_entropy_configfile(struct stat st, char *buf);
-extern void unload_all_unused_snomasks();
-extern void unload_all_unused_umodes();
+extern void unload_all_unused_snomasks(void);
+extern void unload_all_unused_umodes(void);
 extern void unload_all_unused_extcmodes(void);
 
 extern int charsys_test_language(char *name);

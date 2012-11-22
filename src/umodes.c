@@ -356,10 +356,10 @@ void SnomaskDel(Snomask *sno)
 		sno->unloaded = 1;
 	else	
 	{
-		int i;
-		for (i = 0; i <= LastSlot; i++)
+		aClient *cptr;
+
+		list_for_each_entry(cptr, &lclient_list, lclient_node)
 		{
-			aClient *cptr = local[i];
 			long oldsno;
 			if (!cptr || !IsPerson(cptr))
 				continue;
@@ -369,6 +369,7 @@ void SnomaskDel(Snomask *sno)
 				sendto_one(cptr, rpl_str(RPL_SNOMASK), me.name,
 					cptr->name, get_snostr(cptr->user->snomask));
 		}
+
 		sno->flag = '\0';
 	}
 	if (sno->owner) {
@@ -398,7 +399,7 @@ int umode_allow_opers(aClient *sptr, int what)
 		return 1;
 }
 
-void unload_all_unused_umodes()
+void unload_all_unused_umodes(void)
 {
 	long removed_umode = 0;
 	int i;
@@ -410,7 +411,7 @@ void unload_all_unused_umodes()
 	}
 	if (!removed_umode) /* Nothing was unloaded */
 		return;
-	list_for_each_entry(cptr, &client_list, client_node)
+	list_for_each_entry(cptr, &lclient_list, lclient_node)
 	{
 		long oldumode = 0;
 		if (!IsPerson(cptr))
@@ -433,8 +434,9 @@ void unload_all_unused_umodes()
 	make_umodestr();
 }
 
-void unload_all_unused_snomasks()
+void unload_all_unused_snomasks(void)
 {
+	aClient *cptr;
 	long removed_sno = 0;
 	int i;
 
@@ -449,9 +451,9 @@ void unload_all_unused_snomasks()
 	}
 	if (!removed_sno) /* Nothing was unloaded */
 		return;
-	for (i = 0; i <= LastSlot; i++)
+
+	list_for_each_entry(cptr, &lclient_list, lclient_node)
 	{
-		aClient *cptr = local[i];
 		long oldsno;
 		if (!cptr || !IsPerson(cptr))
 			continue;
@@ -460,7 +462,6 @@ void unload_all_unused_snomasks()
 		if (oldsno != cptr->user->snomask)
 			sendto_one(cptr, rpl_str(RPL_SNOMASK), me.name,
 				cptr->name, get_snostr(cptr->user->snomask));
-		
 	}
 }
 

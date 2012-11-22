@@ -202,15 +202,14 @@ VOIDSIG s_monitor(void)
 VOIDSIG s_die()
 {
 #ifdef _WIN32
-	int  i;
 	aClient *cptr;
 	if (!IsService)
 	{
 		unload_all_modules();
-		for (i = LastSlot; i >= 0; i--)
-			if ((cptr = local[i]) && DBufLength(&cptr->sendQ) > 0)
-				(void)send_queued(cptr);
-		
+
+		list_for_each_entry(cptr, &lclient_list, lclient_node)
+			(void) send_queued(cptr);
+
 		exit(-1);
 	}
 	else {
@@ -308,14 +307,13 @@ VOIDSIG dummy()
 
 void server_reboot(char *mesg)
 {
-	int  i;
+	int i;
 	aClient *cptr;
 	sendto_realops("Aieeeee!!!  Restarting server... %s", mesg);
 	Debug((DEBUG_NOTICE, "Restarting server... %s", mesg));
 
-	for (i = LastSlot; i >= 0; i--)
-		if ((cptr = local[i]) && DBufLength(&cptr->sendQ) > 0)
-			(void)send_queued(cptr);
+	list_for_each_entry(cptr, &lclient_list, lclient_node)
+		(void) send_queued(cptr);
 
 	/*
 	 * ** fd 0 must be 'preserved' if either the -d or -i options have
@@ -480,18 +478,12 @@ EVENT(try_connections)
 void check_tkls(void)
 {
 	aClient *cptr = NULL;
-	int i = 0;
 	ConfigItem_ban *bconf = NULL;
 	char killflag = 0;
 	char banbuf[1024];
 
-	for (i = 0; i <= LastSlot; i++) {
-		/*
-		 * If something we should not touch .. 
-		 */
-		if (!(cptr = local[i]) || IsMe(cptr) || IsLog(cptr))
-			continue;
-
+	list_for_each_entry(cptr, &lclient_list, lclient_node)
+	{
 		if (find_tkline_match(cptr, 0) < 0)
 				continue;
 
@@ -553,9 +545,22 @@ void check_tkls(void)
 	}
 }
 
-/* Now find_kill is only called when a kline-related command is used:
-   AKILL/RAKILL/KLINE/UNKLINE/REHASH.  Very significant CPU usage decrease.
-   -- Barubary */
+/*
+ * TODO:
+ * This is really messy at the moment, but the k-line stuff is recurse-safe, so I removed it
+ * a while back (see above).
+ *
+ * Other things that should likely go:
+ *      - FLAGS_DEADSOCKET handling... just kill them off more towards the event that needs to
+ *        kill them off.  Or perhaps kill the DEADSOCKET stuff entirely.  That also works...
+ *      - identd/dns timeout checking (should go to it's own event, idea here is that we just
+ *        keep you in "unknown" state until you actually get 001, so we can cull the unknown list)
+ *
+ * No need to worry about server list vs lclient list because servers are on lclient.  There are
+ * no good reasons for it not to be, considering that 95% of iterations of the lclient list apply
+ * to both clients and servers.
+ *      - nenolod
+ */
 EVENT(check_pings)
 {
 	aClient *cptr = NULL;
@@ -567,13 +572,8 @@ EVENT(check_pings)
 	int  ping = 0;
 	TS   currenttime = TStime();
 
-	for (i = 0; i <= LastSlot; i++) {
-		/*
-		 * If something we should not touch .. 
-		 */
-		if (!(cptr = local[i]) || IsMe(cptr) || IsLog(cptr))
-			continue;
-
+	list_for_each_entry(cptr, &lclient_list, lclient_node)
+	{
 		/*
 		 * ** Note: No need to notify opers here. It's
 		 * ** already done when "FLAGS_DEADSOCKET" is set.
@@ -672,7 +672,7 @@ EVENT(check_pings)
 				/*
 				 * not nice but does the job 
 				 */
-				cptr->lasttime = currenttime - ping;
+				cptr->lasttime = TStime() - ping;
 				sendto_one(cptr, "%s :%s",
 				    IsToken(cptr) ? TOK_PING : MSG_PING,
 				    me.name);
@@ -826,36 +826,27 @@ Event *e;
 struct ThrottlingBucket *n;
 struct ThrottlingBucket z = { NULL, NULL, {0}, 0, 0};
 
-	/* Client time stuff */
-	for (i = 0; i <= LastSlot; i++)
+	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
-	
-	        if (!(acptr = local[i]) || IsMe(acptr))
-	        	continue;
-
-		/* all (servers AND users) */
-		if (MyConnect(acptr))
+		if (acptr->since > TStime())
 		{
-			if (acptr->since > TStime())
-			{
-				Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->since %ld -> %ld",
-					acptr->name, acptr->since, TStime()));
-				acptr->since = TStime();
-			}
-			if (acptr->lasttime > TStime())
-			{
-				Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->lasttime %ld -> %ld",
-					acptr->name, acptr->lasttime, TStime()));
-				acptr->lasttime = TStime();
-			}
-			if (acptr->last > TStime())
-			{
-				Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->last %ld -> %ld",
-					acptr->name, acptr->last, TStime()));
-				acptr->last = TStime();
-			}
+			Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->since %ld -> %ld",
+				acptr->name, acptr->since, TStime()));
+			acptr->since = TStime();
 		}
-		
+		if (acptr->lasttime > TStime())
+		{
+			Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->lasttime %ld -> %ld",
+				acptr->name, acptr->lasttime, TStime()));
+			acptr->lasttime = TStime();
+		}
+		if (acptr->last > TStime())
+		{
+			Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->last %ld -> %ld",
+				acptr->name, acptr->last, TStime()));
+			acptr->last = TStime();
+		}
+
 		/* users */
 		if (MyClient(acptr))
 		{
@@ -1498,7 +1489,6 @@ int InitwIRCD(int argc, char *argv[])
 	me_hash = find_or_add(me.name);
 	me.serv->up = me_hash;
 	me.serv->numeric = conf_me->numeric;
-	add_client_to_list(&me);
 	add_server_to_table(&me);
 	timeofday = time(NULL);
 	me.lasttime = me.since = me.firsttime = TStime();

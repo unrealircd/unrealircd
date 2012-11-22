@@ -163,13 +163,13 @@ int  crule_connected(int numargs, void *crulearg[])
 int  crule_directcon(int numargs, void *crulearg[])
 {
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
-	int  i;
 	aClient *acptr;
 
 	/* adapted from m_trace and exit_one_client */
-	for (i = 0; i <= LastSlot; i++)
+	/* XXX: iterate server_list when added */
+	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
-		if (!(acptr = local[i]) || !IsServer(acptr))
+		if (!IsServer(acptr))
 			continue;
 		if (match((char *)crulearg[0], acptr->name))
 			continue;
@@ -202,16 +202,17 @@ int  crule_via(int numargs, void *crulearg[])
 int  crule_directop(int numargs, void *crulearg[])
 {
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
-	int  i;
 	aClient *acptr;
 
 	/* adapted from m_trace */
-	for (i = 0; i <= LastSlot; i++)
+	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
-		if (!(acptr = local[i]) || !IsAnOper(acptr))
+		if (!IsAnOper(acptr))
 			continue;
+
 		return (1);
 	}
+
 	return (0);
 #endif
 }
