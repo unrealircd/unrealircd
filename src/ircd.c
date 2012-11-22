@@ -477,15 +477,15 @@ EVENT(try_connections)
  */
 void check_tkls(void)
 {
-	aClient *cptr = NULL;
+	aClient *cptr, *cptr2;
 	ConfigItem_ban *bconf = NULL;
 	char killflag = 0;
 	char banbuf[1024];
 
-	list_for_each_entry(cptr, &lclient_list, lclient_node)
+	list_for_each_entry_safe(cptr, cptr2, &lclient_list, lclient_node)
 	{
 		if (find_tkline_match(cptr, 0) < 0)
-				continue;
+			continue;
 
 		find_shun(cptr);
 		if (!killflag && IsPerson(cptr)) {
@@ -563,7 +563,7 @@ void check_tkls(void)
  */
 EVENT(check_pings)
 {
-	aClient *cptr = NULL;
+	aClient *cptr, *cptr2;
 	ConfigItem_ban *bconf = NULL;
 	char killflag = 0;
 	int  i = 0;
@@ -572,7 +572,7 @@ EVENT(check_pings)
 	int  ping = 0;
 	TS   currenttime = TStime();
 
-	list_for_each_entry(cptr, &lclient_list, lclient_node)
+	list_for_each_entry_safe(cptr, cptr2, &lclient_list, lclient_node)
 	{
 		/*
 		 * ** Note: No need to notify opers here. It's
