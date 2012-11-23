@@ -10,7 +10,7 @@ dnl Unreal.nfo
 dnl .CHANGES.NEW
 dnl src/version.c.SH
 
-AC_INIT([unrealircd], [3.2.10-rc1], [http://bugs.unrealircd.org/], [], [http://unrealircd.org/])
+AC_INIT([unrealircd], [3.4-dev], [http://bugs.unrealircd.org/], [], [http://unrealircd.org/])
 AC_CONFIG_SRCDIR([src/ircd.c])
 AC_CONFIG_HEADER([include/setup.h])
 AC_CONFIG_AUX_DIR([autoconf])
@@ -23,21 +23,21 @@ fi
 
 dnl Calculate the versions. Perhaps the use of expr is a little too extravagant
 # Generation version number (e.g.: 3 for Unreal3*)
-UNREAL_VERSION_GENERATION=["`expr $PACKAGE_VERSION : '\([^.]*\)\.[^.]*\.[^.-_]*'`"]
+UNREAL_VERSION_GENERATION=["3"]
 AC_DEFINE_UNQUOTED([UNREAL_VERSION_GENERATION], [$UNREAL_VERSION_GENERATION], [Generation version number (e.g.: 3 for Unreal3*)])
 
 # Major version number (e.g.: 2 for Unreal3.2*)
-UNREAL_VERSION_MAJOR=["`expr $PACKAGE_VERSION : '[0-9]*\.\([0-9]*\)\.[0-9]*'`"]
+UNREAL_VERSION_MAJOR=["4"]
 AC_DEFINE_UNQUOTED([UNREAL_VERSION_MAJOR], [$UNREAL_VERSION_MAJOR], [Major version number (e.g.: 2 for Unreal3.2*)])
 
 # Minor version number (e.g.: 1 for Unreal3.2.1)
-UNREAL_VERSION_MINOR=["`expr $PACKAGE_VERSION : '[0-9]*\.[0-9]*\.\([0-9]*\)'`"]
+UNREAL_VERSION_MINOR=["0"]
 AC_DEFINE_UNQUOTED([UNREAL_VERSION_MINOR], [$UNREAL_VERSION_MINOR], [Minor version number (e.g.: 1 for Unreal3.2.1)])
 
 # The version suffix such as a beta marker or release candidate
 # marker. (e.g.: -rc2 for unrealircd-3.2.9-rc2). This macro is a
 # string instead of an integer because it contains arbitrary data.
-UNREAL_VERSION_SUFFIX=["`expr $PACKAGE_VERSION : '[0-9]*\.[0-9]*\.[0-9]*\(.*\)'`"]
+UNREAL_VERSION_SUFFIX=["`expr $PACKAGE_VERSION : '[0-9]*\.[0-9]*\(.*\)'`"]
 AC_DEFINE_UNQUOTED([UNREAL_VERSION_SUFFIX], ["$UNREAL_VERSION_SUFFIX"], [Version suffix such as a beta marker or release candidate marker. (e.g.: -rc2 for unrealircd-3.2.9-rc2)])
 
 AC_PROG_CC

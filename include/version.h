@@ -59,7 +59,7 @@
 #define UnrealProtocol 		2311
 #define PATCH1  		macro_to_str(UNREAL_VERSION_GENERATION)
 #define PATCH2  		"." macro_to_str(UNREAL_VERSION_MAJOR)
-#define PATCH3  		"." macro_to_str(UNREAL_VERSION_MINOR)
+#define PATCH3  		""
 #define PATCH4  		UNREAL_VERSION_SUFFIX
 #define PATCH5  		""
 #define PATCH6  		""

@@ -1,5 +1,5 @@
 ===============================================
-=            UnrealIRCd v3.2.10-rc1           =
+=            UnrealIRCd v3.2.4-dev1           =
 ===============================================
  This release was brought to you by:
 
@@ -10,23 +10,11 @@
   Coders:
   ========
   * binki
+  * nenolod
 
   Contributors:
   =============
-  * nenolod
-  * Adam
-  * warg
-  * Stealth
-  * WolfSage
-  * katsklaw
-  * darkex
-  * fspijkerman
-  * fbi
-  * Apocalypse
-
-  RC Testers:
-  ===========
-  <<TODO>>
+  ..
 
   Previous coders:
   ================
