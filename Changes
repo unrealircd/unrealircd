@@ -2526,3 +2526,4 @@
 - Use a more robust method of learning the server origin for a SASL
   agent. Fixes crash reported by Adam.
 - Argh.. silly Windows symbol crap.
+- Import unreal32docs Spanish translation by Karim Benzema.
