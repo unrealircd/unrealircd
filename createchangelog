@@ -4,7 +4,8 @@
 # We still filter translated doc changes as to not polute the
 # changelog too much.
 
-hg log -r a673dd0f7b37: --style changelog --template '[{date|shortdate}] {author} ({node|short}):\n- {desc}\n\n' \
--X 'doc/unreal32docs.*.html' -X 'doc/help.*.conf' -X 'doc/example.*.conf' -X 'include/version.h'|sed 's/^- - /- /g' >Changes
+hg log -r : --style changelog --template '[{date|shortdate}] {author} ({node|short}):\n- {desc}\n\n' \
+-b unreal34 -X 'doc/unreal32docs.*.html' -X 'doc/help.*.conf' -X 'doc/example.*.conf' -X 'include/version.h'|\
+sed 's/^- - /- /g' >Changes
 
 echo "Done. File 'Changes' now contains the full version history"
