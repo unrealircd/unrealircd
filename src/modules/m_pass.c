@@ -101,7 +101,7 @@ ConfigItem_ban *bconf;
 
 	list_for_each_entry(acptr, &unknown_list, lclient_node)
 	{
-		if (IsUnknown(acptr[i]) &&
+		if (IsUnknown(acptr) &&
 #ifndef INET6
 			acptr->ip.S_ADDR == cptr->ip.S_ADDR)
 #else
