@@ -56,7 +56,6 @@ Computing Center and Jarkko Oikarinen";
 #include <string.h>
 
 #ifndef NO_FDLIST
-extern fdlist serv_fdlist;
 extern fdlist oper_fdlist;
 #endif
 extern ircstats IRCstats;
@@ -504,8 +503,6 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 #endif
 		if (IsAnOper(sptr))
 			delfrom_fdlist(sptr->slot, &oper_fdlist);
-		if (IsServer(sptr))
-			delfrom_fdlist(sptr->slot, &serv_fdlist);
 #endif
 		if (sptr->class)
 		{

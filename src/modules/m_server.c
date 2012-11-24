@@ -761,9 +761,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	IRCstats.me_servers++;
 	IRCstats.servers++;
 	IRCstats.unknown--;
-#ifndef NO_FDLIST
-	addto_fdlist(cptr->slot, &serv_fdlist);
-#endif
+	list_add(&cptr->special_node, &server_list);
 	if ((Find_uline(cptr->name)))
 		cptr->flags |= FLAGS_ULINE;
 	(void)find_or_add(cptr->name);

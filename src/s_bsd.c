@@ -132,7 +132,6 @@ MODVAR TS last_allinuse = 0;
 
 #ifndef NO_FDLIST
 extern fdlist default_fdlist;
-extern fdlist serv_fdlist;
 extern fdlist oper_fdlist;
 extern fdlist socks_fdlist;
 #endif
@@ -1086,48 +1085,7 @@ void close_connection(aClient *cptr)
 	}
 
 	cptr->from = NULL;	/* ...this should catch them! >:) --msa */
-	/*
-	 * fd remap to keep local[i] filled at the bottom.
-	 */
-#if 0
-#ifdef DO_REMAPPING
-	if (empty > 0)
-		if ((j = LastSlot) > (i = empty) &&
-		    (local[j]->status != STAT_LOG))
-		{
-			if (dup2(j, i) == -1)
-				return;
-			local[i] = local[j];
-			local[i]->fd = i;
-#ifdef USE_SSL
-			/* I didn't know the code above existed, which
-			   fucked up SSL -Stskeeps
-			*/
-			if ((local[i]->flags & FLAGS_SSL) && local[i]->ssl)
-			{
-				/* !! RISKY !! --Stskeeps */
-				SSL_change_fd((SSL *) local[i]->ssl, local[i]->fd);
-			}
-#endif
-			local[j] = NULL;
-#ifndef NO_FDLIST
-			/* update server list */
-			if (IsServer(local[i]))
-			{
-				delfrom_fdlist(j, &serv_fdlist);
-				addto_fdlist(i, &serv_fdlist);
-			}
-			if (IsAnOper(local[i]))
-			{
-				delfrom_fdlist(j, &oper_fdlist);
-				addto_fdlist(i, &oper_fdlist);
-			}
-#endif
-			fd_close(j);
-			--OpenFiles;
-		}
-#endif
-#endif
+
 	return;
 }
 
