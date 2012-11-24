@@ -138,7 +138,6 @@ void fd_desc(int fd, const char *desc)
 }
 
 extern fdlist default_fdlist;
-extern fdlist oper_fdlist;
 
 #define FDLIST_DEBUG
 
@@ -152,11 +151,11 @@ void addto_fdlist(int fd, fdlist * listp)
 	/* I prefer this little 5-cpu-cycles-check over memory corruption. -- Syzop */
 	if ((fd < 0) || (fd >= MAXCONNECTIONS))
 	{
-		sendto_realops("[BUG] trying to add fd #%d to %p (%p/%p), range is 0..%d",
-			fd, listp, &default_fdlist, &oper_fdlist,
+		sendto_realops("[BUG] trying to add fd #%d to %p (%p), range is 0..%d",
+			fd, listp, &default_fdlist,
 			MAXCONNECTIONS);
-		ircd_log(LOG_ERROR, "[BUG] trying to add fd #%d to %p (%p/%p), range is 0..%d",
-			fd, listp, &default_fdlist, &oper_fdlist,
+		ircd_log(LOG_ERROR, "[BUG] trying to add fd #%d to %p (%p), range is 0..%d",
+			fd, listp, &default_fdlist,
 			MAXCONNECTIONS);
 		return;
 	}
@@ -167,8 +166,8 @@ void addto_fdlist(int fd, fdlist * listp)
 		if (listp->entry[i] == fd)
 		{
 			char buf[2048];
-			ircsprintf(buf, "[BUG] addto_fdlist() called for duplicate entry! fd=%d, fdlist=%p, client=%s (%p/%p)",
-				fd, listp, local[fd] ? local[fd]->name : "<null>", &default_fdlist, &oper_fdlist);
+			ircsprintf(buf, "[BUG] addto_fdlist() called for duplicate entry! fd=%d, fdlist=%p, client=%s (%p)",
+				fd, listp, local[fd] ? local[fd]->name : "<null>", &default_fdlist);
 			sendto_realops("%s", buf);
 			ircd_log(LOG_ERROR, "%s", buf);
 			return;
@@ -200,11 +199,11 @@ void delfrom_fdlist(int fd, fdlist * listp)
 	/* I prefer this little 5-cpu-cycles-check over memory corruption. -- Syzop */
 	if ((fd < 0) || (fd >= MAXCONNECTIONS))
 	{
-		sendto_realops("[BUG] trying to remove fd #%d to %p (%p/%p), range is 0..%d",
-			fd, listp, &default_fdlist, &oper_fdlist,
+		sendto_realops("[BUG] trying to remove fd #%d to %p (%p), range is 0..%d",
+			fd, listp, &default_fdlist,
 			MAXCONNECTIONS);
-		ircd_log(LOG_ERROR, "[BUG] trying to remove fd #%d to %p (%p/%p), range is 0..%d",
-			fd, listp, &default_fdlist, &oper_fdlist,
+		ircd_log(LOG_ERROR, "[BUG] trying to remove fd #%d to %p (%p), range is 0..%d",
+			fd, listp, &default_fdlist,
 			MAXCONNECTIONS);
 		return;
 	}
@@ -218,8 +217,8 @@ void delfrom_fdlist(int fd, fdlist * listp)
 	if (cnt > 1)
 	{
 		char buf[2048];
-		ircsprintf(buf, "[BUG] delfrom_fdlist() called, duplicate entries detected! fd=%d, fdlist=%p, client=%s (%p/%p)",
-			fd, listp, local[fd] ? local[fd]->name : "<null>", &default_fdlist, &oper_fdlist);
+		ircsprintf(buf, "[BUG] delfrom_fdlist() called, duplicate entries detected! fd=%d, fdlist=%p, client=%s (%p)",
+			fd, listp, local[fd] ? local[fd]->name : "<null>", &default_fdlist);
 		sendto_realops("%s", buf);
 		ircd_log(LOG_ERROR, "%s", buf);
 		return;

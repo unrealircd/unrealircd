@@ -47,10 +47,6 @@ int vmakebuf_local_withprefix(char *buf, struct Client *from, const char *patter
 #define ADD_CRLF(buf, len) { if (len > 510) len = 510; \
                              buf[len++] = '\r'; buf[len++] = '\n'; buf[len] = '\0'; } while(0)
 
-#ifndef NO_FDLIST
-extern fdlist oper_fdlist;
-#endif
-
 #define NEWLINE	"\r\n"
 
 static char sendbuf[2048];
@@ -1400,16 +1396,17 @@ void sendto_snomask(int snomask, char *pattern, ...)
 {
 	va_list vl;
 	aClient *cptr;
-	int  i, j;
 	char nbuf[2048];
 
 	va_start(vl, pattern);
 	ircvsprintf(nbuf, pattern, vl);
 	va_end(vl);
 
-	for (i = oper_fdlist.entry[j = 1]; j <= oper_fdlist.last_entry; i = oper_fdlist.entry[++j])
-		if (((cptr = local[i])) && (cptr->user->snomask & snomask))
+	list_for_each_entry(cptr, &oper_list, special_node)
+	{
+		if (cptr->user->snomask & snomask)
 			sendto_one(cptr, ":%s NOTICE %s :%s", me.name, cptr->name, nbuf);
+	}
 }
 
 /** Send to specified snomask - global / operonly.
@@ -1421,16 +1418,18 @@ void sendto_snomask_global(int snomask, char *pattern, ...)
 {
 	va_list vl;
 	aClient *cptr;
-	int  i, j;
+	int  i;
 	char nbuf[2048], snobuf[32], *p;
 
 	va_start(vl, pattern);
 	ircvsprintf(nbuf, pattern, vl);
 	va_end(vl);
 
-	for (i = oper_fdlist.entry[j = 1]; j <= oper_fdlist.last_entry; i = oper_fdlist.entry[++j])
-		if (((cptr = local[i])) && (cptr->user->snomask & snomask))
+	list_for_each_entry(cptr, &oper_list, special_node)
+	{
+		if (cptr->user->snomask & snomask)
 			sendto_one(cptr, ":%s NOTICE %s :%s", me.name, cptr->name, nbuf);
+	}
 
 	/* Build snomasks-to-send-to buffer */
 	snobuf[0] = '\0';
@@ -1767,35 +1766,22 @@ void sendto_realops(char *pattern, ...)
 {
 	va_list vl;
 	aClient *cptr;
-	int  i;
-#ifndef NO_FDLIST
-	int  j;
-#endif
 	char nbuf[1024];
 
 	va_start(vl, pattern);
-#ifdef NO_FDLIST
-	for (i = 0; i <= LastSlot; i++)
-#else
-	for (i = oper_fdlist.entry[j = 1]; j <= oper_fdlist.last_entry; i = oper_fdlist.entry[++j])
-#endif
-#ifdef NO_FDLIST
-		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
-		    IsOper(cptr))
-#else
-		if ((cptr = local[i]))
-#endif
-		{
-			(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
-			    me.name, cptr->name);
-			(void)strncat(nbuf, pattern,
-			    sizeof(nbuf) - strlen(nbuf));
-			va_start(vl, pattern);
-			vsendto_one(cptr, nbuf, vl);
-			va_end(vl);
-		}
+
+	list_for_each_entry(cptr, &oper_list, special_node)
+	{
+		(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
+		    me.name, cptr->name);
+		(void)strlcat(nbuf, pattern, sizeof nbuf);
+
+		va_start(vl, pattern);
+		vsendto_one(cptr, nbuf, vl);
+		va_end(vl);
+	}
+
 	va_end(vl);
-	return;
 }
 
 void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnect, char *comment)
@@ -1824,7 +1810,7 @@ void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnec
 		    user->username, user->realhost, Inet_ia2p(&sptr->ip),
 		    sptr->class ? sptr->class->name : "0");
 	}
-	else 
+	else
 	{
 		ircsprintf(connectd, "*** Notice -- Client exiting: %s (%s@%s) [%s]",
 			nick, user->username, user->realhost, comment);
@@ -1832,8 +1818,9 @@ void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnec
 			nick, user->username, user->realhost, comment, Inet_ia2p(&sptr->ip));
 	}
 
-	for (i = oper_fdlist.entry[j = 1]; j <= oper_fdlist.last_entry; i = oper_fdlist.entry[++j])
-		if (((cptr = local[i])) && (cptr->user->snomask & SNO_CLIENT))
+	list_for_each_entry(cptr, &oper_list, special_node)
+	{
+		if (cptr->user->snomask & SNO_CLIENT)
 		{
 			if (IsHybNotice(cptr))
 				sendto_one(cptr, ":%s NOTICE %s :%s", me.name,
@@ -1843,6 +1830,7 @@ void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnec
 				    cptr->name, connectd);
 
 		}
+	}
 }
 
 void sendto_fconnectnotice(char *nick, anUser *user, aClient *sptr, int disconnect, char *comment)
@@ -1860,7 +1848,7 @@ void sendto_fconnectnotice(char *nick, anUser *user, aClient *sptr, int disconne
 		    "*** Notice -- Client connecting at %s: %s (%s@%s) [%s] {0}", user->server, nick,
 		    user->username, user->realhost, user->ip_str ? user->ip_str : "0");
 	}
-	else 
+	else
 	{
 		ircsprintf(connectd, "*** Notice -- Client exiting at %s: %s!%s@%s (%s)",
 			   user->server, nick, user->username, user->realhost, comment);
@@ -1869,8 +1857,9 @@ void sendto_fconnectnotice(char *nick, anUser *user, aClient *sptr, int disconne
 			user->ip_str ? user->ip_str : "0");
 	}
 
-	for (i = oper_fdlist.entry[j = 1]; j <= oper_fdlist.last_entry; i = oper_fdlist.entry[++j])
-		if (((cptr = local[i])) && (cptr->user->snomask & SNO_FCLIENT))
+	list_for_each_entry(cptr, &oper_list, special_node)
+	{
+		if (cptr->user->snomask & SNO_FCLIENT)
 		{
 			if (IsHybNotice(cptr))
 				sendto_one(cptr, ":%s NOTICE %s :%s", me.name,
@@ -1880,6 +1869,7 @@ void sendto_fconnectnotice(char *nick, anUser *user, aClient *sptr, int disconne
 				    cptr->name, connectd);
 
 		}
+	}
 }
 
 /*

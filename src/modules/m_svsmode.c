@@ -458,24 +458,22 @@ char *xtok = show_change ? TOK_SVS2MODE : TOK_SVSMODE;
 			case 'O': /* Locops are opers too! */
 				if (what == MODE_ADD)
 				{
-#ifndef NO_FDLIST
 					if (!IsAnOper(acptr) && MyClient(acptr))
-						addto_fdlist(acptr->slot, &oper_fdlist);
-#endif
+						list_add(&acptr->special_node, &oper_list);
+
 					acptr->umodes &= ~UMODE_OPER;
 				}
-#ifndef NO_FDLIST
+
 				if (what == MODE_DEL && (acptr->umodes & UMODE_LOCOP) && MyClient(acptr))
-					delfrom_fdlist(acptr->slot, &oper_fdlist);
-#endif
+					list_del(&acptr->special_node);
+
 				goto setmodex;					
 			case 'o':
 				if ((what == MODE_ADD) && !(acptr->umodes & UMODE_OPER))
 				{
-#ifndef NO_FDLIST
-					if (MyClient(acptr) && !IsLocOp(acptr))
-						addto_fdlist(acptr->slot, &oper_fdlist);
-#endif
+					if (!IsAnOper(acptr) && MyClient(acptr))
+						list_add(&acptr->special_node, &oper_list);
+
 					acptr->umodes &= ~UMODE_LOCOP; /* can't be both local and global */
 					IRCstats.operators++;
 				}
@@ -488,10 +486,9 @@ char *xtok = show_change ? TOK_SVS2MODE : TOK_SVSMODE;
 					} else {
 						IRCstats.operators--;
 					}
-#ifndef NO_FDLIST
-					if (MyClient(acptr))
-						delfrom_fdlist(acptr->slot, &oper_fdlist);
-#endif
+
+					if (MyClient(acptr) && !list_empty(&acptr->special_node))
+						list_del(&acptr->special_node);
 				}
 				goto setmodex;
 			case 'H':

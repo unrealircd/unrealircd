@@ -112,7 +112,6 @@ extern SERVICE_STATUS IRCDStatus;
 #endif
 #ifndef NO_FDLIST
 fdlist default_fdlist;
-fdlist oper_fdlist;
 fdlist unknown_fdlist;
 #endif
 
@@ -1422,7 +1421,6 @@ int InitwIRCD(int argc, char *argv[])
 	open_debugfile();
 #ifndef NO_FDLIST
 	init_fdlist(&default_fdlist);
-	init_fdlist(&oper_fdlist);
 	init_fdlist(&unknown_fdlist);
 	{
 		int  i;

@@ -132,7 +132,6 @@ MODVAR TS last_allinuse = 0;
 
 #ifndef NO_FDLIST
 extern fdlist default_fdlist;
-extern fdlist oper_fdlist;
 extern fdlist socks_fdlist;
 #endif
 

@@ -2797,18 +2797,14 @@ ConfigItem_oper	*Find_oper(char *name)
 
 int count_oper_sessions(char *name)
 {
-int i, count = 0;
-aClient *cptr;
+	int count = 0;
+	aClient *cptr;
 
-#ifdef NO_FDLIST
-	for (i = 0; i <= LastSlot; i++)
-#else
-int j;
-	for (i = oper_fdlist.entry[j = 1]; j <= oper_fdlist.last_entry; i = oper_fdlist.entry[++j])
-#endif
-		if ((cptr = local[i]) && IsPerson(cptr) && IsAnOper(cptr) &&
-		    cptr->user && cptr->user->operlogin && !strcmp(cptr->user->operlogin,name))
+	list_for_each_entry(cptr, &oper_list, special_node)
+	{
+		if (cptr->user->operlogin != NULL && !strcmp(cptr->user->operlogin, name))
 			count++;
+	}
 
 	return count;
 }

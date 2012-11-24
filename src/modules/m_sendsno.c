@@ -96,9 +96,6 @@ DLLFUNC int m_sendsno(aClient *cptr, aClient *sptr, int parc, char *parv[])
 char *sno, *msg, *p;
 long snomask = 0;
 int i;
-#ifndef NO_FDLIST
-int j;
-#endif
 aClient *acptr;
 
 	if ((parc < 3) || BadPtr(parv[2]))
@@ -125,16 +122,11 @@ aClient *acptr;
 		}
 	}
 
-#ifdef NO_FDLIST
-	for(i = 0; i <= LastSlot; i++)
-#else
-	for (i = oper_fdlist.entry[j = 1]; j <= oper_fdlist.last_entry; i = oper_fdlist.entry[++j])
-#endif
-		if ((acptr = local[i]) && IsPerson(acptr) && IsAnOper(acptr) &&
-		    (acptr->user->snomask & snomask))
-		{
+	list_for_each_entry(acptr, &oper_list, special_node)
+	{
+		if (acptr->user->snomask & snomask)
 			sendto_one(acptr, ":%s NOTICE %s :%s", me.name, acptr->name, msg);
-		}
+	}
 
 	return 0;
 }

@@ -169,8 +169,10 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
                         IRCstats.operators--;
                         VERIFY_OPERCOUNT(acptr, "svso");
                 }
-                if (IsAnOper(acptr))
-                        delfrom_fdlist(acptr->slot, &oper_fdlist);
+
+		if (!list_empty(&acptr->special_node))
+			list_del(&acptr->special_node);
+
                 acptr->umodes &=
                     ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP |UMODE_SERVICES |
                     UMODE_SADMIN | UMODE_ADMIN | UMODE_COADMIN);

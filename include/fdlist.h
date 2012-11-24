@@ -45,11 +45,6 @@ void addto_fdlist(int a, fdlist * b);
 void delfrom_fdlist(int a, fdlist * b);
 void init_fdlist(fdlist * b);
 
-#ifndef NO_FDLIST
-extern MODVAR fdlist oper_fdlist;
-#endif
-
-
 #ifndef TRUE
 #define TRUE 1
 #endif

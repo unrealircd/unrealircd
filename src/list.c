@@ -72,7 +72,7 @@ MODVAR MembershipL *freemembershipL = NULL;
 MODVAR int  numclients = 0;
 
 /* unless documented otherwise, these are all local-only, except client_list. */
-MODVAR struct list_head client_list, lclient_list, server_list;
+MODVAR struct list_head client_list, lclient_list, server_list, oper_list;
 
 void initlists(void)
 {
@@ -88,6 +88,7 @@ void initlists(void)
 	INIT_LIST_HEAD(&client_list);
 	INIT_LIST_HEAD(&lclient_list);
 	INIT_LIST_HEAD(&server_list);
+	INIT_LIST_HEAD(&oper_list);
 }
 
 void outofmemory(void)
