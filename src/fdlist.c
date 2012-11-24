@@ -1,6 +1,6 @@
-/************************************************************************
- *   Unreal Internet Relay Chat Daemon, src/fdlist.c
- *   Copyright (C) Mika Nystrom
+/*
+ * UnrealIRCd, src/fdlist.c
+ * Copyright (c) 2012 William Pitcock <nenolod@dereferenced.org>
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,8 +16,6 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-
-/* $Id$ */
 
 #include "struct.h"
 #include "common.h"
