@@ -71,23 +71,6 @@ Computing Center and Jarkko Oikarinen";
 #include "h.h"
 #include "fdlist.h"
 
-#ifdef USE_POLL
-# ifndef _WIN32
-#  include <sys/poll.h>
-#  include <poll.h>
-#  ifndef POLLRDHUP
-#   define POLLRDHUP 0
-#  endif
-# else
-#  define poll WSAPoll
-#  define POLLRDHUP POLLHUP
-# endif
-
-static struct pollfd pollfds[MAXCONNECTIONS], dummy_pollfd;
-static int pollfd_count = 0;
-static int pollfd_to_client[MAXCONNECTIONS]; /* use get_client_by_pollfd() for grabbing, don't grab from array directly ! */
-#endif
-
 #ifdef INET6
 static unsigned char minus_one[] =
     { 255, 255, 255, 255, 255, 255, 255, 255, 255,
@@ -150,59 +133,6 @@ extern void url_do_transfers_async(void);
 # endif
 #endif
 
-#ifdef USE_POLL
-static void reset_pollfd()
-{
-	int i;
-	
-	pollfd_count = 0;
-	for (i = 0; i < MAXCONNECTIONS; ++i)
-		pollfd_to_client[i] = -1;
-}
-#define POLL_RESOLVER -2
-/** Return a pollfd structure and map file descriptor (fd) to client slot (slot).
- * Although we do some minimal MAXCONNECTIONS checking here to ensure we don't crash,
- * the caller must still check if fd >= MAXCONNECTIONS as this is a serious issue.
- */
-static struct pollfd *get_pollfd(int slot, int fd)
-{
-	if (pollfd_count >= MAXCONNECTIONS)
-	{
-		ircd_log(LOG_ERROR, "TROUBLE: get_pollfd() called with slot %d fd %d, which is >=%d. This is bad!",
-			slot, fd, MAXCONNECTIONS);
-#ifdef DEBUGMODE
-		abort(); /* I think this warrants a core dump in debug mode. -- Syzop */
-#endif
-		memset(&dummy_pollfd, 0, sizeof(dummy_pollfd));
-		return &dummy_pollfd;
-	}
-	else
-	{
-		struct pollfd *p = &pollfds[pollfd_count++];
-		memset(p, 0, sizeof(*p));
-		p->fd = fd;
-		pollfd_to_client[fd] = slot;
-		return p;
-	}
-}
-
-#if 1
-/* For now, always use this function which does extra checking.. paranoid.. -- Syzop */
-static int get_client_by_pollfd(int fd)
-{
-int v;
-	if ((fd < 0) || (fd >= MAXCONNECTIONS))
-		abort();
-	v = pollfd_to_client[fd];
-	/* v may be negative, both when it's POLL_RESOLVER and during a race condition */
-	return v;
-}
-#else
-#define get_client_by_pollfd(x) pollfd_to_client[x]
-#endif /* DEBUGMODE */
-
-#endif /* USE_POLL */
-
 void start_of_normal_client_handshake(aClient *acptr);
 void proceed_normal_client_handshake(aClient *acptr, struct hostent *he);
 
@@ -234,12 +164,6 @@ void remove_local_client(aClient* cptr)
 		cptr->slot = -1;
 		return;
 	}
-
-#ifdef USE_POLL
-	/* Using the pollfd_to_client array directly here, as we do proper bounds checks ! */
-	if ((cptr->fd >= 0) && (cptr->fd < MAXCLIENTS) && (pollfd_to_client[cptr->fd] == cptr->slot))
-		pollfd_to_client[cptr->fd] = -1;
-#endif
 
 	/* Keep LastSlot as the last one
 	 */
@@ -673,7 +597,7 @@ void init_sys(void)
 }
 #endif
 #ifndef _WIN32
-#ifndef USE_POLL
+#ifdef BACKEND_SELECT
 	if (MAXCONNECTIONS > FD_SETSIZE)
 	{
 		fprintf(stderr, "MAXCONNECTIONS (%d) is higher than FD_SETSIZE (%d)\n", MAXCONNECTIONS, FD_SETSIZE);
@@ -764,9 +688,6 @@ init_dgram:
 openlog("ircd", LOG_PID | LOG_NDELAY, LOG_DAEMON); /* reopened now */
 #endif
 	memset(local, 0, sizeof(aClient*) * MAXCONNECTIONS);
-#ifdef USE_POLL
-	reset_pollfd();
-#endif
 	LastSlot = -1;
 
 #endif /*_WIN32*/
