@@ -3069,19 +3069,22 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 		/* FIXME */
 		if (aconf->maxperip)
 		{
+			aClient *acptr, *acptr2;
+
 			ii = 1;
-			for (i = LastSlot; i >= 0; i--)
-				if (local[i] && MyClient(local[i])
+			list_for_each_entry_safe(acptr, acptr2, &lclient_list, lclient_node)
+			{
+				if (
 #ifndef INET6
-				    && local[i]->ip.S_ADDR == cptr->ip.S_ADDR)
+				    acptr->ip.S_ADDR == cptr->ip.S_ADDR)
 #else
 				    /*
 				     * match IPv4 exactly and the ipv6
 				     * based on ipv6_clone_mask.
 				     */
-				    && (is_ipv4
-					? !bcmp(local[i]->ip.S_ADDR, cptr->ip.S_ADDR, sizeof(cptr->ip.S_ADDR))
-					: match_ipv6(&local[i]->ip, &cptr->ip, aconf->ipv6_clone_mask)))
+				    (is_ipv4
+					? !bcmp(acptr->ip.S_ADDR, cptr->ip.S_ADDR, sizeof(cptr->ip.S_ADDR))
+					: match_ipv6(&acptr->ip, &cptr->ip, aconf->ipv6_clone_mask)))
 						
 #endif
 				{
@@ -3093,6 +3096,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 						return -5;	/* Already got one with that ip# */
 					}
 				}
+			}
 		}
 		if ((i = Auth_Check(cptr, aconf->auth, cptr->passwd)) == -1)
 		{
