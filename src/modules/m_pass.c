@@ -94,16 +94,18 @@ static int my_check_banned(aClient *cptr)
 {
 int i, j;
 aTKline *tk;
+aClient *acptr, *acptr2;
 ConfigItem_ban *bconf;
 
 	j = 1;
-	for (i = LastSlot; i >= 0; i--)
+
+	list_for_each_entry(acptr, &unknown_list, lclient_node)
 	{
-		if (local[i] && IsUnknown(local[i]) &&
+		if (IsUnknown(acptr[i]) &&
 #ifndef INET6
-			local[i]->ip.S_ADDR == cptr->ip.S_ADDR)
+			acptr->ip.S_ADDR == cptr->ip.S_ADDR)
 #else
-			!bcmp(local[i]->ip.S_ADDR, cptr->ip.S_ADDR, sizeof(cptr->ip.S_ADDR)))
+			!bcmp(acptr->ip.S_ADDR, cptr->ip.S_ADDR, sizeof(cptr->ip.S_ADDR)))
 #endif
 		{
 			j++;

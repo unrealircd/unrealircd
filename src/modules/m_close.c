@@ -85,7 +85,7 @@ DLLFUNC int MOD_UNLOAD(m_close)(int module_unload)
 */
 DLLFUNC CMD_FUNC(m_close)
 {
-	aClient *acptr;
+	aClient *acptr, *acptr2;
 	int  i;
 	int  closed = 0;
 
@@ -96,21 +96,18 @@ DLLFUNC CMD_FUNC(m_close)
 		return 0;
 	}
 
-	for (i = LastSlot; i >= 0; --i)
+	list_for_each_entry_safe(acptr, acptr2, &unknown_list, lclient_node)
 	{
-		if (!(acptr = local[i]))
-			continue;
-		if (!IsUnknown(acptr) && !IsConnecting(acptr) &&
-		    !IsHandshake(acptr))
-			continue;
 		sendto_one(sptr, rpl_str(RPL_CLOSING), me.name, parv[0],
 		    get_client_name(acptr, TRUE), acptr->status);
 		(void)exit_client(acptr, acptr, acptr, "Oper Closing");
 		closed++;
 	}
+
 	sendto_one(sptr, rpl_str(RPL_CLOSEEND), me.name, parv[0], closed);
 	sendto_realops("%s!%s@%s closed %d unknown connections", sptr->name,
 	    sptr->user->username, GetHost(sptr), closed);
 	IRCstats.unknown = 0;
+
 	return 0;
 }
