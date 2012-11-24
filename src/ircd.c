@@ -553,6 +553,26 @@ void check_tkls(void)
  * to both clients and servers.
  *      - nenolod
  */
+
+/*
+ * Check UNKNOWN connections - if they have been in this state
+ * for more than CONNECTTIMEOUT seconds, close them.
+ */
+EVENT(check_unknowns)
+{
+	aClient *cptr, *cptr2;
+
+	list_for_each_entry_safe(cptr, cptr2, &unknown_list, lclient_node)
+	{
+		if (cptr->firsttime && ((TStime() - cptr->firsttime) > CONNECTTIMEOUT))
+			(void)exit_client(cptr, cptr, &me, "Registration Timeout");
+	}
+}
+
+/*
+ * Check registered connections for PING timeout.
+ * XXX: also does some other stuff still, need to sort this.  --nenolod
+ */
 EVENT(check_pings)
 {
 	aClient *cptr, *cptr2;
@@ -670,19 +690,6 @@ EVENT(check_pings)
 				    me.name);
 			}
 		}
-		/*
-		 * Check UNKNOWN connections - if they have been in this state
-		 * for > 100s, close them.
-		 */
-		if (IsUnknown(cptr)
-#ifdef USE_SSL
-			|| (IsSSLAcceptHandshake(cptr) || IsSSLConnectHandshake(cptr))
-#endif		
-		)
-			if (cptr->firsttime ? ((currenttime - cptr->firsttime) >
-			    100) : 0)
-				(void)exit_client(cptr, cptr, &me,
-				    "Connection Timed Out");
 	}
 }
 
