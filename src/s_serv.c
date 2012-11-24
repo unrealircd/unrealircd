@@ -141,10 +141,6 @@ void reread_motdsandrules();
 **		note:	it is guaranteed that parv[0]..parv[parc-1] are all
 **			non-NULL pointers.
 */
-#ifndef NO_FDLIST
-extern fdlist serv_fdlist;
-#endif
-
 #ifndef _WIN32
 char *getosname(void)
 {

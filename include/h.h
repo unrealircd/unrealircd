@@ -671,7 +671,7 @@ extern MODVAR aCtab cFlagTab[];
 extern char *unreal_encodespace(char *s);
 extern char *unreal_decodespace(char *s);
 extern MODVAR Link *helpign;
-extern MODVAR fdlist default_fdlist, busycli_fdlist, serv_fdlist, oper_fdlist;
+extern MODVAR fdlist default_fdlist, oper_fdlist;
 extern void DCCdeny_add(char *filename, char *reason, int type, int type2);
 extern void DCCdeny_del(ConfigItem_deny_dcc *deny);
 extern void dcc_wipe_services(void);

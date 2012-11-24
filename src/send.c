@@ -48,7 +48,6 @@ int vmakebuf_local_withprefix(char *buf, struct Client *from, const char *patter
                              buf[len++] = '\r'; buf[len++] = '\n'; buf[len] = '\0'; } while(0)
 
 #ifndef NO_FDLIST
-extern fdlist serv_fdlist;
 extern fdlist oper_fdlist;
 #endif
 
@@ -622,29 +621,23 @@ void sendto_chanops_butone(aClient *one, aChannel *chptr, char *pattern, ...)
 void sendto_serv_butone(aClient *one, char *pattern, ...)
 {
 	va_list vl;
-	int  i;
 	aClient *cptr;
-#ifndef NO_FDLIST
-	int  j;
-#endif
 
 	va_start(vl, pattern);
-#ifdef NO_FDLIST
-	for (i = 0; i <= LastSlot; i++)
-#else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
-#endif
+
+	list_for_each_entry(cptr, &server_list, special_node)
 	{
-		if (!(cptr = local[i]) || (one && cptr == one->from))
+		if (one && cptr == one->from)
 			continue;
+
 		va_start(vl, pattern);
 
-#ifdef NO_FDLIST
 		if (IsServer(cptr))
-#endif
 			vsendto_one(cptr, pattern, vl);
+
 		va_end(vl);
 	}
+
 	va_end(vl);
 	return;
 }
@@ -660,12 +653,9 @@ void sendto_serv_butone_token(aClient *one, char *prefix, char *command,
     char *token, char *pattern, ...)
 {
 	va_list vl;
-	int  i;
 	aClient *cptr;
 	aClient *acptr;
-#ifndef NO_FDLIST
-	int  j;
-#endif
+
 	static char buff[2048];
 	static char pref[100];
 	va_start(vl, pattern);
@@ -687,44 +677,39 @@ void sendto_serv_butone_token(aClient *one, char *prefix, char *command,
 	strcat(tcmd, buff);
 	strcat(ccmd, buff);
 
-#ifdef NO_FDLIST
-	for (i = 0; i <= LastSlot; i++)
-#else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
-#endif
+	list_for_each_entry(cptr, &server_list, special_node)
 	{
-		if (!(cptr = local[i]) || (one && cptr == one->from))
+		if (one && cptr == one->from)
 			continue;
-#ifdef NO_FDLIST
-		if (IsServer(cptr))
-#endif
-			if (IsToken(cptr))
+
+		if (IsToken(cptr))
+		{
+			if (SupportNS(cptr) && pref[0])
 			{
-				if (SupportNS(cptr) && pref[0])
-				{
-					sendto_one(cptr, "@%s %s",
-						pref, tcmd);
-				}
-					else
-				{
-					sendto_one(cptr, ":%s %s",
-						prefix, tcmd);
-				}
+				sendto_one(cptr, "@%s %s",
+					pref, tcmd);
 			}
 			else
 			{
-				if (SupportNS(cptr) && pref[0])
-				{
-					sendto_one(cptr, "@%s %s",
-						pref, ccmd);
-				}
-				else
-				{
-					sendto_one(cptr, ":%s %s", prefix,
-					    ccmd);
-				}
+				sendto_one(cptr, ":%s %s",
+					prefix, tcmd);
 			}
+		}
+		else
+		{
+			if (SupportNS(cptr) && pref[0])
+			{
+				sendto_one(cptr, "@%s %s",
+					pref, ccmd);
+			}
+			else
+			{
+				sendto_one(cptr, ":%s %s", prefix,
+				    ccmd);
+			}
+		}
 	}
+
 	va_end(vl);
 	return;
 }
@@ -740,12 +725,9 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
     char *token, char *pattern, ...)
 {
 	va_list vl;
-	int  i;
 	aClient *cptr;
 	aClient *acptr;
-#ifndef NO_FDLIST
-	int  j;
-#endif
+
 	static char tcmd[2048];
 	static char ccmd[2048];
 	static char buff[2048];
@@ -772,17 +754,10 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 	strcat(tcmd, buff);
 	strcat(ccmd, buff);
 
-#ifdef NO_FDLIST
-	for (i = 0; i <= LastSlot; i++)
-#else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
-#endif
+	list_for_each_entry(cptr, &server_list, special_node)
 	{
-		if (!(cptr = local[i]) || (one && cptr == one->from))
+		if (one && cptr == one->from)
 			continue;
-#ifdef NO_FDLIST
-		if (IsServer(cptr))
-#endif
 
 		if ((opt & OPT_NOT_SJOIN) && SupportSJOIN(cptr))
 			continue;
@@ -861,31 +836,23 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 void sendto_serv_butone_quit(aClient *one, char *pattern, ...)
 {
 	va_list vl;
-	int  i;
 	aClient *cptr;
-#ifndef NO_FDLIST
-	int  j;
-#endif
+
 	va_start(vl, pattern);
 
-#ifdef NO_FDLIST
-	for (i = 0; i <= LastSlot; i++)
-#else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
-#endif
+	list_for_each_entry(cptr, &server_list, special_node)
 	{
-		if (!(cptr = local[i]) || (one && cptr == one->from))
+		if (one && cptr == one->from)
 			continue;
+
 		va_start(vl, pattern);
 
-#ifdef NO_FDLIST
-		if (IsServer(cptr) && !DontSendQuit(cptr))
-#else
 		if (!DontSendQuit(cptr))
-#endif
 			vsendto_one(cptr, pattern, vl);
+
 		va_end(vl);
 	}
+
 	va_end(vl);
 	return;
 }
@@ -899,30 +866,23 @@ void sendto_serv_butone_quit(aClient *one, char *pattern, ...)
 void sendto_serv_butone_sjoin(aClient *one, char *pattern, ...)
 {
 	va_list vl;
-	int  i;
 	aClient *cptr;
-#ifndef NO_FDLIST
-	int  j;
-#endif
+
 	va_start(vl, pattern);
-#ifdef NO_FDLIST
-	for (i = 0; i <= LastSlot; i++)
-#else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
-#endif
+
+	list_for_each_entry(cptr, &server_list, special_node)
 	{
-		if (!(cptr = local[i]) || (one && cptr == one->from))
+		if (one && cptr == one->from)
 			continue;
+
 		va_start(vl, pattern);
 
-#ifdef NO_FDLIST
-		if (IsServer(cptr) && !SupportSJOIN(cptr))
-#else
 		if (!SupportSJOIN(cptr))
-#endif
 			vsendto_one(cptr, pattern, vl);
+
 		va_end(vl);
 	}
+
 	va_end(vl);
 	return;
 }
@@ -936,33 +896,24 @@ void sendto_serv_butone_sjoin(aClient *one, char *pattern, ...)
 void sendto_serv_sjoin(aClient *one, char *pattern, ...)
 {
 	va_list vl;
-	int  i;
 	aClient *cptr;
-#ifndef NO_FDLIST
-	int  j;
-#endif
+
 	va_start(vl, pattern);
 
-#ifdef NO_FDLIST
-	for (i = 0; i <= LastSlot; i++)
-#else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
-#endif
+	list_for_each_entry(cptr, &server_list, special_node)
 	{
-		if (!(cptr = local[i]) || (one && cptr == one->from))
+		if (one && cptr == one->from)
 			continue;
+
 		va_start(vl, pattern);
 
-#ifdef NO_FDLIST
-		if (IsServer(cptr) && SupportSJOIN(cptr))
-#else
 		if (SupportSJOIN(cptr))
-#endif
 			vsendto_one(cptr, pattern, vl);
+
 		va_end(vl);
 	}
+
 	va_end(vl);
-	return;
 }
 
 /*
@@ -974,33 +925,24 @@ void sendto_serv_sjoin(aClient *one, char *pattern, ...)
 void sendto_serv_butone_nickv2(aClient *one, char *pattern, ...)
 {
 	va_list vl;
-	int  i;
 	aClient *cptr;
-#ifndef NO_FDLIST
-	int  j;
-#endif
+
 	va_start(vl, pattern);
 
-#ifdef NO_FDLIST
-	for (i = 0; i <= LastSlot; i++)
-#else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
-#endif
+	list_for_each_entry(cptr, &server_list, special_node)
 	{
-		if (!(cptr = local[i]) || (one && cptr == one->from))
+		if (one && cptr == one->from)
 			continue;
+
 		va_start(vl, pattern);
 
-#ifdef NO_FDLIST
-		if (IsServer(cptr) && !SupportNICKv2(cptr))
-#else
 		if (!SupportNICKv2(cptr))
-#endif
 			vsendto_one(cptr, pattern, vl);
+
 		va_end(vl);
 	}
+
 	va_end(vl);
-	return;
 }
 
 /*
@@ -1012,33 +954,24 @@ void sendto_serv_butone_nickv2(aClient *one, char *pattern, ...)
 void sendto_serv_nickv2(aClient *one, char *pattern, ...)
 {
 	va_list vl;
-	int  i;
 	aClient *cptr;
-#ifndef NO_FDLIST
-	int  j;
-#endif
+
 	va_start(vl, pattern);
 
-#ifdef NO_FDLIST
-	for (i = 0; i <= LastSlot; i++)
-#else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
-#endif
+	list_for_each_entry(cptr, &server_list, special_node)
 	{
-		if (!(cptr = local[i]) || (one && cptr == one->from))
+		if (one && cptr == one->from)
 			continue;
+
 		va_start(vl, pattern);
 
-#ifdef NO_FDLIST
-		if (IsServer(cptr) && SupportNICKv2(cptr))
-#else
 		if (SupportNICKv2(cptr))
-#endif
 			vsendto_one(cptr, pattern, vl);
+
 		va_end(vl);
 	}
+
 	va_end(vl);
-	return;
 }
 
 
@@ -1052,40 +985,26 @@ void sendto_serv_nickv2_token(aClient *one, char *pattern, char *tokpattern,
     ...)
 {
 	va_list vl;
-	int  i;
 	aClient *cptr;
-#ifndef NO_FDLIST
-	int  j;
-#endif
+
 	va_start(vl, tokpattern);
 
-#ifdef NO_FDLIST
-	for (i = 0; i <= LastSlot; i++)
-#else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
-#endif
+	list_for_each_entry(cptr, &server_list, special_node)
 	{
-		if (!(cptr = local[i]) || (one && cptr == one->from))
+		if (one && cptr == one->from)
 			continue;
+
 		va_start(vl, tokpattern);
 
-#ifdef NO_FDLIST
-		if (IsServer(cptr) && SupportNICKv2(cptr) && !IsToken(cptr))
-#else
 		if (SupportNICKv2(cptr) && !IsToken(cptr))
-#endif
 			vsendto_one(cptr, pattern, vl);
-		else
-#ifdef NO_FDLIST
-		if (IsServer(cptr) && SupportNICKv2(cptr) && IsToken(cptr))
-#else
-		if (SupportNICKv2(cptr) && IsToken(cptr))
-#endif
+		else if (SupportNICKv2(cptr) && IsToken(cptr))
 			vsendto_one(cptr, tokpattern, vl);
+
 		va_end(vl);
 	}
+
 	va_end(vl);
-	return;
 }
 
 /*
@@ -1973,23 +1892,13 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
     long lastnick, char *username, char *realhost, char *server,
     char *svid, char *info, char *umodes, char *virthost)
 {
-	int  i;
 	aClient *cptr;
-#ifndef NO_FDLIST
-	int  j;
-#endif
 
-#ifdef NO_FDLIST
-	for (i = 0; i <= LastSlot; i++)
-#else
-	for (i = serv_fdlist.entry[j = 1]; j <= serv_fdlist.last_entry; i = serv_fdlist.entry[++j])
-#endif
+	list_for_each_entry(cptr, &server_list, special_node)
 	{
-		if (!(cptr = local[i]) || (one && cptr == one->from))
+		if (one && cptr == one->from)
 			continue;
-#ifdef NO_FDLIST
-		if (IsServer(cptr))
-#endif
+
 		{
 			char *vhost;
 			if (SupportVHP(cptr))
@@ -2006,7 +1915,7 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 				else
 					vhost = "*";
 			}
-				
+
 			if (SupportNICKv2(cptr))
 			{
 				if (sptr->srvptr->serv->numeric && SupportNS(cptr))
@@ -2072,7 +1981,6 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 			}
 		}
 	}
-	return;
 }
 
 /*
