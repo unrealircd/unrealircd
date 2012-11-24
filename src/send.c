@@ -1172,7 +1172,6 @@ static int match_it(one, mask, what)
 void sendto_match_servs(aChannel *chptr, aClient *from, char *format, ...)
 {
 	va_list vl;
-	int  i;
 	aClient *cptr;
 	char *mask;
 
@@ -1188,18 +1187,18 @@ void sendto_match_servs(aChannel *chptr, aClient *from, char *format, ...)
 	else
 		mask = (char *)NULL;
 
-	for (i = 0; i <= LastSlot; i++)
+	list_for_each_entry(cptr, &server_list, special_node)
 	{
-		if (!(cptr = local[i]))
-			continue;
-		if ((cptr == from) || !IsServer(cptr))
+		if (cptr == from)
 			continue;
 		if (!BadPtr(mask) && IsServer(cptr) && match(mask, cptr->name))
 			continue;
+
 		va_start(vl, format);
 		vsendto_one(cptr, format, vl);
 		va_end(vl);
 	}
+
 	va_end(vl);
 }
 
@@ -1226,10 +1225,8 @@ void sendto_match_butone(aClient *one, aClient *from, char *mask, int what,
 	else
 		cansendlocal = cansendglobal = 1;
 
-	for (i = 0; i <= LastSlot; i++)
+	list_for_each_entry(cptr, &server_list, special_node)
 	{
-		if (!(cptr = local[i]))
-			continue;	/* that clients are not mine */
 		if (cptr == one)	/* must skip the origin !! */
 			continue;
 		if (IsServer(cptr))
@@ -1256,8 +1253,8 @@ void sendto_match_butone(aClient *one, aClient *from, char *mask, int what,
 		vsendto_prefix_one(cptr, from, pattern, vl);
 		va_end(vl);
 	}
+
 	va_end(vl);
-	return;
 }
 
 /*
@@ -1270,16 +1267,18 @@ void sendto_match_butone(aClient *one, aClient *from, char *mask, int what,
 void sendto_all_butone(aClient *one, aClient *from, char *pattern, ...)
 {
 	va_list vl;
-	int  i;
 	aClient *cptr;
 
-	for (va_start(vl, pattern), i = 0; i <= LastSlot; i++)
-		if ((cptr = local[i]) && !IsMe(cptr) && one != cptr)
+	va_start(vl, pattern);
+
+	list_for_each_entry(cptr, &lclient_list, lclient_node)
+		if (!IsMe(cptr) && one != cptr)
 		{
 			va_start(vl, pattern);
 			vsendto_prefix_one(cptr, from, pattern, vl);
 			va_end(vl);
 		}
+
 	va_end(vl);
 	return;
 }
@@ -1293,12 +1292,12 @@ void sendto_ops(char *pattern, ...)
 {
 	va_list vl;
 	aClient *cptr;
-	int  i;
 	char nbuf[1024];
 
 	va_start(vl, pattern);
-	for (i = 0; i <= LastSlot; i++)
-		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) && SendServNotice(cptr))
+
+	list_for_each_entry(cptr, &lclient_list, lclient_node)
+		if (!IsServer(cptr) && !IsMe(cptr) && SendServNotice(cptr))
 		{
 			(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ", me.name, cptr->name);
 			(void)strncat(nbuf, pattern, sizeof(nbuf) - strlen(nbuf));
@@ -1306,8 +1305,8 @@ void sendto_ops(char *pattern, ...)
 			vsendto_one(cptr, nbuf, vl);
 			va_end(vl);
 		}
+
 	va_end(vl);
-	return;
 }
 
 /*
@@ -1319,13 +1318,12 @@ void sendto_failops(char *pattern, ...)
 {
 	va_list vl;
 	aClient *cptr;
-	int  i;
 	char nbuf[1024];
 
 	va_start(vl, pattern);
-	for (i = 0; i <= LastSlot; i++)
-		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
-		    SendFailops(cptr))
+
+	list_for_each_entry(cptr, &lclient_list, lclient_node)
+		if (!IsServer(cptr) && !IsMe(cptr) && SendFailops(cptr))
 		{
 			(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Global -- ",
 			    me.name, cptr->name);
@@ -1335,8 +1333,8 @@ void sendto_failops(char *pattern, ...)
 			vsendto_one(cptr, nbuf, vl);
 			va_end(vl);
 		}
+
 	va_end(vl);
-	return;
 }
 
 /*
@@ -1348,11 +1346,12 @@ void sendto_umode(int umodes, char *pattern, ...)
 {
 	va_list vl;
 	aClient *cptr;
-	int  i;
 	char nbuf[1024];
+
 	va_start(vl, pattern);
-	for (i = 0; i <= LastSlot; i++)
-		if ((cptr = local[i]) && IsPerson(cptr) && (cptr->umodes & umodes) == umodes)
+
+	list_for_each_entry(cptr, &lclient_list, lclient_node)
+		if (IsPerson(cptr) && (cptr->umodes & umodes) == umodes)
 		{
 			(void)ircsprintf(nbuf, ":%s NOTICE %s :",
 			    me.name, cptr->name);
@@ -1362,8 +1361,8 @@ void sendto_umode(int umodes, char *pattern, ...)
 			vsendto_one(cptr, nbuf, vl);
 			va_end(vl);
 		}
+
 	va_end(vl);
-	return;
 }
 
 /*
@@ -1376,16 +1375,18 @@ void sendto_umode_raw(int umodes, char *pattern, ...)
 	va_list vl;
 	aClient *cptr;
 	int  i;
+
 	va_start(vl, pattern);
-	for (i = 0; i <= LastSlot; i++)
-		if ((cptr = local[i]) && IsPerson(cptr) && (cptr->umodes & umodes) == umodes)
+
+	list_for_each_entry(cptr, &lclient_list, lclient_node)
+		if (IsPerson(cptr) && (cptr->umodes & umodes) == umodes)
 		{
 			va_start(vl, pattern);
 			vsendto_one(cptr, pattern, vl);
 			va_end(vl);
 		}
+
 	va_end(vl);
-	return;
 }
 /** Send to specified snomask - local / operonly.
  * @param snomask Snomask to send to (can be a bitmask [AND])
@@ -1458,8 +1459,8 @@ void sendto_snomask_normal(int snomask, char *pattern, ...)
 	ircvsprintf(nbuf, pattern, vl);
 	va_end(vl);
 
-	for (i = LastSlot; i >= 0; i--)
-		if ((cptr = local[i]) && IsPerson(cptr) && (cptr->user->snomask & snomask))
+	list_for_each_entry(cptr, &lclient_list, lclient_node)
+		if (IsPerson(cptr) && (cptr->user->snomask & snomask))
 			sendto_one(cptr, ":%s NOTICE %s :%s", me.name, cptr->name, nbuf);
 }
 
@@ -1479,8 +1480,8 @@ void sendto_snomask_normal_global(int snomask, char *pattern, ...)
 	ircvsprintf(nbuf, pattern, vl);
 	va_end(vl);
 
-	for (i = LastSlot; i >= 0; i--)
-		if ((cptr = local[i]) && IsPerson(cptr) && (cptr->user->snomask & snomask))
+	list_for_each_entry(cptr, &lclient_list, lclient_node)
+		if (IsPerson(cptr) && (cptr->user->snomask & snomask))
 			sendto_one(cptr, ":%s NOTICE %s :%s", me.name, cptr->name, nbuf);
 
 	/* Build snomasks-to-send-to buffer */
@@ -1504,13 +1505,12 @@ void sendto_failops_whoare_opers(char *pattern, ...)
 {
 	va_list vl;
 	aClient *cptr;
-	int  i;
 	char nbuf[1024];
 
 	va_start(vl, pattern);
-	for (i = 0; i <= LastSlot; i++)
-		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
-		    SendFailops(cptr) && IsAnOper(cptr))
+
+	list_for_each_entry(cptr, &oper_list, special_node)
+		if (SendFailops(cptr))
 		{
 			(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Global -- ",
 			    me.name, cptr->name);
@@ -1520,9 +1520,10 @@ void sendto_failops_whoare_opers(char *pattern, ...)
 			vsendto_one(cptr, nbuf, vl);
 			va_end(vl);
 		}
+
 	va_end(vl);
-	return;
 }
+
 /*
  * sendto_locfailops
  *
@@ -1536,9 +1537,9 @@ void sendto_locfailops(char *pattern, ...)
 	char nbuf[1024];
 
 	va_start(vl, pattern);
-	for (i = 0; i <= LastSlot; i++)
-		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
-		    SendFailops(cptr) && IsAnOper(cptr))
+
+	list_for_each_entry(cptr, &oper_list, special_node)
+		if (SendFailops(cptr))
 		{
 			(void)ircsprintf(nbuf, ":%s NOTICE %s :*** LocOps -- ",
 			    me.name, cptr->name);
@@ -1548,8 +1549,8 @@ void sendto_locfailops(char *pattern, ...)
 			vsendto_one(cptr, nbuf, vl);
 			va_end(vl);
 		}
+
 	va_end(vl);
-	return;
 }
 /*
  * sendto_opers
@@ -1564,9 +1565,7 @@ void sendto_opers(char *pattern, ...)
 	char nbuf[1024];
 
 	va_start(vl, pattern);
-	for (i = 0; i <= LastSlot; i++)
-		if ((cptr = local[i]) && !IsServer(cptr) && !IsMe(cptr) &&
-		    IsAnOper(cptr))
+	list_for_each_entry(cptr, &oper_list, special_node)
 		{
 			(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Oper -- ",
 			    me.name, cptr->name);
@@ -1576,8 +1575,8 @@ void sendto_opers(char *pattern, ...)
 			vsendto_one(cptr, nbuf, vl);
 			va_end(vl);
 		}
+
 	va_end(vl);
-	return;
 }
 
 /* ** sendto_ops_butone
