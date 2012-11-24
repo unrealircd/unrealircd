@@ -156,8 +156,6 @@ aClient *make_client(aClient *from, aClient *servr)
 		cptr->buffer[0] = '\0';
 		cptr->authfd = -1;
 		cptr->fd = -1;
-
-		list_add(&cptr->lclient_node, &unknown_list);
 	} else {
 		cptr->fd = -256;
 	}
