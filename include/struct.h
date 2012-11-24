@@ -1014,7 +1014,9 @@ struct Client {
 	   ** these fields, if (from != self).
 	 */
 	int  count;		/* Amount of data in buffer */
+
 	struct list_head lclient_node;	/* for local client list (lclient_list) */
+	struct list_head special_node;	/* for special lists (server || unknown || oper) */
 
 #if 1
 	int  oflag;		/* oper access flags (removed from anUser for mem considerations) */

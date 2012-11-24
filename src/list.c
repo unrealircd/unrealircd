@@ -71,7 +71,8 @@ MODVAR Membership *freemembership = NULL;
 MODVAR MembershipL *freemembershipL = NULL;
 MODVAR int  numclients = 0;
 
-MODVAR struct list_head client_list, lclient_list;
+/* unless documented otherwise, these are all local-only, except client_list. */
+MODVAR struct list_head client_list, lclient_list, server_list;
 
 void initlists(void)
 {
@@ -86,6 +87,7 @@ void initlists(void)
 
 	INIT_LIST_HEAD(&client_list);
 	INIT_LIST_HEAD(&lclient_list);
+	INIT_LIST_HEAD(&server_list);
 }
 
 void outofmemory(void)
@@ -142,6 +144,7 @@ aClient *make_client(aClient *from, aClient *servr)
 	if (size == CLIENT_LOCAL_SIZE)
 	{
 		INIT_LIST_HEAD(&cptr->lclient_node);
+		INIT_LIST_HEAD(&cptr->special_node);
 
 		cptr->since = cptr->lasttime =
 		    cptr->lastnick = cptr->firsttime = TStime();
@@ -307,8 +310,13 @@ void remove_client_from_list(aClient *cptr)
 	/* delink ourselves from various lists */
 	if (!list_empty(&cptr->client_node))
 		list_del(&cptr->client_node);
-	if (!list_empty(&cptr->lclient_node))
-		list_del(&cptr->lclient_node);
+	if (MyConnect(cptr))
+	{
+		if (!list_empty(&cptr->lclient_node))
+			list_del(&cptr->lclient_node);
+		if (!list_empty(&cptr->special_node))
+			list_del(&cptr->special_node);
+	}
 
 	checklist();
 	if (IsPerson(cptr))	/* Only persons can have been added before */
