@@ -1825,14 +1825,7 @@ ConfigItem_log *ca = MyMallocEx(sizeof(ConfigItem_log));
 
 int isanyserverlinked(void)
 {
-int i;
-aClient *acptr;
-
-	for (i = LastSlot; i >= 0; i--)
-		if ((acptr = local[i]) && (acptr != &me) && IsServer(acptr))
-			return 1;
-
-	return 0;
+	return !list_empty(&server_list);
 }
 
 void applymeblock(void)

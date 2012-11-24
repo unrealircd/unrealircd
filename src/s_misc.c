@@ -678,12 +678,12 @@ static void exit_one_client(aClient *cptr, aClient *sptr, aClient *from, char *c
 		   ** need to send different names to different servers
 		   ** (domain name matching)
 		 */
-		for (i = 0; i <= LastSlot; i++)
+		list_for_each_entry(acptr, &server_list, special_node)
 		{
 
-			if (!(acptr = local[i]) || !IsServer(acptr) || acptr == cptr || IsMe(acptr)
-			    || (DontSendQuit(acptr) && split))
+			if (acptr == cptr || IsMe(acptr) || (DontSendQuit(acptr) && split))
 				continue;
+
 			/*
 			   ** SQUIT going "upstream". This is the remote
 			   ** squit still hunting for the target. Use prefixed
@@ -791,20 +791,12 @@ static void exit_one_client(aClient *cptr, aClient *sptr, aClient *from, char *c
 
 void checklist(void)
 {
-	aClient *acptr;
-	int  i, j;
-
 	if (!(bootopt & BOOT_AUTODIE))
 		return;
-	for (j = i = 0; i <= LastSlot; i++)
-		if (!(acptr = local[i]))
-			continue;
-		else if (IsClient(acptr))
-			j++;
-	if (!j)
-	{
-		exit(0);
-	}
+
+	if (!list_empty(&lclient_list))
+		exit (0);
+
 	return;
 }
 

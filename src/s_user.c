@@ -740,14 +740,14 @@ void send_umode(aClient *cptr, aClient *sptr, long old, long sendmask, char *umo
  */
 void send_umode_out(aClient *cptr, aClient *sptr, long old)
 {
-	int  i;
 	aClient *acptr;
 
 	send_umode(NULL, sptr, old, SEND_UMODES, buf);
 
-	for (i = LastSlot; i >= 0; i--)
-		if ((acptr = local[i]) && IsServer(acptr) &&
-		    (acptr != cptr) && (acptr != sptr) && *buf) {
+	list_for_each_entry(acptr, &server_list, special_node)
+	{
+		if ((acptr != cptr) && (acptr != sptr) && *buf)
+		{
 			if (!SupportUMODE2(acptr))
 			{
 				sendto_one(acptr, ":%s MODE %s :%s",
@@ -761,28 +761,28 @@ void send_umode_out(aClient *cptr, aClient *sptr, long old)
 				    buf);
 			}
 		}
+	}
+
 	if (cptr && MyClient(cptr))
 		send_umode(cptr, sptr, old, ALL_UMODES, buf);
-
 }
 
 void send_umode_out_nickv2(aClient *cptr, aClient *sptr, long old)
 {
-	int  i;
 	aClient *acptr;
 
 	send_umode(NULL, sptr, old, SEND_UMODES, buf);
 
-	for (i = LastSlot; i >= 0; i--)
-		if ((acptr = local[i]) && IsServer(acptr)
-		    && !SupportNICKv2(acptr) && (acptr != cptr)
+	list_for_each_entry(acptr, &server_list, special_node)
+	{
+		if (!SupportNICKv2(acptr) && (acptr != cptr)
 		    && (acptr != sptr) && *buf)
 			sendto_one(acptr, ":%s MODE %s :%s", sptr->name,
 			    sptr->name, buf);
+	}
 
 	if (cptr && MyClient(cptr))
 		send_umode(cptr, sptr, old, ALL_UMODES, buf);
-
 }
 
 

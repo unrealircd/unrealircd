@@ -871,11 +871,9 @@ char *reason = parv[1];
 		}
 	}
 	sendto_ops("Server is Restarting by request of %s", parv[0]);
-	
-	for (i = 0; i <= LastSlot; i++)
+
+	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
-		if (!(acptr = local[i]))
-			continue;
 		if (IsClient(acptr))
 			sendto_one(acptr,
 			    ":%s %s %s :Server Restarting. %s",
@@ -1221,10 +1219,8 @@ CMD_FUNC(m_die)
 	/* Let the +s know what is going on */
 	sendto_ops("Server Terminating by request of %s", parv[0]);
 
-	for (i = 0; i <= LastSlot; i++)
+	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
-		if (!(acptr = local[i]))
-			continue;
 		if (IsClient(acptr))
 			sendto_one(acptr,
 			    ":%s %s %s :Server Terminating. %s",
@@ -1233,6 +1229,7 @@ CMD_FUNC(m_die)
 			sendto_one(acptr, ":%s ERROR :Terminated by %s",
 			    me.name, get_client_name(sptr, TRUE));
 	}
+
 	(void)s_die();
 	return 0;
 }
@@ -1245,12 +1242,9 @@ CMD_FUNC(m_die)
 int  localdie(void)
 {
 	aClient *acptr;
-	int  i;
 
-	for (i = 0; i <= LastSlot; i++)
+	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
-		if (!(acptr = local[i]))
-			continue;
 		if (IsClient(acptr))
 			sendto_one(acptr,
 			    ":%s %s %s :Server Terminated by local console",
