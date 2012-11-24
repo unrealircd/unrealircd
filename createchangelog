@@ -1,6 +1,7 @@
 #!/bin/sh
 # This will generate a Changelog similar to our original style.
-# New are: the name of the author, the date, and the short hash
+# The header before each entry is new: it contains the name of
+# the author, the date, and the short hash.
 # We still filter translated doc changes as to not polute the
 # changelog too much.
 
