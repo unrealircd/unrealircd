@@ -110,10 +110,6 @@ extern void CleanUpSegv(int sig);
 extern SERVICE_STATUS_HANDLE IRCDStatusHandle;
 extern SERVICE_STATUS IRCDStatus;
 #endif
-#ifndef NO_FDLIST
-fdlist default_fdlist;
-fdlist unknown_fdlist;
-#endif
 
 unsigned char conf_debuglevel = 0;
 char trouble_info[1024];
@@ -1419,15 +1415,6 @@ int InitwIRCD(int argc, char *argv[])
 	    "---------------------------------------------------------------------\n");
 #endif
 	open_debugfile();
-#ifndef NO_FDLIST
-	init_fdlist(&default_fdlist);
-	init_fdlist(&unknown_fdlist);
-	{
-		int  i;
-		for (i = MAXCONNECTIONS + 1; i > 0; i--)
-			default_fdlist.entry[i] = i;
-	}
-#endif
 	if (portnum < 0)
 		portnum = PORTNUM;
 	me.port = portnum;

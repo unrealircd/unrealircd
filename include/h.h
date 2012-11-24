@@ -26,9 +26,8 @@
  * -avalon
  */
 #include "setup.h"
-#ifndef NO_FDLIST
 #include "fdlist.h"
-#endif
+
 extern MODVAR char *extraflags;
 extern MODVAR int tainted;
 /* for the new s_err.c */
@@ -245,12 +244,6 @@ extern int inetport(aClient *, char *, int);
 extern void init_sys();
 extern void init_modef();
 extern int verify_hostname(char *name);
-
-#ifdef NO_FDLIST
-extern int read_message(time_t);
-#else
-extern int read_message(time_t, fdlist *);
-#endif
 
 extern void report_error(char *, aClient *);
 extern void set_non_blocking(int, aClient *);
@@ -671,7 +664,6 @@ extern MODVAR aCtab cFlagTab[];
 extern char *unreal_encodespace(char *s);
 extern char *unreal_decodespace(char *s);
 extern MODVAR Link *helpign;
-extern MODVAR fdlist default_fdlist;
 extern void DCCdeny_add(char *filename, char *reason, int type, int type2);
 extern void DCCdeny_del(ConfigItem_deny_dcc *deny);
 extern void dcc_wipe_services(void);

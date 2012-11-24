@@ -130,11 +130,6 @@ extern char *version;
 extern ircstats IRCstats;
 MODVAR TS last_allinuse = 0;
 
-#ifndef NO_FDLIST
-extern fdlist default_fdlist;
-extern fdlist socks_fdlist;
-#endif
-
 #ifdef USE_LIBCURL
 extern void url_do_transfers_async(void);
 #endif
