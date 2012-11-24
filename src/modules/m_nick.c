@@ -1059,6 +1059,8 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		snprintf(descbuf, sizeof descbuf, "Client: %s", nick);
 		fd_desc(sptr->fd, descbuf);
 
+		list_move(&sptr->lclient_node, &lclient_list);
+
 		IRCstats.unknown--;
 		IRCstats.me_clients++;
 		if (IsHidden(sptr))

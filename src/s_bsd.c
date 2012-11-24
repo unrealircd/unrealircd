@@ -1362,6 +1362,7 @@ void	start_of_normal_client_handshake(aClient *acptr)
 struct hostent *he;
 
 	acptr->status = STAT_UNKNOWN;
+	list_add(&acptr->special_node, &unknown_list);
 
 	RunHook(HOOKTYPE_HANDSHAKE, acptr);
 

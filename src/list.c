@@ -72,7 +72,7 @@ MODVAR MembershipL *freemembershipL = NULL;
 MODVAR int  numclients = 0;
 
 /* unless documented otherwise, these are all local-only, except client_list. */
-MODVAR struct list_head client_list, lclient_list, server_list, oper_list;
+MODVAR struct list_head client_list, lclient_list, server_list, oper_list, unknown_list;
 
 void initlists(void)
 {
@@ -89,6 +89,7 @@ void initlists(void)
 	INIT_LIST_HEAD(&lclient_list);
 	INIT_LIST_HEAD(&server_list);
 	INIT_LIST_HEAD(&oper_list);
+	INIT_LIST_HEAD(&unknown_list);
 }
 
 void outofmemory(void)
@@ -155,6 +156,8 @@ aClient *make_client(aClient *from, aClient *servr)
 		cptr->buffer[0] = '\0';
 		cptr->authfd = -1;
 		cptr->fd = -1;
+
+		list_add(&cptr->lclient_node, &unknown_list);
 	} else {
 		cptr->fd = -256;
 	}
@@ -357,9 +360,6 @@ void remove_client_from_list(aClient *cptr)
 void add_client_to_list(aClient *cptr)
 {
 	list_add(&cptr->client_node, &client_list);
-
-	if (MyConnect(cptr))
-		list_add(&cptr->lclient_node, &lclient_list);
 }
 
 /*
