@@ -48,9 +48,7 @@
 #include "proto.h"
                         /* define it (BSD4.2 needs this) */
 #include "h.h"
-#ifndef NO_FDLIST
-#include  "fdlist.h"
-#endif
+#include "fdlist.h"
 
 /***************************************************************************************
  * Backend-independent functions.  fd_setselect() and friends                          *

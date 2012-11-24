@@ -109,9 +109,7 @@ DLLFUNC CMD_FUNC(m_ison)
 
 	(void)ircsprintf(buf, rpl_str(RPL_ISON), me.name, *parv);
 	len = strlen(buf);
-#ifndef NO_FDLIST
-	cptr->priority += 30;	/* this keeps it from moving to 'busy' list */
-#endif
+
 	for (s = strtoken(&p, *++pav, " "); s; s = strtoken(&p, NULL, " "))
 	{
 		if ((user = index(s, '!')))
@@ -134,6 +132,7 @@ DLLFUNC CMD_FUNC(m_ison)
 			len++;
 		}
 	}
+
 	sendto_one(sptr, "%s", buf);
 	return 0;
 }

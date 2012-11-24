@@ -60,9 +60,7 @@ Computing Center and Jarkko Oikarinen";
 #include <sys/pstat.h>
 #endif
 #include "h.h"
-#ifndef NO_FDLIST
 #include "fdlist.h"
-#endif
 #ifdef STRIPBADWORDS
 #include "badwords.h"
 #endif
@@ -968,9 +966,6 @@ int InitwIRCD(int argc, char *argv[])
 #ifdef  FORCE_CORE
 	struct rlimit corelim;
 #endif
-#ifndef NO_FDLIST
-	TS   nextfdlistcheck = 0;	/*end of priority code */
-#endif
 
 	memset(&botmotd, '\0', sizeof(aMotdFile));
 	memset(&rules, '\0', sizeof(aMotdFile));
@@ -1577,9 +1572,6 @@ void SocketLoop(void *dummy)
 	TS   delay = 0;
 	static TS lastglinecheck = 0;
 	TS   last_tune;
-#ifndef NO_FDLIST
-	TS   nextfdlistcheck = 0;	/*end of priority code */
-#endif
 	
 	
 	while (1)
@@ -1614,7 +1606,6 @@ void SocketLoop(void *dummy)
 			               "the IRCd is started or use the built-in timesynch feature.");
 			sendto_realops("[TimeShift] Resetting a few timers to prevent IRCd freeze!");
 			fix_timers();
-			nextfdlistcheck = 0;
 		} else
 		if (mytdiff(timeofday, oldtimeofday) > POSITIVE_SHIFT_WARN) /* do not set too low or you get false positives */
 		{
@@ -1632,7 +1623,6 @@ void SocketLoop(void *dummy)
 			               "the IRCd is started or use the built-in timesynch feature.");
 			sendto_realops("[TimeShift] Resetting some timers!");
 			fix_timers();
-			nextfdlistcheck = 0;
 		}
 		if (highesttimeofday+NEGATIVE_SHIFT_WARN > timeofday)
 		{

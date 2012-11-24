@@ -69,9 +69,7 @@ Computing Center and Jarkko Oikarinen";
 #include "proto.h"
 			/* define it (BSD4.2 needs this) */
 #include "h.h"
-#ifndef NO_FDLIST
-#include  "fdlist.h"
-#endif
+#include "fdlist.h"
 
 #ifdef USE_POLL
 # ifndef _WIN32

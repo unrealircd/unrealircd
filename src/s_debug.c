@@ -40,9 +40,10 @@ MODVAR char serveropts[] = {
 #ifdef	DEBUGMODE
 	'D',
 #endif
-#ifndef	NO_FDLIST
+	/* FDLIST is always compiled in now.  Well, my replacement to it
+	 * is anyway.  --nenolod
+	 */
 	'F',
-#endif
 	/*
 	 * Marks that the ircd is ``compiled as'' a hub.
 	 * Now always defined as it's impossible to build unrealircd
