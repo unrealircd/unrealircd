@@ -166,8 +166,15 @@ aClient *make_client(aClient *from, aClient *servr)
 
 void free_client(aClient *cptr)
 {
+	if (!list_empty(&cptr->client_node))
+		list_del(&cptr->client_node);
 	if (MyConnect(cptr))
 	{
+		if (!list_empty(&cptr->lclient_node))
+			list_del(&cptr->lclient_node);
+		if (!list_empty(&cptr->special_node))
+			list_del(&cptr->special_node);
+
 		if (cptr->passwd)
 			MyFree((char *)cptr->passwd);
 		if (cptr->error_str)
@@ -311,18 +318,6 @@ void remove_client_from_list(aClient *cptr)
 	)
 		IRCstats.unknown--;
 
-	/* delink ourselves from various lists */
-	if (!list_empty(&cptr->client_node))
-		list_del(&cptr->client_node);
-	if (MyConnect(cptr))
-	{
-		if (!list_empty(&cptr->lclient_node))
-			list_del(&cptr->lclient_node);
-		if (!list_empty(&cptr->special_node))
-			list_del(&cptr->special_node);
-	}
-
-	checklist();
 	if (IsPerson(cptr))	/* Only persons can have been added before */
 	{
 		add_history(cptr, 0);
@@ -347,6 +342,7 @@ void remove_client_from_list(aClient *cptr)
 		crem.inuse--;
 #endif
 	(void)free_client(cptr);
+	checklist();
 	numclients--;
 	return;
 }
