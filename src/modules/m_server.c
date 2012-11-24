@@ -551,7 +551,6 @@ CMD_FUNC(m_server_remote)
 	char	info[REALLEN + 61];
 	long	numeric = 0;
 	char	*servername = parv[1];
-	int	i;
 
 	if ((acptr = find_server(servername, NULL)))
 	{
@@ -671,10 +670,10 @@ CMD_FUNC(m_server_remote)
 	add_client_to_list(acptr);
 	(void)add_to_client_hash_table(acptr->name, acptr);
 	RunHook(HOOKTYPE_SERVER_CONNECT, acptr);
-	for (i = 0; i <= LastSlot; i++)
+
+	list_for_each_entry(bcptr, &server_list, special_node)
 	{
-		if (!(bcptr = local[i]) || !IsServer(bcptr) ||
-			    bcptr == cptr || IsMe(bcptr))
+		if (bcptr == cptr || IsMe(bcptr))
 				continue;
 		if (SupportNS(bcptr))
 		{
@@ -685,7 +684,7 @@ CMD_FUNC(m_server_remote)
 				IsToken(bcptr) ? TOK_SERVER : MSG_SERVER,
 				acptr->name, hop + 1, numeric, acptr->info);
 		}
-			else
+		else
 		{
 			sendto_one(bcptr, ":%s %s %s %d :%s",
 			    parv[0],
@@ -693,6 +692,7 @@ CMD_FUNC(m_server_remote)
 			    acptr->name, hop + 1, acptr->info);
 		}
 	}
+
 	RunHook(HOOKTYPE_POST_SERVER_CONNECT, acptr);
 	return 0;
 }
@@ -702,7 +702,6 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	char		*inpath = get_client_name(cptr, TRUE);
 	extern MODVAR char 	serveropts[];
 	aClient		*acptr;
-	int		i;
 	char buf[BUFSIZE];
 	int incoming = IsUnknown(cptr) ? 1 : 0;
 
@@ -806,10 +805,10 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	cptr->class = cptr->serv->conf->class;
 	add_server_to_table(cptr);
 	RunHook(HOOKTYPE_SERVER_CONNECT, cptr);
-	for (i = 0; i <= LastSlot; i++)
+
+	list_for_each_entry(acptr, &server_list, special_node)
 	{
-		if (!(acptr = local[i]) || !IsServer(acptr) ||
-		    acptr == cptr || IsMe(acptr))
+		if (acptr == cptr || IsMe(acptr))
 			continue;
 
 		if (SupportNS(acptr))
@@ -830,7 +829,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 		}
 	}
 
-	list_for_each_entry_reverse(acptr, &client_list, client_node)
+	list_for_each_entry_reverse(acptr, &server_list, special_node)
 	{
 		/* acptr->from == acptr for acptr == cptr */
 		if (acptr->from == cptr)
