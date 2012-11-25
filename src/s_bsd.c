@@ -1191,6 +1191,7 @@ aClient *add_connection(ConfigItem_listen *cptr, int fd)
 	 */
 	{
 		struct SOCKADDR_IN addr;
+		aClient *acptr2;
 		int  len = sizeof(struct SOCKADDR_IN);
 
 		if (getpeername(fd, (struct SOCKADDR *)&addr, &len) == -1)
@@ -1215,13 +1216,12 @@ add_con_refuse:
 		get_sockhost(acptr, Inet_si2p(&addr));
 		bcopy((char *)&addr.SIN_ADDR, (char *)&acptr->ip, sizeof(struct IN_ADDR));
 		j = 1;
-		for (i = LastSlot; i >= 0; i--)
-		{
-			if (local[i] && IsUnknown(local[i]) &&
+
+		list_for_each_entry(acptr2, &unknown_list, lclient_node)
 #ifndef INET6
-				local[i]->ip.S_ADDR == acptr->ip.S_ADDR)
+			if (acptr2->ip.S_ADDR == acptr->ip.S_ADDR)
 #else
-				!bcmp(local[i]->ip.S_ADDR, acptr->ip.S_ADDR, sizeof(acptr->ip.S_ADDR)))
+			if (!bcmp(acptr2->ip.S_ADDR, acptr->ip.S_ADDR, sizeof(acptr->ip.S_ADDR)))
 #endif
 			{
 				j++;
