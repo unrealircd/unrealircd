@@ -214,13 +214,6 @@ void debug(int level, char *form, ...)
 #endif
 #endif
 
-#if 0
-		if (local[2])
-		{
-			local[2]->sendM++;
-			local[2]->sendB += strlen(debugbuf);
-		}
-#endif
 #ifndef _WIN32
 		(void)fprintf(stderr, "%s", debugbuf);
 		(void)fputc('\n', stderr);

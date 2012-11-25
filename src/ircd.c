@@ -1713,10 +1713,7 @@ static void open_debugfile(void)
 		SetLog(cptr);
 		cptr->port = debuglevel;
 		cptr->flags = 0;
-		cptr->listener = cptr;
-		/*
-		 * local[2] = cptr;  winlocal 
-		 */
+
 		(void)strlcpy(cptr->sockhost, me.sockhost,
 		    sizeof cptr->sockhost);
 # ifndef _WIN32
@@ -1740,12 +1737,8 @@ static void open_debugfile(void)
 		Debug((DEBUG_FATAL,
 		    "Debug: File <%s> Level: %d at %s", cptr->name,
 		    cptr->port, myctime(time(NULL))));
-	} else
-		/*
-		 * local[2] = NULL; winlocal 
-		 */
+	}
 #endif
-		return;
 }
 
 static void setup_signals()

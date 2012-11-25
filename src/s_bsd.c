@@ -175,28 +175,39 @@ void remove_local_client(aClient* cptr)
 
 void close_connections(void)
 {
-  aClient* cptr;
-  int i = LastSlot;
+	aClient* cptr;
 
-  for ( ; i >= 0; --i)
-  {
-    if ((cptr = local[i]) != 0)
-    {
-      if (cptr->fd >= 0) {
-        fd_close(cptr->fd);
-        cptr->fd = -2;
-      }
-      if (cptr->authfd >= 0)
-      {
-        fd_close(cptr->authfd);
-        cptr->authfd = -1;
-      }
-    }
-  }
-  OpenFiles = 0;
-  LastSlot = -1;
+	list_for_each_entry(cptr, &lclient_list, lclient_node)
+	{
+		if (cptr->fd >= 0)
+		{
+			fd_close(cptr->fd);
+			cptr->fd = -2;
+		}
+	}
+
+	list_for_each_entry(cptr, &unknown_list, lclient_node)
+	{
+		if (cptr->fd >= 0)
+		{
+			fd_close(cptr->fd);
+			cptr->fd = -2;
+		}
+
+		if (cptr->authfd >= 0)
+		{
+			fd_close(cptr->authfd);
+			cptr->fd = -1;
+		}
+	}
+
+	close_listeners();
+
+	OpenFiles = 0;
+	LastSlot = -1;
+
 #ifdef _WIN32
-	  WSACleanup();
+	WSACleanup();
 #endif
 }
 
@@ -642,7 +653,6 @@ if ((bootopt & BOOT_CONSOLE) || isatty(0))
 #ifndef NOCLOSEFD
 	(void)close(0);		/* fd 0 opened by inetd */
 #endif
-	local[0] = NULL;
 }
 init_dgram:
 #else
