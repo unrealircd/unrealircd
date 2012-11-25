@@ -98,7 +98,7 @@ DLLFUNC CMD_FUNC(m_user)
 	if (IsServer(cptr) && !IsUnknown(sptr))
 		return 0;
 
-	if (MyConnect(sptr) && (sptr->listener->umodes & LISTENER_SERVERSONLY))
+	if (MyConnect(sptr) && (sptr->listener->options & LISTENER_SERVERSONLY))
 	{
 		return exit_client(cptr, sptr, sptr,
 		    "This port is for servers only");

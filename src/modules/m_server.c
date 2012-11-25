@@ -342,7 +342,7 @@ DLLFUNC CMD_FUNC(m_server)
 			"Not enough parameters");		
 	}
 
-	if (IsUnknown(cptr) && (cptr->listener->umodes & LISTENER_CLIENTSONLY))
+	if (IsUnknown(cptr) && (cptr->listener->options & LISTENER_CLIENTSONLY))
 	{
 		return exit_client(cptr, sptr, &me,
 		    "This port is for clients only");

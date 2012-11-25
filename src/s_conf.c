@@ -4690,6 +4690,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 			listen = MyMallocEx(sizeof(ConfigItem_listen));
 			listen->ip = strdup(ip);
 			listen->port = iport;
+			listen->fd = -1;
 			isnew = 1;
 		} else
 			isnew = 0;
@@ -8922,15 +8923,6 @@ void	run_configuration(void)
 			}
 				else
 			{
-			}
-		}
-		else
-		{
-			if (listenptr->listener)
-			{
-				listenptr->listener->umodes = 
-					(listenptr->options & ~LISTENER_BOUND) ? listenptr->options : LISTENER_NORMAL;
-				listenptr->listener->umodes |= LISTENER_BOUND;
 			}
 		}
 	}

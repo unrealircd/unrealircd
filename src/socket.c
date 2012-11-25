@@ -57,7 +57,6 @@ extern int errno;		/* ...seems that errno.h doesn't define this everywhere */
 int  deliver_it(aClient *cptr, char *str, int len)
 {
 	int  retval;
-	aClient *acpt = cptr->listener;
 
 	if (IsDead(cptr) || (!IsServer(cptr) && !IsPerson(cptr)
 	    && !IsHandshake(cptr) 
@@ -127,15 +126,6 @@ int  deliver_it(aClient *cptr, char *str, int len)
 		{
 			cptr->sendK += (cptr->sendB >> 10);
 			cptr->sendB &= 0x03ff;	/* 2^10 = 1024, 3ff = 1023 */
-		}
-		if (acpt != &me)
-		{
-			acpt->sendB += retval;
-			if (acpt->sendB > 1023)
-			{
-				acpt->sendK += (acpt->sendB >> 10);
-				acpt->sendB &= 0x03ff;
-			}
 		}
 		if (me.sendB > 1023)
 		{

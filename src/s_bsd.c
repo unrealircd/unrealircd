@@ -328,13 +328,13 @@ void report_baderror(char *text, aClient *cptr)
  */
 static void listener_accept(int fd, int revents, void *data)
 {
-	aClient *cptr = data;
+	ConfigItem_listen *cptr = data;
 	int cli_fd;
 
 	if ((cli_fd = fd_accept(cptr->fd)) < 0)
 	{
 	        if ((ERRNO != P_EWOULDBLOCK) && (ERRNO != P_ECONNABORTED))
-			report_baderror("Cannot accept connections %s:%s", cptr);
+			report_baderror("Cannot accept connections %s:%s", NULL);
 		return;
 	}
 
@@ -345,7 +345,7 @@ static void listener_accept(int fd, int revents, void *data)
 		ircstp->is_ref++;
 		if (last_allinuse < TStime() - 15)
 		{
-			sendto_realops("All connections in use. (%s)", get_client_name(cptr, TRUE));
+			sendto_realops("All connections in use. ([@%s/%u])", cptr->ip, cptr->port);
 			last_allinuse = TStime();
 		}
 
@@ -362,7 +362,7 @@ static void listener_accept(int fd, int revents, void *data)
 	(void) add_connection(cptr, cli_fd);
 }
 
-int  inetport(aClient *cptr, char *name, int port)
+int  inetport(ConfigItem_listen *listener, char *name, int port)
 {
 	static struct SOCKADDR_IN server;
 	int  ad[4], len = sizeof(server);
@@ -387,35 +387,30 @@ int  inetport(aClient *cptr, char *name, int port)
 		strlcpy(ipname, name, sizeof(ipname));
 #endif
 
-	if (cptr != &me)
-	{
-		(void)ircsprintf(cptr->sockhost, "%-.42s.%.u",
-		    name, (unsigned int)port);
-		(void)strlcpy(cptr->name, me.name, sizeof cptr->name);
-	}
 	/*
 	 * At first, open a new socket
 	 */
-	if (cptr->fd == -1)
+	if (listener->fd == -1)
 	{
-		cptr->fd = fd_socket(AFINET, SOCK_STREAM, 0, "Listener socket");
+		listener->fd = fd_socket(AFINET, SOCK_STREAM, 0, "Listener socket");
 	}
-	if (cptr->fd < 0)
+	if (listener->fd < 0)
 	{
-#if !defined(DEBUGMODE) && !defined(_WIN32)
-#endif
-		report_baderror("Cannot open stream socket() %s:%s", cptr);
+		report_baderror("Cannot open stream socket() %s:%s", NULL);
 		return -1;
 	}
 	else if (++OpenFiles >= MAXCLIENTS)
 	{
-		sendto_ops("No more connections allowed (%s)", cptr->name);
-		fd_close(cptr->fd);
-		cptr->fd = -1;
+		sendto_ops("No more connections allowed (%s)", listener->ip);
+		fd_close(listener->fd);
+		listener->fd = -1;
 		--OpenFiles;
 		return -1;
 	}
-	set_sock_opts(cptr->fd, cptr);
+
+	set_sock_opts(listener->fd, NULL);
+	set_non_blocking(listener->fd, NULL);
+
 	/*
 	 * Bind a port to listen for new connections if port is non-null,
 	 * else assume it is already open and try get something from it.
@@ -439,13 +434,13 @@ int  inetport(aClient *cptr, char *name, int port)
 		 * This used to be the case.  Now it no longer is.
 		 * Could cause the server to hang for too long - avalon
 		 */
-		if (bind(cptr->fd, (struct SOCKADDR *)&server,
+		if (bind(listener->fd, (struct SOCKADDR *)&server,
 		    sizeof(server)) == -1)
 		{
 			ircsprintf(backupbuf, "Error binding stream socket to IP %s port %i",
 				ipname, port);
 			strlcat(backupbuf, " - %s:%s", sizeof backupbuf);
-			report_baderror(backupbuf, cptr);
+			report_baderror(backupbuf, NULL);
 #if !defined(_WIN32) && defined(INET6)
 			/* Check if ipv4-over-ipv6 (::ffff:a.b.c.d, RFC2553
 			 * section 3.7) is disabled, like at newer FreeBSD's. -- Syzop
@@ -459,63 +454,44 @@ int  inetport(aClient *cptr, char *name, int port)
 				                    "and/or via sysctl.");
 			}
 #endif
-			fd_close(cptr->fd);
-			cptr->fd = -1;
+			fd_close(listener->fd);
+			listener->fd = -1;
 			--OpenFiles;
 			return -1;
 		}
 	}
-	if (getsockname(cptr->fd, (struct SOCKADDR *)&server, &len))
+	if (getsockname(listener->fd, (struct SOCKADDR *)&server, &len))
 	{
-		report_error("getsockname failed for %s:%s", cptr);
-		fd_close(cptr->fd);
-		cptr->fd = -1;
+		report_error("getsockname failed for %s:%s", NULL);
+		fd_close(listener->fd);
+		listener->fd = -1;
 		--OpenFiles;
 		return -1;
 	}
 
-#ifdef INET6
-	bcopy(server.sin6_addr.s6_addr, cptr->ip.s6_addr, IN6ADDRSZ);
-#else
-	cptr->ip.S_ADDR = name ? inet_addr(ipname) : me.ip.S_ADDR;
-#endif
-	cptr->port = (int)ntohs(server.SIN_PORT);
-	(void)listen(cptr->fd, LISTEN_SIZE);
-	add_local_client(cptr);
-
-	fd_setselect(cptr->fd, FD_SELECT_READ, listener_accept, cptr);
+	(void)listen(listener->fd, LISTEN_SIZE);
+	fd_setselect(listener->fd, FD_SELECT_READ, listener_accept, listener);
 
 	return 0;
 }
 
 int add_listener2(ConfigItem_listen *conf)
 {
-	aClient *cptr;
-
-	cptr = make_client(NULL, NULL);
-	cptr->flags = FLAGS_LISTEN;
-	cptr->listener = cptr;
-	cptr->from = cptr;
-	SetMe(cptr);
-	strlcpy(cptr->name, conf->ip, sizeof(cptr->name));
-	if (inetport(cptr, conf->ip, conf->port))
-		cptr->fd = -2;
-	cptr->class = (ConfigItem_class *)conf;
-	cptr->umodes = conf->options ? conf->options : LISTENER_NORMAL;
-	if (cptr->fd >= 0)
-	{	
-		cptr->umodes |= LISTENER_BOUND;
+	if (inetport(conf, conf->ip, conf->port))
+	{
+		ircd_log(LOG_ERROR, "inetport failed for %s:%u", conf->ip, conf->port);
+		conf->fd = -2;
+	}
+	if (conf->fd >= 0)
+	{
 		conf->options |= LISTENER_BOUND;
-		conf->listener = cptr;
-		set_non_blocking(cptr->fd, cptr);
 		return 1;
 	}
 	else
 	{
-		free_client(cptr);
+		conf->fd = -1;
 		return -1;
 	}
-
 }
 
 /*
@@ -524,36 +500,28 @@ int add_listener2(ConfigItem_listen *conf)
  * Close and free all clients which are marked as having their socket open
  * and in a state where they can accept connections.
  */
+void close_listener(ConfigItem_listen *listener)
+{
+	fd_close(listener->fd);
+
+	listener->options &= ~LISTENER_BOUND;
+	listener->fd = -1;
+}
 
 void close_listeners(void)
 {
 	aClient *cptr;
-	int  i, reloop = 1;
-	ConfigItem_listen *aconf;
+	ConfigItem_listen *aconf, *aconf_next;
 
 	/*
 	 * close all 'extra' listening ports we have
 	 */
-	while (reloop)
+	for (aconf = conf_listen; aconf != NULL; aconf = aconf_next)
 	{
-		reloop = 0;
-		for (i = LastSlot; i >= 0; i--)
-		{
-			if (!(cptr = local[i]))
-				continue;
-			if (!IsMe(cptr) || cptr == &me || !IsListening(cptr))
-				continue;
-			aconf = (ConfigItem_listen *) cptr->class;
+		aconf_next = (ConfigItem_listen *) aconf->next;
 
-			if (aconf->flag.temporary && (aconf->clients == 0))
-			{
-				close_connection(cptr);
-				/* need to start over because close_connection() may have 
-				** rearranged local[]!
-				*/
-				reloop = 1;
-			}
-		}
+		if (aconf->flag.temporary && (aconf->clients == 0))
+			close_listener(aconf);
 	}
 }
 
@@ -1200,7 +1168,7 @@ void set_non_blocking(int fd, aClient *cptr)
  * The client is added to the linked list of clients but isnt added to any
  * hash tables yuet since it doesnt have a name.
  */
-aClient *add_connection(aClient *cptr, int fd)
+aClient *add_connection(ConfigItem_listen *cptr, int fd)
 {
 	aClient *acptr;
 	ConfigItem_ban *bconf;
@@ -1211,13 +1179,6 @@ aClient *add_connection(aClient *cptr, int fd)
 	 * m_server and m_user instead. Also connection time out help to
 	 * get rid of unwanted connections.
 	 */
-#if defined(DEBUGMODE) && !defined(_WIN32)
-	if (isatty(fd))		/* If descriptor is a tty, special checking... */
-#else
-	if (0)
-#endif
-		get_sockhost(acptr, cptr->sockhost);
-	else
 	{
 		struct SOCKADDR_IN addr;
 		int  len = sizeof(struct SOCKADDR_IN);
@@ -1228,7 +1189,7 @@ aClient *add_connection(aClient *cptr, int fd)
 			 * so it's not a serious error and can happen quite frequently -- Syzop
 			 */
 			if (ERRNO != P_ENOTCONN)
-				report_error("Failed in connecting to %s :%s", cptr);
+				report_error("Failed in connecting to %s :%s", acptr);
 add_con_refuse:
 			ircstp->is_ref++;
 			acptr->fd = -2;
@@ -1250,7 +1211,7 @@ add_con_refuse:
 #ifndef INET6
 				local[i]->ip.S_ADDR == acptr->ip.S_ADDR)
 #else
-				!bcmp(local[i]->ip.S_ADDR, cptr->ip.S_ADDR, sizeof(cptr->ip.S_ADDR)))
+				!bcmp(local[i]->ip.S_ADDR, acptr->ip.S_ADDR, sizeof(acptr->ip.S_ADDR)))
 #endif
 			{
 				j++;
@@ -1316,21 +1277,15 @@ add_con_refuse:
 	acptr->fd = fd;
     add_local_client(acptr);
 	acptr->listener = cptr;
-	if (!acptr->listener->class)
-	{
-		sendto_ops("ERROR: !acptr->listener->class");
-	}
-	else
-	{
-		((ConfigItem_listen *) acptr->listener->class)->clients++;
-	}
+	if (acptr->listener != NULL)
+		acptr->listener->clients++;
 	add_client_to_list(acptr);
 
 	set_non_blocking(acptr->fd, acptr);
 	set_sock_opts(acptr->fd, acptr);
 	IRCstats.unknown++;
 #ifdef USE_SSL
-	if (cptr->umodes & LISTENER_SSL)
+	if (cptr->options & LISTENER_SSL)
 	{
 		SetSSLAcceptHandshake(acptr);
 		Debug((DEBUG_DEBUG, "Starting SSL accept handshake for %s", acptr->sockhost));
@@ -1709,7 +1664,6 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	}
 	cptr->serv->up = me.name;
 	add_local_client(cptr);
-	cptr->listener = &me;
 	SetConnecting(cptr);
 	SetOutgoing(cptr);
 	IRCstats.unknown++;

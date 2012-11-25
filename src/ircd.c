@@ -1433,22 +1433,6 @@ int InitwIRCD(int argc, char *argv[])
 	 */
 	strlcpy(me.info, conf_me->info, sizeof(me.info));
 	strlcpy(me.name, conf_me->name, sizeof(me.name));
-	/*
-	 * We accept the first listen record 
-	 */
-	portnum = conf_listen->port;
-/*
- *      This is completely unneeded-Sts
-   	me.ip.S_ADDR =
-	    *conf_listen->ip != '*' ? inet_addr(conf_listen->ip) : INADDR_ANY;
-*/
-	Debug((DEBUG_ERROR, "Port = %d", portnum));
-	if (inetport(&me, conf_listen->ip, portnum))
-		exit(1);
-	set_non_blocking(me.fd, &me);
-	conf_listen->options |= LISTENER_BOUND;
-	me.umodes = conf_listen->options;
-	conf_listen->listener = &me;
 	run_configuration();
 	ircd_log(LOG_ERROR, "UnrealIRCd started.");
 
@@ -1459,18 +1443,14 @@ int InitwIRCD(int argc, char *argv[])
 	read_motd(conf_files->smotd_file, &smotd);
 	read_motd(conf_files->svsmotd_file, &svsmotd);
 
-	strncpy(me.sockhost, conf_listen->ip, sizeof(me.sockhost) - 1);
-	if (me.name[0] == '\0')
-		strlcpy(me.name, me.sockhost, sizeof(me.name));
 	me.hopcount = 0;
 	me.authfd = -1;
 	me.user = NULL;
 	me.from = &me;
-	me.class = (ConfigItem_class *) conf_listen;
+
 	/*
 	 * This listener will never go away 
 	 */
-	conf_listen->clients++;
 	me_hash = find_or_add(me.name);
 	me.serv->up = me_hash;
 	me.serv->numeric = conf_me->numeric;

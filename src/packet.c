@@ -49,7 +49,6 @@ int  dopacket(aClient *cptr, char *buffer, int length)
 {
 	char *ch1;
 	char *ch2;
-	aClient *acpt = cptr->listener;
 #ifdef ZIP_LINKS
 	int zipped = 0;
 	int done_unzip = 0;
@@ -61,15 +60,6 @@ int  dopacket(aClient *cptr, char *buffer, int length)
 	{
 		cptr->receiveK += (cptr->receiveB >> 10);
 		cptr->receiveB &= 0x03ff;	/* 2^10 = 1024, 3ff = 1023 */
-	}
-	if (acpt != &me)
-	{
-		acpt->receiveB += length;
-		if (acpt->receiveB > 1023)
-		{
-			acpt->receiveK += (acpt->receiveB >> 10);
-			acpt->receiveB &= 0x03ff;
-		}
 	}
 	if (me.receiveB > 1023)
 	{
@@ -129,8 +119,6 @@ int  dopacket(aClient *cptr, char *buffer, int length)
 				*ch1 = '\0';
 				me.receiveM += 1;	/* Update messages received */
 				cptr->receiveM += 1;
-				if (cptr->listener != &me)
-					cptr->listener->receiveM += 1;
 				cptr->count = 0;	/* ...just in case parse returns with
 							   ** FLUSH_BUFFER without removing the
 							   ** structure pointed by cptr... --msa

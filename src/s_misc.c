@@ -506,12 +506,11 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 		}
 		free_pending_net(sptr);
 		if (sptr->listener)
-			if (sptr->listener->class && !IsOutgoing(sptr))
+			if (sptr->listener && !IsOutgoing(sptr))
 			{
-				listen_conf = (ConfigItem_listen *) sptr->listener->class;
+				listen_conf = sptr->listener;
 				listen_conf->clients--;
-				if (listen_conf->flag.temporary
-				    && (listen_conf->clients == 0))
+				if (listen_conf->flag.temporary && (listen_conf->clients == 0))
 				{
 					/* Call listen cleanup */
 					listen_cleanup();

@@ -319,8 +319,6 @@ void sendbufto_one(aClient *to, char *msg, unsigned int quick)
 	 */
 	to->sendM += 1;
 	me.sendM += 1;
-	if (to->listener != &me)
-		to->listener->sendM += 1;
 
 	if (DBufLength(&to->sendQ) > 0)
 		send_queued(to);

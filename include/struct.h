@@ -975,7 +975,7 @@ typedef struct {
 #define LISTENER_SSL		0x000040
 #define LISTENER_BOUND		0x000080
 
-#define IsServersOnlyListener(x)	((x) && ((x)->umodes & LISTENER_SERVERSONLY))
+#define IsServersOnlyListener(x)	((x) && ((x)->options & LISTENER_SERVERSONLY))
 
 #define CONNECT_SSL		0x000001
 #define CONNECT_ZIP		0x000002 
@@ -1054,7 +1054,7 @@ struct Client {
 	long receiveK;		/* Statistics: total k-bytes received */
 	u_short sendB;		/* counters to count upto 1-k lots of bytes */
 	u_short receiveB;	/* sent and received. */
-	aClient *listener;
+	ConfigItem_listen *listener;
 	ConfigItem_class *class;		/* Configuration record associated */
 	int authfd;		/* fd for rfc931 authentication */
         short slot;         /* my offset in the local fd table */
@@ -1271,7 +1271,7 @@ struct _configitem_listen {
 	char		*ip;
 	int		port;
 	int		options, clients;
-	aClient		*listener;
+	int		fd;
 };
 
 struct _configitem_vhost {

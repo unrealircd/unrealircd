@@ -228,7 +228,7 @@ extern MODVAR short LastSlot; /* last used index in local client array */
 extern MODVAR int OpenFiles;  /* number of files currently open */
 extern MODVAR int debuglevel, portnum, debugtty, maxusersperchannel;
 extern MODVAR int readcalls, udpfd, resfd;
-extern aClient *add_connection(aClient *, int);
+extern aClient *add_connection(ConfigItem_listen *, int);
 extern int add_listener(aConfItem *);
 extern void add_local_domain(char *, int);
 extern int check_client(aClient *, char *);
@@ -240,7 +240,7 @@ extern void close_listeners();
 extern int connect_server(ConfigItem_link *, aClient *, struct hostent *);
 extern void get_my_name(aClient *, char *, int);
 extern int get_sockerr(aClient *);
-extern int inetport(aClient *, char *, int);
+extern int inetport(ConfigItem_listen *, char *, int);
 extern void init_sys();
 extern void init_modef();
 extern int verify_hostname(char *name);

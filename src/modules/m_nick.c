@@ -729,7 +729,7 @@ DLLFUNC CMD_FUNC(m_nick)
 		 * - originally by taz, modified by Wizzu
 		 */
 		if ((parc > 2) && (strlen(parv[2]) <= PASSWDLEN)
-		    && !(sptr->listener->umodes & LISTENER_JAVACLIENT))
+		    && !(sptr->listener->options & LISTENER_JAVACLIENT))
 		{
 			if (sptr->passwd)
 				MyFree(sptr->passwd);
@@ -1075,7 +1075,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			sendto_one(sptr, rpl_str(RPL_YOURHOST), me.name, nick,
 			    me.name, version);
 		sendto_one(sptr, rpl_str(RPL_CREATED), me.name, nick, creation);
-		if (!(sptr->listener->umodes & LISTENER_JAVACLIENT))
+		if (!(sptr->listener->options & LISTENER_JAVACLIENT))
 			sendto_one(sptr, rpl_str(RPL_MYINFO), me.name, parv[0],
 			    me.name, version, umodestring, cmodestring);
 		else
