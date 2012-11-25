@@ -37,7 +37,7 @@ extern char *getreply(int);
 extern MODVAR Member *freemember;
 extern MODVAR Membership *freemembership;
 extern MODVAR MembershipL *freemembershipL;
-extern MODVAR aClient me, *local[];
+extern MODVAR aClient me;
 extern MODVAR aChannel *channel;
 extern MODVAR struct stats *ircstp;
 extern MODVAR int bootopt;
@@ -224,7 +224,6 @@ extern MODVAR int dbufalloc, dbufblocks, debuglevel;
 #else
 extern int dbufalloc, dbufblocks, debuglevel, errno, h_errno;
 #endif
-extern MODVAR short LastSlot; /* last used index in local client array */
 extern MODVAR int OpenFiles;  /* number of files currently open */
 extern MODVAR int debuglevel, portnum, debugtty, maxusersperchannel;
 extern MODVAR int readcalls, udpfd, resfd;
@@ -506,10 +505,6 @@ char *crule_errstring(int);
 int crule_eval(char *);
 void crule_free(char **);
 
-/* Add clients to LocalClients array */
-extern void add_local_client(aClient* cptr);
-/* Remove clients from LocalClients array */
-extern void remove_local_client(aClient* cptr);
 /*
  * Close all local socket connections, invalidate client fd's
  * WIN32 cleanup winsock lib

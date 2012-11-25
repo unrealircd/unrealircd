@@ -40,7 +40,7 @@
 #include <string.h>
 
 char *collapse(char *pattern);
-extern aClient *client, *local[];
+extern aClient *client;
 
 ID_Copyright("(C) Tony Vincell");
 
@@ -191,7 +191,7 @@ int  crule_via(int numargs, void *crulearg[])
 		acptr = lp->value.cptr;
 		if (match((char *)crulearg[1], acptr->name))
 			continue;
-		if (match((char *)crulearg[0], (local[acptr->slot])->name))
+		if (match((char *)crulearg[0], acptr->serv->up))
 			continue;
 		return (1);
 	}

@@ -94,8 +94,6 @@ static unsigned char minus_one[] =
 #endif /* _WIN32 */
 
 extern char backupbuf[8192];
-aClient *local[MAXCONNECTIONS];
-short    LastSlot = -1;    /* GLOBAL - last used slot in local */
 int      OpenFiles = 0;    /* GLOBAL - number of files currently open */
 int readcalls = 0;
 static struct SOCKADDR_IN mysk;
@@ -137,42 +135,6 @@ void start_of_normal_client_handshake(aClient *acptr);
 void proceed_normal_client_handshake(aClient *acptr, struct hostent *he);
 
 /* winlocal */
-void add_local_client(aClient* cptr)
-{
-	int		i;
-	if (LastSlot >= (MAXCONNECTIONS-1))
-	{
-		Debug((DEBUG_ERROR, "add_local_client() called when LastSlot >= MAXCONNECTIONS!"));
-		cptr->slot = -1;
-		return;
-	}
-	i = 0;
-	while (local[i])
-		i++;
-	cptr->slot = i;
-	local[cptr->slot] = cptr;
-	if (i > LastSlot)
-		LastSlot = i;
-}
-
-void remove_local_client(aClient* cptr)
-{
-
-	if (LastSlot < 0)
-	{
-		Debug((DEBUG_ERROR, "remove_local_client() called when LastSlot < 0!"));
-		cptr->slot = -1;
-		return;
-	}
-
-	/* Keep LastSlot as the last one
-	 */
-	local[cptr->slot] = NULL;
-	cptr->slot = -1;
-	while (!local[LastSlot])
-		LastSlot--;
-}
-
 void close_connections(void)
 {
 	aClient* cptr;
@@ -204,7 +166,6 @@ void close_connections(void)
 	close_listeners();
 
 	OpenFiles = 0;
-	LastSlot = -1;
 
 #ifdef _WIN32
 	WSACleanup();
@@ -666,7 +627,6 @@ init_dgram:
 openlog("ircd", LOG_PID | LOG_NDELAY, LOG_DAEMON); /* reopened now */
 #endif
 	memset(local, 0, sizeof(aClient*) * MAXCONNECTIONS);
-	LastSlot = -1;
 
 #endif /*_WIN32*/
 
@@ -958,7 +918,6 @@ void close_connection(aClient *cptr)
 	if (cptr->fd >= 0)
 	{
 		send_queued(cptr);
-		remove_local_client(cptr);
 #ifdef USE_SSL
 		if (IsSSL(cptr) && cptr->ssl) {
 			SSL_set_shutdown((SSL *)cptr->ssl, SSL_RECEIVED_SHUTDOWN);
@@ -1284,7 +1243,6 @@ add_con_refuse:
 	}
 
 	acptr->fd = fd;
-    add_local_client(acptr);
 	acptr->listener = cptr;
 	if (acptr->listener != NULL)
 		acptr->listener->clients++;
@@ -1672,7 +1630,6 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 		cptr->serv->user = NULL;
 	}
 	cptr->serv->up = me.name;
-	add_local_client(cptr);
 	SetConnecting(cptr);
 	SetOutgoing(cptr);
 	IRCstats.unknown++;
