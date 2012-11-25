@@ -109,21 +109,19 @@ static aClient *decode_puid(char *puid)
 		*it2++ = '\0';
 		cookie = atoi(it2);
 	}
+	else
+		cookie = slot;
 
 	slot = atoi(it);
 
 	if (stricmp(me.name, puid))
 		return NULL;
 
-	if (slot >= MAXCONNECTIONS)
-		return NULL;
+	list_for_each_entry(cptr, &unknown_list, lclient_node)
+		if (cptr->sasl_cookie == cookie)
+			return cptr;
 
-	cptr = local[slot];
-
-	if (cookie && cptr->sasl_cookie != cookie)
-		return NULL;
-
-	return cptr;
+	return NULL;
 }
 
 /*
@@ -139,7 +137,7 @@ static const char *encode_puid(aClient *client)
 	while (!client->sasl_cookie)
 		client->sasl_cookie = getrandom16();
 
-	snprintf(buf, sizeof buf, "%s!%d.%d", me.name, client->slot, client->sasl_cookie);
+	snprintf(buf, sizeof buf, "%s!0.%d", me.name, client->sasl_cookie);
 
 	return buf;
 }
