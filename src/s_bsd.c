@@ -1237,7 +1237,6 @@ add_con_refuse:
 					goto add_con_refuse;
 				}
 			}
-		}
 
 		if ((bconf = Find_ban(acptr, Inet_ia2p(&acptr->ip), CONF_BAN_IP))) {
 			if (bconf)
