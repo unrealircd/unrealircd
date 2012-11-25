@@ -169,8 +169,6 @@ DLLFUNC CMD_FUNC(m_trace)
 		char *name;
 		char *class;
 
-		if (!(acptr = local[i]))	/* Local Connection? */
-			continue;
 /* More bits of code to allow oers to see all users on remote traces
  *		if (IsInvisible(acptr) && dow &&
  *		if (dow &&
