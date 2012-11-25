@@ -174,10 +174,9 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		}
 	}
 
-	for(i = 0; i <= LastSlot; i++)
-	    if((acptr = local[i]) && IsPerson(acptr) && ((acptr->user->snomask & snomask) ||
-		(acptr->umodes & umode_s)))
+	list_for_each_entry(acptr, &oper_list, special_node)
 	{
+	    if((acptr->user->snomask & snomask) || (acptr->umodes & umode_s))
 		sendto_one(acptr, ":%s NOTICE %s :%s", me.name, acptr->name, message);
 	}
 

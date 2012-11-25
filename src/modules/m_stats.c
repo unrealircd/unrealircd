@@ -723,10 +723,9 @@ int stats_traffic(aClient *sptr, char *para)
 
 	sp = &tmp;
 	bcopy((char *)ircstp, (char *)sp, sizeof(*sp));
-	for (i = 0; i <= LastSlot; i++)
+
+	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
-		if (!(acptr = local[i]))
-			continue;
 		if (IsServer(acptr))
 		{
 			sp->is_sbs += acptr->sendB;
@@ -1498,13 +1497,11 @@ int stats_class(aClient *sptr, char *para)
 int stats_zip(aClient *sptr, char *para)
 {
 #ifdef ZIP_LINKS
-	int i;
 	aClient *acptr;
-	for (i=0; i <= LastSlot; i++)
+
+	list_for_each_entry(acptr, &server_list, special_node)
 	{
-		if (!(acptr = local[i]))
-			continue;
-		if (!IsServer(acptr) || !IsZipped(acptr))
+		if (!IsZipped(acptr))
 			continue;
 		if (acptr->zip->in->total_out && acptr->zip->out->total_in)
 		{
@@ -1518,8 +1515,8 @@ int stats_zip(aClient *sptr, char *para)
 				(100.0*(float)acptr->zip->in->total_in) /(float)acptr->zip->in->total_out,
 				acptr->zip->out->total_in, acptr->zip->out->total_out,
 				(100.0*(float)acptr->zip->out->total_out) /(float)acptr->zip->out->total_in);
-		} 
-		else 
+		}
+		else
 			sendto_one(sptr, ":%s %i %s :Zipstats for link to %s: unavailable", 
 				me.name, RPL_TEXT, sptr->name, acptr->name);
 	}
@@ -1578,10 +1575,9 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 		remote = 1;
 		wilds = 0;
 	}
-	for (i = 0; i <= LastSlot; i++)
+
+	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
-		if (!(acptr = local[i]))
-			continue;
 		if (IsInvisible(acptr) && (doall || wilds) &&
 			!(MyConnect(sptr) && IsOper(sptr)) &&
 			!IsAnOper(acptr) && (acptr != sptr))

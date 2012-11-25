@@ -1053,65 +1053,57 @@ void _tkl_check_local_remove_shun(aTKline *tmp)
 
 	for (i1 = 0; i1 <= 5; i1++)
 	{
-		/* winlocal
-		for (i = 0; i <= (MAXCONNECTIONS - 1); i++)
-		*/
-		for (i = 0; i <= LastSlot; ++i)
-		{
-			if ((acptr = local[i]))
-				if (MyClient(acptr) && IsShunned(acptr))
+		list_for_each_entry(acptr, &lclient_list, lclient_node)
+			if (MyClient(acptr) && IsShunned(acptr))
+			{
+				chost = acptr->sockhost;
+				cname = acptr->user->username;
+
+				cip = GetIP(acptr);
+
+				if ((*tmp->hostmask >= '0') && (*tmp->hostmask <= '9'))
+					is_ip = 1;
+				else
+					is_ip = 0;
+
+				if (is_ip == 0 ?
+				    (!match(tmp->hostmask, chost) && !match(tmp->usermask, cname)) : 
+				    (!match(tmp->hostmask, chost) || !match(tmp->hostmask, cip))
+				    && !match(tmp->usermask, cname))
 				{
-					chost = acptr->sockhost;
-					cname = acptr->user->username;
+					/*
+					  before blindly marking this user as un-shunned, we need to check
+					  if the user is under any other existing shuns. (#0003906)
+					  Unfortunately, this requires crazy amounts of indentation ;-).
 
-	
-					cip = GetIP(acptr);
-
-					if ((*tmp->hostmask >= '0') && (*tmp->hostmask <= '9'))
-						is_ip = 1;
-					else
-						is_ip = 0;
-
-					if (is_ip == 0 ?
-					    (!match(tmp->hostmask, chost) && !match(tmp->usermask, cname)) : 
-					    (!match(tmp->hostmask, chost) || !match(tmp->hostmask, cip))
-					    && !match(tmp->usermask, cname))
-					{
-						/*
-						  before blindly marking this user as un-shunned, we need to check
-						  if the user is under any other existing shuns. (#0003906)
-						  Unfortunately, this requires crazy amounts of indentation ;-).
-
-						  This enumeration code is based off of _tkl_stats()
-						 */
-						keep_shun = 0;
-						for(tk = tklines[tkl_hash('s')]; tk && !keep_shun; tk = tk->next)
-							if(tk != tmp && !match(tk->usermask, cname))
-							{
-								if ((*tk->hostmask >= '0') && (*tk->hostmask <= '9')
-								    /* the hostmask is an IP */
-								    && (!match(tk->hostmask, chost) || !match(tk->hostmask, cip)))
-									keep_shun = 1;
-								
-								else
-									/* the hostmask is not an IP */
-									if (!match(tk->hostmask, chost) && !match(tk->usermask, cname))
-										keep_shun = 1;
-							}						
-
-						if(!keep_shun)
+					  This enumeration code is based off of _tkl_stats()
+					 */
+					keep_shun = 0;
+					for(tk = tklines[tkl_hash('s')]; tk && !keep_shun; tk = tk->next)
+						if(tk != tmp && !match(tk->usermask, cname))
 						{
-							ClearShunned(acptr);
-#ifdef SHUN_NOTICES
-							sendto_one(acptr,
-								   ":%s NOTICE %s :*** You are no longer shunned",
-								   me.name,
-								   acptr->name);
-#endif
+							if ((*tk->hostmask >= '0') && (*tk->hostmask <= '9')
+							    /* the hostmask is an IP */
+							    && (!match(tk->hostmask, chost) || !match(tk->hostmask, cip)))
+								keep_shun = 1;
+							else
+								/* the hostmask is not an IP */
+								if (!match(tk->hostmask, chost) && !match(tk->usermask, cname))
+									keep_shun = 1;
 						}
+
+					if(!keep_shun)
+					{
+						ClearShunned(acptr);
+#ifdef SHUN_NOTICES
+						sendto_one(acptr,
+							   ":%s NOTICE %s :*** You are no longer shunned",
+							   me.name,
+							   acptr->name);
+#endif
 					}
 				}
-		}
+			}
 	}
 }
 
@@ -1456,8 +1448,8 @@ char buf[1024];
 int i, matches = 0;
 aClient *acptr;
 
-	for (i = LastSlot; i >= 0; i--)
-		if ((acptr = local[i]) && MyClient(acptr))
+	list_for_each_entry_reverse(acptr, &lclient_list, lclient_node)
+		if (MyClient(acptr))
 		{
 			spamfilter_build_user_string(spamfilter_user, acptr->name, acptr);
 			if (regexec(&tk->ptr.spamf->expr, spamfilter_user, 0, NULL, 0))
@@ -1476,7 +1468,7 @@ aClient *acptr;
 			RunHook6(HOOKTYPE_LOCAL_SPAMFILTER, acptr, spamfilter_user, spamfilter_user, SPAMF_USER, NULL, tk);
 			matches++;
 		}
-		
+
 	return matches;
 }
 
