@@ -642,7 +642,6 @@ extern int spamfilter_getconftargets(char *s);
 extern void remove_oper_snomasks(aClient *sptr);
 extern void remove_oper_modes(aClient *sptr);
 extern char *spamfilter_inttostring_long(int v);
-extern int check_channelmask(aClient *, aClient *, char *);
 extern aChannel *get_channel(aClient *cptr, char *chname, int flag);
 extern MODVAR char backupbuf[];
 extern void add_invite(aClient *, aChannel *);

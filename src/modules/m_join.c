@@ -563,8 +563,6 @@ DLLFUNC CMD_FUNC(_do_join)
 
 		if (MyConnect(sptr))
 			clean_channelname(name);
-		if (check_channelmask(sptr, cptr, name) == -1)
-			continue;
 		if (*name == '0' && !atoi(name))
 		{
 			(void)strcpy(jbuf, "0");

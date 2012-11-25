@@ -104,8 +104,6 @@ CMD_FUNC(m_knock)
 	if (MyConnect(sptr))
 		clean_channelname(parv[1]);
 
-	if (check_channelmask(sptr, cptr, parv[1]))
-		return 0;
 	/* bugfix for /knock PRv Please? */
 	if (*parv[1] != '#')
 	{

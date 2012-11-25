@@ -124,8 +124,6 @@ CMD_FUNC(m_kick)
 			    me.name, parv[0], name);
 			continue;
 		}
-		if (check_channelmask(sptr, cptr, name))
-			continue;
 		/* Store "sptr" access flags */
 		if (IsPerson(sptr))
 			sptr_flags = get_access(sptr, chptr);

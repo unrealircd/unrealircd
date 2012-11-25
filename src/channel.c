@@ -59,7 +59,6 @@ extern ircstats IRCstats;
 void add_invite(aClient *, aChannel *);
 char *clean_ban_mask(char *, int, aClient *);
 void channel_modes(aClient *, char *, char *, aChannel *);
-int check_channelmask(aClient *, aClient *, char *);
 
 void sub1_from_channel(aChannel *);
 
@@ -1209,33 +1208,11 @@ void clean_channelname(char *cn)
 		 * or some such.
 		 *   --Wizzu
 		 */
-		if (*ch < 33 || *ch == ',' || *ch == 160)
+		if (*ch < 33 || *ch == ',' || *ch == ':' || *ch == 160)
 		{
 			*ch = '\0';
 			return;
 		}
-}
-
-/*
-** Return -1 if mask is present and doesnt match our server name.
-*/
-int check_channelmask(aClient *sptr, aClient *cptr, char *chname)
-{
-	char *s;
-
-	s = rindex(chname, ':');
-	if (!s)
-		return 0;
-
-	s++;
-	if (match(s, me.name) || (IsServer(cptr) && match(s, cptr->name)))
-	{
-		if (MyClient(sptr))
-			sendto_one(sptr, err_str(ERR_BADCHANMASK),
-			    me.name, sptr->name, chname);
-		return -1;
-	}
-	return 0;
 }
 
 /*

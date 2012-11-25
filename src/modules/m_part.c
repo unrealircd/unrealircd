@@ -129,8 +129,6 @@ DLLFUNC CMD_FUNC(m_part)
 			    me.name, parv[0], name);
 			continue;
 		}
-		if (check_channelmask(sptr, cptr, name))
-			continue;
 
 		/* 'commentx' is the general part msg, but it can be changed
 		 * per-channel (eg some chans block badwords, strip colors, etc)

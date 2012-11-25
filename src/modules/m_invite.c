@@ -125,9 +125,6 @@ DLLFUNC CMD_FUNC(m_invite)
         if (MyConnect(sptr))
                 clean_channelname(parv[2]);
 
-        if (check_channelmask(sptr, cptr, parv[2]))
-                return -1;
-
         if (!(chptr = find_channel(parv[2], NullChn)))
         {
                 sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL),
