@@ -63,9 +63,7 @@ typedef struct hashentry {
 /*
  * Throttling
 */
-#ifdef THROTTLING
 #define THROTTLING_HASH_SIZE	1019 /* prime number */
-#endif
 
 
 #define NullChn ((aChannel *)0)

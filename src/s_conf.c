@@ -863,7 +863,6 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 						break;
 					}
 				}
-#ifdef EXTCMODE
 				/* Try extcmodes */
 				if (!tab->mode)
 				{
@@ -890,7 +889,6 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 						}
 					}
 				}
-#endif
 		}
 	}
 	if (parambuf)
@@ -911,7 +909,6 @@ void chmode_str(struct ChMode modes, char *mbuf, char *pbuf)
 				*mbuf++ = tab->flag;
 		}
 	}
-#ifdef EXTCMODE
 	for (i=0; i <= Channelmode_highest; i++)
 	{
 		if (!(Channelmode_Table[i].flag))
@@ -927,7 +924,6 @@ void chmode_str(struct ChMode modes, char *mbuf, char *pbuf)
 			}
 		}
 	}
-#endif
 #ifdef NEWCHFLOODPROT
 	if (modes.floodprot.per)
 	{
@@ -2456,13 +2452,11 @@ void	config_rehash()
 	}
 	conf_offchans = NULL;
 	
-#ifdef EXTCMODE
 	for (i = 0; i < EXTCMODETABLESZ; i++)
 	{
 		if (iConf.modes_on_join.extparams[i])
 			free(iConf.modes_on_join.extparams[i]);
 	}
-#endif
 
 	for (cgiirc_ptr = conf_cgiirc; cgiirc_ptr; cgiirc_ptr = (ConfigItem_cgiirc *) next)
 	{
@@ -2603,7 +2597,7 @@ int	config_run()
 	free_iConf(&iConf);
 	bcopy(&tempiConf, &iConf, sizeof(aConfiguration));
 	bzero(&tempiConf, sizeof(aConfiguration));
-#ifdef THROTTLING
+
 	{
 		EventInfo eInfo;
 		long v;
@@ -2619,7 +2613,7 @@ int	config_run()
 		eInfo.every = v;
 		EventMod(EventFind("bucketcleaning"), &eInfo);
 	}
-#endif
+
 	check_tkls();
 
 	/* initialize conf_files with defaults if the block isn't set: */
@@ -5363,7 +5357,6 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 	}
-#ifdef THROTTLING
 	else if (!strcmp(ce->ce_vardata, "throttle")) {
 		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 		{
@@ -5384,7 +5377,6 @@ int     _conf_except(ConfigFile *conf, ConfigEntry *ce)
 		}
 
 	}
-#endif
 	else if (!strcmp(ce->ce_vardata, "tkl")) {
 		ConfigEntry *mask = NULL, *type = NULL;
 		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -5464,7 +5456,6 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 		}
 		return errors;
 	}
-#ifdef THROTTLING
 	else if (!strcmp(ce->ce_vardata, "throttle")) {
 		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 		{
@@ -5499,7 +5490,6 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 		}
 		return errors;
 	}
-#endif
 	else if (!strcmp(ce->ce_vardata, "tkl")) {
 		char has_type = 0;
 
@@ -5911,9 +5901,7 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 	char *tmp;
 	short regex = 0;
 	int regflags = 0;
-#ifdef FAST_BADWORD_REPLACE
 	int ast_l = 0, ast_r = 0;
-#endif
 
 	ca = MyMallocEx(sizeof(ConfigItem_badword));
 	ca->action = BADWORD_REPLACE;
@@ -5939,7 +5927,6 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "word"))
 			word = cep;
 	}
-#ifdef FAST_BADWORD_REPLACE
 	/* The fast badwords routine can do: "blah" "*blah" "blah*" and "*blah*",
 	 * in all other cases use regex.
 	 */
@@ -5957,7 +5944,7 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 			break;
 		}
 	}
-	if (regex) 
+	if (regex)
 	{
 		ca->type = BADW_TYPE_REGEX;
 		ircstrdup(ca->word, word->ce_vardata);
@@ -5978,29 +5965,6 @@ int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
 		if (ast_r)
 			ca->type |= BADW_TYPE_FAST_R;
 	}
-#else
-	for (tmp = word->ce_vardata; *tmp; tmp++)
-	{
-		if (!isalnum(*tmp) && !(*tmp >= 128))
-		{
-			regex = 1;
-			break;
-		}
-	}
-	if (regex)
-	{
-		ircstrdup(ca->word, word->ce_vardata);
-	}
-	else
-	{
-		ca->word = MyMalloc(strlen(word->ce_vardata) + strlen(PATTERN) -1);
-		ircsprintf(ca->word, PATTERN, word->ce_vardata);
-	}
-	/* Yes this is called twice, once in test, and once here, but it is still MUCH
-	   faster than calling it each time a message is received like before. -- codemastr
-	 */
-	regcomp(&ca->expr, ca->word, regflags);
-#endif
 	if (!strcmp(ce->ce_vardata, "channel"))
 		AddListItem(ca, conf_badword_channel);
 	else if (!strcmp(ce->ce_vardata, "message"))
@@ -7513,7 +7477,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 			}
 		}
-#ifdef THROTTLING
 		else if (!strcmp(cep->ce_varname, "throttle")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				if (!strcmp(cepp->ce_varname, "period")) 
@@ -7522,7 +7485,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					tempiConf.throttle_count = atoi(cepp->ce_vardata);
 			}
 		}
-#endif
 		else if (!strcmp(cep->ce_varname, "anti-flood")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				if (!strcmp(cepp->ce_varname, "unknown-flood-bantime")) 
@@ -8196,7 +8158,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 			}
 		}
-#ifdef THROTTLING
 		else if (!strcmp(cep->ce_varname, "throttle")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				CheckNull(cepp);
@@ -8233,7 +8194,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 			}
 		}
-#endif
 		else if (!strcmp(cep->ce_varname, "anti-flood")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				CheckNull(cepp);

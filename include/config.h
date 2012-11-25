@@ -153,14 +153,6 @@
 #undef STRIPBADWORDS_CHAN_ALWAYS
 
 /*
- * THROTTLING
- *   This will only allow 1 connection per ip in set::throttle::period time
- * NOTE: There's no reason to disable this (anymore) since it can be fully
- *       configured in the unrealircd.conf. Keep the define...
- */
-#define THROTTLING
-
-/*
  * No spoof code
  *
  * This enables the spoof protection.
@@ -480,22 +472,9 @@
 #define KILLCHASETIMELIMIT 90	/* Recommended value: 90 */
 
 /*
- * Use much faster badwords replace routine (>100 times faster).
- * Disabling this is not supported.
- */
-#define FAST_BADWORD_REPLACE
-
-/*
  * Forces Unreal to use compressed IPv6 addresses rather than expanding them
  */
 #undef IPV6_COMPRESSED
-
-/*
- * Extended channel modes. This extends the channel modes with yet another
- * 32 possible modes which can also be used in modules.
- * This is now pretty much required.
- */
-#define EXTCMODE
 
 /*
  * New channelmode +f system which allows flood control for:

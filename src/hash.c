@@ -708,8 +708,6 @@ int   hash_del_watch_list(aClient *cptr)
  * -by Stskeeps
 */
 
-#ifdef THROTTLING
-
 struct	MODVAR ThrottlingBucket	*ThrottlingHash[THROTTLING_HASH_SIZE+1];
 
 void	init_throttling_hash()
@@ -850,5 +848,3 @@ int	throttle_can_connect(aClient *sptr, struct IN_ADDR *in)
 		return 2;
 	}
 }
-
-#endif

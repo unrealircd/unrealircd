@@ -593,11 +593,11 @@ docontinue:
 	{
 		aCtab *acp;
 		bcopy(&chptr->mode, &oldmode, sizeof(Mode));
-#ifdef EXTCMODE
+
 		/* Fun.. we have to duplicate all extended modes too... */
 		oldmode.extmodeparam = NULL;
 		oldmode.extmodeparam = extcmode_duplicate_paramlist(chptr->mode.extmodeparam);
-#endif
+
 #ifdef NEWCHFLOODPROT
 		if (chptr->mode.floodprot)
 		{
@@ -605,6 +605,7 @@ docontinue:
 			memcpy(oldmode.floodprot, chptr->mode.floodprot, sizeof(ChanFloodProt));
 		}
 #endif
+
 		/* merge the modes */
 		strlcpy(modebuf, parv[3], sizeof modebuf);
 		parabuf[0] = '\0';
@@ -655,7 +656,6 @@ docontinue:
 		}
 #endif
 
-#ifdef EXTCMODE
 		/* First, check if we have something they don't have..
 		 * note that: oldmode.* = us, chptr->mode.* = them.
 		 */
@@ -674,7 +674,7 @@ docontinue:
 				}
 			}
 		}
-#endif
+
 		/* Check if we had +s and it became +p, then revert it... */
 		if ((oldmode.mode & MODE_SECRET) && (chptr->mode.mode & MODE_PRIVATE))
 		{
@@ -755,7 +755,6 @@ docontinue:
 		}
 #endif
 
-#ifdef EXTCMODE
 		/* Now, check if they have something we don't have..
 		 * note that: oldmode.* = us, chptr->mode.* = them.
 		 */
@@ -774,7 +773,6 @@ docontinue:
 				}
 			}
 		}
-#endif
 
 		/* now, if we had diffent para modes - this loop really could be done better, but */
 
@@ -858,7 +856,6 @@ docontinue:
 		}
 #endif
 
-#ifdef EXTCMODE
 		/* Now, check for any param differences in extended channel modes..
 		 * note that: oldmode.* = us, chptr->mode.* = them.
 		 * if we win: copy oldmode to chptr mode, if they win: send the mode
@@ -901,7 +898,6 @@ docontinue:
 				}
 			}
 		}
-#endif
 
 		Addsingle('\0');
 
@@ -914,11 +910,11 @@ docontinue:
 			sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
 			    sptr->name, chptr->chname, modebuf, parabuf);
 		}
-#ifdef EXTCMODE
+
 		/* free the oldmode.* crap :( */
 		extcmode_free_paramlist(oldmode.extmodeparam);
 		oldmode.extmodeparam = NULL; /* just to be sure ;) */
-#endif
+
 #ifdef NEWCHFLOODPROT
 		/* and the oldmode.floodprot struct too... :/ */
 		if (oldmode.floodprot)

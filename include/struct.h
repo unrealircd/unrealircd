@@ -944,10 +944,8 @@ extern MODVAR short	 Usermode_highest;
 extern MODVAR Snomask *Snomask_Table;
 extern MODVAR short Snomask_highest;
 
-#ifdef EXTCMODE
 extern MODVAR Cmode *Channelmode_Table;
 extern MODVAR unsigned short Channelmode_highest;
-#endif
 
 extern Umode *UmodeAdd(Module *module, char ch, int options, int (*allowed)(aClient *sptr, int what), long *mode);
 extern void UmodeDel(Umode *umode);
@@ -955,10 +953,8 @@ extern void UmodeDel(Umode *umode);
 extern Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(aClient *sptr, int what), long *mode);
 extern void SnomaskDel(Snomask *sno);
 
-#ifdef EXTCMODE
 extern Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode);
 extern void CmodeDel(Cmode *cmode);
-#endif
 
 typedef struct {
 	EXTCM_PAR_HEADER
@@ -1339,13 +1335,11 @@ struct _iplist {
 /*	struct irc_netmask  *netmask; */
 };
 
-#ifdef FAST_BADWORD_REPLACE
 #define BADW_TYPE_INVALID 0x0
 #define BADW_TYPE_FAST    0x1
 #define BADW_TYPE_FAST_L  0x2
 #define BADW_TYPE_FAST_R  0x4
 #define BADW_TYPE_REGEX   0x8
-#endif
 
 #define BADWORD_REPLACE 1
 #define BADWORD_BLOCK 2
@@ -1354,9 +1348,7 @@ struct _configitem_badword {
 	ConfigItem      *prev, *next;
 	ConfigFlag	flag;
 	char		*word, *replace;
-#ifdef FAST_BADWORD_REPLACE
 	unsigned short	type;
-#endif
 	char		action;
 	regex_t 	expr;
 };
@@ -1541,9 +1533,7 @@ struct ListOptions {
 	TS   topictimemax;
 };
 
-#ifdef EXTCMODE
 #define EXTCMODETABLESZ 32
-#endif /* EXTCMODE */
 
 /* this can be like ~60-90 bytes, therefore it's in a seperate struct */
 #define FLD_CTCP	0 /* c */
@@ -1575,10 +1565,8 @@ struct SChanFloodProt {
 /* mode structure for channels */
 struct SMode {
 	long mode;
-#ifdef EXTCMODE
 	Cmode_t extmode;
 	CmodeParam *extmodeparam;
-#endif
 	int  limit;
 	char key[KEYLEN + 1];
 	char link[LINKLEN + 1];
@@ -1873,8 +1861,6 @@ struct _cmdoverride {
 	int			(*func)();
 };
 
-#ifdef THROTTLING
-
 struct ThrottlingBucket
 {
 	struct ThrottlingBucket *prev, *next;
@@ -1939,8 +1925,6 @@ struct	ThrottlingBucket	*find_throttling_bucket(struct IN_ADDR *in);
 void	add_throttling_bucket(struct IN_ADDR *in);
 void	del_throttling_bucket(struct ThrottlingBucket *bucket);
 int	throttle_can_connect(aClient *, struct IN_ADDR *in);
-
-#endif
 
 #define VERIFY_OPERCOUNT(clnt,tag) { if (IRCstats.operators < 0) verify_opercount(clnt,tag); } while(0)
 

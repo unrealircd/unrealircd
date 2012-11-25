@@ -239,17 +239,10 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 
 /* IRCu/Hybrid/Unreal way now :) -Stskeeps */
 
-#ifdef EXTCMODE
- #define EXPAR1	extchmstr[0]
- #define EXPAR2	extchmstr[1]
- #define EXPAR3	extchmstr[2]
- #define EXPAR4	extchmstr[3]
-#else
- #define EXPAR1 ""
- #define EXPAR2 ""
- #define EXPAR3 ""
- #define EXPAR4 ""
-#endif /* EXTCMODE */
+#define EXPAR1	extchmstr[0]
+#define EXPAR2	extchmstr[1]
+#define EXPAR3	extchmstr[2]
+#define EXPAR4	extchmstr[3]
 
 #ifdef PREFIX_AQ
 #define CHPFIX        "(qaohv)~&@%+"

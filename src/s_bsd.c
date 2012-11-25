@@ -1219,7 +1219,6 @@ add_con_refuse:
 			send(fd, zlinebuf, strlen(zlinebuf), 0);
 			goto add_con_refuse;
 		}
-#ifdef THROTTLING
 		else
 		{
 			int val;
@@ -1238,7 +1237,6 @@ add_con_refuse:
 			else if (val == 1)
 				add_throttling_bucket(&acptr->ip);
 		}
-#endif
 		acptr->port = ntohs(addr.SIN_PORT);
 	}
 

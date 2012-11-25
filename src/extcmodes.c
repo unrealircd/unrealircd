@@ -42,8 +42,6 @@
 #include <fcntl.h>
 #include "h.h"
 
-#ifdef EXTCMODE
-
 extern char cmodestring[512];
 
 extern void make_cmodestr(void);
@@ -551,5 +549,3 @@ aModejEntry *their = (aModejEntry *)theirx;
 		return EXSJ_SAME;
 }
 #endif /* JOINTHROTTLE */
-
-#endif /* EXTCMODE */

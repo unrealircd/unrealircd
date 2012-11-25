@@ -1104,9 +1104,7 @@ int InitwIRCD(int argc, char *argv[])
 #endif
 	tkl_init();
 	umode_init();
-#ifdef EXTCMODE
 	extcmode_init();
-#endif
 	extban_init();
 	init_random(); /* needs to be done very early!! */
 	clear_scache_hash_table();
@@ -1384,9 +1382,7 @@ int InitwIRCD(int argc, char *argv[])
 	load_tunefile();
 	make_umodestr();
 	make_cmodestr();
-#ifdef EXTCMODE
 	make_extcmodestr();
-#endif
 	make_extbanstr();
 	isupport_init();
 	if (!find_Command_simple("AWAY") /*|| !find_Command_simple("KILL") ||
@@ -1528,9 +1524,7 @@ int InitwIRCD(int argc, char *argv[])
 	write_pidfile();
 	Debug((DEBUG_NOTICE, "Server ready..."));
 	SetupEvents();
-#ifdef THROTTLING
 	init_throttling_hash();
-#endif
 #ifdef NEWCHFLOODPROT
 	init_modef();
 #endif

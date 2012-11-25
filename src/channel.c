@@ -139,20 +139,16 @@ void make_cmodestr(void)
 {
 	char *p = &cmodestring[0];
 	aCtab *tab = &cFlagTab[0];
-#ifdef EXTCMODE
 	int i;
-#endif
 	while (tab->mode != 0x0)
 	{
 		*p = tab->flag;
 		p++;
 		tab++;
 	}
-#ifdef EXTCMODE
 	for (i=0; i <= Channelmode_highest; i++)
 		if (Channelmode_Table[i].flag)
 			*p++ = Channelmode_Table[i].flag;
-#endif
 	*p = '\0';
 }
 
@@ -829,12 +825,9 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 		if (msgtext[0] == 1 && strncmp(&msgtext[1], "ACTION ", 7))
 			return (CANNOT_SEND_NOCTCP);
 
-#ifdef EXTCMODE
 	if (notice && (chptr->mode.extmode & EXTMODE_NONOTICE) &&
 	   (!lp || !(lp->flags & (CHFL_CHANOP | CHFL_CHANOWNER | CHFL_CHANPROT))))
 		return (CANNOT_SEND_NOTICE);
-#endif
-
 
 	/* Makes opers able to talk thru bans -Stskeeps suggested by The_Cat */
 	if (IsOper(cptr))
@@ -910,9 +903,7 @@ void channel_modes(aClient *cptr, char *mbuf, char *pbuf, aChannel *chptr)
 	aCtab *tab = &cFlagTab[0];
 	char bcbuf[1024];
 	int ismember;
-#ifdef EXTCMODE
 	int i;
-#endif
 
 	ismember = (IsMember(cptr, chptr) || IsServer(cptr) || IsULine(cptr)) ? 1 : 0;
 
@@ -927,14 +918,12 @@ void channel_modes(aClient *cptr, char *mbuf, char *pbuf, aChannel *chptr)
 				*mbuf++ = tab->flag;
 		tab++;
 	}
-#ifdef EXTCMODE
 	for (i=0; i <= Channelmode_highest; i++)
 	{
 		if (Channelmode_Table[i].flag && !Channelmode_Table[i].paracount &&
 		    (chptr->mode.extmode & Channelmode_Table[i].mode))
 			*mbuf++ = Channelmode_Table[i].flag;
 	}
-#endif
 	if (chptr->mode.limit)
 	{
 		*mbuf++ = 'l';
@@ -983,7 +972,6 @@ void channel_modes(aClient *cptr, char *mbuf, char *pbuf, aChannel *chptr)
 		}
 	}
 
-#ifdef EXTCMODE
 	for (i=0; i <= Channelmode_highest; i++)
 	{
 		if (Channelmode_Table[i].flag && Channelmode_Table[i].paracount &&
@@ -997,7 +985,6 @@ void channel_modes(aClient *cptr, char *mbuf, char *pbuf, aChannel *chptr)
 			}
 		}
 	}
-#endif
 
 	/* Remove the trailing space from the parameters -- codemastr */
 	if (*pbuf)
@@ -1376,11 +1363,11 @@ void sub1_from_channel(aChannel *chptr)
 			MyFree(ban->who);
 			free_ban(ban);
 		}
-#ifdef EXTCMODE
+
 		/* free extcmode params */
 		extcmode_free_paramlist(chptr->mode.extmodeparam);
 		chptr->mode.extmodeparam = NULL;
-#endif
+
 #ifdef NEWCHFLOODPROT
 		chanfloodtimer_stopchantimers(chptr);
 		if (chptr->mode.floodprot)

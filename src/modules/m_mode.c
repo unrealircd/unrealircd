@@ -61,13 +61,9 @@ int do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 int do_extmode_char(aChannel *chptr, int modeindex, char *param, u_int what,
                     aClient *cptr, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3],
                     char bounce);
-#ifdef EXTCMODE
 void make_mode_str(aChannel *chptr, long oldm, Cmode_t oldem, long oldl, int pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf, char bounce);
-#else
-void make_mode_str(aChannel *chptr, long oldm, long oldl, int pcount,
-    char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf, char bounce);
-#endif
+
 static void mode_cutoff(char *s);
 static void mode_cutoff2(aClient *sptr, aChannel *chptr, int *parc_out, char *parv[]);
 
@@ -582,22 +578,15 @@ DLLFUNC void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, c
  *  contain the +x-y stuff, and the parabuf will contain the parameters.
  *  If bounce is set to 1, it will make the string it needs for a bounce.
  */
-#ifdef EXTCMODE
 void make_mode_str(aChannel *chptr, long oldm, Cmode_t oldem, long oldl, int pcount, 
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf, char bounce)
-#else
-void make_mode_str(aChannel *chptr, long oldm, long oldl, int pcount, 
-	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char *mode_buf, char *para_buf, char bounce)
-#endif
 {
 
 	char tmpbuf[MODEBUFLEN+3], *tmpstr;
 	aCtab *tab = &cFlagTab[0];
 	char *x = mode_buf;
 	int  what, cnt, z;
-#ifdef EXTCMODE
 	int i;
-#endif
 	char *m;
 	what = 0;
 
@@ -623,7 +612,7 @@ void make_mode_str(aChannel *chptr, long oldm, long oldl, int pcount,
 		}
 		tab++;
 	}
-#ifdef EXTCMODE
+
 	/* + paramless extmodes... */
 	for (i=0; i <= Channelmode_highest; i++)
 	{
@@ -641,7 +630,6 @@ void make_mode_str(aChannel *chptr, long oldm, long oldl, int pcount,
 			*x++ = Channelmode_Table[i].flag;
 		}
 	}
-#endif
 
 	*x = '\0';
 	/* - param-less modes */
@@ -663,7 +651,6 @@ void make_mode_str(aChannel *chptr, long oldm, long oldl, int pcount,
 		tab++;
 	}
 
-#ifdef EXTCMODE
 	/* - extmodes (both "param modes" and paramless don't have
 	 * any params when unsetting...
 	 */
@@ -683,7 +670,6 @@ void make_mode_str(aChannel *chptr, long oldm, long oldl, int pcount,
 			*x++ = Channelmode_Table[i].flag;
 		}
 	}
-#endif
 
 	*x = '\0';
 	/* user limit */
@@ -744,9 +730,7 @@ void make_mode_str(aChannel *chptr, long oldm, long oldl, int pcount,
 	if (bounce)
 	{
 		chptr->mode.mode = oldm;
-#ifdef EXTCMODE
 		chptr->mode.extmode = oldem;
-#endif
 	}
 	z = strlen(para_buf);
 	if (para_buf[z - 1] == ' ')
@@ -1782,7 +1766,6 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	return retval;
 }
 
-#ifdef EXTCMODE
 /** Check access and if granted, set the extended chanmode to the requested value in memory.
   * note: if bounce is requested then the mode will not be set.
   * @returns amount of params eaten (0 or 1)
@@ -1890,7 +1873,6 @@ int x;
 	}
 	return paracnt;
 }
-#endif /* EXTCMODE */
 
 /*
  * ListBits(bitvalue, bitlength);
@@ -1939,19 +1921,15 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 	unsigned int htrig = 0;
 	long oldm, oldl;
 	int checkrestr = 0, warnrestr = 1;
-#ifdef EXTCMODE
 	int extm = 1000000; /* (default value not used but stops gcc from complaining) */
 	Cmode_t oldem;
-#endif
 	long my_access;
 	paracount = 1;
 	*pcount = 0;
 
 	oldm = chptr->mode.mode;
 	oldl = chptr->mode.limit;
-#ifdef EXTCMODE
 	oldem = chptr->mode.extmode;
-#endif
 	if (RESTRICT_CHANNELMODES && MyClient(cptr) && !IsAnOper(cptr) && !IsServer(cptr)) /* "cache" this */
 		checkrestr = 1;
 
@@ -2003,7 +1981,6 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 			  {
 				  modetype = foundat.mode;
 			  } else {
-#ifdef EXTCMODE
 					/* Maybe in extmodes */
 					for (extm=0; extm <= Channelmode_highest; extm++)
 					{
@@ -2013,7 +1990,6 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 							break;
 						}
 					}
-#endif
 			  }
 			  if (found == 0) /* Mode char unknown */
 			  {
@@ -2057,13 +2033,11 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 				}
                           }
 				}
-#ifdef EXTCMODE
 				else if (found == 2) {
 					/* Extended mode: all override stuff is in do_extmode_char which will set
 					 * opermode if appropriate. -- Syzop
 					 */
 				}
-#endif /* EXTCMODE */
 #endif /* !NO_OPEROVERRIDE */
 
 			  /* We can afford to send off a param */
@@ -2079,22 +2053,16 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 			      parv[paracount], what, cptr, pcount, pvar,
 			      bounce, my_access);
 			}
-#ifdef EXTCMODE
 			else if (found == 2)
 			{
 				paracount += do_extmode_char(chptr, extm, parv[paracount],
 				                             what, cptr, pcount, pvar, bounce);
 			}
-#endif /* EXTCMODE */
 			  break;
 		}
 	}
 
-#ifdef EXTCMODE
 	make_mode_str(chptr, oldm, oldem, oldl, *pcount, pvar, modebuf, parabuf, bounce);
-#else
-	make_mode_str(chptr, oldm, oldl, *pcount, pvar, modebuf, parabuf, bounce);
-#endif
 
 #ifndef NO_OPEROVERRIDE
         if (htrig == 1)

@@ -49,11 +49,6 @@
  #else
   #define MYTOKEN_ZIP ""
  #endif
- #if !defined(EXTCMODE)
-  #define MYTOKEN_EXTCMODE "/NOEXTC"
- #else
-  #define MYTOKEN_EXTCMODE ""
- #endif
  #if !defined(JOINTHROTTLE)
   #define MYTOKEN_JOINTHROTTLE "/NOJTHR"
  #else
@@ -88,12 +83,12 @@
 
 #ifdef UNREALCORE
   char our_mod_version[] = BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH6 PATCH7 PATCH8 PATCH9 \
-                               MYTOKEN_SSL MYTOKEN_ZIP MYTOKEN_EXTCMODE MYTOKEN_JOINTHROTTLE \
+                               MYTOKEN_SSL MYTOKEN_ZIP MYTOKEN_JOINTHROTTLE \
                                MYTOKEN_NOFLDAWAY MYTOKEN_NEWCHF MYTOKEN_INET6;
   unsigned int our_compiler_version = GCCVER;
 #else
   DLLFUNC char Mod_Version[] = BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH6 PATCH7 PATCH8 PATCH9 \
-                               MYTOKEN_SSL MYTOKEN_ZIP MYTOKEN_EXTCMODE MYTOKEN_JOINTHROTTLE \
+                               MYTOKEN_SSL MYTOKEN_ZIP MYTOKEN_JOINTHROTTLE \
                                MYTOKEN_NOFLDAWAY MYTOKEN_NEWCHF MYTOKEN_INET6;
   DLLFUNC unsigned int compiler_version = GCCVER;
 #endif

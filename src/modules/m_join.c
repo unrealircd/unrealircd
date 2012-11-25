@@ -441,13 +441,8 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 			    sptr->name, chptr->chname, chptr->topic_nick,
 			    chptr->topic_time);
 		}
-		if (chptr->users == 1 && (MODES_ON_JOIN
-#ifdef EXTCMODE
-		    || iConf.modes_on_join.extmodes)
-#endif
-		)
+		if (chptr->users == 1 && (MODES_ON_JOIN || iConf.modes_on_join.extmodes))
 		{
-#ifdef EXTCMODE
 			int i;
 			chptr->mode.extmode =  iConf.modes_on_join.extmodes;
 			/* Param fun */
@@ -462,7 +457,7 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 					AddListItem(p, chptr->mode.extmodeparam);
 				}
 			}
-#endif
+
 			chptr->mode.mode = MODES_ON_JOIN;
 #ifdef NEWCHFLOODPROT
 			if (iConf.modes_on_join.floodprot.per)

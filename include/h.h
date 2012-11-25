@@ -88,9 +88,7 @@ extern MODVAR ConfigItem_offchans	*conf_offchans;
 extern void		completed_connection(int, int, void *);
 extern void clear_unknown();
 extern EVENT(e_unload_module_delayed);
-#ifdef THROTTLING
 extern EVENT(e_clean_out_throttling_buckets);
-#endif
 
 extern void  module_loadall(int module_load);
 extern long set_usermode(char *umode);
@@ -442,14 +440,12 @@ extern MODVAR long SNO_SNOTICE;
 extern MODVAR long SNO_SPAMF;
 extern MODVAR long SNO_OPER;
 
-#ifdef EXTCMODE
 /* Extended chanmodes... */
 extern MODVAR Cmode_t EXTMODE_NONOTICE;
 #ifdef STRIPBADWORDS
 extern MODVAR Cmode_t EXTMODE_STRIPBADWORDS;
 #endif
 extern MODVAR Cmode_t EXTMODE_JOINTHROTTLE;
-#endif
 
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *dst, const char *src, size_t size);
@@ -582,7 +578,7 @@ extern void ident_failed(aClient *cptr);
 
 extern MODVAR char extchmstr[4][64];
 extern MODVAR char extbanstr[EXTBANTABLESZ+1];
-#ifdef EXTCMODE
+
 extern int extcmode_default_requirechop(aClient *, aChannel *, char *, int, int);
 extern int extcmode_default_requirehalfop(aClient *, aChannel *, char *, int, int);
 extern Cmode_t extcmode_get(Cmode *);
@@ -591,7 +587,7 @@ extern CmodeParam *extcmode_get_struct(CmodeParam *, char);
 extern void make_extcmodestr();
 extern CmodeParam *extcmode_duplicate_paramlist(CmodeParam *);
 extern void extcmode_free_paramlist(CmodeParam *);
-#endif
+
 extern int do_chanflood(ChanFloodProt *, int);
 extern void do_chanflood_action(aChannel *, int, char *);
 extern char *channel_modef_string(ChanFloodProt *);

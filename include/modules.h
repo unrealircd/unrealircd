@@ -128,7 +128,6 @@ typedef struct {
         Module *owner;
 } Snomask;
 
-#ifdef EXTCMODE
 #define EXCHK_ACCESS		0 /* Check access */
 #define EXCHK_ACCESS_ERR	1 /* Check access and send error if needed */
 #define EXCHK_PARAM			2 /* Check parameter and send error if needed */
@@ -251,7 +250,6 @@ typedef struct {
 	int		(*sjoin_check)(aChannel *, CmodeParam *, CmodeParam *);
 	char		local;
 } CmodeInfo;
-#endif
 
 /*** Extended bans ***/
 
