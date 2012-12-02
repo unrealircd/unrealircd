@@ -760,7 +760,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	IRCstats.me_servers++;
 	IRCstats.servers++;
 	IRCstats.unknown--;
-	list_move(&acptr->lclient_node, &lclient_list);
+	list_move(&cptr->lclient_node, &lclient_list);
 	list_add(&cptr->special_node, &server_list);
 	if ((Find_uline(cptr->name)))
 		cptr->flags |= FLAGS_ULINE;
