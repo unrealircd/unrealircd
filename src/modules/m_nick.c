@@ -772,8 +772,11 @@ DLLFUNC CMD_FUNC(m_nick)
 	}
 
 	/* update fdlist --nenolod */
-	snprintf(descbuf, sizeof descbuf, "Client: %s", nick);
-	fd_desc(sptr->fd, descbuf);
+	if (MyConnect(sptr))
+	{
+		snprintf(descbuf, sizeof descbuf, "Client: %s", nick);
+		fd_desc(sptr->fd, descbuf);
+	}
 
 	(void)strcpy(sptr->name, nick);
 	(void)add_to_client_hash_table(nick, sptr);
