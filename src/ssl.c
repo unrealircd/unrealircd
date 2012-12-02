@@ -189,6 +189,30 @@ static char buf[2048];
 	ircd_log(LOG_ERROR, "%s", buf);
 }
 
+static void setup_dh_params(SSL_CTX *ctx)
+{
+	DH *dh;
+	BIO *bio;
+
+	bio = BIO_new_file(iConf.x_dh_pem, "r");
+	if (bio == NULL)
+	{
+		mylog("Failed to load DH parameters %s", iConf.x_dh_pem);
+		return;
+	}
+
+	dh = PEM_read_bio_DHparams(bio, NULL, NULL, NULL);
+	if (dh == NULL)
+	{
+		mylog("Failed to use DH parameters %s",	iConf.x_dh_pem);
+		BIO_free(bio);
+		return;
+	}
+
+	BIO_free(bio);
+	SSL_CTX_set_tmp_dh(ctx, dh);
+}
+
 SSL_CTX *init_ctx_server(void)
 {
 SSL_CTX *ctx_server;
@@ -204,6 +228,8 @@ SSL_CTX *ctx_server;
 	SSL_CTX_set_verify(ctx_server, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE
 			| (iConf.ssl_options & SSLFLAG_FAILIFNOCERT ? SSL_VERIFY_FAIL_IF_NO_PEER_CERT : 0), ssl_verify_callback);
 	SSL_CTX_set_session_cache_mode(ctx_server, SSL_SESS_CACHE_OFF);
+
+	setup_dh_params(ctx_server);
 
 	if (SSL_CTX_use_certificate_chain_file(ctx_server, SSL_SERVER_CERT_PEM) <= 0)
 	{
@@ -256,6 +282,9 @@ SSL_CTX *ctx_client;
 	}
 	SSL_CTX_set_default_passwd_cb(ctx_client, ssl_pem_passwd_cb);
 	SSL_CTX_set_session_cache_mode(ctx_client, SSL_SESS_CACHE_OFF);
+
+	setup_dh_params(ctx_server);
+
 	if (SSL_CTX_use_certificate_file(ctx_client, SSL_SERVER_CERT_PEM, SSL_FILETYPE_PEM) <= 0)
 	{
 		mylog("Failed to load SSL certificate %s (client)", SSL_SERVER_CERT_PEM);
