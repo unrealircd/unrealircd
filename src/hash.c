@@ -217,11 +217,7 @@ int  add_to_channel_hash_table(char *name, aChannel *chptr)
 int  del_from_client_hash_table(char *name, aClient *cptr)
 {
 	if (!list_empty(&cptr->client_hash))
-	{
-		ircd_log(LOG_ERROR, "cptr->client_hash.next %p .prev %p",
-			cptr->client_hash.next, cptr->client_hash.prev);
 		list_del(&cptr->client_hash);
-	}
 
 	return 0;
 }

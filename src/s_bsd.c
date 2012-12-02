@@ -1472,7 +1472,6 @@ void read_packet(int fd, int revents, void *data)
 				return;
 		}
 
-		ircd_log(LOG_ERROR, "dbuf_put - length %d, ERRNO %d", length, ERRNO);
 		dbuf_put(&cptr->recvQ, readbuf, length);
 
 		/* parse some of what we have (inducing fakelag, etc) */
