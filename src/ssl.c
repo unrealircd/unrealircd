@@ -194,6 +194,9 @@ static void setup_dh_params(SSL_CTX *ctx)
 	DH *dh;
 	BIO *bio;
 
+	if (iConf.x_dh_pem == NULL)
+		return;
+
 	bio = BIO_new_file(iConf.x_dh_pem, "r");
 	if (bio == NULL)
 	{
