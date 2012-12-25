@@ -60,7 +60,8 @@ Unreal3.2.10 Release Notes
   certificate. The certificate is then copied when you run 'make install'.
 
 ==[ MAJOR BUGS FIXED ]==
-- None?
+- Windows SSL crash (this issue was already fixed in 3.2.9-SSL-fix)
+- Other than that, none?
 
 ==[ MINOR BUGS FIXED ]==
 - Various compile problems, in particular with remote includes enabled.
@@ -83,4 +84,4 @@ Unreal3.2.10 Release Notes
   confused with "+") are not safe to use, they can easily freeze the IRCd.
 
 ==[ ADDITIONAL INFO ]==
-* See Changelog for more details
+- See Changelog for more details
