@@ -99,7 +99,7 @@ int  R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns, R_do_id, R_fin_id, R_fail_id;
 char REPORT_DO_DNS[256], REPORT_FIN_DNS[256], REPORT_FIN_DNSC[256],
     REPORT_FAIL_DNS[256], REPORT_DO_ID[256], REPORT_FIN_ID[256],
     REPORT_FAIL_ID[256];
-extern ircstats IRCstats;
+ircstats IRCstats;
 aClient me;			/* That's me */
 MODVAR char *me_hash;
 extern char backupbuf[8192];
@@ -1098,7 +1098,10 @@ int InitwIRCD(int argc, char *argv[])
 	bzero(&StatsZ, sizeof(StatsZ));
 	setup_signals();
 	charsys_reset();
-	init_ircstats();
+
+	memset(&IRCstats, '\0', sizeof(ircstats));
+	IRCstats.servers = 1;
+
 #ifdef USE_LIBCURL
 	url_init();
 #endif
