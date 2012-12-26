@@ -830,7 +830,7 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 		return (CANNOT_SEND_NOTICE);
 
 	/* Makes opers able to talk thru bans -Stskeeps suggested by The_Cat */
-	if (IsOper(cptr))
+	if (IsOper(cptr) && OPCanOverride(cptr))
 		return 0;
 
 	if ((!lp
