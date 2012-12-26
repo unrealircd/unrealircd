@@ -274,6 +274,11 @@ int  channel_canjoin(aClient *sptr, char *name)
 	return 1;
 }
 
+#ifndef _WIN32
+extern uid_t irc_uid;
+extern gid_t irc_gid; 
+#endif
+
 /* irc logs.. */
 void ircd_log(int flags, char *format, ...)
 {
@@ -356,6 +361,11 @@ static int last_log_file_warning = 0;
 				write_failure = 1;
 			}
 			close(fd);
+#if defined(IRC_USER) && defined(IRC_GROUP)
+			/* Change ownership of the log file to irc user/group so it can still write after the setuid() */
+			if (!loop.ircd_booted)
+				chown(logs->file, irc_uid, irc_gid);
+#endif
 		}
 	}
 	
