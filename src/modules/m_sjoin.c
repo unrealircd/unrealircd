@@ -725,18 +725,6 @@ docontinue:
 			}
 		}
 		/* first we check if it has been set, we did unset longer up */
-		if (!oldmode.limit && chptr->mode.limit)
-		{
-			Addit('l', (char *)my_itoa(chptr->mode.limit));
-		}
-		if (!oldmode.key[0] && chptr->mode.key[0])
-		{
-			Addit('k', chptr->mode.key);
-		}
-		if (!oldmode.link[0] && chptr->mode.link[0])
-		{
-			Addit('L', chptr->mode.link);
-		}
 #ifdef NEWCHFLOODPROT
 		if (chptr->mode.floodprot && !oldmode.floodprot)
 		{
