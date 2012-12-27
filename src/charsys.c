@@ -78,6 +78,7 @@ char langsinuse[4096];
 #define LANGAV_W1250		0x0040 /* windows-1250 (eg: polish-w1250) */
 #define LANGAV_W1251		0x0080 /* windows-1251 (eg: russian) */
 #define LANGAV_LATIN2W1250	0x0100 /* Compatible with both latin2 AND windows-1250 (eg: hungarian) */
+#define LANGAV_ISO8859_6	0x0200 /* arabic */
 #define LANGAV_GBK			0x1000 /* (Chinese) GBK encoding */
 
 typedef struct _langlist LangList;
@@ -90,6 +91,7 @@ struct _langlist
 
 /* MUST be alphabetized (first column) */
 static LangList langlist[] = {
+	{ "arabic",       "ara", LANGAV_ASCII|LANGAV_ISO8859_6 },
 	{ "belarussian-w1251", "blr", LANGAV_ASCII|LANGAV_W1251 },
 	{ "catalan",      "cat", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "chinese",      "chi-j,chi-s,chi-t", LANGAV_GBK },
@@ -271,8 +273,16 @@ void charsys_addallowed(char *s)
 			abort();
 #endif
 		}
-		char_atribs[(unsigned int)*s] |= ALLOWN;
+		char_atribs[(unsigned char)*s] |= ALLOWN;
 	}
+}
+
+void charsys_addallowed_range(unsigned char from, unsigned char to)
+{
+	unsigned char i;
+
+	for (i = from; i != to; i++)
+		char_atribs[i] |= ALLOWN;
 }
 
 int do_nick_name(char *nick)
@@ -380,6 +390,8 @@ int x=0;
 	if (langav & LANGAV_LATIN1)
 		x++;
 	if (langav & LANGAV_LATIN2)
+		x++;
+	if (langav & LANGAV_ISO8859_6)
 		x++;
 	if (langav & LANGAV_ISO8859_7)
 		x++;
@@ -567,7 +579,13 @@ char latin1=0, latin2=0, w1250=0, w1251=0, chinese=0;
 		/* supplied by Saevar */
 		charsys_addallowed("∆Ê÷ˆ¡·ÕÌ–⁄˙”Û›˝ﬁ˛");
 	}
-
+	if (latin1 || !strcmp(name, "arabic"))
+	{
+		char bytes[] = { 0xa0, 0xa4, 0xac, 0xad, 0xbb, 0xbf, 0x00 };
+		charsys_addallowed(bytes);
+		charsys_addallowed_range(0xc1, 0xda);
+		charsys_addallowed_range(0xe0, 0xf2);
+	}
 	/* [LATIN2] */
 	/* actually hungarian is a special case, include it in both w1250 and latin2 ;p */
 	if (latin2 || w1250 || !strcmp(name, "hungarian"))
