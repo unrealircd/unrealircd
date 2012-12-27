@@ -61,10 +61,7 @@ ModuleHeader MOD_HEADER(m_svsjoin)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_svsjoin)(ModuleInfo *modinfo)
 {
-	/*
-	 * We call our add_Command crap here
-	*/
-	add_Command(MSG_SVSJOIN, TOK_SVSJOIN, m_svsjoin, MAXPARA);
+	CommandAdd(modinfo->handle, MSG_SVSJOIN, TOK_SVSJOIN, m_svsjoin, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -78,11 +75,6 @@ DLLFUNC int MOD_LOAD(m_svsjoin)(int module_load)
 /* Called when module is unloaded */
 DLLFUNC int MOD_UNLOAD(m_svsjoin)(int module_unload)
 {
-	if (del_Command(MSG_SVSJOIN, TOK_SVSJOIN, m_svsjoin) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-				MOD_HEADER(m_svsjoin).name);
-	}
 	return MOD_SUCCESS;	
 }
 

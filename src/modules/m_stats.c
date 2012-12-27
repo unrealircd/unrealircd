@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_stats)
 
 DLLFUNC int MOD_INIT(m_stats)(ModuleInfo *modinfo)
 {
-	add_Command(MSG_STATS, TOK_STATS, m_stats, 3);
+	CommandAdd(modinfo->handle, MSG_STATS, TOK_STATS, m_stats, 3, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -72,11 +72,6 @@ DLLFUNC int MOD_LOAD(m_stats)(int module_load)
 
 DLLFUNC int MOD_UNLOAD(m_stats)(int module_unload)
 {
-	if (del_Command(MSG_STATS, TOK_STATS, m_stats) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-			MOD_HEADER(m_stats).name);
-	}
 	return MOD_SUCCESS;
 }
 
@@ -608,9 +603,10 @@ int stats_command(aClient *sptr, char *para)
 {
 	int i;
 	aCommand *mptr;
-	for (i = 0; i < 256; i++)
-		for (mptr = CommandHash[i]; mptr; mptr = mptr->next)
-			if (mptr->count)
+	SplayTreeIter iter;
+
+	SPLAYTREE_FOREACH(mptr, &iter, CommandTree)
+		if (mptr->count)
 #ifndef DEBUGMODE
 			sendto_one(sptr, rpl_str(RPL_STATSCOMMANDS),
 				me.name, sptr->name, mptr->cmd,
@@ -622,9 +618,9 @@ int stats_command(aClient *sptr, char *para)
 				mptr->lticks, mptr->lticks / CLOCKS_PER_SEC,
 				mptr->rticks, mptr->rticks / CLOCKS_PER_SEC);
 #endif
-	for (i = 0; i < 256; i++)
-		for (mptr = TokenHash[i]; mptr; mptr = mptr->next)
-			if (mptr->count)
+
+	SPLAYTREE_FOREACH(mptr, &iter, TokenTree)
+		if (mptr->count)
 #ifndef DEBUGMODE
 			sendto_one(sptr, rpl_str(RPL_STATSCOMMANDS),
 				me.name, sptr->name, mptr->cmd,

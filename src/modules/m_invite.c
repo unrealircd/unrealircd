@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_invite)
 
 DLLFUNC int MOD_INIT(m_invite)(ModuleInfo *modinfo)
 {
-	add_Command(MSG_INVITE, TOK_INVITE, m_invite, MAXPARA);
+	CommandAdd(modinfo->handle, MSG_INVITE, TOK_INVITE, m_invite, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -72,11 +72,6 @@ DLLFUNC int MOD_LOAD(m_invite)(int module_load)
 
 DLLFUNC int MOD_UNLOAD(m_invite)(int module_unload)
 {
-	if (del_Command(MSG_INVITE, TOK_INVITE, m_invite) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-			MOD_HEADER(m_invite).name);
-	}
 	return MOD_SUCCESS;
 }
 

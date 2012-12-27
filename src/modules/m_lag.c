@@ -61,10 +61,7 @@ ModuleHeader MOD_HEADER(m_lag)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_lag)(ModuleInfo *modinfo)
 {
-	/*
-	 * We call our add_Command crap here
-	*/
-	add_Command(MSG_LAG, TOK_LAG, m_lag, MAXPARA);
+	CommandAdd(modinfo->handle, MSG_LAG, TOK_LAG, m_lag, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -78,13 +75,7 @@ DLLFUNC int MOD_LOAD(m_lag)(int module_load)
 /* Called when module is unloaded */
 DLLFUNC int MOD_UNLOAD(m_lag)(int module_unload)
 {
-	if (del_Command(MSG_LAG, TOK_LAG, m_lag) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-				MOD_HEADER(m_lag).name);
-	}
 	return MOD_SUCCESS;
-	
 }
 
 /* m_lag (lag measure) - Stskeeps

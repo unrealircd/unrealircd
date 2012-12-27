@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_links)
 
 DLLFUNC int MOD_INIT(m_links)(ModuleInfo *modinfo)
 {
-	add_Command(MSG_LINKS, TOK_LINKS, m_links, MAXPARA);
+	CommandAdd(modinfo->handle, MSG_LINKS, TOK_LINKS, m_links, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -72,11 +72,6 @@ DLLFUNC int MOD_LOAD(m_links)(int module_load)
 
 DLLFUNC int MOD_UNLOAD(m_links)(int module_unload)
 {
-	if (del_Command(MSG_LINKS, TOK_LINKS, m_links) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-			MOD_HEADER(m_links).name);
-	}
 	return MOD_SUCCESS;
 }
 

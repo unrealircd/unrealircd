@@ -66,8 +66,8 @@ ModuleHeader MOD_HEADER(m_svsmode)
 
 DLLFUNC int MOD_INIT(m_svsmode)(ModuleInfo *modinfo)
 {
-	add_Command(MSG_SVSMODE, TOK_SVSMODE, m_svsmode, MAXPARA);
-	add_Command(MSG_SVS2MODE, TOK_SVS2MODE, m_svs2mode, MAXPARA);
+	CommandAdd(modinfo->handle, MSG_SVSMODE, TOK_SVSMODE, m_svsmode, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SVS2MODE, TOK_SVS2MODE, m_svs2mode, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -79,11 +79,6 @@ DLLFUNC int MOD_LOAD(m_svsmode)(int module_load)
 
 DLLFUNC int MOD_UNLOAD(m_svsmode)(int module_unload)
 {
-	if (del_Command(MSG_SVSMODE, TOK_SVSMODE, m_svsmode) < 0 || del_Command(MSG_SVS2MODE, TOK_SVS2MODE, m_svs2mode) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-				MOD_HEADER(m_svsmode).name);
-	}
 	return MOD_SUCCESS;
 }
 

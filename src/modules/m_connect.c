@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_connect)
 
 DLLFUNC int MOD_INIT(m_connect)(ModuleInfo *modinfo)
 {
-	add_Command(MSG_CONNECT, TOK_CONNECT, m_connect, MAXPARA);
+	CommandAdd(modinfo->handle, MSG_CONNECT, TOK_CONNECT, m_connect, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -72,11 +72,6 @@ DLLFUNC int MOD_LOAD(m_connect)(int module_load)
 
 DLLFUNC int MOD_UNLOAD(m_connect)(int module_unload)
 {
-	if (del_Command(MSG_CONNECT, TOK_CONNECT, m_connect) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-			MOD_HEADER(m_connect).name);
-	}
 	return MOD_SUCCESS;
 }
 

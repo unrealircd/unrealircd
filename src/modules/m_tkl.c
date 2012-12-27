@@ -161,14 +161,14 @@ DLLFUNC int MOD_INIT(m_tkl)(ModuleInfo *modinfo)
 	/*
 	 * We call our add_Command crap here
 	*/
-	add_Command(MSG_GLINE, TOK_GLINE, m_gline, 3);
-	add_Command(MSG_SHUN, TOK_SHUN, m_shun, 3);
-	add_Command(MSG_TEMPSHUN, TOK_TEMPSHUN, m_tempshun, 2);
-	add_Command(MSG_ZLINE, TOK_NONE, m_tzline, 3);
-	add_Command(MSG_KLINE, TOK_NONE, m_tkline, 3);
-	add_Command(MSG_GZLINE, TOK_NONE, m_gzline, 3);
-	add_Command(MSG_SPAMFILTER, TOK_NONE, m_spamfilter, 6);
-	add_Command(MSG_TKL, TOK_TKL, _m_tkl, MAXPARA);
+	CommandAdd(modinfo->handle, MSG_GLINE, TOK_GLINE, m_gline, 3, M_OPER);
+	CommandAdd(modinfo->handle, MSG_SHUN, TOK_SHUN, m_shun, 3, M_OPER);
+	CommandAdd(modinfo->handle, MSG_TEMPSHUN, TOK_TEMPSHUN, m_tempshun, 2, M_OPER);
+	CommandAdd(modinfo->handle, MSG_ZLINE, TOK_NONE, m_tzline, 3, M_OPER);
+	CommandAdd(modinfo->handle, MSG_KLINE, TOK_NONE, m_tkline, 3, M_OPER);
+	CommandAdd(modinfo->handle, MSG_GZLINE, TOK_NONE, m_gzline, 3, M_OPER);
+	CommandAdd(modinfo->handle, MSG_SPAMFILTER, TOK_NONE, m_spamfilter, 6, M_OPER);
+	CommandAdd(modinfo->handle, MSG_TKL, TOK_TKL, _m_tkl, MAXPARA, M_OPER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -183,19 +183,6 @@ DLLFUNC int MOD_LOAD(m_tkl)(int module_load)
 /* Called when module is unloaded */
 DLLFUNC int MOD_UNLOAD(m_tkl)(int module_unload)
 {
-	if ((del_Command(MSG_GLINE, TOK_GLINE, m_gline) < 0) ||
-	    (del_Command(MSG_SHUN, TOK_SHUN, m_shun) < 0 ) ||
-	    (del_Command(MSG_ZLINE, TOK_NONE, m_tzline) < 0) ||
-	    (del_Command(MSG_GZLINE, TOK_NONE, m_gzline) < 0) ||
-	    (del_Command(MSG_KLINE, TOK_NONE, m_tkline) < 0) ||
-	    (del_Command(MSG_SPAMFILTER, TOK_NONE, m_spamfilter) < 0) ||
-	    (del_Command(MSG_TEMPSHUN, TOK_TEMPSHUN, m_tempshun) < 0) ||
-	    (del_Command(MSG_TKL, TOK_TKL, _m_tkl) < 0))
-
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-				MOD_HEADER(m_tkl).name);
-	}
 	return MOD_SUCCESS;
 }
 

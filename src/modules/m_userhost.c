@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_userhost)
 
 DLLFUNC int MOD_INIT(m_userhost)(ModuleInfo *modinfo)
 {
-	add_Command(MSG_USERHOST, TOK_USERHOST, m_userhost, 1);
+	CommandAdd(modinfo->handle, MSG_USERHOST, TOK_USERHOST, m_userhost, 1, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -72,11 +72,6 @@ DLLFUNC int MOD_LOAD(m_userhost)(int module_load)
 
 DLLFUNC int MOD_UNLOAD(m_userhost)(int module_unload)
 {
-	if (del_Command(MSG_USERHOST, TOK_USERHOST, m_userhost) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-			MOD_HEADER(m_userhost).name);
-	}
 	return MOD_SUCCESS;
 }
 

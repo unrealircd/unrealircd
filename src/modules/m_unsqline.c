@@ -61,10 +61,7 @@ ModuleHeader MOD_HEADER(m_unsqline)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_unsqline)(ModuleInfo *modinfo)
 {
-	/*
-	 * We call our add_Command crap here
-	*/
-	add_Command(MSG_UNSQLINE, TOK_UNSQLINE, m_unsqline, MAXPARA);
+	CommandAdd(modinfo->handle, MSG_UNSQLINE, TOK_UNSQLINE, m_unsqline, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -78,11 +75,6 @@ DLLFUNC int MOD_LOAD(m_unsqline)(int module_load)
 /* Called when module is unloaded */
 DLLFUNC int MOD_UNLOAD(m_unsqline)(int module_unload)
 {
-	if (del_Command(MSG_UNSQLINE, TOK_UNSQLINE, m_unsqline) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-				MOD_HEADER(m_unsqline).name);
-	}
 	return MOD_SUCCESS;
 }
 

@@ -63,10 +63,7 @@ ModuleHeader MOD_HEADER(m_whois)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_whois)(ModuleInfo *modinfo)
 {
-	/*
-	 * We call our add_Command crap here
-	*/
-	add_Command(MSG_WHOIS, TOK_WHOIS, m_whois, MAXPARA);
+	CommandAdd(modinfo->handle, MSG_WHOIS, TOK_WHOIS, m_whois, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -80,11 +77,6 @@ DLLFUNC int MOD_LOAD(m_whois)(int module_load)
 /* Called when module is unloaded */
 DLLFUNC int MOD_UNLOAD(m_whois)(int module_unload)
 {
-	if (del_Command(MSG_WHOIS, TOK_WHOIS, m_whois) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-				MOD_HEADER(m_whois).name);
-	}
 	return MOD_SUCCESS;
 }
 

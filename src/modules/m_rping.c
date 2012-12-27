@@ -66,11 +66,8 @@ ModuleHeader MOD_HEADER(m_rping)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_rping)(ModuleInfo *modinfo)
 {
-	/*
-	 * We call our add_Command crap here
-	*/
-	add_Command(MSG_RPING, TOK_RPING, m_rping, MAXPARA);
-	add_Command(MSG_RPONG, TOK_RPONG, m_rpong, MAXPARA);
+	CommandAdd(modinfo->handle, MSG_RPING, TOK_RPING, m_rping, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_RPONG, TOK_RPONG, m_rpong, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -85,16 +82,6 @@ DLLFUNC int MOD_LOAD(m_rping)(int module_load)
 /* Called when module is unloaded */
 DLLFUNC int MOD_UNLOAD(m_rping)(int module_unload)
 {
-	if (del_Command(MSG_RPING, TOK_RPING, m_rping) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-				MOD_HEADER(m_rping).name);
-	}
-	if (del_Command(MSG_RPONG, TOK_RPONG, m_rpong) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-				MOD_HEADER(m_rping).name);
-	}
 	return MOD_SUCCESS;	
 }
 

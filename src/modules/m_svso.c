@@ -99,7 +99,7 @@ ModuleHeader MOD_HEADER(m_svso)
 
 DLLFUNC int MOD_INIT(m_svso)(ModuleInfo *modinfo)
 {
-	add_Command(MSG_SVSO, TOK_SVSO, m_svso, MAXPARA);
+	CommandAdd(modinfo->handle, MSG_SVSO, TOK_SVSO, m_svso, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -111,11 +111,6 @@ DLLFUNC int MOD_LOAD(m_svso)(int module_load)
 
 DLLFUNC int MOD_UNLOAD(m_svso)(int module_unload)
 {
-	if (del_Command(MSG_SVSO, TOK_SVSO, m_svso) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-				MOD_HEADER(m_svso).name);
-	}
 	return MOD_SUCCESS;
 }
 /*

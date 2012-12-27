@@ -61,7 +61,7 @@ ModuleHeader MOD_HEADER(m_sendsno)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_sendsno)(ModuleInfo *modinfo)
 {
-	add_CommandX(MSG_SENDSNO, TOK_SENDSNO, m_sendsno, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SENDSNO, TOK_SENDSNO, m_sendsno, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -75,11 +75,6 @@ DLLFUNC int MOD_LOAD(m_sendsno)(int module_load)
 /* Called when module is unloaded */
 DLLFUNC int MOD_UNLOAD(m_sendsno)(int module_unload)
 {
-	if (del_Command(MSG_SENDSNO, TOK_SENDSNO, m_sendsno) < 0)
-	{
-		sendto_realops("Failed to delete command sendsno when unloading %s",
-				MOD_HEADER(m_sendsno).name);
-	}
 	return MOD_SUCCESS;
 }
 

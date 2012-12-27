@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_protoctl)
 
 DLLFUNC int MOD_INIT(m_protoctl)(ModuleInfo *modinfo)
 {
-	add_CommandX(MSG_PROTOCTL, TOK_PROTOCTL, m_protoctl, MAXPARA, M_UNREGISTERED|M_SERVER|M_USER);
+	CommandAdd(modinfo->handle, MSG_PROTOCTL, TOK_PROTOCTL, m_protoctl, MAXPARA, M_UNREGISTERED|M_SERVER|M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -72,11 +72,6 @@ DLLFUNC int MOD_LOAD(m_protoctl)(int module_load)
 
 DLLFUNC int MOD_UNLOAD(m_protoctl)(int module_unload)
 {
-	if (del_Command(MSG_PROTOCTL, TOK_PROTOCTL, m_protoctl) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-			MOD_HEADER(m_protoctl).name);
-	}
 	return MOD_SUCCESS;
 }
 

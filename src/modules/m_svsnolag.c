@@ -62,8 +62,8 @@ ModuleHeader MOD_HEADER(m_svsnolag)
 
 DLLFUNC int MOD_INIT(m_svsnolag)(ModuleInfo *modinfo)
 {
-	add_Command(MSG_SVSNOLAG, TOK_SVSNOLAG, m_svsnolag, MAXPARA);
-	add_Command(MSG_SVS2NOLAG, TOK_SVS2NOLAG, m_svs2nolag, MAXPARA);
+	CommandAdd(modinfo->handle, MSG_SVSNOLAG, TOK_SVSNOLAG, m_svsnolag, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SVS2NOLAG, TOK_SVS2NOLAG, m_svs2nolag, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -75,11 +75,6 @@ DLLFUNC int MOD_LOAD(m_svsnolag)(int module_load)
 
 DLLFUNC int MOD_UNLOAD(m_svsnolag)(int module_unload)
 {
-	if (del_Command(MSG_SVSNOLAG, TOK_SVSNOLAG, m_svsnolag) < 0 || del_Command(MSG_SVS2NOLAG, TOK_SVS2NOLAG, m_svs2nolag) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-				MOD_HEADER(m_svsnolag).name);
-	}
 	return MOD_SUCCESS;
 }
 

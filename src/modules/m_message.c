@@ -87,14 +87,10 @@ DLLFUNC int MOD_TEST(m_message)(ModuleInfo *modinfo)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_message)(ModuleInfo *modinfo)
 {
-	/*
-	 * We call our add_Command crap here
-	*/
-	add_CommandX(MSG_PRIVATE, TOK_PRIVATE, m_private, 2, M_USER|M_SERVER|M_RESETIDLE|M_VIRUS);
-	add_Command(MSG_NOTICE, TOK_NOTICE, m_notice, 2);
+	CommandAdd(modinfo->handle, MSG_PRIVATE, TOK_PRIVATE, m_private, 2, M_USER|M_SERVER|M_RESETIDLE|M_VIRUS);
+	CommandAdd(modinfo->handle, MSG_NOTICE, TOK_NOTICE, m_notice, 2, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	return MOD_SUCCESS;
-	
+	return MOD_SUCCESS;	
 }
 
 /* Is first run when server is 100% ready */
@@ -106,16 +102,6 @@ DLLFUNC int MOD_LOAD(m_message)(int module_load)
 /* Called when module is unloaded */
 DLLFUNC int MOD_UNLOAD(m_message)(int module_unload)
 {
-	if (del_Command(MSG_PRIVATE, TOK_PRIVATE, m_private) < 0)
-	{
-		sendto_realops("Failed to delete command privmsg when unloading %s",
-				MOD_HEADER(m_message).name);
-	}
-	if (del_Command(MSG_NOTICE, TOK_NOTICE, m_notice) < 0)
-	{
-		sendto_realops("Failed to delete command notice when unloading %s",
-				MOD_HEADER(m_message).name);
-	}
 	return MOD_SUCCESS;
 }
 

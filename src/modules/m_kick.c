@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_kick)
 
 DLLFUNC int MOD_INIT(m_kick)(ModuleInfo *modinfo)
 {
-	add_Command(MSG_KICK, TOK_KICK, m_kick, 3);
+	CommandAdd(modinfo->handle, MSG_KICK, TOK_KICK, m_kick, 3, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -72,11 +72,6 @@ DLLFUNC int MOD_LOAD(m_kick)(int module_load)
 
 DLLFUNC int MOD_UNLOAD(m_kick)(int module_unload)
 {
-	if (del_Command(MSG_KICK, TOK_KICK, m_kick) < 0)
-	{
-		sendto_realops("Failed to delete commands when unloading %s",
-			MOD_HEADER(m_kick).name);
-	}
 	return MOD_SUCCESS;
 }
 
