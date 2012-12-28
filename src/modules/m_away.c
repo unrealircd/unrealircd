@@ -112,8 +112,7 @@ int n, wasaway = 0;
 	                sendto_serv_butone_token(cptr, parv[0], MSG_AWAY, TOK_AWAY, "");
 	                hash_check_watch(cptr, RPL_NOTAWAY);
 
-			sendto_common_channels_local_butone(sptr, PROTO_AWAY_NOTIFY, ":%s!%s@%s AWAY",
-							    sptr->name, sptr->user->username, GetHost(sptr));
+			sendto_common_channels_local_butone(sptr, PROTO_AWAY_NOTIFY, ":%s AWAY", sptr->name);
                 }
                 /* hope this works XX */
                 if (MyConnect(sptr))
@@ -167,8 +166,7 @@ int n, wasaway = 0;
                 sendto_one(sptr, rpl_str(RPL_NOWAWAY), me.name, parv[0]);
 
 	hash_check_watch(cptr, wasaway ? RPL_REAWAY : RPL_GONEAWAY);
-	sendto_common_channels_local_butone(sptr, PROTO_AWAY_NOTIFY, ":%s!%s@%s AWAY :%s",
-					    sptr->name, sptr->user->username, GetHost(sptr), away);
+	sendto_common_channels_local_butone(sptr, PROTO_AWAY_NOTIFY, ":%s AWAY :%s", sptr->name, away);
 
 	RunHook2(HOOKTYPE_AWAY, sptr, away);
         return 0;

@@ -508,8 +508,8 @@ char *xtok = show_change ? TOK_SVS2MODE : TOK_SVSMODE;
 				if (parv[3])
 				{
 					strlcpy(acptr->user->svid, parv[3], sizeof(acptr->user->svid));
-					sendto_common_channels_local_butone(acptr, PROTO_ACCOUNT_NOTIFY, ":%s!%s@%s ACCOUNT %s",
-									    acptr->name, acptr->user->username, GetHost(acptr),
+					sendto_common_channels_local_butone(acptr, PROTO_ACCOUNT_NOTIFY, ":%s ACCOUNT %s",
+									    acptr->name,
 									    !isdigit(*acptr->user->svid) ? acptr->user->svid : "*");
 				}
 				break;
