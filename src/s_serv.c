@@ -713,9 +713,10 @@ CMD_FUNC(m_rehash)
 				acptr = lp->value.cptr;
 				if (acptr == &me)
 					continue;
-				sendto_one(acptr, ":%s %s %s",
+				sendto_one(acptr, ":%s %s %s %s",
 					sptr->name,
 					IsToken(acptr->from) ? TOK_REHASH : MSG_REHASH,
+					acptr->name,
 					parv[1] ? parv[1] : "-all");
 			}
 			/* Don't return, continue, because we need to REHASH ourselves as well. */
