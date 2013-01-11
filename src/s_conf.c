@@ -5161,20 +5161,27 @@ int	_conf_allow_channel(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigItem_allow_channel 	*allow = NULL;
 	ConfigEntry 	    	*cep;
+	char *class = NULL;
+	
+	/* First, search for ::class, if any */
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "class"))
+			class = cep->ce_vardata;
+	}
 
-	allow = MyMallocEx(sizeof(ConfigItem_allow_channel));
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "channel"))
 		{
+			/* This way, we permit multiple ::channel items in one allow block */
+			allow = MyMallocEx(sizeof(ConfigItem_allow_channel));
 			ircstrdup(allow->channel, cep->ce_vardata);
-		}
-		else if (!strcmp(cep->ce_varname, "class"))
-		{
-			ircstrdup(allow->class, cep->ce_vardata);
+			if (class)
+				ircstrdup(allow->class, class);
+			AddListItem(allow, conf_allow_channel);
 		}
 	}
-	AddListItem(allow, conf_allow_channel);
 	return 1;
 }
 
