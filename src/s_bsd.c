@@ -43,6 +43,21 @@ Computing Center and Jarkko Oikarinen";
 #include <WinSock2.h>
 #endif
 
+#include "setup.h"
+#include "config.h"
+
+#ifdef USE_POLL
+# ifndef _WIN32
+#  include <poll.h>
+#  ifndef POLLRDHUP
+#   define POLLRDHUP 0
+#  endif
+# else
+#  define poll WSAPoll
+#  define POLLRDHUP POLLHUP
+# endif
+#endif
+
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
@@ -74,16 +89,6 @@ Computing Center and Jarkko Oikarinen";
 #endif
 
 #ifdef USE_POLL
-# ifndef _WIN32
-#  include <sys/poll.h>
-#  include <poll.h>
-#  ifndef POLLRDHUP
-#   define POLLRDHUP 0
-#  endif
-# else
-#  define poll WSAPoll
-#  define POLLRDHUP POLLHUP
-# endif
 
 static struct pollfd pollfds[MAXCONNECTIONS], dummy_pollfd;
 static int pollfd_count = 0;

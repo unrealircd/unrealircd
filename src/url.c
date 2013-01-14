@@ -17,18 +17,11 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <string.h>
-#include <stdio.h>
-#include <struct.h>
-#include "proto.h"
-#include "h.h"
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <curl/curl.h>
+#include "setup.h"
+#include "config.h"
 
 #ifdef USE_POLL
 # ifndef _WIN32
-#  include <sys/poll.h>
 #  include <poll.h>
 #  ifndef POLLRDHUP
 #   define POLLRDHUP 0
@@ -38,6 +31,16 @@
 #  define POLLRDHUP POLLHUP
 # endif
 #endif
+
+#include <string.h>
+#include <stdio.h>
+#include <struct.h>
+
+#include "proto.h"
+#include "h.h"
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <curl/curl.h>
 
 #ifdef USE_SSL
 extern char *SSLKeyPasswd;
