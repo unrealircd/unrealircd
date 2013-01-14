@@ -866,6 +866,7 @@ struct Server {
 #define M_RESETIDLE		0x0040
 #define M_VIRUS			0x0080
 #define M_ANNOUNCE		0x0100
+#define M_OPER			0x0200
 
 
 /* tkl:

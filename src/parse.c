@@ -333,6 +333,8 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 			flags |= M_SHUN;
 		if (IsVirus(from))
 			flags |= M_VIRUS;
+		if (IsAnOper(from))
+			flags |= M_OPER;
 		cmptr = find_Command(ch, IsServer(cptr) ? 1 : 0, flags);
 		if (!cmptr)
 		{
