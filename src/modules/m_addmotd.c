@@ -106,8 +106,7 @@ DLLFUNC CMD_FUNC(m_addmotd)
 	{
 		return 0;
 	}
-	sendto_one(sptr, ":%s %s %s :*** Wrote (%s) to file: ircd.motd",
-	    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], text);
+	sendnotice(sptr, "*** Wrote (%s) to file: ircd.motd", text);
 	/*      for (i=1 ; i<parc ; i++)
 	   {
 	   if (i!=parc-1)

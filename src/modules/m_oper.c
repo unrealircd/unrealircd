@@ -178,9 +178,8 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 	}
 
 	if (SVSNOOP) {
-		sendto_one(sptr,
-		    ":%s %s %s :*** This server is in NOOP mode, you cannot /oper",
-		    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name);
+		sendnotice(sptr,
+		    "*** This server is in NOOP mode, you cannot /oper");
 		return 0;
 	}
 
@@ -375,9 +374,8 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 	{
 		sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name, parv[0]);
 		if (FAILOPER_WARN)
-			sendto_one(sptr,
-			    ":%s %s %s :*** Your attempt has been logged.", me.name,
-			    IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name);
+			sendnotice(sptr,
+			    "*** Your attempt has been logged.");
 		ircd_log(LOG_OPER, "OPER FAILEDAUTH (%s) by (%s!%s@%s)", name, parv[0],
 			sptr->user->username, sptr->sockhost);
 		sendto_snomask_global

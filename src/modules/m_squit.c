@@ -188,9 +188,8 @@ CMD_FUNC(m_squit)
 	{
 		if (acptr->user)
 		{
-			sendto_one(sptr,
-			    ":%s %s %s :*** Cannot do fake kill by SQUIT !!!",
-			    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name);
+			sendnotice(sptr,
+			    "*** Cannot do fake kill by SQUIT !!!");
 			sendto_ops
 			    ("%s tried to do a fake kill using SQUIT (%s (%s))",
 			    sptr->name, acptr->name, comment);

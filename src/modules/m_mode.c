@@ -2009,8 +2009,8 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 			  {
 				  if (warnrestr)
 				  {
-					sendto_one(cptr, ":%s %s %s :Setting/removing of channelmode(s) '%s' has been disabled.",
-						me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name, RESTRICT_CHANNELMODES);
+					sendnotice(cptr, "Setting/removing of channelmode(s) '%s' has been disabled.",
+						RESTRICT_CHANNELMODES);
 					warnrestr = 0;
 				  }
 				  paracount += foundat.parameters;
@@ -2151,8 +2151,8 @@ DLLFUNC CMD_FUNC(_m_umode)
 		{
 			if (!umode_restrict_err)
 			{
-				sendto_one(sptr, ":%s %s %s :Setting/removing of usermode(s) '%s' has been disabled.",
-					me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, RESTRICT_USERMODES);
+				sendnotice(sptr, "Setting/removing of usermode(s) '%s' has been disabled.",
+					RESTRICT_USERMODES);
 				umode_restrict_err = 1;
 			}
 			continue;
@@ -2222,7 +2222,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 					if (MyClient(sptr))
 					{
 						if (!modex_err) {
-							sendto_one(sptr, ":%s %s %s :*** Setting %cx is disabled", me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, what == MODE_ADD ? '+' : '-');
+							sendnotice(sptr, "*** Setting %cx is disabled", what == MODE_ADD ? '+' : '-');
 							modex_err = 1;
 						}
 						break;
@@ -2232,7 +2232,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 					if (MyClient(sptr) && sptr->user->joined)
 					{
 						if (!modex_err) {
-							sendto_one(sptr, ":%s %s %s :*** Setting %cx can not be done while you are on channels", me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, what == MODE_ADD ? '+' : '-');
+							sendnotice(sptr, "*** Setting %cx can not be done while you are on channels", what == MODE_ADD ? '+' : '-');
 							modex_err = 1;
 						}
 						break;

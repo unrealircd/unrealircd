@@ -406,7 +406,6 @@ extern MODVAR long UMODE_ADMIN;     /*  0x0080	 Admin */
 extern MODVAR long UMODE_SERVNOTICE;/* 0x0100	 server notices such as kill */
 extern MODVAR long UMODE_LOCOP;     /* 0x0200	 Local operator -- SRB */
 extern MODVAR long UMODE_RGSTRONLY; /* 0x0400  Only reg nick message */
-extern MODVAR long UMODE_WEBTV;     /* 0x0800  WebTV Client */
 extern MODVAR long UMODE_SERVICES;  /* 0x4000	 services */
 extern MODVAR long UMODE_HIDE;	     /* 0x8000	 Hide from Nukes */
 extern MODVAR long UMODE_NETADMIN;  /* 0x10000	 Network Admin */

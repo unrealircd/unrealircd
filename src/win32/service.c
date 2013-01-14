@@ -73,9 +73,7 @@ VOID WINAPI IRCDCtrlHandler(DWORD opcode)
 			if (!(acptr = local[i]))
 				continue;
 			if (IsClient(acptr))
-				sendto_one(acptr,
-			    	":%s %s %s :Server Terminating.",
-			   	 me.name, IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name);
+				sendnotice(acptr, "Server Terminating.");
 			else if (IsServer(acptr))
 				sendto_one(acptr, ":%s ERROR :Terminated", me.name);
 		}

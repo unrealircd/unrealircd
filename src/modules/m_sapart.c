@@ -156,10 +156,9 @@ DLLFUNC CMD_FUNC(m_sapart)
 		parv[2] = comment ? commentx : NULL; // comment
 		if (comment)
 		{
-			sendto_one(acptr,
-			    ":%s %s %s :*** You were forced to part %s (%s)", me.name,
-			    IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, parv[1], 
-			    commentx);
+			sendnotice(acptr,
+			    "*** You were forced to part %s (%s)",
+			    parv[1], commentx);
 			sendto_realops("%s used SAPART to make %s part %s (%s)", sptr->name, parv[0],
 				parv[1], comment);
 			sendto_serv_butone(&me, ":%s GLOBOPS :%s used SAPART to make %s part %s (%s)",
@@ -170,9 +169,8 @@ DLLFUNC CMD_FUNC(m_sapart)
 		}
 		else
 		{
-			sendto_one(acptr,
-			    ":%s %s %s :*** You were forced to part %s", me.name,
-			    IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, parv[1]);
+			sendnotice(acptr,
+			    "*** You were forced to part %s", parv[1]);
 			sendto_realops("%s used SAPART to make %s part %s", sptr->name, parv[0],
 				parv[1]);
 			sendto_serv_butone(&me, ":%s GLOBOPS :%s used SAPART to make %s part %s",

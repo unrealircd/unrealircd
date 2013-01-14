@@ -62,7 +62,6 @@ long UMODE_ADMIN = 0L;         /* Admin */
 long UMODE_SERVNOTICE = 0L;    /* server notices such as kill */
 long UMODE_LOCOP = 0L;         /* Local operator -- SRB */
 long UMODE_RGSTRONLY = 0L;     /* Only reg nick message */
-long UMODE_WEBTV = 0L;         /* WebTV Client */
 long UMODE_SERVICES = 0L;      /* services */
 long UMODE_HIDE = 0L;          /* Hide from Nukes */
 long UMODE_NETADMIN = 0L;      /* Network Admin */
@@ -141,7 +140,6 @@ void	umode_init(void)
 	UmodeAdd(NULL, 'O', UMODE_LOCAL, umode_allow_opers, &UMODE_LOCOP);
 	UmodeAdd(NULL, 'R', UMODE_GLOBAL, NULL, &UMODE_RGSTRONLY);
 	UmodeAdd(NULL, 'T', UMODE_GLOBAL, NULL, &UMODE_NOCTCP);
-	UmodeAdd(NULL, 'V', UMODE_GLOBAL, NULL, &UMODE_WEBTV);
 	UmodeAdd(NULL, 'S', UMODE_GLOBAL, umode_allow_opers, &UMODE_SERVICES);
 	UmodeAdd(NULL, 'x', UMODE_GLOBAL, NULL, &UMODE_HIDE);
 	UmodeAdd(NULL, 'N', UMODE_GLOBAL, umode_allow_opers, &UMODE_NETADMIN);

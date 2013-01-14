@@ -53,7 +53,6 @@ static char sendbuf[2048];
 static char tcmd[2048];
 static char ccmd[2048];
 static char xcmd[2048];
-static char wcmd[2048];
 
 /* this array is used to ensure we send a msg only once to a remote 
 ** server.  like, when we are sending a message to all channel members
@@ -456,19 +455,6 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 	xlen = (int)(p - xcmd);
 	ADD_CRLF(xcmd, xlen);
 
-	/* For our webtv friends... */
-	if (!strcmp(cmd, "NOTICE"))
-	{
-		char *chan = strchr(nick, '#'); /* impossible to become NULL? */
-		if (IsPerson(from))
-			p = ircsprintf(wcmd, ":%s!%s@%s %s %s :%s",
-				from->name, from->user->username, GetHost(from), MSG_PRIVATE, chan, text);
-		else
-			p = ircsprintf(wcmd, ":%s %s %s :%s", from->name, MSG_PRIVATE, chan, text);
-		wlen = (int)(p - wcmd);
-		ADD_CRLF(wcmd, wlen);
-	}
-
 	if (do_send_check && *text == 1 && myncmp(text+1,"ACTION ",7) && myncmp(text+1,"DCC ",4))
 		is_ctcp = 1;
 
@@ -505,10 +491,7 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 			if (IsNoCTCP(acptr) && !IsOper(from) && is_ctcp)
 				continue;
 
-			if (IsWebTV(acptr) && wlen)
-				sendbufto_one(acptr, wcmd, wlen);
-			else
-				sendbufto_one(acptr, xcmd, xlen);
+			sendbufto_one(acptr, xcmd, xlen);
 			sentalong[i] = sentalong_marker;
 		}
 		else
@@ -2069,10 +2052,7 @@ static char realpattern[1024];
 va_list vl;
 char *name = *to->name ? to->name : "*";
 
-	if (!IsWebTV(to))
-		ircsprintf(realpattern, ":%s NOTICE %s :%s", me.name, name, pattern);
-	else
-		ircsprintf(realpattern, ":%s PRIVMSG %s :%s", me.name, name, pattern);
+	ircsprintf(realpattern, ":%s NOTICE %s :%s", me.name, name, pattern);
 
 	va_start(vl, pattern);
 	vsendto_one(to, realpattern, vl);
@@ -2084,10 +2064,7 @@ void sendtxtnumeric(aClient *to, char *pattern, ...)
 static char realpattern[1024];
 va_list vl;
 
-	if (!IsWebTV(to))
-		ircsprintf(realpattern, ":%s %d %s :%s", me.name, RPL_TEXT, to->name, pattern);
-	else
-		ircsprintf(realpattern, ":%s PRIVMSG %s :%s", me.name, to->name, pattern);
+	ircsprintf(realpattern, ":%s %d %s :%s", me.name, RPL_TEXT, to->name, pattern);
 
 	va_start(vl, pattern);
 	vsendto_one(to, realpattern, vl);

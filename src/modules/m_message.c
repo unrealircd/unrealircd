@@ -171,8 +171,6 @@ int ret;
 #endif
 		Hook *tmphook;
 		
-		if (notice && IsWebTV(acptr) && **text != '\1')
-			*cmd = MSG_PRIVATE;
 		if (!notice && MyConnect(sptr) &&
 		    acptr->user && acptr->user->away)
 			sendto_one(sptr, rpl_str(RPL_AWAY),

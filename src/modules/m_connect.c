@@ -122,8 +122,8 @@ DLLFUNC CMD_FUNC(m_connect)
 
 	if ((acptr = find_server_quick(parv[1])))
 	{
-		sendto_one(sptr, ":%s %s %s :*** Connect: Server %s %s %s.",
-		    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], parv[1], "already exists from",
+		sendnotice(sptr, "*** Connect: Server %s %s %s.",
+		    parv[1], "already exists from",
 		    acptr->from->name);
 		return 0;
 	}
@@ -136,9 +136,9 @@ DLLFUNC CMD_FUNC(m_connect)
 
 	if (!aconf)
 	{
-		sendto_one(sptr,
-		    ":%s %s %s :*** Connect: Server %s is not configured for linking", me.name,
-		    IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], parv[1]);
+		sendnotice(sptr,
+		    "*** Connect: Server %s is not configured for linking",
+		    parv[1]);
 		return 0;
 	}
 	/*
@@ -151,16 +151,14 @@ DLLFUNC CMD_FUNC(m_connect)
 	{
 		if ((port = atoi(parv[2])) <= 0)
 		{
-			sendto_one(sptr,
-			    ":%s %s %s :*** Connect: Illegal port number", me.name,
-			    IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0]);
+			sendnotice(sptr,
+			    "*** Connect: Illegal port number");
 			return 0;
 		}
 	}
 	else if (port <= 0 && (port = PORTNUM) <= 0)
 	{
-		sendto_one(sptr, ":%s %s %s :*** Connect: missing port number",
-		    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0]);
+		sendnotice(sptr, "*** Connect: missing port number");
 		return 0;
 	}
 
@@ -170,17 +168,15 @@ DLLFUNC CMD_FUNC(m_connect)
 	for (deny = conf_deny_link; deny; deny = (ConfigItem_deny_link *) deny->next) {
 		if (deny->flag.type == CRULE_ALL && !match(deny->mask, aconf->servername)
 			&& crule_eval(deny->rule)) {
-			sendto_one(sptr,
-				":%s %s %s :*** Connect: Disallowed by connection rule",
-				me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0]);
+			sendnotice(sptr,
+				"*** Connect: Disallowed by connection rule");
 			return 0;
 		}
 	}
 	if (strchr(aconf->hostname, '*') != NULL || strchr(aconf->hostname, '?') != NULL)
 	{
-		sendto_one(sptr,
-			":%s %s %s :*** Connect: You cannot connect to a server with wildcards (* and ?) in the hostname",
-			me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0]);
+		sendnotice(sptr,
+			"*** Connect: You cannot connect to a server with wildcards (* and ?) in the hostname");
 		return 0;
 	}	
 	/*
@@ -198,22 +194,21 @@ DLLFUNC CMD_FUNC(m_connect)
 	switch (retval = connect_server(aconf, sptr, NULL))
 	{
 	  case 0:
-		  sendto_one(sptr,
-		      ":%s %s %s :*** Connecting to %s[%s].",
-		      me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], aconf->servername, aconf->hostname);
+		  sendnotice(sptr,
+		      "*** Connecting to %s[%s].",
+		      aconf->servername, aconf->hostname);
 		  break;
 	  case -1:
-		  sendto_one(sptr, ":%s %s %s :*** Couldn't connect to %s.",
-		      me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], aconf->servername);
+		  sendnotice(sptr, "*** Couldn't connect to %s.",
+		      aconf->servername);
 		  break;
 	  case -2:
-		  sendto_one(sptr, ":%s %s %s :*** Resolving hostname '%s'...",
-		      me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], aconf->hostname);
+		  sendnotice(sptr, "*** Resolving hostname '%s'...",
+		      aconf->hostname);
 		  break;
 	  default:
-		  sendto_one(sptr,
-		      ":%s %s %s :*** Connection to %s failed: %s",
-		      me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], aconf->servername, STRERROR(retval));
+		  sendnotice(sptr, "*** Connection to %s failed: %s",
+		      aconf->servername, STRERROR(retval));
 	}
 	aconf->port = tmpport;
 	return 0;

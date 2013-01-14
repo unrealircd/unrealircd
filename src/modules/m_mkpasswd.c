@@ -139,8 +139,8 @@ int  m_mkpasswd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				me.name, sptr->name, parv[1]);
 		return 0;
 	}
-	sendto_one(sptr, ":%s %s %s :*** Authentication phrase (method=%s, para=%s) is: %s",
-		me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], parv[1], parv[2], result);
+	sendnotice(sptr, "*** Authentication phrase (method=%s, para=%s) is: %s",
+		parv[1], parv[2], result);
 
 	return 0;
 }

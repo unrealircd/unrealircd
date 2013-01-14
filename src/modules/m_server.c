@@ -325,9 +325,8 @@ DLLFUNC CMD_FUNC(m_server)
 	{
 		sendto_one(cptr, err_str(ERR_ALREADYREGISTRED),
 		    me.name, parv[0]);
-		sendto_one(cptr,
-		    ":%s %s %s :*** Sorry, but your IRC program doesn't appear to support changing servers.",
-		    me.name, IsWebTV(cptr) ? "PRIVMSG" : "NOTICE", cptr->name);
+		sendnotice(cptr,
+		    "*** Sorry, but your IRC program doesn't appear to support changing servers.");
 		sptr->since += 7;
 		return 0;
 	}

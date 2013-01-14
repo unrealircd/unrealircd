@@ -682,8 +682,8 @@ int stats_port(aClient *sptr, char *para)
 	{
 		if (!(listener->options & LISTENER_BOUND))
 	  		continue;
-	  	sendto_one(sptr, ":%s %s %s :*** Listener on %s:%i, clients %i. is %s %s",
-	  		me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name,
+	  	sendto_one(sptr, ":%s NOTICE %s :*** Listener on %s:%i, clients %i. is %s %s",
+	  		me.name, sptr->name,
 	  		listener->ip,
 			listener->port,
 			listener->clients,
@@ -1307,8 +1307,6 @@ int stats_set(aClient *sptr, char *para)
 	    sptr->name, SHOWOPERMOTD);
 	sendto_one(sptr, ":%s %i %s :options::hide-ulines: %d", me.name, RPL_TEXT,
 	    sptr->name, HIDE_ULINES);
-	sendto_one(sptr, ":%s %i %s :options::webtv-support: %d", me.name, RPL_TEXT,
-	    sptr->name, WEBTV_SUPPORT);
 	sendto_one(sptr, ":%s %i %s :options::identd-check: %d", me.name, RPL_TEXT,
 	    sptr->name, IDENT_CHECK);
 	sendto_one(sptr, ":%s %i %s :options::fail-oper-warn: %d", me.name, RPL_TEXT,
@@ -1590,9 +1588,8 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 #endif
 			if (!IsServer(acptr) && !IsMe(acptr) && IsAnOper(acptr) && sptr != acptr)
 				sendto_one(acptr,
-					":%s %s %s :*** %s did a /stats L on you! IP may have been shown",
-					me.name, IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", 
-					acptr->name, sptr->name);
+					":%s NOTICE %s :*** %s did a /stats L on you! IP may have been shown",
+					me.name, acptr->name, sptr->name);
 		}
 		else if (!strchr(acptr->name, '.'))
 			sendto_one(sptr, Lformat, me.name,

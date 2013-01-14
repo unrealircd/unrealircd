@@ -159,9 +159,8 @@ CMD_FUNC(m_kick)
 						sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), 
 							   me.name, sptr->name, "KICK", 
 							   errbuf);
-						sendto_one(who,
-						    ":%s %s %s :*** q: %s tried to kick you from channel %s (%s)",
-						    me.name, IsWebTV(who) ? "PRIVMSG" : "NOTICE", who->name,
+						sendnotice(who,
+						    "*** q: %s tried to kick you from channel %s (%s)",
 						    parv[0],
 						    chptr->chname, comment);
 						goto deny;

@@ -491,24 +491,14 @@ int   hash_check_watch(aClient *cptr, int reply)
 	{
 		if (!awaynotify)
 		{
-			/* Most common: LOGON or LOGOFF */
-			if (IsWebTV(lp->value.cptr))
-				sendto_one(lp->value.cptr, ":IRC!IRC@%s PRIVMSG %s :%s (%s@%s) "
-					" %s IRC",
-					me.name, lp->value.cptr->name, cptr->name,
-				    	(IsPerson(cptr) ? cptr->user->username : "<N/A>"),
-					(IsPerson(cptr) ?
-				    	(IsHidden(cptr) ? cptr->user->virthost : cptr->
-				    	user->realhost) : "<N/A>"), reply == RPL_LOGON ? 
-					"is now on" : "has left");
-			else
-				sendto_one(lp->value.cptr, rpl_str(reply), me.name,
-				    lp->value.cptr->name, cptr->name,
-				    (IsPerson(cptr) ? cptr->user->username : "<N/A>"),
-				    (IsPerson(cptr) ?
-				    (IsHidden(cptr) ? cptr->user->virthost : cptr->
-				    user->realhost) : "<N/A>"), anptr->lasttime, cptr->info);
-		} else
+			sendto_one(lp->value.cptr, rpl_str(reply), me.name,
+			    lp->value.cptr->name, cptr->name,
+			    (IsPerson(cptr) ? cptr->user->username : "<N/A>"),
+			    (IsPerson(cptr) ?
+			    (IsHidden(cptr) ? cptr->user->virthost : cptr->
+			    user->realhost) : "<N/A>"), anptr->lasttime, cptr->info);
+		}
+		else
 		{
 			/* AWAY or UNAWAY */
 			if (!lp->flags)

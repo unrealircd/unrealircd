@@ -532,9 +532,9 @@ DLLFUNC CMD_FUNC(_do_join)
 	if (bouncedtimes > MAXBOUNCE)
 	{
 		/* bounced too many times */
-		sendto_one(sptr,
-		    ":%s %s %s :*** Couldn't join %s ! - Link setting was too bouncy",
-		    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, parv[1]);
+		sendnotice(sptr,
+		    "*** Couldn't join %s ! - Link setting was too bouncy",
+		    parv[1]);
 		RET(0)
 	}
 
@@ -650,22 +650,22 @@ DLLFUNC CMD_FUNC(_do_join)
 								get_client_name(sptr, 1), name);
 						}
 						if (d->reason)
-							sendto_one(sptr, 
-							":%s %s %s :*** Can not join %s: %s",
-							me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, name, d->reason);
+							sendnotice(sptr, 
+							"*** Can not join %s: %s",
+							name, d->reason);
 						if (d->redirect)
 						{
-							sendto_one(sptr,
-							":%s %s %s :*** Redirecting you to %s",
-							me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, d->redirect);
+							sendnotice(sptr,
+							"*** Redirecting you to %s",
+							d->redirect);
 							parv[0] = sptr->name;
 							parv[1] = d->redirect;
 							do_join(cptr, sptr, 2, parv);
 						}
 						if (d->class) {
-							sendto_one(sptr,
-							":%s %s %s :*** Can not join %s: Your class is not allowed",
-							me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", sptr->name, name);
+							sendnotice(sptr,
+							"*** Can not join %s: Your class is not allowed",
+							name);
 						}
 						continue;
 					}

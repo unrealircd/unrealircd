@@ -104,8 +104,7 @@ DLLFUNC CMD_FUNC(m_addline)
 		return 0;
 	}
 	/* Display what they wrote too */
-	sendto_one(sptr, ":%s %s %s :*** Wrote (%s) to %s",
-	    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], text, configfile);
+	sendnotice(sptr, "*** Wrote (%s) to %s", text, configfile);
 	fprintf(conf, "// Added by %s\n", make_nick_user_host(sptr->name,
 	    sptr->user->username, sptr->user->realhost));
 /*	for (i=1 ; i<parc ; i++)

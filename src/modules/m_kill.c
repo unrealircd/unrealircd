@@ -155,9 +155,9 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				    me.name, parv[0], nick);
 				continue;
 			}
-			sendto_one(sptr,
-			    ":%s %s %s :*** KILL changed from %s to %s",
-			    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], nick, acptr->name);
+			sendnotice(sptr,
+			    "*** KILL changed from %s to %s",
+			    nick, acptr->name);
 			chasing = 1;
 		}
 		if ((!MyConnect(acptr) && MyClient(cptr) && !OPCanGKill(cptr))
@@ -194,9 +194,9 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 		if (!IsServer(sptr) && (kcount > MAXKILLS))
 		{
-			sendto_one(sptr,
-			    ":%s %s %s :*** Too many targets, kill list was truncated. Maximum is %d.",
-			    me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE", parv[0], MAXKILLS);
+			sendnotice(sptr,
+			    "*** Too many targets, kill list was truncated. Maximum is %d.",
+			    MAXKILLS);
 			break;
 		}
 		if (!IsServer(cptr))

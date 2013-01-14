@@ -876,9 +876,7 @@ char *reason = parv[1];
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
 		if (IsClient(acptr))
-			sendto_one(acptr,
-			    ":%s %s %s :Server Restarting. %s",
-			    me.name, IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, sptr->name);
+			sendnotice(acptr, "Server Restarted by %s", sptr->name);
 		else if (IsServer(acptr))
 			sendto_one(acptr, ":%s ERROR :Restarted by %s: %s",
 			    me.name, get_client_name(sptr, TRUE), reason ? reason : "No reason");
@@ -1223,9 +1221,8 @@ CMD_FUNC(m_die)
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
 		if (IsClient(acptr))
-			sendto_one(acptr,
-			    ":%s %s %s :Server Terminating. %s",
-			    me.name, IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name, sptr->name);
+			sendnotice(acptr, "Server Terminated by %s", 
+				sptr->name);
 		else if (IsServer(acptr))
 			sendto_one(acptr, ":%s ERROR :Terminated by %s",
 			    me.name, get_client_name(sptr, TRUE));
@@ -1247,9 +1244,7 @@ int  localdie(void)
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
 		if (IsClient(acptr))
-			sendto_one(acptr,
-			    ":%s %s %s :Server Terminated by local console",
-			    me.name, IsWebTV(acptr) ? "PRIVMSG" : "NOTICE", acptr->name);
+			sendnotice(acptr, "Server Terminated by local console");
 		else if (IsServer(acptr))
 			sendto_one(acptr,
 			    ":%s ERROR :Terminated by local console", me.name);

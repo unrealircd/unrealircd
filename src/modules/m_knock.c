@@ -169,8 +169,7 @@ CMD_FUNC(m_knock)
 	sendto_channelprefix_butone_tok(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
 		MSG_NOTICE, TOK_NOTICE, chbuf, buf, 0);
 
-	sendto_one(sptr, ":%s %s %s :Knocked on %s", me.name, IsWebTV(sptr) ? "PRIVMSG" : "NOTICE",
-	    sptr->name, chptr->chname);
+	sendnotice(sptr, "Knocked on %s", chptr->chname);
 
 #ifdef NEWCHFLOODPROT
 	if (chptr->mode.floodprot && !IsULine(sptr) &&
