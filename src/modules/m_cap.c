@@ -86,7 +86,7 @@ static struct clicap clicap_table[] = {
 
 static int clicap_compare(const char *name, struct clicap *cap)
 {
-	return strcmp(name, cap->name);
+	return stricmp(name, cap->name);
 }
 
 static struct clicap *clicap_find(const char *data, int *negate, int *finished)
