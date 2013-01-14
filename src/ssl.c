@@ -513,7 +513,7 @@ void ircd_SSL_client_handshake(int fd, int revents, void *data)
 			sendto_realops("SSL cipher selecting for %s was unsuccesful (%s)",
 				acptr->serv->conf->servername, 
 				acptr->serv->conf->ciphers);
-			return -2;
+			return;
 		}
 	}
 	acptr->flags |= FLAGS_SSL;
