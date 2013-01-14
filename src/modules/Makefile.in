@@ -62,7 +62,7 @@ COMMANDS=m_sethost.o m_chghost.o m_chgident.o m_setname.o m_setident.o \
 	 m_sdesc.o m_svsmode.o m_swhois.o m_svsmotd.o m_svsnline.o \
 	 m_who.o m_mkpasswd.o m_away.o m_svsnoop.o m_svso.o m_svsnick.o \
 	 m_adminchat.o m_akill.o m_chgname.o m_guest.o m_kill.o \
-	 m_lag.o m_message.o webtv.o m_nachat.o m_oper.o m_pingpong.o \
+	 m_lag.o m_message.o m_nachat.o m_oper.o m_pingpong.o \
 	 m_quit.o m_rakill.o m_rping.o m_sendumode.o m_sqline.o \
 	 m_tsctl.o m_unkline.o m_unsqline.o m_unzline.o m_whois.o \
 	 m_tkl.o m_vhost.o m_cycle.o m_svsjoin.o m_svspart.o \
@@ -122,9 +122,9 @@ m_lag.so: m_lag.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_lag.so m_lag.c
 
-m_message.so: m_message.c webtv.c $(INCLUDES)
+m_message.so: m_message.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o m_message.so m_message.c webtv.c
+		-o m_message.so m_message.c
 
 m_nachat.so: m_nachat.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
