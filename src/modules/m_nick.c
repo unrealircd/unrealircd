@@ -790,7 +790,6 @@ DLLFUNC CMD_FUNC(m_nick)
 	else if (IsPerson(sptr) && update_watch)
 		hash_check_watch(sptr, RPL_LOGON);
 
-#ifdef NEWCHFLOODPROT
 	if (sptr->user && !newusr && !IsULine(sptr))
 	{
 		for (mp = sptr->user->channel; mp; mp = mp->next)
@@ -803,7 +802,7 @@ DLLFUNC CMD_FUNC(m_nick)
 			}
 		}	
 	}
-#endif
+
 	if (newusr && !MyClient(sptr) && IsPerson(sptr))
 	{
 		RunHook(HOOKTYPE_REMOTE_CONNECT, sptr);

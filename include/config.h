@@ -476,12 +476,6 @@
  */
 #undef IPV6_COMPRESSED
 
-/*
- * New channelmode +f system which allows flood control for:
- * msgs, joins, ctcps, nickchanges and /knock.
- */
-#define NEWCHFLOODPROT
-
 /* JoinThrottle (chanmode +j): +j x:y throttles users to X joins per Y seconds (per-user).
  * In peak situations (eg: just after a server restart with thousand clients joining
  * hundreds of channels) it can use like ~200k, but in normal circumstances you should

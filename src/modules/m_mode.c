@@ -904,7 +904,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  else
 		  {
 			  chptr->mode.mode &= ~modetype;
-#ifdef NEWCHFLOODPROT
+
 			  /* reset joinflood on -i, reset msgflood on -m, etc.. */
 			  if (chptr->mode.floodprot)
 			  {
@@ -944,7 +944,6 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 					break;
 				}
 			  }
-#endif
 		  }
 		  break;
 
@@ -1410,94 +1409,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  }
 		  if (retval == 0)	/* you can't break a case from loop */
 			  break;
-#ifndef NEWCHFLOODPROT
-		  if (what == MODE_ADD)
-		  {
-			  if (!bounce)	/* don't do the mode at all. */
-			  {
-				  if (!param || *pcount >= MAXMODEPARAMS)
-				  {
-					  retval = 0;
-					  break;
-				  }
 
-				  /* like 1:1 and if its less than 3 chars then ahem.. */
-				  if (strlen(param) < 3)
-				  {
-					  break;
-				  }
-				  /* may not contain other chars 
-				     than 0123456789: & NULL */
-				  hascolon = 0;
-				  for (xp = param; *xp; xp++)
-				  {
-					  if (*xp == ':')
-						hascolon++;
-					  /* fast alpha check */
-					  if (((*xp < '0') || (*xp > '9'))
-					      && (*xp != ':')
-					      && (*xp != '*'))
-						goto break_flood;
-					  /* uh oh, not the first char */
-					  if (*xp == '*' && (xp != param))
-						goto break_flood;
-				  }
-				  /* We can avoid 2 strchr() and a strrchr() like this
-				   * it should be much faster. -- codemastr
-				   */
-				  if (hascolon != 1)
-					break;
-				  if (*param == '*')
-				  {
-					  xzi = 1;
-					  //                      chptr->mode.kmode = 1;
-				  }
-				  else
-				  {
-					  xzi = 0;
-
-					  //                   chptr->mode.kmode = 0;
-				  }
-				  xp = index(param, ':');
-				  *xp = '\0';
-				  xxi =
-				      atoi((*param ==
-				      '*' ? (param + 1) : param));
-				  xp++;
-				  xyi = atoi(xp);
-				  if (xxi > 500 || xyi > 500)
-					break;
-				  xp--;
-				  *xp = ':';
-				  if ((xxi == 0) || (xyi == 0))
-					  break;
-				  if ((chptr->mode.msgs == xxi)
-				      && (chptr->mode.per == xyi)
-				      && (chptr->mode.kmode == xzi))
-					  break;
-				  chptr->mode.msgs = xxi;
-				  chptr->mode.per = xyi;
-				  chptr->mode.kmode = xzi;
-			  }
-			  tmpstr = param;
-			  retval = 1;
-		  }
-		  else
-		  {
-			  if (!chptr->mode.msgs || !chptr->mode.per)
-				  break;	/* no change */
-			  ircsprintf(tmpbuf,
-			      (chptr->mode.kmode > 0 ? "*%i:%i" : "%i:%i"),
-			      chptr->mode.msgs, chptr->mode.per);
-			  tmpstr = tmpbuf;
-			  if (!bounce)
-			  {
-				  chptr->mode.msgs = chptr->mode.per =
-				      chptr->mode.kmode = 0;
-			  }
-			  retval = 0;
-		  }
-#else
 		/* NEW */
 		if (what == MODE_ADD)
 		{
@@ -1755,7 +1667,6 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			}
 			retval = 1;
 		}
-#endif
 
 		  (void)ircsprintf(pvar[*pcount], "%cf%s",
 		      what == MODE_ADD ? '+' : '-', tmpstr);

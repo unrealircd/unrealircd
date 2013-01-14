@@ -59,11 +59,7 @@
  #else
   #define MYTOKEN_NOFLDAWAY ""
  #endif
- #if !defined(NEWCHFLOODPROT)
-  #define MYTOKEN_NEWCHF "/NOCHF"
- #else
-  #define MYTOKEN_NEWCHF ""
- #endif
+ #define MYTOKEN_NEWCHF "/NOCHF"
  #ifdef INET6
   #define MYTOKEN_INET6 "/IPV6"
  #else

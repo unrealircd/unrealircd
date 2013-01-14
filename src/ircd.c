@@ -1528,9 +1528,7 @@ int InitwIRCD(int argc, char *argv[])
 	Debug((DEBUG_NOTICE, "Server ready..."));
 	SetupEvents();
 	init_throttling_hash();
-#ifdef NEWCHFLOODPROT
 	init_modef();
-#endif
 	loop.ircd_booted = 1;
 #if defined(HAVE_SETPROCTITLE)
 	setproctitle("%s", me.name);

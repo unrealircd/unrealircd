@@ -662,7 +662,6 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 		{
 			case 'f':
 			{
-#ifdef NEWCHFLOODPROT
 				char *myparam = param;
 
 				ChanFloodProt newf;
@@ -806,47 +805,6 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 					store->mode |= MODE_FLOODLIMIT;
 					break;
 				}
-#else
-				char *myparam = param;
-				char kmode = 0;
-				char *xp;
-				int msgs=0, per=0;
-				int hascolon = 0;
-				if (!myparam)
-					break;
-				/* Go to next parameter */
-				param = strtoken(&save, NULL, " ");
-
-				if (*myparam == '*')
-					kmode = 1;
-				for (xp = myparam; *xp; xp++)
-				{
-					if (*xp == ':')
-					{
-						hascolon++;
-						continue;
-					}
-					if (((*xp < '0') || (*xp > '9')) && *xp != '*')
-						break;
-					if (*xp == '*' && *myparam != '*')
-						break;
-				}
-				if (hascolon != 1)
-					break;
-				xp = strchr(myparam, ':');
-					*xp = 0;
-				msgs = atoi((*myparam == '*') ? (myparam+1) : myparam);
-				xp++;
-				per = atoi(xp);
-				xp--;
-				*xp = ':';
-				if (msgs == 0 || msgs > 500 || per == 0 || per > 500)
-					break;
-				store->msgs = msgs;
-				store->per = per;
-				store->kmode = kmode; 					     
-				store->mode |= MODE_FLOODLIMIT;
-#endif
 				break;
 			}
 			default:
@@ -924,23 +882,11 @@ void chmode_str(struct ChMode modes, char *mbuf, char *pbuf)
 			}
 		}
 	}
-#ifdef NEWCHFLOODPROT
 	if (modes.floodprot.per)
 	{
 		*mbuf++ = 'f';
 		strcat(pbuf, channel_modef_string(&modes.floodprot));
 	}
-#else
-	if (modes.per)
-	{
-		*mbuf++ = 'f';
-		if (modes.kmode)
-			strcat(pbuf, "*");
-		strcat(pbuf, my_itoa(modes.msgs));
-		strcat(pbuf, ":");
-		strcat(pbuf, my_itoa(modes.per));
-	}
-#endif
 	*mbuf++=0;
 }
 
@@ -1700,10 +1646,8 @@ void config_setdefaultsettings(aConfiguration *i)
 #ifdef NO_FLOOD_AWAY
 	i->away_count = 4; i->away_period = 120; /* awayflood protection: max 4 per 120s */
 #endif
-#ifdef NEWCHFLOODPROT
 	i->modef_default_unsettime = 0;
 	i->modef_max_unsettime = 60; /* 1 hour seems enough :p */
-#endif
 	i->ban_version_tkl_time = 86400; /* 1d */
 	i->spamfilter_ban_time = 86400; /* 1d */
 	i->spamfilter_ban_reason = strdup("Spam/advertising");
@@ -7669,7 +7613,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		{
 			tempiConf.ban_version_tkl_time = config_checkval(cep->ce_vardata,CFG_TIME);
 		}
-#ifdef NEWCHFLOODPROT
 		else if (!strcmp(cep->ce_varname, "modef-default-unsettime")) {
 			int v = atoi(cep->ce_vardata);
 			tempiConf.modef_default_unsettime = (unsigned char)v;
@@ -7678,7 +7621,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			int v = atoi(cep->ce_vardata);
 			tempiConf.modef_max_unsettime = (unsigned char)v;
 		}
-#endif
 		else if (!strcmp(cep->ce_varname, "ssl")) {
 #ifdef USE_SSL
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
@@ -8608,7 +8550,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 			}
 		}
-#ifdef NEWCHFLOODPROT
 		else if (!strcmp(cep->ce_varname, "modef-default-unsettime")) {
 			int v;
 			CheckDuplicate(cep, modef_default_unsettime, "modef-default-unsettime");
@@ -8633,7 +8574,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 			}
 		}
-#endif
 		else if (!strcmp(cep->ce_varname, "ssl")) {
 #ifdef USE_SSL
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {

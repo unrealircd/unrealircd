@@ -438,11 +438,8 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				int blocked = 0;
 #endif
 				Hook *tmphook;
-#ifdef NEWCHFLOODPROT
+
 				if (chptr->mode.floodprot && chptr->mode.floodprot->l[FLD_TEXT])
-#else
-				if (chptr->mode.per)
-#endif
 					if (check_for_chan_flood(cptr, sptr, chptr) == 1)
 						continue;
 
@@ -503,7 +500,6 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				    notice ? TOK_NOTICE : TOK_PRIVATE,
 				    nick, text, 1);
 
-#ifdef NEWCHFLOODPROT
 				if (chptr->mode.floodprot && !is_skochanop(sptr, chptr) &&
 				    !IsULine(sptr) && do_chanflood(chptr->mode.floodprot, FLD_MSG) &&
 				    MyClient(sptr))
@@ -517,7 +513,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				{
 					do_chanflood_action(chptr, FLD_CTCP, "CTCP");
 				}
-#endif
+
 				sendanyways = 0;
 				continue;
 			}

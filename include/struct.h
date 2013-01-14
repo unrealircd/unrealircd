@@ -1570,14 +1570,7 @@ struct SMode {
 	int  limit;
 	char key[KEYLEN + 1];
 	char link[LINKLEN + 1];
-#ifdef NEWCHFLOODPROT
 	ChanFloodProt *floodprot;
-#else
-	/* x:y */
-	unsigned short  msgs;		/* x */
-	unsigned short  per;		/* y */
-	unsigned char	 kmode;	/* mode  0 = kick  1 = ban */
-#endif
 };
 
 /* Used for notify-hash buckets... -Donwulff */

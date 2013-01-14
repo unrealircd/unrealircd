@@ -51,13 +51,7 @@ struct ChMode {
         long mode;
 	long extmodes;
 	char *extparams[EXTCMODETABLESZ];
-#ifdef NEWCHFLOODPROT
 	ChanFloodProt	floodprot;
-#else
-        unsigned short  msgs;
-        unsigned short  per; 
-        unsigned char   kmode;
-#endif
 };
 
 typedef struct _OperStat {
@@ -142,10 +136,8 @@ struct zConfiguration {
 	long default_bantime;
 	int who_limit;
 	int silence_limit;
-#ifdef NEWCHFLOODPROT
 	unsigned char modef_default_unsettime;
 	unsigned char modef_max_unsettime;
-#endif
 	long ban_version_tkl_time;
 	long spamfilter_ban_time;
 	char *spamfilter_ban_reason;
@@ -255,10 +247,8 @@ extern MODVAR aConfiguration iConf;
 #define DEFAULT_BANTIME			iConf.default_bantime
 #define WHOLIMIT			iConf.who_limit
 
-#ifdef NEWCHFLOODPROT
 #define MODEF_DEFAULT_UNSETTIME	iConf.modef_default_unsettime
 #define MODEF_MAX_UNSETTIME		iConf.modef_max_unsettime
-#endif
 
 #define ALLOW_PART_IF_SHUNNED	iConf.allow_part_if_shunned
 
@@ -363,10 +353,8 @@ struct SetCheck {
 	unsigned has_maxbans:1;
 	unsigned has_maxbanlength:1;
 	unsigned has_silence_limit:1;
-#ifdef NEWCHFLOODPROT
 	unsigned has_modef_default_unsettime:1;
 	unsigned has_modef_max_unsettime:1;
-#endif
 	unsigned has_ban_version_tkl_time:1;
 	unsigned has_spamfilter_ban_time:1;
 	unsigned has_spamfilter_ban_reason:1;

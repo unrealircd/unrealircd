@@ -65,10 +65,8 @@ void sub1_from_channel(aChannel *);
 void clean_channelname(char *);
 void del_invite(aClient *, aChannel *);
 
-#ifdef NEWCHFLOODPROT
 void chanfloodtimer_del(aChannel *chptr, char mflag, long mbit);
 void chanfloodtimer_stopchantimers(aChannel *chptr);
-#endif
 
 /*
  * some buffers for rebuilding channel/nick lists with ,'s
@@ -951,23 +949,12 @@ void channel_modes(aClient *cptr, char *mbuf, char *pbuf, aChannel *chptr)
 		}
 	}
 	/* if we add more parameter modes, add a space to the strings here --Stskeeps */
-#ifdef NEWCHFLOODPROT
 	if (chptr->mode.floodprot)
-#else
-	if (chptr->mode.per)
-#endif
 	{
 		*mbuf++ = 'f';
 		if (ismember)
 		{
-#ifdef NEWCHFLOODPROT
 			ircsprintf(bcbuf, "%s ", channel_modef_string(chptr->mode.floodprot));
-#else
-			if (chptr->mode.kmode == 1)
-				ircsprintf(bcbuf, "*%i:%i ", chptr->mode.msgs, chptr->mode.per);
-			else
-				ircsprintf(bcbuf, "%i:%i ", chptr->mode.msgs, chptr->mode.per);
-#endif
 			(void)strcat(pbuf, bcbuf);
 		}
 	}
@@ -1368,11 +1355,10 @@ void sub1_from_channel(aChannel *chptr)
 		extcmode_free_paramlist(chptr->mode.extmodeparam);
 		chptr->mode.extmodeparam = NULL;
 
-#ifdef NEWCHFLOODPROT
 		chanfloodtimer_stopchantimers(chptr);
 		if (chptr->mode.floodprot)
 			MyFree(chptr->mode.floodprot);
-#endif
+
 #ifdef JOINTHROTTLE
 		cmodej_delchannelentries(chptr);
 #endif
@@ -1412,19 +1398,12 @@ int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
 
 	lp2 = (MembershipL *) lp;
 
-#ifdef NEWCHFLOODPROT
 	if (!chptr->mode.floodprot || !chptr->mode.floodprot->l[FLD_TEXT])
 		return 0;
 	c_limit = chptr->mode.floodprot->l[FLD_TEXT];
 	t_limit = chptr->mode.floodprot->per;
 	banthem = (chptr->mode.floodprot->a[FLD_TEXT] == 'b') ? 1 : 0;
-#else
-	if ((chptr->mode.msgs < 1) || (chptr->mode.per < 1))
-		return 0;
-	c_limit = chptr->mode.msgs;
-	t_limit = chptr->mode.per;
-	banthem = chptr->mode.kmode;
-#endif
+
 	/* if current - firstmsgtime >= mode.per, then reset,
 	 * if nummsg > mode.msgs then kick/ban
 	 */
@@ -1612,7 +1591,6 @@ void rejoin_dojoinandmode(aClient *sptr, char did_parts[])
 	}
 }
 
-#ifdef NEWCHFLOODPROT
 MODVAR RemoveFld *removefld_list = NULL;
 
 RemoveFld *chanfloodtimer_find(aChannel *chptr, char mflag)
@@ -1824,7 +1802,6 @@ char m;
 		}
 	}
 }
-#endif
 
 /* set_channel_mlock()
  *

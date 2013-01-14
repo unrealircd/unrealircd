@@ -171,10 +171,9 @@ CMD_FUNC(m_knock)
 
 	sendnotice(sptr, "Knocked on %s", chptr->chname);
 
-#ifdef NEWCHFLOODPROT
 	if (chptr->mode.floodprot && !IsULine(sptr) &&
 	    do_chanflood(chptr->mode.floodprot, FLD_KNOCK) && MyClient(sptr))
 		do_chanflood_action(chptr, FLD_KNOCK, "knock");
-#endif
+
 	return 0;
 }
