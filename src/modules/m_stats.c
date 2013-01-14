@@ -603,10 +603,9 @@ int stats_command(aClient *sptr, char *para)
 {
 	int i;
 	aCommand *mptr;
-	SplayTreeIter iter;
-
-	SPLAYTREE_FOREACH(mptr, &iter, CommandTree)
-		if (mptr->count)
+	for (i = 0; i < 256; i++)
+		for (mptr = CommandHash[i]; mptr; mptr = mptr->next)
+			if (mptr->count)
 #ifndef DEBUGMODE
 			sendto_one(sptr, rpl_str(RPL_STATSCOMMANDS),
 				me.name, sptr->name, mptr->cmd,
@@ -618,9 +617,9 @@ int stats_command(aClient *sptr, char *para)
 				mptr->lticks, mptr->lticks / CLOCKS_PER_SEC,
 				mptr->rticks, mptr->rticks / CLOCKS_PER_SEC);
 #endif
-
-	SPLAYTREE_FOREACH(mptr, &iter, TokenTree)
-		if (mptr->count)
+	for (i = 0; i < 256; i++)
+		for (mptr = TokenHash[i]; mptr; mptr = mptr->next)
+			if (mptr->count)
 #ifndef DEBUGMODE
 			sendto_one(sptr, rpl_str(RPL_STATSCOMMANDS),
 				me.name, sptr->name, mptr->cmd,
