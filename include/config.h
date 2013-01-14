@@ -471,11 +471,6 @@
  */
 #define KILLCHASETIMELIMIT 90	/* Recommended value: 90 */
 
-/*
- * Forces Unreal to use compressed IPv6 addresses rather than expanding them
- */
-#undef IPV6_COMPRESSED
-
 /* JoinThrottle (chanmode +j): +j x:y throttles users to X joins per Y seconds (per-user).
  * In peak situations (eg: just after a server restart with thousand clients joining
  * hundreds of channels) it can use like ~200k, but in normal circumstances you should
