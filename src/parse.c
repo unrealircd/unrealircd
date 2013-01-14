@@ -384,6 +384,12 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 		if ((flags & M_SERVER) && !(cmptr->flags & M_SERVER))
 			return -1;
 		}
+		if ((cmptr->flags & M_OPER) && !(flags & M_OPER))
+		{
+			sendto_one(cptr, rpl_str(ERR_NOPRIVILEGES), 
+					me.name, from->name);
+			return -1;
+		}
 		paramcount = cmptr->parameters;
 		cmptr->bytes += bytes;
 		if (!(cmptr->flags & M_NOLAG))
