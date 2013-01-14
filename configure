@@ -627,8 +627,6 @@ LIBOBJS
 URL
 CARES_LIBS
 CARES_CFLAGS
-PKG_CONFIG_LIBDIR
-PKG_CONFIG_PATH
 PKG_CONFIG
 TRE_LIBS
 TRE_CFLAGS
@@ -736,8 +734,6 @@ LIBS
 CPPFLAGS
 CPP
 PKG_CONFIG
-PKG_CONFIG_PATH
-PKG_CONFIG_LIBDIR
 TRE_CFLAGS
 TRE_LIBS
 CARES_CFLAGS
@@ -1404,10 +1400,6 @@ Some influential environment variables:
               you have headers in a nonstandard directory <include dir>
   CPP         C preprocessor
   PKG_CONFIG  path to pkg-config utility
-  PKG_CONFIG_PATH
-              directories to add to pkg-config's search path
-  PKG_CONFIG_LIBDIR
-              path overriding pkg-config's built-in search path
   TRE_CFLAGS  C compiler flags for TRE, overriding pkg-config
   TRE_LIBS    linker flags for TRE, overriding pkg-config
   CARES_CFLAGS
@@ -6604,13 +6596,22 @@ $as_echo "#define HAVE_EPOLL /**/" >>confdefs.h
 fi
 done
 
+for ac_func in kqueue kevent
+do :
+  as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
+ac_fn_c_check_func "$LINENO" "$ac_func" "$as_ac_var"
+if eval test \"x\$"$as_ac_var"\" = x"yes"; then :
+  cat >>confdefs.h <<_ACEOF
+#define `$as_echo "HAVE_$ac_func" | $as_tr_cpp` 1
+_ACEOF
+
+$as_echo "#define HAVE_KQUEUE /**/" >>confdefs.h
+
+fi
+done
+
 
 export PATH_SEPARATOR
-
-
-
-
-
 
 
 
@@ -6726,6 +6727,7 @@ $as_echo "yes" >&6; }
 $as_echo "no" >&6; }
 		PKG_CONFIG=""
 	fi
+
 fi
 if test "x$with_system_tre" = "xno"; then :
 
@@ -6773,46 +6775,46 @@ pkg_failed=no
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for TRE" >&5
 $as_echo_n "checking for TRE... " >&6; }
 
-if test -n "$TRE_CFLAGS"; then
-    pkg_cv_TRE_CFLAGS="$TRE_CFLAGS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
+if test -n "$PKG_CONFIG"; then
+    if test -n "$TRE_CFLAGS"; then
+        pkg_cv_TRE_CFLAGS="$TRE_CFLAGS"
+    else
+        if test -n "$PKG_CONFIG" && \
     { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"tre >= 0.7.5\""; } >&5
   ($PKG_CONFIG --exists --print-errors "tre >= 0.7.5") 2>&5
   ac_status=$?
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
   pkg_cv_TRE_CFLAGS=`$PKG_CONFIG --cflags "tre >= 0.7.5" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
 fi
- else
-    pkg_failed=untried
+    fi
+else
+	pkg_failed=untried
 fi
-if test -n "$TRE_LIBS"; then
-    pkg_cv_TRE_LIBS="$TRE_LIBS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
+if test -n "$PKG_CONFIG"; then
+    if test -n "$TRE_LIBS"; then
+        pkg_cv_TRE_LIBS="$TRE_LIBS"
+    else
+        if test -n "$PKG_CONFIG" && \
     { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"tre >= 0.7.5\""; } >&5
   ($PKG_CONFIG --exists --print-errors "tre >= 0.7.5") 2>&5
   ac_status=$?
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
   pkg_cv_TRE_LIBS=`$PKG_CONFIG --libs "tre >= 0.7.5" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
 fi
- else
-    pkg_failed=untried
+    fi
+else
+	pkg_failed=untried
 fi
 
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
         _pkg_short_errors_supported=yes
@@ -6820,9 +6822,9 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        TRE_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "tre >= 0.7.5" 2>&1`
+	        TRE_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "tre >= 0.7.5"`
         else
-	        TRE_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "tre >= 0.7.5" 2>&1`
+	        TRE_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "tre >= 0.7.5"`
         fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$TRE_PKG_ERRORS" >&5
@@ -6836,10 +6838,9 @@ installed software in a non-standard prefix.
 
 Alternatively, you may set the environment variables TRE_CFLAGS
 and TRE_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details." "$LINENO" 5
+See the pkg-config man page for more details.
+" "$LINENO" 5
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
 	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "The pkg-config script could not be found or is too old.  Make sure it
@@ -6850,14 +6851,14 @@ Alternatively, you may set the environment variables TRE_CFLAGS
 and TRE_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details.
 
-To get pkg-config, see <http://pkg-config.freedesktop.org/>.
+To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details" "$LINENO" 5; }
 else
 	TRE_CFLAGS=$pkg_cv_TRE_CFLAGS
 	TRE_LIBS=$pkg_cv_TRE_LIBS
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
-
+	:
 fi
 
 fi
@@ -6926,46 +6927,46 @@ pkg_failed=no
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for CARES" >&5
 $as_echo_n "checking for CARES... " >&6; }
 
-if test -n "$CARES_CFLAGS"; then
-    pkg_cv_CARES_CFLAGS="$CARES_CFLAGS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
+if test -n "$PKG_CONFIG"; then
+    if test -n "$CARES_CFLAGS"; then
+        pkg_cv_CARES_CFLAGS="$CARES_CFLAGS"
+    else
+        if test -n "$PKG_CONFIG" && \
     { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libcares >= 1.6.0\""; } >&5
   ($PKG_CONFIG --exists --print-errors "libcares >= 1.6.0") 2>&5
   ac_status=$?
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
   pkg_cv_CARES_CFLAGS=`$PKG_CONFIG --cflags "libcares >= 1.6.0" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
 fi
- else
-    pkg_failed=untried
+    fi
+else
+	pkg_failed=untried
 fi
-if test -n "$CARES_LIBS"; then
-    pkg_cv_CARES_LIBS="$CARES_LIBS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
+if test -n "$PKG_CONFIG"; then
+    if test -n "$CARES_LIBS"; then
+        pkg_cv_CARES_LIBS="$CARES_LIBS"
+    else
+        if test -n "$PKG_CONFIG" && \
     { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libcares >= 1.6.0\""; } >&5
   ($PKG_CONFIG --exists --print-errors "libcares >= 1.6.0") 2>&5
   ac_status=$?
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
   pkg_cv_CARES_LIBS=`$PKG_CONFIG --libs "libcares >= 1.6.0" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
 fi
- else
-    pkg_failed=untried
+    fi
+else
+	pkg_failed=untried
 fi
 
 
 
 if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
         _pkg_short_errors_supported=yes
@@ -6973,9 +6974,9 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        CARES_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "libcares >= 1.6.0" 2>&1`
+	        CARES_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "libcares >= 1.6.0"`
         else
-	        CARES_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "libcares >= 1.6.0" 2>&1`
+	        CARES_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "libcares >= 1.6.0"`
         fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$CARES_PKG_ERRORS" >&5
@@ -6989,10 +6990,9 @@ installed software in a non-standard prefix.
 
 Alternatively, you may set the environment variables CARES_CFLAGS
 and CARES_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details." "$LINENO" 5
+See the pkg-config man page for more details.
+" "$LINENO" 5
 elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
 	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "The pkg-config script could not be found or is too old.  Make sure it
@@ -7003,14 +7003,14 @@ Alternatively, you may set the environment variables CARES_CFLAGS
 and CARES_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details.
 
-To get pkg-config, see <http://pkg-config.freedesktop.org/>.
+To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
 See \`config.log' for more details" "$LINENO" 5; }
 else
 	CARES_CFLAGS=$pkg_cv_CARES_CFLAGS
 	CARES_LIBS=$pkg_cv_CARES_LIBS
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
-
+	:
 fi
 
 fi
