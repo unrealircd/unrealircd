@@ -17,6 +17,18 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "setup.h"
+#include "config.h"
+
+#ifdef BACKEND_POLL
+#ifndef _WIN32
+# include <poll.h>
+#else
+# define poll WSAPoll
+# define POLLRDHUP POLLHUP
+#endif
+#endif
+
 #ifdef _WIN32
 #include <WinSock2.h>
 #endif
@@ -423,14 +435,6 @@ void fd_select(time_t delay)
  * Poll() backend.                                                                     *
  ***************************************************************************************/
 #ifdef BACKEND_POLL
-
-#ifndef _WIN32
-# include <sys/poll.h>
-# include <poll.h>
-#else
-#  define poll WSAPoll
-#  define POLLRDHUP POLLHUP
-#endif
 
 #ifndef POLLRDNORM
 # define POLLRDNORM POLLIN
