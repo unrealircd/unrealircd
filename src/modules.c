@@ -317,6 +317,7 @@ char  *Module_Create(char *path_)
 	char    *Mod_Version;
 	unsigned int *compiler_version;
 	static char 	errorbuf[1024];
+	char		pathbuf[1024];
 	char 		*path, *tmppath;
 	ModuleHeader    *mod_header = NULL;
 	int		ret = 0;
@@ -328,6 +329,12 @@ char  *Module_Create(char *path_)
 	       path_));
 	path = path_;
 
+	if (!strstr(path, MODULE_SUFFIX))
+	{
+		strlcpy(pathbuf, path, sizeof pathbuf);
+		strlcat(pathbuf, MODULE_SUFFIX, sizeof pathbuf);
+		path = pathbuf;
+	}
 	
 	tmppath = unreal_mktemp("tmp", unreal_getfilename(path));
 	if (!tmppath)
@@ -490,8 +497,8 @@ char  *Module_Create(char *path_)
 		return ((char *)irc_dlerror());
 	}
 	
-	if (path != path_)
-		free(path);				     
+	if (path != path_ && path != pathbuf)
+		free(path);
 	
 #else /* !STATIC_LINKING */
 	return "We don't support dynamic linking";

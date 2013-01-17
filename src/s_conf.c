@@ -8701,14 +8701,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 
 int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 {
-#ifdef GLOBH
-	glob_t files;
-	int i;
-#elif defined(_WIN32)
-	HANDLE hFind;
-	WIN32_FIND_DATA FindData;
-	char cPath[MAX_PATH], *cSlash = NULL, *path;
-#endif
 	char *ret;
 	if (!ce->ce_vardata)
 	{
@@ -8716,103 +8708,12 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return -1;
 	}
-#ifdef GLOBH
-#if defined(__OpenBSD__) && defined(GLOB_LIMIT)
-	glob(ce->ce_vardata, GLOB_NOSORT|GLOB_NOCHECK|GLOB_LIMIT, NULL, &files);
-#else
-	glob(ce->ce_vardata, GLOB_NOSORT|GLOB_NOCHECK, NULL, &files);
-#endif
-	if (!files.gl_pathc) {
-		globfree(&files);
-		config_status("%s:%i: loadmodule %s: failed to load",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			ce->ce_vardata);
-		return -1;
-	}	
-	for (i = 0; i < files.gl_pathc; i++) {
-		if ((ret = Module_Create(files.gl_pathv[i]))) {
-			config_status("%s:%i: loadmodule %s: failed to load: %s",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-				files.gl_pathv[i], ret);
-			return -1;
-		}
-	}
-	globfree(&files);
-#elif defined(_WIN32)
-	bzero(cPath,MAX_PATH);
-	if (strchr(ce->ce_vardata, '/') || strchr(ce->ce_vardata, '\\')) {
-		strlcpy(cPath,ce->ce_vardata,MAX_PATH);
-		cSlash=cPath+strlen(cPath);
-		while(*cSlash != '\\' && *cSlash != '/' && cSlash > cPath)
-			cSlash--; 
-		*(cSlash+1)=0;
-	}
-	hFind = FindFirstFile(ce->ce_vardata, &FindData);
-	if (!FindData.cFileName || hFind == INVALID_HANDLE_VALUE) {
-		config_status("%s:%i: loadmodule %s: failed to load",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			ce->ce_vardata);
-		FindClose(hFind);
-		return -1;
-	}
-
-	if (cPath) {
-		path = MyMalloc(strlen(cPath) + strlen(FindData.cFileName)+1);
-		strcpy(path,cPath);
-		strcat(path,FindData.cFileName);
-		if ((ret = Module_Create(path))) {
-			config_status("%s:%i: loadmodule %s: failed to load: %s",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-				path, ret);
-			free(path);
-			return -1;
-		}
-		free(path);
-	}
-	else
-	{
-		if ((ret = Module_Create(FindData.cFileName))) {
-			config_status("%s:%i: loadmodule %s: failed to load: %s",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-				FindData.cFileName, ret);
-			return -1;
-		}
-	}
-	while (FindNextFile(hFind, &FindData) != 0) {
-		if (cPath) {
-			path = MyMalloc(strlen(cPath) + strlen(FindData.cFileName)+1);
-			strcpy(path,cPath);
-			strcat(path,FindData.cFileName);		
-			if ((ret = Module_Create(path)))
-			{
-				config_status("%s:%i: loadmodule %s: failed to load: %s",
-					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-					FindData.cFileName, ret);
-				free(path);
-				return -1;
-			}
-			free(path);
-		}
-		else
-		{
-			if ((ret = Module_Create(FindData.cFileName)))
-			{
-				config_status("%s:%i: loadmodule %s: failed to load: %s",
-					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-					FindData.cFileName, ret);
-				return -1;
-			}
-		}
-	}
-	FindClose(hFind);
-#else
 	if ((ret = Module_Create(ce->ce_vardata))) {
-			config_status("%s:%i: loadmodule %s: failed to load: %s",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-				ce->ce_vardata, ret);
-				return -1;
+		config_status("%s:%i: loadmodule %s: failed to load: %s",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			ce->ce_vardata, ret);
+		return -1;
 	}
-#endif
 	return 1;
 }
 

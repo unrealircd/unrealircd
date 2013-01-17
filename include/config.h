@@ -95,6 +95,13 @@
 # define BACKEND_SELECT
 #endif
 
+/* Define the ircd module suffix, should be .so on UNIX, and .dll on Windows. */
+#ifndef _WIN32
+# define MODULE_SUFFIX	".so"
+#else
+# define MODULE_SUFFIX	".dll"
+#endif
+
 /*
  * Defining this will allow all ircops to see people in +s channels
  * By default, only net/tech admins can see this
