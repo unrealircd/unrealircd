@@ -2585,8 +2585,11 @@ set {
 <p><font class="set">set::dns::retries &lt;number-of-retries&gt;;</font><br>
   A numeric value specifying the number of times the DNS lookup will be retried 
   if failure occurs. (NOT IMPLEMENTED)</p>
-<p><font class="set">set::dns::nameserver &lt;name-of-dns-server&gt;;</font><br>
-  Specifies the hostname of the server that will be used for DNS lookups. (NOT IMPLEMENTED)</p>
+<p><font class="set">set::dns::nameserver &lt;name-of-dns-server&gt;;</font><br/>
+  Specifies the IP address of the server that will be used for DNS
+  lookups. Used only as a fallback for when c-ares is unable to guess
+  the nameservers (such as if /etc/resolv.conf is empty).
+</p>
 <p><font class="set">set::dns::bind-ip &lt;ip&gt;;</font><br>
   Specifies the IP to bind to for the resolver, rarely ever needed.</p>
 <p><font class="set">set::network-name &lt;name-of-network&gt;;</font><br>
