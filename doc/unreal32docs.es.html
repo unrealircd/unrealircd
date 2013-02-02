@@ -2445,7 +2445,8 @@ set {
 <p><font class="set">set::dns::retries &lt;numero-de-intentos&gt;;</font><br>
   Número de intentos si el servidor DNS no obtiene respuesta (NO IMPLEMENTADO).</p>
 <p><font class="set">set::dns::nameserver &lt;nombre-de-dns-server&gt;;</font><br>
-  Especifica el host del servidor a usar en las búsquedas DNS (NO IMPLEMENTADO).</p>
+  Especifica la dirección IP del servidor que se utilizará en las búsquedas DNS.
+  Sólo se utiliza como reserva para cuando c-ares es incapaz de adivinar los servidores de nombres.</p>
 <p><font class="set">set::dns::bind-ip &lt;ip&gt;;</font><br>
   Especifica la IP a enlazar para el resolver. Raras veces se usa.</p>
 <p><font class="set">set::network-name &lt;nombre-de-red&gt;;</font><br>
