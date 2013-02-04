@@ -30,7 +30,7 @@ Hungarian |
 <div align="center"><b><font size="7">UnrealIRCd</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com/">http://www.unrealircd.com</a></font><br>
   <font size="4">Verzió: 3.2.10</font><br>
-  <b>Utolsó dokumentáció frissítés:</b> 2010-11-15</div>
+  <b>Utolsó dokumentáció frissítés:</b> 2012-10-16</div>
 <br>
   <b>Fõ fejlesztõ/karbantartó:</b> Syzop<br>
   <b>Fejlesztõk:</b> binki<br>
@@ -67,7 +67,8 @@ Hungarian |
   -- 3.16. <a href="#feature_nickchars">Karakterkészletek nicknevekhez</a><br>
   -- 3.17. <a href="#feature_cgiirc">CGI:IRC támogatás</a><br>
   -- 3.18. <a href="#feature_timesync">Idõszinkronizáció</a><br>
-  -- 3.19. <a href="#feature_other">További jellegzetességek</a><br>
+  -- 3.19. <a href="#feature_authtypes">Hitelesítési típusok</a><br>
+  -- 3.20. <a href="#feature_other">További funkciók</a><br>
   4. <a href="#configuringyourunrealircdconf">Az unrealircd.conf fájlod
   beállítása</a><br>
   ---4.1. <a href="#configurationfileexplained">A konfigurációs formátumról</a><br>
@@ -706,7 +707,79 @@ az IRCd ennek ellenére folytatja az indulást (ilyennek ritkán kellene történnie)
    a <a href="#setblock">set leírását</a> további információkért.</p>
 </div>
 
-<p><font size="+2"><b>3.19 - További jellegzetességek</b></font><a name="feature_other"></a></p><div class="desc">
+<p><font size="+2"><b>3.19 - Hitelesítési típusok</b></font><a name="feature_authtypes"></a></p><div class="desc">
+<p>A konfigurációs fájl különbözõ pontjain, például az <a
+href="#operblock">oper blokkban</a>, az <a href="#allowblock">allow blokkban</a> és
+a <a href="#linkblock">link blokkban</a>, jelszóval vagy más módon hitelesíthetjük
+a klienseket.<br>
+
+Megadhatjuk a jelszót egyszerû szövegként, de megadhatunk egy
+hitelesítési típust is.<br>
+A következõ hitelesítési típusok állnak rendelkezésre:<br>
+<table border="0">
+<TR><TD><b>Hitelesítési típus:</b></TD><TD><b>Leírás:</b></TD><TD><b>Függõségek:</b></TD><TD><b>Hogyan generáljuk:</b></TD></TR>
+<TR><TD><b>crypt</b></TD><TD>UNIX crypt</TD><TD>Windows: OpenSSL szükséges</TD><TD>/MKPASSWD crypt :jelszó</TD></TR>
+<TR><TD><b>md5</b></TD><TD>sózott MD5</TD><TD>Mindig elérhetõ</TD><TD>/MKPASSWD md5 :jelszó</TD></TR>
+<TR><TD><b>sha1</b></TD><TD>sózott SHA1</TD><TD>OpenSSL szükséges</TD><TD>/MKPASSWD sha1 :jelszó</TD></TR>
+<TR><TD><b>ripemd160</b></TD><TD>sózott RIPEMD160</TD><TD>OpenSSL szükséges</TD><TD>/MKPASSWD ripemd160 :jelszó</TD></TR>
+<TR><TD><b>sslclientcert</b></TD><TD>SSL kliens tanúsítvány</TD><TD>OpenSSL szükséges</TD><TD>A nyilvános tanúsítvány .pem fájl útvonala.</TD></TR>
+<TR><TD><b>sslclientcertfp</b></TD><TD>SSL kliens tanúsítvány ujjlenyomat</TD><TD>OpenSSL szükséges</TD><TD>openssl x509 -in pem-fájl-neve.pem -sha256 -noout -fingerprint</TD></TR>
+</table>
+Az /MKPASSWD parancsot kiadhatjuk online IRC operátorként. Vagy másképpen,
+használhatjuk a parancssori interfészt is a parancsértelmezõben: <i>./unreal mkpasswd hasítófüggvény-típus
+jelszó</i>.<br>
+Nem minden hitelesítési típus érhetõ el minden rendszeren, lásd
+a függõségeket (elõfeltételeket) a fenti táblázatban.<br>
+<br>
+<b>Példa: MD5-tel hasított jelszó a vhost blokkban</b><br>
+1. Tegyük fel, hogy a <i>teszt</i> jelszót akarjuk használni, és md5-tel hasított jelszavakat
+akarunk használni.<br>
+ IRC operátorként egyszerûen beírhatjuk, hogy <i>/MKPASSWD md5 :teszt</i>.<br>
+Vagy pedig, IRC helyett beírhatjuk a következõ parancsot
+a parancssorban: <i>./unreal mkpasswd md5 teszt</i>.<br>
+Bármelyik módszert is választjuk, a kapott hasított jelszó így fog kinézni: <i>$NIV0bSfG$UTMvI/KdMwe4cZqmT/23qw==</i>
+(a pontos sztring más lesz!)<br>
+2. Most rakjuk bele ezt a sztringet a vhost blokkba, és adjuk az UnrealIRCd tudomására, hogy
+ez egy md5-tel hasított kód. Példa:
+<pre>vhost {
+    vhost En.Imadom.Tuxot;
+    from { userhost *@*; };
+    login Tux;
+    password "$NIV0bSfG$UTMvI/KdMwe4cZqmT/23qw==" { md5; };
+};</pre>
+3. Ennek a vhostnak a használatához írjuk be, hogy /VHOST Tux teszt<br>
+<br>
+<b>Példa: Hitelesítés SSL kliens tanúsítvánnyal</b><br>
+Az <tt>sslclientcert</tt> és a <tt>sslclientcertfp</tt> kivételes
+hitelesítési típusok, amelyek az SSL felhasználókat hitelesítik a kliens
+tanúsítványuk alapján.<br>
+Ezekkel a hitelesítési módszerekkel biztosak lehetünk, hogy a felhasználó SSL-t használ, és
+egy meghatározott kliens tanúsítványa van.<br>
+Íme egy példa, hogyan használjuk egy oper blokkhoz:<br>
+1. Készítsünk egy SSL kliens tanúsítványt, ha még nem rendelkezünk vele (keressünk
+   a weben az "ssl tanúsítvány készítése" kulcsszavakra, ha nem tudjuk, hogyan)<br>
+2. Fogjuk a tanúsítvány SHA256-tal hasított kódját az alábbi futtatásával:
+<pre>openssl x509 -in pem-fájl-neve.pem -sha256 -noout -fingerprint</pre>
+3. A konfigurációs fájlban cseréljük ki az eredeti jelszót (<i>teszt</i> a mi példánkban) a hasított kóddal,
+és adjuk meg az <code>sslclientcertfp</code> hitelesítési típust. Íme egy példa:<br>
+<pre>oper teszt {
+     password "E7:4D:46:F1:9F:F4:68:F5:E8:E3:49:CC:28:5D:F9:65:85:BA:4F:16:B6:49:02:E3:34:E6:E7:6A:FE:76:A7:98" { sslclientcertfp; };
+     flags { global; can_override; };
+     class clients;
+   };</pre>
+4. Töltsük újra a szerverbeállításokat (/REHASH)!<br>
+5. Most kapcsolódjunk az SSL kliensünkkel, és gyõzõdjünk meg arról, hogy a második lépésbeli SSL kliens
+tanúsítványt használjuk.<br>
+6. Most már bejelentkezhetünk operátorként az <i>/oper teszt x</i> paranccsal. Jelszót továbbra is
+meg kell adnunk, de bármi lehet (<i>x</i> ebben a példában), figyelmen kívül marad,
+mivel benyújtjuk az SSL kliens tanúsítványt a hitelesítéshez.<br>
+7. Gratulálunk, Ön most már az UnrealIRCd-ben elérhetõ legbiztonságosabb hitelesítési
+típust használja!<br>
+<br>
+Egy másik nagyon hasznos hely, ahol az <tt>sslclientcertfp</tt> típust használhatjuk, az a <a href="#linkblock_passwordreceive">link::password-receive</a>
+</p></div>
+
+<p><font size="+2"><b>3.20 - További funkciók</b></font><a name="feature_other"></a></p><div class="desc">
 <p>Az UnrealIRCd-nek rengeteg funkciója van, ezért itt nincs minden megemlítve... Rájössz majd magadtól is.</p></div>
 
 <p> </p>
@@ -1013,33 +1086,8 @@ listen *:6601 {
 </p>
 <p id="operblock_password">Az <b>oper::password::</b> az a jelszó, amit az operátornak meg kell adnia.
   Az <b>oper::password::auth-type</b> segítségével megadhatjuk a hitelesítés módját ehhez a jelszóhoz. Ne adjunk meg <b>oper::password::auth-type</b>-ot egyszerû szöveg típusú jelszóhoz!
-  Érvényes hitelesítési típusok: <tt>crypt</tt>, <tt>md5</tt>, <tt>sha1</tt>, <tt>ripemd160</tt>
-  és <tt>sslclientcert</tt>. Bármelyiket is választjuk,
-  az <b>oper::password::</b> értéke egy hash, amit az
-  <a href="#cmd_mkpasswd">mkpasswd</a> segítségével generálunk.
-</p>
-<p id="operblock_password_sslclientcert">
-  Az <tt>sslclientcert</tt> egy kivételes hitelesítési típus. Amikor ezt
-  választjuk, az <b>oper::password::</b> értéke legyen egy fájl
-  útvonal (az UnrealIRCd telepítési célkönyvtárához relatívan), mely
-  tartalmaz egy PEM kódolású SSL tanúsítványt (a nyilvános tanúsítványt, nem
-  pedig egy kulcsot). Ezzel biztosíthatjuk, hogy csak olyan IRC kliens kapcsolódhasson, aki:
-  <ol>
-    <li>SSL-lel kapcsolódik,</li>
-    <li>benyújtja az egyezõ kliens tanúsítványt a kapcsolódáskor,</li>
-    <li>hozzáférése van a tanúsítványhoz tartozó privát kulcshoz.</li>
-  </ol>
-  Természetesen ez a funkció igényli, hogy az UnrealIRCd SSL támogatással
-  legyen fordítva. Továbbá, mivel az SSL tanúsítványokhoz tartozó jelszavak
-  mindig sokkal hosszabbak, mint egy normális emberi jelszó, és sokkal
-  véletlenszerûbbek is, ez a legbiztonságosabb hitelesítési lehetõség. Ahhoz,
-  hogy így jelentkezzünk be operátorként, miután a kliens SSL tanúsítványát
-  megadtuk operátori jelszóként, elég meggyõzõdni arról, hogy a kliens helyesen
-  lett beállítva, és adjuk ki az <pre>/oper &lt;név&gt; :</pre> parancsot. Az <tt>sslclientcert</tt>
-  hitelesítési típust felhasználhatjuk
-  a <a href="#linkblock_passwordreceive">link::password-receive</a>
-  direktívában is biztonságos <a href="#linkblock">link blokkokra</a>.
-  </ol>
+  Az érvényes hitelesítési típusok, mint ahogyan bemutattuk, hogyan használjuk õket oper
+  blokkokon, megtalálhatók a <a href="#feature_authtypes">Hitelesítési típusok</a> alatt.
 </p>
 <p>Megjegyzendõ, hogy MIND a bejelentkezõ név és jelszó a kis- és nagybetûkre érzékenyek.</p>
 <p>Az <b>oper::class</b> direktíva meghatározza azt a már létezõ (a konfigurációban ezen blokk
@@ -1378,9 +1426,8 @@ drpass {
 	die &lt;leállítási-jelszó&gt; { &lt;hitelesítés-típusa&gt;; };
 };</pre></p>
 <p>Ez a blokk állítja be a /restart és /die jelszavakat rendre a drpass::restart és a drpass::die
-  direktívákkal. A drpass::restart:: és drpass::die:: lehetõséget ad a jelszavak
-  hitelesítési típusának meghatározására. A jelenleg támogatott hitelesítési típusok
-  a crypt, md5, sha1 és ripemd-160.</p>
+  direktívákkal.
+  Egyszerû szöveges jelszó helyett használhatunk más <a href="#feature_authtypes">Hitelesítési típusokat</a> is.</p>
 <p>Példa:</p>
 <pre>
 drpass {
@@ -1916,8 +1963,10 @@ vhost {
   illenie kell, hogy jogosult legyen a vhosthoz. Megadhatsz egynél több hostmaszkot is.
   A vhost::login a felhasználó bejelentkezõ neve, és a vhost::password a hozzá tartozó jelszó,
   amelyeket a felhasználónak be kell írnia. A vhost::password:: arra ad lehetõséget, hogy
-  meghatározd a jelszó kódolásának/hitelesítésének típusát. A jelenleg támogatott típusok a
-  crypt, md5, sha1 és ripemd-160. Végül a vhost::swhois egy kiegészítõ sort ad a felhasználó
+  meghatározd a jelszó kódolásának/hitelesítésének típusát. Lásd a <a
+  href="#feature_authtypes">Hitelesítési típusokat</a> a rendelkezésre álló
+  hitelesítési típusok listájához.
+  Végül a vhost::swhois egy kiegészítõ sort ad a felhasználó
   whois adataiba, pontosan úgy, mint az oper blokk oper::swhois direktívájában.</p>
 <p>Példa:<br>
 <pre>
@@ -2037,12 +2086,9 @@ link &lt;szervernév&gt; {
   A távoli szerverre kapcsolódáskor használt jelszó; egyszerû szövegnek kell lennie.
  </p>
 <p id="linkblock_passwordreceive"><b>password-receive</b><br> A beérkezõ linkek érvényesítéséhez
-  használt jelszó. Hasonló módon titkosítható, mint
-  az <a href="#operblock_password"><b>oper::password</b></a>.
-  Még az is megtehetõ, hogy
-  a <a href="#operblock_password_sslclientcert"><tt>sslclientcert</tt></a>
-  hitelesítési típust használjuk. Sõt, ez erõsen ajánlott is, mivel fényévekkel
-  jobban ellenáll a brute-force támadásoknak.
+  használt jelszó. Erõsen ajánlott a hasított jelszavak használata vagy
+  az <tt>sslclientcertfp</tt> hitelesítési típus. Lásd a <a href="#feature_authtypes">Hitelesítési
+  Típusokat</a> további információért.<br>
 </p>
 <p><b>hub vs leaf</b><br>
   A hub egyszerre több szervert is linkelhet, míg a leafnek csak egy linkje lehet... hozzád.
@@ -2508,6 +2554,10 @@ set {
 <p><font class="set">set::options::allow-insane-bans;</font><br>
   Engedélyt ad az olyan õrülten széles banokra is, mint a /GLINE *@*.xx. Ezzel nagyon könnyen elõfordulhat, hogy
   véletlenül kitiltunk mindenkit a hálózatról, ezért csak nagyon óvatosan használjuk!</p>
+<p><font class="set">set::options::disable-cap;</font><br>
+  Letiltja az IRC kliens képességek kiterjesztést (IRC Client Capabilities Extensions, CAP). Megjegyzendõ, hogy ez
+  elérhetetlenné teszi az SASL-t és más funkciókat, vagy megnehezíti a használatukat
+  a kliensek számára.</p>
 <p id="set_nopost_ban_action"><font class="set">set::nopost::ban-action</font> (igényli az <a href="#modules_m_nopost">m_nopost</a> modult)<br />
   Megmondja, mit tegyen az olyan felhasználókkal, akik HTTP POST parancsot próbálnak kiadni.
   Az engedélyezett értékek: kill, gline, gzline, kline, zline, shun és tempshun.
@@ -2532,8 +2582,11 @@ set {
 <p><font class="set">set::dns::retries &lt;próbálkozások-száma&gt;;</font><br>
   Egy számérték, amely meghatározza, hányszor történjen újrapróbálkozás a DNS lekérdezésben,
   ha hiba fordul elõ. (NINCS IMPLEMENTÁLVA)</p>
-<p><font class="set">set::dns::nameserver &lt;dns-szerver-neve&gt;;</font><br>
-  Meghatározza a DNS lekérdezésekhez használt szerver gazdanevét. (NINCS IMPLEMENTÁLVA)</p>
+<p><font class="set">set::dns::nameserver &lt;dns-szerver-neve&gt;;</font><br/>
+  Meghatározza a DNS lekérdezésekhez használt szerver IP címét.
+  Csak tartalék címként lesz felhasználva, amikor a c-ares képtelen
+  a névszerverek kitalálására (mint például ha az <code>/etc/resolv.conf</code> üres).
+</p>
 <p><font class="set">set::dns::bind-ip &lt;ip&gt;;</font><br>
   Meghatározza azt az IP címet, amelyre bindeljen a szerver a lekérdezésekhez; a lehetõ legritkábban van szükség rá.</p>
 <p><font class="set">set::network-name &lt;hálózat-neve&gt;;</font><br>
@@ -2567,7 +2620,8 @@ set {
   függõen más szabályok lehetnek érvényben.</p>
 <p><font class="set">set::hiddenhost-prefix &lt;elõtag&gt;;</font><br>
   Meghatározza a rejtett (+x) gazdanevek elõtagját. Ez általában a hálózat nevét ábrázoló
-  három vagy négy betû.</p>
+  három vagy négy betû. Összekapcsolt szervereken kötelezõen legyen ugyanaz
+  a rejtett gazdanév elõtag a csatorna kitiltások helyes mûködése érdekében!</p>
 <p><font class="set">set::hosts::local &lt;locop-gazdanév&gt;;</font><br>
   Meghatározza azt a gazdanevet, amit a +x beállításakor kapnak a helyi operátorok.
   Igény szerint megadható egy username@host ehhez az értékhez.</p>
@@ -3188,7 +3242,7 @@ további információt kapj.</p>
     <td>Mindenki</td>
   </tr>
   <tr> 
-    <td height="39">Watch +-&lt;nick&gt; +-&lt;nick&gt;<br></td>
+    <td height="39">Watch [+|-]&lt;nick&gt; [+|-]&lt;nick&gt;<br></td>
     <td>A watch egy új értesítési rendszer az UnrealIRCd-ben, amely gyorsabb és kevesebb
       hálózati erõforrást használ fel, mint bármely régi típusú változatok. A szerver
       küld neked egy üzenetet, ha valamely felhasználó, amelynek a nickneve a watch
@@ -3295,6 +3349,10 @@ további információt kapj.</p>
     <td>Visszaadja a megadott felhasználó IP címét.</td>
     <td>Mindenki</td>
   </tr>
+  <tr>
+    <td height="39">silence [+|-]&lt;nick&gt;<br></td>
+    <td>Figyelmen kívül hagyja egy felhasználónak vagy felhasználók listájának a szerveren keresztül küldött üzeneteit.<br></td>
+    <td>Mindenki</td>
   <tr> 
     <td height="39">oper &lt;azonosító&gt; &lt;jelszó&gt;<br></td>
     <td>Ez a parancs egy felhasználónak operátori beosztást ad, ha illik egy oper blokkra.<br></td>
@@ -3506,14 +3564,9 @@ további információt kapj.</p>
   </tr>
   <tr id="cmd_mkpasswd"> 
     <td height="36">mkpasswd &lt;hitelesítés-típusa&gt; &lt;jelszó&gt;<br></td>
-    <td>Titkosítja a megadott &lt;jelszót&gt; a &lt;hitelesítés-típusa&gt; típusú hasító módszerrel. Lehetséges hasító módszerek:
-      <ul>
-	<li>crypt     [<em>Windows alatti támogatáshoz SSL szükséges</em>]</li>
-	<li>md5</li>
-	<li>sha1      [<em>SSL-t igényel</em>]</li>
-	<li>ripemd160 [<em>SSL-t igényel</em>]</li>
-      </ul>
-<br></td>
+    <td>Titkosítja a megadott &lt;jelszót&gt; a megadott &lt;hitelesítési-típusú&gt; hasító módszerrel.
+    Lásd a <a href="#feature_authtypes">Hitelesítési típusokat</a> a rendelkezésre álló
+    hasító módszerekhez.</td>
     <td>IRCop</td>
   </tr>
   <tr> 
