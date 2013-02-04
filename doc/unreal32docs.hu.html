@@ -1066,6 +1066,7 @@ listen *:6601 {
 		userhost &lt;hostmaszk&gt;;
 	};
 	password &lt;jelszó&gt; { &lt;hitelesítés-típusa&gt;; };
+	require-modes &lt;módok&gt;
 	class &lt;osztálynév&gt;;
 	flags &lt;flagek&gt;;
 	flags {
@@ -1082,7 +1083,12 @@ listen *:6601 {
 <p>Az oper blokkal IRC operátorokat állíthatsz be a szerveredhez. Az <b>oper::</b>
   értéke adja meg az /oper-hez a bejelentkezõ nevet. Az <b>oper::from::userhost</b>
   egy user@host maszk, amelyre a felhasználó kapcsolatának illenie kell. Megadhatsz
-  egynél több hostmaszkot is úgy, hogy több oper::from::userhost-ot használsz.
+  egynél több hostmaszkot is úgy, hogy több oper::from::userhost-ot használsz. A
+  nem kötelezõ <b>oper::require-modes</b> beállítással olyan módokat határozhatunk meg
+  (mint például az <em>r</em> vagy a <em>z</em>), amelyeket a felhasználónak meg kell szereznie
+  az OPER parancs használata elõtt. Ezt felhasználhatjuk arra, hogy megköveteljük a felhasználóktól,
+  hogy regisztráljanak a nickservvel, vagy használjanak biztonságos kapcsolatot
+  az operátorrá válás elõtt.
 </p>
 <p id="operblock_password">Az <b>oper::password::</b> az a jelszó, amit az operátornak meg kell adnia.
   Az <b>oper::password::auth-type</b> segítségével megadhatjuk a hitelesítés módját ehhez a jelszóhoz. Ne adjunk meg <b>oper::password::auth-type</b>-ot egyszerû szöveg típusú jelszóhoz!
