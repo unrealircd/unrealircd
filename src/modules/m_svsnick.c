@@ -120,7 +120,7 @@ aClient *ocptr; /* Other client */
 	hash_check_watch(acptr, RPL_LOGOFF);
 
 	sendto_snomask(SNO_NICKCHANGE,
-		"*** Notice -- %s (%s@%s) has been forced to change his/her nickname to %s", 
+		"*** Notice -- %s (%s@%s) has been forced to change their nickname to %s", 
 		acptr->name, acptr->user->username, acptr->user->realhost, parv[2]);
 	RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, acptr, parv[2]);
 

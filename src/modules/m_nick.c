@@ -379,13 +379,13 @@ DLLFUNC CMD_FUNC(m_nick)
 	/*
 	   ** If acptr == sptr, then we have a client doing a nick
 	   ** change between *equivalent* nicknames as far as server
-	   ** is concerned (user is changing the case of his/her
+	   ** is concerned (user is changing the case of their
 	   ** nickname or somesuch)
 	 */
 	if (acptr == sptr) {
 		if (strcmp(acptr->name, nick) != 0)
 		{
-			/* Allows change of case in his/her nick */
+			/* Allows change of case in their nick */
 			removemoder = 0; /* don't set the user -r */
 			goto nickkilldone;	/* -- go and process change */
 		} else
@@ -656,19 +656,19 @@ DLLFUNC CMD_FUNC(m_nick)
 			} else
 				sptr->user->flood.nick_c++;
 
-			sendto_snomask(SNO_NICKCHANGE, "*** Notice -- %s (%s@%s) has changed his/her nickname to %s",
+			sendto_snomask(SNO_NICKCHANGE, "*** Notice -- %s (%s@%s) has changed their nickname to %s",
 				sptr->name, sptr->user->username, sptr->user->realhost, nick);
 
 			RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, sptr, nick);
 		} else {
 			if (!IsULine(sptr))
-				sendto_snomask(SNO_FNICKCHANGE, "*** Notice -- %s (%s@%s) has changed his/her nickname to %s",
+				sendto_snomask(SNO_FNICKCHANGE, "*** Notice -- %s (%s@%s) has changed their nickname to %s",
 					sptr->name, sptr->user->username, sptr->user->realhost, nick);
 
 			RunHook3(HOOKTYPE_REMOTE_NICKCHANGE, cptr, sptr, nick);
 		}
 		/*
-		 * Client just changing his/her nick. If he/she is
+		 * Client just changing their nick. If he/she is
 		 * on a channel, send note of change to all clients
 		 * on that channel. Propagate notice to other servers.
 		 */

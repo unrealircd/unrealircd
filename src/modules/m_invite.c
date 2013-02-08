@@ -75,7 +75,7 @@ DLLFUNC int MOD_UNLOAD(m_invite)(int module_unload)
 	return MOD_SUCCESS;
 }
 
-/* Send the user his/her list of active invites */
+/* Send the user their list of active invites */
 int send_invite_list(aClient *sptr)
 {
 	Link *inv;
