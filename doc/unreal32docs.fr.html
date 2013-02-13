@@ -210,7 +210,7 @@
 			</ul>
 			<p>
 				Veuillez vérifier les RELEASE NOTES pour voir ce qui a changé.
-				Si vous notez des changements (ou bug) entre les versions, VOUS DEVEZ ËTRE SUR D'AVOIR LU LES RELEASE NOTES EN PREMIER avant de reporter cela comme un bug.
+				Si vous notez des changements (ou bug) entre les versions, VOUS DEVEZ ÊTRE SÛR D'AVOIR LU LES RELEASE NOTES EN PREMIER avant de reporter cela comme un bug.
 			</p>
 		</div>
 
@@ -315,7 +315,7 @@
 			</p>
 			<p>
 				Ces clés DOIVENT être les mêmes sur TOUS LES SERVEURS d'un réseau.
-				Elles doivent être gardées SECRËTES car il est possible de déchiffrer l'host original si vous connaissez ces clés (ce qui rendrait le umode +x inutile).
+				Elles doivent être gardées SECRÈTES car il est possible de déchiffrer l'host original si vous connaissez ces clés (ce qui rendrait le umode +x inutile).
 			</p>
 				<p>
 					Astuce: Si vous utilisez un système *UNIX et devez créer de nouvelles clés de cloaking, vous pouvez exécuter './unreal gencloak' dans votre shell, ce qui affichera trois chaînes aléatoires que vous pourrez utiliser.
@@ -3528,7 +3528,13 @@ spamfilter {
 
 			<p>
 				<font class="set">set::dns::nameserver &lt;name-of-dns-server&gt;;</font> (PAS IMPLEMENTE)<br>
-				Spécifie l'hostname du serveur qui sera utilisé pour la résolution de DNS.</p>
+				Spécifie l'hostname du serveur qui sera utilisé pour la résolution de DNS.
+			</p>
+			<p>
+				<font class="set">set::dns::nameserver &lt;name-of-dns-server&gt;;</font><br/>
+				Spécifie l'adresse IP du serveur qui sera utilisé pour la résolution DNS.
+				N'est utilisé que si c-ares n'arrive pas à deviner les serveurs de noms (par exemple car /etc/resolv.conf est vide).
+			</p>
 			<p>
 				<font class="set">set::dns::bind-ip &lt;ip&gt;;</font><br>
 				Spécifie l'IP à relier au résolveur, presque jamais requis.
