@@ -2359,7 +2359,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 	if ((setflags & UMODE_INVISIBLE) && !IsInvisible(sptr))
 		IRCstats.invisible--;
 
-	if (!IsAnOper(sptr))
+	if (MyConnect(sptr) && !IsAnOper(sptr))
 		remove_oper_modes(sptr);
 
 	/*
