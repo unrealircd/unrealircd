@@ -538,7 +538,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 
 #define SetSJOIN(x)		((x)->proto |= PROTO_SJOIN)
 #define SetNoQuit(x)		((x)->proto |= PROTO_NOQUIT)
-#define SetToken(x)		((x)->proto |= PROTO_TOKEN)
 #define SetNICKv2(x)		((x)->proto |= PROTO_NICKv2)
 #define SetSJOIN2(x)		((x)->proto |= PROTO_SJOIN2)
 #define SetUMODE2(x)		((x)->proto |= PROTO_UMODE2)

@@ -153,19 +153,6 @@ CMD_FUNC(m_protoctl)
 			SetNoQuit(cptr);
 
 		}
-		else if (strcmp(s, "TOKEN") == 0)
-		{
-#ifndef PROTOCTL_MADNESS
-			if (remove)
-			{
-				ClearToken(cptr);
-				continue;
-			}
-#endif
-			Debug((DEBUG_ERROR, "Chose protocol %s for link %s",
-			    proto, cptr->name));
-			SetToken(cptr);
-		}
 		else if (strcmp(s, "HCN") == 0)
 		{
 #ifndef PROTOCTL_MADNESS

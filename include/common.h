@@ -262,7 +262,6 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
  * Also take MAXPARA into account !
  */
 #define PROTOCTL_SERVER "NOQUIT" \
-                        " TOKEN" \
                         " NICKv2" \
                         " SJOIN" \
                         " SJOIN2" \
