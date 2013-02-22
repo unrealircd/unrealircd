@@ -342,7 +342,8 @@ int  hunt_server_token(aClient *cptr, aClient *sptr, char *command, char *token,
 		if (acptr->from == sptr->from && !MyConnect(acptr))
 			acptr = NULL;
 	if (!acptr)
-		list_for_each_entry(acptr, &acptr->client_node, client_node)
+	{
+		list_for_each_entry(acptr, &client_list, client_node)
 		{
 			if (acptr->from == sptr->from && !MyConnect(acptr))
 				continue;
@@ -354,6 +355,7 @@ int  hunt_server_token(aClient *cptr, aClient *sptr, char *command, char *token,
 			if (IsRegistered(acptr) && (acptr != cptr))
 				break;
 		}
+	}
 	/* Fix for unregistered client receiving msgs: */
 	if (acptr && MyConnect(acptr) && IsUnknown(acptr))
 		acptr = NULL;
