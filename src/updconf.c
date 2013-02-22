@@ -62,7 +62,6 @@ struct flags oflags[] = {
 	{ 'A', "admin" },
 	{ 'N', "netadmin"},
 	{ 'C', "coadmin"},
-	{ 'T', "techadmin"},
 	{ 'u', "get_umodec"},
 	{ 'f', "get_umodef"},
 	{ 'z', "can_zline" },
