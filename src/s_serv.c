@@ -175,8 +175,6 @@ char *p;
 */
 CMD_FUNC(m_version)
 {
-	extern char serveropts[];
-	extern char *IsupportStrings[];
 	int reply, i;
 
 	/* Only allow remote VERSIONs if registered -- Syzop */

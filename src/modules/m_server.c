@@ -130,8 +130,6 @@ char buf[512];
 
 void _send_server_message(aClient *sptr)
 {
-extern char serveropts[];
-
 	if (sptr->serv->flags.server_sent)
 	{
 #ifdef DEBUGMODE
@@ -699,7 +697,6 @@ CMD_FUNC(m_server_remote)
 int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 {
 	char		*inpath = get_client_name(cptr, TRUE);
-	extern MODVAR char 	serveropts[];
 	aClient		*acptr;
 	char buf[BUFSIZE];
 	int incoming = IsUnknown(cptr) ? 1 : 0;

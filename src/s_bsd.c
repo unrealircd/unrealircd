@@ -794,7 +794,6 @@ void completed_connection(int fd, int revents, void *data)
 {
 	aClient *cptr = data;
 	ConfigItem_link *aconf = cptr->serv ? cptr->serv->conf : NULL;
-	extern char serveropts[];
 	SetHandshake(cptr);
 
 	if (!aconf)

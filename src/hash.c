@@ -759,7 +759,6 @@ EVENT(e_clean_out_throttling_buckets)
 
 	if (!t || (TStime() - t > 30))
 	{
-		extern char serveropts[];
 		extern Module *Modules;
 		char *p = serveropts + strlen(serveropts);
 		Module *mi;

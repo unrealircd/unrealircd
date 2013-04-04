@@ -35,7 +35,6 @@ extern OSVERSIONINFO VerInfo;
 extern char OSName[256];
 extern char backupbuf[8192];
 extern char *buildid;
-extern char serveropts[];
 extern char *extraflags;
 extern BOOL IsService;
 void CleanUp(void);

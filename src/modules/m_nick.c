@@ -1085,7 +1085,6 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 				    me.name, parv[0],
 				    me.name, version, umodestring, cmodestring);
 		{
-			extern MODVAR char *IsupportStrings[];
 			int i;
 			for (i = 0; IsupportStrings[i]; i++)
 				sendto_one(sptr, rpl_str(RPL_ISUPPORT), me.name, nick, IsupportStrings[i]);
