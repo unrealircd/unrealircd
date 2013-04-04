@@ -44,8 +44,6 @@
 
 DLLFUNC int m_protoctl(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
-extern MODVAR char      serveropts[];
-
 #define MSG_PROTOCTL 	"PROTOCTL"	
 #define TOK_PROTOCTL 	"_"	
 

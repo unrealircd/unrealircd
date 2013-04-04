@@ -912,7 +912,6 @@ int  check_client(aClient *cptr, char *username)
 int completed_connection(aClient *cptr)
 {
 	ConfigItem_link *aconf = cptr->serv ? cptr->serv->conf : NULL;
-	extern char serveropts[];
 	SetHandshake(cptr);
 
 	if (!aconf)
