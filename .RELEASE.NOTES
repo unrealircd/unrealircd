@@ -21,6 +21,7 @@ The following bugs in version 3.2.10 were fixed in this 3.2.10.1 release:
   a problem for Anope BotServ bots.
 - A compile problem on OpenBSD.
 - '/REHASH -global' did not rehash all servers.
+- Some documentation updates.
 These were the only changes in 3.2.10.1.
 
 Below is a summary of all changes with respect to 3.2.9:
