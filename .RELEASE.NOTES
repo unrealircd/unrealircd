@@ -1,5 +1,5 @@
-Unreal3.2.10 Release Notes
-===========================
+Unreal3.2.10.1 Release Notes
+=============================
 
 ==[ GENERAL INFORMATION ]==
 - If you are upgrading on *NIX, then make sure you run 'make clean' and
@@ -12,6 +12,18 @@ Unreal3.2.10 Release Notes
 - The purpose of the sections below (NEW, CHANGED, MINOR, etc) is to be a
   SUMMARY of the changes in this release.  There have been 79 changes in
   total, for the full list of changes see the Changelog.
+
+==[ .1 RELEASE]==
+The following bugs in version 3.2.10 were fixed in this 3.2.10.1 release:
+- Windows only: outgoing connects from Windows caused severe linking issues,
+  including killing of (ghost) users on the Windows server.
+- An issue where user modes were stripped from remote clients, this caused
+  a problem for Anope BotServ bots.
+- A compile problem on OpenBSD.
+- '/REHASH -global' did not rehash all servers.
+These were the only changes in 3.2.10.1.
+
+Below is a summary of all changes with respect to 3.2.9:
 
 ==[ NEW ]==
 - Improved socket engine. This brings some performance improvements and
