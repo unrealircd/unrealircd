@@ -24,7 +24,15 @@
 #include "config.h"
 #include "fdlist.h"
 #include "proto.h"
+#include <sys/stat.h>
+#include <unistd.h>
 #include <string.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#ifdef _WIN32
+#include <io.h>
+#endif
+#include <fcntl.h>
 
 /* new FD management code, based on mowgli.eventloop from atheme, hammered into Unreal by
  * me, nenolod.
@@ -55,17 +63,26 @@ int fd_open(int fd, const char *desc)
 	return fde->fd;
 }
 
+#ifndef _WIN32
+# define OPEN_MODES	S_IRUSR|S_IWUSR
+#else
+# define OPEN_MODES	S_IREAD|S_IWRITE
+#endif
+
 int fd_fileopen(const char *path, unsigned int flags)
 {
 	FDEntry *fde;
 	int fd;
 	char comment[FD_DESC_SZ];
+	char pathbuf[BUFSIZE];
 
-	fd = open(path, flags);
+	fd = open(path, flags, OPEN_MODES);
 	if (fd < 0)
 		return -1;
 
-	snprintf(comment, sizeof comment, "File: %s", unreal_getfilename(path));
+	strlcpy(pathbuf, path, sizeof pathbuf);
+
+	snprintf(comment, sizeof comment, "File: %s", unreal_getfilename(pathbuf));
 
 	return fd_open(fd, comment);
 }

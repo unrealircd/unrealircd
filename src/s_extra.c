@@ -282,7 +282,6 @@ static int last_log_file_warning = 0;
 	va_list ap;
 	ConfigItem_log *logs;
 	char buf[2048], timebuf[128];
-	int fd;
 	struct stat fstats;
 	int written = 0, write_failure = 0;
 
@@ -305,22 +304,24 @@ static int last_log_file_warning = 0;
 		{
 			if (stat(logs->file, &fstats) != -1 && logs->maxsize && fstats.st_size >= logs->maxsize)
 			{
+				if (logs->logfd != -1)
+					fd_close(logs->logfd);
 #ifndef _WIN32
-				fd = open(logs->file, O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR);
+				logs->logfd = fd_fileopen(logs->file, O_CREAT|O_WRONLY|O_TRUNC);
 #else
-				fd = open(logs->file, O_CREAT|O_WRONLY|O_TRUNC, S_IREAD|S_IWRITE);
+				logs->logfd = fd_fileopen(logs->file, O_CREAT|O_WRONLY|O_TRUNC);
 #endif
-				if (fd == -1)
+				if (logs->logfd == -1)
 					continue;
-				write(fd, "Max file size reached, starting new log file\n", 45);
+				write(logs->logfd, "Max file size reached, starting new log file\n", 45);
 			}
-			else {
+			else if (logs->logfd == -1) {
 #ifndef _WIN32
-				fd = open(logs->file, O_CREAT|O_APPEND|O_WRONLY, S_IRUSR|S_IWUSR);
+				logs->logfd = fd_fileopen(logs->file, O_CREAT|O_APPEND|O_WRONLY);
 #else
-				fd = open(logs->file, O_CREAT|O_APPEND|O_WRONLY, S_IREAD|S_IWRITE);
+				logs->logfd = fd_fileopen(logs->file, O_CREAT|O_APPEND|O_WRONLY);
 #endif
-				if (fd == -1)
+				if (logs->logfd == -1)
 				{
 					if (!loop.ircd_booted)
 					{
@@ -335,9 +336,12 @@ static int last_log_file_warning = 0;
 					write_failure = 1;
 					continue;
 				}
-			}	
-			write(fd, timebuf, strlen(timebuf));
-			if (write(fd, buf, strlen(buf)) == strlen(buf))
+			}
+			/* this shouldn't happen, but lets not waste unnecessary syscalls... */
+			if (logs->logfd == -1)
+				continue;
+			write(logs->logfd, timebuf, strlen(timebuf));
+			if (write(logs->logfd, buf, strlen(buf)) == strlen(buf))
 			{
 				written++;
 			}
@@ -355,7 +359,9 @@ static int last_log_file_warning = 0;
 				}
 				write_failure = 1;
 			}
-			close(fd);
+#ifndef _WIN32
+			fsync(logs->logfd);
+#endif
 		}
 	}
 	

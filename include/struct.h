@@ -1396,6 +1396,7 @@ struct _configitem_log {
 	char *file;
 	long maxsize;
 	int  flags;
+	int  logfd;
 };
 
 struct _configitem_unknown {

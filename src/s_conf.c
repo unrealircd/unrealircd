@@ -1761,6 +1761,7 @@ ConfigItem_log *ca = MyMallocEx(sizeof(ConfigItem_log));
 
 	ca->file = strdup("ircd.log");
 	ca->flags |= LOG_ERROR;
+	ca->logfd = -1;
 	AddListItem(ca, conf_log);
 }
 
@@ -2337,6 +2338,8 @@ void	config_rehash()
 	}
 	for (log_ptr = conf_log; log_ptr; log_ptr = (ConfigItem_log *)next) {
 		next = (ListStruct *)log_ptr->next;
+		if (log_ptr->logfd != -1)
+			fd_close(log_ptr->logfd);
 		ircfree(log_ptr->file);
 		DelListItem(log_ptr, conf_log);
 		MyFree(log_ptr);
@@ -6326,6 +6329,7 @@ int     _conf_log(ConfigFile *conf, ConfigEntry *ce)
 	OperFlag *ofp = NULL;
 
 	ca = MyMallocEx(sizeof(ConfigItem_log));
+	ca->logfd = -1;
 	ircstrdup(ca->file, ce->ce_vardata);
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
