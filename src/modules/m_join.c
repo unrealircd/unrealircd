@@ -49,7 +49,6 @@ DLLFUNC CMD_FUNC(m_join);
 DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);
 DLLFUNC CMD_FUNC(_do_join);
 DLLFUNC int _can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[]);
-static int extended_operoverride(aClient *sptr, aChannel *chptr, char *key, int mval, char mchar);
 #define MAXBOUNCE   5 /** Most sensible */
 #ifdef JOINTHROTTLE
 static int isjthrottled(aClient *cptr, aChannel *chptr);
@@ -100,45 +99,6 @@ DLLFUNC int MOD_UNLOAD(m_join)(int module_unload)
 {
 	return MOD_SUCCESS;
 }
-
-/* This function adds as an extra (weird) operoverride.
- * Currently it's only used if you try to operoverride for a +z channel,
- * if you then do '/join #chan override' it will put the channel -z and allow you directly in.
- * This is to avoid attackers from using 'race conditions' to prevent you from joining.
- * PARAMETERS: sptr = the client, chptr = the channel, mval = mode value (eg MODE_ONLYSECURE),
- *             mchar = mode char (eg 'z')
- * RETURNS: 1 if operoverride, 0 if not.
- */
-int extended_operoverride(aClient *sptr, aChannel *chptr, char *key, int mval, char mchar)
-{
-unsigned char invited = 0;
-Link *lp;
-
-	if (!IsAnOper(sptr) || !OPCanOverride(sptr))
-		return 0;
-
-	for (lp = sptr->user->invited; lp; lp = lp->next)
-		if (lp->value.chptr == chptr)
-		{
-			invited = 1;
-			break;
-		}
-	if (invited)
-	{
-		if (key && !strcasecmp(key, "override"))
-		{
-			sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-				":%s NOTICE @%s :setting channel -%c due to OperOverride request from %s",
-				me.name, chptr->chname, mchar, sptr->name);
-			sendto_serv_butone(&me, ":%s MODE %s -%c 0", me.name, chptr->chname, mchar);
-			sendto_channel_butserv(chptr, &me, ":%s MODE %s -%c", me.name, chptr->chname, mchar);
-			chptr->mode.mode &= ~mval;
-			return 1;
-		}
-	}
-	return 0;
-}
-
 
 /* Now let _invited_ people join thru bans, +i and +l.
  * Checking if an invite exist could be done only if a block exists,
