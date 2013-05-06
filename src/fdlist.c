@@ -55,6 +55,21 @@ int fd_open(int fd, const char *desc)
 	return fde->fd;
 }
 
+int fd_fileopen(const char *path, unsigned int flags)
+{
+	FDEntry *fde;
+	int fd;
+	char comment[FD_DESC_SZ];
+
+	fd = open(path, flags);
+	if (fd < 0)
+		return -1;
+
+	snprintf(comment, sizeof comment, "File: %s", unreal_getfilename(path));
+
+	return fd_open(fd, comment);
+}
+
 void fd_close(int fd)
 {
 	FDEntry *fde;

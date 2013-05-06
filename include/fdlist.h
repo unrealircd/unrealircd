@@ -27,6 +27,7 @@ extern void fd_close(int fd);
 extern int fd_socket(int family, int type, int protocol, const char *desc);
 extern int fd_accept(int sockfd);
 extern void fd_desc(int fd, const char *desc);
+extern int fd_fileopen(const char *path, unsigned int flags);
 
 #define FD_SELECT_READ		0x1
 #define FD_SELECT_WRITE		0x2
