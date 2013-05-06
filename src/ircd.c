@@ -698,11 +698,30 @@ EVENT(check_pings)
 **	This is called when the commandline is not acceptable.
 **	Give error message and exit without starting anything.
 */
-static int bad_command(void)
+static int bad_command(const char *argv0)
 {
 #ifndef _WIN32
+	if (!argv0)
+		argv0 = "ircd";
+
 	(void)printf
-	    ("Usage: ircd [-f config] [-h servername] [-p portnumber] [-x loglevel] [-t] [-H]\n");
+	    ("Usage: %s [-f <config>] [-h <servername>] [-p <port>] [-x <loglevel>] [-t] [-F]\n"
+	     "\n"
+	     "UnrealIRCd\n"
+	     " -f <config>     Load configuration from <config> instead of the default\n"
+	     "                 (%s).\n"
+	     " -h <servername> Override the me::name configuration setting with\n"
+	     "                 <servername>.\n"
+	     " -p <port>       Listen on <port> in addition to the ports specified by\n"
+	     "                 the listen blocks.\n"
+	     " -x <loglevel>   Set the log level to <loglevel>.\n"
+	     " -t              Dump information to stdout as if you were a linked-in\n"
+	     "                 server.\n"
+	     " -F              Don't fork() when starting up. Use this when running\n"
+	     "                 UnrealIRCd under gdb or when playing around with settings\n"
+	     "                 on a non-production setup.\n"
+	     "\n",
+	     argv0, CONFIGFILE);
 	(void)printf("Server not started\n\n");
 #else
 	if (!IsService) {
@@ -1274,7 +1293,11 @@ int InitwIRCD(int argc, char *argv[])
 			  exit(0);
 #endif
 		  default:
-			  return bad_command();
+#ifndef _WIN32
+			  return bad_command(myargv[0]);
+#else
+			  return bad_command(NULL);
+#endif
 			  break;
 		}
 	}
@@ -1325,7 +1348,7 @@ int InitwIRCD(int argc, char *argv[])
 	 */
 #ifndef _WIN32
 	if (argc > 0)
-		return bad_command();	/* This should exit out */
+		return bad_command(myargv[0]);	/* This should exit out */
 #endif
 #ifndef _WIN32
 	fprintf(stderr, "%s", unreallogo);
