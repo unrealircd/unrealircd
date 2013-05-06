@@ -178,6 +178,12 @@ clean:
 cleandir: clean
 	rm -rf include/setup.h Makefile Settings
 
+distclean: cleandir
+	rm -rf extras/*.bak extras/regexp extras/*.tar extras/c-ares 
+	rm -rf extras/c-ares-* extras/tre-*
+	rm -rf config.log config.settings *.pem ircd.* unreal
+	rm -rf Makefile config.status
+	
 makex:
 	chmod +x Config newnet ircd ircdcron/ircdchk killircd
 	chmod +x rehash ircdreg
