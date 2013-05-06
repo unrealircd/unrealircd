@@ -68,15 +68,11 @@ static char buf[BUFSIZE];
 
 void iNAH_host(aClient *sptr, char *host)
 {
-	DYN_LOCAL(char, did_parts, sptr->user->joined);
 	if (!sptr->user)
-	{
-		DYN_FREE(did_parts);
 		return;
-	}
 
 	if (UHOST_ALLOWED == UHALLOW_REJOIN)
-		rejoin_doparts(sptr, did_parts);
+		rejoin_doquits(sptr);
 	if (sptr->user->virthost)
 	{
 		MyFree(sptr->user->virthost);
@@ -87,10 +83,9 @@ void iNAH_host(aClient *sptr, char *host)
 		sendto_serv_butone_token(&me, sptr->name, MSG_SETHOST,
 		    TOK_SETHOST, "%s", sptr->user->virthost);
 	sptr->umodes |= UMODE_SETHOST;
-	
+
 	if (UHOST_ALLOWED == UHALLOW_REJOIN)
-		rejoin_dojoinandmode(sptr, did_parts);
-	DYN_FREE(did_parts);
+		rejoin_dojoinandmode(sptr);
 }
 
 long set_usermode(char *umode)

@@ -1497,44 +1497,24 @@ void send_user_joins(aClient *cptr, aClient *user)
 }
 
 /*
- * rejoin_doparts:
- * sends a PART to all channels (to local users only)
+ * rejoin_doquits:
+ * sends a QUIT to all common channels (to local users only)
  */
-void rejoin_doparts(aClient *sptr, char did_parts[])
+void rejoin_doquits(aClient *sptr)
 {
 	Membership *tmp;
 	aChannel *chptr;
-	char *comment = "Rejoining because of user@host change";
+	char *comment = "Changing host";
 	int i = 0;
 
-	for (tmp = sptr->user->channel; tmp; tmp = tmp->next)
-	{
-		chptr = tmp->chptr;
-		if (!chptr)
-			continue; /* Possible? */
-
-		/* If the user is banned, don't do it */
-		if (is_banned(sptr, chptr, BANCHK_JOIN))
-		{
-			did_parts[i++] = 0;
-			continue;
-		}
-		did_parts[i++] = 1;
-
-		if ((chptr->mode.mode & MODE_AUDITORIUM) &&
-		    !(tmp->flags & (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP)))
-		{
-			sendto_chanops_butone(sptr, chptr, ":%s!%s@%s PART %s :%s", sptr->name, sptr->user->username, GetHost(sptr), chptr->chname, comment);
-		} else
-			sendto_channel_butserv_butone(chptr, sptr, sptr, ":%s PART %s :%s", sptr->name, chptr->chname, comment);
-	}
+	sendto_common_channels(sptr, ":%s!%s@%s QUIT :%s", comment);
 }
 
 /*
  * rejoin_dojoinandmode:
  * sends a JOIN and a MODE (if needed) to restore qaohv modes (to local users only)
  */
-void rejoin_dojoinandmode(aClient *sptr, char did_parts[])
+void rejoin_dojoinandmode(aClient *sptr)
 {
 	Membership *tmp;
 	aChannel *chptr;
@@ -1547,10 +1527,6 @@ void rejoin_dojoinandmode(aClient *sptr, char did_parts[])
 		chptr = tmp->chptr;
 		if (!chptr)
 			continue; /* Is it possible? */
-
-		/* If the user is banned, don't do it */
-		if (!did_parts[j++])
-			continue;
 
 		if ((chptr->mode.mode & MODE_AUDITORIUM) && 
 		    !(flags & (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP)))
@@ -1584,8 +1560,6 @@ void rejoin_dojoinandmode(aClient *sptr, char did_parts[])
 					if (i < n - 1)
 						strcat(parabuf, " ");
 				}
-				sendto_channel_butserv_butone(chptr, &me, sptr, ":%s MODE %s +%s %s",
-					me.name, chptr->chname, flagbuf, parabuf);
 			}
 		}
 	}

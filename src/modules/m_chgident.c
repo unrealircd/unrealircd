@@ -150,12 +150,10 @@ int  legalident = 1;
 
 	if ((acptr = find_person(parv[1], NULL)))
 	{
-		DYN_LOCAL(char, did_parts, acptr->user->joined);
 		if (MyClient(sptr) && (IsLocOp(sptr) && !MyClient(acptr)))
 		{
 			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 				parv[0]);
-			DYN_FREE(did_parts);
 			return 0;
 		}
 
@@ -166,7 +164,6 @@ int  legalident = 1;
 				{
 					sendto_one(sptr, err_str(ERR_DISABLED), me.name, sptr->name, "CHGIDENT",
 						"This command is disabled on this server");
-					DYN_FREE(did_parts);
 					return 0;
 				}
 				break;
@@ -176,12 +173,11 @@ int  legalident = 1;
 				if (IsPerson(acptr) && MyClient(sptr) && acptr->user->joined)
 				{
 					sendnotice(sptr, "*** /ChgIdent can not be used while %s is on a channel", acptr->name);
-					DYN_FREE(did_parts);
 					return 0;
 				}
 				break;
 			case UHALLOW_REJOIN:
-				rejoin_doparts(acptr, did_parts);
+				rejoin_doquits(acptr);
 				/* join sent later when the ident has been changed */
 				break;
 		}
@@ -205,8 +201,7 @@ int  legalident = 1;
 		    TOK_CHGIDENT, "%s %s", acptr->name, parv[2]);
 		ircsprintf(acptr->user->username, "%s", parv[2]);
 		if (UHOST_ALLOWED == UHALLOW_REJOIN)
-			rejoin_dojoinandmode(acptr, did_parts);
-		DYN_FREE(did_parts);
+			rejoin_dojoinandmode(acptr);
 		return 0;
 	}
 	else

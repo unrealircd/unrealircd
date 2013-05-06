@@ -2271,15 +2271,13 @@ DLLFUNC CMD_FUNC(_m_umode)
 				MSG_SETHOST, TOK_SETHOST, "%s", sptr->user->virthost);
 		if (UHOST_ALLOWED == UHALLOW_REJOIN)
 		{
-			DYN_LOCAL(char, did_parts, sptr->user->joined);
 			/* LOL, this is ugly ;) */
 			sptr->umodes &= ~UMODE_HIDE;
-			rejoin_doparts(sptr, did_parts);
+			rejoin_doquits(sptr);
 			sptr->umodes |= UMODE_HIDE;
-			rejoin_dojoinandmode(sptr, did_parts);
+			rejoin_dojoinandmode(sptr);
 			if (MyClient(sptr))
 				sptr->since += 7; /* Add fake lag */
-			DYN_FREE(did_parts);
 		}
 	}
 
@@ -2287,15 +2285,13 @@ DLLFUNC CMD_FUNC(_m_umode)
 	{
 		if (UHOST_ALLOWED == UHALLOW_REJOIN)
 		{
-			DYN_LOCAL(char, did_parts, sptr->user->joined);
 			/* LOL, this is ugly ;) */
 			sptr->umodes |= UMODE_HIDE;
-			rejoin_doparts(sptr, did_parts);
+			rejoin_doquits(sptr);
 			sptr->umodes &= ~UMODE_HIDE;
-			rejoin_dojoinandmode(sptr, did_parts);
+			rejoin_dojoinandmode(sptr);
 			if (MyClient(sptr))
 				sptr->since += 7; /* Add fake lag */
-			DYN_FREE(did_parts);
 		}
 		if (sptr->user->virthost)
 		{

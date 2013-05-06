@@ -137,19 +137,16 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if ((acptr = find_person(parv[1], NULL)))
 	{
-		DYN_LOCAL(char, did_parts, acptr->user->joined);
 		if (MyClient(sptr) && (IsLocOp(sptr) && !MyClient(acptr)))
 		{
 			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 				parv[0]);
-			DYN_FREE(did_parts);
 			return 0;
 		}
-			
+
 		if (!strcmp(GetHost(acptr), parv[2]))
 		{
 			sendnotice(sptr, "*** /ChgHost Error: requested host is same as current host.");
-			DYN_FREE(did_parts);
 			return 0;
 		}
 		switch (UHOST_ALLOWED)
@@ -159,7 +156,6 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				{
 					sendto_one(sptr, err_str(ERR_DISABLED), me.name, sptr->name, "CHGHOST",
 						"This command is disabled on this server");
-					DYN_FREE(did_parts);
 					return 0;
 				}
 				break;
@@ -169,12 +165,11 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				if (IsPerson(acptr) && MyClient(sptr) && acptr->user->joined)
 				{
 					sendnotice(sptr, "*** /ChgHost can not be used while %s is on a channel", acptr->name);
-					DYN_FREE(did_parts);
 					return 0;
 				}
 				break;
 			case UHALLOW_REJOIN:
-				rejoin_doparts(acptr, did_parts);
+				rejoin_doquits(acptr);
 				/* join sent later when the host has been changed */
 				break;
 		}
@@ -203,8 +198,7 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		}
 		acptr->user->virthost = strdup(parv[2]);
 		if (UHOST_ALLOWED == UHALLOW_REJOIN)
-			rejoin_dojoinandmode(acptr, did_parts);
-		DYN_FREE(did_parts);
+			rejoin_dojoinandmode(acptr);
 		return 0;
 	}
 	else
