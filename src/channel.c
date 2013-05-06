@@ -108,7 +108,7 @@ aCtab cFlagTab[] = {
 	{MODE_NOCTCP, 'C', 0, 0},	/* no CTCPs */
 	{MODE_AUDITORIUM, 'u', 0, 0},
 	{MODE_ONLYSECURE, 'z', 0, 0},
-	{MODE_NONICKCHANGE, 'N', 0, 0},
+	{MODE_NONICKCHANGE, 'N', 1, 0},
 	{0x0, 0x0, 0x0}
 };
 
