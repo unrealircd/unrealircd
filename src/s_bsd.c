@@ -822,6 +822,8 @@ void completed_connection(int fd, int revents, void *data)
 	}
 	if (!IsDead(cptr))
 		start_auth(cptr);
+
+	fd_setselect(fd, FD_SELECT_READ, read_packet, cptr);
 }
 
 /*
@@ -1432,7 +1434,8 @@ void read_packet(int fd, int revents, void *data)
 					fd_setselect(fd, FD_SELECT_WRITE, read_packet, cptr);
 					break;
 				case SSL_ERROR_WANT_READ:
-					SET_ERRNO(P_EWOULDBLOCK);
+					fd_setselect(fd, FD_SELECT_READ, read_packet, cptr);
+					fd_setselect(fd, FD_SELECT_WRITE, NULL, cptr);
 					break;
 				case SSL_ERROR_SYSCALL:
 					break;

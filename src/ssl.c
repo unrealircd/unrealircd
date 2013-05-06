@@ -605,7 +605,8 @@ int ircd_SSL_connect(aClient *acptr, int fd) {
 
     ircd_log(LOG_ERROR, "SSL_connect success!");
 
-    fd_setselect(fd, FD_SELECT_READ | FD_SELECT_WRITE, completed_connection, acptr);
+    fd_setselect(fd, FD_SELECT_READ | FD_SELECT_WRITE, NULL, acptr);
+    completed_connection(fd, FD_SELECT_READ | FD_SELECT_WRITE, acptr);
 
     return 1;
 }
