@@ -666,6 +666,7 @@ CMD_FUNC(m_server_remote)
 	(void)find_or_add(acptr->name);
 	add_client_to_list(acptr);
 	(void)add_to_client_hash_table(acptr->name, acptr);
+	list_move(&acptr->client_node, &global_server_list);
 	RunHook(HOOKTYPE_SERVER_CONNECT, acptr);
 
 	list_for_each_entry(bcptr, &server_list, special_node)
@@ -756,6 +757,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	IRCstats.me_servers++;
 	IRCstats.servers++;
 	IRCstats.unknown--;
+	list_move(&cptr->client_node, &global_server_list);
 	list_move(&cptr->lclient_node, &lclient_list);
 	list_add(&cptr->special_node, &server_list);
 	if ((Find_uline(cptr->name)))
@@ -825,11 +827,12 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 		}
 	}
 
-	list_for_each_entry_reverse(acptr, &server_list, special_node)
+	list_for_each_entry_reverse(acptr, &global_server_list, client_node)
 	{
 		/* acptr->from == acptr for acptr == cptr */
 		if (acptr->from == cptr)
 			continue;
+
 		if (IsServer(acptr))
 		{
 			if (SupportNS(cptr))
@@ -874,6 +877,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 			}
 		}
 	}
+
 	/* Synching nick information */
 	list_for_each_entry_reverse(acptr, &client_list, client_node)
 	{
