@@ -173,7 +173,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    IsHidden(acptr) ? user->virthost : user->realhost,
 			    acptr->info);
 
-			if (IsOper(sptr))
+			if ((IsOper(sptr) || (acptr == sptr))
 			{
 				char sno[512];
 				strcpy(sno, get_sno_str(acptr));
