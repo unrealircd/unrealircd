@@ -1507,7 +1507,7 @@ void rejoin_doquits(aClient *sptr)
 	char *comment = "Changing host";
 	int i = 0;
 
-	sendto_common_channels(sptr, ":%s!%s@%s QUIT :%s", comment);
+	sendto_common_channels(sptr, ":%s!%s@%s QUIT :%s", sptr->name, sptr->user->username, GetHost(sptr), comment);
 }
 
 /*
