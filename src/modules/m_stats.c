@@ -682,6 +682,8 @@ int stats_port(aClient *sptr, char *para)
 	{
 		if (!(listener->options & LISTENER_BOUND))
 	  		continue;
+		if ((listener->options & LISTENER_SERVERSONLY) && !IsAnOper(sptr))
+			continue;
 	  	sendto_one(sptr, ":%s NOTICE %s :*** Listener on %s:%i, clients %i. is %s %s",
 	  		me.name, sptr->name,
 	  		listener->ip,
