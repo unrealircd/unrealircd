@@ -969,6 +969,7 @@ typedef struct {
 #define LISTENER_MASK		0x000020
 #define LISTENER_SSL		0x000040
 #define LISTENER_BOUND		0x000080
+#define LISTENER_DEFER_ACCEPT	0x000100
 
 #define IsServersOnlyListener(x)	((x) && ((x)->options & LISTENER_SERVERSONLY))
 

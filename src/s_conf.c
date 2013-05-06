@@ -246,13 +246,14 @@ static OperFlag _OperFlags[] = {
 
 /* This MUST be alphabetized */
 static OperFlag _ListenerFlags[] = {
-	{ LISTENER_CLIENTSONLY, "clientsonly"},
-	{ LISTENER_JAVACLIENT, 	"java"},
-	{ LISTENER_MASK, 	"mask"},
-	{ LISTENER_REMOTEADMIN, "remoteadmin"},
-	{ LISTENER_SERVERSONLY, "serversonly"},
-	{ LISTENER_SSL, 	"ssl"},
-	{ LISTENER_NORMAL, 	"standard"},
+	{ LISTENER_CLIENTSONLY,  "clientsonly"},
+	{ LISTENER_DEFER_ACCEPT, "defer-accept"},
+	{ LISTENER_JAVACLIENT, 	 "java"},
+	{ LISTENER_MASK, 	 "mask"},
+	{ LISTENER_REMOTEADMIN,  "remoteadmin"},
+	{ LISTENER_SERVERSONLY,  "serversonly"},
+	{ LISTENER_SSL, 	 "ssl"},
+	{ LISTENER_NORMAL, 	 "standard"},
 };
 
 /* This MUST be alphabetized */

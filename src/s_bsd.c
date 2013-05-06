@@ -337,7 +337,7 @@ static void listener_accept(int fd, int revents, void *data)
 int  inetport(ConfigItem_listen *listener, char *name, int port)
 {
 	static struct SOCKADDR_IN server;
-	int  ad[4], len = sizeof(server);
+	int  ad[4], len = sizeof(server), result;
 	char ipname[64];
 
 	if (BadPtr(name))
@@ -441,7 +441,29 @@ int  inetport(ConfigItem_listen *listener, char *name, int port)
 		return -1;
 	}
 
-	(void)listen(listener->fd, LISTEN_SIZE);
+	result = listen(listener->fd, LISTEN_SIZE);
+
+#ifdef TCP_DEFER_ACCEPT
+	if ((listener->flags & LISTENER_DEFER_ACCEPT) && !result)
+	{
+		int true = 1;
+
+		setsockopt(listener->fd, IPPROTO_TCP, TCP_DEFER_ACCEPT, &true, sizeof(int));
+	}
+#endif
+
+#ifdef SO_ACCEPTFILTER
+	if ((listener->flags & LISTENER_DEFER_ACCEPT) && !result)
+	{
+		struct accept_filter_arg afa;
+
+		memset(&afa, '\0', sizeof afa);
+		strlcpy(afa.af_name, "dataready", sizeof afa.af_name);
+		(void) setsockopt(listener->fd, SOL_SOCKET, SO_ACCEPTFILTER, &afa,
+			sizeof afa);
+	}
+#endif
+
 	fd_setselect(listener->fd, FD_SELECT_READ, listener_accept, listener);
 
 	return 0;
