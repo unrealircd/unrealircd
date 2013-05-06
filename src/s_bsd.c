@@ -1572,16 +1572,9 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	}
 	set_non_blocking(cptr->fd, cptr);
 	set_sock_opts(cptr->fd, cptr);
-#ifndef _WIN32
-	(void)signal(SIGALRM, dummy);
+
 	if (connect(cptr->fd, svp, len) < 0 && errno != EINPROGRESS)
 	{
-#else
-	if (connect(cptr->fd, svp, len) < 0 &&
-	    WSAGetLastError() != WSAEINPROGRESS &&
-	    WSAGetLastError() != WSAEWOULDBLOCK)
-	{
-#endif
 		errtmp = ERRNO;
 		report_error("Connect to host %s failed: %s", cptr);
 		if (by && IsPerson(by) && !MyClient(by))
@@ -1633,11 +1626,15 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	add_client_to_list(cptr);
 
 #ifdef USE_SSL
-	if (IsSSL(cptr) && (aconf->options & CONNECT_SSL))
-		fd_setselect(cptr->fd, FD_SELECT_READ, ircd_SSL_client_handshake, cptr);
+	if (aconf->options & CONNECT_SSL)
+	{
+		SetSSLConnectHandshake(cptr);
+		fd_setselect(cptr->fd, FD_SELECT_WRITE | FD_SELECT_ONESHOT, ircd_SSL_client_handshake, cptr);
+	}
 	else
 #endif
-		fd_setselect(cptr->fd, FD_SELECT_READ, completed_connection, cptr);
+		fd_setselect(cptr->fd, FD_SELECT_WRITE | FD_SELECT_ONESHOT, completed_connection, cptr);
+
 	return 0;
 }
 

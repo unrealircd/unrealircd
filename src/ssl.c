@@ -517,9 +517,11 @@ void ircd_SSL_client_handshake(int fd, int revents, void *data)
 		}
 	}
 	acptr->flags |= FLAGS_SSL;
-	switch (ircd_SSL_connect(acptr))
+	switch (ircd_SSL_connect(acptr, fd))
 	{
 		case -1:
+			fd_close(fd);
+			return;
 		case 0: 
 			Debug((DEBUG_DEBUG, "SetSSLConnectHandshake(%s)", get_client_name(acptr, TRUE)));
 			SetSSLConnectHandshake(acptr);
@@ -570,28 +572,41 @@ int ircd_SSL_accept(aClient *acptr, int fd) {
     return 1;
 }
 
-int ircd_SSL_connect(aClient *acptr) {
+static void ircd_SSL_connect_retry(int fd, int revents, void *data)
+{
+	aClient *acptr = data;
+	ircd_SSL_connect(acptr, fd);
+}
+
+int ircd_SSL_connect(aClient *acptr, int fd) {
 
     int ssl_err;
     if((ssl_err = SSL_connect((SSL *)acptr->ssl)) <= 0) {
-	switch(ssl_err = SSL_get_error((SSL *)acptr->ssl, ssl_err)) {
+	ssl_err = SSL_get_error((SSL *)acptr->ssl, ssl_err);
+        ircd_log(LOG_ERROR, "SSL_connect res %d", ssl_err);
+	switch(ssl_err) {
 	    case SSL_ERROR_SYSCALL:
 		if (ERRNO == P_EINTR || ERRNO == P_EWOULDBLOCK
 			|| ERRNO == P_EAGAIN)
 	    case SSL_ERROR_WANT_READ:
+		fd_setselect(fd, FD_SELECT_READ, ircd_SSL_connect_retry, acptr);
+		fd_setselect(fd, FD_SELECT_WRITE, NULL, acptr);
+		return 0;
 	    case SSL_ERROR_WANT_WRITE:
-	    	 {
-		    Debug((DEBUG_DEBUG, "ircd_SSL_connect(%s), - %s", get_client_name(acptr, TRUE), ssl_error_str(ssl_err, ERRNO)));
-		    /* handshake will be completed later . . */
-		    return 0;
-	         }
+		fd_setselect(fd, FD_SELECT_READ, NULL, acptr);
+		fd_setselect(fd, FD_SELECT_WRITE, ircd_SSL_connect_retry, acptr);
+		return 0;
 	    default:
 		return fatal_ssl_error(ssl_err, SAFE_SSL_CONNECT, ERRNO, acptr);
-		
 	}
 	/* NOTREACHED */
 	return -1;
     }
+
+    ircd_log(LOG_ERROR, "SSL_connect success!");
+
+    fd_setselect(fd, FD_SELECT_READ | FD_SELECT_WRITE, completed_connection, acptr);
+
     return 1;
 }
 
@@ -663,9 +678,9 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, aClient *sptr
 		 * and not writing (since otherwise deliver_it will take care of the error), THEN
 		 * send a closing link error...
 		 */
-		sendto_locfailops("Lost connection to %s: %s: %s", get_client_name(sptr, FALSE), ssl_func, ssl_errstr);
-		sendto_serv_butone(&me, ":%s GLOBOPS :Lost connection to server %s: %s: %s",
-		  me.name, get_client_name(sptr, FALSE), ssl_func, ssl_errstr);
+		sendto_locfailops("Lost connection to %s: %s: %d (%s)", get_client_name(sptr, FALSE), ssl_func, ssl_error, ssl_errstr);
+		sendto_serv_butone(&me, ":%s GLOBOPS :Lost connection to server %s: %s: %d (%s)",
+		  me.name, get_client_name(sptr, FALSE), ssl_func, ssl_error, ssl_errstr);
 		/* sendto_failops_whoare_opers("Closing link: %s: %s - %s", ssl_func, ssl_errstr, get_client_name(sptr, FALSE)); */
 	}
 	
