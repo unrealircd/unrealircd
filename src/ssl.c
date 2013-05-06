@@ -583,7 +583,6 @@ int ircd_SSL_connect(aClient *acptr, int fd) {
     int ssl_err;
     if((ssl_err = SSL_connect((SSL *)acptr->ssl)) <= 0) {
 	ssl_err = SSL_get_error((SSL *)acptr->ssl, ssl_err);
-        ircd_log(LOG_ERROR, "SSL_connect res %d", ssl_err);
 	switch(ssl_err) {
 	    case SSL_ERROR_SYSCALL:
 		if (ERRNO == P_EINTR || ERRNO == P_EWOULDBLOCK
@@ -602,8 +601,6 @@ int ircd_SSL_connect(aClient *acptr, int fd) {
 	/* NOTREACHED */
 	return -1;
     }
-
-    ircd_log(LOG_ERROR, "SSL_connect success!");
 
     fd_setselect(fd, FD_SELECT_READ | FD_SELECT_WRITE, NULL, acptr);
     completed_connection(fd, FD_SELECT_READ | FD_SELECT_WRITE, acptr);
