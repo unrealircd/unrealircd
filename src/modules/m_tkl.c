@@ -1483,7 +1483,10 @@ aClient *acptr;
 		
 	return matches;
 }
-
+/*
+ * #*ble* will match with #bbleh
+ * *ble* will NOT match with #bbleh, will with bbleh
+ */
 aTKline *_find_qline(aClient *cptr, char *nick, int *ishold)
 {
 	aTKline *lp;
@@ -1501,7 +1504,7 @@ aTKline *_find_qline(aClient *cptr, char *nick, int *ishold)
 		
 		if (!(lp->type & TKL_NICK))
 			continue;
-		if (!match(lp->hostmask, nick))
+		if (((*lp->hostmask == '#' && *nick == '#') || (*lp->hostmask != '#' && *nick != '#')) && !match(lp->hostmask, nick))
 		{
 			points = 1;
 			break;	
