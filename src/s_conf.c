@@ -249,8 +249,6 @@ static OperFlag _ListenerFlags[] = {
 	{ LISTENER_CLIENTSONLY,  "clientsonly"},
 	{ LISTENER_DEFER_ACCEPT, "defer-accept"},
 	{ LISTENER_JAVACLIENT, 	 "java"},
-	{ LISTENER_MASK, 	 "mask"},
-	{ LISTENER_REMOTEADMIN,  "remoteadmin"},
 	{ LISTENER_SERVERSONLY,  "serversonly"},
 	{ LISTENER_SSL, 	 "ssl"},
 	{ LISTENER_NORMAL, 	 "standard"},
@@ -7490,9 +7488,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 				else if (!strcmp(cepp->ce_varname, "flat-map")) {
 					tempiConf.flat_map = 1;
-				}
-				else if (!strcmp(cepp->ce_varname, "no-stealth")) {
-					tempiConf.no_oper_hiding = 1;
 				}
 				else if (!strcmp(cepp->ce_varname, "show-opermotd")) {
 					tempiConf.som = 1;

@@ -431,8 +431,6 @@ char *get_cptr_status(aClient *acptr)
 		if (acptr->umodes & LISTENER_SSL)
 			*p++ = 's';
 #endif
-		if (acptr->umodes & LISTENER_REMOTEADMIN)
-			*p++ = 'R';
 		if (acptr->umodes & LISTENER_JAVACLIENT)
 			*p++ = 'J';
 	}
