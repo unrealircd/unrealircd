@@ -1672,6 +1672,7 @@ void config_setdefaultsettings(aConfiguration *i)
 #ifdef INET6
 	i->default_ipv6_clone_mask = 64;
 #endif /* INET6 */
+	i->nicklen = NICKLEN;
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,
@@ -7626,6 +7627,12 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			int v = atoi(cep->ce_vardata);
 			tempiConf.modef_max_unsettime = (unsigned char)v;
 		}
+		else if (!strcmp(cep->ce_varname, "nick-length")) {
+			int v = atoi(cep->ce_vardata);
+			tempiConf.nicklen = v;
+			if (loop.ircd_booted)
+				IsupportSetValue(IsupportFind("NICKLEN"), cep->ce_vardata);
+		}
 		else if (!strcmp(cep->ce_varname, "ssl")) {
 #ifdef USE_SSL
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
@@ -8576,6 +8583,18 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			{
 				config_error("%s:%i: set::modef-max-unsettime: value '%d' out of range (should be 1-255)",
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, v);
+				errors++;
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "nick-length")) {
+			int v;
+			CheckDuplicate(cep, nicklen, "nick-length");
+			CheckNull(cep);
+			v = atoi(cep->ce_vardata);
+			if ((v <= 0) || (v > NICKLEN))
+			{
+				config_error("%s:%i: set::nick-length: value '%d' out of range (should be 1-%d)",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, v, NICKLEN);
 				errors++;
 			}
 		}

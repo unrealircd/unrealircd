@@ -131,7 +131,10 @@ DLLFUNC CMD_FUNC(m_nick)
 		return 0;
 	}
 
-	strlcpy(nick, parv[1], NICKLEN + 1);
+	if (!IsServer(cptr))
+		strlcpy(nick, parv[1], iConf.nicklen + 1);
+	else
+		strlcpy(nick, parv[1], NICKLEN + 1);
 
 	if (MyConnect(sptr) && sptr->user && !IsAnOper(sptr))
 	{
