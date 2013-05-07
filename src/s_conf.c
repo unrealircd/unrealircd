@@ -6354,7 +6354,7 @@ int     _conf_log(ConfigFile *conf, ConfigEntry *ce)
 }
 
 int _test_log(ConfigFile *conf, ConfigEntry *ce) { 
-	int errors = 0;
+	int fd, errors = 0;
 	ConfigEntry *cep, *cepp;
 	char has_flags = 0, has_maxsize = 0;
 
@@ -6442,9 +6442,18 @@ int _test_log(ConfigFile *conf, ConfigEntry *ce) {
 			"log::flags");
 		errors++;
 	}
-	return errors; 
-}
+	if (fd = fd_fileopen(ce->ce_vardata, O_WRONLY) == -1)
+	{
+		config_error("%s:%i: Couldn't open logfile (%s) for writing: %s",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			ce->ce_vardata, strerror(errno));
+		errors++;
+	}
+	else
+		fd_close(fd);
 
+	return errors;
+}
 
 int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 {
