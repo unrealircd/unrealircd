@@ -961,8 +961,6 @@ int short_motd(aClient *sptr)
  * Merged read_motd/read_rules stuff into this -- Syzop
  */
 
-#define MOTD_LINE_LEN 81
-
 
 /** Read motd-like file, used for rules/motd/botmotd/opermotd/etc.
  *  Multiplexes to either directly reading the MOTD or downloading it asynchronously.
@@ -1121,8 +1119,6 @@ void do_read_motd(const char *filename, aMotdFile *themotd)
 			*tmp = '\0';
 		if ((tmp = strchr(line, '\r')))
 			*tmp = '\0';
-		if (strlen(line) > MOTD_LINE_LEN)
-			line[MOTD_LINE_LEN] = '\0';
 
 		temp = MyMalloc(sizeof(aMotdLine));
 		if (!temp)
