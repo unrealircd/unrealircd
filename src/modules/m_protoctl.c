@@ -358,46 +358,6 @@ CMD_FUNC(m_protoctl)
 			if (!IsHandshake(cptr) && aconf && !BadPtr(aconf->connpwd)) /* Send PASS early... */
 				sendto_one(sptr, "PASS :%s", aconf->connpwd);
 		}
-		else if ((strncmp(s, "SERVERS=", 8) == 0) && NEW_LINKING_PROTOCOL)
-		{
-			aClient *acptr, *srv;
-			int numeric;
-			
-			if (!IsEAuth(cptr))
-				continue;
-			
-			/* Other side lets us know which servers are behind it.
-			 * SERVERS=<numeric-of-server-1>[,<numeric-of-server-2[,..etc..]]
-			 * Eg: SERVER=1,2,3,4,5
-			 */
-
-			add_pending_net(sptr, s+8);
-
-			acptr = find_non_pending_net_duplicates(sptr);
-			if (acptr)
-			{
-				sendto_one(sptr, "ERROR :Server with numeric %d (%s) already exists",
-					acptr->serv->numeric, acptr->name);
-				sendto_realops("Link %s cancelled, server with numeric %d (%s) already exists",
-					get_client_name(acptr, TRUE), acptr->serv->numeric, acptr->name);
-				return exit_client(sptr, sptr, sptr, "Server Exists (or identical numeric)");
-			}
-			
-			acptr = find_pending_net_duplicates(sptr, &srv, &numeric);
-			if (acptr)
-			{
-				sendto_one(sptr, "ERROR :Server with numeric %d is being introduced by another server as well. "
-				                 "Just wait a moment for it to synchronize...", numeric);
-				sendto_realops("Link %s cancelled, server would introduce server with numeric %d, which "
-				               "server %s is also about to introduce. Just wait a moment for it to synchronize...",
-				               get_client_name(acptr, TRUE), numeric, get_client_name(srv, TRUE));
-				return exit_client(sptr, sptr, sptr, "Server Exists (just wait a moment)");
-			}
-
-			/* Send our PROTOCTL SERVERS= back if this was NOT a response */
-			if (s[8] != '*')
-				send_protoctl_servers(sptr, 1);
-		}
 		else if ((strcmp(s, "MLOCK")) == 0)
 		{
 #ifdef PROTOCTL_MADNESS
