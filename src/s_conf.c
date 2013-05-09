@@ -3303,7 +3303,7 @@ int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
 
 int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 {
-	char has_name = 0, has_info = 0, has_numeric = 0;
+	char has_name = 0, has_info = 0;
 	ConfigEntry *cep;
 	int	    errors = 0;
 
@@ -3386,21 +3386,6 @@ int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 			}
 		}
-		/* me::numeric */
-		else if (!strcmp(cep->ce_varname, "numeric"))
-		{
-			long l;
-
-			has_numeric = 1;
-			l = atol(cep->ce_vardata);
-			if ((l < 0) || (l > 254))
-			{
-				config_error("%s:%i: illegal me::numeric error (must be between 0 and 254)",
-					cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum);
-				errors++;
-			}
-		}
 		/* Unknown entry */
 		else
 		{
@@ -3417,12 +3402,6 @@ int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 	if (!has_info)
 	{
 		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum, "me::info");
-		errors++;
-	}
-	if (!has_numeric)
-	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum, 
-			"me::numeric");
 		errors++;
 	}
 	requiredstuff.conf_me = 1;
