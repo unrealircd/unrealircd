@@ -103,22 +103,23 @@ void remove_server_from_table(aClient *what)
 
 aClient *find_server_quick_search(char *name)
 {
-	Link *lp;
+	aClient *lp;
 
-	for (lp = Servers; lp; lp = lp->next)
-		if (!match(name, lp->value.cptr->name))
-			return (lp->value.cptr);
+	list_for_each_entry(lp, &global_server_list, client_node)
+		if (!match(name, lp->name))
+			return lp;
 	return NULL;
 }
 
 
 aClient *find_server_quick_straight(char *name)
 {
-	Link *lp;
+	aClient *lp;
 
-	for (lp = Servers; lp; lp = lp->next)
-		if (!strcmp(name, lp->value.cptr->name))
-			return (lp->value.cptr);
+	list_for_each_entry(lp, &global_server_list, client_node)
+		if (!strcmp(name, lp->name))
+			return lp;
+
 	return NULL;
 }
 
