@@ -612,7 +612,7 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 		 * the one we just lost.
 		 */
 		recurse++;
-		list_for_each_entry_safe(acptr, next, &client_list, client_node)
+		list_for_each_entry_safe(acptr, next, &global_server_list, client_node)
 		{
 			if (IsServer(acptr) && acptr->srvptr == sptr)
 				exit_client(sptr, acptr, sptr, comment1); /* RECURSION */
