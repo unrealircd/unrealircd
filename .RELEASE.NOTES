@@ -1,5 +1,5 @@
-Unreal3.2.10-rc1 Release Notes
-===============================
+Unreal3.4-dev Release Notes
+===========================
 
 ==[ GENERAL INFORMATION ]==
 - If you are upgrading on *NIX, then make sure you run 'make clean' and
@@ -10,68 +10,30 @@ Unreal3.2.10-rc1 Release Notes
   Read them before asking for help.
 - Report bugs at http://bugs.unrealircd.org/
 - The purpose of the sections below (NEW, CHANGED, MINOR, etc) is to be a
-  SUMMARY of the changes in this release.  There have been 79 changes in
+  SUMMARY of the changes in this release.  There have been many changes in
   total, for the full list of changes see the Changelog.
 
 ==[ NEW ]==
-- Improved socket engine. This brings some performance improvements and
-  also makes it easier to configure a system to hold more than 1024
-  clients (no more editing of header files on Linux!).
-- ESVID support: services can communicate the account name of the user
-  back to the IRCd. This only works on ESVID-capable services:
-  - Extban ~a:<accountname>: matches users who are logged in to services
-    with that account name.
-  - Show account name in /WHOIS
-- CAP support: this enables clients to enable certain features more easily.
-  Can be disabled through set::options::disable-cap.
-- Now that STARTTLS is advertised in CAP it is likely to be used more often.
-- away-notify: informs clients of AWAY state changes of users on the same
-  channels, for clients that support this.
-- account-notify: similar to away-notify, inform clients of changes in the
-  login status and account name used by other clients on the same channels.
-- SASL support. To use this, and if your services support this, you point
-  set::sasl-server to your services server.
-- Server-side MLOCK support: the IRCd will prevent channel mode changes
-  depending on the MLOCK setting in services. Requires special support
-  from services for this feature.
-- User Mode +I (IRCOp only): hide idle time
-- auth-method 'sslclientcertfp': authenticate users using an SSL client
-  certificate by the SHA256 fingerprint of that certificate.
-  The documentation has a new section (3.19) called 'Authentication Types'
-  which contains an (improved) example of how to use SSL client certificate
-  authentication instead of regular passwords.
-- oper::require-modes: an optional setting, which can be used to require
-  users to have certain user modes (such as 'z') before they can /OPER up.
-- allow/deny channel: you can now optionally specify a class here as an
-  extra filter.
-- doc/example.es.conf: Spanish translation of example configuration file.
-- There have also been some behavior changes, which can be considered NEW,
-  see next section (CHANGED).
+- Entirely rewritten I/O and event loop.  This allows the IRCd to scale to
+  tens of thousands of clients on a single process using kernel-evented I/O
+  mechanisms such as epoll and kqueue.
+- Full command modularity is now provided by default.  Each command is it's
+  own module and all of them are loaded in the default config.  See modules.conf.
+- The local nickname length can be modified without recompiling the IRCd, the
+  compiled limit is displayed as MAXNICKLEN, per IRCv3 group discussions.
 
 ==[ CHANGED ]==
-- Anti-spoof protection (ping cookies) can now be enabled/disabled at
-  run-time through set::ping-cookie [yes|no]. The default is 'yes' (enabled).
-- A quit with 'Ping timeout' now shows the number of seconds since the ping.
-- Print out a warning if we can't write to a log file.
-- Refuse to boot if we can't write to ANY log file.
-- Windows: if an SSL certificate exists, then uncheck the 'generate SSL
-  certificate' checkbox by default.
-- *NIX with SSL: We now ask in ./Config if you want to generate an SSL
-  certificate. The certificate is then copied when you run 'make install'.
+- Numerics have been removed.  You will need to remove the numeric setting
+  from me {} in unrealircd.conf.
 
 ==[ MAJOR BUGS FIXED ]==
 - None?
 
 ==[ MINOR BUGS FIXED ]==
-- Various compile problems, in particular with remote includes enabled.
-- Windows: the installer sometimes insisted that the Visual C++ 2008
-  redistributable package was not installed, when it actually was there.
-- Windows: MOTD file date/time was always showing up as 1/1/1970.
-- And more... see Changelog
+- None?
 
 ==[ REMOVED / DROPPED ]==
-- Windows 9X is no longer supported
-- The networks/ directory has been removed
+- Numeric server IDs, see above.
 
 ==[ KNOWN ISSUES ]==
 - Regexes: Be careful with backreferences (\1, etc), certain regexes can
