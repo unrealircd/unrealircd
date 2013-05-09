@@ -634,18 +634,8 @@ void sendto_serv_butone_token(aClient *one, char *prefix, char *command,
 	aClient *acptr;
 
 	static char buff[2048];
-	static char pref[100];
 	va_start(vl, pattern);
 
-	pref[0] = '\0';
-	if (strchr(prefix, '.'))
-	{
-		acptr = (aClient *) find_server_quick(prefix);
-		if (acptr->serv->numeric)
-		{
-			strcpy(pref, base64enc(acptr->serv->numeric));
-		}
-	}
 	strcpy(tcmd, token);
 	strcpy(ccmd, command);
 	strcat(tcmd, " ");
@@ -692,20 +682,8 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 	static char tcmd[2048];
 	static char ccmd[2048];
 	static char buff[2048];
-	static char pref[100];
 
 	va_start(vl, pattern);
-
-	pref[0] = '\0';
-	if (strchr(prefix, '.'))
-	{
-		acptr = (aClient *) find_server_quick(prefix);
-		if (acptr && acptr->serv)
-			if (acptr->serv->numeric)
-			{
-				strcpy(pref, base64enc(acptr->serv->numeric));
-			}
-	}
 
 	strcpy(tcmd, token);
 	strcpy(ccmd, command);
