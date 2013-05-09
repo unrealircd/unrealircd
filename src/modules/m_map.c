@@ -95,9 +95,7 @@ static void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_leng
 	else
 	{
 		sendto_one(cptr, rpl_str(RPL_MAP), me.name, cptr->name, prompt,
-		    length, server->name, server->serv->users,
-		    ((IsAnOper(cptr) && server->serv->numeric) ? (char *)my_itoa(server->serv->
-		    numeric) : ""));
+		    length, server->name, server->serv->users);
 		cnt = 0;
 	}
 
@@ -152,8 +150,7 @@ int cnt = 0, hide_ulines;
 	hide_ulines = (HIDE_ULINES && !IsOper(cptr)) ? 1 : 0;
 
 	sendto_one(cptr, rpl_str(RPL_MAP), me.name, cptr->name, "",
-	    length, server->name, server->serv->users,
-	    (server->serv->numeric ? (char *)my_itoa(server->serv->numeric) : ""));
+	    length, server->name, server->serv->users);
 
 	for (lp = Servers; lp; lp = lp->next)
 	{
@@ -172,8 +169,7 @@ int cnt = 0, hide_ulines;
 		if (--cnt == 0)
 			*buf = '`';
 		sendto_one(cptr, rpl_str(RPL_MAP), me.name, cptr->name, buf,
-		    length-2, acptr->name, acptr->serv->users,
-		    (acptr->serv->numeric ? my_itoa(acptr->serv->numeric) : ""));
+		    length-2, acptr->name, acptr->serv->users);
 	}
 }
 
