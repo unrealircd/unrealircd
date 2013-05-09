@@ -190,7 +190,7 @@ DLLFUNC CMD_FUNC(m_user)
 		user->ip_str = strdup(Inet_ia2p(&sptr->ip));
 	user->server = me_hash;
       user_finish:
-	if (sstamp != NULL)
+	if (sstamp != NULL && *sstamp != '*')
 		strlcpy(user->svid, sstamp, sizeof(user->svid));
 
 	strlcpy(sptr->info, realname, sizeof(sptr->info));
