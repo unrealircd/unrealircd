@@ -1475,10 +1475,10 @@ int InitwIRCD(int argc, char *argv[])
 	 */
 	me_hash = find_or_add(me.name);
 	me.serv->up = me_hash;
-	add_server_to_table(&me);
 	timeofday = time(NULL);
 	me.lasttime = me.since = me.firsttime = TStime();
 	(void)add_to_client_hash_table(me.name, &me);
+	list_add(&me.client_node, &global_server_list);
 #if !defined(_AMIGA) && !defined(_WIN32) && !defined(NO_FORKING)
 	if (!(bootopt & BOOT_NOFORK))
 		if (fork())

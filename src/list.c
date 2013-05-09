@@ -289,9 +289,9 @@ void free_user(anUser *user, aClient *cptr)
  */
 void remove_client_from_list(aClient *cptr)
 {
+	list_del(&cptr->client_node);
 	if (IsServer(cptr))
 	{
-		remove_server_from_table(cptr);
 		IRCstats.servers--;
 	}
 	if (IsClient(cptr))

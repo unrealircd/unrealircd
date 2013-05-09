@@ -67,40 +67,6 @@ long base64dec(char *b64)
 		return 0;
 }
 
-void add_server_to_table(aClient *what)
-{
-	Link *ptr;
-
-	if (IsServer(what) || IsMe(what))
-	{
-		ptr = make_link();
-		ptr->value.cptr = what;
-		ptr->next = Servers;
-		Servers = ptr;
-	}
-}
-
-void remove_server_from_table(aClient *what)
-{
-	Link **curr;
-	Link *tmp;
-	Link *lp = Servers;
-
-	for (; lp && (lp->value.cptr == what); lp = lp->next);
-	for (;;)
-	{
-		for (curr = &Servers; (tmp = *curr); curr = &tmp->next)
-			if (tmp->value.cptr == what)
-			{
-				*curr = tmp->next;
-				free_link(tmp);
-				break;
-			}
-		if (lp)
-			break;
-	}
-}
-
 aClient *find_server_quick_search(char *name)
 {
 	aClient *lp;
