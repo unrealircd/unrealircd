@@ -210,7 +210,7 @@ DLLFUNC CMD_FUNC(m_nick)
 	 */
 	if (IsServer(cptr) &&
 	    (parc > 7
-	    && (!(serv = (aClient *)find_server_b64_or_real(parv[6]))
+	    && (!(serv = (aClient *)find_server(parv[6], NULL))
 	    || serv->from != cptr->from)))
 	{
 		sendto_realops("Cannot find server %s (%s)", parv[6],
@@ -275,9 +275,9 @@ DLLFUNC CMD_FUNC(m_nick)
 		if (IsServer(sptr) && !ishold) /* server introducing new client */
 		{
 			acptrs =
-			    (aClient *)find_server_b64_or_real(sptr->user ==
+			    (aClient *)find_server(sptr->user ==
 			    NULL ? (char *)parv[6] : (char *)sptr->user->
-			    server);
+			    server, NULL);
 			/* (NEW: no unregistered q:line msgs anymore during linking) */
 			if (!acptrs || (acptrs->serv && acptrs->serv->flags.synced))
 				sendto_snomask(SNO_QLINE, "Q:lined nick %s from %s on %s", nick,

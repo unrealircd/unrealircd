@@ -54,7 +54,6 @@ static char *para[MAXPARA + 2];
 static char sender[HOSTLEN + 1];
 static int cancel_clients(aClient *, aClient *, char *);
 static void remove_unknown(aClient *, char *);
-static char nsprefix = 0;
 /*
 **  Find a client (server or user) by name.
 **
@@ -219,10 +218,6 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 	para[0] = from->name;
 	if (*ch == ':' || *ch == '@')
 	{
-		if (*ch == '@')
-			nsprefix = 1;
-		else
-			nsprefix = 0;
 		/*
 		   ** Copy the prefix to 'sender' assuming it terminates
 		   ** with SPACE (or NULL, which is an error, though).
@@ -244,21 +239,12 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 		 */
 		if (*sender && IsServer(cptr))
 		{
-			if (nsprefix)
-			{
-				from = (aClient *) find_server_by_base64(sender);
-				if (from) 
-					para[0] = from->name;
-			}
-				else
-			{
-				from = find_client(sender, (aClient *)NULL);
-				if (!from || match(from->name, sender))
-					from = find_server_quick(sender);
-				else if (!from && index(sender, '@'))
-					from = find_nickserv(sender, (aClient *)NULL);
-				para[0] = sender;
-			}
+			from = find_client(sender, (aClient *)NULL);
+			if (!from || match(from->name, sender))
+				from = find_server_quick(sender);
+			else if (!from && index(sender, '@'))
+				from = find_nickserv(sender, (aClient *)NULL);
+			para[0] = sender;
 
 			/* Hmm! If the client corresponding to the
 			 * prefix is not found--what is the correct
@@ -610,7 +596,7 @@ static void remove_unknown(aClient *cptr, char *sender)
 	 * Do kill if it came from a server because it means there is a ghost
 	 * user on the other server which needs to be removed. -avalon
 	 */
-	if (!index(sender, '.') && !nsprefix)
+	if (!index(sender, '.'))
 		sendto_one(cptr, ":%s KILL %s :%s (%s(?) <- %s)",
 		    me.name, sender, me.name, sender, cptr->name);
 	else

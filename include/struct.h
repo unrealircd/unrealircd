@@ -841,7 +841,6 @@ struct Server {
 	char 		by[NICKLEN + 1];
 	ConfigItem_link *conf;
 	TS   		timestamp;		/* Remotely determined connect try time */
-	unsigned short  numeric;	/* NS numeric, 0 if none */
 	long		 users;
 #ifdef	LIST_DEBUG
 	aClient *bcptr;

@@ -1773,20 +1773,6 @@ void applymeblock(void)
 {
 	if (!conf_me || !me.serv)
 		return; /* uh-huh? */
-	
-	/* Numeric change? */
-	if (conf_me->numeric != me.serv->numeric)
-	{
-		/* Can we apply ? */
-		if (!isanyserverlinked())
-		{
-			me.serv->numeric = conf_me->numeric;
-		} else {
-			config_warn("me::numeric: Numeric change detected, but change cannot be applied "
-			            "due to being linked to other servers. Unlink all servers and /REHASH to "
-			            "try again.");
-		}
-	}
 }
 
 int	init_conf(char *rootconf, int rehash)
@@ -3310,10 +3296,6 @@ int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "info"))
 		{
 			ircstrdup(conf_me->info, cep->ce_vardata);
-		}
-		else if (!strcmp(cep->ce_varname, "numeric"))
-		{
-			conf_me->numeric = atol(cep->ce_vardata);
 		}
 	}
 	return 1;

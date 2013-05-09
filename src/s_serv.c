@@ -1371,27 +1371,3 @@ int i;
 	
 	return NULL;
 }
-
-aClient *find_non_pending_net_duplicates(aClient *cptr)
-{
-aPendingNet *e;
-int i;
-aClient *acptr;
-
-	for (e = pendingnet; e; e = e->next)
-	{
-		if (e->sptr != cptr)
-			continue;
-		/* Ok, found myself */
-		for (i = 0; i < e->numservers; i++)
-		{
-			int numeric = e->servers[i];
-			acptr = find_server_by_numeric(numeric);
-			if (acptr)
-				return acptr; /* Found another (fully CONNECTED) server with identical numeric */
-		}
-	}
-	
-	return NULL;
-}
-

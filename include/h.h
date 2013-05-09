@@ -517,9 +517,6 @@ extern char   		*Auth_Make(short type, char *para);
 extern int   		Auth_CheckError(ConfigEntry *ce);
 
 extern long xbase64dec(char *b64);
-extern aClient *find_server_b64_or_real(char *name);
-extern aClient *find_server_by_base64(char *b64);
-extern aClient *find_server_by_numeric(long value);
 extern int is_chanownprotop(aClient *cptr, aChannel *chptr);
 extern int is_skochanop(aClient *cptr, aChannel *chptr);
 extern char *make_virthost(aClient *sptr, char *curr, char *new, int mode);
@@ -531,7 +528,6 @@ extern void report_network(aClient *sptr);
 extern void report_dynconf(aClient *sptr);
 extern void count_memory(aClient *cptr, char *nick);
 extern void list_scache(aClient *sptr);
-extern void ns_stats(aClient *cptr);
 extern char *oflagstr(long oflag);
 extern int rehash(aClient *cptr, aClient *sptr, int sig);
 extern int _match(char *mask, char *name);

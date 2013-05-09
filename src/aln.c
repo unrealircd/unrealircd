@@ -75,7 +75,6 @@ void add_server_to_table(aClient *what)
 	{
 		ptr = make_link();
 		ptr->value.cptr = what;
-		ptr->flags = what->serv->numeric;
 		ptr->next = Servers;
 		Servers = ptr;
 	}
@@ -100,29 +99,6 @@ void remove_server_from_table(aClient *what)
 		if (lp)
 			break;
 	}
-}
-
-aClient *find_server_by_numeric(long value)
-{
-	Link *lp;
-
-	for (lp = Servers; lp; lp = lp->next)
-		if (lp->value.cptr->serv->numeric == value)
-			return (lp->value.cptr);
-	return NULL;
-}
-
-aClient *find_server_by_base64(char *b64)
-{
-	if (b64)
-		return find_server_by_numeric(base64dec(b64));
-	else
-		return NULL;
-}
-
-char *find_server_id(aClient *which)
-{
-	return (base64enc(which->serv->numeric));
 }
 
 aClient *find_server_quick_search(char *name)
@@ -153,28 +129,6 @@ aClient *find_server_quickx(char *name, aClient *cptr)
 	if (name)
 		cptr = (aClient *)find_server_quick_search(name);
 	return cptr;
-}
-
-
-aClient *find_server_b64_or_real(char *name)
-{
-	Link *lp;
-	long  namebase64;
-	
-	if (!name)
-		return NULL;
-	
-	if (strlen(name) < 3)
-	{
-		namebase64 = base64dec(name);	
-		for (lp = Servers; lp; lp = lp->next)
-			if (lp->value.cptr->serv->numeric == namebase64)
-				return (lp->value.cptr);
-	}
-	else
-		return find_server_quick_straight(name);
-	return NULL;
-	
 }
 
 /* ':' and '#' and '&' and '+' and '@' must never be in this table. */
@@ -253,19 +207,3 @@ static inline long base64_to_int(char *b64)
 
 	return v;
 }
-
-
-void ns_stats(aClient *cptr)
-{
-	Link *lp;
-	aClient *sptr;
-	for (lp = Servers; lp; lp = lp->next)
-	{
-		sptr = lp->value.cptr;
-		sendto_one(cptr,
-		    ":%s NOTICE %s :*** server=%s numeric=%i b64=%s [%s]", me.name,
-		    cptr->name, sptr->name, sptr->serv->numeric,
-		    find_server_id(sptr), find_server_b64_or_real(find_server_id(sptr)) == sptr ? "SANE" : "INSANE");
-	}
-}
-

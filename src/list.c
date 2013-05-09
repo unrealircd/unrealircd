@@ -240,7 +240,6 @@ aServer *make_server(aClient *cptr)
 #endif
 		serv->user = NULL;
 		*serv->by = '\0';
-		serv->numeric = 0;
 		serv->users = 0;
 		serv->up = NULL;
 		cptr->serv = serv;

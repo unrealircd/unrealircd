@@ -1475,7 +1475,6 @@ int InitwIRCD(int argc, char *argv[])
 	 */
 	me_hash = find_or_add(me.name);
 	me.serv->up = me_hash;
-	me.serv->numeric = conf_me->numeric;
 	add_server_to_table(&me);
 	timeofday = time(NULL);
 	me.lasttime = me.since = me.firsttime = TStime();

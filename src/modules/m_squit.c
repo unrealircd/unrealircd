@@ -97,29 +97,16 @@ CMD_FUNC(m_squit)
 
 	if (parc > 1)
 	{
-		if (!(*parv[1] == '@'))
-		{
-			server = parv[1];
+		server = parv[1];
 
-			/* We used to allow wildcards here, but this wasn't really a good
-			 * idea because it made the behaviour of SQUIT unpredictable.  --nenolod
-			 */
-			acptr = find_client(server, NULL);
-			if (acptr && IsMe(acptr))
-			{
-				acptr = cptr;
-				server = cptr->sockhost;
-			}
-		}
-		else
+		/* We used to allow wildcards here, but this wasn't really a good
+		 * idea because it made the behaviour of SQUIT unpredictable.  --nenolod
+		 */
+		acptr = find_client(server, NULL);
+		if (acptr && IsMe(acptr))
 		{
-			server = parv[1];
-			acptr = (aClient *)find_server_by_base64(server + 1);
-			if (acptr && IsMe(acptr))
-			{
-				acptr = cptr;
-				server = cptr->sockhost;
-			}
+			acptr = cptr;
+			server = cptr->sockhost;
 		}
 	}
 	else
