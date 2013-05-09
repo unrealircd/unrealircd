@@ -91,7 +91,7 @@ DLLFUNC int MOD_UNLOAD(m_server)(int module_unload)
 	return MOD_SUCCESS;
 }
 
-int m_server_synch(aClient *cptr, long numeric, ConfigItem_link *conf);
+int m_server_synch(aClient *cptr, ConfigItem_link *conf);
 
 /** Send our PROTOCTL SERVERS=x,x,x,x stuff.
  * When response is set, it will be PROTOCTL SERVERS=*x,x,x (mind the asterisk).
@@ -104,27 +104,9 @@ char buf[512];
 	if (!NEW_LINKING_PROTOCOL)
 		return;
 
-	ircsprintf(buf, "PROTOCTL EAUTH=%s SERVERS=%s",
-		me.name, response ? "*" : "");
+	ircsprintf(buf, "PROTOCTL EAUTH=%s",
+		me.name);
 
-	for (lp = Servers; lp; lp = lp->next)
-	{
-		int numeric = lp->value.cptr->serv->numeric;
-		if (numeric <= 0)
-			continue;
-		ircsprintf(buf+strlen(buf),"%d,", numeric);
-		if (strlen(buf) > sizeof(buf)-12)
-		{
-			/* This should only happen if you have like more than 120 servers.. that would be a tad extreme... */
-			sendto_realops("send_protoctl_servers: Ehm.. you have a whole lot of servers linked, don't you?");
-			break; /* prevent overflow */
-		}
-	}
-	
-	/* Remove final comma */
-	if (buf[strlen(buf)-1] == ',')
-		buf[strlen(buf)-1] = '\0';
-	
 	sendto_one(sptr, "%s", buf);
 }
 
@@ -137,10 +119,9 @@ void _send_server_message(aClient *sptr)
 #endif
 		return;
 	}
-		
-	sendto_one(sptr, "SERVER %s 1 :U%d-%s%s-%i %s",
-		me.name, UnrealProtocol, serveropts, extraflags ? extraflags : "", me.serv->numeric,
-		me.info);
+
+	sendto_one(sptr, "SERVER %s 1 :%s",
+		me.name, me.info);
 	sptr->serv->flags.server_sent = 1;
 }
 
@@ -297,7 +278,7 @@ nohostcheck:
 **	parv[0] = sender prefix
 **	parv[1] = servername
 **      parv[2] = hopcount
-**      parv[3] = numeric
+**      parv[3] = numeric { ignored }
 **      parv[4] = serverinfo
 **
 ** on old protocols, serverinfo is parv[3], and numeric is left out
@@ -311,7 +292,7 @@ DLLFUNC CMD_FUNC(m_server)
 	char *ch = NULL;	/* */
 	char descbuf[BUFSIZE];
 	char *inpath = get_client_name(cptr, TRUE);
-	int  hop = 0, numeric = 0;
+	int  hop = 0;
 	char info[REALLEN + 61];
 	ConfigItem_link *aconf = NULL;
 	ConfigItem_deny_link *deny;
@@ -388,14 +369,6 @@ DLLFUNC CMD_FUNC(m_server)
 			
 		/* OK, let us check in the data now now */
 		hop = TS2ts(parv[2]);
-		numeric = (parc > 4) ? TS2ts(parv[3]) : 0;
-		if ((numeric < 0) || (numeric > 255))
-		{
-			sendto_realops
-				("Cancelling link %s, invalid numeric",
-					get_client_name(cptr, TRUE));
-			return exit_client(cptr, cptr, &me, "Invalid numeric");
-		}
 		strlcpy(info, parv[parc - 1], REALLEN + 61);
 		strlcpy(cptr->name, servername, sizeof(cptr->name));
 		cptr->hopcount = hop;
@@ -492,27 +465,7 @@ DLLFUNC CMD_FUNC(m_server)
 		else
 				strlcpy(cptr->info, info[0] ? info : me.name,
 					sizeof(cptr->info));
-		/* Numerics .. */
-		numeric = num ? atol(num) : numeric;
-		if (numeric)
-		{
-			if ((numeric < 0) || (numeric > 254))
-			{
-				sendto_locfailops("Link %s denied, numeric '%d' out of range (should be 0-254)",
-					inpath, numeric);
 
-				return exit_client(cptr, cptr, cptr,
-				    "Numeric out of range (0-254)");
-			}
-			if (numeric_collides(numeric))
-			{
-				sendto_locfailops("Link %s denied, colliding server numeric",
-					inpath);
-
-				return exit_client(cptr, cptr, cptr,
-				    "Colliding server numeric (choose another)");
-			}
-		}
 		for (deny = conf_deny_link; deny; deny = (ConfigItem_deny_link *) deny->next) {
 			if (deny->flag.type == CRULE_ALL && !match(deny->mask, servername)
 				&& crule_eval(deny->rule)) {
@@ -529,7 +482,7 @@ DLLFUNC CMD_FUNC(m_server)
 		fd_desc(cptr->fd, descbuf);
 
 		/* Start synch now */
-		if (m_server_synch(cptr, numeric, aconf) == FLUSH_BUFFER)
+		if (m_server_synch(cptr, aconf) == FLUSH_BUFFER)
 			return FLUSH_BUFFER;
 	}
 	else
@@ -546,7 +499,6 @@ CMD_FUNC(m_server_remote)
 	ConfigItem_ban *bconf;
 	int 	hop;
 	char	info[REALLEN + 61];
-	long	numeric = 0;
 	char	*servername = parv[1];
 
 	if ((acptr = find_server(servername, NULL)))
@@ -587,16 +539,6 @@ CMD_FUNC(m_server_remote)
 	}
 	/* OK, let us check in the data now now */
 	hop = TS2ts(parv[2]);
-	numeric = (parc > 4) ? TS2ts(parv[3]) : 0;
-	if ((numeric < 0) || (numeric > 255))
-	{
-		sendto_realops
-			("Cancelling link %s, invalid numeric at server %s",
-				get_client_name(cptr, TRUE), servername);
-		sendto_one(cptr, "ERROR :Invalid numeric (%s)",
-			servername);
-		return exit_client(cptr, cptr, &me, "Invalid remote numeric");
-	}
 	strlcpy(info, parv[parc - 1], REALLEN + 61);
 	if (!cptr->serv->conf)
 	{
@@ -628,27 +570,8 @@ CMD_FUNC(m_server_remote)
 			sendto_locfailops("Link %s(%s) cancelled, too deep depth", cptr->name, servername);
 			return exit_client(cptr, cptr, cptr, "Too deep link depth (leaf)");
 	}
-	if (numeric)
-	{
-		if ((numeric < 0) || (numeric > 254))
-		{
-			sendto_locfailops("Link %s(%s) cancelled, numeric '%ld' out of range (should be 0-254)",
-				cptr->name, servername, numeric);
-			return exit_client(cptr, cptr, cptr,
-			    "Numeric out of range (0-254)");
-		}
-		if (numeric_collides(numeric))
-		{
-			sendto_locfailops("Link %s(%s) cancelled, colliding server numeric",
-					cptr->name, servername);
-
-			return exit_client(cptr, cptr, cptr,
-			    "Colliding server numeric (choose another)");
-		}
-	}
 	acptr = make_client(cptr, find_server_quick(parv[0]));
 	(void)make_server(acptr);
-	acptr->serv->numeric = numeric;
 	acptr->hopcount = hop;
 	strlcpy(acptr->name, servername, sizeof(acptr->name));
 	strlcpy(acptr->info, info, sizeof(acptr->info));
@@ -673,29 +596,17 @@ CMD_FUNC(m_server_remote)
 	{
 		if (bcptr == cptr || IsMe(bcptr))
 				continue;
-		if (SupportNS(bcptr))
-		{
-			sendto_one(bcptr,
-				"%c%s %s %s %d %ld :%s",
-				(sptr->serv->numeric ? '@' : ':'),
-				(sptr->serv->numeric ? base64enc(sptr->serv->numeric) : sptr->name),
-				IsToken(bcptr) ? TOK_SERVER : MSG_SERVER,
-				acptr->name, hop + 1, numeric, acptr->info);
-		}
-		else
-		{
-			sendto_one(bcptr, ":%s %s %s %d :%s",
+		sendto_one(bcptr, ":%s %s %s %d :%s",
 			    parv[0],
 			    IsToken(bcptr) ? TOK_SERVER : MSG_SERVER,
 			    acptr->name, hop + 1, acptr->info);
-		}
 	}
 
 	RunHook(HOOKTYPE_POST_SERVER_CONNECT, acptr);
 	return 0;
 }
 
-int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
+int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 {
 	char		*inpath = get_client_name(cptr, TRUE);
 	aClient		*acptr;
@@ -716,10 +627,8 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 		 */
 		sendto_one(cptr, "PASS :%s", aconf->connpwd);
 		send_proto(cptr, aconf);
-		sendto_one(cptr, "SERVER %s 1 :U%d-%s-%i %s",
-			    me.name, UnrealProtocol,
-			    serveropts, me.serv->numeric,
-			    (me.info[0]) ? (me.info) : "IRCers United");
+		sendto_one(cptr, "SERVER %s 1 :%s",
+			    me.name, me.info);
 	}
 #ifdef ZIP_LINKS
 	if (aconf->options & CONNECT_ZIP)
@@ -790,7 +699,6 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 	(void)make_server(cptr);
 	cptr->serv->up = me.name;
 	cptr->srvptr = &me;
-	cptr->serv->numeric = numeric;
 	if (!cptr->serv->conf)
 		cptr->serv->conf = aconf; /* Only set serv->conf to aconf if not set already! Bug #0003913 */
 	if (incoming)
@@ -809,22 +717,10 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 		if (acptr == cptr || IsMe(acptr))
 			continue;
 
-		if (SupportNS(acptr))
-		{
-			sendto_one(acptr, "%c%s %s %s 2 %i :%s",
-			    (me.serv->numeric ? '@' : ':'),
-			    (me.serv->numeric ? base64enc(me.
-			    serv->numeric) : me.name),
-			    (IsToken(acptr) ? TOK_SERVER : MSG_SERVER),
-			    cptr->name, cptr->serv->numeric, cptr->info);
-		}
-		else
-		{
-			sendto_one(acptr, ":%s %s %s 2 :%s",
+		sendto_one(acptr, ":%s %s %s 2 :%s",
 			    me.name,
 			    (IsToken(acptr) ? TOK_SERVER : MSG_SERVER),
 			    cptr->name, cptr->info);
-		}
 	}
 
 	list_for_each_entry_reverse(acptr, &global_server_list, client_node)
@@ -835,23 +731,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 
 		if (IsServer(acptr))
 		{
-			if (SupportNS(cptr))
-			{
-				/* this has to work. */
-				numeric =
-				    ((aClient *)find_server_quick(acptr->
-				    serv->up))->serv->numeric;
-
-				sendto_one(cptr, "%c%s %s %s %d %i :%s",
-				    (numeric ? '@' : ':'),
-				    (numeric ? base64enc(numeric) :
-				    acptr->serv->up),
-				    IsToken(cptr) ? TOK_SERVER : MSG_SERVER,
-				    acptr->name, acptr->hopcount + 1,
-				    acptr->serv->numeric, acptr->info);
-			}
-			else
-				sendto_one(cptr, ":%s %s %s %d :%s",
+			sendto_one(cptr, ":%s %s %s %d :%s",
 				    acptr->serv->up,
 				    (IsToken(cptr) ? TOK_SERVER : MSG_SERVER),
 				    acptr->name, acptr->hopcount + 1,
@@ -910,33 +790,7 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 
 				if (!SupportVHP(cptr))
 				{
-					if (SupportNS(cptr)
-					    && acptr->srvptr->serv->numeric)
-					{
-						sendto_one(cptr,
-						    ((cptr->proto & PROTO_SJB64) ?
-						    "%s %s %d %B %s %s %b %s %s %s %s%s%s%s:%s"
-						    :
-						    "%s %s %d %lu %s %s %b %s %s %s %s%s%s%s:%s"),
-						    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
-						    acptr->name,
-						    acptr->hopcount + 1,
-						    (long)acptr->lastnick,
-						    acptr->user->username,
-						    acptr->user->realhost,
-						    (long)(acptr->srvptr->serv->numeric),
-						    acptr->user->svid,
-						    (!buf || *buf == '\0' ? "+" : buf),
-						    ((IsHidden(acptr) && (acptr->umodes & UMODE_SETHOST)) ? acptr->user->virthost : "*"),
-						    SupportCLK(cptr) ? getcloak(acptr) : "",
-						    SupportCLK(cptr) ? " " : "",
-						    SupportNICKIP(cptr) ? encode_ip(acptr->user->ip_str) : "",
-					        SupportNICKIP(cptr) ? " " : "",
-					        acptr->info);
-					}
-					else
-					{
-						sendto_one(cptr,
+					sendto_one(cptr,
 						    (cptr->proto & PROTO_SJB64 ?
 						    "%s %s %d %B %s %s %s %s %s %s %s%s%s%s:%s"
 						    :
@@ -956,7 +810,6 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 						    SupportNICKIP(cptr) ? encode_ip(acptr->user->ip_str) : "",
 					        SupportNICKIP(cptr) ? " " : "",
 					        acptr->info);
-					}
 				}
 				else
 					sendto_one(cptr,
@@ -967,12 +820,8 @@ int	m_server_synch(aClient *cptr, long numeric, ConfigItem_link *aconf)
 					    acptr->lastnick,
 					    acptr->user->username,
 					    acptr->user->realhost,
-					    (SupportNS(cptr) ?
-					    (acptr->srvptr->serv->numeric ?
-					    base64enc(acptr->srvptr->
-					    serv->numeric) : acptr->
-					    user->server) : acptr->user->
-					    server), acptr->user->svid,
+					    acptr->user->server,
+					    acptr->user->svid,
 					    (!buf
 					    || *buf == '\0' ? "+" : buf),
 					    GetHost(acptr),

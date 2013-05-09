@@ -159,16 +159,7 @@ DLLFUNC CMD_FUNC(m_user)
 		if (sptr->srvptr == NULL)
 			sendto_ops("WARNING, User %s introduced as being "
 			    "on non-existant server %s.", sptr->name, server);
-		if (SupportNS(cptr))
-		{
-			acptr = (aClient *)find_server_b64_or_real(server);
-			if (acptr)
-				user->server = find_or_add(acptr->name);
-			else
-				user->server = find_or_add(server);
-		}
-		else
-			user->server = find_or_add(server);
+		user->server = find_or_add(server);
 		strlcpy(user->realhost, host, sizeof(user->realhost));
 		goto user_finish;
 	}

@@ -67,19 +67,6 @@ long base64dec(char *b64)
 		return 0;
 }
 
-int  numeric_collides(long numeric)
-{
-	Link *lp;
-
-	if (!numeric)
-		return 0;
-
-	for (lp = Servers; lp; lp = lp->next)
-		if (numeric == lp->value.cptr->serv->numeric)
-			return 1;
-	return 0;
-}
-
 void add_server_to_table(aClient *what)
 {
 	Link *ptr;

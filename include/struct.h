@@ -358,7 +358,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define PROTO_NICKv2	0x0008	/* Negotiated NICKv2 protocol */
 #define PROTO_SJOIN2	0x0010	/* Negotiated SJOIN2 protocol */
 #define PROTO_UMODE2	0x0020	/* Negotiated UMODE2 protocol */
-#define PROTO_NS		0x0040	/* Negotiated NS protocol */
 #define PROTO_ZIP		0x0080	/* Negotiated ZIP protocol */
 #define PROTO_VL		0x0100	/* Negotiated VL protocol */
 #define PROTO_SJ3		0x0200	/* Negotiated SJ3 protocol */
@@ -527,7 +526,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SupportNICKIP(x)	(CHECKPROTO(x, PROTO_NICKIP))
 #define SupportSJOIN2(x)	(CHECKPROTO(x, PROTO_SJOIN2))
 #define SupportUMODE2(x)	(CHECKPROTO(x, PROTO_UMODE2))
-#define SupportNS(x)		(CHECKPROTO(x, PROTO_NS))
 #define SupportVL(x)		(CHECKPROTO(x, PROTO_VL))
 #define SupportSJ3(x)		(CHECKPROTO(x, PROTO_SJ3))
 #define SupportVHP(x)		(CHECKPROTO(x, PROTO_VHP))
@@ -541,7 +539,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SetNICKv2(x)		((x)->proto |= PROTO_NICKv2)
 #define SetSJOIN2(x)		((x)->proto |= PROTO_SJOIN2)
 #define SetUMODE2(x)		((x)->proto |= PROTO_UMODE2)
-#define SetNS(x)		((x)->proto |= PROTO_NS)
 #define SetVL(x)		((x)->proto |= PROTO_VL)
 #define SetSJ3(x)		((x)->proto |= PROTO_SJ3)
 #define SetVHP(x)		((x)->proto |= PROTO_VHP)

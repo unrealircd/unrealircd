@@ -217,20 +217,6 @@ CMD_FUNC(m_protoctl)
 			    proto, cptr->name));
 			SetUMODE2(cptr);
 		}
-		else if (strcmp(s, "NS") == 0)
-		{
-#ifdef PROTOCTL_MADNESS
-			if (remove)
-			{
-				ClearNS(cptr);
-				continue;
-			}
-#endif
-			Debug((DEBUG_ERROR,
-			    "Chose protocol %s for link %s",
-			    proto, cptr->name));
-			SetNS(cptr);
-		}
 		else if (strcmp(s, "VL") == 0)
 		{
 #ifndef PROTOCTL_MADNESS

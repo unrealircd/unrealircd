@@ -661,29 +661,13 @@ void sendto_serv_butone_token(aClient *one, char *prefix, char *command,
 
 		if (IsToken(cptr))
 		{
-			if (SupportNS(cptr) && pref[0])
-			{
-				sendto_one(cptr, "@%s %s",
-					pref, tcmd);
-			}
-			else
-			{
-				sendto_one(cptr, ":%s %s",
-					prefix, tcmd);
-			}
+			sendto_one(cptr, ":%s %s",
+				prefix, tcmd);
 		}
 		else
 		{
-			if (SupportNS(cptr) && pref[0])
-			{
-				sendto_one(cptr, "@%s %s",
-					pref, ccmd);
-			}
-			else
-			{
-				sendto_one(cptr, ":%s %s", prefix,
-				    ccmd);
-			}
+			sendto_one(cptr, ":%s %s", prefix,
+			    ccmd);
 		}
 	}
 
@@ -775,29 +759,13 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 
 		if (IsToken(cptr))
 		{
-			if (SupportNS(cptr) && pref[0])
-			{
-				sendto_one(cptr, "@%s %s",
-					pref, tcmd);
-			}
-				else
-			{
-				sendto_one(cptr, ":%s %s",
-					prefix, tcmd);
-			}
+			sendto_one(cptr, ":%s %s",
+				prefix, tcmd);
 		}
 		else
 		{
-			if (SupportNS(cptr) && pref[0])
-			{
-				sendto_one(cptr, "@%s %s",
-					pref, ccmd);
-			}
-			else
-			{
-				sendto_one(cptr, ":%s %s", prefix,
-				    ccmd);
-			}
+			sendto_one(cptr, ":%s %s", prefix,
+			    ccmd);
 		}
 	}
 	va_end(vl);
@@ -1888,29 +1856,11 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 
 			if (SupportNICKv2(cptr))
 			{
-				if (sptr->srvptr->serv->numeric && SupportNS(cptr))
-					sendto_one(cptr,
-						(cptr->proto & PROTO_SJB64) ?
-					    /* Ugly double %s to prevent excessive spaces */
-					    "%s %s %d %B %s %s %b %s %s %s %s%s%s%s:%s"
-					    :
-					    "%s %s %d %lu %s %s %b %s %s %s %s%s%s%s:%s"
-					    ,
-					    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
-					    hopcount, (long)lastnick, username, realhost,
-					    (long)(sptr->srvptr->serv->numeric),
-					    svid, umodes, vhost,
-					    SupportCLK(cptr) ? getcloak(sptr) : "",
-					    SupportCLK(cptr) ? " " : "",
-					    SupportNICKIP(cptr) ? encode_ip(sptr->user->ip_str) : "",
-					    SupportNICKIP(cptr) ? " " : "",
-					    info);
-				else
-					sendto_one(cptr,
+				sendto_one(cptr,
 					    "%s %s %d %d %s %s %s %s %s %s %s%s%s%s:%s",
 					    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
 					    hopcount, lastnick, username, realhost,
-					    SupportNS(cptr) && sptr->srvptr->serv->numeric ? base64enc(sptr->srvptr->serv->numeric) : server,
+					    server,
 					    svid, umodes, vhost,
 					    SupportCLK(cptr) ? getcloak(sptr) : "",
 					    SupportCLK(cptr) ? " " : "",
@@ -1976,28 +1926,12 @@ void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes)
 			else
 				vhost = "*";
 		}
-		if (sptr->srvptr->serv->numeric && SupportNS(cptr))
-			sendto_one(cptr,
-				(cptr->proto & PROTO_SJB64) ?
-			    /* Ugly double %s to prevent excessive spaces */
-			    "%s %s %d %B %s %s %b %s %s %s %s%s:%s"
-			    :
-			    "%s %s %d %lu %s %s %b %s %s %s %s%s:%s"
-			    ,
-			    (IsToken(cptr) ? TOK_NICK : MSG_NICK), sptr->name,
-			    sptr->hopcount+1, (long)sptr->lastnick, sptr->user->username, 
-			    sptr->user->realhost, (long)(sptr->srvptr->serv->numeric),
-			    sptr->user->svid, umodes, vhost,
-			    SupportNICKIP(cptr) ? encode_ip(sptr->user->ip_str) : "",
-			    SupportNICKIP(cptr) ? " " : "", sptr->info);
-		else
-			sendto_one(cptr,
+		sendto_one(cptr,
 			    "%s %s %d %d %s %s %s %lu %s %s %s%s:%s",
 			    (IsToken(cptr) ? TOK_NICK : MSG_NICK), sptr->name,
 			    sptr->hopcount+1, sptr->lastnick, sptr->user->username, 
-			    sptr->user->realhost, SupportNS(cptr) && 
-			    sptr->srvptr->serv->numeric ? base64enc(sptr->srvptr->serv->numeric)
-			    : sptr->user->server, sptr->user->svid, umodes, vhost,
+			    sptr->user->realhost, sptr->user->server,
+			    sptr->user->svid, umodes, vhost,
 			    SupportNICKIP(cptr) ? encode_ip(sptr->user->ip_str) : "",
 			    SupportNICKIP(cptr) ? " " : "", sptr->info);
 	}
