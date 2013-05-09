@@ -85,14 +85,11 @@ DLLFUNC int MOD_UNLOAD(m_links)(int module_unload)
 */
 DLLFUNC CMD_FUNC(m_links)
 {
-	Link *lp;
 	aClient *acptr;
 	int flat = (FLAT_MAP && !IsAnOper(sptr)) ? 1 : 0;
 
-	for (lp = Servers; lp; lp = lp->next)
+	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
-		acptr = lp->value.cptr;
-
 		/* Some checks */
 		if (HIDE_ULINES && IsULine(acptr) && !IsAnOper(sptr))
 			continue;

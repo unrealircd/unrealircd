@@ -584,7 +584,6 @@ CMD_FUNC(m_server_remote)
 	if (IsULine(sptr)
 	    || (Find_uline(acptr->name)))
 		acptr->flags |= FLAGS_ULINE;
-	add_server_to_table(acptr);
 	IRCstats.servers++;
 	(void)find_or_add(acptr->name);
 	add_client_to_list(acptr);
@@ -709,7 +708,6 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 	}
 	cptr->serv->conf->class->clients++;
 	cptr->class = cptr->serv->conf->class;
-	add_server_to_table(cptr);
 	RunHook(HOOKTYPE_SERVER_CONNECT, cptr);
 
 	list_for_each_entry(acptr, &server_list, special_node)

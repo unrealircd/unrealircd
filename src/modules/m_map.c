@@ -85,7 +85,6 @@ static void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_leng
 	char *p = &prompt[prompt_length];
 	int  cnt = 0;
 	aClient *acptr;
-	Link *lp;
 
 	*p = '\0';
 
@@ -110,10 +109,8 @@ static void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_leng
 
 	strcpy(p, "|-");
 
-
-	for (lp = Servers; lp; lp = lp->next)
+	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
-		acptr = lp->value.cptr;
 		if (acptr->srvptr != server ||
  		    (IsULine(acptr) && !IsOper(cptr) && HIDE_ULINES))
 			continue;
@@ -121,9 +118,8 @@ static void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_leng
 		cnt++;
 	}
 
-	for (lp = Servers; lp; lp = lp->next)
+	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
-		acptr = lp->value.cptr;
 		if (IsULine(acptr) && HIDE_ULINES && !IsAnOper(cptr))
 			continue;
 		if (acptr->srvptr != server)
@@ -133,7 +129,6 @@ static void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_leng
 		if (--cnt == 0)
 			*p = '`';
 		dump_map(cptr, acptr, mask, prompt_length + 2, length - 2);
-
 	}
 
 	if (prompt_length > 0)
@@ -143,7 +138,6 @@ static void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_leng
 void dump_flat_map(aClient *cptr, aClient *server, int length)
 {
 char buf[4];
-Link *lp;
 aClient *acptr;
 int cnt = 0, hide_ulines;
 
@@ -152,18 +146,16 @@ int cnt = 0, hide_ulines;
 	sendto_one(cptr, rpl_str(RPL_MAP), me.name, cptr->name, "",
 	    length, server->name, server->serv->users);
 
-	for (lp = Servers; lp; lp = lp->next)
+	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
-		acptr = lp->value.cptr;
 		if ((IsULine(acptr) && hide_ulines) || (acptr == server))
 			continue;
 		cnt++;
 	}
 
 	strcpy(buf, "|-");
-	for (lp = Servers; lp; lp = lp->next)
+	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
-		acptr = lp->value.cptr;
 		if ((IsULine(acptr) && hide_ulines) || (acptr == server))
 			continue;
 		if (--cnt == 0)
@@ -182,16 +174,14 @@ int cnt = 0, hide_ulines;
 **/
 DLLFUNC CMD_FUNC(m_map)
 {
-	Link *lp;
 	aClient *acptr;
 	int  longest = strlen(me.name);
 
 
 	if (parc < 2)
 		parv[1] = "*";
-	for (lp = Servers; lp; lp = lp->next)
+	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
-		acptr = lp->value.cptr;
 		if ((strlen(acptr->name) + acptr->hopcount * 2) > longest)
 			longest = strlen(acptr->name) + acptr->hopcount * 2;
 	}

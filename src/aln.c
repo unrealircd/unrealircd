@@ -50,8 +50,6 @@ static inline char *int_to_base64(long);
 static inline long base64_to_int(char *);
 
 
-Link *Servers = NULL;
-
 char *base64enc(long i)
 {
 	if (i < 0)

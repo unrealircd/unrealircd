@@ -146,12 +146,11 @@ int  crule_connected(int numargs, void *crulearg[])
 {
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
 	aClient *acptr;
-	Link *lp;
 
 	/* taken from m_links */
 	/* Faster this way -- codemastr*/
-	for (lp = Servers; lp; lp = lp->next) {
-		acptr = lp->value.cptr;
+	list_for_each_entry(acptr, &global_server_list, client_node)
+	{
 		if (match((char *)crulearg[0], acptr->name))
 			continue;
 		return (1);
@@ -183,12 +182,11 @@ int  crule_via(int numargs, void *crulearg[])
 {
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
 	aClient *acptr;
-	Link *lp;
 
 	/* adapted from m_links */
 	/* Faster this way -- codemastr */
-	for (lp = Servers; lp; lp = lp->next) {
-		acptr = lp->value.cptr;
+	list_for_each_entry(acptr, &global_server_list, client_node)
+	{
 		if (match((char *)crulearg[1], acptr->name))
 			continue;
 		if (match((char *)crulearg[0], acptr->serv->up))

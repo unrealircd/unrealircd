@@ -681,7 +681,6 @@ CMD_FUNC(m_rehash)
 		if (parv[1] && !_match("-glob*", parv[1]))
 		{
 			/* /REHASH -global [options] */
-			Link *lp;
 			aClient *acptr;
 			
 			/* Shift parv's to the left */
@@ -704,9 +703,8 @@ CMD_FUNC(m_rehash)
 				return 0;
 			}
 			/* Broadcast it in an inefficient, but backwards compatible way. */
-			for (lp = Servers; lp; lp = lp->next)
+			list_for_each_entry(acptr, &global_server_list, client_node)
 			{
-				acptr = lp->value.cptr;
 				if (acptr == &me)
 					continue;
 				sendto_one(acptr, ":%s %s %s %s",
