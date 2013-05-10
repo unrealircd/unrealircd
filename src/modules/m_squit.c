@@ -99,10 +99,7 @@ CMD_FUNC(m_squit)
 	{
 		server = parv[1];
 
-		/* We used to allow wildcards here, but this wasn't really a good
-		 * idea because it made the behaviour of SQUIT unpredictable.  --nenolod
-		 */
-		acptr = find_client(server, NULL);
+		acptr = find_server_quickx(server, NULL);
 		if (acptr && IsMe(acptr))
 		{
 			acptr = cptr;
