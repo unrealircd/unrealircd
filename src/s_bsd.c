@@ -1695,13 +1695,11 @@ static struct SOCKADDR *connect_inet(ConfigItem_link *aconf, aClient *cptr, int 
 
 	get_sockhost(cptr, aconf->hostname);
 
-	bzero((char *)&server, sizeof(server));
-	server.SIN_FAMILY = AFINET;
-	server.SIN_PORT = 0;
-	server.SIN_ADDR = INADDR_ANY;
-
 	if (aconf->bindip && strcmp("*", aconf->bindip))
 	{
+		bzero((char *)&server, sizeof(server));
+		server.SIN_FAMILY = AFINET;
+		server.SIN_PORT = 0;
 #ifndef INET6
 		server.SIN_ADDR.S_ADDR = inet_addr(aconf->bindip);	
 #else
