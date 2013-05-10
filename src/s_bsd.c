@@ -1692,13 +1692,14 @@ static struct SOCKADDR *connect_inet(ConfigItem_link *aconf, aClient *cptr, int 
 		return NULL;
 	}
 	mysk.SIN_PORT = 0;
+
+	get_sockhost(cptr, aconf->hostname);
+
 	bzero((char *)&server, sizeof(server));
 	server.SIN_FAMILY = AFINET;
-	get_sockhost(cptr, aconf->hostname);
-	
 	server.SIN_PORT = 0;
-	server.SIN_ADDR = me.ip;
-	server.SIN_FAMILY = AFINET;
+	server.SIN_ADDR = INADDR_ANY;
+
 	if (aconf->bindip && strcmp("*", aconf->bindip))
 	{
 #ifndef INET6
@@ -1706,12 +1707,13 @@ static struct SOCKADDR *connect_inet(ConfigItem_link *aconf, aClient *cptr, int 
 #else
 		inet_pton(AF_INET6, aconf->bindip, server.SIN_ADDR.S_ADDR);
 #endif
+		if (bind(cptr->fd, (struct SOCKADDR *)&server, sizeof(server)) == -1)
+		{
+			report_baderror("error binding to local port for %s:%s", cptr);
+			return NULL;
+		}
 	}
-	if (bind(cptr->fd, (struct SOCKADDR *)&server, sizeof(server)) == -1)
-	{
-		report_baderror("error binding to local port for %s:%s", cptr);
-		return NULL;
-	}
+
 	bzero((char *)&server, sizeof(server));
 	server.SIN_FAMILY = AFINET;
 	/*
