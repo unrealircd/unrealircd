@@ -235,20 +235,37 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						&& IsAnOper(sptr))
 						*(buf + len++) = '!';
 					access = get_access(acptr, chptr);
+					if (!SupportNAMESX(sptr))
+					{
 #ifdef PREFIX_AQ
-					if (access & CHFL_CHANOWNER)
-						*(buf + len++) = '~';
-					else if (access & CHFL_CHANPROT)
-
-						*(buf + len++) = '&';
-					else
+						if (access & CHFL_CHANOWNER)
+							*(buf + len++) = '~';
+						else if (access & CHFL_CHANPROT)
+							*(buf + len++) = '&';
+						else
 #endif
-					if (access & CHFL_CHANOP)
-						*(buf + len++) = '@';
-					else if (access & CHFL_HALFOP)
-						*(buf + len++) = '%';
-					else if (access & CHFL_VOICE)
-						*(buf + len++) = '+';
+						if (access & CHFL_CHANOP)
+							*(buf + len++) = '@';
+						else if (access & CHFL_HALFOP)
+							*(buf + len++) = '%';
+						else if (access & CHFL_VOICE)
+							*(buf + len++) = '+';
+					}
+					else
+					{
+#ifdef PREFIX_AQ
+						if (access & CHFL_CHANOWNER)
+							*(buf + len++) = '~';
+						if (access & CHFL_CHANPROT)
+							*(buf + len++) = '&';
+#endif
+						if (access & CHFL_CHANOP)
+							*(buf + len++) = '@';
+						if (access & CHFL_HALFOP)
+							*(buf + len++) = '%';
+						if (access & CHFL_VOICE)
+							*(buf + len++) = '+';
+					}
 					if (len)
 						*(buf + len) = '\0';
 					(void)strcpy(buf + len, chptr->chname);
