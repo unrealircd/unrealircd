@@ -35,11 +35,7 @@ int CommandExists(char *name)
 		if (!stricmp(p->cmd, name))
 			return 1;
 	}
-	for (p = TokenHash[*name]; p; p = p->next)
-	{
-		if (!strcmp(p->cmd, name))
-			return 1;
-	}
+
 	return 0;
 }
 
@@ -53,17 +49,10 @@ Command *CommandAdd(Module *module, char *cmd, char *tok, int (*func)(), unsigne
 		return NULL;
 	}
 	command = MyMallocEx(sizeof(Command));
-	command->cmd = add_Command_backend(cmd,func,params, 0, flags);
+	command->cmd = add_Command_backend(cmd,func,params, flags);
 	command->tok = NULL;
 	command->cmd->owner = module;
-	if (tok) {
-		command->tok = add_Command_backend(tok,func,params,1,flags);
-		command->cmd->friend = command->tok;
-		command->tok->friend = command->cmd;
-		command->tok->owner = module;
-	}
-	else
-		command->cmd->friend = NULL;
+	command->cmd->friend = NULL;
 	if (module) {
 		ModuleObject *cmdobj = (ModuleObject *)MyMallocEx(sizeof(ModuleObject));
 		cmdobj->object.command = command;
@@ -123,8 +112,6 @@ void CommandDel(Command *command) {
 			cmdstr = tmp;
 	}
 	DelListItem(command->cmd, CommandHash[toupper(*command->cmd->cmd)]);
-	if (command->tok)
-		DelListItem(command->tok, TokenHash[*command->tok->cmd]);
 	if (command->cmd->owner) {
 		ModuleObject *cmdobj;
 		for (cmdobj = command->cmd->owner->objects; cmdobj; cmdobj = (ModuleObject *)cmdobj->next) {

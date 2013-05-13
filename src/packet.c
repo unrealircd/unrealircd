@@ -29,7 +29,6 @@ ID_Copyright
 ID_Notes("2.12 1/30/94");
 
 aCommand	*CommandHash[256]; /* one per letter */
-aCommand	*TokenHash[256]; 
 
 /*
 ** dopacket
@@ -207,7 +206,6 @@ void	init_CommandHash(void)
 #endif
 	
 	bzero(CommandHash, sizeof(CommandHash));
-	bzero(TokenHash, sizeof(TokenHash));
 	add_CommandX(MSG_ERROR, TOK_ERROR, m_error, MAXPARA, M_UNREGISTERED|M_SERVER);
 	add_CommandX(MSG_VERSION, TOK_VERSION, m_version, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
 	add_Command(MSG_SUMMON, NULL, m_summon, 1);
@@ -232,20 +230,10 @@ void	init_CommandHash(void)
 			fprintf(stderr, "%c chainlength = %i\r\n",
 					i, chainlength);
 	}				
-	fprintf(stderr, "Tokens:\n");
-	for (i = 0; i <= 255; i++)
-	{
-		chainlength = 0;
-		for (p = TokenHash[i]; p; p = p->next)
-			chainlength++;
-		if (chainlength)
-			fprintf(stderr, "%c chainlength = %i\r\n",
-					i, chainlength);
-	}				
 #endif
 }
 
-aCommand *add_Command_backend(char *cmd, int (*func)(), unsigned char parameters, unsigned char token, int flags)
+aCommand *add_Command_backend(char *cmd, int (*func)(), unsigned char parameters, int flags)
 {
 	aCommand	*newcmd = (aCommand *) MyMalloc(sizeof(aCommand));
 	
@@ -257,55 +245,33 @@ aCommand *add_Command_backend(char *cmd, int (*func)(), unsigned char parameters
 	newcmd->flags = flags;
 	
 	/* Add in hash with hash value = first byte */
-	if (!token)
-		AddListItem(newcmd, CommandHash[toupper(*cmd)]);
-	else
-		AddListItem(newcmd, TokenHash[*cmd]);
+	AddListItem(newcmd, CommandHash[toupper(*cmd)]);
+
 	return newcmd;
 }
 
 void	add_Command(char *name, char *token, int (*func)(), unsigned char parameters)
 {
 	aCommand *cmd, *tok;
-	cmd = add_Command_backend(name, func, parameters, 0, 0);
-	if (token)
-	{
-		tok = add_Command_backend(token, func, parameters, 1, 0);
-		tok->friend = cmd;
-		cmd->friend = tok;
-	}
-	else
-		cmd->friend = NULL;
+	cmd = add_Command_backend(name, func, parameters, 0);
+	cmd->friend = NULL;
 }
 
 void    add_CommandX(char *name, char *token, int (*func)(), unsigned char parameters, int flags) 
 {
 	aCommand *cmd, *tok;
-	cmd = add_Command_backend(name, func, parameters, 0, flags);
-	if (token != NULL)
-	{
-		tok = add_Command_backend(token, func, parameters, 1, flags);
-		tok->friend = cmd;
-		cmd->friend = tok;
-	}
-	else
-		cmd->friend = NULL;
+	cmd = add_Command_backend(name, func, parameters, flags);
+	cmd->friend = NULL;
 }
 
 inline aCommand *find_CommandEx(char *cmd, int (*func)(), int token)
 {
 	aCommand *p;
 	
-	if (!token)
-	{
-		for (p = CommandHash[toupper(*cmd)]; p; p = p->next)
-			if (!stricmp(p->cmd, cmd) && p->func == func)
-				return p;
-		return NULL;
-	}
-	for (p = TokenHash[*cmd]; p; p = p->next)
-		if (!strcmp(p->cmd, cmd) && p->func == func)
+	for (p = CommandHash[toupper(*cmd)]; p; p = p->next)
+		if (!stricmp(p->cmd, cmd) && p->func == func)
 			return p;
+
 	return NULL;
 	
 }
@@ -331,39 +297,8 @@ int del_Command(char *cmd, char *token, int (*func)())
 			MyFree(p->cmd);
 		MyFree(p);
 	}
-	if (token != NULL) {
-		p = find_CommandEx(token, func, 1);
-		if (!p)
-			i--;
-		else
-		{
-			DelListItem(p, TokenHash[*token]);
-			if (p->cmd)
-				MyFree(p->cmd);
-			MyFree(p);
-		}
-	}
 	return i;	
 
-}
-
-static inline aCommand *find_Token(char *cmd, int flags)
-{
-	aCommand *p;
-
-	for (p = TokenHash[*cmd]; p; p = p->next) {
-		if ((flags & M_UNREGISTERED) && !(p->flags & M_UNREGISTERED))
-			continue;
-		if ((flags & M_SHUN) && !(p->flags & M_SHUN))
-			continue;
-		if ((flags & M_VIRUS) && !(p->flags & M_VIRUS))
-			continue;
-		if ((flags & M_ALIAS) && !(p->flags & M_ALIAS))
-			continue;
-		if (!strcmp(p->cmd, cmd))
-			return p;
-	}
-	return NULL;
 }
 
 static inline aCommand *find_Cmd(char *cmd, int flags)
@@ -390,18 +325,6 @@ inline aCommand *find_Command(char *cmd, short token, int flags)
 	
 	Debug((DEBUG_NOTICE, "FindCommand %s", cmd));
 
-	if (token)
-	{
-		if (strlen(cmd) < 3)
-		{
-			if ((p = find_Token(cmd, flags)))
-				return p;
-			return find_Cmd(cmd, flags);
-		}
-		if ((p = find_Cmd(cmd, flags)))
-			return p;
-		return find_Token(cmd, flags);
-	}
 	return find_Cmd(cmd, flags);
 }
 
@@ -414,10 +337,6 @@ aCommand *find_Command_simple(char *cmd)
 				return (p);
 	}
 
-	for (p = TokenHash[*cmd]; p; p = p->next) {
-		if (!strcmp(p->cmd, cmd))
-				return p;
-	}
 	return NULL;
 }
 
