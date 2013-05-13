@@ -66,6 +66,7 @@ Computing Center and Jarkko Oikarinen";
 #include <fcntl.h>
 #include "sock.h"		/* If FD_ZERO isn't define up to this point,  */
 #include <string.h>
+#include <netinet/tcp.h>
 #include "proto.h"
 			/* define it (BSD4.2 needs this) */
 #include "h.h"
@@ -444,7 +445,7 @@ int  inetport(ConfigItem_listen *listener, char *name, int port)
 	result = listen(listener->fd, LISTEN_SIZE);
 
 #ifdef TCP_DEFER_ACCEPT
-	if ((listener->flags & LISTENER_DEFER_ACCEPT) && !result)
+	if ((listener->options & LISTENER_DEFER_ACCEPT) && !result)
 	{
 		int true = 1;
 
@@ -453,7 +454,7 @@ int  inetport(ConfigItem_listen *listener, char *name, int port)
 #endif
 
 #ifdef SO_ACCEPTFILTER
-	if ((listener->flags & LISTENER_DEFER_ACCEPT) && !result)
+	if ((listener->options & LISTENER_DEFER_ACCEPT) && !result)
 	{
 		struct accept_filter_arg afa;
 
