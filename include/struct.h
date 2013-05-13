@@ -353,7 +353,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	FLAGS_ID	(FLAGS_DOID|FLAGS_GOTID)
 
 #define PROTO_NOQUIT	0x0001	/* Negotiated NOQUIT protocol */
-#define PROTO_TOKEN		0x0002	/* Negotiated TOKEN protocol */
 #define PROTO_SJOIN		0x0004	/* Negotiated SJOIN protocol */
 #define PROTO_NICKv2	0x0008	/* Negotiated NICKv2 protocol */
 #define PROTO_SJOIN2	0x0010	/* Negotiated SJOIN2 protocol */
@@ -520,7 +519,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #endif
 
 #define DontSendQuit(x)		(CHECKPROTO(x, PROTO_NOQUIT))
-#define IsToken(x)		(CHECKPROTO(x, PROTO_TOKEN))
 #define SupportSJOIN(x)		(CHECKPROTO(x, PROTO_SJOIN))
 #define SupportNICKv2(x)	(CHECKPROTO(x, PROTO_NICKv2))
 #define SupportNICKIP(x)	(CHECKPROTO(x, PROTO_NICKIP))
