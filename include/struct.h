@@ -549,7 +549,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 
 #define ClearSJOIN(x)		((x)->proto &= ~PROTO_SJOIN)
 #define ClearNoQuit(x)		((x)->proto &= ~PROTO_NOQUIT)
-#define ClearToken(x)		((x)->proto &= ~PROTO_TOKEN)
 #define ClearNICKv2(x)		((x)->proto &= ~PROTO_NICKv2)
 #define ClearSJOIN2(x)		((x)->proto &= ~PROTO_SJOIN2)
 #define ClearUMODE2(x)		((x)->proto &= ~PROTO_UMODE2)
