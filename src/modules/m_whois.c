@@ -109,8 +109,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (parc > 2)
 	{
-		if (hunt_server_token(cptr, sptr, MSG_WHOIS, TOK_WHOIS, "%s :%s", 1, parc,
-		    parv) != HUNTED_ISME)
+		if (hunt_server(cptr, sptr, ":%s WHOIS %s :%s", 1, parc, parv) != HUNTED_ISME)
 			return 0;
 		parv[1] = parv[2];
 	}

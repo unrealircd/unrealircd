@@ -385,15 +385,13 @@ DLLFUNC CMD_FUNC(m_stats)
 
 	if (parc == 3 && parv[2][0] != '+' && parv[2][0] != '-')
 	{
-		if (hunt_server_token(cptr, sptr, MSG_STATS, TOK_STATS, "%s :%s", 2, parc,
-		    parv) != HUNTED_ISME)
+		if (hunt_server(cptr, sptr, ":%s STATS %s :%s", 2, parc, parv) != HUNTED_ISME)
 			return 0;
 	}
 	else if (parc == 4 && parv[2][0] != '+' && parv[2][0] != '-')
 	{
-		if (hunt_server_token(cptr, sptr, MSG_STATS, TOK_STATS, "%s %s %s", 2, parc,
-			parv) != HUNTED_ISME)
-				return 0;
+		if (hunt_server(cptr, sptr, ":%s STATS %s %s %s", 2, parc, parv) != HUNTED_ISME)
+			return 0;
 	}
 	if (parc < 2 || !*parv[1])
 	{

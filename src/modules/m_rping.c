@@ -134,8 +134,7 @@ DLLFUNC int  m_rping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (IsAnOper(sptr))
 	{
-		if (hunt_server_token(cptr, sptr, MSG_RPING, TOK_RPING, "%s %s :%s", 2, parc,
-		    parv) != HUNTED_ISME)
+		if (hunt_server(cptr, sptr, ":%s RPING %s %s :%s", 2, parc, parv) != HUNTED_ISME)
 			return 0;
 		if (!(acptr = (aClient *)find_match_server(parv[1])) || !IsServer(acptr))
 		{
@@ -149,8 +148,7 @@ DLLFUNC int  m_rping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	else
 	{
-		if (hunt_server_token(cptr, sptr, MSG_RPING, TOK_RPING, "%s %s %s %s :%s", 1,
-		    parc, parv) != HUNTED_ISME)
+		if (hunt_server(cptr, sptr, ":%s RPING %s %s %s %s :%s", 1, parc, parv) != HUNTED_ISME)
 			return 0;
 		sendto_one(cptr, ":%s RPONG %s %s %s %s :%s", me.name, parv[0],
 		    parv[2], parv[3], parv[4], parv[5]);

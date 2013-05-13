@@ -109,10 +109,6 @@ DLLFUNC CMD_FUNC(m_names)
 		return 0;
 	}
 
-	if (parc > 1 &&
-	    hunt_server_token(cptr, sptr, MSG_NAMES, TOK_NAMES, "%s %s", 2, parc, parv))
-		return 0;
-
 	for (s = para; *s; s++)
 	{
 		if (*s == ',')

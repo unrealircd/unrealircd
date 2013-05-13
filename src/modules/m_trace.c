@@ -92,7 +92,7 @@ DLLFUNC CMD_FUNC(m_trace)
 
 
 	if (parc > 2)
-		if (hunt_server_token(cptr, sptr, MSG_TRACE, TOK_TRACE, "%s :%s", 2, parc, parv))
+		if (hunt_server(cptr, sptr, ":%s TRACE %s :%s", 2, parc, parv))
 			return 0;
 
 	if (parc > 1)
@@ -117,7 +117,7 @@ DLLFUNC CMD_FUNC(m_trace)
 		}
 	}
 
-	switch (hunt_server_token(cptr, sptr, MSG_TRACE, TOK_TRACE, ":%s", 1, parc, parv))
+	switch (hunt_server(cptr, sptr, ":%s TRACE :%s", 1, parc, parv))
 	{
 	  case HUNTED_PASS:	/* note: gets here only if parv[1] exists */
 	  {

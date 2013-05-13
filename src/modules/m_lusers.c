@@ -83,8 +83,7 @@ DLLFUNC CMD_FUNC(m_lusers)
 {
 char flatmap;
 
-	if (hunt_server_token(cptr, sptr, MSG_LUSERS, TOK_LUSERS,
-                          ":%s", 1, parc, parv) != HUNTED_ISME)
+	if (hunt_server(cptr, sptr, ":%s LUSERS :%s", 1, parc, parv) != HUNTED_ISME)
 		return 0;
 
 	flatmap = (FLAT_MAP && !IsAnOper(sptr)) ? 1 : 0;

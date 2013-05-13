@@ -90,8 +90,7 @@ DLLFUNC CMD_FUNC(m_rules)
 	if (IsServer(sptr))
 		return 0;
 		
-	if (hunt_server_token(cptr, sptr, MSG_RULES, TOK_RULES, ":%s", 1, parc,
-	    parv) != HUNTED_ISME)
+	if (hunt_server(cptr, sptr, ":%s RULES :%s", 1, parc, parv) != HUNTED_ISME)
 		return 0;
 #ifndef TLINE_Remote
 	if (!MyConnect(sptr))

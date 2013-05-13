@@ -104,10 +104,9 @@ int  do_svssno(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_ch
 	if (!(acptr = find_person(parv[1], NULL)))
 		return 0;
 
-	if (hunt_server_token(cptr, sptr,
-	                      show_change ? MSG_SVS2SNO : MSG_SVSSNO,
-	                      show_change ? TOK_SVS2SNO : TOK_SVSSNO,
-	                      "%s %s", 1, parc, parv) != HUNTED_ISME)
+	if (hunt_server(cptr, sptr,
+	                      show_change ? ":%s SVS2SNO %s %s" : ":%s SVSSNO %s %s",
+	                      1, parc, parv) != HUNTED_ISME)
 	{
 		return 0;
 	}

@@ -88,8 +88,7 @@ int  m_svslusers(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
         if (!IsULine(sptr) || parc < 4)
 		return -1;  
-        if (hunt_server_token(cptr, sptr, MSG_SVSLUSERS, TOK_SVSLUSERS, "%s %s :%s", 1, parc,
-		parv) == HUNTED_ISME)
+        if (hunt_server(cptr, sptr, ":%s SVSLUSERS %s %s :%s", 1, parc, parv) == HUNTED_ISME)
         {
 		int temp;
 		temp = atoi(parv[2]);

@@ -86,8 +86,7 @@ DLLFUNC int MOD_UNLOAD(m_time)(int module_unload)
 */
 CMD_FUNC(m_time)
 {
-	if (hunt_server_token(cptr, sptr, MSG_TIME, TOK_TIME, ":%s", 1, parc,
-	    parv) == HUNTED_ISME)
+	if (hunt_server(cptr, sptr, ":%s TIME :%s", 1, parc, parv) == HUNTED_ISME)
 		sendto_one(sptr, rpl_str(RPL_TIME), me.name, parv[0], me.name,
 		    date((long)0));
 	return 0;

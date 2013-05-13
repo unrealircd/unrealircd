@@ -84,8 +84,7 @@ DLLFUNC CMD_FUNC(m_botmotd)
 	ConfigItem_tld *tld;
 	char userhost[HOSTLEN + USERLEN + 6];
 
-	if (hunt_server_token(cptr, sptr, MSG_BOTMOTD, TOK_BOTMOTD, ":%s", 1, parc,
-	    parv) != HUNTED_ISME)
+	if (hunt_server(cptr, sptr, ":%s BOTMOTD :%s", 1, parc, parv) != HUNTED_ISME)
 		return 0;
 
 	if (!IsPerson(sptr))
