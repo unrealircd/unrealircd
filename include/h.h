@@ -323,7 +323,6 @@ extern char *make_user_host(char *, char *);
 extern int parse(aClient *, char *, char *);
 extern int do_numeric(int, aClient *, aClient *, int, char **);
 extern int hunt_server(aClient *, aClient *, char *, int, int, char **);
-extern int hunt_server_token(aClient *, aClient *, char *, char *, char *, int, int, char **);
 extern aClient *next_client(aClient *, char *);
 extern int m_server_estab(aClient *);
 extern void umode_init(void);
