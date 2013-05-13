@@ -595,9 +595,8 @@ CMD_FUNC(m_server_remote)
 	{
 		if (bcptr == cptr || IsMe(bcptr))
 				continue;
-		sendto_one(bcptr, ":%s %s %s %d :%s",
+		sendto_one(bcptr, ":%s SERVER %s %d :%s",
 			    parv[0],
-			    IsToken(bcptr) ? TOK_SERVER : MSG_SERVER,
 			    acptr->name, hop + 1, acptr->info);
 	}
 
@@ -715,9 +714,8 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 		if (acptr == cptr || IsMe(acptr))
 			continue;
 
-		sendto_one(acptr, ":%s %s %s 2 :%s",
+		sendto_one(acptr, ":%s SERVER %s 2 :%s",
 			    me.name,
-			    (IsToken(acptr) ? TOK_SERVER : MSG_SERVER),
 			    cptr->name, cptr->info);
 	}
 
@@ -729,9 +727,8 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 
 		if (IsServer(acptr))
 		{
-			sendto_one(cptr, ":%s %s %s %d :%s",
+			sendto_one(cptr, ":%s SERVER %s %d :%s",
 				    acptr->serv->up,
-				    (IsToken(cptr) ? TOK_SERVER : MSG_SERVER),
 				    acptr->name, acptr->hopcount + 1,
 				    acptr->info);
 
@@ -746,8 +743,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 			 */
 			if (acptr->serv->flags.synced)
 			{
-				sendto_one(cptr, ":%s %s", acptr->name,
-					(IsToken(cptr) ? TOK_EOS : MSG_EOS));
+				sendto_one(cptr, ":%s EOS", acptr->name);
 #ifdef DEBUGMODE
 				ircd_log(LOG_ERROR, "[EOSDBG] m_server_synch: sending to uplink '%s' with src %s...",
 					cptr->name, acptr->name);
@@ -764,79 +760,53 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 			continue;
 		if (IsPerson(acptr))
 		{
-			if (!SupportNICKv2(cptr))
+			send_umode(NULL, acptr, 0, SEND_UMODES, buf);
+
+			if (!SupportVHP(cptr))
 			{
 				sendto_one(cptr,
-				    "%s %s %d %ld %s %s %s %s :%s",
-				    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
-				    acptr->name, acptr->hopcount + 1,
-				    acptr->lastnick, acptr->user->username,
-				    acptr->user->realhost,
-				    acptr->user->server,
-				    acptr->user->svid, acptr->info);
-				send_umode(cptr, acptr, 0, SEND_UMODES, buf);
-				if (IsHidden(acptr) && acptr->user->virthost)
-					sendto_one(cptr, ":%s %s %s",
+					    (cptr->proto & PROTO_SJB64 ?
+					    "NICK %s %d %B %s %s %s %s %s %s %s%s%s%s:%s"
+					    :
+					    "NICK %s %d %lu %s %s %s %s %s %s %s%s%s%s:%s"),
 					    acptr->name,
-					    (IsToken(cptr) ? TOK_SETHOST :
-					    MSG_SETHOST),
-					    acptr->user->virthost);
-			}
-			else
-			{
-				send_umode(NULL, acptr, 0, SEND_UMODES, buf);
-
-				if (!SupportVHP(cptr))
-				{
-					sendto_one(cptr,
-						    (cptr->proto & PROTO_SJB64 ?
-						    "%s %s %d %B %s %s %s %s %s %s %s%s%s%s:%s"
-						    :
-						    "%s %s %d %lu %s %s %s %s %s %s %s%s%s%s:%s"),
-						    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
-						    acptr->name,
-						    acptr->hopcount + 1,
-						    (long)acptr->lastnick,
-						    acptr->user->username,
-						    acptr->user->realhost,
-						    acptr->user->server,
-						    acptr->user->svid,
-						    (!buf || *buf == '\0' ? "+" : buf),
-						    ((IsHidden(acptr) && (acptr->umodes & UMODE_SETHOST)) ? acptr->user->virthost : "*"),
-						    SupportCLK(cptr) ? getcloak(acptr) : "",
-						    SupportCLK(cptr) ? " " : "",
-						    SupportNICKIP(cptr) ? encode_ip(acptr->user->ip_str) : "",
-					        SupportNICKIP(cptr) ? " " : "",
-					        acptr->info);
-				}
-				else
-					sendto_one(cptr,
-					    "%s %s %d %ld %s %s %s %s %s %s %s%s:%s",
-					    (IsToken(cptr) ? TOK_NICK :
-					    MSG_NICK), acptr->name,
 					    acptr->hopcount + 1,
-					    acptr->lastnick,
+					    (long)acptr->lastnick,
 					    acptr->user->username,
 					    acptr->user->realhost,
 					    acptr->user->server,
 					    acptr->user->svid,
-					    (!buf
-					    || *buf == '\0' ? "+" : buf),
-					    GetHost(acptr),
+					    (!buf || *buf == '\0' ? "+" : buf),
+					    ((IsHidden(acptr) && (acptr->umodes & UMODE_SETHOST)) ? acptr->user->virthost : "*"),
+					    SupportCLK(cptr) ? getcloak(acptr) : "",
+					    SupportCLK(cptr) ? " " : "",
 					    SupportNICKIP(cptr) ? encode_ip(acptr->user->ip_str) : "",
-				            SupportNICKIP(cptr) ? " " : "", acptr->info);
+				        SupportNICKIP(cptr) ? " " : "",
+				        acptr->info);
 			}
+			else
+				sendto_one(cptr,
+				    "NICK %s %d %ld %s %s %s %s %s %s %s%s:%s",
+				    acptr->name,
+				    acptr->hopcount + 1,
+				    acptr->lastnick,
+				    acptr->user->username,
+				    acptr->user->realhost,
+				    acptr->user->server,
+				    acptr->user->svid,
+				    (!buf
+				    || *buf == '\0' ? "+" : buf),
+				    GetHost(acptr),
+				    SupportNICKIP(cptr) ? encode_ip(acptr->user->ip_str) : "",
+			            SupportNICKIP(cptr) ? " " : "", acptr->info);
 
 			if (acptr->user->away)
-				sendto_one(cptr, ":%s %s :%s", acptr->name,
-				    (IsToken(cptr) ? TOK_AWAY : MSG_AWAY),
+				sendto_one(cptr, ":%s AWAY :%s", acptr->name,
 				    acptr->user->away);
 			if (acptr->user->swhois)
 				if (*acptr->user->swhois != '\0')
-					sendto_one(cptr, "%s %s :%s",
-					    (IsToken(cptr) ? TOK_SWHOIS :
-					    MSG_SWHOIS), acptr->name,
-					    acptr->user->swhois);
+					sendto_one(cptr, "SWHOIS %s :%s",
+					    acptr->name, acptr->user->swhois);
 
 			if (!SupportSJOIN(cptr))
 				send_user_joins(cptr, acptr);
@@ -860,10 +830,9 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 			if (chptr->topic_time)
 				sendto_one(cptr,
 				    (cptr->proto & PROTO_SJB64 ?
-				    "%s %s %s %B :%s"
+				    "TOPIC %s %s %B :%s"
 				    :
-				    "%s %s %s %lu :%s"),
-				    (IsToken(cptr) ? TOK_TOPIC : MSG_TOPIC),
+				    "TOPIC %s %s %lu :%s"),
 				    chptr->chname, chptr->topic_nick,
 				    (long)chptr->topic_time, chptr->topic);
 		}
@@ -874,15 +843,13 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 	/* send out SVSFLINEs */
 	dcc_sync(cptr);
 
-	sendto_one(cptr, "%s %i %li %i %s 0 0 0 :%s",
-	    (IsToken(cptr) ? TOK_NETINFO : MSG_NETINFO),
+	sendto_one(cptr, "NETINFO %i %li %i %s 0 0 0 :%s",
 	    IRCstats.global_max, TStime(), UnrealProtocol,
 	    CLOAK_KEYCRC,
 	    ircnetwork);
 
 	/* Send EOS (End Of Sync) to the just linked server... */
-	sendto_one(cptr, ":%s %s", me.name,
-		(IsToken(cptr) ? TOK_EOS : MSG_EOS));
+	sendto_one(cptr, ":%s EOS", me.name);
 #ifdef DEBUGMODE
 	ircd_log(LOG_ERROR, "[EOSDBG] m_server_synch: sending to justlinked '%s' with src ME...",
 			cptr->name);
@@ -959,12 +926,12 @@ static int send_mode_list(aClient *cptr, char *chname, TS creationtime, Member *
 static inline void send_channel_mode(aClient *cptr, char *from, aChannel *chptr)
 {
 	if (*parabuf)
-		sendto_one(cptr, ":%s %s %s %s %s %lu", from,
-			(IsToken(cptr) ? TOK_MODE : MSG_MODE), chptr->chname,
+		sendto_one(cptr, ":%s MODE %s %s %s %lu", from,
+			chptr->chname,
 			modebuf, parabuf, chptr->creationtime);
 	else
-		sendto_one(cptr, ":%s %s %s %s %lu", from,
-			(IsToken(cptr) ? TOK_MODE : MSG_MODE), chptr->chname,
+		sendto_one(cptr, ":%s MODE %s %s %lu", from,
+			chptr->chname,
 			modebuf, chptr->creationtime);
 }
 
@@ -1058,8 +1025,8 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
 	/* send MLOCK here too... --nenolod */
 	if (CHECKPROTO(cptr, PROTO_MLOCK))
 	{
-		sendto_one(cptr, (CHECKPROTO(cptr, PROTO_SJB64) ? "%s %B %s :%s" : "%s %lu %s :%s"),
-			   (IsToken(cptr) ? TOK_MLOCK : MSG_MLOCK), chptr->creationtime, chptr->chname,
+		sendto_one(cptr, (CHECKPROTO(cptr, PROTO_SJB64) ? "MLOCK %B %s :%s" : "MLOCK %lu %s :%s"),
+			   chptr->creationtime, chptr->chname,
 			   BadPtr(chptr->mode_lock) ? "" : chptr->mode_lock);
 	}
 }
@@ -1097,8 +1064,7 @@ static int send_ban_list(aClient *cptr, char *chname, TS creationtime, aChannel 
 		if (send)
 		{
 			/* cptr is always a server! So we send creationtimes */
-			sendto_one(cptr, "%s %s %s %s %lu",
-			    (IsToken(cptr) ? TOK_MODE : MSG_MODE),
+			sendto_one(cptr, "MODE %s %s %s %lu",
 			    chname, modebuf, parabuf, creationtime);
 			sent = 1;
 			send = 0;
@@ -1135,8 +1101,7 @@ static int send_ban_list(aClient *cptr, char *chname, TS creationtime, aChannel 
 		if (send)
 		{
 			/* cptr is always a server! So we send creationtimes */
-			sendto_one(cptr, "%s %s %s %s %lu",
-			    (IsToken(cptr) ? TOK_MODE : MSG_MODE),
+			sendto_one(cptr, "MODE %s %s %s %lu",
 			    chname, modebuf, parabuf, creationtime);
 			sent = 1;
 			send = 0;
@@ -1173,8 +1138,7 @@ static int send_ban_list(aClient *cptr, char *chname, TS creationtime, aChannel 
 		if (send)
 		{
 			/* cptr is always a server! So we send creationtimes */
-			sendto_one(cptr, "%s %s %s %s %lu",
-			    (IsToken(cptr) ? TOK_MODE : MSG_MODE),
+			sendto_one(cptr, "MODE %s %s %s %lu",
 			    chname, modebuf, parabuf, creationtime);
 			sent = 1;
 			send = 0;
@@ -1228,8 +1192,7 @@ void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
 		else
 			strlcpy(parabuf, "<->", sizeof parabuf);
 	}
-	ircsprintf(buf, "%s %ld %s %s %s :",
-	    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
+	ircsprintf(buf, "SJOIN %ld %s %s %s :",
 	    chptr->creationtime, chptr->chname, modebuf, parabuf);
 
 	bufptr = buf + strlen(buf);
@@ -1266,8 +1229,7 @@ void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
 				bufptr[-1] = '\0';
 			sendto_one(cptr, "%s", buf);
 
-			ircsprintf(buf, "%s %ld %s %s %s :",
-			    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
+			ircsprintf(buf, "SJOIN %ld %s %s %s :",
 			    chptr->creationtime, chptr->chname, modebuf,
 			    parabuf);
 			n = 0;
@@ -1290,8 +1252,7 @@ void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
 	send_ban_list(cptr, chptr->chname, chptr->creationtime, chptr);
 
 	if (modebuf[1] || *parabuf)
-		sendto_one(cptr, "%s %s %s %s %lu",
-		    (IsToken(cptr) ? TOK_MODE : MSG_MODE),
+		sendto_one(cptr, "MODE %s %s %s %lu",
 		    chptr->chname, modebuf, parabuf, chptr->creationtime);
 
 	return;
@@ -1347,22 +1308,19 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 	if (nomode && nopara)
 	{
 		ircsprintf(buf,
-		    (cptr->proto & PROTO_SJB64 ? ":%s %s %B %s :" : ":%s %s %ld %s :"), me.name,
-		    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
+		    (cptr->proto & PROTO_SJB64 ? ":%s SJOIN %B %s :" : ":%s SJOIN %ld %s :"), me.name,
 		    (long)chptr->creationtime, chptr->chname);
 	}
 	if (nopara && !nomode)
 	{
 		ircsprintf(buf, 
-		    (cptr->proto & PROTO_SJB64 ? ":%s %s %B %s %s :" : ":%s %s %ld %s %s :"), me.name,
-		    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
+		    (cptr->proto & PROTO_SJB64 ? ":%s SJOIN %B %s %s :" : ":%s SJOIN %ld %s %s :"), me.name,
 		    (long)chptr->creationtime, chptr->chname, modebuf);
 	}
 	if (!nopara && !nomode)
 	{
 		ircsprintf(buf,
-		    (cptr->proto & PROTO_SJB64 ? ":%s %s %B %s %s %s :" : ":%s %s %ld %s %s %s :"), me.name,
-		    (IsToken(cptr) ? TOK_SJOIN : MSG_SJOIN),
+		    (cptr->proto & PROTO_SJB64 ? ":%s SJOIN %B %s %s %s :" : ":%s SJOIN %ld %s %s %s :"), me.name,
 		    (long)chptr->creationtime, chptr->chname, modebuf, parabuf);
 	}
 
