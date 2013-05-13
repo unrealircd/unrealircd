@@ -685,9 +685,7 @@ EVENT(check_pings)
 				 * not nice but does the job 
 				 */
 				cptr->lasttime = TStime() - ping;
-				sendto_one(cptr, "%s :%s",
-				    IsToken(cptr) ? TOK_PING : MSG_PING,
-				    me.name);
+				sendto_one(cptr, "PING :%s", me.name);
 			}
 		}
 	}

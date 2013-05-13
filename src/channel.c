@@ -996,12 +996,11 @@ int  sendmodeto_one(aClient *cptr, char *from, char *name, char *mode, char *par
 {
 	if ((IsServer(cptr) && DoesOp(mode) && creationtime) ||
 	    IsULine(cptr))
-		sendto_one(cptr, ":%s %s %s %s %s %lu", from,
-		    (IsToken(cptr) ? TOK_MODE : MSG_MODE), name, mode,
-		    param, creationtime);
+		sendto_one(cptr, ":%s MODE %s %s %s %lu", from,
+		    name, mode, param, creationtime);
 	else
-		sendto_one(cptr, ":%s %s %s %s %s", from,
-		    (IsToken(cptr) ? TOK_MODE : MSG_MODE), name, mode, param);
+		sendto_one(cptr, ":%s MODE %s %s %s", from, name, mode, param);
+
 	return 0;
 }
 
@@ -1456,8 +1455,7 @@ void send_user_joins(aClient *cptr, aClient *user)
 	int  cnt = 0, len = 0, clen;
 	char *mask;
 
-	snprintf(buf, sizeof buf, ":%s %s ", user->name,	
-	    (IsToken(cptr) ? TOK_JOIN : MSG_JOIN));
+	snprintf(buf, sizeof buf, ":%s JOIN ", user->name);
 	len = strlen(buf);
 
 	for (lp = user->user->channel; lp; lp = lp->next)
@@ -1476,8 +1474,7 @@ void send_user_joins(aClient *cptr, aClient *user)
 				buf[len - 1] = '\0';
 				sendto_one(cptr, "%s", buf);
 			}
-			snprintf(buf, sizeof buf, ":%s %s ", user->name,
-			    (IsToken(cptr) ? TOK_JOIN : MSG_JOIN));
+			snprintf(buf, sizeof buf, ":%s JOIN ", user->name);
 			len = strlen(buf);
 			cnt = 0;
 		}

@@ -500,10 +500,7 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 			 * remote link already */
 			if (sentalong[i] != sentalong_marker)
 			{
-				if (IsToken(acptr->from))
-					sendbufto_one(acptr, tcmd, tlen);
-				else
-					sendbufto_one(acptr, ccmd, clen);
+				sendbufto_one(acptr, ccmd, clen);
 				sentalong[i] = sentalong_marker;
 			}
 		}
@@ -524,8 +521,7 @@ void sendto_chmodemucrap(aClient *from, aChannel *chptr, char *text)
 	int  i;
 	int remote = MyClient(from) ? 0 : 1;
 
-	sprintf(tcmd, ":%s %s %s :%s", from->name, TOK_PRIVATE, chptr->chname, text); /* token */
-	sprintf(ccmd, ":%s %s %s :%s", from->name, MSG_PRIVATE, chptr->chname, text); /* msg */
+	sprintf(ccmd, ":%s PRIVMSG %s :%s", from->name, chptr->chname, text); /* msg */
 	sprintf(xcmd, ":IRC!IRC@%s PRIVMSG %s :%s: %s", me.name, chptr->chname, from->name, text); /* local */
 
 	++sentalong_marker;
@@ -551,10 +547,7 @@ void sendto_chmodemucrap(aClient *from, aChannel *chptr, char *text)
 			 * remote link already */
 			if (sentalong[i] != sentalong_marker)
 			{
-				if (IsToken(acptr->from))
-					sendto_one(acptr, "%s", tcmd);
-				else
-					sendto_one(acptr, "%s", ccmd);
+				sendto_one(acptr, "%s", ccmd);
 				sentalong[i] = sentalong_marker;
 			}
 		}
@@ -632,36 +625,14 @@ void sendto_serv_butone_token(aClient *one, char *prefix, char *command,
 	va_list vl;
 	aClient *cptr;
 	aClient *acptr;
-
 	static char buff[2048];
+
 	va_start(vl, pattern);
-
-	strcpy(tcmd, token);
-	strcpy(ccmd, command);
-	strcat(tcmd, " ");
-	strcat(ccmd, " ");
 	ircvsprintf(buff, pattern, vl);
-	strcat(tcmd, buff);
-	strcat(ccmd, buff);
-
-	list_for_each_entry(cptr, &server_list, special_node)
-	{
-		if (one && cptr == one->from)
-			continue;
-
-		if (IsToken(cptr))
-		{
-			sendto_one(cptr, ":%s %s",
-				prefix, tcmd);
-		}
-		else
-		{
-			sendto_one(cptr, ":%s %s", prefix,
-			    ccmd);
-		}
-	}
-
 	va_end(vl);
+
+	sendto_serv_butone(one, ":%s %s %s", prefix, command, buff);
+
 	return;
 }
 
@@ -679,19 +650,11 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 	aClient *cptr;
 	aClient *acptr;
 
-	static char tcmd[2048];
-	static char ccmd[2048];
 	static char buff[2048];
 
 	va_start(vl, pattern);
-
-	strcpy(tcmd, token);
-	strcpy(ccmd, command);
-	strcat(tcmd, " ");
-	strcat(ccmd, " ");
 	ircvsprintf(buff, pattern, vl);
-	strcat(tcmd, buff);
-	strcat(ccmd, buff);
+	va_end(vl);
 
 	list_for_each_entry(cptr, &server_list, special_node)
 	{
@@ -735,18 +698,9 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 		if ((opt & OPT_NOT_NICKIP) && (cptr->proto & PROTO_NICKIP))
 			continue;
 
-		if (IsToken(cptr))
-		{
-			sendto_one(cptr, ":%s %s",
-				prefix, tcmd);
-		}
-		else
-		{
-			sendto_one(cptr, ":%s %s", prefix,
-			    ccmd);
-		}
+		sendto_one(cptr, ":%s %s", prefix, command, buff);
 	}
-	va_end(vl);
+
 	return;
 }
 
@@ -917,14 +871,8 @@ void sendto_serv_nickv2_token(aClient *one, char *pattern, char *tokpattern,
 		if (one && cptr == one->from)
 			continue;
 
-		va_start(vl, tokpattern);
-
-		if (SupportNICKv2(cptr) && !IsToken(cptr))
+		if (SupportNICKv2(cptr))
 			vsendto_one(cptr, pattern, vl);
-		else if (SupportNICKv2(cptr) && IsToken(cptr))
-			vsendto_one(cptr, tokpattern, vl);
-
-		va_end(vl);
 	}
 
 	va_end(vl);
@@ -1832,51 +1780,18 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 					vhost = "*";
 			}
 
-			if (SupportNICKv2(cptr))
-			{
-				sendto_one(cptr,
-					    "%s %s %d %d %s %s %s %s %s %s %s%s%s%s:%s",
-					    (IsToken(cptr) ? TOK_NICK : MSG_NICK), nick,
-					    hopcount, lastnick, username, realhost,
-					    server,
-					    svid, umodes, vhost,
-					    SupportCLK(cptr) ? getcloak(sptr) : "",
-					    SupportCLK(cptr) ? " " : "",
-					    SupportNICKIP(cptr) ? encode_ip(sptr->user->ip_str) : "",
-					    SupportNICKIP(cptr) ? " " : "",
-					    info);
-
-			}
-			else
-			{
-				sendto_one(cptr, "%s %s %d %d %s %s %s %s :%s",
-				    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
-				    nick, hopcount, lastnick, username,
-				    realhost,
-				    server, svid, info);
-				if (strcmp(umodes, "+"))
-				{
-					sendto_one(cptr, ":%s %s %s :%s",
-					    nick,
-					    (IsToken(cptr) ? TOK_MODE :
-					    MSG_MODE), nick, umodes);
-				}
-				if (IsHidden(sptr) && (sptr->umodes & UMODE_SETHOST))
-				{
-					sendto_one(cptr, ":%s %s %s",
-					    nick,
-					    (IsToken(cptr) ? TOK_SETHOST :
-					    MSG_SETHOST), virthost);
-				}
-				else if (SupportVHP(cptr))
-				{
-					sendto_one(cptr, ":%s %s %s",
-					    nick,
-					    (IsToken(cptr) ? TOK_SETHOST :
-					     MSG_SETHOST), (IsHidden(sptr) ? virthost :
-					     realhost));
-				}
-			}
+			/* Unreal 3.1 and newer support NICKv2, so we don't care about older versions. --nenolod */
+			sendto_one(cptr,
+				    "NICK %s %d %d %s %s %s %s %s %s %s%s%s%s:%s",
+				    nick,
+				    hopcount, lastnick, username, realhost,
+				    server,
+				    svid, umodes, vhost,
+				    SupportCLK(cptr) ? getcloak(sptr) : "",
+				    SupportCLK(cptr) ? " " : "",
+				    SupportNICKIP(cptr) ? encode_ip(sptr->user->ip_str) : "",
+				    SupportNICKIP(cptr) ? " " : "",
+				    info);
 		}
 	}
 }
@@ -1887,69 +1802,36 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
  */
 void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes)
 {
-	if (SupportNICKv2(cptr))
+	char *vhost;
+	if (SupportVHP(cptr))
 	{
-		char *vhost;
-		if (SupportVHP(cptr))
-		{
-			if (IsHidden(sptr))
-				vhost = sptr->user->virthost;
-			else
-				vhost = sptr->user->realhost;
-		}
+		if (IsHidden(sptr))
+			vhost = sptr->user->virthost;
 		else
-		{
-			if (IsHidden(sptr) && sptr->umodes & UMODE_SETHOST)
-				vhost = sptr->user->virthost;
-			else
-				vhost = "*";
-		}
-		sendto_one(cptr,
-			    "%s %s %d %d %s %s %s %lu %s %s %s%s:%s",
-			    (IsToken(cptr) ? TOK_NICK : MSG_NICK), sptr->name,
-			    sptr->hopcount+1, sptr->lastnick, sptr->user->username, 
-			    sptr->user->realhost, sptr->user->server,
-			    sptr->user->svid, umodes, vhost,
-			    SupportNICKIP(cptr) ? encode_ip(sptr->user->ip_str) : "",
-			    SupportNICKIP(cptr) ? " " : "", sptr->info);
+			vhost = sptr->user->realhost;
 	}
 	else
 	{
-		sendto_one(cptr, "%s %s %d %d %s %s %s %s :%s",
-		    (IsToken(cptr) ? TOK_NICK : MSG_NICK),
-		    sptr->name, sptr->hopcount+1, sptr->lastnick, sptr->user->username,
-		    sptr->user->realhost, sptr->user->server, sptr->user->svid, 
-		    sptr->info);
-		if (strcmp(umodes, "+"))
-		{
-			sendto_one(cptr, ":%s %s %s :%s",
-			    sptr->name, (IsToken(cptr) ? TOK_MODE :
-			    MSG_MODE), sptr->name, umodes);
-		}
-		if (IsHidden(sptr) && (sptr->umodes & UMODE_SETHOST))
-		{
-			sendto_one(cptr, ":%s %s %s",
-			    sptr->name, (IsToken(cptr) ? TOK_SETHOST :
-			    MSG_SETHOST), sptr->user->virthost);
-		}
-		else if (SupportVHP(cptr))
-		{
-			sendto_one(cptr, ":%s %s %s", sptr->name, 
-			    (IsToken(cptr) ? TOK_SETHOST : MSG_SETHOST),
-			    (IsHidden(sptr) ? sptr->user->virthost :
-			    sptr->user->realhost));
-		}
+		if (IsHidden(sptr) && sptr->umodes & UMODE_SETHOST)
+			vhost = sptr->user->virthost;
+		else
+			vhost = "*";
 	}
+	sendto_one(cptr,
+		    "NICK %s %d %d %s %s %s %lu %s %s %s%s:%s",
+		    sptr->name,
+		    sptr->hopcount+1, sptr->lastnick, sptr->user->username, 
+		    sptr->user->realhost, sptr->user->server,
+		    sptr->user->svid, umodes, vhost,
+		    SupportNICKIP(cptr) ? encode_ip(sptr->user->ip_str) : "",
+		    SupportNICKIP(cptr) ? " " : "", sptr->info);
+
 	return;
 }
 
 void	sendto_message_one(aClient *to, aClient *from, char *sender,
 			char *cmd, char *nick, char *msg)
 {
-        if(IsServer(to->from) && IsToken(to->from)) {
-          if(*cmd == 'P') cmd = TOK_PRIVATE;
-          if(*cmd == 'N') cmd = TOK_NOTICE;
-        }
         sendto_prefix_one(to, from, ":%s %s %s :%s",
                          sender, cmd, nick, msg);
 }

@@ -361,17 +361,10 @@ int  hunt_server_token(aClient *cptr, aClient *sptr, char *command, char *token,
 			return HUNTED_ISME;
 		if (match(acptr->name, parv[server]))
 			parv[server] = acptr->name;
-		if (IsToken(acptr->from)) {
-			sprintf(buff, ":%s %s ", parv[0], token);
-			strcat(buff, params);
-			sendto_one(acptr, buff, parv[1], parv[2], parv[3], parv[4], parv[5], parv[6], parv[7], parv[8]);
-		}
-		else {
-			sprintf(buff, ":%s %s ", parv[0], command);
-			strcat(buff, params);
-			sendto_one(acptr, buff, parv[1], parv[2],
+		sprintf(buff, ":%s %s ", parv[0], command);
+		strcat(buff, params);
+		sendto_one(acptr, buff, parv[1], parv[2],
 			parv[3], parv[4], parv[5], parv[6], parv[7], parv[8]);
-		}
 		return (HUNTED_PASS);
 	}
 	sendto_one(sptr, err_str(ERR_NOSUCHSERVER), me.name,
@@ -422,12 +415,8 @@ int  hunt_server_token_quiet(aClient *cptr, aClient *sptr, char *command, char *
 			return HUNTED_ISME;
 		if (match(acptr->name, parv[server]))
 			parv[server] = acptr->name;
-		if (IsToken(acptr->from)) {
-			sprintf(buff, ":%s %s ", parv[0], token);
-			strcat(buff, params);
-			sendto_one(acptr, buff, parv[1], parv[2], parv[3], parv[4], parv[5], parv[6], parv[7], parv[8]);
-		}
-		else {
+		/* XXX rewrite this before someone overflows it and owns us --nenolod */
+		{
 			sprintf(buff, ":%s %s ", parv[0], command);
 			strcat(buff, params);
 			sendto_one(acptr, buff, parv[1], parv[2],
@@ -727,8 +716,7 @@ void send_umode(aClient *cptr, aClient *sptr, long old, long sendmask, char *umo
 	}
 	*m = '\0';
 	if (*umode_buf && cptr)
-		sendto_one(cptr, ":%s %s %s :%s", sptr->name,
-		    (IsToken(cptr) ? TOK_MODE : MSG_MODE),
+		sendto_one(cptr, ":%s MODE %s :%s", sptr->name,
 		    sptr->name, umode_buf);
 }
 
@@ -745,18 +733,9 @@ void send_umode_out(aClient *cptr, aClient *sptr, long old)
 	{
 		if ((acptr != cptr) && (acptr != sptr) && *buf)
 		{
-			if (!SupportUMODE2(acptr))
-			{
-				sendto_one(acptr, ":%s MODE %s :%s",
-				    sptr->name, sptr->name, buf);
-			}
-			else
-			{
-				sendto_one(acptr, ":%s %s %s",
+			sendto_one(acptr, ":%s UMODE2 %s",
 				    sptr->name,
-				    (IsToken(acptr) ? TOK_UMODE2 : MSG_UMODE2),
 				    buf);
-			}
 		}
 	}
 

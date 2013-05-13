@@ -707,9 +707,8 @@ CMD_FUNC(m_rehash)
 			{
 				if (acptr == &me)
 					continue;
-				sendto_one(acptr, ":%s %s %s %s",
+				sendto_one(acptr, ":%s REHASH %s %s",
 					sptr->name,
-					IsToken(acptr->from) ? TOK_REHASH : MSG_REHASH,
 					acptr->name,
 					parv[1] ? parv[1] : "-all");
 			}

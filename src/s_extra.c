@@ -108,8 +108,7 @@ void dcc_sync(aClient *sptr)
 	for (p = conf_deny_dcc; p; p = (ConfigItem_deny_dcc *) p->next)
 	{
 		if (p->flag.type2 == CONF_BAN_TYPE_AKILL)
-			sendto_one(sptr, ":%s %s + %s :%s", me.name,
-			    (IsToken(sptr) ? TOK_SVSFLINE : MSG_SVSFLINE),
+			sendto_one(sptr, ":%s SVSFLINE + %s :%s", me.name,
 			    p->filename, p->reason);
 	}
 }
