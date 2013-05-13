@@ -181,8 +181,7 @@ CMD_FUNC(m_version)
 	if (!IsPerson(sptr) && !IsServer(cptr))
 		goto normal;
 
-	if (hunt_server_token(cptr, sptr, MSG_VERSION, TOK_VERSION, ":%s", 1, parc,
-	    parv) == HUNTED_ISME)
+	if (hunt_server(cptr, sptr, ":%s VERSION :%s", 1, parc, parv) == HUNTED_ISME)
 	{
 		sendto_one(sptr, rpl_str(RPL_VERSION), me.name,
 		    parv[0], version, debugmode, me.name,
@@ -323,9 +322,7 @@ char **text = unrealinfo;
 
 CMD_FUNC(m_info)
 {
-
-	if (hunt_server_token(cptr, sptr, MSG_INFO, TOK_INFO, ":%s", 1, parc,
-	    parv) == HUNTED_ISME)
+	if (hunt_server(cptr, sptr, ":%s INFO :%s", 1, parc, parv) == HUNTED_ISME)
 	{
 		m_info_send(sptr);
 	}
@@ -342,8 +339,7 @@ CMD_FUNC(m_dalinfo)
 {
 	char **text = dalinfotext;
 
-	if (hunt_server_token(cptr, sptr, MSG_DALINFO, TOK_DALINFO, ":%s", 1, parc,
-	    parv) == HUNTED_ISME)
+	if (hunt_server(cptr, sptr, ":%s DALINFO :%s", 1, parc, parv) == HUNTED_ISME)
 	{
 		while (*text)
 			sendto_one(sptr, rpl_str(RPL_INFO),
@@ -370,8 +366,7 @@ CMD_FUNC(m_license)
 {
 	char **text = gnulicense;
 
-	if (hunt_server_token(cptr, sptr, MSG_LICENSE, TOK_LICENSE, ":%s", 1, parc,
-	    parv) == HUNTED_ISME)
+	if (hunt_server(cptr, sptr, ":%s LICENSE :%s", 1, parc, parv) == HUNTED_ISME)
 	{
 		while (*text)
 			sendto_one(sptr, rpl_str(RPL_INFO),
@@ -393,8 +388,7 @@ CMD_FUNC(m_credits)
 {
 	char **text = unrealcredits;
 
-	if (hunt_server_token(cptr, sptr, MSG_CREDITS, TOK_CREDITS, ":%s", 1, parc,
-	    parv) == HUNTED_ISME)
+	if (hunt_server(cptr, sptr, ":%s CREDITS :%s", 1, parc, parv) == HUNTED_ISME)
 	{
 		while (*text)
 			sendto_one(sptr, rpl_str(RPL_INFO),
@@ -639,12 +633,12 @@ CMD_FUNC(m_rehash)
 		if (parv[1] && (parv[1][0] == '-'))
 			x = HUNTED_ISME;
 		else
-			x = hunt_server_token(cptr, sptr, MSG_REHASH, TOK_REHASH, "%s", 1, parc, parv);
+			x = hunt_server(cptr, sptr, ":%s REHASH :%s", 1, parc, parv);
 	} else {
 		if (!_match("-glob*", parv[1])) /* This is really ugly... hack to make /rehash -global -something work */
 			x = HUNTED_ISME;
 		else
-			x = hunt_server_token(cptr, sptr, MSG_REHASH, TOK_REHASH, "%s %s", 1, parc, parv);
+			x = hunt_server(cptr, sptr, ":%s REHASH %s :%s", 1, parc, parv);
 	}
 	if (x != HUNTED_ISME)
 		return 0; /* Now forwarded or server didnt exist */
