@@ -1213,9 +1213,8 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 				}
 			}
 			if (do_identify)
-				sendto_one(nsptr, ":%s %s %s@%s :IDENTIFY %s",
+				sendto_one(nsptr, ":%s PRIVMSG %s@%s :IDENTIFY %s",
 				    sptr->name,
-				    (IsToken(nsptr->from) ? TOK_PRIVATE : MSG_PRIVATE),
 				    NickServ, SERVICES_NAME, sptr->passwd);
 		}
 		if (buf[0] != '\0' && buf[1] != '\0')

@@ -131,8 +131,7 @@ DLLFUNC int  m_ping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		}
 	}
 	else
-		sendto_one(sptr, ":%s %s %s :%s", me.name,
-		    IsToken(cptr) ? TOK_PONG : MSG_PONG,
+		sendto_one(sptr, ":%s PONG %s :%s", me.name,
 		    (destination) ? destination : me.name, origin);
 	return 0;
 }

@@ -308,9 +308,8 @@ int remove = 0;
 	}
 	if (!MyClient(acptr))
 	{
-		sendto_one(acptr->from, ":%s %s %s :%s",
-			sptr->name, IsToken(acptr->from) ? TOK_TEMPSHUN : MSG_TEMPSHUN,
-			parv[1], comment);
+		sendto_one(acptr->from, ":%s TEMPSHUN %s :%s",
+			sptr->name, parv[1], comment);
 	} else {
 		char buf[1024];
 		if (!remove)
@@ -1828,8 +1827,7 @@ void _tkl_synch(aClient *sptr)
 				if ((tk->type & TKL_SPAMF) && (sptr->proto & PROTO_TKLEXT))
 				{
 					sendto_one(sptr,
-					    ":%s %s + %c %s %s %s %li %li %li %s :%s", me.name,
-					    IsToken(sptr) ? TOK_TKL : MSG_TKL,
+					    ":%s TKL + %c %s %s %s %li %li %li %s :%s", me.name,
 					    typ,
 					    tk->usermask, tk->hostmask, tk->setby,
 					    tk->expire_at, tk->set_at,
@@ -1837,8 +1835,7 @@ void _tkl_synch(aClient *sptr)
 					    tk->reason);
 				} else
 					sendto_one(sptr,
-					    ":%s %s + %c %s %s %s %li %li :%s", me.name,
-					    IsToken(sptr) ? TOK_TKL : MSG_TKL,
+					    ":%s TKL + %c %s %s %s %li %li :%s", me.name,
 					    typ,
 					    tk->usermask ? tk->usermask : "*", tk->hostmask, tk->setby,
 					    tk->expire_at, tk->set_at, tk->reason);
