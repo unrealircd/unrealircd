@@ -79,6 +79,7 @@ MODVAR int oper_access[] = {
 	OFLAG_UMODEQ, 'q',
 	OFLAG_DCCDENY, 'd',
 	OFLAG_ADDLINE, 'X',
+        OFLAG_TSCTL, 'T',
 	0, 0
 };
 

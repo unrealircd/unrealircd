@@ -558,24 +558,25 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
  * defined operator access levels
  */
 #define OFLAG_REHASH	0x00000001	/* Oper can /rehash server */
-#define OFLAG_DIE		0x00000002	/* Oper can /die the server */
+#define OFLAG_DIE	0x00000002	/* Oper can /die the server */
 #define OFLAG_RESTART	0x00000004	/* Oper can /restart the server */
 #define OFLAG_DCCDENY	0x00000008	/* Oper can use /dccdeny and /undccdeny */
 #define OFLAG_HELPOP	0x00000010	/* Oper can send /HelpOps */
 #define OFLAG_GLOBOP	0x00000020	/* Oper can send /GlobOps */
 #define OFLAG_WALLOP	0x00000040	/* Oper can send /WallOps */
-#define OFLAG_LOCOP		0x00000080	/* Oper can send /LocOps */
+#define OFLAG_LOCOP	0x00000080	/* Oper can send /LocOps */
 #define OFLAG_LROUTE	0x00000100	/* Oper can do local routing */
 #define OFLAG_GROUTE	0x00000200	/* Oper can do global routing */
-#define OFLAG_LKILL		0x00000400	/* Oper can do local kills */
-#define OFLAG_GKILL		0x00000800	/* Oper can do global kills */
-#define OFLAG_KLINE		0x00001000	/* Oper can /kline users */
+#define OFLAG_LKILL	0x00000400	/* Oper can do local kills */
+#define OFLAG_GKILL	0x00000800	/* Oper can do global kills */
+#define OFLAG_KLINE	0x00001000	/* Oper can /kline users */
 #define OFLAG_UNKLINE	0x00002000	/* Oper can /unkline users */
 #define OFLAG_LNOTICE	0x00004000	/* Oper can send local serv notices */
 #define OFLAG_GNOTICE	0x00008000	/* Oper can send global notices */
-#define OFLAG_ADMIN		0x00010000	/* Admin */
+#define OFLAG_ADMIN	0x00010000	/* Admin */
 #define OFLAG_ADDLINE	0x00020000	/* Oper can use /addline */
-#define OFLAG_ZLINE		0x00080000	/* Oper can use /zline and /unzline */
+#define OFLAG_TSCTL	0x00040000	/* Oper can use /tsctl */
+#define OFLAG_ZLINE	0x00080000	/* Oper can use /zline and /unzline */
 #define OFLAG_NETADMIN	0x00200000	/* netadmin gets +N */
 #define OFLAG_COADMIN	0x00800000	/* co admin gets +C */
 #define OFLAG_SADMIN	0x01000000	/* services admin gets +a */
@@ -602,6 +603,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPCanZline(x)   ((x)->oflag & OFLAG_ZLINE)
 #define OPCanRehash(x)	((x)->oflag & OFLAG_REHASH)
 #define OPCanDie(x)	((x)->oflag & OFLAG_DIE)
+#define OPCanTSCtl(x)	((x)->oflag & OFLAG_TSCTL)
 #define OPCanRestart(x)	((x)->oflag & OFLAG_RESTART)
 #define OPCanHelpOp(x)	((x)->oflag & OFLAG_HELPOP)
 #define OPCanGlobOps(x)	((x)->oflag & OFLAG_GLOBOP)
@@ -628,6 +630,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 
 #define OPSetRehash(x)	((x)->oflag |= OFLAG_REHASH)
 #define OPSetDie(x)	((x)->oflag |= OFLAG_DIE)
+#define OPSetTSCtl(x)	((x)->oflag |= OFLAG_TSCTL)
 #define OPSetRestart(x)	((x)->oflag |= OFLAG_RESTART)
 #define OPSetHelpOp(x)	((x)->oflag |= OFLAG_HELPOP)
 #define OPSetGlobOps(x)	((x)->oflag |= OFLAG_GLOBOP)
@@ -649,6 +652,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OPSetWhois(x)   ((x)->oflag |= OFLAG_WHOIS)
 #define OPClearRehash(x)	((x)->oflag &= ~OFLAG_REHASH)
 #define OPClearDie(x)		((x)->oflag &= ~OFLAG_DIE)
+#define OPClearTSCtl(x)		((x)->oflag &= ~OFLAG_TSCTL)
 #define OPClearRestart(x)	((x)->oflag &= ~OFLAG_RESTART)
 #define OPClearHelpOp(x)	((x)->oflag &= ~OFLAG_HELPOP)
 #define OPClearGlobOps(x)	((x)->oflag &= ~OFLAG_GLOBOP)

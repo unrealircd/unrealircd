@@ -112,7 +112,13 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 		if (stricmp(parv[1], "offset") == 0)
 		{
-			if (!parv[3])
+			if (!OPCanTSCtl(sptr))
+                        {
+			    sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+			    return 0;
+			}
+
+			if (!parv[2] || !parv[3])
 			{
 				sendto_one(sptr,
 				    ":%s NOTICE %s :*** TSCTL OFFSET: /tsctl offset <+|-> <time>",
@@ -185,19 +191,22 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		}
 		if (stricmp(parv[1], "svstime") == 0)
 		{
-			if (!parv[2] || *parv[2] == '\0')
-			{
-				return 0;
-			}
 			if (!IsULine(sptr))
 			{
+				if (MyClient(sptr)) sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+				return 0;
+			}
+
+			if (!parv[2] || *parv[2] == '\0')
+			{
+				if (MyClient(sptr)) sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0], "TSCTL");
 				return 0;
 			}
 
 			timediff = atol(parv[2]);
 			timediff = timediff - time(NULL);
-		    ircd_log(LOG_ERROR, "TSCTL: U:line %s set time to be %li (timediff: %li, was %li)",
-				sptr->name, atol(parv[2]), timediff, TSoffset);
+			ircd_log(LOG_ERROR, "TSCTL: U:line %s set time to be %li (timediff: %li, was %li)",
+				 sptr->name, atol(parv[2]), timediff, TSoffset);
 			TSoffset = timediff;
 			sendto_ops
 			    ("TS Control - U:line set time to be %li (timediff: %li)",
@@ -206,7 +215,15 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    sptr->name, atol(parv[2]));
 			return 0;
 		}
+		
+		//default: no command was recognized
+		sendto_one(sptr, "Invalid syntax for /TSCTL\n");
+                return 0;
 	}
+
+	//default: no parameter was entered
+	sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0], "TSCTL");
+
 	return 0;
 }
 
