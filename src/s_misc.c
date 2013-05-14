@@ -716,9 +716,7 @@ static void exit_one_client(aClient *cptr, aClient *sptr, aClient *from, char *c
 		if ((sptr->flags & FLAGS_KILLED) == 0)
 		{
 			if (split == 0)
-				sendto_serv_butone_token
-				    (cptr, sptr->name, MSG_QUIT, TOK_QUIT,
-				    ":%s", comment);
+				sendto_serv_butone(cptr, ":%s QUIT :%s", sptr->name, comment);
 			else
 				/*
 				 * Then this is a split, only old (stupid)
@@ -1121,7 +1119,7 @@ void kick_insecure_users(aChannel *chptr)
 				sendto_channel_butserv(chptr, &me, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
 			}
 
-			sendto_serv_butone_token(&me, me.name, MSG_KICK, TOK_KICK, "%s %s :%s", chptr->chname, cptr->name, comment);
+			sendto_serv_butone(&me, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
 
 			remove_user_from_channel(cptr, chptr);
 		}

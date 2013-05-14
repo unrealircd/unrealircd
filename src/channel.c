@@ -1438,10 +1438,8 @@ int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
 		sendto_channel_butserv(chptr, &me,
 		    ":%s KICK %s %s :%s", me.name,
 		    chptr->chname, sptr->name, comment);
-		sendto_serv_butone_token(cptr, me.name,
-			MSG_KICK, TOK_KICK, 
-			"%s %s :%s",
-		   chptr->chname, sptr->name, comment);
+		sendto_serv_butone(cptr, ":%s KICK %s %s :%s",
+		   me.name, chptr->chname, sptr->name, comment);
 		remove_user_from_channel(sptr, chptr);
 		return 1;
 	}
@@ -1788,8 +1786,8 @@ void set_channel_mlock(aClient *cptr, aClient *sptr, aChannel *chptr, const char
 
 	if (propagate)
 	{
-		sendto_serv_butone_token(cptr, cptr->name, MSG_MLOCK, TOK_MLOCK, "%B %s :%s",
-					 chptr->creationtime, chptr->chname,
+		sendto_serv_butone(cptr, ":%s MLOCK %B %s :%s",
+					 cptr->name, chptr->creationtime, chptr->chname,
 					 BadPtr(chptr->mode_lock) ? "" : chptr->mode_lock);
 	}
 }

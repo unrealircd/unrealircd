@@ -1314,8 +1314,7 @@ void sendto_snomask_global(int snomask, char *pattern, ...)
 			*p++ = Snomask_Table[i].flag;
 	*p = '\0';
 
-	sendto_serv_butone_token(NULL, me.name, MSG_SENDSNO, TOK_SENDSNO,
-		"%s :%s", snobuf, nbuf);
+	sendto_serv_butone(&me, ":%s SENDSNO %s :%s", me.name, "%s :%s", snobuf, nbuf);
 }
 
 /** Send to specified snomask - local.
@@ -1366,8 +1365,7 @@ void sendto_snomask_normal_global(int snomask, char *pattern, ...)
 			*p++ = Snomask_Table[i].flag;
 	*p = '\0';
 
-	sendto_serv_butone_token(NULL, me.name, MSG_SENDSNO, TOK_SENDSNO,
-		"%s :%s", snobuf, nbuf);
+	sendto_serv_butone(&me, ":%s SENDSNO %s :%s", me.name, "%s :%s", snobuf, nbuf);
 }
 
 
