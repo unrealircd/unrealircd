@@ -1021,7 +1021,7 @@ struct Client {
 	ConfigItem_listen *listener;
 	ConfigItem_class *class;		/* Configuration record associated */
 	int authfd;		/* fd for rfc931 authentication */
-        short slot;         /* my offset in the local fd table */
+        long serial;            /* current serial for send.c functions */
 	struct IN_ADDR ip;	/* keep real ip# too */
 	u_short port;		/* and the remote port# too :-) */
 	struct hostent *hostp;

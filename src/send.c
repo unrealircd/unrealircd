@@ -54,19 +54,10 @@ static char tcmd[2048];
 static char ccmd[2048];
 static char xcmd[2048];
 
-/* this array is used to ensure we send a msg only once to a remote 
-** server.  like, when we are sending a message to all channel members
-** send the message to those that are directly connected to us and once 
-** to each server that has these members.  the servers then forward the
-** message to other servers and to those channel members that are directly
-** connected to them
-*/
-static int sentalong[MAXCONNECTIONS];
-
 void vsendto_prefix_one(struct Client *to, struct Client *from,
     const char *pattern, va_list vl);
 
-MODVAR int  sentalong_marker;
+MODVAR int  current_serial;
 MODVAR int  sendanyways = 0;
 /*
 ** dead_link
@@ -285,7 +276,7 @@ void sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr,
 
 	va_start(vl, pattern);
 
-	++sentalong_marker;
+	++current_serial;
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
 		acptr = lp->cptr;
@@ -294,9 +285,9 @@ void sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr,
 			continue;
 		if (MyConnect(acptr))	/* (It is always a client) */
 			vsendto_prefix_one(acptr, from, pattern, vl);
-		else if (sentalong[(i = acptr->from->slot)] != sentalong_marker)
+		else if (acptr->from->serial != current_serial)
 		{
-			sentalong[i] = sentalong_marker;
+			acptr->from->serial = current_serial;
 			/*
 			 * Burst messages comes here..
 			 */
@@ -319,7 +310,7 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 
 	va_start(vl, pattern);
 
-	++sentalong_marker;
+	++current_serial;
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
 		acptr = lp->cptr;
@@ -341,7 +332,6 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 		continue;
 		
 		good:
-		i = acptr->from->slot;
 		if (MyConnect(acptr) && IsRegisteredUser(acptr))
 		{
 #ifdef SECURECHANMSGSONLYGOTOSECURE
@@ -352,13 +342,12 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 			va_start(vl, pattern);
 			vsendto_prefix_one(acptr, from, pattern, vl);
 			va_end(vl);
-			sentalong[i] = sentalong_marker;
 		}
 		else
 		{
 			/* Now check whether a message has been sent to this
 			 * remote link already */
-			if (sentalong[i] != sentalong_marker)
+			if (acptr->from->serial = current_serial)
 			{
 #ifdef SECURECHANMSGSONLYGOTOSECURE
 				if (chptr->mode.mode & MODE_ONLYSECURE)
@@ -368,7 +357,7 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 				va_start(vl, pattern);
 				vsendto_prefix_one(acptr, from, pattern, vl);
 				va_end(vl);
-				sentalong[i] = sentalong_marker;
+				acptr->from->serial = current_serial;
 			}
 		}
 		va_end(vl);
@@ -411,7 +400,7 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 		is_ctcp = 1;
 
 
-	++sentalong_marker;
+	++current_serial;
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
 		acptr = lp->cptr;
@@ -435,7 +424,6 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 		continue;
 		
 		good:
-		i = acptr->from->slot;
 		if (IsDeaf(acptr) && !sendanyways)
 			continue;
 		if (MyConnect(acptr) && IsRegisteredUser(acptr))
@@ -444,16 +432,15 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 				continue;
 
 			sendbufto_one(acptr, xcmd, xlen);
-			sentalong[i] = sentalong_marker;
 		}
 		else
 		{
 			/* Now check whether a message has been sent to this
 			 * remote link already */
-			if (sentalong[i] != sentalong_marker)
+			if (acptr->from->serial == current_serial)
 			{
 				sendbufto_one(acptr, ccmd, clen);
-				sentalong[i] = sentalong_marker;
+				acptr->from->serial = current_serial;
 			}
 		}
 	}
@@ -476,7 +463,7 @@ void sendto_chmodemucrap(aClient *from, aChannel *chptr, char *text)
 	sprintf(ccmd, ":%s PRIVMSG %s :%s", from->name, chptr->chname, text); /* msg */
 	sprintf(xcmd, ":IRC!IRC@%s PRIVMSG %s :%s: %s", me.name, chptr->chname, from->name, text); /* local */
 
-	++sentalong_marker;
+	++current_serial;
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
 		acptr = lp->cptr;
@@ -487,20 +474,18 @@ void sendto_chmodemucrap(aClient *from, aChannel *chptr, char *text)
 			continue;
 		if (remote && (acptr->from == from->from)) /* don't send it back to where it came from */
 			continue;
-		i = acptr->from->slot;
 		if (MyConnect(acptr) && IsRegisteredUser(acptr))
 		{
 			sendto_one(acptr, "%s", xcmd);
-			sentalong[i] = sentalong_marker;
 		}
 		else
 		{
 			/* Now check whether a message has been sent to this
 			 * remote link already */
-			if (sentalong[i] != sentalong_marker)
+			if (acptr->from->serial = current_serial)
 			{
 				sendto_one(acptr, "%s", ccmd);
-				sentalong[i] = sentalong_marker;
+				acptr->from->serial = current_serial;
 			}
 		}
 	}
@@ -851,20 +836,19 @@ void sendto_common_channels(aClient *user, char *pattern, ...)
 	sendlen = vmakebuf_local_withprefix(sendbuf, user, pattern, vl);
 	va_end(vl);
 
-	++sentalong_marker;
-	if (user->fd >= 0)
-		sentalong[user->slot] = sentalong_marker;
+	++current_serial;
+	user->serial = current_serial;
 	if (user->user)
 		for (channels = user->user->channel; channels; channels = channels->next)
 			for (users = channels->chptr->members; users; users = users->next)
 			{
 				cptr = users->cptr;
-				if (!MyConnect(cptr) || (cptr->slot < 0) || (sentalong[cptr->slot] == sentalong_marker))
+				if (!MyConnect(cptr) || (cptr->serial == current_serial))
 					continue;
 				if ((channels->chptr->mode.mode & MODE_AUDITORIUM) &&
 				    !(is_chanownprotop(user, channels->chptr) || is_chanownprotop(cptr, channels->chptr)))
 					continue;
-				sentalong[cptr->slot] = sentalong_marker;
+				cptr->serial = current_serial;
 				sendbufto_one(cptr, sendbuf, sendlen);
 			}
 
@@ -895,22 +879,21 @@ void sendto_common_channels_local_butone(aClient *user, int cap, char *pattern, 
 	sendlen = vmakebuf_local_withprefix(sendbuf, user, pattern, vl);
 	va_end(vl);
 
-	++sentalong_marker;
-	if (user->fd >= 0)
-		sentalong[user->slot] = sentalong_marker;
+	++current_serial;
+	user->serial = current_serial;
 	if (user->user)
 	{
 		for (channels = user->user->channel; channels; channels = channels->next)
 			for (users = channels->chptr->members; users; users = users->next)
 			{
 				cptr = users->cptr;
-				if (!MyConnect(cptr) || (cptr->slot < 0) || (sentalong[cptr->slot] == sentalong_marker) ||
+				if (!MyConnect(cptr) || (cptr->serial == current_serial) ||
 				    !CHECKPROTO(cptr, cap))
 					continue;
 				if ((channels->chptr->mode.mode & MODE_AUDITORIUM) &&
 				    !(is_chanownprotop(user, channels->chptr) || is_chanownprotop(cptr, channels->chptr)))
 					continue;
-				sentalong[cptr->slot] = sentalong_marker;
+				cptr->serial = current_serial;
 				sendbufto_one(cptr, sendbuf, sendlen);
 			}
 	}
@@ -1417,17 +1400,16 @@ void sendto_ops_butone(aClient *one, aClient *from, char *pattern, ...)
 
 	va_start(vl, pattern);
 
-	++sentalong_marker;
+	++current_serial;
 	list_for_each_entry(cptr, &client_list, client_node)
 	{
 		if (!SendWallops(cptr))
 			continue;
-		i = cptr->from->slot;	/* find connection oper is on */
-		if (sentalong[i] == sentalong_marker)	/* sent message along it already ? */
+		if (cptr->from->serial == current_serial)	/* sent message along it already ? */
 			continue;
 		if (cptr->from == one)
 			continue;	/* ...was the one I should skip */
-		sentalong[i] = sentalong_marker;
+		cptr->from->serial = current_serial;
 		va_start(vl, pattern);
 		vsendto_prefix_one(cptr->from, from, pattern, vl);
 		va_end(vl);
@@ -1451,17 +1433,16 @@ void sendto_opers_butone(aClient *one, aClient *from, char *pattern, ...)
 
 	va_start(vl, pattern);
 
-	++sentalong_marker;
+	++current_serial;
 	list_for_each_entry(cptr, &client_list, client_node)
 	{
 		if (!IsAnOper(cptr))
 			continue;
-		i = cptr->from->slot;	/* find connection oper is on */
-		if (sentalong[i] == sentalong_marker)	/* sent message along it already ? */
+		if (cptr->from->serial == current_serial)	/* sent message along it already ? */
 			continue;
 		if (cptr->from == one)
 			continue;	/* ...was the one I should skip */
-		sentalong[i] = sentalong_marker;
+		cptr->from->serial = current_serial;
 		va_start(vl, pattern);
 		vsendto_prefix_one(cptr->from, from, pattern, vl);
 		va_end(vl);
@@ -1482,17 +1463,16 @@ void sendto_ops_butme(aClient *from, char *pattern, ...)
 
 	va_start(vl, pattern);
 
-	++sentalong_marker;
+	++current_serial;
 	list_for_each_entry(cptr, &client_list, client_node)
 	{
 		if (!SendWallops(cptr))
 			continue;
-		i = cptr->from->slot;	/* find connection oper is on */
-		if (sentalong[i] == sentalong_marker)	/* sent message along it already ? */
+		if (cptr->from->serial == current_serial)	/* sent message along it already ? */
 			continue;
 		if (!strcmp(cptr->user->server, me.name))	/* a locop */
 			continue;
-		sentalong[i] = sentalong_marker;
+		cptr->from->serial = current_serial;
 		va_start(vl, pattern);
 		vsendto_prefix_one(cptr->from, from, pattern, vl);
 		va_end(vl);

@@ -146,14 +146,14 @@ DLLFUNC CMD_FUNC(m_trace)
 		list_for_each_entry(acptr, &client_list, client_node)
 #ifdef	SHOW_INVISIBLE_LUSERS
 			if (IsPerson(acptr))
-				link_u[acptr->from->slot]++;
+				link_u[acptr->from->fd]++;
 #else
 			if (IsPerson(acptr) &&
 			    (!IsInvisible(acptr) || IsOper(sptr)))
-				link_u[acptr->from->slot]++;
+				link_u[acptr->from->fd]++;
 #endif
 			else if (IsServer(acptr))
-				link_s[acptr->from->slot]++;
+				link_s[acptr->from->fd]++;
 	}
 
 	/* report all direct connections */
@@ -275,8 +275,8 @@ DLLFUNC CMD_FUNC(m_trace)
 		 * trace
 		 */
 		sendto_one(sptr, rpl_str(RPL_TRACESERVER),
-		    me.name, parv[0], "0", link_s[me.slot],
-		    link_u[me.slot], me.name, "*", "*", me.name, 0L);
+		    me.name, parv[0], "0", link_s[me.fd],
+		    link_u[me.fd], me.name, "*", "*", me.name, 0L);
 		return 0;
 	}
 	for (cltmp = conf_class; doall && cltmp; cltmp = (ConfigItem_class *) cltmp->next)

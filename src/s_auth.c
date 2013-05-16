@@ -85,8 +85,8 @@ void start_auth(aClient *cptr)
 			finish_auth(cptr);
 		return;
 	}
-	Debug((DEBUG_NOTICE, "start_auth(%x) slot=%d, fd=%d, status=%d",
-	    cptr, cptr->slot, cptr->fd, cptr->status));
+	Debug((DEBUG_NOTICE, "start_auth(%x) fd=%d, status=%d",
+	    cptr, cptr->fd, cptr->status));
 	snprintf(buf, sizeof buf, "identd: %s", get_client_name(cptr, TRUE));
 	if ((cptr->authfd = fd_socket(AFINET, SOCK_STREAM, 0, buf)) == -1)
 	{
