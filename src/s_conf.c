@@ -263,7 +263,6 @@ static OperFlag _LinkFlags[] = {
 	{ CONNECT_NOHOSTCHECK, "nohostcheck" },
 	{ CONNECT_QUARANTINE, "quarantine"},
 	{ CONNECT_SSL,	"ssl"		  },
-	{ CONNECT_ZIP,	"zip"		  },
 };
 
 /* This MUST be alphabetized */
@@ -6472,10 +6471,6 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "ciphers"))
 			link->ciphers = strdup(cep->ce_vardata);
 #endif
-#ifdef ZIP_LINKS
-		else if (!strcmp(cep->ce_varname, "compression-level"))
-			link->compression_level = atoi(cep->ce_vardata);
-#endif
 	}
 	AddListItem(link, conf_link);
 	return 0;
@@ -6492,9 +6487,6 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 	char has_options = 0;
 	char has_autoconnect = 0;
 	char has_hostname_wildcards = 0;
-#ifdef ZIP_LINKS
-	char has_compressionlevel = 0;
-#endif
 	if (!ce->ce_vardata)
 	{
 		config_error("%s:%i: link without servername",
@@ -6551,14 +6543,6 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 					errors++;
 				}
 #endif
-#ifndef ZIP_LINKS
-				if (ofp->flag == CONNECT_ZIP)
-				{
-					config_error("%s:%i: link %s with ZIP option enabled on a non-ZIP compile",
-						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, ce->ce_vardata);
-					errors++;
-				}
-#endif				
 				if (ofp->flag == CONNECT_AUTO)
 				{
 					has_autoconnect = 1;
@@ -6747,24 +6731,6 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 			}
 			has_ciphers = 1;
 		}
-#ifdef ZIP_LINKS
-		else if (!strcmp(cep->ce_varname, "compression-level"))
-		{
-			if (has_compressionlevel)
-			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
-					cep->ce_varlinenum, "link::compression-level");
-				continue;
-			}
-			has_compressionlevel = 1;
-			if ((atoi(cep->ce_vardata) < 1) || (atoi(cep->ce_vardata) > 9))
-			{
-				config_error("%s:%i: compression-level should be in range 1..9",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-				errors++;
-			}
-		}
-#endif
 		else
 		{
 			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,

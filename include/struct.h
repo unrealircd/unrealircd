@@ -61,9 +61,6 @@
 #  include <sys/syslog.h>
 # endif
 #endif
-#ifdef ZIP_LINKS
-#include "zip.h"
-#endif
 #include "auth.h" 
 #include "tre/regex.h"
 
@@ -154,10 +151,6 @@ typedef struct SMembership Membership;
 typedef struct SMembershipL MembershipL;
 typedef struct JFlood aJFlood;
 typedef struct PendingNet aPendingNet;
-
-#ifdef ZIP_LINKS
-typedef struct  Zdata   aZdata;
-#endif
 
 #ifdef NEED_U_INT32_T
 typedef unsigned int u_int32_t;	/* XXX Hope this works! */
@@ -324,9 +317,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define FLAGS_NETINFO    0x200000
 #define FLAGS_HYBNOTICE  0x400000
 #define FLAGS_QUARANTINE 0x800000
-#ifdef ZIP_LINKS
-#define FLAGS_ZIP        0x1000000
-#endif
+//0x1000000 unused (was ziplinks)
 #define FLAGS_DCCNOTICE  0x2000000 /* Has the user seen a notice on how to use DCCALLOW already? */
 #define FLAGS_SHUNNED    0x4000000
 #define FLAGS_VIRUS      0x8000000 /* tagged by spamfilter */
@@ -357,7 +348,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define PROTO_NICKv2	0x0008	/* Negotiated NICKv2 protocol */
 #define PROTO_SJOIN2	0x0010	/* Negotiated SJOIN2 protocol */
 #define PROTO_UMODE2	0x0020	/* Negotiated UMODE2 protocol */
-#define PROTO_ZIP		0x0080	/* Negotiated ZIP protocol */
+//0x0080 unused (was ziplinks)
 #define PROTO_VL		0x0100	/* Negotiated VL protocol */
 #define PROTO_SJ3		0x0200	/* Negotiated SJ3 protocol */
 #define PROTO_VHP		0x0400	/* Send hostnames in NICKv2 even if not sethosted */
@@ -431,14 +422,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define IsSecure(x)		(0)
 #endif
 
-#ifdef ZIP_LINKS
-#define IsZipped(x) 	((x)->flags & FLAGS_ZIP)
-#define IsZipStart(x)	(((x)->flags & FLAGS_ZIP) && ((x)->zip->first == 1))
-#else
-#define IsZipped(x)		(0)
-#define IsZipStart(x)	(0)
-#endif
-
 /* Fake lag exception */
 #define IsNoFakeLag(x)      ((x)->flags & FLAGS_NOFAKELAG)
 #define SetNoFakeLag(x)     ((x)->flags |= FLAGS_NOFAKELAG)
@@ -503,11 +486,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	ClearAccess(x)		((x)->flags &= ~FLAGS_CHKACCESS)
 #define ClearHidden(x)          ((x)->umodes &= ~UMODE_HIDE)
 #define ClearHideOper(x)    ((x)->umodes &= ~UMODE_HIDEOPER)
-
-#ifdef ZIP_LINKS
-#define SetZipped(x)        ((x)->flags |= FLAGS_ZIP)
-#define ClearZipped(x)      ((x)->flags &= ~FLAGS_ZIP)
-#endif
 
 /*
  * ProtoCtl options
@@ -969,7 +947,7 @@ typedef struct {
 #define IsServersOnlyListener(x)	((x) && ((x)->options & LISTENER_SERVERSONLY))
 
 #define CONNECT_SSL		0x000001
-#define CONNECT_ZIP		0x000002 
+//0x000002 unused (was ziplinks)
 #define CONNECT_AUTO		0x000004
 #define CONNECT_QUARANTINE	0x000008
 #define CONNECT_NODNSCACHE	0x000010
@@ -1028,11 +1006,6 @@ struct Client {
 	long sendM;		/* Statistics: protocol messages send */
 	long sendK;		/* Statistics: total k-bytes send */
 	long receiveM;		/* Statistics: protocol messages received */
-#ifdef ZIP_LINKS
-	struct Zdata *zip;	/* zip data */
-#elif defined(_WIN32)
-	void *zip_NOTUSED; /* (win32 binary compatability) */
-#endif
 #ifdef USE_SSL
 	SSL		*ssl;
 #elif defined(_WIN32)
@@ -1288,9 +1261,6 @@ struct _configitem_link {
 	char		*ciphers;
 #elif defined(_WIN32)
 	void *ciphers_NOTUSED;
-#endif
-#ifdef ZIP_LINKS
-	int compression_level;
 #endif
 };
 

@@ -52,13 +52,6 @@ else
 ARG="$ARG--enable-ssl=$SSLDIR "
 fi
 fi
-if [ "$ZIPLINKS" = "1" ] ; then
-if test x"$ZIPLINKSDIR" = "x" ; then
-ARG="$ARG--enable-ziplinks "
-else
-ARG="$ARG--enable-ziplinks=$ZIPLINKSDIR "
-fi
-fi
 if [ "$REMOTEINC" = "1" ] ; then
 ARG="$ARG--enable-libcurl=$CURLDIR "
 fi
@@ -346,9 +339,6 @@ SPATH="`pwd`/src/ircd"
 DEFPERM="0600"
 CRYPTOIRCD=""
 SSLDIR=""
-ZIPLINKS=""
-ZIPLINKSDIR=""
-LISTEN_SIZE="5"
 NICKNAMEHISTORYLENGTH="2000"
 MAXSENDQLENGTH="3000000"
 BUFFERPOOL="18"
@@ -567,49 +557,6 @@ while [ -z "$TEST" ] ; do
 	    ;;
     esac
 done
-
-TEST=""
-while [ -z "$TEST" ] ; do
-    if [ "$ZIPLINKS" = "1" ] ; then
-	TEST="Yes"
-    else
-	TEST="No"
-    fi
-    echo ""
-    echo "Do you want to enable ziplinks support?"
-    echo $n "[$TEST] -> $c"
-	read cc
-    if [ -z "$cc" ] ; then
-	cc=$TEST
-    fi
-    case "$cc" in
-	[Yy]*)
-	    ZIPLINKS="1"
-	    ;;
-	[Nn]*)
-	    ZIPLINKS=""
-	    ;;
-	*)
-	    echo ""
-	    echo "You must enter either Yes or No"
-	    TEST=""
-	    ;;
-    esac
-done
-
-if [ "$ZIPLINKS" = "1" ] ; then
-TEST="$ZIPLINKSDIR"
-echo ""
-echo "If you know the path to zlib on your system, enter it here. If not"
-echo "leave this blank"
-echo $n "[$TEST] -> $c"
-    read cc
-if [ -z "$cc" ] ; then
-    ZIPLINKSDIR="$TEST"
-else 
-    ZIPLINKSDIR=`eval echo $cc` # modified
-fi
-fi
 
 TEST=""
 while [ -z "$TEST" ] ; do
@@ -966,8 +913,6 @@ NICKNAMEHISTORYLENGTH="$NICKNAMEHISTORYLENGTH"
 DEFPERM="$DEFPERM"
 CRYPTOIRCD="$CRYPTOIRCD"
 SSLDIR="$SSLDIR"
-ZIPLINKS="$ZIPLINKS"
-ZIPLINKSDIR="$ZIPLINKSDIR"
 REMOTEINC="$REMOTEINC"
 CURLDIR="$CURLDIR"
 SHOWLISTMODES="$SHOWLISTMODES"

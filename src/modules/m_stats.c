@@ -111,7 +111,6 @@ int stats_uptime(aClient *, char *);
 int stats_denyver(aClient *, char *);
 int stats_notlink(aClient *, char *);
 int stats_class(aClient *, char *);
-int stats_zip(aClient *, char *);
 int stats_officialchannels(aClient *, char *);
 int stats_spamfilter(aClient *, char *);
 int stats_fdtable(aClient *, char *);
@@ -173,7 +172,6 @@ struct statstab StatsTable[] = {
 	{ 'v', "denyver",	stats_denyver,		0 		},
 	{ 'x', "notlink",	stats_notlink,		0 		},	
 	{ 'y', "class",		stats_class,		0 		},
-	{ 'z', "zip",		stats_zip,		0 		},
 	{ 0, 	NULL, 		NULL, 			0		}
 };
 
@@ -312,10 +310,6 @@ inline void stats_help(aClient *sptr)
 		"X - notlink - Send the list of servers that are not current linked");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"Y - class - Send the class block list");
-#ifdef ZIP_LINKS
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"z - zip - Send compression information about ziplinked servers");
-#endif
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
 		"Z - mem - Send memory usage information");
 }
@@ -502,14 +496,13 @@ int stats_links(aClient *sptr, char *para)
 #endif
 	for (link_p = conf_link; link_p; link_p = (ConfigItem_link *) link_p->next)
 	{
-		sendto_one(sptr, ":%s 213 %s C %s@%s * %s %i %s %s%s%s%s%s%s",
+		sendto_one(sptr, ":%s 213 %s C %s@%s * %s %i %s %s%s%s%s%s",
 			me.name, sptr->name, IsOper(sptr) ? link_p->username : "*",
 			IsOper(sptr) ? link_p->hostname : "*", link_p->servername,
 			link_p->port,
 			link_p->class->name,
 			(link_p->options & CONNECT_AUTO) ? "a" : "",
 			(link_p->options & CONNECT_SSL) ? "S" : "",
-			(link_p->options & CONNECT_ZIP) ? "z" : "",
 			(link_p->options & CONNECT_NODNSCACHE) ? "d" : "",
 			(link_p->options & CONNECT_NOHOSTCHECK) ? "h" : "",
 			(link_p->flag.temporary == 1) ? "T" : "");
@@ -1450,36 +1443,6 @@ int stats_class(aClient *sptr, char *para)
 			classes->name, classes->clients, classes->xrefcount);
 #endif
 	}
-	return 0;
-}
-
-int stats_zip(aClient *sptr, char *para)
-{
-#ifdef ZIP_LINKS
-	aClient *acptr;
-
-	list_for_each_entry(acptr, &server_list, special_node)
-	{
-		if (!IsZipped(acptr))
-			continue;
-		if (acptr->zip->in->total_out && acptr->zip->out->total_in)
-		{
-			sendto_one(sptr,
-				":%s %i %s :Zipstats for link to %s (compresslevel %d): decompressed (in): %01lu=>%01lu (%3.1f%%), compressed (out): %01lu=>%01lu (%3.1f%%)",
-				me.name, RPL_TEXT, sptr->name,
-				IsAnOper(sptr) ? get_client_name(acptr, TRUE) : acptr->name,
-				acptr->serv->conf->compression_level ? 
-				acptr->serv->conf->compression_level : ZIP_DEFAULT_LEVEL,
-				acptr->zip->in->total_in, acptr->zip->in->total_out,
-				(100.0*(float)acptr->zip->in->total_in) /(float)acptr->zip->in->total_out,
-				acptr->zip->out->total_in, acptr->zip->out->total_out,
-				(100.0*(float)acptr->zip->out->total_out) /(float)acptr->zip->out->total_in);
-		}
-		else
-			sendto_one(sptr, ":%s %i %s :Zipstats for link to %s: unavailable", 
-				me.name, RPL_TEXT, sptr->name, acptr->name);
-	}
-#endif
 	return 0;
 }
 

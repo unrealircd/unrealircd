@@ -3,8 +3,6 @@
 
 ;#define USE_SSL
 ; Uncomment the above line to package an SSL build
-#define USE_ZIP
-; Uncomment the above line to package with ZIP support
 #define USE_CURL
 ; Uncomment the above line to package with libcurl support
 
@@ -77,9 +75,6 @@ Source: "c:\dev\setacl.exe"; DestDir: "{app}\tmp"; Flags: ignoreversion
 Source: ".\makecert.bat"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\encpem.bat"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\ssl.cnf"; DestDir: "{app}"; Flags: ignoreversion
-#endif
-#ifdef USE_ZIP
-Source: "c:\dev\zlib\zlibwapi.dll"; DestDir: "{app}"; Flags: ignoreversion
 #endif
 #ifdef USE_SSL
 #ifdef USE_CURL

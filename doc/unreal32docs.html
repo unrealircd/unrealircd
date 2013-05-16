@@ -58,17 +58,16 @@ English |
   -- 3.7. <a href="#feature_opercmds">Oper commands</a><br>
   -- 3.8. <a href="#feature_ssl">SSL</a><br>
   -- 3.9. <a href="#feature_ipv6">IPv6</a><br>
-  -- 3.10. <a href="#feature_ziplinks">Zip links</a><br>
-  -- 3.11. <a href="#feature_dyndns">Dynamic DNS/IP linking support</a><br>
-  -- 3.12. <a href="#feature_antiflood">Anti-flood features</a><br>
-  -- 3.13. <a href="#feature_bantypes">Ban types</a><br>
-  -- 3.14. <a href="#feature_spamfilter">Spamfilter</a><br>
-  -- 3.15. <a href="#feature_cidr">CIDR</a><br>
-  -- 3.16. <a href="#feature_nickchars">Nick Character Sets</a><br>
-  -- 3.17. <a href="#feature_cgiirc">CGI:IRC Support</a><br>
-  -- 3.18. <a href="#feature_timesync">Time Synchronization</a><br>
-  -- 3.19. <a href="#feature_authtypes">Authentication Types</a><br>
-  -- 3.20. <a href="#feature_other">Other features</a><br>
+  -- 3.10. <a href="#feature_dyndns">Dynamic DNS/IP linking support</a><br>
+  -- 3.11. <a href="#feature_antiflood">Anti-flood features</a><br>
+  -- 3.12. <a href="#feature_bantypes">Ban types</a><br>
+  -- 3.13. <a href="#feature_spamfilter">Spamfilter</a><br>
+  -- 3.14. <a href="#feature_cidr">CIDR</a><br>
+  -- 3.15. <a href="#feature_nickchars">Nick Character Sets</a><br>
+  -- 3.16. <a href="#feature_cgiirc">CGI:IRC Support</a><br>
+  -- 3.17. <a href="#feature_timesync">Time Synchronization</a><br>
+  -- 3.18. <a href="#feature_authtypes">Authentication Types</a><br>
+  -- 3.19. <a href="#feature_other">Other features</a><br>
   4. <a href="#configuringyourunrealircdconf">Configuring your unrealircd.conf 
   file</a><br>
   ---4.1. <a href="#configurationfileexplained">Configuration file explained</a><br>
@@ -344,19 +343,12 @@ because otherwise you will not understand concepts such as 'cloaking', 'snomasks
    Your OS needs to have IPv6 support and you need to enable IPv6 support in UnrealIRCd during ./Config as well.<br>
 <p>Although microsoft has an experimental IPv6 implementation for w2k/XP it is not (yet) supported by UnrealIRCd.</p></div>
 
-<p><font size="+2"><b>3.10 - Zip links</b></font><a name="feature_ziplinks"></a></p><div class="desc">
-<p>Zip links can be turned on for server&lt;-&gt;server links, it compresses the data by using zlib.
-   It can save 60-80% bandwidth... So it's quite useful for low-bandwidth links or links with
-   many users, it can help a lot when you are linking since a lot of data is sent about every user/channel/etc.</p>
-<p>To compile with zip links support, you need to answer Yes to the zlib question in ./Config and set it in link::options::zip 
-   (on both sides)</p></div>
-
-<p><font size="+2"><b>3.11 - Dynamic DNS/IP linking support</b></font><a name="feature_dyndns"></a></p><div class="desc">
+<p><font size="+2"><b>3.10 - Dynamic DNS/IP linking support</b></font><a name="feature_dyndns"></a></p><div class="desc">
 <p>UnrealIRCd has some (new) nice features which helps dynamic IP users using dynamic DNS (like blah.dyndns.org).
    If you are linking two dynamic DNS hosts, then set link::options::nodnscache and link::options::nohostcheck. 
 </p></div>
 
-<p><font size="+2"><b>3.12 - Anti-Flood features</b></font><a name="feature_antiflood"></a></p><div class="desc">
+<p><font size="+2"><b>3.11 - Anti-Flood features</b></font><a name="feature_antiflood"></a></p><div class="desc">
 <p>
 <b>Throttling</b><br>
 Throttling is a method that allows you to limit how fast a user can disconnect and then reconnect to your server. 
@@ -455,7 +447,7 @@ joins and Y is the number of seconds. If a user exceeds this limit, he/she will 
 from joining the channel.
 </p></div>
 
-<p><font size="+2"><b>3.13 - Ban types</b></font><a name="feature_bantypes"></a></p><div class="desc">
+<p><font size="+2"><b>3.12 - Ban types</b></font><a name="feature_bantypes"></a></p><div class="desc">
 <p>
 <b>Basic bantypes and cloaked hosts</b><br>
 UnrealIRCd supports the basic bantypes like <i>+b nick!user@host</i>.<br>
@@ -528,7 +520,7 @@ such as <i>+I ~c:#trusted</i> and <i>+I ~a:accountname</i>.<br>
 Modules can add other extended ban types.<br>
 </p></div>
 
-<p><font size="+2"><b>3.14 - Spamfilter</b></font><a name="feature_spamfilter"></a></p><div class="desc">
+<p><font size="+2"><b>3.13 - Spamfilter</b></font><a name="feature_spamfilter"></a></p><div class="desc">
 <p>Spamfilter is a new system to fight spam, advertising, worms and other things. It works a bit like
    the badwords system but has several advantages.</p>
 <p>Spamfilters are added via the /spamfilter command which uses the following syntax:<br>
@@ -619,7 +611,7 @@ This feature is currently not available on Windows.<br>
 </p>
 </div>
 
-<p><font size="+2"><b>3.15 - CIDR</b></font><a name="feature_cidr"></a></p><div class="desc">
+<p><font size="+2"><b>3.14 - CIDR</b></font><a name="feature_cidr"></a></p><div class="desc">
 <p>UnrealIRCd now has support for CIDR (Classless Interdomain Routing). CIDR allows you to ban
 IP ranges. IPs are allocated to ISPs using CIDR, therefore, being able to set a CIDR based ban 
 allows you to easily ban an ISP. Unreal supports CIDR for both IPv4 and IPv6. CIDR masks may be
@@ -629,7 +621,7 @@ can be used in /kline, /gline, /zline, /gzline, and /shun. Unreal uses the stand
 IP/bits, e.g., 127.0.0.0/8 (matches 127.0.0.0 - 127.255.255.255), and fe80:0:0:123::/64
 (matches fe80:0:0:123:0:0:0:0 - fe80:0:0:123:ffff:ffff:ffff:ffff).</p></div>
 
-<p><font size="+2"><b>3.16 - Nick Character Sets</b></font><a name="feature_nickchars"></a></p><div class="desc">
+<p><font size="+2"><b>3.15 - Nick Character Sets</b></font><a name="feature_nickchars"></a></p><div class="desc">
 <p>UnrealIRCd now has the ability to specify which charsets/languages should be allowed
 in nicknames. You do this in <b>set::allowed-nickchars</b>.<br>
 A table of all possible choices:<br>
@@ -686,14 +678,14 @@ Example 2, if you have mainly chinese users and want to allow "normal" chinese c
 <pre>set { allowed-nickchars { chinese-simp; chinese-trad; }; };</pre>
 </p></div>
 
-<p><font size="+2"><b>3.17 - CGI:IRC Support</b></font><a name="feature_cgiirc"></a></p><div class="desc">
+<p><font size="+2"><b>3.16 - CGI:IRC Support</b></font><a name="feature_cgiirc"></a></p><div class="desc">
 <p>UnrealIRCd has support for CGI:IRC host spoofing, which means you can mark specific CGI:IRC
 gateways as "trusted" which will cause the IRCd to show the users' real host/ip everywhere on
 IRC, instead of the host/ip of the CGI:IRC-gateway.</p>
 <p>See the <a href="#cgiirc">cgiirc block</a> for information on how to configure this.</p>
 </div>
 
-<p><font size="+2"><b>3.18 - Time Synchronization</b></font><a name="feature_timesync"></a></p><div class="desc">
+<p><font size="+2"><b>3.17 - Time Synchronization</b></font><a name="feature_timesync"></a></p><div class="desc">
 <p>Having correct time is extremely important for IRC servers. Without correct time, channels can desynch, innocent
 users can be killed, channels might not show up properly in /LIST, in short: huge trouble will arrise.</p>
 <p>UnrealIRCd has some build-in time synchronization support.
@@ -708,7 +700,7 @@ the IRCd will continue to boot regardlessly (should rarely happen).</p>
    the <a href="#setblock">set documentation</a> for more information.</p>
 </div>
 
-<p><font size="+2"><b>3.19 - Authentication Types</b></font><a name="feature_authtypes"></a></p><div class="desc">
+<p><font size="+2"><b>3.18 - Authentication Types</b></font><a name="feature_authtypes"></a></p><div class="desc">
 <p>At various places in the configuration file, for example the <a
 href="#operblock">oper block</a>, <a href="#allowblock">allow block</a> and
 <a href="#linkblock">link block</a>, you can authenticate clients by password or other
@@ -780,7 +772,7 @@ available in UnrealIRCd.<br>
 Another very useful place to use <tt>sslclientcertfp</tt> is in <a href="#linkblock_passwordreceive">link::password-receive</a>
 </p></div>
 
-<p><font size="+2"><b>3.20 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
+<p><font size="+2"><b>3.19 - Other features</b></font><a name="feature_other"></a></p><div class="desc">
 <p>UnrealIRCd has a lot of features so not everything is covered here... You'll find that out by yourself.</p></div>
 
 <p> </p>
@@ -2119,9 +2111,6 @@ link &lt;server-name&gt; {
 </p>
 <p><b>class</b><br>
   The class this server is put into, often a separate server class is used for this.
-</p>
-<p><b>compression-level</b> (optional)<br>
-  Specifies the compression level (1-9) for this link. Only used if link::options::zip is set.
 </p>
 <p><b>ciphers</b> (optional)<br>
   Specifies the SSL ciphers to use for this link. To obtain a list of available ciphers, use
@@ -3658,7 +3647,6 @@ to get more information on a command.</p>
 	V - vhost - Send the vhost block list<br>
 	X - notlink - Send the list of servers that are not current linked<br>
 	Y - class - Send the class block list<br>
-	z - zip - Send compression information about ziplinked servers (if compiled with ziplinks support)<br>
 	Z - mem - Send memory usage information<br>
 	</td>
     <td>All</td>

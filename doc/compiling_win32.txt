@@ -27,7 +27,7 @@ use the FREE development kit available for Windows 7 explained below:
    in your path (eg: put it in c:\windows\system32).
 
 ==[ EXTERNAL LIBRARIES ]==
-Fetch the external libraries (c-ares, tre, openssl, zlib, curl) from:
+Fetch the external libraries (c-ares, tre, openssl, curl) from:
 http://www.vulnscan.org/unrealwin32dev/
 
 ==[ COMPILING ]==
@@ -40,8 +40,7 @@ http://www.vulnscan.org/unrealwin32dev/
       'nmake -f makefile.win32'
    B. Don't edit makefile.win32 but instead create a one-line command (which
       you can put in a batch file), like this (all on one line!):
-      nmake -f makefile.win32 USE_ZIPLINKS=1 ZLIB_INC_DIR="c:\dev\zlib"
-      ZLIB_LIB_DIR="c:\dev\zlib\dll32" USE_SSL=1
+      nmake -f makefile.win32 USE_SSL=1
       OPENSSL_INC_DIR="c:\openssl\include" OPENSSL_LIB_DIR="c:\openssl\lib"
       USE_REMOTEINC=1 LIBCURL_INC_DIR="c:\dev\curl-ssl\include"
       LIBCURL_LIB_DIR="c:\dev\curl-ssl\lib\dll-release"
@@ -112,7 +111,7 @@ nmake -f makefile.win32 [your other options here]
 So basically you just run 'nmake -f makefile.win32 SYMBOLFILE' and then restart
 compiling again.
 
-==[ COMPILING ZLIB/SSL/CURL YOURSELF ]==
+==[ COMPILING SSL/CURL YOURSELF ]==
 This is off-topic and not explained here.
 Again, use the stuff from the win32 development pack unless you have a good
 reason to do otherwise.

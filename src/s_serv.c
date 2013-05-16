@@ -192,10 +192,6 @@ CMD_FUNC(m_version)
 		if (IsAnOper(sptr))
 			sendto_one(sptr, ":%s NOTICE %s :%s", me.name, sptr->name, OPENSSL_VERSION_TEXT);
 #endif
-#ifdef ZIP_LINKS
-		if (IsAnOper(sptr))
-			sendto_one(sptr, ":%s NOTICE %s :zlib %s", me.name, sptr->name, zlibVersion());
-#endif
 #ifdef USE_LIBCURL
 		if (IsAnOper(sptr))
 			sendto_one(sptr, ":%s NOTICE %s :%s", me.name, sptr->name, curl_version());
@@ -217,8 +213,7 @@ char *num = NULL;
 
 /*
  * send_proto:
- * Sends PROTOCTL message to server, taking care of whether ZIP
- * should be enabled or not.
+ * Sends PROTOCTL message to server
  * Now split up into multiple PROTOCTL messages (again), since we have
  * too many for a single line. If this breaks your services because
  * you fail to maintain PROTOCTL state, then fix them!
@@ -231,12 +226,8 @@ char buf[1024];
 	sendto_one(cptr, "PROTOCTL %s", PROTOCTL_SERVER);
 
 	/* Second line */
-	sprintf(buf, "CHANMODES=%s%s,%s%s,%s%s,%s%s NICKCHARS=%s MLOCK",
+	snprintf(buf, sizeof(buf), "CHANMODES=%s%s,%s%s,%s%s,%s%s NICKCHARS=%s MLOCK",
 		CHPAR1, EXPAR1, CHPAR2, EXPAR2, CHPAR3, EXPAR3, CHPAR4, EXPAR4, langsinuse);
-#ifdef ZIP_LINKS
-	if (aconf->options & CONNECT_ZIP)
-		strcat(buf, " ZIP");
-#endif
 	sendto_one(cptr, "PROTOCTL %s", buf);
 }
 

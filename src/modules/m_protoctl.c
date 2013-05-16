@@ -280,18 +280,6 @@ CMD_FUNC(m_protoctl)
 			    proto, cptr->name));
 			cptr->proto |= PROTO_SJB64;
 		}
-		else if (strcmp(s, "ZIP") == 0)
-		{
-			if (remove)
-			{
-				cptr->proto &= ~PROTO_ZIP;
-				continue;
-			}
-			Debug((DEBUG_ERROR,
-				"Chose protocol %s for link %s",
-				proto, cptr->name));
-			cptr->proto |= PROTO_ZIP;
-		}
 		else if (strcmp(s, "TKLEXT") == 0)
 		{
 			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));

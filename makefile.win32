@@ -10,7 +10,7 @@ MT=mt
 
 # You are encouraged NOT to set these values here, but instead make a batch file
 # which passes all these arguments to nmake, like:
-# nmake -f makefile.win32 USE_ZIPLINKS=1 ZLIB_INC_DIR="c:\dev\zlib" etc etc...
+# nmake -f makefile.win32 USE_SSL=1 OPENSSL_INC_DIR="c:\dev\openssl" etc etc...
 # Both ways will work, but if you use a batch file it's easier with
 # upgrading Unreal as you won't have to edit this makefile again.
 
@@ -39,22 +39,6 @@ MT=mt
 #
 #
 ### END REMOTE INCLUDES ##
-
-#### ZIPLINKS SUPPORT ####
-#To enable ziplinks support you must have zlib installed on your system
-#you can get a pre-built zlib library from http://www.winimage.com/zLibDll/
-#
-#
-#To enable ziplinks uncomment the next line:
-#USE_ZIPLINKS=1
-#
-#If your zlib library and include files are not in your compiler's
-#default locations, specify the locations here:
-#ZLIB_INC_DIR="c:\dev\zlib"
-#ZLIB_LIB_DIR="c:\dev\zlib\dll32"
-#
-#
-###### END ZIPLINKS ######
 
 ####### SSL SUPPORT ######
 #To enable SSL support you must have OpenSSL installed on your system
@@ -116,18 +100,6 @@ LIBCURL_LIB=/LIBPATH:"$(LIBCURL_LIB_DIR)"
 !ENDIF
 !ENDIF
 
-!IFDEF USE_ZIPLINKS
-ZIPCFLAGS=/D ZIP_LINKS /D ZLIB_DLL
-ZIPOBJ=SRC/ZIP.OBJ
-ZIPLIB=zlibwapi.lib
-!IFDEF ZLIB_INC_DIR
-ZLIB_INC=/I "$(ZLIB_INC_DIR)"
-!ENDIF
-!IFDEF ZLIB_LIB_DIR
-ZLIB_LIB=/LIBPATH:"$(ZLIB_LIB_DIR)"
-!ENDIF
-!ENDIF
-
 !IFDEF USE_SSL
 SSLCFLAGS=/D USE_SSL
 SSLLIBS=ssleay32.lib libeay32.lib
@@ -152,19 +124,19 @@ MODDBGCFLAG=/LDd /MD /Zi
 !ENDIF 
 
 FD_SETSIZE=/D FD_SETSIZE=16384
-CFLAGS=$(DBGCFLAG) $(TRE_INC) $(CARES_INC) $(LIBCURL_INC) $(ZLIB_INC) $(OPENSSL_INC) /J /I ./INCLUDE /I ./INCLUDE/WIN32/ARES /Fosrc/ /nologo \
- $(ZIPCFLAGS) $(CURLCFLAGS) $(FD_SETSIZE) $(SSLCFLAGS) $(NS_ADDRESS) /D NOSPOOF=1 /c /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE /D _USE_32BIT_TIME_T
-CFLAGSST=$(DBGCFLAGST) $(TRE_INC) $(CARES_INC) $(LIBCURL_INC) $(ZLIB_INC) $(OPENSSL_INC) /J /I ./INCLUDE /I ./INCLUDE/WIN32/ARES /Fosrc/ /nologo \
- $(ZIPCFLAGS) $(CURLCFLAGS) $(FD_SETSIZE) $(SSLCFLAGS) $(NS_ADDRESS) /D NOSPOOF=1 /c /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE /D _USE_32BIT_TIME_T
+CFLAGS=$(DBGCFLAG) $(TRE_INC) $(CARES_INC) $(LIBCURL_INC) $(OPENSSL_INC) /J /I ./INCLUDE /I ./INCLUDE/WIN32/ARES /Fosrc/ /nologo \
+ $(CURLCFLAGS) $(FD_SETSIZE) $(SSLCFLAGS) $(NS_ADDRESS) /D NOSPOOF=1 /c /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE /D _USE_32BIT_TIME_T
+CFLAGSST=$(DBGCFLAGST) $(TRE_INC) $(CARES_INC) $(LIBCURL_INC) $(OPENSSL_INC) /J /I ./INCLUDE /I ./INCLUDE/WIN32/ARES /Fosrc/ /nologo \
+ $(CURLCFLAGS) $(FD_SETSIZE) $(SSLCFLAGS) $(NS_ADDRESS) /D NOSPOOF=1 /c /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE /D _USE_32BIT_TIME_T
 LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib advapi32.lib \
- dbghelp.lib oldnames.lib comctl32.lib comdlg32.lib $(CARES_LIB) $(CARESLIB) $(TRE_LIB) $(TRELIB) $(ZLIB_LIB) $(ZIPLIB) \
+ dbghelp.lib oldnames.lib comctl32.lib comdlg32.lib $(CARES_LIB) $(CARESLIB) $(TRE_LIB) $(TRELIB) \
  $(OPENSSL_LIB) $(SSLLIBS) $(LIBCURL_LIB) $(CURLLIB) /def:wircd.def /implib:wircd.lib \
  /nologo $(DBGLFLAG) /out:WIRCD.EXE
-MODCFLAGS=$(MODDBGCFLAG) $(SSLCFLAGS) $(ZIPCFLAGS) $(CURLCFLAGS) /J /Fesrc/modules/ \
- /Fosrc/modules/ /nologo $(TRE_INC) $(CARES_INC) $(LIBCURL_INC) $(ZLIB_INC) $(OPENSSL_INC) /I ./INCLUDE /D \
+MODCFLAGS=$(MODDBGCFLAG) $(SSLCFLAGS) $(CURLCFLAGS) /J /Fesrc/modules/ \
+ /Fosrc/modules/ /nologo $(TRE_INC) $(CARES_INC) $(LIBCURL_INC) $(OPENSSL_INC) /I ./INCLUDE /D \
  DYNAMIC_LINKING /D NOSPOOF /D MODULE_COMPILE /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE /D _USE_32BIT_TIME_T
 MODLFLAGS=/link /def:src/modules/module.def wircd.lib ws2_32.lib $(TRE_LIB) $(TRELIB) $(CARES_LIB) $(OPENSSL_LIB) $(SSLLIBS) \
- $(ZLIB_LIB) $(ZIPLIB) $(LIBCURL_LIB) $(CURLLIB)
+ $(LIBCURL_LIB) $(CURLLIB)
 
 INCLUDES=./include/struct.h ./include/config.h ./include/sys.h \
  ./include/common.h ./include/version.h ./include/h.h ./include/numeric.h \
@@ -182,7 +154,7 @@ EXP_OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/RES.OBJ SRC/MODULES.OBJ \
  SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ \
  SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/MD5.OBJ SRC/API-ISUPPORT.OBJ SRC/API-COMMAND.OBJ \
- SRC/EXTBANS.OBJ SRC/TIMESYNCH.OBJ $(ZIPOBJ) $(CURLOBJ)
+ SRC/EXTBANS.OBJ SRC/TIMESYNCH.OBJ $(CURLOBJ)
 
 OBJ_FILES=$(EXP_OBJ_FILES) SRC/GUI.OBJ SRC/SERVICE.OBJ SRC/DEBUG.OBJ SRC/RTF.OBJ \
  SRC/EDITOR.OBJ SRC/WIN32.OBJ 
@@ -475,9 +447,6 @@ src/api-isupport.obj: src/api-isupport.c $(INCLUDES)
 src/api-command.obj: src/api-command.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/api-command.c
 
-src/zip.obj: src/zip.c $(INCLUDES)
-	$(CC) $(CFLAGS) src/zip.c
-
 src/ssl.obj: src/ssl.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/ssl.c
 
@@ -503,8 +472,8 @@ SYMBOLFILE:
 MODULES: $(DLL_FILES)
 
 src/modules/commands.dll: $(MOD_FILES) $(INCLUDES)
-	$(CC) $(MODDBGCFLAG) $(LIBCURL_INC) $(ZLIB_INC) $(OPENSSL_INC) /nologo \
-	      $(SSLCFLAGS) $(ZIPCFLAGS) $(CURLCFLAGS) $(TRE_INC) /Fosrc/modules/ \
+	$(CC) $(MODDBGCFLAG) $(LIBCURL_INC) $(OPENSSL_INC) /nologo \
+	      $(SSLCFLAGS) $(CURLCFLAGS) $(TRE_INC) /Fosrc/modules/ \
 	      /I ./INCLUDE /D NOSPOOF /D MODULE_COMPILE /D _CRT_SECURE_NO_DEPRECATE \
 	      /D _USE_32BIT_TIME_T $(MOD_FILES) \
 	      $(MODLFLAGS) /OUT:src/modules/commands.dll

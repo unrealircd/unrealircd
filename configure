@@ -633,7 +633,6 @@ TRE_CFLAGS
 FD_SETSIZE
 BINDIR
 IRCDDIR
-HAVE_ZLIB
 MODULEFLAGS
 CRYPTOLIB
 STRTOUL
@@ -719,7 +718,6 @@ with_disable_extendedban_stacking
 with_system_tre
 with_system_cares
 enable_ssl
-enable_ziplinks
 enable_dynamic_linking
 enable_inet6
 enable_libcurl
@@ -1350,9 +1348,6 @@ Optional Features:
   --disable-prefixaq      Enable chanadmin (+a) and chanowner (+q) prefixes
   --enable-ssl=           enable ssl will check /usr/local/ssl /usr/lib/ssl
                           /usr/ssl /usr/pkg /usr/sfw /usr/local /usr
-  --enable-ziplinks=DIR   enable ziplinks. will check /usr/local /usr
-                          /usr/pkg. Note that SSL does its own compression, so
-                          you won't need this for SSL links.
   --disable-dynamic-linking
                           Make the IRCd statically link with shared objects
                           rather than dynamically (noone knows if disabling
@@ -6233,56 +6228,6 @@ $as_echo "#define USE_SSL /**/" >>confdefs.h
 
 fi
 
-
-# Check whether --enable-ziplinks was given.
-if test "${enable_ziplinks+set}" = set; then :
-  enableval=$enable_ziplinks;
-else
-  enable_ziplinks=no
-fi
-
-if test $enable_ziplinks != "no"; then :
-
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for zlib" >&5
-$as_echo_n "checking for zlib... " >&6; }
-	for dir in $enable_ziplinks /usr/local /usr /usr/pkg; do
-		zlibdir="$dir"
-		if test -f "$dir/include/zlib.h"; then
-			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: found in $zlibdir" >&5
-$as_echo "found in $zlibdir" >&6; }
-			found_zlib="yes";
-			if test "$zlibdir" != "/usr" ; then
-				CFLAGS="$CFLAGS -I$zlibdir/include";
-			fi
-
-$as_echo "#define ZIP_LINKS /**/" >>confdefs.h
-
-		break
-		fi
-	done
-	if test x_$found_zlib != x_yes; then
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
-$as_echo "not found" >&6; }
-		echo ""
-		echo "Apparently you do not have the zlib development library installed."
-		echo "You have two options:"
-		echo "a) Install the zlib development library"
-		echo "   and run ./Config"
-		echo "OR"
-		echo "b) If you don't need compressed links..."
-		echo "   Run ./Config and say 'no' when asked about ziplinks support"
-		echo ""
-		exit 1
-	else
-		IRCDLIBS="$IRCDLIBS -lz"
-		if test "$zlibdir" != "/usr" ; then
-			LDFLAGS="$LDFLAGS -L$zlibdir/lib"
-		fi
-		HAVE_ZLIB=yes
-	fi
-
-
-fi
 
 # Check whether --enable-dynamic-linking was given.
 if test "${enable_dynamic_linking+set}" = set; then :

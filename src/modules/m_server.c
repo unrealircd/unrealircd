@@ -628,36 +628,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 		sendto_one(cptr, "SERVER %s 1 :%s",
 			    me.name, me.info);
 	}
-#ifdef ZIP_LINKS
-	if (aconf->options & CONNECT_ZIP)
-	{
-		if (cptr->proto & PROTO_ZIP)
-		{
-			if (zip_init(cptr, aconf->compression_level ? aconf->compression_level : ZIP_DEFAULT_LEVEL) == -1)
-			{
-				zip_free(cptr);
-				sendto_realops("Unable to setup compressed link for %s", get_client_name(cptr, TRUE));
-				return exit_client(cptr, cptr, &me, "zip_init() failed");
-			}
-			SetZipped(cptr);
-			cptr->zip->first = 1;
-		} else {
-			sendto_realops("WARNING: Remote doesnt have link::options::zip set. Compression disabled.");
-		}
-	}
-#endif
 
-#if 0
-/* Disabled because it may generate false warning when linking with cvs versions between b14 en b15 -- Syzop */
-	if ((cptr->proto & PROTO_ZIP) && !(aconf->options & CONNECT_ZIP))
-	{
-#ifdef ZIP_LINKS
-		sendto_realops("WARNING: Remote requested compressed link, but we don't have link::options::zip set. Compression disabled.");
-#else
-		sendto_realops("WARNING: Remote requested compressed link, but we don't have zip links support compiled in. Compression disabled.");
-#endif
-	}
-#endif
 	/* Set up server structure */
 	free_pending_net(cptr);
 	SetServer(cptr);
@@ -673,23 +644,19 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 #ifdef USE_SSL
 	if (IsSecure(cptr))
 	{
-		sendto_serv_butone(&me, ":%s SMO o :(\2link\2) Secure %slink %s -> %s established (%s)",
+		sendto_serv_butone(&me, ":%s SMO o :(\2link\2) Secure link %s -> %s established (%s)",
 			me.name,
-			IsZipped(cptr) ? "ZIP" : "",
 			me.name, inpath, (char *) ssl_get_cipher((SSL *)cptr->ssl));
-		sendto_realops("(\2link\2) Secure %slink %s -> %s established (%s)",
-			IsZipped(cptr) ? "ZIP" : "",
+		sendto_realops("(\2link\2) Secure link %s -> %s established (%s)",
 			me.name, inpath, (char *) ssl_get_cipher((SSL *)cptr->ssl));
 	}
 	else
 #endif
 	{
-		sendto_serv_butone(&me, ":%s SMO o :(\2link\2) %sLink %s -> %s established",
+		sendto_serv_butone(&me, ":%s SMO o :(\2link\2) Link %s -> %s established",
 			me.name,
-			IsZipped(cptr) ? "ZIP" : "",
 			me.name, inpath);
-		sendto_realops("(\2link\2) %sLink %s -> %s established",
-			IsZipped(cptr) ? "ZIP" : "",
+		sendto_realops("(\2link\2) Link %s -> %s established",
 			me.name, inpath);
 	}
 	(void)add_to_client_hash_table(cptr->name, cptr);

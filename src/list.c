@@ -178,10 +178,6 @@ void free_client(aClient *cptr)
 			MyFree((char *)cptr->passwd);
 		if (cptr->error_str)
 			MyFree(cptr->error_str);
-#ifdef ZIP_LINKS
-		if (cptr->zip)
-			zip_free(cptr);
-#endif
 		if (cptr->hostp)
 			unreal_free_hostent(cptr->hostp);
 	}

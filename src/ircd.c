@@ -750,7 +750,7 @@ char buf[1024];
 #endif	
 }
 
-/** Ugly version checker that ensures zlib/ssl/curl runtime libraries match the
+/** Ugly version checker that ensures ssl/curl runtime libraries match the
  * version we compiled for.
  */
 static void do_version_check()
@@ -768,19 +768,9 @@ int error = 0;
 		error=1;
 	}
 #endif
-#ifdef ZIP_LINKS
-	runtime = zlibVersion();
-	compiledfor = ZLIB_VERSION;
-	if (*compiledfor != *runtime)
-	{
-		version_check_logerror("Zlib version mismatch: compiled for '%s', library is '%s'",
-			compiledfor, runtime);
-		error = 1;
-	}
-#endif
 #ifdef USE_LIBCURL
 	/* Perhaps someone should tell them to do this a bit more easy ;)
-	 * problem is runtime output is like: 'libcurl/7.11.1 zlib/1.2.1 c-ares/1.2.0'
+	 * problem is runtime output is like: 'libcurl/7.11.1 c-ares/1.2.0'
 	 * while header output is like: '7.11.1'.
 	 */
 	{
@@ -810,7 +800,7 @@ int error = 0;
 	{
 #ifndef _WIN32
 		version_check_logerror("Header<->library mismatches can make UnrealIRCd *CRASH*! "
-		                "Make sure you don't have multiple versions of openssl or zlib installed (eg: "
+		                "Make sure you don't have multiple versions of openssl installed (eg: "
 		                "one in /usr and one in /usr/local). And, if you recently upgraded them, "
 		                "be sure to recompile Unreal.");
 #else
@@ -1354,9 +1344,6 @@ int InitwIRCD(int argc, char *argv[])
 	fprintf(stderr, "                     using %s\n", tre_version());
 #ifdef USE_SSL
 	fprintf(stderr, "                     using %s\n", SSLeay_version(SSLEAY_VERSION));
-#endif
-#ifdef ZIP_LINKS
-	fprintf(stderr, "                     using zlib %s\n", zlibVersion());
 #endif
 #ifdef USE_LIBCURL
 	fprintf(stderr, "                     using %s\n", curl_version());

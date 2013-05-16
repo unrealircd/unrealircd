@@ -79,9 +79,6 @@ MODVAR char serveropts[] = {
 #ifndef OPEROVERRIDE_VERIFY
 	'o',
 #endif
-#ifdef ZIP_LINKS
-	'Z',
-#endif
 	'E',
 	'\0', /* Don't change those 3 nuls. -- Syzop */
 	'\0',

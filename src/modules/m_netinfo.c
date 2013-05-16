@@ -149,17 +149,6 @@ DLLFUNC CMD_FUNC(m_netinfo)
 	    ("Link %s -> %s is now synced [secs: %li recv: %ld.%hu sent: %ld.%hu]",
 	    cptr->name, me.name, (TStime() - endsync), sptr->receiveK,
 	    sptr->receiveB, sptr->sendK, sptr->sendB);
-#ifdef ZIP_LINKS
-	if ((MyConnect(cptr)) && (IsZipped(cptr)) && cptr->zip->in->total_out && cptr->zip->out->total_in) {
-		sendto_realops
-		("Zipstats for link to %s: decompressed (in): %01lu=>%01lu (%3.1f%%), compressed (out): %01lu=>%01lu (%3.1f%%)",
-			get_client_name(cptr, TRUE),
-			cptr->zip->in->total_in, cptr->zip->in->total_out,
-			(100.0*(float)cptr->zip->in->total_in) /(float)cptr->zip->in->total_out,
-			cptr->zip->out->total_in, cptr->zip->out->total_out,
-			(100.0*(float)cptr->zip->out->total_out) /(float)cptr->zip->out->total_in);
-	}
-#endif
 
 	sendto_serv_butone(&me,
 	    ":%s SMO o :\2(sync)\2 Link %s -> %s is now synced [secs: %li recv: %ld.%hu sent: %ld.%hu]",
