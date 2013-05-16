@@ -347,7 +347,7 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 		{
 			/* Now check whether a message has been sent to this
 			 * remote link already */
-			if (acptr->from->serial = current_serial)
+			if (acptr->from->serial != current_serial)
 			{
 #ifdef SECURECHANMSGSONLYGOTOSECURE
 				if (chptr->mode.mode & MODE_ONLYSECURE)
@@ -437,7 +437,7 @@ void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chpt
 		{
 			/* Now check whether a message has been sent to this
 			 * remote link already */
-			if (acptr->from->serial == current_serial)
+			if (acptr->from->serial != current_serial)
 			{
 				sendbufto_one(acptr, ccmd, clen);
 				acptr->from->serial = current_serial;
@@ -482,7 +482,7 @@ void sendto_chmodemucrap(aClient *from, aChannel *chptr, char *text)
 		{
 			/* Now check whether a message has been sent to this
 			 * remote link already */
-			if (acptr->from->serial = current_serial)
+			if (acptr->from->serial != current_serial)
 			{
 				sendto_one(acptr, "%s", ccmd);
 				acptr->from->serial = current_serial;
