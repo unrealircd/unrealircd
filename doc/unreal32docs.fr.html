@@ -33,7 +33,7 @@
 		<div style="text-align:center;">
 			<b><font size="7">UnrealIRCd</font></b><br>
 				<font size="4"><a href="http://www.unrealircd.com/">http://www.unrealircd.com</a></font><br>
-				<font size="4">Version: 3.2.10-rc1</font><br>
+				<font size="4">Version: 3.2.10</font><br>
 				<b>Dernière mise à jour de la documentation:</b> 2012-10-16
 		</div>
 
@@ -67,17 +67,16 @@
 			-- 3.7. <a href="#feature_opercmds">Commandes opérateurs</a><br>
 			-- 3.8. <a href="#feature_ssl">SSL</a><br>
 			-- 3.9. <a href="#feature_ipv6">IPv6</a><br>
-			-- 3.10. <a href="#feature_ziplinks">Zip links</a><br>
-			-- 3.11. <a href="#feature_dyndns">Support des links avec DNS/IP dynamiques</a><br>
-			-- 3.12. <a href="#feature_antiflood">Fonctionnalités anti-flood</a><br>
-			-- 3.13. <a href="#feature_bantypes">Types de ban</a><br>
-			-- 3.14. <a href="#feature_spamfilter">Spamfilter</a><br>
-			-- 3.15. <a href="#feature_cidr">CIDR</a><br>
-			-- 3.16. <a href="#feature_nickchars">Caractères admis dans les pseudos</a><br>
-			-- 3.17. <a href="#feature_cgiirc">Support de CGI:IRC</a><br>
-			-- 3.18. <a href="#feature_timesync">Synchronisation de l'heure</a><br>
-			-- 3.19. <a href="#feature_authtypes">Types d'Authentification</a><br>
-			-- 3.20. <a href="#feature_other">Autres fonctionnalités</a><br>
+			-- 3.10. <a href="#feature_dyndns">Support des links avec DNS/IP dynamiques</a><br>
+			-- 3.11. <a href="#feature_antiflood">Fonctionnalités anti-flood</a><br>
+			-- 3.12. <a href="#feature_bantypes">Types de ban</a><br>
+			-- 3.13. <a href="#feature_spamfilter">Spamfilter</a><br>
+			-- 3.14. <a href="#feature_cidr">CIDR</a><br>
+			-- 3.15. <a href="#feature_nickchars">Caractères admis dans les pseudos</a><br>
+			-- 3.16. <a href="#feature_cgiirc">Support de CGI:IRC</a><br>
+			-- 3.17. <a href="#feature_timesync">Synchronisation de l'heure</a><br>
+			-- 3.18. <a href="#feature_authtypes">Types d'Authentification</a><br>
+			-- 3.19. <a href="#feature_other">Autres fonctionnalités</a><br>
 			4. <a href="#configuringyourunrealircdconf">Configurer votre fichier unrealircd.conf</a><br>
 			---4.1. <a href="#configurationfileexplained">Explication du fichier de configuration</a><br>
 			---4.2. <a href="#meblock">Me Block -=- (M:Line)</a><br>
@@ -487,22 +486,8 @@
 			</p>
 		</div>
 
-		<p id="feature_ziplinks">
-			<font size="+2"><b>3.10 - Zip links</b></font>
-		</p>
-		<div class="desc">
-			<p>
-				Les Zip links peuvent être activés pour les transferts entre serveurs (links).
-				Cela compresse les données en utilisant zlib et peut sauvegarder entre 60 et 80% de votre bande passante ...
-				C'est donc très utile pour les links avec des bandes passantes faibles ou des links avec énormément d'utilisateurs, et peut être très bénéfique lorsque vous liez deux serveurs, car de nombreuses données sont échangées sur chaque utilisateur, salon, etc.
-			</p>
-			<p>
-				Pour compiler avec le support des zip links, il faudra répondre Yes lors de la question portant sur le zlib pendant le ./Config et ajouter dans votre link block link::options::zip (sur les deux serveurs).
-			</p>
-		</div>
-
 		<p id="feature_dyndns">
-			<font size="+2"><b>3.11 - Support des links avec IP/DNS dynamiques</b></font>
+			<font size="+2"><b>3.10 - Support des links avec IP/DNS dynamiques</b></font>
 		</p>
 		<div class="desc">
 			<p>
@@ -512,7 +497,7 @@
 		</div>
 
 		<p id="feature_antiflood">
-			<font size="+2"><b>3.12 - Fonctionnalités Anti-Flood</b></font>
+			<font size="+2"><b>3.11 - Fonctionnalités Anti-Flood</b></font>
 		</p>
 		<div class="desc">
 			<p>
@@ -637,7 +622,7 @@
 		</div>
 
 		<p id="feature_bantypes">
-			<font size="+2"><b>3.13 - Types de ban</b></font>
+			<font size="+2"><b>3.12 - Types de ban</b></font>
 		</p>
 		<div class="desc">
 			<p>
@@ -897,7 +882,7 @@
 		</div>
 
 		<p id="feature_cidr">
-			<font size="+2"><b>3.15 - CIDR</b></font>
+			<font size="+2"><b>3.14 - CIDR</b></font>
 		</p>
 		<div class="desc">
 			<p>
@@ -912,7 +897,7 @@
 		</div>
 
 		<p id="feature_nickchars">
-			<font size="+2"><b>3.16 - Caractères admis dans les pseudos</b></font>
+			<font size="+2"><b>3.15 - Caractères admis dans les pseudos</b></font>
 		</p>
 		<div class="desc">
 			<p>
@@ -995,7 +980,7 @@
 		</div>
 
 		<p id="feature_cgiirc">
-			<font size="+2"><b>3.17 - Support de CGI:IRC</b></font>
+			<font size="+2"><b>3.16 - Support de CGI:IRC</b></font>
 		</p>
 		<div class="desc">
 			<p>
@@ -1008,7 +993,7 @@
 		</div>
 
 		<p id="feature_timesync">
-			<font size="+2"><b>3.18 - Synchronisation de l'heure</b></font>
+			<font size="+2"><b>3.17 - Synchronisation de l'heure</b></font>
 		</p>
 		<div class="desc">
 			<p>
@@ -1034,7 +1019,7 @@ malgré tout (cela devrait être très rare).
 		</div>
 
 		<p id="feature_authtypes">
-				<font size="+2"><b>3.19 - Types d'Authentication</b></font>
+				<font size="+2"><b>3.18 - Types d'Authentication</b></font>
 		</p>
 		<div class="desc">
 			<p>
@@ -1660,6 +1645,11 @@ listen *:6660-6669;</pre>
 					<td style="text-align:center;">D</td>
 					<td style="text-align:center;">can_die</td>
 					<td>Oper pouvant utiliser /die</td>
+				</tr>
+				<tr>
+					<td style="text-align:center;">T</td>
+					<td style="text-align:center;">can_tsctl</td>
+					<td>Oper pouvant utiliser /tsctl</td>
 				</tr>
 				<tr>
 					<td style="text-align:center;">R</td>
@@ -2899,11 +2889,6 @@ deny channel {
 			<p>
 				<b>class</b><br>
 				La classe dont ce serveur fait partie, souvent une classe de serveurs séparée est utilisé pour ceci.
-			</p>
-			<p>
-				<b>compression-level</b> (optionnel)<br>
-				Spécifie le taux de compression (1-9) pour ce link.
-				Seulement utilisé si link::options::zip est activé.
 			</p>
 			<p>
 				<b>ciphers</b> (optionnel)<br>
@@ -4673,7 +4658,6 @@ spamfilter {
 						V - vhost - envoie la liste des vhost block<br>
 						X - notlink - envoie le liste des serveurs qui ne sont pas actuellement linkés<br>
 						Y - class - envoie la liste des class block<br>
-						z - zip - envoie les informations sur la compression des serveurs ziplinked (si ils ont été compilés avec le support ziplink)<br>
 						Z - mem - envoie les informations sur la mémoire utilisée
 					</td>
 					<td>Tous</td>
