@@ -331,23 +331,13 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 	sendto_serv_butone_token_opt(cptr, OPT_NOT_SJ3, sptr->name, MSG_JOIN,
 		    NULL, "%s", chptr->chname);
 
-#ifdef JOIN_INSTEAD_OF_SJOIN_ON_REMOTEJOIN
-	if ((MyClient(sptr) && !(flags & CHFL_CHANOP)) || !MyClient(sptr))
-		sendto_serv_butone_token_opt(cptr, OPT_SJ3, sptr->name, MSG_JOIN,
-		    NULL, "%s", chptr->chname);
-	if (flags && !(flags & CHFL_DEOPPED))
-	{
-#endif
-		/* I _know_ that the "@%s " look a bit wierd
-		   with the space and all .. but its to get around
-		   a SJOIN bug --stskeeps */
-		sendto_serv_butone_token_opt(cptr, OPT_SJ3,
-			me.name, MSG_SJOIN, NULL,
-			"%li %s :%s%s ", chptr->creationtime, 
-			chptr->chname, chfl_to_sjoin_symbol(flags), sptr->name);
-#ifdef JOIN_INSTEAD_OF_SJOIN_ON_REMOTEJOIN
-	}
-#endif		
+	/* I _know_ that the "@%s " look a bit wierd
+	   with the space and all .. but its to get around
+	   a SJOIN bug --stskeeps */
+	sendto_serv_butone_token_opt(cptr, OPT_SJ3,
+		me.name, MSG_SJOIN, NULL,
+		"%li %s :%s%s ", chptr->creationtime, 
+		chptr->chname, chfl_to_sjoin_symbol(flags), sptr->name);
 
 	if (MyClient(sptr))
 	{
