@@ -46,7 +46,6 @@
 #endif
 
 #define MSG_SETIDENT 	"SETIDENT"	/* set ident */
-#define	TOK_SETIDENT	"AD"	/* good old BASIC ;P */
 
 DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 

@@ -47,7 +47,6 @@
 DLLFUNC CMD_FUNC(m_%COMMAND%);
 
 #define MSG_%UCOMMAND% 	"%UCOMMAND%"	
-#define TOK_%UCOMMAND% 	"%TOKEN%"	
 
 ModuleHeader MOD_HEADER(m_%COMMAND%)
   = {
@@ -60,7 +59,7 @@ ModuleHeader MOD_HEADER(m_%COMMAND%)
 
 DLLFUNC int MOD_INIT(m_%COMMAND%)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_%UCOMMAND%, TOK_%UCOMMAND%, m_%COMMAND%, %MAXPARA%, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_%UCOMMAND%, m_%COMMAND%, %MAXPARA%, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
