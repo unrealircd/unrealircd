@@ -92,8 +92,8 @@ DLLFUNC int MOD_TEST(m_mode)(ModuleInfo *modinfo)
 
 DLLFUNC int MOD_INIT(m_mode)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_MODE, TOK_MODE, m_mode, MAXPARA, M_USER|M_SERVER);
-	CommandAdd(modinfo->handle, MSG_MLOCK, TOK_MLOCK, m_mlock, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_MODE, m_mode, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_MLOCK, m_mlock, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

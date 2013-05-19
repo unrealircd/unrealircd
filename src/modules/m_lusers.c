@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_lusers)
 
 DLLFUNC int MOD_INIT(m_lusers)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_LUSERS, TOK_LUSERS, m_lusers, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_LUSERS, m_lusers, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

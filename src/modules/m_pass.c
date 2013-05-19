@@ -68,8 +68,8 @@ ModuleHeader MOD_HEADER(m_pass)
 
 DLLFUNC int MOD_INIT(m_pass)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_PASS, TOK_PASS, m_pass, 1, M_UNREGISTERED|M_USER|M_SERVER);
-	CommandAdd(modinfo->handle, MSG_WEBIRC, NULL, m_webirc, MAXPARA, M_UNREGISTERED);
+	CommandAdd(modinfo->handle, MSG_PASS, m_pass, 1, M_UNREGISTERED|M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_WEBIRC, m_webirc, MAXPARA, M_UNREGISTERED);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

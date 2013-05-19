@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_wallops)
 
 DLLFUNC int MOD_INIT(m_wallops)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_WALLOPS, TOK_WALLOPS, m_wallops, 1, 0);
+	CommandAdd(modinfo->handle, MSG_WALLOPS, m_wallops, 1, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

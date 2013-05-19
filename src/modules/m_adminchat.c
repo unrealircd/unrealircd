@@ -63,7 +63,7 @@ ModuleHeader MOD_HEADER(m_adminchat)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_adminchat)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_ADMINCHAT, TOK_ADMINCHAT, m_admins, 1, 0);
+	CommandAdd(modinfo->handle, MSG_ADMINCHAT, m_admins, 1, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

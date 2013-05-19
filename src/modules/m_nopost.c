@@ -82,9 +82,9 @@ DLLFUNC int MOD_TEST(m_nopost)(ModuleInfo *modinfo)
 
 DLLFUNC int MOD_INIT(m_nopost)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, "GET", NULL, m_nopost, MAXPARA, M_UNREGISTERED);
-	CommandAdd(modinfo->handle, "POST", NULL, m_nopost, MAXPARA, M_UNREGISTERED);
-	CommandAdd(modinfo->handle, "PUT", NULL, m_nopost, MAXPARA, M_UNREGISTERED);
+	CommandAdd(modinfo->handle, "GET", m_nopost, MAXPARA, M_UNREGISTERED);
+	CommandAdd(modinfo->handle, "POST", m_nopost, MAXPARA, M_UNREGISTERED);
+	CommandAdd(modinfo->handle, "PUT", m_nopost, MAXPARA, M_UNREGISTERED);
 	HookAddEx(modinfo->handle, HOOKTYPE_CONFIGRUN, m_nopost_config_run);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	init_config();

@@ -59,7 +59,7 @@ ModuleHeader MOD_HEADER(m_userip)
 
 DLLFUNC int MOD_INIT(m_userip)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_USERIP, NULL, m_userip, 1, M_USER|M_ANNOUNCE);
+	CommandAdd(modinfo->handle, MSG_USERIP, m_userip, 1, M_USER|M_ANNOUNCE);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

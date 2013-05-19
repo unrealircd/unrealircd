@@ -68,8 +68,8 @@ ModuleHeader MOD_HEADER(m_chgname)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_chgname)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_CHGNAME, TOK_CHGNAME, m_chgname, 2, 0);
-	CommandAdd(modinfo->handle, MSG_SVSNAME, NULL, m_chgname, 2, 0);
+	CommandAdd(modinfo->handle, MSG_CHGNAME, m_chgname, 2, 0);
+	CommandAdd(modinfo->handle, MSG_SVSNAME, m_chgname, 2, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

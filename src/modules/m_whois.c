@@ -63,7 +63,7 @@ ModuleHeader MOD_HEADER(m_whois)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_whois)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_WHOIS, TOK_WHOIS, m_whois, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_WHOIS, m_whois, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

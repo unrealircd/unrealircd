@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_opermotd)
 
 DLLFUNC int MOD_INIT(m_opermotd)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_OPERMOTD, TOK_OPERMOTD, m_opermotd, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_OPERMOTD, m_opermotd, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

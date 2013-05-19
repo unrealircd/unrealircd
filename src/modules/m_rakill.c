@@ -61,7 +61,7 @@ ModuleHeader MOD_HEADER(m_rakill)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_rakill)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_RAKILL, TOK_RAKILL, m_rakill, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_RAKILL, m_rakill, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

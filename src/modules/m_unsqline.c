@@ -61,7 +61,7 @@ ModuleHeader MOD_HEADER(m_unsqline)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_unsqline)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_UNSQLINE, TOK_UNSQLINE, m_unsqline, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_UNSQLINE, m_unsqline, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

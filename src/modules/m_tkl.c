@@ -161,14 +161,14 @@ DLLFUNC int MOD_INIT(m_tkl)(ModuleInfo *modinfo)
 	/*
 	 * We call our add_Command crap here
 	*/
-	CommandAdd(modinfo->handle, MSG_GLINE, TOK_GLINE, m_gline, 3, M_OPER);
-	CommandAdd(modinfo->handle, MSG_SHUN, TOK_SHUN, m_shun, 3, M_OPER);
-	CommandAdd(modinfo->handle, MSG_TEMPSHUN, TOK_TEMPSHUN, m_tempshun, 2, M_OPER);
-	CommandAdd(modinfo->handle, MSG_ZLINE, TOK_NONE, m_tzline, 3, M_OPER);
-	CommandAdd(modinfo->handle, MSG_KLINE, TOK_NONE, m_tkline, 3, M_OPER);
-	CommandAdd(modinfo->handle, MSG_GZLINE, TOK_NONE, m_gzline, 3, M_OPER);
-	CommandAdd(modinfo->handle, MSG_SPAMFILTER, TOK_NONE, m_spamfilter, 6, M_OPER);
-	CommandAdd(modinfo->handle, MSG_TKL, TOK_TKL, _m_tkl, MAXPARA, M_OPER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_GLINE, m_gline, 3, M_OPER);
+	CommandAdd(modinfo->handle, MSG_SHUN, m_shun, 3, M_OPER);
+	CommandAdd(modinfo->handle, MSG_TEMPSHUN, m_tempshun, 2, M_OPER);
+	CommandAdd(modinfo->handle, MSG_ZLINE, m_tzline, 3, M_OPER);
+	CommandAdd(modinfo->handle, MSG_KLINE, m_tkline, 3, M_OPER);
+	CommandAdd(modinfo->handle, MSG_GZLINE, m_gzline, 3, M_OPER);
+	CommandAdd(modinfo->handle, MSG_SPAMFILTER, m_spamfilter, 6, M_OPER);
+	CommandAdd(modinfo->handle, MSG_TKL, _m_tkl, MAXPARA, M_OPER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

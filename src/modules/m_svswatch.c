@@ -61,7 +61,7 @@ ModuleHeader MOD_HEADER(m_svswatch)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_svswatch)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_SVSWATCH, TOK_SVSWATCH, m_svswatch, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SVSWATCH, m_svswatch, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

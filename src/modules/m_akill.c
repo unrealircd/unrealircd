@@ -61,7 +61,7 @@ ModuleHeader MOD_HEADER(m_akill)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_akill)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_AKILL, TOK_AKILL, m_akill, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_AKILL, m_akill, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

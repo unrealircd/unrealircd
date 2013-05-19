@@ -85,7 +85,7 @@ DLLFUNC int MOD_TEST(m_join)(ModuleInfo *modinfo)
 
 DLLFUNC int MOD_INIT(m_join)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_JOIN, TOK_JOIN, m_join, MAXPARA, M_USER);
+	CommandAdd(modinfo->handle, MSG_JOIN, m_join, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

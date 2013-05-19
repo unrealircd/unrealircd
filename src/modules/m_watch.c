@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_watch)
 
 DLLFUNC int MOD_INIT(m_watch)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_WATCH, TOK_WATCH, m_watch, 1, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_WATCH, m_watch, 1, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

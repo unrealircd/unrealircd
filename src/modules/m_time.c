@@ -61,7 +61,7 @@ ModuleHeader MOD_HEADER(m_time)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_time)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_TIME, TOK_TIME, m_time, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_TIME, m_time, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

@@ -61,7 +61,7 @@ ModuleHeader MOD_HEADER(m_quit)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_quit)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_QUIT, TOK_QUIT, m_quit, 1, M_UNREGISTERED|M_USER|M_VIRUS);
+	CommandAdd(modinfo->handle, MSG_QUIT, m_quit, 1, M_UNREGISTERED|M_USER|M_VIRUS);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

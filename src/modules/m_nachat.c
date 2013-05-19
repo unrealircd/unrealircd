@@ -61,7 +61,7 @@ ModuleHeader MOD_HEADER(m_nachat)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_nachat)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_NACHAT, TOK_NACHAT, m_nachat, 1, 0);
+	CommandAdd(modinfo->handle, MSG_NACHAT, m_nachat, 1, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

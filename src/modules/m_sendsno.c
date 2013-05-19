@@ -61,7 +61,7 @@ ModuleHeader MOD_HEADER(m_sendsno)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_sendsno)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_SENDSNO, TOK_SENDSNO, m_sendsno, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SENDSNO, m_sendsno, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

@@ -61,7 +61,7 @@ ModuleHeader MOD_HEADER(m_svspart)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_svspart)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_SVSPART, TOK_SVSPART, m_svspart, 3, 0);
+	CommandAdd(modinfo->handle, MSG_SVSPART, m_svspart, 3, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

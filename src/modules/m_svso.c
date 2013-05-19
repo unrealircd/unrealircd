@@ -100,7 +100,7 @@ ModuleHeader MOD_HEADER(m_svso)
 
 DLLFUNC int MOD_INIT(m_svso)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_SVSO, TOK_SVSO, m_svso, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SVSO, m_svso, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

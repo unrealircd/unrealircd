@@ -63,7 +63,7 @@ ModuleHeader MOD_HEADER(m_sqline)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_sqline)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_SQLINE, TOK_SQLINE, m_sqline, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SQLINE, m_sqline, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

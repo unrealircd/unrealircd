@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_umode2)
 
 DLLFUNC int MOD_INIT(m_umode2)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_UMODE2, TOK_UMODE2, m_umode2, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_UMODE2, m_umode2, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

@@ -61,7 +61,7 @@ ModuleHeader MOD_HEADER(m_whowas)
 
 DLLFUNC int MOD_INIT(m_whowas)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_WHOWAS, TOK_WHOWAS, m_whowas, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_WHOWAS, m_whowas, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

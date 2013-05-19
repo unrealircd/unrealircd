@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_locops)
 
 DLLFUNC int MOD_INIT(m_locops)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_LOCOPS, TOK_LOCOPS, m_locops, 1, 0);
+	CommandAdd(modinfo->handle, MSG_LOCOPS, m_locops, 1, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

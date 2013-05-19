@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_sjoin)
 
 DLLFUNC int MOD_INIT(m_sjoin)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_SJOIN, TOK_SJOIN, m_sjoin, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SJOIN, m_sjoin, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

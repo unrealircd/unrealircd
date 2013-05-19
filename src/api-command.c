@@ -39,10 +39,10 @@ int CommandExists(char *name)
 	return 0;
 }
 
-Command *CommandAdd(Module *module, char *cmd, char *tok, int (*func)(), unsigned char params, int flags) {
+Command *CommandAdd(Module *module, char *cmd, int (*func)(), unsigned char params, int flags) {
 	Command *command;
 
-	if (find_Command_simple(cmd) || (tok && find_Command_simple(tok)))
+	if (find_Command_simple(cmd))
 	{
 		if (module)
 			module->errorcode = MODERR_EXISTS;
@@ -50,7 +50,6 @@ Command *CommandAdd(Module *module, char *cmd, char *tok, int (*func)(), unsigne
 	}
 	command = MyMallocEx(sizeof(Command));
 	command->cmd = add_Command_backend(cmd,func,params, flags);
-	command->tok = NULL;
 	command->cmd->owner = module;
 	command->cmd->friend = NULL;
 	if (module) {

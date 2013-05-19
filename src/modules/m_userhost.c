@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_userhost)
 
 DLLFUNC int MOD_INIT(m_userhost)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_USERHOST, TOK_USERHOST, m_userhost, 1, 0);
+	CommandAdd(modinfo->handle, MSG_USERHOST, m_userhost, 1, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

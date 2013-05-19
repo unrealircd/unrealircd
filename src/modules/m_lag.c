@@ -61,7 +61,7 @@ ModuleHeader MOD_HEADER(m_lag)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_lag)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_LAG, TOK_LAG, m_lag, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_LAG, m_lag, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

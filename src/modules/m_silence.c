@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_silence)
 
 DLLFUNC int MOD_INIT(m_silence)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_SILENCE, TOK_SILENCE, m_silence, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SILENCE, m_silence, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

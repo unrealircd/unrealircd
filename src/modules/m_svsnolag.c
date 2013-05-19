@@ -62,8 +62,8 @@ ModuleHeader MOD_HEADER(m_svsnolag)
 
 DLLFUNC int MOD_INIT(m_svsnolag)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_SVSNOLAG, TOK_SVSNOLAG, m_svsnolag, MAXPARA, 0);
-	CommandAdd(modinfo->handle, MSG_SVS2NOLAG, TOK_SVS2NOLAG, m_svs2nolag, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SVSNOLAG, m_svsnolag, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SVS2NOLAG, m_svs2nolag, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

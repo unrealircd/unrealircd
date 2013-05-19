@@ -117,7 +117,7 @@ ModuleHeader MOD_HEADER(m_oper)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_oper)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_OPER, TOK_OPER, m_oper, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_OPER, m_oper, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

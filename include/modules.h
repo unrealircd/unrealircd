@@ -597,7 +597,7 @@ extern Callback	*CallbackDel(Callback *cb);
 extern Efunction	*EfunctionAddMain(Module *module, int eftype, int (*intfunc)(), void (*voidfunc)(), void *(*pvoidfunc)(), char *(*pcharfunc)());
 extern Efunction	*EfunctionDel(Efunction *cb);
 
-Command *CommandAdd(Module *module, char *cmd, char *tok, int (*func)(), unsigned char params, int flags);
+Command *CommandAdd(Module *module, char *cmd, int (*func)(), unsigned char params, int flags);
 void CommandDel(Command *command);
 int CommandExists(char *name);
 Cmdoverride *CmdoverrideAdd(Module *module, char *cmd, iFP function);

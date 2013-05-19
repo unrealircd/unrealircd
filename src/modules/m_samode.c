@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_samode)
 
 DLLFUNC int MOD_INIT(m_samode)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_SAMODE, TOK_SAMODE, m_samode, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SAMODE, m_samode, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

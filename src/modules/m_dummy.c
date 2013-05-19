@@ -46,7 +46,7 @@ ModuleHeader MOD_HEADER(m_dummy)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_dummy)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_DUMMY, TOK_DUMMY, m_dummy, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_DUMMY, m_dummy, MAXPARA, 0);
 	return MOD_SUCCESS;
 }
 

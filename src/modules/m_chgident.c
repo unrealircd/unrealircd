@@ -73,7 +73,7 @@ DLLFUNC int MOD_INIT(m_chgident)(ModuleInfo *modinfo)
 	   the module_load() will use this to add to the modules linked 
 	   list
 	*/
-	CommandAdd(modinfo->handle, MSG_CHGIDENT, TOK_CHGIDENT, m_chgident, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_CHGIDENT, m_chgident, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

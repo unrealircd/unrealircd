@@ -62,7 +62,7 @@ ModuleHeader MOD_HEADER(m_svsnick)
 
 DLLFUNC int MOD_INIT(m_svsnick)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_SVSNICK, TOK_SVSNICK, m_svsnick, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SVSNICK, m_svsnick, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

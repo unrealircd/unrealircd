@@ -61,7 +61,7 @@ ModuleHeader MOD_HEADER(m_unkline)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_unkline)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_UNKLINE, TOK_UNKLINE, m_unkline, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_UNKLINE, m_unkline, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

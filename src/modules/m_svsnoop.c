@@ -63,7 +63,7 @@ ModuleHeader MOD_HEADER(m_svsnoop)
 
 DLLFUNC int MOD_INIT(m_svsnoop)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_SVSNOOP, TOK_SVSNOOP, m_svsnoop, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SVSNOOP, m_svsnoop, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_globops)
 
 DLLFUNC int MOD_INIT(m_globops)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_GLOBOPS, TOK_GLOBOPS, m_globops, 1, 0);
+	CommandAdd(modinfo->handle, MSG_GLOBOPS, m_globops, 1, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

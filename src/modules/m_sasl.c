@@ -312,9 +312,9 @@ DLLFUNC int MOD_INIT(m_sasl)(ModuleInfo *modinfo)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
-	CommandAdd(modinfo->handle, MSG_SASL, TOK_SASL, m_sasl, MAXPARA, M_USER|M_SERVER);
-	CommandAdd(modinfo->handle, MSG_SVSLOGIN, TOK_SVSLOGIN, m_svslogin, MAXPARA, M_USER|M_SERVER);
-	CommandAdd(modinfo->handle, MSG_AUTHENTICATE, TOK_AUTHENTICATE, m_authenticate, MAXPARA, M_UNREGISTERED);
+	CommandAdd(modinfo->handle, MSG_SASL, m_sasl, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVSLOGIN, m_svslogin, MAXPARA, M_USER|M_SERVER);
+	CommandAdd(modinfo->handle, MSG_AUTHENTICATE, m_authenticate, MAXPARA, M_UNREGISTERED);
 
 	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_CONNECT, abort_sasl);
 	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_QUIT, abort_sasl);

@@ -58,7 +58,7 @@ ModuleHeader MOD_HEADER(m_netinfo)
 
 DLLFUNC int MOD_INIT(m_netinfo)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_NETINFO, TOK_NETINFO, m_netinfo, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_NETINFO, m_netinfo, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

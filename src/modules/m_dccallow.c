@@ -59,7 +59,7 @@ ModuleHeader MOD_HEADER(m_dccallow)
 
 DLLFUNC int MOD_INIT(m_dccallow)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_DCCALLOW, NULL, m_dccallow, 1, M_USER|M_ANNOUNCE);
+	CommandAdd(modinfo->handle, MSG_DCCALLOW, m_dccallow, 1, M_USER|M_ANNOUNCE);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

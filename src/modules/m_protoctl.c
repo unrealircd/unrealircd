@@ -58,7 +58,7 @@ ModuleHeader MOD_HEADER(m_protoctl)
 
 DLLFUNC int MOD_INIT(m_protoctl)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_PROTOCTL, TOK_PROTOCTL, m_protoctl, MAXPARA, M_UNREGISTERED|M_SERVER|M_USER);
+	CommandAdd(modinfo->handle, MSG_PROTOCTL, m_protoctl, MAXPARA, M_UNREGISTERED|M_SERVER|M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

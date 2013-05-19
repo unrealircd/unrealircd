@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_trace)
 
 DLLFUNC int MOD_INIT(m_trace)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_TRACE, TOK_TRACE, m_trace, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_TRACE, m_trace, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

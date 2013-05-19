@@ -445,7 +445,7 @@ DLLFUNC int m_cap(aClient *cptr, aClient *sptr, int parc, char *parv[])
 DLLFUNC int MOD_INIT(m_cap)(ModuleInfo *modinfo)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	CommandAdd(modinfo->handle, MSG_CAP, TOK_CAP, m_cap, MAXPARA, M_UNREGISTERED|M_USER);
+	CommandAdd(modinfo->handle, MSG_CAP, m_cap, MAXPARA, M_UNREGISTERED|M_USER);
 
 	return MOD_SUCCESS;
 }

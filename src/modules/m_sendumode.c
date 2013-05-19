@@ -63,8 +63,8 @@ ModuleHeader MOD_HEADER(m_sendumode)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_sendumode)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_SENDUMODE, TOK_SENDUMODE, m_sendumode, MAXPARA, 0);
-	CommandAdd(modinfo->handle, MSG_SMO, TOK_SMO, m_sendumode, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SENDUMODE, m_sendumode, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SMO, m_sendumode, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

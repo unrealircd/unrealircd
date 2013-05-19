@@ -68,7 +68,7 @@ DLLFUNC int MOD_TEST(m_nick)(ModuleInfo *modinfo)
 
 DLLFUNC int MOD_INIT(m_nick)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_NICK, TOK_NICK, m_nick, MAXPARA, M_USER|M_SERVER|M_UNREGISTERED);
+	CommandAdd(modinfo->handle, MSG_NICK, m_nick, MAXPARA, M_USER|M_SERVER|M_UNREGISTERED);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

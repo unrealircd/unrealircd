@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_eos)
 
 DLLFUNC int MOD_INIT(m_eos)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_EOS, TOK_EOS, m_eos, MAXPARA, M_SERVER);
+	CommandAdd(modinfo->handle, MSG_EOS, m_eos, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

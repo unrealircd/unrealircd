@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_dccdeny)
 
 DLLFUNC int MOD_INIT(m_dccdeny)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_DCCDENY, TOK_DCCDENY, m_dccdeny, 2, 0);
+	CommandAdd(modinfo->handle, MSG_DCCDENY, m_dccdeny, 2, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

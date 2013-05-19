@@ -59,7 +59,7 @@ ModuleHeader MOD_HEADER(m_starttls)
 
 DLLFUNC int MOD_INIT(m_starttls)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_STARTTLS, NULL, m_starttls, MAXPARA, M_UNREGISTERED|M_ANNOUNCE);
+	CommandAdd(modinfo->handle, MSG_STARTTLS, m_starttls, MAXPARA, M_UNREGISTERED|M_ANNOUNCE);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

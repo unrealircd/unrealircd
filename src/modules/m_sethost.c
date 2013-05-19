@@ -62,7 +62,7 @@ ModuleHeader MOD_HEADER(m_sethost)
 
 DLLFUNC int MOD_INIT(m_sethost)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_SETHOST, TOK_SETHOST, m_sethost, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SETHOST, m_sethost, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

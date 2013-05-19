@@ -61,7 +61,7 @@ ModuleHeader MOD_HEADER(m_svsjoin)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_svsjoin)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_SVSJOIN, TOK_SVSJOIN, m_svsjoin, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_SVSJOIN, m_svsjoin, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

@@ -60,7 +60,7 @@ ModuleHeader MOD_HEADER(m_close)
 
 DLLFUNC int MOD_INIT(m_close)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_CLOSE, TOK_CLOSE, m_close, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_CLOSE, m_close, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

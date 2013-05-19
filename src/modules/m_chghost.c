@@ -66,7 +66,7 @@ ModuleHeader MOD_HEADER(m_chghost)
 
 DLLFUNC int MOD_INIT(m_chghost)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_CHGHOST, TOK_CHGHOST, m_chghost, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_CHGHOST, m_chghost, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

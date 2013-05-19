@@ -61,7 +61,7 @@ ModuleHeader MOD_HEADER(m_cycle)
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_cycle)(ModuleInfo *modinfo)
 {
-	CommandAdd(modinfo->handle, MSG_CYCLE, TOK_CYCLE, m_cycle, MAXPARA, 0);
+	CommandAdd(modinfo->handle, MSG_CYCLE, m_cycle, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
