@@ -631,11 +631,9 @@ EVENT(check_pings)
 					}
 					if (SHOWCONNECTINFO && !cptr->serv) {
 						if (DoingDNS(cptr))
-							sendto_one(cptr,
-							    REPORT_FAIL_DNS);
+							sendto_one(cptr, "%s", REPORT_FAIL_DNS);
 						else if (DoingAuth(cptr))
-							sendto_one(cptr,
-							    REPORT_FAIL_ID);
+							sendto_one(cptr, "%s", REPORT_FAIL_ID);
 					}
 					Debug((DEBUG_NOTICE,
 					    "DNS/AUTH timeout %s",
