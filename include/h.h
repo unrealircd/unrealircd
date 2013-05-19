@@ -272,7 +272,6 @@ extern void sendto_channel_butone(aClient *, aClient *, aChannel *,
 extern void sendto_channel_butserv_butone(aChannel *chptr, aClient *from, aClient *one,
                                           char *pattern, ...) __attribute__((format(printf,4,5)));
 extern void sendto_serv_butone(aClient *, char *, ...) __attribute__((format(printf,2,3)));
-extern void sendto_serv_butone_quit(aClient *, char *, ...) __attribute__((format(printf,2,3)));
 extern void sendto_serv_butone_sjoin(aClient *, char *, ...) __attribute__((format(printf,2,3)));
 extern void sendto_serv_sjoin(aClient *, char *, ...) __attribute__((format(printf,2,3)));
 extern void sendto_common_channels(aClient *, char *, ...) __attribute__((format(printf,2,3)));
