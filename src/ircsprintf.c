@@ -30,8 +30,6 @@
 #include <stdio.h>
 /* *INDENT-OFF* */
 
-extern char *base64enc(long i);
-
 const char atoi_tab[4000] = {
     '0','0','0',0, '0','0','1',0, '0','0','2',0, '0','0','3',0, '0','0','4',0,
     '0','0','5',0, '0','0','6',0, '0','0','7',0, '0','0','8',0, '0','0','9',0,
@@ -327,43 +325,6 @@ char *ircvsprintf(char *str, const char *format, va_list vl)
 				*str++ = *ap++;
 				*str++ = *ap++;
 				*str++ = *ap;
-				continue;
-			}
-#if 0				/* Not used */
-			if (c == 'N')	/* Prints "%03u" a numeric value in the
-					   range [ 0, 999 ], padded with zero's */
-			{
-				unsigned int v1;
-				const char *ap;
-				v1 = va_arg(vl, unsigned int);
-				ap = atoi_tab + (v1 << 2);
-				*str++ = *ap++;
-				*str++ = *ap++;
-				*str++ = *ap;
-				continue;
-			}
-#endif
-			/* Send base64 value */
-
-			if (c == 'b')
-			{
-				long v1;
-				char *ap;
-				
-				v1 = va_arg(vl, long);
-				for (ap = (char *) base64enc(v1); *ap; ap++)
-					*str++ = *ap;
-				continue;
-			}
-			if (c == 'B')
-			{
-				long v1;
-				char *ap;
-				
-				v1 = va_arg(vl, long);
-				*str++ = '!';
-				for (ap = (char *) base64enc(v1); *ap; ap++)
-					*str++ = *ap;
 				continue;
 			}
 			

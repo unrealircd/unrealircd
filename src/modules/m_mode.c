@@ -2382,10 +2382,7 @@ CMD_FUNC(m_mlock)
 	if ((parc < 3) || BadPtr(parv[2]))
 		return 0;
 		
-	if (*parv[1] == '!')
-		chants = (TS) base64dec(parv[1] + 1);
-	else
-		chants = (TS) atol(parv[1]);
+	chants = (TS) atol(parv[1]);
 
 	/* Now, try to find the channel in question */
 	chptr = find_channel(parv[2], NullChn);

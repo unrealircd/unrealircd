@@ -152,8 +152,6 @@ extern aChannel *find_channel(char *, aChannel *);
 extern Membership *find_membership_link(Membership *lp, aChannel *ptr);
 extern Member *find_member_link(Member *, aClient *);
 extern void remove_user_from_channel(aClient *, aChannel *);
-extern char *base64enc(long);
-extern long base64dec(char *);
 extern void add_server_to_table(aClient *);
 extern void remove_server_from_table(aClient *);
 extern void iNAH_host(aClient *sptr, char *host);
@@ -510,7 +508,6 @@ extern int		Auth_Check(aClient *cptr, anAuthStruct *as, char *para);
 extern char   		*Auth_Make(short type, char *para);
 extern int   		Auth_CheckError(ConfigEntry *ce);
 
-extern long xbase64dec(char *b64);
 extern int is_chanownprotop(aClient *cptr, aChannel *chptr);
 extern int is_skochanop(aClient *cptr, aChannel *chptr);
 extern char *make_virthost(aClient *sptr, char *curr, char *new, int mode);
@@ -542,7 +539,6 @@ extern void rehash_motdrules();
 extern void read_motd(const char *filename, aMotdFile *motd); /* s_serv.c */
 extern CMD_FUNC(m_server_remote);
 extern void send_proto(aClient *, ConfigItem_link *);
-extern char *xbase64enc(long i);
 extern void unload_all_modules(void);
 extern int set_blocking(int fd);
 extern void set_sock_opts(int fd, aClient *cptr);
