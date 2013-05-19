@@ -115,13 +115,6 @@ NS            When specified informs the server that numeric server names are
               is a server. See doc/technical/base64.txt for information on the base64
               system used.
 
-SJB64         This token allows timestamps to be specified in base64 notation to conserve
-              bandwidth. When SJB64 is supported, anywhere a timestamp can appear may be in
-              base64 notation. A base64 timestamp is preceeded by a ! to identify that it
-              is an sjb64 rather than a regular timestamp, if this is the case the
-              characters following the ! represent the timestamp in base64. See
-              doc/technical/base64.txt for information on the base64 system used. 
-              
 TKLEXT        This allows 10 instead of 8 parameters in TKL's for spamfilter, see s_kline.c
               function m_tkl for more info on this (added in 3.2RC2).
 

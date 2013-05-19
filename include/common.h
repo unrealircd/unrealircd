@@ -268,7 +268,6 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
                         " UMODE2" \
                         " VL" \
                         " SJ3" \
-                        " SJB64" \
                         " TKLEXT" \
                         " NICKIP" \
                         " ESVID"

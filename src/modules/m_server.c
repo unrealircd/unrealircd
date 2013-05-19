@@ -732,10 +732,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 			if (!SupportVHP(cptr))
 			{
 				sendto_one(cptr,
-					    (cptr->proto & PROTO_SJB64 ?
-					    "NICK %s %d %B %s %s %s %s %s %s %s%s%s%s:%s"
-					    :
-					    "NICK %s %d %lu %s %s %s %s %s %s %s%s%s%s:%s"),
+					    "NICK %s %d %lu %s %s %s %s %s %s %s%s%s%s:%s",
 					    acptr->name,
 					    acptr->hopcount + 1,
 					    (long)acptr->lastnick,
@@ -796,10 +793,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 				send_channel_modes_sjoin3(cptr, chptr);
 			if (chptr->topic_time)
 				sendto_one(cptr,
-				    (cptr->proto & PROTO_SJB64 ?
-				    "TOPIC %s %s %B :%s"
-				    :
-				    "TOPIC %s %s %lu :%s"),
+				    "TOPIC %s %s %lu :%s",
 				    chptr->chname, chptr->topic_nick,
 				    (long)chptr->topic_time, chptr->topic);
 		}
@@ -992,7 +986,7 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
 	/* send MLOCK here too... --nenolod */
 	if (CHECKPROTO(cptr, PROTO_MLOCK))
 	{
-		sendto_one(cptr, (CHECKPROTO(cptr, PROTO_SJB64) ? "MLOCK %B %s :%s" : "MLOCK %lu %s :%s"),
+		sendto_one(cptr, "MLOCK %lu %s :%s",
 			   chptr->creationtime, chptr->chname,
 			   BadPtr(chptr->mode_lock) ? "" : chptr->mode_lock);
 	}
@@ -1275,19 +1269,19 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 	if (nomode && nopara)
 	{
 		ircsprintf(buf,
-		    (cptr->proto & PROTO_SJB64 ? ":%s SJOIN %B %s :" : ":%s SJOIN %ld %s :"), me.name,
+		    ":%s SJOIN %ld %s :", me.name,
 		    (long)chptr->creationtime, chptr->chname);
 	}
 	if (nopara && !nomode)
 	{
 		ircsprintf(buf, 
-		    (cptr->proto & PROTO_SJB64 ? ":%s SJOIN %B %s %s :" : ":%s SJOIN %ld %s %s :"), me.name,
+		    ":%s SJOIN %ld %s %s :", me.name,
 		    (long)chptr->creationtime, chptr->chname, modebuf);
 	}
 	if (!nopara && !nomode)
 	{
 		ircsprintf(buf,
-		    (cptr->proto & PROTO_SJB64 ? ":%s SJOIN %B %s %s %s :" : ":%s SJOIN %ld %s %s %s :"), me.name,
+		    ":%s SJOIN %ld %s %s %s :", me.name,
 		    (long)chptr->creationtime, chptr->chname, modebuf, parabuf);
 	}
 

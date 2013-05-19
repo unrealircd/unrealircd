@@ -232,10 +232,7 @@ CMD_FUNC(m_sjoin)
 	}
 	chptr = get_channel(cptr, parv[2], CREATE);
 
-	if (*parv[1] != '!')
-		ts = (time_t)atol(parv[1]);
-	else
-		ts = (time_t)base64dec(parv[1] + 1);
+	ts = (time_t)atol(parv[1]);
 
 	if (chptr->creationtime > ts)
 	{
@@ -882,14 +879,10 @@ docontinue:
 		return -1;
 	}
 	/* This sends out to SJ3 servers .. */
-	Debug((DEBUG_DEBUG, "Sending '%li %s :%s' to sj3-!sjb64", ts, parabuf,
+	Debug((DEBUG_DEBUG, "Sending '%li %s :%s' to sj3", ts, parabuf,
 	    parv[parc - 1]));
-	sendto_serv_butone_token_opt(cptr, OPT_SJOIN | OPT_SJ3 | OPT_NOT_SJB64, sptr->name,
+	sendto_serv_butone_token_opt(cptr, OPT_SJOIN | OPT_SJ3, sptr->name,
 	    MSG_SJOIN, TOK_SJOIN, "%li %s :%s", ts, parabuf, parv[parc - 1]);
-	Debug((DEBUG_DEBUG, "Sending '%B %s :%s' to sj3-sjb64", (long)ts, parabuf,
-	    parv[parc - 1]));
-	sendto_serv_butone_token_opt(cptr, OPT_SJOIN | OPT_SJ3 | OPT_SJB64, sptr->name,
-	    MSG_SJOIN, TOK_SJOIN, "%B %s :%s", (long)ts, parabuf, parv[parc - 1]);
 	 
 	return 0;
 }

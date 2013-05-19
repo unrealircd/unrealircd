@@ -118,7 +118,7 @@ DLLFUNC CMD_FUNC(m_nick)
 	aClient *acptrs;
 	char nick[NICKLEN + 2], *s, descbuf[BUFSIZE];
 	Membership *mp;
-	time_t lastnick = (time_t) 0;
+	long lastnick = 0l;
 	int  differ = 1, update_watch = 1;
 	unsigned char newusr = 0, removemoder = 1;
 	/*
@@ -449,7 +449,7 @@ DLLFUNC CMD_FUNC(m_nick)
 		 */
 		if (parc > 3)
 		{
-			lastnick = TS2ts(parv[3]);
+			lastnick = atol(parv[3]);
 			if (parc > 5)
 				differ = (mycmp(acptr->user->username, parv[4])
 				    || mycmp(acptr->user->realhost, parv[5]));
@@ -522,7 +522,7 @@ DLLFUNC CMD_FUNC(m_nick)
 		   ** A NICK change has collided (e.g. message type ":old NICK new").
 		 */
 		if (parc > 2)
-			lastnick = TS2ts(parv[2]);
+			lastnick = atol(parv[2]);
 		differ = (mycmp(acptr->user->username, sptr->user->username) ||
 		    mycmp(acptr->user->realhost, sptr->user->realhost));
 		sendto_failops
@@ -597,9 +597,9 @@ DLLFUNC CMD_FUNC(m_nick)
 		sptr = make_client(cptr, serv);
 		add_client_to_list(sptr);
 		if (parc > 2)
-			sptr->hopcount = TS2ts(parv[2]);
+			sptr->hopcount = atol(parv[2]);
 		if (parc > 3)
-			sptr->lastnick = TS2ts(parv[3]);
+			sptr->lastnick = atol(parv[3]);
 		else		/* Little bit better, as long as not all upgraded */
 			sptr->lastnick = TStime();
 		if (sptr->lastnick < 0)
@@ -678,9 +678,9 @@ DLLFUNC CMD_FUNC(m_nick)
 		if (mycmp(parv[0], nick) ||
 		    /* Next line can be removed when all upgraded  --Run */
 		    (!MyClient(sptr) && parc > 2
-		    && TS2ts(parv[2]) < sptr->lastnick))
+		    && atol(parv[2]) < sptr->lastnick))
 			sptr->lastnick = (MyClient(sptr)
-			    || parc < 3) ? TStime() : TS2ts(parv[2]);
+			    || parc < 3) ? TStime() : atol(parv[2]);
 		if (sptr->lastnick < 0)
 		{
 			sendto_realops("Negative timestamp (%s)", backupbuf);

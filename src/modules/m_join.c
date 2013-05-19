@@ -342,11 +342,7 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 		/* I _know_ that the "@%s " look a bit wierd
 		   with the space and all .. but its to get around
 		   a SJOIN bug --stskeeps */
-		sendto_serv_butone_token_opt(cptr, OPT_SJ3|OPT_SJB64,
-			me.name, MSG_SJOIN, TOK_SJOIN,
-			"%B %s :%s%s ", (long)chptr->creationtime, 
-			chptr->chname, chfl_to_sjoin_symbol(flags), sptr->name);
-		sendto_serv_butone_token_opt(cptr, OPT_SJ3|OPT_NOT_SJB64,
+		sendto_serv_butone_token_opt(cptr, OPT_SJ3,
 			me.name, MSG_SJOIN, TOK_SJOIN,
 			"%li %s :%s%s ", chptr->creationtime, 
 			chptr->chname, chfl_to_sjoin_symbol(flags), sptr->name);

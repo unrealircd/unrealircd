@@ -266,20 +266,6 @@ CMD_FUNC(m_protoctl)
 			    proto, cptr->name));
 			SetSJ3(cptr);
 		}
-		else if (strcmp(s, "SJB64") == 0)
-		{
-#ifndef PROTOCTL_MADNESS
-			if (remove)
-			{
-				cptr->proto &= ~PROTO_SJB64;
-				continue;
-			}
-#endif
-			Debug((DEBUG_ERROR,
-			    "Chose protocol %s for link %s",
-			    proto, cptr->name));
-			cptr->proto |= PROTO_SJB64;
-		}
 		else if (strcmp(s, "TKLEXT") == 0)
 		{
 			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
