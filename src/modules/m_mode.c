@@ -506,14 +506,12 @@ DLLFUNC void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, c
 	{
 		if (tschange || isbounce) {	/* relay bounce time changes */
 			if (chptr->creationtime)
-				sendto_serv_butone_token(cptr, me.name,
-				    MSG_MODE, TOK_MODE, "%s %s+ %lu",
-				    chptr->chname, isbounce ? "&" : "",
+				sendto_serv_butone(cptr, ":%s MODE %s %s+ %lu",
+				    me.name, chptr->chname, isbounce ? "&" : "",
 				    chptr->creationtime);
 			else
-				sendto_serv_butone_token(cptr, me.name,
-				    MSG_MODE, TOK_MODE, "%s %s+ ",
-				    chptr->chname, isbounce ? "&" : "");
+				sendto_serv_butone(cptr, ":%s MODE %s %s+",
+				    me.name, chptr->chname, isbounce ? "&" : "");
 		return;		/* nothing to send */
 		}
 	}
@@ -541,8 +539,8 @@ DLLFUNC void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, c
 		return;
 	if (IsPerson(sptr) && samode && MyClient(sptr))
 	{
-		sendto_serv_butone_token(NULL, me.name, MSG_GLOBOPS,
-		    TOK_GLOBOPS, ":%s used SAMODE %s (%s%s%s)", sptr->name,
+		sendto_serv_butone(NULL,
+		    ":%s GLOBOPS :%s used SAMODE %s (%s%s%s)", me.name, sptr->name,
 		    chptr->chname, modebuf, *parabuf ? " " : "", parabuf);
 		sendto_failops_whoare_opers
 		    ("from %s: %s used SAMODE %s (%s%s%s)", me.name, sptr->name,
@@ -555,15 +553,15 @@ DLLFUNC void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, c
 	sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
 	    sptr->name, chptr->chname, modebuf, parabuf);
 	if (IsServer(sptr) && sendts != -1)
-		sendto_serv_butone_token(cptr, sptr->name, MSG_MODE, TOK_MODE,
-		    "%s %s%s %s %lu", chptr->chname, isbounce ? "&" : "",
+		sendto_serv_butone(cptr, ":%s MODE %s %s%s %s%lu",
+		    sptr->name, chptr->chname, isbounce ? "&" : "",
 		    modebuf, parabuf, sendts);
 	else if (samode && IsMe(sptr)) /* SAMODE is a special case: always send a TS of 0 (omitting TS==desynch) */
-		sendto_serv_butone_token(cptr, sptr->name, MSG_MODE, TOK_MODE,
-		    "%s %s %s 0", chptr->chname, modebuf, parabuf);
+		sendto_serv_butone(cptr, ":%s MODE %s %s %s 0",
+		    sptr->name, chptr->chname, modebuf, parabuf);
 	else
-		sendto_serv_butone_token(cptr, sptr->name, MSG_MODE, TOK_MODE,
-		    "%s %s%s %s", chptr->chname, isbounce ? "&" : "",
+		sendto_serv_butone(cptr, ":%s MODE %s %s%s %s",
+		    sptr->name, chptr->chname, isbounce ? "&" : "",
 		    modebuf, parabuf);
 	/* tell them it's not a timestamp, in case the last param
 	   ** is a number. */

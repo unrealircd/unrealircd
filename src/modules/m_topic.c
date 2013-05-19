@@ -213,10 +213,8 @@ long flags = 0; /* cache: membership flags */
 
 				chptr->topic_time = ttime;
 				RunHook4(HOOKTYPE_TOPIC, cptr, sptr, chptr, topic);
-				sendto_serv_butone_token
-				    (cptr, parv[0], MSG_TOPIC,
-				    TOK_TOPIC, "%s %s %lu :%s",
-				    chptr->chname, chptr->topic_nick,
+				sendto_serv_butone(cptr, ":%s TOPIC %s %s %lu :%s",
+				    parv[0], chptr->chname, chptr->topic_nick,
 				    chptr->topic_time, chptr->topic);
 				sendto_channel_butserv(chptr, sptr,
 				    ":%s TOPIC %s :%s", parv[0],
@@ -323,11 +321,9 @@ long flags = 0; /* cache: membership flags */
 				chptr->topic_time = ttime;
 			else
 				chptr->topic_time = TStime();
-			sendto_serv_butone_token
-			    (cptr, parv[0], MSG_TOPIC, TOK_TOPIC,
-			    "%s %s %lu :%s",
-			    chptr->chname,
-			    chptr->topic_nick, chptr->topic_time, chptr->topic);
+			sendto_serv_butone(cptr, ":%s TOPIC %s %s %lu :%s",
+			    parv[0], chptr->chname, chptr->topic_nick,
+			    chptr->topic_time, chptr->topic);
 			sendto_channel_butserv(chptr, sptr,
 			    ":%s TOPIC %s :%s", parv[0], chptr->chname,
 			    chptr->topic);

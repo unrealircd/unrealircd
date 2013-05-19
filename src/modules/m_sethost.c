@@ -222,8 +222,7 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		}
 		sptr->user->virthost = strdup(vhost);
 		/* spread it out */
-		sendto_serv_butone_token(cptr, sptr->name, MSG_SETHOST, TOK_SETHOST,
-		    "%s", parv[1]);
+		sendto_serv_butone(cptr, ":%s SETHOST %s", sptr->name, parv[1]);
 
 		if (UHOST_ALLOWED == UHALLOW_REJOIN)
 			rejoin_dojoinandmode(sptr);

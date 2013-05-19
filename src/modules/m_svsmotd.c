@@ -120,12 +120,10 @@ int  m_svsmotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
           default:
                   return 0;
         }
-		if (parv[2])
-	        sendto_serv_butone_token(cptr, parv[0], MSG_SVSMOTD, TOK_SVSMOTD,
-	            "%s :%s", parv[1], parv[2]);
-		else
-	        sendto_serv_butone_token(cptr, parv[0], MSG_SVSMOTD, TOK_SVSMOTD,
-	            "%s", parv[1]);
+        if (parv[2])
+                sendto_serv_butone(cptr, ":%s SVSMOTD %s :%s", parv[0], parv[1], parv[2]);
+        else
+                sendto_serv_butone(cptr, ":%s SVSMOTD %s", parv[0], parv[1]);
 
         if (conf == NULL)
         {

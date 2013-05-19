@@ -102,8 +102,7 @@ aClient *acptr;
 	msg = parv[2];
 
 	/* Forward to others... */
-	sendto_serv_butone_token(cptr, sptr->name, MSG_SENDSNO, TOK_SENDSNO,
-		"%s :%s", parv[1], parv[2]);
+	sendto_serv_butone(cptr, ":%s SENDSNO %s :%s", sptr->name, parv[1], parv[2]);
 
 	for (p = sno; *p; p++)
 	{

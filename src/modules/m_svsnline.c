@@ -143,12 +143,8 @@ DLLFUNC int m_svsnline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  } 
 		 
 		  if (IsULine(sptr))
-		 	sendto_serv_butone_token(cptr,
-		 		sptr->name,
-		 		MSG_SVSNLINE,
-		 		TOK_SVSNLINE,
-		 		"+ %s :%s",
-			      parv[2], parv[3]);
+			sendto_serv_butone(cptr, ":%s SVSNLINE + %s :%s",
+			    sptr->name, parv[2], parv[3]);
 		  break;
 	  }
 	  case '-':
@@ -178,9 +174,7 @@ DLLFUNC int m_svsnline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  	MyFree(bconf);
 		  	
 		  }
-		  sendto_serv_butone_token(cptr,
-		      sptr->name, MSG_SVSNLINE, TOK_SVSNLINE, "- %s",
-		      parv[2]);
+		  sendto_serv_butone(cptr, ":%s SVSNLINE - %s", sptr->name, parv[2]);
 		  break;
 	  }
 	  case '*':
@@ -188,8 +182,7 @@ DLLFUNC int m_svsnline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  if (!IsULine(sptr))
 			  return 0;
 	          wipe_svsnlines();
-		  sendto_serv_butone_token(cptr, sptr->name,
-		      MSG_SVSNLINE, TOK_SVSNLINE, "*");
+		  sendto_serv_butone(cptr, ":%s SVSNLINE *", sptr->name);
 		  break;
 	  }
 

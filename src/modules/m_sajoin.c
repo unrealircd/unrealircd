@@ -175,8 +175,7 @@ DLLFUNC CMD_FUNC(m_sajoin)
 							 "Left all channels");
 					remove_user_from_channel(acptr, chptr);
 				}
-				sendto_serv_butone_token(acptr, acptr->name,
-				    MSG_JOIN, TOK_JOIN, "0");
+				sendto_serv_butone(acptr, ":%s JOIN 0", acptr->name);
 				strcpy(jbuf, "0");
 				i = 1;
 				continue;

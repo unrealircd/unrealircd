@@ -189,8 +189,8 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
                   
 		acptr->umodes |= UMODE_HIDE;
 		acptr->umodes |= UMODE_SETHOST;
-		sendto_serv_butone_token(cptr, sptr->name,
-		    MSG_CHGHOST, TOK_CHGHOST, "%s %s", acptr->name, parv[2]);
+		sendto_serv_butone(cptr, ":%s CHGHOST %s %s",
+		    sptr->name, acptr->name, parv[2]);
 		if (acptr->user->virthost)
 		{
 			MyFree(acptr->user->virthost);

@@ -397,8 +397,6 @@ int i;
 char *m;
 aClient *acptr;
 int  what, setflags;
-char *xmsg = show_change ? MSG_SVS2MODE : MSG_SVSMODE;
-char *xtok = show_change ? TOK_SVS2MODE : TOK_SVSMODE;
 
 	if (!IsULine(sptr))
 		return 0;
@@ -561,11 +559,13 @@ char *xtok = show_change ? TOK_SVS2MODE : TOK_SVSMODE;
 		} /*switch*/
 
 	if (parc > 3)
-		sendto_serv_butone_token(cptr, parv[0], xmsg, xtok,
-			"%s %s %s", parv[1], parv[2], parv[3]);
+		sendto_serv_butone(cptr, ":%s %s %s %s %s",
+		    parv[0], show_change ? "SVS2MODE" : "SVSMODE",
+		    parv[1], parv[2], parv[3]);
 	else
-		sendto_serv_butone_token(cptr, parv[0], xmsg, xtok,
-			"%s %s", parv[1], parv[2]);
+		sendto_serv_butone(cptr, ":%s %s %s %s",
+		    parv[0], show_change ? "SVS2MODE" : "SVSMODE",
+		    parv[1], parv[2]);
 
 	/* Here we trigger the same hooks that m_mode does and, likewise,
 	   only if the old flags (setflags) are different than the newly-

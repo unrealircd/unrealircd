@@ -145,9 +145,8 @@ void set_oper_host(aClient *sptr, char *host)
 		vhost =	c+1;
 		strncpy(sptr->user->username, host, c-host);
 		sptr->user->username[c-host] = 0;
-		sendto_serv_butone_token(NULL, sptr->name, MSG_SETIDENT, 
-					 TOK_SETIDENT, "%s", 
-					 sptr->user->username);
+		sendto_serv_butone(NULL, ":%s SETIDENT %s",
+		    sptr->name, sptr->user->username);
 	}
 	iNAH_host(sptr, vhost);
 	SetHidden(sptr);
@@ -271,8 +270,8 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 				MyFree(sptr->user->swhois);
 			sptr->user->swhois = MyMalloc(strlen(aconf->swhois) +1);
 			strcpy(sptr->user->swhois, aconf->swhois);
-			sendto_serv_butone_token(cptr, me.name,
-				MSG_SWHOIS, TOK_SWHOIS, "%s :%s", sptr->name, aconf->swhois);
+			sendto_serv_butone(cptr, ":%s SWHOIS %s :%s",
+			    me.name, sptr->name, aconf->swhois);
 		}
 
 /* new oper code */

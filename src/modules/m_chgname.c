@@ -162,8 +162,8 @@ DLLFUNC int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		}
 
 
-		sendto_serv_butone_token(cptr, sptr->name,
-		    MSG_CHGNAME, TOK_CHGNAME, "%s :%s", acptr->name, parv[2]);
+		sendto_serv_butone(cptr, ":%s CHGNAME %s :%s",
+		    sptr->name, acptr->name, parv[2]);
 		return 0;
 	}
 	else

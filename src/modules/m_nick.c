@@ -688,8 +688,8 @@ DLLFUNC CMD_FUNC(m_nick)
 		}
 		add_history(sptr, 1);
 		sendto_common_channels(sptr, ":%s NICK :%s", parv[0], nick);
-		sendto_serv_butone_token(cptr, parv[0], MSG_NICK, TOK_NICK,
-		    "%s %ld", nick, sptr->lastnick);
+		sendto_serv_butone(cptr, ":%s NICK %s %ld",
+		    parv[0], nick, sptr->lastnick);
 		if (removemoder)
 			sptr->umodes &= ~UMODE_REGNICK;
 	}

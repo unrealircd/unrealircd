@@ -123,7 +123,7 @@ DLLFUNC CMD_FUNC(m_setname)
 		return exit_client(cptr, sptr, &me,
 		                   "Your GECOS (real name) is banned from this server");
 
-	sendto_serv_butone_token(cptr, sptr->name, MSG_SETNAME, TOK_SETNAME, ":%s", parv[1]);
+	sendto_serv_butone(cptr, ":%s SETNAME :%s", sptr->name, parv[1]);
 
 	if (MyConnect(sptr))
 		sendnotice(sptr, "Your \"real name\" is now set to be %s - you have to set it manually to undo it",

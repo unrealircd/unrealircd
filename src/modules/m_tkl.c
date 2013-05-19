@@ -327,7 +327,7 @@ int remove = 0;
 					acptr->name, acptr->user->username, acptr->user->realhost,
 					sptr->name, comment);
 				sendto_snomask(SNO_TKL, "%s", buf);
-				sendto_serv_butone_token(NULL, me.name, MSG_SENDSNO, TOK_SENDSNO, "G :%s", buf);
+				sendto_serv_butone(NULL, ":%s SENDSNO G :%s", me.name, buf);
 			}
 		} else {
 			if (!IsShunned(acptr))
@@ -339,7 +339,7 @@ int remove = 0;
 					acptr->name, acptr->user->username, acptr->user->realhost,
 					sptr->name);
 				sendto_snomask(SNO_TKL, "%s", buf);
-				sendto_serv_butone_token(NULL, me.name, MSG_SENDSNO, TOK_SENDSNO, "G :%s", buf);
+				sendto_serv_butone(NULL, ":%s SENDSNO G :%s", me.name, buf);
 			}
 		}
 	}
@@ -1449,7 +1449,7 @@ aClient *acptr;
 				unreal_decodespace(tk->ptr.spamf->tkl_reason));
 
 			sendto_snomask(SNO_SPAMF, "%s", buf);
-			sendto_serv_butone_token(NULL, me.name, MSG_SENDSNO, TOK_SENDSNO, "S :%s", buf);
+			sendto_serv_butone(NULL, ":%s SENDSNO S :%s", me.name, buf);
 			ircd_log(LOG_SPAMFILTER, "%s", buf);
 			RunHook6(HOOKTYPE_LOCAL_SPAMFILTER, acptr, spamfilter_user, spamfilter_user, SPAMF_USER, NULL, tk);
 			matches++;
@@ -2548,7 +2548,7 @@ long ms_past;
 				unreal_decodespace(tk->ptr.spamf->tkl_reason));
 
 			sendto_snomask(SNO_SPAMF, "%s", buf);
-			sendto_serv_butone_token(NULL, me.name, MSG_SENDSNO, TOK_SENDSNO, "S :%s", buf);
+			sendto_serv_butone(NULL, ":%s SENDSNO S :%s", me.name, buf);
 			ircd_log(LOG_SPAMFILTER, "%s", buf);
 			RunHook6(HOOKTYPE_LOCAL_SPAMFILTER, sptr, str, str_in, type, target, tk);
 
@@ -2578,7 +2578,7 @@ long ms_past;
 							/* free away & broadcast the unset */
 							MyFree(sptr->user->away);
 							sptr->user->away = NULL;
-							sendto_serv_butone_token(sptr, sptr->name, MSG_AWAY, TOK_AWAY, "");
+							sendto_serv_butone(sptr, ":%s AWAY", sptr->name);
 						}
 						break;
 					case SPAMF_TOPIC:
