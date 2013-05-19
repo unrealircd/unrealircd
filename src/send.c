@@ -40,7 +40,7 @@ static char sccsid[] =
 #endif
 #include <string.h>
 
-void vsendto_one(aClient *to, char *pattern, va_list vl);
+void vsendto_one(aClient *to, const char *pattern, va_list vl);
 void sendbufto_one(aClient *to, char *msg, unsigned int quick);
 int vmakebuf_local_withprefix(char *buf, struct Client *from, const char *pattern, va_list vl);
 
@@ -162,7 +162,7 @@ void sendto_one(aClient *to, char *pattern, ...)
 	va_end(vl);
 }
 
-void vsendto_one(aClient *to, char *pattern, va_list vl)
+void vsendto_one(aClient *to, const char *pattern, va_list vl)
 {
 	ircvsprintf(sendbuf, pattern, vl);
 	sendbufto_one(to, sendbuf, 0);
@@ -530,6 +530,56 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 	}
 
 	return;
+}
+
+/*
+ * sendto_server
+ *
+ * inputs       - pointer to client to NOT send to
+ *              - caps or'd together which must ALL be present
+ *              - caps or'd together which must ALL NOT be present
+ *              - printf style format string
+ *              - args to format string
+ * output       - NONE
+ * side effects - Send a message to all connected servers, except the
+ *                client 'one' (if non-NULL), as long as the servers
+ *                support ALL capabs in 'caps', and NO capabs in 'nocaps'.
+ *
+ * This function was written in an attempt to merge together the other
+ * billion sendto_*serv*() functions, which sprung up with capabs, uids etc
+ * -davidt
+ *
+ * Ported this function over from charybdis 3.5, as it is much cleaner than
+ * what we had going on here.
+ * - kaniini
+ */
+void
+sendto_server(aClient *one, unsigned long caps,
+	unsigned long nocaps, const char *format, ...)
+{
+	aClient *cptr;
+
+	/* noone to send to.. */
+	if (list_empty(&server_list))
+		return;
+
+	list_for_each_entry(cptr, &server_list, special_node)
+	{
+		va_list vl;
+
+		if (one && cptr == one->from)
+			continue;
+
+		if (!CHECKPROTO(cptr, caps))
+			continue;
+
+		if (CHECKPROTO(cptr, nocaps))
+			continue;
+
+		va_start(vl, format);
+		vsendto_one(cptr, format, vl);
+		va_end(vl);
+	}
 }
 
 /*
