@@ -109,7 +109,7 @@ int n, wasaway = 0;
                         MyFree(away);
                         sptr->user->away = NULL;
 			/* Only send this if they were actually away -- codemastr */
-	                sendto_serv_butone_token(cptr, parv[0], MSG_AWAY, TOK_AWAY, "");
+	                sendto_serv_butone(cptr, ":%s AWAY", parv[0]);
 	                hash_check_watch(cptr, RPL_NOTAWAY);
 
 			sendto_common_channels_local_butone(sptr, PROTO_AWAY_NOTIFY, ":%s AWAY", sptr->name);
@@ -152,7 +152,7 @@ int n, wasaway = 0;
 
 	sptr->user->lastaway = TStime();
 	
-        sendto_serv_butone_token(cptr, parv[0], MSG_AWAY, TOK_AWAY, ":%s", awy2);
+        sendto_serv_butone(cptr, ":%s AWAY :%s", parv[0], awy2);
 
 	if (away)
 	{
