@@ -271,28 +271,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define IsSynched(x)	(x->serv->flags.synced)
 #define IsServerSent(x) (x->serv && x->serv->flags.server_sent)
 
-/* opt.. */
-#define OPT_SJOIN	0x0001
-#define OPT_NOT_SJOIN	0x0002
-#define OPT_NICKv2	0x0004
-#define OPT_NOT_NICKv2	0x0008
-#define OPT_SJOIN2	0x0010
-#define OPT_NOT_SJOIN2	0x0020
-#define OPT_UMODE2	0x0040
-#define OPT_NOT_UMODE2	0x0080
-#define OPT_SJ3		0x0100
-#define OPT_NOT_SJ3	0x0200
-//0x0400 unused (was OPT_SJB64)
-//0x0800 unused (was OPT_NOT_SJB64)
-#define OPT_VHP		0x1000
-#define OPT_NOT_VHP	0x2000
-#define OPT_TKLEXT	0x4000
-#define OPT_NOT_TKLEXT	0x8000
-#define OPT_NICKIP	0x10000
-#define OPT_NOT_NICKIP  0x20000
-#define OPT_CLK	0x10000
-#define OPT_NOT_CLK  0x20000
-
 /* client->flags (32 bits): 28 used, 4 free */
 #define	FLAGS_PINGSENT   0x0001	/* Unreplied ping sent */
 #define	FLAGS_DEADSOCKET 0x0002	/* Local socket is dead--Exiting soon */
