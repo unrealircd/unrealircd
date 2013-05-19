@@ -343,7 +343,7 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 		   with the space and all .. but its to get around
 		   a SJOIN bug --stskeeps */
 		sendto_serv_butone_token_opt(cptr, OPT_SJ3,
-			me.name, MSG_SJOIN, TOK_SJOIN,
+			me.name, MSG_SJOIN, NULL,
 			"%li %s :%s%s ", chptr->creationtime, 
 			chptr->chname, chfl_to_sjoin_symbol(flags), sptr->name);
 #ifdef JOIN_INSTEAD_OF_SJOIN_ON_REMOTEJOIN
@@ -372,7 +372,7 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 				/* +ao / +qo for when PREFIX_AQ is off */
 				sendto_serv_butone_token_opt(cptr, OPT_NOT_SJ3, 
 				    me.name,
-				    MSG_MODE, TOK_MODE, "%s +o%c %s %s %lu",
+				    MSG_MODE, NULL, "%s +o%c %s %s %lu",
 				    chptr->chname, chfl_to_chanmode(flags), sptr->name, sptr->name,
 				    chptr->creationtime);
 			} else {
@@ -380,7 +380,7 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 				/* +v/+h/+o (and +a/+q if PREFIX_AQ is on) */
 				sendto_serv_butone_token_opt(cptr, OPT_NOT_SJ3, 
 				    me.name,
-				    MSG_MODE, TOK_MODE, "%s +%c %s %lu",
+				    MSG_MODE, NULL, "%s +%c %s %lu",
 				    chptr->chname, chfl_to_chanmode(flags), sptr->name,
 				    chptr->creationtime);
 #ifndef PREFIX_AQ

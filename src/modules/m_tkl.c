@@ -2016,7 +2016,7 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						 * that can differ for non-opt is the 'setby' and 'setat' field...
 						 */
 				 		sendto_serv_butone_token_opt(cptr, OPT_TKLEXT, sptr->name,
-				 			MSG_TKL, TOK_TKL,
+				 			MSG_TKL, NULL,
 				 			"%s %s %s %s %s %ld %ld %ld %s :%s",
 				 			parv[1], parv[2], parv[3], parv[4],
 				 			tk->setby, tk->expire_at, tk->set_at, tk->ptr.spamf->tkl_duration,
@@ -2145,12 +2145,12 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  	if ((parc == 11) && (type & TKL_SPAMF))
 		  	{
 				sendto_serv_butone_token_opt(cptr, OPT_TKLEXT, sptr->name,
-					MSG_TKL, TOK_TKL,
+					MSG_TKL, NULL,
 					"%s %s %s %s %s %s %s %s %s :%s",
 					parv[1], parv[2], parv[3], parv[4], parv[5],
 					parv[6], parv[7], parv[8], parv[9], parv[10]);
 				sendto_serv_butone_token_opt(cptr, OPT_NOT_TKLEXT, sptr->name,
-					MSG_TKL, TOK_TKL,
+					MSG_TKL, NULL,
 					"%s %s %s %s %s %s %s :%s",
 					parv[1], parv[2], parv[3], parv[4], parv[5],
 					parv[6], parv[7], parv[10]);

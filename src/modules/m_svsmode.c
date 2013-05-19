@@ -534,7 +534,7 @@ int  what, setflags;
 					 */
 					if (MyClient(acptr) && !strcasecmp(acptr->user->virthost, acptr->user->cloakedhost))
 						sendto_serv_butone_token_opt(NULL, OPT_VHP, acptr->name,
-							MSG_SETHOST, TOK_SETHOST, "%s", acptr->user->virthost);
+							MSG_SETHOST, NULL, "%s", acptr->user->virthost);
 				}
 				goto setmodex;
 			case 'z':

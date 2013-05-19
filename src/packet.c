@@ -42,8 +42,6 @@ aCommand	*CommandHash[256]; /* one per letter */
 **	with cptr of "local" variation, which contains all the
 **	necessary fields (buffer etc..)
 */
-void    add_CommandX(char *cmd, char *token, int (*func)(), unsigned char parameters, int flags) ;
-
 int  dopacket(aClient *cptr, char *buffer, int length)
 {
 	char *ch1;
@@ -118,19 +116,19 @@ void	init_CommandHash(void)
 #endif
 	
 	bzero(CommandHash, sizeof(CommandHash));
-	add_CommandX(MSG_ERROR, TOK_ERROR, m_error, MAXPARA, M_UNREGISTERED|M_SERVER);
-	add_CommandX(MSG_VERSION, TOK_VERSION, m_version, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
-	add_Command(MSG_SUMMON, NULL, m_summon, 1);
-	add_Command(MSG_USERS, NULL, m_users, MAXPARA);
-	add_Command(MSG_INFO, TOK_INFO, m_info, MAXPARA);
-	add_Command(MSG_DNS, TOK_DNS, m_dns, MAXPARA);
-	add_Command(MSG_REHASH, TOK_REHASH, m_rehash, MAXPARA);
-	add_Command(MSG_RESTART, TOK_RESTART, m_restart, 2);
-	add_Command(MSG_DIE, TOK_DIE, m_die, MAXPARA);
-	add_Command(MSG_DALINFO, TOK_DALINFO, m_dalinfo, MAXPARA);
-	add_Command(MSG_CREDITS, TOK_CREDITS, m_credits, MAXPARA);
-	add_Command(MSG_LICENSE, TOK_LICENSE, m_license, MAXPARA);
-	add_Command(MSG_MODULE, TOK_MODULE, m_module, MAXPARA);	
+	add_CommandX(MSG_ERROR, m_error, MAXPARA, M_UNREGISTERED|M_SERVER);
+	add_CommandX(MSG_VERSION, m_version, MAXPARA, M_UNREGISTERED|M_USER|M_SERVER);
+	add_Command(MSG_SUMMON, m_summon, 1);
+	add_Command(MSG_USERS, m_users, MAXPARA);
+	add_Command(MSG_INFO, m_info, MAXPARA);
+	add_Command(MSG_DNS, m_dns, MAXPARA);
+	add_Command(MSG_REHASH, m_rehash, MAXPARA);
+	add_Command(MSG_RESTART, m_restart, 2);
+	add_Command(MSG_DIE, m_die, MAXPARA);
+	add_Command(MSG_DALINFO, m_dalinfo, MAXPARA);
+	add_Command(MSG_CREDITS, m_credits, MAXPARA);
+	add_Command(MSG_LICENSE, m_license, MAXPARA);
+	add_Command(MSG_MODULE, m_module, MAXPARA);
 		
 #ifdef DEVELOP_DEBUG
 	for (i = 0; i <= 255; i++)
@@ -162,14 +160,14 @@ aCommand *add_Command_backend(char *cmd, int (*func)(), unsigned char parameters
 	return newcmd;
 }
 
-void	add_Command(char *name, char *token, int (*func)(), unsigned char parameters)
+void	add_Command(char *name, int (*func)(), unsigned char parameters)
 {
 	aCommand *cmd, *tok;
 	cmd = add_Command_backend(name, func, parameters, 0);
 	cmd->friend = NULL;
 }
 
-void    add_CommandX(char *name, char *token, int (*func)(), unsigned char parameters, int flags) 
+void    add_CommandX(char *name, int (*func)(), unsigned char parameters, int flags) 
 {
 	aCommand *cmd, *tok;
 	cmd = add_Command_backend(name, func, parameters, flags);
@@ -188,7 +186,7 @@ inline aCommand *find_CommandEx(char *cmd, int (*func)(), int token)
 	
 }
 
-int del_Command(char *cmd, char *token, int (*func)())
+int del_Command(char *cmd, int (*func)())
 {
 	aCommand *p;
 	int	i = 0;
