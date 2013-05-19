@@ -635,7 +635,7 @@ void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, char *com
 		if ((opt & OPT_NOT_NICKIP) && (cptr->proto & PROTO_NICKIP))
 			continue;
 
-		sendto_one(cptr, ":%s %s", prefix, command, buff);
+		sendto_one(cptr, ":%s %s %s", prefix, command, buff);
 	}
 
 	return;
