@@ -95,7 +95,7 @@ void start_auth(aClient *cptr)
 		ident_failed(cptr);
 		return;
 	}
-    if (++OpenFiles >= (MAXCONNECTIONS - 2))
+	if (++OpenFiles >= (MAXCONNECTIONS - 2))
 	{
 		sendto_ops("Can't allocate fd, too many connections.");
 		fd_close(cptr->authfd);
@@ -103,6 +103,11 @@ void start_auth(aClient *cptr)
 		cptr->authfd = -1;
 		return;
 	}
+
+#if defined(INET6) && defined(IPV6_V6ONLY)
+        int opt = 0;
+        setsockopt(cptr->authfd, IPPROTO_IPV6, IPV6_V6ONLY, (OPT_TYPE *)&opt, sizeof(opt));
+#endif
 
 	if (SHOWCONNECTINFO && !cptr->serv && !IsServersOnlyListener(cptr->listener))
 		sendto_one(cptr, "%s", REPORT_DO_ID);
