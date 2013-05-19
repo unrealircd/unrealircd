@@ -6528,6 +6528,12 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 					errors++; 
 					continue;
 				}
+				if (!stricmp(cepp->ce_varname, "zip"))
+				{
+					config_warn("%s:%i: link %s with deprecated zip option, compression is included with SSL linking",
+						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, ce->ce_vardata);
+					continue;
+				}
 				if (!(ofp = config_binary_flags_search(_LinkFlags, cepp->ce_varname, ARRAY_SIZEOF(_LinkFlags)))) 
 				{
 					config_error_unknownopt(cepp->ce_fileptr->cf_filename,
