@@ -550,30 +550,6 @@ void sendto_serv_butone(aClient *one, char *pattern, ...)
 }
 
 /*
- * sendto_server_butone_token
- *
- * Send a message to all connected servers except the client 'one'.
- * with capab to tokenize
- */
-
-void sendto_serv_butone_token(aClient *one, char *prefix, char *command,
-    char *token, char *pattern, ...)
-{
-	va_list vl;
-	aClient *cptr;
-	aClient *acptr;
-	static char buff[2048];
-
-	va_start(vl, pattern);
-	ircvsprintf(buff, pattern, vl);
-	va_end(vl);
-
-	sendto_serv_butone(one, ":%s %s %s", prefix, command, buff);
-
-	return;
-}
-
-/*
  * sendto_server_butone_token_opt
  *
  * Send a message to all connected servers except the client 'one'.

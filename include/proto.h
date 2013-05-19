@@ -39,8 +39,6 @@ void clear_scache_hash_table(void);
 void sendto_one(aClient *, char *, ...) __attribute__((format(printf,2,3)));
 void sendto_chanops_butone(aClient *one, aChannel *chptr, char *pattern, ...) __attribute__((format(printf,3,4)));
 void sendto_realops(char *pattern, ...) __attribute__((format(printf,1,2)));
-void sendto_serv_butone_token(aClient *one, char *prefix, char *command, 
-                              char *token, char *pattern, ...) __attribute__((format(printf,5,6)));
 void sendto_serv_butone_token_opt(aClient *one, int opt, char *prefix, 
                                   char *command, char *token, char *pattern, ...) __attribute__((format(printf,6,7)));
 void sendto_channel_ntadmins(aClient *from, aChannel *chptr, char *pattern, ...) __attribute__((format(printf,3,4))); 
