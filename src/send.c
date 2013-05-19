@@ -570,10 +570,10 @@ sendto_server(aClient *one, unsigned long caps,
 		if (one && cptr == one->from)
 			continue;
 
-		if (!CHECKPROTO(cptr, caps))
+		if (caps && !CHECKPROTO(cptr, caps))
 			continue;
 
-		if (CHECKPROTO(cptr, nocaps))
+		if (nocaps && CHECKPROTO(cptr, nocaps))
 			continue;
 
 		va_start(vl, format);
