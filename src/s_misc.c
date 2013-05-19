@@ -722,7 +722,7 @@ static void exit_one_client(aClient *cptr, aClient *sptr, aClient *from, char *c
 				 * Then this is a split, only old (stupid)
 				 * clients need to get quit messages
 				 */
-				sendto_serv_butone_quit(cptr, ":%s QUIT :%s",
+				sendto_server(cptr, 0, PROTO_NOQUIT, ":%s QUIT :%s",
 				    sptr->name, comment);
 		}
 		/*

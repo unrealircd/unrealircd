@@ -583,36 +583,6 @@ sendto_server(aClient *one, unsigned long caps,
 }
 
 /*
- * sendto_serv_butone_quit
- *
- * Send a message to all connected servers except the client 'one'.
- * BUT, don't send to NOQUIT servers.
- */
-void sendto_serv_butone_quit(aClient *one, char *pattern, ...)
-{
-	va_list vl;
-	aClient *cptr;
-
-	va_start(vl, pattern);
-
-	list_for_each_entry(cptr, &server_list, special_node)
-	{
-		if (one && cptr == one->from)
-			continue;
-
-		va_start(vl, pattern);
-
-		if (!DontSendQuit(cptr))
-			vsendto_one(cptr, pattern, vl);
-
-		va_end(vl);
-	}
-
-	va_end(vl);
-	return;
-}
-
-/*
  * sendto_serv_butone_sjoin
  *
  * Send a message to all connected servers except the client 'one'.
