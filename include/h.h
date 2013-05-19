@@ -267,8 +267,6 @@ extern void    sendto_message_one(aClient *to, aClient *from, char *sender,
 #define PREFIX_OWNER	0x10
 extern void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
     int prefix, char *pattern, ...) __attribute__((format(printf,5,6)));
-extern void sendto_channelprefix_butone_tok(aClient *one, aClient *from, aChannel *chptr,
-    int prefix, char *cmd, char *tok, char *nick, char *text, char do_send_check);
 extern void sendto_channel_butone(aClient *, aClient *, aChannel *,
                                   char *, ...) __attribute__((format(printf,4,5)));
 extern void sendto_channel_butserv_butone(aChannel *chptr, aClient *from, aClient *one,
