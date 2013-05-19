@@ -49,7 +49,6 @@
 DLLFUNC int m_swhois(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_SWHOIS 	"SWHOIS"	
-#define TOK_SWHOIS 	"BA"	
 
 ModuleHeader MOD_HEADER(m_swhois)
   = {

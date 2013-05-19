@@ -47,7 +47,6 @@
 DLLFUNC CMD_FUNC(m_names);
 
 #define MSG_NAMES 	"NAMES"
-#define TOK_NAMES 	"?"
 
 ModuleHeader MOD_HEADER(m_names)
   = {

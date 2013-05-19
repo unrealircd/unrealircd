@@ -49,7 +49,6 @@
 DLLFUNC int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_SVSO 	"SVSO"	
-#define TOK_SVSO 	"BB"	
 
 #define STAR1 OFLAG_SADMIN|OFLAG_ADMIN|OFLAG_NETADMIN|OFLAG_COADMIN
 #define STAR2 OFLAG_ZLINE|OFLAG_HIDE|OFLAG_WHOIS

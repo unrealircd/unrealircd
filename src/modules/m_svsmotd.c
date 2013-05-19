@@ -49,7 +49,6 @@
 DLLFUNC int m_svsmotd(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_SVSMOTD 	"SVSMOTD"	
-#define TOK_SVSMOTD 	"AS"	
 
 ModuleHeader MOD_HEADER(m_svsmotd)
   = {

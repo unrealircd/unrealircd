@@ -48,7 +48,6 @@ static char buf[BUFSIZE], buf2[BUFSIZE];
 
 /* Place includes here */
 #define MSG_KILL        "KILL"  /* KILL */
-#define TOK_KILL        "."     /* 46 */
 
 ModuleHeader MOD_HEADER(m_kill)
   = {

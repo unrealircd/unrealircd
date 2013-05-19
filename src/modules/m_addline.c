@@ -47,7 +47,6 @@
 DLLFUNC int m_addline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_ADDLINE 	"ADDLINE"	
-#define TOK_ADDLINE 	"z"	
 
 ModuleHeader MOD_HEADER(m_addline)
   = {

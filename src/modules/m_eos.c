@@ -47,7 +47,6 @@
 DLLFUNC int m_eos(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_EOS 	"EOS"	
-#define TOK_EOS 	"ES"	
 
 ModuleHeader MOD_HEADER(m_eos)
   = {

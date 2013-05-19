@@ -47,7 +47,6 @@
 DLLFUNC int m_knock(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_KNOCK 	"KNOCK"	
-#define TOK_KNOCK 	"AI"	
 
 ModuleHeader MOD_HEADER(m_knock)
   = {

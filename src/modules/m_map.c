@@ -47,7 +47,6 @@
 DLLFUNC int m_map(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_MAP 	"MAP"	
-#define TOK_MAP 	"u"	
 
 ModuleHeader MOD_HEADER(m_map)
   = {

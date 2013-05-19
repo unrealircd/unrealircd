@@ -50,7 +50,6 @@ DLLFUNC int m_svsnline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_SVSNLINE 	"SVSNLINE"	/* svsnline */
-#define TOK_SVSNLINE 	"BR"	/* 127 4ever !;) */
 
 ModuleHeader MOD_HEADER(m_svsnline)
   = {

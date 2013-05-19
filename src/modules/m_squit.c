@@ -47,7 +47,6 @@
 DLLFUNC int m_squit(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_SQUIT 	"SQUIT"	
-#define TOK_SQUIT 	"-"	
 
 ModuleHeader MOD_HEADER(m_squit)
   = {

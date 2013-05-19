@@ -48,7 +48,6 @@ DLLFUNC CMD_FUNC(m_nick);
 DLLFUNC int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
 
 #define MSG_NICK 	"NICK"	
-#define TOK_NICK 	"&"	
 
 ModuleHeader MOD_HEADER(m_nick)
   = {

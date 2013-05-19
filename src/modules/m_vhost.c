@@ -48,7 +48,6 @@ DLLFUNC int m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_VHOST       "VHOST"
-#define TOK_VHOST       "BE"
 
 ModuleHeader MOD_HEADER(m_vhost)
   = {

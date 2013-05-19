@@ -47,7 +47,6 @@
 DLLFUNC int m_sajoin(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_SAJOIN 	"SAJOIN"	
-#define TOK_SAJOIN 	"AX"	
 
 ModuleHeader MOD_HEADER(m_sajoin)
   = {

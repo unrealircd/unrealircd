@@ -48,9 +48,7 @@ DLLFUNC int m_svssno(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 DLLFUNC int m_svs2sno(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_SVSSNO 	"SVSSNO"	
-#define TOK_SVSSNO	"BV"	
 #define MSG_SVS2SNO 	"SVS2SNO"	
-#define TOK_SVS2SNO	"BW"	
 
 ModuleHeader MOD_HEADER(m_svssno)
   = {

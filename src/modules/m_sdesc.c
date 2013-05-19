@@ -48,7 +48,6 @@ DLLFUNC int m_sdesc(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_SDESC 	"SDESC"	/* sdesc */
-#define TOK_SDESC 	"AG"	/* 127 4ever !;) */
 
 ModuleHeader MOD_HEADER(m_sdesc)
   = {

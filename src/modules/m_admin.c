@@ -47,7 +47,6 @@
 DLLFUNC int m_admin(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_ADMIN 	"ADMIN"	
-#define TOK_ADMIN 	"@"	
 
 ModuleHeader MOD_HEADER(m_admin)
   = {

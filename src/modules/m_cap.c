@@ -50,7 +50,6 @@ typedef int (*bqcmp)(const void *, const void *);
 DLLFUNC int m_cap(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_CAP 	"CAP"
-#define TOK_CAP 	"CA"
 
 ModuleHeader MOD_HEADER(m_cap)
   = {

@@ -47,7 +47,6 @@
 DLLFUNC CMD_FUNC(m_lusers);
 
 #define MSG_LUSERS 	"LUSERS"	
-#define TOK_LUSERS 	"E"	
 
 ModuleHeader MOD_HEADER(m_lusers)
   = {

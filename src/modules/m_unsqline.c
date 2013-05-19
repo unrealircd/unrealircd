@@ -47,7 +47,6 @@ DLLFUNC int m_unsqline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_UNSQLINE    "UNSQLINE"      /* UNSQLINE */
-#define TOK_UNSQLINE    "d"     /* 99 */  
 
 ModuleHeader MOD_HEADER(m_unsqline)
   = {

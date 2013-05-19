@@ -47,7 +47,6 @@ DLLFUNC int m_rakill(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_RAKILL      "RAKILL"        /* RAKILL */
-#define TOK_RAKILL      "Y"     /* 89 */
 
 ModuleHeader MOD_HEADER(m_rakill)
   = {

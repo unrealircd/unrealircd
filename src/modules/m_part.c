@@ -47,7 +47,6 @@
 DLLFUNC CMD_FUNC(m_part);
 
 #define MSG_PART 	"PART"	
-#define TOK_PART 	"D"	
 
 ModuleHeader MOD_HEADER(m_part)
   = {

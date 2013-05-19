@@ -47,7 +47,6 @@
 DLLFUNC int m_sjoin(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_SJOIN 	"SJOIN"	
-#define TOK_SJOIN 	"~"	
 
 ModuleHeader MOD_HEADER(m_sjoin)
   = {
@@ -882,7 +881,7 @@ docontinue:
 	Debug((DEBUG_DEBUG, "Sending '%li %s :%s' to sj3", ts, parabuf,
 	    parv[parc - 1]));
 	sendto_serv_butone_token_opt(cptr, OPT_SJOIN | OPT_SJ3, sptr->name,
-	    MSG_SJOIN, TOK_SJOIN, "%li %s :%s", ts, parabuf, parv[parc - 1]);
+	    MSG_SJOIN, NULL, "%li %s :%s", ts, parabuf, parv[parc - 1]);
 	 
 	return 0;
 }

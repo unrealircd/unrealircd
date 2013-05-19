@@ -47,7 +47,6 @@
 DLLFUNC CMD_FUNC(m_watch);
 
 #define MSG_WATCH 	"WATCH"	
-#define TOK_WATCH 	"`"	
 
 ModuleHeader MOD_HEADER(m_watch)
   = {

@@ -70,7 +70,6 @@ static void mode_cutoff2(aClient *sptr, aChannel *chptr, int *parc_out, char *pa
 static int samode_in_progress = 0;
 
 #define MSG_MODE 	"MODE"	
-#define TOK_MODE 	"G"	
 
 ModuleHeader MOD_HEADER(m_mode)
   = {

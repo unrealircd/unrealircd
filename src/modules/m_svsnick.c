@@ -49,7 +49,6 @@
 DLLFUNC int m_svsnick(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_SVSNICK 	"SVSNICK"	
-#define TOK_SVSNICK 	"e"	
 
 ModuleHeader MOD_HEADER(m_svsnick)
   = {

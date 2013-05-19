@@ -47,7 +47,6 @@
 DLLFUNC int m_svsfline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_SVSFLINE 	"SVSFLINE"	
-#define TOK_SVSFLINE 	"BC"	
 
 ModuleHeader MOD_HEADER(m_svsfline)
   = {

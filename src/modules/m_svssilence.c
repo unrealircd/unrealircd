@@ -47,7 +47,6 @@ DLLFUNC int m_svssilence(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_SVSSILENCE       "SVSSILENCE"
-#define TOK_SVSSILENCE       "Bs"
 
 ModuleHeader MOD_HEADER(m_svssilence)
   = {

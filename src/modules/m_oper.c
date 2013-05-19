@@ -49,7 +49,6 @@ DLLFUNC int m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_OPER        "OPER"  /* OPER */
-#define TOK_OPER        ";"     /* 59 */
 
 typedef struct oper_oflag_ {
 	unsigned long oflag;

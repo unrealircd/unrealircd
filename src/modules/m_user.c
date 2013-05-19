@@ -47,7 +47,6 @@
 DLLFUNC CMD_FUNC(m_user);
 
 #define MSG_USER 	"USER"	
-#define TOK_USER 	"%"	
 
 ModuleHeader MOD_HEADER(m_user)
   = {

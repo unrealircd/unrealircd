@@ -47,7 +47,6 @@
 DLLFUNC int m_addmotd(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_ADDMOTD 	"ADDMOTD"	
-#define TOK_ADDMOTD 	"AQ"	
 
 ModuleHeader MOD_HEADER(m_addmotd)
   = {

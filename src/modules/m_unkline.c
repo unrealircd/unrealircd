@@ -47,7 +47,6 @@ DLLFUNC int m_unkline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_UNKLINE     "UNKLINE"       /* UNKLINE */
-#define TOK_UNKLINE     "X"     /* 88 */  
 
 ModuleHeader MOD_HEADER(m_unkline)
   = {

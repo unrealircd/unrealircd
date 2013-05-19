@@ -47,9 +47,7 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_SENDUMODE   "SENDUMODE"
-#define TOK_SENDUMODE   "AP"
 #define MSG_SMO         "SMO"
-#define TOK_SMO         "AU"
 
 ModuleHeader MOD_HEADER(m_sendumode)
   = {

@@ -47,7 +47,6 @@
 DLLFUNC int m_silence(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_SILENCE 	"SILENCE"	
-#define TOK_SILENCE 	"U"	
 
 ModuleHeader MOD_HEADER(m_silence)
   = {

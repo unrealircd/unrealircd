@@ -31,7 +31,6 @@ DLLFUNC int m_dummy(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_DUMMY 	"DUMMY"	/* dummy */
-#define TOK_DUMMY 	"DU"	/* 127 4ever !;) */
 
 
 ModuleHeader MOD_HEADER(m_dummy)

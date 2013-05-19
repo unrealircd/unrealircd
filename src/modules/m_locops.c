@@ -47,7 +47,6 @@
 DLLFUNC int m_locops(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_LOCOPS 	"LOCOPS"	
-#define TOK_LOCOPS 	"^"	
 
 ModuleHeader MOD_HEADER(m_locops)
   = {

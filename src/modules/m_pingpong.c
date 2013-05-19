@@ -50,9 +50,7 @@ DLLFUNC int m_nospoof(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_PING        "PING"  /* PING */
-#define TOK_PING        "8"     /* 56 */  
 #define MSG_PONG        "PONG"  /* PONG */
-#define TOK_PONG        "9"     /* 57 */  
 
 ModuleHeader MOD_HEADER(m_pingpong)
   = {

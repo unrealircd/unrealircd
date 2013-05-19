@@ -47,7 +47,6 @@ DLLFUNC int m_akill(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_AKILL       "AKILL" /* AKILL */
-#define TOK_AKILL       "V"     /* 86 */
 
 ModuleHeader MOD_HEADER(m_akill)
   = {

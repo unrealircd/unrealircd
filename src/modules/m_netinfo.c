@@ -45,7 +45,6 @@
 DLLFUNC int m_netinfo(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_NETINFO 	"NETINFO"	
-#define TOK_NETINFO 	"AO"	
 
 ModuleHeader MOD_HEADER(m_netinfo)
   = {

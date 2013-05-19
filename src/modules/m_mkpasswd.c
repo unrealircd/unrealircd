@@ -49,7 +49,6 @@
 DLLFUNC int m_mkpasswd(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_MKPASSWD 	"MKPASSWD"	
-#define TOK_MKPASSWD 	"y"	
 
 ModuleHeader MOD_HEADER(m_mkpasswd)
   = {

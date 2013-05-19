@@ -59,9 +59,7 @@ static int webtv_parse(aClient *sptr, char *string);
 
 /* Place includes here */
 #define MSG_PRIVATE     "PRIVMSG"       /* PRIV */
-#define TOK_PRIVATE     "!"     /* 33 */
 #define MSG_NOTICE      "NOTICE"        /* NOTI */
-#define TOK_NOTICE      "B"     /* 66 */
 
 ModuleHeader MOD_HEADER(m_message)
   = {

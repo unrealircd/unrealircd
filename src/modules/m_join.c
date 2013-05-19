@@ -63,7 +63,6 @@ extern int find_invex(aChannel *chptr, aClient *sptr);
 static int bouncedtimes = 0;
 
 #define MSG_JOIN 	"JOIN"	
-#define TOK_JOIN 	"C"	
 
 ModuleHeader MOD_HEADER(m_join)
   = {
@@ -330,12 +329,12 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 		    ":%s JOIN :%s", sptr->name, chptr->chname);
 	
 	sendto_serv_butone_token_opt(cptr, OPT_NOT_SJ3, sptr->name, MSG_JOIN,
-		    TOK_JOIN, "%s", chptr->chname);
+		    NULL, "%s", chptr->chname);
 
 #ifdef JOIN_INSTEAD_OF_SJOIN_ON_REMOTEJOIN
 	if ((MyClient(sptr) && !(flags & CHFL_CHANOP)) || !MyClient(sptr))
 		sendto_serv_butone_token_opt(cptr, OPT_SJ3, sptr->name, MSG_JOIN,
-		    TOK_JOIN, "%s", chptr->chname);
+		    NULL, "%s", chptr->chname);
 	if (flags && !(flags & CHFL_DEOPPED))
 	{
 #endif

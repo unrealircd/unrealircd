@@ -47,7 +47,6 @@
 DLLFUNC int m_links(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_LINKS 	"LINKS"	
-#define TOK_LINKS 	"0"	
 
 ModuleHeader MOD_HEADER(m_links)
   = {

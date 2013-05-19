@@ -46,13 +46,10 @@
 #endif
 
 #define MSG_AUTHENTICATE "AUTHENTICATE"
-#define TOK_AUTHENTICATE "SX"
 
 #define MSG_SASL "SASL"
-#define TOK_SASL "SY"
 
 #define MSG_SVSLOGIN "SVSLOGIN"
-#define TOK_SVSLOGIN "SZ"
 
 /* returns a server identifier given agent_p */
 #define AGENT_SID(agent_p)	(agent_p->user != NULL ? agent_p->user->server : agent_p->name)

@@ -47,7 +47,6 @@ DLLFUNC int m_lag(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_LAG         "LAG"   /* Lag detect */
-#define TOK_LAG         "AF"    /* a or ? */
 
 ModuleHeader MOD_HEADER(m_lag)
   = {

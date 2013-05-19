@@ -47,7 +47,6 @@ DLLFUNC int m_svspart(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_SVSPART       "SVSPART"
-#define TOK_SVSPART       "BT"
 
 ModuleHeader MOD_HEADER(m_svspart)
   = {

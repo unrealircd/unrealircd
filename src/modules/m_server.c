@@ -54,7 +54,6 @@ static char buf[BUFSIZE];
 
 
 #define MSG_SERVER 	"SERVER"	
-#define TOK_SERVER 	"'"	
 
 ModuleHeader MOD_HEADER(m_server)
   = {

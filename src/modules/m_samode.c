@@ -47,7 +47,6 @@
 DLLFUNC int m_samode(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_SAMODE 	"SAMODE"	
-#define TOK_SAMODE 	"o"	
 
 ModuleHeader MOD_HEADER(m_samode)
   = {

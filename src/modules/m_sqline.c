@@ -47,7 +47,6 @@ DLLFUNC int m_sqline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_SQLINE      "SQLINE"        /* SQLINE */
-#define TOK_SQLINE      "c"     /* 98 */
 
 
 

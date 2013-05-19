@@ -54,7 +54,6 @@ DLLFUNC int m_who(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_WHO 	"WHO"
-#define TOK_WHO 	"\""
 
 ModuleHeader MOD_HEADER(m_who)
   = {

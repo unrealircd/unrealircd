@@ -49,7 +49,6 @@
 DLLFUNC int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_SVSNOOP 	"SVSNOOP"	
-#define TOK_SVSNOOP 	"f"
 
 
 ModuleHeader MOD_HEADER(m_svsnoop)

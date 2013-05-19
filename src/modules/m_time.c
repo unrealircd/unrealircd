@@ -46,7 +46,6 @@ DLLFUNC int m_time(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_TIME	"TIME"
-#define TOK_TIME	">"
 
 ModuleHeader MOD_HEADER(m_time)
   = {

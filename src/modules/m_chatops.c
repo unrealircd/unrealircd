@@ -47,7 +47,6 @@
 DLLFUNC int m_chatops(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_CHATOPS 	"CHATOPS"	
-#define TOK_CHATOPS 	"p"	
 
 ModuleHeader MOD_HEADER(m_chatops)
   = {

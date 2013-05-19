@@ -47,7 +47,6 @@
 DLLFUNC int m_rules(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_RULES 	"RULES"	
-#define TOK_RULES 	"t"	
 
 ModuleHeader MOD_HEADER(m_rules)
   = {

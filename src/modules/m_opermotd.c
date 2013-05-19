@@ -47,7 +47,6 @@
 DLLFUNC CMD_FUNC(m_opermotd);
 
 #define MSG_OPERMOTD 	"OPERMOTD"	
-#define TOK_OPERMOTD 	"AV"	
 
 ModuleHeader MOD_HEADER(m_opermotd)
   = {

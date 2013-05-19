@@ -52,7 +52,6 @@
 #endif
 
 #define MSG_CHGIDENT 	"CHGIDENT"
-#define TOK_CHGIDENT 	"AZ"
 
 DLLFUNC int m_chgident(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 

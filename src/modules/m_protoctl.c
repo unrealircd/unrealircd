@@ -45,7 +45,6 @@
 DLLFUNC int m_protoctl(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_PROTOCTL 	"PROTOCTL"	
-#define TOK_PROTOCTL 	"_"	
 
 ModuleHeader MOD_HEADER(m_protoctl)
   = {

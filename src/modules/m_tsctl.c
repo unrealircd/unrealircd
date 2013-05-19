@@ -47,7 +47,6 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_TSCTL       "TSCTL"
-#define TOK_TSCTL       "AW"
 
 ModuleHeader MOD_HEADER(m_tsctl)
   = {

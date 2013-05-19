@@ -48,7 +48,6 @@ DLLFUNC int m_setname(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_SETNAME 	"SETNAME"	/* setname */
-#define TOK_SETNAME 	"AE"	
 
 ModuleHeader MOD_HEADER(m_setname)
   = {

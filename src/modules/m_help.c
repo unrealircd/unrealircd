@@ -47,7 +47,6 @@
 DLLFUNC int m_help(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_HELP 	"HELP"	
-#define TOK_HELP 	"4"	
 #define MSG_HELPOP	"HELPOP"
 
 ModuleHeader MOD_HEADER(m_help)

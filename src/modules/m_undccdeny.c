@@ -47,7 +47,6 @@
 DLLFUNC int m_undccdeny(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_UNDCCDENY 	"UNDCCDENY"	
-#define TOK_UNDCCDENY 	"BJ"	
 
 ModuleHeader MOD_HEADER(m_undccdeny)
   = {

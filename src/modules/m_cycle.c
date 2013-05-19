@@ -47,7 +47,6 @@ DLLFUNC int m_cycle(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_CYCLE       "CYCLE"
-#define TOK_CYCLE       "BP"
 
 ModuleHeader MOD_HEADER(m_cycle)
   = {

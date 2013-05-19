@@ -47,7 +47,6 @@
 DLLFUNC int m_topic(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_TOPIC 	"TOPIC"	
-#define TOK_TOPIC 	")"	
 
 ModuleHeader MOD_HEADER(m_topic)
   = {

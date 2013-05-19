@@ -53,7 +53,6 @@ DLLFUNC int m_webirc(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 extern MODVAR char zlinebuf[BUFSIZE];
 
 #define MSG_PASS 	"PASS"	
-#define TOK_PASS 	"<"	
 
 #define MSG_WEBIRC	"WEBIRC"
 

@@ -48,7 +48,6 @@ DLLFUNC int m_list(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 void _send_list(aClient *cptr, int numsend);
 
 #define MSG_LIST 	"LIST"	
-#define TOK_LIST 	"("	
 
 ModuleHeader MOD_HEADER(m_list)
   = {

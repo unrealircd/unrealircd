@@ -47,9 +47,7 @@ DLLFUNC int m_svsnolag(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 DLLFUNC int m_svs2nolag(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_SVSNOLAG 	"SVSNOLAG"	
-#define TOK_SVSNOLAG 	"sl"
 #define MSG_SVS2NOLAG 	"SVS2NOLAG"	
-#define TOK_SVS2NOLAG 	"SL"
 
 ModuleHeader MOD_HEADER(m_svsnolag)
   = {

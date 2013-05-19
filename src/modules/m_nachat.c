@@ -47,7 +47,6 @@ DLLFUNC int m_nachat(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_NACHAT      "NACHAT"        /* netadmin chat */
-#define TOK_NACHAT      "AC"    /* *beep* */
 
 ModuleHeader MOD_HEADER(m_nachat)
   = {

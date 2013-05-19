@@ -47,7 +47,6 @@
 DLLFUNC CMD_FUNC(m_botmotd);
 
 #define MSG_BOTMOTD 	"BOTMOTD"	
-#define TOK_BOTMOTD 	"BF"	
 
 ModuleHeader MOD_HEADER(m_botmotd)
   = {

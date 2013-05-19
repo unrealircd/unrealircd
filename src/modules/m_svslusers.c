@@ -48,7 +48,6 @@
 DLLFUNC int m_svslusers(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_SVSLUSERS 	"SVSLUSERS"	
-#define TOK_SVSLUSERS 	"BU"	
 
 ModuleHeader MOD_HEADER(m_svslusers)
   = {

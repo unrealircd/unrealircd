@@ -47,7 +47,6 @@ DLLFUNC int m_sendsno(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_SENDSNO   "SENDSNO"
-#define TOK_SENDSNO   "Ss"
 
 ModuleHeader MOD_HEADER(m_sendsno)
   = {

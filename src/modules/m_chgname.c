@@ -52,7 +52,6 @@ DLLFUNC int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_CHGNAME     "CHGNAME"
-#define TOK_CHGNAME     "BK"
 
 
 ModuleHeader MOD_HEADER(m_chgname)

@@ -47,7 +47,6 @@
 DLLFUNC int m_wallops(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_WALLOPS 	"WALLOPS"	
-#define TOK_WALLOPS 	"="	
 
 ModuleHeader MOD_HEADER(m_wallops)
   = {

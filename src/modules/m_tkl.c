@@ -105,16 +105,12 @@ extern int MODVAR spamf_ugly_vchanoverride;
 
 /* Place includes here */
 #define MSG_GLINE "GLINE"
-#define TOK_GLINE "}"
 #define MSG_SHUN "SHUN"
-#define TOK_SHUN "BL"
 #define MSG_GZLINE "GZLINE"
 #define MSG_KLINE "KLINE"
 #define MSG_ZLINE "ZLINE"
 #define MSG_SPAMFILTER	"SPAMFILTER"
-#define TOK_NONE ""
 #define MSG_TEMPSHUN "TEMPSHUN"
-#define TOK_TEMPSHUN "Tz"
 
 ModuleInfo *TklModInfo;
 

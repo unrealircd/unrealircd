@@ -47,7 +47,6 @@
 DLLFUNC int m_umode2(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_UMODE2 	"UMODE2"	
-#define TOK_UMODE2 	"|"	
 
 ModuleHeader MOD_HEADER(m_umode2)
   = {

@@ -47,7 +47,6 @@
 DLLFUNC int m_invite(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_INVITE 	"INVITE"	
-#define TOK_INVITE 	"*"	
 
 ModuleHeader MOD_HEADER(m_invite)
   = {

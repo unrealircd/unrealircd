@@ -47,7 +47,6 @@ DLLFUNC int m_unzline(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_UNZLINE     "UNZLINE"       /* UNZLINE */
-#define TOK_UNZLINE     "r"     /* 113 */ 
 
 ModuleHeader MOD_HEADER(m_unzline)
   = {

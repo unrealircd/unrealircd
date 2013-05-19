@@ -47,7 +47,6 @@ DLLFUNC int m_admins(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_ADMINCHAT	"ADCHAT"
-#define TOK_ADMINCHAT	"x"
 
 
 ModuleHeader MOD_HEADER(m_adminchat)

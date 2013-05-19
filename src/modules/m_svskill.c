@@ -46,7 +46,6 @@ DLLFUNC int m_svskill(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_SVSKILL	"SVSKILL"
-#define TOK_SVSKILL	"h"
 
 ModuleHeader MOD_HEADER(m_svskill)
   = {

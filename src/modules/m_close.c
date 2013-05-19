@@ -47,7 +47,6 @@
 DLLFUNC int m_close(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_CLOSE 	"CLOSE"	
-#define TOK_CLOSE 	"Q"	
 
 ModuleHeader MOD_HEADER(m_close)
   = {

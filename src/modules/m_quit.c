@@ -47,7 +47,6 @@ DLLFUNC int m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_QUIT        "QUIT"  /* QUIT */
-#define TOK_QUIT        ","     /* 44 */
 
 ModuleHeader MOD_HEADER(m_quit)
   = {

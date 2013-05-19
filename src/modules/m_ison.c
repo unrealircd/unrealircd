@@ -47,7 +47,6 @@
 DLLFUNC int m_ison(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_ISON 	"ISON"	
-#define TOK_ISON 	"K"	
 
 ModuleHeader MOD_HEADER(m_ison)
   = {

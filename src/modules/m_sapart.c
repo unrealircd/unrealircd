@@ -47,7 +47,6 @@
 DLLFUNC int m_sapart(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_SAPART 	"SAPART"	
-#define TOK_SAPART 	"AY"	
 
 ModuleHeader MOD_HEADER(m_sapart)
   = {

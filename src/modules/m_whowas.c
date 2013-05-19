@@ -48,7 +48,6 @@
 DLLFUNC int m_whowas(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_WHOWAS 	"WHOWAS"	
-#define TOK_WHOWAS 	"$"	
 
 ModuleHeader MOD_HEADER(m_whowas)
   = {

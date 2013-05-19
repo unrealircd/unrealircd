@@ -47,7 +47,6 @@
 DLLFUNC CMD_FUNC(m_motd);
 
 #define MSG_MOTD 	"MOTD"	
-#define TOK_MOTD 	"F"	
 
 ModuleHeader MOD_HEADER(m_motd)
   = {

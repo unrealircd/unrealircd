@@ -47,7 +47,6 @@
 DLLFUNC int m_stats(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_STATS 	"STATS"	
-#define TOK_STATS 	"2"	
 
 ModuleHeader MOD_HEADER(m_stats)
   = {

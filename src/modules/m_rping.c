@@ -50,9 +50,7 @@ DLLFUNC char *militime(char *sec, char *usec);
 
 /* Place includes here */
 #define MSG_RPING       "RPING"
-#define TOK_RPING       "AM"
 #define MSG_RPONG       "RPONG"
-#define TOK_RPONG       "AN"
 
 ModuleHeader MOD_HEADER(m_rping)
   = {

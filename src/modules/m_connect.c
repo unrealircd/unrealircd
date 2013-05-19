@@ -47,7 +47,6 @@
 DLLFUNC int m_connect(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_CONNECT 	"CONNECT"	
-#define TOK_CONNECT 	"7"	
 
 ModuleHeader MOD_HEADER(m_connect)
   = {

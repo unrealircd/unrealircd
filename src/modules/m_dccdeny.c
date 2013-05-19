@@ -47,7 +47,6 @@
 DLLFUNC int m_dccdeny(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_DCCDENY 	"DCCDENY"	
-#define TOK_DCCDENY 	"BI"	
 
 ModuleHeader MOD_HEADER(m_dccdeny)
   = {

@@ -52,7 +52,6 @@
 #endif
 
 #define MSG_CHGHOST 	"CHGHOST"
-#define TOK_CHGHOST 	"AL"
 
 DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 

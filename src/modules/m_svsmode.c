@@ -51,9 +51,7 @@ DLLFUNC int m_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 DLLFUNC int m_svs2mode(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_SVSMODE 	"SVSMODE"	
-#define TOK_SVSMODE 	"n"	
 #define MSG_SVS2MODE    "SVS2MODE"
-#define TOK_SVS2MODE	"v"
 
 ModuleHeader MOD_HEADER(m_svsmode)
   = {

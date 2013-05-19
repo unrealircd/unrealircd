@@ -47,7 +47,6 @@
 DLLFUNC int m_userhost(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_USERHOST 	"USERHOST"	
-#define TOK_USERHOST 	"J"	
 
 ModuleHeader MOD_HEADER(m_userhost)
   = {

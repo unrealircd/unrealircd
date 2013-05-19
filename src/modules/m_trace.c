@@ -47,7 +47,6 @@
 DLLFUNC int m_trace(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_TRACE 	"TRACE"	
-#define TOK_TRACE 	"b"	
 
 ModuleHeader MOD_HEADER(m_trace)
   = {

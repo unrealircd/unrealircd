@@ -47,7 +47,6 @@
 DLLFUNC int m_globops(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_GLOBOPS 	"GLOBOPS"	
-#define TOK_GLOBOPS 	"]"	
 
 ModuleHeader MOD_HEADER(m_globops)
   = {

@@ -49,7 +49,6 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_SETHOST 	"SETHOST"	/* sethost */
-#define TOK_SETHOST 	"AA"	/* 127 4ever !;) */
 
 ModuleHeader MOD_HEADER(m_sethost)
   = {

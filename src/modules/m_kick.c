@@ -47,7 +47,6 @@
 DLLFUNC int m_kick(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 #define MSG_KICK 	"KICK"	
-#define TOK_KICK 	"H"	
 
 ModuleHeader MOD_HEADER(m_kick)
   = {
