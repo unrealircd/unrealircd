@@ -519,65 +519,6 @@ sendto_server(aClient *one, unsigned long caps,
 }
 
 /*
- * sendto_serv_butone_sjoin
- *
- * Send a message to all connected servers except the client 'one'.
- * BUT, don't send to SJOIN servers.
- */
-void sendto_serv_butone_sjoin(aClient *one, char *pattern, ...)
-{
-	va_list vl;
-	aClient *cptr;
-
-	va_start(vl, pattern);
-
-	list_for_each_entry(cptr, &server_list, special_node)
-	{
-		if (one && cptr == one->from)
-			continue;
-
-		va_start(vl, pattern);
-
-		if (!SupportSJOIN(cptr))
-			vsendto_one(cptr, pattern, vl);
-
-		va_end(vl);
-	}
-
-	va_end(vl);
-	return;
-}
-
-/*
- * sendto_serv_sjoin
- *
- * Send a message to all connected servers except the client 'one'.
- * BUT only send to SJOIN servers.
- */
-void sendto_serv_sjoin(aClient *one, char *pattern, ...)
-{
-	va_list vl;
-	aClient *cptr;
-
-	va_start(vl, pattern);
-
-	list_for_each_entry(cptr, &server_list, special_node)
-	{
-		if (one && cptr == one->from)
-			continue;
-
-		va_start(vl, pattern);
-
-		if (SupportSJOIN(cptr))
-			vsendto_one(cptr, pattern, vl);
-
-		va_end(vl);
-	}
-
-	va_end(vl);
-}
-
-/*
  * sendto_serv_butone_nickv2
  *
  * Send a message to all connected servers except the client 'one'.

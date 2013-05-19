@@ -155,7 +155,7 @@ static int compare_floodprot_modes(ChanFloodProt *a, ChanFloodProt *b)
 	modebuf[b] = 0;\
 }\
 else {\
-	sendto_serv_butone_sjoin(cptr, ":%s MODE %s %s %s %lu", sptr->name, chptr->chname,\
+	sendto_server(cptr, 0, PROTO_SJOIN, ":%s MODE %s %s %s %lu", sptr->name, chptr->chname,\
 		modebuf, parabuf, chptr->creationtime); \
 	sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", sptr->name, chptr->chname,\
 		modebuf, parabuf);\
@@ -274,7 +274,7 @@ CMD_FUNC(m_sjoin)
 			ap = mp2parv(modebuf, parabuf);
 			set_mode(chptr, cptr, ap->parc, ap->parv, &pcount,
 			    pvar, 0);
-			sendto_serv_butone_sjoin(cptr,
+			sendto_server(cptr, 0, PROTO_SJOIN,
 			    ":%s MODE %s %s %s %lu",
 			    sptr->name, chptr->chname, modebuf, parabuf,
 			    chptr->creationtime);
@@ -354,7 +354,7 @@ CMD_FUNC(m_sjoin)
 		if (b > 1)
 		{
 			modebuf[b] = '\0';
-			sendto_serv_butone_sjoin(cptr,
+			sendto_server(cptr, 0, PROTO_SJOIN,
 			    ":%s MODE %s %s %s %lu",
 			    sptr->name, chptr->chname,
 			    modebuf, parabuf, chptr->creationtime);
@@ -498,7 +498,7 @@ CMD_FUNC(m_sjoin)
 				if (chptr->mode.floodprot && sptr->serv->flags.synced && !IsULine(sptr))
 				        do_chanflood(chptr->mode.floodprot, FLD_JOIN);
 			}
-			sendto_serv_butone_sjoin(cptr, ":%s JOIN %s",
+			sendto_server(cptr, 0, PROTO_SJOIN, ":%s JOIN %s",
 			    nick, chptr->chname);
 			CheckStatus('q', CHFL_CHANOWNER);
 			CheckStatus('a', CHFL_CHANPROT);
@@ -546,7 +546,7 @@ docontinue:
 	if (modebuf[1])
 	{
 		modebuf[b] = '\0';
-		sendto_serv_butone_sjoin(cptr,
+		sendto_server(cptr, 0, PROTO_SJOIN,
 		    ":%s MODE %s %s %s %lu",
 		    sptr->name, chptr->chname, modebuf, parabuf,
 		    chptr->creationtime);
@@ -567,7 +567,7 @@ docontinue:
 		strlcpy(paraback, parabuf, sizeof paraback);
 		ap = mp2parv(modebuf, parabuf);
 		set_mode(chptr, cptr, ap->parc, ap->parv, &pcount, pvar, 0);
-		sendto_serv_butone_sjoin(cptr,
+		sendto_server(cptr, 0, PROTO_SJOIN,
 		    ":%s MODE %s %s %s %lu",
 		    sptr->name, chptr->chname, modebuf, paraback,
 		    chptr->creationtime);
@@ -831,7 +831,7 @@ docontinue:
 
 		if (modebuf[1])
 		{
-			sendto_serv_butone_sjoin(cptr,
+			sendto_server(cptr, 0, PROTO_SJOIN,
 			    ":%s MODE %s %s %s %lu",
 			    sptr->name, chptr->chname, modebuf, parabuf,
 			    chptr->creationtime);
