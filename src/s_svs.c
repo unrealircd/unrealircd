@@ -295,12 +295,10 @@ int ret;
 			{
 				if (alias->spamfilter && (ret = dospamfilter(sptr, parv[1], SPAMF_CHANMSG, chptr->chname, 0, NULL)) < 0)
 					return ret;
-				sendto_channelprefix_butone_tok(sptr,
-				    sptr, chptr,
-				    PREFIX_ALL,
-				    MSG_PRIVATE,
-				    TOK_PRIVATE,
-				    chptr->chname, parv[1], 0);
+				sendto_channelprefix_butone(sptr,
+				    sptr, chptr, PREFIX_ALL,
+                                    ":%s PRIVMSG %s :%s", parv[0],
+				    chptr->chname, parv[1]);
 				return 0;
 			}
 		}
@@ -429,11 +427,10 @@ int ret;
 						{
 							if (alias->spamfilter && (ret = dospamfilter(sptr, output, SPAMF_CHANMSG, chptr->chname, 0, NULL)) < 0)
 								return ret;
-							sendto_channelprefix_butone_tok(sptr,
-							    sptr, chptr,
-							    PREFIX_ALL, MSG_PRIVATE,
-							    TOK_PRIVATE, chptr->chname,
-							    output, 0);
+							sendto_channelprefix_butone(sptr,
+							    sptr, chptr, PREFIX_ALL,
+			                                    ":%s PRIVMSG %s :%s", parv[0],
+							    chptr->chname, parv[1]);
 							return 0;
 						}
 					}

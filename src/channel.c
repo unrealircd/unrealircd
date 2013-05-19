@@ -1756,9 +1756,9 @@ char m;
 		ircsprintf(comment, "*** Channel %sflood detected (limit is %d per %d seconds), setting mode +%c",
 			text, chptr->mode.floodprot->l[what], chptr->mode.floodprot->per, m);
 		ircsprintf(target, "%%%s", chptr->chname);
-		sendto_channelprefix_butone_tok(NULL, &me, chptr,
+		sendto_channelprefix_butone(NULL, &me, chptr,
 			PREFIX_HALFOP|PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-			MSG_NOTICE, TOK_NOTICE, target, comment, 0);
+			":%s NOTICE %s :%s", me.name, target, comment);
 		sendto_serv_butone(&me, ":%s MODE %s +%c 0", me.name, chptr->chname, m);
 		sendto_channel_butserv(chptr, &me, ":%s MODE %s +%c", me.name, chptr->chname, m);
 		chptr->mode.mode |= modeflag;
