@@ -153,7 +153,7 @@ long flags = 0; /* cache: membership flags */
 		if (parc > 4)
 		{
 			tnick = parv[2];
-			ttime = TS2ts(parv[3]);
+			ttime = atol(parv[3]);
 			topic = parv[4];
 
 		}

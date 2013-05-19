@@ -210,15 +210,8 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	modebuf[0] = 0;
 	if(!(chptr = find_channel(parv[1], NULL)))
 		return 0;
-/*	if (parc >= 4) {
-			return 0;
-		if (parc > 4) {
-			ts = TS2ts(parv[4]);
-			if (acptr->since != ts)
-				return 0;
-		}
-	}*/
-	ts = TS2ts(parv[parc-1]);
+
+	ts = atol(parv[parc-1]);
 	for(m = parv[2]; *m; m++) {
 		switch (*m) {
 			case '+':

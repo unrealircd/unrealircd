@@ -1786,7 +1786,7 @@ void set_channel_mlock(aClient *cptr, aClient *sptr, aChannel *chptr, const char
 
 	if (propagate)
 	{
-		sendto_serv_butone(cptr, ":%s MLOCK %B %s :%s",
+		sendto_serv_butone(cptr, ":%s MLOCK %lu %s :%s",
 					 cptr->name, chptr->creationtime, chptr->chname,
 					 BadPtr(chptr->mode_lock) ? "" : chptr->mode_lock);
 	}

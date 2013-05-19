@@ -110,11 +110,11 @@ aClient *ocptr; /* Other client */
 
 	if (acptr != ocptr)
 		acptr->umodes &= ~UMODE_REGNICK;
-	acptr->lastnick = TS2ts(parv[3]);
+	acptr->lastnick = atol(parv[3]);
 	sendto_common_channels(acptr, ":%s NICK :%s", parv[1], parv[2]);
 	add_history(acptr, 1);
 	sendto_serv_butone_token(NULL, parv[1], MSG_NICK, TOK_NICK,
-	                         "%s :%ld", parv[2], TS2ts(parv[3]));
+	                         "%s :%ld", parv[2], atol(parv[3]));
 
 	(void)del_from_client_hash_table(acptr->name, acptr);
 	hash_check_watch(acptr, RPL_LOGOFF);

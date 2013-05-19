@@ -119,7 +119,7 @@ DLLFUNC CMD_FUNC(m_netinfo)
 	}
 	/* is a long therefore not ATOI */
 	lmax = atol(parv[1]);
-	endsync = TS2ts(parv[2]);
+	endsync = atol(parv[2]);
 	protocol = atol(parv[3]);
 
 	/* max global count != max_global_count --sts */

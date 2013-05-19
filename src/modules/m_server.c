@@ -368,7 +368,7 @@ DLLFUNC CMD_FUNC(m_server)
 			return ret; /* FLUSH_BUFFER / failure */
 			
 		/* OK, let us check in the data now now */
-		hop = TS2ts(parv[2]);
+		hop = atol(parv[2]);
 		strlcpy(info, parv[parc - 1], REALLEN + 61);
 		strlcpy(cptr->name, servername, sizeof(cptr->name));
 		cptr->hopcount = hop;
@@ -538,7 +538,7 @@ CMD_FUNC(m_server_remote)
 		return exit_client(cptr, cptr, &me, "Brought in banned server");
 	}
 	/* OK, let us check in the data now now */
-	hop = TS2ts(parv[2]);
+	hop = atol(parv[2]);
 	strlcpy(info, parv[parc - 1], REALLEN + 61);
 	if (!cptr->serv->conf)
 	{

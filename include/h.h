@@ -42,8 +42,6 @@ extern MODVAR aChannel *channel;
 extern MODVAR struct stats *ircstp;
 extern MODVAR int bootopt;
 extern MODVAR time_t TSoffset;
-/* Prototype added to force errors -- Barubary */
-extern TS TS2ts(char *s);
 extern MODVAR time_t timeofday;
 /* newconf */
 #define get_sendq(x) ((x)->class ? (x)->class->sendq : MAXSENDQLENGTH) 

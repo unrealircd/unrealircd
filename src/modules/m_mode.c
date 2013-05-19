@@ -302,7 +302,7 @@ CMD_FUNC(m_mode)
 		return 0;
 	}
 
-	if (IsServer(sptr) && (sendts = TS2ts(parv[parc - 1]))
+	if (IsServer(sptr) && (sendts = atol(parv[parc - 1]))
 	    && !IsULine(sptr) && chptr->creationtime
 	    && sendts > chptr->creationtime)
 	{
