@@ -89,8 +89,7 @@ DLLFUNC int MOD_UNLOAD(m_knock)(int module_unload)
 CMD_FUNC(m_knock)
 {
 	aChannel *chptr;
-	char buf[1024], chbuf[CHANNELLEN + 8];	
-	
+
 	if (IsServer(sptr))
 		return 0;
 
@@ -162,12 +161,10 @@ CMD_FUNC(m_knock)
 		return 0;
 	}
 
-	ircsprintf(chbuf, "@%s", chptr->chname);
-	ircsprintf(buf, "[Knock] by %s!%s@%s (%s)",
+	sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+		":%s NOTICE @%s :[Knock] by %s!%s@%s (%s)", me.name, chptr->chname,
 		sptr->name, sptr->user->username, GetHost(sptr),
 		parv[2] ? parv[2] : "no reason specified");
-	sendto_channelprefix_butone_tok(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-		MSG_NOTICE, TOK_NOTICE, chbuf, buf, 0);
 
 	sendnotice(sptr, "Knocked on %s", chptr->chname);
 

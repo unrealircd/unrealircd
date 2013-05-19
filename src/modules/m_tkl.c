@@ -2449,8 +2449,8 @@ int ret;
 		ircsprintf(buf, "[Spamfilter] %s matched filter '%s' [%s] [%s]",
 			sptr->name, tk->reason, cmdname_by_spamftarget(type),
 			unreal_decodespace(tk->ptr.spamf->tkl_reason));
-		sendto_channelprefix_butone_tok(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-			MSG_NOTICE, TOK_NOTICE, chbuf, buf, 0);
+		sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+			":%s NOTICE %s :%s", me.name, chbuf, buf);
 	}
 	SetVirus(sptr);
 	return 0;

@@ -493,12 +493,11 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				if (!text)
 					continue;
 
-				sendto_channelprefix_butone_tok(cptr,
+				sendto_channelprefix_butone(cptr,
 				    sptr, chptr,
 				    prefix,
-				    notice ? MSG_NOTICE : MSG_PRIVATE,
-				    notice ? TOK_NOTICE : TOK_PRIVATE,
-				    nick, text, 1);
+				    notice ? ":%s NOTICE %s :%s" : ":%s PRIVMSG %s :%s",
+				    parv[0], nick, text);
 
 				if (chptr->mode.floodprot && !is_skochanop(sptr, chptr) &&
 				    !IsULine(sptr) && do_chanflood(chptr->mode.floodprot, FLD_MSG) &&
