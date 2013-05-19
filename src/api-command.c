@@ -128,9 +128,5 @@ void CommandDel(Command *command) {
 	}
 	MyFree(command->cmd->cmd);
 	MyFree(command->cmd);
-	if (command->tok) {
-		MyFree(command->tok->cmd);
-		MyFree(command->tok);
-	}
 	MyFree(command);
 }

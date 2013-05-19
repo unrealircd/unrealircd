@@ -317,7 +317,7 @@ typedef struct {
 
 typedef struct _command {
 	struct _command *prev, *next;
-	aCommand *cmd, *tok;
+	aCommand *cmd;
 } Command;
 
 typedef struct _versionflag {
