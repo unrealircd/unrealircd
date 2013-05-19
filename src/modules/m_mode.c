@@ -2264,8 +2264,8 @@ DLLFUNC CMD_FUNC(_m_umode)
 		}
 		sptr->user->virthost = strdup(sptr->user->cloakedhost);
 		if (!dontspread)
-			sendto_serv_butone_token_opt(cptr, OPT_VHP, sptr->name,
-				MSG_SETHOST, NULL, "%s", sptr->user->virthost);
+			sendto_server(cptr, PROTO_VHP, 0, ":%s SETHOST :%s",
+				sptr->name, sptr->user->virthost);
 		if (UHOST_ALLOWED == UHALLOW_REJOIN)
 		{
 			/* LOL, this is ugly ;) */

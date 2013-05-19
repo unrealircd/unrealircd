@@ -880,8 +880,8 @@ docontinue:
 	/* This sends out to SJ3 servers .. */
 	Debug((DEBUG_DEBUG, "Sending '%li %s :%s' to sj3", ts, parabuf,
 	    parv[parc - 1]));
-	sendto_serv_butone_token_opt(cptr, OPT_SJOIN | OPT_SJ3, sptr->name,
-	    MSG_SJOIN, NULL, "%li %s :%s", ts, parabuf, parv[parc - 1]);
+	sendto_server(cptr, PROTO_SJOIN | PROTO_SJ3, 0,
+	    ":%s SJOIN %li %s :%s", sptr->name, ts, parabuf, parv[parc - 1]);
 	 
 	return 0;
 }

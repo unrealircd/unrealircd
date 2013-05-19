@@ -328,15 +328,13 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 		sendto_channel_butserv(chptr, sptr,
 		    ":%s JOIN :%s", sptr->name, chptr->chname);
 	
-	sendto_serv_butone_token_opt(cptr, OPT_NOT_SJ3, sptr->name, MSG_JOIN,
-		    NULL, "%s", chptr->chname);
+	sendto_server(cptr, 0, PROTO_SJ3, ":%s JOIN :%s", sptr->name, chptr->chname);
 
 	/* I _know_ that the "@%s " look a bit wierd
 	   with the space and all .. but its to get around
 	   a SJOIN bug --stskeeps */
-	sendto_serv_butone_token_opt(cptr, OPT_SJ3,
-		me.name, MSG_SJOIN, NULL,
-		"%li %s :%s%s ", chptr->creationtime, 
+	sendto_server(cptr, PROTO_SJ3, 0, ":%s SJOIN %li %s :%s%s ",
+		me.name, chptr->creationtime,
 		chptr->chname, chfl_to_sjoin_symbol(flags), sptr->name);
 
 	if (MyClient(sptr))
@@ -359,17 +357,15 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 			if ((flags & CHFL_CHANOWNER) || (flags & CHFL_CHANPROT))
 			{
 				/* +ao / +qo for when PREFIX_AQ is off */
-				sendto_serv_butone_token_opt(cptr, OPT_NOT_SJ3, 
+				sendto_server(cptr, 0, PROTO_SJ3, ":%s MODE %s +o%c %s %s %lu",
 				    me.name,
-				    MSG_MODE, NULL, "%s +o%c %s %s %lu",
 				    chptr->chname, chfl_to_chanmode(flags), sptr->name, sptr->name,
 				    chptr->creationtime);
 			} else {
 #endif
 				/* +v/+h/+o (and +a/+q if PREFIX_AQ is on) */
-				sendto_serv_butone_token_opt(cptr, OPT_NOT_SJ3, 
+				sendto_server(cptr, 0, PROTO_SJ3, ":%s MODE %s +%c %s %lu",
 				    me.name,
-				    MSG_MODE, NULL, "%s +%c %s %lu",
 				    chptr->chname, chfl_to_chanmode(flags), sptr->name,
 				    chptr->creationtime);
 #ifndef PREFIX_AQ

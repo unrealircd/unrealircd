@@ -2011,9 +2011,8 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						 * spamfilter entries are permanent (no expire time), the only stuff
 						 * that can differ for non-opt is the 'setby' and 'setat' field...
 						 */
-				 		sendto_serv_butone_token_opt(cptr, OPT_TKLEXT, sptr->name,
-				 			MSG_TKL, NULL,
-				 			"%s %s %s %s %s %ld %ld %ld %s :%s",
+				 		sendto_server(cptr, PROTO_TKLEXT, 0,
+				 			":%s TKL %s %s %s %s %s %ld %ld %ld %s :%s", sptr->name,
 				 			parv[1], parv[2], parv[3], parv[4],
 				 			tk->setby, tk->expire_at, tk->set_at, tk->ptr.spamf->tkl_duration,
 				 			tk->ptr.spamf->tkl_reason, tk->reason);
@@ -2140,14 +2139,12 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  {
 		  	if ((parc == 11) && (type & TKL_SPAMF))
 		  	{
-				sendto_serv_butone_token_opt(cptr, OPT_TKLEXT, sptr->name,
-					MSG_TKL, NULL,
-					"%s %s %s %s %s %s %s %s %s :%s",
+				sendto_server(cptr, PROTO_TKLEXT, 0,
+					":%s TKL %s %s %s %s %s %s %s %s %s :%s", sptr->name,
 					parv[1], parv[2], parv[3], parv[4], parv[5],
 					parv[6], parv[7], parv[8], parv[9], parv[10]);
-				sendto_serv_butone_token_opt(cptr, OPT_NOT_TKLEXT, sptr->name,
-					MSG_TKL, NULL,
-					"%s %s %s %s %s %s %s :%s",
+				sendto_server(cptr, 0, PROTO_TKLEXT,
+					":%s TKL %s %s %s %s %s %s %s :%s", sptr->name,
 					parv[1], parv[2], parv[3], parv[4], parv[5],
 					parv[6], parv[7], parv[10]);
 			} else

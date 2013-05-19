@@ -531,8 +531,8 @@ int  what, setflags;
 					 * the idea behind it :P. -- Syzop
 					 */
 					if (MyClient(acptr) && !strcasecmp(acptr->user->virthost, acptr->user->cloakedhost))
-						sendto_serv_butone_token_opt(NULL, OPT_VHP, acptr->name,
-							MSG_SETHOST, NULL, "%s", acptr->user->virthost);
+						sendto_server(NULL, PROTO_VHP, 0, ":%s SETHOST :%s", acptr->name,
+							acptr->user->virthost);
 				}
 				goto setmodex;
 			case 'z':
