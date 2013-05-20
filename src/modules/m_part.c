@@ -199,10 +199,10 @@ DLLFUNC CMD_FUNC(m_part)
 
 		/* Send to other servers... */
 		if (!comment)
-			sendto_serv_butone(cptr, ":%s PART %s",
+			sendto_server(cptr, 0, 0, ":%s PART %s",
 			    parv[0], chptr->chname);
 		else
-			sendto_serv_butone(cptr, ":%s PART %s :%s",
+			sendto_server(cptr, 0, 0, ":%s PART %s :%s",
 			    parv[0], chptr->chname, comment);
 
 		if (1)

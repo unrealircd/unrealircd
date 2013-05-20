@@ -792,7 +792,7 @@ int size_string, ret;
 		sendto_umode(UMODE_VICTIM,
 		    "%s tried to send forbidden file %s (%s) to %s (is blocked now)",
 		    sptr->name, displayfile, fl->reason, target);
-		sendto_serv_butone(NULL, ":%s SMO v :%s tried to send forbidden file %s (%s) to %s (is blocked now)",
+		sendto_server(NULL, 0, 0, ":%s SMO v :%s tried to send forbidden file %s (%s) to %s (is blocked now)",
 			me.name, sptr->name, displayfile, fl->reason, target);
 		sptr->flags |= FLAGS_DCCBLOCK;
 		return 0; /* block */

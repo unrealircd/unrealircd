@@ -142,7 +142,7 @@ DLLFUNC int m_svsnline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  } 
 		 
 		  if (IsULine(sptr))
-			sendto_serv_butone(cptr, ":%s SVSNLINE + %s :%s",
+			sendto_server(cptr, 0, 0, ":%s SVSNLINE + %s :%s",
 			    sptr->name, parv[2], parv[3]);
 		  break;
 	  }
@@ -173,7 +173,7 @@ DLLFUNC int m_svsnline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  	MyFree(bconf);
 		  	
 		  }
-		  sendto_serv_butone(cptr, ":%s SVSNLINE - %s", sptr->name, parv[2]);
+		  sendto_server(cptr, 0, 0, ":%s SVSNLINE - %s", sptr->name, parv[2]);
 		  break;
 	  }
 	  case '*':
@@ -181,7 +181,7 @@ DLLFUNC int m_svsnline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  if (!IsULine(sptr))
 			  return 0;
 	          wipe_svsnlines();
-		  sendto_serv_butone(cptr, ":%s SVSNLINE *", sptr->name);
+		  sendto_server(cptr, 0, 0, ":%s SVSNLINE *", sptr->name);
 		  break;
 	  }
 

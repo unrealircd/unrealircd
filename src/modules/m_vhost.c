@@ -167,12 +167,12 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (vhost->virtuser) {
 			strcpy(olduser, sptr->user->username);
 			strlcpy(sptr->user->username, vhost->virtuser, USERLEN);
-			sendto_serv_butone(cptr, ":%s SETIDENT %s", sptr->name,
+			sendto_server(cptr, 0, 0, ":%s SETIDENT %s", sptr->name,
 			    sptr->user->username);
 		}
 		sptr->umodes |= UMODE_HIDE;
 		sptr->umodes |= UMODE_SETHOST;
-		sendto_serv_butone(cptr, ":%s SETHOST %s", sptr->name, sptr->user->virthost);
+		sendto_server(cptr, 0, 0, ":%s SETHOST %s", sptr->name, sptr->user->virthost);
 		sendto_one(sptr, ":%s MODE %s :+tx",
 		    sptr->name, sptr->name);
 		if (vhost->swhois) {
@@ -180,7 +180,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				MyFree(sptr->user->swhois);
 			sptr->user->swhois = MyMalloc(strlen(vhost->swhois) +1);
 			strcpy(sptr->user->swhois, vhost->swhois);
-			sendto_serv_butone(cptr, ":%s SWHOIS %s :%s", me.name,
+			sendto_server(cptr, 0, 0, ":%s SWHOIS %s :%s", me.name,
 			    sptr->name, vhost->swhois);
 		}
 		sendto_one(sptr,

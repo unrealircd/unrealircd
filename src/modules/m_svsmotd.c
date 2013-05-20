@@ -120,9 +120,9 @@ int  m_svsmotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
                   return 0;
         }
         if (parv[2])
-                sendto_serv_butone(cptr, ":%s SVSMOTD %s :%s", parv[0], parv[1], parv[2]);
+                sendto_server(cptr, 0, 0, ":%s SVSMOTD %s :%s", parv[0], parv[1], parv[2]);
         else
-                sendto_serv_butone(cptr, ":%s SVSMOTD %s", parv[0], parv[1]);
+                sendto_server(cptr, 0, 0, ":%s SVSMOTD %s", parv[0], parv[1]);
 
         if (conf == NULL)
         {

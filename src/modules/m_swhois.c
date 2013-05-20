@@ -98,6 +98,6 @@ int m_swhois(aClient *cptr, aClient *sptr, int parc, char *parv[])
                 MyFree(acptr->user->swhois);
         acptr->user->swhois = MyMalloc(strlen(parv[2]) + 1);
         strcpy(acptr->user->swhois, parv[2]);
-        sendto_serv_butone(cptr, ":%s SWHOIS %s :%s", sptr->name, parv[1], parv[2]);
+        sendto_server(cptr, 0, 0, ":%s SWHOIS %s :%s", sptr->name, parv[1], parv[2]);
         return 0;
 }

@@ -237,7 +237,7 @@ aChannel *chptr;
 			/* Unset channel mode and send MODE -<char> to other servers */
 			sendto_channel_butserv(chptr, &me, ":%s MODE %s -%c",
 				me.name, chptr->chname, cmode->flag);
-			sendto_serv_butone(NULL, ":%s MODE %s -%c 0",
+			sendto_server(NULL, 0, 0, ":%s MODE %s -%c 0",
 				me.name, chptr->chname, cmode->flag);
 			chptr->mode.extmode &= ~cmode->mode;
 		}	

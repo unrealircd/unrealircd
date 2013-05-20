@@ -150,7 +150,7 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				  sendto_ops
 				      ("TS Control - %s set TStime() to be diffed +%li",
 				      sptr->name, timediff);
-				  sendto_serv_butone(&me,
+				  sendto_server(&me, 0, 0,
 				      ":%s GLOBOPS :TS Control - %s set TStime to be diffed +%li",
 				      me.name, sptr->name, timediff);
 				  break;
@@ -162,7 +162,7 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				  sendto_ops
 				      ("TS Control - %s set TStime() to be diffed -%li",
 				      sptr->name, timediff);
-				  sendto_serv_butone(&me,
+				  sendto_server(&me, 0, 0,
 				      ":%s GLOBOPS :TS Control - %s set TStime to be diffed -%li",
 				      me.name, sptr->name, timediff);
 				  break;
@@ -183,7 +183,7 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    ":%s NOTICE %s :*** Server=%s TStime=%li time()=%li TSoffset=%li",
 			    me.name, sptr->name, me.name, TStime(), time(NULL),
 			    TSoffset);
-			sendto_serv_butone(cptr, ":%s TSCTL alltime",
+			sendto_server(cptr, 0, 0, ":%s TSCTL alltime",
 			    sptr->name);
 			return 0;
 
@@ -210,7 +210,7 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sendto_ops
 			    ("TS Control - U:line set time to be %li (timediff: %li)",
 			    atol(parv[2]), timediff);
-			sendto_serv_butone(cptr, ":%s TSCTL svstime %li",
+			sendto_server(cptr, 0, 0, ":%s TSCTL svstime %li",
 			    sptr->name, atol(parv[2]));
 			return 0;
 		}

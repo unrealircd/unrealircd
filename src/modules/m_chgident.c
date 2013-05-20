@@ -195,7 +195,7 @@ int  legalident = 1;
 
 
 
-		sendto_serv_butone(cptr, ":%s CHGIDENT %s %s",
+		sendto_server(cptr, 0, 0, ":%s CHGIDENT %s %s",
 		    sptr->name, acptr->name, parv[2]);
 		ircsprintf(acptr->user->username, "%s", parv[2]);
 		if (UHOST_ALLOWED == UHALLOW_REJOIN)

@@ -163,7 +163,7 @@ CMD_FUNC(m_squit)
 
 		sendto_locfailops("Received SQUIT %s from %s (%s)",
 		    acptr->name, get_client_name(sptr, FALSE), comment);
-		sendto_serv_butone(&me,
+		sendto_server(&me, 0, 0,
 		    ":%s GLOBOPS :Received SQUIT %s from %s (%s)", me.name,
 		    server, get_client_name(sptr, FALSE), comment);
 	}
@@ -176,14 +176,14 @@ CMD_FUNC(m_squit)
 			sendto_ops
 			    ("%s tried to do a fake kill using SQUIT (%s (%s))",
 			    sptr->name, acptr->name, comment);
-			sendto_serv_butone(&me,
+			sendto_server(&me, 0, 0,
 			    ":%s GLOBOPS :%s tried to fake kill using SQUIT (%s (%s))",
 			    me.name, sptr->name, acptr->name, comment);
 			return 0;
 		}
 		sendto_locfailops("Received SQUIT %s from %s (%s)",
 		    acptr->name, get_client_name(sptr, FALSE), comment);
-		sendto_serv_butone(&me,
+		sendto_server(&me, 0, 0,
 		    ":%s GLOBOPS :Received SQUIT %s from %s (%s)", me.name,
 		    acptr->name, get_client_name(sptr, FALSE), comment);
 	}

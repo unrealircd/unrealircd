@@ -96,7 +96,7 @@ DLLFUNC CMD_FUNC(m_globops)
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
-	sendto_serv_butone(IsServer(cptr) ? cptr : NULL, ":%s GLOBOPS :%s",
+	sendto_server(IsServer(cptr) ? cptr : NULL, 0, 0, ":%s GLOBOPS :%s",
 	    parv[0], message);
 	sendto_failops_whoare_opers("from %s: %s", parv[0], message);
 	return 0;

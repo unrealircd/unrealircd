@@ -643,7 +643,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 #ifdef USE_SSL
 	if (IsSecure(cptr))
 	{
-		sendto_serv_butone(&me, ":%s SMO o :(\2link\2) Secure link %s -> %s established (%s)",
+		sendto_server(&me, 0, 0, ":%s SMO o :(\2link\2) Secure link %s -> %s established (%s)",
 			me.name,
 			me.name, inpath, (char *) ssl_get_cipher((SSL *)cptr->ssl));
 		sendto_realops("(\2link\2) Secure link %s -> %s established (%s)",
@@ -652,7 +652,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 	else
 #endif
 	{
-		sendto_serv_butone(&me, ":%s SMO o :(\2link\2) Link %s -> %s established",
+		sendto_server(&me, 0, 0, ":%s SMO o :(\2link\2) Link %s -> %s established",
 			me.name,
 			me.name, inpath);
 		sendto_realops("(\2link\2) Link %s -> %s established",

@@ -174,7 +174,7 @@ DLLFUNC CMD_FUNC(m_sajoin)
 							 "Left all channels");
 					remove_user_from_channel(acptr, chptr);
 				}
-				sendto_serv_butone(acptr, ":%s JOIN 0", acptr->name);
+				sendto_server(acptr, 0, 0, ":%s JOIN 0", acptr->name);
 				strcpy(jbuf, "0");
 				i = 1;
 				continue;
@@ -202,7 +202,7 @@ DLLFUNC CMD_FUNC(m_sajoin)
 			sendnotice(acptr, "*** You were forced to join %s", jbuf);
 			sendto_realops("%s used SAJOIN to make %s join %s", sptr->name, acptr->name,
 				       jbuf);
-			sendto_serv_butone(&me, ":%s GLOBOPS :%s used SAJOIN to make %s join %s",
+			sendto_server(&me, 0, 0, ":%s GLOBOPS :%s used SAJOIN to make %s join %s",
 					   me.name, sptr->name, acptr->name, jbuf);
 			/* Logging function added by XeRXeS */
 			ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",

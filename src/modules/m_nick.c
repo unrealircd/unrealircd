@@ -168,7 +168,7 @@ DLLFUNC CMD_FUNC(m_nick)
 			    nick, cptr->name);
 			if (sptr != cptr)
 			{	/* bad nick change */
-				sendto_serv_butone(cptr,
+				sendto_server(cptr, 0, 0,
 				    ":%s KILL %s :%s (%s <- %s!%s@%s)",
 				    me.name, parv[0], me.name,
 				    get_client_name(cptr, FALSE),
@@ -472,7 +472,7 @@ DLLFUNC CMD_FUNC(m_nick)
 		if (!(parc > 3) || (acptr->lastnick == lastnick))
 		{
 			ircstp->is_kill++;
-			sendto_serv_butone(NULL,
+			sendto_server(NULL, 0, 0,
 			    ":%s KILL %s :%s (Nick Collision)",
 			    me.name, acptr->name, me.name);
 			acptr->flags |= FLAGS_KILLED;
@@ -485,7 +485,7 @@ DLLFUNC CMD_FUNC(m_nick)
 		    (!differ && (acptr->lastnick < lastnick)) || acptr->from == cptr)	/* we missed a QUIT somewhere ? */
 		{
 			ircstp->is_kill++;
-			sendto_serv_butone(cptr,
+			sendto_server(cptr, 0, 0,
 			    ":%s KILL %s :%s (Nick Collision)",
 			    me.name, acptr->name, me.name);
 			acptr->flags |= FLAGS_KILLED;
@@ -531,10 +531,10 @@ DLLFUNC CMD_FUNC(m_nick)
 		if (!(parc > 2) || lastnick == acptr->lastnick)
 		{
 			ircstp->is_kill += 2;
-			sendto_serv_butone(NULL,	/* First kill the new nick. */
+			sendto_server(NULL, 0, 0, /* First kill the new nick. */
 			    ":%s KILL %s :%s (Self Collision)",
 			    me.name, acptr->name, me.name);
-			sendto_serv_butone(cptr,	/* Tell my servers to kill the old */
+			sendto_server(cptr, 0, 0, /* Tell my servers to kill the old */
 			    ":%s KILL %s :%s (Self Collision)",
 			    me.name, sptr->name, me.name);
 			sptr->flags |= FLAGS_KILLED;
@@ -548,7 +548,7 @@ DLLFUNC CMD_FUNC(m_nick)
 		{
 			/* sptr (their user) won, let's kill acptr (our user) */
 			ircstp->is_kill++;
-			sendto_serv_butone(cptr,
+			sendto_server(cptr, 0, 0,
 			    ":%s KILL %s :%s (Nick collision: %s <- %s)",
 			    me.name, acptr->name, me.name,
 			    acptr->from->name, sptr->from->name);
@@ -564,7 +564,7 @@ DLLFUNC CMD_FUNC(m_nick)
 			 */
 			ircstp->is_kill++;
 			/* Kill the user trying to change their nick. */
-			sendto_serv_butone(cptr,
+			sendto_server(cptr, 0, 0,
 			    ":%s KILL %s :%s (Nick collision: %s <- %s)",
 			    me.name, sptr->name, me.name,
 			    sptr->from->name, acptr->from->name);
@@ -687,7 +687,7 @@ DLLFUNC CMD_FUNC(m_nick)
 		}
 		add_history(sptr, 1);
 		sendto_common_channels(sptr, ":%s NICK :%s", parv[0], nick);
-		sendto_serv_butone(cptr, ":%s NICK %s %ld",
+		sendto_server(cptr, 0, 0, ":%s NICK %s %ld",
 		    parv[0], nick, sptr->lastnick);
 		if (removemoder)
 			sptr->umodes &= ~UMODE_REGNICK;
@@ -1181,6 +1181,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 
 	hash_check_watch(sptr, RPL_LOGON);	/* Uglier hack */
 	send_umode(NULL, sptr, 0, SEND_UMODES|UMODE_SERVNOTICE, buf);
+
 	/* NICKv2 Servers ! */
 	sendto_serv_butone_nickcmd(cptr, sptr, nick,
 	    sptr->hopcount + 1, sptr->lastnick, user->username, user->realhost,

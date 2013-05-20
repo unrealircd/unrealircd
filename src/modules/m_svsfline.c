@@ -93,7 +93,7 @@ DLLFUNC CMD_FUNC(m_svsfline)
 		  if (!Find_deny_dcc(parv[2]))
 			  DCCdeny_add(parv[2], parv[3], DCCDENY_HARD, CONF_BAN_TYPE_AKILL);
 		  if (IsULine(sptr))
-			  sendto_serv_butone(cptr, ":%s SVSFLINE + %s :%s",
+			  sendto_server(cptr, 0, 0, ":%s SVSFLINE + %s :%s",
 			      sptr->name, parv[2], parv[3]);
 		  break;
 	  }
@@ -107,7 +107,7 @@ DLLFUNC CMD_FUNC(m_svsfline)
 		  if (!(deny = Find_deny_dcc(parv[2])))
 			break;
 		  DCCdeny_del(deny);
-		  sendto_serv_butone(cptr, ":%s SVSFLINE %s", sptr->name, parv[2]);
+		  sendto_server(cptr, 0, 0, ":%s SVSFLINE %s", sptr->name, parv[2]);
 		  break;
 	  }
 	  case '*':
@@ -115,7 +115,7 @@ DLLFUNC CMD_FUNC(m_svsfline)
 		  if (!IsULine(sptr))
 			  return 0;
 		  dcc_wipe_services();
-		  sendto_serv_butone(cptr, ":%s SVSFLINE *", sptr->name);
+		  sendto_server(cptr, 0, 0, ":%s SVSFLINE *", sptr->name);
 		  break;
 	  }
 

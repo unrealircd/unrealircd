@@ -370,7 +370,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (*parabuf) {
 		sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s", sptr->name, chptr->chname, 
 			modebuf, parabuf);
-		sendto_serv_butone(NULL, ":%s MODE %s %s %s", sptr->name, chptr->chname, modebuf, parabuf);
+		sendto_server(NULL, 0, 0, ":%s MODE %s %s %s", sptr->name, chptr->chname, modebuf, parabuf);
 
 		/* Activate this hook just like m_mode.c */
 		RunHook7(HOOKTYPE_REMOTE_CHANMODE, cptr, sptr, chptr, modebuf, parabuf, ts, 0);
@@ -557,11 +557,11 @@ int  what, setflags;
 		} /*switch*/
 
 	if (parc > 3)
-		sendto_serv_butone(cptr, ":%s %s %s %s %s",
+		sendto_server(cptr, 0, 0, ":%s %s %s %s %s",
 		    parv[0], show_change ? "SVS2MODE" : "SVSMODE",
 		    parv[1], parv[2], parv[3]);
 	else
-		sendto_serv_butone(cptr, ":%s %s %s %s",
+		sendto_server(cptr, 0, 0,  ":%s %s %s %s",
 		    parv[0], show_change ? "SVS2MODE" : "SVSMODE",
 		    parv[1], parv[2]);
 
@@ -644,7 +644,7 @@ void add_send_mode_param(aChannel *chptr, aClient *from, char what, char mode, c
 	if (send) {
 		sendto_channel_butserv(chptr, from, ":%s MODE %s %s %s",
 			from->name, chptr->chname, modebuf, parabuf);
-		sendto_serv_butone(NULL, ":%s MODE %s %s %s", from->name, chptr->chname, modebuf, parabuf);
+		sendto_server(NULL, 0, 0, ":%s MODE %s %s %s", from->name, chptr->chname, modebuf, parabuf);
 		send = 0;
 		*parabuf = 0;
 		modes = modebuf;

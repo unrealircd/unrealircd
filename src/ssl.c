@@ -677,7 +677,7 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, aClient *sptr
 		 * send a closing link error...
 		 */
 		sendto_locfailops("Lost connection to %s: %s: %d (%s)", get_client_name(sptr, FALSE), ssl_func, ssl_error, ssl_errstr);
-		sendto_serv_butone(&me, ":%s GLOBOPS :Lost connection to server %s: %s: %d (%s)",
+		sendto_server(&me, 0, 0, ":%s GLOBOPS :Lost connection to server %s: %s: %d (%s)",
 		  me.name, get_client_name(sptr, FALSE), ssl_func, ssl_error, ssl_errstr);
 		/* sendto_failops_whoare_opers("Closing link: %s: %s - %s", ssl_func, ssl_errstr, get_client_name(sptr, FALSE)); */
 	}

@@ -114,7 +114,7 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 
-	sendto_serv_butone(IsServer(cptr) ? cptr : NULL,
+	sendto_server(IsServer(cptr) ? cptr : NULL, 0, 0,
 	    ":%s SMO %s :%s", parv[0], parv[1], message);
 
 	for (p = parv[1]; *p; p++)

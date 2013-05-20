@@ -501,14 +501,14 @@ CMD_FUNC(m_error)
 		return 0;
 	if (cptr == sptr)
 	{
-		sendto_serv_butone(&me, ":%s GLOBOPS :ERROR from %s -- %s",
+		sendto_server(&me, 0, 0, ":%s GLOBOPS :ERROR from %s -- %s",
 		    me.name, get_client_name(cptr, FALSE), para);
 		sendto_locfailops("ERROR :from %s -- %s",
 		    get_client_name(cptr, FALSE), para);
 	}
 	else
 	{
-		sendto_serv_butone(&me,
+		sendto_server(&me, 0, 0,
 		    ":%s GLOBOPS :ERROR from %s via %s -- %s", me.name,
 		    sptr->name, get_client_name(cptr, FALSE), para);
 		sendto_ops("ERROR :from %s via %s -- %s", sptr->name,
@@ -554,9 +554,14 @@ void load_tunefile(void)
 	if (!tunefile)
 		return;
 	fprintf(stderr, "* Loading tunefile..\n");
-	fgets(buf, 1023, tunefile);
+	if (!fgets(buf, sizeof(buf), tunefile))
+	    fprintf(stderr, "Warning: error while reading the timestamp offset from the tunefile%s%s\n",
+		errno? ": ": "", errno? strerror(errno): "");
 	TSoffset = atol(buf);
-	fgets(buf, 1023, tunefile);
+
+	if (!fgets(buf, sizeof(buf), tunefile))
+	    fprintf(stderr, "Warning: error while reading the peak user count from the tunefile%s%s\n",
+		errno? ": ": "", errno? strerror(errno): "");
 	IRCstats.me_max = atol(buf);
 	fclose(tunefile);
 }
@@ -648,7 +653,7 @@ CMD_FUNC(m_rehash)
 					me.name, sptr->name);
 				return 0;
 			}
-			sendto_serv_butone(&me,
+			sendto_server(&me, 0, 0,
 			    ":%s GLOBOPS :%s is remotely rehashing server config file",
 			    me.name, sptr->name);
 			sendto_ops
@@ -739,7 +744,7 @@ CMD_FUNC(m_rehash)
 				    cptr != sptr ? "Remotely " : "",
 				    sptr->name);
 				if (cptr != sptr)
-					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing OperMOTD", me.name, sptr->name);
+					sendto_server(&me, 0, 0, ":%s GLOBOPS :%s is remotely rehashing OperMOTD", me.name, sptr->name);
 				read_motd(conf_files->opermotd_file, &opermotd);
 				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
 				return 0;
@@ -751,7 +756,7 @@ CMD_FUNC(m_rehash)
 				    cptr != sptr ? "Remotely " : "",
 				    sptr->name);
 				if (cptr != sptr)
-					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing BotMOTD", me.name, sptr->name);
+					sendto_server(&me, 0, 0, ":%s GLOBOPS :%s is remotely rehashing BotMOTD", me.name, sptr->name);
 				read_motd(conf_files->botmotd_file, &botmotd);
 				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
 				return 0;
@@ -764,7 +769,7 @@ CMD_FUNC(m_rehash)
 				    cptr != sptr ? "Remotely " : "",
 				    sptr->name);
 				if (cptr != sptr)
-					sendto_serv_butone(&me, ":%s GLOBOPS :%s is remotely rehashing all MOTDs and RULES", me.name, sptr->name);
+					sendto_server(&me, 0, 0, ":%s GLOBOPS :%s is remotely rehashing all MOTDs and RULES", me.name, sptr->name);
 				rehash_motdrules();
 				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
 				return 0;

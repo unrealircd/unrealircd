@@ -176,7 +176,7 @@ static int m_svslogin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 
 	/* not for us; propagate. */
-	sendto_serv_butone(cptr, ":%s SVSLOGIN %s %s %s",
+	sendto_server(cptr, 0, 0, ":%s SVSLOGIN %s %s %s",
 	    parv[0], parv[1], parv[2], parv[3]);
 
 	return 0;
@@ -233,7 +233,7 @@ static int m_sasl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 
 	/* not for us; propagate. */
-	sendto_serv_butone(cptr, ":%s SASL %s %s %c %s %s",
+	sendto_server(cptr, 0, 0, ":%s SASL %s %s %c %s %s",
 	    parv[0], parv[1], parv[2], *parv[3], parv[4], parc > 5 ? parv[5] : "");
 
 	return 0;
@@ -269,10 +269,10 @@ static int m_authenticate(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		agent_p = find_client(sptr->sasl_agent, NULL);
 
 	if (agent_p == NULL)
-		sendto_serv_butone(NULL, ":%s SASL %s %s S %s",
+		sendto_server(NULL, 0, 0, ":%s SASL %s %s S %s",
 		    me.name, SASL_SERVER, encode_puid(sptr), parv[1]);
 	else
-		sendto_serv_butone(NULL, ":%s SASL %s %s C %s",
+		sendto_server(NULL, 0, 0, ":%s SASL %s %s C %s",
 		    me.name, AGENT_SID(agent_p), encode_puid(sptr), parv[1]);
 
 	sptr->sasl_out++;
@@ -294,13 +294,13 @@ static int abort_sasl(struct Client *cptr)
 
 		if (agent_p != NULL)
 		{
-			sendto_serv_butone(NULL, ":%s SASL %s %s D A",
+			sendto_server(NULL, 0, 0, ":%s SASL %s %s D A",
 			    me.name, AGENT_SID(agent_p), encode_puid(cptr));
 			return 0;
 		}
 	}
 
-	sendto_serv_butone(NULL, ":%s SASL * %s D A", me.name, encode_puid(cptr));
+	sendto_server(NULL, 0, 0, ":%s SASL * %s D A", me.name, encode_puid(cptr));
 	return 0;
 }
 

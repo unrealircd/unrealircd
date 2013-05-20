@@ -656,7 +656,7 @@ EVENT(check_pings)
 					sendto_realops
 					    ("No response from %s, closing link",
 					    get_client_name(cptr, FALSE));
-					sendto_serv_butone(&me,
+					sendto_server(&me, 0, 0,
 					    ":%s GLOBOPS :No response from %s, closing link",
 					    me.name, get_client_name(cptr,
 					    FALSE));
@@ -1153,7 +1153,8 @@ int InitwIRCD(int argc, char *argv[])
 			  bootopt |= BOOT_QUICK;
 			  break;
 		  case 'd':
-			  (void)setuid((uid_t) uid);
+			  if (setuid((uid_t) uid) == -1)
+			      printf("WARNING: Could not drop privileges: %s\n", strerror(errno));
 #else
 		  case 'd':
 #endif
@@ -1170,7 +1171,9 @@ int InitwIRCD(int argc, char *argv[])
 			  else
 			       printf("ERROR: Command line config with a setuid/setgid ircd is not allowed");
 #else
-			  (void)setuid((uid_t) uid);
+			  if (setuid((uid_t) uid) == -1)
+			      printf("WARNING: could not drop privileges: %s\n", strerror(errno));
+
 			  configfile = p;
 #endif
 			  break;
@@ -1238,7 +1241,9 @@ int InitwIRCD(int argc, char *argv[])
 			  break;
 #ifndef _WIN32
 		  case 't':
-			  (void)setuid((uid_t) uid);
+			  if (setuid((uid_t) uid) == -1)
+			      printf("WARNING: Could not drop privileges: %s\n", strerror(errno));
+
 			  bootopt |= BOOT_TTY;
 			  break;
 		  case 'v':
@@ -1257,7 +1262,8 @@ int InitwIRCD(int argc, char *argv[])
 		  case 'x':
 #ifdef	DEBUGMODE
 # ifndef _WIN32
-			  (void)setuid((uid_t) uid);
+			  if (setuid((uid_t) uid) == -1)
+			      printf("WARNING: Could not drop privileges: %s\n", strerror(errno));
 # endif
 			  debuglevel = atoi(p);
 			  debugmode = *p ? p : "0";

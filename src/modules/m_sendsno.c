@@ -101,7 +101,7 @@ aClient *acptr;
 	msg = parv[2];
 
 	/* Forward to others... */
-	sendto_serv_butone(cptr, ":%s SENDSNO %s :%s", sptr->name, parv[1], parv[2]);
+	sendto_server(cptr, 0, 0, ":%s SENDSNO %s :%s", sptr->name, parv[1], parv[2]);
 
 	for (p = sno; *p; p++)
 	{

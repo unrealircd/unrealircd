@@ -318,7 +318,7 @@ CMD_FUNC(m_kick)
 						    parv[0], chptr->chname, who->name, comment);
 					}
 				}
-				sendto_serv_butone(cptr, ":%s KICK %s %s :%s",
+				sendto_server(cptr, 0, 0, ":%s KICK %s %s :%s",
 				    parv[0], chptr->chname, who->name, comment);
 				if (lp)
 				{

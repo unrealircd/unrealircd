@@ -1430,7 +1430,7 @@ int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
 		{		/* ban. */
 			ircsprintf(mask, "*!*@%s", GetHost(sptr));
 			add_listmode(&chptr->banlist, &me, chptr, mask);
-			sendto_serv_butone(&me, ":%s MODE %s +b %s 0",
+			sendto_server(&me, 0, 0, ":%s MODE %s +b %s 0",
 			    me.name, chptr->chname, mask);
 			sendto_channel_butserv(chptr, &me,
 			    ":%s MODE %s +b %s", me.name, chptr->chname, mask);
@@ -1438,7 +1438,7 @@ int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr)
 		sendto_channel_butserv(chptr, &me,
 		    ":%s KICK %s %s :%s", me.name,
 		    chptr->chname, sptr->name, comment);
-		sendto_serv_butone(cptr, ":%s KICK %s %s :%s",
+		sendto_server(cptr, 0, 0, ":%s KICK %s %s :%s",
 		   me.name, chptr->chname, sptr->name, comment);
 		remove_user_from_channel(sptr, chptr);
 		return 1;
@@ -1660,7 +1660,7 @@ long mode;
 			mode = get_chanbitbychar(e->m);
 			if (e->chptr->mode.mode & mode)
 			{
-				sendto_serv_butone(&me, ":%s MODE %s -%c 0", me.name, e->chptr->chname, e->m);
+				sendto_server(&me, 0, 0, ":%s MODE %s -%c 0", me.name, e->chptr->chname, e->m);
 				sendto_channel_butserv(e->chptr, &me, ":%s MODE %s -%c", me.name, e->chptr->chname, e->m);
 				e->chptr->mode.mode &= ~mode;
 			}
@@ -1759,7 +1759,7 @@ char m;
 		sendto_channelprefix_butone(NULL, &me, chptr,
 			PREFIX_HALFOP|PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
 			":%s NOTICE %s :%s", me.name, target, comment);
-		sendto_serv_butone(&me, ":%s MODE %s +%c 0", me.name, chptr->chname, m);
+		sendto_server(&me, 0, 0, ":%s MODE %s +%c 0", me.name, chptr->chname, m);
 		sendto_channel_butserv(chptr, &me, ":%s MODE %s +%c", me.name, chptr->chname, m);
 		chptr->mode.mode |= modeflag;
 		if (chptr->mode.floodprot->r[what]) /* Add remove-chanmode timer... */
@@ -1786,8 +1786,8 @@ void set_channel_mlock(aClient *cptr, aClient *sptr, aChannel *chptr, const char
 
 	if (propagate)
 	{
-		sendto_serv_butone(cptr, ":%s MLOCK %lu %s :%s",
-					 cptr->name, chptr->creationtime, chptr->chname,
-					 BadPtr(chptr->mode_lock) ? "" : chptr->mode_lock);
+		sendto_server(cptr,0, 0, ":%s MLOCK %lu %s :%s",
+			      cptr->name, chptr->creationtime, chptr->chname,
+			      BadPtr(chptr->mode_lock) ? "" : chptr->mode_lock);
 	}
 }

@@ -117,7 +117,7 @@ int m_sdesc(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	ircsprintf(sptr->srvptr->info, "%s", parv[1]);
 
-	sendto_serv_butone(cptr, ":%s SDESC :%s", sptr->name, parv[1]);
+	sendto_server(cptr, 0, 0, ":%s SDESC :%s", sptr->name, parv[1]);
 
 	if (MyConnect(sptr))
 		sendto_one(sptr,

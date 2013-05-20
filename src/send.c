@@ -429,30 +429,6 @@ void sendto_chanops_butone(aClient *one, aChannel *chptr, char *pattern, ...)
 	va_end(vl);
 }
 
-/*
- * sendto_server_butone
- *
- * Send a message to all connected servers except the client 'one'.
- */
-void sendto_serv_butone(aClient *one, char *pattern, ...)
-{
-	va_list vl;
-	aClient *cptr;
-
-	va_start(vl, pattern);
-
-	list_for_each_entry(cptr, &server_list, special_node)
-	{
-		if (one && cptr == one->from)
-			continue;
-
-		if (IsServer(cptr))
-			vsendto_one(cptr, pattern, vl);
-	}
-
-	va_end(vl);
-	return;
-}
 
 /*
  * sendto_server
@@ -928,7 +904,7 @@ void sendto_snomask_global(int snomask, char *pattern, ...)
 			*p++ = Snomask_Table[i].flag;
 	*p = '\0';
 
-	sendto_serv_butone(&me, ":%s SENDSNO %s :%s", me.name, "%s :%s", snobuf, nbuf);
+	sendto_server(&me, 0, 0, ":%s SENDSNO %s :%s", me.name, snobuf, nbuf);
 }
 
 /** Send to specified snomask - local.
@@ -979,7 +955,7 @@ void sendto_snomask_normal_global(int snomask, char *pattern, ...)
 			*p++ = Snomask_Table[i].flag;
 	*p = '\0';
 
-	sendto_serv_butone(&me, ":%s SENDSNO %s :%s", me.name, "%s :%s", snobuf, nbuf);
+	sendto_server(&me, 0, 0, ":%s SENDSNO %s :%s", me.name, snobuf, nbuf);
 }
 
 

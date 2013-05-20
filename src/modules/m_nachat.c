@@ -106,7 +106,7 @@ DLLFUNC int m_nachat(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 
-	sendto_serv_butone(IsServer(cptr) ? cptr : NULL, ":%s NACHAT :%s",
+	sendto_server(IsServer(cptr) ? cptr : NULL, 0, 0, ":%s NACHAT :%s",
 	    parv[0], message);
 #ifdef ADMINCHAT
 	sendto_umode(UMODE_NETADMIN, "*** NetAdmin.Chat -- from %s: %s",

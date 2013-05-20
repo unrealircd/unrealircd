@@ -160,7 +160,7 @@ DLLFUNC CMD_FUNC(m_sapart)
 			    parv[1], commentx);
 			sendto_realops("%s used SAPART to make %s part %s (%s)", sptr->name, parv[0],
 				parv[1], comment);
-			sendto_serv_butone(&me, ":%s GLOBOPS :%s used SAPART to make %s part %s (%s)",
+			sendto_server(&me, 0, 0, ":%s GLOBOPS :%s used SAPART to make %s part %s (%s)",
 				me.name, sptr->name, parv[0], parv[1], comment);
 			/* Logging function added by XeRXeS */
 			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s (%s)",
@@ -172,7 +172,7 @@ DLLFUNC CMD_FUNC(m_sapart)
 			    "*** You were forced to part %s", parv[1]);
 			sendto_realops("%s used SAPART to make %s part %s", sptr->name, parv[0],
 				parv[1]);
-			sendto_serv_butone(&me, ":%s GLOBOPS :%s used SAPART to make %s part %s",
+			sendto_server(&me, 0, 0, ":%s GLOBOPS :%s used SAPART to make %s part %s",
 				me.name, sptr->name, parv[0], parv[1]);
 			/* Logging function added by XeRXeS */
 			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s",

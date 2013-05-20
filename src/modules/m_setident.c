@@ -213,7 +213,7 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		/* get it in */
 		ircsprintf(sptr->user->username, "%s", vident);
 		/* spread it out */
-		sendto_serv_butone(cptr, ":%s SETIDENT %s", sptr->name, parv[1]);
+		sendto_server(cptr, 0, 0, ":%s SETIDENT %s", sptr->name, parv[1]);
 
 		if (UHOST_ALLOWED == UHALLOW_REJOIN)
 			rejoin_dojoinandmode(sptr);

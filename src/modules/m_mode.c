@@ -505,11 +505,11 @@ DLLFUNC void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, c
 	{
 		if (tschange || isbounce) {	/* relay bounce time changes */
 			if (chptr->creationtime)
-				sendto_serv_butone(cptr, ":%s MODE %s %s+ %lu",
+				sendto_server(cptr, 0, 0, ":%s MODE %s %s+ %lu",
 				    me.name, chptr->chname, isbounce ? "&" : "",
 				    chptr->creationtime);
 			else
-				sendto_serv_butone(cptr, ":%s MODE %s %s+",
+				sendto_server(cptr, 0, 0, ":%s MODE %s %s+",
 				    me.name, chptr->chname, isbounce ? "&" : "");
 		return;		/* nothing to send */
 		}
@@ -538,7 +538,7 @@ DLLFUNC void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, c
 		return;
 	if (IsPerson(sptr) && samode && MyClient(sptr))
 	{
-		sendto_serv_butone(NULL,
+		sendto_server(NULL, 0, 0,
 		    ":%s GLOBOPS :%s used SAMODE %s (%s%s%s)", me.name, sptr->name,
 		    chptr->chname, modebuf, *parabuf ? " " : "", parabuf);
 		sendto_failops_whoare_opers
@@ -552,14 +552,14 @@ DLLFUNC void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, c
 	sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
 	    sptr->name, chptr->chname, modebuf, parabuf);
 	if (IsServer(sptr) && sendts != -1)
-		sendto_serv_butone(cptr, ":%s MODE %s %s%s %s%lu",
+		sendto_server(cptr, 0, 0, ":%s MODE %s %s%s %s%lu",
 		    sptr->name, chptr->chname, isbounce ? "&" : "",
 		    modebuf, parabuf, sendts);
 	else if (samode && IsMe(sptr)) /* SAMODE is a special case: always send a TS of 0 (omitting TS==desynch) */
-		sendto_serv_butone(cptr, ":%s MODE %s %s %s 0",
+		sendto_server(cptr, 0, 0, ":%s MODE %s %s %s 0",
 		    sptr->name, chptr->chname, modebuf, parabuf);
 	else
-		sendto_serv_butone(cptr, ":%s MODE %s %s%s %s",
+		sendto_server(cptr, 0, 0, ":%s MODE %s %s%s %s",
 		    sptr->name, chptr->chname, isbounce ? "&" : "",
 		    modebuf, parabuf);
 	/* tell them it's not a timestamp, in case the last param
@@ -2109,7 +2109,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 		  case 'O':
 			  if(sptr->from->flags & FLAGS_QUARANTINE)
 			  {
-			    sendto_serv_butone(NULL, ":%s KILL %s :%s (Quarantined: no global oper privileges allowed)", me.name, sptr->name, me.name);
+			    sendto_server(NULL, 0, 0, ":%s KILL %s :%s (Quarantined: no global oper privileges allowed)", me.name, sptr->name, me.name);
 			    return exit_client(cptr, sptr, &me, "Quarantined: no global oper privileges allowed");
 			  }
 			  /* A local user trying to set himself +o/+O is denied here.

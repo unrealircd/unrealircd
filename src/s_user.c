@@ -80,7 +80,7 @@ void iNAH_host(aClient *sptr, char *host)
 	}
 	sptr->user->virthost = strdup(host);
 	if (MyConnect(sptr))
-		sendto_serv_butone(&me, ":%s SETHOST :%s", sptr->name, sptr->user->virthost);
+		sendto_server(&me, 0, 0, ":%s SETHOST :%s", sptr->name, sptr->user->virthost);
 	sptr->umodes |= UMODE_SETHOST;
 
 	if (UHOST_ALLOWED == UHALLOW_REJOIN)

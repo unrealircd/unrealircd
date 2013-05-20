@@ -347,7 +347,7 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 		if (chptr->creationtime == 0)
 		{
 			chptr->creationtime = TStime();
-			sendto_serv_butone(cptr, ":%s MODE %s + %lu",
+			sendto_server(cptr, 0, 0, ":%s MODE %s + %lu",
 			    me.name, chptr->chname, chptr->creationtime);
 		}
 		del_invite(sptr, chptr);
@@ -409,7 +409,7 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 			*modebuf = *parabuf = 0;
 			channel_modes(sptr, modebuf, parabuf, chptr);
 			/* This should probably be in the SJOIN stuff */
-			sendto_serv_butone(&me, ":%s MODE %s %s %s %lu",
+			sendto_server(&me, 0, 0, ":%s MODE %s %s %s %lu",
 			    me.name, chptr->chname, modebuf, parabuf, chptr->creationtime);
 			sendto_one(sptr, ":%s MODE %s %s %s", me.name, chptr->chname, modebuf, parabuf);
 		}
@@ -540,7 +540,7 @@ DLLFUNC CMD_FUNC(_do_join)
 					RunHook4(HOOKTYPE_LOCAL_PART, cptr, sptr, chptr, "Left all channels");
 				remove_user_from_channel(sptr, chptr);
 			}
-			sendto_serv_butone(cptr, ":%s JOIN 0", parv[0]);
+			sendto_server(cptr, 0, 0, ":%s JOIN 0", parv[0]);
 			continue;
 		}
 

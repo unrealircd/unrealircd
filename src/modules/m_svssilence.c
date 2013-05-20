@@ -99,7 +99,7 @@ CMD_FUNC(m_svssilence)
 	if (parc < 3 || BadPtr(parv[2]) || !(acptr = find_person(parv[1], NULL)))
 		return 0;
 	
-	sendto_serv_butone(sptr, ":%s SVSSILENCE %s :%s", parv[0], parv[1], parv[2]);
+	sendto_server(sptr, 0, 0, ":%s SVSSILENCE %s :%s", parv[0], parv[1], parv[2]);
 
 	mine = MyClient(acptr) ? 1 : 0;
 

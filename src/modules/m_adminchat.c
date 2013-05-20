@@ -107,7 +107,7 @@ DLLFUNC int m_admins(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
-	sendto_serv_butone(IsServer(cptr) ? cptr : NULL, ":%s ADCHAT :%s",
+	sendto_server(IsServer(cptr) ? cptr : NULL, 0, 0, ":%s ADCHAT :%s",
    	    parv[0], message);	
 #ifdef ADMINCHAT
 	sendto_umode(UMODE_ADMIN, "*** AdminChat -- from %s: %s",
