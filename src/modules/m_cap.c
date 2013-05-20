@@ -76,11 +76,6 @@ static ClientCapability cap_multi_prefix = {
 	.cap = PROTO_NAMESX,
 };
 
-static ClientCapability cap_sasl = {
-	.name = "sasl",
-	.cap = PROTO_SASL,
-};
-
 static ClientCapability cap_uhnames = {
 	.name = "userhost-in-names",
 	.cap = PROTO_UHNAMES,
@@ -96,7 +91,6 @@ static struct list_head *clicap_build_list(void)
 	clicap_append(&clicap_list, &cap_account_notify);
 	clicap_append(&clicap_list, &cap_away_notify);
 	clicap_append(&clicap_list, &cap_multi_prefix);
-	clicap_append(&clicap_list, &cap_sasl);
 	clicap_append(&clicap_list, &cap_uhnames);
 
 	RunHook(HOOKTYPE_CAPLIST, &clicap_list);
@@ -146,9 +140,6 @@ static ClientCapability *clicap_find(const char *data, int *negate, int *finishe
 	if((s = strchr(p, ' ')))
 		*s++ = '\0';
 
-	if (!strcmp(p, "sasl") && (!SASL_SERVER || !find_server(SASL_SERVER, NULL)))
-		return NULL; /* hack: if SASL is disabled or server not online, then pretend it does not exist. -- Syzop */
-
 	list_for_each_entry(cap, clicap_list, caplist_node)
 	{
 		if (!stricmp(cap->name, p))
@@ -182,9 +173,6 @@ static void clicap_generate(aClient *sptr, const char *subcmd, int flags, int cl
 
 	list_for_each_entry(cap, clicap_list, caplist_node)
 	{
-		if ((cap->cap == PROTO_SASL) && (!SASL_SERVER || !find_server(SASL_SERVER, NULL)))
-			continue; /* if SASL is disabled or server not online, then pretend it does not exist. -- Syzop */
-
 		if (flags)
 		{
 			if (!CHECKPROTO(sptr, cap->cap))

@@ -44,6 +44,7 @@
 #ifdef _WIN32
 #include "version.h"
 #endif
+#include "m_cap.h"
 
 #define MSG_AUTHENTICATE "AUTHENTICATE"
 
@@ -304,6 +305,20 @@ static int abort_sasl(struct Client *cptr)
 	return 0;
 }
 
+static ClientCapability cap_sasl = {
+	.name = "sasl",
+	.cap = PROTO_SASL,
+};
+
+static void m_sasl_caplist(struct list_head *head)
+{
+	/* if SASL is disabled or server not online, then pretend it does not exist. -- Syzop */
+	if (!SASL_SERVER || !find_server(SASL_SERVER, NULL))
+		return;
+
+	clicap_append(head, &cap_sasl);
+}
+
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(m_sasl)(ModuleInfo *modinfo)
 {
@@ -315,6 +330,8 @@ DLLFUNC int MOD_INIT(m_sasl)(ModuleInfo *modinfo)
 
 	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_CONNECT, abort_sasl);
 	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_QUIT, abort_sasl);
+
+	HookAddVoidEx(modinfo->handle, HOOKTYPE_CAPLIST, m_sasl_caplist);
 
 	return MOD_SUCCESS;
 }
