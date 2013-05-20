@@ -331,7 +331,11 @@ char  *Module_Create(char *path_)
 
 	if (!strstr(path, MODULE_SUFFIX))
 	{
-		strlcpy(pathbuf, path, sizeof pathbuf);
+		char dirbase[1024];
+		unreal_getpathname(SPATH, dirbase);
+		strlcpy(pathbuf, dirbase, sizeof pathbuf);
+		strlcat(pathbuf, "/", sizeof pathbuf);
+		strlcat(pathbuf, path, sizeof pathbuf);
 		strlcat(pathbuf, MODULE_SUFFIX, sizeof pathbuf);
 		path = pathbuf;
 	}
