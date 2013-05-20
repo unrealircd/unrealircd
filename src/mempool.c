@@ -239,7 +239,7 @@ static mp_chunk_t *
 mp_chunk_new(mp_pool_t *pool)
 {
   size_t sz = pool->new_chunk_capacity * pool->item_alloc_size;
-  mp_chunk_t *chunk = MyMalloc(CHUNK_OVERHEAD + sz);
+  mp_chunk_t *chunk = MyMallocEx(CHUNK_OVERHEAD + sz);
 
 #ifdef MEMPOOL_STATS
   ++pool->total_chunks_allocated;
@@ -427,7 +427,7 @@ mp_pool_new(size_t item_size, size_t chunk_capacity)
   assert(chunk_capacity < SIZE_T_CEILING);
   assert(SIZE_T_CEILING / item_size > chunk_capacity);
 */
-  pool = MyMalloc(sizeof(mp_pool_t));
+  pool = MyMallocEx(sizeof(mp_pool_t));
   /*
    * First, we figure out how much space to allow per item. We'll want to
    * use make sure we have enough for the overhead plus the item size.
@@ -511,7 +511,7 @@ mp_pool_sort_used_chunks(mp_pool_t *pool)
   if (!inverted)
     return;
 
-  chunks = MyMalloc(sizeof(mp_chunk_t *) * n);
+  chunks = MyMallocEx(sizeof(mp_chunk_t *) * n);
 
   for (i=0,chunk = pool->used_chunks; chunk; chunk = chunk->next)
     chunks[i++] = chunk;
