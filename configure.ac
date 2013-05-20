@@ -451,9 +451,6 @@ AC_CHECK_FUNCS(syslog,AC_DEFINE([HAVE_SYSLOG], [], [Define if you have syslog]))
 AC_SUBST(STRTOUL)
 AC_SUBST(CRYPTOLIB)
 AC_SUBST(MODULEFLAGS)
-AC_ARG_WITH(listen, [AS_HELP_STRING([--with-listen=backlog],[Specify the listen backlog value])],
-	[AC_DEFINE_UNQUOTED([LISTEN_SIZE], [$withval], [Set to the listen backlog size you want])],
-	[AC_DEFINE([LISTEN_SIZE], [5], [Set to the listen backlog size you want])])
 AC_ARG_WITH(nick-history, [AS_HELP_STRING([--with-nick-history=length],[Specify the length of the nickname history])],
 	[AC_DEFINE_UNQUOTED([NICKNAMEHISTORYLENGTH], [$withval], [Set to the nickname history length you want])],
 	[AC_DEFINE([NICKNAMEHISTORYLENGTH], [2000], [Set to the nickname history length you want])])

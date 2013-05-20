@@ -193,9 +193,6 @@
 /* Define if you want IPv6 enabled */
 #undef INET6
 
-/* Set to the listen backlog size you want */
-#undef LISTEN_SIZE
-
 /* Define if you want modes shown in /list */
 #undef LIST_SHOW_MODES
 

@@ -61,7 +61,6 @@ fi
 if [ "$PREFIXAQ" != "1" ]; then
 ARG="$ARG--disable-prefixaq "
 fi
-ARG="$ARG--with-listen=$LISTEN_SIZE "
 ARG="$ARG--with-dpath=$DPATH "
 ARG="$ARG--with-spath=$SPATH "
 ARG="$ARG--with-nick-history=$NICKNAMEHISTORYLENGTH "
@@ -763,31 +762,6 @@ while [ -z "$TEST" ] ; do
     esac
 done
 
-
-TEST=""
-while [ -z "$TEST" ] ; do
-    TEST="$LISTEN_SIZE"
-    echo ""
-    echo "What listen() backlog value do you wish to use?  Some older servers"
-    echo "have problems with more than 5, others work fine with many more."
-    echo $n "[$TEST] -> $c"
-	read cc
-    if [ -z "$cc" ] ; then
-	LISTEN_SIZE=$TEST
-	break
-    fi
-    case "$cc" in
-	[1-9]*)
-	    LISTEN_SIZE="$cc"
-	    ;;
-	*)
-	    echo ""
-	    echo "You must enter a number"
-	    TEST=""
-	    ;;
-    esac
-done
-
 TEST=""
 while [ -z "$TEST" ] ; do
     TEST="$NICKNAMEHISTORYLENGTH"
@@ -878,7 +852,6 @@ DPATH="$DPATH"
 SPATH="$SPATH"
 INET6="$INET6"
 PREFIXAQ="$PREFIXAQ"
-LISTEN_SIZE="$LISTEN_SIZE"
 MAXSENDQLENGTH="$MAXSENDQLENGTH"
 MAXCONNECTIONS="$MAXCONNECTIONS"
 NICKNAMEHISTORYLENGTH="$NICKNAMEHISTORYLENGTH"

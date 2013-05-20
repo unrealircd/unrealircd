@@ -442,6 +442,12 @@ int  inetport(ConfigItem_listen *listener, char *name, int port)
 		return -1;
 	}
 
+#ifndef SOMAXCONN
+# define LISTEN_SIZE	(5)
+#else
+# define LISTEN_SIZE	(SOMAXCONN)
+#endif
+
 	result = listen(listener->fd, LISTEN_SIZE);
 
 #ifdef TCP_DEFER_ACCEPT
