@@ -113,6 +113,7 @@ int  send_queued(aClient *to)
 {
 	char *msg;
 	int  len, rlen;
+	dbufbuf *block;
 
 	/*
 	   ** Once socket is marked dead, we cannot start writing to it,
@@ -130,9 +131,11 @@ int  send_queued(aClient *to)
 
 	while (DBufLength(&to->sendQ) > 0)
 	{
-		msg = dbuf_map(&to->sendQ, &len);
+		block = container_of(to->sendQ.dbuf_list.next, dbufbuf, dbuf_node);
+		len = block->size;
+
 		/* Returns always len > 0 */
-		if ((rlen = deliver_it(to, msg, len)) < 0)
+		if ((rlen = deliver_it(to, block->data, len)) < 0)
 		{
 			char buf[256];
 			snprintf(buf, 256, "Write error: %s", STRERROR(ERRNO));
@@ -140,7 +143,7 @@ int  send_queued(aClient *to)
 		}
 		(void)dbuf_delete(&to->sendQ, rlen);
 		to->lastsq = DBufLength(&to->sendQ) / 1024;
-		if (rlen < len)
+		if (rlen < block->size)
 		{
 			/* incomplete write due to EWOULDBLOCK, reschedule */
 			fd_setselect(to->fd, FD_SELECT_WRITE | FD_SELECT_ONESHOT, send_queued_write, to);
@@ -249,11 +252,8 @@ void sendbufto_one(aClient *to, char *msg, unsigned int quick)
 		return;
 	}
 
-	if (!dbuf_put(&to->sendQ, msg, len))
-	{
-		dead_link(to, "Buffer allocation error");
-		return;
-	}
+	dbuf_put(&to->sendQ, msg, len);
+
 	/*
 	 * Update statistics. The following is slightly incorrect
 	 * because it counts messages even if queued, but bytes

@@ -104,7 +104,7 @@ void completed_connection(int, int, void *);
 static int check_init(aClient *, char *, size_t);
 static void do_dns_async();
 void set_sock_opts(int, aClient *);
-static char readbuf[READBUF_SIZE];
+static char readbuf[BUFSIZE];
 char zlinebuf[BUFSIZE];
 extern char *version;
 extern ircstats IRCstats;
@@ -1372,56 +1372,17 @@ static void parse_client_queued(aClient *cptr)
 	int allow_read;
 	int done;
 	time_t now = TStime();
+	char buf[BUFSIZE];
 
-	while (DBufLength(&cptr->recvQ) && !NoNewLine(cptr) &&
+	while (DBufLength(&cptr->recvQ) &&
 	    ((cptr->status < STAT_UNKNOWN) || (cptr->since - now < 10)))
 	{
-		/*
-		   ** If it has become registered as a Service or Server
-		   ** then skip the per-message parsing below.
-		 */
-		if (IsServer(cptr))
-		{
-			dolen = dbuf_get(&cptr->recvQ, readbuf,
-			    sizeof(readbuf));
-			if (dolen <= 0)
-				break;
-			if ((done = dopacket(cptr, readbuf, dolen)))
-				return;
-			break;
-		}
+		dolen = dbuf_getmsg(&cptr->recvQ, buf);
 
-		dolen = dbuf_getmsg(&cptr->recvQ, readbuf,
-		    sizeof(readbuf));
+		if (dolen == 0)
+			return;
 
-		/*
-		   ** Devious looking...whats it do ? well..if a client
-		   ** sends a *long* message without any CR or LF, then
-		   ** dbuf_getmsg fails and we pull it out using this
-		   ** loop which just gets the next 512 bytes and then
-		   ** deletes the rest of the buffer contents.
-		   ** -avalon
-		 */
-		while (dolen <= 0)
-		{
-			if (dolen < 0)
-			{
-				exit_client(cptr, cptr, cptr,
-				    "dbuf_getmsg fail");
-				return;
-			}
-			if (DBufLength(&cptr->recvQ) < 510)
-			{
-				cptr->flags |= FLAGS_NONL;
-				break;
-			}
-			dolen = dbuf_get(&cptr->recvQ, readbuf, 511);
-			if (dolen > 0 && DBufLength(&cptr->recvQ))
-				DBufClear(&cptr->recvQ);
-		}
-
-		if (dolen > 0 &&
-		    (dopacket(cptr, readbuf, dolen) == FLUSH_BUFFER))
+		if (dopacket(cptr, buf, dolen) == FLUSH_BUFFER)
 			return;
 	}
 }

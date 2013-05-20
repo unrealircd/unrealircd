@@ -157,6 +157,9 @@ aClient *make_client(aClient *from, aClient *servr)
 		cptr->buffer[0] = '\0';
 		cptr->authfd = -1;
 		cptr->fd = -1;
+
+		dbuf_queue_init(&cptr->recvQ);
+		dbuf_queue_init(&cptr->sendQ);
 	} else {
 		cptr->fd = -256;
 	}

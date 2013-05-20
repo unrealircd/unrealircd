@@ -41,12 +41,11 @@ aCommand	*CommandHash[256]; /* one per letter */
 **	It is implicitly assumed that dopacket is called only
 **	with cptr of "local" variation, which contains all the
 **	necessary fields (buffer etc..)
+**
+** Rewritten for linebufs, 19th May 2013. --kaniini
 */
 int  dopacket(aClient *cptr, char *buffer, int length)
 {
-	char *ch1;
-	char *ch2;
-
 	me.receiveB += length;	/* Update bytes received */
 	cptr->receiveB += length;
 	if (cptr->receiveB > 1023)
@@ -59,52 +58,11 @@ int  dopacket(aClient *cptr, char *buffer, int length)
 		me.receiveK += (me.receiveB >> 10);
 		me.receiveB &= 0x03ff;
 	}
-	ch1 = cptr->buffer + cptr->count;
-	ch2 = buffer;
 
-		while (--length >= 0)
-		{
-			char g = (*ch1 = *ch2++);
-			/*
-			 * Yuck.  Stuck.  To make sure we stay backward compatible,
-			 * we must assume that either CR or LF terminates the message
-			 * and not CR-LF.  By allowing CR or LF (alone) into the body
-			 * of messages, backward compatibility is lost and major
-			 * problems will arise. - Avalon
-			 */
-			if (g < '\16' && (g == '\n' || g == '\r'))
-			{
-				if (ch1 == cptr->buffer)
-					continue;	/* Skip extra LF/CR's */
-				*ch1 = '\0';
-				me.receiveM += 1;	/* Update messages received */
-				cptr->receiveM += 1;
-				cptr->count = 0;	/* ...just in case parse returns with
-							   ** FLUSH_BUFFER without removing the
-							   ** structure pointed by cptr... --msa
-							 */
-				if (parse(cptr, cptr->buffer, ch1) ==
-				    FLUSH_BUFFER)
-					/*
-					   ** FLUSH_BUFFER means actually that cptr
-					   ** structure *does* not exist anymore!!! --msa
-					 */
-					return FLUSH_BUFFER;
-				/*
-				 ** Socket is dead so exit (which always returns with
-				 ** FLUSH_BUFFER here).  - avalon
-				 */
-				if (cptr->flags & FLAGS_DEADSOCKET)
-					return exit_client(cptr, cptr, &me,
-					    cptr->error_str ? cptr->error_str : "Dead socket");
-				ch1 = cptr->buffer;
-			}
-			else if (ch1 <
-			    cptr->buffer + (sizeof(cptr->buffer) - 1))
-				ch1++;	/* There is always room for the null */
-		}
-	cptr->count = ch1 - cptr->buffer;
-	return 0;
+	me.receiveM += 1;	/* Update messages received */
+	cptr->receiveM += 1;
+
+	return parse(cptr, buffer, buffer + length);
 }
 
 void	init_CommandHash(void)

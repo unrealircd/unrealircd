@@ -1,6 +1,7 @@
 /************************************************************************
  *   Unreal Internet Relay Chat Daemon, include/dbuf.h
  *   Copyright (C) 1990 Markku Savela
+ *   Copyright (C) 2013 William Pitcock <nenolod@dereferenced.org>
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -22,6 +23,11 @@
 #ifndef __dbuf_include__
 #define __dbuf_include__
 
+#include "list.h"
+
+/* 512 bytes -- 510 character bytes + \r\n, per rfc1459 */
+#define DBUF_BLOCK_SIZE		(512)
+
 /*
 ** dbuf is a collection of functions which can be used to
 ** maintain a dynamic buffering of a byte stream.
@@ -40,9 +46,7 @@
 typedef struct dbuf {
 	u_int length;		/* Current number of bytes stored */
 	u_int offset;		/* Offset to the first byte */
-	struct dbufbuf *head;	/* First data buffer, if length > 0 */
-	/* added by mnystrom@mit.edu: */
-	struct dbufbuf *tail;	/* last data buffer, if length > 0 */
+	struct list_head dbuf_list;
 } dbuf;
 
 /*
@@ -55,8 +59,9 @@ typedef struct dbuf {
 ** data after we take away a bit for malloc to play with. -avalon
 */
 typedef struct dbufbuf {
-	struct dbufbuf *next;	/* Next data buffer, NULL if this is last */
-	char data[2032];	/* Actual data stored here */
+	struct list_head dbuf_node;
+	size_t size;
+	char data[DBUF_BLOCK_SIZE];
 } dbufbuf;
 
 /*
@@ -64,64 +69,13 @@ typedef struct dbufbuf {
 **	Append the number of bytes to the buffer, allocating more
 **	memory as needed. Bytes are copied into internal buffers
 **	from users buffer.
-**
-**	returns	> 0, if operation successfull
-**		< 0, if failed (due memory allocation problem)
 */
-int dbuf_put(dbuf *, char *, int);
+void dbuf_put(dbuf *, char *, size_t);
 					/* Dynamic buffer header */
 					/* Pointer to data to be stored */
 					/* Number of bytes to store */
 
-/*
-** dbuf_get
-**	Remove number of bytes from the buffer, releasing dynamic
-**	memory, if applicaple. Bytes are copied from internal buffers
-**	to users buffer.
-**
-**	returns	the number of bytes actually copied to users buffer,
-**		if >= 0, any value less than the size of the users
-**		buffer indicates the dbuf became empty by this operation.
-**
-**		Return 0 indicates that buffer was already empty.
-**
-**		Negative return values indicate some unspecified
-**		error condition, rather fatal...
-*/
-int dbuf_get(dbuf *, char *, int);
-				/* Dynamic buffer header */
-				/* Pointer to buffer to receive the data */
-				/* Max amount of bytes that can be received */
-
-/*
-** dbuf_map, dbuf_delete
-**	These functions are meant to be used in pairs and offer
-**	a more efficient way of emptying the buffer than the
-**	normal 'dbuf_get' would allow--less copying needed.
-**
-**	map	returns a pointer to a largest contiguous section
-**		of bytes in front of the buffer, the length of the
-**		section is placed into the indicated "long int"
-**		variable. Returns NULL *and* zero length, if the
-**		buffer is empty.
-**
-**	delete	removes the specified number of bytes from the
-**		front of the buffer releasing any memory used for them.
-**
-**	Example use (ignoring empty condition here ;)
-**
-**		buf = dbuf_map(&dyn, &count);
-**		<process N bytes (N <= count) of data pointed by 'buf'>
-**		dbuf_delete(&dyn, N);
-**
-**	Note: 	delete can be used alone, there is no real binding
-**		between map and delete functions...
-*/
-char *dbuf_map(dbuf *, int *);
-					/* Dynamic buffer header */
-					/* Return number of bytes accessible */
-
-int dbuf_delete(dbuf *, int);
+void dbuf_delete(dbuf *, size_t);
 					/* Dynamic buffer header */
 					/* Number of bytes to delete */
 
@@ -139,8 +93,9 @@ int dbuf_delete(dbuf *, int);
 **	allocated buffers and make it empty.
 */
 #define DBufClear(dyn)	dbuf_delete((dyn),DBufLength(dyn))
-#define NOTINIT "\x53\x50\x59";
 
-extern int dbuf_getmsg(dbuf *, char *, int);
+extern int dbuf_getmsg(dbuf *, char *);
+extern void dbuf_queue_init(dbuf *dyn);
+extern void dbuf_init(void);
 
 #endif /* __dbuf_include__ */

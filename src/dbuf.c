@@ -1,6 +1,6 @@
-/************************************************************************
- *   Unreal Internet Relay Chat Daemon, src/dbuf.c
- *   Copyright (C) 1990 Markku Savela
+/*
+ * UnrealIRCd, src/dbuf.c
+ * Copyright (c) 2013 William Pitcock <nenolod@dereferenced.org>
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -17,39 +17,15 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-/* -- Jto -- 20 Jun 1990
- * extern void free() fixed as suggested by
- * gruner@informatik.tu-muenchen.de
- */
-
-/* -- Jto -- 10 May 1990
- * Changed memcpy into bcopy and removed the declaration of memset
- * because it was unnecessary.
- * Added the #includes for "struct.h" and "sys.h" to get bcopy/memcpy
- * work
- */
-
-/*
-** For documentation of the *global* functions implemented here,
-** see the header file (dbuf.h).
-**
-*/
-
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
 #include "h.h"
-ID_Copyright("(C) 1990 Markku Savela");
-ID_Notes("2.17 1/30/94 (C) 1990 Markku Savela");
-#if !defined(VALLOC) && !defined(valloc) && !defined(USE_DMALLOC)
-# ifndef _WIN32
-#  define	valloc malloc
-# else
-#  define	valloc MyMalloc
-# endif
-#endif
+#include "mempool.h"
+
 int  dbufalloc = 0, dbufblocks = 0;
 static dbufbuf *freelist = NULL;
 
@@ -61,65 +37,30 @@ static dbufbuf *freelist = NULL;
 
 #define DBUFSIZ sizeof(((dbufbuf *)0)->data)
 
+static mp_pool_t *dbuf_bufpool = NULL;
+
+void dbuf_init(void)
+{
+	dbuf_bufpool = mp_pool_new(sizeof(struct dbufbuf), 512 * 1024);
+}
+
 /*
 ** dbuf_alloc - allocates a dbufbuf structure either from freelist or
 ** creates a new one.
 */
-static dbufbuf *dbuf_alloc(void)
+static dbufbuf *dbuf_alloc(dbuf *dbuf_p)
 {
-#if defined(VALLOC) && !defined(DEBUGMODE)
-	dbufbuf *dbptr, *db2ptr;
-	int  num;
-#else
-	dbufbuf *dbptr;
-#endif
+	dbufbuf *ptr;
 
-	dbufalloc++;
-	if ((dbptr = freelist))
-	{
-		freelist = freelist->next;
-		return dbptr;
-	}
-	if (dbufalloc * DBUFSIZ > BUFFERPOOL)
-	{
-		dbufalloc--;
-		strcpy(trouble_info, "buffer allocation error! Increase BUFFERPOOL!");
-		return NULL;
-	}
+	assert(dbuf_p != NULL);
 
-#if defined(VALLOC) && !defined(DEBUGMODE)
-# if defined(_SOLARIS) || defined(_SC_PAGESIZE)
-	num = sysconf(_SC_PAGESIZE) / sizeof(dbufbuf);
-# else
-	num = getpagesize() / sizeof(dbufbuf);
-# endif
-	if (num < 0)
-		num = 1;
+	ptr = mp_pool_get(dbuf_bufpool);
+	memset(ptr, 0, sizeof(dbufbuf));
 
-	dbufblocks += num;
+	INIT_LIST_HEAD(&ptr->dbuf_node);
+	list_add_tail(&ptr->dbuf_node, &dbuf_p->dbuf_list);
 
-	dbptr = (dbufbuf *)valloc(num * sizeof(dbufbuf));
-	if (!dbptr)
-	{
-		strcpy(trouble_info, "buffer allocation error! Out of memory! OUCH!!!");
-		return (dbufbuf *)NULL;
-	}
-
-	num--;
-	for (db2ptr = dbptr; num; num--)
-	{
-		db2ptr = (dbufbuf *)((char *)db2ptr + sizeof(dbufbuf));
-		db2ptr->next = freelist;
-		freelist = db2ptr;
-	}
-	return dbptr;
-#else
-	dbufblocks++;
-	dbptr = (dbufbuf *)MyMalloc(sizeof(dbufbuf));
-	if (!dbptr)
-		strcpy(trouble_info, "buffer allocation error! Out of memory! OUCH!!!");
-	return dbptr;
-#endif
+	return ptr;
 }
 
 /*
@@ -127,148 +68,75 @@ static dbufbuf *dbuf_alloc(void)
 */
 static void dbuf_free(dbufbuf *ptr)
 {
-	dbufalloc--;
-	ptr->next = freelist;
-	freelist = ptr;
+	assert(ptr != NULL);
+
+	list_del(&ptr->dbuf_node);
+	mp_pool_release(ptr);
 }
 
-/*
-** This is called when malloc fails. Scrap the whole content
-** of dynamic buffer and return -1. (malloc errors are FATAL,
-** there is no reason to continue this buffer...). After this
-** the "dbuf" has consistent EMPTY status... ;)
-*/
-static int dbuf_malloc_error(dbuf *dyn)
+void dbuf_queue_init(dbuf *dyn)
 {
-	dbufbuf *p;
-
-	dyn->length = 0;
-	dyn->offset = 0;
-	while ((p = dyn->head) != NULL)
-	{
-		dyn->head = p->next;
-		dbuf_free(p);
-	}
-	dyn->tail = dyn->head;
-	return 0;
+	INIT_LIST_HEAD(&dyn->dbuf_list);
 }
 
-
-int  dbuf_put(dbuf *dyn, char *buf, int length)
+void dbuf_put(dbuf *dyn, char *buf, size_t length)
 {
-	dbufbuf **h, *d;
-	int  off;
-	int  chunk;
+	struct dbufbuf *block;
+	size_t amount;
 
-	if (!length)
-		return 1;	/* Nothing to do */
+	assert(length > 0);
+	if (list_empty(&dyn->dbuf_list))
+		dbuf_alloc(dyn);
 
-	off = (dyn->offset + dyn->length) % DBUFSIZ;
-	/*
-	   ** Locate the last non-empty buffer. If the last buffer is
-	   ** full, the loop will terminate with 'd==NULL'. This loop
-	   ** assumes that the 'dyn->length' field is correctly
-	   ** maintained, as it should--no other check really needed.
-	 */
-	if (!dyn->length)
-		h = &(dyn->head);
-	else
+	while (length > 0)
 	{
-		if (off)
-			h = &(dyn->tail);
-		else
-			h = &(dyn->tail->next);
-	}
-	/*
-	   ** Append users data to buffer, allocating buffers as needed
-	 */
-	chunk = DBUFSIZ - off;
-	dyn->length += length;
-	for (; length > 0; h = &(d->next))
-	{
-		if ((d = *h) == NULL)
+		block = container_of(dyn->dbuf_list.prev, struct dbufbuf, dbuf_node);
+
+		amount = DBUF_BLOCK_SIZE - block->size;
+		if (!amount)
 		{
-			if ((d = (dbufbuf *)dbuf_alloc()) == NULL)
-				return dbuf_malloc_error(dyn);
-			dyn->tail = d;
-			*h = d;
-			d->next = NULL;
+			block = dbuf_alloc(dyn);
+			amount = DBUF_BLOCK_SIZE;
 		}
-		if (chunk > length)
-			chunk = length;
-		bcopy(buf, d->data + off, chunk);
-		length -= chunk;
-		buf += chunk;
-		off = 0;
-		chunk = DBUFSIZ;
+		if (amount > length)
+			amount = length;
+
+		memcpy(&block->data[block->size], buf, amount);
+
+		length -= amount;
+		block->size += amount;
+		dyn->length += amount;
+		buf += amount;
 	}
-	return 1;
 }
 
-
-char *dbuf_map(dbuf *dyn, int *length)
+void dbuf_delete(dbuf *dyn, size_t length)
 {
-	if (dyn->head == NULL)
-	{
-		dyn->tail = NULL;
-		*length = 0;
-		return NULL;
-	}
-	*length = DBUFSIZ - dyn->offset;
-	if (*length > dyn->length)
-		*length = dyn->length;
-	return (dyn->head->data + dyn->offset);
-}
-
-int  dbuf_delete(dbuf *dyn, int length)
-{
+	struct dbufbuf *block;
 	dbufbuf *d;
 	int  chunk;
 
-	if (length > dyn->length)
-		length = dyn->length;
-	chunk = DBUFSIZ - dyn->offset;
-	while (length > 0)
-	{
-		if (chunk > length)
-			chunk = length;
-		length -= chunk;
-		dyn->offset += chunk;
-		dyn->length -= chunk;
-		if (dyn->offset == DBUFSIZ || dyn->length == 0)
-		{
-			d = dyn->head;
-			dyn->head = d->next;
-			dyn->offset = 0;
-			dbuf_free(d);
-		}
-		chunk = DBUFSIZ;
-	}
-	if (dyn->head == (dbufbuf *)NULL)
-	{
-		dyn->length = 0;
-		dyn->tail = 0;
-	}
-	return 0;
-}
+	assert(dyn->length >= length);
+	if (length == 0)
+		return;
 
-int  dbuf_get(dbuf *dyn, char *buf, int length)
-{
-	int  moved = 0;
-	int  chunk;
-	char *b;
-
-	while (length > 0 && (b = dbuf_map(dyn, &chunk)) != NULL)
+	for (;;)
 	{
-		if (chunk > length)
-			chunk = length;
-		bcopy(b, buf, (int)chunk);
-		(void)dbuf_delete(dyn, chunk);
-		buf += chunk;
-		length -= chunk;
-		moved += chunk;
+		if (length == 0)
+			return;
+
+		block = container_of(dyn->dbuf_list.next, struct dbufbuf, dbuf_node);
+		if (length < block->size)
+			break;
+
+		dyn->length -= block->size;
+		length -= block->size;
+		dbuf_free(block);
 	}
-	return moved;
+
+	block->size -= length;
+	dyn->length -= length;
+	memmove(block->data, &block->data[length], block->size);
 }
 
 /*
@@ -277,73 +145,62 @@ int  dbuf_get(dbuf *dyn, char *buf, int length)
 ** Check the buffers to see if there is a string which is terminted with
 ** either a \r or \n prsent.  If so, copy as much as possible (determined by
 ** length) into buf and return the amount copied - else return 0.
+**
+** Partially based on extract_one_line() from ircd-hybrid. --kaniini
 */
-int  dbuf_getmsg(dbuf *dyn, char *buf, int length)
+int  dbuf_getmsg(dbuf *dyn, char *buf)
 {
-	dbufbuf *d;
-	char *s;
-	int  dlen;
-	int  i;
-	int  copy;
+	dbufbuf *block;
+	int line_bytes = 0, empty_bytes = 0, phase = 0;
+	unsigned int idx;
+	char c;
 
-      getmsg_init:
-	d = dyn->head;
-	dlen = dyn->length;
-	i = DBUFSIZ - dyn->offset;
-	if (i <= 0)
-		return -1;
-	copy = 0;
-	if (d && dlen)
-		s = dyn->offset + d->data;
-	else
-		return 0;
-
-	if (i > dlen)
-		i = dlen;
-	while (length > 0 && dlen > 0)
+	/*
+	 * Phase 0: "empty" characters before the line
+	 * Phase 1: copying the line
+	 * Phase 2: "empty" characters after the line
+	 *          (delete them as well and free some space in the dbuf)
+	 *
+	 * Empty characters are CR, LF and space (but, of course, not
+	 * in the middle of a line). We try to remove as much of them as we can,
+	 * since they simply eat server memory.
+	 *
+	 * --adx
+	 */
+	list_for_each_entry(block, &dyn->dbuf_list, dbuf_node)
 	{
-		dlen--;
-		if (*s == '\n' || *s == '\r' )
+		for (idx = 0; idx < block->size; idx++)
 		{
-			copy = dyn->length - dlen;
-			/*
-			   ** Shortcut this case here to save time elsewhere.
-			   ** -avalon
-			 */
-			if (copy == 1)
+			c = block->data[idx];
+			if (c == '\r' || c == '\n' || (c == ' ' && phase != 1))
 			{
-				(void)dbuf_delete(dyn, 1);
-				goto getmsg_init;
+				empty_bytes++;
+				if (phase == 1)
+					phase = 2;
 			}
-			break;
-		}
-		length--;
-		if (!--i)
-		{
-			if ((d = d->next))
+			else switch (phase)
 			{
-				s = d->data;
-				i = MIN(DBUFSIZ, dlen);
+				case 0: phase = 1;
+				case 1: if (line_bytes++ < BUFSIZE - 2)
+						*buf++ = c;
+					break;
+				case 2: *buf = '\0';
+					dbuf_delete(dyn, line_bytes + empty_bytes);
+					return MIN(line_bytes, BUFSIZE - 2);
 			}
 		}
-		else
-			s++;
 	}
 
-	if (copy <= 0)
-		return 0;
-
 	/*
-	   ** copy as much of the message as wanted into parse buffer
+	 * Now, if we haven't reached phase 2, ignore all line bytes
+	 * that we have read, since this is a partial line case.
 	 */
-	i = dbuf_get(dyn, buf, MIN(copy, length));
-	/*
-	   ** and delete the rest of it!
-	 */
-	if (copy - i > 0)
-		(void)dbuf_delete(dyn, copy - i);
-	if (i >= 0)
-		*(buf + i) = '\0';	/* mark end of messsage */
+	if (phase != 2)
+		line_bytes = 0;
+	else
+		*buf = '\0';
 
-	return i;
+	/* Remove what is now unnecessary */
+	dbuf_delete(dyn, line_bytes + empty_bytes);
+	return MIN(line_bytes, BUFSIZE - 2);
 }

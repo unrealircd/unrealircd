@@ -988,7 +988,6 @@ int InitwIRCD(int argc, char *argv[])
 	memset(&svsmotd, '\0', sizeof(aMotdFile));
 
 	SetupEvents();
-	mp_pool_init();
 
 #ifdef _WIN32
 	CreateMutex(NULL, FALSE, "UnrealMutex");
@@ -1110,6 +1109,9 @@ int InitwIRCD(int argc, char *argv[])
 
 	memset(&IRCstats, '\0', sizeof(ircstats));
 	IRCstats.servers = 1;
+
+	mp_pool_init();
+	dbuf_init();
 
 #ifdef USE_LIBCURL
 	url_init();
