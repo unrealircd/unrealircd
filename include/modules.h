@@ -743,7 +743,7 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
  #define MOD_UNLOAD(name) name##_Unload
 #endif
 
-#define CLOAK_KEYCRC	RCallbacks[CALLBACKTYPE_CLOAKKEYCSUM]->func.pcharfunc()
+#define CLOAK_KEYCRC	RCallbacks[CALLBACKTYPE_CLOAKKEYCSUM] != NULL ? RCallbacks[CALLBACKTYPE_CLOAKKEYCSUM]->func.pcharfunc() : "nil"
 
 #ifdef DYNAMIC_LINKING
  #include "modversion.h"

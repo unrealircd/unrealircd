@@ -41,10 +41,12 @@ char host[256], *mask, *x, *p, *q;
 	*q = '\0';
 
 	/* Call the cloaking layer */
-	if (RCallbacks[CALLBACKTYPE_CLOAK_EX])
+	if (RCallbacks[CALLBACKTYPE_CLOAK_EX] != NULL)
 		mask = RCallbacks[CALLBACKTYPE_CLOAK_EX]->func.pcharfunc(sptr, host);
-	else
+	else if (RCallbacks[CALLBACKTYPE_CLOAK] != NULL)
 		mask = RCallbacks[CALLBACKTYPE_CLOAK]->func.pcharfunc(host);
+	else
+		mask = curr;
 
 	if (mode == 0)
 	{

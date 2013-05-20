@@ -1629,22 +1629,11 @@ int cnt = 0;
 }
 
 /** Ensure that all required callbacks are in place and meet
- * all specified requirements (eg: a cloaking module should
- * be loaded).
+ * all specified requirements
  */
 int callbacks_check(void)
 {
 int i;
-
-	if ((!num_callbacks(CALLBACKTYPE_CLOAK) && !num_callbacks(CALLBACKTYPE_CLOAK_EX)) || !num_callbacks(CALLBACKTYPE_CLOAKKEYCSUM))
-	{
-#ifndef _WIN32
-		config_error("ERROR: No cloaking module loaded. (hint: you probably want to load cloak.so)");
-#else
-		config_error("ERROR: No cloaking module loaded. (hint: you probably want to load modules\\cloak.dll)");
-#endif
-		return -1;
-	}
 
 	for (i=0; i < MAXCALLBACKS; i++)
 	{
