@@ -143,7 +143,14 @@ static ClientCapability *clicap_find(const char *data, int *negate, int *finishe
 	list_for_each_entry(cap, clicap_list, caplist_node)
 	{
 		if (!stricmp(cap->name, p))
+		{
+			if (s)
+				p = s;
+			else
+				*finished = 1;
+
 			return cap;
+		}
 	}
 
 	return NULL;
