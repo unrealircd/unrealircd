@@ -1441,6 +1441,8 @@ int InitwIRCD(int argc, char *argv[])
 	 */
 	strlcpy(me.info, conf_me->info, sizeof(me.info));
 	strlcpy(me.name, conf_me->name, sizeof(me.name));
+	strlcpy(me.id, conf_me->sid, sizeof(me.name));
+	uid_init();
 	run_configuration();
 	ircd_log(LOG_ERROR, "UnrealIRCd started.");
 

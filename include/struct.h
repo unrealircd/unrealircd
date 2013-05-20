@@ -1115,8 +1115,7 @@ struct _configitem {
 };
 
 struct _configitem_me {
-	char	   *name, *info;
-	unsigned short	   numeric;
+	char	   *name, *info, *sid;
 };
 
 struct _configitem_files {

@@ -3298,13 +3298,17 @@ int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
 		{
 			ircstrdup(conf_me->info, cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "sid"))
+		{
+			ircstrdup(conf_me->sid, cep->ce_vardata);
+		}
 	}
 	return 1;
 }
 
 int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 {
-	char has_name = 0, has_info = 0;
+	char has_name = 0, has_info = 0, has_sid = 0;
 	ConfigEntry *cep;
 	int	    errors = 0;
 
@@ -3387,6 +3391,30 @@ int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 			}
 		}
+		else if (!strcmp(cep->ce_varname, "sid"))
+		{
+			if (has_sid)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "me::sid");
+				continue;
+			}
+			has_sid = 1;
+
+			if (strlen(cep->ce_vardata) != 3)
+			{
+				config_error("%s:%i: me::sid must be 3 characters long and begin with a number",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
+
+			if (!isdigit(*cep->ce_vardata))
+			{
+				config_error("%s:%i: me::sid must be 3 characters long and begin with a number",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+			}
+		}
 		/* Unknown entry */
 		else
 		{
@@ -3403,6 +3431,11 @@ int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 	if (!has_info)
 	{
 		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum, "me::info");
+		errors++;
+	}
+	if (!has_sid)
+	{
+		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum, "me::sid");
 		errors++;
 	}
 	requiredstuff.conf_me = 1;

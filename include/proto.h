@@ -70,4 +70,9 @@ char *get_mode_str(aClient *acptr);
 
 /* whowas.c */
 void initwhowas(void);
+
+/* uid.c */
+void uid_init(void);
+const char *uid_get(void);
+
 #endif /* proto_h */
