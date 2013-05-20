@@ -61,26 +61,63 @@ ModuleHeader MOD_HEADER(m_cap)
 	NULL 
     };
 
-static ClientCapability clicap_table[] = {
-	{"account-notify", PROTO_ACCOUNT_NOTIFY, CLICAP_FLAGS_NONE},
-	{"away-notify", PROTO_AWAY_NOTIFY, CLICAP_FLAGS_NONE},
-	{"multi-prefix", PROTO_NAMESX, CLICAP_FLAGS_NONE},
-	{"sasl", PROTO_SASL, CLICAP_FLAGS_NONE},
-#ifdef USE_SSL
-	{"tls", PROTO_STARTTLS, CLICAP_FLAGS_NONE},
-#endif
-	{"userhost-in-names", PROTO_UHNAMES, CLICAP_FLAGS_NONE},
+static ClientCapability cap_account_notify = {
+	.name = "account-notify",
+	.cap = PROTO_ACCOUNT_NOTIFY,
 };
 
-#define CLICAP_TABLE_SIZE (sizeof(clicap_table) / sizeof(ClientCapability))
+static ClientCapability cap_away_notify = {
+	.name = "away-notify",
+	.cap = PROTO_AWAY_NOTIFY,
+};
 
-static int clicap_compare(const char *name, ClientCapability *cap)
+static ClientCapability cap_multi_prefix = {
+	.name = "multi-prefix",
+	.cap = PROTO_NAMESX,
+};
+
+static ClientCapability cap_sasl = {
+	.name = "sasl",
+	.cap = PROTO_SASL,
+};
+
+#ifdef USE_SSL
+static ClientCapability cap_tls = {
+	.name = "tls",
+	.cap = PROTO_STARTTLS,
+};
+#endif
+
+static ClientCapability cap_uhnames = {
+	.name = "userhost-in-names",
+	.cap = PROTO_UHNAMES,
+};
+
+static struct list_head *clicap_build_list(void)
 {
-	return stricmp(name, cap->name);
+	static struct list_head clicap_list;
+
+	INIT_LIST_HEAD(&clicap_list);
+
+	/* add builtins */
+	clicap_append(&clicap_list, &cap_account_notify);
+	clicap_append(&clicap_list, &cap_away_notify);
+	clicap_append(&clicap_list, &cap_multi_prefix);
+	clicap_append(&clicap_list, &cap_sasl);
+	clicap_append(&clicap_list, &cap_uhnames);
+
+#ifdef USE_SSL
+	clicap_append(&clicap_list, &cap_tls);
+#endif
+
+	RunHook(HOOKTYPE_CAPLIST, &clicap_list);
+
+	return &clicap_list;
 }
 
 static ClientCapability *clicap_find(const char *data, int *negate, int *finished)
 {
+	struct list_head *clicap_list = clicap_build_list();
 	static char buf[BUFSIZE];
 	static char *p;
 	ClientCapability *cap;
@@ -123,20 +160,19 @@ static ClientCapability *clicap_find(const char *data, int *negate, int *finishe
 	if (!strcmp(p, "sasl") && (!SASL_SERVER || !find_server(SASL_SERVER, NULL)))
 		return NULL; /* hack: if SASL is disabled or server not online, then pretend it does not exist. -- Syzop */
 
-	if((cap = bsearch(p, clicap_table, CLICAP_TABLE_SIZE,
-			  sizeof(ClientCapability), (bqcmp) clicap_compare)))
+	list_for_each_entry(cap, clicap_list, caplist_node)
 	{
-		if(s)
-			p = s;
-		else
-			*finished = 1;
+		if (!stricmp(cap->name, p))
+			return cap;
 	}
 
-	return cap;
+	return NULL;
 }
 
 static void clicap_generate(aClient *sptr, const char *subcmd, int flags, int clear)
 {
+	struct list_head *clicap_list = clicap_build_list();
+	ClientCapability *cap;
 	char buf[BUFSIZE];
 	char capbuf[BUFSIZE];
 	char *p;
@@ -155,21 +191,21 @@ static void clicap_generate(aClient *sptr, const char *subcmd, int flags, int cl
 		return;
 	}
 
-	for (i = 0; i < CLICAP_TABLE_SIZE; i++)
+	list_for_each_entry(cap, clicap_list, caplist_node)
 	{
-		if ((clicap_table[i].cap == PROTO_SASL) && (!SASL_SERVER || !find_server(SASL_SERVER, NULL)))
+		if ((cap->cap == PROTO_SASL) && (!SASL_SERVER || !find_server(SASL_SERVER, NULL)))
 			continue; /* if SASL is disabled or server not online, then pretend it does not exist. -- Syzop */
 
 		if (flags)
 		{
-			if (!CHECKPROTO(sptr, clicap_table[i].cap))
+			if (!CHECKPROTO(sptr, cap->cap))
 				continue;
-			else if (clear && clicap_table[i].flags & CLICAP_FLAGS_STICKY)
+			else if (clear && cap->flags & CLICAP_FLAGS_STICKY)
 				continue;
 		}
 
 		/* \r\n\0, possible "-~=", space, " *" */
-		if (buflen + strlen(clicap_table[i].name) >= BUFSIZE - 10)
+		if (buflen + strlen(cap->name) >= BUFSIZE - 10)
 		{
 			if (buflen != mlen)
 				*(p - 1) = '\0';
@@ -186,8 +222,7 @@ static void clicap_generate(aClient *sptr, const char *subcmd, int flags, int cl
 			*p++ = '-';
 			buflen++;
 
-			if (clicap_table[i].flags & CLICAP_FLAGS_CLIACK &&
-			    CHECKPROTO(sptr, clicap_table[i].cap))
+			if (cap->flags & CLICAP_FLAGS_CLIACK && CHECKPROTO(sptr, cap->cap))
 			{
 				*p++ = '~';
 				buflen++;
@@ -195,21 +230,21 @@ static void clicap_generate(aClient *sptr, const char *subcmd, int flags, int cl
 		}
 		else
 		{
-			if (clicap_table[i].flags & CLICAP_FLAGS_STICKY)
+			if (cap->flags & CLICAP_FLAGS_STICKY)
 			{
 				*p++ = '=';
 				buflen++;
 			}
 
-			if (clicap_table[i].flags & CLICAP_FLAGS_CLIACK &&
-			    !CHECKPROTO(sptr, clicap_table[i].cap))
+			if (cap->flags & CLICAP_FLAGS_CLIACK &&
+			    !CHECKPROTO(sptr, cap->cap))
 			{
 				*p++ = '~';
 				buflen++;
 			}
 		}
 
-		curlen = snprintf(p, (capbuf + BUFSIZE) - p, "%s ", clicap_table[i].name);
+		curlen = snprintf(p, (capbuf + BUFSIZE) - p, "%s ", cap->name);
 		p += curlen;
 		buflen += curlen;
 	}

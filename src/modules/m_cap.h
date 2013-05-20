@@ -36,4 +36,11 @@ typedef struct _clicap {
 #define CLICAP_FLAGS_STICKY             0x1
 #define CLICAP_FLAGS_CLIACK             0x2
 
+static inline void
+clicap_append(struct list_head *head, ClientCapability *child)
+{
+	INIT_LIST_HEAD(&child->caplist_node);
+	list_add_tail(&child->caplist_node, head);
+}
+
 #endif
