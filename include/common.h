@@ -41,6 +41,7 @@
 #ifdef	PARAMH
 #include <sys/param.h>
 #endif
+#include <stdbool.h>
 
 #if !defined(IN_ADDR)
 #include "sys.h"

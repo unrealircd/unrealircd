@@ -453,9 +453,9 @@ int  inetport(ConfigItem_listen *listener, char *name, int port)
 #ifdef TCP_DEFER_ACCEPT
 	if ((listener->options & LISTENER_DEFER_ACCEPT) && !result)
 	{
-		int true = 1;
+		int yes = 1;
 
-		setsockopt(listener->fd, IPPROTO_TCP, TCP_DEFER_ACCEPT, &true, sizeof(int));
+		setsockopt(listener->fd, IPPROTO_TCP, TCP_DEFER_ACCEPT, &yes, sizeof(int));
 	}
 #endif
 
