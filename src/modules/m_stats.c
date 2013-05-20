@@ -971,9 +971,6 @@ int stats_mem(aClient *sptr, char *para)
 	    (long)(sizeof(aHashEntry) * U_MAX), CH_MAX,
 	    (long)(sizeof(aHashEntry) * CH_MAX), WATCHHASHSIZE,
 	    (long)(sizeof(aWatch *) * WATCHHASHSIZE));
-	db = dbufblocks * sizeof(dbufbuf);
-	sendto_one(sptr, ":%s %d %s :Dbuf blocks %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name, dbufblocks, db);
 
 	for (link = freelink; link; link = link->next)
 		fl++;
