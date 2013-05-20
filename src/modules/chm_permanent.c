@@ -54,7 +54,7 @@ static int chm_permanent_is_ok(aClient *cptr, aChannel *chptr, char *para, int c
 /* This is called on module init, before Server Ready */
 DLLFUNC int MOD_INIT(chm_permanent)(ModuleInfo *modinfo)
 {
-	CmodeInfo chm_permanent;
+	CmodeInfo chm_permanent = { };
 
         MARK_AS_OFFICIAL_MODULE(modinfo);
 
