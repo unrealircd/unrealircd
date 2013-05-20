@@ -57,6 +57,8 @@ R_MODULES= \
 	 m_svslusers.so m_starttls.so m_nopost.so m_issecure.so m_cap.so \
 	 m_sasl.so cap_invitenotify.so
 
+MODES	= chm_permanent.so
+
 #note change of .c to .o
 COMMANDS=m_sethost.o m_chghost.o m_chgident.o m_setname.o m_setident.o \
 	 m_sdesc.o m_svsmode.o m_swhois.o m_svsmotd.o m_svsnline.o \
@@ -81,7 +83,7 @@ COMMANDS=m_sethost.o m_chghost.o m_chgident.o m_setname.o m_setident.o \
 	 m_nopost.o m_issecure.o m_cap.o m_sasl.o
 
 
-MODULES=cloak.so $(R_MODULES)
+MODULES=cloak.so $(R_MODULES) $(MODES)
 MODULEFLAGS=@MODULEFLAGS@
 CC=@CC@
 RM=@RM@
@@ -514,9 +516,21 @@ m_sasl.so: m_sasl.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_sasl.so m_sasl.c
 
+#############################################################################
+# capabilities
+#############################################################################
+
 cap_invitenotify.so: cap_invitenotify.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o cap_invitenotify.so cap_invitenotify.c
+
+#############################################################################
+# channel modes
+#############################################################################
+
+chm_permanent.so: chm_permanent.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o chm_permanent.so chm_permanent.c
 
 #############################################################################
 #             and now the remaining modules...
