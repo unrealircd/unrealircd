@@ -66,7 +66,6 @@ ARG="$ARG--with-dpath=$DPATH "
 ARG="$ARG--with-spath=$SPATH "
 ARG="$ARG--with-nick-history=$NICKNAMEHISTORYLENGTH "
 ARG="$ARG--with-sendq=$MAXSENDQLENGTH "
-ARG="$ARG--with-bufferpool=$BUFFERPOOL "
 ARG="$ARG--with-permissions=$DEFPERM "
 ARG="$ARG--with-fd-setsize=$MAXCONNECTIONS "
 ARG="$ARG--enable-dynamic-linking "
@@ -341,7 +340,6 @@ CRYPTOIRCD=""
 SSLDIR=""
 NICKNAMEHISTORYLENGTH="2000"
 MAXSENDQLENGTH="3000000"
-BUFFERPOOL="18"
 MAXCONNECTIONS="1024"
 INET6=""
 REMOTEINC=""
@@ -836,31 +834,6 @@ while [ -z "$TEST" ] ; do
     esac
 done
 
-TEST=""
-while [ -z "$TEST" ] ; do
-    TEST="$BUFFERPOOL"
-    echo ""
-    echo "How many buffer pools would you like?"
-    echo "This number will be multiplied by MAXSENDQLENGTH."
-    echo $n "[$TEST] -> $c"
-	read cc
-    if [ -z "$cc" ] ; then
-	BUFFERPOOL=$TEST
-	break
-    fi
-    case "$cc" in
-	[1-9]*)
-	    BUFFERPOOL="$cc"
-	    ;;
-	*)
-	    echo ""
-	    echo "You must enter a number"
-	    TEST=""
-	    ;;
-    esac
-
-done
-
 echo ""
 TEST=""
 while [ -z "$TEST" ] ; do
@@ -907,7 +880,6 @@ INET6="$INET6"
 PREFIXAQ="$PREFIXAQ"
 LISTEN_SIZE="$LISTEN_SIZE"
 MAXSENDQLENGTH="$MAXSENDQLENGTH"
-BUFFERPOOL="$BUFFERPOOL"
 MAXCONNECTIONS="$MAXCONNECTIONS"
 NICKNAMEHISTORYLENGTH="$NICKNAMEHISTORYLENGTH"
 DEFPERM="$DEFPERM"

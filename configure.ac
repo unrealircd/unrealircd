@@ -460,9 +460,6 @@ AC_ARG_WITH(nick-history, [AS_HELP_STRING([--with-nick-history=length],[Specify 
 AC_ARG_WITH([sendq], [AS_HELP_STRING([--with-sendq=maxsendq],[Specify the max sendq for the server])],
 	[AC_DEFINE_UNQUOTED([MAXSENDQLENGTH], [$withval], [Set to the max sendq you want])],
 	[AC_DEFINE([MAXSENDQLENGTH], [3000000], [Set to the max sendq you want])])
-AC_ARG_WITH(bufferpool, [AS_HELP_STRING([--with-bufferpool=size],[Specify the size of the buffer pool])],
-	[AC_DEFINE_UNQUOTED([BUFFERPOOL],[($withval * MAXSENDQLENGTH)], [Set to the bufferpool size you want])],
-	[AC_DEFINE([BUFFERPOOL],[(18 * MAXSENDQLENGTH)], [Set to the bufferpool size you want])])
 AC_ARG_WITH(permissions, [AS_HELP_STRING([--with-permissions=permissions], [Specify the default permissions for
 configuration files])],
 	dnl We have an apparently out-of-place 0 here because of a MacOSX bug and because
