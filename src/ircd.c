@@ -30,6 +30,7 @@ Computing Center and Jarkko Oikarinen";
 #include "sys.h"
 #include "numeric.h"
 #include "msg.h"
+#include "mempool.h"
 #include <sys/stat.h>
 #include <signal.h>
 #include <fcntl.h>
@@ -987,6 +988,7 @@ int InitwIRCD(int argc, char *argv[])
 	memset(&svsmotd, '\0', sizeof(aMotdFile));
 
 	SetupEvents();
+	mp_pool_init();
 
 #ifdef _WIN32
 	CreateMutex(NULL, FALSE, "UnrealMutex");
