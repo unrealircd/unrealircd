@@ -111,7 +111,6 @@ extern SERVICE_STATUS IRCDStatus;
 #endif
 
 unsigned char conf_debuglevel = 0;
-char trouble_info[1024];
 
 #ifdef USE_LIBCURL
 extern void url_init(void);
@@ -1683,14 +1682,6 @@ void SocketLoop(void *dummy)
 		if (dorestart)
 		{
 			server_reboot("SIGINT");
-		}
-
-		/* ThA UnReAl TrOuBlE RePoRtInG SyStEm!!! */
-		if (trouble_info[0] != '\0')
-		{
-			sendto_realops("*** TROUBLE: %s ***", trouble_info);
-			ircd_log(LOG_ERROR, "TROUBLE: %s", trouble_info);
-			trouble_info[0] = '\0';
 		}
 	}
 }

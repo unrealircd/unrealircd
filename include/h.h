@@ -551,7 +551,6 @@ extern void init_random();
 extern u_char getrandom8();
 extern u_int16_t getrandom16();
 extern u_int32_t getrandom32();
-extern MODVAR char trouble_info[1024];
 #define EVENT_DRUGS BASE_VERSION
 extern void rejoin_doquits(aClient *sptr);
 extern void rejoin_dojoinandmode(aClient *sptr);
