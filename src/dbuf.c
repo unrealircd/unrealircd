@@ -26,17 +26,6 @@
 #include "h.h"
 #include "mempool.h"
 
-int  dbufalloc = 0, dbufblocks = 0;
-static dbufbuf *freelist = NULL;
-
-/* This is a dangerous define because a broken compiler will set DBUFSIZ
-** to 4, which will work but will be very inefficient. However, there
-** are other places where the code breaks badly if this is screwed
-** up, so... -- Wumpus
-*/
-
-#define DBUFSIZ sizeof(((dbufbuf *)0)->data)
-
 static mp_pool_t *dbuf_bufpool = NULL;
 
 void dbuf_init(void)

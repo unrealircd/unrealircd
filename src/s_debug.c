@@ -316,8 +316,6 @@ void send_usage(aClient *cptr, char *nick)
 #endif
 	sendto_one(cptr, ":%s %d %s :Reads %d Writes %d",
 	    me.name, RPL_STATSDEBUG, nick, readcalls, writecalls);
-	sendto_one(cptr, ":%s %d %s :DBUF alloc %d blocks %d",
-	    me.name, RPL_STATSDEBUG, nick, dbufalloc, dbufblocks);
 	sendto_one(cptr,
 	    ":%s %d %s :Writes:  <0 %d 0 %d <16 %d <32 %d <64 %d",
 	    me.name, RPL_STATSDEBUG, nick,
