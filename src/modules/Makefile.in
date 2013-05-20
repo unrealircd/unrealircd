@@ -55,7 +55,7 @@ R_MODULES= \
 	 m_mode.so m_watch.so m_part.so m_join.so m_motd.so m_opermotd.so \
 	 m_botmotd.so m_lusers.so m_names.so m_svsnolag.so m_addmotd.so \
 	 m_svslusers.so m_starttls.so m_nopost.so m_issecure.so m_cap.so \
-	 m_sasl.so
+	 m_sasl.so cap_invitenotify.so
 
 #note change of .c to .o
 COMMANDS=m_sethost.o m_chghost.o m_chgident.o m_setname.o m_setident.o \
@@ -513,6 +513,10 @@ m_cap.so: m_cap.c $(INCLUDES)
 m_sasl.so: m_sasl.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_sasl.so m_sasl.c
+
+cap_invitenotify.so: cap_invitenotify.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o cap_invitenotify.so cap_invitenotify.c
 
 #############################################################################
 #             and now the remaining modules...

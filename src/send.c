@@ -296,6 +296,38 @@ void sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr,
 	}
 }
 
+void sendto_channel_butone_with_capability(aClient *one, unsigned int cap,
+	aClient *from, aChannel *chptr, char *pattern, ...)
+{
+	va_list vl;
+	Member *lp;
+	aClient *acptr;
+	int  i;
+
+	++current_serial;
+	for (lp = chptr->members; lp; lp = lp->next)
+	{
+		acptr = lp->cptr;
+		/* skip the one and deaf clients (unless sendanyways is set) */
+		if (acptr->from == one || (IsDeaf(acptr) && !(sendanyways == 1)))
+			continue;
+		if (!CHECKPROTO(acptr, cap))
+			continue;
+		if (MyConnect(acptr))	/* (It is always a client) */
+			vsendto_prefix_one(acptr, from, pattern, vl);
+		else if (acptr->from->serial != current_serial)
+		{
+			acptr->from->serial = current_serial;
+			/*
+			 * Burst messages comes here..
+			 */
+			va_start(vl, pattern);
+			vsendto_prefix_one(acptr, from, pattern, vl);
+			va_end(vl);
+		}
+	}
+}
+
 void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 	int	prefix,
     char *pattern, ...)

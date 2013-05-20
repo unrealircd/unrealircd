@@ -326,7 +326,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define PROTO_NICKv2	0x0008	/* Negotiated NICKv2 protocol */
 #define PROTO_SJOIN2	0x0010	/* Negotiated SJOIN2 protocol */
 #define PROTO_UMODE2	0x0020	/* Negotiated UMODE2 protocol */
-//0x0080 unused (was ziplinks)
+#define PROTO_INVITENOTIFY	0x0080	/* client supports invite-notify */
 #define PROTO_VL		0x0100	/* Negotiated VL protocol */
 #define PROTO_SJ3		0x0200	/* Negotiated SJ3 protocol */
 #define PROTO_VHP		0x0400	/* Send hostnames in NICKv2 even if not sethosted */

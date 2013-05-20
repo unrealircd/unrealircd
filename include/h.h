@@ -269,6 +269,8 @@ extern void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *c
     int prefix, char *pattern, ...) __attribute__((format(printf,5,6)));
 extern void sendto_channel_butone(aClient *, aClient *, aChannel *,
                                   char *, ...) __attribute__((format(printf,4,5)));
+void sendto_channel_butone_with_capability(aClient *one, unsigned int cap,
+        aClient *from, aChannel *chptr, char *pattern, ...) __attribute__((format(printf,5,6)));
 extern void sendto_channel_butserv_butone(aChannel *chptr, aClient *from, aClient *one,
                                           char *pattern, ...) __attribute__((format(printf,4,5)));
 extern void sendto_common_channels(aClient *, char *, ...) __attribute__((format(printf,2,3)));
