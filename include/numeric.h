@@ -36,6 +36,7 @@
 #define RPL_ISUPPORT	     005
 
 #define RPL_REDIR	     10
+#define RPL_YOURID           42
 
 #define RPL_REMOTEISUPPORT 105
 

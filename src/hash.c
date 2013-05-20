@@ -31,6 +31,7 @@ ID_Copyright("(C) 1991 Darren Reed");
 ID_Notes("2.10 7/3/93");
 
 static struct list_head clientTable[U_MAX];
+static struct list_head idTable[U_MAX];
 static aHashEntry channelTable[CH_MAX];
 
 /*
@@ -164,6 +165,9 @@ void clear_client_hash_table(void)
 
 	for (i = 0; i < U_MAX; i++)
 		INIT_LIST_HEAD(&clientTable[i]);
+
+	for (i = 0; i < U_MAX; i++)
+		INIT_LIST_HEAD(&idTable[i]);
 }
 
 void clear_channel_hash_table(void)
@@ -197,6 +201,18 @@ int  add_to_client_hash_table(char *name, aClient *cptr)
 	list_add(&cptr->client_hash, &clientTable[hashv]);
 	return 0;
 }
+
+/*
+ * add_to_client_hash_table
+ */
+int  add_to_id_hash_table(char *name, aClient *cptr)
+{
+	unsigned int  hashv;
+	hashv = hash_nick_name(name);
+	list_add(&cptr->id_hash, &idTable[hashv]);
+	return 0;
+}
+
 /*
  * add_to_channel_hash_table
  */
@@ -221,6 +237,15 @@ int  del_from_client_hash_table(char *name, aClient *cptr)
 
 	return 0;
 }
+
+int  del_from_id_hash_table(char *name, aClient *cptr)
+{
+	if (!list_empty(&cptr->id_hash))
+		list_del(&cptr->id_hash);
+
+	return 0;
+}
+
 /*
  * del_from_channel_hash_table
  */
@@ -269,19 +294,21 @@ aClient *hash_find_client(char *name, aClient *cptr)
 	}
 
 	return (cptr);
-	/*
-	 * If the member of the hashtable we found isnt at the top of its
-	 * chain, put it there.  This builds a most-frequently used order
-	 * into the chains of the hash table, giving speedier lookups on
-	 * those nicks which are being used currently.  This same block of
-	 * code is also used for channels and servers for the same
-	 * performance reasons.
-	 * 
-	 * I don't believe it does.. it only wastes CPU, lets try it and
-	 * see....
-	 * 
-	 * - Dianora
-	 */
+}
+
+aClient *hash_find_id(char *name, aClient *cptr)
+{
+	aClient *tmp;
+	unsigned int  hashv;
+
+	hashv = hash_nick_name(name);
+	list_for_each_entry(tmp, &idTable[hashv], id_hash)
+	{
+		if (smycmp(name, tmp->id) == 0)
+			return (tmp);
+	}
+
+	return (cptr);
 }
 
 /*

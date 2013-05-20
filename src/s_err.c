@@ -71,7 +71,7 @@ static char *replies[] = {
 /* 039 */ NULL,
 /* 040 */ NULL,
 /* 041 */ NULL,
-/* 042 */ NULL, /* ircnet */
+/* 042    RPL_YOURID */	":%s 042 %s %s :your unique ID",
 /* 043 */ NULL, /* ircnet */
 /* 044 */ NULL,
 /* 045 */ NULL,

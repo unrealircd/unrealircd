@@ -940,6 +940,7 @@ typedef struct {
 struct Client {
 	struct list_head client_node; 	/* for global client list (client_list) */
 	struct list_head client_hash;	/* for clientTable */
+	struct list_head id_hash;	/* for idTable */
 
 	anUser *user;		/* ...defined, if this is a User */
 	aServer *serv;		/* ...defined, if this is a server */

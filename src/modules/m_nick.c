@@ -843,6 +843,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 {
 	ConfigItem_ban *bconf;
 	char *parv[3], *tmpstr;
+	const char *id;
 #ifdef HOSTILENAME
 	char stripuser[USERLEN + 1], *u1 = stripuser, *u2, olduser[USERLEN + 1],
 	    userbad[USERLEN * 2 + 1], *ubad = userbad, noident = 0;
@@ -1065,6 +1066,11 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 
 		list_move(&sptr->lclient_node, &lclient_list);
 
+		while (hash_find_id((id = uid_get()), NULL) != NULL)
+			;
+		strlcpy(sptr->id, id, sizeof sptr->id);
+		(void)add_to_id_hash_table(sptr->id, sptr);
+
 		IRCstats.unknown--;
 		IRCstats.me_clients++;
 		if (IsHidden(sptr))
@@ -1091,6 +1097,9 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			for (i = 0; IsupportStrings[i]; i++)
 				sendto_one(sptr, rpl_str(RPL_ISUPPORT), me.name, nick, IsupportStrings[i]);
 		}
+
+		sendto_one(sptr, rpl_str(RPL_YOURID), me.name, nick, sptr->id);
+
 #ifdef USE_SSL
 		if (sptr->flags & FLAGS_SSL)
 			if (sptr->ssl)

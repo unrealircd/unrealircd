@@ -773,6 +773,8 @@ static void exit_one_client(aClient *cptr, aClient *sptr, aClient *from, char *c
 	}
 
 	/* Remove sptr from the client list */
+	if (*sptr->id)
+		del_from_id_hash_table(sptr->id, sptr);
 	if (del_from_client_hash_table(sptr->name, sptr) != 1)
 		Debug((DEBUG_ERROR, "%#x !in tab %s[%s] %#x %#x %#x %d %d %#x",
 		    sptr, sptr->name,
