@@ -274,8 +274,6 @@ void sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr,
 	aClient *acptr;
 	int  i;
 
-	va_start(vl, pattern);
-
 	++current_serial;
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
@@ -291,10 +289,11 @@ void sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr,
 			/*
 			 * Burst messages comes here..
 			 */
+			va_start(vl, pattern);
 			vsendto_prefix_one(acptr, from, pattern, vl);
+			va_end(vl);
 		}
 	}
-	va_end(vl);
 }
 
 void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
@@ -305,8 +304,6 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 	Member *lp;
 	aClient *acptr;
 	int  i;
-
-	va_start(vl, pattern);
 
 	++current_serial;
 	for (lp = chptr->members; lp; lp = lp->next)
@@ -337,7 +334,9 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 				if (!IsSecure(acptr))
 					continue;
 #endif
+			va_start(vl, pattern);
 			vsendto_prefix_one(acptr, from, pattern, vl);
+			va_end(vl);
 		}
 		else
 		{
@@ -350,14 +349,14 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 					if (!IsSecure(acptr->from))
 						continue;
 #endif
+				va_start(vl, pattern);
 				vsendto_prefix_one(acptr, from, pattern, vl);
+				va_end(vl);
+
 				acptr->from->serial = current_serial;
 			}
 		}
 	}
-
-	va_end(vl);
-	return;
 }
 
 /* weird channelmode +mu crap:
@@ -416,7 +415,6 @@ void sendto_chanops_butone(aClient *one, aChannel *chptr, char *pattern, ...)
 	Member *lp;
 	aClient *acptr;
 
-	va_start(vl, pattern);
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
 		acptr = lp->cptr;
@@ -424,9 +422,12 @@ void sendto_chanops_butone(aClient *one, aChannel *chptr, char *pattern, ...)
 			continue;	/* ...was the one I should skip
 					   or user not not a channel op */
 		if (MyConnect(acptr) && IsRegisteredUser(acptr))
+		{
+			va_start(vl, pattern);
 			vsendto_one(acptr, pattern, vl);
+			va_end(vl);
+		}
 	}
-	va_end(vl);
 }
 
 
@@ -456,16 +457,14 @@ sendto_server(aClient *one, unsigned long caps,
 	unsigned long nocaps, const char *format, ...)
 {
 	aClient *cptr;
-	va_list vl;
 
 	/* noone to send to.. */
 	if (list_empty(&server_list))
 		return;
 
-	va_start(vl, format);
-
 	list_for_each_entry(cptr, &server_list, special_node)
 	{
+		va_list vl;
 
 		if (one && cptr == one->from)
 			continue;
@@ -476,10 +475,10 @@ sendto_server(aClient *one, unsigned long caps,
 		if (nocaps && CHECKPROTO(cptr, nocaps))
 			continue;
 
+		va_start(vl, format);
 		vsendto_one(cptr, format, vl);
+		va_end(vl);
 	}
-
-	va_end(vl);
 }
 
 /*
@@ -603,18 +602,18 @@ void sendto_channel_butserv_butone(aChannel *chptr, aClient *from, aClient *one,
 	Member *lp;
 	aClient *acptr;
 
-	va_start(vl, pattern);
-
 	for (lp = chptr->members; lp; lp = lp->next)
 	{
 		if (lp->cptr == one)
 			continue;
 
 		if (MyConnect(acptr = lp->cptr))
+		{
+			va_start(vl, pattern);
 			vsendto_prefix_one(acptr, from, pattern, vl);
+			va_end(vl);
+		}
 	}
-
-	va_end(vl);
 }
 
 /*
@@ -651,8 +650,6 @@ void sendto_match_servs(aChannel *chptr, aClient *from, char *format, ...)
 	aClient *cptr;
 	char *mask;
 
-	va_start(vl, format);
-
 	if (chptr)
 	{
 		if (*chptr->chname == '&')
@@ -670,10 +667,10 @@ void sendto_match_servs(aChannel *chptr, aClient *from, char *format, ...)
 		if (!BadPtr(mask) && IsServer(cptr) && match(mask, cptr->name))
 			continue;
 
+		va_start(vl, format);
 		vsendto_one(cptr, format, vl);
+		va_end(vl);
 	}
-
-	va_end(vl);
 }
 
 /*
@@ -690,7 +687,6 @@ void sendto_match_butone(aClient *one, aClient *from, char *mask, int what,
 	aClient *cptr, *acptr;
 	char cansendlocal, cansendglobal;
 
-	va_start(vl, pattern);
 	if (MyConnect(from))
 	{
 		cansendlocal = (OPCanLNotice(from)) ? 1 : 0;
@@ -724,10 +720,10 @@ void sendto_match_butone(aClient *one, aClient *from, char *mask, int what,
 		    match_it(cptr, mask, what))))
 			continue;
 
+		va_start(vl, pattern);
 		vsendto_prefix_one(cptr, from, pattern, vl);
+		va_end(vl);
 	}
-
-	va_end(vl);
 }
 
 /*
@@ -742,15 +738,14 @@ void sendto_all_butone(aClient *one, aClient *from, char *pattern, ...)
 	va_list vl;
 	aClient *cptr;
 
-	va_start(vl, pattern);
-
 	list_for_each_entry(cptr, &lclient_list, lclient_node)
-	{
 		if (!IsMe(cptr) && one != cptr)
+		{
+			va_start(vl, pattern);
 			vsendto_prefix_one(cptr, from, pattern, vl);
-	}
+			va_end(vl);
+		}
 
-	va_end(vl);
 	return;
 }
 
@@ -765,17 +760,16 @@ void sendto_ops(char *pattern, ...)
 	aClient *cptr;
 	char nbuf[1024];
 
-	va_start(vl, pattern);
-
 	list_for_each_entry(cptr, &lclient_list, lclient_node)
 		if (!IsServer(cptr) && !IsMe(cptr) && SendServNotice(cptr))
 		{
 			(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ", me.name, cptr->name);
 			(void)strncat(nbuf, pattern, sizeof(nbuf) - strlen(nbuf));
-			vsendto_one(cptr, nbuf, vl);
-		}
 
-	va_end(vl);
+			va_start(vl, pattern);
+			vsendto_one(cptr, nbuf, vl);
+			va_end(vl);
+		}
 }
 
 /*
@@ -789,8 +783,6 @@ void sendto_failops(char *pattern, ...)
 	aClient *cptr;
 	char nbuf[1024];
 
-	va_start(vl, pattern);
-
 	list_for_each_entry(cptr, &lclient_list, lclient_node)
 		if (!IsServer(cptr) && !IsMe(cptr) && SendFailops(cptr))
 		{
@@ -799,10 +791,10 @@ void sendto_failops(char *pattern, ...)
 			(void)strncat(nbuf, pattern,
 			    sizeof(nbuf) - strlen(nbuf));
 
+			va_start(vl, pattern);
 			vsendto_one(cptr, nbuf, vl);
+			va_end(vl);
 		}
-
-	va_end(vl);
 }
 
 /*
@@ -816,8 +808,6 @@ void sendto_umode(int umodes, char *pattern, ...)
 	aClient *cptr;
 	char nbuf[1024];
 
-	va_start(vl, pattern);
-
 	list_for_each_entry(cptr, &lclient_list, lclient_node)
 		if (IsPerson(cptr) && (cptr->umodes & umodes) == umodes)
 		{
@@ -826,10 +816,10 @@ void sendto_umode(int umodes, char *pattern, ...)
 			(void)strncat(nbuf, pattern,
 			    sizeof(nbuf) - strlen(nbuf));
 
+			va_start(vl, pattern);
 			vsendto_one(cptr, nbuf, vl);
+			va_end(vl);
 		}
-
-	va_end(vl);
 }
 
 /*
@@ -843,16 +833,15 @@ void sendto_umode_raw(int umodes, char *pattern, ...)
 	aClient *cptr;
 	int  i;
 
-	va_start(vl, pattern);
-
 	list_for_each_entry(cptr, &lclient_list, lclient_node)
-	{
 		if (IsPerson(cptr) && (cptr->umodes & umodes) == umodes)
+		{
+			va_start(vl, pattern);
 			vsendto_one(cptr, pattern, vl);
-	}
-
-	va_end(vl);
+			va_end(vl);
+		}
 }
+
 /** Send to specified snomask - local / operonly.
  * @param snomask Snomask to send to (can be a bitmask [AND])
  * @param pattern printf-style pattern, followed by parameters.
@@ -970,8 +959,6 @@ void sendto_failops_whoare_opers(char *pattern, ...)
 	aClient *cptr;
 	char nbuf[1024];
 
-	va_start(vl, pattern);
-
 	list_for_each_entry(cptr, &oper_list, special_node)
 	{
 		if (SendFailops(cptr))
@@ -981,11 +968,11 @@ void sendto_failops_whoare_opers(char *pattern, ...)
 			(void)strncat(nbuf, pattern,
 			    sizeof(nbuf) - strlen(nbuf));
 
+			va_start(vl, pattern);
 			vsendto_one(cptr, nbuf, vl);
+			va_end(vl);
 		}
 	}
-
-	va_end(vl);
 }
 
 /*
@@ -1000,8 +987,6 @@ void sendto_locfailops(char *pattern, ...)
 	int  i;
 	char nbuf[1024];
 
-	va_start(vl, pattern);
-
 	list_for_each_entry(cptr, &oper_list, special_node)
 	{
 		if (SendFailops(cptr))
@@ -1011,11 +996,11 @@ void sendto_locfailops(char *pattern, ...)
 			(void)strncat(nbuf, pattern,
 			    sizeof(nbuf) - strlen(nbuf));
 
+			va_start(vl, pattern);
 			vsendto_one(cptr, nbuf, vl);
+			va_end(vl);
 		}
 	}
-
-	va_end(vl);
 }
 /*
  * sendto_opers
@@ -1029,8 +1014,6 @@ void sendto_opers(char *pattern, ...)
 	int  i;
 	char nbuf[1024];
 
-	va_start(vl, pattern);
-
 	list_for_each_entry(cptr, &oper_list, special_node)
 	{
 		(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Oper -- ",
@@ -1038,10 +1021,10 @@ void sendto_opers(char *pattern, ...)
 		(void)strncat(nbuf, pattern,
 		    sizeof(nbuf) - strlen(nbuf));
 
+		va_start(vl, pattern);
 		vsendto_one(cptr, nbuf, vl);
+		va_end(vl);
 	}
-
-	va_end(vl);
 }
 
 /* ** sendto_ops_butone
@@ -1055,8 +1038,6 @@ void sendto_ops_butone(aClient *one, aClient *from, char *pattern, ...)
 	int  i;
 	aClient *cptr;
 
-	va_start(vl, pattern);
-
 	++current_serial;
 	list_for_each_entry(cptr, &client_list, client_node)
 	{
@@ -1068,10 +1049,10 @@ void sendto_ops_butone(aClient *one, aClient *from, char *pattern, ...)
 			continue;	/* ...was the one I should skip */
 		cptr->from->serial = current_serial;
 
+		va_start(vl, pattern);
 		vsendto_prefix_one(cptr->from, from, pattern, vl);
+		va_end(vl);
 	}
-	va_end(vl);
-	return;
 }
 
 /*
@@ -1087,8 +1068,6 @@ void sendto_opers_butone(aClient *one, aClient *from, char *pattern, ...)
 	int  i;
 	aClient *cptr;
 
-	va_start(vl, pattern);
-
 	++current_serial;
 	list_for_each_entry(cptr, &client_list, client_node)
 	{
@@ -1100,11 +1079,12 @@ void sendto_opers_butone(aClient *one, aClient *from, char *pattern, ...)
 			continue;	/* ...was the one I should skip */
 		cptr->from->serial = current_serial;
 
+		va_start(vl, pattern);
 		vsendto_prefix_one(cptr->from, from, pattern, vl);
+		va_end(vl);
 	}
-	va_end(vl);
-	return;
 }
+
 /*
 ** sendto_ops_butme
 **	Send message to all operators except local ones
@@ -1115,8 +1095,6 @@ void sendto_ops_butme(aClient *from, char *pattern, ...)
 	va_list vl;
 	int  i;
 	aClient *cptr;
-
-	va_start(vl, pattern);
 
 	++current_serial;
 	list_for_each_entry(cptr, &client_list, client_node)
@@ -1129,10 +1107,10 @@ void sendto_ops_butme(aClient *from, char *pattern, ...)
 			continue;
 		cptr->from->serial = current_serial;
 
+		va_start(vl, pattern);
 		vsendto_prefix_one(cptr->from, from, pattern, vl);
+		va_end(vl);
 	}
-
-	va_end(vl);
 }
 
 /* Prepare buffer based on format string and 'from' for LOCAL delivery.
@@ -1226,8 +1204,6 @@ void sendto_realops(char *pattern, ...)
 	aClient *cptr;
 	char nbuf[1024];
 
-	va_start(vl, pattern);
-
 	list_for_each_entry(cptr, &oper_list, special_node)
 	{
 		(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
@@ -1238,8 +1214,6 @@ void sendto_realops(char *pattern, ...)
 		vsendto_one(cptr, nbuf, vl);
 		va_end(vl);
 	}
-
-	va_end(vl);
 }
 
 void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnect, char *comment)
