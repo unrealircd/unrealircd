@@ -620,7 +620,7 @@ extern void remove_oper_modes(aClient *sptr);
 extern char *spamfilter_inttostring_long(int v);
 extern aChannel *get_channel(aClient *cptr, char *chname, int flag);
 extern MODVAR char backupbuf[];
-extern void add_invite(aClient *, aChannel *);
+extern void add_invite(aClient *, aClient *, aChannel *);
 extern void channel_modes(aClient *, char *, char *, aChannel *);
 extern MODVAR char modebuf[BUFSIZE], parabuf[BUFSIZE];
 extern int op_can_override(aClient *sptr);

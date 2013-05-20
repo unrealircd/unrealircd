@@ -660,6 +660,7 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define HOOKTYPE_HANDSHAKE 52
 #define HOOKTYPE_AWAY 53
 #define HOOKTYPE_CAPLIST 54
+#define HOOKTYPE_INVITE 55
 
 /* Hook return values */
 #define HOOK_CONTINUE 0

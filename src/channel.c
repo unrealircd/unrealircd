@@ -56,7 +56,6 @@ extern char backupbuf[];
 extern ircstats IRCstats;
 
 /* Some forward declarations */
-void add_invite(aClient *, aChannel *);
 char *clean_ban_mask(char *, int, aClient *);
 void channel_modes(aClient *, char *, char *, aChannel *);
 
@@ -1236,24 +1235,19 @@ aChannel *get_channel(aClient *cptr, char *chname, int flag)
  * Should U-lined clients have higher limits?   -Donwulff
  */
 
-void add_invite(aClient *cptr, aChannel *chptr)
+void add_invite(aClient *from, aClient *to, aChannel *chptr)
 {
 	Link *inv, *tmp;
 
-	del_invite(cptr, chptr);
+	del_invite(to, chptr);
 	/*
 	 * delete last link in chain if the list is max length
 	 */
-	if (list_length(cptr->user->invited) >= MAXCHANNELSPERUSER)
+	if (list_length(to->user->invited) >= MAXCHANNELSPERUSER)
 	{
-/*		This forgets the channel side of invitation     -Vesa
-		inv = cptr->user->invited;
-		cptr->user->invited = inv->next;
-		free_link(inv);
-*/
-		for (tmp = cptr->user->invited; tmp->next; tmp = tmp->next)
+		for (tmp = to->user->invited; tmp->next; tmp = tmp->next)
 			;
-		del_invite(cptr, tmp->value.chptr);
+		del_invite(to, tmp->value.chptr);
 
 	}
 	/* We get pissy over too many invites per channel as well now,
@@ -1270,7 +1264,7 @@ void add_invite(aClient *cptr, aChannel *chptr)
 	 * add client to the beginning of the channel invite list
 	 */
 	inv = make_link();
-	inv->value.cptr = cptr;
+	inv->value.cptr = to;
 	inv->next = chptr->invites;
 	chptr->invites = inv;
 	/*
@@ -1278,8 +1272,10 @@ void add_invite(aClient *cptr, aChannel *chptr)
 	 */
 	inv = make_link();
 	inv->value.chptr = chptr;
-	inv->next = cptr->user->invited;
-	cptr->user->invited = inv;
+	inv->next = to->user->invited;
+	to->user->invited = inv;
+
+	RunHook3(HOOKTYPE_INVITE, from, to, chptr);
 }
 
 /*
