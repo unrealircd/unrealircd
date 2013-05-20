@@ -1310,14 +1310,20 @@ void sub1_from_channel(aChannel *chptr)
 {
 	Ban *ban;
 	Link *lp;
+	bool should_destroy = true;
 
-        /* if (--chptr->users <= 0) */
-	if (chptr->users == 0 || --chptr->users == 0)
+	--chptr->users;
+	if (chptr->users <= 0)
 	{
+		chptr->users = 0;
+
 		/*
 		 * Now, find all invite links from channel structure
 		 */
-		RunHook(HOOKTYPE_CHANNEL_DESTROY, chptr);
+		RunHook2(HOOKTYPE_CHANNEL_DESTROY, chptr, &should_destroy);
+		if (!should_destroy)
+			return;
+
 		while ((lp = chptr->invites))
 			del_invite(lp->value.cptr, chptr);
 
