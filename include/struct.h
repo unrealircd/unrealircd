@@ -176,6 +176,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	MAXRECIPIENTS 	20
 #define	MAXKILLS	20
 #define	MAXSILELENGTH	NICKLEN+USERLEN+HOSTLEN+10
+#define IDLEN		10
 #define UMODETABLESZ (sizeof(long) * 8)
 /*
  * Watch it - Don't change this unless you also change the ERR_TOOMANYWATCH
@@ -951,6 +952,7 @@ struct Client {
 	char name[HOSTLEN + 1];	/* Unique name of the client, nick or host */
 	char username[USERLEN + 1];	/* username here now for auth stuff */
 	char info[REALLEN + 1];	/* Free form additional client information */
+	char id[IDLEN + 1];	/* SID or UID */
 	aClient *srvptr;	/* Server introducing this.  May be &me */
 	short status;		/* client type */
 	/*
