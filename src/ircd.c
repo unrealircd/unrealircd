@@ -986,6 +986,8 @@ int InitwIRCD(int argc, char *argv[])
 	memset(&smotd, '\0', sizeof(aMotdFile));
 	memset(&svsmotd, '\0', sizeof(aMotdFile));
 
+	SetupEvents();
+
 #ifdef _WIN32
 	CreateMutex(NULL, FALSE, "UnrealMutex");
 	SetErrorMode(SEM_FAILCRITICALERRORS);
@@ -1531,7 +1533,6 @@ int InitwIRCD(int argc, char *argv[])
 	fix_timers(); /* Fix timers AFTER reading tune file AND timesynch */
 	write_pidfile();
 	Debug((DEBUG_NOTICE, "Server ready..."));
-	SetupEvents();
 	init_throttling_hash();
 	init_modef();
 	loop.ircd_booted = 1;
