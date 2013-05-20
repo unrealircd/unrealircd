@@ -81,13 +81,6 @@ static ClientCapability cap_sasl = {
 	.cap = PROTO_SASL,
 };
 
-#ifdef USE_SSL
-static ClientCapability cap_tls = {
-	.name = "tls",
-	.cap = PROTO_STARTTLS,
-};
-#endif
-
 static ClientCapability cap_uhnames = {
 	.name = "userhost-in-names",
 	.cap = PROTO_UHNAMES,
@@ -105,10 +98,6 @@ static struct list_head *clicap_build_list(void)
 	clicap_append(&clicap_list, &cap_multi_prefix);
 	clicap_append(&clicap_list, &cap_sasl);
 	clicap_append(&clicap_list, &cap_uhnames);
-
-#ifdef USE_SSL
-	clicap_append(&clicap_list, &cap_tls);
-#endif
 
 	RunHook(HOOKTYPE_CAPLIST, &clicap_list);
 
