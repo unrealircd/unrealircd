@@ -44,6 +44,7 @@
 #ifdef _WIN32
 #include "version.h"
 #endif
+#include "m_cap.h"
 
 typedef int (*bqcmp)(const void *, const void *);
 
@@ -60,17 +61,7 @@ ModuleHeader MOD_HEADER(m_cap)
 	NULL 
     };
 
-struct clicap {
-	const char *name;
-	int cap;
-	int flags;
-};
-
-#define CLICAP_FLAGS_NONE		0x0
-#define CLICAP_FLAGS_STICKY		0x1
-#define CLICAP_FLAGS_CLIACK		0x2
-
-static struct clicap clicap_table[] = {
+static ClientCapability clicap_table[] = {
 	{"account-notify", PROTO_ACCOUNT_NOTIFY, CLICAP_FLAGS_NONE},
 	{"away-notify", PROTO_AWAY_NOTIFY, CLICAP_FLAGS_NONE},
 	{"multi-prefix", PROTO_NAMESX, CLICAP_FLAGS_NONE},
@@ -81,18 +72,18 @@ static struct clicap clicap_table[] = {
 	{"userhost-in-names", PROTO_UHNAMES, CLICAP_FLAGS_NONE},
 };
 
-#define CLICAP_TABLE_SIZE (sizeof(clicap_table) / sizeof(struct clicap))
+#define CLICAP_TABLE_SIZE (sizeof(clicap_table) / sizeof(ClientCapability))
 
-static int clicap_compare(const char *name, struct clicap *cap)
+static int clicap_compare(const char *name, ClientCapability *cap)
 {
 	return stricmp(name, cap->name);
 }
 
-static struct clicap *clicap_find(const char *data, int *negate, int *finished)
+static ClientCapability *clicap_find(const char *data, int *negate, int *finished)
 {
 	static char buf[BUFSIZE];
 	static char *p;
-	struct clicap *cap;
+	ClientCapability *cap;
 	char *s;
 
 	*negate = 0;
@@ -133,7 +124,7 @@ static struct clicap *clicap_find(const char *data, int *negate, int *finished)
 		return NULL; /* hack: if SASL is disabled or server not online, then pretend it does not exist. -- Syzop */
 
 	if((cap = bsearch(p, clicap_table, CLICAP_TABLE_SIZE,
-			  sizeof(struct clicap), (bqcmp) clicap_compare)))
+			  sizeof(ClientCapability), (bqcmp) clicap_compare)))
 	{
 		if(s)
 			p = s;
@@ -233,7 +224,7 @@ static void clicap_generate(aClient *sptr, const char *subcmd, int flags, int cl
 
 static void cap_ack(aClient *sptr, const char *arg)
 {
-	struct clicap *cap;
+	ClientCapability *cap;
 	int capadd = 0, capdel = 0;
 	int finished = 0, negate;
 
@@ -298,7 +289,7 @@ static void cap_req(aClient *sptr, const char *arg)
 {
 	char buf[BUFSIZE];
 	char pbuf[2][BUFSIZE];
-	struct clicap *cap;
+	ClientCapability *cap;
 	int buflen, plen;
 	int i = 0;
 	int capadd = 0, capdel = 0;
