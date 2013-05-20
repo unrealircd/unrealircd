@@ -1415,7 +1415,6 @@ void read_packet(int fd, int revents, void *data)
 			if (length < 0)
 			{
 				int err = SSL_get_error(cptr->ssl, length);
-				ircd_log(LOG_ERROR, "error %d", err);
 
 				switch (err)
 				{
