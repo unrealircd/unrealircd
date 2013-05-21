@@ -344,6 +344,8 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 		if (acptr->from == one)
 			continue;	/* ...was the one I should skip
 					   or user not not a channel op */
+		if (!prefix)
+			goto good;
 	        if ((prefix & PREFIX_HALFOP) && (lp->flags & CHFL_HALFOP))
 			goto good;
 		if ((prefix & PREFIX_VOICE) && (lp->flags & CHFL_VOICE))
@@ -357,8 +359,7 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 			goto good;
 #endif
 		continue;
-		
-		good:
+good:
 		if (MyConnect(acptr) && IsRegisteredUser(acptr))
 		{
 #ifdef SECURECHANMSGSONLYGOTOSECURE
