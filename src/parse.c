@@ -62,14 +62,17 @@ static void remove_unknown(aClient *, char *);
 **	the old. 'name' is now assumed to be a null terminated
 **	string and the search is the for server and user.
 */
-aClient inline *find_client(char *name, aClient *cptr)
+aClient *find_client(char *name, aClient *cptr)
 {
-
-	if (name)
+	if (cptr == NULL || IsServer(cptr))
 	{
-		cptr = hash_find_client(name, cptr);
+		aClient *acptr;
+
+		if ((acptr = hash_find_id(name, NULL)) != NULL)
+			return acptr;
 	}
-	return cptr;
+
+	return hash_find_client(name, NULL);
 }
 
 aClient inline *find_nickserv(char *name, aClient *cptr)
@@ -133,14 +136,14 @@ aClient inline *find_name(char *name, aClient *cptr)
 */
 aClient *find_person(char *name, aClient *cptr)
 {
-	aClient *c2ptr = cptr;
+	aClient *c2ptr;
 
-	c2ptr = find_client(name, c2ptr);
+	c2ptr = find_client(name, cptr);
 
 	if (c2ptr && IsClient(c2ptr) && c2ptr->user)
 		return c2ptr;
-	else
-		return cptr;
+
+	return NULL;
 }
 
 
