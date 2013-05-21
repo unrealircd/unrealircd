@@ -602,6 +602,10 @@ CMD_FUNC(m_server_remote)
 	(void)find_or_add(acptr->name);
 	add_client_to_list(acptr);
 	(void)add_to_client_hash_table(acptr->name, acptr);
+
+	if (*acptr->id)
+		add_to_id_hash_table(acptr->id, acptr);
+
 	list_move(&acptr->client_node, &global_server_list);
 	RunHook(HOOKTYPE_SERVER_CONNECT, acptr);
 
