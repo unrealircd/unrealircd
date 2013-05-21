@@ -295,9 +295,7 @@ CMD_FUNC(m_protoctl)
 			aClient *acptr;
 			char *sid = s + 4;
 
-			strlcpy(sptr->id, sid, IDLEN);
-
-			if ((acptr = hash_find_id(sptr->id, NULL)) != NULL)
+			if ((acptr = hash_find_id(sid, NULL)) != NULL)
 			{
 				sendto_one(sptr, "ERROR :SID %s already exists from %s", acptr->id, acptr->name);
 				sendto_snomask(SNO_SNOTICE, "Link %s rejected - SID %s already exists from %s",
@@ -305,6 +303,7 @@ CMD_FUNC(m_protoctl)
 				return exit_client(cptr, sptr, &me, "SID collision");
 			}
 
+			strlcpy(sptr->id, sid, IDLEN);
 			add_to_id_hash_table(sptr->id, sptr);
 			cptr->proto |= PROTO_SID;
 		}
