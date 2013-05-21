@@ -250,7 +250,10 @@ DLLFUNC CMD_FUNC(m_nopost)
 		 * ircops see them being added.
 		 */
 		if (cfg.ban_action == BAN_ACT_KILL)
+		{
 			sendto_realops("[m_nopost] Killed connection from %s", GetIP(sptr));
+			ircd_log(LOG_CLIENT, "[m_nopost] Killed connection from %s", GetIP(sptr));
+		}
 		return place_host_ban(sptr, cfg.ban_action, cfg.ban_reason, cfg.ban_time);
 	}
 	return 0;
