@@ -35,7 +35,7 @@ static char *replies[] = {
 /* 003    RPL_CREATED */  ":%s 003 %s :This server was created %s",
 /* 004    RPL_MYINFO */   ":%s 004 %s %s %s %s %s",
 /* 005    RPL_ISUPPORT */ ":%s 005 %s %s :are supported by this server",
-/* 006    RPL_MAP */      ":%s 006 %s :%s%-*s(%ld)",
+/* 006    RPL_MAP */      ":%s 006 %s :%s%-*s(%ld) %s",
 /* 007    RPL_MAPEND */   ":%s 007 %s :End of /MAP",
 /* 008    RPL_SNOMASK */  ":%s 008 %s :Server notice mask (%s)",
 /* 009 */ NULL, /* ircu */

@@ -93,7 +93,7 @@ static void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_leng
 	else
 	{
 		sendto_one(cptr, rpl_str(RPL_MAP), me.name, cptr->name, prompt,
-		    length, server->name, server->serv->users);
+		    length, server->name, server->serv->users, server->id);
 		cnt = 0;
 	}
 
