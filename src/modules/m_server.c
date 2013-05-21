@@ -46,6 +46,7 @@ void send_channel_modes(aClient *cptr, aChannel *chptr);
 void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr);
 void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr);
 DLLFUNC int m_server(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+DLLFUNC int m_server_remote(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 int _verify_link(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link **link_out);
 void _send_protoctl_servers(aClient *sptr, int response);
 void _send_server_message(aClient *sptr);
@@ -76,6 +77,7 @@ DLLFUNC int MOD_TEST(m_server)(ModuleInfo *modinfo)
 DLLFUNC int MOD_INIT(m_server)(ModuleInfo *modinfo)
 {
 	CommandAdd(modinfo->handle, MSG_SERVER, m_server, MAXPARA, M_UNREGISTERED|M_SERVER);
+	CommandAdd(modinfo->handle, "SID", m_server_remote, MAXPARA, M_UNREGISTERED|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -271,6 +273,14 @@ nohostcheck:
 	return 0;
 }
 
+/*
+** m_sid
+**      parv[0] = sender prefix
+**      parv[1] = servername
+**      parv[2] = hopcount
+**      parv[3] = sid
+**      parv[4] = serverinfo
+*/
 
 /*
 ** m_server
@@ -572,8 +582,13 @@ CMD_FUNC(m_server_remote)
 	acptr = make_client(cptr, find_server_quick(parv[0]));
 	(void)make_server(acptr);
 	acptr->hopcount = hop;
+
 	strlcpy(acptr->name, servername, sizeof(acptr->name));
 	strlcpy(acptr->info, info, sizeof(acptr->info));
+
+	if (isdigit(*parv[3]) && parc > 4)
+		strlcpy(acptr->id, parv[3], sizeof(acptr->id));
+
 	acptr->serv->up = find_or_add(parv[0]);
 	SetServer(acptr);
 	ircd_log(LOG_SERVER, "SERVER %s", acptr->name);
@@ -590,14 +605,15 @@ CMD_FUNC(m_server_remote)
 	list_move(&acptr->client_node, &global_server_list);
 	RunHook(HOOKTYPE_SERVER_CONNECT, acptr);
 
-	list_for_each_entry(bcptr, &server_list, special_node)
+	if (*acptr->id)
 	{
-		if (bcptr == cptr || IsMe(bcptr))
-				continue;
-		sendto_one(bcptr, ":%s SERVER %s %d :%s",
-			    parv[0],
-			    acptr->name, hop + 1, acptr->info);
+		sendto_server(cptr, PROTO_SID, 0, ":%s SID %s %d %s :%s",
+			    sptr->id, acptr->name, hop + 1, acptr->id, acptr->info);
 	}
+
+	sendto_server(cptr, 0, *acptr->id ? PROTO_SID : 0, ":%s SERVER %s %d :%s",
+		    parv[0],
+		    acptr->name, hop + 1, acptr->info);
 
 	RunHook(HOOKTYPE_POST_SERVER_CONNECT, acptr);
 	return 0;
@@ -675,15 +691,15 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 	cptr->class = cptr->serv->conf->class;
 	RunHook(HOOKTYPE_SERVER_CONNECT, cptr);
 
-	list_for_each_entry(acptr, &server_list, special_node)
+	if (*cptr->id)
 	{
-		if (acptr == cptr || IsMe(acptr))
-			continue;
-
-		sendto_one(acptr, ":%s SERVER %s 2 :%s",
-			    me.name,
-			    cptr->name, cptr->info);
+		sendto_server(cptr, PROTO_SID, 0, ":%s SID %s 2 %s :%s",
+			    cptr->id, cptr->name, cptr->id, cptr->info);
 	}
+
+	sendto_server(cptr, 0, *cptr->id ? PROTO_SID : 0, ":%s SERVER %s 2 :%s",
+		    cptr->serv->up,
+		    cptr->name, cptr->info);
 
 	list_for_each_entry_reverse(acptr, &global_server_list, client_node)
 	{
@@ -693,7 +709,15 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 
 		if (IsServer(acptr))
 		{
-			sendto_one(cptr, ":%s SERVER %s %d :%s",
+			if (SupportSID(cptr) && *acptr->id)
+			{
+				sendto_one(cptr, ":%s SID %s %d %s :%s",
+				    acptr->from->id,
+				    acptr->name, acptr->hopcount + 1,
+				    acptr->id, acptr->info);
+			}
+			else
+				sendto_one(cptr, ":%s SERVER %s %d :%s",
 				    acptr->serv->up,
 				    acptr->name, acptr->hopcount + 1,
 				    acptr->info);

@@ -488,6 +488,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SupportNAMESX(x)	(CHECKPROTO(x, PROTO_NAMESX))
 #define SupportCLK(x)		(CHECKPROTO(x, PROTO_CLK))
 #define SupportUHNAMES(x)	(CHECKPROTO(x, PROTO_UHNAMES))
+#define SupportSID(x)		(CHECKPROTO(x, PROTO_SID))
 
 #define SetSJOIN(x)		((x)->proto |= PROTO_SJOIN)
 #define SetNoQuit(x)		((x)->proto |= PROTO_NOQUIT)
