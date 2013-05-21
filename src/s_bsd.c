@@ -1372,7 +1372,7 @@ void proceed_normal_client_handshake(aClient *acptr, struct hostent *he)
 ** after we're done reading crap.
 **    -- nenolod
 */
-static void parse_client_queued(aClient *cptr)
+static int parse_client_queued(aClient *cptr)
 {
 	int dolen = 0;
 	int allow_read;
@@ -1386,10 +1386,10 @@ static void parse_client_queued(aClient *cptr)
 		dolen = dbuf_getmsg(&cptr->recvQ, buf);
 
 		if (dolen == 0)
-			return;
+			return 0;
 
 		if (dopacket(cptr, buf, dolen) == FLUSH_BUFFER)
-			return;
+			return FLUSH_BUFFER;
 	}
 }
 
@@ -1467,7 +1467,8 @@ void read_packet(int fd, int revents, void *data)
 
 		/* parse some of what we have (inducing fakelag, etc) */
 		if (!(DoingDNS(cptr) || DoingAuth(cptr)))
-			parse_client_queued(cptr);
+			if (parse_client_queued(cptr) == FLUSH_BUFFER)
+				return;
 
 		/* excess flood check */
 		if (IsPerson(cptr) && DBufLength(&cptr->recvQ) > get_recvq(cptr))
