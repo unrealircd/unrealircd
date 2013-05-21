@@ -78,7 +78,9 @@ DLLFUNC int MOD_INIT(m_server)(ModuleInfo *modinfo)
 {
 	CommandAdd(modinfo->handle, MSG_SERVER, m_server, MAXPARA, M_UNREGISTERED|M_SERVER);
 	CommandAdd(modinfo->handle, "SID", m_server_remote, MAXPARA, M_UNREGISTERED|M_SERVER);
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+
 	return MOD_SUCCESS;
 }
 
@@ -579,7 +581,7 @@ CMD_FUNC(m_server_remote)
 			sendto_locfailops("Link %s(%s) cancelled, too deep depth", cptr->name, servername);
 			return exit_client(cptr, cptr, cptr, "Too deep link depth (leaf)");
 	}
-	acptr = make_client(cptr, find_server_quick(parv[0]));
+	acptr = make_client(cptr, find_server(parv[0], cptr));
 	(void)make_server(acptr);
 	acptr->hopcount = hop;
 
@@ -589,9 +591,9 @@ CMD_FUNC(m_server_remote)
 	if (isdigit(*parv[3]) && parc > 4)
 		strlcpy(acptr->id, parv[3], sizeof(acptr->id));
 
-	acptr->serv->up = find_or_add(parv[0]);
+	acptr->serv->up = find_or_add(acptr->srvptr->name);
 	SetServer(acptr);
-	ircd_log(LOG_SERVER, "SERVER %s", acptr->name);
+	ircd_log(LOG_SERVER, "SERVER %s (from %s)", acptr->name, acptr->srvptr->name);
 	/* Taken from bahamut makes it so all servers behind a U:lined
 	 * server are also U:lined, very helpful if HIDE_ULINES is on
 	 */

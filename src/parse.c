@@ -101,9 +101,13 @@ aClient inline *find_server(char *name, aClient *cptr)
 {
 	if (name)
 	{
-		cptr = hash_find_server(name, cptr);
+		aClient *acptr;
+
+		if ((acptr = find_client(name, NULL)) != NULL && IsServer(acptr))
+			return acptr;
 	}
-	return cptr;
+
+	return NULL;
 }
 
 
@@ -243,9 +247,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 		if (*sender && IsServer(cptr))
 		{
 			from = find_client(sender, (aClient *)NULL);
-			if (!from || match(from->name, sender))
-				from = find_server_quick(sender);
-			else if (!from && index(sender, '@'))
+			if (!from && index(sender, '@'))
 				from = find_nickserv(sender, (aClient *)NULL);
 			para[0] = sender;
 

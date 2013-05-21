@@ -68,7 +68,5 @@ aClient *find_server_quick_straight(char *name)
 
 aClient *find_server_quickx(char *name, aClient *cptr)
 {
-	if (name)
-		cptr = (aClient *)find_server_quick_search(name);
-	return cptr;
+	return find_server(name, cptr);
 }
