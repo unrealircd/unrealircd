@@ -290,6 +290,21 @@ CMD_FUNC(m_protoctl)
 				/* return exit_client(cptr, cptr, &me, "Nick charset mismatch"); */
 			}
 		}
+		else if (strncmp(s, "SID=", 4) == 0)
+		{
+			aClient *acptr;
+			char *sid = s + 4;
+
+			strlcpy(sptr->id, sid, IDLEN);
+
+			if ((acptr = hash_find_id(sptr->id, NULL)) != NULL)
+			{
+				sendto_one(sptr, "ERROR :SID %s already exists from %s", acptr->id, acptr->name);
+				sendto_snomask(SNO_SNOTICE, "Link %s rejected - SID %s already exists from %s",
+						get_client_name(cptr, FALSE), acptr->id, acptr->name);
+				return exit_client(cptr, sptr, &me, "SID collision");
+			}
+		}
 		else if ((strncmp(s, "EAUTH=", 6) == 0) && NEW_LINKING_PROTOCOL)
 		{
 			/* Early authorization: EAUTH=servername[,options] */
