@@ -300,11 +300,11 @@ CMD_FUNC(m_protoctl)
 				sendto_one(sptr, "ERROR :SID %s already exists from %s", acptr->id, acptr->name);
 				sendto_snomask(SNO_SNOTICE, "Link %s rejected - SID %s already exists from %s",
 						get_client_name(cptr, FALSE), acptr->id, acptr->name);
-				return exit_client(cptr, sptr, &me, "SID collision");
+				return exit_client(cptr, cptr, &me, "SID collision");
 			}
 
-			strlcpy(sptr->id, sid, IDLEN);
-			add_to_id_hash_table(sptr->id, sptr);
+			strlcpy(cptr->id, sid, IDLEN);
+			add_to_id_hash_table(cptr->id, cptr);
 			cptr->proto |= PROTO_SID;
 		}
 		else if ((strncmp(s, "EAUTH=", 6) == 0) && NEW_LINKING_PROTOCOL)
