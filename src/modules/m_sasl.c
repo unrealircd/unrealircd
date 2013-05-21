@@ -107,10 +107,6 @@ static aClient *decode_puid(char *puid)
 		*it2++ = '\0';
 		cookie = atoi(it2);
 	}
-	else
-		cookie = slot;
-
-	slot = atoi(it);
 
 	if (stricmp(me.name, puid))
 		return NULL;
