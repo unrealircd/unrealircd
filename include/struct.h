@@ -331,7 +331,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define PROTO_VL		0x0100	/* Negotiated VL protocol */
 #define PROTO_SJ3		0x0200	/* Negotiated SJ3 protocol */
 #define PROTO_VHP		0x0400	/* Send hostnames in NICKv2 even if not sethosted */
-//0x0800 unused (was PROTO_SJB64)
+#define PROTO_SID	0x0800	/* SID/UID mode */
 #define PROTO_TKLEXT	0x1000	/* TKL extension: 10 parameters instead of 8 (3.2RC2) */
 #define PROTO_NICKIP	0x2000  /* Send IP addresses in the NICK command */
 #define PROTO_NAMESX	0x4000  /* Send all rights in NAMES output */

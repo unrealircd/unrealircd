@@ -304,6 +304,9 @@ CMD_FUNC(m_protoctl)
 						get_client_name(cptr, FALSE), acptr->id, acptr->name);
 				return exit_client(cptr, sptr, &me, "SID collision");
 			}
+
+			add_to_id_hash_table(sptr->id, sptr);
+			cptr->proto |= PROTO_SID;
 		}
 		else if ((strncmp(s, "EAUTH=", 6) == 0) && NEW_LINKING_PROTOCOL)
 		{
