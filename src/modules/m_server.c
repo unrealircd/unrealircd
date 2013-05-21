@@ -618,7 +618,7 @@ CMD_FUNC(m_server_remote)
 	}
 
 	sendto_server(cptr, 0, *acptr->id ? PROTO_SID : 0, ":%s SERVER %s %d :%s",
-		    parv[0],
+		    acptr->srvptr->name,
 		    acptr->name, hop + 1, acptr->info);
 
 	RunHook(HOOKTYPE_POST_SERVER_CONNECT, acptr);
