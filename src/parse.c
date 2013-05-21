@@ -496,7 +496,7 @@ static void remove_unknown(aClient *cptr, char *sender)
 	 * Do kill if it came from a server because it means there is a ghost
 	 * user on the other server which needs to be removed. -avalon
 	 */
-	if (!index(sender, '.'))
+	if (!index(sender, '.') && !isdigit(*sender))
 		sendto_one(cptr, ":%s KILL %s :%s (%s(?) <- %s)",
 		    me.name, sender, me.name, sender, cptr->name);
 	else
