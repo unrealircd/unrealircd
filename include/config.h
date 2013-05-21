@@ -326,15 +326,6 @@
 #undef FAKELAG_CONFIGURABLE
 
 /*
- * Size of the LISTEN request.  Some machines handle this large
- * without problem, but not all.  It defaults to 5, but can be
- * raised if you know your machine handles it.
- */
-#ifndef LISTEN_SIZE
-#define LISTEN_SIZE 5
-#endif
-
-/*
  * Max amount of internal send buffering when socket is stuck (bytes)
  */
 #ifndef MAXSENDQLENGTH

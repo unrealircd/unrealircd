@@ -167,8 +167,6 @@ extern char OSName[256];
 #define MYOSNAME getosname()
 #endif
 #ifdef DEBUGMODE
-// #define ircsprintf sprintf
-//#define ircvsprintf vsprintf
 #endif
 
 #ifdef _WIN32

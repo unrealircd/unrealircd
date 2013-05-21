@@ -267,15 +267,18 @@ static char scratch_buffer[32];
  * --Run
  */
 
-char *ircvsprintf(char *str, const char *format, va_list vl)
+char *ircvsnprintf(char *str, size_t size, const char *format, va_list vl)
 {
+	if (!size) return str;
 	char c;
+        const char* end = str+size-1; //for comparison, not dereferencing
 
-	while ((c = *format++))
+	while (str!=end && (c = *format++))
 	{
 		if (c == '%')
 		{
 			c = *format++;	/* May never be '\0' ! */
+                        if (!c) break;  /* But just in case it is... these 2 instructions take care of it. */
 			if (c == 'c')
 			{
 				*str++ = (char)va_arg(vl, int);
@@ -284,8 +287,7 @@ char *ircvsprintf(char *str, const char *format, va_list vl)
 			if (c == 's')
 			{
 				const char *p1 = va_arg(vl, const char *);
-				if ((*str = *p1))
-					while ((*++str = *++p1));
+				while (str!=end && *p1) *str++ = *p1++;
 				continue;
 			}
 			
@@ -296,6 +298,7 @@ char *ircvsprintf(char *str, const char *format, va_list vl)
 				unsigned long v1, v2;
 				const char *ap;
 				++format;
+				if (!*format) break;
 				v1 = va_arg(vl, unsigned long);
 				/* Fixed to work with %lu == 0 --Stskeeps */
 				if (v1 == 0L)
@@ -308,22 +311,31 @@ char *ircvsprintf(char *str, const char *format, va_list vl)
 					v2 = v1 / 1000000000;
 					v1 -= v2 * 1000000000;
 					*str++ = '0' + v2;
+					if (str==end) break;
 				}
 				v2 = v1 / 1000000;
 				v1 -= v2 * 1000000;
 				ap = atoi_tab + (v2 << 2);
 				*str++ = *ap++;
+				if (str==end) break;
 				*str++ = *ap++;
+				if (str==end) break;
 				*str++ = *ap;
+				if (str==end) break;
 				v2 = v1 / 1000;
 				v1 -= v2 * 1000;
 				ap = atoi_tab + (v2 << 2);
 				*str++ = *ap++;
+				if (str==end) break;
 				*str++ = *ap++;
+				if (str==end) break;
 				*str++ = *ap;
+				if (str==end) break;
 				ap = atoi_tab + (v1 << 2);
 				*str++ = *ap++;
+				if (str==end) break;
 				*str++ = *ap++;
+				if (str==end) break;
 				*str++ = *ap;
 				continue;
 			}
@@ -343,6 +355,7 @@ char *ircvsprintf(char *str, const char *format, va_list vl)
 						continue;
 					}
 					*str++ = '-';
+					if (str==end) break;
 					v1 = -v1;
 				}
 				do
@@ -357,8 +370,7 @@ char *ircvsprintf(char *str, const char *format, va_list vl)
 				}
 				while ((v1 = v2) > 0);
 				while ('0' == *++s);
-				*str = *s;
-				while ((*++str = *++s));
+				while (str!=end && *s) *str++ = *s++;
 				continue;
 			}
 			if (c == 'u')
@@ -385,14 +397,13 @@ char *ircvsprintf(char *str, const char *format, va_list vl)
 				}
 				while ((v1 = v2) > 0);
 				while ('0' == *++s);
-				*str = *s;
-				while ((*++str = *++s));
+				while (str!=end && *s) *str++ = *s++;
 				continue;
 			}
 			if (c != '%')
 			{
 				format -= 2;
-				str += vsprintf(str, format, vl);
+				str += vsnprintf(str, (size_t)(end-str+1), format, vl);
 				break;
 			}
 		}
@@ -402,12 +413,12 @@ char *ircvsprintf(char *str, const char *format, va_list vl)
 	return str;
 }
 
-char *ircsprintf(char *str, const char *format, ...)
+char *ircsnprintf(char *str, size_t size, const char *format, ...)
 {
 	va_list vl;
 	char *ret;
 	va_start(vl, format);
-	ret = ircvsprintf(str, format, vl);
+	ret = ircvsnprintf(str, size, format, vl);
 	va_end(vl);
 	return ret;
 }

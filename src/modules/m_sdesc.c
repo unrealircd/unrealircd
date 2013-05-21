@@ -115,7 +115,7 @@ int m_sdesc(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 
-	ircsprintf(sptr->srvptr->info, "%s", parv[1]);
+	ircsnprintf(sptr->srvptr->info, sizeof(sptr->srvptr->info), "%s", parv[1]);
 
 	sendto_server(cptr, 0, 0, ":%s SDESC :%s", sptr->name, parv[1]);
 

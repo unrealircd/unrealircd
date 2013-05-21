@@ -112,7 +112,7 @@ char tmpbuf[512];
 	if (loop.ircd_booted)
 	{
 		make_extbanstr();
-		ircsprintf(tmpbuf, "~,%s", extbanstr);
+		ircsnprintf(tmpbuf, sizeof(tmpbuf), "~,%s", extbanstr);
 		IsupportSetValue(IsupportFind("EXTBAN"), tmpbuf);
 	}
 	return &ExtBan_Table[slot];
@@ -138,7 +138,7 @@ char tmpbuf[512];
 	}
 	memset(eb, 0, sizeof(Extban));
 	make_extbanstr();
-	ircsprintf(tmpbuf, "~,%s", extbanstr);
+	ircsnprintf(tmpbuf, sizeof(tmpbuf), "~,%s", extbanstr);
 	IsupportSetValue(IsupportFind("EXTBAN"), tmpbuf);
 	/* Hmm do we want to go trough all chans and remove the bans?
 	 * I would say 'no' because perhaps we are just reloading,
@@ -370,7 +370,7 @@ char pfix[8];
 	if (!ret)
 		ret = make_nick_user_host(trim_str(cp,NICKLEN), trim_str(user,USERLEN), trim_str(host,HOSTLEN));
 
-	ircsprintf(retbuf, "%s%s", pfix, ret);
+	ircsnprintf(retbuf, USERLEN + NICKLEN + HOSTLEN + 32, "%s%s", pfix, ret);
 	return retbuf;
 }
 
@@ -441,9 +441,9 @@ char* extban_conv_param_nuh_or_extban(char* para)
 			{
 				/*
 				 * If bans are stacked, then we have to use two buffers
-				 * to prevent ircsprintf() from going into a loop.
+				 * to prevent ircsnprintf() from going into a loop.
 				 */
-				ircsprintf(printbuf, "~%c:%s", bantype, ret); /* Make sure our extban prefix sticks. */
+				ircsnprintf(printbuf, sizeof(printbuf), "~%c:%s", bantype, ret); /* Make sure our extban prefix sticks. */
 				memcpy(retbuf, printbuf, sizeof(retbuf));
 				return retbuf;
 			}

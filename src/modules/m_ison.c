@@ -85,8 +85,7 @@ DLLFUNC int MOD_UNLOAD(m_ison)(int module_unload)
  */
 
 static char buf[BUFSIZE];
-DLLFUNC CMD_FUNC(m_ison)
-{
+DLLFUNC CMD_FUNC(m_ison) {
 	char namebuf[USERLEN + HOSTLEN + 4];
 	aClient *acptr;
 	char *s, **pav = parv, *user;
@@ -94,35 +93,28 @@ DLLFUNC CMD_FUNC(m_ison)
 	char *p = NULL;
 
 
-	if (parc < 2)
-	{
+	if (parc < 2) {
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
 		    me.name, parv[0], "ISON");
 		return 0;
 	}
 
-	(void)ircsprintf(buf, rpl_str(RPL_ISON), me.name, *parv);
+	ircsnprintf(buf, sizeof(buf), rpl_str(RPL_ISON), me.name, *parv);
 	len = strlen(buf);
 
-	for (s = strtoken(&p, *++pav, " "); s; s = strtoken(&p, NULL, " "))
-	{
+	for (s = strtoken(&p, *++pav, " "); s; s = strtoken(&p, NULL, " ")) {
 		if ((user = index(s, '!')))
 			*user++ = '\0';
-		if ((acptr = find_person(s, NULL)))
-		{
-			if (user)
-			{
-				strcpy(namebuf, acptr->user->username);
-				strcat(namebuf, "@");
-				strcat(namebuf, GetHost(acptr));
-				if (match(user, namebuf))
-					continue;
+		if ((acptr = find_person(s, NULL))) {
+			if (user) {
+				ircsnprintf(namebuf, sizeof(namebuf), "%s@%s", acptr->user->username, GetHost(acptr));
+				if (match(user, namebuf)) continue;
 				*--user = '!';
 			}
 
-			(void)strncat(buf, s, sizeof(buf) - len);
+			(void)strncat(buf, s, sizeof(buf) - (len+1));
 			len += strlen(s);
-			(void)strncat(buf, " ", sizeof(buf) - len);
+			(void)strncat(buf, " ", sizeof(buf) - (len+1));
 			len++;
 		}
 	}

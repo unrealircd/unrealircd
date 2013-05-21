@@ -228,7 +228,7 @@ DLLFUNC char *militime(char *sec, char *usec)
 	_ftime(&tv);
 #endif
 	if (sec && usec)
-		ircsprintf(timebuf, "%ld",
+		ircsnprintf(timebuf, sizeof(timebuf), "%ld",
 #ifndef _WIN32
 		    (tv.tv_sec - atoi(sec)) * 1000 + (tv.tv_usec - atoi(usec)) / 1000);
 #else
@@ -236,9 +236,9 @@ DLLFUNC char *militime(char *sec, char *usec)
 #endif
 	else
 #ifndef _WIN32
-		ircsprintf(timebuf, "%ld %ld", tv.tv_sec, tv.tv_usec);
+		ircsnprintf(timebuf, sizeof(timebuf), "%ld %ld", tv.tv_sec, tv.tv_usec);
 #else
-		ircsprintf(timebuf, "%ld %ld", tv.time, tv.millitm * 1000);
+		ircsnprintf(timebuf, sizeof(timebuf), "%ld %ld", tv.time, tv.millitm * 1000);
 #endif
 	return timebuf;
 }

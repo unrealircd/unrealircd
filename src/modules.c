@@ -165,11 +165,12 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 
 #ifdef UNDERSCORE
 void *obsd_dlsym(void *handle, char *symbol) {
-    char *obsdsymbol = (char*)MyMalloc(strlen(symbol) + 2);
+    size_t buflen = strlen(symbol) + 2;
+    char *obsdsymbol = (char*)MyMalloc(buflen);
     void *symaddr = NULL;
 
     if (obsdsymbol) {
-       sprintf(obsdsymbol, "_%s", symbol);
+       ircsnprintf(obsdsymbol, buflen, "_%s", symbol);
        symaddr = dlsym(handle, obsdsymbol);
        free(obsdsymbol);
     }
@@ -199,8 +200,7 @@ void DeleteTempModules(void)
 	{
 		if (!strcmp(dir->d_name, ".") || !strcmp(dir->d_name, ".."))
 			continue;
-		strcpy(tempbuf, "tmp/");
-		strcat(tempbuf, dir->d_name);
+		ircsnprintf(tempbuf, sizeof(tempbuf), "tmp/%s", dir->d_name);
 		remove(tempbuf);
 	}
 	closedir(fd);
@@ -211,8 +211,7 @@ void DeleteTempModules(void)
 	{
 		if (strcmp(hData.cFileName, ".") || strcmp(hData.cFileName, ".."))
 		{
-			strcpy(tempbuf, "tmp/");
-			strcat(tempbuf, hData.cFileName);
+			ircsnprintf(tempbuf, sizeof(tempbuf), "tmp/%s", hdata.cFileName);
 			remove(tempbuf);
 		}
 	}
@@ -220,8 +219,7 @@ void DeleteTempModules(void)
 	{
 		if (!strcmp(hData.cFileName, ".") || !strcmp(hData.cFileName, ".."))
 			continue;
-		strcpy(tempbuf, "tmp/");
-		strcat(tempbuf, hData.cFileName);
+		ircsnprintf(tempbuf, sizeof(tempbuf), "tmp/%s", hData.cFileName);
 		remove(tempbuf);
 	}
 	FindClose(hFile);
@@ -279,13 +277,13 @@ int parse_modsys_version(char *version)
 	return 0;
 }
 
-void make_compiler_string(char *buf, unsigned int ver)
+void make_compiler_string(char *buf, size_t buflen, unsigned int ver)
 {
 unsigned int maj, min, plevel;
 
 	if (ver == 0)
 	{
-		strcpy(buf, "0");
+		strlcpy(buf, "0", buflen);
 		return;
 	}
 	
@@ -294,9 +292,9 @@ unsigned int maj, min, plevel;
 	plevel = ver & 0xff;
 	
 	if (plevel == 0)
-		sprintf(buf, "%d.%d", maj, min);
+		snprintf(buf, buflen, "%d.%d", maj, min);
 	else
-		sprintf(buf, "%d.%d.%d", maj, min, plevel);
+		snprintf(buf, buflen, "%d.%d.%d", maj, min, plevel);
 }
 
 /*
@@ -333,10 +331,7 @@ char  *Module_Create(char *path_)
 	{
 		char dirbase[1024];
 		unreal_getpathname(SPATH, dirbase);
-		strlcpy(pathbuf, dirbase, sizeof pathbuf);
-		strlcat(pathbuf, "/", sizeof pathbuf);
-		strlcat(pathbuf, path, sizeof pathbuf);
-		strlcat(pathbuf, MODULE_SUFFIX, sizeof pathbuf);
+                ircsnprintf(pathbuf, sizeof(pathbuf), "%s/%s%s", dirbase, path, MODULE_SUFFIX);
 		path = pathbuf;
 	}
 	
@@ -349,9 +344,9 @@ char  *Module_Create(char *path_)
 	if (!strchr(path, '\\') && !strchr(path, '/'))
 #endif
 	{
-		path = MyMalloc(strlen(path) + 3);
-		strcpy(path, "./");
-		strcat(path, path_);
+                size_t pathsize = strlen(path)+3;
+		path = MyMalloc(pathsize);
+                ircsnprintf(path, pathsize, "./%s", path_);
 	}
 
 	if (!file_exists(path))
@@ -394,8 +389,8 @@ char  *Module_Create(char *path_)
 		if (compiler_version && ( ((*compiler_version) & 0xffff00) != (expectedcompilerversion & 0xffff00) ) )
 		{
 			char theyhad[64], wehave[64];
-			make_compiler_string(theyhad, *compiler_version);
-			make_compiler_string(wehave, expectedcompilerversion);
+			make_compiler_string(theyhad, sizeof(theyhad), *compiler_version);
+			make_compiler_string(wehave, sizeof(wehave), expectedcompilerversion);
 			snprintf(errorbuf, sizeof(errorbuf),
 			         "Module was compiled with GCC %s, core was compiled with GCC %s. SOLUTION: Recompile your UnrealIRCd and all its modules by doing a 'make clean; ./Config -quick && make'.",
 			         theyhad, wehave);
@@ -473,7 +468,7 @@ char  *Module_Create(char *path_)
 		{
 			if (mod->mod_sys_version >= 0x320b8) {
 				if ((ret = (*Mod_Test)(&mod->modinfo)) < MOD_SUCCESS) {
-					ircsprintf(errorbuf, "Mod_Test returned %i",
+					ircsnprintf(errorbuf, sizeof(errorbuf), "Mod_Test returned %i",
 						   ret);
 					/* We EXPECT the module to have cleaned up it's mess */
 		        		Module_free(mod);
@@ -1069,11 +1064,11 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		tmp[0] = '\0';
 		if (mi->flags & MODFLAG_DELAYED)
-			strcat(tmp, "[Unloading] ");
+			strncat(tmp, "[Unloading] ", sizeof(tmp)-strlen(tmp)-1);
 		if (mi->options & MOD_OPT_PERM)
-			strcat(tmp, "[PERM] ");
+			strncat(tmp, "[PERM] ", sizeof(tmp)-strlen(tmp)-1);
 		if (!(mi->options & MOD_OPT_OFFICIAL))
-			strcat(tmp, "[3RD] ");
+			strncat(tmp, "[3RD] ", sizeof(tmp)-strlen(tmp)-1);
 		if (!IsOper(sptr))
 			sendto_one(sptr, ":%s NOTICE %s :*** %s (%s)%s", me.name, sptr->name,
 				mi->header->name, mi->header->description,
@@ -1087,18 +1082,15 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 
 	tmp[0] = '\0';
-	p = tmp;
 	for (i=0; i < MAXHOOKTYPES; i++)
 	{
 		if (!Hooks[i])
 			continue;
-		sprintf(p, "%d ", i);
-		p += strlen(p);
-		if (p > tmp+380)
+		ircsnprintf(tmp, sizeof(tmp), "%d ", i);
+		if (strlen(p) > 380)
 		{
 			sendto_one(sptr, ":%s NOTICE %s :Hooks: %s", me.name, sptr->name, tmp);
 			tmp[0] = '\0';
-			p = tmp;
 		}
 	}
 	sendto_one(sptr, ":%s NOTICE %s :Hooks: %s ", me.name, sptr->name, tmp);
@@ -1110,7 +1102,7 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		for (mptr = CommandHash[i]; mptr; mptr = mptr->next)
 			if (mptr->overriders)
 			{
-				sprintf(p, "%s ", mptr->cmd);
+				ircsnprintf(p, sizeof(tmp)-strlen(tmp), "%s ", mptr->cmd);
 				p += strlen(p);
 				if (p > tmp+380)
 				{

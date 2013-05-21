@@ -183,7 +183,7 @@ va_list vl;
 static char buf[2048];
 
 	va_start(vl, fmt);
-	ircvsprintf(buf, fmt, vl);
+	ircvsnprintf(buf, sizeof(buf), fmt, vl);
 	va_end(vl);
 	sendto_realops("[SSL rehash] %s", buf);
 	ircd_log(LOG_ERROR, "%s", buf);

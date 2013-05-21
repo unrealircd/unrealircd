@@ -1,4 +1,4 @@
-/*
+ /*
  *   Unreal Internet Relay Chat Daemon, src/socket.c
  *   Copyright (C) 1990 Jarkko Oikarinen and
  *                      University of Oulu, Computing Center
@@ -151,7 +151,7 @@ char	*Inet_si2pB(struct SOCKADDR_IN *sin, char *buf, int sz)
 	    && cp[9] == 0 && cp[10] == 0xff
 	    && cp[11] == 0xff)
 	{
-		(void)ircsprintf(buf, "%u.%u.%u.%u",
+		(void)ircsnprintf(buf, sz, "%u.%u.%u.%u",
 		    (u_int)(cp[12]), (u_int)(cp[13]),
 		    (u_int)(cp[14]), (u_int)(cp[15]));
 	
@@ -189,7 +189,7 @@ char	*Inet_ia2p(struct IN_ADDR *ia)
 	    && cp[9] == 0 && cp[10] == 0xff
 	    && cp[11] == 0xff)
 	{
-		(void)ircsprintf(buf, "%u.%u.%u.%u",
+		(void)ircsnprintf(buf, sizeof(buf), "%u.%u.%u.%u",
 		    (u_int)(cp[12]), (u_int)(cp[13]),
 		    (u_int)(cp[14]), (u_int)(cp[15]));
 	

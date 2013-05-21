@@ -263,7 +263,7 @@ CMD_FUNC(m_sjoin)
 	banbuf[0] = '\0';
 	exbuf[0] = '\0';
 	invexbuf[0] = '\0';
-	channel_modes(cptr, modebuf, parabuf, chptr);
+	channel_modes(cptr, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), chptr);
 	if (removeours)
 	{
 		modebuf[0] = '-';

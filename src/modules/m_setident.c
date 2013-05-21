@@ -211,7 +211,7 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		}
 
 		/* get it in */
-		ircsprintf(sptr->user->username, "%s", vident);
+		ircsnprintf(sptr->user->username, sizeof(sptr->user->username), "%s", vident);
 		/* spread it out */
 		sendto_server(cptr, 0, 0, ":%s SETIDENT %s", sptr->name, parv[1]);
 

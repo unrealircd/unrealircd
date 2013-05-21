@@ -142,8 +142,7 @@ void set_oper_host(aClient *sptr, char *host)
 	if ((c = strchr(host, '@')))
 	{
 		vhost =	c+1;
-		strncpy(sptr->user->username, host, c-host);
-		sptr->user->username[c-host] = 0;
+		strlcpy(sptr->user->username, host, c-vhost);
 		sendto_server(NULL, 0, 0, ":%s SETIDENT %s",
 		    sptr->name, sptr->user->username);
 	}
@@ -267,8 +266,9 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		if (aconf->swhois) {
 			if (sptr->user->swhois)
 				MyFree(sptr->user->swhois);
-			sptr->user->swhois = MyMalloc(strlen(aconf->swhois) +1);
-			strcpy(sptr->user->swhois, aconf->swhois);
+                        size_t whois_size = strlen(aconf->swhois) + 1;
+			sptr->user->swhois = MyMalloc(whois_size);
+			strlcpy(sptr->user->swhois, aconf->swhois, whois_size);
 			sendto_server(cptr, 0, 0, ":%s SWHOIS %s :%s",
 			    me.name, sptr->name, aconf->swhois);
 		}

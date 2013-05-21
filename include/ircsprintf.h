@@ -21,8 +21,8 @@
 #define __attribute__(x) /* nothing */
 #endif
 
-extern char *ircvsprintf(char *str, const char *format, va_list);
-extern char *ircsprintf(char *str, const char *format, ...) __attribute__((format(printf,2,3)));
+extern char *ircvsnprintf(char *str, size_t size, const char *format, va_list);
+extern char *ircsnprintf(char *str, size_t size, const char *format, ...) __attribute__((format(printf,3,4)));
 
 extern const char atoi_tab[4000];
 

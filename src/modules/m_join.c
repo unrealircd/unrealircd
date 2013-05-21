@@ -407,7 +407,7 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 			}
 
 			*modebuf = *parabuf = 0;
-			channel_modes(sptr, modebuf, parabuf, chptr);
+			channel_modes(sptr, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), chptr);
 			/* This should probably be in the SJOIN stuff */
 			sendto_server(&me, 0, 0, ":%s MODE %s %s %s %lu",
 			    me.name, chptr->chname, modebuf, parabuf, chptr->creationtime);

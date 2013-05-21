@@ -515,9 +515,9 @@ void check_tkls(void)
 
 			if (bconf->reason) {
 				if (IsPerson(cptr))
-					snprintf(banbuf, sizeof banbuf - 1, "User has been banned (%s)", bconf->reason);
+					snprintf(banbuf, sizeof(banbuf), "User has been banned (%s)", bconf->reason);
 				else
-					snprintf(banbuf, sizeof banbuf - 1, "Banned (%s)", bconf->reason);
+					snprintf(banbuf, sizeof(banbuf), "Banned (%s)", bconf->reason);
 				(void)exit_client(cptr, cptr, &me, banbuf);
 			} else {
 				if (IsPerson(cptr))
@@ -665,7 +665,7 @@ EVENT(check_pings)
 					Debug((DEBUG_DEBUG, "ssl accept handshake timeout: %s (%li-%li > %li)", cptr->sockhost,
 						currenttime, cptr->since, ping));
 #endif
-				(void)ircsprintf(scratch, "Ping timeout: %ld seconds",
+				(void)ircsnprintf(scratch, sizeof(scratch), "Ping timeout: %ld seconds",
 					(long) (TStime() - cptr->lasttime));
 				exit_client(cptr, cptr, &me, scratch);
 				continue;
@@ -1473,13 +1473,13 @@ int InitwIRCD(int argc, char *argv[])
 		if (fork())
 			exit(0);
 #endif
-	(void)ircsprintf(REPORT_DO_DNS, ":%s %s", me.name, BREPORT_DO_DNS);
-	(void)ircsprintf(REPORT_FIN_DNS, ":%s %s", me.name, BREPORT_FIN_DNS);
-	(void)ircsprintf(REPORT_FIN_DNSC, ":%s %s", me.name, BREPORT_FIN_DNSC);
-	(void)ircsprintf(REPORT_FAIL_DNS, ":%s %s", me.name, BREPORT_FAIL_DNS);
-	(void)ircsprintf(REPORT_DO_ID, ":%s %s", me.name, BREPORT_DO_ID);
-	(void)ircsprintf(REPORT_FIN_ID, ":%s %s", me.name, BREPORT_FIN_ID);
-	(void)ircsprintf(REPORT_FAIL_ID, ":%s %s", me.name, BREPORT_FAIL_ID);
+	(void)ircsnprintf(REPORT_DO_DNS, sizeof(REPORT_DO_DNS), ":%s %s", me.name, BREPORT_DO_DNS);
+	(void)ircsnprintf(REPORT_FIN_DNS, sizeof(REPORT_FIN_DNS), ":%s %s", me.name, BREPORT_FIN_DNS);
+	(void)ircsnprintf(REPORT_FIN_DNSC, sizeof(REPORT_FIN_DNSC), ":%s %s", me.name, BREPORT_FIN_DNSC);
+	(void)ircsnprintf(REPORT_FAIL_DNS, sizeof(REPORT_FAIL_DNS), ":%s %s", me.name, BREPORT_FAIL_DNS);
+	(void)ircsnprintf(REPORT_DO_ID, sizeof(REPORT_DO_ID), ":%s %s", me.name, BREPORT_DO_ID);
+	(void)ircsnprintf(REPORT_FIN_ID, sizeof(REPORT_FIN_ID), ":%s %s", me.name, BREPORT_FIN_ID);
+	(void)ircsnprintf(REPORT_FAIL_ID, sizeof(REPORT_FAIL_ID), ":%s %s", me.name, BREPORT_FAIL_ID);
 	R_do_dns = strlen(REPORT_DO_DNS);
 	R_fin_dns = strlen(REPORT_FIN_DNS);
 	R_fin_dnsc = strlen(REPORT_FIN_DNSC);
@@ -1730,7 +1730,7 @@ static void open_debugfile(void)
 			strlcpy(cptr->name, ttyname(2), sizeof(cptr->name));
 		else
 # endif
-			(void)strcpy(cptr->name, "FD2-Pipe");
+			strlcpy(cptr->name, "FD2-Pipe", sizeof(cptr->name));
 		Debug((DEBUG_FATAL,
 		    "Debug: File <%s> Level: %d at %s", cptr->name,
 		    cptr->port, myctime(time(NULL))));

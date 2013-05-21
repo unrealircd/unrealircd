@@ -75,32 +75,21 @@ void make_isupportstrings(void)
 				len = 0;
 				IsupportStrings[++i] = MyMallocEx(bufsize); 
 			}
-			if (IsupportStrings[i][0])
-			{
-				strcat(IsupportStrings[i], " ");
-				toklen++;
-			}
-			strcat(IsupportStrings[i], isupport->token);
+			if (IsupportStrings[i][0]) toklen++;
+			ircsnprintf(IsupportStrings[i]+len, bufsize-len, "%s%s", IsupportStrings[i][0]? " ": "", isupport->token);
 			len += toklen;
 			tokcnt++;
 		}
 		else
 		{
 			toklen = strlen(isupport->token)+strlen(isupport->value)+1;
-			if (tokcnt == 13 || bufsize < len+toklen+1)
-			{
+			if (tokcnt == 13 || bufsize < len+toklen+1) {
 				tokcnt = 0;
 				len = 0;
 				IsupportStrings[++i] = MyMallocEx(bufsize);
 			}
-			if (IsupportStrings[i][0])
-			{
-				strcat(IsupportStrings[i], " ");
-				toklen++;
-			}
-			strcat(IsupportStrings[i], isupport->token);
-			strcat(IsupportStrings[i], "=");
-			strcat(IsupportStrings[i], isupport->value);
+			if (IsupportStrings[i][0]) toklen++;
+			ircsnprintf(IsupportStrings[i]+len, bufsize-len, "%s%s=%s", IsupportStrings[i][0]? " ": "", isupport->token, isupport->value);
 			len += toklen;
 			tokcnt++;
 		}	
@@ -121,11 +110,11 @@ void isupport_init(void)
 	IsupportAdd(NULL, "STATUSMSG", "@%+");
 #endif
 	IsupportAdd(NULL, "ELIST", "MNUCT");
-	ircsprintf(tmpbuf, "~,%s", extbanstr);
+	ircsnprintf(tmpbuf, sizeof(tmpbuf), "~,%s", extbanstr);
 	IsupportAdd(NULL, "EXTBAN", tmpbuf);
 	IsupportAdd(NULL, "CASEMAPPING", "ascii");
 	IsupportAdd(NULL, "NETWORK", ircnet005);
-	ircsprintf(tmpbuf, CHPAR1 "%s," CHPAR2 "%s," CHPAR3 "%s," CHPAR4 "%s",
+	ircsnprintf(tmpbuf, sizeof(tmpbuf), CHPAR1 "%s," CHPAR2 "%s," CHPAR3 "%s," CHPAR4 "%s",
  			EXPAR1, EXPAR2, EXPAR3, EXPAR4);
 	IsupportAdd(NULL, "CHANMODES", tmpbuf);
 	IsupportAdd(NULL, "PREFIX", CHPFIX);
@@ -143,9 +132,9 @@ void isupport_init(void)
 	IsupportAdd(NULL, "CHANNELLEN", my_itoa(CHANNELLEN));
 	IsupportAdd(NULL, "NICKLEN", my_itoa(iConf.nicklen));
 	IsupportAdd(NULL, "MAXNICKLEN", my_itoa(NICKLEN));
-	ircsprintf(tmpbuf, "b:%d,e:%d,I:%d", MAXBANS, MAXBANS, MAXBANS);
+	ircsnprintf(tmpbuf, sizeof(tmpbuf), "b:%d,e:%d,I:%d", MAXBANS, MAXBANS, MAXBANS);
 	IsupportAdd(NULL, "MAXLIST", tmpbuf);
-	ircsprintf(tmpbuf, "#:%d", MAXCHANNELSPERUSER);
+	ircsnprintf(tmpbuf, sizeof(tmpbuf), "#:%d", MAXCHANNELSPERUSER);
 	IsupportAdd(NULL, "CHANLIMIT", tmpbuf);
 	IsupportAdd(NULL, "MAXCHANNELS", my_itoa(MAXCHANNELSPERUSER));
 	IsupportAdd(NULL, "HCN", NULL);

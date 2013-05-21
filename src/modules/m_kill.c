@@ -213,7 +213,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					   around, or it gets appended to itself. */
 				if (!BadPtr(path))
 				{
-					(void)ircsprintf(buf, "%s%s (%s)",
+					(void)ircsnprintf(buf, sizeof(buf), "%s%s (%s)",
 					    cptr->name,
 					    IsOper(sptr) ? "" : "(L)", path);
 					path = buf;
@@ -287,7 +287,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		 */
 		if (MyConnect(acptr) && MyConnect(sptr) && IsAnOper(sptr))
 
-			(void)ircsprintf(buf2, "[%s] Local kill by %s (%s)",
+			ircsnprintf(buf2, sizeof(buf2), "[%s] Local kill by %s (%s)",
 			    me.name, sptr->name,
 			    BadPtr(parv[2]) ? sptr->name : parv[2]);
 		else
@@ -303,7 +303,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			}
 			else
 				killer = path;
-			(void)ircsprintf(buf2, "Killed (%s)", killer);
+			ircsnprintf(buf2, sizeof(buf2), "Killed (%s)", killer);
 		}
 
 		if (MyClient(sptr))

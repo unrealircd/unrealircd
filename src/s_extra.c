@@ -290,11 +290,11 @@ static int last_log_file_warning = 0;
 	int written = 0, write_failure = 0;
 
 	va_start(ap, format);
-	ircvsprintf(buf, format, ap);
+	ircvsnprintf(buf, sizeof(buf), format, ap);
 	va_end(ap);
-	snprintf(timebuf, sizeof timebuf, "[%s] - ", myctime(TStime()));
+	snprintf(timebuf, sizeof(timebuf), "[%s] - ", myctime(TStime()));
 	RunHook3(HOOKTYPE_LOG, flags, timebuf, buf);
-	strlcat(buf, "\n", sizeof buf);
+	strlcat(buf, "\n", sizeof(buf));
 
 	for (logs = conf_log; logs; logs = (ConfigItem_log *) logs->next) {
 #ifdef HAVE_SYSLOG

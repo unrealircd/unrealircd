@@ -352,10 +352,10 @@ int  inetport(ConfigItem_listen *listener, char *name, int port)
 	 */
 #ifndef INET6
 	(void)sscanf(name, "%d.%d.%d.%d", &ad[0], &ad[1], &ad[2], &ad[3]);
-	(void)ircsprintf(ipname, "%d.%d.%d.%d", ad[0], ad[1], ad[2], ad[3]);
+	(void)ircsnprintf(ipname, sizeof(ipname), "%d.%d.%d.%d", ad[0], ad[1], ad[2], ad[3]);
 #else
 	if (*name == '*')
-		ircsprintf(ipname, "::");
+		ircsnprintf(ipname, sizeof(ipname), "::");
 	else
 		strlcpy(ipname, name, sizeof(ipname));
 #endif
@@ -410,7 +410,7 @@ int  inetport(ConfigItem_listen *listener, char *name, int port)
 		if (bind(listener->fd, (struct SOCKADDR *)&server,
 		    sizeof(server)) == -1)
 		{
-			ircsprintf(backupbuf, "Error binding stream socket to IP %s port %i",
+			ircsnprintf(backupbuf, sizeof(backupbuf), "Error binding stream socket to IP %s port %i",
 				ipname, port);
 			strlcat(backupbuf, " - %s:%s", sizeof backupbuf);
 			report_baderror(backupbuf, NULL);
@@ -673,7 +673,7 @@ void write_pidfile(void)
 	if ((fd = open(conf_files->pid_file, O_CREAT | O_WRONLY, 0600)) >= 0)
 	{
 		bzero(buff, sizeof(buff));
-		(void)ircsprintf(buff, "%5d\n", (int)getpid());
+		(void)ircsnprintf(buff, sizeof(buff), "%5d\n", (int)getpid());
 		if (write(fd, buff, strlen(buff)) == -1)
 			Debug((DEBUG_NOTICE, "Error writing to pid file %s",
 			    conf_files->pid_file));
@@ -1039,7 +1039,7 @@ void set_sock_opts(int fd, aClient *cptr)
 		else if (opt > 0 && opt != sizeof(readbuf) / 8)
 		{
 			for (*readbuf = '\0'; opt > 0; opt--, s += 3)
-				(void)ircsprintf(s, "%2.2x:", *t++);
+				(void)ircsnprintf(s, sizeof(readbuf)-(s-readbuf), "%2.2x:", *t++);
 			*s = '\0';
 			sendto_realops("Connection %s using IP opts: (%s)",
 			    get_client_name(cptr, TRUE), readbuf);
@@ -1216,7 +1216,7 @@ add_con_refuse:
 				j++;
 				if (j > MAXUNKNOWNCONNECTIONSPERIP)
 				{
-					ircsprintf(zlinebuf,
+					ircsnprintf(zlinebuf, sizeof(zlinebuf),
 						"ERROR :Closing Link: [%s] (Too many unknown connections from your IP)"
 						"\r\n",
 						Inet_ia2p(&acptr->ip));
@@ -1230,7 +1230,7 @@ add_con_refuse:
 		if ((bconf = Find_ban(acptr, Inet_ia2p(&acptr->ip), CONF_BAN_IP))) {
 			if (bconf)
 			{
-				ircsprintf(zlinebuf,
+				ircsnprintf(zlinebuf, sizeof(zlinebuf),
 					"ERROR :Closing Link: [%s] (You are not welcome on "
 					"this server: %s. Email %s for more information.)\r\n",
 					Inet_ia2p(&acptr->ip),
@@ -1254,7 +1254,7 @@ add_con_refuse:
 			int val;
 			if (!(val = throttle_can_connect(acptr, &acptr->ip)))
 			{
-				ircsprintf(zlinebuf,
+				ircsnprintf(zlinebuf, sizeof(zlinebuf),
 					"ERROR :Closing Link: [%s] (Throttled: Reconnecting too fast) -"
 						"Email %s for more information.\r\n",
 						Inet_ia2p(&acptr->ip),

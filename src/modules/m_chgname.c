@@ -138,7 +138,7 @@ DLLFUNC int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		}
 
 		/* set the realname first to make n:line checking work */
-		ircsprintf(acptr->info, "%s", parv[2]);
+		ircsnprintf(acptr->info, sizeof(acptr->info), "%s", parv[2]);
 		/* only check for n:lines if the person who's name is being changed is not an oper */
 		if (!IsAnOper(acptr) && Find_ban(NULL, acptr->info, CONF_BAN_REALNAME)) {
 			int xx;

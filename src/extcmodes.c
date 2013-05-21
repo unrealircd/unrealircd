@@ -209,7 +209,7 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 	{
 		make_cmodestr();
 		make_extcmodestr();
-		ircsprintf(tmpbuf, CHPAR1 "%s," CHPAR2 "%s," CHPAR3 "%s," CHPAR4 "%s",
+		ircsnprintf(tmpbuf, sizeof(tmpbuf), CHPAR1 "%s," CHPAR2 "%s," CHPAR3 "%s," CHPAR4 "%s",
 			EXPAR1, EXPAR2, EXPAR3, EXPAR4);
 		IsupportSetValue(IsupportFind("CHANMODES"), tmpbuf);
 	}
@@ -245,7 +245,7 @@ aChannel *chptr;
 	cmode->flag = '\0';
 	make_cmodestr();
 	make_extcmodestr();
-	ircsprintf(tmpbuf, CHPAR1 "%s," CHPAR2 "%s," CHPAR3 "%s," CHPAR4 "%s",
+	ircsnprintf(tmpbuf, sizeof(tmpbuf), CHPAR1 "%s," CHPAR2 "%s," CHPAR3 "%s," CHPAR4 "%s",
 			EXPAR1, EXPAR2, EXPAR3, EXPAR4);
 	IsupportSetValue(IsupportFind("CHANMODES"), tmpbuf);
 }

@@ -649,7 +649,7 @@ int _is_silenced(aClient *sptr, aClient *acptr)
 	if (!(acptr->user) || !(lp = acptr->user->silence) ||
 	    !(user = sptr->user)) return 0;
 
-	ircsprintf(sender, "%s!%s@%s", sptr->name, user->username,
+	ircsnprintf(sender, sizeof(sender), "%s!%s@%s", sptr->name, user->username,
 	    user->realhost);
 	/* We also check for matches against sptr->user->virthost if present,
 	 * this is checked regardless of mode +x so you can't do tricks like:
@@ -658,7 +658,7 @@ int _is_silenced(aClient *sptr, aClient *acptr)
 	 */
 	if (sptr->user->virthost)
 	{
-		ircsprintf(senderx, "%s!%s@%s", sptr->name, user->username,
+		ircsnprintf(senderx, sizeof(senderx), "%s!%s@%s", sptr->name, user->username,
 		    sptr->user->virthost);
 		checkv = 1;
 	}

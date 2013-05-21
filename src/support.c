@@ -53,9 +53,9 @@ char	*my_itoa(int i)
 {
 	static char buf[128];
 #ifndef _WIN32	
-	ircsprintf(buf, "%d", i);
+	ircsnprintf(buf, sizeof(buf), "%d", i);
 #else
-	_itoa(i, buf, 10);
+	_itoa_s(i, buf, sizeof(buf), 10);
 #endif
 	return (buf);
 }
@@ -129,7 +129,7 @@ char *strerror(int err_no)
 	if (errp == (char *)NULL)
 	{
 		errp = buff;
-		(void)ircsprintf(errp, "Unknown Error %d", err_no);
+		(void)ircsnprintf(buff, sizeof(buff), "Unknown Error %d", err_no);
 
 	}
 	return errp;
@@ -157,7 +157,7 @@ char *inetntoa(char *in)
 	b = (int)*s++;
 	c = (int)*s++;
 	d = (int)*s++;
-	(void)ircsprintf(buf, "%d.%d.%d.%d", a, b, c, d);
+	(void)ircsnprintf(buf, sizeof(buf), "%d.%d.%d.%d", a, b, c, d);
 
 	return buf;
 }
@@ -1867,8 +1867,8 @@ static const char *inet_ntop4(const u_char *src, char *dst, size_t size)
 	static const char fmt[] = "%u.%u.%u.%u";
 	char tmp[sizeof "255.255.255.255"];
 
-	sprintf(tmp, fmt, src[0], src[1], src[2], src[3]);
-	if ((size_t)strlen(tmp) > size) {
+	snprintf(tmp, sizeof(tmp), fmt, src[0], src[1], src[2], src[3]);
+	if ((size_t)strlen(tmp)+1 > size) {
 #ifndef _WIN32
 		errno = ENOSPC;
 #else
@@ -1876,7 +1876,7 @@ static const char *inet_ntop4(const u_char *src, char *dst, size_t size)
 #endif
 		return (NULL);
 	}
-	strcpy(dst, tmp);
+	strlcpy(dst, tmp, size);
 	return (dst);
 }
 
@@ -1934,9 +1934,10 @@ static const char *inet_ntop6(const u_char *src, char *dst, size_t size)
 	/*
 	 * Format the result.
 	 */
+        if (size < (IN6ADDRSZ / INT16SZ)) return 0;
 	tp = tmp;
 	for (i = 0; i < (IN6ADDRSZ / INT16SZ); i++) {
-		/* Are we inside the best run of 0x00's? */
+		/* Are we inside the best run of 0x00? */
 		if (best.base != -1 && i >= best.base &&
 		    i < (best.base + best.len)) {
 			if (i == best.base)
@@ -1954,7 +1955,7 @@ static const char *inet_ntop6(const u_char *src, char *dst, size_t size)
 			tp += strlen(tp);
 			break;
 		}
-		sprintf(tp, "%x", words[i]);
+		snprintf(tp, sizeof(tmp)-strlen(tmp), "%x", words[i]);
 		tp += strlen(tp);
 	}
 	/* Was it a trailing run of 0x00's? */
@@ -1973,7 +1974,7 @@ static const char *inet_ntop6(const u_char *src, char *dst, size_t size)
 #endif
 		return (NULL);
 	}
-	strcpy(dst, tmp);
+	strlcpy(dst, tmp, size);
 	return (dst);
 }
 
@@ -2290,7 +2291,7 @@ char *sock_strerror(int error)
 		else
 			return WSAErrors[mid].error_string;	
 	}
-	sprintf(unkerr, "Unknown Error: %d", error);
+	snprintf(unkerr, sizeof(unkerr), "Unknown Error: %d", error);
 	return unkerr;
 }
 #endif

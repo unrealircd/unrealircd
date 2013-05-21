@@ -639,7 +639,7 @@ int i;
 	/* Good.. now create the whole string:
 	 * $<saltb64d>$<totalhashb64d>
 	 */
-	ircsprintf(buf, "$%s$%s", saltstr, xresult);
+	ircsnprintf(buf, sizeof(buf), "$%s$%s", saltstr, xresult);
 	return buf;
 }
 
@@ -718,7 +718,7 @@ int i;
 	/* Good.. now create the whole string:
 	 * $<saltb64d>$<totalhashb64d>
 	 */
-	ircsprintf(buf, "$%s$%s", saltstr, xresult);
+	ircsnprintf(buf, sizeof(buf), "$%s$%s", saltstr, xresult);
 	return buf;
 }
 #endif /* AUTHENABLE_SHA1 */
@@ -774,7 +774,7 @@ int i;
 	/* Good.. now create the whole string:
 	 * $<saltb64d>$<totalhashb64d>
 	 */
-	ircsprintf(buf, "$%s$%s", saltstr, xresult);
+	ircsnprintf(buf, sizeof(buf), "$%s$%s", saltstr, xresult);
 	return buf;
 }
 #endif /* AUTHENABLE_RIPEMD160 */
@@ -798,7 +798,7 @@ char	*Auth_Make(short type, char *para)
 			/* If our data is like 1 or none, we just let em through .. */
 			if (!(para[0] && para[1]))
 				return NULL;
-			sprintf(salt, "%02X", (unsigned int)getrandom8());
+			snprintf(salt, sizeof(salt), "%02X", (unsigned int)getrandom8());
 			return(crypt(para, salt));
 			break;
 #endif

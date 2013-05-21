@@ -168,7 +168,7 @@ int succesfully_sent = 0;
 		s[n] = fd_socket(AF_INET, SOCK_DGRAM, 0, buf); /* always ipv4 */
 		if (s[n] < 0)
 		{
-			ircsprintf(tserr, "unable to create socket: %s [%d]", STRERROR(ERRNO), (int)ERRNO);
+			ircsnprintf(tserr, sizeof(tserr), "unable to create socket: %s [%d]", STRERROR(ERRNO), (int)ERRNO);
 			goto end;
 		}
 		
@@ -180,7 +180,7 @@ int succesfully_sent = 0;
 		addr[n].sin_addr.s_addr = inet_addr(servname);
 		if (addr[n].sin_addr.s_addr == INADDR_NONE)
 		{
-			ircsprintf(tserr, "invalid timeserver IP '%s'", servname);
+			ircsnprintf(tserr, sizeof(tserr), "invalid timeserver IP '%s'", servname);
 			goto end;
 		}
 
@@ -205,7 +205,7 @@ int succesfully_sent = 0;
 	{
 		ircd_log(LOG_ERROR, "TimeSync: WARNING: Unable to send time synchronization packets to ANY time server. "
 		                    "Perhaps your firewall is blocking outgoing packets to UDP port 123?");
-		strcpy(tserr, "Unable to send packets");
+		strlcpy(tserr, "Unable to send packets", sizeof(tserr));
 		goto end;
 	}
 
@@ -216,7 +216,7 @@ int succesfully_sent = 0;
 		now = time(NULL);
 		if (start + timeout <= now)
 		{
-			strcpy(tserr, "Timeout");
+			strlcpy(tserr, "Timeout", sizeof(tserr));
 			goto end;
 		}
 		
@@ -232,7 +232,7 @@ int succesfully_sent = 0;
 		if (n < 0)
 		{
 			/* select error == teh bad.. */
-			ircsprintf(tserr, "select() error: %s [%d]", STRERROR(ERRNO), (int)ERRNO);
+			ircsnprintf(tserr, sizeof(tserr), "select() error: %s [%d]", STRERROR(ERRNO), (int)ERRNO);
 			goto end;
 		}
 		

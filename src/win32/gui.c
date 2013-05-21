@@ -38,6 +38,7 @@
 #include <richedit.h>
 #include <commdlg.h>
 #include "win32.h"
+#include <Strsafe.h>
 
 __inline void ShowDialog(HWND *handle, HINSTANCE inst, char *template, HWND parent, 
 			 DLGPROC proc)
@@ -750,7 +751,7 @@ LRESULT CALLBACK FromFileReadDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 			unsigned char szText[256];
 			struct stat sb;
 			HWND hWnd = GetDlgItem(hDlg, IDC_TEXT), hTip;
-			wsprintf(szText, "UnrealIRCd Viewer - %s", (unsigned char *)lParam);
+                        StringCbPrintf(szText, sizeof(szText), "UnrealIRCd Viewer - %s", (unsigned char *)lParam);
 			SetWindowText(hDlg, szText);
 			lpfnOldWndProc = (FARPROC)SetWindowLong(hWnd, GWL_WNDPROC, (DWORD)RESubClassFunc);
 			if ((fd = open((unsigned char *)lParam, _O_RDONLY|_O_BINARY)) != -1) 
@@ -1028,21 +1029,21 @@ void win_log(unsigned char *format, ...)
         unsigned char buf[2048];
 		unsigned char *buf2;
         va_start(ap, format);
-        ircvsprintf(buf, format, ap);
+        ircvsnprintf(buf, sizeof(buf), format, ap);
 	if (!IsService) 
 	{
 		strcat(buf, "\r\n");
 		if (errors) 
 		{
 			buf2 = MyMalloc(strlen(errors)+strlen(buf)+1);
-			sprintf(buf2, "%s%s",errors,buf);
+			snprintf(buf2, sizeof(buf2), "%s%s",errors,buf);
 			MyFree(errors);
 			errors = NULL;
 		}
 		else 
 		{
 			buf2 = MyMalloc(strlen(buf)+1);
-			sprintf(buf2, "%s",buf);
+			snprintf(buf2, sizeof(buf2), "%s",buf);
 		}
 		errors = buf2;
 	}

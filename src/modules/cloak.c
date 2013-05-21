@@ -216,9 +216,10 @@ char buf[512], result[16];
 	cloak_key3 = strdup(cep->ce_varname);
 
 	/* Calculate checksum */
-	sprintf(buf, "%s:%s:%s", KEY1, KEY2, KEY3);
+	ircsnprintf(buf, sizeof(buf), "%s:%s:%s", KEY1, KEY2, KEY3);
 	DoMD5(result, buf, strlen(buf));
-	ircsprintf(cloak_checksum, "MD5:%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x",
+	ircsnprintf(cloak_checksum, sizeof(cloak_checksum),
+		"MD5:%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x",
 		(u_int)(result[0] & 0xf), (u_int)(result[0] >> 4),
 		(u_int)(result[1] & 0xf), (u_int)(result[1] >> 4),
 		(u_int)(result[2] & 0xf), (u_int)(result[2] >> 4),
@@ -298,30 +299,30 @@ unsigned int alpha, beta, gamma;
 	sscanf(host, "%u.%u.%u.%u", &a, &b, &c, &d);
 
 	/* ALPHA... */
-	ircsprintf(buf, "%s:%s:%s", KEY2, host, KEY3);
+	ircsnprintf(buf, sizeof(buf), "%s:%s:%s", KEY2, host, KEY3);
 	DoMD5(res, buf, strlen(buf));
-	strcpy(res+16, KEY1); /* first 16 bytes are filled, append our key.. */
+	strlcpy(res+16, KEY1, sizeof(res)-16); /* first 16 bytes are filled, append our key.. */
 	n = strlen(res+16) + 16;
 	DoMD5(res2, res, n);
 	alpha = downsample(res2);
 
 	/* BETA... */
-	ircsprintf(buf, "%s:%d.%d.%d:%s", KEY3, a, b, c, KEY1);
+	ircsnprintf(buf, sizeof(buf), "%s:%d.%d.%d:%s", KEY3, a, b, c, KEY1);
 	DoMD5(res, buf, strlen(buf));
-	strcpy(res+16, KEY2); /* first 16 bytes are filled, append our key.. */
+	strlcpy(res+16, KEY2, sizeof(res)-16); /* first 16 bytes are filled, append our key.. */
 	n = strlen(res+16) + 16;
 	DoMD5(res2, res, n);
 	beta = downsample(res2);
 
 	/* GAMMA... */
-	ircsprintf(buf, "%s:%d.%d:%s", KEY1, a, b, KEY2);
+	ircsnprintf(buf, sizeof(buf), "%s:%d.%d:%s", KEY1, a, b, KEY2);
 	DoMD5(res, buf, strlen(buf));
-	strcpy(res+16, KEY3); /* first 16 bytes are filled, append our key.. */
+	strlcpy(res+16, KEY3, sizeof(res)-16); /* first 16 bytes are filled, append our key.. */
 	n = strlen(res+16) + 16;
 	DoMD5(res2, res, n);
 	gamma = downsample(res2);
 
-	ircsprintf(result, "%X.%X.%X.IP", alpha, beta, gamma);
+	ircsnprintf(result, sizeof(result), "%X.%X.%X.IP", alpha, beta, gamma);
 	return result;
 }
 
@@ -346,30 +347,30 @@ unsigned int alpha, beta, gamma;
 		&a, &b, &c, &d, &e, &f, &g, &h);
 
 	/* ALPHA... */
-	ircsprintf(buf, "%s:%s:%s", KEY2, host, KEY3);
+	ircsnprintf(buf, sizeof(buf), "%s:%s:%s", KEY2, host, KEY3);
 	DoMD5(res, buf, strlen(buf));
-	strcpy(res+16, KEY1); /* first 16 bytes are filled, append our key.. */
+	strlcpy(res+16, KEY1, sizeof(res)-16); /* first 16 bytes are filled, append our key.. */
 	n = strlen(res+16) + 16;
 	DoMD5(res2, res, n);
 	alpha = downsample(res2);
 
 	/* BETA... */
-	ircsprintf(buf, "%s:%x:%x:%x:%x:%x:%x:%x:%s", KEY3, a, b, c, d, e, f, g, KEY1);
+	ircsnprintf(buf, sizeof(buf), "%s:%x:%x:%x:%x:%x:%x:%x:%s", KEY3, a, b, c, d, e, f, g, KEY1);
 	DoMD5(res, buf, strlen(buf));
-	strcpy(res+16, KEY2); /* first 16 bytes are filled, append our key.. */
+	strlcpy(res+16, KEY2, sizeof(res)-16); /* first 16 bytes are filled, append our key.. */
 	n = strlen(res+16) + 16;
 	DoMD5(res2, res, n);
 	beta = downsample(res2);
 
 	/* GAMMA... */
-	ircsprintf(buf, "%s:%x:%x:%x:%x:%s", KEY1, a, b, c, d, KEY2);
+	ircsnprintf(buf, sizeof(buf), "%s:%x:%x:%x:%x:%s", KEY1, a, b, c, d, KEY2);
 	DoMD5(res, buf, strlen(buf));
-	strcpy(res+16, KEY3); /* first 16 bytes are filled, append our key.. */
+	strlcpy(res+16, KEY3, sizeof(res)-16); /* first 16 bytes are filled, append our key.. */
 	n = strlen(res+16) + 16;
 	DoMD5(res2, res, n);
 	gamma = downsample(res2);
 
-	ircsprintf(result, "%X:%X:%X:IP", alpha, beta, gamma);
+	ircsnprintf(result, sizeof(result), "%X:%X:%X:IP", alpha, beta, gamma);
 	return result;
 }
 
@@ -379,9 +380,9 @@ char *p;
 static char buf[512], res[512], res2[512], result[HOSTLEN+1];
 unsigned int alpha, n;
 
-	ircsprintf(buf, "%s:%s:%s", KEY1, host, KEY2);
+	ircsnprintf(buf, sizeof(buf), "%s:%s:%s", KEY1, host, KEY2);
 	DoMD5(res, buf, strlen(buf));
-	strcpy(res+16, KEY3); /* first 16 bytes are filled, append our key.. */
+	strlcpy(res+16, KEY3, sizeof(res)-16); /* first 16 bytes are filled, append our key.. */
 	n = strlen(res+16) + 16;
 	DoMD5(res2, res, n);
 	alpha = downsample(res2);
@@ -395,14 +396,14 @@ unsigned int alpha, n;
 	{
 		unsigned int len;
 		p++;
-		ircsprintf(result, "%s-%X.", hidden_host, alpha);
+		ircsnprintf(result, sizeof(result), "%s-%X.", hidden_host, alpha);
 		len = strlen(result) + strlen(p);
 		if (len <= HOSTLEN)
-			strcat(result, p);
+			strncat(result, p, sizeof(result)-strlen(result)-1);
 		else
-			strcat(result, p + (len - HOSTLEN));
+			strncat(result, p + (len - HOSTLEN), sizeof(result)-strlen(result)-1);
 	} else
-		ircsprintf(result,  "%s-%X", hidden_host, alpha);
+		ircsnprintf(result, sizeof(result),  "%s-%X", hidden_host, alpha);
 
 	return result;
 }

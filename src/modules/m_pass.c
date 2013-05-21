@@ -110,14 +110,14 @@ ConfigItem_ban *bconf;
 
 	if ((bconf = Find_ban(cptr, Inet_ia2p(&cptr->ip), CONF_BAN_IP)))
 	{
-		ircsprintf(zlinebuf,
+		ircsnprintf(zlinebuf, BUFSIZE,
 			"You are not welcome on this server: %s. Email %s for more information.",
 			bconf->reason ? bconf->reason : "no reason", KLINE_ADDRESS);
 		return exit_client(cptr, cptr, &me, zlinebuf);
 	}
 	else if (find_tkline_match_zap_ex(cptr, &tk) != -1)
 	{
-		ircsprintf(zlinebuf, "Z:Lined (%s)", tk->reason);
+		ircsnprintf(zlinebuf, BUFSIZE, "Z:Lined (%s)", tk->reason);
 		return exit_client(cptr, cptr, &me, zlinebuf);
 	}
 	else
@@ -125,7 +125,7 @@ ConfigItem_ban *bconf;
 		int val;
 		if (!(val = throttle_can_connect(cptr, &cptr->ip)))
 		{
-			ircsprintf(zlinebuf, "Throttled: Reconnecting too fast - Email %s for more information.",
+			ircsnprintf(zlinebuf, BUFSIZE, "Throttled: Reconnecting too fast - Email %s for more information.",
 					KLINE_ADDRESS);
 			return exit_client(cptr, cptr, &me, zlinebuf);
 		}

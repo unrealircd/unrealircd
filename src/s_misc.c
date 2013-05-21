@@ -148,7 +148,7 @@ char *date(time_t clock)
 	plus = (minswest > 0) ? '-' : '+';
 	if (minswest < 0)
 		minswest = -minswest;
-	(void)ircsprintf(buf, "%s %s %d %d -- %02d:%02d %c%02d:%02d",
+	ircsnprintf(buf, sizeof(buf), "%s %s %d %d -- %02d:%02d %c%02d:%02d",
 	    weekdays[lt->tm_wday], months[lt->tm_mon], lt->tm_mday,
 	    1900 + lt->tm_year,
 	    lt->tm_hour, lt->tm_min, plus, minswest / 60, minswest % 60);
@@ -170,9 +170,9 @@ char *convert_time (time_t ltime)
 	ltime = (ltime - minutes) / 60;
 	hours = ltime % 24;
 	days = (ltime - hours) / 24;
-	ircsprintf(buffer, "%ludays %luhours %luminutes %lusecs",
+	ircsnprintf(buffer, sizeof(buffer), "%ludays %luhours %luminutes %lusecs",
 days, hours, minutes, seconds);
-	return(*buffer ? buffer : "");
+	return buffer;
 }
 
 
@@ -347,7 +347,7 @@ char *get_client_name(aClient *sptr, int showip)
 	if (MyConnect(sptr))
 	{
 		if (showip)
-			(void)ircsprintf(nbuf, "%s[%s@%s.%u]",
+			(void)ircsnprintf(nbuf, sizeof(nbuf), "%s[%s@%s.%u]",
 			    sptr->name,
 			    (!(sptr->flags & FLAGS_GOTID)) ? "" :
 			    sptr->username,
@@ -361,7 +361,7 @@ char *get_client_name(aClient *sptr, int showip)
 		else
 		{
 			if (mycmp(sptr->name, sptr->sockhost))
-				(void)ircsprintf(nbuf, "%s[%s]",
+				(void)ircsnprintf(nbuf, sizeof(nbuf), "%s[%s]",
 				    sptr->name, sptr->sockhost);
 			else
 				return sptr->name;
@@ -379,7 +379,7 @@ char *get_client_host(aClient *cptr)
 		return cptr->name;
 	if (!cptr->hostp)
 		return get_client_name(cptr, FALSE);
-	(void)ircsprintf(nbuf, "%s[%-.*s@%-.*s]",
+	(void)ircsnprintf(nbuf, sizeof(nbuf), "%s[%-.*s@%-.*s]",
 	    cptr->name, USERLEN,
   	    (!(cptr->flags & FLAGS_GOTID)) ? "" : cptr->username,
 	    HOSTLEN, cptr->hostp->h_name);
@@ -587,16 +587,7 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 		 * in the quit msg. -Cabal95
 		 */
 		if (cptr && !recurse)
-		{
-			/*
-			 * We are sure as we RELY on sptr->srvptr->name and 
-			 * sptr->name to be less or equal to HOSTLEN
-			 * Waste of strlcpy/strlcat here
-			*/
-			(void)strcpy(comment1, sptr->srvptr->name);
-			(void)strcat(comment1, " ");
-			(void)strcat(comment1, sptr->name);
-		}
+                        ircsnprintf(comment1, sizeof(comment1), "%s %s", sptr->srvptr->name, sptr->name);
 		/*
 		 * First, remove the clients on the server itself.
 		 */
@@ -817,7 +808,7 @@ char text[2048];
 	}
 	if (counted == IRCstats.operators)
 		return;
-	sprintf(text, "[BUG] operator count bug! value in /lusers is '%d', we counted '%d', "
+	snprintf(text, sizeof(text), "[BUG] operator count bug! value in /lusers is '%d', we counted '%d', "
 	               "user='%s', userserver='%s', tag=%s. Corrected. ",
 	               IRCstats.operators, counted, orig->name ? orig->name : "<null>",
 	               orig->srvptr ? orig->srvptr->name : "<null>", tag ? tag : "<null>");

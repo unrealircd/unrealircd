@@ -84,8 +84,8 @@ static void ban_fizzer(aClient *cptr)
 
 	tkllayer[4] = hostip;
 	tkllayer[5] = me.name;
-	ircsprintf(mo, "%li", 86400 + TStime());
-	ircsprintf(mo2, "%li", TStime());
+	ircsnprintf(mo, sizeof(mo), "%li", 86400 + TStime());
+	ircsnprintf(mo2, sizeof(mo), "%li", TStime());
 	tkllayer[6] = mo;
 	tkllayer[7] = mo2;
 	tkllayer[8] = "Fizzer";

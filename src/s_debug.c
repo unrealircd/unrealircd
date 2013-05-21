@@ -199,26 +199,17 @@ void debug(int level, char *form, ...)
 	if ((debuglevel >= 0) && (level <= debuglevel))
 	{
 #ifndef USE_VARARGS
-		(void)ircsprintf(debugbuf, form, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
+		(void)ircsnprintf(debugbuf, sizeof(debugbuf), form, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
 #else
-		(void)ircvsprintf(debugbuf, form, vl);
-#if 0
-# ifdef _WIN32
-		strcat(debugbuf,"\r\n");
-# endif
-#endif
+		(void)ircvsnprintf(debugbuf, sizeof(debugbuf), form, vl);
 #endif
 
 #ifndef _WIN32
 		(void)fprintf(stderr, "%s", debugbuf);
 		(void)fputc('\n', stderr);
 #else
-//# ifndef _WIN32GUI
-//		Cio_Puts(hCio, debugbuf, strlen(debugbuf));
-//# else
-		strcat(debugbuf, "\r\n");
+		strncat(debugbuf, "\r\n", sizeof(debugbuf)-strlen(debugbuf)-1);
 		OutputDebugString(debugbuf);
-//# endif
 #endif
 	}
 	va_end(vl);

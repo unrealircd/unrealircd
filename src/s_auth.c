@@ -172,7 +172,7 @@ static void send_authports(int fd, int revents, void *data)
 		goto authsenderr;
 	}
 
-	(void)ircsprintf(authbuf, "%u , %u\r\n",
+	ircsnprintf(authbuf, sizeof(authbuf), "%u , %u\r\n",
 	    (unsigned int)ntohs(them.SIN_PORT),
 	    (unsigned int)ntohs(us.SIN_PORT));
 

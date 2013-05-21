@@ -319,7 +319,7 @@ int remove = 0;
 			} else
 			{
 				SetShunned(acptr);
-				ircsprintf(buf, "Temporary shun added on user %s (%s@%s) by %s [%s]",
+				ircsnprintf(buf, sizeof(buf), "Temporary shun added on user %s (%s@%s) by %s [%s]",
 					acptr->name, acptr->user->username, acptr->user->realhost,
 					sptr->name, comment);
 				sendto_snomask(SNO_TKL, "%s", buf);
@@ -331,7 +331,7 @@ int remove = 0;
 				sendnotice(sptr, "User '%s' is not shunned", acptr->name);
 			} else {
 				ClearShunned(acptr);
-				ircsprintf(buf, "Removed temporary shun on user %s (%s@%s) by %s",
+				ircsnprintf(buf, sizeof(buf), "Removed temporary shun on user %s (%s@%s) by %s",
 					acptr->name, acptr->user->username, acptr->user->realhost,
 					sptr->name);
 				sendto_snomask(SNO_TKL, "%s", buf);
@@ -677,13 +677,13 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 		if (secs == 0)
 		{
 			if (DEFAULT_BANTIME && (parc <= 3))
-				ircsprintf(mo, "%li", DEFAULT_BANTIME + TStime());
+				ircsnprintf(mo, sizeof(mo), "%li", DEFAULT_BANTIME + TStime());
 			else
-				ircsprintf(mo, "%li", secs); /* "0" */
+				ircsnprintf(mo, sizeof(mo), "%li", secs); /* "0" */
 		}
 		else
-			ircsprintf(mo, "%li", secs + TStime());
-		ircsprintf(mo2, "%li", TStime());
+			ircsnprintf(mo, sizeof(mo), "%li", secs + TStime());
+		ircsnprintf(mo2, sizeof(mo2), "%li", TStime());
 		tkllayer[6] = mo;
 		tkllayer[7] = mo2;
 		if (parc > 3) {
@@ -813,7 +813,7 @@ int n;
 
 	if (parv[4][0] == '-')
 	{
-		ircsprintf(mo, "%li", SPAMFILTER_BAN_TIME);
+		ircsnprintf(mo, sizeof(mo), "%li", SPAMFILTER_BAN_TIME);
 		tkllayer[8] = mo;
 	}
 	else
@@ -845,7 +845,7 @@ int n;
 	
 	if (whattodo == 0)
 	{
-		ircsprintf(mo2, "%li", TStime());
+		ircsnprintf(mo2, sizeof(mo2), "%li", TStime());
 		tkllayer[7] = mo2;
 	}
 	
@@ -1105,28 +1105,27 @@ aTKline *_tkl_expire(aTKline * tmp)
 		    tmp->usermask, tmp->hostmask);
 		return (tmp->next);
 	}
-	/* Using strlcpy here is wasteful, we know it is < 512 */
 	if (tmp->type & TKL_GLOBAL)
 	{
 		if (tmp->type & TKL_KILL)
-			strcpy(whattype, "G:Line");
+			strlcpy(whattype, "G:Line", sizeof(whattype));
 		else if (tmp->type & TKL_ZAP)
-			strcpy(whattype, "Global Z:Line");
+			strlcpy(whattype, "Global Z:Line", sizeof(whattype));
 		else if (tmp->type & TKL_SHUN)
-			strcpy(whattype, "Shun");
+			strlcpy(whattype, "Shun", sizeof(whattype));
 		else if (tmp->type & TKL_NICK)
-			strcpy(whattype, "Global Q:line");
+			strlcpy(whattype, "Global Q:line", sizeof(whattype));
 	}
 	else
 	{
 		if (tmp->type & TKL_KILL)
-			strcpy(whattype, "K:Line");
+			strlcpy(whattype, "K:Line", sizeof(whattype));
 		else if (tmp->type & TKL_ZAP)
-			strcpy(whattype, "Z:Line");
+			strlcpy(whattype, "Z:Line", sizeof(whattype));
 		else if (tmp->type & TKL_SHUN)
-			strcpy(whattype, "Local Shun");
+			strlcpy(whattype, "Local Shun", sizeof(whattype));
 		else if (tmp->type & TKL_NICK)
-			strcpy(whattype, "Q:line");
+			strlcpy(whattype, "Q:line", sizeof(whattype));
 	}
 	if (!(tmp->type & TKL_NICK))
 	{
@@ -1239,8 +1238,8 @@ int  _find_tkline_match(aClient *cptr, int xx)
 
 	if (points != 1)
 		return 1;
-	strcpy(host, make_user_host(cname, chost));
-	strcpy(host2, make_user_host(cname, cip));
+	strlcpy(host, make_user_host(cname, chost), sizeof(host));
+	strlcpy(host2, make_user_host(cname, cip), sizeof(host2));
 	if (((lp->type & TKL_KILL) || (lp->type & TKL_ZAP)) && !(lp->type & TKL_GLOBAL))
 		match_type = CONF_EXCEPT_BAN;
 	else
@@ -1279,7 +1278,7 @@ int  _find_tkline_match(aClient *cptr, int xx)
 					   me.name, cptr->name,
 					   (lp->expire_at ? "banned" : "permanently banned"),
 					   ircnetwork, lp->reason);
-			ircsprintf(msge, "User has been %s from %s (%s)",
+			ircsnprintf(msge, sizeof(msge), "User has been %s from %s (%s)",
 				   (lp->expire_at ? "banned" : "permanently banned"),
 				   ircnetwork, lp->reason);
 			return (exit_client(cptr, cptr, &me, msge));
@@ -1292,7 +1291,7 @@ int  _find_tkline_match(aClient *cptr, int xx)
 				   me.name, cptr->name,
 				   (lp->expire_at ? "banned" : "permanently banned"),
 				   me.name, lp->reason, KLINE_ADDRESS);
-			ircsprintf(msge, "User is %s (%s)",
+			ircsnprintf(msge, sizeof(msge), "User is %s (%s)",
 				   (lp->expire_at ? "banned" : "permanently banned"),
 				   lp->reason);
 			return (exit_client(cptr, cptr, &me, msge));
@@ -1302,7 +1301,7 @@ int  _find_tkline_match(aClient *cptr, int xx)
 	if (lp->type & TKL_ZAP)
 	{
 		ircstp->is_ref++;
-		ircsprintf(msge, "Z:lined (%s)",lp->reason);
+		ircsnprintf(msge, sizeof(msge), "Z:lined (%s)",lp->reason);
 		return exit_client(cptr, cptr, &me, msge);
 	}
 
@@ -1366,8 +1365,8 @@ int  _find_shun(aClient *cptr)
 
 	if (points != 1)
 		return 1;
-	strcpy(host, make_user_host(cname, chost));
-	strcpy(host2, make_user_host(cname, cip));
+	strlcpy(host, make_user_host(cname, chost), sizeof(host));
+	strlcpy(host2, make_user_host(cname, cip), sizeof(host2));
 		match_type = CONF_EXCEPT_TKL;
 
 	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *)excepts->next) {
@@ -1395,13 +1394,13 @@ static char buf[256];
 		return i;
 	
 	/* otherwise, it's IPv6.. prepend it with [ and append a ] */
-	ircsprintf(buf, "[%s]", i);
+	ircsnprintf(buf, sizeof(buf), "[%s]", i);
 	return buf;
 }
 
 void _spamfilter_build_user_string(char *buf, char *nick, aClient *acptr)
 {
-	ircsprintf(buf, "%s!%s@%s:%s",
+	ircsnprintf(buf, sizeof(buf), "%s!%s@%s:%s",
 		nick, acptr->user->username, SpamfilterMagicHost(acptr->user->realhost), acptr->info);
 }
 
@@ -1438,7 +1437,7 @@ aClient *acptr;
 				continue; /* No match */
 
 			/* matched! */
-			ircsprintf(buf, "[Spamfilter] %s!%s@%s matches filter '%s': [%s: '%s'] [%s]",
+			ircsnprintf(buf, sizeof(buf), "[Spamfilter] %s!%s@%s matches filter '%s': [%s: '%s'] [%s]",
 				acptr->name, acptr->user->username, acptr->user->realhost,
 				tk->reason,
 				"user", spamfilter_user,
@@ -1518,12 +1517,12 @@ aTKline *_find_qline(aClient *cptr, char *nick, int *ishold)
 
 	chost = cptr->user ? cptr->user->realhost : (MyConnect(cptr) ? cptr->sockhost : "unknown");
 	cname = cptr->user ? cptr->user->username : "unknown";
-	strcpy(host, make_user_host(cname, chost));
+	strlcpy(host, make_user_host(cname, chost), sizeof(host));
 
 	cip = GetIP(cptr);
 	if (cip)
 	{
-		strcpy(hostbuf2, make_user_host(cname, cip));
+		strlcpy(hostbuf2, make_user_host(cname, cip), sizeof(hostbuf2));
 		host2 = hostbuf2;
 	}
 
@@ -1590,7 +1589,7 @@ int  _find_tkline_match_zap_ex(aClient *cptr, aTKline **rettk)
 						return -1;
 
 				ircstp->is_ref++;
-				ircsprintf(msge,
+				ircsnprintf(msge, sizeof(msge),
 				    "ERROR :Closing Link: [%s] Z:Lined (%s)\r\n",
 #ifndef INET6
 				    inetntoa((char *)&cptr->ip), lp->reason);
@@ -2061,33 +2060,33 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  switch (type)
 		  {
 		    case TKL_KILL:
-			    strcpy(txt, "K:Line");
+			    strlcpy(txt, "K:Line", sizeof(txt));
 			    break;
 		    case TKL_ZAP:
-			    strcpy(txt, "Z:Line");
+			    strlcpy(txt, "Z:Line", sizeof(txt));
 			    break;
 		    case TKL_KILL | TKL_GLOBAL:
-			    strcpy(txt, "G:Line");
+			    strlcpy(txt, "G:Line", sizeof(txt));
 			    break;
 		    case TKL_ZAP | TKL_GLOBAL:
-			    strcpy(txt, "Global Z:line");
+			    strlcpy(txt, "Global Z:line", sizeof(txt));
 			    break;
 		    case TKL_SHUN | TKL_GLOBAL:
-			    strcpy(txt, "Shun");
+			    strlcpy(txt, "Shun", sizeof(txt));
 			    break;
 		    case TKL_NICK | TKL_GLOBAL:
-			    strcpy(txt, "Global Q:line");
+			    strlcpy(txt, "Global Q:line", sizeof(txt));
 			    break;
 		    case TKL_NICK:
-			    strcpy(txt, "Q:line");
+			    strlcpy(txt, "Q:line", sizeof(txt));
 			    break;
 		    default:
-			    strcpy(txt, "Unknown *:Line");
+			    strlcpy(txt, "Unknown *:Line", sizeof(txt));
 		  }
 		  if (type & TKL_SPAMF)
 		  {
 		  	  char buf[512];
-			  snprintf(buf, 512,
+			  ircsnprintf(buf, sizeof(buf),
 			      "Spamfilter added: '%s' [target: %s] [action: %s] [reason: %s] on %s GMT (from %s)",
 			      reason, parv[3], banact_valtostring(banact_chartoval(*parv[4])),
 			      parc >= 10 ? unreal_decodespace(parv[9]) : SPAMFILTER_BAN_REASON,
@@ -2104,11 +2103,11 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				if (type & TKL_NICK)
 				{
 					if (*parv[3] != 'H')
-						snprintf(buf, 512, "%s added for %s on %s GMT (from %s to expire at %s GMT: %s)",
+						ircsnprintf(buf, sizeof(buf), "%s added for %s on %s GMT (from %s to expire at %s GMT: %s)",
 							txt, parv[4], gmt, parv[5], gmt2, reason);
 				}
 				else
-					snprintf(buf, 512, "%s added for %s@%s on %s GMT (from %s to expire at %s GMT: %s)",
+					ircsnprintf(buf, sizeof(buf), "%s added for %s@%s on %s GMT (from %s to expire at %s GMT: %s)",
 						txt, parv[3], parv[4], gmt, parv[5], gmt2, reason);
 			  }
 			  else
@@ -2116,11 +2115,11 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				if (type & TKL_NICK)
 				{
 					if (*parv[3] != 'H')
-						snprintf(buf, 512, "Permanent %s added for %s on %s GMT (from %s: %s)",
+						ircsnprintf(buf, sizeof(buf), "Permanent %s added for %s on %s GMT (from %s: %s)",
 							txt, parv[4], gmt, parv[5], reason);
 				}
 				else
-					snprintf(buf, 512, "Permanent %s added for %s@%s on %s GMT (from %s: %s)",
+					ircsnprintf(buf, sizeof(buf), "Permanent %s added for %s@%s on %s GMT (from %s: %s)",
 						txt, parv[3], parv[4], gmt, parv[5], reason);
 			  }
 			if (!((type & TKL_NICK) && *parv[3] == 'H'))
@@ -2208,28 +2207,28 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  switch (type)
 		  {
 		    case TKL_KILL:
-			    strcpy(txt, "K:Line");
+			    strlcpy(txt, "K:Line", sizeof(txt));
 			    break;
 		    case TKL_ZAP:
-			    strcpy(txt, "Z:Line");
+			    strlcpy(txt, "Z:Line", sizeof(txt));
 			    break;
 		    case TKL_KILL | TKL_GLOBAL:
-			    strcpy(txt, "G:Line");
+			    strlcpy(txt, "G:Line", sizeof(txt));
 			    break;
 		    case TKL_ZAP | TKL_GLOBAL:
-			    strcpy(txt, "Global Z:line");
+			    strlcpy(txt, "Global Z:line", sizeof(txt));
 			    break;
 		    case TKL_SHUN | TKL_GLOBAL:
-			    strcpy(txt, "Shun");
+			    strlcpy(txt, "Shun", sizeof(txt));
 			    break;
 		    case TKL_NICK | TKL_GLOBAL:
-			    strcpy(txt, "Global Q:line");
+			    strlcpy(txt, "Global Q:line", sizeof(txt));
 			    break;
 		    case TKL_NICK:
-			    strcpy(txt, "Q:line");
+			    strlcpy(txt, "Q:line", sizeof(txt));
 			    break;
 		    default:
-			    strcpy(txt, "Unknown *:Line");
+			    strlcpy(txt, "Unknown *:Line", sizeof(txt));
 		  }
 
 		  found = 0;
@@ -2376,10 +2375,10 @@ int _place_host_ban(aClient *sptr, int action, char *reason, long duration)
 			tkllayer[4] = hostip;
 			tkllayer[5] = me.name;
 			if (!duration)
-				strcpy(mo, "0"); /* perm */
+				strlcpy(mo, "0", sizeof(mo)); /* perm */
 			else
-				ircsprintf(mo, "%li", duration + TStime());
-			ircsprintf(mo2, "%li", TStime());
+				ircsnprintf(mo, sizeof(mo), "%li", duration + TStime());
+			ircsnprintf(mo2, sizeof(mo2), "%li", TStime());
 			tkllayer[6] = mo;
 			tkllayer[7] = mo2;
 			tkllayer[8] = reason;
@@ -2438,8 +2437,8 @@ int ret;
 	chptr = find_channel(SPAMFILTER_VIRUSCHAN, NULL);
 	if (chptr)
 	{
-		ircsprintf(chbuf, "@%s", chptr->chname);
-		ircsprintf(buf, "[Spamfilter] %s matched filter '%s' [%s] [%s]",
+		ircsnprintf(chbuf, sizeof(chbuf), "@%s", chptr->chname);
+		ircsnprintf(buf, sizeof(buf), "[Spamfilter] %s matched filter '%s' [%s] [%s]",
 			sptr->name, tk->reason, cmdname_by_spamftarget(type),
 			unreal_decodespace(tk->ptr.spamf->tkl_reason));
 		sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
@@ -2534,7 +2533,7 @@ long ms_past;
 			if (target && target_is_spamexcept(target))
 				return 0; /* No problem! */
 
-			ircsprintf(buf, "[Spamfilter] %s!%s@%s matches filter '%s': [%s%s: '%s'] [%s]",
+			ircsnprintf(buf, sizeof(buf), "[Spamfilter] %s!%s@%s matches filter '%s': [%s%s: '%s'] [%s]",
 				sptr->name, sptr->user->username, sptr->user->realhost,
 				tk->reason,
 				cmdname_by_spamftarget(type), targetbuf, str,

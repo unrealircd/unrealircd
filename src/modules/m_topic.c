@@ -252,7 +252,7 @@ long flags = 0; /* cache: membership flags */
 				{
 					topicoverride(sptr, chptr, topic);
 				} else {
-					ircsprintf(buf, "You cannot change the topic on %s while being banned", chptr->chname);
+					ircsnprintf(buf, sizeof(buf), "You cannot change the topic on %s while being banned", chptr->chname);
 					sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.name, parv[0], "TOPIC",  buf);
 					return -1;
 				}
@@ -266,7 +266,7 @@ long flags = 0; /* cache: membership flags */
 					topicoverride(sptr, chptr, topic);
 				} else {
 					/* With +m and -t, only voice and higher may change the topic */
-					ircsprintf(buf, "Voice (+v) or higher is required in order to change the topic on %s (channel is +m)", chptr->chname);
+					ircsnprintf(buf, sizeof(buf), "Voice (+v) or higher is required in order to change the topic on %s (channel is +m)", chptr->chname);
 					sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.name, parv[0], "TOPIC",  buf);
 					return -1;
 				}

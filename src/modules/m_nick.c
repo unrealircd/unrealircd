@@ -130,7 +130,7 @@ DLLFUNC CMD_FUNC(m_nick)
 		return 0;
 	}
 
-	if (!IsServer(cptr))
+	if ((NICKLEN < iConf.nicklen) || !IsServer(cptr))
 		strlcpy(nick, parv[1], iConf.nicklen + 1);
 	else
 		strlcpy(nick, parv[1], NICKLEN + 1);
@@ -884,7 +884,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			    i == -3 ? "Too many connections" :
 			    "Unauthorized connection", get_client_host(sptr));
 			ircstp->is_ref++;
-			ircsprintf(mo, "This server is full.");
+			ircsnprintf(mo, sizeof(mo), "This server is full.");
 			return
 			    exit_client(cptr, sptr, &me,
 			    i ==
@@ -920,21 +920,21 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		 * Moved the noident stuff here. -OnyxDragon
 		 */
 		if (!(sptr->flags & FLAGS_DOID)) 
-			strlcpy(user->username, username, USERLEN + 1);
+			strlcpy(user->username, username, USERLEN+1);
 		else if (sptr->flags & FLAGS_GOTID) 
-			strlcpy(user->username, sptr->username, USERLEN + 1);
+			strlcpy(user->username, sptr->username, USERLEN+1);
 		else
 		{
 
 			/* because username may point to user->username */
 			char temp[USERLEN + 1];
-			strlcpy(temp, username, USERLEN + 1);
+			strlcpy(temp, username, USERLEN+1);
 			if (IDENT_CHECK == 0) {
-				strlcpy(user->username, temp, USERLEN + 1);
+				strlcpy(user->username, temp, USERLEN+1);
 			}
 			else {
 				*user->username = '~';
-				strlcpy((user->username + 1), temp, USERLEN);
+				strlcpy((user->username + 1), temp, USERLEN+1);
 #ifdef HOSTILENAME
 				noident = 1;
 #endif
@@ -983,8 +983,8 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 				return exit_client(cptr, cptr, cptr, "Hostile username. Please use only 0-9 a-z A-Z _ - and . in your username.");
 			}
 
-			strcpy(olduser, user->username + noident);
-			strncpy(user->username + 1, stripuser, USERLEN - 1);
+			strlcpy(olduser, user->username + noident, USERLEN+1);
+			strlcpy(user->username + 1, stripuser, USERLEN+1);
 			user->username[0] = '~';
 			user->username[USERLEN] = '\0';
 		}
@@ -1047,7 +1047,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 	}
 	else
 	{
-		strlcpy(user->username, username, USERLEN + 1);
+		strlcpy(user->username, username, USERLEN+1);
 	}
 	SetClient(sptr);
 	IRCstats.clients++;
@@ -1232,7 +1232,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		if (user->snomask)
 			sendto_one(sptr, rpl_str(RPL_SNOMASK),
 				me.name, sptr->name, get_snostr(user->snomask));
-		strcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost));
+		strlcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost), USERLEN+1);
 
 		/* NOTE: Code after this 'if (savetkl)' will not be executed for quarantined-
 		 *       virus-users. So be carefull with the order. -- Syzop

@@ -162,7 +162,7 @@ char *modey_get_param(CmodeParam *ypara)
 
 	if (!r)
 		return NULL;
-	sprintf(tmpret, "%hu", r->val);
+	snprintf(tmpret, sizeof(tmpret), "%hu", r->val);
 	return tmpret;
 }
 
@@ -172,7 +172,7 @@ char *modey_conv_param(char *param)
 short i;
 static char tmpret2[16];
 	i = (short)atoi(param);
-	sprintf(tmpret2, "%hu", i);
+	snprintf(tmpret2, sizeof(tmpret2), "%hu", i);
 	return tmpret2;
 }
 

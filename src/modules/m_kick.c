@@ -154,7 +154,7 @@ CMD_FUNC(m_kick)
 					if (!IsNetAdmin(sptr))
 					{
 						char errbuf[NICKLEN+10];
-						ircsprintf(errbuf, "%s is +q", who->name);
+						ircsnprintf(errbuf, sizeof(errbuf), "%s is +q", who->name);
 						sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), 
 							   me.name, sptr->name, "KICK", 
 							   errbuf);
@@ -235,10 +235,10 @@ CMD_FUNC(m_kick)
 					{
 						char errbuf[NICKLEN+25];
 						if (who_flags & CHFL_CHANOWNER)
-							ircsprintf(errbuf, "%s is a channel owner", 
+							ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel owner", 
 								   who->name);
 						else
-							ircsprintf(errbuf, "%s is a channel admin", 
+							ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel admin", 
 								   who->name);
 						sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND),
 							   me.name, sptr->name, "KICK",
@@ -253,7 +253,7 @@ CMD_FUNC(m_kick)
 				    && !(sptr_flags & CHFL_ISOP) && !IsULine(sptr) && MyClient(sptr))
 				{
 					char errbuf[NICKLEN+30];
-					ircsprintf(errbuf, "%s is a channel operator", who->name);
+					ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel operator", who->name);
 					sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND),
 						   me.name, sptr->name, "KICK",
 						   errbuf);
@@ -265,7 +265,7 @@ CMD_FUNC(m_kick)
 				    && !(sptr_flags & CHFL_ISOP) && MyClient(sptr))
 				{
 					char errbuf[NICKLEN+15];
-					ircsprintf(errbuf, "%s is a halfop", who->name);
+					ircsnprintf(errbuf, sizeof(errbuf), "%s is a halfop", who->name);
 					sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND),
 						   me.name, sptr->name, "KICK",
 						   errbuf);

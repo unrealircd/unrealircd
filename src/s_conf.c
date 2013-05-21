@@ -853,18 +853,25 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 		free(parambuf);
 }
 
-void chmode_str(struct ChMode modes, char *mbuf, char *pbuf)
+void chmode_str(struct ChMode modes, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size)
 {
+        if (!(mbuf_size && pbuf_size)) return;
 	aCtab *tab;
 	int i;
 	*pbuf = 0;
 	*mbuf++ = '+';
+	if (--mbuf_size == 0) return;
 	for (tab = &cFlagTab[0]; tab->mode; tab++)
 	{
 		if (modes.mode & tab->mode)
 		{
-			if (!tab->parameters)
+			if (!tab->parameters) {
 				*mbuf++ = tab->flag;
+				if (!--mbuf_size) {
+					*--mbuf=0;
+					break;
+				}
+                        }
 		}
 	}
 	for (i=0; i <= Channelmode_highest; i++)
@@ -874,20 +881,30 @@ void chmode_str(struct ChMode modes, char *mbuf, char *pbuf)
 	
 		if (modes.extmodes & Channelmode_Table[i].mode)
 		{
-			*mbuf++ = Channelmode_Table[i].flag;
+			if (mbuf_size) {
+				*mbuf++ = Channelmode_Table[i].flag;
+				if (!--mbuf_size) {
+					*--mbuf=0;
+					break;
+				}
+			}
 			if (Channelmode_Table[i].paracount)
 			{
-				strcat(pbuf, modes.extparams[i]);
-				strcat(pbuf, " ");
+				strncat(pbuf, modes.extparams[i], pbuf_size-1);
+				pbuf_size-=strlen(modes.extparams[i]);
+				if (!pbuf_size) break;
+				strncat(pbuf, " ", pbuf_size-1);
+				if (!--pbuf_size) break;
 			}
 		}
 	}
 	if (modes.floodprot.per)
 	{
-		*mbuf++ = 'f';
-		strcat(pbuf, channel_modef_string(&modes.floodprot));
+		if (!mbuf_size) return;
+		if (--mbuf_size) *mbuf++ = 'f';
+		if (pbuf_size) strncat(pbuf, channel_modef_string(&modes.floodprot), pbuf_size-1);
 	}
-	*mbuf++=0;
+	*mbuf=0;
 }
 
 int channellevel_to_int(char *s)
@@ -1362,7 +1379,7 @@ void config_error(char *format, ...)
 	char		*ptr;
 
 	va_start(ap, format);
-	vsprintf(buffer, format, ap);
+	vsnprintf(buffer, sizeof(buffer), format, ap);
 	va_end(ap);
 	if ((ptr = strchr(buffer, '\n')) != NULL)
 		*ptr = '\0';
@@ -3105,13 +3122,13 @@ char *pretty_time_val(long timeval)
 	buf[0] = 0;
 
 	if (timeval/86400)
-		sprintf(buf, "%ld day%s ", timeval/86400, timeval/86400 != 1 ? "s" : "");
+		snprintf(buf, sizeof(buf), "%ld day%s ", timeval/86400, timeval/86400 != 1 ? "s" : "");
 	if ((timeval/3600) % 24)
-		sprintf(buf, "%s%ld hour%s ", buf, (timeval/3600)%24, (timeval/3600)%24 != 1 ? "s" : "");
+		snprintf(buf, sizeof(buf), "%s%ld hour%s ", buf, (timeval/3600)%24, (timeval/3600)%24 != 1 ? "s" : "");
 	if ((timeval/60)%60)
-		sprintf(buf, "%s%ld minute%s ", buf, (timeval/60)%60, (timeval/60)%60 != 1 ? "s" : "");
+		snprintf(buf, sizeof(buf), "%s%ld minute%s ", buf, (timeval/60)%60, (timeval/60)%60 != 1 ? "s" : "");
 	if ((timeval%60))
-		sprintf(buf, "%s%ld second%s", buf, timeval%60, timeval%60 != 1 ? "s" : "");
+		snprintf(buf, sizeof(buf), "%s%ld second%s", buf, timeval%60, timeval%60 != 1 ? "s" : "");
 	return buf;
 }
 
@@ -7348,7 +7365,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			{
 				char tmpbuf[512];
 				IsupportSetValue(IsupportFind("MAXCHANNELS"), cep->ce_vardata);
-				ircsprintf(tmpbuf, "#:%s", cep->ce_vardata);
+				ircsnprintf(tmpbuf, sizeof(tmpbuf), "#:%s", cep->ce_vardata);
 				IsupportSetValue(IsupportFind("CHANLIMIT"), tmpbuf);
 			}
 		}

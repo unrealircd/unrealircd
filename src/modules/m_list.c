@@ -255,7 +255,7 @@ DLLFUNC CMD_FUNC(m_list)
 				  if (chptr && (ShowChannel(sptr, chptr) || OPCanSeeSecret(sptr))) {
 #ifdef LIST_SHOW_MODES
 					modebuf[0] = '[';
-					channel_modes(sptr, &modebuf[1], parabuf, chptr);
+					channel_modes(sptr, modebuf+1, parabuf, sizeof(modebuf)-1, sizeof(parabuf), chptr);
 					if (modebuf[2] == '\0')
 						modebuf[0] = '\0';
 					else
@@ -382,7 +382,7 @@ void _send_list(aClient *cptr, int numsend)
 				}
 #ifdef LIST_SHOW_MODES
 				modebuf[0] = '[';
-				channel_modes(cptr, &modebuf[1], parabuf, chptr);
+				channel_modes(cptr, modebuf+1, parabuf, sizeof(modebuf)-1, sizeof(parabuf), chptr);
 				if (modebuf[2] == '\0')
 					modebuf[0] = '\0';
 				else

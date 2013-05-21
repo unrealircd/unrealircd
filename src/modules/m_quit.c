@@ -102,7 +102,7 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			return exit_client(cptr, sptr, sptr, "Client exited");
 
 		if (!prefix_quit || strcmp(prefix_quit, "no"))
-			s = ircsprintf(comment, "%s ",
+			s = ircsnprintf(comment, sizeof(comment), "%s ",
 		    		BadPtr(prefix_quit) ? "Quit:" : prefix_quit);
 #ifdef STRIPBADWORDS
 		ocomment = (char *)stripbadwords_quit(ocomment, &blocked);

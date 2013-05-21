@@ -107,7 +107,7 @@ DLLFUNC int m_sqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc < 2)
 		return 0;
 
-	ircsprintf(mo, "%li", TStime());
+	ircsnprintf(mo, sizeof(mo), "%li", TStime());
 	tkllayer[7] = mo;
         tkllayer[8] = comment ? comment : "no reason";
         return m_tkl(&me, &me, 9, tkllayer);

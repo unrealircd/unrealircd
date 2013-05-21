@@ -948,7 +948,7 @@ struct Client {
 	TS   lastnick;		/* TimeStamp on nick */
 	long flags;		/* client flags */
 	long umodes;		/* client usermodes */
-	aClient *from;		/* == self, if Local Client, *NEVER* NULL! */
+	aClient *from;		/* == &me, if Local Client, *NEVER* NULL! */
 	int  fd;		/* >= 0, for local clients */
 	unsigned char hopcount;		/* number of servers to this 0 = local */
 	char name[HOSTLEN + 1];	/* Unique name of the client, nick or host */

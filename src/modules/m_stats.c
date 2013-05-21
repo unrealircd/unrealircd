@@ -214,9 +214,7 @@ inline struct statstab *stats_search(char *s) {
 inline char *stats_combine_parv(char *p1, char *p2)
 {
 	static char buf[BUFSIZE+1];
-	strcpy(buf, p1);
-	strcat(buf, " ");
-	strcat(buf, p2);
+        ircsnprintf(buf, sizeof(buf), "%s %s", p1, p2);
 	return buf;
 }
 
@@ -636,16 +634,13 @@ int stats_oper(aClient *sptr, char *para)
 
 static char *stats_port_helper(ConfigItem_listen *listener)
 {
-static char buf[256];
-	buf[0] = '\0';
-	if (listener->options & LISTENER_CLIENTSONLY)
-		strcat(buf, "clientsonly ");
-	if (listener->options & LISTENER_SERVERSONLY)
-		strcat(buf, "serversonly ");
-	if (listener->options & LISTENER_JAVACLIENT)
-		strcat(buf, "java ");
-	if (listener->options & LISTENER_SSL)
-		strcat(buf, "SSL ");
+	static char buf[256];
+
+	ircsnprintf(buf, sizeof(buf), "%s%s%s%s",
+	    (listener->options & LISTENER_CLIENTSONLY)? "clientsonly ": "",
+	    (listener->options & LISTENER_SERVERSONLY)? "serversonly ": "",
+	    (listener->options & LISTENER_JAVACLIENT)?  "java ": "",
+	    (listener->options & LISTENER_SSL)?         "ssl ": "");
 	return buf;
 }
 
@@ -1223,7 +1218,7 @@ int stats_set(aClient *sptr, char *para)
 	sendto_one(sptr, ":%s %i %s :modes-on-oper: %s", me.name, RPL_TEXT,
 	    sptr->name, get_modestr(OPER_MODES));
 	*modebuf = *parabuf = 0;
-	chmode_str(iConf.modes_on_join, modebuf, parabuf);
+	chmode_str(iConf.modes_on_join, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf));
 	sendto_one(sptr, ":%s %i %s :modes-on-join: %s %s", me.name, RPL_TEXT,
 		sptr->name, modebuf, parabuf);
 	sendto_one(sptr, ":%s %i %s :nick-length: %i", me.name, RPL_TEXT,
@@ -1512,7 +1507,7 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 			continue;
 
 #ifdef DEBUGMODE
-		ircsprintf(pbuf, "%ld :%ld", (long)acptr->cputime,
+		ircsnprintf(pbuf, sizeof(pbuf), "%ld :%ld", (long)acptr->cputime,
 		      (long)(acptr->user && MyConnect(acptr)) ? TStime() - acptr->last : 0);
 #endif
 		if (IsOper(sptr))

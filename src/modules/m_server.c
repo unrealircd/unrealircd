@@ -105,7 +105,7 @@ char buf[512];
 	if (!NEW_LINKING_PROTOCOL)
 		return;
 
-	ircsprintf(buf, "PROTOCTL EAUTH=%s",
+	ircsnprintf(buf, sizeof(buf), "PROTOCTL EAUTH=%s",
 		me.name);
 
 	sendto_one(sptr, "%s", buf);
@@ -172,11 +172,11 @@ ConfigItem_ban *bconf;
 				break;
 	}
 	if (!link) {
-		snprintf(xerrmsg, 256, "No link block named '%s'", servername);
+		ircsnprintf(xerrmsg, sizeof(xerrmsg), "No link block named '%s'", servername);
 		goto errlink;
 	}
 	if (link->username && match(link->username, cptr->username)) {
-		snprintf(xerrmsg, 256, "Username '%s' didn't match '%s'",
+		ircsnprintf(xerrmsg, sizeof(xerrmsg), "Username '%s' didn't match '%s'",
 			cptr->username, link->username);
 		/* I assume nobody will have 2 link blocks with the same servername
 		 * and different username. -- Syzop
@@ -204,7 +204,7 @@ ConfigItem_ban *bconf;
 #endif		
 	if (!link)
 	{
-		snprintf(xerrmsg, 256, "Server is in link block but IP/host didn't match");
+		ircsnprintf(xerrmsg, sizeof(xerrmsg), "Server is in link block but IP/host didn't match");
 errlink:
 		/* Send the "simple" error msg to the server */
 		sendto_one(cptr,
@@ -487,7 +487,7 @@ DLLFUNC CMD_FUNC(m_server)
 		if (aconf->options & CONNECT_QUARANTINE)
 			cptr->flags |= FLAGS_QUARANTINE;
 
-		snprintf(descbuf, sizeof descbuf, "Server: %s", servername);
+		ircsnprintf(descbuf, sizeof descbuf, "Server: %s", servername);
 		fd_desc(cptr->fd, descbuf);
 
 		/* Start synch now */
@@ -608,7 +608,7 @@ CMD_FUNC(m_server_remote)
 	if (*acptr->id)
 	{
 		sendto_server(cptr, PROTO_SID, 0, ":%s SID %s %d %s :%s",
-			    sptr->id, acptr->name, hop + 1, acptr->id, acptr->info);
+			    acptr->srvptr->id, acptr->name, hop + 1, acptr->id, acptr->info);
 	}
 
 	sendto_server(cptr, 0, *acptr->id ? PROTO_SID : 0, ":%s SERVER %s %d :%s",
@@ -694,7 +694,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 	if (*cptr->id)
 	{
 		sendto_server(cptr, PROTO_SID, 0, ":%s SID %s 2 %s :%s",
-			    cptr->id, cptr->name, cptr->id, cptr->info);
+			    cptr->srvptr->id, cptr->name, cptr->id, cptr->info);
 	}
 
 	sendto_server(cptr, 0, *cptr->id ? PROTO_SID : 0, ":%s SERVER %s 2 :%s",
@@ -712,7 +712,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 			if (SupportSID(cptr) && *acptr->id)
 			{
 				sendto_one(cptr, ":%s SID %s %d %s :%s",
-				    acptr->from->id,
+				    acptr->srvptr->id,
 				    acptr->name, acptr->hopcount + 1,
 				    acptr->id, acptr->info);
 			}
@@ -931,7 +931,7 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
 
 	*parabuf = '\0';
 	*modebuf = '\0';
-	channel_modes(cptr, modebuf, parabuf, chptr);
+	channel_modes(cptr, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), chptr);
 	sent = send_mode_list(cptr, chptr->chname, chptr->creationtime,
 	    chptr->members, CHFL_CHANOP, 'o');
 	if (!sent && chptr->creationtime)
@@ -1164,7 +1164,7 @@ void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
 	/* First we'll send channel, channel modes and members and status */
 
 	*modebuf = *parabuf = '\0';
-	channel_modes(cptr, modebuf, parabuf, chptr);
+	channel_modes(cptr, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), chptr);
 
 	if (*parabuf)
 	{
@@ -1176,7 +1176,7 @@ void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
 		else
 			strlcpy(parabuf, "<->", sizeof parabuf);
 	}
-	ircsprintf(buf, "SJOIN %ld %s %s %s :",
+	ircsnprintf(buf, sizeof(buf), "SJOIN %ld %s %s %s :",
 	    chptr->creationtime, chptr->chname, modebuf, parabuf);
 
 	bufptr = buf + strlen(buf);
@@ -1206,14 +1206,14 @@ void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
 		*bufptr++ = ' ';
 		n++;
 
-		if (bufptr - buf > BUFSIZE - 80)
+		if (bufptr > buf && bufptr - buf > BUFSIZE - 80)
 		{
 			*bufptr++ = '\0';
 			if (bufptr[-1] == ' ')
 				bufptr[-1] = '\0';
 			sendto_one(cptr, "%s", buf);
 
-			ircsprintf(buf, "SJOIN %ld %s %s %s :",
+			ircsnprintf(buf, sizeof(buf), "SJOIN %ld %s %s %s :",
 			    chptr->creationtime, chptr->chname, modebuf,
 			    parabuf);
 			n = 0;
@@ -1281,7 +1281,7 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 	/* First we'll send channel, channel modes and members and status */
 
 	*modebuf = *parabuf = '\0';
-	channel_modes(cptr, modebuf, parabuf, chptr);
+	channel_modes(cptr, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), chptr);
 
 	if (!modebuf[1])
 		nomode = 1;
@@ -1291,19 +1291,19 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 
 	if (nomode && nopara)
 	{
-		ircsprintf(buf,
+		ircsnprintf(buf, sizeof(buf),
 		    ":%s SJOIN %ld %s :", me.name,
 		    (long)chptr->creationtime, chptr->chname);
 	}
 	if (nopara && !nomode)
 	{
-		ircsprintf(buf, 
+		ircsnprintf(buf, sizeof(buf),
 		    ":%s SJOIN %ld %s %s :", me.name,
 		    (long)chptr->creationtime, chptr->chname, modebuf);
 	}
 	if (!nopara && !nomode)
 	{
-		ircsprintf(buf,
+		ircsnprintf(buf, sizeof(buf),
 		    ":%s SJOIN %ld %s %s %s :", me.name,
 		    (long)chptr->creationtime, chptr->chname, modebuf, parabuf);
 	}

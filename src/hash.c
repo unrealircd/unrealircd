@@ -90,7 +90,7 @@ unsigned int hash_nn_name(const char *hname)
 }
 
 
-unsigned hash_nick_name(char *nname)
+unsigned hash_nick_name(const char *nname)
 {
 	unsigned hash = 0;
 	int  hash2 = 0;
@@ -281,7 +281,7 @@ int  del_from_channel_hash_table(char *name, aChannel *chptr)
 /*
  * hash_find_client
  */
-aClient *hash_find_client(char *name, aClient *cptr)
+aClient *hash_find_client(const char *name, aClient *cptr)
 {
 	aClient *tmp;
 	unsigned int  hashv;
@@ -296,7 +296,7 @@ aClient *hash_find_client(char *name, aClient *cptr)
 	return (cptr);
 }
 
-aClient *hash_find_id(char *name, aClient *cptr)
+aClient *hash_find_id(const char *name, aClient *cptr)
 {
 	aClient *tmp;
 	unsigned int  hashv;
@@ -314,7 +314,7 @@ aClient *hash_find_id(char *name, aClient *cptr)
 /*
  * hash_find_nickserver
  */
-aClient *hash_find_nickserver(char *name, aClient *cptr)
+aClient *hash_find_nickserver(const char *name, aClient *cptr)
 {
 	aClient *tmp;
 	unsigned int  hashv;
@@ -343,7 +343,7 @@ aClient *hash_find_nickserver(char *name, aClient *cptr)
 /*
  * hash_find_server
  */
-aClient *hash_find_server(char *server, aClient *cptr)
+aClient *hash_find_server(const char *server, aClient *cptr)
 {
 	aClient *tmp;
 	unsigned int  hashv;

@@ -99,7 +99,7 @@ DLLFUNC CMD_FUNC(m_userhost)
 	/* The idea is to build up the response string out of pieces
 	 * none of this strlen() nonsense.
 	 * 5 * (NICKLEN*2+CHANNELLEN+USERLEN+HOSTLEN+30) is still << sizeof(buf)
-	 * and our ircsprintf() truncates it to fit anyway. There is
+	 * and our ircsnprintf() truncates it to fit anyway. There is
 	 * no danger of an overflow here. -Dianora
 	 */
 	response[0][0] = response[1][0] = response[2][0] =
@@ -114,7 +114,8 @@ DLLFUNC CMD_FUNC(m_userhost)
 
 		if ((acptr = find_person(cn, NULL)))
 		{
-			ircsprintf(response[i], "%s%s=%c%s@%s",
+			ircsnprintf(response[i], NICKLEN * 2 + CHANNELLEN + USERLEN + HOSTLEN + 30,
+                            "%s%s=%c%s@%s",
 			    acptr->name,
 			    (IsAnOper(acptr) && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
 				? "*" : "",

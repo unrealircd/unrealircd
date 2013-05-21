@@ -167,7 +167,7 @@ void sendto_one(aClient *to, char *pattern, ...)
 
 void vsendto_one(aClient *to, const char *pattern, va_list vl)
 {
-	ircvsprintf(sendbuf, pattern, vl);
+	ircvsnprintf(sendbuf, sizeof(sendbuf), pattern, vl);
 	sendbufto_one(to, sendbuf, 0);
 }
 
@@ -405,8 +405,8 @@ void sendto_chmodemucrap(aClient *from, aChannel *chptr, char *text)
 	int  i;
 	int remote = MyClient(from) ? 0 : 1;
 
-	sprintf(ccmd, ":%s PRIVMSG %s :%s", from->name, chptr->chname, text); /* msg */
-	sprintf(xcmd, ":IRC!IRC@%s PRIVMSG %s :%s: %s", me.name, chptr->chname, from->name, text); /* local */
+	snprintf(ccmd, sizeof(ccmd), ":%s PRIVMSG %s :%s", from->name, chptr->chname, text); /* msg */
+	snprintf(xcmd, sizeof(xcmd), ":IRC!IRC@%s PRIVMSG %s :%s: %s", me.name, chptr->chname, from->name, text); /* local */
 
 	++current_serial;
 	for (lp = chptr->members; lp; lp = lp->next)
@@ -796,7 +796,7 @@ void sendto_ops(char *pattern, ...)
 	list_for_each_entry(cptr, &lclient_list, lclient_node)
 		if (!IsServer(cptr) && !IsMe(cptr) && SendServNotice(cptr))
 		{
-			(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ", me.name, cptr->name);
+			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** Notice -- ", me.name, cptr->name);
 			(void)strncat(nbuf, pattern, sizeof(nbuf) - strlen(nbuf));
 
 			va_start(vl, pattern);
@@ -819,7 +819,7 @@ void sendto_failops(char *pattern, ...)
 	list_for_each_entry(cptr, &lclient_list, lclient_node)
 		if (!IsServer(cptr) && !IsMe(cptr) && SendFailops(cptr))
 		{
-			(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Global -- ",
+			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** Global -- ",
 			    me.name, cptr->name);
 			(void)strncat(nbuf, pattern,
 			    sizeof(nbuf) - strlen(nbuf));
@@ -844,7 +844,7 @@ void sendto_umode(int umodes, char *pattern, ...)
 	list_for_each_entry(cptr, &lclient_list, lclient_node)
 		if (IsPerson(cptr) && (cptr->umodes & umodes) == umodes)
 		{
-			(void)ircsprintf(nbuf, ":%s NOTICE %s :",
+			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :",
 			    me.name, cptr->name);
 			(void)strncat(nbuf, pattern,
 			    sizeof(nbuf) - strlen(nbuf));
@@ -887,7 +887,7 @@ void sendto_snomask(int snomask, char *pattern, ...)
 	char nbuf[2048];
 
 	va_start(vl, pattern);
-	ircvsprintf(nbuf, pattern, vl);
+	ircvsnprintf(nbuf, sizeof(nbuf), pattern, vl);
 	va_end(vl);
 
 	list_for_each_entry(cptr, &oper_list, special_node)
@@ -910,7 +910,7 @@ void sendto_snomask_global(int snomask, char *pattern, ...)
 	char nbuf[2048], snobuf[32], *p;
 
 	va_start(vl, pattern);
-	ircvsprintf(nbuf, pattern, vl);
+	ircvsnprintf(nbuf, sizeof(nbuf), pattern, vl);
 	va_end(vl);
 
 	list_for_each_entry(cptr, &oper_list, special_node)
@@ -942,7 +942,7 @@ void sendto_snomask_normal(int snomask, char *pattern, ...)
 	char nbuf[2048];
 
 	va_start(vl, pattern);
-	ircvsprintf(nbuf, pattern, vl);
+	ircvsnprintf(nbuf, sizeof(nbuf), pattern, vl);
 	va_end(vl);
 
 	list_for_each_entry(cptr, &lclient_list, lclient_node)
@@ -963,7 +963,7 @@ void sendto_snomask_normal_global(int snomask, char *pattern, ...)
 	char nbuf[2048], snobuf[32], *p;
 
 	va_start(vl, pattern);
-	ircvsprintf(nbuf, pattern, vl);
+	ircvsnprintf(nbuf, sizeof(nbuf), pattern, vl);
 	va_end(vl);
 
 	list_for_each_entry(cptr, &lclient_list, lclient_node)
@@ -996,7 +996,7 @@ void sendto_failops_whoare_opers(char *pattern, ...)
 	{
 		if (SendFailops(cptr))
 		{
-			(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Global -- ",
+			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** Global -- ",
 			    me.name, cptr->name);
 			(void)strncat(nbuf, pattern,
 			    sizeof(nbuf) - strlen(nbuf));
@@ -1024,7 +1024,7 @@ void sendto_locfailops(char *pattern, ...)
 	{
 		if (SendFailops(cptr))
 		{
-			(void)ircsprintf(nbuf, ":%s NOTICE %s :*** LocOps -- ",
+			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** LocOps -- ",
 			    me.name, cptr->name);
 			(void)strncat(nbuf, pattern,
 			    sizeof(nbuf) - strlen(nbuf));
@@ -1049,7 +1049,7 @@ void sendto_opers(char *pattern, ...)
 
 	list_for_each_entry(cptr, &oper_list, special_node)
 	{
-		(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Oper -- ",
+		(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** Oper -- ",
 		    me.name, cptr->name);
 		(void)strncat(nbuf, pattern,
 		    sizeof(nbuf) - strlen(nbuf));
@@ -1151,7 +1151,7 @@ void sendto_ops_butme(aClient *from, char *pattern, ...)
  * is a person, taking into account the rules for hidden/cloaked host.
  * NOTE: Do not send this prepared buffer to remote clients or servers,
  *       they do not want or need the expanded prefix. In that case, simply
- *       use ircvsprintf() directly.
+ *       use ircvsnprintf() directly.
  */
 int vmakebuf_local_withprefix(char *buf, struct Client *from, const char *pattern, va_list vl)
 {
@@ -1187,10 +1187,10 @@ int len;
 		if (!strcmp(&pattern[3], "%s"))
 			strcpy(buf + strlen(buf), va_arg(vl, char *)); /* This can speed things up by 30% -- Syzop */
 		else
-			ircvsprintf(buf + strlen(buf), &pattern[3], vl);
+			ircvsnprintf(buf + strlen(buf), sizeof(buf)-strlen(buf), &pattern[3], vl);
 	}
 	else
-		ircvsprintf(buf, pattern, vl);
+		ircvsnprintf(buf, sizeof(buf), pattern, vl);
 
 	len = strlen(buf);
 	ADD_CRLF(buf, len);
@@ -1203,7 +1203,7 @@ void vsendto_prefix_one(struct Client *to, struct Client *from,
 	if (to && from && MyClient(to) && from->user)
 		vmakebuf_local_withprefix(sendbuf, from, pattern, vl);
 	else
-		ircvsprintf(sendbuf, pattern, vl);
+		ircvsnprintf(sendbuf, sizeof(sendbuf), pattern, vl);
 
 	sendbufto_one(to, sendbuf, 0);
 }
@@ -1239,7 +1239,7 @@ void sendto_realops(char *pattern, ...)
 
 	list_for_each_entry(cptr, &oper_list, special_node)
 	{
-		(void)ircsprintf(nbuf, ":%s NOTICE %s :*** Notice -- ",
+		(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** Notice -- ",
 		    me.name, cptr->name);
 		(void)strlcat(nbuf, pattern, sizeof nbuf);
 
@@ -1259,7 +1259,7 @@ void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnec
 	if (!disconnect)
 	{
 		RunHook(HOOKTYPE_LOCAL_CONNECT, sptr);
-		ircsprintf(connectd,
+		ircsnprintf(connectd, sizeof(connectd),
 		    "*** Notice -- Client connecting on port %d: %s (%s@%s) [%s] %s%s%s",
 		    sptr->listener->port, nick, user->username, user->realhost,
 		    sptr->class ? sptr->class->name : "",
@@ -1270,16 +1270,16 @@ void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnec
 #else
 		"", "", "");
 #endif
-		ircsprintf(connecth,
+		ircsnprintf(connecth, sizeof(connecth),
 		    "*** Notice -- Client connecting: %s (%s@%s) [%s] {%s}", nick,
 		    user->username, user->realhost, Inet_ia2p(&sptr->ip),
 		    sptr->class ? sptr->class->name : "0");
 	}
 	else
 	{
-		ircsprintf(connectd, "*** Notice -- Client exiting: %s (%s@%s) [%s]",
+		ircsnprintf(connectd, sizeof(connectd), "*** Notice -- Client exiting: %s (%s@%s) [%s]",
 			nick, user->username, user->realhost, comment);
-		ircsprintf(connecth, "*** Notice -- Client exiting: %s (%s@%s) [%s] [%s]",
+		ircsnprintf(connecth, sizeof(connecth), "*** Notice -- Client exiting: %s (%s@%s) [%s] [%s]",
 			nick, user->username, user->realhost, comment, Inet_ia2p(&sptr->ip));
 	}
 
@@ -1307,17 +1307,17 @@ void sendto_fconnectnotice(char *nick, anUser *user, aClient *sptr, int disconne
 
 	if (!disconnect)
 	{
-		ircsprintf(connectd, "*** Notice -- Client connecting at %s: %s (%s@%s)",
+		ircsnprintf(connectd, sizeof(connectd), "*** Notice -- Client connecting at %s: %s (%s@%s)",
 			    user->server, nick, user->username, user->realhost);
-		ircsprintf(connecth,
+		ircsnprintf(connecth, sizeof(connecth),
 		    "*** Notice -- Client connecting at %s: %s (%s@%s) [%s] {0}", user->server, nick,
 		    user->username, user->realhost, user->ip_str ? user->ip_str : "0");
 	}
 	else
 	{
-		ircsprintf(connectd, "*** Notice -- Client exiting at %s: %s!%s@%s (%s)",
+		ircsnprintf(connectd, sizeof(connectd), "*** Notice -- Client exiting at %s: %s!%s@%s (%s)",
 			   user->server, nick, user->username, user->realhost, comment);
-		ircsprintf(connecth, "*** Notice -- Client exiting at %s: %s (%s@%s) [%s] [%s]",
+		ircsnprintf(connecth, sizeof(connecth), "*** Notice -- Client exiting at %s: %s (%s@%s) [%s] [%s]",
 			user->server, nick, user->username, user->realhost, comment,
 			user->ip_str ? user->ip_str : "0");
 	}
@@ -1437,7 +1437,7 @@ static char realpattern[1024];
 va_list vl;
 char *name = *to->name ? to->name : "*";
 
-	ircsprintf(realpattern, ":%s NOTICE %s :%s", me.name, name, pattern);
+	ircsnprintf(realpattern, sizeof(realpattern), ":%s NOTICE %s :%s", me.name, name, pattern);
 
 	va_start(vl, pattern);
 	vsendto_one(to, realpattern, vl);
@@ -1449,7 +1449,7 @@ void sendtxtnumeric(aClient *to, char *pattern, ...)
 static char realpattern[1024];
 va_list vl;
 
-	ircsprintf(realpattern, ":%s %d %s :%s", me.name, RPL_TEXT, to->name, pattern);
+	ircsnprintf(realpattern, sizeof(realpattern), ":%s %d %s :%s", me.name, RPL_TEXT, to->name, pattern);
 
 	va_start(vl, pattern);
 	vsendto_one(to, realpattern, vl);

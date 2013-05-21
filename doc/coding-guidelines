@@ -98,24 +98,29 @@ Rules about patches & modifications to UnrealIRCd
     Some code is old and horrible and has a mix of tabs and spaces used for
     spacing, that's something we do not want to have ;)
 
-17. Be careful about overflows. As you know a line from a user can never be longer
-    than 511 (510?) characters, sometimes you can use this knowledge to your
-    advantage. Whenever it's not safe or when you don't know what input size you
-    can expect, use strlcpy instead of strcpy. Do not ever use strncpy, this is
-    older, slower, and does not add proper zero termination.
-    For the same reason, use snprintf if really needed. Note though, that using
-    ircsprintf with a bigger buffer (eg: 1024 bytes) is MUCH faster, so preferably
-    use that instead of snprintf. The same can be true for strcpy vs strlcpy in
-    some circumstances as well.
+17. Be careful about overflows. Do not do any unchecked string copies
+    (specifically do not use sprintf, strcat, or strcpy, and do not use
+    unqualified %s format specifiers in fscanf and scanf).  Additionally, do not
+    use strncpy (use strlcpy, which does correct null termination).  Recall that
+    strncat's size parameter doesn't include the null terminator (use size-1),
+    but that almost everything else (except strncpy, which is forbidden) takes
+    the actual size and accounts for the null.  Do not dereference a pointer you
+    can't prove is valid (this includes loops with moving pointers for string
+    operations).  Prefer ircsnprintf to chains of strlcpy and strncat, as it
+    relieves you of length accounting.  Never assume a buffer is long enough, as
+    attackers often find ways around filters and protocol constraints and
+    can sometimes overwrite constants.  Always pass in the correct length; never
+    guess the length.
 
 18. Speed.  When optimizing or writing code, keep in mind that readability and
     stability comes FIRST, and after that comes speed. So we'd rather prefer some
     readable code (even if difficult) over some odd highly optimized routine which
     nobody understands, is difficult to extend, and might have several bugs.
-    As mentioned earlier: use ircsprintf, not sprintf (this is because ircsprintf
-    is optimized for simple strings like the ones we use).
-    Prefer ircsprintf with a bigger buffer over the use of snprintf, since
-    ircsprintf is much faster.
+    As mentioned earlier: use ircsnprintf, not snprintf (this is because
+    ircsnprintf is optimized for simple strings like the ones we use).
+    ircsnprintf calls snprintf when it finds a (non-simple) format specifier it
+    can't handle.  Simple format specifiers do not have prefixes other than
+    h and l.
 
 19. Initialize your structs and use the proper memory calls.
     In UnrealIRCd we use MyMalloc, MyMallocEx and MyFree (so not malloc/free).
