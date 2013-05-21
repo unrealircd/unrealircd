@@ -115,7 +115,7 @@ DLLFUNC int  m_ping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			origin = cptr->name;
 	}
 
-	if (!BadPtr(destination) && mycmp(destination, me.name) != 0)
+	if (!BadPtr(destination) && mycmp(destination, me.name) != 0 && mycmp(destination, me.id) != 0)
 	{
 		if (MyClient(sptr))
 			origin = sptr->name; /* Make sure origin is not spoofed */
