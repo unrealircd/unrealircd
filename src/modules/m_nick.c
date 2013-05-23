@@ -45,6 +45,7 @@
 #endif
 
 DLLFUNC CMD_FUNC(m_nick);
+DLLFUNC CMD_FUNC(m_uid);
 DLLFUNC int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, char *umode, char *virthost, char *ip);
 
 #define MSG_NICK 	"NICK"	
@@ -68,6 +69,7 @@ DLLFUNC int MOD_TEST(m_nick)(ModuleInfo *modinfo)
 DLLFUNC int MOD_INIT(m_nick)(ModuleInfo *modinfo)
 {
 	CommandAdd(modinfo->handle, MSG_NICK, m_nick, MAXPARA, M_USER|M_SERVER|M_UNREGISTERED);
+	CommandAdd(modinfo->handle, "UID", m_uid, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -84,6 +86,291 @@ DLLFUNC int MOD_UNLOAD(m_nick)(int module_unload)
 
 static char buf[BUFSIZE];
 static char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64];
+
+/*
+** m_uid
+**	parv[0] = sender prefix
+**	parv[1] = nickname
+**      parv[2] = hopcount
+**      parv[3] = timestamp
+**      parv[4] = username
+**      parv[5] = hostname
+**      parv[6] = UID
+**	parv[7] = servicestamp
+**      parv[8] = umodes
+**	parv[9] = virthost, * if none
+**	parv[10] = ip
+**	parv[11] = info
+*/
+DLLFUNC CMD_FUNC(m_uid)
+{
+	aTKline *tklban;
+	int ishold;
+	aClient *acptr, *serv = NULL;
+	aClient *acptrs;
+	char nick[NICKLEN + 2], *s, descbuf[BUFSIZE];
+	Membership *mp;
+	long lastnick = 0l;
+	int  differ = 1, update_watch = 1;
+	unsigned char newusr = 0, removemoder = 1;
+
+	if ((NICKLEN < iConf.nicklen) || !IsServer(cptr))
+		strlcpy(nick, parv[1], iConf.nicklen + 1);
+	else
+		strlcpy(nick, parv[1], NICKLEN + 1);
+
+	/* For a local clients, do proper nickname checking via do_nick_name()
+	 * and reject the nick if it returns false.
+	 * For remote clients, do a quick check by using do_remote_nick_name(),
+	 * if this returned false then reject and kill it. -- Syzop
+	 */
+	if (IsServer(cptr) && !do_remote_nick_name(nick))
+	{
+		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
+		    me.name, parv[0], parv[1], "Illegal characters");
+
+		if (IsServer(cptr))
+		{
+			ircstp->is_kill++;
+			sendto_failops("Bad Nick: %s From: %s %s",
+			    parv[1], parv[0], get_client_name(cptr, FALSE));
+			sendto_one(cptr, ":%s KILL %s :%s (%s <- %s[%s])",
+			    me.name, parv[1], me.name, parv[1],
+			    nick, cptr->name);
+			if (sptr != cptr)
+			{	/* bad nick change */
+				sendto_server(cptr, 0, 0,
+				    ":%s KILL %s :%s (%s <- %s!%s@%s)",
+				    me.name, parv[0], me.name,
+				    get_client_name(cptr, FALSE),
+				    parv[0],
+				    sptr->user ? sptr->username : "",
+				    sptr->user ? sptr->user->server :
+				    cptr->name);
+				sptr->flags |= FLAGS_KILLED;
+				return exit_client(cptr, sptr, &me, "BadNick");
+			}
+		}
+		return 0;
+	}
+
+	/* Kill quarantined opers early... */
+	if (IsServer(cptr) && (sptr->from->flags & FLAGS_QUARANTINE) &&
+	    (parc >= 11) && strchr(parv[8], 'o'))
+	{
+		ircstp->is_kill++;
+		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
+		sendto_one(cptr, ":%s KILL %s :%s (Quarantined: no global oper privileges allowed)",
+			me.name, parv[1], me.name);
+		sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine",
+			parv[1], sptr->name);
+		/* (nothing to exit_client or to free, since user was never added) */
+		return 0;
+	}
+
+	/*
+	   ** Protocol 4 doesn't send the server as prefix, so it is possible
+	   ** the server doesn't exist (a lagged net.burst), in which case
+	   ** we simply need to ignore the NICK. Also when we got that server
+	   ** name (again) but from another direction. --Run
+	 */
+	/*
+	   ** We should really only deal with this for msgs from servers.
+	   ** -- Aeto
+	 */
+	if (IsServer(cptr) &&
+	    (parc > 7
+	    && (!(serv = (aClient *)find_server(parv[0], NULL))
+	    || serv->from != cptr->from)))
+	{
+		sendto_realops("Cannot find SID %s (%s)", parv[0],
+		    backupbuf);
+		return 0;
+	}
+
+	/*
+	   ** Check for a Q-lined nickname. If we find it, and it's our
+	   ** client, just reject it. -Lefler
+	   ** Allow opers to use Q-lined nicknames. -Russell
+	 */
+	if (!stricmp("ircd", nick))
+	{
+		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME), me.name,
+		    BadPtr(parv[0]) ? "*" : parv[0], nick,
+		    "Reserved for internal IRCd purposes");
+		return 0;
+	}
+	if (!stricmp("irc", nick))
+	{
+		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME), me.name,
+		    BadPtr(parv[0]) ? "*" : parv[0], nick,
+		    "Reserved for internal IRCd purposes");
+		return 0;
+	}
+	if (!IsULine(sptr) && (tklban = find_qline(sptr, nick, &ishold)))
+	{
+		if (IsServer(sptr) && !ishold) /* server introducing new client */
+		{
+			acptrs =
+			    (aClient *)find_server(sptr->user ==
+			    NULL ? (char *)parv[6] : (char *)sptr->user->
+			    server, NULL);
+			/* (NEW: no unregistered q:line msgs anymore during linking) */
+			if (!acptrs || (acptrs->serv && acptrs->serv->flags.synced))
+				sendto_snomask(SNO_QLINE, "Q:lined nick %s from %s on %s", nick,
+				    (*sptr->name != 0
+				    && !IsServer(sptr) ? sptr->name : "<unregistered>"),
+				    acptrs ? acptrs->name : "unknown server");
+		}
+		
+		if (IsServer(cptr) && IsPerson(sptr) && !ishold) /* remote user changing nick */
+		{
+			sendto_snomask(SNO_QLINE, "Q:lined nick %s from %s on %s", nick,
+				sptr->name, sptr->srvptr ? sptr->srvptr->name : "<unknown>");
+		}
+	}
+
+	/*
+	   ** acptr already has result from previous find_server()
+	 */
+	if ((acptr = find_server(nick, NULL)) != NULL)
+	{
+		/*
+		   ** We have a nickname trying to use the same name as
+		   ** a server. Send out a nick collision KILL to remove
+		   ** the nickname. As long as only a KILL is sent out,
+		   ** there is no danger of the server being disconnected.
+		   ** Ultimate way to jupiter a nick ? >;-). -avalon
+		 */
+		sendto_failops("Nick collision on %s(%s <- %s)",
+		    sptr->name, acptr->from->name,
+		    get_client_name(cptr, FALSE));
+		ircstp->is_kill++;
+		sendto_one(cptr, ":%s KILL %s :%s (%s <- %s)",
+		    me.name, sptr->name, me.name, acptr->from->name,
+		    /* NOTE: Cannot use get_client_name
+		       ** twice here, it returns static
+		       ** string pointer--the other info
+		       ** would be lost
+		     */
+		    get_client_name(cptr, FALSE));
+		sptr->flags |= FLAGS_KILLED;
+		return exit_client(cptr, sptr, &me, "Nick/Server collision");
+	}
+
+	if ((acptr = find_client(nick, NULL)) != NULL)
+	{
+		/*
+		   ** A new NICK being introduced by a neighbouring
+		   ** server (e.g. message type "NICK new" received)
+		 */
+		if (parc > 3)
+		{
+			lastnick = atol(parv[3]);
+			if (parc > 5)
+				differ = (mycmp(acptr->user->username, parv[4])
+				    || mycmp(acptr->user->realhost, parv[5]));
+		}
+		sendto_failops("Nick collision on %s (%s %ld <- %s %ld)",
+		    acptr->name, acptr->from->name, acptr->lastnick,
+		    cptr->name, lastnick);
+		/*
+		   **    I'm putting the KILL handling here just to make it easier
+		   ** to read, it's hard to follow it the way it used to be.
+		   ** Basically, this is what it will do.  It will kill both
+		   ** users if no timestamp is given, or they are equal.  It will
+		   ** kill the user on our side if the other server is "correct"
+		   ** (user@host differ and their user is older, or user@host are
+		   ** the same and their user is younger), otherwise just kill the
+		   ** user an reintroduce our correct user.
+		   **    The old code just sat there and "hoped" the other server
+		   ** would kill their user.  Not anymore.
+		   **                                               -- binary
+		 */
+		if (!(parc > 3) || (acptr->lastnick == lastnick))
+		{
+			ircstp->is_kill++;
+			sendto_server(NULL, 0, 0,
+			    ":%s KILL %s :%s (Nick Collision)",
+			    me.name, acptr->name, me.name);
+			acptr->flags |= FLAGS_KILLED;
+			(void)exit_client(NULL, acptr, &me,
+			    "Nick collision with no timestamp/equal timestamps");
+			return 0;	/* We killed both users, now stop the process. */
+		}
+
+		if ((differ && (acptr->lastnick > lastnick)) ||
+		    (!differ && (acptr->lastnick < lastnick)) || acptr->from == cptr)	/* we missed a QUIT somewhere ? */
+		{
+			ircstp->is_kill++;
+			sendto_server(cptr, 0, 0,
+			    ":%s KILL %s :%s (Nick Collision)",
+			    me.name, acptr->name, me.name);
+			acptr->flags |= FLAGS_KILLED;
+			(void)exit_client(NULL, acptr, &me, "Nick collision");
+		}
+
+		if ((differ && (acptr->lastnick < lastnick)) ||
+		    (!differ && (acptr->lastnick > lastnick)))
+		{
+			/*
+			 * Introduce our "correct" user to the other server
+			 */
+
+			sendto_one(cptr, ":%s KILL %s :%s (Nick Collision)",
+			    me.name, parv[1], me.name);
+			send_umode(NULL, acptr, 0, SEND_UMODES, buf);
+			sendto_one_nickcmd(cptr, acptr, buf);
+			if (acptr->user->away)
+				sendto_one(cptr, ":%s AWAY :%s", acptr->name,
+				    acptr->user->away);
+			send_user_joins(cptr, acptr);
+			return 0;	/* Ignore the NICK */
+		}
+		return 0;
+	}
+
+	if (IsServer(sptr))
+	{
+		/* A server introducing a new client, change source */
+
+		sptr = make_client(cptr, serv);
+		strlcpy(sptr->id, parv[6], IDLEN);
+		add_client_to_list(sptr);
+		add_to_id_hash_table(sptr->id, sptr);
+		if (parc > 2)
+			sptr->hopcount = atol(parv[2]);
+		if (parc > 3)
+			sptr->lastnick = atol(parv[3]);
+		else		/* Little bit better, as long as not all upgraded */
+			sptr->lastnick = TStime();
+		if (sptr->lastnick < 0)
+		{
+			sendto_realops
+			    ("Negative timestamp recieved from %s, resetting to TStime (%s)",
+			    cptr->name, backupbuf);
+			sptr->lastnick = TStime();
+		}
+		newusr = 1;
+	}
+
+	(void)strlcpy(sptr->name, nick, NICKLEN);
+	(void)add_to_client_hash_table(nick, sptr);
+
+	if (IsServer(cptr) && parc > 7)
+	{
+		/* XXX: we need to split this out into register_remote_user() or something. */
+		parv[3] = nick;
+		parv[6] = parv[0];
+		do_cmd(cptr, sptr, "USER", parc - 3, &parv[3]);
+		if (GotNetInfo(cptr) && !IsULine(sptr))
+			sendto_fconnectnotice(sptr->name, sptr->user, sptr, 0, NULL);
+	}
+
+	RunHook(HOOKTYPE_REMOTE_CONNECT, sptr);
+
+	return 0;
+}
 
 /*
 ** m_nick
