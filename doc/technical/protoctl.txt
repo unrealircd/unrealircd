@@ -95,26 +95,6 @@ SJ3           Notifies the server that the SJOIN command with SJ3 syntax is
               has * set, then it is included. For +k and +L the "highest" in a string 
               comparison is used.
 
-NS            When specified informs the server that numeric server names are
-              supported. Numeric server names are a base64 number that is associated with
-              each server. This number is used as a shorthand name for the server. It is
-              used in the server parameter of the NICK command and can also be used in the
-              prefix for a message. In the event that the prefix is an NS, rather than
-              using :<sender>, the format is @<ns> the ns should be translated into the
-              server name so that the message can be processed. The format for a SERVER
-              message (at sync time) that supports NS is:
-
-              SERVER <servername> <hops> :U<protocol>-<versionflags>-<numeric> <info>
-
-              The VL protocol must also be supported. The numeric is passed to all servers
-              on the network through the SERVER command using the syntax:
-
-              :<sender> SERVER <servername> <hops> <numeric> :<info>
-
-              Note: anywhere a :<sender> is expected an @<ns> may be received if the source
-              is a server. See doc/technical/base64.txt for information on the base64
-              system used.
-
 TKLEXT        This allows 10 instead of 8 parameters in TKL's for spamfilter, see s_kline.c
               function m_tkl for more info on this (added in 3.2RC2).
 
@@ -140,9 +120,8 @@ EAUTH         Early Authorization. This makes it possible for servers to authent
               the PASS command should be sent prior to this PROTOCTL token.
               EAUTH=my.server.name[,options]
 
-SERVERS       Informs the other server about the other servers (numerics) on this network
-              (including our own numeric).
-              Syntax: SERVERS=numeric1,numeric2,numeric3,etc
+SID           This token indicates that the peer server supports UIDs and SIDs in messages,
+              as well as provides the SID of the direct peer.
 
 ESVID         This token indicates that the traditional services stamp value may take any
               arbitrary value for the SVID field, such as an account name or other unique
