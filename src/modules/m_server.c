@@ -758,40 +758,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 		{
 			send_umode(NULL, acptr, 0, SEND_UMODES, buf);
 
-			if (!SupportVHP(cptr))
-			{
-				sendto_one(cptr,
-					    "NICK %s %d %lu %s %s %s %s %s %s %s%s%s%s:%s",
-					    acptr->name,
-					    acptr->hopcount + 1,
-					    (long)acptr->lastnick,
-					    acptr->user->username,
-					    acptr->user->realhost,
-					    acptr->user->server,
-					    acptr->user->svid,
-					    (!buf || *buf == '\0' ? "+" : buf),
-					    ((IsHidden(acptr) && (acptr->umodes & UMODE_SETHOST)) ? acptr->user->virthost : "*"),
-					    SupportCLK(cptr) ? getcloak(acptr) : "",
-					    SupportCLK(cptr) ? " " : "",
-					    SupportNICKIP(cptr) ? encode_ip(acptr->user->ip_str) : "",
-				        SupportNICKIP(cptr) ? " " : "",
-				        acptr->info);
-			}
-			else
-				sendto_one(cptr,
-				    "NICK %s %d %ld %s %s %s %s %s %s %s%s:%s",
-				    acptr->name,
-				    acptr->hopcount + 1,
-				    acptr->lastnick,
-				    acptr->user->username,
-				    acptr->user->realhost,
-				    acptr->user->server,
-				    acptr->user->svid,
-				    (!buf
-				    || *buf == '\0' ? "+" : buf),
-				    GetHost(acptr),
-				    SupportNICKIP(cptr) ? encode_ip(acptr->user->ip_str) : "",
-			            SupportNICKIP(cptr) ? " " : "", acptr->info);
+			sendto_one_nickcmd(cptr, acptr, buf);
 
 			if (acptr->user->away)
 				sendto_one(cptr, ":%s AWAY :%s", acptr->name,

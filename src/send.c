@@ -1378,6 +1378,7 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes)
 {
 	char *vhost;
+
 	if (SupportVHP(cptr))
 	{
 		if (IsHidden(sptr))
@@ -1392,6 +1393,18 @@ void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes)
 		else
 			vhost = "*";
 	}
+
+	if (CHECKPROTO(cptr, PROTO_SID) && *sptr->id)
+	{
+		sendto_one(cptr,
+			":%s UID %s %d %ld %s %s %s %s %s %s %s %s :%s",
+			sptr->srvptr->id, sptr->name, sptr->hopcount, sptr->lastnick,
+			sptr->user->username, sptr->user->realhost, sptr->id,
+			sptr->user->svid, umodes, vhost, getcloak(sptr),
+			encode_ip(sptr->user->ip_str), sptr->info);
+		return;
+	}
+
 	sendto_one(cptr,
 		    "NICK %s %d %d %s %s %s %lu %s %s %s%s:%s",
 		    sptr->name,
