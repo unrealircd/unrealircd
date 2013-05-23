@@ -99,8 +99,9 @@ static char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64];
 **	parv[7] = servicestamp
 **      parv[8] = umodes
 **	parv[9] = virthost, * if none
-**	parv[10] = ip
-**	parv[11] = info
+**	parv[10] = cloaked host, * if none
+**	parv[11] = ip
+**	parv[12] = info
 */
 DLLFUNC CMD_FUNC(m_uid)
 {

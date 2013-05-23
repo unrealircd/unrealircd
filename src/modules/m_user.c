@@ -147,6 +147,14 @@ DLLFUNC CMD_FUNC(m_user)
 		virthost = parv[6];
 		ip = parv[7];
 	}
+	else if (parc == 10 && IsServer(cptr))
+	{
+		sstamp = (BadPtr(parv[4])) ? "0" : parv[4];
+		realname = (BadPtr(parv[9])) ? "<bad-realname>" : parv[9];
+		umodex = parv[5];
+		virthost = parv[6];
+		ip = parv[8];
+	}
 	else
 	{
 		realname = (BadPtr(parv[4])) ? "<bad-realname>" : parv[4];
