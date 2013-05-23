@@ -1348,43 +1348,27 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
     char *svid, char *info, char *umodes, char *virthost)
 {
 	aClient *cptr;
+	char *vhost;
 
-	list_for_each_entry(cptr, &server_list, special_node)
+	if (IsHidden(sptr))
+		vhost = sptr->user->virthost;
+	else
+		vhost = sptr->user->realhost;
+
+	if (*sptr->id)
 	{
-		if (one && cptr == one->from)
-			continue;
-
-		{
-			char *vhost;
-			if (SupportVHP(cptr))
-			{
-				if (IsHidden(sptr))
-					vhost = sptr->user->virthost;
-				else
-					vhost = sptr->user->realhost;
-			}
-			else
-			{
-				if (IsHidden(sptr) && sptr->umodes & UMODE_SETHOST)
-					vhost = sptr->user->virthost;
-				else
-					vhost = "*";
-			}
-
-			/* Unreal 3.1 and newer support NICKv2, so we don't care about older versions. --nenolod */
-			sendto_one(cptr,
-				    "NICK %s %d %d %s %s %s %s %s %s %s%s%s%s:%s",
-				    nick,
-				    hopcount, lastnick, username, realhost,
-				    server,
-				    svid, umodes, vhost,
-				    SupportCLK(cptr) ? getcloak(sptr) : "",
-				    SupportCLK(cptr) ? " " : "",
-				    SupportNICKIP(cptr) ? encode_ip(sptr->user->ip_str) : "",
-				    SupportNICKIP(cptr) ? " " : "",
-				    info);
-		}
+		sendto_server(one, PROTO_SID, 0,
+			":%s UID %s %d %ld %s %s %s %s %s %s %s %s :%s",
+			sptr->srvptr->id, nick, hopcount, lastnick, username,
+			realhost, sptr->id, svid, umodes, vhost, getcloak(sptr),
+			encode_ip(sptr->user->ip_str), info);
 	}
+
+	sendto_server(one, PROTO_NICKv2 | PROTO_VHP, *sptr->id ? PROTO_SID : 0,
+		"NICK %s %d %ld %s %s %s %s %s %s %s %s :%s",
+		nick, hopcount, lastnick, username,
+		realhost, server, svid, umodes, vhost, getcloak(sptr),
+		encode_ip(sptr->user->ip_str), info);
 }
 
 /*
