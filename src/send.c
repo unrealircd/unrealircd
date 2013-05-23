@@ -1350,6 +1350,9 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 	aClient *cptr;
 	char *vhost;
 
+	if (!*umodes)
+		umodes = "+";
+
 	if (IsHidden(sptr))
 		vhost = sptr->user->virthost;
 	else
@@ -1378,6 +1381,9 @@ void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr,
 void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes)
 {
 	char *vhost;
+
+	if (!*umodes)
+		umodes = "+";
 
 	if (SupportVHP(cptr))
 	{
