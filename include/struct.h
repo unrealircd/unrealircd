@@ -662,6 +662,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define DCC_LINK_ME		1 /* My dcc allow */
 #define DCC_LINK_REMOTE	2 /* I need to remove dccallows from these clients when I die */
 
+#define ID(sptr)	(*sptr->id ? sptr->id : sptr->name)
+
 struct irc_netmask
 {
 	short int type;
