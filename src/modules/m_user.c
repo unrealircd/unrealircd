@@ -166,7 +166,7 @@ DLLFUNC CMD_FUNC(m_user)
 		if (sptr->srvptr == NULL)
 			sendto_ops("WARNING, User %s introduced as being "
 			    "on non-existant server %s.", sptr->name, server);
-		user->server = find_or_add(server);
+		user->server = find_or_add(sptr->srvptr->name);
 		strlcpy(user->realhost, host, sizeof(user->realhost));
 		goto user_finish;
 	}
