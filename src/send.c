@@ -1412,13 +1412,13 @@ void sendto_one_nickcmd(aClient *cptr, aClient *sptr, char *umodes)
 	}
 
 	sendto_one(cptr,
-		    "NICK %s %d %d %s %s %s %lu %s %s %s%s:%s",
+		    "NICK %s %d %d %s %s %s %s %s %s %s :%s",
 		    sptr->name,
 		    sptr->hopcount+1, sptr->lastnick, sptr->user->username, 
-		    sptr->user->realhost, sptr->user->server,
+		    sptr->user->realhost, sptr->srvptr->name,
 		    sptr->user->svid, umodes, vhost,
-		    SupportNICKIP(cptr) ? encode_ip(sptr->user->ip_str) : "",
-		    SupportNICKIP(cptr) ? " " : "", sptr->info);
+		    encode_ip(sptr->user->ip_str),
+		    sptr->info);
 
 	return;
 }
