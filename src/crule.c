@@ -631,7 +631,7 @@ int  crule_parsearglist(crule_treeptr argrootp, int *next_tokp, char **ruleptr)
 #if !defined(CR_DEBUG) && !defined(CR_CHKCONF)
 			  (void)collapse(currarg);
 #endif
-			  if (!BadPtr(currarg))
+			  if (*currarg)
 			  {
 				  DupString(argelemp, currarg);
 				  argrootp->arg[argrootp->numargs++] =
