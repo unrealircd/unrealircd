@@ -46,7 +46,7 @@
 #include "malloc.h"
 #endif
 #include "mempool.h"
-
+#include <assert.h>
 #include <string.h>
 void free_link(Link *);
 Link *make_link();
@@ -190,7 +190,11 @@ void free_client(aClient *cptr)
 			MyFree(cptr->error_str);
 		if (cptr->hostp)
 			unreal_free_hostent(cptr->hostp);
+
+		assert(list_empty(&cptr->lclient_node));
+		assert(list_empty(&cptr->special_node));
 	}
+
 	MyFree((char *)cptr);
 }
 
@@ -338,6 +342,9 @@ void remove_client_from_list(aClient *cptr)
 	else
 		crem.inuse--;
 #endif
+	assert(list_empty(&cptr->client_node));
+	assert(list_empty(&cptr->client_hash));
+	assert(list_empty(&cptr->id_hash));
 	(void)free_client(cptr);
 	checklist();
 	numclients--;
