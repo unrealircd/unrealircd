@@ -1772,18 +1772,12 @@ char	*encode_ip(u_char *ip)
 char *decode_ip(char *buf)
 {
 	int len = strlen(buf);
+	static char result[64];
 	char targ[25];
 
 	b64_decode(buf, targ, 25);
-	if (len == 24) /* IPv6 */
-	{
-		static char result[64];
-		return inetntop(AF_INET6, targ, result, 64);
-	}
-	else if (len == 8) /* IPv4 */
-		return inet_ntoa(*(struct in_addr *)targ);
-	else /* Error?? */
-		abort();
+
+	return inetntop(len == 24 ? AF_INET6 : AF_INET, targ, result, sizeof result);
 }
 
 /* IPv6 stuff */
