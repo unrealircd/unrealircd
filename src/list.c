@@ -45,6 +45,8 @@
 #ifdef	DBMALLOC
 #include "malloc.h"
 #endif
+#include "mempool.h"
+
 #include <string.h>
 void free_link(Link *);
 Link *make_link();
@@ -74,6 +76,8 @@ MODVAR int  numclients = 0;
 /* unless documented otherwise, these are all local-only, except client_list. */
 MODVAR struct list_head client_list, lclient_list, server_list, oper_list, unknown_list, global_server_list;
 
+static mp_pool_t *user_pool = NULL;
+
 void initlists(void)
 {
 #ifdef	DEBUGMODE
@@ -91,6 +95,8 @@ void initlists(void)
 	INIT_LIST_HEAD(&oper_list);
 	INIT_LIST_HEAD(&unknown_list);
 	INIT_LIST_HEAD(&global_server_list);
+
+	user_pool = mp_pool_new(sizeof(anUser), 512 * 1024);
 }
 
 void outofmemory(void)
@@ -142,6 +148,7 @@ aClient *make_client(aClient *from, aClient *servr)
 
 	INIT_LIST_HEAD(&cptr->client_node);
 	INIT_LIST_HEAD(&cptr->client_hash);
+	INIT_LIST_HEAD(&cptr->id_hash);
 
 	(void)strcpy(cptr->username, "unknown");
 	if (size == CLIENT_LOCAL_SIZE)
@@ -198,7 +205,9 @@ anUser *make_user(aClient *cptr)
 	user = cptr->user;
 	if (!user)
 	{
-		user = (anUser *)MyMallocEx(sizeof(anUser));
+		user = mp_pool_get(user_pool);
+		memset(user, 0, sizeof(anUser));
+
 #ifdef	DEBUGMODE
 		users.inuse++;
 #endif
@@ -253,7 +262,8 @@ aServer *make_server(aClient *cptr)
 */
 void free_user(anUser *user, aClient *cptr)
 {
-	if (--user->refcnt <= 0)
+	--user->refcnt;
+	if (user->refcnt == 0)
 	{
 		if (user->away)
 			MyFree(user->away);
@@ -265,17 +275,7 @@ void free_user(anUser *user, aClient *cptr)
 			MyFree(user->ip_str);
 		if (user->operlogin)
 			MyFree(user->operlogin);
-		/*
-		 * sanity check
-		 */
-		if (user->joined || user->refcnt < 0 ||
-		    user->invited || user->channel)
-			sendto_realops("* %p user (%s!%s@%s) %p %p %p %d %d *",
-			    cptr, cptr ? cptr->name : "<noname>",
-			    user->username, user->realhost, user,
-			    user->invited, user->channel, user->joined,
-			    user->refcnt);
-		MyFree(user);
+		mp_pool_release(user);
 #ifdef	DEBUGMODE
 		users.inuse--;
 #endif
