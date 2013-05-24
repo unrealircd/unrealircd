@@ -102,7 +102,6 @@ static struct SOCKADDR_IN mysk;
 static struct SOCKADDR *connect_inet(ConfigItem_link *, aClient *, int *);
 void completed_connection(int, int, void *);
 static int check_init(aClient *, char *, size_t);
-static void do_dns_async();
 void set_sock_opts(int, aClient *);
 static char readbuf[BUFSIZE];
 char zlinebuf[BUFSIZE];
@@ -1391,6 +1390,8 @@ static int parse_client_queued(aClient *cptr)
 		if (dopacket(cptr, buf, dolen) == FLUSH_BUFFER)
 			return FLUSH_BUFFER;
 	}
+
+	return 0;
 }
 
 void read_packet(int fd, int revents, void *data)

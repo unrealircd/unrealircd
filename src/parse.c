@@ -188,7 +188,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 	int buf_len = 0;
 	aClient *from = cptr;
 	char *ch, *s;
-	int  len, i, numeric = 0, paramcount, noprefix = 0;
+	int  len, i, numeric = 0, paramcount;
 #ifdef DEBUGMODE
 	time_t then, ticks;
 	int  retval;
@@ -279,8 +279,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 		while (*ch == ' ')
 			ch++;
 	}
-	else
-		noprefix = 1;
+
 	if (*ch == '\0')
 	{
 		ircstp->is_empt++;
@@ -290,6 +289,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 			cptr->since++; /* 1s fake lag */
 		return (-1);
 	}
+
 	/*
 	   ** Extract the command code from the packet.  Point s to the end
 	   ** of the command code and calculate the length using pointer

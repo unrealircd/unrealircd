@@ -104,9 +104,9 @@ void fd_close(int fd)
 	if (!fde->is_open)
 	{
 		sendto_realops("[BUG] trying to close fd #%d in fd table, but this FD isn't reported open",
-				fd, MAXCONNECTIONS);
+				fd);
 		ircd_log(LOG_ERROR, "[BUG] trying to close fd #%d in fd table, but this FD isn't reported open",
-				fd, MAXCONNECTIONS);
+				fd);
 		return;
 	}
 
@@ -158,9 +158,9 @@ void fd_desc(int fd, const char *desc)
 	if (!fde->is_open)
 	{
 		sendto_realops("[BUG] trying to modify fd #%d in fd table, but this FD isn't reported open",
-				fd, MAXCONNECTIONS);
+				fd);
 		ircd_log(LOG_ERROR, "[BUG] trying to modify fd #%d in fd table, but this FD isn't reported open",
-				fd, MAXCONNECTIONS);
+				fd);
 		return;
 	}
 
