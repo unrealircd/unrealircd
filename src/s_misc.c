@@ -22,12 +22,6 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef CLEAN_COMPILE
-static char sccsid[] =
-    "@(#)s_misc.c	2.42 3/1/94 (C) 1988 University of Oulu, \
-Computing Center and Jarkko Oikarinen";
-#endif
-
 #ifndef _WIN32
 #include <sys/time.h>
 #endif
@@ -528,8 +522,6 @@ remove_dependents(aClient *sptr, aClient *from, const char *comment, const char 
 /* Yeah :/ */
 static void exit_one_client(aClient *sptr, const char *comment)
 {
-	aClient *acptr;
-	int  i;
 	Link *lp;
 	Membership *mp;
 
@@ -611,11 +603,8 @@ static void exit_one_client(aClient *sptr, const char *comment)
 */
 int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 {
-	aClient *acptr;
-	aClient *next;
 	time_t on_for;
 	ConfigItem_listen *listen_conf;
-	static int recurse = 0;
 
 	if (MyConnect(sptr))
 	{
