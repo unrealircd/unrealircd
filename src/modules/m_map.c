@@ -123,7 +123,7 @@ static void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_leng
 			continue;
 		if (acptr->srvptr != server)
 			continue;
-		if (!acptr->flags & FLAGS_MAP)
+		if (!(acptr->flags & FLAGS_MAP))
 			continue;
 		if (--cnt == 0)
 			*p = '`';

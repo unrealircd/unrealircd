@@ -539,7 +539,6 @@ CMD_FUNC(m_sjoin)
 				}
 			}
 		}
-docontinue:
 		continue;
 	}
 

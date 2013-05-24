@@ -6452,7 +6452,7 @@ int _test_log(ConfigFile *conf, ConfigEntry *ce) {
 			"log::flags");
 		errors++;
 	}
-	if (fd = fd_fileopen(ce->ce_vardata, O_WRONLY) == -1)
+	if ((fd = fd_fileopen(ce->ce_vardata, O_WRONLY)) == -1)
 	{
 		config_error("%s:%i: Couldn't open logfile (%s) for writing: %s",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
@@ -7668,7 +7668,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 							tempiConf.ssl_options |= ofl->flag;
 					}
 					if (tempiConf.ssl_options & SSLFLAG_DONOTACCEPTSELFSIGNED)
-						if (!tempiConf.ssl_options & SSLFLAG_VERIFYCERT)
+						if (!(tempiConf.ssl_options & SSLFLAG_VERIFYCERT))
 							tempiConf.ssl_options |= SSLFLAG_VERIFYCERT;
 				}	
 				

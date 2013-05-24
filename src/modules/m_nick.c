@@ -113,7 +113,7 @@ DLLFUNC CMD_FUNC(m_uid)
 	Membership *mp;
 	long lastnick = 0l;
 	int  differ = 1, update_watch = 1;
-	unsigned char newusr = 0, removemoder = 1;
+	unsigned char removemoder = 1;
 
 	if ((NICKLEN < iConf.nicklen) || !IsServer(cptr))
 		strlcpy(nick, parv[1], iConf.nicklen + 1);
@@ -352,7 +352,6 @@ DLLFUNC CMD_FUNC(m_uid)
 			    cptr->name, backupbuf);
 			sptr->lastnick = TStime();
 		}
-		newusr = 1;
 	}
 
 	(void)strlcpy(sptr->name, nick, NICKLEN);
@@ -1483,7 +1482,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 	sendto_serv_butone_nickcmd(cptr, sptr, nick,
 	    sptr->hopcount + 1, sptr->lastnick, user->username, user->realhost,
 	    user->server, user->svid, sptr->info,
-	    (!buf || *buf == '\0' ? "+" : buf),
+	    (*buf == '\0' ? "+" : buf),
 	    sptr->umodes & UMODE_SETHOST ? sptr->user->virthost : NULL);
 
 	if (MyConnect(sptr))

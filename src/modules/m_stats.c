@@ -781,6 +781,8 @@ int stats_fdtable(aClient *sptr, char *para)
 			me.name, RPL_STATSDEBUG, sptr->name,
 			fde->fd, fde->desc, fde->read_callback, fde->write_callback, fde->data);
 	}
+
+	return 0;
 }
 
 int stats_uline(aClient *sptr, char *para)
@@ -1244,9 +1246,6 @@ int stats_set(aClient *sptr, char *para)
 			sptr->name, RESTRICT_EXTENDEDBANS);
 	switch (UHOST_ALLOWED)
 	{
-		case UHALLOW_ALWAYS:
-			uhallow = "always";
-			break;
 		case UHALLOW_NEVER:
 			uhallow = "never";
 			break;
@@ -1255,6 +1254,10 @@ int stats_set(aClient *sptr, char *para)
 			break;
 		case UHALLOW_REJOIN:
 			uhallow = "force-rejoin";
+			break;
+		case UHALLOW_ALWAYS:
+		default:
+			uhallow = "always";
 			break;
 	}
 	if (uhallow)

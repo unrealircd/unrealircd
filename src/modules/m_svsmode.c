@@ -200,8 +200,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	time_t ts;
 	aClient *acptr;
 	char *m;
-	int what;
-	
+	int what = MODE_ADD;
 	int i = 4;
 
 	*parabuf = '\0';
