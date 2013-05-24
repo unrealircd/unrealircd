@@ -344,7 +344,7 @@ int ret;
 							}
 							else 
 								strrangetok(ptr, current, ' ', atoi(nums), atoi(nums));
-							if (!current)
+							if (!*current)
 								continue;
 							if (j + strlen(current)+1 >= 500)
 								break;

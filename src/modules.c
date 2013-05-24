@@ -1082,15 +1082,18 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 
 	tmp[0] = '\0';
+	p = tmp;
 	for (i=0; i < MAXHOOKTYPES; i++)
 	{
 		if (!Hooks[i])
 			continue;
-		ircsnprintf(tmp, sizeof(tmp), "%d ", i);
-		if (strlen(p) > 380)
+		ircsnprintf(p, sizeof(tmp) - strlen(tmp), "%d ", i);
+		p += strlen(p);
+		if (p > tmp + 380)
 		{
 			sendto_one(sptr, ":%s NOTICE %s :Hooks: %s", me.name, sptr->name, tmp);
 			tmp[0] = '\0';
+			p = tmp;
 		}
 	}
 	sendto_one(sptr, ":%s NOTICE %s :Hooks: %s ", me.name, sptr->name, tmp);

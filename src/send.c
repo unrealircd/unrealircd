@@ -1160,9 +1160,7 @@ int len;
 
 	if (from && from->user)
 	{
-		char *par;
-
-		par = va_arg(vl, char *); /* eat first parameter */
+		va_arg(vl, char *); /* eat first parameter */
 
 		*buf = ':';
 		strcpy(buf+1, from->name);

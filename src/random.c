@@ -175,8 +175,6 @@ struct {
 #endif
 } rdat;
 
-int n;
-
 #ifndef _WIN32
 int fd;
 #else
@@ -189,7 +187,7 @@ MEMORYSTATUS mstat;
 #ifdef USE_SSL
  #if OPENSSL_VERSION_NUMBER >= 0x000907000
 	if (EGD_PATH) {
-		n = RAND_query_egd_bytes(EGD_PATH, rdat.egd, sizeof(rdat.egd));
+		RAND_query_egd_bytes(EGD_PATH, rdat.egd, sizeof(rdat.egd));
 	}
  #endif
 #endif
@@ -199,7 +197,7 @@ MEMORYSTATUS mstat;
 	gettimeofday(&rdat.nowt, NULL);
 	fd = open("/dev/urandom", O_RDONLY);
 	if (fd) {
-		n = read(fd, &rdat.rnd, sizeof(rdat.rnd));
+		read(fd, &rdat.rnd, sizeof(rdat.rnd));
 		Debug((DEBUG_INFO, "init_random: read from /dev/urandom returned %d", n));
 		close(fd);
 	}

@@ -409,10 +409,9 @@ EVENT(try_connections)
 	ConfigItem_link *aconf;
 	ConfigItem_deny_link *deny;
 	aClient *cptr;
-	int  connecting, confrq;
+	int  confrq;
 	ConfigItem_class *cltmp;
 
-	connecting = FALSE;
 	for (aconf = conf_link; aconf; aconf = (ConfigItem_link *) aconf->next) {
 		/*
 		 * Also when already connecting! (update holdtimes) --SRB 
@@ -577,7 +576,6 @@ EVENT(check_pings)
 {
 	aClient *cptr, *cptr2;
 	ConfigItem_ban *bconf = NULL;
-	char killflag = 0;
 	int  i = 0;
 	char banbuf[1024];
 	char scratch[64];
@@ -594,7 +592,6 @@ EVENT(check_pings)
 			(void)exit_client(cptr, cptr, &me, cptr->error_str ? cptr->error_str : "Dead socket");
 			continue;
 		}
-		killflag = 0;
 
 		/*
 		 * We go into ping phase 
@@ -602,8 +599,8 @@ EVENT(check_pings)
 		ping =
 		    IsRegistered(cptr) ? (cptr->class ? cptr->
 		    class->pingfreq : CONNECTTIMEOUT) : CONNECTTIMEOUT;
-		Debug((DEBUG_DEBUG, "c(%s)=%d p %d k %d a %d", cptr->name,
-		    cptr->status, ping, killflag,
+		Debug((DEBUG_DEBUG, "c(%s)=%d p %d a %d", cptr->name,
+		    cptr->status, ping,
 		    currenttime - cptr->lasttime));
 		
 		/* If ping is less than or equal to the last time we received a command from them */

@@ -64,19 +64,20 @@ char *ircvsnprintf(char *str, size_t size, const char *format, va_list vl) {
 			if (c == 'l' && *format == 'u') { /* Prints time_t value in interval
 							     [ 100000000 , 4294967295 ]
 							     Actually prints like "%010lu" */
+				int i;
 				format++;
 				if (str+10>end) break;
 				unsigned long int v = va_arg(vl, unsigned long int);
-				int i = 9;
-				for (i;i>=0;i--) {
+				for (i = 9; i>=0; i--) {
 					str[i] = (v%10)+'0';
-					v/=10;
+					v /= 10;
 				}
 				str+=10;
 				continue;
 			}
 			if (c == 'd' || c == 'i') {
 				int v = va_arg(vl, int);
+				int i = 0;
 				if (v<0) {
 					v*=-1;
 					*str++ = '-';
@@ -96,13 +97,13 @@ char *ircvsnprintf(char *str, size_t size, const char *format, va_list vl) {
 
 				size_t len = sizeof(scratch_buffer)-(t-scratch_buffer);
 				if ((str+len)>end) break;
-				int i = 0;
-				for (i;i<len;i++) *str++=t[i];
-
+				for (i = 0; i < len; i++)
+					*str++=t[i];
 				continue;
 			}
 			if (c == 'u') {
 				unsigned int v = va_arg(vl, unsigned int);
+				int i = 0;
 				if (v==0) {
 					*str++ = '0';
 					continue;
@@ -117,9 +118,8 @@ char *ircvsnprintf(char *str, size_t size, const char *format, va_list vl) {
 
 				size_t len = sizeof(scratch_buffer)-(t-scratch_buffer);
 				if ((str+len)>end) break;
-				int i = 0;
-				for (i;i<len;i++) *str++=t[i];
-
+				for (i = 0; i < len; i++)
+					*str++=t[i];
 				continue;
 			}
 			if (c == '%') {
