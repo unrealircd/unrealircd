@@ -798,7 +798,7 @@ void sendto_ops(char *pattern, ...)
 		if (!IsServer(cptr) && !IsMe(cptr) && SendServNotice(cptr))
 		{
 			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** Notice -- ", me.name, cptr->name);
-			(void)strncat(nbuf, pattern, sizeof(nbuf) - strlen(nbuf));
+			(void)strlcat(nbuf, pattern, sizeof nbuf);
 
 			va_start(vl, pattern);
 			vsendto_one(cptr, nbuf, vl);
@@ -822,8 +822,7 @@ void sendto_failops(char *pattern, ...)
 		{
 			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** Global -- ",
 			    me.name, cptr->name);
-			(void)strncat(nbuf, pattern,
-			    sizeof(nbuf) - strlen(nbuf));
+			(void)strlcat(nbuf, pattern, sizeof nbuf);
 
 			va_start(vl, pattern);
 			vsendto_one(cptr, nbuf, vl);
@@ -847,8 +846,7 @@ void sendto_umode(int umodes, char *pattern, ...)
 		{
 			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :",
 			    me.name, cptr->name);
-			(void)strncat(nbuf, pattern,
-			    sizeof(nbuf) - strlen(nbuf));
+			(void)strlcat(nbuf, pattern, sizeof nbuf);
 
 			va_start(vl, pattern);
 			vsendto_one(cptr, nbuf, vl);
@@ -999,8 +997,7 @@ void sendto_failops_whoare_opers(char *pattern, ...)
 		{
 			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** Global -- ",
 			    me.name, cptr->name);
-			(void)strncat(nbuf, pattern,
-			    sizeof(nbuf) - strlen(nbuf));
+			(void)strlcat(nbuf, pattern, sizeof nbuf);
 
 			va_start(vl, pattern);
 			vsendto_one(cptr, nbuf, vl);
@@ -1027,8 +1024,7 @@ void sendto_locfailops(char *pattern, ...)
 		{
 			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** LocOps -- ",
 			    me.name, cptr->name);
-			(void)strncat(nbuf, pattern,
-			    sizeof(nbuf) - strlen(nbuf));
+			(void)strlcat(nbuf, pattern, sizeof nbuf);
 
 			va_start(vl, pattern);
 			vsendto_one(cptr, nbuf, vl);
@@ -1052,8 +1048,7 @@ void sendto_opers(char *pattern, ...)
 	{
 		(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** Oper -- ",
 		    me.name, cptr->name);
-		(void)strncat(nbuf, pattern,
-		    sizeof(nbuf) - strlen(nbuf));
+		(void)strlcat(nbuf, pattern, sizeof nbuf);
 
 		va_start(vl, pattern);
 		vsendto_one(cptr, nbuf, vl);
