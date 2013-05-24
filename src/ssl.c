@@ -39,6 +39,7 @@ extern HWND hwIRCDWnd;
 #define SAFE_SSL_ACCEPT 3
 #define SAFE_SSL_CONNECT 4
 
+extern void start_of_normal_client_handshake(aClient *acptr);
 static int fatal_ssl_error(int ssl_error, int where, int my_errno, aClient *sptr);
 
 /* The SSL structures */
