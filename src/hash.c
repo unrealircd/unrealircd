@@ -235,6 +235,8 @@ int  del_from_client_hash_table(char *name, aClient *cptr)
 	if (!list_empty(&cptr->client_hash))
 		list_del(&cptr->client_hash);
 
+	INIT_LIST_HEAD(&cptr->client_hash);
+
 	return 0;
 }
 
@@ -242,6 +244,8 @@ int  del_from_id_hash_table(char *name, aClient *cptr)
 {
 	if (!list_empty(&cptr->id_hash))
 		list_del(&cptr->id_hash);
+
+	INIT_LIST_HEAD(&cptr->id_hash);
 
 	return 0;
 }

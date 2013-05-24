@@ -37,6 +37,7 @@ Computing Center and Jarkko Oikarinen";
 #include "numeric.h"
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <assert.h>
 #if !defined(ULTRIX) && !defined(SGI) && \
     !defined(__convex__) && !defined(_WIN32)
 # include <sys/param.h>
@@ -58,9 +59,7 @@ Computing Center and Jarkko Oikarinen";
 extern ircstats IRCstats;
 extern char	*me_hash;
 
-static void exit_one_client(aClient *, aClient *, aClient *, char *, int);
-extern void exit_one_client_in_split(aClient *, aClient *, aClient *,
-    char *);
+static void exit_one_client(aClient *, const char *);
 
 static char *months[] = {
 	"January", "February", "March", "April",
@@ -442,6 +441,152 @@ int found;
 	}
 }
 
+/*
+ * Recursively send QUITs and SQUITs for cptr and all of it's dependent
+ * clients.  A server needs the client QUITs if it does not support NOQUIT.
+ *    - kaniini
+ */
+static void
+recurse_send_quits(aClient *cptr, aClient *sptr, aClient *from, aClient *to,
+	const char *comment, const char *splitstr)
+{
+	aClient *acptr, *next;
+
+	if (!CHECKPROTO(to, PROTO_NOQUIT))
+	{
+		list_for_each_entry_safe(acptr, next, &client_list, client_node)
+		{
+			if (acptr->srvptr != sptr)
+				continue;
+
+			sendto_one(to, ":%s QUIT :%s", acptr->name, splitstr);
+		}
+	}
+
+	list_for_each_entry_safe(acptr, next, &global_server_list, client_node)
+	{
+		if (acptr->srvptr != sptr)
+			continue;
+
+		recurse_send_quits(cptr, acptr, from, to, comment, splitstr);
+	}
+
+	if ((cptr == sptr && to != from) || !CHECKPROTO(to, PROTO_NOQUIT))
+		sendto_one(to, "SQUIT %s :%s", sptr->name, comment);
+}
+
+/*
+ * Remove all clients that depend on source_p; assumes all (S)QUITs have
+ * already been sent.  we make sure to exit a server's dependent clients
+ * and servers before the server itself; exit_one_client takes care of
+ * actually removing things off llists.   tweaked from +CSr31  -orabidoo
+ */
+static void
+recurse_remove_clients(aClient *sptr, const char *comment)
+{
+	aClient *acptr, *next;
+
+	list_for_each_entry_safe(acptr, next, &client_list, client_node)
+	{
+		if (acptr->srvptr != sptr)
+			continue;
+
+		exit_one_client(acptr, comment);
+	}
+
+	list_for_each_entry_safe(acptr, next, &global_server_list, client_node)
+	{
+		if (acptr->srvptr != sptr)
+			continue;
+
+		recurse_remove_clients(acptr, comment);
+		exit_one_client(acptr, comment);
+	}
+}
+
+/*
+** Remove *everything* that depends on source_p, from all lists, and sending
+** all necessary QUITs and SQUITs.  source_p itself is still on the lists,
+** and its SQUITs have been sent except for the upstream one  -orabidoo
+*/
+static void
+remove_dependents(aClient *sptr, aClient *from, const char *comment, const char *splitstr)
+{
+	aClient *acptr;
+
+	list_for_each_entry(acptr, &global_server_list, client_node)
+		recurse_send_quits(sptr, sptr, from, acptr, comment, splitstr);
+
+	recurse_remove_clients(sptr, splitstr);
+}
+
+/*
+** Exit one client, local or remote. Assuming all dependants have
+** been already removed, and socket closed for local client.
+*/
+/* DANGER: Ugly hack follows. */
+/* Yeah :/ */
+static void exit_one_client(aClient *sptr, const char *comment)
+{
+	aClient *acptr;
+	int  i;
+	Link *lp;
+	Membership *mp;
+
+	assert(!IsMe(sptr));
+
+	if (IsClient(sptr))
+	{
+		sendto_common_channels(sptr, ":%s QUIT :%s",
+		    sptr->name, comment);
+
+		if (!MyClient(sptr))
+		{
+			RunHook2(HOOKTYPE_REMOTE_QUIT, sptr, comment);
+		}
+
+#ifdef JOINTHROTTLE
+		cmodej_deluserentries(sptr);
+#endif
+		while ((mp = sptr->user->channel))
+			remove_user_from_channel(sptr, mp->chptr);
+
+		/* Clean up invitefield */
+		while ((lp = sptr->user->invited))
+			del_invite(sptr, lp->value.chptr);
+		/* again, this is all that is needed */
+
+		/* Clean up silencefield */
+		while ((lp = sptr->user->silence))
+			(void)del_silence(sptr, lp->value.cp);
+
+		/* Clean up dccallow list and (if needed) notify other clients
+		 * that have this person on DCCALLOW that the user just left/got removed.
+		 */
+		remove_dcc_references(sptr);
+
+		/* For remote clients, we need to check for any outstanding async
+		 * connects attached to this 'sptr', and set those records to NULL.
+		 * Why not for local? Well, we already do that in close_connection ;)
+		 */
+		if (!MyConnect(sptr))
+			unrealdns_delreq_bycptr(sptr);
+	}
+
+	/* Remove sptr from the client list */
+	if (*sptr->id)
+		del_from_id_hash_table(sptr->id, sptr);
+	if (*sptr->name)
+		if (del_from_client_hash_table(sptr->name, sptr) != 1)
+			Debug((DEBUG_ERROR, "%#x !in tab %s[%s] %#x %#x %#x %d %d %#x",
+			    sptr, sptr->name,
+			    sptr->from ? sptr->from->sockhost : "??host",
+			    sptr->from, sptr->next, sptr->prev, sptr->fd,
+			    sptr->status, sptr->user));
+	if (IsRegisteredUser(sptr))
+		hash_check_watch(sptr, RPL_LOGOFF);
+	remove_client_from_list(sptr);
+}
 
 /*
 ** exit_client
@@ -470,7 +615,6 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 	aClient *next;
 	time_t on_for;
 	ConfigItem_listen *listen_conf;
-	static char comment1[HOSTLEN + HOSTLEN + 2];
 	static int recurse = 0;
 
 	if (MyConnect(sptr))
@@ -571,213 +715,46 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 		 */
 		close_connection(sptr);
 	}
+	else if (IsPerson(sptr) && !IsULine(sptr))
+	{
+		if (sptr->srvptr != &me)
+			sendto_fconnectnotice(sptr->name, sptr->user, sptr, 1, comment);
+	}
 
 	/*
 	 * Recurse down the client list and get rid of clients who are no
 	 * longer connected to the network (from my point of view)
 	 * Only do this expensive stuff if exited==server -Donwulff
 	 */
-
 	if (IsServer(sptr))
 	{
-		/*
-		 * Is this right? Not recreateing the split message if
-		 * we have been called recursivly? I hope so, cuz thats
-		 * the only way I could make this give the right servers
-		 * in the quit msg. -Cabal95
-		 */
-		if (cptr && !recurse)
-                        ircsnprintf(comment1, sizeof(comment1), "%s %s", sptr->srvptr->name, sptr->name);
-		/*
-		 * First, remove the clients on the server itself.
-		 */
-		list_for_each_entry_safe(acptr, next, &client_list, client_node)
-		{
-			if (IsClient(acptr) && (acptr->srvptr == sptr))
-				exit_one_client(NULL, acptr,
-				    &me, comment1, 1);
-		}
+		char splitstr[HOSTLEN + HOSTLEN + 2];
 
-		/*
-		 * Now, go SQUIT off the servers which are down-stream of
-		 * the one we just lost.
-		 */
-		recurse++;
-		list_for_each_entry_safe(acptr, next, &global_server_list, client_node)
-		{
-			if (IsServer(acptr) && acptr->srvptr == sptr)
-				exit_client(sptr, acptr, sptr, comment1); /* RECURSION */
-			/*
-			 * I am not masking SQUITS like I do QUITs.  This
-			 * is probobly something we could easily do, but
-			 * how much savings is there really in something
-			 * like that?
-			 */
-#ifdef DEBUGMODE
-			else if (IsServer(acptr) &&
-			    (find_server(acptr->serv->up, NULL) == sptr))
-			{
-				sendto_ops("WARNING, srvptr!=sptr but "
-				    "find_server did!  Server %s on "
-				    "%s thought it was on %s while "
-				    "losing %s.  Tell coding team.",
-				    acptr->name, acptr->serv->up,
-				    acptr->srvptr ? acptr->
-				    srvptr->name : "<noserver>", sptr->name);
-				exit_client(sptr, acptr, sptr, comment1);
-			}
-#endif
-		}
-		recurse--;
+		assert(sptr->serv != NULL && sptr->srvptr != NULL);
+
+		if (FLAT_MAP)
+			strlcpy(splitstr, "*.net *.split", sizeof splitstr);
+		else
+			ircsnprintf(splitstr, sizeof splitstr, "%s %s", sptr->srvptr->name, sptr->name);
+
+		remove_dependents(sptr, cptr, comment, splitstr);
+
 		RunHook(HOOKTYPE_SERVER_QUIT, sptr);
 	}
-
+	else if (IsClient(sptr) && !(sptr->flags & FLAGS_KILLED))
+	{
+		sendto_server(cptr, PROTO_SID, 0,
+			":%s QUIT :%s", ID(sptr), comment);
+		sendto_server(cptr, 0, PROTO_SID,
+			":%s QUIT :%s", sptr->name, comment);
+	}
 
 	/*
 	 * Finally, clear out the server we lost itself
 	 */
-	exit_one_client(cptr, sptr, from, comment, recurse);
+	exit_one_client(sptr, comment);
 	return cptr == sptr ? FLUSH_BUFFER : 0;
 }
-
-/*
-** Exit one client, local or remote. Assuming all dependants have
-** been already removed, and socket closed for local client.
-*/
-/* DANGER: Ugly hack follows. */
-/* Yeah :/ */
-static void exit_one_client(aClient *cptr, aClient *sptr, aClient *from, char *comment, int split)
-{
-	aClient *acptr;
-	int  i;
-	Link *lp;
-	Membership *mp;
-	/*
-	   **  For a server or user quitting, propagage the information to
-	   **  other servers (except to the one where is came from (cptr))
-	 */
-	if (IsMe(sptr))
-	{
-		sendto_ops("ERROR: tried to exit me! : %s", comment);
-		return;		/* ...must *never* exit self!! */
-	}
-	else if (IsServer(sptr))
-	{
-		/*
-		   ** Old sendto_serv_but_one() call removed because we now
-		   ** need to send different names to different servers
-		   ** (domain name matching)
-		 */
-		list_for_each_entry(acptr, &server_list, special_node)
-		{
-
-			if (acptr == cptr || IsMe(acptr) || (DontSendQuit(acptr) && split))
-				continue;
-
-			/*
-			   ** SQUIT going "upstream". This is the remote
-			   ** squit still hunting for the target. Use prefixed
-			   ** form. "from" will be either the oper that issued
-			   ** the squit or some server along the path that
-			   ** didn't have this fix installed. --msa
-			 */
-			if (sptr->from == acptr)
-			{
-				sendto_one(acptr, ":%s SQUIT %s :%s", from->name, sptr->name, comment);
-			}
-			else
-			{
-				sendto_one(acptr, "SQUIT %s :%s", sptr->name, comment);
-			}
-		}
-	}
-	else if (!(IsPerson(sptr)))
-		/* ...this test is *dubious*, would need
-		   ** some thougth.. but for now it plugs a
-		   ** nasty hole in the server... --msa
-		 */
-		;		/* Nothing */
-	else if (sptr->name[0])	/* ...just clean all others with QUIT... */
-	{
-		/*
-		   ** If this exit is generated from "m_kill", then there
-		   ** is no sense in sending the QUIT--KILL's have been
-		   ** sent instead.
-		 */
-		if ((sptr->flags & FLAGS_KILLED) == 0)
-		{
-			if (split == 0)
-				sendto_server(cptr, 0, 0, ":%s QUIT :%s", sptr->name, comment);
-			else
-				/*
-				 * Then this is a split, only old (stupid)
-				 * clients need to get quit messages
-				 */
-				sendto_server(cptr, 0, PROTO_NOQUIT, ":%s QUIT :%s",
-				    sptr->name, comment);
-		}
-		/*
-		   ** If a person is on a channel, send a QUIT notice
-		   ** to every client (person) on the same channel (so
-		   ** that the client can show the "**signoff" message).
-		   ** (Note: The notice is to the local clients *only*)
-		 */
-		if (sptr->user)
-		{
-			sendto_common_channels(sptr, ":%s QUIT :%s",
-			    sptr->name, comment);
-
-			if (!IsULine(sptr) && !split)
-				if (sptr->user->server != me_hash)
-					sendto_fconnectnotice(sptr->name, sptr->user, sptr, 1, comment);
-			if (!MyClient(sptr))
-			{
-				RunHook2(HOOKTYPE_REMOTE_QUIT, sptr, comment);
-			}
-#ifdef JOINTHROTTLE
-			cmodej_deluserentries(sptr);
-#endif
-			while ((mp = sptr->user->channel))
-				remove_user_from_channel(sptr, mp->chptr);
-
-			/* Clean up invitefield */
-			while ((lp = sptr->user->invited))
-				del_invite(sptr, lp->value.chptr);
-			/* again, this is all that is needed */
-
-			/* Clean up silencefield */
-			while ((lp = sptr->user->silence))
-				(void)del_silence(sptr, lp->value.cp);
-
-			/* Clean up dccallow list and (if needed) notify other clients
-			 * that have this person on DCCALLOW that the user just left/got removed.
-			 */
-			remove_dcc_references(sptr);
-			
-			/* For remote clients, we need to check for any outstanding async
-			 * connects attached to this 'sptr', and set those records to NULL.
-			 * Why not for local? Well, we already do that in close_connection ;)
-			 */
-			if (!MyConnect(sptr))
-				unrealdns_delreq_bycptr(sptr);
-		}
-	}
-
-	/* Remove sptr from the client list */
-	if (*sptr->id)
-		del_from_id_hash_table(sptr->id, sptr);
-	if (del_from_client_hash_table(sptr->name, sptr) != 1)
-		Debug((DEBUG_ERROR, "%#x !in tab %s[%s] %#x %#x %#x %d %d %#x",
-		    sptr, sptr->name,
-		    sptr->from ? sptr->from->sockhost : "??host",
-		    sptr->from, sptr->next, sptr->prev, sptr->fd,
-		    sptr->status, sptr->user));
-	if (IsRegisteredUser(sptr))
-		hash_check_watch(sptr, RPL_LOGOFF);
-	remove_client_from_list(sptr);
-	return;
-}
-
 
 void checklist(void)
 {
