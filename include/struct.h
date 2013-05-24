@@ -418,7 +418,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	IsNotSpoof(x)		((x)->nospoof == 0)
 
 #define GetHost(x)			(IsHidden(x) ? (x)->user->virthost : (x)->user->realhost)
-#define GetIP(x)			((x->user && x->user->ip_str) ? x->user->ip_str : (MyConnect(x) ? Inet_ia2p(&x->ip) : NULL))
+#define GetIP(x)			((x->user && x->user->ip_str) ? x->user->ip_str : (MyConnect(x) ? Inet_ia2p(&x->ip) : "255.255.255.255"))
 
 #define SetKillsF(x)		((x)->user->snomask |= SNO_KILLS)
 #define SetClientF(x)		((x)->user->snomask |= SNO_CLIENT)
