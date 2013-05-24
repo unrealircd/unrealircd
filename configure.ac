@@ -56,11 +56,6 @@ fi
 
 dnl (the gcc flag detection trick is taken from xemacs/Vin Shelton)
 
-dnl UnrealIRCd might not be strict-aliasing safe at this time
-case "`$CC -v --help 2>&1`" in
-	*-fstrict-aliasing* ) CFLAGS="$CFLAGS -fno-strict-aliasing" ;;
-esac
-
 dnl Pointer signedness warnings are really a pain and 99.9% of the time
 dnl they are of absolutely no use whatsoever. IMO the person who decided
 dnl to enable this without -Wall should be shot on sight.
