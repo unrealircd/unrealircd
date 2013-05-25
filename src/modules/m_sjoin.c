@@ -186,7 +186,12 @@ CMD_FUNC(m_sjoin)
 	char cbuf[1024];
 	char buf[1024];
 	char nick[1024];
+	char nick_buf[BUFSIZE];
+	char uid_buf[BUFSIZE];
+	char sj3_parabuf[BUFSIZE];
+	size_t buflen;
 	char *s = NULL;
+	char *nptr, *uptr;
 	aClient *acptr;
 	aChannel *chptr;
 	Member *lp;
@@ -377,9 +382,30 @@ CMD_FUNC(m_sjoin)
 	c = 0;
 	bp = buf;
 	strlcpy(cbuf, parv[parc-1], sizeof cbuf);
+
+	strlcpy(sj3_parabuf, "", sizeof sj3_parabuf);
+	for (i = 2; i <= (parc - 2); i++)
+	{
+		if (!parv[i])
+		{
+			sendto_ops("Got null parv in SJ3 code");
+			continue;
+		}
+		strlcat(sj3_parabuf, parv[i], sizeof sj3_parabuf);
+		if (((i + 1) <= (parc - 2)))
+			strlcat(sj3_parabuf, " ", sizeof sj3_parabuf);
+	}
+
+	buflen = snprintf(nick_buf, sizeof nick_buf, ":%s SJOIN %ld %s :",
+		sptr->name, ts, sj3_parabuf);
+	nptr = nick_buf + buflen;
+
+	buflen = snprintf(uid_buf, sizeof uid_buf, ":%s SJOIN %ld %s :",
+		ID(sptr), ts, sj3_parabuf);
+	uptr = uid_buf + buflen;
+
 	for (s = s0 = strtoken(&p, cbuf, " "); s; s = s0 = strtoken(&p, (char *)NULL, " "))
 	{
-	
 		c = f = 0;
 		modeflags = 0;
 		i = 0;
@@ -392,29 +418,45 @@ CMD_FUNC(m_sjoin)
 			switch (*(tp++))
 			{
 			  case '@':
+				  *nptr++ = '@';
+				  *uptr++ = '@';
 				  modeflags |= CHFL_CHANOP;
 				  break;
 			  case '%':
+				  *nptr++ = '%';
+				  *uptr++ = '%';
 				  modeflags |= CHFL_HALFOP;
 				  break;
 			  case '+':
+				  *nptr++ = '+';
+				  *uptr++ = '+';
 				  modeflags |= CHFL_VOICE;
 				  break;
 			  case '*':
+				  *nptr++ = '*';
+				  *uptr++ = '*';
 				  modeflags |= CHFL_CHANOWNER;
 				  break;
 			  case '~':
+				  *nptr++ = '~';
+				  *uptr++ = '~';
 				  modeflags |= CHFL_CHANPROT;
 				  break;
 			  case '&':
+				  *nptr++ = '&';
+				  *uptr++ = '&';
 				  modeflags |= CHFL_BAN;				
 				  goto getnick;
 				  break;
 			  case '"':
+				  *nptr++ = '"';
+				  *uptr++ = '"';
 				  modeflags |= CHFL_EXCEPT;
 				  goto getnick;
 				  break;
 			  case '\'':
+				  *nptr++ = '\'';
+				  *uptr++ = '\'';
 				  modeflags |= CHFL_INVEX;
 				  goto getnick;
 				  break;
@@ -470,19 +512,7 @@ CMD_FUNC(m_sjoin)
 			 * locally (dont send a join to the chan) but propagate it to the other servers.
 			 * I'm not sure if the propagation is needed however -- Syzop.
 			 */
-			if (IsMember(acptr, chptr)) {
-#if 0
-				int i;
-				sendto_realops("[BUG] Duplicate user entry in SJOIN! Please report at http://bugs.unrealircd.org !!! Chan='%s', User='%s', modeflags=%ld",
-					chptr->chname ? chptr->chname : "<NULL>", acptr->name ? acptr->name : "<NULL>", modeflags);
-				ircd_log(LOG_ERROR, "[BUG] Duplicate user entry in SJOIN! Please report to UnrealIrcd team!! Chan='%s', User='%s', modeflags=%ld",
-					chptr->chname ? chptr->chname : "<NULL>", acptr->name ? acptr->name : "<NULL>", modeflags);
-				ircd_log(LOG_ERROR, "--- Dump of parameters ---");
-				for (i=0; i < parc; i++)
-					ircd_log(LOG_ERROR, "parv[%d] = '%s'", i, BadPtr(parv[i]) ? "<NULL-or-empty>" : parv[i]);
-				ircd_log(LOG_ERROR, "--- End of dump ---");
-#endif
-			} else {
+			if (!IsMember(acptr, chptr)) {
 				add_user_to_channel(chptr, acptr, modeflags);
 				RunHook4(HOOKTYPE_REMOTE_JOIN, cptr, acptr, chptr, NULL);
 				if (chptr->mode.mode & MODE_AUDITORIUM)
@@ -505,6 +535,28 @@ CMD_FUNC(m_sjoin)
 			CheckStatus('o', CHFL_CHANOP);
 			CheckStatus('h', CHFL_HALFOP);
 			CheckStatus('v', CHFL_VOICE);
+
+			if (((nptr - nick_buf) + NICKLEN + 10) > BUFSIZE)
+			{
+				sendto_server(cptr, PROTO_SJOIN | PROTO_SJ3, PROTO_SID, "%s", nick_buf);
+
+				buflen = snprintf(nick_buf, sizeof nick_buf, ":%s SJOIN %ld %s :",
+					sptr->name, ts, sj3_parabuf);
+				nptr = nick_buf + buflen;
+			}
+
+			nptr += sprintf(nptr, "%s ", acptr->name);
+
+			if (((uptr - uid_buf) + IDLEN + 10) > BUFSIZE)
+			{
+				sendto_server(cptr, PROTO_SJOIN | PROTO_SJ3 | PROTO_SID, 0, "%s", uid_buf);
+
+				buflen = snprintf(uid_buf, sizeof uid_buf, ":%s SJOIN %ld %s :",
+					ID(sptr), ts, sj3_parabuf);
+				uptr = uid_buf + buflen;
+			}
+
+			uptr += sprintf(uptr, "%s ", ID(acptr));
 		}
 		else
 		{
@@ -538,6 +590,28 @@ CMD_FUNC(m_sjoin)
 					AddInvex(nick);
 				}
 			}
+
+			if (((nptr - nick_buf) + NICKLEN + 10) > BUFSIZE)
+			{
+				sendto_server(cptr, PROTO_SJOIN | PROTO_SJ3, PROTO_SID, "%s", nick_buf);
+
+				buflen = snprintf(nick_buf, sizeof nick_buf, ":%s SJOIN %ld %s :",
+					sptr->name, ts, sj3_parabuf);
+				nptr = nick_buf + buflen;
+			}
+
+			nptr += sprintf(nptr, "%s ", nick);
+
+			if (((uptr - uid_buf) + IDLEN + 10) > BUFSIZE)
+			{
+				sendto_server(cptr, PROTO_SJOIN | PROTO_SJ3 | PROTO_SID, 0, "%s", uid_buf);
+
+				buflen = snprintf(uid_buf, sizeof uid_buf, ":%s SJOIN %ld %s :",
+					ID(sptr), ts, sj3_parabuf);
+				uptr = uid_buf + buflen;
+			}
+
+			uptr += sprintf(uptr, "%s ", nick);
 		}
 		continue;
 	}
@@ -879,8 +953,10 @@ CMD_FUNC(m_sjoin)
 	/* This sends out to SJ3 servers .. */
 	Debug((DEBUG_DEBUG, "Sending '%li %s :%s' to sj3", ts, parabuf,
 	    parv[parc - 1]));
-	sendto_server(cptr, PROTO_SJOIN | PROTO_SJ3, 0,
-	    ":%s SJOIN %li %s :%s", sptr->name, ts, parabuf, parv[parc - 1]);
-	 
+	sendto_server(cptr, PROTO_SJOIN | PROTO_SJ3, PROTO_SID,
+	    "%s", nick_buf);
+	sendto_server(cptr, PROTO_SID | PROTO_SJOIN | PROTO_SJ3, 0,
+	    "%s", uid_buf);
+
 	return 0;
 }
