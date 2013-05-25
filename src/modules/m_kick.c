@@ -318,8 +318,10 @@ CMD_FUNC(m_kick)
 						    parv[0], chptr->chname, who->name, comment);
 					}
 				}
-				sendto_server(cptr, 0, 0, ":%s KICK %s %s :%s",
-				    parv[0], chptr->chname, who->name, comment);
+				sendto_server(cptr, PROTO_SID, 0, ":%s KICK %s %s :%s",
+				    ID(sptr), chptr->chname, ID(who), comment);
+				sendto_server(cptr, 0, PROTO_SID, ":%s KICK %s %s :%s",
+				    sptr->name, chptr->chname, who->name, comment);
 				if (lp)
 				{
 					remove_user_from_channel(who, chptr);
