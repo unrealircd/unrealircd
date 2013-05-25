@@ -140,6 +140,8 @@ void fd_refresh(int fd)
 	while (highest_fd > 0 &&
 		!(FD_ISSET(highest_fd, &read_fds) || FD_ISSET(highest_fd, &write_fds)))
 		highest_fd--;
+
+	fde->backend_flags = flags;
 }
 
 void fd_select(time_t delay)
@@ -236,6 +238,8 @@ void fd_refresh(int fd)
 	if (kqueue_fd == -1)
 		kqueue_fd = kqueue();
 
+	fde->backend_flags = 0;
+
 	EV_SET(&ev, (uintptr_t) fd, (short) EVFILT_READ, fde->read_callback != NULL ? EV_ADD : EV_DELETE, 0, 0, fde);
 	if (kevent(kqueue_fd, &ev, 1, NULL, 0, &(const struct timespec){ .tv_sec = 0, .tv_nsec = 0}) != 0)
 	{
@@ -255,6 +259,12 @@ void fd_refresh(int fd)
 		ircd_log(LOG_ERROR, "[BUG?] kevent returned %d", errno);
 		return;
 	}
+
+	if (fde->read_callback != NULL)
+		fde->backend_flags |= EVFILT_READ;
+
+	if (fde->write_callback != NULL)
+		fde->backend_flags |= EVFILT_WRITE;
 }
 
 void fd_select(time_t delay)
@@ -466,6 +476,8 @@ void fd_refresh(int fd)
 
 	while (nfds > 0 && pollfds[nfds].fd == -1)
 		nfds--;
+
+	fde->backend_flags = pflags;
 }
 
 void fd_select(time_t delay)

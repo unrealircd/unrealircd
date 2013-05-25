@@ -113,7 +113,10 @@ void fd_close(int fd)
 	memset(fde, 0, sizeof(FDEntry));
 
 	fde->fd = fd;
-	fd_refresh(fd);
+
+	/* only notify the backend if it is actively tracking the FD */
+	if (fde->backend_flags)
+		fd_refresh(fd);
 
 	CLOSE_SOCK(fd);
 }
