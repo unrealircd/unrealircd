@@ -21,10 +21,13 @@ Unreal3.4-dev Release Notes
   own module and all of them are loaded in the default config.  See modules.conf.
 - The local nickname length can be modified without recompiling the IRCd, the
   compiled limit is displayed as MAXNICKLEN, per IRCv3 group discussions.
+- Memory pooling has been added to improve memory allocation efficiency on
+  'hot' codepaths.
 
 ==[ CHANGED ]==
 - Numerics have been removed.  You will need to remove the numeric setting
-  from me {} in unrealircd.conf.
+  from me {} in unrealircd.conf.  Instead, proper SID and UIDs are implemented.
+  See me::sid.
 
 ==[ MAJOR BUGS FIXED ]==
 - None?
@@ -34,6 +37,8 @@ Unreal3.4-dev Release Notes
 
 ==[ REMOVED / DROPPED ]==
 - Numeric server IDs, see above.
+- PROTOCTL TOKEN and SJB64 are no longer implemented.
+- Ziplinks -- use the built-in compression of TLS/SSL instead.
 
 ==[ KNOWN ISSUES ]==
 - Regexes: Be careful with backreferences (\1, etc), certain regexes can
