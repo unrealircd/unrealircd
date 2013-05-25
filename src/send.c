@@ -42,7 +42,7 @@ static char sccsid[] =
 
 void vsendto_one(aClient *to, const char *pattern, va_list vl);
 void sendbufto_one(aClient *to, char *msg, unsigned int quick);
-int vmakebuf_local_withprefix(char *buf, struct Client *from, const char *pattern, va_list vl);
+static int vmakebuf_local_withprefix(char *buf, size_t buflen, struct Client *from, const char *pattern, va_list vl);
 
 #define ADD_CRLF(buf, len) { if (len > 510) len = 510; \
                              buf[len++] = '\r'; buf[len++] = '\n'; buf[len] = '\0'; } while(0)
@@ -532,7 +532,7 @@ void sendto_common_channels(aClient *user, char *pattern, ...)
 	/* We now create the buffer _before_ we send it to the clients. -- Syzop */
 	*sendbuf = '\0';
 	va_start(vl, pattern);
-	sendlen = vmakebuf_local_withprefix(sendbuf, user, pattern, vl);
+	sendlen = vmakebuf_local_withprefix(sendbuf, sizeof sendbuf, user, pattern, vl);
 	va_end(vl);
 
 	++current_serial;
@@ -576,7 +576,7 @@ void sendto_common_channels_local_butone(aClient *user, int cap, char *pattern, 
 	/* We now create the buffer _before_ we send it to the clients. -- Syzop */
 	*sendbuf = '\0';
 	va_start(vl, pattern);
-	sendlen = vmakebuf_local_withprefix(sendbuf, user, pattern, vl);
+	sendlen = vmakebuf_local_withprefix(sendbuf, sizeof sendbuf, user, pattern, vl);
 	va_end(vl);
 
 	++current_serial;
@@ -620,7 +620,7 @@ void sendto_channel_butserv(aChannel *chptr, aClient *from, char *pattern, ...)
 	 */
 	*sendbuf = '\0';
 	va_start(vl, pattern);
-	sendlen = vmakebuf_local_withprefix(sendbuf, from, pattern, vl);
+	sendlen = vmakebuf_local_withprefix(sendbuf, sizeof sendbuf, from, pattern, vl);
 	va_end(vl);
 
 	for (lp = chptr->members; lp; lp = lp->next)
@@ -1149,7 +1149,7 @@ void sendto_ops_butme(aClient *from, char *pattern, ...)
  *       they do not want or need the expanded prefix. In that case, simply
  *       use ircvsnprintf() directly.
  */
-int vmakebuf_local_withprefix(char *buf, struct Client *from, const char *pattern, va_list vl)
+static int vmakebuf_local_withprefix(char *buf, size_t buflen, struct Client *from, const char *pattern, va_list vl)
 {
 int len;
 
@@ -1181,10 +1181,10 @@ int len;
 		if (!strcmp(&pattern[3], "%s"))
 			strcpy(buf + strlen(buf), va_arg(vl, char *)); /* This can speed things up by 30% -- Syzop */
 		else
-			ircvsnprintf(buf + strlen(buf), sizeof(buf)-strlen(buf), &pattern[3], vl);
+			ircvsnprintf(buf + strlen(buf), buflen - strlen(buf), &pattern[3], vl);
 	}
 	else
-		ircvsnprintf(buf, sizeof(buf), pattern, vl);
+		ircvsnprintf(buf, buflen, pattern, vl);
 
 	len = strlen(buf);
 	ADD_CRLF(buf, len);
@@ -1195,7 +1195,7 @@ void vsendto_prefix_one(struct Client *to, struct Client *from,
     const char *pattern, va_list vl)
 {
 	if (to && from && MyClient(to) && from->user)
-		vmakebuf_local_withprefix(sendbuf, from, pattern, vl);
+		vmakebuf_local_withprefix(sendbuf, sizeof sendbuf, from, pattern, vl);
 	else
 		ircvsnprintf(sendbuf, sizeof(sendbuf), pattern, vl);
 
