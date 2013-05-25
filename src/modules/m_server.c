@@ -739,7 +739,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 			 */
 			if (acptr->serv->flags.synced)
 			{
-				sendto_one(cptr, ":%s EOS", acptr->name);
+				sendto_one(cptr, ":%s EOS", CHECKPROTO(cptr, PROTO_SID) ? ID(acptr) : acptr->name);
 #ifdef DEBUGMODE
 				ircd_log(LOG_ERROR, "[EOSDBG] m_server_synch: sending to uplink '%s' with src %s...",
 					cptr->name, acptr->name);
@@ -761,12 +761,12 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 			sendto_one_nickcmd(cptr, acptr, buf);
 
 			if (acptr->user->away)
-				sendto_one(cptr, ":%s AWAY :%s", acptr->name,
+				sendto_one(cptr, ":%s AWAY :%s", CHECKPROTO(cptr, PROTO_SID) ? ID(acptr) : acptr->name,
 				    acptr->user->away);
 			if (acptr->user->swhois)
 				if (*acptr->user->swhois != '\0')
 					sendto_one(cptr, "SWHOIS %s :%s",
-					    acptr->name, acptr->user->swhois);
+					    CHECKPROTO(cptr, PROTO_SID) ? ID(acptr) : acptr->name, acptr->user->swhois);
 
 			if (!SupportSJOIN(cptr))
 				send_user_joins(cptr, acptr);
@@ -806,7 +806,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 	    ircnetwork);
 
 	/* Send EOS (End Of Sync) to the just linked server... */
-	sendto_one(cptr, ":%s EOS", me.name);
+	sendto_one(cptr, ":%s EOS", CHECKPROTO(cptr, PROTO_SID) ? me.id : me.name);
 #ifdef DEBUGMODE
 	ircd_log(LOG_ERROR, "[EOSDBG] m_server_synch: sending to justlinked '%s' with src ME...",
 			cptr->name);
@@ -1149,6 +1149,7 @@ void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
 		else
 			strlcpy(parabuf, "<->", sizeof parabuf);
 	}
+
 	ircsnprintf(buf, sizeof(buf), "SJOIN %ld %s %s %s :",
 	    chptr->creationtime, chptr->chname, modebuf, parabuf);
 
@@ -1172,7 +1173,7 @@ void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
 
 
 
-		name = lp->cptr->name;
+		name = CHECKPROTO(cptr, PROTO_SID) ? ID(lp->cptr) : lp->cptr->name;
 
 		strcpy(bufptr, name);
 		bufptr += strlen(bufptr);
@@ -1265,19 +1266,19 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 	if (nomode && nopara)
 	{
 		ircsnprintf(buf, sizeof(buf),
-		    ":%s SJOIN %ld %s :", me.name,
+		    ":%s SJOIN %ld %s :", CHECKPROTO(cptr, PROTO_SID) ? me.id : me.name,
 		    (long)chptr->creationtime, chptr->chname);
 	}
 	if (nopara && !nomode)
 	{
 		ircsnprintf(buf, sizeof(buf),
-		    ":%s SJOIN %ld %s %s :", me.name,
+		    ":%s SJOIN %ld %s %s :", CHECKPROTO(cptr, PROTO_SID) ? me.id : me.name,
 		    (long)chptr->creationtime, chptr->chname, modebuf);
 	}
 	if (!nopara && !nomode)
 	{
 		ircsnprintf(buf, sizeof(buf),
-		    ":%s SJOIN %ld %s %s %s :", me.name,
+		    ":%s SJOIN %ld %s %s %s :", CHECKPROTO(cptr, PROTO_SID) ? me.id : me.name,
 		    (long)chptr->creationtime, chptr->chname, modebuf, parabuf);
 	}
 
@@ -1320,7 +1321,7 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 		if (lp->flags & MODE_CHANPROT)
 			*p++ = '~';
 
-		p = mystpcpy(p, lp->cptr->name);
+		p = mystpcpy(p, CHECKPROTO(cptr, PROTO_SID) ? ID(lp->cptr) : lp->cptr->name);
 		*p++ = ' ';
 		*p = '\0';
 
