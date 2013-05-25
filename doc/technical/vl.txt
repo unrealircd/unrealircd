@@ -2,6 +2,7 @@ VL Information (c) 2002 codemastr (Dominick Meglio) [codemastr@unrealircd.com]
 
 Protocol       Version
 ------------------------------------------------------------------------------------------------
+2312           3.4-alpha*
 2311           3.2.10
 2310           3.2.9
 2309           3.2.6, 3.2.7, 3.2.8
