@@ -198,12 +198,10 @@ DLLFUNC CMD_FUNC(m_part)
 		}
 
 		/* Send to other servers... */
-		if (!comment)
-			sendto_server(cptr, 0, 0, ":%s PART %s",
-			    parv[0], chptr->chname);
-		else
-			sendto_server(cptr, 0, 0, ":%s PART %s :%s",
-			    parv[0], chptr->chname, comment);
+		sendto_server(cptr, PROTO_SID, 0, ":%s PART %s :%s",
+			ID(sptr), chptr->chname, comment ? comment : "");
+		sendto_server(cptr, 0, PROTO_SID, ":%s PART %s :%s",
+			sptr->name, chptr->chname, comment ? comment : "");
 
 		if (1)
 		{
