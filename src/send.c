@@ -1421,7 +1421,7 @@ void	sendto_message_one(aClient *to, aClient *from, char *sender,
 			char *cmd, char *nick, char *msg)
 {
         sendto_prefix_one(to, from, ":%s %s %s :%s",
-                         sender, cmd, nick, msg);
+                         CHECKPROTO(to->from, PROTO_SID) ? ID(from) : sender, cmd, nick, msg);
 }
 
 /* sidenote: sendnotice() and sendtxtnumeric() assume no client or server
