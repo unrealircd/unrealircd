@@ -333,7 +333,10 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 	/* I _know_ that the "@%s " look a bit wierd
 	   with the space and all .. but its to get around
 	   a SJOIN bug --stskeeps */
-	sendto_server(cptr, PROTO_SJ3, 0, ":%s SJOIN %li %s :%s%s ",
+	sendto_server(cptr, PROTO_SID | PROTO_SJ3, 0, ":%s SJOIN %li %s :%s%s ",
+		me.id, chptr->creationtime,
+		chptr->chname, chfl_to_sjoin_symbol(flags), ID(sptr));
+	sendto_server(cptr, PROTO_SJ3, PROTO_SID, ":%s SJOIN %li %s :%s%s ",
 		me.name, chptr->creationtime,
 		chptr->chname, chfl_to_sjoin_symbol(flags), sptr->name);
 
