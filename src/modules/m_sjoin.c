@@ -166,7 +166,7 @@ else {\
 	b = 2;\
 }
 #define Addsingle(x) do { modebuf[b] = x; b++; modebuf[b] = '\0'; } while(0)
-#define CheckStatus(x,y) do { if (modeflags & (y)) { Addit((x), nick); } } while(0)
+#define CheckStatus(x,y) do { if (modeflags & (y)) { Addit((x), acptr->name); } } while(0)
 #define AddBan(x) do { strlcat(banbuf, x, sizeof banbuf); strlcat(banbuf, " ", sizeof banbuf); } while(0)
 #define AddEx(x) do { strlcat(exbuf, x, sizeof exbuf); strlcat(exbuf, " ", sizeof exbuf); } while(0)
 #define AddInvex(x) do { strlcat(invexbuf, x, sizeof invexbuf); strlcat(invexbuf, " ", sizeof invexbuf); } while(0)
