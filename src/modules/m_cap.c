@@ -287,7 +287,7 @@ static void cap_end(aClient *sptr, const char *arg)
 
 	sptr->proto &= ~PROTO_CLICAP;
 
-	if (sptr->name[0] && sptr->user != NULL)
+	if (sptr->name[0] && sptr->user != NULL && sptr->nospoof == 0)
 		register_user(sptr, sptr, sptr->name, sptr->user->username, NULL, NULL, NULL);
 }
 
