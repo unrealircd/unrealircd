@@ -103,23 +103,9 @@ Name: "{app}\tmp"
 Type: files; Name: "{app}\DbgHelp.Dll"
 
 [Code]
-procedure isxdl_AddFile(URL, Filename: PChar);
-external 'isxdl_AddFile@files:isxdl.dll stdcall';
-function isxdl_DownloadFiles(hWnd: Integer): Integer;
-external 'isxdl_DownloadFiles@files:isxdl.dll stdcall';
-function isxdl_SetOption(Option, Value: PChar): Integer;
-external 'isxdl_SetOption@files:isxdl.dll stdcall';
-
 var
-	MSVSRedistPath: string;
-	downloadNeeded: boolean;
-	MSVSNeeded: boolean;
-	memoDependenciesNeeded: string;
   uninstaller: String;
   ErrorCode: Integer;
-
-const
-	MSVSRedistURL = 'http://download.microsoft.com/download/1/1/1/1116b75a-9ec3-481a-a3c8-1777b5381140/vcredist_x86.exe';
 
 //*********************************************************************************
 // This is where all starts.
@@ -129,46 +115,18 @@ function InitializeSetup(): Boolean;
 begin
 
 	Result := true;
-	MSVSNeeded := false;
-	
-  //************************************************************************************
-	// Check for the existance of the Visual C++ 2008 Redist. Package on client machine before installing
-	//************************************************************************************
-	// ids: supposedly VC++ 2008 runtime x86, and one from another source, SP1 version, SP1 with ATL security update, similar but MFC upd.
-    if ((not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{3C3D696B-0DB7-3C6D-A356-3DB8CE541918}'))
-         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{FF66E9F6-83E7-3A3E-AF14-8DE9A809A6A4}'))
-         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{9A25302D-30C0-39D9-BD6F-21E6EC160475}'))
-         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{1F1C2DFC-2D24-3E06-BCB8-725134ADF989}'))
-         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{9BE518E6-ECC6-35A9-88E4-87755C07200F}'))
-         ) then
-		begin
-			MSVSNeeded := true;
-				
+    if ((not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{2F73A7B2-E50E-39A6-9ABC-EF89E4C62E36}'))
+         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{E824E81C-80A4-3DFF-B5F9-4842A9FF5F7F}'))
+         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{E7D4E834-93EB-351F-B8FB-82CDAE623003}'))
+         and (not RegKeyExists(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{3D6AD258-61EA-35F5-812C-B7A02152996E}'))
+        ) then
+    begin
+      MsgBox('UnrealIRCd requires the Microsoft Visual C++ Redistributable for Visual Studio 2012 to be installed.' #13 +
+             'After you click OK you will be taken to a download page. There, choose Download -> choose the vcredist_x86 version (last of 3 choices). Then download and install it.', mbInformation, MB_OK);
+      ShellExec('open', 'http://www.microsoft.com/en-us/download/details.aspx?id=30679', '', '', SW_SHOWNORMAL,ewNoWait,ErrorCode);
+      MsgBox('Click OK once you have installed the Microsoft Visual C++ Redistributable for Visual Studio 2012 (vcredist_x86) to continue the UnrealIRCd installer', mbInformation, MB_OK);
 
-			if (not IsAdminLoggedOn()) then
-				begin
-					MsgBox('Application needs the Microsoft Visual C++ Redistributable Package to be installed by an Administrator', mbInformation, MB_OK);
-					Result := false;
-				end
-			else
-				begin
-					memoDependenciesNeeded := memoDependenciesNeeded + '      Microsoft Visual C++ Redist. Package' #13;
-					MSVSRedistPath := ExpandConstant('{src}\vcredist_x86.exe');
-					if not FileExists(MSVSRedistPath) then
-						begin
-							MSVSRedistPath := ExpandConstant('{tmp}\vcredist_x86.exe');
-							if not FileExists(MSVSRedistPath) then
-								begin
-									isxdl_AddFile(MSVSRedistURL, MSVSRedistPath);
-									downloadNeeded := true;
-								end
-						end
-
-					//SetIniString('install', 'MSVSRedist', MSVSRedistPath, ExpandConstant('{tmp}\dep.ini'));
-					// wth is that?
-				end
 		end;
-
 end;
 
 function NextButtonClick(CurPage: Integer): Boolean;
@@ -194,77 +152,6 @@ begin
       Result := False
     end
   end;
-
-  //*********************************************************************************
-  // Only run this at the "Ready To Install" wizard page.
-  //*********************************************************************************
-  if CurPage = wpReady then
-	begin
-
-		hWnd := StrToInt(ExpandConstant('{wizardhwnd}'));
-
-		// don't try to init isxdl if it's not needed because it will error on < ie 3
-
-		//********************************************************************************************************
-		// Download the Visual C++ 2008 Redist. Package. Can change the MS link to application development site to avoid dead link
-		//*********************************************************************************************************
-		if downloadNeeded and (MSVSNeeded = true) then
-			begin
-				isxdl_SetOption('label', 'Downloading Microsoft Visual C++ Redist. Package');
-				isxdl_SetOption('description', 'This app needs to install the Microsoft Visual C++ Redist. Package. Please wait while Setup is downloading extra files to your computer.');
-				if isxdl_DownloadFiles(hWnd) = 0 then Result := false;
-			end;
-
-		//***********************************************************************************
-		// Run the install file...
-		//***********************************************************************************
-      if (MSVSNeeded = true) then
-			begin
-
-				if Exec(ExpandConstant(MSVSRedistPath), '', '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then
-					begin
-
-						// handle success if necessary; ResultCode contains the exit code
-						if not (ResultCode = 0) then
-							begin
-
-	 						  Res := MsgBox('UnrealIRCd requires the Microsoft Visual C++ 2008 Redistributable Package, and tried to download & install it for you. However, this failed. This could be for a number of reasons, such as it already being installed, or you are using a 64 bit Operating System. If it is not installed yet, or you do not know, then you are suggested to manually download and install the "Microsoft Visual C++ 2008 Redistributable package" from www.microsoft.com. Do you want to continue installing UnrealIRCd anyway?', mbConfirmation, MB_YESNO);
-  							if (Res = IDNO) then
-  							begin
-                  Result := false;
-                end
-
-							end
-					end
-					else
-						begin
-
-							// handle failure if necessary; ResultCode contains the error code
-							Res := MsgBox('UnrealIRCd requires the Microsoft Visual C++ 2008 Redistributable Package, and tried to download & install it for you. However, this failed. This could be for a number of reasons, such as it already being installed, or you are using a 64 bit Operating System. If it is not installed yet, or you do not know, then you are suggested to manually download and install the "Microsoft Visual C++ 2008 Redistributable package" from www.microsoft.com. Do you want to continue installing UnrealIRCd anyway?', mbConfirmation, MB_YESNO);
-							if (Res = IDNO) then
-							begin
-                  Result := false;
-              end
-						end
-			end;
-
-
-end;
-end;
-
-//*********************************************************************************
-// Updates the memo box shown right before the install actuall starts.
-//*********************************************************************************
-function UpdateReadyMemo(Space, NewLine, MemoUserInfoInfo, MemoDirInfo, MemoTypeInfo, MemoComponentsInfo, MemoGroupInfo, MemoTasksInfo: String): String;
-var
-  s: string;
-
-begin
-
-  if memoDependenciesNeeded <> '' then s := s + 'Dependencies that will be automatically downloaded And installed:' + NewLine + memoDependenciesNeeded + NewLine;
-  s := s + MemoDirInfo + NewLine + NewLine;
-
-  Result := s
 
 end;
 
