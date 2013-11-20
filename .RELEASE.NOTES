@@ -13,7 +13,18 @@ Unreal3.2.10.2 Release Notes
   SUMMARY of the changes in this release.  There have been 79 changes in
   total, for the full list of changes see the Changelog.
 
-==[ .1 RELEASE]==
+==[ .2 RELEASE ]==
+The following bugs in version 3.2.10 & 3.2.10.1 were fixed in this version:
+- A remote crash issue when compiled with SSL (NULL pointer dereference)
+- A second issue that can potentially lead to a crash (read-after-free)
+
+In addition to these 3.2.10.x fixes there were also some minor bugs fixed,
+mostly in the area of server linking and flood hardening.
+
+The external libraries of the Windows version have been updated (openssl,
+c-ares, zlib). The bundled c-ares source (for *NIX) has been updated too.
+
+==[ .1 RELEASE ]==
 The following bugs in version 3.2.10 were fixed in this 3.2.10.1 release:
 - Windows only: outgoing connects from Windows caused severe linking issues,
   including killing of (ghost) users on the Windows server.
@@ -22,8 +33,8 @@ The following bugs in version 3.2.10 were fixed in this 3.2.10.1 release:
 - A compile problem on OpenBSD.
 - '/REHASH -global' did not rehash all servers.
 - Some documentation updates.
-These were the only changes in 3.2.10.1.
 
+==[ 3.2.10 RELEASE ]==
 Below is a summary of all changes with respect to 3.2.9:
 
 ==[ NEW ]==
