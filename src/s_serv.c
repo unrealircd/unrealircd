@@ -249,6 +249,23 @@ char buf[1024];
 #define IRCDTOTALVERSION BASE_VERSION PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9
 #endif
 
+int remotecmdfilter(aClient *sptr, int parc, char *parv[])
+{
+	/* no remote requests permitted from non-ircops */
+	if (MyClient(sptr) && !IsOper(sptr) && !BadPtr(parv[1]))
+	{
+		parv[1] = NULL;
+		parc = 1;
+	}
+
+	/* same as above, but in case an old server forwards a request to us: we ignore it */
+	if (!MyClient(sptr) && !IsOper(sptr))
+		return 1; /* STOP (return) */
+	
+	return 0; /* Continue */
+}
+
+
 /*
  * sends m_info into to sptr
 */
@@ -327,6 +344,8 @@ char **text = unrealinfo;
 
 CMD_FUNC(m_info)
 {
+	if (remotecmdfilter(sptr, parc, parv))
+		return 0;
 
 	if (hunt_server_token(cptr, sptr, MSG_INFO, TOK_INFO, ":%s", 1, parc,
 	    parv) == HUNTED_ISME)
@@ -345,6 +364,9 @@ CMD_FUNC(m_info)
 CMD_FUNC(m_dalinfo)
 {
 	char **text = dalinfotext;
+
+	if (remotecmdfilter(sptr, parc, parv))
+		return 0;
 
 	if (hunt_server_token(cptr, sptr, MSG_DALINFO, TOK_DALINFO, ":%s", 1, parc,
 	    parv) == HUNTED_ISME)
@@ -374,6 +396,9 @@ CMD_FUNC(m_license)
 {
 	char **text = gnulicense;
 
+	if (remotecmdfilter(sptr, parc, parv))
+		return 0;
+
 	if (hunt_server_token(cptr, sptr, MSG_LICENSE, TOK_LICENSE, ":%s", 1, parc,
 	    parv) == HUNTED_ISME)
 	{
@@ -396,6 +421,9 @@ CMD_FUNC(m_license)
 CMD_FUNC(m_credits)
 {
 	char **text = unrealcredits;
+
+	if (remotecmdfilter(sptr, parc, parv))
+		return 0;
 
 	if (hunt_server_token(cptr, sptr, MSG_CREDITS, TOK_CREDITS, ":%s", 1, parc,
 	    parv) == HUNTED_ISME)

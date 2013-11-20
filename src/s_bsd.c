@@ -2138,20 +2138,27 @@ deadsocket:
 		}
 		length = 1;	/* for fall through case */
 
-#ifdef USE_POLL
-		if (pfd->revents & POLLIN)
-#else
-		if (FD_ISSET(cptr->fd, &read_set))
+                if (!DoingDNS(cptr) && !DoingAuth(cptr)
+#ifdef USE_SSL
+                    && !IsSSLHandshake(cptr)
 #endif
-			length = read_packet(cptr, 1);
-		/* If we don't have anything to read and we have any recvQ, then
-		 * read_packet must still be called, but this time with the 2nd parameter
-		 * being 0 (=don't read). This is so we check if anything needs to
-		 * be dequeued from the receive queue (due to fake lag). -- Syzop
-		 */
-		else if (DBufLength(&cptr->recvQ) > 0)
-			length = read_packet(cptr, 0);
-
+                    )
+                {
+#ifdef USE_POLL
+        		if (pfd->revents & POLLIN)
+#else
+	        	if (FD_ISSET(cptr->fd, &read_set))
+#endif
+        			length = read_packet(cptr, 1);
+        		/* If we don't have anything to read and we have any recvQ, then
+	        	 * read_packet must still be called, but this time with the 2nd parameter
+        		 * being 0 (=don't read). This is so we check if anything needs to
+	        	 * be dequeued from the receive queue (due to fake lag). -- Syzop
+        		 */
+	        	else if (DBufLength(&cptr->recvQ) > 0)
+        			length = read_packet(cptr, 0);
+                }
+                
 #ifdef USE_SSL
 		if ((length != FLUSH_BUFFER) && (cptr->ssl != NULL) && 
 			IsSSLHandshake(cptr) &&

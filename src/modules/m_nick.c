@@ -864,6 +864,8 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 	
 	if (MyConnect(sptr))
 	{
+	        char temp[USERLEN + 1];
+	        
 		if ((i = check_client(sptr, username))) {
 			/* This had return i; before -McSkaf */
 			if (i == -5)
@@ -909,16 +911,16 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		 *
 		 * Moved the noident stuff here. -OnyxDragon
 		 */
+
+		/* because username may point to user->username */
+		strncpyzt(temp, username, USERLEN + 1);
+
 		if (!(sptr->flags & FLAGS_DOID)) 
-			strncpyzt(user->username, username, USERLEN + 1);
+			strncpyzt(user->username, temp, USERLEN + 1);
 		else if (sptr->flags & FLAGS_GOTID) 
 			strncpyzt(user->username, sptr->username, USERLEN + 1);
 		else
 		{
-
-			/* because username may point to user->username */
-			char temp[USERLEN + 1];
-			strncpyzt(temp, username, USERLEN + 1);
 			if (IDENT_CHECK == 0) {
 				strncpyzt(user->username, temp, USERLEN + 1);
 			}
