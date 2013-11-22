@@ -1,5 +1,5 @@
 ; UnrealIRCd Win32 Installation Script for My Inno Setup Extensions
-; Requires Inno Setup 4.1.6 and ISX 3.0.4 to work
+; Requires Inno Setup 4.1.6 or later
 
 ;#define USE_SSL
 ; Uncomment the above line to package an SSL build
@@ -93,8 +93,7 @@ Source: "..\..\curl-ca-bundle.crt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\dev\curl\builds\libcurl-vc-x86-release-dll-sspi-spnego\bin\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion
 #endif
 #endif
-Source: isxdl.dll; DestDir: {tmp}; Flags: dontcopy
-Source: "..\..\..\dbghelp.dll"; DestDir: "{app}"; Flags: ignoreversion
+;Source: "..\..\..\dbghelp.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 [Dirs]
 Name: "{app}\tmp"
