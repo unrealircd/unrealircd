@@ -121,7 +121,7 @@ static void show_watch(aClient *cptr, char *name, int rpl1, int rpl2, int awayno
 				cptr->name, name);
 		else	
 			sendto_one(cptr, rpl_str(rpl2), me.name, cptr->name,
-			    name, "*", "*", 0);
+			    name, "*", "*", 0L);
 	}
 }
 
