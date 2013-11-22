@@ -14,11 +14,12 @@ Unreal3.2.10.2 Release Notes
   total, for the full list of changes see the Changelog.
 
 ==[ .2 RELEASE ]==
-The following bugs in version 3.2.10 & 3.2.10.1 were fixed in this version:
+The following major issues were present in 3.2.10 & 3.2.10.1 and have
+been fixed in this version:
 - A remote crash issue when compiled with SSL (NULL pointer dereference)
 - A second issue that can potentially lead to a crash (read-after-free)
 
-In addition to these 3.2.10.x fixes there were also some minor bugs fixed,
+In addition to these 3.2.10.x fixes there were also some other bugs fixed,
 mostly in the area of server linking and flood hardening.
 
 The external libraries of the Windows version have been updated (openssl,
