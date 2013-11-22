@@ -10,8 +10,8 @@ Unreal3.2.10.2 Release Notes
   Read them before asking for help.
 - Report bugs at http://bugs.unrealircd.org/
 - The purpose of the sections below (NEW, CHANGED, MINOR, etc) is to be a
-  SUMMARY of the changes in this release.  There have been 79 changes in
-  total, for the full list of changes see the Changelog.
+  SUMMARY of the changes in this release. See the file 'Changes' for a
+  complete list of all changes.
 
 ==[ .2 RELEASE ]==
 The following major issues were present in 3.2.10 & 3.2.10.1 and have
