@@ -144,7 +144,7 @@ extern	char	*rindex(char *, char);
 /*
  * Mac OS X Tiger Support (Intel Only)
  */
-#if defined(macosx) || (defined(__APPLE__)
+#if defined(macosx) || defined(__APPLE__)
 #define OSXTIGER
 #endif
 
