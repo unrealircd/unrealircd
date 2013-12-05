@@ -7801,6 +7801,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 	int	    errors = 0;
 	Hook	*h;
 #define CheckNull(x) if ((!(x)->ce_vardata) || (!(*((x)->ce_vardata)))) { config_error("%s:%i: missing parameter", (x)->ce_fileptr->cf_filename, (x)->ce_varlinenum); errors++; continue; }
+#define CheckNullAllowEmpty(x) if ((!(x)->ce_vardata)) { config_error("%s:%i: missing parameter", (x)->ce_fileptr->cf_filename, (x)->ce_varlinenum); errors++; continue; }
 #define CheckDuplicate(cep, name, display) if (settings.has_##name) { config_warn_duplicate((cep)->ce_fileptr->cf_filename, cep->ce_varlinenum, "set::" display); continue; } else settings.has_##name = 1
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -7997,7 +7998,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			CheckDuplicate(cep, uhnames, "uhnames");
 		}
 		else if (!strcmp(cep->ce_varname, "channel-command-prefix")) {
-			CheckNull(cep);
+			CheckNullAllowEmpty(cep);
 			CheckDuplicate(cep, channel_command_prefix, "channel-command-prefix");
 		}
 		else if (!strcmp(cep->ce_varname, "allow-userhost-change")) {
