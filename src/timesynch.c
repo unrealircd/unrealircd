@@ -186,6 +186,8 @@ int succesfully_sent = 0;
 
 		set_non_blocking(s[n], &me);
 		n++;
+		if (n == MAXTIMESERVERS)
+		        break;
 	}
 	numservers = n;
 	
