@@ -120,7 +120,7 @@ static aClient *decode_puid(char *puid)
 
 	client = local[slot];
 
-	if (cookie && client->sasl_cookie != cookie)
+	if (cookie && client && (client->sasl_cookie != cookie))
 		return NULL;
 
 	return client;
