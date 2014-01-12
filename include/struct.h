@@ -174,6 +174,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	NICKLEN		30
 #define	USERLEN		10
 #define	REALLEN	 	50
+#define SVIDLEN		30
 #define	TOPICLEN	307
 #define	CHANNELLEN	32
 #define	PASSWDLEN 	48	/* was 20, then 32, now 48. */
@@ -814,7 +815,7 @@ struct User {
 	 * which is less useful in the modern world of IRC where nicks are grouped to
 	 * accounts, so it is now a string.
 	 */
-	char svid[NICKLEN + 1];
+	char svid[SVIDLEN + 1];
 
 	signed char refcnt;	/* Number of times this block is referenced */
 	unsigned short joined;		/* number of channels joined */
