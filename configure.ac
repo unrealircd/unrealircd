@@ -119,7 +119,7 @@ if test "$ac_cv_prog_gcc" = "yes"; then
 	ac_cv_pic="-fPIC -DPIC -shared"
 	case `uname -s` in
 		Darwin*[)]
-		ac_cv_pic="-bundle -flat_namespace -undefined suppress"
+		ac_cv_pic="-std=gnu89 -bundle -flat_namespace -undefined suppress"
 		;;
 		HP-UX*[)]
 		ac_cv_pic="-fPIC"
