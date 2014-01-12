@@ -4,3 +4,4 @@ history.
 
 Simply run the following command to generate this 'Changes' file:
 ./createchangelog
+- COMMENT (#4251).
