@@ -2394,6 +2394,46 @@ int _place_host_ban(aClient *sptr, int action, char *reason, long duration)
 	return -1;
 }
 
+/** This function compares two spamfilters ('one' and 'two') and will return
+ * a 'winner' based on which one has the strongest action.
+ * If both have equal action then some additional logic is applied simply
+ * to ensure we (almost) always return the same winner regardless of the
+ * order of the spamfilters (which may differ between servers).
+ */
+aTKline *choose_winning_spamfilter(aTKline *one, aTKline *two)
+{
+int n;
+
+        /* First, see if the action field differs... */
+	if (one->ptr.spamf->action != two->ptr.spamf->action)
+	{
+		/* We can simply compare the action. Highest (strongest) wins. */
+		if (one->ptr.spamf->action > two->ptr.spamf->action)
+			return one;
+		else
+			return two;
+	}
+	
+	/* Ok, try comparing the regex then.. */
+	n = strcmp(one->reason, two->reason);
+	if (n < 0)
+	        return one;
+        if (n > 0)
+                return two;
+        
+        /* Hmm.. regex is identical. Try the 'reason' field. */
+        n = strcmp(one->ptr.spamf->tkl_reason, two->ptr.spamf->tkl_reason);
+        if (n < 0)
+                return one;
+        if (n > 0)
+                return two;
+        
+        /* Hmm.. 'reason' is identical as well.
+         * Make a final decision, could still be identical but would be unlikely.
+         */
+        return (one->subtype > two->subtype) ? one : two;
+}
+
 /** Checks if 'target' is on the spamfilter exception list.
  * RETURNS 1 if found in list, 0 if not.
  */
@@ -2461,12 +2501,14 @@ int ret;
 int _dospamfilter(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk)
 {
 aTKline *tk;
+aTKline *winner_tk = NULL;
 char *str;
-int ret;
+int ret = -1;
 #ifdef SPAMFILTER_DETECTSLOW
 struct rusage rnow, rprev;
 long ms_past;
 #endif
+
 	if (rettk)
 		*rettk = NULL; /* initialize to NULL */
 
@@ -2485,8 +2527,10 @@ long ms_past;
 	{
 		if (!(tk->subtype & type))
 			continue;
+
 		if ((flags & SPAMFLAG_NOWARN) && (tk->ptr.spamf->action == BAN_ACT_WARN))
 			continue;
+
 #ifdef SPAMFILTER_DETECTSLOW
 		memset(&rnow, 0, sizeof(rnow));
 		memset(&rprev, 0, sizeof(rnow));
@@ -2515,11 +2559,13 @@ long ms_past;
 				ms_past, tk->reason);
 		}
 #endif
-		if (!ret)
+
+		if (ret == 0)
 		{
-			/* matched! */
+		        /* We have a match! */
 			char buf[1024];
 			char targetbuf[48];
+			
 			if (target) {
 				targetbuf[0] = ' ';
 				strlcpy(targetbuf+1, target, sizeof(targetbuf)-1); /* cut it off */
@@ -2527,7 +2573,7 @@ long ms_past;
 				targetbuf[0] = '\0';
 
 			/* Hold on.. perhaps it's on the exceptions list... */
-			if (target && target_is_spamexcept(target))
+			if (!winner_tk && target && target_is_spamexcept(target))
 				return 0; /* No problem! */
 
 			ircsnprintf(buf, sizeof(buf), "[Spamfilter] %s!%s@%s matches filter '%s': [%s%s: '%s'] [%s]",
