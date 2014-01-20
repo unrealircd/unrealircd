@@ -1714,6 +1714,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->spamfilter_virus_help_channel = strdup("#help");
 	i->spamfilter_detectslow_warn = 250;
 	i->spamfilter_detectslow_fatal = 500;
+	i->spamfilter_stop_on_first_match = 1;
 	i->maxdccallow = 10;
 	i->channel_command_prefix = strdup("`!.");
 	i->check_target_nick_bans = 1;
@@ -7704,6 +7705,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				{
 					tempiConf.spamfilter_detectslow_fatal = atol(cepp->ce_vardata);
 				}
+				else if (!strcmp(cepp->ce_varname, "stop-on-first-match"))
+				{
+					tempiConf.spamfilter_stop_on_first_match = config_checkval(cepp->ce_vardata, CFG_YESNO);
+				}
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "default-bantime"))
@@ -8617,6 +8622,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				{ 
 				} else
 #endif
+				if (!strcmp(cepp->ce_varname, "stop-on-first-match"))
+				{
+				} else
 				{
 					config_error_unknown(cepp->ce_fileptr->cf_filename,
 						cepp->ce_varlinenum, "set::spamfilter",

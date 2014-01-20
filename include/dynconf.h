@@ -158,6 +158,7 @@ struct zConfiguration {
 	char *spamexcept_line;
 	long spamfilter_detectslow_warn;
 	long spamfilter_detectslow_fatal;
+	int spamfilter_stop_on_first_match;
 	int maxbans;
 	int maxbanlength;
 	int timesynch_enabled;
@@ -279,6 +280,7 @@ extern MODVAR aConfiguration iConf;
 #define SPAMFILTER_EXCEPT		iConf.spamexcept_line
 #define SPAMFILTER_DETECTSLOW_WARN	iConf.spamfilter_detectslow_warn
 #define SPAMFILTER_DETECTSLOW_FATAL	iConf.spamfilter_detectslow_fatal
+#define SPAMFILTER_STOP_ON_FIRST_MATCH	iConf.spamfilter_stop_on_first_match
 
 #define CHECK_TARGET_NICK_BANS	iConf.check_target_nick_bans
 

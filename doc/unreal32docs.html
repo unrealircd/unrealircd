@@ -2737,6 +2737,16 @@ set {
   If a spamfilter takes longer than this amount of milliseconds to execute
   (1000ms = 1 second), then the spamfilter will be removed (default: 500).
   See also <a href="#feature_spamfilter_slow">Slow Spamfilter Detection</a>.</p>
+ <p><font class="set">set::spamfilter::stop-on-first-match &lt;yes|no&gt;</font><br>
+  By default this is set to 'yes' which means that once a spamfilter
+  matches UnrealIRCd will take action immediately and any additional
+  (other) spamfilters will not be processed.<br>
+  When this is set to 'no' then after the first spamfilter match other
+  spamfilters will still be checked. All of these matches will be logged
+  and a message will go to IRCOps (snomask +S) for each one. The affected
+  user, however, will only see one spamfilter action (eg: block or kill)
+  which will be the spamfilter with the 'gravest action' (gzline is highest,
+  block and warn are lowest).</p>
  <p><font class="set">set::check-target-nick-bans &lt;yes|no&gt;</font><br>
   Whenever the user changes his/her nick, check if the NEW nick would be
   banned. If so, do not allow the nickchange. Default is yes.</p>

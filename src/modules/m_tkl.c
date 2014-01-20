@@ -2426,6 +2426,46 @@ int _place_host_ban(aClient *sptr, int action, char *reason, long duration)
 	return -1;
 }
 
+/** This function compares two spamfilters ('one' and 'two') and will return
+ * a 'winner' based on which one has the strongest action.
+ * If both have equal action then some additional logic is applied simply
+ * to ensure we (almost) always return the same winner regardless of the
+ * order of the spamfilters (which may differ between servers).
+ */
+aTKline *choose_winning_spamfilter(aTKline *one, aTKline *two)
+{
+int n;
+
+        /* First, see if the action field differs... */
+	if (one->ptr.spamf->action != two->ptr.spamf->action)
+	{
+		/* We can simply compare the action. Highest (strongest) wins. */
+		if (one->ptr.spamf->action > two->ptr.spamf->action)
+			return one;
+		else
+			return two;
+	}
+	
+	/* Ok, try comparing the regex then.. */
+	n = strcmp(one->reason, two->reason);
+	if (n < 0)
+	        return one;
+        if (n > 0)
+                return two;
+        
+        /* Hmm.. regex is identical. Try the 'reason' field. */
+        n = strcmp(one->ptr.spamf->tkl_reason, two->ptr.spamf->tkl_reason);
+        if (n < 0)
+                return one;
+        if (n > 0)
+                return two;
+        
+        /* Hmm.. 'reason' is identical as well.
+         * Make a final decision, could still be identical but would be unlikely.
+         */
+        return (one->subtype > two->subtype) ? one : two;
+}
+
 /** Checks if 'target' is on the spamfilter exception list.
  * RETURNS 1 if found in list, 0 if not.
  */
@@ -2493,12 +2533,14 @@ int ret;
 int _dospamfilter(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk)
 {
 aTKline *tk;
+aTKline *winner_tk = NULL;
 char *str;
-int ret;
+int ret = -1;
 #ifdef SPAMFILTER_DETECTSLOW
 struct rusage rnow, rprev;
 long ms_past;
 #endif
+
 	if (rettk)
 		*rettk = NULL; /* initialize to NULL */
 
@@ -2517,8 +2559,10 @@ long ms_past;
 	{
 		if (!(tk->subtype & type))
 			continue;
+
 		if ((flags & SPAMFLAG_NOWARN) && (tk->ptr.spamf->action == BAN_ACT_WARN))
 			continue;
+
 #ifdef SPAMFILTER_DETECTSLOW
 		memset(&rnow, 0, sizeof(rnow));
 		memset(&rprev, 0, sizeof(rnow));
@@ -2547,11 +2591,13 @@ long ms_past;
 				ms_past, tk->reason);
 		}
 #endif
-		if (!ret)
+
+		if (ret == 0)
 		{
-			/* matched! */
+		        /* We have a match! */
 			char buf[1024];
 			char targetbuf[48];
+			
 			if (target) {
 				targetbuf[0] = ' ';
 				strlcpy(targetbuf+1, target, sizeof(targetbuf)-1); /* cut it off */
@@ -2559,7 +2605,7 @@ long ms_past;
 				targetbuf[0] = '\0';
 
 			/* Hold on.. perhaps it's on the exceptions list... */
-			if (target && target_is_spamexcept(target))
+			if (!winner_tk && target && target_is_spamexcept(target))
 				return 0; /* No problem! */
 
 			ircsprintf(buf, "[Spamfilter] %s!%s@%s matches filter '%s': [%s%s: '%s'] [%s]",
@@ -2573,86 +2619,109 @@ long ms_past;
 			ircd_log(LOG_SPAMFILTER, "%s", buf);
 			RunHook6(HOOKTYPE_LOCAL_SPAMFILTER, sptr, str, str_in, type, target, tk);
 
-			if (tk->ptr.spamf->action == BAN_ACT_BLOCK)
+			/* If we should stop after the first match, we end here... */
+			if (SPAMFILTER_STOP_ON_FIRST_MATCH)
 			{
-				switch(type)
-				{
-					case SPAMF_USERMSG:
-					case SPAMF_USERNOTICE:
-						sendnotice(sptr, "Message to %s blocked: %s",
-							target, unreal_decodespace(tk->ptr.spamf->tkl_reason));
-						break;
-					case SPAMF_CHANMSG:
-					case SPAMF_CHANNOTICE:
-						sendto_one(sptr, ":%s 404 %s %s :Message blocked: %s",
-							me.name, sptr->name, target,
-							unreal_decodespace(tk->ptr.spamf->tkl_reason));
-						break;
-					case SPAMF_DCC:
-						sendnotice(sptr, "DCC to %s blocked: %s",
-							target, unreal_decodespace(tk->ptr.spamf->tkl_reason));
-						break;
-					case SPAMF_AWAY:
-						/* hack to deal with 'after-away-was-set-filters' */
-						if (sptr->user->away && !strcmp(str_in, sptr->user->away))
-						{
-							/* free away & broadcast the unset */
-							MyFree(sptr->user->away);
-							sptr->user->away = NULL;
-							sendto_serv_butone_token(sptr, sptr->name, MSG_AWAY, TOK_AWAY, "");
-						}
-						break;
-					case SPAMF_TOPIC:
-						//...
-						sendnotice(sptr, "Setting of topic on %s to that text is blocked: %s",
-							target, unreal_decodespace(tk->ptr.spamf->tkl_reason));
-						break;
-					default:
-						break;
-				}
-				return -1;
-			} else
-			if (tk->ptr.spamf->action == BAN_ACT_WARN)
-			{
-				if ((type != SPAMF_USER) && (type != SPAMF_QUIT))
-					sendto_one(sptr, rpl_str(RPL_SPAMCMDFWD),
-						me.name, sptr->name, cmdname_by_spamftarget(type),
-						unreal_decodespace(tk->ptr.spamf->tkl_reason));
-				return 0;
-			} else
-			if (tk->ptr.spamf->action == BAN_ACT_DCCBLOCK)
-			{
-				if (type == SPAMF_DCC)
-				{
-					sendnotice(sptr, "DCC to %s blocked: %s",
-						target, unreal_decodespace(tk->ptr.spamf->tkl_reason));
-					sendnotice(sptr, "*** You have been blocked from sending files, "
-					           "reconnect to regain permission to send files");
-					sptr->flags |= FLAGS_DCCBLOCK;
-				}
-				return -1;
-			} else
-			if (tk->ptr.spamf->action == BAN_ACT_VIRUSCHAN)
-			{
-				if (IsVirus(sptr)) /* Already tagged */
-					return 0;
-					
-				/* There's a race condition for SPAMF_USER, so 'rettk' is used for SPAMF_USER
-				 * when a user is currently connecting and filters are checked:
-				 */
-				if (!IsClient(sptr))
-				{
-					if (rettk)
-						*rettk = tk;
-					return -5;
-				}
+			        winner_tk = tk;
+				break;
+                        }
 				
-				dospamfilter_viruschan(sptr, tk, type);
-				return -5;
-			} else
-				return place_host_ban(sptr, tk->ptr.spamf->action,
-					unreal_decodespace(tk->ptr.spamf->tkl_reason), tk->ptr.spamf->tkl_duration);
+			/* Otherwise.. we set 'winner_tk' to the spamfilter with the strongest action. */
+			if (!winner_tk)
+				winner_tk = tk;
+			else
+				winner_tk = choose_winning_spamfilter(tk, winner_tk);
+			
+			/* and continue.. */
 		}
 	}
-	return 0;
+
+	tk = winner_tk;
+	
+	if (!tk)
+		return 0; /* NOMATCH, we are done */
+
+	/* Spamfilter matched, take action: */
+
+	if (tk->ptr.spamf->action == BAN_ACT_BLOCK)
+	{
+		switch(type)
+		{
+			case SPAMF_USERMSG:
+			case SPAMF_USERNOTICE:
+				sendnotice(sptr, "Message to %s blocked: %s",
+					target, unreal_decodespace(tk->ptr.spamf->tkl_reason));
+				break;
+			case SPAMF_CHANMSG:
+			case SPAMF_CHANNOTICE:
+				sendto_one(sptr, ":%s 404 %s %s :Message blocked: %s",
+					me.name, sptr->name, target,
+					unreal_decodespace(tk->ptr.spamf->tkl_reason));
+				break;
+			case SPAMF_DCC:
+				sendnotice(sptr, "DCC to %s blocked: %s",
+					target, unreal_decodespace(tk->ptr.spamf->tkl_reason));
+				break;
+			case SPAMF_AWAY:
+				/* hack to deal with 'after-away-was-set-filters' */
+				if (sptr->user->away && !strcmp(str_in, sptr->user->away))
+				{
+					/* free away & broadcast the unset */
+					MyFree(sptr->user->away);
+					sptr->user->away = NULL;
+					sendto_serv_butone_token(sptr, sptr->name, MSG_AWAY, TOK_AWAY, "");
+				}
+				break;
+			case SPAMF_TOPIC:
+				//...
+				sendnotice(sptr, "Setting of topic on %s to that text is blocked: %s",
+					target, unreal_decodespace(tk->ptr.spamf->tkl_reason));
+				break;
+			default:
+				break;
+		}
+		return -1;
+	} else
+	if (tk->ptr.spamf->action == BAN_ACT_WARN)
+	{
+		if ((type != SPAMF_USER) && (type != SPAMF_QUIT))
+			sendto_one(sptr, rpl_str(RPL_SPAMCMDFWD),
+				me.name, sptr->name, cmdname_by_spamftarget(type),
+				unreal_decodespace(tk->ptr.spamf->tkl_reason));
+		return 0;
+	} else
+	if (tk->ptr.spamf->action == BAN_ACT_DCCBLOCK)
+	{
+		if (type == SPAMF_DCC)
+		{
+			sendnotice(sptr, "DCC to %s blocked: %s",
+				target, unreal_decodespace(tk->ptr.spamf->tkl_reason));
+			sendnotice(sptr, "*** You have been blocked from sending files, "
+				   "reconnect to regain permission to send files");
+			sptr->flags |= FLAGS_DCCBLOCK;
+		}
+		return -1;
+	} else
+	if (tk->ptr.spamf->action == BAN_ACT_VIRUSCHAN)
+	{
+		if (IsVirus(sptr)) /* Already tagged */
+			return 0;
+			
+		/* There's a race condition for SPAMF_USER, so 'rettk' is used for SPAMF_USER
+		 * when a user is currently connecting and filters are checked:
+		 */
+		if (!IsClient(sptr))
+		{
+			if (rettk)
+				*rettk = tk;
+			return -5;
+		}
+		
+		dospamfilter_viruschan(sptr, tk, type);
+		return -5;
+	} else
+		return place_host_ban(sptr, tk->ptr.spamf->action,
+			unreal_decodespace(tk->ptr.spamf->tkl_reason), tk->ptr.spamf->tkl_duration);
+
+	return 0; /* NOTREACHED */
 }
