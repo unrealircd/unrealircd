@@ -3754,6 +3754,13 @@ spamfilter {
 				Voir aussi <a href="#feature_spamfilter_slow">Slow Spamfilter Detection</a>.
 			</p>
 			<p>
+				<font class="set">set::spamfilter::stop-on-first-match &lt;yes|no&gt;</font><br>
+				Par défaut, 'yes', ce qui signifie qu'une fois qu'un spamfilter correspondant est trouvé, UnrealIRCd va appliquer l'action correspondante immédiatement et les spamfilters restants ne seront pas testés.<br>
+				Si fixé à 'no', alors une fois le premier spamfilter trouvé, les spamfilters restants seront quand même testés.
+				Tous les filtres correspondants seront loggués et un message envoyé aux IRCOps (snomask +S) pour chaque filtre.
+				Par contre, l'utilisateur concerné ne verra qu'une seule des actions (ex: block ou kill), la plus grave de toutes les actions des spamfilters correspondants (gzline est la plus grave, block et warn les moins graves).
+			</p>
+			<p>
 				<font class="set">set::check-target-nick-bans &lt;yes|no&gt;</font><br>
 				A chaque fois qu'un utilisateur change son pseudo, vérifie si le nouveau pseudo est banni.
 				Si c'est le cas, le changement de pseudo n'est pas autorisé. La valeur par défaut est "yes".
@@ -4952,7 +4959,7 @@ spamfilter {
 			<p>
 				Ce module bannit automatiquement les utilisateurs essayant d'envoyer une requête de type HTTP.
 				Il a été écrit par Syzop pour contrer l'attaque XPS touchant Firefox, grâce à laquelle les navigateurs supportant l'AJAX peuvent agir comme robots spammeurs sur IRC.
-				Pour choisir ce que m_nopost doit faire lorsqu'il reÃ§oit une telle requête, configurez <a href="#set_nopost_ban_action">
+				Pour choisir ce que m_nopost doit faire lorsqu'il reçoit une telle requête, configurez <a href="#set_nopost_ban_action">
 		set::nopost::ban-action</a> et <a href="#set_nopost_ban_time">set::nopost::ban-time</a> (et leurs amis).
 			</p>
 			<p>
