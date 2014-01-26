@@ -3738,6 +3738,16 @@ belirtilebilir. Ör: except "#help,#spamreport"</P>
   Eðer bir spamfilterin, uygulanmasý için milisaniyelerin bu miktarýndan daha uzun olursa
   (1000ms = 1 saniye) sonra spamfilter silinir. (varsayýlan: 500).
   Ayrýca görmek için; <a href="#feature_spamfilter_slow">Yavaþ Spamfilter Algýlama</a>.</p>
+  <p><font class="set">set::spamfilter::stop-on-first-match &lt;yes|no&gt;</font><br>
+  Varsayýlan 'yes' olarak ayarlandýðýnda, eþleþmiþ olan spamfilterler
+  UnrealIRCd tarafýndan harekete alýnacak ve herhangi bir (diðer) spamfilter eklendiðinde
+  uygulamaya alýnacak anlamýna gelir.<br>
+  Bu 'hayýr' olarak ayarlandýðýnda ise önceden eklenmiþ spamfilterler kontrol edilmeyecek
+  fakat sonradan eklenmiþ spamfilterler hala kontrol edilecektir. Tüm bu eþleþmelerin hepsi   	
+  kaydedilir ve her bir eþleþme için tüm IRCop'lara (snomask + S) mesaj gidecektir. Sadece bir 
+  spamfilter eylemi göreceksiniz ki ancak kullanýcý bundan etkilenecektir. (örn: block veya kill)
+  Spamfilter ile herhangi bir ciddi eylemde ise en yüksek GZLINE, en düþük ise block olarak 
+  uyarmak gerekir.</p>
 <P><FONT class=set>set::check-target-nick-bans
 &lt;yes|no&gt;</FONT><BR>
 Kullanýcý(lar) nick(ler)ini deðiþtirdiði zaman,
