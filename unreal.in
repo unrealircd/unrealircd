@@ -107,10 +107,10 @@ elif [ "$1" = "backtrace" ] ; then
 		exit 1
 	fi
 
-	# Some ugly prepare work -- ignore errors
-	(echo quit|gdb @BINDIR@ $corefile 2>&1)|\
-	grep -i 'no such file'|\
-	awk -F ':' '{ print $1 }'|sort|uniq|\
+	# The tmp/*.so files are often already deleted. Here we have some
+	# (ugly) scripting to recreate the tmp/*.so links to the modules *.so files...
+	echo 'info sharedlibrary'|gdb @BINDIR@ $corefile 2>/dev/null|\
+	grep No|grep tmp/|awk '{ print $2 }'|\
 	awk -F '.' "{ system(\"ln -s ../$modpath/\" \$2 \".so \" \$0) }"
 	
 	echo ""
