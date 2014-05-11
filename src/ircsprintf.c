@@ -41,10 +41,11 @@
  */
 
 char *ircvsnprintf(char *str, size_t size, const char *format, va_list vl) {
-	if (!size) return str;
 	char* str_begin = str;
 	char c;
         const char* end = str+size-1; //for comparison, not dereferencing.  It is the last position a null can go.
+
+	if (!size) return str;
 
 	while (str!=end && (c = *format++))
 	{
@@ -65,9 +66,10 @@ char *ircvsnprintf(char *str, size_t size, const char *format, va_list vl) {
 							     [ 100000000 , 4294967295 ]
 							     Actually prints like "%010lu" */
 				int i;
+				unsigned long int v;
 				format++;
 				if (str+10>end) break;
-				unsigned long int v = va_arg(vl, unsigned long int);
+				v = va_arg(vl, unsigned long int);
 				for (i = 9; i>=0; i--) {
 					str[i] = (v%10)+'0';
 					v /= 10;
@@ -76,8 +78,10 @@ char *ircvsnprintf(char *str, size_t size, const char *format, va_list vl) {
 				continue;
 			}
 			if (c == 'd' || c == 'i') {
+				char scratch_buffer[16], *t;
 				int v = va_arg(vl, int);
 				int i = 0;
+				size_t len;
 				if (v<0) {
 					v*=-1;
 					*str++ = '-';
@@ -88,35 +92,35 @@ char *ircvsnprintf(char *str, size_t size, const char *format, va_list vl) {
 					continue;
 				}
 
-				char scratch_buffer[16];
-				char* t = scratch_buffer + sizeof(scratch_buffer);
+				t = scratch_buffer + sizeof(scratch_buffer);
 				while (v) {
 					*--t = (v%10) + '0';
 					v/=10;
 				}
 
-				size_t len = sizeof(scratch_buffer)-(t-scratch_buffer);
+				len = sizeof(scratch_buffer)-(t-scratch_buffer);
 				if ((str+len)>end) break;
 				for (i = 0; i < len; i++)
 					*str++=t[i];
 				continue;
 			}
 			if (c == 'u') {
+				char scratch_buffer[16], *t;
 				unsigned int v = va_arg(vl, unsigned int);
 				int i = 0;
+				size_t len;
 				if (v==0) {
 					*str++ = '0';
 					continue;
 				}
 
-				char scratch_buffer[16];
-				char* t = scratch_buffer + sizeof(scratch_buffer);
+				t = scratch_buffer + sizeof(scratch_buffer);
 				while (v) {
 					*--t = (v%10) + '0';
 					v/=10;
 				}
 
-				size_t len = sizeof(scratch_buffer)-(t-scratch_buffer);
+				len = sizeof(scratch_buffer)-(t-scratch_buffer);
 				if ((str+len)>end) break;
 				for (i = 0; i < len; i++)
 					*str++=t[i];

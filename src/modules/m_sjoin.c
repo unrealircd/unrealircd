@@ -37,9 +37,6 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 #ifdef _WIN32
 #include "version.h"
 #endif
@@ -99,21 +96,6 @@ aParv *mp2parv(char *xmbuf, char *parmbuf)
 	pparv.parv[c] = NULL;
 	pparv.parc = c;
 	return (&pparv);
-}
-
-/* Checks if 2 ChanFloodProt modes (chmode +f) are different.
- * This is a bit more complicated than 1 simple memcmp(a,b,..) because
- * counters are also stored in this struct so we have to do
- * it manually :( -- Syzop.
- */
-static int compare_floodprot_modes(ChanFloodProt *a, ChanFloodProt *b)
-{
-	if (memcmp(a->l, b->l, sizeof(a->l)) ||
-	    memcmp(a->a, b->a, sizeof(a->a)) ||
-	    memcmp(a->r, b->r, sizeof(a->r)))
-		return 1;
-	else
-		return 0;
 }
 
 /*
@@ -524,9 +506,6 @@ CMD_FUNC(m_sjoin)
 							acptr->name, acptr->user->username, GetHost(acptr), chptr->chname);
 				} else
 					sendto_channel_butserv(chptr, acptr, ":%s JOIN :%s", nick, chptr->chname);
-
-				if (chptr->mode.floodprot && sptr->serv->flags.synced && !IsULine(sptr))
-				        do_chanflood(chptr->mode.floodprot, FLD_JOIN);
 			}
 			sendto_server(cptr, 0, PROTO_SJOIN, ":%s JOIN %s",
 			    nick, chptr->chname);
@@ -655,14 +634,8 @@ CMD_FUNC(m_sjoin)
 		bcopy(&chptr->mode, &oldmode, sizeof(Mode));
 
 		/* Fun.. we have to duplicate all extended modes too... */
-		oldmode.extmodeparam = NULL;
-		oldmode.extmodeparam = extcmode_duplicate_paramlist(chptr->mode.extmodeparam);
-
-		if (chptr->mode.floodprot)
-		{
-			oldmode.floodprot = MyMalloc(sizeof(ChanFloodProt));
-			memcpy(oldmode.floodprot, chptr->mode.floodprot, sizeof(ChanFloodProt));
-		}
+		memset(&oldmode.extmodeparams, 0, sizeof(oldmode.extmodeparams));
+		extcmode_duplicate_paramlist(chptr->mode.extmodeparams, oldmode.extmodeparams);
 
 		/* merge the modes */
 		strlcpy(modebuf, parv[3], sizeof modebuf);
@@ -692,15 +665,6 @@ CMD_FUNC(m_sjoin)
 		{
 			Addit('k', oldmode.key);
 		}
-		if (oldmode.link[0] && !chptr->mode.link[0])
-		{
-			Addit('L', oldmode.link);
-		}
-		if (oldmode.floodprot && !chptr->mode.floodprot)
-		{
-			char *x = channel_modef_string(oldmode.floodprot);
-			Addit('f', x);
-		}
 
 		/* First, check if we have something they don't have..
 		 * note that: oldmode.* = us, chptr->mode.* = them.
@@ -713,7 +677,8 @@ CMD_FUNC(m_sjoin)
 			{
 				if (Channelmode_Table[i].paracount)
 				{
-					char *parax = Channelmode_Table[i].get_param(extcmode_get_struct(oldmode.extmodeparam, Channelmode_Table[i].flag));
+				        char *parax = cm_getparameter_ex(oldmode.extmodeparams, Channelmode_Table[i].flag);
+					//char *parax = Channelmode_Table[i].get_param(extcmode_get_struct(oldmode.extmodeparam, Channelmode_Table[i].flag));
 					Addit(Channelmode_Table[i].flag, parax);
 				} else {
 					Addsingle(Channelmode_Table[i].flag);
@@ -729,14 +694,6 @@ CMD_FUNC(m_sjoin)
 			chptr->mode.mode |= MODE_SECRET;
 			Addsingle('p'); /* - */
 			queue_s = 1;
-		}
-		/* Check if we had +c and it became +S, then revert it... */
-		if ((oldmode.mode & MODE_NOCOLOR) && (chptr->mode.mode & MODE_STRIP))
-		{
-			chptr->mode.mode &= ~MODE_STRIP;
-			chptr->mode.mode |= MODE_NOCOLOR;
-			Addsingle('S'); /* - */
-			queue_c = 1;
 		}
 		if (!(oldmode.mode & MODE_ONLYSECURE) && (chptr->mode.mode & MODE_ONLYSECURE))
 			kick_insecure_users(chptr);
@@ -770,12 +727,6 @@ CMD_FUNC(m_sjoin)
 				Addsingle(acp->flag);
 			}
 		}
-		/* first we check if it has been set, we did unset longer up */
-		if (chptr->mode.floodprot && !oldmode.floodprot)
-		{
-			char *x = channel_modef_string(chptr->mode.floodprot);
-			Addit('f', x);
-		}
 
 		/* Now, check if they have something we don't have..
 		 * note that: oldmode.* = us, chptr->mode.* = them.
@@ -788,7 +739,8 @@ CMD_FUNC(m_sjoin)
 			{
 				if (Channelmode_Table[i].paracount)
 				{
-					char *parax = Channelmode_Table[i].get_param(extcmode_get_struct(chptr->mode.extmodeparam,Channelmode_Table[i].flag));
+				        char *parax = cm_getparameter(chptr, Channelmode_Table[i].flag);
+					//char *parax = Channelmode_Table[i].get_param(extcmode_get_struct(chptr->mode.extmodeparam,Channelmode_Table[i].flag));
 					Addit(Channelmode_Table[i].flag, parax);
 				} else {
 					Addsingle(Channelmode_Table[i].flag);
@@ -822,40 +774,6 @@ CMD_FUNC(m_sjoin)
 				Addit('k', chptr->mode.key);
 			}
 		}
-		/* same as above (except case insensitive #test == #TEST -- codemastr) */
-		if (oldmode.link[0] && chptr->mode.link[0]
-		    && stricmp(oldmode.link, chptr->mode.link))
-		{
-			if (strcmp(oldmode.link, chptr->mode.link) > 0)
-			{
-				strlcpy(chptr->mode.link, oldmode.link, sizeof(chptr->mode.link));
-			}
-			else
-			{
-				Addit('L', chptr->mode.link);
-			}
-		}
-		/* 
-		 * run a max on each?
-		 */
-		if (chptr->mode.floodprot && oldmode.floodprot)
-		{
-			char *x;
-			int i;
-
-			if (compare_floodprot_modes(chptr->mode.floodprot, oldmode.floodprot))
-			{
-				chptr->mode.floodprot->per = MAX(chptr->mode.floodprot->per, oldmode.floodprot->per);
-				for (i=0; i < NUMFLD; i++)
-				{
-					chptr->mode.floodprot->l[i] = MAX(chptr->mode.floodprot->l[i], oldmode.floodprot->l[i]);
-					chptr->mode.floodprot->a[i] = MAX(chptr->mode.floodprot->a[i], oldmode.floodprot->a[i]);
-					chptr->mode.floodprot->r[i] = MAX(chptr->mode.floodprot->r[i], oldmode.floodprot->r[i]);
-				}
-				x = channel_modef_string(chptr->mode.floodprot);
-				Addit('f', x);
-			}
-		}
 
 		/* Now, check for any param differences in extended channel modes..
 		 * note that: oldmode.* = us, chptr->mode.* = them.
@@ -869,30 +787,34 @@ CMD_FUNC(m_sjoin)
 			{
 				int r;
 				char *parax;
-				CmodeParam *ourm = extcmode_get_struct(oldmode.extmodeparam,Channelmode_Table[i].flag);
-				CmodeParam *theirm = extcmode_get_struct(chptr->mode.extmodeparam, Channelmode_Table[i].flag);
+				char flag = Channelmode_Table[i].flag;
+				void *ourm = GETPARASTRUCTEX(oldmode.extmodeparams, flag);
+				void *theirm = GETPARASTRUCT(chptr, flag);
+				//CmodeParam *ourm = extcmode_get_struct(oldmode.extmodeparam,Channelmode_Table[i].flag);
+				//CmodeParam *theirm = extcmode_get_struct(chptr->mode.extmodeparam, Channelmode_Table[i].flag);
 				
 				r = Channelmode_Table[i].sjoin_check(chptr, ourm, theirm);
 				switch (r)
 				{
 					case EXSJ_WEWON:
 					{
-						CmodeParam *r;
-						parax = Channelmode_Table[i].get_param(ourm);
-						Debug((DEBUG_DEBUG, "sjoin: we won: '%s'", parax));
-						r = Channelmode_Table[i].put_param(theirm, parax);
-						if (r != theirm) /* confusing eh ;) */
-							AddListItem(r, chptr->mode.extmodeparam);
+					        parax = cm_getparameter_ex(oldmode.extmodeparams, flag); /* grab from old */
+					        cm_putparameter(chptr, flag, parax); /* put in new (won) */
 						break;
 					}
 					case EXSJ_THEYWON:
-						parax = Channelmode_Table[i].get_param(theirm);
+					        parax = cm_getparameter(chptr, flag);
 						Debug((DEBUG_DEBUG, "sjoin: they won: '%s'", parax));
 						Addit(Channelmode_Table[i].flag, parax);
 						break;
 					case EXSJ_SAME:
 						Debug((DEBUG_DEBUG, "sjoin: equal"));
 						break;
+                                        case EXSJ_MERGE:
+                                                parax = cm_getparameter_ex(oldmode.extmodeparams, flag); /* grab from old */
+                                                cm_putparameter(chptr, flag, parax); /* put in new (won) */
+                                                Addit(flag, parax);
+                                                break;
 					default:
 						ircd_log(LOG_ERROR, "channel.c:m_sjoin:param diff checker: got unk. retval 0x%x??", r);
 						break;
@@ -913,15 +835,8 @@ CMD_FUNC(m_sjoin)
 		}
 
 		/* free the oldmode.* crap :( */
-		extcmode_free_paramlist(oldmode.extmodeparam);
-		oldmode.extmodeparam = NULL; /* just to be sure ;) */
-
-		/* and the oldmode.floodprot struct too... :/ */
-		if (oldmode.floodprot)
-		{
-			free(oldmode.floodprot);
-			oldmode.floodprot = NULL;
-		}
+		extcmode_free_paramlist(oldmode.extmodeparams);
+		/* memset(&oldmode.extmodeparams, 0, sizeof(oldmode.extmodeparams)); -- redundant? */
 	}
 
 	/* we should be synched by now, */

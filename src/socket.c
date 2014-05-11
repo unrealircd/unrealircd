@@ -94,7 +94,7 @@ int  deliver_it(aClient *cptr, char *str, int len)
 				if (ERRNO == P_EAGAIN)
 					break;
 			default:
-				return 0;
+				return -1; /* hm.. why was this 0?? we have an error! */
 			}
 		}
 	}

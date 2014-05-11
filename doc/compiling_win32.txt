@@ -94,9 +94,9 @@ So, again, it will NOT work properly, if:
 ==[ SYMBOL FILES ]==
 If you get something like this:
 
-  Creating library L_COMMANDS.lib and object L_COMMANDS.exp
-M_OPER.obj : error LNK2019: unresolved external symbol _sendto_snomask_global re
-ferenced in function _m_oper
+  Creating library ....
+M_OPER.obj : error LNK2019: unresolved external symbol _sendto_snomask_global
+ referenced in function _m_oper
 
 (note: the exact name of the symbol will vary!)
 

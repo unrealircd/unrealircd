@@ -20,7 +20,7 @@
 #*/
 # major edit from fez - to compile objects individually...
 
-INCLUDES = ../include/auth.h ../include/badwords.h ../include/channel.h \
+INCLUDES = ../include/auth.h ../include/channel.h \
 	../include/class.h ../include/common.h ../include/config.h ../include/dbuf.h \
 	../include/dynconf.h ../include/events.h ../include/fdlist.h ../include/h.h \
 	../include/hash.h ../include/inet.h ../include/ircsprintf.h \
@@ -54,36 +54,10 @@ R_MODULES= \
 	 m_connect.so m_dccallow.so m_userip.so m_nick.so m_user.so \
 	 m_mode.so m_watch.so m_part.so m_join.so m_motd.so m_opermotd.so \
 	 m_botmotd.so m_lusers.so m_names.so m_svsnolag.so m_addmotd.so \
-	 m_svslusers.so m_starttls.so m_nopost.so m_issecure.so m_cap.so \
+	 m_svslusers.so m_starttls.so m_nopost.so m_cap.so \
 	 m_sasl.so cap_invitenotify.so
 
-MODES	= chm_permanent.so
-
-#note change of .c to .o
-COMMANDS=m_sethost.o m_chghost.o m_chgident.o m_setname.o m_setident.o \
-	 m_sdesc.o m_svsmode.o m_swhois.o m_svsmotd.o m_svsnline.o \
-	 m_who.o m_mkpasswd.o m_away.o m_svsnoop.o m_svso.o m_svsnick.o \
-	 m_adminchat.o m_chgname.o m_guest.o m_kill.o \
-	 m_lag.o m_message.o m_nachat.o m_oper.o m_pingpong.o \
-	 m_quit.o m_rping.o m_sendumode.o m_sqline.o \
-	 m_tsctl.o m_unkline.o m_unsqline.o m_unzline.o m_whois.o \
-	 m_tkl.o m_vhost.o m_cycle.o m_svsjoin.o m_svspart.o \
-	 m_svslusers.o m_svswatch.o m_svssilence.o m_sendsno.o \
-	 m_svssno.o m_sajoin.o m_sapart.o m_samode.o m_kick.o m_topic.o \
-	 m_invite.o m_list.o m_time.o m_svskill.o m_sjoin.o \
-	 m_pass.o m_userhost.o m_ison.o m_silence.o m_knock.o m_umode2.o \
-	 m_squit.o m_protoctl.o m_addmotd.o m_addomotd.o \
-	 m_wallops.o m_admin.o m_globops.o m_locops.o m_chatops.o \
-	 m_trace.o m_netinfo.o m_links.o m_help.o m_rules.o \
-	 m_close.o m_map.o m_eos.o m_server.o m_stats.o \
-	 m_svsfline.o m_dccdeny.o m_undccdeny.o m_whowas.o \
-	 m_connect.o m_dccallow.o m_userip.o m_nick.o m_user.o \
-	 m_mode.o m_watch.o m_part.o m_join.o m_motd.o m_opermotd.o \
-	 m_botmotd.o m_lusers.o m_names.o m_svsnolag.o m_starttls.o \
-	 m_nopost.o m_issecure.o m_cap.o m_sasl.o
-
-
-MODULES=cloak.so $(R_MODULES) $(MODES)
+MODULES=cloak.so $(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
 CC=@CC@
 RM=@RM@
@@ -91,6 +65,8 @@ RM=@RM@
 all: build
 
 build: $(MODULES)
+	cd chanmodes; $(MAKE) all
+	cd usermodes; $(MAKE) all
 
 custommodule: $(MODULEFILE).c
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
@@ -504,10 +480,6 @@ m_nopost.so: m_nopost.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_nopost.so m_nopost.c
 
-m_issecure.so: m_issecure.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o m_issecure.so m_issecure.c
-
 m_cap.so: m_cap.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_cap.so m_cap.c
@@ -523,14 +495,6 @@ m_sasl.so: m_sasl.c $(INCLUDES)
 cap_invitenotify.so: cap_invitenotify.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o cap_invitenotify.so cap_invitenotify.c
-
-#############################################################################
-# channel modes
-#############################################################################
-
-chm_permanent.so: chm_permanent.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o chm_permanent.so chm_permanent.c
 
 #############################################################################
 #             and now the remaining modules...

@@ -537,9 +537,9 @@ static void exit_one_client(aClient *sptr, const char *comment)
 			RunHook2(HOOKTYPE_REMOTE_QUIT, sptr, comment);
 		}
 
-#ifdef JOINTHROTTLE
-		cmodej_deluserentries(sptr);
-#endif
+		/* This hook may or may not be redundant */
+		RunHook(HOOKTYPE_EXIT_ONE_CLIENT, sptr);
+		
 		while ((mp = sptr->user->channel))
 			remove_user_from_channel(sptr, mp->chptr);
 
@@ -569,12 +569,7 @@ static void exit_one_client(aClient *sptr, const char *comment)
 	if (*sptr->id)
 		del_from_id_hash_table(sptr->id, sptr);
 	if (*sptr->name)
-		if (del_from_client_hash_table(sptr->name, sptr) != 1)
-			Debug((DEBUG_ERROR, "%#x !in tab %s[%s] %#x %#x %#x %d %d %#x",
-			    sptr, sptr->name,
-			    sptr->from ? sptr->from->sockhost : "??host",
-			    sptr->from, sptr->next, sptr->prev, sptr->fd,
-			    sptr->status, sptr->user));
+		del_from_client_hash_table(sptr->name, sptr);
 	if (IsRegisteredUser(sptr))
 		hash_check_watch(sptr, RPL_LOGOFF);
 	remove_client_from_list(sptr);
@@ -664,14 +659,14 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 			}
 			on_for = TStime() - sptr->firsttime;
 			if (IsHidden(sptr))
-				ircd_log(LOG_CLIENT, "Disconnect - (%ld:%ld:%ld) %s!%s@%s [VHOST %s]",
+				ircd_log(LOG_CLIENT, "Disconnect - (%ld:%ld:%ld) %s!%s@%s [VHOST %s] (%s)",
 					on_for / 3600, (on_for % 3600) / 60, on_for % 60,
 					sptr->name, sptr->user->username,
-					sptr->user->realhost, sptr->user->virthost);
+					sptr->user->realhost, sptr->user->virthost, comment);
 			else
-				ircd_log(LOG_CLIENT, "Disconnect - (%ld:%ld:%ld) %s!%s@%s",
+				ircd_log(LOG_CLIENT, "Disconnect - (%ld:%ld:%ld) %s!%s@%s (%s)",
 					on_for / 3600, (on_for % 3600) / 60, on_for % 60,
-					sptr->name, sptr->user->username, sptr->user->realhost);
+					sptr->name, sptr->user->username, sptr->user->realhost, comment);
 		} else
 		if (IsUnknown(sptr))
 		{

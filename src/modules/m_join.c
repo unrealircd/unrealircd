@@ -37,9 +37,6 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 #ifdef _WIN32
 #include "version.h"
 #endif
@@ -48,12 +45,8 @@
 DLLFUNC CMD_FUNC(m_join);
 DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);
 DLLFUNC CMD_FUNC(_do_join);
-DLLFUNC int _can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[]);
+DLLFUNC int _can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *parv[]);
 #define MAXBOUNCE   5 /** Most sensible */
-#ifdef JOINTHROTTLE
-static int isjthrottled(aClient *cptr, aChannel *chptr);
-static void cmodej_increase_usercounter(aClient *cptr, aChannel *chptr);
-#endif
 
 /* Externs */
 extern MODVAR int spamf_ugly_vchanoverride;
@@ -99,17 +92,26 @@ DLLFUNC int MOD_UNLOAD(m_join)(int module_unload)
 	return MOD_SUCCESS;
 }
 
-/* Now let _invited_ people join thru bans, +i and +l.
- * Checking if an invite exist could be done only if a block exists,
- * but I'm not too fancy of the complicated structure that'd cause,
- * when optimization will hopefully take care of it. Most of the time
- * a user won't have invites on him anyway. -Donwulff
+/* This function checks if a locally connected user may join the channel.
+ * It also provides an number of hooks where modules can plug in to.
+ * Note that the order of checking has been carefully thought of
+ * (eg: bans at the end), so don't change it unless you have a good reason
+ * to do so -- Syzop.
  */
-
-DLLFUNC int _can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[])
+DLLFUNC int _can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *parv[])
 {
 Link *lp;
 Ban *banned;
+Hook *h;
+int i;
+
+	for (h = Hooks[HOOKTYPE_CAN_JOIN]; h; h = h->next) 
+	{
+		i = (*(h->func.intfunc))(sptr,chptr,key,parv);
+		if (i != 0)
+			return i;
+	}
+
 
 	if ((chptr->mode.mode & MODE_ONLYSECURE) && !(sptr->umodes & UMODE_SECURE))
 	{
@@ -147,24 +149,18 @@ Ban *banned;
 		if (lp->value.chptr == chptr)
 			return 0;
 
-        if ((chptr->mode.limit && chptr->users >= chptr->mode.limit))
+        if (chptr->users >= chptr->mode.limit)
         {
-                if (chptr->mode.link)
+                /* Hmmm.. don't really like this.. and not at this place */
+                
+                for (h = Hooks[HOOKTYPE_CAN_JOIN_LIMITEXCEEDED]; h; h = h->next) 
                 {
-                        if (*chptr->mode.link != '\0')
-                        {
-                                /* We are linked. */
-                                sendto_one(sptr,
-                                    err_str(ERR_LINKCHANNEL), me.name,
-                                    sptr->name, chptr->chname,
-                                    chptr->mode.link);
-                                parv[0] = sptr->name;
-                                parv[1] = (chptr->mode.link);
-                                do_join(cptr, sptr, 2, parv);
-                                return -1;
-                        }
+                        i = (*(h->func.intfunc))(sptr,chptr,key,parv);
+                        if (i != 0)
+                                return i;
                 }
-                /* We check this later return (ERR_CHANNELISFULL); */
+
+                /* We later check again for this limit (in case +L was not set) */
         }
 
         if ((chptr->mode.mode & MODE_RGSTRONLY) && !IsARegNick(sptr))
@@ -190,96 +186,8 @@ Ban *banned;
 #endif
 #endif
 
-#ifdef JOINTHROTTLE
-		if (!IsAnOper(cptr) &&
-		    (chptr->mode.extmode & EXTMODE_JOINTHROTTLE) && isjthrottled(cptr, chptr))
-			return ERR_TOOMANYJOINS;
-#endif
-
         return 0;
 }
-
-#ifdef JOINTHROTTLE
-static int isjthrottled(aClient *cptr, aChannel *chptr)
-{
-CmodeParam *m;
-aJFlood *e;
-int num=0, t=0;
-
-	if (!MyClient(cptr))
-		return 0;
-		
-	for (m = chptr->mode.extmodeparam; m; m=m->next)
-		if (m->flag == 'j')
-		{
-			num = ((aModejEntry *)m)->num;
-			t = ((aModejEntry *)m)->t;
-			break;
-		}
-
-	if (!num || !t)
-		return 0;
-
-	/* Grab user<->chan entry.. */
-	for (e = cptr->user->jflood; e; e=e->next_u)
-		if (e->chptr == chptr)
-			break;
-	
-	if (!e)
-		return 0; /* Not present, so cannot be throttled */
-
-	/* Ok... now the actual check:
-	 * if ([timer valid] && [one more join would exceed num])
-	 */
-	if (((TStime() - e->firstjoin) < t) && (e->numjoins == num))
-		return 1; /* Throttled */
-
-	return 0;
-}
-
-static void cmodej_increase_usercounter(aClient *cptr, aChannel *chptr)
-{
-CmodeParam *m;
-aJFlood *e;
-int num=0, t=0;
-
-	if (!MyClient(cptr))
-		return;
-		
-	for (m = chptr->mode.extmodeparam; m; m=m->next)
-		if (m->flag == 'j')
-		{
-			num = ((aModejEntry *)m)->num;
-			t = ((aModejEntry *)m)->t;
-			break;
-		}
-
-	if (!num || !t)
-		return;
-
-	/* Grab user<->chan entry.. */
-	for (e = cptr->user->jflood; e; e=e->next_u)
-		if (e->chptr == chptr)
-			break;
-	
-	if (!e)
-	{
-		/* Allocate one */
-		e = cmodej_addentry(cptr, chptr);
-		e->firstjoin = TStime();
-		e->numjoins = 1;
-	} else
-	if ((TStime() - e->firstjoin) < t) /* still valid? */
-	{
-		e->numjoins++;
-	} else {
-		/* reset :p */
-		e->firstjoin = TStime();
-		e->numjoins = 1;
-	}
-}
-
-#endif
 
 /*
 ** m_join
@@ -394,20 +302,10 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 				if (!Channelmode_Table[i].flag || !Channelmode_Table[i].paracount)
 					continue;
 				if (chptr->mode.extmode & Channelmode_Table[i].mode)
-				{
-					CmodeParam *p;
-					p = Channelmode_Table[i].put_param(NULL, iConf.modes_on_join.extparams[i]);
-					AddListItem(p, chptr->mode.extmodeparam);
-				}
+				        cm_putparameter(chptr, Channelmode_Table[i].flag, iConf.modes_on_join.extparams[i]);
 			}
 
 			chptr->mode.mode = MODES_ON_JOIN;
-
-			if (iConf.modes_on_join.floodprot.per)
-			{
-				chptr->mode.floodprot = MyMalloc(sizeof(ChanFloodProt));
-				memcpy(chptr->mode.floodprot, &iConf.modes_on_join.floodprot, sizeof(ChanFloodProt));
-			}
 
 			*modebuf = *parabuf = 0;
 			channel_modes(sptr, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), chptr);
@@ -423,34 +321,21 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 	} else {
 		RunHook4(HOOKTYPE_REMOTE_JOIN, cptr, sptr, chptr, parv); /* (rarely used) */
 	}
-
-	/* I'll explain this only once:
-	 * 1. if channel is +f
-	 * 2. local client OR synced server
-	 * 3. then, increase floodcounter
-	 * 4. if we reached the limit AND only if source was a local client.. do the action (+i).
-	 * Nr 4 is done because otherwise you would have a noticeflood with 'joinflood detected'
-	 * from all servers.
-	 */
-	if (chptr->mode.floodprot && (MyClient(sptr) || sptr->srvptr->serv->flags.synced) && 
-	    !IsULine(sptr) && do_chanflood(chptr->mode.floodprot, FLD_JOIN) && MyClient(sptr))
-	{
-		do_chanflood_action(chptr, FLD_JOIN, "join");
-	}
 }
 
 /** User request to join a channel.
- * This routine can be called from both m_join or via do_join->can_join->do_join
- * if the channel is 'linked' (chmode +L). We use a counter 'bouncedtimes' which
- * is set to 0 in m_join, increased every time we enter this loop and decreased
- * anytime we leave the loop. So be carefull ;p.
+ * This routine is normally called from m_join but can also be called from
+ * do_join->can_join->link module->do_join if the channel is 'linked' (chmode +L).
+ * We therefore use a counter 'bouncedtimes' which is set to 0 in m_join,
+ * increased every time we enter this loop and decreased anytime we leave the
+ * loop. So be carefull not to use a simple 'return' after bouncedtimes++. -- Syzop
  */
 DLLFUNC CMD_FUNC(_do_join)
 {
 	char jbuf[BUFSIZE];
 	Membership *lp;
 	aChannel *chptr;
-	char *name, *key = NULL, *link = NULL;
+	char *name, *key = NULL;
 	int  i, flags = 0, ishold;
 	char *p = NULL, *p2 = NULL;
 	aTKline *tklban;
@@ -468,7 +353,7 @@ DLLFUNC CMD_FUNC(_do_join)
 
 	if (bouncedtimes > MAXBOUNCE)
 	{
-		/* bounced too many times */
+		/* bounced too many times. yeah.. should be in the link module, I know.. then again, who cares.. */
 		sendnotice(sptr,
 		    "*** Couldn't join %s ! - Link setting was too bouncy",
 		    parv[1]);
@@ -589,18 +474,13 @@ DLLFUNC CMD_FUNC(_do_join)
 							sendto_one(sptr, err_str(ERR_FORBIDDENCHANNEL), me.name, BadPtr(parv[0]) ? "*" : parv[0], name, d->reason);
 						if (d->redirect)
 						{
-							sendnotice(sptr,
-							"*** Redirecting you to %s",
-							d->redirect);
+							sendnotice(sptr, "*** Redirecting you to %s", d->redirect);
 							parv[0] = sptr->name;
 							parv[1] = d->redirect;
 							do_join(cptr, sptr, 2, parv);
 						}
-						if (d->class) {
-							sendnotice(sptr,
-							"*** Can not join %s: Your class is not allowed",
-							name);
-						}
+						if (d->class)
+							sendnotice(sptr, "*** Can not join %s: Your class is not allowed", name);
 						continue;
 					}
 				}
@@ -663,7 +543,7 @@ DLLFUNC CMD_FUNC(_do_join)
 			}
 			/* If they are allowed, don't check can_join */
 			if (i != HOOK_ALLOW && 
-			   (i = can_join(cptr, sptr, chptr, key, link, parv)))
+			   (i = can_join(cptr, sptr, chptr, key, parv)))
 			{
 #ifndef NO_OPEROVERRIDE
 				if (i != -1 && !OPCanOverride(sptr))
@@ -681,9 +561,6 @@ DLLFUNC CMD_FUNC(_do_join)
 #endif
 				continue;
 			}
-#ifdef JOINTHROTTLE
-			cmodej_increase_usercounter(cptr, chptr);
-#endif
 		}
 
 		join_channel(chptr, cptr, sptr, flags);

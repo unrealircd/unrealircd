@@ -37,9 +37,6 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 #ifdef _WIN32
 #include "version.h"
 #endif
@@ -149,9 +146,6 @@ DLLFUNC CMD_FUNC(m_part)
 		}
 
 		if (!IsAnOper(sptr) && !is_chanownprotop(sptr, chptr)) {
-#ifdef STRIPBADWORDS
-			int blocked = 0;
-#endif
 			/* Banned? No comment allowed ;) */
 			if (comment && is_banned(sptr, chptr, BANCHK_MSG))
 				comment = NULL;
@@ -166,22 +160,6 @@ DLLFUNC CMD_FUNC(m_part)
 			{
 				comment = NULL;
 			}
-			if ((chptr->mode.mode & MODE_STRIP) && comment) {
-				comment = (char *)StripColors(comment);
-			}
-#ifdef STRIPBADWORDS
- #ifdef STRIPBADWORDS_CHAN_ALWAYS
-			if (comment)
-			{
-				comment = (char *)stripbadwords_channel(comment, &blocked);
-			}
- #else
-			if ((chptr->mode.extmode & EXTMODE_STRIPBADWORDS) && comment) {
-				comment = (char *)stripbadwords_channel(comment, &blocked);
-			}
- #endif
-#endif
-			
 		}
 		/* +M and not +r? */
 		if ((chptr->mode.mode & MODE_MODREG) && !IsRegNick(sptr) && !IsAnOper(sptr))

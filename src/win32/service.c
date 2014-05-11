@@ -68,7 +68,7 @@ VOID WINAPI IRCDCtrlHandler(DWORD opcode)
 		IRCDStatus.dwCurrentState = SERVICE_STOP_PENDING;
 		SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
 
-		for (i = 0; i <= LastSlot; i++) 
+/*		for (i = 0; i <= LastSlot; i++) 
 		{
 			if (!(acptr = local[i]))
 				continue;
@@ -76,11 +76,11 @@ VOID WINAPI IRCDCtrlHandler(DWORD opcode)
 				sendnotice(acptr, "Server Terminating.");
 			else if (IsServer(acptr))
 				sendto_one(acptr, ":%s ERROR :Terminated", me.name);
-		}
+		} */
 		unload_all_modules();
-		for (i = LastSlot; i >= 0; i--)
+/*		for (i = LastSlot; i >= 0; i--)
 			if ((acptr = local[i]) && DBufLength(&acptr->sendQ) > 0)
-				(void)send_queued(acptr);
+				(void)send_queued(acptr); */
 		SetServiceStop(0);
 	}
 	/* Rehash */

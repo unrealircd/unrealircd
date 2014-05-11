@@ -47,6 +47,7 @@ extern char *cmdstr;
  * Builds isupport token strings.
  * Respects both the 13 token limit and the 512 buffer limit.
  */
+/* TODO: is all this code really safe? */
 void make_isupportstrings(void)
 {
 	int i;

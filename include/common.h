@@ -41,7 +41,13 @@
 #ifdef	PARAMH
 #include <sys/param.h>
 #endif
+#ifndef _WIN32
 #include <stdbool.h>
+#else
+typedef int bool;
+#define false 0
+#define true 1
+#endif
 
 #if !defined(IN_ADDR)
 #include "sys.h"
@@ -231,6 +237,9 @@ static char *StsMalloc(size_t size, char *file, long line)
 
 #endif
 
+#define ircstrdup(x,y) do { if (x) MyFree(x); if (!y) x = NULL; else x = strdup(y); } while(0)
+#define ircfree(x) do { if (x) MyFree(x); x = NULL; } while(0)
+
 extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 
 /*
@@ -253,7 +262,7 @@ extern struct SLink *find_user_link( /* struct SLink *, struct Client * */ );
 #define CHPAR1        "beIqa"
 #endif /* PREFIX_AQ */
 
-#define CHPAR2        "kfL"
+#define CHPAR2        "k"
 #define CHPAR3        "l"
 #define CHPAR4        "psmntirRcOAQKVCuzNSM"
 

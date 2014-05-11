@@ -19,7 +19,7 @@
 #*   $Id$
 #*/
 
-CC = danger will robinson
+CC = do not run make from this directory
 
 OBJS=timesynch.o res.o s_bsd.o auth.o aln.o channel.o cloak.o crule.o dbuf.o \
 	events.o fdlist.o hash.o help.o ircd.o ircsprintf.o list.o \
@@ -43,7 +43,7 @@ MAKEARGS =	'CFLAGS=${CFLAGS}' 'CC=${CC}' 'IRCDLIBS=${IRCDLIBS}' \
 
 MY_MAKE = $(MAKE) $(MAKEARGS)
 
-INCLUDES = ../include/auth.h ../include/badwords.h ../include/channel.h \
+INCLUDES = ../include/auth.h ../include/channel.h \
 	../include/class.h ../include/common.h ../include/config.h ../include/dbuf.h \
 	../include/dynconf.h ../include/events.h ../include/fdlist.h ../include/h.h \
 	../include/hash.h ../include/inet.h ../include/ircsprintf.h \
@@ -64,17 +64,6 @@ custommodule:
 
 ircd: $(OBJS)
 	$(CC) $(CFLAGS) $(CRYPTOLIB) -o ircd $(OBJS) $(LDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
-
-staticircd: $(OBJS)
-	$(CC) $(CFLAGS) $(CRYPTOLIB) -DSTATIC_LINKING -o ircd.static $(OBJS) \
-	modules/l_commands.c \
-	modules/m_sethost.c \
-	modules/m_chghost.c \
-	modules/m_chgident.c \
-	modules/m_setname.c \
-	modules/m_setident.c \
-	modules/m_sdesc.c \
-	$(LDFLAGS) $(IRCDLIBS) $(CRYPTOLIB)
 
 mods:
 	@if [ ! -r include ] ; then \

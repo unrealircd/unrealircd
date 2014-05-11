@@ -146,10 +146,14 @@ int  send_queued(aClient *to)
 		if (rlen < block->size)
 		{
 			/* incomplete write due to EWOULDBLOCK, reschedule */
-			fd_setselect(to->fd, FD_SELECT_WRITE | FD_SELECT_ONESHOT, send_queued_write, to);
+			fd_setselect(to->fd, FD_SELECT_WRITE, send_queued_write, to);
 			break;
 		}
 	}
+	
+	/* Nothing left to write, stop asking for write-ready notification. */
+	if ((DBufLength(&to->sendQ) == 0) && (to->fd >= 0))
+		fd_setselect(to->fd, FD_SELECT_NOWRITE, NULL, to);
 
 	return (IsDead(to)) ? -1 : 0;
 }
@@ -1241,6 +1245,20 @@ void sendto_realops(char *pattern, ...)
 		vsendto_one(cptr, nbuf, vl);
 		va_end(vl);
 	}
+}
+
+/* Sends a message to all (local) opers AND logs to the ircdlog (as LOG_ERROR) */
+void sendto_realops_and_log(char *fmt, ...)
+{
+va_list vl;
+static char buf[2048];
+
+	va_start(vl, fmt);
+	vsnprintf(buf, sizeof(buf), fmt, vl);
+	va_end(vl);
+
+	sendto_realops("%s", buf);
+	ircd_log(LOG_ERROR, "%s", buf);
 }
 
 void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnect, char *comment)

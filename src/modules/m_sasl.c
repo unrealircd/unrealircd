@@ -38,9 +38,6 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 #ifdef _WIN32
 #include "version.h"
 #endif
@@ -94,7 +91,6 @@ static aClient *decode_puid(char *puid)
 {
 	aClient *cptr;
 	char *it, *it2;
-	unsigned int slot;
 	int cookie = 0;
 
 	if ((it = strrchr(puid, '!')) == NULL)
@@ -301,18 +297,18 @@ static int abort_sasl(struct Client *cptr)
 	return 0;
 }
 
-static ClientCapability cap_sasl = {
-	.name = "sasl",
-	.cap = PROTO_SASL,
-};
-
 static void m_sasl_caplist(struct list_head *head)
 {
+ClientCapability *cap;
+
 	/* if SASL is disabled or server not online, then pretend it does not exist. -- Syzop */
 	if (!SASL_SERVER || !find_server(SASL_SERVER, NULL))
 		return;
 
-	clicap_append(head, &cap_sasl);
+	cap = MyMallocEx(sizeof(ClientCapability));
+	cap->name = strdup("sasl");
+	cap->cap = PROTO_SASL;
+	clicap_append(head, cap);
 }
 
 /* This is called on module init, before Server Ready */

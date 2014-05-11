@@ -106,7 +106,6 @@ typedef struct _configitem_except ConfigItem_except;
 typedef struct _configitem_link	ConfigItem_link;
 typedef struct _configitem_cgiirc ConfigItem_cgiirc;
 typedef struct _configitem_ban ConfigItem_ban;
-typedef struct _configitem_badword ConfigItem_badword;
 typedef struct _configitem_deny_dcc ConfigItem_deny_dcc;
 typedef struct _configitem_deny_link ConfigItem_deny_link;
 typedef struct _configitem_deny_channel ConfigItem_deny_channel;
@@ -133,8 +132,6 @@ typedef struct Server aServer;
 typedef struct SLink Link;
 typedef struct SBan Ban;
 typedef struct SMode Mode;
-typedef struct SChanFloodProt ChanFloodProt;
-typedef struct SRemoveFld RemoveFld;
 typedef struct ListOptions LOpts;
 typedef struct FloodOpt aFloodOpt;
 typedef struct Motd aMotdFile; /* represents a whole MOTD, including remote MOTD support info */
@@ -201,7 +198,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define LOG_CHGCMDS 0x0100
 #define LOG_OVERRIDE 0x0200
 #define LOG_SPAMFILTER 0x0400
-
+#define LOG_DBG    0x0800 /* fixme */
 
 /*
 ** 'offsetof' is defined in ANSI-C. The following definition
@@ -358,9 +355,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define IsHelpOp(x)		((x)->umodes & UMODE_HELPOP)
 #define IsAdmin(x)		((x)->umodes & UMODE_ADMIN)
 
-#ifdef STRIPBADWORDS
-#define IsFilteringWords(x)	((x)->umodes & UMODE_STRIPBADWORDS)
-#endif
 #define IsNetAdmin(x)		((x)->umodes & UMODE_NETADMIN)
 #define IsCoAdmin(x)		((x)->umodes & UMODE_COADMIN)
 #define IsSAdmin(x)		((x)->umodes & UMODE_SADMIN)
@@ -373,7 +367,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define IsARegNick(x)		((x)->umodes & (UMODE_REGNICK))
 #define IsRegNick(x)		((x)->umodes & UMODE_REGNICK)
 #define IsRegNickMsg(x)		((x)->umodes & UMODE_RGSTRONLY)
-#define IsNoCTCP(x)		((x)->umodes & UMODE_NOCTCP)
 #define	IsPerson(x)		((x)->user && IsClient(x))
 #define	IsPrivileged(x)		(IsAnOper(x) || IsServer(x))
 #define	SendWallops(x)		(!IsMe(x) && IsPerson(x) && ((x)->umodes & UMODE_WALLOP))
@@ -789,9 +782,7 @@ struct User {
 		unsigned char away_c;	/* number of times away has been set */
 #endif
 	} flood;
-#ifdef JOINTHROTTLE
-	aJFlood *jflood;
-#endif
+	aJFlood *jflood; /* TODO: move to dynamic modular storage */
 	TS lastaway;
 };
 
@@ -912,16 +903,9 @@ extern void SnomaskDel(Snomask *sno);
 extern Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode);
 extern void CmodeDel(Cmode *cmode);
 
-typedef struct {
-	EXTCM_PAR_HEADER
-	unsigned short num;
-	unsigned short t;
-} aModejEntry;
-
 #define LISTENER_NORMAL		0x000001
 #define LISTENER_CLIENTSONLY	0x000002
 #define LISTENER_SERVERSONLY	0x000004
-#define LISTENER_JAVACLIENT	0x000008
 #define LISTENER_SSL		0x000010
 #define LISTENER_BOUND		0x000020
 #define LISTENER_DEFER_ACCEPT	0x000040
@@ -1283,24 +1267,6 @@ struct _iplist {
 /*	struct irc_netmask  *netmask; */
 };
 
-#define BADW_TYPE_INVALID 0x0
-#define BADW_TYPE_FAST    0x1
-#define BADW_TYPE_FAST_L  0x2
-#define BADW_TYPE_FAST_R  0x4
-#define BADW_TYPE_REGEX   0x8
-
-#define BADWORD_REPLACE 1
-#define BADWORD_BLOCK 2
-
-struct _configitem_badword {
-	ConfigItem      *prev, *next;
-	ConfigFlag	flag;
-	char		*word, *replace;
-	unsigned short	type;
-	char		action;
-	regex_t 	expr;
-};
-
 struct _configitem_deny_dcc {
 	ConfigItem		*prev, *next;
 	ConfigFlag_ban		flag;
@@ -1484,42 +1450,18 @@ struct ListOptions {
 
 #define EXTCMODETABLESZ 32
 
-/* this can be like ~60-90 bytes, therefore it's in a seperate struct */
-#define FLD_CTCP	0 /* c */
-#define FLD_JOIN	1 /* j */
-#define FLD_KNOCK	2 /* k */
-#define FLD_MSG		3 /* m */
-#define FLD_NICK	4 /* n */
-#define FLD_TEXT	5 /* t */
-
-#define NUMFLD	6 /* 6 flood types */
-
-struct SRemoveFld {
-	struct SRemoveFld *prev, *next;
-	aChannel *chptr;
-	char m; /* mode to be removed */
-	time_t when; /* scheduled at */
-};
-
-struct SChanFloodProt {
-	unsigned short	per; /* setting: per <XX> seconds */
-	time_t			t[NUMFLD]; /* runtime: timers */
-	unsigned short	c[NUMFLD]; /* runtime: counters */
-	unsigned short	l[NUMFLD]; /* setting: limit */
-	unsigned char	a[NUMFLD]; /* setting: action */
-	unsigned char	r[NUMFLD]; /* setting: remove-after <this> minutes */
-	unsigned long	timer_flags; /* if a "-m timer" is running this is & MODE_MODERATED etc.. */
-};
+/* Number of maximum paramter modes to allow.
+ * Don't set it unnecessarily high.. we only use k, l, L, j and f at the moment. (FIXME)
+ */
+#define MAXPARAMMODES 16
 
 /* mode structure for channels */
 struct SMode {
 	long mode;
 	Cmode_t extmode;
-	CmodeParam *extmodeparam;
+	void *extmodeparams[MAXPARAMMODES+1];
 	int  limit;
 	char key[KEYLEN + 1];
-	char link[LINKLEN + 1];
-	ChanFloodProt *floodprot;
 };
 
 /* Used for notify-hash buckets... -Donwulff */
@@ -1565,15 +1507,13 @@ struct Channel {
 	char *topic;
 	char *topic_nick;
 	TS   topic_time;
-	unsigned short users;
+	int users;
 	Member *members;
 	Link *invites;
 	Ban *banlist;
 	Ban *exlist;		/* exceptions */
 	Ban *invexlist;         /* invite list */
-#ifdef JOINTHROTTLE
-	aJFlood *jflood;
-#endif
+	aJFlood *jflood; /* TODO: move to dynamic modular storage */
 	char *mode_lock;
 	char chname[1];
 };
@@ -1643,6 +1583,8 @@ struct liststruct {
 #define CHFL_EXCEPT	0x0200	/* phase this out ? +e */
 #define CHFL_INVEX	0x0400  /* invite exception */
 
+#define CHFL_REJOINING	0x8000  /* used internally by rejoin_* */
+
 #define	CHFL_OVERLAP    (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP|CHFL_VOICE|CHFL_HALFOP)
 
 /* Channel macros */
@@ -1664,7 +1606,6 @@ struct liststruct {
 #define	MODE_LIMIT		0x4000
 #define MODE_RGSTR		0x8000
 #define MODE_RGSTRONLY 		0x10000
-#define MODE_LINK		0x20000
 #define MODE_NOCOLOR		0x40000
 #define MODE_OPERONLY   	0x80000
 #define MODE_ADMONLY   		0x100000
@@ -1672,10 +1613,8 @@ struct liststruct {
 #define MODE_STRIP	   	0x400000
 #define MODE_NOKNOCK		0x800000
 #define MODE_NOINVITE  		0x1000000
-#define MODE_FLOODLIMIT		0x2000000
 #define MODE_MODREG		0x4000000
 #define MODE_INVEX		0x8000000
-#define MODE_NOCTCP		0x10000000
 #define MODE_AUDITORIUM		0x20000000
 #define MODE_ONLYSECURE		0x40000000
 #define MODE_NONICKCHANGE	0x80000000
@@ -1684,7 +1623,7 @@ struct liststruct {
 /*
  * mode flags which take another parameter (With PARAmeterS)
  */
-#define	MODE_WPARAS (MODE_HALFOP|MODE_CHANOP|MODE_VOICE|MODE_CHANOWNER|MODE_CHANPROT|MODE_BAN|MODE_KEY|MODE_LINK|MODE_LIMIT|MODE_EXCEPT|MODE_INVEX)
+#define	MODE_WPARAS (MODE_HALFOP|MODE_CHANOP|MODE_VOICE|MODE_CHANOWNER|MODE_CHANPROT|MODE_BAN|MODE_KEY|MODE_LIMIT|MODE_EXCEPT|MODE_INVEX)
 /*
  * Undefined here, these are used in conjunction with the above modes in
  * the source.
@@ -1818,7 +1757,8 @@ typedef struct {
 	unsigned  parameters : 1;
 } aCtab;
 
-#ifdef JOINTHROTTLE
+#if 1 
+/* TODO: move to module / dynamic storage */
 /** A jointhrottle item, this is a double linked list.
  * prev_u    Previous entry of user
  * next_u    Next entry of user
@@ -1870,7 +1810,7 @@ int	throttle_can_connect(aClient *, struct IN_ADDR *in);
 
 #define VERIFY_OPERCOUNT(clnt,tag) { if (IRCstats.operators < 0) verify_opercount(clnt,tag); } while(0)
 
-#define MARK_AS_OFFICIAL_MODULE(modinf)	do { if (modinf && modinf->handle) ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL);  } while(0)
+#define MARK_AS_OFFICIAL_MODULE(modinf)	do { if (modinf && modinf->handle) ModuleSetOptions(modinfo->handle, MOD_OPT_OFFICIAL, 1);  } while(0)
 
 /* old.. please don't use anymore */
 #define CHANOPPFX "@"

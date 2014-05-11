@@ -1,52 +1,91 @@
-Unreal3.4-dev Release Notes
-===========================
+Unreal3.4-alpha0 Release Notes
+===============================
+
+This will be the first alpha version of UnrealIRCd 3.4.
+Some important remarks:
+* This version is NOT STABLE and since this is the very first alpha release
+  it will probably CRASH or hang from time to time. Security issues are also
+  more likely in this 3.4-alpha series.
+  DO NOT EVEN THINK ABOUT USING THIS ON ANY SERIOUS (PRODUCTION) SERVER!!
+  Use this alpha version to play around with the latest features and
+  improvements, test them, and give us feedback(!) on bugs.unrealircd.org
+  and/or on the forums.
+* Linking of 3.2 <-> 3.4 is supported. However, because this is such an
+  early alpha version we can make no guarantees about the impact of this 3.4
+  server on the rest of the net. At this point WE DO NOT RECOMMEND LINKING
+  3.4-alpha* to a 3.2 PRODUCTION/LIVE NETWORK.
+* Things are likely to change between alpha versions. Including configuration,
+  commands, etc. You should not make any assumptions as long as 3.4 is in
+  alpha stage.
+* If you are moving from 3.2.x then be sure to read 'CONFIGURATION CHANGES'!
 
 ==[ GENERAL INFORMATION ]==
-- If you are upgrading on *NIX, then make sure you run 'make clean' and
-  './Config' first, before running 'make'.
-- The official UnrealIRCd documentation is doc/unreal32docs.html
-  online version at: http://www.vulnscan.org/UnrealIRCd/unreal32docs.html
-  FAQ: http://www.vulnscan.org/UnrealIRCd/faq/
+* The official UnrealIRCd documentation for 3.4 is currently not up to date.
+  Translations have not been updated at all, don't use them for now!
+  The online version is available at www.unrealircd.com/unreal32docs.html
+  FAQ: http://www.unrealircd.com/faq
   Read them before asking for help.
-- Report bugs at http://bugs.unrealircd.org/
-- The purpose of the sections below (NEW, CHANGED, MINOR, etc) is to be a
+* Report bugs at http://bugs.unrealircd.org/
+* The purpose of the sections below (NEW, CHANGED, MINOR, etc) is to be a
   SUMMARY of the changes in this release.  There have been many changes in
   total, for the full list of changes see the Changelog.
 
+==[ CONFIGURATION CHANGES ]==
+* In your me { } block, change your "numeric" to "sid", and change the
+  value as follows: pick a 3 character Server ID that starts with a digit.
+  For example: sid "001";
+* For loadmodule lines you can (and should) now use the shorter syntax.
+  Instead of:
+  loadmodule "src/modules/cloaks.so";
+  You should now use:
+  loadmodule "modules/cloak";
+  UnrealIRCd will figure out the exact name of the module. Doesn't matter
+  if you are on Windows or *NIX, and if your modules are in src/modules/ or
+  in modules/.
+* The commands module is gone and replaced with many individual modules:
+  1) Remove the loadmodule line for commands.so 
+  2) Add the following line to your unrealircd.conf:
+     include "modules.conf";
+
 ==[ NEW ]==
-- Entirely rewritten I/O and event loop.  This allows the IRCd to scale to
-  tens of thousands of clients on a single process using kernel-evented I/O
+* Entirely rewritten I/O and event loop. This allows the IRCd to scale
+  more easily to tens of thousands of clients by using kernel-evented I/O
   mechanisms such as epoll and kqueue.
-- Full command modularity is now provided by default.  Each command is it's
-  own module and all of them are loaded in the default config.  See modules.conf.
-- The local nickname length can be modified without recompiling the IRCd, the
-  compiled limit is displayed as MAXNICKLEN, per IRCv3 group discussions.
-- Memory pooling has been added to improve memory allocation efficiency on
-  'hot' codepaths.
+* Memory pooling has been added to improve memory allocation efficiency
+  and performance.
+* The local nickname length can be modified without recompiling the IRCd
 
 ==[ CHANGED ]==
-- Numerics have been removed.  You will need to remove the numeric setting
-  from me {} in unrealircd.conf.  Instead, proper SID and UIDs are implemented.
-  See me::sid.
+* Numerics have been removed. Instead we now use SIDs (Server ID's) and
+  UIDs (User ID's). SIDs work very similar to server numerics and UIDs 
+  help us to fix a number of lag-related race conditions / bugs.
+* The module commands.so / commands.dll has been removed. All commands
+  (those that are modular) are now in their own module.
+* We are in the process of moving channel and user modes to individual
+  modules. All usual modes are included in modules.conf by default but
+  you can decide not to load some of them, simply by commenting them out.
+  Not only does this provide more customizability, it also makes it much
+  easier for developers to look at all the code for a particular feature.
 
 ==[ MAJOR BUGS FIXED ]==
-- None?
+* None?
 
 ==[ MINOR BUGS FIXED ]==
-- None?
+* None?
 
 ==[ REMOVED / DROPPED ]==
-- Numeric server IDs, see above.
-- PROTOCTL TOKEN and SJB64 are no longer implemented.
-- Ziplinks -- use the built-in compression of TLS/SSL instead.
+* Numeric server IDs, see above.
+* PROTOCTL TOKEN and SJB64 are no longer implemented.
+* Ziplinks have been removed. We recommend to use SSL/TLS for all server
+  connections. SSL/TSL already includes compression (when available).
 
 ==[ KNOWN ISSUES ]==
-- Regexes: Be careful with backreferences (\1, etc), certain regexes can
+* Regexes: Be careful with backreferences (\1, etc), certain regexes can
   slow the IRCd down considerably and even bring it to a near-halt.
   In the spamfilter user target it's usually safe though.
   Slow spamfilter detection can help prevent the slowdown/freeze, but
   might not work in worst-case scenario's.
-- Regexes: Possessive quantifiers such as, for example, "++" (not to be
+* Regexes: Possessive quantifiers such as, for example, "++" (not to be
   confused with "+") are not safe to use, they can easily freeze the IRCd.
 
 ==[ ADDITIONAL INFO ]==

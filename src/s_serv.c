@@ -417,8 +417,6 @@ char *get_cptr_status(aClient *acptr)
 		if (acptr->umodes & LISTENER_SSL)
 			*p++ = 's';
 #endif
-		if (acptr->umodes & LISTENER_JAVACLIENT)
-			*p++ = 'J';
 	}
 	else
 	{
@@ -1107,6 +1105,9 @@ void do_read_motd(const char *filename, aMotdFile *themotd)
 			*tmp = '\0';
 		if ((tmp = strchr(line, '\r')))
 			*tmp = '\0';
+		
+		if (strlen(tmp) > 510)
+			tmp[510] = '\0';
 
 		temp = MyMalloc(sizeof(aMotdLine));
 		if (!temp)

@@ -288,6 +288,7 @@ static int last_log_file_warning = 0;
 	char buf[2048], timebuf[128];
 	struct stat fstats;
 	int written = 0, write_failure = 0;
+	int n;
 
 	va_start(ap, format);
 	ircvsnprintf(buf, sizeof(buf), format, ap);
@@ -345,7 +346,8 @@ static int last_log_file_warning = 0;
 			if (logs->logfd == -1)
 				continue;
 			write(logs->logfd, timebuf, strlen(timebuf));
-			if (write(logs->logfd, buf, strlen(buf)) == strlen(buf))
+			n = write(logs->logfd, buf, strlen(buf));
+			if (n == strlen(buf))
 			{
 				written++;
 			}

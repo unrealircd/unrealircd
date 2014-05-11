@@ -20,7 +20,7 @@
 #*/
 
 CC=@CC@
-INCLUDEDIR=../include
+INCLUDEDIR=@UNRLINCDIR@
 NETWORKSDIR=
 FROMDOS=/home/cmunk/bin/4dos
 
@@ -218,7 +218,7 @@ install: all
 	$(INSTALL) -m 0700 -d $(IRCDDIR)/aliases
 	$(INSTALL) -m 0600 aliases/*.conf $(IRCDDIR)/aliases
 	$(INSTALL) -m 0600 doc/example.conf $(IRCDDIR)/unrealircd.conf
-	$(INSTALL) -m 0600 spamfilter.conf dccallow.conf $(IRCDDIR)
+	$(INSTALL) -m 0600 spamfilter.conf dccallow.conf modules.conf $(IRCDDIR)
 	$(INSTALL) -m 0600 badwords.*.conf help.conf LICENSE Donation $(IRCDDIR)
 	$(INSTALL) -m 0700 unreal $(IRCDDIR)
 	$(INSTALL) -m 0700 -d $(IRCDDIR)/modules

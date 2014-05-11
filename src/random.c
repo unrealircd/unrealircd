@@ -197,7 +197,8 @@ MEMORYSTATUS mstat;
 	gettimeofday(&rdat.nowt, NULL);
 	fd = open("/dev/urandom", O_RDONLY);
 	if (fd) {
-		read(fd, &rdat.rnd, sizeof(rdat.rnd));
+		int n;
+		n = read(fd, &rdat.rnd, sizeof(rdat.rnd));
 		Debug((DEBUG_INFO, "init_random: read from /dev/urandom returned %d", n));
 		close(fd);
 	}

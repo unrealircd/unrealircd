@@ -38,9 +38,6 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 #ifdef _WIN32
 #include "version.h"
 #endif
@@ -61,37 +58,40 @@ ModuleHeader MOD_HEADER(m_cap)
 	NULL 
     };
 
-static ClientCapability cap_account_notify = {
-	.name = "account-notify",
-	.cap = PROTO_ACCOUNT_NOTIFY,
-};
-
-static ClientCapability cap_away_notify = {
-	.name = "away-notify",
-	.cap = PROTO_AWAY_NOTIFY,
-};
-
-static ClientCapability cap_multi_prefix = {
-	.name = "multi-prefix",
-	.cap = PROTO_NAMESX,
-};
-
-static ClientCapability cap_uhnames = {
-	.name = "userhost-in-names",
-	.cap = PROTO_UHNAMES,
-};
 
 static struct list_head *clicap_build_list(void)
 {
 	static struct list_head clicap_list;
+	ClientCapability *cap;
 
 	INIT_LIST_HEAD(&clicap_list);
 
-	/* add builtins */
-	clicap_append(&clicap_list, &cap_account_notify);
-	clicap_append(&clicap_list, &cap_away_notify);
-	clicap_append(&clicap_list, &cap_multi_prefix);
-	clicap_append(&clicap_list, &cap_uhnames);
+	/* ADD BUILTINS */
+
+	cap = MyMallocEx(sizeof(ClientCapability));
+	cap->name = strdup("account-notify");
+	cap->cap = PROTO_ACCOUNT_NOTIFY;
+	clicap_append(&clicap_list, cap);
+
+	cap = MyMallocEx(sizeof(ClientCapability));
+	cap->name = strdup("away-notify");
+	cap->cap = PROTO_AWAY_NOTIFY;
+	clicap_append(&clicap_list, cap);
+
+	cap = MyMallocEx(sizeof(ClientCapability));
+	cap->name = strdup("multi-prefix");
+	cap->cap = PROTO_NAMESX;
+	clicap_append(&clicap_list, cap);
+
+	cap = MyMallocEx(sizeof(ClientCapability));
+	cap->name = strdup("userhost-in-names");
+	cap->cap = PROTO_UHNAMES;
+	clicap_append(&clicap_list, cap);
+
+	cap = MyMallocEx(sizeof(ClientCapability));
+	cap->name = strdup("account-notify");
+	cap->cap = PROTO_ACCOUNT_NOTIFY;
+	clicap_append(&clicap_list, cap);
 
 	RunHook(HOOKTYPE_CAPLIST, &clicap_list);
 
@@ -140,7 +140,10 @@ static ClientCapability *clicap_find(const char *data, int *negate, int *finishe
 	if((s = strchr(p, ' ')))
 		*s++ = '\0';
 
-	list_for_each_entry(cap, clicap_list, caplist_node)
+	if (!stricmp(p, "sasl") && (!SASL_SERVER || !find_server(SASL_SERVER, NULL)))
+		return NULL; /* hack: if SASL is disabled or server not online, then pretend it does not exist. -- Syzop */
+
+	list_for_each_entry2(cap, ClientCapability, clicap_list, caplist_node)
 	{
 		if (!stricmp(cap->name, p))
 		{
@@ -178,7 +181,7 @@ static void clicap_generate(aClient *sptr, const char *subcmd, int flags, int cl
 		return;
 	}
 
-	list_for_each_entry(cap, clicap_list, caplist_node)
+	list_for_each_entry2(cap, ClientCapability, clicap_list, caplist_node)
 	{
 		if (flags)
 		{

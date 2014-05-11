@@ -10,7 +10,7 @@ dnl Unreal.nfo
 dnl .CHANGES.NEW
 dnl src/version.c.SH
 
-AC_INIT([unrealircd], [3.4-dev], [http://bugs.unrealircd.org/], [], [http://unrealircd.org/])
+AC_INIT([unrealircd], [3.4-alpha0], [http://bugs.unrealircd.org/], [], [http://unrealircd.org/])
 AC_CONFIG_SRCDIR([src/ircd.c])
 AC_CONFIG_HEADER([include/setup.h])
 AC_CONFIG_AUX_DIR([autoconf])
@@ -55,6 +55,11 @@ fi
 fi
 
 dnl (the gcc flag detection trick is taken from xemacs/Vin Shelton)
+
+dnl UnrealIRCd might not be strict-aliasing safe at this time
+case "`$CC -v --help 2>&1`" in
+	*-fstrict-aliasing* ) CFLAGS="$CFLAGS -fno-strict-aliasing" ;;
+esac
 
 dnl Pointer signedness warnings are really a pain and 99.9% of the time
 dnl they are of absolutely no use whatsoever. IMO the person who decided
@@ -673,8 +678,13 @@ PKG_CHECK_MODULES([CARES], libcares >= 1.6.0)
 
 CHECK_LIBCURL
 
+UNRLINCDIR="`pwd`/include"
+AC_SUBST(UNRLINCDIR)
+
 AC_CONFIG_FILES([Makefile
 	src/modules/Makefile
+	src/modules/chanmodes/Makefile
+	src/modules/usermodes/Makefile
 	unreal
 	ircdcron/ircdchk
 	ircdcron/ircd.cron])

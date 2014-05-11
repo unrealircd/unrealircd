@@ -156,7 +156,7 @@ int  dbuf_getmsg(dbuf *dyn, char *buf)
 	 *
 	 * --adx
 	 */
-	list_for_each_entry(block, &dyn->dbuf_list, dbuf_node)
+	list_for_each_entry2(block, dbufbuf, &dyn->dbuf_list, dbuf_node)
 	{
 		for (idx = 0; idx < block->size; idx++)
 		{

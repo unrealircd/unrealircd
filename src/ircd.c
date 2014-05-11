@@ -62,9 +62,6 @@ Computing Center and Jarkko Oikarinen";
 #endif
 #include "h.h"
 #include "fdlist.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 #include "version.h"
 #include "proto.h"
 #ifdef _WIN32
@@ -142,6 +139,7 @@ void restart(char *);
 static void open_debugfile(), setup_signals();
 extern void init_glines(void);
 extern void tkl_init(void);
+extern void process_clients(void);
 
 MODVAR TS   last_garbage_collect = 0;
 #ifndef _WIN32
@@ -151,7 +149,7 @@ LPCSTR cmdLine;
 #endif
 int  portnum = -1;		/* Server port number, listening this */
 char *configfile = CONFIGFILE;	/* Server configuration file */
-int  debuglevel = 10;		/* Server debug level */
+int  debuglevel = 0;		/* Server debug level */
 int  bootopt = 0;		/* Server boot option flags */
 char *debugmode = "";		/*  -"-    -"-   -"-  */
 char *sbrk0;			/* initial sbrk(0) */
@@ -470,38 +468,41 @@ void check_tkls(void)
 {
 	aClient *cptr, *cptr2;
 	ConfigItem_ban *bconf = NULL;
-	char killflag = 0;
 	char banbuf[1024];
 
 	list_for_each_entry_safe(cptr, cptr2, &lclient_list, lclient_node)
 	{
-		if (find_tkline_match(cptr, 0) < 0)
-			continue;
+		char killflag = 0;
 
-		find_shun(cptr);
-		if (!killflag && IsPerson(cptr)) {
-			/*
-			 * If it's a user, we check for CONF_BAN_USER
-			 */
+		/* Process dynamic *LINES */
+		if (find_tkline_match(cptr, 0) < 0)
+			continue; /* stop processing this user, as (s)he is dead now. */
+
+		find_shun(cptr); /* check for shunned and take action, if so */
+		
+		if (IsPerson(cptr))
+		{
+			/* Check ban user { } and ban realname { } */
+
 			bconf = Find_ban(cptr, make_user_host(cptr->
 				    user ? cptr->user->username : cptr->
 				    username,
 				    cptr->user ? cptr->user->realhost : cptr->
 				    sockhost), CONF_BAN_USER);
-			if (bconf != NULL)
-				killflag++;
 
-			if (!killflag && !IsAnOper(cptr) && (bconf = Find_ban(NULL, cptr->info, CONF_BAN_REALNAME)))
+			if (bconf)
+				killflag++;
+			else if (!IsAnOper(cptr) && (bconf = Find_ban(NULL, cptr->info, CONF_BAN_REALNAME)))
 				killflag++;
 		}
-
-		/*
-		 * If no cookie, we search for Z:lines
-		 */
+		
+		/* If still no match, check ban ip { } */
 		if (!killflag && (bconf = Find_ban(cptr, Inet_ia2p(&cptr->ip), CONF_BAN_IP)))
 			killflag++;
 
-		if (killflag) {
+		/* If user is meant to be killed, take action: */
+		if (killflag)
+		{
 			if (IsPerson(cptr))
 				sendto_realops("Ban active for %s (%s)",
 				    get_client_name(cptr, FALSE),
@@ -524,7 +525,7 @@ void check_tkls(void)
 				else
 					(void)exit_client(cptr, cptr, &me, "Banned");
 			}
-			continue;
+			continue; /* stop processing this user, as (s)he is dead now. */
 		}
 
 		if (IsPerson(cptr) && find_spamfilter_user(cptr, SPAMFLAG_NOWARN) == FLUSH_BUFFER)
@@ -542,8 +543,6 @@ void check_tkls(void)
  * a while back (see above).
  *
  * Other things that should likely go:
- *      - FLAGS_DEADSOCKET handling... just kill them off more towards the event that needs to
- *        kill them off.  Or perhaps kill the DEADSOCKET stuff entirely.  That also works...
  *      - identd/dns timeout checking (should go to it's own event, idea here is that we just
  *        keep you in "unknown" state until you actually get 001, so we can cull the unknown list)
  *
@@ -582,20 +581,9 @@ EVENT(check_pings)
 	int  ping = 0;
 	TS   currenttime = TStime();
 
+	
 	list_for_each_entry_safe(cptr, cptr2, &lclient_list, lclient_node)
 	{
-		/*
-		 * ** Note: No need to notify opers here. It's
-		 * ** already done when "FLAGS_DEADSOCKET" is set.
-		 */
-		if (cptr->flags & FLAGS_DEADSOCKET) {
-			(void)exit_client(cptr, cptr, &me, cptr->error_str ? cptr->error_str : "Dead socket");
-			continue;
-		}
-
-		/*
-		 * We go into ping phase 
-		 */
 		ping =
 		    IsRegistered(cptr) ? (cptr->class ? cptr->
 		    class->pingfreq : CONNECTTIMEOUT) : CONNECTTIMEOUT;
@@ -682,6 +670,35 @@ EVENT(check_pings)
 				cptr->lasttime = TStime() - ping;
 				sendto_one(cptr, "PING :%s", me.name);
 			}
+		}
+	}
+}
+
+EVENT(check_deadsockets)
+{
+	aClient *cptr, *cptr2;
+	
+	list_for_each_entry_safe(cptr, cptr2, &unknown_list, lclient_node)
+	{
+		/* No need to notify opers here. It's already done when "FLAGS_DEADSOCKET" is set. */
+		if (cptr->flags & FLAGS_DEADSOCKET) {
+#ifdef DEBUGMODE
+			ircd_log(LOG_ERROR, "Closing deadsock: %d/%s", cptr->fd, cptr->name);
+#endif
+			(void)exit_client(cptr, cptr, &me, cptr->error_str ? cptr->error_str : "Dead socket");
+			continue;
+		}
+	}
+
+	list_for_each_entry_safe(cptr, cptr2, &lclient_list, lclient_node)
+	{
+		/* No need to notify opers here. It's already done when "FLAGS_DEADSOCKET" is set. */
+		if (cptr->flags & FLAGS_DEADSOCKET) {
+#ifdef DEBUGMODE
+			ircd_log(LOG_ERROR, "Closing deadsock: %d/%s", cptr->fd, cptr->name);
+#endif
+			(void)exit_client(cptr, cptr, &me, cptr->error_str ? cptr->error_str : "Dead socket");
+			continue;
 		}
 	}
 }
@@ -811,6 +828,7 @@ int error = 0;
 extern time_t TSoffset;
 
 extern int unreal_time_synch(int timeout);
+extern void applymeblock(void);
 
 extern MODVAR Event *events;
 extern struct MODVAR ThrottlingBucket *ThrottlingHash[THROTTLING_HASH_SIZE+1];
@@ -997,19 +1015,26 @@ int InitwIRCD(int argc, char *argv[])
 	egid = getegid();
 
 #ifndef IRC_USER
+	if (!euid && uid)
+	{
+		fprintf(stderr, "Sorry, a SUID root IRCd without IRC_USER in include/config.h is not supported.\n"
+		                "It would be very dangerous. Go edit include/config.h and set IRC_USER and\n"
+		                "IRC_GROUP to a nonprivileged username and recompile.\n");
+		exit(-1);
+	}
 	if (!euid)
 	{
 		fprintf(stderr,
 			"WARNING: You are running UnrealIRCd as root and it is not\n"
-			"         configured to drop priviliges. This is _very_ dangerous,\n"
+			"         configured to drop priviliges. This is VERY dangerous,\n"
 			"         as any compromise of your UnrealIRCd is the same as\n"
 			"         giving a cracker root SSH access to your box.\n"
 			"         You should either start UnrealIRCd under a different\n"
 			"         account than root, or set IRC_USER in include/config.h\n"
 			"         to a nonprivileged username and recompile.\n"); 
+		sleep(1); /* just to catch their attention */
 	}
 #endif /* IRC_USER */
-
 # ifdef	PROFIL
 	(void)monstartup(0, etext);
 	(void)moncontrol(1);
@@ -1039,7 +1064,7 @@ int InitwIRCD(int argc, char *argv[])
 	}
 	if (geteuid() != 0)
 		fprintf(stderr, "WARNING: IRCd compiled with CHROOTDIR but effective user id is not root!? "
-		                "Booting is very likely to fail...\n");
+		                "Booting is very likely to fail. You should start the IRCd as root instead.\n");
 	init_resolver(1);
 	{
 		struct stat sb;
@@ -1088,6 +1113,39 @@ int InitwIRCD(int argc, char *argv[])
 		exit(5);
 	}
 #endif	 /*CHROOTDIR*/
+#if !defined(IRC_USER) && !defined(_WIN32)
+	if ((uid != euid) && !euid) {
+		(void)fprintf(stderr,
+		    "ERROR: do not run ircd setuid root. Make it setuid a normal user.\n");
+		exit(-1);
+	}
+#endif
+
+#if defined(IRC_USER) && defined(IRC_GROUP)
+	if ((int)getuid() == 0) {
+		/* NOTE: irc_uid/irc_gid have been looked up earlier, before the chrooting code */
+
+		if ((irc_uid == 0) || (irc_gid == 0)) {
+			(void)fprintf(stderr,
+			    "ERROR: SETUID and SETGID have not been set properly"
+			    "\nPlease read your documentation\n(HINT: IRC_USER and IRC_GROUP in include/config.h cannot be root/wheel)\n");
+			exit(-1);
+		} else {
+			/* run as a specified user */
+			(void)fprintf(stderr, "ircd invoked as root, changing to uid %d (%s) and gid %d (%s)...\n", irc_uid, IRC_USER, irc_gid, IRC_GROUP);
+			if (setgid(irc_gid))
+			{
+				fprintf(stderr, "ERROR: Unable to change group: %s\n", strerror(errno));
+				exit(-1);
+			}
+			if (setuid(irc_uid))
+			{
+				fprintf(stderr, "ERROR: Unable to change userid: %s\n", strerror(errno));
+				exit(-1);
+			}
+		}
+	}
+#endif
 #ifndef _WIN32
 	myargv = argv;
 #else
@@ -1150,12 +1208,8 @@ int InitwIRCD(int argc, char *argv[])
 		  case 'q':
 			  bootopt |= BOOT_QUICK;
 			  break;
-		  case 'd':
-			  if (setuid((uid_t) uid) == -1)
-			      printf("WARNING: Could not drop privileges: %s\n", strerror(errno));
-#else
-		  case 'd':
 #endif
+		  case 'd':
 			  dpath = p;
 			  break;
 		  case 'F':
@@ -1169,9 +1223,6 @@ int InitwIRCD(int argc, char *argv[])
 			  else
 			       printf("ERROR: Command line config with a setuid/setgid ircd is not allowed");
 #else
-			  if (setuid((uid_t) uid) == -1)
-			      printf("WARNING: could not drop privileges: %s\n", strerror(errno));
-
 			  configfile = p;
 #endif
 			  break;
@@ -1239,9 +1290,6 @@ int InitwIRCD(int argc, char *argv[])
 			  break;
 #ifndef _WIN32
 		  case 't':
-			  if (setuid((uid_t) uid) == -1)
-			      printf("WARNING: Could not drop privileges: %s\n", strerror(errno));
-
 			  bootopt |= BOOT_TTY;
 			  break;
 		  case 'v':
@@ -1259,10 +1307,6 @@ int InitwIRCD(int argc, char *argv[])
 			  break;
 		  case 'x':
 #ifdef	DEBUGMODE
-# ifndef _WIN32
-			  if (setuid((uid_t) uid) == -1)
-			      printf("WARNING: Could not drop privileges: %s\n", strerror(errno));
-# endif
 			  debuglevel = atoi(p);
 			  debugmode = *p ? p : "0";
 			  bootopt |= BOOT_DEBUG;
@@ -1371,15 +1415,6 @@ int InitwIRCD(int argc, char *argv[])
 	chmod(CPATH, DEFAULT_PERMISSIONS);
 #endif
 	init_dynconf();
-#ifdef STATIC_LINKING
-	{
-		ModuleInfo ModCoreInfo;
-		ModCoreInfo.size = sizeof(ModuleInfo);
-		ModCoreInfo.module_load = 0;
-		ModCoreInfo.handle = NULL;
-		l_commands_Test(&ModCoreInfo);
-	}
-#endif
 	/*
 	 * Add default class 
 	 */
@@ -1424,21 +1459,17 @@ int InitwIRCD(int argc, char *argv[])
 	open_debugfile();
 	if (portnum < 0)
 		portnum = PORTNUM;
+	memset(&me, 0, sizeof(me));
 	me.port = portnum;
 	(void)init_sys();
 	me.flags = FLAGS_LISTEN;
 	me.fd = -1;
 	SetMe(&me);
 	make_server(&me);
+	applymeblock();
 #ifdef HAVE_SYSLOG
 	openlog("ircd", LOG_PID | LOG_NDELAY, LOG_DAEMON);
 #endif
-	/*
-	 * Put in our info 
-	 */
-	strlcpy(me.info, conf_me->info, sizeof(me.info));
-	strlcpy(me.name, conf_me->name, sizeof(me.name));
-	strlcpy(me.id, conf_me->sid, sizeof(me.name));
 	uid_init();
 	run_configuration();
 	ircd_log(LOG_ERROR, "UnrealIRCd started.");
@@ -1485,44 +1516,6 @@ int InitwIRCD(int argc, char *argv[])
 	R_fin_id = strlen(REPORT_FIN_ID);
 	R_fail_id = strlen(REPORT_FAIL_ID);
 
-#if !defined(IRC_USER) && !defined(_WIN32)
-	if ((uid != euid) && !euid) {
-		(void)fprintf(stderr,
-		    "ERROR: do not run ircd setuid root. Make it setuid a normal user.\n");
-		exit(-1);
-	}
-#endif
-
-#if defined(IRC_USER) && defined(IRC_GROUP)
-	if ((int)getuid() == 0) {
-		/* NOTE: irc_uid/irc_gid have been looked up earlier, before the chrooting code */
-
-		if ((irc_uid == 0) || (irc_gid == 0)) {
-			(void)fprintf(stderr,
-			    "ERROR: SETUID and SETGID have not been set properly"
-			    "\nPlease read your documentation\n(HINT: IRC_USER and IRC_GROUP in include/config.h cannot be root/wheel)\n");
-			exit(-1);
-		} else {
-			/*
-			 * run as a specified user 
-			 */
-
-			(void)fprintf(stderr, "WARNING: ircd invoked as root\n");
-			(void)fprintf(stderr, "         changing to uid %d\n", irc_uid);
-			(void)fprintf(stderr, "         changing to gid %d\n", irc_gid);
-			if (setgid(irc_gid))
-			{
-				fprintf(stderr, "ERROR: Unable to change group: %s\n", strerror(errno));
-				exit(-1);
-			}
-			if (setuid(irc_uid))
-			{
-				fprintf(stderr, "ERROR: Unable to change userid: %s\n", strerror(errno));
-				exit(-1);
-			}
-		}
-	}
-#endif
 	if (TIMESYNCH)
 	{
 		if (!unreal_time_synch(TIMESYNCH_TIMEOUT))
@@ -1535,7 +1528,6 @@ int InitwIRCD(int argc, char *argv[])
 	write_pidfile();
 	Debug((DEBUG_NOTICE, "Server ready..."));
 	init_throttling_hash();
-	init_modef();
 	loop.ircd_booted = 1;
 #if defined(HAVE_SETPROCTITLE)
 	setproctitle("%s", me.name);
@@ -1547,9 +1539,6 @@ int InitwIRCD(int argc, char *argv[])
 	PS_STRINGS->ps_argvstr = me.name;
 #endif
 	module_loadall(0);
-#ifdef STATIC_LINKING
-	l_commands_Load(0);
-#endif
 
 #ifdef _WIN32
 	return 1;
@@ -1661,6 +1650,9 @@ void SocketLoop(void *dummy)
 			delay = MIN(delay, TIMESEC);
 
 		fd_select(delay * 1000);
+		
+		process_clients();
+		
 		timeofday = time(NULL) + TSoffset;
 
 		/*
@@ -1711,8 +1703,8 @@ static void open_debugfile(void)
 		(void)strlcpy(cptr->sockhost, me.sockhost,
 		    sizeof cptr->sockhost);
 # ifndef _WIN32
-		(void)printf("isatty = %d ttyname = %#x\n",
-		    isatty(2), (u_int)ttyname(2));
+		/*(void)printf("isatty = %d ttyname = %#x\n",
+		    isatty(2), (u_int)ttyname(2)); */
 		if (!(bootopt & BOOT_TTY)) {	/* leave debugging output on fd 2 */
 			(void)truncate(LOGFILE, 0);
 			if ((fd = open(LOGFILE, O_WRONLY | O_CREAT, 0600)) < 0)

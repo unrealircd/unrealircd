@@ -1011,6 +1011,7 @@ void win_map(aClient *server, HWND hwTreeView, short remap)
         aClient *acptr;
 	Link *lp;
 
+/*
 	AddItemToTree(hwTreeView,server->name,server->hopcount+1, remap);
 
 	for (lp = Servers; lp; lp = lp->next)
@@ -1020,6 +1021,8 @@ void win_map(aClient *server, HWND hwTreeView, short remap)
                         continue;
                 win_map(acptr, hwTreeView, 0);
         }
+FIXME
+*/
 }
 
 /* ugly stuff, but hey it works -- codemastr */
@@ -1027,25 +1030,26 @@ void win_log(unsigned char *format, ...)
 {
         va_list ap;
         unsigned char buf[2048];
-		unsigned char *buf2;
+	FILE *fd;
+
         va_start(ap, format);
+
         ircvsnprintf(buf, sizeof(buf), format, ap);
+
 	if (!IsService) 
 	{
 		strcat(buf, "\r\n");
 		if (errors) 
 		{
-			buf2 = MyMalloc(strlen(errors)+strlen(buf)+1);
-			snprintf(buf2, sizeof(buf2), "%s%s",errors,buf);
-			MyFree(errors);
-			errors = NULL;
+			char *tbuf = MyMallocEx(strlen(errors) + strlen(buf) + 1);
+			strcpy(tbuf, errors);
+			strcat(tbuf, buf);
+			errors = tbuf;
 		}
 		else 
 		{
-			buf2 = MyMalloc(strlen(buf)+1);
-			snprintf(buf2, sizeof(buf2), "%s",buf);
+			errors = strdup(buf);
 		}
-		errors = buf2;
 	}
 	else 
 	{

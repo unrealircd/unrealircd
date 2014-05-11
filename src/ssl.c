@@ -521,6 +521,7 @@ void ircd_SSL_client_handshake(int fd, int revents, void *data)
 	switch (ircd_SSL_connect(acptr, fd))
 	{
 		case -1:
+		        ircd_log(LOG_ERROR, "%s:%d: called for fd %d/%s", __FILE__, __LINE__, fd, acptr->name);
 			fd_close(fd);
 			return;
 		case 0: 
@@ -635,6 +636,16 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, aClient *sptr
     int errtmp = ERRNO;
     char *ssl_errstr, *ssl_func;
 
+    if (IsDead(sptr))
+    {
+#ifdef DEBUGMODE
+        /* This is quite possible I guess.. especially if we don't pay attention upstream :p */
+        ircd_log(LOG_ERROR, "Warning: fatal_ssl_error() called for already-dead-socket (%d/%s)",
+            sptr->fd, sptr->name);
+#endif
+        return -1;
+    }
+
     switch(where) {
 	case SAFE_SSL_READ:
 	    ssl_func = "SSL_read()";
@@ -691,6 +702,11 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, aClient *sptr
 		SET_ERRNO(P_EIO);
 		sptr->error_str = strdup(ssl_errstr);
 	}
+	
+    /* deregister I/O notification since we don't care anymore. the actual closing of socket will happen later. */
+    if (sptr->fd >= 0)
+        fd_unnotify(sptr->fd);
+    
     return -1;
 }
 

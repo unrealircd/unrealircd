@@ -1,5 +1,5 @@
 ===============================================
-=            UnrealIRCd v3.2.4-dev1           =
+=            UnrealIRCd v3.4-alpha0           =
 ===============================================
  This release was brought to you by:
 
@@ -10,7 +10,6 @@
   Coders:
   ========
   * binki
-  * nenolod
 
   Contributors:
   =============
@@ -20,6 +19,7 @@
   ================
   * Stskeeps
   * codemastr
+  * nenolod
   * Many more..
 
   Internet Presence:

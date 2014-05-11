@@ -37,9 +37,6 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 #include "version.h"
 
 void send_channel_modes(aClient *cptr, aChannel *chptr);
@@ -107,6 +104,7 @@ char buf[512];
 	if (!NEW_LINKING_PROTOCOL)
 		return;
 
+	// TODO: reintroduce SERVERS=...
 	ircsnprintf(buf, sizeof(buf), "PROTOCTL EAUTH=%s",
 		me.name);
 
@@ -1180,7 +1178,7 @@ void send_channel_modes_sjoin(aClient *cptr, aChannel *chptr)
 		*bufptr++ = ' ';
 		n++;
 
-		if (bufptr > buf && bufptr - buf > BUFSIZE - 80)
+		if (bufptr - buf > BUFSIZE - 80)
 		{
 			*bufptr++ = '\0';
 			if (bufptr[-1] == ' ')

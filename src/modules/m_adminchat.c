@@ -36,9 +36,6 @@
 #include <fcntl.h>
 #include "h.h"
 #include "proto.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 #ifdef _WIN32
 #include "version.h"
 #endif

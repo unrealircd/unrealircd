@@ -17,13 +17,28 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
+
+#include "config.h"
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
+#include "numeric.h"
+#include "msg.h"
+#include "proto.h"
+#include "channel.h"
+#include <time.h>
+#include <sys/stat.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#ifdef _WIN32
+#include <io.h>
+#endif
+#include <fcntl.h>
 #include "h.h"
+#ifdef _WIN32
+#include "version.h"
+#endif
 #include "m_cap.h"
 
 ModuleHeader MOD_HEADER(cap_invitenotify)
@@ -35,14 +50,15 @@ ModuleHeader MOD_HEADER(cap_invitenotify)
         NULL 
     };
 
-static ClientCapability cap_invitenotify = {
-	.name = "invite-notify",
-	.cap = PROTO_INVITENOTIFY,
-};
 
 static void cap_invitenotify_caplist(struct list_head *head)
 {
-	clicap_append(head, &cap_invitenotify);
+ClientCapability *cap;
+
+	cap = MyMallocEx(sizeof(ClientCapability));
+	cap->name = strdup("invite-notify");
+	cap->cap = PROTO_INVITENOTIFY;
+	clicap_append(head, cap);
 }
 
 static void cap_invitenotify_invite(aClient *from, aClient *to, aChannel *chptr)

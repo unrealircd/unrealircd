@@ -190,8 +190,57 @@ int  inet_netof(struct IN_ADDR in)
  */
 char *inetntop(int af, const void *in, char *out, size_t the_size)
 {
+#ifdef IPV6_COMPRESSED
 	inet_ntop(af, in, out, the_size);
 	return out;
+#else
+	static char local_dummy[MYDUMMY_SIZE];
+
+	inet_ntop(af, in, local_dummy, the_size);
+	if (strstr(local_dummy, "::"))
+	{
+		char cnt = 0, *cp = local_dummy, *op = out;
+
+		while (*cp)
+		{
+			if (*cp == ':')
+				cnt += 1;
+			if (*cp++ == '.')
+			{
+				cnt += 1;
+				break;
+			}
+		}
+		cp = local_dummy;
+		while (*cp)
+		{
+			*op++ = *cp++;
+			if (*(cp - 1) == ':' && *cp == ':')
+			{
+				if ((cp - 1) == local_dummy)
+				{
+					op--;
+					*op++ = '0';
+					*op++ = ':';
+				}
+
+				*op++ = '0';
+				while (cnt++ < 7)
+				{
+					*op++ = ':';
+					*op++ = '0';
+				}
+			}
+		}
+		if (*(op - 1) == ':')
+			*op++ = '0';
+		*op = '\0';
+		Debug((DEBUG_DNS, "Expanding `%s' -> `%s'", local_dummy, out));
+	}
+	else
+		bcopy(local_dummy, out, 64);
+	return out;
+#endif
 }
 
 /* Made by Potvin originally, i guess */
@@ -1772,12 +1821,18 @@ char	*encode_ip(u_char *ip)
 char *decode_ip(char *buf)
 {
 	int len = strlen(buf);
-	static char result[64];
 	char targ[25];
 
 	b64_decode(buf, targ, 25);
-
-	return inetntop(len == 24 ? AF_INET6 : AF_INET, targ, result, sizeof result);
+	if (len == 24) /* IPv6 */
+	{
+		static char result[64];
+		return inetntop(AF_INET6, targ, result, 64);
+	}
+	else if (len == 8) /* IPv4 */
+		return inet_ntoa(*(struct in_addr *)targ);
+	else /* Error?? */
+		abort();
 }
 
 /* IPv6 stuff */

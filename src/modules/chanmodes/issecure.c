@@ -1,6 +1,6 @@
 /*
  * Channel Is Secure UnrealIRCd module (Channel Mode +Z)
- * (C) Copyright 2010 Bram Matthys (Syzop) and the UnrealIRCd team
+ * (C) Copyright 2010-.. Bram Matthys (Syzop) and the UnrealIRCd team
  *
  * This module will indicate if a channel is secure, and if so will set +Z.
  * Secure is defined as: all users on the channel are connected through SSL/TLS
@@ -42,18 +42,15 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 #ifdef _WIN32
 #include "version.h"
 #endif
 
-DLLFUNC CMD_FUNC(m_issecure);
+DLLFUNC CMD_FUNC(issecure);
 
-ModuleHeader MOD_HEADER(m_issecure)
+ModuleHeader MOD_HEADER(issecure)
   = {
-	"m_issecure",
+	"chanmodes/issecure",
 	"$Id$",
 	"Channel Mode +Z", 
 	"3.2-b8-1",
@@ -66,7 +63,7 @@ Cmode_t EXTCMODE_ISSECURE;
 #define IsSecureChanIndicated(chptr)	(chptr->mode.extmode & EXTCMODE_ISSECURE)
 
 
-int modeZ_is_ok(aClient *sptr, aChannel *chptr, char *para, int checkt, int what);
+int modeZ_is_ok(aClient *sptr, aChannel *chptr, char mode, char *para, int checkt, int what);
 DLLFUNC int issecure_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[]);
 DLLFUNC int issecure_part(aClient *cptr, aClient *sptr, aChannel *chptr, char *comment);
 DLLFUNC int issecure_quit(aClient *acptr, char *comment);
@@ -75,12 +72,12 @@ DLLFUNC int issecure_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
                              char *modebuf, char *parabuf, int sendts, int samode);
                              
 
-DLLFUNC int MOD_TEST(m_issecure)(ModuleInfo *modinfo)
+DLLFUNC int MOD_TEST(issecure)(ModuleInfo *modinfo)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(m_issecure)(ModuleInfo *modinfo)
+DLLFUNC int MOD_INIT(issecure)(ModuleInfo *modinfo)
 {
 CmodeInfo req;
 
@@ -107,17 +104,17 @@ CmodeInfo req;
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_issecure)(int module_load)
+DLLFUNC int MOD_LOAD(issecure)(int module_load)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_issecure)(int module_unload)
+DLLFUNC int MOD_UNLOAD(issecure)(int module_unload)
 {
 	return MOD_SUCCESS;
 }
 
-int modeZ_is_ok(aClient *sptr, aChannel *chptr, char *para, int checkt, int what)
+int modeZ_is_ok(aClient *sptr, aChannel *chptr, char mode, char *para, int checkt, int what)
 {
 	/* Reject any attempt to set or unset our mode. Even to IRCOps */
 	return EX_ALWAYS_DENY;

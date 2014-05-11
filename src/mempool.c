@@ -51,32 +51,32 @@ tor_log2(uint64_t u64)
 {
   int r = 0;
 
-  if (u64 >= (1LLU << 32))
+  if (u64 >= (1ULL << 32))
   {
     u64 >>= 32;
     r = 32;
   }
-  if (u64 >= (1LLU << 16))
+  if (u64 >= (1ULL << 16))
   {
     u64 >>= 16;
     r += 16;
   }
-  if (u64 >= (1LLU <<  8))
+  if (u64 >= (1ULL <<  8))
   {
     u64 >>= 8;
     r += 8;
   }
-  if (u64 >= (1LLU <<  4))
+  if (u64 >= (1ULL <<  4))
   {
     u64 >>= 4;
     r += 4;
   }
-  if (u64 >= (1LLU <<  2))
+  if (u64 >= (1ULL <<  2))
   {
     u64 >>= 2;
     r += 2;
   }
-  if (u64 >= (1LLU <<  1))
+  if (u64 >= (1ULL <<  1))
   {
     u64 >>= 1;
     r += 1;
@@ -98,12 +98,12 @@ round_to_power_of_2(uint64_t u64)
     return 1;
 
   lg2 = tor_log2(u64);
-  low = 1LLU << lg2;
+  low = 1ULL << lg2;
 
   if (lg2 == 63)
     return low;
 
-  high = 1LLU << (lg2 + 1);
+  high = 1ULL << (lg2 + 1);
   if (high - u64 < u64 - low)
     return high;
   else
@@ -475,7 +475,7 @@ mp_pool_new(size_t item_size, size_t chunk_capacity)
   pool->next = mp_allocated_pools;
   mp_allocated_pools = pool;
 
-  ircd_log(LOG_DEBUG, "Capacity is %lu, item size is %lu, alloc size is %lu",
+  ircd_log(LOG_DBG, "Capacity is %lu, item size is %lu, alloc size is %lu",
        (unsigned long)pool->new_chunk_capacity,
        (unsigned long)pool->item_alloc_size,
        (unsigned long)(pool->new_chunk_capacity*pool->item_alloc_size));
@@ -671,18 +671,18 @@ mp_pool_log_status(mp_pool_t *pool)
   for (chunk = pool->empty_chunks; chunk; chunk = chunk->next)
     bytes_allocated += chunk->mem_size;
 
-  ircd_log(LOG_DEBUG, "%lu bytes in %d empty chunks",
+  ircd_log(LOG_DBG, "%lu bytes in %d empty chunks",
        bytes_allocated, pool->n_empty_chunks);
   for (chunk = pool->used_chunks; chunk; chunk = chunk->next) {
     ++n_used;
     bu += chunk->n_allocated * pool->item_alloc_size;
     ba += chunk->mem_size;
 
-    ircd_log(LOG_DEBUG, "   used chunk: %d items allocated",
+    ircd_log(LOG_DBG, "   used chunk: %d items allocated",
          chunk->n_allocated);
   }
 
-  ircd_log(LOG_DEBUG, "%lu/%lu bytes in %d partially full chunks",
+  ircd_log(LOG_DBG, "%lu/%lu bytes in %d partially full chunks",
        bu, ba, n_used);
   bytes_used += bu;
   bytes_allocated += ba;
@@ -694,17 +694,17 @@ mp_pool_log_status(mp_pool_t *pool)
     ba += chunk->mem_size;
   }
 
-  ircd_log(LOG_DEBUG, "%lu/%lu bytes in %d full chunks",
+  ircd_log(LOG_DBG, "%lu/%lu bytes in %d full chunks",
        bu, ba, n_full);
   bytes_used += bu;
   bytes_allocated += ba;
 
-  ircd_log(LOG_DEBUG, "Total: %lu/%lu bytes allocated "
+  ircd_log(LOG_DBG, "Total: %lu/%lu bytes allocated "
        "for cell pools are full.",
        bytes_used, bytes_allocated);
 
 #ifdef MEMPOOL_STATS
-  ircd_log(LOG_DEBUG, "%lu cell allocations ever; "
+  ircd_log(LOG_DBG, "%lu cell allocations ever; "
        "%lu chunk allocations ever; "
        "%lu chunk frees ever.",
        pool->total_items_allocated,

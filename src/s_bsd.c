@@ -66,7 +66,9 @@ Computing Center and Jarkko Oikarinen";
 #include <fcntl.h>
 #include "sock.h"		/* If FD_ZERO isn't define up to this point,  */
 #include <string.h>
+#ifndef _WIN32
 #include <netinet/tcp.h>
+#endif
 #include "proto.h"
 			/* define it (BSD4.2 needs this) */
 #include "h.h"
@@ -470,6 +472,8 @@ int  inetport(ConfigItem_listen *listener, char *name, int port)
 	}
 #endif
 
+	/* ircd_log(LOG_ERROR, "FD #%d: Listener on %s:%d", listener->fd, ipname, port); */
+
 	fd_setselect(listener->fd, FD_SELECT_READ, listener_accept, listener);
 
 	return 0;
@@ -654,8 +658,6 @@ init_dgram:
 #ifdef HAVE_SYSLOG
 openlog("ircd", LOG_PID | LOG_NDELAY, LOG_DAEMON); /* reopened now */
 #endif
-	memset(local, 0, sizeof(aClient*) * MAXCONNECTIONS);
-
 #endif /*_WIN32*/
 
 #ifndef CHROOTDIR
@@ -1278,6 +1280,10 @@ add_con_refuse:
 	set_non_blocking(acptr->fd, acptr);
 	set_sock_opts(acptr->fd, acptr);
 	IRCstats.unknown++;
+	acptr->status = STAT_UNKNOWN;
+
+	list_add(&acptr->lclient_node, &unknown_list);
+
 #ifdef USE_SSL
 	if (cptr->options & LISTENER_SSL)
 	{
@@ -1310,8 +1316,7 @@ void	start_of_normal_client_handshake(aClient *acptr)
 {
 struct hostent *he;
 
-	acptr->status = STAT_UNKNOWN;
-	list_add(&acptr->lclient_node, &unknown_list);
+	acptr->status = STAT_UNKNOWN; /* reset, to be sure (SSL handshake has ended) */
 
 	RunHook(HOOKTYPE_HANDSHAKE, acptr);
 
@@ -1403,14 +1408,14 @@ void read_packet(int fd, int revents, void *data)
 
 	SET_ERRNO(0);
 
+        fd_setselect(fd, FD_SELECT_READ, read_packet, cptr);
+        fd_setselect(fd, FD_SELECT_WRITE, NULL, cptr);
+
 	while (1)
 	{
 #ifdef USE_SSL
 		if (IsSSL(cptr) && cptr->ssl != NULL)
 		{
-			fd_setselect(fd, FD_SELECT_READ, read_packet, cptr);
-			fd_setselect(fd, FD_SELECT_WRITE, NULL, cptr);
-
 			length = SSL_read(cptr->ssl, readbuf, sizeof(readbuf));
 
 			if (length < 0)
@@ -1433,8 +1438,10 @@ void read_packet(int fd, int revents, void *data)
 					if (ERRNO == P_EAGAIN)
 						break;
 				default:
-					length = 0;
+					/*length = 0;
 					SET_ERRNO(0);
+					^^ why this? we should error. -- todo: is errno correct?
+					*/
 					break;
 				}
 			}
@@ -1488,6 +1495,20 @@ void read_packet(int fd, int revents, void *data)
 		if (length < sizeof(readbuf))
 			return;
 	}
+}
+
+/* Process input from clients that may have been deliberately delayed due to fake lag */
+void process_clients(void)
+{
+        aClient *cptr, *cptr2;
+
+        list_for_each_entry_safe(cptr, cptr2, &lclient_list, lclient_node)
+                if ((cptr->fd >= 0) && DBufLength(&cptr->recvQ))
+                        parse_client_queued(cptr);
+
+        list_for_each_entry_safe(cptr, cptr2, &unknown_list, lclient_node)
+                if ((cptr->fd >= 0) && DBufLength(&cptr->recvQ))
+                        parse_client_queued(cptr);
 }
 
 /* When auth is finished, go back and parse all prior input. */
@@ -1567,7 +1588,13 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	set_non_blocking(cptr->fd, cptr);
 	set_sock_opts(cptr->fd, cptr);
 
+#ifndef _WIN32
 	if (connect(cptr->fd, svp, len) < 0 && errno != EINPROGRESS)
+#else
+	if (connect(cptr->fd, svp, len) < 0 &&
+            WSAGetLastError() != WSAEINPROGRESS &&
+            WSAGetLastError() != WSAEWOULDBLOCK)
+#endif
 	{
 		errtmp = ERRNO;
 		report_error("Connect to host %s failed: %s", cptr);
@@ -1616,6 +1643,7 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	SetConnecting(cptr);
 	SetOutgoing(cptr);
 	IRCstats.unknown++;
+	list_add(&cptr->lclient_node, &unknown_list);
 	get_sockhost(cptr, aconf->hostname);
 	add_client_to_list(cptr);
 
@@ -1623,11 +1651,11 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	if (aconf->options & CONNECT_SSL)
 	{
 		SetSSLConnectHandshake(cptr);
-		fd_setselect(cptr->fd, FD_SELECT_WRITE | FD_SELECT_ONESHOT, ircd_SSL_client_handshake, cptr);
+		fd_setselect(cptr->fd, FD_SELECT_WRITE, ircd_SSL_client_handshake, cptr);
 	}
 	else
 #endif
-		fd_setselect(cptr->fd, FD_SELECT_WRITE | FD_SELECT_ONESHOT, completed_connection, cptr);
+		fd_setselect(cptr->fd, FD_SELECT_WRITE, completed_connection, cptr);
 
 	return 0;
 }

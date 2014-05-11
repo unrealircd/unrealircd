@@ -25,7 +25,9 @@
 #include "fdlist.h"
 #include "proto.h"
 #include <sys/stat.h>
+#ifdef  UNISTDH
 #include <unistd.h>
+#endif
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -90,6 +92,7 @@ int fd_fileopen(const char *path, unsigned int flags)
 void fd_close(int fd)
 {
 	FDEntry *fde;
+	unsigned int befl;
 
 	if ((fd < 0) || (fd >= MAXCONNECTIONS))
 	{
@@ -110,15 +113,35 @@ void fd_close(int fd)
 		return;
 	}
 
+	befl = fde->backend_flags;
 	memset(fde, 0, sizeof(FDEntry));
 
 	fde->fd = fd;
 
 	/* only notify the backend if it is actively tracking the FD */
-	if (fde->backend_flags)
+	if (befl)
 		fd_refresh(fd);
 
 	CLOSE_SOCK(fd);
+}
+
+/* Deregister I/O notification for this file descriptor */
+void fd_unnotify(int fd)
+{
+FDEntry *fde;
+#ifdef DEBUGMODE
+	ircd_log(LOG_ERROR, "fd_unnotify(): fd=%d", fd);
+#endif
+	if ((fd < 0) || (fd >= MAXCONNECTIONS))
+		return;
+	
+	fde = &fd_table[fd];
+	if (!fde || !fde->is_open)
+		return;
+		
+	fde->read_callback = fde->write_callback = NULL;
+	fde->read_oneshot = fde->write_oneshot = 0;
+	fd_refresh(fd);
 }
 
 int fd_socket(int family, int type, int protocol, const char *desc)

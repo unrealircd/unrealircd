@@ -69,9 +69,6 @@ extern MODVAR ConfigItem_except	*conf_except;
 extern MODVAR ConfigItem_vhost		*conf_vhost;
 extern MODVAR ConfigItem_link		*conf_link;
 extern MODVAR ConfigItem_ban		*conf_ban;
-extern MODVAR ConfigItem_badword	*conf_badword_channel;
-extern MODVAR ConfigItem_badword       *conf_badword_message;
-extern MODVAR ConfigItem_badword	*conf_badword_quit;
 extern MODVAR ConfigItem_deny_dcc	*conf_deny_dcc;
 extern MODVAR ConfigItem_deny_channel  *conf_deny_channel;
 extern MODVAR ConfigItem_deny_link	*conf_deny_link;
@@ -93,7 +90,15 @@ extern long set_usermode(char *umode);
 extern char *get_modestr(long umodes);
 extern void                    config_error(char *format, ...) __attribute__((format(printf,1,2)));
 extern void config_warn(char *format, ...) __attribute__((format(printf,1,2)));
-
+extern void config_error_missing(const char *filename, int line, const char *entry);
+extern void config_error_unknown(const char *filename, int line, const char *block, const char *entry);
+extern void config_error_unknownflag(const char *filename, int line, const char *block, const char *entry);
+extern void config_error_unknownopt(const char *filename, int line, const char *block, const char *entry);
+extern void config_error_noname(const char *filename, int line, const char *block);
+extern void config_error_blank(const char *filename, int line, const char *block);
+extern void config_error_empty(const char *filename, int line, const char *block, const char *entry);
+extern void config_warn_duplicate(const char *filename, int line, const char *entry);
+extern int config_is_blankorempty(ConfigEntry *cep, const char *block);
 extern MODVAR int config_verbose;
 extern void config_progress(char *format, ...) __attribute__((format(printf,1,2)));
 extern void       ipport_seperate(char *string, char **ip, char **port);
@@ -298,7 +303,6 @@ extern void sendto_server(aClient *one, unsigned long caps, unsigned long nocaps
 
 extern MODVAR int writecalls, writeb[];
 extern int deliver_it(aClient *, char *, int);
-extern int  check_for_chan_flood(aClient *cptr, aClient *sptr, aChannel *chptr);
 extern int  check_for_target_limit(aClient *sptr, void *target, const char *name);
 extern char *canonize(char *buffer);
 extern ConfigItem_deny_dcc *dcc_isforbidden(aClient *sptr, char *filename);
@@ -412,9 +416,7 @@ extern MODVAR long UMODE_VICTIM;    /* 0x8000000	 Intentional Victim */
 extern MODVAR long UMODE_DEAF;      /* 0x10000000       Deaf */
 extern MODVAR long UMODE_HIDEOPER;  /* 0x20000000	 Hide oper mode */
 extern MODVAR long UMODE_SETHOST;   /* 0x40000000	 used sethost */
-extern MODVAR long UMODE_STRIPBADWORDS; /* 0x80000000	 */
 extern MODVAR long UMODE_HIDEWHOIS; /* hides channels in /whois */
-extern MODVAR long UMODE_NOCTCP;    /* blocks all ctcp (except dcc and action) */
 extern MODVAR long UMODE_HIDLE;     /* hides oper idle times */
 extern MODVAR long AllUmodes, SendUmodes;
 
@@ -435,10 +437,6 @@ extern MODVAR long SNO_OPER;
 
 /* Extended chanmodes... */
 extern MODVAR Cmode_t EXTMODE_NONOTICE;
-#ifdef STRIPBADWORDS
-extern MODVAR Cmode_t EXTMODE_STRIPBADWORDS;
-#endif
-extern MODVAR Cmode_t EXTMODE_JOINTHROTTLE;
 
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *dst, const char *src, size_t size);
@@ -538,7 +536,6 @@ extern void       validate_configuration(void);
 extern void       run_configuration(void);
 extern void rehash_motdrules();
 extern void read_motd(const char *filename, aMotdFile *motd); /* s_serv.c */
-extern CMD_FUNC(m_server_remote);
 extern void send_proto(aClient *, ConfigItem_link *);
 extern void unload_all_modules(void);
 extern int set_blocking(int fd);
@@ -557,25 +554,21 @@ extern u_char getrandom8();
 extern u_int16_t getrandom16();
 extern u_int32_t getrandom32();
 #define EVENT_DRUGS BASE_VERSION
-extern void rejoin_doquits(aClient *sptr);
-extern void rejoin_dojoinandmode(aClient *sptr);
+extern void rejoin_leave(aClient *sptr);
+extern void rejoin_joinandmode(aClient *sptr);
 extern void ident_failed(aClient *cptr);
 
 extern MODVAR char extchmstr[4][64];
 extern MODVAR char extbanstr[EXTBANTABLESZ+1];
 
-extern int extcmode_default_requirechop(aClient *, aChannel *, char *, int, int);
-extern int extcmode_default_requirehalfop(aClient *, aChannel *, char *, int, int);
+extern int extcmode_default_requirechop(aClient *, aChannel *, char, char *, int, int);
+extern int extcmode_default_requirehalfop(aClient *, aChannel *, char, char *, int, int);
 extern Cmode_t extcmode_get(Cmode *);
 extern void extcmode_init(void);
-extern CmodeParam *extcmode_get_struct(CmodeParam *, char);
 extern void make_extcmodestr();
-extern CmodeParam *extcmode_duplicate_paramlist(CmodeParam *);
-extern void extcmode_free_paramlist(CmodeParam *);
+extern void extcmode_duplicate_paramlist(void **xi, void **xo);
+extern void extcmode_free_paramlist(void **ar);
 
-extern int do_chanflood(ChanFloodProt *, int);
-extern void do_chanflood_action(aChannel *, int, char *);
-extern char *channel_modef_string(ChanFloodProt *);
 extern void chmode_str(struct ChMode, char *, char *, size_t, size_t);
 extern char *get_cptr_status(aClient *);
 extern char *get_snostr(long);
@@ -583,11 +576,6 @@ extern char *get_snostr(long);
 extern void InitDebug(void);
 extern int InitwIRCD(int argc, char **);
 extern void SocketLoop(void *);
-#endif
-#ifdef STATIC_LINKING
-extern int l_commands_Init(ModuleInfo *);
-extern int l_commands_Test(ModuleInfo *);
-extern int l_commands_Load(int);
 #endif
 extern void sendto_chmodemucrap(aClient *, aChannel *, char *);
 extern void verify_opercount(aClient *, char *);
@@ -667,7 +655,7 @@ extern MODVAR int dontspread;
 /* Efuncs */
 extern MODVAR int (*do_join)(aClient *, aClient *, int, char **);
 extern MODVAR void (*join_channel)(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);
-extern MODVAR int (*can_join)(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[]);
+extern MODVAR int (*can_join)(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *parv[]);
 extern MODVAR void (*do_mode)(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode);
 extern MODVAR void (*set_mode)(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
@@ -694,9 +682,6 @@ extern MODVAR int (*place_host_ban)(aClient *sptr, int action, char *reason, lon
 extern MODVAR int (*dospamfilter)(aClient *sptr, char *str_in, int type, char *target, int flags, aTKline **rettk);
 extern MODVAR int (*dospamfilter_viruschan)(aClient *sptr, aTKline *tk, int type);
 extern MODVAR void (*send_list)(aClient *cptr, int numsend);
-extern MODVAR char *(*stripbadwords_channel)(char *str, int *blocked);
-extern MODVAR char *(*stripbadwords_message)(char *str, int *blocked);
-extern MODVAR char *(*stripbadwords_quit)(char *str, int *blocked);
 extern MODVAR unsigned char *(*StripColors)(unsigned char *text);
 extern MODVAR const char *(*StripControlCodes)(unsigned char *text);
 extern MODVAR void (*spamfilter_build_user_string)(char *buf, char *nick, aClient *acptr);
@@ -710,19 +695,10 @@ extern MODVAR int max_connection_count;
 extern int add_listmode(Ban **list, aClient *cptr, aChannel *chptr, char *banid);
 extern int del_listmode(Ban **list, aChannel *chptr, char *banid);
 extern int Halfop_mode(long mode);
-extern void chanfloodtimer_add(aChannel *chptr, char mflag, long mbit, time_t when);
-extern void chanfloodtimer_del(aChannel *chptr, char mflag, long mbit);
 extern char *clean_ban_mask(char *, int, aClient *);
-extern void chanfloodtimer_stopchantimers(aChannel *chptr);
 extern int find_invex(aChannel *chptr, aClient *sptr);
 extern void DoMD5(unsigned char *mdout, const unsigned char *src, unsigned long n);
 extern char *md5hash(unsigned char *dst, const unsigned char *src, unsigned long n);
-#ifdef JOINTHROTTLE
-aJFlood *cmodej_addentry(aClient *cptr, aChannel *chptr);
-void cmodej_delentry(aJFlood *e);
-void cmodej_deluserentries(aClient *cptr);
-void cmodej_delchannelentries(aChannel *chptr);
-#endif
 extern void charsys_reset(void);
 extern void charsys_addmultibyterange(char s1, char e1, char s2, char e2);
 extern void charsys_addallowed(char *s);
@@ -747,6 +723,13 @@ extern char *unreal_time_synch_error(void);
 extern int unreal_time_synch(int timeout);
 extern int extban_is_banned_helper(char *buf);
 extern char *getcloak(aClient *sptr);
+extern unsigned char param_to_slot_mapping[256];
+extern char *cm_getparameter(aChannel *chptr, char mode);
+extern void cm_putparameter(aChannel *chptr, char mode, char *str);
+extern void cm_freeparameter(aChannel *chptr, char mode);
+extern char *cm_getparameter_ex(void **p, char mode);
+extern void cm_putparameter_ex(void **p, char mode, char *str);
+extern void cm_freeparameter_ex(void **p, char mode, char *str);
 extern void kick_insecure_users(aChannel *);
 extern int file_exists(char* file);
 extern void free_motd(aMotdFile *motd); /* s_serv.c */
@@ -762,3 +745,4 @@ extern MODVAR char serveropts[];
 extern MODVAR char *IsupportStrings[];
 extern void finish_auth(aClient *acptr);
 extern void read_packet(int fd, int revents, void *data);
+extern void sendto_realops_and_log(char *fmt, ...);

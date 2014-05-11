@@ -37,9 +37,6 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 #ifdef _WIN32
 #include "version.h"
 #endif
@@ -92,7 +89,6 @@ int stats_traffic(aClient *, char *);
 int stats_uline(aClient *, char *);
 int stats_vhost(aClient *, char *);
 int stats_mem(aClient *, char *);
-int stats_badwords(aClient *, char *);
 int stats_denylinkauto(aClient *, char *);
 int stats_exceptthrottle(aClient *, char *);
 int stats_denydcc(aClient *, char *);
@@ -150,7 +146,6 @@ struct statstab StatsTable[] = {
 	{ 'X', "notlink",	stats_notlink,		0 		},	
 	{ 'Y', "class",		stats_class,		0 		},	
 	{ 'Z', "mem",		stats_mem,		0 		},
-	{ 'b', "badword", 	stats_badwords,		0 		},
 	{ 'c', "link", 		stats_links,		0 		},
 	{ 'd', "denylinkauto",	stats_denylinkauto,	0 		},
 	{ 'e', "exceptthrottle",stats_exceptthrottle,	0		},
@@ -639,7 +634,6 @@ static char *stats_port_helper(ConfigItem_listen *listener)
 	ircsnprintf(buf, sizeof(buf), "%s%s%s%s",
 	    (listener->options & LISTENER_CLIENTSONLY)? "clientsonly ": "",
 	    (listener->options & LISTENER_SERVERSONLY)? "serversonly ": "",
-	    (listener->options & LISTENER_JAVACLIENT)?  "java ": "",
 	    (listener->options & LISTENER_SSL)?         "ssl ": "");
 	return buf;
 }
@@ -1001,39 +995,6 @@ int stats_mem(aClient *sptr, char *para)
 #else
 	sendto_one(sptr, ":%s %d %s :TOTAL: %lu",
 	    me.name, RPL_STATSDEBUG, sptr->name, tot);
-#endif
-	return 0;
-}
-
-int stats_badwords(aClient *sptr, char *para)
-{
-#ifdef STRIPBADWORDS
-	  ConfigItem_badword *words;
-
-	  for (words = conf_badword_channel; words; words = (ConfigItem_badword *) words->next) {
-		  sendto_one(sptr, ":%s %i %s :c %c %s%s%s %s",
-		      me.name, RPL_TEXT, sptr->name, words->type & BADW_TYPE_REGEX ? 'R' : 'F',
-		      (words->type & BADW_TYPE_FAST_L) ? "*" : "", words->word,
-		      (words->type & BADW_TYPE_FAST_R) ? "*" : "",
-		      words->action == BADWORD_REPLACE ? 
-		      (words->replace ? words->replace : "<censored>") : "");
-	  }
-	  for (words = conf_badword_message; words; words = (ConfigItem_badword *) words->next) {
-		  sendto_one(sptr, ":%s %i %s :m %c %s%s%s %s",
-		      me.name, RPL_TEXT, sptr->name, words->type & BADW_TYPE_REGEX ? 'R' : 'F',
-		      (words->type & BADW_TYPE_FAST_L) ? "*" : "", words->word,
-		      (words->type & BADW_TYPE_FAST_R) ? "*" : "",
-		      words->action == BADWORD_REPLACE ? 
-		      (words->replace ? words->replace : "<censored>") : "");
-	  }
-	  for (words = conf_badword_quit; words; words = (ConfigItem_badword *) words->next) {
-		  sendto_one(sptr, ":%s %i %s :q %c %s%s%s %s",
-		      me.name, RPL_TEXT, sptr->name, words->type & BADW_TYPE_REGEX ? 'R' : 'F',
-		      (words->type & BADW_TYPE_FAST_L) ? "*" : "", words->word,
-		      (words->type & BADW_TYPE_FAST_R) ? "*" : "",
-		      words->action == BADWORD_REPLACE ? 
-		      (words->replace ? words->replace : "<censored>") : "");
-	  }
 #endif
 	return 0;
 }

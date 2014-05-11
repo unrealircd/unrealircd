@@ -2,7 +2,7 @@ VL Information (c) 2002 codemastr (Dominick Meglio) [codemastr@unrealircd.com]
 
 Protocol       Version
 ------------------------------------------------------------------------------------------------
-2312           3.4-alpha*
+2350           3.4-alpha*
 2311           3.2.10
 2310           3.2.9
 2309           3.2.6, 3.2.7, 3.2.8
@@ -30,7 +30,6 @@ W              Windows version
 Y              Syslog logging enabled
 K              No ident checking (?)
 6              IPv6 supported
-X              STRIPBADWORDS enabled (chmode/umode +G)
 P              Uses poll()
 e              SSL supported
 O              OperOverride enabled

@@ -39,9 +39,6 @@
 #include <fcntl.h>
 #include "h.h"
 #include "proto.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 
 #ifdef _WIN32
 #include "version.h"
@@ -91,7 +88,7 @@ struct _langlist
 
 /* MUST be alphabetized (first column) */
 static LangList langlist[] = {
-	{ "arabic",       "ara", LANGAV_ASCII|LANGAV_ISO8859_6 },
+/*	{ "arabic",       "ara", LANGAV_ASCII|LANGAV_ISO8859_6 }, -- TODO: check if this has issues first! */
 	{ "belarussian-w1251", "blr", LANGAV_ASCII|LANGAV_W1251 },
 	{ "catalan",      "cat", LANGAV_ASCII|LANGAV_LATIN1 },
 	{ "chinese",      "chi-j,chi-s,chi-t", LANGAV_GBK },

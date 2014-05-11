@@ -370,7 +370,7 @@ char pfix[8];
 	if (!ret)
 		ret = make_nick_user_host(trim_str(cp,NICKLEN), trim_str(user,USERLEN), trim_str(host,HOSTLEN));
 
-	ircsnprintf(retbuf, USERLEN + NICKLEN + HOSTLEN + 32, "%s%s", pfix, ret);
+	ircsnprintf(retbuf, sizeof(retbuf), "%s%s", pfix, ret);
 	return retbuf;
 }
 

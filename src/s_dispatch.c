@@ -68,7 +68,9 @@
 void fd_setselect(int fd, int flags, IOCallbackFunc iocb, void *data)
 {
 	FDEntry *fde;
-
+#ifdef DEBUGMODE
+	ircd_log(LOG_ERROR, "fd_setselect(): fd %d flags %d func %p", fd, flags, &iocb);
+#endif
 	if ((fd < 0) || (fd >= MAXCONNECTIONS))
 	{
 		sendto_realops("[BUG] trying to modify fd #%d in fd table, but MAXCONNECTIONS is %d",
@@ -87,6 +89,8 @@ void fd_setselect(int fd, int flags, IOCallbackFunc iocb, void *data)
 
 		if (flags & FD_SELECT_ONESHOT)
 			fde->read_oneshot = 1;
+		else
+			fde->read_oneshot = 0;
 	}
 	if (flags & FD_SELECT_WRITE)
 	{
@@ -94,6 +98,13 @@ void fd_setselect(int fd, int flags, IOCallbackFunc iocb, void *data)
 
 		if (flags & FD_SELECT_ONESHOT)
 			fde->write_oneshot = 1;
+		else
+			fde->write_oneshot = 0;
+	} else
+	if (flags & FD_SELECT_NOWRITE)
+	{
+		fde->write_callback = NULL;
+		fde->write_oneshot = 0;
 	}
 
 	fd_refresh(fd);
@@ -144,6 +155,21 @@ void fd_refresh(int fd)
 	fde->backend_flags = flags;
 }
 
+void fd_debug(fd_set *f, int highest, char *name)
+{
+	int i;
+	for (i = 0; i < highest; i++)
+	{
+		if (FD_ISSET(i, f))
+		{
+			/* check if fd 'i' is valid... */
+			//if (fcntl(i, F_GETFL) < 0)
+			int nonb = 1;
+			if (ioctlsocket(i, FIONBIO, &nonb) < 0)
+				ircd_log(LOG_ERROR, "fd_debug: FD #%d is invalid!!!", i);
+		}
+	}
+}
 void fd_select(time_t delay)
 {
 	struct timeval to;
@@ -157,7 +183,22 @@ void fd_select(time_t delay)
 	to.tv_sec = delay % 1000;
 	to.tv_usec = delay * 1000;
 
+#ifdef DEBUGMODE
+	ircd_log(LOG_ERROR, "fd_select() on 0-%d...", highest_fd+1);
+#endif
+
 	num = select(highest_fd + 1, &work_read_fds, &work_write_fds, NULL, &to);
+	if (num < 0)
+	{
+		extern void report_baderror(char *text, aClient *cptr);
+		report_baderror("select %s:%s", &me);
+		/* DEBUG the actual problem: */
+		memcpy(&work_read_fds, &read_fds, sizeof(fd_set));
+		memcpy(&work_write_fds, &write_fds, sizeof(fd_set));
+		fd_debug(&work_read_fds, highest_fd+1, "read");
+		fd_debug(&work_read_fds, highest_fd+1, "write");
+	}
+
 	if (num <= 0)
 		return;
 
@@ -171,6 +212,10 @@ void fd_select(time_t delay)
 		if (!fde->is_open)
 			continue;
 
+#ifdef DEBUGMODE
+		ircd_log(LOG_ERROR, "fd_select(): checking %d...", fd);
+#endif
+
 		if (FD_ISSET(fd, &work_read_fds))
 			evflags |= FD_SELECT_READ;
 
@@ -183,6 +228,10 @@ void fd_select(time_t delay)
 
 		if (!evflags)
 			continue;
+
+#ifdef DEBUGMODE
+		ircd_log(LOG_ERROR, "fd_select(): events for %d (%d)... processing...", fd, evflags);
+#endif
 
 		if (evflags & FD_SELECT_READ)
 		{
@@ -372,7 +421,7 @@ void fd_refresh(int fd)
 		if (ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN)
 			return;
 
-		ircd_log(LOG_ERROR, "[BUG?] epoll returned %d", errno);
+		ircd_log(LOG_ERROR, "[BUG?] epoll returned error %d (%s)", errno, STRERROR(ERRNO));
 		return;
 	}
 
@@ -383,13 +432,24 @@ void fd_select(time_t delay)
 {
 	int num, p, revents, fd;
 	struct epoll_event *epfd;
-
+#ifndef _WIN32
+#define DEBUG_IOENGINE
+#endif
+#ifdef DEBUG_IOENGINE
+	int read_callbacks = 0, write_callbacks = 0;
+	struct timeval oldt, t;
+	long long tdiff;
+#endif
 	if (epoll_fd == -1)
 		epoll_fd = epoll_create(MAXCONNECTIONS);
 
 	num = epoll_wait(epoll_fd, epfds, MAXCONNECTIONS, delay);
 	if (num <= 0)
 		return;
+
+#ifdef DEBUG_IOENGINE
+	gettimeofday(&oldt, NULL);
+#endif
 
 	for (p = 0; p < num; p++)
 	{
@@ -422,6 +482,9 @@ void fd_select(time_t delay)
 				iocb(fd, evflags, fde->data);
 
 			fde->read_oneshot = 0;
+#ifdef DEBUG_IOENGINE
+			read_callbacks++;
+#endif
 		}
 
 		if (evflags & FD_SELECT_WRITE)
@@ -434,8 +497,29 @@ void fd_select(time_t delay)
 				iocb(fd, evflags, fde->data);
 
 			fde->write_oneshot = 0;
+#ifdef DEBUG_IOENGINE
+			write_callbacks++;
+#endif
 		}
+#if 0
+		if (((read_callbacks + write_callbacks) % 100) == 0)
+		{
+			/* every 100 events.. set the internal clock so we don't screw up under extreme load */
+			timeofday = time(NULL) + TSoffset;
+		}
+#endif
 	}
+
+#ifdef DEBUG_IOENGINE
+	gettimeofday(&t, NULL);
+	tdiff = ((t.tv_sec - oldt.tv_sec) * 1000000) + (t.tv_usec - oldt.tv_usec);
+	
+	if (tdiff > 1000000)
+	{
+		sendto_realops_and_log("WARNING: Slow I/O engine or high load: fd_select() took %lld ms! read_callbacks=%d, write_callbacks=%d",
+			tdiff / 1000, read_callbacks, write_callbacks);
+	}
+#endif
 }
 
 #endif

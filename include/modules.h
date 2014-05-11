@@ -135,6 +135,7 @@ typedef struct {
 #define EXSJ_SAME			0 /* Parameters are the same */
 #define EXSJ_WEWON			1 /* We won! w00t */
 #define EXSJ_THEYWON		2 /* They won :( */
+#define EXSJ_MERGE		3 /* Merging of modes.. neither won nor lost (merged params are in 'our' on return) */
 
 /* return values for EXCHK_ACCESS*: */
 #define EX_DENY				0  /* Disallowed, except in case of operoverride */
@@ -148,13 +149,6 @@ typedef struct {
  * functions, etc..
  */
 typedef unsigned long Cmode_t;
-
-#define EXTCM_PAR_HEADER struct _CmodeParam *prev, *next; char flag;
-
-typedef struct _CmodeParam {
-	EXTCM_PAR_HEADER
-	/** other fields are placed after this header in your own paramstruct */
-} CmodeParam;
 
 typedef struct {
 	/** mode character (like 'Z') */
@@ -174,7 +168,7 @@ typedef struct {
 	 * int: what (MODE_ADD or MODE_DEL)
 	 * return value: 1=ok, 0=bad
 	 */
-	int			(*is_ok)(aClient *,aChannel *, char *para, int, int);
+	int			(*is_ok)(aClient *,aChannel *, char mode, char *para, int, int);
 
 	/** NOTE: The routines below are NULL for paramless modes */
 	
@@ -185,32 +179,36 @@ typedef struct {
 	 * design notes: only alloc a new paramstruct if you need to, search for
 	 * any current one first (like in case of mode +y 5 and then +y 6 later without -y).
 	 */
-	CmodeParam *		(*put_param)(CmodeParam *, char *);
+	void *		(*put_param)(void *, char *);
 
 	/** Get readable string version" of the stored parameter.
 	 * aExtCMtableParam *: the list (usually chptr->mode.extmodeparams).
 	 * return value: a pointer to the string (temp. storage)
 	 */
-	char *		(*get_param)(CmodeParam *);
+	char *		(*get_param)(void *);
 
 	/** Convert input parameter to output.
 	 * Like +l "1aaa" becomes "1".
 	 * char *: the input parameter.
+	 * aClient *: the client that the mode request came from:
+	 *            1. Can be NULL (eg: if called for set::modes-on-join
+	 *            2. Probably only used in rare cases, see also next remark
+	 *            3. ERRORS SHOULD NOT BE SENT BY conv_param BUT BY is_ok!
 	 * return value: pointer to output string (temp. storage)
 	 */
-	char *		(*conv_param)(char *);
+	char *		(*conv_param)(char *, aClient *);
 
 	/** free and remove parameter from list.
 	 * aExtCMtableParam *: the list (usually chptr->mode.extmodeparams).
 	 */
-	void		(*free_param)(CmodeParam *);
+	void		(*free_param)(void *);
 
 	/** duplicate a struct and return a pointer to duplicate.
 	 * This is usually just a malloc + memcpy.
 	 * aExtCMtableParam *: source struct itself (no list).
 	 * return value: pointer to newly allocated struct.
 	 */
-	CmodeParam *	(*dup_struct)(CmodeParam *);
+	void *	(*dup_struct)(void *);
 
 	/** Compares 2 parameters and decides who wins the sjoin fight.
 	 * When syncing channel modes (m_sjoin) a parameter conflict may occur, things like
@@ -221,10 +219,13 @@ typedef struct {
 	 * aExtCMtableParam *: our parameter
 	 * aExtCMtableParam *: their parameter
 	 */
-	int			(*sjoin_check)(aChannel *, CmodeParam *, CmodeParam *);
+	int			(*sjoin_check)(aChannel *, void *, void *);
 
 	/** Local channel mode? Prevents remote servers from setting/unsetting this */
 	char local;
+	
+	/** Unsetting also eats/requires a parameter. Unusual, but possible. */
+	char unset_with_param;
 
 	/** Is this mode being unloaded?
 	 * This is set to 1 if the chanmode module providing this mode is unloaded
@@ -234,6 +235,9 @@ typedef struct {
 	 */
 	char unloaded;
 	
+	/* Slot#.. Can be used instead of GETPARAMSLOT() */
+	int slot;
+	
 	/** Module owner */
         Module *owner;
 } Cmode;
@@ -241,15 +245,35 @@ typedef struct {
 typedef struct {
 	char		flag;
 	int		paracount;
-	int		(*is_ok)(aClient *,aChannel *, char *para, int, int);
-	CmodeParam *	(*put_param)(CmodeParam *, char *);
-	char *		(*get_param)(CmodeParam *);
-	char *		(*conv_param)(char *);
-	void		(*free_param)(CmodeParam *);
-	CmodeParam *	(*dup_struct)(CmodeParam *);
-	int		(*sjoin_check)(aChannel *, CmodeParam *, CmodeParam *);
+	int		(*is_ok)(aClient *,aChannel *, char mode, char *para, int, int);
+	void *	(*put_param)(void *, char *);
+	char *		(*get_param)(void *);
+	char *		(*conv_param)(char *, aClient *);
+	void		(*free_param)(void *);
+	void *	(*dup_struct)(void *);
+	int		(*sjoin_check)(aChannel *, void *, void *);
 	char		local;
+	char		unset_with_param;
 } CmodeInfo;
+
+/* Get a slot# for a param.. eg... GETPARAMSLOT('k') ;p */
+#define GETPARAMSLOT(x)	param_to_slot_mapping[x]
+
+/* Get a cmode handler by slot.. for example for [dont use this]: GETPARAMHANDLERBYSLOT(5)->get_param(chptr) */
+#define GETPARAMHANDLERBYSLOT(slotid)	ParamTable[slotid]
+
+/* Same as GETPARAMHANDLERBYSLOT but then by letter.. like [dont use this]: GETPARAMHANDLERBYSLOT('k')->get_param(chptr) */
+#define GETPARAMHANDLERBYLETTER(x)	ParamTable[GETPARAMSLOT(x)]
+
+/* Get paramter data struct.. for like: ((aModejEntry *)GETPARASTRUCT(chptr, 'j'))->t */
+#define GETPARASTRUCT(mychptr, mychar)	chptr->mode.extmodeparams[GETPARAMSLOT(mychar)]
+
+#define GETPARASTRUCTEX(v, mychar)	v[GETPARAMSLOT(mychar)]
+
+#define CMP_GETSLOT(x) GETPARAMSLOT(x)
+#define CMP_GETHANDLERBYSLOT(x) GETPARAMHANDLERBYSLOT(x)
+#define CMP_GETHANDLERBYLETTER(x) GETPARAMHANDLERBYLETTER(x)
+#define CMP_GETSTRUCT(x,y) GETPARASTRUCT(x,y)
 
 /*** Extended bans ***/
 
@@ -415,7 +439,7 @@ struct _hooktype {
 unsigned int ModuleGetError(Module *module);
 const char *ModuleGetErrorStr(Module *module);
 unsigned int ModuleGetOptions(Module *module);
-unsigned int ModuleSetOptions(Module *module, unsigned int options);
+unsigned int ModuleSetOptions(Module *module, unsigned int options, int action);
 
 struct _Module
 {
@@ -447,22 +471,13 @@ struct _Module
 
 struct _mod_symboltable
 {
-#ifndef STATIC_LINKING
 	char	*symbol;
-#else
-	void	*realfunc;
-#endif
 	vFP 	*pointer;
-#ifndef STATIC_LINKING
 	char	*module;
-#endif
 };
 
-#ifndef STATIC_LINKING
 #define MOD_Dep(name, container,module) {#name, (vFP *) &container, module}
-#else
-#define MOD_Dep(name, container,module) {(void *)&name, (vFP *) &container}
-#endif
+
 /* Event structs */
 struct _event {
 	Event   *prev, *next;
@@ -661,6 +676,18 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define HOOKTYPE_AWAY 53
 #define HOOKTYPE_CAPLIST 54
 #define HOOKTYPE_INVITE 55
+#define HOOKTYPE_CAN_JOIN 56
+#define HOOKTYPE_CAN_SEND 57
+#define HOOKTYPE_CAN_KICK 58
+#define HOOKTYPE_FREE_CLIENT 59
+#define HOOKTYPE_FREE_USER 60
+#define HOOKTYPE_PRE_CHANMSG 61
+#define HOOKTYPE_PRE_USERMSG 62
+#define HOOKTYPE_KNOCK 63
+#define HOOKTYPE_MODECHAR_ADD 64
+#define HOOKTYPE_MODECHAR_DEL 65
+#define HOOKTYPE_EXIT_ONE_CLIENT 66
+#define HOOKTYPE_CAN_JOIN_LIMITEXCEEDED 67
 
 /* Hook return values */
 #define HOOK_CONTINUE 0
@@ -700,9 +727,6 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define EFUNC_DOSPAMFILTER_VIRUSCHAN		25
 #define EFUNC_FIND_TKLINE_MATCH_ZAP_EX		26
 #define EFUNC_SEND_LIST						27
-#define EFUNC_STRIPBADWORDS_CHANNEL			28
-#define EFUNC_STRIPBADWORDS_MESSAGE			29
-#define EFUNC_STRIPBADWORDS_QUIT			30
 #define EFUNC_STRIPCOLORS					31
 #define EFUNC_STRIPCONTROLCODES				32
 #define EFUNC_SPAMFILTER_BUILD_USER_STRING	33

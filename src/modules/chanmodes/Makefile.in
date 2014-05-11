@@ -1,0 +1,90 @@
+#************************************************************************
+#*   IRC - Internet Relay Chat, src/modules/chanmodes/Makefile
+#*   Copyright (C) Carsten V. Munk 2001 & The UnrealIRCd Team
+#*
+#*   This program is free software; you can redistribute it and/or modify
+#*   it under the terms of the GNU General Public License as published by
+#*   the Free Software Foundation; either version 1, or (at your option)
+#*   any later version.
+#*
+#*   This program is distributed in the hope that it will be useful,
+#*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#*   GNU General Public License for more details.
+#*
+#*   You should have received a copy of the GNU General Public License
+#*   along with this program; if not, write to the Free Software
+#*   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#*/
+
+INCLUDES = ../../include/auth.h ../../include/channel.h \
+	../../include/class.h ../../include/common.h ../../include/config.h ../../include/dbuf.h \
+	../../include/dynconf.h ../../include/events.h ../../include/fdlist.h ../../include/h.h \
+	../../include/hash.h ../../include/inet.h ../../include/ircsprintf.h \
+	../../include/license.h ../../include/macros.h ../../include/md5.h \
+	../../include/modules.h ../../include/modversion.h ../../include/msg.h \
+	../../include/numeric.h ../../include/proto.h ../../include/res.h \
+	../../include/resource.h ../../include/setup.h ../../include/sjoin.h \
+	../../include/sock.h ../../include/ssl.h ../../include/struct.h ../../include/sys.h \
+	../../include/threads.h ../../include/types.h ../../include/url.h \
+	../../include/version.h ../../include/whowas.h
+
+R_MODULES= \
+	nocolor.so stripcolor.so issecure.so permanent.so jointhrottle.so floodprot.so \
+	noctcp.so link.so censor.so
+
+MODULES=$(R_MODULES)
+MODULEFLAGS=@MODULEFLAGS@
+CC=@CC@
+RM=@RM@
+
+all: build
+
+build: $(MODULES)
+
+custommodule: $(MODULEFILE).c
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o $(MODULEFILE).so $(MODULEFILE).c $(EXLIBS)
+
+clean:
+	$(RM) -f *.o *.so *~ core
+
+#############################################################################
+#             .so's section
+#############################################################################
+
+issecure.so: issecure.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o issecure.so issecure.c
+
+nocolor.so: nocolor.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o nocolor.so nocolor.c
+
+stripcolor.so: stripcolor.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o stripcolor.so stripcolor.c
+
+permanent.so: permanent.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o permanent.so permanent.c
+
+jointhrottle.so: jointhrottle.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o jointhrottle.so jointhrottle.c
+
+floodprot.so: floodprot.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o floodprot.so floodprot.c
+
+noctcp.so: noctcp.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o noctcp.so noctcp.c
+
+link.so: link.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o link.so link.c
+
+censor.so: censor.c $(INCLUDES) ../../include/badwords.h
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o censor.so censor.c

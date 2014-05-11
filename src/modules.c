@@ -82,7 +82,7 @@ typedef struct {
 /* Efuncs */
 int (*do_join)(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 void (*join_channel)(aChannel *chptr, aClient *cptr, aClient *sptr, int flags);
-int (*can_join)(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[]);
+int (*can_join)(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, char *parv[]);
 void (*do_mode)(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, char *parv[], time_t sendts, int samode);
 void (*set_mode)(aChannel *chptr, aClient *cptr, int parc, char *parv[], u_int *pcount,
     char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], int bounce);
@@ -109,9 +109,6 @@ int (*dospamfilter)(aClient *sptr, char *str_in, int type, char *target, int fla
 int (*dospamfilter_viruschan)(aClient *sptr, aTKline *tk, int type);
 int  (*find_tkline_match_zap_ex)(aClient *cptr, aTKline **rettk);
 void (*send_list)(aClient *cptr, int numsend);
-char *(*stripbadwords_channel)(char *str, int *blocked);
-char *(*stripbadwords_message)(char *str, int *blocked);
-char *(*stripbadwords_quit)(char *str, int *blocked);
 unsigned char *(*StripColors)(unsigned char *text);
 const char *(*StripControlCodes)(unsigned char *text);
 void (*spamfilter_build_user_string)(char *buf, char *nick, aClient *acptr);
@@ -149,9 +146,9 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 25 */	{"dospamfilter_viruschan", (void *)&dospamfilter_viruschan},
 /* 26 */	{"find_tkline_match_zap_ex", (void *)&find_tkline_match_zap_ex},
 /* 27 */	{"send_list", (void *)&send_list},
-/* 28 */	{"stripbadwords_channel", (void *)&stripbadwords_channel},
-/* 29 */	{"stripbadwords_message", (void *)&stripbadwords_message},
-/* 30 */	{"stripbadwords_quit", (void *)&stripbadwords_quit},
+/* 28 */	{NULL,NULL},
+/* 29 */	{NULL,NULL},
+/* 30 */	{NULL,NULL},
 /* 31 */	{"StripColors", (void *)&StripColors},
 /* 32 */	{"StripControlCodes", (void *)&StripControlCodes},
 /* 33 */	{"spamfilter_build_user_string", (void *)&spamfilter_build_user_string},
@@ -211,7 +208,7 @@ void DeleteTempModules(void)
 	{
 		if (strcmp(hData.cFileName, ".") || strcmp(hData.cFileName, ".."))
 		{
-			ircsnprintf(tempbuf, sizeof(tempbuf), "tmp/%s", hdata.cFileName);
+			ircsnprintf(tempbuf, sizeof(tempbuf), "tmp/%s", hData.cFileName);
 			remove(tempbuf);
 		}
 	}
@@ -302,7 +299,6 @@ unsigned int maj, min, plevel;
 */
 char  *Module_Create(char *path_)
 {
-#ifndef STATIC_LINKING
 #ifdef _WIN32
 	HMODULE 	Mod;
 #else /* _WIN32 */
@@ -330,8 +326,18 @@ char  *Module_Create(char *path_)
 	if (!strstr(path, MODULE_SUFFIX))
 	{
 		char dirbase[1024];
+#ifdef CHROOTDIR
+		/* Not so sure if I like this magic... */
+		if (!strncmp(path, "modules/", 8) && (access("modules", F_OK)<0) && (access("src/modules", F_OK)==0))
+			strcpy(dirbase, "./src");
+		else
+			strcpy(dirbase, ".");
+#elif !defined(_WIN32)
 		unreal_getpathname(SPATH, dirbase);
-                ircsnprintf(pathbuf, sizeof(pathbuf), "%s/%s%s", dirbase, path, MODULE_SUFFIX);
+#else
+		strcpy(dirbase, ".");
+#endif
+		ircsnprintf(pathbuf, sizeof(pathbuf), "%s/%s%s", dirbase, path, MODULE_SUFFIX);
 		path = pathbuf;
 	}
 	
@@ -498,11 +504,6 @@ char  *Module_Create(char *path_)
 	
 	if (path != path_ && path != pathbuf)
 		free(path);
-	
-#else /* !STATIC_LINKING */
-	return "We don't support dynamic linking";
-#endif
-	
 }
 
 void Module_DelayChildren(Module *m)
@@ -860,7 +861,6 @@ vFP Module_SymEx(
 #endif
 	, char *name)
 {
-#ifndef STATIC_LINKING
 	vFP	fp;
 
 	if (!name)
@@ -870,13 +870,10 @@ vFP Module_SymEx(
 	if (fp)
 		return (fp);
 	return NULL;
-#endif
-	
 }
 
 vFP Module_Sym(char *name)
 {
-#ifndef STATIC_LINKING
 	vFP	fp;
 	Module *mi;
 	
@@ -893,12 +890,10 @@ vFP Module_Sym(char *name)
 			return (fp);
 	}
 	return NULL;
-#endif
 }
 
 vFP Module_SymX(char *name, Module **mptr)
 {
-#ifndef STATIC_LINKING
 	vFP	fp;
 	Module *mi;
 	
@@ -919,7 +914,6 @@ vFP Module_SymX(char *name, Module **mptr)
 	}
 	*mptr = NULL;
 	return NULL;
-#endif
 }
 
 
@@ -927,7 +921,6 @@ vFP Module_SymX(char *name, Module **mptr)
 
 void	module_loadall(int module_load)
 {
-#ifndef STATIC_LINKING
 	iFP	fp;
 	Module *mi, *next;
 	
@@ -952,7 +945,6 @@ void	module_loadall(int module_load)
 		else
 			mi->flags = MODFLAG_LOADED;
 	}
-#endif
 }
 
 inline int	Module_IsAlreadyChild(Module *parent, Module *child)
@@ -983,7 +975,6 @@ int	Module_Depend_Resolve(Module *p, char *path)
 	
 	if (d == NULL)
 		return 0;
-#ifndef STATIC_LINKING
 	while (d->pointer)
 	{
 		if ((*(d->pointer) = Module_SymEx(p->dll, d->symbol)))
@@ -1023,13 +1014,6 @@ int	Module_Depend_Resolve(Module *p, char *path)
 		d++;	
 	}
 	return 0;
-#else
-	while (d->pointer)
-	{
-		*((vFP *)d->pointer) = (vFP) d->realfunc;
-		d++;
-	}
-#endif
 }
 
 /* m_module.
@@ -1581,11 +1565,14 @@ void	unload_all_modules(void)
 	}
 }
 
-unsigned int ModuleSetOptions(Module *module, unsigned int options)
+unsigned int ModuleSetOptions(Module *module, unsigned int options, int action)
 {
 	unsigned int oldopts = module->options;
 
-	module->options = options;
+	if (action)
+        	module->options |= options;
+        else
+        	module->options &= ~options;
 	return oldopts;
 }
 

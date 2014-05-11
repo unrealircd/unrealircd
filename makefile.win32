@@ -150,60 +150,25 @@ EXP_OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/S_DEBUG.OBJ  SRC/SUPPORT.OBJ SRC/LIST.OBJ \
  SRC/S_ERR.OBJ SRC/PACKET.OBJ SRC/S_BSD.OBJ \
  SRC/S_SERV.OBJ SRC/S_USER.OBJ SRC/CHARSYS.OBJ \
- SRC/VERSION.OBJ SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ SRC/LUSERS.OBJ \
+ SRC/VERSION.OBJ SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ \
  SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/RES.OBJ SRC/MODULES.OBJ \
  SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ \
- SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/MD5.OBJ SRC/API-ISUPPORT.OBJ SRC/API-COMMAND.OBJ \
+ SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/UID.OBJ SRC/MEMPOOL.OBJ SRC/S_DISPATCH.OBJ SRC/MD5.OBJ SRC/API-ISUPPORT.OBJ SRC/API-COMMAND.OBJ \
  SRC/EXTBANS.OBJ SRC/TIMESYNCH.OBJ $(CURLOBJ)
 
 OBJ_FILES=$(EXP_OBJ_FILES) SRC/GUI.OBJ SRC/SERVICE.OBJ SRC/DEBUG.OBJ SRC/RTF.OBJ \
  SRC/EDITOR.OBJ SRC/WIN32.OBJ 
-
-MOD_FILES=SRC/MODULES/L_COMMANDS.C SRC/MODULES/M_CHGHOST.C SRC/MODULES/M_SDESC.C \
- SRC/MODULES/M_SETIDENT.C SRC/MODULES/M_SETNAME.C SRC/MODULES/M_SETHOST.C \
- SRC/MODULES/M_CHGIDENT.C SRC/MODULES/M_SVSMOTD.C SRC/MODULES/M_SVSNLINE.C \
- SRC/MODULES/M_WHO.C SRC/MODULES/M_SWHOIS.C SRC/MODULES/M_SVSMODE.C SRC/MODULES/M_AWAY.C \
- SRC/MODULES/M_SVSNOOP.C SRC/MODULES/M_MKPASSWD.C SRC/MODULES/M_SVSO.C \
- SRC/MODULES/M_SVSNICK.C SRC/MODULES/M_ADMINCHAT.C SRC/MODULES/M_AKILL.C \
- SRC/MODULES/M_CHGNAME.C SRC/MODULES/M_GUEST.C SRC/MODULES/M_HTM.C SRC/MODULES/M_LAG.C \
- SRC/MODULES/M_MESSAGE.C SRC/MODULES/WEBTV.C SRC/MODULES/M_NACHAT.C SRC/MODULES/M_OPER.C \
- SRC/MODULES/M_PINGPONG.C SRC/MODULES/M_QUIT.C SRC/MODULES/M_RAKILL.C SRC/MODULES/M_RPING.C \
- SRC/MODULES/M_SENDUMODE.C SRC/MODULES/M_SQLINE.C SRC/MODULES/M_KILL.C \
- SRC/MODULES/M_TSCTL.C SRC/MODULES/M_UNKLINE.C SRC/MODULES/M_UNSQLINE.C \
- SRC/MODULES/M_UNZLINE.C SRC/MODULES/M_WHOIS.C SRC/MODULES/M_TKL.C SRC/MODULES/M_VHOST.C \
- SRC/MODULES/M_CYCLE.C SRC/MODULES/M_SVSJOIN.C SRC/MODULES/M_SVSPART.C \
- SRC/MODULES/M_SVSLUSERS.C SRC/MODULES/M_SVSWATCH.C SRC/MODULES/M_SVSSILENCE.C \
- SRC/MODULES/M_SENDSNO.C SRC/MODULES/M_SVSSNO.C SRC/MODULES/M_SAJOIN.C \
- SRC/MODULES/M_SAPART.C SRC/MODULES/M_SAMODE.C SRC/MODULES/M_KICK.C SRC/MODULES/M_TOPIC.C \
- SRC/MODULES/M_INVITE.C SRC/MODULES/M_LIST.C SRC/MODULES/M_TIME.C SRC/MODULES/M_SVSKILL.C \
- SRC/MODULES/M_KNOCK.C SRC/MODULES/M_UMODE2.C SRC/MODULES/M_SQUIT.C \
- SRC/MODULES/M_PROTOCTL.C SRC/MODULES/M_SJOIN.C SRC/MODULES/M_PASS.C \
- SRC/MODULES/M_USERHOST.C SRC/MODULES/M_ISON.C SRC/MODULES/M_SILENCE.C \
- SRC/MODULES/M_ADDLINE.C SRC/MODULES/M_ADDMOTD.C SRC/MODULES/M_ADDOMOTD.C \
- SRC/MODULES/M_WALLOPS.C SRC/MODULES/M_GLOBOPS.C SRC/MODULES/M_LOCOPS.C \
- SRC/MODULES/M_CHATOPS.C SRC/MODULES/M_ADMIN.C SRC/MODULES/M_TRACE.C \
- SRC/MODULES/M_NETINFO.C SRC/MODULES/M_LINKS.C SRC/MODULES/M_HELP.C \
- SRC/MODULES/M_RULES.C SRC/MODULES/M_CLOSE.C SRC/MODULES/M_MAP.C SRC/MODULES/M_EOS.C \
- SRC/MODULES/M_SERVER.C SRC/MODULES/M_STATS.C SRC/MODULES/M_SVSFLINE.C \
- SRC/MODULES/M_DCCDENY.C SRC/MODULES/M_UNDCCDENY.C SRC/MODULES/M_WHOWAS.C \
- SRC/MODULES/M_CONNECT.C SRC/MODULES/M_DCCALLOW.C SRC/MODULES/M_USERIP.C \
- SRC/MODULES/M_NICK.C SRC/MODULES/M_USER.C SRC/MODULES/M_MODE.C \
- SRC/MODULES/M_WATCH.C SRC/MODULES/M_PART.C SRC/MODULES/M_JOIN.C \
- SRC/MODULES/M_MOTD.C SRC/MODULES/M_OPERMOTD.C SRC/MODULES/M_BOTMOTD.C \
- SRC/MODULES/M_LUSERS.C SRC/MODULES/M_NAMES.C SRC/MODULES/M_SVSNOLAG.C \
- SRC/MODULES/M_STARTTLS.C SRC/MODULES/M_NOPOST.C SRC/MODULES/M_ISSECURE.C SRC/MODULES/M_CAP.C \
- SRC/MODULES/M_SASL.C
 
 DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDENT.DLL \
  SRC/MODULES/M_SETNAME.DLL SRC/MODULES/M_SETHOST.DLL SRC/MODULES/M_CHGIDENT.DLL \
  SRC/MODULES/M_SVSMOTD.DLL SRC/MODULES/M_SVSNLINE.DLL SRC/MODULES/M_WHO.DLL \
  SRC/MODULES/M_SWHOIS.DLL SRC/MODULES/M_SVSMODE.DLL SRC/MODULES/M_AWAY.DLL \
  SRC/MODULES/M_SVSNOOP.DLL SRC/MODULES/M_MKPASSWD.DLL SRC/MODULES/M_SVSO.DLL \
- SRC/MODULES/M_SVSNICK.DLL SRC/MODULES/M_ADMINCHAT.DLL SRC/MODULES/M_AKILL.DLL \
- SRC/MODULES/M_CHGNAME.DLL SRC/MODULES/M_GUEST.DLL SRC/MODULES/M_HTM.DLL \
+ SRC/MODULES/M_SVSNICK.DLL SRC/MODULES/M_ADMINCHAT.DLL \
+ SRC/MODULES/M_CHGNAME.DLL SRC/MODULES/M_GUEST.DLL \
  SRC/MODULES/M_LAG.DLL SRC/MODULES/M_MESSAGE.DLL SRC/MODULES/M_NACHAT.DLL \
  SRC/MODULES/M_OPER.DLL SRC/MODULES/M_PINGPONG.DLL SRC/MODULES/M_QUIT.DLL \
- SRC/MODULES/M_RAKILL.DLL SRC/MODULES/M_RPING.DLL SRC/MODULES/M_SENDUMODE.DLL \
+ SRC/MODULES/M_RPING.DLL SRC/MODULES/M_SENDUMODE.DLL \
  SRC/MODULES/M_SQLINE.DLL SRC/MODULES/M_KILL.DLL SRC/MODULES/M_TSCTL.DLL \
  SRC/MODULES/M_UNKLINE.DLL SRC/MODULES/M_UNSQLINE.DLL SRC/MODULES/M_UNZLINE.DLL \
  SRC/MODULES/M_WHOIS.DLL SRC/MODULES/M_TKL.DLL SRC/MODULES/M_VHOST.DLL \
@@ -229,12 +194,18 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/M_MOTD.DLL SRC/MODULES/M_OPERMOTD.DLL SRC/MODULES/M_BOTMOTD.DLL \
  SRC/MODULES/M_LUSERS.DLL SRC/MODULES/M_NAMES.DLL SRC/MODULES/M_SVSNOLAG.DLL \
  SRC/MODULES/M_STARTTLS.DLL \
- SRC/MODULES/M_NOPOST.DLL SRC/MODULES/M_ISSECURE.DLL SRC/MODULES/M_CAP.DLL \
- SRC/MODULES/M_SASL.DLL \
- SRC/MODULES/CLOAK.DLL
+ SRC/MODULES/M_NOPOST.DLL SRC/MODULES/M_CAP.DLL \
+ SRC/MODULES/M_SASL.DLL SRC/MODULES/CAP_INVITENOTIFY.DLL \
+ SRC/MODULES/CLOAK.DLL \
+ SRC/MODULES/CHANMODES/FLOODPROT.DLL \
+ SRC/MODULES/CHANMODES/ISSECURE.DLL \
+ SRC/MODULES/CHANMODES/JOINTHROTTLE.DLL \
+ SRC/MODULES/CHANMODES/NOCOLOR.DLL \
+ SRC/MODULES/CHANMODES/STRIPCOLOR.DLL \
+ SRC/MODULES/CHANMODES/PERMANENT.DLL 
 
 
-ALL: CONF UNREAL.EXE WIRCD.EXE src/modules/commands.dll MODULES 
+ALL: CONF UNREAL.EXE WIRCD.EXE MODULES 
 
 CLEAN:
         -@erase src\*.obj >NUL
@@ -243,6 +214,8 @@ CLEAN:
         -@erase src\win32\*.obj >NUL
 	-@erase src\modules\*.obj >NUL
 	-@erase src\modules\*.dll >NUL
+	-@erase src\modules\chanmodes\*.dll >NUL
+	-@erase src\modules\usermodes\*.dll >NUL
         -@erase .\*.exe >NUL
 	-@erase wircd.lib >NUL
 	-@erase src\modules\*.exp >NUL
@@ -311,9 +284,6 @@ src/channel.obj: src/channel.c $(INCLUDES) ./include/channel.h
 
 src/class.obj: src/class.c $(INCLUDES) ./include/class.h
         $(CC) $(CFLAGS) src/class.c
-
-src/lusers.obj: src/lusers.c $(INCLUDES)
-        $(CC) $(CFLAGS) src/lusers.c
 
 src/aln.obj: src/aln.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/aln.c
@@ -432,6 +402,15 @@ src/random.obj: src/random.c $(INCLUDES)
 src/extcmodes.obj: src/extcmodes.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/extcmodes.c
 
+src/uid.obj: src/uid.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/uid.c
+
+src/mempool.obj: src/mempool.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/mempool.c
+
+src/s_dispatch.obj: src/s_dispatch.c $(INCLUDES)
+	$(CC) $(CFLAGS) src/s_dispatch.c
+
 src/md5.obj: src/md5.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/md5.c
 
@@ -470,13 +449,6 @@ SYMBOLFILE:
 	def-clean wircd.def.in wircd.def
 
 MODULES: $(DLL_FILES)
-
-src/modules/commands.dll: $(MOD_FILES) $(INCLUDES)
-	$(CC) $(MODDBGCFLAG) $(LIBCURL_INC) $(OPENSSL_INC) /nologo \
-	      $(SSLCFLAGS) $(CURLCFLAGS) $(TRE_INC) /Fosrc/modules/ \
-	      /I ./INCLUDE /D NOSPOOF /D MODULE_COMPILE /D _CRT_SECURE_NO_DEPRECATE \
-	      /D _USE_32BIT_TIME_T $(MOD_FILES) \
-	      $(MODLFLAGS) /OUT:src/modules/commands.dll
 
 src/modules/m_chghost.dll: src/modules/m_chghost.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/m_chghost.c $(MODLFLAGS)
@@ -532,17 +504,11 @@ src/modules/m_svsnick.dll: src/modules/m_svsnick.c $(INCLUDES)
 src/modules/m_adminchat.dll: src/modules/m_adminchat.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/m_adminchat.c $(MODLFLAGS)
 
-src/modules/m_akill.dll: src/modules/m_akill.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/m_akill.c $(MODLFLAGS)
-
 src/modules/m_chgname.dll: src/modules/m_chgname.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/m_chgname.c $(MODLFLAGS)
 
 src/modules/m_guest.dll: src/modules/m_guest.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/m_guest.c $(MODLFLAGS)
-
-src/modules/m_htm.dll: src/modules/m_htm.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/m_htm.c $(MODLFLAGS)
 
 src/modules/m_kill.dll: src/modules/m_kill.c $(INCLUDES) 
 	$(CC) $(MODCFLAGS) src/modules/m_kill.c $(MODLFLAGS)
@@ -551,7 +517,7 @@ src/modules/m_lag.dll: src/modules/m_lag.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/m_lag.c $(MODLFLAGS)
 
 src/modules/m_message.dll: src/modules/m_message.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/m_message.c src/modules/webtv.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) src/modules/m_message.c $(MODLFLAGS)
 
 src/modules/m_nachat.dll: src/modules/m_nachat.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/m_nachat.c $(MODLFLAGS)
@@ -564,9 +530,6 @@ src/modules/m_pingpong.dll: src/modules/m_pingpong.c $(INCLUDES)
 
 src/modules/m_quit.dll: src/modules/m_quit.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/m_quit.c $(MODLFLAGS)
-
-src/modules/m_rakill.dll: src/modules/m_rakill.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/m_rakill.c $(MODLFLAGS)
 
 src/modules/m_rping.dll: src/modules/m_rping.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/m_rping.c $(MODLFLAGS)
@@ -793,14 +756,33 @@ src/modules/m_starttls.dll: src/modules/m_starttls.c $(INCLUDES)
 src/modules/m_nopost.dll: src/modules/m_nopost.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/m_nopost.c $(MODLFLAGS)
 
-src/modules/m_issecure.dll: src/modules/m_issecure.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/m_issecure.c $(MODLFLAGS)
-
 src/modules/m_cap.dll: src/modules/m_cap.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/m_cap.c $(MODLFLAGS)
 
 src/modules/m_sasl.dll: src/modules/m_sasl.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/m_sasl.c $(MODLFLAGS)
+
+src/modules/cap_invitenotify.dll: src/modules/cap_invitenotify.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/cap_invitenotify.c $(MODLFLAGS)
+
+src/modules/chanmodes/issecure.dll: src/modules/chanmodes/issecure.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/issecure.c $(MODLFLAGS)
+
+src/modules/chanmodes/jointhrottle.dll: src/modules/chanmodes/jointhrottle.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/jointhrottle.c $(MODLFLAGS)
+
+src/modules/chanmodes/nocolor.dll: src/modules/chanmodes/nocolor.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/nocolor.c $(MODLFLAGS)
+
+src/modules/chanmodes/stripcolor.dll: src/modules/chanmodes/stripcolor.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/stripcolor.c $(MODLFLAGS)
+
+src/modules/chanmodes/permanent.dll: src/modules/chanmodes/permanent.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/permanent.c $(MODLFLAGS)
+
+src/modules/chanmodes/floodprot.dll: src/modules/chanmodes/floodprot.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/floodprot.c $(MODLFLAGS)
+
 
 dummy:
 

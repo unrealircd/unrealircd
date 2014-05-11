@@ -67,9 +67,6 @@ MODVAR char serveropts[] = {
 #ifdef INET6
 	'6',
 #endif
-#ifdef STRIPBADWORDS
-	'X',
-#endif
 #ifdef USE_SSL
 	'e',
 #endif
@@ -305,16 +302,6 @@ void send_usage(aClient *cptr, char *nick)
 	    me.name, RPL_STATSDEBUG, nick, mins, secs, umin, usec, smin, ssec);
 # endif
 #endif
-	sendto_one(cptr, ":%s %d %s :Reads %d Writes %d",
-	    me.name, RPL_STATSDEBUG, nick, readcalls, writecalls);
-	sendto_one(cptr,
-	    ":%s %d %s :Writes:  <0 %d 0 %d <16 %d <32 %d <64 %d",
-	    me.name, RPL_STATSDEBUG, nick,
-	    writeb[0], writeb[1], writeb[2], writeb[3], writeb[4]);
-	sendto_one(cptr,
-	    ":%s %d %s :<128 %d <256 %d <512 %d <1024 %d >1024 %d",
-	    me.name, RPL_STATSDEBUG, nick,
-	    writeb[5], writeb[6], writeb[7], writeb[8], writeb[9]);
 	return;
 }
 

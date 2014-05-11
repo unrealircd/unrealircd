@@ -45,9 +45,6 @@ Computing Center and Jarkko Oikarinen";
 #include <fcntl.h>
 #include "h.h"
 #include "proto.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 
 #ifdef _WIN32
 #include "version.h"
@@ -72,7 +69,7 @@ void iNAH_host(aClient *sptr, char *host)
 		return;
 
 	if (UHOST_ALLOWED == UHALLOW_REJOIN)
-		rejoin_doquits(sptr);
+		rejoin_leave(sptr);
 	if (sptr->user->virthost)
 	{
 		MyFree(sptr->user->virthost);
@@ -84,7 +81,7 @@ void iNAH_host(aClient *sptr, char *host)
 	sptr->umodes |= UMODE_SETHOST;
 
 	if (UHOST_ALLOWED == UHALLOW_REJOIN)
-		rejoin_dojoinandmode(sptr);
+		rejoin_joinandmode(sptr);
 }
 
 long set_usermode(char *umode)

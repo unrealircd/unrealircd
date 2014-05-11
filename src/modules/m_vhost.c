@@ -37,9 +37,6 @@
 #include <fcntl.h>
 #include "h.h"
 #include "proto.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 #ifdef _WIN32
 #include "version.h"
 #endif
@@ -151,7 +148,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				}
 				break;
 			case UHALLOW_REJOIN:
-				rejoin_doquits(sptr);
+				rejoin_leave(sptr);
 				/* join sent later when the host has been changed */
 				break;
 		}
@@ -194,7 +191,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    sptr->user->realhost, vhost->virtuser ? vhost->virtuser : "", 
 		    	vhost->virtuser ? "@" : "", vhost->virthost);
 		if (UHOST_ALLOWED == UHALLOW_REJOIN)
-			rejoin_dojoinandmode(sptr);
+			rejoin_joinandmode(sptr);
 		return 0;
 	}
 	if (i == -1)

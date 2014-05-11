@@ -36,9 +36,6 @@
 #include <fcntl.h>
 #include "h.h"
 #include "proto.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 #ifdef _WIN32
 #include "version.h"
 #endif
@@ -89,7 +86,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	Membership *lp;
 	anUser *user;
-	aClient *acptr, *a2cptr;
+	aClient *acptr;
 	aChannel *chptr;
 	char *nick, *tmp, *name;
 	char *p = NULL;
@@ -151,8 +148,6 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 			invis = acptr != sptr && IsInvisible(acptr);
 			member = (user->channel) ? 1 : 0;
-
-			a2cptr = find_server_quick(user->server);
 
 			hideoper = 0;
 			if (IsHideOper(acptr) && (acptr != sptr) && !IsAnOper(sptr))
@@ -280,7 +275,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
                         if (!(IsULine(acptr) && !IsOper(sptr) && HIDE_ULINES))
 				sendto_one(sptr, rpl_str(RPL_WHOISSERVER),
 				    me.name, parv[0], name, user->server,
-				    a2cptr ? a2cptr->info : "*Not On This Net*");
+				    acptr->srvptr ? acptr->srvptr->info : "*Not On This Net*");
 
 			if (user->away)
 				sendto_one(sptr, rpl_str(RPL_AWAY), me.name,

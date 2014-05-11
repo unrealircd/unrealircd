@@ -37,9 +37,6 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 #include "version.h"
 
 DLLFUNC int m_netinfo(aClient *cptr, aClient *sptr, int parc, char *parv[]);

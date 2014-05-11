@@ -1,0 +1,148 @@
+/*
+ * Block Color UnrealIRCd Module (Channel Mode +c)
+ * (C) Copyright 2000-.. Bram Matthys (Syzop) and the UnrealIRCd team
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 1, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
+#include "config.h"
+#include "struct.h"
+#include "common.h"
+#include "sys.h"
+#include "numeric.h"
+#include "msg.h"
+#include "proto.h"
+#include "channel.h"
+#include <time.h>
+#include <sys/stat.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#ifdef _WIN32
+#include <io.h>
+#endif
+#include <fcntl.h>
+#include "h.h"
+#ifdef _WIN32
+#include "version.h"
+#endif
+
+DLLFUNC CMD_FUNC(nocolor);
+
+ModuleHeader MOD_HEADER(nocolor)
+  = {
+	"chanmodes/nocolor",
+	"$Id$",
+	"Channel Mode +c",
+	"3.2-b8-1",
+	NULL 
+    };
+
+Cmode_t EXTCMODE_NOCOLOR;
+
+#define IsNoColor(chptr)    (chptr->mode.extmode & EXTCMODE_NOCOLOR)
+
+DLLFUNC char *nocolor_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
+DLLFUNC char *nocolor_prelocalpart(aClient *sptr, aChannel *chptr, char *comment);
+DLLFUNC char *nocolor_prelocalquit(aClient *sptr, char *comment);
+
+DLLFUNC int MOD_TEST(nocolor)(ModuleInfo *modinfo)
+{
+	return MOD_SUCCESS;
+}
+
+DLLFUNC int MOD_INIT(nocolor)(ModuleInfo *modinfo)
+{
+CmodeInfo req;
+
+	/* Channel mode */
+	memset(&req, 0, sizeof(req));
+	req.paracount = 0;
+	req.flag = 'c';
+	req.is_ok = extcmode_default_requirechop;
+	CmodeAdd(modinfo->handle, req, &EXTCMODE_NOCOLOR);
+	
+	HookAddPCharEx(modinfo->handle, HOOKTYPE_PRE_CHANMSG, nocolor_prechanmsg);
+	HookAddPCharEx(modinfo->handle, HOOKTYPE_PRE_LOCAL_PART, nocolor_prelocalpart);
+	HookAddPCharEx(modinfo->handle, HOOKTYPE_PRE_LOCAL_QUIT, nocolor_prelocalquit);
+	
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	return MOD_SUCCESS;
+}
+
+DLLFUNC int MOD_LOAD(nocolor)(int module_load)
+{
+	return MOD_SUCCESS;
+}
+
+DLLFUNC int MOD_UNLOAD(nocolor)(int module_unload)
+{
+	return MOD_SUCCESS;
+}
+
+static int IsUsingColor(char *s)
+{
+        if (!s)
+                return 0;
+
+        for (; *s; s++)
+                if (*s == 3 || *s == 27 || *s == 4 || *s == 22) /* mirc color, ansi, rgb, reverse */
+                        return 1;
+
+        return 0;
+}
+
+DLLFUNC char *nocolor_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
+{
+        if (MyClient(sptr) && IsNoColor(chptr) && IsUsingColor(text))
+        {
+                if (!notice)
+                {
+                        sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
+                                   me.name, sptr->name, chptr->chname,
+                                   "Color is not permitted in this channel", chptr->chname);
+                }
+
+                return NULL;
+        }
+        return text;
+}
+
+DLLFUNC char *nocolor_prelocalpart(aClient *sptr, aChannel *chptr, char *comment)
+{
+        if (MyClient(sptr) && IsNoColor(chptr) && IsUsingColor(comment))
+                return NULL;
+
+        return comment;
+}
+
+/** Is any channel where the user is in +c? */
+static int IsAnyChannelNoColor(aClient *sptr)
+{
+Membership *lp;
+
+	for (lp = sptr->user->channel; lp; lp = lp->next)
+		if (IsNoColor(lp->chptr))
+			return 1;
+	return 0;
+}
+
+DLLFUNC char *nocolor_prelocalquit(aClient *sptr, char *comment)
+{
+        if (MyClient(sptr) && !BadPtr(comment) && IsUsingColor(comment) && IsAnyChannelNoColor(sptr))
+                return NULL;
+
+        return comment;
+}

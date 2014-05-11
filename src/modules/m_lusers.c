@@ -37,9 +37,6 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 #ifdef _WIN32
 #include "version.h"
 #endif
@@ -117,7 +114,7 @@ char flatmap;
 		max_connection_count =
 		    IRCstats.me_clients + IRCstats.me_servers;
 		if (max_connection_count % 10 == 0)	/* only send on even tens */
-			sendto_ops("Maximum connections: %d (%d clients)",
+			sendto_ops("New record on this server: %d connections (%d clients)",
 			    max_connection_count, IRCstats.me_clients);
 	}
 	return 0;

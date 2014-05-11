@@ -44,9 +44,6 @@
 #include <fcntl.h>
 #include "h.h"
 #include "proto.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 #ifdef _WIN32
 #include "version.h"
 #endif
@@ -176,7 +173,7 @@ int  legalident = 1;
 				}
 				break;
 			case UHALLOW_REJOIN:
-				rejoin_doquits(acptr);
+				rejoin_leave(acptr);
 				/* join sent later when the ident has been changed */
 				break;
 		}
@@ -199,7 +196,7 @@ int  legalident = 1;
 		    sptr->name, acptr->name, parv[2]);
 		ircsnprintf(acptr->user->username, sizeof(acptr->user->username), "%s", parv[2]);
 		if (UHOST_ALLOWED == UHALLOW_REJOIN)
-			rejoin_dojoinandmode(acptr);
+			rejoin_joinandmode(acptr);
 		return 0;
 	}
 	else

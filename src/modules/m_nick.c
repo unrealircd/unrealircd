@@ -37,9 +37,6 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 #ifdef _WIN32
 #include "version.h"
 #endif
@@ -115,7 +112,7 @@ DLLFUNC CMD_FUNC(m_uid)
 	int  differ = 1, update_watch = 1;
 	unsigned char removemoder = 1;
 
-	if ((NICKLEN < iConf.nicklen) || !IsServer(cptr))
+	if (!IsServer(cptr))
 		strlcpy(nick, parv[1], iConf.nicklen + 1);
 	else
 		strlcpy(nick, parv[1], NICKLEN + 1);
@@ -417,7 +414,7 @@ DLLFUNC CMD_FUNC(m_nick)
 		return 0;
 	}
 
-	if ((NICKLEN < iConf.nicklen) || !IsServer(cptr))
+	if (!IsServer(cptr))
 		strlcpy(nick, parv[1], iConf.nicklen + 1);
 	else
 		strlcpy(nick, parv[1], NICKLEN + 1);
@@ -1017,8 +1014,7 @@ DLLFUNC CMD_FUNC(m_nick)
 		/* Copy password to the passwd field if it's given after NICK
 		 * - originally by taz, modified by Wizzu
 		 */
-		if ((parc > 2) && (strlen(parv[2]) <= PASSWDLEN)
-		    && !(sptr->listener->options & LISTENER_JAVACLIENT))
+		if ((parc > 2) && (strlen(parv[2]) <= PASSWDLEN))
 		{
 			if (sptr->passwd)
 				MyFree(sptr->passwd);
@@ -1078,19 +1074,6 @@ DLLFUNC CMD_FUNC(m_nick)
 	}
 	else if (IsPerson(sptr) && update_watch)
 		hash_check_watch(sptr, RPL_LOGON);
-
-	if (sptr->user && !newusr && !IsULine(sptr))
-	{
-		for (mp = sptr->user->channel; mp; mp = mp->next)
-		{
-			aChannel *chptr = mp->chptr;
-			if (chptr && !(mp->flags & (CHFL_CHANOP|CHFL_VOICE|CHFL_CHANOWNER|CHFL_HALFOP|CHFL_CHANPROT)) &&
-			    chptr->mode.floodprot && do_chanflood(chptr->mode.floodprot, FLD_NICK) && MyClient(sptr))
-			{
-				do_chanflood_action(chptr, FLD_NICK, "nick");
-			}
-		}	
-	}
 
 	if (newusr && !MyClient(sptr) && IsPerson(sptr))
 	{
@@ -1347,6 +1330,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 	if (MyConnect(sptr))
 	{
 		char descbuf[BUFSIZE];
+		int i;
 
 		snprintf(descbuf, sizeof descbuf, "Client: %s", nick);
 		fd_desc(sptr->fd, descbuf);
@@ -1372,18 +1356,11 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			sendto_one(sptr, rpl_str(RPL_YOURHOST), me.name, nick,
 			    me.name, version);
 		sendto_one(sptr, rpl_str(RPL_CREATED), me.name, nick, creation);
-		if (!(sptr->listener->options & LISTENER_JAVACLIENT))
-			sendto_one(sptr, rpl_str(RPL_MYINFO), me.name, parv[0],
-			    me.name, version, umodestring, cmodestring);
-		else
-			sendto_one(sptr, ":%s 004 %s %s CR1.8.03-%s %s %s",
-				    me.name, parv[0],
-				    me.name, version, umodestring, cmodestring);
-		{
-			int i;
-			for (i = 0; IsupportStrings[i]; i++)
-				sendto_one(sptr, rpl_str(RPL_ISUPPORT), me.name, nick, IsupportStrings[i]);
-		}
+		sendto_one(sptr, rpl_str(RPL_MYINFO), me.name, parv[0],
+		    me.name, version, umodestring, cmodestring);
+
+		for (i = 0; IsupportStrings[i]; i++)
+			sendto_one(sptr, rpl_str(RPL_ISUPPORT), me.name, nick, IsupportStrings[i]);
 
 		sendto_one(sptr, rpl_str(RPL_YOURID), me.name, nick, sptr->id);
 
@@ -1519,7 +1496,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		if (user->snomask)
 			sendto_one(sptr, rpl_str(RPL_SNOMASK),
 				me.name, sptr->name, get_snostr(user->snomask));
-		strlcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost), USERLEN+1);
+		strlcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost), sizeof(userhost));
 
 		/* NOTE: Code after this 'if (savetkl)' will not be executed for quarantined-
 		 *       virus-users. So be carefull with the order. -- Syzop

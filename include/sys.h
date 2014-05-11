@@ -171,6 +171,8 @@ extern char OSName[256];
 
 #ifdef _WIN32
 typedef unsigned short u_int16_t;
+typedef unsigned __int64 uint64_t;
+typedef unsigned __int32 uint32_t;
 #endif
 
 /*

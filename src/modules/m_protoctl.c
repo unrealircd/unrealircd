@@ -37,9 +37,6 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 #include "version.h"
 
 DLLFUNC int m_protoctl(aClient *cptr, aClient *sptr, int parc, char *parv[]);
@@ -294,6 +291,9 @@ CMD_FUNC(m_protoctl)
 		{
 			aClient *acptr;
 			char *sid = s + 4;
+
+                        if (!IsServer(cptr) && !IsEAuth(cptr) && !IsHandshake(cptr))
+                                return exit_client(cptr, cptr, &me, "Got PROTOCTL SID before EAUTH, that's the wrong order!");
 
 			if ((acptr = hash_find_id(sid, NULL)) != NULL)
 			{

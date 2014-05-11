@@ -51,7 +51,6 @@ struct ChMode {
         long mode;
 	long extmodes;
 	char *extparams[EXTCMODETABLESZ];
-	ChanFloodProt	floodprot;
 };
 
 typedef struct _OperStat {
@@ -110,9 +109,9 @@ struct zConfiguration {
 	int ssl_renegotiate_timeout;
 	
 #elif defined(_WIN32)
-	void *bogus1, *bogus2, *bogus3, *bogus5, *bogus8;
-	long bogus4;
-	int bogus6, bogus7;
+	void *bogus1, *bogus2, *bogus3, *bogus4, *bogus5;
+	long bogus6;
+	int bogus7, bogus8;
 #endif
 	enum UHAllowed userhost_allowed;
 	char *restrict_usermodes;

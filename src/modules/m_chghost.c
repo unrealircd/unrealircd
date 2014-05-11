@@ -44,9 +44,6 @@
 #include <fcntl.h>
 #include "h.h"
 #include "proto.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 #ifdef _WIN32
 #include "version.h"
 #endif
@@ -168,7 +165,7 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				}
 				break;
 			case UHALLOW_REJOIN:
-				rejoin_doquits(acptr);
+				rejoin_leave(acptr);
 				/* join sent later when the host has been changed */
 				break;
 		}
@@ -197,7 +194,7 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		}
 		acptr->user->virthost = strdup(parv[2]);
 		if (UHOST_ALLOWED == UHALLOW_REJOIN)
-			rejoin_dojoinandmode(acptr);
+			rejoin_joinandmode(acptr);
 		return 0;
 	}
 	else

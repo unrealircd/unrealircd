@@ -36,9 +36,6 @@
 #include <fcntl.h>
 #include "h.h"
 #include "proto.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 #ifdef _WIN32
 #include "version.h"
 #endif
@@ -90,9 +87,6 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (!IsServer(cptr) && IsPerson(sptr))
 	{
-#ifdef STRIPBADWORDS
-		int blocked = 0;
-#endif
 		int n;
 		char *s = comment;
 		Hook *tmphook;
@@ -104,11 +98,7 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (!prefix_quit || strcmp(prefix_quit, "no"))
 			s = ircsnprintf(comment, sizeof(comment), "%s ",
 		    		BadPtr(prefix_quit) ? "Quit:" : prefix_quit);
-#ifdef STRIPBADWORDS
-		ocomment = (char *)stripbadwords_quit(ocomment, &blocked);
-		if (blocked)
-			ocomment = parv[0];
-#endif
+
 		n = dospamfilter(sptr, ocomment, SPAMF_QUIT, NULL, 0, NULL);
 		if (n == FLUSH_BUFFER)
 			return n;
@@ -118,33 +108,6 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (!IsAnOper(sptr) && ANTI_SPAM_QUIT_MSG_TIME)
 			if (sptr->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
 				ocomment = parv[0];
-
-		/* Strip color codes if any channel is +S, use nick as reason if +c. */
-		if (IsPerson(sptr) && (strchr(ocomment, '\003')))
-		{
-			unsigned char filtertype = 0; /* 1=filter, 2=block, highest wins. */
-			for (lp = sptr->user->channel; lp; lp = lp->next)
-			{
-				if (lp->chptr->mode.mode & MODE_NOCOLOR)
-				{
-					filtertype = 2;
-					break;
-				}
-				if (lp->chptr->mode.mode & MODE_STRIP)
-				{
-					if (!filtertype)
-						filtertype = 1;
-				}
-			}
-			if (filtertype == 1)
-			{
-				ocomment = StripColors(ocomment);
-				if (*ocomment == '\0')
-					ocomment = parv[0];
-			} else
-			if (filtertype == 2)
-				ocomment = parv[0];
-		} /* (strip color codes) */
 
                 for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_QUIT]; tmphook; tmphook = tmphook->next)
 		{

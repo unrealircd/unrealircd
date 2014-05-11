@@ -37,9 +37,6 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 #ifdef _WIN32
 #include "version.h"
 #endif
@@ -80,17 +77,16 @@ DLLFUNC int MOD_UNLOAD(m_starttls)(int module_unload)
 	return MOD_SUCCESS;
 }
 
-#ifdef USE_SSL
-static ClientCapability cap_tls = {
-	.name = "tls",
-	.cap = PROTO_STARTTLS,
-};
-#endif
-
 static void m_starttls_caplist(struct list_head *head)
 {
 #ifdef USE_SSL
-	clicap_append(head, &cap_tls);
+ClientCapability *cap;
+
+	cap = MyMallocEx(sizeof(ClientCapability));
+	cap->name = strdup("tls");
+	cap->cap = PROTO_STARTTLS,
+	clicap_append(head, cap); /* this is wrong.. head? and unfreed */
+	/* todo: free */
 #endif
 }
 

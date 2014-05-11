@@ -150,16 +150,6 @@
 #define REMOTEINC_SPECIALCACHE
 
 /*
-  Stripbadwords patch
-*/
-#define STRIPBADWORDS
-
-/*
- * Always strip badwords in channels? (channel does not have to be +G)
-*/
-#undef STRIPBADWORDS_CHAN_ALWAYS
-
-/*
  * No spoof code
  *
  * This enables the spoof protection.
@@ -264,18 +254,17 @@
 
 /* CHROOTDIR
  *
- * This enables running the IRCd chrooted (requires initial root privileges,
- * but will be dropped to IRC_USER/IRC_GROUP privileges if those are defined).
+ * This enables running the IRCd chrooted. Privileges will be dropped later
+ * to IRC_USER/IRC_GROUP when those are defined.
  *
  * The directory to chroot to is simply DPATH (which is set via ./Config).
  * (This may effect the PATH locations above, though you can symlink it)
  *
- * Usually you only simply need to enable this, and set IRC_USER and 
- * IRC_GROUP, you don't need to create a special chroot environment.. 
+ * If you want this, simple change this to '#define CHROOTDIR' and also
+ * look at IRC_USER/IRC_GROUP a few lines below.
+ * There's no need for you to create a special chroot environment;
  * UnrealIRCd will do that by itself (Unreal will create /dev/random, 
  * etc. etc.).
- *
- * Change to '#define CHROOTDIR' to enable...
  */
 /* #define CHROOTDIR    */
 
@@ -283,8 +272,7 @@
  * IRC_USER
  *
  * If you start the server as root but wish to have it run as another user,
- * define IRC_USER to that user name.  This should only be defined if you 
- * are running as root and even then perhaps not.
+ * define IRC_USER to that user name.
  */
 /* #define IRC_USER  "<user name>" */
 /* #define IRC_GROUP "<group name>" */
@@ -464,13 +452,11 @@
  */
 #define KILLCHASETIMELIMIT 90	/* Recommended value: 90 */
 
-/* JoinThrottle (chanmode +j): +j x:y throttles users to X joins per Y seconds (per-user).
- * In peak situations (eg: just after a server restart with thousand clients joining
- * hundreds of channels) it can use like ~200k, but in normal circumstances you should
- * count on just ~10-50k.
+/*
+ * Forces Unreal to use compressed IPv6 addresses rather than expanding them
  */
-#define JOINTHROTTLE
-
+#undef IPV6_COMPRESSED
+  
 /* Detect slow spamfilters? This requires a little more cpu time when processing
  * any spamfilter (like on text/connect/..) but will save you from slowing down
  * your IRCd to a near-halt (well, in most cases.. there are still cases like when

@@ -42,19 +42,12 @@
 #ifdef GLOBH
 #include <glob.h>
 #endif
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 #include "h.h"
 #include "inet.h"
 #include "proto.h"
 #ifdef _WIN32
 #undef GLOBH
 #endif
-#include "badwords.h"
-
-#define ircstrdup(x,y) do { if (x) MyFree(x); if (!y) x = NULL; else x = strdup(y); } while(0)
-#define ircfree(x) do { if (x) MyFree(x); x = NULL; } while(0)
 
 /* 
  * Some typedefs..
@@ -93,9 +86,6 @@ static int	_conf_vhost		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_link		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_ban		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_set		(ConfigFile *conf, ConfigEntry *ce);
-#ifdef STRIPBADWORDS
-static int	_conf_badword		(ConfigFile *conf, ConfigEntry *ce);
-#endif
 static int	_conf_deny		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_deny_dcc		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_deny_link		(ConfigFile *conf, ConfigEntry *ce);
@@ -131,9 +121,6 @@ static int	_test_vhost		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_link		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_ban		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_set		(ConfigFile *conf, ConfigEntry *ce);
-#ifdef STRIPBADWORDS
-static int	_test_badword		(ConfigFile *conf, ConfigEntry *ce);
-#endif
 static int	_test_deny		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_allow_channel	(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_allow_dcc		(ConfigFile *conf, ConfigEntry *ce);
@@ -150,9 +137,6 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "admin", 		_conf_admin,		_test_admin 	},
 	{ "alias",		_conf_alias,		_test_alias	},
 	{ "allow",		_conf_allow,		_test_allow	},
-#ifdef STRIPBADWORDS
-	{ "badword",		_conf_badword,		_test_badword	},
-#endif
 	{ "ban", 		_conf_ban,		_test_ban	},
 	{ "cgiirc", 	_conf_cgiirc,	_test_cgiirc	},
 	{ "class", 		_conf_class,		_test_class	},
@@ -250,7 +234,6 @@ static OperFlag _OperFlags[] = {
 static OperFlag _ListenerFlags[] = {
 	{ LISTENER_CLIENTSONLY,  "clientsonly"},
 	{ LISTENER_DEFER_ACCEPT, "defer-accept"},
-	{ LISTENER_JAVACLIENT, 	 "java"},
 	{ LISTENER_SERVERSONLY,  "serversonly"},
 	{ LISTENER_SSL, 	 "ssl"},
 	{ LISTENER_NORMAL, 	 "standard"},
@@ -385,11 +368,6 @@ ConfigItem_log		*conf_log = NULL;
 ConfigItem_alias	*conf_alias = NULL;
 ConfigItem_include	*conf_include = NULL;
 ConfigItem_help		*conf_help = NULL;
-#ifdef STRIPBADWORDS
-ConfigItem_badword	*conf_badword_channel = NULL;
-ConfigItem_badword      *conf_badword_message = NULL;
-ConfigItem_badword	*conf_badword_quit = NULL;
-#endif
 ConfigItem_offchans	*conf_offchans = NULL;
 
 aConfiguration		iConf;
@@ -658,195 +636,44 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 				modes++;
 			continue;
 		}
-		switch (*modes)
+		for (tab = &cFlagTab[0]; tab->mode; tab++)
 		{
-			case 'f':
+			if (tab->flag == *modes)
 			{
-				char *myparam = param;
-
-				ChanFloodProt newf;
-				
-				memset(&newf, 0, sizeof(newf));
-				if (!myparam)
-					break;
-				/* Go to next parameter */
-				param = strtoken(&save, NULL, " ");
-
-				if (myparam[0] != '[')
+				if (tab->parameters)
 				{
-					if (warn)
-						config_status("set::modes-on-join: please use the new +f format: '10:5' becomes '[10t]:5' "
-					                  "and '*10:5' becomes '[10t#b]:5'.");
-				} else
-				{
-					char xbuf[256], c, a, *p, *p2, *x = xbuf+1;
-					int v;
-					unsigned short breakit;
-					unsigned char r;
-					
-					/* '['<number><1 letter>[optional: '#'+1 letter],[next..]']'':'<number> */
-					strlcpy(xbuf, myparam, sizeof(xbuf));
-					p2 = strchr(xbuf+1, ']');
-					if (!p2)
-						break;
-					*p2 = '\0';
-					if (*(p2+1) != ':')
-						break;
-					breakit = 0;
-					for (x = strtok(xbuf+1, ","); x; x = strtok(NULL, ","))
-					{
-						/* <number><1 letter>[optional: '#'+1 letter] */
-						p = x;
-						while(isdigit(*p)) { p++; }
-						if ((*p == '\0') ||
-						    !((*p == 'c') || (*p == 'j') || (*p == 'k') ||
-						    (*p == 'm') || (*p == 'n') || (*p == 't')))
-							break;
-						c = *p;
-						*p = '\0';
-						v = atoi(x);
-						if ((v < 1) || (v > 999)) /* out of range... */
-							break;
-						p++;
-						a = '\0';
-						r = 0;
-						if (*p != '\0')
-						{
-							if (*p == '#')
-							{
-								p++;
-								a = *p;
-								p++;
-								if (*p != '\0')
-								{
-									int tv;
-									tv = atoi(p);
-									if (tv <= 0)
-										tv = 0; /* (ignored) */
-									if (tv > 255)
-										tv = 255; /* set to max */
-									r = tv;
-								}
-							}
-						}
-
-						switch(c)
-						{
-							case 'c':
-								newf.l[FLD_CTCP] = v;
-								if ((a == 'm') || (a == 'M'))
-									newf.a[FLD_CTCP] = a;
-								else
-									newf.a[FLD_CTCP] = 'C';
-								newf.r[FLD_CTCP] = r;
-								break;
-							case 'j':
-								newf.l[FLD_JOIN] = v;
-								if (a == 'R')
-									newf.a[FLD_JOIN] = a;
-								else
-									newf.a[FLD_JOIN] = 'i';
-								newf.r[FLD_JOIN] = r;
-								break;
-							case 'k':
-								newf.l[FLD_KNOCK] = v;
-								newf.a[FLD_KNOCK] = 'K';
-								newf.r[FLD_KNOCK] = r;
-								break;
-							case 'm':
-								newf.l[FLD_MSG] = v;
-								if (a == 'M')
-									newf.a[FLD_MSG] = a;
-								else
-									newf.a[FLD_MSG] = 'm';
-								newf.r[FLD_MSG] = r;
-								break;
-							case 'n':
-								newf.l[FLD_NICK] = v;
-								newf.a[FLD_NICK] = 'N';
-								newf.r[FLD_NICK] = r;
-								break;
-							case 't':
-								newf.l[FLD_TEXT] = v;
-								if (a == 'b')
-									newf.a[FLD_TEXT] = 'b';
-								/** newf.r[FLD_TEXT] ** not supported */
-								break;
-							default:
-								breakit=1;
-								break;
-						}
-						if (breakit)
-							break;
-					} /* for strtok.. */
-					if (breakit)
-						break;
-					/* parse 'per' */
-					p2++;
-					if (*p2 != ':')
-						break;
-					p2++;
-					if (!*p2)
-						break;
-					v = atoi(p2);
-					if ((v < 1) || (v > 999)) /* 'per' out of range */
-						break;
-					newf.per = v;
-					/* Is anything turned on? (to stop things like '+f []:15' */
-					breakit = 1;
-					for (v=0; v < NUMFLD; v++)
-						if (newf.l[v])
-							breakit=0;
-					if (breakit)
-						break;
-					
-					/* w00t, we passed... */
-					memcpy(&store->floodprot, &newf, sizeof(newf));
-					store->mode |= MODE_FLOODLIMIT;
+					/* INCOMPATIBLE */
 					break;
 				}
+				store->mode |= tab->mode;
 				break;
 			}
-			default:
-				for (tab = &cFlagTab[0]; tab->mode; tab++)
+		}
+		/* Try extcmodes */
+		if (!tab->mode)
+		{
+			int i;
+			for (i=0; i <= Channelmode_highest; i++)
+			{
+				if (!(Channelmode_Table[i].flag))
+					continue;
+				if (*modes == Channelmode_Table[i].flag)
 				{
-					if (tab->flag == *modes)
+					if (Channelmode_Table[i].paracount)
 					{
-						if (tab->parameters)
-						{
-							/* INCOMPATIBLE */
+						if (!param)
 							break;
-						}
-						store->mode |= tab->mode;
-						break;
+						param = Channelmode_Table[i].conv_param(param, NULL);
+						if (!param)
+							break; /* invalid parameter fmt, do not set mode. */
+						store->extparams[i] = strdup(param);
+						/* Get next parameter */
+						param = strtoken(&save, NULL, " ");
 					}
+					store->extmodes |= Channelmode_Table[i].mode;
+					break;
 				}
-				/* Try extcmodes */
-				if (!tab->mode)
-				{
-					int i;
-					for (i=0; i <= Channelmode_highest; i++)
-					{
-						if (!(Channelmode_Table[i].flag))
-							continue;
-						if (*modes == Channelmode_Table[i].flag)
-						{
-							if (Channelmode_Table[i].paracount)
-							{
-								if (!param)
-									break;
-								param = Channelmode_Table[i].conv_param(param);
-								if (!param)
-									break; /* invalid parameter fmt, do not set mode. */
-								store->extparams[i] = strdup(param);
-								/* Get next parameter */
-								param = strtoken(&save, NULL, " ");
-							}
-							store->extmodes |= Channelmode_Table[i].mode;
-							break;
-						}
-					}
-				}
+			}
 		}
 	}
 	if (parambuf)
@@ -855,9 +682,11 @@ void set_channelmodes(char *modes, struct ChMode *store, int warn)
 
 void chmode_str(struct ChMode modes, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size)
 {
-        if (!(mbuf_size && pbuf_size)) return;
 	aCtab *tab;
 	int i;
+
+        if (!(mbuf_size && pbuf_size)) return;
+
 	*pbuf = 0;
 	*mbuf++ = '+';
 	if (--mbuf_size == 0) return;
@@ -897,12 +726,6 @@ void chmode_str(struct ChMode modes, char *mbuf, char *pbuf, size_t mbuf_size, s
 				if (!--pbuf_size) break;
 			}
 		}
-	}
-	if (modes.floodprot.per)
-	{
-		if (!mbuf_size) return;
-		if (--mbuf_size) *mbuf++ = 'f';
-		if (pbuf_size) strncat(pbuf, channel_modef_string(&modes.floodprot), pbuf_size-1);
 	}
 	*mbuf=0;
 }
@@ -1396,40 +1219,40 @@ void config_error(char *format, ...)
 	config_error_flag = 1;
 }
 
-static void inline config_error_missing(const char *filename, int line, const char *entry)
+void config_error_missing(const char *filename, int line, const char *entry)
 {
 	config_error("%s:%d: %s is missing", filename, line, entry);
 }
 
-static void inline config_error_unknown(const char *filename, int line, const char *block, 
+void config_error_unknown(const char *filename, int line, const char *block, 
 	const char *entry)
 {
 	config_error("%s:%d: Unknown directive '%s::%s'", filename, line, block, entry);
 }
 
-static void inline config_error_unknownflag(const char *filename, int line, const char *block,
+void config_error_unknownflag(const char *filename, int line, const char *block,
 	const char *entry)
 {
 	config_error("%s:%d: Unknown %s flag '%s'", filename, line, block, entry);
 }
 
-static void inline config_error_unknownopt(const char *filename, int line, const char *block,
+void config_error_unknownopt(const char *filename, int line, const char *block,
 	const char *entry)
 {
 	config_error("%s:%d: Unknown %s option '%s'", filename, line, block, entry);
 }
 
-static void inline config_error_noname(const char *filename, int line, const char *block)
+void config_error_noname(const char *filename, int line, const char *block)
 {
 	config_error("%s:%d: %s block has no name", filename, line, block);
 }
 
-static void inline config_error_blank(const char *filename, int line, const char *block)
+void config_error_blank(const char *filename, int line, const char *block)
 {
 	config_error("%s:%d: Blank %s entry", filename, line, block);
 }
 
-static void inline config_error_empty(const char *filename, int line, const char *block, 
+void config_error_empty(const char *filename, int line, const char *block, 
 	const char *entry)
 {
 	config_error("%s:%d: %s::%s specified without a value",
@@ -1477,7 +1300,7 @@ void config_warn(char *format, ...)
 	sendto_realops("[warning] %s", buffer);
 }
 
-static void inline config_warn_duplicate(const char *filename, int line, const char *entry)
+void config_warn_duplicate(const char *filename, int line, const char *entry)
 {
 	config_warn("%s:%d: Duplicate %s directive", filename, line, entry);
 }
@@ -1575,7 +1398,7 @@ void config_progress(char *format, ...)
 	sendto_realops("%s", buffer);
 }
 
-static int inline config_is_blankorempty(ConfigEntry *cep, const char *block)
+int config_is_blankorempty(ConfigEntry *cep, const char *block)
 {
 	if (!cep->ce_varname)
 	{
@@ -1789,8 +1612,29 @@ int isanyserverlinked(void)
 
 void applymeblock(void)
 {
-	if (!conf_me || !me.serv)
+	if (!conf_me)
 		return; /* uh-huh? */
+	
+	/* Info text may always change, just wouldn't show up on other servers, that's all.. */
+	strlcpy(me.info, conf_me->info, sizeof(me.info));
+
+	/* Name can only be set once (on boot) */
+	if (!*me.name)
+		strlcpy(me.name, conf_me->name, sizeof(me.name));
+
+	/* SID change? */
+	if (strcmp(me.id, conf_me->sid))
+	{
+		/* Can we apply ? */
+		if (!isanyserverlinked())
+		{
+			strlcpy(me.id, conf_me->sid, sizeof(me.id));
+		} else {
+			config_warn("me::sid: Server ID changed in config but this change cannot be applied "
+			            "due to being linked to other servers. Unlink all servers and /REHASH to "
+			            "try again.");
+		}
+	}
 }
 
 int	init_conf(char *rootconf, int rehash)
@@ -1827,9 +1671,7 @@ int	init_conf(char *rootconf, int rehash)
 			if (!rehash)
 				win_error();
 #endif
-#ifndef STATIC_LINKING
 			Unload_all_testing_modules();
-#endif
 			unload_notloaded_includes();
 			config_free(conf);
 			conf = NULL;
@@ -1844,7 +1686,6 @@ int	init_conf(char *rootconf, int rehash)
 			old_pid_file = conf_files->pid_file;
 			unrealdns_delasyncconnects();
 			config_rehash();
-#ifndef STATIC_LINKING
 			Unload_all_loaded_modules();
 
 			/* Notify permanent modules of the rehash */
@@ -1856,23 +1697,10 @@ int	init_conf(char *rootconf, int rehash)
 					continue;
 				(*(h->func.intfunc))();
 			}
-#else
-			RunHook0(HOOKTYPE_REHASH);
-#endif
 			unload_loaded_includes();
 		}
 		load_includes();
-#ifndef STATIC_LINKING
 		Init_all_testing_modules();
-#else
-		if (!rehash) {
-			ModuleInfo ModCoreInfo;
-			ModCoreInfo.size = sizeof(ModuleInfo);
-			ModCoreInfo.module_load = 0;
-			ModCoreInfo.handle = NULL;
-			l_commands_Init(&ModCoreInfo);
-		}
-#endif
 		charsys_reset();
 		if (config_run() < 0)
 		{
@@ -1899,9 +1727,7 @@ int	init_conf(char *rootconf, int rehash)
 	else	
 	{
 		config_error("IRCd configuration failed to load");
-#ifndef STATIC_LINKING
 		Unload_all_testing_modules();
-#endif
 		unload_notloaded_includes();
 		config_free(conf);
 		conf = NULL;
@@ -1916,9 +1742,7 @@ int	init_conf(char *rootconf, int rehash)
 	conf = NULL;
 	if (rehash)
 	{
-#ifndef STATIC_LINKING
 		module_loadall(0);
-#endif
 		RunHook0(HOOKTYPE_REHASH_COMPLETE);
 	}
 	do_weird_shun_stuff();
@@ -2063,7 +1887,6 @@ void	config_rehash()
 	ConfigItem_listen	 	*listen_ptr;
 	ConfigItem_tld			*tld_ptr;
 	ConfigItem_vhost		*vhost_ptr;
-	ConfigItem_badword		*badword_ptr;
 	ConfigItem_deny_dcc		*deny_dcc_ptr;
 	ConfigItem_allow_dcc		*allow_dcc_ptr;
 	ConfigItem_deny_link		*deny_link_ptr;
@@ -2225,38 +2048,6 @@ void	config_rehash()
 		MyFree(vhost_ptr);
 	}
 
-#ifdef STRIPBADWORDS
-	for (badword_ptr = conf_badword_channel; badword_ptr;
-		badword_ptr = (ConfigItem_badword *) next) {
-		next = (ListStruct *)badword_ptr->next;
-		ircfree(badword_ptr->word);
-		if (badword_ptr->replace)
-			ircfree(badword_ptr->replace);
-		regfree(&badword_ptr->expr);
-		DelListItem(badword_ptr, conf_badword_channel);
-		MyFree(badword_ptr);
-	}
-	for (badword_ptr = conf_badword_message; badword_ptr;
-		badword_ptr = (ConfigItem_badword *) next) {
-		next = (ListStruct *)badword_ptr->next;
-		ircfree(badword_ptr->word);
-		if (badword_ptr->replace)
-			ircfree(badword_ptr->replace);
-		regfree(&badword_ptr->expr);
-		DelListItem(badword_ptr, conf_badword_message);
-		MyFree(badword_ptr);
-	}
-	for (badword_ptr = conf_badword_quit; badword_ptr;
-		badword_ptr = (ConfigItem_badword *) next) {
-		next = (ListStruct *)badword_ptr->next;
-		ircfree(badword_ptr->word);
-		if (badword_ptr->replace)
-			ircfree(badword_ptr->replace);
-		regfree(&badword_ptr->expr);
-		DelListItem(badword_ptr, conf_badword_quit);
-		MyFree(badword_ptr);
-	}
-#endif
 	/* Clean up local spamfilter entries... */
 	for (tk = tklines[tkl_hash('f')]; tk; tk = tk_next)
 	{
@@ -3407,6 +3198,14 @@ int	_test_me(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
 			}
+		}
+		else if (!strcmp(cep->ce_varname, "numeric"))
+		{
+			config_error("%s:%i: me::numeric has been removed, you must now specify a Server ID (SID) instead. "
+			             "Edit your configuration file and change 'numeric' to 'sid' and make up "
+			             "a server id of exactly 3 characters, starting with a digit, eg: \"001\" or \"0AB\".",
+			             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			errors++;
 		}
 		else if (!strcmp(cep->ce_varname, "sid"))
 		{
@@ -5843,212 +5642,6 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 	return errors;
 }
 
-#ifdef STRIPBADWORDS
-
-static ConfigItem_badword *copy_badword_struct(ConfigItem_badword *ca, int regex, int regflags)
-{
-	ConfigItem_badword *x = MyMalloc(sizeof(ConfigItem_badword));
-	memcpy(x, ca, sizeof(ConfigItem_badword));
-	x->word = strdup(ca->word);
-	if (ca->replace)
-		x->replace = strdup(ca->replace);
-	if (regex) 
-	{
-		memset(&x->expr, 0, sizeof(regex_t));
-		regcomp(&x->expr, x->word, regflags);
-	}
-	return x;
-}
-
-int     _conf_badword(ConfigFile *conf, ConfigEntry *ce)
-{
-	ConfigEntry *cep, *word = NULL;
-	ConfigItem_badword *ca;
-	char *tmp;
-	short regex = 0;
-	int regflags = 0;
-	int ast_l = 0, ast_r = 0;
-
-	ca = MyMallocEx(sizeof(ConfigItem_badword));
-	ca->action = BADWORD_REPLACE;
-	regflags = REG_ICASE|REG_EXTENDED;
-
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
-	{
-		if (!strcmp(cep->ce_varname, "action"))
-		{
-			if (!strcmp(cep->ce_vardata, "block"))
-			{
-				ca->action = BADWORD_BLOCK;
-				/* If it is set to just block, then we don't need to worry about
-				 * replacements 
-				 */
-				regflags |= REG_NOSUB;
-			}
-		}
-		else if (!strcmp(cep->ce_varname, "replace"))
-		{
-			ircstrdup(ca->replace, cep->ce_vardata);
-		}
-		else if (!strcmp(cep->ce_varname, "word"))
-			word = cep;
-	}
-	/* The fast badwords routine can do: "blah" "*blah" "blah*" and "*blah*",
-	 * in all other cases use regex.
-	 */
-	for (tmp = word->ce_vardata; *tmp; tmp++) {
-		if (!isalnum(*tmp) && !(*tmp >= 128)) {
-			if ((word->ce_vardata == tmp) && (*tmp == '*')) {
-				ast_l = 1; /* Asterisk at the left */
-				continue;
-			}
-			if ((*(tmp + 1) == '\0') && (*tmp == '*')) {
-				ast_r = 1; /* Asterisk at the right */
-				continue;
-			}
-			regex = 1;
-			break;
-		}
-	}
-	if (regex)
-	{
-		ca->type = BADW_TYPE_REGEX;
-		ircstrdup(ca->word, word->ce_vardata);
-		regcomp(&ca->expr, ca->word, regflags);
-	}
-	else
-	{
-		char *tmpw;
-		ca->type = BADW_TYPE_FAST;
-		ca->word = tmpw = MyMalloc(strlen(word->ce_vardata) - ast_l - ast_r + 1);
-		/* Copy except for asterisks */
-		for (tmp = word->ce_vardata; *tmp; tmp++)
-			if (*tmp != '*')
-				*tmpw++ = *tmp;
-		*tmpw = '\0';
-		if (ast_l)
-			ca->type |= BADW_TYPE_FAST_L;
-		if (ast_r)
-			ca->type |= BADW_TYPE_FAST_R;
-	}
-	if (!strcmp(ce->ce_vardata, "channel"))
-		AddListItem(ca, conf_badword_channel);
-	else if (!strcmp(ce->ce_vardata, "message"))
-		AddListItem(ca, conf_badword_message);
-	else if (!strcmp(ce->ce_vardata, "quit"))
-		AddListItem(ca, conf_badword_quit);
-	else if (!strcmp(ce->ce_vardata, "all"))
-	{
-		AddListItem(ca, conf_badword_channel);
-		AddListItem(copy_badword_struct(ca,regex,regflags), conf_badword_message);
-		AddListItem(copy_badword_struct(ca,regex,regflags), conf_badword_quit);
-	}
-	return 1;
-}
-
-int _test_badword(ConfigFile *conf, ConfigEntry *ce) 
-{ 
-	int errors = 0;
-	ConfigEntry *cep;
-	char has_word = 0, has_replace = 0, has_action = 0, action = 'r';
-
-	if (!ce->ce_vardata)
-	{
-		config_error("%s:%i: badword without type",
-			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return 1;
-	}
-	else if (strcmp(ce->ce_vardata, "channel") && strcmp(ce->ce_vardata, "message") && 
-	         strcmp(ce->ce_vardata, "quit") && strcmp(ce->ce_vardata, "all")) {
-			config_error("%s:%i: badword with unknown type",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		return 1;
-	}
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
-	{
-		if (config_is_blankorempty(cep, "badword"))
-		{
-			errors++;
-			continue;
-		}
-		if (!strcmp(cep->ce_varname, "word"))
-		{
-			char *errbuf;
-			if (has_word)
-			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
-					cep->ce_varlinenum, "badword::word");
-				continue;
-			}
-			has_word = 1;
-			if ((errbuf = unreal_checkregex(cep->ce_vardata,1,1)))
-			{
-				config_error("%s:%i: badword::%s contains an invalid regex: %s",
-					cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum,
-					cep->ce_varname, errbuf);
-				errors++;
-			}
-		}
-		else if (!strcmp(cep->ce_varname, "replace"))
-		{
-			if (has_replace)
-			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
-					cep->ce_varlinenum, "badword::replace");
-				continue;
-			}
-			has_replace = 1;
-		}
-		else if (!strcmp(cep->ce_varname, "action"))
-		{
-			if (has_action)
-			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
-					cep->ce_varlinenum, "badword::action");
-				continue;
-			}
-			has_action = 1;
-			if (!strcmp(cep->ce_vardata, "replace"))
-				action = 'r';
-			else if (!strcmp(cep->ce_vardata, "block"))
-				action = 'b';
-			else
-			{
-				config_error("%s:%d: Unknown badword::action '%s'",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-					cep->ce_vardata);
-				errors++;
-			}
-				
-		}
-		else
-		{
-			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"badword", cep->ce_varname);
-			errors++;
-		}
-	}
-
-	if (!has_word)
-	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			"badword::word");
-		errors++;
-	}
-	if (has_action)
-	{
-		if (has_replace && action == 'b')
-		{
-			config_error("%s:%i: badword::action is block but badword::replace exists",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-			errors++;
-		}
-	}
-	return errors; 
-}
-#endif
-
 int _conf_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep;
@@ -6452,7 +6045,7 @@ int _test_log(ConfigFile *conf, ConfigEntry *ce) {
 			"log::flags");
 		errors++;
 	}
-	if ((fd = fd_fileopen(ce->ce_vardata, O_WRONLY)) == -1)
+	if ((fd = fd_fileopen(ce->ce_vardata, O_WRONLY|O_CREAT)) == -1)
 	{
 		config_error("%s:%i: Couldn't open logfile (%s) for writing: %s",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
@@ -7800,12 +7393,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
 			}
-			if (temp.mode & MODE_NOCOLOR && temp.mode & MODE_STRIP)
-			{
-				config_error("%s:%i: set::modes-on-join has +c and +S",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-				errors++;
-			}
 			if (temp.mode & MODE_SECRET && temp.mode & MODE_PRIVATE)
 			{
 				config_error("%s:%i: set::modes-on-join has +s and +p",
@@ -8719,6 +8306,14 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 	{
 		config_status("%s:%i: loadmodule without filename",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		return -1;
+	}
+	if (strstr(ce->ce_vardata, "commands.so") || strstr(ce->ce_vardata, "commands.dll"))
+	{
+		config_error("%s:%i: You are trying to load the 'commands' module, this is no longer supported. "
+		             "Fix this by editing your configuration file: remove the loadmodule line for commands and add the following line instead: "
+		             "include \"modules.conf\";",
+		             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return -1;
 	}
 	if ((ret = Module_Create(ce->ce_vardata))) {

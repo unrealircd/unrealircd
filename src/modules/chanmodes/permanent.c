@@ -1,5 +1,5 @@
 /*
- * UnrealIRCd, src/modules/chm_permanent.c
+ * UnrealIRCd, src/modules/chanmodes/permanent.c
  * Copyright (c) 2013 William Pitcock <nenolod@dereferenced.org>
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -24,11 +24,10 @@
 #include "common.h"
 #include "sys.h"
 #include "h.h"
-#include "m_cap.h"
 
-ModuleHeader MOD_HEADER(chm_permanent)
+ModuleHeader MOD_HEADER(permanent)
   = {
-        "chm_permanent",
+        "chanmodes/permanent",
         "$Id$",
         "Permanent channel mode (+P)", 
         "3.2-b8-1",
@@ -37,13 +36,13 @@ ModuleHeader MOD_HEADER(chm_permanent)
 
 static Cmode_t EXTMODE_PERMANENT = 0L;
 
-static void chm_permanent_channel_destroy(aChannel *chptr, bool *should_destroy)
+static void permanent_channel_destroy(aChannel *chptr, bool *should_destroy)
 {
 	if (chptr->mode.extmode & EXTMODE_PERMANENT)
 		*should_destroy = false;
 }
 
-static int chm_permanent_is_ok(aClient *cptr, aChannel *chptr, char *para, int checkt, int what)
+static int permanent_is_ok(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what)
 {
 	if (IsOper(cptr))
 		return EX_ALLOW;
@@ -52,30 +51,31 @@ static int chm_permanent_is_ok(aClient *cptr, aChannel *chptr, char *para, int c
 }
 
 /* This is called on module init, before Server Ready */
-DLLFUNC int MOD_INIT(chm_permanent)(ModuleInfo *modinfo)
+DLLFUNC int MOD_INIT(permanent)(ModuleInfo *modinfo)
 {
-	CmodeInfo chm_permanent = { };
+CmodeInfo req;
 
         MARK_AS_OFFICIAL_MODULE(modinfo);
 
-	chm_permanent.paracount = 0;
-	chm_permanent.flag = 'P';
-	chm_permanent.is_ok = chm_permanent_is_ok;
-	CmodeAdd(modinfo->handle, chm_permanent, &EXTMODE_PERMANENT);
+        memset(&req, 0, sizeof(req));
+	req.paracount = 0;
+	req.flag = 'P';
+	req.is_ok = permanent_is_ok;
+	CmodeAdd(modinfo->handle, req, &EXTMODE_PERMANENT);
 
-	HookAddVoidEx(modinfo->handle, HOOKTYPE_CHANNEL_DESTROY, chm_permanent_channel_destroy);
+	HookAddVoidEx(modinfo->handle, HOOKTYPE_CHANNEL_DESTROY, permanent_channel_destroy);
 
         return MOD_SUCCESS;
 }
 
 /* Is first run when server is 100% ready */
-DLLFUNC int MOD_LOAD(chm_permanent)(int module_load)
+DLLFUNC int MOD_LOAD(permanent)(int module_load)
 {
         return MOD_SUCCESS;
 }
 
 /* Called when module is unloaded */
-DLLFUNC int MOD_UNLOAD(chm_permanent)(int module_unload)
+DLLFUNC int MOD_UNLOAD(permanent)(int module_unload)
 {
         return MOD_SUCCESS;
 }

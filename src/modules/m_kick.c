@@ -37,9 +37,6 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 #ifdef _WIN32
 #include "version.h"
 #endif
@@ -93,8 +90,9 @@ CMD_FUNC(m_kick)
 	aClient *who;
 	aChannel *chptr;
 	int  chasing = 0;
-	char *comment, *name, *p = NULL, *user, *p2 = NULL;
+	char *comment, *name, *p = NULL, *user, *p2 = NULL, *badkick;
 	Membership *lp;
+	Hook *h;
 
 	if (parc < 3 || *parv[1] == '\0')
 	{
@@ -188,6 +186,38 @@ CMD_FUNC(m_kick)
 				}
 				/* Store "who" access flags */
 				who_flags = get_access(who, chptr);
+
+				badkick = NULL;
+				for (h = Hooks[HOOKTYPE_CAN_KICK]; h; h = h->next) {
+					badkick = (*(h->func.pcharfunc))(sptr, who, chptr, comment, sptr_flags, who_flags);
+					if (badkick)
+						break;
+				}
+				
+				if (badkick)
+				{
+					/* If set it means 'not allowed to kick'.. now check if (s)he can override that.. */
+					if (op_can_override(sptr))
+					{
+						sendto_snomask(SNO_EYES,
+							"*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
+							sptr->name, sptr->user->username, sptr->user->realhost,
+							chptr->chname, who->name, comment);
+						ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) KICK %s %s (%s)",
+							sptr->name, sptr->user->username, sptr->user->realhost,
+							chptr->chname, who->name, comment);
+						goto attack; /* all other checks don't matter anymore (and could cause double msgs) */
+					} else {
+						/* Not an oper overriding */
+						if (MyClient(sptr))
+						{
+							/* Send the error message prepared by the can_kick hook and deny the kick */
+							sendto_one(sptr, "%s", badkick);
+							continue;
+						}
+					}
+				}
+
 				/* we are neither +o nor +h, OR..
 				 * we are +h but victim is +o, OR...
 				 * we are +h and victim is +h

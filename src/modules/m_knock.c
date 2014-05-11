@@ -37,9 +37,6 @@
 #endif
 #include <fcntl.h>
 #include "h.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 #ifdef _WIN32
 #include "version.h"
 #endif
@@ -167,9 +164,6 @@ CMD_FUNC(m_knock)
 
 	sendnotice(sptr, "Knocked on %s", chptr->chname);
 
-	if (chptr->mode.floodprot && !IsULine(sptr) &&
-	    do_chanflood(chptr->mode.floodprot, FLD_KNOCK) && MyClient(sptr))
-		do_chanflood_action(chptr, FLD_KNOCK, "knock");
-
+        RunHook2(HOOKTYPE_KNOCK, sptr, chptr);
 	return 0;
 }

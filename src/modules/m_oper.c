@@ -37,9 +37,6 @@
 #include "h.h"
 #include "proto.h"
 #include "inet.h"
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
 #ifdef _WIN32
 #include "version.h"
 #endif
@@ -136,17 +133,20 @@ DLLFUNC int MOD_UNLOAD(m_oper)(int module_unload)
 
 void set_oper_host(aClient *sptr, char *host)
 {
-	char *c;
-	char *vhost = host;
-
-	if ((c = strchr(host, '@')))
+        char uhost[HOSTLEN + USERLEN + 1];
+        char *p;
+        
+        strlcpy(uhost, host, sizeof(uhost));
+        
+	if ((p = strchr(uhost, '@')))
 	{
-		vhost =	c+1;
-		strlcpy(sptr->user->username, host, c-vhost);
+	        *p++ = '\0';
+		strlcpy(sptr->user->username, uhost, sizeof(sptr->user->username));
 		sendto_server(NULL, 0, 0, ":%s SETIDENT %s",
 		    sptr->name, sptr->user->username);
+	        host = p;
 	}
-	iNAH_host(sptr, vhost);
+	iNAH_host(sptr, host);
 	SetHidden(sptr);
 }
 
@@ -266,9 +266,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		if (aconf->swhois) {
 			if (sptr->user->swhois)
 				MyFree(sptr->user->swhois);
-                        size_t whois_size = strlen(aconf->swhois) + 1;
-			sptr->user->swhois = MyMalloc(whois_size);
-			strlcpy(sptr->user->swhois, aconf->swhois, whois_size);
+                        sptr->user->swhois = strdup(aconf->swhois);
 			sendto_server(cptr, 0, 0, ":%s SWHOIS %s :%s",
 			    me.name, sptr->name, aconf->swhois);
 		}
