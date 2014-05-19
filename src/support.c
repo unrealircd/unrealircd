@@ -1672,7 +1672,7 @@ int unreal_copyfile(const char *src, const char *dest)
 	}
 
 #ifndef _WIN32
-#if DEFAULT_PERMISSIONS
+#if defined(DEFAULT_PERMISSIONS) && (DEFAULT_PERMISSIONS != 0)
 	destfd  = open(dest, O_WRONLY|O_CREAT, DEFAULT_PERMISSIONS);
 #else
 	destfd  = open(dest, O_WRONLY|O_CREAT, S_IRUSR | S_IXUSR);
