@@ -1454,3 +1454,137 @@ void set_channel_mlock(aClient *cptr, aClient *sptr, aChannel *chptr, const char
 			      BadPtr(chptr->mode_lock) ? "" : chptr->mode_lock);
 	}
 }
+
+/** Parse a channelmode line.
+ * @in pm A ParseMode struct, used to return values and to maintain internal state.
+ * @in modebuf_in Buffer pointing to mode characters (eg: +snk-l)
+ * @in parabuf_in Buffer pointing to all parameters (eg: key 123)
+ * @retval Returns 1 if we have valid data to return, 0 if at end of mode line.
+ * @example
+ *
+ * ParseMode pm;
+ * int ret;
+ * for (ret = parse_chanmode(&pm, modebuf, parabuf); ret; ret = parse_chanmode(&pm, NULL, NULL))
+ * {
+ *         ircd_log(LOG_ERROR, "Got %c%c %s",
+ *                  pm.what == MODE_ADD ? '+' : '-',
+ *                  pm.modechar,
+ *                  pm.param ? pm.param : "");
+ * }
+ */
+int parse_chanmode(ParseMode *pm, char *modebuf_in, char *parabuf_in)
+{
+	if (modebuf_in)
+	{
+		/* Initialize */
+		memset(pm, 0, sizeof(ParseMode));
+		pm->modebuf = modebuf_in;
+		pm->parabuf = parabuf_in;
+		pm->what = MODE_ADD;
+	}
+
+	while(1)
+	{
+		if (*pm->modebuf == '\0')
+			return 0;
+		else if (*pm->modebuf == '+')
+		{
+			pm->what = MODE_ADD;
+			pm->modebuf++;
+			continue;
+		}
+		else if (*pm->modebuf == '-')
+		{
+			pm->what = MODE_DEL;
+			pm->modebuf++;
+			continue;
+		}
+		else
+		{
+			aCtab *tab = &cFlagTab[0];
+			int i;
+			int eatparam = 0;
+
+			/* Set some defaults */
+			pm->extm = NULL;
+			pm->modechar = *pm->modebuf;
+			pm->param = NULL;
+
+			while (tab->mode != 0x0)
+			{
+				if (tab->flag == *pm->modebuf)
+					break;
+				tab++;
+			}
+
+			if (tab->mode)
+			{
+				/* INTERNAL MODE */
+				if (tab->parameters)
+				{
+					if ((pm->what == MODE_DEL) && (tab->flag == 'l'))
+						eatparam = 0; /* -l is special: no parameter required */
+					else
+						eatparam = 1; /* all other internal parameter modes do require a parameter on unset */
+				}
+			} else {
+				/* EXTENDED CHANNEL MODE */
+				int found = 0;
+				for (i=0; i <= Channelmode_highest; i++)
+					if (Channelmode_Table[i].flag == *pm->modebuf)
+						break;
+				if (!found)
+				{
+					/* Not found. Will be ignored, just move on.. */
+					pm->modebuf++;
+					continue;
+				}
+				pm->extm = &Channelmode_Table[i];
+				if (Channelmode_Table[i].paracount == 1)
+				{
+					if (pm->what == MODE_ADD)
+						eatparam = 1;
+					else if (Channelmode_Table[i].unset_with_param)
+						eatparam = 1;
+					/* else 0 (if MODE_DEL && !unset_with_param) */
+				}
+			}
+
+			if (eatparam)
+			{
+				/* Hungry.. */
+				if (pm->parabuf && *pm->parabuf)
+				{
+					char *start, *end;
+					for (; *pm->parabuf == ' '; pm->parabuf++); /* skip whitespace */
+					start = pm->parabuf;
+					if (*pm->parabuf == '\0')
+					{
+						pm->modebuf++;
+						continue; /* invalid, got mode but no parameter available */
+					}
+					end = strchr(start, ' ');
+					/* copy start .. end (where end may be null, then just copy all) */
+					if (end)
+					{
+						pm->parabuf = end + 1; /* point to next param, or \0 */
+						if (end - start + 1 > sizeof(pm->buf))
+							end = start + sizeof(pm->buf); /* 'never' reached */
+						strlcpy(pm->buf, start, end - start + 1);
+					}
+					else
+					{
+						strlcpy(pm->buf, start, sizeof(pm->buf));
+						pm->parabuf = pm->parabuf + strlen(pm->parabuf); /* point to \0 at end */
+					}
+					pm->param = pm->buf;
+				} else {
+					pm->modebuf++;
+					continue; /* invalid, got mode but no parameter available */
+				}
+			}
+		}
+		pm->modebuf++; /* advance pointer */
+		return 1;
+	}
+}

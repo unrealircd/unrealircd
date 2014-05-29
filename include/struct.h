@@ -1757,6 +1757,18 @@ typedef struct {
 	unsigned  parameters : 1;
 } aCtab;
 
+/** Parse channel mode */
+typedef struct _parsemode ParseMode;
+struct _parsemode {
+	int what;
+	char modechar;
+	char *param;
+	Cmode *extm;
+	char *modebuf; /* curr pos */
+	char *parabuf; /* curr pos */
+	char buf[512]; /* internal parse buffer */
+};
+
 #if 1 
 /* TODO: move to module / dynamic storage */
 /** A jointhrottle item, this is a double linked list.

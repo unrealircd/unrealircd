@@ -746,3 +746,4 @@ extern MODVAR char *IsupportStrings[];
 extern void finish_auth(aClient *acptr);
 extern void read_packet(int fd, int revents, void *data);
 extern void sendto_realops_and_log(char *fmt, ...);
+extern int parse_chanmode(ParseMode *pm, char *modebuf_in, char *parabuf_in);
