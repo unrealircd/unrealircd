@@ -180,7 +180,7 @@ Debug((DEBUG_NOTICE, "NOSPOOF"));
 		sendto_one(sptr, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
 			   me.name, sptr->name);
 
-	if (sptr->user && sptr->name[0] && !CHECKPROTO(sptr, PROTO_CLICAP))
+	if (sptr->user && *sptr->user->username && sptr->name[0] && !CHECKPROTO(sptr, PROTO_CLICAP))
 		return register_user(cptr, sptr, sptr->name,
 		    sptr->user->username, NULL, NULL, NULL);
 	return 0;
