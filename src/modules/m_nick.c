@@ -1193,7 +1193,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		 */
 
 		/* because username may point to user->username */
-		strncpyzt(temp, username, USERLEN + 1);
+		strlcpy(temp, username, USERLEN + 1);
 
 		if (!(sptr->flags & FLAGS_DOID)) 
 			strlcpy(user->username, temp, USERLEN + 1);
