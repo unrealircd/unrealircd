@@ -1,19 +1,19 @@
 Rules about patches & modifications to UnrealIRCd
 
-1. When making a change, always add a small description in Changes, in the
-   BOTTOM. Don't forget to mention the bug# and credit the reporter (if any).
+1. When making a change, always add a small description in the commit log.
+   Don't forget to mention the bug# and credit the reporter (if any).
 
 2. If new files are made, it must contain proper copyright headers.
 
-3. If you want to submit patches (f.e. if you don't have CVS write access)
-   then submit them to http://bugs.unrealircd.org/ (shortly called bugs*)
-   using "cvs diff -u > patchname". A submission must contain description of
-   what it does, etc.
+3. If you want to submit patches (f.e. if you don't have write access to
+   the repository), then submit them to http://bugs.unrealircd.org/
+   using "hg export" or "hg diff". Naturally include a clear description
+   of what the change does.
 
 4. Each bug or feature should have a bug# so people can have a discussion
    about it. This has a few implications (read!!):
-   * People must report bugs/feature requests to bugs* and not on
-     IRC, e-mail, etc.
+   * People must report bugs/feature requests to bugs.unrealircd.org and
+     not on IRC, e-mail, etc.
    * That means other people can see the bug# and comment on it. This means
      discussion is easy to read back for each issue and not spread between
      several IRC logs.
@@ -31,11 +31,15 @@ Rules about patches & modifications to UnrealIRCd
 
 5. Do not commit changes that do not have an associated bug# and have not
    had any discussion.
-   Small/tiny bugfixes that do not change any functionality, are very
-   unlikely to break anything and definitely don't require any prior
+   3.2.x: Small/tiny bugfixes that do not change any functionality, are
+   very unlikely to break anything and definitely don't require any prior
    discussion may be exempted.
+   3.4.x: During the alpha & beta stage it is permitted to commit fixes
+   and code cleanups / restructuring without any discussion.
+   However in general, and in particular for new features, it is appreciated
+   if there has been prior discussion on bugs.unrealircd.org (or by mail).
 
-6. Regarding reidenting, restructuring or other code cleanups: please
+6. Regarding reidenting, restructuring or other major code cleanups: please
    discuss before doing so. The other devs might not agree with you on the
    particular cleanup you have in mind which would result in another
    clean-up-the-cleanup commit.
@@ -49,22 +53,22 @@ Rules about patches & modifications to UnrealIRCd
    carefully... it might indeed be useless and/or redundant, but it might
    also be a subtle thing that can create great bugs when 'cleaned up'.
 
-7. Prior to a release: be very careful with any restructuring of a subsystem
-   or doing any major commits that may break things. Stuff like this can be
-   perfectly fine if there are many months to go, but are not good to do a
-   month before release. The head coder may impose additional restrictions
-   during such a period.
+7. Prior to a 3.2.x release: be very careful with any restructuring of a
+   subsystem or doing any major commits that may break things. Stuff like
+   this can be perfectly fine if there are many months to go, but are not
+   good to do a month before release. The head coder may impose additional
+   restrictions during such a period.
 
 8. During the Release Candidate stage (from RC1 until the final release)
    only the head coder may commit directly, all others should ask and
-   present their patch before committing. Yes, even if you are changing only
-   1 line of code or text.
+   present their patch before committing. Yes, even if you are changing
+   only 1 line of code or text.
 
 9. UnrealIRCd should compile on all supported operating systems and
    platforms, using GCC 3 or higher on *NIX, and Visual Studio 2008 or
    higher on Windows. This means you cannot blindly use all C99 extensions.
 
-10. Coders should test their code before committing.
+10. Coders must test their code before committing.
 
 11. /*  
      * These kind of comments
@@ -98,19 +102,12 @@ Rules about patches & modifications to UnrealIRCd
     Some code is old and horrible and has a mix of tabs and spaces used for
     spacing, that's something we do not want to have ;)
 
-17. Be careful about overflows. Do not do any unchecked string copies
-    (specifically do not use sprintf, strcat, or strcpy, and do not use
-    unqualified %s format specifiers in fscanf and scanf).  Additionally, do not
-    use strncpy (use strlcpy, which does correct null termination).  Recall that
-    strncat's size parameter doesn't include the null terminator (use size-1),
-    but that almost everything else (except strncpy, which is forbidden) takes
-    the actual size and accounts for the null.  Do not dereference a pointer you
-    can't prove is valid (this includes loops with moving pointers for string
-    operations).  Prefer ircsnprintf to chains of strlcpy and strncat, as it
-    relieves you of length accounting.  Never assume a buffer is long enough, as
-    attackers often find ways around filters and protocol constraints and
-    can sometimes overwrite constants.  Always pass in the correct length; never
-    guess the length.
+17. Be careful about overflows. Do not do any unchecked string copies.
+    Instead of strcpy, strcat and sprintf/ircsprintf, use the following
+    functions: strlcpy, strlcat, snprintf/ircnsprintf.
+    If you are copying/writing character-by-character or word-by-word in a
+    loop, be very sure about your size counting. Sometimes it's possible
+    to avoid such code alltogether by just calling strlcat each time.
 
 18. Speed.  When optimizing or writing code, keep in mind that readability and
     stability comes FIRST, and after that comes speed. So we'd rather prefer some
@@ -139,7 +136,7 @@ Rules about patches & modifications to UnrealIRCd
     Put comments wherever you think they are needed, to aid any further coders
     with reading your code.. and, in fact, it will aid yourself as well if you
     would look back at your code 2 years later.
-    If there's some obscure pitfall, do mention it! Don't just "hope" a next
+    If there's some obscure pitfall, DO mention it! Don't just "hope" a next
     author will see it like you did.
 
 21. Use enums whenever possible, rather than #define constants. Besides making
