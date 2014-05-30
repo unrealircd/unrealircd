@@ -244,14 +244,14 @@ static void clicap_generate(aClient *sptr, const char *subcmd, int flags, int cl
 	sendto_one(sptr, "%s :%s", buf, capbuf);
 }
 
-static void cap_ack(aClient *sptr, const char *arg)
+static int cap_ack(aClient *sptr, const char *arg)
 {
 	ClientCapability *cap;
 	int capadd = 0, capdel = 0;
 	int finished = 0, negate;
 
 	if (BadPtr(arg))
-		return;
+		return 0;
 
 	for(cap = clicap_find(arg, &negate, &finished); cap;
 	    cap = clicap_find(NULL, &negate, &finished))
@@ -274,40 +274,46 @@ static void cap_ack(aClient *sptr, const char *arg)
 
 	sptr->proto |= capadd;
 	sptr->proto &= ~capdel;
+	return 0;
 }
 
-static void cap_clear(aClient *sptr, const char *arg)
+static int cap_clear(aClient *sptr, const char *arg)
 {
         clicap_generate(sptr, "ACK", sptr->proto ? sptr->proto : -1, 1);
 
      	sptr->proto = 0;
+     	return 0;
 }
 
-static void cap_end(aClient *sptr, const char *arg)
+static int cap_end(aClient *sptr, const char *arg)
 {
 	if (IsRegisteredUser(sptr))
-		return;
+		return 0;
 
 	sptr->proto &= ~PROTO_CLICAP;
 
 	if (sptr->name[0] && sptr->user != NULL && sptr->nospoof == 0)
-		register_user(sptr, sptr, sptr->name, sptr->user->username, NULL, NULL, NULL);
+		return register_user(sptr, sptr, sptr->name, sptr->user->username, NULL, NULL, NULL);
+
+	return 0;
 }
 
-static void cap_list(aClient *sptr, const char *arg)
+static int cap_list(aClient *sptr, const char *arg)
 {
         clicap_generate(sptr, "LIST", sptr->proto ? sptr->proto : -1, 0);
+        return 0;
 }
 
-static void cap_ls(aClient *sptr, const char *arg)
+static int cap_ls(aClient *sptr, const char *arg)
 {
 	if (!IsRegisteredUser(sptr))
 		sptr->proto |= PROTO_CLICAP;
 
        	clicap_generate(sptr, "LS", 0, 0);
+       	return 0;
 }
 
-static void cap_req(aClient *sptr, const char *arg)
+static int cap_req(aClient *sptr, const char *arg)
 {
 	char buf[BUFSIZE];
 	char pbuf[2][BUFSIZE];
@@ -321,7 +327,7 @@ static void cap_req(aClient *sptr, const char *arg)
 		sptr->proto |= PROTO_CLICAP;
 
 	if (BadPtr(arg))
-		return;
+		return 0;
 
 	buflen = snprintf(buf, sizeof(buf), ":%s CAP %s ACK",
 			  me.name, BadPtr(sptr->name) ? "*" : sptr->name);
@@ -381,7 +387,7 @@ static void cap_req(aClient *sptr, const char *arg)
 	if (!finished)
 	{
 		sendto_one(sptr, ":%s CAP %s NAK :%s", me.name, BadPtr(sptr->name) ? "*" : sptr->name, arg);
-		return;
+		return 0;
 	}
 
 	if (i)
@@ -394,11 +400,12 @@ static void cap_req(aClient *sptr, const char *arg)
 
 	sptr->proto |= capadd;
 	sptr->proto &= ~capdel;
+	return 0;
 }
 
 struct clicap_cmd {
 	const char *cmd;
-	void (*func)(struct Client *source_p, const char *arg);
+	int (*func)(struct Client *source_p, const char *arg);
 };
 
 static struct clicap_cmd clicap_cmdtable[] = {
@@ -449,8 +456,7 @@ DLLFUNC int m_cap(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	}
 
-	(cmd->func)(sptr, parv[2]);
-	return 0;
+	return (cmd->func)(sptr, parv[2]);
 }
 
 /* This is called on module init, before Server Ready */
