@@ -88,11 +88,6 @@ static struct list_head *clicap_build_list(void)
 	cap->cap = PROTO_UHNAMES;
 	clicap_append(&clicap_list, cap);
 
-	cap = MyMallocEx(sizeof(ClientCapability));
-	cap->name = strdup("account-notify");
-	cap->cap = PROTO_ACCOUNT_NOTIFY;
-	clicap_append(&clicap_list, cap);
-
 	RunHook(HOOKTYPE_CAPLIST, &clicap_list);
 
 	return &clicap_list;
