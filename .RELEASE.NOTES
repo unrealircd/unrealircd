@@ -1,4 +1,4 @@
-Unreal3.2.10.2 Release Notes
+Unreal3.2.10.3 Release Notes
 =============================
 
 ==[ GENERAL INFORMATION ]==
@@ -12,6 +12,21 @@ Unreal3.2.10.2 Release Notes
 - The purpose of the sections below (NEW, CHANGED, MINOR, etc) is to be a
   SUMMARY of the changes in this release. See the file 'Changes' for a
   complete list of all changes.
+
+==[ .3 RELEASE ]==
+The following issues have been fixed in 3.2.10.3:
+- Crash when SASL is enabled and ping-cookie is disabled
+- Compile issue with remote include
+- OS X compile problems
+- ./unreal backtrace not always working well
+Changes:
+- For silenced users we now only check the current nick!user@host
+- Server to server links now use latest TLS (eg: v1.2) instead of SSLv3
+New:
+- Added set::spamfilter::stop-on-first-match (default yes). You can change
+  this to 'no' to have UnrealIRCd continue processing all spamfilters even
+  after the first match. The spamfilter with the 'gravest action' wins
+  (eg: gzline wins from block).
 
 ==[ .2 RELEASE ]==
 The following major issues were present in 3.2.10 & 3.2.10.1 and have
