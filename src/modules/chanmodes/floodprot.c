@@ -1,6 +1,6 @@
 /*
  * Channel Mode +f
- * (C) Copyright 2005-2006 Bram Matthys and The UnrealIRCd team.
+ * (C) Copyright 2005-2014 Bram Matthys and The UnrealIRCd team.
  */
 
 #include "config.h"
@@ -55,6 +55,12 @@ struct SRemoveFld {
 	time_t when; /* scheduled at */
 };
 
+typedef struct UserFld aUserFld;
+struct UserFld {
+	unsigned short nmsg;
+	TS   firstmsg;
+};
+
 /* Maximum timers, iotw: max number of possible actions.
  * Currently this is: CNmMKiR (7)
  */
@@ -75,6 +81,8 @@ struct SChanFloodProt {
 ModuleInfo *ModInfo = NULL;
 
 Cmode_t EXTMODE_FLOODLIMIT = 0L;
+
+ModDataInfo *mdflood = NULL;
 
 #define IsFloodLimit(x)	((x)->mode.extmode & EXTMODE_FLOODLIMIT)
 
@@ -104,27 +112,37 @@ int floodprot_knock(aClient *sptr, aChannel *chptr);
 int floodprot_local_nickchange(aClient *sptr, char *oldnick);
 int floodprot_remote_nickchange(aClient *cptr, aClient *sptr, char *oldnick);
 int floodprot_chanmode_del(aChannel *chptr, int m);
+void userfld_free(ModData *md);
 
 DLLFUNC int MOD_INIT(floodprot)(ModuleInfo *modinfo)
 {
-	CmodeInfo req;
-	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM, 1);
+	CmodeInfo creq;
+	ModDataInfo mreq;
+	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	memset(&req, 0, sizeof(req));
 	ModInfo = modinfo;
 
-	req.paracount = 1;
-	req.is_ok = cmodef_is_ok;
-	req.flag = 'f';
-	req.unset_with_param = 1; /* ah yeah, +f is special! */
-	req.put_param = cmodef_put_param;
-	req.get_param = cmodef_get_param;
-	req.conv_param = cmodef_conv_param;
-	req.free_param = cmodef_free_param;
-	req.dup_struct = cmodef_dup_struct;
-	req.sjoin_check = cmodef_sjoin_check;
-	CmodeAdd(modinfo->handle, req, &EXTMODE_FLOODLIMIT);
+	memset(&creq, 0, sizeof(creq));
+	creq.paracount = 1;
+	creq.is_ok = cmodef_is_ok;
+	creq.flag = 'f';
+	creq.unset_with_param = 1; /* ah yeah, +f is special! */
+	creq.put_param = cmodef_put_param;
+	creq.get_param = cmodef_get_param;
+	creq.conv_param = cmodef_conv_param;
+	creq.free_param = cmodef_free_param;
+	creq.dup_struct = cmodef_dup_struct;
+	creq.sjoin_check = cmodef_sjoin_check;
+	CmodeAdd(modinfo->handle, creq, &EXTMODE_FLOODLIMIT);
 
+	memset(&mreq, 0, sizeof(mreq));
+	mreq.name = "floodprot";
+	mreq.type = MODDATATYPE_MEMBERSHIP;
+	mreq.free = userfld_free;
+	mdflood = ModDataAdd(modinfo->handle, mreq);
+	if (!mdflood)
+	        abort();
+	
 	HookAddPCharEx(modinfo->handle, HOOKTYPE_PRE_CHANMSG, floodprot_pre_chanmsg);
 	HookAddEx(modinfo->handle, HOOKTYPE_CHANMSG, floodprot_post_chanmsg);
 	HookAddEx(modinfo->handle, HOOKTYPE_KNOCK, floodprot_knock);
@@ -146,7 +164,6 @@ DLLFUNC int MOD_LOAD(floodprot)(int module_load)
 
 DLLFUNC int MOD_UNLOAD(floodprot)(int module_unload)
 {
-	sendto_realops("Mod_Unload was called??? Arghhhhhh.. we will loose all flood counters!");
 	return MOD_FAILED;
 }
 
@@ -165,6 +182,9 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 		ChanFloodProt newf;
 		int xxi, xyi, xzi, hascolon;
 		char *xp;
+		
+		memset(&newf, 0, sizeof(newf));
+		
 		/* old +f was like +f 10:5 or +f *10:5
 		 * new is +f [5c,30j,10t#b]:15
 		 * +f 10:5  --> +f [10t]:5
@@ -975,6 +995,7 @@ int  check_for_chan_flood(aClient *sptr, aChannel *chptr)
 	MembershipL *lp2;
 	int c_limit, t_limit, banthem;
 	ChanFloodProt *chp;
+	aUserFld *userfld;
 
 	if (!MyClient(sptr) || !IsFloodLimit(chptr) || IsOper(sptr) || IsULine(sptr) || is_skochanop(sptr, chptr))
 		return 0;
@@ -991,24 +1012,32 @@ int  check_for_chan_flood(aClient *sptr, aChannel *chptr)
 	c_limit = chp->l[FLD_TEXT];
 	t_limit = chp->per;
 	banthem = (chp->a[FLD_TEXT] == 'b') ? 1 : 0;
+	
+	if (moddata_membership(lp2, mdflood).ptr == NULL)
+	{
+		/* Alloc a new entry if it doesn't exist yet */
+		moddata_membership(lp2, mdflood).ptr = MyMallocEx(sizeof(aUserFld));
+	}
+	userfld = (aUserFld *)moddata_membership(lp2, mdflood).ptr;
+
 	/* if current - firstmsgtime >= mode.per, then reset,
 	 * if nummsg > mode.msgs then kick/ban
 	 */
 	Debug((DEBUG_ERROR, "Checking for flood +f: firstmsg=%d (%ds ago), new nmsgs: %d, limit is: %d:%d",
-		lp2->flood.firstmsg, TStime() - lp2->flood.firstmsg, lp2->flood.nmsg + 1,
+		userfld->firstmsg, TStime() - userfld->firstmsg, userfld->nmsg + 1,
 		c_limit, t_limit));
-	if ((TStime() - lp2->flood.firstmsg) >= t_limit)
+	if ((TStime() - userfld->firstmsg) >= t_limit)
 	{
 		/* reset */
-		lp2->flood.firstmsg = TStime();
-		lp2->flood.nmsg = 1;
+		userfld->firstmsg = TStime();
+		userfld->nmsg = 1;
 		return 0; /* forget about it.. */
 	}
 
 	/* increase msgs */
-	lp2->flood.nmsg++;
+	userfld->nmsg++;
 
-	if ((lp2->flood.nmsg) > c_limit)
+	if ((userfld->nmsg) > c_limit)
 	{
 		char comment[1024], mask[1024];
 		sprintf(comment,
@@ -1297,4 +1326,9 @@ static int compare_floodprot_modes(ChanFloodProt *a, ChanFloodProt *b)
 		return 1;
 	else
 		return 0;
+}
+
+void userfld_free(ModData *md)
+{
+	MyFree(md);
 }

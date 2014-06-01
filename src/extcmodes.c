@@ -137,6 +137,7 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 	short i = 0, j = 0;
 	int paraslot = -1;
 	char tmpbuf[512];
+	int existing = 0;
 
 	while (i < EXTCMODETABLESZ)
 	{
@@ -147,6 +148,7 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 			if (Channelmode_Table[i].unloaded)
 			{
 				Channelmode_Table[i].unloaded = 0;
+				existing = 1;
 				break;
 			} else {
 				if (module)
@@ -166,14 +168,25 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 
 	if (req.paracount == 1)
 	{
-		for (paraslot = 0; ParamTable[paraslot]; paraslot++)
-			if (paraslot == MAXPARAMMODES - 1)
+		if (existing)
+		{
+			/* Re-use parameter slot of the module with the same modechar that is unloading */
+			paraslot = Channelmode_Table[i].slot;
+		}
+		else
+		{
+			/* Allocate a new one */
+			for (paraslot = 0; ParamTable[paraslot]; paraslot++)
 			{
-				Debug((DEBUG_DEBUG, "CmodeAdd failed, no space for parameter"));
-				if (module)
-					module->errorcode = MODERR_NOSPACE;
-				return NULL;
+				if (paraslot == MAXPARAMMODES - 1)
+				{
+					Debug((DEBUG_DEBUG, "CmodeAdd failed, no space for parameter"));
+					if (module)
+						module->errorcode = MODERR_NOSPACE;
+					return NULL;
+				}
 			}
+		}
 	}
 
 	*mode = Channelmode_Table[i].mode;
@@ -254,8 +267,6 @@ aChannel *chptr;
 
 void CmodeDel(Cmode *cmode)
 {
-	/* It would be nice if we could abort() here if a parameter module is trying to unload which is extremely dangerous/crashy/disallowed */
-
 	if (loop.ircd_rehashing)
 		cmode->unloaded = 1;
 	else

@@ -111,6 +111,7 @@ typedef struct {
 #define MOBJ_ISUPPORT	  0x0400
 #define MOBJ_EFUNCTION    0x0800
 #define MOBJ_CMODE        0x1000
+#define MOBJ_MODDATA      0x2000
 
 typedef struct {
         long mode;
@@ -127,6 +128,26 @@ typedef struct {
         char unloaded;
         Module *owner;
 } Snomask;
+
+typedef enum ModDataType { MODDATATYPE_CLIENT=1, MODDATATYPE_CHANNEL=2, MODDATATYPE_MEMBER=3, MODDATATYPE_MEMBERSHIP=4 } ModDataType;
+
+typedef struct _moddatainfo ModDataInfo;
+
+struct _moddatainfo {
+	ModDataInfo *prev, *next;
+	char *name; /**< Name for this moddata */
+	Module *owner; /**< Owner of this moddata */
+	ModDataType type; /**< Type of module data (eg: for client, channel, etc..) */
+	int slot; /**< Assigned slot */
+	char unloaded; /**< Module being unloaded? */
+	void (*free)(ModData *m);
+	/* TODO: serialize/unserialze? */
+};
+
+#define moddata_client(acptr, md)    acptr->moddata[md->slot]
+#define moddata_channel(chptr, md)   chptr->moddata[md->slot]
+#define moddata_member(m, md)        m->moddata[md->slot]
+#define moddata_membership(m, md)    m->moddata[md->slot]
 
 #define EXCHK_ACCESS		0 /* Check access */
 #define EXCHK_ACCESS_ERR	1 /* Check access and send error if needed */
@@ -374,6 +395,7 @@ typedef struct _ModuleObject {
 		Efunction *efunction;
 		Isupport *isupport;
 		Cmode *cmode;
+		ModDataInfo *moddata;
 	} object;
 } ModuleObject;
 

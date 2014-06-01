@@ -573,6 +573,54 @@ void Init_all_testing_modules(void)
 	}
 }	
 
+void FreeModObj(ModuleObject *obj, Module *m)
+{
+	if (obj->type == MOBJ_EVENT) {
+		LockEventSystem();
+		EventDel(obj->object.event);
+		UnlockEventSystem();
+	}
+	else if (obj->type == MOBJ_HOOK) {
+		HookDel(obj->object.hook);
+	}
+	else if (obj->type == MOBJ_COMMAND) {
+		CommandDel(obj->object.command);
+	}
+	else if (obj->type == MOBJ_HOOKTYPE) {
+		HooktypeDel(obj->object.hooktype, m);
+	}
+	else if (obj->type == MOBJ_VERSIONFLAG) {
+		VersionflagDel(obj->object.versionflag, m);
+	}
+	else if (obj->type == MOBJ_SNOMASK) {
+		SnomaskDel(obj->object.snomask);
+	}
+	else if (obj->type == MOBJ_UMODE) {
+		UmodeDel(obj->object.umode);
+	}
+	else if (obj->type == MOBJ_CMODE) {
+		CmodeDel(obj->object.cmode);
+	}
+	else if (obj->type == MOBJ_CMDOVERRIDE) {
+		CmdoverrideDel(obj->object.cmdoverride);
+	}
+	else if (obj->type == MOBJ_EXTBAN) {
+		ExtbanDel(obj->object.extban);
+	}
+	else if (obj->type == MOBJ_CALLBACK) {
+		CallbackDel(obj->object.callback);
+	}
+	else if (obj->type == MOBJ_EFUNCTION) {
+		EfunctionDel(obj->object.efunction);
+	}
+	else if (obj->type == MOBJ_ISUPPORT) {
+		IsupportDel(obj->object.isupport);
+	}
+	else if (obj->type == MOBJ_MODDATA) {
+		ModDataDel(obj->object.moddata);
+	}
+}
+
 void Unload_all_loaded_modules(void)
 {
 	Module *mi, *next;
@@ -598,47 +646,7 @@ void Unload_all_loaded_modules(void)
 		}
 		for (objs = mi->objects; objs; objs = objnext) {
 			objnext = objs->next;
-			if (objs->type == MOBJ_EVENT) {
-				LockEventSystem();
-				EventDel(objs->object.event);
-				UnlockEventSystem();
-			}
-			else if (objs->type == MOBJ_HOOK) {
-				HookDel(objs->object.hook);
-			}
-			else if (objs->type == MOBJ_COMMAND) {
-				CommandDel(objs->object.command);
-			}
-			else if (objs->type == MOBJ_HOOKTYPE) {
-				HooktypeDel(objs->object.hooktype, mi);
-			}
-			else if (objs->type == MOBJ_VERSIONFLAG) {
-				VersionflagDel(objs->object.versionflag, mi);
-			}
-			else if (objs->type == MOBJ_SNOMASK) {
-				SnomaskDel(objs->object.snomask);
-			}
-			else if (objs->type == MOBJ_UMODE) {
-				UmodeDel(objs->object.umode);
-			}
-			else if (objs->type == MOBJ_CMODE) {
-				CmodeDel(objs->object.cmode);
-			}
-			else if (objs->type == MOBJ_CMDOVERRIDE) {
-				CmdoverrideDel(objs->object.cmdoverride);
-			}
-			else if (objs->type == MOBJ_EXTBAN) {
-				ExtbanDel(objs->object.extban);
-			}
-			else if (objs->type == MOBJ_CALLBACK) {
-				CallbackDel(objs->object.callback);
-			}
-			else if (objs->type == MOBJ_EFUNCTION) {
-				EfunctionDel(objs->object.efunction);
-			}
-			else if (objs->type == MOBJ_ISUPPORT) {
-				IsupportDel(objs->object.isupport);
-			}
+			FreeModObj(objs, mi);
 		}
 		for (child = mi->children; child; child = childnext)
 		{
@@ -669,47 +677,7 @@ void Unload_all_testing_modules(void)
 			continue;
 		for (objs = mi->objects; objs; objs = objnext) {
 			objnext = objs->next;
-			if (objs->type == MOBJ_EVENT) {
-				LockEventSystem();
-				EventDel(objs->object.event);
-				UnlockEventSystem();
-			}
-			else if (objs->type == MOBJ_HOOK) {
-				HookDel(objs->object.hook);
-			}
-			else if (objs->type == MOBJ_COMMAND) {
-				CommandDel(objs->object.command);
-			}
-			else if (objs->type == MOBJ_HOOKTYPE) {
-				HooktypeDel(objs->object.hooktype, mi);
-			}
-			else if (objs->type == MOBJ_VERSIONFLAG) {
-				VersionflagDel(objs->object.versionflag, mi);
-			}
-			else if (objs->type == MOBJ_SNOMASK) {
-				SnomaskDel(objs->object.snomask);
-			}
-			else if (objs->type == MOBJ_UMODE) {
-				UmodeDel(objs->object.umode);
-			}
-			else if (objs->type == MOBJ_CMODE) {
-				CmodeDel(objs->object.cmode);
-			}
-			else if (objs->type == MOBJ_CMDOVERRIDE) {
-				CmdoverrideDel(objs->object.cmdoverride);
-			}
-			else if (objs->type == MOBJ_EXTBAN) {
-				ExtbanDel(objs->object.extban);
-			}
-			else if (objs->type == MOBJ_CALLBACK) {
-				CallbackDel(objs->object.callback);
-			}
-			else if (objs->type == MOBJ_EFUNCTION) {
-				EfunctionDel(objs->object.efunction);
-			}
-			else if (objs->type == MOBJ_ISUPPORT) {
-				IsupportDel(objs->object.isupport);
-			}
+			FreeModObj(objs, mi);
 		}
 		for (child = mi->children; child; child = childnext)
 		{
@@ -744,48 +712,7 @@ int    Module_free(Module *mod)
 	}
 	for (objs = mod->objects; objs; objs = next) {
 		next = objs->next;
-		if (objs->type == MOBJ_EVENT) {
-			LockEventSystem();
-			EventDel(objs->object.event);
-			UnlockEventSystem();
-		}
-		else if (objs->type == MOBJ_HOOK) {
-			HookDel(objs->object.hook);
-		}
-		else if (objs->type == MOBJ_COMMAND) {
-			CommandDel(objs->object.command);
-		}
-		else if (objs->type == MOBJ_HOOKTYPE) {
-			HooktypeDel(objs->object.hooktype, mod);
-		}
-		else if (objs->type == MOBJ_VERSIONFLAG) {
-			VersionflagDel(objs->object.versionflag, mod);
-		}
-		else if (objs->type == MOBJ_SNOMASK) {
-			SnomaskDel(objs->object.snomask);
-		}
-		else if (objs->type == MOBJ_UMODE) {
-			UmodeDel(objs->object.umode);
-		}
-		else if (objs->type == MOBJ_CMODE) {
-			CmodeDel(objs->object.cmode);
-		}
-		else if (objs->type == MOBJ_CMDOVERRIDE) {
-			CmdoverrideDel(objs->object.cmdoverride);
-		}
-		else if (objs->type == MOBJ_EXTBAN) {
-			ExtbanDel(objs->object.extban);
-		}
-		else if (objs->type == MOBJ_CALLBACK) {
-			CallbackDel(objs->object.callback);
-		}
-		else if (objs->type == MOBJ_EFUNCTION) {
-			EfunctionDel(objs->object.efunction);
-		}
-		else if (objs->type == MOBJ_ISUPPORT) {
-			IsupportDel(objs->object.isupport);
-		}
-
+		FreeModObj(objs, mod);
 	}
 	for (p = Modules; p; p = p->next)
 	{

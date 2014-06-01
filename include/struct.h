@@ -133,7 +133,6 @@ typedef struct SLink Link;
 typedef struct SBan Ban;
 typedef struct SMode Mode;
 typedef struct ListOptions LOpts;
-typedef struct FloodOpt aFloodOpt;
 typedef struct Motd aMotdFile; /* represents a whole MOTD, including remote MOTD support info */
 typedef struct MotdItem aMotdLine; /* one line of a MOTD stored as a linked list */
 #ifdef USE_LIBCURL
@@ -658,16 +657,27 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 
 #define ID(sptr)	(*sptr->id ? sptr->id : sptr->name)
 
+/* Maximum number of moddata objects that may be attached to an object -- maybe move to config.h? */
+#define MODDATA_MAX_CLIENT 8
+#define MODDATA_MAX_CHANNEL 8
+#define MODDATA_MAX_MEMBER 4
+#define MODDATA_MAX_MEMBERSHIP 4
+
+/** Union for moddata objects */
+typedef union _moddata ModData;
+union _moddata
+{
+        int i;
+        long l;
+        char *str;
+        void *ptr;
+};
+
 struct irc_netmask
 {
 	short int type;
 	struct IN_ADDR mask;
 	short int bits;
-};
-
-struct FloodOpt {
-	unsigned short nmsg;
-	TS   firstmsg;
 };
 
 #ifdef USE_LIBCURL
@@ -904,6 +914,11 @@ extern void SnomaskDel(Snomask *sno);
 extern Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode);
 extern void CmodeDel(Cmode *cmode);
 
+extern void moddata_init(void);
+extern ModDataInfo *ModDataAdd(Module *module, ModDataInfo req);
+extern void ModDataDel(ModDataInfo *md);
+extern void unload_all_unused_moddata(void);
+
 #define LISTENER_NORMAL		0x000001
 #define LISTENER_CLIENTSONLY	0x000002
 #define LISTENER_SERVERSONLY	0x000004
@@ -944,6 +959,7 @@ struct Client {
 	char id[IDLEN + 1];	/* SID or UID */
 	aClient *srvptr;	/* Server introducing this.  May be &me */
 	short status;		/* client type */
+	ModData moddata[MODDATA_MAX_CLIENT]; /* for modules */
 	/*
 	   ** The following fields are allocated only for local clients
 	   ** (directly connected to *this* server with a socket.
@@ -1499,6 +1515,7 @@ struct SMember
 	struct SMember *next;
 	aClient	      *cptr;
 	int		flags;
+	ModData moddata[MODDATA_MAX_MEMBER]; /* for modules */
 };
 
 struct Channel {
@@ -1516,22 +1533,26 @@ struct Channel {
 	Ban *invexlist;         /* invite list */
 	aJFlood *jflood; /* TODO: move to dynamic modular storage */
 	char *mode_lock;
+	ModData moddata[MODDATA_MAX_CHANNEL]; /* for modules */
 	char chname[1];
 };
 
+/** user/channel membership struct for local clients */
 struct SMembershipL
 {
 	struct SMembership 	*next;
 	struct Channel		*chptr;
 	int			flags;
-	aFloodOpt		flood;		
+	ModData moddata[MODDATA_MAX_MEMBERSHIP]; /* for modules */
 };
 
+/** user/channel membership struct for remote clients */
 struct SMembership
 {
 	struct SMembership 	*next;
 	struct Channel		*chptr;
 	int			flags;
+	ModData moddata[MODDATA_MAX_MEMBERSHIP]; /* for modules */
 };
 
 struct SBan {

@@ -747,3 +747,7 @@ extern void finish_auth(aClient *acptr);
 extern void read_packet(int fd, int revents, void *data);
 extern void sendto_realops_and_log(char *fmt, ...);
 extern int parse_chanmode(ParseMode *pm, char *modebuf_in, char *parabuf_in);
+extern void moddata_free_client(aClient *acptr);
+extern void moddata_free_channel(aChannel *chptr);
+extern void moddata_free_member(Member *m);
+extern void moddata_free_membership(Membership *m);

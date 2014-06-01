@@ -202,7 +202,7 @@ Member	*make_member(void)
 	{
 		for (i = 1; i <= (4072/sizeof(Member)); ++i)		
 		{
-			lp = (Member *)MyMalloc(sizeof(Member));
+			lp = (Member *)MyMallocEx(sizeof(Member));
 			lp->cptr = NULL;
 			lp->flags = 0;
 			lp->next = freemember;
@@ -217,13 +217,14 @@ Member	*make_member(void)
 
 void	free_member(Member *lp)
 {
-	if (lp)
-	{
-		lp->next = freemember;
-		lp->cptr = NULL;
-		lp->flags = 0;
-		freemember = lp;
-	}
+	if (!lp)
+		return;
+	moddata_free_member(lp);
+	memset(lp, 0, sizeof(Member));
+	lp->next = freemember;
+	lp->cptr = NULL;
+	lp->flags = 0;
+	freemember = lp;
 }
 
 /* 
@@ -241,7 +242,7 @@ Membership	*make_membership(int local)
 		{
 			for (i = 1; i <= (4072/sizeof(Membership)); i++)
 			{
-				lp = (Membership *)MyMalloc(sizeof(Membership));
+				lp = (Membership *)MyMallocEx(sizeof(Membership));
 				lp->next = freemembership;
 				freemembership = lp;
 			}
@@ -286,13 +287,16 @@ void	free_membership(Membership *lp, int local)
 {
 	if (lp)
 	{
+		moddata_free_membership(lp);
 		if (!local)
 		{
+			memset(lp, 0, sizeof(Membership));
 			lp->next = freemembership;
 			freemembership = lp;
 		}
 		else
 		{
+			memset(lp, 0, sizeof(Membership));
 			lp->next = (Membership *) freemembershipL;
 			freemembershipL = (MembershipL *) lp;
 		}

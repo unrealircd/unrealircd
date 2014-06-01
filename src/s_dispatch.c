@@ -68,7 +68,7 @@
 void fd_setselect(int fd, int flags, IOCallbackFunc iocb, void *data)
 {
 	FDEntry *fde;
-#ifdef DEBUGMODE
+#if 0
 	ircd_log(LOG_ERROR, "fd_setselect(): fd %d flags %d func %p", fd, flags, &iocb);
 #endif
 	if ((fd < 0) || (fd >= MAXCONNECTIONS))
