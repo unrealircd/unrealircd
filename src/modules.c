@@ -116,6 +116,10 @@ int (*is_silenced)(aClient *sptr, aClient *acptr);
 void (*send_protoctl_servers)(aClient *sptr, int response);
 int (*verify_link)(aClient *cptr, aClient *sptr, char *servername, ConfigItem_link **link_out);
 void (*send_server_message)(aClient *sptr);
+void (*send_md_client)(ModDataInfo *mdi, aClient *acptr, ModData *md);
+void (*send_md_channel)(ModDataInfo *mdi, aChannel *chptr, ModData *md);
+void (*send_md_member)(ModDataInfo *mdi, aChannel *chptr, Member *m, ModData *md);
+void (*send_md_membership)(ModDataInfo *mdi, aClient *acptr, Membership *m, ModData *md);
 
 static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 00 */	{NULL, NULL},
@@ -156,9 +160,12 @@ static const EfunctionsList efunction_table[MAXEFUNCTIONS] = {
 /* 35 */	{"send_protoctl_servers", (void *)&send_protoctl_servers},
 /* 36 */	{"verify_link", (void *)&verify_link},
 /* 37 */	{"send_server_message", (void *)&send_server_message},
-/* 38 */	{NULL, NULL}
+/* 38 */	{"send_md_client", (void *)&send_md_client},
+/* 39 */	{"send_md_channel", (void *)&send_md_channel},
+/* 40 */	{"send_md_member", (void *)&send_md_member}, 
+/* 41 */	{"send_md_membership", (void *)&send_md_membership},
+/* 42 */	{NULL, NULL}
 };
-
 
 #ifdef UNDERSCORE
 void *obsd_dlsym(void *handle, char *symbol) {
@@ -1617,14 +1624,14 @@ int i, n, errors=0;
 			if (n < 1)
 			{
 				config_error("ERROR: efunction '%s' not found, you probably did not "
-				             "load commands.so properly (or not all required m_* modules)",
+				             "load all required modules! (hint: see modules.conf)",
 				             efunction_table[i].name);
 				errors++;
 			} else
 			if (n > 1)
 			{
 				config_error("ERROR: efunction '%s' was found %d times, perhaps you "
-				             "loaded commands.so twice or commands.so and a/the m_*.so module(s)",
+				             "loaded a module multiple times??",
 				             efunction_table[i].name, n);
 				errors++;
 			}

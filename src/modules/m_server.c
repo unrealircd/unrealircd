@@ -757,6 +757,8 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 			send_umode(NULL, acptr, 0, SEND_UMODES, buf);
 
 			sendto_one_nickcmd(cptr, acptr, buf);
+			
+			send_moddata_client(cptr, acptr);
 
 			if (acptr->user->away)
 				sendto_one(cptr, ":%s AWAY :%s", CHECKPROTO(cptr, PROTO_SID) ? ID(acptr) : acptr->name,
@@ -777,6 +779,8 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 		aChannel *chptr;
 		for (chptr = channel; chptr; chptr = chptr->nextch)
 		{
+			ModDataInfo *mdi;
+			
 			if (!SupportSJOIN(cptr))
 				send_channel_modes(cptr, chptr);
 			else if (SupportSJOIN(cptr) && !SupportSJ3(cptr))
@@ -790,8 +794,13 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 				    "TOPIC %s %s %lu :%s",
 				    chptr->chname, chptr->topic_nick,
 				    (long)chptr->topic_time, chptr->topic);
+			send_moddata_channel(cptr, chptr);
 		}
 	}
+	
+	/* Send ModData for all member(ship) structs */
+	send_moddata_members(cptr);
+	
 	/* pass on TKLs */
 	tkl_synch(cptr);
 

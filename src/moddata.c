@@ -103,6 +103,9 @@ ModDataInfo *ModDataAdd(Module *module, ModDataInfo req)
 	m->type = req.type;
 moddataadd_isok:
 	m->free = req.free;
+	m->serialize = req.serialize;
+	m->unserialize = req.unserialize;
+	m->sync = req.sync;
 	m->owner = module;
 	
 	if (new_struct)
@@ -276,5 +279,104 @@ ModDataInfo *md, *md_next;
 		if (md->owner)
 			abort(); /* shouldn't happen */
 		unload_moddata_commit(md);
+	}
+}
+
+ModDataInfo *findmoddata_byname(char *name, ModDataType type)
+{
+ModDataInfo *md;
+
+	for (md = MDInfo; md; md = md->next)
+		if ((md->type == type) && !strcmp(name, md->name))
+			return md;
+
+	return NULL;
+}
+
+// TODO: move below to efuncs
+
+/** Send all moddata attached to client 'acptr' to remote server 'srv' (if the module wants this), called by .. */
+void send_moddata_client(aClient *srv, aClient *acptr)
+{
+ModDataInfo *mdi;
+
+	for (mdi = MDInfo; mdi; mdi = mdi->next)
+	{
+		if ((mdi->type == MODDATATYPE_CLIENT) && mdi->sync && mdi->serialize)
+		{
+			char *value = mdi->serialize(&moddata_client(acptr, mdi));
+			if (value)
+				sendto_one(srv, ":%s MD %s %s %s :%s",
+					me.name, "client", acptr->name, mdi->name, value);
+		}
+	}
+}
+
+/** Send all moddata attached to channel 'chptr' to remote server 'srv' (if the module wants this), called by SJOIN */
+void send_moddata_channel(aClient *srv, aChannel *chptr)
+{
+ModDataInfo *mdi;
+
+	for (mdi = MDInfo; mdi; mdi = mdi->next)
+	{
+		if ((mdi->type == MODDATATYPE_CHANNEL) && mdi->sync && mdi->serialize)
+		{
+			char *value = mdi->serialize(&moddata_channel(chptr, mdi));
+			if (value)
+				sendto_one(srv, ":%s MD %s %s %s :%s",
+					me.name, "channel", chptr->chname, mdi->name, value);
+		}
+	}
+}
+
+/** Send all moddata attached to member & memberships for 'chptr' to remote server 'srv' (if the module wants this), called by SJOIN */
+void send_moddata_members(aClient *srv)
+{
+ModDataInfo *mdi;
+aChannel *chptr;
+aClient *acptr;
+
+	for (chptr = channel; chptr; chptr = chptr->nextch)
+	{
+		Member *m;
+		for (m = chptr->members; m; m = m->next)
+		{
+			if (m->cptr->from == srv)
+				continue; /* from srv's direction */
+			for (mdi = MDInfo; mdi; mdi = mdi->next)
+			{
+				if ((mdi->type == MODDATATYPE_MEMBER) && mdi->sync && mdi->serialize)
+				{
+					char *value = mdi->serialize(&moddata_member(m, mdi));
+					if (value)
+						sendto_one(srv, ":%s MD %s %s:%s %s :%s",
+							me.name, "member", chptr->chname, m->cptr->name, mdi->name, value);
+				}
+			}
+		}
+	}
+	
+	list_for_each_entry(acptr, &client_list, client_node)
+	{
+		Membership *m;
+		if (!IsPerson(acptr) || !acptr->user)
+			continue;
+
+		if (acptr->from == srv)
+			continue; /* from srv's direction */
+
+		for (m = acptr->user->channel; m; m = m->next)
+		{
+			for (mdi = MDInfo; mdi; mdi = mdi->next)
+			{
+				if ((mdi->type == MODDATATYPE_MEMBERSHIP) && mdi->sync && mdi->serialize)
+				{
+					char *value = mdi->serialize(&moddata_membership(m, mdi));
+					if (value)
+						sendto_one(srv, ":%s MD %s %s:%s %s :%s",
+							me.name, "membership", acptr->name, m->chptr->chname, mdi->name, value);
+				}
+			}
+		}
 	}
 }

@@ -140,8 +140,10 @@ struct _moddatainfo {
 	ModDataType type; /**< Type of module data (eg: for client, channel, etc..) */
 	int slot; /**< Assigned slot */
 	char unloaded; /**< Module being unloaded? */
-	void (*free)(ModData *m);
-	/* TODO: serialize/unserialze? */
+	void (*free)(ModData *m); /**< Function will be called when the data needs to be freed (may be NULL if not using dynamic storage) */
+	char *(*serialize)(ModData *m); /**< Function which converts the data to a string. May return NULL if 'm' contains no data (since for example m->ptr may be NULL). */
+	void (*unserialize)(char *str, ModData *m); /**< Function which converts the string back to data */
+	int sync; /**< Send in netsynch (when servers connect) */
 };
 
 #define moddata_client(acptr, md)    acptr->moddata[md->slot]
@@ -641,6 +643,12 @@ Cmdoverride *CmdoverrideAdd(Module *module, char *cmd, iFP function);
 void CmdoverrideDel(Cmdoverride *ovr);
 int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
+extern void moddata_free_client(aClient *acptr);
+extern void moddata_free_channel(aChannel *chptr);
+extern void moddata_free_member(Member *m);
+extern void moddata_free_membership(Membership *m);
+ModDataInfo *findmoddata_byname(char *name, ModDataType type);
+
 /* Hook types */
 #define HOOKTYPE_LOCAL_QUIT	1
 #define HOOKTYPE_LOCAL_NICKCHANGE 2
@@ -756,6 +764,10 @@ int CallCmdoverride(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int parc, ch
 #define EFUNC_SEND_PROTOCTL_SERVERS	35
 #define EFUNC_VERIFY_LINK		36
 #define EFUNC_SEND_SERVER_MESSAGE	37
+#define EFUNC_SEND_MD_CLIENT            38
+#define EFUNC_SEND_MD_CHANNEL           39
+#define EFUNC_SEND_MD_MEMBER            40
+#define EFUNC_SEND_MD_MEMBERSHIP        41
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000
