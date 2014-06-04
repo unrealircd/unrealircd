@@ -461,6 +461,12 @@ DLLFUNC void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, c
 	set_mode(chptr, sptr, parc, parv, &pcount, pvar, 0);
 	samode_in_progress = 0; 
 
+	if (MyConnect(sptr))
+			RunHook7(HOOKTYPE_PRE_LOCAL_CHANMODE, cptr, sptr, chptr, modebuf, parabuf, sendts, samode);
+		else
+			RunHook7(HOOKTYPE_PRE_REMOTE_CHANMODE, cptr, sptr, chptr, modebuf, parabuf, sendts, samode);
+
+
 	if (IsServer(sptr))
 	{
 		if (sendts > 0)
@@ -811,22 +817,6 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	}
 	switch (modetype)
 	{
-	  case MODE_AUDITORIUM:
-		  if (IsULine(cptr) || IsServer(cptr) || samode_in_progress)
-			  goto auditorium_ok;
-		  if (MyClient(cptr) && !is_chanowner(cptr, chptr) && !op_can_override(cptr))
-		  {
-			sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED), me.name, cptr->name,
-				   chptr->chname);
-			break;
-		  }
-		  if (op_can_override(cptr) && !is_chanowner(cptr, chptr))
-		  {
-		  	opermode = 1;
-		  }
-
-		auditorium_ok:
-		  goto setthephuckingmode;
 	  case MODE_OPERONLY:
 		  if (MyClient(cptr) && !IsAnOper(cptr))
 		  {

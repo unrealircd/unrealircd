@@ -396,52 +396,6 @@ good:
 	}
 }
 
-/* weird channelmode +mu crap:
- * - local: deliver msgs to chanops (and higher) like <IRC> SrcNick: hi all
- * - remote: deliver msgs to every server once (if needed) with real sourcenick.
- * The problem is we can't send to remote servers with sourcenick (prefix) 'IRC'
- * because that's a virtual user... Fun... -- Syzop.
- */
-void sendto_chmodemucrap(aClient *from, aChannel *chptr, char *text)
-{
-	Member *lp;
-	aClient *acptr;
-	int  i;
-	int remote = MyClient(from) ? 0 : 1;
-
-	snprintf(ccmd, sizeof(ccmd), ":%s PRIVMSG %s :%s", from->name, chptr->chname, text); /* msg */
-	snprintf(xcmd, sizeof(xcmd), ":IRC!IRC@%s PRIVMSG %s :%s: %s", me.name, chptr->chname, from->name, text); /* local */
-
-	++current_serial;
-	for (lp = chptr->members; lp; lp = lp->next)
-	{
-		acptr = lp->cptr;
-
-		if (IsDeaf(acptr) && !sendanyways)
-			continue;
-		if (!(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)))
-			continue;
-		if (remote && (acptr->from == from->from)) /* don't send it back to where it came from */
-			continue;
-		if (MyConnect(acptr) && IsRegisteredUser(acptr))
-		{
-			sendto_one(acptr, "%s", xcmd);
-		}
-		else
-		{
-			/* Now check whether a message has been sent to this
-			 * remote link already */
-			if (acptr->from->serial != current_serial)
-			{
-				sendto_one(acptr, "%s", ccmd);
-				acptr->from->serial = current_serial;
-			}
-		}
-	}
-	return;
-}
-
-
 /*
    sendto_chanops_butone -Stskeeps
 */
@@ -549,9 +503,6 @@ void sendto_common_channels(aClient *user, char *pattern, ...)
 				cptr = users->cptr;
 				if (!MyConnect(cptr) || (cptr->serial == current_serial))
 					continue;
-				if ((channels->chptr->mode.mode & MODE_AUDITORIUM) &&
-				    !(is_chanownprotop(user, channels->chptr) || is_chanownprotop(cptr, channels->chptr)))
-					continue;
 				cptr->serial = current_serial;
 				sendbufto_one(cptr, sendbuf, sendlen);
 			}
@@ -593,9 +544,6 @@ void sendto_common_channels_local_butone(aClient *user, int cap, char *pattern, 
 				cptr = users->cptr;
 				if (!MyConnect(cptr) || (cptr->serial == current_serial) ||
 				    !CHECKPROTO(cptr, cap))
-					continue;
-				if ((channels->chptr->mode.mode & MODE_AUDITORIUM) &&
-				    !(is_chanownprotop(user, channels->chptr) || is_chanownprotop(cptr, channels->chptr)))
 					continue;
 				cptr->serial = current_serial;
 				sendbufto_one(cptr, sendbuf, sendlen);

@@ -214,15 +214,28 @@ int r;
  */
 DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags)
 {
+	Hook *h;
+	int i;
 	char *parv[] = { 0, 0 };
 	/*
 	   **  Complete user entry to the new channel (if any)
 	 */
 	add_user_to_channel(chptr, sptr, flags);
+
+	/*
+	  ** Check if we should notify users of new join
+	 */
+	for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
+		{
+			i = (*(h->func.intfunc))(sptr,chptr);
+			if (i != 0)
+				break;
+		}
+
 	/*
 	   ** notify all other users on the new channel
 	 */
-	if (chptr->mode.mode & MODE_AUDITORIUM)
+	if (i != 0)
 	{
 		if (MyClient(sptr))
 			sendto_one(sptr, ":%s!%s@%s JOIN :%s",

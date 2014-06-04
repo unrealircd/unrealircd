@@ -93,6 +93,7 @@ CMD_FUNC(m_kick)
 	char *comment, *name, *p = NULL, *user, *p2 = NULL, *badkick;
 	Membership *lp;
 	Hook *h;
+	int i = 0;
 
 	if (parc < 3 || *parv[1] == '\0')
 	{
@@ -326,8 +327,15 @@ CMD_FUNC(m_kick)
 				}
 				if (lp)
 				{
-					if ((chptr->mode.mode & MODE_AUDITORIUM) &&
-					    !(lp->flags & (CHFL_CHANOP|CHFL_CHANPROT|CHFL_CHANOWNER)))
+					for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
+					{
+						i = (*(h->func.intfunc))(sptr,chptr);
+						if (i != 0)
+							break;
+					}
+
+					if ((i != 0) &&
+					    !(lp->flags & (CHFL_CHANOP|CHFL_CHANPROT|CHFL_CHANOWNER|CHFL_HALFOP|CHFL_VOICE)))
 					{
 						/* Send it only to chanops & victim */
 						if (IsPerson(sptr))

@@ -1,0 +1,386 @@
+/*
+ * Channel mode +D/+d: delayed join
+ * except from opers, U-lines and servers.
+ * Copyright 2014 Travis Mcarthur <Heero> and UnrealIRCd Team
+ */
+#include "config.h"
+#include "struct.h"
+#include "common.h"
+#include "sys.h"
+#include "numeric.h"
+#include "msg.h"
+#include "channel.h"
+#include <time.h>
+#include <sys/stat.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#ifdef _WIN32
+#include <io.h>
+#endif
+#include <fcntl.h>
+#include "h.h"
+#ifdef _WIN32
+#include "version.h"
+#endif
+
+#ifndef DYNAMIC_LINKING
+ModuleHeader m_moded_Header
+#else
+#define m_moded_Header Mod_Header
+ModuleHeader Mod_Header
+#endif
+  = {
+        "m_moded",   /* Name of module */
+        "v0.0.1", /* Version */
+        "delayed join (+D,+d)", /* Short description of module */
+        "3.2-b8-1",
+        NULL
+    };
+
+#define MOD_DATA_STR "moded"
+#define MOD_DATA_INVISIBLE "1"
+
+static long UMODE_PRIVDEAF = 0;
+static Cmode *CmodeDelayed = NULL;
+static Cmode *CmodePostDelayed = NULL;
+static Cmode_t EXTMODE_DELAYED;
+static Cmode_t EXTMODE_POST_DELAYED;
+
+DLLFUNC int moded_check_join( aClient *cptr, aChannel *chptr);
+DLLFUNC int moded_check_part( aClient *cptr, aChannel *chptr);
+DLLFUNC int moded_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[]);
+DLLFUNC int moded_part(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[]);
+DLLFUNC int deny_all(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what);
+DLLFUNC int moded_quit(aClient *acptr, char *comment);
+DLLFUNC int moded_kick(aClient *cptr, aClient *sptr, aClient *acptr, aChannel *chptr, char *comment);
+DLLFUNC int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
+                             char *modebuf, char *parabuf, int sendts, int samode);
+DLLFUNC int moded_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
+void moded_free(ModData *m);
+char *moded_serialize(ModData *m);
+void moded_unserialize(char *str, ModData *m);
+
+DLLFUNC int MOD_INIT(m_privdeaf)(ModuleInfo *modinfo)
+{
+
+	CmodeInfo req;
+	ModDataInfo mreq;
+	memset(&req, 0, sizeof(req));
+	req.paracount = 0;
+	req.is_ok = extcmode_default_requirechop;
+	req.flag = 'D';
+	CmodeDelayed = CmodeAdd(modinfo->handle, req, &EXTMODE_DELAYED);
+	req.flag = 'd';
+	req.is_ok = deny_all;
+	CmodePostDelayed = CmodeAdd(modinfo->handle, req, &EXTMODE_POST_DELAYED);
+	memset(&mreq, 0, sizeof(mreq));
+	mreq.name = MOD_DATA_STR;
+	mreq.free = moded_free;
+	mreq.serialize = moded_serialize;
+	mreq.unserialize = moded_unserialize;
+	mreq.sync = 0;
+	mreq.type = MODDATATYPE_MEMBER;
+	if (!ModDataAdd(modinfo->handle, mreq))
+			abort();
+
+	if (!CmodeDelayed || !CmodePostDelayed)
+	{
+			/* I use config_error() here because it's printed to stderr in case of a load
+			 * on cmd line, and to all opers in case of a /rehash.
+			 */
+			config_error("m_privdeaf: Could not add usermode '+D' or '+d': %s", ModuleGetErrorStr(modinfo->handle));
+			return MOD_FAILED;
+	}
+
+        HookAddEx(modinfo->handle, HOOKTYPE_VISIBLE_IN_CHANNEL, moded_check_join);
+        HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_JOIN, moded_join);
+        HookAddEx(modinfo->handle, HOOKTYPE_REMOTE_JOIN, moded_join);
+        HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_PART, moded_part);
+        HookAddEx(modinfo->handle, HOOKTYPE_REMOTE_PART, moded_part);
+    	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_QUIT, moded_quit);
+    	HookAddEx(modinfo->handle, HOOKTYPE_REMOTE_QUIT, moded_quit);
+    	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_KICK, moded_kick);
+    	HookAddEx(modinfo->handle, HOOKTYPE_REMOTE_KICK, moded_kick);
+    	HookAddEx(modinfo->handle, HOOKTYPE_PRE_LOCAL_CHANMODE, moded_chanmode);
+    	HookAddEx(modinfo->handle, HOOKTYPE_PRE_REMOTE_CHANMODE, moded_chanmode);
+    	HookAddEx(modinfo->handle, HOOKTYPE_CHANMSG, moded_chanmsg);
+
+        return MOD_SUCCESS;
+}
+
+DLLFUNC int MOD_LOAD(m_privdeaf)(int module_load)
+{
+        return MOD_SUCCESS;
+}
+
+DLLFUNC int MOD_UNLOAD(m_privdeaf)(int module_unload)
+{
+        return MOD_SUCCESS;
+}
+
+
+
+DLLFUNC void set_post_delayed(aChannel *chptr)
+{
+	chptr->mode.extmode |= EXTMODE_POST_DELAYED;
+	sendto_channel_butserv(chptr, &me, ":%s MODE %s +d", me.name, chptr->chname);
+}
+
+DLLFUNC void clear_post_delayed(aChannel *chptr)
+{
+	chptr->mode.extmode &= ~EXTMODE_POST_DELAYED;
+	sendto_channel_butserv(chptr, &me, ":%s MODE %s -d", me.name, chptr->chname);
+}
+
+
+bool moded_member_invisible(Member* m, aChannel *chptr)
+{
+	ModDataInfo *md;
+
+	if (!m)
+		return false;
+
+	md = findmoddata_byname(MOD_DATA_STR, MODDATATYPE_MEMBER);
+	if (!md)
+		return false;
+
+	if (!moddata_member(m,md).str)
+		return false;
+
+	return true;
+
+}
+
+bool moded_user_invisible(aClient *cptr, aChannel *chptr)
+{
+	return moded_member_invisible(find_member_link(chptr->members, cptr),chptr);
+}
+
+DLLFUNC bool channel_has_invisible_users(aChannel *chptr)
+{
+	Member* i;
+	for (i = chptr->members; i; i = i->next)
+	{
+		if (moded_member_invisible(i,chptr))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+DLLFUNC bool channel_is_post_delayed(aChannel *chptr)
+{
+	if (chptr->mode.extmode & EXTMODE_POST_DELAYED)
+		return true;
+	return false;
+}
+
+DLLFUNC bool channel_is_delayed(aChannel *chptr)
+{
+	if (chptr->mode.extmode & EXTMODE_DELAYED)
+		return true;
+	return false;
+}
+
+DLLFUNC void clear_user_invisible(aChannel *chptr, aClient *sptr)
+{
+	Member *i;
+	ModDataInfo *md;
+	bool should_clear = true, found_member = false;
+
+	md = findmoddata_byname(MOD_DATA_STR, MODDATATYPE_MEMBER);
+	if (!md)
+		return;
+	for (i = chptr->members; i; i = i->next)
+	{
+		if (i->cptr == sptr)
+		{
+
+			if (md && md->free)
+			{
+				md->free(&moddata_member(i, md));
+				memset(&moddata_member(i, md), 0, sizeof(ModData));
+			}
+
+
+			found_member = true;
+
+			if (!should_clear)
+				break;
+		}
+
+		else if (moddata_member(i,md).str)
+		{
+			should_clear = false;
+			if (found_member)
+				break;
+		}
+	}
+
+	if (should_clear && (chptr->mode.extmode & EXTMODE_POST_DELAYED))
+	{
+		clear_post_delayed(chptr);
+	}
+
+}
+
+DLLFUNC void clear_user_invisible_announce(aChannel *chptr, aClient *sptr)
+{
+	Member *i;
+	clear_user_invisible(chptr,sptr);
+
+	for (i = chptr->members; i; i = i->next)
+	{
+		if (!is_skochanop(i->cptr,chptr) && i->cptr != sptr)
+			sendto_one(i->cptr,
+			    ":%s JOIN :%s", sptr->name, chptr->chname);
+	}
+}
+
+DLLFUNC void set_user_invisible(aChannel *chptr, aClient *sptr)
+{
+	Member *m = find_member_link(chptr->members,sptr);
+	ModDataInfo *md;
+
+	if (!m)
+		return;
+
+	md = findmoddata_byname(MOD_DATA_STR, MODDATATYPE_MEMBER);
+
+	if (!md || !md->unserialize)
+		return;
+
+	md->unserialize(MOD_DATA_INVISIBLE, &moddata_member(m, md));
+
+
+}
+
+
+DLLFUNC int deny_all(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what)
+{
+	return EX_ALWAYS_DENY;
+}
+
+
+DLLFUNC int moded_check_join(aClient *cptr, aChannel *chptr)
+{
+	return channel_is_delayed(chptr) && moded_user_invisible(cptr,chptr);
+}
+
+
+DLLFUNC int moded_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[])
+{
+
+	if (channel_is_delayed(chptr))
+		set_user_invisible(chptr,cptr);
+
+	return 0;
+}
+
+DLLFUNC int moded_part(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[])
+{
+	if (channel_is_delayed(chptr) || channel_is_post_delayed(chptr))
+		clear_user_invisible(chptr,cptr);
+	return 0;
+}
+
+DLLFUNC int moded_quit(aClient *acptr, char *comment)
+{
+	Membership *membership;
+	aChannel *chptr;
+
+	for (membership = acptr->user->channel; membership; membership=membership->next)
+	{
+		chptr = membership->chptr;
+		if (channel_is_delayed(chptr) || channel_is_post_delayed(chptr))
+			clear_user_invisible(chptr,acptr);
+
+	}
+
+	return 0;
+}
+
+DLLFUNC int moded_kick(aClient *cptr, aClient *sptr, aClient *acptr, aChannel *chptr, char *comment)
+{
+	if (channel_is_delayed(chptr) || channel_is_post_delayed(chptr))
+		clear_user_invisible(chptr,acptr);
+	return 0;
+}
+
+
+DLLFUNC int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
+                             char *modebuf, char *parabuf, int sendts, int samode)
+{
+	// Handle case where we just unset +D but have invisible users
+	if (!channel_is_delayed(chptr) && !channel_is_post_delayed(chptr) && channel_has_invisible_users(chptr))
+		set_post_delayed(chptr);
+	else if (channel_is_delayed(chptr) && channel_is_post_delayed(chptr))
+		clear_post_delayed(chptr);
+
+	if ((channel_is_delayed(chptr) || channel_is_post_delayed(chptr)))
+	{
+		ParseMode pm;
+		 int ret;
+		 for (ret = parse_chanmode(&pm, modebuf, parabuf); ret; ret = parse_chanmode(&pm, NULL, NULL))
+		 {
+			 if (pm.what == MODE_ADD && (pm.modechar == 'o' || pm.modechar == 'h' || pm.modechar == 'a' || pm.modechar == 'q' || pm.modechar == 'v'))
+			 {
+				 Member* i;
+				 aClient* user = find_client(pm.param,NULL);
+				 if (!user)
+					 continue;
+
+				 if (moded_user_invisible(user,chptr))
+					 clear_user_invisible_announce(chptr,user);
+
+				 if (pm.modechar == 'v')
+					 continue;
+
+				 for (i = chptr->members; i; i = i->next)
+				 {
+					 if (i->cptr == user)
+						 continue;
+					 if (moded_user_invisible(i->cptr,chptr))
+						 sendto_one(user,":%s JOIN :%s", i->cptr->name, chptr->chname);
+				 }
+
+			 }
+		 }
+	}
+
+	return 0;
+}
+
+DLLFUNC int moded_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
+{
+
+	if ((channel_is_delayed(chptr) || channel_is_post_delayed(chptr)) && (moded_user_invisible(sptr,chptr)))
+		clear_user_invisible_announce(chptr,sptr);
+
+	return 0;
+}
+
+void moded_free(ModData *m)
+{
+	if (m->str)
+		MyFree(m->str);
+	m->str = NULL;
+}
+
+char *moded_serialize(ModData *m)
+{
+	if (!m->str)
+		return NULL;
+	return m->str;
+}
+
+void moded_unserialize(char *str, ModData *m)
+{
+	if (m->str)
+		MyFree(m->str);
+	m->str = strdup(str);
+}
+
+

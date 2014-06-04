@@ -406,6 +406,8 @@ int i = 1;
 static int can_see(aClient *sptr, aClient *acptr, aChannel *channel)
 {
 int ret = 0;
+int i=0;
+Hook *h;
 char has_common_chan = 0;
 	do {
 		/* can only see people */
@@ -565,8 +567,15 @@ char has_common_chan = 0;
 			}
 			if (IsInvisible(acptr) && !member)
 				break;
-			if ((channel->mode.mode & MODE_AUDITORIUM) &&
-			    !is_chan_op(acptr, channel) && !is_chan_op(sptr, channel))
+
+			for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
+			{
+				i = (*(h->func.intfunc))(acptr,channel);
+				if (i != 0)
+					break;
+			}
+
+			if (i != 0 && !(is_skochanop(sptr, channel)) && !(is_skochanop(acptr, channel) || has_voice(acptr,channel)))
 				break;
 		}
 		else
@@ -819,6 +828,8 @@ static char *first_visible_channel(aClient *sptr, aClient *acptr, int *flg)
 static int has_common_channels(aClient *c1, aClient *c2)
 {
 	Membership *lp;
+	Hook *h;
+	int j = 0, k = 0;
 
 	for (lp = c1->user->channel; lp; lp = lp->next)
 	{
@@ -826,9 +837,17 @@ static int has_common_channels(aClient *c1, aClient *c2)
 		{
 			if (c1 == c2)
 				return 1;
+
+			for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
+							{
+								j = (*(h->func.intfunc))(c2,lp->chptr);
+								if (j != 0)
+									break;
+							}
+
 			/* We must ensure that c1 is allowed to "see" c2 */
-                        if ((lp->chptr->mode.mode & MODE_AUDITORIUM) &&
-                            !is_chan_op(c2, lp->chptr) && !is_chan_op(c1, lp->chptr))
+                        if (j != 0 &&
+                        		!(is_skochanop(c2, lp->chptr) || has_voice(c2,lp->chptr)) && !is_skochanop(c1, lp->chptr))
                                 break;
 
 			return 1;

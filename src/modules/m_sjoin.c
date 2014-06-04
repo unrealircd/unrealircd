@@ -179,7 +179,8 @@ CMD_FUNC(m_sjoin)
 	Member *lp;
 	Membership *lp2;
 	aParv *ap;
-	int pcount, i, f;
+	int pcount, i, f, k =0;
+	Hook* h;
 	time_t ts, oldts;
 	unsigned short b=0,c;
 	Mode oldmode;
@@ -494,12 +495,20 @@ CMD_FUNC(m_sjoin)
 			 * locally (dont send a join to the chan) but propagate it to the other servers.
 			 * I'm not sure if the propagation is needed however -- Syzop.
 			 */
+			for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
+				{
+					k = (*(h->func.intfunc))(sptr,chptr);
+					if (k != 0)
+						break;
+				}
+
+
 			if (!IsMember(acptr, chptr)) {
 				add_user_to_channel(chptr, acptr, modeflags);
 				RunHook4(HOOKTYPE_REMOTE_JOIN, cptr, acptr, chptr, NULL);
-				if (chptr->mode.mode & MODE_AUDITORIUM)
+				if (k != 0)
 				{
-					if (modeflags & (CHFL_CHANOP|CHFL_CHANPROT|CHFL_CHANOWNER))
+					if (modeflags & (CHFL_CHANOP|CHFL_CHANPROT|CHFL_CHANOWNER|CHFL_HALFOP|CHFL_VOICE))
 						sendto_channel_butserv(chptr, acptr, ":%s JOIN :%s", nick, chptr->chname);
 					else
 						sendto_chanops_butone(NULL, chptr, ":%s!%s@%s JOIN :%s",

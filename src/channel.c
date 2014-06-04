@@ -35,7 +35,6 @@
  * Moved is_full() from list.c
  */
 
-
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
@@ -45,6 +44,7 @@
 #include "hash.h"		/* For CHANNELHASHSIZE */
 #include "h.h"
 #include "proto.h"
+#include "modules.h"
 #include <string.h>
 
 ID_Copyright
@@ -97,7 +97,6 @@ aCtab cFlagTab[] = {
 	{MODE_NOKNOCK, 'K', 0, 0},	/* knock knock (no way!) */
 	{MODE_NOINVITE, 'V', 0, 0},	/* no invites */
 	{MODE_MODREG, 'M', 0, 0},	/* Need umode +r to talk */
-	{MODE_AUDITORIUM, 'u', 0, 0},
 	{MODE_ONLYSECURE, 'z', 0, 0},
 	{MODE_NONICKCHANGE, 'N', 1, 0},
 	{0x0, 0x0, 0x0}
@@ -758,20 +757,6 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 	
 	if (!MyClient(cptr))
 	{
-		if (IsClient(cptr))
-		{
-			/* channelmode +mu is a special case.. sux!. -- Syzop */		
-
-			lp = find_membership_link(cptr->user->channel, chptr);
-			if ((chptr->mode.mode & MODE_MODERATED) && (chptr->mode.mode & MODE_AUDITORIUM) &&
-			    !IsOper(cptr) &&
-		        (!lp || !(lp->flags & (CHFL_CHANOP|CHFL_VOICE|CHFL_CHANOWNER|CHFL_HALFOP|CHFL_CHANPROT))) &&
-		        !is_irc_banned(chptr))
-		    {
-				sendto_chmodemucrap(cptr, chptr, msgtext);
-				return (CANNOT_SEND_MODERATED);
-			}
-		}
 		return 0;
 	}
 
@@ -790,8 +775,6 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
 	    CHFL_HALFOP | CHFL_CHANPROT))))
 	    {
-			if ((chptr->mode.mode & MODE_AUDITORIUM) && !is_irc_banned(chptr) && !is_banned(cptr, chptr, BANCHK_MSG))
-				sendto_chmodemucrap(cptr, chptr, msgtext);
 			return (CANNOT_SEND_MODERATED);
 	    }
 
@@ -1349,6 +1332,7 @@ void rejoin_leave(aClient *sptr)
 {
 	Membership *tmp;
 	aChannel *chptr;
+	Hook *h;
 	char *comment = "Changing host";
 	int i = 0;
 
@@ -1367,8 +1351,16 @@ void rejoin_leave(aClient *sptr)
 		/* Ok, we will now part/quit/whatever the user, so tag it.. */
 		tmp->flags |= CHFL_REJOINING;
 
-		if ((chptr->mode.mode & MODE_AUDITORIUM) &&
-		    !(tmp->flags & (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP)))
+
+		for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
+			{
+				i = (*(h->func.intfunc))(sptr,chptr);
+				if (i != 0)
+					break;
+			}
+
+		if ((i != 0) &&
+		    !(tmp->flags & (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP|CHFL_HALFOP|CHFL_VOICE)))
 		{
 			sendto_chanops_butone(sptr, chptr, ":%s!%s@%s PART %s :%s", sptr->name, sptr->user->username, GetHost(sptr), chptr->chname, comment);
 		} else
@@ -1385,6 +1377,8 @@ void rejoin_joinandmode(aClient *sptr)
 	Membership *tmp;
 	aChannel *chptr;
 	int i, j = 0, n, flags;
+	Hook *h;
+	int k = 0;
 	char flagbuf[8]; /* For holding "qohva" and "*~@%+" */
 
 	for (tmp = sptr->user->channel; tmp; tmp = tmp->next)
@@ -1398,8 +1392,16 @@ void rejoin_joinandmode(aClient *sptr)
 		if (!(flags & CHFL_REJOINING))
 			continue;
 
-		if ((chptr->mode.mode & MODE_AUDITORIUM) && 
-		    !(flags & (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP)))
+		for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
+		{
+			k = (*(h->func.intfunc))(sptr,chptr);
+			if (k != 0)
+				break;
+		}
+
+
+		if ((k != 0) &&
+		    !(flags & (CHFL_CHANOWNER|CHFL_CHANPROT|CHFL_CHANOP|CHFL_HALFOP|CHFL_VOICE)))
 		{
 			sendto_chanops_butone(sptr, chptr, ":%s!%s@%s JOIN :%s", sptr->name, sptr->user->username, GetHost(sptr), chptr->chname);
 		} else

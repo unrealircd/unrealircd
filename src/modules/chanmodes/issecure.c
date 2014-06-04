@@ -143,9 +143,19 @@ Member *member;
  */
 void issecure_unset(aChannel *chptr, aClient *sptr, int notice)
 {
+	Hook *h;
+	int i = 0;
+
 	if (notice)
 	{
-		if (chptr->mode.mode & MODE_AUDITORIUM)
+		for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
+		{
+			i = (*(h->func.intfunc))(sptr,chptr);
+			if (i != 0)
+				break;
+		}
+
+		if (i != 0)
 			sendto_channel_butserv(chptr, &me, ":%s NOTICE %s :User joined and is not connected through SSL, setting channel -Z (insecure)",
 				me.name, chptr->chname);
 		else

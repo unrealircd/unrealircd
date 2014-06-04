@@ -92,6 +92,8 @@ DLLFUNC CMD_FUNC(m_names)
 	aChannel *chptr;
 	aClient *acptr;
 	int  member;
+	int i = 0;
+	Hook *h;
 	Member *cm;
 	int  idx, flag = 1, spos;
 	char *s, *para = parv[1];
@@ -157,13 +159,20 @@ DLLFUNC CMD_FUNC(m_names)
 		acptr = cm->cptr;
 		if (IsInvisible(acptr) && !member && !IsNetAdmin(sptr))
 			continue;
-		if (chptr->mode.mode & MODE_AUDITORIUM)
-			if (!is_chan_op(sptr, chptr)
-			    && !is_chanprot(sptr, chptr)
-			    && !is_chanowner(sptr, chptr))
+
+		for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
+		{
+			i = (*(h->func.intfunc))(cm->cptr,chptr);
+			if (i != 0)
+				break;
+		}
+
+		if (i != 0)
+			if (!is_skochanop(sptr, chptr)
+			    && !has_voice(sptr, chptr))
 				if (!(cm->
 				    flags & (CHFL_CHANOP | CHFL_CHANPROT |
-				    CHFL_CHANOWNER)) && acptr != sptr)
+				    CHFL_CHANOWNER | CHFL_HALFOP)) && acptr != sptr)
 					continue;
 
 		if (!SupportNAMESX(sptr))

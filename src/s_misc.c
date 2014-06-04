@@ -1053,6 +1053,8 @@ void kick_insecure_users(aChannel *chptr)
 {
 	Member *member, *mb2;
 	aClient *cptr;
+	int i = 0;
+	Hook *h;
 	char *comment = "Insecure user not allowed on secure channel (+z)";
 	
 	for (member = chptr->members; member; member = mb2)
@@ -1063,7 +1065,14 @@ void kick_insecure_users(aChannel *chptr)
 		{
 			RunHook5(HOOKTYPE_LOCAL_KICK, &me, &me, cptr, chptr, comment);
 
-			if ((chptr->mode.mode & MODE_AUDITORIUM) && is_chanownprotop(cptr, chptr))
+			for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
+			{
+				i = (*(h->func.intfunc))(cptr,chptr);
+				if (i != 0)
+					break;
+			}
+
+			if (i != 0 && !(is_skochanop(cptr, chptr) || has_voice(cptr,chptr)))
 			{
 				sendto_chanops_butone(cptr, chptr, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
 				sendto_prefix_one(cptr, &me, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);

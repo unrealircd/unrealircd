@@ -85,6 +85,8 @@ DLLFUNC CMD_FUNC(m_part)
 	char *commentx = (parc > 2 && parv[2]) ? parv[2] : NULL;
 	char *comment;
 	int n;
+	Hook *h;
+	int i = 0;
 	
 	if (parc < 2 || parv[1][0] == '\0')
 	{
@@ -181,9 +183,17 @@ DLLFUNC CMD_FUNC(m_part)
 		sendto_server(cptr, 0, PROTO_SID, ":%s PART %s :%s",
 			sptr->name, chptr->chname, comment ? comment : "");
 
+		for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
+			{
+				i = (*(h->func.intfunc))(sptr,chptr);
+				if (i != 0)
+					break;
+			}
+
+
 		if (1)
 		{
-			if ((chptr->mode.mode & MODE_AUDITORIUM) && !is_chanownprotop(sptr, chptr))
+			if ((i != 0) && !(is_skochanop(sptr, chptr) || has_voice(sptr,chptr)))
 			{
 				if (!comment)
 				{

@@ -718,6 +718,9 @@ ModDataInfo *findmoddata_byname(char *name, ModDataType type);
 #define HOOKTYPE_MODECHAR_DEL 65
 #define HOOKTYPE_EXIT_ONE_CLIENT 66
 #define HOOKTYPE_CAN_JOIN_LIMITEXCEEDED 67
+#define HOOKTYPE_VISIBLE_IN_CHANNEL 68
+#define HOOKTYPE_PRE_LOCAL_CHANMODE 69
+#define HOOKTYPE_PRE_REMOTE_CHANMODE 70
 
 /* Hook return values */
 #define HOOK_CONTINUE 0
