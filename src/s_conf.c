@@ -6068,6 +6068,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 
 	link = (ConfigItem_link *) MyMallocEx(sizeof(ConfigItem_link));
 	link->servername = strdup(ce->ce_vardata);
+
 	/* ugly, but it works. if it fails, we know _test_link failed miserably */
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -6116,6 +6117,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 			link->ciphers = strdup(cep->ce_vardata);
 #endif
 	}
+
 	AddListItem(link, conf_link);
 	return 0;
 }
@@ -7004,6 +7006,13 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			else
 				ircstrdup(tempiConf.network.x_prefix_quit, cep->ce_vardata);
 		}
+		else if (!strcmp(cep->ce_varname, "link")) {
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+				if (!strcmp(cepp->ce_varname, "bind-ip")) {
+					ircstrdup(tempiConf.link_bindip, cepp->ce_vardata);
+				}
+			}
+		}
 		else if (!strcmp(cep->ce_varname, "dns")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				if (!strcmp(cepp->ce_varname, "timeout")) {
@@ -7018,6 +7027,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "bind-ip")) {
 					ircstrdup(tempiConf.dns_bindip, cepp->ce_vardata);
 				}
+
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "throttle")) {
@@ -7656,6 +7666,27 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		{
 			CheckDuplicate(cep, new_linking_protocol, "new-linking-protocol");
 			CheckNull(cep);
+		}
+		else if (!strcmp(cep->ce_varname, "link")) {
+					for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
+						CheckNull(cepp);
+						if (!strcmp(cepp->ce_varname, "bind-ip")) {
+							struct in_addr in;
+							CheckDuplicate(cepp, dns_bind_ip, "link::bind-ip");
+							if (strcmp(cepp->ce_vardata, "*"))
+							{
+								in.s_addr = inet_addr(cepp->ce_vardata);
+								if (strcmp((char *)inet_ntoa(in), cepp->ce_vardata))
+								{
+									config_error("%s:%i: set::link::bind-ip (%s) is not a valid IP",
+										cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum,
+										cepp->ce_vardata);
+									errors++;
+									continue;
+								}
+							}
+						}
+					}
 		}
 		else if (!strcmp(cep->ce_varname, "dns")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {

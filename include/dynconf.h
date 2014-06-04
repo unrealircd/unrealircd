@@ -80,6 +80,7 @@ struct zConfiguration {
 	int  host_retries;
 	char *name_server;
 	char *dns_bindip;
+	char *link_bindip;
 	long throttle_period;
 	char throttle_count;
 	char *kline_address;
@@ -186,6 +187,7 @@ extern MODVAR aConfiguration iConf;
 #define HOST_RETRIES			iConf.host_retries
 #define NAME_SERVER			iConf.name_server
 #define DNS_BINDIP			iConf.dns_bindip
+#define LINK_BINDIP			iConf.link_bindip
 #define IDENT_CHECK			iConf.ident_check
 #define FAILOPER_WARN			iConf.fail_oper_warn
 #define SHOWCONNECTINFO			iConf.show_connect_info

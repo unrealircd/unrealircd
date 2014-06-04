@@ -1285,6 +1285,9 @@ int stats_set(aClient *sptr, char *para)
 		    sptr->name, DNS_BINDIP);
 	sendto_one(sptr, ":%s %i %s :ban-version-tkl-time: %s", me.name, RPL_TEXT,
 	    sptr->name, pretty_time_val(BAN_VERSION_TKL_TIME));
+	if (LINK_BINDIP)
+		sendto_one(sptr, ":%s %i %s :link::bind-ip: %s", me.name, RPL_TEXT,
+		    sptr->name, LINK_BINDIP);
 	sendto_one(sptr, ":%s %i %s :throttle::period: %s", me.name, RPL_TEXT,
 			sptr->name, THROTTLING_PERIOD ? pretty_time_val(THROTTLING_PERIOD) : "disabled");
 	sendto_one(sptr, ":%s %i %s :throttle::connections: %d", me.name, RPL_TEXT,

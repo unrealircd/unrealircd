@@ -1664,6 +1664,7 @@ static struct SOCKADDR *connect_inet(ConfigItem_link *aconf, aClient *cptr, int 
 {
 	static struct SOCKADDR_IN server;
 	struct hostent *hp;
+	char *bindip;
 	char buf[BUFSIZE];
 
 	/*
@@ -1692,15 +1693,21 @@ static struct SOCKADDR *connect_inet(ConfigItem_link *aconf, aClient *cptr, int 
 
 	get_sockhost(cptr, aconf->hostname);
 
-	if (aconf->bindip && strcmp("*", aconf->bindip))
+
+	if (!aconf->bindip && iConf.link_bindip)
+		bindip = iConf.link_bindip;
+	else
+		bindip = aconf->bindip;
+
+	if (bindip && strcmp("*", bindip))
 	{
 		bzero((char *)&server, sizeof(server));
 		server.SIN_FAMILY = AFINET;
 		server.SIN_PORT = 0;
 #ifndef INET6
-		server.SIN_ADDR.S_ADDR = inet_addr(aconf->bindip);	
+		server.SIN_ADDR.S_ADDR = inet_addr(bindip);
 #else
-		inet_pton(AF_INET6, aconf->bindip, server.SIN_ADDR.S_ADDR);
+		inet_pton(AF_INET6, bindip, server.SIN_ADDR.S_ADDR);
 #endif
 		if (bind(cptr->fd, (struct SOCKADDR *)&server, sizeof(server)) == -1)
 		{
