@@ -31,7 +31,7 @@ INCLUDES = ../../include/auth.h ../../include/channel.h \
 
 R_MODULES= \
 	nocolor.so stripcolor.so issecure.so permanent.so jointhrottle.so floodprot.so \
-	noctcp.so link.so censor.so
+	noctcp.so link.so censor.so delayjoin.so
 
 MODULES=$(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -88,3 +88,7 @@ link.so: link.c $(INCLUDES)
 censor.so: censor.c $(INCLUDES) ../../include/badwords.h
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o censor.so censor.c
+
+delayjoin.so: delayjoin.c $(INCLUDES) ../../include/badwords.h
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o delayjoin.so delayjoin.c

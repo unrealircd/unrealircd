@@ -25,13 +25,13 @@
 #endif
 
 #ifndef DYNAMIC_LINKING
-ModuleHeader m_moded_Header
+ModuleHeader delayjoin_Header
 #else
-#define m_moded_Header Mod_Header
+#define delayjoin_Header Mod_Header
 ModuleHeader Mod_Header
 #endif
   = {
-        "m_moded",   /* Name of module */
+        "delayjoin",   /* Name of module */
         "v0.0.1", /* Version */
         "delayed join (+D,+d)", /* Short description of module */
         "3.2-b8-1",
@@ -61,7 +61,7 @@ void moded_free(ModData *m);
 char *moded_serialize(ModData *m);
 void moded_unserialize(char *str, ModData *m);
 
-DLLFUNC int MOD_INIT(m_privdeaf)(ModuleInfo *modinfo)
+DLLFUNC int MOD_INIT(delayjoin)(ModuleInfo *modinfo)
 {
 
 	CmodeInfo req;
@@ -89,7 +89,7 @@ DLLFUNC int MOD_INIT(m_privdeaf)(ModuleInfo *modinfo)
 			/* I use config_error() here because it's printed to stderr in case of a load
 			 * on cmd line, and to all opers in case of a /rehash.
 			 */
-			config_error("m_privdeaf: Could not add usermode '+D' or '+d': %s", ModuleGetErrorStr(modinfo->handle));
+			config_error("delayjoin: Could not add usermode '+D' or '+d': %s", ModuleGetErrorStr(modinfo->handle));
 			return MOD_FAILED;
 	}
 
@@ -109,17 +109,15 @@ DLLFUNC int MOD_INIT(m_privdeaf)(ModuleInfo *modinfo)
         return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_privdeaf)(int module_load)
+DLLFUNC int MOD_LOAD(delayjoin)(int module_load)
 {
         return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_privdeaf)(int module_unload)
+DLLFUNC int MOD_UNLOAD(delayjoin)(int module_unload)
 {
         return MOD_SUCCESS;
 }
-
-
 
 DLLFUNC void set_post_delayed(aChannel *chptr)
 {
@@ -382,5 +380,3 @@ void moded_unserialize(char *str, ModData *m)
 		MyFree(m->str);
 	m->str = strdup(str);
 }
-
-
