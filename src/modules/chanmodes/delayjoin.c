@@ -38,7 +38,7 @@ ModuleHeader Mod_Header
         NULL
     };
 
-#define MOD_DATA_STR "moded"
+#define MOD_DATA_STR "delayjoin"
 #define MOD_DATA_INVISIBLE "1"
 
 static long UMODE_PRIVDEAF = 0;
@@ -57,7 +57,6 @@ DLLFUNC int moded_kick(aClient *cptr, aClient *sptr, aClient *acptr, aChannel *c
 DLLFUNC int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
                              char *modebuf, char *parabuf, int sendts, int samode);
 DLLFUNC int moded_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
-void moded_free(ModData *m);
 char *moded_serialize(ModData *m);
 void moded_unserialize(char *str, ModData *m);
 
@@ -76,7 +75,6 @@ DLLFUNC int MOD_INIT(delayjoin)(ModuleInfo *modinfo)
 	CmodePostDelayed = CmodeAdd(modinfo->handle, req, &EXTMODE_POST_DELAYED);
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = MOD_DATA_STR;
-	mreq.free = moded_free;
 	mreq.serialize = moded_serialize;
 	mreq.unserialize = moded_unserialize;
 	mreq.sync = 0;
@@ -196,12 +194,8 @@ DLLFUNC void clear_user_invisible(aChannel *chptr, aClient *sptr)
 		if (i->cptr == sptr)
 		{
 
-			if (md && md->free)
-			{
-				md->free(&moddata_member(i, md));
+			if (md)
 				memset(&moddata_member(i, md), 0, sizeof(ModData));
-			}
-
 
 			found_member = true;
 
@@ -360,23 +354,12 @@ DLLFUNC int moded_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice
 	return 0;
 }
 
-void moded_free(ModData *m)
-{
-	if (m->str)
-		MyFree(m->str);
-	m->str = NULL;
-}
-
 char *moded_serialize(ModData *m)
 {
-	if (!m->str)
-		return NULL;
-	return m->str;
+	return m->i ? "1" : "0";
 }
 
 void moded_unserialize(char *str, ModData *m)
 {
-	if (m->str)
-		MyFree(m->str);
-	m->str = strdup(str);
+	m->i = atoi(str);
 }
