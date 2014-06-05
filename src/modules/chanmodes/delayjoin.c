@@ -49,7 +49,7 @@ static Cmode_t EXTMODE_POST_DELAYED;
 
 DLLFUNC int moded_check_join( aClient *cptr, aChannel *chptr);
 DLLFUNC int moded_check_part( aClient *cptr, aChannel *chptr);
-DLLFUNC int moded_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[]);
+DLLFUNC int moded_join(aClient *cptr, aChannel *chptr);
 DLLFUNC int moded_part(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[]);
 DLLFUNC int deny_all(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what);
 DLLFUNC int moded_quit(aClient *acptr, char *comment);
@@ -92,8 +92,7 @@ DLLFUNC int MOD_INIT(delayjoin)(ModuleInfo *modinfo)
 	}
 
         HookAddEx(modinfo->handle, HOOKTYPE_VISIBLE_IN_CHANNEL, moded_check_join);
-        HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_JOIN, moded_join);
-        HookAddEx(modinfo->handle, HOOKTYPE_REMOTE_JOIN, moded_join);
+        HookAddEx(modinfo->handle, HOOKTYPE_JOIN_DATA, moded_join);
         HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_PART, moded_part);
         HookAddEx(modinfo->handle, HOOKTYPE_REMOTE_PART, moded_part);
     	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_QUIT, moded_quit);
@@ -247,6 +246,7 @@ DLLFUNC void set_user_invisible(aChannel *chptr, aClient *sptr)
 	md->unserialize(MOD_DATA_INVISIBLE, &moddata_member(m, md));
 
 
+
 }
 
 
@@ -258,15 +258,18 @@ DLLFUNC int deny_all(aClient *cptr, aChannel *chptr, char mode, char *para, int 
 
 DLLFUNC int moded_check_join(aClient *cptr, aChannel *chptr)
 {
+
 	return channel_is_delayed(chptr) && moded_user_invisible(cptr,chptr);
 }
 
 
-DLLFUNC int moded_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[])
+DLLFUNC int moded_join(aClient *cptr, aChannel *chptr)
 {
 
 	if (channel_is_delayed(chptr))
 		set_user_invisible(chptr,cptr);
+
+
 
 	return 0;
 }

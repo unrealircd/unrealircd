@@ -597,6 +597,7 @@ void add_user_to_channel(aChannel *chptr, aClient *who, int flags)
 		ptr2->flags = flags;
 		who->user->channel = ptr2;
 		who->user->joined++;
+		RunHook2(HOOKTYPE_JOIN_DATA,who,chptr);
 	}
 }
 

@@ -721,6 +721,7 @@ ModDataInfo *findmoddata_byname(char *name, ModDataType type);
 #define HOOKTYPE_VISIBLE_IN_CHANNEL 68
 #define HOOKTYPE_PRE_LOCAL_CHANMODE 69
 #define HOOKTYPE_PRE_REMOTE_CHANMODE 70
+#define HOOKTYPE_JOIN_DATA 71
 
 /* Hook return values */
 #define HOOK_CONTINUE 0
