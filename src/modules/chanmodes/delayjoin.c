@@ -103,6 +103,8 @@ DLLFUNC int MOD_INIT(delayjoin)(ModuleInfo *modinfo)
     	HookAddEx(modinfo->handle, HOOKTYPE_PRE_REMOTE_CHANMODE, moded_chanmode);
     	HookAddEx(modinfo->handle, HOOKTYPE_CHANMSG, moded_chanmsg);
 
+    	MARK_AS_OFFICIAL_MODULE(modinfo);
+
         return MOD_SUCCESS;
 }
 
