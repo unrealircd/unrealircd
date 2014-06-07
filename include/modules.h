@@ -722,6 +722,9 @@ ModDataInfo *findmoddata_byname(char *name, ModDataType type);
 #define HOOKTYPE_PRE_LOCAL_CHANMODE 69
 #define HOOKTYPE_PRE_REMOTE_CHANMODE 70
 #define HOOKTYPE_JOIN_DATA 71
+#define HOOKTYPE_PRE_KNOCK 72
+#define HOOKTYPE_PRE_INVITE 73
+#define HOOKTYPE_CAN_CHANGE_MODE 74
 
 /* Hook return values */
 #define HOOK_CONTINUE 0

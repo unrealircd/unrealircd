@@ -96,6 +96,8 @@ DLLFUNC CMD_FUNC(m_invite)
         aClient *acptr;
         aChannel *chptr;
         short over = 0;
+        int i = 0;
+        Hook *h;
 
 	if (parc == 1)
 		return send_invite_list(sptr);
@@ -123,7 +125,14 @@ DLLFUNC CMD_FUNC(m_invite)
                 return -1;
         }
 
-        if (chptr->mode.mode & MODE_NOINVITE && !IsULine(sptr))
+    	for (h = Hooks[HOOKTYPE_PRE_INVITE]; h; h = h->next)
+    	{
+    		i = (*(h->func.intfunc))(sptr,chptr);
+    		if (i == HOOK_DENY || i == HOOK_ALLOW)
+    			break;
+    	}
+
+        if (i == HOOK_DENY && !IsULine(sptr))
         {
 #ifndef NO_OPEROVERRIDE
                 if ((MyClient(sptr) ? (IsOper(sptr) && OPCanOverride(sptr)) :

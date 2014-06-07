@@ -85,6 +85,8 @@ DLLFUNC int MOD_UNLOAD(m_knock)(int module_unload)
 CMD_FUNC(m_knock)
 {
 	aChannel *chptr;
+	Hook *h;
+	int i = 0;
 
 	if (IsServer(sptr))
 		return 0;
@@ -124,13 +126,6 @@ CMD_FUNC(m_knock)
 		    sptr->name, chptr->chname, "You're already there!");
 		return 0;
 	}
-	if (chptr->mode.mode & MODE_NOKNOCK)
-	{
-		sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
-		    me.name,
-		    sptr->name, chptr->chname, "No knocks are allowed! (+K)");
-		return 0;
-	}
 
 	if (!(chptr->mode.mode & MODE_INVITEONLY))
 	{
@@ -147,15 +142,16 @@ CMD_FUNC(m_knock)
 		return 0;
 	}
 
-	if ((chptr->mode.mode & MODE_NOINVITE) && !is_chan_op(sptr, chptr))
+	for (h = Hooks[HOOKTYPE_PRE_KNOCK]; h; h = h->next)
 	{
-		sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
-		    me.name,
-		    sptr->name,
-		    chptr->chname, "The channel does not allow invites (+V)");
-
-		return 0;
+		i = (*(h->func.intfunc))(sptr,chptr);
+		if (i == HOOK_DENY || i == HOOK_ALLOW)
+			break;
 	}
+
+	if (i == HOOK_DENY)
+		return 0;
+
 
 	sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
 		":%s NOTICE @%s :[Knock] by %s!%s@%s (%s)", me.name, chptr->chname,

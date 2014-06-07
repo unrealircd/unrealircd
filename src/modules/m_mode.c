@@ -782,6 +782,18 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	char *xp;
 	int  notsecure;
 	chasing = 0;
+	Hook *h;
+	int i = 0;
+
+	for (h = Hooks[HOOKTYPE_CAN_CHANGE_MODE]; h; h = h->next)
+	{
+		i = (*(h->func.intfunc))(chptr,cptr,modetype,param);
+		if (i == HOOK_DENY || i == HOOK_ALLOW)
+			break;
+	}
+
+	if (i == HOOK_DENY)
+		return 0;
 
 	if ((my_access & CHFL_HALFOP) && !is_xchanop(my_access) && !IsULine(cptr)
 	    && !op_can_override(cptr) && !samode_in_progress)
@@ -848,23 +860,11 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	  case MODE_RGSTRONLY:
 	  case MODE_MODREG:
 	  case MODE_NOKICKS:
+	  case MODE_INVITEONLY:
 	  	goto setthephuckingmode;
 
-	  case MODE_INVITEONLY:
-		if (what == MODE_DEL && modetype == MODE_INVITEONLY && (chptr->mode.mode & MODE_NOKNOCK))
-			chptr->mode.mode &= ~MODE_NOKNOCK;
-		goto setthephuckingmode;
-	  case MODE_NOKNOCK:
-		if (what == MODE_ADD && modetype == MODE_NOKNOCK && !(chptr->mode.mode & MODE_INVITEONLY))
-		{
-			sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), 
-				me.name, cptr->name, 'K', "+i must be set");
-			break;
-		}
-		goto setthephuckingmode;
 	  case MODE_ONLYSECURE:
 	  case MODE_NONICKCHANGE:
-	  case MODE_NOINVITE:
 		setthephuckingmode:
 		  retval = 0;
 		  if (what == MODE_ADD) {

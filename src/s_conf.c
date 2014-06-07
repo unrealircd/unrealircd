@@ -7403,12 +7403,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 			}
 			set_channelmodes(cep->ce_vardata, &temp, 1);
-			if (temp.mode & MODE_NOKNOCK && !(temp.mode & MODE_INVITEONLY))
-			{
-				config_error("%s:%i: set::modes-on-join has +K but not +i",
-					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
-				errors++;
-			}
 			if (temp.mode & MODE_SECRET && temp.mode & MODE_PRIVATE)
 			{
 				config_error("%s:%i: set::modes-on-join has +s and +p",
