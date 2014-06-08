@@ -120,7 +120,7 @@ DLLFUNC int adminonly_topic_allow (aClient *sptr, aChannel *chptr)
 
 DLLFUNC int adminonly_require_admin(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what)
 {
-	if ((!IsSkoAdmin(cptr) || !is_chan_op(cptr, chptr)) && MyClient(cptr))
+	if (!MyClient(cptr) || (IsSkoAdmin(cptr) && is_chan_op(cptr, chptr)))
 		return EX_ALLOW;
 
 	return EX_DENY;
