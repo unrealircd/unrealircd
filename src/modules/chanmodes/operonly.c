@@ -71,7 +71,7 @@ CmodeInfo req;
 	memset(&req, 0, sizeof(req));
 	req.paracount = 0;
 	req.flag = 'O';
-	req.is_ok = extcmode_default_requirechop;
+	req.is_ok = operonly_require_oper;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_OPERONLY);
 	
 	HookAddEx(modinfo->handle, HOOKTYPE_CAN_CHANGE_MODE, operonly_mode_allow);
@@ -129,5 +129,13 @@ DLLFUNC int operonly_topic_allow (aClient *sptr, aChannel *chptr)
 		return HOOK_DENY;
 
 	return HOOK_CONTINUE;
+}
+
+DLLFUNC int operonly_require_oper(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what)
+{
+	if (!MyClient(cptr) || IsAnOper(cptr))
+		return EX_ALLOW;
+
+	return EX_DENY;
 }
 
