@@ -117,16 +117,13 @@ DLLFUNC int noknock_mode_del (aChannel *chptr, int modeChar)
 DLLFUNC int noknock_mode_allow(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what)
 {
 
-	if (MyClient(cptr) && !is_chanop(cptr,chptr))
-		return EX_DENY;
-
-	if ((mode & EXTCMODE_NOKNOCK) && !(chptr->mode.mode & MODE_INVITEONLY))
+	if (!(chptr->mode.mode & MODE_INVITEONLY))
 	{
 		sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE),
 						me.name, cptr->name, 'K', "+i must be set");
 		return EX_DENY;
 	}
 
-	return EX_ALLOW;
+	return extcmode_default_requirechop(cptr,chptr,mode,para,checkt,what);
 }
 

@@ -120,9 +120,12 @@ DLLFUNC int adminonly_topic_allow (aClient *sptr, aChannel *chptr)
 
 DLLFUNC int adminonly_require_admin(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what)
 {
-	if (!MyClient(cptr) || (IsSkoAdmin(cptr) && is_chan_op(cptr, chptr)))
+	if (!MyClient(cptr) || IsSkoAdmin(cptr))
 		return EX_ALLOW;
 
+
+	sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE),
+					me.name, cptr->name, 'A', "You are not an Admin");
 	return EX_DENY;
 }
 

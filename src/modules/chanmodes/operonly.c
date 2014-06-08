@@ -119,9 +119,12 @@ DLLFUNC int operonly_topic_allow (aClient *sptr, aChannel *chptr)
 
 DLLFUNC int operonly_require_oper(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what)
 {
-	if (!MyClient(cptr) || (IsAnOper(cptr) && is_chan_op(cptr, chptr)))
+	if (!MyClient(cptr) || IsAnOper(cptr))
 		return EX_ALLOW;
 
+
+	sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE),
+					me.name, cptr->name, 'O', "You are not an IRC operator");
 	return EX_DENY;
 }
 
