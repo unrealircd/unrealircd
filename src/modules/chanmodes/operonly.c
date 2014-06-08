@@ -56,7 +56,6 @@ Cmode_t EXTCMODE_OPERONLY;
 
 DLLFUNC int operonly_check (aClient *cptr, aChannel *chptr, char *key, char *parv[]);
 DLLFUNC int operonly_topic_allow (aClient *sptr, aChannel *chptr);
-DLLFUNC int operonly_mode_allow (aChannel *chptr, aClient *cptr, long mode, char *params);
 DLLFUNC int operonly_check_ban(aClient *cptr, aChannel *chptr);
 
 DLLFUNC int MOD_TEST(operonly)(ModuleInfo *modinfo)
@@ -74,7 +73,6 @@ CmodeInfo req;
 	req.is_ok = operonly_require_oper;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_OPERONLY);
 	
-	HookAddEx(modinfo->handle, HOOKTYPE_CAN_CHANGE_MODE, operonly_mode_allow);
 	HookAddEx(modinfo->handle, HOOKTYPE_CAN_JOIN, operonly_check);
 	HookAddEx(modinfo->handle, HOOKTYPE_OPER_INVITE_BAN, operonly_check_ban);
 	HookAddEx(modinfo->handle, HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEl, operonly_topic_allow);
@@ -99,19 +97,6 @@ DLLFUNC int operonly_check (aClient *cptr, aChannel *chptr, char *key, char *par
 	if ((chptr->mode.extmode & EXTCMODE_OPERONLY) && !IsAnOper(cptr))
 		return ERR_OPERONLY;
 	return 0;
-}
-
-
-DLLFUNC int operonly_mode_allow (aChannel *chptr, aClient *cptr, long mode, char *params)
-{
-
-	if ((mode & EXTCMODE_OPERONLY) && !IsAnOper(cptr))
-	{
-		sendto_one(cptr, err_str(ERR_NOPRIVILEGES), me.name, cptr->name);
-		return HOOK_DENY;
-	}
-
-	return HOOK_CONTINUE;
 }
 
 DLLFUNC int operonly_check_ban(aClient *cptr, aChannel *chptr)

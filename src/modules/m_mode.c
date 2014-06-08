@@ -782,18 +782,6 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	char *xp;
 	int  notsecure;
 	chasing = 0;
-	Hook *h;
-	int i = 0;
-
-	for (h = Hooks[HOOKTYPE_CAN_CHANGE_MODE]; h; h = h->next)
-	{
-		i = (*(h->func.intfunc))(chptr,cptr,modetype,param);
-		if (i == HOOK_DENY || i == HOOK_ALLOW)
-			break;
-	}
-
-	if (i == HOOK_DENY)
-		return 0;
 
 	if ((my_access & CHFL_HALFOP) && !is_xchanop(my_access) && !IsULine(cptr)
 	    && !op_can_override(cptr) && !samode_in_progress)
