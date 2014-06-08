@@ -817,14 +817,6 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	}
 	switch (modetype)
 	{
-	  case MODE_ADMONLY:
-		  if (!IsSkoAdmin(cptr) && !IsServer(cptr)
-		      && !IsULine(cptr))
-		  {
-			sendto_one(cptr, err_str(ERR_NOPRIVILEGES), me.name, cptr->name);
-			break;
-		  }
-		  goto setthephuckingmode;
 	  case MODE_RGSTR:
 		  if (!IsServer(cptr) && !IsULine(cptr))
 		  {

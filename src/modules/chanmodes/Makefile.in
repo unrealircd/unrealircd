@@ -31,7 +31,8 @@ INCLUDES = ../../include/auth.h ../../include/channel.h \
 
 R_MODULES= \
 	nocolor.so stripcolor.so issecure.so permanent.so jointhrottle.so floodprot.so \
-	noctcp.so link.so censor.so delayjoin.so noknock.so noinvite.so operonly.so
+	noctcp.so link.so censor.so delayjoin.so noknock.so noinvite.so operonly.so \
+	adminonly.so
 
 MODULES=$(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -104,3 +105,7 @@ noinvite.so: noinvite.c $(INCLUDES)
 operonly.so: operonly.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o operonly.so operonly.c
+		
+adminonly.so: adminonly.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o adminonly.so adminonly.c

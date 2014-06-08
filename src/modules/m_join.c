@@ -128,10 +128,6 @@ int i,j;
 		return (ERR_SECUREONLYCHAN);
 	}
 
-	if ((chptr->mode.mode & MODE_ADMONLY) && !IsSkoAdmin(sptr))
-		return (ERR_ADMONLY);
-
-
 	for (h = Hooks[HOOKTYPE_OPER_INVITE_BAN]; h; h = h->next)
 	{
 		j = (*(h->func.intfunc))(sptr,chptr);
@@ -142,11 +138,6 @@ int i,j;
 	/* See if we can evade this ban */
 	banned = is_banned(sptr, chptr, BANCHK_JOIN);
 	if (banned && j == HOOK_DENY)
-		return (ERR_BANNEDFROMCHAN);
-
-	/* Only NetAdmin/SAdmin can walk +b in +A */
-	if (banned && (chptr->mode.mode & MODE_ADMONLY) &&
-	    IsAnOper(sptr) && !IsNetAdmin(sptr) && !IsSAdmin(sptr))
 		return (ERR_BANNEDFROMCHAN);
 
 	for (lp = sptr->user->invited; lp; lp = lp->next)
