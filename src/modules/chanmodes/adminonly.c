@@ -54,6 +54,7 @@ Cmode_t EXTCMODE_ADMINONLY;
 
 #define IsAdminOnly(chptr)    (chptr->mode.extmode & EXTCMODE_ADMINONLY)
 
+DLLFUNC int adminonly_require_admin(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what);
 DLLFUNC int adminonly_check (aClient *cptr, aChannel *chptr, char *key, char *parv[]);
 DLLFUNC int adminonly_topic_allow (aClient *sptr, aChannel *chptr);
 DLLFUNC int adminonly_check_ban(aClient *cptr, aChannel *chptr);
@@ -70,7 +71,7 @@ CmodeInfo req;
 	memset(&req, 0, sizeof(req));
 	req.paracount = 0;
 	req.flag = 'A';
-	req.is_ok = adminonly_require_oper;
+	req.is_ok = adminonly_require_admin;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_ADMINONLY);
 	
 	HookAddEx(modinfo->handle, HOOKTYPE_CAN_JOIN, adminonly_check);
@@ -117,10 +118,9 @@ DLLFUNC int adminonly_topic_allow (aClient *sptr, aChannel *chptr)
 	return HOOK_CONTINUE;
 }
 
-DLLFUNC int adminonly_require_oper(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what)
+DLLFUNC int adminonly_require_admin(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what)
 {
-	if (!IsSkoAdmin(cptr) && !IsServer(cptr)
-			      && !IsULine(cptr))
+	if ((!IsSkoAdmin(cptr) || !is_chan_op(cptr, chptr)) && MyClient(cptr))
 		return EX_ALLOW;
 
 	return EX_DENY;

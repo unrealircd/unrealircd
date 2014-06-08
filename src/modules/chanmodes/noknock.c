@@ -55,7 +55,7 @@ Cmode_t EXTCMODE_NOKNOCK;
 #define IsNoKnock(chptr)    (chptr->mode.extmode & EXTCMODE_NOKNOCK)
 
 DLLFUNC int noknock_check (aClient *sptr, aChannel *chptr);
-DLLFUNC int noknock_mode_allow (aChannel *chptr, aClient *cptr, long mode, char *params);
+DLLFUNC int noknock_mode_allow(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what);
 DLLFUNC int noknock_mode_del (aChannel *chptr, int modeChar);
 
 DLLFUNC int MOD_TEST(noknock)(ModuleInfo *modinfo)
@@ -70,12 +70,11 @@ CmodeInfo req;
 	memset(&req, 0, sizeof(req));
 	req.paracount = 0;
 	req.flag = 'K';
-	req.is_ok = extcmode_default_requirechop;
+	req.is_ok = noknock_mode_allow;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_NOKNOCK);
 	
 	HookAddEx(modinfo->handle, HOOKTYPE_PRE_KNOCK, noknock_check);
 	HookAddEx(modinfo->handle, HOOKTYPE_MODECHAR_DEL, noknock_mode_del);
-	HookAddEx(modinfo->handle, HOOKTYPE_CAN_CHANGE_MODE, noknock_mode_allow);
 
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -115,12 +114,12 @@ DLLFUNC int noknock_mode_del (aChannel *chptr, int modeChar)
 	return 0;
 }
 
-DLLFUNC int noknock_mode_allow (aChannel *chptr, aClient *cptr, long mode, char *params)
+DLLFUNC int noknock_mode_allow(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what)
 {
 
 	sendto_one(cptr, ":%s NOTICE %s :Val %i %i",
 					me.name, cptr->name, chptr->mode.mode & MODE_INVITEONLY, mode & EXTCMODE_NOKNOCK);
-	if ((mode & EXTCMODE_NOKNOCK) && !(chptr->mode.mode & MODE_INVITEONLY))
+	if (MyClient(cptr) && (!is_chan_op(cptr, chptr) || ((mode & EXTCMODE_NOKNOCK) && !(chptr->mode.mode & MODE_INVITEONLY))))
 	{
 		sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE),
 						me.name, cptr->name, 'K', "+i must be set");

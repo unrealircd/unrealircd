@@ -54,6 +54,7 @@ Cmode_t EXTCMODE_OPERONLY;
 
 #define IsOperOnly(chptr)    (chptr->mode.extmode & EXTCMODE_OPERONLY)
 
+DLLFUNC int operonly_require_oper(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what);
 DLLFUNC int operonly_check (aClient *cptr, aChannel *chptr, char *key, char *parv[]);
 DLLFUNC int operonly_topic_allow (aClient *sptr, aChannel *chptr);
 DLLFUNC int operonly_check_ban(aClient *cptr, aChannel *chptr);
@@ -118,7 +119,7 @@ DLLFUNC int operonly_topic_allow (aClient *sptr, aChannel *chptr)
 
 DLLFUNC int operonly_require_oper(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what)
 {
-	if (!MyClient(cptr) || IsAnOper(cptr))
+	if (!MyClient(cptr) || (IsAnOper(cptr) && is_chan_op(cptr, chptr)))
 		return EX_ALLOW;
 
 	return EX_DENY;
