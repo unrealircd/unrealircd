@@ -725,6 +725,8 @@ ModDataInfo *findmoddata_byname(char *name, ModDataType type);
 #define HOOKTYPE_PRE_KNOCK 72
 #define HOOKTYPE_PRE_INVITE 73
 #define HOOKTYPE_CAN_CHANGE_MODE 74
+#define HOOKTYPE_OPER_INVITE_BAN 75
+#define HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEl 76
 
 /* Hook return values */
 #define HOOK_CONTINUE 0

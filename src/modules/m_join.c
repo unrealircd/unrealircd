@@ -103,9 +103,9 @@ DLLFUNC int _can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, 
 Link *lp;
 Ban *banned;
 Hook *h;
-int i;
+int i,j;
 
-	for (h = Hooks[HOOKTYPE_CAN_JOIN]; h; h = h->next) 
+	for (h = Hooks[HOOKTYPE_CAN_JOIN]; h; h = h->next)
 	{
 		i = (*(h->func.intfunc))(sptr,chptr,key,parv);
 		if (i != 0)
@@ -128,16 +128,20 @@ int i;
 		return (ERR_SECUREONLYCHAN);
 	}
 
-	if ((chptr->mode.mode & MODE_OPERONLY) && !IsAnOper(sptr))
-		return (ERR_OPERONLY);
-
 	if ((chptr->mode.mode & MODE_ADMONLY) && !IsSkoAdmin(sptr))
 		return (ERR_ADMONLY);
 
-	/* Admin, Coadmin, Netadmin, and SAdmin can still walk +b in +O */
+
+	for (h = Hooks[HOOKTYPE_OPER_INVITE_BAN]; h; h = h->next)
+	{
+		j = (*(h->func.intfunc))(sptr,chptr);
+		if (j != 0)
+			break;
+	}
+
+	/* See if we can evade this ban */
 	banned = is_banned(sptr, chptr, BANCHK_JOIN);
-	if (banned && (chptr->mode.mode & MODE_OPERONLY) &&
-	    IsAnOper(sptr) && !IsSkoAdmin(sptr) && !IsCoAdmin(sptr))
+	if (banned && j == HOOK_DENY)
 		return (ERR_BANNEDFROMCHAN);
 
 	/* Only NetAdmin/SAdmin can walk +b in +A */

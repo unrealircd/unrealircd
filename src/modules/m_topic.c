@@ -103,6 +103,8 @@ char *topic = NULL, *name, *tnick = NULL;
 TS   ttime = 0;
 int  topiClen = 0;
 int  nicKlen = 0;
+int i = 0;
+Hook *h;
 int ismember; /* cache: IsMember() */
 long flags = 0; /* cache: membership flags */
 
@@ -156,12 +158,20 @@ long flags = 0; /* cache: membership flags */
 
 		if (!topic)	/* only asking  for topic  */
 		{
-			if ((chptr->mode.mode & MODE_OPERONLY && !IsAnOper(sptr) && !ismember) ||
-			    (chptr->mode.mode & MODE_ADMONLY && !IsAdmin(sptr) && !ismember) ||
-			    (is_banned(sptr,chptr,BANCHK_JOIN) && !IsAnOper(sptr) && !ismember)) {
+			for (h = Hooks[HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEl]; h; h = h->next)
+			{
+				i = (*(h->func.intfunc))(sptr,chptr);
+				if (i != HOOK_CONTINUE)
+					break;
+			}
+
+			/* If you're not a member, and you can't view outside channel, deny */
+			if ((!ismember && i == HOOK_DENY) || (is_banned(sptr,chptr,BANCHK_JOIN) && !IsAnOper(sptr)))
+			{
 				sendto_one(sptr, err_str(ERR_NOTONCHANNEL), me.name, parv[0], name);
 				return 0;
 			}
+
 			if (!chptr->topic)
 				sendto_one(sptr, rpl_str(RPL_NOTOPIC),
 				    me.name, parv[0], chptr->chname);
