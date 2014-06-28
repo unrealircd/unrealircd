@@ -151,7 +151,7 @@ char *unrealcredits[] =
 	"officially joining the staff.",
 	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-[Coders]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-",
 	"Syzop <syzop@unrealircd.com> - Head Coder / Project leader",
-	"binki <binki@unrealircd.com> - Coder",
+	"Heero <heero@unrealircd.com> - Coder",
 	"For a full list of coders & contributors, see /INFO (/QUOTE INFO)",
 	"=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-",
 	"Stskeeps would primarily like to thank Julie for her support",
