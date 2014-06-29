@@ -39,8 +39,6 @@
 #include "version.h"
 #endif
 
-DLLFUNC CMD_FUNC(noknock);
-
 ModuleHeader MOD_HEADER(noknock)
   = {
 	"chanmodes/noknock",

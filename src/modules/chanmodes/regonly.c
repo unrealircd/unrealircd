@@ -39,7 +39,6 @@
 #include "version.h"
 #endif
 
-DLLFUNC CMD_FUNC(regonly);
 
 ModuleHeader MOD_HEADER(regonly)
   = {

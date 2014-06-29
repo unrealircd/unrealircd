@@ -39,8 +39,6 @@
 #include "version.h"
 #endif
 
-DLLFUNC CMD_FUNC(nonotice);
-
 ModuleHeader MOD_HEADER(nonotice)
   = {
 	"chanmodes/nonotice",
