@@ -1628,7 +1628,6 @@ struct liststruct {
 #define	MODE_LIMIT		0x4000
 #define MODE_RGSTR		0x8000
 #define MODE_NOCOLOR		0x40000
-#define MODE_NOKICKS   		0x200000
 #define MODE_STRIP	   	0x400000
 #define MODE_MODREG		0x4000000
 #define MODE_INVEX		0x8000000
