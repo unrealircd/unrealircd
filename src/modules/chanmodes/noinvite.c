@@ -78,12 +78,12 @@ DLLFUNC int MOD_INIT(noinvite)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(noctcp)(int module_load)
+DLLFUNC int MOD_LOAD(noinvite)(int module_load)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(noctcp)(int module_unload)
+DLLFUNC int MOD_UNLOAD(noinvite)(int module_unload)
 {
 	return MOD_SUCCESS;
 }
