@@ -404,6 +404,8 @@ DLLFUNC CMD_FUNC(m_nick)
 	long lastnick = 0l;
 	int  differ = 1, update_watch = 1;
 	unsigned char newusr = 0, removemoder = 1;
+	Hook *h;
+	int i;
 	/*
 	 * If the user didn't specify a nickname, complain
 	 */
@@ -923,9 +925,15 @@ DLLFUNC CMD_FUNC(m_nick)
 					    mp->chptr->chname);
 					return 0;
 				}
-				if (!IsOper(sptr) && !IsULine(sptr)
-				    && mp->chptr->mode.mode & MODE_NONICKCHANGE
-				    && !is_chanownprotop(sptr, mp->chptr))
+
+				for (h = Hooks[HOOKTYPE_CHAN_PERMIT_NICK_CHANGE]; h; h = h->next)
+				{
+					i = (*(h->func.intfunc))(sptr,mp->chptr);
+					if (i != HOOK_CONTINUE)
+						break;
+				}
+
+				if (i == HOOK_DENY)
 				{
 					sendto_one(sptr,
 					    err_str(ERR_NONICKCHANGE),

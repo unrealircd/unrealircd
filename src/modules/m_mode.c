@@ -836,7 +836,6 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	  	goto setthephuckingmode;
 
 	  case MODE_ONLYSECURE:
-	  case MODE_NONICKCHANGE:
 		setthephuckingmode:
 		  retval = 0;
 		  if (what == MODE_ADD) {

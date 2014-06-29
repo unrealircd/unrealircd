@@ -1633,7 +1633,6 @@ struct liststruct {
 #define MODE_MODREG		0x4000000
 #define MODE_INVEX		0x8000000
 #define MODE_ONLYSECURE		0x40000000
-#define MODE_NONICKCHANGE	0x80000000
 
 #define is_halfop is_half_op
 /*
