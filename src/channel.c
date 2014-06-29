@@ -742,12 +742,13 @@ int  is_chanprot(aClient *cptr, aChannel *chptr)
 #define CANNOT_SEND_BAN 4
 #define CANNOT_SEND_MODREG 6
 #define CANNOT_SEND_SWEAR 7 /* This isn't actually used here */
-#define CANNOT_SEND_NOTICE 8 
+#define CANNOT_SEND_OTHER 8
 
 int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 {
 	Membership *lp;
-	int  member;
+	int  member, i;
+	Hook *h;
 	/* 
 	 * #0000053 by |savage|, speedup 
 	*/
@@ -758,6 +759,7 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 	}
 
 	member = IsMember(cptr, chptr);
+
 	if (chptr->mode.mode & MODE_NOPRIVMSGS && !member)
 		return (CANNOT_SEND_NOPRIVMSGS);
 
@@ -775,9 +777,16 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 			return (CANNOT_SEND_MODERATED);
 	    }
 
-	if (notice && (chptr->mode.extmode & EXTMODE_NONOTICE) &&
-	   (!lp || !(lp->flags & (CHFL_CHANOP | CHFL_CHANOWNER | CHFL_CHANPROT))))
-		return (CANNOT_SEND_NOTICE);
+
+	for (h = Hooks[HOOKTYPE_CAN_SEND]; h; h = h->next)
+	{
+		i = (*(h->func.intfunc))(cptr,chptr,msgtext,lp,notice);
+		if (i != HOOK_CONTINUE)
+			break;
+	}
+
+	if (i == HOOK_DENY)
+		return (CANNOT_SEND_OTHER);
 
 	/* Makes opers able to talk thru bans -Stskeeps suggested by The_Cat */
 	if (IsOper(cptr) && OPCanOverride(cptr))

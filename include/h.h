@@ -435,9 +435,6 @@ extern MODVAR long SNO_SNOTICE;
 extern MODVAR long SNO_SPAMF;
 extern MODVAR long SNO_OPER;
 
-/* Extended chanmodes... */
-extern MODVAR Cmode_t EXTMODE_NONOTICE;
-
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *dst, const char *src, size_t size);
 #endif
