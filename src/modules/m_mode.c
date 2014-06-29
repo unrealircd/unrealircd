@@ -830,7 +830,6 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	  case MODE_MODERATED:
 	  case MODE_TOPICLIMIT:
 	  case MODE_NOPRIVMSGS:
-	  case MODE_MODREG:
 	  case MODE_INVITEONLY:
 	  	goto setthephuckingmode;
 

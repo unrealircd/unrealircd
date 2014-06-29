@@ -89,7 +89,7 @@ int nonotice_check_can_send(aClient *cptr, aChannel *chptr, char *msgtext, Membe
 {
 	if (notice && IsNoNotice(chptr) &&
 	   (!lp || !(lp->flags & (CHFL_CHANOP | CHFL_CHANOWNER | CHFL_CHANPROT))))
-		return HOOK_DENY;
+		return CANNOT_SEND_NONOTICE;
 
 	return HOOK_CONTINUE;
 }

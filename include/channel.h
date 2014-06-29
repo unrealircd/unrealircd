@@ -26,6 +26,13 @@
 
 #define	MODEBUFLEN	200
 
+#define CANNOT_SEND_MODERATED 1
+#define CANNOT_SEND_NOPRIVMSGS 2
+#define CANNOT_SEND_BAN 4
+#define CANNOT_SEND_MODREG 6
+#define CANNOT_SEND_SWEAR 7 /* This isn't actually used here */
+#define CANNOT_SEND_NONOTICE 8
+
 #define NullChn	((aChannel *)0)
 
 #define ChannelExists(n)	(find_channel(n, NullChn) != NullChn)

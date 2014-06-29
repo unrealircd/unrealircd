@@ -32,7 +32,7 @@ INCLUDES = ../../include/auth.h ../../include/channel.h \
 R_MODULES= \
 	nocolor.so stripcolor.so issecure.so permanent.so jointhrottle.so floodprot.so \
 	noctcp.so link.so censor.so delayjoin.so noknock.so noinvite.so operonly.so \
-	adminonly.so nonotice.so regonly.so nonickchange.so nokick.so
+	adminonly.so nonotice.so regonly.so nonickchange.so nokick.so regonlyspeak.so
 
 MODULES=$(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -125,3 +125,7 @@ nonickchange.so: nonickchange.c $(INCLUDES)
 nokick.so: nokick.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o nokick.so nokick.c
+		
+regonlyspeak.so: regonlyspeak.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o regonlyspeak.so regonlyspeak.c

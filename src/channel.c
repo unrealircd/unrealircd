@@ -90,7 +90,6 @@ aCtab cFlagTab[] = {
 	{MODE_BAN, 'b', 1, 1},
 	{MODE_EXCEPT, 'e', 1, 0},	/* exception ban */
 	{MODE_INVEX, 'I', 1, 0},	/* exception ban */
-	{MODE_MODREG, 'M', 0, 0},	/* Need umode +r to talk */
 	{MODE_ONLYSECURE, 'z', 0, 0},
 	{0x0, 0x0, 0x0}
 };
@@ -734,13 +733,6 @@ int  is_chanprot(aClient *cptr, aChannel *chptr)
 	return 0;
 }
 
-#define CANNOT_SEND_MODERATED 1
-#define CANNOT_SEND_NOPRIVMSGS 2
-#define CANNOT_SEND_BAN 4
-#define CANNOT_SEND_MODREG 6
-#define CANNOT_SEND_SWEAR 7 /* This isn't actually used here */
-#define CANNOT_SEND_OTHER 8
-
 int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 {
 	Membership *lp;
@@ -761,11 +753,6 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 		return (CANNOT_SEND_NOPRIVMSGS);
 
 	lp = find_membership_link(cptr->user->channel, chptr);
-	if ((chptr->mode.mode & MODE_MODREG) && !op_can_override(cptr) && !IsRegNick(cptr) && 
-	    (!lp
-	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
-	    CHFL_HALFOP | CHFL_CHANPROT))))
-		return CANNOT_SEND_MODREG;
 	if (chptr->mode.mode & MODE_MODERATED && !op_can_override(cptr) &&
 	    (!lp
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
@@ -782,8 +769,8 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 			break;
 	}
 
-	if (i == HOOK_DENY)
-		return (CANNOT_SEND_OTHER);
+	if (i != HOOK_CONTINUE)
+		return i;
 
 	/* Makes opers able to talk thru bans -Stskeeps suggested by The_Cat */
 	if (IsOper(cptr) && OPCanOverride(cptr))
