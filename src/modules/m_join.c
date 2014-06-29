@@ -158,8 +158,6 @@ int i,j;
                 /* We later check again for this limit (in case +L was not set) */
         }
 
-        if ((chptr->mode.mode & MODE_RGSTRONLY) && !IsARegNick(sptr))
-                return (ERR_NEEDREGGEDNICK);
 
         if (*chptr->mode.key && (BadPtr(key) || strcmp(chptr->mode.key, key)))
                 return (ERR_BADCHANNELKEY);

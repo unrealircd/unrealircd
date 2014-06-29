@@ -280,17 +280,7 @@ DLLFUNC CMD_FUNC(m_invite)
 				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
 
 		}
-        	else if (chptr->mode.mode & MODE_RGSTRONLY)
-	        {
-                        sendto_snomask_global(SNO_EYES,
-                          "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +R).",
-                          sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
 
-                        /* Logging implementation added by XeRXeS */
-			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Reg Nicks Only)",
-				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
-
-	        }
         	else if (*chptr->mode.key)
 	        {
                         sendto_snomask_global(SNO_EYES,
