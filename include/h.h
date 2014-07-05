@@ -151,7 +151,7 @@ extern MODVAR int R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns,
 
 #endif
 extern MODVAR struct list_head client_list, lclient_list, server_list, oper_list, unknown_list, global_server_list;
-extern inline aCommand *find_Command(char *cmd, short token, int flags);
+extern aCommand *find_Command(char *cmd, short token, int flags);
 extern aCommand *find_Command_simple(char *cmd);
 extern aChannel *find_channel(char *, aChannel *);
 extern Membership *find_membership_link(Membership *lp, aChannel *ptr);
@@ -316,7 +316,7 @@ extern int exit_client(aClient *, aClient *, aClient *, char *);
 extern void initstats(), tstats(aClient *, char *);
 extern char *check_string(char *);
 extern char *make_nick_user_host(char *, char *, char *);
-extern inline char *make_nick_user_host_r(char *namebuf, char *nick, char *name, char *host);
+extern char *make_nick_user_host_r(char *namebuf, char *nick, char *name, char *host);
 extern char *make_user_host(char *, char *);
 extern int parse(aClient *, char *, char *);
 extern int do_numeric(int, aClient *, aClient *, int, char **);

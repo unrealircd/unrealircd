@@ -187,7 +187,7 @@ static inline aCommand *find_Cmd(char *cmd, int flags)
 	return NULL;
 }
 
-inline aCommand *find_Command(char *cmd, short token, int flags)
+aCommand *find_Command(char *cmd, short token, int flags)
 {
 	aCommand *p;
 	
