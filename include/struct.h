@@ -406,6 +406,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	IsAnOper(x)		((x)->umodes & (UMODE_OPER|UMODE_LOCOP))
 #define IsARegNick(x)		((x)->umodes & (UMODE_REGNICK))
 #define IsRegNick(x)		((x)->umodes & UMODE_REGNICK)
+#define IsLoggedIn(x)		(IsRegNick(x) || (x->user && (*x->user->svid != '*') && !isdigit(*x->user->svid))) /* registered nick (+r) or just logged into services (may be -r) */
 #define IsRegNickMsg(x)		((x)->umodes & UMODE_RGSTRONLY)
 #define IsNoCTCP(x)		((x)->umodes & UMODE_NOCTCP)
 #define IsWebTV(x)		((x)->umodes & UMODE_WEBTV)

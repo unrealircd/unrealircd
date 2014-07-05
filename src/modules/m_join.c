@@ -208,7 +208,7 @@ Ban *banned;
                 /* We check this later return (ERR_CHANNELISFULL); */
         }
 
-        if ((chptr->mode.mode & MODE_RGSTRONLY) && !IsARegNick(sptr))
+        if ((chptr->mode.mode & MODE_RGSTRONLY) && !IsLoggedIn(sptr))
                 return (ERR_NEEDREGGEDNICK);
 
         if (*chptr->mode.key && (BadPtr(key) || strcmp(chptr->mode.key, key)))

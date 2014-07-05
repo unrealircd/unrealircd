@@ -186,8 +186,8 @@ DLLFUNC CMD_FUNC(m_part)
 #endif
 			
 		}
-		/* +M and not +r? */
-		if ((chptr->mode.mode & MODE_MODREG) && !IsRegNick(sptr) && !IsAnOper(sptr))
+		/* +M and not logged in to services? */
+		if ((chptr->mode.mode & MODE_MODREG) && !IsLoggedIn(sptr) && !IsAnOper(sptr))
 			comment = NULL;
 
 		if (MyConnect(sptr))
