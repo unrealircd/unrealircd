@@ -727,6 +727,10 @@ ModDataInfo *findmoddata_byname(char *name, ModDataType type);
 #define HOOKTYPE_OPER_INVITE_BAN 74
 #define HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEl 75
 #define HOOKTYPE_CHAN_PERMIT_NICK_CHANGE 76
+#define HOOKTYPE_IS_CHANNEL_SECURE 77
+#define HOOKTYPE_CAN_SEND_SECURE 78
+#define HOOKTYPE_CHANNEL_SYNCED 79
+#define HOOKTYPE_CAN_SAJOIN 80
 
 /* Hook return values */
 #define HOOK_CONTINUE 0

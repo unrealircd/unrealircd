@@ -59,10 +59,9 @@ ModuleHeader MOD_HEADER(issecure)
 
 Cmode_t EXTCMODE_ISSECURE;
 
-#define IsSecureJoin(chptr) (chptr->mode.mode & MODE_ONLYSECURE)
 #define IsSecureChanIndicated(chptr)	(chptr->mode.extmode & EXTCMODE_ISSECURE)
 
-
+int IsSecureJoin(aChannel *chptr);
 int modeZ_is_ok(aClient *sptr, aChannel *chptr, char mode, char *para, int checkt, int what);
 DLLFUNC int issecure_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[]);
 DLLFUNC int issecure_part(aClient *cptr, aClient *sptr, aChannel *chptr, char *comment);
@@ -112,6 +111,19 @@ DLLFUNC int MOD_LOAD(issecure)(int module_load)
 DLLFUNC int MOD_UNLOAD(issecure)(int module_unload)
 {
 	return MOD_SUCCESS;
+}
+
+int IsSecureJoin(aChannel *chptr)
+{
+	Hook *h;
+	int i = 0;
+
+	for (h = Hooks[HOOKTYPE_IS_CHANNEL_SECURE]; h; h = h->next)
+	{
+		i = (*(h->func.intfunc))(chptr);
+		if (i != 0)
+			return i;
+	}
 }
 
 int modeZ_is_ok(aClient *sptr, aChannel *chptr, char mode, char *para, int checkt, int what)

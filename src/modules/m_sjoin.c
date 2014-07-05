@@ -634,8 +634,6 @@ CMD_FUNC(m_sjoin)
 		    chptr->creationtime);
 		sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
 		    sptr->name, chptr->chname, modebuf, paraback);
-		if (chptr->mode.mode & MODE_ONLYSECURE)
-			kick_insecure_users(chptr);
 	}
 	if (merge && !nomode)
 	{
@@ -704,8 +702,6 @@ CMD_FUNC(m_sjoin)
 			Addsingle('p'); /* - */
 			queue_s = 1;
 		}
-		if (!(oldmode.mode & MODE_ONLYSECURE) && (chptr->mode.mode & MODE_ONLYSECURE))
-			kick_insecure_users(chptr);
 		/* Add single char modes... */
 		for (acp = cFlagTab; acp->mode; acp++)
 		{
@@ -846,6 +842,11 @@ CMD_FUNC(m_sjoin)
 		/* free the oldmode.* crap :( */
 		extcmode_free_paramlist(oldmode.extmodeparams);
 		/* memset(&oldmode.extmodeparams, 0, sizeof(oldmode.extmodeparams)); -- redundant? */
+	}
+
+	for (h = Hooks[HOOKTYPE_CHANNEL_SYNCED]; h; h = h->next)
+	{
+		(*(h->func.voidfunc))(chptr,merge,removetheirs,nomode);
 	}
 
 	/* we should be synched by now, */

@@ -90,7 +90,6 @@ aCtab cFlagTab[] = {
 	{MODE_BAN, 'b', 1, 1},
 	{MODE_EXCEPT, 'e', 1, 0},	/* exception ban */
 	{MODE_INVEX, 'I', 1, 0},	/* exception ban */
-	{MODE_ONLYSECURE, 'z', 0, 0},
 	{0x0, 0x0, 0x0}
 };
 

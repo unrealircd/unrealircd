@@ -156,6 +156,8 @@ DLLFUNC CMD_FUNC(m_sajoin)
 			int flags;
 			aChannel *chptr;
 			Membership *lp;
+			Hook *h;
+			int i;
 
 			if (*name == '0' && !atoi(name))
 			{
@@ -180,12 +182,20 @@ DLLFUNC CMD_FUNC(m_sajoin)
 			chptr = get_channel(acptr, name, CREATE);
 			if (chptr && (lp = find_membership_link(acptr->user->channel, chptr)))
 				continue;
-			if ((chptr->mode.mode & MODE_ONLYSECURE) && !IsSecure(acptr))
+
+			for (h = Hooks[HOOKTYPE_CAN_SAJOIN]; h; h = h->next)
 			{
-				sendnotice(sptr, "You cannot SAJOIN %s to %s because the channel is +z and the user is not connected via SSL",
-					acptr->name, chptr->chname);
+				i = (*(h->func.intfunc))(acptr,chptr,sptr);
+				if (i != HOOK_CONTINUE)
+					break;
+			}
+
+			if (i == HOOK_DENY)
+			{
 				continue;
 			}
+
+
 			join_channel(chptr, acptr, acptr, flags);
 			did_anything = 1;
 			if (*jbuf)

@@ -339,7 +339,8 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 	va_list vl;
 	Member *lp;
 	aClient *acptr;
-	int  i;
+	int  i,j;
+	Hook *h;
 
 	++current_serial;
 	for (lp = chptr->members; lp; lp = lp->next)
@@ -367,9 +368,15 @@ good:
 		if (MyConnect(acptr) && IsRegisteredUser(acptr))
 		{
 #ifdef SECURECHANMSGSONLYGOTOSECURE
-			if (chptr->mode.mode & MODE_ONLYSECURE)
-				if (!IsSecure(acptr))
-					continue;
+			for (h = Hooks[HOOKTYPE_CAN_SEND_SECURE]; h; h = h->next)
+			{
+				j = (*(h->func.intfunc))(acptr,chptr);
+				if (j != HOOK_CONTINUE)
+					break;
+			}
+
+			if (j != HOOK_CONTINUE)
+				continue;
 #endif
 			va_start(vl, pattern);
 			vsendto_prefix_one(acptr, from, pattern, vl);
@@ -382,9 +389,15 @@ good:
 			if (acptr->from->serial != current_serial)
 			{
 #ifdef SECURECHANMSGSONLYGOTOSECURE
-				if (chptr->mode.mode & MODE_ONLYSECURE)
-					if (!IsSecure(acptr->from))
-						continue;
+				for (h = Hooks[HOOKTYPE_CAN_SEND_SECURE]; h; h = h->next)
+				{
+					j = (*(h->func.intfunc))(acptr,chptr);
+					if (j != HOOK_CONTINUE)
+						break;
+				}
+
+				if (j != HOOK_CONTINUE)
+					continue;
 #endif
 				va_start(vl, pattern);
 				vsendto_prefix_one(acptr, from, pattern, vl);

@@ -112,22 +112,6 @@ int i,j;
 			return i;
 	}
 
-
-	if ((chptr->mode.mode & MODE_ONLYSECURE) && !(sptr->umodes & UMODE_SECURE))
-	{
-		if (IsAnOper(sptr))
-		{
-			/* Yeah yeah.. duplicate code..
-			 * Anyway: if the channel is +z we still allow an ircop to bypass it
-			 * if they are invited.
-			 */
-			for (lp = sptr->user->invited; lp; lp = lp->next)
-				if (lp->value.chptr == chptr)
-					return 0;
-		}
-		return (ERR_SECUREONLYCHAN);
-	}
-
 	for (h = Hooks[HOOKTYPE_OPER_INVITE_BAN]; h; h = h->next)
 	{
 		j = (*(h->func.intfunc))(sptr,chptr);

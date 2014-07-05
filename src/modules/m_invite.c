@@ -237,17 +237,7 @@ DLLFUNC CMD_FUNC(m_invite)
 
 
 	if (over && MyConnect(acptr)) {
-        	if ((chptr->mode.mode & MODE_ONLYSECURE) && !IsSecure(acptr))
-	        {
-                        sendto_snomask_global(SNO_EYES,
-                          "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +z).",
-                          sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
-
-                        /* Logging implementation added by XeRXeS */
-			ircd_log(LOG_OVERRIDE,"OVERRIDE: %s (%s@%s) invited him/herself into %s (Overriding Secure Mode)",
-				sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);
-	        }
-	        else if (is_banned(sptr, chptr, BANCHK_JOIN))
+        	if (is_banned(sptr, chptr, BANCHK_JOIN))
         	{
                         sendto_snomask_global(SNO_EYES,
                           "*** OperOverride -- %s (%s@%s) invited him/herself into %s (overriding +b).",
