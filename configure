@@ -6356,7 +6356,7 @@ fi
 
 
 hold_cflags=$CFLAGS
-CFLAGS="$CFLAGS -export-dynamic"
+CFLAGS="$CFLAGS -Wl,-export-dynamic"
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking if we need the -export-dynamic flag" >&5
 $as_echo_n "checking if we need the -export-dynamic flag... " >&6; }
 if ${ac_cv_export_dynamic+:} false; then :

@@ -227,7 +227,7 @@ char *make_user_host(char *name, char *host)
  * create a string of form "foo!bar@fubar" given foo, bar and fubar
  * as the parameters.  If NULL, they become "*".
  */
-inline char *make_nick_user_host_r(char *namebuf, char *nick, char *name, char *host)
+char *make_nick_user_host_r(char *namebuf, char *nick, char *name, char *host)
 {
 	char *s = namebuf;
 

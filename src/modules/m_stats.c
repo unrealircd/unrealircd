@@ -193,7 +193,7 @@ int stats_compare(char *s1, char *s2)
 	return 1;
 }	
 
-inline struct statstab *stats_binary_search(char c) {
+struct statstab *stats_binary_search(char c) {
 	int start = 0;
 	int stop = sizeof(StatsTable)/sizeof(StatsTable[0])-1;
 	int mid;
@@ -209,7 +209,7 @@ inline struct statstab *stats_binary_search(char c) {
 	return NULL;
 }
 
-inline struct statstab *stats_search(char *s) {
+struct statstab *stats_search(char *s) {
 	int i;
 	for (i = 0; StatsTable[i].flag; i++)
 		if (!stats_compare(StatsTable[i].longflag,s))
@@ -217,7 +217,7 @@ inline struct statstab *stats_search(char *s) {
 	return NULL;
 }
 
-inline char *stats_combine_parv(char *p1, char *p2)
+char *stats_combine_parv(char *p1, char *p2)
 {
 	static char buf[BUFSIZE+1];
 	strcpy(buf, p1);
@@ -226,7 +226,7 @@ inline char *stats_combine_parv(char *p1, char *p2)
 	return buf;
 }
 
-inline void stats_help(aClient *sptr)
+void stats_help(aClient *sptr)
 {
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name, "/Stats flags:");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
@@ -321,7 +321,7 @@ inline void stats_help(aClient *sptr)
 		"Z - mem - Send memory usage information");
 }
 
-inline int stats_operonly_short(char c)
+int stats_operonly_short(char c)
 {
 	char l;
 	if (!OPER_ONLY_STATS)
@@ -351,7 +351,7 @@ inline int stats_operonly_short(char c)
 	return 0;
 }
 
-inline int stats_operonly_long(char *s)
+int stats_operonly_long(char *s)
 {
 	OperStat *os;
 	for (os = iConf.oper_only_stats_ext; os; os = (OperStat *)os->next)
@@ -363,7 +363,7 @@ inline int stats_operonly_long(char *s)
 }
 
 /* This is pretty slow, but it isn't used often so it isn't a big deal */
-inline char *stats_operonly_long_to_short()
+char *stats_operonly_long_to_short()
 {
 	static char buffer[BUFSIZE+1];
 	int i = 0;

@@ -922,7 +922,7 @@ int hlength = strlen (haystack);
 	}
   return NULL; /* not found */
 }
-inline int fast_badword_match(ConfigItem_badword *badword, char *line)
+static inline int fast_badword_match(ConfigItem_badword *badword, char *line)
 {
  	char *p;
 	int bwlen = strlen(badword->word);
@@ -955,7 +955,7 @@ next:
  * buf is used for the result and max is sizeof(buf).
  * (Internal assumptions: max > 0 AND max > strlen(line)+1)
  */
-inline int fast_badword_replace(ConfigItem_badword *badword, char *line, char *buf, int max)
+static inline int fast_badword_replace(ConfigItem_badword *badword, char *line, char *buf, int max)
 {
 /* Some aliases ;P */
 char *replacew = badword->replace ? badword->replace : REPLACEWORD;
