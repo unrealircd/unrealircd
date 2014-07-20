@@ -1665,7 +1665,7 @@ int	init_conf(char *rootconf, int rehash)
 	{
 		charsys_reset_pretest();
 		if ((config_test() < 0) || (callbacks_check() < 0) || (efunctions_check() < 0) ||
-		    (charsys_postconftest() < 0))
+		    (charsys_postconftest() < 0) || ssl_used_in_config_but_unavail())
 		{
 			config_error("IRCd configuration failed to pass testing");
 #ifdef _WIN32
@@ -9704,3 +9704,35 @@ void load_includes(void)
 	for (inc = conf_include; inc; inc = (ConfigItem_include *)inc->next)
 		inc->flag.type &= ~INCLUDE_NOTLOADED; 
 }
+
+#ifdef USE_SSL
+/** Check if an important SSL option is used in config. Only checks link and listen at this time.
+ * This will generate a warning on boot & REHASH.
+ * If booting, the IRCd will stop.
+ */
+int ssl_used_in_config_but_unavail(void)
+{
+	int errors = 0;
+	ConfigItem_link *link;
+	ConfigItem_listen *listener;
+
+	if (ctx_server && ctx_client)
+		return 0; /* everything is functional */
+
+	for (listener = conf_listen; listener; listener = (ConfigItem_listen *)listener->next)
+		if (listener->options & LISTENER_SSL)
+		{
+			config_status("Listen block %s:%d is configured to use SSL, however SSL is unavailable due to an earlier error (certificate/key not loaded?)", listener->ip, listener->port);
+			errors++;
+		}
+
+	for (link = conf_link; link; link = (ConfigItem_link *)link->next)
+		if (link->options & CONNECT_SSL)
+		{
+			config_status("Link block %s is configured to use SSL, however SSL is unavailable due to an earlier error (certificate/key not loaded?)", link->servername);
+			errors++;
+		}
+	
+	return (errors ? 1 : 0);
+}
+#endif

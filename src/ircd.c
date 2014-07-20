@@ -1454,6 +1454,14 @@ int InitwIRCD(int argc, char *argv[])
 #ifndef _WIN32
 		fprintf(stderr, "WARNING: Failed to load SSL (no certificate or keys?) -- continueing without SSL support...\n");
 #endif
+		if (ssl_used_in_config_but_unavail())
+		{
+			ircd_log(LOG_ERROR, "IRCd failed to start");
+#ifndef _WIN32
+			fprintf(stderr, "IRCd failed to start\n");
+#endif
+			exit(9); /* ssl_used_in_config_but_unavail() takes care of error message. */
+		}
 	}
 #endif
 #ifndef _WIN32

@@ -751,3 +751,4 @@ extern int parse_chanmode(ParseMode *pm, char *modebuf_in, char *parabuf_in);
 extern void send_moddata_client(aClient *srv, aClient *acptr);
 extern void send_moddata_channel(aClient *srv, aChannel *chptr);
 extern void send_moddata_members(aClient *srv);
+extern int ssl_used_in_config_but_unavail(void);
