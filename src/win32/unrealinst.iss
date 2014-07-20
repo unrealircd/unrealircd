@@ -2,7 +2,7 @@
 ; Requires Inno Setup 4.1.6 or later
 
 ; Uncomment the line below for an SSL build
-;#define USE_SSL
+#define USE_SSL
 
 ; Uncomment the line below to package with libcurl support
 #define USE_CURL
