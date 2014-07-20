@@ -122,7 +122,25 @@ static char ssl_errbuf[256];
      }
      return ssl_errstr;
 }
-				
+
+/** Write official OpenSSL error string to ircd log / sendto_realops, using config_status.
+ * Note that you are expected to announce earlier that you actually encountered an SSL error.
+ * Also note that multiple error strings may be written out (with a slight chance of including
+ * irrelevent ones[?]).
+ */
+void config_report_ssl_error()
+{
+unsigned long e;
+char buf[512];
+
+	do {
+		e = ERR_get_error();
+		if (e == 0)
+			break; /* no (more) errors */
+		ERR_error_string_n(e, buf, sizeof(buf));
+		config_status(" %s", buf);
+	} while(e);
+}
 				
 int  ssl_pem_passwd_cb(char *buf, int size, int rwflag, void *password)
 {
@@ -201,14 +219,16 @@ static void setup_dh_params(SSL_CTX *ctx)
 	bio = BIO_new_file(iConf.x_dh_pem, "r");
 	if (bio == NULL)
 	{
-		config_error("Failed to load DH parameters %s", iConf.x_dh_pem);
+		config_warn("Failed to load DH parameters %s", iConf.x_dh_pem);
+		config_report_ssl_error();
 		return;
 	}
 
 	dh = PEM_read_bio_DHparams(bio, NULL, NULL, NULL);
 	if (dh == NULL)
 	{
-		config_error("Failed to use DH parameters %s",	iConf.x_dh_pem);
+		config_warn("Failed to use DH parameters %s",	iConf.x_dh_pem);
+		config_report_ssl_error();
 		BIO_free(bio);
 		return;
 	}
@@ -225,6 +245,7 @@ SSL_CTX *ctx_server;
 	if (!ctx_server)
 	{
 		config_error("Failed to do SSL CTX new");
+		config_report_ssl_error();
 		return NULL;
 	}
 	SSL_CTX_set_default_passwd_cb(ctx_server, ssl_pem_passwd_cb);
@@ -237,25 +258,29 @@ SSL_CTX *ctx_server;
 
 	if (SSL_CTX_use_certificate_chain_file(ctx_server, SSL_SERVER_CERT_PEM) <= 0)
 	{
-		config_error("Failed to load SSL certificate %s", SSL_SERVER_CERT_PEM);
+		config_warn("Failed to load SSL certificate %s", SSL_SERVER_CERT_PEM);
+		config_report_ssl_error();
 		goto fail;
 	}
 	if (SSL_CTX_use_PrivateKey_file(ctx_server, SSL_SERVER_KEY_PEM, SSL_FILETYPE_PEM) <= 0)
 	{
-		config_error("Failed to load SSL private key %s", SSL_SERVER_KEY_PEM);
+		config_warn("Failed to load SSL private key %s", SSL_SERVER_KEY_PEM);
+		config_report_ssl_error();
 		goto fail;
 	}
 
 	if (!SSL_CTX_check_private_key(ctx_server))
 	{
-		config_error("Failed to check SSL private key");
+		config_warn("Failed to check SSL private key");
+		config_report_ssl_error();
 		goto fail;
 	}
 	if (iConf.x_server_cipher_list)
 	{
                 if (SSL_CTX_set_cipher_list(ctx_server, iConf.x_server_cipher_list) == 0)
                 {
-                    config_error("Failed to set SSL cipher list for clients");
+                    config_warn("Failed to set SSL cipher list for clients");
+                    config_report_ssl_error();
                     goto fail;
                 }
 	}
@@ -263,7 +288,8 @@ SSL_CTX *ctx_server;
 	{
 		if (!SSL_CTX_load_verify_locations(ctx_server, iConf.trusted_ca_file, NULL))
 		{
-			config_error("Failed to load Trusted CA's from %s", iConf.trusted_ca_file);
+			config_warn("Failed to load Trusted CA's from %s", iConf.trusted_ca_file);
+			config_report_ssl_error();
 			goto fail;
 		}
 	}
@@ -281,7 +307,8 @@ SSL_CTX *ctx_client;
 	ctx_client = SSL_CTX_new(SSLv23_client_method());
 	if (!ctx_client)
 	{
-		config_error("Failed to do SSL CTX new client");
+		config_warn("Failed to do SSL CTX new client");
+		config_report_ssl_error();
 		return NULL;
 	}
 	SSL_CTX_set_default_passwd_cb(ctx_client, ssl_pem_passwd_cb);
@@ -292,18 +319,21 @@ SSL_CTX *ctx_client;
 
 	if (SSL_CTX_use_certificate_file(ctx_client, SSL_SERVER_CERT_PEM, SSL_FILETYPE_PEM) <= 0)
 	{
-		config_error("Failed to load SSL certificate %s (client)", SSL_SERVER_CERT_PEM);
+		config_warn("Failed to load SSL certificate %s (client)", SSL_SERVER_CERT_PEM);
+		config_report_ssl_error();
 		goto fail;
 	}
 	if (SSL_CTX_use_PrivateKey_file(ctx_client, SSL_SERVER_KEY_PEM, SSL_FILETYPE_PEM) <= 0)
 	{
-		config_error("Failed to load SSL private key %s (client)", SSL_SERVER_KEY_PEM);
+		config_warn("Failed to load SSL private key %s (client)", SSL_SERVER_KEY_PEM);
+		config_report_ssl_error();
 		goto fail;
 	}
 
 	if (!SSL_CTX_check_private_key(ctx_client))
 	{
-		config_error("Failed to check SSL private key (client)");
+		config_warn("Failed to check SSL private key (client)");
+		config_report_ssl_error();
 		goto fail;
 	}
 	return ctx_client;
@@ -335,6 +365,7 @@ int init_ssl(void)
 	ctx_client = init_ctx_client();
 	if (!ctx_client)
 		return 0;
+	return 1;
 }
 
 void reinit_ssl(aClient *acptr)
@@ -352,6 +383,7 @@ SSL_CTX *tmp;
 	if (!tmp)
 	{
 		config_error("SSL Reload failed.");
+		config_report_ssl_error();
 		return;
 	}
 	/* free and do it for real */
@@ -363,6 +395,7 @@ SSL_CTX *tmp;
 	if (!tmp)
 	{
 		config_error("SSL Reload partially failed. Server context is reloaded, client context failed");
+		config_report_ssl_error();
 		return;
 	}
 	/* free and do it for real */
