@@ -175,7 +175,6 @@ DLLFUNC CMD_FUNC(m_sajoin)
 				}
 				sendto_server(acptr, 0, 0, ":%s JOIN 0", acptr->name);
 				strcpy(jbuf, "0");
-				i = 1;
 				continue;
 			}
 			flags = (ChannelExists(name)) ? CHFL_DEOPPED : CHFL_CHANOP;
@@ -183,6 +182,7 @@ DLLFUNC CMD_FUNC(m_sajoin)
 			if (chptr && (lp = find_membership_link(acptr->user->channel, chptr)))
 				continue;
 
+			i = HOOK_CONTINUE;
 			for (h = Hooks[HOOKTYPE_CAN_SAJOIN]; h; h = h->next)
 			{
 				i = (*(h->func.intfunc))(acptr,chptr,sptr);
@@ -191,17 +191,13 @@ DLLFUNC CMD_FUNC(m_sajoin)
 			}
 
 			if (i == HOOK_DENY)
-			{
-				continue;
-			}
-
+				continue; /* process next channel */
 
 			join_channel(chptr, acptr, acptr, flags);
 			did_anything = 1;
 			if (*jbuf)
-				(void)strlcat(jbuf, ",", sizeof jbuf);
-			(void)strlncat(jbuf, name, sizeof jbuf, sizeof(jbuf) - i - 1);
-			i += strlen(name) + 1;
+				strlcat(jbuf, ",", sizeof jbuf);
+			strlcat(jbuf, name, sizeof jbuf);
 		}
 		
 		if (did_anything)
