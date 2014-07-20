@@ -95,22 +95,29 @@ DLLFUNC CMD_FUNC(m_starttls)
 	if (!MyConnect(sptr) || !IsUnknown(sptr))
 		return 0;
 #ifndef USE_SSL
-	/* sendnotice(sptr, "This server does not support SSL"); */
-	/* or numeric 691? */
-	/* actually... it's probably best to just act like we don't know this command...? */
-	sendto_one(sptr, err_str(ERR_NOTREGISTERED), me.name, "STARTTLS");
-	return 0;
+	if (1) /* if not compiled with SSL support... */
 #else
+	if (!ctx_server) /* or SSL support is not enabled (failed to load cert/keys/..)... */
+#endif
+	{
+		/* Pretend STARTTLS is an unknown command, this is the safest approach */
+		sendto_one(sptr, err_str(ERR_NOTREGISTERED), me.name, "STARTTLS");
+		return 0;
+	}
+
+#ifdef USE_SSL
 	if (iConf.ssl_options & SSLFLAG_NOSTARTTLS)
 	{
 		sendto_one(sptr, err_str(ERR_NOTREGISTERED), me.name, "STARTTLS");
 		return 0;
 	}
+
 	if (IsSecure(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_STARTTLS), me.name, !BadPtr(sptr->name) ? sptr->name : "*", "STARTTLS failed. Already using TLS.");
 		return 0;
 	}
+
 	dbuf_delete(&sptr->recvQ, 1000000); /* Clear up any remaining plaintext commands */
 	sendto_one(sptr, rpl_str(RPL_STARTTLS), me.name, !BadPtr(sptr->name) ? sptr->name : "*");
 	send_queued(sptr);

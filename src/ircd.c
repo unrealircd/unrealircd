@@ -1448,7 +1448,13 @@ int InitwIRCD(int argc, char *argv[])
 #ifndef _WIN32
 	fprintf(stderr, "* Initializing SSL.\n");
 #endif
-	init_ssl();
+	if (!init_ssl())
+	{
+		ircd_log(LOG_ERROR, "WARNING: Failed to load SSL (no certificate?) -- continueing without SSL support...");
+#ifndef _WIN32
+		fprintf(stderr, "WARNING: Failed to load SSL (no certificate or keys?) -- continueing without SSL support...\n");
+#endif
+	}
 #endif
 #ifndef _WIN32
 	fprintf(stderr,

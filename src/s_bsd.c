@@ -1285,7 +1285,7 @@ add_con_refuse:
 	list_add(&acptr->lclient_node, &unknown_list);
 
 #ifdef USE_SSL
-	if (cptr->options & LISTENER_SSL)
+	if ((cptr->options & LISTENER_SSL) && ctx_server)
 	{
 		SetSSLAcceptHandshake(acptr);
 		Debug((DEBUG_DEBUG, "Starting SSL accept handshake for %s", acptr->sockhost));

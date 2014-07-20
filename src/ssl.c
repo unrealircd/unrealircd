@@ -312,7 +312,7 @@ fail:
 	return NULL;
 }
 
-void init_ssl(void)
+int init_ssl(void)
 {
 	/* SSL preliminaries. We keep the certificate and key with the context. */
 
@@ -331,10 +331,10 @@ void init_ssl(void)
 	}
 	ctx_server = init_ctx_server();
 	if (!ctx_server)
-		exit(7);
+		return 0;
 	ctx_client = init_ctx_client();
 	if (!ctx_client)
-		exit(8);
+		return 0;
 }
 
 void reinit_ssl(aClient *acptr)
@@ -382,6 +382,12 @@ int  ssl_handshake(aClient *cptr)
 #ifdef NO_CERTCHECKING
 	char *str;
 #endif
+
+	if (!ctx_server)
+	{
+		sendto_realops("Could not start SSL handshake: SSL was not loaded correctly on this server (failed to load cert or key during boot process)");
+		return -1;
+	}
 
 	cptr->ssl = SSL_new(ctx_server);
 	CHK_NULL(cptr->ssl);
@@ -485,6 +491,12 @@ char	*ssl_get_cipher(SSL *ssl)
 void ircd_SSL_client_handshake(int fd, int revents, void *data)
 {
 	aClient *acptr = data;
+
+	if (!ctx_client)
+	{
+		sendto_realops("Could not start SSL client handshake: SSL was not loaded correctly on this server (failed to load cert or key during boot process)");
+		return;
+	}
 
 	acptr->ssl = SSL_new(ctx_client);
 	if (!acptr->ssl)
