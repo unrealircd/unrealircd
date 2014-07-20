@@ -631,7 +631,7 @@ static char *stats_port_helper(ConfigItem_listen *listener)
 {
 	static char buf[256];
 
-	ircsnprintf(buf, sizeof(buf), "%s%s%s%s",
+	ircsnprintf(buf, sizeof(buf), "%s%s%s",
 	    (listener->options & LISTENER_CLIENTSONLY)? "clientsonly ": "",
 	    (listener->options & LISTENER_SERVERSONLY)? "serversonly ": "",
 	    (listener->options & LISTENER_SSL)?         "ssl ": "");
