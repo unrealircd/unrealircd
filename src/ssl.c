@@ -201,14 +201,14 @@ static void setup_dh_params(SSL_CTX *ctx)
 	bio = BIO_new_file(iConf.x_dh_pem, "r");
 	if (bio == NULL)
 	{
-		mylog("Failed to load DH parameters %s", iConf.x_dh_pem);
+		config_error("Failed to load DH parameters %s", iConf.x_dh_pem);
 		return;
 	}
 
 	dh = PEM_read_bio_DHparams(bio, NULL, NULL, NULL);
 	if (dh == NULL)
 	{
-		mylog("Failed to use DH parameters %s",	iConf.x_dh_pem);
+		config_error("Failed to use DH parameters %s",	iConf.x_dh_pem);
 		BIO_free(bio);
 		return;
 	}
@@ -224,7 +224,7 @@ SSL_CTX *ctx_server;
 	ctx_server = SSL_CTX_new(SSLv23_server_method());
 	if (!ctx_server)
 	{
-		mylog("Failed to do SSL CTX new");
+		config_error("Failed to do SSL CTX new");
 		return NULL;
 	}
 	SSL_CTX_set_default_passwd_cb(ctx_server, ssl_pem_passwd_cb);
@@ -237,25 +237,25 @@ SSL_CTX *ctx_server;
 
 	if (SSL_CTX_use_certificate_chain_file(ctx_server, SSL_SERVER_CERT_PEM) <= 0)
 	{
-		mylog("Failed to load SSL certificate %s", SSL_SERVER_CERT_PEM);
+		config_error("Failed to load SSL certificate %s", SSL_SERVER_CERT_PEM);
 		goto fail;
 	}
 	if (SSL_CTX_use_PrivateKey_file(ctx_server, SSL_SERVER_KEY_PEM, SSL_FILETYPE_PEM) <= 0)
 	{
-		mylog("Failed to load SSL private key %s", SSL_SERVER_KEY_PEM);
+		config_error("Failed to load SSL private key %s", SSL_SERVER_KEY_PEM);
 		goto fail;
 	}
 
 	if (!SSL_CTX_check_private_key(ctx_server))
 	{
-		mylog("Failed to check SSL private key");
+		config_error("Failed to check SSL private key");
 		goto fail;
 	}
 	if (iConf.x_server_cipher_list)
 	{
                 if (SSL_CTX_set_cipher_list(ctx_server, iConf.x_server_cipher_list) == 0)
                 {
-                    mylog("Failed to set SSL cipher list for clients");
+                    config_error("Failed to set SSL cipher list for clients");
                     goto fail;
                 }
 	}
@@ -263,7 +263,7 @@ SSL_CTX *ctx_server;
 	{
 		if (!SSL_CTX_load_verify_locations(ctx_server, iConf.trusted_ca_file, NULL))
 		{
-			mylog("Failed to load Trusted CA's from %s", iConf.trusted_ca_file);
+			config_error("Failed to load Trusted CA's from %s", iConf.trusted_ca_file);
 			goto fail;
 		}
 	}
@@ -281,7 +281,7 @@ SSL_CTX *ctx_client;
 	ctx_client = SSL_CTX_new(SSLv23_client_method());
 	if (!ctx_client)
 	{
-		mylog("Failed to do SSL CTX new client");
+		config_error("Failed to do SSL CTX new client");
 		return NULL;
 	}
 	SSL_CTX_set_default_passwd_cb(ctx_client, ssl_pem_passwd_cb);
@@ -292,18 +292,18 @@ SSL_CTX *ctx_client;
 
 	if (SSL_CTX_use_certificate_file(ctx_client, SSL_SERVER_CERT_PEM, SSL_FILETYPE_PEM) <= 0)
 	{
-		mylog("Failed to load SSL certificate %s (client)", SSL_SERVER_CERT_PEM);
+		config_error("Failed to load SSL certificate %s (client)", SSL_SERVER_CERT_PEM);
 		goto fail;
 	}
 	if (SSL_CTX_use_PrivateKey_file(ctx_client, SSL_SERVER_KEY_PEM, SSL_FILETYPE_PEM) <= 0)
 	{
-		mylog("Failed to load SSL private key %s (client)", SSL_SERVER_KEY_PEM);
+		config_error("Failed to load SSL private key %s (client)", SSL_SERVER_KEY_PEM);
 		goto fail;
 	}
 
 	if (!SSL_CTX_check_private_key(ctx_client))
 	{
-		mylog("Failed to check SSL private key (client)");
+		config_error("Failed to check SSL private key (client)");
 		goto fail;
 	}
 	return ctx_client;
@@ -351,7 +351,7 @@ SSL_CTX *tmp;
 	tmp = init_ctx_server();
 	if (!tmp)
 	{
-		mylog("SSL Reload failed.");
+		config_error("SSL Reload failed.");
 		return;
 	}
 	/* free and do it for real */
@@ -362,7 +362,7 @@ SSL_CTX *tmp;
 	tmp = init_ctx_client();
 	if (!tmp)
 	{
-		mylog("SSL Reload partially failed. Server context is reloaded, client context failed");
+		config_error("SSL Reload partially failed. Server context is reloaded, client context failed");
 		return;
 	}
 	/* free and do it for real */
