@@ -196,14 +196,29 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/M_STARTTLS.DLL \
  SRC/MODULES/M_NOPOST.DLL SRC/MODULES/M_CAP.DLL \
  SRC/MODULES/M_SASL.DLL SRC/MODULES/CAP_INVITENOTIFY.DLL \
+ SRC/MODULES/M_MD.DLL \
  SRC/MODULES/CLOAK.DLL \
- SRC/MODULES/CHANMODES/FLOODPROT.DLL \
+ SRC/MODULES/CHANMODES/ADMINONLY.DLL \
+ SRC/MODULES/CHANMODES/CENSOR.DLL \
+ SRC/MODULES/CHANMODES/DELAYJOIN.DLL \
  SRC/MODULES/CHANMODES/ISSECURE.DLL \
  SRC/MODULES/CHANMODES/JOINTHROTTLE.DLL \
+ SRC/MODULES/CHANMODES/LINK.DLL \
  SRC/MODULES/CHANMODES/NOCOLOR.DLL \
+ SRC/MODULES/CHANMODES/NOCTCP.DLL \
+ SRC/MODULES/CHANMODES/NOINVITE.DLL \
+ SRC/MODULES/CHANMODES/NOKICK.DLL \
+ SRC/MODULES/CHANMODES/NOKNOCK.DLL \
+ SRC/MODULES/CHANMODES/NONICKCHANGE.DLL \
+ SRC/MODULES/CHANMODES/NONOTICE.DLL \
+ SRC/MODULES/CHANMODES/OPERONLY.DLL \
+ SRC/MODULES/CHANMODES/PERMANENT.DLL \
+ SRC/MODULES/CHANMODES/REGONLY.DLL \
+ SRC/MODULES/CHANMODES/REGONLYSPEAK.DLL \
+ SRC/MODULES/CHANMODES/SECUREONLY.DLL \
  SRC/MODULES/CHANMODES/STRIPCOLOR.DLL \
- SRC/MODULES/CHANMODES/PERMANENT.DLL 
-
+ SRC/MODULES/USERMODES/CENSOR.DLL \
+ SRC/MODULES/USERMODES/NOCTCP.DLL
 
 ALL: CONF UNREAL.EXE WIRCD.EXE MODULES 
 
@@ -747,6 +762,9 @@ src/modules/m_lusers.dll: src/modules/m_lusers.c $(INCLUDES)
 src/modules/m_names.dll: src/modules/m_names.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/m_names.c $(MODLFLAGS)
 
+src/modules/m_md.dll: src/modules/m_md.c $(INCLUDES)
+        $(CC) $(MODCFLAGS) src/modules/m_md.c $(MODLFLAGS)
+
 src/modules/cloak.dll: src/modules/cloak.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/cloak.c $(MODLFLAGS)
 
@@ -768,26 +786,67 @@ src/modules/m_sasl.dll: src/modules/m_sasl.c $(INCLUDES)
 src/modules/cap_invitenotify.dll: src/modules/cap_invitenotify.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/cap_invitenotify.c $(MODLFLAGS)
 
+src/modules/chanmodes/adminonly.dll: src/modules/chanmodes/adminonly.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/adminonly.c $(MODLFLAGS)
+
+src/modules/chanmodes/censor.dll: src/modules/chanmodes/censor.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/censor.c $(MODLFLAGS)
+
+src/modules/chanmodes/delayjoin.dll: src/modules/chanmodes/delayjoin.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/delayjoin.c $(MODLFLAGS)
+
 src/modules/chanmodes/issecure.dll: src/modules/chanmodes/issecure.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/issecure.c $(MODLFLAGS)
 
 src/modules/chanmodes/jointhrottle.dll: src/modules/chanmodes/jointhrottle.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/jointhrottle.c $(MODLFLAGS)
 
+src/modules/chanmodes/link.dll: src/modules/chanmodes/link.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/link.c $(MODLFLAGS)
+
 src/modules/chanmodes/nocolor.dll: src/modules/chanmodes/nocolor.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/nocolor.c $(MODLFLAGS)
 
-src/modules/chanmodes/stripcolor.dll: src/modules/chanmodes/stripcolor.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/stripcolor.c $(MODLFLAGS)
+src/modules/chanmodes/noctcp.dll: src/modules/chanmodes/noctcp.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/noctcp.c $(MODLFLAGS)
+
+src/modules/chanmodes/noinvite.dll: src/modules/chanmodes/noinvite.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/noinvite.c $(MODLFLAGS)
+
+src/modules/chanmodes/nokick.dll: src/modules/chanmodes/nokick.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/nokick.c $(MODLFLAGS)
+
+src/modules/chanmodes/noknock.dll: src/modules/chanmodes/noknock.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/noknock.c $(MODLFLAGS)
+
+src/modules/chanmodes/nonickchange.dll: src/modules/chanmodes/nonickchange.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/nonickchange.c $(MODLFLAGS)
+
+src/modules/chanmodes/nonotice.dll: src/modules/chanmodes/nonotice.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/nonotice.c $(MODLFLAGS)
+
+src/modules/chanmodes/operonly.dll: src/modules/chanmodes/operonly.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/operonly.c $(MODLFLAGS)
 
 src/modules/chanmodes/permanent.dll: src/modules/chanmodes/permanent.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/permanent.c $(MODLFLAGS)
 
-src/modules/chanmodes/floodprot.dll: src/modules/chanmodes/floodprot.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/floodprot.c $(MODLFLAGS)
+src/modules/chanmodes/regonly.dll: src/modules/chanmodes/regonly.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/regonly.c $(MODLFLAGS)
 
+src/modules/chanmodes/regonlyspeak.dll: src/modules/chanmodes/regonlyspeak.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/regonlyspeak.c $(MODLFLAGS)
+
+src/modules/chanmodes/secureonly.dll: src/modules/chanmodes/secureonly.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/secureonly.c $(MODLFLAGS)
+
+src/modules/chanmodes/stripcolor.dll: src/modules/chanmodes/stripcolor.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/stripcolor.c $(MODLFLAGS)
+
+src/modules/usermodes/censor.dll: src/modules/usermodes/censor.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/usermodes/ /Fesrc/modules/usermodes/ src/modules/usermodes/censor.c $(MODLFLAGS)
+
+src/modules/usermodes/noctcp.dll: src/modules/usermodes/noctcp.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/usermodes/ /Fesrc/modules/usermodes/ src/modules/usermodes/noctcp.c $(MODLFLAGS)
 
 dummy:
-
-
-
