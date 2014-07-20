@@ -153,6 +153,7 @@ int secureonly_check_join (aClient *sptr, aChannel *chptr, char *key, char *parv
 			}
 			return (ERR_SECUREONLYCHAN);
 		}
+	return 0;
 }
 
 int secureonly_check_secure (aChannel* chptr)
