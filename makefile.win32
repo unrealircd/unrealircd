@@ -201,6 +201,7 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/CHANMODES/ADMINONLY.DLL \
  SRC/MODULES/CHANMODES/CENSOR.DLL \
  SRC/MODULES/CHANMODES/DELAYJOIN.DLL \
+ SRC/MODULES/CHANMODES/FLOODPROT.DLL \
  SRC/MODULES/CHANMODES/ISSECURE.DLL \
  SRC/MODULES/CHANMODES/JOINTHROTTLE.DLL \
  SRC/MODULES/CHANMODES/LINK.DLL \
@@ -794,6 +795,9 @@ src/modules/chanmodes/censor.dll: src/modules/chanmodes/censor.c $(INCLUDES)
 
 src/modules/chanmodes/delayjoin.dll: src/modules/chanmodes/delayjoin.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/delayjoin.c $(MODLFLAGS)
+
+src/modules/chanmodes/floodprot.dll: src/modules/chanmodes/floodprot.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/floodprot.c $(MODLFLAGS)
 
 src/modules/chanmodes/issecure.dll: src/modules/chanmodes/issecure.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/issecure.c $(MODLFLAGS)
