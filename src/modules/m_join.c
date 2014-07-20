@@ -103,7 +103,7 @@ DLLFUNC int _can_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *key, 
 Link *lp;
 Ban *banned;
 Hook *h;
-int i,j;
+int i=0,j=0;
 
 	for (h = Hooks[HOOKTYPE_CAN_JOIN]; h; h = h->next)
 	{
@@ -192,7 +192,7 @@ int r;
 DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int flags)
 {
 	Hook *h;
-	int i;
+	int i = 0;
 	char *parv[] = { 0, 0 };
 	/*
 	   **  Complete user entry to the new channel (if any)
