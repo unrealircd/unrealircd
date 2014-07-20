@@ -61,6 +61,10 @@ You can use your 3.2.x unrealircd.conf WITH SOME CHANGES:
 * Memory pooling has been added to improve memory allocation efficiency
   and performance.
 * The local nickname length can be modified without recompiling the IRCd
+* Channel Mode +d: This will hide joins/parts for users who don't say
+  anything in a channel. Whenever a user speaks for the first time they
+  will appear to join. Chanops will still see everyone joining normally
+  as if there was no +d set.
 
 ==[ CHANGED ]==
 * Numerics have been removed. Instead we now use SIDs (Server ID's) and
