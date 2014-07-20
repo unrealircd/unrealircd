@@ -1,8 +1,8 @@
-Unreal3.4-alpha0 Release Notes
+Unreal3.4-alpha1 Release Notes
 ===============================
 
-This will be the first alpha version of UnrealIRCd 3.4.
-Some important remarks:
+This is the first alpha version of UnrealIRCd 3.4.
+Some important remarks(!):
 * This version is NOT STABLE and since this is the very first alpha release
   it will probably CRASH or hang from time to time. Security issues are also
   more likely in this 3.4-alpha series.
@@ -13,41 +13,48 @@ Some important remarks:
 * Linking of 3.2 <-> 3.4 is supported. However, because this is such an
   early alpha version we can make no guarantees about the impact of this 3.4
   server on the rest of the net. At this point WE DO NOT RECOMMEND LINKING
-  3.4-alpha* to a 3.2 PRODUCTION/LIVE NETWORK.
+  3.4-alpha* to a 3.2 PRODUCTION/LIVE NETWORK. Later versions will support this.
 * Things are likely to change between alpha versions. Including configuration,
   commands, etc. You should not make any assumptions as long as 3.4 is in
   alpha stage.
 * If you are moving from 3.2.x then be sure to read 'CONFIGURATION CHANGES'!
+* A lot of documentation has not been updated to reflect 3.4.x status.
+  Similarly, all translated documents are out of date. Don't use them!
 
 ==[ GENERAL INFORMATION ]==
-* The official UnrealIRCd documentation for 3.4 is currently not up to date.
-  Translations have not been updated at all, don't use them for now!
-  The online version is available at www.unrealircd.com/unreal32docs.html
-  FAQ: http://www.unrealircd.com/faq
-  Read them before asking for help.
-* Report bugs at http://bugs.unrealircd.org/
+* Documentation is still in doc\unreal32docs.html but - as said - is not
+  entirely up to date. FAQ is on: http://www.unrealircd.com/faq
+* Please report bugs at http://bugs.unrealircd.org/
 * The purpose of the sections below (NEW, CHANGED, MINOR, etc) is to be a
   SUMMARY of the changes in this release.  There have been many changes in
   total, for the full list of changes see the Changelog.
 
 ==[ CONFIGURATION CHANGES ]==
+You can use your 3.2.x unrealircd.conf WITH SOME CHANGES:
 * In your me { } block, change your "numeric" to "sid", and change the
   value as follows: pick a 3 character Server ID that starts with a digit.
-  For example: sid "001";
-* For loadmodule lines you can (and should) now use the shorter syntax.
-  Instead of:
-  loadmodule "src/modules/cloaks.so";
-  You should now use:
-  loadmodule "modules/cloak";
-  UnrealIRCd will figure out the exact name of the module. Doesn't matter
-  if you are on Windows or *NIX, and if your modules are in src/modules/ or
-  in modules/.
-* The commands module is gone and replaced with many individual modules:
-  1) Remove the loadmodule line for commands.so 
+  For example: numeric "1"; becomes: sid "001";
+* The commands module is gone and replaced with 100+ individual modules:
+  1) Remove the loadmodule lines for commands.so and cloak.so
   2) Add the following line to your unrealircd.conf:
      include "modules.conf";
+* For any remaining loadmodule lines you can (and should!) now use the
+  shorter syntax. Instead of:
+  loadmodule "src/modules/somemodule.so";
+  You should now use:
+  loadmodule "modules/somemodule";
+  UnrealIRCd will figure out the exact name of the module. It doesn't
+  matter if you are on Windows or *NIX, and if your modules are in
+  src/modules/ or in modules/.
 
 ==[ NEW ]==
+* We moved a lot of channel and user modes to modules. These are all
+  loaded by modules.conf, but if you don't want to load a certain module
+  you can now simply comment them out or remove that line.
+  Since a lot of code has been moved from the core to these modules it
+  makes it A) easier for coders to see all source code related to a
+  specific feature, and B) makes it possible to fix something and reload
+  the module rather than restart the IRCd.
 * Entirely rewritten I/O and event loop. This allows the IRCd to scale
   more easily to tens of thousands of clients by using kernel-evented I/O
   mechanisms such as epoll and kqueue.
@@ -61,14 +68,12 @@ Some important remarks:
   help us to fix a number of lag-related race conditions / bugs.
 * The module commands.so / commands.dll has been removed. All commands
   (those that are modular) are now in their own module.
-* We are in the process of moving channel and user modes to individual
-  modules. All usual modes are included in modules.conf by default but
-  you can decide not to load some of them, simply by commenting them out.
-  Not only does this provide more customizability, it also makes it much
-  easier for developers to look at all the code for a particular feature.
+* There have been a lot of source code cleanups, things who end-users
+  won't see.
 
 ==[ MAJOR BUGS FIXED ]==
-* None?
+* Maybe some
+* Most likely a number of major bugs are introduced by this early alpha!
 
 ==[ MINOR BUGS FIXED ]==
 * None?
@@ -77,16 +82,12 @@ Some important remarks:
 * Numeric server IDs, see above.
 * PROTOCTL TOKEN and SJB64 are no longer implemented.
 * Ziplinks have been removed. We recommend to use SSL/TLS for all server
-  connections. SSL/TSL already includes compression (when available).
+  connections. Later on the source code will be fixed so SSL/TLS will use
+  compression.
 
 ==[ KNOWN ISSUES ]==
-* Regexes: Be careful with backreferences (\1, etc), certain regexes can
-  slow the IRCd down considerably and even bring it to a near-halt.
-  In the spamfilter user target it's usually safe though.
-  Slow spamfilter detection can help prevent the slowdown/freeze, but
-  might not work in worst-case scenario's.
-* Regexes: Possessive quantifiers such as, for example, "++" (not to be
-  confused with "+") are not safe to use, they can easily freeze the IRCd.
+* Documentation has NOT been updated to reflect most 3.4.x features!!
+* Regexes still have their usual issues
 
 ==[ ADDITIONAL INFO ]==
 * See Changelog for more details
