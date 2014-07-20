@@ -19,29 +19,18 @@
 
 <!-- $Id$ -->
 
-<body>
-English | 
-<a href="unreal32docs.de.html">German</a> | 
-<a href="unreal32docs.hu.html">Hungarian</a> | 
-<a href="unreal32docs.fr.html">French</a> | 
-<a href="unreal32docs.ru.html">Russian</a> | 
-<a href="unreal32docs.tr.html">Turkish</a> |
-<a href="unreal32docs.es.html">Spanish</a>
-<br><br>
-<div align="center"><b><font size="7">UnrealIRCd</font></b><br>
+<div align="center"><b><font size="7">UnrealIRCd 3.4</font></b><br>
   <font size="4"><a href="http://www.unrealircd.com">http://www.unrealircd.com</a></font><br>
   <font size="4">Version: 3.4-alpha0</font><br>
-  <b>Last doc update:</b> 2012-10-16</div>
-<br>
-  <b>Head coder/maintainer:</b> Syzop<br>
-  <b>Coders:</b> binki<br>
-  <b>Previous coders &amp; contributors:</b> Stskeeps, codemastr, Luke, aquanight,
-  WolfSage, McSkaf, Zogg,  NiQuiL,  assyrian,  chasm,  DrBin,  llthangel,
-  Griever,  nighthawk<br>
-  <b>Documentation:</b> CKnight^ (initial documentation), Syzop (major rewrite), codemastr, and many contributors<br>
-<p>To view this documentation you must have a compatible browser, which are listed below. Up to date docs are 
-  available at <a href="http://www.vulnscan.org/UnrealIRCd/unreal32docs.html">http://www.vulnscan.org/UnrealIRCd/unreal32docs.html</a>
-  and a FAQ at <a href="http://www.vulnscan.org/UnrealIRCd/faq/" TARGET="_blank">http://www.vulnscan.org/UnrealIRCd/faq/</a>.
+  <b>Last doc update:</b> 2014-07-20<br>
+  <br>
+  <b>Project leader / Head coder:</b> Syzop<br>
+  <b>Coders:</b> Heero<br>
+</div>
+<p><font color="red">WARNING: UnrealIRCd 3.4.x is in early alpha stage.
+The documentation is NOT up to date to reflect most of the changes
+in 3.4.x! Similarly, all translations are out of date. Apologies for this.</font></p>
+<p>Also check out our FAQ at <a href="http://www.unrealircd.com/faq" TARGET="_blank">http://www.unrealircd.com/faq</a>.
 </p>
 <p><font size="+2"><b>INDEX / TABLE OF CONTENTS</b></font><br>
   1. <a href="#IntroductionNotes">Introduction & Notes</a><br>
@@ -142,7 +131,7 @@ English |
   another software package is strictly prohibited without the written permission 
   of the UnrealIRCd Development Team. This document may be copied/printed/reproduced/published 
   as many times as you like, provided it is for use with UnrealIRCd and it is not 
-  modified in anyway. &#8211; Copyright UnrealIRCd Development Team 2002-2006</p>
+  modified in anyway. &#8211; Copyright UnrealIRCd Development Team 2002-2014</p>
 <p>Please read this manual before asking for help, you also REALLY want to take a look at the 
    <a href="http://www.vulnscan.org/UnrealIRCd/faq/" target="_blank">FAQ</a> since over 80% of your questions/problems are answered in it. If you still
    need help you can ask for support at irc.unrealircd.org (port 6667) channel #unreal-support (note 
@@ -164,7 +153,6 @@ English |
 <p>The recommended way to upgrade is:<br>
 Linux:<br>
 <ul>
-<li>Rename your old UnrealIRCd directory (or otherwise you'll overwrite it in the next step)
 <li>Extract the new UnrealIRCd version and run ./Config and make
 <li>Copy your old configuration files to the new directory (unrealircd.conf, motd, rules, server.* [SSL certs], network file, etc)</p></ul>
 Windows:<br>
@@ -183,36 +171,26 @@ Windows:<br>
 <ul>
 <li><b>*NIX versions:</b>
 <ul>
-<li>Linux (2.2.*, 2.4.*, 2.6.*)
-<li>FreeBSD (4.*, 5.*, 6.*)
-<li>NetBSD (2.*)
-<li>OpenBSD (3.7, 3.8, 3.9)
-<li>Solaris (9, 10)
+<li>Linux (2.2 and up)
+<li>FreeBSD (4.x and up)
+<li>NetBSD (2.x and up)
+<li>OpenBSD (3.7 and up)
+<li>Solaris (9 and up)
 </ul>
 <li><b>Windows version:</b>
 <ul> 
-<li>Windows 2000 (Pro, Server, Advanced Server)
-<li>Windows XP (Home, Pro)
-<li>Windows 2003 
-</ul>
-<li><b>Architectures tested:</b>
-<ul>
-<li>ia32 (i386, i486, i586, i686)
-<li>ia64
-<li>amd64
-<li>alpha
+<li>Windows XP, Vista, 2003, 7, 8
 </ul>
 </ul>
   <br>
   If you have Unreal3.2 working correctly under other operating systems, please 
-  send the details to <a href="mailto:coders@lists.unrealircd.org">coders@lists.unrealircd.org<br>
+  send the details to <a href="mailto:syzop@unrealircd.org">syzop@unrealircd.org<br>
   </a> </p>
 <p><b>Installation Instructions</b><br>
 Linux:<br>
 <ol>
-<li>gunzip -d Unreal3.2.X.tar.gz
-<li>tar xvf Unreal3.2.X.tar
-<li>cd Unreal3.2
+<li>tar xzvf Unreal3.4.X.tar.gz
+<li>cd Unreal3.4.X
 <li>./Config
 <li>Answer these questions to the best of your knowledge. Generally if your not 
   sure, the default will work just fine!
@@ -250,14 +228,24 @@ because otherwise you will not understand concepts such as 'cloaking', 'snomasks
    in your shell, which will output 3 random strings that you can use.</p>
 </div>
 <p><font size="+2"><b>3.2 - Modules</b></font><a name="feature_modules"></a></p><div class="desc">
-<p>UnrealIRCd supports modules which is nice because:<br>
-   - You can load/reload/unload them while the ircd is running (by /rehash). This allows some bugs to be fixed or new features to be added without requiring a restart!<br>
-   - Other people can create (3rd party) modules with new commands, usermodes and even channelmodes.<br>
-   UnrealIRCd only comes with a few <a href="#modules">modules</a>. Take a look at www.unrealircd.com -&gt; modules
-   or use google to find 3rd party modules.<br>
-<p>You need to load at least 2 modules or else you won't be able to boot!:<br>
-   - the commands module: commands.so (commands.dll on windows)<br>
-   - a cloaking module: usually cloak.so (cloak.dll on windows).</p>
+<p>UnrealIRCd supports modules which has the following benefits:<br>
+<ul>
+<li>You can load/reload/unload them while the ircd is running (by /rehash). This allows some bugs to be fixed or new features to be added without requiring a restart!
+<li>Other people can create (3rd party) modules with new commands, usermodes and even channelmodes.
+</ul>
+   UnrealIRCd comes with a huge number of modules, <a href="#modules">see
+   here for the full list</a>.
+   Additionally, you can also find more (3rd party) modules at <a href="http://modules.unrealircd.org">modules.unrealircd.org</a>.<br>
+<p>If you just want to load <u>all</u> the default built-in modules then add this to your
+   unrealircd.conf:<br>
+   <pre>include "modules.conf";</pre>
+   If you want to <u>customize</u> what modules to load and which not to load, then
+   <u>don't edit modules.conf directly</u> as this file will be overwritten by an
+   upgrade!<br>
+   Instead, copy modules.conf to (for example) custom_modules.conf,
+   then comment out any modules out (add // at the beginning of the line of
+   each module you don't want), and finally include
+   this file in your unrealircd.conf.</p>
 </div>
 
 <p><font size="+2"><b>3.3 - Snomasks</b></font><a name="feature_snomasks"></a></p><div class="desc">
@@ -1475,21 +1463,12 @@ drpass {
    <font class="block_required">REQUIRED</font><a name="loadmoduledirective"></a><div class="desc">
 </p>
 <p>Syntax:<br>
-  loadmodule &lt;file-name&gt;;</p>
-<p>See <a href="#feature_modules">here</a> why modules are nice/useful.</p>
-<p>Modules that come standard with Unreal3.2:</p>
-<p>commands.so / commands.dll - All the / commands (well not all yet, but will eventually be all) <font color="red">REQUIRED</font><br>
-   cloak.so / cloak.dll - Cloaking module <font color="red">REQUIRED</font> (or any other cloaking module)</p>
-<p>So you want to be sure to have these loaded:</p>
-<pre>
-loadmodule "src/modules/commands.so";
-loadmodule "src/modules/cloak.so";
-</pre>
-<p>or on windows:</p>
-<pre>
-loadmodule "modules/commands.dll";
-loadmodule "modules/cloak.dll";
-</pre>
+  loadmodule &lt;friendly-file-name&gt;;</p>
+<p>File names are friendly/universal. What this means is if you (for example) want to load <i>src/modules/cloak.so</i> on *NIX or <i>modules\cloak.dll</i> on Windows then you don't have to specify the exact filename, instead you use:
+<pre>loadmodule "modules/cloak";</pre></p>
+<p>If you are first setting up UnrealIRCd you probably want to load all modules, to do so simply add:
+<pre>include "modules.conf";</pre>
+Later on you can customize the modules to load, for example if you don't want certain channel modes to be loaded. Or maybe you want to load 3rd party modules. See <a href="#feature_modules">this for more information</a> on both.</p>
 </div>
 <p><font class="block_section">4.11 - </font><font class="block_name">Log Block</font>
    <font class="block_recommended">RECOMMENDED</font><a name="logblock"></a><div class="desc">
@@ -3842,10 +3821,35 @@ security until they got hacked, try to avoid that :).
 
 <p id="modules"><font size="+2"><b>10 &#8211; Modules</b></font></p>
 <div class="desc">
-  <p>The following are some descriptions of modules shipped with
-  UnrealIRCd.  Unfortunately, only one of the modules shipped with
-  UnrealIRCd is documented at the moment.</p>
+  <p>UnrealIRCd ships with over 120 modules. Below is a (very!) partial list of them.</p>
+  <p>All these modules are loaded if you include <i>modules.conf</i>, see that file for the full list of modules (without description)</p>
 </div>
+<table border=1 cellpadding=3 cellspacing=1>
+<tr><td><b>module name:</b></td><td><b>description:</b></td></tr>
+<tr><td>modules/chanmodes/adminonly</td><td>Channel Mode +A: Only Server Admins and above may join</td></tr>
+<tr><td>modules/chanmodes/censor</td><td>Channel Mode +G: Prevent "bad words" from being said</td></tr>
+<tr><td>modules/chanmodes/delayjoin</td><td>Channel Mode +d/+D: hide joins/parts of users who don't say anything</td></tr>
+<tr><td>modules/chanmodes/floodprot</td><td>Channel Mode +f: Advanced channel flood protection</td></tr>
+<tr><td>modules/chanmodes/issecure</td><td>Channel Mode +Z: Indicates all users in the channel use SSL (only set by server if +z too)</td></tr>
+<tr><td>modules/chanmodes/jointhrottle</td><td>Channel Mode +j: Prevent joinfloods</td></tr>
+<tr><td>modules/chanmodes/link</td><td>Channel Mode +L: Send users to a different channel if full due to +l</td></tr>
+<tr><td>modules/chanmodes/nocolor</td><td>Channel Mode +c: No color codes allowed in channel</td></tr>
+<tr><td>modules/chanmodes/noctcp</td><td>Channel Mode +C: No CTCP's allowed in channel</td></tr>
+<tr><td>modules/chanmodes/noinvite</td><td>Channel Mode +V: /INVITE not allowed</td></tr>
+<tr><td>modules/chanmodes/nokick</td><td>Channel Mode +Q: /KICK not allowed (only U:lined servers may kick)</td></tr>
+<tr><td>modules/chanmodes/noknock</td><td>Channel Mode +K: /KNOCK not allowed</td></tr>
+<tr><td>modules/chanmodes/nonickchange</td><td>Channel Mode +N: Nick change not allowed</td></tr>
+<tr><td>modules/chanmodes/nonotice</td><td>Channel Mode +T: /NOTICE not allowed</td></tr>
+<tr><td>modules/chanmodes/operonly</td><td>Channel Mode +O: Only IRCOp's may join</td></tr>
+<tr><td>modules/chanmodes/permanent</td><td>Channel Mode +P: Permanent channel</td></tr>
+<tr><td>modules/chanmodes/regonly</td><td>Channel Mode +R: Only registered users (identified to services) may join</td></tr>
+<tr><td>modules/chanmodes/regonlyspeak</td><td>Channel Mode +M: Only registered users (identified to services) may speak</td></tr>
+<tr><td>modules/chanmodes/secureony</td><td>Channel Mode +z: Only secure users may join, that is: users on a SSL/TLS connection</td></tr>
+<tr><td>modules/chanmodes/stripcolor</td><td>Channel Mode +S: Strip color codes from messages</td></tr>
+<tr><td>modules/usermodes/censor</td><td>User Mode +G: Prevent "bad words" from being said through PM</td></tr>
+<tr><td>modules/usermodes/noctcp</td><td>User Mode +T: Users may not send CTCP's to you</td></tr>
+</table>
+
 <p id="modules_m_nopost"><font size="+2"><b>10.1 <a href="#modules_m_nopost">m_nopost</a></b></font><br />
   This module automatically bans any user who tries to issue an HTTP-style request.
   This module was written by Syzop in response to the Firefox XPS attack through which
