@@ -1450,7 +1450,7 @@ int InitwIRCD(int argc, char *argv[])
 #endif
 	if (!init_ssl())
 	{
-		config_warn("Failed to load SSL (no certificate?) -- continueing without SSL support...");
+		config_warn("Failed to load SSL (see error above), proceeding without SSL support...");
 		if (ssl_used_in_config_but_unavail())
 		{
 			config_error("IRCd failed to start");
