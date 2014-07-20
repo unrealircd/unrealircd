@@ -1212,8 +1212,7 @@ void config_error(char *format, ...)
 #else
 		win_log("[error] %s", buffer);
 #endif
-	else
-		ircd_log(LOG_ERROR, "config error: %s", buffer);
+	ircd_log(LOG_ERROR, "config error: %s", buffer);
 	sendto_realops("error: %s", buffer);
 	/* We cannot live with this */
 	config_error_flag = 1;
@@ -1277,6 +1276,7 @@ void config_status(char *format, ...)
 #else
 		win_log("* %s", buffer);
 #endif
+	ircd_log(LOG_ERROR, "%s", buffer);
 	sendto_realops("%s", buffer);
 }
 
@@ -1297,6 +1297,7 @@ void config_warn(char *format, ...)
 #else
 		win_log("[warning] %s", buffer);
 #endif
+	ircd_log(LOG_ERROR, "[warning] %s", buffer);
 	sendto_realops("[warning] %s", buffer);
 }
 
@@ -9722,14 +9723,14 @@ int ssl_used_in_config_but_unavail(void)
 	for (listener = conf_listen; listener; listener = (ConfigItem_listen *)listener->next)
 		if (listener->options & LISTENER_SSL)
 		{
-			config_status("Listen block %s:%d is configured to use SSL, however SSL is unavailable due to an earlier error (certificate/key not loaded?)", listener->ip, listener->port);
+			config_error("Listen block %s:%d is configured to use SSL, however SSL is unavailable due to an earlier error (certificate/key not loaded?)", listener->ip, listener->port);
 			errors++;
 		}
 
 	for (link = conf_link; link; link = (ConfigItem_link *)link->next)
 		if (link->options & CONNECT_SSL)
 		{
-			config_status("Link block %s is configured to use SSL, however SSL is unavailable due to an earlier error (certificate/key not loaded?)", link->servername);
+			config_error("Link block %s is configured to use SSL, however SSL is unavailable due to an earlier error (certificate/key not loaded?)", link->servername);
 			errors++;
 		}
 	
