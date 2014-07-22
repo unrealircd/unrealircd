@@ -467,6 +467,13 @@
 #define SPAMFILTER_DETECTSLOW
 #endif
 
+/* The 3.4-alpha* series, especially the first few, are highly experimental.
+ * If EXPERIMENTAL is #define'd then all users will receive a notice about
+ * this when they connect, along with a pointer to bugs.unrealircd.org where
+ * they can report any problems. This is mainly to help UnrealIRCd development.
+ */
+#define EXPERIMENTAL
+
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #define MOTD MPATH
 #define RULES RPATH
