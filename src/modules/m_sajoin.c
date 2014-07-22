@@ -157,7 +157,7 @@ DLLFUNC CMD_FUNC(m_sajoin)
 			aChannel *chptr;
 			Membership *lp;
 			Hook *h;
-			int i;
+			int i = 0;
 
 			if (*name == '0' && !atoi(name))
 			{

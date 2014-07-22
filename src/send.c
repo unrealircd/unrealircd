@@ -339,7 +339,7 @@ void sendto_channelprefix_butone(aClient *one, aClient *from, aChannel *chptr,
 	va_list vl;
 	Member *lp;
 	aClient *acptr;
-	int  i,j;
+	int  i = 0,j = 0;
 	Hook *h;
 
 	++current_serial;

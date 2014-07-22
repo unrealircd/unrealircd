@@ -735,7 +735,7 @@ int  is_chanprot(aClient *cptr, aChannel *chptr)
 int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 {
 	Membership *lp;
-	int  member, i;
+	int  member, i = 0;
 	Hook *h;
 	/* 
 	 * #0000053 by |savage|, speedup 

@@ -405,7 +405,7 @@ DLLFUNC CMD_FUNC(m_nick)
 	int  differ = 1, update_watch = 1;
 	unsigned char newusr = 0, removemoder = 1;
 	Hook *h;
-	int i;
+	int i = 0;
 	/*
 	 * If the user didn't specify a nickname, complain
 	 */
