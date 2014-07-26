@@ -1,4 +1,4 @@
-Unreal3.2.10.3 Release Notes
+Unreal3.2.10.4 Release Notes
 =============================
 
 ==[ GENERAL INFORMATION ]==
@@ -12,6 +12,22 @@ Unreal3.2.10.3 Release Notes
 - The purpose of the sections below (NEW, CHANGED, MINOR, etc) is to be a
   SUMMARY of the changes in this release. See the file 'Changes' for a
   complete list of all changes.
+
+==[ .4 RELEASE ]==
+Two major issues were fixed:
+- Compile problems when using clang instead of gcc (such as on FreeBSD & OS X)
+- For services who allow you to log in by account name but still allow you to
+  use a different nick: when you're logged in you are now considered
+  registered as far as mode +M and +R are concerned.
+  Tech: whenever services set SVID and it's not * and does not start with a
+  number, then we consider this user to be 'logged in'.
+  Whenever a user is set +r (s)he is also considered 'logged in'.
+  This way it's compatible with both older and new services and doesn't
+  (or shouldn't) introduce security issues with older services using
+  servicetimestamp for nick tracking or other means.
+Additionally:
+- curl-ca-bundle.crt has been updated to use latest certificates
+- The Windows libraries (OpenSSL, curl, ..) have been updated.
 
 ==[ .3 RELEASE ]==
 The following issues have been fixed in 3.2.10.3:

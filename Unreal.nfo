@@ -1,5 +1,5 @@
 ===============================================
-=            UnrealIRCd v3.2.10.3             =
+=            UnrealIRCd v3.2.10.4             =
 ===============================================
  This release was brought to you by:
 
@@ -13,6 +13,7 @@
 
   Contributors:
   =============
+  * Heero
   * nenolod
   * Adam
   * warg
