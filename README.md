@@ -50,7 +50,7 @@ You can find the **documentation** online at: http://www.unrealircd.com/unreal32
 We also have a good **FAQ**: http://www.unrealircd.com/faq
 
 ## Website, support, and other links ##
-* www.unrealircd.com - Our main website
-* forums.unrealircd.com - Support
-* bugs.unrealircd.com - Bug tracker
-* modules.unrealircd.com - 3rd party modules
+* http://www.unrealircd.com - Our main website
+* http://forums.unrealircd.com - Support
+* http://bugs.unrealircd.com - Bug tracker
+* http://modules.unrealircd.com - 3rd party modules
