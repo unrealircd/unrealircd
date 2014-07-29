@@ -316,7 +316,7 @@ aClient *find_chasing(aClient *sptr, char *user, int *chasing)
 	if (!(who = get_history(user, (long)KILLCHASETIMELIMIT)))
 	{
 		sendto_one(sptr, err_str(ERR_NOSUCHNICK),
-		    me.name, sptr->name, user);
+		    me.client.name, sptr->name, user);
 		return NULL;
 	}
 	if (chasing)
@@ -343,7 +343,7 @@ int add_listmode(Ban **list, aClient *cptr, aChannel *chptr, char *banid)
 	if (!*list && ((len > MAXBANLENGTH) || (MAXBANS < 1)))
 	{
 		sendto_one(cptr, err_str(ERR_BANLISTFULL),
-			me.name, cptr->name, chptr->chname, banid);
+			me.client.name, cptr->name, chptr->chname, banid);
 		return -1;
 	}
 	for (ban = *list; ban; ban = ban->next)
@@ -353,7 +353,7 @@ int add_listmode(Ban **list, aClient *cptr, aChannel *chptr, char *banid)
 			if ((len > MAXBANLENGTH) || (++cnt >= MAXBANS))
 			{
 				sendto_one(cptr, err_str(ERR_BANLISTFULL),
-				    me.name, cptr->name, chptr->chname, banid);
+				    me.client.name, cptr->name, chptr->chname, banid);
 				return -1;
 			}
 			else
@@ -1421,8 +1421,8 @@ void rejoin_joinandmode(aClient *sptr)
 					if (i < n - 1)
 						strcat(parabuf, " ");
 				}
-				sendto_channel_butserv_butone(chptr, &me, sptr, ":%s MODE %s +%s %s",
-					me.name, chptr->chname, flagbuf, parabuf);
+				sendto_channel_butserv_butone(chptr, &me.client, sptr, ":%s MODE %s +%s %s",
+					me.client.name, chptr->chname, flagbuf, parabuf);
 			}
 		}
 		

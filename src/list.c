@@ -153,20 +153,22 @@ aClient *make_client(aClient *from, aClient *servr)
 	(void)strcpy(cptr->username, "unknown");
 	if (size == CLIENT_LOCAL_SIZE)
 	{
-		INIT_LIST_HEAD(&cptr->lclient_node);
-		INIT_LIST_HEAD(&cptr->special_node);
+		cptr->localClient = (struct LocalClient *) cptr;
 
-		cptr->since = cptr->lasttime =
-		    cptr->lastnick = cptr->firsttime = TStime();
-		cptr->class = NULL;
-		cptr->passwd = NULL;
-		cptr->sockhost[0] = '\0';
-		cptr->buffer[0] = '\0';
-		cptr->authfd = -1;
+		INIT_LIST_HEAD(&cptr->localClient->lclient_node);
+		INIT_LIST_HEAD(&cptr->localClient->special_node);
+
+		cptr->localClient->since = cptr->localClient->lasttime =
+		    cptr->lastnick = cptr->localClient->firsttime = TStime();
+		cptr->localClient->class = NULL;
+		cptr->localClient->passwd = NULL;
+		cptr->localClient->sockhost[0] = '\0';
+		cptr->localClient->buffer[0] = '\0';
+		cptr->localClient->authfd = -1;
 		cptr->fd = -1;
 
-		dbuf_queue_init(&cptr->recvQ);
-		dbuf_queue_init(&cptr->sendQ);
+		dbuf_queue_init(&cptr->localClient->recvQ);
+		dbuf_queue_init(&cptr->localClient->sendQ);
 	} else {
 		cptr->fd = -256;
 	}
@@ -179,21 +181,21 @@ void free_client(aClient *cptr)
 		list_del(&cptr->client_node);
 	if (MyConnect(cptr))
 	{
-		if (!list_empty(&cptr->lclient_node))
-			list_del(&cptr->lclient_node);
-		if (!list_empty(&cptr->special_node))
-			list_del(&cptr->special_node);
+		if (!list_empty(&cptr->localClient->lclient_node))
+			list_del(&cptr->localClient->lclient_node);
+		if (!list_empty(&cptr->localClient->special_node))
+			list_del(&cptr->localClient->special_node);
 
 		RunHook(HOOKTYPE_FREE_CLIENT, cptr);
-		if (cptr->passwd)
-			MyFree((char *)cptr->passwd);
-		if (cptr->error_str)
-			MyFree(cptr->error_str);
-		if (cptr->hostp)
-			unreal_free_hostent(cptr->hostp);
+		if (cptr->localClient->passwd)
+			MyFree((char *)cptr->localClient->passwd);
+		if (cptr->localClient->error_str)
+			MyFree(cptr->localClient->error_str);
+		if (cptr->localClient->hostp)
+			unreal_free_hostent(cptr->localClient->hostp);
 
-		assert(list_empty(&cptr->lclient_node));
-		assert(list_empty(&cptr->special_node));
+		assert(list_empty(&cptr->localClient->lclient_node));
+		assert(list_empty(&cptr->localClient->special_node));
 	}
 
 	MyFree((char *)cptr);
@@ -506,36 +508,36 @@ void send_listinfo(aClient *cptr, char *name)
 	int  inuse = 0, mem = 0, tmp = 0;
 
 	sendto_one(cptr, ":%s %d %s :Local: inuse: %d(%d)",
-	    me.name, RPL_STATSDEBUG, name, inuse += cloc.inuse,
+	    me.client.name, RPL_STATSDEBUG, name, inuse += cloc.inuse,
 	    tmp = cloc.inuse * CLIENT_LOCAL_SIZE);
 	mem += tmp;
 	sendto_one(cptr, ":%s %d %s :Remote: inuse: %d(%d)",
-	    me.name, RPL_STATSDEBUG, name,
+	    me.client.name, RPL_STATSDEBUG, name,
 	    crem.inuse, tmp = crem.inuse * CLIENT_REMOTE_SIZE);
 	mem += tmp;
 	inuse += crem.inuse;
 	sendto_one(cptr, ":%s %d %s :Users: inuse: %d(%d)",
-	    me.name, RPL_STATSDEBUG, name, users.inuse,
+	    me.client.name, RPL_STATSDEBUG, name, users.inuse,
 	    tmp = users.inuse * sizeof(anUser));
 	mem += tmp;
 	inuse += users.inuse,
 	    sendto_one(cptr, ":%s %d %s :Servs: inuse: %d(%d)",
-	    me.name, RPL_STATSDEBUG, name, servs.inuse,
+	    me.client.name, RPL_STATSDEBUG, name, servs.inuse,
 	    tmp = servs.inuse * sizeof(aServer));
 	mem += tmp;
 	inuse += servs.inuse,
 	    sendto_one(cptr, ":%s %d %s :Links: inuse: %d(%d)",
-	    me.name, RPL_STATSDEBUG, name, links.inuse,
+	    me.client.name, RPL_STATSDEBUG, name, links.inuse,
 	    tmp = links.inuse * sizeof(Link));
 	mem += tmp;
 	inuse += links.inuse,
 	    sendto_one(cptr, ":%s %d %s :Classes: inuse: %d(%d)",
-	    me.name, RPL_STATSDEBUG, name, classs.inuse,
+	    me.client.name, RPL_STATSDEBUG, name, classs.inuse,
 	    tmp = classs.inuse * sizeof(aClass));
 	mem += tmp;
 	inuse += aconfs.inuse,
 	    sendto_one(cptr, ":%s %d %s :Totals: inuse %d %d",
-	    me.name, RPL_STATSDEBUG, name, inuse, mem);
+	    me.client.name, RPL_STATSDEBUG, name, inuse, mem);
 }
 
 #endif

@@ -125,7 +125,7 @@ DLLFUNC CMD_FUNC(m_uid)
 	if (IsServer(cptr) && !do_remote_nick_name(nick))
 	{
 		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
-		    me.name, parv[0], parv[1], "Illegal characters");
+		    me.client.name, parv[0], parv[1], "Illegal characters");
 
 		if (IsServer(cptr))
 		{
@@ -133,20 +133,20 @@ DLLFUNC CMD_FUNC(m_uid)
 			sendto_failops("Bad Nick: %s From: %s %s",
 			    parv[1], parv[0], get_client_name(cptr, FALSE));
 			sendto_one(cptr, ":%s KILL %s :%s (%s <- %s[%s])",
-			    me.name, parv[1], me.name, parv[1],
+			    me.client.name, parv[1], me.client.name, parv[1],
 			    nick, cptr->name);
 			if (sptr != cptr)
 			{	/* bad nick change */
 				sendto_server(cptr, 0, 0,
 				    ":%s KILL %s :%s (%s <- %s!%s@%s)",
-				    me.name, parv[0], me.name,
+				    me.client.name, parv[0], me.client.name,
 				    get_client_name(cptr, FALSE),
 				    parv[0],
 				    sptr->user ? sptr->username : "",
 				    sptr->user ? sptr->user->server :
 				    cptr->name);
 				sptr->flags |= FLAGS_KILLED;
-				return exit_client(cptr, sptr, &me, "BadNick");
+				return exit_client(cptr, sptr, &me.client, "BadNick");
 			}
 		}
 		return 0;
@@ -159,7 +159,7 @@ DLLFUNC CMD_FUNC(m_uid)
 		ircstp->is_kill++;
 		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
 		sendto_one(cptr, ":%s KILL %s :%s (Quarantined: no global oper privileges allowed)",
-			me.name, parv[1], me.name);
+			me.client.name, parv[1], me.client.name);
 		sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine",
 			parv[1], sptr->name);
 		/* (nothing to exit_client or to free, since user was never added) */
@@ -193,14 +193,14 @@ DLLFUNC CMD_FUNC(m_uid)
 	 */
 	if (!stricmp("ircd", nick))
 	{
-		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME), me.name,
+		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME), me.client.name,
 		    BadPtr(parv[0]) ? "*" : parv[0], nick,
 		    "Reserved for internal IRCd purposes");
 		return 0;
 	}
 	if (!stricmp("irc", nick))
 	{
-		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME), me.name,
+		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME), me.client.name,
 		    BadPtr(parv[0]) ? "*" : parv[0], nick,
 		    "Reserved for internal IRCd purposes");
 		return 0;
@@ -234,7 +234,7 @@ DLLFUNC CMD_FUNC(m_uid)
 	if ((acptr = find_server(nick, NULL)) != NULL)
 	{
 		/*
-		   ** We have a nickname trying to use the same name as
+		   ** We have a nickname trying to use the same.client.name as
 		   ** a server. Send out a nick collision KILL to remove
 		   ** the nickname. As long as only a KILL is sent out,
 		   ** there is no danger of the server being disconnected.
@@ -245,7 +245,7 @@ DLLFUNC CMD_FUNC(m_uid)
 		    get_client_name(cptr, FALSE));
 		ircstp->is_kill++;
 		sendto_one(cptr, ":%s KILL %s :%s (%s <- %s)",
-		    me.name, sptr->name, me.name, acptr->from->name,
+		    me.client.name, sptr->name, me.client.name, acptr->from->name,
 		    /* NOTE: Cannot use get_client_name
 		       ** twice here, it returns static
 		       ** string pointer--the other info
@@ -253,7 +253,7 @@ DLLFUNC CMD_FUNC(m_uid)
 		     */
 		    get_client_name(cptr, FALSE));
 		sptr->flags |= FLAGS_KILLED;
-		return exit_client(cptr, sptr, &me, "Nick/Server collision");
+		return exit_client(cptr, sptr, &me.client, "Nick/Server collision");
 	}
 
 	if ((acptr = find_client(nick, NULL)) != NULL)
@@ -290,9 +290,9 @@ DLLFUNC CMD_FUNC(m_uid)
 			ircstp->is_kill++;
 			sendto_server(NULL, 0, 0,
 			    ":%s KILL %s :%s (Nick Collision)",
-			    me.name, acptr->name, me.name);
+			    me.client.name, acptr->name, me.client.name);
 			acptr->flags |= FLAGS_KILLED;
-			(void)exit_client(NULL, acptr, &me,
+			(void)exit_client(NULL, acptr, &me.client,
 			    "Nick collision with no timestamp/equal timestamps");
 			return 0;	/* We killed both users, now stop the process. */
 		}
@@ -303,9 +303,9 @@ DLLFUNC CMD_FUNC(m_uid)
 			ircstp->is_kill++;
 			sendto_server(cptr, 0, 0,
 			    ":%s KILL %s :%s (Nick Collision)",
-			    me.name, acptr->name, me.name);
+			    me.client.name, acptr->name, me.client.name);
 			acptr->flags |= FLAGS_KILLED;
-			(void)exit_client(NULL, acptr, &me, "Nick collision");
+			(void)exit_client(NULL, acptr, &me.client, "Nick collision");
 		}
 
 		if ((differ && (acptr->lastnick < lastnick)) ||
@@ -316,7 +316,7 @@ DLLFUNC CMD_FUNC(m_uid)
 			 */
 
 			sendto_one(cptr, ":%s KILL %s :%s (Nick Collision)",
-			    me.name, parv[1], me.name);
+			    me.client.name, parv[1], me.client.name);
 			send_umode(NULL, acptr, 0, SEND_UMODES, buf);
 			sendto_one_nickcmd(cptr, acptr, buf);
 			if (acptr->user->away)
@@ -412,7 +412,7 @@ DLLFUNC CMD_FUNC(m_nick)
 	if (parc < 2)
 	{
 		sendto_one(sptr, err_str(ERR_NONICKNAMEGIVEN),
-		    me.name, parv[0]);
+		    me.client.name, parv[0]);
 		return 0;
 	}
 
@@ -427,7 +427,7 @@ DLLFUNC CMD_FUNC(m_nick)
 		    (TStime() - sptr->user->flood.nick_t < NICK_PERIOD))
 		{
 			/* Throttle... */
-			sendto_one(sptr, err_str(ERR_NCHANGETOOFAST), me.name, sptr->name, nick,
+			sendto_one(sptr, err_str(ERR_NCHANGETOOFAST), me.client.name, sptr->name, nick,
 				(int)(NICK_PERIOD - (TStime() - sptr->user->flood.nick_t)));
 			return 0;
 		}
@@ -442,7 +442,7 @@ DLLFUNC CMD_FUNC(m_nick)
 	    (!IsServer(cptr) && !do_nick_name(nick)))
 	{
 		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
-		    me.name, parv[0], parv[1], "Illegal characters");
+		    me.client.name, parv[0], parv[1], "Illegal characters");
 
 		if (IsServer(cptr))
 		{
@@ -450,20 +450,20 @@ DLLFUNC CMD_FUNC(m_nick)
 			sendto_failops("Bad Nick: %s From: %s %s",
 			    parv[1], parv[0], get_client_name(cptr, FALSE));
 			sendto_one(cptr, ":%s KILL %s :%s (%s <- %s[%s])",
-			    me.name, parv[1], me.name, parv[1],
+			    me.client.name, parv[1], me.client.name, parv[1],
 			    nick, cptr->name);
 			if (sptr != cptr)
 			{	/* bad nick change */
 				sendto_server(cptr, 0, 0,
 				    ":%s KILL %s :%s (%s <- %s!%s@%s)",
-				    me.name, parv[0], me.name,
+				    me.client.name, parv[0], me.client.name,
 				    get_client_name(cptr, FALSE),
 				    parv[0],
 				    sptr->user ? sptr->username : "",
 				    sptr->user ? sptr->user->server :
 				    cptr->name);
 				sptr->flags |= FLAGS_KILLED;
-				return exit_client(cptr, sptr, &me, "BadNick");
+				return exit_client(cptr, sptr, &me.client, "BadNick");
 			}
 		}
 		return 0;
@@ -476,7 +476,7 @@ DLLFUNC CMD_FUNC(m_nick)
 		ircstp->is_kill++;
 		/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
 		sendto_one(cptr, ":%s KILL %s :%s (Quarantined: no global oper privileges allowed)",
-			me.name, parv[1], me.name);
+			me.client.name, parv[1], me.client.name);
 		sendto_realops("QUARANTINE: Oper %s on server %s killed, due to quarantine",
 			parv[1], sptr->name);
 		/* (nothing to exit_client or to free, since user was never added) */
@@ -522,7 +522,7 @@ DLLFUNC CMD_FUNC(m_nick)
 				return 0;
 			}
 #endif
-			sendto_one(sptr, err_str(ERR_NICKNAMEINUSE), me.name,
+			sendto_one(sptr, err_str(ERR_NICKNAMEINUSE), me.client.name,
 			    BadPtr(parv[0]) ? "*" : parv[0], nick);
 			return 0;	/* NICK message ignored */
 		}
@@ -535,14 +535,14 @@ DLLFUNC CMD_FUNC(m_nick)
 	 */
 	if (!stricmp("ircd", nick))
 	{
-		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME), me.name,
+		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME), me.client.name,
 		    BadPtr(parv[0]) ? "*" : parv[0], nick,
 		    "Reserved for internal IRCd purposes");
 		return 0;
 	}
 	if (!stricmp("irc", nick))
 	{
-		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME), me.name,
+		sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME), me.client.name,
 		    BadPtr(parv[0]) ? "*" : parv[0], nick,
 		    "Reserved for internal IRCd purposes");
 		return 0;
@@ -582,15 +582,15 @@ DLLFUNC CMD_FUNC(m_nick)
 			if (ishold)
 			{
 				sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
-				    me.name, BadPtr(parv[0]) ? "*" : parv[0],
+				    me.client.name, BadPtr(parv[0]) ? "*" : parv[0],
 				    nick, tklban->reason);
 				return 0;
 			}
 			if (!IsOper(cptr))
 			{
-				sptr->since += 4; /* lag them up */
+				sptr->localClient->since += 4; /* lag them up */
 				sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
-				    me.name, BadPtr(parv[0]) ? "*" : parv[0],
+				    me.client.name, BadPtr(parv[0]) ? "*" : parv[0],
 				    nick, tklban->reason);
 				sendto_snomask(SNO_QLINE, "Forbidding Q-lined nick %s from %s.",
 				    nick, get_client_name(cptr, FALSE));
@@ -604,7 +604,7 @@ DLLFUNC CMD_FUNC(m_nick)
 	if (acptr)
 	{
 		/*
-		   ** We have a nickname trying to use the same name as
+		   ** We have a nickname trying to use the same.client.name as
 		   ** a server. Send out a nick collision KILL to remove
 		   ** the nickname. As long as only a KILL is sent out,
 		   ** there is no danger of the server being disconnected.
@@ -615,7 +615,7 @@ DLLFUNC CMD_FUNC(m_nick)
 		    get_client_name(cptr, FALSE));
 		ircstp->is_kill++;
 		sendto_one(cptr, ":%s KILL %s :%s (%s <- %s)",
-		    me.name, sptr->name, me.name, acptr->from->name,
+		    me.client.name, sptr->name, me.client.name, acptr->from->name,
 		    /* NOTE: Cannot use get_client_name
 		       ** twice here, it returns static
 		       ** string pointer--the other info
@@ -623,11 +623,11 @@ DLLFUNC CMD_FUNC(m_nick)
 		     */
 		    get_client_name(cptr, FALSE));
 		sptr->flags |= FLAGS_KILLED;
-		return exit_client(cptr, sptr, &me, "Nick/Server collision");
+		return exit_client(cptr, sptr, &me.client, "Nick/Server collision");
 	}
 
 	if (MyClient(cptr) && !IsOper(cptr))
-		cptr->since += 3;	/* Nick-flood prot. -Donwulff */
+		cptr->localClient->since += 3;	/* Nick-flood prot. -Donwulff */
 
 	if (!(acptr = find_client(nick, NULL)))
 		goto nickkilldone;	/* No collisions, all clear... */
@@ -644,7 +644,7 @@ DLLFUNC CMD_FUNC(m_nick)
 		if (acptr == cptr)
 			return 0;
 		acptr->flags |= FLAGS_KILLED;
-		exit_client(NULL, acptr, &me, "Overridden");
+		exit_client(NULL, acptr, &me.client, "Overridden");
 		goto nickkilldone;
 	}
 	/* A sanity check in the user field... */
@@ -655,13 +655,13 @@ DLLFUNC CMD_FUNC(m_nick)
 		    acptr->name, get_client_name(cptr, FALSE));
 		ircstp->is_kill++;
 		sendto_one(acptr, ":%s KILL %s :%s (Lost user field!)",
-		    me.name, acptr->name, me.name);
+		    me.client.name, acptr->name, me.client.name);
 		acptr->flags |= FLAGS_KILLED;
 		/* Here's the previous versions' desynch.  If the old one is
 		   messed up, trash the old one and accept the new one.
 		   Remember - at this point there is a new nick coming in!
 		   Handle appropriately. -- Barubary */
-		exit_client(NULL, acptr, &me, "Lost user field");
+		exit_client(NULL, acptr, &me.client, "Lost user field");
 		goto nickkilldone;
 	}
 	/*
@@ -708,7 +708,7 @@ DLLFUNC CMD_FUNC(m_nick)
 #endif
 		sendto_one(sptr, err_str(ERR_NICKNAMEINUSE),
 		    /* parv[0] is empty when connecting */
-		    me.name, BadPtr(parv[0]) ? "*" : parv[0], nick);
+		    me.client.name, BadPtr(parv[0]) ? "*" : parv[0], nick);
 		return 0;	/* NICK message ignored */
 	}
 	/*
@@ -760,9 +760,9 @@ DLLFUNC CMD_FUNC(m_nick)
 			ircstp->is_kill++;
 			sendto_server(NULL, 0, 0,
 			    ":%s KILL %s :%s (Nick Collision)",
-			    me.name, acptr->name, me.name);
+			    me.client.name, acptr->name, me.client.name);
 			acptr->flags |= FLAGS_KILLED;
-			(void)exit_client(NULL, acptr, &me,
+			(void)exit_client(NULL, acptr, &me.client,
 			    "Nick collision with no timestamp/equal timestamps");
 			return 0;	/* We killed both users, now stop the process. */
 		}
@@ -773,9 +773,9 @@ DLLFUNC CMD_FUNC(m_nick)
 			ircstp->is_kill++;
 			sendto_server(cptr, 0, 0,
 			    ":%s KILL %s :%s (Nick Collision)",
-			    me.name, acptr->name, me.name);
+			    me.client.name, acptr->name, me.client.name);
 			acptr->flags |= FLAGS_KILLED;
-			(void)exit_client(NULL, acptr, &me, "Nick collision");
+			(void)exit_client(NULL, acptr, &me.client, "Nick collision");
 			goto nickkilldone;	/* OK, we got rid of the "wrong" user,
 						   ** now we're going to add the user the
 						   ** other server introduced.
@@ -790,7 +790,7 @@ DLLFUNC CMD_FUNC(m_nick)
 			 */
 
 			sendto_one(cptr, ":%s KILL %s :%s (Nick Collision)",
-			    me.name, parv[1], me.name);
+			    me.client.name, parv[1], me.client.name);
 			send_umode(NULL, acptr, 0, SEND_UMODES, buf);
 			sendto_one_nickcmd(cptr, acptr, buf);
 			if (acptr->user->away)
@@ -819,14 +819,14 @@ DLLFUNC CMD_FUNC(m_nick)
 			ircstp->is_kill += 2;
 			sendto_server(NULL, 0, 0, /* First kill the new nick. */
 			    ":%s KILL %s :%s (Self Collision)",
-			    me.name, acptr->name, me.name);
+			    me.client.name, acptr->name, me.client.name);
 			sendto_server(cptr, 0, 0, /* Tell my servers to kill the old */
 			    ":%s KILL %s :%s (Self Collision)",
-			    me.name, sptr->name, me.name);
+			    me.client.name, sptr->name, me.client.name);
 			sptr->flags |= FLAGS_KILLED;
 			acptr->flags |= FLAGS_KILLED;
-			(void)exit_client(NULL, sptr, &me, "Self Collision");
-			(void)exit_client(NULL, acptr, &me, "Self Collision");
+			(void)exit_client(NULL, sptr, &me.client, "Self Collision");
+			(void)exit_client(NULL, acptr, &me.client, "Self Collision");
 			return 0;	/* Now that I killed them both, ignore the NICK */
 		}
 		if ((differ && (acptr->lastnick > lastnick)) ||
@@ -836,10 +836,10 @@ DLLFUNC CMD_FUNC(m_nick)
 			ircstp->is_kill++;
 			sendto_server(cptr, 0, 0,
 			    ":%s KILL %s :%s (Nick collision: %s <- %s)",
-			    me.name, acptr->name, me.name,
+			    me.client.name, acptr->name, me.client.name,
 			    acptr->from->name, sptr->from->name);
 			acptr->flags |= FLAGS_KILLED;
-			(void)exit_client(NULL, acptr, &me, "Nick collision");
+			(void)exit_client(NULL, acptr, &me.client, "Nick collision");
 			goto nickkilldone;	/* their user won, introduce new nick */
 		}
 		if ((differ && (acptr->lastnick < lastnick)) ||
@@ -852,16 +852,16 @@ DLLFUNC CMD_FUNC(m_nick)
 			/* Kill the user trying to change their nick. */
 			sendto_server(cptr, 0, 0,
 			    ":%s KILL %s :%s (Nick collision: %s <- %s)",
-			    me.name, sptr->name, me.name,
+			    me.client.name, sptr->name, me.client.name,
 			    sptr->from->name, acptr->from->name);
 			sptr->flags |= FLAGS_KILLED;
-			(void)exit_client(NULL, sptr, &me, "Nick collision");
+			(void)exit_client(NULL, sptr, &me.client, "Nick collision");
 			/*
 			 * Introduce our "correct" user to the other server
 			 */
 			/* Kill their user. */
 			sendto_one(cptr, ":%s KILL %s :%s (Nick Collision)",
-			    me.name, parv[1], me.name);
+			    me.client.name, parv[1], me.client.name);
 			send_umode(NULL, acptr, 0, SEND_UMODES, buf);
 			sendto_one_nickcmd(cptr, acptr, buf);
 			if (acptr->user->away)
@@ -913,7 +913,7 @@ DLLFUNC CMD_FUNC(m_nick)
 				{
 					sendto_one(sptr,
 					    err_str(ERR_BANNICKCHANGE),
-					    me.name, parv[0],
+					    me.client.name, parv[0],
 					    mp->chptr->chname);
 					return 0;
 				}
@@ -921,7 +921,7 @@ DLLFUNC CMD_FUNC(m_nick)
 				{
 					sendto_one(sptr,
 					    ":%s 437 %s %s :Cannot change to a nickname banned on channel",
-					    me.name, parv[0],
+					    me.client.name, parv[0],
 					    mp->chptr->chname);
 					return 0;
 				}
@@ -937,7 +937,7 @@ DLLFUNC CMD_FUNC(m_nick)
 				{
 					sendto_one(sptr,
 					    err_str(ERR_NONICKCHANGE),
-					    me.name, parv[0],
+					    me.client.name, parv[0],
 					    mp->chptr->chname);
 					return 0;
 				}
@@ -993,15 +993,15 @@ DLLFUNC CMD_FUNC(m_nick)
 			 *
 			 * Generate a random string for them to pong with.
 			 */
-			sptr->nospoof = getrandom32();
+			sptr->localClient->nospoof = getrandom32();
 
 			if (PINGPONG_WARNING)
 				sendto_one(sptr, ":%s NOTICE %s :*** If you are having problems"
 				    " connecting due to ping timeouts, please"
 				    " type /quote pong %X or /raw pong %X now.",
-				    me.name, nick, sptr->nospoof, sptr->nospoof);
+				    me.client.name, nick, sptr->localClient->nospoof, sptr->localClient->nospoof);
 
-			sendto_one(sptr, "PING :%X", sptr->nospoof);
+			sendto_one(sptr, "PING :%X", sptr->localClient->nospoof);
 		}
 
 #ifdef CONTACT_EMAIL
@@ -1010,13 +1010,13 @@ DLLFUNC CMD_FUNC(m_nick)
 		    " connection problem, please email " CONTACT_EMAIL
 		    " with the name and version of the client you are"
 		    " using, and the server you tried to connect to: %s",
-		    me.name, nick, me.name);
+		    me.client.name, nick, me.client.name);
 #endif /* CONTACT_EMAIL */
 #ifdef CONTACT_URL
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** If you need assistance with"
 		    " connecting to this server, %s, please refer to: "
-		    CONTACT_URL, me.name, nick, me.name);
+		    CONTACT_URL, me.client.name, nick, me.client.name);
 #endif /* CONTACT_URL */
 
 		/* Copy password to the passwd field if it's given after NICK
@@ -1024,10 +1024,10 @@ DLLFUNC CMD_FUNC(m_nick)
 		 */
 		if ((parc > 2) && (strlen(parv[2]) <= PASSWDLEN))
 		{
-			if (sptr->passwd)
-				MyFree(sptr->passwd);
-			sptr->passwd = MyMalloc(strlen(parv[2]) + 1);
-			(void)strcpy(sptr->passwd, parv[2]);
+			if (sptr->localClient->passwd)
+				MyFree(sptr->localClient->passwd);
+			sptr->localClient->passwd = MyMalloc(strlen(parv[2]) + 1);
+			(void)strcpy(sptr->localClient->passwd, parv[2]);
 		}
 		/* This had to be copied here to avoid problems.. */
 		(void)strcpy(sptr->name, nick);
@@ -1043,7 +1043,7 @@ DLLFUNC CMD_FUNC(m_nick)
 			 */
 			if (!iConf.ping_cookie && USE_BAN_VERSION && MyConnect(sptr))
 				sendto_one(sptr, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
-					me.name, nick);
+					me.client.name, nick);
 
 			sptr->lastnick = TStime();	/* Always local client */
 			if (register_user(cptr, sptr, nick,
@@ -1132,7 +1132,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 	int  i;
 	char mo[256];
 	char *tkllayer[9] = {
-		me.name,	/*0  server.name */
+		me.client.name,	/*0  server.name */
 		"+",		/*1  +|- */
 		"z",		/*2  G   */
 		"*",		/*3  user */
@@ -1144,7 +1144,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 	};
 	aTKline *savetkl = NULL;
 	ConfigItem_tld *tlds;
-	cptr->last = TStime();
+	cptr->localClient->last = TStime();
 	parv[0] = sptr->name;
 	parv[1] = parv[2] = NULL;
 	nick = sptr->name; /* <- The data is always the same, but the pointer is sometimes not,
@@ -1166,25 +1166,25 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			ircstp->is_ref++;
 			ircsnprintf(mo, sizeof(mo), "This server is full.");
 			return
-			    exit_client(cptr, sptr, &me,
+			    exit_client(cptr, sptr, &me.client,
 			    i ==
 			    -3 ? mo :
 			    "You are not authorized to connect to this server");
 		}
 
-		if (sptr->hostp)
+		if (sptr->localClient->hostp)
 		{
 			/* reject ASCII < 32 and ASCII >= 127 (note: upper resolver might be even more strict). */
-			for (tmpstr = sptr->sockhost; *tmpstr > ' ' && *tmpstr < 127; tmpstr++);
+			for (tmpstr = sptr->localClient->sockhost; *tmpstr > ' ' && *tmpstr < 127; tmpstr++);
 			
 			/* if host contained invalid ASCII _OR_ the DNS reply is an IP-like reply
 			 * (like: 1.2.3.4 or ::ffff:1.2.3.4), then reject it and use IP instead.
 			 */
-			if (*tmpstr || !*user->realhost || (isdigit(*sptr->sockhost) && (sptr->sockhost > tmpstr && isdigit(*(tmpstr - 1))) )
-			    || (sptr->sockhost[0] == ':'))
-				strlcpy(sptr->sockhost, Inet_ia2p(&sptr->ip), sizeof(sptr->sockhost));
+			if (*tmpstr || !*user->realhost || (isdigit(*sptr->localClient->sockhost) && (sptr->localClient->sockhost > tmpstr && isdigit(*(tmpstr - 1))) )
+			    || (sptr->localClient->sockhost[0] == ':'))
+				strlcpy(sptr->localClient->sockhost, Inet_ia2p(&sptr->localClient->ip), sizeof(sptr->localClient->sockhost));
 		}
-		strlcpy(user->realhost, sptr->sockhost, sizeof(sptr->sockhost)); /* SET HOSTNAME */
+		strlcpy(user->realhost, sptr->localClient->sockhost, sizeof(sptr->localClient->sockhost)); /* SET HOSTNAME */
 
 		/*
 		 * I do not consider *, ~ or ! 'hostile' in usernames,
@@ -1283,7 +1283,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			sendto_one(cptr,
 			    ":%s %d %s :*** You are not welcome on this server (%s)"
 			    " Email %s for more information.",
-			    me.name, ERR_YOUREBANNEDCREEP,
+			    me.client.name, ERR_YOUREBANNEDCREEP,
 			    cptr->name, bconf->reason ? bconf->reason : "",
 			    KLINE_ADDRESS);
 			return exit_client(cptr, cptr, cptr, "You are banned");
@@ -1294,10 +1294,10 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			sendto_one(cptr,
 			    ":%s %d %s :*** Your GECOS (real name) is not allowed on this server (%s)"
 			    " Please change it and reconnect",
-			    me.name, ERR_YOUREBANNEDCREEP,
+			    me.client.name, ERR_YOUREBANNEDCREEP,
 			    cptr->name, bconf->reason ? bconf->reason : "");
 
-			return exit_client(cptr, sptr, &me,
+			return exit_client(cptr, sptr, &me.client,
 			    "Your GECOS (real name) is banned from this server");
 		}
 		tkl_check_expire(NULL);
@@ -1345,7 +1345,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		snprintf(descbuf, sizeof descbuf, "Client: %s", nick);
 		fd_desc(sptr->fd, descbuf);
 
-		list_move(&sptr->lclient_node, &lclient_list);
+		list_move(&sptr->localClient->lclient_node, &lclient_list);
 
 		while (hash_find_id((id = uid_get()), NULL) != NULL)
 			;
@@ -1360,34 +1360,34 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		else
 			ircd_log(LOG_CLIENT, "Connect - %s!%s@%s", nick, user->username,
 				user->realhost);
-		sendto_one(sptr, rpl_str(RPL_WELCOME), me.name, nick,
+		sendto_one(sptr, rpl_str(RPL_WELCOME), me.client.name, nick,
 		    ircnetwork, nick, user->username, user->realhost);
 		/* This is a duplicate of the NOTICE but see below... */
-			sendto_one(sptr, rpl_str(RPL_YOURHOST), me.name, nick,
-			    me.name, version);
-		sendto_one(sptr, rpl_str(RPL_CREATED), me.name, nick, creation);
-		sendto_one(sptr, rpl_str(RPL_MYINFO), me.name, parv[0],
-		    me.name, version, umodestring, cmodestring);
+			sendto_one(sptr, rpl_str(RPL_YOURHOST), me.client.name, nick,
+			    me.client.name, version);
+		sendto_one(sptr, rpl_str(RPL_CREATED), me.client.name, nick, creation);
+		sendto_one(sptr, rpl_str(RPL_MYINFO), me.client.name, parv[0],
+		    me.client.name, version, umodestring, cmodestring);
 
 		for (i = 0; IsupportStrings[i]; i++)
-			sendto_one(sptr, rpl_str(RPL_ISUPPORT), me.name, nick, IsupportStrings[i]);
+			sendto_one(sptr, rpl_str(RPL_ISUPPORT), me.client.name, nick, IsupportStrings[i]);
 
-		sendto_one(sptr, rpl_str(RPL_YOURID), me.name, nick, sptr->id);
+		sendto_one(sptr, rpl_str(RPL_YOURID), me.client.name, nick, sptr->id);
 
 #ifdef USE_SSL
 		if (sptr->flags & FLAGS_SSL)
-			if (sptr->ssl)
+			if (sptr->localClient->ssl)
 				sendto_one(sptr,
 				    ":%s NOTICE %s :*** You are connected to %s with %s",
-				    me.name, sptr->name, me.name,
-				    ssl_get_cipher(sptr->ssl));
+				    me.client.name, sptr->name, me.client.name,
+				    ssl_get_cipher(sptr->localClient->ssl));
 #endif
 		do_cmd(sptr, sptr, "LUSERS", 1, parv);
 		short_motd(sptr);
 #ifdef EXPERIMENTAL
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** \2NOTE:\2 This server is running experimental IRC server software (Unreal%s). If you find any bugs or problems, please report them at http://bugs.unrealircd.org/",
-		    me.name, sptr->name, VERSIONONLY);
+		    me.client.name, sptr->name, VERSIONONLY);
 #endif
 #ifdef HOSTILENAME
 		/*
@@ -1395,7 +1395,7 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		 * anything, happened.
 		 */
 		if (u1)
-			sendto_one(sptr, err_str(ERR_HOSTILENAME), me.name,
+			sendto_one(sptr, err_str(ERR_HOSTILENAME), me.client.name,
 			    sptr->name, olduser, userbad, stripuser);
 #endif
 		if (IsSecure(sptr))
@@ -1411,9 +1411,9 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			    ("Bad USER [%s] :%s USER %s %s : No such server",
 			    cptr->name, nick, user->username, user->server);
 			sendto_one(cptr, ":%s KILL %s :%s (No such server: %s)",
-			    me.name, sptr->name, me.name, user->server);
+			    me.client.name, sptr->name, me.client.name, user->server);
 			sptr->flags |= FLAGS_KILLED;
-			return exit_client(sptr, sptr, &me,
+			return exit_client(sptr, sptr, &me.client,
 			    "USER without prefix(2.8) or wrong prefix");
 		}
 		else if (acptr->from != sptr->from)
@@ -1422,10 +1422,10 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			    cptr->name, nick, user->username, user->server,
 			    acptr->name, acptr->from->name);
 			sendto_one(cptr, ":%s KILL %s :%s (%s != %s[%s])",
-			    me.name, sptr->name, me.name, user->server,
-			    acptr->from->name, acptr->from->sockhost);
+			    me.client.name, sptr->name, me.client.name, user->server,
+			    acptr->from->name, acptr->from->localClient->sockhost);
 			sptr->flags |= FLAGS_KILLED;
-			return exit_client(sptr, sptr, &me,
+			return exit_client(sptr, sptr, &me.client,
 			    "USER server wrong direction");
 		}
 		else
@@ -1478,11 +1478,11 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 
 		sendto_connectnotice(nick, user, sptr, 0, NULL); /* moved down, for modules. */
 
-		/* Send password from sptr->passwd to NickServ for identification,
+		/* Send password from sptr->localClient->passwd to NickServ for identification,
 		 * if passwd given and if NickServ is online.
 		 * - by taz, modified by Wizzu
 		 */
-		if (sptr->passwd && (nsptr = find_person(NickServ, NULL)))
+		if (sptr->localClient->passwd && (nsptr = find_person(NickServ, NULL)))
 		{
 			int do_identify = 1;
 			Hook *h;
@@ -1498,14 +1498,14 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 			if (do_identify)
 				sendto_one(nsptr, ":%s PRIVMSG %s@%s :IDENTIFY %s",
 				    sptr->name,
-				    NickServ, SERVICES_NAME, sptr->passwd);
+				    NickServ, SERVICES_NAME, sptr->localClient->passwd);
 		}
 		if (buf[0] != '\0' && buf[1] != '\0')
 			sendto_one(cptr, ":%s MODE %s :%s", cptr->name,
 			    cptr->name, buf);
 		if (user->snomask)
 			sendto_one(sptr, rpl_str(RPL_SNOMASK),
-				me.name, sptr->name, get_snostr(user->snomask));
+				me.client.name, sptr->name, get_snostr(user->snomask));
 		strlcpy(userhost,make_user_host(cptr->user->username, cptr->user->realhost), sizeof(userhost));
 
 		/* NOTE: Code after this 'if (savetkl)' will not be executed for quarantined-
@@ -1539,10 +1539,10 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 		/* NOTE: If you add something here.. be sure to check the 'if (savetkl)' note above */
 	}
 
-	if (MyConnect(sptr) && !BadPtr(sptr->passwd))
+	if (MyConnect(sptr) && !BadPtr(sptr->localClient->passwd))
 	{
-		MyFree(sptr->passwd);
-		sptr->passwd = NULL;
+		MyFree(sptr->localClient->passwd);
+		sptr->localClient->passwd = NULL;
 	}
 	return 0;
 }

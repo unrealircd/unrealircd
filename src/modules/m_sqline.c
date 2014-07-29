@@ -87,7 +87,7 @@ DLLFUNC int m_sqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	char    mo[1024];
 	char *comment = (parc == 3) ? parv[2] : NULL;
 	char *tkllayer[9] = {
-                me.name,        /*0  server.name */
+                me.client.name,        /*0  server.name */
                 "+",            /*1  +|- */
                 "Q",            /*2  G   */
                 "*" ,           /*3  user */
@@ -107,5 +107,5 @@ DLLFUNC int m_sqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	ircsnprintf(mo, sizeof(mo), "%li", TStime());
 	tkllayer[7] = mo;
         tkllayer[8] = comment ? comment : "no reason";
-        return m_tkl(&me, &me, 9, tkllayer);
+        return m_tkl(&me.client, &me.client, 9, tkllayer);
 }

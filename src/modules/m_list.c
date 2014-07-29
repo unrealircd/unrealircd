@@ -123,7 +123,7 @@ DLLFUNC CMD_FUNC(m_list)
 	/* If a /list is in progress, then another one will cancel it */
 	if ((lopt = sptr->user->lopt) != NULL)
 	{
-		sendto_one(sptr, rpl_str(RPL_LISTEND), me.name, parv[0]);
+		sendto_one(sptr, rpl_str(RPL_LISTEND), me.client.name, parv[0]);
 		free_str_list(sptr->user->lopt->yeslist);
 		free_str_list(sptr->user->lopt->nolist);
 		MyFree(sptr->user->lopt);
@@ -134,13 +134,13 @@ DLLFUNC CMD_FUNC(m_list)
 	if (parc < 2 || BadPtr(parv[1]))
 	{
 
-		sendto_one(sptr, rpl_str(RPL_LISTSTART), me.name, parv[0]);
+		sendto_one(sptr, rpl_str(RPL_LISTSTART), me.client.name, parv[0]);
 		lopt = sptr->user->lopt = (LOpts *) MyMalloc(sizeof(LOpts));
 		memset(lopt, '\0', sizeof(LOpts));
 
 		lopt->showall = 1;
 
-		if (DBufLength(&cptr->sendQ) < 2048)
+		if (DBufLength(&cptr->localClient->sendQ) < 2048)
 			send_list(cptr, 64);
 
 		return 0;
@@ -151,11 +151,11 @@ DLLFUNC CMD_FUNC(m_list)
 		char **ptr = usage;
 		for (; *ptr; ptr++)
 			sendto_one(sptr, rpl_str(RPL_LISTSYNTAX),
-			    me.name, cptr->name, *ptr);
+			    me.client.name, cptr->name, *ptr);
 		return 0;
 	}
 
-	sendto_one(sptr, rpl_str(RPL_LISTSTART), me.name, parv[0]);
+	sendto_one(sptr, rpl_str(RPL_LISTSTART), me.client.name, parv[0]);
 
 	chantimemax = topictimemax = currenttime + 86400;
 	chantimemin = topictimemin = 0;
@@ -190,7 +190,7 @@ DLLFUNC CMD_FUNC(m_list)
 				    doall = 1;
 				    break;
 			    default:
-				    sendto_one(sptr, err_str(ERR_LISTSYNTAX), me.name, cptr->name);
+				    sendto_one(sptr, err_str(ERR_LISTSYNTAX), me.client.name, cptr->name);
 				    error = 1;
 			  }
 			  break;
@@ -213,7 +213,7 @@ DLLFUNC CMD_FUNC(m_list)
 			    default:
 				    sendto_one(sptr,
 					err_str(ERR_LISTSYNTAX),
-					me.name, cptr->name,
+					me.client.name, cptr->name,
 					"Bad list syntax, type /list ?");
 				    error = 1;
 			  }
@@ -260,7 +260,7 @@ DLLFUNC CMD_FUNC(m_list)
 #endif
 					  sendto_one(sptr,
 					      rpl_str(RPL_LIST),
-					      me.name, parv[0],
+					      me.client.name, parv[0],
 					      name, chptr->users,
 #ifdef LIST_SHOW_MODES
 					      modebuf,
@@ -285,12 +285,12 @@ DLLFUNC CMD_FUNC(m_list)
 		lopt->nolist = nolist;
 		lopt->yeslist = yeslist;
 
-		if (DBufLength(&cptr->sendQ) < 2048)
+		if (DBufLength(&cptr->localClient->sendQ) < 2048)
 			send_list(cptr, 64);
 		return 0;
 	}
 
-	sendto_one(sptr, rpl_str(RPL_LISTEND), me.name, parv[0]);
+	sendto_one(sptr, rpl_str(RPL_LISTEND), me.client.name, parv[0]);
 
 	return 0;
 }
@@ -325,7 +325,7 @@ void _send_list(aClient *cptr, int numsend)
 			if (find_channel(x->chname, (aChannel *)NULL))
 				continue; /* exists, >0 users.. will be sent later */
 			sendto_one(cptr,
-			    rpl_str(RPL_LIST), me.name,
+			    rpl_str(RPL_LIST), me.client.name,
 			    cptr->name, x->chname,
 			    0,
 #ifdef LIST_SHOW_MODES
@@ -387,7 +387,7 @@ void _send_list(aClient *cptr, int numsend)
 #endif
 				if (!OPCanSeeSecret(cptr))
 					sendto_one(cptr,
-					    rpl_str(RPL_LIST), me.name,
+					    rpl_str(RPL_LIST), me.client.name,
 					    cptr->name,
 					    ShowChannel(cptr,
 					    chptr) ? chptr->chname :
@@ -401,7 +401,7 @@ void _send_list(aClient *cptr, int numsend)
 					    chptr->topic : "") : "");
 				else
 					sendto_one(cptr,
-					    rpl_str(RPL_LIST), me.name,
+					    rpl_str(RPL_LIST), me.client.name,
 					    cptr->name, chptr->chname,
 					    chptr->users,
 #ifdef LIST_SHOW_MODES
@@ -417,7 +417,7 @@ void _send_list(aClient *cptr, int numsend)
 	/* All done */
 	if (hashnum == CH_MAX)
 	{
-		sendto_one(cptr, rpl_str(RPL_LISTEND), me.name, cptr->name);
+		sendto_one(cptr, rpl_str(RPL_LISTEND), me.client.name, cptr->name);
 		free_str_list(cptr->user->lopt->yeslist);
 		free_str_list(cptr->user->lopt->nolist);
 		MyFree(cptr->user->lopt);

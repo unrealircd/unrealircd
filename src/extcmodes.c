@@ -234,10 +234,10 @@ aChannel *chptr;
 		if (chptr->mode.extmode && cmode->mode)
 		{
 			/* Unset channel mode and send MODE -<char> to other servers */
-			sendto_channel_butserv(chptr, &me, ":%s MODE %s -%c",
-				me.name, chptr->chname, cmode->flag);
+			sendto_channel_butserv(chptr, &me.client, ":%s MODE %s -%c",
+				me.client.name, chptr->chname, cmode->flag);
 			sendto_server(NULL, 0, 0, ":%s MODE %s -%c 0",
-				me.name, chptr->chname, cmode->flag);
+				me.client.name, chptr->chname, cmode->flag);
 			chptr->mode.extmode &= ~cmode->mode;
 		}	
 
@@ -352,7 +352,7 @@ int extcmode_default_requirechop(aClient *cptr, aChannel *chptr, char mode, char
 	if (IsPerson(cptr) && is_chan_op(cptr, chptr))
 		return EX_ALLOW;
 	if (checkt == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
-		sendto_one(cptr, err_str(ERR_NOTFORHALFOPS), me.name, cptr->name, mode);
+		sendto_one(cptr, err_str(ERR_NOTFORHALFOPS), me.client.name, cptr->name, mode);
 	return EX_DENY;
 }
 

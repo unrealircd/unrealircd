@@ -165,7 +165,7 @@ inline void parse_addlag(aClient *cptr, int cmdbytes)
 {
 	if (!IsServer(cptr) && !IsNoFakeLag(cptr) &&
 #ifdef FAKELAG_CONFIGURABLE
-		!(cptr->class && (cptr->class->options & CLASS_OPT_NOFAKELAG)) && 
+		!(cptr->localClient->class && (cptr->localClient->class->options & CLASS_OPT_NOFAKELAG)) && 
 #endif
 #ifdef NO_FAKE_LAG_FOR_LOCOPS	
 	!IsAnOper(cptr))
@@ -173,7 +173,7 @@ inline void parse_addlag(aClient *cptr, int cmdbytes)
 	!IsOper(cptr))
 #endif		
 	{
-		cptr->since += (1 + cmdbytes/90);
+		cptr->localClient->since += (1 + cmdbytes/90);
 	}		
 }
 
@@ -197,7 +197,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 
 	for(h = Hooks[HOOKTYPE_PACKET]; h; h = h->next) {
 		buf_len = (int)(bufend - buffer);
-		(*(h->func.intfunc))(from, &me, &buffer, &buf_len);
+		(*(h->func.intfunc))(from, &me.client, &buffer, &buf_len);
 		if(!buffer) return 0;
 		bufend = buffer + buf_len;
 	}
@@ -207,10 +207,10 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 	if (IsDead(cptr))
 		return 0;
 
-	if ((cptr->receiveK >= UNKNOWN_FLOOD_AMOUNT) && IsUnknown(cptr))
+	if ((cptr->localClient->receiveK >= UNKNOWN_FLOOD_AMOUNT) && IsUnknown(cptr))
 	{
 		sendto_snomask(SNO_FLOOD, "Flood from unknown connection %s detected",
-			cptr->sockhost);
+			cptr->localClient->sockhost);
 		ban_flooder(cptr);
 		return FLUSH_BUFFER;
 	}
@@ -286,7 +286,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 		Debug((DEBUG_NOTICE, "Empty message from host %s:%s",
 		    cptr->name, from->name));
 		if (!IsServer(cptr))
-			cptr->since++; /* 1s fake lag */
+			cptr->localClient->since++; /* 1s fake lag */
 		return (-1);
 	}
 
@@ -344,7 +344,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 			 */
 			if (!IsRegistered(cptr) && stricmp(ch, "NOTICE")) {
 				sendto_one(from, ":%s %d %s :You have not registered",
-				    me.name, ERR_NOTREGISTERED, ch);
+				    me.client.name, ERR_NOTREGISTERED, ch);
 				parse_addlag(cptr, bytes);
 				return -1;
 			}
@@ -356,7 +356,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 				if (IsPerson(from))
 					sendto_one(from,
 					    ":%s %d %s %s :Unknown command",
-					    me.name, ERR_UNKNOWNCOMMAND,
+					    me.client.name, ERR_UNKNOWNCOMMAND,
 					    from->name, ch);
 				Debug((DEBUG_ERROR, "Unknown (%s) from %s",
 				    ch, get_client_name(cptr, TRUE)));
@@ -368,7 +368,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 		if (cmptr->flags != 0) { /* temporary until all commands are updated */
 		if ((flags & M_USER) && !(cmptr->flags & M_USER))
 		{
-			sendto_one(cptr, rpl_str(ERR_NOTFORUSERS), me.name,
+			sendto_one(cptr, rpl_str(ERR_NOTFORUSERS), me.client.name,
 					from->name, cmptr->cmd);
 			return -1;
 		}
@@ -378,7 +378,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 		if ((cmptr->flags & M_OPER) && !(flags & M_OPER))
 		{
 			sendto_one(cptr, rpl_str(ERR_NOPRIVILEGES), 
-					me.name, from->name);
+					me.client.name, from->name);
 			return -1;
 		}
 		paramcount = cmptr->parameters;
@@ -438,7 +438,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 		return (do_numeric(numeric, cptr, from, i, para));
 	cmptr->count++;
 	if (IsRegisteredUser(cptr) && (cmptr->flags & M_RESETIDLE))
-		cptr->last = TStime();
+		cptr->localClient->last = TStime();
 
 #ifndef DEBUGMODE
 	if (cmptr->flags & M_ALIAS)
@@ -477,7 +477,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 static int cancel_clients(aClient *cptr, aClient *sptr, char *cmd)
 {
 	if (IsServer(cptr) || IsServer(sptr) || IsMe(sptr)) return 0;
-	return exit_client(cptr, cptr, &me, "Fake prefix");
+	return exit_client(cptr, cptr, &me.client, "Fake prefix");
 }
 
 static void remove_unknown(aClient *cptr, char *sender)
@@ -500,8 +500,8 @@ static void remove_unknown(aClient *cptr, char *sender)
 	 */
 	if (!index(sender, '.') && !isdigit(*sender))
 		sendto_one(cptr, ":%s KILL %s :%s (%s(?) <- %s)",
-		    me.name, sender, me.name, sender, cptr->name);
+		    me.client.name, sender, me.client.name, sender, cptr->name);
 	else
 		sendto_one(cptr, ":%s SQUIT %s :(Unknown from %s)",
-		    me.name, sender, get_client_name(cptr, FALSE));
+		    me.client.name, sender, get_client_name(cptr, FALSE));
 }

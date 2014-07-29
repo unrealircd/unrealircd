@@ -101,39 +101,39 @@ DLLFUNC CMD_FUNC(m_starttls)
 #endif
 	{
 		/* Pretend STARTTLS is an unknown command, this is the safest approach */
-		sendto_one(sptr, err_str(ERR_NOTREGISTERED), me.name, "STARTTLS");
+		sendto_one(sptr, err_str(ERR_NOTREGISTERED), me.client.name, "STARTTLS");
 		return 0;
 	}
 
 #ifdef USE_SSL
 	if (iConf.ssl_options & SSLFLAG_NOSTARTTLS)
 	{
-		sendto_one(sptr, err_str(ERR_NOTREGISTERED), me.name, "STARTTLS");
+		sendto_one(sptr, err_str(ERR_NOTREGISTERED), me.client.name, "STARTTLS");
 		return 0;
 	}
 
 	if (IsSecure(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_STARTTLS), me.name, !BadPtr(sptr->name) ? sptr->name : "*", "STARTTLS failed. Already using TLS.");
+		sendto_one(sptr, err_str(ERR_STARTTLS), me.client.name, !BadPtr(sptr->name) ? sptr->name : "*", "STARTTLS failed. Already using TLS.");
 		return 0;
 	}
 
-	dbuf_delete(&sptr->recvQ, 1000000); /* Clear up any remaining plaintext commands */
-	sendto_one(sptr, rpl_str(RPL_STARTTLS), me.name, !BadPtr(sptr->name) ? sptr->name : "*");
+	dbuf_delete(&sptr->localClient->recvQ, 1000000); /* Clear up any remaining plaintext commands */
+	sendto_one(sptr, rpl_str(RPL_STARTTLS), me.client.name, !BadPtr(sptr->name) ? sptr->name : "*");
 	send_queued(sptr);
 
 	SetSSLStartTLSHandshake(sptr);
-	Debug((DEBUG_DEBUG, "Starting SSL handshake (due to STARTTLS) for %s", sptr->sockhost));
-	if ((sptr->ssl = SSL_new(ctx_server)) == NULL)
+	Debug((DEBUG_DEBUG, "Starting SSL handshake (due to STARTTLS) for %s", sptr->localClient->sockhost));
+	if ((sptr->localClient->ssl = SSL_new(ctx_server)) == NULL)
 		goto fail;
 	sptr->flags |= FLAGS_SSL;
-	SSL_set_fd(sptr->ssl, sptr->fd);
-	SSL_set_nonblocking(sptr->ssl);
+	SSL_set_fd(sptr->localClient->ssl, sptr->fd);
+	SSL_set_nonblocking(sptr->localClient->ssl);
 	if (!ircd_SSL_accept(sptr, sptr->fd)) {
-		Debug((DEBUG_DEBUG, "Failed SSL accept handshake in instance 1: %s", sptr->sockhost));
-		SSL_set_shutdown(sptr->ssl, SSL_RECEIVED_SHUTDOWN);
-		SSL_smart_shutdown(sptr->ssl);
-		SSL_free(sptr->ssl);
+		Debug((DEBUG_DEBUG, "Failed SSL accept handshake in instance 1: %s", sptr->localClient->sockhost));
+		SSL_set_shutdown(sptr->localClient->ssl, SSL_RECEIVED_SHUTDOWN);
+		SSL_smart_shutdown(sptr->localClient->ssl);
+		SSL_free(sptr->localClient->ssl);
 		goto fail;
 	}
 
@@ -141,8 +141,8 @@ DLLFUNC CMD_FUNC(m_starttls)
 	return 0;
 fail:
 	/* Failure */
-	sendto_one(sptr, err_str(ERR_STARTTLS), me.name, !BadPtr(sptr->name) ? sptr->name : "*", "STARTTLS failed");
-	sptr->ssl = NULL;
+	sendto_one(sptr, err_str(ERR_STARTTLS), me.client.name, !BadPtr(sptr->name) ? sptr->name : "*", "STARTTLS failed");
+	sptr->localClient->ssl = NULL;
 	sptr->flags &= ~FLAGS_SSL;
 	SetUnknown(sptr);
 	return 0;

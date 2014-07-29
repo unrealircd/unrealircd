@@ -94,7 +94,7 @@ DLLFUNC CMD_FUNC(m_user)
 	if (IsServer(cptr) && !IsUnknown(sptr))
 		return 0;
 
-	if (MyConnect(sptr) && (sptr->listener->options & LISTENER_SERVERSONLY))
+	if (MyConnect(sptr) && (sptr->localClient->listener->options & LISTENER_SERVERSONLY))
 	{
 		return exit_client(cptr, sptr, sptr,
 		    "This port is for servers only");
@@ -106,7 +106,7 @@ DLLFUNC CMD_FUNC(m_user)
 	    *parv[3] == '\0' || *parv[4] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "USER");
+		    me.client.name, parv[0], "USER");
 		if (IsServer(cptr))
 			sendto_ops("bad USER param count for %s from %s",
 			    parv[0], get_client_name(cptr, FALSE));
@@ -171,7 +171,7 @@ DLLFUNC CMD_FUNC(m_user)
 	if (!IsUnknown(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_ALREADYREGISTRED),
-		    me.name, parv[0]);
+		    me.client.name, parv[0]);
 		return 0;
 	}
 
@@ -189,9 +189,9 @@ DLLFUNC CMD_FUNC(m_user)
 	 * this was copying user supplied data directly into user->realhost
 	 * which seemed bad. Not to say this is much better ;p. -- Syzop
 	 */
-	strlcpy(user->realhost, Inet_ia2p(&sptr->ip), sizeof(user->realhost));
+	strlcpy(user->realhost, Inet_ia2p(&sptr->localClient->ip), sizeof(user->realhost));
 	if (!user->ip_str)
-		user->ip_str = strdup(Inet_ia2p(&sptr->ip));
+		user->ip_str = strdup(Inet_ia2p(&sptr->localClient->ip));
 	user->server = me_hash;
       user_finish:
 	if (sstamp != NULL && *sstamp != '*')
@@ -205,7 +205,7 @@ DLLFUNC CMD_FUNC(m_user)
 	{
 		if (USE_BAN_VERSION && MyConnect(sptr))
 			sendto_one(sptr, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
-				me.name, sptr->name);
+				me.client.name, sptr->name);
 		if (strlen(username) > USERLEN)
 			username[USERLEN] = '\0'; /* cut-off */
 		return(

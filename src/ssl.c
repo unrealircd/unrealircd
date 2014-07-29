@@ -422,9 +422,9 @@ int  ssl_handshake(aClient *cptr)
 		return -1;
 	}
 
-	cptr->ssl = SSL_new(ctx_server);
-	CHK_NULL(cptr->ssl);
-	SSL_set_fd((SSL *) cptr->ssl, cptr->fd);
+	cptr->localClient->ssl = SSL_new(ctx_server);
+	CHK_NULL(cptr->localClient->ssl);
+	SSL_set_fd((SSL *) cptr->localClient->ssl, cptr->fd);
 	set_non_blocking(cptr->fd, cptr);
 	/* 
 	 *  if necessary, SSL_write() will negotiate a TLS/SSL session, if not already explicitly
@@ -434,10 +434,10 @@ int  ssl_handshake(aClient *cptr)
 	 *   
 	 */
 	if (!ircd_SSL_accept(cptr, cptr->fd)) {
-		SSL_set_shutdown((SSL *)cptr->ssl, SSL_RECEIVED_SHUTDOWN);
-		SSL_smart_shutdown((SSL *)cptr->ssl);
-		SSL_free((SSL *)cptr->ssl);
-		cptr->ssl = NULL;
+		SSL_set_shutdown((SSL *)cptr->localClient->ssl, SSL_RECEIVED_SHUTDOWN);
+		SSL_smart_shutdown((SSL *)cptr->localClient->ssl);
+		SSL_free((SSL *)cptr->localClient->ssl);
+		cptr->localClient->ssl = NULL;
 		return -1;
 	}
 	return 0;
@@ -456,19 +456,19 @@ int  ssl_handshake(aClient *cptr)
 */
 int  ssl_client_handshake(aClient *cptr, ConfigItem_link *l)
 {
-	cptr->ssl = SSL_new((SSL_CTX *)ctx_client);
-	if (!cptr->ssl)
+	cptr->localClient->ssl = SSL_new((SSL_CTX *)ctx_client);
+	if (!cptr->localClient->ssl)
 	{
 		sendto_realops("Couldn't SSL_new(ctx_client) on %s",
 			get_client_name(cptr, FALSE));
 		return -1;
 	}
 /*	set_blocking(cptr->fd); */
-	SSL_set_fd((SSL *)cptr->ssl, cptr->fd);
-	SSL_set_connect_state((SSL *)cptr->ssl);
+	SSL_set_fd((SSL *)cptr->localClient->ssl, cptr->fd);
+	SSL_set_connect_state((SSL *)cptr->localClient->ssl);
 	if (l && l->ciphers)
 	{
-		if (SSL_set_cipher_list((SSL *)cptr->ssl, 
+		if (SSL_set_cipher_list((SSL *)cptr->localClient->ssl, 
 			l->ciphers) == 0)
 		{
 			/* We abort */
@@ -477,7 +477,7 @@ int  ssl_client_handshake(aClient *cptr, ConfigItem_link *l)
 			return -2;
 		}
 	}
-	if (SSL_connect((SSL *)cptr->ssl) <= 0)
+	if (SSL_connect((SSL *)cptr->localClient->ssl) <= 0)
 	{
 #if 0
 		sendto_realops("Couldn't SSL_connect");
@@ -531,29 +531,29 @@ void ircd_SSL_client_handshake(int fd, int revents, void *data)
 		return;
 	}
 
-	acptr->ssl = SSL_new(ctx_client);
-	if (!acptr->ssl)
+	acptr->localClient->ssl = SSL_new(ctx_client);
+	if (!acptr->localClient->ssl)
 	{
 		sendto_realops("Failed to SSL_new(ctx_client)");
 		return;
 	}
-	SSL_set_fd(acptr->ssl, acptr->fd);
-	SSL_set_connect_state(acptr->ssl);
-	SSL_set_nonblocking(acptr->ssl);
+	SSL_set_fd(acptr->localClient->ssl, acptr->fd);
+	SSL_set_connect_state(acptr->localClient->ssl);
+	SSL_set_nonblocking(acptr->localClient->ssl);
         if (iConf.ssl_renegotiate_bytes > 0)
 	{
-          BIO_set_ssl_renegotiate_bytes(SSL_get_rbio(acptr->ssl), iConf.ssl_renegotiate_bytes);
-          BIO_set_ssl_renegotiate_bytes(SSL_get_wbio(acptr->ssl), iConf.ssl_renegotiate_bytes);
+          BIO_set_ssl_renegotiate_bytes(SSL_get_rbio(acptr->localClient->ssl), iConf.ssl_renegotiate_bytes);
+          BIO_set_ssl_renegotiate_bytes(SSL_get_wbio(acptr->localClient->ssl), iConf.ssl_renegotiate_bytes);
         }
         if (iConf.ssl_renegotiate_timeout > 0)
         {
-          BIO_set_ssl_renegotiate_timeout(SSL_get_rbio(acptr->ssl), iConf.ssl_renegotiate_timeout);
-          BIO_set_ssl_renegotiate_timeout(SSL_get_wbio(acptr->ssl), iConf.ssl_renegotiate_timeout);
+          BIO_set_ssl_renegotiate_timeout(SSL_get_rbio(acptr->localClient->ssl), iConf.ssl_renegotiate_timeout);
+          BIO_set_ssl_renegotiate_timeout(SSL_get_wbio(acptr->localClient->ssl), iConf.ssl_renegotiate_timeout);
         }
 
 	if (acptr->serv && acptr->serv->conf->ciphers)
 	{
-		if (SSL_set_cipher_list((SSL *)acptr->ssl, 
+		if (SSL_set_cipher_list((SSL *)acptr->localClient->ssl, 
 			acptr->serv->conf->ciphers) == 0)
 		{
 			/* We abort */
@@ -593,8 +593,8 @@ int ircd_SSL_accept(aClient *acptr, int fd) {
 
     int ssl_err;
 
-    if((ssl_err = SSL_accept((SSL *)acptr->ssl)) <= 0) {
-	switch(ssl_err = SSL_get_error((SSL *)acptr->ssl, ssl_err)) {
+    if((ssl_err = SSL_accept((SSL *)acptr->localClient->ssl)) <= 0) {
+	switch(ssl_err = SSL_get_error((SSL *)acptr->localClient->ssl, ssl_err)) {
 	    case SSL_ERROR_SYSCALL:
 		if (ERRNO == P_EINTR || ERRNO == P_EWOULDBLOCK
 			|| ERRNO == P_EAGAIN)
@@ -629,8 +629,8 @@ static void ircd_SSL_connect_retry(int fd, int revents, void *data)
 int ircd_SSL_connect(aClient *acptr, int fd) {
 
     int ssl_err;
-    if((ssl_err = SSL_connect((SSL *)acptr->ssl)) <= 0) {
-	ssl_err = SSL_get_error((SSL *)acptr->ssl, ssl_err);
+    if((ssl_err = SSL_connect((SSL *)acptr->localClient->ssl)) <= 0) {
+	ssl_err = SSL_get_error((SSL *)acptr->localClient->ssl, ssl_err);
 	switch(ssl_err) {
 	    case SSL_ERROR_SYSCALL:
 		if (ERRNO == P_EINTR || ERRNO == P_EWOULDBLOCK
@@ -735,18 +735,18 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, aClient *sptr
 		 * send a closing link error...
 		 */
 		sendto_locfailops("Lost connection to %s: %s: %d (%s)", get_client_name(sptr, FALSE), ssl_func, ssl_error, ssl_errstr);
-		sendto_server(&me, 0, 0, ":%s GLOBOPS :Lost connection to server %s: %s: %d (%s)",
-		  me.name, get_client_name(sptr, FALSE), ssl_func, ssl_error, ssl_errstr);
+		sendto_server(&me.client, 0, 0, ":%s GLOBOPS :Lost connection to server %s: %s: %d (%s)",
+		  me.client.name, get_client_name(sptr, FALSE), ssl_func, ssl_error, ssl_errstr);
 		/* sendto_failops_whoare_opers("Closing link: %s: %s - %s", ssl_func, ssl_errstr, get_client_name(sptr, FALSE)); */
 	}
 	
 	if (errtmp)
 	{
 		SET_ERRNO(errtmp);
-		sptr->error_str = strdup(strerror(errtmp));
+		sptr->localClient->error_str = strdup(strerror(errtmp));
 	} else {
 		SET_ERRNO(P_EIO);
-		sptr->error_str = strdup(ssl_errstr);
+		sptr->localClient->error_str = strdup(ssl_errstr);
 	}
 	
     /* deregister I/O notification since we don't care anymore. the actual closing of socket will happen later. */

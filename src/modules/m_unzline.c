@@ -85,11 +85,11 @@ DLLFUNC int m_unzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
         if (!MyClient(sptr) || !OPCanZline(sptr))
         {
-                sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+                sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
                 return 0;
         }
 
-        sendto_one(sptr, ":%s NOTICE %s :Please use /zline -user@host", me.name, parv[0]);
+        sendto_one(sptr, ":%s NOTICE %s :Please use /zline -user@host", me.client.name, parv[0]);
 
 	return 0;
 }

@@ -215,94 +215,94 @@ static inline char *stats_combine_parv(char *p1, char *p2)
 
 static inline void stats_help(aClient *sptr)
 {
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name, "/Stats flags:");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name, "/Stats flags:");
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"B - banversion - Send the ban version list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"b - badword - Send the badwords list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"C - link - Send the link block list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"d - denylinkauto - Send the deny link (auto) block list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"D - denylinkall - Send the deny link (all) block list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"e - exceptthrottle - Send the except throttle block list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"E - exceptban - Send the except ban and except tkl block list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"f - spamfilter - Send the spamfilter list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"F - denydcc - Send the deny dcc and allow dcc block lists");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"G - gline - Send the gline and gzline list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"  Extended flags: [+/-mrs] [mask] [reason] [setby]");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"   m Return glines matching/not matching the specified mask");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"   r Return glines with a reason matching/not matching the specified reason");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"   s Return glines set by/not set by clients matching the specified name");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"I - allow - Send the allow block list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"j - officialchans - Send the offical channels list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"K - kline - Send the ban user/ban ip/except ban block list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"l - linkinfo - Send link information");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"L - linkinfoall - Send all link information");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"M - command - Send list of how many times each command was used");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"n - banrealname - Send the ban realname block list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"O - oper - Send the oper block list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"P - port - Send information about ports");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"q - bannick - Send the ban nick block list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"Q - sqline - Send the global qline list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"r - chanrestrict - Send the channel deny/allow block list");
 #ifdef DEBUGMODE
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"R - usage - Send usage information");
 #endif
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"S - set - Send the set block list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"s - shun - Send the shun list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"  Extended flags: [+/-mrs] [mask] [reason] [setby]");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"   m Return shuns matching/not matching the specified mask");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"   r Return shuns with a reason matching/not matching the specified reason");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"   s Return shuns set by/not set by clients matching the specified name");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"t - tld - Send the tld block list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"T - traffic - Send traffic information");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"u - uptime - Send the server uptime and connection count");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"U - uline - Send the ulines block list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"v - denyver - Send the deny version block list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"V - vhost - Send the vhost block list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"W - fdtable - Send the FD table listing");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"X - notlink - Send the list of servers that are not current linked");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"Y - class - Send the class block list");
-	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.client.name, sptr->name,
 		"Z - mem - Send memory usage information");
 }
 
@@ -382,7 +382,7 @@ DLLFUNC CMD_FUNC(m_stats)
 	if (parc < 2 || !*parv[1])
 	{
 		stats_help(sptr);
-		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, parv[0], '*');
+		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.client.name, parv[0], '*');
 		return 0;
 	}
 
@@ -391,7 +391,7 @@ DLLFUNC CMD_FUNC(m_stats)
 	{
 		if (!IsAnOper(sptr) && stats_operonly_short(parv[1][0]))
 		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);	
+			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);	
 			return 0;
 		}	
 		/* Old style, we can use a binary search here */
@@ -401,7 +401,7 @@ DLLFUNC CMD_FUNC(m_stats)
 	{
 		if (!IsAnOper(sptr) && stats_operonly_long(parv[1]))
 		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);	
+			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);	
 			return 0;
 		}
 		/* New style, search the hard way */
@@ -414,7 +414,7 @@ DLLFUNC CMD_FUNC(m_stats)
 		{
 			if (!IsAnOper(sptr) && stats_operonly_long(stat->longflag))
 			{
-				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 				return 0;
 			}
 		}
@@ -423,7 +423,7 @@ DLLFUNC CMD_FUNC(m_stats)
 		{
 			if (!IsAnOper(sptr) && stats_operonly_short(stat->flag))
 			{
-				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);	
+				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);	
 				return 0;
 			}
 		}
@@ -450,7 +450,7 @@ DLLFUNC CMD_FUNC(m_stats)
 		}
 		else
 			stat->func(sptr, NULL);
-		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, parv[0], stat->flag);
+		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.client.name, parv[0], stat->flag);
 		if (!IsULine(sptr))
 			sendto_snomask(SNO_EYES, "Stats \'%c\' requested by %s (%s@%s)",
 				stat->flag, sptr->name, sptr->user->username, GetHost(sptr));
@@ -461,7 +461,7 @@ DLLFUNC CMD_FUNC(m_stats)
 	else
 	{
 		stats_help(sptr);
-		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, parv[0], '*');
+		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.client.name, parv[0], '*');
 		return 0;
 	}
 	return 0;
@@ -474,7 +474,7 @@ int stats_banversion(aClient *sptr, char *para)
 	{
 		if (bans->flag.type != CONF_BAN_VERSION)
 			continue;
-		sendto_one(sptr, rpl_str(RPL_STATSBANVER), me.name, sptr->name,
+		sendto_one(sptr, rpl_str(RPL_STATSBANVER), me.client.name, sptr->name,
 			bans->mask, bans->reason ? bans->reason : "No Reason");
 	}
 	return 0;
@@ -489,7 +489,7 @@ int stats_links(aClient *sptr, char *para)
 	for (link_p = conf_link; link_p; link_p = (ConfigItem_link *) link_p->next)
 	{
 		sendto_one(sptr, ":%s 213 %s C %s@%s * %s %i %s %s%s%s%s%s",
-			me.name, sptr->name, IsOper(sptr) ? link_p->username : "*",
+			me.client.name, sptr->name, IsOper(sptr) ? link_p->username : "*",
 			IsOper(sptr) ? link_p->hostname : "*", link_p->servername,
 			link_p->port,
 			link_p->class->name,
@@ -504,11 +504,11 @@ int stats_links(aClient *sptr, char *para)
 #endif
 		if (link_p->hubmask)
 			sendto_one(sptr, ":%s 244 %s H %s * %s",
-				me.name, sptr->name, link_p->hubmask,
+				me.client.name, sptr->name, link_p->hubmask,
 				link_p->servername);
 		else if (link_p->leafmask)
 			sendto_one(sptr, ":%s 241 %s L %s * %s %d",
-				me.name, sptr->name,
+				me.client.name, sptr->name,
 				link_p->leafmask, link_p->servername, link_p->leafdepth);
 	}
 #ifdef DEBUGMODE
@@ -536,7 +536,7 @@ int stats_denylinkall(aClient *sptr, char *para)
 	for (links = conf_deny_link; links; links = (ConfigItem_deny_link *) links->next) 
 	{
 		if (links->flag.type == CRULE_ALL)
-			sendto_one(sptr, rpl_str(RPL_STATSDLINE), me.name, sptr->name,
+			sendto_one(sptr, rpl_str(RPL_STATSDLINE), me.client.name, sptr->name,
 			'D', links->mask, links->prettyrule);
 	}
 	return 0;
@@ -562,10 +562,10 @@ int stats_exceptban(aClient *sptr, char *para)
 	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *) excepts->next)
 	{
 		if (excepts->flag.type == CONF_EXCEPT_BAN)
-			sendto_one(sptr, rpl_str(RPL_STATSKLINE), me.name,
+			sendto_one(sptr, rpl_str(RPL_STATSKLINE), me.client.name,
 				sptr->name, "E", excepts->mask, "");
 		else if (excepts->flag.type == CONF_EXCEPT_TKL)
-			sendto_one(sptr, rpl_str(RPL_STATSEXCEPTTKL), me.name,
+			sendto_one(sptr, rpl_str(RPL_STATSEXCEPTTKL), me.client.name,
 				sptr->name, tkl_typetochar(excepts->type), excepts->mask);
 	}
 	return 0;
@@ -575,7 +575,7 @@ int stats_allow(aClient *sptr, char *para)
 {
 	ConfigItem_allow *allows;
 	for (allows = conf_allow; allows; allows = (ConfigItem_allow *) allows->next) 
-		sendto_one(sptr, rpl_str(RPL_STATSILINE), me.name,
+		sendto_one(sptr, rpl_str(RPL_STATSILINE), me.client.name,
 			sptr->name, allows->ip, allows->hostname, allows->maxperip, 
 			allows->class->name, allows->server ? allows->server 
 			: defserv, allows->port ? allows->port : 6667);
@@ -591,11 +591,11 @@ int stats_command(aClient *sptr, char *para)
 			if (mptr->count)
 #ifndef DEBUGMODE
 			sendto_one(sptr, rpl_str(RPL_STATSCOMMANDS),
-				me.name, sptr->name, mptr->cmd,
+				me.client.name, sptr->name, mptr->cmd,
 				mptr->count, mptr->bytes);
 #else
 			sendto_one(sptr, rpl_str(RPL_STATSCOMMANDS),
-				me.name, sptr->name, mptr->cmd,
+				me.client.name, sptr->name, mptr->cmd,
 				mptr->count, mptr->bytes,
 				mptr->lticks, mptr->lticks / CLOCKS_PER_SEC,
 				mptr->rticks, mptr->rticks / CLOCKS_PER_SEC);
@@ -612,14 +612,14 @@ int stats_oper(aClient *sptr, char *para)
 	{
 		if(!oper_p->from)
 			sendto_one(sptr, rpl_str(RPL_STATSOLINE),
-		  		me.name, sptr->name, 
+		  		me.client.name, sptr->name, 
 		  		'O', "(none)", oper_p->name,
 		  		oflagstr(oper_p->oflags),
 		  		oper_p->class->name ? oper_p->class->name : "");
 		else
 			for (from = (ConfigItem_oper_from *) oper_p->from; from; from = (ConfigItem_oper_from *) from->next)
 		  		sendto_one(sptr, rpl_str(RPL_STATSOLINE),
-		  			me.name, sptr->name, 
+		  			me.client.name, sptr->name, 
 		  			'O', from->name, oper_p->name,
 		  			oflagstr(oper_p->oflags),
 		  			oper_p->class->name? oper_p->class->name : "");
@@ -650,7 +650,7 @@ int stats_port(aClient *sptr, char *para)
 		if ((listener->options & LISTENER_SERVERSONLY) && !IsAnOper(sptr))
 			continue;
 	  	sendto_one(sptr, ":%s NOTICE %s :*** Listener on %s:%i, clients %i. is %s %s",
-	  		me.name, sptr->name,
+	  		me.client.name, sptr->name,
 	  		listener->ip,
 			listener->port,
 			listener->clients,
@@ -685,15 +685,15 @@ int stats_traffic(aClient *sptr, char *para)
 	sp = &tmp;
 	bcopy((char *)ircstp, (char *)sp, sizeof(*sp));
 
-	list_for_each_entry(acptr, &lclient_list, lclient_node)
+	list_for_each_entry2(acptr, struct LocalClient, &lclient_list, lclient_node)
 	{
 		if (IsServer(acptr))
 		{
-			sp->is_sbs += acptr->sendB;
-			sp->is_sbr += acptr->receiveB;
-			sp->is_sks += acptr->sendK;
-			sp->is_skr += acptr->receiveK;
-			sp->is_sti += now - acptr->firsttime;
+			sp->is_sbs += acptr->localClient->sendB;
+			sp->is_sbr += acptr->localClient->receiveB;
+			sp->is_sks += acptr->localClient->sendK;
+			sp->is_skr += acptr->localClient->receiveK;
+			sp->is_sti += now - acptr->localClient->firsttime;
 			sp->is_sv++;
 			if (sp->is_sbs > 1023)
 			{
@@ -708,11 +708,11 @@ int stats_traffic(aClient *sptr, char *para)
 		}
 		else if (IsClient(acptr))
 		{
-			sp->is_cbs += acptr->sendB;
-			sp->is_cbr += acptr->receiveB;
-			sp->is_cks += acptr->sendK;
-			sp->is_ckr += acptr->receiveK;
-			sp->is_cti += now - acptr->firsttime;
+			sp->is_cbs += acptr->localClient->sendB;
+			sp->is_cbr += acptr->localClient->receiveB;
+			sp->is_cks += acptr->localClient->sendK;
+			sp->is_ckr += acptr->localClient->receiveK;
+			sp->is_cti += now - acptr->localClient->firsttime;
 			sp->is_cl++;
 			if (sp->is_cbs > 1023)
 			{
@@ -730,31 +730,31 @@ int stats_traffic(aClient *sptr, char *para)
 	}
 
 	sendto_one(sptr, ":%s %d %s :accepts %u refused %u",
-	    me.name, RPL_STATSDEBUG, sptr->name, sp->is_ac, sp->is_ref);
+	    me.client.name, RPL_STATSDEBUG, sptr->name, sp->is_ac, sp->is_ref);
 	sendto_one(sptr, ":%s %d %s :unknown commands %u prefixes %u",
-	    me.name, RPL_STATSDEBUG, sptr->name, sp->is_unco, sp->is_unpf);
+	    me.client.name, RPL_STATSDEBUG, sptr->name, sp->is_unco, sp->is_unpf);
 	sendto_one(sptr, ":%s %d %s :nick collisions %u unknown closes %u",
-	    me.name, RPL_STATSDEBUG, sptr->name, sp->is_kill, sp->is_ni);
+	    me.client.name, RPL_STATSDEBUG, sptr->name, sp->is_kill, sp->is_ni);
 	sendto_one(sptr, ":%s %d %s :wrong direction %u empty %u",
-	    me.name, RPL_STATSDEBUG, sptr->name, sp->is_wrdi, sp->is_empt);
+	    me.client.name, RPL_STATSDEBUG, sptr->name, sp->is_wrdi, sp->is_empt);
 	sendto_one(sptr, ":%s %d %s :numerics seen %u mode fakes %u",
-	    me.name, RPL_STATSDEBUG, sptr->name, sp->is_num, sp->is_fake);
+	    me.client.name, RPL_STATSDEBUG, sptr->name, sp->is_num, sp->is_fake);
 	sendto_one(sptr, ":%s %d %s :auth successes %u fails %u",
-	    me.name, RPL_STATSDEBUG, sptr->name, sp->is_asuc, sp->is_abad);
+	    me.client.name, RPL_STATSDEBUG, sptr->name, sp->is_asuc, sp->is_abad);
 	sendto_one(sptr, ":%s %d %s :local connections %u udp packets %u",
-	    me.name, RPL_STATSDEBUG, sptr->name, sp->is_loc, sp->is_udp);
+	    me.client.name, RPL_STATSDEBUG, sptr->name, sp->is_loc, sp->is_udp);
 	sendto_one(sptr, ":%s %d %s :Client Server",
-	    me.name, RPL_STATSDEBUG, sptr->name);
+	    me.client.name, RPL_STATSDEBUG, sptr->name);
 	sendto_one(sptr, ":%s %d %s :connected %u %u",
-	    me.name, RPL_STATSDEBUG, sptr->name, sp->is_cl, sp->is_sv);
+	    me.client.name, RPL_STATSDEBUG, sptr->name, sp->is_cl, sp->is_sv);
 	sendto_one(sptr, ":%s %d %s :bytes sent %ld.%huK %ld.%huK",
-	    me.name, RPL_STATSDEBUG, sptr->name,
+	    me.client.name, RPL_STATSDEBUG, sptr->name,
 	    sp->is_cks, sp->is_cbs, sp->is_sks, sp->is_sbs);
 	sendto_one(sptr, ":%s %d %s :bytes recv %ld.%huK %ld.%huK",
-	    me.name, RPL_STATSDEBUG, sptr->name,
+	    me.client.name, RPL_STATSDEBUG, sptr->name,
 	    sp->is_ckr, sp->is_cbr, sp->is_skr, sp->is_sbr);
 	sendto_one(sptr, ":%s %d %s :time connected %ld %ld",
-	    me.name, RPL_STATSDEBUG, sptr->name, sp->is_cti, sp->is_sti);
+	    me.client.name, RPL_STATSDEBUG, sptr->name, sp->is_cti, sp->is_sti);
 
 	return 0;
 }
@@ -772,7 +772,7 @@ int stats_fdtable(aClient *sptr, char *para)
 
 		sendto_one(sptr,
 			":%s %d %s :fd %3d, desc '%s', read-hdl %p, write-hdl %p, cbdata %p",
-			me.name, RPL_STATSDEBUG, sptr->name,
+			me.client.name, RPL_STATSDEBUG, sptr->name,
 			fde->fd, fde->desc, fde->read_callback, fde->write_callback, fde->data);
 	}
 
@@ -783,7 +783,7 @@ int stats_uline(aClient *sptr, char *para)
 {
 	ConfigItem_ulines *ulines;
 	for (ulines = conf_ulines; ulines; ulines = (ConfigItem_ulines *) ulines->next)
-		sendto_one(sptr, rpl_str(RPL_STATSULINE), me.name,
+		sendto_one(sptr, rpl_str(RPL_STATSULINE), me.client.name,
 			sptr->name, ulines->servername);
 	return 0;	
 }
@@ -794,7 +794,7 @@ int stats_vhost(aClient *sptr, char *para)
 	for(vhosts = conf_vhost; vhosts; vhosts = (ConfigItem_vhost *) vhosts->next) 
 	{
 		for (from = (ConfigItem_oper_from *)vhosts->from; from; from = (ConfigItem_oper_from *)from->next) 
-			sendto_one(sptr, ":%s %i %s :vhost %s%s%s %s %s", me.name, RPL_TEXT, sptr->name,
+			sendto_one(sptr, ":%s %i %s :vhost %s%s%s %s %s", me.client.name, RPL_TEXT, sptr->name,
 			     vhosts->virtuser ? vhosts->virtuser : "", vhosts->virtuser ? "@" : "",
 			     vhosts->virthost, vhosts->login, from->name);
 	}
@@ -847,7 +847,7 @@ int stats_mem(aClient *sptr, char *para)
 
 	if (!IsAnOper(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, sptr->name);
 		return 0;
 	}
 
@@ -918,46 +918,46 @@ int stats_mem(aClient *sptr, char *para)
 	}
 
 	sendto_one(sptr, ":%s %d %s :Client Local %d(%ld) Remote %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name, lc, lcm, rc, rcm);
+	    me.client.name, RPL_STATSDEBUG, sptr->name, lc, lcm, rc, rcm);
 	sendto_one(sptr, ":%s %d %s :Users %d(%ld) Invites %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name, us, (long)(us * sizeof(anUser)),
+	    me.client.name, RPL_STATSDEBUG, sptr->name, us, (long)(us * sizeof(anUser)),
 	    usi, (long)(usi * sizeof(Link)));
 	sendto_one(sptr, ":%s %d %s :User channels %d(%ld) Aways %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name, usc, (long)(usc * sizeof(Link)), aw, awm);
+	    me.client.name, RPL_STATSDEBUG, sptr->name, usc, (long)(usc * sizeof(Link)), aw, awm);
 	sendto_one(sptr, ":%s %d %s :WATCH headers %d(%ld) entries %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name, wlh, wlhm, wle, (long)(wle * sizeof(Link)));
+	    me.client.name, RPL_STATSDEBUG, sptr->name, wlh, wlhm, wle, (long)(wle * sizeof(Link)));
 	sendto_one(sptr, ":%s %d %s :Attached confs %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name, lcc, (long)(lcc * sizeof(Link)));
+	    me.client.name, RPL_STATSDEBUG, sptr->name, lcc, (long)(lcc * sizeof(Link)));
 
 	totcl = lcm + rcm + us * sizeof(anUser) + usc * sizeof(Link) + awm;
 	totcl += lcc * sizeof(Link) + usi * sizeof(Link) + wlhm;
 	totcl += wle * sizeof(Link);
 
 	sendto_one(sptr, ":%s %d %s :Conflines %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name, co, com);
+	    me.client.name, RPL_STATSDEBUG, sptr->name, co, com);
 
 	sendto_one(sptr, ":%s %d %s :Classes %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name, StatsZ.classes, StatsZ.classesmem);
+	    me.client.name, RPL_STATSDEBUG, sptr->name, StatsZ.classes, StatsZ.classesmem);
 
 	sendto_one(sptr, ":%s %d %s :Channels %d(%ld) Bans %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name, ch, chm, chb, chbm);
+	    me.client.name, RPL_STATSDEBUG, sptr->name, ch, chm, chb, chbm);
 	sendto_one(sptr, ":%s %d %s :Channel members %d(%ld) invite %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name, chu, (long)(chu * sizeof(Link)),
+	    me.client.name, RPL_STATSDEBUG, sptr->name, chu, (long)(chu * sizeof(Link)),
 	    chi, (long)(chi * sizeof(Link)));
 
 	totch = chm + chbm + chu * sizeof(Link) + chi * sizeof(Link);
 
 	sendto_one(sptr, ":%s %d %s :Whowas users %d(%ld) away %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name, 
+	    me.client.name, RPL_STATSDEBUG, sptr->name, 
 	    wwu, (long)(wwu * sizeof(anUser)),
 	    wwa, wwam);
 	sendto_one(sptr, ":%s %d %s :Whowas array %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name, NICKNAMEHISTORYLENGTH, wwm);
+	    me.client.name, RPL_STATSDEBUG, sptr->name, NICKNAMEHISTORYLENGTH, wwm);
 
 	totww = wwu * sizeof(anUser) + wwam + wwm;
 
 	sendto_one(sptr,
-	    ":%s %d %s :Hash: client %d(%ld) chan %d(%ld) watch %d(%ld)", me.name,
+	    ":%s %d %s :Hash: client %d(%ld) chan %d(%ld) watch %d(%ld)", me.client.name,
 	    RPL_STATSDEBUG, sptr->name, U_MAX,
 	    (long)(sizeof(aHashEntry) * U_MAX), CH_MAX,
 	    (long)(sizeof(aHashEntry) * CH_MAX), WATCHHASHSIZE,
@@ -966,7 +966,7 @@ int stats_mem(aClient *sptr, char *para)
 	for (link = freelink; link; link = link->next)
 		fl++;
 	sendto_one(sptr, ":%s %d %s :Link blocks free %d(%ld) total %d(%ld)",
-	    me.name, RPL_STATSDEBUG, sptr->name,
+	    me.client.name, RPL_STATSDEBUG, sptr->name,
 	    fl, (long)(fl * sizeof(Link)),
 	    flinks, (long)(flinks * sizeof(Link)));
 
@@ -980,21 +980,21 @@ int stats_mem(aClient *sptr, char *para)
 	tot += sizeof(aWatch *) * WATCHHASHSIZE;
 
 	sendto_one(sptr, ":%s %d %s :Total: ww %ld ch %ld cl %ld co %ld db %ld",
-	    me.name, RPL_STATSDEBUG, sptr->name, totww, totch, totcl, com, db);
+	    me.client.name, RPL_STATSDEBUG, sptr->name, totww, totch, totcl, com, db);
 #if !defined(_WIN32) && !defined(_AMIGA)
 #ifdef __alpha
 	sendto_one(sptr, ":%s %d %s :TOTAL: %d sbrk(0)-etext: %u",
-	    me.name, RPL_STATSDEBUG, sptr->name, tot,
+	    me.client.name, RPL_STATSDEBUG, sptr->name, tot,
 	    (u_int)sbrk((size_t)0) - (u_int)sbrk0);
 #else
 	sendto_one(sptr, ":%s %d %s :TOTAL: %ld sbrk(0)-etext: %lu",
-	    me.name, RPL_STATSDEBUG, sptr->name, tot,
+	    me.client.name, RPL_STATSDEBUG, sptr->name, tot,
 	    (u_long)sbrk((size_t)0) - (u_long)sbrk0);
 
 #endif
 #else
 	sendto_one(sptr, ":%s %d %s :TOTAL: %lu",
-	    me.name, RPL_STATSDEBUG, sptr->name, tot);
+	    me.client.name, RPL_STATSDEBUG, sptr->name, tot);
 #endif
 	return 0;
 }
@@ -1006,7 +1006,7 @@ int stats_denylinkauto(aClient *sptr, char *para)
 	for (links = conf_deny_link; links; links = (ConfigItem_deny_link *) links->next) 
 	{
 		if (links->flag.type == CRULE_AUTO)
-			sendto_one(sptr, rpl_str(RPL_STATSDLINE), me.name, sptr->name,
+			sendto_one(sptr, rpl_str(RPL_STATSDLINE), me.client.name, sptr->name,
 			'd', links->mask, links->prettyrule);
 	}
 	return 0;
@@ -1018,7 +1018,7 @@ int stats_exceptthrottle(aClient *sptr, char *para)
 	for (excepts = conf_except; excepts; excepts = (ConfigItem_except *) excepts->next)
 		if (excepts->flag.type == CONF_EXCEPT_THROTTLE)
 			sendto_one(sptr, rpl_str(RPL_STATSELINE),
-				me.name, sptr->name, excepts->mask);
+				me.client.name, sptr->name, excepts->mask);
 	return 0;
 }
 
@@ -1040,7 +1040,7 @@ int stats_denydcc(aClient *sptr, char *para)
 		if (denytmp->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
 			a = 'o';
 		/* <d> <s|h> <howadded> <filemask> <reason> */
-		sendto_one(sptr, ":%s %i %s :d %c %c %s %s", me.name, RPL_TEXT,
+		sendto_one(sptr, ":%s %i %s :d %c %c %s %s", me.client.name, RPL_TEXT,
 			sptr->name,
 			(denytmp->flag.type == DCCDENY_SOFT) ? 's' : 'h',
 			a, filemask, reason);
@@ -1055,7 +1055,7 @@ int stats_denydcc(aClient *sptr, char *para)
 		if (allowtmp->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
 			a = 'o';
 		/* <a> <s|h> <howadded> <filemask> */
-		sendto_one(sptr, ":%s %i %s :a %c %c %s", me.name, RPL_TEXT,
+		sendto_one(sptr, ":%s %i %s :a %c %c %s", me.client.name, RPL_TEXT,
 			sptr->name,
 			(allowtmp->flag.type == DCCDENY_SOFT) ? 's' : 'h',
 			a, filemask);
@@ -1074,7 +1074,7 @@ int stats_kline(aClient *sptr, char *para)
 				type[0] = 'K';
 			type[1] = '\0';
 			sendto_one(sptr, rpl_str(RPL_STATSKLINE),
-		 		me.name, sptr->name, type, bans->mask, bans->reason
+		 		me.client.name, sptr->name, type, bans->mask, bans->reason
 				? bans->reason : "<no reason>");
 		}
 		else if (bans->flag.type == CONF_BAN_IP) {
@@ -1084,7 +1084,7 @@ int stats_kline(aClient *sptr, char *para)
 				type[0] = 'z';
 			type[1] = '\0';
 			sendto_one(sptr, rpl_str(RPL_STATSKLINE),
-				me.name, sptr->name, type, bans->mask, bans->reason 
+				me.client.name, sptr->name, type, bans->mask, bans->reason 
 				? bans->reason : "<no reason>");
 		}
 	}
@@ -1094,7 +1094,7 @@ int stats_kline(aClient *sptr, char *para)
 	{
 		if (excepts->flag.type == CONF_EXCEPT_BAN)
 			sendto_one(sptr, rpl_str(RPL_STATSKLINE),
-				me.name, sptr->name, "E", excepts->mask, "");
+				me.client.name, sptr->name, "E", excepts->mask, "");
 	}
 	return 0;
 }
@@ -1105,7 +1105,7 @@ int stats_banrealname(aClient *sptr, char *para)
 	for (bans = conf_ban; bans; bans = (ConfigItem_ban *)bans->next) 
 		if (bans->flag.type == CONF_BAN_REALNAME)
 			sendto_one(sptr, rpl_str(RPL_STATSNLINE),
-				me.name, sptr->name, bans->mask, bans->reason
+				me.client.name, sptr->name, bans->mask, bans->reason
 				? bans->reason : "<no reason>");
 	return 0;
 }
@@ -1121,10 +1121,10 @@ int stats_chanrestrict(aClient *sptr, char *para)
 	ConfigItem_deny_channel *dchans;
 	ConfigItem_allow_channel *achans;
 	for (dchans = conf_deny_channel; dchans; dchans = (ConfigItem_deny_channel *) dchans->next) 
-		sendto_one(sptr, ":%s %i %s :deny %s %c %s", me.name, RPL_TEXT, sptr->name,
+		sendto_one(sptr, ":%s %i %s :deny %s %c %s", me.client.name, RPL_TEXT, sptr->name,
 			dchans->channel, dchans->warn ? 'w' : '-', dchans->reason);
   	for (achans = conf_allow_channel; achans; achans = (ConfigItem_allow_channel *) achans->next) 
-		sendto_one(sptr, ":%s %i %s :allow %s", me.name, RPL_TEXT, sptr->name,
+		sendto_one(sptr, ":%s %i %s :allow %s", me.client.name, RPL_TEXT, sptr->name,
 			achans->channel);
 	return 0;
 }
@@ -1141,7 +1141,7 @@ int stats_officialchannels(aClient *sptr, char *para)
 ConfigItem_offchans *x;
 	for (x = conf_offchans; x; x = (ConfigItem_offchans *)x->next)
 		sendto_one(sptr, ":%s %i %s :%s %s",
-			me.name, RPL_TEXT, sptr->name, x->chname, x->topic ? x->topic : "");
+			me.client.name, RPL_TEXT, sptr->name, x->chname, x->topic ? x->topic : "");
 	return 0;
 }
 
@@ -1151,59 +1151,59 @@ int stats_set(aClient *sptr, char *para)
 
 	if (!IsAnOper(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, sptr->name);
 		return 0;
 	}
 
 	sendto_one(sptr, ":%s %i %s :*** Configuration Report ***",
-	    me.name, RPL_TEXT, sptr->name);
-	sendto_one(sptr, ":%s %i %s :network-name: %s", me.name, RPL_TEXT,
+	    me.client.name, RPL_TEXT, sptr->name);
+	sendto_one(sptr, ":%s %i %s :network-name: %s", me.client.name, RPL_TEXT,
 	    sptr->name, ircnetwork);
-	sendto_one(sptr, ":%s %i %s :default-server: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :default-server: %s", me.client.name, RPL_TEXT,
 	    sptr->name, defserv);
-	sendto_one(sptr, ":%s %i %s :services-server: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :services-server: %s", me.client.name, RPL_TEXT,
 	    sptr->name, SERVICES_NAME);
-	sendto_one(sptr, ":%s %i %s :stats-server: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :stats-server: %s", me.client.name, RPL_TEXT,
 	    sptr->name, STATS_SERVER);
-	sendto_one(sptr, ":%s %i %s :hiddenhost-prefix: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :hiddenhost-prefix: %s", me.client.name, RPL_TEXT,
 	    sptr->name, hidden_host);
-	sendto_one(sptr, ":%s %i %s :help-channel: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :help-channel: %s", me.client.name, RPL_TEXT,
 	    sptr->name, helpchan);
-	sendto_one(sptr, ":%s %i %s :cloak-keys: %s", me.name, RPL_TEXT, sptr->name,
+	sendto_one(sptr, ":%s %i %s :cloak-keys: %s", me.client.name, RPL_TEXT, sptr->name,
 		CLOAK_KEYCRC);
-	sendto_one(sptr, ":%s %i %s :kline-address: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :kline-address: %s", me.client.name, RPL_TEXT,
 	    sptr->name, KLINE_ADDRESS);
 	if (GLINE_ADDRESS)
-		sendto_one(sptr, ":%s %i %s :gline-address: %s", me.name, RPL_TEXT,
+		sendto_one(sptr, ":%s %i %s :gline-address: %s", me.client.name, RPL_TEXT,
 		    sptr->name, GLINE_ADDRESS);
-	sendto_one(sptr, ":%s %i %s :modes-on-connect: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :modes-on-connect: %s", me.client.name, RPL_TEXT,
 	    sptr->name, get_modestr(CONN_MODES));
-	sendto_one(sptr, ":%s %i %s :modes-on-oper: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :modes-on-oper: %s", me.client.name, RPL_TEXT,
 	    sptr->name, get_modestr(OPER_MODES));
 	*modebuf = *parabuf = 0;
 	chmode_str(iConf.modes_on_join, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf));
-	sendto_one(sptr, ":%s %i %s :modes-on-join: %s %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :modes-on-join: %s %s", me.client.name, RPL_TEXT,
 		sptr->name, modebuf, parabuf);
-	sendto_one(sptr, ":%s %i %s :nick-length: %i", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :nick-length: %i", me.client.name, RPL_TEXT,
 		sptr->name, iConf.nicklen);
-	sendto_one(sptr, ":%s %i %s :snomask-on-oper: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :snomask-on-oper: %s", me.client.name, RPL_TEXT,
 	    sptr->name, OPER_SNOMASK);
-	sendto_one(sptr, ":%s %i %s :snomask-on-connect: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :snomask-on-connect: %s", me.client.name, RPL_TEXT,
 	    sptr->name, CONNECT_SNOMASK ? CONNECT_SNOMASK : "+");
 	if (OPER_ONLY_STATS)
 	{
 		char *longflags = stats_operonly_long_to_short();
-		sendto_one(sptr, ":%s %i %s :oper-only-stats: %s%s", me.name, RPL_TEXT,
+		sendto_one(sptr, ":%s %i %s :oper-only-stats: %s%s", me.client.name, RPL_TEXT,
 			sptr->name, OPER_ONLY_STATS, longflags ? longflags : "");
 	}
 	if (RESTRICT_USERMODES)
-		sendto_one(sptr, ":%s %i %s :restrict-usermodes: %s", me.name, RPL_TEXT,
+		sendto_one(sptr, ":%s %i %s :restrict-usermodes: %s", me.client.name, RPL_TEXT,
 			sptr->name, RESTRICT_USERMODES);
 	if (RESTRICT_CHANNELMODES)
-		sendto_one(sptr, ":%s %i %s :restrict-channelmodes: %s", me.name, RPL_TEXT,
+		sendto_one(sptr, ":%s %i %s :restrict-channelmodes: %s", me.client.name, RPL_TEXT,
 			sptr->name, RESTRICT_CHANNELMODES);
 	if (RESTRICT_EXTENDEDBANS)
-		sendto_one(sptr, ":%s %i %s :restrict-extendedbans: %s", me.name, RPL_TEXT,
+		sendto_one(sptr, ":%s %i %s :restrict-extendedbans: %s", me.client.name, RPL_TEXT,
 			sptr->name, RESTRICT_EXTENDEDBANS);
 	switch (UHOST_ALLOWED)
 	{
@@ -1222,121 +1222,121 @@ int stats_set(aClient *sptr, char *para)
 			break;
 	}
 	if (uhallow)
-		sendto_one(sptr, ":%s %i %s :allow-userhost-change: %s", me.name, RPL_TEXT,
+		sendto_one(sptr, ":%s %i %s :allow-userhost-change: %s", me.client.name, RPL_TEXT,
 			sptr->name, uhallow);
-	sendto_one(sptr, ":%s %i %s :anti-spam-quit-message-time: %s", me.name, RPL_TEXT, 
+	sendto_one(sptr, ":%s %i %s :anti-spam-quit-message-time: %s", me.client.name, RPL_TEXT, 
 		sptr->name, pretty_time_val(ANTI_SPAM_QUIT_MSG_TIME));
-	sendto_one(sptr, ":%s %i %s :channel-command-prefix: %s", me.name, RPL_TEXT, sptr->name, CHANCMDPFX ? CHANCMDPFX : "`");
+	sendto_one(sptr, ":%s %i %s :channel-command-prefix: %s", me.client.name, RPL_TEXT, sptr->name, CHANCMDPFX ? CHANCMDPFX : "`");
 #ifdef USE_SSL
-	sendto_one(sptr, ":%s %i %s :ssl::egd: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :ssl::egd: %s", me.client.name, RPL_TEXT,
 		sptr->name, EGD_PATH ? EGD_PATH : (USE_EGD ? "1" : "0"));
-	sendto_one(sptr, ":%s %i %s :ssl::certificate: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :ssl::certificate: %s", me.client.name, RPL_TEXT,
 		sptr->name, SSL_SERVER_CERT_PEM);
-	sendto_one(sptr, ":%s %i %s :ssl::key: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :ssl::key: %s", me.client.name, RPL_TEXT,
 		sptr->name, SSL_SERVER_KEY_PEM);
-	sendto_one(sptr, ":%s %i %s :ssl::trusted-ca-file: %s", me.name, RPL_TEXT, sptr->name,
+	sendto_one(sptr, ":%s %i %s :ssl::trusted-ca-file: %s", me.client.name, RPL_TEXT, sptr->name,
 	 iConf.trusted_ca_file ? iConf.trusted_ca_file : "<none>");
-	sendto_one(sptr, ":%s %i %s :ssl::options: %s %s %s", me.name, RPL_TEXT, sptr->name,
+	sendto_one(sptr, ":%s %i %s :ssl::options: %s %s %s", me.client.name, RPL_TEXT, sptr->name,
 		iConf.ssl_options & SSLFLAG_FAILIFNOCERT ? "FAILIFNOCERT" : "",
 		iConf.ssl_options & SSLFLAG_VERIFYCERT ? "VERIFYCERT" : "",
 		iConf.ssl_options & SSLFLAG_DONOTACCEPTSELFSIGNED ? "DONOTACCEPTSELFSIGNED" : "");
 #endif
 
-	sendto_one(sptr, ":%s %i %s :options::show-opermotd: %d", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :options::show-opermotd: %d", me.client.name, RPL_TEXT,
 	    sptr->name, SHOWOPERMOTD);
-	sendto_one(sptr, ":%s %i %s :options::hide-ulines: %d", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :options::hide-ulines: %d", me.client.name, RPL_TEXT,
 	    sptr->name, HIDE_ULINES);
-	sendto_one(sptr, ":%s %i %s :options::identd-check: %d", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :options::identd-check: %d", me.client.name, RPL_TEXT,
 	    sptr->name, IDENT_CHECK);
-	sendto_one(sptr, ":%s %i %s :options::fail-oper-warn: %d", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :options::fail-oper-warn: %d", me.client.name, RPL_TEXT,
 	    sptr->name, FAILOPER_WARN);
-	sendto_one(sptr, ":%s %i %s :options::show-connect-info: %d", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :options::show-connect-info: %d", me.client.name, RPL_TEXT,
 	    sptr->name, SHOWCONNECTINFO);
-	sendto_one(sptr, ":%s %i %s :options::dont-resolve: %d", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :options::dont-resolve: %d", me.client.name, RPL_TEXT,
 	    sptr->name, DONT_RESOLVE);
-	sendto_one(sptr, ":%s %i %s :options::mkpasswd-for-everyone: %d", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :options::mkpasswd-for-everyone: %d", me.client.name, RPL_TEXT,
 	    sptr->name, MKPASSWD_FOR_EVERYONE);
-	sendto_one(sptr, ":%s %i %s :options::allow-insane-bans: %d", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :options::allow-insane-bans: %d", me.client.name, RPL_TEXT,
 	    sptr->name, ALLOW_INSANE_BANS);
-	sendto_one(sptr, ":%s %i %s :options::allow-part-if-shunned: %d", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :options::allow-part-if-shunned: %d", me.client.name, RPL_TEXT,
 	    sptr->name, ALLOW_PART_IF_SHUNNED);
-	sendto_one(sptr, ":%s %i %s :maxchannelsperuser: %i", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :maxchannelsperuser: %i", me.client.name, RPL_TEXT,
 	    sptr->name, MAXCHANNELSPERUSER);
-	sendto_one(sptr, ":%s %i %s :auto-join: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :auto-join: %s", me.client.name, RPL_TEXT,
 	    sptr->name, AUTO_JOIN_CHANS ? AUTO_JOIN_CHANS : "0");
-	sendto_one(sptr, ":%s %i %s :oper-auto-join: %s", me.name,
+	sendto_one(sptr, ":%s %i %s :oper-auto-join: %s", me.client.name,
 	    RPL_TEXT, sptr->name, OPER_AUTO_JOIN_CHANS ? OPER_AUTO_JOIN_CHANS : "0");
-	sendto_one(sptr, ":%s %i %s :static-quit: %s", me.name, 
+	sendto_one(sptr, ":%s %i %s :static-quit: %s", me.client.name, 
 		RPL_TEXT, sptr->name, STATIC_QUIT ? STATIC_QUIT : "<none>");	
-	sendto_one(sptr, ":%s %i %s :static-part: %s", me.name, 
+	sendto_one(sptr, ":%s %i %s :static-part: %s", me.client.name, 
 		RPL_TEXT, sptr->name, STATIC_PART ? STATIC_PART : "<none>");	
-	sendto_one(sptr, ":%s %i %s :who-limit: %d", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :who-limit: %d", me.client.name, RPL_TEXT,
 		sptr->name, WHOLIMIT);
-	sendto_one(sptr, ":%s %i %s :silence-limit: %d", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :silence-limit: %d", me.client.name, RPL_TEXT,
 		sptr->name, SILENCE_LIMIT);
-	sendto_one(sptr, ":%s %i %s :dns::timeout: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :dns::timeout: %s", me.client.name, RPL_TEXT,
 	    sptr->name, pretty_time_val(HOST_TIMEOUT));
-	sendto_one(sptr, ":%s %i %s :dns::retries: %d", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :dns::retries: %d", me.client.name, RPL_TEXT,
 	    sptr->name, HOST_RETRIES);
-	sendto_one(sptr, ":%s %i %s :dns::nameserver: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :dns::nameserver: %s", me.client.name, RPL_TEXT,
 	    sptr->name, NAME_SERVER);
 	if (DNS_BINDIP)
-		sendto_one(sptr, ":%s %i %s :dns::bind-ip: %s", me.name, RPL_TEXT,
+		sendto_one(sptr, ":%s %i %s :dns::bind-ip: %s", me.client.name, RPL_TEXT,
 		    sptr->name, DNS_BINDIP);
-	sendto_one(sptr, ":%s %i %s :ban-version-tkl-time: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :ban-version-tkl-time: %s", me.client.name, RPL_TEXT,
 	    sptr->name, pretty_time_val(BAN_VERSION_TKL_TIME));
 	if (LINK_BINDIP)
-		sendto_one(sptr, ":%s %i %s :link::bind-ip: %s", me.name, RPL_TEXT,
+		sendto_one(sptr, ":%s %i %s :link::bind-ip: %s", me.client.name, RPL_TEXT,
 		    sptr->name, LINK_BINDIP);
-	sendto_one(sptr, ":%s %i %s :throttle::period: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :throttle::period: %s", me.client.name, RPL_TEXT,
 			sptr->name, THROTTLING_PERIOD ? pretty_time_val(THROTTLING_PERIOD) : "disabled");
-	sendto_one(sptr, ":%s %i %s :throttle::connections: %d", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :throttle::connections: %d", me.client.name, RPL_TEXT,
 			sptr->name, THROTTLING_COUNT ? THROTTLING_COUNT : -1);
-	sendto_one(sptr, ":%s %i %s :anti-flood::unknown-flood-bantime: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :anti-flood::unknown-flood-bantime: %s", me.client.name, RPL_TEXT,
 			sptr->name, pretty_time_val(UNKNOWN_FLOOD_BANTIME));
-	sendto_one(sptr, ":%s %i %s :anti-flood::unknown-flood-amount: %ldKB", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :anti-flood::unknown-flood-amount: %ldKB", me.client.name, RPL_TEXT,
 			sptr->name, UNKNOWN_FLOOD_AMOUNT);
 #ifdef NO_FLOOD_AWAY
 	if (AWAY_PERIOD)
 	{
-		sendto_one(sptr, ":%s %i %s :anti-flood::away-flood: %d per %s", me.name, RPL_TEXT, 
+		sendto_one(sptr, ":%s %i %s :anti-flood::away-flood: %d per %s", me.client.name, RPL_TEXT, 
 			sptr->name, AWAY_COUNT, pretty_time_val(AWAY_PERIOD));
 	}
 #endif
-	sendto_one(sptr, ":%s %i %s :anti-flood::nick-flood: %d per %s", me.name, RPL_TEXT, 
+	sendto_one(sptr, ":%s %i %s :anti-flood::nick-flood: %d per %s", me.client.name, RPL_TEXT, 
 		sptr->name, NICK_COUNT, pretty_time_val(NICK_PERIOD));
-	sendto_one(sptr, ":%s %i %s :ident::connect-timeout: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :ident::connect-timeout: %s", me.client.name, RPL_TEXT,
 			sptr->name, pretty_time_val(IDENT_CONNECT_TIMEOUT));
-	sendto_one(sptr, ":%s %i %s :ident::read-timeout: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :ident::read-timeout: %s", me.client.name, RPL_TEXT,
 			sptr->name, pretty_time_val(IDENT_READ_TIMEOUT));
-	sendto_one(sptr, ":%s %i %s :modef-default-unsettime: %hd", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :modef-default-unsettime: %hd", me.client.name, RPL_TEXT,
 			sptr->name, (unsigned short)MODEF_DEFAULT_UNSETTIME);
-	sendto_one(sptr, ":%s %i %s :modef-max-unsettime: %hd", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :modef-max-unsettime: %hd", me.client.name, RPL_TEXT,
 			sptr->name, (unsigned short)MODEF_MAX_UNSETTIME);
-	sendto_one(sptr, ":%s %i %s :spamfilter::ban-time: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :spamfilter::ban-time: %s", me.client.name, RPL_TEXT,
 		sptr->name, pretty_time_val(SPAMFILTER_BAN_TIME));
-	sendto_one(sptr, ":%s %i %s :spamfilter::ban-reason: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :spamfilter::ban-reason: %s", me.client.name, RPL_TEXT,
 		sptr->name, SPAMFILTER_BAN_REASON);
-	sendto_one(sptr, ":%s %i %s :spamfilter::virus-help-channel: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :spamfilter::virus-help-channel: %s", me.client.name, RPL_TEXT,
 		sptr->name, SPAMFILTER_VIRUSCHAN);
 	if (SPAMFILTER_EXCEPT)
-		sendto_one(sptr, ":%s %i %s :spamfilter::except: %s", me.name, RPL_TEXT,
+		sendto_one(sptr, ":%s %i %s :spamfilter::except: %s", me.client.name, RPL_TEXT,
 			sptr->name, SPAMFILTER_EXCEPT);
-	sendto_one(sptr, ":%s %i %s :check-target-nick-bans: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :check-target-nick-bans: %s", me.client.name, RPL_TEXT,
 		sptr->name, CHECK_TARGET_NICK_BANS ? "yes" : "no");
-	sendto_one(sptr, ":%s %i %s :hosts::global: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :hosts::global: %s", me.client.name, RPL_TEXT,
 	    sptr->name, oper_host);
-	sendto_one(sptr, ":%s %i %s :hosts::admin: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :hosts::admin: %s", me.client.name, RPL_TEXT,
 	    sptr->name, admin_host);
-	sendto_one(sptr, ":%s %i %s :hosts::local: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :hosts::local: %s", me.client.name, RPL_TEXT,
 	    sptr->name, locop_host);
-	sendto_one(sptr, ":%s %i %s :hosts::servicesadmin: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :hosts::servicesadmin: %s", me.client.name, RPL_TEXT,
 	    sptr->name, sadmin_host);
-	sendto_one(sptr, ":%s %i %s :hosts::netadmin: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :hosts::netadmin: %s", me.client.name, RPL_TEXT,
 	    sptr->name, netadmin_host);
-	sendto_one(sptr, ":%s %i %s :hosts::coadmin: %s", me.name, RPL_TEXT,
+	sendto_one(sptr, ":%s %i %s :hosts::coadmin: %s", me.client.name, RPL_TEXT,
 	    sptr->name, coadmin_host);
-	sendto_one(sptr, ":%s %i %s :hosts::host-on-oper-up: %i", me.name, RPL_TEXT, sptr->name,
+	sendto_one(sptr, ":%s %i %s :hosts::host-on-oper-up: %i", me.client.name, RPL_TEXT, sptr->name,
 	    iNAH);
 	RunHook2(HOOKTYPE_STATS, sptr, "S");
 	return 1;
@@ -1346,7 +1346,7 @@ int stats_tld(aClient *sptr, char *para)
 {
 	ConfigItem_tld *tld;
 	for (tld = conf_tld; tld; tld = (ConfigItem_tld *) tld->next)
-		sendto_one(sptr, rpl_str(RPL_STATSTLINE), me.name, sptr->name, 
+		sendto_one(sptr, rpl_str(RPL_STATSTLINE), me.client.name, sptr->name, 
 			tld->mask, tld->motd_file, tld->rules_file ? 
 			tld->rules_file : "none");
 	return 0;
@@ -1357,10 +1357,10 @@ int stats_uptime(aClient *sptr, char *para)
 	time_t tmpnow;
 
 	tmpnow = TStime() - me.since;
-	sendto_one(sptr, rpl_str(RPL_STATSUPTIME), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSUPTIME), me.client.name, sptr->name,
 	    tmpnow / 86400, (tmpnow / 3600) % 24, (tmpnow / 60) % 60,
 	    tmpnow % 60);
-	sendto_one(sptr, rpl_str(RPL_STATSCONN), me.name, sptr->name,
+	sendto_one(sptr, rpl_str(RPL_STATSCONN), me.client.name, sptr->name,
 	    max_connection_count, IRCstats.me_max);
 	return 0;
 }
@@ -1369,7 +1369,7 @@ int stats_denyver(aClient *sptr, char *para)
 {
 	ConfigItem_deny_version *versions;
 	for (versions = conf_deny_version; versions; versions = (ConfigItem_deny_version *) versions->next) 
-		sendto_one(sptr, rpl_str(RPL_STATSVLINE), me.name, sptr->name,
+		sendto_one(sptr, rpl_str(RPL_STATSVLINE), me.client.name, sptr->name,
 			versions->version, versions->flags, versions->mask);
 	return 0;
 }
@@ -1382,7 +1382,7 @@ int stats_notlink(aClient *sptr, char *para)
 	{
 		if (!find_server_quick(link_p->servername))
 			sendto_one(sptr, rpl_str(RPL_STATSXLINE),
-				me.name, sptr->name, link_p->servername,
+				me.client.name, sptr->name, link_p->servername,
 				link_p->port);
 	}
 	return 0;
@@ -1394,7 +1394,7 @@ int stats_class(aClient *sptr, char *para)
 	for (classes = conf_class; classes; classes = (ConfigItem_class *) classes->next) 
 	{
 		sendto_one(sptr, rpl_str(RPL_STATSYLINE),
-			me.name, sptr->name, classes->name, classes->pingfreq, classes->connfreq,
+			me.client.name, sptr->name, classes->name, classes->pingfreq, classes->connfreq,
 			classes->maxclients, classes->sendq, classes->recvq ? classes->recvq : CLIENT_FLOOD);
 #ifdef DEBUGMODE
 		sendnotice(sptr, "class '%s' has clients=%d, xrefcount=%d",
@@ -1434,29 +1434,29 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 	aClient *acptr;
 	/*
 	 * send info about connections which match, or all if the
-	 * mask matches me.name.  Only restrictions are on those who
+	 * mask matches me.client.name.  Only restrictions are on those who
 	 * are invisible not being visible to 'foreigners' who use
 	 * a wild card based search to list it.
 	 */
 	if (para)
 	{
-		if (!mycmp(para, me.name))
+		if (!mycmp(para, me.client.name))
 			doall = 2;
-		else if (match(para, me.name) == 0)
+		else if (match(para, me.client.name) == 0)
 			doall = 1;
 		if (index(para, '*') || index(para, '?'))
 			wilds = 1;
 	}
 	else
-		para = me.name;
-	sendto_one(sptr, Sformat, me.name, RPL_STATSLINKINFO, sptr->name);
+		para = me.client.name;
+	sendto_one(sptr, Sformat, me.client.name, RPL_STATSLINKINFO, sptr->name);
 	if (!MyClient(sptr))
 	{
 		remote = 1;
 		wilds = 0;
 	}
 
-	list_for_each_entry(acptr, &lclient_list, lclient_node)
+	list_for_each_entry2(acptr, struct LocalClient, &lclient_list, lclient_node)
 	{
 		if (IsInvisible(acptr) && (doall || wilds) &&
 			!(MyConnect(sptr) && IsOper(sptr)) &&
@@ -1475,48 +1475,48 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 
 #ifdef DEBUGMODE
 		ircsnprintf(pbuf, sizeof(pbuf), "%ld :%ld", (long)acptr->cputime,
-		      (long)(acptr->user && MyConnect(acptr)) ? TStime() - acptr->last : 0);
+		      (long)(acptr->user && MyConnect(acptr)) ? TStime() - acptr->localClient->last : 0);
 #endif
 		if (IsOper(sptr))
 		{
-			sendto_one(sptr, Lformat, me.name,
+			sendto_one(sptr, Lformat, me.client.name,
 				RPL_STATSLINKINFO, sptr->name, 
 				all ?
 				(get_client_name2(acptr, showports)) :
 				(get_client_name(acptr, FALSE)),
 				get_cptr_status(acptr),
-				(int)DBufLength(&acptr->sendQ),
-				(int)acptr->sendM, (int)acptr->sendK,
-				(int)acptr->receiveM,
-				(int)acptr->receiveK,
-			 	TStime() - acptr->firsttime,
+				(int)DBufLength(&acptr->localClient->sendQ),
+				(int)acptr->localClient->sendM, (int)acptr->localClient->sendK,
+				(int)acptr->localClient->receiveM,
+				(int)acptr->localClient->receiveK,
+			 	TStime() - acptr->localClient->firsttime,
 #ifndef DEBUGMODE
 				(acptr->user && MyConnect(acptr)) ?
-				TStime() - acptr->last : 0);
+				TStime() - acptr->localClient->last : 0);
 #else
 				pbuf);
 #endif
 			if (!IsServer(acptr) && !IsMe(acptr) && IsAnOper(acptr) && sptr != acptr)
 				sendto_one(acptr,
 					":%s NOTICE %s :*** %s did a /stats L on you! IP may have been shown",
-					me.name, acptr->name, sptr->name);
+					me.client.name, acptr->name, sptr->name);
 		}
 		else if (!strchr(acptr->name, '.'))
-			sendto_one(sptr, Lformat, me.name,
+			sendto_one(sptr, Lformat, me.client.name,
 				RPL_STATSLINKINFO, sptr->name,
 				IsHidden(acptr) ? acptr->name :
 				all ?	/* Potvin - PreZ */
 				get_client_name2(acptr, showports) :
 				get_client_name(acptr, FALSE),
 				get_cptr_status(acptr),
-				(int)DBufLength(&acptr->sendQ),
-				(int)acptr->sendM, (int)acptr->sendK,
-				(int)acptr->receiveM,
-				(int)acptr->receiveK,
-				TStime() - acptr->firsttime,
+				(int)DBufLength(&acptr->localClient->sendQ),
+				(int)acptr->localClient->sendM, (int)acptr->localClient->sendK,
+				(int)acptr->localClient->receiveM,
+				(int)acptr->localClient->receiveK,
+				TStime() - acptr->localClient->firsttime,
 #ifndef DEBUGMODE
 				(acptr->user && MyConnect(acptr)) ?
-				TStime() - acptr->last : 0);
+				TStime() - acptr->localClient->last : 0);
 #else
 				pbuf);
 #endif
@@ -1526,7 +1526,7 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 	{
 		if (IsServer(acptr))
 			sendto_one(sptr, ":%s NOTICE %s :Server %s is %s",
-				me.name, sptr->name, acptr->name, acptr->serv->flags.synced ? "SYNCED" : "NOT SYNCED!!");
+				me.client.name, sptr->name, acptr->name, acptr->serv->flags.synced ? "SYNCED" : "NOT SYNCED!!");
 	}
 #endif
 	return 0;

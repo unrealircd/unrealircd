@@ -105,7 +105,7 @@ DLLFUNC char *noctcp_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int 
 		if (!notice)
 		{
 			sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
-				   me.name, sptr->name, chptr->chname,
+				   me.client.name, sptr->name, chptr->chname,
 				   "CTCPs are not permitted in this channel", chptr->chname);
 		}
 

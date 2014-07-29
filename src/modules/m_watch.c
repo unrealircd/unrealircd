@@ -86,21 +86,21 @@ static void show_watch(aClient *cptr, char *name, int rpl1, int rpl2, int awayno
 	{
 		if (awaynotify && acptr->user->away)
 		{
-			sendto_one(cptr, rpl_str(RPL_NOWISAWAY), me.name, cptr->name,
+			sendto_one(cptr, rpl_str(RPL_NOWISAWAY), me.client.name, cptr->name,
 			    acptr->name, acptr->user->username,
 			    IsHidden(acptr) ? acptr->user->virthost : acptr->user->
 			    realhost, acptr->user->lastaway);
 			return;
 		}
 		
-		sendto_one(cptr, rpl_str(rpl1), me.name, cptr->name,
+		sendto_one(cptr, rpl_str(rpl1), me.client.name, cptr->name,
 		    acptr->name, acptr->user->username,
 		    IsHidden(acptr) ? acptr->user->virthost : acptr->user->
 		    realhost, acptr->lastnick);
 	}
 	else
 	{
-		sendto_one(cptr, rpl_str(rpl2), me.name, cptr->name,
+		sendto_one(cptr, rpl_str(rpl2), me.client.name, cptr->name,
 		    name, "*", "*", 0L);
 	}
 }
@@ -146,10 +146,10 @@ DLLFUNC CMD_FUNC(m_watch)
 				continue;
 			if (do_nick_name(s + 1))
 			{
-				if (sptr->watches >= MAXWATCH)
+				if (sptr->localClient->watches >= MAXWATCH)
 				{
 					sendto_one(sptr,
-					    err_str(ERR_TOOMANYWATCH), me.name,
+					    err_str(ERR_TOOMANYWATCH), me.client.name,
 					    cptr->name, s + 1);
 
 					continue;
@@ -209,23 +209,23 @@ DLLFUNC CMD_FUNC(m_watch)
 				for (lp = anptr->watch, count = 1;
 				    (lp = lp->next); count++)
 					;
-			sendto_one(sptr, rpl_str(RPL_WATCHSTAT), me.name,
-			    parv[0], sptr->watches, count);
+			sendto_one(sptr, rpl_str(RPL_WATCHSTAT), me.client.name,
+			    parv[0], sptr->localClient->watches, count);
 
 			/*
 			 * Send a list of everybody in their WATCH list. Be careful
 			 * not to buffer overflow.
 			 */
-			if ((lp = sptr->watch) == NULL)
+			if ((lp = sptr->localClient->watch) == NULL)
 			{
 				sendto_one(sptr, rpl_str(RPL_ENDOFWATCHLIST),
-				    me.name, parv[0], *s);
+				    me.client.name, parv[0], *s);
 				continue;
 			}
 			*buf = '\0';
 			strlcpy(buf, lp->value.wptr->nick, sizeof buf);
 			count =
-			    strlen(parv[0]) + strlen(me.name) + 10 +
+			    strlen(parv[0]) + strlen(me.client.name) + 10 +
 			    strlen(buf);
 			while ((lp = lp->next))
 			{
@@ -233,20 +233,20 @@ DLLFUNC CMD_FUNC(m_watch)
 				    BUFSIZE - 2)
 				{
 					sendto_one(sptr, rpl_str(RPL_WATCHLIST),
-					    me.name, parv[0], buf);
+					    me.client.name, parv[0], buf);
 					*buf = '\0';
 					count =
-					    strlen(parv[0]) + strlen(me.name) +
+					    strlen(parv[0]) + strlen(me.client.name) +
 					    10;
 				}
 				strcat(buf, " ");
 				strcat(buf, lp->value.wptr->nick);
 				count += (strlen(lp->value.wptr->nick) + 1);
 			}
-			sendto_one(sptr, rpl_str(RPL_WATCHLIST), me.name,
+			sendto_one(sptr, rpl_str(RPL_WATCHLIST), me.client.name,
 			    parv[0], buf);
 
-			sendto_one(sptr, rpl_str(RPL_ENDOFWATCHLIST), me.name,
+			sendto_one(sptr, rpl_str(RPL_ENDOFWATCHLIST), me.client.name,
 			    parv[0], *s);
 			continue;
 		}
@@ -258,7 +258,7 @@ DLLFUNC CMD_FUNC(m_watch)
 		 */
 		if ((*s == 'L' || *s == 'l') && !did_l)
 		{
-			Link *lp = sptr->watch;
+			Link *lp = sptr->localClient->watch;
 
 			did_l = 1;
 
@@ -268,7 +268,7 @@ DLLFUNC CMD_FUNC(m_watch)
 				    find_person(lp->value.wptr->nick, NULL)))
 				{
 					sendto_one(sptr, rpl_str(RPL_NOWON),
-					    me.name, parv[0], acptr->name,
+					    me.client.name, parv[0], acptr->name,
 					    acptr->user->username,
 					    IsHidden(acptr) ? acptr->user->
 					    virthost : acptr->user->realhost,
@@ -280,13 +280,13 @@ DLLFUNC CMD_FUNC(m_watch)
 				 */
 				else if (isupper(*s))
 					sendto_one(sptr, rpl_str(RPL_NOWOFF),
-					    me.name, parv[0],
+					    me.client.name, parv[0],
 					    lp->value.wptr->nick, "*", "*",
 					    lp->value.wptr->lasttime);
 				lp = lp->next;
 			}
 
-			sendto_one(sptr, rpl_str(RPL_ENDOFWATCHLIST), me.name,
+			sendto_one(sptr, rpl_str(RPL_ENDOFWATCHLIST), me.client.name,
 			    parv[0], *s);
 
 			continue;

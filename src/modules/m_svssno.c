@@ -139,7 +139,7 @@ int  do_svssno(aClient *cptr, aClient *sptr, int parc, char *parv[], int show_ch
 	}
 
 	if (show_change)
-		sendto_one(acptr, rpl_str(RPL_SNOMASK), me.name, acptr->name, get_sno_str(acptr));
+		sendto_one(acptr, rpl_str(RPL_SNOMASK), me.client.name, acptr->name, get_sno_str(acptr));
 
 	return 0;
 }

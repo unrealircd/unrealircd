@@ -85,13 +85,13 @@ DLLFUNC CMD_FUNC(m_chatops)
 	if (BadPtr(message))
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "CHATOPS");
+		    me.client.name, parv[0], "CHATOPS");
 		return 0;
 	}
 
 	if (MyClient(sptr) && !IsAnOper(cptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, sptr->name);
 		return 0;
 	}
 

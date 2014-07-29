@@ -83,13 +83,13 @@ int m_sdesc(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	if (!IsAdmin(sptr) && !IsCoAdmin(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, sptr->name);
 		return 0;
 	}
 	
 	if (parc < 2)
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "SDESC");
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.client.name, sptr->name, "SDESC");
 		return 0;
 	}
 
@@ -98,7 +98,7 @@ int m_sdesc(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			sendto_one(sptr,
 			    ":%s NOTICE %s :*** Nothing to change to (SDESC)",
-			    me.name, sptr->name);
+			    me.client.name, sptr->name);
 			return 0;
 		}
 	if (strlen(parv[1]) > (REALLEN))
@@ -107,7 +107,7 @@ int m_sdesc(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			sendto_one(sptr,
 			    ":%s NOTICE %s :*** /SDESC Error: \"Server info\" may maximum be %i characters of length",
-			    me.name, sptr->name, REALLEN);
+			    me.client.name, sptr->name, REALLEN);
 		}
 		return 0;
 	}
@@ -119,7 +119,7 @@ int m_sdesc(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (MyConnect(sptr))
 		sendto_one(sptr,
 			":%s NOTICE %s :Your \"server description\" is now set to be %s - you have to set it manually to undo it",
-			me.name, parv[0], parv[1]);
+			me.client.name, parv[0], parv[1]);
 
 	sendto_ops("Server description for %s is now '%s' changed by %s",
 		sptr->srvptr->name, sptr->srvptr->info, parv[0]);

@@ -23,8 +23,8 @@
 #include "h.h"
 #include "proto.h"
 
-#define HDR(str) sendto_one(sptr, ":%s 290 %s :%s", me.name, sptr->name, str);
-#define SND(str) sendto_one(sptr, ":%s 292 %s :%s", me.name, sptr->name, str);
+#define HDR(str) sendto_one(sptr, ":%s 290 %s :%s", me.client.name, sptr->name, str);
+#define SND(str) sendto_one(sptr, ":%s 292 %s :%s", me.client.name, sptr->name, str);
 
 ConfigItem_help *Find_Help(char *command) {
 	ConfigItem_help *help;
@@ -73,14 +73,14 @@ int  parse_help(aClient *sptr, char *name, char *help)
 		SND("   We're sorry, we don't have help available for the command you requested.");
 		SND(" -");
 		sendto_one(sptr,":%s 292 %s : ***** Go to %s if you have any further questions *****",
-		    me.name, sptr->name, helpchan);
+		    me.client.name, sptr->name, helpchan);
 		SND(" -");
 		return 0;
 	}
 	text = helpitem->text;
 	SND(" -");
 	sendto_one(sptr,":%s 290 %s :***** %s *****",
-	    me.name, sptr->name, helpitem->command);
+	    me.client.name, sptr->name, helpitem->command);
 	SND(" -");
 	while (text) {
 		SND(text->line);

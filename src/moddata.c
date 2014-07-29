@@ -187,7 +187,7 @@ void unload_moddata_commit(ModDataInfo *md)
 		case MODDATATYPE_CLIENT:
 		{
 			aClient *acptr;
-			list_for_each_entry(acptr, &lclient_list, lclient_node)
+			list_for_each_entry2(acptr, struct LocalClient, &lclient_list, lclient_node)
 			{
 				if (md->free && moddata_client(acptr, md).ptr)
 					md->free(moddata_client(acptr, md).ptr);
@@ -225,7 +225,7 @@ void unload_moddata_commit(ModDataInfo *md)
 		{
 			aClient *acptr;
 			Membership *m;
-			list_for_each_entry(acptr, &lclient_list, lclient_node)
+			list_for_each_entry2(acptr, struct LocalClient, &lclient_list, lclient_node)
 			{
 				if (!acptr->user)
 					continue;
@@ -307,7 +307,7 @@ ModDataInfo *mdi;
 			char *value = mdi->serialize(&moddata_client(acptr, mdi));
 			if (value)
 				sendto_one(srv, ":%s MD %s %s %s :%s",
-					me.name, "client", acptr->name, mdi->name, value);
+					me.client.name, "client", acptr->name, mdi->name, value);
 		}
 	}
 }
@@ -324,7 +324,7 @@ ModDataInfo *mdi;
 			char *value = mdi->serialize(&moddata_channel(chptr, mdi));
 			if (value)
 				sendto_one(srv, ":%s MD %s %s %s :%s",
-					me.name, "channel", chptr->chname, mdi->name, value);
+					me.client.name, "channel", chptr->chname, mdi->name, value);
 		}
 	}
 }
@@ -350,7 +350,7 @@ aClient *acptr;
 					char *value = mdi->serialize(&moddata_member(m, mdi));
 					if (value)
 						sendto_one(srv, ":%s MD %s %s:%s %s :%s",
-							me.name, "member", chptr->chname, m->cptr->name, mdi->name, value);
+							me.client.name, "member", chptr->chname, m->cptr->name, mdi->name, value);
 				}
 			}
 		}
@@ -374,7 +374,7 @@ aClient *acptr;
 					char *value = mdi->serialize(&moddata_membership(m, mdi));
 					if (value)
 						sendto_one(srv, ":%s MD %s %s:%s %s :%s",
-							me.name, "membership", acptr->name, m->chptr->chname, mdi->name, value);
+							me.client.name, "membership", acptr->name, m->chptr->chname, mdi->name, value);
 				}
 			}
 		}

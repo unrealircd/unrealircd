@@ -90,19 +90,19 @@ DLLFUNC CMD_FUNC(m_connect)
 
 	if (!IsPrivileged(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 		return -1;
 	}
 
 	if (MyClient(sptr) && !OPCanGRoute(sptr) && parc > 3)
 	{			/* Only allow LocOps to make */
 		/* local CONNECTS --SRB      */
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 		return 0;
 	}
 	if (MyClient(sptr) && !OPCanLRoute(sptr) && parc <= 3)
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 		return 0;
 	}
 	if (hunt_server(cptr, sptr, ":%s CONNECT %s %s :%s", 3, parc, parv) != HUNTED_ISME)
@@ -111,7 +111,7 @@ DLLFUNC CMD_FUNC(m_connect)
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "CONNECT");
+		    me.client.name, parv[0], "CONNECT");
 		return -1;
 	}
 
@@ -179,9 +179,9 @@ DLLFUNC CMD_FUNC(m_connect)
 	 */
 	if (!IsAnOper(cptr))
 	{
-		sendto_server(&me, 0, 0,
+		sendto_server(&me.client, 0, 0,
 		    ":%s GLOBOPS :Remote CONNECT %s %s from %s",
-		    me.name, parv[1], parv[2] ? parv[2] : "",
+		    me.client.name, parv[1], parv[2] ? parv[2] : "",
 		    get_client_name(sptr, FALSE));
 	}
 	/* Interesting */

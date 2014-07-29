@@ -77,14 +77,14 @@ static int dead_link(aClient *to, char *notice)
 	 * If because of BUFFERPOOL problem then clean dbuf's now so that
 	 * notices don't hurt operators below.
 	 */
-	DBufClear(&to->recvQ);
-	DBufClear(&to->sendQ);
+	DBufClear(&to->localClient->recvQ);
+	DBufClear(&to->localClient->sendQ);
 	
 	if (!IsPerson(to) && !IsUnknown(to) && !(to->flags & FLAGS_CLOSING))
 		(void)sendto_failops_whoare_opers("Closing link: %s - %s",
 			notice, get_client_name(to, FALSE));
 	Debug((DEBUG_ERROR, "dead_link: %s - %s", notice, get_client_name(to, FALSE)));
-	to->error_str = strdup(notice);
+	to->localClient->error_str = strdup(notice);
 	return -1;
 }
 
@@ -129,9 +129,9 @@ int  send_queued(aClient *to)
 		return -1;
 	}
 
-	while (DBufLength(&to->sendQ) > 0)
+	while (DBufLength(&to->localClient->sendQ) > 0)
 	{
-		block = container_of(to->sendQ.dbuf_list.next, dbufbuf, dbuf_node);
+		block = container_of(to->localClient->sendQ.dbuf_list.next, dbufbuf, dbuf_node);
 		len = block->size;
 
 		/* Returns always len > 0 */
@@ -141,8 +141,8 @@ int  send_queued(aClient *to)
 			snprintf(buf, 256, "Write error: %s", STRERROR(ERRNO));
 			return dead_link(to, buf);
 		}
-		(void)dbuf_delete(&to->sendQ, rlen);
-		to->lastsq = DBufLength(&to->sendQ) / 1024;
+		(void)dbuf_delete(&to->localClient->sendQ, rlen);
+		to->localClient->lastsq = DBufLength(&to->localClient->sendQ) / 1024;
 		if (rlen < block->size)
 		{
 			/* incomplete write due to EWOULDBLOCK, reschedule */
@@ -152,7 +152,7 @@ int  send_queued(aClient *to)
 	}
 	
 	/* Nothing left to write, stop asking for write-ready notification. */
-	if ((DBufLength(&to->sendQ) == 0) && (to->fd >= 0))
+	if ((DBufLength(&to->localClient->sendQ) == 0) && (to->fd >= 0))
 		fd_setselect(to->fd, FD_SELECT_NOWRITE, NULL, to);
 
 	return (IsDead(to)) ? -1 : 0;
@@ -243,30 +243,30 @@ void sendbufto_one(aClient *to, char *msg, unsigned int quick)
 		return;
 	}
         for(h = Hooks[HOOKTYPE_PACKET]; h; h = h->next) {
-		(*(h->func.intfunc))(&me, to, &msg, &len);
+		(*(h->func.intfunc))(&me.client, to, &msg, &len);
 		if(!msg) return;
 	}
-	if (DBufLength(&to->sendQ) > get_sendq(to))
+	if (DBufLength(&to->localClient->sendQ) > get_sendq(to))
 	{
 		if (IsServer(to))
 			sendto_ops("Max SendQ limit exceeded for %s: %u > %d",
-			    get_client_name(to, FALSE), DBufLength(&to->sendQ),
+			    get_client_name(to, FALSE), DBufLength(&to->localClient->sendQ),
 			    get_sendq(to));
 		dead_link(to, "Max SendQ exceeded");
 		return;
 	}
 
-	dbuf_put(&to->sendQ, msg, len);
+	dbuf_put(&to->localClient->sendQ, msg, len);
 
 	/*
 	 * Update statistics. The following is slightly incorrect
 	 * because it counts messages even if queued, but bytes
 	 * only really sent. Queued bytes get updated in SendQueued.
 	 */
-	to->sendM += 1;
+	to->localClient->sendM += 1;
 	me.sendM += 1;
 
-	if (DBufLength(&to->sendQ) > 0)
+	if (DBufLength(&to->localClient->sendQ) > 0)
 		send_queued(to);
 }
 
@@ -287,9 +287,9 @@ void sendto_channel_butone(aClient *one, aClient *from, aChannel *chptr,
 			continue;
 		if (MyConnect(acptr))	/* (It is always a client) */
 			vsendto_prefix_one(acptr, from, pattern, vl);
-		else if (acptr->from->serial != current_serial)
+		else if (acptr->from->localClient->serial != current_serial)
 		{
-			acptr->from->serial = current_serial;
+			acptr->from->localClient->serial = current_serial;
 			/*
 			 * Burst messages comes here..
 			 */
@@ -319,9 +319,9 @@ void sendto_channel_butone_with_capability(aClient *one, unsigned int cap,
 			continue;
 		if (MyConnect(acptr))	/* (It is always a client) */
 			vsendto_prefix_one(acptr, from, pattern, vl);
-		else if (acptr->from->serial != current_serial)
+		else if (acptr->from->localClient->serial != current_serial)
 		{
-			acptr->from->serial = current_serial;
+			acptr->from->localClient->serial = current_serial;
 			/*
 			 * Burst messages comes here..
 			 */
@@ -386,7 +386,7 @@ good:
 		{
 			/* Now check whether a message has been sent to this
 			 * remote link already */
-			if (acptr->from->serial != current_serial)
+			if (acptr->from->localClient->serial != current_serial)
 			{
 #ifdef SECURECHANMSGSONLYGOTOSECURE
 				for (h = Hooks[HOOKTYPE_CAN_SEND_SECURE]; h; h = h->next)
@@ -403,7 +403,7 @@ good:
 				vsendto_prefix_one(acptr, from, pattern, vl);
 				va_end(vl);
 
-				acptr->from->serial = current_serial;
+				acptr->from->localClient->serial = current_serial;
 			}
 		}
 	}
@@ -466,7 +466,7 @@ sendto_server(aClient *one, unsigned long caps,
 	if (list_empty(&server_list))
 		return;
 
-	list_for_each_entry(cptr, &server_list, special_node)
+	list_for_each_entry2(cptr, struct LocalClient, &server_list, special_node)
 	{
 		va_list vl;
 
@@ -508,15 +508,15 @@ void sendto_common_channels(aClient *user, char *pattern, ...)
 
 	++current_serial;
 	if (MyConnect(user))
-		user->serial = current_serial;
+		user->localClient->serial = current_serial;
 	if (user->user)
 		for (channels = user->user->channel; channels; channels = channels->next)
 			for (users = channels->chptr->members; users; users = users->next)
 			{
 				cptr = users->cptr;
-				if (!MyConnect(cptr) || (cptr->serial == current_serial))
+				if (!MyConnect(cptr) || (cptr->localClient->serial == current_serial))
 					continue;
-				cptr->serial = current_serial;
+				cptr->localClient->serial = current_serial;
 				sendbufto_one(cptr, sendbuf, sendlen);
 			}
 
@@ -548,17 +548,17 @@ void sendto_common_channels_local_butone(aClient *user, int cap, char *pattern, 
 	va_end(vl);
 
 	++current_serial;
-	user->serial = current_serial;
+	user->localClient->serial = current_serial;
 	if (user->user)
 	{
 		for (channels = user->user->channel; channels; channels = channels->next)
 			for (users = channels->chptr->members; users; users = users->next)
 			{
 				cptr = users->cptr;
-				if (!MyConnect(cptr) || (cptr->serial == current_serial) ||
+				if (!MyConnect(cptr) || (cptr->localClient->serial == current_serial) ||
 				    !CHECKPROTO(cptr, cap))
 					continue;
-				cptr->serial = current_serial;
+				cptr->localClient->serial = current_serial;
 				sendbufto_one(cptr, sendbuf, sendlen);
 			}
 	}
@@ -659,7 +659,7 @@ void sendto_match_servs(aChannel *chptr, aClient *from, char *format, ...)
 	else
 		mask = (char *)NULL;
 
-	list_for_each_entry(cptr, &server_list, special_node)
+	list_for_each_entry2(cptr, struct LocalClient, &server_list, special_node)
 	{
 		if (cptr == from)
 			continue;
@@ -694,7 +694,7 @@ void sendto_match_butone(aClient *one, aClient *from, char *mask, int what,
 	else
 		cansendlocal = cansendglobal = 1;
 
-	list_for_each_entry(cptr, &server_list, special_node)
+	list_for_each_entry2(cptr, struct LocalClient, &server_list, special_node)
 	{
 		if (cptr == one)	/* must skip the origin !! */
 			continue;
@@ -737,7 +737,7 @@ void sendto_all_butone(aClient *one, aClient *from, char *pattern, ...)
 	va_list vl;
 	aClient *cptr;
 
-	list_for_each_entry(cptr, &lclient_list, lclient_node)
+	list_for_each_entry2(cptr, struct LocalClient, &lclient_list, lclient_node)
 		if (!IsMe(cptr) && one != cptr)
 		{
 			va_start(vl, pattern);
@@ -759,10 +759,10 @@ void sendto_ops(char *pattern, ...)
 	aClient *cptr;
 	char nbuf[1024];
 
-	list_for_each_entry(cptr, &lclient_list, lclient_node)
+	list_for_each_entry2(cptr, struct LocalClient, &lclient_list, lclient_node)
 		if (!IsServer(cptr) && !IsMe(cptr) && SendServNotice(cptr))
 		{
-			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** Notice -- ", me.name, cptr->name);
+			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** Notice -- ", me.client.name, cptr->name);
 			(void)strlcat(nbuf, pattern, sizeof nbuf);
 
 			va_start(vl, pattern);
@@ -782,11 +782,11 @@ void sendto_failops(char *pattern, ...)
 	aClient *cptr;
 	char nbuf[1024];
 
-	list_for_each_entry(cptr, &lclient_list, lclient_node)
+	list_for_each_entry2(cptr, struct LocalClient, &lclient_list, lclient_node)
 		if (!IsServer(cptr) && !IsMe(cptr) && SendFailops(cptr))
 		{
 			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** Global -- ",
-			    me.name, cptr->name);
+			    me.client.name, cptr->name);
 			(void)strlcat(nbuf, pattern, sizeof nbuf);
 
 			va_start(vl, pattern);
@@ -806,11 +806,11 @@ void sendto_umode(int umodes, char *pattern, ...)
 	aClient *cptr;
 	char nbuf[1024];
 
-	list_for_each_entry(cptr, &lclient_list, lclient_node)
+	list_for_each_entry2(cptr, struct LocalClient, &lclient_list, lclient_node)
 		if (IsPerson(cptr) && (cptr->umodes & umodes) == umodes)
 		{
 			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :",
-			    me.name, cptr->name);
+			    me.client.name, cptr->name);
 			(void)strlcat(nbuf, pattern, sizeof nbuf);
 
 			va_start(vl, pattern);
@@ -830,7 +830,7 @@ void sendto_umode_raw(int umodes, char *pattern, ...)
 	aClient *cptr;
 	int  i;
 
-	list_for_each_entry(cptr, &lclient_list, lclient_node)
+	list_for_each_entry2(cptr, struct LocalClient, &lclient_list, lclient_node)
 		if (IsPerson(cptr) && (cptr->umodes & umodes) == umodes)
 		{
 			va_start(vl, pattern);
@@ -854,10 +854,10 @@ void sendto_snomask(int snomask, char *pattern, ...)
 	ircvsnprintf(nbuf, sizeof(nbuf), pattern, vl);
 	va_end(vl);
 
-	list_for_each_entry(cptr, &oper_list, special_node)
+	list_for_each_entry2(cptr, struct LocalClient, &oper_list, special_node)
 	{
 		if (cptr->user->snomask & snomask)
-			sendto_one(cptr, ":%s NOTICE %s :%s", me.name, cptr->name, nbuf);
+			sendto_one(cptr, ":%s NOTICE %s :%s", me.client.name, cptr->name, nbuf);
 	}
 }
 
@@ -877,10 +877,10 @@ void sendto_snomask_global(int snomask, char *pattern, ...)
 	ircvsnprintf(nbuf, sizeof(nbuf), pattern, vl);
 	va_end(vl);
 
-	list_for_each_entry(cptr, &oper_list, special_node)
+	list_for_each_entry2(cptr, struct LocalClient, &oper_list, special_node)
 	{
 		if (cptr->user->snomask & snomask)
-			sendto_one(cptr, ":%s NOTICE %s :%s", me.name, cptr->name, nbuf);
+			sendto_one(cptr, ":%s NOTICE %s :%s", me.client.name, cptr->name, nbuf);
 	}
 
 	/* Build snomasks-to-send-to buffer */
@@ -890,7 +890,7 @@ void sendto_snomask_global(int snomask, char *pattern, ...)
 			*p++ = Snomask_Table[i].flag;
 	*p = '\0';
 
-	sendto_server(&me, 0, 0, ":%s SENDSNO %s :%s", me.name, snobuf, nbuf);
+	sendto_server(&me.client, 0, 0, ":%s SENDSNO %s :%s", me.client.name, snobuf, nbuf);
 }
 
 /** Send to specified snomask - local.
@@ -909,9 +909,9 @@ void sendto_snomask_normal(int snomask, char *pattern, ...)
 	ircvsnprintf(nbuf, sizeof(nbuf), pattern, vl);
 	va_end(vl);
 
-	list_for_each_entry(cptr, &lclient_list, lclient_node)
+	list_for_each_entry2(cptr, struct LocalClient, &lclient_list, lclient_node)
 		if (IsPerson(cptr) && (cptr->user->snomask & snomask))
-			sendto_one(cptr, ":%s NOTICE %s :%s", me.name, cptr->name, nbuf);
+			sendto_one(cptr, ":%s NOTICE %s :%s", me.client.name, cptr->name, nbuf);
 }
 
 /** Send to specified snomask - global.
@@ -930,9 +930,9 @@ void sendto_snomask_normal_global(int snomask, char *pattern, ...)
 	ircvsnprintf(nbuf, sizeof(nbuf), pattern, vl);
 	va_end(vl);
 
-	list_for_each_entry(cptr, &lclient_list, lclient_node)
+	list_for_each_entry2(cptr, struct LocalClient, &lclient_list, lclient_node)
 		if (IsPerson(cptr) && (cptr->user->snomask & snomask))
-			sendto_one(cptr, ":%s NOTICE %s :%s", me.name, cptr->name, nbuf);
+			sendto_one(cptr, ":%s NOTICE %s :%s", me.client.name, cptr->name, nbuf);
 
 	/* Build snomasks-to-send-to buffer */
 	snobuf[0] = '\0';
@@ -941,7 +941,7 @@ void sendto_snomask_normal_global(int snomask, char *pattern, ...)
 			*p++ = Snomask_Table[i].flag;
 	*p = '\0';
 
-	sendto_server(&me, 0, 0, ":%s SENDSNO %s :%s", me.name, snobuf, nbuf);
+	sendto_server(&me.client, 0, 0, ":%s SENDSNO %s :%s", me.client.name, snobuf, nbuf);
 }
 
 
@@ -956,12 +956,12 @@ void sendto_failops_whoare_opers(char *pattern, ...)
 	aClient *cptr;
 	char nbuf[1024];
 
-	list_for_each_entry(cptr, &oper_list, special_node)
+	list_for_each_entry2(cptr, struct LocalClient, &oper_list, special_node)
 	{
 		if (SendFailops(cptr))
 		{
 			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** Global -- ",
-			    me.name, cptr->name);
+			    me.client.name, cptr->name);
 			(void)strlcat(nbuf, pattern, sizeof nbuf);
 
 			va_start(vl, pattern);
@@ -983,12 +983,12 @@ void sendto_locfailops(char *pattern, ...)
 	int  i;
 	char nbuf[1024];
 
-	list_for_each_entry(cptr, &oper_list, special_node)
+	list_for_each_entry2(cptr, struct LocalClient, &oper_list, special_node)
 	{
 		if (SendFailops(cptr))
 		{
 			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** LocOps -- ",
-			    me.name, cptr->name);
+			    me.client.name, cptr->name);
 			(void)strlcat(nbuf, pattern, sizeof nbuf);
 
 			va_start(vl, pattern);
@@ -1009,10 +1009,10 @@ void sendto_opers(char *pattern, ...)
 	int  i;
 	char nbuf[1024];
 
-	list_for_each_entry(cptr, &oper_list, special_node)
+	list_for_each_entry2(cptr, struct LocalClient, &oper_list, special_node)
 	{
 		(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** Oper -- ",
-		    me.name, cptr->name);
+		    me.client.name, cptr->name);
 		(void)strlcat(nbuf, pattern, sizeof nbuf);
 
 		va_start(vl, pattern);
@@ -1037,11 +1037,11 @@ void sendto_ops_butone(aClient *one, aClient *from, char *pattern, ...)
 	{
 		if (!SendWallops(cptr))
 			continue;
-		if (cptr->from->serial == current_serial)	/* sent message along it already ? */
+		if (cptr->from->localClient->serial == current_serial)	/* sent message along it already ? */
 			continue;
 		if (cptr->from == one)
 			continue;	/* ...was the one I should skip */
-		cptr->from->serial = current_serial;
+		cptr->from->localClient->serial = current_serial;
 
 		va_start(vl, pattern);
 		vsendto_prefix_one(cptr->from, from, pattern, vl);
@@ -1067,11 +1067,11 @@ void sendto_opers_butone(aClient *one, aClient *from, char *pattern, ...)
 	{
 		if (!IsAnOper(cptr))
 			continue;
-		if (cptr->from->serial == current_serial)	/* sent message along it already ? */
+		if (cptr->from->localClient->serial == current_serial)	/* sent message along it already ? */
 			continue;
 		if (cptr->from == one)
 			continue;	/* ...was the one I should skip */
-		cptr->from->serial = current_serial;
+		cptr->from->localClient->serial = current_serial;
 
 		va_start(vl, pattern);
 		vsendto_prefix_one(cptr->from, from, pattern, vl);
@@ -1095,11 +1095,11 @@ void sendto_ops_butme(aClient *from, char *pattern, ...)
 	{
 		if (!SendWallops(cptr))
 			continue;
-		if (cptr->from->serial == current_serial)	/* sent message along it already ? */
+		if (cptr->from->localClient->serial == current_serial)	/* sent message along it already ? */
 			continue;
-		if (!strcmp(cptr->user->server, me.name))	/* a locop */
+		if (!strcmp(cptr->user->server, me.client.name))	/* a locop */
 			continue;
-		cptr->from->serial = current_serial;
+		cptr->from->localClient->serial = current_serial;
 
 		va_start(vl, pattern);
 		vsendto_prefix_one(cptr->from, from, pattern, vl);
@@ -1196,10 +1196,10 @@ void sendto_realops(char *pattern, ...)
 	aClient *cptr;
 	char nbuf[1024];
 
-	list_for_each_entry(cptr, &oper_list, special_node)
+	list_for_each_entry2(cptr, struct LocalClient, &oper_list, special_node)
 	{
 		(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** Notice -- ",
-		    me.name, cptr->name);
+		    me.client.name, cptr->name);
 		(void)strlcat(nbuf, pattern, sizeof nbuf);
 
 		va_start(vl, pattern);
@@ -1234,37 +1234,37 @@ void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnec
 		RunHook(HOOKTYPE_LOCAL_CONNECT, sptr);
 		ircsnprintf(connectd, sizeof(connectd),
 		    "*** Notice -- Client connecting on port %d: %s (%s@%s) [%s] %s%s%s",
-		    sptr->listener->port, nick, user->username, user->realhost,
-		    sptr->class ? sptr->class->name : "",
+		    sptr->localClient->listener->port, nick, user->username, user->realhost,
+		    sptr->localClient->class ? sptr->localClient->class->name : "",
 #ifdef USE_SSL
 		IsSecure(sptr) ? "[secure " : "",
-		IsSecure(sptr) ? SSL_get_cipher((SSL *)sptr->ssl) : "",
+		IsSecure(sptr) ? SSL_get_cipher((SSL *)sptr->localClient->ssl) : "",
 		IsSecure(sptr) ? "]" : "");
 #else
 		"", "", "");
 #endif
 		ircsnprintf(connecth, sizeof(connecth),
 		    "*** Notice -- Client connecting: %s (%s@%s) [%s] {%s}", nick,
-		    user->username, user->realhost, Inet_ia2p(&sptr->ip),
-		    sptr->class ? sptr->class->name : "0");
+		    user->username, user->realhost, Inet_ia2p(&sptr->localClient->ip),
+		    sptr->localClient->class ? sptr->localClient->class->name : "0");
 	}
 	else
 	{
 		ircsnprintf(connectd, sizeof(connectd), "*** Notice -- Client exiting: %s (%s@%s) [%s]",
 			nick, user->username, user->realhost, comment);
 		ircsnprintf(connecth, sizeof(connecth), "*** Notice -- Client exiting: %s (%s@%s) [%s] [%s]",
-			nick, user->username, user->realhost, comment, Inet_ia2p(&sptr->ip));
+			nick, user->username, user->realhost, comment, Inet_ia2p(&sptr->localClient->ip));
 	}
 
-	list_for_each_entry(cptr, &oper_list, special_node)
+	list_for_each_entry2(cptr, struct LocalClient, &oper_list, special_node)
 	{
 		if (cptr->user->snomask & SNO_CLIENT)
 		{
 			if (IsHybNotice(cptr))
-				sendto_one(cptr, ":%s NOTICE %s :%s", me.name,
+				sendto_one(cptr, ":%s NOTICE %s :%s", me.client.name,
 				    cptr->name, connecth);
 			else
-				sendto_one(cptr, ":%s NOTICE %s :%s", me.name,
+				sendto_one(cptr, ":%s NOTICE %s :%s", me.client.name,
 				    cptr->name, connectd);
 
 		}
@@ -1295,15 +1295,15 @@ void sendto_fconnectnotice(char *nick, anUser *user, aClient *sptr, int disconne
 			user->ip_str ? user->ip_str : "0");
 	}
 
-	list_for_each_entry(cptr, &oper_list, special_node)
+	list_for_each_entry2(cptr, struct LocalClient, &oper_list, special_node)
 	{
 		if (cptr->user->snomask & SNO_FCLIENT)
 		{
 			if (IsHybNotice(cptr))
-				sendto_one(cptr, ":%s NOTICE %s :%s", me.name,
+				sendto_one(cptr, ":%s NOTICE %s :%s", me.client.name,
 				    cptr->name, connecth);
 			else
-				sendto_one(cptr, ":%s NOTICE %s :%s", me.name,
+				sendto_one(cptr, ":%s NOTICE %s :%s", me.client.name,
 				    cptr->name, connectd);
 
 		}
@@ -1413,7 +1413,7 @@ static char realpattern[1024];
 va_list vl;
 char *name = *to->name ? to->name : "*";
 
-	ircsnprintf(realpattern, sizeof(realpattern), ":%s NOTICE %s :%s", me.name, name, pattern);
+	ircsnprintf(realpattern, sizeof(realpattern), ":%s NOTICE %s :%s", me.client.name, name, pattern);
 
 	va_start(vl, pattern);
 	vsendto_one(to, realpattern, vl);
@@ -1425,7 +1425,7 @@ void sendtxtnumeric(aClient *to, char *pattern, ...)
 static char realpattern[1024];
 va_list vl;
 
-	ircsnprintf(realpattern, sizeof(realpattern), ":%s %d %s :%s", me.name, RPL_TEXT, to->name, pattern);
+	ircsnprintf(realpattern, sizeof(realpattern), ":%s %d %s :%s", me.client.name, RPL_TEXT, to->name, pattern);
 
 	va_start(vl, pattern);
 	vsendto_one(to, realpattern, vl);

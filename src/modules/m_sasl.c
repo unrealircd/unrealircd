@@ -104,11 +104,11 @@ static aClient *decode_puid(char *puid)
 		cookie = atoi(it2);
 	}
 
-	if (stricmp(me.name, puid))
+	if (stricmp(me.client.name, puid))
 		return NULL;
 
-	list_for_each_entry(cptr, &unknown_list, lclient_node)
-		if (cptr->sasl_cookie == cookie)
+	list_for_each_entry2(cptr, struct LocalClient, &unknown_list, lclient_node)
+		if (cptr->localClient->sasl_cookie == cookie)
 			return cptr;
 
 	return NULL;
@@ -124,10 +124,10 @@ static const char *encode_puid(aClient *client)
 	static char buf[HOSTLEN + 20];
 
 	/* create a cookie if necessary (and in case getrandom16 returns 0, then run again) */
-	while (!client->sasl_cookie)
-		client->sasl_cookie = getrandom16();
+	while (!client->localClient->sasl_cookie)
+		client->localClient->sasl_cookie = getrandom16();
 
-	snprintf(buf, sizeof buf, "%s!0.%d", me.name, client->sasl_cookie);
+	snprintf(buf, sizeof buf, "%s!0.%d", me.client.name, client->localClient->sasl_cookie);
 
 	return buf;
 }
@@ -145,7 +145,7 @@ static int m_svslogin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (!SASL_SERVER || MyClient(sptr) || (parc < 3) || !parv[3])
 		return 0;
 
-	if (!stricmp(parv[1], me.name))
+	if (!stricmp(parv[1], me.client.name))
 	{
 		aClient *target_p;
 
@@ -158,7 +158,7 @@ static int m_svslogin(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 		strlcpy(target_p->user->svid, parv[3], sizeof(target_p->user->svid));
 
-		sendto_one(target_p, err_str(RPL_LOGGEDIN), me.name,
+		sendto_one(target_p, err_str(RPL_LOGGEDIN), me.client.name,
 			   BadPtr(target_p->name) ? "*" : target_p->name,
 			   BadPtr(target_p->name) ? "*" : target_p->name,
 			   BadPtr(target_p->user->username) ? "*" : target_p->user->username,
@@ -190,7 +190,7 @@ static int m_sasl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (!SASL_SERVER || MyClient(sptr) || (parc < 4) || !parv[4])
 		return 0;
 
-	if (!stricmp(parv[1], me.name))
+	if (!stricmp(parv[1], me.client.name))
 	{
 		aClient *target_p;
 
@@ -202,24 +202,24 @@ static int m_sasl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			make_user(target_p);
 
 		/* reject if another SASL agent is answering */
-		if (*target_p->sasl_agent && stricmp(parv[0], target_p->sasl_agent))
+		if (*target_p->localClient->sasl_agent && stricmp(parv[0], target_p->localClient->sasl_agent))
 			return 0;
 		else
-			strlcpy(target_p->sasl_agent, parv[0], sizeof(target_p->sasl_agent));
+			strlcpy(target_p->localClient->sasl_agent, parv[0], sizeof(target_p->localClient->sasl_agent));
 
 		if (*parv[3] == 'C')
 			sendto_one(target_p, "AUTHENTICATE %s", parv[4]);
 		else if (*parv[3] == 'D')
 		{
 			if (*parv[4] == 'F')
-				sendto_one(target_p, err_str(ERR_SASLFAIL), me.name, BadPtr(target_p->name) ? "*" : target_p->name);
+				sendto_one(target_p, err_str(ERR_SASLFAIL), me.client.name, BadPtr(target_p->name) ? "*" : target_p->name);
 			else if (*parv[4] == 'S')
 			{
-				target_p->sasl_complete++;
-				sendto_one(target_p, err_str(RPL_SASLSUCCESS), me.name, BadPtr(target_p->name) ? "*" : target_p->name);
+				target_p->localClient->sasl_complete++;
+				sendto_one(target_p, err_str(RPL_SASLSUCCESS), me.client.name, BadPtr(target_p->name) ? "*" : target_p->name);
 			}
 
-			*target_p->sasl_agent = '\0';
+			*target_p->localClient->sasl_agent = '\0';
 		}
 
 		return 0;
@@ -246,54 +246,54 @@ static int m_authenticate(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (!SASL_SERVER || !MyConnect(sptr) || BadPtr(parv[1]) || !CHECKPROTO(sptr, PROTO_SASL))
 		return 0;
 
-	if (sptr->sasl_complete)
+	if (sptr->localClient->sasl_complete)
 	{
-		sendto_one(sptr, err_str(ERR_SASLALREADY), me.name, BadPtr(sptr->name) ? "*" : sptr->name);
+		sendto_one(sptr, err_str(ERR_SASLALREADY), me.client.name, BadPtr(sptr->name) ? "*" : sptr->name);
 		return 0;
 	}
 
 	if (strlen(parv[1]) > 400)
 	{
-		sendto_one(sptr, err_str(ERR_SASLTOOLONG), me.name, BadPtr(sptr->name) ? "*" : sptr->name);
+		sendto_one(sptr, err_str(ERR_SASLTOOLONG), me.client.name, BadPtr(sptr->name) ? "*" : sptr->name);
 		return 0;
 	}
 
-	if (*sptr->sasl_agent)
-		agent_p = find_client(sptr->sasl_agent, NULL);
+	if (*sptr->localClient->sasl_agent)
+		agent_p = find_client(sptr->localClient->sasl_agent, NULL);
 
 	if (agent_p == NULL)
 		sendto_server(NULL, 0, 0, ":%s SASL %s %s S %s",
-		    me.name, SASL_SERVER, encode_puid(sptr), parv[1]);
+		    me.client.name, SASL_SERVER, encode_puid(sptr), parv[1]);
 	else
 		sendto_server(NULL, 0, 0, ":%s SASL %s %s C %s",
-		    me.name, AGENT_SID(agent_p), encode_puid(sptr), parv[1]);
+		    me.client.name, AGENT_SID(agent_p), encode_puid(sptr), parv[1]);
 
-	sptr->sasl_out++;
+	sptr->localClient->sasl_out++;
 
 	return 0;
 }
 
 static int abort_sasl(struct Client *cptr)
 {
-	if (cptr->sasl_out == 0 || cptr->sasl_complete)
+	if (cptr->localClient->sasl_out == 0 || cptr->localClient->sasl_complete)
 		return 0;
 
-	cptr->sasl_out = cptr->sasl_complete = 0;
-	sendto_one(cptr, err_str(ERR_SASLABORTED), me.name, BadPtr(cptr->name) ? "*" : cptr->name);
+	cptr->localClient->sasl_out = cptr->localClient->sasl_complete = 0;
+	sendto_one(cptr, err_str(ERR_SASLABORTED), me.client.name, BadPtr(cptr->name) ? "*" : cptr->name);
 
-	if (*cptr->sasl_agent)
+	if (*cptr->localClient->sasl_agent)
 	{
-		aClient *agent_p = find_client(cptr->sasl_agent, NULL);
+		aClient *agent_p = find_client(cptr->localClient->sasl_agent, NULL);
 
 		if (agent_p != NULL)
 		{
 			sendto_server(NULL, 0, 0, ":%s SASL %s %s D A",
-			    me.name, AGENT_SID(agent_p), encode_puid(cptr));
+			    me.client.name, AGENT_SID(agent_p), encode_puid(cptr));
 			return 0;
 		}
 	}
 
-	sendto_server(NULL, 0, 0, ":%s SASL * %s D A", me.name, encode_puid(cptr));
+	sendto_server(NULL, 0, 0, ":%s SASL * %s D A", me.client.name, encode_puid(cptr));
 	return 0;
 }
 

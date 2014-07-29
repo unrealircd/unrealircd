@@ -90,44 +90,44 @@ ConfigItem_ban *bconf;
 
 	j = 1;
 
-	list_for_each_entry(acptr, &unknown_list, lclient_node)
+	list_for_each_entry2(acptr, struct LocalClient, &unknown_list, lclient_node)
 	{
 		if (IsUnknown(acptr) &&
 #ifndef INET6
-			acptr->ip.S_ADDR == cptr->ip.S_ADDR)
+			acptr->localClient->ip.S_ADDR == cptr->localClient->ip.S_ADDR)
 #else
-			!bcmp(acptr->ip.S_ADDR, cptr->ip.S_ADDR, sizeof(cptr->ip.S_ADDR)))
+			!bcmp(acptr->localClient->ip.S_ADDR, cptr->localClient->ip.S_ADDR, sizeof(cptr->localClient->ip.S_ADDR)))
 #endif
 		{
 			j++;
 			if (j > MAXUNKNOWNCONNECTIONSPERIP)
-				return exit_client(cptr, cptr, &me, "Too many unknown connections from your IP");
+				return exit_client(cptr, cptr, &me.client, "Too many unknown connections from your IP");
 		}
 	}
 
-	if ((bconf = Find_ban(cptr, Inet_ia2p(&cptr->ip), CONF_BAN_IP)))
+	if ((bconf = Find_ban(cptr, Inet_ia2p(&cptr->localClient->ip), CONF_BAN_IP)))
 	{
 		ircsnprintf(zlinebuf, BUFSIZE,
 			"You are not welcome on this server: %s. Email %s for more information.",
 			bconf->reason ? bconf->reason : "no reason", KLINE_ADDRESS);
-		return exit_client(cptr, cptr, &me, zlinebuf);
+		return exit_client(cptr, cptr, &me.client, zlinebuf);
 	}
 	else if (find_tkline_match_zap_ex(cptr, &tk) != -1)
 	{
 		ircsnprintf(zlinebuf, BUFSIZE, "Z:Lined (%s)", tk->reason);
-		return exit_client(cptr, cptr, &me, zlinebuf);
+		return exit_client(cptr, cptr, &me.client, zlinebuf);
 	}
 	else
 	{
 		int val;
-		if (!(val = throttle_can_connect(cptr, &cptr->ip)))
+		if (!(val = throttle_can_connect(cptr, &cptr->localClient->ip)))
 		{
 			ircsnprintf(zlinebuf, BUFSIZE, "Throttled: Reconnecting too fast - Email %s for more information.",
 					KLINE_ADDRESS);
-			return exit_client(cptr, cptr, &me, zlinebuf);
+			return exit_client(cptr, cptr, &me.client, zlinebuf);
 		}
 		else if (val == 1)
-			add_throttling_bucket(&cptr->ip);
+			add_throttling_bucket(&cptr->localClient->ip);
 	}
 
 	return 0;
@@ -145,23 +145,23 @@ int docgiirc(aClient *cptr, char *ip, char *host)
 	char *sockhost;
 
 	if (IsCGIIRC(cptr))
-		return exit_client(cptr, cptr, &me, "Double CGI:IRC request (already identified)");
+		return exit_client(cptr, cptr, &me.client, "Double CGI:IRC request (already identified)");
 
 	if (host && !strcmp(ip, host))
 		host = NULL; /* host did not resolve, make it NULL */
 
-	/* STEP 1: Update cptr->ip
+	/* STEP 1: Update cptr->localClient->ip
 	   inet_pton() returns 1 on success, 0 on bad input, -1 on bad AF */
-	if(inet_pton(AFINET, ip, &cptr->ip) != 1)
+	if(inet_pton(AFINET, ip, &cptr->localClient->ip) != 1)
 	{
 #ifndef INET6
 		/* then we have an invalid IP */
-		return exit_client(cptr, cptr, &me, "Invalid IP address");
+		return exit_client(cptr, cptr, &me.client, "Invalid IP address");
 #else
 		/* The address may be IPv4. We have to try ::ffff:ipv4 */
 		snprintf(ipbuf, sizeof(ipbuf), "::ffff:%s", ip);
-		if(inet_pton(AFINET, ipbuf, &cptr->ip) != 1)
-			return exit_client(cptr, cptr, &me, "Invalid IP address");
+		if(inet_pton(AFINET, ipbuf, &cptr->localClient->ip) != 1)
+			return exit_client(cptr, cptr, &me.client, "Invalid IP address");
 #endif
 	}
 
@@ -174,27 +174,27 @@ int docgiirc(aClient *cptr, char *ip, char *host)
 		cptr->user->ip_str = strdup(ip);
 	}
 		
-	/* STEP 3: Update cptr->hostp */
+	/* STEP 3: Update cptr->localClient->hostp */
 	/* (free old) */
-	if (cptr->hostp)
+	if (cptr->localClient->hostp)
 	{
-		unreal_free_hostent(cptr->hostp);
-		cptr->hostp = NULL;
+		unreal_free_hostent(cptr->localClient->hostp);
+		cptr->localClient->hostp = NULL;
 	}
 	/* (create new) */
 	if (host && verify_hostname(host))
-		cptr->hostp = unreal_create_hostent(host, &cptr->ip);
+		cptr->localClient->hostp = unreal_create_hostent(host, &cptr->localClient->ip);
 
 	/* STEP 4: Update sockhost
 	   Make sure that if this any IPv4 address is _not_ prefixed with
 	   "::ffff:" by using Inet_ia2p().
 	 */
-	sockhost = Inet_ia2p(&cptr->ip);
+	sockhost = Inet_ia2p(&cptr->localClient->ip);
 	if(!sockhost)
 	{
-		return exit_client(cptr, cptr, &me, "Error processing CGI:IRC IP address.");
+		return exit_client(cptr, cptr, &me.client, "Error processing CGI:IRC IP address.");
 	}
-	strlcpy(cptr->sockhost, sockhost, sizeof(cptr->sockhost));
+	strlcpy(cptr->localClient->sockhost, sockhost, sizeof(cptr->localClient->sockhost));
 
 	SetCGIIRC(cptr);
 
@@ -214,7 +214,7 @@ ConfigItem_cgiirc *e;
 
 	if ((parc < 5) || BadPtr(parv[4]))
 	{
-		sendto_one(cptr, err_str(ERR_NEEDMOREPARAMS), me.name, "*", "WEBIRC");
+		sendto_one(cptr, err_str(ERR_NEEDMOREPARAMS), me.client.name, "*", "WEBIRC");
 		return -1;
 	}
 
@@ -223,13 +223,13 @@ ConfigItem_cgiirc *e;
 	ip = parv[4];
 
 	/* Check if allowed host */
-	e = Find_cgiirc(sptr->username, sptr->sockhost, GetIP(sptr), CGIIRC_WEBIRC);
+	e = Find_cgiirc(sptr->username, sptr->localClient->sockhost, GetIP(sptr), CGIIRC_WEBIRC);
 	if (!e)
-		return exit_client(cptr, sptr, &me, "CGI:IRC -- No access");
+		return exit_client(cptr, sptr, &me.client, "CGI:IRC -- No access");
 
 	/* Check password */
 	if (Auth_Check(sptr, e->auth, password) == -1)
-		return exit_client(cptr, sptr, &me, "CGI:IRC -- Invalid password");
+		return exit_client(cptr, sptr, &me.client, "CGI:IRC -- Invalid password");
 
 	/* And do our job.. */
 	return docgiirc(cptr, ip, host);
@@ -250,13 +250,13 @@ DLLFUNC CMD_FUNC(m_pass)
 	if (BadPtr(password))
 	{
 		sendto_one(cptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "PASS");
+		    me.client.name, parv[0], "PASS");
 		return 0;
 	}
 	if (!MyConnect(sptr) || (!IsUnknown(cptr) && !IsHandshake(cptr)))
 	{
 		sendto_one(cptr, err_str(ERR_ALREADYREGISTRED),
-		    me.name, parv[0]);
+		    me.client.name, parv[0]);
 		return 0;
 	}
 
@@ -265,7 +265,7 @@ DLLFUNC CMD_FUNC(m_pass)
 		char *ip, *host;
 		ConfigItem_cgiirc *e;
 
-		e = Find_cgiirc(sptr->username, sptr->sockhost, GetIP(sptr), CGIIRC_PASS);
+		e = Find_cgiirc(sptr->username, sptr->localClient->sockhost, GetIP(sptr), CGIIRC_PASS);
 		if (e)
 		{
 			/* Ok now we got that sorted out, proceed:
@@ -276,7 +276,7 @@ DLLFUNC CMD_FUNC(m_pass)
 			ip = password + CGIIRC_STRINGLEN;
 			host = strchr(ip, '_');
 			if (!host)
-				return exit_client(cptr, sptr, &me, "Invalid CGI:IRC IP received");
+				return exit_client(cptr, sptr, &me.client, "Invalid CGI:IRC IP received");
 			*host++ = '\0';
 		
 			return docgiirc(cptr, ip, host);
@@ -285,12 +285,12 @@ DLLFUNC CMD_FUNC(m_pass)
 
 	
 	PassLen = strlen(password);
-	if (cptr->passwd)
-		MyFree(cptr->passwd);
+	if (cptr->localClient->passwd)
+		MyFree(cptr->localClient->passwd);
 	if (PassLen > (PASSWDLEN))
 		PassLen = PASSWDLEN;
-	cptr->passwd = MyMalloc(PassLen + 1);
-	strlcpy(cptr->passwd, password, PassLen + 1);
+	cptr->localClient->passwd = MyMalloc(PassLen + 1);
+	strlcpy(cptr->localClient->passwd, password, PassLen + 1);
 
 	/* note: the original non-truncated password is supplied as 2nd parameter. */
 	RunHookReturnInt2(HOOKTYPE_LOCAL_PASS, sptr, password, !=0);

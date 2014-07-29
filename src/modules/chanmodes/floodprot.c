@@ -174,7 +174,7 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 		if (IsPerson(sptr) && is_chan_op(sptr, chptr))
 			return EX_ALLOW;
 		if (type == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
-			sendto_one(sptr, err_str(ERR_NOTFORHALFOPS), me.name, sptr->name, 'f');
+			sendto_one(sptr, err_str(ERR_NOTFORHALFOPS), me.client.name, sptr->name, 'f');
 		return EX_DENY;
 	} else
 	if (type == EXCHK_PARAM)
@@ -274,7 +274,7 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 				{
 					if (MyClient(sptr) && *p && (warnings++ < 3))
 						sendto_one(sptr, ":%s NOTICE %s :warning: channelmode +f: floodtype '%c' unknown, ignored.",
-							me.name, sptr->name, *p);
+							me.client.name, sptr->name, *p);
 					continue; /* continue instead of break for forward compatability. */
 				}
 				c = *p;
@@ -285,7 +285,7 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 					if (MyClient(sptr))
 					{
 						sendto_one(sptr, err_str(ERR_CANNOTCHANGECHANMODE),
-							   me.name, sptr->name, 
+							   me.client.name, sptr->name, 
 							   'f', "value should be from 1-999");
 						goto invalidsyntax;
 					} else
@@ -373,7 +373,7 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 			{
 				if (MyClient(sptr))
 					sendto_one(sptr, err_str(ERR_CANNOTCHANGECHANMODE), 
-						   me.name, sptr->name, 'f', 
+						   me.client.name, sptr->name, 'f', 
 						   "time range should be 1-999");
 				goto invalidsyntax;
 			}
@@ -391,7 +391,7 @@ int cmodef_is_ok(aClient *sptr, aChannel *chptr, char mode, char *param, int typ
 		
 		return EX_ALLOW;
 invalidsyntax:
-		sendto_one(sptr, err_str(ERR_CANNOTCHANGECHANMODE), me.name, sptr->name, 'f', "Invalid syntax for MODE +f"); /* FIXME */
+		sendto_one(sptr, err_str(ERR_CANNOTCHANGECHANMODE), me.client.name, sptr->name, 'f', "Invalid syntax for MODE +f"); /* FIXME */
 		return EX_DENY;
 	}
 
@@ -1046,17 +1046,17 @@ int  check_for_chan_flood(aClient *sptr, aChannel *chptr)
 		if (banthem)
 		{		/* ban. */
 			sprintf(mask, "*!*@%s", GetHost(sptr));
-			add_listmode(&chptr->banlist, &me, chptr, mask);
-			sendto_server(&me, 0, 0, ":%s MODE %s +b %s 0",
-			    me.name, chptr->chname, mask);
-			sendto_channel_butserv(chptr, &me,
-			    ":%s MODE %s +b %s", me.name, chptr->chname, mask);
+			add_listmode(&chptr->banlist, &me.client, chptr, mask);
+			sendto_server(&me.client, 0, 0, ":%s MODE %s +b %s 0",
+			    me.client.name, chptr->chname, mask);
+			sendto_channel_butserv(chptr, &me.client,
+			    ":%s MODE %s +b %s", me.client.name, chptr->chname, mask);
 		}
-		sendto_channel_butserv(chptr, &me,
-		    ":%s KICK %s %s :%s", me.name,
+		sendto_channel_butserv(chptr, &me.client,
+		    ":%s KICK %s %s :%s", me.client.name,
 		    chptr->chname, sptr->name, comment);
 		sendto_server(NULL, 0, 0, ":%s KICK %s %s :%s",
-		   me.name, chptr->chname, sptr->name, comment);
+		   me.client.name, chptr->chname, sptr->name, comment);
 		remove_user_from_channel(sptr, chptr);
 		return 1;
 	}
@@ -1206,8 +1206,8 @@ Cmode_t extmode;
 			if ((mode && (e->chptr->mode.mode & mode)) ||
 			    (extmode && (e->chptr->mode.extmode & extmode)))
 			{
-				sendto_server(&me, 0, 0, ":%s MODE %s -%c 0", me.name, e->chptr->chname, e->m);
-				sendto_channel_butserv(e->chptr, &me, ":%s MODE %s -%c", me.name, e->chptr->chname, e->m);
+				sendto_server(&me.client, 0, 0, ":%s MODE %s -%c 0", me.client.name, e->chptr->chname, e->m);
+				sendto_channel_butserv(e->chptr, &me.client, ":%s MODE %s -%c", me.client.name, e->chptr->chname, e->m);
 				e->chptr->mode.mode &= ~mode;
 				e->chptr->mode.extmode &= ~extmode;
 			}
@@ -1294,11 +1294,11 @@ ChanFloodProt *chp = (ChanFloodProt *)GETPARASTRUCT(chptr, 'f');
 		ircsnprintf(comment, sizeof(comment), "*** Channel %sflood detected (limit is %d per %d seconds), setting mode +%c",
 			text, chp->l[what], chp->per, m);
 		ircsnprintf(target, sizeof(target), "%%%s", chptr->chname);
-		sendto_channelprefix_butone(NULL, &me, chptr,
+		sendto_channelprefix_butone(NULL, &me.client, chptr,
 			PREFIX_HALFOP|PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-			":%s NOTICE %s :%s", me.name, target, comment);
-		sendto_server(&me, 0, 0, ":%s MODE %s +%c 0", me.name, chptr->chname, m);
-		sendto_channel_butserv(chptr, &me, ":%s MODE %s +%c", me.name, chptr->chname, m);
+			":%s NOTICE %s :%s", me.client.name, target, comment);
+		sendto_server(&me.client, 0, 0, ":%s MODE %s +%c 0", me.client.name, chptr->chname, m);
+		sendto_channel_butserv(chptr, &me.client, ":%s MODE %s +%c", me.client.name, chptr->chname, m);
 		chptr->mode.mode |= mode;
 		chptr->mode.extmode |= extmode;
 		if (chp->r[what]) /* Add remove-chanmode timer... */

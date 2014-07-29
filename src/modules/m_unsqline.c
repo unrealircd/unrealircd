@@ -81,7 +81,7 @@ DLLFUNC int MOD_UNLOAD(m_unsqline)(int module_unload)
 DLLFUNC int m_unsqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
        char *tkllayer[6] = {
-                me.name,        /*0  server.name */
+                me.client.name,        /*0  server.name */
                 "-",            /*1  - */
                 "Q",            /*2  Q   */
                 "*",            /*3  unused */
@@ -94,6 +94,6 @@ DLLFUNC int m_unsqline(aClient *cptr, aClient *sptr, int parc, char *parv[])
         if (!IsServer(cptr))
                 return 0;
 
-        m_tkl(&me, &me, 6, tkllayer);
+        m_tkl(&me.client, &me.client, 6, tkllayer);
         return 0;
 }

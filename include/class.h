@@ -32,7 +32,7 @@ typedef struct Class {
 	struct Class *next;
 } aClass;
 
-#define	Class(x)	((x)->class)
+#define	Class(x)	((x)->localClient->class)
 #define	ConFreq(x)	((x)->conFreq)
 #define	PingFreq(x)	((x)->pingFreq)
 #define	MaxLinks(x)	((x)->maxLinks)
@@ -41,7 +41,7 @@ typedef struct Class {
 
 #define	ConfLinks(x)	(Class(x)->links)
 #define	ConfMaxLinks(x)	(Class(x)->maxLinks)
-#define	ConfClass(x)	(Class(x)->class)
+#define	ConfClass(x)	(Class(x)->localClient->class)
 #define	ConfConFreq(x)	(Class(x)->conFreq)
 #define	ConfPingFreq(x)	(Class(x)->pingFreq)
 #define	ConfSendq(x)	(Class(x)->maxSendq)

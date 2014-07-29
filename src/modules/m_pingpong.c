@@ -96,7 +96,7 @@ DLLFUNC int  m_ping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (parc < 2 || *parv[1] == '\0')
 	{
-		sendto_one(sptr, err_str(ERR_NOORIGIN), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOORIGIN), me.client.name, parv[0]);
 		return 0;
 	}
 	origin = parv[1];
@@ -112,22 +112,22 @@ DLLFUNC int  m_ping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			origin = cptr->name;
 	}
 
-	if (!BadPtr(destination) && mycmp(destination, me.name) != 0 && mycmp(destination, me.id) != 0)
+	if (!BadPtr(destination) && mycmp(destination, me.client.name) != 0 && mycmp(destination, me.client.id) != 0)
 	{
 		if (MyClient(sptr))
 			origin = sptr->name; /* Make sure origin is not spoofed */
-		if ((acptr = find_server_quick(destination)) && (acptr != &me))
+		if ((acptr = find_server_quick(destination)) && (acptr != &me.client))
 			sendto_one(acptr, ":%s PING %s :%s", parv[0], origin, destination);
 		else
 		{
 			sendto_one(sptr, err_str(ERR_NOSUCHSERVER),
-			    me.name, parv[0], destination);
+			    me.client.name, parv[0], destination);
 			return 0;
 		}
 	}
 	else
-		sendto_one(sptr, ":%s PONG %s :%s", me.name,
-		    (destination) ? destination : me.name, origin);
+		sendto_one(sptr, ":%s PONG %s :%s", me.client.name,
+		    (destination) ? destination : me.client.name, origin);
 	return 0;
 }
 
@@ -151,18 +151,18 @@ Debug((DEBUG_NOTICE, "NOSPOOF"));
 		goto temp;
 	result = strtoul(parv[1], NULL, 16);
 	/* Accept code in second parameter (ircserv) */
-	if (result != sptr->nospoof)
+	if (result != sptr->localClient->nospoof)
 	{
 		if (BadPtr(parv[2]))
 			goto temp;
 		result = strtoul(parv[2], NULL, 16);
-		if (result != sptr->nospoof)
+		if (result != sptr->localClient->nospoof)
 			goto temp;
 	}
-	sptr->nospoof = 0;
+	sptr->localClient->nospoof = 0;
 	if (USE_BAN_VERSION && MyConnect(sptr))
 		sendto_one(sptr, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
-			   me.name, sptr->name);
+			   me.client.name, sptr->name);
 
 	if (sptr->user && *sptr->user->username && sptr->name[0] && !CHECKPROTO(sptr, PROTO_CLICAP))
 		return register_user(cptr, sptr, sptr->name,
@@ -171,7 +171,7 @@ Debug((DEBUG_NOTICE, "NOSPOOF"));
       temp:
 	/* Homer compatibility */
 	sendto_one(cptr, ":%X!nospoof@%s PRIVMSG %s :\1VERSION\1",
-	    cptr->nospoof, me.name, cptr->name);
+	    cptr->localClient->nospoof, me.client.name, cptr->name);
 	return 0;
 }
 
@@ -191,7 +191,7 @@ DLLFUNC int m_pong(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (parc < 2 || *parv[1] == '\0')
 	{
-		sendto_one(sptr, err_str(ERR_NOORIGIN), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOORIGIN), me.client.name, parv[0]);
 		return 0;
 	}
 
@@ -204,7 +204,7 @@ DLLFUNC int m_pong(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (MyClient(sptr) || !IsRegistered(sptr))
 		destination = NULL;
 
-	if (!BadPtr(destination) && mycmp(destination, me.name) != 0)
+	if (!BadPtr(destination) && mycmp(destination, me.client.name) != 0)
 	{
 		if ((acptr = find_client(destination, NULL)) ||
 		    (acptr = find_server_quick(destination)))
@@ -212,7 +212,7 @@ DLLFUNC int m_pong(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			if (!IsServer(cptr) && !IsServer(acptr))
 			{
 				sendto_one(sptr, err_str(ERR_NOSUCHSERVER),
-				    me.name, parv[0], destination);
+				    me.client.name, parv[0], destination);
 				return 0;
 			}
 			else
@@ -222,7 +222,7 @@ DLLFUNC int m_pong(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		else
 		{
 			sendto_one(sptr, err_str(ERR_NOSUCHSERVER),
-			    me.name, parv[0], destination);
+			    me.client.name, parv[0], destination);
 			return 0;
 		}
 	}

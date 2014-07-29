@@ -88,7 +88,7 @@ DLLFUNC CMD_FUNC(m_setname)
 
  	if ((parc < 2) || BadPtr(parv[1]))
  	{
- 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0], "SETNAME");
+ 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.client.name, parv[0], "SETNAME");
  		return 0;
 	}
 
@@ -116,7 +116,7 @@ DLLFUNC CMD_FUNC(m_setname)
 
 	/* Check for n:lines here too */
 	if (!IsAnOper(sptr) && Find_ban(NULL, sptr->info, CONF_BAN_REALNAME))
-		return exit_client(cptr, sptr, &me,
+		return exit_client(cptr, sptr, &me.client,
 		                   "Your GECOS (real name) is banned from this server");
 
 	sendto_server(cptr, 0, 0, ":%s SETNAME :%s", sptr->name, parv[1]);

@@ -1548,8 +1548,8 @@ char *encoded;
 			continue;
 		if (!tk->setby)
 		{
-			if (me.name[0] != '\0')
-				tk->setby = strdup(me.name);
+			if (me.client.name[0] != '\0')
+				tk->setby = strdup(me.client.name);
 			else
 				tk->setby = strdup(conf_me->name ? conf_me->name : "~server~");
 		}
@@ -1568,8 +1568,8 @@ char *encoded;
 		/* This one is even more ugly, but our config crap is VERY confusing :[ */
 		if (!tk->setby)
 		{
-			if (me.name[0] != '\0')
-				tk->setby = strdup(me.name);
+			if (me.client.name[0] != '\0')
+				tk->setby = strdup(me.client.name);
 			else
 				tk->setby = strdup(conf_me->name ? conf_me->name : "~server~");
 		}
@@ -1618,19 +1618,19 @@ void applymeblock(void)
 		return; /* uh-huh? */
 	
 	/* Info text may always change, just wouldn't show up on other servers, that's all.. */
-	strlcpy(me.info, conf_me->info, sizeof(me.info));
+	strlcpy(me.client.info, conf_me->info, sizeof(me.client.info));
 
 	/* Name can only be set once (on boot) */
-	if (!*me.name)
-		strlcpy(me.name, conf_me->name, sizeof(me.name));
+	if (!*me.client.name)
+		strlcpy(me.client.name, conf_me->name, sizeof(me.client.name));
 
 	/* SID change? */
-	if (strcmp(me.id, conf_me->sid))
+	if (strcmp(me.client.id, conf_me->sid))
 	{
 		/* Can we apply ? */
 		if (!isanyserverlinked())
 		{
-			strlcpy(me.id, conf_me->sid, sizeof(me.id));
+			strlcpy(me.client.id, conf_me->sid, sizeof(me.client.id));
 		} else {
 			config_warn("me::sid: Server ID changed in config but this change cannot be applied "
 			            "due to being linked to other servers. Unlink all servers and /REHASH to "
@@ -2531,7 +2531,7 @@ int count_oper_sessions(char *name)
 	int count = 0;
 	aClient *cptr;
 
-	list_for_each_entry(cptr, &oper_list, special_node)
+	list_for_each_entry2(cptr, struct LocalClient, &oper_list, special_node)
 	{
 		if (cptr->user->operlogin != NULL && !strcmp(cptr->user->operlogin, name))
 			count++;
@@ -2580,7 +2580,7 @@ ConfigItem_except *Find_except(aClient *sptr, char *host, short type) {
 	for(excepts = conf_except; excepts; excepts =(ConfigItem_except *) excepts->next) {
 		if (excepts->flag.type == type)
 		{
-			if (match_ip(sptr->ip, host, excepts->mask, excepts->netmask))
+			if (match_ip(sptr->localClient->ip, host, excepts->mask, excepts->netmask))
 				return excepts;
 		}
 	}
@@ -2671,7 +2671,7 @@ ConfigItem_ban 	*Find_ban(aClient *sptr, char *host, short type)
 		{
 			if (sptr)
 			{
-				if (match_ip(sptr->ip, host, ban->mask, ban->netmask))
+				if (match_ip(sptr->localClient->ip, host, ban->mask, ban->netmask))
 				{
 					/* Person got a exception */
 					if ((type == CONF_BAN_USER || type == CONF_BAN_IP)
@@ -2702,7 +2702,7 @@ ConfigItem_ban 	*Find_banEx(aClient *sptr, char *host, short type, short type2)
 		{
 			if (sptr)
 			{
-				if (match_ip(sptr->ip, host, ban->mask, ban->netmask)) {
+				if (match_ip(sptr->localClient->ip, host, ban->mask, ban->netmask)) {
 					/* Person got a exception */
 					if (Find_except(sptr, host, type))
 						return NULL;
@@ -2731,7 +2731,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 	{
 		if (!aconf->hostname || !aconf->ip)
 			goto attach;
-		if (aconf->auth && !cptr->passwd && aconf->flags.nopasscont)
+		if (aconf->auth && !cptr->localClient->passwd && aconf->flags.nopasscont)
 			continue;
 		if (aconf->flags.ssl && !IsSecure(cptr))
 			continue;
@@ -2768,7 +2768,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 			*uhost = '\0';
 		strlcat(uhost, sockhost, sizeof(uhost));
 		/* Check the IP */
-		if (match_ip(cptr->ip, uhost, aconf->ip, aconf->netmask))
+		if (match_ip(cptr->localClient->ip, uhost, aconf->ip, aconf->netmask))
 			goto attach;
 
 		/* Hmm, localhost is a special case, hp == NULL and sockhost contains
@@ -2801,7 +2801,7 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 			strlcpy(uhost, sockhost, sizeof(uhost));
 		get_sockhost(cptr, uhost);
 #ifdef INET6
-		is_ipv4 = IN6_IS_ADDR_V4MAPPED(&cptr->ip);
+		is_ipv4 = IN6_IS_ADDR_V4MAPPED(&cptr->localClient->ip);
 #endif /* INET6 */
 
 		/* FIXME */
@@ -2810,51 +2810,51 @@ int	AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *usernam
 			aClient *acptr, *acptr2;
 
 			ii = 1;
-			list_for_each_entry_safe(acptr, acptr2, &lclient_list, lclient_node)
+			list_for_each_entry_safe2(acptr, acptr2, struct LocalClient, &lclient_list, lclient_node)
 			{
 				if (
 #ifndef INET6
-				    acptr->ip.S_ADDR == cptr->ip.S_ADDR)
+				    acptr->localClient->ip.S_ADDR == cptr->localClient->ip.S_ADDR)
 #else
 				    /*
 				     * match IPv4 exactly and the ipv6
 				     * based on ipv6_clone_mask.
 				     */
 				    (is_ipv4
-					? !bcmp(acptr->ip.S_ADDR, cptr->ip.S_ADDR, sizeof(cptr->ip.S_ADDR))
-					: match_ipv6(&acptr->ip, &cptr->ip, aconf->ipv6_clone_mask)))
+					? !bcmp(acptr->localClient->ip.S_ADDR, cptr->localClient->ip.S_ADDR, sizeof(cptr->localClient->ip.S_ADDR))
+					: match_ipv6(&acptr->localClient->ip, &cptr->localClient->ip, aconf->ipv6_clone_mask)))
 						
 #endif
 				{
 					ii++;
 					if (ii > aconf->maxperip)
 					{
-						exit_client(cptr, cptr, &me,
+						exit_client(cptr, cptr, &me.client,
 							"Too many connections from your IP");
 						return -5;	/* Already got one with that ip# */
 					}
 				}
 			}
 		}
-		if ((i = Auth_Check(cptr, aconf->auth, cptr->passwd)) == -1)
+		if ((i = Auth_Check(cptr, aconf->auth, cptr->localClient->passwd)) == -1)
 		{
-			exit_client(cptr, cptr, &me,
+			exit_client(cptr, cptr, &me.client,
 				"Password mismatch");
 			return -5;
 		}
-		if ((i == 2) && (cptr->passwd))
+		if ((i == 2) && (cptr->localClient->passwd))
 		{
-			MyFree(cptr->passwd);
-			cptr->passwd = NULL;
+			MyFree(cptr->localClient->passwd);
+			cptr->localClient->passwd = NULL;
 		}
 		if (!((aconf->class->clients + 1) > aconf->class->maxclients))
 		{
-			cptr->class = aconf->class;
-			cptr->class->clients++;
+			cptr->localClient->class = aconf->class;
+			cptr->localClient->class->clients++;
 		}
 		else
 		{
-			sendto_one(cptr, rpl_str(RPL_REDIR), me.name, cptr->name, aconf->server ? aconf->server : defserv, aconf->port ? aconf->port : 6667);
+			sendto_one(cptr, rpl_str(RPL_REDIR), me.client.name, cptr->name, aconf->server ? aconf->server : defserv, aconf->port ? aconf->port : 6667);
 			return -3;
 		}
 		return 0;
@@ -2881,14 +2881,14 @@ ConfigItem_deny_channel *Find_channel_allowed(aClient *cptr, char *name)
 
 	for (dchannel = conf_deny_channel; dchannel; dchannel = (ConfigItem_deny_channel *)dchannel->next)
 	{
-		if (!match(dchannel->channel, name) && (dchannel->class ? !strcmp(cptr->class->name, dchannel->class) : 1))
+		if (!match(dchannel->channel, name) && (dchannel->class ? !strcmp(cptr->localClient->class->name, dchannel->class) : 1))
 			break;
 	}
 	if (dchannel)
 	{
 		for (achannel = conf_allow_channel; achannel; achannel = (ConfigItem_allow_channel *)achannel->next)
 		{
-			if (!match(achannel->channel, name) && (achannel->class ? !strcmp(cptr->class->name, achannel->class) : 1))
+			if (!match(achannel->channel, name) && (achannel->class ? !strcmp(cptr->localClient->class->name, achannel->class) : 1))
 				break;
 		}
 		if (achannel)
@@ -5694,7 +5694,7 @@ int _conf_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 	strlcpy(nl->usermask, spamfilter_target_inttostring(target), sizeof(nl->usermask));
 	nl->subtype = target;
 
-	nl->setby = BadPtr(me.name) ? NULL : strdup(me.name); /* Hmm! */
+	nl->setby = BadPtr(me.client.name) ? NULL : strdup(me.client.name); /* Hmm! */
 	nl->ptr.spamf = unreal_buildspamfilter(word);
 	nl->ptr.spamf->action = action;
 
@@ -9311,7 +9311,7 @@ int     rehash(aClient *cptr, aClient *sptr, int sig)
 	{
 		if (!sig)
 			sendto_one(sptr, ":%s NOTICE %s :A rehash is already in progress",
-				me.name, sptr->name);
+				me.client.name, sptr->name);
 		return 0;
 	}
 

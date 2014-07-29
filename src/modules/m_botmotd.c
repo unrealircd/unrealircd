@@ -98,17 +98,17 @@ DLLFUNC CMD_FUNC(m_botmotd)
 	if (!motdline)
 	{
 		sendto_one(sptr, ":%s NOTICE %s :BOTMOTD File not found",
-		    me.name, sptr->name);
+		    me.client.name, sptr->name);
 		return 0;
 	}
 	sendto_one(sptr, ":%s NOTICE %s :- %s Bot Message of the Day - ",
-	    me.name, sptr->name, me.name);
+	    me.client.name, sptr->name, me.client.name);
 
 	while (motdline)
 	{
-		sendto_one(sptr, ":%s NOTICE %s :- %s", me.name, sptr->name, motdline->line);
+		sendto_one(sptr, ":%s NOTICE %s :- %s", me.client.name, sptr->name, motdline->line);
 		motdline = motdline->next;
 	}
-	sendto_one(sptr, ":%s NOTICE %s :End of /BOTMOTD command.", me.name, sptr->name);
+	sendto_one(sptr, ":%s NOTICE %s :End of /BOTMOTD command.", me.client.name, sptr->name);
 	return 0;
 }

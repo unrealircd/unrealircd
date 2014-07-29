@@ -125,7 +125,7 @@ DLLFUNC int adminonly_require_admin(aClient *cptr, aChannel *chptr, char mode, c
 
 
 	sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE),
-					me.name, cptr->name, 'A', "You are not an Admin");
+					me.client.name, cptr->name, 'A', "You are not an Admin");
 	return EX_DENY;
 }
 

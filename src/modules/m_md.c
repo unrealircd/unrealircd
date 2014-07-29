@@ -221,10 +221,10 @@ char *value = md ? mdi->serialize(md) : NULL;
 	
 	if (value)
 		sendto_server(NULL, 0, 0, ":%s MD %s %s %s :%s",
-			me.name, "client", acptr->name, mdi->name, value);
+			me.client.name, "client", acptr->name, mdi->name, value);
 	else
 		sendto_server(NULL, 0, 0, ":%s MD %s %s %s",
-			me.name, "client", acptr->name, mdi->name);
+			me.client.name, "client", acptr->name, mdi->name);
 }
 
 void _send_md_channel(ModDataInfo *mdi, aChannel *chptr, ModData *md)
@@ -233,10 +233,10 @@ char *value = md ? mdi->serialize(md) : NULL;
 	
 	if (value)
 		sendto_server(NULL, 0, 0, ":%s MD %s %s %s :%s",
-			me.name, "channel", chptr->chname, mdi->name, value);
+			me.client.name, "channel", chptr->chname, mdi->name, value);
 	else
 		sendto_server(NULL, 0, 0, ":%s MD %s %s %s",
-			me.name, "channel", chptr->chname, mdi->name);
+			me.client.name, "channel", chptr->chname, mdi->name);
 }
 
 void _send_md_member(ModDataInfo *mdi, aChannel *chptr, Member *m, ModData *md)
@@ -245,10 +245,10 @@ char *value = md ? mdi->serialize(md) : NULL;
 	
 	if (value)
 		sendto_server(NULL, 0, 0, ":%s MD %s %s:%s %s :%s",
-			me.name, "member", chptr->chname, m->cptr->name, mdi->name, value);
+			me.client.name, "member", chptr->chname, m->cptr->name, mdi->name, value);
 	else
 		sendto_server(NULL, 0, 0, ":%s MD %s %s:%s %s",
-			me.name, "member", chptr->chname, m->cptr->name, mdi->name);
+			me.client.name, "member", chptr->chname, m->cptr->name, mdi->name);
 }
 
 void _send_md_membership(ModDataInfo *mdi, aClient *acptr, Membership *m, ModData *md)
@@ -257,8 +257,8 @@ char *value = md ? mdi->serialize(md) : NULL;
 	
 	if (value)
 		sendto_server(NULL, 0, 0, ":%s MD %s %s:%s %s :%s",
-			me.name, "membership", acptr->name, m->chptr->chname, mdi->name, value);
+			me.client.name, "membership", acptr->name, m->chptr->chname, mdi->name, value);
 	else
 		sendto_server(NULL, 0, 0, ":%s MD %s %s:%s %s",
-			me.name, "membership", acptr->name, m->chptr->chname, mdi->name);
+			me.client.name, "membership", acptr->name, m->chptr->chname, mdi->name);
 }

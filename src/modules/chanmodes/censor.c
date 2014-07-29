@@ -597,7 +597,7 @@ int blocked;
 	{
 		if (!notice)
 			sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
-				me.name, sptr->name, chptr->chname,
+				me.client.name, sptr->name, chptr->chname,
 				"Swearing is not permitted in this channel", chptr->chname);
 		return NULL;
 	}
@@ -644,7 +644,7 @@ int stats_badwords(aClient *sptr, char *para)
 	for (words = conf_badword_channel; words; words = (ConfigItem_badword *) words->next)
 	{
 		sendto_one(sptr, ":%s %i %s :c %c %s%s%s %s",
-		           me.name, RPL_TEXT, sptr->name, words->type & BADW_TYPE_REGEX ? 'R' : 'F',
+		           me.client.name, RPL_TEXT, sptr->name, words->type & BADW_TYPE_REGEX ? 'R' : 'F',
 		           (words->type & BADW_TYPE_FAST_L) ? "*" : "", words->word,
 		           (words->type & BADW_TYPE_FAST_R) ? "*" : "",
 		           words->action == BADWORD_REPLACE ? (words->replace ? words->replace : "<censored>") : "");
@@ -652,7 +652,7 @@ int stats_badwords(aClient *sptr, char *para)
 	for (words = conf_badword_quit; words; words = (ConfigItem_badword *) words->next)
 	{
 		sendto_one(sptr, ":%s %i %s :q %c %s%s%s %s",
-		           me.name, RPL_TEXT, sptr->name, words->type & BADW_TYPE_REGEX ? 'R' : 'F',
+		           me.client.name, RPL_TEXT, sptr->name, words->type & BADW_TYPE_REGEX ? 'R' : 'F',
 		           (words->type & BADW_TYPE_FAST_L) ? "*" : "", words->word,
 		           (words->type & BADW_TYPE_FAST_R) ? "*" : "",
 		           words->action == BADWORD_REPLACE ? (words->replace ? words->replace : "<censored>") : "");

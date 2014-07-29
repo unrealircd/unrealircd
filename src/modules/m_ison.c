@@ -92,11 +92,11 @@ DLLFUNC CMD_FUNC(m_ison) {
 
 	if (parc < 2) {
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "ISON");
+		    me.client.name, parv[0], "ISON");
 		return 0;
 	}
 
-	ircsnprintf(buf, sizeof(buf), rpl_str(RPL_ISON), me.name, *parv);
+	ircsnprintf(buf, sizeof(buf), rpl_str(RPL_ISON), me.client.name, *parv);
 	len = strlen(buf);
 
 	for (s = strtoken(&p, *++pav, " "); s; s = strtoken(&p, NULL, " ")) {

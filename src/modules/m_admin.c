@@ -89,11 +89,11 @@ DLLFUNC CMD_FUNC(m_admin)
 	if (!conf_admin_tail)
 	{
 		sendto_one(sptr, err_str(ERR_NOADMININFO),
-		    me.name, parv[0], me.name);
+		    me.client.name, parv[0], me.client.name);
 		return 0;
 	}
 
-	sendto_one(sptr, rpl_str(RPL_ADMINME), me.name, parv[0], me.name);
+	sendto_one(sptr, rpl_str(RPL_ADMINME), me.client.name, parv[0], me.client.name);
 
 	/* cycle through the list backwards */
 	for (admin = conf_admin_tail; admin;
@@ -101,13 +101,13 @@ DLLFUNC CMD_FUNC(m_admin)
 	{
 		if (!admin->next)
 			sendto_one(sptr, rpl_str(RPL_ADMINLOC1),
-			    me.name, parv[0], admin->line);
+			    me.client.name, parv[0], admin->line);
 		else if (!admin->next->next)
 			sendto_one(sptr, rpl_str(RPL_ADMINLOC2),
-			    me.name, parv[0], admin->line);
+			    me.client.name, parv[0], admin->line);
 		else
 			sendto_one(sptr, rpl_str(RPL_ADMINEMAIL),
-			    me.name, parv[0], admin->line);
+			    me.client.name, parv[0], admin->line);
 	}
 	return 0;
 }

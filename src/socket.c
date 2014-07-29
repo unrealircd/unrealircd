@@ -74,13 +74,13 @@ int  deliver_it(aClient *cptr, char *str, int len)
 	}
 
 #ifdef USE_SSL
-	if (IsSSL(cptr) && cptr->ssl != NULL)
+	if (IsSSL(cptr) && cptr->localClient->ssl != NULL)
 	{
-		retval = SSL_write(cptr->ssl, str, len);
+		retval = SSL_write(cptr->localClient->ssl, str, len);
 
 		if (retval < 0)
 		{
-			switch (SSL_get_error(cptr->ssl, retval))
+			switch (SSL_get_error(cptr->localClient->ssl, retval))
 			{
 			case SSL_ERROR_WANT_READ:
 				/* retry later */
@@ -120,12 +120,12 @@ int  deliver_it(aClient *cptr, char *str, int len)
 
 	if (retval > 0)
 	{
-		cptr->sendB += retval;
+		cptr->localClient->sendB += retval;
 		me.sendB += retval;
-		if (cptr->sendB > 1023)
+		if (cptr->localClient->sendB > 1023)
 		{
-			cptr->sendK += (cptr->sendB >> 10);
-			cptr->sendB &= 0x03ff;	/* 2^10 = 1024, 3ff = 1023 */
+			cptr->localClient->sendK += (cptr->localClient->sendB >> 10);
+			cptr->localClient->sendB &= 0x03ff;	/* 2^10 = 1024, 3ff = 1023 */
 		}
 		if (me.sendB > 1023)
 		{

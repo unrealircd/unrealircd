@@ -85,7 +85,7 @@ DLLFUNC int m_lag(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (MyClient(sptr))
 		if (!IsAnOper(sptr))
 		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name,
 			    parv[0]);
 			return 0;
 		}
@@ -93,13 +93,13 @@ DLLFUNC int m_lag(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc < 2)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "LAG");
+		    me.client.name, parv[0], "LAG");
 		return 0;
 	}
 	if (*parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "LAG");
+		    me.client.name, parv[0], "LAG");
 		return 0;
 	}
 	if (hunt_server(cptr, sptr, ":%s LAG :%s", 1, parc, parv) == HUNTED_NOSUCH)
@@ -108,7 +108,7 @@ DLLFUNC int m_lag(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 
 	sendto_one(sptr, ":%s NOTICE %s :Lag reply -- %s %s %li",
-	    me.name, sptr->name, me.name, parv[1], TStime());
+	    me.client.name, sptr->name, me.client.name, parv[1], TStime());
 
 	return 0;
 }

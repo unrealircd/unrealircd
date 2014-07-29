@@ -85,11 +85,11 @@ static void dump_map(aClient *cptr, aClient *server, char *mask, int prompt_leng
 	*p = '\0';
 
 	if (prompt_length > 60)
-		sendto_one(cptr, rpl_str(RPL_MAPMORE), me.name, cptr->name,
+		sendto_one(cptr, rpl_str(RPL_MAPMORE), me.client.name, cptr->name,
 		    prompt, length, server->name);
 	else
 	{
-		sendto_one(cptr, rpl_str(RPL_MAP), me.name, cptr->name, prompt,
+		sendto_one(cptr, rpl_str(RPL_MAP), me.client.name, cptr->name, prompt,
 		    length, server->name, server->serv->users, server->id);
 		cnt = 0;
 	}
@@ -139,7 +139,7 @@ int cnt = 0, hide_ulines;
 
 	hide_ulines = (HIDE_ULINES && !IsOper(cptr)) ? 1 : 0;
 
-	sendto_one(cptr, rpl_str(RPL_MAP), me.name, cptr->name, "",
+	sendto_one(cptr, rpl_str(RPL_MAP), me.client.name, cptr->name, "",
 	    length, server->name, server->serv->users);
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
@@ -156,7 +156,7 @@ int cnt = 0, hide_ulines;
 			continue;
 		if (--cnt == 0)
 			*buf = '`';
-		sendto_one(cptr, rpl_str(RPL_MAP), me.name, cptr->name, buf,
+		sendto_one(cptr, rpl_str(RPL_MAP), me.client.name, cptr->name, buf,
 		    length-2, acptr->name, acptr->serv->users);
 	}
 }
@@ -171,7 +171,7 @@ int cnt = 0, hide_ulines;
 DLLFUNC CMD_FUNC(m_map)
 {
 	aClient *acptr;
-	int  longest = strlen(me.name);
+	int  longest = strlen(me.client.name);
 
 
 	if (parc < 2)
@@ -185,10 +185,10 @@ DLLFUNC CMD_FUNC(m_map)
 		longest = 60;
 	longest += 2;
 	if (FLAT_MAP && !IsAnOper(sptr))
-		dump_flat_map(sptr, &me, longest);
+		dump_flat_map(sptr, &me.client, longest);
 	else
-		dump_map(sptr, &me, "*", 0, longest);
-	sendto_one(sptr, rpl_str(RPL_MAPEND), me.name, parv[0]);
+		dump_map(sptr, &me.client, "*", 0, longest);
+	sendto_one(sptr, rpl_str(RPL_MAPEND), me.client.name, parv[0]);
 
 	return 0;
 }

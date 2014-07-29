@@ -220,9 +220,9 @@ ModDataInfo *md;
 			char *str;
 			
 			md = findmoddata_byname(varname, MODDATATYPE_CLIENT);
-			if (!md || !md->serialize || !acptr)
+			if (!md || !md->localClient->serialize || !acptr)
 				return 0;
-			str = md->serialize(&moddata_client(acptr, md));
+			str = md->localClient->serialize(&moddata_client(acptr, md));
 			if (str)
 				sendnotice(sptr, "Value: %s", str ? str : "<null>");
 			else
@@ -234,9 +234,9 @@ ModDataInfo *md;
 			char *str;
 			
 			md = findmoddata_byname(varname, MODDATATYPE_CHANNEL);
-			if (!md || !md->serialize || !chptr)
+			if (!md || !md->localClient->serialize || !chptr)
 				return 0;
-			str = md->serialize(&moddata_channel(chptr, md));
+			str = md->localClient->serialize(&moddata_channel(chptr, md));
 			if (str)
 				sendnotice(sptr, "Value: %s", str ? str : "<null>");
 			else
@@ -268,10 +268,10 @@ ModDataInfo *md;
 				return 0;
 			
 			md = findmoddata_byname(varname, MODDATATYPE_MEMBER);
-			if (!md || !md->serialize)
+			if (!md || !md->localClient->serialize)
 				return 0;
 
-			str = md->serialize(&moddata_member(m, md));
+			str = md->localClient->serialize(&moddata_member(m, md));
 			if (str)
 				sendnotice(sptr, "Value: %s", str ? str : "<null>");
 			else
@@ -303,10 +303,10 @@ ModDataInfo *md;
 				return 0;
 			
 			md = findmoddata_byname(varname, MODDATATYPE_MEMBERSHIP);
-			if (!md || !md->serialize)
+			if (!md || !md->localClient->serialize)
 				return 0;
 
-			str = md->serialize(&moddata_membership(m, md));
+			str = md->localClient->serialize(&moddata_membership(m, md));
 			if (str)
 				sendnotice(sptr, "Value: %s", str ? str : "<null>");
 			else

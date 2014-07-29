@@ -112,7 +112,7 @@ int n, wasaway = 0;
                 }
                 /* hope this works XX */
                 if (MyConnect(sptr))
-                        sendto_one(sptr, rpl_str(RPL_UNAWAY), me.name, parv[0]);
+                        sendto_one(sptr, rpl_str(RPL_UNAWAY), me.client.name, parv[0]);
 				RunHook2(HOOKTYPE_AWAY, sptr, NULL);
                 return 0;
         }
@@ -133,7 +133,7 @@ int n, wasaway = 0;
 			sptr->user->flood.away_c++;
 		if (sptr->user->flood.away_c > AWAY_COUNT)
 		{
-			sendto_one(sptr, err_str(ERR_TOOMANYAWAY), me.name, parv[0]);
+			sendto_one(sptr, err_str(ERR_TOOMANYAWAY), me.client.name, parv[0]);
 			return 0;
 		}
 	}
@@ -159,7 +159,7 @@ int n, wasaway = 0;
 	away = sptr->user->away = strdup(awy2);
 
         if (MyConnect(sptr))
-                sendto_one(sptr, rpl_str(RPL_NOWAWAY), me.name, parv[0]);
+                sendto_one(sptr, rpl_str(RPL_NOWAWAY), me.client.name, parv[0]);
 
 	hash_check_watch(cptr, wasaway ? RPL_REAWAY : RPL_GONEAWAY);
 	sendto_common_channels_local_butone(sptr, PROTO_AWAY_NOTIFY, ":%s AWAY :%s", sptr->name, away);

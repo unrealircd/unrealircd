@@ -97,9 +97,9 @@ DLLFUNC CMD_FUNC(m_silence)
 			if (acptr != sptr)
 				return 0;
 			for (lp = acptr->user->silence; lp; lp = lp->next)
-				sendto_one(sptr, rpl_str(RPL_SILELIST), me.name,
+				sendto_one(sptr, rpl_str(RPL_SILELIST), me.client.name,
 				    sptr->name, acptr->name, lp->value.cp);
-			sendto_one(sptr, rpl_str(RPL_ENDOFSILELIST), me.name,
+			sendto_one(sptr, rpl_str(RPL_ENDOFSILELIST), me.client.name,
 			    acptr->name);
 			return 0;
 		}
@@ -110,7 +110,7 @@ DLLFUNC CMD_FUNC(m_silence)
 		else if (!(index(cp, '@') || index(cp, '.') ||
 		    index(cp, '!') || index(cp, '*')))
 		{
-			sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name,
+			sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.client.name,
 			    parv[0], parv[1]);
 			return -1;
 		}
@@ -129,7 +129,7 @@ DLLFUNC CMD_FUNC(m_silence)
 	}
 	else if (parc < 3 || *parv[2] == '\0')
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0],
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.client.name, parv[0],
 		    "SILENCE");
 		return -1;
 	}
@@ -151,7 +151,7 @@ DLLFUNC CMD_FUNC(m_silence)
 	}
 	else
 	{
-		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, parv[0],
+		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.client.name, parv[0],
 		    parv[1]);
 		return -1;
 	}

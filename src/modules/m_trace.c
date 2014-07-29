@@ -94,21 +94,21 @@ DLLFUNC CMD_FUNC(m_trace)
 	if (parc > 1)
 		tname = parv[1];
 	else
-		tname = me.name;
+		tname = me.client.name;
 
 	if (!IsOper(sptr))
 	{
 		if (IsAnOper(sptr))
 		{
 			/* local opers may not /TRACE remote servers! */
-			if (strcasecmp(tname, me.name))
+			if (strcasecmp(tname, me.client.name))
 			{
 				sendnotice(sptr, "You can only /TRACE local servers as a locop");
-				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 				return 0;
 			}
 		} else {
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 			return 0;
 		}
 	}
@@ -120,7 +120,7 @@ DLLFUNC CMD_FUNC(m_trace)
 		  aClient *ac2ptr;
 
 		  ac2ptr = find_client(tname, NULL);
-		  sendto_one(sptr, rpl_str(RPL_TRACELINK), me.name, parv[0],
+		  sendto_one(sptr, rpl_str(RPL_TRACELINK), me.client.name, parv[0],
 		      version, debugmode, tname, ac2ptr->from->name);
 		  return 0;
 	  }
@@ -130,7 +130,7 @@ DLLFUNC CMD_FUNC(m_trace)
 		  return 0;
 	}
 
-	doall = (parv[1] && (parc > 1)) ? !match(tname, me.name) : TRUE;
+	doall = (parv[1] && (parc > 1)) ? !match(tname, me.client.name) : TRUE;
 	wilds = !parv[1] || index(tname, '*') || index(tname, '?');
 	dow = wilds || doall;
 
@@ -155,7 +155,7 @@ DLLFUNC CMD_FUNC(m_trace)
 	/* report all direct connections */
 
 	now = TStime();
-	list_for_each_entry(acptr, &lclient_list, lclient_node)
+	list_for_each_entry2(acptr, struct LocalClient, &lclient_list, lclient_node)
 	{
 		char *name;
 		char *class;
@@ -171,16 +171,16 @@ DLLFUNC CMD_FUNC(m_trace)
 		if (!dow && mycmp(tname, acptr->name))
 			continue;
 		name = get_client_name(acptr, FALSE);
-		class = acptr->class ? acptr->class->name : "default";
+		class = acptr->localClient->class ? acptr->localClient->class->name : "default";
 		switch (acptr->status)
 		{
 		  case STAT_CONNECTING:
 			  sendto_one(sptr, rpl_str(RPL_TRACECONNECTING),
-			      me.name, parv[0], class, name);
+			      me.client.name, parv[0], class, name);
 			  cnt++;
 			  break;
 		  case STAT_HANDSHAKE:
-			  sendto_one(sptr, rpl_str(RPL_TRACEHANDSHAKE), me.name,
+			  sendto_one(sptr, rpl_str(RPL_TRACEHANDSHAKE), me.client.name,
 			      parv[0], class, name);
 			  cnt++;
 			  break;
@@ -188,7 +188,7 @@ DLLFUNC CMD_FUNC(m_trace)
 			  break;
 		  case STAT_UNKNOWN:
 			  sendto_one(sptr, rpl_str(RPL_TRACEUNKNOWN),
-			      me.name, parv[0], class, name);
+			      me.client.name, parv[0], class, name);
 			  cnt++;
 			  break;
 		  case STAT_CLIENT:
@@ -206,54 +206,54 @@ DLLFUNC CMD_FUNC(m_trace)
 				  if (IsAnOper(acptr))
 					  sendto_one(sptr,
 					      rpl_str(RPL_TRACEOPERATOR),
-					      me.name,
+					      me.client.name,
 					      parv[0], class, acptr->name,
 					      GetHost(acptr),
-					      now - acptr->lasttime);
+					      now - acptr->localClient->lasttime);
 				  else
 					  sendto_one(sptr,
-					      rpl_str(RPL_TRACEUSER), me.name,
+					      rpl_str(RPL_TRACEUSER), me.client.name,
 					      parv[0], class, acptr->name,
 					      acptr->user->realhost,
-					      now - acptr->lasttime);
+					      now - acptr->localClient->lasttime);
 				  cnt++;
 			  }
 			  break;
 		  case STAT_SERVER:
 			  if (acptr->serv->user)
 				  sendto_one(sptr, rpl_str(RPL_TRACESERVER),
-				      me.name, parv[0], class, link_s[i],
+				      me.client.name, parv[0], class, link_s[i],
 				      link_u[i], name, acptr->serv->by,
 				      acptr->serv->user->username,
 				      acptr->serv->user->realhost,
-				      now - acptr->lasttime);
+				      now - acptr->localClient->lasttime);
 			  else
 				  sendto_one(sptr, rpl_str(RPL_TRACESERVER),
-				      me.name, parv[0], class, link_s[i],
+				      me.client.name, parv[0], class, link_s[i],
 				      link_u[i], name, *(acptr->serv->by) ?
-				      acptr->serv->by : "*", "*", me.name,
-				      now - acptr->lasttime);
+				      acptr->serv->by : "*", "*", me.client.name,
+				      now - acptr->localClient->lasttime);
 			  cnt++;
 			  break;
 		  case STAT_LOG:
-			  sendto_one(sptr, rpl_str(RPL_TRACELOG), me.name,
-			      parv[0], LOGFILE, acptr->port);
+			  sendto_one(sptr, rpl_str(RPL_TRACELOG), me.client.name,
+			      parv[0], LOGFILE, acptr->localClient->port);
 			  cnt++;
 			  break;
 #ifdef USE_SSL
 		  case STAT_SSL_CONNECT_HANDSHAKE:
-		  	sendto_one(sptr, rpl_str(RPL_TRACENEWTYPE), me.name,
+		  	sendto_one(sptr, rpl_str(RPL_TRACENEWTYPE), me.client.name,
 		  	 parv[0], "SSL-Connect-Handshake", name); 
 			cnt++;
 			break;
 		  case STAT_SSL_ACCEPT_HANDSHAKE:
-		  	sendto_one(sptr, rpl_str(RPL_TRACENEWTYPE), me.name,
+		  	sendto_one(sptr, rpl_str(RPL_TRACENEWTYPE), me.client.name,
 		  	 parv[0], "SSL-Accept-Handshake", name); 
 			cnt++;
 			break;
 #endif
 		  default:	/* ...we actually shouldn't come here... --msa */
-			  sendto_one(sptr, rpl_str(RPL_TRACENEWTYPE), me.name,
+			  sendto_one(sptr, rpl_str(RPL_TRACENEWTYPE), me.client.name,
 			      parv[0], "<newtype>", name);
 			  cnt++;
 			  break;
@@ -271,13 +271,13 @@ DLLFUNC CMD_FUNC(m_trace)
 		 * trace
 		 */
 		sendto_one(sptr, rpl_str(RPL_TRACESERVER),
-		    me.name, parv[0], "0", link_s[me.fd],
-		    link_u[me.fd], me.name, "*", "*", me.name, 0L);
+		    me.client.name, parv[0], "0", link_s[me.client.fd],
+		    link_u[me.client.fd], me.client.name, "*", "*", me.client.name, 0L);
 		return 0;
 	}
 	for (cltmp = conf_class; doall && cltmp; cltmp = (ConfigItem_class *) cltmp->next)
 	/*	if (cltmp->clients > 0) */
-			sendto_one(sptr, rpl_str(RPL_TRACECLASS), me.name,
+			sendto_one(sptr, rpl_str(RPL_TRACECLASS), me.client.name,
 			    parv[0], cltmp->name ? cltmp->name : "[noname]", cltmp->clients);
 	return 0;
 }

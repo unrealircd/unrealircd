@@ -88,13 +88,13 @@ DLLFUNC CMD_FUNC(m_addomotd)
 
 	if (!(IsAdmin(sptr) || IsCoAdmin(sptr)))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 		return 0;
 	}
 	if (parc < 2)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "ADDMOTD");
+		    me.client.name, parv[0], "ADDMOTD");
 		return 0;
 	}
 	conf = fopen(conf_files->opermotd_file, "a");

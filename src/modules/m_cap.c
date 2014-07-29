@@ -138,7 +138,7 @@ static ClientCapability *clicap_find(const char *data, int *negate, int *finishe
 	if (!stricmp(p, "sasl") && (!SASL_SERVER || !find_server(SASL_SERVER, NULL)))
 		return NULL; /* hack: if SASL is disabled or server not online, then pretend it does not exist. -- Syzop */
 
-	list_for_each_entry2(cap, ClientCapability, clicap_list, caplist_node)
+	list_for_each_entry3(ClientCapability, cap, ClientCapability, clicap_list, caplist_node)
 	{
 		if (!stricmp(cap->name, p))
 		{
@@ -165,7 +165,7 @@ static void clicap_generate(aClient *sptr, const char *subcmd, int flags, int cl
 	int curlen, mlen;
 	size_t i;
 
-	mlen = snprintf(buf, BUFSIZE, ":%s CAP %s %s", me.name,	BadPtr(sptr->name) ? "*" : sptr->name, subcmd);
+	mlen = snprintf(buf, BUFSIZE, ":%s CAP %s %s", me.client.name,	BadPtr(sptr->name) ? "*" : sptr->name, subcmd);
 
 	p = capbuf;
 	buflen = mlen;
@@ -176,7 +176,7 @@ static void clicap_generate(aClient *sptr, const char *subcmd, int flags, int cl
 		return;
 	}
 
-	list_for_each_entry2(cap, ClientCapability, clicap_list, caplist_node)
+	list_for_each_entry3(ClientCapability, cap, ClientCapability, clicap_list, caplist_node)
 	{
 		if (flags)
 		{
@@ -267,16 +267,16 @@ static int cap_ack(aClient *sptr, const char *arg)
 			capadd |= cap->cap;
 	}
 
-	sptr->proto |= capadd;
-	sptr->proto &= ~capdel;
+	sptr->localClient->proto |= capadd;
+	sptr->localClient->proto &= ~capdel;
 	return 0;
 }
 
 static int cap_clear(aClient *sptr, const char *arg)
 {
-        clicap_generate(sptr, "ACK", sptr->proto ? sptr->proto : -1, 1);
+        clicap_generate(sptr, "ACK", sptr->localClient->proto ? sptr->localClient->proto : -1, 1);
 
-     	sptr->proto = 0;
+     	sptr->localClient->proto = 0;
      	return 0;
 }
 
@@ -285,9 +285,9 @@ static int cap_end(aClient *sptr, const char *arg)
 	if (IsRegisteredUser(sptr))
 		return 0;
 
-	sptr->proto &= ~PROTO_CLICAP;
+	sptr->localClient->proto &= ~PROTO_CLICAP;
 
-	if (sptr->name[0] && sptr->user != NULL && sptr->nospoof == 0)
+	if (sptr->name[0] && sptr->user != NULL && sptr->localClient->nospoof == 0)
 		return register_user(sptr, sptr, sptr->name, sptr->user->username, NULL, NULL, NULL);
 
 	return 0;
@@ -295,14 +295,14 @@ static int cap_end(aClient *sptr, const char *arg)
 
 static int cap_list(aClient *sptr, const char *arg)
 {
-        clicap_generate(sptr, "LIST", sptr->proto ? sptr->proto : -1, 0);
+        clicap_generate(sptr, "LIST", sptr->localClient->proto ? sptr->localClient->proto : -1, 0);
         return 0;
 }
 
 static int cap_ls(aClient *sptr, const char *arg)
 {
 	if (!IsRegisteredUser(sptr))
-		sptr->proto |= PROTO_CLICAP;
+		sptr->localClient->proto |= PROTO_CLICAP;
 
        	clicap_generate(sptr, "LS", 0, 0);
        	return 0;
@@ -319,13 +319,13 @@ static int cap_req(aClient *sptr, const char *arg)
 	int finished = 0, negate;
 
 	if (!IsRegisteredUser(sptr))
-		sptr->proto |= PROTO_CLICAP;
+		sptr->localClient->proto |= PROTO_CLICAP;
 
 	if (BadPtr(arg))
 		return 0;
 
 	buflen = snprintf(buf, sizeof(buf), ":%s CAP %s ACK",
-			  me.name, BadPtr(sptr->name) ? "*" : sptr->name);
+			  me.client.name, BadPtr(sptr->name) ? "*" : sptr->name);
 
 	pbuf[0][0] = '\0';
 	plen = 0;
@@ -381,7 +381,7 @@ static int cap_req(aClient *sptr, const char *arg)
 
 	if (!finished)
 	{
-		sendto_one(sptr, ":%s CAP %s NAK :%s", me.name, BadPtr(sptr->name) ? "*" : sptr->name, arg);
+		sendto_one(sptr, ":%s CAP %s NAK :%s", me.client.name, BadPtr(sptr->name) ? "*" : sptr->name, arg);
 		return 0;
 	}
 
@@ -393,8 +393,8 @@ static int cap_req(aClient *sptr, const char *arg)
 	else
 		sendto_one(sptr, "%s :%s", buf, pbuf[0]);
 
-	sptr->proto |= capadd;
-	sptr->proto &= ~capdel;
+	sptr->localClient->proto |= capadd;
+	sptr->localClient->proto &= ~capdel;
 	return 0;
 }
 
@@ -425,16 +425,16 @@ DLLFUNC int m_cap(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		/* I know nothing! */
 		if (IsPerson(sptr))
-			sendto_one(sptr, err_str(ERR_UNKNOWNCOMMAND), me.name, parv[0], "CAP");
+			sendto_one(sptr, err_str(ERR_UNKNOWNCOMMAND), me.client.name, parv[0], "CAP");
 		else
-			sendto_one(sptr, err_str(ERR_NOTREGISTERED), me.name, "CAP");
+			sendto_one(sptr, err_str(ERR_NOTREGISTERED), me.client.name, "CAP");
 		return 0;
 	}
 
 	if (parc < 2)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-			   me.name, BadPtr(sptr->name) ? "*" : sptr->name,
+			   me.client.name, BadPtr(sptr->name) ? "*" : sptr->name,
 			   "CAP");
 
 		return 0;
@@ -445,7 +445,7 @@ DLLFUNC int m_cap(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			   sizeof(struct clicap_cmd), (bqcmp) clicap_cmd_search)))
         {
 		sendto_one(sptr, err_str(ERR_INVALIDCAPCMD),
-			   me.name, BadPtr(sptr->name) ? "*" : sptr->name,
+			   me.client.name, BadPtr(sptr->name) ? "*" : sptr->name,
 			   parv[1]);
 
 		return 0;

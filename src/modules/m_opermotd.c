@@ -82,7 +82,7 @@ DLLFUNC CMD_FUNC(m_opermotd)
 
 	if (!IsAnOper(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 		return 0;
 	}
 
@@ -97,19 +97,19 @@ DLLFUNC CMD_FUNC(m_opermotd)
 
 	if (!motdline)
 	{
-		sendto_one(sptr, err_str(ERR_NOOPERMOTD), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOOPERMOTD), me.client.name, parv[0]);
 		return 0;
 	}
-	sendto_one(sptr, rpl_str(RPL_MOTDSTART), me.name, parv[0], me.name);
-	sendto_one(sptr, rpl_str(RPL_MOTD), me.name, parv[0],
+	sendto_one(sptr, rpl_str(RPL_MOTDSTART), me.client.name, parv[0], me.client.name);
+	sendto_one(sptr, rpl_str(RPL_MOTD), me.client.name, parv[0],
 	    "IRC Operator Message of the Day");
 
 	while (motdline)
 	{
-		sendto_one(sptr, rpl_str(RPL_MOTD), me.name, parv[0],
+		sendto_one(sptr, rpl_str(RPL_MOTD), me.client.name, parv[0],
 			   motdline->line);
 		motdline = motdline->next;
 	}
-	sendto_one(sptr, rpl_str(RPL_ENDOFMOTD), me.name, parv[0]);
+	sendto_one(sptr, rpl_str(RPL_ENDOFMOTD), me.client.name, parv[0]);
 	return 0;
 }

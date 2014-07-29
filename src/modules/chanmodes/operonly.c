@@ -124,7 +124,7 @@ DLLFUNC int operonly_require_oper(aClient *cptr, aChannel *chptr, char mode, cha
 
 
 	sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE),
-					me.name, cptr->name, 'O', "You are not an IRC operator");
+					me.client.name, cptr->name, 'O', "You are not an IRC operator");
 	return EX_DENY;
 }
 

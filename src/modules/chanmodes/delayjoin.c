@@ -121,13 +121,13 @@ DLLFUNC int MOD_UNLOAD(delayjoin)(int module_unload)
 DLLFUNC void set_post_delayed(aChannel *chptr)
 {
 	chptr->mode.extmode |= EXTMODE_POST_DELAYED;
-	sendto_channel_butserv(chptr, &me, ":%s MODE %s +d", me.name, chptr->chname);
+	sendto_channel_butserv(chptr, &me.client, ":%s MODE %s +d", me.client.name, chptr->chname);
 }
 
 DLLFUNC void clear_post_delayed(aChannel *chptr)
 {
 	chptr->mode.extmode &= ~EXTMODE_POST_DELAYED;
-	sendto_channel_butserv(chptr, &me, ":%s MODE %s -d", me.name, chptr->chname);
+	sendto_channel_butserv(chptr, &me.client, ":%s MODE %s -d", me.client.name, chptr->chname);
 }
 
 

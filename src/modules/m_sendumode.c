@@ -101,13 +101,13 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc < 3)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "SENDUMODE");
+		    me.client.name, parv[0], "SENDUMODE");
 		return 0;
 	}
 
 	if (!IsServer(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 		return 0;
 	}
 
@@ -154,10 +154,10 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		}
 	}
 
-	list_for_each_entry(acptr, &oper_list, special_node)
+	list_for_each_entry2(acptr, struct LocalClient, &oper_list, special_node)
 	{
 	    if((acptr->user->snomask & snomask) || (acptr->umodes & umode_s))
-		sendto_one(acptr, ":%s NOTICE %s :%s", me.name, acptr->name, message);
+		sendto_one(acptr, ":%s NOTICE %s :%s", me.client.name, acptr->name, message);
 	}
 
 	return 0;

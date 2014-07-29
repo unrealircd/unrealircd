@@ -99,7 +99,7 @@ DLLFUNC int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (MyClient(sptr) && !IsAnOper(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name,
 		    parv[0]);
 		return 0;
 	}
@@ -107,7 +107,7 @@ DLLFUNC int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #ifdef DISABLE_USERMOD
 	if (MyClient(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_DISABLED), me.name, sptr->name, "CHGNAME",
+		sendto_one(sptr, err_str(ERR_DISABLED), me.client.name, sptr->name, "CHGNAME",
 			"This command is disabled on this server");
 		return 0;
 	}
@@ -115,7 +115,7 @@ DLLFUNC int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if ((parc < 3) || !*parv[2])
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "CHGNAME");
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.client.name, sptr->name, "CHGNAME");
 		return 0;
 	}
 
@@ -129,7 +129,7 @@ DLLFUNC int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		if (MyClient(sptr) && (IsLocOp(sptr) && !MyClient(acptr)))
 		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name,
 				parv[0]);
 			return 0;
 		}
@@ -140,7 +140,7 @@ DLLFUNC int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (!IsAnOper(acptr) && Find_ban(NULL, acptr->info, CONF_BAN_REALNAME)) {
 			int xx;
 			xx =
-			   exit_client(cptr, sptr, &me,
+			   exit_client(cptr, sptr, &me.client,
 			   "Your GECOS (real name) is banned from this server");
 			return xx;
 		}
@@ -164,7 +164,7 @@ DLLFUNC int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	else
 	{
-		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, sptr->name,
+		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.client.name, sptr->name,
 		    parv[1]);
 		return 0;
 	}

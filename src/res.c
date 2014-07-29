@@ -238,7 +238,7 @@ void unrealdns_addreqtolist(DNSReq *r)
 /** Get (and verify) the host for an incoming client.
  * - it checks the cache first, returns the host if found (and valid).
  * - if not found in cache it does ip->name and then name->ip, if both resolve
- *   to the same name it is accepted, otherwise not.
+ *   to the same.client.name it is accepted, otherwise not.
  *   We return NULL in this case and an asynchronic request is done.
  *   When done, proceed_normal_client_handshake() is called.
  */
@@ -251,26 +251,26 @@ char ipv4[4];
 static struct hostent *he;
 char *cache_name, ipv6;
 
-	cache_name = unrealdns_findcache_byaddr(&cptr->ip);
+	cache_name = unrealdns_findcache_byaddr(&cptr->localClient->ip);
 	if (cache_name)
-		return unreal_create_hostent(cache_name, &cptr->ip);
+		return unreal_create_hostent(cache_name, &cptr->localClient->ip);
 
 	/* Create a request */
 	r = MyMallocEx(sizeof(DNSReq));
 	r->cptr = cptr;
-	r->ipv6 = isipv6(&cptr->ip);
+	r->ipv6 = isipv6(&cptr->localClient->ip);
 	unrealdns_addreqtolist(r);
 
 	/* Execute it */
 #ifndef INET6
 	/* easy */
-	ares_gethostbyaddr(resolver_channel, &cptr->ip, 4, AF_INET, unrealdns_cb_iptoname, r);
+	ares_gethostbyaddr(resolver_channel, &cptr->localClient->ip, 4, AF_INET, unrealdns_cb_iptoname, r);
 #else
 	if (r->ipv6)
-		ares_gethostbyaddr(resolver_channel, &cptr->ip, 16, AF_INET6, unrealdns_cb_iptoname, r);
+		ares_gethostbyaddr(resolver_channel, &cptr->localClient->ip, 16, AF_INET6, unrealdns_cb_iptoname, r);
 	else {
 		/* This is slightly more tricky: convert it to an IPv4 presentation and issue the request with that */
-		memcpy(ipv4, ((char *)&cptr->ip) + 12, 4);
+		memcpy(ipv4, ((char *)&cptr->localClient->ip) + 12, 4);
 		ares_gethostbyaddr(resolver_channel, ipv4, 4, AF_INET, unrealdns_cb_iptoname, r);
 	}
 #endif
@@ -388,9 +388,9 @@ u_int32_t ipv4_addr;
 
 	if (!ipv6)
 #ifndef INET6
-		ipv4_addr = acptr->ip.S_ADDR;
+		ipv4_addr = acptr->localClient->ip.S_ADDR;
 #else
-		inet6_to_inet4(&acptr->ip, &ipv4_addr);
+		inet6_to_inet4(&acptr->localClient->ip, &ipv4_addr);
 #endif
 
 	/* Verify ip->name and name->ip mapping... */
@@ -402,7 +402,7 @@ u_int32_t ipv4_addr;
 #else
 		if (ipv6)
 		{
-			if ((he->h_length == 16) && !memcmp(he->h_addr_list[i], &acptr->ip, 16))
+			if ((he->h_length == 16) && !memcmp(he->h_addr_list[i], &acptr->localClient->ip, 16))
 				break;
 		} else {
 			if ((he->h_length == 4) && !memcmp(he->h_addr_list[i], &ipv4_addr, 4))
@@ -426,9 +426,9 @@ u_int32_t ipv4_addr;
 	}
 
 	/* Entry was found, verified, and can be added to cache */
-	unrealdns_addtocache(r->name, &acptr->ip, sizeof(acptr->ip));
+	unrealdns_addtocache(r->name, &acptr->localClient->ip, sizeof(acptr->localClient->ip));
 	
-	he2 = unreal_create_hostent(r->name, &acptr->ip);
+	he2 = unreal_create_hostent(r->name, &acptr->localClient->ip);
 	proceed_normal_client_handshake(acptr, he2);
 
 bad:
@@ -750,7 +750,7 @@ char *param;
 
 	if (!IsAnOper(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, sptr->name);
 		return 0;
 	}
 
@@ -770,7 +770,7 @@ char *param;
 		sendtxtnumeric(sptr, "DNS Request List:");
 		for (r = requests; r; r = r->next)
 			sendtxtnumeric(sptr, " %s",
-				r->cptr ? Inet_ia2p(&r->cptr->ip) : "<client lost>");
+				r->cptr ? Inet_ia2p(&r->cptr->localClient->ip) : "<client lost>");
 	} else
 	if (*param == 'c') /* CLEAR CACHE */
 	{

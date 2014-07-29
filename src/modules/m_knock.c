@@ -94,7 +94,7 @@ CMD_FUNC(m_knock)
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "KNOCK");
+		    me.client.name, parv[0], "KNOCK");
 		return -1;
 	}
 
@@ -105,7 +105,7 @@ CMD_FUNC(m_knock)
 	if (*parv[1] != '#')
 	{
 		sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
-		    me.name,
+		    me.client.name,
 		    sptr->name,
 		    parv[1], "Remember to use a # prefix in channel name");
 
@@ -114,7 +114,7 @@ CMD_FUNC(m_knock)
 	if (!(chptr = find_channel(parv[1], NullChn)))
 	{
 		sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
-		    me.name, sptr->name, parv[1], "Channel does not exist!");
+		    me.client.name, sptr->name, parv[1], "Channel does not exist!");
 		return 0;
 	}
 
@@ -122,7 +122,7 @@ CMD_FUNC(m_knock)
 	if (IsMember(sptr, chptr) == 1)
 	{
 		sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
-		    me.name,
+		    me.client.name,
 		    sptr->name, chptr->chname, "You're already there!");
 		return 0;
 	}
@@ -130,7 +130,7 @@ CMD_FUNC(m_knock)
 	if (!(chptr->mode.mode & MODE_INVITEONLY))
 	{
 		sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
-		    me.name,
+		    me.client.name,
 		    sptr->name, chptr->chname, "Channel is not invite only!");
 		return 0;
 	}
@@ -138,7 +138,7 @@ CMD_FUNC(m_knock)
 	if (is_banned(sptr, chptr, BANCHK_JOIN))
 	{
 		sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
-		    me.name, sptr->name, chptr->chname, "You're banned!");
+		    me.client.name, sptr->name, chptr->chname, "You're banned!");
 		return 0;
 	}
 
@@ -153,8 +153,8 @@ CMD_FUNC(m_knock)
 		return 0;
 
 
-	sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-		":%s NOTICE @%s :[Knock] by %s!%s@%s (%s)", me.name, chptr->chname,
+	sendto_channelprefix_butone(NULL, &me.client, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+		":%s NOTICE @%s :[Knock] by %s!%s@%s (%s)", me.client.name, chptr->chname,
 		sptr->name, sptr->user->username, GetHost(sptr),
 		parv[2] ? parv[2] : "no reason specified");
 

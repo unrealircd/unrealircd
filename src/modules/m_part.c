@@ -91,7 +91,7 @@ DLLFUNC CMD_FUNC(m_part)
 	if (parc < 2 || parv[1][0] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "PART");
+		    me.client.name, parv[0], "PART");
 		return 0;
 	}
 
@@ -124,7 +124,7 @@ DLLFUNC CMD_FUNC(m_part)
 		if (!chptr)
 		{
 			sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL),
-			    me.name, parv[0], name);
+			    me.client.name, parv[0], name);
 			continue;
 		}
 
@@ -142,7 +142,7 @@ DLLFUNC CMD_FUNC(m_part)
 			 */
 			if (MyClient(sptr))
 				sendto_one(sptr,
-				    err_str(ERR_NOTONCHANNEL), me.name,
+				    err_str(ERR_NOTONCHANNEL), me.client.name,
 				    parv[0], name);
 			continue;
 		}

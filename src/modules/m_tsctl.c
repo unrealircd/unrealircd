@@ -93,7 +93,7 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		goto doit;
 	if (!IsAdmin(sptr) && !IsCoAdmin(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 		return 0;
 	}
       doit:
@@ -102,7 +102,7 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (*parv[1] == '\0')
 		{
 			sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-			    me.name, parv[0], "TSCTL");
+			    me.client.name, parv[0], "TSCTL");
 			return 0;
 		}
 
@@ -110,7 +110,7 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			if (!OPCanTSCtl(sptr))
                         {
-			    sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+			    sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 			    return 0;
 			}
 
@@ -118,21 +118,21 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			{
 				sendto_one(sptr,
 				    ":%s NOTICE %s :*** TSCTL OFFSET: /tsctl offset <+|-> <time>",
-				    me.name, sptr->name);
+				    me.client.name, sptr->name);
 				return 0;
 			}
 			if (*parv[2] == '\0' || *parv[3] == '\0')
 			{
 				sendto_one(sptr,
 				    ":%s NOTICE %s :*** TSCTL OFFSET: /tsctl offset <+|-> <time>",
-				    me.name, sptr->name);
+				    me.client.name, sptr->name);
 				return 0;
 			}
 			if (!(*parv[2] == '+' || *parv[2] == '-'))
 			{
 				sendto_one(sptr,
 				    ":%s NOTICE %s :*** TSCTL OFFSET: /tsctl offset <+|-> <time>",
-				    me.name, sptr->name);
+				    me.client.name, sptr->name);
 				return 0;
 
 			}
@@ -147,9 +147,9 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				  sendto_ops
 				      ("TS Control - %s set TStime() to be diffed +%li",
 				      sptr->name, timediff);
-				  sendto_server(&me, 0, 0,
+				  sendto_server(&me.client, 0, 0,
 				      ":%s GLOBOPS :TS Control - %s set TStime to be diffed +%li",
-				      me.name, sptr->name, timediff);
+				      me.client.name, sptr->name, timediff);
 				  break;
 			  case '-':
 				  timediff = atol(parv[3]);
@@ -159,9 +159,9 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				  sendto_ops
 				      ("TS Control - %s set TStime() to be diffed -%li",
 				      sptr->name, timediff);
-				  sendto_server(&me, 0, 0,
+				  sendto_server(&me.client, 0, 0,
 				      ":%s GLOBOPS :TS Control - %s set TStime to be diffed -%li",
-				      me.name, sptr->name, timediff);
+				      me.client.name, sptr->name, timediff);
 				  break;
 			}
 			return 0;
@@ -170,7 +170,7 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			sendto_one(sptr,
 			    ":%s NOTICE %s :*** TStime=%li time()=%li TSoffset=%li",
-			    me.name, sptr->name, TStime(), time(NULL),
+			    me.client.name, sptr->name, TStime(), time(NULL),
 			    TSoffset);
 			return 0;
 		}
@@ -178,7 +178,7 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			sendto_one(sptr,
 			    ":%s NOTICE %s :*** Server=%s TStime=%li time()=%li TSoffset=%li",
-			    me.name, sptr->name, me.name, TStime(), time(NULL),
+			    me.client.name, sptr->name, me.client.name, TStime(), time(NULL),
 			    TSoffset);
 			sendto_server(cptr, 0, 0, ":%s TSCTL alltime",
 			    sptr->name);
@@ -189,13 +189,13 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			if (!IsULine(sptr))
 			{
-				if (MyClient(sptr)) sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+				if (MyClient(sptr)) sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 				return 0;
 			}
 
 			if (!parv[2] || *parv[2] == '\0')
 			{
-				if (MyClient(sptr)) sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0], "TSCTL");
+				if (MyClient(sptr)) sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.client.name, parv[0], "TSCTL");
 				return 0;
 			}
 
@@ -218,7 +218,7 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 
 	//default: no parameter was entered
-	sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0], "TSCTL");
+	sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.client.name, parv[0], "TSCTL");
 
 	return 0;
 }

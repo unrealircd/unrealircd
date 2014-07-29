@@ -69,7 +69,7 @@ static void ban_fizzer(aClient *cptr)
 	aClient *acptr;
 	char hostip[128], mo[100], mo2[100];
 	char *tkllayer[9] = {
-		me.name,	/*0  server.name */
+		me.client.name,	/*0  server.name */
 		"+",		/*1  +|- */
 		"z",		/*2  G   */
 		"*",		/*3  user */
@@ -80,16 +80,16 @@ static void ban_fizzer(aClient *cptr)
 		NULL		/*8  reason */
 	};
 
-	strlcpy(hostip, Inet_ia2p(&cptr->ip), sizeof(hostip));
+	strlcpy(hostip, Inet_ia2p(&cptr->localClient->ip), sizeof(hostip));
 
 	tkllayer[4] = hostip;
-	tkllayer[5] = me.name;
+	tkllayer[5] = me.client.name;
 	ircsnprintf(mo, sizeof(mo), "%li", 86400 + TStime());
 	ircsnprintf(mo2, sizeof(mo), "%li", TStime());
 	tkllayer[6] = mo;
 	tkllayer[7] = mo2;
 	tkllayer[8] = "Fizzer";
-	m_tkl(&me, &me, 9, tkllayer);
+	m_tkl(&me.client, &me.client, 9, tkllayer);
 	return;
 }
 
@@ -122,7 +122,7 @@ DLLFUNC int h_defizzer_connect(aClient *sptr)
 	{
 		ircstp->is_ref++;
 		ban_fizzer(sptr);			
-		return exit_client(sptr, sptr, &me, "Fizzer client");
+		return exit_client(sptr, sptr, &me.client, "Fizzer client");
 	}	
 	return 0;
 }

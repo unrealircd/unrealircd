@@ -111,12 +111,12 @@ long flags = 0; /* cache: membership flags */
 	if (parc < 2)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "TOPIC");
+		    me.client.name, parv[0], "TOPIC");
 		return 0;
 	}
 	name = parv[1];
 
-	if (name && IsChannelName(name))
+	if (*name == '0' || !IsChannelName(name))
 	{
 		chptr = find_channel(parv[1], NullChn);
 		if (!chptr)
@@ -128,7 +128,7 @@ long flags = 0; /* cache: membership flags */
 				    parv[1], backupbuf);
 			}
 			sendto_one(sptr, rpl_str(ERR_NOSUCHCHANNEL),
-			    me.name, parv[0], name);
+			    me.client.name, parv[0], name);
 			return 0;
 		}
 		
@@ -142,7 +142,7 @@ long flags = 0; /* cache: membership flags */
 			    && !OPCanSeeSecret(sptr) && !IsULine(sptr))
 			{
 				sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
-				    me.name, parv[0], name);
+				    me.client.name, parv[0], name);
 				return 0;
 			}
 			if (parc > 2)
@@ -168,20 +168,20 @@ long flags = 0; /* cache: membership flags */
 			/* If you're not a member, and you can't view outside channel, deny */
 			if ((!ismember && i == HOOK_DENY) || (is_banned(sptr,chptr,BANCHK_JOIN) && !IsAnOper(sptr)))
 			{
-				sendto_one(sptr, err_str(ERR_NOTONCHANNEL), me.name, parv[0], name);
+				sendto_one(sptr, err_str(ERR_NOTONCHANNEL), me.client.name, parv[0], name);
 				return 0;
 			}
 
 			if (!chptr->topic)
 				sendto_one(sptr, rpl_str(RPL_NOTOPIC),
-				    me.name, parv[0], chptr->chname);
+				    me.client.name, parv[0], chptr->chname);
 			else
 			{
 				sendto_one(sptr, rpl_str(RPL_TOPIC),
-				    me.name, parv[0],
+				    me.client.name, parv[0],
 				    chptr->chname, chptr->topic);
 				sendto_one(sptr,
-				    rpl_str(RPL_TOPICWHOTIME), me.name,
+				    rpl_str(RPL_TOPICWHOTIME), me.client.name,
 				    parv[0], chptr->chname,
 				    chptr->topic_nick, chptr->topic_time);
 			}
@@ -245,7 +245,7 @@ long flags = 0; /* cache: membership flags */
 					{
 #endif
 					sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
-					    me.name, parv[0], chptr->chname);
+					    me.client.name, parv[0], chptr->chname);
 					return 0;
 #ifndef NO_OPEROVERRIDE
 					}
@@ -263,7 +263,7 @@ long flags = 0; /* cache: membership flags */
 					topicoverride(sptr, chptr, topic);
 				} else {
 					ircsnprintf(buf, sizeof(buf), "You cannot change the topic on %s while being banned", chptr->chname);
-					sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.name, parv[0], "TOPIC",  buf);
+					sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.client.name, parv[0], "TOPIC",  buf);
 					return -1;
 				}
 			} else
@@ -277,7 +277,7 @@ long flags = 0; /* cache: membership flags */
 				} else {
 					/* With +m and -t, only voice and higher may change the topic */
 					ircsnprintf(buf, sizeof(buf), "Voice (+v) or higher is required in order to change the topic on %s (channel is +m)", chptr->chname);
-					sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.name, parv[0], "TOPIC",  buf);
+					sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.client.name, parv[0], "TOPIC",  buf);
 					return -1;
 				}
 			}
@@ -339,7 +339,7 @@ long flags = 0; /* cache: membership flags */
 		}
 		else
 			sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
-			    me.name, parv[0], chptr->chname);
+			    me.client.name, parv[0], chptr->chname);
 	}
 	return 0;
 }

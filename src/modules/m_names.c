@@ -88,7 +88,7 @@ DLLFUNC CMD_FUNC(m_names)
 {
 	int uhnames = (MyConnect(sptr) && SupportUHNAMES(sptr)); // cache UHNAMES support
 	int bufLen = NICKLEN + (!uhnames ? 0 : (1 + USERLEN + 1 + HOSTLEN));
-	int  mlen = strlen(me.name) + bufLen + 7;
+	int  mlen = strlen(me.client.name) + bufLen + 7;
 	aChannel *chptr;
 	aClient *acptr;
 	int  member;
@@ -102,7 +102,7 @@ DLLFUNC CMD_FUNC(m_names)
 
 	if (parc < 2 || !MyConnect(sptr))
 	{
-		sendto_one(sptr, rpl_str(RPL_ENDOFNAMES), me.name,
+		sendto_one(sptr, rpl_str(RPL_ENDOFNAMES), me.client.name,
 		    parv[0], "*");
 		return 0;
 	}
@@ -116,7 +116,7 @@ DLLFUNC CMD_FUNC(m_names)
 			sendto_realops("names abuser %s %s",
 			    get_client_name(sptr, FALSE), para);
 			sendto_one(sptr, err_str(ERR_TOOMANYTARGETS),
-			    me.name, sptr->name, "NAMES");
+			    me.client.name, sptr->name, "NAMES");
 			return 0;
 		}
 	}
@@ -125,7 +125,7 @@ DLLFUNC CMD_FUNC(m_names)
 
 	if (!chptr || (!ShowChannel(sptr, chptr) && !OPCanSeeSecret(sptr)))
 	{
-		sendto_one(sptr, rpl_str(RPL_ENDOFNAMES), me.name,
+		sendto_one(sptr, rpl_str(RPL_ENDOFNAMES), me.client.name,
 		    parv[0], para);
 		return 0;
 	}
@@ -225,7 +225,7 @@ DLLFUNC CMD_FUNC(m_names)
 		flag = 1;
 		if (mlen + idx + bufLen > BUFSIZE - 7)
 		{
-			sendto_one(sptr, rpl_str(RPL_NAMREPLY), me.name,
+			sendto_one(sptr, rpl_str(RPL_NAMREPLY), me.client.name,
 			    parv[0], buf);
 			idx = spos;
 			flag = 0;
@@ -233,9 +233,9 @@ DLLFUNC CMD_FUNC(m_names)
 	}
 
 	if (flag)
-		sendto_one(sptr, rpl_str(RPL_NAMREPLY), me.name, parv[0], buf);
+		sendto_one(sptr, rpl_str(RPL_NAMREPLY), me.client.name, parv[0], buf);
 
-	sendto_one(sptr, rpl_str(RPL_ENDOFNAMES), me.name, parv[0], para);
+	sendto_one(sptr, rpl_str(RPL_ENDOFNAMES), me.client.name, parv[0], para);
 
 	return 0;
 

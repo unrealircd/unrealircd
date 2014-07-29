@@ -166,7 +166,7 @@ int  crule_directcon(int numargs, void *crulearg[])
 
 	/* adapted from m_trace and exit_one_client */
 	/* XXX: iterate server_list when added */
-	list_for_each_entry(acptr, &lclient_list, lclient_node)
+	list_for_each_entry2(acptr, struct LocalClient, &lclient_list, lclient_node)
 	{
 		if (!IsServer(acptr))
 			continue;
@@ -203,7 +203,7 @@ int  crule_directop(int numargs, void *crulearg[])
 	aClient *acptr;
 
 	/* adapted from m_trace */
-	list_for_each_entry(acptr, &lclient_list, lclient_node)
+	list_for_each_entry2(acptr, struct LocalClient, &lclient_list, lclient_node)
 	{
 		if (!IsAnOper(acptr))
 			continue;

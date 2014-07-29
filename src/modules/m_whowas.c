@@ -92,7 +92,7 @@ DLLFUNC CMD_FUNC(m_whowas)
 	if (parc < 2)
 	{
 		sendto_one(sptr, err_str(ERR_NONICKNAMEGIVEN),
-		    me.name, parv[0]);
+		    me.client.name, parv[0]);
 		return 0;
 	}
 	if (parc > 2)
@@ -115,14 +115,14 @@ DLLFUNC CMD_FUNC(m_whowas)
 		if (!mycmp(nick, temp->name))
 		{
 			sendto_one(sptr, rpl_str(RPL_WHOWASUSER),
-			    me.name, parv[0], temp->name,
+			    me.client.name, parv[0], temp->name,
 			    temp->username,
 			    (IsOper(sptr) ? temp->hostname :
 			    (*temp->virthost !=
 			    '\0') ? temp->virthost : temp->hostname),
 			    temp->realname);
                 	if (!((Find_uline(temp->servername)) && !IsOper(sptr) && HIDE_ULINES))
-				sendto_one(sptr, rpl_str(RPL_WHOISSERVER), me.name,
+				sendto_one(sptr, rpl_str(RPL_WHOISSERVER), me.client.name,
 				    parv[0], temp->name, temp->servername,
 				    myctime(temp->logoff));
 			cur++;
@@ -133,8 +133,8 @@ DLLFUNC CMD_FUNC(m_whowas)
 	}
 	if (!found)
 		sendto_one(sptr, err_str(ERR_WASNOSUCHNICK),
-		    me.name, parv[0], nick);
+		    me.client.name, parv[0], nick);
 
-	sendto_one(sptr, rpl_str(RPL_ENDOFWHOWAS), me.name, parv[0], parv[1]);
+	sendto_one(sptr, rpl_str(RPL_ENDOFWHOWAS), me.client.name, parv[0], parv[1]);
 	return 0;
 }

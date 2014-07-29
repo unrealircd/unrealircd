@@ -191,7 +191,7 @@ void fd_select(time_t delay)
 	if (num < 0)
 	{
 		extern void report_baderror(char *text, aClient *cptr);
-		report_baderror("select %s:%s", &me);
+		report_baderror("select %s:%s", &me.client);
 		/* DEBUG the actual problem: */
 		memcpy(&work_read_fds, &read_fds, sizeof(fd_set));
 		memcpy(&work_write_fds, &write_fds, sizeof(fd_set));

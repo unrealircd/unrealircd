@@ -480,11 +480,11 @@ int   add_to_watch_hash_table(char *nick, aClient *cptr, int awaynotify)
 		anptr->watch->next = lp;
 		
 		lp = make_link();
-		lp->next = cptr->watch;
+		lp->next = cptr->localClient->watch;
 		lp->value.wptr = anptr;
 		lp->flags = awaynotify;
-		cptr->watch = lp;
-		cptr->watches++;
+		cptr->localClient->watch = lp;
+		cptr->localClient->watches++;
 	}
 	
 	return 0;
@@ -522,7 +522,7 @@ int   hash_check_watch(aClient *cptr, int reply)
 	{
 		if (!awaynotify)
 		{
-			sendto_one(lp->value.cptr, rpl_str(reply), me.name,
+			sendto_one(lp->value.cptr, rpl_str(reply), me.client.name,
 			    lp->value.cptr->name, cptr->name,
 			    (IsPerson(cptr) ? cptr->user->username : "<N/A>"),
 			    (IsPerson(cptr) ?
@@ -536,14 +536,14 @@ int   hash_check_watch(aClient *cptr, int reply)
 				continue; /* skip away/unaway notification for users not interested in them */
 
 			if (reply == RPL_NOTAWAY)
-				sendto_one(lp->value.cptr, rpl_str(reply), me.name,
+				sendto_one(lp->value.cptr, rpl_str(reply), me.client.name,
 				    lp->value.cptr->name, cptr->name,
 				    (IsPerson(cptr) ? cptr->user->username : "<N/A>"),
 				    (IsPerson(cptr) ?
 				    (IsHidden(cptr) ? cptr->user->virthost : cptr->
 				    user->realhost) : "<N/A>"), cptr->user->lastaway);
 			else /* RPL_GONEAWAY / RPL_REAWAY */
-				sendto_one(lp->value.cptr, rpl_str(reply), me.name,
+				sendto_one(lp->value.cptr, rpl_str(reply), me.client.name,
 				    lp->value.cptr->name, cptr->name,
 				    (IsPerson(cptr) ? cptr->user->username : "<N/A>"),
 				    (IsPerson(cptr) ?
@@ -613,7 +613,7 @@ int   del_from_watch_hash_table(char *nick, aClient *cptr)
 	
 	/* Do the same regarding the links in client-record... */
 	last = NULL;
-	if ((lp = cptr->watch))
+	if ((lp = cptr->localClient->watch))
 	  while (lp && (lp->value.wptr != anptr)) {
 		  last = lp;
 		  lp = lp->next;
@@ -630,7 +630,7 @@ int   del_from_watch_hash_table(char *nick, aClient *cptr)
 					 nick, cptr->user);
 	else {
 		if (!last) /* First one matched */
-		  cptr->watch = lp->next;
+		  cptr->localClient->watch = lp->next;
 		else
 		  last->next = lp->next;
 		free_link(lp);
@@ -645,7 +645,7 @@ int   del_from_watch_hash_table(char *nick, aClient *cptr)
 	}
 	
 	/* Update count of notifies on nick */
-	cptr->watches--;
+	cptr->localClient->watches--;
 	
 	return 0;
 }
@@ -660,10 +660,10 @@ int   hash_del_watch_list(aClient *cptr)
 	Link  *np, *lp, *last;
 	
 	
-	if (!(np = cptr->watch))
+	if (!(np = cptr->localClient->watch))
 	  return 0;   /* Nothing to do */
 	
-	cptr->watch = NULL; /* Break the watch-list for client */
+	cptr->localClient->watch = NULL; /* Break the watch-list for client */
 	while (np) {
 		/* Find the watch-record from hash-table... */
 		anptr = np->value.wptr;
@@ -715,7 +715,7 @@ int   hash_del_watch_list(aClient *cptr)
 		free_link(lp); /* Free the previous */
 	}
 	
-	cptr->watches = 0;
+	cptr->localClient->watches = 0;
 	
 	return 0;
 }

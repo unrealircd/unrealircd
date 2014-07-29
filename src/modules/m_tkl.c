@@ -196,7 +196,7 @@ DLLFUNC int m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (!OPCanTKL(sptr) || !IsOper(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name,
 		sptr->name);
 		return 0;
 	}
@@ -205,7 +205,7 @@ DLLFUNC int m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		tkl_stats(sptr, TKL_KILL|TKL_GLOBAL, NULL);
 		tkl_stats(sptr, TKL_ZAP|TKL_GLOBAL, NULL);
-		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
+		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.client.name, sptr->name, 'g');
 		sendto_snomask(SNO_EYES, "Stats \'g\' requested by %s (%s@%s)",
 			sptr->name, sptr->user->username, GetHost(sptr));
 		return 0;
@@ -222,7 +222,7 @@ DLLFUNC int m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (!OPCanGZL(sptr) || !IsOper(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name,
 		sptr->name);
 		return 0;
 	}
@@ -231,7 +231,7 @@ DLLFUNC int m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		tkl_stats(sptr, TKL_GLOBAL|TKL_KILL, NULL);
 		tkl_stats(sptr, TKL_GLOBAL|TKL_ZAP, NULL);
-		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
+		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.client.name, sptr->name, 'g');
 		sendto_snomask(SNO_EYES, "Stats \'g\' requested by %s (%s@%s)",
 			sptr->name, sptr->user->username, GetHost(sptr));
 		return 0;
@@ -248,7 +248,7 @@ DLLFUNC int m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (!OPCanTKL(sptr) || !IsOper(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name,
 		sptr->name);
 		return 0;
 	}
@@ -256,7 +256,7 @@ DLLFUNC int m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc == 1)
 	{
 		tkl_stats(sptr, TKL_GLOBAL|TKL_SHUN, NULL);
-		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 's');
+		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.client.name, sptr->name, 's');
 		sendto_snomask(SNO_EYES, "Stats \'s\' requested by %s (%s@%s)",
 			sptr->name, sptr->user->username, GetHost(sptr));
 		return 0;
@@ -275,13 +275,13 @@ int remove = 0;
 
 	if (MyClient(sptr) && (!OPCanTKL(sptr) || !IsOper(sptr)))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name,
 		sptr->name);
 		return 0;
 	}
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "TEMPSHUN");
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.client.name, sptr->name, "TEMPSHUN");
 		return 0;
 	}
 	if (parv[1][0] == '+')
@@ -296,7 +296,7 @@ int remove = 0;
 	acptr = find_person(name, NULL);
 	if (!acptr)
 	{
-		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, sptr->name, name);
+		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.client.name, sptr->name, name);
 		return 0;
 	}
 	if (!MyClient(acptr))
@@ -320,7 +320,7 @@ int remove = 0;
 					acptr->name, acptr->user->username, acptr->user->realhost,
 					sptr->name, comment);
 				sendto_snomask(SNO_TKL, "%s", buf);
-				sendto_server(NULL, 0, 0, ":%s SENDSNO G :%s", me.name, buf);
+				sendto_server(NULL, 0, 0, ":%s SENDSNO G :%s", me.client.name, buf);
 			}
 		} else {
 			if (!IsShunned(acptr))
@@ -332,7 +332,7 @@ int remove = 0;
 					acptr->name, acptr->user->username, acptr->user->realhost,
 					sptr->name);
 				sendto_snomask(SNO_TKL, "%s", buf);
-				sendto_server(NULL, 0, 0, ":%s SENDSNO G :%s", me.name, buf);
+				sendto_server(NULL, 0, 0, ":%s SENDSNO G :%s", me.client.name, buf);
 			}
 		}
 	}
@@ -346,7 +346,7 @@ DLLFUNC int m_tkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (!OPCanKline(sptr) || !IsAnOper(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name,
 		sptr->name);
 		return 0;
 	}
@@ -365,7 +365,7 @@ DLLFUNC int m_tkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					type[0] = 'K';
 				type[1] = '\0';
 				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
-			 		me.name, sptr->name, type, bans->mask, bans->reason
+			 		me.client.name, sptr->name, type, bans->mask, bans->reason
 					? bans->reason : "<no reason>");
 			}
 			else if (bans->flag.type == CONF_BAN_IP) 
@@ -376,7 +376,7 @@ DLLFUNC int m_tkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					type[0] = 'z';
 				type[1] = '\0';
 				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
-					me.name, sptr->name, type, bans->mask, bans->reason 
+					me.client.name, sptr->name, type, bans->mask, bans->reason 
 					? bans->reason : "<no reason>");
 			}
 		}		
@@ -386,16 +386,16 @@ DLLFUNC int m_tkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			if (excepts->flag.type == 1)
 				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
-					me.name, sptr->name, "E", excepts->mask, "");
+					me.client.name, sptr->name, "E", excepts->mask, "");
 		}
-		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'k');
+		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.client.name, sptr->name, 'k');
 		sendto_snomask(SNO_EYES, "Stats \'k\' requested by %s (%s@%s)",
 			sptr->name, sptr->user->username, GetHost(sptr));
 		return 0;
 	}
 	if (!OPCanUnKline(sptr) && *parv[1] == '-')
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 		return 0;
 	}
 	return m_tkl_line(cptr, sptr, parc, parv, "k");
@@ -409,7 +409,7 @@ DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (!OPCanZline(sptr) || !IsAnOper(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name,
 		sptr->name);
 		return 0;
 	}
@@ -428,7 +428,7 @@ DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					type[0] = 'K';
 				type[1] = '\0';
 				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
-			 		me.name, sptr->name, type, bans->mask, bans->reason
+			 		me.client.name, sptr->name, type, bans->mask, bans->reason
 					? bans->reason : "<no reason>");
 			}
 			else if (bans->flag.type == CONF_BAN_IP) 
@@ -439,7 +439,7 @@ DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					type[0] = 'z';
 				type[1] = '\0';
 				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
-					me.name, sptr->name, type, bans->mask, bans->reason 
+					me.client.name, sptr->name, type, bans->mask, bans->reason 
 					? bans->reason : "<no reason>");
 			}
 		}		
@@ -449,9 +449,9 @@ DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			if (excepts->flag.type == 1)
 				sendto_one(sptr, rpl_str(RPL_STATSKLINE),
-					me.name, sptr->name, "E", excepts->mask, "");
+					me.client.name, sptr->name, "E", excepts->mask, "");
 		}
-		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'k');
+		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.client.name, sptr->name, 'k');
 		sendto_snomask(SNO_EYES, "Stats \'k\' requested by %s (%s@%s)",
 			sptr->name, sptr->user->username, GetHost(sptr));
 		return 0;
@@ -481,7 +481,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 	char mo[1024], mo2[1024];
 	char *p, *usermask, *hostmask;
 	char *tkllayer[9] = {
-		me.name,	/*0  server.name */
+		me.client.name,	/*0  server.name */
 		NULL,		/*1  +|- */
 		NULL,		/*2  G   */
 		NULL,		/*3  user */
@@ -496,7 +496,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 	if (parc == 1)
 	{
 		tkl_stats(sptr, 0, NULL);
-		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'g');
+		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.client.name, sptr->name, 'g');
 		return 0;
 	}
 
@@ -514,13 +514,13 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 
 	if (strchr(mask, '!'))
 	{
-		sendto_one(sptr, ":%s NOTICE %s :[error] Cannot have '!' in masks.", me.name,
+		sendto_one(sptr, ":%s NOTICE %s :[error] Cannot have '!' in masks.", me.client.name,
 		    sptr->name);
 		return 0;
 	}
 	if (*mask == ':')
 	{
-		sendto_one(sptr, ":%s NOTICE %s :[error] Mask cannot start with a ':'.", me.name,
+		sendto_one(sptr, ":%s NOTICE %s :[error] Mask cannot start with a ':'.", me.client.name,
 			sptr->name);
 		return 0;
 	}
@@ -597,7 +597,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 		}
 		else
 		{
-			sendto_one(sptr, rpl_str(ERR_NOSUCHNICK), me.name, sptr->name, mask);
+			sendto_one(sptr, rpl_str(ERR_NOSUCHNICK), me.client.name, sptr->name, mask);
 			return 0;
 		}
 	}	
@@ -625,7 +625,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 			{
 				sendto_one(sptr,
 				    ":%s NOTICE %s :*** [error] Too broad mask",
-				    me.name, sptr->name);
+				    me.client.name, sptr->name);
 				return 0;
 			}
 
@@ -640,7 +640,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 					{
 						sendto_one(sptr,
 						    ":%s NOTICE %s :*** [error] Too broad mask",
-						    me.name, sptr->name);
+						    me.client.name, sptr->name);
 						return 0;
 					}
 				}
@@ -659,7 +659,7 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 		{
 			sendto_one(sptr,
 			    ":%s NOTICE %s :*** [error] The time you specified is out of range!",
-			    me.name, sptr->name);
+			    me.client.name, sptr->name);
 			return 0;
 		}
 	}
@@ -695,17 +695,17 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 		{
 			sendto_one(sptr,
 				":%s NOTICE %s :*** [error] The time you specified is out of range",
-				me.name, sptr->name);
+				me.client.name, sptr->name);
 			return 0;
 		}
 		
 		/* call the tkl layer .. */
-		m_tkl(&me, &me, 9, tkllayer);
+		m_tkl(&me.client, &me.client, 9, tkllayer);
 	}
 	else
 	{
 		/* call the tkl layer .. */
-		m_tkl(&me, &me, 6, tkllayer);
+		m_tkl(&me.client, &me.client, 6, tkllayer);
 
 	}
 	return 0;
@@ -724,7 +724,7 @@ int  whattodo = 0;	/* 0 = add  1 = del */
 char mo[32], mo2[32];
 char *p;
 char *tkllayer[11] = {
-	me.name,	/*  0 server.name */
+	me.client.name,	/*  0 server.name */
 	NULL,		/*  1 +|- */
 	"F",		/*  2 F   */
 	NULL,		/*  3 usermask (targets) */
@@ -746,7 +746,7 @@ int n;
 
 	if (!OPCanTKL(sptr) || !IsOper(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, sptr->name);
 		return 0;
 	}
 
@@ -754,7 +754,7 @@ int n;
 	{
 		tkl_stats(sptr, TKL_SPAMF, NULL);
 		tkl_stats(sptr, TKL_SPAMF|TKL_GLOBAL, NULL);
-		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, sptr->name, 'F');
+		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.client.name, sptr->name, 'F');
 		sendto_snomask(SNO_EYES, "Stats \'f\' requested by %s (%s@%s)",
 			sptr->name, sptr->user->username, GetHost(sptr));
 		return 0;
@@ -775,7 +775,7 @@ int n;
 		whattodo = 1;
 	else
 	{
-		sendto_one(sptr, ":%s NOTICE %s :1st parameter invalid", me.name, sptr->name);
+		sendto_one(sptr, ":%s NOTICE %s :1st parameter invalid", me.client.name, sptr->name);
 		return spamfilter_usage(sptr);
 	}
 
@@ -788,7 +788,7 @@ int n;
 	action = banact_stringtoval(parv[3]);
 	if (!action)
 	{
-		sendto_one(sptr, ":%s NOTICE %s :Invalid 'action' field (%s)", me.name, sptr->name, parv[3]);
+		sendto_one(sptr, ":%s NOTICE %s :Invalid 'action' field (%s)", me.client.name, sptr->name, parv[3]);
 		return spamfilter_usage(sptr);
 	}
 	actionbuf[0] = banact_valtochar(action);
@@ -799,7 +799,7 @@ int n;
 	if (p)
 	{
 		sendto_one(sptr, ":%s NOTICE %s :Error in regex '%s': %s",
-			me.name, sptr->name, parv[6], p);
+			me.client.name, sptr->name, parv[6], p);
 		return 0;
 	}
 
@@ -846,7 +846,7 @@ int n;
 		tkllayer[7] = mo2;
 	}
 	
-	m_tkl(&me, &me, 11, tkllayer);
+	m_tkl(&me.client, &me.client, 11, tkllayer);
 
 	return 0;
 }
@@ -1032,10 +1032,10 @@ void _tkl_check_local_remove_shun(aTKline *tmp)
 
 	for (i1 = 0; i1 <= 5; i1++)
 	{
-		list_for_each_entry(acptr, &lclient_list, lclient_node)
+		list_for_each_entry2(acptr, struct LocalClient, &lclient_list, lclient_node)
 			if (MyClient(acptr) && IsShunned(acptr))
 			{
-				chost = acptr->sockhost;
+				chost = acptr->localClient->sockhost;
 				cname = acptr->user->username;
 
 				cip = GetIP(acptr);
@@ -1077,7 +1077,7 @@ void _tkl_check_local_remove_shun(aTKline *tmp)
 #ifdef SHUN_NOTICES
 						sendto_one(acptr,
 							   ":%s NOTICE %s :*** You are no longer shunned",
-							   me.name,
+							   me.client.name,
 							   acptr->name);
 #endif
 					}
@@ -1195,7 +1195,7 @@ int  _find_tkline_match(aClient *cptr, int xx)
 		return -1;
 
 	nowtime = TStime();
-	chost = cptr->sockhost;
+	chost = cptr->localClient->sockhost;
 	cname = cptr->user ? cptr->user->username : "unknown";
 	cip = GetIP(cptr);
 
@@ -1210,7 +1210,7 @@ int  _find_tkline_match(aClient *cptr, int xx)
 			/* If it's tangy and brown, you're in CIDR town! */
 			if (lp->ptr.netmask)
 			{
-				if (match_ip(cptr->ip, NULL, NULL, lp->ptr.netmask) && 
+				if (match_ip(cptr->localClient->ip, NULL, NULL, lp->ptr.netmask) && 
 				    !match(lp->usermask, cname))
 				{
 					points = 1;
@@ -1248,7 +1248,7 @@ int  _find_tkline_match(aClient *cptr, int xx)
 
 		if (excepts->netmask)
 		{
-			if (match_ip(cptr->ip, host2, excepts->mask, excepts->netmask))
+			if (match_ip(cptr->localClient->ip, host2, excepts->mask, excepts->netmask))
 				return 1;		
 		} else
 		if (!match(excepts->mask, host) || !match(excepts->mask, host2))
@@ -1267,31 +1267,31 @@ int  _find_tkline_match(aClient *cptr, int xx)
 			if (GLINE_ADDRESS)
 				sendto_one(cptr, ":%s NOTICE %s :*** You are %s from %s (%s)"
 					   " Email %s for more information.",
-					   me.name, cptr->name,
+					   me.client.name, cptr->name,
 					   (lp->expire_at ? "banned" : "permanently banned"),
 					   ircnetwork, lp->reason, GLINE_ADDRESS);
 			else
 				sendto_one(cptr, ":%s NOTICE %s :*** You are %s from %s (%s)",
-					   me.name, cptr->name,
+					   me.client.name, cptr->name,
 					   (lp->expire_at ? "banned" : "permanently banned"),
 					   ircnetwork, lp->reason);
 			ircsnprintf(msge, sizeof(msge), "User has been %s from %s (%s)",
 				   (lp->expire_at ? "banned" : "permanently banned"),
 				   ircnetwork, lp->reason);
-			return (exit_client(cptr, cptr, &me, msge));
+			return (exit_client(cptr, cptr, &me.client, msge));
 		}
 		else
 		{
 			ircstp->is_ref++;
 			sendto_one(cptr, ":%s NOTICE %s :*** You are %s from %s (%s)"
 				   " Email %s for more information.",
-				   me.name, cptr->name,
+				   me.client.name, cptr->name,
 				   (lp->expire_at ? "banned" : "permanently banned"),
-				   me.name, lp->reason, KLINE_ADDRESS);
+				   me.client.name, lp->reason, KLINE_ADDRESS);
 			ircsnprintf(msge, sizeof(msge), "User is %s (%s)",
 				   (lp->expire_at ? "banned" : "permanently banned"),
 				   lp->reason);
-			return (exit_client(cptr, cptr, &me, msge));
+			return (exit_client(cptr, cptr, &me.client, msge));
 
 		}
 	}
@@ -1299,7 +1299,7 @@ int  _find_tkline_match(aClient *cptr, int xx)
 	{
 		ircstp->is_ref++;
 		ircsnprintf(msge, sizeof(msge), "Z:lined (%s)",lp->reason);
-		return exit_client(cptr, cptr, &me, msge);
+		return exit_client(cptr, cptr, &me.client, msge);
 	}
 
 	return 3;
@@ -1323,7 +1323,7 @@ int  _find_shun(aClient *cptr)
 		return 1;
 
 	nowtime = TStime();
-	chost = cptr->sockhost;
+	chost = cptr->localClient->sockhost;
 	cname = cptr->user ? cptr->user->username : "unknown";
 	cip = GetIP(cptr);
 
@@ -1337,7 +1337,7 @@ int  _find_shun(aClient *cptr)
 		/* CIDR */
 		if (lp->ptr.netmask)
 		{
-			if (match_ip(cptr->ip, NULL, NULL, lp->ptr.netmask) && 
+			if (match_ip(cptr->localClient->ip, NULL, NULL, lp->ptr.netmask) && 
 			    !match(lp->usermask, cname))
 			{
 				points = 1;
@@ -1372,7 +1372,7 @@ int  _find_shun(aClient *cptr)
 			continue;
 		if (excepts->netmask)
 		{
-			if (match_ip(cptr->ip, NULL, NULL, excepts->netmask))
+			if (match_ip(cptr->localClient->ip, NULL, NULL, excepts->netmask))
 				return 1;		
 		}
 		else if (!match(excepts->mask, host) || !match(excepts->mask, host2))
@@ -1426,7 +1426,7 @@ char buf[1024];
 int i, matches = 0;
 aClient *acptr;
 
-	list_for_each_entry_reverse(acptr, &lclient_list, lclient_node)
+	list_for_each_entry_reverse2(acptr, struct LocalClient, &lclient_list, lclient_node)
 		if (MyClient(acptr))
 		{
 			spamfilter_build_user_string(spamfilter_user, acptr->name, acptr);
@@ -1441,7 +1441,7 @@ aClient *acptr;
 				unreal_decodespace(tk->ptr.spamf->tkl_reason));
 
 			sendto_snomask(SNO_SPAMF, "%s", buf);
-			sendto_server(NULL, 0, 0, ":%s SENDSNO S :%s", me.name, buf);
+			sendto_server(NULL, 0, 0, ":%s SENDSNO S :%s", me.client.name, buf);
 			ircd_log(LOG_SPAMFILTER, "%s", buf);
 			RunHook6(HOOKTYPE_LOCAL_SPAMFILTER, acptr, spamfilter_user, spamfilter_user, SPAMF_USER, NULL, tk);
 			matches++;
@@ -1512,7 +1512,7 @@ aTKline *_find_qline(aClient *cptr, char *nick, int *ishold)
 		return lp;
 	}
 
-	chost = cptr->user ? cptr->user->realhost : (MyConnect(cptr) ? cptr->sockhost : "unknown");
+	chost = cptr->user ? cptr->user->realhost : (MyConnect(cptr) ? cptr->localClient->sockhost : "unknown");
 	cname = cptr->user ? cptr->user->username : "unknown";
 	strlcpy(host, make_user_host(cname, chost), sizeof(host));
 
@@ -1529,7 +1529,7 @@ aTKline *_find_qline(aClient *cptr, char *nick, int *ishold)
 			continue;
 		if (excepts->netmask)
 		{
-			if (MyConnect(cptr) && match_ip(cptr->ip, NULL, NULL, excepts->netmask))
+			if (MyConnect(cptr) && match_ip(cptr->localClient->ip, NULL, NULL, excepts->netmask))
 				return NULL;
 		} else
 		if (!match(excepts->mask, host) || (host2 && !match(excepts->mask, host2)))
@@ -1561,7 +1561,7 @@ int  _find_tkline_match_zap_ex(aClient *cptr, aTKline **rettk)
 	{
 		if (lp->type & TKL_ZAP)
 		{
-			if ((lp->ptr.netmask && match_ip(cptr->ip, NULL, NULL, lp->ptr.netmask))
+			if ((lp->ptr.netmask && match_ip(cptr->localClient->ip, NULL, NULL, lp->ptr.netmask))
 			    || !match(lp->hostmask, cip))
 			{
 
@@ -1576,7 +1576,7 @@ int  _find_tkline_match_zap_ex(aClient *cptr, aTKline **rettk)
 						continue;
 					if (excepts->netmask)
 					{
-						if (match_ip(cptr->ip, NULL, NULL, excepts->netmask))
+						if (match_ip(cptr->localClient->ip, NULL, NULL, excepts->netmask))
 							return -1;		
 					} else if (!match(excepts->mask, cip))
 						return -1;		
@@ -1589,9 +1589,9 @@ int  _find_tkline_match_zap_ex(aClient *cptr, aTKline **rettk)
 				ircsnprintf(msge, sizeof(msge),
 				    "ERROR :Closing Link: [%s] Z:Lined (%s)\r\n",
 #ifndef INET6
-				    inetntoa((char *)&cptr->ip), lp->reason);
+				    inetntoa((char *)&cptr->localClient->ip), lp->reason);
 #else
-				    inet_ntop(AF_INET6, (char *)&cptr->ip,
+				    inet_ntop(AF_INET6, (char *)&cptr->localClient->ip,
 				    mydummy, MYDUMMY_SIZE), lp->reason);
 #endif
 				strlcpy(zlinebuf, msge, sizeof zlinebuf);
@@ -1735,7 +1735,7 @@ void _tkl_stats(aClient *cptr, int type, char *para)
 		}
 		if (tk->type == (TKL_KILL | TKL_GLOBAL))
 		{
-			sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.name,
+			sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.client.name,
 			    cptr->name, 'G', tk->usermask, tk->hostmask,
 			    (tk->expire_at !=
 			    0) ? (tk->expire_at - curtime) : 0,
@@ -1743,7 +1743,7 @@ void _tkl_stats(aClient *cptr, int type, char *para)
 		}
 		if (tk->type == (TKL_ZAP | TKL_GLOBAL))
 		{
-			sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.name,
+			sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.client.name,
 			    cptr->name, 'Z', tk->usermask, tk->hostmask,
 			    (tk->expire_at !=
 			    0) ? (tk->expire_at - curtime) : 0,
@@ -1751,7 +1751,7 @@ void _tkl_stats(aClient *cptr, int type, char *para)
 		}
 		if (tk->type == (TKL_SHUN | TKL_GLOBAL))
 		{
-			sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.name,
+			sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.client.name,
 			    cptr->name, 's', tk->usermask, tk->hostmask,
 			    (tk->expire_at !=
 			    0) ? (tk->expire_at - curtime) : 0,
@@ -1759,7 +1759,7 @@ void _tkl_stats(aClient *cptr, int type, char *para)
 		}
 		if (tk->type == (TKL_KILL))
 		{
-			sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.name,
+			sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.client.name,
 			    cptr->name, 'K', tk->usermask, tk->hostmask,
 			    (tk->expire_at !=
 			    0) ? (tk->expire_at - curtime) : 0,
@@ -1767,7 +1767,7 @@ void _tkl_stats(aClient *cptr, int type, char *para)
 		}
 		if (tk->type == (TKL_ZAP))
 		{
-			sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.name,
+			sendto_one(cptr, rpl_str(RPL_STATSGLINE), me.client.name,
 			    cptr->name, 'z', tk->usermask, tk->hostmask,
 			    (tk->expire_at !=
 			    0) ? (tk->expire_at - curtime) : 0,
@@ -1775,7 +1775,7 @@ void _tkl_stats(aClient *cptr, int type, char *para)
 		}
 		if (tk->type & TKL_SPAMF)
 		{
-			sendto_one(cptr, rpl_str(RPL_STATSSPAMF), me.name,
+			sendto_one(cptr, rpl_str(RPL_STATSSPAMF), me.client.name,
 				cptr->name,
 				(tk->type & TKL_GLOBAL) ? 'F' : 'f',
 				spamfilter_target_inttostring(tk->subtype),
@@ -1787,7 +1787,7 @@ void _tkl_stats(aClient *cptr, int type, char *para)
 				tk->reason);
 		}
 		if (tk->type & TKL_NICK)
-			sendto_one(cptr, rpl_str(RPL_STATSQLINE), me.name,
+			sendto_one(cptr, rpl_str(RPL_STATSQLINE), me.client.name,
 				cptr->name, (tk->type & TKL_GLOBAL) ? 'Q' : 'q',
 				tk->hostmask, (tk->expire_at != 0) ? (tk->expire_at - curtime) : 0,
 				curtime - tk->set_at, tk->setby, tk->reason); 
@@ -1816,10 +1816,10 @@ void _tkl_synch(aClient *sptr)
 					typ = 'F';
 				if (tk->type & TKL_NICK)
 					typ = 'Q';
-				if ((tk->type & TKL_SPAMF) && (sptr->proto & PROTO_TKLEXT))
+				if ((tk->type & TKL_SPAMF) && (sptr->localClient->proto & PROTO_TKLEXT))
 				{
 					sendto_one(sptr,
-					    ":%s TKL + %c %s %s %s %li %li %li %s :%s", me.name,
+					    ":%s TKL + %c %s %s %s %li %li %li %s :%s", me.client.name,
 					    typ,
 					    tk->usermask, tk->hostmask, tk->setby,
 					    tk->expire_at, tk->set_at,
@@ -1827,7 +1827,7 @@ void _tkl_synch(aClient *sptr)
 					    tk->reason);
 				} else
 					sendto_one(sptr,
-					    ":%s TKL + %c %s %s %s %li %li :%s", me.name,
+					    ":%s TKL + %c %s %s %s %li %li :%s", me.client.name,
 					    typ,
 					    tk->usermask ? tk->usermask : "*", tk->hostmask, tk->setby,
 					    tk->expire_at, tk->set_at, tk->reason);
@@ -2346,7 +2346,7 @@ int _place_host_ban(aClient *sptr, int action, char *reason, long duration)
 		{
 			char hostip[128], mo[100], mo2[100];
 			char *tkllayer[9] = {
-				me.name,	/*0  server.name */
+				me.client.name,	/*0  server.name */
 				"+",		/*1  +|- */
 				"?",		/*2  type */
 				"*",		/*3  user */
@@ -2370,7 +2370,7 @@ int _place_host_ban(aClient *sptr, int action, char *reason, long duration)
 			else if (action == BAN_ACT_SHUN)
 				tkllayer[2] = "s";
 			tkllayer[4] = hostip;
-			tkllayer[5] = me.name;
+			tkllayer[5] = me.client.name;
 			if (!duration)
 				strlcpy(mo, "0", sizeof(mo)); /* perm */
 			else
@@ -2379,7 +2379,7 @@ int _place_host_ban(aClient *sptr, int action, char *reason, long duration)
 			tkllayer[6] = mo;
 			tkllayer[7] = mo2;
 			tkllayer[8] = reason;
-			m_tkl(&me, &me, 9, tkllayer);
+			m_tkl(&me.client, &me.client, 9, tkllayer);
 			if (action == BAN_ACT_SHUN)
 			{
 				find_shun(sptr);
@@ -2478,8 +2478,8 @@ int ret;
 		ircsnprintf(buf, sizeof(buf), "[Spamfilter] %s matched filter '%s' [%s] [%s]",
 			sptr->name, tk->reason, cmdname_by_spamftarget(type),
 			unreal_decodespace(tk->ptr.spamf->tkl_reason));
-		sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
-			":%s NOTICE %s :%s", me.name, chbuf, buf);
+		sendto_channelprefix_butone(NULL, &me.client, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+			":%s NOTICE %s :%s", me.client.name, chbuf, buf);
 	}
 	SetVirus(sptr);
 	return 0;
@@ -2583,7 +2583,7 @@ long ms_past;
 				unreal_decodespace(tk->ptr.spamf->tkl_reason));
 
 			sendto_snomask(SNO_SPAMF, "%s", buf);
-			sendto_server(NULL, 0, 0, ":%s SENDSNO S :%s", me.name, buf);
+			sendto_server(NULL, 0, 0, ":%s SENDSNO S :%s", me.client.name, buf);
 			ircd_log(LOG_SPAMFILTER, "%s", buf);
 			RunHook6(HOOKTYPE_LOCAL_SPAMFILTER, sptr, str, str_in, type, target, tk);
 
@@ -2623,7 +2623,7 @@ long ms_past;
 			case SPAMF_CHANMSG:
 			case SPAMF_CHANNOTICE:
 				sendto_one(sptr, ":%s 404 %s %s :Message blocked: %s",
-					me.name, sptr->name, target,
+					me.client.name, sptr->name, target,
 					unreal_decodespace(tk->ptr.spamf->tkl_reason));
 				break;
 			case SPAMF_DCC:
@@ -2654,7 +2654,7 @@ long ms_past;
 	{
 		if ((type != SPAMF_USER) && (type != SPAMF_QUIT))
 			sendto_one(sptr, rpl_str(RPL_SPAMCMDFWD),
-				me.name, sptr->name, cmdname_by_spamftarget(type),
+				me.client.name, sptr->name, cmdname_by_spamftarget(type),
 				unreal_decodespace(tk->ptr.spamf->tkl_reason));
 		return 0;
 	} else

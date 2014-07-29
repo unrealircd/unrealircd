@@ -448,9 +448,14 @@ SINLINE void list_splice_tail_init(struct list_head *list,
  * @member:	the name of the list_struct within the struct.
  */
 #define list_for_each_entry2(pos, tpe, head, member)				\
-	for (pos = list_entry((head)->next, tpe, member);	\
-	     &pos->member != (head); 	\
-	     pos = list_entry(pos->member.next, tpe, member))
+	for (pos = (aClient *) list_entry((head)->next, tpe, member);	\
+	     &((tpe*)pos)->member != (head); 	\
+	     pos = (aClient *) list_entry(((tpe*)pos)->member.next, tpe, member))
+
+#define list_for_each_entry3(ptype, pos, tpe, head, member)				\
+	for (pos = (ptype *) list_entry((head)->next, tpe, member);	\
+	     &((tpe*)pos)->member != (head); 	\
+	     pos = (ptype *) list_entry(((tpe*)pos)->member.next, tpe, member))
 
 /**
  * list_for_each_entry_reverse - iterate backwards over list of given type.
@@ -462,6 +467,11 @@ SINLINE void list_splice_tail_init(struct list_head *list,
 	for (pos = list_entry((head)->prev, typeof(*pos), member);	\
 	     &pos->member != (head); 	\
 	     pos = list_entry(pos->member.prev, typeof(*pos), member))
+
+#define list_for_each_entry_reverse2(pos, type, head, member)			\
+	for (pos = (aClient *) list_entry((head)->prev, type, member);	\
+	     &((type*)pos)->member != (head); 	\
+	     pos = (aClient *) list_entry(((type*)pos)->member.prev, type, member))
 
 /**
  * list_prepare_entry - prepare a pos entry for use in list_for_each_entry_continue()
@@ -526,6 +536,12 @@ SINLINE void list_splice_tail_init(struct list_head *list,
 		n = list_entry(pos->member.next, typeof(*pos), member);	\
 	     &pos->member != (head); 					\
 	     pos = n, n = list_entry(n->member.next, typeof(*n), member))
+
+#define list_for_each_entry_safe2(pos, n, type, head, member)			\
+	for (pos = (aClient *) list_entry((head)->next, type, member),	\
+		n = (aClient *) list_entry(((type*)pos)->member.next, type, member);	\
+	     &((type*)pos)->member != (head); 					\
+	     pos = n, n = (aClient *) list_entry(((type*)n)->member.next, type, member))
 
 /**
  * list_for_each_entry_safe_continue - continue list iteration safe against removal

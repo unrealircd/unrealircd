@@ -95,7 +95,7 @@ DLLFUNC char * nokick_check (aClient* sptr, aClient* who, aChannel *chptr, char*
 	{
 		/* As a warning, this is not thread safe... */
 		ircsnprintf(errMsg,sizeof(errMsg),err_str(ERR_CANNOTDOCOMMAND),
-				   me.name, sptr->name, "KICK",
+				   me.client.name, sptr->name, "KICK",
 				   "channel is +Q");
 		return errMsg;
 	}

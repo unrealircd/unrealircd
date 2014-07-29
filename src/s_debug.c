@@ -242,7 +242,7 @@ void send_usage(aClient *cptr, char *nick)
 	if (getrusage(RUSAGE_SELF, &rus) == -1)
 	{
 		sendto_one(cptr, ":%s NOTICE %s :Getruseage error: %s.",
-		    me.name, nick, strerror(errno));
+		    me.client.name, nick, strerror(errno));
 		return;
 	}
 	secs = rus.ru_utime.tv_sec + rus.ru_stime.tv_sec;
@@ -252,22 +252,22 @@ void send_usage(aClient *cptr, char *nick)
 
 	sendto_one(cptr,
 	    ":%s %d %s :CPU Secs %ld:%ld User %ld:%ld System %ld:%ld",
-	    me.name, RPL_STATSDEBUG, nick, secs / 60, secs % 60,
+	    me.client.name, RPL_STATSDEBUG, nick, secs / 60, secs % 60,
 	    rus.ru_utime.tv_sec / 60, rus.ru_utime.tv_sec % 60,
 	    rus.ru_stime.tv_sec / 60, rus.ru_stime.tv_sec % 60);
 	sendto_one(cptr, ":%s %d %s :RSS %ld ShMem %ld Data %ld Stack %ld",
-	    me.name, RPL_STATSDEBUG, nick, rus.ru_maxrss,
+	    me.client.name, RPL_STATSDEBUG, nick, rus.ru_maxrss,
 	    rus.ru_ixrss / (rup * hzz), rus.ru_idrss / (rup * hzz),
 	    rus.ru_isrss / (rup * hzz));
 	sendto_one(cptr, ":%s %d %s :Swaps %ld Reclaims %ld Faults %ld",
-	    me.name, RPL_STATSDEBUG, nick, rus.ru_nswap,
+	    me.client.name, RPL_STATSDEBUG, nick, rus.ru_nswap,
 	    rus.ru_minflt, rus.ru_majflt);
 	sendto_one(cptr, ":%s %d %s :Block in %ld out %ld",
-	    me.name, RPL_STATSDEBUG, nick, rus.ru_inblock, rus.ru_oublock);
+	    me.client.name, RPL_STATSDEBUG, nick, rus.ru_inblock, rus.ru_oublock);
 	sendto_one(cptr, ":%s %d %s :Msg Rcv %ld Send %ld",
-	    me.name, RPL_STATSDEBUG, nick, rus.ru_msgrcv, rus.ru_msgsnd);
+	    me.client.name, RPL_STATSDEBUG, nick, rus.ru_msgrcv, rus.ru_msgsnd);
 	sendto_one(cptr, ":%s %d %s :Signals %ld Context Vol. %ld Invol %ld",
-	    me.name, RPL_STATSDEBUG, nick, rus.ru_nsignals,
+	    me.client.name, RPL_STATSDEBUG, nick, rus.ru_nsignals,
 	    rus.ru_nvcsw, rus.ru_nivcsw);
 #else
 # ifdef TIMES_2
@@ -292,14 +292,14 @@ void send_usage(aClient *cptr, char *nick)
 	if (times(&tmsbuf) == -1)
 	{
 		sendto_one(cptr, ":%s %d %s :times(2) error: %s.",
-		    me.name, RPL_STATSDEBUG, nick, STRERROR(ERRNO));
+		    me.client.name, RPL_STATSDEBUG, nick, STRERROR(ERRNO));
 		return;
 	}
 	secs = tmsbuf.tms_utime + tmsbuf.tms_stime;
 
 	sendto_one(cptr,
 	    ":%s %d %s :CPU Secs %d:%d User %d:%d System %d:%d",
-	    me.name, RPL_STATSDEBUG, nick, mins, secs, umin, usec, smin, ssec);
+	    me.client.name, RPL_STATSDEBUG, nick, mins, secs, umin, usec, smin, ssec);
 # endif
 #endif
 	return;
@@ -310,6 +310,6 @@ int checkprotoflags(aClient *sptr, int flags, char *file, int line)
 	if (!MyConnect(sptr))
 		ircd_log(LOG_ERROR, "[Debug] [BUG] ERROR: %s:%d: IsToken(<%s>,%d) on remote client",
 		         file, line, sptr->name, flags);
-	return (sptr->proto & flags) ? 1 : 0;
+	return (sptr->localClient->proto & flags) ? 1 : 0;
 }
 #endif

@@ -101,24 +101,24 @@ DLLFUNC int  m_rping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (!IsPrivileged(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 		return 0;
 	}
 	
 	if (parc < (IsAnOper(sptr) ? (MyConnect(sptr) ? 2 : 3) : 6))
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0],
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.client.name, parv[0],
 		    "RPING");
 		return 0;
 	}
 	if (MyClient(sptr))
 	{
 		if (parc == 2)
-			parv[parc++] = me.name;
+			parv[parc++] = me.client.name;
 		else if (!(acptr =  (aClient *)find_match_server(parv[2])))
 		{
 			parv[3] = parv[2];
-			parv[2] = me.name;
+			parv[2] = me.client.name;
 			parc++;
 		}
 		else
@@ -133,19 +133,19 @@ DLLFUNC int  m_rping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			return 0;
 		if (!(acptr = (aClient *)find_match_server(parv[1])) || !IsServer(acptr))
 		{
-			sendto_one(sptr, err_str(ERR_NOSUCHSERVER), me.name,
+			sendto_one(sptr, err_str(ERR_NOSUCHSERVER), me.client.name,
 			    parv[0], parv[1]);
 			return 0;
 		}
 		sendto_one(acptr, ":%s RPING %s %s %s :%s",
-		    me.name, acptr->name, sptr->name, militime(NULL, NULL),
+		    me.client.name, acptr->name, sptr->name, militime(NULL, NULL),
 		    parv[3]);
 	}
 	else
 	{
 		if (hunt_server(cptr, sptr, ":%s RPING %s %s %s %s :%s", 1, parc, parv) != HUNTED_ISME)
 			return 0;
-		sendto_one(cptr, ":%s RPONG %s %s %s %s :%s", me.name, parv[0],
+		sendto_one(cptr, ":%s RPONG %s %s %s %s :%s", me.client.name, parv[0],
 		    parv[2], parv[3], parv[4], parv[5]);
 	}
 	return 0;
@@ -169,7 +169,7 @@ DLLFUNC int  m_rpong(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc < 5)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "RPING");
+		    me.client.name, parv[0], "RPING");
 		return 0;
 	}
 
@@ -192,7 +192,7 @@ DLLFUNC int  m_rpong(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		parv[1] = parv[2];
 		parv[2] = sptr->name;
-		parv[0] = me.name;
+		parv[0] = me.client.name;
 		parv[3] = militime(parv[3], parv[4]);
 		parv[4] = parv[5];
 		if (!(acptr = find_person(parv[1], (aClient *)NULL)))

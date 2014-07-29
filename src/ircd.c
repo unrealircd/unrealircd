@@ -98,7 +98,7 @@ char REPORT_DO_DNS[256], REPORT_FIN_DNS[256], REPORT_FIN_DNSC[256],
     REPORT_FAIL_DNS[256], REPORT_DO_ID[256], REPORT_FIN_ID[256],
     REPORT_FAIL_ID[256];
 ircstats IRCstats;
-aClient me;			/* That's me */
+struct LocalClient me;			/* That's me */
 MODVAR char *me_hash;
 extern char backupbuf[8192];
 #ifdef _WIN32
@@ -197,7 +197,7 @@ VOIDSIG s_die()
 	{
 		unload_all_modules();
 
-		list_for_each_entry(cptr, &lclient_list, lclient_node)
+		list_for_each_entry2(cptr, struct LocalClient, &lclient_list, lclient_node)
 			(void) send_queued(cptr);
 
 		exit(-1);
@@ -302,7 +302,7 @@ void server_reboot(char *mesg)
 	sendto_realops("Aieeeee!!!  Restarting server... %s", mesg);
 	Debug((DEBUG_NOTICE, "Restarting server... %s", mesg));
 
-	list_for_each_entry(cptr, &lclient_list, lclient_node)
+	list_for_each_entry2(cptr, struct LocalClient, &lclient_list, lclient_node)
 		(void) send_queued(cptr);
 
 	/*
@@ -470,7 +470,7 @@ void check_tkls(void)
 	ConfigItem_ban *bconf = NULL;
 	char banbuf[1024];
 
-	list_for_each_entry_safe(cptr, cptr2, &lclient_list, lclient_node)
+	list_for_each_entry_safe2(cptr, cptr2, struct LocalClient, &lclient_list, lclient_node)
 	{
 		char killflag = 0;
 
@@ -487,7 +487,7 @@ void check_tkls(void)
 			bconf = Find_ban(cptr, make_user_host(cptr->
 				    user ? cptr->user->username : cptr->
 				    username,
-				    cptr->user ? cptr->user->realhost : cptr->
+				    cptr->user ? cptr->user->realhost : cptr->localClient->
 				    sockhost), CONF_BAN_USER);
 
 			if (bconf)
@@ -497,7 +497,7 @@ void check_tkls(void)
 		}
 		
 		/* If still no match, check ban ip { } */
-		if (!killflag && (bconf = Find_ban(cptr, Inet_ia2p(&cptr->ip), CONF_BAN_IP)))
+		if (!killflag && (bconf = Find_ban(cptr, Inet_ia2p(&cptr->localClient->ip), CONF_BAN_IP)))
 			killflag++;
 
 		/* If user is meant to be killed, take action: */
@@ -518,12 +518,12 @@ void check_tkls(void)
 					snprintf(banbuf, sizeof(banbuf), "User has been banned (%s)", bconf->reason);
 				else
 					snprintf(banbuf, sizeof(banbuf), "Banned (%s)", bconf->reason);
-				(void)exit_client(cptr, cptr, &me, banbuf);
+				(void)exit_client(cptr, cptr, &me.client, banbuf);
 			} else {
 				if (IsPerson(cptr))
-					(void)exit_client(cptr, cptr, &me, "User has been banned");
+					(void)exit_client(cptr, cptr, &me.client, "User has been banned");
 				else
-					(void)exit_client(cptr, cptr, &me, "Banned");
+					(void)exit_client(cptr, cptr, &me.client, "Banned");
 			}
 			continue; /* stop processing this user, as (s)he is dead now. */
 		}
@@ -560,10 +560,10 @@ EVENT(check_unknowns)
 {
 	aClient *cptr, *cptr2;
 
-	list_for_each_entry_safe(cptr, cptr2, &unknown_list, lclient_node)
+	list_for_each_entry_safe2(cptr, cptr2, struct LocalClient, &unknown_list, lclient_node)
 	{
-		if (cptr->firsttime && ((TStime() - cptr->firsttime) > CONNECTTIMEOUT))
-			(void)exit_client(cptr, cptr, &me, "Registration Timeout");
+		if (cptr->localClient->firsttime && ((TStime() - cptr->localClient->firsttime) > CONNECTTIMEOUT))
+			(void)exit_client(cptr, cptr, &me.client, "Registration Timeout");
 	}
 }
 
@@ -582,37 +582,37 @@ EVENT(check_pings)
 	TS   currenttime = TStime();
 
 	
-	list_for_each_entry_safe(cptr, cptr2, &lclient_list, lclient_node)
+	list_for_each_entry_safe2(cptr, cptr2, struct LocalClient, &lclient_list, lclient_node)
 	{
 		ping =
-		    IsRegistered(cptr) ? (cptr->class ? cptr->
+		    IsRegistered(cptr) ? (cptr->localClient->class ? cptr->localClient->
 		    class->pingfreq : CONNECTTIMEOUT) : CONNECTTIMEOUT;
 		Debug((DEBUG_DEBUG, "c(%s)=%d p %d a %d", cptr->name,
 		    cptr->status, ping,
-		    currenttime - cptr->lasttime));
+		    currenttime - cptr->localClient->lasttime));
 		
 		/* If ping is less than or equal to the last time we received a command from them */
-		if (ping <= (currenttime - cptr->lasttime))
+		if (ping <= (currenttime - cptr->localClient->lasttime))
 		{
 			if (
 				/* If we have sent a ping */
 				((cptr->flags & FLAGS_PINGSENT)
 				/* And they had 2x ping frequency to respond */
-				&& ((currenttime - cptr->lasttime) >= (2 * ping)))
+				&& ((currenttime - cptr->localClient->lasttime) >= (2 * ping)))
 				|| 
 				/* Or isn't registered and time spent is larger than ping .. */
-				(!IsRegistered(cptr) && (currenttime - cptr->since >= ping))
+				(!IsRegistered(cptr) && (currenttime - cptr->localClient->since >= ping))
 				)
 			{
 				/* if it's registered and doing dns/auth, timeout */
 				if (!IsRegistered(cptr) && (DoingDNS(cptr) || DoingAuth(cptr)))
 				{
-					if (cptr->authfd >= 0) {
-						fd_close(cptr->authfd);
+					if (cptr->localClient->authfd >= 0) {
+						fd_close(cptr->localClient->authfd);
 						--OpenFiles;
-						cptr->authfd = -1;
-						cptr->count = 0;
-						*cptr->buffer = '\0';
+						cptr->localClient->authfd = -1;
+						cptr->localClient->count = 0;
+						*cptr->localClient->buffer = '\0';
 					}
 					if (SHOWCONNECTINFO && !cptr->serv) {
 						if (DoingDNS(cptr))
@@ -627,8 +627,8 @@ EVENT(check_pings)
 					ClearAuth(cptr);
 					ClearDNS(cptr);
 					SetAccess(cptr);
-					cptr->firsttime = currenttime;
-					cptr->lasttime = currenttime;
+					cptr->localClient->firsttime = currenttime;
+					cptr->localClient->lasttime = currenttime;
 					continue;
 				}
 				if (IsServer(cptr) || IsConnecting(cptr) ||
@@ -640,19 +640,19 @@ EVENT(check_pings)
 					sendto_realops
 					    ("No response from %s, closing link",
 					    get_client_name(cptr, FALSE));
-					sendto_server(&me, 0, 0,
+					sendto_server(&me.client, 0, 0,
 					    ":%s GLOBOPS :No response from %s, closing link",
-					    me.name, get_client_name(cptr,
+					    me.client.name, get_client_name(cptr,
 					    FALSE));
 				}
 #ifdef USE_SSL
 				if (IsSSLAcceptHandshake(cptr))
-					Debug((DEBUG_DEBUG, "ssl accept handshake timeout: %s (%li-%li > %li)", cptr->sockhost,
-						currenttime, cptr->since, ping));
+					Debug((DEBUG_DEBUG, "ssl accept handshake timeout: %s (%li-%li > %li)", cptr->localClient->sockhost,
+						currenttime, cptr->localClient->since, ping));
 #endif
 				(void)ircsnprintf(scratch, sizeof(scratch), "Ping timeout: %ld seconds",
-					(long) (TStime() - cptr->lasttime));
-				exit_client(cptr, cptr, &me, scratch);
+					(long) (TStime() - cptr->localClient->lasttime));
+				exit_client(cptr, cptr, &me.client, scratch);
 				continue;
 				
 			}
@@ -667,8 +667,8 @@ EVENT(check_pings)
 				/*
 				 * not nice but does the job 
 				 */
-				cptr->lasttime = TStime() - ping;
-				sendto_one(cptr, "PING :%s", me.name);
+				cptr->localClient->lasttime = TStime() - ping;
+				sendto_one(cptr, "PING :%s", me.client.name);
 			}
 		}
 	}
@@ -678,26 +678,26 @@ EVENT(check_deadsockets)
 {
 	aClient *cptr, *cptr2;
 	
-	list_for_each_entry_safe(cptr, cptr2, &unknown_list, lclient_node)
+	list_for_each_entry_safe2(cptr, cptr2, struct LocalClient, &unknown_list, lclient_node)
 	{
 		/* No need to notify opers here. It's already done when "FLAGS_DEADSOCKET" is set. */
 		if (cptr->flags & FLAGS_DEADSOCKET) {
 #ifdef DEBUGMODE
 			ircd_log(LOG_ERROR, "Closing deadsock: %d/%s", cptr->fd, cptr->name);
 #endif
-			(void)exit_client(cptr, cptr, &me, cptr->error_str ? cptr->error_str : "Dead socket");
+			(void)exit_client(cptr, cptr, &me.client, cptr->localClient->error_str ? cptr->localClient->error_str : "Dead socket");
 			continue;
 		}
 	}
 
-	list_for_each_entry_safe(cptr, cptr2, &lclient_list, lclient_node)
+	list_for_each_entry_safe2(cptr, cptr2, struct LocalClient, &lclient_list, lclient_node)
 	{
 		/* No need to notify opers here. It's already done when "FLAGS_DEADSOCKET" is set. */
 		if (cptr->flags & FLAGS_DEADSOCKET) {
 #ifdef DEBUGMODE
 			ircd_log(LOG_ERROR, "Closing deadsock: %d/%s", cptr->fd, cptr->name);
 #endif
-			(void)exit_client(cptr, cptr, &me, cptr->error_str ? cptr->error_str : "Dead socket");
+			(void)exit_client(cptr, cptr, &me.client, cptr->localClient->error_str ? cptr->localClient->error_str : "Dead socket");
 			continue;
 		}
 	}
@@ -845,41 +845,41 @@ Event *e;
 struct ThrottlingBucket *n;
 struct ThrottlingBucket z = { NULL, NULL, {0}, 0, 0};
 
-	list_for_each_entry(acptr, &lclient_list, lclient_node)
+	list_for_each_entry2(acptr, struct LocalClient, &lclient_list, lclient_node)
 	{
-		if (acptr->since > TStime())
+		if (acptr->localClient->since > TStime())
 		{
-			Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->since %ld -> %ld",
-				acptr->name, acptr->since, TStime()));
-			acptr->since = TStime();
+			Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->localClient->since %ld -> %ld",
+				acptr->name, acptr->localClient->since, TStime()));
+			acptr->localClient->since = TStime();
 		}
-		if (acptr->lasttime > TStime())
+		if (acptr->localClient->lasttime > TStime())
 		{
-			Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->lasttime %ld -> %ld",
-				acptr->name, acptr->lasttime, TStime()));
-			acptr->lasttime = TStime();
+			Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->localClient->lasttime %ld -> %ld",
+				acptr->name, acptr->localClient->lasttime, TStime()));
+			acptr->localClient->lasttime = TStime();
 		}
-		if (acptr->last > TStime())
+		if (acptr->localClient->last > TStime())
 		{
-			Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->last %ld -> %ld",
-				acptr->name, acptr->last, TStime()));
-			acptr->last = TStime();
+			Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->localClient->last %ld -> %ld",
+				acptr->name, acptr->localClient->last, TStime()));
+			acptr->localClient->last = TStime();
 		}
 
 		/* users */
 		if (MyClient(acptr))
 		{
-			if (acptr->nextnick > TStime())
+			if (acptr->localClient->nextnick > TStime())
 			{
-				Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->nextnick %ld -> %ld",
-					acptr->name, acptr->nextnick, TStime()));
-				acptr->nextnick = TStime();
+				Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->localClient->nextnick %ld -> %ld",
+					acptr->name, acptr->localClient->nextnick, TStime()));
+				acptr->localClient->nextnick = TStime();
 			}
-			if (acptr->nexttarget > TStime())
+			if (acptr->localClient->nexttarget > TStime())
 			{
-				Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->nexttarget %ld -> %ld",
-					acptr->name, acptr->nexttarget, TStime()));
-				acptr->nexttarget = TStime();
+				Debug((DEBUG_DEBUG, "fix_timers(): %s: acptr->localClient->nexttarget %ld -> %ld",
+					acptr->name, acptr->localClient->nexttarget, TStime()));
+				acptr->localClient->nexttarget = TStime();
 			}
 			
 		}
@@ -1156,7 +1156,7 @@ int InitwIRCD(int argc, char *argv[])
 #else
 	WSAStartup(wVersionRequested, &wsaData);
 #endif
-	bzero((char *)&me, sizeof(me));
+	bzero((char *)&me.client, sizeof(me));
 	bzero(&StatsZ, sizeof(StatsZ));
 	setup_signals();
 	charsys_reset();
@@ -1234,7 +1234,7 @@ int InitwIRCD(int argc, char *argv[])
 				      p);
 				  exit(1);
 			  }
-			  strlcpy(me.name, p, sizeof(me.name));
+			  strlcpy(me.client.name, p, sizeof(me.client.name));
 			  break;
 #endif
 #ifndef _WIN32
@@ -1470,13 +1470,13 @@ int InitwIRCD(int argc, char *argv[])
 	open_debugfile();
 	if (portnum < 0)
 		portnum = PORTNUM;
-	memset(&me, 0, sizeof(me));
+	memset(&me.client, 0, sizeof(me));
 	me.port = portnum;
 	(void)init_sys();
-	me.flags = FLAGS_LISTEN;
-	me.fd = -1;
-	SetMe(&me);
-	make_server(&me);
+	me.client.flags = FLAGS_LISTEN;
+	me.client.fd = -1;
+	SetMe(&me.client);
+	make_server(&me.client);
 	applymeblock();
 #ifdef HAVE_SYSLOG
 	openlog("ircd", LOG_PID | LOG_NDELAY, LOG_DAEMON);
@@ -1492,33 +1492,33 @@ int InitwIRCD(int argc, char *argv[])
 	read_motd(conf_files->smotd_file, &smotd);
 	read_motd(conf_files->svsmotd_file, &svsmotd);
 
-	me.hopcount = 0;
+	me.client.hopcount = 0;
 	me.authfd = -1;
-	me.user = NULL;
-	me.from = &me;
+	me.client.user = NULL;
+	me.client.from = &me.client;
 
 	/*
 	 * This listener will never go away 
 	 */
-	me_hash = find_or_add(me.name);
-	me.serv->up = me_hash;
+	me_hash = find_or_add(me.client.name);
+	me.client.serv->up = me_hash;
 	timeofday = time(NULL);
 	me.lasttime = me.since = me.firsttime = TStime();
-	(void)add_to_client_hash_table(me.name, &me);
-	(void)add_to_id_hash_table(me.id, &me);
-	list_add(&me.client_node, &global_server_list);
+	(void)add_to_client_hash_table(me.client.name, &me.client);
+	(void)add_to_id_hash_table(me.client.id, &me.client);
+	list_add(&me.client.client_node, &global_server_list);
 #if !defined(_AMIGA) && !defined(_WIN32) && !defined(NO_FORKING)
 	if (!(bootopt & BOOT_NOFORK))
 		if (fork())
 			exit(0);
 #endif
-	(void)ircsnprintf(REPORT_DO_DNS, sizeof(REPORT_DO_DNS), ":%s %s", me.name, BREPORT_DO_DNS);
-	(void)ircsnprintf(REPORT_FIN_DNS, sizeof(REPORT_FIN_DNS), ":%s %s", me.name, BREPORT_FIN_DNS);
-	(void)ircsnprintf(REPORT_FIN_DNSC, sizeof(REPORT_FIN_DNSC), ":%s %s", me.name, BREPORT_FIN_DNSC);
-	(void)ircsnprintf(REPORT_FAIL_DNS, sizeof(REPORT_FAIL_DNS), ":%s %s", me.name, BREPORT_FAIL_DNS);
-	(void)ircsnprintf(REPORT_DO_ID, sizeof(REPORT_DO_ID), ":%s %s", me.name, BREPORT_DO_ID);
-	(void)ircsnprintf(REPORT_FIN_ID, sizeof(REPORT_FIN_ID), ":%s %s", me.name, BREPORT_FIN_ID);
-	(void)ircsnprintf(REPORT_FAIL_ID, sizeof(REPORT_FAIL_ID), ":%s %s", me.name, BREPORT_FAIL_ID);
+	(void)ircsnprintf(REPORT_DO_DNS, sizeof(REPORT_DO_DNS), ":%s %s", me.client.name, BREPORT_DO_DNS);
+	(void)ircsnprintf(REPORT_FIN_DNS, sizeof(REPORT_FIN_DNS), ":%s %s", me.client.name, BREPORT_FIN_DNS);
+	(void)ircsnprintf(REPORT_FIN_DNSC, sizeof(REPORT_FIN_DNSC), ":%s %s", me.client.name, BREPORT_FIN_DNSC);
+	(void)ircsnprintf(REPORT_FAIL_DNS, sizeof(REPORT_FAIL_DNS), ":%s %s", me.client.name, BREPORT_FAIL_DNS);
+	(void)ircsnprintf(REPORT_DO_ID, sizeof(REPORT_DO_ID), ":%s %s", me.client.name, BREPORT_DO_ID);
+	(void)ircsnprintf(REPORT_FIN_ID, sizeof(REPORT_FIN_ID), ":%s %s", me.client.name, BREPORT_FIN_ID);
+	(void)ircsnprintf(REPORT_FAIL_ID, sizeof(REPORT_FAIL_ID), ":%s %s", me.client.name, BREPORT_FAIL_ID);
 	R_do_dns = strlen(REPORT_DO_DNS);
 	R_fin_dns = strlen(REPORT_FIN_DNS);
 	R_fin_dnsc = strlen(REPORT_FIN_DNSC);
@@ -1541,13 +1541,13 @@ int InitwIRCD(int argc, char *argv[])
 	init_throttling_hash();
 	loop.ircd_booted = 1;
 #if defined(HAVE_SETPROCTITLE)
-	setproctitle("%s", me.name);
+	setproctitle("%s", me.client.name);
 #elif defined(HAVE_PSTAT)
-	pstats.pst_command = me.name;
-	pstat(PSTAT_SETCMD, pstats, strlen(me.name), 0, 0);
+	pstats.pst_command = me.client.name;
+	pstat(PSTAT_SETCMD, pstats, strlen(me.client.name), 0, 0);
 #elif defined(HAVE_PSSTRINGS)
 	PS_STRINGS->ps_nargvstr = 1;
-	PS_STRINGS->ps_argvstr = me.name;
+	PS_STRINGS->ps_argvstr = me.client.name;
 #endif
 	module_loadall(0);
 
@@ -1679,7 +1679,7 @@ void SocketLoop(void *dummy)
 		 */
 		if (dorehash) 
 		{
-			(void)rehash(&me, &me, 1);
+			(void)rehash(&me.client, &me.client, 1);
 			dorehash = 0;
 		}
 		if (dorestart)
@@ -1708,11 +1708,11 @@ static void open_debugfile(void)
 		cptr = make_client(NULL, NULL);
 		cptr->fd = 2;
 		SetLog(cptr);
-		cptr->port = debuglevel;
+		cptr->localClient->port = debuglevel;
 		cptr->flags = 0;
 
-		(void)strlcpy(cptr->sockhost, me.sockhost,
-		    sizeof cptr->sockhost);
+		(void)strlcpy(cptr->localClient->sockhost, me.sockhost,
+		    sizeof cptr->localClient->sockhost);
 # ifndef _WIN32
 		/*(void)printf("isatty = %d ttyname = %#x\n",
 		    isatty(2), (u_int)ttyname(2)); */
@@ -1733,7 +1733,7 @@ static void open_debugfile(void)
 			strlcpy(cptr->name, "FD2-Pipe", sizeof(cptr->name));
 		Debug((DEBUG_FATAL,
 		    "Debug: File <%s> Level: %d at %s", cptr->name,
-		    cptr->port, myctime(time(NULL))));
+		    cptr->localClient->port, myctime(time(NULL))));
 	}
 #endif
 }

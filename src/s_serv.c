@@ -183,18 +183,18 @@ CMD_FUNC(m_version)
 
 	if (hunt_server(cptr, sptr, ":%s VERSION :%s", 1, parc, parv) == HUNTED_ISME)
 	{
-		sendto_one(sptr, rpl_str(RPL_VERSION), me.name,
-		    parv[0], version, debugmode, me.name,
+		sendto_one(sptr, rpl_str(RPL_VERSION), me.client.name,
+		    parv[0], version, debugmode, me.client.name,
 		    serveropts, extraflags ? extraflags : "",
 		    tainted ? "3" : "",
 		    (IsAnOper(sptr) ? MYOSNAME : "*"), UnrealProtocol);
 #ifdef USE_SSL
 		if (IsAnOper(sptr))
-			sendto_one(sptr, ":%s NOTICE %s :%s", me.name, sptr->name, OPENSSL_VERSION_TEXT);
+			sendto_one(sptr, ":%s NOTICE %s :%s", me.client.name, sptr->name, OPENSSL_VERSION_TEXT);
 #endif
 #ifdef USE_LIBCURL
 		if (IsAnOper(sptr))
-			sendto_one(sptr, ":%s NOTICE %s :%s", me.name, sptr->name, curl_version());
+			sendto_one(sptr, ":%s NOTICE %s :%s", me.client.name, sptr->name, curl_version());
 #endif
 		if (MyClient(sptr))
 normal:
@@ -203,7 +203,7 @@ normal:
 			reply = RPL_REMOTEISUPPORT;
 		/* Send the text */
 		for (i = 0; IsupportStrings[i]; i++)
-			sendto_one(sptr, rpl_str(reply), me.name, sptr->name, 
+			sendto_one(sptr, rpl_str(reply), me.client.name, sptr->name, 
 				   IsupportStrings[i]); 
 	}
 	return 0;
@@ -227,7 +227,7 @@ char buf[1024];
 
 	/* Second line */
 	snprintf(buf, sizeof(buf), "CHANMODES=%s%s,%s%s,%s%s,%s%s NICKCHARS=%s SID=%s MLOCK",
-		CHPAR1, EXPAR1, CHPAR2, EXPAR2, CHPAR3, EXPAR3, CHPAR4, EXPAR4, langsinuse, me.id);
+		CHPAR1, EXPAR1, CHPAR2, EXPAR2, CHPAR3, EXPAR3, CHPAR4, EXPAR4, langsinuse, me.client.id);
 
 	sendto_one(cptr, "PROTOCTL %s", buf);
 }
@@ -283,38 +283,38 @@ void m_info_send(aClient *sptr)
 char **text = unrealinfo;
 
 	sendto_one(sptr, ":%s %d %s :=-=-=-= %s =-=-=-=",
-	    me.name, RPL_INFO, sptr->name, IRCDTOTALVERSION);
+	    me.client.name, RPL_INFO, sptr->name, IRCDTOTALVERSION);
 
 	while (*text)
 		sendto_one(sptr, ":%s %d %s :| %s", 
-		    me.name, RPL_INFO, sptr->name, *text++);
+		    me.client.name, RPL_INFO, sptr->name, *text++);
 
-	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
+	sendto_one(sptr, ":%s %d %s :|", me.client.name, RPL_INFO, sptr->name);
+	sendto_one(sptr, ":%s %d %s :|", me.client.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| Credits - Type /Credits",
-	    me.name, RPL_INFO, sptr->name);
+	    me.client.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| DALnet Credits - Type /DalInfo",
-	    me.name, RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :|", me.name, RPL_INFO, sptr->name);
+	    me.client.name, RPL_INFO, sptr->name);
+	sendto_one(sptr, ":%s %d %s :|", me.client.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| This is an UnrealIRCd-style server",
-	    me.name, RPL_INFO, sptr->name);
+	    me.client.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :| If you find any bugs, please report them at:",
-	    me.name, RPL_INFO, sptr->name);
+	    me.client.name, RPL_INFO, sptr->name);
 	sendto_one(sptr, ":%s %d %s :|  http://bugs.unrealircd.org/",
-	    me.name, RPL_INFO, sptr->name);
+	    me.client.name, RPL_INFO, sptr->name);
 	sendto_one(sptr,
 	    ":%s %d %s :| UnrealIRCd Homepage: http://www.unrealircd.com",
-	    me.name, RPL_INFO, sptr->name);
+	    me.client.name, RPL_INFO, sptr->name);
 	sendto_one(sptr,
-	    ":%s %d %s :-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=", me.name,
+	    ":%s %d %s :-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=", me.client.name,
 	    RPL_INFO, sptr->name);
-	sendto_one(sptr, ":%s %d %s :Birth Date: %s, compile # %s", me.name,
+	sendto_one(sptr, ":%s %d %s :Birth Date: %s, compile # %s", me.client.name,
 	    RPL_INFO, sptr->name, creation, generation);
-	sendto_one(sptr, ":%s %d %s :On-line since %s", me.name, RPL_INFO,
+	sendto_one(sptr, ":%s %d %s :On-line since %s", me.client.name, RPL_INFO,
 	    sptr->name, myctime(me.firsttime));
-	sendto_one(sptr, ":%s %d %s :ReleaseID (%s)", me.name, RPL_INFO,
+	sendto_one(sptr, ":%s %d %s :ReleaseID (%s)", me.client.name, RPL_INFO,
 	    sptr->name, buildid);
-	sendto_one(sptr, rpl_str(RPL_ENDOFINFO), me.name, sptr->name);
+	sendto_one(sptr, rpl_str(RPL_ENDOFINFO), me.client.name, sptr->name);
 }
 
 /*
@@ -353,15 +353,15 @@ CMD_FUNC(m_dalinfo)
 	{
 		while (*text)
 			sendto_one(sptr, rpl_str(RPL_INFO),
-			    me.name, parv[0], *text++);
+			    me.client.name, parv[0], *text++);
 
-		sendto_one(sptr, rpl_str(RPL_INFO), me.name, parv[0], "");
+		sendto_one(sptr, rpl_str(RPL_INFO), me.client.name, parv[0], "");
 		sendto_one(sptr,
 		    ":%s %d %s :Birth Date: %s, compile # %s",
-		    me.name, RPL_INFO, parv[0], creation, generation);
+		    me.client.name, RPL_INFO, parv[0], creation, generation);
 		sendto_one(sptr, ":%s %d %s :On-line since %s",
-		    me.name, RPL_INFO, parv[0], myctime(me.firsttime));
-		sendto_one(sptr, rpl_str(RPL_ENDOFINFO), me.name, parv[0]);
+		    me.client.name, RPL_INFO, parv[0], myctime(me.firsttime));
+		sendto_one(sptr, rpl_str(RPL_ENDOFINFO), me.client.name, parv[0]);
 	}
 
 	return 0;
@@ -383,10 +383,10 @@ CMD_FUNC(m_license)
 	{
 		while (*text)
 			sendto_one(sptr, rpl_str(RPL_INFO),
-			    me.name, parv[0], *text++);
+			    me.client.name, parv[0], *text++);
 
-		sendto_one(sptr, rpl_str(RPL_INFO), me.name, parv[0], "");
-		sendto_one(sptr, rpl_str(RPL_ENDOFINFO), me.name, parv[0]);
+		sendto_one(sptr, rpl_str(RPL_INFO), me.client.name, parv[0], "");
+		sendto_one(sptr, rpl_str(RPL_ENDOFINFO), me.client.name, parv[0]);
 	}
 
 	return 0;
@@ -408,15 +408,15 @@ CMD_FUNC(m_credits)
 	{
 		while (*text)
 			sendto_one(sptr, rpl_str(RPL_INFO),
-			    me.name, parv[0], *text++);
+			    me.client.name, parv[0], *text++);
 
-		sendto_one(sptr, rpl_str(RPL_INFO), me.name, parv[0], "");
+		sendto_one(sptr, rpl_str(RPL_INFO), me.client.name, parv[0], "");
 		sendto_one(sptr,
 		    ":%s %d %s :Birth Date: %s, compile # %s",
-		    me.name, RPL_INFO, parv[0], creation, generation);
+		    me.client.name, RPL_INFO, parv[0], creation, generation);
 		sendto_one(sptr, ":%s %d %s :On-line since %s",
-		    me.name, RPL_INFO, parv[0], myctime(me.firsttime));
-		sendto_one(sptr, rpl_str(RPL_ENDOFINFO), me.name, parv[0]);
+		    me.client.name, RPL_INFO, parv[0], myctime(me.firsttime));
+		sendto_one(sptr, rpl_str(RPL_ENDOFINFO), me.client.name, parv[0]);
 	}
 
 	return 0;
@@ -483,7 +483,7 @@ CMD_FUNC(m_summon)
 {
 	/* /summon is old and out dated, we just return an error as
 	 * required by RFC1459 -- codemastr
-	 */ sendto_one(sptr, err_str(ERR_SUMMONDISABLED), me.name, parv[0]);
+	 */ sendto_one(sptr, err_str(ERR_SUMMONDISABLED), me.client.name, parv[0]);
 	return 0;
 }
 /*
@@ -495,7 +495,7 @@ CMD_FUNC(m_users)
 {
 	/* /users is out of date, just return an error as  required by
 	 * RFC1459 -- codemastr
-	 */ sendto_one(sptr, err_str(ERR_USERSDISABLED), me.name, parv[0]);
+	 */ sendto_one(sptr, err_str(ERR_USERSDISABLED), me.client.name, parv[0]);
 	return 0;
 }
 /*
@@ -524,15 +524,15 @@ CMD_FUNC(m_error)
 		return 0;
 	if (cptr == sptr)
 	{
-		sendto_server(&me, 0, 0, ":%s GLOBOPS :ERROR from %s -- %s",
-		    me.name, get_client_name(cptr, FALSE), para);
+		sendto_server(&me.client, 0, 0, ":%s GLOBOPS :ERROR from %s -- %s",
+		    me.client.name, get_client_name(cptr, FALSE), para);
 		sendto_locfailops("ERROR :from %s -- %s",
 		    get_client_name(cptr, FALSE), para);
 	}
 	else
 	{
-		sendto_server(&me, 0, 0,
-		    ":%s GLOBOPS :ERROR from %s via %s -- %s", me.name,
+		sendto_server(&me.client, 0, 0,
+		    ":%s GLOBOPS :ERROR from %s via %s -- %s", me.client.name,
 		    sptr->name, get_client_name(cptr, FALSE), para);
 		sendto_ops("ERROR :from %s via %s -- %s", sptr->name,
 		    get_client_name(cptr, FALSE), para);
@@ -634,13 +634,13 @@ CMD_FUNC(m_rehash)
 
 	if (MyClient(sptr) && !OPCanRehash(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 		return 0;
 	}
 	if (!MyClient(sptr) && !IsNetAdmin(sptr)
 	    && !IsULine(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 		return 0;
 	}
 	x = 0;
@@ -665,7 +665,7 @@ CMD_FUNC(m_rehash)
 	if (cptr != sptr)
 	{
 #ifndef REMOTE_REHASH
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 		return 0;
 #endif
 		if (parv[2] == NULL)
@@ -673,12 +673,12 @@ CMD_FUNC(m_rehash)
 			if (loop.ircd_rehashing)
 			{
 				sendto_one(sptr, ":%s NOTICE %s :A rehash is already in progress",
-					me.name, sptr->name);
+					me.client.name, sptr->name);
 				return 0;
 			}
-			sendto_server(&me, 0, 0,
+			sendto_server(&me.client, 0, 0,
 			    ":%s GLOBOPS :%s is remotely rehashing server config file",
-			    me.name, sptr->name);
+			    me.client.name, sptr->name);
 			sendto_ops
 			    ("%s is remotely rehashing server config file",
 			    parv[0]);
@@ -706,7 +706,7 @@ CMD_FUNC(m_rehash)
 			 */
 			if (!IsNetAdmin(sptr))
 			{
-				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 				sendnotice(sptr, "'/REHASH -global' requires you to be NetAdmin");
 				return 0;
 			}
@@ -718,7 +718,7 @@ CMD_FUNC(m_rehash)
 			/* Broadcast it in an inefficient, but backwards compatible way. */
 			list_for_each_entry(acptr, &global_server_list, client_node)
 			{
-				if (acptr == &me)
+				if (acptr == &me.client)
 					continue;
 				sendto_one(acptr, ":%s REHASH %s %s",
 					sptr->name,
@@ -734,7 +734,7 @@ CMD_FUNC(m_rehash)
 
 		if (!IsAdmin(sptr) && !IsCoAdmin(sptr))
 		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 			return 0;
 		}
 
@@ -767,7 +767,7 @@ CMD_FUNC(m_rehash)
 				    cptr != sptr ? "Remotely " : "",
 				    sptr->name);
 				if (cptr != sptr)
-					sendto_server(&me, 0, 0, ":%s GLOBOPS :%s is remotely rehashing OperMOTD", me.name, sptr->name);
+					sendto_server(&me.client, 0, 0, ":%s GLOBOPS :%s is remotely rehashing OperMOTD", me.client.name, sptr->name);
 				read_motd(conf_files->opermotd_file, &opermotd);
 				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
 				return 0;
@@ -779,7 +779,7 @@ CMD_FUNC(m_rehash)
 				    cptr != sptr ? "Remotely " : "",
 				    sptr->name);
 				if (cptr != sptr)
-					sendto_server(&me, 0, 0, ":%s GLOBOPS :%s is remotely rehashing BotMOTD", me.name, sptr->name);
+					sendto_server(&me.client, 0, 0, ":%s GLOBOPS :%s is remotely rehashing BotMOTD", me.client.name, sptr->name);
 				read_motd(conf_files->botmotd_file, &botmotd);
 				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
 				return 0;
@@ -792,7 +792,7 @@ CMD_FUNC(m_rehash)
 				    cptr != sptr ? "Remotely " : "",
 				    sptr->name);
 				if (cptr != sptr)
-					sendto_server(&me, 0, 0, ":%s GLOBOPS :%s is remotely rehashing all MOTDs and RULES", me.name, sptr->name);
+					sendto_server(&me.client, 0, 0, ":%s GLOBOPS :%s is remotely rehashing all MOTDs and RULES", me.client.name, sptr->name);
 				rehash_motdrules();
 				RunHook3(HOOKTYPE_REHASHFLAG, cptr, sptr, parv[1]);
 				return 0;
@@ -806,7 +806,7 @@ CMD_FUNC(m_rehash)
 		if (loop.ircd_rehashing)
 		{
 			sendto_one(sptr, ":%s NOTICE %s :A rehash is already in progress",
-				me.name, sptr->name);
+				me.client.name, sptr->name);
 			return 0;
 		}
 		sendto_ops("%s is rehashing server config file", parv[0]);
@@ -814,7 +814,7 @@ CMD_FUNC(m_rehash)
 
 	/* Normal rehash, rehash motds&rules too, just like the on in the tld block will :p */
 	if (cptr == sptr)
-		sendto_one(sptr, rpl_str(RPL_REHASHING), me.name, parv[0], configfile);
+		sendto_one(sptr, rpl_str(RPL_REHASHING), me.client.name, parv[0], configfile);
 	x = rehash(cptr, sptr, (parc > 1) ? ((*parv[1] == 'q') ? 2 : 0) : 0);
 	reread_motdsandrules();
 	return x;
@@ -837,12 +837,12 @@ char *reason = parv[1];
 	/* Check permissions */
 	if (MyClient(sptr) && !OPCanRestart(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 		return 0;
 	}
 	if (!MyClient(sptr) && !IsNetAdmin(sptr) && !IsULine(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 		return 0;
 	}
 
@@ -856,7 +856,7 @@ char *reason = parv[1];
 	{
 		if (conf_drpass)
 		{
-			sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0], "RESTART");
+			sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.client.name, parv[0], "RESTART");
 			return 0;
 		}
 	} else
@@ -869,7 +869,7 @@ char *reason = parv[1];
 			ret = Auth_Check(cptr, conf_drpass->restartauth, parv[1]);
 			if (ret == -1)
 			{
-				sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name, parv[0]);
+				sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.client.name, parv[0]);
 				return 0;
 			}
 			if (ret < 1)
@@ -879,13 +879,13 @@ char *reason = parv[1];
 	}
 	sendto_ops("Server is Restarting by request of %s", parv[0]);
 
-	list_for_each_entry(acptr, &lclient_list, lclient_node)
+	list_for_each_entry2(acptr, struct LocalClient, &lclient_list, lclient_node)
 	{
 		if (IsClient(acptr))
 			sendnotice(acptr, "Server Restarted by %s", sptr->name);
 		else if (IsServer(acptr))
 			sendto_one(acptr, ":%s ERROR :Restarted by %s: %s",
-			    me.name, get_client_name(sptr, TRUE), reason ? reason : "No reason");
+			    me.client.name, get_client_name(sptr, TRUE), reason ? reason : "No reason");
 	}
 
 	server_reboot(reason ? reason : "No reason");
@@ -931,23 +931,23 @@ int short_motd(aClient *sptr)
 
        if (!themotd->lines)
        {
-               sendto_one(sptr, err_str(ERR_NOMOTD), me.name, sptr->name);
+               sendto_one(sptr, err_str(ERR_NOMOTD), me.client.name, sptr->name);
                return 0;
        }
        if (themotd->last_modified.tm_year)
        {
 	       tm = &themotd->last_modified; /* for readability */
-               sendto_one(sptr, rpl_str(RPL_MOTDSTART), me.name, sptr->name,
-                   me.name);
-               sendto_one(sptr, ":%s %d %s :- %d/%d/%d %d:%02d", me.name,
+               sendto_one(sptr, rpl_str(RPL_MOTDSTART), me.client.name, sptr->name,
+                   me.client.name);
+               sendto_one(sptr, ":%s %d %s :- %d/%d/%d %d:%02d", me.client.name,
                    RPL_MOTD, sptr->name, tm->tm_mday, tm->tm_mon + 1,
                    1900 + tm->tm_year, tm->tm_hour, tm->tm_min);
        }
        if (is_short)
        {
-               sendto_one(sptr, rpl_str(RPL_MOTD), me.name, sptr->name,
+               sendto_one(sptr, rpl_str(RPL_MOTD), me.client.name, sptr->name,
                        "This is the short MOTD. To view the complete MOTD type /motd");
-               sendto_one(sptr, rpl_str(RPL_MOTD), me.name, sptr->name, "");
+               sendto_one(sptr, rpl_str(RPL_MOTD), me.client.name, sptr->name, "");
        }
 
        motdline = NULL;
@@ -955,11 +955,11 @@ int short_motd(aClient *sptr)
 	       motdline = themotd->lines;
        while (motdline)
        {
-               sendto_one(sptr, rpl_str(RPL_MOTD), me.name, sptr->name,
+               sendto_one(sptr, rpl_str(RPL_MOTD), me.client.name, sptr->name,
                    motdline->line);
                motdline = motdline->next;
        }
-       sendto_one(sptr, rpl_str(RPL_ENDOFMOTD), me.name, sptr->name);
+       sendto_one(sptr, rpl_str(RPL_ENDOFMOTD), me.client.name, sptr->name);
        return 0;
 }
 
@@ -1195,7 +1195,7 @@ CMD_FUNC(m_die)
 	int  i;
 	if (!MyClient(sptr) || !OPCanDie(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 		return 0;
 	}
 
@@ -1203,14 +1203,14 @@ CMD_FUNC(m_die)
 	{
 		if (parc < 2)	/* And if so, require a password :) */
 		{
-			sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name,
+			sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.client.name,
 			    parv[0], "DIE");
 			return 0;
 		}
 		i = Auth_Check(cptr, conf_drpass->dieauth, parv[1]);
 		if (i == -1)
 		{
-			sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name,
+			sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.client.name,
 			    parv[0]);
 			return 0;
 		}
@@ -1223,14 +1223,14 @@ CMD_FUNC(m_die)
 	/* Let the +s know what is going on */
 	sendto_ops("Server Terminating by request of %s", parv[0]);
 
-	list_for_each_entry(acptr, &lclient_list, lclient_node)
+	list_for_each_entry2(acptr, struct LocalClient, &lclient_list, lclient_node)
 	{
 		if (IsClient(acptr))
 			sendnotice(acptr, "Server Terminated by %s", 
 				sptr->name);
 		else if (IsServer(acptr))
 			sendto_one(acptr, ":%s ERROR :Terminated by %s",
-			    me.name, get_client_name(sptr, TRUE));
+			    me.client.name, get_client_name(sptr, TRUE));
 	}
 
 	(void)s_die();
@@ -1246,13 +1246,13 @@ int  localdie(void)
 {
 	aClient *acptr;
 
-	list_for_each_entry(acptr, &lclient_list, lclient_node)
+	list_for_each_entry2(acptr, struct LocalClient, &lclient_list, lclient_node)
 	{
 		if (IsClient(acptr))
 			sendnotice(acptr, "Server Terminated by local console");
 		else if (IsServer(acptr))
 			sendto_one(acptr,
-			    ":%s ERROR :Terminated by local console", me.name);
+			    ":%s ERROR :Terminated by local console", me.client.name);
 	}
 	(void)s_die();
 	return 0;

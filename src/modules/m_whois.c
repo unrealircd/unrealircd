@@ -99,7 +99,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc < 2)
 	{
 		sendto_one(sptr, err_str(ERR_NONICKNAMEGIVEN),
-		    me.name, parv[0]);
+		    me.client.name, parv[0]);
 		return 0;
 	}
 
@@ -160,7 +160,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				    sptr->name,
 				    sptr->user->username, sptr->user->realhost);
 			}
-			sendto_one(sptr, rpl_str(RPL_WHOISUSER), me.name,
+			sendto_one(sptr, rpl_str(RPL_WHOISUSER), me.client.name,
 			    parv[0], name,
 			    user->username,
 			    IsHidden(acptr) ? user->virthost : user->realhost,
@@ -173,22 +173,22 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				
 				/* send the target user's modes */
 				sendto_one(sptr, rpl_str(RPL_WHOISMODES),
-				    me.name, parv[0], name,
+				    me.client.name, parv[0], name,
 				    get_mode_str(acptr), sno[1] == 0 ? "" : sno);
 			}
 			if ((acptr == sptr) || IsAnOper(sptr))
 			{
 				sendto_one(sptr, rpl_str(RPL_WHOISHOST),
-				    me.name, parv[0], acptr->name,
+				    me.client.name, parv[0], acptr->name,
 					(MyConnect(acptr) && strcmp(acptr->username, "unknown")) ? acptr->username : "*",
 					user->realhost, user->ip_str ? user->ip_str : "");
 			}
 
 			if (IsARegNick(acptr))
-				sendto_one(sptr, rpl_str(RPL_WHOISREGNICK), me.name, parv[0], name);
+				sendto_one(sptr, rpl_str(RPL_WHOISREGNICK), me.client.name, parv[0], name);
 			
 			found = 1;
-			mlen = strlen(me.name) + strlen(parv[0]) + 10 + strlen(name);
+			mlen = strlen(me.client.name) + strlen(parv[0]) + 10 + strlen(name);
 			for (len = 0, *buf = '\0', lp = user->channel; lp; lp = lp->next)
 			{
 				chptr = lp->chptr;
@@ -212,7 +212,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					{
 						sendto_one(sptr,
 						    ":%s %d %s %s :%s",
-						    me.name,
+						    me.client.name,
 						    RPL_WHOISCHANNELS,
 						    parv[0], name, buf);
 						*buf = '\0';
@@ -270,15 +270,15 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			}
 
 			if (buf[0] != '\0')
-				sendto_one(sptr, rpl_str(RPL_WHOISCHANNELS), me.name, parv[0], name, buf); 
+				sendto_one(sptr, rpl_str(RPL_WHOISCHANNELS), me.client.name, parv[0], name, buf); 
 
                         if (!(IsULine(acptr) && !IsOper(sptr) && HIDE_ULINES))
 				sendto_one(sptr, rpl_str(RPL_WHOISSERVER),
-				    me.name, parv[0], name, user->server,
+				    me.client.name, parv[0], name, user->server,
 				    acptr->srvptr ? acptr->srvptr->info : "*Not On This Net*");
 
 			if (user->away)
-				sendto_one(sptr, rpl_str(RPL_AWAY), me.name,
+				sendto_one(sptr, rpl_str(RPL_AWAY), me.client.name,
 				    parv[0], name, user->away);
 			/* makesure they aren't +H (we'll also check
 			   before we display a helpop or IRCD Coder msg)
@@ -306,28 +306,28 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				{
 					if (IsOper(sptr) && MyClient(acptr))
 						sendto_one(sptr,
-						    ":%s 313 %s %s :is %s (%s)", me.name,
+						    ":%s 313 %s %s :is %s (%s)", me.client.name,
 						    parv[0], name, buf, acptr->user->operlogin);
 					else
 						sendto_one(sptr,
-						    rpl_str(RPL_WHOISOPERATOR), me.name,
+						    rpl_str(RPL_WHOISOPERATOR), me.client.name,
 						    parv[0], name, buf);
 				}
 			}
 
 			if (IsHelpOp(acptr) && !hideoper && !user->away)
-				sendto_one(sptr, rpl_str(RPL_WHOISHELPOP), me.name, parv[0], name);
+				sendto_one(sptr, rpl_str(RPL_WHOISHELPOP), me.client.name, parv[0], name);
 
 			if (acptr->umodes & UMODE_BOT)
-				sendto_one(sptr, rpl_str(RPL_WHOISBOT), me.name, parv[0], name, ircnetwork);
+				sendto_one(sptr, rpl_str(RPL_WHOISBOT), me.client.name, parv[0], name, ircnetwork);
 
 			if (acptr->umodes & UMODE_SECURE)
-				sendto_one(sptr, rpl_str(RPL_WHOISSECURE), me.name, parv[0], name,
+				sendto_one(sptr, rpl_str(RPL_WHOISSECURE), me.client.name, parv[0], name,
 					"is using a Secure Connection");
 
 			if (!BadPtr(user->swhois) && !hideoper)
 					sendto_one(sptr, ":%s %d %s %s :%s",
-					    me.name, RPL_WHOISSPECIAL, parv[0],
+					    me.client.name, RPL_WHOISSPECIAL, parv[0],
 					    name, acptr->user->swhois);
 
 			/*
@@ -335,7 +335,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			 * not a legacy timestamp.  --nenolod
 			 */
 			if (!isdigit(*user->svid))
-				sendto_one(sptr, rpl_str(RPL_WHOISLOGGEDIN), me.name, parv[0], name, user->svid);
+				sendto_one(sptr, rpl_str(RPL_WHOISLOGGEDIN), me.client.name, parv[0], name, user->svid);
 
 			/*
 			 * Umode +I hides an oper's idle time from regular users.
@@ -344,15 +344,15 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			if (MyConnect(acptr) && (IsAnOper(sptr) || !(acptr->umodes & UMODE_HIDLE)))
 			{
 				sendto_one(sptr, rpl_str(RPL_WHOISIDLE),
-				    me.name, parv[0], name,
-				    TStime() - acptr->last, acptr->firsttime);
+				    me.client.name, parv[0], name,
+				    TStime() - acptr->localClient->last, acptr->localClient->firsttime);
 			}
 		}
 		if (!found)
 			sendto_one(sptr, err_str(ERR_NOSUCHNICK),
-			    me.name, parv[0], nick);
+			    me.client.name, parv[0], nick);
 	}
-	sendto_one(sptr, rpl_str(RPL_ENDOFWHOIS), me.name, parv[0], querybuf);
+	sendto_one(sptr, rpl_str(RPL_ENDOFWHOIS), me.client.name, parv[0], querybuf);
 
 	return 0;
 }

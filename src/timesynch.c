@@ -184,7 +184,7 @@ int succesfully_sent = 0;
 			goto end;
 		}
 
-		set_non_blocking(s[n], &me);
+		set_non_blocking(s[n], &me.client);
 		n++;
 		if (n == MAXTIMESERVERS)
 		        break;

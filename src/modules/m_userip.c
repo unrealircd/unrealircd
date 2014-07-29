@@ -94,7 +94,7 @@ DLLFUNC CMD_FUNC(m_userip)
 	if (parc < 2)
 	{
 		sendto_one(sptr, rpl_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "USERIP");
+		    me.client.name, parv[0], "USERIP");
 		return 0;
 	}
 
@@ -131,14 +131,14 @@ DLLFUNC CMD_FUNC(m_userip)
 			    (acptr->user->away) ? '-' : '+',
 			    acptr->user->username, ip);
 			/* add extra fakelag (penalty) because of all the work we need to do: 1s per entry: */
-			sptr->since += 1;
+			sptr->localClient->since += 1;
 		}
 		if (p)
 			p++;
 		cn = p;
 	}
 
-	sendto_one(sptr, rpl_str(RPL_USERIP), me.name, parv[0],
+	sendto_one(sptr, rpl_str(RPL_USERIP), me.client.name, parv[0],
 	    response[0], response[1], response[2], response[3], response[4]);
 
 	return 0;

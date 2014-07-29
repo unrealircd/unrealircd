@@ -90,25 +90,25 @@ char flatmap;
 	if (IRCstats.me_clients > IRCstats.me_max)
 		IRCstats.me_max = IRCstats.me_clients;
 
-	sendto_one(sptr, rpl_str(RPL_LUSERCLIENT), me.name, parv[0],
+	sendto_one(sptr, rpl_str(RPL_LUSERCLIENT), me.client.name, parv[0],
 	    IRCstats.clients - IRCstats.invisible, IRCstats.invisible,
 	    IRCstats.servers);
 
 	if (IRCstats.operators)
 		sendto_one(sptr, rpl_str(RPL_LUSEROP),
-		    me.name, parv[0], IRCstats.operators);
+		    me.client.name, parv[0], IRCstats.operators);
 	if (IRCstats.unknown)
 		sendto_one(sptr, rpl_str(RPL_LUSERUNKNOWN),
-		    me.name, parv[0], IRCstats.unknown);
+		    me.client.name, parv[0], IRCstats.unknown);
 	if (IRCstats.channels)
 		sendto_one(sptr, rpl_str(RPL_LUSERCHANNELS),
-		    me.name, parv[0], IRCstats.channels);
+		    me.client.name, parv[0], IRCstats.channels);
 	sendto_one(sptr, rpl_str(RPL_LUSERME),
-	    me.name, parv[0], IRCstats.me_clients, flatmap ? 0 : IRCstats.me_servers);
+	    me.client.name, parv[0], IRCstats.me_clients, flatmap ? 0 : IRCstats.me_servers);
 	sendto_one(sptr, rpl_str(RPL_LOCALUSERS),
-	    me.name, parv[0], IRCstats.me_clients, IRCstats.me_max, IRCstats.me_clients, IRCstats.me_max);
+	    me.client.name, parv[0], IRCstats.me_clients, IRCstats.me_max, IRCstats.me_clients, IRCstats.me_max);
 	sendto_one(sptr, rpl_str(RPL_GLOBALUSERS),
-	    me.name, parv[0], IRCstats.clients, IRCstats.global_max, IRCstats.clients, IRCstats.global_max);
+	    me.client.name, parv[0], IRCstats.clients, IRCstats.global_max, IRCstats.clients, IRCstats.global_max);
 	if ((IRCstats.me_clients + IRCstats.me_servers) > max_connection_count)
 	{
 		max_connection_count =

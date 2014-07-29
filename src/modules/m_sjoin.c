@@ -475,7 +475,7 @@ CMD_FUNC(m_sjoin)
 			
 				sendto_one(sptr,
 				    ":%s KICK %s %s :Fake direction",
-				    me.name, chptr->chname,
+				    me.client.name, chptr->chname,
 				    acptr->name);
 				sendto_realops
 				    ("Fake direction from user %s in SJOIN from %s(%s) at %s",
@@ -852,9 +852,9 @@ CMD_FUNC(m_sjoin)
 	/* we should be synched by now, */
 	if (oldts != -1)
 		if (oldts != chptr->creationtime)
-			sendto_channel_butserv(chptr, &me,
+			sendto_channel_butserv(chptr, &me.client,
 			    ":%s NOTICE %s :*** Notice -- TS for %s changed from %ld to %ld",
-			    me.name, chptr->chname, chptr->chname,
+			    me.client.name, chptr->chname, chptr->chname,
 			    oldts, chptr->creationtime);
 
 

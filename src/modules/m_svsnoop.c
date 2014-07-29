@@ -97,8 +97,8 @@ long oldumodes;
 						VERIFY_OPERCOUNT(acptr, "svsnoop");
 					}
 
-					if (!list_empty(&acptr->special_node))
-						list_del(&acptr->special_node);
+					if (!list_empty(&acptr->localClient->special_node))
+						list_del(&acptr->localClient->special_node);
 
 					oldumodes = acptr->umodes;
 					acptr->umodes &= ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP |
@@ -106,7 +106,7 @@ long oldumodes;
 					                   UMODE_NETADMIN | UMODE_WHOIS | UMODE_KIX |
 					                   UMODE_DEAF | UMODE_HIDEOPER | UMODE_FAILOP |
 					                   UMODE_COADMIN | UMODE_VICTIM);
-					acptr->oflag = 0;
+					acptr->localClient->oflag = 0;
 					remove_oper_snomasks(acptr);
 					send_umode_out(acptr, acptr, oldumodes);
 					RunHook2(HOOKTYPE_LOCAL_OPER, acptr, 0);

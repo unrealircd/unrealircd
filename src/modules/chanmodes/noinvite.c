@@ -94,7 +94,7 @@ DLLFUNC int noinvite_check (aClient *sptr, aChannel *chptr)
 	if (MyClient(sptr) && IsNoInvite(chptr))
 	{
 		sendto_one(sptr, err_str(ERR_CANNOTKNOCK),
-				    me.name,
+				    me.client.name,
 				    sptr->name,
 				    chptr->chname, "The channel does not allow invites (+V)");
 		return HOOK_DENY;

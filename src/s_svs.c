@@ -231,14 +231,14 @@ int ret;
 	if (!(alias = Find_alias(cmd))) 
 	{
 		sendto_one(sptr, ":%s %d %s %s :Unknown command",
-			me.name, ERR_UNKNOWNCOMMAND, parv[0], cmd);
+			me.client.name, ERR_UNKNOWNCOMMAND, parv[0], cmd);
 		return 0;
 	}
 	
 	/* If it isn't an ALIAS_COMMAND, we require a paramter ... We check ALIAS_COMMAND LATER */
 	if (alias->type != ALIAS_COMMAND && (parc < 2 || *parv[1] == '\0'))
 	{
-		sendto_one(sptr, err_str(ERR_NOTEXTTOSEND), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOTEXTTOSEND), me.client.name, parv[0]);
 		return -1;
 	}
 
@@ -252,7 +252,7 @@ int ret;
 				alias->nick, SERVICES_NAME, parv[1]);
 		}
 		else
-			sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name,
+			sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.client.name,
 				parv[0], alias->nick);
 	}
 	else if (alias->type == ALIAS_STATS) 
@@ -265,7 +265,7 @@ int ret;
 				alias->nick, STATS_SERVER, parv[1]);
 		}
 		else
-			sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name,
+			sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.client.name,
 				parv[0], alias->nick);
 	}
 	else if (alias->type == ALIAS_NORMAL) 
@@ -283,7 +283,7 @@ int ret;
 					alias->nick, parv[1]);
 		}
 		else
-			sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name,
+			sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.client.name,
 				parv[0], alias->nick);
 	}
 	else if (alias->type == ALIAS_CHANNEL)
@@ -302,7 +302,7 @@ int ret;
 				return 0;
 			}
 		}
-		sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.name, parv[0],
+		sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.client.name, parv[0],
 				cmd, "You may not use this command at this time");
 	}
 	else if (alias->type == ALIAS_COMMAND) 
@@ -372,7 +372,7 @@ int ret;
 				/* Now check to make sure we have something to send */
 				if (strlen(output) == 0)
 				{
-					sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, cmd);
+					sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.client.name, sptr->name, cmd);
 					return -1;
 				}
 				
@@ -385,7 +385,7 @@ int ret;
 						sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", parv[0],
 							format->nick, SERVICES_NAME, output);
 					} else
-						sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name,
+						sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.client.name,
 							parv[0], format->nick);
 				}
 				else if (format->type == ALIAS_STATS) 
@@ -397,7 +397,7 @@ int ret;
 						sendto_one(acptr, ":%s PRIVMSG %s@%s :%s", parv[0],
 							format->nick, STATS_SERVER, output);
 					} else
-						sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name,
+						sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.client.name,
 							parv[0], format->nick);
 				}
 				else if (format->type == ALIAS_NORMAL) 
@@ -415,7 +415,7 @@ int ret;
 								format->nick, output);
 					}
 					else
-						sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name,
+						sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.client.name,
 							parv[0], format->nick);
 				}
 				else if (format->type == ALIAS_CHANNEL)
@@ -434,7 +434,7 @@ int ret;
 							return 0;
 						}
 					}
-					sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.name,
+					sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.client.name,
 						 parv[0], cmd, 
 						"You may not use this command at this time");
 				}
@@ -447,7 +447,7 @@ int ret;
 
 					if (recursive_alias)
 					{
-						sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.name, parv[0], cmd, "You may not use this command at this time -- recursion");
+						sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), me.client.name, parv[0], cmd, "You may not use this command at this time -- recursion");
 						return -1;
 					}
 

@@ -92,7 +92,7 @@ DLLFUNC int m_admins(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (BadPtr(message))
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "ADCHAT");
+		    me.client.name, parv[0], "ADCHAT");
 		return 0;
 	}
 #ifdef ADMINCHAT
@@ -101,7 +101,7 @@ DLLFUNC int m_admins(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (MyClient(sptr))
 #endif
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 		return 0;
 	}
 	sendto_server(IsServer(cptr) ? cptr : NULL, 0, 0, ":%s ADCHAT :%s",

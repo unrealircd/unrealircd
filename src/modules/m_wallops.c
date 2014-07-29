@@ -84,12 +84,12 @@ DLLFUNC CMD_FUNC(m_wallops)
 	if (BadPtr(message))
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "WALLOPS");
+		    me.client.name, parv[0], "WALLOPS");
 		return 0;
 	}
 	if (MyClient(sptr) && !OPCanWallOps(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 		return 0;
 	}
 	sendto_ops_butone(IsServer(cptr) ? cptr : NULL, sptr,

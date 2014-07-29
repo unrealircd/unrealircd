@@ -548,7 +548,7 @@ int blocked;
 		if (blocked)
 		{
 			if (!notice)
-				sendto_one(sptr, rpl_str(ERR_NOSWEAR),  me.name, sptr->name, target->name);
+				sendto_one(sptr, rpl_str(ERR_NOSWEAR),  me.client.name, sptr->name, target->name);
 			return NULL;
 		}
 	}
@@ -564,7 +564,7 @@ int stats_badwords(aClient *sptr, char *para)
 	for (words = conf_badword_message; words; words = (ConfigItem_badword *) words->next)
 	{
 		sendto_one(sptr, ":%s %i %s :m %c %s%s%s %s",
-		           me.name, RPL_TEXT, sptr->name, words->type & BADW_TYPE_REGEX ? 'R' : 'F',
+		           me.client.name, RPL_TEXT, sptr->name, words->type & BADW_TYPE_REGEX ? 'R' : 'F',
 		           (words->type & BADW_TYPE_FAST_L) ? "*" : "", words->word,
 		           (words->type & BADW_TYPE_FAST_R) ? "*" : "",
 		           words->action == BADWORD_REPLACE ? (words->replace ? words->replace : "<censored>") : "");

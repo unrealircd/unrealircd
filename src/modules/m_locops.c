@@ -85,12 +85,12 @@ DLLFUNC CMD_FUNC(m_locops)
 	if (BadPtr(message))
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "LOCOPS");
+		    me.client.name, parv[0], "LOCOPS");
 		return 0;
 	}
 	if (MyClient(sptr) && !OPCanLocOps(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 		return 0;
 	}
 	sendto_locfailops("from %s: %s", parv[0], message);

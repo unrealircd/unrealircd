@@ -108,7 +108,7 @@ void dcc_sync(aClient *sptr)
 	for (p = conf_deny_dcc; p; p = (ConfigItem_deny_dcc *) p->next)
 	{
 		if (p->flag.type2 == CONF_BAN_TYPE_AKILL)
-			sendto_one(sptr, ":%s SVSFLINE + %s :%s", me.name,
+			sendto_one(sptr, ":%s SVSFLINE + %s :%s", me.client.name,
 			    p->filename, p->reason);
 	}
 }
@@ -183,7 +183,7 @@ int cnt = 0;
 
 	if (cnt >= MAXDCCALLOW)
 	{
-		sendto_one(sptr, err_str(ERR_TOOMANYDCC), me.name, sptr->name,
+		sendto_one(sptr, err_str(ERR_TOOMANYDCC), me.client.name, sptr->name,
 			optr->name, MAXDCCALLOW);
 		return 0;
 	}
@@ -200,7 +200,7 @@ int cnt = 0;
 	lp->next = optr->user->dccallow;
 	optr->user->dccallow = lp;
 	
-	sendto_one(sptr, rpl_str(RPL_DCCSTATUS), me.name, sptr->name, optr->name, "added to");
+	sendto_one(sptr, rpl_str(RPL_DCCSTATUS), me.client.name, sptr->name, optr->name, "added to");
 	return 0;
 }
 
@@ -225,7 +225,7 @@ int found = 0;
 	if (!found)
 	{
 		sendto_one(sptr, ":%s %d %s :%s is not in your DCC allow list",
-			me.name, RPL_DCCINFO, sptr->name, optr->name);
+			me.client.name, RPL_DCCINFO, sptr->name, optr->name);
 		return 0;
 	}
 	
@@ -246,7 +246,7 @@ int found = 0;
 		sendto_realops("[BUG!] %s was in dccallowme list of %s but not in dccallowrem list!",
 			optr->name, sptr->name);
 
-	sendto_one(sptr, rpl_str(RPL_DCCSTATUS), me.name, sptr->name, optr->name, "removed from");
+	sendto_one(sptr, rpl_str(RPL_DCCSTATUS), me.client.name, sptr->name, optr->name, "removed from");
 
 	return 0;
 }
@@ -267,12 +267,12 @@ int  channel_canjoin(aClient *sptr, char *name)
 	p = Find_channel_allowed(sptr, name);
 	if (p)
 	{
-		sendto_one(sptr, err_str(ERR_FORBIDDENCHANNEL), me.name, sptr->name, name, p->reason);
+		sendto_one(sptr, err_str(ERR_FORBIDDENCHANNEL), me.client.name, sptr->name, name, p->reason);
 		return 0;
 	}
 	if ((tklban = find_qline(sptr, name, &ishold)))
 	{
-		sendto_one(sptr, err_str(ERR_FORBIDDENCHANNEL), me.name, sptr->name, name, tklban->reason);
+		sendto_one(sptr, err_str(ERR_FORBIDDENCHANNEL), me.client.name, sptr->name, name, tklban->reason);
 		return 0;
 	}
 	return 1;

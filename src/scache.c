@@ -159,7 +159,7 @@ void list_scache(aClient *sptr)
 			if (ptr->name)
 				sendto_one(sptr,
 				    ":%s NOTICE %s :server=%s hash=%i",
-				    me.name, sptr->name, ptr->name, hash_index);
+				    me.client.name, sptr->name, ptr->name, hash_index);
 			ptr = ptr->next;
 		}
 	}

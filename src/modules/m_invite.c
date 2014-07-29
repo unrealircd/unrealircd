@@ -78,10 +78,10 @@ int send_invite_list(aClient *sptr)
 
 	for (inv = sptr->user->invited; inv; inv = inv->next)
 	{
-		sendto_one(sptr, rpl_str(RPL_INVITELIST), me.name, sptr->name,
+		sendto_one(sptr, rpl_str(RPL_INVITELIST), me.client.name, sptr->name,
 			   inv->value.chptr->chname);	
 	}
-	sendto_one(sptr, rpl_str(RPL_ENDOFINVITELIST), me.name, sptr->name);
+	sendto_one(sptr, rpl_str(RPL_ENDOFINVITELIST), me.client.name, sptr->name);
 	return 0;
 }
 
@@ -104,14 +104,14 @@ DLLFUNC CMD_FUNC(m_invite)
         else if (parc < 3 || *parv[1] == '\0')
         {
                 sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-                    me.name, parv[0], "INVITE");
+                    me.client.name, parv[0], "INVITE");
                 return -1;
         }
 
         if (!(acptr = find_person(parv[1], (aClient *)NULL)))
         {
                 sendto_one(sptr, err_str(ERR_NOSUCHNICK),
-                    me.name, parv[0], parv[1]);
+                    me.client.name, parv[0], parv[1]);
                 return -1;
         }
 
@@ -121,7 +121,7 @@ DLLFUNC CMD_FUNC(m_invite)
         if (!(chptr = find_channel(parv[2], NullChn)))
         {
                 sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL),
-                    me.name, parv[0], parv[2]);
+                    me.client.name, parv[0], parv[2]);
                 return -1;
         }
 
@@ -141,7 +141,7 @@ DLLFUNC CMD_FUNC(m_invite)
                 else {
 #endif
                         sendto_one(sptr, err_str(ERR_NOINVITE),
-                            me.name, parv[0], parv[2]);
+                            me.client.name, parv[0], parv[2]);
                         return -1;
 #ifndef NO_OPEROVERRIDE
                 }
@@ -157,7 +157,7 @@ DLLFUNC CMD_FUNC(m_invite)
                 else {
 #endif
                         sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
-                            me.name, parv[0], parv[2]);
+                            me.client.name, parv[0], parv[2]);
                         return -1;
 #ifndef NO_OPEROVERRIDE
                 }
@@ -167,7 +167,7 @@ DLLFUNC CMD_FUNC(m_invite)
         if (IsMember(acptr, chptr))
         {
                 sendto_one(sptr, err_str(ERR_USERONCHANNEL),
-                    me.name, parv[0], parv[1], parv[2]);
+                    me.client.name, parv[0], parv[1], parv[2]);
                 return 0;
         }
 
@@ -182,7 +182,7 @@ DLLFUNC CMD_FUNC(m_invite)
                         else {
 #endif
                                 sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
-                                    me.name, parv[0], chptr->chname);
+                                    me.client.name, parv[0], chptr->chname);
                                 return -1;
 #ifndef NO_OPEROVERRIDE
                         }
@@ -197,7 +197,7 @@ DLLFUNC CMD_FUNC(m_invite)
                         else {
 #endif
                                 sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
-                                    me.name, parv[0],
+                                    me.client.name, parv[0],
                                         ((chptr) ? (chptr->chname) : parv[2]));
                                 return -1;
 #ifndef NO_OPEROVERRIDE
@@ -211,7 +211,7 @@ DLLFUNC CMD_FUNC(m_invite)
 		    !is_chan_op(sptr, chptr) && !IsAnOper(sptr) && !IsULine(sptr))
 		{
 			sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
-				me.name, parv[0], chptr->chname);
+				me.client.name, parv[0], chptr->chname);
 			return -1;
 		}
 
@@ -221,11 +221,11 @@ DLLFUNC CMD_FUNC(m_invite)
                         return 0;
                 if (!over)
                 {
-                        sendto_one(sptr, rpl_str(RPL_INVITING), me.name,
+                        sendto_one(sptr, rpl_str(RPL_INVITING), me.client.name,
                             parv[0], acptr->name,
                             ((chptr) ? (chptr->chname) : parv[2]));
                         if (acptr->user->away)
-                                sendto_one(sptr, rpl_str(RPL_AWAY), me.name,
+                                sendto_one(sptr, rpl_str(RPL_AWAY), me.client.name,
                                     parv[0], acptr->name, acptr->user->away);
                 }
         }
@@ -298,13 +298,13 @@ DLLFUNC CMD_FUNC(m_invite)
 #endif
 		    )) {
 		        if (over == 1)
-                		sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+                		sendto_channelprefix_butone(NULL, &me.client, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
 		                  ":%s NOTICE @%s :OperOverride -- %s invited him/herself into the channel.",
-                		  me.name, chptr->chname, sptr->name);
+                		  me.client.name, chptr->chname, sptr->name);
 		        else if (over == 0)
-		                sendto_channelprefix_butone(NULL, &me, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
+		                sendto_channelprefix_butone(NULL, &me.client, chptr, PREFIX_OP|PREFIX_ADMIN|PREFIX_OWNER,
                 		  ":%s NOTICE @%s :%s invited %s into the channel.",
-		                  me.name, chptr->chname, sptr->name, acptr->name);
+		                  me.client.name, chptr->chname, sptr->name, acptr->name);
 
 		        add_invite(sptr, acptr, chptr);
 			}

@@ -297,7 +297,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						i++;
 						break;
 					}
-					if (ts && ts != acptr->since) {
+					if (ts && ts != acptr->localClient->since) {
 						i++;
 						break;
 					}
@@ -318,7 +318,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						i++;
 						break;
 					}
-					if (ts && ts != acptr->since) {
+					if (ts && ts != acptr->localClient->since) {
 						i++;
 						break;
 					}
@@ -338,7 +338,7 @@ int channel_svsmode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						i++;
 						break;
 					}
-					if (ts && ts != acptr->since) {
+					if (ts && ts != acptr->localClient->since) {
 						i++;
 						break;
 					}
@@ -439,20 +439,20 @@ int  what, setflags;
 				if (what == MODE_ADD)
 				{
 					if (!IsAnOper(acptr) && MyClient(acptr))
-						list_add(&acptr->special_node, &oper_list);
+						list_add(&acptr->localClient->special_node, &oper_list);
 
 					acptr->umodes &= ~UMODE_OPER;
 				}
 
 				if (what == MODE_DEL && (acptr->umodes & UMODE_LOCOP) && MyClient(acptr))
-					list_del(&acptr->special_node);
+					list_del(&acptr->localClient->special_node);
 
 				goto setmodex;					
 			case 'o':
 				if ((what == MODE_ADD) && !(acptr->umodes & UMODE_OPER))
 				{
 					if (!IsAnOper(acptr) && MyClient(acptr))
-						list_add(&acptr->special_node, &oper_list);
+						list_add(&acptr->localClient->special_node, &oper_list);
 
 					acptr->umodes &= ~UMODE_LOCOP; /* can't be both local and global */
 					IRCstats.operators++;
@@ -467,8 +467,8 @@ int  what, setflags;
 						IRCstats.operators--;
 					}
 
-					if (MyClient(acptr) && !list_empty(&acptr->special_node))
-						list_del(&acptr->special_node);
+					if (MyClient(acptr) && !list_empty(&acptr->localClient->special_node))
+						list_del(&acptr->localClient->special_node);
 				}
 				goto setmodex;
 			case 'H':

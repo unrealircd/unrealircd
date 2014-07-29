@@ -232,10 +232,10 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 	   with the space and all .. but its to get around
 	   a SJOIN bug --stskeeps */
 	sendto_server(cptr, PROTO_SID | PROTO_SJ3, 0, ":%s SJOIN %li %s :%s%s ",
-		me.id, chptr->creationtime,
+		me.client.id, chptr->creationtime,
 		chptr->chname, chfl_to_sjoin_symbol(flags), ID(sptr));
 	sendto_server(cptr, PROTO_SJ3, PROTO_SID, ":%s SJOIN %li %s :%s%s ",
-		me.name, chptr->creationtime,
+		me.client.name, chptr->creationtime,
 		chptr->chname, chfl_to_sjoin_symbol(flags), sptr->name);
 
 	if (MyClient(sptr))
@@ -249,7 +249,7 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 		{
 			chptr->creationtime = TStime();
 			sendto_server(cptr, 0, 0, ":%s MODE %s + %lu",
-			    me.name, chptr->chname, chptr->creationtime);
+			    me.client.name, chptr->chname, chptr->creationtime);
 		}
 		del_invite(sptr, chptr);
 		if (flags && !(flags & CHFL_DEOPPED))
@@ -259,14 +259,14 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 			{
 				/* +ao / +qo for when PREFIX_AQ is off */
 				sendto_server(cptr, 0, PROTO_SJ3, ":%s MODE %s +o%c %s %s %lu",
-				    me.name,
+				    me.client.name,
 				    chptr->chname, chfl_to_chanmode(flags), sptr->name, sptr->name,
 				    chptr->creationtime);
 			} else {
 #endif
 				/* +v/+h/+o (and +a/+q if PREFIX_AQ is on) */
 				sendto_server(cptr, 0, PROTO_SJ3, ":%s MODE %s +%c %s %lu",
-				    me.name,
+				    me.client.name,
 				    chptr->chname, chfl_to_chanmode(flags), sptr->name,
 				    chptr->creationtime);
 #ifndef PREFIX_AQ
@@ -276,9 +276,9 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 		if (chptr->topic)
 		{
 			sendto_one(sptr, rpl_str(RPL_TOPIC),
-			    me.name, sptr->name, chptr->chname, chptr->topic);
+			    me.client.name, sptr->name, chptr->chname, chptr->topic);
 			sendto_one(sptr,
-			    rpl_str(RPL_TOPICWHOTIME), me.name,
+			    rpl_str(RPL_TOPICWHOTIME), me.client.name,
 			    sptr->name, chptr->chname, chptr->topic_nick,
 			    chptr->topic_time);
 		}
@@ -300,9 +300,9 @@ DLLFUNC void _join_channel(aChannel *chptr, aClient *cptr, aClient *sptr, int fl
 			*modebuf = *parabuf = 0;
 			channel_modes(sptr, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), chptr);
 			/* This should probably be in the SJOIN stuff */
-			sendto_server(&me, 0, 0, ":%s MODE %s %s %s %lu",
-			    me.name, chptr->chname, modebuf, parabuf, chptr->creationtime);
-			sendto_one(sptr, ":%s MODE %s %s %s", me.name, chptr->chname, modebuf, parabuf);
+			sendto_server(&me.client, 0, 0, ":%s MODE %s %s %s %lu",
+			    me.client.name, chptr->chname, modebuf, parabuf, chptr->creationtime);
+			sendto_one(sptr, ":%s MODE %s %s %s", me.client.name, chptr->chname, modebuf, parabuf);
 		}
 		parv[0] = sptr->name;
 		parv[1] = chptr->chname;
@@ -335,7 +335,7 @@ DLLFUNC CMD_FUNC(_do_join)
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "JOIN");
+		    me.client.name, parv[0], "JOIN");
 		return 0;
 	}
 	bouncedtimes++;
@@ -380,7 +380,7 @@ DLLFUNC CMD_FUNC(_do_join)
 		{
 			if (MyClient(sptr))
 				sendto_one(sptr,
-				    err_str(ERR_NOSUCHCHANNEL), me.name,
+				    err_str(ERR_NOSUCHCHANNEL), me.client.name,
 				    parv[0], name);
 			continue;
 		}
@@ -444,7 +444,7 @@ DLLFUNC CMD_FUNC(_do_join)
 					sendto_one(sptr,
 					    err_str
 					    (ERR_TOOMANYCHANNELS),
-					    me.name, parv[0], name);
+					    me.client.name, parv[0], name);
 					RET(0)
 				}
 /* RESTRICTCHAN */
@@ -461,7 +461,7 @@ DLLFUNC CMD_FUNC(_do_join)
 								get_client_name(sptr, 1), name);
 						}
 						if (d->reason)
-							sendto_one(sptr, err_str(ERR_FORBIDDENCHANNEL), me.name, BadPtr(parv[0]) ? "*" : parv[0], name, d->reason);
+							sendto_one(sptr, err_str(ERR_FORBIDDENCHANNEL), me.client.name, BadPtr(parv[0]) ? "*" : parv[0], name, d->reason);
 						if (d->redirect)
 						{
 							sendnotice(sptr, "*** Redirecting you to %s", d->redirect);
@@ -477,7 +477,7 @@ DLLFUNC CMD_FUNC(_do_join)
 			}
 			if (!IsOper(sptr) && !IsULine(sptr) && (tklban = find_qline(sptr, name, &ishold)))
 			{
-				sendto_one(sptr, err_str(ERR_FORBIDDENCHANNEL), me.name, BadPtr(parv[0]) ? "*" : parv[0], name, tklban->reason);
+				sendto_one(sptr, err_str(ERR_FORBIDDENCHANNEL), me.client.name, BadPtr(parv[0]) ? "*" : parv[0], name, tklban->reason);
 				continue;
 			}
 			/* ugly set::spamfilter::virus-help-channel-deny hack.. */
@@ -541,7 +541,7 @@ DLLFUNC CMD_FUNC(_do_join)
 				if (i != -1)
 #endif
 					sendto_one(sptr, err_str(i),
-					    me.name, parv[0], name);
+					    me.client.name, parv[0], name);
 #ifndef NO_OPEROVERRIDE
 				else if (i != -1 && OPCanOverride(sptr))
 				{

@@ -84,20 +84,20 @@ DLLFUNC CMD_FUNC(m_dccdeny)
 
 	if (!IsAnOper(sptr) || !OPCanDCCDeny(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 		return 0;
 	}
 	/* fixup --Stskeeps */
 	if (parc < 2)
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0],
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.client.name, parv[0],
 		    "DCCDENY");
 		return 0;
 	}
 	
 	if (BadPtr(parv[2]))
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0],
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.client.name, parv[0],
 		    "DCCDENY");
 		return 0;
 	}

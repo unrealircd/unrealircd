@@ -117,7 +117,7 @@ short t;
 		if (!is_chan_op(sptr, chptr))
 		{
 			if (checkt == EXCHK_ACCESS_ERR)
-				sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED), me.name, sptr->name, chptr->chname);
+				sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED), me.client.name, sptr->name, chptr->chname);
 			return 0;
 		} else {
 			return 1;
@@ -129,7 +129,7 @@ short t;
 		if ((t < 0) || (t > 100))
 		{
 			sendto_one(sptr, ":%s NOTICE %s :chanmode +y requires a parameter in the range 0..100",
-				me.name, sptr->name);
+				me.client.name, sptr->name);
 			return 0;
 		}
 		return 1;

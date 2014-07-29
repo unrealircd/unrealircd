@@ -97,7 +97,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "KILL");
+		    me.client.name, parv[0], "KILL");
 		return 0;
 	}
 
@@ -113,7 +113,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (!IsPrivileged(cptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 		return 0;
 	}
 	if (IsAnOper(cptr))
@@ -121,7 +121,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (BadPtr(path))
 		{
 			sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-			    me.name, parv[0], "KILL");
+			    me.client.name, parv[0], "KILL");
 			return 0;
 		}
 		if (strlen(path) > (size_t)TOPICLEN)
@@ -148,7 +148,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    get_history(nick, (long)KILLCHASETIMELIMIT)))
 			{
 				sendto_one(sptr, err_str(ERR_NOSUCHNICK),
-				    me.name, parv[0], nick);
+				    me.client.name, parv[0], nick);
 				continue;
 			}
 			sendnotice(sptr,
@@ -160,27 +160,27 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    || (MyConnect(acptr) && MyClient(cptr)
 		    && !OPCanLKill(cptr)))
 		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name,
 			    parv[0]);
 			continue;
 		}
 		if (IsServer(acptr) || IsMe(acptr))
 		{
 			sendto_one(sptr, err_str(ERR_CANTKILLSERVER),
-			    me.name, parv[0]);
+			    me.client.name, parv[0]);
 			continue;
 		}
 		if (!IsPerson(acptr))
 		{
 			/* Nick exists but user is not registered yet: IOTW "doesn't exist". -- Syzop */
 			sendto_one(sptr, err_str(ERR_NOSUCHNICK),
-			    me.name, parv[0], nick);
+			    me.client.name, parv[0], nick);
 			continue;
 		}
 
 		if (IsServices(acptr) && !(IsNetAdmin(sptr) || IsULine(sptr)))
 		{
-			sendto_one(sptr, err_str(ERR_KILLDENY), me.name,
+			sendto_one(sptr, err_str(ERR_KILLDENY), me.client.name,
 			    parv[0], parv[1]);
 			return 0;
 		}
@@ -264,7 +264,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    parv[0], acptr->name, inpath, path);
 			if (chasing && IsServer(cptr))
 				sendto_one(cptr, ":%s KILL %s :%s!%s",
-				    me.name, acptr->name, inpath, path);
+				    me.client.name, acptr->name, inpath, path);
 			acptr->flags |= FLAGS_KILLED;
 		}
 
@@ -285,7 +285,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (MyConnect(acptr) && MyConnect(sptr) && IsAnOper(sptr))
 
 			ircsnprintf(buf2, sizeof(buf2), "[%s] Local kill by %s (%s)",
-			    me.name, sptr->name,
+			    me.client.name, sptr->name,
 			    BadPtr(parv[2]) ? sptr->name : parv[2]);
 		else
 		{

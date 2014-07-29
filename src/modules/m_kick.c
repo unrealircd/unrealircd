@@ -98,7 +98,7 @@ CMD_FUNC(m_kick)
 	if (parc < 3 || *parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "KICK");
+		    me.client.name, parv[0], "KICK");
 		return 0;
 	}
 
@@ -114,7 +114,7 @@ CMD_FUNC(m_kick)
 		if (!chptr)
 		{
 			sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL),
-			    me.name, parv[0], name);
+			    me.client.name, parv[0], name);
 			continue;
 		}
 		/* Store "sptr" access flags */
@@ -124,7 +124,7 @@ CMD_FUNC(m_kick)
 		    && !(sptr_flags & CHFL_ISOP) && !(sptr_flags & CHFL_HALFOP))
 		{
 			sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
-			    me.name, parv[0], chptr->chname);
+			    me.client.name, parv[0], chptr->chname);
 			continue;
 		}
 
@@ -155,7 +155,7 @@ CMD_FUNC(m_kick)
 						char errbuf[NICKLEN+10];
 						ircsnprintf(errbuf, sizeof(errbuf), "%s is +q", who->name);
 						sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), 
-							   me.name, sptr->name, "KICK", 
+							   me.client.name, sptr->name, "KICK", 
 							   errbuf);
 						sendnotice(who,
 						    "*** q: %s tried to kick you from channel %s (%s)",
@@ -252,7 +252,7 @@ CMD_FUNC(m_kick)
 							ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel admin", 
 								   who->name);
 						sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND),
-							   me.name, sptr->name, "KICK",
+							   me.client.name, sptr->name, "KICK",
 							   errbuf);
 						goto deny;
 						continue;
@@ -266,7 +266,7 @@ CMD_FUNC(m_kick)
 					char errbuf[NICKLEN+30];
 					ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel operator", who->name);
 					sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND),
-						   me.name, sptr->name, "KICK",
+						   me.client.name, sptr->name, "KICK",
 						   errbuf);
 					goto deny;
 				}
@@ -278,7 +278,7 @@ CMD_FUNC(m_kick)
 					char errbuf[NICKLEN+15];
 					ircsnprintf(errbuf, sizeof(errbuf), "%s is a halfop", who->name);
 					sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND),
-						   me.name, sptr->name, "KICK",
+						   me.client.name, sptr->name, "KICK",
 						   errbuf);
 					goto deny;
 				}	/* halfop */
@@ -348,7 +348,7 @@ CMD_FUNC(m_kick)
 			else if (MyClient(sptr))
 				sendto_one(sptr,
 				    err_str(ERR_USERNOTINCHANNEL),
-				    me.name, parv[0], user, name);
+				    me.client.name, parv[0], user, name);
 			if (MyClient(cptr))
 				break;
 		}		/* loop on parv[2] */

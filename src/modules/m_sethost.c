@@ -97,7 +97,7 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	  case 0:
 		  if (!IsAnOper(sptr))
 		  {
-			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name,
 			      parv[0]);
 			  return 0;
 		  }
@@ -105,7 +105,7 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	  case 1:
 		  if (!IsOper(sptr))
 		  {
-			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name,
 			      parv[0]);
 			  return 0;
 		  }
@@ -113,14 +113,14 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	  case 2:
 		  if (MyConnect(sptr))
 		  {
-			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name,
 			      parv[0]);
 			  return 0;
 		  }
 	  default:
 		  sendto_ops_butone(IsServer(cptr) ? cptr : NULL, sptr,
 		      ":%s WALLOPS :[SETHOST] Somebody fixing this corrupted server? !(0|1) !!!",
-		      me.name);
+		      me.client.name);
 		  break;
 	}
 
@@ -137,7 +137,7 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			sendto_one(sptr,
 			    ":%s NOTICE %s :*** Syntax: /SetHost <new host>",
-			    me.name, parv[0]);
+			    me.client.name, parv[0]);
 		}
 		return 0;
 	}
@@ -147,7 +147,7 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (MyConnect(sptr))
 			sendto_one(sptr,
 			    ":%s NOTICE %s :*** /SetHost Error: Atleast write SOMETHING that makes sense (':' string)",
-			    me.name, sptr->name);
+			    me.client.name, sptr->name);
 		return 0;
 	}
 	/* too large huh? */
@@ -157,7 +157,7 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (MyConnect(sptr))
 			sendto_one(sptr,
 			    ":%s NOTICE %s :*** /SetHost Error: Hostnames are limited to %i characters.",
-			    me.name, sptr->name, HOSTLEN);
+			    me.client.name, sptr->name, HOSTLEN);
 		return 0;
 	}
 
@@ -165,12 +165,12 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** /SetHost Error: A hostname may contain a-z, A-Z, 0-9, '-' & '.' - Please only use them",
-		    me.name, parv[0]);
+		    me.client.name, parv[0]);
 		return 0;
 	}
 	if (vhost[0] == ':')
 	{
-		sendto_one(sptr, ":%s NOTICE %s :*** A hostname cannot start with ':'", me.name, sptr->name);
+		sendto_one(sptr, ":%s NOTICE %s :*** A hostname cannot start with ':'", me.client.name, sptr->name);
 		return 0;
 	}
 
@@ -178,7 +178,7 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** /SetHost Error: requested host is same as current host.",
-		    me.name, parv[0]);
+		    me.client.name, parv[0]);
 		return 0;
 	}
 
@@ -188,7 +188,7 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			case UHALLOW_NEVER:
 				if (MyClient(sptr))
 				{
-					sendto_one(sptr, ":%s NOTICE %s :*** /SetHost is disabled", me.name, sptr->name);
+					sendto_one(sptr, ":%s NOTICE %s :*** /SetHost is disabled", me.client.name, sptr->name);
 					return 0;
 				}
 				break;
@@ -197,7 +197,7 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			case UHALLOW_NOCHANS:
 				if (MyClient(sptr) && sptr->user->joined)
 				{
-					sendto_one(sptr, ":%s NOTICE %s :*** /SetHost can not be used while you are on a channel", me.name, sptr->name);
+					sendto_one(sptr, ":%s NOTICE %s :*** /SetHost can not be used while you are on a channel", me.client.name, sptr->name);
 					return 0;
 				}
 				break;
@@ -229,7 +229,7 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_one(sptr, ":%s MODE %s :+xt", sptr->name, sptr->name);
 		sendto_one(sptr,
 		    ":%s NOTICE %s :Your nick!user@host-mask is now (%s!%s@%s) - To disable it type /mode %s -x",
-		    me.name, parv[0], parv[0], sptr->user->username, vhost,
+		    me.client.name, parv[0], parv[0], sptr->user->username, vhost,
 		    parv[0]);
 	}
 	return 0;

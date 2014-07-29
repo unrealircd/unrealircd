@@ -41,7 +41,7 @@ void uid_init(void)
 	memset(new_uid, 0, sizeof new_uid);
 
 	/* copy the SID */
-	memcpy(new_uid, me.id, 3);
+	memcpy(new_uid, me.client.id, 3);
 	memcpy(new_uid + 3, "AAAAA@", 6);
 }
 

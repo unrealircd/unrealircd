@@ -106,7 +106,7 @@ char buf[512];
 
 	// TODO: reintroduce SERVERS=...
 	ircsnprintf(buf, sizeof(buf), "PROTOCTL EAUTH=%s",
-		me.name);
+		me.client.name);
 
 	sendto_one(sptr, "%s", buf);
 }
@@ -122,7 +122,7 @@ void _send_server_message(aClient *sptr)
 	}
 
 	sendto_one(sptr, "SERVER %s 1 :%s",
-		me.name, me.info);
+		me.client.name, me.client.info);
 	sptr->serv->flags.server_sent = 1;
 }
 
@@ -149,10 +149,10 @@ ConfigItem_ban *bconf;
 	
 	strcpy(xerrmsg, "No matching link configuration");
 
-	if (!cptr->passwd)
+	if (!cptr->localClient->passwd)
 	{
 		sendto_one(cptr, "ERROR :Missing password");
-		return exit_client(cptr, sptr, &me, "Missing password");
+		return exit_client(cptr, sptr, &me.client, "Missing password");
 	}
 
 
@@ -188,19 +188,19 @@ ConfigItem_ban *bconf;
 	 */
 	if (link->options & CONNECT_NOHOSTCHECK)
 		goto nohostcheck;
-	link = Find_link(cptr->username, cptr->sockhost, cptr->sockhost, servername);
+	link = Find_link(cptr->username, cptr->localClient->sockhost, cptr->localClient->sockhost, servername);
 	
 #ifdef INET6
 	/*  
 	 * We first try match on uncompressed form ::ffff:192.168.1.5 thing included
 	*/
 	if (!link)
-		link = Find_link(cptr->username, cptr->sockhost, Inet_ia2pNB(&cptr->ip, 0), servername);
+		link = Find_link(cptr->username, cptr->localClient->sockhost, Inet_ia2pNB(&cptr->localClient->ip, 0), servername);
 	/* 
 	 * Then on compressed 
 	*/
 	if (!link)
-		link = Find_link(cptr->username, cptr->sockhost, Inet_ia2pNB(&cptr->ip, 1), servername);
+		link = Find_link(cptr->username, cptr->localClient->sockhost, Inet_ia2pNB(&cptr->localClient->ip, 1), servername);
 #endif		
 	if (!link)
 	{
@@ -213,20 +213,20 @@ errlink:
 		/* And send the "verbose" error msg only to local failops */
 		sendto_locfailops
 		    ("Link denied for %s(%s@%s) (%s) %s",
-		    servername, cptr->username, cptr->sockhost, xerrmsg, inpath);
-		return exit_client(cptr, sptr, &me,
+		    servername, cptr->username, cptr->localClient->sockhost, xerrmsg, inpath);
+		return exit_client(cptr, sptr, &me.client,
 		    "Link denied (No matching link configuration)");
 	}
 nohostcheck:
 	/* Now for checking passwords */
-	if (Auth_Check(cptr, link->recvauth, cptr->passwd) == -1)
+	if (Auth_Check(cptr, link->recvauth, cptr->localClient->passwd) == -1)
 	{
 		sendto_one(cptr,
 		    "ERROR :Link denied (Authentication failed) %s",
 		    inpath);
 		sendto_locfailops
 		    ("Link denied (Authentication failed [Bad password?]) %s", inpath);
-		return exit_client(cptr, sptr, &me,
+		return exit_client(cptr, sptr, &me.client,
 		    "Link denied (Authentication failed)");
 	}
 
@@ -239,9 +239,9 @@ nohostcheck:
 		/* Found. Bad. Quit. */
 		acptr = acptr->from;
 		ocptr =
-		    (cptr->firsttime > acptr->firsttime) ? acptr : cptr;
+		    (cptr->localClient->firsttime > acptr->localClient->firsttime) ? acptr : cptr;
 		acptr =
-		    (cptr->firsttime > acptr->firsttime) ? cptr : acptr;
+		    (cptr->localClient->firsttime > acptr->localClient->firsttime) ? cptr : acptr;
 		sendto_one(acptr,
 		    "ERROR :Server %s already exists from %s",
 		    servername,
@@ -259,14 +259,14 @@ nohostcheck:
 			("Cancelling link %s, banned server",
 			get_client_name(cptr, TRUE));
 		sendto_one(cptr, "ERROR :Banned server (%s)", bconf->reason ? bconf->reason : "no reason");
-		return exit_client(cptr, cptr, &me, "Banned server");
+		return exit_client(cptr, cptr, &me.client, "Banned server");
 	}
 	if (link->class->clients + 1 > link->class->maxclients)
 	{
 		sendto_realops
 			("Cancelling link %s, full class",
 				get_client_name(cptr, TRUE));
-		return exit_client(cptr, cptr, &me, "Full class");
+		return exit_client(cptr, cptr, &me.client, "Full class");
 	}
 	if (link_out)
 		*link_out = link;
@@ -312,10 +312,10 @@ DLLFUNC CMD_FUNC(m_server)
 	if (IsPerson(sptr))
 	{
 		sendto_one(cptr, err_str(ERR_ALREADYREGISTRED),
-		    me.name, parv[0]);
+		    me.client.name, parv[0]);
 		sendnotice(cptr,
 		    "*** Sorry, but your IRC program doesn't appear to support changing servers.");
-		sptr->since += 7;
+		sptr->localClient->since += 7;
 		return 0;
 	}
 
@@ -325,13 +325,13 @@ DLLFUNC CMD_FUNC(m_server)
 	if (parc < 4 || (!*parv[3]))
 	{
 		sendto_one(sptr, "ERROR :Not enough SERVER parameters");
-		return exit_client(cptr, sptr, &me, 
+		return exit_client(cptr, sptr, &me.client, 
 			"Not enough parameters");		
 	}
 
-	if (IsUnknown(cptr) && (cptr->listener->options & LISTENER_CLIENTSONLY))
+	if (IsUnknown(cptr) && (cptr->localClient->listener->options & LISTENER_CLIENTSONLY))
 	{
-		return exit_client(cptr, sptr, &me,
+		return exit_client(cptr, sptr, &me.client,
 		    "This port is for clients only");
 	}
 
@@ -356,13 +356,13 @@ DLLFUNC CMD_FUNC(m_server)
 		    "WARNING: Bogus server name (%s) from %s (maybe just a fishy client)",
 		    servername, get_client_name(cptr, TRUE));
 
-		return exit_client(cptr, sptr, &me, "Bogus server name");
+		return exit_client(cptr, sptr, &me.client, "Bogus server name");
 	}
 
-	if ((IsUnknown(cptr) || IsHandshake(cptr)) && !cptr->passwd)
+	if ((IsUnknown(cptr) || IsHandshake(cptr)) && !cptr->localClient->passwd)
 	{
 		sendto_one(sptr, "ERROR :Missing password");
-		return exit_client(cptr, sptr, &me, "Missing password");
+		return exit_client(cptr, sptr, &me.client, "Missing password");
 	}
 
 	/*
@@ -400,7 +400,7 @@ DLLFUNC CMD_FUNC(m_server)
 			if (num)
 				inf = (char *)strtok((char *)NULL, "");
 			if (inf) {
-				strlcpy(cptr->info, inf[0] ? inf : me.name,
+				strlcpy(cptr->info, inf[0] ? inf : me.client.name,
 				    sizeof(cptr->info));
 
 				for (vlines = conf_deny_version; vlines; vlines = (ConfigItem_deny_version *) vlines->next) {
@@ -467,12 +467,12 @@ DLLFUNC CMD_FUNC(m_server)
 				}
 			}
 			else
-				strlcpy(cptr->info, info[0] ? info : me.name,
+				strlcpy(cptr->info, info[0] ? info : me.client.name,
 				    sizeof(cptr->info));
 
 		}
 		else
-				strlcpy(cptr->info, info[0] ? info : me.name,
+				strlcpy(cptr->info, info[0] ? info : me.client.name,
 					sizeof(cptr->info));
 
 		for (deny = conf_deny_link; deny; deny = (ConfigItem_deny_link *) deny->next) {
@@ -515,9 +515,9 @@ CMD_FUNC(m_server_remote)
 		/* Found. Bad. Quit. */
 		acptr = acptr->from;
 		ocptr =
-		    (cptr->firsttime > acptr->firsttime) ? acptr : cptr;
+		    (cptr->localClient->firsttime > acptr->localClient->firsttime) ? acptr : cptr;
 		acptr =
-		    (cptr->firsttime > acptr->firsttime) ? cptr : acptr;
+		    (cptr->localClient->firsttime > acptr->localClient->firsttime) ? cptr : acptr;
 		sendto_one(acptr,
 		    "ERROR :Server %s already exists from %s",
 		    servername,
@@ -544,7 +544,7 @@ CMD_FUNC(m_server_remote)
 			("Cancelling link %s, banned server %s",
 			get_client_name(cptr, TRUE), servername);
 		sendto_one(cptr, "ERROR :Banned server (%s)", bconf->reason ? bconf->reason : "no reason");
-		return exit_client(cptr, cptr, &me, "Brought in banned server");
+		return exit_client(cptr, cptr, &me.client, "Brought in banned server");
 	}
 	/* OK, let us check in the data now now */
 	hop = atol(parv[2]);
@@ -632,10 +632,10 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 
 	ircd_log(LOG_SERVER, "SERVER %s", cptr->name);
 
-	if (cptr->passwd)
+	if (cptr->localClient->passwd)
 	{
-		MyFree(cptr->passwd);
-		cptr->passwd = NULL;
+		MyFree(cptr->localClient->passwd);
+		cptr->localClient->passwd = NULL;
 	}
 	if (incoming)
 	{
@@ -645,7 +645,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 		sendto_one(cptr, "PASS :%s", aconf->connpwd);
 		send_proto(cptr, aconf);
 		sendto_one(cptr, "SERVER %s 1 :%s",
-			    me.name, me.info);
+			    me.client.name, me.client.info);
 	}
 
 	/* Set up server structure */
@@ -655,34 +655,34 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 	IRCstats.servers++;
 	IRCstats.unknown--;
 	list_move(&cptr->client_node, &global_server_list);
-	list_move(&cptr->lclient_node, &lclient_list);
-	list_add(&cptr->special_node, &server_list);
+	list_move(&cptr->localClient->lclient_node, &lclient_list);
+	list_add(&cptr->localClient->special_node, &server_list);
 	if ((Find_uline(cptr->name)))
 		cptr->flags |= FLAGS_ULINE;
 	(void)find_or_add(cptr->name);
 #ifdef USE_SSL
 	if (IsSecure(cptr))
 	{
-		sendto_server(&me, 0, 0, ":%s SMO o :(\2link\2) Secure link %s -> %s established (%s)",
-			me.name,
-			me.name, inpath, (char *) ssl_get_cipher((SSL *)cptr->ssl));
+		sendto_server(&me.client, 0, 0, ":%s SMO o :(\2link\2) Secure link %s -> %s established (%s)",
+			me.client.name,
+			me.client.name, inpath, (char *) ssl_get_cipher((SSL *)cptr->localClient->ssl));
 		sendto_realops("(\2link\2) Secure link %s -> %s established (%s)",
-			me.name, inpath, (char *) ssl_get_cipher((SSL *)cptr->ssl));
+			me.client.name, inpath, (char *) ssl_get_cipher((SSL *)cptr->localClient->ssl));
 	}
 	else
 #endif
 	{
-		sendto_server(&me, 0, 0, ":%s SMO o :(\2link\2) Link %s -> %s established",
-			me.name,
-			me.name, inpath);
+		sendto_server(&me.client, 0, 0, ":%s SMO o :(\2link\2) Link %s -> %s established",
+			me.client.name,
+			me.client.name, inpath);
 		sendto_realops("(\2link\2) Link %s -> %s established",
-			me.name, inpath);
+			me.client.name, inpath);
 	}
 	(void)add_to_client_hash_table(cptr->name, cptr);
 	/* doesnt duplicate cptr->serv if allocted this struct already */
 	(void)make_server(cptr);
-	cptr->serv->up = me.name;
-	cptr->srvptr = &me;
+	cptr->serv->up = me.client.name;
+	cptr->srvptr = &me.client;
 	if (!cptr->serv->conf)
 		cptr->serv->conf = aconf; /* Only set serv->conf to aconf if not set already! Bug #0003913 */
 	if (incoming)
@@ -692,7 +692,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 			cptr->name, cptr->serv->conf->servername, cptr->serv->conf->refcount));
 	}
 	cptr->serv->conf->class->clients++;
-	cptr->class = cptr->serv->conf->class;
+	cptr->localClient->class = cptr->serv->conf->class;
 	RunHook(HOOKTYPE_SERVER_CONNECT, cptr);
 
 	if (*cptr->id)
@@ -813,7 +813,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 	    ircnetwork);
 
 	/* Send EOS (End Of Sync) to the just linked server... */
-	sendto_one(cptr, ":%s EOS", CHECKPROTO(cptr, PROTO_SID) ? me.id : me.name);
+	sendto_one(cptr, ":%s EOS", CHECKPROTO(cptr, PROTO_SID) ? me.client.id : me.client.name);
 #ifdef DEBUGMODE
 	ircd_log(LOG_ERROR, "[EOSDBG] m_server_synch: sending to justlinked '%s' with src ME...",
 			cptr->name);
@@ -867,7 +867,7 @@ static int send_mode_list(aClient *cptr, char *chname, TS creationtime, Member *
 		if (send)
 		{
 			/* cptr is always a server! So we send creationtimes */
-			sendmodeto_one(cptr, me.name, chname, modebuf,
+			sendmodeto_one(cptr, me.client.name, chname, modebuf,
 			    parabuf, creationtime);
 			sent = 1;
 			send = 0;
@@ -915,9 +915,9 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
 	sent = send_mode_list(cptr, chptr->chname, chptr->creationtime,
 	    chptr->members, CHFL_CHANOP, 'o');
 	if (!sent && chptr->creationtime)
-		send_channel_mode(cptr, me.name, chptr);
+		send_channel_mode(cptr, me.client.name, chptr);
 	else if (modebuf[1] || *parabuf)
-		sendmodeto_one(cptr, me.name,
+		sendmodeto_one(cptr, me.client.name,
 		    chptr->chname, modebuf, parabuf, chptr->creationtime);
 
 	*parabuf = '\0';
@@ -927,9 +927,9 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
 	sent = send_mode_list(cptr, chptr->chname, chptr->creationtime,
 	    chptr->members, CHFL_HALFOP, 'h');
 	if (!sent && chptr->creationtime)
-		send_channel_mode(cptr, me.name, chptr);
+		send_channel_mode(cptr, me.client.name, chptr);
 	else if (modebuf[1] || *parabuf)
-		sendmodeto_one(cptr, me.name,
+		sendmodeto_one(cptr, me.client.name,
 		    chptr->chname, modebuf, parabuf, chptr->creationtime);
 
 	*parabuf = '\0';
@@ -938,7 +938,7 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
 	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
 	    (Member *)chptr->banlist, CHFL_BAN, 'b');
 	if (modebuf[1] || *parabuf)
-		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
+		sendmodeto_one(cptr, me.client.name, chptr->chname, modebuf,
 		    parabuf, chptr->creationtime);
 
 	*parabuf = '\0';
@@ -947,7 +947,7 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
 	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
 	    (Member *)chptr->exlist, CHFL_EXCEPT, 'e');
 	if (modebuf[1] || *parabuf)
-		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
+		sendmodeto_one(cptr, me.client.name, chptr->chname, modebuf,
 		    parabuf, chptr->creationtime);
 
 	*parabuf = '\0';
@@ -956,7 +956,7 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
 	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
 	    (Member *)chptr->invexlist, CHFL_INVEX, 'I');
 	if (modebuf[1] || *parabuf)
-		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
+		sendmodeto_one(cptr, me.client.name, chptr->chname, modebuf,
 		    parabuf, chptr->creationtime);
 
 	*parabuf = '\0';
@@ -965,7 +965,7 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
 	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
 	    chptr->members, CHFL_VOICE, 'v');
 	if (modebuf[1] || *parabuf)
-		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
+		sendmodeto_one(cptr, me.client.name, chptr->chname, modebuf,
 		    parabuf, chptr->creationtime);
 
 	*parabuf = '\0';
@@ -974,7 +974,7 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
 	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
 	    chptr->members, CHFL_CHANOWNER, 'q');
 	if (modebuf[1] || *parabuf)
-		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
+		sendmodeto_one(cptr, me.client.name, chptr->chname, modebuf,
 		    parabuf, chptr->creationtime);
 
 	*parabuf = '\0';
@@ -983,7 +983,7 @@ void send_channel_modes(aClient *cptr, aChannel *chptr)
 	(void)send_mode_list(cptr, chptr->chname, chptr->creationtime,
 	    chptr->members, CHFL_CHANPROT, 'a');
 	if (modebuf[1] || *parabuf)
-		sendmodeto_one(cptr, me.name, chptr->chname, modebuf,
+		sendmodeto_one(cptr, me.client.name, chptr->chname, modebuf,
 		    parabuf, chptr->creationtime);
 
 	/* send MLOCK here too... --nenolod */
@@ -1273,19 +1273,19 @@ void send_channel_modes_sjoin3(aClient *cptr, aChannel *chptr)
 	if (nomode && nopara)
 	{
 		ircsnprintf(buf, sizeof(buf),
-		    ":%s SJOIN %ld %s :", CHECKPROTO(cptr, PROTO_SID) ? me.id : me.name,
+		    ":%s SJOIN %ld %s :", CHECKPROTO(cptr, PROTO_SID) ? me.client.id : me.client.name,
 		    (long)chptr->creationtime, chptr->chname);
 	}
 	if (nopara && !nomode)
 	{
 		ircsnprintf(buf, sizeof(buf),
-		    ":%s SJOIN %ld %s %s :", CHECKPROTO(cptr, PROTO_SID) ? me.id : me.name,
+		    ":%s SJOIN %ld %s %s :", CHECKPROTO(cptr, PROTO_SID) ? me.client.id : me.client.name,
 		    (long)chptr->creationtime, chptr->chname, modebuf);
 	}
 	if (!nopara && !nomode)
 	{
 		ircsnprintf(buf, sizeof(buf),
-		    ":%s SJOIN %ld %s %s %s :", CHECKPROTO(cptr, PROTO_SID) ? me.id : me.name,
+		    ":%s SJOIN %ld %s %s %s :", CHECKPROTO(cptr, PROTO_SID) ? me.client.id : me.client.name,
 		    (long)chptr->creationtime, chptr->chname, modebuf, parabuf);
 	}
 

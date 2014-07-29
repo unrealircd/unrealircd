@@ -91,7 +91,7 @@ aClient *acptr;
 
 	if ((parc < 3) || BadPtr(parv[2]))
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0], "SENDSNO");
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.client.name, parv[0], "SENDSNO");
 		return 0;
 	}
 	sno = parv[1];
@@ -112,10 +112,10 @@ aClient *acptr;
 		}
 	}
 
-	list_for_each_entry(acptr, &oper_list, special_node)
+	list_for_each_entry2(acptr, struct LocalClient, &oper_list, special_node)
 	{
 		if (acptr->user->snomask & snomask)
-			sendto_one(acptr, ":%s NOTICE %s :%s", me.name, acptr->name, msg);
+			sendto_one(acptr, ":%s NOTICE %s :%s", me.client.name, acptr->name, msg);
 	}
 
 	return 0;

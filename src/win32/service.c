@@ -75,18 +75,18 @@ VOID WINAPI IRCDCtrlHandler(DWORD opcode)
 			if (IsClient(acptr))
 				sendnotice(acptr, "Server Terminating.");
 			else if (IsServer(acptr))
-				sendto_one(acptr, ":%s ERROR :Terminated", me.name);
+				sendto_one(acptr, ":%s ERROR :Terminated", me.client.name);
 		} */
 		unload_all_modules();
 /*		for (i = LastSlot; i >= 0; i--)
-			if ((acptr = local[i]) && DBufLength(&acptr->sendQ) > 0)
+			if ((acptr = local[i]) && DBufLength(&acptr->localClient->sendQ) > 0)
 				(void)send_queued(acptr); */
 		SetServiceStop(0);
 	}
 	/* Rehash */
 	else if (opcode == IRCD_SERVICE_CONTROL_REHASH) 
 	{
-		rehash(&me,&me,0);
+		rehash(&me.client,&me.client,0);
 		reread_motdsandrules();
 	}
 

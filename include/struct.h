@@ -408,10 +408,10 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #ifdef USE_SSL
 #define IsSSL(x)		IsSecure(x)
 #endif
-#define	IsNotSpoof(x)		((x)->nospoof == 0)
+#define	IsNotSpoof(x)		((x)->localClient->nospoof == 0)
 
 #define GetHost(x)			(IsHidden(x) ? (x)->user->virthost : (x)->user->realhost)
-#define GetIP(x)			((x->user && x->user->ip_str) ? x->user->ip_str : (MyConnect(x) ? Inet_ia2p(&x->ip) : "255.255.255.255"))
+#define GetIP(x)			((x->user && x->user->ip_str) ? x->user->ip_str : (MyConnect(x) ? Inet_ia2p(&x->localClient->ip) : "255.255.255.255"))
 
 #define SetKillsF(x)		((x)->user->snomask |= SNO_KILLS)
 #define SetClientF(x)		((x)->user->snomask |= SNO_CLIENT)
@@ -463,7 +463,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
  * ProtoCtl options
  */
 #ifndef DEBUGMODE
-#define CHECKPROTO(x,y)	((x)->proto & y)
+#define CHECKPROTO(x,y)	((x)->localClient->proto & y)
 #else
 #define CHECKPROTO(x,y) (checkprotoflags(x, y, __FILE__, __LINE__))
 #endif
@@ -483,27 +483,27 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SupportUHNAMES(x)	(CHECKPROTO(x, PROTO_UHNAMES))
 #define SupportSID(x)		(CHECKPROTO(x, PROTO_SID))
 
-#define SetSJOIN(x)		((x)->proto |= PROTO_SJOIN)
-#define SetNoQuit(x)		((x)->proto |= PROTO_NOQUIT)
-#define SetNICKv2(x)		((x)->proto |= PROTO_NICKv2)
-#define SetSJOIN2(x)		((x)->proto |= PROTO_SJOIN2)
-#define SetUMODE2(x)		((x)->proto |= PROTO_UMODE2)
-#define SetVL(x)		((x)->proto |= PROTO_VL)
-#define SetSJ3(x)		((x)->proto |= PROTO_SJ3)
-#define SetVHP(x)		((x)->proto |= PROTO_VHP)
-#define SetTKLEXT(x)	((x)->proto |= PROTO_TKLEXT)
-#define SetNAMESX(x)	((x)->proto |= PROTO_NAMESX)
-#define SetCLK(x)		((x)->proto |= PROTO_CLK)
-#define SetUHNAMES(x)	((x)->proto |= PROTO_UHNAMES)
+#define SetSJOIN(x)		((x)->localClient->proto |= PROTO_SJOIN)
+#define SetNoQuit(x)		((x)->localClient->proto |= PROTO_NOQUIT)
+#define SetNICKv2(x)		((x)->localClient->proto |= PROTO_NICKv2)
+#define SetSJOIN2(x)		((x)->localClient->proto |= PROTO_SJOIN2)
+#define SetUMODE2(x)		((x)->localClient->proto |= PROTO_UMODE2)
+#define SetVL(x)		((x)->localClient->proto |= PROTO_VL)
+#define SetSJ3(x)		((x)->localClient->proto |= PROTO_SJ3)
+#define SetVHP(x)		((x)->localClient->proto |= PROTO_VHP)
+#define SetTKLEXT(x)	((x)->localClient->proto |= PROTO_TKLEXT)
+#define SetNAMESX(x)	((x)->localClient->proto |= PROTO_NAMESX)
+#define SetCLK(x)		((x)->localClient->proto |= PROTO_CLK)
+#define SetUHNAMES(x)	((x)->localClient->proto |= PROTO_UHNAMES)
 
-#define ClearSJOIN(x)		((x)->proto &= ~PROTO_SJOIN)
-#define ClearNoQuit(x)		((x)->proto &= ~PROTO_NOQUIT)
-#define ClearNICKv2(x)		((x)->proto &= ~PROTO_NICKv2)
-#define ClearSJOIN2(x)		((x)->proto &= ~PROTO_SJOIN2)
-#define ClearUMODE2(x)		((x)->proto &= ~PROTO_UMODE2)
-#define ClearVL(x)		((x)->proto &= ~PROTO_VL)
-#define ClearVHP(x)		((x)->proto &= ~PROTO_VHP)
-#define ClearSJ3(x)		((x)->proto &= ~PROTO_SJ3)
+#define ClearSJOIN(x)		((x)->localClient->proto &= ~PROTO_SJOIN)
+#define ClearNoQuit(x)		((x)->localClient->proto &= ~PROTO_NOQUIT)
+#define ClearNICKv2(x)		((x)->localClient->proto &= ~PROTO_NICKv2)
+#define ClearSJOIN2(x)		((x)->localClient->proto &= ~PROTO_SJOIN2)
+#define ClearUMODE2(x)		((x)->localClient->proto &= ~PROTO_UMODE2)
+#define ClearVL(x)		((x)->localClient->proto &= ~PROTO_VL)
+#define ClearVHP(x)		((x)->localClient->proto &= ~PROTO_VHP)
+#define ClearSJ3(x)		((x)->localClient->proto &= ~PROTO_SJ3)
 
 /*
  * defined operator access levels
@@ -545,84 +545,84 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define OFLAG_COADMIN_	(OFLAG_COADMIN | OFLAG_GLOBAL | OFLAG_DCCDENY)
 #define OFLAG_SADMIN_	(OFLAG_SADMIN | OFLAG_GLOBAL | OFLAG_UMODEQ | OFLAG_DCCDENY)
 
-#define OPCanOverride(x) ((x)->oflag & OFLAG_OVERRIDE)
-#define OPCanUmodeq(x)	((x)->oflag & OFLAG_UMODEQ)
-#define OPCanDCCDeny(x)	((x)->oflag & OFLAG_DCCDENY)
-#define OPCanTKL(x)	((x)->oflag & OFLAG_TKL)
-#define OPCanGZL(x)	((x)->oflag & OFLAG_GZL)
-#define OPCanAddline(x)   ((x)->oflag & OFLAG_ADDLINE)
-#define OPCanZline(x)   ((x)->oflag & OFLAG_ZLINE)
-#define OPCanRehash(x)	((x)->oflag & OFLAG_REHASH)
-#define OPCanDie(x)	((x)->oflag & OFLAG_DIE)
-#define OPCanTSCtl(x)	((x)->oflag & OFLAG_TSCTL)
-#define OPCanRestart(x)	((x)->oflag & OFLAG_RESTART)
-#define OPCanHelpOp(x)	((x)->oflag & OFLAG_HELPOP)
-#define OPCanGlobOps(x)	((x)->oflag & OFLAG_GLOBOP)
-#define OPCanWallOps(x)	((x)->oflag & OFLAG_WALLOP)
-#define OPCanLocOps(x)	((x)->oflag & OFLAG_LOCOP)
-#define OPCanLRoute(x)	((x)->oflag & OFLAG_LROUTE)
-#define OPCanGRoute(x)	((x)->oflag & OFLAG_GROUTE)
-#define OPCanLKill(x)	((x)->oflag & OFLAG_LKILL)
-#define OPCanGKill(x)	((x)->oflag & OFLAG_GKILL)
-#define OPCanKline(x)	((x)->oflag & OFLAG_KLINE)
-#define OPCanUnKline(x)	((x)->oflag & OFLAG_UNKLINE)
-#define OPCanLNotice(x)	((x)->oflag & OFLAG_LNOTICE)
-#define OPCanGNotice(x)	((x)->oflag & OFLAG_GNOTICE)
-#define OPIsAdmin(x)	((x)->oflag & OFLAG_ADMIN)
-#define OPIsSAdmin(x)	((x)->oflag & OFLAG_SADMIN)
-#define OPIsNetAdmin(x) ((x)->oflag & OFLAG_NETADMIN)
-#define OPIsCoAdmin(x)	((x)->oflag & OFLAG_COADMIN)
-#define OPIsWhois(x)    ((x)->oflag & OFLAG_WHOIS)
+#define OPCanOverride(x) ((x)->localClient->oflag & OFLAG_OVERRIDE)
+#define OPCanUmodeq(x)	((x)->localClient->oflag & OFLAG_UMODEQ)
+#define OPCanDCCDeny(x)	((x)->localClient->oflag & OFLAG_DCCDENY)
+#define OPCanTKL(x)	((x)->localClient->oflag & OFLAG_TKL)
+#define OPCanGZL(x)	((x)->localClient->oflag & OFLAG_GZL)
+#define OPCanAddline(x)   ((x)->localClient->oflag & OFLAG_ADDLINE)
+#define OPCanZline(x)   ((x)->localClient->oflag & OFLAG_ZLINE)
+#define OPCanRehash(x)	((x)->localClient->oflag & OFLAG_REHASH)
+#define OPCanDie(x)	((x)->localClient->oflag & OFLAG_DIE)
+#define OPCanTSCtl(x)	((x)->localClient->oflag & OFLAG_TSCTL)
+#define OPCanRestart(x)	((x)->localClient->oflag & OFLAG_RESTART)
+#define OPCanHelpOp(x)	((x)->localClient->oflag & OFLAG_HELPOP)
+#define OPCanGlobOps(x)	((x)->localClient->oflag & OFLAG_GLOBOP)
+#define OPCanWallOps(x)	((x)->localClient->oflag & OFLAG_WALLOP)
+#define OPCanLocOps(x)	((x)->localClient->oflag & OFLAG_LOCOP)
+#define OPCanLRoute(x)	((x)->localClient->oflag & OFLAG_LROUTE)
+#define OPCanGRoute(x)	((x)->localClient->oflag & OFLAG_GROUTE)
+#define OPCanLKill(x)	((x)->localClient->oflag & OFLAG_LKILL)
+#define OPCanGKill(x)	((x)->localClient->oflag & OFLAG_GKILL)
+#define OPCanKline(x)	((x)->localClient->oflag & OFLAG_KLINE)
+#define OPCanUnKline(x)	((x)->localClient->oflag & OFLAG_UNKLINE)
+#define OPCanLNotice(x)	((x)->localClient->oflag & OFLAG_LNOTICE)
+#define OPCanGNotice(x)	((x)->localClient->oflag & OFLAG_GNOTICE)
+#define OPIsAdmin(x)	((x)->localClient->oflag & OFLAG_ADMIN)
+#define OPIsSAdmin(x)	((x)->localClient->oflag & OFLAG_SADMIN)
+#define OPIsNetAdmin(x) ((x)->localClient->oflag & OFLAG_NETADMIN)
+#define OPIsCoAdmin(x)	((x)->localClient->oflag & OFLAG_COADMIN)
+#define OPIsWhois(x)    ((x)->localClient->oflag & OFLAG_WHOIS)
 #ifdef SHOW_SECRET
 #define OPCanSeeSecret(x) IsAnOper(x)
 #else
 #define OPCanSeeSecret(x) IsNetAdmin(x)
 #endif
 
-#define OPSetRehash(x)	((x)->oflag |= OFLAG_REHASH)
-#define OPSetDie(x)	((x)->oflag |= OFLAG_DIE)
-#define OPSetTSCtl(x)	((x)->oflag |= OFLAG_TSCTL)
-#define OPSetRestart(x)	((x)->oflag |= OFLAG_RESTART)
-#define OPSetHelpOp(x)	((x)->oflag |= OFLAG_HELPOP)
-#define OPSetGlobOps(x)	((x)->oflag |= OFLAG_GLOBOP)
-#define OPSetWallOps(x)	((x)->oflag |= OFLAG_WALLOP)
-#define OPSetLocOps(x)	((x)->oflag |= OFLAG_LOCOP)
-#define OPSetLRoute(x)	((x)->oflag |= OFLAG_LROUTE)
-#define OPSetGRoute(x)	((x)->oflag |= OFLAG_GROUTE)
-#define OPSetLKill(x)	((x)->oflag |= OFLAG_LKILL)
-#define OPSetGKill(x)	((x)->oflag |= OFLAG_GKILL)
-#define OPSetKline(x)	((x)->oflag |= OFLAG_KLINE)
-#define OPSetUnKline(x)	((x)->oflag |= OFLAG_UNKLINE)
-#define OPSetLNotice(x)	((x)->oflag |= OFLAG_LNOTICE)
-#define OPSetGNotice(x)	((x)->oflag |= OFLAG_GNOTICE)
-#define OPSSetAdmin(x)	((x)->oflag |= OFLAG_ADMIN)
-#define OPSSetSAdmin(x)	((x)->oflag |= OFLAG_SADMIN)
-#define OPSSetNetAdmin(x) ((x)->oflag |= OFLAG_NETADMIN)
-#define OPSSetCoAdmin(x) ((x)->oflag |= OFLAG_COADMIN)
-#define OPSetZLine(x)	((x)->oflag |= OFLAG_ZLINE)
-#define OPSetWhois(x)   ((x)->oflag |= OFLAG_WHOIS)
-#define OPClearRehash(x)	((x)->oflag &= ~OFLAG_REHASH)
-#define OPClearDie(x)		((x)->oflag &= ~OFLAG_DIE)
-#define OPClearTSCtl(x)		((x)->oflag &= ~OFLAG_TSCTL)
-#define OPClearRestart(x)	((x)->oflag &= ~OFLAG_RESTART)
-#define OPClearHelpOp(x)	((x)->oflag &= ~OFLAG_HELPOP)
-#define OPClearGlobOps(x)	((x)->oflag &= ~OFLAG_GLOBOP)
-#define OPClearWallOps(x)	((x)->oflag &= ~OFLAG_WALLOP)
-#define OPClearLocOps(x)	((x)->oflag &= ~OFLAG_LOCOP)
-#define OPClearLRoute(x)	((x)->oflag &= ~OFLAG_LROUTE)
-#define OPClearGRoute(x)	((x)->oflag &= ~OFLAG_GROUTE)
-#define OPClearLKill(x)		((x)->oflag &= ~OFLAG_LKILL)
-#define OPClearGKill(x)		((x)->oflag &= ~OFLAG_GKILL)
-#define OPClearKline(x)		((x)->oflag &= ~OFLAG_KLINE)
-#define OPClearUnKline(x)	((x)->oflag &= ~OFLAG_UNKLINE)
-#define OPClearLNotice(x)	((x)->oflag &= ~OFLAG_LNOTICE)
-#define OPClearGNotice(x)	((x)->oflag &= ~OFLAG_GNOTICE)
-#define OPClearAdmin(x)		((x)->oflag &= ~OFLAG_ADMIN)
-#define OPClearSAdmin(x)	((x)->oflag &= ~OFLAG_SADMIN)
-#define OPClearNetAdmin(x)	((x)->oflag &= ~OFLAG_NETADMIN)
-#define OPClearCoAdmin(x)	((x)->oflag &= ~OFLAG_COADMIN)
-#define OPClearZLine(x)		((x)->oflag &= ~OFLAG_ZLINE)
-#define OPClearWhois(x)         ((x)->oflag &= ~OFLAG_WHOIS)
+#define OPSetRehash(x)	((x)->localClient->oflag |= OFLAG_REHASH)
+#define OPSetDie(x)	((x)->localClient->oflag |= OFLAG_DIE)
+#define OPSetTSCtl(x)	((x)->localClient->oflag |= OFLAG_TSCTL)
+#define OPSetRestart(x)	((x)->localClient->oflag |= OFLAG_RESTART)
+#define OPSetHelpOp(x)	((x)->localClient->oflag |= OFLAG_HELPOP)
+#define OPSetGlobOps(x)	((x)->localClient->oflag |= OFLAG_GLOBOP)
+#define OPSetWallOps(x)	((x)->localClient->oflag |= OFLAG_WALLOP)
+#define OPSetLocOps(x)	((x)->localClient->oflag |= OFLAG_LOCOP)
+#define OPSetLRoute(x)	((x)->localClient->oflag |= OFLAG_LROUTE)
+#define OPSetGRoute(x)	((x)->localClient->oflag |= OFLAG_GROUTE)
+#define OPSetLKill(x)	((x)->localClient->oflag |= OFLAG_LKILL)
+#define OPSetGKill(x)	((x)->localClient->oflag |= OFLAG_GKILL)
+#define OPSetKline(x)	((x)->localClient->oflag |= OFLAG_KLINE)
+#define OPSetUnKline(x)	((x)->localClient->oflag |= OFLAG_UNKLINE)
+#define OPSetLNotice(x)	((x)->localClient->oflag |= OFLAG_LNOTICE)
+#define OPSetGNotice(x)	((x)->localClient->oflag |= OFLAG_GNOTICE)
+#define OPSSetAdmin(x)	((x)->localClient->oflag |= OFLAG_ADMIN)
+#define OPSSetSAdmin(x)	((x)->localClient->oflag |= OFLAG_SADMIN)
+#define OPSSetNetAdmin(x) ((x)->localClient->oflag |= OFLAG_NETADMIN)
+#define OPSSetCoAdmin(x) ((x)->localClient->oflag |= OFLAG_COADMIN)
+#define OPSetZLine(x)	((x)->localClient->oflag |= OFLAG_ZLINE)
+#define OPSetWhois(x)   ((x)->localClient->oflag |= OFLAG_WHOIS)
+#define OPClearRehash(x)	((x)->localClient->oflag &= ~OFLAG_REHASH)
+#define OPClearDie(x)		((x)->localClient->oflag &= ~OFLAG_DIE)
+#define OPClearTSCtl(x)		((x)->localClient->oflag &= ~OFLAG_TSCTL)
+#define OPClearRestart(x)	((x)->localClient->oflag &= ~OFLAG_RESTART)
+#define OPClearHelpOp(x)	((x)->localClient->oflag &= ~OFLAG_HELPOP)
+#define OPClearGlobOps(x)	((x)->localClient->oflag &= ~OFLAG_GLOBOP)
+#define OPClearWallOps(x)	((x)->localClient->oflag &= ~OFLAG_WALLOP)
+#define OPClearLocOps(x)	((x)->localClient->oflag &= ~OFLAG_LOCOP)
+#define OPClearLRoute(x)	((x)->localClient->oflag &= ~OFLAG_LROUTE)
+#define OPClearGRoute(x)	((x)->localClient->oflag &= ~OFLAG_GROUTE)
+#define OPClearLKill(x)		((x)->localClient->oflag &= ~OFLAG_LKILL)
+#define OPClearGKill(x)		((x)->localClient->oflag &= ~OFLAG_GKILL)
+#define OPClearKline(x)		((x)->localClient->oflag &= ~OFLAG_KLINE)
+#define OPClearUnKline(x)	((x)->localClient->oflag &= ~OFLAG_UNKLINE)
+#define OPClearLNotice(x)	((x)->localClient->oflag &= ~OFLAG_LNOTICE)
+#define OPClearGNotice(x)	((x)->localClient->oflag &= ~OFLAG_GNOTICE)
+#define OPClearAdmin(x)		((x)->localClient->oflag &= ~OFLAG_ADMIN)
+#define OPClearSAdmin(x)	((x)->localClient->oflag &= ~OFLAG_SADMIN)
+#define OPClearNetAdmin(x)	((x)->localClient->oflag &= ~OFLAG_NETADMIN)
+#define OPClearCoAdmin(x)	((x)->localClient->oflag &= ~OFLAG_COADMIN)
+#define OPClearZLine(x)		((x)->localClient->oflag &= ~OFLAG_ZLINE)
+#define OPClearWhois(x)         ((x)->localClient->oflag &= ~OFLAG_WHOIS)
 /*
  * defined debugging levels
  */
@@ -960,13 +960,12 @@ struct Client {
 	aClient *srvptr;	/* Server introducing this.  May be &me */
 	short status;		/* client type */
 	ModData moddata[MODDATA_MAX_CLIENT]; /* for modules */
-	/*
-	   ** The following fields are allocated only for local clients
-	   ** (directly connected to *this* server with a socket.
-	   ** The first of them *MUST* be the "count"--it is the field
-	   ** to which the allocation is tied to! *Never* refer to
-	   ** these fields, if (from != self).
-	 */
+	struct LocalClient *localClient;
+};
+
+struct LocalClient
+{
+	struct Client client;
 	int  count;		/* Amount of data in buffer */
 
 	struct list_head lclient_node;	/* for local client list (lclient_list) */
@@ -1029,8 +1028,8 @@ struct Client {
 };
 
 
-#define	CLIENT_LOCAL_SIZE sizeof(aClient)
-#define	CLIENT_REMOTE_SIZE offsetof(aClient,count)
+#define	CLIENT_LOCAL_SIZE sizeof(struct LocalClient)
+#define	CLIENT_REMOTE_SIZE sizeof(aClient)
 
 /*
  * conf2 stuff -stskeeps

@@ -99,7 +99,7 @@ DLLFUNC char *noctcp_preusermsg(aClient *sptr, aClient *acptr, char *text, int n
 	if (MyClient(sptr) && IsNoCTCP(acptr) && IsACTCP(text))
 	{
 		if (!notice)
-			sendto_one(sptr, err_str(ERR_NOCTCP), me.name, sptr->name, acptr->name);
+			sendto_one(sptr, err_str(ERR_NOCTCP), me.client.name, sptr->name, acptr->name);
 
 		return NULL;
 	}

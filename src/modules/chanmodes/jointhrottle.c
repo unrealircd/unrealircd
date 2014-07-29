@@ -106,7 +106,7 @@ int cmodej_is_ok(aClient *sptr, aChannel *chptr, char mode, char *para, int type
 		if (IsPerson(sptr) && is_chan_op(sptr, chptr))
 			return EX_ALLOW;
 		if (type == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
-			sendto_one(sptr, err_str(ERR_NOTFORHALFOPS), me.name, sptr->name, 'j');
+			sendto_one(sptr, err_str(ERR_NOTFORHALFOPS), me.client.name, sptr->name, 'j');
 		return EX_DENY;
 	} else
 	if (type == EXCHK_PARAM)

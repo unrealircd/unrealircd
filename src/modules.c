@@ -974,7 +974,7 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 	if (!Modules)
 	{
-		sendto_one(sptr, ":%s NOTICE %s :*** No modules loaded", me.name, sptr->name);
+		sendto_one(sptr, ":%s NOTICE %s :*** No modules loaded", me.client.name, sptr->name);
 		return 1;
 	}
 	
@@ -988,11 +988,11 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (!(mi->options & MOD_OPT_OFFICIAL))
 			strncat(tmp, "[3RD] ", sizeof(tmp)-strlen(tmp)-1);
 		if (!IsOper(sptr))
-			sendto_one(sptr, ":%s NOTICE %s :*** %s (%s)%s", me.name, sptr->name,
+			sendto_one(sptr, ":%s NOTICE %s :*** %s (%s)%s", me.client.name, sptr->name,
 				mi->header->name, mi->header->description,
 				mi->options & MOD_OPT_OFFICIAL ? "" : " [3RD]");
 		else
-			sendto_one(sptr, ":%s NOTICE %s :*** %s - %s (%s) %s", me.name, sptr->name,
+			sendto_one(sptr, ":%s NOTICE %s :*** %s - %s (%s) %s", me.client.name, sptr->name,
 				mi->header->name, mi->header->version, mi->header->description, tmp);
 	}
 
@@ -1009,12 +1009,12 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		p += strlen(p);
 		if (p > tmp + 380)
 		{
-			sendto_one(sptr, ":%s NOTICE %s :Hooks: %s", me.name, sptr->name, tmp);
+			sendto_one(sptr, ":%s NOTICE %s :Hooks: %s", me.client.name, sptr->name, tmp);
 			tmp[0] = '\0';
 			p = tmp;
 		}
 	}
-	sendto_one(sptr, ":%s NOTICE %s :Hooks: %s ", me.name, sptr->name, tmp);
+	sendto_one(sptr, ":%s NOTICE %s :Hooks: %s ", me.client.name, sptr->name, tmp);
 
 	tmp[0] = '\0';
 	p = tmp;
@@ -1027,13 +1027,13 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				p += strlen(p);
 				if (p > tmp+380)
 				{
-					sendto_one(sptr, ":%s NOTICE %s :Override: %s", me.name, sptr->name, tmp);
+					sendto_one(sptr, ":%s NOTICE %s :Override: %s", me.client.name, sptr->name, tmp);
 					tmp[0] = '\0';
 					p = tmp;
 				}
 			}
 	}
-	sendto_one(sptr, ":%s NOTICE %s :Override: %s", me.name, sptr->name, tmp);
+	sendto_one(sptr, ":%s NOTICE %s :Override: %s", me.client.name, sptr->name, tmp);
 
 #ifdef DEBUGMODE
 	sendnotice(sptr, "Efunctions dump:");

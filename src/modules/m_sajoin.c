@@ -87,19 +87,19 @@ DLLFUNC CMD_FUNC(m_sajoin)
 
 	if (!IsSAdmin(sptr) && !IsULine(sptr))
 	{
-	 sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+	 sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 	 return 0;
 	}
 
 	if (parc < 3)
 	{
-	 sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0], "SAJOIN");
+	 sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.client.name, parv[0], "SAJOIN");
 	 return 0;
 	}
 
 	if (!(acptr = find_person(parv[1], NULL)))
 	{
-		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, parv[0], parv[1]);
+		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.client.name, parv[0], parv[1]);
 		return 0;
 	}
 	if (MyClient(acptr))
@@ -129,7 +129,7 @@ DLLFUNC CMD_FUNC(m_sajoin)
 			if (*name == '0' || !IsChannelName(name))
 			{
 				sendto_one(sptr,
-				    err_str(ERR_NOSUCHCHANNEL), me.name,
+				    err_str(ERR_NOSUCHCHANNEL), me.client.name,
 				    parv[0], name);
 				continue;
 			}
@@ -137,7 +137,7 @@ DLLFUNC CMD_FUNC(m_sajoin)
 			chptr = get_channel(acptr, name, 0);
 			if (!parted && chptr && (lp = find_membership_link(acptr->user->channel, chptr)))
 			{
-				sendto_one(sptr, err_str(ERR_USERONCHANNEL), me.name, parv[0], 
+				sendto_one(sptr, err_str(ERR_USERONCHANNEL), me.client.name, parv[0], 
 					   parv[1], name);
 				continue;
 			}
@@ -205,8 +205,8 @@ DLLFUNC CMD_FUNC(m_sajoin)
 			sendnotice(acptr, "*** You were forced to join %s", jbuf);
 			sendto_realops("%s used SAJOIN to make %s join %s", sptr->name, acptr->name,
 				       jbuf);
-			sendto_server(&me, 0, 0, ":%s GLOBOPS :%s used SAJOIN to make %s join %s",
-					   me.name, sptr->name, acptr->name, jbuf);
+			sendto_server(&me.client, 0, 0, ":%s GLOBOPS :%s used SAJOIN to make %s join %s",
+					   me.client.name, sptr->name, acptr->name, jbuf);
 			/* Logging function added by XeRXeS */
 			ircd_log(LOG_SACMDS,"SAJOIN: %s used SAJOIN to make %s join %s",
 				sptr->name, parv[1], jbuf);

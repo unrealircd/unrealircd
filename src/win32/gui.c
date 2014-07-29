@@ -560,13 +560,13 @@ LRESULT CALLBACK MainDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				case IDM_RHALL:
 					MessageBox(NULL, "Rehashing all files", "Rehashing", MB_OK);
 					sendto_realops("Rehashing all files via the console");
-					rehash(&me,&me,0);
+					rehash(&me.client,&me.client,0);
 					reread_motdsandrules();
 					break;
 				case IDM_RHCONF:
 					MessageBox(NULL, "Rehashing the Config file", "Rehashing", MB_OK);
 					sendto_realops("Rehashing the Config file via the console");
-					rehash(&me,&me,0);
+					rehash(&me.client,&me.client,0);
 					break;
 				case IDM_RHMOTD: 
 				{
@@ -908,7 +908,7 @@ LRESULT CALLBACK StatusDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 		case WM_INITDIALOG: 
 		{
 			hwTreeView = GetDlgItem(hDlg, IDC_TREE);
-			win_map(&me, hwTreeView, 0);
+			win_map(&me.client, hwTreeView, 0);
 			SetDlgItemInt(hDlg, IDC_CLIENTS, IRCstats.clients, FALSE);
 			SetDlgItemInt(hDlg, IDC_SERVERS, IRCstats.servers, FALSE);
 			SetDlgItemInt(hDlg, IDC_INVISO, IRCstats.invisible, FALSE);
@@ -931,7 +931,7 @@ LRESULT CALLBACK StatusDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 			return TRUE;
 		case WM_TIMER:
 			TreeView_DeleteAllItems(hwTreeView);
-			win_map(&me, hwTreeView, 1);
+			win_map(&me.client, hwTreeView, 1);
 			SetDlgItemInt(hDlg, IDC_CLIENTS, IRCstats.clients, FALSE);
 			SetDlgItemInt(hDlg, IDC_SERVERS, IRCstats.servers, FALSE);
 			SetDlgItemInt(hDlg, IDC_INVISO, IRCstats.invisible, FALSE);

@@ -94,19 +94,19 @@ DLLFUNC CMD_FUNC(m_sapart)
 
 	if (!IsSAdmin(sptr) && !IsULine(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 		return 0;
 	}
 
 	if (parc < 3)
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0], "SAPART");
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.client.name, parv[0], "SAPART");
 		return 0;
 	}
 
 	if (!(acptr = find_person(parv[1], NULL)))
 	{
-		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, parv[0], parv[1]);
+		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.client.name, parv[0], parv[1]);
 		return 0;
 	}
 
@@ -120,13 +120,13 @@ DLLFUNC CMD_FUNC(m_sapart)
 		{
 			if (!(chptr = get_channel(acptr, name, 0)))
 			{
-				sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL), me.name, parv[0],
+				sendto_one(sptr, err_str(ERR_NOSUCHCHANNEL), me.client.name, parv[0],
 					name);
 				continue;
 			}
 			if (!(lp = find_membership_link(acptr->user->channel, chptr)))
 			{
-				sendto_one(sptr, err_str(ERR_USERNOTINCHANNEL), me.name, parv[0],
+				sendto_one(sptr, err_str(ERR_USERNOTINCHANNEL), me.client.name, parv[0],
 					parv[1], name);
 				continue;
 			}
@@ -157,8 +157,8 @@ DLLFUNC CMD_FUNC(m_sapart)
 			    parv[1], commentx);
 			sendto_realops("%s used SAPART to make %s part %s (%s)", sptr->name, parv[0],
 				parv[1], comment);
-			sendto_server(&me, 0, 0, ":%s GLOBOPS :%s used SAPART to make %s part %s (%s)",
-				me.name, sptr->name, parv[0], parv[1], comment);
+			sendto_server(&me.client, 0, 0, ":%s GLOBOPS :%s used SAPART to make %s part %s (%s)",
+				me.client.name, sptr->name, parv[0], parv[1], comment);
 			/* Logging function added by XeRXeS */
 			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s (%s)",
 				sptr->name, parv[0], parv[1], comment);
@@ -169,8 +169,8 @@ DLLFUNC CMD_FUNC(m_sapart)
 			    "*** You were forced to part %s", parv[1]);
 			sendto_realops("%s used SAPART to make %s part %s", sptr->name, parv[0],
 				parv[1]);
-			sendto_server(&me, 0, 0, ":%s GLOBOPS :%s used SAPART to make %s part %s",
-				me.name, sptr->name, parv[0], parv[1]);
+			sendto_server(&me.client, 0, 0, ":%s GLOBOPS :%s used SAPART to make %s part %s",
+				me.client.name, sptr->name, parv[0], parv[1]);
 			/* Logging function added by XeRXeS */
 			ircd_log(LOG_SACMDS,"SAPART: %s used SAPART to make %s part %s",
 				sptr->name, parv[0], parv[1]);

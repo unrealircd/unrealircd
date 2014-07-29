@@ -77,7 +77,7 @@ void iNAH_host(aClient *sptr, char *host)
 	}
 	sptr->user->virthost = strdup(host);
 	if (MyConnect(sptr))
-		sendto_server(&me, 0, 0, ":%s SETHOST :%s", sptr->name, sptr->user->virthost);
+		sendto_server(&me.client, 0, 0, ":%s SETHOST :%s", sptr->name, sptr->user->virthost);
 	sptr->umodes |= UMODE_SETHOST;
 
 	if (UHOST_ALLOWED == UHALLOW_REJOIN)
@@ -241,8 +241,8 @@ int  hunt_server(aClient *cptr, aClient *sptr, char *command, int server, int pa
 	   ** Assume it's me, if no server
 	 */
 	if (parc <= server || BadPtr(parv[server]) ||
-	    match(me.name, parv[server]) == 0 ||
-	    match(parv[server], me.name) == 0)
+	    match(me.client.name, parv[server]) == 0 ||
+	    match(parv[server], me.client.name) == 0)
 		return (HUNTED_ISME);
 	/*
 	   ** These are to pickup matches that would cause the following
@@ -282,7 +282,7 @@ int  hunt_server(aClient *cptr, aClient *sptr, char *command, int server, int pa
 		    parv[5], parv[6], parv[7], parv[8]);
 		return (HUNTED_PASS);
 	}
-	sendto_one(sptr, err_str(ERR_NOSUCHSERVER), me.name,
+	sendto_one(sptr, err_str(ERR_NOSUCHSERVER), me.client.name,
 	    parv[0], parv[server]);
 	return (HUNTED_NOSUCH);
 }
@@ -308,38 +308,38 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 
 	if (IsAnOper(sptr))
 		return 0;
-	if (sptr->targets[0] == hash)
+	if (sptr->localClient->targets[0] == hash)
 		return 0;
 
-	for (p = sptr->targets; p < &sptr->targets[MAXTARGETS - 1];)
+	for (p = sptr->localClient->targets; p < &sptr->localClient->targets[MAXTARGETS - 1];)
 		if (*++p == hash)
 		{
 			/* move targethash to first position... */
-			memmove(&sptr->targets[1], &sptr->targets[0],
-			    p - sptr->targets);
-			sptr->targets[0] = hash;
+			memmove(&sptr->localClient->targets[1], &sptr->localClient->targets[0],
+			    p - sptr->localClient->targets);
+			sptr->localClient->targets[0] = hash;
 			return 0;
 		}
 
-	if (TStime() < sptr->nexttarget)
+	if (TStime() < sptr->localClient->nexttarget)
 	{
-		sptr->since += TARGET_DELAY; /* lag them up */
-		sptr->nexttarget += TARGET_DELAY;
-		sendto_one(sptr, err_str(ERR_TARGETTOOFAST), me.name, sptr->name,
-			name, sptr->nexttarget - TStime());
+		sptr->localClient->since += TARGET_DELAY; /* lag them up */
+		sptr->localClient->nexttarget += TARGET_DELAY;
+		sendto_one(sptr, err_str(ERR_TARGETTOOFAST), me.client.name, sptr->name,
+			name, sptr->localClient->nexttarget - TStime());
 
 		return 1;
 	}
 
-	if (TStime() > sptr->nexttarget + TARGET_DELAY*MAXTARGETS)
+	if (TStime() > sptr->localClient->nexttarget + TARGET_DELAY*MAXTARGETS)
 	{
-		sptr->nexttarget = TStime() - TARGET_DELAY*MAXTARGETS;
+		sptr->localClient->nexttarget = TStime() - TARGET_DELAY*MAXTARGETS;
 	}
 
-	sptr->nexttarget += TARGET_DELAY;
+	sptr->localClient->nexttarget += TARGET_DELAY;
 
-	memmove(&sptr->targets[1], &sptr->targets[0], MAXTARGETS - 1);
-	sptr->targets[0] = hash;
+	memmove(&sptr->localClient->targets[1], &sptr->localClient->targets[0], MAXTARGETS - 1);
+	sptr->localClient->targets[0] = hash;
 #endif
 	return 0;
 }
@@ -586,7 +586,7 @@ void send_umode_out(aClient *cptr, aClient *sptr, long old)
 
 	send_umode(NULL, sptr, old, SEND_UMODES, buf);
 
-	list_for_each_entry(acptr, &server_list, special_node)
+	list_for_each_entry2(acptr, struct LocalClient, &server_list, special_node)
 	{
 		if ((acptr != cptr) && (acptr != sptr) && *buf)
 		{
@@ -606,7 +606,7 @@ void send_umode_out_nickv2(aClient *cptr, aClient *sptr, long old)
 
 	send_umode(NULL, sptr, old, SEND_UMODES, buf);
 
-	list_for_each_entry(acptr, &server_list, special_node)
+	list_for_each_entry2(acptr, struct LocalClient, &server_list, special_node)
 	{
 		if (!SupportNICKv2(acptr) && (acptr != cptr)
 		    && (acptr != sptr) && *buf)
@@ -649,7 +649,7 @@ int add_silence(aClient *sptr, char *mask, int senderr)
 			if ((strlen(lp->value.cp) > MAXSILELENGTH) || (++cnt >= SILENCE_LIMIT))
 			{
 				if (senderr)
-					sendto_one(sptr, err_str(ERR_SILELISTFULL), me.name, sptr->name, mask);
+					sendto_one(sptr, err_str(ERR_SILELISTFULL), me.client.name, sptr->name, mask);
 				return -1;
 			}
 			else

@@ -137,27 +137,27 @@ DLLFUNC CMD_FUNC(m_netinfo)
 		sendto_realops
 		    ("Possible negative TS split at link %s (%li - %li = %li)%s",
 		    cptr->name, (xx), (endsync), (xx - endsync), emsg);
-		sendto_server(&me, 0, 0,
+		sendto_server(&me.client, 0, 0,
 		    ":%s SMO o :\2(sync)\2 Possible negative TS split at link %s (%li - %li = %li)%s",
-		    me.name, cptr->name, (xx), (endsync), (xx - endsync), emsg);
+		    me.client.name, cptr->name, (xx), (endsync), (xx - endsync), emsg);
 	}
 	sendto_realops
 	    ("Link %s -> %s is now synced [secs: %li recv: %ld.%hu sent: %ld.%hu]",
-	    cptr->name, me.name, (TStime() - endsync), sptr->receiveK,
-	    sptr->receiveB, sptr->sendK, sptr->sendB);
+	    cptr->name, me.client.name, (TStime() - endsync), sptr->localClient->receiveK,
+	    sptr->localClient->receiveB, sptr->localClient->sendK, sptr->localClient->sendB);
 
-	sendto_server(&me, 0, 0,
+	sendto_server(&me.client, 0, 0,
 	    ":%s SMO o :\2(sync)\2 Link %s -> %s is now synced [secs: %li recv: %ld.%hu sent: %ld.%hu]",
-	    me.name, cptr->name, me.name, (TStime() - endsync), sptr->receiveK,
-	    sptr->receiveB, sptr->sendK, sptr->sendB);
+	    me.client.name, cptr->name, me.client.name, (TStime() - endsync), sptr->localClient->receiveK,
+	    sptr->localClient->receiveB, sptr->localClient->sendK, sptr->localClient->sendB);
 
 	if (!(strcmp(ircnetwork, parv[8]) == 0))
 	{
 		sendto_realops("Network name mismatch from link %s (%s != %s)",
 		    cptr->name, parv[8], ircnetwork);
-		sendto_server(&me, 0, 0,
+		sendto_server(&me.client, 0, 0,
 		    ":%s SMO o :\2(sync)\2 Network name mismatch from link %s (%s != %s)",
-		    me.name, cptr->name, parv[8], ircnetwork);
+		    me.client.name, cptr->name, parv[8], ircnetwork);
 	}
 
 	if ((protocol != UnrealProtocol) && (protocol != 0))
@@ -165,9 +165,9 @@ DLLFUNC CMD_FUNC(m_netinfo)
 		sendto_realops
 		    ("Link %s is running Protocol u%li while we are running %d!",
 		    cptr->name, protocol, UnrealProtocol);
-		sendto_server(&me, 0, 0,
+		sendto_server(&me.client, 0, 0,
 		    ":%s SMO o :\2(sync)\2 Link %s is running u%li while %s is running %d!",
-		    me.name, cptr->name, protocol, me.name, UnrealProtocol);
+		    me.client.name, cptr->name, protocol, me.client.name, UnrealProtocol);
 
 	}
 	strlcpy(buf, CLOAK_KEYCRC, sizeof(buf));

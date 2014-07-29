@@ -101,7 +101,7 @@ int  legalident = 1;
 
 	if (MyClient(sptr) && !IsAnOper(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 		return 0;
 	}
 
@@ -109,7 +109,7 @@ int  legalident = 1;
 #ifdef DISABLE_USERMOD
 	if (MyClient(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_DISABLED), me.name, sptr->name, "CHGIDENT",
+		sendto_one(sptr, err_str(ERR_DISABLED), me.client.name, sptr->name, "CHGIDENT",
 			"This command is disabled on this server");
 		return 0;
 	}
@@ -117,7 +117,7 @@ int  legalident = 1;
 
 	if ((parc < 3) || !*parv[2])
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "CHGIDENT");
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.client.name, sptr->name, "CHGIDENT");
 		return 0;
 	}
 
@@ -148,7 +148,7 @@ int  legalident = 1;
 	{
 		if (MyClient(sptr) && (IsLocOp(sptr) && !MyClient(acptr)))
 		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name,
 				parv[0]);
 			return 0;
 		}
@@ -158,7 +158,7 @@ int  legalident = 1;
 			case UHALLOW_NEVER:
 				if (MyClient(sptr))
 				{
-					sendto_one(sptr, err_str(ERR_DISABLED), me.name, sptr->name, "CHGIDENT",
+					sendto_one(sptr, err_str(ERR_DISABLED), me.client.name, sptr->name, "CHGIDENT",
 						"This command is disabled on this server");
 					return 0;
 				}
@@ -201,7 +201,7 @@ int  legalident = 1;
 	}
 	else
 	{
-		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, sptr->name,
+		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.client.name, sptr->name,
 		    parv[1]);
 		return 0;
 	}

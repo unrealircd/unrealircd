@@ -93,7 +93,7 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (MyClient(sptr) && !IsAnOper(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name,
 			parv[0]);
 		return 0;
 	}
@@ -101,7 +101,7 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 #ifdef DISABLE_USERMOD
 	if (MyClient(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_DISABLED), me.name, sptr->name, "CHGHOST",
+		sendto_one(sptr, err_str(ERR_DISABLED), me.client.name, sptr->name, "CHGHOST",
 			"This command is disabled on this server");
 		return 0;
 	}
@@ -109,7 +109,7 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if ((parc < 3) || !*parv[2])
 	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, sptr->name, "CHGHOST");
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.client.name, sptr->name, "CHGHOST");
 		return 0;
 	}
 
@@ -135,7 +135,7 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		if (MyClient(sptr) && (IsLocOp(sptr) && !MyClient(acptr)))
 		{
-			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name,
 				parv[0]);
 			return 0;
 		}
@@ -150,7 +150,7 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			case UHALLOW_NEVER:
 				if (MyClient(sptr))
 				{
-					sendto_one(sptr, err_str(ERR_DISABLED), me.name, sptr->name, "CHGHOST",
+					sendto_one(sptr, err_str(ERR_DISABLED), me.client.name, sptr->name, "CHGHOST",
 						"This command is disabled on this server");
 					return 0;
 				}
@@ -199,7 +199,7 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	else
 	{
-		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, sptr->name,
+		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.client.name, sptr->name,
 		    parv[1]);
 		return 0;
 	}

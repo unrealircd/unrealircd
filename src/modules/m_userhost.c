@@ -89,7 +89,7 @@ DLLFUNC CMD_FUNC(m_userhost)
 	if (parc < 2)
 	{
 		sendto_one(sptr, rpl_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "USERHOST");
+		    me.client.name, parv[0], "USERHOST");
 		return 0;
 	}
 
@@ -127,7 +127,7 @@ DLLFUNC CMD_FUNC(m_userhost)
 		cn = p;
 	}
 
-	sendto_one(sptr, rpl_str(RPL_USERHOST), me.name, parv[0],
+	sendto_one(sptr, rpl_str(RPL_USERHOST), me.client.name, parv[0],
 	    response[0], response[1], response[2], response[3], response[4]);
 
 	return 0;

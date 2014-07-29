@@ -147,7 +147,7 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
                         {
                                 if (*m == (char) *(i + 1))
                                 {
-                                        acptr->oflag |= flag;
+                                        acptr->localClient->oflag |= flag;
                                         break;
                                 }
                         }
@@ -162,8 +162,8 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
                         VERIFY_OPERCOUNT(acptr, "svso");
                 }
 
-		if (!list_empty(&acptr->special_node))
-			list_del(&acptr->special_node);
+		if (!list_empty(&acptr->localClient->special_node))
+			list_del(&acptr->localClient->special_node);
 
                 acptr->umodes &=
                     ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP |UMODE_SERVICES |
@@ -172,7 +172,7 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
                     ~(UMODE_NETADMIN | UMODE_WHOIS);
                 acptr->umodes &=
                     ~(UMODE_KIX | UMODE_DEAF | UMODE_HIDEOPER | UMODE_VICTIM);
-                acptr->oflag = 0;
+                acptr->localClient->oflag = 0;
 		remove_oper_snomasks(acptr);
 		RunHook2(HOOKTYPE_LOCAL_OPER, acptr, 0);
                 send_umode_out(acptr, acptr, fLag);

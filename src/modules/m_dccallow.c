@@ -123,7 +123,7 @@ static char *dcc_help[] =
 			
 			if (!acptr)
 			{
-				sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, sptr->name, s);
+				sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.client.name, sptr->name, s);
 				continue;
 			}
 			add_dccallow(sptr, acptr);
@@ -139,7 +139,7 @@ static char *dcc_help[] =
 				continue;
 			if (!acptr)
 			{
-				sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, sptr->name, s);
+				sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.client.name, sptr->name, s);
 				continue;
 			}
 			del_dccallow(sptr, acptr);
@@ -148,24 +148,24 @@ static char *dcc_help[] =
 		{
 			didanything = didlist = 1;
 			sendto_one(sptr, ":%s %d %s :The following users are on your dcc allow list:",
-				me.name, RPL_DCCINFO, sptr->name);
+				me.client.name, RPL_DCCINFO, sptr->name);
 			for(lp = sptr->user->dccallow; lp; lp = lp->next)
 			{
 				if (lp->flags == DCC_LINK_REMOTE)
 					continue;
-				sendto_one(sptr, ":%s %d %s :%s (%s@%s)", me.name,
+				sendto_one(sptr, ":%s %d %s :%s (%s@%s)", me.client.name,
 					RPL_DCCLIST, sptr->name, lp->value.cptr->name,
 					lp->value.cptr->user->username,
 					GetHost(lp->value.cptr));
 			}
-			sendto_one(sptr, rpl_str(RPL_ENDOFDCCLIST), me.name, sptr->name, s);
+			sendto_one(sptr, rpl_str(RPL_ENDOFDCCLIST), me.client.name, sptr->name, s);
 		} else
 		if (!didhelp && !myncmp(s, "help", 4))
 		{
 			didanything = didhelp = 1;
 			for(ptr = dcc_help; *ptr; ptr++)
-				sendto_one(sptr, ":%s %d %s :%s", me.name, RPL_DCCINFO, sptr->name, *ptr);
-			sendto_one(sptr, rpl_str(RPL_ENDOFDCCLIST), me.name, sptr->name, s);
+				sendto_one(sptr, ":%s %d %s :%s", me.client.name, RPL_DCCINFO, sptr->name, *ptr);
+			sendto_one(sptr, rpl_str(RPL_ENDOFDCCLIST), me.client.name, sptr->name, s);
 		}
 	}
 	if (!didanything)

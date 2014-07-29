@@ -270,7 +270,7 @@ CMD_FUNC(m_protoctl)
 		else if (strcmp(s, "NICKIP") == 0)
 		{
 			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
-			cptr->proto |= PROTO_NICKIP;
+			cptr->localClient->proto |= PROTO_NICKIP;
 		}
 		else if (strncmp(s, "NICKCHARS=", 10) == 0)
 		{
@@ -284,7 +284,7 @@ CMD_FUNC(m_protoctl)
 				sendto_realops("\002WARNING!!!!\002 Link %s does not have the same set::allowed-nickchars settings (or is "
 							"a different UnrealIRCd version), this MAY cause display issues. Our charset: '%s', theirs: '%s'",
 					get_client_name(cptr, FALSE), langsinuse, s+10);
-				/* return exit_client(cptr, cptr, &me, "Nick charset mismatch"); */
+				/* return exit_client(cptr, cptr, &me.client, "Nick charset mismatch"); */
 			}
 		}
 		else if (strncmp(s, "SID=", 4) == 0)
@@ -293,19 +293,19 @@ CMD_FUNC(m_protoctl)
 			char *sid = s + 4;
 
                         if (!IsServer(cptr) && !IsEAuth(cptr) && !IsHandshake(cptr))
-                                return exit_client(cptr, cptr, &me, "Got PROTOCTL SID before EAUTH, that's the wrong order!");
+                                return exit_client(cptr, cptr, &me.client, "Got PROTOCTL SID before EAUTH, that's the wrong order!");
 
 			if ((acptr = hash_find_id(sid, NULL)) != NULL)
 			{
 				sendto_one(sptr, "ERROR :SID %s already exists from %s", acptr->id, acptr->name);
 				sendto_snomask(SNO_SNOTICE, "Link %s rejected - SID %s already exists from %s",
 						get_client_name(cptr, FALSE), acptr->id, acptr->name);
-				return exit_client(cptr, cptr, &me, "SID collision");
+				return exit_client(cptr, cptr, &me.client, "SID collision");
 			}
 
 			strlcpy(cptr->id, sid, IDLEN);
 			add_to_id_hash_table(cptr->id, cptr);
-			cptr->proto |= PROTO_SID;
+			cptr->localClient->proto |= PROTO_SID;
 		}
 		else if ((strncmp(s, "EAUTH=", 6) == 0) && NEW_LINKING_PROTOCOL)
 		{
@@ -337,7 +337,7 @@ CMD_FUNC(m_protoctl)
 				    "WARNING: Bogus server name (%s) from %s in EAUTH (maybe just a fishy client)",
 				    servername, get_client_name(cptr, TRUE));
 
-				return exit_client(cptr, sptr, &me, "Bogus server name");
+				return exit_client(cptr, sptr, &me.client, "Bogus server name");
 			}
 
 			ret = verify_link(cptr, sptr, s+6, &aconf);
@@ -353,12 +353,12 @@ CMD_FUNC(m_protoctl)
 #ifdef PROTOCTL_MADNESS
 			if (remove)
 			{
-				cptr->proto &= ~PROTO_MLOCK;
+				cptr->localClient->proto &= ~PROTO_MLOCK;
 				continue;
 			}
 #endif
 			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
-			cptr->proto |= PROTO_MLOCK;
+			cptr->localClient->proto |= PROTO_MLOCK;
 		}
 		/*
 		 * Add other protocol extensions here, with proto

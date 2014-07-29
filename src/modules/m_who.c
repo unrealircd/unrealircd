@@ -149,7 +149,7 @@ int i = 0;
 		i = parse_who_options(sptr, parc - 1, parv + 1);
 		if (i < 0)
 		{
-			sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, parv[0], mask);
+			sendto_one(sptr, getreply(RPL_ENDOFWHO), me.client.name, parv[0], mask);
 			return 0;
 		}
 	}
@@ -167,14 +167,14 @@ int i = 0;
 	if (*mask == '\0')
 	{
 		/* no mask given */
-		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, parv[0], "*");
+		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.client.name, parv[0], "*");
 		return 0;
 	}
 
 	if ((target_channel = find_channel(mask, NULL)) != NULL)
 	{
 		do_channel_who(sptr, target_channel, mask);
-		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, parv[0], mask);
+		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.client.name, parv[0], mask);
 		return 0;
 	}
 
@@ -182,13 +182,13 @@ int i = 0;
 	    (target_channel = find_channel(wfl.channel, NULL)) != NULL)
 	{
 		do_channel_who(sptr, target_channel, mask);
-		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, parv[0], mask);
+		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.client.name, parv[0], mask);
 		return 0;
 	}
 	else
 	{
 		do_other_who(sptr, mask);
-		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.name, parv[0], mask);
+		sendto_one(sptr, getreply(RPL_ENDOFWHO), me.client.name, parv[0], mask);
 		return 0;
 	}
 
@@ -257,7 +257,7 @@ static void who_sendhelp(aClient *sptr)
 		s = who_help;
 
 	for (; *s; s++)
-		sendto_one(sptr, getreply(RPL_LISTSYNTAX), me.name, sptr->name, *s);
+		sendto_one(sptr, getreply(RPL_LISTSYNTAX), me.client.name, sptr->name, *s);
 }
 
 #define WHO_ADD 1
@@ -505,7 +505,7 @@ char has_common_chan = 0;
 			if (!MyClient(acptr))
 				return WHO_CANTSEE;
 
-			port = acptr->listener->port;
+			port = acptr->localClient->listener->port;
 
 			if (((wfl.want_port == WHO_WANT) && wfl.port != port) ||
 			    ((wfl.want_port == WHO_DONTWANT) && wfl.port == port))
@@ -718,7 +718,7 @@ matchok:
 				continue;
 			if (WHOLIMIT && !IsAnOper(sptr) && ++i > WHOLIMIT)
 			{
-				sendto_one(sptr, rpl_str(ERR_WHOLIMEXCEED), me.name, sptr->name, WHOLIMIT);
+				sendto_one(sptr, rpl_str(ERR_WHOLIMEXCEED), me.client.name, sptr->name, WHOLIMIT);
 				return;
 			}
 
@@ -773,7 +773,7 @@ static void send_who_reply(aClient *sptr, aClient *acptr,
 					
 
 	if (IsULine(acptr) && !IsOper(sptr) && HIDE_ULINES)
-	        sendto_one(sptr, getreply(RPL_WHOREPLY), me.name, sptr->name,
+	        sendto_one(sptr, getreply(RPL_WHOREPLY), me.client.name, sptr->name,
         	     channel,       /* channel name */
 	             acptr->user->username, /* user name */
         	     host,		    /* hostname */
@@ -785,7 +785,7 @@ static void send_who_reply(aClient *sptr, aClient *acptr,
              	);
 
 	else
-		sendto_one(sptr, getreply(RPL_WHOREPLY), me.name, sptr->name,      
+		sendto_one(sptr, getreply(RPL_WHOREPLY), me.client.name, sptr->name,      
 		     channel,       /* channel name */
 		     acptr->user->username,      /* user name */
 		     host,		         /* hostname */

@@ -110,7 +110,7 @@ void secureonly_kick_insecure_users(aChannel *chptr)
 		cptr = member->cptr;
 		if (MyClient(cptr) && !IsSecureConnect(cptr) && !IsULine(cptr))
 		{
-			RunHook5(HOOKTYPE_LOCAL_KICK, &me, &me, cptr, chptr, comment);
+			RunHook5(HOOKTYPE_LOCAL_KICK, &me.client, &me.client, cptr, chptr, comment);
 
 			for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
 			{
@@ -121,15 +121,15 @@ void secureonly_kick_insecure_users(aChannel *chptr)
 
 			if (i != 0 && !(is_skochanop(cptr, chptr) || has_voice(cptr,chptr)))
 			{
-				sendto_chanops_butone(cptr, chptr, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
-				sendto_prefix_one(cptr, &me, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
+				sendto_chanops_butone(cptr, chptr, ":%s KICK %s %s :%s", me.client.name, chptr->chname, cptr->name, comment);
+				sendto_prefix_one(cptr, &me.client, ":%s KICK %s %s :%s", me.client.name, chptr->chname, cptr->name, comment);
 			}
 			else
 			{
-				sendto_channel_butserv(chptr, &me, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
+				sendto_channel_butserv(chptr, &me.client, ":%s KICK %s %s :%s", me.client.name, chptr->chname, cptr->name, comment);
 			}
 
-			sendto_server(&me, 0, 0, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
+			sendto_server(&me.client, 0, 0, ":%s KICK %s %s :%s", me.client.name, chptr->chname, cptr->name, comment);
 
 			remove_user_from_channel(cptr, chptr);
 		}

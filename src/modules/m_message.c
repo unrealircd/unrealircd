@@ -122,7 +122,7 @@ int ret;
 	}
 	/* Umode +R (idea from Bahamut) */
 	if (IsRegNickMsg(acptr) && !IsRegNick(sptr) && !IsULine(sptr) && !IsOper(sptr) && !IsServer(sptr)) {
-		sendto_one(sptr, err_str(ERR_NONONREG), me.name, sptr->name,
+		sendto_one(sptr, err_str(ERR_NONONREG), me.client.name, sptr->name,
 			acptr->name);
 		return 0;
 	}
@@ -149,7 +149,7 @@ int ret;
 		if (!notice && MyConnect(sptr) &&
 		    acptr->user && acptr->user->away)
 			sendto_one(sptr, rpl_str(RPL_AWAY),
-			    me.name, sptr->name, acptr->name,
+			    me.client.name, sptr->name, acptr->name,
 			    acptr->user->away);
 
 		if (MyClient(sptr))
@@ -224,13 +224,13 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NORECIPIENT),
-		    me.name, parv[0], cmd);
+		    me.client.name, parv[0], cmd);
 		return -1;
 	}
 
 	if (parc < 3 || *parv[2] == '\0')
 	{
-		sendto_one(sptr, err_str(ERR_NOTEXTTOSEND), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOTEXTTOSEND), me.client.name, parv[0]);
 		return -1;
 	}
 
@@ -346,14 +346,14 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 						if (!lp || !(lp->flags & (CHFL_VOICE|CHFL_HALFOP|CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)))
 						{
 							sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
-								me.name, sptr->name, chptr->chname);
+								me.client.name, sptr->name, chptr->chname);
 							return 0;
 						}
 						if (!(prefix & PREFIX_OP) && ((prefix & PREFIX_OWNER) || (prefix & PREFIX_ADMIN)) &&
 						    !(lp->flags & (CHFL_CHANOP|CHFL_CHANOWNER|CHFL_CHANPROT)))
 						{
 							sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
-								me.name, sptr->name, chptr->chname);
+								me.client.name, sptr->name, chptr->chname);
 							return 0;
 						}
 					}
@@ -434,14 +434,14 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 			{
 				if (!notice || (cansend == 8)) /* privmsg or 'cannot send notice'... */
 					sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN),
-					    me.name, parv[0], chptr->chname,
+					    me.client.name, parv[0], chptr->chname,
 					    err_cantsend[cansend - 1], p2);
 			}
 			continue;
 		}
 		else if (p2)
 		{
-			sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name,
+			sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.client.name,
 			    parv[0], p2);
 			continue;
 		}
@@ -501,16 +501,16 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				}
 				/* NICK@SERVER NOT FOUND: */
 				if (server && strncasecmp(server + 1, SERVICES_NAME, strlen(SERVICES_NAME)) == 0)
-					sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.name, parv[0], nick);
+					sendto_one(sptr, err_str(ERR_SERVICESDOWN), me.client.name, parv[0], nick);
 				else
-					sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, parv[0], fulltarget);
+					sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.client.name, parv[0], fulltarget);
 
 				continue;
 			}
 
 		}
 		/* nothing, nada, not anything found */
-		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, parv[0],
+		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.client.name, parv[0],
 		    nick);
 		continue;
 	}
@@ -655,7 +655,7 @@ int size_string, ret;
 	{
 		sendto_one(sptr, ":%s NOTICE %s :*** You are blocked from sending files as you have tried to "
 		                 "send a forbidden file - reconnect to regain ability to send",
-			me.name, sptr->name);
+			me.client.name, sptr->name);
 		return 0;
 	}
 	for (; (*ctcp == ' '); ctcp++); /* skip leading spaces */
@@ -684,16 +684,16 @@ int size_string, ret;
 		char *displayfile = dcc_displayfile(realfile);
 		sendto_one(sptr,
 		    ":%s %d %s :*** Cannot DCC SEND file %s to %s (%s)",
-		    me.name, RPL_TEXT,
+		    me.client.name, RPL_TEXT,
 		    sptr->name, displayfile, target, fl->reason);
 		sendto_one(sptr, ":%s NOTICE %s :*** You have been blocked from sending files, reconnect to regain permission to send files",
-			me.name, sptr->name);
+			me.client.name, sptr->name);
 
 		sendto_umode(UMODE_VICTIM,
 		    "%s tried to send forbidden file %s (%s) to %s (is blocked now)",
 		    sptr->name, displayfile, fl->reason, target);
 		sendto_server(NULL, 0, 0, ":%s SMO v :%s tried to send forbidden file %s (%s) to %s (is blocked now)",
-			me.name, sptr->name, displayfile, fl->reason, target);
+			me.client.name, sptr->name, displayfile, fl->reason, target);
 		sptr->flags |= FLAGS_DCCBLOCK;
 		return 0; /* block */
 	}
@@ -704,7 +704,7 @@ int size_string, ret;
 		char *displayfile = dcc_displayfile(realfile);
 		sendto_one(sptr,
 		    ":%s %d %s :*** Cannot DCC SEND file %s to %s (%s)",
-		    me.name, RPL_TEXT,
+		    me.client.name, RPL_TEXT,
 		    sptr->name, displayfile, target, fl->reason);
 		return 0; /* block */
 	}
@@ -760,7 +760,7 @@ int size_string;
 			char *displayfile = dcc_displayfile(realfile);
 			sendto_one(from,
 				":%s %d %s :*** Cannot DCC SEND file %s to %s (%s)",
-				me.name, RPL_TEXT, from->name, displayfile, to->name, fl->reason);
+				me.client.name, RPL_TEXT, from->name, displayfile, to->name, fl->reason);
 			sendnotice(from, "User %s is currently not accepting DCC SENDs with such a filename/filetype from you. "
 				"Your file %s was not sent.", to->name, displayfile);
 			sendnotice(to, "%s (%s@%s) tried to DCC SEND you a file named '%s', the request has been blocked.",

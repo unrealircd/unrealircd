@@ -106,19 +106,19 @@ DLLFUNC CMD_FUNC(m_rules)
       playrules:
 	if (temp == NULL)
 	{
-		sendto_one(sptr, err_str(ERR_NORULES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NORULES), me.client.name, parv[0]);
 		return 0;
 
 	}
 
-	sendto_one(sptr, rpl_str(RPL_RULESSTART), me.name, parv[0], me.name);
+	sendto_one(sptr, rpl_str(RPL_RULESSTART), me.client.name, parv[0], me.client.name);
 
 	while (temp)
 	{
-		sendto_one(sptr, rpl_str(RPL_RULES), me.name, parv[0],
+		sendto_one(sptr, rpl_str(RPL_RULES), me.client.name, parv[0],
 		    temp->line);
 		temp = temp->next;
 	}
-	sendto_one(sptr, rpl_str(RPL_ENDOFRULES), me.name, parv[0]);
+	sendto_one(sptr, rpl_str(RPL_ENDOFRULES), me.client.name, parv[0]);
 	return 0;
 }

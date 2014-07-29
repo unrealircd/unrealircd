@@ -86,7 +86,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (parc < 3)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "VHOST");
+		    me.client.name, parv[0], "VHOST");
 		return 0;
 
 	}
@@ -106,11 +106,11 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    sptr->user->realhost);
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** [\2vhost\2] Login for %s failed - password incorrect",
-		    me.name, sptr->name, user);
+		    me.client.name, sptr->name, user);
 		return 0;
 	}
 	strlcpy(host, make_user_host(sptr->user->username, sptr->user->realhost), sizeof host);
-	strlcpy(host2, make_user_host(sptr->user->username, (char *)Inet_ia2p(&sptr->ip)), sizeof host2);
+	strlcpy(host2, make_user_host(sptr->user->username, (char *)Inet_ia2p(&sptr->localClient->ip)), sizeof host2);
 	for (from = (ConfigItem_oper_from *)vhost->from; from; from = (ConfigItem_oper_from *)from->next) {
 		if (!match(from->name, host) || !match(from->name, host2))
 			break;
@@ -121,7 +121,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    user, sptr->name, sptr->user->username, sptr->user->realhost);
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** No vHost lines available for your host",
-		    me.name, sptr->name);
+		    me.client.name, sptr->name);
 		return 0;
 	}
 	i = Auth_Check(cptr, vhost->auth, pwd);
@@ -134,7 +134,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			case UHALLOW_NEVER:
 				if (MyClient(sptr))
 				{
-					sendto_one(sptr, ":%s NOTICE %s :*** /vhost is disabled", me.name, sptr->name);
+					sendto_one(sptr, ":%s NOTICE %s :*** /vhost is disabled", me.client.name, sptr->name);
 					return 0;
 				}
 				break;
@@ -143,7 +143,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			case UHALLOW_NOCHANS:
 				if (MyClient(sptr) && sptr->user->joined)
 				{
-					sendto_one(sptr, ":%s NOTICE %s :*** /vhost can not be used while you are on a channel", me.name, sptr->name);
+					sendto_one(sptr, ":%s NOTICE %s :*** /vhost can not be used while you are on a channel", me.client.name, sptr->name);
 					return 0;
 				}
 				break;
@@ -177,12 +177,12 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				MyFree(sptr->user->swhois);
 			sptr->user->swhois = MyMalloc(strlen(vhost->swhois) +1);
 			strcpy(sptr->user->swhois, vhost->swhois);
-			sendto_server(cptr, 0, 0, ":%s SWHOIS %s :%s", me.name,
+			sendto_server(cptr, 0, 0, ":%s SWHOIS %s :%s", me.client.name,
 			    sptr->name, vhost->swhois);
 		}
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** Your vhost is now %s%s%s",
-		    me.name, sptr->name, vhost->virtuser ? vhost->virtuser : "", 
+		    me.client.name, sptr->name, vhost->virtuser ? vhost->virtuser : "", 
 			vhost->virtuser ? "@" : "", vhost->virthost);
 		sendto_snomask(SNO_VHOST,
 		    "[\2vhost\2] %s (%s!%s@%s) is now using vhost %s%s%s",
@@ -203,7 +203,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    sptr->user->realhost);
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** [\2vhost\2] Login for %s failed - password incorrect",
-		    me.name, sptr->name, user);
+		    me.client.name, sptr->name, user);
 		return 0;
 	}
 	/* Belay that order, Lt. (upon -2)*/

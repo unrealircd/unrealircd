@@ -84,7 +84,7 @@ DLLFUNC CMD_FUNC(m_samode)
 
 	if (!IsPrivileged(cptr) || !IsSAdmin(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 		return 0;
 	}
 
@@ -97,7 +97,7 @@ DLLFUNC CMD_FUNC(m_samode)
 	else
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "SAMODE");
+		    me.client.name, parv[0], "SAMODE");
 		return 0;
 	}
 	opermode = 0;

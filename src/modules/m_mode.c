@@ -139,7 +139,7 @@ CMD_FUNC(m_mode)
 	else
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "MODE");
+		    me.client.name, parv[0], "MODE");
 		return 0;
 	}
 
@@ -152,9 +152,9 @@ CMD_FUNC(m_mode)
 		
 		modebuf[1] = '\0';
 		channel_modes(sptr, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf), chptr);
-		sendto_one(sptr, rpl_str(RPL_CHANNELMODEIS), me.name, parv[0],
+		sendto_one(sptr, rpl_str(RPL_CHANNELMODEIS), me.client.name, parv[0],
 		    chptr->chname, modebuf, parabuf);
-		sendto_one(sptr, rpl_str(RPL_CREATIONTIME), me.name, parv[0],
+		sendto_one(sptr, rpl_str(RPL_CREATIONTIME), me.client.name, parv[0],
 		    chptr->chname, chptr->creationtime);
 		return 0;
 	}
@@ -167,11 +167,11 @@ CMD_FUNC(m_mode)
 			return 0;
 		/* send ban list */
 		for (ban = chptr->banlist; ban; ban = ban->next)
-			sendto_one(sptr, rpl_str(RPL_BANLIST), me.name,
+			sendto_one(sptr, rpl_str(RPL_BANLIST), me.client.name,
 			    sptr->name, chptr->chname, ban->banstr,
 			    ban->who, ban->when);
 		sendto_one(cptr,
-		    rpl_str(RPL_ENDOFBANLIST), me.name, sptr->name,
+		    rpl_str(RPL_ENDOFBANLIST), me.client.name, sptr->name,
 		    chptr->chname);
 		return 0;
 	}
@@ -184,11 +184,11 @@ CMD_FUNC(m_mode)
 			return 0;
 		/* send exban list */
 		for (ban = chptr->exlist; ban; ban = ban->next)
-			sendto_one(sptr, rpl_str(RPL_EXLIST), me.name,
+			sendto_one(sptr, rpl_str(RPL_EXLIST), me.client.name,
 			    sptr->name, chptr->chname, ban->banstr,
 			    ban->who, ban->when);
 		sendto_one(cptr,
-		    rpl_str(RPL_ENDOFEXLIST), me.name, sptr->name,
+		    rpl_str(RPL_ENDOFEXLIST), me.client.name, sptr->name,
 		    chptr->chname);
 		return 0;
 	}
@@ -209,11 +209,11 @@ CMD_FUNC(m_mode)
 			{
 				if (is_chanowner(member->cptr, chptr))
 					sendto_one(sptr, rpl_str(RPL_QLIST),
-					    me.name, sptr->name, chptr->chname,
+					    me.client.name, sptr->name, chptr->chname,
 					    member->cptr->name);
 			}
 			sendto_one(cptr,
-			    rpl_str(RPL_ENDOFQLIST), me.name, sptr->name,
+			    rpl_str(RPL_ENDOFQLIST), me.client.name, sptr->name,
 			    chptr->chname);
 			return 0;
 		}
@@ -235,11 +235,11 @@ CMD_FUNC(m_mode)
 			{
 				if (is_chanprot(member->cptr, chptr))
 					sendto_one(sptr, rpl_str(RPL_ALIST),
-					    me.name, sptr->name, chptr->chname,
+					    me.client.name, sptr->name, chptr->chname,
 					    member->cptr->name);
 			}
 			sendto_one(cptr,
-			    rpl_str(RPL_ENDOFALIST), me.name, sptr->name,
+			    rpl_str(RPL_ENDOFALIST), me.client.name, sptr->name,
 			    chptr->chname);
 			return 0;
 		}
@@ -253,10 +253,10 @@ CMD_FUNC(m_mode)
 		if (!IsMember(sptr, chptr) && !IsAnOper(sptr))
 			return 0;
 		for (ban = chptr->invexlist; ban; ban = ban->next)
-			sendto_one(sptr, rpl_str(RPL_INVEXLIST), me.name,
+			sendto_one(sptr, rpl_str(RPL_INVEXLIST), me.client.name,
 			    sptr->name, chptr->chname, ban->banstr,
 			    ban->who, ban->when);
-		sendto_one(sptr, rpl_str(RPL_ENDOFINVEXLIST), me.name,
+		sendto_one(sptr, rpl_str(RPL_ENDOFINVEXLIST), me.client.name,
 		    sptr->name, chptr->chname);
 		return 0;
 	}
@@ -288,11 +288,11 @@ CMD_FUNC(m_mode)
 		if (cptr == sptr)
 		{
 			sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
-			    me.name, parv[0], chptr->chname);
+			    me.client.name, parv[0], chptr->chname);
 			return 0;
 		}
 		sendto_one(cptr, ":%s MODE %s -oh %s %s 0",
-		    me.name, chptr->chname, parv[0], parv[0]);
+		    me.client.name, chptr->chname, parv[0], parv[0]);
 		/* Tell the other server that the user is
 		 * de-opped.  Fix op desyncs. */
 		bounce_mode(chptr, cptr, parc - 2, parv + 2);
@@ -434,10 +434,10 @@ static void bounce_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[])
 	set_mode(chptr, cptr, parc, parv, &pcount, pvar, 1);
 
 	if (chptr->creationtime)
-		sendto_one(cptr, ":%s MODE %s &%s %s %lu", me.name,
+		sendto_one(cptr, ":%s MODE %s &%s %s %lu", me.client.name,
 		    chptr->chname, modebuf, parabuf, chptr->creationtime);
 	else
-		sendto_one(cptr, ":%s MODE %s &%s %s", me.name, chptr->chname,
+		sendto_one(cptr, ":%s MODE %s &%s %s", me.client.name, chptr->chname,
 		    modebuf, parabuf);
 
 	/* the '&' denotes a bounce so servers won't bounce a bounce */
@@ -497,7 +497,7 @@ DLLFUNC void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, c
 			{
 				/* theirs is wrong but we let it pass anyway */
 				sendts = chptr->creationtime;
-				sendto_one(cptr, ":%s MODE %s + %lu", me.name,
+				sendto_one(cptr, ":%s MODE %s + %lu", me.client.name,
 				    chptr->chname, chptr->creationtime);
 			}
 		}
@@ -510,11 +510,11 @@ DLLFUNC void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, c
 		if (tschange || isbounce) {	/* relay bounce time changes */
 			if (chptr->creationtime)
 				sendto_server(cptr, 0, 0, ":%s MODE %s %s+ %lu",
-				    me.name, chptr->chname, isbounce ? "&" : "",
+				    me.client.name, chptr->chname, isbounce ? "&" : "",
 				    chptr->creationtime);
 			else
 				sendto_server(cptr, 0, 0, ":%s MODE %s %s+",
-				    me.name, chptr->chname, isbounce ? "&" : "");
+				    me.client.name, chptr->chname, isbounce ? "&" : "");
 		return;		/* nothing to send */
 		}
 	}
@@ -543,12 +543,12 @@ DLLFUNC void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, c
 	if (IsPerson(sptr) && samode && MyClient(sptr))
 	{
 		sendto_server(NULL, 0, 0,
-		    ":%s GLOBOPS :%s used SAMODE %s (%s%s%s)", me.name, sptr->name,
+		    ":%s GLOBOPS :%s used SAMODE %s (%s%s%s)", me.client.name, sptr->name,
 		    chptr->chname, modebuf, *parabuf ? " " : "", parabuf);
 		sendto_failops_whoare_opers
-		    ("from %s: %s used SAMODE %s (%s%s%s)", me.name, sptr->name,
+		    ("from %s: %s used SAMODE %s (%s%s%s)", me.client.name, sptr->name,
 		    chptr->chname, modebuf, *parabuf ? " " : "", parabuf);
-		sptr = &me;
+		sptr = &me.client;
 		sendts = 0;
 	}
 
@@ -804,7 +804,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 					if (tab->mode == modetype)
 					{
 						sendto_one(cptr,
-						    err_str(ERR_NOTFORHALFOPS), me.name,
+						    err_str(ERR_NOTFORHALFOPS), me.client.name,
 						    cptr->name, tab->flag);
 						eaten = tab->parameters;
 						break;
@@ -820,7 +820,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	  case MODE_RGSTR:
 		  if (!IsServer(cptr) && !IsULine(cptr))
 		  {
-			sendto_one(cptr, err_str(ERR_ONLYSERVERSCANCHANGE), me.name, cptr->name,
+			sendto_one(cptr, err_str(ERR_ONLYSERVERSCANCHANGE), me.client.name, cptr->name,
 				   chptr->chname);
 			break;
 		  }
@@ -858,7 +858,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  {
 		  	  if (MyClient(cptr) && !op_can_override(cptr))
 		  	  {
-		  	  	sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED), me.name, cptr->name, chptr->chname);
+		  	  	sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED), me.client.name, cptr->name, chptr->chname);
 		  	  	break;
 		  	  }
 			  if (IsOper(cptr))
@@ -875,7 +875,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  {
 		  	  if (MyClient(cptr) && !op_can_override(cptr))
 		  	  {
-		  	  	sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED), me.name, cptr->name, chptr->chname);
+		  	  	sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED), me.client.name, cptr->name, chptr->chname);
 		  	  	break;
 		  	  }
 			  if (IsOper(cptr))
@@ -899,7 +899,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
    		  if (!(membership = find_membership_link(who->user->channel, chptr)))
 		  {
 			  sendto_one(cptr, err_str(ERR_USERNOTINCHANNEL),
-			      me.name, cptr->name, who->name, chptr->chname);
+			      me.client.name, cptr->name, who->name, chptr->chname);
 			  break;
 		  }
 		  member = find_member_link(chptr->members, who);
@@ -918,7 +918,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  {
 			char errbuf[NICKLEN+50];
 			ircsnprintf(errbuf, sizeof(errbuf), "%s is a network service", member->cptr->name);
-			sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), me.name, cptr->name,
+			sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), me.client.name, cptr->name,
 				   modechar, errbuf);
 			break;
 		  }
@@ -940,7 +940,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				{
 					char errbuf[NICKLEN+30];
 					ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel owner", member->cptr->name);
-					sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), me.name, cptr->name,
+					sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), me.client.name, cptr->name,
 					   modechar, errbuf);
 					break;
 				}
@@ -966,7 +966,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  	{
 					char errbuf[NICKLEN+30];
 					ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel admin", member->cptr->name);
-					sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), me.name, cptr->name,
+					sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), me.client.name, cptr->name,
 					   modechar, errbuf);
 					break;
 				}
@@ -1388,7 +1388,7 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 			  tmpo = (char *)ListBits(chptr->mode.mode, 64);
 			  sendto_one(cptr,
 			      ":%s NOTICE %s :*** %s mode is %li (0x%lx) [%s]",
-			      me.name, cptr->name, chptr->chname,
+			      me.client.name, cptr->name, chptr->chname,
 			      chptr->mode.mode, chptr->mode.mode, tmpo);
 			  MyFree(tmpo);
 			  break;
@@ -1398,7 +1398,7 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 			  {
 				  if (!sent_mlock_warning)
 				  {
-					  sendto_one(cptr, err_str(ERR_MLOCKRESTRICTED), me.name, cptr->name, chptr->chname, *curchr, chptr->mode_lock);
+					  sendto_one(cptr, err_str(ERR_MLOCKRESTRICTED), me.client.name, cptr->name, chptr->chname, *curchr, chptr->mode_lock);
 					  sent_mlock_warning++;
 				  }
 				  continue;
@@ -1438,7 +1438,7 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 
 				  if (MyClient(cptr))
 					  sendto_one(cptr, err_str(ERR_UNKNOWNMODE),
-					     me.name, cptr->name, *curchr);
+					     me.client.name, cptr->name, *curchr);
 				  break;
 			  }
 
@@ -1542,7 +1542,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 	if (parc < 2)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "MODE");
+		    me.client.name, parv[0], "MODE");
 		return 0;
 	}
 
@@ -1550,7 +1550,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 	{
 		if (MyConnect(sptr))
 			sendto_one(sptr, err_str(ERR_NOSUCHNICK),
-			    me.name, parv[0], parv[1]);
+			    me.client.name, parv[0], parv[1]);
 		return 0;
 	}
 	if (acptr != sptr)
@@ -1559,10 +1559,10 @@ DLLFUNC CMD_FUNC(_m_umode)
 	if (parc < 3)
 	{
 		sendto_one(sptr, rpl_str(RPL_UMODEIS),
-		    me.name, parv[0], get_mode_str(sptr));
+		    me.client.name, parv[0], get_mode_str(sptr));
 		if (sptr->user->snomask)
 			sendto_one(sptr, rpl_str(RPL_SNOMASK),
-				me.name, parv[0], get_sno_str(sptr));
+				me.client.name, parv[0], get_sno_str(sptr));
 		return 0;
 	}
 
@@ -1638,8 +1638,8 @@ DLLFUNC CMD_FUNC(_m_umode)
 		  case 'O':
 			  if(sptr->from->flags & FLAGS_QUARANTINE)
 			  {
-			    sendto_server(NULL, 0, 0, ":%s KILL %s :%s (Quarantined: no global oper privileges allowed)", me.name, sptr->name, me.name);
-			    return exit_client(cptr, sptr, &me, "Quarantined: no global oper privileges allowed");
+			    sendto_server(NULL, 0, 0, ":%s KILL %s :%s (Quarantined: no global oper privileges allowed)", me.client.name, sptr->name, me.client.name);
+			    return exit_client(cptr, sptr, &me.client, "Quarantined: no global oper privileges allowed");
 			  }
 			  /* A local user trying to set himself +o/+O is denied here.
 			   * A while later (outside this loop) it is handled as well (and +C, +N, etc too)
@@ -1700,7 +1700,7 @@ DLLFUNC CMD_FUNC(_m_umode)
   			  	  {
 				  	sendto_one(sptr,
 				      		err_str(ERR_UMODEUNKNOWNFLAG),
-				      		me.name, parv[0]);
+				      		me.client.name, parv[0]);
 					  rpterror = 1;
 				  }
 			  }
@@ -1803,7 +1803,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 			sptr->umodes |= UMODE_HIDE;
 			rejoin_joinandmode(sptr);
 			if (MyClient(sptr))
-				sptr->since += 7; /* Add fake lag */
+				sptr->localClient->since += 7; /* Add fake lag */
 		}
 	}
 
@@ -1817,7 +1817,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 			sptr->umodes &= ~UMODE_HIDE;
 			rejoin_joinandmode(sptr);
 			if (MyClient(sptr))
-				sptr->since += 7; /* Add fake lag */
+				sptr->localClient->since += 7; /* Add fake lag */
 		}
 		if (sptr->user->virthost)
 		{
@@ -1842,8 +1842,8 @@ DLLFUNC CMD_FUNC(_m_umode)
 	if ((setflags & (UMODE_OPER | UMODE_LOCOP)) && !IsAnOper(sptr) &&
 	    MyConnect(sptr))
 	{
-		list_del(&sptr->special_node);
-		sptr->oflag = 0;
+		list_del(&sptr->localClient->special_node);
+		sptr->localClient->oflag = 0;
 		remove_oper_snomasks(sptr);
 		RunHook2(HOOKTYPE_LOCAL_OPER, sptr, 0);
 	}
@@ -1895,7 +1895,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 
 	if (MyConnect(sptr) && setsnomask != sptr->user->snomask)
 		sendto_one(sptr, rpl_str(RPL_SNOMASK),
-			me.name, parv[0], get_sno_str(sptr));
+			me.client.name, parv[0], get_sno_str(sptr));
 
 	return 0;
 }

@@ -193,12 +193,12 @@ void	EventStatus(aClient *sptr)
 	if (!events)
 	{
 		sendto_one(sptr, ":%s NOTICE %s :*** No events",
-				me.name, sptr->name);
+				me.client.name, sptr->name);
 		return;
 	}
 	for (eventptr = events; eventptr; eventptr = eventptr->next)
 	{
-		sendto_one(sptr, ":%s NOTICE %s :*** Event %s: e/%ld h/%ld n/%ld l/%ld", me.name,
+		sendto_one(sptr, ":%s NOTICE %s :*** Event %s: e/%ld h/%ld n/%ld l/%ld", me.client.name,
 			sptr->name, eventptr->name, eventptr->every, eventptr->howmany,
 				now - eventptr->last, (eventptr->last + eventptr->every) - now);
 	}

@@ -99,7 +99,7 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	  case 0:
 		  if (!IsAnOper(sptr))
 		  {
-			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name,
 			      parv[0]);
 			  return 0;
 		  }
@@ -107,7 +107,7 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	  case 1:
 		  if (!IsOper(sptr))
 		  {
-			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name,
 			      parv[0]);
 			  return 0;
 		  }
@@ -115,7 +115,7 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	  case 2:
 		  if (MyConnect(sptr))
 		  {
-			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name,
 			      parv[0]);
 			  return 0;
 		  }
@@ -123,7 +123,7 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	  default:
 		  sendto_ops_butone(IsServer(cptr) ? cptr : NULL, sptr,
 		      ":%s WALLOPS :[SETIDENT] Somebody fixing this corrupted server? !(0|1) !!!",
-		      me.name);
+		      me.client.name);
 		  break;
 	}
       permit_2:
@@ -139,7 +139,7 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			sendto_one(sptr,
 			    ":%s NOTICE %s :*** Syntax: /SetIdent <new ident>",
-			    me.name, parv[0]);
+			    me.client.name, parv[0]);
 		}
 		return 1;
 	}
@@ -148,7 +148,7 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (MyConnect(sptr))
 			sendto_one(sptr,
 			    ":%s NOTICE %s :*** /SetIdent Error: Atleast write SOMETHING that makes sense (':' string)",
-			    me.name, sptr->name);
+			    me.client.name, sptr->name);
 		return 0;
 	}
 
@@ -159,7 +159,7 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (MyConnect(sptr))
 			sendto_one(sptr,
 			    ":%s NOTICE %s :*** /SetIdent Error: Usernames are limited to %i characters.",
-			    me.name, sptr->name, USERLEN);
+			    me.client.name, sptr->name, USERLEN);
 		return 0;
 	}
 
@@ -179,7 +179,7 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** /SetIdent Error: A username may contain a-z, A-Z, 0-9, '-', '~' & '.' - Please only use them",
-		    me.name, parv[0]);
+		    me.client.name, parv[0]);
 		return 0;
 	}
 
@@ -191,14 +191,14 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			case UHALLOW_NEVER:
 				if (MyClient(sptr))
 				{
-					sendto_one(sptr, ":%s NOTICE %s :*** /SetIdent is disabled", me.name, sptr->name);
+					sendto_one(sptr, ":%s NOTICE %s :*** /SetIdent is disabled", me.client.name, sptr->name);
 					return 0;
 				}
 				break;
 			case UHALLOW_NOCHANS:
 				if (MyClient(sptr) && sptr->user->joined)
 				{
-					sendto_one(sptr, ":%s NOTICE %s :*** /SetIdent can not be used while you are on a channel", me.name, sptr->name);
+					sendto_one(sptr, ":%s NOTICE %s :*** /SetIdent can not be used while you are on a channel", me.client.name, sptr->name);
 					return 0;
 				}
 				break;
@@ -220,7 +220,7 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		sendto_one(sptr,
 		    ":%s NOTICE %s :Your nick!user@host-mask is now (%s!%s@%s) - To disable ident set change it manually by /setident'ing again",
-		    me.name, parv[0], parv[0], sptr->user->username, GetHost(sptr));
+		    me.client.name, parv[0], parv[0], sptr->user->username, GetHost(sptr));
 	}
 	return 0;
 }

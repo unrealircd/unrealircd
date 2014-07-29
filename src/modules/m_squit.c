@@ -87,7 +87,7 @@ CMD_FUNC(m_squit)
 
 	if (!IsPrivileged(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 		return 0;
 	}
 
@@ -99,7 +99,7 @@ CMD_FUNC(m_squit)
 		if (acptr && IsMe(acptr))
 		{
 			acptr = cptr;
-			server = cptr->sockhost;
+			server = cptr->localClient->sockhost;
 		}
 	}
 	else
@@ -108,7 +108,7 @@ CMD_FUNC(m_squit)
 		   ** This is actually protocol error. But, well, closing
 		   ** the link is very proper answer to that...
 		 */
-		server = cptr->sockhost;
+		server = cptr->localClient->sockhost;
 		acptr = cptr;
 	}
 
@@ -143,13 +143,13 @@ CMD_FUNC(m_squit)
 	if (!acptr)
 	{
 		sendto_one(sptr, err_str(ERR_NOSUCHSERVER),
-		    me.name, parv[0], server);
+		    me.client.name, parv[0], server);
 		return 0;
 	}
 	if (MyClient(sptr) && ((!OPCanGRoute(sptr) && !MyConnect(acptr)) ||
 	    (!OPCanLRoute(sptr) && MyConnect(acptr))))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
 		return 0;
 	}
 	/*
@@ -160,8 +160,8 @@ CMD_FUNC(m_squit)
 
 		sendto_locfailops("Received SQUIT %s from %s (%s)",
 		    acptr->name, get_client_name(sptr, FALSE), comment);
-		sendto_server(&me, 0, 0,
-		    ":%s GLOBOPS :Received SQUIT %s from %s (%s)", me.name,
+		sendto_server(&me.client, 0, 0,
+		    ":%s GLOBOPS :Received SQUIT %s from %s (%s)", me.client.name,
 		    server, get_client_name(sptr, FALSE), comment);
 	}
 	else if (MyConnect(acptr))
@@ -173,15 +173,15 @@ CMD_FUNC(m_squit)
 			sendto_ops
 			    ("%s tried to do a fake kill using SQUIT (%s (%s))",
 			    sptr->name, acptr->name, comment);
-			sendto_server(&me, 0, 0,
+			sendto_server(&me.client, 0, 0,
 			    ":%s GLOBOPS :%s tried to fake kill using SQUIT (%s (%s))",
-			    me.name, sptr->name, acptr->name, comment);
+			    me.client.name, sptr->name, acptr->name, comment);
 			return 0;
 		}
 		sendto_locfailops("Received SQUIT %s from %s (%s)",
 		    acptr->name, get_client_name(sptr, FALSE), comment);
-		sendto_server(&me, 0, 0,
-		    ":%s GLOBOPS :Received SQUIT %s from %s (%s)", me.name,
+		sendto_server(&me.client, 0, 0,
+		    ":%s GLOBOPS :Received SQUIT %s from %s (%s)", me.client.name,
 		    acptr->name, get_client_name(sptr, FALSE), comment);
 	}
 	if (IsAnOper(sptr))

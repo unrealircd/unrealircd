@@ -532,9 +532,9 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 		case AUTHTYPE_SSL_CLIENTCERT:
 			if (!para)
 				return -1;
-			if (!cptr->ssl)
+			if (!cptr->localClient->ssl)
 				return -1;
-			x509_clientcert = SSL_get_peer_certificate((SSL *)cptr->ssl);
+			x509_clientcert = SSL_get_peer_certificate((SSL *)cptr->localClient->ssl);
 			if (!x509_clientcert)
 				return -1;
 			if (!(x509_f = fopen(as->data, "r")))
@@ -563,9 +563,9 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 		case AUTHTYPE_SSL_CLIENTCERTFP:
 			if (!para)
 				return -1;
-			if (!cptr->ssl)
+			if (!cptr->localClient->ssl)
 				return -1;
-			x509_clientcert = SSL_get_peer_certificate((SSL *)cptr->ssl);
+			x509_clientcert = SSL_get_peer_certificate((SSL *)cptr->localClient->ssl);
 			if (!x509_clientcert)
 				return -1;
 			if (!X509_digest(x509_clientcert, digest, md, &n)) {

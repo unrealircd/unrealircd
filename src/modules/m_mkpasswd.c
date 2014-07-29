@@ -85,7 +85,7 @@ int  m_mkpasswd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (!MKPASSWD_FOR_EVERYONE && !IsAnOper(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
+		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, sptr->name);
 		return -1;
 	}
 	if (!IsAnOper(sptr))
@@ -93,7 +93,7 @@ int  m_mkpasswd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		/* Non-opers /mkpasswd usage: lag them up, and send a notice to eyes snomask.
 		 * This notice is always sent, even in case of bad usage/bad auth methods/etc.
 		 */
-		sptr->since += 7;
+		sptr->localClient->since += 7;
 		sendto_snomask(SNO_EYES, "*** /mkpasswd used by %s (%s@%s)",
 			sptr->name, sptr->user->username, GetHost(sptr));
 	}
@@ -101,21 +101,21 @@ int  m_mkpasswd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if ((parc < 3) || BadPtr(parv[2]))
 	{
 		sendto_one(sptr, ":%s NOTICE %s :*** Syntax: /mkpasswd <authmethod> :parameter",
-			me.name, sptr->name);
+			me.client.name, sptr->name);
 		return 0;
 	}
 	/* Don't want to take any risk ;p. -- Syzop */
 	if (strlen(parv[2]) > 64)
 	{
 		sendto_one(sptr, ":%s NOTICE %s :*** Your parameter (text-to-hash) is too long.",
-			me.name, sptr->name);
+			me.client.name, sptr->name);
 		return 0;
 	}
 	if ((type = Auth_FindType(parv[1])) == -1)
 	{
 		sendto_one(sptr, 
 			":%s NOTICE %s :*** %s is not an enabled authentication method",
-				me.name, sptr->name, parv[1]);
+				me.client.name, sptr->name, parv[1]);
 		return 0;
 	}
 
@@ -132,7 +132,7 @@ int  m_mkpasswd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
 		sendto_one(sptr, 
 			":%s NOTICE %s :*** Authentication method %s failed",
-				me.name, sptr->name, parv[1]);
+				me.client.name, sptr->name, parv[1]);
 		return 0;
 	}
 	sendnotice(sptr, "*** Authentication phrase (method=%s, para=%s) is: %s",

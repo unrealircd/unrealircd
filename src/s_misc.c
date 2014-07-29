@@ -288,7 +288,7 @@ int  check_registered_user(aClient *sptr)
 {
 	if (!IsRegisteredUser(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOTREGISTERED), me.name, "*");
+		sendto_one(sptr, err_str(ERR_NOTREGISTERED), me.client.name, "*");
 		return -1;
 	}
 	return 0;
@@ -303,7 +303,7 @@ int  check_registered(aClient *sptr)
 {
 	if (!IsRegistered(sptr))
 	{
-		sendto_one(sptr, err_str(ERR_NOTREGISTERED), me.name, "*");
+		sendto_one(sptr, err_str(ERR_NOTREGISTERED), me.client.name, "*");
 		return -1;
 	}
 	return 0;
@@ -325,7 +325,7 @@ int  check_registered(aClient *sptr)
 **
 ** NOTE 1:
 **	Watch out the allocation of "nbuf", if either sptr->name
-**	or sptr->sockhost gets changed into pointers instead of
+**	or sptr->localClient->sockhost gets changed into pointers instead of
 **	directly allocated within the structure...
 **
 ** NOTE 2:
@@ -346,16 +346,16 @@ char *get_client_name(aClient *sptr, int showip)
 			    sptr->username,
 #ifdef INET6
 			    inetntop(AF_INET6,
-			    (char *)&sptr->ip, mydummy, MYDUMMY_SIZE),
+			    (char *)&sptr->localClient->ip, mydummy, MYDUMMY_SIZE),
 #else
-			    inetntoa((char *)&sptr->ip),
+			    inetntoa((char *)&sptr->localClient->ip),
 #endif
-			    (unsigned int)sptr->port);
+			    (unsigned int)sptr->localClient->port);
 		else
 		{
-			if (mycmp(sptr->name, sptr->sockhost))
+			if (mycmp(sptr->name, sptr->localClient->sockhost))
 				(void)ircsnprintf(nbuf, sizeof(nbuf), "%s[%s]",
-				    sptr->name, sptr->sockhost);
+				    sptr->name, sptr->localClient->sockhost);
 			else
 				return sptr->name;
 		}
@@ -370,12 +370,12 @@ char *get_client_host(aClient *cptr)
 
 	if (!MyConnect(cptr))
 		return cptr->name;
-	if (!cptr->hostp)
+	if (!cptr->localClient->hostp)
 		return get_client_name(cptr, FALSE);
 	(void)ircsnprintf(nbuf, sizeof(nbuf), "%s[%-.*s@%-.*s]",
 	    cptr->name, USERLEN,
   	    (!(cptr->flags & FLAGS_GOTID)) ? "" : cptr->username,
-	    HOSTLEN, cptr->hostp->h_name);
+	    HOSTLEN, cptr->localClient->hostp->h_name);
 	return nbuf;
 }
 
@@ -390,7 +390,7 @@ void get_sockhost(aClient *cptr, char *host)
 		s++;
 	else
 		s = host;
-	strlcpy(cptr->sockhost, s, sizeof(cptr->sockhost));
+	strlcpy(cptr->localClient->sockhost, s, sizeof(cptr->localClient->sockhost));
 }
 
 void remove_dcc_references(aClient *sptr)
@@ -415,7 +415,7 @@ int found;
 				{
 					sendto_one(acptr, ":%s %d %s :%s has been removed from "
 						"your DCC allow list for signing off",
-						me.name, RPL_DCCINFO, acptr->name, sptr->name);
+						me.client.name, RPL_DCCINFO, acptr->name, sptr->name);
 				}
 				tmp = *lpp;
 				*lpp = tmp->next;
@@ -603,13 +603,13 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 
 	if (MyConnect(sptr))
 	{
-		if (sptr->class)
+		if (sptr->localClient->class)
 		{
-			sptr->class->clients--;
-			if ((sptr->class->flag.temporary) && !sptr->class->clients && !sptr->class->xrefcount)
+			sptr->localClient->class->clients--;
+			if ((sptr->localClient->class->flag.temporary) && !sptr->localClient->class->clients && !sptr->localClient->class->xrefcount)
 			{
-				delete_classblock(sptr->class);
-				sptr->class = NULL;
+				delete_classblock(sptr->localClient->class);
+				sptr->localClient->class = NULL;
 			}
 		}
 		if (IsClient(sptr))
@@ -633,10 +633,10 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 			ircd_log(LOG_SERVER, "SQUIT %s (%s)", sptr->name, comment);
 		}
 		free_pending_net(sptr);
-		if (sptr->listener)
-			if (sptr->listener && !IsOutgoing(sptr))
+		if (sptr->localClient->listener)
+			if (sptr->localClient->listener && !IsOutgoing(sptr))
 			{
-				listen_conf = sptr->listener;
+				listen_conf = sptr->localClient->listener;
 				listen_conf->clients--;
 				if (listen_conf->flag.temporary && (listen_conf->clients == 0))
 				{
@@ -657,7 +657,7 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 				free_str_list(sptr->user->lopt->nolist);
 				MyFree(sptr->user->lopt);
 			}
-			on_for = TStime() - sptr->firsttime;
+			on_for = TStime() - sptr->localClient->firsttime;
 			if (IsHidden(sptr))
 				ircd_log(LOG_CLIENT, "Disconnect - (%ld:%ld:%ld) %s!%s@%s [VHOST %s] (%s)",
 					on_for / 3600, (on_for % 3600) / 60, on_for % 60,
@@ -701,7 +701,7 @@ int  exit_client(aClient *cptr, aClient *sptr, aClient *from, char *comment)
 	}
 	else if (IsPerson(sptr) && !IsULine(sptr))
 	{
-		if (sptr->srvptr != &me)
+		if (sptr->srvptr != &me.client)
 			sendto_fconnectnotice(sptr->name, sptr->user, sptr, 1, comment);
 	}
 
@@ -1063,7 +1063,7 @@ void kick_insecure_users(aChannel *chptr)
 		cptr = member->cptr;
 		if (MyClient(cptr) && !IsSecureConnect(cptr) && !IsULine(cptr))
 		{
-			RunHook5(HOOKTYPE_LOCAL_KICK, &me, &me, cptr, chptr, comment);
+			RunHook5(HOOKTYPE_LOCAL_KICK, &me.client, &me.client, cptr, chptr, comment);
 
 			for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
 			{
@@ -1074,15 +1074,15 @@ void kick_insecure_users(aChannel *chptr)
 
 			if (i != 0 && !(is_skochanop(cptr, chptr) || has_voice(cptr,chptr)))
 			{
-				sendto_chanops_butone(cptr, chptr, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
-				sendto_prefix_one(cptr, &me, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
+				sendto_chanops_butone(cptr, chptr, ":%s KICK %s %s :%s", me.client.name, chptr->chname, cptr->name, comment);
+				sendto_prefix_one(cptr, &me.client, ":%s KICK %s %s :%s", me.client.name, chptr->chname, cptr->name, comment);
 			} 
 			else
 			{
-				sendto_channel_butserv(chptr, &me, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
+				sendto_channel_butserv(chptr, &me.client, ":%s KICK %s %s :%s", me.client.name, chptr->chname, cptr->name, comment);
 			}
 
-			sendto_server(&me, 0, 0, ":%s KICK %s %s :%s", me.name, chptr->chname, cptr->name, comment);
+			sendto_server(&me.client, 0, 0, ":%s KICK %s %s :%s", me.client.name, chptr->chname, cptr->name, comment);
 
 			remove_user_from_channel(cptr, chptr);
 		}

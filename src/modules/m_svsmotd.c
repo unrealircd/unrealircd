@@ -83,20 +83,20 @@ int  m_svsmotd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
         if (!IsULine(sptr))
         {
-                sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+                sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.client.name, parv[0]);
                 return 0;
         }
         if (parc < 2)
         {
                 sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-                    me.name, parv[0], "SVSMOTD");
+                    me.client.name, parv[0], "SVSMOTD");
                 return 0;
         }
 
         if ((*parv[1] != '!') && parc < 3)
         {
                 sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-                    me.name, parv[0], "SVSMOTD");
+                    me.client.name, parv[0], "SVSMOTD");
                 return 0;
         }
 
