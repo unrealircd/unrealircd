@@ -118,7 +118,7 @@ DLLFUNC CMD_FUNC(m_starttls)
 		return 0;
 	}
 
-	dbuf_delete(&sptr->recvQ, 1000000); /* Clear up any remaining plaintext commands */
+	dbuf_delete(&sptr->recvQ, DBufLength(&sptr->recvQ)); /* Clear up any remaining plaintext commands */
 	sendto_one(sptr, rpl_str(RPL_STARTTLS), me.name, !BadPtr(sptr->name) ? sptr->name : "*");
 	send_queued(sptr);
 
