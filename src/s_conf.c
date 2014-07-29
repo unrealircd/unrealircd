@@ -9706,7 +9706,6 @@ void load_includes(void)
 		inc->flag.type &= ~INCLUDE_NOTLOADED; 
 }
 
-#ifdef USE_SSL
 /** Check if an important SSL option is used in config. Only checks link and listen at this time.
  * This will generate a warning on boot & REHASH.
  * If booting, the IRCd will stop.
@@ -9717,8 +9716,10 @@ int ssl_used_in_config_but_unavail(void)
 	ConfigItem_link *link;
 	ConfigItem_listen *listener;
 
+#ifdef USE_SSL
 	if (ctx_server && ctx_client)
 		return 0; /* everything is functional */
+#endif
 
 	for (listener = conf_listen; listener; listener = (ConfigItem_listen *)listener->next)
 		if (listener->options & LISTENER_SSL)
@@ -9736,4 +9737,3 @@ int ssl_used_in_config_but_unavail(void)
 	
 	return (errors ? 1 : 0);
 }
-#endif
