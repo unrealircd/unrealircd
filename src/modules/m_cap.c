@@ -47,6 +47,8 @@ typedef int (*bqcmp)(const void *, const void *);
 
 DLLFUNC int m_cap(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
+static struct list_head clicap_list;
+
 #define MSG_CAP 	"CAP"
 
 ModuleHeader MOD_HEADER(m_cap)
@@ -59,9 +61,8 @@ ModuleHeader MOD_HEADER(m_cap)
     };
 
 
-static struct list_head *clicap_build_list(void)
+static void clicap_build_list(void)
 {
-	static struct list_head clicap_list;
 	ClientCapability *cap;
 
 	INIT_LIST_HEAD(&clicap_list);
@@ -89,13 +90,10 @@ static struct list_head *clicap_build_list(void)
 	clicap_append(&clicap_list, cap);
 
 	RunHook(HOOKTYPE_CAPLIST, &clicap_list);
-
-	return &clicap_list;
 }
 
 static ClientCapability *clicap_find(const char *data, int *negate, int *finished)
 {
-	struct list_head *clicap_list = clicap_build_list();
 	static char buf[BUFSIZE];
 	static char *p;
 	ClientCapability *cap;
@@ -138,7 +136,7 @@ static ClientCapability *clicap_find(const char *data, int *negate, int *finishe
 	if (!stricmp(p, "sasl") && (!SASL_SERVER || !find_server(SASL_SERVER, NULL)))
 		return NULL; /* hack: if SASL is disabled or server not online, then pretend it does not exist. -- Syzop */
 
-	list_for_each_entry2(cap, ClientCapability, clicap_list, caplist_node)
+	list_for_each_entry2(cap, ClientCapability, &clicap_list, caplist_node)
 	{
 		if (!stricmp(cap->name, p))
 		{
@@ -156,7 +154,6 @@ static ClientCapability *clicap_find(const char *data, int *negate, int *finishe
 
 static void clicap_generate(aClient *sptr, const char *subcmd, int flags, int clear)
 {
-	struct list_head *clicap_list = clicap_build_list();
 	ClientCapability *cap;
 	char buf[BUFSIZE];
 	char capbuf[BUFSIZE];
@@ -176,7 +173,7 @@ static void clicap_generate(aClient *sptr, const char *subcmd, int flags, int cl
 		return;
 	}
 
-	list_for_each_entry2(cap, ClientCapability, clicap_list, caplist_node)
+	list_for_each_entry2(cap, ClientCapability, &clicap_list, caplist_node)
 	{
 		if (flags)
 		{
@@ -466,6 +463,7 @@ DLLFUNC int MOD_INIT(m_cap)(ModuleInfo *modinfo)
 /* Is first run when server is 100% ready */
 DLLFUNC int MOD_LOAD(m_cap)(int module_load)
 {
+	clicap_build_list();
 	return MOD_SUCCESS;
 }
 
@@ -473,5 +471,6 @@ DLLFUNC int MOD_LOAD(m_cap)(int module_load)
 /* Called when module is unloaded */
 DLLFUNC int MOD_UNLOAD(m_cap)(int module_unload)
 {
+	// XXX free cap list
 	return MOD_SUCCESS;
 }
