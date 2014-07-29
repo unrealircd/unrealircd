@@ -2680,6 +2680,9 @@ set {
  <p><font class="set">set::default-bantime &lt;time&gt;</font><br>
   Default bantime when doing /kline, /gline, /zline, /shun, etc without time parameter 
   (like /gline *@some.nasty.isp), the default is permanent (0). Example: <i>default-bantime 90d;</i></p>
+   <p><font class="set">set::link::bind-ip &lt;ip&gt;</font><br>
+  Sets a default bind-ip for link blocks - if no bind-ip is explicitly set in a link block, it will inherit this IP, 
+   for example <i>bind-ip: "10.0.0.1"</i> will set 10.0.0.1 as the default bind-ip for links.</p>
  <p><font class="set">set::modef-default-unsettime &lt;value&gt;</font><br>
   For channelmode +f you can specify a default unsettime, if you specify 10 for example then 
   +f [5j]:15 will be transformed to [5j#i10]:15. The default is no default unsettime.</p>
