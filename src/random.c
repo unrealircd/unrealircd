@@ -130,8 +130,8 @@ u_char si, sj;
 u_int16_t getrandom16()
 {
 u_int16_t val;
-	val = getrandom8(rs) << 8;
-	val |= getrandom8(rs);
+	val = getrandom8() << 8;
+	val |= getrandom8();
 	return val;
 }
 
@@ -139,10 +139,10 @@ u_int32_t getrandom32()
 {
 u_int32_t val;
 
-	val = getrandom8(rs) << 24;
-	val |= getrandom8(rs) << 16;
-	val |= getrandom8(rs) << 8;
-	val |= getrandom8(rs);
+	val = getrandom8() << 24;
+	val |= getrandom8() << 16;
+	val |= getrandom8() << 8;
+	val |= getrandom8();
 	return val;
 }
 

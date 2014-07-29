@@ -122,8 +122,10 @@ int IsSecureJoin(aChannel *chptr)
 	{
 		i = (*(h->func.intfunc))(chptr);
 		if (i != 0)
-			return i;
+			break;
 	}
+
+	return i;
 }
 
 int modeZ_is_ok(aClient *sptr, aChannel *chptr, char mode, char *para, int checkt, int what)
