@@ -1624,19 +1624,8 @@ void applymeblock(void)
 	if (!*me.name)
 		strlcpy(me.name, conf_me->name, sizeof(me.name));
 
-	/* SID change? */
-	if (strcmp(me.id, conf_me->sid))
-	{
-		/* Can we apply ? */
-		if (!isanyserverlinked())
-		{
-			strlcpy(me.id, conf_me->sid, sizeof(me.id));
-		} else {
-			config_warn("me::sid: Server ID changed in config but this change cannot be applied "
-			            "due to being linked to other servers. Unlink all servers and /REHASH to "
-			            "try again.");
-		}
-	}
+	if (!*me.id)
+		strlcpy(me.id, conf_me->sid, sizeof(me.id));
 }
 
 int	init_conf(char *rootconf, int rehash)
