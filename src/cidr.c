@@ -211,7 +211,7 @@ static int parse_v4_netmask(const char *text, struct IN_ADDR *addr, short int *b
 	{
 		char *after;
 		bits = strtoul(p + 1, &after, 10);
-		if (!bits || *after) /* Error: Invalid number or not end */
+		if (bits < 0 || *after) /* Error: Invalid number or not end */
 			return HM_HOST;
 		if (bits > n * 8) /* Error: More than the bits given */
 			return HM_HOST;
