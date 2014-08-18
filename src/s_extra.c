@@ -379,19 +379,6 @@ static char recursion_trap=0;
 #endif
 		}
 	}
-	
-	/* If nothing got written at all AND we had a write failure AND we are booting, then exit.
-	 * Note that we can't just fail when nothing got written, as we might have been called for
-	 * 'tkl' for example, which might not be in our log block.
-	 */
-	if (!written && write_failure && !loop.ircd_booted)
-	{
-		config_status("ERROR: Unable to write to any log file. Please check your log { } blocks and file permissions!");
-#ifdef _WIN32
-		win_error();
-#endif
-		exit(9);
-	}
 
 	recursion_trap = 0;
 }
