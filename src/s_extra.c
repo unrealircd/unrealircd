@@ -282,6 +282,7 @@ int  channel_canjoin(aClient *sptr, char *name)
 void ircd_log(int flags, char *format, ...)
 {
 static int last_log_file_warning = 0;
+static char recursion_trap=0;
 
 	va_list ap;
 	ConfigItem_log *logs;
@@ -296,6 +297,13 @@ static int last_log_file_warning = 0;
 	snprintf(timebuf, sizeof(timebuf), "[%s] - ", myctime(TStime()));
 	RunHook3(HOOKTYPE_LOG, flags, timebuf, buf);
 	strlcat(buf, "\n", sizeof(buf));
+
+	/* Trap infinite recursions to avoid crash if log file is unavailable,
+	 * this will also avoid calling ircd_log from anything else called, which is why
+	 * we execute it _after_ the hook call
+	 */
+	if (recursion_trap == 1)
+		return;
 
 	for (logs = conf_log; logs; logs = (ConfigItem_log *) logs->next) {
 #ifdef HAVE_SYSLOG
@@ -330,11 +338,15 @@ static int last_log_file_warning = 0;
 				{
 					if (!loop.ircd_booted)
 					{
+						recursion_trap = 1;
 						config_status("WARNING: Unable to write to '%s': %s", logs->file, strerror(ERRNO));
+						recursion_trap = 0;
 					} else {
 						if (last_log_file_warning + 300 < TStime())
 						{
+							recursion_trap = 1;
 							config_status("WARNING: Unable to write to '%s': %s. This warning will not re-appear for at least 5 minutes.", logs->file, strerror(ERRNO));
+							recursion_trap = 0;
 							last_log_file_warning = TStime();
 						}
 					}
@@ -355,11 +367,15 @@ static int last_log_file_warning = 0;
 			{
 				if (!loop.ircd_booted)
 				{
+					recursion_trap = 1;
 					config_status("WARNING: Unable to write to '%s': %s", logs->file, strerror(ERRNO));
+					recursion_trap = 0;
 				} else {
 					if (last_log_file_warning + 300 < TStime())
 					{
+						recursion_trap = 1;
 						config_status("WARNING: Unable to write to '%s': %s. This warning will not re-appear for at least 5 minutes.", logs->file, strerror(ERRNO));
+						recursion_trap = 0;
 						last_log_file_warning = TStime();
 					}
 				}
