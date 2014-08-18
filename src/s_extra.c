@@ -291,19 +291,19 @@ static char recursion_trap=0;
 	int written = 0, write_failure = 0;
 	int n;
 
+	/* Trap infinite recursions to avoid crash if log file is unavailable,
+	 * this will also avoid calling ircd_log from anything else called
+	 */
+	if (recursion_trap == 1)
+		return;
+
+	recursion_trap = 1;
 	va_start(ap, format);
 	ircvsnprintf(buf, sizeof(buf), format, ap);
 	va_end(ap);
 	snprintf(timebuf, sizeof(timebuf), "[%s] - ", myctime(TStime()));
 	RunHook3(HOOKTYPE_LOG, flags, timebuf, buf);
 	strlcat(buf, "\n", sizeof(buf));
-
-	/* Trap infinite recursions to avoid crash if log file is unavailable,
-	 * this will also avoid calling ircd_log from anything else called, which is why
-	 * we execute it _after_ the hook call
-	 */
-	if (recursion_trap == 1)
-		return;
 
 	for (logs = conf_log; logs; logs = (ConfigItem_log *) logs->next) {
 #ifdef HAVE_SYSLOG
@@ -338,15 +338,11 @@ static char recursion_trap=0;
 				{
 					if (!loop.ircd_booted)
 					{
-						recursion_trap = 1;
 						config_status("WARNING: Unable to write to '%s': %s", logs->file, strerror(ERRNO));
-						recursion_trap = 0;
 					} else {
 						if (last_log_file_warning + 300 < TStime())
 						{
-							recursion_trap = 1;
 							config_status("WARNING: Unable to write to '%s': %s. This warning will not re-appear for at least 5 minutes.", logs->file, strerror(ERRNO));
-							recursion_trap = 0;
 							last_log_file_warning = TStime();
 						}
 					}
@@ -367,18 +363,15 @@ static char recursion_trap=0;
 			{
 				if (!loop.ircd_booted)
 				{
-					recursion_trap = 1;
 					config_status("WARNING: Unable to write to '%s': %s", logs->file, strerror(ERRNO));
-					recursion_trap = 0;
 				} else {
 					if (last_log_file_warning + 300 < TStime())
 					{
-						recursion_trap = 1;
 						config_status("WARNING: Unable to write to '%s': %s. This warning will not re-appear for at least 5 minutes.", logs->file, strerror(ERRNO));
-						recursion_trap = 0;
 						last_log_file_warning = TStime();
 					}
 				}
+
 				write_failure = 1;
 			}
 #ifndef _WIN32
@@ -399,4 +392,6 @@ static char recursion_trap=0;
 #endif
 		exit(9);
 	}
+
+	recursion_trap = 0;
 }
