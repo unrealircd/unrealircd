@@ -1276,7 +1276,8 @@ void config_status(char *format, ...)
 #else
 		win_log("* %s", buffer);
 #endif
-	ircd_log(LOG_ERROR, "%s", buffer);
+	if (loop.ircd_booted)
+		ircd_log(LOG_ERROR, "%s", buffer);
 	sendto_realops("%s", buffer);
 }
 
@@ -1297,7 +1298,8 @@ void config_warn(char *format, ...)
 #else
 		win_log("[warning] %s", buffer);
 #endif
-	ircd_log(LOG_ERROR, "[warning] %s", buffer);
+	if (loop.ircd_booted)
+		ircd_log(LOG_ERROR, "[warning] %s", buffer);
 	sendto_realops("[warning] %s", buffer);
 }
 
