@@ -120,6 +120,7 @@ DLLFUNC int MOD_INIT(floodprot)(ModuleInfo *modinfo)
 	ModDataInfo mreq;
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+	ModuleSetOptions(modinfo->handle,MOD_OPT_PERM,1);
 	ModInfo = modinfo;
 
 	memset(&creq, 0, sizeof(creq));
