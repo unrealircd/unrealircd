@@ -464,77 +464,75 @@ EVENT(try_connections)
  * same time as pings is really negligible because we rarely process TKLs
  * anyway. --nenolod
  */
-void check_tkls(void)
+int check_tkls(aClient *cptr)
 {
-	aClient *cptr, *cptr2;
 	ConfigItem_ban *bconf = NULL;
 	char banbuf[1024];
 
-	list_for_each_entry_safe(cptr, cptr2, &lclient_list, lclient_node)
+	char killflag = 0;
+
+	/* Process dynamic *LINES */
+	if (find_tkline_match(cptr, 0) < 0)
+		return 0; /* stop processing this user, as (s)he is dead now. */
+
+	find_shun(cptr); /* check for shunned and take action, if so */
+
+	if (IsPerson(cptr))
 	{
-		char killflag = 0;
+		/* Check ban user { } and ban realname { } */
 
-		/* Process dynamic *LINES */
-		if (find_tkline_match(cptr, 0) < 0)
-			continue; /* stop processing this user, as (s)he is dead now. */
+		bconf = Find_ban(cptr, make_user_host(cptr->
+				user ? cptr->user->username : cptr->
+				username,
+				cptr->user ? cptr->user->realhost : cptr->
+				sockhost), CONF_BAN_USER);
 
-		find_shun(cptr); /* check for shunned and take action, if so */
-		
-		if (IsPerson(cptr))
-		{
-			/* Check ban user { } and ban realname { } */
-
-			bconf = Find_ban(cptr, make_user_host(cptr->
-				    user ? cptr->user->username : cptr->
-				    username,
-				    cptr->user ? cptr->user->realhost : cptr->
-				    sockhost), CONF_BAN_USER);
-
-			if (bconf)
-				killflag++;
-			else if (!IsAnOper(cptr) && (bconf = Find_ban(NULL, cptr->info, CONF_BAN_REALNAME)))
-				killflag++;
-		}
-		
-		/* If still no match, check ban ip { } */
-		if (!killflag && (bconf = Find_ban(cptr, Inet_ia2p(&cptr->ip), CONF_BAN_IP)))
+		if (bconf)
 			killflag++;
-
-		/* If user is meant to be killed, take action: */
-		if (killflag)
-		{
-			if (IsPerson(cptr))
-				sendto_realops("Ban active for %s (%s)",
-				    get_client_name(cptr, FALSE),
-				    bconf->reason ? bconf->reason : "no reason");
-
-			if (IsServer(cptr))
-				sendto_realops("Ban active for server %s (%s)",
-				    get_client_name(cptr, FALSE),
-				    bconf->reason ? bconf->reason : "no reason");
-
-			if (bconf->reason) {
-				if (IsPerson(cptr))
-					snprintf(banbuf, sizeof(banbuf), "User has been banned (%s)", bconf->reason);
-				else
-					snprintf(banbuf, sizeof(banbuf), "Banned (%s)", bconf->reason);
-				(void)exit_client(cptr, cptr, &me, banbuf);
-			} else {
-				if (IsPerson(cptr))
-					(void)exit_client(cptr, cptr, &me, "User has been banned");
-				else
-					(void)exit_client(cptr, cptr, &me, "Banned");
-			}
-			continue; /* stop processing this user, as (s)he is dead now. */
-		}
-
-		if (IsPerson(cptr) && find_spamfilter_user(cptr, SPAMFLAG_NOWARN) == FLUSH_BUFFER)
-			continue;
-
-		if (IsPerson(cptr) && cptr->user->away != NULL &&
-			dospamfilter(cptr, cptr->user->away, SPAMF_AWAY, NULL, SPAMFLAG_NOWARN, NULL) == FLUSH_BUFFER)
-			continue;
+		else if (!IsAnOper(cptr) && (bconf = Find_ban(NULL, cptr->info, CONF_BAN_REALNAME)))
+			killflag++;
 	}
+
+	/* If still no match, check ban ip { } */
+	if (!killflag && (bconf = Find_ban(cptr, Inet_ia2p(&cptr->ip), CONF_BAN_IP)))
+		killflag++;
+
+	/* If user is meant to be killed, take action: */
+	if (killflag)
+	{
+		if (IsPerson(cptr))
+			sendto_realops("Ban active for %s (%s)",
+				get_client_name(cptr, FALSE),
+				bconf->reason ? bconf->reason : "no reason");
+
+		if (IsServer(cptr))
+			sendto_realops("Ban active for server %s (%s)",
+				get_client_name(cptr, FALSE),
+				bconf->reason ? bconf->reason : "no reason");
+
+		if (bconf->reason) {
+			if (IsPerson(cptr))
+				snprintf(banbuf, sizeof(banbuf), "User has been banned (%s)", bconf->reason);
+			else
+				snprintf(banbuf, sizeof(banbuf), "Banned (%s)", bconf->reason);
+			(void)exit_client(cptr, cptr, &me, banbuf);
+		} else {
+			if (IsPerson(cptr))
+				(void)exit_client(cptr, cptr, &me, "User has been banned");
+			else
+				(void)exit_client(cptr, cptr, &me, "Banned");
+		}
+		return 0; /* stop processing this user, as (s)he is dead now. */
+	}
+
+	if (loop.do_bancheck_spamf_user && IsPerson(cptr) && find_spamfilter_user(cptr, SPAMFLAG_NOWARN) == FLUSH_BUFFER)
+		return 0;
+
+	if (loop.do_bancheck_spamf_user && IsPerson(cptr) && cptr->user->away != NULL &&
+		dospamfilter(cptr, cptr->user->away, SPAMF_AWAY, NULL, SPAMFLAG_NOWARN, NULL) == FLUSH_BUFFER)
+		return 0;
+
+	return 1;
 }
 
 /*
@@ -584,6 +582,14 @@ EVENT(check_pings)
 	
 	list_for_each_entry_safe(cptr, cptr2, &lclient_list, lclient_node)
 	{
+
+		// Check TKLs for this user
+		if (!check_tkls(cptr))
+		{
+			continue;
+		}
+
+
 		ping =
 		    IsRegistered(cptr) ? (cptr->class ? cptr->
 		    class->pingfreq : CONNECTTIMEOUT) : CONNECTTIMEOUT;

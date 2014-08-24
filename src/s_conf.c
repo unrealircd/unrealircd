@@ -2327,6 +2327,7 @@ int	config_run()
 	close_listeners();
 	listen_cleanup();
 	close_listeners();
+	loop.do_bancheck = 1;
 	free_iConf(&iConf);
 	bcopy(&tempiConf, &iConf, sizeof(aConfiguration));
 	bzero(&tempiConf, sizeof(aConfiguration));
@@ -2347,7 +2348,6 @@ int	config_run()
 		EventMod(EventFind("bucketcleaning"), &eInfo);
 	}
 
-	check_tkls();
 
 	/* initialize conf_files with defaults if the block isn't set: */
 	if(!conf_files)
