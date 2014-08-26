@@ -113,6 +113,10 @@ aClient *ocptr; /* Other client */
 		return 0;
 	}
 
+	/* if the new nickname is identical to the old one, ignore it */
+	if (!strcmp(acptr->name, parv[2]))
+		return 0;
+
 	if (acptr != ocptr)
 		acptr->umodes &= ~UMODE_REGNICK;
 	acptr->lastnick = TS2ts(parv[3]);
