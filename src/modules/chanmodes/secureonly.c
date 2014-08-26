@@ -96,13 +96,16 @@ DLLFUNC int MOD_UNLOAD(sslonly)(int module_unload)
 
 
 /** Kicks all insecure users on a +z channel */
-void secureonly_kick_insecure_users(aChannel *chptr)
+static void secureonly_kick_insecure_users(aChannel *chptr)
 {
 	Member *member, *mb2;
 	aClient *cptr;
 	int i = 0;
 	Hook *h;
 	char *comment = "Insecure user not allowed on secure channel (+z)";
+
+	if (!IsSecureOnly(chptr))
+		return;
 
 	for (member = chptr->members; member; member = mb2)
 	{
@@ -112,6 +115,7 @@ void secureonly_kick_insecure_users(aChannel *chptr)
 		{
 			RunHook5(HOOKTYPE_LOCAL_KICK, &me, &me, cptr, chptr, comment);
 
+			i = 0;
 			for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)
 			{
 				i = (*(h->func.intfunc))(cptr,chptr);
