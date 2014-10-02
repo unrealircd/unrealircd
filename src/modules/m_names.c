@@ -224,6 +224,7 @@ DLLFUNC CMD_FUNC(m_names)
 		flag = 1;
 		if (mlen + idx + bufLen > BUFSIZE - 7)
 		{
+			buf[idx-1] = '\0'; // remove trailing space
 			sendto_one(sptr, rpl_str(RPL_NAMREPLY), me.name,
 			    parv[0], buf);
 			idx = spos;
@@ -232,7 +233,10 @@ DLLFUNC CMD_FUNC(m_names)
 	}
 
 	if (flag)
+	{
+		buf[idx-1] = '\0';
 		sendto_one(sptr, rpl_str(RPL_NAMREPLY), me.name, parv[0], buf);
+	}
 
 	sendto_one(sptr, rpl_str(RPL_ENDOFNAMES), me.name, parv[0], para);
 
