@@ -90,6 +90,7 @@ struct zConfiguration {
 	int  maxdccallow;
 	int  anti_spam_quit_message_time;
 	char *egd_path;
+	int static_quit_part_users;
 	char *static_quit;
 	char *static_part;
 	char *x_server_cert_pem;
@@ -198,6 +199,7 @@ extern MODVAR aConfiguration iConf;
 #define SSL_SERVER_CERT_PEM		iConf.x_server_cert_pem
 #define SSL_SERVER_KEY_PEM		iConf.x_server_key_pem
 
+#define STATIC_QUIT_PART_USERS		iConf.static_quit_part_users
 #define STATIC_QUIT			iConf.static_quit
 #define STATIC_PART			iConf.static_part
 #define UHOST_ALLOWED			iConf.userhost_allowed
@@ -299,6 +301,7 @@ struct SetCheck {
 	unsigned has_maxdccallow:1;
 	unsigned has_anti_spam_quit_message_time:1;
 	unsigned has_egd_path:1;
+	unsigned has_static_quit_part_users:1;
 	unsigned has_static_quit:1;
 	unsigned has_static_part:1;
 	unsigned has_ssl_certificate:1;

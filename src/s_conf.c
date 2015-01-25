@@ -1406,6 +1406,7 @@ void	free_iConf(aConfiguration *i)
 	safefree(i->oper_snomask);
 	safefree(i->user_snomask);
 	safefree(i->egd_path);
+	safefree(i->static_part);
 	safefree(i->static_quit);
 	safefree(i->x_server_cert_pem);
 	safefree(i->x_server_key_pem);
@@ -6793,6 +6794,18 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "level-on-join")) {
 			tempiConf.level_on_join = channellevel_to_int(cep->ce_vardata);
 		}
+		/* setting "all" will enforce static-quit and static-part to all users
+		 * 
+		 * setting "unregistered" will enforce static-quit and static-part to
+		 * unregistered users only -dboyz
+		 * TODO: Produce error message by adding else
+		 */
+		else if (!strcmp(cep->ce_varname, "static-quit-part-users")) {
+			if(!strcmp(ce->ce_vardata, "all"))
+				tempiConf.static_quit_part_users = 0;
+			else if (!strcmp(ce->vardata, "unregistered"))
+				tempiConf.static_quit_part_users = 1;
+		}
 		else if (!strcmp(cep->ce_varname, "static-quit")) {
 			safestrdup(tempiConf.static_quit, cep->ce_vardata);
 		}
@@ -6878,8 +6891,21 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "new-linking-protocol")) {
 			tempiConf.new_linking_protocol = atoi(cep->ce_vardata);
 		}
+		/* setting a valid value according to config_checkval will enforce 
+		 * static-quit and static-part to newly connected users during the 
+		 * duration specified
+		 *
+		 * setting value 0 disables the feature
+		 *
+		 * anti-spam-quit-message-time can now be enforced all the time by
+		 * setting "static". This will also enforce static-quit and static-
+		 * part all the time, when enabled. -dboyz
+		 */
 		else if (!strcmp(cep->ce_varname, "anti-spam-quit-message-time")) {
-			tempiConf.anti_spam_quit_message_time = config_checkval(cep->ce_vardata,CFG_TIME);
+			if(!strcmp(ce->ce_vardata, "static"))
+				tempiConf.anti_spam_quit_message_time = -1;
+			else
+				tempiConf.anti_spam_quit_message_time = config_checkval(cep->ce_vardata,CFG_TIME);
 		}
 		else if (!strcmp(cep->ce_varname, "oper-only-stats")) {
 			if (!cep->ce_entries)
@@ -7359,6 +7385,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
 				errors++;
 			}
+		}
+		else if (!strcmp(cep->ce_varname, "static-quit-part-users")) {
+			CheckNull(cep);
+			CheckDuplicate(cep, static_quit_part_users, "static-quit-part-users");
 		}
 		else if (!strcmp(cep->ce_varname, "static-quit")) {
 			CheckNull(cep);
