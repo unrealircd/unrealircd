@@ -98,8 +98,9 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			 * quit messages from unregistered users when config is set to
 			 * set::static-quit unreg; -dboyz
 			 */
-			if (strcasecmp(STATIC_PART, "unreg") && !IsAnOper(sptr) && !IsLoggedIn(sptr))
-				return exit_client(cptr, sptr, sptr, "Client Quit");
+			if (strcasecmp(STATIC_PART, "unreg"))
+				if(!IsAnOper(sptr) && !IsLoggedIn(sptr))
+					return exit_client(cptr, sptr, sptr, "Client Quit");
 			else
 				return exit_client(cptr, sptr, sptr, "Client Quit");
 		}
