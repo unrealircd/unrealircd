@@ -91,7 +91,18 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		char *s = comment;
 		Hook *tmphook;
 		if (STATIC_QUIT)
-			return exit_client(cptr, sptr, sptr, STATIC_QUIT);
+		{
+			/* Lets not let unregistered users spam us even without STATIC_QUIT
+			 * except opers. -katsklaw
+			 * Added configurable option to katsklaw's patch. New code will block
+			 * quit messages from unregistered users when config is set to
+			 * set::static-quit unreg; -dboyz
+			 */
+			if (strcasecmp(STATIC_PART, "unreg") && !IsAnOper(sptr) && !IsLoggedIn(sptr))
+				return exit_client(cptr, sptr, sptr, "Client Quit");
+			else
+				return exit_client(cptr, sptr, sptr, "Client Quit");
+		}
 		if (IsVirus(sptr))
 			return exit_client(cptr, sptr, sptr, "Client exited");
 
