@@ -6839,6 +6839,33 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "level-on-join")) {
 			tempiConf.level_on_join = channellevel_to_int(cep->ce_vardata);
 		}
+		/* setting "all" will enforce static-quit and static-part to all users
+		 * 
+		 * setting "unregistered" will enforce static-quit and static-part to
+		 * unregistered users only -dboyz
+		 * TODO: Produce error message by adding else
+		 */
+		else if (!strcmp(cep->ce_varname, "static-quit-part-set")) {
+			if(!strcmp(ce->ce_vardata, "all"))
+				tempiConf.static_quit_part_set = 0;
+			else if (!strcmp(ce->vardata, "unregistered"))
+				tempiConf.static_quit_part_set = 1;
+		}
+		/* setting a valid value according to config_checkval will enforce 
+		 * static-quit and static-part to newly connected users during the 
+		 * duration specified
+		 *
+		 * setting value 0 disables the feature
+		 *
+		 * setting "static" will enforce static-quit and static-part all the
+		 * time -dboyz
+		 */
+		else if (!strcmp(cep->ce_varname, "static-quit-part-time")) {
+			if(!strcmp(ce->ce_vardata, "static"))
+				tempiConf.static_quit_part_time = -1;
+			else
+				tempiConf.static_quit_part_time = config_checkval(cep->ce_vardata,CFG_TIME);
+		}
 		else if (!strcmp(cep->ce_varname, "static-quit")) {
 			ircstrdup(tempiConf.static_quit, cep->ce_vardata);
 		}
@@ -7429,6 +7456,14 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, cep->ce_vardata);
 				errors++;
 			}
+		}
+		else if (!strcmp(cep->ce_varname, "static-quit-part-set")) {
+			CheckNull(cep);
+			CheckDuplicate(cep, static_quit_part_set, "static-quit-part-set");
+		}
+		else if (!strcmp(cep->ce_varname, "static-quit-part-time")) {
+			CheckNull(cep);
+			CheckDuplicate(cep, static_quit_part_time, "static-quit-part-time");
 		}
 		else if (!strcmp(cep->ce_varname, "static-quit")) {
 			CheckNull(cep);
