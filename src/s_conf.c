@@ -1445,6 +1445,7 @@ void	free_iConf(aConfiguration *i)
 	ircfree(i->oper_snomask);
 	ircfree(i->user_snomask);
 	ircfree(i->egd_path);
+	ircfree(i->static_part);
 	ircfree(i->static_quit);
 #ifdef USE_SSL
 	ircfree(i->x_server_cert_pem);
