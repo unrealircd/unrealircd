@@ -1224,8 +1224,6 @@ int stats_set(aClient *sptr, char *para)
 	if (uhallow)
 		sendto_one(sptr, ":%s %i %s :allow-userhost-change: %s", me.name, RPL_TEXT,
 			sptr->name, uhallow);
-	sendto_one(sptr, ":%s %i %s :anti-spam-quit-message-time: %s", me.name, RPL_TEXT, 
-		sptr->name, pretty_time_val(ANTI_SPAM_QUIT_MSG_TIME));
 	sendto_one(sptr, ":%s %i %s :channel-command-prefix: %s", me.name, RPL_TEXT, sptr->name, CHANCMDPFX ? CHANCMDPFX : "`");
 #ifdef USE_SSL
 	sendto_one(sptr, ":%s %i %s :ssl::egd: %s", me.name, RPL_TEXT,
@@ -1266,6 +1264,24 @@ int stats_set(aClient *sptr, char *para)
 	    sptr->name, AUTO_JOIN_CHANS ? AUTO_JOIN_CHANS : "0");
 	sendto_one(sptr, ":%s %i %s :oper-auto-join: %s", me.name,
 	    RPL_TEXT, sptr->name, OPER_AUTO_JOIN_CHANS ? OPER_AUTO_JOIN_CHANS : "0");
+	if (STATIC_QUIT_PART_SET)
+	{
+		sendto_one(sptr, ":%s %i %s :static-quit-part-set: %s", me.name, RPL_TEXT, 
+			sptr->name, "all");
+	}
+	else
+		sendto_one(sptr, ":%s %i %s :static-quit-part-set: %s", me.name, RPL_TEXT, 
+			sptr->name, "unregistered"));
+	if (STATIC_QUIT_PART_TIME == -1)
+	{
+		sendto_one(sptr, ":%s %i %s :static-quit-part-time: %s", me.name, RPL_TEXT, 
+			sptr->name, "STATIC");
+	}
+	else
+	{
+		sendto_one(sptr, ":%s %i %s :static-quit-part-time: %s", me.name, RPL_TEXT, 
+			sptr->name, pretty_time_val(STATIC_QUIT_PART_TIME));
+	}
 	sendto_one(sptr, ":%s %i %s :static-quit: %s", me.name, 
 		RPL_TEXT, sptr->name, STATIC_QUIT ? STATIC_QUIT : "<none>");	
 	sendto_one(sptr, ":%s %i %s :static-part: %s", me.name, 
