@@ -101,12 +101,16 @@ DLLFUNC CMD_FUNC(m_part)
 			commentx = NULL;
 		if (STATIC_PART)
 		{
-			if (!strcasecmp(STATIC_PART, "yes") || !strcmp(STATIC_PART, "1"))
-				commentx = NULL;
-			else if (!strcasecmp(STATIC_PART, "no") || !strcmp(STATIC_PART, "0"))
-				; /* keep original reason */
+			if (STATIC_QUIT_PART_TIME == -1)
+			{
+				if!(IsLoggedIn(sptr) && STATIC_QUIT_PART_SET)
+					commentx = STATIC_PART;
+			}
 			else
-				commentx = STATIC_PART;
+				/* we only care of users within the time range -dboyz */
+				if (sptr->firsttime+STATIC_QUIT_PART_TIME > TStime())
+					if!(IsLoggedIn(sptr) && STATIC_QUIT_PART_SET)
+						commentx = STATIC_PART;
 		}
 		if (commentx)
 		{
