@@ -6927,9 +6927,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "new-linking-protocol")) {
 			tempiConf.new_linking_protocol = atoi(cep->ce_vardata);
 		}
-		else if (!strcmp(cep->ce_varname, "anti-spam-quit-message-time")) {
-			tempiConf.anti_spam_quit_message_time = config_checkval(cep->ce_vardata,CFG_TIME);
-		}
 		else if (!strcmp(cep->ce_varname, "oper-only-stats")) {
 			if (!cep->ce_entries)
 			{
@@ -7522,10 +7519,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					errors++;
 				}
 			}
-		}
-		else if (!strcmp(cep->ce_varname, "anti-spam-quit-message-time")) {
-			CheckNull(cep);
-			CheckDuplicate(cep, anti_spam_quit_message_time, "anti-spam-quit-message-time");
 		}
 		else if (!strcmp(cep->ce_varname, "oper-only-stats")) {
 			CheckDuplicate(cep, oper_only_stats, "oper-only-stats");
