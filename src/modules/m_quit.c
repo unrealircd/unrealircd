@@ -94,15 +94,20 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			/* Lets not let unregistered users spam us even without STATIC_QUIT
 			 * except opers. -katsklaw
-			 * Added configurable option to katsklaw's patch. New code will block
-			 * quit messages from unregistered users when config is set to
-			 * set::static-quit unreg; -dboyz
+			 * Removed anti-spam-quit-message-time and integrate it with STATIC_
+			 * QUIT and STATIC_PART. Remodified katsklaw's code
+			 * TODO: update config file and docs -dboyz
 			 */
-			if (strcasecmp(STATIC_PART, "unreg"))
-				if(!IsAnOper(sptr) && !IsLoggedIn(sptr))
+			if (STATIC_QUIT_PART_TIME == -1)
+			{
+				if!(IsLoggedIn(sptr) && STATIC_QUIT_PART_SET)
 					return exit_client(cptr, sptr, sptr, "Client Quit");
+			}
 			else
-				return exit_client(cptr, sptr, sptr, "Client Quit");
+				/* we only care of users within the time range -dboyz */
+				if (sptr->firsttime+STATIC_QUIT_PART_TIME > TStime())
+					if!(IsLoggedIn(sptr) && STATIC_QUIT_PART_SET)
+						return exit_client(cptr, sptr, sptr, "Client Quit");
 		}
 		if (IsVirus(sptr))
 			return exit_client(cptr, sptr, sptr, "Client exited");
@@ -117,10 +122,6 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (n < 0)
 			ocomment = parv[0];
 		
-		if (!IsAnOper(sptr) && ANTI_SPAM_QUIT_MSG_TIME)
-			if (sptr->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
-				ocomment = parv[0];
-
                 for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_QUIT]; tmphook; tmphook = tmphook->next)
 		{
                 	ocomment = (*(tmphook->func.pcharfunc))(sptr, ocomment);
