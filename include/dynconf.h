@@ -96,6 +96,8 @@ struct zConfiguration {
 	int  maxchannelsperuser;
 	int  maxdccallow;
 	char *egd_path;
+	int static_quit_part_set;
+	int static_quit_part_time;
 	char *static_quit;
 	char *static_part;
 #ifdef USE_SSL
@@ -213,6 +215,8 @@ extern MODVAR aConfiguration iConf;
 #define SSL_SERVER_CERT_PEM		(iConf.x_server_cert_pem ? iConf.x_server_cert_pem : "server.cert.pem")
 #define SSL_SERVER_KEY_PEM		(iConf.x_server_key_pem ? iConf.x_server_key_pem : "server.key.pem")
 
+#define STATIC_QUIT_PART_SET		iConf.static_quit_part_set
+#define STATIC_QUIT_PART_TIME		iConf.static_quit_part_time
 #define STATIC_QUIT			iConf.static_quit
 #define STATIC_PART			iConf.static_part
 #define UHOST_ALLOWED			iConf.userhost_allowed
@@ -317,6 +321,8 @@ struct SetCheck {
 	unsigned has_maxchannelsperuser:1;
 	unsigned has_maxdccallow:1;
 	unsigned has_egd_path:1;
+	unsigned has_static_quit_part_set:1;
+	unsigned has_static_quit_part_time:1;
 	unsigned has_static_quit:1;
 	unsigned has_static_part:1;
 #ifdef USE_SSL
