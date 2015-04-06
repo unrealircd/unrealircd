@@ -93,6 +93,8 @@ AC_CHECK_LIB(socket, socket,
 AC_CHECK_LIB(nsl, inet_ntoa,
 	[IRCDLIBS="$IRCDLIBS-lnsl "
 		INETLIB="-lnsl"])
+AC_CHECK_LIB(crypto, RAND_egd,
+		AC_DEFINE(HAVE_RAND_EGD, 1, [Define if the libcrypto has RAND_egd]))
 
 AC_SUBST(IRCDLIBS)
 AC_SUBST(MKPASSWDLIBS)

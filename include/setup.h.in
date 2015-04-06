@@ -109,6 +109,9 @@
 /* Define if you have pstat */
 #undef HAVE_PSTAT
 
+/* Define if the libcrypto has RAND_egd */
+#undef HAVE_RAND_EGD
+
 /* Define if you have setproctitle */
 #undef HAVE_SETPROCTITLE
 
