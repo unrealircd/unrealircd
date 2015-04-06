@@ -117,6 +117,8 @@ aClient *ocptr; /* Other client */
 	if (!strcmp(acptr->name, parv[2]))
 		return 0;
 
+	RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, acptr, parv[2]);
+
 	if (acptr != ocptr)
 		acptr->umodes &= ~UMODE_REGNICK;
 	acptr->lastnick = TS2ts(parv[3]);
@@ -131,7 +133,6 @@ aClient *ocptr; /* Other client */
 	sendto_snomask(SNO_NICKCHANGE,
 		"*** Notice -- %s (%s@%s) has been forced to change his/her nickname to %s", 
 		acptr->name, acptr->user->username, acptr->user->realhost, parv[2]);
-	RunHook2(HOOKTYPE_LOCAL_NICKCHANGE, acptr, parv[2]);
 
 	strlcpy(acptr->name, parv[2], sizeof acptr->name);
 	add_to_client_hash_table(parv[2], acptr);
