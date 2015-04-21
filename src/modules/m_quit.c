@@ -94,8 +94,9 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		{
 			/* Lets not let unregistered users spam us even without STATIC_QUIT
 			 * except opers. -katsklaw
-			 * Removed anti-spam-quit-message-time and integrate it with STATIC_
-			 * QUIT and STATIC_PART. Remodified katsklaw's code
+			 * Enhance anti-spam-quit-message-time and integrate it with STATIC_
+			 * QUIT and STATIC_PART. Remodified katsklaw's code to further add
+			 * configuration flexibility.
 			 * TODO: update config file and docs -dboyz
 			 */
 			if (ANTI_SPAM_QUIT_MSG_TIME == -1)
@@ -126,10 +127,21 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (n < 0)
 			ocomment = parv[0];
 		
-		if (!IsAnOper(sptr) && ANTI_SPAM_QUIT_MSG_TIME)
+		if(ANTI_SPAM_QUIT_MSG_TIME == -1)
 		{
-			if (sptr->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
+			if(!(IsLoggedIn(sptr) && STATIC_QUIT_PART_USERS))
 				ocomment = parv[0];
+		}
+		else
+		{
+			if (!IsAnOper(sptr) && ANTI_SPAM_QUIT_MSG_TIME)
+			{
+				if (sptr->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
+				{
+					if(!(IsLoggedIn(sptr) && STATIC_QUIT_PART_USERS))
+						ocomment = parv[0];
+				}
+			}
 		}
 		
                 for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_QUIT]; tmphook; tmphook = tmphook->next)
