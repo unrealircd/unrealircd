@@ -121,7 +121,7 @@ int ret;
 		return CANPRIVMSG_CONTINUE;
 	}
 	/* Umode +R (idea from Bahamut) */
-	if (IsRegNickMsg(acptr) && !IsRegNick(sptr) && !IsULine(sptr) && !IsOper(sptr) && !IsServer(sptr)) {
+	if (IsRegNickMsg(acptr) && !IsLoggedIn(sptr) && !IsULine(sptr) && !IsOper(sptr) && !IsServer(sptr)) {
 		sendto_one(sptr, err_str(ERR_NONONREG), me.name, sptr->name,
 			acptr->name);
 		return 0;
