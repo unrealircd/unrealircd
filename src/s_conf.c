@@ -6846,26 +6846,11 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		 * unregistered users only -dboyz
 		 * TODO: Produce error message by adding else
 		 */
-		else if (!strcmp(cep->ce_varname, "static-quit-part-set")) {
+		else if (!strcmp(cep->ce_varname, "static-quit-part-users")) {
 			if(!strcmp(ce->ce_vardata, "all"))
-				tempiConf.static_quit_part_set = 0;
+				tempiConf.static_quit_part_users = 0;
 			else if (!strcmp(ce->vardata, "unregistered"))
-				tempiConf.static_quit_part_set = 1;
-		}
-		/* setting a valid value according to config_checkval will enforce 
-		 * static-quit and static-part to newly connected users during the 
-		 * duration specified
-		 *
-		 * setting value 0 disables the feature
-		 *
-		 * setting "static" will enforce static-quit and static-part all the
-		 * time -dboyz
-		 */
-		else if (!strcmp(cep->ce_varname, "static-quit-part-time")) {
-			if(!strcmp(ce->ce_vardata, "static"))
-				tempiConf.static_quit_part_time = -1;
-			else
-				tempiConf.static_quit_part_time = config_checkval(cep->ce_vardata,CFG_TIME);
+				tempiConf.static_quit_part_users = 1;
 		}
 		else if (!strcmp(cep->ce_varname, "static-quit")) {
 			ircstrdup(tempiConf.static_quit, cep->ce_vardata);
@@ -6954,6 +6939,22 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "new-linking-protocol")) {
 			tempiConf.new_linking_protocol = atoi(cep->ce_vardata);
+		}
+		/* setting a valid value according to config_checkval will enforce 
+		 * static-quit and static-part to newly connected users during the 
+		 * duration specified
+		 *
+		 * setting value 0 disables the feature
+		 *
+		 * anti-spam-quit-message-time can now be enforced all the time by
+		 * setting "static". This will also enforce static-quit and static-
+		 * part all the time, when enabled. -dboyz
+		 */
+		else if (!strcmp(cep->ce_varname, "anti-spam-quit-message-time")) {
+			if(!strcmp(ce->ce_vardata, "static"))
+				tempiConf.anti_spam_quit_message_time = -1;
+			else
+				tempiConf.anti_spam_quit_message_time = config_checkval(cep->ce_vardata,CFG_TIME);
 		}
 		else if (!strcmp(cep->ce_varname, "oper-only-stats")) {
 			if (!cep->ce_entries)
@@ -7462,10 +7463,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			CheckNull(cep);
 			CheckDuplicate(cep, static_quit_part_set, "static-quit-part-set");
 		}
-		else if (!strcmp(cep->ce_varname, "static-quit-part-time")) {
-			CheckNull(cep);
-			CheckDuplicate(cep, static_quit_part_time, "static-quit-part-time");
-		}
 		else if (!strcmp(cep->ce_varname, "static-quit")) {
 			CheckNull(cep);
 			CheckDuplicate(cep, static_quit, "static-quit");
@@ -7555,6 +7552,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					errors++;
 				}
 			}
+		}
+		else if (!strcmp(cep->ce_varname, "anti-spam-quit-message-time")) {
+			CheckNull(cep);
+			CheckDuplicate(cep, anti_spam_quit_message_time, "anti-spam-quit-message-time");
 		}
 		else if (!strcmp(cep->ce_varname, "oper-only-stats")) {
 			CheckDuplicate(cep, oper_only_stats, "oper-only-stats");
