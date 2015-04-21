@@ -101,17 +101,38 @@ DLLFUNC CMD_FUNC(m_part)
 			commentx = NULL;
 		if (STATIC_PART)
 		{
-			if (STATIC_QUIT_PART_TIME == -1)
+			if (ANTI_SPAM_QUIT_MSG_TIME == -1)
 			{
-				if!(IsLoggedIn(sptr) && STATIC_QUIT_PART_SET)
+				if(!(IsLoggedIn(sptr) && STATIC_QUIT_PART_USERS))
 					commentx = STATIC_PART;
 			}
-			else
+			else if (ANTI_SPAM_QUIT_MSG_TIME)
+			{
 				/* we only care of users within the time range -dboyz */
-				if (sptr->firsttime+STATIC_QUIT_PART_TIME > TStime())
-					if!(IsLoggedIn(sptr) && STATIC_QUIT_PART_SET)
+				if (sptr->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
+				{
+					if(!(IsLoggedIn(sptr) && STATIC_QUIT_PART_USERS))
 						commentx = STATIC_PART;
+				}
+			}
 		}
+		else
+		{
+			if (!IsAnOper(sptr) && (ANTI_SPAM_QUIT_MSG_TIME == -1))
+			{
+				if(!(IsLoggedIn(sptr) && STATIC_QUIT_PART_USERS))
+					commentx = NULL;
+			}
+			else if (!IsAnOper(sptr) && ANTI_SPAM_QUIT_MSG_TIME)
+			{
+				if (sptr->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
+				{
+					if(!(IsLoggedIn(sptr) && STATIC_QUIT_PART_USERS))
+						commentx = NULL;
+				}
+			}
+		}
+		
 		if (commentx)
 		{
 			n = dospamfilter(sptr, commentx, SPAMF_PART, parv[1], 0, NULL);
