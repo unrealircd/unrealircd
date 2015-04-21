@@ -44,10 +44,13 @@ static void permanent_channel_destroy(aChannel *chptr, bool *should_destroy)
 
 static int permanent_is_ok(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what)
 {
-	if (IsOper(cptr))
-		return EX_ALLOW;
+	if (!IsOper(cptr))
+	{
+		sendto_one(cptr, err_str(ERR_NOPRIVILEGES), me.name, cptr->name);
+		return EX_DENY;
+	}
 
-	return EX_DENY;
+	return EX_ALLOW;
 }
 
 /* This is called on module init, before Server Ready */
