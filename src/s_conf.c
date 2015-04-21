@@ -7459,9 +7459,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 			}
 		}
-		else if (!strcmp(cep->ce_varname, "static-quit-part-set")) {
+		else if (!strcmp(cep->ce_varname, "static-quit-part-users")) {
 			CheckNull(cep);
-			CheckDuplicate(cep, static_quit_part_set, "static-quit-part-set");
+			CheckDuplicate(cep, static_quit_part_users, "static-quit-part-users");
 		}
 		else if (!strcmp(cep->ce_varname, "static-quit")) {
 			CheckNull(cep);
