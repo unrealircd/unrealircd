@@ -98,16 +98,20 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			 * QUIT and STATIC_PART. Remodified katsklaw's code
 			 * TODO: update config file and docs -dboyz
 			 */
-			if (STATIC_QUIT_PART_TIME == -1)
+			if (ANTI_SPAM_QUIT_MSG_TIME == -1)
 			{
-				if!(IsLoggedIn(sptr) && STATIC_QUIT_PART_SET)
+				if(!(IsLoggedIn(sptr) && STATIC_QUIT_PART_USERS))
 					return exit_client(cptr, sptr, sptr, STATIC_QUIT);
 			}
 			else
+			{
 				/* we only care of users within the time range -dboyz */
-				if (sptr->firsttime+STATIC_QUIT_PART_TIME > TStime())
-					if!(IsLoggedIn(sptr) && STATIC_QUIT_PART_SET)
+				if (sptr->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
+				{
+					if(!(IsLoggedIn(sptr) && STATIC_QUIT_PART_USERS))
 						return exit_client(cptr, sptr, sptr, STATIC_QUIT);
+				}
+			}
 		}
 		if (IsVirus(sptr))
 			return exit_client(cptr, sptr, sptr, "Client exited");
