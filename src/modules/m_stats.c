@@ -1225,7 +1225,7 @@ int stats_set(aClient *sptr, char *para)
 		sendto_one(sptr, ":%s %i %s :allow-userhost-change: %s", me.name, RPL_TEXT,
 			sptr->name, uhallow);
 	sendto_one(sptr, ":%s %i %s :anti-spam-quit-message-time: %s", me.name, RPL_TEXT, 
-			sptr->name, ANTI_SPAM_QUIT_MSG_TIME == -1 ? "static" : pretty_time_val(STATIC_QUIT_PART_TIME));
+		sptr->name, ANTI_SPAM_QUIT_MSG_TIME == -1 ? "static" : pretty_time_val(ANTI_SPAM_QUIT_MSG_TIME));
 	sendto_one(sptr, ":%s %i %s :channel-command-prefix: %s", me.name, RPL_TEXT, sptr->name, CHANCMDPFX ? CHANCMDPFX : "`");
 #ifdef USE_SSL
 	sendto_one(sptr, ":%s %i %s :ssl::egd: %s", me.name, RPL_TEXT,
