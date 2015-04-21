@@ -104,7 +104,7 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				if(!(IsLoggedIn(sptr) && STATIC_QUIT_PART_USERS))
 					return exit_client(cptr, sptr, sptr, STATIC_QUIT);
 			}
-			else
+			else if (ANTI_SPAM_QUIT_MSG_TIME)
 			{
 				/* we only care of users within the time range -dboyz */
 				if (sptr->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
@@ -127,20 +127,17 @@ DLLFUNC int  m_quit(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (n < 0)
 			ocomment = parv[0];
 		
-		if(ANTI_SPAM_QUIT_MSG_TIME == -1)
+		if (!IsAnOper(sptr) && (ANTI_SPAM_QUIT_MSG_TIME == -1))
 		{
 			if(!(IsLoggedIn(sptr) && STATIC_QUIT_PART_USERS))
 				ocomment = parv[0];
 		}
-		else
+		else if (!IsAnOper(sptr) && ANTI_SPAM_QUIT_MSG_TIME)
 		{
-			if (!IsAnOper(sptr) && ANTI_SPAM_QUIT_MSG_TIME)
+			if (sptr->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
 			{
-				if (sptr->firsttime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
-				{
-					if(!(IsLoggedIn(sptr) && STATIC_QUIT_PART_USERS))
-						ocomment = parv[0];
-				}
+				if(!(IsLoggedIn(sptr) && STATIC_QUIT_PART_USERS))
+					ocomment = parv[0];
 			}
 		}
 		
