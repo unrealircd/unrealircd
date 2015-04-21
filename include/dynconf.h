@@ -95,6 +95,7 @@ struct zConfiguration {
 	OperStat *oper_only_stats_ext;
 	int  maxchannelsperuser;
 	int  maxdccallow;
+	int  anti_spam_quit_message_time;
 	char *egd_path;
 	int static_quit_part_set;
 	int static_quit_part_time;
@@ -193,6 +194,7 @@ extern MODVAR aConfiguration iConf;
 #define FAILOPER_WARN			iConf.fail_oper_warn
 #define SHOWCONNECTINFO			iConf.show_connect_info
 #define OPER_ONLY_STATS			iConf.oper_only_stats
+#define ANTI_SPAM_QUIT_MSG_TIME		iConf.anti_spam_quit_message_time
 #define USE_EGD				iConf.use_egd
 #define EGD_PATH			iConf.egd_path
 
@@ -320,6 +322,7 @@ struct SetCheck {
 	unsigned has_oper_only_stats:1;
 	unsigned has_maxchannelsperuser:1;
 	unsigned has_maxdccallow:1;
+	unsigned has_anti_spam_quit_message_time:1;
 	unsigned has_egd_path:1;
 	unsigned has_static_quit_part_set:1;
 	unsigned has_static_quit_part_time:1;
