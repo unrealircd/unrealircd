@@ -142,11 +142,6 @@ int i=0,j=0;
                 /* We later check again for this limit (in case +L was not set) */
         }
 
-<<<<<<< HEAD
-=======
-        if ((chptr->mode.mode & MODE_RGSTRONLY) && !IsLoggedIn(sptr))
-                return (ERR_NEEDREGGEDNICK);
->>>>>>> 61f94bd... For services who allow you to log in by account name but still allow you to
 
         if (*chptr->mode.key && (BadPtr(key) || strcmp(chptr->mode.key, key)))
                 return (ERR_BADCHANNELKEY);
