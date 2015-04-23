@@ -90,7 +90,7 @@ DLLFUNC int MOD_UNLOAD(regonly)(int module_unload)
 
 DLLFUNC int regonly_check (aClient *cptr, aChannel *chptr, char *key, char *parv[])
 {
-	if (IsRegOnly(chptr) && !IsARegNick(cptr))
+	if (IsRegOnly(chptr) && !IsLoggedIn(cptr))
 		return ERR_NEEDREGGEDNICK;
 	return 0;
 }
