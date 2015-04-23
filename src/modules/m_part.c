@@ -163,12 +163,6 @@ DLLFUNC CMD_FUNC(m_part)
 				comment = NULL;
 			}
 		}
-<<<<<<< HEAD
-=======
-		/* +M and not logged in to services? */
-		if ((chptr->mode.mode & MODE_MODREG) && !IsLoggedIn(sptr) && !IsAnOper(sptr))
-			comment = NULL;
->>>>>>> 61f94bd... For services who allow you to log in by account name but still allow you to
 
 		if (MyConnect(sptr))
 		{
