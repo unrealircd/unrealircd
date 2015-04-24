@@ -765,8 +765,13 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 				    acptr->user->away);
 			if (acptr->user->swhois)
 				if (*acptr->user->swhois != '\0')
+				{
 					sendto_one(cptr, "SWHOIS %s :%s",
 					    CHECKPROTO(cptr, PROTO_SID) ? ID(acptr) : acptr->name, acptr->user->swhois);
+					if (!BadPtr(acptr->sslfingerprint))
+						sendto_one(cptr, "%s :%s",
+					        CHECKPROTO(cptr, PROTO_SID) ? ID(acptr) : acptr->name, acptr->sslfingerprint);
+				}
 
 			if (!SupportSJOIN(cptr))
 				send_user_joins(cptr, acptr);

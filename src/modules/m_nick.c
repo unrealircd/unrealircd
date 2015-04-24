@@ -1376,11 +1376,25 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 
 #ifdef USE_SSL
 		if (sptr->flags & FLAGS_SSL)
+		{
 			if (sptr->ssl)
+			{
 				sendto_one(sptr,
 				    ":%s NOTICE %s :*** You are connected to %s with %s",
 				    me.name, sptr->name, me.name,
 				    ssl_get_cipher(sptr->ssl));
+				/* Handle fingerprint stuff -Nath */
+				if (!BadPtr(sptr->sslfingerprint))
+				{
+					sendto_one(sptr,
+						":%s NOTICE %s :*** Your SSL fingerprint is %s",
+						me.name, sptr->name, sptr->sslfingerprint);
+					sendto_server(cptr, 0, 0,
+						"%s :%s",
+						me.name, sptr->name, sptr->sslfingerprint);
+				}
+			}
+		}
 #endif
 		do_cmd(sptr, sptr, "LUSERS", 1, parv);
 		short_motd(sptr);
