@@ -88,6 +88,10 @@ m_guest.so: m_guest.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_guest.so m_guest.c
 
+m_fingerprint.so: m_fingerprint.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o m_fingerprint.so m_fingerprint.c
+
 m_kill.so: m_kill.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_kill.so m_kill.c
