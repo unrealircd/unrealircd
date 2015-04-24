@@ -309,7 +309,7 @@ static char *replies[] = {
 /* 273 */ NULL, /* aircd */
 /* 274 */ NULL, /* ircnet */
 /* 275    RPL_STATSDLINE */ ":%s 275 %s %c %s %s",
-/* 276 */ NULL, /* hybrid */
+/* 276    RPL_FINGERPRINT */ ":%s 276 %s: %s has ssl fingerprint %s",
 /* 277 */ NULL, /* hybrid */
 /* 278 */ NULL, /* hybrid */
 /* 279 */ NULL,

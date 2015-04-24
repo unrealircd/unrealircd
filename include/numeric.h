@@ -315,6 +315,7 @@
 #define RPL_SILELIST         271
 #define RPL_ENDOFSILELIST    272
 #define RPL_STATSDLINE       275
+#define RPL_FINGERPRINT	276
 
 #define RPL_HELPHDR	     290
 #define RPL_HELPOP	     291
