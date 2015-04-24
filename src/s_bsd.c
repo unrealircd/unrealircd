@@ -851,6 +851,9 @@ void completed_connection(int fd, int revents, void *data)
 		send_server_message(cptr);
 	}
 	if (!IsDead(cptr))
+#ifdef USE_SSL
+		sslfingerprintstuff(cptr);
+#endif
 		start_auth(cptr);
 
 	fd_setselect(fd, FD_SELECT_READ, read_packet, cptr);
@@ -1314,7 +1317,7 @@ static int dns_special_flag = 0; /* This is for an "interesting" race condition 
 
 void	start_of_normal_client_handshake(aClient *acptr)
 {
-struct hostent *he;
+	struct hostent *he;
 
 	acptr->status = STAT_UNKNOWN; /* reset, to be sure (SSL handshake has ended) */
 
@@ -1344,6 +1347,9 @@ struct hostent *he;
 	}
 
 doauth:
+#ifdef USE_SSL
+	sslfingerprintstuff(acptr);
+#endif
 	start_auth(acptr);
 	fd_setselect(acptr->fd, FD_SELECT_READ, read_packet, acptr);
 }

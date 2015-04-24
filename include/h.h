@@ -246,6 +246,7 @@ extern void report_error(char *, aClient *);
 extern void set_non_blocking(int, aClient *);
 extern int setup_ping();
 
+extern void sslfingerprintstuff(aClient *)
 extern void start_auth(aClient *);
 
 extern void set_channel_mlock(aClient *, aClient *, aChannel *, const char *, int);

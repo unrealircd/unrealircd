@@ -64,6 +64,35 @@ void ident_failed(aClient *cptr)
 		sendto_one(cptr, "%s", REPORT_FAIL_ID);
 }
 
+void sslfingerprintstuff(aClient *cptr)
+{
+	unsigned int n;
+	unsigned int l;
+	unsigned int j;
+	unsigned char md[EVP_MAX_MD_SIZE];
+	char hex[EVP_MAX_MD_SIZE * 2 + 1];
+	char hexc[EVP_MAX_MD_SIZE * 3 + 1];
+	char hexchars[16] = "0123456789abcdef";
+	const EVP_MD *digest = EVP_sha256();
+	X509 *x509_clientcert = NULL;
+	
+	/* Get the client's certificate fingerprint if they have one for outgoing connections -Nath */
+	x509_clientcert = SSL_get_peer_certificate((SSL *)cptr->ssl);
+	if (x509_clientcert)
+	{
+		if (X509_digest(x509_clientcert, digest, md, &n)) {
+			j = 0;
+			for	(l=0; l<n; l++) {
+				hex[j++] = hexchars[(md[l] >> 4) & 0xF];
+				hex[j++] = hexchars[md[l] & 0xF];
+			}
+			hex[j] = '\0';
+			strlcpy(cptr->sslfingerprint, hex, sizeof(cptr->sslfingerprint));
+		}
+		X509_free(x509_clientcert);
+	}
+}
+
 /*
  * start_auth
  *
