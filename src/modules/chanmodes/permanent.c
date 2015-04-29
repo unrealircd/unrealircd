@@ -22,6 +22,7 @@
 #include <assert.h>
 #include "struct.h"
 #include "common.h"
+#include "numeric.h"
 #include "sys.h"
 #include "h.h"
 

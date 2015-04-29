@@ -228,7 +228,7 @@ DLLFUNC void clear_user_invisible_announce(aChannel *chptr, aClient *sptr)
 	{
 		if (!is_skochanop(i->cptr,chptr) && i->cptr != sptr)
 			sendto_one(i->cptr,
-			    ":%s JOIN :%s", sptr->name, chptr->chname);
+			    ":%s!%s@%s JOIN :%s", sptr->name, sptr->user->username, GetHost(sptr), chptr->chname);
 	}
 }
 
@@ -340,7 +340,7 @@ DLLFUNC int moded_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
 					 if (i->cptr == user)
 						 continue;
 					 if (moded_user_invisible(i->cptr,chptr))
-						 sendto_one(user,":%s JOIN :%s", i->cptr->name, chptr->chname);
+						 sendto_one(user,":%s!%s@%s JOIN :%s", i->cptr->name, i->cptr->user->username, GetHost(i->cptr), chptr->chname);
 				 }
 
 			 }
