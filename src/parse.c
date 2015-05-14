@@ -366,16 +366,24 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 			return (-1);
 		}
 		if (cmptr->flags != 0) { /* temporary until all commands are updated */
-		if ((flags & M_USER) && !(cmptr->flags & M_USER))
+
+		/* Logic in comparisions below is a bit complicated, see notes */
+
+		/* If you're a user, and this command does not permit users or opers, deny */
+		if ((flags & M_USER) && !(cmptr->flags & M_USER) && !(cmptr->flags & M_OPER))
 		{
 			sendto_one(cptr, rpl_str(ERR_NOTFORUSERS), me.name,
 					from->name, cmptr->cmd);
 			return -1;
 		}
+
+		/* If you're a server, but command doesn't want servers, deny */
 		if ((flags & M_SERVER) && !(cmptr->flags & M_SERVER))
 			return -1;
 		}
-		if ((cmptr->flags & M_OPER) && !(flags & M_OPER))
+
+		/* If you're a user, but not an operator, and this requires operators, deny */
+		if ((cmptr->flags & M_OPER) && (flags & M_USER) && !(flags & M_OPER))
 		{
 			sendto_one(cptr, rpl_str(ERR_NOPRIVILEGES), 
 					me.name, from->name);
