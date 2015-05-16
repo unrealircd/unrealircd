@@ -49,7 +49,7 @@ Then open it in an editor and carefully modify it using the documentation and FA
 * Simply run `wircd.exe`
 
 #### *BSD/Linux/OS X
-* Run `./unrealircd start`
+* Run `./unreal start`
 
 Note that after booting, the errors are usually logged to `ircd.log`
 so check that file if you have any problems.
