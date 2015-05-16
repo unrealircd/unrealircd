@@ -34,15 +34,25 @@ Compiling UnrealIRCd for Windows yourself is not straightforward and thus not re
 #### *BSD/Linux/OS X
 First you must compile the IRCd:
 
-* Run *./Config*
-* Run *make*
-* If you chose to install the IRCd at a different location than the defaults, then also run *make install*
+* Run `./Config`
+* Run `make`
+* If you chose to install the IRCd at a different location than the defaults, then also run `make install`
 
 ### Step 2: Configuration
 #### Create a configuration file
 If you are new, then you need to create your own configuration file:
-copy doc/example.conf to your main UnrealIRCd directory and call it unrealircd.conf.
+copy `doc/example.conf` to your main UnrealIRCd directory and call it `unrealircd.conf`.
 Then open it in an editor and carefully modify it using the documentation and FAQ (see below) as a guide.
+
+### Step 3: Booting
+#### Windows
+* Simply run `wircd.exe`
+
+#### *BSD/Linux/OS X
+* Run `./unrealircd start`
+
+Note that after booting, the errors are usually logged to `ircd.log`
+so check that file if you have any problems.
 
 ## Documentation & FAQ
 You can find the **documentation** online at: http://www.unrealircd.com/unreal32docs.html
