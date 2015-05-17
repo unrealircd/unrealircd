@@ -201,7 +201,7 @@ static int parse_v4_netmask(const char *text, struct IN_ADDR *addr, short int *b
 	}
 	else if (c == '*')
 	{
-		if (*(p + 1) || n == 0 || *(p - 1) != '.') /* Error: * is not at the end
+		if (*(p + 1) || n == 1 || *(p - 1) != '.') /* Error: * is not at the end
 							    * or not its own section */
 			return HM_HOST;
 		bits = (n - 1) * 8;
