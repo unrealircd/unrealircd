@@ -197,6 +197,7 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/M_NOPOST.DLL SRC/MODULES/M_CAP.DLL \
  SRC/MODULES/M_SASL.DLL SRC/MODULES/CAP_INVITENOTIFY.DLL \
  SRC/MODULES/M_MD.DLL \
+ SRC/MODULES/CERTFP.DLL \
  SRC/MODULES/CLOAK.DLL \
  SRC/MODULES/CHANMODES/ADMINONLY.DLL \
  SRC/MODULES/CHANMODES/CENSOR.DLL \
@@ -765,6 +766,9 @@ src/modules/m_names.dll: src/modules/m_names.c $(INCLUDES)
 
 src/modules/m_md.dll: src/modules/m_md.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/m_md.c $(MODLFLAGS)
+
+src/modules/certfp.dll: src/modules/certfp.c $(INCLUDES)
+        $(CC) $(MODCFLAGS) src/modules/certfp.c $(MODLFLAGS)
 
 src/modules/cloak.dll: src/modules/cloak.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/cloak.c $(MODLFLAGS)
