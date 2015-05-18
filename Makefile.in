@@ -238,13 +238,13 @@ install: all
 pem:	src/ssl.cnf
 	@echo "Generating certificate request .. "
 	$(OPENSSLPATH) req -new \
-              -config src/ssl.cnf -out server.req.pem \
+              -config src/ssl.cnf -sha256 -out server.req.pem \
               -keyout server.key.pem -nodes
 	@echo "Generating self-signed certificate .. "
-	$(OPENSSLPATH) req -x509 -days 365 -in server.req.pem \
+	$(OPENSSLPATH) req -x509 -days 3650 -sha256 -in server.req.pem \
                -key server.key.pem -out server.cert.pem
 	@echo "Generating fingerprint .."
-	$(OPENSSLPATH) x509 -subject -dates -fingerprint -noout \
+	$(OPENSSLPATH) x509 -subject -dates -sha256 -fingerprint -noout \
 		-in server.cert.pem
 	@echo "Setting o-rwx & g-rwx for files... "
 	chmod o-rwx server.req.pem server.key.pem server.cert.pem
