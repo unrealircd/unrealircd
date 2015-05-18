@@ -629,7 +629,7 @@ Membership *lp;
 
 char *censor_pre_local_quit(aClient *sptr, char *text)
 {
-int blocked;
+int blocked = 0;
 
 	if (IsAnyChannelCensored(sptr))
 		text = stripbadwords_quit(text, &blocked);
