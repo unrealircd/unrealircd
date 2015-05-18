@@ -380,3 +380,46 @@ aClient *acptr;
 		}
 	}
 }
+
+/** Set ModData for client (via variable name, string value) */
+int moddata_client_set_string(aClient *acptr, char *varname, char *value)
+{
+	ModDataInfo *md;
+
+	md = findmoddata_byname(varname, MODDATATYPE_CLIENT);
+
+	if (!md)
+		return 0;
+
+	if (value)
+	{
+		/* SET */
+		md->unserialize(value, &moddata_client(acptr, md));
+	}
+	else
+	{
+		/* UNSET */
+		md->free(&moddata_client(acptr, md));
+		memset(&moddata_client(acptr, md), 0, sizeof(ModData));
+	}
+
+	if (value)
+		sendto_server(NULL, 0, 0, ":%s MD %s %s %s :%s",
+			me.name, "client", acptr->name, md->name, value); /* set */
+	else
+		sendto_server(NULL, 0, 0, ":%s MD %s %s %s",
+			me.name, "client", acptr->name, md->name); /* unset */
+}
+
+/** Get ModData for client (via variable name) */
+char *moddata_client_get_string(aClient *acptr, char *varname)
+{
+	ModDataInfo *md;
+
+	md = findmoddata_byname(varname, MODDATATYPE_CLIENT);
+
+	if (!md)
+		return NULL;
+
+	return md->serialize(&moddata_client(acptr, md)); /* can be NULL */
+}

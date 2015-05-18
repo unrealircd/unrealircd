@@ -648,6 +648,8 @@ extern void moddata_free_channel(aChannel *chptr);
 extern void moddata_free_member(Member *m);
 extern void moddata_free_membership(Membership *m);
 ModDataInfo *findmoddata_byname(char *name, ModDataType type);
+extern int moddata_client_set_string(aClient *acptr, char *varname, char *value);
+extern char *moddata_client_get_string(aClient *acptr, char *varname);
 
 /* Hook types */
 #define HOOKTYPE_LOCAL_QUIT	1

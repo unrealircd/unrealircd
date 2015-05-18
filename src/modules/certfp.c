@@ -98,35 +98,24 @@ char *get_fingerprint_for_client(aClient *cptr)
 	return NULL;
 }
 
-void certfp_broadcast(aClient *acptr, char *fp)
-{
-	/* Hmm.. we shouldn't have to do this ourselves.. */
-	sendto_server(NULL, 0, 0, ":%s MD %s %s %s :%s",
-		me.name, "client", acptr->name, "certfp", fp);
-}
-
 int certfp_connect(aClient *acptr)
 {
 	if (IsSecure(acptr))
 	{
 		char *fp = get_fingerprint_for_client(acptr);
-		void *data = &moddata_client(acptr, certfp_md);
 
+		if (!fp)
+			return 0; /* wtf? */
+
+		moddata_client_set_string(acptr, "certfp", fp); /* set & broadcast */
 		sendnotice(acptr, "*** Your SSL fingerprint is %s", fp);
-
-		/* Set & broadcast */
-		certfp_unserialize(fp, data);
-		certfp_broadcast(acptr, fp);
 	}
 	return 0;
 }
 
 int certfp_whois(aClient *sptr, aClient *acptr)
 {
-	char *fp;
-	void *data = &moddata_client(acptr, certfp_md); /* never NULL */
-	
-	fp = certfp_serialize(data);
+	char *fp = moddata_client_get_string(acptr, "certfp");
 	
 	if (fp)
 		sendto_one(sptr, WHOISCERTFP_STRING, me.name, sptr->name, acptr->name, fp);
