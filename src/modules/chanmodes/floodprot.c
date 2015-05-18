@@ -1331,5 +1331,5 @@ static int compare_floodprot_modes(ChanFloodProt *a, ChanFloodProt *b)
 
 void userfld_free(ModData *md)
 {
-	MyFree(md);
+	MyFree(md->ptr);
 }

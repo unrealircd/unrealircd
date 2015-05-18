@@ -131,7 +131,7 @@ ModDataInfo *md;
 		if (md->type == MODDATATYPE_CLIENT)
 		{
 			if (md->free && moddata_client(acptr, md).ptr)
-				md->free(moddata_client(acptr, md).ptr);
+				md->free(&moddata_client(acptr, md));
 		}
 
 	memset(acptr->moddata, 0, sizeof(acptr->moddata));
@@ -145,7 +145,7 @@ ModDataInfo *md;
 		if (md->type == MODDATATYPE_CHANNEL)
 		{
 			if (md->free && moddata_channel(chptr, md).ptr)
-				md->free(moddata_channel(chptr, md).ptr);
+				md->free(&moddata_channel(chptr, md));
 		}
 
 	memset(chptr->moddata, 0, sizeof(chptr->moddata));
@@ -159,7 +159,7 @@ ModDataInfo *md;
 		if (md->type == MODDATATYPE_MEMBER)
 		{
 			if (md->free && moddata_member(m, md).ptr)
-				md->free(moddata_member(m, md).ptr);
+				md->free(&moddata_member(m, md));
 		}
 
 	memset(m->moddata, 0, sizeof(m->moddata));
@@ -173,7 +173,7 @@ ModDataInfo *md;
 		if (md->type == MODDATATYPE_MEMBERSHIP)
 		{
 			if (md->free && moddata_membership(m, md).ptr)
-				md->free(moddata_membership(m, md).ptr);
+				md->free(&moddata_membership(m, md));
 		}
 
 	memset(m->moddata, 0, sizeof(m->moddata));
