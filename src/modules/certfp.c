@@ -98,6 +98,13 @@ char *get_fingerprint_for_client(aClient *cptr)
 	return NULL;
 }
 
+void certfp_broadcast(aClient *acptr, char *fp)
+{
+	/* Hmm.. we shouldn't have to do this ourselves.. */
+	sendto_server(NULL, 0, 0, ":%s MD %s %s %s :%s",
+		me.name, "client", acptr->name, "certfp", fp);
+}
+
 int certfp_connect(aClient *acptr)
 {
 	if (IsSecure(acptr))
@@ -107,7 +114,9 @@ int certfp_connect(aClient *acptr)
 
 		sendnotice(acptr, "*** Your SSL fingerprint is %s", fp);
 
+		/* Set & broadcast */
 		certfp_unserialize(fp, data);
+		certfp_broadcast(acptr, fp);
 	}
 	return 0;
 }
