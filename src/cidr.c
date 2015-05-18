@@ -109,7 +109,7 @@ static int parse_v6_netmask(const char *text, struct IN_ADDR *addr, short int *b
 		else if (c == '*')
 		{
 			/* Error: there was a ::, or it is not the last segment */
-			if (finsert >= 0 || *(p + 1) || dp == 0 || *(p - 1) != ':')
+			if (finsert >= 0 || *(p + 1) || dp == 0 || (p == text) || (*(p - 1) != ':'))
 				return HM_HOST;
 			bits = dp * 16;
 		}
@@ -191,34 +191,36 @@ static int parse_v4_netmask(const char *text, struct IN_ADDR *addr, short int *b
 	digits[n++] = text;
 
 	for (p = text; (c = *p); p++)
+	{
 		if (c >= '0' && c <= '9')   /* empty */
 			;
-	else if (c == '.')
-	{
-		if (n >= 4) /* Error: More than four sections */
+		else if (c == '.')
+		{
+			if (n >= 4) /* Error: More than four sections */
+				return HM_HOST;
+			digits[n++] = p + 1;
+		}
+		else if (c == '*')
+		{
+			if (*(p + 1) || (p == text) || *(p - 1) != '.') /* Error: * is not at the end
+									* or not its own section */
+				return HM_HOST;
+			bits = (n - 1) * 8;
+			break;
+		}
+		else if (c == '/')
+		{
+			char *after;
+			bits = strtoul(p + 1, &after, 10);
+			if (bits < 0 || *after) /* Error: Invalid number or not end */
+				return HM_HOST;
+			if (bits > n * 8) /* Error: More than the bits given */
+				return HM_HOST;
+			break;
+		}
+		else /* Error: Illegal character */
 			return HM_HOST;
-		digits[n++] = p + 1;
 	}
-	else if (c == '*')
-	{
-		if (*(p + 1) || n == 0 || *(p - 1) != '.') /* Error: * is not at the end
-							    * or not its own section */
-			return HM_HOST;
-		bits = (n - 1) * 8;
-		break;
-	}
-	else if (c == '/')
-	{
-		char *after;
-		bits = strtoul(p + 1, &after, 10);
-		if (bits < 0 || *after) /* Error: Invalid number or not end */
-			return HM_HOST;
-		if (bits > n * 8) /* Error: More than the bits given */
-			return HM_HOST;
-		break;
-	}
-	else /* Error: Illegal character */
-		return HM_HOST;
 
 	if (n < 4 && bits == 0)
 		bits = n * 8;
