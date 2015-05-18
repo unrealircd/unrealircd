@@ -255,7 +255,7 @@ SSL_CTX *ctx_client;
 		return NULL;
 	}
 	SSL_CTX_set_default_passwd_cb(ctx_client, ssl_pem_passwd_cb);
-	SSL_CTX_set_options(ctx_server, SSL_OP_NO_SSLv2);
+	SSL_CTX_set_options(ctx_client, SSL_OP_NO_SSLv2);
 	SSL_CTX_set_session_cache_mode(ctx_client, SSL_SESS_CACHE_OFF);
 	if (SSL_CTX_use_certificate_file(ctx_client, SSL_SERVER_CERT_PEM, SSL_FILETYPE_PEM) <= 0)
 	{
