@@ -185,8 +185,7 @@ distclean: cleandir
 	rm -rf Makefile config.status
 	
 makex:
-	chmod +x Config newnet ircd ircdcron/ircdchk killircd
-	chmod +x rehash ircdreg
+	chmod +x Config ircd ircdcron/ircdchk
 
 fromdos: cleandir
 	$(FROMDOS) -dv *
