@@ -324,6 +324,8 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			if (acptr->umodes & UMODE_SECURE)
 				sendto_one(sptr, rpl_str(RPL_WHOISSECURE), me.name, parv[0], name,
 					"is using a Secure Connection");
+			
+			RunHook2(HOOKTYPE_WHOIS, sptr, acptr);
 
 			if (!BadPtr(user->swhois) && !hideoper)
 					sendto_one(sptr, ":%s %d %s %s :%s",

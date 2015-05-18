@@ -731,6 +731,7 @@ ModDataInfo *findmoddata_byname(char *name, ModDataType type);
 #define HOOKTYPE_CAN_SEND_SECURE 78
 #define HOOKTYPE_CHANNEL_SYNCED 79
 #define HOOKTYPE_CAN_SAJOIN 80
+#define HOOKTYPE_WHOIS 81
 
 /* Hook return values */
 #define HOOK_CONTINUE 0
