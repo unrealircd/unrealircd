@@ -795,7 +795,8 @@ int size_string;
 
 char *_StripColors(unsigned char *text) {
 	int i = 0, len = strlen(text), save_len=0;
-	char nc = 0, col = 0, rgb = 0, *save_text=NULL;
+	int nc = 0, col = 0, rgb = 0, ans = 0;
+	char *save_text=NULL;
 	static unsigned char new_str[4096];
 
 	while (len > 0) 
@@ -816,6 +817,15 @@ char *_StripColors(unsigned char *text) {
 			if (*text == ',')
 				nc = 0;
 		}
+		/* we strip ansi color codes too */
+		else if ( (ans && isdigit(*text) && nc < 2 && nc != -1) || (ans && *text == '[' && nc == -1) || (ans && *text == ';' && nc < 3 && nc != -1) || (ans && *text == 'm' && nc < 3 && nc != -1) )
+		{
+			nc++;
+			if (*text == ';')
+				nc = 0;
+			else if (*text == 'm')
+				ans = 0;
+		}
 		else 
 		{
 			if (col)
@@ -831,6 +841,8 @@ char *_StripColors(unsigned char *text) {
 				}
 				rgb = 0;
 			}
+			if (ans)
+				ans = 0;
 			if (*text == '\003') 
 			{
 				col = 1;
@@ -842,6 +854,11 @@ char *_StripColors(unsigned char *text) {
 				save_len = len;
 				rgb = 1;
 				nc = 0;
+			}
+			else if (*text == '\027')
+			{
+				ans = 1;
+				nc = -1;
 			}
 			else if (*text != '\026') /* (strip reverse too) */
 			{
