@@ -74,7 +74,7 @@ mods:
 	fi
 	+cd modules; $(MY_MAKE) all
 
-version.c: version.c.SH ../Changes
+version.c: version.c.SH
 	$(SHELL) version.c.SH
 
 version.o: version.c $(INCLUDES)
