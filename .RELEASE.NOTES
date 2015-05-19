@@ -1,11 +1,10 @@
 Unreal3.4-alpha2 Release Notes
 ===============================
 
-This is the first alpha version of UnrealIRCd 3.4.
+This is the second alpha version of UnrealIRCd 3.4.
 Some important remarks(!):
-* This version is NOT STABLE and since this is the very first alpha release
-  it will probably CRASH or hang from time to time. Security issues are also
-  more likely in this 3.4-alpha series.
+* This version is NOT STABLE and could easily CRASH or hang from time to time.
+  Security issues are also more likely in this 3.4-alpha series.
   DO NOT EVEN THINK ABOUT USING THIS ON ANY SERIOUS (PRODUCTION) SERVER!!
   Use this alpha version to play around with the latest features and
   improvements, test them, and give us feedback(!) on bugs.unrealircd.org
@@ -27,7 +26,9 @@ Some important remarks(!):
 * Please report bugs at http://bugs.unrealircd.org/
 * The purpose of the sections below (NEW, CHANGED, MINOR, etc) is to be a
   SUMMARY of the changes in this release.  There have been many changes in
-  total, for the full list of changes see the Changelog.
+  total, for the full list of changes see 'git log'. Changes in alpha2 in
+  particular are tagged with "(A2)". Some changes in alpha2 are simply a
+  continuation of changes in alpha1 and are not specifically marked.
 
 ==[ CONFIGURATION CHANGES ]==
 You can use your 3.2.x unrealircd.conf WITH SOME CHANGES:
@@ -39,12 +40,12 @@ You can use your 3.2.x unrealircd.conf WITH SOME CHANGES:
   2) Add the following line to your unrealircd.conf:
      include "modules.conf";
 * For any remaining loadmodule lines you can (and should!) now use the
-  shorter syntax. Instead of:
+  shorter syntax which is OS-neutral. Instead of:
   loadmodule "src/modules/somemodule.so";
   You should now use:
   loadmodule "modules/somemodule";
   UnrealIRCd will figure out the exact name of the module. It doesn't
-  matter if you are on Windows or *NIX, and if your modules are in
+  matter if you are on Windows or *NIX, and whether your modules are in
   src/modules/ or in modules/.
 
 ==[ NEW ]==
@@ -65,6 +66,10 @@ You can use your 3.2.x unrealircd.conf WITH SOME CHANGES:
   anything in a channel. Whenever a user speaks for the first time they
   will appear to join. Chanops will still see everyone joining normally
   as if there was no +d set.
+* If you connect with SSL/TLS then your SSL Fingerprint (SHA256 hash) can
+  be seen by yourself and others through /WHOIS. The fingerprint is also
+  shared (broadcasted) with all servers on the network. In alpha3 we
+  will add more features that will use SSL fingerprints. (A2)
 
 ==[ CHANGED ]==
 * Numerics have been removed. Instead we now use SIDs (Server ID's) and
@@ -72,22 +77,32 @@ You can use your 3.2.x unrealircd.conf WITH SOME CHANGES:
   help us to fix a number of lag-related race conditions / bugs.
 * The module commands.so / commands.dll has been removed. All commands
   (those that are modular) are now in their own module.
+* Self-signed certificates are now generated using 4096 bits, a SHA256
+  hash and validity of 10 years. (A2)
+
+==[ MODULE CODERS / DEVELOPERS ]==
+* A lot of technical documentation for module coders has been added
+  at https://www.unrealircd.org/docs/ describing things like how to
+  write a module from scratch, the User & Channel Mode System, Commands,
+  Command Overrides, Hooks, attaching custom-data to users/channels,
+  and more. (A2)
 * There have been a lot of source code cleanups, things who end-users
   won't see.
 
 ==[ MAJOR BUGS FIXED ]==
-* Maybe some
+* Crash bug on-boot in alpha1 (A2)
+* IRCOp commands such as /GLINE were not always working (A2)
 * Most likely a number of major bugs are introduced by this early alpha!
 
 ==[ MINOR BUGS FIXED ]==
-* None?
+* Errors in example configuration files (A2)
+* Some fixes in delayjoin (Channel mode +d) (A2)
 
 ==[ REMOVED / DROPPED ]==
 * Numeric server IDs, see above.
 * PROTOCTL TOKEN and SJB64 are no longer implemented.
 * Ziplinks have been removed. We recommend to use SSL/TLS for all server
-  connections. Later on the source code will be fixed so SSL/TLS will use
-  compression.
+  connections. Later on we will look at enabling SSL/TLS compression.
 
 ==[ KNOWN ISSUES ]==
 * Documentation has NOT been updated to reflect most 3.4.x features!!
