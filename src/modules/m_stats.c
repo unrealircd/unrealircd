@@ -217,93 +217,93 @@ static inline void stats_help(aClient *sptr)
 {
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name, "/Stats flags:");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"B - banversion - Send the ban version list");
+	    "B - banversion - Send the ban version list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"b - badword - Send the badwords list");
+	    "b - badword - Send the badwords list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"C - link - Send the link block list");
+	    "C - link - Send the link block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"d - denylinkauto - Send the deny link (auto) block list");
+	    "d - denylinkauto - Send the deny link (auto) block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"D - denylinkall - Send the deny link (all) block list");
+	    "D - denylinkall - Send the deny link (all) block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"e - exceptthrottle - Send the except throttle block list");
+	    "e - exceptthrottle - Send the except throttle block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"E - exceptban - Send the except ban and except tkl block list");
+	    "E - exceptban - Send the except ban and except tkl block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"f - spamfilter - Send the spamfilter list");
+	    "f - spamfilter - Send the spamfilter list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"F - denydcc - Send the deny dcc and allow dcc block lists");
+	    "F - denydcc - Send the deny dcc and allow dcc block lists");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"G - gline - Send the gline and gzline list");
+	    "G - gline - Send the gline and gzline list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"  Extended flags: [+/-mrs] [mask] [reason] [setby]");
+	    "  Extended flags: [+/-mrs] [mask] [reason] [setby]");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"   m Return glines matching/not matching the specified mask");
+	    "   m Return glines matching/not matching the specified mask");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"   r Return glines with a reason matching/not matching the specified reason");
+	    "   r Return glines with a reason matching/not matching the specified reason");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"   s Return glines set by/not set by clients matching the specified name");
+	    "   s Return glines set by/not set by clients matching the specified name");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"I - allow - Send the allow block list");
+	    "I - allow - Send the allow block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"j - officialchans - Send the offical channels list");
+	    "j - officialchans - Send the offical channels list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"K - kline - Send the ban user/ban ip/except ban block list");
+	    "K - kline - Send the ban user/ban ip/except ban block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"l - linkinfo - Send link information");
+	    "l - linkinfo - Send link information");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"L - linkinfoall - Send all link information");
+	    "L - linkinfoall - Send all link information");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"M - command - Send list of how many times each command was used");
+	    "M - command - Send list of how many times each command was used");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"n - banrealname - Send the ban realname block list");
+	    "n - banrealname - Send the ban realname block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"O - oper - Send the oper block list");
+	    "O - oper - Send the oper block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"P - port - Send information about ports");
+	    "P - port - Send information about ports");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"q - bannick - Send the ban nick block list");
+	    "q - bannick - Send the ban nick block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"Q - sqline - Send the global qline list");
+	    "Q - sqline - Send the global qline list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"r - chanrestrict - Send the channel deny/allow block list");
+	    "r - chanrestrict - Send the channel deny/allow block list");
 #ifdef DEBUGMODE
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"R - usage - Send usage information");
+	    "R - usage - Send usage information");
 #endif
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"S - set - Send the set block list");
+	    "S - set - Send the set block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"s - shun - Send the shun list");
+	    "s - shun - Send the shun list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"  Extended flags: [+/-mrs] [mask] [reason] [setby]");
+	    "  Extended flags: [+/-mrs] [mask] [reason] [setby]");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"   m Return shuns matching/not matching the specified mask");
+	    "   m Return shuns matching/not matching the specified mask");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"   r Return shuns with a reason matching/not matching the specified reason");
+	    "   r Return shuns with a reason matching/not matching the specified reason");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"   s Return shuns set by/not set by clients matching the specified name");
+	    "   s Return shuns set by/not set by clients matching the specified name");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"t - tld - Send the tld block list");
+	    "t - tld - Send the tld block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"T - traffic - Send traffic information");
+	    "T - traffic - Send traffic information");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"u - uptime - Send the server uptime and connection count");
+	    "u - uptime - Send the server uptime and connection count");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"U - uline - Send the ulines block list");
+	    "U - uline - Send the ulines block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"v - denyver - Send the deny version block list");
+	    "v - denyver - Send the deny version block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"V - vhost - Send the vhost block list");
+	    "V - vhost - Send the vhost block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"W - fdtable - Send the FD table listing");
+	    "W - fdtable - Send the FD table listing");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"X - notlink - Send the list of servers that are not current linked");
+	    "X - notlink - Send the list of servers that are not current linked");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"Y - class - Send the class block list");
+	    "Y - class - Send the class block list");
 	sendto_one(sptr, rpl_str(RPL_STATSHELP), me.name, sptr->name,
-		"Z - mem - Send memory usage information");
+	    "Z - mem - Send memory usage information");
 }
 
 static inline int stats_operonly_short(char c)
@@ -453,10 +453,10 @@ DLLFUNC CMD_FUNC(m_stats)
 		sendto_one(sptr, rpl_str(RPL_ENDOFSTATS), me.name, parv[0], stat->flag);
 		if (!IsULine(sptr))
 			sendto_snomask(SNO_EYES, "Stats \'%c\' requested by %s (%s@%s)",
-				stat->flag, sptr->name, sptr->user->username, GetHost(sptr));
+			    stat->flag, sptr->name, sptr->user->username, GetHost(sptr));
 		else
 			sendto_snomask(SNO_JUNK, "Stats \'%c\' requested by %s (%s@%s) [ulined]",
-				stat->flag, sptr->name, sptr->user->username, GetHost(sptr));
+			    stat->flag, sptr->name, sptr->user->username, GetHost(sptr));
 	}
 	else
 	{
@@ -475,7 +475,7 @@ int stats_banversion(aClient *sptr, char *para)
 		if (bans->flag.type != CONF_BAN_VERSION)
 			continue;
 		sendto_one(sptr, rpl_str(RPL_STATSBANVER), me.name, sptr->name,
-			bans->mask, bans->reason ? bans->reason : "No Reason");
+		    bans->mask, bans->reason ? bans->reason : "No Reason");
 	}
 	return 0;
 }
@@ -489,27 +489,27 @@ int stats_links(aClient *sptr, char *para)
 	for (link_p = conf_link; link_p; link_p = (ConfigItem_link *) link_p->next)
 	{
 		sendto_one(sptr, ":%s 213 %s C %s@%s * %s %i %s %s%s%s%s%s",
-			me.name, sptr->name, IsOper(sptr) ? link_p->username : "*",
-			IsOper(sptr) ? link_p->hostname : "*", link_p->servername,
-			link_p->port,
-			link_p->class->name,
-			(link_p->options & CONNECT_AUTO) ? "a" : "",
-			(link_p->options & CONNECT_SSL) ? "S" : "",
-			(link_p->options & CONNECT_NODNSCACHE) ? "d" : "",
-			(link_p->options & CONNECT_NOHOSTCHECK) ? "h" : "",
-			(link_p->flag.temporary == 1) ? "T" : "");
+		    me.name, sptr->name, IsOper(sptr) ? link_p->username : "*",
+		    IsOper(sptr) ? link_p->hostname : "*", link_p->servername,
+		    link_p->port,
+		    link_p->class->name,
+		    (link_p->options & CONNECT_AUTO) ? "a" : "",
+		    (link_p->options & CONNECT_SSL) ? "S" : "",
+		    (link_p->options & CONNECT_NODNSCACHE) ? "d" : "",
+		    (link_p->options & CONNECT_NOHOSTCHECK) ? "h" : "",
+		    (link_p->flag.temporary == 1) ? "T" : "");
 #ifdef DEBUGMODE
 		sendnotice(sptr, "%s (%p) has refcount %d",
-			link_p->servername, link_p, link_p->refcount);
+		    link_p->servername, link_p, link_p->refcount);
 #endif
 		if (link_p->hubmask)
 			sendto_one(sptr, ":%s 244 %s H %s * %s",
-				me.name, sptr->name, link_p->hubmask,
-				link_p->servername);
+			    me.name, sptr->name, link_p->hubmask,
+			    link_p->servername);
 		else if (link_p->leafmask)
 			sendto_one(sptr, ":%s 241 %s L %s * %s %d",
-				me.name, sptr->name,
-				link_p->leafmask, link_p->servername, link_p->leafdepth);
+			    me.name, sptr->name,
+			    link_p->leafmask, link_p->servername, link_p->leafdepth);
 	}
 #ifdef DEBUGMODE
 	list_for_each_entry(acptr, &client_list, client_node)
@@ -517,13 +517,13 @@ int stats_links(aClient *sptr, char *para)
 		{
 			if (!acptr->serv->conf)
 				sendnotice(sptr, "client '%s' (%p) has NO CONF attached (? :P)",
-					acptr->name, acptr);
+				    acptr->name, acptr);
 			else
 				sendnotice(sptr, "client '%s' (%p) has conf %p attached, refcount: %d, temporary: %s",
-					acptr->name, acptr,
-					acptr->serv->conf,
-					acptr->serv->conf->refcount,
-					acptr->serv->conf->flag.temporary ? "YES" : "NO");
+				    acptr->name, acptr,
+				    acptr->serv->conf,
+				    acptr->serv->conf->refcount,
+				    acptr->serv->conf->flag.temporary ? "YES" : "NO");
 		}
 #endif
 	return 0;
@@ -537,7 +537,7 @@ int stats_denylinkall(aClient *sptr, char *para)
 	{
 		if (links->flag.type == CRULE_ALL)
 			sendto_one(sptr, rpl_str(RPL_STATSDLINE), me.name, sptr->name,
-			'D', links->mask, links->prettyrule);
+			    'D', links->mask, links->prettyrule);
 	}
 	return 0;
 }
@@ -563,10 +563,10 @@ int stats_exceptban(aClient *sptr, char *para)
 	{
 		if (excepts->flag.type == CONF_EXCEPT_BAN)
 			sendto_one(sptr, rpl_str(RPL_STATSKLINE), me.name,
-				sptr->name, "E", excepts->mask, "");
+			    sptr->name, "E", excepts->mask, "");
 		else if (excepts->flag.type == CONF_EXCEPT_TKL)
 			sendto_one(sptr, rpl_str(RPL_STATSEXCEPTTKL), me.name,
-				sptr->name, tkl_typetochar(excepts->type), excepts->mask);
+			    sptr->name, tkl_typetochar(excepts->type), excepts->mask);
 	}
 	return 0;
 }
@@ -576,9 +576,9 @@ int stats_allow(aClient *sptr, char *para)
 	ConfigItem_allow *allows;
 	for (allows = conf_allow; allows; allows = (ConfigItem_allow *) allows->next) 
 		sendto_one(sptr, rpl_str(RPL_STATSILINE), me.name,
-			sptr->name, allows->ip, allows->hostname, allows->maxperip, 
-			allows->class->name, allows->server ? allows->server 
-			: defserv, allows->port ? allows->port : 6667);
+		    sptr->name, allows->ip, allows->hostname, allows->maxperip, 
+		    allows->class->name, allows->server ? allows->server 
+		    : defserv, allows->port ? allows->port : 6667);
 	return 0;
 }
 
@@ -591,14 +591,14 @@ int stats_command(aClient *sptr, char *para)
 			if (mptr->count)
 #ifndef DEBUGMODE
 			sendto_one(sptr, rpl_str(RPL_STATSCOMMANDS),
-				me.name, sptr->name, mptr->cmd,
-				mptr->count, mptr->bytes);
+			    me.name, sptr->name, mptr->cmd,
+			    mptr->count, mptr->bytes);
 #else
 			sendto_one(sptr, rpl_str(RPL_STATSCOMMANDS),
-				me.name, sptr->name, mptr->cmd,
-				mptr->count, mptr->bytes,
-				mptr->lticks, mptr->lticks / CLOCKS_PER_SEC,
-				mptr->rticks, mptr->rticks / CLOCKS_PER_SEC);
+			    me.name, sptr->name, mptr->cmd,
+			    mptr->count, mptr->bytes,
+			    mptr->lticks, mptr->lticks / CLOCKS_PER_SEC,
+			    mptr->rticks, mptr->rticks / CLOCKS_PER_SEC);
 #endif
 
 	return 0;
@@ -612,17 +612,17 @@ int stats_oper(aClient *sptr, char *para)
 	{
 		if(!oper_p->from)
 			sendto_one(sptr, rpl_str(RPL_STATSOLINE),
-		  		me.name, sptr->name, 
-		  		'O', "(none)", oper_p->name,
-		  		oflagstr(oper_p->oflags),
-		  		oper_p->class->name ? oper_p->class->name : "");
+		  	    me.name, sptr->name, 
+		  	    'O', "(none)", oper_p->name,
+		  	    oflagstr(oper_p->oflags),
+		  	    oper_p->class->name ? oper_p->class->name : "");
 		else
 			for (from = (ConfigItem_oper_from *) oper_p->from; from; from = (ConfigItem_oper_from *) from->next)
 		  		sendto_one(sptr, rpl_str(RPL_STATSOLINE),
-		  			me.name, sptr->name, 
-		  			'O', from->name, oper_p->name,
-		  			oflagstr(oper_p->oflags),
-		  			oper_p->class->name? oper_p->class->name : "");
+		  		    me.name, sptr->name, 
+		  		    'O', from->name, oper_p->name,
+		  		    oflagstr(oper_p->oflags),
+		  		    oper_p->class->name? oper_p->class->name : "");
 	}
 	return 0;
 }
@@ -1183,9 +1183,9 @@ int stats_set(aClient *sptr, char *para)
 	*modebuf = *parabuf = 0;
 	chmode_str(iConf.modes_on_join, modebuf, parabuf, sizeof(modebuf), sizeof(parabuf));
 	sendto_one(sptr, ":%s %i %s :modes-on-join: %s %s", me.name, RPL_TEXT,
-		sptr->name, modebuf, parabuf);
+	    sptr->name, modebuf, parabuf);
 	sendto_one(sptr, ":%s %i %s :nick-length: %i", me.name, RPL_TEXT,
-		sptr->name, iConf.nicklen);
+	    sptr->name, iConf.nicklen);
 	sendto_one(sptr, ":%s %i %s :snomask-on-oper: %s", me.name, RPL_TEXT,
 	    sptr->name, OPER_SNOMASK);
 	sendto_one(sptr, ":%s %i %s :snomask-on-connect: %s", me.name, RPL_TEXT,
@@ -1194,17 +1194,17 @@ int stats_set(aClient *sptr, char *para)
 	{
 		char *longflags = stats_operonly_long_to_short();
 		sendto_one(sptr, ":%s %i %s :oper-only-stats: %s%s", me.name, RPL_TEXT,
-			sptr->name, OPER_ONLY_STATS, longflags ? longflags : "");
+		    sptr->name, OPER_ONLY_STATS, longflags ? longflags : "");
 	}
 	if (RESTRICT_USERMODES)
 		sendto_one(sptr, ":%s %i %s :restrict-usermodes: %s", me.name, RPL_TEXT,
-			sptr->name, RESTRICT_USERMODES);
+		    sptr->name, RESTRICT_USERMODES);
 	if (RESTRICT_CHANNELMODES)
 		sendto_one(sptr, ":%s %i %s :restrict-channelmodes: %s", me.name, RPL_TEXT,
-			sptr->name, RESTRICT_CHANNELMODES);
+		    sptr->name, RESTRICT_CHANNELMODES);
 	if (RESTRICT_EXTENDEDBANS)
 		sendto_one(sptr, ":%s %i %s :restrict-extendedbans: %s", me.name, RPL_TEXT,
-			sptr->name, RESTRICT_EXTENDEDBANS);
+		    sptr->name, RESTRICT_EXTENDEDBANS);
 	switch (UHOST_ALLOWED)
 	{
 		case UHALLOW_NEVER:
@@ -1223,23 +1223,23 @@ int stats_set(aClient *sptr, char *para)
 	}
 	if (uhallow)
 		sendto_one(sptr, ":%s %i %s :allow-userhost-change: %s", me.name, RPL_TEXT,
-			sptr->name, uhallow);
+		    sptr->name, uhallow);
 	sendto_one(sptr, ":%s %i %s :anti-spam-quit-message-time: %s", me.name, RPL_TEXT, 
-		sptr->name, pretty_time_val(ANTI_SPAM_QUIT_MSG_TIME));
+	    sptr->name, ANTI_SPAM_QUIT_MSG_TIME == -1 ? "static" : pretty_time_val(ANTI_SPAM_QUIT_MSG_TIME));
 	sendto_one(sptr, ":%s %i %s :channel-command-prefix: %s", me.name, RPL_TEXT, sptr->name, CHANCMDPFX ? CHANCMDPFX : "`");
 #ifdef USE_SSL
 	sendto_one(sptr, ":%s %i %s :ssl::egd: %s", me.name, RPL_TEXT,
-		sptr->name, EGD_PATH ? EGD_PATH : (USE_EGD ? "1" : "0"));
+	    sptr->name, EGD_PATH ? EGD_PATH : (USE_EGD ? "1" : "0"));
 	sendto_one(sptr, ":%s %i %s :ssl::certificate: %s", me.name, RPL_TEXT,
-		sptr->name, SSL_SERVER_CERT_PEM);
+	    sptr->name, SSL_SERVER_CERT_PEM);
 	sendto_one(sptr, ":%s %i %s :ssl::key: %s", me.name, RPL_TEXT,
-		sptr->name, SSL_SERVER_KEY_PEM);
+	    sptr->name, SSL_SERVER_KEY_PEM);
 	sendto_one(sptr, ":%s %i %s :ssl::trusted-ca-file: %s", me.name, RPL_TEXT, sptr->name,
 	 iConf.trusted_ca_file ? iConf.trusted_ca_file : "<none>");
 	sendto_one(sptr, ":%s %i %s :ssl::options: %s %s %s", me.name, RPL_TEXT, sptr->name,
-		iConf.ssl_options & SSLFLAG_FAILIFNOCERT ? "FAILIFNOCERT" : "",
-		iConf.ssl_options & SSLFLAG_VERIFYCERT ? "VERIFYCERT" : "",
-		iConf.ssl_options & SSLFLAG_DONOTACCEPTSELFSIGNED ? "DONOTACCEPTSELFSIGNED" : "");
+	    iConf.ssl_options & SSLFLAG_FAILIFNOCERT ? "FAILIFNOCERT" : "",
+	    iConf.ssl_options & SSLFLAG_VERIFYCERT ? "VERIFYCERT" : "",
+	    iConf.ssl_options & SSLFLAG_DONOTACCEPTSELFSIGNED ? "DONOTACCEPTSELFSIGNED" : "");
 #endif
 
 	sendto_one(sptr, ":%s %i %s :options::show-opermotd: %d", me.name, RPL_TEXT,
@@ -1266,14 +1266,16 @@ int stats_set(aClient *sptr, char *para)
 	    sptr->name, AUTO_JOIN_CHANS ? AUTO_JOIN_CHANS : "0");
 	sendto_one(sptr, ":%s %i %s :oper-auto-join: %s", me.name,
 	    RPL_TEXT, sptr->name, OPER_AUTO_JOIN_CHANS ? OPER_AUTO_JOIN_CHANS : "0");
+	sendto_one(sptr, ":%s %i %s :static-quit-part-users: %s", me.name, RPL_TEXT, 
+	    sptr->name, STATIC_QUIT_PART_USERS ? "unregistered" : "all" );
 	sendto_one(sptr, ":%s %i %s :static-quit: %s", me.name, 
-		RPL_TEXT, sptr->name, STATIC_QUIT ? STATIC_QUIT : "<none>");	
+	    RPL_TEXT, sptr->name, STATIC_QUIT ? STATIC_QUIT : "<none>");	
 	sendto_one(sptr, ":%s %i %s :static-part: %s", me.name, 
-		RPL_TEXT, sptr->name, STATIC_PART ? STATIC_PART : "<none>");	
+	    RPL_TEXT, sptr->name, STATIC_PART ? STATIC_PART : "<none>");	
 	sendto_one(sptr, ":%s %i %s :who-limit: %d", me.name, RPL_TEXT,
-		sptr->name, WHOLIMIT);
+	    sptr->name, WHOLIMIT);
 	sendto_one(sptr, ":%s %i %s :silence-limit: %d", me.name, RPL_TEXT,
-		sptr->name, SILENCE_LIMIT);
+	    sptr->name, SILENCE_LIMIT);
 	sendto_one(sptr, ":%s %i %s :dns::timeout: %s", me.name, RPL_TEXT,
 	    sptr->name, pretty_time_val(HOST_TIMEOUT));
 	sendto_one(sptr, ":%s %i %s :dns::retries: %d", me.name, RPL_TEXT,
@@ -1289,41 +1291,41 @@ int stats_set(aClient *sptr, char *para)
 		sendto_one(sptr, ":%s %i %s :link::bind-ip: %s", me.name, RPL_TEXT,
 		    sptr->name, LINK_BINDIP);
 	sendto_one(sptr, ":%s %i %s :throttle::period: %s", me.name, RPL_TEXT,
-			sptr->name, THROTTLING_PERIOD ? pretty_time_val(THROTTLING_PERIOD) : "disabled");
+	    sptr->name, THROTTLING_PERIOD ? pretty_time_val(THROTTLING_PERIOD) : "disabled");
 	sendto_one(sptr, ":%s %i %s :throttle::connections: %d", me.name, RPL_TEXT,
-			sptr->name, THROTTLING_COUNT ? THROTTLING_COUNT : -1);
+	    sptr->name, THROTTLING_COUNT ? THROTTLING_COUNT : -1);
 	sendto_one(sptr, ":%s %i %s :anti-flood::unknown-flood-bantime: %s", me.name, RPL_TEXT,
-			sptr->name, pretty_time_val(UNKNOWN_FLOOD_BANTIME));
+	    sptr->name, pretty_time_val(UNKNOWN_FLOOD_BANTIME));
 	sendto_one(sptr, ":%s %i %s :anti-flood::unknown-flood-amount: %ldKB", me.name, RPL_TEXT,
-			sptr->name, UNKNOWN_FLOOD_AMOUNT);
+	    sptr->name, UNKNOWN_FLOOD_AMOUNT);
 #ifdef NO_FLOOD_AWAY
 	if (AWAY_PERIOD)
 	{
 		sendto_one(sptr, ":%s %i %s :anti-flood::away-flood: %d per %s", me.name, RPL_TEXT, 
-			sptr->name, AWAY_COUNT, pretty_time_val(AWAY_PERIOD));
+		    sptr->name, AWAY_COUNT, pretty_time_val(AWAY_PERIOD));
 	}
 #endif
 	sendto_one(sptr, ":%s %i %s :anti-flood::nick-flood: %d per %s", me.name, RPL_TEXT, 
-		sptr->name, NICK_COUNT, pretty_time_val(NICK_PERIOD));
+	    sptr->name, NICK_COUNT, pretty_time_val(NICK_PERIOD));
 	sendto_one(sptr, ":%s %i %s :ident::connect-timeout: %s", me.name, RPL_TEXT,
-			sptr->name, pretty_time_val(IDENT_CONNECT_TIMEOUT));
+	    sptr->name, pretty_time_val(IDENT_CONNECT_TIMEOUT));
 	sendto_one(sptr, ":%s %i %s :ident::read-timeout: %s", me.name, RPL_TEXT,
-			sptr->name, pretty_time_val(IDENT_READ_TIMEOUT));
+	    sptr->name, pretty_time_val(IDENT_READ_TIMEOUT));
 	sendto_one(sptr, ":%s %i %s :modef-default-unsettime: %hd", me.name, RPL_TEXT,
-			sptr->name, (unsigned short)MODEF_DEFAULT_UNSETTIME);
+	    sptr->name, (unsigned short)MODEF_DEFAULT_UNSETTIME);
 	sendto_one(sptr, ":%s %i %s :modef-max-unsettime: %hd", me.name, RPL_TEXT,
-			sptr->name, (unsigned short)MODEF_MAX_UNSETTIME);
+	    sptr->name, (unsigned short)MODEF_MAX_UNSETTIME);
 	sendto_one(sptr, ":%s %i %s :spamfilter::ban-time: %s", me.name, RPL_TEXT,
-		sptr->name, pretty_time_val(SPAMFILTER_BAN_TIME));
+	    sptr->name, pretty_time_val(SPAMFILTER_BAN_TIME));
 	sendto_one(sptr, ":%s %i %s :spamfilter::ban-reason: %s", me.name, RPL_TEXT,
-		sptr->name, SPAMFILTER_BAN_REASON);
+	    sptr->name, SPAMFILTER_BAN_REASON);
 	sendto_one(sptr, ":%s %i %s :spamfilter::virus-help-channel: %s", me.name, RPL_TEXT,
-		sptr->name, SPAMFILTER_VIRUSCHAN);
+	    sptr->name, SPAMFILTER_VIRUSCHAN);
 	if (SPAMFILTER_EXCEPT)
 		sendto_one(sptr, ":%s %i %s :spamfilter::except: %s", me.name, RPL_TEXT,
-			sptr->name, SPAMFILTER_EXCEPT);
+		    sptr->name, SPAMFILTER_EXCEPT);
 	sendto_one(sptr, ":%s %i %s :check-target-nick-bans: %s", me.name, RPL_TEXT,
-		sptr->name, CHECK_TARGET_NICK_BANS ? "yes" : "no");
+	    sptr->name, CHECK_TARGET_NICK_BANS ? "yes" : "no");
 	sendto_one(sptr, ":%s %i %s :hosts::global: %s", me.name, RPL_TEXT,
 	    sptr->name, oper_host);
 	sendto_one(sptr, ":%s %i %s :hosts::admin: %s", me.name, RPL_TEXT,
