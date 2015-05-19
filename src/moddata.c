@@ -403,12 +403,16 @@ int moddata_client_set(aClient *acptr, char *varname, char *value)
 		memset(&moddata_client(acptr, md), 0, sizeof(ModData));
 	}
 
-	if (value)
-		sendto_server(NULL, 0, 0, ":%s MD %s %s %s :%s",
-			me.name, "client", acptr->name, md->name, value); /* set */
-	else
-		sendto_server(NULL, 0, 0, ":%s MD %s %s %s",
-			me.name, "client", acptr->name, md->name); /* unset */
+	if (md->sync)
+	{
+		if (value)
+			sendto_server(NULL, 0, 0, ":%s MD %s %s %s :%s",
+				me.name, "client", acptr->name, md->name, value); /* set */
+		else
+			sendto_server(NULL, 0, 0, ":%s MD %s %s %s",
+				me.name, "client", acptr->name, md->name); /* unset */
+	}
+	return 1;
 }
 
 /** Get ModData for client (via variable name) */
