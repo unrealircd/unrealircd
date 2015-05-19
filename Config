@@ -45,12 +45,10 @@ if [ "$DISABLEEXTBANSTACKING" = "1" ]; then
 	ARG="$ARG--with-disable-extendedban-stacking ";
 fi
 fi
-if [  "$CRYPTOIRCD" = "1" ] ; then
 if test x"$SSLDIR" = "x" ; then
 ARG="$ARG--enable-ssl "
 else
 ARG="$ARG--enable-ssl=$SSLDIR "
-fi
 fi
 if [ "$REMOTEINC" = "1" ] ; then
 ARG="$ARG--enable-libcurl=$CURLDIR "
@@ -335,7 +333,7 @@ UNREALCWD="`pwd`"
 DPATH="`pwd`"
 SPATH="`pwd`/src/ircd"
 DEFPERM="0600"
-CRYPTOIRCD=""
+CRYPTOIRCD="1"
 SSLDIR=""
 NICKNAMEHISTORYLENGTH="2000"
 MAXSENDQLENGTH="3000000"
@@ -483,34 +481,7 @@ while [ -z "$TEST" ] ; do
 
 done
 
-TEST=""
-while [ -z "$TEST" ] ; do
-    if [ "$CRYPTOIRCD" = "1" ] ; then
-	TEST="Yes"
-    else
-	TEST="No"
-    fi
-    echo ""
-    echo "Do you want to support SSL (Secure Sockets Layer) connections?"
-    echo $n "[$TEST] -> $c"
-	read cc
-    if [ -z "$cc" ] ; then
-	cc=$TEST
-    fi
-    case "$cc" in
-	[Yy]*)
-	    CRYPTOIRCD="1"
-	    ;;
-	[Nn]*)
-	    CRYPTOIRCD=""
-	    ;;
-	*)
-	    echo ""
-	    echo "You must enter either Yes or No"
-	    TEST=""
-	    ;;
-    esac
-done
+CRYPTOIRCD="1"
 
 if [ "$CRYPTOIRCD" = "1" ] ; then
 TEST="$SSLDIR"
