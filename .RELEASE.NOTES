@@ -79,6 +79,7 @@ You can use your 3.2.x unrealircd.conf WITH SOME CHANGES:
   (those that are modular) are now in their own module.
 * Self-signed certificates are now generated using 4096 bits, a SHA256
   hash and validity of 10 years. (A2)
+* Building with SSL (OpenSSL) is now mandatory (A2)
 
 ==[ MODULE CODERS / DEVELOPERS ]==
 * A lot of technical documentation for module coders has been added

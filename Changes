@@ -1,6 +1,0 @@
-If you are reading this, then this means you have checked out the Mercurial
-repository. The change log is now generated from the Mercurial version
-history.
-
-Simply run the following command to generate this 'Changes' file:
-./createchangelog
