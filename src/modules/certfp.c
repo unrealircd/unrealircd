@@ -107,7 +107,7 @@ int certfp_connect(aClient *acptr)
 		if (!fp)
 			return 0; /* wtf? */
 
-		moddata_client_set_string(acptr, "certfp", fp); /* set & broadcast */
+		moddata_client_set(acptr, "certfp", fp); /* set & broadcast */
 		sendnotice(acptr, "*** Your SSL fingerprint is %s", fp);
 	}
 	return 0;
@@ -115,7 +115,7 @@ int certfp_connect(aClient *acptr)
 
 int certfp_whois(aClient *sptr, aClient *acptr)
 {
-	char *fp = moddata_client_get_string(acptr, "certfp");
+	char *fp = moddata_client_get(acptr, "certfp");
 	
 	if (fp)
 		sendto_one(sptr, WHOISCERTFP_STRING, me.name, sptr->name, acptr->name, fp);

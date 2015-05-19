@@ -382,7 +382,7 @@ aClient *acptr;
 }
 
 /** Set ModData for client (via variable name, string value) */
-int moddata_client_set_string(aClient *acptr, char *varname, char *value)
+int moddata_client_set(aClient *acptr, char *varname, char *value)
 {
 	ModDataInfo *md;
 
@@ -412,7 +412,7 @@ int moddata_client_set_string(aClient *acptr, char *varname, char *value)
 }
 
 /** Get ModData for client (via variable name) */
-char *moddata_client_get_string(aClient *acptr, char *varname)
+char *moddata_client_get(aClient *acptr, char *varname)
 {
 	ModDataInfo *md;
 
