@@ -70,7 +70,7 @@ int		Auth_FindType(char *type)
 	
 	while (p->data)
 	{
-		if (!strcmp(p->data, type))
+		if (!mycmp(p->data, type))
 			return p->type;
 		p++;
 	}
