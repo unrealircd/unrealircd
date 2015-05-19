@@ -74,7 +74,7 @@ static void init_operflags()
 	oper_oflags[3].umode = &UMODE_COADMIN;
 	oper_oflags[3].host = &coadmin_host;
 	oper_oflags[3].announce = "is now a co administrator (C)";
-	oper_oflags[4].oflag = OFLAG_ISGLOBAL;
+	oper_oflags[4].oflag = OFLAG_GLOBAL;
 	oper_oflags[4].umode = &UMODE_OPER;
 	oper_oflags[4].host = &oper_host;
 	oper_oflags[4].announce = "is now an operator (O)";
