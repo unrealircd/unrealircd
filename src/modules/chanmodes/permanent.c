@@ -17,14 +17,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-#include "struct.h"
-#include "common.h"
-#include "numeric.h"
-#include "sys.h"
-#include "h.h"
+#include "unrealircd.h"
 
 ModuleHeader MOD_HEADER(permanent)
   = {

@@ -3,33 +3,9 @@
  * except from opers, U-lines and servers.
  * Copyright 2014 Travis Mcarthur <Heero> and UnrealIRCd Team
  */
-#include "config.h"
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "numeric.h"
-#include "msg.h"
-#include "channel.h"
-#include <time.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
-#include <fcntl.h>
-#include "h.h"
-#ifdef _WIN32
-#include "version.h"
-#endif
+#include "unrealircd.h"
 
-#ifndef DYNAMIC_LINKING
-ModuleHeader delayjoin_Header
-#else
-#define delayjoin_Header Mod_Header
-ModuleHeader Mod_Header
-#endif
+ModuleHeader MOD_HEADER(delayjoin)
   = {
         "delayjoin",   /* Name of module */
         "v0.0.1", /* Version */
