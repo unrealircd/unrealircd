@@ -28,7 +28,6 @@
 /* need to include ssl stuff here coz otherwise you get
  * conflicting types with isalnum/isalpha/etc @ redhat. -- Syzop
  */
-#if defined(USE_SSL)
 #define OPENSSL_NO_KRB5
 #include <openssl/rsa.h>       /* SSL stuff */
 #include <openssl/crypto.h>
@@ -40,7 +39,6 @@
 #include <openssl/rand.h>
 #include <openssl/md5.h>
 #include <openssl/ripemd.h>
-#endif
 #include "common.h"
 #include "sys.h"
 #include "hash.h"
@@ -53,7 +51,6 @@
 #ifdef STDDEFH
 # include <stddef.h>
 #endif
-#include "md5.h"
 
 #ifdef HAVE_SYSLOG
 # include <syslog.h>
