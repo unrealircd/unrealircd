@@ -163,9 +163,7 @@ unsigned char mdbuf[16];
 void init_random()
 {
 struct {
-#ifdef USE_SSL
 	char egd[32];			/* from EGD */
-#endif
 #ifndef _WIN32
 	struct timeval nowt;	/* time */
 	char rnd[32];			/* /dev/urandom */
@@ -184,12 +182,10 @@ MEMORYSTATUS mstat;
 	arc4_init();
 
 	/* Grab non-OS specific "random" data */
-#ifdef USE_SSL
- #if OPENSSL_VERSION_NUMBER >= 0x000907000 && defined(HAVE_RAND_EGD)
+#if OPENSSL_VERSION_NUMBER >= 0x000907000 && defined(HAVE_RAND_EGD)
 	if (EGD_PATH) {
 		RAND_query_egd_bytes(EGD_PATH, rdat.egd, sizeof(rdat.egd));
 	}
- #endif
 #endif
 
 	/* Grab OS specific "random" data */

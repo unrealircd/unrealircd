@@ -34,7 +34,6 @@ typedef	struct {
 
 /* md5 is always available and enabled as of Unreal3.2.1 */
 #define AUTHENABLE_MD5
-#ifdef USE_SSL
 #define AUTHENABLE_SHA1
 #define AUTHENABLE_SSL_CLIENTCERT
 #define AUTHENABLE_RIPEMD160
@@ -45,7 +44,6 @@ typedef	struct {
 #if OPENSSL_VERSION_NUMBER >= 0x0090700fL 
 #ifndef HAVE_CRYPT
 #define crypt DES_crypt
-#endif
 #endif
 #endif
 #endif

@@ -318,9 +318,7 @@ void remove_client_from_list(aClient *cptr)
 			cptr->srvptr->serv->users--;
 	}
 	if (IsUnknown(cptr) || IsConnecting(cptr) || IsHandshake(cptr)
-#ifdef USE_SSL
 		|| IsSSLHandshake(cptr)
-#endif
 	)
 		IRCstats.unknown--;
 

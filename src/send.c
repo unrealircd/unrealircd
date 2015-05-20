@@ -1236,13 +1236,9 @@ void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnec
 		    "*** Notice -- Client connecting on port %d: %s (%s@%s) [%s] %s%s%s",
 		    sptr->listener->port, nick, user->username, user->realhost,
 		    sptr->class ? sptr->class->name : "",
-#ifdef USE_SSL
 		IsSecure(sptr) ? "[secure " : "",
 		IsSecure(sptr) ? SSL_get_cipher((SSL *)sptr->ssl) : "",
 		IsSecure(sptr) ? "]" : "");
-#else
-		"", "", "");
-#endif
 		ircsnprintf(connecth, sizeof(connecth),
 		    "*** Notice -- Client connecting: %s (%s@%s) [%s] {%s}", nick,
 		    user->username, user->realhost, Inet_ia2p(&sptr->ip),

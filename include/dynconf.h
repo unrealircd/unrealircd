@@ -99,7 +99,6 @@ struct zConfiguration {
 	char *egd_path;
 	char *static_quit;
 	char *static_part;
-#ifdef USE_SSL
 	char *x_server_cert_pem;
 	char *x_server_key_pem;
 	char *x_server_cipher_list;
@@ -109,11 +108,6 @@ struct zConfiguration {
 	int ssl_renegotiate_bytes;
 	int ssl_renegotiate_timeout;
 	
-#elif defined(_WIN32)
-	void *bogus1, *bogus2, *bogus3, *bogus4, *bogus5;
-	long bogus6;
-	int bogus7, bogus8;
-#endif
 	enum UHAllowed userhost_allowed;
 	char *restrict_usermodes;
 	char *restrict_channelmodes;
@@ -326,7 +320,6 @@ struct SetCheck {
 	unsigned has_egd_path:1;
 	unsigned has_static_quit:1;
 	unsigned has_static_part:1;
-#ifdef USE_SSL
 	unsigned has_ssl_certificate:1;
 	unsigned has_ssl_key:1;
 	unsigned has_ssl_trusted_ca_file:1;
@@ -334,7 +327,6 @@ struct SetCheck {
 	unsigned has_ssl_dh:1;
 	unsigned has_renegotiate_timeout : 1;
 	unsigned has_renegotiate_bytes : 1;
-#endif
 	unsigned has_allow_userhost_change:1;
 	unsigned has_restrict_usermodes:1;
 	unsigned has_restrict_channelmodes:1;

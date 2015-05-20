@@ -6226,23 +6226,15 @@ $as_echo "found in $ssldir/include" >&6; }
 $as_echo "not found" >&6; }
 		echo ""
 		echo "Apparently you do not have both the openssl binary and openssl development libraries installed."
-		echo "You have two options:"
-		echo "a) Install the needed binaries and libraries"
-		echo "   and run ./Config"
-		echo "OR"
-		echo "b) If you don't need SSL..."
-		echo "   Run ./Config and say 'no' when asked about SSL"
-		echo "   (or pass --disable-ssl to ./configure)"
-		echo ""
+		echo "" 
+		echo "Please install the needed binaries and libraries"
+		echo "and run ./Config"
 		exit 1
 	else
 		CRYPTOLIB="-lssl -lcrypto";
 		if test ! "$ssldir" = "/usr" ; then
 			LDFLAGS="$LDFLAGS -L$ssldir/lib";
 		fi
-
-$as_echo "#define USE_SSL /**/" >>confdefs.h
-
 	fi
 
 fi

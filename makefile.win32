@@ -10,7 +10,7 @@ MT=mt
 
 # You are encouraged NOT to set these values here, but instead make a batch file
 # which passes all these arguments to nmake, like:
-# nmake -f makefile.win32 USE_SSL=1 OPENSSL_INC_DIR="c:\dev\openssl" etc etc...
+# nmake -f makefile.win32 OPENSSL_INC_DIR="c:\dev\openssl" etc etc...
 # Both ways will work, but if you use a batch file it's easier with
 # upgrading Unreal as you won't have to edit this makefile again.
 
@@ -41,18 +41,10 @@ MT=mt
 ### END REMOTE INCLUDES ##
 
 ####### SSL SUPPORT ######
-#To enable SSL support you must have OpenSSL installed on your system
-#
-#
-#To enable SSL uncomment the next line:
-#USE_SSL=1
-#
 #If your OpenSSL library and include files are not in your compiler's
 #default locations, specify the locations here:
 #OPENSSL_INC_DIR="c:\openssl\include"
 #OPENSSL_LIB_DIR="c:\openssl\lib"
-#
-#
 ######### END SSL ########
 
 ###### _EXTRA_ DEBUGGING #####
@@ -100,15 +92,12 @@ LIBCURL_LIB=/LIBPATH:"$(LIBCURL_LIB_DIR)"
 !ENDIF
 !ENDIF
 
-!IFDEF USE_SSL
-SSLCFLAGS=/D USE_SSL
 SSLLIBS=ssleay32.lib libeay32.lib
 !IFDEF OPENSSL_INC_DIR
 OPENSSL_INC=/I "$(OPENSSL_INC_DIR)"
 !ENDIF
 !IFDEF OPENSSL_LIB_DIR
 OPENSSL_LIB=/LIBPATH:"$(OPENSSL_LIB_DIR)"
-!ENDIF
 !ENDIF
 
 !IFDEF DEBUGEXTRA

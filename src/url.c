@@ -27,9 +27,7 @@
 #include <sys/stat.h>
 #include <curl/curl.h>
 
-#ifdef USE_SSL
 extern char *SSLKeyPasswd;
-#endif
 
 #ifndef _WIN32
 extern uid_t irc_uid;
@@ -107,7 +105,6 @@ char *url_getfilename(const char *url)
         return strdup("-");
 }
 
-#ifdef USE_SSL
 /*
  * Sets up all of the SSL options necessary to support HTTPS/FTPS
  * transfers.
@@ -122,7 +119,6 @@ static void set_curl_ssl_options(CURL *curl)
 	curl_easy_setopt(curl, CURLOPT_SSLKEY, SSL_SERVER_KEY_PEM);
 	curl_easy_setopt(curl, CURLOPT_CAINFO, "curl-ca-bundle.crt");
 }
-#endif
 
 /*
  * Used by CURLOPT_WRITEFUNCTION to actually write the data to
@@ -184,9 +180,7 @@ char *download_file(const char *url, char **error)
  	curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);
 #endif
 
-#ifdef USE_SSL
 	set_curl_ssl_options(curl);
-#endif
 	bzero(errorbuf, CURL_ERROR_SIZE);
 	curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorbuf);
 	res = curl_easy_perform(curl);
@@ -398,9 +392,7 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
                 curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download);
                 curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)handle->fd);
 		curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
-#ifdef USE_SSL
 		set_curl_ssl_options(curl);
-#endif
 		bzero(handle->errorbuf, CURL_ERROR_SIZE);
 		curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, handle->errorbuf);
 		curl_easy_setopt(curl, CURLOPT_PRIVATE, (char *)handle);

@@ -384,9 +384,6 @@
    support */
 #undef USE_LIBCURL
 
-/* Define if you want to allow SSL connections */
-#undef USE_SSL
-
 /* Define if you are compiling unrealircd on Sun's (or Oracle's?) Solaris */
 #undef _SOLARIS
 

@@ -60,9 +60,7 @@ int  deliver_it(aClient *cptr, char *str, int len)
 
 	if (IsDead(cptr) || (!IsServer(cptr) && !IsPerson(cptr)
 	    && !IsHandshake(cptr) 
-#ifdef USE_SSL
 	    && !IsSSLHandshake(cptr)
-#endif 
  
 	    && !IsUnknown(cptr)))
 	{
@@ -73,7 +71,6 @@ int  deliver_it(aClient *cptr, char *str, int len)
 		return -1;
 	}
 
-#ifdef USE_SSL
 	if (IsSSL(cptr) && cptr->ssl != NULL)
 	{
 		retval = SSL_write(cptr->ssl, str, len);
@@ -99,7 +96,6 @@ int  deliver_it(aClient *cptr, char *str, int len)
 		}
 	}
 	else
-#endif
 		retval = send(cptr->fd, str, len, 0);
 	/*
 	   ** Convert WOULDBLOCK to a return of "0 bytes moved". This

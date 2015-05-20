@@ -245,7 +245,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define	IsClient(x)		((x)->status == STAT_CLIENT)
 #define	IsLog(x)		((x)->status == STAT_LOG)
 
-#ifdef USE_SSL
 #define IsSSLStartTLSHandshake(x)	((x)->status == STAT_SSL_STARTTLS_HANDSHAKE)
 #define IsSSLAcceptHandshake(x)	((x)->status == STAT_SSL_ACCEPT_HANDSHAKE)
 #define IsSSLConnectHandshake(x)	((x)->status == STAT_SSL_CONNECT_HANDSHAKE)
@@ -253,7 +252,6 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SetSSLStartTLSHandshake(x)	((x)->status = STAT_SSL_STARTTLS_HANDSHAKE)
 #define SetSSLAcceptHandshake(x)	((x)->status = STAT_SSL_ACCEPT_HANDSHAKE)
 #define SetSSLConnectHandshake(x)	((x)->status = STAT_SSL_CONNECT_HANDSHAKE)
-#endif
 
 #define	SetConnecting(x)	((x)->status = STAT_CONNECTING)
 #define	SetHandshake(x)		((x)->status = STAT_HANDSHAKE)
@@ -294,9 +292,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define FLAGS_DCCNOTICE  0x2000000 /* Has the user seen a notice on how to use DCCALLOW already? */
 #define FLAGS_SHUNNED    0x4000000
 #define FLAGS_VIRUS      0x8000000 /* tagged by spamfilter */
-#ifdef USE_SSL
 #define FLAGS_SSL        0x10000000
-#endif
 #define FLAGS_NOFAKELAG  0x20000000 /* Exception from fake lag */
 #define FLAGS_DCCBLOCK   0x40000000 /* Block all DCC send requests */
 #define FLAGS_MAP        0x80000000	/* Show this entry in /map */
@@ -385,11 +381,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define IsVirus(x)			((x)->flags & FLAGS_VIRUS)
 #define SetVirus(x)			((x)->flags |= FLAGS_VIRUS)
 #define ClearVirus(x)		((x)->flags &= ~FLAGS_VIRUS)
-#ifdef USE_SSL
 #define IsSecure(x)		((x)->flags & FLAGS_SSL)
-#else
-#define IsSecure(x)		(0)
-#endif
 
 /* Fake lag exception */
 #define IsNoFakeLag(x)      ((x)->flags & FLAGS_NOFAKELAG)
@@ -402,9 +394,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define IsHidden(x)             ((x)->umodes & UMODE_HIDE)
 #define IsSetHost(x)			((x)->umodes & UMODE_SETHOST)
 #define IsHideOper(x)		((x)->umodes & UMODE_HIDEOPER)
-#ifdef USE_SSL
 #define IsSSL(x)		IsSecure(x)
-#endif
 #define	IsNotSpoof(x)		((x)->nospoof == 0)
 
 #define GetHost(x)			(IsHidden(x) ? (x)->user->virthost : (x)->user->realhost)
@@ -991,11 +981,7 @@ struct Client {
 	long sendM;		/* Statistics: protocol messages send */
 	long sendK;		/* Statistics: total k-bytes send */
 	long receiveM;		/* Statistics: protocol messages received */
-#ifdef USE_SSL
 	SSL		*ssl;
-#elif defined(_WIN32)
-	void	*ssl_NOTUSED; /* (win32 binary compatability) */
-#endif
 #ifndef NO_FDLIST
 	long lastrecvM;		/* to check for activity --Mika */
 	int  priority;
@@ -1241,11 +1227,7 @@ struct _configitem_link {
 	ConfigItem_class	*class;
 	struct IN_ADDR 		ipnum;
 	time_t			hold;
-#ifdef USE_SSL
 	char		*ciphers;
-#elif defined(_WIN32)
-	void *ciphers_NOTUSED;
-#endif
 };
 
 typedef enum {
@@ -1724,9 +1706,7 @@ extern MODVAR char *gnulicense[];
 
 #define isexcept void
 
-#ifdef USE_SSL
 #include "ssl.h"
-#endif
 #define EVENT_HASHES EVENT_DRUGS
 #include "events.h"
 struct Command {

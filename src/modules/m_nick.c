@@ -1374,14 +1374,12 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 
 		sendto_one(sptr, rpl_str(RPL_YOURID), me.name, nick, sptr->id);
 
-#ifdef USE_SSL
 		if (sptr->flags & FLAGS_SSL)
 			if (sptr->ssl)
 				sendto_one(sptr,
 				    ":%s NOTICE %s :*** You are connected to %s with %s",
 				    me.name, sptr->name, me.name,
 				    ssl_get_cipher(sptr->ssl));
-#endif
 		do_cmd(sptr, sptr, "LUSERS", 1, parv);
 		short_motd(sptr);
 #ifdef EXPERIMENTAL

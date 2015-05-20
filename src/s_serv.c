@@ -75,9 +75,7 @@ void read_motd_asynch_downloaded(const char *url, const char *filename, const ch
 
 extern aMotdLine *Find_file(char *, short);
 
-#ifdef USE_SSL
 extern void reinit_ssl(aClient *);
-#endif
 void reread_motdsandrules();
 
 
@@ -188,10 +186,8 @@ CMD_FUNC(m_version)
 		    serveropts, extraflags ? extraflags : "",
 		    tainted ? "3" : "",
 		    (IsAnOper(sptr) ? MYOSNAME : "*"), UnrealProtocol);
-#ifdef USE_SSL
 		if (IsAnOper(sptr))
 			sendto_one(sptr, ":%s NOTICE %s :%s", me.name, sptr->name, OPENSSL_VERSION_TEXT);
-#endif
 #ifdef USE_LIBCURL
 		if (IsAnOper(sptr))
 			sendto_one(sptr, ":%s NOTICE %s :%s", me.name, sptr->name, curl_version());
@@ -437,17 +433,13 @@ char *get_cptr_status(aClient *acptr)
 			*p++ = 'S';
 		if (acptr->umodes & LISTENER_CLIENTSONLY)
 			*p++ = 'C';
-#ifdef USE_SSL
 		if (acptr->umodes & LISTENER_SSL)
 			*p++ = 's';
-#endif
 	}
 	else
 	{
-#ifdef USE_SSL
 		if (acptr->flags & FLAGS_SSL)
 			*p++ = 's';
-#endif
 	}
 	*p++ = ']';
 	*p++ = '\0';
@@ -753,11 +745,7 @@ CMD_FUNC(m_rehash)
 			}
 			if (!_match("-ssl*", parv[1]))
 			{
-#ifdef USE_SSL
 				reinit_ssl(sptr);
-#else
-				sendnotice(sptr, "SSL is not enabled on this server");
-#endif
 				return 0;
 			}
 			if (!_match("-o*motd", parv[1]))

@@ -19,7 +19,6 @@
  */
 
 #include "config.h"
-#ifdef USE_SSL
 #include "struct.h"
 #include "common.h"
 #include "h.h"
@@ -756,4 +755,3 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, aClient *sptr
     return -1;
 }
 
-#endif

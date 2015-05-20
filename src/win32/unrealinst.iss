@@ -1,8 +1,6 @@
 ; UnrealIRCd Win32 Installation Script
 ; Requires Inno Setup 4.1.6 or later
 
-; Uncomment the line below for an SSL build
-#define USE_SSL
 
 ; Uncomment the line below to package with libcurl support
 #define USE_CURL
@@ -18,11 +16,7 @@ AppMutex=UnrealMutex,Global\UnrealMutex
 DefaultDirName={pf}\Unreal3.4
 DefaultGroupName=UnrealIRCd
 AllowNoIcons=yes
-#ifndef USE_SSL
-LicenseFile=.\gpl.rtf
-#else
 LicenseFile=.\gplplusssl.rtf
-#endif
 Compression=lzma
 SolidCompression=true
 MinVersion=5.0
@@ -36,10 +30,8 @@ Name: "installservice"; Description: "Install as a &service (not for beginners)"
 Name: "installservice/startboot"; Description: "S&tart UnrealIRCd when Windows starts"; GroupDescription: "Service support:"; MinVersion: 0,4.0; Flags: exclusive unchecked
 Name: "installservice/startdemand"; Description: "Start UnrealIRCd on &request"; GroupDescription: "Service support:"; MinVersion: 0,4.0; Flags: exclusive unchecked
 Name: "installservice/crashrestart"; Description: "Restart UnrealIRCd if it &crashes"; GroupDescription: "Service support:"; Flags: unchecked; MinVersion: 0,5.0;
-#ifdef USE_SSL
 Name: "makecert"; Description: "&Create certificate"; GroupDescription: "SSL options:";
 Name: "enccert"; Description: "&Encrypt certificate"; GroupDescription: "SSL options:"; Flags: unchecked;
-#endif
 Name: "fixperm"; Description: "Make Unreal folder writable by current user";
 
 [Files]
@@ -70,7 +62,6 @@ Source: "..\modules\chanmodes\*.dll"; DestDir: "{app}\modules\chanmodes"; Flags:
 Source: "..\modules\usermodes\*.dll"; DestDir: "{app}\modules\usermodes"; Flags: ignoreversion
 Source: "c:\dev\tre\win32\release\tre.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\dev\c-ares\msvc90\cares\dll-release\cares.dll"; DestDir: "{app}"; Flags: ignoreversion
-#ifdef USE_SSL
 Source: "c:\openssl\bin\openssl.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\openssl\bin\ssleay32.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\openssl\bin\libeay32.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -78,18 +69,10 @@ Source: "c:\dev\setacl.exe"; DestDir: "{app}\tmp"; Flags: ignoreversion
 Source: ".\makecert.bat"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\encpem.bat"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\ssl.cnf"; DestDir: "{app}"; Flags: ignoreversion
-#endif
-#ifdef USE_SSL
 #ifdef USE_CURL
 ; curl with ssl support
 Source: "C:\dev\curl-ssl\builds\libcurl-vc-x86-release-dll-sspi-spnego\bin\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\curl-ca-bundle.crt"; DestDir: "{app}"; Flags: ignoreversion
-#endif
-#else
-#ifdef USE_CURL
-; curl without ssl support
-Source: "C:\dev\curl\builds\libcurl-vc-x86-release-dll-sspi-spnego\bin\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion
-#endif
 #endif
 ;Source: "..\..\..\dbghelp.dll"; DestDir: "{app}"; Flags: ignoreversion
 
@@ -184,7 +167,6 @@ end;
 // Checks if ssl cert file exists
 //*********************************************************************************
 
-#ifdef USE_SSL
 procedure CurPageChanged(CurPage: Integer);
 begin
   if (CurPage = wpSelectTasks)then
@@ -199,12 +181,10 @@ begin
      end
   end
 end;
-#endif
 
 [Icons]
 Name: "{group}\UnrealIRCd"; Filename: "{app}\wircd.exe"; WorkingDir: "{app}"
 Name: "{group}\Uninstall UnrealIRCd"; Filename: "{uninstallexe}"; WorkingDir: "{app}"
-#ifdef USE_SSL
 Name: "{group}\Make Certificate"; Filename: "{app}\makecert.bat"; WorkingDir: "{app}"
 Name: "{group}\Encrypt Certificate"; Filename: "{app}\encpem.bat"; WorkingDir: "{app}"
 #endif
@@ -221,10 +201,8 @@ Filename: "{app}\unreal.exe"; Parameters: "install"; Flags: runminimized nowait;
 Filename: "{app}\unreal.exe"; Parameters: "config startup manual"; Flags: runminimized nowait; Tasks: installservice/startdemand
 Filename: "{app}\unreal.exe"; Parameters: "config startup auto"; Flags: runminimized nowait; Tasks: installservice/startboot
 Filename: "{app}\unreal.exe"; Parameters: "config crashrestart 2"; Flags: runminimized nowait; Tasks: installservice/crashrestart
-#ifdef USE_SSL
 Filename: "{app}\makecert.bat"; Tasks: makecert; Flags: postinstall;
 Filename: "{app}\encpem.bat"; WorkingDir: "{app}"; Tasks: enccert; Flags: postinstall;
-#endif
 
 [UninstallRun]
 Filename: "{app}\unreal.exe"; Parameters: "uninstall"; Flags: runminimized; RunOnceID: "DelService"; Tasks: installservice

@@ -639,9 +639,7 @@ EVENT(check_pings)
 				}
 				if (IsServer(cptr) || IsConnecting(cptr) ||
 				    IsHandshake(cptr)
-#ifdef USE_SSL
 					|| IsSSLConnectHandshake(cptr)
-#endif	    
 				    ) {
 					sendto_realops
 					    ("No response from %s, closing link",
@@ -651,11 +649,9 @@ EVENT(check_pings)
 					    me.name, get_client_name(cptr,
 					    FALSE));
 				}
-#ifdef USE_SSL
 				if (IsSSLAcceptHandshake(cptr))
 					Debug((DEBUG_DEBUG, "ssl accept handshake timeout: %s (%li-%li > %li)", cptr->sockhost,
 						currenttime, cptr->since, ping));
-#endif
 				(void)ircsnprintf(scratch, sizeof(scratch), "Ping timeout: %ld seconds",
 					(long) (TStime() - cptr->lasttime));
 				exit_client(cptr, cptr, &me, scratch);
@@ -776,7 +772,6 @@ static void do_version_check()
 const char *compiledfor, *runtime;
 int error = 0;
 
-#ifdef USE_SSL
 	compiledfor = OPENSSL_VERSION_TEXT;
 	runtime = SSLeay_version(SSLEAY_VERSION);
 	if (strcasecmp(compiledfor, runtime))
@@ -785,7 +780,6 @@ int error = 0;
 			compiledfor, runtime);
 		error=1;
 	}
-#endif
 #ifdef USE_LIBCURL
 	/* Perhaps someone should tell them to do this a bit more easy ;)
 	 * problem is runtime output is like: 'libcurl/7.11.1 c-ares/1.2.0'
@@ -1398,9 +1392,7 @@ int InitwIRCD(int argc, char *argv[])
 	fprintf(stderr, "%s", unreallogo);
 	fprintf(stderr, "                           v%s\n", VERSIONONLY);
 	fprintf(stderr, "                     using %s\n", tre_version());
-#ifdef USE_SSL
 	fprintf(stderr, "                     using %s\n", SSLeay_version(SSLEAY_VERSION));
-#endif
 #ifdef USE_LIBCURL
 	fprintf(stderr, "                     using %s\n", curl_version());
 #endif
@@ -1450,7 +1442,6 @@ int InitwIRCD(int argc, char *argv[])
 		exit(-4);
 	}
 
-#ifdef USE_SSL
 #ifndef _WIN32
 	fprintf(stderr, "* Initializing SSL.\n");
 #endif
@@ -1466,7 +1457,6 @@ int InitwIRCD(int argc, char *argv[])
 			exit(9);
 		}
 	}
-#endif
 #ifndef _WIN32
 	fprintf(stderr,
 	    "* Dynamic configuration initialized .. booting IRCd.\n");

@@ -79,7 +79,6 @@ DLLFUNC int MOD_UNLOAD(m_starttls)(int module_unload)
 
 static void m_starttls_caplist(struct list_head *head)
 {
-#ifdef USE_SSL
 ClientCapability *cap;
 
 	cap = MyMallocEx(sizeof(ClientCapability));
@@ -87,25 +86,19 @@ ClientCapability *cap;
 	cap->cap = PROTO_STARTTLS,
 	clicap_append(head, cap); /* this is wrong.. head? and unfreed */
 	/* todo: free */
-#endif
 }
 
 DLLFUNC CMD_FUNC(m_starttls)
 {
 	if (!MyConnect(sptr) || !IsUnknown(sptr))
 		return 0;
-#ifndef USE_SSL
-	if (1) /* if not compiled with SSL support... */
-#else
 	if (!ctx_server) /* or SSL support is not enabled (failed to load cert/keys/..)... */
-#endif
 	{
 		/* Pretend STARTTLS is an unknown command, this is the safest approach */
 		sendto_one(sptr, err_str(ERR_NOTREGISTERED), me.name, "STARTTLS");
 		return 0;
 	}
 
-#ifdef USE_SSL
 	if (iConf.ssl_options & SSLFLAG_NOSTARTTLS)
 	{
 		sendto_one(sptr, err_str(ERR_NOTREGISTERED), me.name, "STARTTLS");
@@ -146,5 +139,4 @@ fail:
 	sptr->flags &= ~FLAGS_SSL;
 	SetUnknown(sptr);
 	return 0;
-#endif
 }
