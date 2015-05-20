@@ -307,7 +307,7 @@ ModDataInfo *mdi;
 			char *value = mdi->serialize(&moddata_client(acptr, mdi));
 			if (value)
 				sendto_one(srv, ":%s MD %s %s %s :%s",
-					me.name, "client", acptr->name, mdi->name, value);
+					me.name, "client", CHECKPROTO(acptr,PROTO_SID) ? ID(acptr) : acptr->name, mdi->name, value);
 		}
 	}
 }
@@ -374,7 +374,7 @@ aClient *acptr;
 					char *value = mdi->serialize(&moddata_membership(m, mdi));
 					if (value)
 						sendto_one(srv, ":%s MD %s %s:%s %s :%s",
-							me.name, "membership", acptr->name, m->chptr->chname, mdi->name, value);
+							me.name, "membership", CHECKPROTO(acptr,PROTO_SID) ? ID(acptr) : acptr->name, m->chptr->chname, mdi->name, value);
 				}
 			}
 		}
@@ -407,10 +407,10 @@ int moddata_client_set(aClient *acptr, char *varname, char *value)
 	{
 		if (value)
 			sendto_server(NULL, 0, 0, ":%s MD %s %s %s :%s",
-				me.name, "client", acptr->name, md->name, value); /* set */
+				me.name, "client", CHECKPROTO(acptr,PROTO_SID) ? ID(acptr) : acptr->name, md->name, value); /* set */
 		else
 			sendto_server(NULL, 0, 0, ":%s MD %s %s %s",
-				me.name, "client", acptr->name, md->name); /* unset */
+				me.name, "client", CHECKPROTO(acptr,PROTO_SID) ? ID(acptr) : acptr->name, md->name); /* unset */
 	}
 	return 1;
 }
