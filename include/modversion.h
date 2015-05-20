@@ -39,7 +39,11 @@
  *       but this prevents (most) binary incompatability problems
  *       making it easier for module coders to ship dll's.
  */
- #define MYTOKEN_SSL "/SSL"
+ #ifndef _WIN32
+  #define MYTOKEN_SSL "/SSL"
+ #else
+  #define MYTOKEN_SSL ""
+ #endif
  #if !defined(NO_FLOOD_AWAY)
   #define MYTOKEN_NOFLDAWAY "/NONFA"
  #else
