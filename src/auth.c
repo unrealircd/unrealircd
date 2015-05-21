@@ -560,12 +560,13 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 				return -1;
 			if (!cptr->ssl)
 				return -1;
-			char *fp = moddata_client_get(acptr, "certfp");
+			char *fp = moddata_client_get(cptr, "certfp");
 			if (!fp)
 				return -1;
 			strlcpy(hexcopy, fp, sizeof(hexcopy));
 			/* Make a colon version so that we keep in line with
-			previous versions -Nath */
+			previous versions, based on Nath's patch -dboyz */
+			k=0;
 			for (i=0; i<strlen(hexcopy); i++) {
 				if (i != 0 && i % 2 == 0)
 					hexcolon[k++] = ':';
