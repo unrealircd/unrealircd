@@ -42,25 +42,15 @@
 anAuthStruct MODVAR AuthTypes[] = {
 	{"plain",	AUTHTYPE_PLAINTEXT},
 	{"plaintext",   AUTHTYPE_PLAINTEXT},
-#ifdef AUTHENABLE_UNIXCRYPT
 	{"crypt",	AUTHTYPE_UNIXCRYPT},
 	{"unixcrypt",	AUTHTYPE_UNIXCRYPT},
-#endif
 	{"md5",	        AUTHTYPE_MD5},
-#ifdef AUTHENABLE_SHA1
 	{"sha1",	AUTHTYPE_SHA1},
-#endif
-#ifdef AUTHENABLE_SSL_CLIENTCERT
 	{"sslclientcert",   AUTHTYPE_SSL_CLIENTCERT},
-#endif
-#ifdef AUTHENABLE_RIPEMD160
 	{"ripemd160",	AUTHTYPE_RIPEMD160},
 	/* sure, this is ugly, but it's our fault. -- Syzop */
 	{"ripemd-160",	AUTHTYPE_RIPEMD160},
-#endif
-#ifdef AUTHENABLE_SSL_CLIENTCERTFP
 	{"sslclientcertfp", AUTHTYPE_SSL_CLIENTCERTFP},
-#endif
 	{NULL,		0}
 };
 
@@ -87,10 +77,8 @@ int		Auth_FindType(char *type)
 int		Auth_CheckError(ConfigEntry *ce)
 {
 	short		type = AUTHTYPE_PLAINTEXT;
-#ifdef AUTHENABLE_SSL_CLIENTCERT
 	X509 *x509_filecert = NULL;
 	FILE *x509_f = NULL;
-#endif
 	if (!ce->ce_vardata)
 	{
 		config_error("%s:%i: authentication module failure: missing parameter",
@@ -117,7 +105,6 @@ int		Auth_CheckError(ConfigEntry *ce)
 			}
 			switch (type)
 			{
-#ifdef AUTHENABLE_UNIXCRYPT
 				case AUTHTYPE_UNIXCRYPT:
 					/* If our data is like 1 or none, we just let em through .. */
 					if (strlen(ce->ce_vardata) < 2)
@@ -127,8 +114,6 @@ int		Auth_CheckError(ConfigEntry *ce)
 						return -1;
 					}
 					break;
-#endif
-#ifdef AUTHENABLE_SSL_CLIENTCERT
 				case AUTHTYPE_SSL_CLIENTCERT:
 					if (!(x509_f = fopen(ce->ce_vardata, "r")))
 					{
@@ -146,7 +131,6 @@ int		Auth_CheckError(ConfigEntry *ce)
 					}
 					X509_free(x509_filecert);
 					break;
-#endif
 				default: ;
 			}
 		}
@@ -285,7 +269,6 @@ char *saltstr, *hashstr;
 	return -1; /* NOTREACHED */
 }
 
-#ifdef AUTHENABLE_SHA1
 static int authcheck_sha1(aClient *cptr, anAuthStruct *as, char *para)
 {
 char buf[512];
@@ -390,9 +373,7 @@ char *saltstr, *hashstr;
 #endif
 	}
 }
-#endif /* AUTHENABLE_SHA1 */
 
-#ifdef AUTHENABLE_RIPEMD160
 static int authcheck_ripemd160(aClient *cptr, anAuthStruct *as, char *para)
 {
 char buf[512];
@@ -448,7 +429,6 @@ char *saltstr, *hashstr;
 			return -1;
 	}
 }
-#endif /* AUTHENABLE_RIPEMD160 */
 
 
 /*
@@ -466,23 +446,14 @@ char *saltstr, *hashstr;
 */
 int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 {
-#ifdef	AUTHENABLE_UNIXCRYPT
 	extern	char *crypt();
-#endif
-
-#if defined(AUTHENABLE_SSL_CLIENTCERT)
 	X509 *x509_clientcert = NULL;
-#endif
-#ifdef AUTHENABLE_SSL_CLIENTCERT
 	X509 *x509_filecert = NULL;
 	FILE *x509_f = NULL;
-#endif
-#ifdef AUTHENABLE_SSL_CLIENTCERTFP
 	unsigned int i;
 	unsigned int k;
 	char hexcolon[EVP_MAX_MD_SIZE * 3 + 1];
 	char hexcopy[EVP_MAX_MD_SIZE * 2 + 1];
-#endif
 
 	if (!as)
 		return 1;
@@ -498,7 +469,6 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 			else
 				return -1;
 			break;
-#ifdef AUTHENABLE_UNIXCRYPT
 		case AUTHTYPE_UNIXCRYPT:
 			if (!para)
 				return -1;
@@ -510,20 +480,14 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 			else
 				return -1;
 			break;
-#endif
 		case AUTHTYPE_MD5:
 			return authcheck_md5(cptr, as, para);
 			break;
-#ifdef AUTHENABLE_SHA1
 		case AUTHTYPE_SHA1:
 			return authcheck_sha1(cptr, as, para);
 			break;
-#endif
-#ifdef AUTHENABLE_RIPEMD160
 		case AUTHTYPE_RIPEMD160:
 			return authcheck_ripemd160(cptr, as, para);
-#endif
-#ifdef AUTHENABLE_SSL_CLIENTCERT
 		case AUTHTYPE_SSL_CLIENTCERT:
 			if (!para)
 				return -1;
@@ -553,8 +517,6 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 			X509_free(x509_clientcert);
 			X509_free(x509_filecert);
 			return 2;	
-#endif
-#ifdef AUTHENABLE_SSL_CLIENTCERTFP
 		case AUTHTYPE_SSL_CLIENTCERTFP:
 			if (!para)
 				return -1;
@@ -576,7 +538,6 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 			if (strcasecmp(as->data, hexcolon) && strcasecmp(as->data, hexcopy))
 				return -1;
 			return 2;
-#endif
 	}
 	return -1;
 }
@@ -630,7 +591,6 @@ int i;
 	return buf;
 }
 
-#ifdef AUTHENABLE_SHA1
 static char *mkpass_sha1(char *para)
 {
 static char buf[128];
@@ -708,9 +668,7 @@ int i;
 	ircsnprintf(buf, sizeof(buf), "$%s$%s", saltstr, xresult);
 	return buf;
 }
-#endif /* AUTHENABLE_SHA1 */
 
-#ifdef AUTHENABLE_RIPEMD160
 static char *mkpass_ripemd160(char *para)
 {
 static char buf[128];
@@ -764,21 +722,17 @@ int i;
 	ircsnprintf(buf, sizeof(buf), "$%s$%s", saltstr, xresult);
 	return buf;
 }
-#endif /* AUTHENABLE_RIPEMD160 */
 
 char	*Auth_Make(short type, char *para)
 {
-#ifdef	AUTHENABLE_UNIXCRYPT
 	char	salt[3];
 	extern	char *crypt();
-#endif
 
 	switch (type)
 	{
 		case AUTHTYPE_PLAINTEXT:
 			return (para);
 			break;
-#ifdef AUTHENABLE_UNIXCRYPT
 		case AUTHTYPE_UNIXCRYPT:
 			if (!para)
 				return NULL;
@@ -788,20 +742,15 @@ char	*Auth_Make(short type, char *para)
 			snprintf(salt, sizeof(salt), "%02X", (unsigned int)getrandom8());
 			return(crypt(para, salt));
 			break;
-#endif
 
 		case AUTHTYPE_MD5:
 			return mkpass_md5(para);
 
-#ifdef AUTHENABLE_SHA1
 		case AUTHTYPE_SHA1:
 			return mkpass_sha1(para);
-#endif
 
-#ifdef AUTHENABLE_RIPEMD160
 		case AUTHTYPE_RIPEMD160:
 			return mkpass_ripemd160(para);
-#endif
 
 		default:
 			return (NULL);
