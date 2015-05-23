@@ -285,50 +285,26 @@ char *saltstr, *hashstr;
 		char result2[20];
 		char rsalt[MAXSALTLEN+1];
 		int rsaltlen;
-#ifndef _WIN32
 		SHA_CTX hash;
-#else
-		HCRYPTPROV hProv;
-		HCRYPTHASH hHash;
-		DWORD size = 20;
-#endif
 		
 		/* First, decode the salt to something real... */
 		rsaltlen = b64_decode(saltstr, rsalt, sizeof(rsalt));
 		if (rsaltlen <= 0)
 			return -1;
 
-#ifdef _WIN32
-		if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT))
-			return -1;
-#endif
-		
 		/* Then hash the password (1st round)... */
-#ifndef _WIN32
 		SHA1_Init(&hash);
 		SHA1_Update(&hash, para, strlen(para));
 		SHA1_Final(result1, &hash);
-#else
-		if (!CryptCreateHash(hProv, CALG_SHA1, 0, 0, &hHash)) return -1;
-		if (!CryptHashData(hHash, para, strlen(para), 0)) return -1;
-		if (!CryptGetHashParam(hHash, HP_HASHVAL, result1, &size, 0)) return -1;
-		CryptDestroyHash(hHash);
-#endif
+
 		/* Add salt to result */
 		memcpy(result1+20, rsalt, rsaltlen); /* b64_decode already made sure bounds are ok */
 
 		/* Then hash it all together again (2nd round)... */
-#ifndef _WIN32
 		SHA1_Init(&hash);
 		SHA1_Update(&hash, result1, rsaltlen+20);
 		SHA1_Final(result2, &hash);
-#else
-		if (!CryptCreateHash(hProv, CALG_SHA1, 0, 0, &hHash)) return -1;
-		if (!CryptHashData(hHash, result1, 20+rsaltlen, 0)) return -1;
-		if (!CryptGetHashParam(hHash, HP_HASHVAL, result2, &size, 0)) return -1;
-		CryptDestroyHash(hHash);
-		CryptReleaseContext(hProv, 0);
-#endif		
+
 		/* Then base64 encode it all and we are done... */
 		if ((i = b64_encode(result2, sizeof(result2), buf, sizeof(buf))))
 		{
@@ -340,7 +316,6 @@ char *saltstr, *hashstr;
 			return -1;
 	} else {
 		/* OLD auth */
-#ifndef _WIN32
 		if ((i = b64_encode(SHA1(para, strlen(para), NULL), 20, buf, sizeof(buf))))
 		{
 			if (!strcmp(buf, as->data))
@@ -349,28 +324,6 @@ char *saltstr, *hashstr;
 				return -1;
 		} else
 			return -1;
-#else
-		HCRYPTPROV hProv;
-		HCRYPTHASH hHash;
-		char buf2[512];
-		DWORD size = 512;
-		if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_FULL,
-		     CRYPT_VERIFYCONTEXT))
-			return -1;
-		if (!CryptCreateHash(hProv, CALG_SHA1, 0, 0, &hHash))
-			return -1;
-		if (!CryptHashData(hHash, para, strlen(para), 0))
-			return -1;
-		if (!CryptGetHashParam(hHash, HP_HASHVAL, buf, &size, 0))
-			return -1;
-		CryptDestroyHash(hHash);
-		CryptReleaseContext(hProv, 0);
-		b64_encode(buf, 20, buf2, sizeof(buf2));
-		if (!strcmp(buf2, as->data))
-			return 2;
-		else 
-			return -1;
-#endif
 	}
 }
 
@@ -599,13 +552,7 @@ char result2[20];
 char saltstr[REALSALTLEN]; /* b64 encoded printable string*/
 char saltraw[RAWSALTLEN];  /* raw binary */
 char xresult[64];
-#ifndef _WIN32
 SHA_CTX hash;
-#else
-HCRYPTPROV hProv;
-HCRYPTHASH hHash;
-DWORD size = 20;
-#endif
 int i;
 
 	if (!para) return NULL;
@@ -617,11 +564,6 @@ int i;
 	i = b64_encode(saltraw, RAWSALTLEN, saltstr, REALSALTLEN);
 	if (!i) return NULL;
 
-#ifdef _WIN32
-	if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT))
-		return NULL;
-#endif
-
 	/* b64(SHA1(SHA1(<pass>)+salt))
 	 *         ^^^^^^^^^^^
 	 *           step 1
@@ -632,31 +574,18 @@ int i;
 	 */
 
 	/* STEP 1 */
-#ifndef _WIN32
 	SHA1_Init(&hash);
 	SHA1_Update(&hash, para, strlen(para));
 	SHA1_Final(result1, &hash);
-#else
-	if (!CryptCreateHash(hProv, CALG_SHA1, 0, 0, &hHash)) return NULL;
-	if (!CryptHashData(hHash, para, strlen(para), 0)) return NULL;
-	if (!CryptGetHashParam(hHash, HP_HASHVAL, result1, &size, 0)) return NULL;
-	CryptDestroyHash(hHash);
-#endif
+
 	/* STEP 2 */
 	/* add salt to result */
 	memcpy(result1+20, saltraw, RAWSALTLEN);
 	/* Then hash it all together */
-#ifndef _WIN32
 	SHA1_Init(&hash);
 	SHA1_Update(&hash, result1, RAWSALTLEN+20);
 	SHA1_Final(result2, &hash);
-#else
-	if (!CryptCreateHash(hProv, CALG_SHA1, 0, 0, &hHash)) return NULL;
-	if (!CryptHashData(hHash, result1, RAWSALTLEN+20, 0)) return NULL;
-	if (!CryptGetHashParam(hHash, HP_HASHVAL, result2, &size, 0)) return NULL;
-	CryptDestroyHash(hHash);
-	CryptReleaseContext(hProv, 0);
-#endif	
+
 	/* STEP 3 */
 	/* Then base64 encode it all together.. */
 	i = b64_encode(result2, sizeof(result2), xresult, sizeof(xresult));
