@@ -71,14 +71,17 @@ MODVAR int  sendanyways = 0;
 */
 int dead_link(aClient *to, char *notice)
 {
-	
-	to->flags |= FLAGS_DEADSOCKET;
 	/*
 	 * If because of BUFFERPOOL problem then clean dbuf's now so that
 	 * notices don't hurt operators below.
 	 */
 	DBufClear(&to->recvQ);
 	DBufClear(&to->sendQ);
+
+	if ((to->flags & FLAGS_DEADSOCKET) && to->error_str)
+		return -1; /* already pending to be closed */
+
+	to->flags |= FLAGS_DEADSOCKET;
 	
 	if (!IsPerson(to) && !IsUnknown(to) && !(to->flags & FLAGS_CLOSING))
 		(void)sendto_failops_whoare_opers("Closing link: %s - %s",
