@@ -66,6 +66,23 @@ int Auth_AutoDetectHashType(char *hash)
 	char *saltstr, *hashstr;
 	int bits;
 
+	if (!strchr(hash, '$'))
+	{
+		/* SHA256 SSL fingerprint perhaps?
+		 * These are exactly 64 bytes (00112233..etc..) or 95 bytes (00:11:22:33:etc) in size.
+		 */
+		if ((strlen(hash) == 64) || (strlen(hash) == 95))
+		{
+			char *p;
+			char hexchars[16] = "0123456789abcdef";
+			for (p = hash; *p; p++)
+				if ((*hash != ':') && !strchr(hexchars, *p))
+					return AUTHTYPE_PLAINTEXT; /* not hex and not colon */
+			
+			return AUTHTYPE_SSL_CLIENTCERTFP;
+		}
+	}
+	
 	if ((*hash != '$') || !strchr(hash+1, '$'))
 		return AUTHTYPE_PLAINTEXT;
 
