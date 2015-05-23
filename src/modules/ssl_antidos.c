@@ -41,6 +41,9 @@ DLLFUNC int MOD_INIT(ssl_antidos)(ModuleInfo *modinfo)
 	HookAddEx(modinfo->handle, HOOKTYPE_HANDSHAKE, ssl_antidos_handshake);
 
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM, 1);
+	/* Note that we cannot be MOD_OPT_PERM_RELOADABLE as we use OpenSSL functions to register
+	 * an index and callback function.
+	 */
 	
 	ssl_antidos_index = SSL_get_ex_new_index(0, "ssl_antidos", NULL, NULL, ssl_antidos_free);
 	

@@ -64,7 +64,7 @@ aJFlood *cmodej_addentry(aClient *cptr, aChannel *chptr);
 DLLFUNC int MOD_INIT(jointhrottle)(ModuleInfo *modinfo)
 {
 	CmodeInfo req;
-	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM, 1);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM_RELOADABLE, 1);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	ModInfo = modinfo;
 	memset(&req, 0, sizeof(req));

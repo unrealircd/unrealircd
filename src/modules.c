@@ -983,6 +983,8 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		tmp[0] = '\0';
 		if (mi->flags & MODFLAG_DELAYED)
 			strncat(tmp, "[Unloading] ", sizeof(tmp)-strlen(tmp)-1);
+		if (mi->options & MOD_OPT_PERM_RELOADABLE)
+			strncat(tmp, "[PERM-BUT-RELOADABLE] ", sizeof(tmp)-strlen(tmp)-1);
 		if (mi->options & MOD_OPT_PERM)
 			strncat(tmp, "[PERM] ", sizeof(tmp)-strlen(tmp)-1);
 		if (!(mi->options & MOD_OPT_OFFICIAL))

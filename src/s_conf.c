@@ -327,6 +327,7 @@ extern void charsys_add_language(char *name);
 extern void charsys_reset_pretest(void);
 int charsys_postconftest(void);
 void charsys_finish(void);
+int reloadable_perm_module_unloaded(void);
 void delete_cgiircblock(ConfigItem_cgiirc *e);
 
 /*
@@ -1652,7 +1653,7 @@ int	init_conf(char *rootconf, int rehash)
 	{
 		charsys_reset_pretest();
 		if ((config_test() < 0) || (callbacks_check() < 0) || (efunctions_check() < 0) ||
-		    (charsys_postconftest() < 0) || ssl_used_in_config_but_unavail())
+		    (charsys_postconftest() < 0) || ssl_used_in_config_but_unavail() || reloadable_perm_module_unloaded())
 		{
 			config_error("IRCd configuration failed to pass testing");
 #ifdef _WIN32
@@ -9694,4 +9695,36 @@ int ssl_used_in_config_but_unavail(void)
 		}
 	
 	return (errors ? 1 : 0);
+}
+
+/** Check if the user attempts to unload (eg: by commenting out) a module
+ * that is currently loaded and is tagged as MOD_OPT_PERM_RELOADABLE
+ * (in other words: a module that allows re-loading but not un-loading)
+ */
+int reloadable_perm_module_unloaded(void)
+{
+Module *m, *m2;
+extern Module *Modules;
+int ret = 0;
+
+	for (m = Modules; m; m = m->next)
+	{
+		if ((m->options & MOD_OPT_PERM_RELOADABLE) && (m->flags & MODFLAG_LOADED))
+		{
+			/* For each module w/MOD_OPT_PERM_RELOADABLE that is currently fully loaded... */
+			int found = 0;
+			for (m2 = Modules; m2; m2 = m2->next)
+			{
+				if ((m != m2) && !strcmp(m->header->name, m2->header->name))
+					found = 1;
+			}
+			if (!found)
+			{
+				config_error("Attempt to unload module '%s' is not permitted. Module is permanent and reloadable only.", m->header->name);
+				ret = 1;
+				/* we don't return straight away so the user gets to see all errors and not just one */
+			}
+		}
+	}
+	return ret;
 }

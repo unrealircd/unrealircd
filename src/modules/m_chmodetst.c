@@ -67,7 +67,7 @@ DLLFUNC int MOD_INIT(m_dummy)(ModuleInfo *modinfo)
 {
 	CmodeInfo req;
 	ircd_log(LOG_ERROR, "debug: mod_init called from chmodetst module");
-	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM_RELOADABLE); /* Cannot be unloaded but can be re-loaded */
 	sendto_realops("chmodetst loading...");
 	/* TODO: load mode here */
 	/* +w doesn't do anything, it's just for testing */

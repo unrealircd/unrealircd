@@ -54,7 +54,7 @@ int link_can_join_limitexceeded(aClient *sptr, aChannel *chptr, char *key, char 
 DLLFUNC int MOD_INIT(link)(ModuleInfo *modinfo)
 {
 	CmodeInfo req;
-	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM, 1);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM_RELOADABLE, 1);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	memset(&req, 0, sizeof(req));
 	req.paracount = 1;
