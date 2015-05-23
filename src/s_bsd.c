@@ -1460,7 +1460,7 @@ void read_packet(int fd, int revents, void *data)
 
 		for (h = Hooks[HOOKTYPE_RAWPACKET_IN]; h; h = h->next)
 		{
-			int v = (*(h->func.intfunc))(cptr, readbuf, length);
+			int v = (*(h->func.intfunc))(cptr, readbuf, &length);
 			if (v <= 0)
 				return;
 		}
