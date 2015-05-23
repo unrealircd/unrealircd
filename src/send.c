@@ -69,7 +69,7 @@ MODVAR int  sendanyways = 0;
 **	notice will be the quit message. notice will also be
 **	sent to failops in case 'to' is a server.
 */
-static int dead_link(aClient *to, char *notice)
+int dead_link(aClient *to, char *notice)
 {
 	
 	to->flags |= FLAGS_DEADSOCKET;

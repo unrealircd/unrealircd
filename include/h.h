@@ -750,3 +750,4 @@ extern void send_moddata_channel(aClient *srv, aChannel *chptr);
 extern void send_moddata_members(aClient *srv);
 extern int ssl_used_in_config_but_unavail(void);
 extern void config_report_ssl_error(void);
+extern int dead_link(aClient *to, char *notice);

@@ -55,7 +55,7 @@ R_MODULES= \
 	 m_mode.so m_watch.so m_part.so m_join.so m_motd.so m_opermotd.so \
 	 m_botmotd.so m_lusers.so m_names.so m_svsnolag.so m_addmotd.so \
 	 m_svslusers.so m_starttls.so m_nopost.so m_cap.so \
-	 m_sasl.so cap_invitenotify.so m_md.so certfp.so
+	 m_sasl.so cap_invitenotify.so m_md.so certfp.so ssl_antidos.so
 
 MODULES=cloak.so $(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -495,6 +495,10 @@ m_md.so: m_md.c $(INCLUDES)
 certfp.so: certfp.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o certfp.so certfp.c
+
+ssl_antidos.so: ssl_antidos.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o ssl_antidos.so ssl_antidos.c
 
 #############################################################################
 # capabilities
