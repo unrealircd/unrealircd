@@ -1483,6 +1483,7 @@ void config_setdefaultsettings(aConfiguration *i)
 #ifdef NO_FLOOD_AWAY
 	i->away_count = 4; i->away_period = 120; /* awayflood protection: max 4 per 120s */
 #endif
+	i->throttle_count = 3; i->throttle_period = 60; /* throttle protection: max 3 per 60s */
 	i->modef_default_unsettime = 0;
 	i->modef_max_unsettime = 60; /* 1 hour seems enough :p */
 	i->ban_version_tkl_time = 86400; /* 1d */
