@@ -400,13 +400,6 @@ char *saltstr, *hashstr;
 int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 {
 	extern	char *crypt();
-	X509 *x509_clientcert = NULL;
-	X509 *x509_filecert = NULL;
-	FILE *x509_f = NULL;
-	unsigned int i;
-	unsigned int k;
-	char hexcolon[EVP_MAX_MD_SIZE * 3 + 1];
-	char hexcopy[EVP_MAX_MD_SIZE * 2 + 1];
 
 	if (!as)
 		return 1;
@@ -419,9 +412,8 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 			/* plain text compare */
 			if (!strcmp(para, as->data))
 				return 2;
-			else
-				return -1;
-			break;
+			return -1;
+
 		case AUTHTYPE_UNIXCRYPT:
 			if (!para)
 				return -1;
@@ -430,20 +422,24 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 				return 1;
 			if (!strcmp(crypt(para, as->data), as->data))
 				return 2;
-			else
-				return -1;
-			break;
+			return -1;
+
 		case AUTHTYPE_MD5:
 			return authcheck_md5(cptr, as, para);
-			break;
+
 		case AUTHTYPE_SHA1:
 			return authcheck_sha1(cptr, as, para);
-			break;
+
 		case AUTHTYPE_RIPEMD160:
 			return authcheck_ripemd160(cptr, as, para);
+
 		case AUTHTYPE_SSL_CLIENTCERT:
-			if (!para)
-				return -1;
+		{
+			X509 *x509_clientcert = NULL;
+			X509 *x509_filecert = NULL;
+			FILE *x509_f = NULL;
+			int i, k;
+
 			if (!cptr->ssl)
 				return -1;
 			x509_clientcert = SSL_get_peer_certificate((SSL *)cptr->ssl);
@@ -470,27 +466,31 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 			X509_free(x509_clientcert);
 			X509_free(x509_filecert);
 			return 2;	
+		}
+
 		case AUTHTYPE_SSL_CLIENTCERTFP:
-			if (!para)
-				return -1;
+		{
+			int i, k;
+			char hexcolon[EVP_MAX_MD_SIZE * 3 + 1];
+
 			if (!cptr->ssl)
 				return -1;
 			char *fp = moddata_client_get(cptr, "certfp");
 			if (!fp)
 				return -1;
-			strlcpy(hexcopy, fp, sizeof(hexcopy));
 			/* Make a colon version so that we keep in line with
 			previous versions, based on Nath's patch -dboyz */
 			k=0;
-			for (i=0; i<strlen(hexcopy); i++) {
+			for (i=0; i<strlen(fp); i++) {
 				if (i != 0 && i % 2 == 0)
 					hexcolon[k++] = ':';
-				hexcolon[k++] = hexcopy[i];
+				hexcolon[k++] = fp[i];
  			}
 			hexcolon[k] = '\0';
-			if (strcasecmp(as->data, hexcolon) && strcasecmp(as->data, hexcopy))
+			if (strcasecmp(as->data, hexcolon) && strcasecmp(as->data, fp))
 				return -1;
 			return 2;
+		}
 	}
 	return -1;
 }
