@@ -54,17 +54,68 @@ anAuthStruct MODVAR AuthTypes[] = {
 	{NULL,		0}
 };
 
-int		Auth_FindType(char *type)
+/* Forward declarations */
+static int parsepass(char *str, char **salt, char **hash);
+
+/** Auto detect hash type for input hash 'hash'.
+ * Will fallback to AUTHTYPE_PLAINTEXT when not found (or invalid).
+ */
+int Auth_AutoDetectHashType(char *hash)
 {
-	anAuthStruct 	*p = AuthTypes;
+	static char buf[512], hashbuf[256];
+	char *saltstr, *hashstr;
+	int bits;
+
+	if ((*hash != '$') || !strchr(hash+1, '$'))
+		return AUTHTYPE_PLAINTEXT;
+
+	/* Now handle UnrealIRCd-style password hashes.. */
+	if (parsepass(hash, &saltstr, &hashstr) == 0)
+		return AUTHTYPE_PLAINTEXT; /* old method (pre-3.2.1) or could not detect, fallback. */
+
+	bits = b64_decode(hashstr, hashbuf, sizeof(hashbuf)) * 8;
+	if (bits <= 0)
+		return AUTHTYPE_UNIXCRYPT; /* decode failed. likely some other crypt() type. */
+
+	/* We (only) detect MD5 and SHA1 automatically.
+	 * If, for some reason, you use RIPEMD160 then you'll have to be explicit about it ;)
+	 */
 	
-	while (p->data)
+	if (bits == 128)
+		return AUTHTYPE_MD5;
+	
+	if (bits == 160)
+		return AUTHTYPE_SHA1;
+	
+	/* else it's likely some other crypt() type */
+	return AUTHTYPE_UNIXCRYPT;
+}
+
+
+/** Find authentication type for 'hash' and explicit type 'type'.
+ * @param hash   The password hash (may be NULL if you are creating a password)
+ * @param type   An explicit type. In that case we will search by this type, rather
+ *               than trying to determine the type on the 'hash' parameter.
+ *               Or leave NULL, then we use hash autodetection.
+ */
+int	Auth_FindType(char *hash, char *type)
+{
+	if (type)
 	{
-		if (!mycmp(p->data, type))
-			return p->type;
-		p++;
+		anAuthStruct *p = AuthTypes;
+		while (p->data)
+		{
+			if (!mycmp(p->data, type))
+				return p->type;
+			p++;
+		}
+		return -1; /* Not found */
 	}
-	return -1;
+
+	if (hash)
+		return Auth_AutoDetectHashType(hash);
+
+	return -1; /* both 'hash' and 'type' are NULL */
 }
 
 /*
@@ -95,7 +146,7 @@ int		Auth_CheckError(ConfigEntry *ce)
 	{
 		if (ce->ce_entries->ce_varname)
 		{
-			type = Auth_FindType(ce->ce_entries->ce_varname);
+			type = Auth_FindType(ce->ce_vardata, ce->ce_entries ? ce->ce_entries->ce_varname : NULL);
 			if (type == -1)
 			{
 				config_error("%s:%i: authentication module failure: %s is not an implemented/enabled authentication method",
@@ -149,14 +200,11 @@ anAuthStruct	*Auth_ConvertConf2AuthStruct(ConfigEntry *ce)
 {
 	short		type = AUTHTYPE_PLAINTEXT;
 	anAuthStruct 	*as = NULL;
-	/* If there is a {}, use it */
-	if (ce->ce_entries)
-	{
-		if (ce->ce_entries->ce_varname)
-		{
-			type = Auth_FindType(ce->ce_entries->ce_varname);
-		}
-	}
+
+	type = Auth_FindType(ce->ce_vardata, ce->ce_entries ? ce->ce_entries->ce_varname : NULL);
+	if (type == -1)
+		type = AUTHTYPE_PLAINTEXT;
+
 	as = (anAuthStruct *) MyMalloc(sizeof(anAuthStruct));
 	as->data = strdup(ce->ce_vardata);
 	as->type = type;

@@ -1242,7 +1242,7 @@ int InitwIRCD(int argc, char *argv[])
 			  short type;
 			  char *result;
 			  srandom(TStime());
-			  if ((type = Auth_FindType(p)) == -1) {
+			  if ((type = Auth_FindType(NULL, p)) == -1) {
 				  printf("No such auth type %s\n", p);
 				  exit(0);
 			  }
