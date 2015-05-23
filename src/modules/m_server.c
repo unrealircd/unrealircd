@@ -613,11 +613,14 @@ CMD_FUNC(m_server_remote)
 	{
 		sendto_server(cptr, PROTO_SID, 0, ":%s SID %s %d %s :%s",
 			    acptr->srvptr->id, acptr->name, hop + 1, acptr->id, acptr->info);
+		sendto_server(cptr, 0, PROTO_SID, ":%s SERVER %s %d :%s",
+				acptr->srvptr->name,
+				acptr->name, hop + 1, acptr->info);
+	} else {
+		sendto_server(cptr, 0, 0, ":%s SERVER %s %d :%s",
+				acptr->srvptr->name,
+				acptr->name, hop + 1, acptr->info);
 	}
-
-	sendto_server(cptr, 0, *acptr->id ? PROTO_SID : 0, ":%s SERVER %s %d :%s",
-		    acptr->srvptr->name,
-		    acptr->name, hop + 1, acptr->info);
 
 	RunHook(HOOKTYPE_POST_SERVER_CONNECT, acptr);
 	return 0;
