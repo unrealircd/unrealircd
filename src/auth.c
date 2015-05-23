@@ -438,7 +438,6 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 			X509 *x509_clientcert = NULL;
 			X509 *x509_filecert = NULL;
 			FILE *x509_f = NULL;
-			int i, k;
 
 			if (!cptr->ssl)
 				return -1;
@@ -472,14 +471,18 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 		{
 			int i, k;
 			char hexcolon[EVP_MAX_MD_SIZE * 3 + 1];
+			char *fp;
 
 			if (!cptr->ssl)
 				return -1;
-			char *fp = moddata_client_get(cptr, "certfp");
+			
+			fp = moddata_client_get(cptr, "certfp");
 			if (!fp)
 				return -1;
+				
 			/* Make a colon version so that we keep in line with
-			previous versions, based on Nath's patch -dboyz */
+			 * previous versions, based on Nath's patch -dboyz
+			 */
 			k=0;
 			for (i=0; i<strlen(fp); i++) {
 				if (i != 0 && i % 2 == 0)
@@ -487,8 +490,10 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 				hexcolon[k++] = fp[i];
  			}
 			hexcolon[k] = '\0';
+
 			if (strcasecmp(as->data, hexcolon) && strcasecmp(as->data, fp))
 				return -1;
+
 			return 2;
 		}
 	}
