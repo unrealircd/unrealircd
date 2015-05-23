@@ -9,30 +9,8 @@ int main() {
 	char releaseid[512];
 	int generation = 0;
 
-	if (!fd) {
-		return -1;
-	}
+	*releaseid = '\0';
 
-	while (fgets(buf, 1023, fd)) {
-		if (!strstr(buf, "Changes,v"))
-			continue;
-		else {
-			while (!isdigit(buf[i]))
-				i++;
-			j = i;
-			while (buf[j]) {
-				if (buf[j] == ' ')
-					space++;
-				if (space == 3) {
-					buf[j] = 0;
-					break;
-				}
-				j++;
-			}
-			strcpy(releaseid,&buf[i]);
-		}
-	}
-	fclose(fd);
 	i = 0;
 	fd = fopen("src/version.c", "r");
 	if (!fd)
