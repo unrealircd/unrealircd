@@ -32,27 +32,6 @@ typedef	struct {
 #define AUTHTYPE_RIPEMD160  5
 #define AUTHTYPE_SSL_CLIENTCERTFP 6
 
-/* md5 is always available and enabled as of Unreal3.2.1 */
-#define AUTHENABLE_MD5
-#define AUTHENABLE_SHA1
-#define AUTHENABLE_SSL_CLIENTCERT
-#define AUTHENABLE_RIPEMD160
-#define AUTHENABLE_SSL_CLIENTCERTFP
-/* OpenSSL provides a crypt() */
-#ifndef AUTHENABLE_UNIXCRYPT
-#define AUTHENABLE_UNIXCRYPT
-#if OPENSSL_VERSION_NUMBER >= 0x0090700fL 
 #ifndef HAVE_CRYPT
 #define crypt DES_crypt
 #endif
-#endif
-#endif
-
-#ifdef _WIN32
-#ifndef AUTHENABLE_SHA1
-#define AUTHENABLE_SHA1
-#endif
-#endif
-
-
-
