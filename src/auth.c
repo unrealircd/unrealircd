@@ -39,7 +39,10 @@
 #include <fcntl.h>
 #include "h.h"
 
+#include "crypt_blowfish.h"
+
 anAuthStruct MODVAR AuthTypes[] = {
+	{"bcrypt",	AUTHTYPE_BCRYPT},
 	{"plain",	AUTHTYPE_PLAINTEXT},
 	{"plaintext",   AUTHTYPE_PLAINTEXT},
 	{"crypt",	AUTHTYPE_UNIXCRYPT},
@@ -48,8 +51,6 @@ anAuthStruct MODVAR AuthTypes[] = {
 	{"sha1",	AUTHTYPE_SHA1},
 	{"sslclientcert",   AUTHTYPE_SSL_CLIENTCERT},
 	{"ripemd160",	AUTHTYPE_RIPEMD160},
-	/* sure, this is ugly, but it's our fault. -- Syzop */
-	{"ripemd-160",	AUTHTYPE_RIPEMD160},
 	{"sslclientcertfp", AUTHTYPE_SSL_CLIENTCERTFP},
 	{NULL,		0}
 };
@@ -85,6 +86,9 @@ int Auth_AutoDetectHashType(char *hash)
 	
 	if ((*hash != '$') || !strchr(hash+1, '$'))
 		return AUTHTYPE_PLAINTEXT;
+	
+	if (!strncmp(hash, "$2a$", 4) || !strncmp(hash, "$2b$", 4) || !strncmp(hash, "$2y$", 4))
+		return AUTHTYPE_BCRYPT;
 
 	/* Now handle UnrealIRCd-style password hashes.. */
 	if (parsepass(hash, &saltstr, &hashstr) == 0)
@@ -159,49 +163,45 @@ int		Auth_CheckError(ConfigEntry *ce)
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return -1;
 	}
-	if (ce->ce_entries)
+
+	type = Auth_FindType(ce->ce_vardata, ce->ce_entries ? ce->ce_entries->ce_varname : NULL);
+	if (type == -1)
 	{
-		if (ce->ce_entries->ce_varname)
-		{
-			type = Auth_FindType(ce->ce_vardata, ce->ce_entries ? ce->ce_entries->ce_varname : NULL);
-			if (type == -1)
+		config_error("%s:%i: authentication module failure: %s is not an implemented/enabled authentication method",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			ce->ce_entries->ce_varname);
+		return -1;
+	}
+
+	switch (type)
+	{
+		case AUTHTYPE_UNIXCRYPT:
+			/* If our data is like 1 or none, we just let em through .. */
+			if (strlen(ce->ce_vardata) < 2)
 			{
-				config_error("%s:%i: authentication module failure: %s is not an implemented/enabled authentication method",
-					ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-					ce->ce_entries->ce_varname);
+				config_error("%s:%i: authentication module failure: AUTHTYPE_UNIXCRYPT: no salt (crypt strings will always be >2 in length)",
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 				return -1;
 			}
-			switch (type)
+			break;
+		case AUTHTYPE_SSL_CLIENTCERT:
+			if (!(x509_f = fopen(ce->ce_vardata, "r")))
 			{
-				case AUTHTYPE_UNIXCRYPT:
-					/* If our data is like 1 or none, we just let em through .. */
-					if (strlen(ce->ce_vardata) < 2)
-					{
-						config_error("%s:%i: authentication module failure: AUTHTYPE_UNIXCRYPT: no salt (crypt strings will always be >2 in length)",
-							ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-						return -1;
-					}
-					break;
-				case AUTHTYPE_SSL_CLIENTCERT:
-					if (!(x509_f = fopen(ce->ce_vardata, "r")))
-					{
-						config_error("%s:%i: authentication module failure: AUTHTYPE_SSL_CLIENTCERT: error opening file %s: %s",
-							ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata, strerror(errno));
-						return -1;
-					}
-					x509_filecert = PEM_read_X509(x509_f, NULL, NULL, NULL);
-					fclose(x509_f);
-					if (!x509_filecert)
-					{
-						config_error("%s:%i: authentication module failure: AUTHTYPE_SSL_CLIENTCERT: PEM_read_X509 errored in file %s (format error?)",
-							ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
-						return -1;
-					}
-					X509_free(x509_filecert);
-					break;
-				default: ;
+				config_error("%s:%i: authentication module failure: AUTHTYPE_SSL_CLIENTCERT: error opening file %s: %s",
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata, strerror(errno));
+				return -1;
 			}
-		}
+			x509_filecert = PEM_read_X509(x509_f, NULL, NULL, NULL);
+			fclose(x509_f);
+			if (!x509_filecert)
+			{
+				config_error("%s:%i: authentication module failure: AUTHTYPE_SSL_CLIENTCERT: PEM_read_X509 errored in file %s (format error?)",
+					ce->ce_fileptr->cf_filename, ce->ce_varlinenum, ce->ce_vardata);
+				return -1;
+			}
+			X509_free(x509_filecert);
+			break;
+		default: ;
 	}
 	
 	if ((type == AUTHTYPE_PLAINTEXT) && (strlen(ce->ce_vardata) > PASSWDLEN))
@@ -276,6 +276,26 @@ int max;
 	*salt = saltbuf;
 	*hash = hashbuf;
 	return 1;
+}
+
+static int authcheck_bcrypt(aClient *cptr, anAuthStruct *as, char *para)
+{
+char data[512]; /* NOTE: only 64 required by BF_crypt() */
+char *str;
+
+	if (!para)
+		return -1;
+
+	memset(data, 0, sizeof(data));
+	str = _crypt_blowfish_rn(para, as->data, data, sizeof(data));
+
+	if (!str)
+		return -1; /* ERROR / INVALID HASH */
+
+	if (!strcmp(str, as->data))
+		return 2; /* MATCH */
+	
+	return -1; /* NO MATCH */
 }
 
 static int authcheck_md5(aClient *cptr, anAuthStruct *as, char *para)
@@ -479,6 +499,9 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 				return 2;
 			return -1;
 
+		case AUTHTYPE_BCRYPT:
+			return authcheck_bcrypt(cptr, as, para);
+
 		case AUTHTYPE_UNIXCRYPT:
 			if (!para)
 				return -1;
@@ -497,7 +520,7 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 
 		case AUTHTYPE_RIPEMD160:
 			return authcheck_ripemd160(cptr, as, para);
-
+		
 		case AUTHTYPE_SSL_CLIENTCERT:
 		{
 			X509 *x509_clientcert = NULL;
@@ -563,6 +586,37 @@ int	Auth_Check(aClient *cptr, anAuthStruct *as, char *para)
 		}
 	}
 	return -1;
+}
+
+static char *mkpass_bcrypt(char *para)
+{
+	static char buf[128];
+	char data[512]; /* NOTE: only 64 required by BF_crypt() */
+	char salt[64];
+	char random_data[32];
+	char *str;
+	char *saltstr;
+	int i;
+
+	if (!para)
+		return NULL;
+
+	memset(data, 0, sizeof(data));
+
+	for (i=0; i<sizeof(random_data); i++)
+		random_data[i] = getrandom8();
+	
+	saltstr = _crypt_gensalt_blowfish_rn("$2y", 9, random_data, sizeof(random_data), salt, sizeof(salt));
+	if (!saltstr)
+		return NULL;
+	
+	str = _crypt_blowfish_rn(para, saltstr, data, sizeof(data));
+
+	if (!str)
+		return NULL; /* INTERNAL ERROR */
+
+	strlcpy(buf, str, sizeof(buf));
+	return buf;
 }
 
 static char *mkpass_md5(char *para)
@@ -731,7 +785,10 @@ char	*Auth_Make(short type, char *para)
 	{
 		case AUTHTYPE_PLAINTEXT:
 			return (para);
-			break;
+
+		case AUTHTYPE_BCRYPT:
+			return mkpass_bcrypt(para);
+
 		case AUTHTYPE_UNIXCRYPT:
 			if (!para)
 				return NULL;
@@ -740,7 +797,6 @@ char	*Auth_Make(short type, char *para)
 				return NULL;
 			snprintf(salt, sizeof(salt), "%02X", (unsigned int)getrandom8());
 			return(crypt(para, salt));
-			break;
 
 		case AUTHTYPE_MD5:
 			return mkpass_md5(para);

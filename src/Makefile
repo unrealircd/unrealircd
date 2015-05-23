@@ -28,7 +28,8 @@ OBJS=timesynch.o res.o s_bsd.o auth.o aln.o channel.o cloak.o crule.o dbuf.o \
 	s_misc.o s_numeric.o s_serv.o s_svs.o $(STRTOUL) socket.o \
 	ssl.o s_user.o charsys.o scache.o send.o support.o umodes.o \
 	version.o whowas.o cidr.o random.o extcmodes.o moddata.o uid.o \
-	extbans.o api-isupport.o api-command.o md5.o $(URL)
+	extbans.o api-isupport.o api-command.o md5.o crypt_blowfish.o \
+	$(URL)
 
 SRC=$(OBJS:%.o=%.c)
 
@@ -249,6 +250,9 @@ api-command.o: api-command.c $(INCLUDES)
 
 api-isupport.o: api-isupport.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c api-isupport.c
+
+crypt_blowfish.o: crypt_blowfish.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c crypt_blowfish.c
 
 url.o: url.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c url.c
