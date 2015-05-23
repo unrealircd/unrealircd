@@ -1242,12 +1242,23 @@ int InitwIRCD(int argc, char *argv[])
 			  short type;
 			  char *result;
 			  srandom(TStime());
-			  if ((type = Auth_FindType(NULL, p)) == -1) {
-				  printf("No such auth type %s\n", p);
-				  exit(0);
+			  type = Auth_FindType(NULL, p);
+			  if (type == -1)
+			  {
+			      type = AUTHTYPE_BCRYPT;
+			  } else {
+			      p = *++argv;
+			      argc--;
 			  }
-			  p = *++argv;
-			  argc--;
+			  if (!*p)
+			  {
+#ifndef _WIN32
+			      p = getpass("Enter password to hash: ");
+#else
+				  printf("ERROR: You should specify a password to hash");
+				  exit(1);
+#endif
+			  }
 			  if ((type == AUTHTYPE_UNIXCRYPT) && (strlen(p) > 8))
 			  {
 			      /* Hmmm.. is this warning really still true (and always) ?? */
