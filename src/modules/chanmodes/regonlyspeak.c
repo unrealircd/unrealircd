@@ -93,7 +93,7 @@ DLLFUNC int MOD_UNLOAD(regonlyspeak)(int module_unload)
 DLLFUNC char * regonlyspeak_part_message (aClient* sptr, aChannel *chptr, char* comment)
 {
 
-	if (IsRegOnlySpeak(chptr) && !IsRegNick(sptr) && !IsAnOper(sptr))
+	if (IsRegOnlySpeak(chptr) && !IsLoggedIn(sptr) && !IsAnOper(sptr))
 				return NULL;
 
 	return comment;
@@ -102,7 +102,7 @@ DLLFUNC char * regonlyspeak_part_message (aClient* sptr, aChannel *chptr, char* 
 DLLFUNC int regonlyspeak_can_send (aClient* cptr, aChannel *chptr, char* message, Membership* lp, int notice)
 {
 
-	if (IsRegOnlySpeak(chptr) && !op_can_override(cptr) && !IsRegNick(cptr) &&
+	if (IsRegOnlySpeak(chptr) && !op_can_override(cptr) && !IsLoggedIn(cptr) &&
 		    (!lp
 		    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
 		    CHFL_HALFOP | CHFL_CHANPROT))))
