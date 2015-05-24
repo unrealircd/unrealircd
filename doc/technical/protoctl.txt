@@ -126,3 +126,8 @@ SID           This token indicates that the peer server supports UIDs and SIDs i
 ESVID         This token indicates that the traditional services stamp value may take any
               arbitrary value for the SVID field, such as an account name or other unique
               identifier, including a traditional timestamp value.
+
+TS            Upon linking newer servers send TS=<ts> where <ts> is the current unix
+              timestamp. This way a link can be rejected if the difference between the
+              clock of two servers is too large (since such a difference would lead to
+              serious issues).

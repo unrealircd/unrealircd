@@ -348,6 +348,37 @@ CMD_FUNC(m_protoctl)
 			if (!IsHandshake(cptr) && aconf && !BadPtr(aconf->connpwd)) /* Send PASS early... */
 				sendto_one(sptr, "PASS :%s", aconf->connpwd);
 		}
+		else if ((strncmp(s, "TS=",3) == 0) && (IsServer(sptr) || IsEAuth(sptr)))
+		{
+			long t = atol(s+3);
+			char msg[512], linkerr[512];
+			
+			if (t < 10000)
+				continue; /* ignore */
+			
+			*msg = *linkerr = '\0';
+#define MAX_SERVER_TIME_OFFSET 60
+			
+			if ((TStime() - t) > MAX_SERVER_TIME_OFFSET)
+			{
+				snprintf(linkerr, sizeof(linkerr), "Your clock is %ld seconds behind my clock. Please verify both your clock and mine, fix it and try linking again.", TStime() - t);
+				snprintf(msg, sizeof(msg), "Rejecting link %s: our clock is %ld seconds ahead. Correct time is very important in IRC. Please verify the clock on both %s (them) and %s (us), fix it and then try linking again",
+					get_client_name(cptr, TRUE), TStime() - t, sptr->name, me.name);
+			} else
+			if ((t - TStime()) > MAX_SERVER_TIME_OFFSET)
+			{
+				snprintf(linkerr, sizeof(linkerr), "Your clock is %ld seconds ahead of my clock. Please verify both your clock and mine, fix it, and try linking again.", t - TStime());
+				snprintf(msg, sizeof(msg), "Rejecting link %s: our clock is %ld seconds behind. Correct time is very important in IRC. Please verify the clock on both %s (them) and %s (us), fix it and then try linking again",
+					get_client_name(cptr, TRUE), t - TStime(), sptr->name, me.name);
+			}
+			
+			if (*msg)
+			{
+				sendto_realops("%s", msg);
+				ircd_log(LOG_ERROR, "%s", msg);
+				return exit_client(sptr, sptr, sptr, linkerr);
+			}
+		}
 		else if ((strcmp(s, "MLOCK")) == 0)
 		{
 #ifdef PROTOCTL_MADNESS
