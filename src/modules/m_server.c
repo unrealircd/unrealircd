@@ -680,8 +680,15 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 			me.name, inpath);
 		sendto_realops("(\2link\2) Link %s -> %s established",
 			me.name, inpath);
-		sendto_realops("\002WARNING:\002 This link is unencrypted (non-SSL). We highly recommend to use "
-		               "SSL server linking. See https://www.unrealircd.org/docs/Linking_servers");
+		/* Print out a warning if linking to a non-SSL server unless it's localhost.
+		 * Yeah.. there are still other cases when non-SSL links are fine (eg: local IP
+		 * of the same machine), we won't bother with detecting that. -- Syzop
+		 */
+		if (strcmp(cptr->sockhost, "localhost"))
+		{
+			sendto_realops("\002WARNING:\002 This link is unencrypted (non-SSL). We highly recommend to use "
+						   "SSL server linking. See https://www.unrealircd.org/docs/Linking_servers");
+		}
 	}
 	(void)add_to_client_hash_table(cptr->name, cptr);
 	/* doesnt duplicate cptr->serv if allocted this struct already */
