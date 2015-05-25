@@ -187,12 +187,6 @@ ConfigItem_ban *bconf;
 		goto errlink;
 	}
 
-	if (!link->incoming.auth)
-	{
-		ircsnprintf(xerrmsg, sizeof(xerrmsg), "Link block '%s' exists but has no link::incoming::password", servername);
-		goto errlink;
-	}
-
 	/* Find by (literal) IP */
 	link = Find_link(cptr->username, cptr->sockhost, cptr->sockhost, servername);
 	
@@ -227,7 +221,7 @@ errlink:
 
 skip_host_check:
 	/* Now for checking passwords */
-	if (link->incoming.auth && (Auth_Check(cptr, link->incoming.auth, cptr->passwd) == -1))
+	if (Auth_Check(cptr, link->auth, cptr->passwd) == -1)
 	{
 		sendto_one(cptr,
 		    "ERROR :Link denied (Authentication failed) %s",
@@ -653,7 +647,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 		/* If this is an incomming connection, then we have just received
 		 * their stuff and now send our stuff back.
 		 */
-		sendto_one(cptr, "PASS :%s", BadPtr(aconf->outgoing.password) ? "*" : aconf->outgoing.password);
+		sendto_one(cptr, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
 		send_proto(cptr, aconf);
 		sendto_one(cptr, "SERVER %s 1 :%s",
 			    me.name, me.info);

@@ -832,7 +832,7 @@ void completed_connection(int fd, int revents, void *data)
 		return;
 	}
 
-	sendto_one(cptr, "PASS :%s", aconf->outgoing.password ? aconf->outgoing.password : "*");
+	sendto_one(cptr, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
 
 	send_protoctl_servers(cptr, 0);
 	send_proto(cptr, aconf);

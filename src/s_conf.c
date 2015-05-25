@@ -6059,8 +6059,6 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 			{
 				if (!strcmp(cepp->ce_varname, "mask"))
 					ircstrdup(link->incoming.mask, cepp->ce_vardata); // TODO: support multiple
-				else if (!strcmp(cepp->ce_varname, "password"))
-					link->incoming.auth = Auth_ConvertConf2AuthStruct(cepp);
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "outgoing"))
@@ -6073,8 +6071,6 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 					ircstrdup(link->outgoing.hostname, cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "port"))
 					link->outgoing.port = atoi(cepp->ce_vardata);
-				else if (!strcmp(cepp->ce_varname, "password"))
-					ircstrdup(link->outgoing.password, cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "options"))
 				{
 					/* TODO: options still need to be split */
@@ -6087,6 +6083,8 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 				}
 			}
 		}
+		else if (!strcmp(cep->ce_varname, "password"))
+			link->auth = Auth_ConvertConf2AuthStruct(cep);
 		else if (!strcmp(cep->ce_varname, "hub"))
 			ircstrdup(link->hub, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "leaf"))
@@ -6133,7 +6131,7 @@ int config_detect_duplicate(int *var, ConfigEntry *ce, int *errors)
 		config_error("%s:%d: Duplicate %s directive",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 			ce->ce_varname);
-		*errors++;
+		(*errors)++;
 		return 1;
 	} else {
 		*var = 1;
@@ -6170,11 +6168,10 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 	OperFlag *ofp;
 	int errors = 0;
 
-	int has_incoming = 0, has_incoming_mask = 0, has_incoming_password = 0, has_outgoing = 0;
+	int has_incoming = 0, has_incoming_mask = 0, has_outgoing = 0;
 	int has_outgoing_bind_ip = 0, has_outgoing_hostname = 0, has_outgoing_port = 0;
-	int has_outgoing_password = 0, has_outgoing_options = 0, has_hub = 0;
-	int has_leaf = 0, has_leaf_depth = 0, has_class = 0, has_ciphers = 0;
-	int has_options = 0;
+	int has_outgoing_options = 0, has_hub = 0, has_leaf = 0, has_leaf_depth = 0;
+	int has_password = 0, has_class = 0, has_ciphers = 0, has_options = 0;
 
 	if (!ce->ce_vardata)
 	{
@@ -6195,32 +6192,26 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!strcmp(cep->ce_varname, "incoming"))
 		{
-			config_detect_duplicate(&has_incoming, ce, &errors);
+			config_detect_duplicate(&has_incoming, cep, &errors);
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
 				if (!strcmp(cepp->ce_varname, "mask"))
 					has_incoming_mask = 1;
-				else if (!strcmp(cepp->ce_varname, "password"))
-				{
-					config_detect_duplicate(&has_incoming_password, ce, &errors);
-					if (Auth_CheckError(cepp) < 0)
-						errors++;
-				}
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "outgoing"))
 		{
-			config_detect_duplicate(&has_outgoing, ce, &errors);
+			config_detect_duplicate(&has_outgoing, cep, &errors);
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
 				if (!strcmp(cepp->ce_varname, "bind-ip"))
 				{
-					config_detect_duplicate(&has_outgoing_bind_ip, ce, &errors);
+					config_detect_duplicate(&has_outgoing_bind_ip, cepp, &errors);
 					auto_convert_ipv4_to_ipv6(cepp);
 				}
 				else if (!strcmp(cepp->ce_varname, "hostname"))
 				{
-					config_detect_duplicate(&has_outgoing_hostname, ce, &errors);
+					config_detect_duplicate(&has_outgoing_hostname, cepp, &errors);
 					auto_convert_ipv4_to_ipv6(cepp);
 					if (strchr(cepp->ce_vardata, '*') || strchr(cepp->ce_vardata, '?'))
 					{
@@ -6231,15 +6222,11 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 				}
 				else if (!strcmp(cepp->ce_varname, "port"))
 				{
-					config_detect_duplicate(&has_outgoing_port, ce, &errors);
-				}
-				else if (!strcmp(cepp->ce_varname, "password"))
-				{
-					config_detect_duplicate(&has_outgoing_password, ce, &errors);
+					config_detect_duplicate(&has_outgoing_port, cepp, &errors);
 				}
 				else if (!strcmp(cepp->ce_varname, "options"))
 				{
-					config_detect_duplicate(&has_outgoing_options, ce, &errors);
+					config_detect_duplicate(&has_outgoing_options, cepp, &errors);
 					for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
 					{
 						if (!strcmp(ceppp->ce_varname, "autoconnect"))
@@ -6257,29 +6244,50 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 				}
 			}
 		}
+		else if (!strcmp(cep->ce_varname, "password"))
+		{
+			config_detect_duplicate(&has_password, cep, &errors);
+			if (Auth_CheckError(cep) < 0)
+			{
+				errors++;
+			} else {
+				anAuthStruct *auth = Auth_ConvertConf2AuthStruct(cep);
+				/* hm. would be nicer if handled @auth-system I think. ah well.. */
+				if ((auth->type != AUTHTYPE_PLAINTEXT) && (auth->type != AUTHTYPE_SSL_CLIENTCERT) &&
+				    (auth->type != AUTHTYPE_SSL_CLIENTCERTFP))
+				{
+					config_error("%s:%i: password in link block should be plaintext OR should be the "
+					             "SSL fingerprint of the remote link (=better)",
+					             /* TODO: mention some faq or wiki item for more information */
+					             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+					errors++;
+				}
+				Auth_DeleteAuthStruct(auth);
+			}
+		}
 		else if (!strcmp(cep->ce_varname, "hub"))
 		{
-			config_detect_duplicate(&has_hub, ce, &errors);
+			config_detect_duplicate(&has_hub, cep, &errors);
 		}
 		else if (!strcmp(cep->ce_varname, "leaf"))
 		{
-			config_detect_duplicate(&has_leaf, ce, &errors);
+			config_detect_duplicate(&has_leaf, cep, &errors);
 		}
 		else if (!strcmp(cep->ce_varname, "leaf-depth") || !strcmp(cep->ce_varname, "leafdepth"))
 		{
-			config_detect_duplicate(&has_leaf_depth, ce, &errors);
+			config_detect_duplicate(&has_leaf_depth, cep, &errors);
 		}
 		else if (!strcmp(cep->ce_varname, "class"))
 		{
-			config_detect_duplicate(&has_class, ce, &errors);
+			config_detect_duplicate(&has_class, cep, &errors);
 		}
 		else if (!strcmp(cep->ce_varname, "ciphers"))
 		{
-			config_detect_duplicate(&has_ciphers, ce, &errors);
+			config_detect_duplicate(&has_ciphers, cep, &errors);
 		}
 		else if (!strcmp(cep->ce_varname, "options"))
 		{
-			config_detect_duplicate(&has_options, ce, &errors);
+			config_detect_duplicate(&has_options, cep, &errors);
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
 				if ((ofp = config_binary_flags_search(_LinkFlags, cepp->ce_varname, ARRAY_SIZEOF(_LinkFlags)))) 
@@ -6303,11 +6311,6 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 			config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum, "link::incoming::mask");
 			errors++;
 		}
-		if (!has_incoming_password)
-		{
-			config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum, "link::incoming::password");
-			errors++;
-		}
 	}
 	
 	if (has_outgoing)
@@ -6325,7 +6328,12 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 
-	/* The only other generic option that is required is 'class' */
+	/* The only other generic options that are required are 'class' and 'password' */
+	if (!has_password)
+	{
+		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum, "link::password");
+		errors++;
+	}
 	if (!has_class)
 	{
 		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
@@ -9259,10 +9267,9 @@ void link_cleanup(ConfigItem_link *link_ptr)
 {
 	ircfree(link_ptr->servername);
 	ircfree(link_ptr->incoming.mask); // TODO: will become a list
-	Auth_DeleteAuthStruct(link_ptr->incoming.auth);
+	Auth_DeleteAuthStruct(link_ptr->auth);
 	ircfree(link_ptr->outgoing.bind_ip);
 	ircfree(link_ptr->outgoing.hostname);
-	ircfree(link_ptr->outgoing.password);
 	ircfree(link_ptr->hub);
 	ircfree(link_ptr->leaf);
 	ircfree(link_ptr->ciphers);

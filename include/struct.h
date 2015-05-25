@@ -1224,15 +1224,14 @@ struct _configitem_link {
 	char *servername; /**< Name of the server ('link <servername> { }') */
 	struct {
 		char *mask; /**< incoming mask(s) to accept (TODO: linked list) */
-		anAuthStruct *auth; /**< authentication method (eg: password) */
 	} incoming;
 	struct {
 		char *bind_ip; /**< Our IP to bind to when doing the connect */
 		char *hostname; /**< Hostname or IP to connect to */
 		int port; /**< Port to connect to */
-		char *password; /**< Password to send to other server */
 		int options; /**< Connect options like ssl or autoconnect */
 	} outgoing;
+	anAuthStruct *auth; /**< authentication method (eg: password) */
 	char *hub; /**< Hub mask */
 	char *leaf; /**< Leaf mask */
 	int leaf_depth; /**< Leaf depth */

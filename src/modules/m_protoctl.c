@@ -346,7 +346,7 @@ CMD_FUNC(m_protoctl)
 
 			SetEAuth(cptr);
 			if (!IsHandshake(cptr) && aconf) /* Send PASS early... */
-				sendto_one(sptr, "PASS :%s", BadPtr(aconf->outgoing.password) ? "*" : aconf->outgoing.password);
+				sendto_one(sptr, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
 		}
 		else if ((strncmp(s, "TS=",3) == 0) && (IsServer(sptr) || IsEAuth(sptr)))
 		{
