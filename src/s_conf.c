@@ -6058,7 +6058,19 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
 				if (!strcmp(cepp->ce_varname, "mask"))
-					ircstrdup(link->incoming.mask, cepp->ce_vardata); // TODO: support multiple
+				{
+					// TODO: support multiple
+					
+					/* Mask may be user@ip or just ip */
+					if (strchr(cepp->ce_vardata, '@'))
+					{
+						ircstrdup(link->incoming.mask, cepp->ce_vardata);
+					} else {
+						char buf[HOSTLEN + 4];
+						snprintf(buf, sizeof(buf), "*@%s", cepp->ce_vardata); /* auto-convert to u@ip */
+						ircstrdup(link->incoming.mask, buf);
+					}
+				}
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "outgoing"))

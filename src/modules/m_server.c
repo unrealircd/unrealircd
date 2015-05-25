@@ -224,10 +224,10 @@ skip_host_check:
 	if (Auth_Check(cptr, link->auth, cptr->passwd) == -1)
 	{
 		sendto_one(cptr,
-		    "ERROR :Link denied (Authentication failed) %s",
-		    inpath);
+		    "ERROR :Link '%s' denied (Authentication failed) %s",
+		    servername, inpath);
 		sendto_locfailops
-		    ("Link denied (Authentication failed [Bad password?]) %s", inpath);
+		    ("Link denied for '%s' (Authentication failed [Bad password?]) %s", servername, inpath);
 		return exit_client(cptr, sptr, &me,
 		    "Link denied (Authentication failed)");
 	}
@@ -680,6 +680,8 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 			me.name, inpath);
 		sendto_realops("(\2link\2) Link %s -> %s established",
 			me.name, inpath);
+		sendto_realops("\002WARNING:\002 This link is unencrypted (non-SSL). We highly recommend to use "
+		               "SSL server linking. See https://www.unrealircd.org/docs/Linking_servers");
 	}
 	(void)add_to_client_hash_table(cptr->name, cptr);
 	/* doesnt duplicate cptr->serv if allocted this struct already */
