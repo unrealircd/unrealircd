@@ -6176,7 +6176,6 @@ void auto_convert_ipv4_to_ipv6(ConfigEntry *cep)
 int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp, *ceppp;
-	ConfigItem_link *link = NULL;
 	OperFlag *ofp;
 	int errors = 0;
 
@@ -6303,7 +6302,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
 				if ((ofp = config_binary_flags_search(_LinkFlags, cepp->ce_varname, ARRAY_SIZEOF(_LinkFlags)))) 
-					link->options |= ofp->flag;
+					;
 			}
 		}
 	}
