@@ -6309,7 +6309,9 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 
 	if (!has_incoming && !has_outgoing)
 	{
-		config_error("%s:%d: link block needs at least an incoming or outgoing section",
+		config_error("%s:%d: link block needs at least an incoming or outgoing section. "
+		             "Are you upgrading from version 3.2.x to 3.4.x? "
+		             "Check out https://www.unrealircd.org/docs/Upgrading_from_3.2.x#Link%20block",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		errors++;
 	}
