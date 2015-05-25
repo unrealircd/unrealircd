@@ -831,8 +831,8 @@ void completed_connection(int fd, int revents, void *data)
 		sendto_ops("Lost configuration for %s", get_client_name(cptr, FALSE));
 		return;
 	}
-	if (!BadPtr(aconf->connpwd))
-		sendto_one(cptr, "PASS :%s", aconf->connpwd);
+
+	sendto_one(cptr, "PASS :%s", aconf->outgoing.password ? aconf->outgoing.password : "*");
 
 	send_protoctl_servers(cptr, 0);
 	send_proto(cptr, aconf);
@@ -1527,8 +1527,12 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 		aconf, aconf->refcount, aconf->flag.temporary ? "YES" : "NO");
 #endif
 
-	if (!hp && (aconf->options & CONNECT_NODNSCACHE)) {
-		/* Remove "cache" if link::options::nodnscache is set */
+	if (!aconf->outgoing.hostname)
+		return -1; /* This is an incoming-only link block. Caller shouldn't call us. */
+		
+	if (!hp)
+	{
+		/* Remove "cache" */
 		memset(&aconf->ipnum, '\0', sizeof(struct IN_ADDR));
 	}
 	/*
@@ -1537,7 +1541,7 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	 */
 	 if (!WHOSTENTP(aconf->ipnum.S_ADDR))
 	 {
-		s = aconf->hostname;
+		s = aconf->outgoing.hostname;
 #ifndef INET6
 		if ((aconf->ipnum.S_ADDR = inet_addr(s)) == -1)
 #else
@@ -1555,7 +1559,7 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 			 * -- Syzop, bug #0003689.
 			 */
 			aconf->refcount++;
-			unrealdns_gethostbyname_link(aconf->hostname, aconf);
+			unrealdns_gethostbyname_link(aconf->outgoing.hostname, aconf);
 			return -2;
 		}
 	}
@@ -1565,7 +1569,7 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	 * Copy these in so we have something for error detection.
 	 */
 	strlcpy(cptr->name, aconf->servername, sizeof(cptr->name));
-	strlcpy(cptr->sockhost, aconf->hostname, HOSTLEN + 1);
+	strlcpy(cptr->sockhost, aconf->outgoing.hostname, HOSTLEN + 1);
 
 	svp = connect_inet(aconf, cptr, &len);
 	if (!svp)
@@ -1638,10 +1642,10 @@ int  connect_server(ConfigItem_link *aconf, aClient *by, struct hostent *hp)
 	SetOutgoing(cptr);
 	IRCstats.unknown++;
 	list_add(&cptr->lclient_node, &unknown_list);
-	get_sockhost(cptr, aconf->hostname);
+	get_sockhost(cptr, aconf->outgoing.hostname);
 	add_client_to_list(cptr);
 
-	if (aconf->options & CONNECT_SSL)
+	if (aconf->outgoing.options & CONNECT_SSL)
 	{
 		SetSSLConnectHandshake(cptr);
 		fd_setselect(cptr->fd, FD_SELECT_WRITE, ircd_SSL_client_handshake, cptr);
@@ -1683,13 +1687,12 @@ static struct SOCKADDR *connect_inet(ConfigItem_link *aconf, aClient *cptr, int 
 	}
 	mysk.SIN_PORT = 0;
 
-	get_sockhost(cptr, aconf->hostname);
+	get_sockhost(cptr, aconf->outgoing.hostname);
 
-
-	if (!aconf->bindip && iConf.link_bindip)
+	if (!aconf->outgoing.bind_ip && iConf.link_bindip)
 		bindip = iConf.link_bindip;
 	else
-		bindip = aconf->bindip;
+		bindip = aconf->outgoing.bind_ip;
 
 	if (bindip && strcmp("*", bindip))
 	{
@@ -1717,26 +1720,26 @@ static struct SOCKADDR *connect_inet(ConfigItem_link *aconf, aClient *cptr, int 
 	 */
 #ifdef INET6
 	if (!WHOSTENTP(aconf->ipnum.S_ADDR) &&
-	    !inet_pton(AF_INET6, aconf->hostname, aconf->ipnum.s6_addr))
+	    !inet_pton(AF_INET6, aconf->outgoing.hostname, aconf->ipnum.s6_addr))
 		bcopy(minus_one, aconf->ipnum.s6_addr, IN6ADDRSZ); /* IP->struct failed: make invalid */
 	if (AND16(aconf->ipnum.s6_addr) == 255)
 #else
-	if (isdigit(*aconf->hostname) && (aconf->ipnum.S_ADDR == -1))
-		aconf->ipnum.S_ADDR = inet_addr(aconf->hostname);
+	if (isdigit(*aconf->outgoing.hostname) && (aconf->ipnum.S_ADDR == -1))
+		aconf->ipnum.S_ADDR = inet_addr(aconf->outgoing.hostname);
 	if (aconf->ipnum.S_ADDR == -1)
 #endif
 	{
 		hp = cptr->hostp;
 		if (!hp)
 		{
-			Debug((DEBUG_FATAL, "%s: unknown host", aconf->hostname));
+			Debug((DEBUG_FATAL, "%s: unknown host", aconf->outgoing.hostname));
 			return NULL;
 		}
 		bcopy(hp->h_addr, (char *)&aconf->ipnum, sizeof(struct IN_ADDR));
 	}
 	bcopy((char *)&aconf->ipnum, (char *)&server.SIN_ADDR, sizeof(struct IN_ADDR));
 	bcopy((char *)&aconf->ipnum, (char *)&cptr->ip, sizeof(struct IN_ADDR));
-	server.SIN_PORT = htons(((aconf->port > 0) ? aconf->port : portnum));
+	server.SIN_PORT = htons(((aconf->outgoing.port > 0) ? aconf->outgoing.port : portnum));
 	*lenp = sizeof(server);
 	return (struct SOCKADDR *)&server;
 }

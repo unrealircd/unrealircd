@@ -497,14 +497,14 @@ struct hostent *he2;
 	switch ((n = connect_server(r->linkblock, r->cptr, he2)))
 	{
 		case 0:
-			sendto_realops("Connecting to %s[%s].", r->linkblock->servername, r->linkblock->hostname);
+			sendto_realops("Connecting to %s[%s].", r->linkblock->servername, r->linkblock->outgoing.hostname);
 			break;
 		case -1:
 			sendto_realops("Couldn't connect to %s.", r->linkblock->servername);
 			break;
 		case -2:
 			/* Should not happen since he is not NULL */
-			sendto_realops("Hostname %s is unknown for server %s (!?).", r->linkblock->hostname, r->linkblock->servername);
+			sendto_realops("Hostname %s is unknown for server %s (!?).", r->linkblock->outgoing.hostname, r->linkblock->servername);
 			break;
 		default:
 			sendto_realops("Connection to %s failed: %s", r->linkblock->servername, STRERROR(n));

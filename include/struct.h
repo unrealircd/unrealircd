@@ -1220,15 +1220,29 @@ struct _configitem_vhost {
 struct _configitem_link {
 	ConfigItem	*prev, *next;
 	ConfigFlag	flag;
-	char		*servername, *username, *hostname, *bindip, *hubmask, *leafmask, *connpwd;
-	anAuthStruct	*recvauth;
-	u_short		port, options;
-	unsigned char 	leafdepth;
-	int		refcount;
-	ConfigItem_class	*class;
-	struct IN_ADDR 		ipnum;
-	time_t			hold;
-	char		*ciphers;
+	/* config options: */
+	char *servername; /**< Name of the server ('link <servername> { }') */
+	struct {
+		char *mask; /**< incoming mask(s) to accept (TODO: linked list) */
+		anAuthStruct *auth; /**< authentication method (eg: password) */
+	} incoming;
+	struct {
+		char *bind_ip; /**< Our IP to bind to when doing the connect */
+		char *hostname; /**< Hostname or IP to connect to */
+		int port; /**< Port to connect to */
+		char *password; /**< Password to send to other server */
+		int options; /**< Connect options like ssl or autoconnect */
+	} outgoing;
+	char *hub; /**< Hub mask */
+	char *leaf; /**< Leaf mask */
+	int leaf_depth; /**< Leaf depth */
+	ConfigItem_class *class; /**< Class the server should use */
+	char *ciphers; /**< SSL Ciphers to use */
+	int options; /**< Generic options such as quarantine */
+	/* internal: */
+	int	refcount; /**< Reference counter (used so we know if the struct may be freed) */
+	time_t hold; /**< For how long the server is "on hold" for outgoing connects (why?) */
+	struct IN_ADDR ipnum; /**< actual IP to use for outgoing connect (filled in after host is resolved) */
 };
 
 typedef enum {

@@ -161,33 +161,39 @@ ConfigItem_ban *bconf;
 		strcpy(xerrmsg, "Null servername");
 		goto errlink;
 	}
+	
 	if (cptr->serv && cptr->serv->conf)
 	{
 		/* We already know what block we are dealing with (outgoing connect!) */
+		/* TODO: validate this comment ^ !! */
 		link = cptr->serv->conf;
+		goto skip_host_check;
 	} else {
 		/* Hunt the linkblock down ;) */
 		for(link = conf_link; link; link = (ConfigItem_link *) link->next)
 			if (!match(link->servername, servername))
 				break;
 	}
-	if (!link) {
+	
+	if (!link)
+	{
 		ircsnprintf(xerrmsg, sizeof(xerrmsg), "No link block named '%s'", servername);
 		goto errlink;
 	}
-	if (link->username && match(link->username, cptr->username)) {
-		ircsnprintf(xerrmsg, sizeof(xerrmsg), "Username '%s' didn't match '%s'",
-			cptr->username, link->username);
-		/* I assume nobody will have 2 link blocks with the same servername
-		 * and different username. -- Syzop
-		 */
+	
+	if (!link->incoming.mask)
+	{
+		ircsnprintf(xerrmsg, sizeof(xerrmsg), "Link block '%s' exists but has no link::incoming::mask", servername);
 		goto errlink;
 	}
-	/* For now, we don't check based on DNS, it is slow, and IPs are better.
-	 * We also skip checking if link::options::nohostcheck is set.
-	 */
-	if (link->options & CONNECT_NOHOSTCHECK)
-		goto nohostcheck;
+
+	if (!link->incoming.auth)
+	{
+		ircsnprintf(xerrmsg, sizeof(xerrmsg), "Link block '%s' exists but has no link::incoming::password", servername);
+		goto errlink;
+	}
+
+	/* Find by (literal) IP */
 	link = Find_link(cptr->username, cptr->sockhost, cptr->sockhost, servername);
 	
 #ifdef INET6
@@ -202,24 +208,26 @@ ConfigItem_ban *bconf;
 	if (!link)
 		link = Find_link(cptr->username, cptr->sockhost, Inet_ia2pNB(&cptr->ip, 1), servername);
 #endif		
+
 	if (!link)
 	{
-		ircsnprintf(xerrmsg, sizeof(xerrmsg), "Server is in link block but IP/host didn't match");
+		ircsnprintf(xerrmsg, sizeof(xerrmsg), "Server is in link block but link::incoming::mask didn't match");
 errlink:
 		/* Send the "simple" error msg to the server */
 		sendto_one(cptr,
-		    "ERROR :Link denied (No matching link configuration) %s",
-		    inpath);
+		    "ERROR :Link denied (No link block found named '%s' or link::incoming::mask did not match your IP %s) %s",
+		    servername, GetIP(cptr), inpath);
 		/* And send the "verbose" error msg only to local failops */
 		sendto_locfailops
 		    ("Link denied for %s(%s@%s) (%s) %s",
 		    servername, cptr->username, cptr->sockhost, xerrmsg, inpath);
 		return exit_client(cptr, sptr, &me,
-		    "Link denied (No matching link configuration)");
+		    "Link denied (No link block found with your server name or link::incoming::mask did not match)");
 	}
-nohostcheck:
+
+skip_host_check:
 	/* Now for checking passwords */
-	if (Auth_Check(cptr, link->recvauth, cptr->passwd) == -1)
+	if (link->incoming.auth && (Auth_Check(cptr, link->incoming.auth, cptr->passwd) == -1))
 	{
 		sendto_one(cptr,
 		    "ERROR :Link denied (Authentication failed) %s",
@@ -555,26 +563,26 @@ CMD_FUNC(m_server_remote)
 		return exit_client(cptr, cptr, cptr, "Lost configuration");
 	}
 	aconf = cptr->serv->conf;
-	if (!aconf->hubmask)
+	if (!aconf->hub)
 	{
 		sendto_locfailops("Link %s cancelled, is Non-Hub but introduced Leaf %s",
 			cptr->name, servername);
 		return exit_client(cptr, cptr, cptr, "Non-Hub Link");
 	}
-	if (match(aconf->hubmask, servername))
+	if (match(aconf->hub, servername))
 	{
 		sendto_locfailops("Link %s cancelled, linked in %s, which hub config disallows", cptr->name, servername);
 		return exit_client(cptr, cptr, cptr, "Not matching hub configuration");
 	}
-	if (aconf->leafmask)
+	if (aconf->leaf)
 	{
-		if (match(aconf->leafmask, servername))
+		if (match(aconf->leaf, servername))
 		{
 			sendto_locfailops("Link %s(%s) cancelled, disallowed by leaf configuration", cptr->name, servername);
 			return exit_client(cptr, cptr, cptr, "Disallowed by leaf configuration");
 		}
 	}
-	if (aconf->leafdepth && (hop > aconf->leafdepth))
+	if (aconf->leaf_depth && (hop > aconf->leaf_depth))
 	{
 			sendto_locfailops("Link %s(%s) cancelled, too deep depth", cptr->name, servername);
 			return exit_client(cptr, cptr, cptr, "Too deep link depth (leaf)");
@@ -645,7 +653,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 		/* If this is an incomming connection, then we have just received
 		 * their stuff and now send our stuff back.
 		 */
-		sendto_one(cptr, "PASS :%s", aconf->connpwd);
+		sendto_one(cptr, "PASS :%s", BadPtr(aconf->outgoing.password) ? "*" : aconf->outgoing.password);
 		send_proto(cptr, aconf);
 		sendto_one(cptr, "SERVER %s 1 :%s",
 			    me.name, me.info);

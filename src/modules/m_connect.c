@@ -77,12 +77,10 @@ DLLFUNC int MOD_UNLOAD(m_connect)(int module_unload)
    ** m_connect
    **  parv[0] = sender prefix
    **  parv[1] = servername
-   **  parv[2] = port number
-   **  parv[3] = remote server
  */
 DLLFUNC CMD_FUNC(m_connect)
 {
-	int  port, tmpport, retval;
+	int  retval;
 	ConfigItem_link	*aconf;
 	ConfigItem_deny_link *deny;
 	aClient *acptr;
@@ -136,30 +134,16 @@ DLLFUNC CMD_FUNC(m_connect)
 		    parv[1]);
 		return 0;
 	}
-	/*
-	   ** Get port number from user, if given. If not specified,
-	   ** use the default form configuration structure. If missing
-	   ** from there, then use the precompiled default.
-	 */
-	tmpport = port = aconf->port;
-	if (parc > 2 && !BadPtr(parv[2]))
+
+	if (!aconf->outgoing.hostname)
 	{
-		if ((port = atoi(parv[2])) <= 0)
-		{
-			sendnotice(sptr,
-			    "*** Connect: Illegal port number");
-			return 0;
-		}
-	}
-	else if (port <= 0 && (port = PORTNUM) <= 0)
-	{
-		sendnotice(sptr, "*** Connect: missing port number");
+		sendnotice(sptr,
+		    "*** Connect: Server %s is not configured to be an outgoing link (has a link block, but no link::outgoing::hostname)",
+		    parv[1]);
 		return 0;
 	}
 
-
-
-/* Evaluate deny link */
+	/* Evaluate deny link */
 	for (deny = conf_deny_link; deny; deny = (ConfigItem_deny_link *) deny->next) {
 		if (deny->flag.type == CRULE_ALL && !match(deny->mask, aconf->servername)
 			&& crule_eval(deny->rule)) {
@@ -168,15 +152,8 @@ DLLFUNC CMD_FUNC(m_connect)
 			return 0;
 		}
 	}
-	if (strchr(aconf->hostname, '*') != NULL || strchr(aconf->hostname, '?') != NULL)
-	{
-		sendnotice(sptr,
-			"*** Connect: You cannot connect to a server with wildcards (* and ?) in the hostname");
-		return 0;
-	}	
-	/*
-	   ** Notify all operators about remote connect requests
-	 */
+
+	/* Notify all operators about remote connect requests */
 	if (!IsAnOper(cptr))
 	{
 		sendto_server(&me, 0, 0,
@@ -184,27 +161,25 @@ DLLFUNC CMD_FUNC(m_connect)
 		    me.name, parv[1], parv[2] ? parv[2] : "",
 		    get_client_name(sptr, FALSE));
 	}
-	/* Interesting */
-	aconf->port = port;
+
 	switch (retval = connect_server(aconf, sptr, NULL))
 	{
 	  case 0:
-		  sendnotice(sptr,
-		      "*** Connecting to %s[%s].",
-		      aconf->servername, aconf->hostname);
+		  sendnotice(sptr, "*** Connecting to %s[%s].",
+		      aconf->servername, aconf->outgoing.hostname);
 		  break;
 	  case -1:
-		  sendnotice(sptr, "*** Couldn't connect to %s.",
-		      aconf->servername);
+		  sendnotice(sptr, "*** Couldn't connect to %s[%s]",
+		  	aconf->servername, aconf->outgoing.hostname);
 		  break;
 	  case -2:
 		  sendnotice(sptr, "*** Resolving hostname '%s'...",
-		      aconf->hostname);
+		  	aconf->outgoing.hostname);
 		  break;
 	  default:
-		  sendnotice(sptr, "*** Connection to %s failed: %s",
-		      aconf->servername, STRERROR(retval));
+		  sendnotice(sptr, "*** Connection to %s[%s] failed: %s",
+		  	aconf->servername, aconf->outgoing.hostname, STRERROR(retval));
 	}
-	aconf->port = tmpport;
+
 	return 0;
 }

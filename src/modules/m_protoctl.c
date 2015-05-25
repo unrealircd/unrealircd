@@ -345,8 +345,8 @@ CMD_FUNC(m_protoctl)
 				return ret; /* FLUSH_BUFFER */
 
 			SetEAuth(cptr);
-			if (!IsHandshake(cptr) && aconf && !BadPtr(aconf->connpwd)) /* Send PASS early... */
-				sendto_one(sptr, "PASS :%s", aconf->connpwd);
+			if (!IsHandshake(cptr) && aconf) /* Send PASS early... */
+				sendto_one(sptr, "PASS :%s", BadPtr(aconf->outgoing.password) ? "*" : aconf->outgoing.password);
 		}
 		else if ((strncmp(s, "TS=",3) == 0) && (IsServer(sptr) || IsEAuth(sptr)))
 		{

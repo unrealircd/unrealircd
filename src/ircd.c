@@ -414,7 +414,7 @@ EVENT(try_connections)
 		/*
 		 * Also when already connecting! (update holdtimes) --SRB 
 		 */
-		if (!(aconf->options & CONNECT_AUTO) || (aconf->flag.temporary == 1))
+		if (!(aconf->options & CONNECT_AUTO) || !aconf->outgoing.hostname || (aconf->flag.temporary == 1))
 			continue;
 
 		cltmp = aconf->class;
@@ -451,7 +451,7 @@ EVENT(try_connections)
 			    (struct hostent *)NULL) == 0)
 				sendto_realops
 				    ("Connection to %s[%s] activated.",
-				    aconf->servername, aconf->hostname);
+				    aconf->servername, aconf->outgoing.hostname);
 
 		}
 	}

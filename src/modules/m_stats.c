@@ -488,28 +488,27 @@ int stats_links(aClient *sptr, char *para)
 #endif
 	for (link_p = conf_link; link_p; link_p = (ConfigItem_link *) link_p->next)
 	{
-		sendto_one(sptr, ":%s 213 %s C %s@%s * %s %i %s %s%s%s%s%s",
-			me.name, sptr->name, IsOper(sptr) ? link_p->username : "*",
-			IsOper(sptr) ? link_p->hostname : "*", link_p->servername,
-			link_p->port,
+		sendto_one(sptr, ":%s 213 %s C - * %s %i %s %s%s%s",
+			me.name, sptr->name, /* user@host no longer shown as we allow multiple and split out/in etc */
+			link_p->servername,
+			link_p->outgoing.port,
 			link_p->class->name,
-			(link_p->options & CONNECT_AUTO) ? "a" : "",
-			(link_p->options & CONNECT_SSL) ? "S" : "",
-			(link_p->options & CONNECT_NODNSCACHE) ? "d" : "",
-			(link_p->options & CONNECT_NOHOSTCHECK) ? "h" : "",
+			(link_p->outgoing.options & CONNECT_AUTO) ? "a" : "",
+			(link_p->outgoing.options & CONNECT_SSL) ? "S" : "",
 			(link_p->flag.temporary == 1) ? "T" : "");
 #ifdef DEBUGMODE
 		sendnotice(sptr, "%s (%p) has refcount %d",
 			link_p->servername, link_p, link_p->refcount);
 #endif
-		if (link_p->hubmask)
+		if (link_p->hub)
 			sendto_one(sptr, ":%s 244 %s H %s * %s",
-				me.name, sptr->name, link_p->hubmask,
+				me.name, sptr->name, link_p->hub,
 				link_p->servername);
-		else if (link_p->leafmask)
+		else if (link_p->leaf)
 			sendto_one(sptr, ":%s 241 %s L %s * %s %d",
 				me.name, sptr->name,
-				link_p->leafmask, link_p->servername, link_p->leafdepth);
+				link_p->leaf, link_p->servername, link_p->leaf_depth);
+		// TODO: send incoming allow list? (for opers only)
 	}
 #ifdef DEBUGMODE
 	list_for_each_entry(acptr, &client_list, client_node)
@@ -1381,7 +1380,7 @@ int stats_notlink(aClient *sptr, char *para)
 		if (!find_server_quick(link_p->servername))
 			sendto_one(sptr, rpl_str(RPL_STATSXLINE),
 				me.name, sptr->name, link_p->servername,
-				link_p->port);
+				link_p->outgoing.port);
 	}
 	return 0;
 }

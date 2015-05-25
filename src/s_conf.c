@@ -1512,6 +1512,7 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->default_ipv6_clone_mask = 64;
 #endif /* INET6 */
 	i->nicklen = NICKLEN;
+	i->link_bindip = strdup("*");
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,
@@ -2601,16 +2602,22 @@ ConfigItem_link *Find_link(char *username,
 			   char *servername)
 {
 	ConfigItem_link	*link;
-
+	char uip[HOSTLEN + USERLEN + 3];
+	char uhost[HOSTLEN + USERLEN + 3];
+	
 	if (!username || !hostname || !servername || !ip)
 		return NULL;
 
-	for(link = conf_link; link; link = (ConfigItem_link *) link->next)
+	snprintf(uip, sizeof(uip), "%s@%s", username, ip);
+	snprintf(uhost, sizeof(uhost), "%s@%s", username, hostname);
+
+	for (link = conf_link; link; link = (ConfigItem_link *)link->next)
 	{
 		if (!match(link->servername, servername) &&
-		    !match(link->username, username) &&
-		    (!match(link->hostname, hostname) || !match(link->hostname, ip)))
-			return link;
+		    (!match(link->incoming.mask, uip) || !match(link->incoming.mask, uhost)))
+		{
+		    return link;
+		}
 	}
 	return NULL;
 
@@ -6047,21 +6054,42 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 	link = (ConfigItem_link *) MyMallocEx(sizeof(ConfigItem_link));
 	link->servername = strdup(ce->ce_vardata);
 
-	/* ugly, but it works. if it fails, we know _test_link failed miserably */
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!strcmp(cep->ce_varname, "username"))
-			link->username = strdup(cep->ce_vardata);
-		else if (!strcmp(cep->ce_varname, "hostname"))
-			link->hostname = strdup(cep->ce_vardata);
-		else if (!strcmp(cep->ce_varname, "bind-ip"))
-			link->bindip = strdup(cep->ce_vardata);
-		else if (!strcmp(cep->ce_varname, "port"))
-			link->port = atol(cep->ce_vardata);
-		else if (!strcmp(cep->ce_varname, "password-receive"))
-			link->recvauth = Auth_ConvertConf2AuthStruct(cep);
-		else if (!strcmp(cep->ce_varname, "password-connect"))
-			link->connpwd = strdup(cep->ce_vardata);
+		if (!strcmp(cep->ce_varname, "incoming"))
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!strcmp(cepp->ce_varname, "mask"))
+					ircstrdup(link->incoming.mask, cepp->ce_vardata); // TODO: support multiple
+				else if (!strcmp(cepp->ce_varname, "password"))
+					link->incoming.auth = Auth_ConvertConf2AuthStruct(cepp);
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "outgoing"))
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!strcmp(cepp->ce_varname, "bind-ip"))
+					ircstrdup(link->outgoing.bind_ip, cepp->ce_vardata);
+				else if (!strcmp(cepp->ce_varname, "hostname"))
+					ircstrdup(link->outgoing.hostname, cepp->ce_vardata);
+				else if (!strcmp(cepp->ce_varname, "port"))
+					link->outgoing.port = atoi(cepp->ce_vardata);
+				else if (!strcmp(cepp->ce_varname, "password"))
+					ircstrdup(link->outgoing.password, cepp->ce_vardata);
+				else if (!strcmp(cepp->ce_varname, "options"))
+				{
+					// TODO: options like autoconnect etc.
+				}
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "hub"))
+			ircstrdup(link->hub, cep->ce_vardata);
+		else if (!strcmp(cep->ce_varname, "leaf"))
+			ircstrdup(link->leaf, cep->ce_vardata);
+		else if (!strcmp(cep->ce_varname, "leaf-depth") || !strcmp(cep->ce_varname, "leafdepth"))
+			link->leaf_depth = atoi(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "class"))
 		{
 			link->class = Find_class(cep->ce_vardata);
@@ -6075,6 +6103,8 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 			}
 			link->class->xrefcount++;
 		}
+		else if (!strcmp(cep->ce_varname, "ciphers"))
+			link->ciphers = strdup(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "options"))
 		{
 			link->options = 0;
@@ -6084,333 +6114,221 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 					link->options |= ofp->flag;
 			}
 		}
-		else if (!strcmp(cep->ce_varname, "hub"))
-			link->hubmask = strdup(cep->ce_vardata);
-		else if (!strcmp(cep->ce_varname, "leaf"))
-			link->leafmask = strdup(cep->ce_vardata);
-		else if (!strcmp(cep->ce_varname, "leafdepth"))
-			link->leafdepth = atol(cep->ce_vardata);
-		else if (!strcmp(cep->ce_varname, "ciphers"))
-			link->ciphers = strdup(cep->ce_vardata);
 	}
 
 	AddListItem(link, conf_link);
 	return 0;
 }
 
+/** Helper function for erroring on duplicate items.
+ * TODO: make even more friendy for dev's?
+ */
+int config_detect_duplicate(int *var, ConfigEntry *ce, int *errors)
+{
+	if (*var)
+	{
+		config_error("%s:%d: Duplicate %s directive",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			ce->ce_varname);
+		*errors++;
+		return 1;
+	} else {
+		*var = 1;
+	}
+	return 0;
+}
+
+/** For IPv6 users, auto-convert IPv4 ip's like '1.2.3.4' to '::ffff:1.2.3.4'.
+ * This function is a no-op for IPv4 so may be called freely.
+ */
+void auto_convert_ipv4_to_ipv6(ConfigEntry *cep)
+{
+#ifdef INET6
+	/* [ not null && len>6 && has not a : in it && last character is a digit ] */
+	if (cep->ce_vardata && (strlen(cep->ce_vardata) > 6) && !strchr(cep->ce_vardata, ':') &&
+		isdigit(cep->ce_vardata[strlen(cep->ce_vardata)-1]))
+	{
+		char crap[32];
+		if (inet_pton(AF_INET, cep->ce_vardata, crap) != 0)
+		{
+			char ipv6buf[48];
+			snprintf(ipv6buf, sizeof(ipv6buf), "::ffff:%s", cep->ce_vardata);
+			MyFree(cep->ce_vardata);
+			cep->ce_vardata = strdup(ipv6buf);
+		}
+	}
+#endif
+}
+
 int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 {
-	ConfigEntry	*cep, *cepp;
-	OperFlag 	*ofp;
-	int		errors = 0;
-	char has_username = 0, has_hostname = 0, has_bindip = 0, has_port = 0;
-	char has_passwordreceive = 0, has_passwordconnect = 0, has_class = 0;
-	char has_hub = 0, has_leaf = 0, has_leafdepth = 0, has_ciphers = 0;
-	char has_options = 0;
-	char has_autoconnect = 0;
-	char has_hostname_wildcards = 0;
+	ConfigEntry *cep, *cepp, *ceppp;
+	ConfigItem_link *link = NULL;
+	OperFlag *ofp;
+	int errors = 0;
+
+	int has_incoming = 0, has_incoming_mask = 0, has_incoming_password = 0, has_outgoing = 0;
+	int has_outgoing_bind_ip = 0, has_outgoing_hostname = 0, has_outgoing_port = 0;
+	int has_outgoing_password = 0, has_outgoing_options = 0, has_hub = 0;
+	int has_leaf = 0, has_leaf_depth = 0, has_class = 0, has_ciphers = 0;
+	int has_options = 0;
+
 	if (!ce->ce_vardata)
 	{
-		config_error("%s:%i: link without servername",
+		config_error("%s:%i: link without servername. Expected: link servername { ... }",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return 1;
 
 	}
+
 	if (!strchr(ce->ce_vardata, '.'))
 	{
-		config_error("%s:%i: link: bogus server name",
+		config_error("%s:%i: link: bogus server name. Expected: link servername { ... }",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return 1;
 	}
 	
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!cep->ce_varname)
+		if (!strcmp(cep->ce_varname, "incoming"))
 		{
-			config_error_blank(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"link");
-			errors++;
-			continue;
-		}
-		if (!strcmp(cep->ce_varname, "options"))
-		{
-			if (has_options)
-			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
-					cep->ce_varlinenum, "link::options");
-				continue;
-			}
-			has_options = 1;
+			config_detect_duplicate(&has_incoming, ce, &errors);
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
-				if (!cepp->ce_varname)
+				if (!strcmp(cepp->ce_varname, "mask"))
+					has_incoming_mask = 1;
+				else if (!strcmp(cepp->ce_varname, "password"))
 				{
-					config_error_blank(cepp->ce_fileptr->cf_filename,
-						cepp->ce_varlinenum, "link::options");
-					errors++; 
-					continue;
-				}
-				if (!stricmp(cepp->ce_varname, "zip"))
-				{
-					config_warn("%s:%i: link %s with deprecated zip option, compression is included with SSL linking",
-						cep->ce_fileptr->cf_filename, cep->ce_varlinenum, ce->ce_vardata);
-					continue;
-				}
-				if (!(ofp = config_binary_flags_search(_LinkFlags, cepp->ce_varname, ARRAY_SIZEOF(_LinkFlags)))) 
-				{
-					config_error_unknownopt(cepp->ce_fileptr->cf_filename,
-						cepp->ce_varlinenum, "link", cepp->ce_varname);
-					errors++;
-					continue;
-				}
-				if (ofp->flag == CONNECT_AUTO)
-				{
-					has_autoconnect = 1;
+					config_detect_duplicate(&has_incoming_password, ce, &errors);
+					if (Auth_CheckError(cepp) < 0)
+						errors++;
 				}
 			}
-			continue;
 		}
-		if (!cep->ce_vardata)
+		else if (!strcmp(cep->ce_varname, "outgoing"))
 		{
-			config_error_empty(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"link", cep->ce_varname);
-			errors++;
-			continue;
-		}
-		if (!strcmp(cep->ce_varname, "username"))
-		{
-			if (has_username)
+			config_detect_duplicate(&has_outgoing, ce, &errors);
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
-					cep->ce_varlinenum, "link::username");
-				continue;
-			}
-			has_username = 1;
-		}
-		else if (!strcmp(cep->ce_varname, "hostname"))
-		{
-			if (has_hostname)
-			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
-					cep->ce_varlinenum, "link::hostname");
-				continue;
-			}
-			has_hostname = 1;
-#ifdef INET6
-			/* I'm nice... I'll help those poor ipv6 users. -- Syzop */
-			/* [ not null && len>6 && has not a : in it && last character is a digit ] */
-			if (cep->ce_vardata && (strlen(cep->ce_vardata) > 6) && !strchr(cep->ce_vardata, ':') &&
-			    isdigit(cep->ce_vardata[strlen(cep->ce_vardata)-1]))
-			{
-				char crap[32];
-				if (inet_pton(AF_INET, cep->ce_vardata, crap) != 0)
+				if (!strcmp(cepp->ce_varname, "bind-ip"))
 				{
-					char ipv6buf[48];
-					snprintf(ipv6buf, sizeof(ipv6buf), "::ffff:%s", cep->ce_vardata);
-					MyFree(cep->ce_vardata);
-					cep->ce_vardata = strdup(ipv6buf);
-				} else {
-				/* Insert IPv6 validation here */
-					config_error( "%s:%i: listen: '%s' looks like "
-						"it might be IPv4, but is not a valid address.",
-						ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-						cep->ce_vardata);
-					errors++;
+					config_detect_duplicate(&has_outgoing_bind_ip, ce, &errors);
+					auto_convert_ipv4_to_ipv6(cepp);
+				}
+				else if (!strcmp(cepp->ce_varname, "hostname"))
+				{
+					config_detect_duplicate(&has_outgoing_hostname, ce, &errors);
+					auto_convert_ipv4_to_ipv6(cepp);
+					if (strchr(cepp->ce_vardata, '*') || strchr(cepp->ce_vardata, '?'))
+					{
+						config_error("%s:%i: hostname in link::outgoing(!) cannot contain wildcards",
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+						errors++;
+					}
+				}
+				else if (!strcmp(cepp->ce_varname, "port"))
+				{
+					config_detect_duplicate(&has_outgoing_port, ce, &errors);
+				}
+				else if (!strcmp(cepp->ce_varname, "password"))
+				{
+					config_detect_duplicate(&has_outgoing_password, ce, &errors);
+				}
+				else if (!strcmp(cepp->ce_varname, "options"))
+				{
+					config_detect_duplicate(&has_outgoing_options, ce, &errors);
+					for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
+					{
+						if (!strcmp(ceppp->ce_varname, "autoconnect"))
+							;
+						else
+						{
+							config_error_unknownopt(ceppp->ce_fileptr->cf_filename,
+								ceppp->ce_varlinenum, "link::outgoing", ceppp->ce_varname);
+							errors++;
+						}
+						// TODO: validate more options (?) and use list rather than code here...
+					}
 				}
 			}
-#endif
-			if (strchr(cep->ce_vardata, '*') != NULL || strchr(cep->ce_vardata, '?'))
-			{
-				has_hostname_wildcards = 1;
-			}
-		}
-		else if (!strcmp(cep->ce_varname, "bind-ip"))
-		{
-			if (has_bindip)
-			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
-					cep->ce_varlinenum, "link::bind-ip");
-				continue;
-			}
-			has_bindip = 1;
-#ifdef INET6
-			/* I'm nice... I'll help those poor ipv6 users. -- Syzop */
-			/* [ not null && len>6 && has not a : in it && last character is a digit ] */
-			if (cep->ce_vardata && (strlen(cep->ce_vardata) > 6) && !strchr(cep->ce_vardata, ':') &&
-			    isdigit(cep->ce_vardata[strlen(cep->ce_vardata)-1]))
-			{
-				char crap[32];
-				if (inet_pton(AF_INET, cep->ce_vardata, crap) != 0)
-				{
-					char ipv6buf[48];
-					snprintf(ipv6buf, sizeof(ipv6buf), "::ffff:%s", cep->ce_vardata);
-					MyFree(cep->ce_vardata);
-					cep->ce_vardata = strdup(ipv6buf);
-				} else {
-				/* Insert IPv6 validation here */
-					config_error( "%s:%i: bind-ip: '%s' looks like "
-						"it might be IPv4, but is not a valid address.",
-						ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-						cep->ce_vardata);
-					errors++;
-				}
-			}
-#endif
-		}
-		else if (!strcmp(cep->ce_varname, "port"))
-		{
-			if (has_port)
-			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
-					cep->ce_varlinenum, "link::port");
-				continue;
-			}
-			has_port = 1;
-		}
-		else if (!strcmp(cep->ce_varname, "password-receive"))
-		{
-			if (has_passwordreceive)
-			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
-					cep->ce_varlinenum, "link::password-receive");
-				continue;
-			}
-			has_passwordreceive = 1;
-			if (Auth_CheckError(cep) < 0)
-				errors++;
-		}
-		else if (!strcmp(cep->ce_varname, "password-connect"))
-		{
-			if (has_passwordconnect)
-			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
-					cep->ce_varlinenum, "link::password-connect");
-				continue;
-			}
-			has_passwordconnect = 1;
-			if (cep->ce_entries)
-			{
-				config_error("%s:%i: link::password-connect cannot be encrypted",
-					     ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-				errors++;
-			}
-			if (strlen(cep->ce_vardata) > PASSWDLEN) 
-			{
-				config_error("%s:%i: link::password-connect cannot exceed %d characters in length",
-					     ce->ce_fileptr->cf_filename, ce->ce_varlinenum, PASSWDLEN);
-				errors++;
-			}
-		}
-		else if (!strcmp(cep->ce_varname, "class"))
-		{
-			if (has_class)
-			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
-					cep->ce_varlinenum, "link::class");
-				continue;
-			}
-			has_class = 1;
 		}
 		else if (!strcmp(cep->ce_varname, "hub"))
 		{
-			if (has_hub)
-			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
-					cep->ce_varlinenum, "link::hub");
-				continue;
-			}
-			has_hub = 1;
+			config_detect_duplicate(&has_hub, ce, &errors);
 		}
 		else if (!strcmp(cep->ce_varname, "leaf"))
 		{
-			if (has_leaf)
-			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
-					cep->ce_varlinenum, "link::leaf");
-				continue;
-			}
-			has_leaf = 1;
+			config_detect_duplicate(&has_leaf, ce, &errors);
 		}
-		else if (!strcmp(cep->ce_varname, "leafdepth"))
+		else if (!strcmp(cep->ce_varname, "leaf-depth") || !strcmp(cep->ce_varname, "leafdepth"))
 		{
-			if (has_leafdepth)
-			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
-					cep->ce_varlinenum, "link::leafdepth");
-				continue;
-			}
-			has_leafdepth = 1;
+			config_detect_duplicate(&has_leaf_depth, ce, &errors);
+		}
+		else if (!strcmp(cep->ce_varname, "class"))
+		{
+			config_detect_duplicate(&has_class, ce, &errors);
 		}
 		else if (!strcmp(cep->ce_varname, "ciphers"))
 		{
-			if (has_ciphers)
-			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
-					cep->ce_varlinenum, "link::ciphers");
-				continue;
-			}
-			has_ciphers = 1;
+			config_detect_duplicate(&has_ciphers, ce, &errors);
 		}
-		else
+		else if (!strcmp(cep->ce_varname, "options"))
 		{
-			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
-				"link", cep->ce_varname);
+			config_detect_duplicate(&has_options, ce, &errors);
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if ((ofp = config_binary_flags_search(_LinkFlags, cepp->ce_varname, ARRAY_SIZEOF(_LinkFlags)))) 
+					link->options |= ofp->flag;
+			}
+		}
+	}
+
+	if (!has_incoming && !has_outgoing)
+	{
+		config_error("%s:%d: link block needs at least an incoming or outgoing section",
+			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		errors++;
+	}
+
+	if (has_incoming)
+	{
+		/* If we have an incoming sub-block then we need at least 'mask' and 'password' */
+		if (!has_incoming_mask)
+		{
+			config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum, "link::incoming::mask");
+			errors++;
+		}
+		if (!has_incoming_password)
+		{
+			config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum, "link::incoming::password");
 			errors++;
 		}
 	}
-	if (!has_username)
+	
+	if (has_outgoing)
 	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			"link::username");
-		errors++;
+		/* If we have an outgoing sub-block then we need at least a hostname and port */
+		if (!has_outgoing_hostname)
+		{
+			config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum, "link::outgoing::hostname");
+			errors++;
+		}
+		if (!has_outgoing_port)
+		{
+			config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum, "link::outgoing::port");
+			errors++;
+		}
 	}
-	if (!has_hostname)
-	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			"link::hostname");
-		errors++;
-	}
-	if (!has_port)
-	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			"link::port");
-		errors++;
-	}
-	if (!has_passwordreceive)
-	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			"link::password-receive");
-		errors++;
-	}
-	if (!has_passwordconnect)
-	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			"link::password-connect");
-		errors++;
-	}
+
+	/* The only other generic option that is required is 'class' */
 	if (!has_class)
 	{
 		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 			"link::class");
 		errors++;
 	}
-	if (has_autoconnect && has_hostname_wildcards)
-	{
-		config_error("%s:%i: link block with autoconnect and wildcards (* and/or ? in hostname)",
-				ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		errors++;
-	}
-	if (errors > 0)
-		return errors;
-	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
-	{
-		if (!strcmp(cep->ce_varname, "options")) 
-		{
-			continue;
-		}
-	}
+
 	return errors;
-		
 }
 
 int	_conf_cgiirc(ConfigFile *conf, ConfigEntry *ce)
@@ -9332,18 +9250,17 @@ int	rehash_internal(aClient *cptr, aClient *sptr, int sig)
 	return 1;
 }
 
-void	link_cleanup(ConfigItem_link *link_ptr)
+void link_cleanup(ConfigItem_link *link_ptr)
 {
 	ircfree(link_ptr->servername);
-	ircfree(link_ptr->username);
-	ircfree(link_ptr->bindip);
-	ircfree(link_ptr->hostname);
-	ircfree(link_ptr->hubmask);
-	ircfree(link_ptr->leafmask);
-	ircfree(link_ptr->connpwd);
+	ircfree(link_ptr->incoming.mask); // TODO: will become a list
+	Auth_DeleteAuthStruct(link_ptr->incoming.auth);
+	ircfree(link_ptr->outgoing.bind_ip);
+	ircfree(link_ptr->outgoing.hostname);
+	ircfree(link_ptr->outgoing.password);
+	ircfree(link_ptr->hub);
+	ircfree(link_ptr->leaf);
 	ircfree(link_ptr->ciphers);
-	Auth_DeleteAuthStruct(link_ptr->recvauth);
-	link_ptr->recvauth = NULL;
 }
 
 void delete_linkblock(ConfigItem_link *link_ptr)
