@@ -242,8 +242,6 @@ static OperFlag _ListenerFlags[] = {
 /* This MUST be alphabetized */
 static OperFlag _LinkFlags[] = {
 	{ CONNECT_AUTO,	"autoconnect" },
-	{ CONNECT_NODNSCACHE, "nodnscache" },
-	{ CONNECT_NOHOSTCHECK, "nohostcheck" },
 	{ CONNECT_QUARANTINE, "quarantine"},
 	{ CONNECT_SSL,	"ssl"		  },
 };
@@ -6046,10 +6044,9 @@ int _test_log(ConfigFile *conf, ConfigEntry *ce) {
 
 int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 {
-	ConfigEntry *cep;
-	ConfigEntry *cepp;
+	ConfigEntry *cep, *cepp, *ceppp;
 	ConfigItem_link *link = NULL;
-	OperFlag    *ofp;
+	OperFlag *ofp;
 
 	link = (ConfigItem_link *) MyMallocEx(sizeof(ConfigItem_link));
 	link->servername = strdup(ce->ce_vardata);
@@ -6080,7 +6077,13 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 					ircstrdup(link->outgoing.password, cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "options"))
 				{
-					// TODO: options like autoconnect etc.
+					/* TODO: options still need to be split */
+					link->outgoing.options = 0;
+					for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
+					{
+						if ((ofp = config_binary_flags_search(_LinkFlags, ceppp->ce_varname, ARRAY_SIZEOF(_LinkFlags)))) 
+							link->outgoing.options |= ofp->flag;
+					}
 				}
 			}
 		}
@@ -6240,6 +6243,8 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 					for (ceppp = cepp->ce_entries; ceppp; ceppp = ceppp->ce_next)
 					{
 						if (!strcmp(ceppp->ce_varname, "autoconnect"))
+							;
+						if (!strcmp(ceppp->ce_varname, "ssl"))
 							;
 						else
 						{
