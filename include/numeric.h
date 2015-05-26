@@ -245,6 +245,7 @@
 #define	RPL_USERS            393
 #define	RPL_ENDOFUSERS       394
 #define	RPL_NOUSERS          395
+#define RPL_HOSTHIDDEN       396
 
 #define RPL_TRACELINK        200
 #define RPL_TRACECONNECTING  201

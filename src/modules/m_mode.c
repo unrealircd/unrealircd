@@ -1805,6 +1805,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 			if (MyClient(sptr))
 				sptr->since += 7; /* Add fake lag */
 		}
+		sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, sptr->user->virthost);
 	}
 
 	if (!IsHidden(sptr) && (setflags & UMODE_HIDE))
@@ -1829,6 +1830,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 		 * been a vhost for example. -- Syzop
 		 */
 		sptr->user->virthost = strdup(sptr->user->cloakedhost);
+		sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, sptr->user->realhost);
 	}
 	/*
 	 * If I understand what this code is doing correctly...

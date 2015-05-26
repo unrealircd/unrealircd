@@ -82,6 +82,8 @@ void iNAH_host(aClient *sptr, char *host)
 
 	if (UHOST_ALLOWED == UHALLOW_REJOIN)
 		rejoin_joinandmode(sptr);
+
+	sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, sptr->user->virthost);
 }
 
 long set_usermode(char *umode)
