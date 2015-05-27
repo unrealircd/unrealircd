@@ -25,6 +25,8 @@
 /* channel.c */
 extern int  sendmodeto_one(aClient *cptr, char *from, char *name, char *mode, char *param, TS creationtime);
 extern void make_cmodestr(void);
+extern int  is_halfop(aClient *cptr, aChannel *chptr);
+extern int  is_chanprot(aClient *cptr, aChannel *chptr);
 
 /* lusers.c */
 extern void init_ircstats(void);
@@ -62,12 +64,10 @@ extern void read_motd(const char *filename, aMotdFile *motd);
 /* s_user.c */
 extern int  check_for_target_limit(aClient *sptr, void *target, const char *name);
 extern void make_umodestr(void);
-
-/* webtv.c */
-extern int  is_halfop(aClient *cptr, aChannel *chptr);
-extern int  is_chanprot(aClient *cptr, aChannel *chptr);
-extern char *convert_time(time_t ltime);
 extern char *get_mode_str(aClient *acptr);
+
+/* s_misc.c */
+extern char *convert_time(time_t ltime);
 
 /* whowas.c */
 extern void initwhowas(void);

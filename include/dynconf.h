@@ -64,7 +64,6 @@ struct zConfiguration {
 	unsigned hide_ulines:1;
 	unsigned flat_map:1;
 	unsigned allow_chatops:1;
-	unsigned webtv_support:1;
 	unsigned ident_check:1;
 	unsigned fail_oper_warn:1;
 	unsigned show_connect_info:1;
@@ -173,7 +172,6 @@ extern MODVAR aConfiguration iConf;
 #define ALLOW_CHATOPS			iConf.allow_chatops
 #define MAXCHANNELSPERUSER		iConf.maxchannelsperuser
 #define MAXDCCALLOW			iConf.maxdccallow
-#define WEBTV_SUPPORT			iConf.webtv_support
 #define DONT_RESOLVE			iConf.dont_resolve
 #define AUTO_JOIN_CHANS			iConf.auto_join_chans
 #define OPER_AUTO_JOIN_CHANS		iConf.oper_auto_join_chans
@@ -285,7 +283,6 @@ struct SetCheck {
 	unsigned has_hide_ulines:1;
 	unsigned has_flat_map:1;
 	unsigned has_allow_chatops:1;
-	unsigned has_webtv_support:1;
 	unsigned has_ident_check:1;
 	unsigned has_fail_oper_warn:1;
 	unsigned has_show_connect_info:1;
@@ -373,7 +370,6 @@ struct SetCheck {
 	unsigned has_help_channel:1;
 	unsigned has_stats_server:1;
 	unsigned has_cloak_keys:1;
-	unsigned has_options_webtv_support:1;
 	unsigned has_options_hide_ulines:1;
 	unsigned has_options_flat_map:1;
 	unsigned has_options_show_opermotd:1;
