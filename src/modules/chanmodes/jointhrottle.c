@@ -95,7 +95,6 @@ DLLFUNC int MOD_LOAD(jointhrottle)(int module_load)
 
 DLLFUNC int MOD_UNLOAD(jointhrottle)(int module_unload)
 {
-	sendto_realops("Mod_Unload was called??? Argh!! We will loose all flood counters!");
 	return MOD_FAILED;
 }
 
