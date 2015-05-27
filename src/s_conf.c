@@ -6981,10 +6981,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "options")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
-				if (!strcmp(cepp->ce_varname, "webtv-support")) {
-					tempiConf.webtv_support = 1;
-				}
-				else if (!strcmp(cepp->ce_varname, "hide-ulines")) {
+				if (!strcmp(cepp->ce_varname, "hide-ulines")) {
 					tempiConf.hide_ulines = 1;
 				}
 				else if (!strcmp(cepp->ce_varname, "flat-map")) {
@@ -7759,11 +7756,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "options")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
-				if (!strcmp(cepp->ce_varname, "webtv-support")) 
-				{
-					CheckDuplicate(cepp, options_webtv_support, "options::webtv-support");
-				}
-				else if (!strcmp(cepp->ce_varname, "hide-ulines")) 
+				if (!strcmp(cepp->ce_varname, "hide-ulines")) 
 				{
 					CheckDuplicate(cepp, options_hide_ulines, "options::hide-ulines");
 				}

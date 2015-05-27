@@ -44,11 +44,11 @@ int _is_silenced(aClient *, aClient *);
 char *_StripColors(unsigned char *text);
 char *_StripControlCodes(unsigned char *text);
 
-DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice);
-DLLFUNC int  m_notice(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-DLLFUNC int  m_private(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+int	ban_version(aClient *sptr, char *text);
 
-static int webtv_parse(aClient *sptr, char *string);
+DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice);
+DLLFUNC int m_notice(aClient *cptr, aClient *sptr, int parc, char *parv[]);
+DLLFUNC int m_private(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 /* Place includes here */
 #define MSG_PRIVATE     "PRIVMSG"       /* PRIV */
@@ -189,7 +189,6 @@ int ret;
 ** rev argv 6/91
 **
 */
-static int recursive_webtv = 0;
 DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int notice)
 {
 	aClient *acptr, *srvptr;
@@ -240,40 +239,24 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 	for (p = NULL, nick = strtoken(&p, parv[1], ","); nick;
 	    nick = strtoken(&p, NULL, ","))
 	{
-		if (IsVirus(sptr) && (!strcasecmp(nick, "ircd") || !strcasecmp(nick, "irc")))
-		{
-			sendnotice(sptr, "IRC command(s) unavailable because you are suspected to have a virus");
-			continue;
-		}
-		/*
-		   ** nickname addressed?
-		 */
+		/* The nicks "ircd" and "irc" are special (and reserved) */
+
 		if (!strcasecmp(nick, "ircd") && MyClient(sptr))
-		{
-			ret = 0;
-			if (!recursive_webtv)
-			{
-				recursive_webtv = 1;
-				ret = parse(sptr, parv[2], (parv[2] + strlen(parv[2])));
-				recursive_webtv = 0;
-			}
-			return ret;
-		}
+			return 0;
+
 		if (!strcasecmp(nick, "irc") && MyClient(sptr))
 		{
-			if (!recursive_webtv)
-			{
-				recursive_webtv = 1;
-				ret = webtv_parse(sptr, parv[2]);
-				if (ret == -99)
-				{
-					ret = parse(sptr, parv[2], (parv[2] + strlen(parv[2])));
-				}
-				recursive_webtv = 0;
-				return ret;
-			}
+			/* When ban version { } is enabled the IRCd sends a CTCP VERSION request
+			 * from the "IRC" nick. So we need to handle CTCP VERSION replies to "IRC".
+			 */
+			if (!strncmp(parv[2], "\1VERSION ", 9))
+				return ban_version(sptr, parv[2] + 9);
+			if (!strncmp(parv[2], "\1SCRIPT ", 8))
+				return ban_version(sptr, parv[2] + 8);
+			return 0;
 		}
 		
+		/* nickname addressed? */
 		if (*nick != '#' && (acptr = find_person(nick, NULL)))
 		{
 			text = parv[2];
@@ -934,110 +917,20 @@ char *_StripControlCodes(unsigned char *text)
 	return new_str;
 }
 
-typedef struct zMessage aMessage;
-struct zMessage {
-	char *command;
-	int  (*func) ();
-	int  maxpara;
-};
-
-/* This really has nothing to do with WebTV yet, but eventually it will, so I figured
- * it's easiest to put it here so why not? -- codemastr
- */
-static int ban_version(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-
-static aMessage webtv_cmds[] = 
-{
-	{"\1VERSION", ban_version, 1},
-	{"\1SCRIPT", ban_version, 1},
-	{NULL, 0, 15}
-};
-
-
-static int webtv_parse(aClient *sptr, char *string)
-{
-	char *cmd = NULL, *s = NULL;
-	int i, n;
-	aMessage *message = webtv_cmds;
-	static char *para[MAXPARA + 2];
-	
-	if (!string || !*string)
-	{
-		sendto_one(sptr, ":IRC %s %s :No command given", MSG_PRIVATE, sptr->name);
-		return 0;
-	}
-
-	n = strlen(string);
-	cmd = strtok(string, " ");
-	if (!cmd)
-		return -99;	
-		
-	for (message = webtv_cmds; message->command; message++)
-		if (strcasecmp(message->command, cmd) == 0)
-			break;
-
-	if (!message->command || !message->func)
- 	{
-/*		sendto_one(sptr, ":IRC %s %s :Sorry, \"%s\" is an unknown command to me",
-			MSG_PRIVATE, sptr->name, cmd); */
-		/* restore the string*/
-		if (strlen(cmd) < n)
-			cmd[strlen(cmd)]= ' ';
-		return -99;
-	}
-
-	i = 0;
-	s = strtok(NULL, "");
-	if (s)
-	{
-		if (message->maxpara > MAXPARA)
-			message->maxpara = MAXPARA; /* paranoid ? ;p */
-		for (;;)
-		{
-			/*
-			   ** Never "FRANCE " again!! ;-) Clean
-			   ** out *all* blanks.. --msa
-			 */
-			while (*s == ' ')
-				*s++ = '\0';
-
-			if (*s == '\0')
-				break;
-			if (*s == ':')
-			{
-				/*
-				   ** The rest is single parameter--can
-				   ** include blanks also.
-				 */
-				para[++i] = s + 1;
-				break;
-			}
-			para[++i] = s;
-			if (i >= message->maxpara)
-				break;
-			for (; *s != ' ' && *s; s++)
-				;
-		}
-	}
-	para[++i] = NULL;
-
-	para[0] = sptr->name;
-
-	return (*message->func) (sptr->from, sptr, i, para);
-}
-
-int	ban_version(aClient *cptr, aClient *sptr, int parc, char *parv[])
+int	ban_version(aClient *sptr, char *text)
 {	
 	int len;
 	ConfigItem_ban *ban;
-	if (parc < 2)
-		return 0;
-	len = strlen(parv[1]);
+
+	len = strlen(text);
 	if (!len)
 		return 0;
-	if (parv[1][len-1] == '\1')
-		parv[1][len-1] = '\0';
-	if ((ban = Find_ban(NULL, parv[1], CONF_BAN_VERSION)))
+
+	if (text[len-1] == '\1')
+		text[len-1] = '\0'; /* remove CTCP REPLY terminator (ASCII 1) */
+
+	if ((ban = Find_ban(NULL, text, CONF_BAN_VERSION)))
 		return place_host_ban(sptr, ban->action, ban->reason, BAN_VERSION_TKL_TIME);
+
 	return 0;
 }

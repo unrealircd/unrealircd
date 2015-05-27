@@ -203,7 +203,6 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					showchannel = 0;
 				if (acptr == sptr)
 					showchannel = 1;
-				/* Hey, if you are editting here... don't forget to change the webtv w_whois ;p. */
 
 				if (showchannel)
 				{
