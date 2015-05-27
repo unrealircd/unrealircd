@@ -37,6 +37,8 @@ ModuleHeader MOD_HEADER(jointhrottle)
 
 ModuleInfo *ModInfo = NULL;
 
+ModDataInfo *jointhrottle_md; /* Module Data structure which we acquire */
+
 Cmode_t EXTMODE_JOINTHROTTLE = 0L;
 
 typedef struct {
@@ -44,6 +46,16 @@ typedef struct {
 	unsigned short t;
 } aModejEntry;
 
+typedef struct JFlood aJFlood;
+
+struct JFlood {
+	aJFlood *prev, *next;
+	char chname[CHANNELLEN+1];
+	time_t firstjoin;
+	unsigned short numjoins;
+};
+
+/* Forward declarations */
 int cmodej_is_ok(aClient *sptr, aChannel *chptr, char mode, char *para, int type, int what);
 void *cmodej_put_param(void *r_in, char *param);
 char *cmodej_get_param(void *r_in);
@@ -52,21 +64,24 @@ void cmodej_free_param(void *r);
 void *cmodej_dup_struct(void *r_in);
 int cmodej_sjoin_check(aChannel *chptr, void *ourx, void *theirx);
 
+void jointhrottle_md_free(ModData *m);
+
 int jointhrottle_can_join(aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[]);
 int jointhrottle_local_join(aClient *cptr, aClient *sptr, aChannel *chptr, char *parv[]);
 static int isjthrottled(aClient *cptr, aChannel *chptr);
 static void cmodej_increase_usercounter(aClient *cptr, aChannel *chptr);
 EVENT(cmodej_cleanup_structs);
-int cmodej_exit_one_client(aClient *sptr);
-int cmodej_channel_destroy(aChannel *chptr);
 aJFlood *cmodej_addentry(aClient *cptr, aChannel *chptr);
 
 DLLFUNC int MOD_INIT(jointhrottle)(ModuleInfo *modinfo)
 {
+	ModDataInfo mreq;
 	CmodeInfo req;
+
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM_RELOADABLE, 1);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	ModInfo = modinfo;
+
 	memset(&req, 0, sizeof(req));
 	req.paracount = 1;
 	req.is_ok = cmodej_is_ok;
@@ -79,10 +94,19 @@ DLLFUNC int MOD_INIT(jointhrottle)(ModuleInfo *modinfo)
 	req.sjoin_check = cmodej_sjoin_check;
 	CmodeAdd(modinfo->handle, req, &EXTMODE_JOINTHROTTLE);
 
+	memset(&mreq, 0, sizeof(mreq));
+	mreq.name = "jointhrottle";
+	mreq.free = jointhrottle_md_free;
+	mreq.serialize = NULL; /* not supported */
+	mreq.unserialize = NULL; /* not supported */
+	mreq.sync = 0;
+	mreq.type = MODDATATYPE_CLIENT;
+	jointhrottle_md = ModDataAdd(modinfo->handle, mreq);
+	if (!jointhrottle_md)
+		abort();
+
 	HookAddEx(modinfo->handle, HOOKTYPE_CAN_JOIN, jointhrottle_can_join);
 	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_JOIN, jointhrottle_local_join);
-	HookAddEx(modinfo->handle, HOOKTYPE_EXIT_ONE_CLIENT, cmodej_exit_one_client);
-	HookAddEx(modinfo->handle, HOOKTYPE_CHANNEL_DESTROY, cmodej_channel_destroy);
 	return MOD_SUCCESS;
 }
 
@@ -91,7 +115,6 @@ DLLFUNC int MOD_LOAD(jointhrottle)(int module_load)
 	EventAddEx(ModInfo->handle, "cmodej_cleanup_structs", 60, 0, cmodej_cleanup_structs, NULL);
 	return MOD_SUCCESS;
 }
-
 
 DLLFUNC int MOD_UNLOAD(jointhrottle)(int module_unload)
 {
@@ -263,8 +286,8 @@ int num=0, t=0;
 #endif
 
 	/* Grab user<->chan entry.. */
-	for (e = cptr->user->jflood; e; e=e->next_u)
-		if (e->chptr == chptr)
+	for (e = moddata_client(cptr, jointhrottle_md).ptr; e; e=e->next)
+		if (!strcasecmp(e->chname, chptr->chname))
 			break;
 	
 	if (!e)
@@ -299,8 +322,8 @@ int num=0, t=0;
 #endif
 
 	/* Grab user<->chan entry.. */
-	for (e = cptr->user->jflood; e; e=e->next_u)
-		if (e->chptr == chptr)
+	for (e = moddata_client(cptr, jointhrottle_md).ptr; e; e=e->next)
+		if (!strcasecmp(e->chname, chptr->chname))
 			break;
 	
 	if (!e)
@@ -346,154 +369,89 @@ aJFlood *e;
 	if (!IsPerson(cptr))
 		abort();
 
-	for (e=cptr->user->jflood; e; e=e->next_u)
-		if (e->chptr == chptr)
-			abort();
-
-	for (e=chptr->jflood; e; e=e->next_c)
-		if (e->cptr == cptr)
-			abort();
+	for (e=moddata_client(cptr, jointhrottle_md).ptr; e; e=e->next)
+		if (!strcasecmp(e->chname, chptr->chname))
+			abort(); /* already exists -- should never happen */
 #endif
 
 	e = MyMallocEx(sizeof(aJFlood));
-	e->cptr = cptr;
-	e->chptr = chptr;
-	e->prev_u = e->prev_c = NULL;
-	e->next_u = cptr->user->jflood;
-	e->next_c = chptr->jflood;
-	if (cptr->user->jflood)
-		cptr->user->jflood->prev_u = e;
-	if (chptr->jflood)
-		chptr->jflood->prev_c = e;
-	cptr->user->jflood = chptr->jflood = e;
+	strlcpy(e->chname, chptr->chname, sizeof(e->chname));
+
+	/* Insert our new entry as (new) head */
+	if (moddata_client(cptr, jointhrottle_md).ptr)
+	{
+		aJFlood *current_head = moddata_client(cptr, jointhrottle_md).ptr;
+		current_head->prev = e;
+		e->next = current_head;
+	}
+	moddata_client(cptr, jointhrottle_md).ptr = e;
 
 	return e;
-}
-
-/** Removes an individual entry from list and frees it.
- */
-void cmodej_delentry(aJFlood *e)
-{
-	/* remove from user.. */
-	if (e->prev_u)
-		e->prev_u->next_u = e->next_u;
-	else
-		e->cptr->user->jflood = e->next_u; /* new head */
-	if (e->next_u)
-		e->next_u->prev_u = e->prev_u;
-
-	/* remove from channel.. */
-	if (e->prev_c)
-		e->prev_c->next_c = e->next_c;
-	else
-		e->chptr->jflood = e->next_c; /* new head */
-	if (e->next_c)
-		e->next_c->prev_c = e->prev_c;
-
-	/* actually free it */
-	MyFree(e);
-}
-
-/** Removes all entries belonging to user from all lists and free them. */
-void cmodej_deluserentries(aClient *cptr)
-{
-aJFlood *e, *e_next;
-
-	for (e=cptr->user->jflood; e; e=e_next)
-	{
-		e_next = e->next_u;
-
-		/* remove from channel.. */
-		if (e->prev_c)
-			e->prev_c->next_c = e->next_c;
-		else
-			e->chptr->jflood = e->next_c; /* new head */
-		if (e->next_c)
-			e->next_c->prev_c = e->prev_c;
-
-		/* actually free it */
-		MyFree(e);
-	}
-	cptr->user->jflood = NULL;
-}
-
-/** Removes all entries belonging to channel from all lists and free them. */
-void cmodej_delchannelentries(aChannel *chptr)
-{
-aJFlood *e, *e_next;
-
-	for (e=chptr->jflood; e; e=e_next)
-	{
-		e_next = e->next_c;
-		
-		/* remove from user.. */
-		if (e->prev_u)
-			e->prev_u->next_u = e->next_u;
-		else
-			e->cptr->user->jflood = e->next_u; /* new head */
-		if (e->next_u)
-			e->next_u->prev_u = e->prev_u;
-
-		/* actually free it */
-		MyFree(e);
-	}
-	chptr->jflood = NULL;
 }
 
 /** Regularly cleans up cmode-j user/chan structs */
 EVENT(cmodej_cleanup_structs)
 {
-aJFlood *e, *e_next;
-int i;
-aClient *cptr;
+aClient *acptr;
 aChannel *chptr;
+aJFlood *jf, *jf_next;
 int t;
-//void *cmp;
-#ifdef DEBUGMODE
-int freed=0;
-#endif
-
-	for (chptr = channel; chptr; chptr=chptr->nextch)
+	
+	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
-		if (!chptr->jflood)
-			continue;
-		t=0;
-		/* t will be kept at 0 if not found or if mode not set,
-		 * but DO still check since there are entries left as indicated by ->jflood!
-		 */
-		if (chptr->mode.extmode & EXTMODE_JOINTHROTTLE)
-		{
-			t = ((aModejEntry *)GETPARASTRUCT(chptr, 'j'))->t;
-		}
+		if (!MyClient(acptr))
+			continue; /* only (local) persons.. */
 
-		for (e = chptr->jflood; e; e = e_next)
+		for (jf = moddata_client(acptr, jointhrottle_md).ptr; jf; jf = jf_next)
 		{
-			e_next = e->next_c;
+			t = 0;
+			jf_next = jf->next;
 			
-			if (e->firstjoin + t < TStime())
+			chptr = find_channel(jf->chname, NULL);
+			/* Now check if chptr is valid and if a flood still applies, if so we skip,
+			 * in all other cases we free the (no longer useful) entry.
+			 */
+			if (chptr && (chptr->mode.extmode & EXTMODE_JOINTHROTTLE))
 			{
-				cmodej_delentry(e);
-#ifdef DEBUGMODE
-				freed++;
-#endif
+				/* exists and has +j set.. check some more..*/
+				t = ((aModejEntry *)GETPARASTRUCT(chptr, 'j'))->t;
+
+				if (jf->firstjoin + t > TStime())
+					continue; /* still valid entry */
 			}
+#ifdef DEBUGMODE
+			ircd_log(LOG_ERROR, "cmodej_cleanup_structs(): freeing %s/%s (%ld[%ld], %d)",
+				acptr->name, jf->chname, jf->firstjoin, (long)(TStime() - jf->firstjoin), t);
+#endif
+			if (moddata_client(acptr, jointhrottle_md).ptr == jf)
+			{
+				/* change head */
+				moddata_client(acptr, jointhrottle_md).ptr = jf->next; /* could be set to NULL now */
+				if (jf->next)
+					jf->next->prev = NULL;
+			} else {
+				/* change non-head entries */
+				jf->prev->next = jf->next; /* could be set to NULL now */
+				if (jf->next)
+					jf->next->prev = jf->prev;
+			}
+			MyFree(jf);
 		}
 	}
-
-#ifdef DEBUGMODE
-	if (freed)
-		ircd_log(LOG_ERROR, "cmodej_cleanup_structs: %d entries freed [%ld bytes]", freed, freed * sizeof(aJFlood));
-#endif
 }
 
-int cmodej_exit_one_client(aClient *sptr)
+void jointhrottle_md_free(ModData *m)
 {
-	cmodej_deluserentries(sptr);
-	return 0;
-}
+aJFlood *j, *j_next;
 
-int cmodej_channel_destroy(aChannel *chptr)
-{
-	cmodej_delchannelentries(chptr);
-	return 0;
+	if (!m->ptr)
+		return;
+
+	for (j = m->ptr; j; j = j_next)
+	{
+		j_next = j->next;
+		MyFree(j);
+	}	
+
+	m->ptr = NULL;
 }
