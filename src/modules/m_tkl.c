@@ -76,7 +76,7 @@ DLLFUNC int m_spamfilter(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 int _tkl_hash(unsigned int c);
 char _tkl_typetochar(int type);
 aTKline *_tkl_add_line(int type, char *usermask, char *hostmask, char *reason, char *setby,
-    TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason);
+    TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason, MatchType match_type);
 aTKline *_tkl_del_line(aTKline *tkl);
 static void _tkl_check_local_remove_shun(aTKline *tmp);
 aTKline *_tkl_expire(aTKline * tmp);
@@ -160,7 +160,7 @@ DLLFUNC int MOD_INIT(m_tkl)(ModuleInfo *modinfo)
 	CommandAdd(modinfo->handle, MSG_ZLINE, m_tzline, 3, M_OPER);
 	CommandAdd(modinfo->handle, MSG_KLINE, m_tkline, 3, M_OPER);
 	CommandAdd(modinfo->handle, MSG_GZLINE, m_gzline, 3, M_OPER);
-	CommandAdd(modinfo->handle, MSG_SPAMFILTER, m_spamfilter, 6, M_OPER);
+	CommandAdd(modinfo->handle, MSG_SPAMFILTER, m_spamfilter, 7, M_OPER);
 	CommandAdd(modinfo->handle, MSG_TKL, _m_tkl, MAXPARA, M_OPER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
@@ -480,16 +480,17 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 	char *mask = NULL;
 	char mo[1024], mo2[1024];
 	char *p, *usermask, *hostmask;
-	char *tkllayer[9] = {
-		me.name,	/*0  server.name */
-		NULL,		/*1  +|- */
-		NULL,		/*2  G   */
-		NULL,		/*3  user */
-		NULL,		/*4  host */
-		NULL,		/*5  setby */
-		"0",		/*6  expire_at */
-		NULL,		/*7  set_at */
-		"no reason"	/*8  reason */
+	char *tkllayer[10] = {
+		me.name,		/*0  server.name */
+		NULL,			/*1  +|- */
+		NULL,			/*2  G   */
+		NULL,			/*3  user */
+		NULL,			/*4  host */
+		NULL,			/*5  setby */
+		"0",			/*6  expire_at */
+		NULL,			/*7  set_at */
+		"no reason",	/*8  reason */
+		NULL
 	};
 	struct tm *t;
 
@@ -713,17 +714,19 @@ DLLFUNC int  m_tkl_line(aClient *cptr, aClient *sptr, int parc, char *parv[], ch
 
 int spamfilter_usage(aClient *sptr)
 {
-	sendnotice(sptr, "Use: /spamfilter [add|del|remove|+|-] [type] [action] [tkltime] [tklreason] [regex]");
+	sendnotice(sptr, "Use: /spamfilter [add|del|remove|+|-] [-simple|-regex|-posix] [type] [action] [tkltime] [tklreason] [regex]");
 	sendnotice(sptr, "See '/helpop ?spamfilter' for more information.");
 	return 0;
 }
 
+/** /spamfilter [add|del|remove|+|-] [match-type] [type] [action] [tkltime] [reason] [regex]
+ *                   1                    2         3        4        5        6        7
+ */
 DLLFUNC int m_spamfilter(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 int  whattodo = 0;	/* 0 = add  1 = del */
 char mo[32], mo2[32];
-char *p;
-char *tkllayer[11] = {
+char *tkllayer[13] = {
 	me.name,	/*  0 server.name */
 	NULL,		/*  1 +|- */
 	"F",		/*  2 F   */
@@ -734,12 +737,17 @@ char *tkllayer[11] = {
 	"0",		/*  7 set_at */
 	"",			/*  8 tkl time */
 	"",			/*  9 tkl reason */
-	""			/* 10 regex */
+	"",			/* 10 match method */
+	"",			/* 11 regex */
+	NULL
 };
 int targets = 0, action = 0;
 char targetbuf[64], actionbuf[2];
 char reason[512];
 int n;
+aMatch *m;
+int match_type = 0;
+char *err = NULL;
 
 	if (IsServer(sptr))
 		return 0;
@@ -759,15 +767,20 @@ int n;
 			sptr->name, sptr->user->username, GetHost(sptr));
 		return 0;
 	}
-	if ((parc < 7) || BadPtr(parv[4]))
+
+	if ((parc == 7) && (*parv[2] != '-'))
+		goto new_spamfilter_syntax;
+		
+	if ((parc < 8) || BadPtr(parv[7]))
 		return spamfilter_usage(sptr);
 
 	/* parv[1]: [add|del|+|-]
-	 * parv[2]: type
-	 * parv[3]: action
-	 * parv[4]: tkl time
-	 * parv[5]: tkl reason (or block reason..)
-	 * parv[6]: regex
+	 * parv[2]: match-type
+	 * parv[3]: type
+	 * parv[4]: action
+	 * parv[5]: tkl time
+	 * parv[6]: tkl reason (or block reason..)
+	 * parv[7]: regex
 	 */
 	if (!strcasecmp(parv[1], "add") || !strcmp(parv[1], "+"))
 		whattodo = 0;
@@ -779,50 +792,66 @@ int n;
 		return spamfilter_usage(sptr);
 	}
 
-	targets = spamfilter_gettargets(parv[2], sptr);
+	match_type = unreal_match_method_strtoval(parv[2]+1);
+	if (!match_type)
+	{
+new_spamfilter_syntax:
+		sendnotice(sptr, "Unknown match-type '%s'. Must be one of: -regex (new fast PCRE regexes), "
+		                 "-posix (old unreal 3.2.x posix regexes) or "
+		                 "-simple (simple text with ? and * wildcards)",
+		                 parv[2]);
+		if (*parv[2] != '-')
+			sendnotice(sptr, "Using the old 3.2.x /SPAMFILTER syntax? Note the new -regex/-posix/-simple field!!");
+		
+		return spamfilter_usage(cptr);
+	}
+
+	targets = spamfilter_gettargets(parv[3], sptr);
 	if (!targets)
 		return spamfilter_usage(sptr);
 
 	strlcpy(targetbuf, spamfilter_target_inttostring(targets), sizeof(targetbuf));
 
-	action = banact_stringtoval(parv[3]);
+	action = banact_stringtoval(parv[4]);
 	if (!action)
 	{
-		sendto_one(sptr, ":%s NOTICE %s :Invalid 'action' field (%s)", me.name, sptr->name, parv[3]);
+		sendto_one(sptr, ":%s NOTICE %s :Invalid 'action' field (%s)", me.name, sptr->name, parv[4]);
 		return spamfilter_usage(sptr);
 	}
 	actionbuf[0] = banact_valtochar(action);
 	actionbuf[1] = '\0';
 
-	/* now check the regex... */
-	p = unreal_checkregex(parv[6],0,1);
-	if (p)
+	/* now check the regex / match field... */
+	m = unreal_create_match(match_type, reason, &err);
+	if (!m)
 	{
 		sendto_one(sptr, ":%s NOTICE %s :Error in regex '%s': %s",
-			me.name, sptr->name, parv[6], p);
+			me.name, sptr->name, parv[7], err);
 		return 0;
 	}
+	unreal_delete_match(m);
 
 	tkllayer[1] = whattodo ? "-" : "+";
 	tkllayer[3] = targetbuf;
 	tkllayer[4] = actionbuf;
 	tkllayer[5] = make_nick_user_host(sptr->name, sptr->user->username, GetHost(sptr));
 
-	if (parv[4][0] == '-')
+	if (parv[5][0] == '-')
 	{
 		ircsnprintf(mo, sizeof(mo), "%li", SPAMFILTER_BAN_TIME);
 		tkllayer[8] = mo;
 	}
 	else
-		tkllayer[8] = parv[4];
+		tkllayer[8] = parv[5];
 
-	if (parv[5][0] == '-')
+	if (parv[6][0] == '-')
 		strlcpy(reason, unreal_encodespace(SPAMFILTER_BAN_REASON), sizeof(reason));
 	else
-		strlcpy(reason, parv[5], sizeof(reason));
+		strlcpy(reason, parv[6], sizeof(reason));
 
 	tkllayer[9] = reason;
-	tkllayer[10] = parv[6];
+	tkllayer[10] = parv[2]+1; /* +1 to skip the '-' */
+	tkllayer[11] = parv[7];
 
 	/* SPAMFILTER LENGTH CHECK.
 	 * We try to limit it here so '/stats f' output shows ok, output of that is:
@@ -832,7 +861,7 @@ int n;
 	 * We also do >500 instead of >510, since that looks cleaner ;).. so actually we count
 	 * on 50 characters for the rest... -- Syzop
 	 */
-	n = strlen(reason) + strlen(parv[6]) + strlen(tkllayer[5]) + (NICKLEN * 2) + 40;
+	n = strlen(reason) + strlen(parv[7]) + strlen(tkllayer[6]) + (NICKLEN * 2) + 40;
 	if ((n > 500) && (whattodo == 0))
 	{
 		sendnotice(sptr, "Sorry, spamfilter too long. You'll either have to trim down the "
@@ -846,7 +875,7 @@ int n;
 		tkllayer[7] = mo2;
 	}
 	
-	m_tkl(&me, &me, 11, tkllayer);
+	m_tkl(&me, &me, 12, tkllayer);
 
 	return 0;
 }
@@ -921,10 +950,11 @@ char _tkl_typetochar(int type)
 */
 
 aTKline *_tkl_add_line(int type, char *usermask, char *hostmask, char *reason, char *setby,
-                  TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason)
+                  TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason, MatchType match_type)
 {
 	aTKline *nl;
 	int index;
+	aMatch *m;
 
 	/* Pre-allocate etc check for spamfilters that fail to compile.
 	 * This could happen if for example TRE supports a feature on server X, but not
@@ -932,11 +962,12 @@ aTKline *_tkl_add_line(int type, char *usermask, char *hostmask, char *reason, c
 	 */
 	if (type & TKL_SPAMF)
 	{
-		char *myerr = unreal_checkregex(reason, 0, 0);
-		if (myerr)
+		char *err = NULL;
+		m = unreal_create_match(match_type, reason, &err);
+		if (!m)
 		{
 			sendto_realops("[TKL ERROR] ERROR: Spamfilter was added but did not compile. ERROR='%s', Spamfilter='%s'",
-				myerr, reason);
+				err, reason);
 			return NULL;
 		}
 	}
@@ -957,7 +988,8 @@ aTKline *_tkl_add_line(int type, char *usermask, char *hostmask, char *reason, c
 	{
 		/* Need to set some additional flags like 'targets' and 'action'.. */
 		nl->subtype = spamfilter_gettargets(usermask, NULL);
-		nl->ptr.spamf = unreal_buildspamfilter(reason);
+		nl->ptr.spamf = MyMallocEx(sizeof(Spamfilter));
+		nl->ptr.spamf->expr = m;
 		nl->ptr.spamf->action = banact_chartoval(*hostmask);
 		nl->expire_at = 0; /* temporary spamfilters are NOT supported! (makes no sense) */
 		if (!spamf_tkl_reason)
@@ -1005,7 +1037,7 @@ aTKline *_tkl_del_line(aTKline *tkl)
 			MyFree(p->setby);
 			if (p->type & TKL_SPAMF && p->ptr.spamf)
 			{
-				regfree(&p->ptr.spamf->expr);
+				unreal_delete_match(p->ptr.spamf->expr);
 				if (p->ptr.spamf->tkl_reason)
 					MyFree(p->ptr.spamf->tkl_reason);
 				MyFree(p->ptr.spamf);
@@ -1435,7 +1467,7 @@ aClient *acptr;
 		if (MyClient(acptr))
 		{
 			spamfilter_build_user_string(spamfilter_user, acptr->name, acptr);
-			if (regexec(&tk->ptr.spamf->expr, spamfilter_user, 0, NULL, 0))
+			if (!unreal_match(tk->ptr.spamf->expr, spamfilter_user))
 				continue; /* No match */
 
 			/* matched! */
@@ -1465,7 +1497,7 @@ aClient *acptr;
 		if (IsPerson(acptr))
 		{
 			spamfilter_build_user_string(spamfilter_user, acptr->name, acptr);
-			if (regexec(&tk->ptr.spamf->expr, spamfilter_user, 0, NULL, 0))
+			if (!unreal_match(tk->ptr.spamf->expr, spamfilter_user))
 				continue; /* No match */
 
 			/* matched! */
@@ -1783,6 +1815,7 @@ void _tkl_stats(aClient *cptr, int type, char *para)
 			sendto_one(cptr, rpl_str(RPL_STATSSPAMF), me.name,
 				cptr->name,
 				(tk->type & TKL_GLOBAL) ? 'F' : 'f',
+				unreal_match_method_valtostr(tk->ptr.spamf->expr->type),
 				spamfilter_target_inttostring(tk->subtype),
 				banact_valtostring(tk->ptr.spamf->action),
 				(tk->expire_at != 0) ? (tk->expire_at - curtime) : 0,
@@ -1850,21 +1883,23 @@ void _tkl_synch(aClient *sptr)
  * This routine is used both internally by the ircd (to
  * for example add local klines, zlines, etc) and over the
  * network (glines, gzlines, spamfilter, etc).
- *           add:      remove:    spamfilter:    spamfilter+TKLEXT  sqline:
- * parv[ 1]: +         -          +/-            +                  +/-
- * parv[ 2]: type      type       type           type               type
- * parv[ 3]: user      user       target         target             hold
- * parv[ 4]: host      host       action         action             host
- * parv[ 5]: setby     removedby  (un)setby      setby              setby
- * parv[ 6]: expire_at            expire_at (0)  expire_at (0)      expire_at
- * parv[ 7]: set_at               set_at         set_at             set_at
- * parv[ 8]: reason               regex          tkl duration       reason
- * parv[ 9]:                                     tkl reason [A]        
- * parv[10]:                                     regex              
+ *           add:      remove:    spamfilter:    spamfilter+TKLEXT  spamfilter+TKLEXT2  sqline:
+ * parv[ 1]: +         -          +/-            +                  +                   +/-
+ * parv[ 2]: type      type       type           type               type                type
+ * parv[ 3]: user      user       target         target             target              hold
+ * parv[ 4]: host      host       action         action             action              host
+ * parv[ 5]: setby     removedby  (un)setby      setby              setby               setby
+ * parv[ 6]: expire_at            expire_at (0)  expire_at (0)      expire_at (0)       expire_at
+ * parv[ 7]: set_at               set_at         set_at             set_at              set_at
+ * parv[ 8]: reason               regex          tkl duration       tkl duration        reason
+ * parv[ 9]:                                     tkl reason [A]     tkl reason [A]
+ * parv[10]:                                     regex              match-type [B]
+ * parv[11]:                                                        match-string [C]
  *
  * [A] tkl reason field must be escaped by caller [eg: use unreal_encodespace()
  *     if m_tkl is called internally].
- *
+ * [B] match-type must be one of: regex, simple, posix.
+ * [C] Could be a regex or a regular string with wildcards, depending on [B]
  */
 int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
@@ -1874,6 +1909,7 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	char gmt[256], gmt2[256];
 	char txt[256];
 	TS   expiry_1, setat_1, spamf_tklduration = 0;
+	MatchType spamf_match_method = MATCH_TRE_REGEX; /* (if unspecified, default to this) */
 	char *reason = NULL, *timeret;
 
 	if (!IsServer(sptr) && !IsOper(sptr) && !IsMe(sptr))
@@ -1935,7 +1971,27 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  found = 0;
 		  if ((type & TKL_SPAMF) && (parc >= 11))
 		  {
-		  	reason = parv[10];
+		  	if (parc >= 12)
+		  	{
+		  	    reason = parv[11];
+		  	    spamf_match_method = unreal_match_method_strtoval(parv[10]);
+		  	    if (spamf_match_method == 0)
+		  	    {
+		  	    	sendto_realops("Ignoring spamfilter from %s with unknown match type '%s'",
+		  	    		sptr->name, parv[10]);
+		  	    	return 0;
+				}
+		  	} else {
+		  		reason = parv[10];
+#ifdef USE_TRE
+		  		spamf_match_method = MATCH_TRE_REGEX;
+#else
+				sendto_realops("Ignoring spamfilter from %s. Spamfilter is of type 'posix' (TRE) and this "
+				               "build was compiled without TRE support. Suggestion: upgrade the other server",
+				               sptr->name);
+				return 0;
+#endif
+		  	}
 		  	spamf_tklduration = config_checkval(parv[8], CFG_TIME); /* was: atol(parv[8]); */
 		  }
 		  for (tk = tklines[tkl_hash(parv[2][0])]; tk; tk = tk->next)
@@ -2030,10 +2086,10 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  /* there is something fucked here? */
 		  if ((type & TKL_SPAMF) && (parc >= 11))
 			tk = tkl_add_line(type, parv[3], parv[4], reason, parv[5],
-				expiry_1, setat_1, spamf_tklduration, parv[9]);
+				expiry_1, setat_1, spamf_tklduration, parv[9], spamf_match_method);
 		  else
 			tk = tkl_add_line(type, parv[3], parv[4], reason, parv[5],
-				expiry_1, setat_1, 0, NULL);
+				expiry_1, setat_1, 0, NULL, 0);
 
 		  if (!tk)
 		     return 0; /* ERROR on allocate or something else... */
@@ -2137,6 +2193,22 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 		  if (type & TKL_GLOBAL)
 		  {
+		  	if ((parc == 12) && (type & TKL_SPAMF))
+		  	{
+		  		/* Oooooh.. so many flavours ! */
+				sendto_server(cptr, PROTO_TKLEXT2, 0,
+					":%s TKL %s %s %s %s %s %s %s %s %s %s :%s", sptr->name,
+					parv[1], parv[2], parv[3], parv[4], parv[5],
+					parv[6], parv[7], parv[8], parv[9], parv[10], parv[11]);
+				sendto_server(cptr, PROTO_TKLEXT, PROTO_TKLEXT2,
+					":%s TKL %s %s %s %s %s %s %s %s %s :%s", sptr->name,
+					parv[1], parv[2], parv[3], parv[4], parv[5],
+					parv[6], parv[7], parv[8], parv[9], parv[11]); /* parv[11] = regex */
+				sendto_server(cptr, 0, PROTO_TKLEXT,
+					":%s TKL %s %s %s %s %s %s %s :%s", sptr->name,
+					parv[1], parv[2], parv[3], parv[4], parv[5],
+					parv[6], parv[7], parv[10]);
+		  	} else
 		  	if ((parc == 11) && (type & TKL_SPAMF))
 		  	{
 				sendto_server(cptr, PROTO_TKLEXT, 0,
@@ -2542,7 +2614,7 @@ long ms_past;
 		getrusage(RUSAGE_SELF, &rprev);
 #endif
 
-		ret = regexec(&tk->ptr.spamf->expr, str, 0, NULL, 0);
+		ret = unreal_match(tk->ptr.spamf->expr, str);
 
 #ifdef SPAMFILTER_DETECTSLOW
 		getrusage(RUSAGE_SELF, &rnow);
@@ -2564,7 +2636,7 @@ long ms_past;
 		}
 #endif
 
-		if (ret == 0)
+		if (ret)
 		{
 		        /* We have a match! */
 			char buf[1024];

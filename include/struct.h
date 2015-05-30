@@ -316,6 +316,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define PROTO_NICKv2	0x0008	/* Negotiated NICKv2 protocol */
 #define PROTO_SJOIN2	0x0010	/* Negotiated SJOIN2 protocol */
 #define PROTO_UMODE2	0x0020	/* Negotiated UMODE2 protocol */
+#define PROTO_TKLEXT2	0x0040	/* TKL extension 2: 11 parameters instead of 8 or 10 */
 #define PROTO_INVITENOTIFY	0x0080	/* client supports invite-notify */
 #define PROTO_VL		0x0100	/* Negotiated VL protocol */
 #define PROTO_SJ3		0x0200	/* Negotiated SJ3 protocol */
@@ -465,6 +466,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SupportSJ3(x)		(CHECKPROTO(x, PROTO_SJ3))
 #define SupportVHP(x)		(CHECKPROTO(x, PROTO_VHP))
 #define SupportTKLEXT(x)	(CHECKPROTO(x, PROTO_TKLEXT))
+#define SupportTKLEXT2(x)	(CHECKPROTO(x, PROTO_TKLEXT2))
 #define SupportNAMESX(x)	(CHECKPROTO(x, PROTO_NAMESX))
 #define SupportCLK(x)		(CHECKPROTO(x, PROTO_CLK))
 #define SupportUHNAMES(x)	(CHECKPROTO(x, PROTO_UHNAMES))
@@ -479,6 +481,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define SetSJ3(x)		((x)->proto |= PROTO_SJ3)
 #define SetVHP(x)		((x)->proto |= PROTO_VHP)
 #define SetTKLEXT(x)	((x)->proto |= PROTO_TKLEXT)
+#define SetTKLEXT2(x)	((x)->proto |= PROTO_TKLEXT2)
 #define SetNAMESX(x)	((x)->proto |= PROTO_NAMESX)
 #define SetCLK(x)		((x)->proto |= PROTO_CLK)
 #define SetUHNAMES(x)	((x)->proto |= PROTO_UHNAMES)
@@ -491,6 +494,8 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #define ClearVL(x)		((x)->proto &= ~PROTO_VL)
 #define ClearVHP(x)		((x)->proto &= ~PROTO_VHP)
 #define ClearSJ3(x)		((x)->proto &= ~PROTO_SJ3)
+#define ClearTKLEXT(x)		((x)->proto &= ~PROTO_TKLEXT)
+#define ClearTKLEXT2(x)		((x)->proto &= ~PROTO_TKLEXT2)
 
 /*
  * defined operator access levels
@@ -724,6 +729,27 @@ struct aloopStruct {
 	int rehash_save_sig;
 };
 
+/** Matching types for aMatch.type */
+typedef enum {
+	MATCH_SIMPLE=1, /**< Simple pattern with * and ? */
+	MATCH_PCRE_REGEX=2, /**< PCRE2 Perl-like regex (new) */
+#ifdef USE_TRE
+	MATCH_TRE_REGEX=3, /**< TRE POSIX regex (old, unreal3.2.x) */
+#endif
+} MatchType;
+
+/** Match struct, which allows various matching styles, see MATCH_* */
+typedef struct _match {
+	char *str; /**< Text of the glob/regex/whatever. Always set. */
+	MatchType type;
+	union {
+//		pcre2_code *pcre_expr; /**< PCRE2 Perl-like Regex (New) */
+#ifdef USE_TRE
+		regex_t *tre_expr; /**< TRE POSIX Regex (Old) */
+#endif
+	} ext;
+} aMatch;
+
 typedef struct Whowas {
 	int  hashv;
 	char *name;
@@ -845,7 +871,7 @@ struct Server {
 
 struct _spamfilter {
 	unsigned short action; /* see BAN_ACT* */
-	regex_t expr;
+	aMatch *expr;
 	char *tkl_reason; /* spamfilter reason field [escaped by unreal_encodespace()!] */
 	TS tkl_duration;
 };
@@ -1359,7 +1385,7 @@ struct _configitem_alias_format {
 	char *nick;
 	AliasType type;
 	char *format, *parameters;
-	regex_t expr;
+	aMatch *expr;
 };
 
 /**

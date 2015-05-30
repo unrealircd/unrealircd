@@ -21,6 +21,7 @@
 #include "struct.h"
 #include "common.h"
 #include "sys.h"
+#include "h.h"
 
 ID_Copyright("(C) 1990 Jarkko Oikarinen");
 
@@ -426,4 +427,120 @@ int match(const char *mask, const char *name) {
 		name++;
 	}
 	return match2(mask,name);
+}
+
+/** Free up all resources of an aMatch entry (including the struct itself).
+ * NOTE: this function may (also) be called for aMatch structs that have only been
+ *       setup half-way, so use special care when accessing members (NULL checks!)
+ */
+void unreal_delete_match(aMatch *m)
+{
+	safefree(m->str);
+#ifdef USE_TRE
+	if (m->type == MATCH_TRE_REGEX)
+	{
+		if (m->ext.tre_expr)
+			regfree(m->ext.tre_expr);
+	}
+#endif
+	// TODO: PCRE2 !!
+	MyFree(m);
+}
+
+aMatch *unreal_create_match(MatchType type, char *str, char **error)
+{
+	aMatch *m = MyMallocEx(sizeof(aMatch));
+	static char errorbuf[512];
+
+	m->str = strdup(str);
+	m->type = type;
+	
+	if (m->type == MATCH_SIMPLE)
+	{
+		/* Nothing to do */
+	}
+	else if (m->type == MATCH_PCRE_REGEX)
+	{
+		/* TODO */
+	}
+#ifdef USE_TRE
+	else if (m->type == MATCH_TRE_REGEX)
+	{
+		int errorcode;
+		
+		m->ext.tre_expr = MyMallocEx(sizeof(regex_t));
+		errorcode = regcomp(m->ext.tre_expr, str, REG_ICASE|REG_EXTENDED|REG_NOSUB);
+		if (errorcode > 0)
+		{
+			int errorbufsize = 512;
+			char *errtmp = MyMallocEx(errorbufsize);
+			regerror(errorcode, m->ext.tre_expr, errtmp, errorbufsize);
+			strlcpy(errorbuf, errtmp, sizeof(errorbuf));
+			MyFree(errtmp);
+			if (error)
+				*error = errorbuf;
+			goto fail;
+		}
+	}
+#endif
+	else {
+		abort(); /* unknown type, how did that happen ? */
+	}
+	return m;
+	
+fail:
+	unreal_delete_match(m);
+	return NULL;
+}
+
+/** Try to match an aMatch entry ('m') against a string ('str').
+ * @returns 1 if matched, 0 if not.
+ * @notes These (more logical) return values are opposite to the match() function.
+ */
+int unreal_match(aMatch *m, char *str)
+{
+	if (m->type == MATCH_SIMPLE)
+	{
+		if (_match(m->str, str) == 0)
+			return 1;
+		return 0;
+	}
+	
+	if (m->type == MATCH_PCRE_REGEX)
+	{
+		// todo
+		return 0;
+	}
+
+#ifdef USE_TRE
+	if (m->type == MATCH_TRE_REGEX)
+	{
+		if (regexec(m->ext.tre_expr, str, 0, NULL, 0) == 0)
+			return 1;
+		return 0;
+	}
+#endif
+}
+
+int unreal_match_method_strtoval(char *str)
+{
+	if (!strcmp(str, "regex") || !strcmp(str, "pcre"))
+		return MATCH_PCRE_REGEX;
+	if (!strcmp(str, "posix") || !strcmp(str, "tre"))
+		return MATCH_TRE_REGEX;
+	if (!strcmp(str, "simple") || !strcmp(str, "glob"))
+		return MATCH_SIMPLE;
+	return 0;
+}
+
+char *unreal_match_method_valtostr(int val)
+{
+	if (val == MATCH_PCRE_REGEX)
+		return "regex";
+	if (val == MATCH_TRE_REGEX)
+		return "posix";
+	if (val == MATCH_SIMPLE)
+		return "simple";
+	
+	return "unknown";
 }

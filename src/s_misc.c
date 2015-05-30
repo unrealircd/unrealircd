@@ -847,25 +847,7 @@ Ilovegotos:
 	return NULL;
 }
 
-
-
-#define SPF_REGEX_FLAGS (REG_ICASE|REG_EXTENDED|REG_NOSUB)
-
-/** Allocates a new Spamfilter entry and compiles/fills in the info.
- * NOTE: originally I wanted to integrate both badwords and spamfilter
- * into one function, but that was quickly getting ugly :(.
- */
-Spamfilter *unreal_buildspamfilter(char *s)
-{
-Spamfilter *e = MyMallocEx(sizeof(Spamfilter));
-
-	regcomp(&e->expr, s, SPF_REGEX_FLAGS);
-	return e;
-}
-
-
 /*|| BAN ACTION ROUTINES FOLLOW ||*/
-
 
 /** Converts a banaction string (eg: "kill") to an integer value (eg: BAN_ACT_KILL) */
 int banact_stringtoval(char *s)

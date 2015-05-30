@@ -98,6 +98,10 @@ SJ3           Notifies the server that the SJOIN command with SJ3 syntax is
 TKLEXT        This allows 10 instead of 8 parameters in TKL's for spamfilter, see s_kline.c
               function m_tkl for more info on this (added in 3.2RC2).
 
+TKLEXT2       This allows 11 instead of 8 or 10 parameters in TKL's for spamfilter,
+              see s_kline.c function m_tkl for more info on this (added in 3.4-alpha3).
+              Note that TKLEXT2 implies TKLEXT support as well.
+
 NICKIP        This token indicates that a (standard) base64 encoded IP address is included
               in the NICK command. The IP is in binary network byte order formated and
               encoded using the standard base64 algorithm. '*' is used if no IP is available.

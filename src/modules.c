@@ -91,7 +91,7 @@ int (*register_user)(aClient *cptr, aClient *sptr, char *nick, char *username, c
 int (*tkl_hash)(unsigned int c);
 char (*tkl_typetochar)(int type);
 aTKline *(*tkl_add_line)(int type, char *usermask, char *hostmask, char *reason, char *setby,
-    TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason);
+    TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason, MatchType match_type);
 aTKline *(*tkl_del_line)(aTKline *tkl);
 void (*tkl_check_local_remove_shun)(aTKline *tmp);
 aTKline *(*tkl_expire)(aTKline * tmp);

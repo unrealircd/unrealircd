@@ -2140,7 +2140,7 @@ void	config_rehash()
 				ircfree(fmt->format);
 				ircfree(fmt->nick);
 				ircfree(fmt->parameters);
-				regfree(&fmt->expr);
+				unreal_delete_match(fmt->expr);
 				DelListItem(fmt, alias_ptr->format);
 				MyFree(fmt);
 			}
@@ -5634,10 +5634,11 @@ int _conf_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 	char *word = NULL, *reason = NULL, *bantime = NULL;
 	int action = 0, target = 0;
 	char has_reason = 0, has_bantime = 0;
+	int match_type = 0;
 	
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
-		if (!strcmp(cep->ce_varname, "regex"))
+		if (!strcmp(cep->ce_varname, "match"))
 		{
 			nl->reason = strdup(cep->ce_vardata);
 
@@ -5668,6 +5669,10 @@ int _conf_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 			has_bantime = 1;
 			bantime = cep->ce_vardata;
 		}
+		else if (!strcmp(cep->ce_varname, "match-type"))
+		{
+			match_type = unreal_match_method_strtoval(cep->ce_vardata);
+		}
 	}
 	nl->type = TKL_SPAMF;
 	nl->expire_at = 0;
@@ -5677,7 +5682,8 @@ int _conf_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 	nl->subtype = target;
 
 	nl->setby = BadPtr(me.name) ? NULL : strdup(me.name); /* Hmm! */
-	nl->ptr.spamf = unreal_buildspamfilter(word);
+	nl->ptr.spamf = MyMallocEx(sizeof(Spamfilter));
+	nl->ptr.spamf->expr = unreal_create_match(match_type, word, NULL);
 	nl->ptr.spamf->action = action;
 
 	if (has_reason && reason)
@@ -5698,8 +5704,9 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp;
 	int errors = 0;
-	char *regex = NULL, *reason = NULL;
-	char has_target = 0, has_regex = 0, has_action = 0, has_reason = 0, has_bantime = 0;
+	char *match = NULL, *reason = NULL;
+	char has_target = 0, has_match = 0, has_action = 0, has_reason = 0, has_bantime = 0, has_match_type = 0;
+	int match_type = 0;
 	
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -5775,26 +5782,16 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 			has_reason = 1;
 			reason = cep->ce_vardata;
 		}
-		else if (!strcmp(cep->ce_varname, "regex"))
+		else if (!strcmp(cep->ce_varname, "match"))
 		{
-			char *errbuf;
-			if (has_regex)
+			if (has_match)
 			{
 				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "spamfilter::regex");
+					cep->ce_varlinenum, "spamfilter::match");
 				continue;
 			}
-			has_regex = 1;
-			if ((errbuf = unreal_checkregex(cep->ce_vardata,0,0)))
-			{
-				config_error("%s:%i: spamfilter::regex contains an invalid regex: %s",
-					cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum,
-					errbuf);
-				errors++;
-				continue;
-			}
-			regex = cep->ce_vardata;
+			has_match = 1;
+			match = cep->ce_vardata;
 		}
 		else if (!strcmp(cep->ce_varname, "action"))
 		{
@@ -5822,6 +5819,26 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 			}
 			has_bantime = 1;
 		}
+		else if (!strcmp(cep->ce_varname, "match-type"))
+		{
+			if (has_match_type)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+					cep->ce_varlinenum, "spamfilter::match-type");
+				continue;
+			}
+			match_type = unreal_match_method_strtoval(cep->ce_vardata);
+			if (match_type == 0)
+			{
+				config_error("%s:%i: spamfilter::match-type: unknown match type '%s', "
+				             "should be one of: 'simple', 'regex' or 'posix'",
+				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				             cep->ce_vardata);
+				errors++;
+				continue;
+			}
+			has_match_type = 1;
+		}
 		else
 		{
 			config_error_unknown(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
@@ -5831,10 +5848,26 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 
-	if (!has_regex)
+	if (match && match_type)
+	{
+		aMatch *m;
+		char *err;
+		
+		m = unreal_create_match(match_type, match, &err);
+		if (!m)
+		{
+			config_error("%s:%i: spamfilter::match contains an invalid regex: %s",
+				cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum,
+				err);
+			errors++;
+		}
+	}
+	
+	if (!has_match)
 	{
 		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			"spamfilter::regex");
+			"spamfilter::match");
 		errors++;
 	} 
 	if (!has_target)
@@ -5849,12 +5882,24 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 			"spamfilter::action");
 		errors++;
 	}
-	if (regex && reason && (strlen(regex) + strlen(reason) > 505))
+	if (match && reason && (strlen(match) + strlen(reason) > 505))
 	{
-		config_error("%s:%i: spamfilter block problem: regex + reason field are together over 505 bytes, "
+		config_error("%s:%i: spamfilter block problem: match + reason field are together over 505 bytes, "
 		             "please choose a shorter regex or reason",
 		             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		errors++;
+	}
+	if (!has_match_type)
+	{
+		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			"spamfilter::match-type");
+		errors++;
+	}
+
+	if (!has_match_type && !has_match && has_action && has_target)
+	{
+		config_error("Upgrading from 3.2.x to 3.4.x? Your spamfilter { } blocks need to be converted. "
+					 "See https://www.unrealircd.org/docs/Upgrading_from_3.2.x#Spamfilter");
 	}
 
 	return errors;
@@ -8392,7 +8437,9 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 		if (!strcmp(cep->ce_varname, "format")) {
 			format = MyMallocEx(sizeof(ConfigItem_alias_format));
 			ircstrdup(format->format, cep->ce_vardata);
-			regcomp(&format->expr, cep->ce_vardata, REG_ICASE|REG_EXTENDED);
+			format->expr = unreal_create_match(MATCH_PCRE_REGEX, cep->ce_vardata, NULL);
+			if (!format->expr)
+				abort(); /* Impossible due to _test_alias earlier */
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				if (!strcmp(cepp->ce_varname, "nick") ||
 				    !strcmp(cepp->ce_varname, "target") ||
@@ -8477,26 +8524,22 @@ int _test_alias(ConfigFile *conf, ConfigEntry *ce) {
 			continue;
 		}
 		if (!strcmp(cep->ce_varname, "format")) {
-			int errorcode, errorbufsize;
-			char *errorbuf;
-			regex_t expr;
+			char *err = NULL;
+			aMatch *expr;
 			char has_type = 0, has_target = 0, has_parameters = 0;
 
 			has_format = 1;
-			errorcode = regcomp(&expr, cep->ce_vardata, REG_ICASE|REG_EXTENDED);
-                        if (errorcode > 0)
-                        {
-                                errorbufsize = regerror(errorcode, &expr, NULL, 0)+1;
-                                errorbuf = MyMalloc(errorbufsize);
-                                regerror(errorcode, &expr, errorbuf, errorbufsize);
-                                config_error("%s:%i: alias::format contains an invalid regex: %s",
- 					cep->ce_fileptr->cf_filename,
- 					cep->ce_varlinenum,
- 					errorbuf);
-                                errors++;
-                                free(errorbuf);
-                        }
-			regfree(&expr);	
+			expr = unreal_create_match(MATCH_PCRE_REGEX, cep->ce_vardata, &err);
+			if (!expr)
+			{
+				config_error("%s:%i: alias::format contains an invalid regex: %s",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum, err);
+				config_error("Upgrading from 3.2.x to 3.4.x? Note that regex changed from POSIX Regex "
+				             "to PCRE Regex!"); /* TODO: refer to some url ? */
+			} else {
+				unreal_delete_match(expr);
+			}
+
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				if (config_is_blankorempty(cepp, "alias::format"))
 				{

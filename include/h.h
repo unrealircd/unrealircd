@@ -517,7 +517,7 @@ extern void count_memory(aClient *cptr, char *nick);
 extern void list_scache(aClient *sptr);
 extern char *oflagstr(long oflag);
 extern int rehash(aClient *cptr, aClient *sptr, int sig);
-extern int _match(char *mask, char *name);
+extern int _match(const char *mask, const char *name);
 extern void outofmemory(void);
 extern int add_listener2(ConfigItem_listen *conf);
 extern void link_cleanup(ConfigItem_link *link_ptr);
@@ -659,7 +659,7 @@ extern MODVAR int (*register_user)(aClient *cptr, aClient *sptr, char *nick, cha
 extern MODVAR int (*tkl_hash)(unsigned int c);
 extern MODVAR char (*tkl_typetochar)(int type);
 extern MODVAR aTKline *(*tkl_add_line)(int type, char *usermask, char *hostmask, char *reason, char *setby,
-                  TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason);
+                  TS expire_at, TS set_at, TS spamf_tkl_duration, char *spamf_tkl_reason, MatchType match_type);
 extern MODVAR aTKline *(*tkl_del_line)(aTKline *tkl);
 extern MODVAR void (*tkl_check_local_remove_shun)(aTKline *tmp);
 extern MODVAR aTKline *(*tkl_expire)(aTKline * tmp);
@@ -751,3 +751,8 @@ extern void send_moddata_members(aClient *srv);
 extern int ssl_used_in_config_but_unavail(void);
 extern void config_report_ssl_error(void);
 extern int dead_link(aClient *to, char *notice);
+extern aMatch *unreal_create_match(MatchType type, char *str, char **error);
+extern void unreal_delete_match(aMatch *m);
+extern int unreal_match(aMatch *m, char *str);
+extern int unreal_match_method_strtoval(char *str);
+extern char *unreal_match_method_valtostr(int val);
