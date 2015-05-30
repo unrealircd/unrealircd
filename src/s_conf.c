@@ -74,6 +74,7 @@ static int	_conf_admin		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_me		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_files		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_oper		(ConfigFile *conf, ConfigEntry *ce);
+static int	_conf_operclass		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_class		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_drpass		(ConfigFile *conf, ConfigEntry *ce);
 static int	_conf_ulines		(ConfigFile *conf, ConfigEntry *ce);
@@ -109,6 +110,7 @@ static int	_test_admin		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_me		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_files		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_oper		(ConfigFile *conf, ConfigEntry *ce);
+static int	_test_operclass		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_class		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_drpass		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_ulines		(ConfigFile *conf, ConfigEntry *ce);
@@ -153,6 +155,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "me", 		_conf_me,		_test_me	},
 	{ "official-channels", 		_conf_offchans,		_test_offchans	},
 	{ "oper", 		_conf_oper,		_test_oper	},
+	{ "operclass",		_conf_operclass,	_test_operclass	},
 	{ "set",		_conf_set,		_test_set	},
 	{ "spamfilter",	_conf_spamfilter,	_test_spamfilter	},
 	{ "tld",		_conf_tld,		_test_tld	},
@@ -348,6 +351,7 @@ ConfigItem_drpass	*conf_drpass = NULL;
 ConfigItem_ulines	*conf_ulines = NULL;
 ConfigItem_tld		*conf_tld = NULL;
 ConfigItem_oper		*conf_oper = NULL;
+ConfigItem_operclass	*conf_operclass = NULL;
 ConfigItem_listen	*conf_listen = NULL;
 ConfigItem_allow	*conf_allow = NULL;
 ConfigItem_except	*conf_except = NULL;
@@ -2512,6 +2516,20 @@ ConfigItem_oper	*Find_oper(char *name)
 	return NULL;
 }
 
+ConfigItem_operclass *Find_operclass(char *name)
+{
+	ConfigItem_operclass *p;
+	if (!name)
+		return NULL;
+
+	for (p = conf_operclass; p; p= (ConfigItem_operclass *) p->next)
+	{
+		if (!strcmp(name,p->classStruct->name))
+			return (p);
+	}
+	return NULL;
+}
+
 int count_oper_sessions(char *name)
 {
 	int count = 0;
@@ -3426,6 +3444,93 @@ int	_test_files(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 	return errors;
+}
+
+/*
+ * The operclass {} block parser
+ */
+
+OperClassACLEntry* _conf_parseACLEntry(ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	OperClassACLEntry *entry = NULL;
+	entry = MyMallocEx(sizeof(OperClassACLEntry));
+	
+	if (!strcmp(ce->ce_varname,"allow"))
+		entry->type = OPERCLASSENTRY_ALLOW;
+	else
+		entry->type = OPERCLASSENTRY_DENY;
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		OperClassACLEntryVar *var = MyMallocEx(sizeof(OperClassACLEntryVar));
+		var->name = strdup(cep->ce_varname);
+		if (cep->ce_vardata)
+		{
+			var->value = strdup(cep->ce_vardata);
+		}
+		AddListItem(var,entry->variables);
+	}
+
+	return entry;
+}
+
+OperClassACL* _conf_parseACL(char* name, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	ConfigEntry *cepp;
+	OperClassACL *acl = NULL;
+	acl = MyMallocEx(sizeof(OperClassACL));
+	acl->name = strdup(name);
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "deny") || !strcmp(cep->ce_varname, "allow"))
+		{
+			OperClassACLEntry *entry = _conf_parseACLEntry(cep);
+			AddListItem(entry,acl->entries);
+		}
+		else {
+			OperClassACL *subAcl = _conf_parseACL(cep->ce_varname,cep);
+			AddListItem(subAcl,acl->acls);
+		}
+	}
+
+	return acl;
+}
+
+int	_conf_operclass(ConfigFile *conf, ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+	ConfigEntry *cepp;
+	ConfigItem_operclass *operClass = NULL;
+	operClass = MyMallocEx(sizeof(ConfigItem_operclass));
+	operClass->classStruct = MyMallocEx(sizeof(OperClass));
+	operClass->classStruct->name = strdup(ce->ce_vardata);
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "parent"))
+		{
+			operClass->classStruct->ISA = strdup(cep->ce_vardata);
+		}
+		else if (!strcmp(cep->ce_varname, "privileges"))
+		{	
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				OperClassACL *acl = _conf_parseACL(cepp->ce_varname,cepp);
+				AddListItem(acl,operClass->classStruct->acls);
+			}
+		}
+	}
+
+	AddListItem(operClass, conf_operclass);
+	return 1;	
+}
+
+int 	_test_operclass(ConfigFile *conf, ConfigEntry *ce)
+{
+	/* Stub - add validation later */
+	return 0;
 }
 
 /*

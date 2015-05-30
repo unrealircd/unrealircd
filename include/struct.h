@@ -89,6 +89,7 @@ typedef struct _configitem_files ConfigItem_files;
 typedef struct _configitem_admin ConfigItem_admin;
 typedef struct _configitem_class ConfigItem_class;
 typedef struct _configitem_oper ConfigItem_oper;
+typedef struct _configitem_operclass ConfigItem_operclass;
 typedef struct _configitem_oper_from ConfigItem_oper_from;
 typedef struct _configitem_drpass ConfigItem_drpass;
 typedef struct _configitem_ulines ConfigItem_ulines;
@@ -147,6 +148,16 @@ typedef struct PendingNet aPendingNet;
 #ifdef NEED_U_INT32_T
 typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 #endif
+
+typedef enum OperClassEntryType { OPERCLASSENTRY_ALLOW=1, OPERCLASSENTRY_DENY=2} OperClassEntryType;
+
+typedef enum OperPermission { OPER_ALLOW=1, OPER_DENY=2} OperPermission;
+
+typedef struct _operClass OperClass;
+typedef struct _operClassACL OperClassACL;
+typedef struct _operClassACLEntry OperClassACLEntry;
+typedef struct _operClassACLEntryVar OperClassACLEntryVar;
+typedef struct _operClassCheckParams OperClassCheckParams;
 
 #ifndef VMSP
 #include "class.h"
@@ -1179,6 +1190,49 @@ struct _configitem_allow {
 #ifdef INET6
 	unsigned short ipv6_clone_mask;
 #endif /* INET6 */
+};
+
+struct _operClassACLEntryVar
+{
+        OperClassACLEntryVar *prev,*next;
+        char* name;
+        char* value;
+};
+
+struct _operClassACLEntry
+{
+        OperClassACLEntry *prev,*next;
+        OperClassACLEntryVar *variables;
+        OperClassEntryType type;
+};
+
+struct _operClassACL
+{
+        OperClassACL *prev,*next;
+        char *name;
+        OperClassACLEntry *entries;
+        OperClassACL *acls;
+};
+
+struct _operClass
+{
+        char *ISA;
+        char *name;
+        OperClassACL *acls;
+};
+
+struct _operClassCheckParams
+{
+        char *action;
+        aClient *sptr;
+        aClient *victim;
+        aChannel *channel;
+        void *extra;
+};
+
+struct _configitem_operclass {
+	ConfigItem	*prev, *next;
+	OperClass	*classStruct;
 };
 
 struct _configitem_oper {

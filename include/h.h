@@ -105,6 +105,7 @@ extern void       ipport_seperate(char *string, char **ip, char **port);
 ConfigItem_class	*Find_class(char *name);
 ConfigItem_deny_dcc	*Find_deny_dcc(char *name);
 ConfigItem_oper		*Find_oper(char *name);
+ConfigItem_operclass	*Find_operclass(char *name);
 ConfigItem_listen	*Find_listen(char *ipmask, int port);
 ConfigItem_ulines	*Find_uline(char *host);
 ConfigItem_except	*Find_except(aClient *, char *host, short type);
@@ -117,6 +118,10 @@ ConfigItem_vhost	*Find_vhost(char *name);
 ConfigItem_deny_channel *Find_channel_allowed(aClient *cptr, char *name);
 ConfigItem_alias	*Find_alias(char *name);
 ConfigItem_help 	*Find_Help(char *command);
+
+
+
+
 int			AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *username);
 int parse_netmask(const char *text, struct irc_netmask *netmask);
 int match_ip(struct IN_ADDR addr, char *uhost, char *mask, struct irc_netmask *netmask);
