@@ -556,7 +556,7 @@ seen. gmtime warning still there
 - Removed the old SOCKS check code.
 - Fixed a quarantine bug
 - Added NETWORK= numeric 005 token for mIRC 5.91
-- Fixed some scan-socks and blackhole fuckups
+- Fixed some scan-socks and blackhole issues
 - Added ./configure, autoconf generated configure script, (still need to update ./Config)
 - Config fixes, settings.h and Makefile.dist are now dead. RIP.
 - Fixed a typo in configure
@@ -648,7 +648,7 @@ seen. gmtime warning still there
 - Fixed so we compile without symbols in win32 .. 
 - Fixed some rant stuff
 - Fixed a documentation bug in unrealircd.conf.txt, made config_error
-  actually bitch when loop.ircd_booted
+  actually error when loop.ircd_booted
 - Made badword fix found by eternal/Jsmj
 - Changed pthread process check to pthread_join on proposal and idea by
   codemastr
@@ -840,7 +840,7 @@ seen. gmtime warning still there
 - Fixed a /who bug, found by IXpfah
 - Updated makefile.win32 for all the new modules
 - Added in Fish's patches
-- Added bitching when you lack needed IRC commands
+- Added error when you lack needed IRC commands
 - Removed REMGLINE
 - Fixed a typo in the win32 makefile
 - Really removed remgline (since sts didn't really do it)
@@ -957,7 +957,7 @@ seen. gmtime warning still there
 - Module v3 bugfixes. cause: codemastr lack find n replace skill
 - Moved the mkpasswd program into ./unreal mkpasswd <method> <password>
 - Recoded m_oper almost completely, note that the fceT flags are ignored
-  now (you still get them, they just dont do shit). Remove them for me 
+  now (you still get them, they just dont do anything). Remove them for me 
   please, as well as the +T usermode. I haven't tested this completely but 
   I see nowhere a bug could happen.
 - Removed umode +T (useless) and the fue oflags since
@@ -1182,7 +1182,7 @@ seen. gmtime warning still there
 - Clean compile under -Wparentheses
 - Clean compile under -Wall -Wno-implicit
 - Fixed #undef STRIPBADWORDS problem, patch by light
-- Blah blah new cloaking shit blah
+- New cloaking
 - Added a patch by Syzop fixing a memory leak in StripColors
 - Added a patch by Syzop fixing a +k issue using a key with a , and when using long keys
 - Added a patch by Syzop to fix a MyMalloc/MyFree debugmode error
@@ -1253,7 +1253,7 @@ seen. gmtime warning still there
 - Fixed a cloak problem on OSes with 64bit integers (reported by wolven)
 - Updated credits
 - Memory leak fixes with scanners
-- Some fixes with connect(). Knowing my luck this will fuck up to hell
+- Some fixes with connect(). 
 - Fixed another memory leak with the scanners
 - Fixed some helpop typos reported by BiGi (#0000144)
 - Fixed a typo in /stats ? where T/t were reversed, reported by Zer0

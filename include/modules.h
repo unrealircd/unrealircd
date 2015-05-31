@@ -80,9 +80,6 @@ typedef struct _ModuleHeader {
 	Mod_SymbolDepTable *symdep;
 } ModuleHeader;
 
-/*
- * One piece of Borg ass..
-*/
 typedef struct _Module Module;
 
 typedef struct _ModuleChild

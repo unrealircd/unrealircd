@@ -824,15 +824,15 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 				   chptr->chname);
 			break;
 		  }
-		  goto setthephuckingmode;
+		  goto setmode;
 	  case MODE_SECRET:
 	  case MODE_PRIVATE:
 	  case MODE_MODERATED:
 	  case MODE_TOPICLIMIT:
 	  case MODE_NOPRIVMSGS:
 	  case MODE_INVITEONLY:
-	  	goto setthephuckingmode;
-		setthephuckingmode:
+	  	goto setmode;
+		setmode:
 		  retval = 0;
 		  if (what == MODE_ADD) {
 			  /* +sp bugfix.. (by JK/Luke)*/

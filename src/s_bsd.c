@@ -1306,7 +1306,7 @@ add_con_refuse:
 	return acptr;
 }
 
-static int dns_special_flag = 0; /* This is for an "interesting" race condition / fuck up issue.. very ugly. */
+static int dns_special_flag = 0; /* This is for an "interesting" race condition  very ugly. */
 
 void	start_of_normal_client_handshake(aClient *acptr)
 {

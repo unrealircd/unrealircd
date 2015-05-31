@@ -510,7 +510,6 @@ DLLFUNC CMD_FUNC(m_nick)
 	   ** is present in the nicklist (due to the way the below for loop is
 	   ** constructed). -avalon
 	 */
-	/* I managed to fuck this up i guess --stskeeps */
 	if ((acptr = find_server(nick, NULL)))
 	{
 		if (MyConnect(sptr))
