@@ -2501,6 +2501,7 @@ ConfigItem_class	*Find_class(char *name)
 	return NULL;
 }
 
+
 ConfigItem_oper	*Find_oper(char *name)
 {
 	ConfigItem_oper	*p;

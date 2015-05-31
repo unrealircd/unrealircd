@@ -153,11 +153,14 @@ typedef enum OperClassEntryType { OPERCLASSENTRY_ALLOW=1, OPERCLASSENTRY_DENY=2}
 
 typedef enum OperPermission { OPER_ALLOW=1, OPER_DENY=2} OperPermission;
 
+typedef struct _operClassACLPath OperClassACLPath;
 typedef struct _operClass OperClass;
 typedef struct _operClassACL OperClassACL;
 typedef struct _operClassACLEntry OperClassACLEntry;
 typedef struct _operClassACLEntryVar OperClassACLEntryVar;
 typedef struct _operClassCheckParams OperClassCheckParams;
+
+typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* variables,OperClassCheckParams* params);
 
 #ifndef VMSP
 #include "class.h"
@@ -1190,6 +1193,12 @@ struct _configitem_allow {
 #ifdef INET6
 	unsigned short ipv6_clone_mask;
 #endif /* INET6 */
+};
+
+struct _operClassACLPath
+{
+	OperClassACLPath *prev,*next;
+	char* identifier;
 };
 
 struct _operClassACLEntryVar
