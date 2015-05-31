@@ -189,21 +189,15 @@ AS_IF([test $enable_ssl != "no"],
 		AC_MSG_RESULT(not found)
 		echo ""
 		echo "Apparently you do not have both the openssl binary and openssl development libraries installed."
-		echo "You have two options:"
-		echo "a) Install the needed binaries and libraries"
-		echo "   and run ./Config"
-		echo "OR"
-		echo "b) If you don't need SSL..."
-		echo "   Run ./Config and say 'no' when asked about SSL"
-		echo "   (or pass --disable-ssl to ./configure)"
-		echo ""
+		echo "Please install the needed binaries and libraries."
+		echo "The package is often called 'openssl-dev', 'openssl-devel' or 'libssl-dev'"
+		echo "After doing so re-run ./Config"
 		exit 1
 	else
 		CRYPTOLIB="-lssl -lcrypto";
 		if test ! "$ssldir" = "/usr" ; then
 			LDFLAGS="$LDFLAGS -L$ssldir/lib";
 		fi
-		AC_DEFINE([USE_SSL], [], [Define if you want to allow SSL connections])
 	fi
 	])
 ])

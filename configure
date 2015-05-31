@@ -628,6 +628,8 @@ UNRLINCDIR
 URL
 CARES_LIBS
 CARES_CFLAGS
+PCRE2_LIBS
+PCRE2_CFLAGS
 PKG_CONFIG_LIBDIR
 PKG_CONFIG_PATH
 PKG_CONFIG
@@ -717,6 +719,7 @@ with_disableusermod
 with_operoverride_verify
 with_disable_extendedban_stacking
 with_system_tre
+with_system_pcre2
 with_system_cares
 enable_ssl
 enable_dynamic_linking
@@ -737,6 +740,8 @@ PKG_CONFIG_PATH
 PKG_CONFIG_LIBDIR
 TRE_CFLAGS
 TRE_LIBS
+PCRE2_CFLAGS
+PCRE2_LIBS
 CARES_CFLAGS
 CARES_LIBS'
 
@@ -1382,6 +1387,8 @@ Optional Packages:
                           Disable extended ban stacking
   --with-system-tre       Use the system tre package instead of bundled,
                           discovered using pkg-config
+  --with-system-pcre2     Use the system pcre2 package instead of bundled,
+                          discovered using pkg-config
   --with-system-cares     Use the system c-ares (at least version 1.6.0)
                           package instead of bundled c-ares, discovered using
                           pkg-config
@@ -1402,6 +1409,9 @@ Some influential environment variables:
               path overriding pkg-config's built-in search path
   TRE_CFLAGS  C compiler flags for TRE, overriding pkg-config
   TRE_LIBS    linker flags for TRE, overriding pkg-config
+  PCRE2_CFLAGS
+              C compiler flags for PCRE2, overriding pkg-config
+  PCRE2_LIBS  linker flags for PCRE2, overriding pkg-config
   CARES_CFLAGS
               C compiler flags for CARES, overriding pkg-config
   CARES_LIBS  linker flags for CARES, overriding pkg-config
@@ -6181,6 +6191,14 @@ else
 fi
 
 
+# Check whether --with-system-pcre2 was given.
+if test "${with_system_pcre2+set}" = set; then :
+  withval=$with_system_pcre2;
+else
+  with_system_pcre2=no
+fi
+
+
 # Check whether --with-system-cares was given.
 if test "${with_system_cares+set}" = set; then :
   withval=$with_system_cares;
@@ -6226,9 +6244,9 @@ $as_echo "found in $ssldir/include" >&6; }
 $as_echo "not found" >&6; }
 		echo ""
 		echo "Apparently you do not have both the openssl binary and openssl development libraries installed."
-		echo "" 
-		echo "Please install the needed binaries and libraries"
-		echo "and run ./Config"
+		echo "Please install the needed binaries and libraries."
+		echo "The package is often called 'openssl-dev', 'openssl-devel' or 'libssl-dev'"
+		echo "After doing so re-run ./Config"
 		exit 1
 	else
 		CRYPTOLIB="-lssl -lcrypto";
@@ -6816,6 +6834,141 @@ See \`config.log' for more details" "$LINENO" 5; }
 else
 	TRE_CFLAGS=$pkg_cv_TRE_CFLAGS
 	TRE_LIBS=$pkg_cv_TRE_LIBS
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+
+fi
+
+fi
+
+if test "x$with_system_pcre2" = "xno"; then :
+
+pcre2_version="10.10"
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: extracting PCRE2 regex library" >&5
+$as_echo "extracting PCRE2 regex library" >&6; }
+cur_dir=`pwd`
+cd extras
+rm -rf pcre2-$pcre2_version pcre2
+if test "x$ac_cv_path_GUNZIP" = "x" ; then
+	tar xfz pcre2.tar.gz
+else
+	cp pcre2.tar.gz pcre2.tar.gz.bak
+	gunzip -f pcre2.tar.gz
+	cp pcre2.tar.gz.bak pcre2.tar.gz
+	tar xf pcre2.tar
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: configuring PCRE2 regex library" >&5
+$as_echo "configuring PCRE2 regex library" >&6; }
+cd pcre2-$pcre2_version
+./configure --enable-jit --disable-shared --disable-unicode --prefix=$cur_dir/extras/pcre2 || exit 1
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: compiling PCRE2 regex library" >&5
+$as_echo "compiling PCRE2 regex library" >&6; }
+$ac_cv_prog_MAKER || exit 1
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: installing PCRE2 regex library" >&5
+$as_echo "installing PCRE2 regex library" >&6; }
+$ac_cv_prog_MAKER install || exit 1
+PCRE2_CFLAGS="-I$cur_dir/extras/pcre2/include"
+
+
+PCRE2_LIBS=
+if test -n "$ac_cv_path_PKGCONFIG"; then :
+  PCRE2_LIBS="`$ac_cv_path_PKGCONFIG --static --libs libpcre2-8.pc | sed -e 's,-L\([^ ]*regex[^ ]*lib\)\( .*\)-lpcre2-8,\1/libpcre2-8.a \2,'`"
+fi
+if test -z "$PCRE2_LIBS"; then :
+  PCRE2_LIBS="../extras/pcre2/lib/libpcre2-8.a"
+fi
+
+cd $cur_dir
+
+else
+
+
+pkg_failed=no
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for PCRE2" >&5
+$as_echo_n "checking for PCRE2... " >&6; }
+
+if test -n "$PCRE2_CFLAGS"; then
+    pkg_cv_PCRE2_CFLAGS="$PCRE2_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libpcre2-8 >= 10.00\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libpcre2-8 >= 10.00") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_PCRE2_CFLAGS=`$PKG_CONFIG --cflags "libpcre2-8 >= 10.00" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$PCRE2_LIBS"; then
+    pkg_cv_PCRE2_LIBS="$PCRE2_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libpcre2-8 >= 10.00\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libpcre2-8 >= 10.00") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_PCRE2_LIBS=`$PKG_CONFIG --libs "libpcre2-8 >= 10.00" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        PCRE2_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "libpcre2-8 >= 10.00" 2>&1`
+        else
+	        PCRE2_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "libpcre2-8 >= 10.00" 2>&1`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$PCRE2_PKG_ERRORS" >&5
+
+	as_fn_error $? "Package requirements (libpcre2-8 >= 10.00) were not met:
+
+$PCRE2_PKG_ERRORS
+
+Consider adjusting the PKG_CONFIG_PATH environment variable if you
+installed software in a non-standard prefix.
+
+Alternatively, you may set the environment variables PCRE2_CFLAGS
+and PCRE2_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details." "$LINENO" 5
+elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "The pkg-config script could not be found or is too old.  Make sure it
+is in your PATH or set the PKG_CONFIG environment variable to the full
+path to pkg-config.
+
+Alternatively, you may set the environment variables PCRE2_CFLAGS
+and PCRE2_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+
+To get pkg-config, see <http://pkg-config.freedesktop.org/>.
+See \`config.log' for more details" "$LINENO" 5; }
+else
+	PCRE2_CFLAGS=$pkg_cv_PCRE2_CFLAGS
+	PCRE2_LIBS=$pkg_cv_PCRE2_LIBS
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 

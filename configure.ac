@@ -515,6 +515,7 @@ AC_ARG_WITH(disable-extendedban-stacking, [AS_HELP_STRING([--with-disable-extend
        [AS_IF([test $withval = "yes"],
        		[AC_DEFINE([DISABLE_STACKED_EXTBANS], [], [Define to disable extended ban stacking (~q:~c:\#chan, etc)])])])
 AC_ARG_WITH(system-tre, [AS_HELP_STRING([--with-system-tre], [Use the system tre package instead of bundled, discovered using pkg-config])], [], [with_system_tre=no])
+AC_ARG_WITH(system-pcre2, [AS_HELP_STRING([--with-system-pcre2], [Use the system pcre2 package instead of bundled, discovered using pkg-config])], [], [with_system_pcre2=no])
 AC_ARG_WITH(system-cares, [AS_HELP_STRING([--with-system-cares], [Use the system c-ares (at least version 1.6.0) package instead of bundled c-ares, discovered using pkg-config])], [], [with_system_cares=no])
 CHECK_SSL
 AC_ARG_ENABLE(dynamic-linking, [AS_HELP_STRING([--disable-dynamic-linking], [Make the IRCd statically link with shared objects rather than dynamically (noone knows if disabling dynamic linking actually does anything or not)])],
@@ -606,6 +607,50 @@ cd $cur_dir
 ],[
 dnl use pkgconfig for tre:
 PKG_CHECK_MODULES([TRE], tre >= 0.7.5)
+])
+
+AS_IF([test "x$with_system_pcre2" = "xno"],[
+dnl REMEMBER TO CHANGE WITH A NEW PCRE2 RELEASE!
+pcre2_version="10.10"
+AC_MSG_RESULT(extracting PCRE2 regex library)
+cur_dir=`pwd`
+cd extras
+dnl remove old pcre2 directory to force a recompile...
+dnl and remove its installation prefix just to clean things up.
+rm -rf pcre2-$pcre2_version pcre2
+if test "x$ac_cv_path_GUNZIP" = "x" ; then
+	tar xfz pcre2.tar.gz
+else
+	cp pcre2.tar.gz pcre2.tar.gz.bak
+	gunzip -f pcre2.tar.gz
+	cp pcre2.tar.gz.bak pcre2.tar.gz
+	tar xf pcre2.tar
+fi
+AC_MSG_RESULT(configuring PCRE2 regex library)
+cd pcre2-$pcre2_version
+./configure --enable-jit --disable-shared --disable-unicode --prefix=$cur_dir/extras/pcre2 || exit 1
+AC_MSG_RESULT(compiling PCRE2 regex library)
+$ac_cv_prog_MAKER || exit 1
+AC_MSG_RESULT(installing PCRE2 regex library)
+$ac_cv_prog_MAKER install || exit 1
+PCRE2_CFLAGS="-I$cur_dir/extras/pcre2/include"
+AC_SUBST(PCRE2_CFLAGS)
+
+PCRE2_LIBS=
+dnl See c-ares's compilation section for more info on this hack.
+dnl ensure that we're linking against the bundled version of pcre2
+dnl (we only reach this code if linking against the bundled version is desired).
+AS_IF([test -n "$ac_cv_path_PKGCONFIG"],
+       [PCRE2_LIBS="`$ac_cv_path_PKGCONFIG --static --libs libpcre2-8.pc | sed -e ['s,-L\([^ ]*regex[^ ]*lib\)\( .*\)-lpcre2-8,\1/libpcre2-8.a \2,']`"])
+dnl For when pkg-config isn't available -- or for when pkg-config
+dnl doesn't see the libpcre2-8.pc file somehow... (#3982)
+AS_IF([test -z "$PCRE2_LIBS"],
+       [PCRE2_LIBS="../extras/pcre2/lib/libpcre2-8.a"])
+AC_SUBST(PCRE2_LIBS)
+cd $cur_dir
+],[
+dnl use pkgconfig for pcre2:
+PKG_CHECK_MODULES([PCRE2], libpcre2-8 >= 10.00)
 ])
 
 AS_IF([test "x$with_system_cares" = "xno"],[
