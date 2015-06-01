@@ -1251,6 +1251,7 @@ struct _configitem_oper {
 	ConfigFlag 	 flag;
 	char		 *name, *swhois, *snomask;
 	anAuthStruct	 *auth;
+	char *operclass;
 	ConfigItem_class *class;
 	ConfigItem	 *from;
 	unsigned long	 modes, require_modes;

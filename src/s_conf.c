@@ -3552,6 +3552,8 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 	
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
+		if (!strcmp(cep->ce_varname, "operclass"))
+			oper->operclass = strdup(cep->ce_vardata);
 		if (!strcmp(cep->ce_varname, "password"))
 			oper->auth = Auth_ConvertConf2AuthStruct(cep);
 		else if (!strcmp(cep->ce_varname, "class"))
