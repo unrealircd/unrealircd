@@ -262,9 +262,14 @@ OperPermission OperClass_evaluateACLPathEx(OperClassACL* acl, OperClassACLPath* 
         return OPER_DENY;
 }
 
-OperPermission OperClass_evaluateACLPath(char* operClass, char* path, OperClassCheckParams* params)
+OperPermission OperClass_evaluateACLPath(char* opername, char* path, aClient *sptr, aClient *cptr, aClient *victim, aChannel *channel, void* extra)
 {
-        ConfigItem_operclass *ce_operClass = Find_operclass(operClass);
+	ConfigItem_oper *ce_oper = Find_oper(opername);
+	if (!ce_oper)
+	{
+		return OPER_DENY;
+	}
+        ConfigItem_operclass *ce_operClass = Find_operclass(ce_oper->operclass);
         OperClass *oc = NULL;
         OperClassACLPath* operPath = OperClass_parsePath(path);
         OperClassACL* acl;
@@ -278,8 +283,15 @@ OperPermission OperClass_evaluateACLPath(char* operClass, char* path, OperClassC
                 OperClassACL* acl = OperClass_FindACL(oc->acls,operPath->identifier);
                 if (acl)
                 {
+			OperClassCheckParams *params = MyMallocEx(sizeof(OperClassCheckParams));
+        		params->sptr = sptr;
+        		params->cptr = cptr;
+        		params->victim = victim;
+        		params->channel = channel;
+        		params->extra = extra;
                         OperPermission perm = OperClass_evaluateACLPathEx(oc->acls, operPath, params);
 			OperClass_freePath(operPath);
+			MyFree(params);
 			return perm;
                 }
                 if (!oc->ISA)

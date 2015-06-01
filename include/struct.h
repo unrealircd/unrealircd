@@ -151,7 +151,7 @@ typedef unsigned int u_int32_t;	/* XXX Hope this works! */
 
 typedef enum OperClassEntryType { OPERCLASSENTRY_ALLOW=1, OPERCLASSENTRY_DENY=2} OperClassEntryType;
 
-typedef enum OperPermission { OPER_ALLOW=1, OPER_DENY=2} OperPermission;
+typedef enum OperPermission { OPER_ALLOW=1, OPER_DENY=0} OperPermission;
 
 struct _operClass_Validator;
 typedef struct _operClass_Validator OperClassValidator;
@@ -558,7 +558,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define OPCanDCCDeny(x)	((x)->oflag & OFLAG_DCCDENY)
 #define OPCanTKL(x)	((x)->oflag & OFLAG_TKL)
 #define OPCanGZL(x)	((x)->oflag & OFLAG_GZL)
-#define OPCanAddline(x)   ((x)->oflag & OFLAG_ADDLINE)
+#define OPCanAddline(x) ((x)->oflag & OFLAG_ADDLINE)
 #define OPCanZline(x)   ((x)->oflag & OFLAG_ZLINE)
 #define OPCanRehash(x)	((x)->oflag & OFLAG_REHASH)
 #define OPCanDie(x)	((x)->oflag & OFLAG_DIE)
@@ -1234,8 +1234,8 @@ struct _operClass
 
 struct _operClassCheckParams
 {
-        char *action;
         aClient *sptr;
+	aClient *cptr;
         aClient *victim;
         aChannel *channel;
         void *extra;
