@@ -626,6 +626,9 @@ void FreeModObj(ModuleObject *obj, Module *m)
 	else if (obj->type == MOBJ_MODDATA) {
 		ModDataDel(obj->object.moddata);
 	}
+	else if (obj->type == MOBJ_VALIDATOR) {
+		OperClassValidatorDel(obj->object.validator);
+	}
 }
 
 void Unload_all_loaded_modules(void)

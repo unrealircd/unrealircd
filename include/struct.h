@@ -153,6 +153,8 @@ typedef enum OperClassEntryType { OPERCLASSENTRY_ALLOW=1, OPERCLASSENTRY_DENY=2}
 
 typedef enum OperPermission { OPER_ALLOW=1, OPER_DENY=2} OperPermission;
 
+struct _operClass_Validator;
+typedef struct _operClass_Validator OperClassValidator;
 typedef struct _operClassACLPath OperClassACLPath;
 typedef struct _operClass OperClass;
 typedef struct _operClassACL OperClassACL;

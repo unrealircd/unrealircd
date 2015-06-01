@@ -34,10 +34,97 @@ struct _operClass_PathNode
 struct _operClass_CallbackNode
 {
 	OperClass_CallbackNode *prev, *next;
+	OperClass_PathNode *parent;
 	OperClassEntryEvalCallback callback;
 };
 
+struct _operClass_Validator
+{
+	Module* owner;
+	OperClass_CallbackNode* node;
+};
+
+OperClassACLPath* OperClass_parsePath(char* path);
+void OperClass_freePath(OperClassACLPath* path);
+OperClass_PathNode* OperClass_findPathNodeForIdentifier(char* identifier, OperClass_PathNode *head);
+
 OperClass_PathNode* rootEvalNode = NULL;
+
+OperClassValidator* OperClassAddValidator(Module *module, char* pathStr, OperClassEntryEvalCallback callback)
+{
+	OperClass_PathNode *node,*nextNode;
+	OperClass_CallbackNode *callbackNode;
+	OperClassValidator *validator; 
+	OperClassACLPath* path = OperClass_parsePath(pathStr);
+
+	if (!rootEvalNode)
+	{
+		rootEvalNode = MyMallocEx(sizeof(OperClass_PathNode));
+	}
+
+	node = rootEvalNode;
+
+	while (path)
+        {
+                nextNode = OperClass_findPathNodeForIdentifier(path->identifier,node->children);
+                if (!nextNode)
+                {
+			nextNode = MyMallocEx(sizeof(OperClass_PathNode));
+			nextNode->identifier = strdup(path->identifier);
+			AddListItem(nextNode,node->children);
+                }
+                node = nextNode;
+		path = path->next;
+        }
+
+	callbackNode = MyMallocEx(sizeof(OperClass_CallbackNode));
+	callbackNode->callback = callback;
+	callbackNode->parent = node;	
+	AddListItem(callbackNode,node->callbacks);
+
+	validator = MyMallocEx(sizeof(OperClassValidator));
+	validator->node = callbackNode;	
+        validator->owner = module;
+
+	if (module)
+        {
+                ModuleObject *mobj = MyMallocEx(sizeof(ModuleObject));
+                mobj->object.validator = validator;
+                mobj->type = MOBJ_VALIDATOR;
+                AddListItem(mobj, module->objects);
+                module->errorcode = MODERR_NOERROR;
+        }
+
+	OperClass_freePath(path);
+
+	return validator;
+}
+
+void OperClassValidatorDel(OperClassValidator* validator)
+{
+	if (validator->owner)
+        {
+                ModuleObject *mdobj;
+                for (mdobj = validator->owner->objects; mdobj; mdobj = mdobj->next)
+                {
+                        if ((mdobj->type == MOBJ_VALIDATOR) && (mdobj->object.validator == validator))
+                        {
+                                DelListItem(mdobj, validator->owner->objects);
+                                MyFree(mdobj);
+                                break;
+                        }
+                }
+                validator->owner = NULL;
+        }
+	
+	/* Technically, the below leaks memory if you don't re-register
+	 * another validator at same path, but it is cheaper than walking
+	 * back up and doing cleanup in practice, since this tree is very small
+	 */
+	DelListItem(validator->node,validator->node->parent->callbacks);
+	MyFree(validator->node);
+	MyFree(validator);	
+}
 
 OperClassACLPath* OperClass_parsePath(char* path)
 {
@@ -105,6 +192,7 @@ unsigned char OperClass_evaluateACLEntry(OperClassACLEntry* entry, OperClassACLP
 			return 0;
 		}
 		node = node->children;
+		path = path->next;
 	}
 
 	/* If no evals for full path, no match */

@@ -109,6 +109,7 @@ typedef struct {
 #define MOBJ_EFUNCTION    0x0800
 #define MOBJ_CMODE        0x1000
 #define MOBJ_MODDATA      0x2000
+#define MOBJ_VALIDATOR	  0x4000
 
 typedef struct {
         long mode;
@@ -395,6 +396,7 @@ typedef struct _ModuleObject {
 		Isupport *isupport;
 		Cmode *cmode;
 		ModDataInfo *moddata;
+		OperClassValidator *validator;
 	} object;
 } ModuleObject;
 
