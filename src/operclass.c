@@ -215,13 +215,19 @@ unsigned char OperClass_evaluateACLEntry(OperClassACLEntry* entry, OperClassACLP
 		return 0;
 	}
 
+	/* If we just have allow or deny then we match it */
+	if (!node->callbacks)
+	{
+		return 1;
+	}
+
 	/* We have a valid node, execute all callback nodes */
 	for (callbackNode = node->callbacks; callbackNode; callbackNode = callbackNode->next)
 	{
 		eval = callbackNode->callback(entry->variables,params);
 	}
 
-	return 0;	
+	return eval;	
 }
 
 OperPermission OperClass_evaluateACLPathEx(OperClassACL* acl, OperClassACLPath* path, OperClassCheckParams* params)
@@ -233,7 +239,7 @@ OperPermission OperClass_evaluateACLPathEx(OperClassACL* acl, OperClassACLPath* 
         OperClassACLEntry* entry;
         unsigned char allow = 0;
         unsigned char deny = 0;
-        while (path->next && acl->acls)
+        while (path && path->next && acl->acls)
         {
                 tmp = OperClass_FindACL(acl->acls,path->identifier);
                 if (!tmp)
