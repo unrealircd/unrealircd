@@ -43,16 +43,26 @@ OperClassACLPath* OperClass_parsePath(char* path)
 {
         OperClassACLPath* pathHead = NULL;
         OperClassACLPath* tmpPath;
-        char *tmp = strdup(path);
-        char *str = strtok(tmp,":");
+        char *str = strtok(path,":");
         while (str)
         {
                 tmpPath = MyMallocEx(sizeof(OperClassACLPath));
-                tmpPath->identifier = str;
+                tmpPath->identifier = strdup(str);
                 AddListItem(tmpPath,pathHead);
+		str = strtok(NULL,":");
         }
 
         return pathHead;
+}
+
+void OperClass_freePath(OperClassACLPath* path)
+{
+	OperClassACLPath* next;
+	for (next = path->next; path; path = next)
+	{
+		MyFree(path->identifier);
+		MyFree(path);
+	}	
 }
 
 OperClassACL* OperClass_FindACL(OperClassACL* acl, char* name)
@@ -180,7 +190,9 @@ OperPermission OperClass_evaluateACLPath(char* operClass, char* path, OperClassC
                 OperClassACL* acl = OperClass_FindACL(oc->acls,operPath->identifier);
                 if (acl)
                 {
-                        return OperClass_evaluateACLPathEx(oc->acls, operPath, params);
+                        OperPermission perm = OperClass_evaluateACLPathEx(oc->acls, operPath, params);
+			OperClass_freePath(operPath);
+			return perm;
                 }
                 if (!oc->ISA)
                 {
@@ -192,6 +204,6 @@ OperPermission OperClass_evaluateACLPath(char* operClass, char* path, OperClassC
 			oc = ce_operClass->classStruct;
 		}
         }
-
+	OperClass_freePath(operPath);
         return OPER_DENY;
 }
