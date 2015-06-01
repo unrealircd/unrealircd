@@ -196,11 +196,17 @@ unsigned char OperClass_evaluateACLEntry(OperClassACLEntry* entry, OperClassACLP
 	OperClass_CallbackNode *callbackNode = NULL;
 	unsigned char eval = 0;
 
+	/* If no variables, always match */
+	if (!entry->variables)
+	{
+		return 1;
+	}
+
 	/* Go as deep as possible */
 	while (path->next && node)
 	{
 		node = OperClass_findPathNodeForIdentifier(path->identifier,node);	
-		/* If we can't find a node we need, no match */
+		/* If we can't find a node we need, and we have vars, no match */
 		if (!node)
 		{
 			return 0;
@@ -215,11 +221,6 @@ unsigned char OperClass_evaluateACLEntry(OperClassACLEntry* entry, OperClassACLP
 		return 0;
 	}
 
-	/* If we just have allow or deny then we match it */
-	if (!node->callbacks)
-	{
-		return 1;
-	}
 
 	/* We have a valid node, execute all callback nodes */
 	for (callbackNode = node->callbacks; callbackNode; callbackNode = callbackNode->next)
@@ -239,16 +240,24 @@ OperPermission OperClass_evaluateACLPathEx(OperClassACL* acl, OperClassACLPath* 
         OperClassACLEntry* entry;
         unsigned char allow = 0;
         unsigned char deny = 0;
-        while (path && path->next && acl->acls)
+	unsigned char aclNotFound = 0;
+        while (path && acl->acls)
         {
                 tmp = OperClass_FindACL(acl->acls,path->identifier);
                 if (!tmp)
                 {
+			aclNotFound = 1;
                         break;
                 }
                 path = path->next;
                 acl = tmp;
         }
+	/** If node does not exist, but most specific one has other ACLs, deny **/
+	if (acl->acls && aclNotFound)
+	{
+		return OPER_DENY;
+	}
+
         /** If node exists for this but has no ACL entries, allow **/
         if (!acl->entries)
         {
@@ -268,7 +277,10 @@ OperPermission OperClass_evaluateACLPathEx(OperClassACL* acl, OperClassACLPath* 
                 {
                         allow = result;
                 }
-                deny = result;
+		else
+		{
+                	deny = result;
+		}
         }
 
         /** We only permit if an allow matched AND no deny matched **/
