@@ -193,8 +193,8 @@ DLLFUNC int m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	if (IsServer(sptr))
 		return 0;
+	if ((!OPCanTKL(sptr) || !IsOper(sptr)) &&  !OperClass_evaluateACLPath(sptr->user->operlogin,"kline:global",sptr,cptr,NULL,NULL,NULL))
 
-	if (!OPCanTKL(sptr) || !IsOper(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		sptr->name);
