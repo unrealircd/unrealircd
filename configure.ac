@@ -723,6 +723,8 @@ dnl use pkg-config for system c-ares:
 PKG_CHECK_MODULES([CARES], libcares >= 1.6.0)
 ])
 
+AX_PTHREAD()
+
 CHECK_LIBCURL
 
 UNRLINCDIR="`pwd`/include"

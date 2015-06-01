@@ -127,6 +127,12 @@
 /* Define if you have pstat */
 #undef HAVE_PSTAT
 
+/* Define if you have POSIX threads libraries and header files. */
+#undef HAVE_PTHREAD
+
+/* Have PTHREAD_PRIO_INHERIT. */
+#undef HAVE_PTHREAD_PRIO_INHERIT
+
 /* Define if the libcrypto has RAND_egd */
 #undef HAVE_RAND_EGD
 
@@ -291,6 +297,10 @@
 
 /* Define if you want +a/+q prefixes */
 #undef PREFIX_AQ
+
+/* Define to necessary symbol if this constant uses a non-standard name on
+   your system. */
+#undef PTHREAD_CREATE_JOINABLE
 
 /* Define if you have the <sys/rusage.h> header file. */
 #undef RUSAGEH
