@@ -128,14 +128,12 @@ void OperClassValidatorDel(OperClassValidator* validator)
 
 OperClassACLPath* OperClass_parsePath(char* path)
 {
-	ircd_log(LOG_ERROR,"Parsing path");
 	char* pathCopy = strdup(path);
         OperClassACLPath* pathHead = NULL;
         OperClassACLPath* tmpPath;
         char *str = strtok(pathCopy,":");
         while (str)
         {
-		ircd_log(LOG_ERROR,"Found %s",str);
                 tmpPath = MyMallocEx(sizeof(OperClassACLPath));
                 tmpPath->identifier = strdup(str);
                 AddListItem(tmpPath,pathHead);
@@ -228,12 +226,6 @@ unsigned char OperClass_evaluateACLEntry(OperClassACLEntry* entry, OperClassACLP
 
 OperPermission OperClass_evaluateACLPathEx(OperClassACL* acl, OperClassACLPath* path, OperClassCheckParams* params)
 {
-	/* if no ACLS exist on top level, allow */
-	if (!acl->acls)
-	{
-		return OPER_ALLOW;
-	}
-
         /** Evaluate into ACL struct as deep as possible **/
 	OperClassACLPath *basePath = path;
 	path = path->next; /* Avoid first level since we have resolved it */
@@ -243,7 +235,6 @@ OperPermission OperClass_evaluateACLPathEx(OperClassACL* acl, OperClassACLPath* 
         unsigned char deny = 0;
         while (path->next && acl->acls)
         {
-		ircd_log(LOG_ERROR,"In ACL depth loop");
                 tmp = OperClass_FindACL(acl->acls,path->identifier);
                 if (!tmp)
                 {
@@ -252,13 +243,11 @@ OperPermission OperClass_evaluateACLPathEx(OperClassACL* acl, OperClassACLPath* 
                 path = path->next;
                 acl = tmp;
         }
-	ircd_log(LOG_ERROR,"Out of acl depth loop");
         /** If node exists for this but has no ACL entries, allow **/
         if (!acl->entries)
         {
                 return OPER_ALLOW;
         }
-	ircd_log(LOG_ERROR,"MISS!");
         /** Process entries **/
         for (entry = acl->entries; entry; entry = entry->next)
         {
