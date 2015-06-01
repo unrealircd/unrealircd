@@ -443,7 +443,11 @@ void unreal_delete_match(aMatch *m)
 			regfree(m->ext.tre_expr);
 	}
 #endif
-	// TODO: PCRE2 !!
+	if (m->type == MATCH_PCRE_REGEX)
+	{
+		if (m->ext.pcre2_expr)
+			pcre2_code_free(m->ext.pcre2_expr);
+	}
 	MyFree(m);
 }
 
@@ -463,24 +467,29 @@ aMatch *unreal_create_match(MatchType type, char *str, char **error)
 	}
 	else if (m->type == MATCH_PCRE_REGEX)
 	{
-		/* TODO */
 		int errorcode = 0;
 		PCRE2_SIZE erroroffset = 0;
 		int options = 0;
+		char buf2[512];
 		
 		options = PCRE2_CASELESS|PCRE2_NEVER_UTF|PCRE2_NEVER_UCP;
 		
 		m->ext.pcre2_expr = pcre2_compile(str, PCRE2_ZERO_TERMINATED, options, &errorcode, &erroroffset, NULL);
 		if (m->ext.pcre2_expr == NULL)
 		{
-			pcre2_get_error_message(errorcode, errorbuf, sizeof(errorbuf));
+			pcre2_get_error_message(errorcode, buf2, sizeof(buf2));
 			if (error)
+			{
+				if (erroroffset > 0)
+					snprintf(errorbuf, sizeof(errorbuf), "%s (at character #%d)", buf2, erroroffset);
+				else
+					strlcpy(errorbuf, buf2, sizeof(errorbuf));
 				*error = errorbuf;
+			}
 			unreal_delete_match(m);
 			return NULL;
 		}
-		// TODO: re-write error to include offset ? (so user knows where there error is exactly..)
-		// TODO: JIT
+		pcre2_jit_compile(m->ext.pcre2_expr, PCRE2_JIT_COMPLETE);
 		return m;
 	}
 #ifdef USE_TRE

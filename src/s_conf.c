@@ -5976,8 +5976,8 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 		if (!m)
 		{
 			config_error("%s:%i: spamfilter::match contains an invalid regex: %s",
-				cep->ce_fileptr->cf_filename,
-				cep->ce_varlinenum,
+				ce->ce_fileptr->cf_filename,
+				ce->ce_varlinenum,
 				err);
 			errors++;
 		}
