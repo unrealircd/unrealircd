@@ -452,6 +452,8 @@ aMatch *unreal_create_match(MatchType type, char *str, char **error)
 	aMatch *m = MyMallocEx(sizeof(aMatch));
 	static char errorbuf[512];
 
+	*errorbuf = '\0';
+
 	m->str = strdup(str);
 	m->type = type;
 	
@@ -462,6 +464,24 @@ aMatch *unreal_create_match(MatchType type, char *str, char **error)
 	else if (m->type == MATCH_PCRE_REGEX)
 	{
 		/* TODO */
+		int errorcode = 0;
+		PCRE2_SIZE erroroffset = 0;
+		int options = 0;
+		
+		options = PCRE2_CASELESS|PCRE2_NEVER_UTF|PCRE2_NEVER_UCP;
+		
+		m->ext.pcre2_expr = pcre2_compile(str, PCRE2_ZERO_TERMINATED, options, &errorcode, &erroroffset, NULL);
+		if (m->ext.pcre2_expr == NULL)
+		{
+			pcre2_get_error_message(errorcode, errorbuf, sizeof(errorbuf));
+			if (error)
+				*error = errorbuf;
+			unreal_delete_match(m);
+			return NULL;
+		}
+		// TODO: re-write error to include offset ? (so user knows where there error is exactly..)
+		// TODO: JIT
+		return m;
 	}
 #ifdef USE_TRE
 	else if (m->type == MATCH_TRE_REGEX)
@@ -488,9 +508,6 @@ aMatch *unreal_create_match(MatchType type, char *str, char **error)
 		abort(); /* unknown type, how did that happen ? */
 	}
 	return m;
-	
-	unreal_delete_match(m);
-	return NULL;
 }
 
 /** Try to match an aMatch entry ('m') against a string ('str').
@@ -508,8 +525,15 @@ int unreal_match(aMatch *m, char *str)
 	
 	if (m->type == MATCH_PCRE_REGEX)
 	{
-		// todo
-		return 0;
+		pcre2_match_data *md = pcre2_match_data_create(9, NULL);
+		int ret;
+		
+		ret = pcre2_match(m->ext.pcre2_expr, str, PCRE2_ZERO_TERMINATED, 0, 0, md, NULL); /* run the regex */
+		pcre2_match_data_free(md); /* yeah, we never use it. unfortunately argument must be non-NULL for pcre2_match() */
+		
+		if (ret > 0)
+			return 1; /* MATCH */		
+		return 0; /* NO MATCH */
 	}
 
 #ifdef USE_TRE

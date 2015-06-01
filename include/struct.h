@@ -60,6 +60,8 @@
 #endif
 #include "auth.h" 
 #include "tre/regex.h"
+#define PCRE2_CODE_UNIT_WIDTH 8
+#include "pcre2.h"
 
 #include "channel.h"
 
@@ -759,7 +761,7 @@ typedef struct _match {
 	char *str; /**< Text of the glob/regex/whatever. Always set. */
 	MatchType type;
 	union {
-//		pcre2_code *pcre_expr; /**< PCRE2 Perl-like Regex (New) */
+		pcre2_code *pcre2_expr; /**< PCRE2 Perl-like Regex (New) */
 #ifdef USE_TRE
 		regex_t *tre_expr; /**< TRE POSIX Regex (Old) */
 #endif
