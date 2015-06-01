@@ -825,15 +825,18 @@ char *err = NULL;
 	actionbuf[0] = banact_valtochar(action);
 	actionbuf[1] = '\0';
 
-	/* now check the regex / match field... */
-	m = unreal_create_match(match_type, reason, &err);
-	if (!m)
+	if (whattodo == 1)
 	{
-		sendto_one(sptr, ":%s NOTICE %s :Error in regex '%s': %s",
-			me.name, sptr->name, parv[7], err);
-		return 0;
+		/* now check the regex / match field... */
+		m = unreal_create_match(match_type, parv[7], &err);
+		if (!m)
+		{
+			sendto_one(sptr, ":%s NOTICE %s :Error in regex '%s': %s",
+				me.name, sptr->name, parv[7], err);
+			return 0;
+		}
+		unreal_delete_match(m);
 	}
-	unreal_delete_match(m);
 
 	tkllayer[1] = whattodo ? "-" : "+";
 	tkllayer[3] = targetbuf;
@@ -2259,7 +2262,9 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		          return 0; /* bogus */
 		      }
 			  type = TKL_SPAMF | TKL_GLOBAL;
-			  if (parc >= 11)
+			  if (parc >= 12)
+			  	reason = parv[11];
+			  else if (parc >= 11)
 			  	reason = parv[10];
 			  else
 			  	reason = parv[8];
@@ -2273,7 +2278,9 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		          return 0; /* bogus */
 		      }
 			  type = TKL_SPAMF;
-			  if (parc >= 11)
+			  if (parc >= 12)
+			  	reason = parv[11];
+			  else if (parc >= 11)
 			  	reason = parv[10];
 			  else
 			  	reason = parv[8];
