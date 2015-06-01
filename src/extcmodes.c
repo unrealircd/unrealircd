@@ -187,6 +187,7 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 	Channelmode_Table[i].local = req.local;
 	Channelmode_Table[i].unset_with_param = req.unset_with_param;
 	Channelmode_Table[i].owner = module;
+	Channelmode_Table[i].unloaded = 0;
 	
 	for (j = 0; j < EXTCMODETABLESZ; j++)
 		if (Channelmode_Table[j].flag)
