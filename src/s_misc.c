@@ -1032,3 +1032,16 @@ char *getcloak(aClient *sptr)
 	return sptr->user->cloakedhost;
 }
 
+int mixed_network(void)
+{
+	aClient *acptr;
+	
+	list_for_each_entry(acptr, &server_list, special_node)
+	{
+		if (!IsServer(acptr) || IsULine(acptr))
+			continue; /* skip u-lined servers (=non-unreal, unless you configure your ulines badly, that is) */
+		if (SupportTKLEXT(acptr) && !SupportTKLEXT2(acptr))
+			return 1; /* yup, something below 3.4-alpha3 is linked */
+	}
+	return 0;
+}

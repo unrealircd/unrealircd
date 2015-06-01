@@ -2207,14 +2207,28 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					":%s TKL %s %s %s %s %s %s %s %s %s %s :%s", sptr->name,
 					parv[1], parv[2], parv[3], parv[4], parv[5],
 					parv[6], parv[7], parv[8], parv[9], parv[10], parv[11]);
-				sendto_server(cptr, PROTO_TKLEXT, PROTO_TKLEXT2,
-					":%s TKL %s %s %s %s %s %s %s %s %s :%s", sptr->name,
-					parv[1], parv[2], parv[3], parv[4], parv[5],
-					parv[6], parv[7], parv[8], parv[9], parv[11]); /* parv[11] = regex */
-				sendto_server(cptr, 0, PROTO_TKLEXT,
-					":%s TKL %s %s %s %s %s %s %s :%s", sptr->name,
-					parv[1], parv[2], parv[3], parv[4], parv[5],
-					parv[6], parv[7], parv[10]);
+				/* Also send to old TKLEXT and even older non-TKLEXT..
+				 * ..but only if spam filter is of type 'posix', not cause any trouble..
+				 */
+				if (tk->ptr.spamf->expr == MATCH_TRE_REGEX)
+				{
+					sendto_server(cptr, PROTO_TKLEXT, PROTO_TKLEXT2,
+						":%s TKL %s %s %s %s %s %s %s %s %s :%s", sptr->name,
+						parv[1], parv[2], parv[3], parv[4], parv[5],
+						parv[6], parv[7], parv[8], parv[9], parv[11]);
+					sendto_server(cptr, 0, PROTO_TKLEXT,
+						":%s TKL %s %s %s %s %s %s %s :%s", sptr->name,
+						parv[1], parv[2], parv[3], parv[4], parv[5],
+						parv[6], parv[7], parv[11]);
+				} else {
+					/* Print out a warning if any 3.2.x servers linked (TKLEXT but no TKLEXT2) */
+					if (mixed_network())
+					{
+						sendto_realops("WARNING: Spamfilter '%s' added of type '%s' and 3.2.x servers are linked. "
+						               "Spamfilter will not execute on non-3.4.x servers.",
+						               parv[11] , parv[10]);
+					}
+				}
 		  	} else
 		  	if ((parc == 11) && (type & TKL_SPAMF))
 		  	{

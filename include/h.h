@@ -760,3 +760,4 @@ extern void unreal_delete_match(aMatch *m);
 extern int unreal_match(aMatch *m, char *str);
 extern int unreal_match_method_strtoval(char *str);
 extern char *unreal_match_method_valtostr(int val);
+extern int mixed_network(void);
