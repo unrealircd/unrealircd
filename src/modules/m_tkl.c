@@ -220,7 +220,7 @@ DLLFUNC int m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (IsServer(sptr))
 		return 0;
 
-	if (!OPCanGZL(sptr) || !IsOper(sptr))
+	if ((!OPCanGZL(sptr) || !IsOper(sptr)) && !OperClass_evaluateACLPath(sptr->user->operlogin,"zline:global",sptr,cptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		sptr->name);
@@ -246,7 +246,7 @@ DLLFUNC int m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (IsServer(sptr))
 		return 0;
 
-	if (!OPCanTKL(sptr) || !IsOper(sptr))
+	if ((!OPCanTKL(sptr) || !IsOper(sptr)) && !OperClass_evaluateACLPath(sptr->user->operlogin,"shun",sptr,cptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		sptr->name);
@@ -273,7 +273,7 @@ char *comment = ((parc > 2) && !BadPtr(parv[2])) ? parv[2] : "no reason";
 char *name;
 int remove = 0;
 
-	if (MyClient(sptr) && (!OPCanTKL(sptr) || !IsOper(sptr)))
+	if (MyClient(sptr) && ((!OPCanTKL(sptr) || !IsOper(sptr))) && !OperClass_evaluateACLPath(sptr->user->operlogin,"shun:temporary",sptr,cptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		sptr->name);
@@ -344,7 +344,7 @@ DLLFUNC int m_tkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (IsServer(sptr))
 		return 0;
 
-	if (!OPCanKline(sptr) || !IsAnOper(sptr))
+	if ((!OPCanKline(sptr) || !IsAnOper(sptr)) && !OperClass_evaluateACLPath(sptr->user->operlogin,"kline:local",sptr,cptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		sptr->name);
@@ -407,7 +407,7 @@ DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (IsServer(sptr))
 		return 0;
 
-	if (!OPCanZline(sptr) || !IsAnOper(sptr))
+	if ((!OPCanZline(sptr) || !IsAnOper(sptr)) && !OperClass_evaluateACLPath(sptr->user->operlogin,"zline:local",sptr,cptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		sptr->name);
@@ -764,7 +764,7 @@ char *err = NULL;
 	if (IsServer(sptr))
 		return 0;
 
-	if (!OPCanTKL(sptr) || !IsOper(sptr))
+	if ((!OPCanTKL(sptr) || !IsOper(sptr)) && !OperClass_evaluateACLPath(sptr->user->operlogin,"spamfilter",sptr,cptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
