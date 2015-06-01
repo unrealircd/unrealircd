@@ -3639,7 +3639,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 {
 	char has_class = 0, has_password = 0, has_flags = 0, has_swhois = 0, has_snomask = 0;
-	char has_modes = 0, has_require_modes = 0, has_from = 0, has_maxlogins = 0;
+	char has_modes = 0, has_require_modes = 0, has_from = 0, has_maxlogins = 0, has_operclass = 0;
 	int oper_flags = 0;
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
@@ -3673,6 +3673,17 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 			continue;
 		}
+		if (!strcmp(cep->ce_varname, "operclass"))
+                {
+                        if (has_operclass)
+                        {
+                                config_warn_duplicate(cep->ce_fileptr->cf_filename,
+                                        cep->ce_varlinenum, "oper::operclass");
+                                continue;
+                        }
+                        has_operclass = 1;
+                        continue;
+                }
 		/* Regular variables */
 		if (!cep->ce_entries)
 		{
