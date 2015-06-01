@@ -166,6 +166,15 @@ char *p;
 }
 #endif
 
+
+inline void send_version(aClient* sptr, int reply)
+{
+	int i;
+	for (i = 0; IsupportStrings[i]; i++)
+                        sendto_one(sptr, rpl_str(reply), me.name, sptr->name,
+                                   IsupportStrings[i]);
+}
+
 /*
 ** m_version
 **	parv[0] = sender prefix
@@ -173,11 +182,9 @@ char *p;
 */
 CMD_FUNC(m_version)
 {
-	int reply, i;
-
 	/* Only allow remote VERSIONs if registered -- Syzop */
 	if (!IsPerson(sptr) && !IsServer(cptr))
-		goto normal;
+ 	       send_version(sptr,RPL_ISUPPORT);
 
 	if (hunt_server(cptr, sptr, ":%s VERSION :%s", 1, parc, parv) == HUNTED_ISME)
 	{
@@ -193,14 +200,9 @@ CMD_FUNC(m_version)
 			sendto_one(sptr, ":%s NOTICE %s :%s", me.name, sptr->name, curl_version());
 #endif
 		if (MyClient(sptr))
-normal:
-			reply = RPL_ISUPPORT;
+			send_version(sptr,RPL_ISUPPORT);
 		else
-			reply = RPL_REMOTEISUPPORT;
-		/* Send the text */
-		for (i = 0; IsupportStrings[i]; i++)
-			sendto_one(sptr, rpl_str(reply), me.name, sptr->name, 
-				   IsupportStrings[i]); 
+			send_version(sptr,RPL_REMOTEISUPPORT);
 	}
 	return 0;
 }

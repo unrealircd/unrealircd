@@ -719,6 +719,18 @@ int spamfilter_usage(aClient *sptr)
 	return 0;
 }
 
+int spamfilter_new_usage(aClient *cptr, aClient *sptr, char *parv[])
+{
+        sendnotice(sptr, "Unknown match-type '%s'. Must be one of: -regex (new fast PCRE regexes), "
+                         "-posix (old unreal 3.2.x posix regexes) or "
+                         "-simple (simple text with ? and * wildcards)",
+                         parv[2]);
+        if (*parv[2] != '-')
+        	sendnotice(sptr, "Using the old 3.2.x /SPAMFILTER syntax? Note the new -regex/-posix/-simple field!!");
+
+	return spamfilter_usage(cptr);
+} 
+
 /** /spamfilter [add|del|remove|+|-] [match-type] [type] [action] [tkltime] [reason] [regex]
  *                   1                    2         3        4        5        6        7
  */
@@ -769,7 +781,7 @@ char *err = NULL;
 	}
 
 	if ((parc == 7) && (*parv[2] != '-'))
-		goto new_spamfilter_syntax;
+		return spamfilter_new_usage(cptr,sptr,parv);
 		
 	if ((parc < 8) || BadPtr(parv[7]))
 		return spamfilter_usage(sptr);
@@ -795,15 +807,7 @@ char *err = NULL;
 	match_type = unreal_match_method_strtoval(parv[2]+1);
 	if (!match_type)
 	{
-new_spamfilter_syntax:
-		sendnotice(sptr, "Unknown match-type '%s'. Must be one of: -regex (new fast PCRE regexes), "
-		                 "-posix (old unreal 3.2.x posix regexes) or "
-		                 "-simple (simple text with ? and * wildcards)",
-		                 parv[2]);
-		if (*parv[2] != '-')
-			sendnotice(sptr, "Using the old 3.2.x /SPAMFILTER syntax? Note the new -regex/-posix/-simple field!!");
-		
-		return spamfilter_usage(cptr);
+		return spamfilter_new_usage(cptr,sptr,parv);
 	}
 
 	targets = spamfilter_gettargets(parv[3], sptr);

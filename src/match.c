@@ -479,7 +479,8 @@ aMatch *unreal_create_match(MatchType type, char *str, char **error)
 			MyFree(errtmp);
 			if (error)
 				*error = errorbuf;
-			goto fail;
+			unreal_delete_match(m);
+			return NULL;
 		}
 	}
 #endif
@@ -488,7 +489,6 @@ aMatch *unreal_create_match(MatchType type, char *str, char **error)
 	}
 	return m;
 	
-fail:
 	unreal_delete_match(m);
 	return NULL;
 }

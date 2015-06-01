@@ -112,7 +112,8 @@ char *getfield(char *newline)
 
 		end = x;
 		line++;
-		goto end1;
+		*end = '\0';
+		return (field);
 
 	}
 	if ((end = (char *)index(line, ':')) == NULL)
@@ -123,7 +124,6 @@ char *getfield(char *newline)
 	}
 	else
 		line = end + 1;
-	end1:
 	*end = '\0';
 	return (field);
 }

@@ -1648,6 +1648,14 @@ int has_cached_version(const char *url)
 	return file_exists(unreal_mkcache(url));
 }
 
+/* Used to blow away result of bad copy or cancel file copy */
+inline void cancel_copy(int srcfd, int destfd, const char* dest)
+{
+        close(srcfd);
+        close(destfd);
+        unlink(dest);
+}
+
 /* Copys the contents of the src file to the dest file.
  * The dest file will have permissions r-x------
  */
@@ -1691,13 +1699,15 @@ int unreal_copyfile(const char *src, const char *dest)
 		{
 			config_error("Write error to file '%s': %s [not enough free hd space / quota? need several mb's!]",
 				dest, strerror(ERRNO));
-			goto fail;
+			cancel_copy(srcfd,destfd,dest);
+                	return 0;
 		}
 
 	if (len < 0) /* very unusual.. perhaps an I/O error */
 	{
 		config_error("Read error from file '%s': %s", src, strerror(errno));
-		goto fail;
+		cancel_copy(srcfd,destfd,dest);
+        	return 0;
 	}
 
 	close(srcfd);
@@ -1708,11 +1718,6 @@ int unreal_copyfile(const char *src, const char *dest)
 		chown(dest, irc_uid, irc_gid);
 #endif
 	return 1;
-fail:
-	close(srcfd);
-	close(destfd);
-	unlink(dest); /* make sure our corrupt file isn't used */
-	return 0;
 }
 
 /* Same as unreal_copyfile, but with an option to try hardlinking first */

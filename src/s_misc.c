@@ -809,22 +809,21 @@ char *errtmp, *tmp;
 static char errorbuf[512];
 regex_t expr;
 
-	if (!fastsupport)
-		goto Ilovegotos;
-
-	for (tmp = s; *tmp; tmp++) {
-		if (!isalnum(*tmp) && !(*tmp >= 128)) {
-			if ((s == tmp) && (*tmp == '*'))
-				continue;
-			if ((*(tmp + 1) == '\0') && (*tmp == '*'))
-				continue;
-			regex = 1;
-			break;
+	if (fastsupport)
+	{
+		for (tmp = s; *tmp; tmp++) {
+			if (!isalnum(*tmp) && !(*tmp >= 128)) {
+				if ((s == tmp) && (*tmp == '*'))
+					continue;
+				if ((*(tmp + 1) == '\0') && (*tmp == '*'))
+					continue;
+				regex = 1;
+				break;
+			}
 		}
 	}
-	if (regex)
+	if (!fastsupport || regex)
 	{
-Ilovegotos:
 		errorcode = regcomp(&expr, s, REG_ICASE|REG_EXTENDED);
 		if (errorcode > 0)
 		{
