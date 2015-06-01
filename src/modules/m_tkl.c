@@ -193,7 +193,7 @@ DLLFUNC int m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	if (IsServer(sptr))
 		return 0;
-	if ((!OPCanTKL(sptr) || !IsOper(sptr)) &&  !OperClass_evaluateACLPath(sptr->user->operlogin,"kline:global",sptr,cptr,NULL,NULL,NULL))
+	if ((!OPCanTKL(sptr) || !IsOper(sptr)) &&  !OperClass_evaluateACLPath(sptr->user->operlogin,"gline",sptr,cptr,NULL,NULL,NULL))
 
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
@@ -2210,7 +2210,7 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				/* Also send to old TKLEXT and even older non-TKLEXT..
 				 * ..but only if spam filter is of type 'posix', not cause any trouble..
 				 */
-				if (tk->ptr.spamf->expr == MATCH_TRE_REGEX)
+				if (tk->ptr.spamf->expr->type == MATCH_TRE_REGEX)
 				{
 					sendto_server(cptr, PROTO_TKLEXT, PROTO_TKLEXT2,
 						":%s TKL %s %s %s %s %s %s %s %s %s :%s", sptr->name,
