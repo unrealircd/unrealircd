@@ -1,4 +1,4 @@
-Unreal3.4-alpha2 Release Notes
+Unreal3.4-alpha3 Release Notes
 ===============================
 
 This is the second alpha version of UnrealIRCd 3.4.
@@ -31,22 +31,9 @@ Some important remarks(!):
   continuation of changes in alpha1 and are not specifically marked.
 
 ==[ CONFIGURATION CHANGES ]==
-You can use your 3.2.x unrealircd.conf WITH SOME CHANGES:
-* In your me { } block, change your "numeric" to "sid", and change the
-  value as follows: pick a 3 character Server ID that starts with a digit.
-  For example: numeric "1"; becomes: sid "001";
-* The commands module is gone and replaced with 100+ individual modules:
-  1) Remove the loadmodule lines for commands.so and cloak.so
-  2) Add the following line to your unrealircd.conf:
-     include "modules.conf";
-* For any remaining loadmodule lines you can (and should!) now use the
-  shorter syntax which is OS-neutral. Instead of:
-  loadmodule "src/modules/somemodule.so";
-  You should now use:
-  loadmodule "modules/somemodule";
-  UnrealIRCd will figure out the exact name of the module. It doesn't
-  matter if you are on Windows or *NIX, and whether your modules are in
-  src/modules/ or in modules/.
+You can use your 3.2.x unrealircd.conf but some changes are required!
+Check out https://www.unrealircd.org/docs/Upgrading_from_3.2.x to see
+how to convert your existing 3.2.x conf to be compatible with 3.4.x.
 
 ==[ NEW ]==
 * We moved a lot of channel and user modes to modules. These are all
@@ -70,6 +57,14 @@ You can use your 3.2.x unrealircd.conf WITH SOME CHANGES:
   be seen by yourself and others through /WHOIS. The fingerprint is also
   shared (broadcasted) with all servers on the network. In alpha3 we
   will add more features that will use SSL fingerprints. (A2)
+* bcrypt has been added as a password hashing algorithm and is now the
+  preferred algorithm (A3)
+* './unreal mkpasswd' will now prompt you for the password to hash (A3)
+* Protection against SSL renegotiation attacks (A3)
+* When you link two servers the current timestamp is exchanged. If the
+  time differs more than 60 seconds then servers won't link and it will
+  show a message that you should fix your clock(s). This requires
+  version 3.4-alpha3 (or later) on both ends of the link (A3)
 
 ==[ CHANGED ]==
 * Numerics have been removed. Instead we now use SIDs (Server ID's) and
@@ -80,34 +75,59 @@ You can use your 3.2.x unrealircd.conf WITH SOME CHANGES:
 * Self-signed certificates are now generated using 4096 bits, a SHA256
   hash and validity of 10 years. (A2)
 * Building with SSL (OpenSSL) is now mandatory (A2)
+* The link { } block has been restructured, see
+  https://www.unrealircd.org/docs/Upgrading_from_3.2.x#Link_block (A3)
+* Better yet, check out our secure server linking tutorial:
+  https://www.unrealircd.org/docs/Tutorial:_Linking_servers
+* If you have no set::throttle block you now get a default of 3:60 (A3)
+* password entries in the conf no longer require specifying an auth-type
+  like password "..." { md5; };. UnrealIRCd will now auto-detect. (A3)
+* You will now see a warning when you link to a non-SSL server. (A3)
+* Previously we used POSIX Regular expressions in spamfilters and at
+  some other places. We have now moved to PCRE Regular expressions.
+  They look very similar, but PCRE is a lot faster.
+  For backwards-compatibility we still compile with both regex engines. (A3)
+* Spamfilter command syntax has been changed, it now has an extra option
+  to indicate the matching method:
+  /SPAMFILTER [add|del|remove|+|-] [method] [type] ....
+  Where 'method' can be one of:
+  * -regex: this is the new fast PCRE2 regex engine
+  * -simple: supports just strings and ? and * wildcards (super fast)
+  * -posix: the old regex engine for compatibility with 3.2.x.  (A3)
+* If you have both 3.2.x and 3.4.x servers on your network then the
+  3.4.x server will only send spamfilters of type 'posix' to the 3.2.x
+  servers, since 3.2.x servers don't support the other two types.
+  So in a mixed network you probably want to keep using 'posix'
+  for a while, until all your UnrealIRCd servers are on 3.4.x. (A3)
 
 ==[ MODULE CODERS / DEVELOPERS ]==
 * A lot of technical documentation for module coders has been added
   at https://www.unrealircd.org/docs/ describing things like how to
   write a module from scratch, the User & Channel Mode System, Commands,
   Command Overrides, Hooks, attaching custom-data to users/channels,
-  and more. (A2)
-* There have been a lot of source code cleanups, things who end-users
-  won't see.
+  and more. (A2+)
+* Added MOD_OPT_PERM_RELOADABLE which permits reloading (eg: upgrades)
+  but disallows unloading of a module (A3)
+* There have been *a lot* of source code cleanups (ALL)
 
 ==[ MAJOR BUGS FIXED ]==
 * Crash bug on-boot in alpha1 (A2)
 * IRCOp commands such as /GLINE were not always working (A2)
-* Most likely a number of major bugs are introduced by this early alpha!
+* This is still an alpha release, so likely contains major issues
 
 ==[ MINOR BUGS FIXED ]==
 * Errors in example configuration files (A2)
 * Some fixes in delayjoin (Channel mode +d) (A2)
+* Deal with services who allow you to log in by account name (A3)
 
 ==[ REMOVED / DROPPED ]==
-* Numeric server IDs, see above.
-* PROTOCTL TOKEN and SJB64 are no longer implemented.
-* Ziplinks have been removed. We recommend to use SSL/TLS for all server
-  connections. Later on we will look at enabling SSL/TLS compression.
+* Numeric server IDs, see above. (A1)
+* PROTOCTL TOKEN and SJB64 are no longer implemented. (A1)
+* Ziplinks have been removed. (A1)
+* WebTV support. (A3)
 
 ==[ KNOWN ISSUES ]==
-* Documentation has NOT been updated to reflect most 3.4.x features!!
-* Regexes still have their usual issues
+* Documentation has NOT been updated to reflect 3.4.x features!!!
 
 ==[ ADDITIONAL INFO ]==
 * See Changelog for more details
