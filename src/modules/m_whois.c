@@ -195,11 +195,11 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				showchannel = 0;
 				if (ShowChannel(sptr, chptr))
 					showchannel = 1;
-				if (OPCanSeeSecret(sptr))
+				if (OPCanSeeSecret(sptr) || OperClass_evaluateACLPath(sptr->user->operlogin,"override:whois",sptr,NULL,chptr,NULL)) 
 					showchannel = 1;
-				if ((acptr->umodes & UMODE_HIDEWHOIS) && !IsMember(sptr, chptr) && !IsAnOper(sptr))
+				if ((acptr->umodes & UMODE_HIDEWHOIS) && !IsMember(sptr, chptr) && !IsAnOper(sptr) && !OperClass_evaluateACLPath(sptr->user->operlogin,"override:whois:",sptr,NULL,chptr,NULL))
 					showchannel = 0;
-				if (IsServices(acptr) && !IsNetAdmin(sptr) && !IsSAdmin(sptr))
+				if (IsServices(acptr) && !IsNetAdmin(sptr) && !IsSAdmin(sptr) && !OperClass_evaluateACLPath(sptr->user->operlogin,"override:whois",sptr,NULL,chptr,NULL))
 					showchannel = 0;
 				if (acptr == sptr)
 					showchannel = 1;
@@ -218,11 +218,11 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						len = 0;
 					}
 #ifdef SHOW_SECRET
-					if (IsAnOper(sptr)
+					if ((IsAnOper(sptr) ||
 #else
-					if (IsNetAdmin(sptr)
+					if ((IsNetAdmin(sptr) ||
 #endif
-					    && SecretChannel(chptr) && !IsMember(sptr, chptr))
+					    OperClass_evaluateACLPath(sptr->user->operlogin,"override:whois",sptr,NULL,chptr,NULL)) && SecretChannel(chptr) && !IsMember(sptr, chptr))
 						*(buf + len++) = '?';
 					if (acptr->umodes & UMODE_HIDEWHOIS && !IsMember(sptr, chptr)
 						&& IsAnOper(sptr))
