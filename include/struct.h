@@ -1237,7 +1237,6 @@ struct _operClass
 struct _operClassCheckParams
 {
         aClient *sptr;
-	aClient *cptr;
         aClient *victim;
         aChannel *channel;
         void *extra;

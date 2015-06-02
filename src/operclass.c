@@ -292,7 +292,7 @@ OperPermission OperClass_evaluateACLPathEx(OperClassACL* acl, OperClassACLPath* 
         return OPER_DENY;
 }
 
-OperPermission OperClass_evaluateACLPath(char* opername, char* path, aClient *sptr, aClient *cptr, aClient *victim, aChannel *channel, void* extra)
+OperPermission OperClass_evaluateACLPath(char* opername, char* path, aClient *sptr, aClient *victim, aChannel *channel, void* extra)
 {
 	ConfigItem_oper *ce_oper = Find_oper(opername);
 	if (!ce_oper)
@@ -315,7 +315,6 @@ OperPermission OperClass_evaluateACLPath(char* opername, char* path, aClient *sp
                 {
 			OperClassCheckParams *params = MyMallocEx(sizeof(OperClassCheckParams));
         		params->sptr = sptr;
-        		params->cptr = cptr;
         		params->victim = victim;
         		params->channel = channel;
         		params->extra = extra;
