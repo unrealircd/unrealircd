@@ -92,7 +92,7 @@ typedef struct _configitem_admin ConfigItem_admin;
 typedef struct _configitem_class ConfigItem_class;
 typedef struct _configitem_oper ConfigItem_oper;
 typedef struct _configitem_operclass ConfigItem_operclass;
-typedef struct _configitem_oper_from ConfigItem_oper_from;
+typedef struct _configitem_mask ConfigItem_mask;
 typedef struct _configitem_drpass ConfigItem_drpass;
 typedef struct _configitem_ulines ConfigItem_ulines;
 typedef struct _configitem_tld ConfigItem_tld;
@@ -1254,17 +1254,17 @@ struct _configitem_oper {
 	anAuthStruct	 *auth;
 	char *operclass;
 	ConfigItem_class *class;
-	ConfigItem	 *from;
+	ConfigItem_mask *mask;
 	unsigned long	 modes, require_modes;
 	long		 oflags;
 	int			maxlogins;
 };
 
-struct _configitem_oper_from {
-	ConfigItem       *prev, *next;
-	ConfigFlag 	 flag;
-	char		 *name;
-	struct irc_netmask	*netmask;
+struct _configitem_mask {
+	ConfigItem_mask *prev, *next;
+	ConfigFlag flag;
+	char *mask;
+	struct irc_netmask *netmask;
 };
 
 struct _configitem_drpass {
@@ -1303,7 +1303,7 @@ struct _configitem_listen {
 struct _configitem_vhost {
 	ConfigItem 	*prev, *next;
 	ConfigFlag 	flag;
-	ConfigItem       *from;
+	ConfigItem_mask *mask;
 	char		*login, *virthost, *virtuser, *swhois;
 	anAuthStruct	*auth;
 };

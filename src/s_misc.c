@@ -1045,3 +1045,78 @@ int mixed_network(void)
 	}
 	return 0;
 }
+
+/** Free all masks in the mask list */
+void unreal_delete_masks(ConfigItem_mask *m)
+{
+	ConfigItem_mask *m_next;
+	
+	for (; m; m = m_next)
+	{
+		m_next = m->next;
+
+		safefree(m->mask);
+		safefree(m->netmask);
+
+		MyFree(m);
+	}
+}
+
+/** Internal function to add one individual mask to the list */
+static void unreal_add_mask(ConfigItem_mask **head, ConfigEntry *ce)
+{
+	ConfigItem_mask *m = MyMallocEx(sizeof(ConfigItem_mask));
+	struct irc_netmask tmp;
+
+	memset(&tmp, 0, sizeof(tmp));
+	
+	ircstrdup(m->mask, ce->ce_vardata);
+	
+	tmp.type = parse_netmask(m->mask, &tmp);
+	if (tmp.type != HM_HOST)
+	{
+		m->netmask = MyMallocEx(sizeof(struct irc_netmask));
+		bcopy(&tmp, m->netmask, sizeof(struct irc_netmask));
+	}
+	add_ListItem((ListStruct *)m, (ListStruct **)head);
+}
+
+/** Add mask entries from config */
+void unreal_add_masks(ConfigItem_mask **head, ConfigEntry *ce)
+{
+	if (ce->ce_entries)
+	{
+		ConfigEntry *cep;
+		for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+			unreal_add_mask(head, cep);
+	} else
+	{
+		unreal_add_mask(head, ce);
+	}
+}
+
+/** Check if a client matches any of the masks in the mask list */
+int unreal_mask_match(aClient *acptr, ConfigItem_mask *m)
+{
+	static char nuhost[NICKLEN + USERLEN + HOSTLEN + 8];
+	static char nuip[NICKLEN + USERLEN + HOSTLEN + 8];
+
+	if (acptr->user)
+	{
+		/* is a person */
+		strlcpy(nuhost, make_user_host(acptr->user->username, acptr->user->realhost), sizeof(nuhost));
+		strlcpy(nuip, make_user_host(acptr->user->username, Inet_ia2p(&acptr->ip)), sizeof(nuip));
+	} else {
+		/* is an unknown or a server */
+		snprintf(nuhost, sizeof(nuhost), "%s@%s", acptr->username, acptr->sockhost);
+		snprintf(nuip, sizeof(nuip), "%s@%s", acptr->username, Inet_ia2p(&acptr->ip));
+	}
+
+	for (; m; m = m->next)
+	{
+		if (match_ip(acptr->ip, nuhost, m->mask, m->netmask) || !match(m->mask, nuhost))
+			return 1;
+	}
+	
+	return 0;
+}

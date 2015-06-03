@@ -159,8 +159,7 @@ void set_oper_host(aClient *sptr, char *host)
 
 DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 	ConfigItem_oper *aconf;
-	ConfigItem_oper_from *oper_from;
-	char *name, *password, nuhhost[NICKLEN+USERLEN+HOSTLEN+6], nuhhost2[NICKLEN+USERLEN+HOSTLEN+6];
+	char *name, *password;
 	char* host = 0;
 	int i = 0, j = 0;
 	char* announce = 0;
@@ -200,15 +199,8 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		return 0;
 	}
 
-	strlcpy(nuhhost, make_user_host(sptr->user->username, sptr->user->realhost), sizeof(nuhhost));
-	strlcpy(nuhhost2, make_user_host(sptr->user->username, Inet_ia2p(&sptr->ip)), sizeof(nuhhost2));
-	for (oper_from = (ConfigItem_oper_from *) aconf->from;
-	    oper_from; oper_from = (ConfigItem_oper_from *) oper_from->next)
-		/* if (!match(oper_from->name, nuhhost) || !match(oper_from->name, nuhhost2)) */
-		if (match_ip(sptr->ip, nuhhost, oper_from->name, oper_from->netmask) ||
-		    !match(oper_from->name, nuhhost2))
-			break;
-	if (!oper_from)	{
+	if (!unreal_mask_match(sptr, aconf->mask))
+	{
 		sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, parv[0]);
 		sendto_snomask_global
 		    (SNO_OPER, "Failed OPER attempt by %s (%s@%s) using UID %s [host doesnt match]",

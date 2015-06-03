@@ -606,22 +606,18 @@ int stats_command(aClient *sptr, char *para)
 int stats_oper(aClient *sptr, char *para)
 {
 	ConfigItem_oper *oper_p;
-	ConfigItem_oper_from *from;
+	ConfigItem_mask *m;
+
 	for (oper_p = conf_oper; oper_p; oper_p = (ConfigItem_oper *) oper_p->next)
 	{
-		if(!oper_p->from)
-			sendto_one(sptr, rpl_str(RPL_STATSOLINE),
-		  		me.name, sptr->name, 
-		  		'O', "(none)", oper_p->name,
-		  		oflagstr(oper_p->oflags),
-		  		oper_p->class->name ? oper_p->class->name : "");
-		else
-			for (from = (ConfigItem_oper_from *) oper_p->from; from; from = (ConfigItem_oper_from *) from->next)
-		  		sendto_one(sptr, rpl_str(RPL_STATSOLINE),
-		  			me.name, sptr->name, 
-		  			'O', from->name, oper_p->name,
-		  			oflagstr(oper_p->oflags),
-		  			oper_p->class->name? oper_p->class->name : "");
+		for (m = oper_p->mask; m; m = m->next)
+		{
+	  		sendto_one(sptr, rpl_str(RPL_STATSOLINE),
+	  			me.name, sptr->name, 
+	  			'O', m->mask, oper_p->name,
+	  			oflagstr(oper_p->oflags),
+	  			oper_p->class->name? oper_p->class->name : "");
+		}
 	}
 	return 0;
 }
@@ -788,14 +784,17 @@ int stats_uline(aClient *sptr, char *para)
 }
 int stats_vhost(aClient *sptr, char *para)
 {
-	ConfigItem_oper_from *from;
+	ConfigItem_mask *m;
 	ConfigItem_vhost *vhosts;
-	for(vhosts = conf_vhost; vhosts; vhosts = (ConfigItem_vhost *) vhosts->next) 
+
+	for (vhosts = conf_vhost; vhosts; vhosts = (ConfigItem_vhost *) vhosts->next) 
 	{
-		for (from = (ConfigItem_oper_from *)vhosts->from; from; from = (ConfigItem_oper_from *)from->next) 
+		for (m = vhosts->mask; m; m = m->next)
+		{
 			sendto_one(sptr, ":%s %i %s :vhost %s%s%s %s %s", me.name, RPL_TEXT, sptr->name,
 			     vhosts->virtuser ? vhosts->virtuser : "", vhosts->virtuser ? "@" : "",
-			     vhosts->virthost, vhosts->login, from->name);
+			     vhosts->virthost, vhosts->login, m->mask);
+		}
 	}
 	return 0;
 }

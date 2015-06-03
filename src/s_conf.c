@@ -1908,23 +1908,13 @@ void	config_rehash()
 	/* wipe the fckers out ..*/
 	for (oper_ptr = conf_oper; oper_ptr; oper_ptr = (ConfigItem_oper *)next)
 	{
-		ConfigItem_oper_from *oper_from;
+		ConfigItem_mask *oper_mask;
 		next = (ListStruct *)oper_ptr->next;
 		ircfree(oper_ptr->name);
 		ircfree(oper_ptr->swhois);
 		ircfree(oper_ptr->snomask);
 		Auth_DeleteAuthStruct(oper_ptr->auth);
-		for (oper_from = (ConfigItem_oper_from *) oper_ptr->from; oper_from; oper_from = (ConfigItem_oper_from *) next2)
-		{
-			next2 = (ListStruct *)oper_from->next;
-			ircfree(oper_from->name);
-			if (oper_from->netmask)
-			{
-				MyFree(oper_from->netmask);
-			}
-			DelListItem(oper_from, oper_ptr->from);
-			MyFree(oper_from);
-		}
+		unreal_delete_masks(oper_ptr->mask);
 		DelListItem(oper_ptr, conf_oper);
 		MyFree(oper_ptr);
 	}
@@ -2020,7 +2010,7 @@ void	config_rehash()
 	}
 	for (vhost_ptr = conf_vhost; vhost_ptr; vhost_ptr = (ConfigItem_vhost *) next)
 	{
-		ConfigItem_oper_from *vhost_from;
+		ConfigItem_mask *vhost_mask;
 		
 		next = (ListStruct *)vhost_ptr->next;
 		
@@ -2028,14 +2018,7 @@ void	config_rehash()
 		Auth_DeleteAuthStruct(vhost_ptr->auth);
 		ircfree(vhost_ptr->virthost);
 		ircfree(vhost_ptr->virtuser);
-		for (vhost_from = (ConfigItem_oper_from *) vhost_ptr->from; vhost_from;
-			vhost_from = (ConfigItem_oper_from *) next2)
-		{
-			next2 = (ListStruct *)vhost_from->next;
-			ircfree(vhost_from->name);
-			DelListItem(vhost_from, vhost_ptr->from);
-			MyFree(vhost_from);
-		}
+		unreal_delete_masks(vhost_ptr->mask);
 		DelListItem(vhost_ptr, conf_vhost);
 		MyFree(vhost_ptr);
 	}
@@ -3543,9 +3526,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
 	ConfigItem_oper *oper = NULL;
-	ConfigItem_oper_from *from;
 	OperFlag *ofp = NULL;
-	struct irc_netmask tmp;
 
 	oper =  MyMallocEx(sizeof(ConfigItem_oper));
 	oper->name = strdup(ce->ce_vardata);
@@ -3613,23 +3594,9 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 		{
 			oper->maxlogins = atoi(cep->ce_vardata);
 		}
-		else if (!strcmp(cep->ce_varname, "from"))
+		else if (!strcmp(cep->ce_varname, "mask"))
 		{
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
-			{
-				if (!strcmp(cepp->ce_varname, "userhost"))
-				{
-					from = MyMallocEx(sizeof(ConfigItem_oper_from));
-					ircstrdup(from->name, cepp->ce_vardata);
-					tmp.type = parse_netmask(from->name, &tmp);
-					if (tmp.type != HM_HOST)
-					{
-						from->netmask = MyMallocEx(sizeof(struct irc_netmask));
-						bcopy(&tmp, from->netmask, sizeof(struct irc_netmask));
-					}
-					AddListItem(from, oper->from);
-				}
-			}
+			unreal_add_masks(&oper->mask, cep);
 		}
 	}
 	AddListItem(oper, conf_oper);
@@ -3639,7 +3606,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 {
 	char has_class = 0, has_password = 0, has_flags = 0, has_swhois = 0, has_snomask = 0;
-	char has_modes = 0, has_require_modes = 0, has_from = 0, has_maxlogins = 0, has_operclass = 0;
+	char has_modes = 0, has_require_modes = 0, has_mask = 0, has_maxlogins = 0, has_operclass = 0;
 	int oper_flags = 0;
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
@@ -3795,6 +3762,10 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 				}
 				has_flags = 1;
 			}
+			else if (!strcmp(cep->ce_varname, "mask"))
+			{
+				has_mask = 1;
+			}
 			else
 			{
 				config_error_unknown(cep->ce_fileptr->cf_filename, 
@@ -3839,30 +3810,9 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			/* oper::from {} */
 			else if (!strcmp(cep->ce_varname, "from"))
 			{
-				if (has_from)
-				{
-					config_warn_duplicate(cep->ce_fileptr->cf_filename,
-						cep->ce_varlinenum, "oper::from");
-					continue;
-				}
-				has_from = 1;
-				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
-				{
-					if (config_is_blankorempty(cepp, "oper::from"))
-					{
-						errors++;
-						continue;
-					}
-					/* Unknown Entry */
-					if (strcmp(cepp->ce_varname, "userhost"))
-					{
-						config_error_unknown(cepp->ce_fileptr->cf_filename,
-							cepp->ce_varlinenum, "oper::from",
-							cepp->ce_varname);
-						errors++;
-						continue;
-					}
-				}
+				config_error("%s:%i: oper::from::userhost is now called oper::mask",
+				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
 				continue;
 			}
 			else
@@ -3880,10 +3830,10 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			"oper::password");
 		errors++;
 	}	
-	if (!has_from)
+	if (!has_mask)
 	{
 		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			"oper::from");
+			"oper::mask");
 		errors++;
 	}	
 	if (!has_flags)
@@ -3907,6 +3857,8 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			"oper::class");
 		errors++;
 	}
+	
+	// TODO: upgrading hints
 	return errors;
 	
 }
@@ -5538,7 +5490,7 @@ int     _test_except(ConfigFile *conf, ConfigEntry *ce)
 int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigItem_vhost *vhost;
-	ConfigItem_oper_from *from;
+	ConfigItem_mask *mask;
 	ConfigEntry *cep, *cepp;
 	vhost = MyMallocEx(sizeof(ConfigItem_vhost));
 
@@ -5561,17 +5513,9 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 			vhost->login = strdup(cep->ce_vardata);	
 		else if (!strcmp(cep->ce_varname, "password"))
 			vhost->auth = Auth_ConvertConf2AuthStruct(cep);
-		else if (!strcmp(cep->ce_varname, "from"))
+		else if (!strcmp(cep->ce_varname, "mask"))
 		{
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
-			{
-				if (!strcmp(cepp->ce_varname, "userhost"))
-				{
-					from = MyMallocEx(sizeof(ConfigItem_oper_from));
-					ircstrdup(from->name, cepp->ce_vardata);
-					AddListItem(from, vhost->from);
-				}
-			}
+			unreal_add_masks(&vhost->mask, cep);
 		}
 		else if (!strcmp(cep->ce_varname, "swhois"))
 			vhost->swhois = strdup(cep->ce_vardata);
@@ -5584,8 +5528,7 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 {
 	int errors = 0;
 	ConfigEntry *cep;
-	char has_vhost = 0, has_login = 0, has_password = 0, has_swhois = 0, has_from = 0;
-	char has_userhost = 0;
+	char has_vhost = 0, has_login = 0, has_password = 0, has_swhois = 0, has_mask = 0;
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -5686,31 +5629,14 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 		{
 			ConfigEntry *cepp;
 
-			if (has_from)
-			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename, 
-					cep->ce_varlinenum, "vhost::from");
-				continue;
-			}
-			has_from = 1;
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
-			{
-				if (config_is_blankorempty(cepp, "vhost::from"))
-				{
-					errors++;
-					continue;
-				}
-				if (!strcmp(cepp->ce_varname, "userhost"))
-					has_userhost = 1;
-				else
-				{
-					config_error_unknown(cepp->ce_fileptr->cf_filename,
-						cepp->ce_varlinenum, "vhost::from",
-						cepp->ce_varname);
-					errors++;
-					continue;	
-				}
-			}
+			config_error("%s:%i: vhost::from::userhost is now called oper::mask",
+						 cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			errors++;
+			continue;
+		}
+		else if (!strcmp(cep->ce_varname, "mask"))
+		{
+			has_mask = 1;
 		}
 		else if (!strcmp(cep->ce_varname, "swhois"))
 		{
@@ -5748,18 +5674,13 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 			"vhost::password");
 		errors++;
 	}
-	if (!has_from)
+	if (!has_mask)
 	{
 		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			"vhost::from");
+			"vhost::mask");
 		errors++;
 	}
-	if (!has_userhost)
-	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			"vhost::userhost");
-		errors++;
-	}
+	// TODO: 3.2.x -> 3.4.x upgrading hints
 	return errors;
 }
 

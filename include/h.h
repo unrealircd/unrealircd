@@ -761,3 +761,6 @@ extern int unreal_match(aMatch *m, char *str);
 extern int unreal_match_method_strtoval(char *str);
 extern char *unreal_match_method_valtostr(int val);
 extern int mixed_network(void);
+extern void unreal_delete_masks(ConfigItem_mask *m);
+extern void unreal_add_masks(ConfigItem_mask **head, ConfigEntry *ce);
+extern int unreal_mask_match(aClient *acptr, ConfigItem_mask *m);
