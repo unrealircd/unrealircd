@@ -3626,6 +3626,16 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			has_password = 1;
 			if (Auth_CheckError(cep) < 0)
 				errors++;
+			
+			if (ce->ce_vardata && cep->ce_vardata &&
+			    !strcmp(ce->ce_vardata, "bobsmith") &&
+			    !strcmp(cep->ce_vardata, "test"))
+			{
+				config_error("%s:%i: please change the the name and password of the "
+				             "default 'opersmith' oper block",
+				             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+				errors++;
+			}
 			continue;
 		}
 		if (!strcmp(cep->ce_varname, "operclass"))
