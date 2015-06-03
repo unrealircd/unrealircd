@@ -7027,14 +7027,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 
 			}
 		}
-		else if (!strcmp(cep->ce_varname, "throttle")) {
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
-				if (!strcmp(cepp->ce_varname, "period")) 
-					tempiConf.throttle_period = config_checkval(cepp->ce_vardata,CFG_TIME);
-				else if (!strcmp(cepp->ce_varname, "connections"))
-					tempiConf.throttle_count = atoi(cepp->ce_vardata);
-			}
-		}
 		else if (!strcmp(cep->ce_varname, "anti-flood")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				if (!strcmp(cepp->ce_varname, "unknown-flood-bantime")) 
@@ -7061,7 +7053,13 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					tempiConf.nick_count = cnt;
 					tempiConf.nick_period = period;
 				}
-
+				else if (!strcmp(cepp->ce_varname, "connect-flood"))
+				{
+					int cnt, period;
+					config_parse_flood(cepp->ce_vardata, &cnt, &period);
+					tempiConf.throttle_count = cnt;
+					tempiConf.throttle_period = period;
+				}
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "options")) {
@@ -7723,40 +7721,13 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "throttle")) {
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
-				CheckNull(cepp);
-				if (!strcmp(cepp->ce_varname, "period")) {
-					int x = config_checkval(cepp->ce_vardata,CFG_TIME);
-					CheckDuplicate(cepp, throttle_period, "throttle::period");
-					if (x > 86400*7)
-					{
-						config_error("%s:%i: insane set::throttle::period value",
-							cepp->ce_fileptr->cf_filename,
-							cepp->ce_varlinenum);
-						errors++;
-						continue;
-					}
-				}
-				else if (!strcmp(cepp->ce_varname, "connections")) {
-					int x = atoi(cepp->ce_vardata);
-					CheckDuplicate(cepp, throttle_connections, "throttle::connections");
-					if ((x < 1) || (x > 127))
-					{
-						config_error("%s:%i: set::throttle::connections out of range, should be 1-127",
-							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
-						errors++;
-						continue;
-					}
-				}
-				else
-				{
-					config_error_unknownopt(cepp->ce_fileptr->cf_filename,
-						cepp->ce_varlinenum, "set::throttle",
-						cepp->ce_varname);
-					errors++;
-					continue;
-				}
-			}
+			config_error("%s:%i: set::throttle has been renamed. you now use "
+			             "set::anti-flood::connect-flood <connections>:<period>. "
+			             "Or just remove the throttle block and you get the default "
+			             "of 3 per 60 seconds.",
+			             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			errors++;
+			continue;
 		}
 		else if (!strcmp(cep->ce_varname, "anti-flood")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
@@ -7825,6 +7796,19 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					{
 						config_error("%s:%i: set::anti-flood::away-flood error. Syntax is '<count>:<period>' (eg 5:60), "
 						             "count should be 1-255, period should be greater than 4",
+							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
+						errors++;
+					}
+				}
+				else if (!strcmp(cepp->ce_varname, "connect-flood"))
+				{
+					int cnt, period;
+					CheckDuplicate(cepp, anti_flood_connect_flood, "anti-flood::connect-flood");
+					if (!config_parse_flood(cepp->ce_vardata, &cnt, &period) ||
+					    (cnt < 1) || (cnt > 255) || (period < 1) || (period > 3600))
+					{
+						config_error("%s:%i: set::anti-flood::connect-flood: Syntax is '<count>:<period>' (eg 5:60), "
+						             "count should be 1-255, period should be 1-3600",
 							cepp->ce_fileptr->cf_filename, cepp->ce_varlinenum);
 						errors++;
 					}

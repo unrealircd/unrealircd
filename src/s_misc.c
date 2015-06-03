@@ -1119,9 +1119,11 @@ int unreal_mask_match(aClient *acptr, ConfigItem_mask *m)
 		snprintf(nuip2, sizeof(nuip2), "%s@%s", acptr->username, Inet_ia2pNB(&acptr->ip, 1));
 	}
 
+	// wait.. if we use match_ip() we don't need both nuip & nuip2 ? better verify... (IPv4-IPv6 fun)
+
 	for (; m; m = m->next)
 	{
-		if (match_ip(acptr->ip, nuhost, m->mask, m->netmask) || !match(m->mask, nuhost))
+		if (match_ip(acptr->ip, nuip, m->mask, m->netmask) || !match(m->mask, nuhost))
 			return 1;
 	}
 	

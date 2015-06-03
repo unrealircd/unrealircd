@@ -339,6 +339,7 @@ struct SetCheck {
 	unsigned has_anti_flood_away_period:1;
 #endif
 	unsigned has_anti_flood_nick_flood:1;
+	unsigned has_anti_flood_connect_flood:1;
 	unsigned has_ident_connect_timeout:1;
 	unsigned has_ident_read_timeout:1;
 	unsigned has_default_bantime:1;
