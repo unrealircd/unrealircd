@@ -1071,7 +1071,7 @@ static void unreal_add_mask(ConfigItem_mask **head, ConfigEntry *ce)
 	memset(&tmp, 0, sizeof(tmp));
 
 	/* Since we allow both mask "xyz"; and mask { abc; def; };... */
-	if (!strcmp(m->mask, "mask") && ce->ce_vardata)
+	if (!strcmp(ce->ce_varname, "mask") && ce->ce_vardata)
 		ircstrdup(m->mask, ce->ce_vardata);
 	else
 		ircstrdup(m->mask, ce->ce_varname);
