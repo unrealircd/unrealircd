@@ -4795,6 +4795,13 @@ int	_conf_allow(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 	}
+	
+	if (!allow->hostname)
+		allow->hostname = strdup("*@NOMATCH");
+		
+	if (!allow->ip)
+		allow->ip = strdup("*@NOMATCH");
+		
 	AddListItem(allow, conf_allow);
 	return 1;
 }
@@ -4997,22 +5004,33 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 			continue;
 		}
 	}
-	if (!has_ip)
+
+	if (!has_ip && !has_hostname)
 	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			"allow::ip");
+		config_error("%s:%d: allow block needs an allow::ip or allow::hostname",
+				 ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		errors++;
 	}
-	if (!has_hostname)
+
+	if (has_ip && has_hostname)
 	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			"allow::hostname");
-		errors++;
+		config_warn("%s:%d: allow block has both allow::ip and allow::hostname. "
+		            "In previous UnrealIRCd versions (3.2.x) this was normal. "
+		            "Now we recommend using just one of them to avoid confusion.",
+		            ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 	}
+
 	if (!has_class)
 	{
 		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 			"allow::class");
+		errors++;
+	}
+
+	if (!has_maxperip)
+	{
+		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			"allow::maxperip");
 		errors++;
 	}
 	return errors;
