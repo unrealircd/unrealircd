@@ -3632,7 +3632,7 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			    !strcmp(cep->ce_vardata, "test"))
 			{
 				config_error("%s:%i: please change the the name and password of the "
-				             "default 'opersmith' oper block",
+				             "default 'bobsmith' oper block",
 				             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 				errors++;
 			}
