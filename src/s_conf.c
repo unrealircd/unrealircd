@@ -1515,6 +1515,7 @@ void config_setdefaultsettings(aConfiguration *i)
 #endif /* INET6 */
 	i->nicklen = NICKLEN;
 	i->link_bindip = strdup("*");
+	i->oper_only_stats = strdup("*");
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,
