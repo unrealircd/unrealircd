@@ -2597,31 +2597,18 @@ ConfigItem_tld *Find_tld(aClient *cptr, char *uhost) {
 }
 
 
-ConfigItem_link *Find_link(char *username,
-			   char *hostname,
-			   char *ip,
-			   char *servername)
+ConfigItem_link *Find_link(char *servername, aClient *acptr)
 {
 	ConfigItem_link	*link;
-	char uip[HOSTLEN + USERLEN + 3];
-	char uhost[HOSTLEN + USERLEN + 3];
-	
-	if (!username || !hostname || !servername || !ip)
-		return NULL;
-
-	snprintf(uip, sizeof(uip), "%s@%s", username, ip);
-	snprintf(uhost, sizeof(uhost), "%s@%s", username, hostname);
 
 	for (link = conf_link; link; link = (ConfigItem_link *)link->next)
 	{
-		if (!match(link->servername, servername) &&
-		    (!match(link->incoming.mask, uip) || !match(link->incoming.mask, uhost)))
+		if (!match(link->servername, servername) && unreal_mask_match(acptr, link->incoming.mask))
 		{
 		    return link;
 		}
 	}
 	return NULL;
-
 }
 
 /* ugly ugly ugly */
@@ -3765,7 +3752,8 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			}
 			else if (!strcmp(cep->ce_varname, "mask"))
 			{
-				has_mask = 1;
+				if (cep->ce_vardata || cep->ce_entries)
+					has_mask = 1;
 			}
 			else
 			{
@@ -6163,17 +6151,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 			{
 				if (!strcmp(cepp->ce_varname, "mask"))
 				{
-					// TODO: support multiple
-					
-					/* Mask may be user@ip or just ip */
-					if (strchr(cepp->ce_vardata, '@'))
-					{
-						ircstrdup(link->incoming.mask, cepp->ce_vardata);
-					} else {
-						char buf[HOSTLEN + 4];
-						snprintf(buf, sizeof(buf), "*@%s", cepp->ce_vardata); /* auto-convert to u@ip */
-						ircstrdup(link->incoming.mask, buf);
-					}
+					unreal_add_masks(&link->incoming.mask, cepp);
 				}
 			}
 		}
@@ -6311,7 +6289,10 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
 				if (!strcmp(cepp->ce_varname, "mask"))
-					has_incoming_mask = 1;
+				{
+					if (cepp->ce_vardata || cepp->ce_entries)
+						has_incoming_mask = 1;
+				}
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "outgoing"))
@@ -6415,7 +6396,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 	{
 		config_error("%s:%d: link block needs at least an incoming or outgoing section. "
 		             "Are you upgrading from version 3.2.x to 3.4.x? "
-		             "Check out https://www.unrealircd.org/docs/Upgrading_from_3.2.x#Link%20block",
+		             "Check out https://www.unrealircd.org/docs/Upgrading_from_3.2.x#Link%%20block",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		errors++;
 	}

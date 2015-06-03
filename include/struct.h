@@ -1314,7 +1314,7 @@ struct _configitem_link {
 	/* config options: */
 	char *servername; /**< Name of the server ('link <servername> { }') */
 	struct {
-		char *mask; /**< incoming mask(s) to accept (TODO: linked list) */
+		ConfigItem_mask *mask; /**< incoming mask(s) to accept */
 	} incoming;
 	struct {
 		char *bind_ip; /**< Our IP to bind to when doing the connect */

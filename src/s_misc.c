@@ -1069,8 +1069,12 @@ static void unreal_add_mask(ConfigItem_mask **head, ConfigEntry *ce)
 	struct irc_netmask tmp;
 
 	memset(&tmp, 0, sizeof(tmp));
-	
-	ircstrdup(m->mask, ce->ce_vardata);
+
+	/* Since we allow both mask "xyz"; and mask { abc; def; };... */
+	if (!strcmp(m->mask, "mask") && ce->ce_vardata)
+		ircstrdup(m->mask, ce->ce_vardata);
+	else
+		ircstrdup(m->mask, ce->ce_varname);
 	
 	tmp.type = parse_netmask(m->mask, &tmp);
 	if (tmp.type != HM_HOST)
@@ -1100,16 +1104,19 @@ int unreal_mask_match(aClient *acptr, ConfigItem_mask *m)
 {
 	static char nuhost[NICKLEN + USERLEN + HOSTLEN + 8];
 	static char nuip[NICKLEN + USERLEN + HOSTLEN + 8];
+	static char nuip2[NICKLEN + USERLEN + HOSTLEN + 8];
 
 	if (acptr->user)
 	{
 		/* is a person */
 		strlcpy(nuhost, make_user_host(acptr->user->username, acptr->user->realhost), sizeof(nuhost));
-		strlcpy(nuip, make_user_host(acptr->user->username, Inet_ia2p(&acptr->ip)), sizeof(nuip));
+		strlcpy(nuip, make_user_host(acptr->user->username, Inet_ia2pNB(&acptr->ip, 0)), sizeof(nuip));
+		strlcpy(nuip2, make_user_host(acptr->user->username, Inet_ia2pNB(&acptr->ip, 1)), sizeof(nuip2));
 	} else {
 		/* is an unknown or a server */
 		snprintf(nuhost, sizeof(nuhost), "%s@%s", acptr->username, acptr->sockhost);
-		snprintf(nuip, sizeof(nuip), "%s@%s", acptr->username, Inet_ia2p(&acptr->ip));
+		snprintf(nuip, sizeof(nuip), "%s@%s", acptr->username, Inet_ia2pNB(&acptr->ip, 0));
+		snprintf(nuip2, sizeof(nuip2), "%s@%s", acptr->username, Inet_ia2pNB(&acptr->ip, 1));
 	}
 
 	for (; m; m = m->next)
