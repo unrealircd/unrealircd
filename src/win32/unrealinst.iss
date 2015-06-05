@@ -38,7 +38,6 @@ Name: "fixperm"; Description: "Make Unreal folder writable by current user";
 Source: "..\..\wircd.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\WIRCD.pdb"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\.CHANGES.NEW"; DestDir: "{app}"; DestName: "CHANGES.NEW.txt";Flags: ignoreversion
-Source: "..\..\.CONFIG.RANT"; DestDir: "{app}"; DestName: "CONFIG.RANT.txt"; Flags: ignoreversion
 Source: "..\..\.RELEASE.NOTES"; DestDir: "{app}"; DestName: "RELEASE.NOTES.txt"; Flags: ignoreversion
 Source: "..\..\.SICI"; DestDir: "{app}"; DestName: "SICI.txt"; Flags: ignoreversion
 Source: "..\..\badwords.channel.conf"; DestDir: "{app}"; Flags: ignoreversion
