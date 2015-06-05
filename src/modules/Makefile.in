@@ -67,6 +67,7 @@ all: build
 build: $(MODULES)
 	cd chanmodes; $(MAKE) all
 	cd usermodes; $(MAKE) all
+	cd extbans; $(MAKE) all
 
 custommodule: $(MODULEFILE).c
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \

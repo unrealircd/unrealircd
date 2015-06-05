@@ -734,6 +734,7 @@ AC_CONFIG_FILES([Makefile
 	src/modules/Makefile
 	src/modules/chanmodes/Makefile
 	src/modules/usermodes/Makefile
+	src/modules/extbans/Makefile
 	unreal
 	ircdcron/ircdchk
 	ircdcron/ircd.cron])

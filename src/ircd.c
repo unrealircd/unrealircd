@@ -1173,7 +1173,6 @@ int InitwIRCD(int argc, char *argv[])
 	tkl_init();
 	umode_init();
 	extcmode_init();
-	extban_init();
 	init_random(); /* needs to be done very early!! */
 	clear_scache_hash_table();
 #ifdef FORCE_CORE
