@@ -378,6 +378,8 @@ MODVAR ConfigFile		*conf = NULL;
 MODVAR int			config_error_flag = 0;
 int			config_verbose = 0;
 
+int need_34_upgrade = 0;
+
 void add_include(const char *filename, const char *included_from, int included_from_line);
 #ifdef USE_LIBCURL
 void add_remote_include(const char *, const char *, int, const char *, const char *included_from, int included_from_line);
@@ -1630,6 +1632,16 @@ void applymeblock(void)
 		strlcpy(me.id, conf_me->sid, sizeof(me.id));
 }
 
+void upgrade_conf_to_34(void)
+{
+	need_34_upgrade = 0;
+	config_error("******************************************************************");
+	config_error("This *seems* an UnrealIRCd 3.2.x configuration file.");
+	config_error("To upgrade it to the new 3.4.x format, run: ./unreal upgrade-conf");
+	config_error("******************************************************************");
+	/* TODO: win32 may require a different error */
+}
+
 int	init_conf(char *rootconf, int rehash)
 {
 	char *old_pid_file = NULL;
@@ -1845,6 +1857,8 @@ int	load_conf(char *filename, const char *original_path)
 			if (!strcmp(ce->ce_varname, "loadmodule"))
 			{
 				 ret = _conf_loadmodule(cfptr, ce);
+				 if (need_34_upgrade)
+				 	upgrade_conf_to_34();
 				 if (ret < 0) 
 					 	return ret;
 			}
@@ -2365,7 +2379,6 @@ OperFlag *config_binary_flags_search(OperFlag *table, char *cmd, int size) {
 	return NULL;
 }
 
-
 int	config_test()
 {
 	ConfigEntry 	*ce;
@@ -2434,6 +2447,11 @@ int	config_test()
 	if (errors > 0)
 	{
 		config_error("%i errors encountered", errors);
+	}
+	
+	if (need_34_upgrade)
+	{
+		upgrade_conf_to_34();
 	}
 	return (errors > 0 ? -1 : 1);
 }
@@ -3812,6 +3830,7 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 				config_error("%s:%i: oper::from::userhost is now called oper::mask",
 				             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 				errors++;
+				need_34_upgrade = 1;
 				continue;
 			}
 			else
@@ -4965,10 +4984,9 @@ int	_test_allow(ConfigFile *conf, ConfigEntry *ce)
 
 	if (has_ip && has_hostname)
 	{
-		config_warn("%s:%d: allow block has both allow::ip and allow::hostname. "
-		            "In previous UnrealIRCd versions (3.2.x) this was normal. "
-		            "Now we recommend using just one of them to avoid confusion.",
+		config_warn("%s:%d: allow block has both allow::ip and allow::hostname which is no longer permitted.",
 		            ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		need_34_upgrade = 1;
 	}
 
 	if (!has_class)
@@ -5631,6 +5649,7 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 			config_error("%s:%i: vhost::from::userhost is now called oper::mask",
 						 cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			errors++;
+			need_34_upgrade = 1;
 			continue;
 		}
 		else if (!strcmp(cep->ce_varname, "mask"))
@@ -5955,8 +5974,7 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 
 	if (!has_match_type && !has_match && has_action && has_target)
 	{
-		config_error("Upgrading from 3.2.x to 3.4.x? Your spamfilter { } blocks need to be converted. "
-					 "See https://www.unrealircd.org/docs/Upgrading_from_3.2.x#Spamfilter");
+		need_34_upgrade = 1;
 	}
 
 	return errors;
@@ -6404,11 +6422,10 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 
 	if (!has_incoming && !has_outgoing)
 	{
-		config_error("%s:%d: link block needs at least an incoming or outgoing section. "
-		             "Are you upgrading from version 3.2.x to 3.4.x? "
-		             "Check out https://www.unrealircd.org/docs/Upgrading_from_3.2.x#Link%%20block",
+		config_error("%s:%d: link block needs at least an incoming or outgoing section.",
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		errors++;
+		need_34_upgrade = 1;
 	}
 
 	if (has_incoming)
@@ -7737,6 +7754,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			             "of 3 per 60 seconds.",
 			             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			errors++;
+			need_34_upgrade = 1;
 			continue;
 		}
 		else if (!strcmp(cep->ce_varname, "anti-flood")) {
@@ -8328,6 +8346,7 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 		             "Fix this by editing your configuration file: remove the loadmodule line for commands and add the following line instead: "
 		             "include \"modules.conf\";",
 		             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
+		need_34_upgrade = 1;
 		return -1;
 	}
 	if ((ret = Module_Create(ce->ce_vardata))) {
