@@ -313,7 +313,7 @@ int ret;
 			ptr = parv[1]; 
 		for (format = alias->format; format; format = (ConfigItem_alias_format *)format->next) 
 		{
-			if (regexec(&format->expr, ptr, 0, NULL, 0) == 0) 
+			if (unreal_match(format->expr, ptr))
 			{
 				/* Parse the parameters */
 				int i = 0, j = 0, k = 1;

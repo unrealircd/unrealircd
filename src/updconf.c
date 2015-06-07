@@ -752,7 +752,7 @@ int upgrade_allow(ConfigEntry *ce)
 	return 1;
 }
 
-int update_conf_file()
+int update_conf_file(void)
 {
 	ConfigFile *cf = NULL;
 	ConfigEntry *ce = NULL, *cep, *cepp;
@@ -914,7 +914,7 @@ ConfigFile *build_include_list(char *fname)
 	return cf_list;
 }
 
-void update_conf()
+void update_conf(void)
 {
 	ConfigFile *cf;
 	ConfigEntry *ce, *cep, *cepp;
@@ -937,7 +937,7 @@ void update_conf()
 			config_error("Could not create temp file for processing!");
 			die();
 		}
-		if (update_conf_file(cf->cf_filename))
+		if (update_conf_file())
 		{
 			char buf[512];
 			snprintf(buf, sizeof(buf), "%s.old", configfile);

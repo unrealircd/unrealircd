@@ -481,7 +481,7 @@ aMatch *unreal_create_match(MatchType type, char *str, char **error)
 			if (error)
 			{
 				if (erroroffset > 0)
-					snprintf(errorbuf, sizeof(errorbuf), "%s (at character #%d)", buf2, erroroffset);
+					snprintf(errorbuf, sizeof(errorbuf), "%s (at character #%d)", buf2, (int)erroroffset);
 				else
 					strlcpy(errorbuf, buf2, sizeof(errorbuf));
 				*error = errorbuf;
@@ -553,6 +553,8 @@ int unreal_match(aMatch *m, char *str)
 		return 0;
 	}
 #endif
+
+	return 0;
 }
 
 int unreal_match_method_strtoval(char *str)
