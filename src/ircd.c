@@ -1166,6 +1166,7 @@ int InitwIRCD(int argc, char *argv[])
 
 	mp_pool_init();
 	dbuf_init();
+	initlists();
 
 #ifdef USE_LIBCURL
 	url_init();
@@ -1339,6 +1340,9 @@ int InitwIRCD(int argc, char *argv[])
 			  generate_cloakkeys();
 			  exit(0);
 #endif
+		  case 'U':
+		      update_conf();
+		      exit(0);
 		  default:
 #ifndef _WIN32
 			  return bad_command(myargv[0]);
@@ -1412,7 +1416,6 @@ int InitwIRCD(int argc, char *argv[])
 	clear_watch_hash_table();
 	bzero(&loop, sizeof(loop));
 	init_CommandHash();
-	initlists();
 	initwhowas();
 	initstats();
 	DeleteTempModules();

@@ -1,792 +1,990 @@
-/************************************************************************
-
- *   Unreal Internet Relay Chat Daemon, src/updconf.c
- *   Copyright (C) 2001 UnrealIRCd Team
+/*
+ * Configuration file updater - upgrade from 3.2.x to 3.4.x
+ * (C) Copyright 2015 Bram Matthys and the UnrealIRCd team
  *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 1, or (at your option)
- *   any later version.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
- *
- *   You should have received a copy of the GNU General Public License
- *   along with this program; if not, write to the Free Software
- *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * License: GPLv2
  */
+ 
+#include "unrealircd.h"
 
-#include <stdio.h>
-#include <string.h>
-#include "../include/config.h"
-#include "../include/setup.h"
-#ifdef _WIN32
-#define index strchr
-#define strcasecmp stricmp
-#endif
+extern ConfigFile *config_load(char *filename);
+extern void config_free(ConfigFile *cfptr);
 
-#define	BadPtr(x) (!(x) || (*(x) == '\0'))
-#define AllocCpy(x,y) if (x) free(x);  x = (char *) malloc(strlen(y) + 1); strcpy(x,y)
+char configfiletmp[512];
 
-struct flags {
-	char oldflag;
-	char *newflag;
-};
-
-struct uline *ulines = NULL;
-struct link  *links = NULL;
-struct oper *opers = NULL;
-struct vhost *vhosts = NULL;
-
-struct flags oflags[] = {
-	{ 'o', "local" },
-	{ 'O', "global" },
-	{ 'r', "can_rehash" },
-	{ 'e', "eyes" },
-	{ 'D', "can_die" },
-	{ 'R', "can_restart" },
-	{ 'h', "helpop" },
-	{ 'g', "can_globops" },
-	{ 'w', "can_wallops" },
-	{ 'c', "can_localroute" },
-	{ 'L', "can_globalroute" },
-	{ 'k', "can_localkill" },
-	{ 'K', "can_globalkill" },
-	{ 'b', "can_kline" },
- 	{ 'B', "can_unkline" },
-	{ 'n', "can_localnotice" },
-	{ 'G', "can_globalnotice" },
-	{ 'a', "services-admin"},
-	{ 'A', "admin" },
-	{ 'N', "netadmin"},
-	{ 'C', "coadmin"},
-	{ 'u', "get_umodec"},
-	{ 'f', "get_umodef"},
-	{ 'z', "can_zline" },
-	{ 'W', "get_umodew" },
-	{ '^', "can_stealth" },
-	{ NULL, NULL }
-};
-
-struct flags listenflags[] = {
-	{ 'S', "serversonly" },
-	{ 'C', "clientsonly" },
-	{ 'J', "java" },
-	{ 's', "ssl" },
-	{ '*', "standard" },
-	{ NULL, NULL }
-};
-
-struct flags linkflags[] = {
-	{ 'S', "ssl" },
-	{ 'Z', "zip" },
-	{ NULL, NULL }
-};
-
-char *getfield(char *newline)
+static void die()
 {
-	static char *line = NULL;
-	char *end, *field, *x;
-
-	if (newline)
-		line = newline;
-
-	if (line == NULL)
-		return NULL;
-
-	field = line;
-	if (*field == '"')
-	{
-		field++;
-		x = index(field, '"');
-		if (!x)
-			return NULL;
-		*x = '\0';
-		x++;
-		if (*x == '\n')
-			line = NULL;
-		else
-			line = x;
-
-		end = x;
-		line++;
-		*end = '\0';
-		return (field);
-
-	}
-	if ((end = (char *)index(line, ':')) == NULL)
-	{
-		line = NULL;
-		if ((end = (char *)index(field, '\n')) == NULL)
-			end = field + strlen(field);
-	}
-	else
-		line = end + 1;
-	*end = '\0';
-	return (field);
+#ifdef _WIN32
+	win_error(); /* ? */
+#endif
+	exit(0);
 }
 
+#define CFGBUFSIZE 1024
+void modify_file(int start, char *ins, int stop)
+{
+	char configfiletmp2[512];
+	FILE *fdi, *fdo;
+	char *rdbuf, *wbuf;
+	int n;
+	int first = 1;
+		
+	snprintf(configfiletmp2, sizeof(configfiletmp2), "%s.tmp", configfiletmp); // .tmp.tmp :D
 
-struct oper {
-	char *login;
-	char *pass;
-	char *flags;
-	char *class;
-	struct host *hosts;
-	struct oper *next;
-};
+	fdi = fopen(configfiletmp, "r");
+	fdo = fopen(configfiletmp2, "w");
 
-struct vhost {
-	char *login;
-	char *pass;
-	char *vhost;
-	struct host *hosts;
-	struct vhost *next;
-};
+	if (!fdi || !fdo)
+	{
+		config_error("could not read/write to %s/%s", configfiletmp, configfiletmp2);
+		die();
+	}
 
-struct host {
-	char *host;
-	struct host *next;
-};
-
-struct uline {
-	char *name;
-	struct uline *next;
-};
-
-struct link {
-	char 	*name;
-	char 	*hostmask;
-	short 	type;
-	int  	port;
-	char	*flags;
-	char 	*class;
-	char 	*connpass;
-	char 	*recpass;
-	int  	leafdepth;
-	char    *leafmask;
-	char 	*hubmask;
-	struct link *next;
-};
+	rdbuf = MyMallocEx(start);
 	
+	if ((n = fread(rdbuf, 1, start, fdi)) != start)
+	{
+		config_error("read error in remove_section(%d,%d): %d", start, stop, n);
+		die();
+	}
+	
+	fwrite(rdbuf, 1, start, fdo);
+	
+	MyFree(rdbuf);
 
+	if (ins)
+		fwrite(ins, 1, strlen(ins), fdo); /* insert this piece */
 
-int add_uline(char *name) {
-	struct uline *ul = (struct uline *)malloc(sizeof(struct uline));
+	if (stop > 0)
+	{
+		if (fseek(fdi, stop+1, SEEK_SET) != 0)
+			goto end; /* end of file we hope.. */
+	}
+	
+	// read the remaining stuff
+	rdbuf = MyMallocEx(CFGBUFSIZE);
+	
+	while(1)
+	{
+		n = fread(rdbuf, 1, CFGBUFSIZE, fdi);
+		if (n <= 0)
+			break; // done
+		
+		wbuf = rdbuf;
+		
+		if (first && (stop > 0))
+		{
+			if ((n > 0) && (*wbuf == '\r'))
+			{
+				wbuf++;
+				n--;
+			}
+			if ((n > 0) && (*wbuf == '\n'))
+			{
+				wbuf++;
+				n--;
+			}
+			first = 0;
+			if (n <= 0)
+				break; /* we are done (EOF) */
+		}
+		
+		fwrite(wbuf, 1, n, fdo);
+	}
 
-	if (!ul)
+end:
+	fclose(fdi);
+	fclose(fdo);
+	
+	MyFree(rdbuf);
+	// todo: handle write errors and such..
+	
+	rename(configfiletmp2, configfiletmp);
+}
+
+void remove_section(int start, int stop)
+{
+	modify_file(start, NULL, stop);
+}
+
+void insert_section(int start, char *buf)
+{
+#ifdef _WIN32
+static char realbuf[16384];
+char *i, *o;
+
+	if (strlen(buf) > ((sizeof(realbuf)/2)-2))
+		abort(); /* damn lazy you !!! */
+
+	for (i = buf, o = realbuf; *i; i++)
+	{
+		if (*i == '\n')
+		{
+			*o++ = '\r';
+			*o++ = '\n';
+		} else
+		{
+			*o++ = *i;
+		}
+	}
+	*o = '\0';
+	
+	modify_file(start, realbuf, 0);
+#else
+	modify_file(start, buf, 0);
+#endif
+}
+
+void replace_section(ConfigEntry *ce, char *buf)
+{
+	remove_section(ce->ce_fileposstart, ce->ce_fileposend);
+	insert_section(ce->ce_fileposstart, buf);
+}
+
+static char buf[8192];
+
+int upgrade_me_block(ConfigEntry *ce)
+{
+	ConfigEntry *cep, *cepp;
+	char *name;
+	char *info;
+	int numeric;
+
+	char sid[16];
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname)
+			continue; /* impossible? */
+		else if (!strcmp(cep->ce_varname, "sid"))
+			return 0; /* no upgrade needed */
+		else if (!cep->ce_vardata)
+		{
+			config_error_empty(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				"me", cep->ce_varname);
+			return 0;
+		}
+		else if (!strcmp(cep->ce_varname, "name"))
+			name = cep->ce_vardata;
+		else if (!strcmp(cep->ce_varname, "info"))
+			info = cep->ce_vardata;
+		else if (!strcmp(cep->ce_varname, "numeric"))
+			numeric = atoi(cep->ce_vardata);
+	}
+	
+	if (!name || !info || !numeric)
+	{
+		/* Invalid block as it does not contain the 3.2.x mandatory items */
 		return 0;
-	AllocCpy(ul->name, name);
+	}
 
-	ul->next = ulines;
-	ulines = ul;
+	snprintf(sid, sizeof(sid), "%.3d", numeric);
+		
+	snprintf(buf, sizeof(buf),
+			 "me {\n"
+			 "\tname %s;\n"
+			 "\tinfo \"%s\";\n"
+			 "\tsid %s;\n"
+			 "};\n",
+			 name,
+			 info,
+			 sid);
+
+	replace_section(ce, buf);
+	
+	config_status("- me block upgraded");
 	return 1;
 }
 
-
-
-struct host *add_host(struct oper *oper, char *mask) {
-	struct host *host = (struct host *)malloc(sizeof(struct host));
-
-	if (!host)
-		return NULL;
-
-	AllocCpy(host->host, mask);
-
-		host->next = oper->hosts;
-
-	oper->hosts = host;
-
-	return host;
-}
-
-
-int find_host(struct oper *oper, char *mask) {
-	struct host *host;
-
-	for (host = oper->hosts; host; host = host->next) {
-		if (!stricmp(host->host, mask))
-			return 1;
-	}
-	return 0;
-}
-struct oper *add_oper(char *name) {
-	struct oper *op = (struct oper *)malloc(sizeof(struct oper));
-
-	if (!op)
-		return NULL;
-	AllocCpy(op->login, name);
-
-	op->next = opers;
-	opers = op;
-	return op;
-}
-
-struct oper *find_oper(char *name, char *pass) {
-	struct oper *op;
-
-	for (op = opers; op; op = op->next) {
-		if (!stricmp(op->login, name) && !stricmp(op->pass, pass))
-			return op;
-	}
-	return NULL;
-}	
-
-struct link *add_server(char *name) {
-	struct link *lk = (struct link *)malloc(sizeof(struct link));
-
-	if (!lk)
-		return NULL;
-	AllocCpy(lk->name, name);
-
-	lk->next = links;
-	links = lk;
-	return lk;
-}
-
-struct link *find_link(char *name) {
-	struct link *lk;
-
-	for (lk = links; lk; lk = lk->next) {
-		if (!stricmp(lk->name, name))
-			return lk;
-	}
-	return NULL;
-}	
-
-struct vhost *add_vhost(char *name) {
-	struct vhost *vh = (struct vhost *)malloc(sizeof(struct vhost));
-
-	if (!vh)
-		return NULL;
-	AllocCpy(vh->login, name);
-
-	vh->next = vhosts;
-	vhosts = vh;
-	return vh;
-}
-
-struct vhost *find_vhost(char *name, char *pass) {
-	struct vhost *vh;
-
-	for (vh = vhosts; vh; vh = vh->next) {
-		if (!stricmp(vh->login, name) && !stricmp(vh->pass, pass))
-			return vh;
-	}
-	return NULL;
-}	
-
-struct host *add_vhost_host(struct vhost *vh, char *mask) {
-	struct host *host = (struct host *)malloc(sizeof(struct host));
-
-	if (!host)
-		return NULL;
-
-	AllocCpy(host->host, mask);
-
-		host->next = vh->hosts;
-
-	vh->hosts = host;
-
-	return host;
-}
-
-
-int find_vhost_host(struct vhost *vh, char *mask) {
-	struct host *host;
-
-	for (host = vh->hosts; host; host = host->next) {
-		if (!stricmp(host->host, mask))
-			return 1;
-	}
-	return 0;
-}
-
-
-void iCstrip(char *line)
+int upgrade_link_block(ConfigEntry *ce)
 {
-	char *c;
+	ConfigEntry *cep, *cepp;
+	char *bind_ip = NULL;
+	char *username = NULL;
+	char *hostname = NULL;
+	int port = 0;
+	char *password_receive = NULL;
+	char *password_connect = NULL;
+	char *class = NULL;
+	int options_ssl = 0;
+	int options_autoconnect = 0;
+	int options_nohostcheck = 0;
+	int options_quarantine = 0;
+	/* options_nodnscache is deprecated, always now.. */
+	char *hub = NULL;
+	char *leaf = NULL;
+	int leaf_depth = -1;
+	char *ciphers = NULL;
+	char *password_receive_authmethod = NULL;
+	int need_incoming = 0, need_outgoing = 0;
+	int upg_passwd_warning = 0;
 
-	if ((c = strchr(line, '\n')))
-		*c = '\0';
-	if ((c = strchr(line, '\r')))
-		*c = '\0';
+	/* ripped from test_link */
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname)
+			continue; /* impossible? */
+		else if (!strcmp(cep->ce_varname, "incoming") || !strcmp(cep->ce_varname, "outgoing"))
+			return 0; /* no upgrade needed */
+		else if (!strcmp(cep->ce_varname, "options"))
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!strcmp(cepp->ce_varname, "ssl"))
+					options_ssl = 1;
+				if (!strcmp(cepp->ce_varname, "autoconnect"))
+					options_autoconnect = 1;
+				if (!strcmp(cepp->ce_varname, "nohostcheck"))
+					options_nohostcheck = 1;
+				if (!strcmp(cepp->ce_varname, "quarantine"))
+					options_quarantine = 1;
+			}
+		}
+		else if (!cep->ce_vardata)
+		{
+			config_error_empty(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				"link", cep->ce_varname);
+			return 0;
+		}
+		else if (!strcmp(cep->ce_varname, "username"))
+			username = cep->ce_vardata;
+		else if (!strcmp(cep->ce_varname, "hostname"))
+			hostname = cep->ce_vardata;
+		else if (!strcmp(cep->ce_varname, "bind-ip"))
+			bind_ip = cep->ce_vardata;
+		else if (!strcmp(cep->ce_varname, "port"))
+			port = atoi(cep->ce_vardata);
+		else if (!strcmp(cep->ce_varname, "password-receive"))
+		{
+			password_receive = cep->ce_vardata;
+			if (cep->ce_entries)
+				password_receive_authmethod = cep->ce_entries->ce_varname;
+		}
+		else if (!strcmp(cep->ce_varname, "password-connect"))
+			password_connect = cep->ce_vardata;
+		else if (!strcmp(cep->ce_varname, "class"))
+			class = cep->ce_vardata;
+		else if (!strcmp(cep->ce_varname, "hub"))
+			hub = cep->ce_vardata;
+		else if (!strcmp(cep->ce_varname, "leaf"))
+			leaf = cep->ce_vardata;
+		else if (!strcmp(cep->ce_varname, "leafdepth"))
+			leaf_depth = atoi(cep->ce_vardata);
+		else if (!strcmp(cep->ce_varname, "ciphers"))
+			ciphers = cep->ce_vardata;
+	}
+	
+	if (!username || !hostname || !class || !password_receive ||
+	    !password_connect || !port)
+	{
+		/* Invalid link block as it does not contain the 3.2.x mandatory items */
+		return 0;
+	}
+	
+	if (strchr(hostname, '?') || strchr(hostname, '*'))
+	{
+		/* Wildcards in hostname: incoming only */
+		need_incoming = 1;
+		need_outgoing = 0;
+	}
+	else
+	{
+		/* IP (or hostname with nohostcheck) */
+		need_incoming = 1;
+		need_outgoing = 1;
+	}
+
+	snprintf(buf, sizeof(buf), "link %s {\n", ce->ce_vardata);
+	
+	if (need_incoming)
+	{
+		char upg_mask[HOSTLEN+USERLEN+8];
+		
+		if (options_nohostcheck)
+		{
+			strlcpy(upg_mask, "*", sizeof(upg_mask));
+		}
+		else
+		{
+			if (!strcmp(username, "*"))
+				strlcpy(upg_mask, hostname, sizeof(upg_mask)); /* just host */
+			else
+				snprintf(upg_mask, sizeof(upg_mask), "%s@%s", username, hostname); /* user@host */
+		}
+
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tincoming {\n\t\tmask %s;\n\t};\n", upg_mask);
+	}
+
+	if (need_outgoing)
+	{
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf),
+		         "\toutgoing {\n"
+		         "\t\tbind-ip %s;\n"
+		         "\t\thostname %s;\n"
+		         "\t\tport %d;\n"
+		         "\t\toptions { %s%s};\n"
+		         "\t};\n",
+		         bind_ip,
+		         hostname,
+		         port,
+		         options_ssl ? "ssl; " : "",
+		         options_autoconnect ? "autoconnect; " : "");
+	}
+
+	if (strcasecmp(password_connect, password_receive))
+	{
+		if (!password_receive_authmethod)
+		{
+			/* Prompt user ? */
+			config_warn("Link block '%s' has a different connect/receive password. "
+			            "This is no longer supported in UnrealIRCd 3.4.x",
+			            ce->ce_vardata);
+			
+			snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf),
+			         "\tpassword \"%s\"; /* WARNING: password changed due to 3.4.x upgrade */\n",
+			         password_connect);
+		} else
+		{
+			/* sslcertificate or sslcertficatefp */
+			snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf),
+			         "\tpassword \"%s\" { %s; };\n",
+			         password_receive,
+			         password_receive_authmethod);
+		}
+	} else {
+		/* identical connect & receive passwords. easy. */
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf),
+		         "\tpassword \"%s\";\n", password_receive);
+	}
+
+	if (hub)
+	{
+		if (strcmp(hub, "*")) // only if it's something other than *, as * is the default anyway..
+			snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\thub %s;\n", hub);
+	} else
+	if (leaf)
+	{
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tleaf %s;\n", leaf);
+		if (leaf_depth)
+			snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tleaf-depth %d;\n", leaf_depth);
+	}
+
+	snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tclass %s;\n", class);
+
+	if (ciphers)
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tciphers %s;\n", ciphers);
+
+	if (options_quarantine)
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\toptions { quarantine; };\n");
+
+	snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "};\n"); /* end */
+	
+	replace_section(ce, buf);
+	
+	config_status("- link block upgraded");
+	return 1;
 }
 
-int main(int argc, char *argv[]) {
-        FILE *fd;
-        FILE *fd2;
-	char buf[1024], mainip[32], *tmp;
-	int mainport;
-	struct oper *op;
-	struct link *lk;
-	struct uline *ul;
-	struct host *operhost;
-	struct vhost *vh;
-	struct flags *_flags;
-	if (argc >= 3) { 
-		fd = fopen(argv[1],"r");
-		fd2 = fopen(argv[2],"w");
+/** oper::from::userhost becomes oper::mask & vhost::from::userhost becomes vhost::mask */
+#define MAXFROMENTRIES 100
+int upgrade_from_subblock(ConfigEntry *ce)
+{
+	ConfigEntry *cep, *cepp;
+	char *list[MAXFROMENTRIES];
+	char sid[16];
+	int listcnt = 0;
+
+	memset(list, 0, sizeof(list));
+	
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname || !cep->ce_vardata)
+			continue;
+		else if (!strcmp(cep->ce_varname, "userhost"))
+		{
+			if (listcnt == MAXFROMENTRIES)
+				break; // no room, sorry.
+			list[listcnt++] = cep->ce_vardata;
+		}
 	}
-	else {
-		fd = fopen("ircd.conf","r");
-		fd2 = stdout;
-//		fd2 = fopen("unrealircd.conf.new", "w");
+	
+	if (listcnt == 0)
+		return 0; /* invalid block. strange. */
+
+	if (listcnt == 1)
+	{
+		char *m = !strncmp(list[0], "*@", 2) ? list[0]+2 : list[0]; /* skip or don't skip the user@ part */
+		snprintf(buf, sizeof(buf), "mask %s;\n", m);
+	} else
+	{
+		/* Multiple (list of masks) */
+		int i;
+		snprintf(buf, sizeof(buf), "mask {\n");
+		
+		for (i=0; i < listcnt; i++)
+		{
+			char *m = !strncmp(list[i], "*@", 2) ? list[i]+2 : list[i]; /* skip or don't skip the user@ part */
+			snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\t%s;\n", m);
+		}
 	}
-	if (!fd || !fd2)
+
+	replace_section(ce, buf);
+	
+	config_status("- %s::from::userhost sub-block upgraded", ce->ce_prevlevel ? ce->ce_prevlevel->ce_varname : "???");
+	return 1;
+}
+
+int upgrade_loadmodule(ConfigEntry *ce)
+{
+	char *file = ce->ce_vardata;
+	char tmp[512], *p, *newfile;
+	
+	if (!file)
+		return 0;
+	
+	if (our_strcasestr(file, "commands.dll") || our_strcasestr(file, "/commands.so"))
+	{
+		snprintf(buf, sizeof(buf), "include \"modules.conf\";\n");
+		replace_section(ce, buf);
+		config_status("- loadmodule for '%s' replaced with an include \"modules.conf\"", file);
+		return 1;
+	}
+	
+	if (our_strcasestr(file, "cloak.dll") || our_strcasestr(file, "/cloak.so"))
+	{
+		replace_section(ce, "/* NOTE: cloaking module is included in modules.conf */");
+		config_status("- loadmodule for '%s' removed as this is now in modules.conf", file);
+		return 1;
+	}
+
+	/* All other loadmodule commands... */
+	
+	strlcpy(tmp, file, sizeof(tmp));
+	p = strstr(tmp, ".so");
+	if (p)
+		*p = '\0';
+	p = our_strcasestr(tmp, ".dll");
+	if (p)
+		*p = '\0';
+
+	newfile = !strncmp(tmp, "src/", 4) ? tmp+4 : tmp;
+	
+	if (!strcmp(newfile, file))
+		return 0; /* no change */
+	
+	snprintf(buf, sizeof(buf), "loadmodule \"%s\";\n", newfile);
+	replace_section(ce, buf);
+	config_status("- loadmodule line converted to new syntax");
+	return 1;
+}
+
+#define MAXSPFTARGETS 32
+int upgrade_spamfilter(ConfigEntry *ce)
+{
+	ConfigEntry *cep, *cepp;
+	char *reason = NULL;
+	char *regex = NULL;
+	char *action = NULL;
+	char *ban_time = NULL;
+	char *target[MAXSPFTARGETS];
+	char targets[512];
+	int targetcnt = 0;
+	char *match_type = NULL;
+	char *p;
+
+	memset(target, 0, sizeof(target));
+		
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname)
+			continue; /* impossible? */
+		else if (!strcmp(cep->ce_varname, "match") || !strcmp(cep->ce_varname, "match-type"))
+			return 0; /* no upgrade needed */
+		else if (!strcmp(cep->ce_varname, "target"))
+		{
+			if (cep->ce_vardata)
+			{
+				target[0] = cep->ce_vardata;
+			}
+			else if (cep->ce_entries)
+			{
+				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+				{
+					if (targetcnt == MAXSPFTARGETS)
+						break;
+					target[targetcnt++] = cepp->ce_varname;
+				}
+			}
+		}
+		else if (!cep->ce_vardata)
+			continue; /* invalid */
+		else if (!strcmp(cep->ce_varname, "regex"))
+		{
+			regex = cep->ce_vardata;
+		}
+		else if (!strcmp(cep->ce_varname, "action"))
+		{
+			action = cep->ce_vardata;
+		}
+		else if (!strcmp(cep->ce_varname, "reason"))
+		{
+			reason = cep->ce_vardata;
+		}
+		else if (!strcmp(cep->ce_varname, "ban-time"))
+		{
+			ban_time = cep->ce_vardata;
+		}
+	}
+
+	if (!regex || !target[0] || !action)
+		return 0; /* invalid spamfilter block */
+
+	/* build target(s) list */
+	if (targetcnt > 1)
+	{
+		int i;
+		
+		strlcpy(targets, "{ ", sizeof(targets));
+		
+		for (i=0; i < targetcnt; i++)
+		{
+			snprintf(targets+strlen(targets), sizeof(targets)-strlen(targets),
+			         "%s; ", target[i]);
+		}
+		strlcat(targets, "}", sizeof(target));
+	} else {
+		strlcpy(targets, target[0], sizeof(targets));
+	}
+
+	/* Determine match-type, fallback to 'posix' (=3.2.x regex engine) */
+	
+	match_type = "simple";
+	for (p = regex; *p; p++)
+		if (!isalnum(*p) && !isspace(*p))
+		{
+			match_type = "posix";
+			break;
+		}
+	
+	snprintf(buf, sizeof(buf), "spamfilter {\n"
+	                           "\tmatch-type %s;\n"
+	                           "\tmatch \"%s\";\n"
+	                           "\ttarget %s;\n"
+	                           "\taction %s;\n",
+	                           match_type,
+	                           regex,
+	                           targets,
+	                           action);
+
+	/* optional: reason */
+	if (reason)
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\treason \"%s\";\n", reason);
+	
+	/* optional: ban-time */
+	if (ban_time)
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tban-time \"%s\";\n", ban_time);
+
+	strlcat(buf, "};\n", sizeof(buf));
+	
+	replace_section(ce, buf);
+	config_status("- spamfilter block converted to new syntax");
+	return 1;
+}
+
+#define MAXALLOWOPTIONS 16
+int upgrade_allow(ConfigEntry *ce)
+{
+	ConfigEntry *cep, *cepp;
+	char *hostname = NULL;
+	char *ip = NULL;
+	char *maxperip = NULL;
+	char *ipv6_clone_mask = NULL;
+	char *password = NULL;
+	char *password_type = NULL;
+	char *class = NULL;
+	char *redirect_server = NULL;
+	int redirect_port = 0;
+	char *options[MAXSPFTARGETS];
+	int optionscnt = 0;
+	char options_str[512], comment[512];
+
+	memset(options, 0, sizeof(options));
+	*comment = '\0';
+		
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname)
+			continue; /* impossible? */
+		else if (!strcmp(cep->ce_varname, "options"))
+		{
+			if (cep->ce_vardata)
+			{
+				options[0] = cep->ce_vardata;
+			}
+			else if (cep->ce_entries)
+			{
+				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+				{
+					if (optionscnt == MAXALLOWOPTIONS)
+						break;
+					options[optionscnt++] = cepp->ce_varname;
+				}
+			}
+		}
+		else if (!cep->ce_vardata)
+			continue; /* invalid */
+		else if (!strcmp(cep->ce_varname, "hostname"))
+		{
+			hostname = cep->ce_vardata;
+		}
+		else if (!strcmp(cep->ce_varname, "ip"))
+		{
+			ip = cep->ce_vardata;
+		}
+		else if (!strcmp(cep->ce_varname, "maxperip"))
+		{
+			maxperip = cep->ce_vardata;
+		}
+		else if (!strcmp(cep->ce_varname, "ipv6-clone-mask"))
+		{
+			ipv6_clone_mask = cep->ce_vardata;
+		}
+		else if (!strcmp(cep->ce_varname, "password"))
+		{
+			password = cep->ce_vardata;
+			if (cep->ce_entries)
+				password_type = cep->ce_entries->ce_varname;
+		}
+		else if (!strcmp(cep->ce_varname, "class"))
+		{
+			class = cep->ce_vardata;
+		}
+		else if (!strcmp(cep->ce_varname, "redirect-server"))
+		{
+			redirect_server = cep->ce_vardata;
+		}
+		else if (!strcmp(cep->ce_varname, "redirect-port"))
+		{
+			redirect_port = atoi(cep->ce_vardata);
+		}
+	}
+
+	if (!ip || !hostname || !class)
+		return 0; /* missing 3.2.x items in allow block, upgraded already! (or invalid) */
+
+	/* build target(s) list */
+	if (optionscnt == 0)
+	{
+		*options_str = '\0';
+	}
+	else
+	{
+		int i;
+		
+		for (i=0; i < optionscnt; i++)
+		{
+			snprintf(options_str+strlen(options_str), sizeof(options_str)-strlen(options_str),
+			         "%s; ", options[i]);
+		}
+	}
+
+	/* drop either 'ip' or 'hostname' */
+	if (!strcmp(ip, "*@*") && !strcmp(hostname, "*@*"))
+		hostname = NULL; /* just ip */
+	else if (strstr(ip, "NOMATCH"))
+		ip = NULL;
+	else if (strstr(hostname, "NOMATCH"))
+		hostname = NULL;
+	else if (!strchr(hostname, '.') && strcmp(hostname, "localhost"))
+		hostname = NULL;
+	else if (!strchr(ip, '.'))
+		ip = NULL;
+	else
+	{
+		/* very rare case -- let's bet on IP */
+		snprintf(comment, sizeof(comment), "/* CHANGED BY 3.2.x TO 3.4.x CONF UPGRADE!! Was: ip %s; hostname %s; */\n", ip, hostname);
+		hostname = NULL;
+	}
+
+	snprintf(buf, sizeof(buf), "allow {\n");
+
+	if (*comment)
+		strlcat(buf, comment, sizeof(buf));
+
+	if (ip)
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tip \"%s\";\n", ip);
+
+	if (hostname)
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\thostname \"%s\";\n", hostname);
+
+	snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tclass %s;\n", class);
+	
+	/* maxperip: optional in 3.2.x, mandatory in 3.4.x */
+	if (maxperip)
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tmaxperip %s;\n", maxperip);
+	else
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tmaxperip 3; /* CHANGED BY 3.2.x TO 3.4.x CONF UPGRADE! */\n");
+	
+	if (ipv6_clone_mask)
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tipv6-clone-mask %s;\n", ipv6_clone_mask);
+
+	if (password)
+	{
+		if (password_type)
+			snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tpassword \"%s\" { %s; };\n", password, password_type);
+		else
+			snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tpassword \"%s\";\n", password);
+	}
+
+	if (redirect_server)
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tredirect-server %s;\n", redirect_server);
+
+	if (redirect_port)
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tredirect-port %d;\n", redirect_port);
+
+	if (*options_str)
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\toptions { %s};\n", options_str);
+
+	strlcat(buf, "};\n", sizeof(buf));
+	
+	replace_section(ce, buf);
+	config_status("- allow block converted to new syntax");
+	return 1;
+}
+
+int update_conf_file()
+{
+	ConfigFile *cf = NULL;
+	ConfigEntry *ce = NULL, *cep, *cepp;
+	int update_conf_runs = 0;
+
+again:
+	if (update_conf_runs++ > 100)
+	{
+		config_error("update conf re-run overflow. whoops! upgrade failed! sorry!");
+		return 0;
+	}
+	
+	if (cf)
+	{
+		config_free(cf);
+		cf = NULL;
+	}
+
+	cf = config_load(configfiletmp);
+	if (!cf)
+	{
+		config_error("could not load configuration file '%s'", configfile);
+		return 0;
+	}
+		
+	for (ce = cf->cf_entries; ce; ce = ce->ce_next)
+	{
+		/*printf("%s%s%s\n",
+			ce->ce_varname,
+			ce->ce_vardata ? " " : "",
+			ce->ce_vardata ? ce->ce_vardata : ""); */
+		
+		if (!strcmp(ce->ce_varname, "loadmodule"))
+		{
+			if (upgrade_loadmodule(ce))
+				goto again;
+		}
+		if (!strcmp(ce->ce_varname, "me"))
+		{
+			if (upgrade_me_block(ce))
+				goto again;
+		}
+		if (!strcmp(ce->ce_varname, "link"))
+		{
+			if (upgrade_link_block(ce))
+				goto again;
+		}
+		if (!strcmp(ce->ce_varname, "oper"))
+		{
+			for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+			{
+				if (!strcmp(cep->ce_varname, "from"))
+				{
+					if (upgrade_from_subblock(cep))
+						goto again;
+				}
+			}
+		}
+		if (!strcmp(ce->ce_varname, "vhost"))
+		{
+			for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+			{
+				if (!strcmp(cep->ce_varname, "from"))
+				{
+					if (upgrade_from_subblock(cep))
+						goto again;
+				}
+			}
+		}
+		if (!strcmp(ce->ce_varname, "spamfilter"))
+		{
+			if (upgrade_spamfilter(ce))
+				goto again;
+		}
+		if (!strcmp(ce->ce_varname, "allow") && !ce->ce_vardata) /* 'allow' block for clients, not 'allow channel' etc.. */
+		{
+			if (upgrade_allow(ce))
+				goto again;
+		}
+		if (!strcmp(ce->ce_varname, "set"))
+		{
+			for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+			{
+				if (!strcmp(cep->ce_varname, "throttle"))
+				{
+					int n = 0, t = 0;
+					for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+					{
+						if (!cepp->ce_vardata)
+							continue;
+						if (!strcmp(cepp->ce_varname, "period"))
+							t = config_checkval(cepp->ce_vardata, CFG_TIME);
+						else if (!strcmp(cepp->ce_varname, "connections"))
+							n = atoi(cepp->ce_vardata);
+					}
+
+					remove_section(cep->ce_fileposstart, cep->ce_fileposend);
+					snprintf(buf, sizeof(buf), "anti-flood { connect-flood %d:%d; };\n",
+					         n, t);
+						
+					insert_section(cep->ce_fileposstart, buf);
+					goto again;
+				}
+			}
+		}
+		
+	}	
+
+	if (cf)
+		config_free(cf);
+	
+	return (update_conf_runs > 1) ? 1 : 0;
+}
+
+static int already_included(char *fname, ConfigFile *cf)
+{
+	for (; cf; cf = cf->cf_next)
+		if (!strcmp(cf->cf_filename, fname))
+			return 1;
+
+	return 0;
+}
+
+static void add_include_list(char *fname, ConfigFile **cf)
+{
+	ConfigFile *n = MyMallocEx(sizeof(ConfigFile));
+	
+//	config_status("INCLUDE: %s", fname);
+	n->cf_filename = strdup(fname);
+	n->cf_next = *cf;
+	*cf = n;
+}
+
+void build_include_list_ex(char *fname, ConfigFile **cf_list)
+{
+	ConfigFile *cf, *cf2;
+	ConfigEntry *ce;
+
+	if (strstr(fname, "://"))
+		return; /* Remote include - ignored */
+
+	add_include_list(fname, cf_list);
+
+	cf = config_load(fname);
+	if (!cf)
 		return;
 
-	fprintf(fd2, "/* Created using the UnrealIRCd configuration file updater */\n\n");
+	for (ce = cf->cf_entries; ce; ce = ce->ce_next)
+		if (!strcmp(ce->ce_varname, "include"))
+			if (!already_included(ce->ce_vardata, *cf_list))
+				build_include_list_ex(ce->ce_vardata, cf_list);
+}
 
-	while (fgets(buf, 1023, fd)) {
-		if (buf[0] == '#' || buf[0] == '\n' || buf[0] == '\r')
-			continue;
-		iCstrip(buf);
-		if (buf[1] == ':') {
-			/* Regular config line, switch! */
-			switch(buf[0]) {
-			case 'M':
-				fprintf(fd2, "me {\n");
-				tmp = getfield(&buf[2]);
-				fprintf(fd2, "\tname \"%s\";\n", tmp);
-				strcpy(mainip, getfield(NULL));
-				tmp = getfield(NULL);
-				fprintf(fd2, "\tinfo \"%s\";\n", tmp);
-				tmp = getfield(NULL);
-				mainport = atoi(tmp);
-				tmp = getfield(NULL);
-				if (tmp)
-					fprintf(fd2, "\tnumeric %s;\n", tmp);
-				fprintf(fd2, "};\n\n");
-				break;
-			case 'A': 
-				fprintf(fd2, "admin {\n");
-				tmp = getfield(&buf[2]);
-				if (tmp)
-					fprintf(fd2, "\t\"%s\";\n", tmp);
-				tmp = getfield(NULL);
-				if (tmp)
-					fprintf(fd2, "\t\"%s\";\n", tmp);
-				tmp = getfield(NULL);
-				if (tmp)
-					fprintf(fd2, "\t\"%s\";\n", tmp);
-				fprintf(fd2,"};\n\n");
-				break;
-			case 'Y': 
-				tmp = getfield(&buf[2]);
-				fprintf(fd2, "class %s {\n",tmp);
-				tmp = getfield(NULL);
-				fprintf(fd2, "\tpingfreq %s;\n", tmp);
-				tmp = getfield(NULL);
-				if (atoi(tmp) != 0)
-					fprintf(fd2, "\tconnfreq %s;\n", tmp);
-				tmp = getfield(NULL);
-				fprintf(fd2, "\tmaxclients %s;\n", tmp);
-				tmp = getfield(NULL);
-				fprintf(fd2, "\tsendq %s;\n", tmp);
-				fprintf(fd2, "};\n\n");
-				break;	
-			case 'I':
-			{
-				char *ip, *pass;
-				fprintf(fd2, "allow {\n");
-				ip = getfield(&buf[2]);
-				pass = getfield(NULL);
-				tmp = getfield(NULL);
-				fprintf(fd2, "\tip %s;\n", ip);
-				fprintf(fd2, "\thostname %s;\n", tmp);
-				if (!BadPtr(pass)) {
-					if(!strcmp(pass, "ONE"))
-						fprintf(fd2, "\tmaxperip 1;\n");
-					else
-						fprintf(fd2, "\tpassword \"%s\";\n", tmp);
-				}
-				getfield(NULL);
-				tmp = getfield(NULL);
-				fprintf(fd2, "\tclass %s;\n", tmp);
-				fprintf(fd2,"};\n\n");
-				break;
-			}
-			case 'O':
-			case 'o':
-			{
-				char host[256], pass[32];
-				struct flags *_oflags;
-				char rebuild[128];
-				int i = 0;
-				tmp = getfield(&buf[2]);
-				if (!strchr(tmp,'@'))
-					sprintf(host, "*@%s",tmp);
-				else
-					strcpy(host, tmp);
-				strcpy(pass, getfield(NULL));
-				tmp = getfield(NULL);
-				if (!(op = find_oper(tmp, pass)))
-					op = add_oper(tmp);
-				AllocCpy(op->pass, pass);
-				tmp = getfield(NULL);
-				if (!find_host(op, host))
-					add_host(op, host);
-				if (!BadPtr(op->flags)) {
-					memset(rebuild, 0, 128);
-					for(_oflags = oflags; _oflags->oldflag;_oflags++) {
-						if (strchr(op->flags, _oflags->oldflag) || strchr(tmp, _oflags->oldflag)) {
-							rebuild[i] = _oflags->oldflag;
-							i++;	
-						}
-					}
-					AllocCpy(op->flags, rebuild);
-				}
-				else {
-					AllocCpy(op->flags, tmp);
-				}
-				tmp = getfield(NULL);
-				AllocCpy(op->class, tmp);
-				break;
-			}
-			case 'U':
-				add_uline(getfield(&buf[2]));
-				break;
-			case 'X':
-				fprintf(fd2, "drpass {\n");
-				tmp = getfield(&buf[2]);
-				fprintf(fd2, "\tdie \"%s\";\n", tmp);
-				tmp = getfield(NULL);
-				fprintf(fd2, "\trestart \"%s\";\n", tmp);
-				fprintf(fd2, "};\n\n");
-				break;
-			case 'P':
-			{
-				char ip[256], flags[20];
-				struct flags *_lflags;
-				strcpy(ip,getfield(&buf[2]));
-				strcpy(flags,getfield(NULL));
-				getfield(NULL);
-				tmp = getfield(NULL);
-				if (!BadPtr(flags) && flags[0] != '*') {
-					fprintf(fd2, "listen %s:%s {\n", ip, tmp);
-					tmp = flags;
-					fprintf(fd2, "\toptions {\n");
-					for(; *tmp; tmp++) {
-						for(_lflags = listenflags; _lflags->oldflag; _lflags++) {
-							if (*tmp == _lflags->oldflag)
-								fprintf(fd2, "\t\t%s;\n", _lflags->newflag);
-						}
-					}
-					fprintf(fd2, "\t};\n};\n\n");
-				}
-				else
-					fprintf(fd2, "listen %s:%s;\n\n", ip, tmp);
-				break;
-			}
-			case 'T':
-				fprintf(fd2, "tld {\n");
-				tmp = getfield(&buf[2]);
-				fprintf(fd2, "\tmask %s;\n", tmp);
-				tmp = getfield(NULL);
-				fprintf(fd2, "\tmotd \"%s\";\n", tmp);
-				tmp = getfield(NULL);
-				fprintf(fd2, "\trules \"%s\";\n", tmp);
-				fprintf(fd2, "};\n\n");
-				break;
-			case 'E': 
-			{
-				char *tmp2;
-				fprintf(fd2, "except ban {\n");
-				tmp = getfield(&buf[2]);
-				getfield(NULL);
-				tmp2 = getfield(NULL);
-				fprintf(fd2, "\tmask %s@%s;\n", tmp2, tmp);
-				fprintf(fd2, "};\n\n");
-				break;
-			}
-			case 'e':
-				fprintf(fd2, "except scan {\n");
-				tmp = getfield(&buf[2]);
-				fprintf(fd2, "\tmask %s;\n", tmp);
-				fprintf(fd2, "};\n\n");
-				break;
-			case 'L':
-			{
-				char *leafmask;
-				leafmask = getfield(&buf[2]);
-				getfield(NULL);
-				tmp = getfield(NULL);
-				if (!(lk = find_link(tmp))) 
-					lk = add_server(tmp);
-				AllocCpy(lk->leafmask, leafmask);
-				lk->type = 0;
-				tmp = getfield(NULL);
-				if (!BadPtr(tmp))
-					lk->leafdepth = atoi(tmp);
-				else
-					lk->leafdepth = 0;
-				break;
-			}
-			case 'H':
-			{
-				char *hubmask;
-				hubmask = getfield(&buf[2]);
-				getfield(NULL);
-				tmp = getfield(NULL);
-				if (!(lk = find_link(tmp)))
-					lk = add_server(tmp);
-				AllocCpy(lk->hubmask, hubmask);
-				lk->type = 1;
-				lk->leafdepth = 0;
-				break;
-			}
-			case 'N':
-			{
-				char *host, *pass;		
-		
-				host = getfield(&buf[2]);
-				pass = getfield(NULL);
-				tmp = getfield(NULL);
-				if (!(lk = find_link(tmp)))
-					lk = add_server(tmp);
-				AllocCpy(lk->recpass,pass);
-				getfield(NULL);
-				break;
-			}			
-			case 'C':
-			{
-				char *host, *pass;
-		
-				host = getfield(&buf[2]);
-				pass = getfield(NULL);
-				tmp = getfield(NULL);
-				if (!(lk = find_link(tmp)))
-					lk = add_server(tmp);
-				AllocCpy(lk->hostmask, host);
-				AllocCpy(lk->connpass,pass);
-				tmp = getfield(NULL);
-				if (!BadPtr(tmp))
-					lk->port = atoi(tmp);
-				else
-					lk->port = 0;
-				tmp = getfield(NULL);
-				AllocCpy(lk->class, tmp);
-				tmp = getfield(NULL);
-				if (!BadPtr(tmp)) {
-					AllocCpy(lk->flags, tmp);
-				}
-				else
-					lk->flags = NULL;
-				break;
-			}
-			case 'Q':
-			{
-				char *tmp2;
-				getfield(&buf[2]);
-				tmp2 = getfield(NULL);
-				tmp = getfield(NULL);
-				fprintf(fd2, "ban nick {\n");
-				fprintf(fd2, "\tmask \"%s\";\n", tmp);
-				if (!BadPtr(tmp2))
-				fprintf(fd2, "\treason \"%s\";\n", tmp2);
-				fprintf(fd2, "};\n\n");
-				break;
-			}
-			case 'q':
-			{	
-				char *tmp2;
-				getfield(&buf[2]);
-				tmp2 = getfield(NULL);
-				tmp = getfield(NULL);
-				fprintf(fd2, "ban server {\n");
-				fprintf(fd2, "\tmask \"%s\";\n", tmp);
-				if (!BadPtr(tmp2))
-				fprintf(fd2, "\treason \"%s\";\n", tmp2);
-				fprintf(fd2, "};\n\n");
-				break;
-			}
-			case 'Z':
-				tmp = getfield(&buf[2]);
-				fprintf(fd2, "ban ip {\n");
-				fprintf(fd2, "\tmask \"%s\";\n", tmp);
-				tmp = getfield(NULL);
-				if (!BadPtr(tmp))
-					fprintf(fd2, "\treason \"%s\";\n", tmp);
-				fprintf(fd2, "};\n\n");
-				break;
-			case 'n':
-				tmp = getfield(&buf[2]);
-				fprintf(fd2, "ban realname {\n");
-				fprintf(fd2, "\tmask \"%s\";\n", tmp);
-				tmp = getfield(NULL);
-				if (!BadPtr(tmp))
-					fprintf(fd2, "\treason \"%s\";\n", tmp);
-				fprintf(fd2, "};\n\n");
-				break;
-			case 'K':
-			case 'k':
-			{
-				char *host, *user, *reason;
-				host = getfield(&buf[2]);
-				reason = getfield(NULL);
-				user = getfield(NULL);
-				fprintf(fd2, "ban user {\n");
-				fprintf(fd2, "\tmask %s@%s;\n", BadPtr(user) ? "*" : user, host);
-				if (!BadPtr(reason))
-					fprintf(fd2, "\treason \"%s\";\n", reason);
-				fprintf(fd2, "};\n\n");
-				break;
-			}
-			case 'V':
-			case 'v':
-			{
-				char *version, *flags;
-				version = getfield(&buf[2]);
-				flags = getfield(NULL);
-				tmp = getfield(NULL);
-				fprintf(fd2, "deny version {\n");
-				fprintf(fd2, "\tmask %s;\n", tmp);
-				fprintf(fd2, "\tversion \"%s\";\n", version);
-				fprintf(fd2, "\tflags \"%s\";\n", flags);
-				fprintf(fd2, "};\n\n");
-				break;
-				}
-			case 'D':
-				fprintf(fd2, "deny link {\n");
-				fprintf(fd2, "\tmask %s;\n", getfield(&buf[2]));
-				getfield(NULL);
-				fprintf(fd2, "\trule \"%s\";\n", getfield(NULL));
-				fprintf(fd2, "\ttype all;\n};\n\n");
-				break;
-			case 'd':
-				fprintf(fd2, "deny link {\n");
-				fprintf(fd2, "\tmask %s;\n", getfield(&buf[2]));
-				getfield(NULL);
-				fprintf(fd2, "\trule \"%s\";\n", getfield(NULL));
-				fprintf(fd2, "\ttype auto;\n};\n\n");
-				break;
-			}
-		}
-		else {
-		tmp = strtok(buf, " ");
-		if (!strcmp(tmp, "deny")) {
-			fprintf(fd2, "deny dcc {\n");
-			fprintf(fd2, "\tmask \"%s\";\n",strtok(NULL, " "));
-			fprintf(fd2, "\treason \"%s\"\n};\n",strtok(NULL,""));
-			continue;
-		}
-		else if (!strcmp(tmp, "allow")) {
-			fprintf(fd2, "allow channel {\n");
-			fprintf(fd2, "\tchannel \"%s\";\n",strtok(NULL, " "));
-			continue;
-		}
-		else if (!strcmp(tmp, "vhost")) {
-			char host[100];
-			tmp = strtok(NULL," ");
-			vh = add_vhost(tmp);	
-			AllocCpy(vh->vhost,tmp);
-			AllocCpy(vh->pass,strtok(NULL," "));
-			tmp = strtok(NULL, "");
-			strcpy(host,tmp);
-			if (!strchr(tmp,'@'))
-				sprintf(host, "*@%s",tmp);
-			else
-				strcpy(host, tmp);
-			if (!find_vhost_host(vh, host))
-				add_vhost_host(vh, host);
-		}
-	}
-
-	}
-	/* Old M:line bind */
-	fprintf(fd2, "listen %s:%d;\n\n", mainip, mainport);
-
-	for (op = opers; op; op = op->next) {
-		fprintf(fd2, "oper %s {\n", op->login);
-		fprintf(fd2, "\tfrom {\n");
-		for (operhost = op->hosts; operhost; operhost = operhost->next) {
-			fprintf(fd2, "\t\tuserhost %s;\n", operhost->host);
-		}
-		fprintf(fd2, "\t};\n");
-		fprintf(fd2, "\tpassword \"%s\";\n", op->pass);
-		fprintf(fd2, "\tflags {\n");
-		for (; *op->flags; op->flags++) {
-			for (_flags = oflags; _flags->oldflag; _flags++) {
-				if (*op->flags == _flags->oldflag)
-					fprintf(fd2, "\t\t%s;\n", _flags->newflag);
-			}
-		}
-		fprintf(fd2, "\t};\n");
-		fprintf(fd2, "\tclass %s;\n", op->class);
-		fprintf(fd2, "};\n\n");
-	}
-
-	for (lk = links; lk; lk = lk->next) {
-		char *user, *host;
-		struct flags *_linkflags;
-		fprintf(fd2, "link %s {\n", lk->name);
-		user = strtok(lk->hostmask, "@");
-		host = strtok(NULL, "");
-		if (!BadPtr(host)) {
-			fprintf(fd2, "\tusername %s;\n", user);
-			fprintf(fd2, "\thostname %s;\n", host);
-		}
-		else {
-			fprintf(fd2, "\tusername *;\n");
-			fprintf(fd2, "\thostname %s;\n", user);
-		}
-
-		fprintf(fd2, "\tbind-ip %s;\n", mainip);
-		if (lk->port)
-			fprintf(fd2, "\tport %d;\n", lk->port);
-		if (lk->type == 1)
-		fprintf(fd2, "\thub %s;\n", lk->hubmask);
-		else {
-			if (!BadPtr(lk->leafmask))
-				fprintf(fd2, "\tleaf %s;\n", lk->leafmask);
-			else
-				fprintf(fd2, "\tleaf *;\n");
-			if (lk->leafdepth)
-			fprintf(fd2, "\tleaf-depth %d;\n", lk->leafdepth);
-		}
-		fprintf(fd2, "\tpassword-connect %s;\n", lk->connpass);
-		fprintf(fd2, "\tpassword-receive %s;\n", lk->recpass);
-		fprintf(fd2, "\tconnect-class %s;\n", lk->class);
-		if (lk->flags != NULL || lk->port) 
-			fprintf(fd2, "\toptions {\n");
-		if (lk->flags != NULL) {
-		for (tmp = lk->flags; *tmp; tmp++) {
-			for (_linkflags = linkflags; _linkflags->oldflag; _linkflags++) {
-				if (*tmp == _linkflags->oldflag)
-					fprintf(fd2, "\t\t%s;\n",_linkflags->newflag);
-			}
-		}
-		}
-			if (lk->port)
-				fprintf(fd2, "\t\tautoconnect;\n");
-			if (lk->port || lk->flags != NULL)
-			fprintf(fd2, "\t};\n");
-		
-		fprintf(fd2, "};\n\n");
-	}
-		
-	for (vh = vhosts; vh; vh = vh->next) {
-		fprintf(fd2, "vhost {\n");
-		fprintf(fd2, "\tfrom {\n");
-		for (operhost = vh->hosts; operhost; operhost = operhost->next) {
-			fprintf(fd2, "\t\tuserhost %s;\n", operhost->host);
-		}
-		fprintf(fd2, "\t};\n");
-		fprintf(fd2, "\tvhost %s;\n", vh->vhost);
-		fprintf(fd2, "\tlogin %s;\n", vh->login);
-		fprintf(fd2, "\tpassword \"%s\";\n", vh->pass);
-		fprintf(fd2, "};\n\n");
-	}
-	if (ulines)
-		fprintf(fd2, "ulines {\n");
-	for (ul = ulines; ul; ul = ul->next) {	
-		fprintf(fd2, "\t%s;\n", ul->name);
-	}
-	if (ulines)
-		fprintf(fd2, "};\n\n");
+ConfigFile *build_include_list(char *fname)
+{
+	ConfigFile *cf_list = NULL;
 	
+	build_include_list_ex(fname, &cf_list);
+	return cf_list;
+}
+
+void update_conf()
+{
+	ConfigFile *cf;
+	ConfigEntry *ce, *cep, *cepp;
+	char *mainconf = configfile;
+	int upgraded_files = 0;
+
+	config_status("Attempting to upgrade '%s' (and all it's included files) from UnrealIRCd 3.2.x to UnrealIRCd 3.4.x...", configfile);
+	
+	strlcpy(me.name, "<server>", sizeof(me.name));
+
+	cf = build_include_list(mainconf);
+
+	for (; cf; cf = cf->cf_next)
+	{
+		configfile = cf->cf_filename;
+		config_status("Checking '%s'...", cf->cf_filename);
+		snprintf(configfiletmp, sizeof(configfiletmp), "%s.tmp", configfile);
+		if (!unreal_copyfileex(configfile, configfiletmp, 0))
+		{
+			config_error("Could not create temp file for processing!");
+			die();
+		}
+		if (update_conf_file(cf->cf_filename))
+		{
+			char buf[512];
+			snprintf(buf, sizeof(buf), "%s.old", configfile);
+			if (file_exists(buf))
+			{
+				int i;
+				for (i=0; i<100; i++)
+				{
+					snprintf(buf, sizeof(buf), "%s.old.%d", configfile, i);
+					if (!file_exists(buf))
+						break;
+				}
+			}
+			/* rename original config file to ... */
+			if (rename(configfile, buf) < 0)
+			{
+				config_error("Could not rename original conf '%s' to '%s'", configfile, buf);
+				die();
+			}
+			
+			/* rename converted conf to config file */
+			if (rename(configfiletmp, configfile) < 0)
+			{
+				config_error("Could not rename converted configuration file '%s' to '%s' -- please rename this file yourself!",
+					configfiletmp, configfile);
+				die();
+			}
+			
+			config_status("File '%s' upgrade complete.", configfile);
+			upgraded_files++;
+		} else {
+			unlink(configfiletmp);
+			config_status("File '%s' left unchanged (no upgrade necessary)", configfile);
+		}
+	}
+	configfile = mainconf; /* restore */
+	
+	if (upgraded_files > 0)
+	{
+		config_status("");
+		config_status("%d configuration file(s) upgraded. You can now boot UnrealIRCd with your freshly converted conf's!", upgraded_files);
+		config_status("");
+	} else {
+		config_status("");
+		config_status("No configuration files were changed. No upgrade was needed. If this is incorrect then please report on https://bugs.unrealircd.org/ !");
+		config_status("");
+	}
+	exit(0);
 }
 

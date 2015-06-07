@@ -762,3 +762,4 @@ extern int mixed_network(void);
 extern void unreal_delete_masks(ConfigItem_mask *m);
 extern void unreal_add_masks(ConfigItem_mask **head, ConfigEntry *ce);
 extern int unreal_mask_match(aClient *acptr, ConfigItem_mask *m);
+extern char *our_strcasestr(char *haystack, char *needle);

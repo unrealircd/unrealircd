@@ -338,25 +338,6 @@ static ConfigItem_badword *copy_badword_struct(ConfigItem_badword *ca, int regex
 	return x;
 }
 
-/*
- * our own strcasestr implementation because strcasestr is often not
- * available or is not working correctly.
- */
-char *our_strcasestr(char *haystack, char *needle) {
-int i;
-int nlength = strlen (needle);
-int hlength = strlen (haystack);
-
-	if (nlength > hlength) return NULL;
-	if (hlength <= 0) return NULL;
-	if (nlength <= 0) return haystack;
-	for (i = 0; i <= (hlength - nlength); i++) {
-		if (strncasecmp (haystack + i, needle, nlength) == 0)
-			return haystack + i;
-	}
-  return NULL; /* not found */
-}
-
 static inline int fast_badword_match(ConfigItem_badword *badword, char *line)
 {
  	char *p;
