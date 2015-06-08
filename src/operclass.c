@@ -235,12 +235,13 @@ OperPermission OperClass_evaluateACLPathEx(OperClassACL* acl, OperClassACLPath* 
 {
         /** Evaluate into ACL struct as deep as possible **/
 	OperClassACLPath *basePath = path;
-	path = path->next; /* Avoid first level since we have resolved it */
         OperClassACL* tmp;
         OperClassACLEntry* entry;
         unsigned char allow = 0;
         unsigned char deny = 0;
 	unsigned char aclNotFound = 0;
+
+	path = path->next; /* Avoid first level since we have resolved it */
         while (path && acl->acls)
         {
                 tmp = OperClass_FindACL(acl->acls,path->identifier);
@@ -266,13 +267,14 @@ OperPermission OperClass_evaluateACLPathEx(OperClassACL* acl, OperClassACLPath* 
         /** Process entries **/
         for (entry = acl->entries; entry; entry = entry->next)
         {
+        	unsigned char result;
                 /* Short circuit if we already have valid block */
                 if (entry->type == OPERCLASSENTRY_ALLOW && allow)
                         continue;
                 if (entry->type == OPERCLASSENTRY_DENY && deny)
                         continue;
 
-                unsigned char result = OperClass_evaluateACLEntry(entry,basePath,params);
+                result = OperClass_evaluateACLEntry(entry,basePath,params);
                 if (entry->type == OPERCLASSENTRY_ALLOW)
                 {
                         allow = result;
@@ -294,32 +296,38 @@ OperPermission OperClass_evaluateACLPathEx(OperClassACL* acl, OperClassACLPath* 
 
 OperPermission OperClass_evaluateACLPath(char* opername, char* path, aClient *sptr, aClient *victim, aChannel *channel, void* extra)
 {
-	ConfigItem_oper *ce_oper = Find_oper(opername);
+	ConfigItem_oper *ce_oper;
+        ConfigItem_operclass *ce_operClass;
+        OperClass *oc = NULL;
+        OperClassACLPath* operPath;
+        OperClassACL* acl;
+
+        ce_oper = Find_oper(opername);
 	if (!ce_oper)
 	{
 		return OPER_DENY;
 	}
-        ConfigItem_operclass *ce_operClass = Find_operclass(ce_oper->operclass);
-        OperClass *oc = NULL;
-        OperClassACLPath* operPath = OperClass_parsePath(path);
-        OperClassACL* acl;
+	
+	ce_operClass = Find_operclass(ce_oper->operclass);
         if (ce_operClass)
         {
                 oc = ce_operClass->classStruct;
         }
 
+        operPath = OperClass_parsePath(path);
         while (oc && operPath)
         {
                 OperClassACL* acl = OperClass_FindACL(oc->acls,operPath->identifier);
                 if (acl)
                 {
+                	OperPermission perm;
 			OperClassCheckParams *params = MyMallocEx(sizeof(OperClassCheckParams));
         		params->sptr = sptr;
         		params->victim = victim;
         		params->channel = channel;
         		params->extra = extra;
 			
-                        OperPermission perm = OperClass_evaluateACLPathEx(oc->acls, operPath, params);
+                        perm = OperClass_evaluateACLPathEx(oc->acls, operPath, params);
 			OperClass_freePath(operPath);
 			MyFree(params);
 			return perm;
