@@ -378,7 +378,7 @@ MODVAR ConfigFile		*conf = NULL;
 MODVAR int			config_error_flag = 0;
 int			config_verbose = 0;
 
-int need_34_upgrade = 0;
+MODVAR int need_34_upgrade = 0;
 
 void add_include(const char *filename, const char *included_from, int included_from_line);
 #ifdef USE_LIBCURL
@@ -1634,10 +1634,16 @@ void applymeblock(void)
 
 void upgrade_conf_to_34(void)
 {
-	need_34_upgrade = 0;
 	config_error("******************************************************************");
 	config_error("This *seems* an UnrealIRCd 3.2.x configuration file.");
-	config_error("To upgrade it to the new 3.4.x format, run: ./unreal upgrade-conf");
+
+#ifdef _WIN32
+	if (!IsService)
+		config_error("In next screen you will be prompted to automatically upgrade the configuration file(s).");
+	else
+#endif
+		config_error("To upgrade it to the new 3.4.x format, run: ./unreal upgrade-conf");
+
 	config_error("******************************************************************");
 	/* TODO: win32 may require a different error */
 }
@@ -1784,6 +1790,8 @@ int	load_conf(char *filename, const char *original_path)
 
 	if (config_verbose > 0)
 		config_status("Loading config file %s ..", filename);
+
+	need_34_upgrade = 0;
 
 	/*
 	 * Check if we're accidentally including a file a second
@@ -2386,6 +2394,8 @@ int	config_test()
 	ConfigCommand	*cc;
 	int		errors = 0;
 	Hook *h;
+	
+	need_34_upgrade = 0;
 
 	for (cfptr = conf; cfptr; cfptr = cfptr->cf_next)
 	{

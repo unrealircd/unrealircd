@@ -64,9 +64,6 @@ Computing Center and Jarkko Oikarinen";
 #include "fdlist.h"
 #include "version.h"
 #include "proto.h"
-#ifdef _WIN32
-extern BOOL IsService;
-#endif
 #ifdef USE_LIBCURL
 #include <curl/curl.h>
 #endif

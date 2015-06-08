@@ -764,3 +764,7 @@ extern void unreal_add_masks(ConfigItem_mask **head, ConfigEntry *ce);
 extern int unreal_mask_match(aClient *acptr, ConfigItem_mask *m);
 extern char *our_strcasestr(char *haystack, char *needle);
 extern void update_conf(void);
+extern MODVAR int need_34_upgrade;
+#ifdef _WIN32
+extern BOOL IsService;
+#endif

@@ -83,7 +83,6 @@ extern Link *Servers;
 extern ircstats IRCstats;
 unsigned char *errors = NULL;
 extern VOID WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv);
-extern BOOL IsService;
 void CleanUp(void)
 {
 	Shell_NotifyIcon(NIM_DELETE ,&SysTray);
@@ -1073,6 +1072,27 @@ void win_error()
 {
 	if (errors && !IsService)
 		DialogBox(hInst, "ConfigError", hwIRCDWnd, (DLGPROC)ConfigErrorDLG);
+	if (need_34_upgrade)
+	{
+		need_34_upgrade = 0; /* anti-recursion. yes, is needed. */
+		if (MessageBox(NULL, 
+		               "Shall I try to upgrade your configuration files to UnrealIRCd 3.4.x format?",
+		               "3.2.x configuration detected",
+		               MB_YESNO|MB_ICONQUESTION) == IDNO)
+		{
+			 return 0;
+		}
+		else 
+		{
+			update_conf();
+			MessageBox(NULL,
+			           "Configuration file(s) upgraded! In next screen you can see what I did (just for reference). "
+			           "After that, simply try to start UnrealIRCd again and see if it loads.",
+			           "Configuration upgrade",
+			           MB_OK);
+			DialogBox(hInst, "ConfigError", hwIRCDWnd, (DLGPROC)ConfigErrorDLG);
+		}
+	}
 }
 
 LRESULT CALLBACK ConfigErrorDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 

@@ -31,8 +31,13 @@ void modify_file(int start, char *ins, int stop)
 		
 	snprintf(configfiletmp2, sizeof(configfiletmp2), "%s.tmp", configfiletmp); // .tmp.tmp :D
 
+#ifndef _WIN32
 	fdi = fopen(configfiletmp, "r");
 	fdo = fopen(configfiletmp2, "w");
+#else
+	fdi = fopen(configfiletmp, "rb");
+	fdo = fopen(configfiletmp2, "wb");
+#endif
 
 	if (!fdi || !fdo)
 	{
@@ -98,8 +103,13 @@ end:
 	
 	MyFree(rdbuf);
 	// todo: handle write errors and such..
-	
-	rename(configfiletmp2, configfiletmp);
+
+	unlink(configfiletmp);
+	if (rename(configfiletmp2, configfiletmp) < 0)
+	{
+		config_error("Could not rename '%s' to '%s': %s", configfiletmp2, configfiletmp, strerror(errno));
+		die();
+	}
 }
 
 void remove_section(int start, int stop)
@@ -609,7 +619,7 @@ int upgrade_allow(ConfigEntry *ce)
 	char options_str[512], comment[512];
 
 	memset(options, 0, sizeof(options));
-	*comment = '\0';
+	*comment = *options_str = '\0';
 		
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -620,6 +630,7 @@ int upgrade_allow(ConfigEntry *ce)
 			if (cep->ce_vardata)
 			{
 				options[0] = cep->ce_vardata;
+				optionscnt = 1;
 			}
 			else if (cep->ce_entries)
 			{
@@ -958,7 +969,13 @@ void update_conf(void)
 				die();
 			}
 			
-			/* rename converted conf to config file */
+			/* Rename converted conf to config file */
+#ifdef _WIN32
+			/* "If newpath already exists it will be atomically replaced"..
+			 * well.. not on Windows! Error: "File exists"...
+			 */
+			unlink(configfile);
+#endif
 			if (rename(configfiletmp, configfile) < 0)
 			{
 				config_error("Could not rename converted configuration file '%s' to '%s' -- please rename this file yourself!",
@@ -985,6 +1002,5 @@ void update_conf(void)
 		config_status("No configuration files were changed. No upgrade was needed. If this is incorrect then please report on https://bugs.unrealircd.org/ !");
 		config_status("");
 	}
-	exit(0);
 }
 
