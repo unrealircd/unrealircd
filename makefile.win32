@@ -19,6 +19,11 @@ MT=mt
 #TRE_INC_DIR="C:\dev\tre"
 #TRELIB="tre.lib"
 
+### PCRE2 ###
+#PCRE2_LIB_DIR="C:\dev\pcre2\build\release"
+#PCRE2_INC_DIR="C:\dev\pcre2"
+#PCRE2LIB="pcre2-8.lib"
+
 ### C-ARES ####
 #CARES_LIB_DIR="C:\dev\c-ares\vc\cares\dll-release"
 #CARES_INC_DIR="C:\dev\c-ares"
@@ -80,6 +85,13 @@ TRE_INC=/I "$(TRE_INC_DIR)"
 TRE_LIB=/LIBPATH:"$(TRE_LIB_DIR)"
 !ENDIF
 
+!IFDEF PCRE2_INC_DIR
+PCRE2_INC=/I "$(PCRE2_INC_DIR)"
+!ENDIF
+!IFDEF PCRE2_LIB_DIR
+PCRE2_LIB=/LIBPATH:"$(PCRE2_LIB_DIR)"
+!ENDIF
+
 !IFDEF USE_REMOTEINC
 CURLCFLAGS=/D USE_LIBCURL
 CURLOBJ=SRC/URL.OBJ
@@ -113,18 +125,19 @@ MODDBGCFLAG=/LDd /MD /Zi
 !ENDIF 
 
 FD_SETSIZE=/D FD_SETSIZE=16384
-CFLAGS=$(DBGCFLAG) $(TRE_INC) $(CARES_INC) $(LIBCURL_INC) $(OPENSSL_INC) /J /I ./INCLUDE /I ./INCLUDE/WIN32/ARES /Fosrc/ /nologo \
+CFLAGS=$(DBGCFLAG) $(TRE_INC) $(PCRE2_INC) $(CARES_INC) $(LIBCURL_INC) $(OPENSSL_INC) /J /I ./INCLUDE /I ./INCLUDE/WIN32/ARES /Fosrc/ /nologo \
  $(CURLCFLAGS) $(FD_SETSIZE) $(SSLCFLAGS) $(NS_ADDRESS) /D NOSPOOF=1 /c /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE /D _USE_32BIT_TIME_T
-CFLAGSST=$(DBGCFLAGST) $(TRE_INC) $(CARES_INC) $(LIBCURL_INC) $(OPENSSL_INC) /J /I ./INCLUDE /I ./INCLUDE/WIN32/ARES /Fosrc/ /nologo \
+CFLAGSST=$(DBGCFLAGST) $(TRE_INC) $(PCRE2_INC) $(CARES_INC) $(LIBCURL_INC) $(OPENSSL_INC) /J /I ./INCLUDE /I ./INCLUDE/WIN32/ARES /Fosrc/ /nologo \
  $(CURLCFLAGS) $(FD_SETSIZE) $(SSLCFLAGS) $(NS_ADDRESS) /D NOSPOOF=1 /c /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE /D _USE_32BIT_TIME_T
 LFLAGS=kernel32.lib user32.lib gdi32.lib shell32.lib ws2_32.lib advapi32.lib \
  dbghelp.lib oldnames.lib comctl32.lib comdlg32.lib $(CARES_LIB) $(CARESLIB) $(TRE_LIB) $(TRELIB) \
- $(OPENSSL_LIB) $(SSLLIBS) $(LIBCURL_LIB) $(CURLLIB) /def:wircd.def /implib:wircd.lib \
+  $(PCRE2_LIB) $(PCRE2LIB) $(OPENSSL_LIB) $(SSLLIBS) $(LIBCURL_LIB) $(CURLLIB) /def:wircd.def /implib:wircd.lib \
  /nologo $(DBGLFLAG) /out:WIRCD.EXE
 MODCFLAGS=$(MODDBGCFLAG) $(SSLCFLAGS) $(CURLCFLAGS) /J /Fesrc/modules/ \
- /Fosrc/modules/ /nologo $(TRE_INC) $(CARES_INC) $(LIBCURL_INC) $(OPENSSL_INC) /I ./INCLUDE /D \
+ /Fosrc/modules/ /nologo $(TRE_INC) $(PCRE2_INC) $(CARES_INC) $(LIBCURL_INC) $(OPENSSL_INC) /I ./INCLUDE /D \
  DYNAMIC_LINKING /D NOSPOOF /D MODULE_COMPILE /D _CRT_SECURE_NO_DEPRECATE /D _CRT_NONSTDC_NO_DEPRECATE /D _USE_32BIT_TIME_T
-MODLFLAGS=/link /def:src/modules/module.def wircd.lib ws2_32.lib $(TRE_LIB) $(TRELIB) $(CARES_LIB) $(OPENSSL_LIB) $(SSLLIBS) \
+MODLFLAGS=/link /def:src/modules/module.def wircd.lib ws2_32.lib $(TRE_LIB) $(TRELIB) \
+ $(PCRE2_LIB) $(PCRE2LIB) $(CARES_LIB) $(OPENSSL_LIB) $(SSLLIBS) \
  $(LIBCURL_LIB) $(CURLLIB)
 
 INCLUDES=./include/struct.h ./include/config.h ./include/sys.h \
@@ -142,8 +155,10 @@ EXP_OBJ_FILES=SRC/CHANNEL.OBJ SRC/SEND.OBJ SRC/SOCKET.OBJ \
  SRC/VERSION.OBJ SRC/S_KLINE.OBJ SRC/S_EXTRA.OBJ SRC/IRCSPRINTF.OBJ \
  SRC/SCACHE.OBJ SRC/ALN.OBJ SRC/RES.OBJ SRC/MODULES.OBJ \
  SRC/S_SVS.OBJ SRC/EVENTS.OBJ SRC/UMODES.OBJ SRC/AUTH.OBJ SRC/CIDR.OBJ SRC/SSL.OBJ \
- SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/MODDATA.OBJ SRC/UID.OBJ SRC/MEMPOOL.OBJ SRC/S_DISPATCH.OBJ SRC/MD5.OBJ SRC/API-ISUPPORT.OBJ SRC/API-COMMAND.OBJ \
- SRC/EXTBANS.OBJ SRC/TIMESYNCH.OBJ SRC/CRYPT_BLOWFISH.OBJ $(CURLOBJ)
+ SRC/RANDOM.OBJ SRC/EXTCMODES.OBJ SRC/MODDATA.OBJ SRC/UID.OBJ SRC/MEMPOOL.OBJ \
+ SRC/S_DISPATCH.OBJ SRC/MD5.OBJ SRC/API-ISUPPORT.OBJ SRC/API-COMMAND.OBJ \
+ SRC/EXTBANS.OBJ SRC/TIMESYNCH.OBJ SRC/CRYPT_BLOWFISH.OBJ \
+ SRC/OPERCLASS.OBJ SRC/UPDCONF.OBJ $(CURLOBJ)
 
 OBJ_FILES=$(EXP_OBJ_FILES) SRC/GUI.OBJ SRC/SERVICE.OBJ SRC/DEBUG.OBJ SRC/RTF.OBJ \
  SRC/EDITOR.OBJ SRC/WIN32.OBJ 
@@ -185,6 +200,7 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/M_STARTTLS.DLL \
  SRC/MODULES/M_NOPOST.DLL SRC/MODULES/M_CAP.DLL \
  SRC/MODULES/M_SASL.DLL SRC/MODULES/CAP_INVITENOTIFY.DLL \
+ SRC/MODULES/SSL_ANTIDOS.DLL \
  SRC/MODULES/M_MD.DLL \
  SRC/MODULES/CERTFP.DLL \
  SRC/MODULES/CLOAK.DLL \
@@ -209,7 +225,14 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/CHANMODES/SECUREONLY.DLL \
  SRC/MODULES/CHANMODES/STRIPCOLOR.DLL \
  SRC/MODULES/USERMODES/CENSOR.DLL \
- SRC/MODULES/USERMODES/NOCTCP.DLL
+ SRC/MODULES/USERMODES/NOCTCP.DLL \
+ SRC/MODULES/EXTBANS/ACCOUNT.DLL \
+ SRC/MODULES/EXTBANS/INCHANNEL.DLL \
+ SRC/MODULES/EXTBANS/JOIN.DLL \
+ SRC/MODULES/EXTBANS/NICKCHANGE.DLL \
+ SRC/MODULES/EXTBANS/QUIET.DLL \
+ SRC/MODULES/EXTBANS/REALNAME.DLL \
+ SRC/MODULES/EXTBANS/REGNICK.DLL
 
 ALL: CONF UNREAL.EXE WIRCD.EXE MODULES 
 
@@ -440,6 +463,12 @@ src/ssl.obj: src/ssl.c $(INCLUDES)
 
 src/crypt_blowfish.obj: src/crypt_blowfish.c $(INCLUDES)
 	$(CC) $(CFLAGS) src/crypt_blowfish.c
+
+src/operclass.obj: src/operclass.c $(INCLUDES) ./include/dbuf.h
+        $(CC) $(CFLAGS) src/operclass.c
+
+src/s_updconf.obj: src/s_updconf.c $(INCLUDES) ./include/dbuf.h
+        $(CC) $(CFLAGS) src/s_updconf.c
 
 src/win32/win32.res: src/win32/win32gui.rc
         $(RC) /l 0x409 /fosrc/win32/win32.res /i ./include /i ./src \
@@ -783,6 +812,9 @@ src/modules/m_sasl.dll: src/modules/m_sasl.c $(INCLUDES)
 src/modules/cap_invitenotify.dll: src/modules/cap_invitenotify.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/cap_invitenotify.c $(MODLFLAGS)
 
+src/modules/ssl_antidos.dll: src/modules/ssl_antidos.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) src/modules/ssl_antidos.c $(MODLFLAGS)
+
 src/modules/chanmodes/adminonly.dll: src/modules/chanmodes/adminonly.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/adminonly.c $(MODLFLAGS)
 
@@ -848,5 +880,26 @@ src/modules/usermodes/censor.dll: src/modules/usermodes/censor.c $(INCLUDES)
 
 src/modules/usermodes/noctcp.dll: src/modules/usermodes/noctcp.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/usermodes/ /Fesrc/modules/usermodes/ src/modules/usermodes/noctcp.c $(MODLFLAGS)
+
+src/modules/extbans/account.dll: src/modules/extbans/account.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/extbans/ /Fesrc/modules/extbans/ src/modules/extbans/account.c $(MODLFLAGS)
+
+src/modules/extbans/inchannel.dll: src/modules/extbans/inchannel.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/extbans/ /Fesrc/modules/extbans/ src/modules/extbans/inchannel.c $(MODLFLAGS)
+
+src/modules/extbans/join.dll: src/modules/extbans/join.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/extbans/ /Fesrc/modules/extbans/ src/modules/extbans/join.c $(MODLFLAGS)
+
+src/modules/extbans/nickchange.dll: src/modules/extbans/nickchange.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/extbans/ /Fesrc/modules/extbans/ src/modules/extbans/nickchange.c $(MODLFLAGS)
+
+src/modules/extbans/quiet.dll: src/modules/extbans/quiet.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/extbans/ /Fesrc/modules/extbans/ src/modules/extbans/quiet.c $(MODLFLAGS)
+
+src/modules/extbans/realname.dll: src/modules/extbans/realname.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/extbans/ /Fesrc/modules/extbans/ src/modules/extbans/realname.c $(MODLFLAGS)
+
+src/modules/extbans/regnick.dll: src/modules/extbans/regnick.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/extbans/ /Fesrc/modules/extbans/ src/modules/extbans/regnick.c $(MODLFLAGS)
 
 dummy:
