@@ -212,7 +212,7 @@ int upgrade_link_block(ConfigEntry *ce)
 	char *bind_ip = NULL;
 	char *username = NULL;
 	char *hostname = NULL;
-	int port = 0;
+	char *port = NULL;
 	char *password_receive = NULL;
 	char *password_connect = NULL;
 	char *class = NULL;
@@ -263,7 +263,7 @@ int upgrade_link_block(ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "bind-ip"))
 			bind_ip = cep->ce_vardata;
 		else if (!strcmp(cep->ce_varname, "port"))
-			port = atoi(cep->ce_vardata);
+			port = cep->ce_vardata;
 		else if (!strcmp(cep->ce_varname, "password-receive"))
 		{
 			password_receive = cep->ce_vardata;
@@ -331,7 +331,7 @@ int upgrade_link_block(ConfigEntry *ce)
 		         "\toutgoing {\n"
 		         "\t\tbind-ip %s;\n"
 		         "\t\thostname %s;\n"
-		         "\t\tport %d;\n"
+		         "\t\tport %s;\n"
 		         "\t\toptions { %s%s};\n"
 		         "\t};\n",
 		         bind_ip,
@@ -391,7 +391,7 @@ int upgrade_link_block(ConfigEntry *ce)
 	
 	replace_section(ce, buf);
 	
-	config_status("- link block upgraded");
+	config_status("- link block '%s' upgraded", ce->ce_vardata);
 	return 1;
 }
 
