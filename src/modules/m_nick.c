@@ -1373,6 +1373,9 @@ int _register_user(aClient *cptr, aClient *sptr, char *nick, char *username, cha
 
 		sendto_one(sptr, rpl_str(RPL_YOURID), me.name, nick, sptr->id);
 
+		if (IsHidden(sptr))
+			sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, user->virthost);
+
 		if (sptr->flags & FLAGS_SSL)
 			if (sptr->ssl)
 				sendto_one(sptr,

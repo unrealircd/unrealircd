@@ -176,6 +176,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sendto_server(cptr, 0, 0, ":%s SWHOIS %s :%s", me.name,
 			    sptr->name, vhost->swhois);
 		}
+		sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, vhost->virthost);
 		sendto_one(sptr,
 		    ":%s NOTICE %s :*** Your vhost is now %s%s%s",
 		    me.name, sptr->name, vhost->virtuser ? vhost->virtuser : "", 
