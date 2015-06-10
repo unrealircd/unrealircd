@@ -17,23 +17,41 @@ Some important remarks(!):
   commands, etc. You should not make any assumptions as long as 3.4 is in
   alpha stage.
 * If you are moving from 3.2.x then be sure to read 'CONFIGURATION CHANGES'!
-* A lot of documentation has not been updated to reflect 3.4.x status.
-  Similarly, all translated documents are out of date. Don't use them!
+* The documentation has not been updated to reflect the changes in 3.4.x.
 
 ==[ GENERAL INFORMATION ]==
 * Documentation is still in doc\unreal32docs.html but - as said - is not
-  entirely up to date. FAQ is on: http://www.unrealircd.com/faq
+  up to date for 3.4.x. FAQ is on: http://www.unrealircd.com/faq
 * Please report bugs at http://bugs.unrealircd.org/
-* The purpose of the sections below (NEW, CHANGED, MINOR, etc) is to be a
-  SUMMARY of the changes in this release.  There have been many changes in
-  total, for the full list of changes see 'git log'. Changes in alpha2 in
-  particular are tagged with "(A2)". Some changes in alpha2 are simply a
-  continuation of changes in alpha1 and are not specifically marked.
+* Below you will see a summary of all changes. Changes may be tagged when
+  a change was made in a specific version, e.g. "(A3)" means 3.4-alpha3.
+  For a complete list of changes (500+) use 'git log' or have a look at
+  https://github.com/unrealircd/unrealircd/commits/unreal34
 
 ==[ CONFIGURATION CHANGES ]==
-You can use your 3.2.x unrealircd.conf but some changes are required!
-Check out https://www.unrealircd.org/docs/Upgrading_from_3.2.x to see
-how to convert your existing 3.2.x conf to be compatible with 3.4.x.
+UnrealIRCd 3.4.x comes with an easy to use tool to upgrade your configuration
+file from the 3.2.x syntax to 3.4.x. If you already have a good working
+3.2.x configuration file then this should make it very easy to move to 3.4.x.
+
+After UnrealIRCd is compiled/installed you copy your unrealircd.conf over
+from 3.2.x (along with any other custom .conf's).
+Then, on *NIX run './unreal upgrade-conf'.
+On Windows simply try to boot and watch all the errors, click OK and
+you will be asked if UnrealIRCd should upgrade your configuration file.
+
+UnrealIRCd will go through your unrealircd.conf and any other files that
+are included from there and upgrade the files one by one.
+
+For both *NIX and Windows, after running the step from above, simply
+start UnrealIRCd (again) and it should boot up fine with your freshly
+converted configuration file(s).
+
+Note: UnrealIRCd can only convert *working* 3.2.x configuration files!
+If your 3.2.x configuration contains mistakes or errors then the upgrade
+process will likely fail or the resulting config file will fail to load.
+
+You may still be interested in the configuration changes, they are
+listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 
 ==[ NEW ]==
 * We moved a lot of channel and user modes to modules. These are all
@@ -65,6 +83,9 @@ how to convert your existing 3.2.x conf to be compatible with 3.4.x.
   time differs more than 60 seconds then servers won't link and it will
   show a message that you should fix your clock(s). This requires
   version 3.4-alpha3 (or later) on both ends of the link (A3)
+* Configuration file converter that will upgrade your 3.2.x conf to 3.4.x.
+  On *NIX run './unreal upgrade-conf'. On Windows simply try to boot and
+  after the config errors screen UnrealIRCd offers the conversion. (A3)
 
 ==[ CHANGED ]==
 * Numerics have been removed. Instead we now use SIDs (Server ID's) and
@@ -96,9 +117,17 @@ how to convert your existing 3.2.x conf to be compatible with 3.4.x.
   * -posix: the old regex engine for compatibility with 3.2.x.  (A3)
 * If you have both 3.2.x and 3.4.x servers on your network then the
   3.4.x server will only send spamfilters of type 'posix' to the 3.2.x
-  servers, since 3.2.x servers don't support the other two types.
-  So in a mixed network you probably want to keep using 'posix'
-  for a while, until all your UnrealIRCd servers are on 3.4.x. (A3)
+  servers because 3.2.x servers don't support the other two types.
+  So in a mixed network you probably want to keep using 'posix' for
+  a while until all your UnrealIRCd servers are on 3.4.x. (A3)
+* set::oper-only-stats now defaults to "*"
+* oper::from::userhost and vhost::from::userhost are now called
+  oper::mask and vhost::mask. The usermask@ part is now optional and
+  it supports two syntaxes. For one entry you can use: mask 1.2.3.*;
+  For multiple entries the syntax is: mask { 192.168.*; 10.*; };
+* Because having both allow::ip and allow::hostname in the same allow
+  block was highly confusing (it was an OR-match) you must now choose
+  between either allow::ip OR allow::hostname. (A3)
 
 ==[ MODULE CODERS / DEVELOPERS ]==
 * A lot of technical documentation for module coders has been added
