@@ -859,7 +859,8 @@ cat << __EOF__
 |_______________________________________________________________________|
 |                        - The UnrealIRCd Team -                        |
 |                                                                       |
-| * Syzop     syzop@unrealircd.com                                      |
+| * Bram Matthys (Syzop)     syzop@unrealircd.com                       |
+| * Travis McArthur (Heero)  heero@unrealircd.com                       |
 |_______________________________________________________________________|
 __EOF__
 
