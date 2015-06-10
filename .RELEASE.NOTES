@@ -1,21 +1,27 @@
 Unreal3.4-alpha3 Release Notes
 ===============================
 
-This is the second alpha version of UnrealIRCd 3.4.
-Some important remarks(!):
-* This version is NOT STABLE and could easily CRASH or hang from time to time.
-  Security issues are also more likely in this 3.4-alpha series.
-  DO NOT EVEN THINK ABOUT USING THIS ON ANY SERIOUS (PRODUCTION) SERVER!!
-  Use this alpha version to play around with the latest features and
-  improvements, test them, and give us feedback(!) on bugs.unrealircd.org
-  and/or on the forums.
-* Linking of 3.2 <-> 3.4 is supported. However, because this is such an
-  early alpha version we can make no guarantees about the impact of this 3.4
-  server on the rest of the net. At this point WE DO NOT RECOMMEND LINKING
-  3.4-alpha* to a 3.2 PRODUCTION/LIVE NETWORK. Later versions will support this.
-* Things are likely to change between alpha versions. Including configuration,
-  commands, etc. You should not make any assumptions as long as 3.4 is in
-  alpha stage.
+This is the third 'alpha' version of UnrealIRCd 3.4. We plan to move to
+'beta' stage in 1-2 months and have a stable 3.4.x release later in 2015.
+
+IMPORTANT REMARKS as long as UnrealIRCd 3.4.x is in alpha stage:
+* Because this is an alpha version it is far more likely to crash or hang.
+* Linking with 3.2.x servers is supported but highly untested.
+* Things are likely to change between alpha versions. Including but not
+  limited to: configuration, command syntax, location of files, etc.
+
+Therefore:
+* You should never run 3.4-alpha3 as a production server
+* You should not link 3.4-alpha3 with a production 3.2.x network
+
+Please do:
+* Install 3.4-alpha3 to play around, show to your friends, have fun with
+  the latest features and improvements, test things.
+* Report any problems, bugs, issues and other feedback on
+  https://bugs.unrealircd.org/ so we can improve 3.4.x!
+  During alpha stage we are still very flexible so feedback is really helpful.
+
+Finally:
 * If you are moving from 3.2.x then be sure to read 'CONFIGURATION CHANGES'!
 * The documentation has not been updated to reflect the changes in 3.4.x.
 
