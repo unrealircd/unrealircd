@@ -6,6 +6,7 @@ This is the third 'alpha' version of UnrealIRCd 3.4. We plan to move to
 
 IMPORTANT REMARKS as long as UnrealIRCd 3.4.x is in alpha stage:
 * Because this is an alpha version it is far more likely to crash or hang.
+* Security issues are handled as regular issues (no security advisories!)
 * Linking with 3.2.x servers is supported but highly untested.
 * Things are likely to change between alpha versions. Including but not
   limited to: configuration, command syntax, location of files, etc.
