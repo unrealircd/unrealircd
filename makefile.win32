@@ -245,6 +245,7 @@ CLEAN:
 	-@erase src\modules\*.dll >NUL
 	-@erase src\modules\chanmodes\*.dll >NUL
 	-@erase src\modules\usermodes\*.dll >NUL
+	-@erase src\modules\extbans\*.dll >NUL
         -@erase .\*.exe >NUL
 	-@erase wircd.lib >NUL
 	-@erase src\modules\*.exp >NUL
