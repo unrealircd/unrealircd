@@ -609,6 +609,16 @@ void HooktypeDel(Hooktype *hooktype, Module *module);
   if (retval retchk) return retval; \
  } \
 }
+#define RunHookReturnInt3(hooktype,x,y,z,retchk) \
+{ \
+ int retval; \
+ Hook *h; \
+ for (h = Hooks[hooktype]; h; h = h->next) \
+ { \
+  retval = (*(h->func.intfunc))(x,y,z); \
+  if (retval retchk) return retval; \
+ } \
+}
 
 #define RunHookReturnVoid(hooktype,x,ret) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) if((*(h->func.intfunc))(x) ret) return; } while(0)
 #define RunHook2(hooktype,x,y) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) (*(h->func.intfunc))(x,y); } while(0)
@@ -734,6 +744,7 @@ extern char *moddata_client_get(aClient *acptr, char *varname);
 #define HOOKTYPE_CHANNEL_SYNCED 79
 #define HOOKTYPE_CAN_SAJOIN 80
 #define HOOKTYPE_WHOIS 81
+#define HOOKTYPE_CHECK_INIT 82
 
 /* Hook return values */
 #define HOOK_CONTINUE 0
@@ -784,6 +795,7 @@ extern char *moddata_client_get(aClient *acptr, char *varname);
 #define EFUNC_SEND_MD_CHANNEL           39
 #define EFUNC_SEND_MD_MEMBER            40
 #define EFUNC_SEND_MD_MEMBERSHIP        41
+#define EFUNC_CHECK_BANNED              42
 
 /* Module flags */
 #define MODFLAG_NONE	0x0000

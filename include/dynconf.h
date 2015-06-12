@@ -382,9 +382,6 @@ struct SetCheck {
 	unsigned has_options_allow_insane_bans:1;
 	unsigned has_options_allow_part_if_shunned:1;
 	unsigned has_options_disable_cap:1;
-	int cgiirc_type; /* cheat :( */
-	unsigned has_cgiirc_hosts:1;
-	unsigned has_cgiirc_webpass:1;
 	unsigned has_ping_cookie:1;
 	unsigned has_nicklen:1;
 };

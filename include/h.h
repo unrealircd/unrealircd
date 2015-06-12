@@ -111,7 +111,6 @@ ConfigItem_ulines	*Find_uline(char *host);
 ConfigItem_except	*Find_except(aClient *, char *host, short type);
 ConfigItem_tld		*Find_tld(aClient *cptr, char *host);
 ConfigItem_link		*Find_link(char *servername, aClient *acptr);
-ConfigItem_cgiirc *Find_cgiirc(char *username, char *hostname, char *ip, CGIIRCType type);
 ConfigItem_ban 		*Find_ban(aClient *, char *host, short type);
 ConfigItem_ban 		*Find_banEx(aClient *,char *host, short type, short type2);
 ConfigItem_vhost	*Find_vhost(char *name);
@@ -690,6 +689,8 @@ extern MODVAR void (*send_md_client)(ModDataInfo *mdi, aClient *acptr, ModData *
 extern MODVAR void (*send_md_channel)(ModDataInfo *mdi, aChannel *chptr, ModData *md);
 extern MODVAR void (*send_md_member)(ModDataInfo *mdi, aChannel *chptr, Member *m, ModData *md);
 extern MODVAR void (*send_md_membership)(ModDataInfo *mdi, aClient *acptr, Membership *m, ModData *md);
+extern MODVAR int (*check_banned)(aClient *cptr);
+
 /* /Efuncs */
 extern MODVAR aMotdFile opermotd, svsmotd, motd, botmotd, smotd, rules;
 extern MODVAR int max_connection_count;
@@ -768,3 +769,4 @@ extern MODVAR int need_34_upgrade;
 #ifdef _WIN32
 extern BOOL IsService;
 #endif
+extern int match_ip46(char *a, char *b);

@@ -45,13 +45,10 @@
 #endif
 
 DLLFUNC int m_pass(aClient *cptr, aClient *sptr, int parc, char *parv[]);
-DLLFUNC int m_webirc(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 
 extern MODVAR char zlinebuf[BUFSIZE];
 
 #define MSG_PASS 	"PASS"	
-
-#define MSG_WEBIRC	"WEBIRC"
 
 ModuleHeader MOD_HEADER(m_pass)
   = {
@@ -62,10 +59,22 @@ ModuleHeader MOD_HEADER(m_pass)
 	NULL 
     };
 
+/* Forward declarations */
+DLLFUNC int _check_banned(aClient *cptr);
+
+DLLFUNC int MOD_TEST(m_pass)(ModuleInfo *modinfo)
+{
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+
+	EfunctionAdd(modinfo->handle, EFUNC_CHECK_BANNED, _check_banned);
+	
+	return MOD_SUCCESS;
+}
+
 DLLFUNC int MOD_INIT(m_pass)(ModuleInfo *modinfo)
 {
 	CommandAdd(modinfo->handle, MSG_PASS, m_pass, 1, M_UNREGISTERED|M_USER|M_SERVER);
-	CommandAdd(modinfo->handle, MSG_WEBIRC, m_webirc, MAXPARA, M_UNREGISTERED);
+	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -81,7 +90,7 @@ DLLFUNC int MOD_UNLOAD(m_pass)(int module_unload)
 }
 
 /** Handles zlines/gzlines/throttling/unknown connections */
-static int my_check_banned(aClient *cptr)
+DLLFUNC int _check_banned(aClient *cptr)
 {
 int i, j;
 aTKline *tk;
@@ -133,108 +142,6 @@ ConfigItem_ban *bconf;
 	return 0;
 }
 
-#define CGIIRC_STRING     "CGIIRC_"
-#define CGIIRC_STRINGLEN  (sizeof(CGIIRC_STRING)-1)
-
-/* Does the CGI:IRC host spoofing work */
-int docgiirc(aClient *cptr, char *ip, char *host)
-{
-#ifdef INET6
-	char ipbuf[64];
-#endif
-	char *sockhost;
-
-	if (IsCGIIRC(cptr))
-		return exit_client(cptr, cptr, &me, "Double CGI:IRC request (already identified)");
-
-	if (host && !strcmp(ip, host))
-		host = NULL; /* host did not resolve, make it NULL */
-
-	/* STEP 1: Update cptr->ip
-	   inet_pton() returns 1 on success, 0 on bad input, -1 on bad AF */
-	if(inet_pton(AFINET, ip, &cptr->ip) != 1)
-	{
-#ifndef INET6
-		/* then we have an invalid IP */
-		return exit_client(cptr, cptr, &me, "Invalid IP address");
-#else
-		/* The address may be IPv4. We have to try ::ffff:ipv4 */
-		snprintf(ipbuf, sizeof(ipbuf), "::ffff:%s", ip);
-		if(inet_pton(AFINET, ipbuf, &cptr->ip) != 1)
-			return exit_client(cptr, cptr, &me, "Invalid IP address");
-#endif
-	}
-
-	/* STEP 2: Update GetIP() */
-	if (cptr->user)
-	{
-		/* Kinda unsure if this is actually used.. But maybe if USER, PASS, NICK ? */
-		if (cptr->user->ip_str)
-			MyFree(cptr->user->ip_str);
-		cptr->user->ip_str = strdup(ip);
-	}
-		
-	/* STEP 3: Update cptr->hostp */
-	/* (free old) */
-	if (cptr->hostp)
-	{
-		unreal_free_hostent(cptr->hostp);
-		cptr->hostp = NULL;
-	}
-	/* (create new) */
-	if (host && verify_hostname(host))
-		cptr->hostp = unreal_create_hostent(host, &cptr->ip);
-
-	/* STEP 4: Update sockhost
-	   Make sure that if this any IPv4 address is _not_ prefixed with
-	   "::ffff:" by using Inet_ia2p().
-	 */
-	sockhost = Inet_ia2p(&cptr->ip);
-	if(!sockhost)
-	{
-		return exit_client(cptr, cptr, &me, "Error processing CGI:IRC IP address.");
-	}
-	strlcpy(cptr->sockhost, sockhost, sizeof(cptr->sockhost));
-
-	SetCGIIRC(cptr);
-
-	/* Check (g)zlines right now; these are normally checked upon accept(),
-	 * but since we know the IP only now after PASS/WEBIRC, we have to check
-	 * here again...
-	 */
-	return my_check_banned(cptr);
-}
-
-/* WEBIRC <pass> "cgiirc" <hostname> <ip> */
-DLLFUNC int m_webirc(aClient *cptr, aClient *sptr, int parc, char *parv[])
-{
-char *ip, *host, *password;
-size_t ourlen;
-ConfigItem_cgiirc *e;
-
-	if ((parc < 5) || BadPtr(parv[4]))
-	{
-		sendto_one(cptr, err_str(ERR_NEEDMOREPARAMS), me.name, "*", "WEBIRC");
-		return -1;
-	}
-
-	password = parv[1];
-	host = !DONT_RESOLVE ? parv[3] : parv[4];
-	ip = parv[4];
-
-	/* Check if allowed host */
-	e = Find_cgiirc(sptr->username, sptr->sockhost, GetIP(sptr), CGIIRC_WEBIRC);
-	if (!e)
-		return exit_client(cptr, sptr, &me, "CGI:IRC -- No access");
-
-	/* Check password */
-	if (Auth_Check(sptr, e->auth, password) == -1)
-		return exit_client(cptr, sptr, &me, "CGI:IRC -- Invalid password");
-
-	/* And do our job.. */
-	return docgiirc(cptr, ip, host);
-}
-
 /***************************************************************************
  * m_pass() - Added Sat, 4 March 1989
  ***************************************************************************/
@@ -260,30 +167,6 @@ DLLFUNC CMD_FUNC(m_pass)
 		return 0;
 	}
 
-	if (!strncmp(password, CGIIRC_STRING, CGIIRC_STRINGLEN))
-	{
-		char *ip, *host;
-		ConfigItem_cgiirc *e;
-
-		e = Find_cgiirc(sptr->username, sptr->sockhost, GetIP(sptr), CGIIRC_PASS);
-		if (e)
-		{
-			/* Ok now we got that sorted out, proceed:
-			 * Syntax: CGIIRC_<ip>_<resolvedhostname>
-			 * The <resolvedhostname> has been checked ip->host AND host->ip by CGI:IRC itself
-			 * already so we trust it.
-			 */
-			ip = password + CGIIRC_STRINGLEN;
-			host = strchr(ip, '_');
-			if (!host)
-				return exit_client(cptr, sptr, &me, "Invalid CGI:IRC IP received");
-			*host++ = '\0';
-		
-			return docgiirc(cptr, ip, host);
-		}
-	}
-
-	
 	PassLen = strlen(password);
 	if (cptr->passwd)
 		MyFree(cptr->passwd);

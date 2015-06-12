@@ -104,7 +104,6 @@ typedef struct _configitem_allow_dcc ConfigItem_allow_dcc;
 typedef struct _configitem_vhost ConfigItem_vhost;
 typedef struct _configitem_except ConfigItem_except;
 typedef struct _configitem_link	ConfigItem_link;
-typedef struct _configitem_cgiirc ConfigItem_cgiirc;
 typedef struct _configitem_ban ConfigItem_ban;
 typedef struct _configitem_deny_dcc ConfigItem_deny_dcc;
 typedef struct _configitem_deny_link ConfigItem_deny_link;
@@ -296,7 +295,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define	FLAGS_GOTID      0x1000	/* successful ident lookup achieved */
 #define	FLAGS_DOID       0x2000	/* I-lines say must use ident return */
 #define	FLAGS_NONL       0x4000	/* No \n in buffer */
-#define FLAGS_CGIIRC     0x8000 /* CGI IRC host: flag set = ip/host data has been filled in already */
+//0x8000 unused (was cgiirc)
 #define FLAGS_ULINE      0x10000	/* User/server is considered U-lined */
 #define FLAGS_SQUIT      0x20000	/* Server has been /squit by an oper */
 #define FLAGS_PROTOCTL   0x40000	/* Received a PROTOCTL message */
@@ -391,7 +390,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define IsOutgoing(x)		((x)->flags & FLAGS_OUTGOING)
 #define GotNetInfo(x) 		((x)->flags & FLAGS_NETINFO)
 #define SetNetInfo(x)		((x)->flags |= FLAGS_NETINFO)
-#define IsCGIIRC(x)			((x)->flags & FLAGS_CGIIRC)
 #define SetEAuth(x)		((x)->flags |= FLAGS_EAUTH)
 #define IsEAuth(x)		((x)->flags & FLAGS_EAUTH)
 #define IsShunned(x)		((x)->flags & FLAGS_SHUNNED)
@@ -436,7 +434,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define	DoingDNS(x)		((x)->flags & FLAGS_DOINGDNS)
 #define	SetAccess(x)		((x)->flags |= FLAGS_CHKACCESS); Debug((DEBUG_DEBUG, "SetAccess(%s)", (x)->name))
 #define SetOutgoing(x)		do { x->flags |= FLAGS_OUTGOING; } while(0)
-#define SetCGIIRC(x)		do { x->flags |= FLAGS_CGIIRC; } while(0)
 #define	DoingAuth(x)		((x)->flags & FLAGS_AUTH)
 #define	NoNewLine(x)		((x)->flags & FLAGS_NONL)
 #define IsDCCNotice(x)		((x)->flags & FLAGS_DCCNOTICE)
@@ -1333,19 +1330,6 @@ struct _configitem_link {
 	int	refcount; /**< Reference counter (used so we know if the struct may be freed) */
 	time_t hold; /**< For how long the server is "on hold" for outgoing connects (why?) */
 	struct IN_ADDR ipnum; /**< actual IP to use for outgoing connect (filled in after host is resolved) */
-};
-
-typedef enum {
-	CGIIRC_PASS=1, CGIIRC_WEBIRC=2
-} CGIIRCType;
-
-struct _configitem_cgiirc {
-	ConfigItem  *prev, *next;
-	ConfigFlag  flag;
-	CGIIRCType type;
-	char *username;
-	char *hostname;
-	anAuthStruct *auth;
 };
 
 struct _configitem_except {

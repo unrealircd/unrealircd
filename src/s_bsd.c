@@ -699,11 +699,7 @@ static int check_init(aClient *cptr, char *sockn, size_t size)
 	struct SOCKADDR_IN sk;
 	int  len = sizeof(struct SOCKADDR_IN);
 
-	if (IsCGIIRC(cptr))
-	{
-		strlcpy(sockn, GetIP(cptr), size); /* use already set value */
-		return 0;
-	}
+	RunHookReturnInt3(HOOKTYPE_CHECK_INIT, cptr, sockn, size, ==0);
 
 	/* If descriptor is a tty, special checking... */
 #if defined(DEBUGMODE) && !defined(_WIN32)

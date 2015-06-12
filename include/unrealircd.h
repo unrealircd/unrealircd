@@ -9,6 +9,7 @@
 #include "numeric.h"
 #include "msg.h"
 #include "proto.h"
+#include "inet.h"
 #include "channel.h"
 #include <time.h>
 #include <sys/stat.h>
