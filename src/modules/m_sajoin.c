@@ -85,23 +85,25 @@ DLLFUNC CMD_FUNC(m_sajoin)
 	char jbuf[BUFSIZE];
 	int did_anything = 0;
 
-	if (!IsSAdmin(sptr) && !IsULine(sptr))
+	if (parc < 3) 
+        {
+         sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0], "SAJOIN");     
+         return 0;
+        }
+
+	if (!(acptr = find_person(parv[1], NULL)))
+        {
+                sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, parv[0], parv[1]);
+                return 0;
+        }
+
+	/* Is this user disallowed from operating on this victim at all? */
+	if (!IsSAdmin(sptr) && !IsULine(sptr) && !OperClass_evaluateACLPath(sptr->user->operlogin,"sajoin",sptr,acptr,NULL,NULL))
 	{
 	 sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 	 return 0;
 	}
 
-	if (parc < 3)
-	{
-	 sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0], "SAJOIN");
-	 return 0;
-	}
-
-	if (!(acptr = find_person(parv[1], NULL)))
-	{
-		sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, parv[0], parv[1]);
-		return 0;
-	}
 	if (MyClient(acptr))
 	{
 		char *name, *p = NULL;
@@ -135,6 +137,14 @@ DLLFUNC CMD_FUNC(m_sajoin)
 			}
 
 			chptr = get_channel(acptr, name, 0);
+
+			/* If this _specific_ channel is not permitted, skip it */
+			if (!IsSAdmin(sptr) && !IsULine(sptr) && !OperClass_evaluateACLPath(sptr->user->operlogin,"sajoin",sptr,chptr,NULL,NULL))
+        		{
+         			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
+				continue;
+		        }
+
 			if (!parted && chptr && (lp = find_membership_link(acptr->user->channel, chptr)))
 			{
 				sendto_one(sptr, err_str(ERR_USERONCHANNEL), me.name, parv[0], 
