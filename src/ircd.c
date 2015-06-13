@@ -911,8 +911,8 @@ struct ThrottlingBucket z = { NULL, NULL, {0}, 0, 0};
 static void generate_cloakkeys()
 {
 	/* Generate 3 cloak keys */
-#define GENERATE_CLOAKKEY_MINLEN 16
-#define GENERATE_CLOAKKEY_MAXLEN 32 /* Length of cloak keys to generate. */
+#define GENERATE_CLOAKKEY_MINLEN 50
+#define GENERATE_CLOAKKEY_MAXLEN 60 /* Length of cloak keys to generate. */
 	char keyBuf[GENERATE_CLOAKKEY_MAXLEN + 1];
 	int keyNum;
 	int keyLen;
