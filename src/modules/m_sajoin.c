@@ -139,7 +139,7 @@ DLLFUNC CMD_FUNC(m_sajoin)
 			chptr = get_channel(acptr, name, 0);
 
 			/* If this _specific_ channel is not permitted, skip it */
-			if (!IsSAdmin(sptr) && !IsULine(sptr) && !OperClass_evaluateACLPath(sptr->user->operlogin,"sajoin",sptr,chptr,NULL,NULL))
+			if (!IsSAdmin(sptr) && !IsULine(sptr) && !OperClass_evaluateACLPath(sptr->user->operlogin,"sajoin",sptr,acptr,chptr,NULL))
         		{
          			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 				continue;
