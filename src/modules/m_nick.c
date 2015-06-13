@@ -994,12 +994,6 @@ DLLFUNC CMD_FUNC(m_nick)
 			 */
 			sptr->nospoof = getrandom32();
 
-			if (PINGPONG_WARNING)
-				sendto_one(sptr, ":%s NOTICE %s :*** If you are having problems"
-				    " connecting due to ping timeouts, please"
-				    " type /quote pong %X or /raw pong %X now.",
-				    me.name, nick, sptr->nospoof, sptr->nospoof);
-
 			sendto_one(sptr, "PING :%X", sptr->nospoof);
 		}
 

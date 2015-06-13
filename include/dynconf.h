@@ -145,7 +145,6 @@ struct zConfiguration {
 	int timesynch_enabled;
 	int timesynch_timeout;
 	char *timesynch_server;
-	int pingpong_warning;
 	int watch_away_notification;
 	int uhnames;
 	aNetwork network;
@@ -271,8 +270,6 @@ extern MODVAR aConfiguration iConf;
 #define TIMESYNCH_TIMEOUT	iConf.timesynch_timeout
 #define TIMESYNCH_SERVER	iConf.timesynch_server
 
-#define PINGPONG_WARNING	iConf.pingpong_warning
-
 #define WATCH_AWAY_NOTIFICATION	iConf.watch_away_notification
 
 #define UHNAMES_ENABLED	iConf.uhnames
@@ -307,7 +304,6 @@ struct SetCheck {
 	unsigned has_auto_join:1;
 	unsigned has_oper_auto_join:1;
 	unsigned has_check_target_nick_bans:1;
-	unsigned has_pingpong_warning:1;
 	unsigned has_watch_away_notification:1;
 	unsigned has_uhnames:1;
 	unsigned has_oper_only_stats:1;

@@ -6722,9 +6722,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "check-target-nick-bans")) {
 			tempiConf.check_target_nick_bans = config_checkval(cep->ce_vardata, CFG_YESNO);
 		}
-		else if (!strcmp(cep->ce_varname, "pingpong-warning")) {
-			tempiConf.pingpong_warning = config_checkval(cep->ce_vardata, CFG_YESNO);
-		}
 		else if (!strcmp(cep->ce_varname, "ping-cookie")) {
 			tempiConf.ping_cookie = config_checkval(cep->ce_vardata, CFG_YESNO);
 		}
@@ -7317,8 +7314,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			CheckDuplicate(cep, check_target_nick_bans, "check-target-nick-bans");
 		}
 		else if (!strcmp(cep->ce_varname, "pingpong-warning")) {
-			CheckNull(cep);
-			CheckDuplicate(cep, pingpong_warning, "pingpong-warning");
+			config_error("%s:%s: set::pingpong-warning no longer exists (the warning is always off)",
+			             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			need_34_upgrade = 1;
+			errors++;
 		}
 		else if (!strcmp(cep->ce_varname, "ping-cookie")) {
 			CheckNull(cep);
