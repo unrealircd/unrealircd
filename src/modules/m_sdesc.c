@@ -81,7 +81,7 @@ DLLFUNC int MOD_UNLOAD(m_sdesc)(int module_unload)
 
 int m_sdesc(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	if (!IsAdmin(sptr) && !IsCoAdmin(sptr) && !OperClass_evaluateACLPath(sptr->user->operlogin,"add:description",sptr,NULL,NULL,NULL))
+	if (!IsAdmin(sptr) && !IsCoAdmin(sptr) && !OperClass_evaluateACLPath("add:description",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;

@@ -294,7 +294,7 @@ OperPermission OperClass_evaluateACLPathEx(OperClassACL* acl, OperClassACLPath* 
         return OPER_DENY;
 }
 
-OperPermission OperClass_evaluateACLPath(char* opername, char* path, aClient *sptr, aClient *victim, aChannel *channel, void* extra)
+OperPermission OperClass_evaluateACLPath(char* path, aClient *sptr, aClient *victim, aChannel *channel, void* extra)
 {
 	ConfigItem_oper *ce_oper;
         ConfigItem_operclass *ce_operClass;
@@ -302,18 +302,19 @@ OperPermission OperClass_evaluateACLPath(char* opername, char* path, aClient *sp
         OperClassACLPath* operPath;
         OperClassACL* acl;
 
-        ce_oper = Find_oper(opername);
+        ce_oper = Find_oper(sptr->user->operlogin);
 	if (!ce_oper)
 	{
 		return OPER_DENY;
 	}
 	
 	ce_operClass = Find_operclass(ce_oper->operclass);
-        if (ce_operClass)
+        if (!ce_operClass)
         {
-                oc = ce_operClass->classStruct;
+		return OPER_DENY;
         }
 
+        oc = ce_operClass->classStruct;
         operPath = OperClass_parsePath(path);
         while (oc && operPath)
         {

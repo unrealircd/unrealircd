@@ -95,7 +95,7 @@ DLLFUNC CMD_FUNC(m_samode)
                 return 0;
         }
 
-	if ((!IsPrivileged(cptr) || !IsSAdmin(sptr)) && !OperClass_evaluateACLPath(sptr->user->operlogin,"samode",sptr,NULL,chptr,NULL))
+	if ((!IsPrivileged(cptr) || !IsSAdmin(sptr)) && !OperClass_evaluateACLPath("samode",sptr,NULL,chptr,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
