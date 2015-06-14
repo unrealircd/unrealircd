@@ -1136,13 +1136,16 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 				if (!*ptr)
 				{
 					if (curce)
-						config_error("%s: Unexpected EOF for variable starting at %i\n",
+						config_error("%s: End of file reached but directive or block at line %i did not end properly. "
+									 "Perhaps a missing ; (semicolon) somewhere?\n",
 							filename, curce->ce_varlinenum);
 					else if (cursection) 
-						config_error("%s: Unexpected EOF for section starting at %i\n",
-							filename, cursection->ce_sectlinenum);
+						config_error("%s: End of file reached but the section which starts at line %i did never end properly. "
+									 "Perhaps a missing }; ?\n",
+								filename, cursection->ce_sectlinenum);
 					else
-						config_error("%s: Unexpected EOF.\n", filename);
+						config_error("%s: Unexpected end of file. Some line or block did not end properly. "
+						             "Look for any missing } and };\n", filename);
 					errors++;
 					config_entry_free(curce);
 					config_free(curcf);
@@ -1183,14 +1186,16 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 
 	if (curce)
 	{
-		config_error("%s: End of file reached but directive at line %i did not end properly.\n",
+		config_error("%s: End of file reached but directive or block at line %i did not end properly. "
+		             "Perhaps a missing ; (semicolon) somewhere?\n",
 			filename, curce->ce_varlinenum);
 		errors++;
 		config_entry_free(curce);
 	}
 	else if (cursection)
 	{
-		config_error("%s: End of file reached but section at line %i did not end properly.\n",
+		config_error("%s: End of file reached but the section which starts at line %i did never end properly. "
+		             "Perhaps a missing }; ?\n",
 				filename, cursection->ce_sectlinenum);
 		errors++;
 	}
