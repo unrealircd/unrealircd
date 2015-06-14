@@ -533,7 +533,7 @@ int upgrade_loadmodule(ConfigEntry *ce)
 }
 
 #define MAXSPFTARGETS 32
-int upgrade_spamfilter(ConfigEntry *ce)
+int upgrade_spamfilter_block(ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp;
 	char *reason = NULL;
@@ -646,7 +646,7 @@ int upgrade_spamfilter(ConfigEntry *ce)
 }
 
 #define MAXALLOWOPTIONS 16
-int upgrade_allow(ConfigEntry *ce)
+int upgrade_allow_block(ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp;
 	char *hostname = NULL;
@@ -807,6 +807,87 @@ int upgrade_allow(ConfigEntry *ce)
 	return 1;
 }
 
+int upgrade_cgiirc_block(ConfigEntry *ce)
+{
+	ConfigEntry *cep, *cepp;
+	char *type = NULL;
+	char *username = NULL;
+	char *hostname = NULL;
+	char *password = NULL, *password_type = NULL;
+	char mask[USERLEN+HOSTLEN+8];
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!cep->ce_varname)
+			continue; /* impossible? */
+		else if (!cep->ce_vardata)
+		{
+			config_error_empty(cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
+				"cgiirc", cep->ce_varname);
+			return 0;
+		}
+		else if (!strcmp(cep->ce_varname, "type"))
+			type = cep->ce_vardata;
+		else if (!strcmp(cep->ce_varname, "username"))
+			username = cep->ce_vardata;
+		else if (!strcmp(cep->ce_varname, "hostname"))
+			hostname = cep->ce_vardata;
+		else if (!strcmp(cep->ce_varname, "password"))
+		{
+			password = cep->ce_vardata;
+			if (cep->ce_entries)
+				password_type = cep->ce_entries->ce_varname;
+		}
+	}
+	
+	if (!type || !hostname)
+	{
+		/* Invalid block as it does not contain the 3.2.x mandatory items */
+		return 0;
+	}
+
+	if (username)
+		snprintf(mask, sizeof(mask), "%s@%s", username, hostname);
+	else
+		strlcpy(mask, hostname, sizeof(mask));
+
+	if (!strcmp(type, "old"))
+	{
+		snprintf(buf, sizeof(buf),
+		         "webirc {\n"
+		         "\ttype old;\n"
+		         "\tmask %s;\n",
+		         mask);
+	} else
+	{
+		if (password_type)
+		{
+			snprintf(buf, sizeof(buf),
+					 "webirc {\n"
+					 "\tmask %s;\n"
+					 "\tpassword \"%s\" { %s; };\n"
+					 "};\n",
+					 mask,
+					 password,
+					 password_type);
+		} else
+		{
+			snprintf(buf, sizeof(buf),
+					 "webirc {\n"
+					 "\tmask %s;\n"
+					 "\tpassword \"%s\";\n"
+					 "};\n",
+					 mask,
+					 password);
+		}
+	}
+
+	replace_section(ce, buf);
+	
+	config_status("- cgiirc block upgraded and renamed to webirc");
+	return 1;
+}
+
 int update_conf_file(void)
 {
 	ConfigFile *cf = NULL;
@@ -879,12 +960,17 @@ again:
 		}
 		if (!strcmp(ce->ce_varname, "spamfilter"))
 		{
-			if (upgrade_spamfilter(ce))
+			if (upgrade_spamfilter_block(ce))
 				goto again;
 		}
 		if (!strcmp(ce->ce_varname, "allow") && !ce->ce_vardata) /* 'allow' block for clients, not 'allow channel' etc.. */
 		{
-			if (upgrade_allow(ce))
+			if (upgrade_allow_block(ce))
+				goto again;
+		}
+		if (!strcmp(ce->ce_varname, "cgiirc"))
+		{
+			if (upgrade_cgiirc_block(ce))
 				goto again;
 		}
 		if (!strcmp(ce->ce_varname, "set"))
