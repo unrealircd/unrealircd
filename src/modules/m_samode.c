@@ -82,24 +82,25 @@ DLLFUNC CMD_FUNC(m_samode)
 {
 	aChannel *chptr;
 
-	if (!IsPrivileged(cptr) || !IsSAdmin(sptr))
+	if (parc > 2)
+        {
+                chptr = find_channel(parv[1], NullChn);
+                if (chptr == NullChn)
+                        return 0;
+        }
+	else
+        {
+                sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+                    me.name, parv[0], "SAMODE");
+                return 0;
+        }
+
+	if ((!IsPrivileged(cptr) || !IsSAdmin(sptr)) && !OperClass_evaluateACLPath(sptr->user->operlogin,"samode",sptr,NULL,chptr,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
 
-	if (parc > 2)
-	{
-		chptr = find_channel(parv[1], NullChn);
-		if (chptr == NullChn)
-			return 0;
-	}
-	else
-	{
-		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "SAMODE");
-		return 0;
-	}
 	opermode = 0;
 	(void)do_mode(chptr, cptr, sptr, parc - 2, parv + 2, 0, 1);
 

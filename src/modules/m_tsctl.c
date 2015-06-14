@@ -91,7 +91,7 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	if (!MyClient(sptr))
 		goto doit;
-	if (!IsAdmin(sptr) && !IsCoAdmin(sptr))
+	if (!IsAdmin(sptr) && !IsCoAdmin(sptr) && !OperClass_evaluateACLPath(sptr->user->operlogin,"tsctl",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
