@@ -153,6 +153,50 @@ void replace_section(ConfigEntry *ce, char *buf)
 
 static char buf[8192];
 
+int updconf_addquotes_r(char *i, char *o, size_t len)
+{
+	if (len == 0)
+		return 0;
+	
+	len--; /* reserve room for nul byte */
+
+	if (len == 0)
+	{
+		*o = '\0';
+		return 0;
+	}
+	
+	for (; *i; i++)
+	{
+		if ((*i == '"') || (*i == '\\')) /* only " and \ need to be quoted */
+		{
+			if (len < 2)
+				break;
+			*o++ = '\\';
+			*o++ = *i;
+			len -= 2;
+		} else
+		{
+			if (len == 0)
+				break;
+			*o++ = *i;
+			len--;
+		}
+	}
+	*o = '\0';
+	
+	return 1;
+}	
+
+char *updconf_addquotes(char *str)
+{
+	static char qbuf[2048];
+	
+	*qbuf = '\0';
+	updconf_addquotes_r(str, qbuf, sizeof(qbuf));
+	return qbuf;
+}
+
 int upgrade_me_block(ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp;
@@ -575,20 +619,20 @@ int upgrade_spamfilter(ConfigEntry *ce)
 			match_type = "posix";
 			break;
 		}
-	
+
 	snprintf(buf, sizeof(buf), "spamfilter {\n"
 	                           "\tmatch-type %s;\n"
 	                           "\tmatch \"%s\";\n"
 	                           "\ttarget %s;\n"
 	                           "\taction %s;\n",
 	                           match_type,
-	                           regex,
+	                           updconf_addquotes(regex),
 	                           targets,
 	                           action);
 
 	/* optional: reason */
 	if (reason)
-		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\treason \"%s\";\n", reason);
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\treason \"%s\";\n", updconf_addquotes(reason));
 	
 	/* optional: ban-time */
 	if (ban_time)
@@ -943,6 +987,7 @@ void update_conf(void)
 		configfile = cf->cf_filename;
 		config_status("Checking '%s'...", cf->cf_filename);
 		snprintf(configfiletmp, sizeof(configfiletmp), "%s.tmp", configfile);
+		unlink(configfiletmp);
 		if (!unreal_copyfileex(configfile, configfiletmp, 0))
 		{
 			config_error("Could not create temp file for processing!");

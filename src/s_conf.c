@@ -878,12 +878,34 @@ void config_free(ConfigFile *cfptr)
 	}
 }
 
+/** Remove quotes so that 'hello \"all\" \\ lala' becomes 'hello "all" \ lala' */
+void unreal_delquotes(char *i)
+{
+	char *o;
+
+	for (o = i; *i; i++)
+	{
+		if (*i == '\\')
+		{
+			if ((i[1] == '\\') || (i[1] == '"'))
+			{
+				i++; /* skip original \ */
+				if (*i == '\0')
+					break;
+			}
+		}
+		*o++ = *i;
+	}
+	*o = '\0';
+}
+
 /* This is the internal parser, made by Chris Behrens & Fred Jacobs */
 static ConfigFile *config_parse(char *filename, char *confdata)
 {
 	char		*ptr;
 	char		*start;
 	int		linenumber = 1;
+	int errors = 0;
 	ConfigEntry	*curce;
 	ConfigEntry	**lastce;
 	ConfigEntry	*cursection;
@@ -921,14 +943,18 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 			case '{':
 				if (!curce)
 				{
-					config_status("%s:%i: No name for section start\n",
-							filename, linenumber);
+					config_error("%s:%i: New section start detected on line %d but the section has no name. "
+					             "Sections should start with a name like 'oper {' or 'set {'.",
+							filename, linenumber, linenumber);
+					errors++;
 					continue;
 				}
 				else if (curce->ce_entries)
 				{
-					config_status("%s:%i: Ignoring extra section start\n",
-							filename, linenumber);
+					config_error("%s:%i: New section start but previous section did not end properly. "
+					             "Check line %d and the line(s) before, you are likely missing a '};' there.\n",
+							filename, linenumber, linenumber);
+					errors++;
 					continue;
 				}
 				curce->ce_sectlinenum = linenumber;
@@ -939,17 +965,19 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 			case '}':
 				if (curce)
 				{
-					config_error("%s:%i: Missing semicolon before close brace\n",
-						filename, linenumber);
+					config_error("%s:%i: Missing semicolon (';') before close brace. Check line %d and the line(s) before.\n",
+						filename, linenumber, linenumber);
 					config_entry_free(curce);
 					config_free(curcf);
-
+					errors++;
 					return NULL;
 				}
 				else if (!cursection)
 				{
-					config_status("%s:%i: Ignoring extra close brace\n",
-						filename, linenumber);
+					config_error("%s:%i: You have a close brace ('};') too many. "
+					              "Check line %d AND the lines above it from the previous block.\n",
+						filename, linenumber, linenumber);
+					errors++;
 					continue;
 				}
 				curce = cursection;
@@ -1008,8 +1036,9 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					}
 					if (!*ptr)
 					{
-						config_error("%s:%i Comment on this line does not end\n",
-							filename, commentstart);
+						config_error("%s:%i Comment on line %d does not end\n",
+							filename, commentstart, commentstart);
+						errors++;
 						config_entry_free(curce);
 						config_free(curcf);
 						return NULL;
@@ -1019,8 +1048,10 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 			case '\"':
 				if (curce && curce->ce_varlinenum != linenumber && cursection)
 				{
-					config_warn("%s:%i: Missing semicolon at end of line\n",
-						filename, curce->ce_varlinenum);
+					config_error("%s:%i: Missing semicolon (';') at end of line. "
+					             "Line %d must end with a ; character\n",
+						filename, curce->ce_varlinenum, curce->ce_varlinenum);
+					errors++;
 					
 					*lastce = curce;
 					lastce = &(curce->ce_next);
@@ -1031,14 +1062,13 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 				start = ++ptr;
 				for(;*ptr;ptr++)
 				{
-					if ((*ptr == '\\'))
+					if (*ptr == '\\')
 					{
-					
-						if (*(ptr+1) == '\\' || *(ptr+1) == '\"')
+						if ((ptr[1] == '\\') || (ptr[1] == '"'))
 						{
-							char *tptr = ptr;
-							while((*tptr = *(tptr+1)))
-								tptr++;
+							/* \\ or \" in config file (escaped) */
+							ptr++; /* skip */
+							continue;
 						}
 					}
 					else if ((*ptr == '\"') || (*ptr == '\n'))
@@ -1048,6 +1078,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 				{
 					config_error("%s:%i: Unterminated quote found\n",
 							filename, linenumber);
+					errors++;
 					config_entry_free(curce);
 					config_free(curcf);
 					return NULL;
@@ -1056,14 +1087,15 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 				{
 					if (curce->ce_vardata)
 					{
-						config_status("%s:%i: Ignoring extra data\n",
+						config_error("%s:%i: Extra data detected. Perhaps missing a ';' or one too many?\n",
 							filename, linenumber);
+						errors++;
 					}
 					else
 					{
 						curce->ce_vardata = MyMalloc(ptr-start+1);
-						strncpy(curce->ce_vardata, start, ptr-start);
-						curce->ce_vardata[ptr-start] = '\0';
+						strlcpy(curce->ce_vardata, start, ptr-start+1);
+						unreal_delquotes(curce->ce_vardata);
 					}
 				}
 				else
@@ -1071,8 +1103,8 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					curce = MyMalloc(sizeof(ConfigEntry));
 					memset(curce, 0, sizeof(ConfigEntry));
 					curce->ce_varname = MyMalloc((ptr-start)+1);
-					strncpy(curce->ce_varname, start, ptr-start);
-					curce->ce_varname[ptr-start] = '\0';
+					strlcpy(curce->ce_varname, start, ptr-start+1);
+					unreal_delquotes(curce->ce_varname);
 					curce->ce_varlinenum = linenumber;
 					curce->ce_fileptr = curcf;
 					curce->ce_prevlevel = cursection;
@@ -1111,6 +1143,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 							filename, cursection->ce_sectlinenum);
 					else
 						config_error("%s: Unexpected EOF.\n", filename);
+					errors++;
 					config_entry_free(curce);
 					config_free(curcf);
 					return NULL;
@@ -1119,14 +1152,14 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 				{
 					if (curce->ce_vardata)
 					{
-						config_status("%s:%i: Ignoring extra data\n",
-							filename, linenumber);
+						config_error("%s:%i: Extra data detected. Check for a missing ; character at or around line %d\n",
+							filename, linenumber, linenumber-1);
+						errors++;
 					}
 					else
 					{
 						curce->ce_vardata = MyMalloc(ptr-start+1);
-						strncpy(curce->ce_vardata, start, ptr-start);
-						curce->ce_vardata[ptr-start] = '\0';
+						strlcpy(curce->ce_vardata, start, ptr-start+1);
 					}
 				}
 				else
@@ -1134,8 +1167,7 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 					curce = MyMalloc(sizeof(ConfigEntry));
 					memset(curce, 0, sizeof(ConfigEntry));
 					curce->ce_varname = MyMalloc((ptr-start)+1);
-					strncpy(curce->ce_varname, start, ptr-start);
-					curce->ce_varname[ptr-start] = '\0';
+					strlcpy(curce->ce_varname, start, ptr-start+1);
 					curce->ce_varlinenum = linenumber;
 					curce->ce_fileptr = curcf;
 					curce->ce_prevlevel = cursection;
@@ -1148,18 +1180,23 @@ static ConfigFile *config_parse(char *filename, char *confdata)
 		if (!*ptr) /* This IS possible. -- Syzop */
 			break;
 	} /* for */
+
 	if (curce)
 	{
-		config_error("%s: Unexpected EOF for variable starting on line %i\n",
+		config_error("%s: End of file reached but directive at line %i did not end properly.\n",
 			filename, curce->ce_varlinenum);
+		errors++;
 		config_entry_free(curce);
-		config_free(curcf);
-		return NULL;
 	}
 	else if (cursection)
 	{
-		config_error("%s: Unexpected EOF for section starting on line %i\n",
+		config_error("%s: End of file reached but section at line %i did not end properly.\n",
 				filename, cursection->ce_sectlinenum);
+		errors++;
+	}
+	
+	if (errors)
+	{
 		config_free(curcf);
 		return NULL;
 	}
@@ -7314,7 +7351,7 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			CheckDuplicate(cep, check_target_nick_bans, "check-target-nick-bans");
 		}
 		else if (!strcmp(cep->ce_varname, "pingpong-warning")) {
-			config_error("%s:%s: set::pingpong-warning no longer exists (the warning is always off)",
+			config_error("%s:%i: set::pingpong-warning no longer exists (the warning is always off)",
 			             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
 			need_34_upgrade = 1;
 			errors++;
