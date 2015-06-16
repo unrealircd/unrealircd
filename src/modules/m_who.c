@@ -772,7 +772,7 @@ static void send_who_reply(aClient *sptr, aClient *acptr,
 		host = GetHost(acptr);
 					
 
-	if (IsULine(acptr) && !IsOper(sptr) && HIDE_ULINES)
+	if (IsULine(acptr) && !IsOper(sptr) && !OperClass_evaluateACLPath("who:ulines",sptr,acptr,NULL,NULL) && HIDE_ULINES)
 	        sendto_one(sptr, getreply(RPL_WHOREPLY), me.name, sptr->name,
         	     channel,       /* channel name */
 	             acptr->user->username, /* user name */
