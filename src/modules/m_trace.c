@@ -96,9 +96,9 @@ DLLFUNC CMD_FUNC(m_trace)
 	else
 		tname = me.name;
 
-	if (!IsOper(sptr))
+	if (!IsOper(sptr) && !OperClass_evaluateACLPath("trace:global",sptr,NULL,NULL,NULL))
 	{
-		if (IsAnOper(sptr))
+		if (IsAnOper(sptr) || OperClass_evaluateACLPath("trace:local",sptr,NULL,NULL,NULL))
 		{
 			/* local opers may not /TRACE remote servers! */
 			if (strcasecmp(tname, me.name))
@@ -145,7 +145,7 @@ DLLFUNC CMD_FUNC(m_trace)
 				link_u[acptr->from->fd]++;
 #else
 			if (IsPerson(acptr) &&
-			    (!IsInvisible(acptr) || IsOper(sptr)))
+			    (!IsInvisible(acptr) || IsOper(sptr) || OperClass_evaluateACLPath("trace:invisible_users",sptr,acptr,NULL,NULL)))
 				link_u[acptr->from->fd]++;
 #endif
 			else if (IsServer(acptr))
@@ -164,7 +164,7 @@ DLLFUNC CMD_FUNC(m_trace)
  *		if (IsInvisible(acptr) && dow &&
  *		if (dow &&
  *		    !(MyConnect(sptr) && IsOper(sptr)) && */
-		if (!IsOper(sptr) && !IsAnOper(acptr) && (acptr != sptr))
+		if (!IsOper(sptr) && !OperClass_evaluateACLPath("trace:invisible_users",sptr,acptr,NULL,NULL) && !IsAnOper(acptr) && (acptr != sptr))
 			continue;
 		if (!doall && wilds && match(tname, acptr->name))
 			continue;
@@ -200,7 +200,7 @@ DLLFUNC CMD_FUNC(m_trace)
  * search  ... sure as hell  helps to find clonebots.  --Russell
  *			    (MyClient(sptr) || !(dow && IsInvisible(acptr)))
  *                           || !dow || IsAnOper(acptr)) */
-			  if (IsOper(sptr) ||
+			  if (IsOper(sptr) || OperClass_evaluateACLPath("trace:invisible_users",sptr,acptr,NULL,NULL)
 			      (IsAnOper(acptr) && !IsInvisible(acptr)))
 			  {
 				  if (IsAnOper(acptr))
