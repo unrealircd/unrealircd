@@ -167,7 +167,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 	if (!MyClient(sptr))
 		return 0;
 
-	if (parc < 3) {
+	if (parc < 2) {
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
 		    me.name, parv[0], "OPER");
 		return 0;
@@ -186,7 +186,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 	}
 
 	name = parv[1];
-	password = parv[2];
+	password = (parc >= 2) ? parv[2] : "";
 
 	if (!(aconf = Find_oper(name))) {
 		sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, parv[0]);
