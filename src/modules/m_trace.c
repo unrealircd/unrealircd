@@ -200,7 +200,7 @@ DLLFUNC CMD_FUNC(m_trace)
  * search  ... sure as hell  helps to find clonebots.  --Russell
  *			    (MyClient(sptr) || !(dow && IsInvisible(acptr)))
  *                           || !dow || IsAnOper(acptr)) */
-			  if (IsOper(sptr) || OperClass_evaluateACLPath("trace:invisible_users",sptr,acptr,NULL,NULL)
+			  if (IsOper(sptr) || OperClass_evaluateACLPath("trace:invisible_users",sptr,acptr,NULL,NULL) ||
 			      (IsAnOper(acptr) && !IsInvisible(acptr)))
 			  {
 				  if (IsAnOper(acptr))
