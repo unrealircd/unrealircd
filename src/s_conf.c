@@ -5968,6 +5968,9 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 				ce->ce_varlinenum,
 				err);
 			errors++;
+		} else
+		{
+			unreal_delete_match(m);
 		}
 	}
 	
