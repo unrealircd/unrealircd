@@ -6386,7 +6386,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 					{
 						if (!strcmp(ceppp->ce_varname, "autoconnect"))
 							;
-						if (!strcmp(ceppp->ce_varname, "ssl"))
+						else if (!strcmp(ceppp->ce_varname, "ssl"))
 							;
 						else
 						{
