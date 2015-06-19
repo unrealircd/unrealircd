@@ -24,7 +24,8 @@ ARG=" "
 
 if [ -z "$BINDIR" -o -z "$DATADIR" -o -z "$CONFDIR" -o -z "$MODULESDIR" -o -z "$LOGDIR" -o -z "$CACHEDIR" -o -z "$DOCDIR" -o -z "$TMPDIR" ]; then
 	echo "Sorry './Config -quick' cannot be used because your 'config.settings'"
-	echo "file is from an old UnrealIRCd version (older than 3.4-alpha4)."
+	echo "file either does not exist or is from an old UnrealIRCd version"
+	echo "(older than version 3.4-alpha4)."
 	echo ""
 	echo "Please run './Config' without -quick and answer all questions."
 	echo ""
@@ -828,8 +829,14 @@ fi
 rm -f config.settings
 cat > config.settings << __EOF__
 #
-DPATH="$DPATH"
-SPATH="$SPATH"
+BINDIR="$BINDIR"
+DATADIR="$DATADIR"
+CONFDIR="$CONFDIR"
+MODULESDIR="$MODULESDIR"
+LOGDIR="$LOGDIR"
+CACHEDIR="$CACHEDIR"
+DOCDIR="$DOCDIR"
+TMPDIR="$TMPDIR"
 INET6="$INET6"
 PREFIXAQ="$PREFIXAQ"
 MAXSENDQLENGTH="$MAXSENDQLENGTH"
