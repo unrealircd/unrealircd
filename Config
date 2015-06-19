@@ -423,8 +423,8 @@ clear
         read cc
         clear
     fi
-    if [ -f ".RELEASE.NOTES" -a -z "$NOINTRO" ] ; then
-        more .RELEASE.NOTES
+    if [ -f "doc/RELEASE.NOTES" -a -z "$NOINTRO" ] ; then
+        more doc/RELEASE.NOTES
         echo $n "[Enter to continue]"
         read cc
         clear
