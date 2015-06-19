@@ -175,25 +175,6 @@ distclean: cleandir
 	rm -rf config.log config.settings *.pem ircd.* unrealircd
 	rm -rf Makefile config.status
 	
-makex:
-	chmod +x Config ircd ircdcron/ircdchk
-
-fromdos: cleandir
-	$(FROMDOS) -dv *
-	$(FROMDOS) -dv src/*
-	$(FROMDOS) -dv include/*
-	$(FROMDOS) -dv doc/*
-	$(FROMDOS) -dv crypt/*
-	$(FROMDOS) -dv ircdcron/*
-makedist: makex
-	echo "Stamping.."
-
-stamp: makedist
-	echo "/* Auto created release stamping */" > include/stamp.h
-	echo "#define RELEASEID2 \"`date +%s`\"" >> include/stamp.h
-	echo "#define RELEASESTUFF \"`hostname`\"" >> include/stamp.h
-	echo "" >> include/stamp.h
-
 depend:
 	@+for i in $(SUBDIRS); do \
 		echo "Making dependencies in $$i";\

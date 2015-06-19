@@ -7987,7 +7987,7 @@ fi
 UNRLINCDIR="`pwd`/include"
 
 
-ac_config_files="$ac_config_files Makefile src/modules/Makefile src/modules/chanmodes/Makefile src/modules/usermodes/Makefile src/modules/extbans/Makefile unrealircd ircdcron/ircdchk ircdcron/ircd.cron"
+ac_config_files="$ac_config_files Makefile src/modules/Makefile src/modules/chanmodes/Makefile src/modules/usermodes/Makefile src/modules/extbans/Makefile unrealircd extras/ircdcron/ircdchk extras/ircdcron/ircd.cron"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -8686,8 +8686,8 @@ do
     "src/modules/usermodes/Makefile") CONFIG_FILES="$CONFIG_FILES src/modules/usermodes/Makefile" ;;
     "src/modules/extbans/Makefile") CONFIG_FILES="$CONFIG_FILES src/modules/extbans/Makefile" ;;
     "unrealircd") CONFIG_FILES="$CONFIG_FILES unrealircd" ;;
-    "ircdcron/ircdchk") CONFIG_FILES="$CONFIG_FILES ircdcron/ircdchk" ;;
-    "ircdcron/ircd.cron") CONFIG_FILES="$CONFIG_FILES ircdcron/ircd.cron" ;;
+    "extras/ircdcron/ircdchk") CONFIG_FILES="$CONFIG_FILES extras/ircdcron/ircdchk" ;;
+    "extras/ircdcron/ircd.cron") CONFIG_FILES="$CONFIG_FILES extras/ircdcron/ircd.cron" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
@@ -9270,4 +9270,4 @@ $as_echo "$as_me: WARNING: unrecognized options: $ac_unrecognized_opts" >&2;}
 fi
 
 chmod 0700 unrealircd
-chmod 0700 ircdcron/ircdchk
+chmod 0700 extras/ircdcron/ircdchk
