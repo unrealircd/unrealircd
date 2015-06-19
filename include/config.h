@@ -233,13 +233,7 @@
 /* #undef	DEBUGMODE */
 
 /*
- * Full pathnames and defaults of irc system's support files. Please note that
- * these are only the recommened names and paths.  You must define PPATH if you 
- * want a pidfile written. Also, IRCDTUNE should be defined because it is needed for
- * operation. All of these options are runtime-configurable (except for CPATH and LPATH)
- * in the files block of unrealircd.conf. CPATH is runtime-configurable as a command-
- * line argument. These used as the default values for options absent from the user's
- * unrealircd.conf.
+ * Full pathnames and defaults of irc system's support files.
  */
 #define	CPATH		"unrealircd.conf"	/* server configuration file */
 #define	MPATH		"ircd.motd"	/* server MOTD file */
@@ -247,7 +241,6 @@
 #define RPATH   	"ircd.rules"	/* server rules file */
 #define OPATH   	"oper.motd"	/* Operators MOTD file */
 #define	LPATH		"debug.log"	/* Where the debug file lives, if DEBUGMODE */
-#define	PPATH		"ircd.pid"	/* file for server pid */
 #define VPATH		"ircd.svsmotd"	/* Services MOTD append. */
 #define BPATH		"bot.motd"	/* Bot MOTD */
 #define IRCDTUNE 	"ircd.tune"	/* tuning .. */
@@ -480,9 +473,9 @@
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
 #define MOTD MPATH
 #define RULES RPATH
-#define	MYNAME SPATH
+#define	MYNAME BINDIR "/unrealircd"
 #define	CONFIGFILE CPATH
-#define	IRCD_PIDFILE PPATH
+#define	IRCD_PIDFILE PIDFILE
 
 #if defined(CHROOTDIR) && !defined(IRC_USER)
 #error "ERROR: It makes no sense to define CHROOTDIR but not IRC_USER and IRC_GROUP! Please define IRC_USER and IRC_GROUP properly as the user/group to change to."

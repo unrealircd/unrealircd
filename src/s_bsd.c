@@ -578,15 +578,6 @@ void init_sys(void)
 	}
 #endif
 #endif
-	/* Startup message
-	   pid = getpid();
-	   pid++;
-	   fprintf(stderr, "|---------------------------------------------\n");
-	   fprintf(stderr, "| UnrealIRCD has successfully loaded.\n");
-	   fprintf(stderr, "| Config Directory: %s\n", DPATH);
-	   fprintf(stderr, "| MAXCONNECTIONS set at %d\n", MAXCONNECTIONS);
-	   fprintf(stderr, "| Process ID: %d\n", pid);
-	   fprintf(stderr, "|---------------------------------------------\n"); */
 #if defined(PCS) || defined(SVR3)
 char logbuf[BUFSIZ];
 

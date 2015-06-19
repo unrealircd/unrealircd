@@ -1,7 +1,16 @@
 /* include/setup.h.in.  Generated from configure.ac by autoheader.  */
 
+/* Define the directory where the unrealircd binary is located */
+#undef BINDIR
+
 /* Define if you have BSD signals */
 #undef BSD_RELIABLE_SIGNALS
+
+/* Define the location of the cached remote include files */
+#undef CACHEDIR
+
+/* Define the location of the configuration files */
+#undef CONFDIR
 
 /* Define to one of `_getb67', `GETB67', `getb67' for Cray-2 and Cray-YMP
    systems. This function is required for `alloca.c' support on those systems.
@@ -10,6 +19,9 @@
 
 /* Define to 1 if using `alloca.c'. */
 #undef C_ALLOCA
+
+/* Define the location of permanent data files */
+#undef DATADIR
 
 /* The default permissions for configuration files. Set to 0 to prevent
    unrealircd from calling chmod() on the files. */
@@ -21,8 +33,8 @@
 /* Define if you want to disable /set* and /chg* */
 #undef DISABLE_USERMOD
 
-/* Define the location of the configuration files */
-#undef DPATH
+/* Define the location of the documentation */
+#undef DOCDIR
 
 /* Define if you can set the core size to unlimited */
 #undef FORCE_CORE
@@ -205,6 +217,9 @@
 /* Define if you want modes shown in /list */
 #undef LIST_SHOW_MODES
 
+/* Define the location of the log files */
+#undef LOGDIR
+
 /* Define if rlim_t is long long */
 #undef LONG_LONG_RLIM_T
 
@@ -219,6 +234,9 @@
 
 /* Set to the max sendq you want */
 #undef MAXSENDQLENGTH
+
+/* Define the location of the modules */
+#undef MODULESDIR
 
 /* Define if you have O_NDELAY */
 #undef NBLOCK_BSD
@@ -292,6 +310,9 @@
 /* Define if you have the <sys/param.h> header file. */
 #undef PARAMH
 
+/* Define the path of the pid file */
+#undef PIDFILE
+
 /* Define if you have POSIX signals */
 #undef POSIX_SIGNALS
 
@@ -304,6 +325,9 @@
 
 /* Define if you have the <sys/rusage.h> header file. */
 #undef RUSAGEH
+
+/* Define the directory where the unrealircd start stop scripts is located */
+#undef SCRIPTDIR
 
 /* Define to 1 if the `setpgrp' function takes no argument. */
 #undef SETPGRP_VOID
@@ -322,9 +346,6 @@
 
 /* The size of `short', as computed by sizeof. */
 #undef SIZEOF_SHORT
-
-/* Define the location of the executable */
-#undef SPATH
 
 /* If using the C implementation of alloca, define if you know the
    direction of stack growth for your system; otherwise it will be
@@ -364,6 +385,9 @@
 
 /* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
 #undef TIME_WITH_SYS_TIME
+
+/* Define the location of private temporary files */
+#undef TMPDIR
 
 /* Define to 1 if your <sys/time.h> declares `struct tm'. */
 #undef TM_IN_SYS_TIME

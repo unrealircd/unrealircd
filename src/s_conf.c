@@ -1555,6 +1555,8 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->nicklen = NICKLEN;
 	i->link_bindip = strdup("*");
 	i->oper_only_stats = strdup("*");
+	i->x_server_cert_pem = strdup("ssl/server.cert.pem");
+	i->x_server_key_pem = strdup("ssl/server.key.pem");
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,
@@ -6111,6 +6113,16 @@ int _test_log(ConfigFile *conf, ConfigEntry *ce) {
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return 1;
 	}
+
+	/* Hmmm... not really proper huh... */
+	if (ce->ce_vardata[0] != '/')
+	{
+		char *str = MyMallocEx(strlen(ce->ce_vardata) + strlen(LOGDIR) + 4);
+		sprintf(str, "%s/%s", LOGDIR, ce->ce_vardata);
+		MyFree(ce->ce_vardata);
+		ce->ce_vardata = str;
+	}
+	
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!cep->ce_varname)

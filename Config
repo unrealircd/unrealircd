@@ -59,8 +59,16 @@ fi
 if [ "$PREFIXAQ" != "1" ]; then
 ARG="$ARG--disable-prefixaq "
 fi
-ARG="$ARG--with-dpath=$DPATH "
-ARG="$ARG--with-spath=$SPATH "
+
+ARG="$ARG--with-bindir=$BINDIR "
+ARG="$ARG--with-datadir=$DATADIR "
+ARG="$ARG--with-confdir=$CONFDIR "
+ARG="$ARG--with-modulesdir=$MODULESDIR "
+ARG="$ARG--with-logdir=$LOGDIR "
+ARG="$ARG--with-cachedir=$CACHEDIR "
+ARG="$ARG--with-docdir=$DOCDIR "
+ARG="$ARG--with-tmpdir=$TMPDIR "
+
 ARG="$ARG--with-nick-history=$NICKNAMEHISTORYLENGTH "
 ARG="$ARG--with-sendq=$MAXSENDQLENGTH "
 ARG="$ARG--with-permissions=$DEFPERM "
@@ -330,8 +338,7 @@ done
 c=""
 n=""
 UNREALCWD="`pwd`"
-DPATH="`pwd`"
-SPATH="`pwd`/src/ircd"
+BASEPATH="$HOME/unrealircd"
 DEFPERM="0600"
 CRYPTOIRCD="1"
 SSLDIR=""
@@ -423,38 +430,30 @@ clear
         clear
     fi
 
-TEST="$DPATH"
+echo "We will now ask you a number of questions."
+echo "You can just press ENTER to accept the defaults!"
+
+TEST="$BASEPATH"
 echo ""
-echo "What directory are all the server configuration files in?"
+echo "In what directory do you want to install UnrealIRCd?"
+echo "(Note: in Unreal3.4.x you should always install somewhere)"
 echo $n "[$TEST] -> $c"
 read cc
 if [ -z "$cc" ] ; then
-   DPATH=$TEST
+   BASEPATH=$TEST
 else
-   DPATH=`eval echo $cc` # modified
+   BASEPATH=`eval echo $cc` # modified
 fi
 
-TEST=""
-SAVEME="$SPATH"
-while [ -z "$TEST" ] ; do
-    TEST="$SAVEME"
-    echo ""
-    echo "What is the path to the ircd binary including the name of the binary?"
-    echo $n "[$TEST] -> $c"
-        read cc
-    if [ -z "$cc" ] ; then
-        SPATH=$TEST
-    else 
-        SPATH=`eval echo $cc` # modified
-    fi
-    if [ "$SPATH" = "$DPATH" ]; then
-    	echo ""
-    	echo "You need to specify the path to the BINARY, not to a directory."
-	echo "The answer to this question can never be identical to the previous one."
-    	echo "HINT: perhaps you want $DPATH/ircd ?"
-    	TEST=""
-    fi
-done
+# TODO: For -advanced we could prompt the user.
+BINDIR="$BASEPATH/bin"
+DATADIR="$BASEPATH/data"
+CONFDIR="$BASEPATH/conf"
+MODULESDIR="$BASEPATH/modules"
+LOGDIR="$BASEPATH/logs"
+CACHEDIR="$BASEPATH/cache"
+DOCDIR="$BASEPATH/doc"
+TMPDIR="$BASEPATH/tmp"
 
 TEST=""
 while [ -z "$TEST" ] ; do

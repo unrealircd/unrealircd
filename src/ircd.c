@@ -151,7 +151,6 @@ int  bootopt = 0;		/* Server boot option flags */
 char *debugmode = "";		/*  -"-    -"-   -"-  */
 char *sbrk0;			/* initial sbrk(0) */
 static int dorehash = 0, dorestart = 0;
-static char *dpath = DPATH;
 MODVAR int  booted = FALSE;
 MODVAR TS   lastlucheck = 0;
 
@@ -1054,7 +1053,7 @@ int InitwIRCD(int argc, char *argv[])
 	}
 #endif
 #ifdef	CHROOTDIR
-	if (chdir(dpath)) {
+	if (chdir(CONFDIR)) {
 		perror("chdir");
 		fprintf(stderr, "ERROR: Unable to change to directory '%s'\n", dpath);
 		exit(-1);
@@ -1105,7 +1104,7 @@ int InitwIRCD(int argc, char *argv[])
 		}
 		umask(umaskold);
 	}
-	if (chroot(DPATH)) {
+	if (chroot(CONFDIR)) {
 		(void)fprintf(stderr, "ERROR:  Cannot (chdir/)chroot to directory '%s'\n", dpath);
 		exit(5);
 	}
@@ -1206,9 +1205,6 @@ int InitwIRCD(int argc, char *argv[])
 			  bootopt |= BOOT_QUICK;
 			  break;
 #endif
-		  case 'd':
-			  dpath = p;
-			  break;
 		  case 'F':
 			  bootopt |= BOOT_NOFORK;
 			  break;
@@ -1338,6 +1334,7 @@ int InitwIRCD(int argc, char *argv[])
 			  exit(0);
 #endif
 		  case 'U':
+		      chdir(CONFDIR);
 		      update_conf();
 		      exit(0);
 		  default:
@@ -1353,10 +1350,10 @@ int InitwIRCD(int argc, char *argv[])
 	do_version_check();
 
 #ifndef	CHROOTDIR
-	if (chdir(dpath)) {
+	if (chdir(CONFDIR)) {
 # ifndef _WIN32
 		perror("chdir");
-		fprintf(stderr, "ERROR: Unable to change to directory '%s'\n", dpath);
+		fprintf(stderr, "ERROR: Unable to change to directory '%s'\n", CONFDIR);
 # else
 		if (!IsService) {
 			MessageBox(NULL, strerror(GetLastError()),

@@ -648,8 +648,16 @@ PKG_CONFIG
 TRE_LIBS
 TRE_CFLAGS
 FD_SETSIZE
+PIDFILE
+DOCDIR
+DATADIR
+TMPDIR
+CACHEDIR
+LOGDIR
+MODULESDIR
+CONFDIR
+SCRIPTDIR
 BINDIR
-IRCDDIR
 MODULEFLAGS
 CRYPTOLIB
 STRTOUL
@@ -719,9 +727,17 @@ enable_option_checking
 with_nick_history
 with_sendq
 with_permissions
-with_dpath
+with_bindir
+with_scriptdir
+with_confdir
+with_modulesdir
+with_logdir
+with_cachedir
+with_tmpdir
+with_datadir
+with_docdir
+with_pidfile
 with_fd_setsize
-with_spath
 enable_prefixaq
 with_showlistmodes
 with_topicisnuhost
@@ -1388,10 +1404,21 @@ Optional Packages:
   --with-permissions=permissions
                           Specify the default permissions for configuration
                           files
-  --with-dpath=path       Specify the path where configuration files are
+  --with-bindir=path      Specify the directory for the unrealircd binary
+  --with-scriptdir=path   Specify the directory for the unrealircd start-stop
+                          script
+  --with-confdir=path     Specify the directory where configuration files are
                           stored
+  --with-modulesdir=path  Specify the directory for loadable modules
+  --with-logdir=path      Specify the directory where log files are stored
+  --with-cachedir=path    Specify the directory where cached files are stored
+  --with-tmpdir=path      Specify the directory where private temporary files
+                          are stored. Should not be readable or writable by
+                          others, so not /tmp!!
+  --with-datadir=path     Specify the directory where permanent data is stored
+  --with-docdir=path      Specify the directory where documentation is stored
+  --with-pidfile=path     Specify the path of the pid file
   --with-fd-setsize=size  Specify the max file descriptors to use
-  --with-spath            Specify the location of the executable
   --with-showlistmodes    Specify whether modes are shown in /list
   --with-topicisnuhost    Display nick!user@host as the topic setter
   --with-shunnotices      Notify a user when he/she is no longer shunned
@@ -6064,22 +6091,205 @@ $as_echo "#define DEFAULT_PERMISSIONS 0600" >>confdefs.h
 fi
 
 
-# Check whether --with-dpath was given.
-if test "${with_dpath+set}" = set; then :
-  withval=$with_dpath;
+
+# Check whether --with-bindir was given.
+if test "${with_bindir+set}" = set; then :
+  withval=$with_bindir;
 cat >>confdefs.h <<_ACEOF
-#define DPATH "$withval"
+#define BINDIR "$withval"
 _ACEOF
 
-		IRCDDIR="$withval"
+		BINDIR="$withval"
 else
 
 cat >>confdefs.h <<_ACEOF
-#define DPATH "`pwd`"
+#define BINDIR "$HOME/unrealircd/bin"
 _ACEOF
 
-		IRCDDIR="`pwd`"
+		BINDIR="$HOME/unrealircd/bin"
 fi
+
+
+
+# Check whether --with-scriptdir was given.
+if test "${with_scriptdir+set}" = set; then :
+  withval=$with_scriptdir;
+cat >>confdefs.h <<_ACEOF
+#define SCRIPTDIR "$withval"
+_ACEOF
+
+		SCRIPTDIR="$withval"
+else
+
+cat >>confdefs.h <<_ACEOF
+#define SCRIPTDIR "$HOME/unrealircd"
+_ACEOF
+
+		SCRIPTDIR="$HOME/unrealircd"
+fi
+
+
+
+# Check whether --with-confdir was given.
+if test "${with_confdir+set}" = set; then :
+  withval=$with_confdir;
+cat >>confdefs.h <<_ACEOF
+#define CONFDIR "$withval"
+_ACEOF
+
+		CONFDIR="$withval"
+else
+
+cat >>confdefs.h <<_ACEOF
+#define CONFDIR "$HOME/unrealircd/conf"
+_ACEOF
+
+		CONFDIR="$HOME/unrealircd/conf"
+fi
+
+
+
+# Check whether --with-modulesdir was given.
+if test "${with_modulesdir+set}" = set; then :
+  withval=$with_modulesdir;
+cat >>confdefs.h <<_ACEOF
+#define MODULESDIR "$withval"
+_ACEOF
+
+		MODULESDIR="$withval"
+else
+
+cat >>confdefs.h <<_ACEOF
+#define MODULESDIR "$HOME/unrealircd/modules"
+_ACEOF
+
+		MODULESDIR="$HOME/unrealircd/modules"
+fi
+
+
+
+# Check whether --with-logdir was given.
+if test "${with_logdir+set}" = set; then :
+  withval=$with_logdir;
+cat >>confdefs.h <<_ACEOF
+#define LOGDIR "$withval"
+_ACEOF
+
+		LOGDIR="$withval"
+else
+
+cat >>confdefs.h <<_ACEOF
+#define LOGDIR "$HOME/unrealircd/logs"
+_ACEOF
+
+		LOGDIR="$HOME/unrealircd/logs"
+fi
+
+
+
+# Check whether --with-cachedir was given.
+if test "${with_cachedir+set}" = set; then :
+  withval=$with_cachedir;
+cat >>confdefs.h <<_ACEOF
+#define CACHEDIR "$withval"
+_ACEOF
+
+		CACHEDIR="$withval"
+else
+
+cat >>confdefs.h <<_ACEOF
+#define CACHEDIR "$HOME/unrealircd/cache"
+_ACEOF
+
+		CACHEDIR="$HOME/unrealircd/cache"
+fi
+
+
+
+# Check whether --with-tmpdir was given.
+if test "${with_tmpdir+set}" = set; then :
+  withval=$with_tmpdir;
+cat >>confdefs.h <<_ACEOF
+#define TMPDIR "$withval"
+_ACEOF
+
+		TMPDIR="$withval"
+else
+
+cat >>confdefs.h <<_ACEOF
+#define TMPDIR "$HOME/unrealircd/tmp"
+_ACEOF
+
+		TMPDIR="$HOME/unrealircd/tmp"
+fi
+
+
+
+# Check whether --with-datadir was given.
+if test "${with_datadir+set}" = set; then :
+  withval=$with_datadir;
+cat >>confdefs.h <<_ACEOF
+#define DATADIR "$withval"
+_ACEOF
+
+		DATADIR="$withval"
+else
+
+cat >>confdefs.h <<_ACEOF
+#define DATADIR "$HOME/unrealircd/data"
+_ACEOF
+
+		DATADIR="$HOME/unrealircd/data"
+fi
+
+
+
+# Check whether --with-docdir was given.
+if test "${with_docdir+set}" = set; then :
+  withval=$with_docdir;
+cat >>confdefs.h <<_ACEOF
+#define DOCDIR "$withval"
+_ACEOF
+
+		DOCDIR="$withval"
+else
+
+cat >>confdefs.h <<_ACEOF
+#define DOCDIR "$HOME/unrealircd/doc"
+_ACEOF
+
+		DOCDIR="$HOME/unrealircd/doc"
+fi
+
+
+
+# Check whether --with-pidfile was given.
+if test "${with_pidfile+set}" = set; then :
+  withval=$with_pidfile;
+cat >>confdefs.h <<_ACEOF
+#define PIDFILE "$withval"
+_ACEOF
+
+		PIDFILE="$withval"
+else
+
+cat >>confdefs.h <<_ACEOF
+#define PIDFILE "$HOME/unrealircd/data/ircd.pid"
+_ACEOF
+
+		PIDFILE="$HOME/unrealircd/data/ircd.pid"
+fi
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6094,25 +6304,6 @@ fi
 cat >>confdefs.h <<_ACEOF
 #define MAXCONNECTIONS $ac_fd
 _ACEOF
-
-
-
-# Check whether --with-spath was given.
-if test "${with_spath+set}" = set; then :
-  withval=$with_spath;
-cat >>confdefs.h <<_ACEOF
-#define SPATH "$withval"
-_ACEOF
-
-		BINDIR="$withval"
-else
-
-cat >>confdefs.h <<_ACEOF
-#define SPATH "`pwd`/src/ircd"
-_ACEOF
-
-		BINDIR="`pwd`/src/ircd"
-fi
 
 
 # Check whether --enable-prefixaq was given.
@@ -6517,8 +6708,6 @@ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 
 fi
 fi
-
-
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking if FD_SETSIZE is large enough to allow $ac_fd file descriptors" >&5
 $as_echo_n "checking if FD_SETSIZE is large enough to allow $ac_fd file descriptors... " >&6; }
@@ -7798,7 +7987,7 @@ fi
 UNRLINCDIR="`pwd`/include"
 
 
-ac_config_files="$ac_config_files Makefile src/modules/Makefile src/modules/chanmodes/Makefile src/modules/usermodes/Makefile src/modules/extbans/Makefile unreal ircdcron/ircdchk ircdcron/ircd.cron"
+ac_config_files="$ac_config_files Makefile src/modules/Makefile src/modules/chanmodes/Makefile src/modules/usermodes/Makefile src/modules/extbans/Makefile unrealircd ircdcron/ircdchk ircdcron/ircd.cron"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -8496,7 +8685,7 @@ do
     "src/modules/chanmodes/Makefile") CONFIG_FILES="$CONFIG_FILES src/modules/chanmodes/Makefile" ;;
     "src/modules/usermodes/Makefile") CONFIG_FILES="$CONFIG_FILES src/modules/usermodes/Makefile" ;;
     "src/modules/extbans/Makefile") CONFIG_FILES="$CONFIG_FILES src/modules/extbans/Makefile" ;;
-    "unreal") CONFIG_FILES="$CONFIG_FILES unreal" ;;
+    "unrealircd") CONFIG_FILES="$CONFIG_FILES unrealircd" ;;
     "ircdcron/ircdchk") CONFIG_FILES="$CONFIG_FILES ircdcron/ircdchk" ;;
     "ircdcron/ircd.cron") CONFIG_FILES="$CONFIG_FILES ircdcron/ircd.cron" ;;
 
@@ -9080,5 +9269,5 @@ if test -n "$ac_unrecognized_opts" && test "$enable_option_checking" != no; then
 $as_echo "$as_me: WARNING: unrecognized options: $ac_unrecognized_opts" >&2;}
 fi
 
-chmod 0700 unreal
+chmod 0700 unrealircd
 chmod 0700 ircdcron/ircdchk

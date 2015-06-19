@@ -320,49 +320,33 @@ char  *Module_Create(char *path_)
 	char    *Mod_Version;
 	unsigned int *compiler_version;
 	static char 	errorbuf[1024];
-	char		pathbuf[1024];
-	char 		*path, *tmppath;
+	char		path[1024];
+	char 		*tmppath;
 	ModuleHeader    *mod_header = NULL;
 	int		ret = 0;
 	Module          *mod = NULL, **Mod_Handle = NULL;
 	char *expectedmodversion = our_mod_version;
 	unsigned int expectedcompilerversion = our_compiler_version;
 	long modsys_ver = 0;
-	Debug((DEBUG_DEBUG, "Attempting to load module from %s",
-	       path_));
-	path = path_;
+	Debug((DEBUG_DEBUG, "Attempting to load module from %s", path_));
 
-	if (!strstr(path, MODULE_SUFFIX))
+	/* Prefix the module path with MODULESDIR, unless it's an absolute path
+	 * (we check for "/", "\" and things like "C:" to detect absolute paths).
+_	 */
+	if ((*path_ != '/') && (*path_ != '\\') && !(*path_ && (path_[1] == ':')))
 	{
-		char dirbase[1024];
-#ifdef CHROOTDIR
-		/* Not so sure if I like this magic... */
-		if (!strncmp(path, "modules/", 8) && (access("modules", F_OK)<0) && (access("src/modules", F_OK)==0))
-			strcpy(dirbase, "./src");
-		else
-			strcpy(dirbase, ".");
-#elif !defined(_WIN32)
-		unreal_getpathname(SPATH, dirbase);
-#else
-		strcpy(dirbase, ".");
-#endif
-		ircsnprintf(pathbuf, sizeof(pathbuf), "%s/%s%s", dirbase, path, MODULE_SUFFIX);
-		path = pathbuf;
+		snprintf(path, sizeof(path), "%s/%s", MODULESDIR, path_);
+	} else {
+		strlcpy(path, path_, sizeof(path));
 	}
+
+	/* auto-suffix .dll / .so */
+	if (!strstr(path, MODULE_SUFFIX))
+		strlcat(path, MODULE_SUFFIX, sizeof(path));
 	
 	tmppath = unreal_mktemp("tmp", unreal_getfilename(path));
 	if (!tmppath)
 		return "Unable to create temporary file!";
-#ifndef _WIN32
-	if(!strchr(path, '/'))
-#else
-	if (!strchr(path, '\\') && !strchr(path, '/'))
-#endif
-	{
-                size_t pathsize = strlen(path)+3;
-		path = MyMalloc(pathsize);
-                ircsnprintf(path, pathsize, "./%s", path_);
-	}
 
 	if (!file_exists(path))
 	{
@@ -510,9 +494,6 @@ char  *Module_Create(char *path_)
 		/* Return the error .. */
 		return ((char *)irc_dlerror());
 	}
-	
-	if (path != path_ && path != pathbuf)
-		free(path);
 }
 
 void Module_DelayChildren(Module *m)

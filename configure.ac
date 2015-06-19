@@ -466,24 +466,82 @@ configuration files])],
 	dnl (#3189)
 	[AC_DEFINE_UNQUOTED([DEFAULT_PERMISSIONS], [0$withval], [The default permissions for configuration files. Set to 0 to prevent unrealircd from calling chmod() on the files.])],
 	[AC_DEFINE([DEFAULT_PERMISSIONS], [0600], [The default permissions for configuration files. Set to 0 to prevent unrealircd from calling chmod() on the files.])]) 
-AC_ARG_WITH(dpath, [AS_HELP_STRING([--with-dpath=path],[Specify the path where configuration files are stored])],
-	[AC_DEFINE_UNQUOTED([DPATH], ["$withval"], [Define the location of the configuration files])
-		IRCDDIR="$withval"],
-	[AC_DEFINE_UNQUOTED([DPATH], ["`pwd`"], [Define the location of the configuration files])
-		IRCDDIR="`pwd`"])
+
+AC_ARG_WITH(bindir, [AS_HELP_STRING([--with-bindir=path],[Specify the directory for the unrealircd binary])],
+	[AC_DEFINE_UNQUOTED([BINDIR], ["$withval"], [Define the directory where the unrealircd binary is located])
+		BINDIR="$withval"],
+	[AC_DEFINE_UNQUOTED([BINDIR], ["$HOME/unrealircd/bin"], [Define the directory where the unrealircd binary is located])
+		BINDIR="$HOME/unrealircd/bin"])
+
+AC_ARG_WITH(scriptdir, [AS_HELP_STRING([--with-scriptdir=path],[Specify the directory for the unrealircd start-stop script])],
+	[AC_DEFINE_UNQUOTED([SCRIPTDIR], ["$withval"], [Define the directory where the unrealircd start stop scripts is located])
+		SCRIPTDIR="$withval"],
+	[AC_DEFINE_UNQUOTED([SCRIPTDIR], ["$HOME/unrealircd"], [Define the directory where the unrealircd start stop scripts is located])
+		SCRIPTDIR="$HOME/unrealircd"])
+
+AC_ARG_WITH(confdir, [AS_HELP_STRING([--with-confdir=path],[Specify the directory where configuration files are stored])],
+	[AC_DEFINE_UNQUOTED([CONFDIR], ["$withval"], [Define the location of the configuration files])
+		CONFDIR="$withval"],
+	[AC_DEFINE_UNQUOTED([CONFDIR], ["$HOME/unrealircd/conf"], [Define the location of the configuration files])
+		CONFDIR="$HOME/unrealircd/conf"])
+
+AC_ARG_WITH(modulesdir, [AS_HELP_STRING([--with-modulesdir=path],[Specify the directory for loadable modules])],
+	[AC_DEFINE_UNQUOTED([MODULESDIR], ["$withval"], [Define the location of the modules])
+		MODULESDIR="$withval"],
+	[AC_DEFINE_UNQUOTED([MODULESDIR], ["$HOME/unrealircd/modules"], [Define the location of the modules])
+		MODULESDIR="$HOME/unrealircd/modules"])
+
+AC_ARG_WITH(logdir, [AS_HELP_STRING([--with-logdir=path],[Specify the directory where log files are stored])],
+	[AC_DEFINE_UNQUOTED([LOGDIR], ["$withval"], [Define the location of the log files])
+		LOGDIR="$withval"],
+	[AC_DEFINE_UNQUOTED([LOGDIR], ["$HOME/unrealircd/logs"], [Define the location of the log files])
+		LOGDIR="$HOME/unrealircd/logs"])
+
+AC_ARG_WITH(cachedir, [AS_HELP_STRING([--with-cachedir=path],[Specify the directory where cached files are stored])],
+	[AC_DEFINE_UNQUOTED([CACHEDIR], ["$withval"], [Define the location of the cached remote include files])
+		CACHEDIR="$withval"],
+	[AC_DEFINE_UNQUOTED([CACHEDIR], ["$HOME/unrealircd/cache"], [Define the location of the cached remote include files])
+		CACHEDIR="$HOME/unrealircd/cache"])
+
+AC_ARG_WITH(tmpdir, [AS_HELP_STRING([--with-tmpdir=path],[Specify the directory where private temporary files are stored. Should not be readable or writable by others, so not /tmp!!])],
+	[AC_DEFINE_UNQUOTED([TMPDIR], ["$withval"], [Define the location of private temporary files])
+		TMPDIR="$withval"],
+	[AC_DEFINE_UNQUOTED([TMPDIR], ["$HOME/unrealircd/tmp"], [Define the location of private temporary files])
+		TMPDIR="$HOME/unrealircd/tmp"])
+
+AC_ARG_WITH(datadir, [AS_HELP_STRING([--with-datadir=path],[Specify the directory where permanent data is stored])],
+	[AC_DEFINE_UNQUOTED([DATADIR], ["$withval"], [Define the location of permanent data files])
+		DATADIR="$withval"],
+	[AC_DEFINE_UNQUOTED([DATADIR], ["$HOME/unrealircd/data"], [Define the location of permanent data files])
+		DATADIR="$HOME/unrealircd/data"])
+
+AC_ARG_WITH(docdir, [AS_HELP_STRING([--with-docdir=path],[Specify the directory where documentation is stored])],
+	[AC_DEFINE_UNQUOTED([DOCDIR], ["$withval"], [Define the location of the documentation])
+		DOCDIR="$withval"],
+	[AC_DEFINE_UNQUOTED([DOCDIR], ["$HOME/unrealircd/doc"], [Define the location of the documentation])
+		DOCDIR="$HOME/unrealircd/doc"])
+
+AC_ARG_WITH(pidfile, [AS_HELP_STRING([--with-pidfile=path],[Specify the path of the pid file])],
+	[AC_DEFINE_UNQUOTED([PIDFILE], ["$withval"], [Define the path of the pid file])
+		PIDFILE="$withval"],
+	[AC_DEFINE_UNQUOTED([PIDFILE], ["$HOME/unrealircd/data/ircd.pid"], [Define the path of the pid file])
+		PIDFILE="$HOME/unrealircd/data/ircd.pid"])
+
+AC_SUBST(BINDIR)
+AC_SUBST(SCRIPTDIR)
+AC_SUBST(CONFDIR)
+AC_SUBST(MODULESDIR)
+AC_SUBST(LOGDIR)
+AC_SUBST(CACHEDIR)
+AC_SUBST(TMPDIR)
+AC_SUBST(DATADIR)
+AC_SUBST(DOCDIR)
+AC_SUBST(PIDFILE)
 
 AC_ARG_WITH(fd-setsize, [AS_HELP_STRING([--with-fd-setsize=size], [Specify the max file descriptors to use])],
 	[ac_fd=$withval],
 	[ac_fd=1024])
 AC_DEFINE_UNQUOTED([MAXCONNECTIONS], [$ac_fd], [Set to the max connections you want])
-
-dnl It would be nice if this could just respect --bindir like every other
-dnl program does someday... -- ohnobinki
-AC_ARG_WITH(spath, [AS_HELP_STRING([--with-spath],[Specify the location of the executable])],
-	[AC_DEFINE_UNQUOTED([SPATH], ["$withval"], [Define the location of the executable])
-		BINDIR="$withval"],
-	[AC_DEFINE_UNQUOTED([SPATH], ["`pwd`/src/ircd"], [Define the location of the executable])
-		BINDIR="`pwd`/src/ircd"])
 
 AC_ARG_ENABLE([prefixaq],
 	[AS_HELP_STRING([--disable-prefixaq],[Enable chanadmin (+a) and chanowner (+q) prefixes])],
@@ -527,8 +585,6 @@ AS_IF([test $enable_dynamic_linking = "yes"],
 AC_ARG_ENABLE([inet6], [AS_HELP_STRING([--enable-inet6], [Make the IRCd support IPv6])],
 	[AS_IF([test $enableval = "yes"],
 		[AC_ENABLE_INET6])])
-AC_SUBST(IRCDDIR)
-AC_SUBST(BINDIR)
 AC_MSG_CHECKING([if FD_SETSIZE is large enough to allow $ac_fd file descriptors])
 AC_COMPILE_IFELSE([
 #include <sys/types.h>
@@ -735,9 +791,9 @@ AC_CONFIG_FILES([Makefile
 	src/modules/chanmodes/Makefile
 	src/modules/usermodes/Makefile
 	src/modules/extbans/Makefile
-	unreal
+	unrealircd
 	ircdcron/ircdchk
 	ircdcron/ircd.cron])
 AC_OUTPUT
-chmod 0700 unreal
+chmod 0700 unrealircd
 chmod 0700 ircdcron/ircdchk
