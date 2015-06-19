@@ -5,7 +5,6 @@ dnl appropriately:
 dnl
 dnl include/win32/setup.h
 dnl src/win32/unrealinst.iss
-dnl docs/unreal32docs*.html
 dnl .CHANGES.NEW
 dnl src/version.c.SH
 
