@@ -522,8 +522,8 @@ AC_ARG_WITH(docdir, [AS_HELP_STRING([--with-docdir=path],[Specify the directory 
 AC_ARG_WITH(pidfile, [AS_HELP_STRING([--with-pidfile=path],[Specify the path of the pid file])],
 	[AC_DEFINE_UNQUOTED([PIDFILE], ["$withval"], [Define the path of the pid file])
 		PIDFILE="$withval"],
-	[AC_DEFINE_UNQUOTED([PIDFILE], ["$HOME/unrealircd/data/ircd.pid"], [Define the path of the pid file])
-		PIDFILE="$HOME/unrealircd/data/ircd.pid"])
+	[AC_DEFINE_UNQUOTED([PIDFILE], ["$HOME/unrealircd/data/unrealircd.pid"], [Define the path of the pid file])
+		PIDFILE="$HOME/unrealircd/data/unrealircd.pid"])
 
 AC_SUBST(BINDIR)
 AC_SUBST(SCRIPTDIR)
