@@ -8246,7 +8246,8 @@ int	_test_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 void	run_configuration(void)
 {
 	ConfigItem_listen 	*listenptr;
-
+	int ports_bound = 0;
+	
 	for (listenptr = conf_listen; listenptr; listenptr = (ConfigItem_listen *) listenptr->next)
 	{
 		if (!(listenptr->options & LISTENER_BOUND))
@@ -8255,10 +8256,22 @@ void	run_configuration(void)
 			{
 				ircd_log(LOG_ERROR, "Failed to bind to %s:%i", listenptr->ip, listenptr->port);
 			}
-				else
-			{
-			}
 		}
+		
+		/* NOTE: do not merge this with code above (nor in an else block),
+		 * as add_listener2() affects this flag.
+		 */
+		if (listenptr->options & LISTENER_BOUND)
+			ports_bound++;
+	}
+	
+	if (ports_bound == 0)
+	{
+		ircd_log(LOG_ERROR, "IRCd could not listen on any ports. If you see 'Address already in use' errors "
+		                    "above then most likely the IRCd is already running (or something else is using the "
+		                    "specified ports). If you are sure the IRCd is not running then verify your "
+		                    "listen blocks, maybe you have to bind to a specific IP rather than \"*\".");
+		exit(-1);
 	}
 }
 
