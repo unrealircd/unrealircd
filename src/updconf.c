@@ -549,17 +549,26 @@ int upgrade_include(ConfigEntry *ce)
 		return 1;
 	}
 	
+	if (!strcmp("badwords.quit.conf", file))
+	{
+		*buf = '\0';
+		replace_section(ce, buf);
+		config_status("- include for '%s' removed (now in badwords.conf)", file);
+		return 1;
+	}
+
 	if (!_match("badwords.*.conf", file))
 	{
 		if (badwords_upgraded_already)
 		{
-			strcpy(buf, "/* all badwords are now in badwords.conf */\n");
+			*buf = '\0';
+			config_status("- include for '%s' removed (now in badwords.conf)", file);
 		} else {
-			strcpy(buf, "include \"badwords.conf\";\n");
+			strcpy(buf, "/* all badwords are now in badwords.conf */\ninclude \"badwords.conf\";\n");
 			badwords_upgraded_already = 1;
+			config_status("- include for '%s' replaced with 'badwords.conf'", file);
 		}
 		replace_section(ce, buf);
-		config_status("- include for '%s' replaced (now in badwords.conf)", file);
 		return 1;
 	}
 	
