@@ -9154,7 +9154,7 @@ static void conf_download_complete(const char *url, const char *file, const char
 	{
 		char *urlfile = url_getfilename(url);
 		char *file_basename = unreal_getfilename(urlfile);
-		char *tmp = unreal_mktemp("tmp", file_basename);
+		char *tmp = unreal_mktemp(TMPDIR, file_basename);
 		free(urlfile);
 
 		if (cached)

@@ -190,13 +190,13 @@ void DeleteTempModules(void)
 {
 	char tempbuf[PATH_MAX+1];
 #ifndef _WIN32
-	DIR *fd = opendir("tmp");
+	DIR *fd = opendir(TMPDIR);
 	struct dirent *dir;
 
 	if (!fd) /* Ouch.. this is NOT good!! */
 	{
-		config_error("Unable to open 'tmp' directory: %s, please create one with the appropriate permissions",
-			strerror(errno));
+		config_error("Unable to open temp directory %s: %s, please create one with the appropriate permissions",
+			TMPDIR, strerror(errno));
 		if (!loop.ircd_booted)
 			exit(7);
 		return; 
@@ -206,18 +206,22 @@ void DeleteTempModules(void)
 	{
 		if (!strcmp(dir->d_name, ".") || !strcmp(dir->d_name, ".."))
 			continue;
-		ircsnprintf(tempbuf, sizeof(tempbuf), "tmp/%s", dir->d_name);
+		ircsnprintf(tempbuf, sizeof(tempbuf), "%s/%s", TMPDIR, dir->d_name);
 		remove(tempbuf);
 	}
 	closedir(fd);
 #else
 	WIN32_FIND_DATA hData;
-	HANDLE hFile = FindFirstFile("tmp/*", &hData);
+	HANDLE hFile;
+	
+	snprintf(tempbuf, sizeof(tempbuf), "%s/*", TMPDIR);
+	
+	hFile = FindFirstFile(tempbuf, &hData);
 	if (hFile != INVALID_HANDLE_VALUE)
 	{
 		if (strcmp(hData.cFileName, ".") || strcmp(hData.cFileName, ".."))
 		{
-			ircsnprintf(tempbuf, sizeof(tempbuf), "tmp/%s", hData.cFileName);
+			ircsnprintf(tempbuf, sizeof(tempbuf), "%s/%s", TMPDIR, hData.cFileName);
 			remove(tempbuf);
 		}
 	}
@@ -225,7 +229,7 @@ void DeleteTempModules(void)
 	{
 		if (!strcmp(hData.cFileName, ".") || !strcmp(hData.cFileName, ".."))
 			continue;
-		ircsnprintf(tempbuf, sizeof(tempbuf), "tmp/%s", hData.cFileName);
+		ircsnprintf(tempbuf, sizeof(tempbuf), "%s/%s", TMPDIR, hData.cFileName);
 		remove(tempbuf);
 	}
 	FindClose(hFile);
@@ -344,7 +348,7 @@ _	 */
 	if (!strstr(path, MODULE_SUFFIX))
 		strlcat(path, MODULE_SUFFIX, sizeof(path));
 	
-	tmppath = unreal_mktemp("tmp", unreal_getfilename(path));
+	tmppath = unreal_mktemp(TMPDIR, unreal_getfilename(path));
 	if (!tmppath)
 		return "Unable to create temporary file!";
 
