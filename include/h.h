@@ -398,7 +398,6 @@ extern MODVAR long UMODE_INVISIBLE; /*  0x0001	 makes user invisible */
 extern MODVAR long UMODE_OPER;      /*  0x0002	 Operator */
 extern MODVAR long UMODE_WALLOP;    /*  0x0004	 send wallops to them */
 extern MODVAR long UMODE_FAILOP;    /*  0x0008	 Shows some global messages */
-extern MODVAR long UMODE_HELPOP;    /*  0x0010	 Help system operator */
 extern MODVAR long UMODE_REGNICK;   /*  0x0020	 Nick set by services as registered */
 extern MODVAR long UMODE_SADMIN;    /*  0x0040	 Services Admin */
 extern MODVAR long UMODE_ADMIN;     /*  0x0080	 Admin */

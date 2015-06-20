@@ -56,7 +56,6 @@ static int oper_access[] = {
         OFLAG_REHASH, 'r',
         OFLAG_DIE, 'D',
         OFLAG_RESTART, 'R',
-        OFLAG_HELPOP, 'h',
         OFLAG_GLOBOP, 'g',
         OFLAG_WALLOP, 'w',
         OFLAG_LOCOP, 'l',
@@ -166,7 +165,7 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			list_del(&acptr->special_node);
 
                 acptr->umodes &=
-                    ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP |UMODE_SERVICES |
+                    ~(UMODE_OPER | UMODE_LOCOP | UMODE_SERVICES |
                     UMODE_SADMIN | UMODE_ADMIN | UMODE_COADMIN);
                 acptr->umodes &=
                     ~(UMODE_NETADMIN | UMODE_WHOIS);

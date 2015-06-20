@@ -55,7 +55,6 @@ long UMODE_INVISIBLE = 0L;     /* makes user invisible */
 long UMODE_OPER = 0L;          /* Operator */
 long UMODE_WALLOP = 0L;        /* send wallops to them */
 long UMODE_FAILOP = 0L;        /* Shows some global messages */
-long UMODE_HELPOP = 0L;        /* Help system operator */
 long UMODE_REGNICK = 0L;       /* Nick set by services as registered */
 long UMODE_SADMIN = 0L;        /* Services Admin */
 long UMODE_ADMIN = 0L;         /* Admin */
@@ -129,7 +128,6 @@ void	umode_init(void)
 	UmodeAdd(NULL, 'o', UMODE_GLOBAL, umode_allow_opers, &UMODE_OPER);
 	UmodeAdd(NULL, 'w', UMODE_GLOBAL, NULL, &UMODE_WALLOP);
 	UmodeAdd(NULL, 'g', UMODE_GLOBAL, umode_allow_opers, &UMODE_FAILOP);
-	UmodeAdd(NULL, 'h', UMODE_GLOBAL, NULL, &UMODE_HELPOP);
 	UmodeAdd(NULL, 'r', UMODE_GLOBAL, NULL, &UMODE_REGNICK);
 	UmodeAdd(NULL, 'a', UMODE_GLOBAL, umode_allow_opers, &UMODE_SADMIN);
 	UmodeAdd(NULL, 'A', UMODE_GLOBAL, umode_allow_opers, &UMODE_ADMIN);

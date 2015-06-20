@@ -362,7 +362,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define IsEyes(x)		((x)->user->snomask & SNO_EYES)
 #define IsWhois(x)	        ((x)->umodes & UMODE_WHOIS)
 #define IsKix(x)		((x)->umodes & UMODE_KIX)
-#define IsHelpOp(x)		((x)->umodes & UMODE_HELPOP)
 #define IsAdmin(x)		((x)->umodes & UMODE_ADMIN)
 
 #define IsNetAdmin(x)		((x)->umodes & UMODE_NETADMIN)
@@ -420,7 +419,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define SetKillsF(x)		((x)->user->snomask |= SNO_KILLS)
 #define SetClientF(x)		((x)->user->snomask |= SNO_CLIENT)
 #define SetFloodF(x)		((x)->user->snomask |= SNO_FLOOD)
-#define SetHelpOp(x)		((x)->umodes |= UMODE_HELPOP)
 #define	SetOper(x)		((x)->umodes |= UMODE_OPER)
 #define	SetLocOp(x)    		((x)->umodes |= UMODE_LOCOP)
 #define SetAdmin(x)		((x)->umodes |= UMODE_ADMIN)
@@ -450,7 +448,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define ClearClientF(x)		((x)->user->snomask &= ~SNO_CLIENT)
 #define ClearFloodF(x)		((x)->user->snomask &= ~SNO_FLOOD)
 #define ClearEyes(x)		((x)->user->snomask &= ~SNO_EYES)
-#define ClearHelpOp(x)		((x)->umodes &= ~UMODE_HELPOP)
 #define ClearFailops(x)		((x)->umodes &= ~UMODE_FAILOP)
 #define	ClearOper(x)		((x)->umodes &= ~UMODE_OPER)
 #define	ClearInvisible(x)	((x)->umodes &= ~UMODE_INVISIBLE)
@@ -519,7 +516,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define OFLAG_DIE	0x00000002	/* Oper can /die the server */
 #define OFLAG_RESTART	0x00000004	/* Oper can /restart the server */
 #define OFLAG_DCCDENY	0x00000008	/* Oper can use /dccdeny and /undccdeny */
-#define OFLAG_HELPOP	0x00000010	/* Oper can send /HelpOps */
 #define OFLAG_GLOBOP	0x00000020	/* Oper can send /GlobOps */
 #define OFLAG_WALLOP	0x00000040	/* Oper can send /WallOps */
 #define OFLAG_LOCOP	0x00000080	/* Oper can send /LocOps */
@@ -544,7 +540,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define OFLAG_GZL       0x20000000	/* can use global Z:lines */
 #define OFLAG_OVERRIDE	0x40000000	/* can use oper-override */
 #define OFLAG_UMODEQ	0x80000000	/* can set +q */
-#define OFLAG_LOCAL	(OFLAG_REHASH|OFLAG_HELPOP|OFLAG_GLOBOP|OFLAG_WALLOP|OFLAG_LOCOP|OFLAG_LROUTE|OFLAG_LKILL|OFLAG_KLINE|OFLAG_UNKLINE|OFLAG_LNOTICE)
+#define OFLAG_LOCAL	(OFLAG_REHASH|OFLAG_GLOBOP|OFLAG_WALLOP|OFLAG_LOCOP|OFLAG_LROUTE|OFLAG_LKILL|OFLAG_KLINE|OFLAG_UNKLINE|OFLAG_LNOTICE)
 #define OFLAG_GLOBAL	(OFLAG_LOCAL|OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE)
 #define OFLAG_ISGLOBAL	(OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE|OFLAG_TKL|OFLAG_GZL|OFLAG_OVERRIDE)
 #define OFLAG_NADMIN	(OFLAG_NETADMIN | OFLAG_SADMIN | OFLAG_ADMIN | OFLAG_GLOBAL | OFLAG_UMODEQ | OFLAG_DCCDENY)
@@ -563,7 +559,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define OPCanDie(x)	((x)->oflag & OFLAG_DIE)
 #define OPCanTSCtl(x)	((x)->oflag & OFLAG_TSCTL)
 #define OPCanRestart(x)	((x)->oflag & OFLAG_RESTART)
-#define OPCanHelpOp(x)	((x)->oflag & OFLAG_HELPOP)
 #define OPCanGlobOps(x)	((x)->oflag & OFLAG_GLOBOP)
 #define OPCanWallOps(x)	((x)->oflag & OFLAG_WALLOP)
 #define OPCanLocOps(x)	((x)->oflag & OFLAG_LOCOP)
@@ -590,7 +585,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define OPSetDie(x)	((x)->oflag |= OFLAG_DIE)
 #define OPSetTSCtl(x)	((x)->oflag |= OFLAG_TSCTL)
 #define OPSetRestart(x)	((x)->oflag |= OFLAG_RESTART)
-#define OPSetHelpOp(x)	((x)->oflag |= OFLAG_HELPOP)
 #define OPSetGlobOps(x)	((x)->oflag |= OFLAG_GLOBOP)
 #define OPSetWallOps(x)	((x)->oflag |= OFLAG_WALLOP)
 #define OPSetLocOps(x)	((x)->oflag |= OFLAG_LOCOP)
@@ -612,7 +606,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define OPClearDie(x)		((x)->oflag &= ~OFLAG_DIE)
 #define OPClearTSCtl(x)		((x)->oflag &= ~OFLAG_TSCTL)
 #define OPClearRestart(x)	((x)->oflag &= ~OFLAG_RESTART)
-#define OPClearHelpOp(x)	((x)->oflag &= ~OFLAG_HELPOP)
 #define OPClearGlobOps(x)	((x)->oflag &= ~OFLAG_GLOBOP)
 #define OPClearWallOps(x)	((x)->oflag &= ~OFLAG_WALLOP)
 #define OPClearLocOps(x)	((x)->oflag &= ~OFLAG_LOCOP)

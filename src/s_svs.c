@@ -54,7 +54,6 @@ MODVAR int oper_access[] = {
 	OFLAG_REHASH, 'r',
 	OFLAG_DIE, 'D',
 	OFLAG_RESTART, 'R',
-	OFLAG_HELPOP, 'h',
 	OFLAG_GLOBOP, 'g',
 	OFLAG_WALLOP, 'w',
 	OFLAG_LOCOP, 'l',

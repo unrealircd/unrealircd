@@ -1715,12 +1715,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 		ClearOper(sptr);
 	if (!(setflags & UMODE_LOCOP) && IsLocOp(sptr) && !IsServer(cptr))
 		sptr->umodes &= ~UMODE_LOCOP;
-	/*
-	 *  Let only operators set HelpOp
-	 * Helpops get all /quote help <mess> globals -Donwulff
-	 */
-	if (MyClient(sptr) && IsHelpOp(sptr) && !OPCanHelpOp(sptr))
-		ClearHelpOp(sptr);
+
 	/*
 	 * Let only operators set FloodF, ClientF; also
 	 * remove those flags if they've gone -o/-O.
@@ -1736,7 +1731,6 @@ DLLFUNC CMD_FUNC(_m_umode)
 		ClearNetAdmin(sptr);
 		ClearHideOper(sptr);
 		ClearCoAdmin(sptr);
-		ClearHelpOp(sptr);
 		ClearFailops(sptr);
 	}
 

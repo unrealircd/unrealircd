@@ -78,26 +78,22 @@ static void init_operflags()
 	oper_oflags[4].umode = &UMODE_OPER;
 	oper_oflags[4].host = &oper_host;
 	oper_oflags[4].announce = "is now an operator (O)";
-	oper_oflags[5].oflag = OFLAG_HELPOP;
-	oper_oflags[5].umode = &UMODE_HELPOP;
+	oper_oflags[5].oflag= OFLAG_GLOBOP;
+	oper_oflags[5].umode = &UMODE_FAILOP;
 	oper_oflags[5].host = NULL;
 	oper_oflags[5].announce = NULL;
-	oper_oflags[6].oflag= OFLAG_GLOBOP;
-	oper_oflags[6].umode = &UMODE_FAILOP;
+	oper_oflags[6].oflag = OFLAG_WALLOP;
+	oper_oflags[6].umode = &UMODE_WALLOP;
 	oper_oflags[6].host = NULL;
 	oper_oflags[6].announce = NULL;
-	oper_oflags[7].oflag = OFLAG_WALLOP;
-	oper_oflags[7].umode = &UMODE_WALLOP;
+	oper_oflags[7].oflag = OFLAG_WHOIS;
+	oper_oflags[7].umode = &UMODE_WHOIS;
 	oper_oflags[7].host = NULL;
 	oper_oflags[7].announce = NULL;
-	oper_oflags[8].oflag = OFLAG_WHOIS;
-	oper_oflags[8].umode = &UMODE_WHOIS;
+	oper_oflags[8].oflag = 0;
+	oper_oflags[8].umode = NULL;
 	oper_oflags[8].host = NULL;
 	oper_oflags[8].announce = NULL;
-	oper_oflags[9].oflag = 0;
-	oper_oflags[9].umode = NULL;
-	oper_oflags[9].host = NULL;
-	oper_oflags[9].announce = NULL;
 }
 	
 

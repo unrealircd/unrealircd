@@ -279,9 +279,6 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			if (user->away)
 				sendto_one(sptr, rpl_str(RPL_AWAY), me.name,
 				    parv[0], name, user->away);
-			/* makesure they aren't +H (we'll also check
-			   before we display a helpop or IRCD Coder msg)
-			   -- codemastr */
 
 			if ((IsAnOper(acptr) || IsServices(acptr)) && !hideoper)
 			{
@@ -313,9 +310,6 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						    parv[0], name, buf);
 				}
 			}
-
-			if (IsHelpOp(acptr) && !hideoper && !user->away)
-				sendto_one(sptr, rpl_str(RPL_WHOISHELPOP), me.name, parv[0], name);
 
 			if (acptr->umodes & UMODE_SECURE)
 				sendto_one(sptr, rpl_str(RPL_WHOISSECURE), me.name, parv[0], name,
