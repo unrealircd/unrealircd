@@ -332,6 +332,7 @@ extern long umode_get(char, int, int (*)(aClient *, int));
 #define umode_gget(x) umode_get(x, 1, 0);
 extern int umode_allow_all(aClient *sptr, int what);
 extern int umode_allow_opers(aClient *sptr, int what);
+extern int umode_allow_none(aClient *sptr, int what);
 extern int  umode_delete(char ch, long val);
 extern void send_umode(aClient *, aClient *, long, long, char *);
 extern void send_umode_out(aClient *, aClient *, long);
@@ -404,7 +405,6 @@ extern MODVAR long UMODE_ADMIN;     /*  0x0080	 Admin */
 extern MODVAR long UMODE_SERVNOTICE;/* 0x0100	 server notices such as kill */
 extern MODVAR long UMODE_LOCOP;     /* 0x0200	 Local operator -- SRB */
 extern MODVAR long UMODE_RGSTRONLY; /* 0x0400  Only reg nick message */
-extern MODVAR long UMODE_SERVICES;  /* 0x4000	 services */
 extern MODVAR long UMODE_HIDE;	     /* 0x8000	 Hide from Nukes */
 extern MODVAR long UMODE_NETADMIN;  /* 0x10000	 Network Admin */
 extern MODVAR long UMODE_COADMIN;   /* 0x80000	 Co Admin */

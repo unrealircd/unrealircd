@@ -782,6 +782,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	char *xp;
 	int  notsecure;
 	chasing = 0;
+	Hook *h;
 
 	if ((my_access & CHFL_HALFOP) && !is_xchanop(my_access) && !IsULine(cptr)
 	    && !op_can_override(cptr) && !samode_in_progress)
@@ -913,16 +914,48 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  if (IsServer(cptr) || IsULine(cptr))
 			  goto breaktherules;
 		
-		  /* Services are special! */
-		  if (IsServices(member->cptr) && MyClient(cptr) && !IsNetAdmin(cptr) && (what == MODE_DEL))
+		  if (what == MODE_DEL)
 		  {
-			char errbuf[NICKLEN+50];
-			ircsnprintf(errbuf, sizeof(errbuf), "%s is a network service", member->cptr->name);
-			sendto_one(cptr, err_str(ERR_CANNOTCHANGECHANMODE), me.name, cptr->name,
-				   modechar, errbuf);
-			break;
-		  }
+		  	int ret = 0;
+		  	int strict_ret = EX_ALLOW;
+		  	char *badmode = NULL;
+		  	
+		  	for (h = Hooks[HOOKTYPE_MODE_DEOP]; h; h = h->next)
+		  	{
+		  		ret = (*(h->func.intfunc))(cptr, member->cptr, chptr, what, modechar, my_access, &badmode);
+		  		if (ret == EX_DENY)
+		  			strict_ret = ret;
+				else if (ret == EX_ALWAYS_DENY)
+					break;
+		  	}
+		  	ret = strict_ret; /* most strict one wins */
+		  	
+		  	if (ret == EX_ALWAYS_DENY)
+		  	{
+		  		if (MyClient(cptr) && badmode)
+		  			sendto_one(cptr, "%s", badmode); /* send error message, if any */
+				
+				if (MyClient(cptr))
+					break; /* stop processing this mode */
+		  	}
 
+		  	/* This probably should work but is completely untested (the operoverride stuff, I mean): */
+		  	if (ret == EX_DENY)
+		  	{
+		  		if (!op_can_override(cptr))
+		  		{
+					if (MyClient(cptr) && badmode)
+						sendto_one(cptr, "%s", badmode); /* send error message, if any */
+					
+					if (MyClient(cptr))
+						break; /* stop processing this mode */
+				} else {
+					if (IsAnOper(cptr))
+						opermode = 1;
+				}
+		  	}
+		  }
+		  
 		  /* This check not only prevents unprivileged users from doing a -q on chanowners,
 		   * it also protects against -o/-h/-v on them.
 		   */
@@ -1764,14 +1797,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 				sptr->umodes |= UMODE_SECURE;
 		}
 	}
-	/*
-	 * For Services Protection...
-	 */
-	if (!IsServer(cptr) && !IsULine(sptr))
-	{
-		if (IsServices(sptr))
-			ClearServices(sptr);
-	}
+
 	if ((setflags & UMODE_HIDE) && !IsHidden(sptr))
 		sptr->umodes &= ~UMODE_SETHOST;
 

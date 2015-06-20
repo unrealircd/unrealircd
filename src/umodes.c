@@ -61,7 +61,6 @@ long UMODE_ADMIN = 0L;         /* Admin */
 long UMODE_SERVNOTICE = 0L;    /* server notices such as kill */
 long UMODE_LOCOP = 0L;         /* Local operator -- SRB */
 long UMODE_RGSTRONLY = 0L;     /* Only reg nick message */
-long UMODE_SERVICES = 0L;      /* services */
 long UMODE_HIDE = 0L;          /* Hide from Nukes */
 long UMODE_NETADMIN = 0L;      /* Network Admin */
 long UMODE_COADMIN = 0L;       /* Co Admin */
@@ -132,7 +131,6 @@ void	umode_init(void)
 	UmodeAdd(NULL, 's', UMODE_LOCAL, NULL, &UMODE_SERVNOTICE);
 	UmodeAdd(NULL, 'O', UMODE_LOCAL, umode_allow_opers, &UMODE_LOCOP);
 	UmodeAdd(NULL, 'R', UMODE_GLOBAL, NULL, &UMODE_RGSTRONLY);
-	UmodeAdd(NULL, 'S', UMODE_GLOBAL, umode_allow_opers, &UMODE_SERVICES);
 	UmodeAdd(NULL, 'x', UMODE_GLOBAL, NULL, &UMODE_HIDE);
 	UmodeAdd(NULL, 'N', UMODE_GLOBAL, umode_allow_opers, &UMODE_NETADMIN);
 	UmodeAdd(NULL, 'C', UMODE_GLOBAL, umode_allow_opers, &UMODE_COADMIN);
@@ -374,6 +372,13 @@ void SnomaskDel(Snomask *sno)
 
 int umode_allow_all(aClient *sptr, int what)
 {
+	return 1;
+}
+
+int umode_allow_none(aClient *sptr, int what)
+{
+	if (MyClient(sptr))
+		return 0;
 	return 1;
 }
 

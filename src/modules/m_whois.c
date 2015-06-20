@@ -192,8 +192,8 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					showchannel = 1;
 				if ((acptr->umodes & UMODE_HIDEWHOIS) && !IsMember(sptr, chptr) && !IsAnOper(sptr) && !OperClass_evaluateACLPath("override:whois:",sptr,NULL,chptr,NULL))
 					showchannel = 0;
-				if (IsServices(acptr) && !IsNetAdmin(sptr) && !IsSAdmin(sptr) && !OperClass_evaluateACLPath("override:whois",sptr,NULL,chptr,NULL))
-					showchannel = 0;
+/*				if (IsServices(acptr) && !IsNetAdmin(sptr) && !IsSAdmin(sptr) && !OperClass_evaluateACLPath("override:whois",sptr,NULL,chptr,NULL))
+					showchannel = 0; TODO TODO OOOOOOOOOOOOOOOOOOOOOOOOOOOOO TODODODODODOO !!!! */
 				if (acptr == sptr)
 					showchannel = 1;
 
@@ -273,7 +273,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				sendto_one(sptr, rpl_str(RPL_AWAY), me.name,
 				    parv[0], name, user->away);
 
-			if ((IsAnOper(acptr) || IsServices(acptr)) && !hideoper)
+			if (IsAnOper(acptr) && !hideoper)
 			{
 				buf[0] = '\0';
 				if (IsNetAdmin(acptr))
@@ -284,8 +284,6 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					strlcat(buf, "a Server Administrator", sizeof buf);
 				else if (IsCoAdmin(acptr))
 					strlcat(buf, "a Co Administrator", sizeof buf);
-				else if (IsServices(acptr))
-					strlcat(buf, "a Network Service", sizeof buf);
 				else if (IsOper(acptr))
 					strlcat(buf, "an IRC Operator", sizeof buf);
 

@@ -162,13 +162,9 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (!list_empty(&acptr->special_node))
 			list_del(&acptr->special_node);
 
-                acptr->umodes &=
-                    ~(UMODE_OPER | UMODE_LOCOP | UMODE_SERVICES |
-                    UMODE_SADMIN | UMODE_ADMIN | UMODE_COADMIN);
-                acptr->umodes &=
-                    ~(UMODE_NETADMIN);
-                acptr->umodes &=
-                    ~(UMODE_DEAF | UMODE_HIDEOPER | UMODE_VICTIM);
+                acptr->umodes &= ~(UMODE_OPER | UMODE_LOCOP | UMODE_SADMIN | UMODE_ADMIN | UMODE_COADMIN);
+                acptr->umodes &= ~(UMODE_NETADMIN);
+                acptr->umodes &= ~(UMODE_DEAF | UMODE_HIDEOPER | UMODE_VICTIM);
                 acptr->oflag = 0;
 		remove_oper_snomasks(acptr);
 		RunHook2(HOOKTYPE_LOCAL_OPER, acptr, 0);

@@ -162,6 +162,7 @@ CMD_FUNC(m_kick)
 					else if (ret == EX_ALWAYS_DENY)
 						break;
 				}
+				ret = strict_ret; /* most strict one wins */
 				
 				if (ret == EX_ALWAYS_DENY)
 				{
@@ -219,7 +220,7 @@ CMD_FUNC(m_kick)
 
 				}				
 				/* victim is +a or +q, we are not +q */
-				if ((who_flags & (CHFL_CHANOWNER|CHFL_CHANPROT) || IsServices(who))
+				if ((who_flags & (CHFL_CHANOWNER|CHFL_CHANPROT))
 					 && !(sptr_flags & CHFL_CHANOWNER)) {
 					if (sptr == who)
 						goto attack; /* kicking self == ok */

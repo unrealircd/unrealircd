@@ -102,7 +102,7 @@ long oldumodes;
 
 					oldumodes = acptr->umodes;
 					acptr->umodes &= ~(UMODE_OPER | UMODE_LOCOP |
-					                   UMODE_SERVICES | UMODE_SADMIN | UMODE_ADMIN |
+					                   UMODE_SADMIN | UMODE_ADMIN |
 					                   UMODE_NETADMIN |
 					                   UMODE_DEAF | UMODE_HIDEOPER | UMODE_FAILOP |
 					                   UMODE_COADMIN | UMODE_VICTIM);
