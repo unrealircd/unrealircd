@@ -360,7 +360,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define IsClientF(x)		((x)->user->snomask & SNO_CLIENT)
 #define IsFloodF(x)		((x)->user->snomask & SNO_FLOOD)
 #define IsEyes(x)		((x)->user->snomask & SNO_EYES)
-#define IsKix(x)		((x)->umodes & UMODE_KIX)
 #define IsAdmin(x)		((x)->umodes & UMODE_ADMIN)
 
 #define IsNetAdmin(x)		((x)->umodes & UMODE_NETADMIN)
@@ -537,17 +536,15 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define OFLAG_TKL       0x10000000	/* can use G:lines and shuns */
 #define OFLAG_GZL       0x20000000	/* can use global Z:lines */
 #define OFLAG_OVERRIDE	0x40000000	/* can use oper-override */
-#define OFLAG_UMODEQ	0x80000000	/* can set +q */
 #define OFLAG_LOCAL	(OFLAG_REHASH|OFLAG_GLOBOP|OFLAG_WALLOP|OFLAG_LOCOP|OFLAG_LROUTE|OFLAG_LKILL|OFLAG_KLINE|OFLAG_UNKLINE|OFLAG_LNOTICE)
 #define OFLAG_GLOBAL	(OFLAG_LOCAL|OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE)
 #define OFLAG_ISGLOBAL	(OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE|OFLAG_TKL|OFLAG_GZL|OFLAG_OVERRIDE)
-#define OFLAG_NADMIN	(OFLAG_NETADMIN | OFLAG_SADMIN | OFLAG_ADMIN | OFLAG_GLOBAL | OFLAG_UMODEQ | OFLAG_DCCDENY)
+#define OFLAG_NADMIN	(OFLAG_NETADMIN | OFLAG_SADMIN | OFLAG_ADMIN | OFLAG_GLOBAL | OFLAG_DCCDENY)
 #define OFLAG_ADMIN_	(OFLAG_ADMIN | OFLAG_GLOBAL | OFLAG_DCCDENY)
 #define OFLAG_COADMIN_	(OFLAG_COADMIN | OFLAG_GLOBAL | OFLAG_DCCDENY)
-#define OFLAG_SADMIN_	(OFLAG_SADMIN | OFLAG_GLOBAL | OFLAG_UMODEQ | OFLAG_DCCDENY)
+#define OFLAG_SADMIN_	(OFLAG_SADMIN | OFLAG_GLOBAL | OFLAG_DCCDENY)
 
 #define OPCanOverride(x) ((x)->oflag & OFLAG_OVERRIDE)
-#define OPCanUmodeq(x)	((x)->oflag & OFLAG_UMODEQ)
 #define OPCanDCCDeny(x)	((x)->oflag & OFLAG_DCCDENY)
 #define OPCanTKL(x)	((x)->oflag & OFLAG_TKL)
 #define OPCanGZL(x)	((x)->oflag & OFLAG_GZL)

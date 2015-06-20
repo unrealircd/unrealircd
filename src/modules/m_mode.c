@@ -1758,8 +1758,6 @@ DLLFUNC CMD_FUNC(_m_umode)
 	 */
 		if (MyClient(sptr))
 		{
-			if ((sptr->umodes & UMODE_KIX) && (!OPCanUmodeq(sptr) || !IsAnOper(sptr)))
-				sptr->umodes &= ~UMODE_KIX;
 			if ((sptr->umodes & UMODE_SECURE) && !IsSecure(sptr))
 				sptr->umodes &= ~UMODE_SECURE;
 			if (!(sptr->umodes & UMODE_SECURE) && IsSecure(sptr))

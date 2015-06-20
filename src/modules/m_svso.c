@@ -76,7 +76,6 @@ static int oper_access[] = {
 	OFLAG_TKL, 't',
 	OFLAG_GZL, 'Z',
 	OFLAG_OVERRIDE, 'v',
-	OFLAG_UMODEQ, 'q',
 	OFLAG_DCCDENY, 'd',
 	OFLAG_ADDLINE, 'X',
         OFLAG_TSCTL, 'T',
@@ -169,7 +168,7 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
                 acptr->umodes &=
                     ~(UMODE_NETADMIN);
                 acptr->umodes &=
-                    ~(UMODE_KIX | UMODE_DEAF | UMODE_HIDEOPER | UMODE_VICTIM);
+                    ~(UMODE_DEAF | UMODE_HIDEOPER | UMODE_VICTIM);
                 acptr->oflag = 0;
 		remove_oper_snomasks(acptr);
 		RunHook2(HOOKTYPE_LOCAL_OPER, acptr, 0);

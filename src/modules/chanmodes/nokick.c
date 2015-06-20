@@ -50,11 +50,10 @@ ModuleHeader MOD_HEADER(nokick)
     };
 
 Cmode_t EXTCMODE_NOKICK;
-static char errMsg[2048];
 
 #define IsNoKick(chptr)    (chptr->mode.extmode & EXTCMODE_NOKICK)
 
-DLLFUNC char * nokick_check (aClient* sptr, aClient* who, aChannel *chptr, char* comment, long sptr_flags, long who_flags);
+int nokick_check (aClient* sptr, aClient* who, aChannel *chptr, char* comment, long sptr_flags, long who_flags, char **reject_reason);
 
 DLLFUNC int MOD_TEST(nokick)(ModuleInfo *modinfo)
 {
@@ -71,7 +70,7 @@ DLLFUNC int MOD_INIT(nokick)(ModuleInfo *modinfo)
 	req.is_ok = extcmode_default_requirechop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_NOKICK);
 	
-	HookAddPCharEx(modinfo->handle, HOOKTYPE_CAN_KICK, nokick_check);
+	HookAddEx(modinfo->handle, HOOKTYPE_CAN_KICK, nokick_check);
 
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -88,18 +87,19 @@ DLLFUNC int MOD_UNLOAD(nokick)(int module_unload)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC char * nokick_check (aClient* sptr, aClient* who, aChannel *chptr, char* comment, long sptr_flags, long who_flags)
+int nokick_check (aClient* sptr, aClient* who, aChannel *chptr, char* comment, long sptr_flags, long who_flags, char **reject_reason)
 {
+	static char errmsg[256];
 
 	if (MyClient(sptr) && IsNoKick(chptr))
 	{
-		/* As a warning, this is not thread safe... */
-		ircsnprintf(errMsg,sizeof(errMsg),err_str(ERR_CANNOTDOCOMMAND),
+		ircsnprintf(errmsg, sizeof(errmsg), err_str(ERR_CANNOTDOCOMMAND),
 				   me.name, sptr->name, "KICK",
 				   "channel is +Q");
-		return errMsg;
+		*reject_reason = errmsg;
+		return EX_DENY; /* Deny, but let opers override if necessary. */
 	}
 
-	return 0;
+	return EX_ALLOW;
 }
 
