@@ -360,7 +360,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define IsClientF(x)		((x)->user->snomask & SNO_CLIENT)
 #define IsFloodF(x)		((x)->user->snomask & SNO_FLOOD)
 #define IsEyes(x)		((x)->user->snomask & SNO_EYES)
-#define IsWhois(x)	        ((x)->umodes & UMODE_WHOIS)
 #define IsKix(x)		((x)->umodes & UMODE_KIX)
 #define IsAdmin(x)		((x)->umodes & UMODE_ADMIN)
 
@@ -534,7 +533,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define OFLAG_NETADMIN	0x00200000	/* netadmin gets +N */
 #define OFLAG_COADMIN	0x00800000	/* co admin gets +C */
 #define OFLAG_SADMIN	0x01000000	/* services admin gets +a */
-#define OFLAG_WHOIS     0x02000000	/* gets auto +W on oper up */
 #define OFLAG_HIDE      0x04000000	/* gets auto +x on oper up */
 #define OFLAG_TKL       0x10000000	/* can use G:lines and shuns */
 #define OFLAG_GZL       0x20000000	/* can use global Z:lines */
@@ -574,7 +572,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define OPIsSAdmin(x)	((x)->oflag & OFLAG_SADMIN)
 #define OPIsNetAdmin(x) ((x)->oflag & OFLAG_NETADMIN)
 #define OPIsCoAdmin(x)	((x)->oflag & OFLAG_COADMIN)
-#define OPIsWhois(x)    ((x)->oflag & OFLAG_WHOIS)
 #ifdef SHOW_SECRET
 #define OPCanSeeSecret(x) IsAnOper(x)
 #else
@@ -601,7 +598,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define OPSSetNetAdmin(x) ((x)->oflag |= OFLAG_NETADMIN)
 #define OPSSetCoAdmin(x) ((x)->oflag |= OFLAG_COADMIN)
 #define OPSetZLine(x)	((x)->oflag |= OFLAG_ZLINE)
-#define OPSetWhois(x)   ((x)->oflag |= OFLAG_WHOIS)
 #define OPClearRehash(x)	((x)->oflag &= ~OFLAG_REHASH)
 #define OPClearDie(x)		((x)->oflag &= ~OFLAG_DIE)
 #define OPClearTSCtl(x)		((x)->oflag &= ~OFLAG_TSCTL)
@@ -622,7 +618,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define OPClearNetAdmin(x)	((x)->oflag &= ~OFLAG_NETADMIN)
 #define OPClearCoAdmin(x)	((x)->oflag &= ~OFLAG_COADMIN)
 #define OPClearZLine(x)		((x)->oflag &= ~OFLAG_ZLINE)
-#define OPClearWhois(x)         ((x)->oflag &= ~OFLAG_WHOIS)
 /*
  * defined debugging levels
  */

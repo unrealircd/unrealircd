@@ -45,7 +45,7 @@ extern ircstats IRCstats;
 aConfiguration iConf;
 
 #define STAR1 OFLAG_SADMIN|OFLAG_ADMIN|OFLAG_NETADMIN|OFLAG_COADMIN
-#define STAR2 OFLAG_ZLINE|OFLAG_HIDE|OFLAG_WHOIS
+#define STAR2 OFLAG_ZLINE|OFLAG_HIDE
 
 MODVAR int oper_access[] = {
 	~(STAR1 | STAR2), '*',
@@ -70,7 +70,6 @@ MODVAR int oper_access[] = {
 	OFLAG_NETADMIN, 'N',
 	OFLAG_COADMIN, 'C',
 	OFLAG_ZLINE, 'z',
-	OFLAG_WHOIS, 'W',
 	OFLAG_HIDE, 'H',
 	OFLAG_TKL, 't',
 	OFLAG_GZL, 'Z',

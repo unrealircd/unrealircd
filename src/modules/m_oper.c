@@ -86,14 +86,10 @@ static void init_operflags()
 	oper_oflags[6].umode = &UMODE_WALLOP;
 	oper_oflags[6].host = NULL;
 	oper_oflags[6].announce = NULL;
-	oper_oflags[7].oflag = OFLAG_WHOIS;
-	oper_oflags[7].umode = &UMODE_WHOIS;
+	oper_oflags[7].oflag = 0;
+	oper_oflags[7].umode = NULL;
 	oper_oflags[7].host = NULL;
 	oper_oflags[7].announce = NULL;
-	oper_oflags[8].oflag = 0;
-	oper_oflags[8].umode = NULL;
-	oper_oflags[8].host = NULL;
-	oper_oflags[8].announce = NULL;
 }
 	
 

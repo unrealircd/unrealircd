@@ -153,13 +153,6 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			if (IsHideOper(acptr) && (acptr != sptr) && !IsAnOper(sptr))
 				hideoper = 1;
 
-			if (IsWhois(acptr) && (sptr != acptr))
-			{
-				sendnotice(acptr,
-				    "*** %s (%s@%s) did a /whois on you.",
-				    sptr->name,
-				    sptr->user->username, sptr->user->realhost);
-			}
 			sendto_one(sptr, rpl_str(RPL_WHOISUSER), me.name,
 			    parv[0], name,
 			    user->username,

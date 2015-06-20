@@ -48,7 +48,7 @@ DLLFUNC int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_SVSO 	"SVSO"	
 
 #define STAR1 OFLAG_SADMIN|OFLAG_ADMIN|OFLAG_NETADMIN|OFLAG_COADMIN
-#define STAR2 OFLAG_ZLINE|OFLAG_HIDE|OFLAG_WHOIS
+#define STAR2 OFLAG_ZLINE|OFLAG_HIDE
 static int oper_access[] = {
         ~(STAR1 | STAR2), '*',
         OFLAG_LOCAL, 'o',
@@ -72,7 +72,6 @@ static int oper_access[] = {
         OFLAG_NETADMIN, 'N',
         OFLAG_COADMIN, 'C',
         OFLAG_ZLINE, 'z',
-        OFLAG_WHOIS, 'W',
         OFLAG_HIDE, 'H',
 	OFLAG_TKL, 't',
 	OFLAG_GZL, 'Z',
@@ -168,7 +167,7 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
                     ~(UMODE_OPER | UMODE_LOCOP | UMODE_SERVICES |
                     UMODE_SADMIN | UMODE_ADMIN | UMODE_COADMIN);
                 acptr->umodes &=
-                    ~(UMODE_NETADMIN | UMODE_WHOIS);
+                    ~(UMODE_NETADMIN);
                 acptr->umodes &=
                     ~(UMODE_KIX | UMODE_DEAF | UMODE_HIDEOPER | UMODE_VICTIM);
                 acptr->oflag = 0;

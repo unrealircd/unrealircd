@@ -1725,7 +1725,6 @@ DLLFUNC CMD_FUNC(_m_umode)
 	 */
 	if (!IsAnOper(sptr) && !IsServer(cptr))
 	{
-		sptr->umodes &= ~UMODE_WHOIS;
 		ClearAdmin(sptr);
 		ClearSAdmin(sptr);
 		ClearNetAdmin(sptr);
