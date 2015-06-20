@@ -19,9 +19,10 @@ if [ "$1" = "start" ] ; then
 	if [ ! -r $PID_FILE ] ; then
 		echo "Possible error encountered (IRCd seemingly not started)"	
 		echo "====================================================="
-		echo "Check above for possible errors, and this output of  "
-		echo "ircd.log. If you cannot solve the problem, read"
-		echo "Unreal.nfo on where to get support"
+		echo "Check above for possible errors and the output below of @LOGDIR@/ircd.log"
+		echo "If you don't understand the problem, then have a look at our:"
+		echo "* FAQ: https://www.unrealircd.org/faq (Frequently Asked Questions)"
+		echo "* Documentation: https://www.unrealircd.org/docs/"
 		echo "====================================================="
 		tail -n 5 @LOGDIR@/ircd.log
 		if [ -r $PID_BACKUP ] ; then

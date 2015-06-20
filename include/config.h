@@ -235,15 +235,15 @@
 /*
  * Full pathnames and defaults of irc system's support files.
  */
-#define	CPATH		"unrealircd.conf"	/* server configuration file */
-#define	MPATH		"ircd.motd"	/* server MOTD file */
-#define SMPATH          "ircd.smotd"    /* short MOTD file */
-#define RPATH   	"ircd.rules"	/* server rules file */
-#define OPATH   	"oper.motd"	/* Operators MOTD file */
-#define	LPATH		"debug.log"	/* Where the debug file lives, if DEBUGMODE */
-#define VPATH		"ircd.svsmotd"	/* Services MOTD append. */
-#define BPATH		"bot.motd"	/* Bot MOTD */
-#define IRCDTUNE 	"ircd.tune"	/* tuning .. */
+#define	CPATH		CONFDIR"/unrealircd.conf"	/* server configuration file */
+#define	MPATH		CONFDIR"/ircd.motd"	/* server MOTD file */
+#define SMPATH		CONFDIR"/ircd.smotd"    /* short MOTD file */
+#define RPATH   	CONFDIR"/ircd.rules"	/* server rules file */
+#define OPATH   	CONFDIR"/oper.motd"	/* Operators MOTD file */
+#define	LPATH		LOGDIR"/debug.log"	/* Where the debug file lives, if DEBUGMODE */
+#define VPATH		CONFDIR"/ircd.svsmotd"	/* Services MOTD append. */
+#define BPATH		CONFDIR"/bot.motd"	/* Bot MOTD */
+#define IRCDTUNE 	DATADIR"/ircd.tune"	/* tuning .. */
 
 /* CHROOTDIR
  *
