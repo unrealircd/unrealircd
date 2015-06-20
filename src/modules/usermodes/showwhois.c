@@ -1,0 +1,76 @@
+/*
+ * Show when someone does a /WHOIS on you (User mode +W)
+ * (C) Copyright 2000-.. Bram Matthys (Syzop) and the UnrealIRCd team
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 1, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
+#include "unrealircd.h"
+
+#define IsWhois(cptr)    (cptr->umodes & UMODE_SHOWWHOIS)
+
+/* Module header */
+ModuleHeader MOD_HEADER(showwhois)
+  = {
+	"usermodes/showwhois",
+	"$Id$",
+	"User Mode +W",
+	"3.2-b8-1",
+	NULL 
+    };
+
+/* Global variables */
+long UMODE_SHOWWHOIS = 0L;
+
+/* Forward declarations */
+int showwhois_whois(aClient *sptr, aClient *acptr);
+
+DLLFUNC int MOD_TEST(showwhois)(ModuleInfo *modinfo)
+{
+	return MOD_SUCCESS;
+}
+
+DLLFUNC int MOD_INIT(showwhois)(ModuleInfo *modinfo)
+{
+	UmodeAdd(modinfo->handle, 'W', UMODE_GLOBAL, umode_allow_opers, &UMODE_SHOWWHOIS);
+	
+	HookAddEx(modinfo->handle, HOOKTYPE_WHOIS, showwhois_whois);
+	
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	return MOD_SUCCESS;
+}
+
+DLLFUNC int MOD_LOAD(showwhois)(int module_load)
+{
+	return MOD_SUCCESS;
+}
+
+DLLFUNC int MOD_UNLOAD(showwhois)(int module_unload)
+{
+	return MOD_SUCCESS;
+}
+
+int showwhois_whois(aClient *sptr, aClient *acptr)
+{
+	if (IsWhois(acptr) && (sptr != acptr))
+	{
+		sendnotice(acptr,
+			"*** %s (%s@%s) did a /whois on you.",
+			sptr->name,
+			sptr->user->username, sptr->user->realhost);
+	}
+
+	return 0;
+}
