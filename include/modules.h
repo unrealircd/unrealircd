@@ -745,6 +745,7 @@ extern char *moddata_client_get(aClient *acptr, char *varname);
 #define HOOKTYPE_CAN_SAJOIN 80
 #define HOOKTYPE_WHOIS 81
 #define HOOKTYPE_CHECK_INIT 82
+#define HOOKTYPE_WHO_STATUS 83
 
 /* Hook return values */
 #define HOOK_CONTINUE 0

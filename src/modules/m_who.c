@@ -356,7 +356,7 @@ int i = 1;
 					}
 
 					if (!IsAnOper(sptr))
-						*umodes = *umodes & (UMODE_OPER | UMODE_LOCOP | UMODE_SADMIN | UMODE_ADMIN | UMODE_COADMIN | UMODE_NETADMIN | UMODE_BOT);
+						*umodes = *umodes & (UMODE_OPER | UMODE_LOCOP | UMODE_SADMIN | UMODE_ADMIN | UMODE_COADMIN | UMODE_NETADMIN);
 					if (*umodes == 0)
 						return -1;
 				}
@@ -634,6 +634,7 @@ static void make_who_status(aClient *sptr, aClient *acptr, aChannel *channel,
 			    Member *cm, char *status, int cansee)
 {
 int i = 0;
+Hook *h;
 
 	if (acptr->user->away)
 		status[i++] = 'G';
@@ -643,9 +644,13 @@ int i = 0;
 	if (IsARegNick(acptr))
 		status[i++] = 'r';
 
-	if (acptr->umodes & UMODE_BOT)
-		status[i++] = 'B';
-
+	for (h = Hooks[HOOKTYPE_WHO_STATUS]; h; h = h->next)
+	{
+		int ret = (*(h->func.intfunc))(sptr, acptr, channel, cm, status, cansee);
+		if (ret != 0)
+			status[i++] = (char)ret;
+	}
+	
 	if (IsAnOper(acptr) && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
 		status[i++] = '*';
 

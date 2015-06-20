@@ -68,7 +68,6 @@ long UMODE_NETADMIN = 0L;      /* Network Admin */
 long UMODE_COADMIN = 0L;       /* Co Admin */
 long UMODE_WHOIS = 0L;         /* gets notice on /whois */
 long UMODE_KIX = 0L;           /* usermode +q */
-long UMODE_BOT = 0L;           /* User is a bot */
 long UMODE_SECURE = 0L;        /* User is a secure connect */
 long UMODE_VICTIM = 0L;        /* Intentional Victim */
 long UMODE_DEAF = 0L;          /* Deaf */
@@ -143,7 +142,6 @@ void	umode_init(void)
 	UmodeAdd(NULL, 'C', UMODE_GLOBAL, umode_allow_opers, &UMODE_COADMIN);
 	UmodeAdd(NULL, 'W', UMODE_GLOBAL, NULL, &UMODE_WHOIS);
 	UmodeAdd(NULL, 'q', UMODE_GLOBAL, umode_allow_opers, &UMODE_KIX);
-	UmodeAdd(NULL, 'B', UMODE_GLOBAL, NULL, &UMODE_BOT);
 	UmodeAdd(NULL, 'z', UMODE_GLOBAL, NULL, &UMODE_SECURE);
 	UmodeAdd(NULL, 'v', UMODE_GLOBAL, umode_allow_opers, &UMODE_VICTIM);
 	UmodeAdd(NULL, 'd', UMODE_GLOBAL, NULL, &UMODE_DEAF);

@@ -317,9 +317,6 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			if (IsHelpOp(acptr) && !hideoper && !user->away)
 				sendto_one(sptr, rpl_str(RPL_WHOISHELPOP), me.name, parv[0], name);
 
-			if (acptr->umodes & UMODE_BOT)
-				sendto_one(sptr, rpl_str(RPL_WHOISBOT), me.name, parv[0], name, ircnetwork);
-
 			if (acptr->umodes & UMODE_SECURE)
 				sendto_one(sptr, rpl_str(RPL_WHOISSECURE), me.name, parv[0], name,
 					"is using a Secure Connection");

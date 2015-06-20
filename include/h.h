@@ -411,7 +411,6 @@ extern MODVAR long UMODE_NETADMIN;  /* 0x10000	 Network Admin */
 extern MODVAR long UMODE_COADMIN;   /* 0x80000	 Co Admin */
 extern MODVAR long UMODE_WHOIS;     /* 0x100000	 gets notice on /whois */
 extern MODVAR long UMODE_KIX;       /* 0x200000	 usermode +q */
-extern MODVAR long UMODE_BOT;       /* 0x400000	 User is a bot */
 extern MODVAR long UMODE_SECURE;    /*	0x800000	 User is a secure connect */
 extern MODVAR long UMODE_VICTIM;    /* 0x8000000	 Intentional Victim */
 extern MODVAR long UMODE_DEAF;      /* 0x10000000       Deaf */

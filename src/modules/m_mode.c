@@ -1850,12 +1850,6 @@ DLLFUNC CMD_FUNC(_m_umode)
 		RunHook2(HOOKTYPE_LOCAL_OPER, sptr, 0);
 	}
 
-	if ((sptr->umodes & UMODE_BOT) && !(setflags & UMODE_BOT) && MyClient(sptr))
-	{
-		/* now +B */
-	  do_cmd(sptr, sptr, "BOTMOTD", 1, parv);
-	}
-
 	if (!(setflags & UMODE_OPER) && IsOper(sptr))
 		IRCstats.operators++;
 
