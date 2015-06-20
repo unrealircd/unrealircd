@@ -25,6 +25,8 @@ which may hinder you getting started.
 Please consult our excelent online documentation at https://www.unrealircd.org/docs/
 when setting up the IRCd!
 
+Note: the procedure below is for UnrealIRCd version 3.4.x (not 3.2.x!)
+
 ### Step 1: Installation
 #### Windows
 Simply download the UnrealIRCd Windows version from www.unrealircd.org
@@ -34,15 +36,26 @@ Compiling UnrealIRCd for Windows yourself is not straightforward and thus not re
 #### *BSD/Linux/OS X
 First you must compile the IRCd:
 
-* Run *./Config*
-* Run *make*
-* If you chose to install the IRCd at a different location than the defaults, then also run *make install*
+* Run `./Config`
+* Run `make`
+* Run `make install`
+* Now change to the directory where you installed UnrealIRCd, e.g. `cd /home/xxxx/unrealircd`
 
 ### Step 2: Configuration
+Configuration files are stored in the conf/ folder by default (eg: /home/xxxx/unrealircd/conf)
+
 #### Create a configuration file
 If you are new, then you need to create your own configuration file:
-copy doc/example.conf to your main UnrealIRCd directory and call it unrealircd.conf.
-Then open it in an editor and carefully modify it using the documentation and FAQ (see below) as a guide.
+Copy conf/examples/example.conf to conf/ and call it unrealircd.conf.
+Then open it in an editor and carefully modify it using the documentation and FAQ as a guide (see below).
+
+### Step 3: Booting
+
+#### Linux/*BSD/OS X
+Run `./unrealircd start` in the directory where you installed UnrealIRCd.
+
+#### Windows
+Start -> All Programs -> UnrealIRCd -> UnrealIRCd
 
 ## Documentation & FAQ
 You can find the **documentation** online at: http://www.unrealircd.org/docs/
@@ -54,3 +67,4 @@ We also have a good **FAQ**: http://www.unrealircd.org/docs/FAQ
 * http://forums.unrealircd.org - Support
 * http://bugs.unrealircd.org - Bug tracker
 * http://modules.unrealircd.org - 3rd party modules
+
