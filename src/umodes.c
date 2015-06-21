@@ -446,45 +446,34 @@ void unload_all_unused_snomasks(void)
 }
 
 /**
- * Simply non-perfect function to remove all oper-snomasks, 
- * it's at least better than manually doing a .. &= ~SNO_BLAH everywhere.
- *
- * Also unsets all snomasks and UMODE_SERVNOTICE if it would seem the
- * user doesn't deserve to have snomask after being deopered. This is
- * simpler, but hackier, than actually recording whether or not the
- * user already had some snomasks set before OPERing and then reset
- * his stuff to that... --binki
+ * This function removes any oper-only snomasks when the user is no
+ * longer an IRC Operator.
+ * In the past this relied on hacks and guesses. Nowadays we simply
+ * use the information given by SnomaskAdd() and set::restrict-user-modes.
  */
 void remove_oper_snomasks(aClient *sptr)
 {
-int i;
-	/*
-	 * See #3329
-	 */
-	if (sptr->umodes & UMODE_SERVNOTICE
-	    && RESTRICT_USERMODES
-	    && strchr(RESTRICT_USERMODES, 's')
-	    && !(CONN_MODES & UMODE_SERVNOTICE))
+	int i;
+
+	if (RESTRICT_USERMODES && strchr(RESTRICT_USERMODES, 's'))
 	{
 		sptr->umodes &= ~UMODE_SERVNOTICE;
 		sptr->user->snomask = 0;
-		/* we unset all snomasks, so short-circuit */
-		return;
+		return; /* we unset all snomasks, so short-circuit */
 	}
 
 	for (i = 0; i <= Snomask_highest; i++)
 	{
 		if (!Snomask_Table[i].flag)
 			continue;
-		if (Snomask_Table[i].allowed == umode_allow_opers)
+		if (Snomask_Table[i].unset_on_deoper)
 			sptr->user->snomask &= ~Snomask_Table[i].mode;
 	}
 }
 
 /*
- * Strip all 'oper only modes' from the user.
- * This function is NOT PERFECT, see comments from the
- * remove_oper_snomasks above.
+ * This function removes any oper-only user modes from the user.
+ * You may also want to call remove_oper_snomasks(), see above.
  */
 void remove_oper_modes(aClient *sptr)
 {
@@ -494,7 +483,7 @@ int i;
 	{
 		if (!Usermode_Table[i].flag)
 			continue;
-		if (Usermode_Table[i].allowed == umode_allow_opers)
+		if (Usermode_Table[i].unset_on_deoper)
 			sptr->umodes &= ~Usermode_Table[i].mode;
 	}
 }

@@ -1741,37 +1741,15 @@ DLLFUNC CMD_FUNC(_m_umode)
 			  break;
 		} /* switch */
 	} /* for */
-	/*
-	 * stop users making themselves operators too easily
-	 */
 
-	if (!(setflags & UMODE_OPER) && IsOper(sptr) && !IsServer(cptr))
-		ClearOper(sptr);
-	if (!(setflags & UMODE_LOCOP) && IsLocOp(sptr) && !IsServer(cptr))
-		sptr->umodes &= ~UMODE_LOCOP;
-
-	/*
-	 * Let only operators set FloodF, ClientF; also
-	 * remove those flags if they've gone -o/-O.
-	 *  FloodF sends notices about possible flooding -Cabal95
-	 *  ClientF sends notices about clients connecting or exiting
-	 *  Admin is for server admins
-	 */
-	if (!IsAnOper(sptr) && !IsServer(cptr))
+	/* Don't let non-ircops set ircop-only modes or snomasks */
+	if (MyClient(sptr) && !IsAnOper(sptr))
 	{
-		ClearAdmin(sptr);
-		ClearSAdmin(sptr);
-		ClearNetAdmin(sptr);
-		ClearHideOper(sptr);
-		ClearCoAdmin(sptr);
-		ClearFailops(sptr);
+		remove_oper_modes(sptr);
+		remove_oper_snomasks(sptr);
 	}
 
-	/*
-	 * New oper access flags - Only let them set certian usermodes on
-	 * themselves IF they have access to set that specific mode in their
-	 * O:Line.
-	 */
+	/* Below can be removed after Heero is done with the new oper system and this shit is gone :D */
 	if (MyClient(sptr)) {
 		if (IsAnOper(sptr)) {
 			if (IsAdmin(sptr) && !OPIsAdmin(sptr))
@@ -1786,19 +1764,9 @@ DLLFUNC CMD_FUNC(_m_umode)
 			    && !IsSecure(sptr))
 				sptr->umodes &= ~UMODE_SECURE;
 		}
-	/*
-	   This is to remooove the kix bug.. and to protect some stuffie
-	   -techie
-	 */
-		if (MyClient(sptr))
-		{
-			if ((sptr->umodes & UMODE_SECURE) && !IsSecure(sptr))
-				sptr->umodes &= ~UMODE_SECURE;
-			if (!(sptr->umodes & UMODE_SECURE) && IsSecure(sptr))
-				sptr->umodes |= UMODE_SECURE;
-		}
 	}
 
+	/* If user was +x and does MODE -x then set -t as well */
 	if ((setflags & UMODE_HIDE) && !IsHidden(sptr))
 		sptr->umodes &= ~UMODE_SETHOST;
 

@@ -50,36 +50,36 @@ DLLFUNC int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define STAR1 OFLAG_SADMIN|OFLAG_ADMIN|OFLAG_NETADMIN|OFLAG_COADMIN
 #define STAR2 OFLAG_ZLINE|OFLAG_HIDE
 static int oper_access[] = {
-        ~(STAR1 | STAR2), '*',
-        OFLAG_LOCAL, 'o',
-        OFLAG_GLOBAL, 'O',
-        OFLAG_REHASH, 'r',
-        OFLAG_DIE, 'D',
-        OFLAG_RESTART, 'R',
-        OFLAG_GLOBOP, 'g',
-        OFLAG_WALLOP, 'w',
-        OFLAG_LOCOP, 'l',
-        OFLAG_LROUTE, 'c',
-        OFLAG_GROUTE, 'L',
-        OFLAG_LKILL, 'k',
-        OFLAG_GKILL, 'K',
-        OFLAG_KLINE, 'b',
-        OFLAG_UNKLINE, 'B',
-        OFLAG_LNOTICE, 'n',
-        OFLAG_GNOTICE, 'G',
-        OFLAG_ADMIN, 'A',
-        OFLAG_SADMIN, 'a',
-        OFLAG_NETADMIN, 'N',
-        OFLAG_COADMIN, 'C',
-        OFLAG_ZLINE, 'z',
-        OFLAG_HIDE, 'H',
+	~(STAR1 | STAR2), '*',
+	OFLAG_LOCAL, 'o',
+	OFLAG_GLOBAL, 'O',
+	OFLAG_REHASH, 'r',
+	OFLAG_DIE, 'D',
+	OFLAG_RESTART, 'R',
+	OFLAG_GLOBOP, 'g',
+	OFLAG_WALLOP, 'w',
+	OFLAG_LOCOP, 'l',
+	OFLAG_LROUTE, 'c',
+	OFLAG_GROUTE, 'L',
+	OFLAG_LKILL, 'k',
+	OFLAG_GKILL, 'K',
+	OFLAG_KLINE, 'b',
+	OFLAG_UNKLINE, 'B',
+	OFLAG_LNOTICE, 'n',
+	OFLAG_GNOTICE, 'G',
+	OFLAG_ADMIN, 'A',
+	OFLAG_SADMIN, 'a',
+	OFLAG_NETADMIN, 'N',
+	OFLAG_COADMIN, 'C',
+	OFLAG_ZLINE, 'z',
+	OFLAG_HIDE, 'H',
 	OFLAG_TKL, 't',
 	OFLAG_GZL, 'Z',
 	OFLAG_OVERRIDE, 'v',
 	OFLAG_DCCDENY, 'd',
 	OFLAG_ADDLINE, 'X',
-        OFLAG_TSCTL, 'T',
-        0, 0
+	OFLAG_TSCTL, 'T',
+	0, 0
 };
 
 ModuleHeader MOD_HEADER(m_svso)
@@ -116,59 +116,58 @@ DLLFUNC int MOD_UNLOAD(m_svso)(int module_unload)
 
 int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-        aClient *acptr;
-        long fLag;
+	aClient *acptr;
 
-        if (!IsULine(sptr))
-                return 0;
+	if (!IsULine(sptr))
+		return 0;
 
-        if (parc < 3)
-                return 0;
+	if (parc < 3)
+		return 0;
 
-        if (!(acptr = find_person(parv[1], (aClient *)NULL)))
-                return 0;
+	if (!(acptr = find_person(parv[1], (aClient *)NULL)))
+		return 0;
 
-        if (!MyClient(acptr))
-        {
-                sendto_one(acptr, ":%s SVSO %s %s", parv[0], parv[1], parv[2]);
-                return 0;
-        }
+	if (!MyClient(acptr))
+	{
+		sendto_one(acptr, ":%s SVSO %s %s", parv[0], parv[1], parv[2]);
+		return 0;
+	}
 
-        if (*parv[2] == '+')
-        {
-                int     *i, flag;
-                char *m = NULL;
-                for (m = (parv[2] + 1); *m; m++)
-                {
-                        for (i = oper_access; (flag = *i); i += 2)
-                        {
-                                if (*m == (char) *(i + 1))
-                                {
-                                        acptr->oflag |= flag;
-                                        break;
-                                }
-                        }
-                }
-        }
-        if (*parv[2] == '-')
-        {
-                fLag = acptr->umodes;
-                if (IsOper(acptr) && !IsHideOper(acptr))
-                {
-                        IRCstats.operators--;
-                        VERIFY_OPERCOUNT(acptr, "svso");
-                }
+	if (*parv[2] == '+')
+	{
+		int     *i, flag;
+		char *m = NULL;
+		for (m = (parv[2] + 1); *m; m++)
+		{
+			for (i = oper_access; (flag = *i); i += 2)
+			{
+				if (*m == (char) *(i + 1))
+				{
+					acptr->oflag |= flag;
+					break;
+				}
+			}
+		}
+	}
+	
+	if (*parv[2] == '-')
+	{
+		long oldumodes;
+		if (IsOper(acptr) && !IsHideOper(acptr))
+		{
+			IRCstats.operators--;
+			VERIFY_OPERCOUNT(acptr, "svso");
+		}
 
 		if (!list_empty(&acptr->special_node))
 			list_del(&acptr->special_node);
 
-                acptr->umodes &= ~(UMODE_OPER | UMODE_LOCOP | UMODE_SADMIN | UMODE_ADMIN | UMODE_COADMIN);
-                acptr->umodes &= ~(UMODE_NETADMIN);
-                acptr->umodes &= ~(UMODE_DEAF | UMODE_HIDEOPER);
-                acptr->oflag = 0;
+		oldumodes = acptr->umodes;
+		remove_oper_modes(acptr);
 		remove_oper_snomasks(acptr);
+		acptr->oflag = 0;
+		send_umode_out(acptr, acptr, oldumodes);
 		RunHook2(HOOKTYPE_LOCAL_OPER, acptr, 0);
-                send_umode_out(acptr, acptr, fLag);
-        }
+	}
 	return 0;
 }
