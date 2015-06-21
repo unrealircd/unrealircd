@@ -69,7 +69,6 @@ long UMODE_VICTIM = 0L;        /* Intentional Victim */
 long UMODE_DEAF = 0L;          /* Deaf */
 long UMODE_HIDEOPER = 0L;      /* Hide oper mode */
 long UMODE_SETHOST = 0L;       /* Used sethost */
-long UMODE_HIDEWHOIS = 0L;     /* Hides channels in /whois */
 long UMODE_HIDLE = 0L;         /* Hides the idle time of opers */
 
 long SNO_KILLS = 0L;
@@ -139,7 +138,6 @@ void	umode_init(void)
 	UmodeAdd(NULL, 'd', UMODE_GLOBAL, NULL, &UMODE_DEAF);
 	UmodeAdd(NULL, 'H', UMODE_GLOBAL, umode_allow_opers, &UMODE_HIDEOPER);
 	UmodeAdd(NULL, 't', UMODE_GLOBAL, NULL, &UMODE_SETHOST);
-	UmodeAdd(NULL, 'p', UMODE_GLOBAL, NULL, &UMODE_HIDEWHOIS);
 	UmodeAdd(NULL, 'I', UMODE_GLOBAL, umode_allow_opers, &UMODE_HIDLE);
 	SnomaskAdd(NULL, 'k', umode_allow_all, &SNO_KILLS);
 	SnomaskAdd(NULL, 'c', umode_allow_opers, &SNO_CLIENT);

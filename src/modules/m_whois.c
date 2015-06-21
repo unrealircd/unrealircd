@@ -190,10 +190,9 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				
 				chptr = lp->chptr;
 				showchannel = 0;
+
 				if (ShowChannel(sptr, chptr))
 					showchannel = 1;
-				if ((acptr->umodes & UMODE_HIDEWHOIS) && !IsMember(sptr, chptr) && !IsAnOper(sptr) && !OperClass_evaluateACLPath("override:whois:",sptr,NULL,chptr,NULL))
-					showchannel = 0;
 
 				for (h = Hooks[HOOKTYPE_SEE_CHANNEL_IN_WHOIS]; h; h = h->next)
 				{
