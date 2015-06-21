@@ -120,12 +120,6 @@ int ret;
 		sendnotice(sptr, "You are only allowed to talk in '%s'", SPAMFILTER_VIRUSCHAN);
 		return CANPRIVMSG_CONTINUE;
 	}
-	/* Umode +R (idea from Bahamut) */
-	if (IsRegNickMsg(acptr) && !IsLoggedIn(sptr) && !IsULine(sptr) && !IsOper(sptr) && !IsServer(sptr)) {
-		sendto_one(sptr, err_str(ERR_NONONREG), me.name, sptr->name,
-			acptr->name);
-		return 0;
-	}
 
 	if (MyClient(sptr) && !strncasecmp(*text, "\001DCC", 4))
 	{
