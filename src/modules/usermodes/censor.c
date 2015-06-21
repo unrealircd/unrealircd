@@ -65,7 +65,7 @@ DLLFUNC int MOD_INIT(censor)(ModuleInfo *modinfo)
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
-	UmodeAdd(modinfo->handle, 'G', UMODE_GLOBAL, NULL, &UMODE_CENSOR);
+	UmodeAdd(modinfo->handle, 'G', UMODE_GLOBAL, 0, NULL, &UMODE_CENSOR);
 
 	HookAddPCharEx(modinfo->handle, HOOKTYPE_PRE_USERMSG, censor_pre_usermsg);
 	

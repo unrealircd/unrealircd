@@ -325,11 +325,8 @@ extern int hunt_server(aClient *, aClient *, char *, int, int, char **);
 extern aClient *next_client(aClient *, char *);
 extern int m_server_estab(aClient *);
 extern void umode_init(void);
-extern long umode_get(char, int, int (*)(aClient *, int));
 #define UMODE_GLOBAL 1
 #define UMODE_LOCAL 0
-#define umode_lget(x) umode_get(x, 0, 0);
-#define umode_gget(x) umode_get(x, 1, 0);
 extern int umode_allow_all(aClient *sptr, int what);
 extern int umode_allow_opers(aClient *sptr, int what);
 extern int umode_allow_none(aClient *sptr, int what);

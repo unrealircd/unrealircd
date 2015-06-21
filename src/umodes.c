@@ -111,44 +111,37 @@ void	umode_init(void)
 	Snomask_highest = 0;
 
 	/* Set up modes */
-	/* 2004-02-11: note: TODO: 'umode_allow_opers' is in most cases
-	 * not completely correct since even opers shouldn't be allowed
-	 * to set most of these flags (eg locop trying to set +N),
-	 * it is currently handled by the m_umode() routine however,
-	 * but it would be better if we get rid of that and switch
-	 * completely to this umode->allowed system :). -- Syzop.
-	 */
-	UmodeAdd(NULL, 'i', UMODE_GLOBAL, NULL, &UMODE_INVISIBLE);
-	UmodeAdd(NULL, 'o', UMODE_GLOBAL, umode_allow_opers, &UMODE_OPER);
-	UmodeAdd(NULL, 'w', UMODE_GLOBAL, NULL, &UMODE_WALLOP);
-	UmodeAdd(NULL, 'g', UMODE_GLOBAL, umode_allow_opers, &UMODE_FAILOP);
-	UmodeAdd(NULL, 'r', UMODE_GLOBAL, NULL, &UMODE_REGNICK);
-	UmodeAdd(NULL, 'a', UMODE_GLOBAL, umode_allow_opers, &UMODE_SADMIN);
-	UmodeAdd(NULL, 'A', UMODE_GLOBAL, umode_allow_opers, &UMODE_ADMIN);
-	UmodeAdd(NULL, 's', UMODE_LOCAL, NULL, &UMODE_SERVNOTICE);
-	UmodeAdd(NULL, 'O', UMODE_LOCAL, umode_allow_opers, &UMODE_LOCOP);
-	UmodeAdd(NULL, 'x', UMODE_GLOBAL, NULL, &UMODE_HIDE);
-	UmodeAdd(NULL, 'N', UMODE_GLOBAL, umode_allow_opers, &UMODE_NETADMIN);
-	UmodeAdd(NULL, 'C', UMODE_GLOBAL, umode_allow_opers, &UMODE_COADMIN);
-	UmodeAdd(NULL, 'z', UMODE_GLOBAL, NULL, &UMODE_SECURE);
-	UmodeAdd(NULL, 'd', UMODE_GLOBAL, NULL, &UMODE_DEAF);
-	UmodeAdd(NULL, 'H', UMODE_GLOBAL, umode_allow_opers, &UMODE_HIDEOPER);
-	UmodeAdd(NULL, 't', UMODE_GLOBAL, NULL, &UMODE_SETHOST);
-	UmodeAdd(NULL, 'I', UMODE_GLOBAL, umode_allow_opers, &UMODE_HIDLE);
-	SnomaskAdd(NULL, 'k', umode_allow_all, &SNO_KILLS);
-	SnomaskAdd(NULL, 'c', umode_allow_opers, &SNO_CLIENT);
-	SnomaskAdd(NULL, 'f', umode_allow_opers, &SNO_FLOOD);
-	SnomaskAdd(NULL, 'F', umode_allow_opers, &SNO_FCLIENT);
-	SnomaskAdd(NULL, 'j', umode_allow_opers, &SNO_JUNK);
-	SnomaskAdd(NULL, 'v', umode_allow_opers, &SNO_VHOST);
-	SnomaskAdd(NULL, 'e', umode_allow_opers, &SNO_EYES);
-	SnomaskAdd(NULL, 'G', umode_allow_opers, &SNO_TKL);
-	SnomaskAdd(NULL, 'n', umode_allow_opers, &SNO_NICKCHANGE);
-	SnomaskAdd(NULL, 'N', umode_allow_opers, &SNO_FNICKCHANGE);
-	SnomaskAdd(NULL, 'q', umode_allow_opers, &SNO_QLINE);
-	SnomaskAdd(NULL, 'S', umode_allow_opers, &SNO_SPAMF);
-	SnomaskAdd(NULL, 's', umode_allow_opers, &SNO_SNOTICE);
-	SnomaskAdd(NULL, 'o', umode_allow_opers, &SNO_OPER);
+	UmodeAdd(NULL, 'i', UMODE_GLOBAL, 0, NULL, &UMODE_INVISIBLE);
+	UmodeAdd(NULL, 'o', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_OPER);
+	UmodeAdd(NULL, 'w', UMODE_GLOBAL, 0, NULL, &UMODE_WALLOP);
+	UmodeAdd(NULL, 'g', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_FAILOP);
+	UmodeAdd(NULL, 'r', UMODE_GLOBAL, 0, NULL, &UMODE_REGNICK);
+	UmodeAdd(NULL, 'a', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_SADMIN);
+	UmodeAdd(NULL, 'A', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_ADMIN);
+	UmodeAdd(NULL, 's', UMODE_LOCAL, 0, NULL, &UMODE_SERVNOTICE);
+	UmodeAdd(NULL, 'O', UMODE_LOCAL, 1, umode_allow_opers, &UMODE_LOCOP);
+	UmodeAdd(NULL, 'x', UMODE_GLOBAL, 0, NULL, &UMODE_HIDE);
+	UmodeAdd(NULL, 'N', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_NETADMIN);
+	UmodeAdd(NULL, 'C', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_COADMIN);
+	UmodeAdd(NULL, 'z', UMODE_GLOBAL, 0, NULL, &UMODE_SECURE);
+	UmodeAdd(NULL, 'd', UMODE_GLOBAL, 0, NULL, &UMODE_DEAF);
+	UmodeAdd(NULL, 'H', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_HIDEOPER);
+	UmodeAdd(NULL, 't', UMODE_GLOBAL, 0, NULL, &UMODE_SETHOST);
+	UmodeAdd(NULL, 'I', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_HIDLE);
+	SnomaskAdd(NULL, 'k', 0, umode_allow_all, &SNO_KILLS);
+	SnomaskAdd(NULL, 'c', 1, umode_allow_opers, &SNO_CLIENT);
+	SnomaskAdd(NULL, 'f', 1, umode_allow_opers, &SNO_FLOOD);
+	SnomaskAdd(NULL, 'F', 1, umode_allow_opers, &SNO_FCLIENT);
+	SnomaskAdd(NULL, 'j', 1, umode_allow_opers, &SNO_JUNK);
+	SnomaskAdd(NULL, 'v', 1, umode_allow_opers, &SNO_VHOST);
+	SnomaskAdd(NULL, 'e', 1, umode_allow_opers, &SNO_EYES);
+	SnomaskAdd(NULL, 'G', 1, umode_allow_opers, &SNO_TKL);
+	SnomaskAdd(NULL, 'n', 1, umode_allow_opers, &SNO_NICKCHANGE);
+	SnomaskAdd(NULL, 'N', 1, umode_allow_opers, &SNO_FNICKCHANGE);
+	SnomaskAdd(NULL, 'q', 1, umode_allow_opers, &SNO_QLINE);
+	SnomaskAdd(NULL, 'S', 1, umode_allow_opers, &SNO_SPAMF);
+	SnomaskAdd(NULL, 's', 1, umode_allow_opers, &SNO_SNOTICE);
+	SnomaskAdd(NULL, 'o', 1, umode_allow_opers, &SNO_OPER);
 }
 
 void make_umodestr(void)
@@ -169,7 +162,7 @@ void make_umodestr(void)
  * Add a usermode with character 'ch', if global is set to 1 the usermode is global
  * (sent to other servers) otherwise it's a local usermode
  */
-Umode *UmodeAdd(Module *module, char ch, int global, int (*allowed)(aClient *sptr, int what), long *mode)
+Umode *UmodeAdd(Module *module, char ch, int global, int unset_on_deoper, int (*allowed)(aClient *sptr, int what), long *mode)
 {
 	short	 i = 0;
 	short	 j = 0;
@@ -200,6 +193,7 @@ Umode *UmodeAdd(Module *module, char ch, int global, int (*allowed)(aClient *spt
 	{
 		Usermode_Table[i].flag = ch;
 		Usermode_Table[i].allowed = allowed;
+		Usermode_Table[i].unset_on_deoper = unset_on_deoper;
 		Debug((DEBUG_DEBUG, "umode_get(%c) returning %04x",
 			ch, Usermode_Table[i].mode));
 		/* Update usermode table highest */
@@ -270,7 +264,7 @@ void UmodeDel(Umode *umode)
 	return;
 }
 
-Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(aClient *sptr, int what), long *mode)
+Snomask *SnomaskAdd(Module *module, char ch, int unset_on_deoper, int (*allowed)(aClient *sptr, int what), long *mode)
 {
 	short	 i = 0;
 	short	 j = 0;
@@ -301,6 +295,7 @@ Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(aClient *sptr, int w
 	{
 		Snomask_Table[i].flag = ch;
 		Snomask_Table[i].allowed = allowed;
+		Snomask_Table[i].unset_on_deoper = unset_on_deoper;
 		/* Update usermode table highest */
 		for (j = 0; j < UMODETABLESZ; j++)
 			if (Snomask_Table[i].flag)
@@ -448,28 +443,6 @@ void unload_all_unused_snomasks(void)
 			sendto_one(cptr, rpl_str(RPL_SNOMASK), me.name,
 				cptr->name, get_snostr(cptr->user->snomask));
 	}
-}
-
-long umode_get(char ch, int options, int (*allowed)(aClient *sptr, int what))
-{
-	long flag;
-	if (UmodeAdd(NULL, ch, options, allowed, &flag))
-		return flag;
-	return 0;
-}
-
-int umode_delete(char ch, long val)
-{
-	int i;
-	for (i = 0; i < UMODETABLESZ; i++)
-	{
-		if (Usermode_Table[i].flag == ch && Usermode_Table[i].mode == val)
-		{
-			UmodeDel(&Usermode_Table[i]);
-			return 1;
-		}
-	}
-	return -1;
 }
 
 /**

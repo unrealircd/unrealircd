@@ -39,7 +39,7 @@ char *regonlymsg_pre_usermsg(aClient *sptr, aClient *target, char *text, int not
                     
 DLLFUNC int MOD_INIT(regonlymsg)(ModuleInfo *modinfo)
 {
-	UmodeAdd(modinfo->handle, 'R', UMODE_GLOBAL, umode_allow_all, &UMODE_REGONLYMSG);
+	UmodeAdd(modinfo->handle, 'R', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_REGONLYMSG);
 	
 	HookAddPCharEx(modinfo->handle, HOOKTYPE_PRE_USERMSG, regonlymsg_pre_usermsg);
 	

@@ -52,7 +52,7 @@ DLLFUNC int MOD_TEST(servicebot)(ModuleInfo *modinfo)
 
 DLLFUNC int MOD_INIT(servicebot)(ModuleInfo *modinfo)
 {
-	UmodeAdd(modinfo->handle, 'S', UMODE_GLOBAL, umode_allow_none, &UMODE_SERVICEBOT);
+	UmodeAdd(modinfo->handle, 'S', UMODE_GLOBAL, 1, umode_allow_none, &UMODE_SERVICEBOT);
 	
 	HookAddEx(modinfo->handle, HOOKTYPE_CAN_KICK, servicebot_can_kick);
 	HookAddEx(modinfo->handle, HOOKTYPE_MODE_DEOP, servicebot_mode_deop);

@@ -48,7 +48,7 @@ DLLFUNC int MOD_TEST(bot)(ModuleInfo *modinfo)
 
 DLLFUNC int MOD_INIT(bot)(ModuleInfo *modinfo)
 {
-	UmodeAdd(modinfo->handle, 'B', UMODE_GLOBAL, NULL, &UMODE_BOT);
+	UmodeAdd(modinfo->handle, 'B', UMODE_GLOBAL, 0, NULL, &UMODE_BOT);
 	
 	HookAddEx(modinfo->handle, HOOKTYPE_WHOIS, bot_whois);
 	HookAddEx(modinfo->handle, HOOKTYPE_WHO_STATUS, bot_who_status);

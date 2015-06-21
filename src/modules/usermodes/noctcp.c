@@ -65,7 +65,7 @@ DLLFUNC int MOD_INIT(noctcp)(ModuleInfo *modinfo)
 {
 CmodeInfo req;
 
-	UmodeAdd(modinfo->handle, 'T', UMODE_GLOBAL, NULL, &UMODE_NOCTCP);
+	UmodeAdd(modinfo->handle, 'T', UMODE_GLOBAL, 0, NULL, &UMODE_NOCTCP);
 	
 	HookAddPCharEx(modinfo->handle, HOOKTYPE_PRE_USERMSG, noctcp_preusermsg);
 	
