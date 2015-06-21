@@ -62,7 +62,7 @@ DLLFUNC int MOD_UNLOAD(privacy)(int module_unload)
  */
 int privacy_see_channel_in_whois(aClient *sptr, aClient *target, aChannel *chptr)
 {
-	if (!IsMember(sptr, chptr))
+	if (IsPrivacy(target) && !IsMember(sptr, chptr))
 		return EX_DENY;
 	
 	return EX_ALLOW;
