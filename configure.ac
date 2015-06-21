@@ -788,6 +788,7 @@ AC_CONFIG_FILES([Makefile
 	src/modules/Makefile
 	src/modules/chanmodes/Makefile
 	src/modules/usermodes/Makefile
+	src/modules/snomasks/Makefile
 	src/modules/extbans/Makefile
 	unrealircd
 	extras/ircdcron/ircdchk

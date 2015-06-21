@@ -665,13 +665,10 @@ int size_string, ret;
 		    sptr->name, displayfile, target, fl->reason);
 		sendto_one(sptr, ":%s NOTICE %s :*** You have been blocked from sending files, reconnect to regain permission to send files",
 			me.name, sptr->name);
-
-		sendto_umode(UMODE_VICTIM,
-		    "%s tried to send forbidden file %s (%s) to %s (is blocked now)",
-		    sptr->name, displayfile, fl->reason, target);
-		sendto_server(NULL, 0, 0, ":%s SMO v :%s tried to send forbidden file %s (%s) to %s (is blocked now)",
-			me.name, sptr->name, displayfile, fl->reason, target);
 		sptr->flags |= FLAGS_DCCBLOCK;
+
+		RunHook5(HOOKTYPE_DCC_DENIED, sptr, target, realfile, displayfile, fl);
+
 		return 0; /* block */
 	}
 
@@ -751,13 +748,6 @@ int size_string;
 					"more information on using the dccallow system by typing '/DCCALLOW HELP'", from->name);
 			}
 	
-			/* if (SHOW_ALLDENIEDDCCS) */
-			if (0)
-			{
-				sendto_umode(UMODE_VICTIM,
-					"[DCCALLOW] %s tried to send forbidden file %s (%s) to %s",
-					from->name, displayfile, fl->reason, to->name);
-			}
 			return 0;
 		}
 	}

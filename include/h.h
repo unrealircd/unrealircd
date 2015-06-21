@@ -408,7 +408,6 @@ extern MODVAR long UMODE_HIDE;	     /* 0x8000	 Hide from Nukes */
 extern MODVAR long UMODE_NETADMIN;  /* 0x10000	 Network Admin */
 extern MODVAR long UMODE_COADMIN;   /* 0x80000	 Co Admin */
 extern MODVAR long UMODE_SECURE;    /*	0x800000	 User is a secure connect */
-extern MODVAR long UMODE_VICTIM;    /* 0x8000000	 Intentional Victim */
 extern MODVAR long UMODE_DEAF;      /* 0x10000000       Deaf */
 extern MODVAR long UMODE_HIDEOPER;  /* 0x20000000	 Hide oper mode */
 extern MODVAR long UMODE_SETHOST;   /* 0x40000000	 used sethost */

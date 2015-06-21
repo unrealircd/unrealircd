@@ -749,6 +749,7 @@ extern char *moddata_client_get(aClient *acptr, char *varname);
 #define HOOKTYPE_MODE_DEOP 84
 #define HOOKTYPE_PRE_KILL 85
 #define HOOKTYPE_SEE_CHANNEL_IN_WHOIS 86
+#define HOOKTYPE_DCC_DENIED 87
 
 /* Hook return values */
 #define HOOK_CONTINUE 0

@@ -164,7 +164,7 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
                 acptr->umodes &= ~(UMODE_OPER | UMODE_LOCOP | UMODE_SADMIN | UMODE_ADMIN | UMODE_COADMIN);
                 acptr->umodes &= ~(UMODE_NETADMIN);
-                acptr->umodes &= ~(UMODE_DEAF | UMODE_HIDEOPER | UMODE_VICTIM);
+                acptr->umodes &= ~(UMODE_DEAF | UMODE_HIDEOPER);
                 acptr->oflag = 0;
 		remove_oper_snomasks(acptr);
 		RunHook2(HOOKTYPE_LOCAL_OPER, acptr, 0);

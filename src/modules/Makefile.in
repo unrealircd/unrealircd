@@ -68,6 +68,7 @@ all: build
 build: $(MODULES)
 	cd chanmodes; $(MAKE) all
 	cd usermodes; $(MAKE) all
+	cd snomasks; $(MAKE) all
 	cd extbans; $(MAKE) all
 
 custommodule: $(MODULEFILE).c

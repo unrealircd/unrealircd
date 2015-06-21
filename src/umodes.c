@@ -64,7 +64,6 @@ long UMODE_HIDE = 0L;          /* Hide from Nukes */
 long UMODE_NETADMIN = 0L;      /* Network Admin */
 long UMODE_COADMIN = 0L;       /* Co Admin */
 long UMODE_SECURE = 0L;        /* User is a secure connect */
-long UMODE_VICTIM = 0L;        /* Intentional Victim */
 long UMODE_DEAF = 0L;          /* Deaf */
 long UMODE_HIDEOPER = 0L;      /* Hide oper mode */
 long UMODE_SETHOST = 0L;       /* Used sethost */
@@ -132,7 +131,6 @@ void	umode_init(void)
 	UmodeAdd(NULL, 'N', UMODE_GLOBAL, umode_allow_opers, &UMODE_NETADMIN);
 	UmodeAdd(NULL, 'C', UMODE_GLOBAL, umode_allow_opers, &UMODE_COADMIN);
 	UmodeAdd(NULL, 'z', UMODE_GLOBAL, NULL, &UMODE_SECURE);
-	UmodeAdd(NULL, 'v', UMODE_GLOBAL, umode_allow_opers, &UMODE_VICTIM);
 	UmodeAdd(NULL, 'd', UMODE_GLOBAL, NULL, &UMODE_DEAF);
 	UmodeAdd(NULL, 'H', UMODE_GLOBAL, umode_allow_opers, &UMODE_HIDEOPER);
 	UmodeAdd(NULL, 't', UMODE_GLOBAL, NULL, &UMODE_SETHOST);

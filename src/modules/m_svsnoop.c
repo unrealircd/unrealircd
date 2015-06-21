@@ -105,7 +105,7 @@ long oldumodes;
 					                   UMODE_SADMIN | UMODE_ADMIN |
 					                   UMODE_NETADMIN |
 					                   UMODE_DEAF | UMODE_HIDEOPER | UMODE_FAILOP |
-					                   UMODE_COADMIN | UMODE_VICTIM);
+					                   UMODE_COADMIN);
 					acptr->oflag = 0;
 					remove_oper_snomasks(acptr);
 					send_umode_out(acptr, acptr, oldumodes);

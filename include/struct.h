@@ -354,7 +354,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 /*
  * flags macros.
  */
-#define IsVictim(x)             ((x)->umodes & UMODE_VICTIM)
 #define IsDeaf(x)               ((x)->umodes & UMODE_DEAF)
 #define IsKillsF(x)		((x)->user->snomask & SNO_KILLS)
 #define IsClientF(x)		((x)->user->snomask & SNO_CLIENT)
