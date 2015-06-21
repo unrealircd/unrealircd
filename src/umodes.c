@@ -111,22 +111,22 @@ void	umode_init(void)
 	Snomask_highest = 0;
 
 	/* Set up modes */
-	UmodeAdd(NULL, 'i', UMODE_GLOBAL, 0, NULL, &UMODE_INVISIBLE);
+	UmodeAdd(NULL, 'i', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_INVISIBLE);
 	UmodeAdd(NULL, 'o', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_OPER);
-	UmodeAdd(NULL, 'w', UMODE_GLOBAL, 0, NULL, &UMODE_WALLOP);
+	UmodeAdd(NULL, 'w', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_WALLOP);
 	UmodeAdd(NULL, 'g', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_FAILOP);
-	UmodeAdd(NULL, 'r', UMODE_GLOBAL, 0, NULL, &UMODE_REGNICK);
+	UmodeAdd(NULL, 'r', UMODE_GLOBAL, 0, umode_allow_none, &UMODE_REGNICK);
 	UmodeAdd(NULL, 'a', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_SADMIN);
 	UmodeAdd(NULL, 'A', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_ADMIN);
-	UmodeAdd(NULL, 's', UMODE_LOCAL, 0, NULL, &UMODE_SERVNOTICE);
+	UmodeAdd(NULL, 's', UMODE_LOCAL, 0, umode_allow_all, &UMODE_SERVNOTICE);
 	UmodeAdd(NULL, 'O', UMODE_LOCAL, 1, umode_allow_opers, &UMODE_LOCOP);
-	UmodeAdd(NULL, 'x', UMODE_GLOBAL, 0, NULL, &UMODE_HIDE);
+	UmodeAdd(NULL, 'x', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_HIDE);
 	UmodeAdd(NULL, 'N', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_NETADMIN);
 	UmodeAdd(NULL, 'C', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_COADMIN);
-	UmodeAdd(NULL, 'z', UMODE_GLOBAL, 0, NULL, &UMODE_SECURE);
-	UmodeAdd(NULL, 'd', UMODE_GLOBAL, 0, NULL, &UMODE_DEAF);
+	UmodeAdd(NULL, 'z', UMODE_GLOBAL, 0, umode_allow_none, &UMODE_SECURE);
+	UmodeAdd(NULL, 'd', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_DEAF);
 	UmodeAdd(NULL, 'H', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_HIDEOPER);
-	UmodeAdd(NULL, 't', UMODE_GLOBAL, 0, NULL, &UMODE_SETHOST);
+	UmodeAdd(NULL, 't', UMODE_GLOBAL, 0, umode_allow_none, &UMODE_SETHOST);
 	UmodeAdd(NULL, 'I', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_HIDLE);
 	SnomaskAdd(NULL, 'k', 0, umode_allow_all, &SNO_KILLS);
 	SnomaskAdd(NULL, 'c', 1, umode_allow_opers, &SNO_CLIENT);
