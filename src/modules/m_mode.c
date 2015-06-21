@@ -916,19 +916,20 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		
 		  if (what == MODE_DEL)
 		  {
-		  	int ret = 0;
-		  	int strict_ret = EX_ALLOW;
+		  	int ret = EX_ALLOW;
 		  	char *badmode = NULL;
 		  	
 		  	for (h = Hooks[HOOKTYPE_MODE_DEOP]; h; h = h->next)
 		  	{
-		  		ret = (*(h->func.intfunc))(cptr, member->cptr, chptr, what, modechar, my_access, &badmode);
-		  		if (ret == EX_DENY)
-		  			strict_ret = ret;
-				else if (ret == EX_ALWAYS_DENY)
+		  		int n = (*(h->func.intfunc))(cptr, member->cptr, chptr, what, modechar, my_access, &badmode);
+		  		if (n == EX_DENY)
+		  			ret = n;
+				else if (n == EX_ALWAYS_DENY)
+				{
+					ret = n;
 					break;
+				}
 		  	}
-		  	ret = strict_ret; /* most strict one wins */
 		  	
 		  	if (ret == EX_ALWAYS_DENY)
 		  	{

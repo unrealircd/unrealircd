@@ -94,7 +94,7 @@ CMD_FUNC(m_kick)
 	Membership *lp;
 	Hook *h;
 	int i = 0;
-	int ret, strict_ret;
+	int ret;
 
 	if (parc < 3 || *parv[1] == '\0')
 	{
@@ -152,18 +152,19 @@ CMD_FUNC(m_kick)
 				who_flags = get_access(who, chptr);
 
 				badkick = NULL;
-				ret = 0;
-				strict_ret = EX_ALLOW;
+				ret = EX_ALLOW;
 				for (h = Hooks[HOOKTYPE_CAN_KICK]; h; h = h->next) {
-					ret = (*(h->func.intfunc))(sptr, who, chptr, comment, sptr_flags, who_flags, &badkick);
+					int n = (*(h->func.intfunc))(sptr, who, chptr, comment, sptr_flags, who_flags, &badkick);
 
-					if (ret == EX_DENY)
-						strict_ret = ret;
-					else if (ret == EX_ALWAYS_DENY)
+					if (n == EX_DENY)
+						ret = n;
+					else if (n == EX_ALWAYS_DENY)
+					{
+						ret = n;
 						break;
+					}
 				}
-				ret = strict_ret; /* most strict one wins */
-				
+
 				if (ret == EX_ALWAYS_DENY)
 				{
 					if (MyClient(sptr) && badkick)
