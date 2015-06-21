@@ -44,7 +44,7 @@ Source: "..\..\badwords.channel.conf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\badwords.message.conf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\badwords.quit.conf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\spamfilter.conf"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\modules.conf"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\modules.*.conf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\dccallow.conf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\Donation"; DestDir: "{app}"; DestName: "Donation.txt"; Flags: ignoreversion
 Source: "..\..\help.conf"; DestDir: "{app}"; Flags: ignoreversion

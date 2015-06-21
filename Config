@@ -21,6 +21,17 @@
 
 RUN_CONFIGURE () {
 ARG=" "
+
+if [ -z "$BINDIR" -o -z "$DATADIR" -o -z "$CONFDIR" -o -z "$MODULESDIR" -o -z "$LOGDIR" -o -z "$CACHEDIR" -o -z "$DOCDIR" -o -z "$TMPDIR" ]; then
+	echo "Sorry './Config -quick' cannot be used because your 'config.settings'"
+	echo "file either does not exist or is from an old UnrealIRCd version"
+	echo "(older than version 3.4-alpha4)."
+	echo ""
+	echo "Please run './Config' without -quick and answer all questions."
+	echo ""
+	exit
+fi
+
 # Do this even if we're not in advanced mode
 if [ "$SHOWLISTMODES" = "1" ] ; then
 	ARG="$ARG--with-showlistmodes "
@@ -59,8 +70,16 @@ fi
 if [ "$PREFIXAQ" != "1" ]; then
 ARG="$ARG--disable-prefixaq "
 fi
-ARG="$ARG--with-dpath=$DPATH "
-ARG="$ARG--with-spath=$SPATH "
+
+ARG="$ARG--with-bindir=$BINDIR "
+ARG="$ARG--with-datadir=$DATADIR "
+ARG="$ARG--with-confdir=$CONFDIR "
+ARG="$ARG--with-modulesdir=$MODULESDIR "
+ARG="$ARG--with-logdir=$LOGDIR "
+ARG="$ARG--with-cachedir=$CACHEDIR "
+ARG="$ARG--with-docdir=$DOCDIR "
+ARG="$ARG--with-tmpdir=$TMPDIR "
+
 ARG="$ARG--with-nick-history=$NICKNAMEHISTORYLENGTH "
 ARG="$ARG--with-sendq=$MAXSENDQLENGTH "
 ARG="$ARG--with-permissions=$DEFPERM "
@@ -75,7 +94,7 @@ echo $CONF
 $CONF || exit 1
 cd "$UNREALCWD"
 if [  "$CRYPTOIRCD" = "1" ] ; then
-if [ ! -f server.req.pem ]; then
+if [ ! -f $CONFDIR/ssl/server.cert.pem ]; then
 export OPENSSLPATH
 TEST=""
 while [ -z "$TEST" ] ; do
@@ -108,14 +127,14 @@ while [ -z "$TEST" ] ; do
 done
 if [ "$GENCERTIFICATE" = 1 ]; then
 	make pem
-	cat .SICI
-	read cc
+	echo Certificate created succesfully.
+	sleep 1
 else
-echo "Ok, not generating SSL certificate. Make sure that the certificate and key"
-echo "are installed as server.crt.pem and server.key.pem prior to starting the IRCd."
+	echo "Ok, not generating SSL certificate. Make sure that the certificate and key"
+	echo "are installed in conf/ssl/server.crt.pem and conf/ssl/server.key.pem prior to starting the IRCd."
 fi
 else
-echo "SSL certificate already existing, no need to regenerate"
+echo "SSL certificate exists in $CONFDIR/ssl/server.cert.pem, no need to regenerate."
 fi
 fi
 }
@@ -330,8 +349,7 @@ done
 c=""
 n=""
 UNREALCWD="`pwd`"
-DPATH="`pwd`"
-SPATH="`pwd`/src/ircd"
+BASEPATH="$HOME/unrealircd"
 DEFPERM="0600"
 CRYPTOIRCD="1"
 SSLDIR=""
@@ -416,45 +434,37 @@ clear
         read cc
         clear
     fi
-    if [ -f ".RELEASE.NOTES" -a -z "$NOINTRO" ] ; then
-        more .RELEASE.NOTES
+    if [ -f "doc/RELEASE-NOTES" -a -z "$NOINTRO" ] ; then
+        more doc/RELEASE-NOTES
         echo $n "[Enter to continue]"
         read cc
         clear
     fi
 
-TEST="$DPATH"
+echo "We will now ask you a number of questions."
+echo "You can just press ENTER to accept the defaults!"
+
+TEST="$BASEPATH"
 echo ""
-echo "What directory are all the server configuration files in?"
+echo "In what directory do you want to install UnrealIRCd?"
+echo "(Note: in Unreal3.4.x you should always install somewhere)"
 echo $n "[$TEST] -> $c"
 read cc
 if [ -z "$cc" ] ; then
-   DPATH=$TEST
+   BASEPATH=$TEST
 else
-   DPATH=`eval echo $cc` # modified
+   BASEPATH=`eval echo $cc` # modified
 fi
 
-TEST=""
-SAVEME="$SPATH"
-while [ -z "$TEST" ] ; do
-    TEST="$SAVEME"
-    echo ""
-    echo "What is the path to the ircd binary including the name of the binary?"
-    echo $n "[$TEST] -> $c"
-        read cc
-    if [ -z "$cc" ] ; then
-        SPATH=$TEST
-    else 
-        SPATH=`eval echo $cc` # modified
-    fi
-    if [ "$SPATH" = "$DPATH" ]; then
-    	echo ""
-    	echo "You need to specify the path to the BINARY, not to a directory."
-	echo "The answer to this question can never be identical to the previous one."
-    	echo "HINT: perhaps you want $DPATH/ircd ?"
-    	TEST=""
-    fi
-done
+# TODO: For -advanced we could prompt the user.
+BINDIR="$BASEPATH/bin"
+DATADIR="$BASEPATH/data"
+CONFDIR="$BASEPATH/conf"
+MODULESDIR="$BASEPATH/modules"
+LOGDIR="$BASEPATH/logs"
+CACHEDIR="$BASEPATH/cache"
+DOCDIR="$BASEPATH/doc"
+TMPDIR="$BASEPATH/tmp"
 
 TEST=""
 while [ -z "$TEST" ] ; do
@@ -819,8 +829,14 @@ fi
 rm -f config.settings
 cat > config.settings << __EOF__
 #
-DPATH="$DPATH"
-SPATH="$SPATH"
+BINDIR="$BINDIR"
+DATADIR="$DATADIR"
+CONFDIR="$CONFDIR"
+MODULESDIR="$MODULESDIR"
+LOGDIR="$LOGDIR"
+CACHEDIR="$CACHEDIR"
+DOCDIR="$DOCDIR"
+TMPDIR="$TMPDIR"
 INET6="$INET6"
 PREFIXAQ="$PREFIXAQ"
 MAXSENDQLENGTH="$MAXSENDQLENGTH"

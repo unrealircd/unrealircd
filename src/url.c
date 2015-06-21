@@ -145,7 +145,7 @@ char *download_file(const char *url, char **error)
 	CURLcode res;
 	char *file = url_getfilename(url);
 	char *filename = unreal_getfilename(file);
-	char *tmp = unreal_mktemp("tmp", filename ? filename : "download.conf");
+	char *tmp = unreal_mktemp(TMPDIR, filename ? filename : "download.conf");
 	FILE *fd;
 
 
@@ -368,7 +368,7 @@ void download_file_async(const char *url, time_t cachetime, vFP callback, void *
 	{
 		char *file = url_getfilename(url);
 		char *filename = unreal_getfilename(file);
-        	char *tmp = unreal_mktemp("tmp", filename ? filename : "download.conf");
+        	char *tmp = unreal_mktemp(TMPDIR, filename ? filename : "download.conf");
 		FileHandle *handle = MyMallocEx(sizeof(FileHandle));
 		handle->fd = fopen(tmp, "wb");
 		if (!handle->fd)

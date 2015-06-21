@@ -1,11 +1,12 @@
 #!/bin/sh
 
-PID_FILE="@IRCDDIR@/ircd.pid"
-PID_BACKUP="@IRCDDIR@/ircd.pid.bak"
-if [ ! -f @BINDIR@ ]; then
-	echo "ERROR: Could not find the IRCd binary (@BINDIR@)"
-	echo "This usually means you did not answer the question correctly"
-	echo "during './Config', or you forgot to run 'make install'."
+PID_FILE="@PIDFILE@"
+PID_BACKUP="@PIDFILE@.bak"
+if [ ! -f @BINDIR@/unrealircd ]; then
+	echo "ERROR: Could not find the IRCd binary (@BINDIR@/unrealircd)"
+	echo "This could mean two things:"
+	echo "1) You forgot to run 'make install' after running 'make'"
+	echo "2) You answered a ./Config question incorrectly"
 	exit
 fi
 if [ "$1" = "start" ] ; then
@@ -13,16 +14,17 @@ if [ "$1" = "start" ] ; then
 	if [ -r $PID_FILE ] ; then
 		mv -f $PID_FILE $PID_BACKUP
 	fi
-	@BINDIR@
+	@BINDIR@/unrealircd
 	sleep 1
 	if [ ! -r $PID_FILE ] ; then
 		echo "Possible error encountered (IRCd seemingly not started)"	
 		echo "====================================================="
-		echo "Check above for possible errors, and this output of  "
-		echo "ircd.log. If you cannot solve the problem, read"
-		echo "Unreal.nfo on where to get support"
+		echo "Check above for possible errors and the output below of @LOGDIR@/ircd.log"
+		echo "If you don't understand the problem, then have a look at our:"
+		echo "* FAQ: https://www.unrealircd.org/faq (Frequently Asked Questions)"
+		echo "* Documentation: https://www.unrealircd.org/docs/"
 		echo "====================================================="
-		tail -n 5 @IRCDDIR@/ircd.log
+		tail -n 5 @LOGDIR@/ircd.log
 		if [ -r $PID_BACKUP ] ; then
 			mv -f $PID_BACKUP $PID_FILE
 		fi
@@ -33,7 +35,13 @@ elif [ "$1" = "stop" ] ; then
 		echo "ERROR: UnrealIRCd is not running"
 		exit 1
 	fi
-	kill -9 `cat $PID_FILE`
+	kill -15 `cat $PID_FILE`
+	if [ "$?" != 0 ]; then
+		echo "ERROR: UnrealIRCd is not running"
+		exit 1
+	fi
+	sleep 1
+	kill -9 `cat $PID_FILE` 1>/dev/null 2>&1
 elif [ "$1" = "rehash" ] ; then
 	echo "Rehashing UnrealIRCd"
 	if [ ! -r $PID_FILE ] ; then
@@ -41,36 +49,36 @@ elif [ "$1" = "rehash" ] ; then
 		exit 1
 	fi
 	kill -1 `cat $PID_FILE`
-elif [ "$1" = "restart" ] ; then
-	echo "Restarting UnrealIRCd"
-	if [ ! -r $PID_FILE ] ; then
+	if [ "$?" != 0 ]; then
 		echo "ERROR: UnrealIRCd is not running"
 		exit 1
 	fi
-	kill -2 `cat $PID_FILE`
+elif [ "$1" = "restart" ] ; then
+	echo "Restarting UnrealIRCd"
+	if [ ! -r $PID_FILE ] ; then
+		echo "WARNING: UnrealIRCd was not running"
+	else
+		kill -15 `cat $PID_FILE`
+		if [ "$?" != 0 ]; then
+			echo "WARNING: UnrealIRCd was not running"
+		else
+			sleep 1
+			kill -9 `cat $PID_FILE` 1>/dev/null 2>&1
+		fi
+	fi
+	$0 start
 elif [ "$1" = "mkpasswd" ] ; then
-	@BINDIR@ -P $2 $3
+	@BINDIR@/unrealircd -P $2 $3
 elif [ "$1" = "version" ] ; then
-	@BINDIR@ -v
+	@BINDIR@/unrealircd -v
 elif [ "$1" = "gencloak" ] ; then
-	@BINDIR@ -k
+	@BINDIR@/unrealircd -k
 elif [ "$1" = "upgrade-conf" ] ; then
-	@BINDIR@ -U
+	@BINDIR@/unrealircd -U
 elif [ "$1" = "backtrace" ] ; then
 	cd @IRCDDIR@
 
-	if [ -d "modules" ]; then
-		modpath="modules"
-	elif [ -d "src/modules" ]; then
-		modpath="src/modules"
-	else
-		echo 'Enter the path to your modules directory relative to your root installed directory (eg: "mods")'
-		read modpath
-		if [ ! -d "$modpath" ]; then
-			echo "Not a directory"
-			exit
-		fi
-	fi
+	modpath="@MODULESDIR@"
 
 	# Find the corefile
 	echo "Core files available:"
@@ -111,7 +119,7 @@ elif [ "$1" = "backtrace" ] ; then
 
 	# The tmp/*.so files are often already deleted. Here we have some
 	# (ugly) scripting to recreate the tmp/*.so links to the modules *.so files...
-	echo 'info sharedlibrary'|gdb @BINDIR@ $corefile 2>/dev/null|\
+	echo 'info sharedlibrary'|gdb @BINDIR@/unrealircd $corefile 2>/dev/null|\
 	grep No|grep tmp/|awk '{ print $2 }'|\
 	awk -F '.' "{ system(\"ln -s ../$modpath/\" \$2 \".so \" \$0) }"
 	
@@ -130,7 +138,7 @@ bt 3 full
 quit
 __EOF__
 
-	gdb -batch -x gdb.commands @BINDIR@ $corefile
+	gdb -batch -x gdb.commands @BINDIR@/unrealircd $corefile
 	rm -f gdb.commands
 	echo "GCC: `gcc -v 2>&1|tail -n 1`"
 	echo "UNAME: `uname -a`"

@@ -94,6 +94,7 @@ CMD_FUNC(m_kick)
 	Membership *lp;
 	Hook *h;
 	int i = 0;
+	int ret;
 
 	if (parc < 3 || *parv[1] == '\0')
 	{
@@ -147,35 +148,33 @@ CMD_FUNC(m_kick)
 				 * a remote kick should always be allowed (pass through). -- Syzop
 				 */
 
-				/* applies to everyone (well except remote/ulines :p) */
-				if (IsKix(who) && !IsULine(sptr) && MyClient(sptr))
-				{
-					if (!IsNetAdmin(sptr))
-					{
-						char errbuf[NICKLEN+10];
-						ircsnprintf(errbuf, sizeof(errbuf), "%s is +q", who->name);
-						sendto_one(sptr, err_str(ERR_CANNOTDOCOMMAND), 
-							   me.name, sptr->name, "KICK", 
-							   errbuf);
-						sendnotice(who,
-						    "*** q: %s tried to kick you from channel %s (%s)",
-						    parv[0],
-						    chptr->chname, comment);
-						goto deny;
-					}
-				}
-
 				/* Store "who" access flags */
 				who_flags = get_access(who, chptr);
 
 				badkick = NULL;
+				ret = EX_ALLOW;
 				for (h = Hooks[HOOKTYPE_CAN_KICK]; h; h = h->next) {
-					badkick = (*(h->func.pcharfunc))(sptr, who, chptr, comment, sptr_flags, who_flags);
-					if (badkick)
+					int n = (*(h->func.intfunc))(sptr, who, chptr, comment, sptr_flags, who_flags, &badkick);
+
+					if (n == EX_DENY)
+						ret = n;
+					else if (n == EX_ALWAYS_DENY)
+					{
+						ret = n;
 						break;
+					}
+				}
+
+				if (ret == EX_ALWAYS_DENY)
+				{
+					if (MyClient(sptr) && badkick)
+						sendto_one(sptr, "%s", badkick); /* send error, if any */
+
+					if (MyClient(sptr))
+						continue; /* reject the kick (note: we never block remote kicks) */
 				}
 				
-				if (badkick)
+				if (ret == EX_DENY)
 				{
 					/* If set it means 'not allowed to kick'.. now check if (s)he can override that.. */
 					if (op_can_override(sptr))
@@ -190,12 +189,10 @@ CMD_FUNC(m_kick)
 						goto attack; /* all other checks don't matter anymore (and could cause double msgs) */
 					} else {
 						/* Not an oper overriding */
-						if (MyClient(sptr))
-						{
-							/* Send the error message prepared by the can_kick hook and deny the kick */
-							sendto_one(sptr, "%s", badkick);
-							continue;
-						}
+						if (MyClient(sptr) && badkick)
+							sendto_one(sptr, "%s", badkick); /* send error, if any */
+
+						continue; /* reject the kick */
 					}
 				}
 
@@ -224,7 +221,7 @@ CMD_FUNC(m_kick)
 
 				}				
 				/* victim is +a or +q, we are not +q */
-				if ((who_flags & (CHFL_CHANOWNER|CHFL_CHANPROT) || IsServices(who))
+				if ((who_flags & (CHFL_CHANOWNER|CHFL_CHANPROT))
 					 && !(sptr_flags & CHFL_CHANOWNER)) {
 					if (sptr == who)
 						goto attack; /* kicking self == ok */

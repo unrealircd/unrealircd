@@ -48,7 +48,7 @@ DLLFUNC int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 #define MSG_SVSO 	"SVSO"	
 
 #define STAR1 OFLAG_SADMIN|OFLAG_ADMIN|OFLAG_NETADMIN|OFLAG_COADMIN
-#define STAR2 OFLAG_ZLINE|OFLAG_HIDE|OFLAG_WHOIS
+#define STAR2 OFLAG_ZLINE|OFLAG_HIDE
 static int oper_access[] = {
         ~(STAR1 | STAR2), '*',
         OFLAG_LOCAL, 'o',
@@ -56,7 +56,6 @@ static int oper_access[] = {
         OFLAG_REHASH, 'r',
         OFLAG_DIE, 'D',
         OFLAG_RESTART, 'R',
-        OFLAG_HELPOP, 'h',
         OFLAG_GLOBOP, 'g',
         OFLAG_WALLOP, 'w',
         OFLAG_LOCOP, 'l',
@@ -73,12 +72,10 @@ static int oper_access[] = {
         OFLAG_NETADMIN, 'N',
         OFLAG_COADMIN, 'C',
         OFLAG_ZLINE, 'z',
-        OFLAG_WHOIS, 'W',
         OFLAG_HIDE, 'H',
 	OFLAG_TKL, 't',
 	OFLAG_GZL, 'Z',
 	OFLAG_OVERRIDE, 'v',
-	OFLAG_UMODEQ, 'q',
 	OFLAG_DCCDENY, 'd',
 	OFLAG_ADDLINE, 'X',
         OFLAG_TSCTL, 'T',
@@ -165,13 +162,9 @@ int m_svso(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		if (!list_empty(&acptr->special_node))
 			list_del(&acptr->special_node);
 
-                acptr->umodes &=
-                    ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP |UMODE_SERVICES |
-                    UMODE_SADMIN | UMODE_ADMIN | UMODE_COADMIN);
-                acptr->umodes &=
-                    ~(UMODE_NETADMIN | UMODE_WHOIS);
-                acptr->umodes &=
-                    ~(UMODE_KIX | UMODE_DEAF | UMODE_HIDEOPER | UMODE_VICTIM);
+                acptr->umodes &= ~(UMODE_OPER | UMODE_LOCOP | UMODE_SADMIN | UMODE_ADMIN | UMODE_COADMIN);
+                acptr->umodes &= ~(UMODE_NETADMIN);
+                acptr->umodes &= ~(UMODE_DEAF | UMODE_HIDEOPER | UMODE_VICTIM);
                 acptr->oflag = 0;
 		remove_oper_snomasks(acptr);
 		RunHook2(HOOKTYPE_LOCAL_OPER, acptr, 0);

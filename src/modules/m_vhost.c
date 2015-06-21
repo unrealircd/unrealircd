@@ -82,7 +82,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	char *user, *pwd, host[NICKLEN+USERLEN+HOSTLEN+6], host2[NICKLEN+USERLEN+HOSTLEN+6];
 	int	len, length;
 	int 	i;
-	if (parc < 3)
+	if (parc < 2)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
 		    me.name, parv[0], "VHOST");
@@ -93,7 +93,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		return 0;
 
 	user = parv[1];
-	pwd = parv[2];
+	pwd = (parc >= 2) ? parv[2] : "";
 	if (strlen(user) > HOSTLEN)
 		*(user + HOSTLEN) = '\0';
 

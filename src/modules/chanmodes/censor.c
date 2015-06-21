@@ -51,9 +51,6 @@ DLLFUNC int censor_config_run(ConfigFile *, ConfigEntry *, int);
 ModuleInfo *ModInfo = NULL;
 
 ConfigItem_badword *conf_badword_channel = NULL;
-ConfigItem_badword *conf_badword_quit = NULL;
-
-static ConfigItem_badword *copy_badword_struct(ConfigItem_badword *ca, int regex, int regflags);
 
 
 DLLFUNC int MOD_TEST(censor)(ModuleInfo *modinfo)
@@ -104,16 +101,6 @@ ConfigItem_badword *badword, *next;
 		DelListItem(badword, conf_badword_channel);
 		MyFree(badword);
 	}
-	for (badword = conf_badword_quit; badword; badword = (ConfigItem_badword *) next)
-	{
-		next = badword->next;
-		ircfree(badword->word);
-		if (badword->replace)
-			ircfree(badword->replace);
-		regfree(&badword->expr);
-		DelListItem(badword, conf_badword_quit);
-		MyFree(badword);
-	}
 	return MOD_SUCCESS;
 }
 
@@ -141,6 +128,15 @@ DLLFUNC int censor_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 				ce->ce_fileptr->cf_filename, ce->ce_varlinenum); -- can't do that.. */
 		return 0; /* unhandled */
 	}
+	
+	if (!strcmp(ce->ce_vardata, "quit"))
+	{
+		config_error("%s:%i: badword quit has been removed. We just use the bad words from "
+		             "badword channel { } instead.",
+		             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+		return 0; /* pretend unhandled.. ok not just pretend.. ;) */
+	}
+
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (config_is_blankorempty(cep, "badword"))
@@ -243,8 +239,7 @@ DLLFUNC int censor_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	if (!ce || !ce->ce_varname || strcmp(ce->ce_varname, "badword"))
 		return 0; /* not interested */
 
-	if (strcmp(ce->ce_vardata, "channel") && 
-	         strcmp(ce->ce_vardata, "quit") && strcmp(ce->ce_vardata, "all"))
+	if (strcmp(ce->ce_vardata, "channel") && strcmp(ce->ce_vardata, "all"))
 	        return 0; /* not for us */
 
 	ca = MyMallocEx(sizeof(ConfigItem_badword));
@@ -311,31 +306,13 @@ DLLFUNC int censor_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	}
 	if (!strcmp(ce->ce_vardata, "channel"))
 		AddListItem(ca, conf_badword_channel);
-	else if (!strcmp(ce->ce_vardata, "quit"))
-		AddListItem(ca, conf_badword_quit);
 	else if (!strcmp(ce->ce_vardata, "all"))
 	{
 		AddListItem(ca, conf_badword_channel);
-		AddListItem(copy_badword_struct(ca,regex,regflags), conf_badword_quit);
 		return 0; /* pretend we didn't see it, so other modules can handle 'all' as well */
 	}
 
 	return 1;
-}
-
-static ConfigItem_badword *copy_badword_struct(ConfigItem_badword *ca, int regex, int regflags)
-{
-	ConfigItem_badword *x = MyMalloc(sizeof(ConfigItem_badword));
-	memcpy(x, ca, sizeof(ConfigItem_badword));
-	x->word = strdup(ca->word);
-	if (ca->replace)
-		x->replace = strdup(ca->replace);
-	if (regex) 
-	{
-		memset(&x->expr, 0, sizeof(regex_t));
-		regcomp(&x->expr, x->word, regflags);
-	}
-	return x;
 }
 
 static inline int fast_badword_match(ConfigItem_badword *badword, char *line)
@@ -560,12 +537,6 @@ char *stripbadwords_channel(char *str, int *blocked)
 	return stripbadwords(str, conf_badword_channel, blocked);
 }
 
-char *stripbadwords_quit(char *str, int *blocked)
-{
-	return stripbadwords(str, conf_badword_quit, blocked);
-}
-
-
 char *censor_pre_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
 {
 int blocked;
@@ -613,7 +584,7 @@ char *censor_pre_local_quit(aClient *sptr, char *text)
 int blocked = 0;
 
 	if (IsAnyChannelCensored(sptr))
-		text = stripbadwords_quit(text, &blocked);
+		text = stripbadwords_channel(text, &blocked);
 	return blocked ? NULL : text;
 }
 
@@ -625,14 +596,6 @@ int stats_badwords(aClient *sptr, char *para)
 	for (words = conf_badword_channel; words; words = (ConfigItem_badword *) words->next)
 	{
 		sendto_one(sptr, ":%s %i %s :c %c %s%s%s %s",
-		           me.name, RPL_TEXT, sptr->name, words->type & BADW_TYPE_REGEX ? 'R' : 'F',
-		           (words->type & BADW_TYPE_FAST_L) ? "*" : "", words->word,
-		           (words->type & BADW_TYPE_FAST_R) ? "*" : "",
-		           words->action == BADWORD_REPLACE ? (words->replace ? words->replace : "<censored>") : "");
-	}
-	for (words = conf_badword_quit; words; words = (ConfigItem_badword *) words->next)
-	{
-		sendto_one(sptr, ":%s %i %s :q %c %s%s%s %s",
 		           me.name, RPL_TEXT, sptr->name, words->type & BADW_TYPE_REGEX ? 'R' : 'F',
 		           (words->type & BADW_TYPE_FAST_L) ? "*" : "", words->word,
 		           (words->type & BADW_TYPE_FAST_R) ? "*" : "",

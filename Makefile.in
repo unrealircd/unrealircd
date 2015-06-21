@@ -151,19 +151,10 @@ build: Makefile
 		echo "Building $$i";\
 		( cd $$i; ${MAKE} ${MAKEARGS} build; ) \
 	done
-	@echo ' __________________________________________________ '
-	@echo '| Compile is now complete.                         |'
-	@echo '| You should now read the documentation and learn  |'
-	@echo '| how to configure your IRCd.                      |'
-	@echo '|                                                  |'
-	@echo '| If you really like UnrealIRCd, and would like to |'
-	@echo '| make a donation, please read the Donation file in|'
-	@echo '| this archive. :)                                 |'
-	@echo '|                                                  |'
-	@echo '| Thanks for using Unreal IRCd! If you are in need |' 
-	@echo '| for any kind of help regarding the IRCd please   |'
-	@echo '| read the Unreal.nfo file.                        |' 
-	@echo '|__________________________________________________|'
+	@echo ''
+	@echo '* UnrealIRCd compiled succesfully'
+	@echo '* YOU ARE NOT DONE YET! Run "make install" to install UnrealIRCd !'
+	@echo ''
 
 clean:
 	$(RM) -f *~ \#* core *.orig include/*.orig
@@ -181,28 +172,9 @@ cleandir: clean
 distclean: cleandir
 	rm -rf extras/*.bak extras/regexp extras/*.tar extras/c-ares 
 	rm -rf extras/c-ares-* extras/tre-*
-	rm -rf config.log config.settings *.pem ircd.* unreal
+	rm -rf config.log config.settings *.pem ircd.* unrealircd
 	rm -rf Makefile config.status
 	
-makex:
-	chmod +x Config ircd ircdcron/ircdchk
-
-fromdos: cleandir
-	$(FROMDOS) -dv *
-	$(FROMDOS) -dv src/*
-	$(FROMDOS) -dv include/*
-	$(FROMDOS) -dv doc/*
-	$(FROMDOS) -dv crypt/*
-	$(FROMDOS) -dv ircdcron/*
-makedist: makex
-	echo "Stamping.."
-
-stamp: makedist
-	echo "/* Auto created release stamping */" > include/stamp.h
-	echo "#define RELEASEID2 \"`date +%s`\"" >> include/stamp.h
-	echo "#define RELEASESTUFF \"`hostname`\"" >> include/stamp.h
-	echo "" >> include/stamp.h
-
 depend:
 	@+for i in $(SUBDIRS); do \
 		echo "Making dependencies in $$i";\
@@ -210,30 +182,63 @@ depend:
 	done
 
 install: all
-	$(INSTALL) -m 0700 -d $(IRCDDIR)
-	$(INSTALL) -m 0700 src/ircd $(BINDIR) 2>/dev/null || { $(INSTALL) -m 0700 -d "$$(dirname '$(BINDIR)')"; $(INSTALL) -m 0700 src/ircd $(BINDIR); }
-	$(INSTALL) -m 0700 -d $(IRCDDIR)/doc
-	$(INSTALL) -m 0600 doc/Authors doc/example.conf doc/coding-guidelines doc/tao.of.irc doc/unreal32docs.html $(IRCDDIR)/doc
-	$(INSTALL) -m 0700 -d $(IRCDDIR)/aliases
-	$(INSTALL) -m 0600 aliases/*.conf $(IRCDDIR)/aliases
-	$(INSTALL) -m 0600 doc/example.conf $(IRCDDIR)/unrealircd.conf
-	$(INSTALL) -m 0600 spamfilter.conf dccallow.conf modules.conf $(IRCDDIR)
-	$(INSTALL) -m 0600 badwords.*.conf help.conf LICENSE Donation $(IRCDDIR)
-	$(INSTALL) -m 0700 unreal $(IRCDDIR)
-	$(INSTALL) -m 0700 -d $(IRCDDIR)/modules
-	$(INSTALL) -m 0700 src/modules/*.so $(IRCDDIR)/modules
-	$(INSTALL) -m 0700 -d $(IRCDDIR)/ircdcron
-	$(INSTALL) -m 0600 ircdcron/ircd.cron $(IRCDDIR)/ircdcron
-	$(INSTALL) -m 0700 ircdcron/ircdchk $(IRCDDIR)/ircdcron
-	-@if [ ! -f "$(IRCDDIR)/curl-ca-bundle.crt" ] ; then \
-		$(INSTALL) -m 0700 curl-ca-bundle.crt $(IRCDDIR) ; \
+	$(INSTALL) -m 0700 -d @BINDIR@
+	$(INSTALL) -m 0700 src/ircd @BINDIR@/unrealircd
+	$(INSTALL) -m 0700 -d @DOCDIR@
+	$(INSTALL) -m 0600 doc/Authors doc/coding-guidelines doc/tao.of.irc @DOCDIR@
+	$(INSTALL) -m 0700 -d @CONFDIR@
+	$(INSTALL) -m 0600 doc/conf/*.conf @CONFDIR@
+	$(INSTALL) -m 0700 -d @CONFDIR@/aliases
+	$(INSTALL) -m 0600 doc/conf/aliases/*.conf @CONFDIR@/aliases
+	$(INSTALL) -m 0700 -d @CONFDIR@/help
+	$(INSTALL) -m 0600 doc/conf/help/*.conf @CONFDIR@/help
+	$(INSTALL) -m 0700 -d @CONFDIR@/examples
+	$(INSTALL) -m 0600 doc/conf/examples/*.conf @CONFDIR@/examples
+	$(INSTALL) -m 0700 -d @CONFDIR@/ssl
+	$(INSTALL) -m 0600 doc/conf/ssl/curl-ca-bundle.crt @CONFDIR@/ssl
+	$(INSTALL) -m 0700 unrealircd @SCRIPTDIR@
+	$(INSTALL) -m 0700 -d @MODULESDIR@
+	$(INSTALL) -m 0700 src/modules/*.so @MODULESDIR@
+	$(INSTALL) -m 0700 -d @MODULESDIR@/usermodes
+	$(INSTALL) -m 0700 src/modules/usermodes/*.so @MODULESDIR@/usermodes
+	$(INSTALL) -m 0700 -d @MODULESDIR@/chanmodes
+	$(INSTALL) -m 0700 src/modules/chanmodes/*.so @MODULESDIR@/chanmodes
+	$(INSTALL) -m 0700 -d @MODULESDIR@/extbans
+	$(INSTALL) -m 0700 src/modules/extbans/*.so @MODULESDIR@/extbans
+	$(INSTALL) -m 0700 -d @TMPDIR@
+	$(INSTALL) -m 0700 -d @CACHEDIR@
+	$(INSTALL) -m 0700 -d @DATADIR@
+	$(INSTALL) -m 0700 -d @LOGDIR@
+	# TODO: ircdcron.. where?
+	-@if [ ! -f "@CONFDIR@/ssl/server.cert.pem" ] ; then \
+		$(INSTALL) -m 0600 server.req.pem @CONFDIR@/ssl ; \
+		$(INSTALL) -m 0600 server.key.pem @CONFDIR@/ssl ; \
+		$(INSTALL) -m 0600 server.cert.pem @CONFDIR@/ssl ; \
 	fi
-	-@if [ server.cert.pem -nt "$(IRCDDIR)/server.cert.pem" ] ; then \
-		$(INSTALL) -m 0600 server.req.pem $(IRCDDIR) ; \
-		$(INSTALL) -m 0600 server.key.pem $(IRCDDIR) ; \
-		$(INSTALL) -m 0600 server.cert.pem $(IRCDDIR) ; \
+	@echo ''
+	@echo '* UnrealIRCd is now installed.'
+	
+	-@if [ "@SCRIPTDIR@/bin" = "@BINDIR@" ] ; then \
+		echo '* Leave this directory and run "cd @SCRIPTDIR@" now' ; \
+	fi
+	@echo '* Directory layout:'
+	-@if [ "@SCRIPTDIR@/bin" = "@BINDIR@" ] ; then \
+		echo ' * Base directory: @SCRIPTDIR@' ; \
+	fi
+	@echo '  * Configuration files: @CONFDIR@'
+	@echo '  * Log files: @LOGDIR@'
+	@echo '  * Modules: @MODULESDIR@'
+	@echo '* To start/stop UnrealIRCd run: @SCRIPTDIR@/unrealircd"'
+	@echo ''
+	@echo '* Consult the documentation online at:'
+	@echo '  * https://www.unrealircd.org/docs/UnrealIRCd_3.4.x_documentation'
+	@echo '  * https://www.unrealircd.org/docs/FAQ'
+	@echo ''
+	-@if [ "@SCRIPTDIR@/bin" = "@BINDIR@" ] ; then \
+		echo 'Again, be sure to change to the @SCRIPTDIR@ directory!' ; \
 	fi
 
+### TODO: all the stuff below ;) ###
 pem:	src/ssl.cnf
 	@echo "Generating certificate request .. "
 	$(OPENSSLPATH) req -new \

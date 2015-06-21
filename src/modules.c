@@ -190,13 +190,13 @@ void DeleteTempModules(void)
 {
 	char tempbuf[PATH_MAX+1];
 #ifndef _WIN32
-	DIR *fd = opendir("tmp");
+	DIR *fd = opendir(TMPDIR);
 	struct dirent *dir;
 
 	if (!fd) /* Ouch.. this is NOT good!! */
 	{
-		config_error("Unable to open 'tmp' directory: %s, please create one with the appropriate permissions",
-			strerror(errno));
+		config_error("Unable to open temp directory %s: %s, please create one with the appropriate permissions",
+			TMPDIR, strerror(errno));
 		if (!loop.ircd_booted)
 			exit(7);
 		return; 
@@ -206,18 +206,22 @@ void DeleteTempModules(void)
 	{
 		if (!strcmp(dir->d_name, ".") || !strcmp(dir->d_name, ".."))
 			continue;
-		ircsnprintf(tempbuf, sizeof(tempbuf), "tmp/%s", dir->d_name);
+		ircsnprintf(tempbuf, sizeof(tempbuf), "%s/%s", TMPDIR, dir->d_name);
 		remove(tempbuf);
 	}
 	closedir(fd);
 #else
 	WIN32_FIND_DATA hData;
-	HANDLE hFile = FindFirstFile("tmp/*", &hData);
+	HANDLE hFile;
+	
+	snprintf(tempbuf, sizeof(tempbuf), "%s/*", TMPDIR);
+	
+	hFile = FindFirstFile(tempbuf, &hData);
 	if (hFile != INVALID_HANDLE_VALUE)
 	{
 		if (strcmp(hData.cFileName, ".") || strcmp(hData.cFileName, ".."))
 		{
-			ircsnprintf(tempbuf, sizeof(tempbuf), "tmp/%s", hData.cFileName);
+			ircsnprintf(tempbuf, sizeof(tempbuf), "%s/%s", TMPDIR, hData.cFileName);
 			remove(tempbuf);
 		}
 	}
@@ -225,7 +229,7 @@ void DeleteTempModules(void)
 	{
 		if (!strcmp(hData.cFileName, ".") || !strcmp(hData.cFileName, ".."))
 			continue;
-		ircsnprintf(tempbuf, sizeof(tempbuf), "tmp/%s", hData.cFileName);
+		ircsnprintf(tempbuf, sizeof(tempbuf), "%s/%s", TMPDIR, hData.cFileName);
 		remove(tempbuf);
 	}
 	FindClose(hFile);
@@ -320,49 +324,33 @@ char  *Module_Create(char *path_)
 	char    *Mod_Version;
 	unsigned int *compiler_version;
 	static char 	errorbuf[1024];
-	char		pathbuf[1024];
-	char 		*path, *tmppath;
+	char		path[1024];
+	char 		*tmppath;
 	ModuleHeader    *mod_header = NULL;
 	int		ret = 0;
 	Module          *mod = NULL, **Mod_Handle = NULL;
 	char *expectedmodversion = our_mod_version;
 	unsigned int expectedcompilerversion = our_compiler_version;
 	long modsys_ver = 0;
-	Debug((DEBUG_DEBUG, "Attempting to load module from %s",
-	       path_));
-	path = path_;
+	Debug((DEBUG_DEBUG, "Attempting to load module from %s", path_));
 
-	if (!strstr(path, MODULE_SUFFIX))
+	/* Prefix the module path with MODULESDIR, unless it's an absolute path
+	 * (we check for "/", "\" and things like "C:" to detect absolute paths).
+_	 */
+	if ((*path_ != '/') && (*path_ != '\\') && !(*path_ && (path_[1] == ':')))
 	{
-		char dirbase[1024];
-#ifdef CHROOTDIR
-		/* Not so sure if I like this magic... */
-		if (!strncmp(path, "modules/", 8) && (access("modules", F_OK)<0) && (access("src/modules", F_OK)==0))
-			strcpy(dirbase, "./src");
-		else
-			strcpy(dirbase, ".");
-#elif !defined(_WIN32)
-		unreal_getpathname(SPATH, dirbase);
-#else
-		strcpy(dirbase, ".");
-#endif
-		ircsnprintf(pathbuf, sizeof(pathbuf), "%s/%s%s", dirbase, path, MODULE_SUFFIX);
-		path = pathbuf;
+		snprintf(path, sizeof(path), "%s/%s", MODULESDIR, path_);
+	} else {
+		strlcpy(path, path_, sizeof(path));
 	}
+
+	/* auto-suffix .dll / .so */
+	if (!strstr(path, MODULE_SUFFIX))
+		strlcat(path, MODULE_SUFFIX, sizeof(path));
 	
-	tmppath = unreal_mktemp("tmp", unreal_getfilename(path));
+	tmppath = unreal_mktemp(TMPDIR, unreal_getfilename(path));
 	if (!tmppath)
 		return "Unable to create temporary file!";
-#ifndef _WIN32
-	if(!strchr(path, '/'))
-#else
-	if (!strchr(path, '\\') && !strchr(path, '/'))
-#endif
-	{
-                size_t pathsize = strlen(path)+3;
-		path = MyMalloc(pathsize);
-                ircsnprintf(path, pathsize, "./%s", path_);
-	}
 
 	if (!file_exists(path))
 	{
@@ -510,9 +498,6 @@ char  *Module_Create(char *path_)
 		/* Return the error .. */
 		return ((char *)irc_dlerror());
 	}
-	
-	if (path != path_ && path != pathbuf)
-		free(path);
 }
 
 void Module_DelayChildren(Module *m)
@@ -1631,7 +1616,7 @@ int i, n, errors=0;
 			if (n < 1)
 			{
 				config_error("ERROR: efunction '%s' not found, you probably did not "
-				             "load all required modules! (hint: see modules.conf)",
+				             "load all required modules! (hint: see modules.full.conf)",
 				             efunction_table[i].name);
 				errors++;
 			} else

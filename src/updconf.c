@@ -498,16 +498,16 @@ int upgrade_loadmodule(ConfigEntry *ce)
 	
 	if (our_strcasestr(file, "commands.dll") || our_strcasestr(file, "/commands.so"))
 	{
-		snprintf(buf, sizeof(buf), "include \"modules.conf\";\n");
+		snprintf(buf, sizeof(buf), "include \"modules.full.conf\";\n");
 		replace_section(ce, buf);
-		config_status("- loadmodule for '%s' replaced with an include \"modules.conf\"", file);
+		config_status("- loadmodule for '%s' replaced with an include \"modules.full.conf\"", file);
 		return 1;
 	}
 	
 	if (our_strcasestr(file, "cloak.dll") || our_strcasestr(file, "/cloak.so"))
 	{
-		replace_section(ce, "/* NOTE: cloaking module is included in modules.conf */");
-		config_status("- loadmodule for '%s' removed as this is now in modules.conf", file);
+		replace_section(ce, "/* NOTE: cloaking module is included in modules.full.conf */");
+		config_status("- loadmodule for '%s' removed as this is now in modules.full.conf", file);
 		return 1;
 	}
 
@@ -530,6 +530,49 @@ int upgrade_loadmodule(ConfigEntry *ce)
 	replace_section(ce, buf);
 	config_status("- loadmodule line converted to new syntax");
 	return 1;
+}
+
+int upgrade_include(ConfigEntry *ce)
+{
+	char *file = ce->ce_vardata;
+	char tmp[512], *p, *newfile;
+	static int badwords_upgraded_already = 0;
+	
+	if (!file)
+		return 0;
+
+	if (!strstr(file, "help/") && !_match("help*.conf", file))
+	{
+		snprintf(buf, sizeof(buf), "include \"help/%s\";\n", file);
+		replace_section(ce, buf);
+		config_status("- include for '%s' replaced with 'help/%s'", file, file);
+		return 1;
+	}
+	
+	if (!strcmp("badwords.quit.conf", file))
+	{
+		*buf = '\0';
+		replace_section(ce, buf);
+		config_status("- include for '%s' removed (now in badwords.conf)", file);
+		return 1;
+	}
+
+	if (!_match("badwords.*.conf", file))
+	{
+		if (badwords_upgraded_already)
+		{
+			*buf = '\0';
+			config_status("- include for '%s' removed (now in badwords.conf)", file);
+		} else {
+			strcpy(buf, "/* all badwords are now in badwords.conf */\ninclude \"badwords.conf\";\n");
+			badwords_upgraded_already = 1;
+			config_status("- include for '%s' replaced with 'badwords.conf'", file);
+		}
+		replace_section(ce, buf);
+		return 1;
+	}
+	
+	return 0;
 }
 
 #define MAXSPFTARGETS 32
@@ -926,6 +969,11 @@ again:
 			if (upgrade_loadmodule(ce))
 				goto again;
 		}
+		if (!strcmp(ce->ce_varname, "include"))
+		{
+			if (upgrade_include(ce))
+				goto again;
+		}
 		if (!strcmp(ce->ce_varname, "me"))
 		{
 			if (upgrade_me_block(ce))
@@ -1070,6 +1118,8 @@ void update_conf(void)
 
 	for (; cf; cf = cf->cf_next)
 	{
+		if (!file_exists(cf->cf_filename))
+			continue; /* skip silently. errors were already shown earlier by build_include_list anyway. */
 		configfile = cf->cf_filename;
 		config_status("Checking '%s'...", cf->cf_filename);
 		snprintf(configfiletmp, sizeof(configfiletmp), "%s.tmp", configfile);

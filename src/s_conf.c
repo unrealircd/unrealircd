@@ -166,7 +166,6 @@ static int _OldOperFlags[] = {
 	OFLAG_REHASH, 'r',
 	OFLAG_DIE, 'D',
 	OFLAG_RESTART, 'R',
-	OFLAG_HELPOP, 'h',
 	OFLAG_GLOBOP, 'g',
 	OFLAG_WALLOP, 'w',
 	OFLAG_LOCOP, 'l',
@@ -183,12 +182,10 @@ static int _OldOperFlags[] = {
 	OFLAG_NADMIN, 'N',
 	OFLAG_COADMIN, 'C',
 	OFLAG_ZLINE, 'z',
-	OFLAG_WHOIS, 'W',
 	OFLAG_HIDE, 'H',
 	OFLAG_TKL, 't',
 	OFLAG_GZL, 'Z',
 	OFLAG_OVERRIDE, 'v',
-	OFLAG_UMODEQ, 'q',
 	OFLAG_DCCDENY, 'd',
 	OFLAG_ADDLINE, 'X',
         OFLAG_TSCTL, 'T',
@@ -214,16 +211,13 @@ static OperFlag _OperFlags[] = {
 	{ OFLAG_OVERRIDE,	"can_override" },
 	{ OFLAG_REHASH,		"can_rehash" },
 	{ OFLAG_RESTART,        "can_restart" },
-	{ OFLAG_UMODEQ,		"can_setq" },
 	{ OFLAG_TSCTL,		"can_tsctl" },
 	{ OFLAG_UNKLINE,	"can_unkline" },
 	{ OFLAG_WALLOP,         "can_wallops" },
 	{ OFLAG_ZLINE,		"can_zline"},
 	{ OFLAG_COADMIN_,	"coadmin"},
 	{ OFLAG_HIDE,		"get_host"},
-	{ OFLAG_WHOIS,		"get_umodew"},
 	{ OFLAG_GLOBAL,		"global" },
-	{ OFLAG_HELPOP,         "helpop" },
 	{ OFLAG_LOCAL,		"local" },
 	{ OFLAG_LOCOP,		"locop"},
 	{ OFLAG_NADMIN,		"netadmin"},
@@ -1555,6 +1549,8 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->nicklen = NICKLEN;
 	i->link_bindip = strdup("*");
 	i->oper_only_stats = strdup("*");
+	i->x_server_cert_pem = strdup("ssl/server.cert.pem");
+	i->x_server_key_pem = strdup("ssl/server.key.pem");
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,
@@ -5968,6 +5964,9 @@ int _test_spamfilter(ConfigFile *conf, ConfigEntry *ce)
 				ce->ce_varlinenum,
 				err);
 			errors++;
+		} else
+		{
+			unreal_delete_match(m);
 		}
 	}
 	
@@ -6108,6 +6107,16 @@ int _test_log(ConfigFile *conf, ConfigEntry *ce) {
 			ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return 1;
 	}
+
+	/* Hmmm... not really proper huh... */
+	if (ce->ce_vardata[0] != '/')
+	{
+		char *str = MyMallocEx(strlen(ce->ce_vardata) + strlen(LOGDIR) + 4);
+		sprintf(str, "%s/%s", LOGDIR, ce->ce_vardata);
+		MyFree(ce->ce_vardata);
+		ce->ce_vardata = str;
+	}
+	
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!cep->ce_varname)
@@ -6386,7 +6395,7 @@ int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 					{
 						if (!strcmp(ceppp->ce_varname, "autoconnect"))
 							;
-						if (!strcmp(ceppp->ce_varname, "ssl"))
+						else if (!strcmp(ceppp->ce_varname, "ssl"))
 							;
 						else
 						{
@@ -8205,7 +8214,7 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 	{
 		config_error("%s:%i: You are trying to load the 'commands' module, this is no longer supported. "
 		             "Fix this by editing your configuration file: remove the loadmodule line for commands and add the following line instead: "
-		             "include \"modules.conf\";",
+		             "include \"modules.full.conf\";",
 		             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		need_34_upgrade = 1;
 		return -1;
@@ -8231,7 +8240,8 @@ int	_test_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 void	run_configuration(void)
 {
 	ConfigItem_listen 	*listenptr;
-
+	int ports_bound = 0;
+	
 	for (listenptr = conf_listen; listenptr; listenptr = (ConfigItem_listen *) listenptr->next)
 	{
 		if (!(listenptr->options & LISTENER_BOUND))
@@ -8240,10 +8250,22 @@ void	run_configuration(void)
 			{
 				ircd_log(LOG_ERROR, "Failed to bind to %s:%i", listenptr->ip, listenptr->port);
 			}
-				else
-			{
-			}
 		}
+		
+		/* NOTE: do not merge this with code above (nor in an else block),
+		 * as add_listener2() affects this flag.
+		 */
+		if (listenptr->options & LISTENER_BOUND)
+			ports_bound++;
+	}
+	
+	if (ports_bound == 0)
+	{
+		ircd_log(LOG_ERROR, "IRCd could not listen on any ports. If you see 'Address already in use' errors "
+		                    "above then most likely the IRCd is already running (or something else is using the "
+		                    "specified ports). If you are sure the IRCd is not running then verify your "
+		                    "listen blocks, maybe you have to bind to a specific IP rather than \"*\".");
+		exit(-1);
 	}
 }
 
@@ -9126,7 +9148,7 @@ static void conf_download_complete(const char *url, const char *file, const char
 	{
 		char *urlfile = url_getfilename(url);
 		char *file_basename = unreal_getfilename(urlfile);
-		char *tmp = unreal_mktemp("tmp", file_basename);
+		char *tmp = unreal_mktemp(TMPDIR, file_basename);
 		free(urlfile);
 
 		if (cached)

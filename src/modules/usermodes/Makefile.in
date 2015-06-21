@@ -30,7 +30,8 @@ INCLUDES = ../../include/auth.h ../../include/badwords.h ../../include/channel.h
 	../../include/version.h ../../include/whowas.h
 
 R_MODULES=\
-	noctcp.so censor.so
+	noctcp.so censor.so bot.so showwhois.so nokick.so servicebot.so \
+	privacy.so regonlymsg.so
 
 MODULES=$(R_MODULES)
 MODULEFLAGS=@MODULEFLAGS@
@@ -59,3 +60,27 @@ noctcp.so: noctcp.c $(INCLUDES)
 censor.so: censor.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o censor.so censor.c
+
+bot.so: bot.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o bot.so bot.c
+
+showwhois.so: showwhois.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o showwhois.so showwhois.c
+
+nokick.so: nokick.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o nokick.so nokick.c
+
+servicebot.so: servicebot.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o servicebot.so servicebot.c
+
+privacy.so: privacy.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o privacy.so privacy.c
+
+regonlymsg.so: regonlymsg.c $(INCLUDES)
+	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
+		-o regonlymsg.so regonlymsg.c

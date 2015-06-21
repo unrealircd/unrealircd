@@ -55,26 +55,19 @@ long UMODE_INVISIBLE = 0L;     /* makes user invisible */
 long UMODE_OPER = 0L;          /* Operator */
 long UMODE_WALLOP = 0L;        /* send wallops to them */
 long UMODE_FAILOP = 0L;        /* Shows some global messages */
-long UMODE_HELPOP = 0L;        /* Help system operator */
 long UMODE_REGNICK = 0L;       /* Nick set by services as registered */
 long UMODE_SADMIN = 0L;        /* Services Admin */
 long UMODE_ADMIN = 0L;         /* Admin */
 long UMODE_SERVNOTICE = 0L;    /* server notices such as kill */
 long UMODE_LOCOP = 0L;         /* Local operator -- SRB */
-long UMODE_RGSTRONLY = 0L;     /* Only reg nick message */
-long UMODE_SERVICES = 0L;      /* services */
 long UMODE_HIDE = 0L;          /* Hide from Nukes */
 long UMODE_NETADMIN = 0L;      /* Network Admin */
 long UMODE_COADMIN = 0L;       /* Co Admin */
-long UMODE_WHOIS = 0L;         /* gets notice on /whois */
-long UMODE_KIX = 0L;           /* usermode +q */
-long UMODE_BOT = 0L;           /* User is a bot */
 long UMODE_SECURE = 0L;        /* User is a secure connect */
 long UMODE_VICTIM = 0L;        /* Intentional Victim */
 long UMODE_DEAF = 0L;          /* Deaf */
 long UMODE_HIDEOPER = 0L;      /* Hide oper mode */
 long UMODE_SETHOST = 0L;       /* Used sethost */
-long UMODE_HIDEWHOIS = 0L;     /* Hides channels in /whois */
 long UMODE_HIDLE = 0L;         /* Hides the idle time of opers */
 
 long SNO_KILLS = 0L;
@@ -130,26 +123,19 @@ void	umode_init(void)
 	UmodeAdd(NULL, 'o', UMODE_GLOBAL, umode_allow_opers, &UMODE_OPER);
 	UmodeAdd(NULL, 'w', UMODE_GLOBAL, NULL, &UMODE_WALLOP);
 	UmodeAdd(NULL, 'g', UMODE_GLOBAL, umode_allow_opers, &UMODE_FAILOP);
-	UmodeAdd(NULL, 'h', UMODE_GLOBAL, NULL, &UMODE_HELPOP);
 	UmodeAdd(NULL, 'r', UMODE_GLOBAL, NULL, &UMODE_REGNICK);
 	UmodeAdd(NULL, 'a', UMODE_GLOBAL, umode_allow_opers, &UMODE_SADMIN);
 	UmodeAdd(NULL, 'A', UMODE_GLOBAL, umode_allow_opers, &UMODE_ADMIN);
 	UmodeAdd(NULL, 's', UMODE_LOCAL, NULL, &UMODE_SERVNOTICE);
 	UmodeAdd(NULL, 'O', UMODE_LOCAL, umode_allow_opers, &UMODE_LOCOP);
-	UmodeAdd(NULL, 'R', UMODE_GLOBAL, NULL, &UMODE_RGSTRONLY);
-	UmodeAdd(NULL, 'S', UMODE_GLOBAL, umode_allow_opers, &UMODE_SERVICES);
 	UmodeAdd(NULL, 'x', UMODE_GLOBAL, NULL, &UMODE_HIDE);
 	UmodeAdd(NULL, 'N', UMODE_GLOBAL, umode_allow_opers, &UMODE_NETADMIN);
 	UmodeAdd(NULL, 'C', UMODE_GLOBAL, umode_allow_opers, &UMODE_COADMIN);
-	UmodeAdd(NULL, 'W', UMODE_GLOBAL, NULL, &UMODE_WHOIS);
-	UmodeAdd(NULL, 'q', UMODE_GLOBAL, umode_allow_opers, &UMODE_KIX);
-	UmodeAdd(NULL, 'B', UMODE_GLOBAL, NULL, &UMODE_BOT);
 	UmodeAdd(NULL, 'z', UMODE_GLOBAL, NULL, &UMODE_SECURE);
 	UmodeAdd(NULL, 'v', UMODE_GLOBAL, umode_allow_opers, &UMODE_VICTIM);
 	UmodeAdd(NULL, 'd', UMODE_GLOBAL, NULL, &UMODE_DEAF);
 	UmodeAdd(NULL, 'H', UMODE_GLOBAL, umode_allow_opers, &UMODE_HIDEOPER);
 	UmodeAdd(NULL, 't', UMODE_GLOBAL, NULL, &UMODE_SETHOST);
-	UmodeAdd(NULL, 'p', UMODE_GLOBAL, NULL, &UMODE_HIDEWHOIS);
 	UmodeAdd(NULL, 'I', UMODE_GLOBAL, umode_allow_opers, &UMODE_HIDLE);
 	SnomaskAdd(NULL, 'k', umode_allow_all, &SNO_KILLS);
 	SnomaskAdd(NULL, 'c', umode_allow_opers, &SNO_CLIENT);
@@ -382,6 +368,13 @@ void SnomaskDel(Snomask *sno)
 
 int umode_allow_all(aClient *sptr, int what)
 {
+	return 1;
+}
+
+int umode_allow_none(aClient *sptr, int what)
+{
+	if (MyClient(sptr))
+		return 0;
 	return 1;
 }
 

@@ -101,9 +101,9 @@ long oldumodes;
 						list_del(&acptr->special_node);
 
 					oldumodes = acptr->umodes;
-					acptr->umodes &= ~(UMODE_OPER | UMODE_LOCOP | UMODE_HELPOP |
-					                   UMODE_SERVICES | UMODE_SADMIN | UMODE_ADMIN |
-					                   UMODE_NETADMIN | UMODE_WHOIS | UMODE_KIX |
+					acptr->umodes &= ~(UMODE_OPER | UMODE_LOCOP |
+					                   UMODE_SADMIN | UMODE_ADMIN |
+					                   UMODE_NETADMIN |
 					                   UMODE_DEAF | UMODE_HIDEOPER | UMODE_FAILOP |
 					                   UMODE_COADMIN | UMODE_VICTIM);
 					acptr->oflag = 0;

@@ -118,7 +118,7 @@ ConfigItem_deny_channel *Find_channel_allowed(aClient *cptr, char *name);
 ConfigItem_alias	*Find_alias(char *name);
 ConfigItem_help 	*Find_Help(char *command);
 
-OperPermission OperClass_evaluateACLPath(char* operClass, char* path, aClient *sptr, aClient *victim, aChannel *channel, void* extra);
+OperPermission OperClass_evaluateACLPath(char* path, aClient *sptr, aClient *victim, aChannel *channel, void* extra);
 
 int			AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *username);
 int parse_netmask(const char *text, struct irc_netmask *netmask);
@@ -332,6 +332,7 @@ extern long umode_get(char, int, int (*)(aClient *, int));
 #define umode_gget(x) umode_get(x, 1, 0);
 extern int umode_allow_all(aClient *sptr, int what);
 extern int umode_allow_opers(aClient *sptr, int what);
+extern int umode_allow_none(aClient *sptr, int what);
 extern int  umode_delete(char ch, long val);
 extern void send_umode(aClient *, aClient *, long, long, char *);
 extern void send_umode_out(aClient *, aClient *, long);
@@ -398,26 +399,19 @@ extern MODVAR long UMODE_INVISIBLE; /*  0x0001	 makes user invisible */
 extern MODVAR long UMODE_OPER;      /*  0x0002	 Operator */
 extern MODVAR long UMODE_WALLOP;    /*  0x0004	 send wallops to them */
 extern MODVAR long UMODE_FAILOP;    /*  0x0008	 Shows some global messages */
-extern MODVAR long UMODE_HELPOP;    /*  0x0010	 Help system operator */
 extern MODVAR long UMODE_REGNICK;   /*  0x0020	 Nick set by services as registered */
 extern MODVAR long UMODE_SADMIN;    /*  0x0040	 Services Admin */
 extern MODVAR long UMODE_ADMIN;     /*  0x0080	 Admin */
 extern MODVAR long UMODE_SERVNOTICE;/* 0x0100	 server notices such as kill */
 extern MODVAR long UMODE_LOCOP;     /* 0x0200	 Local operator -- SRB */
-extern MODVAR long UMODE_RGSTRONLY; /* 0x0400  Only reg nick message */
-extern MODVAR long UMODE_SERVICES;  /* 0x4000	 services */
 extern MODVAR long UMODE_HIDE;	     /* 0x8000	 Hide from Nukes */
 extern MODVAR long UMODE_NETADMIN;  /* 0x10000	 Network Admin */
 extern MODVAR long UMODE_COADMIN;   /* 0x80000	 Co Admin */
-extern MODVAR long UMODE_WHOIS;     /* 0x100000	 gets notice on /whois */
-extern MODVAR long UMODE_KIX;       /* 0x200000	 usermode +q */
-extern MODVAR long UMODE_BOT;       /* 0x400000	 User is a bot */
 extern MODVAR long UMODE_SECURE;    /*	0x800000	 User is a secure connect */
 extern MODVAR long UMODE_VICTIM;    /* 0x8000000	 Intentional Victim */
 extern MODVAR long UMODE_DEAF;      /* 0x10000000       Deaf */
 extern MODVAR long UMODE_HIDEOPER;  /* 0x20000000	 Hide oper mode */
 extern MODVAR long UMODE_SETHOST;   /* 0x40000000	 used sethost */
-extern MODVAR long UMODE_HIDEWHOIS; /* hides channels in /whois */
 extern MODVAR long UMODE_HIDLE;     /* hides oper idle times */
 extern MODVAR long AllUmodes, SendUmodes;
 

@@ -91,9 +91,8 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	char *oinpath = get_client_name(cptr, FALSE);
 	char *user, *path, *killer, *nick, *p, *s;
 	int  chasing = 0, kcount = 0;
-
-
-
+	Hook *h;
+	
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
@@ -178,12 +177,20 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			continue;
 		}
 
-		if (IsServices(acptr) && !(IsNetAdmin(sptr) || IsULine(sptr)))
+		if (MyClient(sptr))
 		{
-			sendto_one(sptr, err_str(ERR_KILLDENY), me.name,
-			    parv[0], parv[1]);
-			return 0;
+			int ret = EX_ALLOW;
+			for (h = Hooks[HOOKTYPE_PRE_KILL]; h; h = h->next)
+			{
+				/* note: parameters are: sptr, victim, reason. reason can be NULL !! */
+				ret = (*(h->func.intfunc))(sptr, acptr, path);
+				if (ret != EX_ALLOW)
+					break;
+			}
+			if ((ret == EX_DENY) || (ret == EX_ALWAYS_DENY))
+				continue; /* reject kill for this particular user */
 		}
+
 		/* From here on, the kill is probably going to be successful. */
 
 		kcount++;

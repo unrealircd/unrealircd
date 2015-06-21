@@ -207,8 +207,8 @@ extern MODVAR aConfiguration iConf;
 #define SASL_SERVER			iConf.network.x_sasl_server
 #define iNAH				iConf.network.x_inah
 #define prefix_quit			iConf.network.x_prefix_quit
-#define SSL_SERVER_CERT_PEM		(iConf.x_server_cert_pem ? iConf.x_server_cert_pem : "server.cert.pem")
-#define SSL_SERVER_KEY_PEM		(iConf.x_server_key_pem ? iConf.x_server_key_pem : "server.key.pem")
+#define SSL_SERVER_CERT_PEM		iConf.x_server_cert_pem
+#define SSL_SERVER_KEY_PEM		iConf.x_server_key_pem
 
 #define STATIC_QUIT			iConf.static_quit
 #define STATIC_PART			iConf.static_part

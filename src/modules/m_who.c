@@ -356,7 +356,7 @@ int i = 1;
 					}
 
 					if (!IsAnOper(sptr))
-						*umodes = *umodes & (UMODE_OPER | UMODE_LOCOP | UMODE_SADMIN | UMODE_ADMIN | UMODE_COADMIN | UMODE_NETADMIN | UMODE_BOT);
+						*umodes = *umodes & (UMODE_OPER | UMODE_LOCOP | UMODE_SADMIN | UMODE_ADMIN | UMODE_COADMIN | UMODE_NETADMIN);
 					if (*umodes == 0)
 						return -1;
 				}
@@ -634,6 +634,7 @@ static void make_who_status(aClient *sptr, aClient *acptr, aChannel *channel,
 			    Member *cm, char *status, int cansee)
 {
 int i = 0;
+Hook *h;
 
 	if (acptr->user->away)
 		status[i++] = 'G';
@@ -643,9 +644,13 @@ int i = 0;
 	if (IsARegNick(acptr))
 		status[i++] = 'r';
 
-	if (acptr->umodes & UMODE_BOT)
-		status[i++] = 'B';
-
+	for (h = Hooks[HOOKTYPE_WHO_STATUS]; h; h = h->next)
+	{
+		int ret = (*(h->func.intfunc))(sptr, acptr, channel, cm, status, cansee);
+		if (ret != 0)
+			status[i++] = (char)ret;
+	}
+	
 	if (IsAnOper(acptr) && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
 		status[i++] = '*';
 
@@ -772,7 +777,7 @@ static void send_who_reply(aClient *sptr, aClient *acptr,
 		host = GetHost(acptr);
 					
 
-	if (IsULine(acptr) && !IsOper(sptr) && HIDE_ULINES)
+	if (IsULine(acptr) && !IsOper(sptr) && !OperClass_evaluateACLPath("who:ulines",sptr,acptr,NULL,NULL) && HIDE_ULINES)
 	        sendto_one(sptr, getreply(RPL_WHOREPLY), me.name, sptr->name,
         	     channel,       /* channel name */
 	             acptr->user->username, /* user name */
@@ -806,19 +811,57 @@ static char *first_visible_channel(aClient *sptr, aClient *acptr, int *flg)
 
 	for (lp = acptr->user->channel; lp; lp = lp->next)
 	{
-	aChannel *chptr = lp->chptr;
-	int cansee = ShowChannel(sptr, chptr);
+		aChannel *chptr = lp->chptr;
+		Hook *h;
+		int ret = EX_ALLOW;
+		int operoverride = 0;
+		int showchannel = 0;
+		
+		/* Note that the code below is almost identical to the one in /WHOIS */
 
-		if (cansee && (acptr->umodes & UMODE_HIDEWHOIS) && !IsMember(sptr, chptr))
-			cansee = 0;
-		if (!cansee)
+		if (ShowChannel(sptr, chptr))
+			showchannel = 1;
+
+		for (h = Hooks[HOOKTYPE_SEE_CHANNEL_IN_WHOIS]; h; h = h->next)
 		{
-			if (OPCanSeeSecret(sptr))
-				*flg |= FVC_HIDDEN;
-			else
-				continue;
+			int n = (*(h->func.intfunc))(sptr, acptr, chptr);
+			/* Hook return values:
+			 * EX_ALLOW means 'yes is ok, as far as modules are concerned'
+			 * EX_DENY means 'hide this channel, unless oper overriding'
+			 * EX_ALWAYS_DENY means 'hide this channel, always'
+			 * ... with the exception that we always show the channel if you /WHOIS yourself
+			 */
+			if (n == EX_DENY)
+			{
+				ret = EX_DENY;
+			}
+			else if (n == EX_ALWAYS_DENY)
+			{
+				ret = EX_ALWAYS_DENY;
+				break;
+			}
 		}
-		return chptr->chname;
+		
+		if (ret == EX_DENY)
+			showchannel = 0;
+		
+		if (!showchannel && (OPCanSeeSecret(sptr) || OperClass_evaluateACLPath("override:whois",sptr,NULL,chptr,NULL)))
+		{
+			showchannel = 1; /* OperOverride */
+			operoverride = 1;
+		}
+		
+		if ((ret == EX_ALWAYS_DENY) && (acptr != sptr))
+			continue; /* a module asked us to really not expose this channel, so we don't (except target==ourselves). */
+
+		if (acptr == sptr)
+			showchannel = 1;
+
+		if (operoverride)
+			*flg |= FVC_HIDDEN;
+
+		if (showchannel)
+			return chptr->chname;
 	}
 
 	/* no channels that they can see */

@@ -44,8 +44,12 @@
 #undef  TIMES_2
 #undef  GETRUSAGE_2
 #define HAVE_ALLOCA
-#define SPATH "."
-#define DPATH "."
+#define CONFDIR "conf"
+#define MODULESDIR "modules"
+#define LOGDIR "logs"
+#define DATADIR "data"
+#define CACHEDIR "cache"
+#define TMPDIR "tmp"
 #define NO_U_TYPES
 #define NEED_U_INT32_T
 #define PREFIX_AQ
