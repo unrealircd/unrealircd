@@ -184,16 +184,49 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			mlen = strlen(me.name) + strlen(parv[0]) + 10 + strlen(name);
 			for (len = 0, *buf = '\0', lp = user->channel; lp; lp = lp->next)
 			{
+				Hook *h;
+				int ret = EX_ALLOW;
+				int operoverride = 0;
+				
 				chptr = lp->chptr;
 				showchannel = 0;
 				if (ShowChannel(sptr, chptr))
 					showchannel = 1;
-				if (OPCanSeeSecret(sptr) || OperClass_evaluateACLPath("override:whois",sptr,NULL,chptr,NULL)) 
-					showchannel = 1;
 				if ((acptr->umodes & UMODE_HIDEWHOIS) && !IsMember(sptr, chptr) && !IsAnOper(sptr) && !OperClass_evaluateACLPath("override:whois:",sptr,NULL,chptr,NULL))
 					showchannel = 0;
-/*				if (IsServices(acptr) && !IsNetAdmin(sptr) && !IsSAdmin(sptr) && !OperClass_evaluateACLPath("override:whois",sptr,NULL,chptr,NULL))
-					showchannel = 0; TODO TODO OOOOOOOOOOOOOOOOOOOOOOOOOOOOO TODODODODODOO !!!! */
+
+				for (h = Hooks[HOOKTYPE_SEE_CHANNEL_IN_WHOIS]; h; h = h->next)
+				{
+					int n = (*(h->func.intfunc))(sptr, acptr, chptr);
+					/* Hook return values:
+					 * EX_ALLOW means 'yes is ok, as far as modules are concerned'
+					 * EX_DENY means 'hide this channel, unless oper overriding'
+					 * EX_ALWAYS_DENY means 'hide this channel, always'
+					 * ... with the exception that we always show the channel if you /WHOIS yourself
+					 */
+					if (n == EX_DENY)
+					{
+						ret = EX_DENY;
+					}
+					else if (n == EX_ALWAYS_DENY)
+					{
+						ret = EX_ALWAYS_DENY;
+						break;
+					}
+				}
+				
+				if (ret == EX_DENY)
+					showchannel = 0;
+				
+				if (!showchannel && (OPCanSeeSecret(sptr) || OperClass_evaluateACLPath("override:whois",sptr,NULL,chptr,NULL)))
+				{
+					showchannel = 1; /* OperOverride */
+					operoverride = 1;
+				}
+				
+				if ((ret == EX_ALWAYS_DENY) && (acptr != sptr))
+					continue; /* a module asked us to really not expose this channel, so we don't (except target==ourselves). */
+
 				if (acptr == sptr)
 					showchannel = 1;
 
@@ -210,16 +243,24 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 						*buf = '\0';
 						len = 0;
 					}
-#ifdef SHOW_SECRET
-					if ((IsAnOper(sptr) ||
-#else
-					if ((IsNetAdmin(sptr) ||
-#endif
-					    OperClass_evaluateACLPath("override:whois",sptr,NULL,chptr,NULL)) && SecretChannel(chptr) && !IsMember(sptr, chptr))
-						*(buf + len++) = '?';
-					if (acptr->umodes & UMODE_HIDEWHOIS && !IsMember(sptr, chptr)
-						&& IsAnOper(sptr))
-						*(buf + len++) = '!';
+
+					if (operoverride)
+					{
+						/* '?' and '!' both mean we can see the channel in /WHOIS and normally wouldn't,
+						 * but there's still a slight difference between the two...
+						 */
+						if (!PubChannel(chptr))
+						{
+							/* '?' means it's a secret/private channel (too) */
+							*(buf + len++) = '?';
+						}
+						else
+						{
+							/* public channel but hidden in WHOIS (umode +p, service bot, etc) */
+							*(buf + len++) = '!';
+						}
+					}
+
 					access = get_access(acptr, chptr);
 					if (!SupportNAMESX(sptr))
 					{

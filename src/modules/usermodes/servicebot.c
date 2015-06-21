@@ -43,6 +43,7 @@ int servicebot_mode_deop(aClient *sptr, aClient *target, aChannel *chptr,
                     u_int what, char modechar, long my_access, char **reject_reason);
 int servicebot_pre_kill(aClient *sptr, aClient *target, char *reason);
 int servicebot_whois(aClient *sptr, aClient *acptr);
+int servicebot_see_channel_in_whois(aClient *sptr, aClient *target, aChannel *chptr);
                     
 DLLFUNC int MOD_TEST(servicebot)(ModuleInfo *modinfo)
 {
@@ -57,6 +58,7 @@ DLLFUNC int MOD_INIT(servicebot)(ModuleInfo *modinfo)
 	HookAddEx(modinfo->handle, HOOKTYPE_MODE_DEOP, servicebot_mode_deop);
 	HookAddEx(modinfo->handle, HOOKTYPE_PRE_KILL, servicebot_pre_kill);
 	HookAddEx(modinfo->handle, HOOKTYPE_WHOIS, servicebot_whois);
+	HookAddEx(modinfo->handle, HOOKTYPE_SEE_CHANNEL_IN_WHOIS, servicebot_see_channel_in_whois);
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
@@ -133,4 +135,13 @@ int servicebot_whois(aClient *sptr, aClient *acptr)
 		sendto_one(sptr, WHOIS_SERVICE_STRING, me.name, sptr->name, acptr->name);
 
 	return 0;
+}
+
+/* This hides the servicebot, even if you are in the same channel, unless oper overriding */
+int servicebot_see_channel_in_whois(aClient *sptr, aClient *target, aChannel *chptr)
+{
+	if (IsServiceBot(target))
+		return EX_DENY;
+	
+	return EX_ALLOW;
 }
