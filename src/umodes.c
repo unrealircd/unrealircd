@@ -147,7 +147,7 @@ void	umode_init(void)
 	SnomaskAdd(NULL, 'N', umode_allow_opers, &SNO_FNICKCHANGE);
 	SnomaskAdd(NULL, 'q', umode_allow_opers, &SNO_QLINE);
 	SnomaskAdd(NULL, 'S', umode_allow_opers, &SNO_SPAMF);
-	SnomaskAdd(NULL, 's', umode_allow_all, &SNO_SNOTICE);
+	SnomaskAdd(NULL, 's', umode_allow_opers, &SNO_SNOTICE);
 	SnomaskAdd(NULL, 'o', umode_allow_opers, &SNO_OPER);
 }
 
