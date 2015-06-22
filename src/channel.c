@@ -73,7 +73,7 @@ MODVAR char modebuf[BUFSIZE], parabuf[BUFSIZE];
 
 #define MODESYS_LINKOK		/* We do this for a TEST  */
 aCtab cFlagTab[] = {
-	{MODE_LIMIT, 'l', 0, 1},
+	{MODE_LIMIT, 'l', 1, 1},
 	{MODE_VOICE, 'v', 1, 1},
 	{MODE_HALFOP, 'h', 0, 1},
 	{MODE_CHANOP, 'o', 0, 1},

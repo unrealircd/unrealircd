@@ -122,6 +122,6 @@ DLLFUNC int noknock_mode_allow(aClient *cptr, aChannel *chptr, char mode, char *
 		return EX_DENY;
 	}
 
-	return extcmode_default_requirechop(cptr,chptr,mode,para,checkt,what);
+	return extcmode_default_requirehalfop(cptr,chptr,mode,para,checkt,what);
 }
 

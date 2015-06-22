@@ -69,7 +69,7 @@ DLLFUNC int MOD_INIT(regonlyspeak)(ModuleInfo *modinfo)
 	memset(&req, 0, sizeof(req));
 	req.paracount = 0;
 	req.flag = 'M';
-	req.is_ok = extcmode_default_requirechop;
+	req.is_ok = extcmode_default_requirehalfop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_REGONLYSPEAK);
 	
 	HookAddEx(modinfo->handle, HOOKTYPE_CAN_SEND, regonlyspeak_can_send);
