@@ -58,26 +58,27 @@ static oper_oflag_t oper_oflags[10];
 
 static void init_operflags()
 {
+	static const char* operAnnouncement = "is now an operator";
 	oper_oflags[0].oflag = OFLAG_NETADMIN;
 	oper_oflags[0].umode = &UMODE_NETADMIN;
 	oper_oflags[0].host = &netadmin_host;
-	oper_oflags[0].announce = "is now a network administrator (N)";
+	oper_oflags[0].announce = operAnnouncement;
 	oper_oflags[1].oflag = OFLAG_SADMIN;
 	oper_oflags[1].umode = &UMODE_SADMIN;
 	oper_oflags[1].host = &sadmin_host;
-	oper_oflags[1].announce = "is now a services administrator (a)";
+	oper_oflags[1].announce = operAnnouncement;
 	oper_oflags[2].oflag = OFLAG_ADMIN;
 	oper_oflags[2].umode = &UMODE_ADMIN;
 	oper_oflags[2].host = &admin_host;
-	oper_oflags[2].announce = "is now a server admin (A)";
+	oper_oflags[2].announce = operAnnouncement;
 	oper_oflags[3].oflag = OFLAG_COADMIN;
 	oper_oflags[3].umode = &UMODE_COADMIN;
 	oper_oflags[3].host = &coadmin_host;
-	oper_oflags[3].announce = "is now a co administrator (C)";
+	oper_oflags[3].announce = operAnnouncement;
 	oper_oflags[4].oflag = OFLAG_ISGLOBAL;
 	oper_oflags[4].umode = &UMODE_OPER;
 	oper_oflags[4].host = &oper_host;
-	oper_oflags[4].announce = "is now an operator (O)";
+	oper_oflags[4].announce = operAnnouncement;
 	oper_oflags[5].oflag= OFLAG_GLOBOP;
 	oper_oflags[5].umode = &UMODE_FAILOP;
 	oper_oflags[5].host = NULL;
