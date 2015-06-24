@@ -1616,7 +1616,7 @@ int i, n, errors=0;
 			if (n < 1)
 			{
 				config_error("ERROR: efunction '%s' not found, you probably did not "
-				             "load all required modules! (hint: see modules.full.conf)",
+				             "load all required modules! (hint: see modules.default.conf)",
 				             efunction_table[i].name);
 				errors++;
 			} else

@@ -8214,7 +8214,7 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 	{
 		config_error("%s:%i: You are trying to load the 'commands' module, this is no longer supported. "
 		             "Fix this by editing your configuration file: remove the loadmodule line for commands and add the following line instead: "
-		             "include \"modules.full.conf\";",
+		             "include \"modules.default.conf\";",
 		             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		need_34_upgrade = 1;
 		return -1;

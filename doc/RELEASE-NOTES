@@ -85,7 +85,7 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
   B) easier for coders to see all source code related to a specific feature
   C) possible to fix bugs and just reload rather than restart the IRCd.
 
-  Have a look at modules.full.conf which contains the "default" set of
+  Have a look at modules.default.conf which contains the "default" set of
   modules that you can load if you just want to load all functionality.
   If you want to customize the list of modules to load then simply make
   a copy of that file, give it a different name, and include that one
@@ -172,8 +172,11 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
   titled 'CONFIGURATION CHANGES' about 100 lines up. (A4)
 * badword quit { } is removed, we use badword channel for it. (A4)
 * badwords.*.conf is now just one badwords.conf
-* To load the default modules you can now include modules.full.conf.
-  This file was called modules.conf in earlier alpha's. (A4)
+* To load all default modules you now include modules.default.conf.
+  This file was called modules.conf in earlier alpha's.
+  The file has been split up in sections and a lot of comments have
+  been added to aid the user in deciding whether to load or not to
+  load each module. (A4)
 * Snomask +s is now (always) IRCOp-only. (A4)
 * There's now actually an idea behind HalfOp permissions. The idea
   is that halfops should be able to help out in case of a flood but

@@ -498,16 +498,16 @@ int upgrade_loadmodule(ConfigEntry *ce)
 	
 	if (our_strcasestr(file, "commands.dll") || our_strcasestr(file, "/commands.so"))
 	{
-		snprintf(buf, sizeof(buf), "include \"modules.full.conf\";\n");
+		snprintf(buf, sizeof(buf), "include \"modules.default.conf\";\n");
 		replace_section(ce, buf);
-		config_status("- loadmodule for '%s' replaced with an include \"modules.full.conf\"", file);
+		config_status("- loadmodule for '%s' replaced with an include \"modules.default.conf\"", file);
 		return 1;
 	}
 	
 	if (our_strcasestr(file, "cloak.dll") || our_strcasestr(file, "/cloak.so"))
 	{
-		replace_section(ce, "/* NOTE: cloaking module is included in modules.full.conf */");
-		config_status("- loadmodule for '%s' removed as this is now in modules.full.conf", file);
+		replace_section(ce, "/* NOTE: cloaking module is included in modules.default.conf */");
+		config_status("- loadmodule for '%s' removed as this is now in modules.default.conf", file);
 		return 1;
 	}
 
