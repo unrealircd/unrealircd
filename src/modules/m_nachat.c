@@ -94,7 +94,7 @@ DLLFUNC int m_nachat(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 #ifdef ADMINCHAT
 	if (MyClient(sptr))
-		if (!IsNetAdmin(sptr))
+		if (!OperClass_evaluateACLPath("chat:netadmin",sptr,NULL,NULL,NULL))
 #else
 	if (MyClient(sptr))
 #endif

@@ -316,15 +316,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			if (IsAnOper(acptr) && !hideoper)
 			{
 				buf[0] = '\0';
-				if (IsNetAdmin(acptr))
-					strlcat(buf, "a Network Administrator", sizeof buf);
-				else if (IsSAdmin(acptr))
-					strlcat(buf, "a Services Administrator", sizeof buf);
-				else if (IsAdmin(acptr) && !IsCoAdmin(acptr))
-					strlcat(buf, "a Server Administrator", sizeof buf);
-				else if (IsCoAdmin(acptr))
-					strlcat(buf, "a Co Administrator", sizeof buf);
-				else if (IsOper(acptr))
+				if (IsOper(acptr))
 					strlcat(buf, "an IRC Operator", sizeof buf);
 
 				else

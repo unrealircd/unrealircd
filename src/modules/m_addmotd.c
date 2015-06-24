@@ -86,7 +86,7 @@ DLLFUNC CMD_FUNC(m_addmotd)
 	if (!MyConnect(sptr))
 		return 0;
 
-	if (!IsAdmin(sptr) && !IsCoAdmin(sptr) && !OperClass_evaluateACLPath("add:motd",sptr,NULL,NULL,NULL))
+	if (!OperClass_evaluateACLPath("server:motd",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;

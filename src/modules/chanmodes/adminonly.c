@@ -95,7 +95,7 @@ DLLFUNC int MOD_UNLOAD(noctcp)(int module_unload)
 
 DLLFUNC int adminonly_check (aClient *cptr, aChannel *chptr, char *key, char *parv[])
 {
-	if ((chptr->mode.extmode & EXTCMODE_ADMINONLY) && !IsSkoAdmin(cptr))
+	if ((chptr->mode.extmode & EXTCMODE_ADMINONLY) && !OperClass_evaluateACLPath("join:adminonly",cptr,NULL,chptr,NULL) )
 		return ERR_ADMONLY;
 	return 0;
 }
@@ -104,7 +104,7 @@ DLLFUNC int adminonly_check (aClient *cptr, aChannel *chptr, char *key, char *pa
 DLLFUNC int adminonly_check_ban(aClient *cptr, aChannel *chptr)
 {
 
-	 if ((chptr->mode.extmode & EXTCMODE_ADMINONLY) && IsAnOper(cptr) && !IsNetAdmin(cptr) && !IsSAdmin(cptr))
+	 if ((chptr->mode.extmode & EXTCMODE_ADMINONLY) && IsAnOper(cptr) && !OperClass_evaluateACLPath("override:ban:adminonly",cptr,NULL,chptr,NULL))
 		 return HOOK_DENY;
 
 	 return HOOK_CONTINUE;
@@ -112,7 +112,7 @@ DLLFUNC int adminonly_check_ban(aClient *cptr, aChannel *chptr)
 
 DLLFUNC int adminonly_topic_allow (aClient *sptr, aChannel *chptr)
 {
-	if (chptr->mode.extmode & EXTCMODE_ADMINONLY && !IsAdmin(sptr))
+	if (chptr->mode.extmode & EXTCMODE_ADMINONLY && !OperClass_evaluateACLPath("join:adminonly",sptr,NULL,chptr,NULL))
 		return HOOK_DENY;
 
 	return HOOK_CONTINUE;
@@ -120,7 +120,7 @@ DLLFUNC int adminonly_topic_allow (aClient *sptr, aChannel *chptr)
 
 DLLFUNC int adminonly_require_admin(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what)
 {
-	if (!MyClient(cptr) || IsSkoAdmin(cptr))
+	if (!MyClient(cptr) || OperClass_evaluateACLPath("join:adminonly",cptr,NULL,NULL,NULL))
 		return EX_ALLOW;
 
 

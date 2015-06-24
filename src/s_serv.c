@@ -631,7 +631,7 @@ CMD_FUNC(m_rehash)
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
-	if (!MyClient(sptr) && !IsNetAdmin(sptr)
+	if (!MyClient(sptr) && !OperClass_evaluateACLPath("server:rehash",sptr,NULL,NULL,NULL)
 	    && !IsULine(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
@@ -698,10 +698,10 @@ CMD_FUNC(m_rehash)
 			 * a) it makes sense
 			 * b) remote servers don't support remote rehashes by non-netadmins
 			 */
-			if (!IsNetAdmin(sptr))
+			if (!OperClass_evaluateACLPath("server:rehash",sptr,NULL,NULL,NULL))
 			{
 				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-				sendnotice(sptr, "'/REHASH -global' requires you to be NetAdmin");
+				sendnotice(sptr, "'/REHASH -global' requires you to have server::rehash permissions");
 				return 0;
 			}
 			if (parv[1] && *parv[1] != '-')
@@ -726,7 +726,7 @@ CMD_FUNC(m_rehash)
 	if (!BadPtr(parv[1]) && stricmp(parv[1], "-all"))
 	{
 
-		if (!IsAdmin(sptr) && !IsCoAdmin(sptr))
+		if (!OperClass_evaluateACLPath("server:rehash",sptr,NULL,NULL,NULL))
 		{
 			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 			return 0;
@@ -830,7 +830,7 @@ char *reason = parv[1];
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
-	if (!MyClient(sptr) && !IsNetAdmin(sptr) && !IsULine(sptr))
+	if (!MyClient(sptr) && !OperClass_evaluateACLPath("server:restart",sptr,NULL,NULL,NULL) && !IsULine(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;

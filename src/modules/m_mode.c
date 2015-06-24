@@ -283,7 +283,7 @@ CMD_FUNC(m_mode)
 
 	if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr)
 	    && !is_half_op(sptr, chptr)
-	    && (cptr == sptr || !IsSAdmin(sptr) || !IsOper(sptr)))
+	    && (cptr == sptr || !OperClass_evaluateACLPath("override:mode",sptr,NULL,chptr,NULL) || !IsOper(sptr)))
 	{
 		if (cptr == sptr)
 		{
@@ -1752,14 +1752,6 @@ DLLFUNC CMD_FUNC(_m_umode)
 	/* Below can be removed after Heero is done with the new oper system and this shit is gone :D */
 	if (MyClient(sptr)) {
 		if (IsAnOper(sptr)) {
-			if (IsAdmin(sptr) && !OPIsAdmin(sptr))
-				ClearAdmin(sptr);
-			if (IsSAdmin(sptr) && !OPIsSAdmin(sptr))
-				ClearSAdmin(sptr);
-			if (IsNetAdmin(sptr) && !OPIsNetAdmin(sptr))
-				ClearNetAdmin(sptr);
-			if (IsCoAdmin(sptr) && !OPIsCoAdmin(sptr))
-				ClearCoAdmin(sptr);
 			if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
 			    && !IsSecure(sptr))
 				sptr->umodes &= ~UMODE_SECURE;

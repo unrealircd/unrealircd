@@ -100,7 +100,7 @@ int servicebot_mode_deop(aClient *sptr, aClient *target, aChannel *chptr,
 {
 	static char errmsg[NICKLEN+32];
 	
-	if (IsServiceBot(target) && MyClient(sptr) && !IsNetAdmin(sptr) && (what == MODE_DEL))
+	if (IsServiceBot(target) && MyClient(sptr) && !OperClass_evaluateACLPath("servicebot:deop",sptr,target,chptr,NULL) && (what == MODE_DEL))
 	{
 		char errmsg2[NICKLEN+32];
 		snprintf(errmsg2, sizeof(errmsg2), "%s is a Service Bot", target->name);
@@ -118,7 +118,7 @@ int servicebot_mode_deop(aClient *sptr, aClient *target, aChannel *chptr,
 
 int servicebot_pre_kill(aClient *sptr, aClient *target, char *reason)
 {
-	if (IsServiceBot(target) && !(IsNetAdmin(sptr) || IsULine(sptr)))
+	if (IsServiceBot(target) && !(OperClass_evaluateACLPath("servicebot:kill",sptr,target,NULL,NULL) || IsULine(sptr)))
 	{
 		sendto_one(sptr, err_str(ERR_KILLDENY), me.name,
 			sptr->name, target->name);

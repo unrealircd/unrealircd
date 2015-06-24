@@ -157,7 +157,7 @@ DLLFUNC CMD_FUNC(m_names)
 	for (cm = chptr->members; cm; cm = cm->next)
 	{
 		acptr = cm->cptr;
-		if (IsInvisible(acptr) && !member && !IsNetAdmin(sptr))
+		if (IsInvisible(acptr) && !member && !OperClass_evaluateACLPath("override:names:invisible",sptr,acptr,chptr,NULL))
 			continue;
 
 		for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)

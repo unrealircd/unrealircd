@@ -614,7 +614,7 @@ char has_common_chan = 0;
 static void do_channel_who(aClient *sptr, aChannel *channel, char *mask)
 {
 	Member *cm = channel->members;
-	if (IsMember(sptr, channel) || IsNetAdmin(sptr))
+	if (IsMember(sptr, channel) || OperClass_evaluateACLPath("who:onchannel",sptr,NULL,channel,NULL))
 		who_flags |= WF_ONCHANNEL;
 
 	for (cm = channel->members; cm; cm = cm->next)

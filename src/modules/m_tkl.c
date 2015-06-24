@@ -1363,7 +1363,7 @@ int  _find_shun(aClient *cptr)
 
 	if (IsShunned(cptr))
 		return 1;
-	if (IsAdmin(cptr))
+	if (OperClass_evaluateACLPath("immune:shun",cptr,NULL,NULL,NULL))
 		return 1;
 
 	nowtime = TStime();

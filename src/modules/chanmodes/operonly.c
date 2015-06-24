@@ -103,7 +103,7 @@ DLLFUNC int operonly_check (aClient *cptr, aChannel *chptr, char *key, char *par
 DLLFUNC int operonly_check_ban(aClient *cptr, aChannel *chptr)
 {
 	 if ((chptr->mode.extmode & EXTCMODE_OPERONLY) &&
-		    IsAnOper(cptr) && !IsSkoAdmin(cptr) && !IsCoAdmin(cptr))
+		    IsAnOper(cptr) && !OperClass_evaluateACLPath("override:ban:operonly",cptr,NULL,NULL,NULL))
 		 return HOOK_DENY;
 
 	 return HOOK_CONTINUE;

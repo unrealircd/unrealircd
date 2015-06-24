@@ -359,11 +359,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define IsClientF(x)		((x)->user->snomask & SNO_CLIENT)
 #define IsFloodF(x)		((x)->user->snomask & SNO_FLOOD)
 #define IsEyes(x)		((x)->user->snomask & SNO_EYES)
-#define IsAdmin(x)		((x)->umodes & UMODE_ADMIN)
-
-#define IsNetAdmin(x)		((x)->umodes & UMODE_NETADMIN)
-#define IsCoAdmin(x)		((x)->umodes & UMODE_COADMIN)
-#define IsSAdmin(x)		((x)->umodes & UMODE_SADMIN)
 #define SendFailops(x)		((x)->umodes & UMODE_FAILOP)
 #define	IsOper(x)		((x)->umodes & UMODE_OPER)
 #define	IsLocOp(x)		((x)->umodes & UMODE_LOCOP)
@@ -416,10 +411,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define SetFloodF(x)		((x)->user->snomask |= SNO_FLOOD)
 #define	SetOper(x)		((x)->umodes |= UMODE_OPER)
 #define	SetLocOp(x)    		((x)->umodes |= UMODE_LOCOP)
-#define SetAdmin(x)		((x)->umodes |= UMODE_ADMIN)
-#define SetSAdmin(x)		((x)->umodes |= UMODE_SADMIN)
-#define SetNetAdmin(x)		((x)->umodes |= UMODE_NETADMIN)
-#define SetCoAdmin(x)		((x)->umodes |= UMODE_COADMIN)
 #define	SetInvisible(x)		((x)->umodes |= UMODE_INVISIBLE)
 #define SetEyes(x)		((x)->user->snomask |= SNO_EYES)
 #define	SetWallops(x)  		((x)->umodes |= UMODE_WALLOP)
@@ -435,10 +426,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define SetHidden(x)            ((x)->umodes |= UMODE_HIDE)
 #define SetHideOper(x)      ((x)->umodes |= UMODE_HIDEOPER)
 #define IsSecureConnect(x)	((x)->umodes & UMODE_SECURE)
-#define ClearAdmin(x)		((x)->umodes &= ~UMODE_ADMIN)
-#define ClearNetAdmin(x)	((x)->umodes &= ~UMODE_NETADMIN)
-#define ClearCoAdmin(x)		((x)->umodes &= ~UMODE_COADMIN)
-#define ClearSAdmin(x)		((x)->umodes &= ~UMODE_SADMIN)
 #define ClearKillsF(x)		((x)->user->snomask &= ~SNO_KILLS)
 #define ClearClientF(x)		((x)->user->snomask &= ~SNO_CLIENT)
 #define ClearFloodF(x)		((x)->user->snomask &= ~SNO_FLOOD)
@@ -561,15 +548,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define OPCanUnKline(x)	((x)->oflag & OFLAG_UNKLINE)
 #define OPCanLNotice(x)	((x)->oflag & OFLAG_LNOTICE)
 #define OPCanGNotice(x)	((x)->oflag & OFLAG_GNOTICE)
-#define OPIsAdmin(x)	((x)->oflag & OFLAG_ADMIN)
-#define OPIsSAdmin(x)	((x)->oflag & OFLAG_SADMIN)
-#define OPIsNetAdmin(x) ((x)->oflag & OFLAG_NETADMIN)
-#define OPIsCoAdmin(x)	((x)->oflag & OFLAG_COADMIN)
-#ifdef SHOW_SECRET
 #define OPCanSeeSecret(x) IsAnOper(x)
-#else
-#define OPCanSeeSecret(x) IsNetAdmin(x)
-#endif
 
 #define OPSetRehash(x)	((x)->oflag |= OFLAG_REHASH)
 #define OPSetDie(x)	((x)->oflag |= OFLAG_DIE)
@@ -586,10 +565,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define OPSetUnKline(x)	((x)->oflag |= OFLAG_UNKLINE)
 #define OPSetLNotice(x)	((x)->oflag |= OFLAG_LNOTICE)
 #define OPSetGNotice(x)	((x)->oflag |= OFLAG_GNOTICE)
-#define OPSSetAdmin(x)	((x)->oflag |= OFLAG_ADMIN)
-#define OPSSetSAdmin(x)	((x)->oflag |= OFLAG_SADMIN)
-#define OPSSetNetAdmin(x) ((x)->oflag |= OFLAG_NETADMIN)
-#define OPSSetCoAdmin(x) ((x)->oflag |= OFLAG_COADMIN)
 #define OPSetZLine(x)	((x)->oflag |= OFLAG_ZLINE)
 #define OPClearRehash(x)	((x)->oflag &= ~OFLAG_REHASH)
 #define OPClearDie(x)		((x)->oflag &= ~OFLAG_DIE)
@@ -606,10 +581,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define OPClearUnKline(x)	((x)->oflag &= ~OFLAG_UNKLINE)
 #define OPClearLNotice(x)	((x)->oflag &= ~OFLAG_LNOTICE)
 #define OPClearGNotice(x)	((x)->oflag &= ~OFLAG_GNOTICE)
-#define OPClearAdmin(x)		((x)->oflag &= ~OFLAG_ADMIN)
-#define OPClearSAdmin(x)	((x)->oflag &= ~OFLAG_SADMIN)
-#define OPClearNetAdmin(x)	((x)->oflag &= ~OFLAG_NETADMIN)
-#define OPClearCoAdmin(x)	((x)->oflag &= ~OFLAG_COADMIN)
 #define OPClearZLine(x)		((x)->oflag &= ~OFLAG_ZLINE)
 /*
  * defined debugging levels
@@ -624,9 +595,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define	DEBUG_DEBUG  8		/* anything to do with debugging, ie unimportant :) */
 #define	DEBUG_MALLOC 9		/* malloc/free calls */
 #define	DEBUG_LIST  10		/* debug list use */
-
-/* blah */
-#define IsSkoAdmin(sptr) (IsAdmin(sptr) || IsNetAdmin(sptr) || IsSAdmin(sptr))
 
 /*
  * defines for curses in client
