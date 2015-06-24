@@ -624,6 +624,7 @@ ac_includes_default="\
 
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
+BUILDDIR
 UNRLINCDIR
 URL
 PTHREAD_CFLAGS
@@ -7985,6 +7986,9 @@ rm -f core conftest.err conftest.$ac_objext \
 fi
 
 UNRLINCDIR="`pwd`/include"
+
+
+BUILDDIR="`pwd`"
 
 
 ac_config_files="$ac_config_files Makefile src/modules/Makefile src/modules/chanmodes/Makefile src/modules/usermodes/Makefile src/modules/snomasks/Makefile src/modules/extbans/Makefile unrealircd extras/ircdcron/ircdchk extras/ircdcron/ircd.cron"

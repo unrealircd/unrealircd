@@ -784,6 +784,9 @@ CHECK_LIBCURL
 UNRLINCDIR="`pwd`/include"
 AC_SUBST(UNRLINCDIR)
 
+BUILDDIR="`pwd`"
+AC_SUBST(BUILDDIR)
+
 AC_CONFIG_FILES([Makefile
 	src/modules/Makefile
 	src/modules/chanmodes/Makefile
