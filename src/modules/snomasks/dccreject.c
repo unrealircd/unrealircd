@@ -64,7 +64,7 @@ int dccreject_dcc_denied(aClient *sptr, aClient *target, char *realfile, char *d
 {
 	sendto_snomask_global(SNO_DCCREJECT, 
 		"%s tried to send forbidden file %s (%s) to %s (is blocked now)",
-		sptr->name, displayfile, dccdeny->reason, target);
+		sptr->name, displayfile, dccdeny->reason, target->name);
 
 	return 0;
 }

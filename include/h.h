@@ -102,34 +102,34 @@ extern int config_is_blankorempty(ConfigEntry *cep, const char *block);
 extern MODVAR int config_verbose;
 extern void config_progress(char *format, ...) __attribute__((format(printf,1,2)));
 extern void       ipport_seperate(char *string, char **ip, char **port);
-ConfigItem_class	*Find_class(char *name);
-ConfigItem_deny_dcc	*Find_deny_dcc(char *name);
-ConfigItem_oper		*Find_oper(char *name);
-ConfigItem_operclass	*Find_operclass(char *name);
-ConfigItem_listen	*Find_listen(char *ipmask, int port);
-ConfigItem_ulines	*Find_uline(char *host);
-ConfigItem_except	*Find_except(aClient *, char *host, short type);
-ConfigItem_tld		*Find_tld(aClient *cptr, char *host);
-ConfigItem_link		*Find_link(char *servername, aClient *acptr);
-ConfigItem_ban 		*Find_ban(aClient *, char *host, short type);
-ConfigItem_ban 		*Find_banEx(aClient *,char *host, short type, short type2);
-ConfigItem_vhost	*Find_vhost(char *name);
-ConfigItem_deny_channel *Find_channel_allowed(aClient *cptr, char *name);
-ConfigItem_alias	*Find_alias(char *name);
-ConfigItem_help 	*Find_Help(char *command);
+extern ConfigItem_class	*Find_class(char *name);
+extern ConfigItem_deny_dcc	*Find_deny_dcc(char *name);
+extern ConfigItem_oper		*Find_oper(char *name);
+extern ConfigItem_operclass	*Find_operclass(char *name);
+extern ConfigItem_listen	*Find_listen(char *ipmask, int port);
+extern ConfigItem_ulines	*Find_uline(char *host);
+extern ConfigItem_except	*Find_except(aClient *, char *host, short type);
+extern ConfigItem_tld		*Find_tld(aClient *cptr, char *host);
+extern ConfigItem_link		*Find_link(char *servername, aClient *acptr);
+extern ConfigItem_ban 		*Find_ban(aClient *, char *host, short type);
+extern ConfigItem_ban 		*Find_banEx(aClient *,char *host, short type, short type2);
+extern ConfigItem_vhost	*Find_vhost(char *name);
+extern ConfigItem_deny_channel *Find_channel_allowed(aClient *cptr, char *name);
+extern ConfigItem_alias	*Find_alias(char *name);
+extern ConfigItem_help 	*Find_Help(char *command);
 
-OperPermission OperClass_evaluateACLPath(char* path, aClient *sptr, aClient *victim, aChannel *channel, void* extra);
+extern OperPermission OperClass_evaluateACLPath(char *path, aClient *sptr, aClient *victim, aChannel *channel, void *extra);
+extern void OperClassValidatorDel(OperClassValidator *validator);
 
-int			AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *username);
-int parse_netmask(const char *text, struct irc_netmask *netmask);
-int match_ip(struct IN_ADDR addr, char *uhost, char *mask, struct irc_netmask *netmask);
+extern int AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *username);
+extern int parse_netmask(const char *text, struct irc_netmask *netmask);
+extern int match_ip(struct IN_ADDR addr, char *uhost, char *mask, struct irc_netmask *netmask);
 #ifdef INET6
-int match_ipv6(struct IN_ADDR *addr, struct IN_ADDR *mask, int bits);
+extern int match_ipv6(struct IN_ADDR *addr, struct IN_ADDR *mask, int bits);
 #endif
-ConfigItem_ban  *Find_ban_ip(aClient *sptr);
-void add_ListItem(ListStruct *, ListStruct **);
-ListStruct *del_ListItem(ListStruct *, ListStruct **);
-/* Remmed out for win32 compatibility.. as stated of 467leaf win32 port.. */
+extern ConfigItem_ban  *Find_ban_ip(aClient *sptr);
+extern void add_ListItem(ListStruct *, ListStruct **);
+extern ListStruct *del_ListItem(ListStruct *, ListStruct **);
 extern aClient *find_match_server(char *mask);
 extern MODVAR LoopStruct loop;
 extern int del_banid(aChannel *chptr, char *banid);
