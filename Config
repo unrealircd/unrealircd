@@ -32,6 +32,8 @@ if [ -z "$BINDIR" -o -z "$DATADIR" -o -z "$CONFDIR" -o -z "$MODULESDIR" -o -z "$
 	exit
 fi
 
+mkdir -p $TMPDIR
+
 # Do this even if we're not in advanced mode
 if [ "$SHOWLISTMODES" = "1" ] ; then
 	ARG="$ARG--with-showlistmodes "
@@ -447,7 +449,8 @@ echo "You can just press ENTER to accept the defaults!"
 TEST="$BASEPATH"
 echo ""
 echo "In what directory do you want to install UnrealIRCd?"
-echo "(Note: in Unreal3.4.x you should always install somewhere)"
+echo "(Note: in Unreal3.4.x you should always install somewhere,"
+echo "and if this directory does not exist it will be created)"
 echo $n "[$TEST] -> $c"
 read cc
 if [ -z "$cc" ] ; then
