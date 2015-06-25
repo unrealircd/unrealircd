@@ -513,3 +513,7 @@ cloak.so: cloak.c $(INCLUDES)
 
 clean:
 	$(RM) -f *.o *.so *~ core
+	cd usermodes; make clean; cd ..
+	cd chanmodes; make clean; cd ..
+	cd snomasks; make clean; cd ..
+	cd extbans; make clean; cd ..
