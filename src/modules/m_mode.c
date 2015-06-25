@@ -1823,7 +1823,6 @@ DLLFUNC CMD_FUNC(_m_umode)
 	    MyConnect(sptr))
 	{
 		list_del(&sptr->special_node);
-		sptr->oflag = 0;
 		remove_oper_snomasks(sptr);
 		RunHook2(HOOKTYPE_LOCAL_OPER, sptr, 0);
 	}

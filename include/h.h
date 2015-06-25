@@ -397,13 +397,9 @@ extern MODVAR long UMODE_OPER;      /*  0x0002	 Operator */
 extern MODVAR long UMODE_WALLOP;    /*  0x0004	 send wallops to them */
 extern MODVAR long UMODE_FAILOP;    /*  0x0008	 Shows some global messages */
 extern MODVAR long UMODE_REGNICK;   /*  0x0020	 Nick set by services as registered */
-extern MODVAR long UMODE_SADMIN;    /*  0x0040	 Services Admin */
-extern MODVAR long UMODE_ADMIN;     /*  0x0080	 Admin */
 extern MODVAR long UMODE_SERVNOTICE;/* 0x0100	 server notices such as kill */
 extern MODVAR long UMODE_LOCOP;     /* 0x0200	 Local operator -- SRB */
 extern MODVAR long UMODE_HIDE;	     /* 0x8000	 Hide from Nukes */
-extern MODVAR long UMODE_NETADMIN;  /* 0x10000	 Network Admin */
-extern MODVAR long UMODE_COADMIN;   /* 0x80000	 Co Admin */
 extern MODVAR long UMODE_SECURE;    /*	0x800000	 User is a secure connect */
 extern MODVAR long UMODE_DEAF;      /* 0x10000000       Deaf */
 extern MODVAR long UMODE_HIDEOPER;  /* 0x20000000	 Hide oper mode */

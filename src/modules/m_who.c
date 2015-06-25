@@ -356,7 +356,7 @@ int i = 1;
 					}
 
 					if (!IsAnOper(sptr))
-						*umodes = *umodes & (UMODE_OPER | UMODE_LOCOP | UMODE_SADMIN | UMODE_ADMIN | UMODE_COADMIN | UMODE_NETADMIN);
+						*umodes = *umodes & UMODE_OPER; /* these are usermodes regular users may search for. just oper now. */
 					if (*umodes == 0)
 						return -1;
 				}

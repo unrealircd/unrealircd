@@ -103,7 +103,6 @@ long oldumodes;
 					oldumodes = acptr->umodes;
 					remove_oper_modes(acptr);
 					remove_oper_snomasks(acptr);
-					acptr->oflag = 0;
 					send_umode_out(acptr, acptr, oldumodes);
 					RunHook2(HOOKTYPE_LOCAL_OPER, acptr, 0);
 				}

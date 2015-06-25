@@ -47,53 +47,6 @@ DLLFUNC int m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]);
 /* Place includes here */
 #define MSG_OPER        "OPER"  /* OPER */
 
-typedef struct oper_oflag_ {
-	unsigned long oflag;
-	long* umode;	/* you just HAD to make them variables */
-	char** host;
-	char* announce;
-} oper_oflag_t;
-
-static oper_oflag_t oper_oflags[10]; 
-
-static void init_operflags()
-{
-	static const char* operAnnouncement = "is now an operator";
-	oper_oflags[0].oflag = OFLAG_NETADMIN;
-	oper_oflags[0].umode = &UMODE_NETADMIN;
-	oper_oflags[0].host = &netadmin_host;
-	oper_oflags[0].announce = operAnnouncement;
-	oper_oflags[1].oflag = OFLAG_SADMIN;
-	oper_oflags[1].umode = &UMODE_SADMIN;
-	oper_oflags[1].host = &sadmin_host;
-	oper_oflags[1].announce = operAnnouncement;
-	oper_oflags[2].oflag = OFLAG_ADMIN;
-	oper_oflags[2].umode = &UMODE_ADMIN;
-	oper_oflags[2].host = &admin_host;
-	oper_oflags[2].announce = operAnnouncement;
-	oper_oflags[3].oflag = OFLAG_COADMIN;
-	oper_oflags[3].umode = &UMODE_COADMIN;
-	oper_oflags[3].host = &coadmin_host;
-	oper_oflags[3].announce = operAnnouncement;
-	oper_oflags[4].oflag = OFLAG_ISGLOBAL;
-	oper_oflags[4].umode = &UMODE_OPER;
-	oper_oflags[4].host = &oper_host;
-	oper_oflags[4].announce = operAnnouncement;
-	oper_oflags[5].oflag= OFLAG_GLOBOP;
-	oper_oflags[5].umode = &UMODE_FAILOP;
-	oper_oflags[5].host = NULL;
-	oper_oflags[5].announce = NULL;
-	oper_oflags[6].oflag = OFLAG_WALLOP;
-	oper_oflags[6].umode = &UMODE_WALLOP;
-	oper_oflags[6].host = NULL;
-	oper_oflags[6].announce = NULL;
-	oper_oflags[7].oflag = 0;
-	oper_oflags[7].umode = NULL;
-	oper_oflags[7].host = NULL;
-	oper_oflags[7].announce = NULL;
-}
-	
-
 ModuleHeader MOD_HEADER(m_oper)
   = {
 	"oper",	/* Name of module */
@@ -114,7 +67,6 @@ DLLFUNC int MOD_INIT(m_oper)(ModuleInfo *modinfo)
 /* Is first run when server is 100% ready */
 DLLFUNC int MOD_LOAD(m_oper)(int module_load)
 {
-	init_operflags();
 	return MOD_SUCCESS;
 }
 
@@ -150,12 +102,12 @@ void set_oper_host(aClient *sptr, char *host)
 **	parv[2] = oper password
 */
 
-DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
+DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[])
+{
 	ConfigItem_oper *aconf;
 	char *name, *password;
-	char* host = 0;
 	int i = 0, j = 0;
-	char* announce = 0;
+	long old; /* old user modes */
 
 	if (!MyClient(sptr))
 		return 0;
@@ -175,13 +127,15 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 	if (IsAnOper(sptr)) {
 		sendto_one(sptr, rpl_str(RPL_YOUREOPER),
 		    me.name, parv[0]);
+		// TODO: de-confuse this ? ;)
 		return 0;
 	}
 
 	name = parv[1];
 	password = (parc >= 2) ? parv[2] : "";
 
-	if (!(aconf = Find_oper(name))) {
+	if (!(aconf = Find_oper(name)))
+	{
 		sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, parv[0]);
 		sendto_snomask_global
 		    (SNO_OPER, "Failed OPER attempt by %s (%s@%s) [unknown oper]",
@@ -205,147 +159,6 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 	}
 
 	i = Auth_Check(cptr, aconf->auth, password);
-	if (i > 1)
-	{
-		int  old = (sptr->umodes & ALL_UMODES);
-
-		/* Check oper::require_modes */
-		if (aconf->require_modes & ~sptr->umodes)
-		{
-			sendto_one(sptr, ":%s %d %s :You are missing user modes required to OPER", me.name, ERR_NOOPERHOST, parv[0]);
-			sendto_snomask_global
-				(SNO_OPER, "Failed OPER attempt by %s (%s@%s) [lacking modes '%s' in oper::require-modes]",
-				 parv[0], sptr->user->username, sptr->sockhost, get_modestr(aconf->require_modes & ~sptr->umodes));
-			ircd_log(LOG_OPER, "OPER MISSINGMODES (%s) by (%s!%s@%s), needs modes=%s",
-				 name, parv[0], sptr->user->username, sptr->sockhost,
-				 get_modestr(aconf->require_modes & ~sptr->umodes));
-			sptr->since += 7;
-			return 0;
-		}
-
-		if (aconf->maxlogins && (count_oper_sessions(aconf->name) >= aconf->maxlogins))
-		{
-			sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, parv[0]);
-			sendto_one(sptr, ":%s NOTICE %s :Your maximum number of concurrent oper logins has been reached (%d)",
-				me.name, sptr->name, aconf->maxlogins);
-			sendto_snomask_global
-				(SNO_OPER, "Failed OPER attempt by %s (%s@%s) using UID %s [maxlogins reached]",
-				parv[0], sptr->user->username, sptr->sockhost, name);
-			ircd_log(LOG_OPER, "OPER TOOMANYLOGINS (%s) by (%s!%s@%s)", name, parv[0],
-				sptr->user->username, sptr->sockhost);
-			sptr->since += 4;
-			return 0;
-		}
-
-		if (sptr->user->operlogin)
-			MyFree(sptr->user->operlogin);
-		sptr->user->operlogin = strdup(aconf->name);
-
-		/* Put in the right class */
-		if (sptr->class)
-			sptr->class->clients--;
-
-		sptr->class = aconf->class;
-		sptr->class->clients++;
-		sptr->oflag = 0;
-		if (aconf->swhois) {
-			if (sptr->user->swhois)
-				MyFree(sptr->user->swhois);
-                        sptr->user->swhois = strdup(aconf->swhois);
-			sendto_server(cptr, 0, 0, ":%s SWHOIS %s :%s",
-			    me.name, sptr->name, aconf->swhois);
-		}
-
-/* new oper code */
-
-		if (aconf->modes)
-			sptr->umodes |= aconf->modes;
-		else
-			sptr->umodes |= OPER_MODES;
-
-/* handle oflags that trigger umodes */
-		
-		while(oper_oflags[j].umode) {
-			if(aconf->oflags & oper_oflags[j].oflag) {	/* we match this oflag */
-				if (!announce && oper_oflags[j].announce) { /* we haven't matched an oper_type yet */
-					host = *oper_oflags[j].host;	/* set the iNAH host */
-					announce = oper_oflags[j].announce; /* set the announcement */
-				}
-				sptr->umodes |= 
-					*oper_oflags[j].umode; /* add the umode for this oflag */
-			}
-			j++;
-		}
-
-		sptr->oflag = aconf->oflags;
-		if ((aconf->oflags & OFLAG_HIDE) && iNAH && !BadPtr(host)) {
-			set_oper_host(sptr, host);
-		} else
-		if (IsHidden(sptr) && !sptr->user->virthost) {
-			/* +x has just been set by modes-on-oper and iNAH is off */
-			sptr->user->virthost = strdup(sptr->user->cloakedhost);
-		}
-
-		if (!IsOper(sptr))
-		{
-			sptr->umodes |= UMODE_LOCOP;
-			if ((aconf->oflags & OFLAG_HIDE) && iNAH && !BadPtr(locop_host)) {
-				set_oper_host(sptr, locop_host);
-			} else
-			if (IsHidden(sptr) && !sptr->user->virthost) {
-				 /* +x has just been set by modes-on-oper and iNAH is off */
-				  sptr->user->virthost = strdup(sptr->user->cloakedhost);
-			}
-			sendto_snomask(SNO_OPER, "%s (%s@%s) is now a local operator (o)",
-				       parv[0], sptr->user->username, sptr->sockhost);
-		}
-
-
-		if (announce != NULL)
-			sendto_snomask_global(SNO_OPER,
-			    "%s (%s@%s) [%s] %s",
-			    parv[0], sptr->user->username, sptr->sockhost,
-			    parv[1], announce);
-		if (aconf->snomask)
-			set_snomask(sptr, aconf->snomask);
-		else
-			set_snomask(sptr, OPER_SNOMASK);
-		if (sptr->user->snomask)
-		{
-			sptr->user->snomask |= SNO_SNOTICE; /* set +s if needed */
-			sptr->umodes |= UMODE_SERVNOTICE;
-		}
-		
-		send_umode_out(cptr, sptr, old);
-		sendto_one(sptr, rpl_str(RPL_SNOMASK),
-			me.name, parv[0], get_sno_str(sptr));
-
-		list_add(&sptr->special_node, &oper_list);
-
-		RunHook2(HOOKTYPE_LOCAL_OPER, sptr, 1);
-		sendto_one(sptr, rpl_str(RPL_YOUREOPER), me.name, parv[0]);
-		if (IsInvisible(sptr) && !(old & UMODE_INVISIBLE))
-			IRCstats.invisible++;
-		if (IsOper(sptr) && !IsHideOper(sptr))
-			IRCstats.operators++;
-
-		if (SHOWOPERMOTD == 1)
-			do_cmd(cptr, sptr, "OPERMOTD", parc, parv);
-		if (!BadPtr(OPER_AUTO_JOIN_CHANS)
-		    && strcmp(OPER_AUTO_JOIN_CHANS, "0"))
-		{
-			char *chans[3] = {
-				sptr->name,
-				OPER_AUTO_JOIN_CHANS,
-				NULL
-			};
-			if (do_cmd(cptr, sptr, "JOIN", 3, chans) == FLUSH_BUFFER)
-				return FLUSH_BUFFER;
-		}
-		ircd_log(LOG_OPER, "OPER (%s) by (%s!%s@%s)", name, parv[0], sptr->user->username,
-			sptr->sockhost);
-
-	}
 	if (i == -1)
 	{
 		sendto_one(sptr, err_str(ERR_PASSWDMISMATCH), me.name, parv[0]);
@@ -358,7 +171,135 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[]) {
 		    (SNO_OPER, "Failed OPER attempt by %s (%s@%s) using UID %s [FAILEDAUTH]",
 		    parv[0], sptr->user->username, sptr->sockhost, name);
 		sptr->since += 7;
+		return 0;
 	}
-	/* Belay that order, number One. (-2) */
+	
+	if (i < 2)
+		return 0; /* anything below 2 means 'not really authenticated' */
+
+	/* Authentication of the oper succeeded (like, password, ssl cert),
+	 * but we still have some other restrictions to check below as well,
+	 * like 'require-modes' and 'maxlogins'...
+	 */
+
+	/* Check oper::require_modes */
+	if (aconf->require_modes & ~sptr->umodes)
+	{
+		sendto_one(sptr, ":%s %d %s :You are missing user modes required to OPER", me.name, ERR_NOOPERHOST, parv[0]);
+		sendto_snomask_global
+			(SNO_OPER, "Failed OPER attempt by %s (%s@%s) [lacking modes '%s' in oper::require-modes]",
+			 parv[0], sptr->user->username, sptr->sockhost, get_modestr(aconf->require_modes & ~sptr->umodes));
+		ircd_log(LOG_OPER, "OPER MISSINGMODES (%s) by (%s!%s@%s), needs modes=%s",
+			 name, parv[0], sptr->user->username, sptr->sockhost,
+			 get_modestr(aconf->require_modes & ~sptr->umodes));
+		sptr->since += 7;
+		return 0;
+	}
+
+	if (aconf->maxlogins && (count_oper_sessions(aconf->name) >= aconf->maxlogins))
+	{
+		sendto_one(sptr, err_str(ERR_NOOPERHOST), me.name, parv[0]);
+		sendto_one(sptr, ":%s NOTICE %s :Your maximum number of concurrent oper logins has been reached (%d)",
+			me.name, sptr->name, aconf->maxlogins);
+		sendto_snomask_global
+			(SNO_OPER, "Failed OPER attempt by %s (%s@%s) using UID %s [maxlogins reached]",
+			parv[0], sptr->user->username, sptr->sockhost, name);
+		ircd_log(LOG_OPER, "OPER TOOMANYLOGINS (%s) by (%s!%s@%s)", name, parv[0],
+			sptr->user->username, sptr->sockhost);
+		sptr->since += 4;
+		return 0;
+	}
+
+	/* /OPER really succeeded now. Start processing it. */
+
+	/* Store which oper block was used to become IRCOp (for maxlogins and whois) */
+	safefree(sptr->user->operlogin);
+	sptr->user->operlogin = strdup(aconf->name);
+
+	/* Put in the right class */
+	if (sptr->class)
+		sptr->class->clients--;
+	sptr->class = aconf->class;
+	sptr->class->clients++;
+
+	/* oper::swhois */
+	if (aconf->swhois)
+	{
+		safefree(sptr->user->swhois);
+		sptr->user->swhois = strdup(aconf->swhois);
+		sendto_server(cptr, 0, 0, ":%s SWHOIS %s :%s",
+			me.name, sptr->name, aconf->swhois);
+	}
+
+	/* set oper user modes */
+	sptr->umodes |= UMODE_OPER;
+	if (aconf->modes)
+		sptr->umodes |= aconf->modes; /* oper::modes */
+	else
+		sptr->umodes |= OPER_MODES; /* set::modes-on-oper */
+
+	/* oper::vhost */
+	if (aconf->vhost)
+	{
+		set_oper_host(sptr, aconf->vhost);
+	} else
+	if (IsHidden(sptr) && !sptr->user->virthost)
+	{
+		/* +x has just been set by modes-on-oper and no vhost. cloak the oper! */
+		sptr->user->virthost = strdup(sptr->user->cloakedhost);
+	}
+
+	sendto_snomask_global(SNO_OPER,
+		"%s (%s@%s) [%s] is now an operator",
+		parv[0], sptr->user->username, sptr->sockhost,
+		parv[1]);
+
+	ircd_log(LOG_OPER, "OPER (%s) by (%s!%s@%s)", name, parv[0], sptr->user->username,
+		sptr->sockhost);
+
+	/* set oper snomasks */
+	if (aconf->snomask)
+		set_snomask(sptr, aconf->snomask); /* oper::snomask */
+	else
+		set_snomask(sptr, OPER_SNOMASK); /* set::snomask-on-oper */
+
+	/* some magic to set user mode +s (and snomask +s) if you have any snomasks set */
+	if (sptr->user->snomask)
+	{
+		sptr->user->snomask |= SNO_SNOTICE;
+		sptr->umodes |= UMODE_SERVNOTICE;
+	}
+	
+	old = (sptr->umodes & ALL_UMODES);
+	send_umode_out(cptr, sptr, old);
+	sendto_one(sptr, rpl_str(RPL_SNOMASK),
+		me.name, parv[0], get_sno_str(sptr));
+
+	list_add(&sptr->special_node, &oper_list);
+
+	RunHook2(HOOKTYPE_LOCAL_OPER, sptr, 1);
+
+	sendto_one(sptr, rpl_str(RPL_YOUREOPER), me.name, parv[0]);
+
+	/* Update statistics */
+	if (IsInvisible(sptr) && !(old & UMODE_INVISIBLE))
+		IRCstats.invisible++;
+	if (IsOper(sptr) && !IsHideOper(sptr))
+		IRCstats.operators++;
+
+	if (SHOWOPERMOTD == 1)
+		do_cmd(cptr, sptr, "OPERMOTD", parc, parv);
+
+	if (!BadPtr(OPER_AUTO_JOIN_CHANS) && strcmp(OPER_AUTO_JOIN_CHANS, "0"))
+	{
+		char *chans[3] = {
+			sptr->name,
+			OPER_AUTO_JOIN_CHANS,
+			NULL
+		};
+		if (do_cmd(cptr, sptr, "JOIN", 3, chans) == FLUSH_BUFFER)
+			return FLUSH_BUFFER;
+	}
+
 	return 0;
 }

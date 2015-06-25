@@ -60,8 +60,8 @@ struct	_confcommand
 	int 	(*testfunc)(ConfigFile *conf, ConfigEntry *ce);
 };
 
-typedef struct _conf_operflag OperFlag;
-struct _conf_operflag
+typedef struct _conf_namevalue NameValue;
+struct _conf_namevalue
 {
 	long	flag;
 	char	*name;
@@ -160,72 +160,8 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "vhost", 		_conf_vhost,		_test_vhost	},
 };
 
-static int _OldOperFlags[] = {
-	OFLAG_LOCAL, 'o',
-	OFLAG_GLOBAL, 'O',
-	OFLAG_REHASH, 'r',
-	OFLAG_DIE, 'D',
-	OFLAG_RESTART, 'R',
-	OFLAG_GLOBOP, 'g',
-	OFLAG_WALLOP, 'w',
-	OFLAG_LOCOP, 'l',
-	OFLAG_LROUTE, 'c',
-	OFLAG_GROUTE, 'L',
-	OFLAG_LKILL, 'k',
-	OFLAG_GKILL, 'K',
-	OFLAG_KLINE, 'b',
-	OFLAG_UNKLINE, 'B',
-	OFLAG_LNOTICE, 'n',
-	OFLAG_GNOTICE, 'G',
-	OFLAG_ADMIN_, 'A',
-	OFLAG_SADMIN_, 'a',
-	OFLAG_NADMIN, 'N',
-	OFLAG_COADMIN, 'C',
-	OFLAG_ZLINE, 'z',
-	OFLAG_HIDE, 'H',
-	OFLAG_TKL, 't',
-	OFLAG_GZL, 'Z',
-	OFLAG_OVERRIDE, 'v',
-	OFLAG_DCCDENY, 'd',
-	OFLAG_ADDLINE, 'X',
-        OFLAG_TSCTL, 'T',
-	0, 0
-};
-
 /* This MUST be alphabetized */
-static OperFlag _OperFlags[] = {
-	{ OFLAG_ADMIN_,		"admin"},
-	{ OFLAG_ADDLINE,	"can_addline"},
-	{ OFLAG_DCCDENY,	"can_dccdeny"},
-	{ OFLAG_DIE,		"can_die" },
-	{ OFLAG_TKL,		"can_gkline"},
-	{ OFLAG_GKILL,		"can_globalkill" },
-	{ OFLAG_GNOTICE,	"can_globalnotice" },
-	{ OFLAG_GROUTE,		"can_globalroute" },
-	{ OFLAG_GLOBOP,         "can_globops" },
-	{ OFLAG_GZL,		"can_gzline"},
-	{ OFLAG_KLINE,		"can_kline" },
-	{ OFLAG_LKILL,		"can_localkill" },
-	{ OFLAG_LNOTICE,	"can_localnotice" },
-	{ OFLAG_LROUTE,		"can_localroute" },
-	{ OFLAG_OVERRIDE,	"can_override" },
-	{ OFLAG_REHASH,		"can_rehash" },
-	{ OFLAG_RESTART,        "can_restart" },
-	{ OFLAG_TSCTL,		"can_tsctl" },
-	{ OFLAG_UNKLINE,	"can_unkline" },
-	{ OFLAG_WALLOP,         "can_wallops" },
-	{ OFLAG_ZLINE,		"can_zline"},
-	{ OFLAG_COADMIN_,	"coadmin"},
-	{ OFLAG_HIDE,		"get_host"},
-	{ OFLAG_GLOBAL,		"global" },
-	{ OFLAG_LOCAL,		"local" },
-	{ OFLAG_LOCOP,		"locop"},
-	{ OFLAG_NADMIN,		"netadmin"},
-	{ OFLAG_SADMIN_,	"services-admin"},
-};
-
-/* This MUST be alphabetized */
-static OperFlag _ListenerFlags[] = {
+static NameValue _ListenerFlags[] = {
 	{ LISTENER_CLIENTSONLY,  "clientsonly"},
 	{ LISTENER_DEFER_ACCEPT, "defer-accept"},
 	{ LISTENER_SERVERSONLY,  "serversonly"},
@@ -234,14 +170,14 @@ static OperFlag _ListenerFlags[] = {
 };
 
 /* This MUST be alphabetized */
-static OperFlag _LinkFlags[] = {
+static NameValue _LinkFlags[] = {
 	{ CONNECT_AUTO,	"autoconnect" },
 	{ CONNECT_QUARANTINE, "quarantine"},
 	{ CONNECT_SSL,	"ssl"		  },
 };
 
 /* This MUST be alphabetized */
-static OperFlag _LogFlags[] = {
+static NameValue _LogFlags[] = {
 	{ LOG_CHGCMDS, "chg-commands" },
 	{ LOG_CLIENT, "connects" },
 	{ LOG_ERROR, "errors" },
@@ -256,7 +192,7 @@ static OperFlag _LogFlags[] = {
 };
 
 /* This MUST be alphabetized */
-static OperFlag ExceptTklFlags[] = {
+static NameValue ExceptTklFlags[] = {
 	{ 0, "all" },
 	{ TKL_GLOBAL|TKL_KILL,	"gline" },
 	{ TKL_GLOBAL|TKL_NICK,	"gqline" },
@@ -266,7 +202,7 @@ static OperFlag ExceptTklFlags[] = {
 };
 
 /* This MUST be alphabetized */
-static OperFlag _SSLFlags[] = {
+static NameValue _SSLFlags[] = {
 	{ SSLFLAG_FAILIFNOCERT, "fail-if-no-clientcert" },
 	{ SSLFLAG_DONOTACCEPTSELFSIGNED, "no-self-signed" },
 	{ SSLFLAG_NOSTARTTLS, "no-starttls" },
@@ -2402,7 +2338,7 @@ int	config_run()
 }
 
 
-OperFlag *config_binary_flags_search(OperFlag *table, char *cmd, int size) {
+NameValue *config_binary_flags_search(NameValue *table, char *cmd, int size) {
 	int start = 0;
 	int stop = size-1;
 	int mid;
@@ -3559,7 +3495,6 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
 	ConfigItem_oper *oper = NULL;
-	OperFlag *ofp = NULL;
 
 	oper =  MyMallocEx(sizeof(ConfigItem_oper));
 	oper->name = strdup(ce->ce_vardata);
@@ -3579,32 +3514,6 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 					cep->ce_vardata);
 				oper->class = default_class;
-			}
-		}
-		else if (!strcmp(cep->ce_varname, "flags"))
-		{
-			if (!cep->ce_entries)
-			{
-				char *m = "*";
-				int *i, flag;
-
-				for (m = (*cep->ce_vardata) ? cep->ce_vardata : m; *m; m++) 
-				{
-					for (i = _OldOperFlags; (flag = *i); i += 2)
-						if (*m == (char)(*(i + 1))) 
-						{
-							oper->oflags |= flag;
-							break;
-						}
-				}
-			}
-			else
-			{
-				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
-				{
-					if ((ofp = config_binary_flags_search(_OperFlags, cepp->ce_varname, ARRAY_SIZEOF(_OperFlags)))) 
-						oper->oflags |= ofp->flag;
-				}
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "swhois"))
@@ -3638,12 +3547,12 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 
 int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 {
-	char has_class = 0, has_password = 0, has_flags = 0, has_swhois = 0, has_snomask = 0;
+	char has_class = 0, has_password = 0, has_swhois = 0, has_snomask = 0;
 	char has_modes = 0, has_require_modes = 0, has_mask = 0, has_maxlogins = 0, has_operclass = 0;
 	int oper_flags = 0;
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
-	OperFlag *ofp;
+	NameValue *ofp;
 	int	errors = 0;
 
 	if (!ce->ce_vardata)
@@ -3684,16 +3593,16 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			continue;
 		}
 		if (!strcmp(cep->ce_varname, "operclass"))
-                {
-                        if (has_operclass)
-                        {
-                                config_warn_duplicate(cep->ce_fileptr->cf_filename,
-                                        cep->ce_varlinenum, "oper::operclass");
-                                continue;
-                        }
-                        has_operclass = 1;
-                        continue;
-                }
+		{
+			if (has_operclass)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum, "oper::operclass");
+				continue;
+			}
+			has_operclass = 1;
+			continue;
+		}
 		/* Regular variables */
 		if (!cep->ce_entries)
 		{
@@ -3797,13 +3706,10 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			/* oper::flags */
 			else if (!strcmp(cep->ce_varname, "flags"))
 			{
-				if (has_flags)
-				{
-					config_warn_duplicate(cep->ce_fileptr->cf_filename,
-						cep->ce_varlinenum, "oper::flags");
-					continue;
-				}
-				has_flags = 1;
+				config_error("%s:%i: oper::flags no longer exists. UnrealIRCd 3.4.x uses a new style oper block now.",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+				need_34_upgrade = 1;
 			}
 			else if (!strcmp(cep->ce_varname, "mask"))
 			{
@@ -3824,31 +3730,10 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			/* oper::flags {} */
 			if (!strcmp(cep->ce_varname, "flags"))
 			{
-				if (has_flags)
-				{
-					config_warn_duplicate(cep->ce_fileptr->cf_filename,
-						cep->ce_varlinenum, "oper::flags");
-					continue;
-				}
-				has_flags = 1;
-				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
-				{
-					if (!cepp->ce_varname)
-					{
-						config_error_empty(cepp->ce_fileptr->cf_filename,
-							cepp->ce_varlinenum, "oper::flags",
-							cep->ce_varname);
-						errors++; 
-						continue;
-					}
-					if (!(ofp = config_binary_flags_search(_OperFlags, cepp->ce_varname, ARRAY_SIZEOF(_OperFlags)))) {
-						config_error_unknownflag(cepp->ce_fileptr->cf_filename,
-							cepp->ce_varlinenum, "oper",
-							cepp->ce_varname);
-						errors++; 
-					} else
-						oper_flags |= ofp->flag;
-				}
+				config_error("%s:%i: oper::flags no longer exists. UnrealIRCd 3.4.x uses a new style oper block now.",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+				need_34_upgrade = 1;
 				continue;
 			}
 			/* oper::from {} */
@@ -3881,29 +3766,20 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			"oper::mask");
 		errors++;
 	}	
-	if (!has_flags)
-	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			"oper::flags");
-		errors++;
-	} else {
-		/* Check oper flags -- warning needed only (autoconvert) */
-		if (!(oper_flags & (OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE)) &&
-		    (oper_flags & (OFLAG_GZL|OFLAG_TKL|OFLAG_OVERRIDE)))
-		{
-			config_warn("%s:%i: oper::oflags: can_gzline/can_gkline/can_override (global privileges) "
-			            "are incompatible with local oper -- user will be globop",
-			            ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		}
-	}
 	if (!has_class)
 	{
 		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 			"oper::class");
 		errors++;
 	}
+	if (!has_operclass)
+	{
+		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			"oper::operclass");
+		need_34_upgrade = 1;
+		errors++;
+	}
 	
-	// TODO: upgrading hints
 	return errors;
 	
 }
@@ -4503,7 +4379,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
 	ConfigItem_listen *listen = NULL;
-	OperFlag    *ofp;
+	NameValue    *ofp;
 	char	    copy[256];
 	char	    *ip;
 	char	    *port;
@@ -4575,7 +4451,7 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 	int	    start, end;
 	int	    errors = 0;
 	char has_options = 0;
-	OperFlag    *ofp;
+	NameValue    *ofp;
 
 	if (!ce->ce_vardata)
 	{
@@ -5178,7 +5054,7 @@ void create_tkl_except_ii(char *mask, char *type)
 {
 	ConfigItem_except *ca;
 	struct irc_netmask tmp;
-	OperFlag *opf;
+	NameValue *opf;
 	ca = MyMallocEx(sizeof(ConfigItem_except));
 	ca->mask = strdup(mask);
 	
@@ -6064,7 +5940,7 @@ int     _conf_log(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp;
 	ConfigItem_log *ca;
-	OperFlag *ofp = NULL;
+	NameValue *ofp = NULL;
 
 	ca = MyMallocEx(sizeof(ConfigItem_log));
 	ca->logfd = -1;
@@ -6206,7 +6082,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp, *ceppp;
 	ConfigItem_link *link = NULL;
-	OperFlag *ofp;
+	NameValue *ofp;
 
 	link = (ConfigItem_link *) MyMallocEx(sizeof(ConfigItem_link));
 	link->servername = strdup(ce->ce_vardata);
@@ -6326,7 +6202,7 @@ void auto_convert_ipv4_to_ipv6(ConfigEntry *cep)
 int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp, *ceppp;
-	OperFlag *ofp;
+	NameValue *ofp;
 	int errors = 0;
 
 	int has_incoming = 0, has_incoming_mask = 0, has_outgoing = 0;
@@ -6715,7 +6591,7 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp, *ceppp;
-	OperFlag 	*ofl = NULL;
+	NameValue 	*ofl = NULL;
 	Hook *h;
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)

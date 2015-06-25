@@ -615,7 +615,7 @@ int stats_oper(aClient *sptr, char *para)
 	  		sendto_one(sptr, rpl_str(RPL_STATSOLINE),
 	  			me.name, sptr->name, 
 	  			'O', m->mask, oper_p->name,
-	  			oflagstr(oper_p->oflags),
+	  			"-",
 	  			oper_p->class->name? oper_p->class->name : "");
 		}
 	}

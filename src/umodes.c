@@ -56,13 +56,9 @@ long UMODE_OPER = 0L;          /* Operator */
 long UMODE_WALLOP = 0L;        /* send wallops to them */
 long UMODE_FAILOP = 0L;        /* Shows some global messages */
 long UMODE_REGNICK = 0L;       /* Nick set by services as registered */
-long UMODE_SADMIN = 0L;        /* Services Admin */
-long UMODE_ADMIN = 0L;         /* Admin */
 long UMODE_SERVNOTICE = 0L;    /* server notices such as kill */
 long UMODE_LOCOP = 0L;         /* Local operator -- SRB */
 long UMODE_HIDE = 0L;          /* Hide from Nukes */
-long UMODE_NETADMIN = 0L;      /* Network Admin */
-long UMODE_COADMIN = 0L;       /* Co Admin */
 long UMODE_SECURE = 0L;        /* User is a secure connect */
 long UMODE_DEAF = 0L;          /* Deaf */
 long UMODE_HIDEOPER = 0L;      /* Hide oper mode */
@@ -116,13 +112,9 @@ void	umode_init(void)
 	UmodeAdd(NULL, 'w', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_WALLOP);
 	UmodeAdd(NULL, 'g', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_FAILOP);
 	UmodeAdd(NULL, 'r', UMODE_GLOBAL, 0, umode_allow_none, &UMODE_REGNICK);
-	UmodeAdd(NULL, 'a', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_SADMIN);
-	UmodeAdd(NULL, 'A', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_ADMIN);
 	UmodeAdd(NULL, 's', UMODE_LOCAL, 0, umode_allow_all, &UMODE_SERVNOTICE);
 	UmodeAdd(NULL, 'O', UMODE_LOCAL, 1, umode_allow_opers, &UMODE_LOCOP);
 	UmodeAdd(NULL, 'x', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_HIDE);
-	UmodeAdd(NULL, 'N', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_NETADMIN);
-	UmodeAdd(NULL, 'C', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_COADMIN);
 	UmodeAdd(NULL, 'z', UMODE_GLOBAL, 0, umode_allow_none, &UMODE_SECURE);
 	UmodeAdd(NULL, 'd', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_DEAF);
 	UmodeAdd(NULL, 'H', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_HIDEOPER);

@@ -44,63 +44,6 @@ extern ircstats IRCstats;
 
 aConfiguration iConf;
 
-#define STAR1 OFLAG_SADMIN|OFLAG_ADMIN|OFLAG_NETADMIN|OFLAG_COADMIN
-#define STAR2 OFLAG_ZLINE|OFLAG_HIDE
-
-MODVAR int oper_access[] = {
-	~(STAR1 | STAR2), '*',
-	OFLAG_LOCAL, 'o',
-	OFLAG_GLOBAL, 'O',
-	OFLAG_REHASH, 'r',
-	OFLAG_DIE, 'D',
-	OFLAG_RESTART, 'R',
-	OFLAG_GLOBOP, 'g',
-	OFLAG_WALLOP, 'w',
-	OFLAG_LOCOP, 'l',
-	OFLAG_LROUTE, 'c',
-	OFLAG_GROUTE, 'L',
-	OFLAG_LKILL, 'k',
-	OFLAG_GKILL, 'K',
-	OFLAG_KLINE, 'b',
-	OFLAG_UNKLINE, 'B',
-	OFLAG_LNOTICE, 'n',
-	OFLAG_GNOTICE, 'G',
-	OFLAG_ADMIN, 'A',
-	OFLAG_SADMIN, 'a',
-	OFLAG_NETADMIN, 'N',
-	OFLAG_COADMIN, 'C',
-	OFLAG_ZLINE, 'z',
-	OFLAG_HIDE, 'H',
-	OFLAG_TKL, 't',
-	OFLAG_GZL, 'Z',
-	OFLAG_OVERRIDE, 'v',
-	OFLAG_DCCDENY, 'd',
-	OFLAG_ADDLINE, 'X',
-        OFLAG_TSCTL, 'T',
-	0, 0
-};
-
-MODVAR char oflagbuf[128];
-
-char *oflagstr(long oflag)
-{
-	int *i, flag;
-	char m;
-	char *p = oflagbuf;
-
-	for (i = &oper_access[6], m = *(i + 1); (flag = *i);
-	    i += 2, m = *(i + 1))
-	{
-		if (oflag & flag)
-		{
-			*p = m;
-			p++;
-		}
-	}
-	*p = '\0';
-	return oflagbuf;
-}
-
 /* ok, given a mask, our job is to determine
  * wether or not it's a safe mask to banish...
  *

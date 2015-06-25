@@ -167,10 +167,10 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/M_SETNAME.DLL SRC/MODULES/M_SETHOST.DLL SRC/MODULES/M_CHGIDENT.DLL \
  SRC/MODULES/M_SVSMOTD.DLL SRC/MODULES/M_SVSNLINE.DLL SRC/MODULES/M_WHO.DLL \
  SRC/MODULES/M_SWHOIS.DLL SRC/MODULES/M_SVSMODE.DLL SRC/MODULES/M_AWAY.DLL \
- SRC/MODULES/M_SVSNOOP.DLL SRC/MODULES/M_MKPASSWD.DLL SRC/MODULES/M_SVSO.DLL \
- SRC/MODULES/M_SVSNICK.DLL SRC/MODULES/M_ADMINCHAT.DLL \
+ SRC/MODULES/M_SVSNOOP.DLL SRC/MODULES/M_MKPASSWD.DLL \
+ SRC/MODULES/M_SVSNICK.DLL \
  SRC/MODULES/M_CHGNAME.DLL SRC/MODULES/M_GUEST.DLL \
- SRC/MODULES/M_LAG.DLL SRC/MODULES/M_MESSAGE.DLL SRC/MODULES/M_NACHAT.DLL \
+ SRC/MODULES/M_LAG.DLL SRC/MODULES/M_MESSAGE.DLL \
  SRC/MODULES/M_OPER.DLL SRC/MODULES/M_PINGPONG.DLL SRC/MODULES/M_QUIT.DLL \
  SRC/MODULES/M_RPING.DLL SRC/MODULES/M_SENDUMODE.DLL \
  SRC/MODULES/M_SQLINE.DLL SRC/MODULES/M_KILL.DLL SRC/MODULES/M_TSCTL.DLL \
@@ -537,14 +537,8 @@ src/modules/m_mkpasswd.dll: src/modules/m_mkpasswd.c $(INCLUDES)
 src/modules/m_svsnoop.dll: src/modules/m_svsnoop.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/m_svsnoop.c $(MODLFLAGS)
 
-src/modules/m_svso.dll: src/modules/m_svso.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/m_svso.c $(MODLFLAGS)
-
 src/modules/m_svsnick.dll: src/modules/m_svsnick.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/m_svsnick.c $(MODLFLAGS)
-
-src/modules/m_adminchat.dll: src/modules/m_adminchat.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/m_adminchat.c $(MODLFLAGS)
 
 src/modules/m_chgname.dll: src/modules/m_chgname.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/m_chgname.c $(MODLFLAGS)
@@ -560,9 +554,6 @@ src/modules/m_lag.dll: src/modules/m_lag.c $(INCLUDES)
 
 src/modules/m_message.dll: src/modules/m_message.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/m_message.c $(MODLFLAGS)
-
-src/modules/m_nachat.dll: src/modules/m_nachat.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/m_nachat.c $(MODLFLAGS)
 
 src/modules/m_oper.dll: src/modules/m_oper.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/m_oper.c $(MODLFLAGS)
