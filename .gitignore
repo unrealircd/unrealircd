@@ -1,0 +1,33 @@
+# Ignores for platform stuff
+.DS_Store
+
+# Ignores for Unix stuff
+*.so
+*.o
+*.dSYM
+
+# Ignores for mac stuff
+## Various settings
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata
+
+## Other
+*.xccheckout
+*.moved-aside
+*.xcuserstate
+*.xcscmblueprint
+
+## Obj-C/Swift specific
+*.hmap
+*.ipa
+
+src/macosx/build/
+DerivedData
+src/macosx/pods/
