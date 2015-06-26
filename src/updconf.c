@@ -1578,6 +1578,8 @@ void update_conf(void)
 	{
 		config_status("");
 		config_status("%d configuration file(s) upgraded. You can now boot UnrealIRCd with your freshly converted conf's!", upgraded_files);
+		config_status("You should probably take a look at the converted configuration files now or at a later time.");
+		config_status("See also https://www.unrealircd.org/docs/Upgrading_from_3.2.x and the sections in there (eg: Oper block)");
 		config_status("");
 	} else {
 		config_status("");
