@@ -1015,6 +1015,7 @@ int upgrade_oper_block(ConfigEntry *ce)
 	char *operclass = NULL; /* set by us, not read from conf */
 	char *vhost = NULL; /* set by us, not read from conf */
 	int i;
+	char silly[64];
 
 	memset(flags, 0, sizeof(flags));
 	*maskbuf = '\0';
@@ -1179,6 +1180,13 @@ int upgrade_oper_block(ConfigEntry *ce)
 	/* The 'coadmin' operclass is actually 'admin'. There's no difference in privileges. */
 	if (!strcmp(operclass, "coadmin"))
 		operclass = "admin";
+	
+	/* convert globop and above w/override to operclassname-with-override */
+	if (contains_flag(flags, flagscnt, "can_override") && strcmp(operclass, "locop"))
+	{
+		snprintf(silly, sizeof(silly), "%s-with-override", operclass);
+		operclass = silly;
+	}
 
 	/* Ok, we got everything we need. Now we will write out the actual new oper block! */
 
