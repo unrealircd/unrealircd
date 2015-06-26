@@ -108,7 +108,7 @@ DLLFUNC int m_tsctl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 		if (stricmp(parv[1], "offset") == 0)
 		{
-			if (!OperClass_evaluateACLPath("server:tsctl",sptr,NULL,NULL,NULL))
+			if (!OperClass_evaluateACLPath("server:tsctl:set",sptr,NULL,NULL,NULL))
                         {
 			    sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 			    return 0;
