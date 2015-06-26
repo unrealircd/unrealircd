@@ -1351,7 +1351,7 @@ int InitwIRCD(int argc, char *argv[])
 
 	do_version_check();
 
-#ifndef	CHROOTDIR
+#if !defined(CHROOTDIR) && !defined(_WIN32)
 	if (chdir(CONFDIR)) {
 # ifndef _WIN32
 		perror("chdir");

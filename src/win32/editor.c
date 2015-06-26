@@ -657,7 +657,7 @@ LRESULT CALLBACK FromFileDLG(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 					lpopen.lpstrFile = path;
 					lpopen.nMaxFile = MAX_PATH;
 					lpopen.lpstrFileTitle = NULL;
-					lpopen.lpstrInitialDir = CFGPATH;
+					lpopen.lpstrInitialDir = CONFDIR;
 					lpopen.lpstrTitle = NULL;
 					lpopen.Flags = (OFN_ENABLESIZING|OFN_NONETWORKBUTTON|
 							OFN_OVERWRITEPROMPT);

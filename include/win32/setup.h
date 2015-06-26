@@ -50,7 +50,7 @@
 #define PERMDATADIR "data"
 #define CACHEDIR "cache"
 #define TMPDIR "tmp"
-#define PIDFILE PERMDATA"/unrealircd.pid"
+#define PIDFILE PERMDATADIR"/unrealircd.pid"
 #define NO_U_TYPES
 #define NEED_U_INT32_T
 #define PREFIX_AQ
