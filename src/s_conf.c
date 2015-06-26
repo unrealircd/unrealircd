@@ -1856,6 +1856,17 @@ int	load_conf(char *filename, const char *original_path)
 	else
 	{
 		config_error("Could not load config file %s", filename);
+#ifdef _WIN32
+		if (!strcmp(filename, "conf/unrealircd.conf"))
+		{
+			if (file_exists("unrealircd.conf"))
+			{
+				config_error("Note that 'unrealircd.conf' now belongs in the 'conf' subdirectory! (So move it to there)");
+			} else {
+				config_error("New to UnrealIRCd? Be sure to read https://www.unrealircd.org/docs/Installing_%28Windows%29");
+			}
+		}
+#endif
 		return -1;
 	}
 }
