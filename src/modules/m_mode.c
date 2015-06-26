@@ -768,8 +768,6 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	 u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char bounce, long my_access)
 {
 	aCtab *tab = &cFlagTab[0];
-
-
 	int  retval = 0;
 	Member *member = NULL;
 	Membership *membership = NULL;
@@ -777,11 +775,10 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	unsigned int tmp = 0;
 	char tmpbuf[512], *tmpstr;
 	char tc = ' ';		/* */
-	int  chasing, x;
+	int  chasing = 0, x;
 	int xxi, xyi, xzi, hascolon;
 	char *xp;
 	int  notsecure;
-	chasing = 0;
 	Hook *h;
 
 	if ((my_access & CHFL_HALFOP) && !is_xchanop(my_access) && !IsULine(cptr)
