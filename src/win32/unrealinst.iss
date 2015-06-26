@@ -176,7 +176,7 @@ procedure CurPageChanged(CurPage: Integer);
 begin
   if (CurPage = wpSelectTasks)then
   begin
-     if FileExists(ExpandConstant('{app}\server.cert.pem')) then
+     if FileExists(ExpandConstant('{app}\conf\ssl\server.cert.pem')) then
      begin
         WizardForm.TasksList.Checked[9]:=false;
      end

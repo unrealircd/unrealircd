@@ -1,4 +1,4 @@
 @title Certificate Generation
-openssl req -new -config ssl.cnf -out server.req.pem -keyout server.key.pem -nodes
-openssl req -x509 -config ssl.cnf -days 365 -in server.req.pem -key server.key.pem -out server.cert.pem
+openssl req -new -config ssl.cnf -out conf/ssl/server.req.pem -keyout conf/ssl/server.key.pem -nodes
+openssl req -x509 -config ssl.cnf -days 365 -in conf/ssl/server.req.pem -key conf/ssl/server.key.pem -out conf/ssl/server.cert.pem
 
