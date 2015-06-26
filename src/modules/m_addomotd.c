@@ -86,7 +86,7 @@ DLLFUNC CMD_FUNC(m_addomotd)
 	if (!MyConnect(sptr))
 		return 0;
 
-	if (!OperClass_evaluateACLPath("server:omotd",sptr,NULL,NULL,NULL))
+	if (!OperClass_evaluateACLPath("server:addomotd",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
@@ -94,7 +94,7 @@ DLLFUNC CMD_FUNC(m_addomotd)
 	if (parc < 2)
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-		    me.name, parv[0], "ADDMOTD");
+		    me.name, parv[0], "ADDOMOTD");
 		return 0;
 	}
 	conf = fopen(conf_files->opermotd_file, "a");
