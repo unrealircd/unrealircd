@@ -324,9 +324,15 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				if (buf[0])
 				{
 					if (IsOper(sptr) && MyClient(acptr))
+					{
+						char *operclass = "???";
+						ConfigItem_oper *oper = Find_oper(acptr->user->operlogin);
+						if (oper && oper->operclass)
+							operclass = oper->operclass;
 						sendto_one(sptr,
-						    ":%s 313 %s %s :is %s (%s)", me.name,
-						    parv[0], name, buf, acptr->user->operlogin);
+						    ":%s 313 %s %s :is %s (%s) [%s]", me.name,
+						    parv[0], name, buf, acptr->user->operlogin, operclass);
+					}
 					else
 						sendto_one(sptr,
 						    rpl_str(RPL_WHOISOPERATOR), me.name,
