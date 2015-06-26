@@ -209,7 +209,7 @@ install: all
 	$(INSTALL) -m 0700 src/modules/extbans/*.so @MODULESDIR@/extbans
 	$(INSTALL) -m 0700 -d @TMPDIR@
 	$(INSTALL) -m 0700 -d @CACHEDIR@
-	$(INSTALL) -m 0700 -d @DATADIR@
+	$(INSTALL) -m 0700 -d @PERMDATADIR@
 	$(INSTALL) -m 0700 -d @LOGDIR@
 	# TODO: ircdcron.. where?
 	-@if [ ! -f "@CONFDIR@/ssl/server.cert.pem" ] ; then \

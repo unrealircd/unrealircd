@@ -508,10 +508,10 @@ AC_ARG_WITH(tmpdir, [AS_HELP_STRING([--with-tmpdir=path],[Specify the directory 
 		TMPDIR="$HOME/unrealircd/tmp"])
 
 AC_ARG_WITH(datadir, [AS_HELP_STRING([--with-datadir=path],[Specify the directory where permanent data is stored])],
-	[AC_DEFINE_UNQUOTED([DATADIR], ["$withval"], [Define the location of permanent data files])
-		DATADIR="$withval"],
+	[AC_DEFINE_UNQUOTED([PERMDATADIR], ["$withval"], [Define the location of permanent data files])
+		PERMDATADIR="$withval"],
 	[AC_DEFINE_UNQUOTED([DATADIR], ["$HOME/unrealircd/data"], [Define the location of permanent data files])
-		DATADIR="$HOME/unrealircd/data"])
+		PERMDATADIR="$HOME/unrealircd/data"])
 
 AC_ARG_WITH(docdir, [AS_HELP_STRING([--with-docdir=path],[Specify the directory where documentation is stored])],
 	[AC_DEFINE_UNQUOTED([DOCDIR], ["$withval"], [Define the location of the documentation])
@@ -532,7 +532,9 @@ AC_SUBST(MODULESDIR)
 AC_SUBST(LOGDIR)
 AC_SUBST(CACHEDIR)
 AC_SUBST(TMPDIR)
-AC_SUBST(DATADIR)
+dnl Why o why PERMDATADIR and not DATADIR you ask?
+dnl well, Because DATADIR conflicts with the Windows SDK header files.. amazing.
+AC_SUBST(PERMDATADIR)
 AC_SUBST(DOCDIR)
 AC_SUBST(PIDFILE)
 

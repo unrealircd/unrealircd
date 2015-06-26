@@ -651,7 +651,7 @@ TRE_CFLAGS
 FD_SETSIZE
 PIDFILE
 DOCDIR
-DATADIR
+PERMDATADIR
 TMPDIR
 CACHEDIR
 LOGDIR
@@ -6230,17 +6230,17 @@ fi
 if test "${with_datadir+set}" = set; then :
   withval=$with_datadir;
 cat >>confdefs.h <<_ACEOF
-#define DATADIR "$withval"
+#define PERMDATADIR "$withval"
 _ACEOF
 
-		DATADIR="$withval"
+		PERMDATADIR="$withval"
 else
 
 cat >>confdefs.h <<_ACEOF
 #define DATADIR "$HOME/unrealircd/data"
 _ACEOF
 
-		DATADIR="$HOME/unrealircd/data"
+		PERMDATADIR="$HOME/unrealircd/data"
 fi
 
 

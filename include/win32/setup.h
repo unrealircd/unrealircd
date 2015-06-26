@@ -47,7 +47,7 @@
 #define CONFDIR "conf"
 #define MODULESDIR "modules"
 #define LOGDIR "logs"
-#define DATADIR "data"
+#define PERMDATADIR "data"
 #define CACHEDIR "cache"
 #define TMPDIR "tmp"
 #define NO_U_TYPES
