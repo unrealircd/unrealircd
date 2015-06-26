@@ -328,7 +328,7 @@ OperPermission OperClass_evaluateACLPath(char* path, aClient *sptr, aClient *vic
         		params->channel = channel;
         		params->extra = extra;
 			
-                        perm = OperClass_evaluateACLPathEx(oc->acls, operPath, params);
+                        perm = OperClass_evaluateACLPathEx(acl, operPath, params);
 			OperClass_freePath(operPath);
 			MyFree(params);
 			return perm;
