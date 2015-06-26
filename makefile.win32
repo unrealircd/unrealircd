@@ -807,9 +807,6 @@ src/modules/cap_invitenotify.dll: src/modules/cap_invitenotify.c $(INCLUDES)
 src/modules/ssl_antidos.dll: src/modules/ssl_antidos.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/ssl_antidos.c $(MODLFLAGS)
 
-src/modules/chanmodes/adminonly.dll: src/modules/chanmodes/adminonly.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/adminonly.c $(MODLFLAGS)
-
 src/modules/chanmodes/censor.dll: src/modules/chanmodes/censor.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/censor.c $(MODLFLAGS)
 
