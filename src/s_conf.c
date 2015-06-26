@@ -1427,12 +1427,6 @@ void	free_iConf(aConfiguration *i)
 	ircfree(i->network.x_ircnet005);	
 	ircfree(i->network.x_defserv);
 	ircfree(i->network.x_services_name);
-	ircfree(i->network.x_oper_host);
-	ircfree(i->network.x_admin_host);
-	ircfree(i->network.x_locop_host);	
-	ircfree(i->network.x_sadmin_host);
-	ircfree(i->network.x_netadmin_host);
-	ircfree(i->network.x_coadmin_host);
 	ircfree(i->network.x_hidden_host);
 	ircfree(i->network.x_prefix_quit);
 	ircfree(i->network.x_helpchan);
@@ -2224,16 +2218,6 @@ int	config_post_test()
 		Error("set::default-server is missing");
 	if (!settings.has_network_name)
 		Error("set::network-name is missing");
-	if (!settings.has_hosts_global)
-		Error("set::hosts::global is missing");
-	if (!settings.has_hosts_admin)
-		Error("set::hosts::admin is missing");
-	if (!settings.has_hosts_servicesadmin)
-		Error("set::hosts::servicesadmin is missing");
-	if (!settings.has_hosts_netadmin)
-		Error("set::hosts::netadmin is missing");
-	if (!settings.has_hosts_coadmin)
-		Error("set::hosts::coadmin is missing");
 	if (!settings.has_help_channel)
 		Error("set::help-channel is missing");
 	if (!settings.has_hiddenhost_prefix)
@@ -6886,32 +6870,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 			}
 		}
-		else if (!strcmp(cep->ce_varname, "hosts")) {
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
-			{
-				if (!strcmp(cepp->ce_varname, "local")) {
-					ircstrdup(tempiConf.network.x_locop_host, cepp->ce_vardata);
-				}
-				else if (!strcmp(cepp->ce_varname, "global")) {
-					ircstrdup(tempiConf.network.x_oper_host, cepp->ce_vardata);
-				}
-				else if (!strcmp(cepp->ce_varname, "coadmin")) {
-					ircstrdup(tempiConf.network.x_coadmin_host, cepp->ce_vardata);
-				}
-				else if (!strcmp(cepp->ce_varname, "admin")) {
-					ircstrdup(tempiConf.network.x_admin_host, cepp->ce_vardata);
-				}
-				else if (!strcmp(cepp->ce_varname, "servicesadmin")) {
-					ircstrdup(tempiConf.network.x_sadmin_host, cepp->ce_vardata);
-				}
-				else if (!strcmp(cepp->ce_varname, "netadmin")) {
-					ircstrdup(tempiConf.network.x_netadmin_host, cepp->ce_vardata);
-				}
-				else if (!strcmp(cepp->ce_varname, "host-on-oper-up")) {
-					tempiConf.network.x_inah = config_checkval(cepp->ce_vardata,CFG_YESNO);
-				}
-			}
-		}
 		else if (!strcmp(cep->ce_varname, "cloak-keys"))
 		{
 			for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
@@ -7660,101 +7618,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "hosts")) {
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
-			{
-				char *c, *host;
-				if (!cepp->ce_vardata)
-				{
-					config_error_empty(cepp->ce_fileptr->cf_filename,
-						cepp->ce_varlinenum, "set::hosts",
-						cepp->ce_varname);
-					errors++;
-					continue;
-				} 
-				if (!strcmp(cepp->ce_varname, "local")) {
-					CheckDuplicate(cepp, hosts_local, "hosts::local");
-				}
-				else if (!strcmp(cepp->ce_varname, "global")) {
-					CheckDuplicate(cepp, hosts_global, "hosts::global");
-				}
-				else if (!strcmp(cepp->ce_varname, "coadmin")) {
-					CheckDuplicate(cepp, hosts_coadmin, "hosts::coadmin");
-				}
-				else if (!strcmp(cepp->ce_varname, "admin")) {
-					CheckDuplicate(cepp, hosts_admin, "hosts::admin");
-				}
-				else if (!strcmp(cepp->ce_varname, "servicesadmin")) {
-					CheckDuplicate(cepp, hosts_servicesadmin, "hosts::servicesadmin");
-				}
-				else if (!strcmp(cepp->ce_varname, "netadmin")) {
-					CheckDuplicate(cepp, hosts_netadmin, "hosts::netadmin");
-				}
-				else if (!strcmp(cepp->ce_varname, "host-on-oper-up")) {
-					CheckDuplicate(cepp, hosts_host_on_oper_up, "hosts::host-on-oper-up");
-				}
-				else
-				{
-					config_error_unknown(cepp->ce_fileptr->cf_filename,
-						cepp->ce_varlinenum, "set::hosts", cepp->ce_varname);
-					errors++;
-					continue;
-
-				}
-				if ((c = strchr(cepp->ce_vardata, '@')))
-				{
-					char *tmp;
-					if (!(*(c+1)) || (c-cepp->ce_vardata) > USERLEN ||
-					    c == cepp->ce_vardata)
-					{
-						config_error("%s:%i: illegal value for set::hosts::%s",
-							     cepp->ce_fileptr->cf_filename,
-							     cepp->ce_varlinenum, 
-							     cepp->ce_varname);
-						errors++;
-						continue;
-					}
-					for (tmp = cepp->ce_vardata; tmp != c; tmp++)
-					{
-						if (*tmp == '~' && tmp == cepp->ce_vardata)
-							continue;
-						if (!isallowed(*tmp))
-							break;
-					}
-					if (tmp != c)
-					{
-						config_error("%s:%i: illegal value for set::hosts::%s",
-							     cepp->ce_fileptr->cf_filename,
-							     cepp->ce_varlinenum, 
-							     cepp->ce_varname);
-						errors++;
-						continue;
-					}
-					host = c+1;
-				}
-				else
-					host = cepp->ce_vardata;
-				if (strlen(host) > HOSTLEN)
-				{
-					config_error("%s:%i: illegal value for set::hosts::%s",
-						     cepp->ce_fileptr->cf_filename,
-						     cepp->ce_varlinenum, 
-						     cepp->ce_varname);
-					errors++;
-					continue;
-				}
-				for (; *host; host++)
-				{
-					if (!isallowed(*host) && *host != ':')
-					{
-						config_error("%s:%i: illegal value for set::hosts::%s",
-							     cepp->ce_fileptr->cf_filename,
-							     cepp->ce_varlinenum, 
-							     cepp->ce_varname);
-						errors++;
-						continue;
-					}
-				}
-			}
+			config_error("%s:%i: set::hosts has been removed in UnrealIRCd 3.4.x. You can use oper::vhost now.",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			errors++;
+			need_34_upgrade = 1;
 		}
 		else if (!strcmp(cep->ce_varname, "cloak-keys"))
 		{

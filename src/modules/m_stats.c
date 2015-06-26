@@ -1320,20 +1320,6 @@ int stats_set(aClient *sptr, char *para)
 			sptr->name, SPAMFILTER_EXCEPT);
 	sendto_one(sptr, ":%s %i %s :check-target-nick-bans: %s", me.name, RPL_TEXT,
 		sptr->name, CHECK_TARGET_NICK_BANS ? "yes" : "no");
-	sendto_one(sptr, ":%s %i %s :hosts::global: %s", me.name, RPL_TEXT,
-	    sptr->name, oper_host);
-	sendto_one(sptr, ":%s %i %s :hosts::admin: %s", me.name, RPL_TEXT,
-	    sptr->name, admin_host);
-	sendto_one(sptr, ":%s %i %s :hosts::local: %s", me.name, RPL_TEXT,
-	    sptr->name, locop_host);
-	sendto_one(sptr, ":%s %i %s :hosts::servicesadmin: %s", me.name, RPL_TEXT,
-	    sptr->name, sadmin_host);
-	sendto_one(sptr, ":%s %i %s :hosts::netadmin: %s", me.name, RPL_TEXT,
-	    sptr->name, netadmin_host);
-	sendto_one(sptr, ":%s %i %s :hosts::coadmin: %s", me.name, RPL_TEXT,
-	    sptr->name, coadmin_host);
-	sendto_one(sptr, ":%s %i %s :hosts::host-on-oper-up: %i", me.name, RPL_TEXT, sptr->name,
-	    iNAH);
 	RunHook2(HOOKTYPE_STATS, sptr, "S");
 	return 1;
 }
