@@ -1,3 +1,24 @@
+# Ignore configure step
+config.log
+conftest.*
+config.settings
+extras/pcre2*
+extras/c-ares*
+extras/regexp*
+config.status
+extras/tre*
+extras/ircdcron/ircd.cron
+extras/ircdcron/ircdchk
+src/modules/snomasks/Makefile
+src/modules/chanmodes/Makefile
+src/modules/extbans/Makefile
+src/modules/usermodes/Makefile
+src/modules/Makefile
+/Makefile
+unrealircd
+include/setup.h
+
+
 # Ignores for platform stuff
 .DS_Store
 
