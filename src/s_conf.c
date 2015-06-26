@@ -7991,11 +7991,12 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 	}
 	if (strstr(ce->ce_vardata, "modules/cloak") && !strcmp(conf->cf_filename, "modules.conf"))
 	{
-		config_error("You seem to have an include for 'modules.conf'.\n"
-		             "If you have this because you are upgrading from 3.4-alpha3 to a\n"
-		             "later 3.4.x version then please change the include \"modules.conf\";\n"
-		             "into an include \"modules.default.conf\"; (probably in your\n"
-		             "conf/unrealircd.conf). Yeah, we changed the file name.");
+		config_error("You seem to have an include for 'modules.conf'.");
+		config_error("If you have this because you are upgrading from 3.4-alpha3 to a");
+		config_error("later 3.4.x version then please change the include \"modules.conf\";");
+		config_error("into an include \"modules.default.conf\"; (probably in your");
+		config_error("conf/unrealircd.conf). Yeah, we changed the file name.");
+		// TODO ^: silly win32 wrapping prevents this from being displayed otherwise. PLZ FIX! !
 		/* let it continue to load anyway? */
 	}
 	if ((ret = Module_Create(ce->ce_vardata))) {
