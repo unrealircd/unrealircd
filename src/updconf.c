@@ -1468,8 +1468,17 @@ void build_include_list_ex(char *fname, ConfigFile **cf_list)
 
 	for (ce = cf->cf_entries; ce; ce = ce->ce_next)
 		if (!strcmp(ce->ce_varname, "include"))
+		{
+			if ((ce->ce_vardata[0] != '/') && (ce->ce_vardata[0] != '\\') && strcmp(ce->ce_vardata, CPATH))
+			{
+				char *str = MyMallocEx(strlen(ce->ce_vardata) + strlen(CONFDIR) + 4);
+				sprintf(str, "%s/%s", CONFDIR, ce->ce_vardata);
+				MyFree(ce->ce_vardata);
+				ce->ce_vardata = str;
+			}
 			if (!already_included(ce->ce_vardata, *cf_list))
 				build_include_list_ex(ce->ce_vardata, cf_list);
+		}
 }
 
 ConfigFile *build_include_list(char *fname)

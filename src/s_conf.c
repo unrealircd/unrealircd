@@ -1756,7 +1756,8 @@ int	load_conf(char *filename, const char *original_path)
 	ConfigFile 	*cfptr, *cfptr2, **cfptr3;
 	ConfigEntry 	*ce;
 	ConfigItem_include *inc, *my_inc;
-	int		ret;
+	int ret;
+	int fatal_ret;
 	int counter;
 
 	if (config_verbose > 0)
@@ -1830,23 +1831,34 @@ int	load_conf(char *filename, const char *original_path)
 		for (cfptr3 = &conf, cfptr2 = conf; cfptr2; cfptr2 = cfptr2->cf_next)
 			cfptr3 = &cfptr2->cf_next;
 		*cfptr3 = cfptr;
+
+		/* Load modules */
 		if (config_verbose > 1)
 			config_status("Loading modules in %s", filename);
+
+		fatal_ret = 0;
 		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
 			if (!strcmp(ce->ce_varname, "loadmodule"))
 			{
 				 ret = _conf_loadmodule(cfptr, ce);
-				 if (need_34_upgrade)
-				 	upgrade_conf_to_34();
-				 if (ret < 0) 
-					 	return ret;
+				 if (ret < fatal_ret)
+				 	fatal_ret = ret; /* lowest wins */
 			}
+		ret = fatal_ret;
+		if (need_34_upgrade)
+			upgrade_conf_to_34();
+		if (ret < 0) 
+			return ret;
+
+		/* Load includes */
 		if (config_verbose > 1)
 			config_status("Searching through %s for include files..", filename);
 		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
 			if (!strcmp(ce->ce_varname, "include"))
 			{
 				 ret = _conf_include(cfptr, ce);
+				 if (need_34_upgrade)
+				 	upgrade_conf_to_34();
 				 if (ret < 0) 
 					 	return ret;
 			}
@@ -2905,6 +2917,19 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_varlinenum);
 		return -1;
 	}
+
+	if (!strcmp(ce->ce_vardata, "help.conf"))
+		need_34_upgrade = 1;
+
+	/* Hmmm... not really proper huh... */
+	if ((ce->ce_vardata[0] != '/') && (ce->ce_vardata[0] != '\\') && strcmp(ce->ce_vardata, CPATH))
+	{
+		char *str = MyMallocEx(strlen(ce->ce_vardata) + strlen(CONFDIR) + 4);
+		sprintf(str, "%s/%s", CONFDIR, ce->ce_vardata);
+		MyFree(ce->ce_vardata);
+		ce->ce_vardata = str;
+	}
+
 #ifdef USE_LIBCURL
 	if (url_is_valid(ce->ce_vardata))
 		return remote_include(ce);
