@@ -1081,6 +1081,24 @@ int upgrade_oper_block(ConfigEntry *ce)
 				}
 			}
 		}
+		else if (!strcmp(cep->ce_varname, "mask"))
+		{
+			/* processing mask here means we can also upgrade 3.4-alphaX oper blocks.. */
+			if (cep->ce_vardata)
+			{
+				if (fromlistcnt == MAXFROMENTRIES)
+					break; // no room, sorry.
+				fromlist[fromlistcnt++] = cep->ce_vardata;
+			} else
+			{
+				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+				{
+					if (fromlistcnt == MAXFROMENTRIES)
+						break; // no room, sorry.
+					fromlist[fromlistcnt++] = cepp->ce_varname;
+				}
+			}
+		}
 		else if (!cep->ce_vardata)
 			continue; /* invalid */
 		else if (!strcmp(cep->ce_varname, "password"))
