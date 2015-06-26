@@ -82,6 +82,8 @@ Source: "c:\dev\curl-ssl\builds\libcurl-vc-x86-release-dll-sspi-spnego\bin\libcu
 Name: "{app}\tmp"
 Name: "{app}\cache"
 Name: "{app}\logs"
+Name: "{app}\conf"
+Name: "{app}\conf\ssl"
 
 [UninstallDelete]
 Type: files; Name: "{app}\DbgHelp.Dll"
