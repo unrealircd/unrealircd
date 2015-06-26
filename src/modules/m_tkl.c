@@ -193,7 +193,7 @@ DLLFUNC int m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	if (IsServer(sptr))
 		return 0;
-	if ((!OPCanTKL(sptr) || !IsOper(sptr)) &&  !OperClass_evaluateACLPath("gline",sptr,NULL,NULL,NULL))
+	if ((!OPCanTKL(sptr) || !IsOper(sptr)) &&  !OperClass_evaluateACLPath("tkl:gline",sptr,NULL,NULL,NULL))
 
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
@@ -220,7 +220,7 @@ DLLFUNC int m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (IsServer(sptr))
 		return 0;
 
-	if ((!OPCanGZL(sptr) || !IsOper(sptr)) && !OperClass_evaluateACLPath("zline:global",sptr,NULL,NULL,NULL))
+	if ((!OPCanGZL(sptr) || !IsOper(sptr)) && !OperClass_evaluateACLPath("tkl:zline:global",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		sptr->name);
@@ -246,7 +246,7 @@ DLLFUNC int m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (IsServer(sptr))
 		return 0;
 
-	if ((!OPCanTKL(sptr) || !IsOper(sptr)) && !OperClass_evaluateACLPath("shun",sptr,NULL,NULL,NULL))
+	if ((!OPCanTKL(sptr) || !IsOper(sptr)) && !OperClass_evaluateACLPath("tkl:shun",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		sptr->name);
@@ -273,7 +273,7 @@ char *comment = ((parc > 2) && !BadPtr(parv[2])) ? parv[2] : "no reason";
 char *name;
 int remove = 0;
 
-	if (MyClient(sptr) && ((!OPCanTKL(sptr) || !IsOper(sptr))) && !OperClass_evaluateACLPath("shun:temporary",sptr,NULL,NULL,NULL))
+	if (MyClient(sptr) && ((!OPCanTKL(sptr) || !IsOper(sptr))) && !OperClass_evaluateACLPath("tkl:shun:temporary",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		sptr->name);
@@ -344,7 +344,7 @@ DLLFUNC int m_tkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (IsServer(sptr))
 		return 0;
 
-	if ((!OPCanKline(sptr) || !IsAnOper(sptr)) && !OperClass_evaluateACLPath("kline:local",sptr,NULL,NULL,NULL))
+	if ((!OPCanKline(sptr) || !IsAnOper(sptr)) && !OperClass_evaluateACLPath("tkl:kline:local",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		sptr->name);
@@ -407,7 +407,7 @@ DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (IsServer(sptr))
 		return 0;
 
-	if ((!OPCanZline(sptr) || !IsAnOper(sptr)) && !OperClass_evaluateACLPath("zline:local",sptr,NULL,NULL,NULL))
+	if ((!OPCanZline(sptr) || !IsAnOper(sptr)) && !OperClass_evaluateACLPath("tkl:zline:local",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		sptr->name);
