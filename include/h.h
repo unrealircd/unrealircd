@@ -598,7 +598,7 @@ extern MODVAR char backupbuf[];
 extern void add_invite(aClient *, aClient *, aChannel *);
 extern void channel_modes(aClient *cptr, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size, aChannel *chptr);
 extern MODVAR char modebuf[BUFSIZE], parabuf[BUFSIZE];
-extern int op_can_override(aClient *sptr);
+extern int op_can_override(char* acl, aClient *sptr,aChannel *channel,void* extra);
 extern aClient *find_chasing(aClient *sptr, char *user, int *chasing);
 extern MODVAR long opermode;
 extern void add_user_to_channel(aChannel *chptr, aClient *who, int flags);

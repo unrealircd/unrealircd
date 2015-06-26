@@ -785,7 +785,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	Hook *h;
 
 	if ((my_access & CHFL_HALFOP) && !is_xchanop(my_access) && !IsULine(cptr)
-	    && !op_can_override(cptr) && !samode_in_progress)
+	    && !op_can_override("override:mode",cptr,chptr,&modetype) && !samode_in_progress)
 	{
 		if (MyClient(cptr) && (modetype == MODE_HALFOP) && (what == MODE_DEL) &&
 		    param && (find_client(param, NULL) == cptr))
@@ -857,7 +857,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  REQUIRE_PARAMETER()
 		  if (!IsULine(cptr) && !IsServer(cptr) && !is_chanowner(cptr, chptr) && !samode_in_progress)
 		  {
-		  	  if (MyClient(cptr) && !op_can_override(cptr))
+		  	  if (MyClient(cptr) && !op_can_override("override:mode",cptr,chptr,&modetype))
 		  	  {
 		  	  	sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED), me.name, cptr->name, chptr->chname);
 		  	  	break;
@@ -874,7 +874,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  if (!IsULine(cptr) && !IsServer(cptr) && !is_chanowner(cptr, chptr) && !samode_in_progress &&
 		      !(param && (what == MODE_DEL) && (find_client(param, NULL) == cptr)))
 		  {
-		  	  if (MyClient(cptr) && !op_can_override(cptr))
+		  	  if (MyClient(cptr) && !op_can_override("override:mode",cptr,chptr,&modetype))
 		  	  {
 		  	  	sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED), me.name, cptr->name, chptr->chname);
 		  	  	break;
@@ -943,7 +943,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  	/* This probably should work but is completely untested (the operoverride stuff, I mean): */
 		  	if (ret == EX_DENY)
 		  	{
-		  		if (!op_can_override(cptr))
+		  		if (!op_can_override("override:mode:del",cptr,chptr,&modetype))
 		  		{
 					if (MyClient(cptr) && badmode)
 						sendto_one(cptr, "%s", badmode); /* send error message, if any */
@@ -970,7 +970,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  	/* Need this !op_can_override() here again, even with the !opermode
 			  	 * check a few lines up, all due to halfops. -- Syzop
 			  	 */
-				if (!op_can_override(cptr))
+				if (!op_can_override("override:mode:del",cptr,chptr,&modetype))
 				{
 					char errbuf[NICKLEN+30];
 					ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel owner", member->cptr->name);
@@ -996,7 +996,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  	/* Need this !op_can_override() here again, even with the !opermode
 			  	 * check a few lines up, all due to halfops. -- Syzop
 			  	 */
-			  	if (!op_can_override(cptr))
+			  	if (!op_can_override("override:mode:del",cptr,chptr,&modetype))
 			  	{
 					char errbuf[NICKLEN+30];
 					ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel admin", member->cptr->name);
@@ -1256,7 +1256,7 @@ char *morphed;
 	{
 		x = handler->is_ok(cptr, chptr, mode, param, EXCHK_ACCESS, what);
 		if ((x == EX_ALWAYS_DENY) ||
-		    ((x == EX_DENY) && !op_can_override(cptr) && !samode_in_progress))
+		    ((x == EX_DENY) && !op_can_override("override:mode:del",cptr,chptr,handler) && !samode_in_progress))
 		{
 			handler->is_ok(cptr, chptr, mode, param, EXCHK_ACCESS_ERR, what);
 			return paracnt; /* Denied & error msg sent */
@@ -1265,7 +1265,7 @@ char *morphed;
 			opermode = 1; /* override in progress... */
 	} else {
 		/* remote user: we only need to check if we need to generate an operoverride msg */
-		if (!IsULine(cptr) && IsPerson(cptr) && op_can_override(cptr) &&
+		if (!IsULine(cptr) && IsPerson(cptr) && op_can_override("override:mode:del",cptr,chptr,handler) &&
 		    (handler->is_ok(cptr, chptr, mode, param, EXCHK_ACCESS, what) != EX_ALLOW))
 			opermode = 1; /* override in progress... */
 	}

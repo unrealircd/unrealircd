@@ -135,7 +135,7 @@ DLLFUNC CMD_FUNC(m_invite)
         if (i == HOOK_DENY && !IsULine(sptr))
         {
 #ifndef NO_OPEROVERRIDE
-                if ((MyClient(sptr) ? (IsOper(sptr) && OPCanOverride(sptr)) :
+                if ((MyClient(sptr) ? (IsOper(sptr) && (OperClass_evaluateACLPath("override:invite:nopermissions",sptr,NULL,chptr,NULL))) :
 		    IsOper(sptr)) && sptr == acptr)
                         over = 1;
                 else {
@@ -151,7 +151,7 @@ DLLFUNC CMD_FUNC(m_invite)
         if (!IsMember(sptr, chptr) && !IsULine(sptr))
         {
 #ifndef NO_OPEROVERRIDE
-                if ((MyClient(sptr) ? (IsOper(sptr) && OPCanOverride(sptr)) :
+                if ((MyClient(sptr) ? (IsOper(sptr) && (OperClass_evaluateACLPath("override:invite:notinchannel",sptr,NULL,chptr,NULL))) :
 		    IsOper(sptr)) && sptr == acptr)
                         over = 1;
                 else {
@@ -176,7 +176,7 @@ DLLFUNC CMD_FUNC(m_invite)
                 if (!is_chan_op(sptr, chptr) && !IsULine(sptr))
                 {
 #ifndef NO_OPEROVERRIDE
-                if ((MyClient(sptr) ? (IsOper(sptr) && OPCanOverride(sptr)) :
+                if ((MyClient(sptr) ? (IsOper(sptr) && (OperClass_evaluateACLPath("override:invite:nopermissions",sptr,NULL,chptr,NULL))) :
 		    IsOper(sptr)) && sptr == acptr)
                                 over = 1;
                         else {
@@ -191,7 +191,7 @@ DLLFUNC CMD_FUNC(m_invite)
                 else if (!IsMember(sptr, chptr) && !IsULine(sptr))
                 {
 #ifndef NO_OPEROVERRIDE
-                if ((MyClient(sptr) ? (IsOper(sptr) && OPCanOverride(sptr)) :
+                if ((MyClient(sptr) ? (IsOper(sptr) && (OperClass_evaluateACLPath("override:invite:nopermissions",sptr,NULL,chptr,NULL))) :
 		    IsOper(sptr)) && sptr == acptr)
                                 over = 1;
                         else {

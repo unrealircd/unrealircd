@@ -313,7 +313,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 				
 				if (prefix)
 				{
-					if (MyClient(sptr) && !op_can_override(sptr))
+					if (MyClient(sptr) && !op_can_override("override:message:prefix",sptr,chptr,NULL))
 					{
 						Membership *lp = find_membership_link(sptr->user->channel, chptr);
 						/* Check if user is allowed to send. RULES:

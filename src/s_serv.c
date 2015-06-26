@@ -626,7 +626,7 @@ CMD_FUNC(m_rehash)
 {
 	int  x;
 
-	if (MyClient(sptr) && !OPCanRehash(sptr))
+	if (MyClient(sptr) && !OperClass_evaluateACLPath("server:rehash",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
@@ -825,7 +825,7 @@ char *reason = parv[1];
 	aClient *acptr;
 	int i;
 	/* Check permissions */
-	if (MyClient(sptr) && !OPCanRestart(sptr))
+	if (MyClient(sptr) && !OperClass_evaluateACLPath("server:restart",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
@@ -1183,7 +1183,7 @@ CMD_FUNC(m_die)
 {
 	aClient *acptr;
 	int  i;
-	if (!MyClient(sptr) || !OPCanDie(sptr))
+	if (!MyClient(sptr) || !OperClass_evaluateACLPath("server:die",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
