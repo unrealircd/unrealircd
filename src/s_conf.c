@@ -3540,6 +3540,10 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 		{
 			unreal_add_masks(&oper->mask, cep);
 		}
+		else if (!strcmp(cep->ce_varname, "vhost"))
+		{
+			ircstrdup(oper->vhost, cep->ce_vardata);
+		}
 	}
 	AddListItem(oper, conf_oper);
 	return 1;
@@ -3548,7 +3552,8 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 {
 	char has_class = 0, has_password = 0, has_swhois = 0, has_snomask = 0;
-	char has_modes = 0, has_require_modes = 0, has_mask = 0, has_maxlogins = 0, has_operclass = 0;
+	char has_modes = 0, has_require_modes = 0, has_mask = 0, has_maxlogins = 0;
+	char has_operclass = 0, has_vhost = 0;
 	int oper_flags = 0;
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
@@ -3632,6 +3637,17 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 					continue;
 				}
 				has_swhois = 1;
+			}
+			/* oper::vhost */
+			else if (!strcmp(cep->ce_varname, "vhost")) 
+			{
+				if (has_vhost)
+				{
+					config_warn_duplicate(cep->ce_fileptr->cf_filename,
+						cep->ce_varlinenum, "oper::vhost");
+					continue;
+				}
+				has_vhost = 1;
 			}
 			/* oper::snomask */
 			else if (!strcmp(cep->ce_varname, "snomask")) 
