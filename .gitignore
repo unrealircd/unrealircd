@@ -22,10 +22,14 @@ include/setup.h
 # Ignores for platform stuff
 .DS_Store
 
-# Ignores for Unix stuff
+# Ignores for build artifacts
 *.so
 *.o
 *.dSYM
+*.dylib
+src/ircd
+src/version.c
+src/include
 
 # Ignores for mac stuff
 ## Various settings
