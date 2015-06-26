@@ -1440,6 +1440,8 @@ int	config_test();
 
 void config_setdefaultsettings(aConfiguration *i)
 {
+	char tmp[512];
+	
 	i->unknown_flood_amount = 4;
 	i->unknown_flood_bantime = 600;
 	i->oper_snomask = strdup(SNO_DEFOPER);
@@ -1479,8 +1481,10 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->nicklen = NICKLEN;
 	i->link_bindip = strdup("*");
 	i->oper_only_stats = strdup("*");
-	i->x_server_cert_pem = strdup("ssl/server.cert.pem");
-	i->x_server_key_pem = strdup("ssl/server.key.pem");
+	snprintf(tmp, sizeof(tmp), "%s/ssl/server.cert.pem", CONFDIR);
+	i->x_server_cert_pem = strdup(tmp);
+	snprintf(tmp, sizeof(tmp), "%s/ssl/server.key.pem", CONFDIR);
+	i->x_server_key_pem = strdup(tmp);
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,
