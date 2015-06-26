@@ -16,11 +16,12 @@ AppMutex=UnrealMutex,Global\UnrealMutex
 DefaultDirName={pf}\Unreal3.4
 DefaultGroupName=UnrealIRCd
 AllowNoIcons=yes
-LicenseFile=.\gplplusssl.rtf
+LicenseFile=src\win32\gplplusssl.rtf
 Compression=lzma
 SolidCompression=true
 MinVersion=5.0
 OutputDir=../../
+SourceDir=../../
 
 ; !!! Make sure to update SSL validation (WizardForm.TasksList.Checked[9]) if tasks are added/removed !!!
 [Tasks]
@@ -35,45 +36,47 @@ Name: "enccert"; Description: "&Encrypt certificate"; GroupDescription: "SSL opt
 Name: "fixperm"; Description: "Make Unreal folder writable by current user";
 
 [Files]
-Source: "..\..\wircd.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\WIRCD.pdb"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\.CHANGES.NEW"; DestDir: "{app}"; DestName: "CHANGES.NEW.txt";Flags: ignoreversion
-Source: "..\..\.RELEASE.NOTES"; DestDir: "{app}"; DestName: "RELEASE.NOTES.txt"; Flags: ignoreversion
-Source: "..\..\.SICI"; DestDir: "{app}"; DestName: "SICI.txt"; Flags: ignoreversion
-Source: "..\..\badwords.channel.conf"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\badwords.message.conf"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\badwords.quit.conf"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\spamfilter.conf"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\modules.*.conf"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\dccallow.conf"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\Donation"; DestDir: "{app}"; DestName: "Donation.txt"; Flags: ignoreversion
-Source: "..\..\help.conf"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
-Source: "..\..\Unreal.nfo"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\doc\*.*"; DestDir: "{app}\doc"; Flags: ignoreversion
-Source: "..\..\doc\technical\*.*"; DestDir: "{app}\doc\technical"; Flags: ignoreversion
-Source: "..\..\aliases\*"; DestDir: "{app}\aliases"; Flags: ignoreversion
-Source: "..\..\unreal.exe"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0,4.0
-Source: "..\modules\*.dll"; DestDir: "{app}\modules"; Flags: ignoreversion
-Source: "..\modules\chanmodes\*.dll"; DestDir: "{app}\modules\chanmodes"; Flags: ignoreversion
-Source: "..\modules\usermodes\*.dll"; DestDir: "{app}\modules\usermodes"; Flags: ignoreversion
-Source: "..\modules\extbans\*.dll"; DestDir: "{app}\modules\extbans"; Flags: ignoreversion
+Source: "wircd.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "WIRCD.pdb"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".CHANGES.NEW"; DestDir: "{app}"; DestName: "CHANGES.NEW.txt";Flags: ignoreversion
+Source: "doc\RELEASE-NOTES"; DestDir: "{app}"; DestName: "RELEASE.NOTES.txt"; Flags: ignoreversion
+
+Source: "doc\conf\*.conf"; DestDir: "{app}\conf"; Flags: ignoreversion
+Source: "doc\conf\aliases\*.conf"; DestDir: "{app}\conf\aliases"; Flags: ignoreversion
+Source: "doc\conf\help\*.conf"; DestDir: "{app}\conf\help"; Flags: ignoreversion
+Source: "doc\conf\examples\*.conf"; DestDir: "{app}\exmaples\help"; Flags: ignoreversion
+
+Source: "doc\Donation"; DestDir: "{app}"; DestName: "Donation.txt"; Flags: ignoreversion
+Source: "LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
+
+Source: "doc\*.*"; DestDir: "{app}\doc"; Flags: ignoreversion
+Source: "doc\technical\*.*"; DestDir: "{app}\doc\technical"; Flags: ignoreversion
+Source: "doc\conf\aliases\*"; DestDir: "{app}\conf\aliases"; Flags: ignoreversion
+
+Source: "unreal.exe"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0,4.0
+
+Source: "src\win32\makecert.bat"; DestDir: "{app}"; Flags: ignoreversion
+Source: "src\win32\encpem.bat"; DestDir: "{app}"; Flags: ignoreversion
+Source: "src\ssl.cnf"; DestDir: "{app}"; Flags: ignoreversion
+
+Source: "src\modules\*.dll"; DestDir: "{app}\modules"; Flags: ignoreversion
+Source: "src\modules\chanmodes\*.dll"; DestDir: "{app}\modules\chanmodes"; Flags: ignoreversion
+Source: "src\modules\usermodes\*.dll"; DestDir: "{app}\modules\usermodes"; Flags: ignoreversion
+Source: "src\modules\snomasks\*.dll"; DestDir: "{app}\modules\snomasks"; Flags: ignoreversion
+Source: "src\modules\extbans\*.dll"; DestDir: "{app}\modules\extbans"; Flags: ignoreversion
+
 Source: "c:\dev\tre\win32\release\tre.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\dev\pcre2\build\release\pcre2-8.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\dev\c-ares\msvc90\cares\dll-release\cares.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\dev\c-ares\msvc90\cares\dll-release\cares.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\openssl\bin\openssl.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\openssl\bin\ssleay32.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\openssl\bin\libeay32.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\dev\setacl.exe"; DestDir: "{app}\tmp"; Flags: ignoreversion
-Source: ".\makecert.bat"; DestDir: "{app}"; Flags: ignoreversion
-Source: ".\encpem.bat"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\ssl.cnf"; DestDir: "{app}"; Flags: ignoreversion
+
 #ifdef USE_CURL
 ; curl with ssl support
-Source: "C:\dev\curl-ssl\builds\libcurl-vc-x86-release-dll-sspi-spnego\bin\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\curl-ca-bundle.crt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\dev\curl-ssl\builds\libcurl-vc-x86-release-dll-sspi-spnego\bin\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion
 #endif
-;Source: "..\..\..\dbghelp.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 [Dirs]
 Name: "{app}\tmp"
