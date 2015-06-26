@@ -925,6 +925,6 @@ src/modules/extbans/regnick.dll: src/modules/extbans/regnick.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/extbans/ /Fesrc/modules/extbans/ src/modules/extbans/regnick.c $(MODLFLAGS)
 
 src/modules/extbans/operclass.dll: src/modules/extbans/operclass.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) /Fosrc/modules/extbans/ /Fesrc/modules/extbans/ src/modules/extbans/opeclass.c $(MODLFLAGS)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/extbans/ /Fesrc/modules/extbans/ src/modules/extbans/operclass.c $(MODLFLAGS)
 
 dummy:
