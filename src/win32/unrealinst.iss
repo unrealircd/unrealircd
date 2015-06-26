@@ -106,7 +106,8 @@ begin
         ) then
     begin
       MsgBox('UnrealIRCd requires the Microsoft Visual C++ Redistributable for Visual Studio 2012 to be installed.' #13 +
-             'After you click OK you will be taken to a download page. There, choose Download -> choose the vcredist_x86 version (last of 3 choices). Then download and install it.', mbInformation, MB_OK);
+             'After you click OK you will be taken to a download page. There, click Download and choose the vcredist_x86 version. Then download and install it.' #13 +
+             'If you are already absolutely sure that you have this package installed then you can skip this step.', mbInformation, MB_OK);
       ShellExec('open', 'http://www.microsoft.com/en-us/download/details.aspx?id=30679', '', '', SW_SHOWNORMAL,ewNoWait,ErrorCode);
       MsgBox('Click OK once you have installed the Microsoft Visual C++ Redistributable for Visual Studio 2012 (vcredist_x86) to continue the UnrealIRCd installer', mbInformation, MB_OK);
 
