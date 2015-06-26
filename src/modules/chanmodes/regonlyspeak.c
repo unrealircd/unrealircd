@@ -102,7 +102,7 @@ DLLFUNC char * regonlyspeak_part_message (aClient* sptr, aChannel *chptr, char* 
 DLLFUNC int regonlyspeak_can_send (aClient* cptr, aChannel *chptr, char* message, Membership* lp, int notice)
 {
 
-	if (IsRegOnlySpeak(chptr) && !op_can_override(cptr) && !IsLoggedIn(cptr) &&
+	if (IsRegOnlySpeak(chptr) && !op_can_override("override:message:regonlyspeak",cptr,chptr,NULL) && !IsLoggedIn(cptr) &&
 		    (!lp
 		    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
 		    CHFL_HALFOP | CHFL_CHANPROT))))
