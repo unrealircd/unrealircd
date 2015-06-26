@@ -130,7 +130,7 @@ void delete_webircblock(ConfigItem_webirc *e)
 	MyFree(e);
 }
 
-DLLFUNC int webirc_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+int webirc_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	ConfigEntry	*cep, *cepp;
 	int errors = 0;
@@ -244,7 +244,7 @@ DLLFUNC int webirc_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 	return errors ? -1 : 1;
 }
 
-DLLFUNC int webirc_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
+int webirc_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
