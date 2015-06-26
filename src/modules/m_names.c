@@ -123,7 +123,7 @@ DLLFUNC CMD_FUNC(m_names)
 
 	chptr = find_channel(para, (aChannel *)NULL);
 
-	if (!chptr || (!ShowChannel(sptr, chptr) && !OPCanSeeSecret(sptr)))
+	if (!chptr || (!ShowChannel(sptr, chptr) && !OperClass_evaluateACLPath("override:see:names:secret",sptr,NULL,chptr,NULL)))
 	{
 		sendto_one(sptr, rpl_str(RPL_ENDOFNAMES), me.name,
 		    parv[0], para);

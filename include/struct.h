@@ -491,32 +491,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define ClearTKLEXT2(x)		((x)->proto &= ~PROTO_TKLEXT2)
 
 /*
- * defined operator access levels
- */
-#define OPCanOverride(x) 0
-#define OPCanDCCDeny(x) 0
-#define OPCanTKL(x) 0
-#define OPCanGZL(x) 0
-#define OPCanAddline(x) 0
-#define OPCanZline(x) 0
-#define OPCanRehash(x) 0
-#define OPCanDie(x) 0
-#define OPCanTSCtl(x) 0
-#define OPCanRestart(x) 0
-#define OPCanGlobOps(x) 0
-#define OPCanWallOps(x) 0
-#define OPCanLocOps(x) 0
-#define OPCanLRoute(x) 0
-#define OPCanGRoute(x) 0
-#define OPCanLKill(x) 0
-#define OPCanGKill(x) 0
-#define OPCanKline(x) 0
-#define OPCanUnKline(x) 0
-#define OPCanLNotice(x) 0
-#define OPCanGNotice(x) 0
-#define OPCanSeeSecret(x) 0
-
-/*
  * defined debugging levels
  */
 #define	DEBUG_FATAL  0

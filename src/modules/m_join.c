@@ -536,14 +536,14 @@ DLLFUNC CMD_FUNC(_do_join)
 			   (i = can_join(cptr, sptr, chptr, key, parv)))
 			{
 #ifndef NO_OPEROVERRIDE
-				if (i != -1 && !OPCanOverride(sptr))
+				if (i != -1 && !OperClass_evaluateACLPath("override:join",sptr,NULL,chptr,NULL))
 #else
 				if (i != -1)
 #endif
 					sendto_one(sptr, err_str(i),
 					    me.name, parv[0], name);
 #ifndef NO_OPEROVERRIDE
-				else if (i != -1 && OPCanOverride(sptr))
+				else if (i != -1 && OperClass_evaluateACLPath("override:join",sptr,NULL,chptr,NULL) )
 				{
 					sendto_snomask(SNO_EYES, "*** OperOverride -- %s (%s@%s) JOIN %s",
 						sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);

@@ -845,7 +845,7 @@ static char *first_visible_channel(aClient *sptr, aClient *acptr, int *flg)
 		if (ret == EX_DENY)
 			showchannel = 0;
 		
-		if (!showchannel && (OPCanSeeSecret(sptr) || OperClass_evaluateACLPath("override:see:whois",sptr,NULL,chptr,NULL)))
+		if (!showchannel && (OperClass_evaluateACLPath("override:see:who:secret",sptr,NULL,chptr,NULL) || OperClass_evaluateACLPath("override:see:whois",sptr,NULL,chptr,NULL)))
 		{
 			showchannel = 1; /* OperOverride */
 			operoverride = 1;

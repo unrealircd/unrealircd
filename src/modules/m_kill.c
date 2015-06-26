@@ -155,9 +155,9 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    nick, acptr->name);
 			chasing = 1;
 		}
-		if ((!MyConnect(acptr) && MyClient(cptr) && !OPCanGKill(cptr))
+		if ((!MyConnect(acptr) && MyClient(cptr) && !OperClass_evaluateACLPath("kill:global",sptr,acptr,NULL,NULL))
 		    || (MyConnect(acptr) && MyClient(cptr)
-		    && !OPCanLKill(cptr)))
+		    && !OperClass_evaluateACLPath("kill:local",sptr,acptr,NULL,NULL)))
 		{
 			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 			    parv[0]);

@@ -82,7 +82,7 @@ DLLFUNC int MOD_UNLOAD(m_unkline)(int module_unload)
 
 DLLFUNC int m_unkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	if (!MyClient(sptr) || !OPCanUnKline(sptr))
+	if (!MyClient(sptr) || !OperClass_evaluateACLPath("tkl:kline:remove",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
