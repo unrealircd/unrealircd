@@ -1042,7 +1042,7 @@ int upgrade_oper_block(ConfigEntry *ce)
 					{
 						if (FlagMappingTable[i].shortflag == *p)
 						{
-							flags[flagscnt] = cep->ce_vardata;
+							flags[flagscnt] = FlagMappingTable[i].longflag;
 							flagscnt++;
 							break;
 						}
