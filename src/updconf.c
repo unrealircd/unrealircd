@@ -63,6 +63,9 @@ static FlagMapping FlagMappingTable[] = {
 	{ 0, NULL },
 };
 
+int needs_modules_default_conf = 1;
+int needs_operclass_default_conf = 1;
+
 static void die()
 {
 #ifdef _WIN32
@@ -547,10 +550,17 @@ int upgrade_loadmodule(ConfigEntry *ce)
 	
 	if (!file)
 		return 0;
-	
+
 	if (our_strcasestr(file, "commands.dll") || our_strcasestr(file, "/commands.so"))
 	{
 		snprintf(buf, sizeof(buf), "include \"modules.default.conf\";\n");
+		needs_modules_default_conf = 0;
+		if (needs_operclass_default_conf)
+		{
+			/* This is a nice place :) */
+			snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "include \"operclass.default.conf\";\n");
+			needs_operclass_default_conf = 0;
+		}
 		replace_section(ce, buf);
 		config_status("- loadmodule for '%s' replaced with an include \"modules.default.conf\"", file);
 		return 1;
@@ -1247,6 +1257,12 @@ void update_read_settings(char *cfgfile)
 	cf = config_load(cfgfile);
 	if (!cf)
 		return;
+		
+	if (strstr(cfgfile, "modules.default.conf"))
+		needs_modules_default_conf = 0;
+	else if (strstr(cfgfile, "operclass.default.conf"))
+		needs_operclass_default_conf = 0;
+	
 
 	/* This needs to be read early, as the rest may depend on it */
 	for (ce = cf->cf_entries; ce; ce = ce->ce_next)
@@ -1542,6 +1558,21 @@ void update_conf(void)
 		}
 	}
 	configfile = mainconf; /* restore */
+
+	if (needs_operclass_default_conf)
+	{
+		/* There's a slight chance we never added this include, and you get mysterious
+		 * oper permissions errors if you try to use such an operclass and it's missing.
+		 */
+		FILE *fd = fopen(mainconf, "a");
+		if (fd)
+		{
+			fprintf(fd, "\ninclude \"operclass.default.conf\";\n");
+			fclose(fd);
+			config_status("Oh wait, %s needs an include for operclass.default.conf. Added.", mainconf);
+			upgraded_files++;
+		}
+	}	
 	
 	if (upgraded_files > 0)
 	{
