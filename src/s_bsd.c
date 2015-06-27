@@ -689,6 +689,8 @@ static int check_init(aClient *cptr, char *sockn, size_t size)
 	struct SOCKADDR_IN sk;
 	int  len = sizeof(struct SOCKADDR_IN);
 
+	strlcpy(sockn, cptr->sockhost, HOSTLEN);
+	
 	RunHookReturnInt3(HOOKTYPE_CHECK_INIT, cptr, sockn, size, ==0);
 
 	/* Some silly hack to convert 127.0.0.1 and such into 'localhost' */
