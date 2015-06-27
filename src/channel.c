@@ -104,8 +104,6 @@ char cmodestring[512];
 inline int op_can_override(char* acl, aClient *sptr,aChannel *channel,void* extra)
 {
 #ifndef NO_OPEROVERRIDE
-	if (!IsOper(sptr))
-		return 0;
 	if (MyClient(sptr) && !(OperClass_evaluateACLPath(acl,sptr,NULL,channel,extra)))
 		return 0;
 	return 1;
@@ -955,7 +953,7 @@ char *clean_ban_mask(char *mask, int what, aClient *cptr)
 	/* Extended ban? */
 	if ((*mask == '~') && mask[1] && (mask[2] == ':'))
 	{
-		if (RESTRICT_EXTENDEDBANS && MyClient(cptr) && !IsAnOper(cptr))
+		if (RESTRICT_EXTENDEDBANS && MyClient(cptr) && !OperClass_evaluateACLPath("channel:extbans",icptr,NULL,NULL,NULL))
 		{
 			if (!strcmp(RESTRICT_EXTENDEDBANS, "*"))
 			{
