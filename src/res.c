@@ -153,11 +153,17 @@ int optmask;
 	}
 
 	memset(&options, 0, sizeof(options));
-	options.timeout = 3;
+	options.timeout = 2500; /* 2.5 seconds */
 	options.tries = 2;
-	options.flags = ARES_FLAG_NOALIASES|ARES_FLAG_IGNTC;
+	/* Note that the effective DNS timeout is NOT simply 2500*2=5000ms.
+	 * This is because c-ares does some incremental timeout stuff itself
+	 * that may add up to twice the timeout in the second round,
+	 * so effective max is 2500ms first and then 5000ms, so 7500ms in total
+	 * (until they change the algorithm again, that is...).
+	 */
+	options.flags |= ARES_FLAG_NOALIASES|ARES_FLAG_IGNTC;
 	options.sock_state_cb = unrealdns_sock_state_cb;
-	optmask = ARES_OPT_TIMEOUT|ARES_OPT_TRIES|ARES_OPT_FLAGS|ARES_OPT_SOCK_STATE_CB;
+	optmask = ARES_OPT_TIMEOUTMS|ARES_OPT_TRIES|ARES_OPT_FLAGS|ARES_OPT_SOCK_STATE_CB;
 #ifndef _WIN32
 	/* on *NIX don't use the hosts file, since it causes countless useless reads.
 	 * on Windows we use it for now, this could be changed in the future.
@@ -194,7 +200,7 @@ int optmask;
 	}
 
 	ares_set_socket_callback(resolver_channel, unrealdns_sock_create_cb, NULL);
-	unrealdns_timeout_hdl = EventAddEx(NULL, "unrealdns_timeout", 1, 0, unrealdns_timeout, NULL);
+	unrealdns_timeout_hdl = EventAddEx(NULL, "unrealdns_timeout", 0, 0, unrealdns_timeout, NULL);
 }
 
 void reinit_resolver(aClient *sptr)

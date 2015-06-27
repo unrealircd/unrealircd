@@ -1646,21 +1646,7 @@ void SocketLoop(void *dummy)
 		if (IRCstats.me_clients > IRCstats.me_max)
 			IRCstats.me_max = IRCstats.me_clients;
 
-		/*
-		 * ** Adjust delay to something reasonable [ad hoc values]
-		 * ** (one might think something more clever here... --msa)
-		 * ** We don't really need to check that often and as long
-		 * ** as we don't delay too long, everything should be ok.
-		 * ** waiting too long can cause things to timeout...
-		 * ** i.e. PINGS -> a disconnection :(
-		 * ** - avalon
-		 */
-		if (delay < 1)
-			delay = 1;
-		else
-			delay = MIN(delay, TIMESEC);
-
-		fd_select(delay * 1000);
+		fd_select(SOCKETLOOP_MAX_DELAY);
 		
 		process_clients();
 		
