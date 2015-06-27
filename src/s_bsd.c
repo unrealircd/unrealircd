@@ -1346,6 +1346,9 @@ static int parse_client_queued(aClient *cptr)
 	time_t now = TStime();
 	char buf[BUFSIZE];
 
+	if (DoingDNS(cptr))
+		return 0; /* we delay processing of data until the host is resolved */
+
 	while (DBufLength(&cptr->recvQ) &&
 	    ((cptr->status < STAT_UNKNOWN) || (cptr->since - now < 10)))
 	{
