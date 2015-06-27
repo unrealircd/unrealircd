@@ -1,12 +1,11 @@
 ; UnrealIRCd Win32 Installation Script
 ; Requires Inno Setup 4.1.6 or later
 
-
 ; Uncomment the line below to package with libcurl support
 #define USE_CURL
 
 [Setup]
-AppName=UnrealIRCd
+AppName=UnrealIRCd 3.4
 AppVerName=UnrealIRCd3.4-alpha4
 AppPublisher=UnrealIRCd Team
 AppPublisherURL=http://www.unrealircd.com
@@ -20,7 +19,7 @@ LicenseFile=src\win32\gplplusssl.rtf
 Compression=lzma
 SolidCompression=true
 MinVersion=5.0
-OutputDir=../../
+OutputDir=.
 SourceDir=../../
 
 ; !!! Make sure to update SSL validation (WizardForm.TasksList.Checked[9]) if tasks are added/removed !!!
@@ -194,13 +193,14 @@ Name: "{group}\UnrealIRCd"; Filename: "{app}\wircd.exe"; WorkingDir: "{app}"
 Name: "{group}\Uninstall UnrealIRCd"; Filename: "{uninstallexe}"; WorkingDir: "{app}"
 Name: "{group}\Make Certificate"; Filename: "{app}\makecert.bat"; WorkingDir: "{app}"
 Name: "{group}\Encrypt Certificate"; Filename: "{app}\encpem.bat"; WorkingDir: "{app}"
-Name: "{group}\Documentation"; Filename: "{app}\doc\unreal32docs.html"; WorkingDir: "{app}"
+Name: "{group}\Documentation"; Filename: "https://www.unrealircd.org/docs/UnrealIRCd_3.4.x_documentation"; WorkingDir: "{app}"
 Name: "{userdesktop}\UnrealIRCd"; Filename: "{app}\wircd.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\UnrealIRCd"; Filename: "{app}\wircd.exe"; WorkingDir: "{app}"; Tasks: quicklaunchicon
 
 [Run]
-Filename: "notepad"; Description: "View example.conf"; Parameters: "{app}\doc\example.conf"; Flags: postinstall skipifsilent shellexec runmaximized
-Filename: "{app}\doc\unreal32docs.html"; Description: "View UnrealIRCd documentation"; Parameters: ""; Flags: postinstall skipifsilent shellexec runmaximized
+;Filename: "notepad"; Description: "View example.conf"; Parameters: "{app}\conf\examples\example.conf"; Flags: postinstall skipifsilent shellexec runmaximized
+Filename: "https://www.unrealircd.org/docs/"; Description: "View documentation"; Parameters: ""; Flags: postinstall skipifsilent shellexec runmaximized
+Filename: "https://www.unrealircd.org/docs/Installing_%28Windows%29"; Description: "View installation instructions"; Parameters: ""; Flags: postinstall skipifsilent shellexec runmaximized
 Filename: "notepad"; Description: "View Release Notes"; Parameters: "{app}\RELEASE.NOTES.txt"; Flags: postinstall skipifsilent shellexec runmaximized
 Filename: "{app}\unreal.exe"; Parameters: "install"; Flags: runminimized nowait; Tasks: installservice
 Filename: "{app}\unreal.exe"; Parameters: "config startup manual"; Flags: runminimized nowait; Tasks: installservice/startdemand
