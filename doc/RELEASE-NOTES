@@ -239,9 +239,3 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * User mode +h (helpop). This user mode only added a line in /WHOIS
   saying the user "is available for help". You can use a vhost block
   with a vhost::swhois as a replacement. Or oper::swhois. (A4)
-
-==[ KNOWN ISSUES ]==
-* Documentation has NOT been updated to reflect 3.4.x features!!!
-
-==[ ADDITIONAL INFO ]==
-* See Changelog for more details
