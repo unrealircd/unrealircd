@@ -953,7 +953,7 @@ char *clean_ban_mask(char *mask, int what, aClient *cptr)
 	/* Extended ban? */
 	if ((*mask == '~') && mask[1] && (mask[2] == ':'))
 	{
-		if (RESTRICT_EXTENDEDBANS && MyClient(cptr) && !OperClass_evaluateACLPath("channel:extbans",icptr,NULL,NULL,NULL))
+		if (RESTRICT_EXTENDEDBANS && MyClient(cptr) && !OperClass_evaluateACLPath("channel:extbans",cptr,NULL,NULL,NULL))
 		{
 			if (!strcmp(RESTRICT_EXTENDEDBANS, "*"))
 			{
