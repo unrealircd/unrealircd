@@ -409,7 +409,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define SetClientF(x)		((x)->user->snomask |= SNO_CLIENT)
 #define SetFloodF(x)		((x)->user->snomask |= SNO_FLOOD)
 #define	SetOper(x)		((x)->umodes |= UMODE_OPER)
-#define	SetLocOp(x)    		((x)->umodes |= UMODE_LOCOP)
 #define	SetInvisible(x)		((x)->umodes |= UMODE_INVISIBLE)
 #define SetEyes(x)		((x)->user->snomask |= SNO_EYES)
 #define	SetWallops(x)  		((x)->umodes |= UMODE_WALLOP)
@@ -1596,7 +1595,6 @@ struct liststruct {
  */
 #define	MyConnect(x)			((x)->fd != -256)
 #define	MyClient(x)			(MyConnect(x) && IsClient(x))
-#define	MyOper(x)			(MyConnect(x) && IsAnOper(x))
 
 #ifdef CLEAN_COMPILE
 #define TStime() (time(NULL) + TSoffset)
