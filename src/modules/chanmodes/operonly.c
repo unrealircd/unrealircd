@@ -52,8 +52,6 @@ ModuleHeader MOD_HEADER(operonly)
 
 Cmode_t EXTCMODE_OPERONLY;
 
-#define IsOperOnly(chptr)    (chptr->mode.extmode & EXTCMODE_OPERONLY)
-
 DLLFUNC int operonly_require_oper(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what);
 DLLFUNC int operonly_check (aClient *cptr, aChannel *chptr, char *key, char *parv[]);
 DLLFUNC int operonly_topic_allow (aClient *sptr, aChannel *chptr);
@@ -95,7 +93,7 @@ DLLFUNC int MOD_UNLOAD(noctcp)(int module_unload)
 
 DLLFUNC int operonly_check (aClient *cptr, aChannel *chptr, char *key, char *parv[])
 {
-	if ((chptr->mode.extmode & EXTCMODE_OPERONLY) && !IsAnOper(cptr))
+	if ((chptr->mode.extmode & EXTCMODE_OPERONLY) && OperClass_evaluateACLPath("channel:operonly",cptr,NULL,chptr,NULL))
 		return ERR_OPERONLY;
 	return 0;
 }
@@ -103,7 +101,7 @@ DLLFUNC int operonly_check (aClient *cptr, aChannel *chptr, char *key, char *par
 DLLFUNC int operonly_check_ban(aClient *cptr, aChannel *chptr)
 {
 	 if ((chptr->mode.extmode & EXTCMODE_OPERONLY) &&
-		    IsAnOper(cptr) && !OperClass_evaluateACLPath("override:ban:operonly",cptr,NULL,NULL,NULL))
+		    !OperClass_evaluateACLPath("override:ban:operonly",cptr,NULL,NULL,NULL))
 		 return HOOK_DENY;
 
 	 return HOOK_CONTINUE;
@@ -111,7 +109,7 @@ DLLFUNC int operonly_check_ban(aClient *cptr, aChannel *chptr)
 
 DLLFUNC int operonly_topic_allow (aClient *sptr, aChannel *chptr)
 {
-	if (chptr->mode.extmode & EXTCMODE_OPERONLY && !IsAnOper(sptr))
+	if (chptr->mode.extmode & EXTCMODE_OPERONLY && !OperClass_evaluateACLPath("channel:operonly:topic",sptr,NULL,chptr,NULL))
 		return HOOK_DENY;
 
 	return HOOK_CONTINUE;
@@ -119,7 +117,7 @@ DLLFUNC int operonly_topic_allow (aClient *sptr, aChannel *chptr)
 
 DLLFUNC int operonly_require_oper(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what)
 {
-	if (!MyClient(cptr) || IsAnOper(cptr))
+	if (!MyClient(cptr) || OperClass_evaluateACLPath("channel:operonly",cptr,NULL,chptr,NULL))
 		return EX_ALLOW;
 
 

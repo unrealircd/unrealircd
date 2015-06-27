@@ -96,9 +96,9 @@ DLLFUNC CMD_FUNC(m_trace)
 	else
 		tname = me.name;
 
-	if (!IsOper(sptr) && !OperClass_evaluateACLPath("trace:global",sptr,NULL,NULL,NULL))
+	if (!OperClass_evaluateACLPath("trace:global",sptr,NULL,NULL,NULL))
 	{
-		if (IsAnOper(sptr) || OperClass_evaluateACLPath("trace:local",sptr,NULL,NULL,NULL))
+		if (OperClass_evaluateACLPath("trace:local",sptr,NULL,NULL,NULL))
 		{
 			/* local opers may not /TRACE remote servers! */
 			if (strcasecmp(tname, me.name))
@@ -145,7 +145,7 @@ DLLFUNC CMD_FUNC(m_trace)
 				link_u[acptr->from->fd]++;
 #else
 			if (IsPerson(acptr) &&
-			    (!IsInvisible(acptr) || IsOper(sptr) || OperClass_evaluateACLPath("trace:invisible-users",sptr,acptr,NULL,NULL)))
+			    (!IsInvisible(acptr) || OperClass_evaluateACLPath("trace:invisible-users",sptr,acptr,NULL,NULL)))
 				link_u[acptr->from->fd]++;
 #endif
 			else if (IsServer(acptr))
@@ -160,11 +160,7 @@ DLLFUNC CMD_FUNC(m_trace)
 		char *name;
 		char *class;
 
-/* More bits of code to allow oers to see all users on remote traces
- *		if (IsInvisible(acptr) && dow &&
- *		if (dow &&
- *		    !(MyConnect(sptr) && IsOper(sptr)) && */
-		if (!IsOper(sptr) && !OperClass_evaluateACLPath("trace:invisible-users",sptr,acptr,NULL,NULL) && !IsAnOper(acptr) && (acptr != sptr))
+		if (!OperClass_evaluateACLPath("trace:invisible-users",sptr,acptr,NULL,NULL) && (acptr != sptr))
 			continue;
 		if (!doall && wilds && match(tname, acptr->name))
 			continue;
@@ -195,15 +191,10 @@ DLLFUNC CMD_FUNC(m_trace)
 			  /* Only opers see users if there is a wildcard
 			   * but anyone can see all the opers.
 			   */
-/*			if (IsOper(sptr) &&
- * Allow opers to see invisible users on a remote trace or wildcard
- * search  ... sure as hell  helps to find clonebots.  --Russell
- *			    (MyClient(sptr) || !(dow && IsInvisible(acptr)))
- *                           || !dow || IsAnOper(acptr)) */
-			  if (IsOper(sptr) || OperClass_evaluateACLPath("trace:invisible-users",sptr,acptr,NULL,NULL) ||
-			      (IsAnOper(acptr) && !IsInvisible(acptr)))
+			  if (OperClass_evaluateACLPath("trace:invisible-users",sptr,acptr,NULL,NULL) ||
+			      (!IsInvisible(acptr) && OperClass_evaluateACLPath("trace",sptr,acptr,NULL,NULL)))
 			  {
-				  if (IsAnOper(acptr))
+				  if (OperClass_evaluateACLPath("trace",sptr,acptr,NULL,NULL) || OperClass_evaluateACLPath("trace:invisible-users",sptr,acptr,NULL,NULL))
 					  sendto_one(sptr,
 					      rpl_str(RPL_TRACEOPERATOR),
 					      me.name,
@@ -263,7 +254,7 @@ DLLFUNC CMD_FUNC(m_trace)
 	 * Add these lines to summarize the above which can get rather long
 	 * and messy when done remotely - Avalon
 	 */
-	if (!IsAnOper(sptr) || !cnt)
+	if (!OperClass_evaluateACLPath("trace",sptr,acptr,NULL,NULL) || !cnt)
 	{
 		if (cnt)
 			return 0;
