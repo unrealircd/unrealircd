@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1FC660CF1B3EA90B008EFAD1 /* bat23.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC660CE1B3EA90B008EFAD1 /* bat23.png */; };
 		1FE784F51B3DF0DD006CB6DD /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE784F41B3DF0DD006CB6DD /* AppDelegate.swift */; };
 		1FE784F71B3DF0DD006CB6DD /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE784F61B3DF0DD006CB6DD /* ViewController.swift */; };
 		1FE784F91B3DF0DD006CB6DD /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1FE784F81B3DF0DD006CB6DD /* Images.xcassets */; };
@@ -25,6 +26,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1FC660CE1B3EA90B008EFAD1 /* bat23.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = bat23.png; sourceTree = "<group>"; };
 		1FE784EF1B3DF0DD006CB6DD /* UnrealIRCd.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UnrealIRCd.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1FE784F31B3DF0DD006CB6DD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1FE784F41B3DF0DD006CB6DD /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -87,6 +89,7 @@
 		1FE784F21B3DF0DD006CB6DD /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				1FC660CE1B3EA90B008EFAD1 /* bat23.png */,
 				1FE784F31B3DF0DD006CB6DD /* Info.plist */,
 			);
 			name = "Supporting Files";
@@ -189,6 +192,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1FC660CF1B3EA90B008EFAD1 /* bat23.png in Resources */,
 				1FE784F91B3DF0DD006CB6DD /* Images.xcassets in Resources */,
 				1FE784FC1B3DF0DD006CB6DD /* Main.storyboard in Resources */,
 			);
@@ -327,7 +331,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "Developer ID Application";
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = UnrealIRCd/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
@@ -339,7 +342,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "Developer ID Application";
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = UnrealIRCd/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";

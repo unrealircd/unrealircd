@@ -7,18 +7,24 @@
 //
 
 import Cocoa
+import AppKit
 
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
 
+    
 
-
+    var menuItem : NSStatusItem!;
+    
     func applicationDidFinishLaunching(aNotification: NSNotification) {
-        // Insert code here to initialize your application
+        println("App did finish launching!")
+        // Compiler error - hack below
+        menuItem = NSStatusBar.systemStatusBar().statusItemWithLength(-1/*NSVariableStatusItemLength*/)
+        menuItem.image = NSImage(named: "bat23.png")
     }
 
     func applicationWillTerminate(aNotification: NSNotification) {
-        // Insert code here to tear down your application
+
     }
 
 
