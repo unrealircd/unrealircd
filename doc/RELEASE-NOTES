@@ -91,9 +91,27 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
   a copy of that file, give it a different name, and include that one
   instead. Since the file is fully documented, you can just comment out
   or delete the loadmodule lines of things you don't want to load.
-* Oper permissions............ (A4)
-  ................................................
-  .......................................................
+* Oper permissions have changed completely: (A4)
+  * All previous oper levels/ranks no longer exist (Netadmin, Admin, ..)
+  * oper::flags has been removed. Instead you must specify an operclass
+    in oper::operclass (for example, 'operclass netadmin').
+  * In operclass block(s) you define the privileges. You can now control
+    exactly what an IRCOp can and cannot do. (This process is on-going)
+    Have a look at operclass.default.conf which ships with UnrealIRCd,
+    it contains a number of default operclass blocks suitable for the
+    most common situations. See also the operclass block documentation:
+    https://www.unrealircd.org/docs/Operclass_block
+  * If you ask UnrealIRCd to convert your 3.2.x configuration file then
+    it will try to select a suitable operclass for the oper. This will
+    not always 100% match your current oper block rights, though.
+  * Channel Mode +A (Admin Only) has been removed. You can use the new
+    extended ban ~O:<operclass>. This allows you to, for example, create
+    an operclass 'netadmin' only channel: /MODE #chan +iI ~O:netadmin*
+  * set::hosts has been removed, use oper::vhost instead.
+  * Since oper levels have been removed you no longer see things like
+    "OperX is a Network Administrator" in /WHOIS by default.
+    If you want that, then you can set oper::swhois to
+    "is a Network Administrator" (or any other text).
 * Entirely rewritten I/O and event loop. This allows the IRCd to scale
   more easily to tens of thousands of clients by using kernel-evented I/O
   mechanisms such as epoll and kqueue.
