@@ -153,12 +153,12 @@ int optmask;
 	}
 
 	memset(&options, 0, sizeof(options));
-	options.timeout = 2500; /* 2.5 seconds */
+	options.timeout = 1500; /* 1.5 seconds */
 	options.tries = 2;
-	/* Note that the effective DNS timeout is NOT simply 2500*2=5000ms.
+	/* Note that the effective DNS timeout is NOT simply 1500*2=3000.
 	 * This is because c-ares does some incremental timeout stuff itself
 	 * that may add up to twice the timeout in the second round,
-	 * so effective max is 2500ms first and then 5000ms, so 7500ms in total
+	 * so effective max is 1500ms first and then up to 3000s, so 4500ms in total
 	 * (until they change the algorithm again, that is...).
 	 */
 	options.flags |= ARES_FLAG_NOALIASES|ARES_FLAG_IGNTC;
