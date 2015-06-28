@@ -832,6 +832,7 @@ fi
 rm -f config.settings
 cat > config.settings << __EOF__
 #
+BASEPATH="$BASEPATH"
 BINDIR="$BINDIR"
 DATADIR="$DATADIR"
 CONFDIR="$CONFDIR"
