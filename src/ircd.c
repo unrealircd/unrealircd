@@ -104,7 +104,7 @@ extern SERVICE_STATUS_HANDLE IRCDStatusHandle;
 extern SERVICE_STATUS IRCDStatus;
 #endif
 
-unsigned char conf_debuglevel = 0;
+MODVAR unsigned char conf_debuglevel = 0;
 
 #ifdef USE_LIBCURL
 extern void url_init(void);
