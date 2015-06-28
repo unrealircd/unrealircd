@@ -83,6 +83,7 @@ Name: "{app}\cache"
 Name: "{app}\logs"
 Name: "{app}\conf"
 Name: "{app}\conf\ssl"
+Name: "{app}\data"
 
 [UninstallDelete]
 Type: files; Name: "{app}\DbgHelp.Dll"
