@@ -28,6 +28,8 @@
 	<string>Copyright © 2015 UnrealIRCd Team. All rights reserved.</string>
 	<key>NSMainStoryboardFile</key>
 	<string>Main</string>
+	<key>LSUIElement</key>
+	<true/>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>

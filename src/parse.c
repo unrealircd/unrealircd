@@ -167,11 +167,7 @@ inline void parse_addlag(aClient *cptr, int cmdbytes)
 #ifdef FAKELAG_CONFIGURABLE
 		!(cptr->class && (cptr->class->options & CLASS_OPT_NOFAKELAG)) && 
 #endif
-#ifdef NO_FAKE_LAG_FOR_LOCOPS	
-	!IsAnOper(cptr))
-#else
-	!IsOper(cptr))
-#endif		
+	!OperClass_evaluateACLPath("privacy:fakelag",cptr,NULL,NULL,NULL))
 	{
 		cptr->since += (1 + cmdbytes/90);
 	}		

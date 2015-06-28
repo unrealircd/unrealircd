@@ -485,7 +485,7 @@ int check_tkls(aClient *cptr)
 
 		if (bconf)
 			killflag++;
-		else if (!IsAnOper(cptr) && (bconf = Find_ban(NULL, cptr->info, CONF_BAN_REALNAME)))
+		else if (!OperClass_evaluateACLPath("immune",cptr,NULL,NULL,NULL) && (bconf = Find_ban(NULL, cptr->info, CONF_BAN_REALNAME)))
 			killflag++;
 	}
 

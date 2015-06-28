@@ -110,7 +110,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		*s = '\0';	/* Truncate at first "." */
 #endif
 
-	if (!IsPrivileged(cptr))
+	if (!IsServer(cptr) && !OperClass_evaluateACLPath("kill:global",sptr,NULL,NULL,NULL) && !OperClass_evaluateACLPath("kill:local",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
