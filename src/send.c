@@ -1068,7 +1068,7 @@ void sendto_opers_butone(aClient *one, aClient *from, char *pattern, ...)
 	++current_serial;
 	list_for_each_entry(cptr, &client_list, client_node)
 	{
-		if (!IsAnOper(cptr))
+		if (!IsOper(cptr))
 			continue;
 		if (cptr->from->serial == current_serial)	/* sent message along it already ? */
 			continue;

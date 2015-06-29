@@ -366,7 +366,7 @@ int umode_allow_none(aClient *sptr, int what)
 int umode_allow_opers(aClient *sptr, int what)
 {
 	if (MyClient(sptr))
-		return IsAnOper(sptr) ? 1 : 0;
+		return IsOper(sptr) ? 1 : 0;
 	else
 		return 1;
 }
