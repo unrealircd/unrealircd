@@ -192,11 +192,11 @@ CMD_FUNC(m_version)
 		    parv[0], version, debugmode, me.name,
 		    serveropts, extraflags ? extraflags : "",
 		    tainted ? "3" : "",
-		    (IsAnOper(sptr) ? MYOSNAME : "*"), UnrealProtocol);
-		if (IsAnOper(sptr))
+		    (OperClass_evaluateACLPath("server:info",sptr,NULL,NULL,NULL) ? MYOSNAME : "*"), UnrealProtocol);
+		if (OperClass_evaluateACLPath("server:info",sptr,NULL,NULL,NULL))
 			sendto_one(sptr, ":%s NOTICE %s :%s", me.name, sptr->name, OPENSSL_VERSION_TEXT);
 #ifdef USE_LIBCURL
-		if (IsAnOper(sptr))
+		if (OperClass_evaluateACLPath("server:info",sptr,NULL,NULL,NULL))
 			sendto_one(sptr, ":%s NOTICE %s :%s", me.name, sptr->name, curl_version());
 #endif
 		if (MyClient(sptr))
@@ -237,14 +237,14 @@ char buf[1024];
 int remotecmdfilter(aClient *sptr, int parc, char *parv[])
 {
 	/* no remote requests permitted from non-ircops */
-	if (MyClient(sptr) && !IsOper(sptr) && !BadPtr(parv[1]))
+	if (MyClient(sptr) && !OperClass_evaluateACLPath("server:remote",sptr,NULL,NULL,NULL) && !BadPtr(parv[1]))
 	{
 		parv[1] = NULL;
 		parc = 1;
 	}
 
 	/* same as above, but in case an old server forwards a request to us: we ignore it */
-	if (!MyClient(sptr) && !IsOper(sptr))
+	if (!MyClient(sptr) && !OperClass_evaluateACLPath("server:remote",sptr,NULL,NULL,NULL))
 		return 1; /* STOP (return) */
 	
 	return 0; /* Continue */

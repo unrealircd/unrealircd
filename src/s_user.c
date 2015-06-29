@@ -308,7 +308,7 @@ int  check_for_target_limit(aClient *sptr, void *target, const char *name)
 #endif
 	u_char hash = (tmp * tmp) >> 12;
 
-	if (IsAnOper(sptr))
+	if (OperClass_evaluateACLPath("immune:limits",sptr,NULL,NULL,NULL))
 		return 0;
 	if (sptr->targets[0] == hash)
 		return 0;

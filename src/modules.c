@@ -979,7 +979,7 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			strncat(tmp, "[PERM] ", sizeof(tmp)-strlen(tmp)-1);
 		if (!(mi->options & MOD_OPT_OFFICIAL))
 			strncat(tmp, "[3RD] ", sizeof(tmp)-strlen(tmp)-1);
-		if (!IsOper(sptr))
+		if (!OperClass_evaluateACLPath("server:module",sptr,NULL,NULL,NULL))
 			sendto_one(sptr, ":%s NOTICE %s :*** %s (%s)%s", me.name, sptr->name,
 				mi->header->name, mi->header->description,
 				mi->options & MOD_OPT_OFFICIAL ? "" : " [3RD]");
@@ -988,7 +988,7 @@ int  m_module(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				mi->header->name, mi->header->version, mi->header->description, tmp);
 	}
 
-	if (!IsOper(sptr))
+	if (!OperClass_evaluateACLPath("server:module",sptr,NULL,NULL,NULL))
 		return 0;
 
 	tmp[0] = '\0';
