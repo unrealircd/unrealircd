@@ -205,7 +205,7 @@ int  crule_directop(int numargs, void *crulearg[])
 	/* adapted from m_trace */
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
-		if (!IsAnOper(acptr))
+		if (!IsOper(acptr))
 			continue;
 
 		return (1);
