@@ -1,5 +1,5 @@
 /*
- * Extended ban to ban/exempt by certfp (+b ~S:certfp)
+ * Extended ban to ban/exempt by certificate fingerprint (+b ~S:certfp)
  * (C) Copyright 2015 The UnrealIRCd Team
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,7 +22,7 @@ ModuleHeader MOD_HEADER(certfp)
 = {
 	"extbans/certfp",
 	"$Id$",
-	"ExtBan ~S - Ban/exempt by certfp",
+	"ExtBan ~S - Ban/exempt by SHA256 SSL certificate fingerprint",
 	"3.2-b8-1",
 	NULL 
 };
@@ -65,25 +65,29 @@ DLLFUNC int MOD_UNLOAD(account)(int module_unload)
 	return MOD_SUCCESS;
 }
 
+#define CERT_FP_LEN 64
+
+int extban_certfp_usage(aClient *sptr)
+{
+	sendnotice(sptr, "ERROR: ExtBan ~S expects an SHA256 fingerprint in hexadecimal format (no colons). "
+					 "For example: +e ~S:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef)");
+	return EX_DENY;
+}
+
 int extban_certfp_is_ok(aClient *sptr, aChannel *chptr, char *para, int checkt, int what, int what2)
 {
-	char *retbuf0;
-	retbuf0 = para+3;
-	if(checkt == EXCHK_PARAM)
+	if (checkt == EXCHK_PARAM)
 	{
-		if(BadPtr(retbuf0) || (strlen(retbuf0) != EVP_MAX_MD_SIZE))
-		{
-			sendnotice(sptr, "Invalid certfp");
-			return EX_DENY;
-		}
-		while(*retbuf0 != '\0') {
-			if(!isxdigit(*retbuf0))
-			{
-				sendnotice(sptr, "Invalid certfp");
-				return EX_DENY;
-			}
-			retbuf0++;
-		}
+		char *p;
+		
+		if (strlen(para) != 3 + CERT_FP_LEN)
+			return extban_certfp_usage(sptr);
+		
+		for (p = para + 3; *p; p++)
+			if (!isxdigit(*p))
+				return extban_certfp_usage(sptr);
+
+		return EX_ALLOW;
 	}
 	return EX_ALLOW;
 }
@@ -91,16 +95,14 @@ int extban_certfp_is_ok(aClient *sptr, aChannel *chptr, char *para, int checkt, 
 /* Obtain targeted certfp from the ban string */
 char *extban_certfp_conv_param(char *para)
 {
-	int c0unt3 = 0;
 	static char retbuf[EVP_MAX_MD_SIZE * 2 + 1];
+	char *p;
+	
 	strlcpy(retbuf, para, sizeof(retbuf));
-	while(c0unt3 < strlen(retbuf))
+	
+	for (p = retbuf+3; *p; p++)
 	{
-		if(c0unt3 > 2)
-		{
-			retbuf[c0unt3] = tolower(retbuf[c0unt3]);
-		}
-		c0unt3++;
+		*p = tolower(*p);
 	}
 
 	return retbuf;
@@ -114,9 +116,9 @@ int extban_certfp_is_banned(aClient *sptr, aChannel *chptr, char *banin, int typ
 	fp = moddata_client_get(sptr, "certfp");
 
 	if (!fp)
-		return 0; /* lolwut? */
+		return 0; /* not using SSL */
 
-	if (!mycmp(ban, fp))
+	if (!strcmp(ban, fp))
 		return 1;
 
 	return 0;
