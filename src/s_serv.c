@@ -192,11 +192,11 @@ CMD_FUNC(m_version)
 		    parv[0], version, debugmode, me.name,
 		    serveropts, extraflags ? extraflags : "",
 		    tainted ? "3" : "",
-		    (IsAnOper(sptr) ? MYOSNAME : "*"), UnrealProtocol);
-		if (IsAnOper(sptr))
+		    (OperClass_evaluateACLPath("server:info",sptr,NULL,NULL,NULL) ? MYOSNAME : "*"), UnrealProtocol);
+		if (OperClass_evaluateACLPath("server:info",sptr,NULL,NULL,NULL))
 			sendto_one(sptr, ":%s NOTICE %s :%s", me.name, sptr->name, OPENSSL_VERSION_TEXT);
 #ifdef USE_LIBCURL
-		if (IsAnOper(sptr))
+		if (OperClass_evaluateACLPath("server:info",sptr,NULL,NULL,NULL))
 			sendto_one(sptr, ":%s NOTICE %s :%s", me.name, sptr->name, curl_version());
 #endif
 		if (MyClient(sptr))
@@ -237,14 +237,14 @@ char buf[1024];
 int remotecmdfilter(aClient *sptr, int parc, char *parv[])
 {
 	/* no remote requests permitted from non-ircops */
-	if (MyClient(sptr) && !IsOper(sptr) && !BadPtr(parv[1]))
+	if (MyClient(sptr) && !OperClass_evaluateACLPath("server:remote",sptr,NULL,NULL,NULL) && !BadPtr(parv[1]))
 	{
 		parv[1] = NULL;
 		parc = 1;
 	}
 
 	/* same as above, but in case an old server forwards a request to us: we ignore it */
-	if (!MyClient(sptr) && !IsOper(sptr))
+	if (!MyClient(sptr) && !OperClass_evaluateACLPath("server:remote",sptr,NULL,NULL,NULL))
 		return 1; /* STOP (return) */
 	
 	return 0; /* Continue */
@@ -626,12 +626,12 @@ CMD_FUNC(m_rehash)
 {
 	int  x;
 
-	if (MyClient(sptr) && !OPCanRehash(sptr))
+	if (MyClient(sptr) && !OperClass_evaluateACLPath("server:rehash",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
-	if (!MyClient(sptr) && !IsNetAdmin(sptr)
+	if (!MyClient(sptr) && !OperClass_evaluateACLPath("server:rehash",sptr,NULL,NULL,NULL)
 	    && !IsULine(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
@@ -698,10 +698,10 @@ CMD_FUNC(m_rehash)
 			 * a) it makes sense
 			 * b) remote servers don't support remote rehashes by non-netadmins
 			 */
-			if (!IsNetAdmin(sptr))
+			if (!OperClass_evaluateACLPath("server:rehash",sptr,NULL,NULL,NULL))
 			{
 				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-				sendnotice(sptr, "'/REHASH -global' requires you to be NetAdmin");
+				sendnotice(sptr, "'/REHASH -global' requires you to have server::rehash permissions");
 				return 0;
 			}
 			if (parv[1] && *parv[1] != '-')
@@ -726,7 +726,7 @@ CMD_FUNC(m_rehash)
 	if (!BadPtr(parv[1]) && stricmp(parv[1], "-all"))
 	{
 
-		if (!IsAdmin(sptr) && !IsCoAdmin(sptr))
+		if (!OperClass_evaluateACLPath("server:rehash",sptr,NULL,NULL,NULL))
 		{
 			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 			return 0;
@@ -825,12 +825,12 @@ char *reason = parv[1];
 	aClient *acptr;
 	int i;
 	/* Check permissions */
-	if (MyClient(sptr) && !OPCanRestart(sptr))
+	if (MyClient(sptr) && !OperClass_evaluateACLPath("server:restart",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
-	if (!MyClient(sptr) && !IsNetAdmin(sptr) && !IsULine(sptr))
+	if (!MyClient(sptr) && !OperClass_evaluateACLPath("server:restart",sptr,NULL,NULL,NULL) && !IsULine(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
@@ -1183,7 +1183,7 @@ CMD_FUNC(m_die)
 {
 	aClient *acptr;
 	int  i;
-	if (!MyClient(sptr) || !OPCanDie(sptr))
+	if (!MyClient(sptr) || !OperClass_evaluateACLPath("server:die",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;

@@ -73,7 +73,7 @@ MODVAR char modebuf[BUFSIZE], parabuf[BUFSIZE];
 
 #define MODESYS_LINKOK		/* We do this for a TEST  */
 aCtab cFlagTab[] = {
-	{MODE_LIMIT, 'l', 0, 1},
+	{MODE_LIMIT, 'l', 1, 1},
 	{MODE_VOICE, 'v', 1, 1},
 	{MODE_HALFOP, 'h', 0, 1},
 	{MODE_CHANOP, 'o', 0, 1},
@@ -101,12 +101,10 @@ aCtab cFlagTab[] = {
 
 char cmodestring[512];
 
-inline int op_can_override(aClient *sptr)
+inline int op_can_override(char* acl, aClient *sptr,aChannel *channel,void* extra)
 {
 #ifndef NO_OPEROVERRIDE
-	if (!IsOper(sptr))
-		return 0;
-	if (MyClient(sptr) && !OPCanOverride(sptr))
+	if (MyClient(sptr) && !(OperClass_evaluateACLPath(acl,sptr,NULL,channel,extra)))
 		return 0;
 	return 1;
 #else
@@ -752,7 +750,7 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 		return (CANNOT_SEND_NOPRIVMSGS);
 
 	lp = find_membership_link(cptr->user->channel, chptr);
-	if (chptr->mode.mode & MODE_MODERATED && !op_can_override(cptr) &&
+	if (chptr->mode.mode & MODE_MODERATED && !op_can_override("override:message:moderated",cptr,chptr,NULL) &&
 	    (!lp
 	    || !(lp->flags & (CHFL_CHANOP | CHFL_VOICE | CHFL_CHANOWNER |
 	    CHFL_HALFOP | CHFL_CHANPROT))))
@@ -772,7 +770,7 @@ int  can_send(aClient *cptr, aChannel *chptr, char *msgtext, int notice)
 		return i;
 
 	/* Makes opers able to talk thru bans -Stskeeps suggested by The_Cat */
-	if (IsOper(cptr) && OPCanOverride(cptr))
+	if (op_can_override("override:message:ban",cptr,chptr,NULL))
 		return 0;
 
 	if ((!lp
@@ -955,7 +953,7 @@ char *clean_ban_mask(char *mask, int what, aClient *cptr)
 	/* Extended ban? */
 	if ((*mask == '~') && mask[1] && (mask[2] == ':'))
 	{
-		if (RESTRICT_EXTENDEDBANS && MyClient(cptr) && !IsAnOper(cptr))
+		if (RESTRICT_EXTENDEDBANS && MyClient(cptr) && !OperClass_evaluateACLPath("channel:extbans",cptr,NULL,NULL,NULL))
 		{
 			if (!strcmp(RESTRICT_EXTENDEDBANS, "*"))
 			{

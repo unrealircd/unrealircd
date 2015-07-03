@@ -32,12 +32,6 @@ struct zNetwork {
 	char *x_ircnet005;
 	char *x_defserv;
 	char *x_services_name;
-	char *x_oper_host;
-	char *x_admin_host;
-	char *x_locop_host;
-	char *x_sadmin_host;
-	char *x_netadmin_host;
-	char *x_coadmin_host;
 	char *x_hidden_host;
 	char *x_prefix_quit;
 	char *x_helpchan;
@@ -195,12 +189,6 @@ extern MODVAR aConfiguration iConf;
 #define ircnet005			iConf.network.x_ircnet005
 #define defserv				iConf.network.x_defserv
 #define SERVICES_NAME		iConf.network.x_services_name
-#define oper_host			iConf.network.x_oper_host
-#define admin_host			iConf.network.x_admin_host
-#define locop_host			iConf.network.x_locop_host
-#define sadmin_host			iConf.network.x_sadmin_host
-#define netadmin_host		iConf.network.x_netadmin_host
-#define coadmin_host		iConf.network.x_coadmin_host
 #define hidden_host			iConf.network.x_hidden_host
 #define helpchan			iConf.network.x_helpchan
 #define STATS_SERVER			iConf.network.x_stats_server
@@ -351,17 +339,10 @@ struct SetCheck {
 	unsigned has_spamfilter_virus_help_channel:1;
 	unsigned has_spamfilter_virus_help_channel_deny:1;
 	unsigned has_spamfilter_except:1;
-	unsigned has_hosts_host_on_oper_up:1;
 	unsigned has_network_name:1;
 	unsigned has_default_server:1;
 	unsigned has_services_server:1;
 	unsigned has_sasl_server:1;
-	unsigned has_hosts_global:1;
-	unsigned has_hosts_admin:1;
-	unsigned has_hosts_local:1;
-	unsigned has_hosts_servicesadmin:1;
-	unsigned has_hosts_netadmin:1;
-	unsigned has_hosts_coadmin:1;
 	unsigned has_hiddenhost_prefix:1;
 	unsigned has_prefix_quit:1;
 	unsigned has_help_channel:1;

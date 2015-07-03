@@ -265,7 +265,7 @@ CMD_FUNC(m_mode)
 #ifndef NO_OPEROVERRIDE
         if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr)
             && !is_half_op(sptr, chptr) && (MyClient(sptr) ? (IsOper(sptr) &&
-	    OPCanOverride(sptr)) : IsOper(sptr)))
+	    OperClass_evaluateACLPath("override:mode",sptr,NULL,chptr,NULL)) : IsOper(sptr)))
         {
                 sendts = 0;
                 opermode = 1;
@@ -274,7 +274,7 @@ CMD_FUNC(m_mode)
 
         if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr)
             && is_half_op(sptr, chptr) && (MyClient(sptr) ? (IsOper(sptr) &&
-	    OPCanOverride(sptr)) : IsOper(sptr)))
+	    OperClass_evaluateACLPath("override:mode",sptr,NULL,chptr,NULL)) : IsOper(sptr)))
         {
                 opermode = 2;
                 goto aftercheck;
@@ -283,7 +283,7 @@ CMD_FUNC(m_mode)
 
 	if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr)
 	    && !is_half_op(sptr, chptr)
-	    && (cptr == sptr || !IsSAdmin(sptr) || !IsOper(sptr)))
+	    && (cptr == sptr || !OperClass_evaluateACLPath("override:mode",sptr,NULL,chptr,NULL) || !IsOper(sptr)))
 	{
 		if (cptr == sptr)
 		{
@@ -768,8 +768,6 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	 u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3], char bounce, long my_access)
 {
 	aCtab *tab = &cFlagTab[0];
-
-
 	int  retval = 0;
 	Member *member = NULL;
 	Membership *membership = NULL;
@@ -777,15 +775,14 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 	unsigned int tmp = 0;
 	char tmpbuf[512], *tmpstr;
 	char tc = ' ';		/* */
-	int  chasing, x;
+	int  chasing = 0, x;
 	int xxi, xyi, xzi, hascolon;
 	char *xp;
 	int  notsecure;
-	chasing = 0;
 	Hook *h;
 
 	if ((my_access & CHFL_HALFOP) && !is_xchanop(my_access) && !IsULine(cptr)
-	    && !op_can_override(cptr) && !samode_in_progress)
+	    && !op_can_override("override:mode",cptr,chptr,&modetype) && !samode_in_progress)
 	{
 		if (MyClient(cptr) && (modetype == MODE_HALFOP) && (what == MODE_DEL) &&
 		    param && (find_client(param, NULL) == cptr))
@@ -857,7 +854,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  REQUIRE_PARAMETER()
 		  if (!IsULine(cptr) && !IsServer(cptr) && !is_chanowner(cptr, chptr) && !samode_in_progress)
 		  {
-		  	  if (MyClient(cptr) && !op_can_override(cptr))
+		  	  if (MyClient(cptr) && !op_can_override("override:mode",cptr,chptr,&modetype))
 		  	  {
 		  	  	sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED), me.name, cptr->name, chptr->chname);
 		  	  	break;
@@ -874,7 +871,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  if (!IsULine(cptr) && !IsServer(cptr) && !is_chanowner(cptr, chptr) && !samode_in_progress &&
 		      !(param && (what == MODE_DEL) && (find_client(param, NULL) == cptr)))
 		  {
-		  	  if (MyClient(cptr) && !op_can_override(cptr))
+		  	  if (MyClient(cptr) && !op_can_override("override:mode",cptr,chptr,&modetype))
 		  	  {
 		  	  	sendto_one(cptr, err_str(ERR_CHANOWNPRIVNEEDED), me.name, cptr->name, chptr->chname);
 		  	  	break;
@@ -943,7 +940,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		  	/* This probably should work but is completely untested (the operoverride stuff, I mean): */
 		  	if (ret == EX_DENY)
 		  	{
-		  		if (!op_can_override(cptr))
+		  		if (!op_can_override("override:mode:del",cptr,chptr,&modetype))
 		  		{
 					if (MyClient(cptr) && badmode)
 						sendto_one(cptr, "%s", badmode); /* send error message, if any */
@@ -970,7 +967,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  	/* Need this !op_can_override() here again, even with the !opermode
 			  	 * check a few lines up, all due to halfops. -- Syzop
 			  	 */
-				if (!op_can_override(cptr))
+				if (!op_can_override("override:mode:del",cptr,chptr,&modetype))
 				{
 					char errbuf[NICKLEN+30];
 					ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel owner", member->cptr->name);
@@ -996,7 +993,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 			  	/* Need this !op_can_override() here again, even with the !opermode
 			  	 * check a few lines up, all due to halfops. -- Syzop
 			  	 */
-			  	if (!op_can_override(cptr))
+			  	if (!op_can_override("override:mode:del",cptr,chptr,&modetype))
 			  	{
 					char errbuf[NICKLEN+30];
 					ircsnprintf(errbuf, sizeof(errbuf), "%s is a channel admin", member->cptr->name);
@@ -1256,7 +1253,7 @@ char *morphed;
 	{
 		x = handler->is_ok(cptr, chptr, mode, param, EXCHK_ACCESS, what);
 		if ((x == EX_ALWAYS_DENY) ||
-		    ((x == EX_DENY) && !op_can_override(cptr) && !samode_in_progress))
+		    ((x == EX_DENY) && !op_can_override("override:mode:del",cptr,chptr,handler) && !samode_in_progress))
 		{
 			handler->is_ok(cptr, chptr, mode, param, EXCHK_ACCESS_ERR, what);
 			return paracnt; /* Denied & error msg sent */
@@ -1265,7 +1262,7 @@ char *morphed;
 			opermode = 1; /* override in progress... */
 	} else {
 		/* remote user: we only need to check if we need to generate an operoverride msg */
-		if (!IsULine(cptr) && IsPerson(cptr) && op_can_override(cptr) &&
+		if (!IsULine(cptr) && IsPerson(cptr) && op_can_override("override:mode:del",cptr,chptr,handler) &&
 		    (handler->is_ok(cptr, chptr, mode, param, EXCHK_ACCESS, what) != EX_ALLOW))
 			opermode = 1; /* override in progress... */
 	}
@@ -1741,64 +1738,24 @@ DLLFUNC CMD_FUNC(_m_umode)
 			  break;
 		} /* switch */
 	} /* for */
-	/*
-	 * stop users making themselves operators too easily
-	 */
 
-	if (!(setflags & UMODE_OPER) && IsOper(sptr) && !IsServer(cptr))
-		ClearOper(sptr);
-	if (!(setflags & UMODE_LOCOP) && IsLocOp(sptr) && !IsServer(cptr))
-		sptr->umodes &= ~UMODE_LOCOP;
-
-	/*
-	 * Let only operators set FloodF, ClientF; also
-	 * remove those flags if they've gone -o/-O.
-	 *  FloodF sends notices about possible flooding -Cabal95
-	 *  ClientF sends notices about clients connecting or exiting
-	 *  Admin is for server admins
-	 */
-	if (!IsAnOper(sptr) && !IsServer(cptr))
+	/* Don't let non-ircops set ircop-only modes or snomasks */
+	if (MyClient(sptr) && !IsAnOper(sptr))
 	{
-		ClearAdmin(sptr);
-		ClearSAdmin(sptr);
-		ClearNetAdmin(sptr);
-		ClearHideOper(sptr);
-		ClearCoAdmin(sptr);
-		ClearFailops(sptr);
+		remove_oper_modes(sptr);
+		remove_oper_snomasks(sptr);
 	}
 
-	/*
-	 * New oper access flags - Only let them set certian usermodes on
-	 * themselves IF they have access to set that specific mode in their
-	 * O:Line.
-	 */
+	/* Below can be removed after Heero is done with the new oper system and this shit is gone :D */
 	if (MyClient(sptr)) {
 		if (IsAnOper(sptr)) {
-			if (IsAdmin(sptr) && !OPIsAdmin(sptr))
-				ClearAdmin(sptr);
-			if (IsSAdmin(sptr) && !OPIsSAdmin(sptr))
-				ClearSAdmin(sptr);
-			if (IsNetAdmin(sptr) && !OPIsNetAdmin(sptr))
-				ClearNetAdmin(sptr);
-			if (IsCoAdmin(sptr) && !OPIsCoAdmin(sptr))
-				ClearCoAdmin(sptr);
 			if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
 			    && !IsSecure(sptr))
 				sptr->umodes &= ~UMODE_SECURE;
 		}
-	/*
-	   This is to remooove the kix bug.. and to protect some stuffie
-	   -techie
-	 */
-		if (MyClient(sptr))
-		{
-			if ((sptr->umodes & UMODE_SECURE) && !IsSecure(sptr))
-				sptr->umodes &= ~UMODE_SECURE;
-			if (!(sptr->umodes & UMODE_SECURE) && IsSecure(sptr))
-				sptr->umodes |= UMODE_SECURE;
-		}
 	}
 
+	/* If user was +x and does MODE -x then set -t as well */
 	if ((setflags & UMODE_HIDE) && !IsHidden(sptr))
 		sptr->umodes &= ~UMODE_SETHOST;
 
@@ -1863,7 +1820,6 @@ DLLFUNC CMD_FUNC(_m_umode)
 	    MyConnect(sptr))
 	{
 		list_del(&sptr->special_node);
-		sptr->oflag = 0;
 		remove_oper_snomasks(sptr);
 		RunHook2(HOOKTYPE_LOCAL_OPER, sptr, 0);
 	}

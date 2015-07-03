@@ -47,9 +47,10 @@
 #define CONFDIR "conf"
 #define MODULESDIR "modules"
 #define LOGDIR "logs"
-#define DATADIR "data"
+#define PERMDATADIR "data"
 #define CACHEDIR "cache"
 #define TMPDIR "tmp"
+#define PIDFILE PERMDATADIR"/unrealircd.pid"
 #define NO_U_TYPES
 #define NEED_U_INT32_T
 #define PREFIX_AQ
@@ -82,6 +83,6 @@
 
 /* Version suffix such as a beta marker or release candidate marker. (e.g.:
    -rc2 for unrealircd-3.2.9-rc2) */
-#define UNREAL_VERSION_SUFFIX "-alpha3"
+#define UNREAL_VERSION_SUFFIX "-alpha4"
 
 #endif

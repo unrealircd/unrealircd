@@ -45,7 +45,7 @@ DLLFUNC int MOD_TEST(nokick)(ModuleInfo *modinfo)
 
 DLLFUNC int MOD_INIT(nokick)(ModuleInfo *modinfo)
 {
-	UmodeAdd(modinfo->handle, 'q', UMODE_GLOBAL, umode_allow_opers, &UMODE_NOKICK); // TODO: limit more!!
+	UmodeAdd(modinfo->handle, 'q', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_NOKICK); // TODO: limit more!!
 	
 	HookAddEx(modinfo->handle, HOOKTYPE_CAN_KICK, nokick_can_kick);
 	
@@ -68,7 +68,7 @@ int nokick_can_kick(aClient *sptr, aClient *target, aChannel *chptr, char *comme
 {
 	static char errmsg[NICKLEN+32];
 
-	if (IsNokick(target) && !IsULine(sptr) && MyClient(sptr) && !IsNetAdmin(sptr))
+	if (IsNokick(target) && !IsULine(sptr) && MyClient(sptr) && !OperClass_evaluateACLPath("override:kick:nokick",sptr,target,chptr,NULL))
 	{
 		ircsnprintf(errmsg, sizeof(errmsg), err_str(ERR_CANNOTDOCOMMAND),
 				   me.name, sptr->name, "KICK",

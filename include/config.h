@@ -243,7 +243,7 @@
 #define	LPATH		LOGDIR"/debug.log"	/* Where the debug file lives, if DEBUGMODE */
 #define VPATH		CONFDIR"/ircd.svsmotd"	/* Services MOTD append. */
 #define BPATH		CONFDIR"/bot.motd"	/* Bot MOTD */
-#define IRCDTUNE 	DATADIR"/ircd.tune"	/* tuning .. */
+#define IRCDTUNE 	PERMDATADIR"/ircd.tune"	/* tuning .. */
 
 /* CHROOTDIR
  *
@@ -404,6 +404,13 @@
  * DO NOT SET THIS TO ANYTHING MORE THAN 5. BETTER YET, JUST LEAVE IT AT 2!
  */
 #define TIMESEC  2
+/*
+ * Maximum delay for socket loop (in miliseconds, so 1000 = 1 second). 
+ * This means any other events and such may be delayed up to this value
+ * when there is no socket data waiting for us (no clients sending anything).
+ * Was 2000ms in 3.2.x, 1000ms for versions below 3.4-alpha4.
+ */
+#define SOCKETLOOP_MAX_DELAY 500
 
 /*
  * If daemon doesn't receive anything from any of its links within

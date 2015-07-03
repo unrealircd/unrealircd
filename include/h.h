@@ -102,34 +102,34 @@ extern int config_is_blankorempty(ConfigEntry *cep, const char *block);
 extern MODVAR int config_verbose;
 extern void config_progress(char *format, ...) __attribute__((format(printf,1,2)));
 extern void       ipport_seperate(char *string, char **ip, char **port);
-ConfigItem_class	*Find_class(char *name);
-ConfigItem_deny_dcc	*Find_deny_dcc(char *name);
-ConfigItem_oper		*Find_oper(char *name);
-ConfigItem_operclass	*Find_operclass(char *name);
-ConfigItem_listen	*Find_listen(char *ipmask, int port);
-ConfigItem_ulines	*Find_uline(char *host);
-ConfigItem_except	*Find_except(aClient *, char *host, short type);
-ConfigItem_tld		*Find_tld(aClient *cptr, char *host);
-ConfigItem_link		*Find_link(char *servername, aClient *acptr);
-ConfigItem_ban 		*Find_ban(aClient *, char *host, short type);
-ConfigItem_ban 		*Find_banEx(aClient *,char *host, short type, short type2);
-ConfigItem_vhost	*Find_vhost(char *name);
-ConfigItem_deny_channel *Find_channel_allowed(aClient *cptr, char *name);
-ConfigItem_alias	*Find_alias(char *name);
-ConfigItem_help 	*Find_Help(char *command);
+extern ConfigItem_class	*Find_class(char *name);
+extern ConfigItem_deny_dcc	*Find_deny_dcc(char *name);
+extern ConfigItem_oper		*Find_oper(char *name);
+extern ConfigItem_operclass	*Find_operclass(char *name);
+extern ConfigItem_listen	*Find_listen(char *ipmask, int port);
+extern ConfigItem_ulines	*Find_uline(char *host);
+extern ConfigItem_except	*Find_except(aClient *, char *host, short type);
+extern ConfigItem_tld		*Find_tld(aClient *cptr, char *host);
+extern ConfigItem_link		*Find_link(char *servername, aClient *acptr);
+extern ConfigItem_ban 		*Find_ban(aClient *, char *host, short type);
+extern ConfigItem_ban 		*Find_banEx(aClient *,char *host, short type, short type2);
+extern ConfigItem_vhost	*Find_vhost(char *name);
+extern ConfigItem_deny_channel *Find_channel_allowed(aClient *cptr, char *name);
+extern ConfigItem_alias	*Find_alias(char *name);
+extern ConfigItem_help 	*Find_Help(char *command);
 
-OperPermission OperClass_evaluateACLPath(char* path, aClient *sptr, aClient *victim, aChannel *channel, void* extra);
+extern OperPermission OperClass_evaluateACLPath(char *path, aClient *sptr, aClient *victim, aChannel *channel, void *extra);
+extern void OperClassValidatorDel(OperClassValidator *validator);
 
-int			AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *username);
-int parse_netmask(const char *text, struct irc_netmask *netmask);
-int match_ip(struct IN_ADDR addr, char *uhost, char *mask, struct irc_netmask *netmask);
+extern int AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *username);
+extern int parse_netmask(const char *text, struct irc_netmask *netmask);
+extern int match_ip(struct IN_ADDR addr, char *uhost, char *mask, struct irc_netmask *netmask);
 #ifdef INET6
-int match_ipv6(struct IN_ADDR *addr, struct IN_ADDR *mask, int bits);
+extern int match_ipv6(struct IN_ADDR *addr, struct IN_ADDR *mask, int bits);
 #endif
-ConfigItem_ban  *Find_ban_ip(aClient *sptr);
-void add_ListItem(ListStruct *, ListStruct **);
-ListStruct *del_ListItem(ListStruct *, ListStruct **);
-/* Remmed out for win32 compatibility.. as stated of 467leaf win32 port.. */
+extern ConfigItem_ban  *Find_ban_ip(aClient *sptr);
+extern void add_ListItem(ListStruct *, ListStruct **);
+extern ListStruct *del_ListItem(ListStruct *, ListStruct **);
 extern aClient *find_match_server(char *mask);
 extern MODVAR LoopStruct loop;
 extern int del_banid(aChannel *chptr, char *banid);
@@ -325,11 +325,8 @@ extern int hunt_server(aClient *, aClient *, char *, int, int, char **);
 extern aClient *next_client(aClient *, char *);
 extern int m_server_estab(aClient *);
 extern void umode_init(void);
-extern long umode_get(char, int, int (*)(aClient *, int));
 #define UMODE_GLOBAL 1
 #define UMODE_LOCAL 0
-#define umode_lget(x) umode_get(x, 0, 0);
-#define umode_gget(x) umode_get(x, 1, 0);
 extern int umode_allow_all(aClient *sptr, int what);
 extern int umode_allow_opers(aClient *sptr, int what);
 extern int umode_allow_none(aClient *sptr, int what);
@@ -400,15 +397,10 @@ extern MODVAR long UMODE_OPER;      /*  0x0002	 Operator */
 extern MODVAR long UMODE_WALLOP;    /*  0x0004	 send wallops to them */
 extern MODVAR long UMODE_FAILOP;    /*  0x0008	 Shows some global messages */
 extern MODVAR long UMODE_REGNICK;   /*  0x0020	 Nick set by services as registered */
-extern MODVAR long UMODE_SADMIN;    /*  0x0040	 Services Admin */
-extern MODVAR long UMODE_ADMIN;     /*  0x0080	 Admin */
 extern MODVAR long UMODE_SERVNOTICE;/* 0x0100	 server notices such as kill */
 extern MODVAR long UMODE_LOCOP;     /* 0x0200	 Local operator -- SRB */
 extern MODVAR long UMODE_HIDE;	     /* 0x8000	 Hide from Nukes */
-extern MODVAR long UMODE_NETADMIN;  /* 0x10000	 Network Admin */
-extern MODVAR long UMODE_COADMIN;   /* 0x80000	 Co Admin */
 extern MODVAR long UMODE_SECURE;    /*	0x800000	 User is a secure connect */
-extern MODVAR long UMODE_VICTIM;    /* 0x8000000	 Intentional Victim */
 extern MODVAR long UMODE_DEAF;      /* 0x10000000       Deaf */
 extern MODVAR long UMODE_HIDEOPER;  /* 0x20000000	 Hide oper mode */
 extern MODVAR long UMODE_SETHOST;   /* 0x40000000	 used sethost */
@@ -606,7 +598,7 @@ extern MODVAR char backupbuf[];
 extern void add_invite(aClient *, aClient *, aChannel *);
 extern void channel_modes(aClient *cptr, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size, aChannel *chptr);
 extern MODVAR char modebuf[BUFSIZE], parabuf[BUFSIZE];
-extern int op_can_override(aClient *sptr);
+extern int op_can_override(char* acl, aClient *sptr,aChannel *channel,void* extra);
 extern aClient *find_chasing(aClient *sptr, char *user, int *chasing);
 extern MODVAR long opermode;
 extern void add_user_to_channel(aChannel *chptr, aClient *who, int flags);
@@ -719,7 +711,7 @@ extern char *unreal_time_synch_error(void);
 extern int unreal_time_synch(int timeout);
 extern int extban_is_banned_helper(char *buf);
 extern char *getcloak(aClient *sptr);
-extern unsigned char param_to_slot_mapping[256];
+extern MODVAR unsigned char param_to_slot_mapping[256];
 extern char *cm_getparameter(aChannel *chptr, char mode);
 extern void cm_putparameter(aChannel *chptr, char mode, char *str);
 extern void cm_freeparameter(aChannel *chptr, char mode);
@@ -761,6 +753,6 @@ extern char *our_strcasestr(char *haystack, char *needle);
 extern void update_conf(void);
 extern MODVAR int need_34_upgrade;
 #ifdef _WIN32
-extern BOOL IsService;
+extern MODVAR BOOL IsService;
 #endif
 extern int match_ip46(char *a, char *b);

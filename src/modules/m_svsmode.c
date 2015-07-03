@@ -469,6 +469,12 @@ int  what, setflags;
 
 					if (MyClient(acptr) && !list_empty(&acptr->special_node))
 						list_del(&acptr->special_node);
+					
+					/* User is no longer oper (after the goto below, anyway)...
+					 * so remove all oper-only modes and snomasks.
+					 */
+					remove_oper_modes(acptr);
+					remove_oper_snomasks(acptr);
 				}
 				goto setmodex;
 			case 'H':

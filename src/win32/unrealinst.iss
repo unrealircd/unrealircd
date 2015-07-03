@@ -1,13 +1,12 @@
 ; UnrealIRCd Win32 Installation Script
 ; Requires Inno Setup 4.1.6 or later
 
-
 ; Uncomment the line below to package with libcurl support
 #define USE_CURL
 
 [Setup]
-AppName=UnrealIRCd
-AppVerName=UnrealIRCd3.4-alpha3
+AppName=UnrealIRCd 3.4
+AppVerName=UnrealIRCd3.4-alpha4
 AppPublisher=UnrealIRCd Team
 AppPublisherURL=http://www.unrealircd.com
 AppSupportURL=http://www.unrealircd.com
@@ -16,11 +15,12 @@ AppMutex=UnrealMutex,Global\UnrealMutex
 DefaultDirName={pf}\Unreal3.4
 DefaultGroupName=UnrealIRCd
 AllowNoIcons=yes
-LicenseFile=.\gplplusssl.rtf
+LicenseFile=src\win32\gplplusssl.rtf
 Compression=lzma
 SolidCompression=true
 MinVersion=5.0
-OutputDir=../../
+OutputDir=.
+SourceDir=../../
 
 ; !!! Make sure to update SSL validation (WizardForm.TasksList.Checked[9]) if tasks are added/removed !!!
 [Tasks]
@@ -35,48 +35,55 @@ Name: "enccert"; Description: "&Encrypt certificate"; GroupDescription: "SSL opt
 Name: "fixperm"; Description: "Make Unreal folder writable by current user";
 
 [Files]
-Source: "..\..\wircd.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\WIRCD.pdb"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\.CHANGES.NEW"; DestDir: "{app}"; DestName: "CHANGES.NEW.txt";Flags: ignoreversion
-Source: "..\..\.RELEASE.NOTES"; DestDir: "{app}"; DestName: "RELEASE.NOTES.txt"; Flags: ignoreversion
-Source: "..\..\.SICI"; DestDir: "{app}"; DestName: "SICI.txt"; Flags: ignoreversion
-Source: "..\..\badwords.channel.conf"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\badwords.message.conf"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\badwords.quit.conf"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\spamfilter.conf"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\modules.*.conf"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\dccallow.conf"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\Donation"; DestDir: "{app}"; DestName: "Donation.txt"; Flags: ignoreversion
-Source: "..\..\help.conf"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
-Source: "..\..\Unreal.nfo"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\doc\*.*"; DestDir: "{app}\doc"; Flags: ignoreversion
-Source: "..\..\doc\technical\*.*"; DestDir: "{app}\doc\technical"; Flags: ignoreversion
-Source: "..\..\aliases\*"; DestDir: "{app}\aliases"; Flags: ignoreversion
-Source: "..\..\unreal.exe"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0,4.0
-Source: "..\modules\*.dll"; DestDir: "{app}\modules"; Flags: ignoreversion
-Source: "..\modules\chanmodes\*.dll"; DestDir: "{app}\modules\chanmodes"; Flags: ignoreversion
-Source: "..\modules\usermodes\*.dll"; DestDir: "{app}\modules\usermodes"; Flags: ignoreversion
-Source: "..\modules\extbans\*.dll"; DestDir: "{app}\modules\extbans"; Flags: ignoreversion
+Source: "wircd.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "WIRCD.pdb"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".CHANGES.NEW"; DestDir: "{app}"; DestName: "CHANGES.NEW.txt";Flags: ignoreversion
+Source: "doc\RELEASE-NOTES"; DestDir: "{app}"; DestName: "RELEASE.NOTES.txt"; Flags: ignoreversion
+
+Source: "doc\conf\*.conf"; DestDir: "{app}\conf"; Flags: ignoreversion
+Source: "doc\conf\aliases\*.conf"; DestDir: "{app}\conf\aliases"; Flags: ignoreversion
+Source: "doc\conf\help\*.conf"; DestDir: "{app}\conf\help"; Flags: ignoreversion
+Source: "doc\conf\examples\*.conf"; DestDir: "{app}\conf\examples"; Flags: ignoreversion
+
+Source: "doc\Donation"; DestDir: "{app}"; DestName: "Donation.txt"; Flags: ignoreversion
+Source: "LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
+
+Source: "doc\*.*"; DestDir: "{app}\doc"; Flags: ignoreversion
+Source: "doc\technical\*.*"; DestDir: "{app}\doc\technical"; Flags: ignoreversion
+Source: "doc\conf\aliases\*"; DestDir: "{app}\conf\aliases"; Flags: ignoreversion
+
+Source: "unreal.exe"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0,4.0
+
+Source: "src\win32\makecert.bat"; DestDir: "{app}"; Flags: ignoreversion
+Source: "src\win32\encpem.bat"; DestDir: "{app}"; Flags: ignoreversion
+Source: "src\ssl.cnf"; DestDir: "{app}"; Flags: ignoreversion
+
+Source: "src\modules\*.dll"; DestDir: "{app}\modules"; Flags: ignoreversion
+Source: "src\modules\chanmodes\*.dll"; DestDir: "{app}\modules\chanmodes"; Flags: ignoreversion
+Source: "src\modules\usermodes\*.dll"; DestDir: "{app}\modules\usermodes"; Flags: ignoreversion
+Source: "src\modules\snomasks\*.dll"; DestDir: "{app}\modules\snomasks"; Flags: ignoreversion
+Source: "src\modules\extbans\*.dll"; DestDir: "{app}\modules\extbans"; Flags: ignoreversion
+
 Source: "c:\dev\tre\win32\release\tre.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\dev\pcre2\build\release\pcre2-8.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\dev\c-ares\msvc90\cares\dll-release\cares.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\dev\c-ares\msvc90\cares\dll-release\cares.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\openssl\bin\openssl.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\openssl\bin\ssleay32.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\openssl\bin\libeay32.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "c:\dev\setacl.exe"; DestDir: "{app}\tmp"; Flags: ignoreversion
-Source: ".\makecert.bat"; DestDir: "{app}"; Flags: ignoreversion
-Source: ".\encpem.bat"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\ssl.cnf"; DestDir: "{app}"; Flags: ignoreversion
+
 #ifdef USE_CURL
 ; curl with ssl support
-Source: "C:\dev\curl-ssl\builds\libcurl-vc-x86-release-dll-sspi-spnego\bin\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\curl-ca-bundle.crt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c:\dev\curl-ssl\builds\libcurl-vc-x86-release-dll-sspi-spnego\bin\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion
 #endif
-;Source: "..\..\..\dbghelp.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 [Dirs]
 Name: "{app}\tmp"
+Name: "{app}\cache"
+Name: "{app}\logs"
+Name: "{app}\conf"
+Name: "{app}\conf\ssl"
+Name: "{app}\data"
 
 [UninstallDelete]
 Type: files; Name: "{app}\DbgHelp.Dll"
@@ -101,7 +108,8 @@ begin
         ) then
     begin
       MsgBox('UnrealIRCd requires the Microsoft Visual C++ Redistributable for Visual Studio 2012 to be installed.' #13 +
-             'After you click OK you will be taken to a download page. There, choose Download -> choose the vcredist_x86 version (last of 3 choices). Then download and install it.', mbInformation, MB_OK);
+             'After you click OK you will be taken to a download page. There, click Download and choose the vcredist_x86 version. Then download and install it.' #13 +
+             'If you are already absolutely sure that you have this package installed then you can skip this step.', mbInformation, MB_OK);
       ShellExec('open', 'http://www.microsoft.com/en-us/download/details.aspx?id=30679', '', '', SW_SHOWNORMAL,ewNoWait,ErrorCode);
       MsgBox('Click OK once you have installed the Microsoft Visual C++ Redistributable for Visual Studio 2012 (vcredist_x86) to continue the UnrealIRCd installer', mbInformation, MB_OK);
 
@@ -170,7 +178,7 @@ procedure CurPageChanged(CurPage: Integer);
 begin
   if (CurPage = wpSelectTasks)then
   begin
-     if FileExists(ExpandConstant('{app}\server.cert.pem')) then
+     if FileExists(ExpandConstant('{app}\conf\ssl\server.cert.pem')) then
      begin
         WizardForm.TasksList.Checked[9]:=false;
      end
@@ -186,13 +194,14 @@ Name: "{group}\UnrealIRCd"; Filename: "{app}\wircd.exe"; WorkingDir: "{app}"
 Name: "{group}\Uninstall UnrealIRCd"; Filename: "{uninstallexe}"; WorkingDir: "{app}"
 Name: "{group}\Make Certificate"; Filename: "{app}\makecert.bat"; WorkingDir: "{app}"
 Name: "{group}\Encrypt Certificate"; Filename: "{app}\encpem.bat"; WorkingDir: "{app}"
-Name: "{group}\Documentation"; Filename: "{app}\doc\unreal32docs.html"; WorkingDir: "{app}"
+Name: "{group}\Documentation"; Filename: "https://www.unrealircd.org/docs/UnrealIRCd_3.4.x_documentation"; WorkingDir: "{app}"
 Name: "{userdesktop}\UnrealIRCd"; Filename: "{app}\wircd.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\UnrealIRCd"; Filename: "{app}\wircd.exe"; WorkingDir: "{app}"; Tasks: quicklaunchicon
 
 [Run]
-Filename: "notepad"; Description: "View example.conf"; Parameters: "{app}\doc\example.conf"; Flags: postinstall skipifsilent shellexec runmaximized
-Filename: "{app}\doc\unreal32docs.html"; Description: "View UnrealIRCd documentation"; Parameters: ""; Flags: postinstall skipifsilent shellexec runmaximized
+;Filename: "notepad"; Description: "View example.conf"; Parameters: "{app}\conf\examples\example.conf"; Flags: postinstall skipifsilent shellexec runmaximized
+Filename: "https://www.unrealircd.org/docs/"; Description: "View documentation"; Parameters: ""; Flags: postinstall skipifsilent shellexec runmaximized
+Filename: "https://www.unrealircd.org/docs/Installing_%28Windows%29"; Description: "View installation instructions"; Parameters: ""; Flags: postinstall skipifsilent shellexec runmaximized
 Filename: "notepad"; Description: "View Release Notes"; Parameters: "{app}\RELEASE.NOTES.txt"; Flags: postinstall skipifsilent shellexec runmaximized
 Filename: "{app}\unreal.exe"; Parameters: "install"; Flags: runminimized nowait; Tasks: installservice
 Filename: "{app}\unreal.exe"; Parameters: "config startup manual"; Flags: runminimized nowait; Tasks: installservice/startdemand

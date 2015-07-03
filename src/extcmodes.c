@@ -45,7 +45,7 @@
 extern char cmodestring[512];
 
 /* Channel parameter to slot# mapping */
-unsigned char param_to_slot_mapping[256];
+MODVAR unsigned char param_to_slot_mapping[256];
 
 extern void make_cmodestr(void);
 

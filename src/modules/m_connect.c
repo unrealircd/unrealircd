@@ -86,19 +86,13 @@ DLLFUNC CMD_FUNC(m_connect)
 	aClient *acptr;
 
 
-	if (!IsPrivileged(sptr))
-	{
-		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
-		return -1;
-	}
-
-	if (MyClient(sptr) && !OPCanGRoute(sptr) && parc > 3)
+	if (!IsServer(sptr) && MyClient(sptr) && !OperClass_evaluateACLPath("route:global",sptr,NULL,NULL,NULL) && parc > 3)
 	{			/* Only allow LocOps to make */
 		/* local CONNECTS --SRB      */
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
-	if (MyClient(sptr) && !OPCanLRoute(sptr) && parc <= 3)
+	if (!IsServer(sptr) && MyClient(sptr) && !OperClass_evaluateACLPath("route:local",sptr,NULL,NULL,NULL) && parc <= 3)
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;

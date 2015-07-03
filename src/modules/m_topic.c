@@ -139,7 +139,7 @@ long flags = 0; /* cache: membership flags */
 		if (parc > 2 || SecretChannel(chptr))
 		{
 			if (!ismember && !IsServer(sptr)
-			    && !OPCanSeeSecret(sptr) && !IsULine(sptr))
+			    && !OperClass_evaluateACLPath("override:see:list:secret",sptr,NULL,chptr,NULL) && !IsULine(sptr))
 			{
 				sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
 				    me.name, parv[0], name);
@@ -241,7 +241,7 @@ long flags = 0; /* cache: membership flags */
 					is_chan_op(sptr, chptr))
 				{
 #ifndef NO_OPEROVERRIDE
-					if ((MyClient(sptr) ? (!IsOper(sptr) || !OPCanOverride(sptr)) : !IsOper(sptr)))
+					if ((MyClient(sptr) ? (!IsOper(sptr) || !OperClass_evaluateACLPath("override:topic",sptr,NULL,chptr,NULL)) : !IsOper(sptr)))
 					{
 #endif
 					sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
@@ -258,7 +258,7 @@ long flags = 0; /* cache: membership flags */
 			{
 				char buf[512];
 				
-				if (IsOper(sptr) && OPCanOverride(sptr))
+				if (IsOper(sptr) && OperClass_evaluateACLPath("override:topic",sptr,NULL,chptr,NULL))
 				{
 					topicoverride(sptr, chptr, topic);
 				} else {
@@ -271,7 +271,7 @@ long flags = 0; /* cache: membership flags */
 			{
 				char buf[512];
 				
-				if (IsOper(sptr) && OPCanOverride(sptr))
+				if (IsOper(sptr) && OperClass_evaluateACLPath("override:topic",sptr,NULL,chptr,NULL))
 				{
 					topicoverride(sptr, chptr, topic);
 				} else {

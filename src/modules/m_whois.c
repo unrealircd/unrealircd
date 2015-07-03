@@ -217,7 +217,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				if (ret == EX_DENY)
 					showchannel = 0;
 				
-				if (!showchannel && (OPCanSeeSecret(sptr) || OperClass_evaluateACLPath("override:whois",sptr,NULL,chptr,NULL)))
+				if (!showchannel && (OperClass_evaluateACLPath("override:see:whois",sptr,NULL,chptr,NULL)))
 				{
 					showchannel = 1; /* OperOverride */
 					operoverride = 1;
@@ -316,15 +316,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			if (IsAnOper(acptr) && !hideoper)
 			{
 				buf[0] = '\0';
-				if (IsNetAdmin(acptr))
-					strlcat(buf, "a Network Administrator", sizeof buf);
-				else if (IsSAdmin(acptr))
-					strlcat(buf, "a Services Administrator", sizeof buf);
-				else if (IsAdmin(acptr) && !IsCoAdmin(acptr))
-					strlcat(buf, "a Server Administrator", sizeof buf);
-				else if (IsCoAdmin(acptr))
-					strlcat(buf, "a Co Administrator", sizeof buf);
-				else if (IsOper(acptr))
+				if (IsOper(acptr))
 					strlcat(buf, "an IRC Operator", sizeof buf);
 
 				else
@@ -332,9 +324,15 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				if (buf[0])
 				{
 					if (IsOper(sptr) && MyClient(acptr))
+					{
+						char *operclass = "???";
+						ConfigItem_oper *oper = Find_oper(acptr->user->operlogin);
+						if (oper && oper->operclass)
+							operclass = oper->operclass;
 						sendto_one(sptr,
-						    ":%s 313 %s %s :is %s (%s)", me.name,
-						    parv[0], name, buf, acptr->user->operlogin);
+						    ":%s 313 %s %s :is %s (%s) [%s]", me.name,
+						    parv[0], name, buf, acptr->user->operlogin, operclass);
+					}
 					else
 						sendto_one(sptr,
 						    rpl_str(RPL_WHOISOPERATOR), me.name,

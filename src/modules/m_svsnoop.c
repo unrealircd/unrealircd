@@ -101,12 +101,7 @@ long oldumodes;
 						list_del(&acptr->special_node);
 
 					oldumodes = acptr->umodes;
-					acptr->umodes &= ~(UMODE_OPER | UMODE_LOCOP |
-					                   UMODE_SADMIN | UMODE_ADMIN |
-					                   UMODE_NETADMIN |
-					                   UMODE_DEAF | UMODE_HIDEOPER | UMODE_FAILOP |
-					                   UMODE_COADMIN | UMODE_VICTIM);
-					acptr->oflag = 0;
+					remove_oper_modes(acptr);
 					remove_oper_snomasks(acptr);
 					send_umode_out(acptr, acptr, oldumodes);
 					RunHook2(HOOKTYPE_LOCAL_OPER, acptr, 0);

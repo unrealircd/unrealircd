@@ -12,6 +12,60 @@ extern void config_free(ConfigFile *cfptr);
 
 char configfiletmp[512];
 
+struct _upgrade
+{
+	char *locop_host;
+	char *oper_host;
+	char *coadmin_host;
+	char *admin_host;
+	char *sadmin_host;
+	char *netadmin_host;
+	int host_on_oper_up;
+};
+
+struct _upgrade upgrade;
+
+typedef struct flagmapping FlagMapping;
+struct flagmapping
+{
+	char shortflag;
+	char *longflag;
+};
+
+static FlagMapping FlagMappingTable[] = {
+	{ 'o', "local" },
+	{ 'O', "global" },
+	{ 'r', "can_rehash" },
+	{ 'D', "can_die" },
+	{ 'R', "can_restart" },
+	{ 'w', "can_wallops" },
+	{ 'g', "can_globops" },
+	{ 'c', "can_localroute" },
+	{ 'L', "can_globalroute" },
+	{ 'K', "can_globalkill" },
+	{ 'b', "can_kline" },
+	{ 'B', "can_unkline" },
+	{ 'n', "can_localnotice" },
+	{ 'G', "can_globalnotice" },
+	{ 'A', "admin" },
+	{ 'a', "services-admin" },
+	{ 'N', "netadmin" },
+	{ 'C', "coadmin" },
+	{ 'z', "can_zline" },
+	{ 'W', "get_umodew" },
+	{ 'H', "get_host" },
+	{ 't', "can_gkline" },
+	{ 'Z', "can_gzline" },
+	{ 'v', "can_override" },
+	{ 'q', "can_setq" },
+	{ 'd', "can_dccdeny" },
+	{ 'T', "can_tsctl" },
+	{ 0, NULL },
+};
+
+int needs_modules_default_conf = 1;
+int needs_operclass_default_conf = 1;
+
 static void die()
 {
 #ifdef _WIN32
@@ -445,7 +499,6 @@ int upgrade_from_subblock(ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp;
 	char *list[MAXFROMENTRIES];
-	char sid[16];
 	int listcnt = 0;
 
 	memset(list, 0, sizeof(list));
@@ -480,6 +533,8 @@ int upgrade_from_subblock(ConfigEntry *ce)
 			char *m = !strncmp(list[i], "*@", 2) ? list[i]+2 : list[i]; /* skip or don't skip the user@ part */
 			snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\t%s;\n", m);
 		}
+		
+		strlcat(buf, "\t};\n", sizeof(buf));
 	}
 
 	replace_section(ce, buf);
@@ -495,19 +550,26 @@ int upgrade_loadmodule(ConfigEntry *ce)
 	
 	if (!file)
 		return 0;
-	
+
 	if (our_strcasestr(file, "commands.dll") || our_strcasestr(file, "/commands.so"))
 	{
-		snprintf(buf, sizeof(buf), "include \"modules.full.conf\";\n");
+		snprintf(buf, sizeof(buf), "include \"modules.default.conf\";\n");
+		needs_modules_default_conf = 0;
+		if (needs_operclass_default_conf)
+		{
+			/* This is a nice place :) */
+			snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "include \"operclass.default.conf\";\n");
+			needs_operclass_default_conf = 0;
+		}
 		replace_section(ce, buf);
-		config_status("- loadmodule for '%s' replaced with an include \"modules.full.conf\"", file);
+		config_status("- loadmodule for '%s' replaced with an include \"modules.default.conf\"", file);
 		return 1;
 	}
 	
 	if (our_strcasestr(file, "cloak.dll") || our_strcasestr(file, "/cloak.so"))
 	{
-		replace_section(ce, "/* NOTE: cloaking module is included in modules.full.conf */");
-		config_status("- loadmodule for '%s' removed as this is now in modules.full.conf", file);
+		replace_section(ce, "/* NOTE: cloaking module is included in modules.default.conf */");
+		config_status("- loadmodule for '%s' removed as this is now in modules.default.conf", file);
 		return 1;
 	}
 
@@ -701,7 +763,7 @@ int upgrade_allow_block(ConfigEntry *ce)
 	char *class = NULL;
 	char *redirect_server = NULL;
 	int redirect_port = 0;
-	char *options[MAXSPFTARGETS];
+	char *options[MAXALLOWOPTIONS];
 	int optionscnt = 0;
 	char options_str[512], comment[512];
 
@@ -931,6 +993,339 @@ int upgrade_cgiirc_block(ConfigEntry *ce)
 	return 1;
 }
 
+int contains_flag(char **flags, int flagscnt, char *needle)
+{
+	int i;
+	
+	for (i = 0; i < flagscnt; i++)
+		if (!strcmp(flags[i], needle))
+			return 1;
+
+	return 0;
+}
+
+#define MAXOPERFLAGS 64
+int upgrade_oper_block(ConfigEntry *ce)
+{
+	ConfigEntry *cep, *cepp;
+	char *name = NULL;
+	char *password = NULL;
+	char *password_type = NULL;
+	char *require_modes = NULL;
+	char *class = NULL;
+	char *flags[MAXOPERFLAGS];
+	int flagscnt = 0;
+	char *swhois = NULL;
+	char *snomask = NULL;
+	char *modes = NULL;
+	int maxlogins = -1;
+	char *fromlist[MAXFROMENTRIES];
+	int fromlistcnt = 0;
+	char maskbuf[1024];
+	char *operclass = NULL; /* set by us, not read from conf */
+	char *vhost = NULL; /* set by us, not read from conf */
+	int i;
+	char silly[64];
+
+	memset(flags, 0, sizeof(flags));
+	*maskbuf = '\0';
+
+	name = ce->ce_vardata;
+	
+	if (!name)
+		return 0; /* oper block without a name = invalid */
+
+	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+	{
+		if (!strcmp(cep->ce_varname, "operclass"))
+			return 0; /* already 3.4.x conf */
+		else if (!strcmp(cep->ce_varname, "flags"))
+		{
+			if (cep->ce_vardata) /* short options (flag letters) */
+			{
+				char *p;
+				for (p = cep->ce_vardata; *p; p++)
+				{
+					if (flagscnt == MAXALLOWOPTIONS)
+						break;
+					for (i = 0; FlagMappingTable[i].shortflag; i++)
+					{
+						if (FlagMappingTable[i].shortflag == *p)
+						{
+							flags[flagscnt] = FlagMappingTable[i].longflag;
+							flagscnt++;
+							break;
+						}
+					}
+				}
+			}
+			else if (cep->ce_entries) /* long options (flags written out) */
+			{
+				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+				{
+					if (flagscnt == MAXALLOWOPTIONS)
+						break;
+					flags[flagscnt++] = cepp->ce_varname;
+				}
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "from"))
+		{
+			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+			{
+				if (!strcmp(cepp->ce_varname, "userhost") && cepp->ce_vardata)
+				{
+					if (fromlistcnt == MAXFROMENTRIES)
+						break; // no room, sorry.
+					fromlist[fromlistcnt++] = cepp->ce_vardata;
+				}
+			}
+		}
+		else if (!strcmp(cep->ce_varname, "mask"))
+		{
+			/* processing mask here means we can also upgrade 3.4-alphaX oper blocks.. */
+			if (cep->ce_vardata)
+			{
+				if (fromlistcnt == MAXFROMENTRIES)
+					break; // no room, sorry.
+				fromlist[fromlistcnt++] = cep->ce_vardata;
+			} else
+			{
+				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+				{
+					if (fromlistcnt == MAXFROMENTRIES)
+						break; // no room, sorry.
+					fromlist[fromlistcnt++] = cepp->ce_varname;
+				}
+			}
+		}
+		else if (!cep->ce_vardata)
+			continue; /* invalid */
+		else if (!strcmp(cep->ce_varname, "password"))
+		{
+			password = cep->ce_vardata;
+			if (cep->ce_entries)
+				password_type = cep->ce_entries->ce_varname;
+		}
+		else if (!strcmp(cep->ce_varname, "require-modes"))
+		{
+			require_modes = cep->ce_vardata;
+		}
+		else if (!strcmp(cep->ce_varname, "class"))
+		{
+			class = cep->ce_vardata;
+		}
+		else if (!strcmp(cep->ce_varname, "swhois"))
+		{
+			swhois = cep->ce_vardata;
+		}
+		else if (!strcmp(cep->ce_varname, "snomasks"))
+		{
+			snomask = cep->ce_vardata;
+		}
+		else if (!strcmp(cep->ce_varname, "modes"))
+		{
+			modes = cep->ce_vardata;
+		}
+		else if (!strcmp(cep->ce_varname, "maxlogins"))
+		{
+			maxlogins = atoi(cep->ce_vardata);
+		}
+	}
+
+	if ((fromlistcnt == 0) || !password || !class)
+		return 0; /* missing 3.2.x items in allow block (invalid or upgraded already) */
+
+	/* build oper::mask list in 'maskbuf' (includes variable name) */
+	if (fromlistcnt == 1)
+	{
+		char *m = !strncmp(fromlist[0], "*@", 2) ? fromlist[0]+2 : fromlist[0]; /* skip or don't skip the user@ part */
+		snprintf(maskbuf, sizeof(maskbuf), "mask %s;\n", m);
+	} else
+	{
+		/* Multiple (list of masks) */
+		int i;
+		snprintf(maskbuf, sizeof(maskbuf), "mask {\n");
+		
+		for (i=0; i < fromlistcnt; i++)
+		{
+			char *m = !strncmp(fromlist[i], "*@", 2) ? fromlist[i]+2 : fromlist[i]; /* skip or don't skip the user@ part */
+			snprintf(maskbuf+strlen(maskbuf), sizeof(maskbuf)-strlen(maskbuf), "\t%s;\n", m);
+		}
+		strlcat(maskbuf, "\t};\n", sizeof(maskbuf));
+	}
+	
+	/* Figure out which default operclass looks most suitable (="find highest rank") */
+	if (contains_flag(flags, flagscnt, "netadmin"))
+		operclass = "netadmin";
+	else if (contains_flag(flags, flagscnt, "services-admin"))
+		operclass = "services-admin";
+	else if (contains_flag(flags, flagscnt, "coadmin"))
+		operclass = "coadmin";
+	else if (contains_flag(flags, flagscnt, "admin"))
+		operclass = "admin";
+	else if (contains_flag(flags, flagscnt, "global"))
+		operclass = "globop";
+	else if (contains_flag(flags, flagscnt, "local"))
+		operclass = "locop";
+	else
+	{
+		/* Hmm :) */
+		config_status("WARNING: I have trouble converting oper block '%s' to the new system. "
+		              "I made it use the locop operclass. Feel free to change", name);
+		operclass = "locop";
+	}
+
+	if (contains_flag(flags, flagscnt, "get_host") || upgrade.host_on_oper_up)
+	{
+		if (!strcmp(operclass, "netadmin"))
+			vhost = upgrade.netadmin_host;
+		else if (!strcmp(operclass, "services-admin"))
+			vhost = upgrade.sadmin_host;
+		else if (!strcmp(operclass, "coadmin"))
+			vhost = upgrade.coadmin_host;
+		else if (!strcmp(operclass, "admin"))
+			vhost = upgrade.admin_host;
+		else if (!strcmp(operclass, "globop"))
+			vhost = upgrade.oper_host;
+		else if (!strcmp(operclass, "locop"))
+			vhost = upgrade.locop_host;
+	}
+
+	/* If no swhois is set, then set a title. Just because people are used to it. */
+	if (!swhois)
+	{
+		if (!strcmp(operclass, "netadmin"))
+			swhois = "is a Network Administrator";
+		else if (!strcmp(operclass, "services-admin"))
+			swhois = "is a Services Administrator";
+		else if (!strcmp(operclass, "coadmin"))
+			swhois = "is a Co Administrator";
+		else if (!strcmp(operclass, "admin"))
+			swhois = "is a Server Administrator";
+	}
+
+	/* The 'coadmin' operclass is actually 'admin'. There's no difference in privileges. */
+	if (!strcmp(operclass, "coadmin"))
+		operclass = "admin";
+	
+	/* convert globop and above w/override to operclassname-with-override */
+	if (contains_flag(flags, flagscnt, "can_override") && strcmp(operclass, "locop"))
+	{
+		snprintf(silly, sizeof(silly), "%s-with-override", operclass);
+		operclass = silly;
+	}
+
+	/* Ok, we got everything we need. Now we will write out the actual new oper block! */
+
+	/* oper block header & oper::mask */
+	snprintf(buf, sizeof(buf), "oper %s {\n"
+	                           "\t%s",
+	                           name,
+	                           maskbuf);
+
+	/* oper::password */
+	if (password_type)
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tpassword \"%s\" { %s; };\n", password, password_type);
+	else
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tpassword \"%s\";\n", password);
+
+	/* oper::require-modes */
+	if (require_modes)
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\trequire-modes \"%s\";\n", require_modes);
+
+	/* oper::maxlogins */
+	if (maxlogins != -1)
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tmaxlogins %d;\n", maxlogins);
+
+	/* oper::class */
+	snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tclass %s;\n", class);
+
+	/* oper::operclass */
+	snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\toperclass %s;\n", operclass);
+	
+	/* oper::modes */
+	if (modes)
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tmodes \"%s\";\n", modes);
+
+	/* oper::snomask */
+	if (snomask)
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tsnomask \"%s\";\n", snomask);
+
+	/* oper::vhost */
+	if (vhost)
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tvhost \"%s\";\n", vhost);
+
+	/* oper::swhois */
+	if (swhois)
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "\tswhois \"%s\";\n", swhois);
+
+	strlcat(buf, "};\n", sizeof(buf));
+	
+	replace_section(ce, buf);
+	config_status("- oper block (%s) converted to new syntax", name);
+	return 1;
+}
+
+void update_read_settings(char *cfgfile)
+{
+	ConfigFile *cf = NULL;
+	ConfigEntry *ce = NULL, *cep, *cepp;
+
+	cf = config_load(cfgfile);
+	if (!cf)
+		return;
+		
+	if (strstr(cfgfile, "modules.default.conf"))
+		needs_modules_default_conf = 0;
+	else if (strstr(cfgfile, "operclass.default.conf"))
+		needs_operclass_default_conf = 0;
+	
+
+	/* This needs to be read early, as the rest may depend on it */
+	for (ce = cf->cf_entries; ce; ce = ce->ce_next)
+	{
+		if (!strcmp(ce->ce_varname, "set"))
+		{
+			for (cep = ce->ce_entries; cep; cep = cep->ce_next)
+			{
+				if (!strcmp(cep->ce_varname, "hosts"))
+				{
+					for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+					{
+						if (!cepp->ce_vardata)
+							continue;
+						if (!strcmp(cepp->ce_varname, "local")) {
+							ircstrdup(upgrade.locop_host, cepp->ce_vardata);
+						}
+						else if (!strcmp(cepp->ce_varname, "global")) {
+							ircstrdup(upgrade.oper_host, cepp->ce_vardata);
+						}
+						else if (!strcmp(cepp->ce_varname, "coadmin")) {
+							ircstrdup(upgrade.coadmin_host, cepp->ce_vardata);
+						}
+						else if (!strcmp(cepp->ce_varname, "admin")) {
+							ircstrdup(upgrade.admin_host, cepp->ce_vardata);
+						}
+						else if (!strcmp(cepp->ce_varname, "servicesadmin")) {
+							ircstrdup(upgrade.sadmin_host, cepp->ce_vardata);
+						}
+						else if (!strcmp(cepp->ce_varname, "netadmin")) {
+							ircstrdup(upgrade.netadmin_host, cepp->ce_vardata);
+						}
+						else if (!strcmp(cepp->ce_varname, "host-on-oper-up")) {
+							upgrade.host_on_oper_up = config_checkval(cepp->ce_vardata,CFG_YESNO);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	config_free(cf);
+}
+
+
 int update_conf_file(void)
 {
 	ConfigFile *cf = NULL;
@@ -956,7 +1351,7 @@ again:
 		config_error("could not load configuration file '%s'", configfile);
 		return 0;
 	}
-		
+
 	for (ce = cf->cf_entries; ce; ce = ce->ce_next)
 	{
 		/*printf("%s%s%s\n",
@@ -986,14 +1381,8 @@ again:
 		}
 		if (!strcmp(ce->ce_varname, "oper"))
 		{
-			for (cep = ce->ce_entries; cep; cep = cep->ce_next)
-			{
-				if (!strcmp(cep->ce_varname, "from"))
-				{
-					if (upgrade_from_subblock(cep))
-						goto again;
-				}
-			}
+			if (upgrade_oper_block(ce))
+				goto again;
 		}
 		if (!strcmp(ce->ce_varname, "vhost"))
 		{
@@ -1044,6 +1433,12 @@ again:
 						
 					insert_section(cep->ce_fileposstart, buf);
 					goto again;
+				} else
+				if (!strcmp(cep->ce_varname, "hosts"))
+				{
+					config_status("- removed set::hosts. we now use oper::vhost for this.");
+					remove_section(cep->ce_fileposstart, cep->ce_fileposend+2); /* hmm +2.. why.. */
+					goto again;
 				}
 			}
 		}
@@ -1091,8 +1486,17 @@ void build_include_list_ex(char *fname, ConfigFile **cf_list)
 
 	for (ce = cf->cf_entries; ce; ce = ce->ce_next)
 		if (!strcmp(ce->ce_varname, "include"))
+		{
+			if ((ce->ce_vardata[0] != '/') && (ce->ce_vardata[0] != '\\') && strcmp(ce->ce_vardata, CPATH))
+			{
+				char *str = MyMallocEx(strlen(ce->ce_vardata) + strlen(CONFDIR) + 4);
+				sprintf(str, "%s/%s", CONFDIR, ce->ce_vardata);
+				MyFree(ce->ce_vardata);
+				ce->ce_vardata = str;
+			}
 			if (!already_included(ce->ce_vardata, *cf_list))
 				build_include_list_ex(ce->ce_vardata, cf_list);
+		}
 }
 
 ConfigFile *build_include_list(char *fname)
@@ -1105,6 +1509,7 @@ ConfigFile *build_include_list(char *fname)
 
 void update_conf(void)
 {
+	ConfigFile *files;
 	ConfigFile *cf;
 	ConfigEntry *ce, *cep, *cepp;
 	char *mainconf = configfile;
@@ -1113,10 +1518,18 @@ void update_conf(void)
 	config_status("Attempting to upgrade '%s' (and all it's included files) from UnrealIRCd 3.2.x to UnrealIRCd 3.4.x...", configfile);
 	
 	strlcpy(me.name, "<server>", sizeof(me.name));
+	memset(&upgrade, 0, sizeof(upgrade));
 
-	cf = build_include_list(mainconf);
+	files = build_include_list(mainconf);
 
-	for (; cf; cf = cf->cf_next)
+	/* We need to read some original settings first, before we touch anything... */
+	for (cf = files; cf; cf = cf->cf_next)
+	{
+		update_read_settings(cf->cf_filename);
+	}
+	
+	/* Now go upgrade... */
+	for (cf = files; cf; cf = cf->cf_next)
 	{
 		if (!file_exists(cf->cf_filename))
 			continue; /* skip silently. errors were already shown earlier by build_include_list anyway. */
@@ -1172,11 +1585,28 @@ void update_conf(void)
 		}
 	}
 	configfile = mainconf; /* restore */
+
+	if (needs_operclass_default_conf)
+	{
+		/* There's a slight chance we never added this include, and you get mysterious
+		 * oper permissions errors if you try to use such an operclass and it's missing.
+		 */
+		FILE *fd = fopen(mainconf, "a");
+		if (fd)
+		{
+			fprintf(fd, "\ninclude \"operclass.default.conf\";\n");
+			fclose(fd);
+			config_status("Oh wait, %s needs an include for operclass.default.conf. Added.", mainconf);
+			upgraded_files++;
+		}
+	}	
 	
 	if (upgraded_files > 0)
 	{
 		config_status("");
 		config_status("%d configuration file(s) upgraded. You can now boot UnrealIRCd with your freshly converted conf's!", upgraded_files);
+		config_status("You should probably take a look at the converted configuration files now or at a later time.");
+		config_status("See also https://www.unrealircd.org/docs/Upgrading_from_3.2.x and the sections in there (eg: Oper block)");
 		config_status("");
 	} else {
 		config_status("");

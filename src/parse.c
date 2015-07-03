@@ -167,11 +167,7 @@ inline void parse_addlag(aClient *cptr, int cmdbytes)
 #ifdef FAKELAG_CONFIGURABLE
 		!(cptr->class && (cptr->class->options & CLASS_OPT_NOFAKELAG)) && 
 #endif
-#ifdef NO_FAKE_LAG_FOR_LOCOPS	
-	!IsAnOper(cptr))
-#else
-	!IsOper(cptr))
-#endif		
+	!OperClass_evaluateACLPath("privacy:fakelag",cptr,NULL,NULL,NULL))
 	{
 		cptr->since += (1 + cmdbytes/90);
 	}		
@@ -324,7 +320,7 @@ int  parse(aClient *cptr, char *buffer, char *bufend)
 			flags |= M_SHUN;
 		if (IsVirus(from))
 			flags |= M_VIRUS;
-		if (IsAnOper(from))
+		if (IsOper(from))
 			flags |= M_OPER;
 		cmptr = find_Command(ch, IsServer(cptr) ? 1 : 0, flags);
 		if (!cmptr)

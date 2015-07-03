@@ -670,7 +670,7 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 		 * Yeah.. there are still other cases when non-SSL links are fine (eg: local IP
 		 * of the same machine), we won't bother with detecting that. -- Syzop
 		 */
-		if (strcmp(cptr->sockhost, "localhost"))
+		if (!IsLocal(cptr))
 		{
 			sendto_realops("\002WARNING:\002 This link is unencrypted (non-SSL). We highly recommend to use "
 						   "SSL server linking. See https://www.unrealircd.org/docs/Linking_servers");

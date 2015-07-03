@@ -167,10 +167,10 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/M_SETNAME.DLL SRC/MODULES/M_SETHOST.DLL SRC/MODULES/M_CHGIDENT.DLL \
  SRC/MODULES/M_SVSMOTD.DLL SRC/MODULES/M_SVSNLINE.DLL SRC/MODULES/M_WHO.DLL \
  SRC/MODULES/M_SWHOIS.DLL SRC/MODULES/M_SVSMODE.DLL SRC/MODULES/M_AWAY.DLL \
- SRC/MODULES/M_SVSNOOP.DLL SRC/MODULES/M_MKPASSWD.DLL SRC/MODULES/M_SVSO.DLL \
- SRC/MODULES/M_SVSNICK.DLL SRC/MODULES/M_ADMINCHAT.DLL \
+ SRC/MODULES/M_SVSNOOP.DLL SRC/MODULES/M_MKPASSWD.DLL \
+ SRC/MODULES/M_SVSNICK.DLL \
  SRC/MODULES/M_CHGNAME.DLL SRC/MODULES/M_GUEST.DLL \
- SRC/MODULES/M_LAG.DLL SRC/MODULES/M_MESSAGE.DLL SRC/MODULES/M_NACHAT.DLL \
+ SRC/MODULES/M_LAG.DLL SRC/MODULES/M_MESSAGE.DLL \
  SRC/MODULES/M_OPER.DLL SRC/MODULES/M_PINGPONG.DLL SRC/MODULES/M_QUIT.DLL \
  SRC/MODULES/M_RPING.DLL SRC/MODULES/M_SENDUMODE.DLL \
  SRC/MODULES/M_SQLINE.DLL SRC/MODULES/M_KILL.DLL SRC/MODULES/M_TSCTL.DLL \
@@ -204,7 +204,7 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/M_MD.DLL \
  SRC/MODULES/CERTFP.DLL \
  SRC/MODULES/CLOAK.DLL \
- SRC/MODULES/CHANMODES/ADMINONLY.DLL \
+ SRC/MODULES/WEBIRC.DLL \
  SRC/MODULES/CHANMODES/CENSOR.DLL \
  SRC/MODULES/CHANMODES/DELAYJOIN.DLL \
  SRC/MODULES/CHANMODES/FLOODPROT.DLL \
@@ -226,13 +226,21 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/CHANMODES/STRIPCOLOR.DLL \
  SRC/MODULES/USERMODES/CENSOR.DLL \
  SRC/MODULES/USERMODES/NOCTCP.DLL \
+ SRC/MODULES/USERMODES/BOT.DLL \
+ SRC/MODULES/USERMODES/SERVICEBOT.DLL \
+ SRC/MODULES/USERMODES/SHOWWHOIS.DLL \
+ SRC/MODULES/USERMODES/PRIVACY.DLL \
+ SRC/MODULES/USERMODES/NOKICK.DLL \
+ SRC/MODULES/USERMODES/REGONLYMSG.DLL \
+ SRC/MODULES/SNOMASKS/DCCREJECT.DLL \
  SRC/MODULES/EXTBANS/ACCOUNT.DLL \
  SRC/MODULES/EXTBANS/INCHANNEL.DLL \
  SRC/MODULES/EXTBANS/JOIN.DLL \
  SRC/MODULES/EXTBANS/NICKCHANGE.DLL \
  SRC/MODULES/EXTBANS/QUIET.DLL \
  SRC/MODULES/EXTBANS/REALNAME.DLL \
- SRC/MODULES/EXTBANS/REGNICK.DLL
+ SRC/MODULES/EXTBANS/REGNICK.DLL \
+ SRC/MODULES/EXTBANS/OPERCLASS.DLL
 
 ALL: CONF UNREAL.EXE WIRCD.EXE MODULES 
 
@@ -245,6 +253,7 @@ CLEAN:
 	-@erase src\modules\*.dll >NUL
 	-@erase src\modules\chanmodes\*.dll >NUL
 	-@erase src\modules\usermodes\*.dll >NUL
+	-@erase src\modules\snomasks\*.dll >NUL
 	-@erase src\modules\extbans\*.dll >NUL
         -@erase .\*.exe >NUL
 	-@erase wircd.lib >NUL
@@ -537,14 +546,8 @@ src/modules/m_mkpasswd.dll: src/modules/m_mkpasswd.c $(INCLUDES)
 src/modules/m_svsnoop.dll: src/modules/m_svsnoop.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/m_svsnoop.c $(MODLFLAGS)
 
-src/modules/m_svso.dll: src/modules/m_svso.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/m_svso.c $(MODLFLAGS)
-
 src/modules/m_svsnick.dll: src/modules/m_svsnick.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/m_svsnick.c $(MODLFLAGS)
-
-src/modules/m_adminchat.dll: src/modules/m_adminchat.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/m_adminchat.c $(MODLFLAGS)
 
 src/modules/m_chgname.dll: src/modules/m_chgname.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/m_chgname.c $(MODLFLAGS)
@@ -560,9 +563,6 @@ src/modules/m_lag.dll: src/modules/m_lag.c $(INCLUDES)
 
 src/modules/m_message.dll: src/modules/m_message.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/m_message.c $(MODLFLAGS)
-
-src/modules/m_nachat.dll: src/modules/m_nachat.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/m_nachat.c $(MODLFLAGS)
 
 src/modules/m_oper.dll: src/modules/m_oper.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/m_oper.c $(MODLFLAGS)
@@ -795,6 +795,9 @@ src/modules/certfp.dll: src/modules/certfp.c $(INCLUDES)
 src/modules/cloak.dll: src/modules/cloak.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/cloak.c $(MODLFLAGS)
 
+src/modules/webirc.dll: src/modules/webirc.c $(INCLUDES)
+        $(CC) $(MODCFLAGS) src/modules/webirc.c $(MODLFLAGS)
+
 src/modules/m_svsnolag.dll: src/modules/m_svsnolag.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/m_svsnolag.c $(MODLFLAGS)
 
@@ -815,9 +818,6 @@ src/modules/cap_invitenotify.dll: src/modules/cap_invitenotify.c $(INCLUDES)
 
 src/modules/ssl_antidos.dll: src/modules/ssl_antidos.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/ssl_antidos.c $(MODLFLAGS)
-
-src/modules/chanmodes/adminonly.dll: src/modules/chanmodes/adminonly.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/adminonly.c $(MODLFLAGS)
 
 src/modules/chanmodes/censor.dll: src/modules/chanmodes/censor.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/censor.c $(MODLFLAGS)
@@ -882,6 +882,27 @@ src/modules/usermodes/censor.dll: src/modules/usermodes/censor.c $(INCLUDES)
 src/modules/usermodes/noctcp.dll: src/modules/usermodes/noctcp.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/usermodes/ /Fesrc/modules/usermodes/ src/modules/usermodes/noctcp.c $(MODLFLAGS)
 
+src/modules/usermodes/bot.dll: src/modules/usermodes/bot.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/usermodes/ /Fesrc/modules/usermodes/ src/modules/usermodes/bot.c $(MODLFLAGS)
+
+src/modules/usermodes/servicebot.dll: src/modules/usermodes/servicebot.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/usermodes/ /Fesrc/modules/usermodes/ src/modules/usermodes/servicebot.c $(MODLFLAGS)
+
+src/modules/usermodes/showwhois.dll: src/modules/usermodes/showwhois.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/usermodes/ /Fesrc/modules/usermodes/ src/modules/usermodes/showwhois.c $(MODLFLAGS)
+
+src/modules/usermodes/privacy.dll: src/modules/usermodes/privacy.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/usermodes/ /Fesrc/modules/usermodes/ src/modules/usermodes/privacy.c $(MODLFLAGS)
+
+src/modules/usermodes/nokick.dll: src/modules/usermodes/nokick.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/usermodes/ /Fesrc/modules/usermodes/ src/modules/usermodes/nokick.c $(MODLFLAGS)
+
+src/modules/usermodes/regonlymsg.dll: src/modules/usermodes/regonlymsg.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/usermodes/ /Fesrc/modules/usermodes/ src/modules/usermodes/regonlymsg.c $(MODLFLAGS)
+
+src/modules/snomasks/dccreject.dll: src/modules/snomasks/dccreject.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/snomasks/ /Fesrc/modules/snomasks/ src/modules/snomasks/dccreject.c $(MODLFLAGS)
+
 src/modules/extbans/account.dll: src/modules/extbans/account.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/extbans/ /Fesrc/modules/extbans/ src/modules/extbans/account.c $(MODLFLAGS)
 
@@ -902,5 +923,8 @@ src/modules/extbans/realname.dll: src/modules/extbans/realname.c $(INCLUDES)
 
 src/modules/extbans/regnick.dll: src/modules/extbans/regnick.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/extbans/ /Fesrc/modules/extbans/ src/modules/extbans/regnick.c $(MODLFLAGS)
+
+src/modules/extbans/operclass.dll: src/modules/extbans/operclass.c $(INCLUDES)
+	$(CC) $(MODCFLAGS) /Fosrc/modules/extbans/ /Fesrc/modules/extbans/ src/modules/extbans/operclass.c $(MODLFLAGS)
 
 dummy:

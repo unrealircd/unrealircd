@@ -39,7 +39,7 @@ int privacy_see_channel_in_whois(aClient *sptr, aClient *target, aChannel *chptr
                     
 DLLFUNC int MOD_INIT(privacy)(ModuleInfo *modinfo)
 {
-	UmodeAdd(modinfo->handle, 'p', UMODE_GLOBAL, umode_allow_all, &UMODE_PRIVACY);
+	UmodeAdd(modinfo->handle, 'p', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_PRIVACY);
 	
 	HookAddEx(modinfo->handle, HOOKTYPE_SEE_CHANNEL_IN_WHOIS, privacy_see_channel_in_whois);
 	

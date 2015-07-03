@@ -691,8 +691,8 @@ void sendto_match_butone(aClient *one, aClient *from, char *mask, int what,
 
 	if (MyConnect(from))
 	{
-		cansendlocal = (OPCanLNotice(from)) ? 1 : 0;
-		cansendglobal = (OPCanGNotice(from)) ? 1 : 0;
+		cansendlocal = (OperClass_evaluateACLPath("notice:local",from,NULL,NULL,NULL)) ? 1 : 0;
+		cansendglobal = (OperClass_evaluateACLPath("notice:global",from,NULL,NULL,NULL)) ? 1 : 0;
 	}
 	else
 		cansendlocal = cansendglobal = 1;
@@ -1068,7 +1068,7 @@ void sendto_opers_butone(aClient *one, aClient *from, char *pattern, ...)
 	++current_serial;
 	list_for_each_entry(cptr, &client_list, client_node)
 	{
-		if (!IsAnOper(cptr))
+		if (!IsOper(cptr))
 			continue;
 		if (cptr->from->serial == current_serial)	/* sent message along it already ? */
 			continue;

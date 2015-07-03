@@ -121,7 +121,7 @@ CMD_FUNC(m_kick)
 		/* Store "sptr" access flags */
 		if (IsPerson(sptr))
 			sptr_flags = get_access(sptr, chptr);
-		if (!IsServer(cptr) && !IsULine(sptr) && !op_can_override(sptr)
+		if (!IsServer(cptr) && !IsULine(sptr) && !op_can_override("override:kick",sptr,chptr,NULL)
 		    && !(sptr_flags & CHFL_ISOP) && !(sptr_flags & CHFL_HALFOP))
 		{
 			sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
@@ -177,7 +177,7 @@ CMD_FUNC(m_kick)
 				if (ret == EX_DENY)
 				{
 					/* If set it means 'not allowed to kick'.. now check if (s)he can override that.. */
-					if (op_can_override(sptr))
+					if (op_can_override("override:kick",sptr,chptr,NULL))
 					{
 						sendto_snomask(SNO_EYES,
 							"*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",
@@ -200,7 +200,7 @@ CMD_FUNC(m_kick)
 				 * we are +h but victim is +o, OR...
 				 * we are +h and victim is +h
 				 */
-				if (op_can_override(sptr))
+				if (op_can_override("override:kick",sptr,chptr,NULL))
 				{
 					if ((!(sptr_flags & CHFL_ISOP) && !(sptr_flags & CHFL_HALFOP)) ||
 					    ((sptr_flags & CHFL_HALFOP) && (who_flags & CHFL_ISOP)) ||
@@ -225,7 +225,7 @@ CMD_FUNC(m_kick)
 					 && !(sptr_flags & CHFL_CHANOWNER)) {
 					if (sptr == who)
 						goto attack; /* kicking self == ok */
-					if (op_can_override(sptr)) /* (and f*ck local ops) */
+					if (op_can_override("override:kick:owner",sptr,chptr,NULL)) /* (and f*ck local ops) */
 					{	/* IRCop kicking owner/prot */
 						sendto_snomask(SNO_EYES,
 						    "*** OperOverride -- %s (%s@%s) KICK %s %s (%s)",

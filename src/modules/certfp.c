@@ -35,6 +35,8 @@ DLLFUNC int MOD_INIT(certfp)(ModuleInfo *modinfo)
 {
 ModDataInfo mreq;
 
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "certfp";
 	mreq.free = certfp_free;

@@ -421,7 +421,7 @@ DLLFUNC CMD_FUNC(m_nick)
 	else
 		strlcpy(nick, parv[1], NICKLEN + 1);
 
-	if (MyConnect(sptr) && sptr->user && !IsAnOper(sptr))
+	if (MyConnect(sptr) && sptr->user && !OperClass_evaluateACLPath("immune:limits",sptr,NULL,NULL,NULL))
 	{
 		if ((sptr->user->flood.nick_c >= NICK_COUNT) && 
 		    (TStime() - sptr->user->flood.nick_t < NICK_PERIOD))

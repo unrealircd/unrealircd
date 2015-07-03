@@ -36,9 +36,9 @@ R_MODULES= \
 	 m_sethost.so m_chghost.so m_chgident.so m_setname.so \
 	 m_setident.so m_sdesc.so m_svsmode.so m_swhois.so\
 	 m_svsmotd.so m_svsnline.so m_who.so m_mkpasswd.so \
-	 m_away.so m_svsnoop.so m_svso.so m_svsnick.so \
-	 m_adminchat.so m_chgname.so m_guest.so m_kill.so \
-	 m_lag.so m_message.so m_nachat.so m_oper.so m_pingpong.so \
+	 m_away.so m_svsnoop.so m_svsnick.so \
+	 m_chgname.so m_guest.so m_kill.so \
+	 m_lag.so m_message.so m_oper.so m_pingpong.so \
 	 m_quit.so m_rping.so m_sendumode.so m_sqline.so \
 	 m_tsctl.so m_unkline.so m_unsqline.so m_unzline.so m_whois.so \
 	 m_tkl.so m_vhost.so m_cycle.so m_svsjoin.so m_svspart.so \
@@ -68,6 +68,7 @@ all: build
 build: $(MODULES)
 	cd chanmodes; $(MAKE) all
 	cd usermodes; $(MAKE) all
+	cd snomasks; $(MAKE) all
 	cd extbans; $(MAKE) all
 
 custommodule: $(MODULEFILE).c
@@ -77,10 +78,6 @@ custommodule: $(MODULEFILE).c
 #############################################################################
 #             .so's section
 #############################################################################
-
-m_adminchat.so: m_adminchat.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o m_adminchat.so m_adminchat.c
 
 m_chgname.so: m_chgname.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
@@ -101,10 +98,6 @@ m_lag.so: m_lag.c $(INCLUDES)
 m_message.so: m_message.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_message.so m_message.c
-
-m_nachat.so: m_nachat.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o m_nachat.so m_nachat.c
 
 m_oper.so: m_oper.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
@@ -205,10 +198,6 @@ m_away.so: m_away.c $(INCLUDES)
 m_svsnoop.so: m_svsnoop.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_svsnoop.so m_svsnoop.c
-
-m_svso.so: m_svso.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o m_svso.so m_svso.c
 
 m_svsnick.so: m_svsnick.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
@@ -524,3 +513,7 @@ cloak.so: cloak.c $(INCLUDES)
 
 clean:
 	$(RM) -f *.o *.so *~ core
+	cd chanmodes; $(MAKE) clean
+	cd usermodes; $(MAKE) clean
+	cd snomasks; $(MAKE) clean
+	cd extbans; $(MAKE) clean

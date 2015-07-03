@@ -68,7 +68,7 @@ CmodeInfo req;
 	memset(&req, 0, sizeof(req));
 	req.paracount = 0;
 	req.flag = 'R';
-	req.is_ok = extcmode_default_requirechop;
+	req.is_ok = extcmode_default_requirehalfop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_REGONLY);
 	
 	HookAddEx(modinfo->handle, HOOKTYPE_CAN_JOIN, regonly_check);

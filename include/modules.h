@@ -112,19 +112,21 @@ typedef struct {
 #define MOBJ_VALIDATOR	  0x4000
 
 typedef struct {
-        long mode;
-        char flag;
-        int (*allowed)(aClient *sptr, int what);
-        char unloaded;
-        Module *owner;
+        long mode; /**< Mode mask */
+        char flag; /**< Mode character */
+        int unset_on_deoper; /**< When set to 1 then this user mode will be unset on de-oper */
+        int (*allowed)(aClient *sptr, int what); /**< The 'is this user allowed to set this mode?' routine */
+        char unloaded; /**< Internal flag to indicate module is being unloaded */
+        Module *owner; /**< Module that owns this user mode */
 } Umode;
 
 typedef struct {
-        long mode;
-        char flag;
-        int (*allowed)(aClient *sptr, int what);
-        char unloaded;
-        Module *owner;
+        long mode; /**< Snomask mask */
+        char flag; /**< Snomask character */
+        int unset_on_deoper; /**< When set to 1 then this snomask will be unset on de-oper */
+        int (*allowed)(aClient *sptr, int what); /**< The 'is this user allowed to set this snomask?' routine */
+        char unloaded; /**< Internal flag to indicate module is being unloaded */
+        Module *owner; /**< Module that owns this snomask */
 } Snomask;
 
 typedef enum ModDataType { MODDATATYPE_CLIENT=1, MODDATATYPE_CHANNEL=2, MODDATATYPE_MEMBER=3, MODDATATYPE_MEMBERSHIP=4 } ModDataType;
@@ -749,6 +751,7 @@ extern char *moddata_client_get(aClient *acptr, char *varname);
 #define HOOKTYPE_MODE_DEOP 84
 #define HOOKTYPE_PRE_KILL 85
 #define HOOKTYPE_SEE_CHANNEL_IN_WHOIS 86
+#define HOOKTYPE_DCC_DENIED 87
 
 /* Hook return values */
 #define HOOK_CONTINUE 0

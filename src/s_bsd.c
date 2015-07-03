@@ -680,44 +680,21 @@ void write_pidfile(void)
 #endif
 }
 
-/*
- * Initialize the various name strings used to store hostnames. This is set
- * from either the server's sockhost (if client fd is a tty or localhost)
- * or from the ip# converted into a string. 0 = success, -1 = fail.
+/* This used to initialize the various name strings used to store hostnames.
+ * But nowadays this takes place much earlier (in add_connection?).
+ * It's mainly used for "localhost" and WEBIRC magic only now...
  */
 static int check_init(aClient *cptr, char *sockn, size_t size)
 {
 	struct SOCKADDR_IN sk;
 	int  len = sizeof(struct SOCKADDR_IN);
 
+	strlcpy(sockn, cptr->sockhost, HOSTLEN);
+	
 	RunHookReturnInt3(HOOKTYPE_CHECK_INIT, cptr, sockn, size, ==0);
 
-	/* If descriptor is a tty, special checking... */
-#if defined(DEBUGMODE) && !defined(_WIN32)
-	if (isatty(cptr->fd))
-#else
-	if (0)
-#endif
-	{
-		strlcpy(sockn, me.sockhost, HOSTLEN);
-		bzero((char *)&sk, sizeof(struct SOCKADDR_IN));
-	}
-	else if (getpeername(cptr->fd, (struct SOCKADDR *)&sk, &len) == -1)
-	{
-		/* On Linux 2.4 and FreeBSD the socket may just have been disconnected
-		 * so it's not a serious error and can happen quite frequently -- Syzop
-		 */
-		if (ERRNO != P_ENOTCONN)
-			report_error("connect failure: %s %s", cptr);
-		return -1;
-	}
-	(void)strlcpy(sockn, (char *)Inet_si2p(&sk), size);
-
-#ifdef INET6
-	if (IN6_IS_ADDR_LOOPBACK(&sk.SIN_ADDR) || !strcmp(sockn, "127.0.0.1"))
-#else
-	if (inet_netof(sk.SIN_ADDR) == IN_LOOPBACKNET)
-#endif
+	/* Some silly hack to convert 127.0.0.1 and such into 'localhost' */
+	if (IsLocal(cptr))
 	{
 		if (cptr->hostp)
 		{
@@ -726,7 +703,6 @@ static int check_init(aClient *cptr, char *sockn, size_t size)
 		}
 		strlcpy(sockn, "localhost", HOSTLEN);
 	}
-	bcopy((char *)&sk.SIN_ADDR, (char *)&cptr->ip, sizeof(struct IN_ADDR));
 
 	cptr->port = (int)ntohs(sk.SIN_PORT);
 
@@ -780,22 +756,6 @@ int  check_client(aClient *cptr, char *username)
 
 	Debug((DEBUG_DNS, "ch_cl: access ok: %s[%s]", cptr->name, sockname));
 
-#ifdef INET6
-	if (IN6_IS_ADDR_LOOPBACK(&cptr->ip) ||
-	    (cptr->ip.s6_addr[0] == mysk.sin6_addr.s6_addr[0] &&
-	    cptr->ip.s6_addr[1] == mysk.sin6_addr.s6_addr[1])
-/* ||
-           IN6_ARE_ADDR_SAMEPREFIX(&cptr->ip, &mysk.SIN_ADDR))
- about the same, I think              NOT */
-	    )
-#else
-	if (inet_netof(cptr->ip) == IN_LOOPBACKNET ||
-	    inet_netof(cptr->ip) == inet_netof(mysk.SIN_ADDR))
-#endif
-	{
-		ircstp->is_loc++;
-		cptr->flags |= FLAGS_LOCAL;
-	}
 	return 0;
 }
 
@@ -1190,6 +1150,25 @@ add_con_refuse:
 		 */
 		get_sockhost(acptr, Inet_si2p(&addr));
 		bcopy((char *)&addr.SIN_ADDR, (char *)&acptr->ip, sizeof(struct IN_ADDR));
+
+		/* Tag loopback connections as FLAGS_LOCAL */
+#ifdef INET6
+		if (IN6_IS_ADDR_LOOPBACK(&acptr->ip) ||
+			(acptr->ip.s6_addr[0] == mysk.sin6_addr.s6_addr[0] &&
+			acptr->ip.s6_addr[1] == mysk.sin6_addr.s6_addr[1])
+	/* ||
+			   IN6_ARE_ADDR_SAMEPREFIX(&acptr->ip, &mysk.SIN_ADDR))
+	 about the same, I think              NOT */
+			)
+#else
+		if (inet_netof(acptr->ip) == IN_LOOPBACKNET ||
+			inet_netof(acptr->ip) == inet_netof(mysk.SIN_ADDR))
+#endif
+		{
+			ircstp->is_loc++;
+			acptr->flags |= FLAGS_LOCAL;
+		}
+
 		j = 1;
 
 		list_for_each_entry(acptr2, &unknown_list, lclient_node)
@@ -1366,6 +1345,9 @@ static int parse_client_queued(aClient *cptr)
 	int done;
 	time_t now = TStime();
 	char buf[BUFSIZE];
+
+	if (DoingDNS(cptr))
+		return 0; /* we delay processing of data until the host is resolved */
 
 	while (DBufLength(&cptr->recvQ) &&
 	    ((cptr->status < STAT_UNKNOWN) || (cptr->since - now < 10)))

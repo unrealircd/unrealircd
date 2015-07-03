@@ -1,0 +1,58 @@
+# Ignore configure step
+config.log
+conftest.*
+config.settings
+extras/pcre2*
+extras/c-ares*
+extras/regexp*
+config.status
+extras/tre*
+extras/ircdcron/ircd.cron
+extras/ircdcron/ircdchk
+src/modules/snomasks/Makefile
+src/modules/chanmodes/Makefile
+src/modules/extbans/Makefile
+src/modules/usermodes/Makefile
+src/modules/Makefile
+/Makefile
+unrealircd
+include/setup.h
+
+
+# Ignores for platform stuff
+.DS_Store
+
+# Ignores for build artifacts
+*.so
+*.o
+*.dSYM
+*.dylib
+src/ircd
+src/version.c
+src/include
+
+# Ignores for mac stuff
+## Various settings
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata
+
+## Other
+*.xccheckout
+*.moved-aside
+*.xcuserstate
+*.xcscmblueprint
+
+## Obj-C/Swift specific
+*.hmap
+*.ipa
+
+src/macosx/build/
+DerivedData
+src/macosx/pods/

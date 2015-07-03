@@ -40,6 +40,8 @@ DLLFUNC int MOD_INIT(ssl_antidos)(ModuleInfo *modinfo)
 {
 	HookAddEx(modinfo->handle, HOOKTYPE_HANDSHAKE, ssl_antidos_handshake);
 
+	MARK_AS_OFFICIAL_MODULE(modinfo);
+	
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM, 1);
 	/* Note that we cannot be MOD_OPT_PERM_RELOADABLE as we use OpenSSL functions to register
 	 * an index and callback function.

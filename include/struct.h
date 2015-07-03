@@ -354,17 +354,11 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 /*
  * flags macros.
  */
-#define IsVictim(x)             ((x)->umodes & UMODE_VICTIM)
 #define IsDeaf(x)               ((x)->umodes & UMODE_DEAF)
 #define IsKillsF(x)		((x)->user->snomask & SNO_KILLS)
 #define IsClientF(x)		((x)->user->snomask & SNO_CLIENT)
 #define IsFloodF(x)		((x)->user->snomask & SNO_FLOOD)
 #define IsEyes(x)		((x)->user->snomask & SNO_EYES)
-#define IsAdmin(x)		((x)->umodes & UMODE_ADMIN)
-
-#define IsNetAdmin(x)		((x)->umodes & UMODE_NETADMIN)
-#define IsCoAdmin(x)		((x)->umodes & UMODE_COADMIN)
-#define IsSAdmin(x)		((x)->umodes & UMODE_SADMIN)
 #define SendFailops(x)		((x)->umodes & UMODE_FAILOP)
 #define	IsOper(x)		((x)->umodes & UMODE_OPER)
 #define	IsLocOp(x)		((x)->umodes & UMODE_LOCOP)
@@ -374,7 +368,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define IsRegNick(x)		((x)->umodes & UMODE_REGNICK)
 #define IsLoggedIn(x)		(IsRegNick(x) || (x->user && (*x->user->svid != '*') && !isdigit(*x->user->svid))) /* registered nick (+r) or just logged into services (may be -r) */
 #define	IsPerson(x)		((x)->user && IsClient(x))
-#define	IsPrivileged(x)		(IsAnOper(x) || IsServer(x))
 #define	SendWallops(x)		(!IsMe(x) && IsPerson(x) && ((x)->umodes & UMODE_WALLOP))
 #define	SendServNotice(x)	(((x)->user) && ((x)->user->snomask & SNO_SNOTICE))
 #define	IsListening(x)		((x)->flags & FLAGS_LISTEN)
@@ -416,11 +409,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define SetClientF(x)		((x)->user->snomask |= SNO_CLIENT)
 #define SetFloodF(x)		((x)->user->snomask |= SNO_FLOOD)
 #define	SetOper(x)		((x)->umodes |= UMODE_OPER)
-#define	SetLocOp(x)    		((x)->umodes |= UMODE_LOCOP)
-#define SetAdmin(x)		((x)->umodes |= UMODE_ADMIN)
-#define SetSAdmin(x)		((x)->umodes |= UMODE_SADMIN)
-#define SetNetAdmin(x)		((x)->umodes |= UMODE_NETADMIN)
-#define SetCoAdmin(x)		((x)->umodes |= UMODE_COADMIN)
 #define	SetInvisible(x)		((x)->umodes |= UMODE_INVISIBLE)
 #define SetEyes(x)		((x)->user->snomask |= SNO_EYES)
 #define	SetWallops(x)  		((x)->umodes |= UMODE_WALLOP)
@@ -436,10 +424,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define SetHidden(x)            ((x)->umodes |= UMODE_HIDE)
 #define SetHideOper(x)      ((x)->umodes |= UMODE_HIDEOPER)
 #define IsSecureConnect(x)	((x)->umodes & UMODE_SECURE)
-#define ClearAdmin(x)		((x)->umodes &= ~UMODE_ADMIN)
-#define ClearNetAdmin(x)	((x)->umodes &= ~UMODE_NETADMIN)
-#define ClearCoAdmin(x)		((x)->umodes &= ~UMODE_COADMIN)
-#define ClearSAdmin(x)		((x)->umodes &= ~UMODE_SADMIN)
 #define ClearKillsF(x)		((x)->user->snomask &= ~SNO_KILLS)
 #define ClearClientF(x)		((x)->user->snomask &= ~SNO_CLIENT)
 #define ClearFloodF(x)		((x)->user->snomask &= ~SNO_FLOOD)
@@ -505,114 +489,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define ClearTKLEXT2(x)		((x)->proto &= ~PROTO_TKLEXT2)
 
 /*
- * defined operator access levels
- */
-#define OFLAG_REHASH	0x00000001	/* Oper can /rehash server */
-#define OFLAG_DIE	0x00000002	/* Oper can /die the server */
-#define OFLAG_RESTART	0x00000004	/* Oper can /restart the server */
-#define OFLAG_DCCDENY	0x00000008	/* Oper can use /dccdeny and /undccdeny */
-#define OFLAG_GLOBOP	0x00000020	/* Oper can send /GlobOps */
-#define OFLAG_WALLOP	0x00000040	/* Oper can send /WallOps */
-#define OFLAG_LOCOP	0x00000080	/* Oper can send /LocOps */
-#define OFLAG_LROUTE	0x00000100	/* Oper can do local routing */
-#define OFLAG_GROUTE	0x00000200	/* Oper can do global routing */
-#define OFLAG_LKILL	0x00000400	/* Oper can do local kills */
-#define OFLAG_GKILL	0x00000800	/* Oper can do global kills */
-#define OFLAG_KLINE	0x00001000	/* Oper can /kline users */
-#define OFLAG_UNKLINE	0x00002000	/* Oper can /unkline users */
-#define OFLAG_LNOTICE	0x00004000	/* Oper can send local serv notices */
-#define OFLAG_GNOTICE	0x00008000	/* Oper can send global notices */
-#define OFLAG_ADMIN	0x00010000	/* Admin */
-#define OFLAG_ADDLINE	0x00020000	/* Oper can use /addline */
-#define OFLAG_TSCTL	0x00040000	/* Oper can use /tsctl */
-#define OFLAG_ZLINE	0x00080000	/* Oper can use /zline and /unzline */
-#define OFLAG_NETADMIN	0x00200000	/* netadmin gets +N */
-#define OFLAG_COADMIN	0x00800000	/* co admin gets +C */
-#define OFLAG_SADMIN	0x01000000	/* services admin gets +a */
-#define OFLAG_HIDE      0x04000000	/* gets auto +x on oper up */
-#define OFLAG_TKL       0x10000000	/* can use G:lines and shuns */
-#define OFLAG_GZL       0x20000000	/* can use global Z:lines */
-#define OFLAG_OVERRIDE	0x40000000	/* can use oper-override */
-#define OFLAG_LOCAL	(OFLAG_REHASH|OFLAG_GLOBOP|OFLAG_WALLOP|OFLAG_LOCOP|OFLAG_LROUTE|OFLAG_LKILL|OFLAG_KLINE|OFLAG_UNKLINE|OFLAG_LNOTICE)
-#define OFLAG_GLOBAL	(OFLAG_LOCAL|OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE)
-#define OFLAG_ISGLOBAL	(OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE|OFLAG_TKL|OFLAG_GZL|OFLAG_OVERRIDE)
-#define OFLAG_NADMIN	(OFLAG_NETADMIN | OFLAG_SADMIN | OFLAG_ADMIN | OFLAG_GLOBAL | OFLAG_DCCDENY)
-#define OFLAG_ADMIN_	(OFLAG_ADMIN | OFLAG_GLOBAL | OFLAG_DCCDENY)
-#define OFLAG_COADMIN_	(OFLAG_COADMIN | OFLAG_GLOBAL | OFLAG_DCCDENY)
-#define OFLAG_SADMIN_	(OFLAG_SADMIN | OFLAG_GLOBAL | OFLAG_DCCDENY)
-
-#define OPCanOverride(x) ((x)->oflag & OFLAG_OVERRIDE)
-#define OPCanDCCDeny(x)	((x)->oflag & OFLAG_DCCDENY)
-#define OPCanTKL(x)	((x)->oflag & OFLAG_TKL)
-#define OPCanGZL(x)	((x)->oflag & OFLAG_GZL)
-#define OPCanAddline(x) ((x)->oflag & OFLAG_ADDLINE)
-#define OPCanZline(x)   ((x)->oflag & OFLAG_ZLINE)
-#define OPCanRehash(x)	((x)->oflag & OFLAG_REHASH)
-#define OPCanDie(x)	((x)->oflag & OFLAG_DIE)
-#define OPCanTSCtl(x)	((x)->oflag & OFLAG_TSCTL)
-#define OPCanRestart(x)	((x)->oflag & OFLAG_RESTART)
-#define OPCanGlobOps(x)	((x)->oflag & OFLAG_GLOBOP)
-#define OPCanWallOps(x)	((x)->oflag & OFLAG_WALLOP)
-#define OPCanLocOps(x)	((x)->oflag & OFLAG_LOCOP)
-#define OPCanLRoute(x)	((x)->oflag & OFLAG_LROUTE)
-#define OPCanGRoute(x)	((x)->oflag & OFLAG_GROUTE)
-#define OPCanLKill(x)	((x)->oflag & OFLAG_LKILL)
-#define OPCanGKill(x)	((x)->oflag & OFLAG_GKILL)
-#define OPCanKline(x)	((x)->oflag & OFLAG_KLINE)
-#define OPCanUnKline(x)	((x)->oflag & OFLAG_UNKLINE)
-#define OPCanLNotice(x)	((x)->oflag & OFLAG_LNOTICE)
-#define OPCanGNotice(x)	((x)->oflag & OFLAG_GNOTICE)
-#define OPIsAdmin(x)	((x)->oflag & OFLAG_ADMIN)
-#define OPIsSAdmin(x)	((x)->oflag & OFLAG_SADMIN)
-#define OPIsNetAdmin(x) ((x)->oflag & OFLAG_NETADMIN)
-#define OPIsCoAdmin(x)	((x)->oflag & OFLAG_COADMIN)
-#ifdef SHOW_SECRET
-#define OPCanSeeSecret(x) IsAnOper(x)
-#else
-#define OPCanSeeSecret(x) IsNetAdmin(x)
-#endif
-
-#define OPSetRehash(x)	((x)->oflag |= OFLAG_REHASH)
-#define OPSetDie(x)	((x)->oflag |= OFLAG_DIE)
-#define OPSetTSCtl(x)	((x)->oflag |= OFLAG_TSCTL)
-#define OPSetRestart(x)	((x)->oflag |= OFLAG_RESTART)
-#define OPSetGlobOps(x)	((x)->oflag |= OFLAG_GLOBOP)
-#define OPSetWallOps(x)	((x)->oflag |= OFLAG_WALLOP)
-#define OPSetLocOps(x)	((x)->oflag |= OFLAG_LOCOP)
-#define OPSetLRoute(x)	((x)->oflag |= OFLAG_LROUTE)
-#define OPSetGRoute(x)	((x)->oflag |= OFLAG_GROUTE)
-#define OPSetLKill(x)	((x)->oflag |= OFLAG_LKILL)
-#define OPSetGKill(x)	((x)->oflag |= OFLAG_GKILL)
-#define OPSetKline(x)	((x)->oflag |= OFLAG_KLINE)
-#define OPSetUnKline(x)	((x)->oflag |= OFLAG_UNKLINE)
-#define OPSetLNotice(x)	((x)->oflag |= OFLAG_LNOTICE)
-#define OPSetGNotice(x)	((x)->oflag |= OFLAG_GNOTICE)
-#define OPSSetAdmin(x)	((x)->oflag |= OFLAG_ADMIN)
-#define OPSSetSAdmin(x)	((x)->oflag |= OFLAG_SADMIN)
-#define OPSSetNetAdmin(x) ((x)->oflag |= OFLAG_NETADMIN)
-#define OPSSetCoAdmin(x) ((x)->oflag |= OFLAG_COADMIN)
-#define OPSetZLine(x)	((x)->oflag |= OFLAG_ZLINE)
-#define OPClearRehash(x)	((x)->oflag &= ~OFLAG_REHASH)
-#define OPClearDie(x)		((x)->oflag &= ~OFLAG_DIE)
-#define OPClearTSCtl(x)		((x)->oflag &= ~OFLAG_TSCTL)
-#define OPClearRestart(x)	((x)->oflag &= ~OFLAG_RESTART)
-#define OPClearGlobOps(x)	((x)->oflag &= ~OFLAG_GLOBOP)
-#define OPClearWallOps(x)	((x)->oflag &= ~OFLAG_WALLOP)
-#define OPClearLocOps(x)	((x)->oflag &= ~OFLAG_LOCOP)
-#define OPClearLRoute(x)	((x)->oflag &= ~OFLAG_LROUTE)
-#define OPClearGRoute(x)	((x)->oflag &= ~OFLAG_GROUTE)
-#define OPClearLKill(x)		((x)->oflag &= ~OFLAG_LKILL)
-#define OPClearGKill(x)		((x)->oflag &= ~OFLAG_GKILL)
-#define OPClearKline(x)		((x)->oflag &= ~OFLAG_KLINE)
-#define OPClearUnKline(x)	((x)->oflag &= ~OFLAG_UNKLINE)
-#define OPClearLNotice(x)	((x)->oflag &= ~OFLAG_LNOTICE)
-#define OPClearGNotice(x)	((x)->oflag &= ~OFLAG_GNOTICE)
-#define OPClearAdmin(x)		((x)->oflag &= ~OFLAG_ADMIN)
-#define OPClearSAdmin(x)	((x)->oflag &= ~OFLAG_SADMIN)
-#define OPClearNetAdmin(x)	((x)->oflag &= ~OFLAG_NETADMIN)
-#define OPClearCoAdmin(x)	((x)->oflag &= ~OFLAG_COADMIN)
-#define OPClearZLine(x)		((x)->oflag &= ~OFLAG_ZLINE)
-/*
  * defined debugging levels
  */
 #define	DEBUG_FATAL  0
@@ -625,9 +501,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define	DEBUG_DEBUG  8		/* anything to do with debugging, ie unimportant :) */
 #define	DEBUG_MALLOC 9		/* malloc/free calls */
 #define	DEBUG_LIST  10		/* debug list use */
-
-/* blah */
-#define IsSkoAdmin(sptr) (IsAdmin(sptr) || IsNetAdmin(sptr) || IsSAdmin(sptr))
 
 /*
  * defines for curses in client
@@ -917,10 +790,10 @@ extern MODVAR short Snomask_highest;
 extern MODVAR Cmode *Channelmode_Table;
 extern MODVAR unsigned short Channelmode_highest;
 
-extern Umode *UmodeAdd(Module *module, char ch, int options, int (*allowed)(aClient *sptr, int what), long *mode);
+extern Umode *UmodeAdd(Module *module, char ch, int options, int unset_on_deoper, int (*allowed)(aClient *sptr, int what), long *mode);
 extern void UmodeDel(Umode *umode);
 
-extern Snomask *SnomaskAdd(Module *module, char ch, int (*allowed)(aClient *sptr, int what), long *mode);
+extern Snomask *SnomaskAdd(Module *module, char ch, int unset_on_deoper, int (*allowed)(aClient *sptr, int what), long *mode);
 extern void SnomaskDel(Snomask *sno);
 
 extern Cmode *CmodeAdd(Module *reserved, CmodeInfo req, Cmode_t *mode);
@@ -985,7 +858,6 @@ struct Client {
 	struct list_head special_node;	/* for special lists (server || unknown || oper) */
 
 #if 1
-	int  oflag;		/* oper access flags (removed from anUser for mem considerations) */
 	TS   since;		/* time they will next be allowed to send something */
 	TS   firsttime;		/* Time it was created */
 	TS   lasttime;		/* last time any message was received */
@@ -1227,16 +1099,16 @@ struct _configitem_operclass {
 };
 
 struct _configitem_oper {
-	ConfigItem       *prev, *next;
-	ConfigFlag 	 flag;
-	char		 *name, *swhois, *snomask;
-	anAuthStruct	 *auth;
+	ConfigItem *prev, *next;
+	ConfigFlag flag;
+	char *name, *swhois, *snomask;
+	anAuthStruct *auth;
 	char *operclass;
 	ConfigItem_class *class;
 	ConfigItem_mask *mask;
-	unsigned long	 modes, require_modes;
-	long		 oflags;
-	int			maxlogins;
+	unsigned long modes, require_modes;
+	char *vhost;
+	int maxlogins;
 };
 
 struct _configitem_mask {
@@ -1723,7 +1595,6 @@ struct liststruct {
  */
 #define	MyConnect(x)			((x)->fd != -256)
 #define	MyClient(x)			(MyConnect(x) && IsClient(x))
-#define	MyOper(x)			(MyConnect(x) && IsAnOper(x))
 
 #ifdef CLEAN_COMPILE
 #define TStime() (time(NULL) + TSoffset)

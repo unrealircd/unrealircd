@@ -85,7 +85,7 @@ CMD_FUNC(m_squit)
 	    parv[parc - 1] : cptr->name;
 
 
-	if (!IsPrivileged(sptr))
+	if (!IsServer(sptr) && !OperClass_evaluateACLPath("route:local",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
@@ -146,8 +146,8 @@ CMD_FUNC(m_squit)
 		    me.name, parv[0], server);
 		return 0;
 	}
-	if (MyClient(sptr) && ((!OPCanGRoute(sptr) && !MyConnect(acptr)) ||
-	    (!OPCanLRoute(sptr) && MyConnect(acptr))))
+	if (MyClient(sptr) && ((!OperClass_evaluateACLPath("route:global",sptr,NULL,NULL,NULL) && !MyConnect(acptr)) ||
+	    (!OperClass_evaluateACLPath("route:local",sptr,NULL,NULL,NULL) && MyConnect(acptr))))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;

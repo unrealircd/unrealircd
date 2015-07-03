@@ -299,8 +299,11 @@ OperPermission OperClass_evaluateACLPath(char* path, aClient *sptr, aClient *vic
 	ConfigItem_oper *ce_oper;
         ConfigItem_operclass *ce_operClass;
         OperClass *oc = NULL;
-        OperClassACLPath* operPath;
-        OperClassACL* acl;
+        OperClassACLPath *operPath;
+        OperClassACL *acl;
+
+	if (!IsOper(sptr))
+		return OPER_DENY;
 
         ce_oper = Find_oper(sptr->user->operlogin);
 	if (!ce_oper)
@@ -328,7 +331,7 @@ OperPermission OperClass_evaluateACLPath(char* path, aClient *sptr, aClient *vic
         		params->channel = channel;
         		params->extra = extra;
 			
-                        perm = OperClass_evaluateACLPathEx(oc->acls, operPath, params);
+                        perm = OperClass_evaluateACLPathEx(acl, operPath, params);
 			OperClass_freePath(operPath);
 			MyFree(params);
 			return perm;

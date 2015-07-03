@@ -104,7 +104,7 @@ extern SERVICE_STATUS_HANDLE IRCDStatusHandle;
 extern SERVICE_STATUS IRCDStatus;
 #endif
 
-unsigned char conf_debuglevel = 0;
+MODVAR unsigned char conf_debuglevel = 0;
 
 #ifdef USE_LIBCURL
 extern void url_init(void);
@@ -485,7 +485,7 @@ int check_tkls(aClient *cptr)
 
 		if (bconf)
 			killflag++;
-		else if (!IsAnOper(cptr) && (bconf = Find_ban(NULL, cptr->info, CONF_BAN_REALNAME)))
+		else if (!OperClass_evaluateACLPath("immune",cptr,NULL,NULL,NULL) && (bconf = Find_ban(NULL, cptr->info, CONF_BAN_REALNAME)))
 			killflag++;
 	}
 
@@ -561,114 +561,116 @@ EVENT(check_unknowns)
 	}
 }
 
+/** Ping individual user, and check for ping timeout */
+int check_ping(aClient *cptr)
+{
+	char scratch[64];
+	int ping = 0;
+
+	ping = cptr->class ? cptr->class->pingfreq : CONNECTTIMEOUT;
+	Debug((DEBUG_DEBUG, "c(%s)=%d p %d a %d", cptr->name,
+		cptr->status, ping,
+		TStime() - cptr->lasttime));
+	
+	/* If ping is less than or equal to the last time we received a command from them */
+	if (ping > (TStime() - cptr->lasttime))
+		return 0; /* some recent command was executed */
+
+	if (
+		/* If we have sent a ping */
+		((cptr->flags & FLAGS_PINGSENT)
+		/* And they had 2x ping frequency to respond */
+		&& ((TStime() - cptr->lasttime) >= (2 * ping)))
+		|| 
+		/* Or isn't registered and time spent is larger than ping .. */
+		(!IsRegistered(cptr) && (TStime() - cptr->since >= ping))
+		)
+	{
+		/* if it's registered and doing dns/auth, timeout */
+		if (!IsRegistered(cptr) && (DoingDNS(cptr) || DoingAuth(cptr)))
+		{
+			if (cptr->authfd >= 0) {
+				fd_close(cptr->authfd);
+				--OpenFiles;
+				cptr->authfd = -1;
+				cptr->count = 0;
+				*cptr->buffer = '\0';
+			}
+			if (SHOWCONNECTINFO && !cptr->serv) {
+				if (DoingDNS(cptr))
+					sendto_one(cptr, "%s", REPORT_FAIL_DNS);
+				else if (DoingAuth(cptr))
+					sendto_one(cptr, "%s", REPORT_FAIL_ID);
+			}
+			Debug((DEBUG_NOTICE,
+				"DNS/AUTH timeout %s",
+				get_client_name(cptr, TRUE)));
+			unrealdns_delreq_bycptr(cptr);
+			ClearAuth(cptr);
+			ClearDNS(cptr);
+			SetAccess(cptr);
+			cptr->firsttime = TStime();
+			cptr->lasttime = TStime();
+			return -5;
+		}
+		if (IsServer(cptr) || IsConnecting(cptr) ||
+			IsHandshake(cptr)
+			|| IsSSLConnectHandshake(cptr)
+			) {
+			sendto_realops
+				("No response from %s, closing link",
+				get_client_name(cptr, FALSE));
+			sendto_server(&me, 0, 0,
+				":%s GLOBOPS :No response from %s, closing link",
+				me.name, get_client_name(cptr,
+				FALSE));
+		}
+		if (IsSSLAcceptHandshake(cptr))
+			Debug((DEBUG_DEBUG, "ssl accept handshake timeout: %s (%li-%li > %li)", cptr->sockhost,
+				TStime(), cptr->since, ping));
+		(void)ircsnprintf(scratch, sizeof(scratch), "Ping timeout: %ld seconds",
+			(long) (TStime() - cptr->lasttime));
+		return exit_client(cptr, cptr, &me, scratch);
+	}
+	else if (IsRegistered(cptr) &&
+		((cptr->flags & FLAGS_PINGSENT) == 0)) {
+		/*
+		 * if we havent PINGed the connection and we havent
+		 * heard from it in a while, PING it to make sure
+		 * it is still alive.
+		 */
+		cptr->flags |= FLAGS_PINGSENT;
+		/*
+		 * not nice but does the job 
+		 */
+		cptr->lasttime = TStime() - ping;
+		sendto_one(cptr, "PING :%s", me.name);
+	}
+	
+	return 0;
+}
+
 /*
  * Check registered connections for PING timeout.
  * XXX: also does some other stuff still, need to sort this.  --nenolod
+ * Perhaps it would be wise to ping servers as well mr nenolod, just an idea -- Syzop
  */
 EVENT(check_pings)
 {
 	aClient *cptr, *cptr2;
-	ConfigItem_ban *bconf = NULL;
-	int  i = 0;
-	char banbuf[1024];
-	char scratch[64];
-	int  ping = 0;
-	TS   currenttime = TStime();
 
-	
 	list_for_each_entry_safe(cptr, cptr2, &lclient_list, lclient_node)
 	{
-
-		// Check TKLs for this user
+		/* Check TKLs for this user (huh, always?) */
 		if (!check_tkls(cptr))
-		{
 			continue;
-		}
+		check_ping(cptr);
+		/* don't touch 'cptr' after this as it may have been killed */
+	}
 
-
-		ping =
-		    IsRegistered(cptr) ? (cptr->class ? cptr->
-		    class->pingfreq : CONNECTTIMEOUT) : CONNECTTIMEOUT;
-		Debug((DEBUG_DEBUG, "c(%s)=%d p %d a %d", cptr->name,
-		    cptr->status, ping,
-		    currenttime - cptr->lasttime));
-		
-		/* If ping is less than or equal to the last time we received a command from them */
-		if (ping <= (currenttime - cptr->lasttime))
-		{
-			if (
-				/* If we have sent a ping */
-				((cptr->flags & FLAGS_PINGSENT)
-				/* And they had 2x ping frequency to respond */
-				&& ((currenttime - cptr->lasttime) >= (2 * ping)))
-				|| 
-				/* Or isn't registered and time spent is larger than ping .. */
-				(!IsRegistered(cptr) && (currenttime - cptr->since >= ping))
-				)
-			{
-				/* if it's registered and doing dns/auth, timeout */
-				if (!IsRegistered(cptr) && (DoingDNS(cptr) || DoingAuth(cptr)))
-				{
-					if (cptr->authfd >= 0) {
-						fd_close(cptr->authfd);
-						--OpenFiles;
-						cptr->authfd = -1;
-						cptr->count = 0;
-						*cptr->buffer = '\0';
-					}
-					if (SHOWCONNECTINFO && !cptr->serv) {
-						if (DoingDNS(cptr))
-							sendto_one(cptr, "%s", REPORT_FAIL_DNS);
-						else if (DoingAuth(cptr))
-							sendto_one(cptr, "%s", REPORT_FAIL_ID);
-					}
-					Debug((DEBUG_NOTICE,
-					    "DNS/AUTH timeout %s",
-					    get_client_name(cptr, TRUE)));
-					unrealdns_delreq_bycptr(cptr);
-					ClearAuth(cptr);
-					ClearDNS(cptr);
-					SetAccess(cptr);
-					cptr->firsttime = currenttime;
-					cptr->lasttime = currenttime;
-					continue;
-				}
-				if (IsServer(cptr) || IsConnecting(cptr) ||
-				    IsHandshake(cptr)
-					|| IsSSLConnectHandshake(cptr)
-				    ) {
-					sendto_realops
-					    ("No response from %s, closing link",
-					    get_client_name(cptr, FALSE));
-					sendto_server(&me, 0, 0,
-					    ":%s GLOBOPS :No response from %s, closing link",
-					    me.name, get_client_name(cptr,
-					    FALSE));
-				}
-				if (IsSSLAcceptHandshake(cptr))
-					Debug((DEBUG_DEBUG, "ssl accept handshake timeout: %s (%li-%li > %li)", cptr->sockhost,
-						currenttime, cptr->since, ping));
-				(void)ircsnprintf(scratch, sizeof(scratch), "Ping timeout: %ld seconds",
-					(long) (TStime() - cptr->lasttime));
-				exit_client(cptr, cptr, &me, scratch);
-				continue;
-				
-			}
-			else if (IsRegistered(cptr) &&
-			    ((cptr->flags & FLAGS_PINGSENT) == 0)) {
-				/*
-				 * if we havent PINGed the connection and we havent
-				 * heard from it in a while, PING it to make sure
-				 * it is still alive.
-				 */
-				cptr->flags |= FLAGS_PINGSENT;
-				/*
-				 * not nice but does the job 
-				 */
-				cptr->lasttime = TStime() - ping;
-				sendto_one(cptr, "PING :%s", me.name);
-			}
-		}
+	list_for_each_entry_safe(cptr, cptr2, &server_list, special_node)
+	{
+		check_ping(cptr);
 	}
 }
 
@@ -1349,7 +1351,7 @@ int InitwIRCD(int argc, char *argv[])
 
 	do_version_check();
 
-#ifndef	CHROOTDIR
+#if !defined(CHROOTDIR) && !defined(_WIN32)
 	if (chdir(CONFDIR)) {
 # ifndef _WIN32
 		perror("chdir");
@@ -1644,21 +1646,7 @@ void SocketLoop(void *dummy)
 		if (IRCstats.me_clients > IRCstats.me_max)
 			IRCstats.me_max = IRCstats.me_clients;
 
-		/*
-		 * ** Adjust delay to something reasonable [ad hoc values]
-		 * ** (one might think something more clever here... --msa)
-		 * ** We don't really need to check that often and as long
-		 * ** as we don't delay too long, everything should be ok.
-		 * ** waiting too long can cause things to timeout...
-		 * ** i.e. PINGS -> a disconnection :(
-		 * ** - avalon
-		 */
-		if (delay < 1)
-			delay = 1;
-		else
-			delay = MIN(delay, TIMESEC);
-
-		fd_select(delay * 1000);
+		fd_select(SOCKETLOOP_MAX_DELAY);
 		
 		process_clients();
 		

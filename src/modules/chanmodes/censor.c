@@ -133,7 +133,7 @@ DLLFUNC int censor_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 	{
 		config_error("%s:%i: badword quit has been removed. We just use the bad words from "
 		             "badword channel { } instead.",
-		             cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+		             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		return 0; /* pretend unhandled.. ok not just pretend.. ;) */
 	}
 

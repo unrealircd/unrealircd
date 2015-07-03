@@ -8,7 +8,7 @@ dnl src/win32/unrealinst.iss
 dnl .CHANGES.NEW
 dnl src/version.c.SH
 
-AC_INIT([unrealircd], [3.4-alpha3], [http://bugs.unrealircd.org/], [], [http://unrealircd.org/])
+AC_INIT([unrealircd], [3.4-alpha4], [http://bugs.unrealircd.org/], [], [http://unrealircd.org/])
 AC_CONFIG_SRCDIR([src/ircd.c])
 AC_CONFIG_HEADER([include/setup.h])
 AC_CONFIG_AUX_DIR([autoconf])
@@ -508,10 +508,10 @@ AC_ARG_WITH(tmpdir, [AS_HELP_STRING([--with-tmpdir=path],[Specify the directory 
 		TMPDIR="$HOME/unrealircd/tmp"])
 
 AC_ARG_WITH(datadir, [AS_HELP_STRING([--with-datadir=path],[Specify the directory where permanent data is stored])],
-	[AC_DEFINE_UNQUOTED([DATADIR], ["$withval"], [Define the location of permanent data files])
-		DATADIR="$withval"],
+	[AC_DEFINE_UNQUOTED([PERMDATADIR], ["$withval"], [Define the location of permanent data files])
+		PERMDATADIR="$withval"],
 	[AC_DEFINE_UNQUOTED([DATADIR], ["$HOME/unrealircd/data"], [Define the location of permanent data files])
-		DATADIR="$HOME/unrealircd/data"])
+		PERMDATADIR="$HOME/unrealircd/data"])
 
 AC_ARG_WITH(docdir, [AS_HELP_STRING([--with-docdir=path],[Specify the directory where documentation is stored])],
 	[AC_DEFINE_UNQUOTED([DOCDIR], ["$withval"], [Define the location of the documentation])
@@ -532,7 +532,9 @@ AC_SUBST(MODULESDIR)
 AC_SUBST(LOGDIR)
 AC_SUBST(CACHEDIR)
 AC_SUBST(TMPDIR)
-AC_SUBST(DATADIR)
+dnl Why o why PERMDATADIR and not DATADIR you ask?
+dnl well, Because DATADIR conflicts with the Windows SDK header files.. amazing.
+AC_SUBST(PERMDATADIR)
 AC_SUBST(DOCDIR)
 AC_SUBST(PIDFILE)
 
@@ -784,10 +786,14 @@ CHECK_LIBCURL
 UNRLINCDIR="`pwd`/include"
 AC_SUBST(UNRLINCDIR)
 
+BUILDDIR="`pwd`"
+AC_SUBST(BUILDDIR)
+
 AC_CONFIG_FILES([Makefile
 	src/modules/Makefile
 	src/modules/chanmodes/Makefile
 	src/modules/usermodes/Makefile
+	src/modules/snomasks/Makefile
 	src/modules/extbans/Makefile
 	unrealircd
 	extras/ircdcron/ircdchk

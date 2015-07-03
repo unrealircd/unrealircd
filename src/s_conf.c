@@ -60,8 +60,8 @@ struct	_confcommand
 	int 	(*testfunc)(ConfigFile *conf, ConfigEntry *ce);
 };
 
-typedef struct _conf_operflag OperFlag;
-struct _conf_operflag
+typedef struct _conf_namevalue NameValue;
+struct _conf_namevalue
 {
 	long	flag;
 	char	*name;
@@ -160,72 +160,8 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "vhost", 		_conf_vhost,		_test_vhost	},
 };
 
-static int _OldOperFlags[] = {
-	OFLAG_LOCAL, 'o',
-	OFLAG_GLOBAL, 'O',
-	OFLAG_REHASH, 'r',
-	OFLAG_DIE, 'D',
-	OFLAG_RESTART, 'R',
-	OFLAG_GLOBOP, 'g',
-	OFLAG_WALLOP, 'w',
-	OFLAG_LOCOP, 'l',
-	OFLAG_LROUTE, 'c',
-	OFLAG_GROUTE, 'L',
-	OFLAG_LKILL, 'k',
-	OFLAG_GKILL, 'K',
-	OFLAG_KLINE, 'b',
-	OFLAG_UNKLINE, 'B',
-	OFLAG_LNOTICE, 'n',
-	OFLAG_GNOTICE, 'G',
-	OFLAG_ADMIN_, 'A',
-	OFLAG_SADMIN_, 'a',
-	OFLAG_NADMIN, 'N',
-	OFLAG_COADMIN, 'C',
-	OFLAG_ZLINE, 'z',
-	OFLAG_HIDE, 'H',
-	OFLAG_TKL, 't',
-	OFLAG_GZL, 'Z',
-	OFLAG_OVERRIDE, 'v',
-	OFLAG_DCCDENY, 'd',
-	OFLAG_ADDLINE, 'X',
-        OFLAG_TSCTL, 'T',
-	0, 0
-};
-
 /* This MUST be alphabetized */
-static OperFlag _OperFlags[] = {
-	{ OFLAG_ADMIN_,		"admin"},
-	{ OFLAG_ADDLINE,	"can_addline"},
-	{ OFLAG_DCCDENY,	"can_dccdeny"},
-	{ OFLAG_DIE,		"can_die" },
-	{ OFLAG_TKL,		"can_gkline"},
-	{ OFLAG_GKILL,		"can_globalkill" },
-	{ OFLAG_GNOTICE,	"can_globalnotice" },
-	{ OFLAG_GROUTE,		"can_globalroute" },
-	{ OFLAG_GLOBOP,         "can_globops" },
-	{ OFLAG_GZL,		"can_gzline"},
-	{ OFLAG_KLINE,		"can_kline" },
-	{ OFLAG_LKILL,		"can_localkill" },
-	{ OFLAG_LNOTICE,	"can_localnotice" },
-	{ OFLAG_LROUTE,		"can_localroute" },
-	{ OFLAG_OVERRIDE,	"can_override" },
-	{ OFLAG_REHASH,		"can_rehash" },
-	{ OFLAG_RESTART,        "can_restart" },
-	{ OFLAG_TSCTL,		"can_tsctl" },
-	{ OFLAG_UNKLINE,	"can_unkline" },
-	{ OFLAG_WALLOP,         "can_wallops" },
-	{ OFLAG_ZLINE,		"can_zline"},
-	{ OFLAG_COADMIN_,	"coadmin"},
-	{ OFLAG_HIDE,		"get_host"},
-	{ OFLAG_GLOBAL,		"global" },
-	{ OFLAG_LOCAL,		"local" },
-	{ OFLAG_LOCOP,		"locop"},
-	{ OFLAG_NADMIN,		"netadmin"},
-	{ OFLAG_SADMIN_,	"services-admin"},
-};
-
-/* This MUST be alphabetized */
-static OperFlag _ListenerFlags[] = {
+static NameValue _ListenerFlags[] = {
 	{ LISTENER_CLIENTSONLY,  "clientsonly"},
 	{ LISTENER_DEFER_ACCEPT, "defer-accept"},
 	{ LISTENER_SERVERSONLY,  "serversonly"},
@@ -234,14 +170,14 @@ static OperFlag _ListenerFlags[] = {
 };
 
 /* This MUST be alphabetized */
-static OperFlag _LinkFlags[] = {
+static NameValue _LinkFlags[] = {
 	{ CONNECT_AUTO,	"autoconnect" },
 	{ CONNECT_QUARANTINE, "quarantine"},
 	{ CONNECT_SSL,	"ssl"		  },
 };
 
 /* This MUST be alphabetized */
-static OperFlag _LogFlags[] = {
+static NameValue _LogFlags[] = {
 	{ LOG_CHGCMDS, "chg-commands" },
 	{ LOG_CLIENT, "connects" },
 	{ LOG_ERROR, "errors" },
@@ -256,7 +192,7 @@ static OperFlag _LogFlags[] = {
 };
 
 /* This MUST be alphabetized */
-static OperFlag ExceptTklFlags[] = {
+static NameValue ExceptTklFlags[] = {
 	{ 0, "all" },
 	{ TKL_GLOBAL|TKL_KILL,	"gline" },
 	{ TKL_GLOBAL|TKL_NICK,	"gqline" },
@@ -266,7 +202,7 @@ static OperFlag ExceptTklFlags[] = {
 };
 
 /* This MUST be alphabetized */
-static OperFlag _SSLFlags[] = {
+static NameValue _SSLFlags[] = {
 	{ SSLFLAG_FAILIFNOCERT, "fail-if-no-clientcert" },
 	{ SSLFLAG_DONOTACCEPTSELFSIGNED, "no-self-signed" },
 	{ SSLFLAG_NOSTARTTLS, "no-starttls" },
@@ -1491,12 +1427,6 @@ void	free_iConf(aConfiguration *i)
 	ircfree(i->network.x_ircnet005);	
 	ircfree(i->network.x_defserv);
 	ircfree(i->network.x_services_name);
-	ircfree(i->network.x_oper_host);
-	ircfree(i->network.x_admin_host);
-	ircfree(i->network.x_locop_host);	
-	ircfree(i->network.x_sadmin_host);
-	ircfree(i->network.x_netadmin_host);
-	ircfree(i->network.x_coadmin_host);
 	ircfree(i->network.x_hidden_host);
 	ircfree(i->network.x_prefix_quit);
 	ircfree(i->network.x_helpchan);
@@ -1510,6 +1440,8 @@ int	config_test();
 
 void config_setdefaultsettings(aConfiguration *i)
 {
+	char tmp[512];
+	
 	i->unknown_flood_amount = 4;
 	i->unknown_flood_bantime = 600;
 	i->oper_snomask = strdup(SNO_DEFOPER);
@@ -1549,8 +1481,10 @@ void config_setdefaultsettings(aConfiguration *i)
 	i->nicklen = NICKLEN;
 	i->link_bindip = strdup("*");
 	i->oper_only_stats = strdup("*");
-	i->x_server_cert_pem = strdup("ssl/server.cert.pem");
-	i->x_server_key_pem = strdup("ssl/server.key.pem");
+	snprintf(tmp, sizeof(tmp), "%s/ssl/server.cert.pem", CONFDIR);
+	i->x_server_cert_pem = strdup(tmp);
+	snprintf(tmp, sizeof(tmp), "%s/ssl/server.key.pem", CONFDIR);
+	i->x_server_key_pem = strdup(tmp);
 }
 
 /* 1: needed for set::options::allow-part-if-shunned,
@@ -1826,7 +1760,8 @@ int	load_conf(char *filename, const char *original_path)
 	ConfigFile 	*cfptr, *cfptr2, **cfptr3;
 	ConfigEntry 	*ce;
 	ConfigItem_include *inc, *my_inc;
-	int		ret;
+	int ret;
+	int fatal_ret;
 	int counter;
 
 	if (config_verbose > 0)
@@ -1900,23 +1835,34 @@ int	load_conf(char *filename, const char *original_path)
 		for (cfptr3 = &conf, cfptr2 = conf; cfptr2; cfptr2 = cfptr2->cf_next)
 			cfptr3 = &cfptr2->cf_next;
 		*cfptr3 = cfptr;
+
+		/* Load modules */
 		if (config_verbose > 1)
 			config_status("Loading modules in %s", filename);
+
+		fatal_ret = 0;
 		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
 			if (!strcmp(ce->ce_varname, "loadmodule"))
 			{
 				 ret = _conf_loadmodule(cfptr, ce);
-				 if (need_34_upgrade)
-				 	upgrade_conf_to_34();
-				 if (ret < 0) 
-					 	return ret;
+				 if (ret < fatal_ret)
+				 	fatal_ret = ret; /* lowest wins */
 			}
+		ret = fatal_ret;
+		if (need_34_upgrade)
+			upgrade_conf_to_34();
+		if (ret < 0) 
+			return ret;
+
+		/* Load includes */
 		if (config_verbose > 1)
 			config_status("Searching through %s for include files..", filename);
 		for (ce = cfptr->cf_entries; ce; ce = ce->ce_next)
 			if (!strcmp(ce->ce_varname, "include"))
 			{
 				 ret = _conf_include(cfptr, ce);
+				 if (need_34_upgrade)
+				 	upgrade_conf_to_34();
 				 if (ret < 0) 
 					 	return ret;
 			}
@@ -1926,6 +1872,17 @@ int	load_conf(char *filename, const char *original_path)
 	else
 	{
 		config_error("Could not load config file %s", filename);
+#ifdef _WIN32
+		if (!strcmp(filename, "conf/unrealircd.conf"))
+		{
+			if (file_exists("unrealircd.conf"))
+			{
+				config_error("Note that 'unrealircd.conf' now belongs in the 'conf' subdirectory! (So move it to there)");
+			} else {
+				config_error("New to UnrealIRCd? Be sure to read https://www.unrealircd.org/docs/Installing_%28Windows%29");
+			}
+		}
+#endif
 		return -1;
 	}
 }
@@ -2288,16 +2245,6 @@ int	config_post_test()
 		Error("set::default-server is missing");
 	if (!settings.has_network_name)
 		Error("set::network-name is missing");
-	if (!settings.has_hosts_global)
-		Error("set::hosts::global is missing");
-	if (!settings.has_hosts_admin)
-		Error("set::hosts::admin is missing");
-	if (!settings.has_hosts_servicesadmin)
-		Error("set::hosts::servicesadmin is missing");
-	if (!settings.has_hosts_netadmin)
-		Error("set::hosts::netadmin is missing");
-	if (!settings.has_hosts_coadmin)
-		Error("set::hosts::coadmin is missing");
 	if (!settings.has_help_channel)
 		Error("set::help-channel is missing");
 	if (!settings.has_hiddenhost_prefix)
@@ -2402,7 +2349,7 @@ int	config_run()
 }
 
 
-OperFlag *config_binary_flags_search(OperFlag *table, char *cmd, int size) {
+NameValue *config_binary_flags_search(NameValue *table, char *cmd, int size) {
 	int start = 0;
 	int stop = size-1;
 	int mid;
@@ -2974,6 +2921,19 @@ int	_conf_include(ConfigFile *conf, ConfigEntry *ce)
 			ce->ce_varlinenum);
 		return -1;
 	}
+
+	if (!strcmp(ce->ce_vardata, "help.conf"))
+		need_34_upgrade = 1;
+
+	/* Hmmm... not really proper huh... */
+	if ((ce->ce_vardata[0] != '/') && (ce->ce_vardata[0] != '\\') && strcmp(ce->ce_vardata, CPATH))
+	{
+		char *str = MyMallocEx(strlen(ce->ce_vardata) + strlen(CONFDIR) + 4);
+		sprintf(str, "%s/%s", CONFDIR, ce->ce_vardata);
+		MyFree(ce->ce_vardata);
+		ce->ce_vardata = str;
+	}
+
 #ifdef USE_LIBCURL
 	if (url_is_valid(ce->ce_vardata))
 		return remote_include(ce);
@@ -3559,7 +3519,6 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
 	ConfigItem_oper *oper = NULL;
-	OperFlag *ofp = NULL;
 
 	oper =  MyMallocEx(sizeof(ConfigItem_oper));
 	oper->name = strdup(ce->ce_vardata);
@@ -3579,32 +3538,6 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 					cep->ce_fileptr->cf_filename, cep->ce_varlinenum,
 					cep->ce_vardata);
 				oper->class = default_class;
-			}
-		}
-		else if (!strcmp(cep->ce_varname, "flags"))
-		{
-			if (!cep->ce_entries)
-			{
-				char *m = "*";
-				int *i, flag;
-
-				for (m = (*cep->ce_vardata) ? cep->ce_vardata : m; *m; m++) 
-				{
-					for (i = _OldOperFlags; (flag = *i); i += 2)
-						if (*m == (char)(*(i + 1))) 
-						{
-							oper->oflags |= flag;
-							break;
-						}
-				}
-			}
-			else
-			{
-				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
-				{
-					if ((ofp = config_binary_flags_search(_OperFlags, cepp->ce_varname, ARRAY_SIZEOF(_OperFlags)))) 
-						oper->oflags |= ofp->flag;
-				}
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "swhois"))
@@ -3631,6 +3564,10 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 		{
 			unreal_add_masks(&oper->mask, cep);
 		}
+		else if (!strcmp(cep->ce_varname, "vhost"))
+		{
+			ircstrdup(oper->vhost, cep->ce_vardata);
+		}
 	}
 	AddListItem(oper, conf_oper);
 	return 1;
@@ -3638,12 +3575,13 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 
 int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 {
-	char has_class = 0, has_password = 0, has_flags = 0, has_swhois = 0, has_snomask = 0;
-	char has_modes = 0, has_require_modes = 0, has_mask = 0, has_maxlogins = 0, has_operclass = 0;
+	char has_class = 0, has_password = 0, has_swhois = 0, has_snomask = 0;
+	char has_modes = 0, has_require_modes = 0, has_mask = 0, has_maxlogins = 0;
+	char has_operclass = 0, has_vhost = 0;
 	int oper_flags = 0;
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
-	OperFlag *ofp;
+	NameValue *ofp;
 	int	errors = 0;
 
 	if (!ce->ce_vardata)
@@ -3684,16 +3622,16 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			continue;
 		}
 		if (!strcmp(cep->ce_varname, "operclass"))
-                {
-                        if (has_operclass)
-                        {
-                                config_warn_duplicate(cep->ce_fileptr->cf_filename,
-                                        cep->ce_varlinenum, "oper::operclass");
-                                continue;
-                        }
-                        has_operclass = 1;
-                        continue;
-                }
+		{
+			if (has_operclass)
+			{
+				config_warn_duplicate(cep->ce_fileptr->cf_filename,
+				cep->ce_varlinenum, "oper::operclass");
+				continue;
+			}
+			has_operclass = 1;
+			continue;
+		}
 		/* Regular variables */
 		if (!cep->ce_entries)
 		{
@@ -3723,6 +3661,17 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 					continue;
 				}
 				has_swhois = 1;
+			}
+			/* oper::vhost */
+			else if (!strcmp(cep->ce_varname, "vhost")) 
+			{
+				if (has_vhost)
+				{
+					config_warn_duplicate(cep->ce_fileptr->cf_filename,
+						cep->ce_varlinenum, "oper::vhost");
+					continue;
+				}
+				has_vhost = 1;
 			}
 			/* oper::snomask */
 			else if (!strcmp(cep->ce_varname, "snomask")) 
@@ -3797,13 +3746,10 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			/* oper::flags */
 			else if (!strcmp(cep->ce_varname, "flags"))
 			{
-				if (has_flags)
-				{
-					config_warn_duplicate(cep->ce_fileptr->cf_filename,
-						cep->ce_varlinenum, "oper::flags");
-					continue;
-				}
-				has_flags = 1;
+				config_error("%s:%i: oper::flags no longer exists. UnrealIRCd 3.4.x uses a new style oper block now.",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+				need_34_upgrade = 1;
 			}
 			else if (!strcmp(cep->ce_varname, "mask"))
 			{
@@ -3824,31 +3770,10 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			/* oper::flags {} */
 			if (!strcmp(cep->ce_varname, "flags"))
 			{
-				if (has_flags)
-				{
-					config_warn_duplicate(cep->ce_fileptr->cf_filename,
-						cep->ce_varlinenum, "oper::flags");
-					continue;
-				}
-				has_flags = 1;
-				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
-				{
-					if (!cepp->ce_varname)
-					{
-						config_error_empty(cepp->ce_fileptr->cf_filename,
-							cepp->ce_varlinenum, "oper::flags",
-							cep->ce_varname);
-						errors++; 
-						continue;
-					}
-					if (!(ofp = config_binary_flags_search(_OperFlags, cepp->ce_varname, ARRAY_SIZEOF(_OperFlags)))) {
-						config_error_unknownflag(cepp->ce_fileptr->cf_filename,
-							cepp->ce_varlinenum, "oper",
-							cepp->ce_varname);
-						errors++; 
-					} else
-						oper_flags |= ofp->flag;
-				}
+				config_error("%s:%i: oper::flags no longer exists. UnrealIRCd 3.4.x uses a new style oper block now.",
+					cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+				errors++;
+				need_34_upgrade = 1;
 				continue;
 			}
 			/* oper::from {} */
@@ -3881,29 +3806,20 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			"oper::mask");
 		errors++;
 	}	
-	if (!has_flags)
-	{
-		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
-			"oper::flags");
-		errors++;
-	} else {
-		/* Check oper flags -- warning needed only (autoconvert) */
-		if (!(oper_flags & (OFLAG_GROUTE|OFLAG_GKILL|OFLAG_GNOTICE)) &&
-		    (oper_flags & (OFLAG_GZL|OFLAG_TKL|OFLAG_OVERRIDE)))
-		{
-			config_warn("%s:%i: oper::oflags: can_gzline/can_gkline/can_override (global privileges) "
-			            "are incompatible with local oper -- user will be globop",
-			            ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
-		}
-	}
 	if (!has_class)
 	{
 		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
 			"oper::class");
 		errors++;
 	}
+	if (!has_operclass)
+	{
+		config_error_missing(ce->ce_fileptr->cf_filename, ce->ce_varlinenum,
+			"oper::operclass");
+		need_34_upgrade = 1;
+		errors++;
+	}
 	
-	// TODO: upgrading hints
 	return errors;
 	
 }
@@ -4503,7 +4419,7 @@ int	_conf_listen(ConfigFile *conf, ConfigEntry *ce)
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
 	ConfigItem_listen *listen = NULL;
-	OperFlag    *ofp;
+	NameValue    *ofp;
 	char	    copy[256];
 	char	    *ip;
 	char	    *port;
@@ -4575,7 +4491,7 @@ int	_test_listen(ConfigFile *conf, ConfigEntry *ce)
 	int	    start, end;
 	int	    errors = 0;
 	char has_options = 0;
-	OperFlag    *ofp;
+	NameValue    *ofp;
 
 	if (!ce->ce_vardata)
 	{
@@ -5178,7 +5094,7 @@ void create_tkl_except_ii(char *mask, char *type)
 {
 	ConfigItem_except *ca;
 	struct irc_netmask tmp;
-	OperFlag *opf;
+	NameValue *opf;
 	ca = MyMallocEx(sizeof(ConfigItem_except));
 	ca->mask = strdup(mask);
 	
@@ -6064,7 +5980,7 @@ int     _conf_log(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp;
 	ConfigItem_log *ca;
-	OperFlag *ofp = NULL;
+	NameValue *ofp = NULL;
 
 	ca = MyMallocEx(sizeof(ConfigItem_log));
 	ca->logfd = -1;
@@ -6206,7 +6122,7 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp, *ceppp;
 	ConfigItem_link *link = NULL;
-	OperFlag *ofp;
+	NameValue *ofp;
 
 	link = (ConfigItem_link *) MyMallocEx(sizeof(ConfigItem_link));
 	link->servername = strdup(ce->ce_vardata);
@@ -6326,7 +6242,7 @@ void auto_convert_ipv4_to_ipv6(ConfigEntry *cep)
 int	_test_link(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp, *ceppp;
-	OperFlag *ofp;
+	NameValue *ofp;
 	int errors = 0;
 
 	int has_incoming = 0, has_incoming_mask = 0, has_outgoing = 0;
@@ -6715,7 +6631,7 @@ int     _test_ban(ConfigFile *conf, ConfigEntry *ce)
 int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp, *ceppp;
-	OperFlag 	*ofl = NULL;
+	NameValue 	*ofl = NULL;
 	Hook *h;
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
@@ -6991,32 +6907,6 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 				else if (!strcmp(cepp->ce_varname, "disable-cap")) {
 					tempiConf.disable_cap = 1;
-				}
-			}
-		}
-		else if (!strcmp(cep->ce_varname, "hosts")) {
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
-			{
-				if (!strcmp(cepp->ce_varname, "local")) {
-					ircstrdup(tempiConf.network.x_locop_host, cepp->ce_vardata);
-				}
-				else if (!strcmp(cepp->ce_varname, "global")) {
-					ircstrdup(tempiConf.network.x_oper_host, cepp->ce_vardata);
-				}
-				else if (!strcmp(cepp->ce_varname, "coadmin")) {
-					ircstrdup(tempiConf.network.x_coadmin_host, cepp->ce_vardata);
-				}
-				else if (!strcmp(cepp->ce_varname, "admin")) {
-					ircstrdup(tempiConf.network.x_admin_host, cepp->ce_vardata);
-				}
-				else if (!strcmp(cepp->ce_varname, "servicesadmin")) {
-					ircstrdup(tempiConf.network.x_sadmin_host, cepp->ce_vardata);
-				}
-				else if (!strcmp(cepp->ce_varname, "netadmin")) {
-					ircstrdup(tempiConf.network.x_netadmin_host, cepp->ce_vardata);
-				}
-				else if (!strcmp(cepp->ce_varname, "host-on-oper-up")) {
-					tempiConf.network.x_inah = config_checkval(cepp->ce_vardata,CFG_YESNO);
 				}
 			}
 		}
@@ -7768,101 +7658,10 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "hosts")) {
-			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
-			{
-				char *c, *host;
-				if (!cepp->ce_vardata)
-				{
-					config_error_empty(cepp->ce_fileptr->cf_filename,
-						cepp->ce_varlinenum, "set::hosts",
-						cepp->ce_varname);
-					errors++;
-					continue;
-				} 
-				if (!strcmp(cepp->ce_varname, "local")) {
-					CheckDuplicate(cepp, hosts_local, "hosts::local");
-				}
-				else if (!strcmp(cepp->ce_varname, "global")) {
-					CheckDuplicate(cepp, hosts_global, "hosts::global");
-				}
-				else if (!strcmp(cepp->ce_varname, "coadmin")) {
-					CheckDuplicate(cepp, hosts_coadmin, "hosts::coadmin");
-				}
-				else if (!strcmp(cepp->ce_varname, "admin")) {
-					CheckDuplicate(cepp, hosts_admin, "hosts::admin");
-				}
-				else if (!strcmp(cepp->ce_varname, "servicesadmin")) {
-					CheckDuplicate(cepp, hosts_servicesadmin, "hosts::servicesadmin");
-				}
-				else if (!strcmp(cepp->ce_varname, "netadmin")) {
-					CheckDuplicate(cepp, hosts_netadmin, "hosts::netadmin");
-				}
-				else if (!strcmp(cepp->ce_varname, "host-on-oper-up")) {
-					CheckDuplicate(cepp, hosts_host_on_oper_up, "hosts::host-on-oper-up");
-				}
-				else
-				{
-					config_error_unknown(cepp->ce_fileptr->cf_filename,
-						cepp->ce_varlinenum, "set::hosts", cepp->ce_varname);
-					errors++;
-					continue;
-
-				}
-				if ((c = strchr(cepp->ce_vardata, '@')))
-				{
-					char *tmp;
-					if (!(*(c+1)) || (c-cepp->ce_vardata) > USERLEN ||
-					    c == cepp->ce_vardata)
-					{
-						config_error("%s:%i: illegal value for set::hosts::%s",
-							     cepp->ce_fileptr->cf_filename,
-							     cepp->ce_varlinenum, 
-							     cepp->ce_varname);
-						errors++;
-						continue;
-					}
-					for (tmp = cepp->ce_vardata; tmp != c; tmp++)
-					{
-						if (*tmp == '~' && tmp == cepp->ce_vardata)
-							continue;
-						if (!isallowed(*tmp))
-							break;
-					}
-					if (tmp != c)
-					{
-						config_error("%s:%i: illegal value for set::hosts::%s",
-							     cepp->ce_fileptr->cf_filename,
-							     cepp->ce_varlinenum, 
-							     cepp->ce_varname);
-						errors++;
-						continue;
-					}
-					host = c+1;
-				}
-				else
-					host = cepp->ce_vardata;
-				if (strlen(host) > HOSTLEN)
-				{
-					config_error("%s:%i: illegal value for set::hosts::%s",
-						     cepp->ce_fileptr->cf_filename,
-						     cepp->ce_varlinenum, 
-						     cepp->ce_varname);
-					errors++;
-					continue;
-				}
-				for (; *host; host++)
-				{
-					if (!isallowed(*host) && *host != ':')
-					{
-						config_error("%s:%i: illegal value for set::hosts::%s",
-							     cepp->ce_fileptr->cf_filename,
-							     cepp->ce_varlinenum, 
-							     cepp->ce_varname);
-						errors++;
-						continue;
-					}
-				}
-			}
+			config_error("%s:%i: set::hosts has been removed in UnrealIRCd 3.4.x. You can use oper::vhost now.",
+				cep->ce_fileptr->cf_filename, cep->ce_varlinenum);
+			errors++;
+			need_34_upgrade = 1;
 		}
 		else if (!strcmp(cep->ce_varname, "cloak-keys"))
 		{
@@ -8214,10 +8013,20 @@ int	_conf_loadmodule(ConfigFile *conf, ConfigEntry *ce)
 	{
 		config_error("%s:%i: You are trying to load the 'commands' module, this is no longer supported. "
 		             "Fix this by editing your configuration file: remove the loadmodule line for commands and add the following line instead: "
-		             "include \"modules.full.conf\";",
+		             "include \"modules.default.conf\";",
 		             ce->ce_fileptr->cf_filename, ce->ce_varlinenum);
 		need_34_upgrade = 1;
 		return -1;
+	}
+	if (strstr(ce->ce_vardata, "modules/cloak") && !strcmp(conf->cf_filename, "modules.conf"))
+	{
+		config_error("You seem to have an include for 'modules.conf'.");
+		config_error("If you have this because you are upgrading from 3.4-alpha3 to a");
+		config_error("later 3.4.x version then please change the include \"modules.conf\";");
+		config_error("into an include \"modules.default.conf\"; (probably in your");
+		config_error("conf/unrealircd.conf). Yeah, we changed the file name.");
+		// TODO ^: silly win32 wrapping prevents this from being displayed otherwise. PLZ FIX! !
+		/* let it continue to load anyway? */
 	}
 	if ((ret = Module_Create(ce->ce_vardata))) {
 		config_status("%s:%i: loadmodule %s: failed to load: %s",
