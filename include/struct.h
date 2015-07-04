@@ -697,6 +697,9 @@ struct Server {
 		unsigned synced:1;		/* Server linked? (3.2beta18+) */
 		unsigned server_sent:1;		/* SERVER message sent to this link? (for outgoing links) */
 	} flags;
+	struct {
+		char *chanmodes[4];
+	} features;
 };
 
 #define M_UNREGISTERED	0x0001

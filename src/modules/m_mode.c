@@ -1368,6 +1368,53 @@ char *ListBits(long bits, long length)
 }
 #endif
 
+/** In 2003 I introduced PROTOCTL CHANMODES= so remote servers (and services)
+ * could deal with unknown "parameter eating" channel modes, minimizing desynchs.
+ * Now, in 2015, I finally added the code to deal with this. -- Syzop
+ */
+int paracount_for_chanmode_from_server(aClient *acptr, u_int what, char mode)
+{
+	if (MyClient(acptr))
+		return 0; /* no server, we have no idea, assume 0 paracount */
+
+	if (!acptr->serv)
+	{
+		/* If it's from a remote client then figure out from which "uplink" we
+		 * received this MODE. The uplink is the directly-connected-server to us
+		 * and may differ from the server the user is actually on. This is correct.
+		 */
+		if (!acptr->from || !acptr->from->serv)
+			return 0;
+		acptr = acptr->from;
+	}
+
+	if (acptr->serv->features.chanmodes[0] && strchr(acptr->serv->features.chanmodes[0], mode))
+		return 1; /* 1 parameter for set, 1 parameter for unset */
+	
+	if (acptr->serv->features.chanmodes[1] && strchr(acptr->serv->features.chanmodes[1], mode))
+		return 1; /* 1 parameter for set, 1 parameter for unset */
+
+	if (acptr->serv->features.chanmodes[2] && strchr(acptr->serv->features.chanmodes[2], mode))
+		return (what == MODE_ADD) ? 1 : 0; /* 1 parameter for set, no parameter for unset */
+
+	if (acptr->serv->features.chanmodes[3] && strchr(acptr->serv->features.chanmodes[3], mode))
+		return 0; /* no parameter for set, no parameter for unset */
+
+	/* If we end up here it means we have no idea if it is a parameter-eating or paramless
+	 * channel mode. That's actually pretty bad. This shouldn't happen since CHANMODES=
+	 * is sent since 2003 and the (often also required) EAUTH PROTOCTL is in there since 2010.
+	 */
+	sendto_realops("Unknown channel mode %c%c from server %s!",
+		(what == MODE_ADD) ? '+' : '-',
+		mode,
+		acptr->name);
+
+	/* Some additional backward compatability for +j for really old servers.. Hmm.. too nice */
+	if ((what == MODE_ADD) && (mode == 'j'))
+		return 1;
+
+	return 0;
+}
 
 /* set_mode
  *	written by binary
@@ -1461,13 +1508,9 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 			  }
 			  if (found == 0) /* Mode char unknown */
 			  {
-			      /* temporary hack: eat parameters of certain future chanmodes.. */
-			      if (*curchr == 'I')
-				      paracount++;
-				  if ((*curchr == 'j') && (what == MODE_ADD))
-					  paracount++;
-
-				  if (MyClient(cptr))
+				  if (!MyClient(cptr))
+				      paracount += paracount_for_chanmode_from_server(cptr, what, *curchr);
+				  else
 					  sendto_one(cptr, err_str(ERR_UNKNOWNMODE),
 					     me.name, cptr->name, *curchr);
 				  break;

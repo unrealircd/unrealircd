@@ -298,8 +298,8 @@ CMD_FUNC(m_protoctl)
 			aClient *acptr;
 			char *sid = s + 4;
 
-                        if (!IsServer(cptr) && !IsEAuth(cptr) && !IsHandshake(cptr))
-                                return exit_client(cptr, cptr, &me, "Got PROTOCTL SID before EAUTH, that's the wrong order!");
+			if (!IsServer(cptr) && !IsEAuth(cptr) && !IsHandshake(cptr))
+				return exit_client(cptr, cptr, &me, "Got PROTOCTL SID before EAUTH, that's the wrong order!");
 
 			if ((acptr = hash_find_id(sid, NULL)) != NULL)
 			{
@@ -351,6 +351,7 @@ CMD_FUNC(m_protoctl)
 				return ret; /* FLUSH_BUFFER */
 
 			SetEAuth(cptr);
+			make_server(cptr); /* allocate and set cptr->serv */
 			if (!IsHandshake(cptr) && aconf) /* Send PASS early... */
 				sendto_one(sptr, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
 		}
@@ -397,6 +398,36 @@ CMD_FUNC(m_protoctl)
 			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
 			cptr->proto |= PROTO_MLOCK;
 		}
+		else if ((strncmp(s, "CHANMODES=", 10) == 0) && sptr->serv)
+		{
+			char *ch = s + 4;
+			char *modes, *p;
+			char copy[256];
+			
+			strlcpy(copy, s+10, sizeof(copy));
+			
+			modes = strtoken(&p, copy, ",");
+			if (modes)
+			{
+				safestrdup(sptr->serv->features.chanmodes[0], modes);
+				modes = strtoken(&p, NULL, ",");
+				if (modes)
+				{
+					safestrdup(sptr->serv->features.chanmodes[1], modes);
+					modes = strtoken(&p, NULL, ",");
+					if (modes)
+					{
+						safestrdup(sptr->serv->features.chanmodes[2], modes);
+						modes = strtoken(&p, NULL, ",");
+						if (modes)
+						{
+							safestrdup(sptr->serv->features.chanmodes[3], modes);
+						}
+					}
+				}
+			}
+		}
+
 		/*
 		 * Add other protocol extensions here, with proto
 		 * containing the base option, and options containing

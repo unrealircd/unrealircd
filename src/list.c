@@ -334,6 +334,10 @@ void remove_client_from_list(aClient *cptr)
 	{
 		if (cptr->serv->user)
 			free_user(cptr->serv->user, cptr);
+		safefree(cptr->serv->features.chanmodes[0]);
+		safefree(cptr->serv->features.chanmodes[1]);
+		safefree(cptr->serv->features.chanmodes[2]);
+		safefree(cptr->serv->features.chanmodes[3]);
 		MyFree((char *)cptr->serv);
 #ifdef	DEBUGMODE
 		servs.inuse--;
