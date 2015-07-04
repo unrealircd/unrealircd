@@ -1437,7 +1437,7 @@ again:
 				if (!strcmp(cep->ce_varname, "hosts"))
 				{
 					config_status("- removed set::hosts. we now use oper::vhost for this.");
-					remove_section(cep->ce_fileposstart, cep->ce_fileposend+2); /* hmm +2.. why.. */
+					remove_section(cep->ce_fileposstart, cep->ce_fileposend); /* hmm something is wrong here */
 					goto again;
 				}
 			}
