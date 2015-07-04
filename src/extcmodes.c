@@ -90,12 +90,45 @@ int i;
 	*p = '\0';
 }
 
+static char previous_chanmodes[256];
+
+void extcmodes_check_for_changes(void)
+{
+	char chanmodes[256];
+	Isupport *isup;
+	
+	make_cmodestr();
+	make_extcmodestr();
+	ircsnprintf(chanmodes, sizeof(chanmodes), CHPAR1 "%s," CHPAR2 "%s," CHPAR3 "%s," CHPAR4 "%s",
+		EXPAR1, EXPAR2, EXPAR3, EXPAR4);
+	
+	isup = IsupportFind("CHANMODES");
+	if (!isup)
+	{
+		strlcpy(previous_chanmodes, chanmodes, sizeof(previous_chanmodes));
+		return; /* not booted yet. then we are done here. */
+	}
+	
+	IsupportSetValue(isup, chanmodes);
+	
+	if (strcmp(chanmodes, previous_chanmodes))
+	{
+		ircd_log(LOG_ERROR, "Channel modes changed at runtime: %s -> %s",
+			previous_chanmodes, chanmodes);
+		sendto_realops("Channel modes changed at runtime: %s -> %s",
+			previous_chanmodes, chanmodes);
+		/* Broadcast change to all (locally connected) servers */
+		sendto_server(&me, 0, 0, "PROTOCTL CHANMODES=%s", chanmodes);
+	}
+
+	strlcpy(previous_chanmodes, chanmodes, sizeof(previous_chanmodes));
+}
+
 void	extcmode_init(void)
 {
 	Cmode_t val = 1;
 	int	i;
-	Channelmode_Table = (Cmode *)MyMalloc(sizeof(Cmode) * EXTCMODETABLESZ);
-	bzero(Channelmode_Table, sizeof(Cmode) * EXTCMODETABLESZ);
+	Channelmode_Table = MyMallocEx(sizeof(Cmode) * EXTCMODETABLESZ);
 	for (i = 0; i < EXTCMODETABLESZ; i++)
 	{
 		Channelmode_Table[i].mode = val;
@@ -104,6 +137,7 @@ void	extcmode_init(void)
 	Channelmode_highest = 0;
 	memset(&extchmstr, 0, sizeof(extchmstr));
 	memset(&param_to_slot_mapping, 0, sizeof(param_to_slot_mapping));
+	*previous_chanmodes = '\0';
 }
 
 /* Update letter->slot mapping and slot->handler mapping */
@@ -120,7 +154,6 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 {
 	short i = 0, j = 0;
 	int paraslot = -1;
-	char tmpbuf[512];
 	int existing = 0;
 
 	while (i < EXTCMODETABLESZ)
@@ -205,20 +238,11 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 		AddListItem(cmodeobj, module->objects);
 		module->errorcode = MODERR_NOERROR;
 	}
-	if (loop.ircd_booted)
-	{
-		make_cmodestr();
-		make_extcmodestr();
-		ircsnprintf(tmpbuf, sizeof(tmpbuf), CHPAR1 "%s," CHPAR2 "%s," CHPAR3 "%s," CHPAR4 "%s",
-			EXPAR1, EXPAR2, EXPAR3, EXPAR4);
-		IsupportSetValue(IsupportFind("CHANMODES"), tmpbuf);
-	}
 	return &(Channelmode_Table[i]);
 }
 
 void unload_extcmode_commit(Cmode *cmode)
 {
-char tmpbuf[512];
 aChannel *chptr;
 
 	if (!cmode)
@@ -243,11 +267,6 @@ aChannel *chptr;
 		}	
 
 	cmode->flag = '\0';
-	make_cmodestr();
-	make_extcmodestr();
-	ircsnprintf(tmpbuf, sizeof(tmpbuf), CHPAR1 "%s," CHPAR2 "%s," CHPAR3 "%s," CHPAR4 "%s",
-			EXPAR1, EXPAR2, EXPAR3, EXPAR4);
-	IsupportSetValue(IsupportFind("CHANMODES"), tmpbuf);
 }
 
 void CmodeDel(Cmode *cmode)

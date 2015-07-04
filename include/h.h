@@ -756,3 +756,4 @@ extern MODVAR int need_34_upgrade;
 extern MODVAR BOOL IsService;
 #endif
 extern int match_ip46(char *a, char *b);
+extern void extcmodes_check_for_changes(void);

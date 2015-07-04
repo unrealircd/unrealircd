@@ -9057,6 +9057,7 @@ int	rehash_internal(aClient *cptr, aClient *sptr, int sig)
 	unload_all_unused_snomasks();
 	unload_all_unused_umodes();
 	unload_all_unused_extcmodes();
+	extcmodes_check_for_changes();
 	loop.ircd_rehashing = 0;	
 	return 1;
 }

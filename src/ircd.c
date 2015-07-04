@@ -1435,8 +1435,7 @@ int InitwIRCD(int argc, char *argv[])
 	booted = TRUE;
 	load_tunefile();
 	make_umodestr();
-	make_cmodestr();
-	make_extcmodestr();
+	extcmodes_check_for_changes();
 	make_extbanstr();
 	isupport_init();
 	if (!find_Command_simple("AWAY") /*|| !find_Command_simple("KILL") ||
