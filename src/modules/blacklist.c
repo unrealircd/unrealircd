@@ -96,6 +96,7 @@ void blacklist_resolver_callback(void *arg, int status, int timeouts, struct hos
 int blacklist_start_check(aClient *cptr);
 int blacklist_dns_request(aClient *cptr, Blacklist *bl);
 int blacklist_rehash(void);
+void blacklist_free_bluser_if_able(BLUser *bl);
 
 #define SetBLUser(x, y)	do { moddata_client(x, blacklist_md).ptr = y; } while(0)
 #define BLUSER(x)	((BLUser *)moddata_client(x, blacklist_md).ptr)
@@ -533,6 +534,10 @@ int blacklist_start_check(aClient *cptr)
 		if (bl->backend_type == BLACKLIST_BACKEND_DNS)
 			blacklist_dns_request(cptr, bl);
 	
+	/* Free bluser entry. This only happens if you have no blacklist configured or they fail very early */
+	if (BLUSER(cptr))
+		blacklist_free_bluser_if_able(BLUSER(cptr));
+
 	return 0;
 }
 
