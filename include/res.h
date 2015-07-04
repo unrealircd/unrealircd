@@ -77,3 +77,6 @@ extern ares_channel resolver_channel;
 extern void init_resolver(int);
 
 struct hostent *unrealdns_doclient(aClient *cptr);
+
+extern void unreal_gethostbyname(const char *name, int family, ares_host_callback callback, void *arg);
+

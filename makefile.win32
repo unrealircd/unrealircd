@@ -205,6 +205,7 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/CERTFP.DLL \
  SRC/MODULES/CLOAK.DLL \
  SRC/MODULES/WEBIRC.DLL \
+ SRC/MODULES/BLACKLIST.DLL \
  SRC/MODULES/CHANMODES/CENSOR.DLL \
  SRC/MODULES/CHANMODES/DELAYJOIN.DLL \
  SRC/MODULES/CHANMODES/FLOODPROT.DLL \
@@ -797,6 +798,9 @@ src/modules/cloak.dll: src/modules/cloak.c $(INCLUDES)
 
 src/modules/webirc.dll: src/modules/webirc.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/webirc.c $(MODLFLAGS)
+
+src/modules/blacklist.dll: src/modules/blacklist.c $(INCLUDES)
+        $(CC) $(MODCFLAGS) src/modules/blacklist.c $(MODLFLAGS)
 
 src/modules/m_svsnolag.dll: src/modules/m_svsnolag.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/m_svsnolag.c $(MODLFLAGS)

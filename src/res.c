@@ -832,3 +832,11 @@ char *param;
 	}
 	return 0;
 }
+
+/* Little helper function for dnsbl module.
+ * No we will NOT copy the entire c-ares api, just this one.
+ */
+void unreal_gethostbyname(const char *name, int family, ares_host_callback callback, void *arg)
+{
+	ares_gethostbyname(resolver_channel, name, family, callback, arg);
+}
