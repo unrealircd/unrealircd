@@ -6195,6 +6195,10 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 		}
 	}
 
+	/* The default is 'hub *', unless you specify leaf or hub manually. */
+	if (!link->hub && !link->leaf)
+		link->hub = strdup("*");
+
 	AddListItem(link, conf_link);
 	return 0;
 }
