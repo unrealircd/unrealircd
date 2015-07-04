@@ -218,7 +218,6 @@ char *make_nick_user_host_r(char *namebuf, char *nick, char *name, char *host)
 {
 	char *s = namebuf;
 
-	bzero(namebuf, sizeof(namebuf));
 	nick = check_string(nick);
 	strlcpy(namebuf, nick, NICKLEN + 1);
 	s += strlen(s);
@@ -231,7 +230,7 @@ char *make_nick_user_host_r(char *namebuf, char *nick, char *name, char *host)
 	strlcpy(s, host, HOSTLEN + 1);
 	s += strlen(s);
 	*s = '\0';
-	return (namebuf);
+	return namebuf;
 }
 
 /*
