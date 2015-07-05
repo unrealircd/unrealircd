@@ -90,7 +90,7 @@ ARG="$ARG--enable-dynamic-linking "
 ARG="$ARG $EXTRAPARA "
 CONF="./configure $ARG"
 if [ "x$INSTALLCURL" = "x1" ]; then
-	./curlinstall || exit 1
+	extras/curlinstall || exit 1
 fi
 echo $CONF
 $CONF || exit 1

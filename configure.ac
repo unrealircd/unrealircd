@@ -711,7 +711,7 @@ PKG_CHECK_MODULES([PCRE2], libpcre2-8 >= 10.00)
 
 AS_IF([test "x$with_system_cares" = "xno"],[
 dnl REMEMBER TO CHANGE WITH A NEW C-ARES RELEASE!
-dnl NOTE: when changing this here, ALSO change it in ./curlinstall
+dnl NOTE: when changing this here, ALSO change it in extras/curlinstall
 dnl       and in the comment in this file around line 400!
 cares_version="1.10.0"
 AC_MSG_RESULT(extracting c-ares resolver library)
