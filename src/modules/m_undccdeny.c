@@ -81,7 +81,7 @@ DLLFUNC CMD_FUNC(m_undccdeny)
 	if (!MyClient(sptr))
 		return 0;
 
-	if (!IsAnOper(sptr) || !OperClass_evaluateACLPath("client:dcc",sptr,NULL,NULL,NULL))
+	if (!OperClass_evaluateACLPath("client:dcc",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
