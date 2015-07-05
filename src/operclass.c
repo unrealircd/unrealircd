@@ -302,6 +302,10 @@ OperPermission OperClass_evaluateACLPath(char* path, aClient *sptr, aClient *vic
         OperClassACLPath *operPath;
         OperClassACL *acl;
 
+	// Trust U:Line or remote users
+	if (IsULine(sptr) || !MyClient(sptr))
+		return OPER_ALLOW;
+
 	if (!IsOper(sptr))
 		return OPER_DENY;
 
