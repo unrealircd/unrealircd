@@ -122,7 +122,7 @@ int n, wasaway = 0;
         return n;
 
 #ifdef NO_FLOOD_AWAY
-	if (MyClient(sptr) && AWAY_PERIOD && !IsAnOper(sptr))
+	if (MyClient(sptr) && AWAY_PERIOD && !OperClass_evaluateACLPath("immune:awayflood",sptr,NULL,NULL,NULL))
 	{
 		if ((sptr->user->flood.away_t + AWAY_PERIOD) <= timeofday)
 		{
