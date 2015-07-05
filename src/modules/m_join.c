@@ -157,7 +157,7 @@ int i=0,j=0;
 
 #ifndef NO_OPEROVERRIDE
 #ifdef OPEROVERRIDE_VERIFY
-        if (IsOper(sptr) && (chptr->mode.mode & MODE_SECRET ||
+        if (OperClass_evaluateACLPath("override:privsecret",sptr,NULL,chptr,NULL) && (chptr->mode.mode & MODE_SECRET ||
             chptr->mode.mode & MODE_PRIVATE) && !is_autojoin_chan(chptr->chname))
                 return (ERR_OPERSPVERIFY);
 #endif
@@ -438,7 +438,7 @@ DLLFUNC CMD_FUNC(_do_join)
 			flags =
 			    (ChannelExists(name)) ? CHFL_DEOPPED : LEVEL_ON_JOIN;
 
-			if (!IsAnOper(sptr))	/* opers can join unlimited chans */
+			if (!OperClass_evaluateACLPath("immune:channellimit",sptr,NULL,NULL,NULL))	/* opers can join unlimited chans */
 				if (sptr->user->joined >= MAXCHANNELSPERUSER)
 				{
 					sendto_one(sptr,
@@ -450,7 +450,7 @@ DLLFUNC CMD_FUNC(_do_join)
 /* RESTRICTCHAN */
 			if (conf_deny_channel)
 			{
-				if (!IsOper(sptr) && !IsULine(sptr))
+				if (!OperClass_evaluateACLPath("immune:forbiddenchan",sptr,NULL,NULL,NULL))
 				{
 					ConfigItem_deny_channel *d;
 					if ((d = Find_channel_allowed(cptr, name)))
@@ -475,7 +475,7 @@ DLLFUNC CMD_FUNC(_do_join)
 					}
 				}
 			}
-			if (!IsOper(sptr) && !IsULine(sptr) && (tklban = find_qline(sptr, name, &ishold)))
+			if (OperClass_evaluateACLPath("immune:forbiddenchan",sptr,NULL,NULL,NULL) && (tklban = find_qline(sptr, name, &ishold)))
 			{
 				sendto_one(sptr, err_str(ERR_FORBIDDENCHANNEL), me.name, BadPtr(parv[0]) ? "*" : parv[0], name, tklban->reason);
 				continue;
@@ -483,7 +483,7 @@ DLLFUNC CMD_FUNC(_do_join)
 			/* ugly set::spamfilter::virus-help-channel-deny hack.. */
 			if (SPAMFILTER_VIRUSCHANDENY && SPAMFILTER_VIRUSCHAN &&
 			    !strcasecmp(name, SPAMFILTER_VIRUSCHAN) &&
-			    !IsAnOper(sptr) && !spamf_ugly_vchanoverride)
+			    !OperClass_evaluateACLPath("immune:viruschan",sptr,NULL,NULL,NULL) && !spamf_ugly_vchanoverride)
 			{
 				int invited = 0;
 				Link *lp;
