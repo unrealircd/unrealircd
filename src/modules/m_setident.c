@@ -97,7 +97,7 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	switch (permit)
 	{
 	  case 0:
-		  if (!IsAnOper(sptr))
+		  if (!OperClass_evaluateACLPath("self:ident",sptr,NULL,NULL,NULL))
 		  {
 			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 			      parv[0]);
