@@ -88,7 +88,7 @@ DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	{
   		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 	        parv[0]);
-		return 0
+		return 0;
 	}
 
 	if (parc < 2)
