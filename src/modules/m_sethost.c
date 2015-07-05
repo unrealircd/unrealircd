@@ -83,48 +83,14 @@ DLLFUNC int MOD_UNLOAD(m_sethost)(int module_unload)
 DLLFUNC int m_sethost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	char *vhost;
-#ifndef DISABLE_USERMOD
-	int  permit = 0;	/* 0 = opers(glob/locop) 1 = global oper 2 = not MY clients.. */
-#else
-	int  permit = 2;
-#endif
 
-
-	if (!MyConnect(sptr))
-		goto have_permit1;
-	switch (permit)
+	if (!OperClass_evaluateACLPath("client:host",sptr,NULL,NULL,NULL))
 	{
-	  case 0:
-		  if (!IsAnOper(sptr))
-		  {
-			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			      parv[0]);
-			  return 0;
-		  }
-		  break;
-	  case 1:
-		  if (!IsOper(sptr))
-		  {
-			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			      parv[0]);
-			  return 0;
-		  }
-		  break;
-	  case 2:
-		  if (MyConnect(sptr))
-		  {
-			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			      parv[0]);
-			  return 0;
-		  }
-	  default:
-		  sendto_ops_butone(IsServer(cptr) ? cptr : NULL, sptr,
-		      ":%s WALLOPS :[SETHOST] Somebody fixing this corrupted server? !(0|1) !!!",
-		      me.name);
-		  break;
+  		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
+	        parv[0]);
+		return 0
 	}
 
-      have_permit1:
 	if (parc < 2)
 		vhost = NULL;
 	else
