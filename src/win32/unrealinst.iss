@@ -84,6 +84,7 @@ Name: "{app}\logs"
 Name: "{app}\conf"
 Name: "{app}\conf\ssl"
 Name: "{app}\data"
+Name: "{app}\modules\third"
 
 [UninstallDelete]
 Type: files; Name: "{app}\DbgHelp.Dll"

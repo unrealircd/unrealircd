@@ -70,6 +70,7 @@ build: $(MODULES)
 	cd usermodes; $(MAKE) all
 	cd snomasks; $(MAKE) all
 	cd extbans; $(MAKE) all
+	cd third; $(MAKE) all
 
 custommodule: $(MODULEFILE).c
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
@@ -525,3 +526,4 @@ clean:
 	cd usermodes; $(MAKE) clean
 	cd snomasks; $(MAKE) clean
 	cd extbans; $(MAKE) clean
+	cd third; $(MAKE) clean

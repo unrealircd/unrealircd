@@ -7991,7 +7991,7 @@ UNRLINCDIR="`pwd`/include"
 BUILDDIR="`pwd`"
 
 
-ac_config_files="$ac_config_files Makefile src/modules/Makefile src/modules/chanmodes/Makefile src/modules/usermodes/Makefile src/modules/snomasks/Makefile src/modules/extbans/Makefile unrealircd extras/ircdcron/ircdchk extras/ircdcron/ircd.cron"
+ac_config_files="$ac_config_files Makefile src/modules/Makefile src/modules/chanmodes/Makefile src/modules/usermodes/Makefile src/modules/snomasks/Makefile src/modules/extbans/Makefile src/modules/third/Makefile unrealircd extras/ircdcron/ircdchk extras/ircdcron/ircd.cron"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -8690,6 +8690,7 @@ do
     "src/modules/usermodes/Makefile") CONFIG_FILES="$CONFIG_FILES src/modules/usermodes/Makefile" ;;
     "src/modules/snomasks/Makefile") CONFIG_FILES="$CONFIG_FILES src/modules/snomasks/Makefile" ;;
     "src/modules/extbans/Makefile") CONFIG_FILES="$CONFIG_FILES src/modules/extbans/Makefile" ;;
+    "src/modules/third/Makefile") CONFIG_FILES="$CONFIG_FILES src/modules/third/Makefile" ;;
     "unrealircd") CONFIG_FILES="$CONFIG_FILES unrealircd" ;;
     "extras/ircdcron/ircdchk") CONFIG_FILES="$CONFIG_FILES extras/ircdcron/ircdchk" ;;
     "extras/ircdcron/ircd.cron") CONFIG_FILES="$CONFIG_FILES extras/ircdcron/ircd.cron" ;;
