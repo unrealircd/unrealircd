@@ -206,6 +206,7 @@ DLL_FILES=SRC/MODULES/M_CHGHOST.DLL SRC/MODULES/M_SDESC.DLL SRC/MODULES/M_SETIDE
  SRC/MODULES/CLOAK.DLL \
  SRC/MODULES/WEBIRC.DLL \
  SRC/MODULES/BLACKLIST.DLL \
+ SRC/MODULES/JOINTHROTTLE.DLL \
  SRC/MODULES/CHANMODES/CENSOR.DLL \
  SRC/MODULES/CHANMODES/DELAYJOIN.DLL \
  SRC/MODULES/CHANMODES/FLOODPROT.DLL \
@@ -802,6 +803,9 @@ src/modules/webirc.dll: src/modules/webirc.c $(INCLUDES)
 src/modules/blacklist.dll: src/modules/blacklist.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/blacklist.c $(MODLFLAGS)
 
+src/modules/jointhrottle.dll: src/modules/jointhrottle.c $(INCLUDES)
+        $(CC) $(MODCFLAGS) src/modules/jointhrottle.c $(MODLFLAGS)
+
 src/modules/m_svsnolag.dll: src/modules/m_svsnolag.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/m_svsnolag.c $(MODLFLAGS)
 
@@ -834,9 +838,6 @@ src/modules/chanmodes/floodprot.dll: src/modules/chanmodes/floodprot.c $(INCLUDE
 
 src/modules/chanmodes/issecure.dll: src/modules/chanmodes/issecure.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/issecure.c $(MODLFLAGS)
-
-src/modules/chanmodes/jointhrottle.dll: src/modules/chanmodes/jointhrottle.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/jointhrottle.c $(MODLFLAGS)
 
 src/modules/chanmodes/link.dll: src/modules/chanmodes/link.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) /Fosrc/modules/chanmodes/ /Fesrc/modules/chanmodes/ src/modules/chanmodes/link.c $(MODLFLAGS)

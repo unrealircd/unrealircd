@@ -823,6 +823,7 @@ extern char *moddata_client_get(aClient *acptr, char *varname);
 #define CONFIG_DENY 5
 #define CONFIG_ALLOW 6
 #define CONFIG_CLOAKKEYS 7
+#define CONFIG_SET_ANTI_FLOOD 8
 
 #ifdef DYNAMIC_LINKING
  #define MOD_HEADER(name) Mod_Header

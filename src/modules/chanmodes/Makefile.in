@@ -30,7 +30,7 @@ INCLUDES = ../../include/auth.h ../../include/channel.h \
 	../../include/version.h ../../include/whowas.h
 
 R_MODULES= \
-	nocolor.so stripcolor.so issecure.so permanent.so jointhrottle.so floodprot.so \
+	nocolor.so stripcolor.so issecure.so permanent.so floodprot.so \
 	noctcp.so link.so censor.so delayjoin.so noknock.so noinvite.so operonly.so \
 	nonotice.so regonly.so nonickchange.so nokick.so regonlyspeak.so \
 	secureonly.so
@@ -70,10 +70,6 @@ stripcolor.so: stripcolor.c $(INCLUDES)
 permanent.so: permanent.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o permanent.so permanent.c
-
-jointhrottle.so: jointhrottle.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o jointhrottle.so jointhrottle.c
 
 floodprot.so: floodprot.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \

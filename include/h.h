@@ -757,3 +757,4 @@ extern MODVAR BOOL IsService;
 #endif
 extern int match_ip46(char *a, char *b);
 extern void extcmodes_check_for_changes(void);
+extern int config_parse_flood(char *orig, int *times, int *period);

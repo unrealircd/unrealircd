@@ -6875,6 +6875,15 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					tempiConf.throttle_count = cnt;
 					tempiConf.throttle_period = period;
 				}
+				else
+				{
+					for (h = Hooks[HOOKTYPE_CONFIGRUN]; h; h = h->next)
+					{
+						int value = (*(h->func.intfunc))(conf,cepp,CONFIG_SET_ANTI_FLOOD);
+						if (value == 1)
+							break;
+					}
+				}
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "options")) {
@@ -7607,10 +7616,43 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 				else
 				{
-					config_error_unknownopt(cepp->ce_fileptr->cf_filename,
-						cepp->ce_varlinenum, "set::anti-flood",
-						cepp->ce_varname);
-					errors++;
+					/* hmm.. I don't like this method. but I just quickly copied it from CONFIG_ALLOW for now... */
+					int used = 0;
+					Hook *h;
+					for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next) 
+					{
+						int value, errs = 0;
+						if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
+							&& !(h->owner->options & MOD_OPT_PERM))
+							continue;
+						config_status("Callliiiiiiiiiiiing");
+						value = (*(h->func.intfunc))(conf,cepp,CONFIG_SET_ANTI_FLOOD,&errs);
+						if (value == 2)
+							used = 1;
+						if (value == 1)
+						{
+							used = 1;
+							break;
+						}
+						if (value == -1)
+						{
+							used = 1;
+							errors += errs;
+							break;
+						}
+						if (value == -2)
+						{
+							used = 1;
+							errors += errs;
+						}
+					}
+					if (!used)
+					{
+						config_error_unknownopt(cepp->ce_fileptr->cf_filename,
+							cepp->ce_varlinenum, "set::anti-flood",
+							cepp->ce_varname);
+						errors++;
+					}
 					continue;
 				}
 			}
