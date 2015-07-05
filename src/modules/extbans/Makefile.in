@@ -42,10 +42,6 @@ all: build
 
 build: $(MODULES)
 
-custommodule: $(MODULEFILE).c
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o $(MODULEFILE).so $(MODULEFILE).c $(EXLIBS)
-
 clean:
 	$(RM) -f *.o *.so *~ core
 

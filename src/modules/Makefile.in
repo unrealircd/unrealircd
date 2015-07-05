@@ -72,10 +72,6 @@ build: $(MODULES)
 	cd extbans; $(MAKE) all
 	cd third; $(MAKE) all
 
-custommodule: $(MODULEFILE).c
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o $(MODULEFILE).so $(MODULEFILE).c $(EXLIBS)
-
 #############################################################################
 #             .so's section
 #############################################################################
