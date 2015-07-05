@@ -117,15 +117,17 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
   mechanisms such as epoll and kqueue.
 * Memory pooling has been added to improve memory allocation efficiency
   and performance.
+* On-connect DNSBL/RBL checking via the new blacklist block. (A5)
 * The local nickname length can be modified without recompiling the IRCd
 * Channel Mode +d: This will hide joins/parts for users who don't say
   anything in a channel. Whenever a user speaks for the first time they
   will appear to join. Chanops will still see everyone joining normally
   as if there was no +d set.
-* If you connect with SSL/TLS then your SSL Fingerprint (SHA256 hash) can
-  be seen by yourself and others through /WHOIS. The fingerprint is also
-  shared (broadcasted) with all servers on the network. In alpha3 we
-  will add more features that will use SSL fingerprints. (A2)
+* If you connect with SSL/TLS with a client certificate then your SSL
+  Fingerprint (SHA256 hash) can be seen by yourself and others through
+  /WHOIS. The fingerprint is also shared with all servers on the network.
+* ExtBan ~S:<certificate fingerprint> for ban exceptions / invex. This
+  can be used like +iI ~S:000000000etc.
 * bcrypt has been added as a password hashing algorithm and is now the
   preferred algorithm (A3)
 * './unreal mkpasswd' will now prompt you for the password to hash (A3)
@@ -137,6 +139,9 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * Configuration file converter that will upgrade your 3.2.x conf to 3.4.x.
   On *NIX run './unreal upgrade-conf'. On Windows simply try to boot and
   after the config errors screen UnrealIRCd offers the conversion. (A3)
+* The IRCd can now better handle unknown channel modes which expect a
+  parameter. This can be useful in a scenario where you are slowly
+  upgrading all your servers.
 
 ==[ CHANGED ]==
 * Numerics have been removed. Instead we now use SIDs (Server ID's) and
@@ -203,7 +208,8 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
   set. Now the idea is as follows: halfops should be able to help out
   in case of a flood but not be able to change any 'policy decission
   modes' such as +G, +S, +c, +s. Due to this change halfops can now
-  set modes +beiklmntIMKNCR (was: +beikmntI).
+  set modes +beiklmntIMKNCR (was: +beikmntI). (A4)
+* If no link::hub or link::leaf is specified then assume hub "*". (A5)
 
 ==[ MODULE CODERS / DEVELOPERS ]==
 * A lot of technical documentation for module coders has been added
@@ -214,6 +220,9 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * Added MOD_OPT_PERM_RELOADABLE which permits reloading (eg: upgrades)
   but disallows unloading of a module (A3)
 * There have been *a lot* of source code cleanups (ALL)
+* We now use the information from PROTOCTL CHANMODES= for parameter
+  skipping if the channel mode is unknown. Also, when channel modes
+  are loaded or unloaded we re-broadcast PROTOCTL CHANMODES=. (A5)
 
 ==[ MAJOR BUGS FIXED ]==
 * Crash bug on-boot in alpha1 (A2)
@@ -230,6 +239,10 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * Detect "IRCd not running" situations better (A4)
 * './unrealircd restart' will now always try to start UnrealIRCd,
   so also if it wasn't running previously. (A4)
+* alpha4's upgrade-conf could get confused by set::host block (A5)
+* ExtBan ~a (account) did not work with +I (A5)
+* On Windows we didn't create the data/ directory resulting in a
+  "Unable to write tunefile" error in alpha4. (A5)
 
 ==[ REMOVED / DROPPED ]==
 * Numeric server IDs, see above. (A1)
@@ -239,3 +252,5 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * User mode +h (helpop). This user mode only added a line in /WHOIS
   saying the user "is available for help". You can use a vhost block
   with a vhost::swhois as a replacement. Or oper::swhois. (A4)
+* Channel Mode +j was removed and replaced by the configuration setting
+  set::anti-flood::join-flood (default: 3 per 90 seconds). (A5)
