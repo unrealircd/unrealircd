@@ -89,7 +89,7 @@ DLLFUNC CMD_FUNC(m_chatops)
 		return 0;
 	}
 
-	if (MyClient(sptr) && !IsAnOper(cptr))
+	if (MyClient(sptr) && !OperClass_evaluateACLPath("chat:ops",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
