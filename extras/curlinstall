@@ -4,10 +4,14 @@ OUTF="curl-latest.tar.gz"
 OUTD="curl-latest"
 ARESPATH="`pwd`/extras/c-ares"
 CARESVERSION="1.10.0"
-if [ ! -f "Unreal.nfo" ]; then
-	echo "Please run this program from your UnrealIRCd directory"
-	echo "(usually $HOME/Unreal3.2 or something like that)"
-	exit 1
+if [ ! -f src/parse.c ]; then
+	if [ -f ../src/parse.c ]; then
+		cd ..
+	else
+		echo "Please run this program from your UnrealIRCd directory"
+		echo "(usually $HOME/Unreal3.2 or something like that)"
+		exit 1
+	fi
 fi
 
 wget --version 1>/dev/null 2>&1
