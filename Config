@@ -380,6 +380,7 @@ fi
 
 #parse arguments
 NOCACHE=""
+IMPORTEDSETTINGS=""
 NOINTRO=""
 CLEAN=""
 ADVANCED=""
@@ -414,10 +415,6 @@ while [ $# -ge 1 ] ; do
 	shift 1
 done
 
-if [ -f "config.settings" -a -z "$NOCACHE" ] ; then
-    . ./config.settings
-fi
-
 if [ "$PREADVANCED" = "1" ] ; then
 	ADVANCED="1"
 elif [ "$ADVANCED" = "1" ]; then
@@ -445,6 +442,53 @@ clear
 
 echo "We will now ask you a number of questions."
 echo "You can just press ENTER to accept the defaults!"
+echo ""
+
+if [ -z "$NOCACHE" ] ; then
+	# This needs to be updated each release:
+	UNREALRELEASES="Unreal3.4-alpha4 Unreal3.4-alpha3 Unreal3.4-alpha2 Unreal3.4-alpha1"
+	if [ -f "config.settings" ]; then
+		. ./config.settings
+	else
+		# Try to load a previous config.settings
+		for x in $UNREALRELEASES
+		do
+			if [ -f ../$x/config.settings ]; then
+				IMPORTEDSETTINGS="../$x"
+				break
+			fi
+		done
+		echo "If you have previously installed UnrealIRCd on this shell then you can specify a"
+		echo "directory here so I can import the build settings and third party modules"
+		echo "to make your life a little easier."
+		if [ ! -z "$IMPORTEDSETTINGS" ]; then
+			echo "Found previous installation in $IMPORTEDSETTINGS."
+			echo "Just press Enter to accept this default settings."
+		else
+			echo "If you install UnrealIRCd for the first time on this shell, then just hit Enter";
+		fi
+
+		TEST="$IMPORTEDSETTINGS"
+		echo $n "[$TEST] -> $c"
+		read cc
+		if [ -z "$cc" ]; then
+			IMPORTEDSETTINGS="$TEST"
+		else
+			IMPORTEDSETTINGS="$cc"
+		fi
+		if [ ! -f $IMPORTEDSETTINGS/config.settings ]; then
+			echo "Directory $IMPORTEDSETTINGS does not exist or does not contain a config.settings file"
+			exit
+		fi
+		# Actually load the settings
+		. $IMPORTEDSETTINGS/config.settings
+		# Copy over 3rd party modules (also deals with 0 file cases, hence the silly looking code)
+		for f in $IMPORTEDSETTINGS/src/modules/third/*.c
+		do
+			[ -e "$f" ] && cp $f src/modules/third/
+		done
+	fi
+fi
 
 TEST="$BASEPATH"
 echo ""
