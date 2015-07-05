@@ -93,7 +93,7 @@ DLLFUNC int MOD_UNLOAD(regonlyspeak)(int module_unload)
 DLLFUNC char * regonlyspeak_part_message (aClient* sptr, aChannel *chptr, char* comment)
 {
 
-	if (IsRegOnlySpeak(chptr) && !IsLoggedIn(sptr) && !IsAnOper(sptr))
+	if (IsRegOnlySpeak(chptr) && !IsLoggedIn(sptr) && !OperClass_evaluateACLPath("immune:regonly",sptr,NULL,NULL,NULL))
 				return NULL;
 
 	return comment;
