@@ -18,6 +18,14 @@ src/modules/Makefile
 unrealircd
 include/setup.h
 
+# Ignore tags file
+tags
+
+# Ignore SSL Stuff
+server.cert.pem
+server.key.pem
+server.req.pem
+ssl.rnd
 
 # Ignores for platform stuff
 .DS_Store
