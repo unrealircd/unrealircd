@@ -57,7 +57,6 @@ long UMODE_WALLOP = 0L;        /* send wallops to them */
 long UMODE_FAILOP = 0L;        /* Shows some global messages */
 long UMODE_REGNICK = 0L;       /* Nick set by services as registered */
 long UMODE_SERVNOTICE = 0L;    /* server notices such as kill */
-long UMODE_LOCOP = 0L;         /* Local operator -- SRB */
 long UMODE_HIDE = 0L;          /* Hide from Nukes */
 long UMODE_SECURE = 0L;        /* User is a secure connect */
 long UMODE_DEAF = 0L;          /* Deaf */
@@ -113,7 +112,6 @@ void	umode_init(void)
 	UmodeAdd(NULL, 'g', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_FAILOP);
 	UmodeAdd(NULL, 'r', UMODE_GLOBAL, 0, umode_allow_none, &UMODE_REGNICK);
 	UmodeAdd(NULL, 's', UMODE_LOCAL, 0, umode_allow_all, &UMODE_SERVNOTICE);
-	UmodeAdd(NULL, 'O', UMODE_LOCAL, 1, umode_allow_opers, &UMODE_LOCOP);
 	UmodeAdd(NULL, 'x', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_HIDE);
 	UmodeAdd(NULL, 'z', UMODE_GLOBAL, 0, umode_allow_none, &UMODE_SECURE);
 	UmodeAdd(NULL, 'd', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_DEAF);

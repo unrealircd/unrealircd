@@ -435,26 +435,12 @@ int  what, setflags;
 				if ((what == MODE_DEL) && (acptr->umodes & UMODE_INVISIBLE))
 					IRCstats.invisible--;
 				goto setmodex;
-			case 'O': /* Locops are opers too! */
-				if (what == MODE_ADD)
-				{
-					if (!IsAnOper(acptr) && MyClient(acptr))
-						list_add(&acptr->special_node, &oper_list);
-
-					acptr->umodes &= ~UMODE_OPER;
-				}
-
-				if (what == MODE_DEL && (acptr->umodes & UMODE_LOCOP) && MyClient(acptr))
-					list_del(&acptr->special_node);
-
-				goto setmodex;					
 			case 'o':
 				if ((what == MODE_ADD) && !(acptr->umodes & UMODE_OPER))
 				{
 					if (!IsAnOper(acptr) && MyClient(acptr))
 						list_add(&acptr->special_node, &oper_list);
 
-					acptr->umodes &= ~UMODE_LOCOP; /* can't be both local and global */
 					IRCstats.operators++;
 				}
 				if ((what == MODE_DEL) && (acptr->umodes & UMODE_OPER))
@@ -489,10 +475,9 @@ int  what, setflags;
 							"report at http://bugs.unrealircd.org/", sptr->name, parv[1], parv[2], acptr->umodes);
 						break; /* abort! */
 					}
-					if (!IsLocOp(acptr))
-						IRCstats.operators--;
+					IRCstats.operators--;
 				}
-				if (what == MODE_DEL && (acptr->umodes & UMODE_HIDEOPER) && !IsLocOp(acptr))
+				if (what == MODE_DEL && (acptr->umodes & UMODE_HIDEOPER))
 					IRCstats.operators++;
 				goto setmodex;
 			case 'd':

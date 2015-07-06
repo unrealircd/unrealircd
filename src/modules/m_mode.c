@@ -1859,8 +1859,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 	 * O.K. The above code just does normal access flag checks. This
 	 * only changes the operflag access level.  -Cabal95
 	 */
-	if ((setflags & (UMODE_OPER | UMODE_LOCOP)) && !IsAnOper(sptr) &&
-	    MyConnect(sptr))
+	if ((setflags & UMODE_OPER) && !IsAnOper(sptr) && MyConnect(sptr))
 	{
 		list_del(&sptr->special_node);
 		remove_oper_snomasks(sptr);

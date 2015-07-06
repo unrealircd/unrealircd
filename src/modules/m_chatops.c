@@ -98,6 +98,5 @@ DLLFUNC CMD_FUNC(m_chatops)
 	sendto_server(IsServer(cptr) ? cptr : NULL, 0, 0, ":%s CHATOPS :%s",
 	    parv[0], message);
 	sendto_umode(UMODE_OPER, "*** ChatOps -- from %s: %s", parv[0], message);
-	sendto_umode(UMODE_LOCOP, "*** ChatOps -- from %s: %s", parv[0], message);
 	return 0;
 }
