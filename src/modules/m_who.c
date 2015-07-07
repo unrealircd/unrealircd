@@ -251,7 +251,7 @@ static void who_sendhelp(aClient *sptr)
   };
   char **s;
 
-	if (IsAnOper(sptr))
+	if (IsOper(sptr))
 		s = who_oper_help;
 	else
 		s = who_help;
@@ -306,7 +306,7 @@ int i = 1;
 				break;
 			case 'g':
 				REQUIRE_PARAM()
-				if (!IsAnOper(sptr))
+				if (!IsOper(sptr))
 					break; /* oper-only */
 				wfl.gecos = argv[i];
 				SET_OPTION(wfl.want_gecos);
@@ -320,7 +320,7 @@ int i = 1;
 				break;
 			case 'i':
 				REQUIRE_PARAM()
-				if (!IsAnOper(sptr))
+				if (!IsOper(sptr))
 					break; /* oper-only */
 				wfl.ip = argv[i];
 				SET_OPTION(wfl.want_ip);
@@ -355,7 +355,7 @@ int i = 1;
 					s++;
 					}
 
-					if (!IsAnOper(sptr))
+					if (!IsOper(sptr))
 						*umodes = *umodes & UMODE_OPER; /* these are usermodes regular users may search for. just oper now. */
 					if (*umodes == 0)
 						return -1;
@@ -364,7 +364,7 @@ int i = 1;
 				break;
 			case 'p':
 				REQUIRE_PARAM()
-				if (!IsAnOper(sptr))
+				if (!IsOper(sptr))
 					break; /* oper-only */
 				wfl.port = atoi(argv[i]);
 				SET_OPTION(wfl.want_port);
@@ -374,7 +374,7 @@ int i = 1;
 				SET_OPTION(wfl.common_channels_only);
 				break;
 			case 'R':
-				if (!IsAnOper(sptr))
+				if (!IsOper(sptr))
 					break;
 				if (what == WHO_ADD)
 					who_flags |= WF_REALHOST;
@@ -382,7 +382,7 @@ int i = 1;
 					who_flags &= ~WF_REALHOST;
 				break;
 			case 'I':
-				if (!IsAnOper(sptr))
+				if (!IsOper(sptr))
 					break;
 				if (what == WHO_ADD)
 					who_flags |= WF_IP;
@@ -417,10 +417,10 @@ char has_common_chan = 0;
 		/* can only see opers if thats what they want */
 		if (who_flags & WF_OPERONLY)
 		{
-			if (!IsAnOper(acptr))
+			if (!IsOper(acptr))
 				return ret | WHO_CANTSEE;
 			if (IsHideOper(acptr)) {
-				if (IsAnOper(sptr))
+				if (IsOper(sptr))
 					ret |= WHO_OPERSEE;
 				else
 					return ret | WHO_CANTSEE;
@@ -469,7 +469,7 @@ char has_common_chan = 0;
 		{
 			char *host;
 
-			if (IsAnOper(sptr))
+			if (IsOper(sptr))
 				host = acptr->user->realhost;
 			else
 				host = GetHost(acptr);
@@ -537,13 +537,13 @@ char has_common_chan = 0;
 		/* if they only want people with a certain umode */
 		if (wfl.umodes_want)
 		{
-			if (!(acptr->umodes & wfl.umodes_want) || (!IsAnOper(sptr) && (acptr->umodes & UMODE_HIDEOPER)))
+			if (!(acptr->umodes & wfl.umodes_want) || (!IsOper(sptr) && (acptr->umodes & UMODE_HIDEOPER)))
 				return WHO_CANTSEE;
 		}
 
 		if (wfl.umodes_dontwant)
 		{
-			if ((acptr->umodes & wfl.umodes_dontwant) && (!(acptr->umodes & UMODE_HIDEOPER) || IsAnOper(sptr)))
+			if ((acptr->umodes & wfl.umodes_dontwant) && (!(acptr->umodes & UMODE_HIDEOPER) || IsOper(sptr)))
 				return WHO_CANTSEE;
 		}
 
@@ -600,7 +600,7 @@ char has_common_chan = 0;
 	} while (0);
 
 	/* if we get here, it's oper-dependant. */
-	if (IsAnOper(sptr))
+	if (IsOper(sptr))
 		return ret | WHO_OPERSEE | WHO_CANSEE;
 	else
 	{
@@ -651,10 +651,10 @@ Hook *h;
 			status[i++] = (char)ret;
 	}
 	
-	if (IsAnOper(acptr) && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
+	if (IsOper(acptr) && (!IsHideOper(acptr) || sptr == acptr || IsOper(sptr)))
 		status[i++] = '*';
 
-	if (IsAnOper(acptr) && (IsHideOper(acptr) && sptr != acptr && IsAnOper(sptr)))
+	if (IsOper(acptr) && (IsHideOper(acptr) && sptr != acptr && IsOper(sptr)))
 		status[i++] = '!';
   
 	if (cansee & WHO_OPERSEE)
@@ -682,7 +682,7 @@ Hook *h;
 
 static void do_other_who(aClient *sptr, char *mask)
 {
-int oper = IsAnOper(sptr);
+int oper = IsOper(sptr);
 
 	if (strchr(mask, '*') || strchr(mask, '?'))
 	{
@@ -721,7 +721,7 @@ int oper = IsAnOper(sptr);
 matchok:
 			if ((cansee = can_see(sptr, acptr, NULL)) & WHO_CANTSEE)
 				continue;
-			if (WHOLIMIT && !IsAnOper(sptr) && ++i > WHOLIMIT)
+			if (WHOLIMIT && !IsOper(sptr) && ++i > WHOLIMIT)
 			{
 				sendto_one(sptr, rpl_str(ERR_WHOLIMEXCEED), me.name, sptr->name, WHOLIMIT);
 				return;
@@ -758,12 +758,12 @@ static void send_who_reply(aClient *sptr, aClient *acptr,
 {
 	char *stat;
 	char *host;
-	int flat = (FLAT_MAP && !IsAnOper(sptr)) ? 1 : 0;
+	int flat = (FLAT_MAP && !IsOper(sptr)) ? 1 : 0;
 
 	stat = malloc(strlen(status) + strlen(xstat) + 1);
 	sprintf(stat, "%s%s", status, xstat);
 
-	if (IsAnOper(sptr))
+	if (IsOper(sptr))
 	{
 		if (who_flags & WF_REALHOST)
 			host = acptr->user->realhost;

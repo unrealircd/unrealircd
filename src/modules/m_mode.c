@@ -163,7 +163,7 @@ CMD_FUNC(m_mode)
 	    && parv[2][1] == '\0') || (parv[2][1] == 'b' && parv[2][2] == '\0'
 	    && (*parv[2] == '+' || *parv[2] == '-'))))
 	{
-		if (!IsMember(sptr, chptr) && !IsAnOper(sptr))
+		if (!IsMember(sptr, chptr) && !IsOper(sptr))
 			return 0;
 		/* send ban list */
 		for (ban = chptr->banlist; ban; ban = ban->next)
@@ -180,7 +180,7 @@ CMD_FUNC(m_mode)
 	    && parv[2][1] == '\0') || (parv[2][1] == 'e' && parv[2][2] == '\0'
 	    && (*parv[2] == '+' || *parv[2] == '-'))))
 	{
-		if (!IsMember(sptr, chptr) && !IsAnOper(sptr))
+		if (!IsMember(sptr, chptr) && !IsOper(sptr))
 			return 0;
 		/* send exban list */
 		for (ban = chptr->exlist; ban; ban = ban->next)
@@ -197,7 +197,7 @@ CMD_FUNC(m_mode)
 	    && parv[2][1] == '\0') || (parv[2][1] == 'q' && parv[2][2] == '\0'
 	    && (*parv[2] == '+' || *parv[2] == '-'))))
 	{
-		if (!IsMember(sptr, chptr) && !IsAnOper(sptr))
+		if (!IsMember(sptr, chptr) && !IsOper(sptr))
 			return 0;
 		{
 			Member *member;
@@ -223,7 +223,7 @@ CMD_FUNC(m_mode)
 	    && parv[2][1] == '\0') || (parv[2][1] == 'a' && parv[2][2] == '\0'
 	    && (*parv[2] == '+' || *parv[2] == '-'))))
 	{
-		if (!IsMember(sptr, chptr) && !IsAnOper(sptr))
+		if (!IsMember(sptr, chptr) && !IsOper(sptr))
 			return 0;
 		{
 			Member *member;
@@ -250,7 +250,7 @@ CMD_FUNC(m_mode)
 	    && parv[2][1] == '\0') || (parv[2][1] == 'I' && parv[2][2] == '\0'
 	    && (*parv[2] == '+' || *parv[2] == '-'))))
 	{
-		if (!IsMember(sptr, chptr) && !IsAnOper(sptr))
+		if (!IsMember(sptr, chptr) && !IsOper(sptr))
 			return 0;
 		for (ban = chptr->invexlist; ban; ban = ban->next)
 			sendto_one(sptr, rpl_str(RPL_INVEXLIST), me.name,
@@ -948,7 +948,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 					if (MyClient(cptr))
 						break; /* stop processing this mode */
 				} else {
-					if (IsAnOper(cptr))
+					if (IsOper(cptr))
 						opermode = 1;
 				}
 		  	}
@@ -1123,7 +1123,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
 		      {
 			if (!p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_BAN))
 		        {
-		            if (IsAnOper(cptr))
+		            if (IsOper(cptr))
 		            {
 		                /* TODO: send operoverride notice */
   		            } else {
@@ -1159,7 +1159,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
        		      {
 			 if (!p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_EXCEPT))
 		         {
-		            if (IsAnOper(cptr))
+		            if (IsOper(cptr))
 		            {
 		                /* TODO: send operoverride notice */
 		            } else {
@@ -1198,7 +1198,7 @@ int  do_mode_char(aChannel *chptr, long modetype, char modechar, char *param,
        		        
 			if (p->is_ok && !p->is_ok(cptr, chptr, tmpstr, EXBCHK_ACCESS, what, EXBTYPE_EXCEPT))
 		        {
-		            if (IsAnOper(cptr))
+		            if (IsOper(cptr))
 		            {
 		                /* TODO: send operoverride notice */
 		            } else {
@@ -1445,7 +1445,7 @@ DLLFUNC void _set_mode(aChannel *chptr, aClient *cptr, int parc, char *parv[], u
 	oldm = chptr->mode.mode;
 	oldl = chptr->mode.limit;
 	oldem = chptr->mode.extmode;
-	if (RESTRICT_CHANNELMODES && MyClient(cptr) && !IsAnOper(cptr) && !IsServer(cptr)) /* "cache" this */
+	if (RESTRICT_CHANNELMODES && MyClient(cptr) && !IsOper(cptr) && !IsServer(cptr)) /* "cache" this */
 		checkrestr = 1;
 
 	/* Set access to the status we have */
@@ -1647,7 +1647,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 		if ((sptr->umodes & Usermode_Table[i].mode))
 			setflags |= Usermode_Table[i].mode;
 
-	if (RESTRICT_USERMODES && MyClient(sptr) && !IsAnOper(sptr) && !IsServer(sptr))
+	if (RESTRICT_USERMODES && MyClient(sptr) && !IsOper(sptr) && !IsServer(sptr))
 		chk_restrict = 1;
 
 	if (MyConnect(sptr))
@@ -1703,7 +1703,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 			  }
 			  if (what == MODE_ADD) {
 				if (parc < 4)
-					set_snomask(sptr, IsAnOper(sptr) ? SNO_DEFOPER : SNO_DEFUSER);
+					set_snomask(sptr, IsOper(sptr) ? SNO_DEFOPER : SNO_DEFUSER);
 				else
 					set_snomask(sptr, parv[3]);
 				goto def;
@@ -1718,7 +1718,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 			  /* A local user trying to set himself +o/+O is denied here.
 			   * A while later (outside this loop) it is handled as well (and +C, +N, etc too)
 			   * but we need to take care here too because it might cause problems
-			   * since otherwise all IsOper()/IsAnOper() calls cannot be trusted,
+			   * since otherwise all IsOper()/IsOper() calls cannot be trusted,
 			   * that's just asking for bugs! -- Syzop.
 			   */
 			  if (MyClient(sptr) && (what == MODE_ADD)) /* Someone setting himself +o? Deny it. */
@@ -1783,7 +1783,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 	} /* for */
 
 	/* Don't let non-ircops set ircop-only modes or snomasks */
-	if (MyClient(sptr) && !IsAnOper(sptr))
+	if (MyClient(sptr) && !IsOper(sptr))
 	{
 		remove_oper_modes(sptr);
 		remove_oper_snomasks(sptr);
@@ -1791,7 +1791,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 
 	/* Below can be removed after Heero is done with the new oper system and this shit is gone :D */
 	if (MyClient(sptr)) {
-		if (IsAnOper(sptr)) {
+		if (IsOper(sptr)) {
 			if (MyClient(sptr) && (sptr->umodes & UMODE_SECURE)
 			    && !IsSecure(sptr))
 				sptr->umodes &= ~UMODE_SECURE;
@@ -1859,7 +1859,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 	 * O.K. The above code just does normal access flag checks. This
 	 * only changes the operflag access level.  -Cabal95
 	 */
-	if ((setflags & UMODE_OPER) && !IsAnOper(sptr) && MyConnect(sptr))
+	if ((setflags & UMODE_OPER) && !IsOper(sptr) && MyConnect(sptr))
 	{
 		list_del(&sptr->special_node);
 		remove_oper_snomasks(sptr);
@@ -1893,7 +1893,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 	if ((setflags & UMODE_INVISIBLE) && !IsInvisible(sptr))
 		IRCstats.invisible--;
 
-	if (MyConnect(sptr) && !IsAnOper(sptr))
+	if (MyConnect(sptr) && !IsOper(sptr))
 		remove_oper_modes(sptr);
 
 	/*

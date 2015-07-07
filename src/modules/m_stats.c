@@ -1442,7 +1442,7 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 	{
 		if (IsInvisible(acptr) && (doall || wilds) &&
 			!(MyConnect(sptr) && IsOper(sptr)) &&
-			!IsAnOper(acptr) && (acptr != sptr))
+			!IsOper(acptr) && (acptr != sptr))
 			continue;
 		if (remote && doall && !IsServer(acptr) && !IsMe(acptr))
 			continue;

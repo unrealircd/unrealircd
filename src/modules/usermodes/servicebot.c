@@ -129,7 +129,7 @@ int servicebot_pre_kill(aClient *sptr, aClient *target, char *reason)
 
 int servicebot_whois(aClient *sptr, aClient *acptr)
 {
-	int hideoper = (IsHideOper(acptr) && (sptr != acptr) && !IsAnOper(sptr)) ? 1 : 0;
+	int hideoper = (IsHideOper(acptr) && (sptr != acptr) && !IsOper(sptr)) ? 1 : 0;
 
 	if (IsServiceBot(acptr) && !hideoper)
 		sendto_one(sptr, WHOIS_SERVICE_STRING, me.name, sptr->name, acptr->name);

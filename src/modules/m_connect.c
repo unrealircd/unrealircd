@@ -148,7 +148,7 @@ DLLFUNC CMD_FUNC(m_connect)
 	}
 
 	/* Notify all operators about remote connect requests */
-	if (!IsAnOper(cptr))
+	if (!IsOper(cptr))
 	{
 		sendto_server(&me, 0, 0,
 		    ":%s GLOBOPS :Remote CONNECT %s %s from %s",

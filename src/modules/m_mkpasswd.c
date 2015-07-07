@@ -83,12 +83,12 @@ int  m_mkpasswd(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	short	type;
 	char	*result = NULL;
 
-	if (!MKPASSWD_FOR_EVERYONE && !IsAnOper(sptr))
+	if (!MKPASSWD_FOR_EVERYONE && !IsOper(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return -1;
 	}
-	if (!IsAnOper(sptr))
+	if (!IsOper(sptr))
 	{
 		/* Non-opers /mkpasswd usage: lag them up, and send a notice to eyes snomask.
 		 * This notice is always sent, even in case of bad usage/bad auth methods/etc.

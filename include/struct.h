@@ -362,7 +362,6 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define SendFailops(x)		((x)->umodes & UMODE_FAILOP)
 #define	IsOper(x)		((x)->umodes & UMODE_OPER)
 #define	IsInvisible(x)		((x)->umodes & UMODE_INVISIBLE)
-#define	IsAnOper(x)		IsOper(x)
 #define IsARegNick(x)		((x)->umodes & (UMODE_REGNICK))
 #define IsRegNick(x)		((x)->umodes & UMODE_REGNICK)
 #define IsLoggedIn(x)		(IsRegNick(x) || (x->user && (*x->user->svid != '*') && !isdigit(*x->user->svid))) /* registered nick (+r) or just logged into services (may be -r) */

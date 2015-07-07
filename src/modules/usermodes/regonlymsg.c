@@ -61,7 +61,7 @@ char *regonlymsg_pre_usermsg(aClient *sptr, aClient *target, char *text, int not
 {
 	if (IsRegOnlyMsg(target) && !IsServer(sptr) && !IsULine(sptr) && !IsLoggedIn(sptr))
 	{
-		if (IsAnOper(sptr))
+		if (IsOper(sptr))
 			return text; /* TODO: this is actually an override */
 
 		sendto_one(sptr, err_str(ERR_NONONREG), me.name, sptr->name, target->name);

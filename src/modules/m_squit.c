@@ -155,7 +155,7 @@ CMD_FUNC(m_squit)
 	/*
 	   **  Notify all opers, if my local link is remotely squitted
 	 */
-	if (MyConnect(acptr) && !IsAnOper(cptr))
+	if (MyConnect(acptr) && !IsOper(cptr))
 	{
 
 		sendto_locfailops("Received SQUIT %s from %s (%s)",
@@ -184,7 +184,7 @@ CMD_FUNC(m_squit)
 		    ":%s GLOBOPS :Received SQUIT %s from %s (%s)", me.name,
 		    acptr->name, get_client_name(sptr, FALSE), comment);
 	}
-	if (IsAnOper(sptr))
+	if (IsOper(sptr))
 	{
 		/*
 		 * It was manually /squit'ed by a human being(we hope),

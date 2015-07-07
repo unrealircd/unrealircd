@@ -616,7 +616,7 @@ ConfigItem_deny_dcc *fl;
 char *end, realfile[BUFSIZE];
 int size_string, ret;
 
-	if ((*text != 1) || OperClass_evaluateACLPath("immune:dcc",sptr,targetcli,NULL,NULL) || (targetcli && IsAnOper(targetcli)))
+	if ((*text != 1) || OperClass_evaluateACLPath("immune:dcc",sptr,targetcli,NULL,NULL) || (targetcli && IsOper(targetcli)))
 		return 1;
 
 	ctcp = &text[1];
@@ -701,7 +701,7 @@ ConfigItem_deny_dcc *fl;
 char *end, realfile[BUFSIZE];
 int size_string;
 
-	if ((*text != 1) || OperClass_evaluateACLPath("immune:dcc",from,to,NULL,NULL)|| IsAnOper(to))
+	if ((*text != 1) || OperClass_evaluateACLPath("immune:dcc",from,to,NULL,NULL)|| IsOper(to))
 		return 1;
 
 	ctcp = &text[1];

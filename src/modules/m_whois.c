@@ -150,7 +150,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			member = (user->channel) ? 1 : 0;
 
 			hideoper = 0;
-			if (IsHideOper(acptr) && (acptr != sptr) && !IsAnOper(sptr))
+			if (IsHideOper(acptr) && (acptr != sptr) && !IsOper(sptr))
 				hideoper = 1;
 
 			sendto_one(sptr, rpl_str(RPL_WHOISUSER), me.name,
@@ -169,7 +169,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				    me.name, parv[0], name,
 				    get_mode_str(acptr), sno[1] == 0 ? "" : sno);
 			}
-			if ((acptr == sptr) || IsAnOper(sptr))
+			if ((acptr == sptr) || IsOper(sptr))
 			{
 				sendto_one(sptr, rpl_str(RPL_WHOISHOST),
 				    me.name, parv[0], acptr->name,
@@ -313,7 +313,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				sendto_one(sptr, rpl_str(RPL_AWAY), me.name,
 				    parv[0], name, user->away);
 
-			if (IsAnOper(acptr) && !hideoper)
+			if (IsOper(acptr) && !hideoper)
 			{
 				buf[0] = '\0';
 				if (IsOper(acptr))
@@ -362,7 +362,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			 * Umode +I hides an oper's idle time from regular users.
 			 * -Nath.
 			 */
-			if (MyConnect(acptr) && (IsAnOper(sptr) || !(acptr->umodes & UMODE_HIDLE)))
+			if (MyConnect(acptr) && (IsOper(sptr) || !(acptr->umodes & UMODE_HIDLE)))
 			{
 				sendto_one(sptr, rpl_str(RPL_WHOISIDLE),
 				    me.name, parv[0], name,

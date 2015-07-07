@@ -438,7 +438,7 @@ int  what, setflags;
 			case 'o':
 				if ((what == MODE_ADD) && !(acptr->umodes & UMODE_OPER))
 				{
-					if (!IsAnOper(acptr) && MyClient(acptr))
+					if (!IsOper(acptr) && MyClient(acptr))
 						list_add(&acptr->special_node, &oper_list);
 
 					IRCstats.operators++;
@@ -466,7 +466,7 @@ int  what, setflags;
 			case 'H':
 				if (what == MODE_ADD && !(acptr->umodes & UMODE_HIDEOPER))
 				{
-					if (!IsAnOper(acptr) && !strchr(parv[2], 'o')) /* (ofcoz this strchr() is flawed) */
+					if (!IsOper(acptr) && !strchr(parv[2], 'o')) /* (ofcoz this strchr() is flawed) */
 					{
 						/* isn't an oper, and would not become one either.. abort! */
 						sendto_realops(

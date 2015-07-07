@@ -114,7 +114,7 @@ DLLFUNC CMD_FUNC(m_userhost)
 			ircsnprintf(response[i], NICKLEN * 2 + CHANNELLEN + USERLEN + HOSTLEN + 30,
                             "%s%s=%c%s@%s",
 			    acptr->name,
-			    (IsAnOper(acptr) && (!IsHideOper(acptr) || sptr == acptr || IsAnOper(sptr)))
+			    (IsOper(acptr) && (!IsHideOper(acptr) || sptr == acptr || IsOper(sptr)))
 				? "*" : "",
 			    (acptr->user->away) ? '-' : '+',
 			    acptr->user->username,

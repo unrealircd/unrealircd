@@ -90,7 +90,7 @@ DLLFUNC int m_mdex(aClient *cptr, aClient *sptr, int parc, char *parv[])
 char *action, *type, *objname, *varname, *value;
 ModDataInfo *md;
 
-	if (!IsAnOper(sptr) || (parc < 5) || BadPtr(parv[4]))
+	if (!IsOper(sptr) || (parc < 5) || BadPtr(parv[4]))
 		return 0;
 
 	action = parv[1]; /* get / set */

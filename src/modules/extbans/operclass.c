@@ -89,7 +89,7 @@ int extban_operclass_is_banned(aClient *sptr, aChannel *chptr, char *banin, int 
 {
 	char *ban = banin+3;
 
-	if (MyClient(sptr) && IsAnOper(sptr))
+	if (MyClient(sptr) && IsOper(sptr))
 	{
 		char *operclass = NULL;
 		ConfigItem_oper *oper = Find_oper(sptr->user->operlogin);

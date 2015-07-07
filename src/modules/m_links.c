@@ -82,12 +82,12 @@ DLLFUNC int MOD_UNLOAD(m_links)(int module_unload)
 DLLFUNC CMD_FUNC(m_links)
 {
 	aClient *acptr;
-	int flat = (FLAT_MAP && !IsAnOper(sptr)) ? 1 : 0;
+	int flat = (FLAT_MAP && !IsOper(sptr)) ? 1 : 0;
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
 		/* Some checks */
-		if (HIDE_ULINES && IsULine(acptr) && !IsAnOper(sptr))
+		if (HIDE_ULINES && IsULine(acptr) && !IsOper(sptr))
 			continue;
 		if (flat)
 			sendto_one(sptr, rpl_str(RPL_LINKS),

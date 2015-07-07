@@ -208,7 +208,7 @@ DLLFUNC CMD_FUNC(m_invite)
 
 		if (MyClient(sptr) && SPAMFILTER_VIRUSCHANDENY && SPAMFILTER_VIRUSCHAN &&
 		    !strcasecmp(chptr->chname, SPAMFILTER_VIRUSCHAN) &&
-		    !is_chan_op(sptr, chptr) && !IsAnOper(sptr) && !IsULine(sptr))
+		    !is_chan_op(sptr, chptr) && !IsOper(sptr) && !IsULine(sptr))
 		{
 			sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
 				me.name, parv[0], chptr->chname);

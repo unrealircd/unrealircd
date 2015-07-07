@@ -115,7 +115,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
-	if (IsAnOper(cptr))
+	if (IsOper(cptr))
 	{
 		if (BadPtr(path))
 		{
@@ -265,7 +265,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		   ** back.
 		   ** Suicide kills are NOT passed on --SRB
 		 */
-		if (!MyConnect(acptr) || !MyConnect(sptr) || !IsAnOper(sptr))
+		if (!MyConnect(acptr) || !MyConnect(sptr) || !IsOper(sptr))
 		{
 			sendto_server(cptr, 0, 0, ":%s KILL %s :%s!%s",
 			    parv[0], acptr->name, inpath, path);
@@ -289,7 +289,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		   ** the unnecessary QUIT for this. (This flag should never be
 		   ** set in any other place)
 		 */
-		if (MyConnect(acptr) && MyConnect(sptr) && IsAnOper(sptr))
+		if (MyConnect(acptr) && MyConnect(sptr) && IsOper(sptr))
 
 			ircsnprintf(buf2, sizeof(buf2), "[%s] Local kill by %s (%s)",
 			    me.name, sptr->name,

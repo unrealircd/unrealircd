@@ -97,7 +97,7 @@ DLLFUNC int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 
-	if (MyClient(sptr) && !IsAnOper(sptr))
+	if (MyClient(sptr) && !IsOper(sptr))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		    parv[0]);
@@ -130,7 +130,7 @@ DLLFUNC int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		/* set the realname first to make n:line checking work */
 		ircsnprintf(acptr->info, sizeof(acptr->info), "%s", parv[2]);
 		/* only check for n:lines if the person who's name is being changed is not an oper */
-		if (!IsAnOper(acptr) && Find_ban(NULL, acptr->info, CONF_BAN_REALNAME)) {
+		if (!IsOper(acptr) && Find_ban(NULL, acptr->info, CONF_BAN_REALNAME)) {
 			int xx;
 			xx =
 			   exit_client(cptr, sptr, &me,
