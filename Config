@@ -462,8 +462,9 @@ if [ -z "$NOCACHE" ] ; then
 		echo "directory here so I can import the build settings and third party modules"
 		echo "to make your life a little easier."
 		if [ ! -z "$IMPORTEDSETTINGS" ]; then
-			echo "Found previous installation in $IMPORTEDSETTINGS."
-			echo "Just press Enter to accept this default settings."
+			echo "Found previous installation in: $IMPORTEDSETTINGS."
+			echo "You can enter a different path or type 'none' if you don't want to use it."
+			echo "Just press Enter to accept the default settings."
 		else
 			echo "If you install UnrealIRCd for the first time on this shell, then just hit Enter";
 		fi
@@ -476,17 +477,22 @@ if [ -z "$NOCACHE" ] ; then
 		else
 			IMPORTEDSETTINGS="$cc"
 		fi
-		if [ ! -f $IMPORTEDSETTINGS/config.settings ]; then
-			echo "Directory $IMPORTEDSETTINGS does not exist or does not contain a config.settings file"
-			exit
+		if [ "$IMPORTEDSETTINGS" = "none" ]; then
+			IMPORTEDSETTINGS=""
 		fi
-		# Actually load the settings
-		. $IMPORTEDSETTINGS/config.settings
-		# Copy over 3rd party modules (also deals with 0 file cases, hence the silly looking code)
-		for f in $IMPORTEDSETTINGS/src/modules/third/*.c
-		do
-			[ -e "$f" ] && cp $f src/modules/third/
-		done
+		if [ "$IMPORTEDSETTINGS" != "" ]; then
+			if [ ! -f $IMPORTEDSETTINGS/config.settings ]; then
+				echo "Directory $IMPORTEDSETTINGS does not exist or does not contain a config.settings file"
+				exit
+			fi
+			# Actually load the settings
+			. $IMPORTEDSETTINGS/config.settings
+			# Copy over 3rd party modules (also deals with 0 file cases, hence the silly looking code)
+			for f in $IMPORTEDSETTINGS/src/modules/third/*.c
+			do
+				[ -e "$f" ] && cp $f src/modules/third/
+			done
+		fi
 	fi
 fi
 
