@@ -1223,7 +1223,7 @@ void HooktypeDel(Hooktype *hooktype, Module *module) {
 }
 		
 	
-Hook	*HookAddMain(Module *module, int hooktype, int (*func)(), void (*vfunc)(), char *(*cfunc)())
+Hook *HookAddMain(Module *module, int hooktype, int priority, int (*func)(), void (*vfunc)(), char *(*cfunc)())
 {
 	Hook *p;
 	
@@ -1236,7 +1236,8 @@ Hook	*HookAddMain(Module *module, int hooktype, int (*func)(), void (*vfunc)(), 
 		p->func.pcharfunc = cfunc;
 	p->type = hooktype;
 	p->owner = module;
-	AddListItem(p, Hooks[hooktype]);
+	p->priority = priority;
+
 	if (module) {
 		ModuleObject *hookobj = (ModuleObject *)MyMallocEx(sizeof(ModuleObject));
 		hookobj->object.hook = p;
@@ -1244,6 +1245,49 @@ Hook	*HookAddMain(Module *module, int hooktype, int (*func)(), void (*vfunc)(), 
 		AddListItem(hookobj, module->objects);
 		module->errorcode = MODERR_NOERROR;
 	}
+
+	if (!Hooks[hooktype])
+	{
+		/* Nobody else using this hook. Easy. */
+		Hooks[hooktype] = p;
+	} else {
+		/* There are existing entries. Put our entry in the list, taking into account 'priority'. */
+		Hook *h, *last = NULL;
+		for (h = Hooks[hooktype]; h; h = h->next)
+		{
+			last = h;
+			if (h->priority >= priority)
+				break;
+		}
+		if (h)
+		{
+			if (h->prev)
+			{
+				/* We will insert ourselves just before this item */
+				p->prev = h->prev;
+				p->next = h;
+				h->prev->next = p;
+				h->prev = p;
+			} else {
+				/* We are the new head */
+				Hooks[hooktype] = p;
+				p->next = h;
+				h->prev = p;
+			}
+		} else
+		{
+			/* We are the last item */
+			last->next = p;
+			p->prev = last;
+		}
+
+		p->prev = h;
+		p->next = h->next;
+		if (h->next)
+			h->next->prev = p;
+		h->next = p;
+	}
+
 	return p;
 }
 

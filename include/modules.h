@@ -404,7 +404,8 @@ typedef struct _ModuleObject {
 
 struct _irchook {
 	Hook *prev, *next;
-	short type;
+	int priority;
+	int type;
 	union {
 		int (*intfunc)();
 		void (*voidfunc)();
@@ -573,16 +574,11 @@ void IsupportSetValue(Isupport *isupport, const char *value);
 void IsupportDel(Isupport *isupport);
 Isupport *IsupportFind(const char *token);
 
-#define add_Hook(hooktype, func) HookAddMain(NULL, hooktype, func, NULL, NULL)
-#define HookAdd(hooktype, func) HookAddMain(NULL, hooktype, func, NULL, NULL)
-#define HookAddEx(module, hooktype, func) HookAddMain(module, hooktype, func, NULL, NULL)
-#define HookAddVoid(hooktype, func) HookAddMain(NULL, hooktype, NULL, func, NULL)
-#define HookAddVoidEx(module, hooktype, func) HookAddMain(module, hooktype, NULL, func, NULL)
-#define HookAddPChar(hooktype, func) HookAddMain(NULL, hooktype, NULL, NULL, func)
-#define HookAddPCharEx(module, hooktype, func) HookAddMain(module, hooktype, NULL, NULL, func)
-#define add_HookX(hooktype, func1, func2, func3) HookAddMain(NULL, hooktype, func1, func2, func3)
+#define HookAdd(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, func, NULL, NULL)
+#define HookAddVoid(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, NULL, func, NULL)
+#define HookAddPChar(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, NULL, NULL, func)
 
-Hook	*HookAddMain(Module *module, int hooktype, int (*intfunc)(), void (*voidfunc)(), char *(*pcharfunc)());
+Hook	*HookAddMain(Module *module, int hooktype, int priority, int (*intfunc)(), void (*voidfunc)(), char *(*pcharfunc)());
 Hook	*HookDel(Hook *hook);
 
 Hooktype *HooktypeAdd(Module *module, char *string, int *type);
