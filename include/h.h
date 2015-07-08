@@ -85,7 +85,7 @@ extern void clear_unknown();
 extern EVENT(e_unload_module_delayed);
 extern EVENT(e_clean_out_throttling_buckets);
 
-extern void  module_loadall(int module_load);
+extern void  module_loadall(void);
 extern long set_usermode(char *umode);
 extern char *get_modestr(long umodes);
 extern void                    config_error(char *format, ...) __attribute__((format(printf,1,2)));

@@ -634,7 +634,7 @@ void Unload_all_loaded_modules(void)
 		irc_dlsym(mi->dll, "Mod_Unload", Mod_Unload);
 		if (Mod_Unload)
 		{
-			ret = (*Mod_Unload)(0);
+			ret = (*Mod_Unload)(mi->modinfo);
 			if (ret == MOD_DELAY)
 			{
 				mi->flags |= MODFLAG_DELAYED;
@@ -705,7 +705,7 @@ int    Module_free(Module *mod)
 	{
 		sendto_realops("Unloading child module %s",
 			      cp->child->header->name);
-		Module_Unload(cp->child->header->name, 0);
+		Module_Unload(cp->child->header->name);
 	}
 	for (objs = mod->objects; objs; objs = next) {
 		next = objs->next;
@@ -735,13 +735,12 @@ int    Module_free(Module *mod)
 /*
  *  Module_Unload ()
  *     char *name        Internal module name
- *     int unload        If /module unload
  *  Returns:
  *     -1                Not able to locate module, severe failure, anything
  *      1                Module unloaded
  *      2                Module wishes delayed unloading, has placed event
  */
-int     Module_Unload(char *name, int unload)
+int Module_Unload(char *name)
 {
 	Module *m;
 	int    (*Mod_Unload)();
@@ -760,7 +759,7 @@ int     Module_Unload(char *name, int unload)
 	{
 		return -1;
 	}
-	ret = (*Mod_Unload)(unload);
+	ret = (*Mod_Unload)(m->modinfo);
 	if (ret == MOD_DELAY)
 	{
 		m->flags |= MODFLAG_DELAYED;
@@ -843,7 +842,7 @@ vFP Module_SymX(char *name, Module **mptr)
 
 
 
-void	module_loadall(int module_load)
+void module_loadall(void)
 {
 	iFP	fp;
 	Module *mi, *next;
@@ -861,7 +860,7 @@ void	module_loadall(int module_load)
 			continue;
 		irc_dlsym(mi->dll, "Mod_Load", fp);
 		/* Call the module_load */
-		if ((*fp)(module_load) != MOD_SUCCESS)
+		if ((*fp)(mi->modinfo) != MOD_SUCCESS)
 		{
 			config_status("cannot load module %s", mi->header->name);
 			Module_free(mi);
@@ -1503,7 +1502,7 @@ EVENT(e_unload_module_delayed)
 {
 	char	*name = strdup(data);
 	int	i; 
-	i = Module_Unload(name, 0);
+	i = Module_Unload(name);
 	if (i == -1)
 	{
 		sendto_realops("Failed to unload '%s'", name);
@@ -1524,7 +1523,7 @@ void	unload_all_modules(void)
 	{
 		irc_dlsym(m->dll, "Mod_Unload", Mod_Unload);
 		if (Mod_Unload)
-			(*Mod_Unload)(0);
+			(*Mod_Unload)(m->modinfo);
 		remove(m->tmp_file);
 	}
 }

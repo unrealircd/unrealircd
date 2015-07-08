@@ -557,7 +557,7 @@ char    *Module_Create(char *path);
 void    Init_all_testing_modules(void);
 void    Unload_all_loaded_modules(void);
 void    Unload_all_testing_modules(void);
-int     Module_Unload(char *name, int unload);
+int     Module_Unload(char *name);
 vFP     Module_Sym(char *name);
 vFP     Module_SymX(char *name, Module **mptr);
 int	Module_free(Module *mod);
@@ -821,19 +821,11 @@ extern char *moddata_client_get(aClient *acptr, char *varname);
 #define CONFIG_CLOAKKEYS 7
 #define CONFIG_SET_ANTI_FLOOD 8
 
-#ifdef DYNAMIC_LINKING
- #define MOD_HEADER(name) Mod_Header
- #define MOD_TEST(name) Mod_Test
- #define MOD_INIT(name) Mod_Init
- #define MOD_LOAD(name) Mod_Load
- #define MOD_UNLOAD(name) Mod_Unload
-#else
- #define MOD_HEADER(name) name##_Header
- #define MOD_TEST(name) name##_Test
- #define MOD_INIT(name) name##_Init
- #define MOD_LOAD(name) name##_Load
- #define MOD_UNLOAD(name) name##_Unload
-#endif
+#define MOD_HEADER(name) Mod_Header
+#define MOD_TEST(name) DLLFUNC int Mod_Test(ModuleInfo *modinfo)
+#define MOD_INIT(name) DLLFUNC int Mod_Init(ModuleInfo *modinfo)
+#define MOD_LOAD(name) DLLFUNC int Mod_Load(ModuleInfo *modinfo)
+#define MOD_UNLOAD(name) DLLFUNC int Mod_Unload(ModuleInfo *modinfo)
 
 #define CLOAK_KEYCRC	RCallbacks[CALLBACKTYPE_CLOAKKEYCSUM] != NULL ? RCallbacks[CALLBACKTYPE_CLOAKKEYCSUM]->func.pcharfunc() : "nil"
 

@@ -1548,7 +1548,7 @@ int InitwIRCD(int argc, char *argv[])
 	PS_STRINGS->ps_nargvstr = 1;
 	PS_STRINGS->ps_argvstr = me.name;
 #endif
-	module_loadall(0);
+	module_loadall();
 
 #ifdef _WIN32
 	return 1;

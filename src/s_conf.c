@@ -1728,7 +1728,7 @@ int	init_conf(char *rootconf, int rehash)
 	conf = NULL;
 	if (rehash)
 	{
-		module_loadall(0);
+		module_loadall();
 		RunHook0(HOOKTYPE_REHASH_COMPLETE);
 	}
 	do_weird_shun_stuff();
