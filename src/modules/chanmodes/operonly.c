@@ -72,9 +72,9 @@ CmodeInfo req;
 	req.is_ok = operonly_require_oper;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_OPERONLY);
 	
-	HookAddEx(modinfo->handle, HOOKTYPE_CAN_JOIN, operonly_check);
-	HookAddEx(modinfo->handle, HOOKTYPE_OPER_INVITE_BAN, operonly_check_ban);
-	HookAddEx(modinfo->handle, HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEl, operonly_topic_allow);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_JOIN, 0, operonly_check);
+	HookAdd(modinfo->handle, HOOKTYPE_OPER_INVITE_BAN, 0, operonly_check_ban);
+	HookAdd(modinfo->handle, HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEl, 0, operonly_topic_allow);
 
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);

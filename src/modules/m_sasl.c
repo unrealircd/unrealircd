@@ -320,10 +320,10 @@ DLLFUNC int MOD_INIT(m_sasl)(ModuleInfo *modinfo)
 	CommandAdd(modinfo->handle, MSG_SVSLOGIN, m_svslogin, MAXPARA, M_USER|M_SERVER);
 	CommandAdd(modinfo->handle, MSG_AUTHENTICATE, m_authenticate, MAXPARA, M_UNREGISTERED);
 
-	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_CONNECT, abort_sasl);
-	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_QUIT, abort_sasl);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CONNECT, 0, abort_sasl);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, abort_sasl);
 
-	HookAddVoidEx(modinfo->handle, HOOKTYPE_CAPLIST, m_sasl_caplist);
+	HookAddVoid(modinfo->handle, HOOKTYPE_CAPLIST, 0, m_sasl_caplist);
 
 	return MOD_SUCCESS;
 }

@@ -41,7 +41,7 @@ DLLFUNC int MOD_INIT(privacy)(ModuleInfo *modinfo)
 {
 	UmodeAdd(modinfo->handle, 'p', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_PRIVACY);
 	
-	HookAddEx(modinfo->handle, HOOKTYPE_SEE_CHANNEL_IN_WHOIS, privacy_see_channel_in_whois);
+	HookAdd(modinfo->handle, HOOKTYPE_SEE_CHANNEL_IN_WHOIS, 0, privacy_see_channel_in_whois);
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;

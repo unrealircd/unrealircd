@@ -1280,12 +1280,6 @@ Hook *HookAddMain(Module *module, int hooktype, int priority, int (*func)(), voi
 			last->next = p;
 			p->prev = last;
 		}
-
-		p->prev = h;
-		p->next = h->next;
-		if (h->next)
-			h->next->prev = p;
-		h->next = p;
 	}
 
 	return p;

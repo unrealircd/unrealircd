@@ -88,16 +88,16 @@ CmodeInfo req;
 	req.local = 1; /* local channel mode */
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_ISSECURE);
 	
-	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_JOIN, issecure_join);
-	HookAddEx(modinfo->handle, HOOKTYPE_REMOTE_JOIN, issecure_join);
-	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_PART, issecure_part);
-	HookAddEx(modinfo->handle, HOOKTYPE_REMOTE_PART, issecure_part);
-	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_QUIT, issecure_quit);
-	HookAddEx(modinfo->handle, HOOKTYPE_REMOTE_QUIT, issecure_quit);
-	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_KICK, issecure_kick);
-	HookAddEx(modinfo->handle, HOOKTYPE_REMOTE_KICK, issecure_kick);
-	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_CHANMODE, issecure_chanmode);
-	HookAddEx(modinfo->handle, HOOKTYPE_REMOTE_CHANMODE, issecure_chanmode);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_JOIN, 0, issecure_join);
+	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_JOIN, 0, issecure_join);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_PART, 0, issecure_part);
+	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_PART, 0, issecure_part);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, issecure_quit);
+	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_QUIT, 0, issecure_quit);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_KICK, 0, issecure_kick);
+	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_KICK, 0, issecure_kick);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CHANMODE, 0, issecure_chanmode);
+	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_CHANMODE, 0, issecure_chanmode);
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;

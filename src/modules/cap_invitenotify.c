@@ -72,8 +72,8 @@ DLLFUNC int MOD_INIT(cap_invitenotify)(ModuleInfo *modinfo)
 {
         MARK_AS_OFFICIAL_MODULE(modinfo);
 
-	HookAddVoidEx(modinfo->handle, HOOKTYPE_INVITE, cap_invitenotify_invite);
-	HookAddVoidEx(modinfo->handle, HOOKTYPE_CAPLIST, cap_invitenotify_caplist);
+	HookAddVoid(modinfo->handle, HOOKTYPE_INVITE, 0, cap_invitenotify_invite);
+	HookAddVoid(modinfo->handle, HOOKTYPE_CAPLIST, 0, cap_invitenotify_caplist);
 
         return MOD_SUCCESS;
 }

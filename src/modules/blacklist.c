@@ -103,7 +103,7 @@ void blacklist_free_bluser_if_able(BLUser *bl);
 
 DLLFUNC int MOD_TEST(blacklist)(ModuleInfo *modinfo)
 {
-	HookAddEx(modinfo->handle, HOOKTYPE_CONFIGTEST, blacklist_config_test);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, blacklist_config_test);
 	return MOD_SUCCESS;
 }
 
@@ -126,11 +126,11 @@ DLLFUNC int MOD_INIT(blacklist)(ModuleInfo *modinfo)
 		return MOD_FAILED;
 	}
 
-	HookAddEx(modinfo->handle, HOOKTYPE_CONFIGRUN, blacklist_config_run);
-	HookAddEx(modinfo->handle, HOOKTYPE_HANDSHAKE, blacklist_handshake);
-	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_QUIT, blacklist_quit);
-	HookAddEx(modinfo->handle, HOOKTYPE_UNKUSER_QUIT, blacklist_quit);
-	HookAddEx(modinfo->handle, HOOKTYPE_REHASH, blacklist_rehash);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, blacklist_config_run);
+	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, 0, blacklist_handshake);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, blacklist_quit);
+	HookAdd(modinfo->handle, HOOKTYPE_UNKUSER_QUIT, 0, blacklist_quit);
+	HookAdd(modinfo->handle, HOOKTYPE_REHASH, 0, blacklist_rehash);
 
 	return MOD_SUCCESS;
 }

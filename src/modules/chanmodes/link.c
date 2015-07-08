@@ -69,7 +69,7 @@ DLLFUNC int MOD_INIT(link)(ModuleInfo *modinfo)
 	req.sjoin_check = cmodeL_sjoin_check;
 	CmodeAdd(modinfo->handle, req, &EXTMODE_LINK);
 
-	HookAddEx(modinfo->handle, HOOKTYPE_CAN_JOIN_LIMITEXCEEDED, link_can_join_limitexceeded);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_JOIN_LIMITEXCEEDED, 0, link_can_join_limitexceeded);
 	return MOD_SUCCESS;
 }
 

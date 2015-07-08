@@ -71,7 +71,7 @@ CmodeInfo req;
 	req.is_ok = extcmode_default_requirehalfop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_NOCTCP);
 	
-	HookAddPCharEx(modinfo->handle, HOOKTYPE_PRE_CHANMSG, noctcp_prechanmsg);
+	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_CHANMSG, 0, noctcp_prechanmsg);
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;

@@ -74,9 +74,9 @@ CmodeInfo req;
 	req.is_ok = extcmode_default_requirechop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_STRIPCOLOR);
 	
-	HookAddPCharEx(modinfo->handle, HOOKTYPE_PRE_CHANMSG, stripcolor_prechanmsg);
-	HookAddPCharEx(modinfo->handle, HOOKTYPE_PRE_LOCAL_PART, stripcolor_prelocalpart);
-	HookAddPCharEx(modinfo->handle, HOOKTYPE_PRE_LOCAL_QUIT, stripcolor_prelocalquit);
+	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_CHANMSG, 0, stripcolor_prechanmsg);
+	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_LOCAL_PART, 0, stripcolor_prelocalpart);
+	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_LOCAL_QUIT, 0, stripcolor_prelocalquit);
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;

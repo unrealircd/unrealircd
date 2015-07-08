@@ -60,7 +60,7 @@ CmodeInfo req;
 	req.is_ok = permanent_is_ok;
 	CmodeAdd(modinfo->handle, req, &EXTMODE_PERMANENT);
 
-	HookAddVoidEx(modinfo->handle, HOOKTYPE_CHANNEL_DESTROY, permanent_channel_destroy);
+	HookAddVoid(modinfo->handle, HOOKTYPE_CHANNEL_DESTROY, 0, permanent_channel_destroy);
 
         return MOD_SUCCESS;
 }

@@ -54,11 +54,11 @@ DLLFUNC int MOD_INIT(servicebot)(ModuleInfo *modinfo)
 {
 	UmodeAdd(modinfo->handle, 'S', UMODE_GLOBAL, 1, umode_allow_none, &UMODE_SERVICEBOT);
 	
-	HookAddEx(modinfo->handle, HOOKTYPE_CAN_KICK, servicebot_can_kick);
-	HookAddEx(modinfo->handle, HOOKTYPE_MODE_DEOP, servicebot_mode_deop);
-	HookAddEx(modinfo->handle, HOOKTYPE_PRE_KILL, servicebot_pre_kill);
-	HookAddEx(modinfo->handle, HOOKTYPE_WHOIS, servicebot_whois);
-	HookAddEx(modinfo->handle, HOOKTYPE_SEE_CHANNEL_IN_WHOIS, servicebot_see_channel_in_whois);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_KICK, 0, servicebot_can_kick);
+	HookAdd(modinfo->handle, HOOKTYPE_MODE_DEOP, 0, servicebot_mode_deop);
+	HookAdd(modinfo->handle, HOOKTYPE_PRE_KILL, 0, servicebot_pre_kill);
+	HookAdd(modinfo->handle, HOOKTYPE_WHOIS, 0, servicebot_whois);
+	HookAdd(modinfo->handle, HOOKTYPE_SEE_CHANNEL_IN_WHOIS, 0, servicebot_see_channel_in_whois);
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;

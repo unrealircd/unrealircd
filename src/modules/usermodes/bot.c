@@ -50,9 +50,9 @@ DLLFUNC int MOD_INIT(bot)(ModuleInfo *modinfo)
 {
 	UmodeAdd(modinfo->handle, 'B', UMODE_GLOBAL, 0, NULL, &UMODE_BOT);
 	
-	HookAddEx(modinfo->handle, HOOKTYPE_WHOIS, bot_whois);
-	HookAddEx(modinfo->handle, HOOKTYPE_WHO_STATUS, bot_who_status);
-	HookAddEx(modinfo->handle, HOOKTYPE_UMODE_CHANGE, bot_umode_change);
+	HookAdd(modinfo->handle, HOOKTYPE_WHOIS, 0, bot_whois);
+	HookAdd(modinfo->handle, HOOKTYPE_WHO_STATUS, 0, bot_who_status);
+	HookAdd(modinfo->handle, HOOKTYPE_UMODE_CHANGE, 0, bot_umode_change);
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;

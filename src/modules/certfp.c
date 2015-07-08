@@ -48,8 +48,8 @@ ModDataInfo mreq;
 	if (!certfp_md)
 		abort();
 
-	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_CONNECT, certfp_connect);
-	HookAddEx(modinfo->handle, HOOKTYPE_WHOIS, certfp_whois);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CONNECT, 0, certfp_connect);
+	HookAdd(modinfo->handle, HOOKTYPE_WHOIS, 0, certfp_whois);
 
 	return MOD_SUCCESS;
 }

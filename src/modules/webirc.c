@@ -65,7 +65,7 @@ void webirc_md_free(ModData *md);
 
 DLLFUNC int MOD_TEST(webirc)(ModuleInfo *modinfo)
 {
-	HookAddEx(modinfo->handle, HOOKTYPE_CONFIGTEST, webirc_config_test);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, webirc_config_test);
 	return MOD_SUCCESS;
 }
 
@@ -87,9 +87,9 @@ DLLFUNC int MOD_INIT(webirc)(ModuleInfo *modinfo)
 		return MOD_FAILED;
 	}
 
-	HookAddEx(modinfo->handle, HOOKTYPE_CONFIGRUN, webirc_config_run);
-	HookAddEx(modinfo->handle, HOOKTYPE_CHECK_INIT, webirc_check_init);
-	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_PASS, webirc_local_pass);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, webirc_config_run);
+	HookAdd(modinfo->handle, HOOKTYPE_CHECK_INIT, 0, webirc_check_init);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_PASS, 0, webirc_local_pass);
 
 	CommandAdd(modinfo->handle, MSG_WEBIRC, m_webirc, MAXPARA, M_UNREGISTERED);
 		

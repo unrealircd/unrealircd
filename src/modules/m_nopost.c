@@ -73,7 +73,7 @@ static int is_except_host(aClient *sptr);
 
 DLLFUNC int MOD_TEST(m_nopost)(ModuleInfo *modinfo)
 {
-	HookAddEx(modinfo->handle, HOOKTYPE_CONFIGTEST, m_nopost_config_test);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, m_nopost_config_test);
 	return MOD_SUCCESS;
 }
 
@@ -82,7 +82,7 @@ DLLFUNC int MOD_INIT(m_nopost)(ModuleInfo *modinfo)
 	CommandAdd(modinfo->handle, "GET", m_nopost, MAXPARA, M_UNREGISTERED);
 	CommandAdd(modinfo->handle, "POST", m_nopost, MAXPARA, M_UNREGISTERED);
 	CommandAdd(modinfo->handle, "PUT", m_nopost, MAXPARA, M_UNREGISTERED);
-	HookAddEx(modinfo->handle, HOOKTYPE_CONFIGRUN, m_nopost_config_run);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, m_nopost_config_run);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	init_config();
 	return MOD_SUCCESS;

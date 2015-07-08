@@ -47,7 +47,7 @@ DLLFUNC int MOD_INIT(nokick)(ModuleInfo *modinfo)
 {
 	UmodeAdd(modinfo->handle, 'q', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_NOKICK); // TODO: limit more!!
 	
-	HookAddEx(modinfo->handle, HOOKTYPE_CAN_KICK, nokick_can_kick);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_KICK, 0, nokick_can_kick);
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;

@@ -46,7 +46,7 @@ DLLFUNC int MOD_INIT(showwhois)(ModuleInfo *modinfo)
 {
 	UmodeAdd(modinfo->handle, 'W', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_SHOWWHOIS);
 	
-	HookAddEx(modinfo->handle, HOOKTYPE_WHOIS, showwhois_whois);
+	HookAdd(modinfo->handle, HOOKTYPE_WHOIS, 0, showwhois_whois);
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;

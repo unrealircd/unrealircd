@@ -64,7 +64,7 @@ DLLFUNC int MOD_INIT(m_guest)(ModuleInfo *modinfo)
 	*/
 #ifdef GUEST
 	ModGuestInfo = modinfo;
-	GuestHook = HookAddEx(ModGuestInfo->handle, HOOKTYPE_GUEST, m_guest);
+	GuestHook = HookAdd(ModGuestInfo->handle, HOOKTYPE_GUEST, 0, m_guest);
 #endif
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;

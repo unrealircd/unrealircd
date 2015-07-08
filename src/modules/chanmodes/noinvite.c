@@ -71,8 +71,8 @@ DLLFUNC int MOD_INIT(noinvite)(ModuleInfo *modinfo)
 	req.is_ok = extcmode_default_requirechop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_NOINVITE);
 	
-	HookAddEx(modinfo->handle, HOOKTYPE_PRE_KNOCK, noinvite_check);
-	HookAddEx(modinfo->handle, HOOKTYPE_PRE_INVITE, noinvite_check);
+	HookAdd(modinfo->handle, HOOKTYPE_PRE_KNOCK, 0, noinvite_check);
+	HookAdd(modinfo->handle, HOOKTYPE_PRE_INVITE, 0, noinvite_check);
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;

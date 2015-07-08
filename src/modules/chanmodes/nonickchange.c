@@ -70,7 +70,7 @@ CmodeInfo req;
 	req.is_ok = extcmode_default_requirehalfop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_NONICKCHANGE);
 	
-	HookAddEx(modinfo->handle, HOOKTYPE_CHAN_PERMIT_NICK_CHANGE, nonickchange_check);
+	HookAdd(modinfo->handle, HOOKTYPE_CHAN_PERMIT_NICK_CHANGE, 0, nonickchange_check);
 
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);

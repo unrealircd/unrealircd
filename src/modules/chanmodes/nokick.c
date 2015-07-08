@@ -70,7 +70,7 @@ DLLFUNC int MOD_INIT(nokick)(ModuleInfo *modinfo)
 	req.is_ok = extcmode_default_requirechop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_NOKICK);
 	
-	HookAddEx(modinfo->handle, HOOKTYPE_CAN_KICK, nokick_check);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_KICK, 0, nokick_check);
 
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);

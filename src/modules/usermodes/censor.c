@@ -55,7 +55,7 @@ static ConfigItem_badword *copy_badword_struct(ConfigItem_badword *ca, int regex
 
 DLLFUNC int MOD_TEST(censor)(ModuleInfo *modinfo)
 {
-	HookAddEx(modinfo->handle, HOOKTYPE_CONFIGTEST, censor_config_test);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, censor_config_test);
 	return MOD_SUCCESS;
 }
 	
@@ -67,9 +67,9 @@ DLLFUNC int MOD_INIT(censor)(ModuleInfo *modinfo)
 
 	UmodeAdd(modinfo->handle, 'G', UMODE_GLOBAL, 0, NULL, &UMODE_CENSOR);
 
-	HookAddPCharEx(modinfo->handle, HOOKTYPE_PRE_USERMSG, censor_pre_usermsg);
+	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_USERMSG, 0, censor_pre_usermsg);
 	
-	HookAddEx(modinfo->handle, HOOKTYPE_CONFIGRUN, censor_config_run);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, censor_config_run);
 	return MOD_SUCCESS;
 }
 

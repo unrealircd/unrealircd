@@ -44,7 +44,7 @@ DLLFUNC int MOD_INIT(dccreject)(ModuleInfo *modinfo)
 {
 	SnomaskAdd(modinfo->handle, 'D', 1, umode_allow_opers, &SNO_DCCREJECT);
 	
-	HookAddEx(modinfo->handle, HOOKTYPE_DCC_DENIED, dccreject_dcc_denied);
+	HookAdd(modinfo->handle, HOOKTYPE_DCC_DENIED, 0, dccreject_dcc_denied);
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;

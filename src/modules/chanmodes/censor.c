@@ -55,7 +55,7 @@ ConfigItem_badword *conf_badword_channel = NULL;
 
 DLLFUNC int MOD_TEST(censor)(ModuleInfo *modinfo)
 {
-	HookAddEx(modinfo->handle, HOOKTYPE_CONFIGTEST, censor_config_test);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, censor_config_test);
 	return MOD_SUCCESS;
 }
 	
@@ -73,11 +73,11 @@ DLLFUNC int MOD_INIT(censor)(ModuleInfo *modinfo)
 	req.flag = 'G';
 	CmodeAdd(modinfo->handle, req, &EXTMODE_CENSOR);
 
-	HookAddPCharEx(modinfo->handle, HOOKTYPE_PRE_CHANMSG, censor_pre_chanmsg);
-	HookAddPCharEx(modinfo->handle, HOOKTYPE_PRE_LOCAL_PART, censor_pre_local_part);
-	HookAddPCharEx(modinfo->handle, HOOKTYPE_PRE_LOCAL_QUIT, censor_pre_local_quit);
+	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_CHANMSG, 0, censor_pre_chanmsg);
+	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_LOCAL_PART, 0, censor_pre_local_part);
+	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_LOCAL_QUIT, 0, censor_pre_local_quit);
 	
-	HookAddEx(modinfo->handle, HOOKTYPE_CONFIGRUN, censor_config_run);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, censor_config_run);
 	return MOD_SUCCESS;
 }
 

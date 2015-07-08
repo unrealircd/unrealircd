@@ -67,17 +67,17 @@ DLLFUNC int MOD_INIT(delayjoin)(ModuleInfo *modinfo)
 			return MOD_FAILED;
 	}
 
-        HookAddEx(modinfo->handle, HOOKTYPE_VISIBLE_IN_CHANNEL, moded_check_join);
-        HookAddEx(modinfo->handle, HOOKTYPE_JOIN_DATA, moded_join);
-        HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_PART, moded_part);
-        HookAddEx(modinfo->handle, HOOKTYPE_REMOTE_PART, moded_part);
-    	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_QUIT, moded_quit);
-    	HookAddEx(modinfo->handle, HOOKTYPE_REMOTE_QUIT, moded_quit);
-    	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_KICK, moded_kick);
-    	HookAddEx(modinfo->handle, HOOKTYPE_REMOTE_KICK, moded_kick);
-    	HookAddEx(modinfo->handle, HOOKTYPE_PRE_LOCAL_CHANMODE, moded_chanmode);
-    	HookAddEx(modinfo->handle, HOOKTYPE_PRE_REMOTE_CHANMODE, moded_chanmode);
-    	HookAddEx(modinfo->handle, HOOKTYPE_CHANMSG, moded_chanmsg);
+        HookAdd(modinfo->handle, HOOKTYPE_VISIBLE_IN_CHANNEL, 0, moded_check_join);
+        HookAdd(modinfo->handle, HOOKTYPE_JOIN_DATA, 0, moded_join);
+        HookAdd(modinfo->handle, HOOKTYPE_LOCAL_PART, 0, moded_part);
+        HookAdd(modinfo->handle, HOOKTYPE_REMOTE_PART, 0, moded_part);
+    	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, moded_quit);
+    	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_QUIT, 0, moded_quit);
+    	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_KICK, 0, moded_kick);
+    	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_KICK, 0, moded_kick);
+    	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CHANMODE, 0, moded_chanmode);
+    	HookAdd(modinfo->handle, HOOKTYPE_PRE_REMOTE_CHANMODE, 0, moded_chanmode);
+    	HookAdd(modinfo->handle, HOOKTYPE_CHANMSG, 0, moded_chanmsg);
 
     	MARK_AS_OFFICIAL_MODULE(modinfo);
 

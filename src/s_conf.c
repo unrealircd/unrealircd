@@ -7625,7 +7625,6 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 						if (h->owner && !(h->owner->flags & MODFLAG_TESTING)
 							&& !(h->owner->options & MOD_OPT_PERM))
 							continue;
-						config_status("Callliiiiiiiiiiiing");
 						value = (*(h->func.intfunc))(conf,cepp,CONFIG_SET_ANTI_FLOOD,&errs);
 						if (value == 2)
 							used = 1;

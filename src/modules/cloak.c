@@ -88,15 +88,15 @@ DLLFUNC int MOD_TEST(cloak)(ModuleInfo *modinfo)
 		config_error("cloak: Error while trying to install cloaking checksum callback!");
 		return MOD_FAILED;
 	}
-	HookAddEx(modinfo->handle, HOOKTYPE_CONFIGTEST, cloak_config_test);
-	HookAddEx(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, cloak_config_posttest);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, cloak_config_test);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, cloak_config_posttest);
 	return MOD_SUCCESS;
 }
 
 DLLFUNC int MOD_INIT(cloak)(ModuleInfo *modinfo)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	HookAddEx(modinfo->handle, HOOKTYPE_CONFIGRUN, cloak_config_run);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, cloak_config_run);
 	return MOD_SUCCESS;
 }
 

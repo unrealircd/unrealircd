@@ -73,11 +73,11 @@ DLLFUNC int MOD_INIT(sslonly)(ModuleInfo *modinfo)
 	req.is_ok = extcmode_default_requirechop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_SSLONLY);
 	
-	HookAddEx(modinfo->handle, HOOKTYPE_CAN_JOIN, secureonly_check_join);
-	HookAddVoidEx(modinfo->handle, HOOKTYPE_CHANNEL_SYNCED, secureonly_channel_sync);
-	HookAddEx(modinfo->handle, HOOKTYPE_IS_CHANNEL_SECURE, secureonly_check_secure);
-	HookAddEx(modinfo->handle, HOOKTYPE_CAN_SEND_SECURE, secureonly_check_send);
-	HookAddEx(modinfo->handle, HOOKTYPE_CAN_SAJOIN, secureonly_check_sajoin);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_JOIN, 0, secureonly_check_join);
+	HookAddVoid(modinfo->handle, HOOKTYPE_CHANNEL_SYNCED, 0, secureonly_channel_sync);
+	HookAdd(modinfo->handle, HOOKTYPE_IS_CHANNEL_SECURE, 0, secureonly_check_secure);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_SECURE, 0, secureonly_check_send);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_SAJOIN, 0, secureonly_check_sajoin);
 
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);

@@ -144,15 +144,15 @@ DLLFUNC int MOD_INIT(floodprot)(ModuleInfo *modinfo)
 	if (!mdflood)
 	        abort();
 	
-	HookAddPCharEx(modinfo->handle, HOOKTYPE_PRE_CHANMSG, floodprot_pre_chanmsg);
-	HookAddEx(modinfo->handle, HOOKTYPE_CHANMSG, floodprot_post_chanmsg);
-	HookAddEx(modinfo->handle, HOOKTYPE_KNOCK, floodprot_knock);
-	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_NICKCHANGE, floodprot_local_nickchange);
-	HookAddEx(modinfo->handle, HOOKTYPE_REMOTE_NICKCHANGE, floodprot_remote_nickchange);
-	HookAddEx(modinfo->handle, HOOKTYPE_MODECHAR_DEL, floodprot_chanmode_del);
-	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_JOIN, floodprot_join);
-	HookAddEx(modinfo->handle, HOOKTYPE_REMOTE_JOIN, floodprot_join);
-	HookAddEx(modinfo->handle, HOOKTYPE_CHANNEL_DESTROY, cmodef_channel_destroy);
+	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_CHANMSG, 0, floodprot_pre_chanmsg);
+	HookAdd(modinfo->handle, HOOKTYPE_CHANMSG, 0, floodprot_post_chanmsg);
+	HookAdd(modinfo->handle, HOOKTYPE_KNOCK, 0, floodprot_knock);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_NICKCHANGE, 0, floodprot_local_nickchange);
+	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_NICKCHANGE, 0, floodprot_remote_nickchange);
+	HookAdd(modinfo->handle, HOOKTYPE_MODECHAR_DEL, 0, floodprot_chanmode_del);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_JOIN, 0, floodprot_join);
+	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_JOIN, 0, floodprot_join);
+	HookAdd(modinfo->handle, HOOKTYPE_CHANNEL_DESTROY, 0, cmodef_channel_destroy);
 	return MOD_SUCCESS;
 }
 

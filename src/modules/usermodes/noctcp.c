@@ -67,7 +67,7 @@ CmodeInfo req;
 
 	UmodeAdd(modinfo->handle, 'T', UMODE_GLOBAL, 0, NULL, &UMODE_NOCTCP);
 	
-	HookAddPCharEx(modinfo->handle, HOOKTYPE_PRE_USERMSG, noctcp_preusermsg);
+	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_USERMSG, 0, noctcp_preusermsg);
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;

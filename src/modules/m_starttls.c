@@ -61,7 +61,7 @@ DLLFUNC int MOD_INIT(m_starttls)(ModuleInfo *modinfo)
 {
 	CommandAdd(modinfo->handle, MSG_STARTTLS, m_starttls, MAXPARA, M_UNREGISTERED|M_ANNOUNCE);
 
-	HookAddVoidEx(modinfo->handle, HOOKTYPE_CAPLIST, m_starttls_caplist);
+	HookAddVoid(modinfo->handle, HOOKTYPE_CAPLIST, 0, m_starttls_caplist);
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;

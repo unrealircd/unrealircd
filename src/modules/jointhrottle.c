@@ -67,7 +67,7 @@ aJFlood *jointhrottle_addentry(aClient *cptr, aChannel *chptr);
 
 DLLFUNC int MOD_TEST(jointhrottle)(ModuleInfo *modinfo)
 {
-	HookAddEx(modinfo->handle, HOOKTYPE_CONFIGTEST, jointhrottle_config_test);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, jointhrottle_config_test);
 	return MOD_SUCCESS;
 }
 
@@ -89,9 +89,9 @@ DLLFUNC int MOD_INIT(jointhrottle)(ModuleInfo *modinfo)
 	if (!jointhrottle_md)
 		abort();
 
-	HookAddEx(modinfo->handle, HOOKTYPE_CONFIGRUN, jointhrottle_config_run);
-	HookAddEx(modinfo->handle, HOOKTYPE_CAN_JOIN, jointhrottle_can_join);
-	HookAddEx(modinfo->handle, HOOKTYPE_LOCAL_JOIN, jointhrottle_local_join);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, jointhrottle_config_run);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_JOIN, 0, jointhrottle_can_join);
+	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_JOIN, 0, jointhrottle_local_join);
 	
 	cfg.t = JOINTHROTTLE_DEFAULT_TIME;
 	cfg.num = JOINTHROTTLE_DEFAULT_COUNT;

@@ -72,8 +72,8 @@ DLLFUNC int MOD_INIT(regonlyspeak)(ModuleInfo *modinfo)
 	req.is_ok = extcmode_default_requirehalfop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_REGONLYSPEAK);
 	
-	HookAddEx(modinfo->handle, HOOKTYPE_CAN_SEND, regonlyspeak_can_send);
-	HookAddPCharEx(modinfo->handle, HOOKTYPE_PRE_LOCAL_PART, regonlyspeak_part_message);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND, 0, regonlyspeak_can_send);
+	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_LOCAL_PART, 0, regonlyspeak_part_message);
 
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);

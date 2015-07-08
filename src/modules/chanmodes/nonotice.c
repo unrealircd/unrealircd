@@ -69,7 +69,7 @@ DLLFUNC int MOD_INIT(nonotice)(ModuleInfo *modinfo)
 	req.is_ok = extcmode_default_requirechop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_NONOTICE);
 	
-	HookAddEx(modinfo->handle, HOOKTYPE_CAN_SEND, nonotice_check_can_send);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND, 0, nonotice_check_can_send);
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;

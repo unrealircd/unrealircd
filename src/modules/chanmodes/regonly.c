@@ -71,7 +71,7 @@ CmodeInfo req;
 	req.is_ok = extcmode_default_requirehalfop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_REGONLY);
 	
-	HookAddEx(modinfo->handle, HOOKTYPE_CAN_JOIN, regonly_check);
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_JOIN, 0, regonly_check);
 
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);

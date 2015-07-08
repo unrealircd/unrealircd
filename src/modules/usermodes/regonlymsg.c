@@ -41,7 +41,7 @@ DLLFUNC int MOD_INIT(regonlymsg)(ModuleInfo *modinfo)
 {
 	UmodeAdd(modinfo->handle, 'R', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_REGONLYMSG);
 	
-	HookAddPCharEx(modinfo->handle, HOOKTYPE_PRE_USERMSG, regonlymsg_pre_usermsg);
+	HookAddPChar(modinfo->handle, HOOKTYPE_PRE_USERMSG, 0, regonlymsg_pre_usermsg);
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;

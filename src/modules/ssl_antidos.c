@@ -38,7 +38,7 @@ void ssl_antidos_free(void *parent, void *ptr, CRYPTO_EX_DATA *ad, int idx, long
 
 DLLFUNC int MOD_INIT(ssl_antidos)(ModuleInfo *modinfo)
 {
-	HookAddEx(modinfo->handle, HOOKTYPE_HANDSHAKE, ssl_antidos_handshake);
+	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, 0, ssl_antidos_handshake);
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	

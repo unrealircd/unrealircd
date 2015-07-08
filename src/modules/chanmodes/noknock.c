@@ -71,8 +71,8 @@ CmodeInfo req;
 	req.is_ok = noknock_mode_allow;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_NOKNOCK);
 	
-	HookAddEx(modinfo->handle, HOOKTYPE_PRE_KNOCK, noknock_check);
-	HookAddEx(modinfo->handle, HOOKTYPE_MODECHAR_DEL, noknock_mode_del);
+	HookAdd(modinfo->handle, HOOKTYPE_PRE_KNOCK, 0, noknock_check);
+	HookAdd(modinfo->handle, HOOKTYPE_MODECHAR_DEL, 0, noknock_mode_del);
 
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);
