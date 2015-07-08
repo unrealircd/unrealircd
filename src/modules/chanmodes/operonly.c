@@ -74,7 +74,7 @@ CmodeInfo req;
 	
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_JOIN, 0, operonly_check);
 	HookAdd(modinfo->handle, HOOKTYPE_OPER_INVITE_BAN, 0, operonly_check_ban);
-	HookAdd(modinfo->handle, HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEl, 0, operonly_topic_allow);
+	HookAdd(modinfo->handle, HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEL, 0, operonly_topic_allow);
 
 	
 	MARK_AS_OFFICIAL_MODULE(modinfo);

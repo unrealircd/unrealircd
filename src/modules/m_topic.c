@@ -158,7 +158,7 @@ long flags = 0; /* cache: membership flags */
 
 		if (!topic)	/* only asking  for topic  */
 		{
-			for (h = Hooks[HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEl]; h; h = h->next)
+			for (h = Hooks[HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEL]; h; h = h->next)
 			{
 				i = (*(h->func.intfunc))(sptr,chptr);
 				if (i != HOOK_CONTINUE)
