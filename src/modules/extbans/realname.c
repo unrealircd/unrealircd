@@ -32,7 +32,7 @@ char *extban_realname_conv_param(char *para);
 int extban_realname_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type);
 
 /** Called upon module init */
-DLLFUNC int MOD_INIT(realname)(ModuleInfo *modinfo)
+MOD_INIT(realname)
 {
 	ExtbanInfo req;
 	
@@ -53,13 +53,13 @@ DLLFUNC int MOD_INIT(realname)(ModuleInfo *modinfo)
 }
 
 /** Called upon module load */
-DLLFUNC int MOD_LOAD(realname)(int module_load)
+MOD_LOAD(realname)
 {
 	return MOD_SUCCESS;
 }
 
 /** Called upon unload */
-DLLFUNC int MOD_UNLOAD(realname)(int module_unload)
+MOD_UNLOAD(realname)
 {
 	return MOD_SUCCESS;
 }

@@ -32,7 +32,7 @@ char *extban_regnick_conv_param(char *para);
 int extban_regnick_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type);
 
 /** Called upon module init */
-DLLFUNC int MOD_INIT(regnick)(ModuleInfo *modinfo)
+MOD_INIT(regnick)
 {
 	ExtbanInfo req;
 	
@@ -53,13 +53,13 @@ DLLFUNC int MOD_INIT(regnick)(ModuleInfo *modinfo)
 }
 
 /** Called upon module load */
-DLLFUNC int MOD_LOAD(regnick)(int module_load)
+MOD_LOAD(regnick)
 {
 	return MOD_SUCCESS;
 }
 
 /** Called upon unload */
-DLLFUNC int MOD_UNLOAD(regnick)(int module_unload)
+MOD_UNLOAD(regnick)
 {
 	return MOD_SUCCESS;
 }

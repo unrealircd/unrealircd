@@ -58,12 +58,12 @@ int secureonly_check_send (aClient *acptr, aChannel* chptr);
 int secureonly_check_secure (aChannel* chptr);
 int secureonly_check_sajoin (aClient *acptr, aChannel* chptr, aClient *sptr);
 
-DLLFUNC int MOD_TEST(sslonly)(ModuleInfo *modinfo)
+MOD_TEST(sslonly)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(sslonly)(ModuleInfo *modinfo)
+MOD_INIT(sslonly)
 {
 	CmodeInfo req;
 
@@ -84,12 +84,12 @@ DLLFUNC int MOD_INIT(sslonly)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(sslonly)(int module_load)
+MOD_LOAD(sslonly)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(sslonly)(int module_unload)
+MOD_UNLOAD(sslonly)
 {
 	return MOD_SUCCESS;
 }

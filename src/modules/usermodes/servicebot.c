@@ -45,12 +45,12 @@ int servicebot_pre_kill(aClient *sptr, aClient *target, char *reason);
 int servicebot_whois(aClient *sptr, aClient *acptr);
 int servicebot_see_channel_in_whois(aClient *sptr, aClient *target, aChannel *chptr);
                     
-DLLFUNC int MOD_TEST(servicebot)(ModuleInfo *modinfo)
+MOD_TEST(servicebot)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(servicebot)(ModuleInfo *modinfo)
+MOD_INIT(servicebot)
 {
 	UmodeAdd(modinfo->handle, 'S', UMODE_GLOBAL, 1, umode_allow_none, &UMODE_SERVICEBOT);
 	
@@ -64,12 +64,12 @@ DLLFUNC int MOD_INIT(servicebot)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(servicebot)(int module_load)
+MOD_LOAD(servicebot)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(servicebot)(int module_unload)
+MOD_UNLOAD(servicebot)
 {
 	return MOD_SUCCESS;
 }

@@ -37,7 +37,7 @@ long UMODE_PRIVACY = 0L;
 /* Forward declarations */
 int privacy_see_channel_in_whois(aClient *sptr, aClient *target, aChannel *chptr);
                     
-DLLFUNC int MOD_INIT(privacy)(ModuleInfo *modinfo)
+MOD_INIT(privacy)
 {
 	UmodeAdd(modinfo->handle, 'p', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_PRIVACY);
 	
@@ -47,12 +47,12 @@ DLLFUNC int MOD_INIT(privacy)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(privacy)(int module_load)
+MOD_LOAD(privacy)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(privacy)(int module_unload)
+MOD_UNLOAD(privacy)
 {
 	return MOD_SUCCESS;
 }

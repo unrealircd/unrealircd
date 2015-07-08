@@ -55,7 +55,7 @@ ModuleHeader MOD_HEADER(m_tsctl)
     };
 
 /* This is called on module init, before Server Ready */
-DLLFUNC int MOD_INIT(m_tsctl)(ModuleInfo *modinfo)
+MOD_INIT(m_tsctl)
 {
 	/*
 	 * We call our add_Command crap here
@@ -66,13 +66,13 @@ DLLFUNC int MOD_INIT(m_tsctl)(ModuleInfo *modinfo)
 }
 
 /* Is first run when server is 100% ready */
-DLLFUNC int MOD_LOAD(m_tsctl)(int module_load)
+MOD_LOAD(m_tsctl)
 {
 	return MOD_SUCCESS;
 }
 
 /* Called when module is unloaded */
-DLLFUNC int MOD_UNLOAD(m_tsctl)(int module_unload)
+MOD_UNLOAD(m_tsctl)
 {
 	return MOD_SUCCESS;
 }

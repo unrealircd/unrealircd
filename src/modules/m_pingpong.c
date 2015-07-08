@@ -58,7 +58,7 @@ ModuleHeader MOD_HEADER(m_pingpong)
 	NULL 
     };
 /* This is called on module init, before Server Ready */
-DLLFUNC int MOD_INIT(m_pingpong)(ModuleInfo *modinfo)
+MOD_INIT(m_pingpong)
 {
 	/*
 	 * We call our add_Command crap here
@@ -71,14 +71,14 @@ DLLFUNC int MOD_INIT(m_pingpong)(ModuleInfo *modinfo)
 }
 
 /* Is first run when server is 100% ready */
-DLLFUNC int MOD_LOAD(m_pingpong)(int module_load)
+MOD_LOAD(m_pingpong)
 {
 	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
-DLLFUNC int MOD_UNLOAD(m_pingpong)(int module_unload)
+MOD_UNLOAD(m_pingpong)
 {
 	return MOD_SUCCESS;
 }

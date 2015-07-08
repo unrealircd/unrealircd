@@ -54,19 +54,19 @@ ModuleHeader MOD_HEADER(m_eos)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_eos)(ModuleInfo *modinfo)
+MOD_INIT(m_eos)
 {
 	CommandAdd(modinfo->handle, MSG_EOS, m_eos, MAXPARA, M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_eos)(int module_load)
+MOD_LOAD(m_eos)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_eos)(int module_unload)
+MOD_UNLOAD(m_eos)
 {
 	return MOD_SUCCESS;
 }

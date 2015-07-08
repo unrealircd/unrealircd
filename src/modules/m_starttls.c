@@ -57,7 +57,7 @@ ModuleHeader MOD_HEADER(m_starttls)
 
 static void m_starttls_caplist(struct list_head *head);
 
-DLLFUNC int MOD_INIT(m_starttls)(ModuleInfo *modinfo)
+MOD_INIT(m_starttls)
 {
 	CommandAdd(modinfo->handle, MSG_STARTTLS, m_starttls, MAXPARA, M_UNREGISTERED|M_ANNOUNCE);
 
@@ -67,12 +67,12 @@ DLLFUNC int MOD_INIT(m_starttls)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_starttls)(int module_load)
+MOD_LOAD(m_starttls)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_starttls)(int module_unload)
+MOD_UNLOAD(m_starttls)
 {
 	return MOD_SUCCESS;
 }

@@ -57,12 +57,12 @@ DLLFUNC int operonly_check (aClient *cptr, aChannel *chptr, char *key, char *par
 DLLFUNC int operonly_topic_allow (aClient *sptr, aChannel *chptr);
 DLLFUNC int operonly_check_ban(aClient *cptr, aChannel *chptr);
 
-DLLFUNC int MOD_TEST(operonly)(ModuleInfo *modinfo)
+MOD_TEST(operonly)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(operonly)(ModuleInfo *modinfo)
+MOD_INIT(operonly)
 {
 CmodeInfo req;
 
@@ -81,12 +81,12 @@ CmodeInfo req;
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(noctcp)(int module_load)
+MOD_LOAD(noctcp)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(noctcp)(int module_unload)
+MOD_UNLOAD(noctcp)
 {
 	return MOD_SUCCESS;
 }

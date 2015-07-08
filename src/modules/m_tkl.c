@@ -120,7 +120,7 @@ ModuleHeader MOD_HEADER(m_tkl)
 	NULL 
     };
 
-DLLFUNC int MOD_TEST(m_tkl)(ModuleInfo *modinfo)
+MOD_TEST(m_tkl)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	TklModInfo = modinfo;
@@ -148,7 +148,7 @@ DLLFUNC int MOD_TEST(m_tkl)(ModuleInfo *modinfo)
 }
 
 /* This is called on module init, before Server Ready */
-DLLFUNC int MOD_INIT(m_tkl)(ModuleInfo *modinfo)
+MOD_INIT(m_tkl)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	/*
@@ -167,14 +167,14 @@ DLLFUNC int MOD_INIT(m_tkl)(ModuleInfo *modinfo)
 }
 
 /* Is first run when server is 100% ready */
-DLLFUNC int MOD_LOAD(m_tkl)(int module_load)
+MOD_LOAD(m_tkl)
 {
 	EventAddEx(TklModInfo->handle, "tklexpire", 5, 0, tkl_check_expire, NULL);
 	return MOD_SUCCESS;
 }
 
 /* Called when module is unloaded */
-DLLFUNC int MOD_UNLOAD(m_tkl)(int module_unload)
+MOD_UNLOAD(m_tkl)
 {
 	return MOD_SUCCESS;
 }

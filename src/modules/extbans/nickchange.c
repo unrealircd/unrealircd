@@ -31,7 +31,7 @@ ModuleHeader MOD_HEADER(nickchange)
 int extban_nickchange_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type);
 
 /** Called upon module init */
-DLLFUNC int MOD_INIT(nickchange)(ModuleInfo *modinfo)
+MOD_INIT(nickchange)
 {
 	ExtbanInfo req;
 	
@@ -52,13 +52,13 @@ DLLFUNC int MOD_INIT(nickchange)(ModuleInfo *modinfo)
 }
 
 /** Called upon module load */
-DLLFUNC int MOD_LOAD(nickchange)(int module_load)
+MOD_LOAD(nickchange)
 {
 	return MOD_SUCCESS;
 }
 
 /** Called upon unload */
-DLLFUNC int MOD_UNLOAD(nickchange)(int module_unload)
+MOD_UNLOAD(nickchange)
 {
 	return MOD_SUCCESS;
 }

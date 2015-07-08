@@ -55,12 +55,12 @@ Cmode_t EXTCMODE_NOKICK;
 
 int nokick_check (aClient* sptr, aClient* who, aChannel *chptr, char* comment, long sptr_flags, long who_flags, char **reject_reason);
 
-DLLFUNC int MOD_TEST(nokick)(ModuleInfo *modinfo)
+MOD_TEST(nokick)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(nokick)(ModuleInfo *modinfo)
+MOD_INIT(nokick)
 {
 	CmodeInfo req;
 
@@ -77,12 +77,12 @@ DLLFUNC int MOD_INIT(nokick)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(nokick)(int module_load)
+MOD_LOAD(nokick)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(nokick)(int module_unload)
+MOD_UNLOAD(nokick)
 {
 	return MOD_SUCCESS;
 }

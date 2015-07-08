@@ -56,19 +56,19 @@ ModuleHeader MOD_HEADER(m_mkpasswd)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_mkpasswd)(ModuleInfo *modinfo)
+MOD_INIT(m_mkpasswd)
 {
 	CommandAdd(modinfo->handle, MSG_MKPASSWD, m_mkpasswd, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_mkpasswd)(int module_load)
+MOD_LOAD(m_mkpasswd)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_mkpasswd)(int module_unload)
+MOD_UNLOAD(m_mkpasswd)
 {
 	return MOD_SUCCESS;
 }

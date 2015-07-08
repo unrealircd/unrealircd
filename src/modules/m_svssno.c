@@ -56,7 +56,7 @@ ModuleHeader MOD_HEADER(m_svssno)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_svssno)(ModuleInfo *modinfo)
+MOD_INIT(m_svssno)
 {
 	CommandAdd(modinfo->handle, MSG_SVSSNO, m_svssno, MAXPARA, 0);
 	CommandAdd(modinfo->handle, MSG_SVS2SNO, m_svs2sno, MAXPARA, 0);
@@ -64,12 +64,12 @@ DLLFUNC int MOD_INIT(m_svssno)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_svssno)(int module_load)
+MOD_LOAD(m_svssno)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_svssno)(int module_unload)
+MOD_UNLOAD(m_svssno)
 {
 	return MOD_SUCCESS;
 }

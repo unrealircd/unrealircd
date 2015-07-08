@@ -62,7 +62,7 @@ ModuleHeader MOD_HEADER(m_chgname)
 
 
 /* This is called on module init, before Server Ready */
-DLLFUNC int MOD_INIT(m_chgname)(ModuleInfo *modinfo)
+MOD_INIT(m_chgname)
 {
 	CommandAdd(modinfo->handle, MSG_CHGNAME, m_chgname, 2, 0);
 	CommandAdd(modinfo->handle, MSG_SVSNAME, m_chgname, 2, 0);
@@ -71,14 +71,14 @@ DLLFUNC int MOD_INIT(m_chgname)(ModuleInfo *modinfo)
 }
 
 /* Is first run when server is 100% ready */
-DLLFUNC int MOD_LOAD(m_chgname)(int module_load)
+MOD_LOAD(m_chgname)
 {
 	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
-DLLFUNC int MOD_UNLOAD(m_chgname)(int module_unload)
+MOD_UNLOAD(m_chgname)
 {
 	return MOD_SUCCESS;	
 }

@@ -62,7 +62,7 @@ ModuleHeader MOD_HEADER(m_chgident)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_chgident)(ModuleInfo *modinfo)
+MOD_INIT(m_chgident)
 {
 	/* extern variable to export m_chgident_info to temporary
            ModuleHeader *modulebuffer;
@@ -74,12 +74,12 @@ DLLFUNC int MOD_INIT(m_chgident)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_chgident)(int module_load)
+MOD_LOAD(m_chgident)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_chgident)(int module_unload)
+MOD_UNLOAD(m_chgident)
 {
 	return MOD_SUCCESS;
 }

@@ -37,7 +37,7 @@ long UMODE_REGONLYMSG = 0L;
 /* Forward declarations */
 char *regonlymsg_pre_usermsg(aClient *sptr, aClient *target, char *text, int notice);
                     
-DLLFUNC int MOD_INIT(regonlymsg)(ModuleInfo *modinfo)
+MOD_INIT(regonlymsg)
 {
 	UmodeAdd(modinfo->handle, 'R', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_REGONLYMSG);
 	
@@ -47,12 +47,12 @@ DLLFUNC int MOD_INIT(regonlymsg)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(regonlymsg)(int module_load)
+MOD_LOAD(regonlymsg)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(regonlymsg)(int module_unload)
+MOD_UNLOAD(regonlymsg)
 {
 	return MOD_SUCCESS;
 }

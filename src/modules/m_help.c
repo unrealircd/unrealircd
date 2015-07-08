@@ -55,7 +55,7 @@ ModuleHeader MOD_HEADER(m_help)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_help)(ModuleInfo *modinfo)
+MOD_INIT(m_help)
 {
 	CommandAdd(modinfo->handle, MSG_HELP, m_help, 1, 0);
 	CommandAdd(modinfo->handle, MSG_HELPOP, m_help, 1, 0);
@@ -63,12 +63,12 @@ DLLFUNC int MOD_INIT(m_help)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_help)(int module_load)
+MOD_LOAD(m_help)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_help)(int module_unload)
+MOD_UNLOAD(m_help)
 {
 	return MOD_SUCCESS;
 }

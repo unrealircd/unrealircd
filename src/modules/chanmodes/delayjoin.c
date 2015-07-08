@@ -36,7 +36,7 @@ DLLFUNC int moded_chanmsg(aClient *sptr, aChannel *chptr, char *text, int notice
 char *moded_serialize(ModData *m);
 void moded_unserialize(char *str, ModData *m);
 
-DLLFUNC int MOD_INIT(delayjoin)(ModuleInfo *modinfo)
+MOD_INIT(delayjoin)
 {
 
 	CmodeInfo req;
@@ -84,12 +84,12 @@ DLLFUNC int MOD_INIT(delayjoin)(ModuleInfo *modinfo)
         return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(delayjoin)(int module_load)
+MOD_LOAD(delayjoin)
 {
         return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(delayjoin)(int module_unload)
+MOD_UNLOAD(delayjoin)
 {
         return MOD_SUCCESS;
 }

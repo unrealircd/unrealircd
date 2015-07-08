@@ -48,7 +48,7 @@ static int permanent_is_ok(aClient *cptr, aChannel *chptr, char mode, char *para
 }
 
 /* This is called on module init, before Server Ready */
-DLLFUNC int MOD_INIT(permanent)(ModuleInfo *modinfo)
+MOD_INIT(permanent)
 {
 CmodeInfo req;
 
@@ -66,13 +66,13 @@ CmodeInfo req;
 }
 
 /* Is first run when server is 100% ready */
-DLLFUNC int MOD_LOAD(permanent)(int module_load)
+MOD_LOAD(permanent)
 {
         return MOD_SUCCESS;
 }
 
 /* Called when module is unloaded */
-DLLFUNC int MOD_UNLOAD(permanent)(int module_unload)
+MOD_UNLOAD(permanent)
 {
         return MOD_SUCCESS;
 }

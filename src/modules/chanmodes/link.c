@@ -51,7 +51,7 @@ int cmodeL_sjoin_check(aChannel *chptr, void *ourx, void *theirx);
 
 int link_can_join_limitexceeded(aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[]);
 
-DLLFUNC int MOD_INIT(link)(ModuleInfo *modinfo)
+MOD_INIT(link)
 {
 	CmodeInfo req;
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM_RELOADABLE, 1);
@@ -73,13 +73,13 @@ DLLFUNC int MOD_INIT(link)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(link)(int module_load)
+MOD_LOAD(link)
 {
 	return MOD_SUCCESS;
 }
 
 
-DLLFUNC int MOD_UNLOAD(link)(int module_unload)
+MOD_UNLOAD(link)
 {
 	return MOD_SUCCESS;
 }

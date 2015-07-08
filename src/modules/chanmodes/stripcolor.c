@@ -58,12 +58,12 @@ DLLFUNC char *stripcolor_prechanmsg(aClient *sptr, aChannel *chptr, char *text, 
 DLLFUNC char *stripcolor_prelocalpart(aClient *sptr, aChannel *chptr, char *comment);
 DLLFUNC char *stripcolor_prelocalquit(aClient *sptr, char *comment);
 
-DLLFUNC int MOD_TEST(stripcolor)(ModuleInfo *modinfo)
+MOD_TEST(stripcolor)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(stripcolor)(ModuleInfo *modinfo)
+MOD_INIT(stripcolor)
 {
 CmodeInfo req;
 
@@ -82,12 +82,12 @@ CmodeInfo req;
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(stripcolor)(int module_load)
+MOD_LOAD(stripcolor)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(stripcolor)(int module_unload)
+MOD_UNLOAD(stripcolor)
 {
 	return MOD_SUCCESS;
 }

@@ -54,19 +54,19 @@ ModuleHeader MOD_HEADER(m_botmotd)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_botmotd)(ModuleInfo *modinfo)
+MOD_INIT(m_botmotd)
 {
 	CommandAdd(modinfo->handle, MSG_BOTMOTD, m_botmotd, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_botmotd)(int module_load)
+MOD_LOAD(m_botmotd)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_botmotd)(int module_unload)
+MOD_UNLOAD(m_botmotd)
 {
 	return MOD_SUCCESS;
 }

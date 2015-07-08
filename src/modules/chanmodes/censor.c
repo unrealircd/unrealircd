@@ -53,13 +53,13 @@ ModuleInfo *ModInfo = NULL;
 ConfigItem_badword *conf_badword_channel = NULL;
 
 
-DLLFUNC int MOD_TEST(censor)(ModuleInfo *modinfo)
+MOD_TEST(censor)
 {
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, censor_config_test);
 	return MOD_SUCCESS;
 }
 	
-DLLFUNC int MOD_INIT(censor)(ModuleInfo *modinfo)
+MOD_INIT(censor)
 {
 	CmodeInfo req;
 
@@ -81,13 +81,13 @@ DLLFUNC int MOD_INIT(censor)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(censor)(int module_load)
+MOD_LOAD(censor)
 {
 	return MOD_SUCCESS;
 }
 
 
-DLLFUNC int MOD_UNLOAD(censor)(int module_unload)
+MOD_UNLOAD(censor)
 {
 ConfigItem_badword *badword, *next;
 

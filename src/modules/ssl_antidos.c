@@ -36,7 +36,7 @@ int ssl_antidos_handshake(aClient *acptr);
 
 void ssl_antidos_free(void *parent, void *ptr, CRYPTO_EX_DATA *ad, int idx, long argl, void *argp);
 
-DLLFUNC int MOD_INIT(ssl_antidos)(ModuleInfo *modinfo)
+MOD_INIT(ssl_antidos)
 {
 	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, 0, ssl_antidos_handshake);
 
@@ -52,12 +52,12 @@ DLLFUNC int MOD_INIT(ssl_antidos)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(ssl_antidos)(int module_load)
+MOD_LOAD(ssl_antidos)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(ssl_antidos)(int module_unload)
+MOD_UNLOAD(ssl_antidos)
 {
 	return MOD_SUCCESS;
 }

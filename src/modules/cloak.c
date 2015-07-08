@@ -74,7 +74,7 @@ ModuleHeader MOD_HEADER(cloak)
   NULL
   };
 
-DLLFUNC int MOD_TEST(cloak)(ModuleInfo *modinfo)
+MOD_TEST(cloak)
 {
 	cloak = CallbackAddPCharEx(modinfo->handle, CALLBACKTYPE_CLOAK, hidehost);
 	if (!cloak)
@@ -93,19 +93,19 @@ DLLFUNC int MOD_TEST(cloak)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(cloak)(ModuleInfo *modinfo)
+MOD_INIT(cloak)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, cloak_config_run);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(cloak)(int module_load)
+MOD_LOAD(cloak)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(cloak)(int module_unload)
+MOD_UNLOAD(cloak)
 {
 	if (cloak_key1)
 	{

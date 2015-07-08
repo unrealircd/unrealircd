@@ -54,12 +54,12 @@ Cmode_t EXTCMODE_NONOTICE;
 
 int nonotice_check_can_send(aClient *cptr, aChannel *chptr, char *msgtext, Membership *lp, int notice);
 
-DLLFUNC int MOD_TEST(nonotice)(ModuleInfo *modinfo)
+MOD_TEST(nonotice)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(nonotice)(ModuleInfo *modinfo)
+MOD_INIT(nonotice)
 {
 	CmodeInfo req;
 
@@ -75,12 +75,12 @@ DLLFUNC int MOD_INIT(nonotice)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(nonotice)(int module_load)
+MOD_LOAD(nonotice)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(nonotice)(int module_unload)
+MOD_UNLOAD(nonotice)
 {
 	return MOD_SUCCESS;
 }

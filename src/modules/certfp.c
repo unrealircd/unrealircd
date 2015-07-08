@@ -31,7 +31,7 @@ ModDataInfo *certfp_md; /* Module Data structure which we acquire */
 
 #define WHOISCERTFP_STRING ":%s 276 %s %s :has client certificate fingerprint %s"
 
-DLLFUNC int MOD_INIT(certfp)(ModuleInfo *modinfo)
+MOD_INIT(certfp)
 {
 ModDataInfo mreq;
 
@@ -54,13 +54,13 @@ ModDataInfo mreq;
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(certfp)(int module_load)
+MOD_LOAD(certfp)
 {
 	return MOD_SUCCESS;
 }
 
 
-DLLFUNC int MOD_UNLOAD(certfp)(int module_unload)
+MOD_UNLOAD(certfp)
 {
 	return MOD_SUCCESS;
 }

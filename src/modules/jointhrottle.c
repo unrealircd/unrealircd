@@ -65,13 +65,13 @@ static void jointhrottle_increase_usercounter(aClient *cptr, aChannel *chptr);
 EVENT(jointhrottle_cleanup_structs);
 aJFlood *jointhrottle_addentry(aClient *cptr, aChannel *chptr);
 
-DLLFUNC int MOD_TEST(jointhrottle)(ModuleInfo *modinfo)
+MOD_TEST(jointhrottle)
 {
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, jointhrottle_config_test);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(jointhrottle)(ModuleInfo *modinfo)
+MOD_INIT(jointhrottle)
 {
 	ModDataInfo mreq;
 
@@ -98,13 +98,13 @@ DLLFUNC int MOD_INIT(jointhrottle)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(jointhrottle)(int module_load)
+MOD_LOAD(jointhrottle)
 {
 	EventAddEx(ModInfo->handle, "jointhrottle_cleanup_structs", 60, 0, jointhrottle_cleanup_structs, NULL);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(jointhrottle)(int module_unload)
+MOD_UNLOAD(jointhrottle)
 {
 	return MOD_FAILED;
 }

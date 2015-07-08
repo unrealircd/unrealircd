@@ -56,14 +56,14 @@ ModuleHeader MOD_HEADER(m_nick)
 	NULL 
     };
 
-DLLFUNC int MOD_TEST(m_nick)(ModuleInfo *modinfo)
+MOD_TEST(m_nick)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAdd(modinfo->handle, EFUNC_REGISTER_USER, _register_user);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(m_nick)(ModuleInfo *modinfo)
+MOD_INIT(m_nick)
 {
 	CommandAdd(modinfo->handle, MSG_NICK, m_nick, MAXPARA, M_USER|M_SERVER|M_UNREGISTERED);
 	CommandAdd(modinfo->handle, "UID", m_uid, MAXPARA, M_SERVER);
@@ -71,12 +71,12 @@ DLLFUNC int MOD_INIT(m_nick)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_nick)(int module_load)
+MOD_LOAD(m_nick)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_nick)(int module_unload)
+MOD_UNLOAD(m_nick)
 {
 	return MOD_SUCCESS;
 }

@@ -54,19 +54,19 @@ ModuleHeader MOD_HEADER(m_trace)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_trace)(ModuleInfo *modinfo)
+MOD_INIT(m_trace)
 {
 	CommandAdd(modinfo->handle, MSG_TRACE, m_trace, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_trace)(int module_load)
+MOD_LOAD(m_trace)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_trace)(int module_unload)
+MOD_UNLOAD(m_trace)
 {
 	return MOD_SUCCESS;
 }

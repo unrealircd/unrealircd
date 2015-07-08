@@ -55,19 +55,19 @@ ModuleHeader MOD_HEADER(m_svslusers)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_svslusers)(ModuleInfo *modinfo)
+MOD_INIT(m_svslusers)
 {
 	CommandAdd(modinfo->handle, MSG_SVSLUSERS, m_svslusers, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_svslusers)(int module_load)
+MOD_LOAD(m_svslusers)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_svslusers)(int module_unload)
+MOD_UNLOAD(m_svslusers)
 {
 	return MOD_SUCCESS;
 }

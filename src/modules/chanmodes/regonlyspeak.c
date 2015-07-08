@@ -57,12 +57,12 @@ static char errMsg[2048];
 DLLFUNC int regonlyspeak_can_send (aClient* cptr, aChannel *chptr, char* message, Membership* lp, int notice);
 DLLFUNC char * regonlyspeak_part_message (aClient* sptr, aChannel *chptr, char* comment);
 
-DLLFUNC int MOD_TEST(regonlyspeak)(ModuleInfo *modinfo)
+MOD_TEST(regonlyspeak)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(regonlyspeak)(ModuleInfo *modinfo)
+MOD_INIT(regonlyspeak)
 {
 	CmodeInfo req;
 
@@ -80,12 +80,12 @@ DLLFUNC int MOD_INIT(regonlyspeak)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(regonlyspeak)(int module_load)
+MOD_LOAD(regonlyspeak)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(regonlyspeak)(int module_unload)
+MOD_UNLOAD(regonlyspeak)
 {
 	return MOD_SUCCESS;
 }

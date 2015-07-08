@@ -452,7 +452,7 @@ DLLFUNC int m_cap(aClient *cptr, aClient *sptr, int parc, char *parv[])
 }
 
 /* This is called on module init, before Server Ready */
-DLLFUNC int MOD_INIT(m_cap)(ModuleInfo *modinfo)
+MOD_INIT(m_cap)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	CommandAdd(modinfo->handle, MSG_CAP, m_cap, MAXPARA, M_UNREGISTERED|M_USER);
@@ -461,7 +461,7 @@ DLLFUNC int MOD_INIT(m_cap)(ModuleInfo *modinfo)
 }
 
 /* Is first run when server is 100% ready */
-DLLFUNC int MOD_LOAD(m_cap)(int module_load)
+MOD_LOAD(m_cap)
 {
 	clicap_build_list();
 	return MOD_SUCCESS;
@@ -469,7 +469,7 @@ DLLFUNC int MOD_LOAD(m_cap)(int module_load)
 
 
 /* Called when module is unloaded */
-DLLFUNC int MOD_UNLOAD(m_cap)(int module_unload)
+MOD_UNLOAD(m_cap)
 {
 	// XXX free cap list
 	return MOD_SUCCESS;

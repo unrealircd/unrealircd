@@ -54,19 +54,19 @@ ModuleHeader MOD_HEADER(m_knock)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_knock)(ModuleInfo *modinfo)
+MOD_INIT(m_knock)
 {
 	CommandAdd(modinfo->handle, MSG_KNOCK, m_knock, 2, M_USER|M_ANNOUNCE);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_knock)(int module_load)
+MOD_LOAD(m_knock)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_knock)(int module_unload)
+MOD_UNLOAD(m_knock)
 {
 	return MOD_SUCCESS;
 }

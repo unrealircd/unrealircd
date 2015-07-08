@@ -101,14 +101,14 @@ void blacklist_free_bluser_if_able(BLUser *bl);
 #define SetBLUser(x, y)	do { moddata_client(x, blacklist_md).ptr = y; } while(0)
 #define BLUSER(x)	((BLUser *)moddata_client(x, blacklist_md).ptr)
 
-DLLFUNC int MOD_TEST(blacklist)(ModuleInfo *modinfo)
+MOD_TEST(blacklist)
 {
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, blacklist_config_test);
 	return MOD_SUCCESS;
 }
 
 /** Called upon module init */
-DLLFUNC int MOD_INIT(blacklist)(ModuleInfo *modinfo)
+MOD_INIT(blacklist)
 {
 	ModDataInfo mreq;
 
@@ -136,13 +136,13 @@ DLLFUNC int MOD_INIT(blacklist)(ModuleInfo *modinfo)
 }
 
 /** Called upon module load */
-DLLFUNC int MOD_LOAD(blacklist)(int module_load)
+MOD_LOAD(blacklist)
 {
 	return MOD_SUCCESS;
 }
 
 /** Called upon unload */
-DLLFUNC int MOD_UNLOAD(blacklist)(int module_unload)
+MOD_UNLOAD(blacklist)
 {
 	blacklist_free_conf();
 	return MOD_SUCCESS;

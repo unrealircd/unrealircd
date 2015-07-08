@@ -54,19 +54,19 @@ ModuleHeader MOD_HEADER(m_undccdeny)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_undccdeny)(ModuleInfo *modinfo)
+MOD_INIT(m_undccdeny)
 {
 	CommandAdd(modinfo->handle, MSG_UNDCCDENY, m_undccdeny, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_undccdeny)(int module_load)
+MOD_LOAD(m_undccdeny)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_undccdeny)(int module_unload)
+MOD_UNLOAD(m_undccdeny)
 {
 	return MOD_SUCCESS;
 }

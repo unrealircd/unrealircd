@@ -52,19 +52,19 @@ ModuleHeader MOD_HEADER(m_protoctl)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_protoctl)(ModuleInfo *modinfo)
+MOD_INIT(m_protoctl)
 {
 	CommandAdd(modinfo->handle, MSG_PROTOCTL, m_protoctl, MAXPARA, M_UNREGISTERED|M_SERVER|M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_protoctl)(int module_load)
+MOD_LOAD(m_protoctl)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_protoctl)(int module_unload)
+MOD_UNLOAD(m_protoctl)
 {
 	return MOD_SUCCESS;
 }

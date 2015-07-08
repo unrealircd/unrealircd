@@ -71,12 +71,12 @@ DLLFUNC int issecure_chanmode(aClient *cptr, aClient *sptr, aChannel *chptr,
                              char *modebuf, char *parabuf, int sendts, int samode);
                              
 
-DLLFUNC int MOD_TEST(issecure)(ModuleInfo *modinfo)
+MOD_TEST(issecure)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(issecure)(ModuleInfo *modinfo)
+MOD_INIT(issecure)
 {
 CmodeInfo req;
 
@@ -103,12 +103,12 @@ CmodeInfo req;
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(issecure)(int module_load)
+MOD_LOAD(issecure)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(issecure)(int module_unload)
+MOD_UNLOAD(issecure)
 {
 	return MOD_SUCCESS;
 }

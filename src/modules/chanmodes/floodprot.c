@@ -114,7 +114,7 @@ int floodprot_remote_nickchange(aClient *cptr, aClient *sptr, char *oldnick);
 int floodprot_chanmode_del(aChannel *chptr, int m);
 void userfld_free(ModData *md);
 
-DLLFUNC int MOD_INIT(floodprot)(ModuleInfo *modinfo)
+MOD_INIT(floodprot)
 {
 	CmodeInfo creq;
 	ModDataInfo mreq;
@@ -156,14 +156,14 @@ DLLFUNC int MOD_INIT(floodprot)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(floodprot)(int module_load)
+MOD_LOAD(floodprot)
 {
 	EventAddEx(ModInfo->handle, "modef_event", 10, 0, modef_event, NULL);
 	return MOD_SUCCESS;
 }
 
 
-DLLFUNC int MOD_UNLOAD(floodprot)(int module_unload)
+MOD_UNLOAD(floodprot)
 {
 	return MOD_FAILED;
 }

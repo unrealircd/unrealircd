@@ -57,7 +57,7 @@ ModuleHeader MOD_HEADER(m_guest)
 
 ModuleInfo *ModGuestInfo;
 /* This is called on module init, before Server Ready */
-DLLFUNC int MOD_INIT(m_guest)(ModuleInfo *modinfo)
+MOD_INIT(m_guest)
 {
 	/*
 	 * We call our add_Command crap here
@@ -71,7 +71,7 @@ DLLFUNC int MOD_INIT(m_guest)(ModuleInfo *modinfo)
 }
 
 /* Is first run when server is 100% ready */
-DLLFUNC int MOD_LOAD(m_guest)(int module_load)
+MOD_LOAD(m_guest)
 {
 	return MOD_SUCCESS;
 	
@@ -79,7 +79,7 @@ DLLFUNC int MOD_LOAD(m_guest)(int module_load)
 
 
 /* Called when module is unloaded */
-DLLFUNC int MOD_UNLOAD(m_guest)(int module_unload)
+MOD_UNLOAD(m_guest)
 {
 #ifdef GUEST
 	HookDel(GuestHook);

@@ -57,7 +57,7 @@ ModuleHeader MOD_HEADER(m_sqline)
     };
 
 /* This is called on module init, before Server Ready */
-DLLFUNC int MOD_INIT(m_sqline)(ModuleInfo *modinfo)
+MOD_INIT(m_sqline)
 {
 	CommandAdd(modinfo->handle, MSG_SQLINE, m_sqline, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -65,14 +65,14 @@ DLLFUNC int MOD_INIT(m_sqline)(ModuleInfo *modinfo)
 }
 
 /* Is first run when server is 100% ready */
-DLLFUNC int MOD_LOAD(m_sqline)(int module_load)
+MOD_LOAD(m_sqline)
 {
 	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
-DLLFUNC int MOD_UNLOAD(m_sqline)(int module_unload)
+MOD_UNLOAD(m_sqline)
 {
 	return MOD_SUCCESS;
 }

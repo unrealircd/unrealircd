@@ -40,21 +40,21 @@ ModuleHeader MOD_HEADER(m_dummy)
     };
 
 /* This is called on module init, before Server Ready */
-DLLFUNC int MOD_INIT(m_dummy)(ModuleInfo *modinfo)
+MOD_INIT(m_dummy)
 {
 	CommandAdd(modinfo->handle, MSG_DUMMY, m_dummy, MAXPARA, 0);
 	return MOD_SUCCESS;
 }
 
 /* Is first run when server is 100% ready */
-DLLFUNC int MOD_LOAD(m_dummy)(int module_load)
+MOD_LOAD(m_dummy)
 {
 	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
-DLLFUNC int MOD_UNLOAD(m_dummy)(int module_unload)
+MOD_UNLOAD(m_dummy)
 {
 	return MOD_SUCCESS;
 }

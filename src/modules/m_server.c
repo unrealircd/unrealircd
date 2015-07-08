@@ -62,7 +62,7 @@ ModuleHeader MOD_HEADER(m_server)
 	NULL 
     };
 
-DLLFUNC int MOD_TEST(m_server)(ModuleInfo *modinfo)
+MOD_TEST(m_server)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddVoid(modinfo->handle, EFUNC_SEND_PROTOCTL_SERVERS, _send_protoctl_servers);
@@ -71,7 +71,7 @@ DLLFUNC int MOD_TEST(m_server)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(m_server)(ModuleInfo *modinfo)
+MOD_INIT(m_server)
 {
 	CommandAdd(modinfo->handle, MSG_SERVER, m_server, MAXPARA, M_UNREGISTERED|M_SERVER);
 	CommandAdd(modinfo->handle, "SID", m_server_remote, MAXPARA, M_UNREGISTERED|M_SERVER);
@@ -81,12 +81,12 @@ DLLFUNC int MOD_INIT(m_server)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_server)(int module_load)
+MOD_LOAD(m_server)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_server)(int module_unload)
+MOD_UNLOAD(m_server)
 {
 	return MOD_SUCCESS;
 }

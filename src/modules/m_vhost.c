@@ -56,7 +56,7 @@ ModuleHeader MOD_HEADER(m_vhost)
     };
 
 /* This is called on module init, before Server Ready */
-DLLFUNC int MOD_INIT(m_vhost)(ModuleInfo *modinfo)
+MOD_INIT(m_vhost)
 {
 	CommandAdd(modinfo->handle, MSG_VHOST, m_vhost, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -64,14 +64,14 @@ DLLFUNC int MOD_INIT(m_vhost)(ModuleInfo *modinfo)
 }
 
 /* Is first run when server is 100% ready */
-DLLFUNC int MOD_LOAD(m_vhost)(int module_load)
+MOD_LOAD(m_vhost)
 {
 	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
-DLLFUNC int MOD_UNLOAD(m_vhost)(int module_unload)
+MOD_UNLOAD(m_vhost)
 {
 	return MOD_SUCCESS;	
 }

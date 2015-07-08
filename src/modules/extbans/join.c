@@ -31,7 +31,7 @@ ModuleHeader MOD_HEADER(join)
 int extban_modej_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type);
 
 /** Called upon module init */
-DLLFUNC int MOD_INIT(join)(ModuleInfo *modinfo)
+MOD_INIT(join)
 {
 	ExtbanInfo req;
 	
@@ -52,13 +52,13 @@ DLLFUNC int MOD_INIT(join)(ModuleInfo *modinfo)
 }
 
 /** Called upon module load */
-DLLFUNC int MOD_LOAD(join)(int module_load)
+MOD_LOAD(join)
 {
 	return MOD_SUCCESS;
 }
 
 /** Called upon unload */
-DLLFUNC int MOD_UNLOAD(join)(int module_unload)
+MOD_UNLOAD(join)
 {
 	return MOD_SUCCESS;
 }

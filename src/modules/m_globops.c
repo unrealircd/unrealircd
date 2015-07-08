@@ -54,19 +54,19 @@ ModuleHeader MOD_HEADER(m_globops)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_globops)(ModuleInfo *modinfo)
+MOD_INIT(m_globops)
 {
 	CommandAdd(modinfo->handle, MSG_GLOBOPS, m_globops, 1, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_globops)(int module_load)
+MOD_LOAD(m_globops)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_globops)(int module_unload)
+MOD_UNLOAD(m_globops)
 {
 	return MOD_SUCCESS;
 }

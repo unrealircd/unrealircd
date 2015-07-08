@@ -54,19 +54,19 @@ ModuleHeader MOD_HEADER(m_lusers)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_lusers)(ModuleInfo *modinfo)
+MOD_INIT(m_lusers)
 {
 	CommandAdd(modinfo->handle, MSG_LUSERS, m_lusers, MAXPARA, M_USER|M_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_lusers)(int module_load)
+MOD_LOAD(m_lusers)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_lusers)(int module_unload)
+MOD_UNLOAD(m_lusers)
 {
 	return MOD_SUCCESS;
 }

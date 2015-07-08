@@ -62,7 +62,7 @@ ModuleHeader MOD_HEADER(m_who)
     };
 
 /* This is called on module init, before Server Ready */
-DLLFUNC int MOD_INIT(m_who)(ModuleInfo *modinfo)
+MOD_INIT(m_who)
 {
 	CommandAdd(modinfo->handle, MSG_WHO, m_who, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -70,14 +70,14 @@ DLLFUNC int MOD_INIT(m_who)(ModuleInfo *modinfo)
 }
 
 /* Is first run when server is 100% ready */
-DLLFUNC int MOD_LOAD(m_who)(int module_load)
+MOD_LOAD(m_who)
 {
 	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
-DLLFUNC int MOD_UNLOAD(m_who)(int module_unload)
+MOD_UNLOAD(m_who)
 {
 	return MOD_SUCCESS;
 }

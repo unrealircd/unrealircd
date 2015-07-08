@@ -56,7 +56,7 @@ ModuleHeader MOD_HEADER(m_sendumode)
     };
 
 /* This is called on module init, before Server Ready */
-DLLFUNC int MOD_INIT(m_sendumode)(ModuleInfo *modinfo)
+MOD_INIT(m_sendumode)
 {
 	CommandAdd(modinfo->handle, MSG_SENDUMODE, m_sendumode, MAXPARA, 0);
 	CommandAdd(modinfo->handle, MSG_SMO, m_sendumode, MAXPARA, 0);
@@ -65,13 +65,13 @@ DLLFUNC int MOD_INIT(m_sendumode)(ModuleInfo *modinfo)
 }
 
 /* Is first run when server is 100% ready */
-DLLFUNC int MOD_LOAD(m_sendumode)(int module_load)
+MOD_LOAD(m_sendumode)
 {
 	return MOD_SUCCESS;
 }
 
 /* Called when module is unloaded */
-DLLFUNC int MOD_UNLOAD(m_sendumode)(int module_unload)
+MOD_UNLOAD(m_sendumode)
 {
 	return MOD_SUCCESS;
 }

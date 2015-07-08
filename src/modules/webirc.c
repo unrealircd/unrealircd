@@ -63,14 +63,14 @@ void webirc_md_free(ModData *md);
 
 #define MSG_WEBIRC "WEBIRC"
 
-DLLFUNC int MOD_TEST(webirc)(ModuleInfo *modinfo)
+MOD_TEST(webirc)
 {
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, webirc_config_test);
 	return MOD_SUCCESS;
 }
 
 /** Called upon module init */
-DLLFUNC int MOD_INIT(webirc)(ModuleInfo *modinfo)
+MOD_INIT(webirc)
 {
 	ModDataInfo mreq;
 
@@ -97,13 +97,13 @@ DLLFUNC int MOD_INIT(webirc)(ModuleInfo *modinfo)
 }
 
 /** Called upon module load */
-DLLFUNC int MOD_LOAD(webirc)(int module_load)
+MOD_LOAD(webirc)
 {
 	return MOD_SUCCESS;
 }
 
 /** Called upon unload */
-DLLFUNC int MOD_UNLOAD(webirc)(int module_unload)
+MOD_UNLOAD(webirc)
 {
 	webirc_free_conf();
 	return MOD_SUCCESS;

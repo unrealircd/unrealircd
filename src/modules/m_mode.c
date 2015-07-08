@@ -78,7 +78,7 @@ ModuleHeader MOD_HEADER(m_mode)
 	NULL 
     };
 
-DLLFUNC int MOD_TEST(m_mode)(ModuleInfo *modinfo)
+MOD_TEST(m_mode)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddVoid(modinfo->handle, EFUNC_DO_MODE, _do_mode);
@@ -87,7 +87,7 @@ DLLFUNC int MOD_TEST(m_mode)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(m_mode)(ModuleInfo *modinfo)
+MOD_INIT(m_mode)
 {
 	CommandAdd(modinfo->handle, MSG_MODE, m_mode, MAXPARA, M_USER|M_SERVER);
 	CommandAdd(modinfo->handle, MSG_MLOCK, m_mlock, MAXPARA, M_SERVER);
@@ -95,12 +95,12 @@ DLLFUNC int MOD_INIT(m_mode)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_mode)(int module_load)
+MOD_LOAD(m_mode)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_mode)(int module_unload)
+MOD_UNLOAD(m_mode)
 {
 	return MOD_SUCCESS;
 }

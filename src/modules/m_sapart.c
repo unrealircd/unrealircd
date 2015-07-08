@@ -54,19 +54,19 @@ ModuleHeader MOD_HEADER(m_sapart)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_sapart)(ModuleInfo *modinfo)
+MOD_INIT(m_sapart)
 {
 	CommandAdd(modinfo->handle, MSG_SAPART, m_sapart, 3, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_sapart)(int module_load)
+MOD_LOAD(m_sapart)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_sapart)(int module_unload)
+MOD_UNLOAD(m_sapart)
 {
 	return MOD_SUCCESS;
 }

@@ -58,12 +58,12 @@ DLLFUNC char *nocolor_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int
 DLLFUNC char *nocolor_prelocalpart(aClient *sptr, aChannel *chptr, char *comment);
 DLLFUNC char *nocolor_prelocalquit(aClient *sptr, char *comment);
 
-DLLFUNC int MOD_TEST(nocolor)(ModuleInfo *modinfo)
+MOD_TEST(nocolor)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(nocolor)(ModuleInfo *modinfo)
+MOD_INIT(nocolor)
 {
 CmodeInfo req;
 
@@ -82,12 +82,12 @@ CmodeInfo req;
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(nocolor)(int module_load)
+MOD_LOAD(nocolor)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(nocolor)(int module_unload)
+MOD_UNLOAD(nocolor)
 {
 	return MOD_SUCCESS;
 }

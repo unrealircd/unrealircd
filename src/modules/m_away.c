@@ -56,19 +56,19 @@ DLLFUNC ModuleHeader MOD_HEADER(m_away)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_away)(ModuleInfo *modinfo)
+MOD_INIT(m_away)
 {
 	CommandAdd(modinfo->handle, MSG_AWAY, m_away, 1, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_away)(int module_load)
+MOD_LOAD(m_away)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_away)(int module_unload)
+MOD_UNLOAD(m_away)
 {
 	return MOD_SUCCESS;
 }

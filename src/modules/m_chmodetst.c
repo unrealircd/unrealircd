@@ -63,7 +63,7 @@ typedef struct {
 
 Cmode *ModeTest = NULL, *ModeTest2 = NULL;
 /* This is called on module init, before Server Ready */
-DLLFUNC int MOD_INIT(m_dummy)(ModuleInfo *modinfo)
+MOD_INIT(m_dummy)
 {
 	CmodeInfo req;
 	ircd_log(LOG_ERROR, "debug: mod_init called from chmodetst module");
@@ -94,14 +94,14 @@ DLLFUNC int MOD_INIT(m_dummy)(ModuleInfo *modinfo)
 }
 
 /* Is first run when server is 100% ready */
-DLLFUNC int MOD_LOAD(m_dummy)(int module_load)
+MOD_LOAD(m_dummy)
 {
 	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
-DLLFUNC int MOD_UNLOAD(m_dummy)(int module_unload)
+MOD_UNLOAD(m_dummy)
 {
 	/* Aaaaaaaargh... we are assumed to be a permanent module */
 	sendto_realops("Mod_Unload was called??? Arghhhhhh..");

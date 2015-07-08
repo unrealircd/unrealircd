@@ -54,19 +54,19 @@ ModuleHeader MOD_HEADER(m_userip)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_userip)(ModuleInfo *modinfo)
+MOD_INIT(m_userip)
 {
 	CommandAdd(modinfo->handle, MSG_USERIP, m_userip, 1, M_USER|M_ANNOUNCE);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_userip)(int module_load)
+MOD_LOAD(m_userip)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_userip)(int module_unload)
+MOD_UNLOAD(m_userip)
 {
 	return MOD_SUCCESS;
 }

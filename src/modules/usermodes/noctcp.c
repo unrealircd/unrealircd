@@ -56,12 +56,12 @@ long UMODE_NOCTCP = 0L;
 
 DLLFUNC char *noctcp_preusermsg(aClient *sptr, aClient *acptr, char *text, int notice);
 
-DLLFUNC int MOD_TEST(noctcp)(ModuleInfo *modinfo)
+MOD_TEST(noctcp)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(noctcp)(ModuleInfo *modinfo)
+MOD_INIT(noctcp)
 {
 CmodeInfo req;
 
@@ -73,12 +73,12 @@ CmodeInfo req;
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(noctcp)(int module_load)
+MOD_LOAD(noctcp)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(noctcp)(int module_unload)
+MOD_UNLOAD(noctcp)
 {
 	return MOD_SUCCESS;
 }

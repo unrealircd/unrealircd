@@ -56,19 +56,19 @@ ModuleHeader MOD_HEADER(m_svsmotd)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_svsmotd)(ModuleInfo *modinfo)
+MOD_INIT(m_svsmotd)
 {
 	CommandAdd(modinfo->handle, MSG_SVSMOTD, m_svsmotd, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_svsmotd)(int module_load)
+MOD_LOAD(m_svsmotd)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_svsmotd)(int module_unload)
+MOD_UNLOAD(m_svsmotd)
 {
 	return MOD_SUCCESS;
 }

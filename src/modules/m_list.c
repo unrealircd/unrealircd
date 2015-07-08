@@ -55,26 +55,26 @@ ModuleHeader MOD_HEADER(m_list)
 	NULL 
     };
 
-DLLFUNC int MOD_TEST(m_list)(ModuleInfo *modinfo)
+MOD_TEST(m_list)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddVoid(modinfo->handle, EFUNC_SEND_LIST, _send_list);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(m_list)(ModuleInfo *modinfo)
+MOD_INIT(m_list)
 {
 	CommandAdd(modinfo->handle, MSG_LIST, m_list, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_list)(int module_load)
+MOD_LOAD(m_list)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_list)(int module_unload)
+MOD_UNLOAD(m_list)
 {
 	return MOD_SUCCESS;
 }

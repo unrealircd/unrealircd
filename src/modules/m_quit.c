@@ -55,7 +55,7 @@ ModuleHeader MOD_HEADER(m_quit)
     };
 
 /* This is called on module init, before Server Ready */
-DLLFUNC int MOD_INIT(m_quit)(ModuleInfo *modinfo)
+MOD_INIT(m_quit)
 {
 	CommandAdd(modinfo->handle, MSG_QUIT, m_quit, 1, M_UNREGISTERED|M_USER|M_VIRUS);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -63,13 +63,13 @@ DLLFUNC int MOD_INIT(m_quit)(ModuleInfo *modinfo)
 }
 
 /* Is first run when server is 100% ready */
-DLLFUNC int MOD_LOAD(m_quit)(int module_load)
+MOD_LOAD(m_quit)
 {
 	return MOD_SUCCESS;
 }
 
 /* Called when module is unloaded */
-DLLFUNC int MOD_UNLOAD(m_quit)(int module_unload)
+MOD_UNLOAD(m_quit)
 {
 	return MOD_SUCCESS;
 }

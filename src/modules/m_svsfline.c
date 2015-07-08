@@ -54,19 +54,19 @@ ModuleHeader MOD_HEADER(m_svsfline)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_svsfline)(ModuleInfo *modinfo)
+MOD_INIT(m_svsfline)
 {
 	CommandAdd(modinfo->handle, MSG_SVSFLINE, m_svsfline, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_svsfline)(int module_load)
+MOD_LOAD(m_svsfline)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_svsfline)(int module_unload)
+MOD_UNLOAD(m_svsfline)
 {
 	return MOD_SUCCESS;
 }

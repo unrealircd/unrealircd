@@ -41,12 +41,12 @@ int bot_whois(aClient *sptr, aClient *acptr);
 int bot_who_status(aClient *sptr, aClient *acptr, aChannel *chptr, Member *cm, char *status, int cansee);
 int bot_umode_change(aClient *sptr, long oldmode, long newmode);
 
-DLLFUNC int MOD_TEST(bot)(ModuleInfo *modinfo)
+MOD_TEST(bot)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(bot)(ModuleInfo *modinfo)
+MOD_INIT(bot)
 {
 	UmodeAdd(modinfo->handle, 'B', UMODE_GLOBAL, 0, NULL, &UMODE_BOT);
 	
@@ -58,12 +58,12 @@ DLLFUNC int MOD_INIT(bot)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(bot)(int module_load)
+MOD_LOAD(bot)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(bot)(int module_unload)
+MOD_UNLOAD(bot)
 {
 	return MOD_SUCCESS;
 }

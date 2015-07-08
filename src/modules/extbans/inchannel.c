@@ -33,7 +33,7 @@ char *extban_inchannel_conv_param(char *para);
 int extban_inchannel_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type);
 
 /** Called upon module init */
-DLLFUNC int MOD_INIT(inchannel)(ModuleInfo *modinfo)
+MOD_INIT(inchannel)
 {
 	ExtbanInfo req;
 	
@@ -54,13 +54,13 @@ DLLFUNC int MOD_INIT(inchannel)(ModuleInfo *modinfo)
 }
 
 /** Called upon module load */
-DLLFUNC int MOD_LOAD(inchannel)(int module_load)
+MOD_LOAD(inchannel)
 {
 	return MOD_SUCCESS;
 }
 
 /** Called upon unload */
-DLLFUNC int MOD_UNLOAD(inchannel)(int module_unload)
+MOD_UNLOAD(inchannel)
 {
 	return MOD_SUCCESS;
 }

@@ -54,19 +54,19 @@ ModuleHeader MOD_HEADER(m_locops)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_locops)(ModuleInfo *modinfo)
+MOD_INIT(m_locops)
 {
 	CommandAdd(modinfo->handle, MSG_LOCOPS, m_locops, 1, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_locops)(int module_load)
+MOD_LOAD(m_locops)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_locops)(int module_unload)
+MOD_UNLOAD(m_locops)
 {
 	return MOD_SUCCESS;
 }

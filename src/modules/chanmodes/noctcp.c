@@ -56,12 +56,12 @@ Cmode_t EXTCMODE_NOCTCP;
 
 DLLFUNC char *noctcp_prechanmsg(aClient *sptr, aChannel *chptr, char *text, int notice);
 
-DLLFUNC int MOD_TEST(noctcp)(ModuleInfo *modinfo)
+MOD_TEST(noctcp)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(noctcp)(ModuleInfo *modinfo)
+MOD_INIT(noctcp)
 {
 CmodeInfo req;
 
@@ -77,12 +77,12 @@ CmodeInfo req;
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(noctcp)(int module_load)
+MOD_LOAD(noctcp)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(noctcp)(int module_unload)
+MOD_UNLOAD(noctcp)
 {
 	return MOD_SUCCESS;
 }

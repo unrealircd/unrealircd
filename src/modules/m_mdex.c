@@ -42,7 +42,7 @@ void mdex_free(ModData *m);
 char *mdex_serialize(ModData *m);
 void mdex_unserialize(char *str, ModData *m);
 
-DLLFUNC int MOD_INIT(m_mdex)(ModuleInfo *modinfo)
+MOD_INIT(m_mdex)
 {
 ModDataInfo mreq;
 
@@ -74,13 +74,13 @@ ModDataInfo mreq;
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_mdex)(int module_load)
+MOD_LOAD(m_mdex)
 {
 	return MOD_SUCCESS;
 }
 
 
-DLLFUNC int MOD_UNLOAD(m_mdex)(int module_unload)
+MOD_UNLOAD(m_mdex)
 {
 	return MOD_SUCCESS;
 }

@@ -54,19 +54,19 @@ ModuleHeader MOD_HEADER(m_topic)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_topic)(ModuleInfo *modinfo)
+MOD_INIT(m_topic)
 {
 	CommandAdd(modinfo->handle, MSG_TOPIC, m_topic, 4, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_topic)(int module_load)
+MOD_LOAD(m_topic)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_topic)(int module_unload)
+MOD_UNLOAD(m_topic)
 {
 	return MOD_SUCCESS;
 }

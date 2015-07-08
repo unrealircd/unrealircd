@@ -312,7 +312,7 @@ ClientCapability *cap;
 }
 
 /* This is called on module init, before Server Ready */
-DLLFUNC int MOD_INIT(m_sasl)(ModuleInfo *modinfo)
+MOD_INIT(m_sasl)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
@@ -329,13 +329,13 @@ DLLFUNC int MOD_INIT(m_sasl)(ModuleInfo *modinfo)
 }
 
 /* Is first run when server is 100% ready */
-DLLFUNC int MOD_LOAD(m_sasl)(int module_load)
+MOD_LOAD(m_sasl)
 {
 	return MOD_SUCCESS;
 }
 
 /* Called when module is unloaded */
-DLLFUNC int MOD_UNLOAD(m_sasl)(int module_unload)
+MOD_UNLOAD(m_sasl)
 {
 	return MOD_SUCCESS;
 }

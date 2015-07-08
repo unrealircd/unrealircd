@@ -54,19 +54,19 @@ ModuleHeader MOD_HEADER(m_silence)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_silence)(ModuleInfo *modinfo)
+MOD_INIT(m_silence)
 {
 	CommandAdd(modinfo->handle, MSG_SILENCE, m_silence, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_silence)(int module_load)
+MOD_LOAD(m_silence)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_silence)(int module_unload)
+MOD_UNLOAD(m_silence)
 {
 	return MOD_SUCCESS;
 }

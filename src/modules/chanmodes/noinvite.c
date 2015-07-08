@@ -56,12 +56,12 @@ Cmode_t EXTCMODE_NOINVITE;
 
 DLLFUNC int noinvite_check (aClient *sptr, aChannel *chptr);
 
-DLLFUNC int MOD_TEST(noinvite)(ModuleInfo *modinfo)
+MOD_TEST(noinvite)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(noinvite)(ModuleInfo *modinfo)
+MOD_INIT(noinvite)
 {
 	CmodeInfo req;
 
@@ -78,12 +78,12 @@ DLLFUNC int MOD_INIT(noinvite)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(noinvite)(int module_load)
+MOD_LOAD(noinvite)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(noinvite)(int module_unload)
+MOD_UNLOAD(noinvite)
 {
 	return MOD_SUCCESS;
 }

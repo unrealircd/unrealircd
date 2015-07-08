@@ -59,7 +59,7 @@ ModuleHeader MOD_HEADER(m_rping)
     };
 
 /* This is called on module init, before Server Ready */
-DLLFUNC int MOD_INIT(m_rping)(ModuleInfo *modinfo)
+MOD_INIT(m_rping)
 {
 	CommandAdd(modinfo->handle, MSG_RPING, m_rping, MAXPARA, 0);
 	CommandAdd(modinfo->handle, MSG_RPONG, m_rpong, MAXPARA, 0);
@@ -68,14 +68,14 @@ DLLFUNC int MOD_INIT(m_rping)(ModuleInfo *modinfo)
 }
 
 /* Is first run when server is 100% ready */
-DLLFUNC int MOD_LOAD(m_rping)(int module_load)
+MOD_LOAD(m_rping)
 {
 	return MOD_SUCCESS;
 }
 
 
 /* Called when module is unloaded */
-DLLFUNC int MOD_UNLOAD(m_rping)(int module_unload)
+MOD_UNLOAD(m_rping)
 {
 	return MOD_SUCCESS;	
 }

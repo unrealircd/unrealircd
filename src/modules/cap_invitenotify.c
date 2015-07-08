@@ -68,7 +68,7 @@ static void cap_invitenotify_invite(aClient *from, aClient *to, aChannel *chptr)
 }
 
 /* This is called on module init, before Server Ready */
-DLLFUNC int MOD_INIT(cap_invitenotify)(ModuleInfo *modinfo)
+MOD_INIT(cap_invitenotify)
 {
         MARK_AS_OFFICIAL_MODULE(modinfo);
 
@@ -79,13 +79,13 @@ DLLFUNC int MOD_INIT(cap_invitenotify)(ModuleInfo *modinfo)
 }
 
 /* Is first run when server is 100% ready */
-DLLFUNC int MOD_LOAD(cap_invitenotify)(int module_load)
+MOD_LOAD(cap_invitenotify)
 {
         return MOD_SUCCESS;
 }
 
 /* Called when module is unloaded */
-DLLFUNC int MOD_UNLOAD(cap_invitenotify)(int module_unload)
+MOD_UNLOAD(cap_invitenotify)
 {
         return MOD_SUCCESS;
 }

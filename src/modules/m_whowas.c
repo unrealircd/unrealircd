@@ -55,19 +55,19 @@ ModuleHeader MOD_HEADER(m_whowas)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_whowas)(ModuleInfo *modinfo)
+MOD_INIT(m_whowas)
 {
 	CommandAdd(modinfo->handle, MSG_WHOWAS, m_whowas, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_whowas)(int module_load)
+MOD_LOAD(m_whowas)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_whowas)(int module_unload)
+MOD_UNLOAD(m_whowas)
 {
 	return MOD_SUCCESS;
 }

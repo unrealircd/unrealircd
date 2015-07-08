@@ -52,19 +52,19 @@ ModuleHeader MOD_HEADER(m_netinfo)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_netinfo)(ModuleInfo *modinfo)
+MOD_INIT(m_netinfo)
 {
 	CommandAdd(modinfo->handle, MSG_NETINFO, m_netinfo, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_netinfo)(int module_load)
+MOD_LOAD(m_netinfo)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_netinfo)(int module_unload)
+MOD_UNLOAD(m_netinfo)
 {
 	return MOD_SUCCESS;
 }

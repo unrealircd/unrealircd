@@ -55,12 +55,12 @@ Cmode_t EXTCMODE_NONICKCHANGE;
 
 DLLFUNC int nonickchange_check (aClient *sptr, aChannel *chptr);
 
-DLLFUNC int MOD_TEST(nonickchange)(ModuleInfo *modinfo)
+MOD_TEST(nonickchange)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(nonickchange)(ModuleInfo *modinfo)
+MOD_INIT(nonickchange)
 {
 CmodeInfo req;
 
@@ -77,12 +77,12 @@ CmodeInfo req;
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(nonickchange)(int module_load)
+MOD_LOAD(nonickchange)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(nonickchange)(int module_unload)
+MOD_UNLOAD(nonickchange)
 {
 	return MOD_SUCCESS;
 }

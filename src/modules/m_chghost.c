@@ -60,20 +60,20 @@ ModuleHeader MOD_HEADER(m_chghost)
 	"3.2-b8-1",
     };
 
-DLLFUNC int MOD_INIT(m_chghost)(ModuleInfo *modinfo)
+MOD_INIT(m_chghost)
 {
 	CommandAdd(modinfo->handle, MSG_CHGHOST, m_chghost, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_chghost)(int module_load)
+MOD_LOAD(m_chghost)
 {
 	return MOD_SUCCESS;
 	
 }
 
-DLLFUNC int MOD_UNLOAD(m_chghost)(int module_unload)
+MOD_UNLOAD(m_chghost)
 {
 	return MOD_SUCCESS;	
 }

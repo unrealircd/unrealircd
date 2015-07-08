@@ -54,19 +54,19 @@ ModuleHeader MOD_HEADER(m_chatops)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_chatops)(ModuleInfo *modinfo)
+MOD_INIT(m_chatops)
 {
 	CommandAdd(modinfo->handle, MSG_CHATOPS, m_chatops, 1, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_chatops)(int module_load)
+MOD_LOAD(m_chatops)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_chatops)(int module_unload)
+MOD_UNLOAD(m_chatops)
 {
 	return MOD_SUCCESS;
 }

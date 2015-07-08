@@ -37,12 +37,12 @@ long UMODE_SHOWWHOIS = 0L;
 /* Forward declarations */
 int showwhois_whois(aClient *sptr, aClient *acptr);
 
-DLLFUNC int MOD_TEST(showwhois)(ModuleInfo *modinfo)
+MOD_TEST(showwhois)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(showwhois)(ModuleInfo *modinfo)
+MOD_INIT(showwhois)
 {
 	UmodeAdd(modinfo->handle, 'W', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_SHOWWHOIS);
 	
@@ -52,12 +52,12 @@ DLLFUNC int MOD_INIT(showwhois)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(showwhois)(int module_load)
+MOD_LOAD(showwhois)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(showwhois)(int module_unload)
+MOD_UNLOAD(showwhois)
 {
 	return MOD_SUCCESS;
 }

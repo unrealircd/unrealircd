@@ -54,19 +54,19 @@ ModuleHeader MOD_HEADER(m_admin)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_admin)(ModuleInfo *modinfo)
+MOD_INIT(m_admin)
 {
 	CommandAdd(modinfo->handle, MSG_ADMIN, m_admin, MAXPARA, M_UNREGISTERED|M_USER|M_SHUN|M_VIRUS);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_admin)(int module_load)
+MOD_LOAD(m_admin)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_admin)(int module_unload)
+MOD_UNLOAD(m_admin)
 {
 	return MOD_SUCCESS;
 }

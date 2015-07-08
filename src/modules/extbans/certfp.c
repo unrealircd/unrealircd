@@ -33,7 +33,7 @@ char *extban_certfp_conv_param(char *para);
 int extban_certfp_is_banned(aClient *sptr, aChannel *chptr, char *banin, int type);
 
 /* Called upon module init */
-DLLFUNC int MOD_INIT(certfp)(ModuleInfo *modinfo)
+MOD_INIT(certfp)
 {
 	ExtbanInfo req;
 	
@@ -54,13 +54,13 @@ DLLFUNC int MOD_INIT(certfp)(ModuleInfo *modinfo)
 }
 
 /* Called upon module load */
-DLLFUNC int MOD_LOAD(certfp)(int module_load)
+MOD_LOAD(certfp)
 {
 	return MOD_SUCCESS;
 }
 
 /* Called upon unload */
-DLLFUNC int MOD_UNLOAD(account)(int module_unload)
+MOD_UNLOAD(account)
 {
 	return MOD_SUCCESS;
 }

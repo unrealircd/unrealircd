@@ -56,12 +56,12 @@ DLLFUNC int noknock_check (aClient *sptr, aChannel *chptr);
 DLLFUNC int noknock_mode_allow(aClient *cptr, aChannel *chptr, char mode, char *para, int checkt, int what);
 DLLFUNC int noknock_mode_del (aChannel *chptr, int modeChar);
 
-DLLFUNC int MOD_TEST(noknock)(ModuleInfo *modinfo)
+MOD_TEST(noknock)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(noknock)(ModuleInfo *modinfo)
+MOD_INIT(noknock)
 {
 CmodeInfo req;
 
@@ -79,12 +79,12 @@ CmodeInfo req;
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(noctcp)(int module_load)
+MOD_LOAD(noctcp)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(noctcp)(int module_unload)
+MOD_UNLOAD(noctcp)
 {
 	return MOD_SUCCESS;
 }

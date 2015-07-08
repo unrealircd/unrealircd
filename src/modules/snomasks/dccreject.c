@@ -35,12 +35,12 @@ long SNO_DCCREJECT = 0L;
 /* Forward declarations */
 int dccreject_dcc_denied(aClient *sptr, aClient *target, char *realfile, char *displayfile, ConfigItem_deny_dcc *dccdeny);
 
-DLLFUNC int MOD_TEST(dccreject)(ModuleInfo *modinfo)
+MOD_TEST(dccreject)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(dccreject)(ModuleInfo *modinfo)
+MOD_INIT(dccreject)
 {
 	SnomaskAdd(modinfo->handle, 'D', 1, umode_allow_opers, &SNO_DCCREJECT);
 	
@@ -50,12 +50,12 @@ DLLFUNC int MOD_INIT(dccreject)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(dccreject)(int module_load)
+MOD_LOAD(dccreject)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(dccreject)(int module_unload)
+MOD_UNLOAD(dccreject)
 {
 	return MOD_SUCCESS;
 }

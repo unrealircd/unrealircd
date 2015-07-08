@@ -71,13 +71,13 @@ DLLFUNC int m_nopost_config_test(ConfigFile *, ConfigEntry *, int, int *);
 DLLFUNC int m_nopost_config_run(ConfigFile *, ConfigEntry *, int);
 static int is_except_host(aClient *sptr);
 
-DLLFUNC int MOD_TEST(m_nopost)(ModuleInfo *modinfo)
+MOD_TEST(m_nopost)
 {
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, m_nopost_config_test);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(m_nopost)(ModuleInfo *modinfo)
+MOD_INIT(m_nopost)
 {
 	CommandAdd(modinfo->handle, "GET", m_nopost, MAXPARA, M_UNREGISTERED);
 	CommandAdd(modinfo->handle, "POST", m_nopost, MAXPARA, M_UNREGISTERED);
@@ -88,12 +88,12 @@ DLLFUNC int MOD_INIT(m_nopost)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_nopost)(int module_load)
+MOD_LOAD(m_nopost)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_nopost)(int module_unload)
+MOD_UNLOAD(m_nopost)
 {
 	free_config();
 	return MOD_SUCCESS;

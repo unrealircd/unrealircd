@@ -38,12 +38,12 @@ long UMODE_NOKICK = 0L;
 int nokick_can_kick(aClient *sptr, aClient *target, aChannel *chptr,
                     char *comment, long sptr_flags, long target_flags, char **reject_reason);
 
-DLLFUNC int MOD_TEST(nokick)(ModuleInfo *modinfo)
+MOD_TEST(nokick)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(nokick)(ModuleInfo *modinfo)
+MOD_INIT(nokick)
 {
 	UmodeAdd(modinfo->handle, 'q', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_NOKICK); // TODO: limit more!!
 	
@@ -53,12 +53,12 @@ DLLFUNC int MOD_INIT(nokick)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(nokick)(int module_load)
+MOD_LOAD(nokick)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(nokick)(int module_unload)
+MOD_UNLOAD(nokick)
 {
 	return MOD_SUCCESS;
 }

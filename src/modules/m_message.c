@@ -63,7 +63,7 @@ ModuleHeader MOD_HEADER(m_message)
 	NULL 
     };
 
-DLLFUNC int MOD_TEST(m_message)(ModuleInfo *modinfo)
+MOD_TEST(m_message)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddPChar(modinfo->handle, EFUNC_STRIPCOLORS, _StripColors);
@@ -73,7 +73,7 @@ DLLFUNC int MOD_TEST(m_message)(ModuleInfo *modinfo)
 }
 
 /* This is called on module init, before Server Ready */
-DLLFUNC int MOD_INIT(m_message)(ModuleInfo *modinfo)
+MOD_INIT(m_message)
 {
 	CommandAdd(modinfo->handle, MSG_PRIVATE, m_private, 2, M_USER|M_SERVER|M_RESETIDLE|M_VIRUS);
 	CommandAdd(modinfo->handle, MSG_NOTICE, m_notice, 2, 0);
@@ -82,13 +82,13 @@ DLLFUNC int MOD_INIT(m_message)(ModuleInfo *modinfo)
 }
 
 /* Is first run when server is 100% ready */
-DLLFUNC int MOD_LOAD(m_message)(int module_load)
+MOD_LOAD(m_message)
 {
 	return MOD_SUCCESS;
 }
 
 /* Called when module is unloaded */
-DLLFUNC int MOD_UNLOAD(m_message)(int module_unload)
+MOD_UNLOAD(m_message)
 {
 	return MOD_SUCCESS;
 }

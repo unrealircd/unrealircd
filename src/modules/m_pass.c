@@ -62,7 +62,7 @@ ModuleHeader MOD_HEADER(m_pass)
 /* Forward declarations */
 DLLFUNC int _check_banned(aClient *cptr);
 
-DLLFUNC int MOD_TEST(m_pass)(ModuleInfo *modinfo)
+MOD_TEST(m_pass)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
@@ -71,7 +71,7 @@ DLLFUNC int MOD_TEST(m_pass)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(m_pass)(ModuleInfo *modinfo)
+MOD_INIT(m_pass)
 {
 	CommandAdd(modinfo->handle, MSG_PASS, m_pass, 1, M_UNREGISTERED|M_USER|M_SERVER);
 	
@@ -79,12 +79,12 @@ DLLFUNC int MOD_INIT(m_pass)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_pass)(int module_load)
+MOD_LOAD(m_pass)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_pass)(int module_unload)
+MOD_UNLOAD(m_pass)
 {
 	return MOD_SUCCESS;
 }

@@ -56,12 +56,12 @@ Cmode_t EXTCMODE_REGONLY;
 DLLFUNC int regonly_check (aClient *cptr, aChannel *chptr, char *key, char *parv[]);
 
 
-DLLFUNC int MOD_TEST(regonly)(ModuleInfo *modinfo)
+MOD_TEST(regonly)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(regonly)(ModuleInfo *modinfo)
+MOD_INIT(regonly)
 {
 CmodeInfo req;
 
@@ -78,12 +78,12 @@ CmodeInfo req;
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(regonly)(int module_load)
+MOD_LOAD(regonly)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(regonly)(int module_unload)
+MOD_UNLOAD(regonly)
 {
 	return MOD_SUCCESS;
 }

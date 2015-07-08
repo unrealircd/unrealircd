@@ -66,7 +66,7 @@ ModuleHeader MOD_HEADER(m_join)
 	NULL 
     };
 
-DLLFUNC int MOD_TEST(m_join)(ModuleInfo *modinfo)
+MOD_TEST(m_join)
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAddVoid(modinfo->handle, EFUNC_JOIN_CHANNEL, _join_channel);
@@ -75,19 +75,19 @@ DLLFUNC int MOD_TEST(m_join)(ModuleInfo *modinfo)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_INIT(m_join)(ModuleInfo *modinfo)
+MOD_INIT(m_join)
 {
 	CommandAdd(modinfo->handle, MSG_JOIN, m_join, MAXPARA, M_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_join)(int module_load)
+MOD_LOAD(m_join)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_join)(int module_unload)
+MOD_UNLOAD(m_join)
 {
 	return MOD_SUCCESS;
 }

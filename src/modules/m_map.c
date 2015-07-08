@@ -54,19 +54,19 @@ ModuleHeader MOD_HEADER(m_map)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_map)(ModuleInfo *modinfo)
+MOD_INIT(m_map)
 {
 	CommandAdd(modinfo->handle, MSG_MAP, m_map, MAXPARA, M_USER|M_ANNOUNCE);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_map)(int module_load)
+MOD_LOAD(m_map)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_map)(int module_unload)
+MOD_UNLOAD(m_map)
 {
 	return MOD_SUCCESS;
 }

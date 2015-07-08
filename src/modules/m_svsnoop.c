@@ -57,19 +57,19 @@ ModuleHeader MOD_HEADER(m_svsnoop)
 	NULL
     };
 
-DLLFUNC int MOD_INIT(m_svsnoop)(ModuleInfo *modinfo)
+MOD_INIT(m_svsnoop)
 {
 	CommandAdd(modinfo->handle, MSG_SVSNOOP, m_svsnoop, MAXPARA, 0);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_svsnoop)(int module_load)
+MOD_LOAD(m_svsnoop)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_svsnoop)(int module_unload)
+MOD_UNLOAD(m_svsnoop)
 {
 	return MOD_SUCCESS;
 }

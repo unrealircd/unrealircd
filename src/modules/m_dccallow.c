@@ -54,19 +54,19 @@ ModuleHeader MOD_HEADER(m_dccallow)
 	NULL 
     };
 
-DLLFUNC int MOD_INIT(m_dccallow)(ModuleInfo *modinfo)
+MOD_INIT(m_dccallow)
 {
 	CommandAdd(modinfo->handle, MSG_DCCALLOW, m_dccallow, 1, M_USER|M_ANNOUNCE);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_dccallow)(int module_load)
+MOD_LOAD(m_dccallow)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_dccallow)(int module_unload)
+MOD_UNLOAD(m_dccallow)
 {
 	return MOD_SUCCESS;
 }
