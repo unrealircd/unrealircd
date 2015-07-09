@@ -585,7 +585,7 @@ DLLFUNC CMD_FUNC(m_nick)
 				    nick, tklban->reason);
 				return 0;
 			}
-			if (!IsOper(cptr) && !ValidatePermissionsForPath("override:nick:qline",sptr,NULL,NULL,nick))
+			if (!ValidatePermissionsForPath("override:nick:qline",sptr,NULL,NULL,nick))
 			{
 				sptr->since += 4; /* lag them up */
 				sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
@@ -625,7 +625,7 @@ DLLFUNC CMD_FUNC(m_nick)
 		return exit_client(cptr, sptr, &me, "Nick/Server collision");
 	}
 
-	if (MyClient(cptr) && (!IsOper(cptr) || !ValidatePermissionsForPath("override:nick:flood",sptr,NULL,NULL,NULL)))
+	if (MyClient(cptr) && ValidatePermissionsForPath("override:nick:flood",sptr,NULL,NULL,NULL))
 		cptr->since += 3;	/* Nick-flood prot. -Donwulff */
 
 	if (!(acptr = find_client(nick, NULL)))
