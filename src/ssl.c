@@ -722,7 +722,6 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, aClient *sptr
 	
 	if (where == SAFE_SSL_CONNECT)
 	{
-		/* sendto_failops_whoare_opers("Closing link: SSL_connect(): %s - %s", myerr, get_client_name(sptr, FALSE)); */
 		sendto_umode(UMODE_OPER, "Lost connection to %s: %s: %s",
 			get_client_name(sptr, FALSE), ssl_func, ssl_errstr);
                 /* This is a connect() that fails, we don't broadcast that for non-SSL either (noisy) */
@@ -733,10 +732,7 @@ static int fatal_ssl_error(int ssl_error, int where, int my_errno, aClient *sptr
 		 * and not writing (since otherwise deliver_it will take care of the error), THEN
 		 * send a closing link error...
 		 */
-		sendto_locfailops("Lost connection to %s: %s: %d (%s)", get_client_name(sptr, FALSE), ssl_func, ssl_error, ssl_errstr);
-		sendto_server(&me, 0, 0, ":%s GLOBOPS :Lost connection to server %s: %s: %d (%s)",
-		  me.name, get_client_name(sptr, FALSE), ssl_func, ssl_error, ssl_errstr);
-		/* sendto_failops_whoare_opers("Closing link: %s: %s - %s", ssl_func, ssl_errstr, get_client_name(sptr, FALSE)); */
+		sendto_umode_global(UMODE_OPER, "Lost connection to %s: %s: %d (%s)", get_client_name(sptr, FALSE), ssl_func, ssl_error, ssl_errstr);
 	}
 	
 	if (errtmp)

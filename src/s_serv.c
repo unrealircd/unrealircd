@@ -518,9 +518,7 @@ CMD_FUNC(m_error)
 		return 0;
 	if (cptr == sptr)
 	{
-		sendto_server(&me, 0, 0, ":%s GLOBOPS :ERROR from %s -- %s",
-		    me.name, get_client_name(cptr, FALSE), para);
-		sendto_locfailops("ERROR :from %s -- %s",
+		sendto_umode_global(UMODE_OPER, "ERROR :from %s -- %s",
 		    get_client_name(cptr, FALSE), para);
 	}
 	else

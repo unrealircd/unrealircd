@@ -157,12 +157,8 @@ CMD_FUNC(m_squit)
 	 */
 	if (MyConnect(acptr) && !IsOper(cptr))
 	{
-
-		sendto_locfailops("Received SQUIT %s from %s (%s)",
+		sendto_umode_global(UMODE_OPER, "Received SQUIT %s from %s (%s)",
 		    acptr->name, get_client_name(sptr, FALSE), comment);
-		sendto_server(&me, 0, 0,
-		    ":%s GLOBOPS :Received SQUIT %s from %s (%s)", me.name,
-		    server, get_client_name(sptr, FALSE), comment);
 	}
 	else if (MyConnect(acptr))
 	{
@@ -178,10 +174,7 @@ CMD_FUNC(m_squit)
 			    me.name, sptr->name, acptr->name, comment);
 			return 0;
 		}
-		sendto_locfailops("Received SQUIT %s from %s (%s)",
-		    acptr->name, get_client_name(sptr, FALSE), comment);
-		sendto_server(&me, 0, 0,
-		    ":%s GLOBOPS :Received SQUIT %s from %s (%s)", me.name,
+		sendto_umode_global(UMODE_OPER, "Received SQUIT %s from %s (%s)",
 		    acptr->name, get_client_name(sptr, FALSE), comment);
 	}
 	if (IsOper(sptr))

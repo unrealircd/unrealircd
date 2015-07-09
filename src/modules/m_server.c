@@ -198,8 +198,7 @@ errlink:
 		    "ERROR :Link denied (No link block found named '%s' or link::incoming::mask did not match your IP %s) %s",
 		    servername, GetIP(cptr), inpath);
 		/* And send the "verbose" error msg only to local failops */
-		sendto_locfailops
-		    ("Link denied for %s(%s@%s) (%s) %s",
+		sendto_umode(UMODE_OPER, "Link denied for %s(%s@%s) (%s) %s",
 		    servername, cptr->username, cptr->sockhost, xerrmsg, inpath);
 		return exit_client(cptr, sptr, &me,
 		    "Link denied (No link block found with your server name or link::incoming::mask did not match)");
@@ -212,8 +211,8 @@ skip_host_check:
 		sendto_one(cptr,
 		    "ERROR :Link '%s' denied (Authentication failed) %s",
 		    servername, inpath);
-		sendto_locfailops
-		    ("Link denied for '%s' (Authentication failed [Bad password?]) %s", servername, inpath);
+		sendto_umode(UMODE_OPER, "Link denied for '%s' (Authentication failed [Bad password?]) %s",
+			servername, inpath);
 		return exit_client(cptr, sptr, &me,
 		    "Link denied (Authentication failed)");
 	}
@@ -545,26 +544,29 @@ CMD_FUNC(m_server_remote)
 	aconf = cptr->serv->conf;
 	if (!aconf->hub)
 	{
-		sendto_locfailops("Link %s cancelled, is Non-Hub but introduced Leaf %s",
+		sendto_umode(UMODE_OPER, "Link %s cancelled, is Non-Hub but introduced Leaf %s",
 			cptr->name, servername);
 		return exit_client(cptr, cptr, cptr, "Non-Hub Link");
 	}
 	if (match(aconf->hub, servername))
 	{
-		sendto_locfailops("Link %s cancelled, linked in %s, which hub config disallows", cptr->name, servername);
+		sendto_umode(UMODE_OPER, "Link %s cancelled, linked in %s, which hub config disallows",
+			cptr->name, servername);
 		return exit_client(cptr, cptr, cptr, "Not matching hub configuration");
 	}
 	if (aconf->leaf)
 	{
 		if (match(aconf->leaf, servername))
 		{
-			sendto_locfailops("Link %s(%s) cancelled, disallowed by leaf configuration", cptr->name, servername);
+			sendto_umode(UMODE_OPER, "Link %s(%s) cancelled, disallowed by leaf configuration",
+				cptr->name, servername);
 			return exit_client(cptr, cptr, cptr, "Disallowed by leaf configuration");
 		}
 	}
 	if (aconf->leaf_depth && (hop > aconf->leaf_depth))
 	{
-			sendto_locfailops("Link %s(%s) cancelled, too deep depth", cptr->name, servername);
+			sendto_umode(UMODE_OPER, "Link %s(%s) cancelled, too deep depth",
+				cptr->name, servername);
 			return exit_client(cptr, cptr, cptr, "Too deep link depth (leaf)");
 	}
 	acptr = make_client(cptr, find_server(parv[0], cptr));

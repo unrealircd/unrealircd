@@ -542,16 +542,11 @@ DLLFUNC void _do_mode(aChannel *chptr, aClient *cptr, aClient *sptr, int parc, c
 		return;
 	if (IsPerson(sptr) && samode && MyClient(sptr))
 	{
-		sendto_server(NULL, 0, 0,
-		    ":%s GLOBOPS :%s used SAMODE %s (%s%s%s)", me.name, sptr->name,
-		    chptr->chname, modebuf, *parabuf ? " " : "", parabuf);
-		sendto_failops_whoare_opers
-		    ("from %s: %s used SAMODE %s (%s%s%s)", me.name, sptr->name,
-		    chptr->chname, modebuf, *parabuf ? " " : "", parabuf);
+		sendto_umode_global(UMODE_OPER, "%s used SAMODE %s (%s%s%s)",
+			sptr->name, chptr->chname, modebuf, *parabuf ? " " : "", parabuf);
 		sptr = &me;
 		sendts = 0;
 	}
-
 	
 	sendto_channel_butserv(chptr, sptr, ":%s MODE %s %s %s",
 	    sptr->name, chptr->chname, modebuf, parabuf);

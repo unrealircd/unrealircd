@@ -130,7 +130,7 @@ DLLFUNC CMD_FUNC(m_uid)
 		if (IsServer(cptr))
 		{
 			ircstp->is_kill++;
-			sendto_failops("Bad Nick: %s From: %s %s",
+			sendto_umode(UMODE_OPER, "Bad Nick: %s From: %s %s",
 			    parv[1], parv[0], get_client_name(cptr, FALSE));
 			sendto_one(cptr, ":%s KILL %s :%s (%s <- %s[%s])",
 			    me.name, parv[1], me.name, parv[1],
@@ -240,7 +240,7 @@ DLLFUNC CMD_FUNC(m_uid)
 		   ** there is no danger of the server being disconnected.
 		   ** Ultimate way to jupiter a nick ? >;-). -avalon
 		 */
-		sendto_failops("Nick collision on %s(%s <- %s)",
+		sendto_umode(UMODE_OPER, "Nick collision on %s(%s <- %s)",
 		    sptr->name, acptr->from->name,
 		    get_client_name(cptr, FALSE));
 		ircstp->is_kill++;
@@ -269,7 +269,7 @@ DLLFUNC CMD_FUNC(m_uid)
 				differ = (mycmp(acptr->user->username, parv[4])
 				    || mycmp(acptr->user->realhost, parv[5]));
 		}
-		sendto_failops("Nick collision on %s (%s %ld <- %s %ld)",
+		sendto_umode(UMODE_OPER, "Nick collision on %s (%s %ld <- %s %ld)",
 		    acptr->name, acptr->from->name, acptr->lastnick,
 		    cptr->name, lastnick);
 		/*
@@ -447,7 +447,7 @@ DLLFUNC CMD_FUNC(m_nick)
 		if (IsServer(cptr))
 		{
 			ircstp->is_kill++;
-			sendto_failops("Bad Nick: %s From: %s %s",
+			sendto_umode(UMODE_OPER, "Bad Nick: %s From: %s %s",
 			    parv[1], parv[0], get_client_name(cptr, FALSE));
 			sendto_one(cptr, ":%s KILL %s :%s (%s <- %s[%s])",
 			    me.name, parv[1], me.name, parv[1],
@@ -609,7 +609,7 @@ DLLFUNC CMD_FUNC(m_nick)
 		   ** there is no danger of the server being disconnected.
 		   ** Ultimate way to jupiter a nick ? >;-). -avalon
 		 */
-		sendto_failops("Nick collision on %s(%s <- %s)",
+		sendto_umode(UMODE_OPER, "Nick collision on %s(%s <- %s)",
 		    sptr->name, acptr->from->name,
 		    get_client_name(cptr, FALSE));
 		ircstp->is_kill++;
@@ -650,7 +650,7 @@ DLLFUNC CMD_FUNC(m_nick)
 	if (acptr->user == NULL)
 	{
 		/* This is a Bad Thing */
-		sendto_failops("Lost user field for %s in change from %s",
+		sendto_umode(UMODE_OPER, "Lost user field for %s in change from %s",
 		    acptr->name, get_client_name(cptr, FALSE));
 		ircstp->is_kill++;
 		sendto_one(acptr, ":%s KILL %s :%s (Lost user field!)",
@@ -738,7 +738,7 @@ DLLFUNC CMD_FUNC(m_nick)
 				differ = (mycmp(acptr->user->username, parv[4])
 				    || mycmp(acptr->user->realhost, parv[5]));
 		}
-		sendto_failops("Nick collision on %s (%s %ld <- %s %ld)",
+		sendto_umode(UMODE_OPER, "Nick collision on %s (%s %ld <- %s %ld)",
 		    acptr->name, acptr->from->name, acptr->lastnick,
 		    cptr->name, lastnick);
 		/*
@@ -809,8 +809,7 @@ DLLFUNC CMD_FUNC(m_nick)
 			lastnick = atol(parv[2]);
 		differ = (mycmp(acptr->user->username, sptr->user->username) ||
 		    mycmp(acptr->user->realhost, sptr->user->realhost));
-		sendto_failops
-		    ("Nick change collision from %s to %s (%s %ld <- %s %ld)",
+		sendto_umode(UMODE_OPER, "Nick change collision from %s to %s (%s %ld <- %s %ld)",
 		    sptr->name, acptr->name, acptr->from->name, acptr->lastnick,
 		    sptr->from->name, lastnick);
 		if (!(parc > 2) || lastnick == acptr->lastnick)
