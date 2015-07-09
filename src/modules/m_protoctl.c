@@ -427,6 +427,18 @@ CMD_FUNC(m_protoctl)
 				}
 			}
 		}
+		else if (!strcmp(s, "EXTSWHOIS"))
+		{
+#ifdef PROTOCTL_MADNESS
+			if (remove)
+			{
+				cptr->proto &= ~PROTO_EXTSWHOIS;
+				continue;
+			}
+#endif
+			Debug((DEBUG_ERROR, "Chose protocol %s for link %s", proto, cptr->name));
+			cptr->proto |= PROTO_EXTSWHOIS;
+		}
 
 		/*
 		 * Add other protocol extensions here, with proto

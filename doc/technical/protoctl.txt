@@ -135,3 +135,11 @@ TS            Upon linking newer servers send TS=<ts> where <ts> is the current 
               timestamp. This way a link can be rejected if the difference between the
               clock of two servers is too large (since such a difference would lead to
               serious issues).
+
+EXTSWHOIS     Extended SWHOIS. This allows setting multiple 'swhois' titles for /WHOIS.
+              It also allows other servers to see what/who set the 'swhois' and to
+              specifiy a 'priority' which is used for the swhois display order in /WHOIS.
+              Instead of: SWHOIS <nick> :<swhois title>
+              This will send: SWHOIS <nick> <+|-> <setby> <priority> :<swhois title>
+              Add example: SWHOIS someuser + vhost 0 :is particularly helpful
+              Del example: SWHOIS someuser + vhost 0 :is particularly helpful

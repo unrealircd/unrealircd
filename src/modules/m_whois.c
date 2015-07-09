@@ -346,10 +346,15 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			
 			RunHook2(HOOKTYPE_WHOIS, sptr, acptr);
 
-			if (!BadPtr(user->swhois) && !hideoper)
+			if (user->swhois && !hideoper)
+			{
+				SWhois *s;
+				
+				for (s = user->swhois; s; s = s->next)
 					sendto_one(sptr, ":%s %d %s %s :%s",
-					    me.name, RPL_WHOISSPECIAL, parv[0],
-					    name, acptr->user->swhois);
+					    me.name, RPL_WHOISSPECIAL, sptr->name,
+					    name, s->line);
+			}
 
 			/*
 			 * display services account name if it's actually a services account name and

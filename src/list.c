@@ -277,7 +277,14 @@ void free_user(anUser *user, aClient *cptr)
 		if (user->away)
 			MyFree(user->away);
 		if (user->swhois)
-			MyFree(user->swhois);
+		{
+			SWhois *s, *s_next;
+			for (s = user->swhois; s; s = s_next)
+			{
+				s_next = s->next;
+				MyFree(s);
+			}
+		}
 		if (user->virthost)
 			MyFree(user->virthost);
 		if (user->ip_str)

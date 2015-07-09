@@ -475,3 +475,14 @@ int i;
 			sptr->umodes &= ~Usermode_Table[i].mode;
 	}
 }
+
+void remove_oper_privileges(aClient *sptr, int broadcast_mode_change)
+{
+	long oldumodes = sptr->umodes;
+	remove_oper_modes(sptr);
+	remove_oper_snomasks(sptr);
+	if (broadcast_mode_change && (sptr->umodes != oldumodes))
+		send_umode_out(sptr, sptr, oldumodes);
+	if (MyClient(sptr)) /* only do if it's our client, remote servers will send a SWHOIS cmd */
+		swhois_delete(sptr, "oper", "*", &me, NULL);
+}

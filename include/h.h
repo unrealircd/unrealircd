@@ -753,3 +753,6 @@ extern MODVAR BOOL IsService;
 extern int match_ip46(char *a, char *b);
 extern void extcmodes_check_for_changes(void);
 extern int config_parse_flood(char *orig, int *times, int *period);
+extern int swhois_add(aClient *acptr, char *tag, int priority, char *swhois, aClient *from, aClient *skip);
+extern int swhois_delete(aClient *acptr, char *tag, char *swhois, aClient *from, aClient *skip);
+extern void remove_oper_privileges(aClient *sptr, int broadcast_mode_change);

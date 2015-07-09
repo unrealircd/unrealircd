@@ -1780,8 +1780,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 	/* Don't let non-ircops set ircop-only modes or snomasks */
 	if (MyClient(sptr) && !IsOper(sptr))
 	{
-		remove_oper_modes(sptr);
-		remove_oper_snomasks(sptr);
+		remove_oper_privileges(sptr, 0);
 	}
 
 	/* Below can be removed after Heero is done with the new oper system and this shit is gone :D */
@@ -1891,7 +1890,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 		IRCstats.invisible--;
 
 	if (MyConnect(sptr) && !IsOper(sptr))
-		remove_oper_modes(sptr);
+		remove_oper_privileges(sptr, 0);
 
 	/*
 	 * compare new flags with old flags and send string which

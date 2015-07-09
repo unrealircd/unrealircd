@@ -1147,3 +1147,62 @@ int hlength = strlen (haystack);
 	}
   return NULL; /* not found */
 }
+
+int swhois_add(aClient *acptr, char *tag, int priority, char *swhois, aClient *from, aClient *skip)
+{
+	SWhois *s;
+
+	/* Make sure the line isn't added yet. If so, then bail out silently. */
+	for (s = acptr->user->swhois; s; s = s->next)
+		if (!strcmp(s->line, swhois))
+			return -1; /* exists */
+
+	s = MyMallocEx(sizeof(SWhois));
+	s->line = strdup(swhois);
+	s->setby = strdup(tag);
+	s->priority = priority;
+	AddListItem(s, acptr->user->swhois);
+	
+	sendto_server(skip, 0, PROTO_EXTSWHOIS, ":%s SWHOIS %s :%s",
+		from->name, acptr->name, swhois);
+
+	sendto_server(skip, PROTO_EXTSWHOIS, 0, ":%s SWHOIS %s + %s %d :%s",
+		from->name, acptr->name, tag, priority, swhois);
+
+	return 0;
+}
+
+/** Delete swhois title(s)
+ * Delete swhois by tag and swhois. Then broadcast this change to all other servers.
+ * Remark: if you use swhois "*" then it will remove all swhois titles for that tag
+ */
+int swhois_delete(aClient *acptr, char *tag, char *swhois, aClient *from, aClient *skip)
+{
+	SWhois *s, *s_next;
+	int ret = -1; /* default to 'not found' */
+	
+	for (s = acptr->user->swhois; s; s = s_next)
+	{
+		s_next = s->next;
+		
+		/* If ( same swhois or "*" ) AND same tag */
+		if ( ((!strcmp(s->line, swhois) || !strcmp(swhois, "*")) &&
+		    !strcmp(s->setby, tag)))
+		{
+			DelListItem(s, acptr->user->swhois);
+			MyFree(s->line);
+			MyFree(s->setby);
+			MyFree(s);
+
+			sendto_server(skip, 0, PROTO_EXTSWHOIS, ":%s SWHOIS %s :",
+				from->name, acptr->name);
+
+			sendto_server(skip, PROTO_EXTSWHOIS, 0, ":%s SWHOIS %s - %s %d :%s",
+				from->name, acptr->name, tag, 0, swhois);
+			
+			ret = 0;
+		}
+	}
+
+	return ret;
+}

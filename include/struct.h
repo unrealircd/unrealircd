@@ -187,6 +187,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define	MAXKILLS	20
 #define	MAXSILELENGTH	NICKLEN+USERLEN+HOSTLEN+10
 #define IDLEN		10
+#define SWHOISLEN	256
 #define UMODETABLESZ (sizeof(long) * 8)
 /*
  * Watch it - Don't change this unless you also change the ERR_TOOMANYWATCH
@@ -350,6 +351,7 @@ typedef OperPermission (*OperClassEntryEvalCallback)(OperClassACLEntryVar* varia
 #define PROTO_AWAY_NOTIFY	0x100000	/* client supports away-notify */
 #define PROTO_ACCOUNT_NOTIFY	0x200000	/* client supports account-notify */
 #define PROTO_MLOCK		0x400000	/* server supports MLOCK */
+#define PROTO_EXTSWHOIS 0x800000	/* extended SWHOIS support */
 
 /*
  * flags macros.
@@ -633,6 +635,14 @@ typedef struct Whowas {
 	struct Whowas *cprev;	/* for client struct linked list */
 } aWhowas;
 
+typedef struct _swhois SWhois;
+struct _swhois {
+	SWhois *prev, *next;
+	int priority;
+	char *line;
+	char *setby;
+};
+	
 /*
  * Client structures
  */
@@ -658,7 +668,7 @@ struct User {
 	char cloakedhost[HOSTLEN + 1]; /* cloaked host (masked host for caching). NOT NECESSARILY THE SAME AS virthost. */
 	char *virthost;
 	char *server;
-	char *swhois;		/* special whois thing */
+	SWhois *swhois; /* special whois entries */
 	LOpts *lopt;            /* Saved /list options */
 	aWhowas *whowas;
 	int snomask;

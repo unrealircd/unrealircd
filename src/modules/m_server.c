@@ -763,10 +763,23 @@ int	m_server_synch(aClient *cptr, ConfigItem_link *aconf)
 			if (acptr->user->away)
 				sendto_one(cptr, ":%s AWAY :%s", CHECKPROTO(cptr, PROTO_SID) ? ID(acptr) : acptr->name,
 				    acptr->user->away);
+
 			if (acptr->user->swhois)
-				if (*acptr->user->swhois != '\0')
-					sendto_one(cptr, "SWHOIS %s :%s",
-					    CHECKPROTO(cptr, PROTO_SID) ? ID(acptr) : acptr->name, acptr->user->swhois);
+			{
+				SWhois *s;
+				for (s = acptr->user->swhois; s; s = s->next)
+				{
+					if (CHECKPROTO(cptr, PROTO_EXTSWHOIS))
+					{
+						sendto_one(cptr, ":%s SWHOIS %s + %s %d :%s",
+							me.name, acptr->name, s->setby, s->priority, s->line);
+					} else
+					{
+						sendto_one(cptr, ":%s SWHOIS %s :%s",
+							me.name, acptr->name, s->line);
+					}
+				}
+			}
 
 			if (!SupportSJOIN(cptr))
 				send_user_joins(cptr, acptr);

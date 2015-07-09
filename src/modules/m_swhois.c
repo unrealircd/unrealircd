@@ -74,27 +74,63 @@ MOD_UNLOAD(m_swhois)
 }
 /*
  * m_swhois
+ * Old syntax:
  * parv[1] = nickname
  * parv[2] = new swhois
- *
+ * New syntax:
+ * parv[1] = nickname
+ * parv[2] = + or -
+ * parv[3] = added-by tag
+ * parv[4] = priority
+ * parv[5] = swhois
 */
 
 int m_swhois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
         aClient *acptr;
+        char tag[HOSTLEN+1];
+        char swhois[SWHOISLEN+1];
+        int add;
+        int priority = 0;
+
+        *tag = *swhois = '\0';
 
         if (!(IsServer(sptr) || IsULine(sptr)))
                 return 0;
+
         if (parc < 3)
                 return 0;
+
         acptr = find_person(parv[1], (aClient *)NULL);
         if (!acptr)
                 return 0;
 
-        if (acptr->user->swhois)
-                MyFree(acptr->user->swhois);
-        acptr->user->swhois = MyMalloc(strlen(parv[2]) + 1);
-        strcpy(acptr->user->swhois, parv[2]);
-        sendto_server(cptr, 0, 0, ":%s SWHOIS %s :%s", sptr->name, parv[1], parv[2]);
-        return 0;
+		if ((parc > 5) && !BadPtr(parv[5]))
+		{
+			/* New syntax */
+			add = (*parv[2] == '+') ? 1 : 0;
+			strlcpy(tag, parv[3], sizeof(tag));
+			priority = atoi(parv[4]);
+			strlcpy(swhois, parv[5], sizeof(swhois));
+		} else {
+			/* Old syntax */
+			strlcpy(tag, sptr->name, sizeof(tag));
+			if (BadPtr(parv[2]))
+			{
+				/* Delete. Hmmmm. Let's just delete anything with that tag. */
+				strcpy(swhois, "*");
+				add = 0;
+			} else {
+				/* Add */
+				add = 1;
+				strlcpy(swhois, parv[2], sizeof(swhois));
+			}
+		}
+		
+		if (add)
+			swhois_add(acptr, tag, priority, swhois, sptr, sptr);
+		else
+			swhois_delete(acptr, tag, swhois, sptr, sptr);
+		
+		return 0;
 }

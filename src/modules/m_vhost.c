@@ -169,12 +169,7 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_one(sptr, ":%s MODE %s :+tx",
 		    sptr->name, sptr->name);
 		if (vhost->swhois) {
-			if (sptr->user->swhois)
-				MyFree(sptr->user->swhois);
-			sptr->user->swhois = MyMalloc(strlen(vhost->swhois) +1);
-			strcpy(sptr->user->swhois, vhost->swhois);
-			sendto_server(cptr, 0, 0, ":%s SWHOIS %s :%s", me.name,
-			    sptr->name, vhost->swhois);
+			swhois_add(sptr, "vhost", 0, vhost->swhois, &me, NULL);
 		}
 		sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, vhost->virthost);
 		sendto_one(sptr,

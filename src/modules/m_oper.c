@@ -225,10 +225,7 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	/* oper::swhois */
 	if (aconf->swhois)
 	{
-		safefree(sptr->user->swhois);
-		sptr->user->swhois = strdup(aconf->swhois);
-		sendto_server(cptr, 0, 0, ":%s SWHOIS %s :%s",
-			me.name, sptr->name, aconf->swhois);
+		swhois_add(sptr, "oper", -100, aconf->swhois, &me, NULL);
 	}
 
 	/* set oper user modes */
