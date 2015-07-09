@@ -998,7 +998,7 @@ int  check_for_chan_flood(aClient *sptr, aChannel *chptr)
 	ChanFloodProt *chp;
 	aUserFld *userfld;
 
-	if (!MyClient(sptr) || !IsFloodLimit(chptr) || IsOper(sptr) || IsULine(sptr) || is_skochanop(sptr, chptr))
+	if (ValidatePermissionsForPath("immune:channel:flood",sptr,NULL,chptr,NULL) || !IsFloodLimit(chptr) || is_skochanop(sptr, chptr))
 		return 0;
 
 	if (!(lp = find_membership_link(sptr->user->channel, chptr)))
