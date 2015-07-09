@@ -115,7 +115,7 @@ DLLFUNC CMD_FUNC(m_setname)
     }
 
 	/* Check for n:lines here too */
-	if (!OperClass_evaluateACLPath("immune:namecheck",sptr,NULL,NULL,NULL) && Find_ban(NULL, sptr->info, CONF_BAN_REALNAME))
+	if (!ValidatePermissionsForPath("immune:namecheck",sptr,NULL,NULL,NULL) && Find_ban(NULL, sptr->info, CONF_BAN_REALNAME))
 		return exit_client(cptr, sptr, &me,
 		                   "Your GECOS (real name) is banned from this server");
 

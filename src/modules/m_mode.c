@@ -265,7 +265,7 @@ CMD_FUNC(m_mode)
 #ifndef NO_OPEROVERRIDE
         if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr)
             && !is_half_op(sptr, chptr) && (MyClient(sptr) ? (IsOper(sptr) &&
-	    OperClass_evaluateACLPath("override:mode",sptr,NULL,chptr,NULL)) : IsOper(sptr)))
+	    ValidatePermissionsForPath("override:mode",sptr,NULL,chptr,NULL)) : IsOper(sptr)))
         {
                 sendts = 0;
                 opermode = 1;
@@ -274,7 +274,7 @@ CMD_FUNC(m_mode)
 
         if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr)
             && is_half_op(sptr, chptr) && (MyClient(sptr) ? (IsOper(sptr) &&
-	    OperClass_evaluateACLPath("override:mode",sptr,NULL,chptr,NULL)) : IsOper(sptr)))
+	    ValidatePermissionsForPath("override:mode",sptr,NULL,chptr,NULL)) : IsOper(sptr)))
         {
                 opermode = 2;
                 goto aftercheck;
@@ -283,7 +283,7 @@ CMD_FUNC(m_mode)
 
 	if (IsPerson(sptr) && !IsULine(sptr) && !is_chan_op(sptr, chptr)
 	    && !is_half_op(sptr, chptr)
-	    && (cptr == sptr || !OperClass_evaluateACLPath("override:mode",sptr,NULL,chptr,NULL) || !IsOper(sptr)))
+	    && (cptr == sptr || !ValidatePermissionsForPath("override:mode",sptr,NULL,chptr,NULL) || !IsOper(sptr)))
 	{
 		if (cptr == sptr)
 		{

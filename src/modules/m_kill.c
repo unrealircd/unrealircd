@@ -110,7 +110,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		*s = '\0';	/* Truncate at first "." */
 #endif
 
-	if (!IsServer(cptr) && !OperClass_evaluateACLPath("kill:global",sptr,NULL,NULL,NULL) && !OperClass_evaluateACLPath("kill:local",sptr,NULL,NULL,NULL))
+	if (!IsServer(cptr) && !ValidatePermissionsForPath("kill:global",sptr,NULL,NULL,NULL) && !ValidatePermissionsForPath("kill:local",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
@@ -155,9 +155,9 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    nick, acptr->name);
 			chasing = 1;
 		}
-		if ((!MyConnect(acptr) && MyClient(cptr) && !OperClass_evaluateACLPath("kill:global",sptr,acptr,NULL,NULL))
+		if ((!MyConnect(acptr) && MyClient(cptr) && !ValidatePermissionsForPath("kill:global",sptr,acptr,NULL,NULL))
 		    || (MyConnect(acptr) && MyClient(cptr)
-		    && !OperClass_evaluateACLPath("kill:local",sptr,acptr,NULL,NULL)))
+		    && !ValidatePermissionsForPath("kill:local",sptr,acptr,NULL,NULL)))
 		{
 			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 			    parv[0]);

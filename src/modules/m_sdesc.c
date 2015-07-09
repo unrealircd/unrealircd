@@ -81,7 +81,7 @@ MOD_UNLOAD(m_sdesc)
 
 int m_sdesc(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-	if (!OperClass_evaluateACLPath("server:description",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:description",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;

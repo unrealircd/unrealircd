@@ -83,7 +83,7 @@ DLLFUNC int m_lag(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 
 	if (MyClient(sptr))
-		if (!OperClass_evaluateACLPath("server:info:lag",sptr,NULL,NULL,NULL))
+		if (!ValidatePermissionsForPath("server:info:lag",sptr,NULL,NULL,NULL))
 		{
 			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 			    parv[0]);

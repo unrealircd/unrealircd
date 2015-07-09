@@ -85,7 +85,7 @@ CMD_FUNC(m_squit)
 	    parv[parc - 1] : cptr->name;
 
 
-	if (!IsServer(sptr) && !OperClass_evaluateACLPath("route:local",sptr,NULL,NULL,NULL))
+	if (!IsServer(sptr) && !ValidatePermissionsForPath("route:local",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
@@ -146,8 +146,8 @@ CMD_FUNC(m_squit)
 		    me.name, parv[0], server);
 		return 0;
 	}
-	if (MyClient(sptr) && ((!OperClass_evaluateACLPath("route:global",sptr,NULL,NULL,NULL) && !MyConnect(acptr)) ||
-	    (!OperClass_evaluateACLPath("route:local",sptr,NULL,NULL,NULL) && MyConnect(acptr))))
+	if (MyClient(sptr) && ((!ValidatePermissionsForPath("route:global",sptr,NULL,NULL,NULL) && !MyConnect(acptr)) ||
+	    (!ValidatePermissionsForPath("route:local",sptr,NULL,NULL,NULL) && MyConnect(acptr))))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;

@@ -80,7 +80,7 @@ DLLFUNC CMD_FUNC(m_close)
 	int  i;
 	int  closed = 0;
 
-	if (!OperClass_evaluateACLPath("server:close",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:close",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;

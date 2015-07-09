@@ -258,7 +258,7 @@ int  channel_canjoin(aClient *sptr, char *name)
 	ConfigItem_deny_channel *p;
 	aTKline *tklban;
 	int ishold;
-	if (!OperClass_evaluateACLPath("channel:restricted",sptr,NULL,NULL,name))
+	if (!ValidatePermissionsForPath("channel:restricted",sptr,NULL,NULL,name))
 		return 1;
 	if (IsULine(sptr))
 		return 1;

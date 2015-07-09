@@ -249,7 +249,7 @@ DLLFUNC CMD_FUNC(m_list)
 			  else	/* Just a normal channel */
 			  {
 				  chptr = find_channel(name, NullChn);
-				  if (chptr && (ShowChannel(sptr, chptr) || OperClass_evaluateACLPath("override:see:list:secret",sptr,NULL,chptr,NULL))) {
+				  if (chptr && (ShowChannel(sptr, chptr) || ValidatePermissionsForPath("override:see:list:secret",sptr,NULL,chptr,NULL))) {
 #ifdef LIST_SHOW_MODES
 					modebuf[0] = '[';
 					channel_modes(sptr, modebuf+1, parabuf, sizeof(modebuf)-1, sizeof(parabuf), chptr);
@@ -344,7 +344,7 @@ void _send_list(aClient *cptr, int numsend)
 			{
 				if (SecretChannel(chptr)
 				    && !IsMember(cptr, chptr)
-				    && !OperClass_evaluateACLPath("override:see:list:secret",cptr,NULL,chptr,NULL))
+				    && !ValidatePermissionsForPath("override:see:list:secret",cptr,NULL,chptr,NULL))
 					continue;
 
 				/* Much more readable like this -- codemastr */
@@ -385,7 +385,7 @@ void _send_list(aClient *cptr, int numsend)
 				else
 					strlcat(modebuf, "]", sizeof modebuf);
 #endif
-				if (!OperClass_evaluateACLPath("override:see:list:secret",cptr,NULL,chptr,NULL))
+				if (!ValidatePermissionsForPath("override:see:list:secret",cptr,NULL,chptr,NULL))
 					sendto_one(cptr,
 					    rpl_str(RPL_LIST), me.name,
 					    cptr->name,

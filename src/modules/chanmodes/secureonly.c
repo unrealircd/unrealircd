@@ -146,7 +146,7 @@ int secureonly_check_join (aClient *sptr, aChannel *chptr, char *key, char *parv
 
 	if (IsSecureOnly(chptr) && !(sptr->umodes & UMODE_SECURE))
 		{
-			if (OperClass_evaluateACLPath("immune:secureonly",sptr,NULL,chptr,NULL))
+			if (ValidatePermissionsForPath("immune:secureonly",sptr,NULL,chptr,NULL))
 			{
 				/* if the channel is +z we still allow an ircop to bypass it
 				 * if they are invited.

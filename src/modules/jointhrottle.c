@@ -208,7 +208,7 @@ int num=cfg.num, t=cfg.t;
 
 int jointhrottle_can_join(aClient *sptr, aChannel *chptr, char *key, char *link, char *parv[])
 {
-	if (!OperClass_evaluateACLPath("immune:jointhrottle",sptr,NULL,chptr,NULL) && isjthrottled(sptr, chptr))
+	if (!ValidatePermissionsForPath("immune:jointhrottle",sptr,NULL,chptr,NULL) && isjthrottled(sptr, chptr))
 		return ERR_TOOMANYJOINS;
 	return 0;
 }

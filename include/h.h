@@ -118,7 +118,7 @@ extern ConfigItem_deny_channel *Find_channel_allowed(aClient *cptr, char *name);
 extern ConfigItem_alias	*Find_alias(char *name);
 extern ConfigItem_help 	*Find_Help(char *command);
 
-extern OperPermission OperClass_evaluateACLPath(char *path, aClient *sptr, aClient *victim, aChannel *channel, void *extra);
+extern OperPermission ValidatePermissionsForPath(char *path, aClient *sptr, aClient *victim, aChannel *channel, void *extra);
 extern void OperClassValidatorDel(OperClassValidator *validator);
 
 extern int AllowClient(aClient *cptr, struct hostent *hp, char *sockhost, char *username);

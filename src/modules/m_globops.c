@@ -89,7 +89,7 @@ DLLFUNC CMD_FUNC(m_globops)
 		return 0;
 	}
 
-	if (MyClient(sptr) && !OperClass_evaluateACLPath("chat:globops",sptr,NULL,NULL,NULL))
+	if (MyClient(sptr) && !ValidatePermissionsForPath("chat:globops",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;

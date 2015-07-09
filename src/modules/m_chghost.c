@@ -91,7 +91,7 @@ DLLFUNC int m_chghost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 
-	if (MyClient(sptr) && !OperClass_evaluateACLPath("client:host",sptr,NULL,NULL,NULL))
+	if (MyClient(sptr) && !ValidatePermissionsForPath("client:host",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 			parv[0]);

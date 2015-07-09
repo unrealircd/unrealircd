@@ -421,7 +421,7 @@ DLLFUNC CMD_FUNC(m_nick)
 	else
 		strlcpy(nick, parv[1], NICKLEN + 1);
 
-	if (MyConnect(sptr) && sptr->user && !OperClass_evaluateACLPath("immune:limits",sptr,NULL,NULL,NULL))
+	if (MyConnect(sptr) && sptr->user && !ValidatePermissionsForPath("immune:limits",sptr,NULL,NULL,NULL))
 	{
 		if ((sptr->user->flood.nick_c >= NICK_COUNT) && 
 		    (TStime() - sptr->user->flood.nick_t < NICK_PERIOD))
@@ -585,7 +585,7 @@ DLLFUNC CMD_FUNC(m_nick)
 				    nick, tklban->reason);
 				return 0;
 			}
-			if (!IsOper(cptr) && !OperClass_evaluateACLPath("override:nick:qline",sptr,NULL,NULL,nick))
+			if (!IsOper(cptr) && !ValidatePermissionsForPath("override:nick:qline",sptr,NULL,NULL,nick))
 			{
 				sptr->since += 4; /* lag them up */
 				sendto_one(sptr, err_str(ERR_ERRONEUSNICKNAME),
@@ -625,7 +625,7 @@ DLLFUNC CMD_FUNC(m_nick)
 		return exit_client(cptr, sptr, &me, "Nick/Server collision");
 	}
 
-	if (MyClient(cptr) && (!IsOper(cptr) || !OperClass_evaluateACLPath("override:nick:flood",sptr,NULL,NULL,NULL)))
+	if (MyClient(cptr) && (!IsOper(cptr) || !ValidatePermissionsForPath("override:nick:flood",sptr,NULL,NULL,NULL)))
 		cptr->since += 3;	/* Nick-flood prot. -Donwulff */
 
 	if (!(acptr = find_client(nick, NULL)))

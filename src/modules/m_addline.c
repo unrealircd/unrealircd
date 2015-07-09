@@ -82,7 +82,7 @@ DLLFUNC CMD_FUNC(m_addline)
 	char *text;
 	text = parc > 1 ? parv[1] : NULL;
 
-	if (!OperClass_evaluateACLPath("server:addline",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:addline",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;

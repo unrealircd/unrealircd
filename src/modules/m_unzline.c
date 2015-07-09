@@ -83,7 +83,7 @@ MOD_UNLOAD(m_unzline)
 
 DLLFUNC int m_unzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
-        if (!MyClient(sptr) || !OperClass_evaluateACLPath("tkl:zline:local:remove",sptr,NULL,NULL,NULL))
+        if (!MyClient(sptr) || !ValidatePermissionsForPath("tkl:zline:local:remove",sptr,NULL,NULL,NULL))
         {
                 sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
                 return 0;

@@ -157,7 +157,7 @@ int i=0,j=0;
 
 #ifndef NO_OPEROVERRIDE
 #ifdef OPEROVERRIDE_VERIFY
-        if (OperClass_evaluateACLPath("override:privsecret",sptr,NULL,chptr,NULL) && (chptr->mode.mode & MODE_SECRET ||
+        if (ValidatePermissionsForPath("override:privsecret",sptr,NULL,chptr,NULL) && (chptr->mode.mode & MODE_SECRET ||
             chptr->mode.mode & MODE_PRIVATE) && !is_autojoin_chan(chptr->chname))
                 return (ERR_OPERSPVERIFY);
 #endif
@@ -438,7 +438,7 @@ DLLFUNC CMD_FUNC(_do_join)
 			flags =
 			    (ChannelExists(name)) ? CHFL_DEOPPED : LEVEL_ON_JOIN;
 
-			if (!OperClass_evaluateACLPath("immune:channellimit",sptr,NULL,NULL,NULL))	/* opers can join unlimited chans */
+			if (!ValidatePermissionsForPath("immune:channellimit",sptr,NULL,NULL,NULL))	/* opers can join unlimited chans */
 				if (sptr->user->joined >= MAXCHANNELSPERUSER)
 				{
 					sendto_one(sptr,
@@ -450,7 +450,7 @@ DLLFUNC CMD_FUNC(_do_join)
 /* RESTRICTCHAN */
 			if (conf_deny_channel)
 			{
-				if (!OperClass_evaluateACLPath("immune:forbiddenchan",sptr,NULL,NULL,NULL))
+				if (!ValidatePermissionsForPath("immune:forbiddenchan",sptr,NULL,NULL,NULL))
 				{
 					ConfigItem_deny_channel *d;
 					if ((d = Find_channel_allowed(cptr, name)))
@@ -475,7 +475,7 @@ DLLFUNC CMD_FUNC(_do_join)
 					}
 				}
 			}
-			if (OperClass_evaluateACLPath("immune:forbiddenchan",sptr,NULL,NULL,NULL) && (tklban = find_qline(sptr, name, &ishold)))
+			if (ValidatePermissionsForPath("immune:forbiddenchan",sptr,NULL,NULL,NULL) && (tklban = find_qline(sptr, name, &ishold)))
 			{
 				sendto_one(sptr, err_str(ERR_FORBIDDENCHANNEL), me.name, BadPtr(parv[0]) ? "*" : parv[0], name, tklban->reason);
 				continue;
@@ -483,7 +483,7 @@ DLLFUNC CMD_FUNC(_do_join)
 			/* ugly set::spamfilter::virus-help-channel-deny hack.. */
 			if (SPAMFILTER_VIRUSCHANDENY && SPAMFILTER_VIRUSCHAN &&
 			    !strcasecmp(name, SPAMFILTER_VIRUSCHAN) &&
-			    !OperClass_evaluateACLPath("immune:viruschan",sptr,NULL,NULL,NULL) && !spamf_ugly_vchanoverride)
+			    !ValidatePermissionsForPath("immune:viruschan",sptr,NULL,NULL,NULL) && !spamf_ugly_vchanoverride)
 			{
 				int invited = 0;
 				Link *lp;
@@ -536,14 +536,14 @@ DLLFUNC CMD_FUNC(_do_join)
 			   (i = can_join(cptr, sptr, chptr, key, parv)))
 			{
 #ifndef NO_OPEROVERRIDE
-				if (i != -1 && !OperClass_evaluateACLPath("override:join",sptr,NULL,chptr,NULL))
+				if (i != -1 && !ValidatePermissionsForPath("override:join",sptr,NULL,chptr,NULL))
 #else
 				if (i != -1)
 #endif
 					sendto_one(sptr, err_str(i),
 					    me.name, parv[0], name);
 #ifndef NO_OPEROVERRIDE
-				else if (i != -1 && OperClass_evaluateACLPath("override:join",sptr,NULL,chptr,NULL) )
+				else if (i != -1 && ValidatePermissionsForPath("override:join",sptr,NULL,chptr,NULL) )
 				{
 					sendto_snomask(SNO_EYES, "*** OperOverride -- %s (%s@%s) JOIN %s",
 						sptr->name, sptr->user->username, sptr->user->realhost, chptr->chname);

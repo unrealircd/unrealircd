@@ -691,8 +691,8 @@ void sendto_match_butone(aClient *one, aClient *from, char *mask, int what,
 
 	if (MyConnect(from))
 	{
-		cansendlocal = (OperClass_evaluateACLPath("notice:local",from,NULL,NULL,NULL)) ? 1 : 0;
-		cansendglobal = (OperClass_evaluateACLPath("notice:global",from,NULL,NULL,NULL)) ? 1 : 0;
+		cansendlocal = (ValidatePermissionsForPath("notice:local",from,NULL,NULL,NULL)) ? 1 : 0;
+		cansendglobal = (ValidatePermissionsForPath("notice:global",from,NULL,NULL,NULL)) ? 1 : 0;
 	}
 	else
 		cansendlocal = cansendglobal = 1;

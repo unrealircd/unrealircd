@@ -87,7 +87,7 @@ DLLFUNC CMD_FUNC(m_wallops)
 		    me.name, parv[0], "WALLOPS");
 		return 0;
 	}
-	if (MyClient(sptr) && !OperClass_evaluateACLPath("chat:wallops",sptr,NULL,NULL,NULL))
+	if (MyClient(sptr) && !ValidatePermissionsForPath("chat:wallops",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;

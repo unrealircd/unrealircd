@@ -193,7 +193,7 @@ DLLFUNC int m_gline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	if (IsServer(sptr))
 		return 0;
-	if (!OperClass_evaluateACLPath("tkl:gline",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("tkl:gline",sptr,NULL,NULL,NULL))
 
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
@@ -220,7 +220,7 @@ DLLFUNC int m_gzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (IsServer(sptr))
 		return 0;
 
-	if (!OperClass_evaluateACLPath("tkl:zline:global",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("tkl:zline:global",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		sptr->name);
@@ -246,7 +246,7 @@ DLLFUNC int m_shun(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (IsServer(sptr))
 		return 0;
 
-	if (!OperClass_evaluateACLPath("tkl:shun",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("tkl:shun",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		sptr->name);
@@ -273,7 +273,7 @@ char *comment = ((parc > 2) && !BadPtr(parv[2])) ? parv[2] : "no reason";
 char *name;
 int remove = 0;
 
-	if (MyClient(sptr) && (!OperClass_evaluateACLPath("tkl:shun:temporary",sptr,NULL,NULL,NULL)))
+	if (MyClient(sptr) && (!ValidatePermissionsForPath("tkl:shun:temporary",sptr,NULL,NULL,NULL)))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		sptr->name);
@@ -310,7 +310,7 @@ int remove = 0;
 			if (IsShunned(acptr))
 			{
 				sendnotice(sptr, "User '%s' already shunned", acptr->name);
-			} else if (OperClass_evaluateACLPath("immune:shun",acptr,NULL,NULL,NULL))
+			} else if (ValidatePermissionsForPath("immune:shun",acptr,NULL,NULL,NULL))
 			{
 				sendnotice(sptr, "You cannot tempshun '%s' because (s)he is an oper with 'immune:shun' privilege", acptr->name);
 			} else
@@ -344,7 +344,7 @@ DLLFUNC int m_tkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (IsServer(sptr))
 		return 0;
 
-	if (!OperClass_evaluateACLPath("tkl:kline:local:add",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("tkl:kline:local:add",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		sptr->name);
@@ -393,7 +393,7 @@ DLLFUNC int m_tkline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sptr->name, sptr->user->username, GetHost(sptr));
 		return 0;
 	}
-	if (!OperClass_evaluateACLPath("tkl:kline:remove",sptr,NULL,NULL,NULL) && *parv[1] == '-')
+	if (!ValidatePermissionsForPath("tkl:kline:remove",sptr,NULL,NULL,NULL) && *parv[1] == '-')
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
@@ -407,7 +407,7 @@ DLLFUNC int m_tzline(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	if (IsServer(sptr))
 		return 0;
 
-	if (!OperClass_evaluateACLPath("tkl:zline:local:add",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("tkl:zline:local:add",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		sptr->name);
@@ -764,7 +764,7 @@ char *err = NULL;
 	if (IsServer(sptr))
 		return 0;
 
-	if (!OperClass_evaluateACLPath("spamfilter",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("spamfilter",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
@@ -1363,7 +1363,7 @@ int  _find_shun(aClient *cptr)
 
 	if (IsShunned(cptr))
 		return 1;
-	if (OperClass_evaluateACLPath("immune:shun",cptr,NULL,NULL,NULL))
+	if (ValidatePermissionsForPath("immune:shun",cptr,NULL,NULL,NULL))
 		return 1;
 
 	nowtime = TStime();
@@ -1456,7 +1456,7 @@ int _find_spamfilter_user(aClient *sptr, int flags)
 {
 char spamfilter_user[NICKLEN + USERLEN + HOSTLEN + REALLEN + 64]; /* n!u@h:r */
 
-	if (OperClass_evaluateACLPath("immune:spamfilter",sptr,NULL,NULL,NULL))
+	if (ValidatePermissionsForPath("immune:spamfilter",sptr,NULL,NULL,NULL))
 		return 0;
 
 	spamfilter_build_user_string(spamfilter_user, sptr->name, sptr);
@@ -2403,7 +2403,7 @@ int _m_tkl(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		  break;
 
 	  case '?':
-		  if (OperClass_evaluateACLPath("server:info",sptr,NULL,NULL,NULL))
+		  if (ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL))
 			  tkl_stats(sptr,0,NULL);
 	}
 	return 0;
@@ -2621,7 +2621,7 @@ long ms_past;
 	/* (note: using sptr->user check here instead of IsPerson()
 	 * due to SPAMF_USER where user isn't marked as client/person yet.
 	 */
-	if (!sptr->user || OperClass_evaluateACLPath("immune:spamfilter",sptr,NULL,NULL,NULL) || IsULine(sptr))
+	if (!sptr->user || ValidatePermissionsForPath("immune:spamfilter",sptr,NULL,NULL,NULL) || IsULine(sptr))
 		return 0;
 
 	for (tk = tklines[tkl_hash('F')]; tk; tk = tk->next)

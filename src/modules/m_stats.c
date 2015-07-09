@@ -389,7 +389,7 @@ DLLFUNC CMD_FUNC(m_stats)
 	/* Decide if we are looking for 1 char or a string */
 	if (parv[1][0] && !parv[1][1])
 	{
-		if (!OperClass_evaluateACLPath("server:info",sptr,NULL,NULL,NULL) && stats_operonly_short(parv[1][0]))
+		if (!ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL) && stats_operonly_short(parv[1][0]))
 		{
 			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);	
 			return 0;
@@ -399,7 +399,7 @@ DLLFUNC CMD_FUNC(m_stats)
 	}
 	else
 	{
-		if (!OperClass_evaluateACLPath("server:info",sptr,NULL,NULL,NULL) && stats_operonly_long(parv[1]))
+		if (!ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL) && stats_operonly_long(parv[1]))
 		{
 			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);	
 			return 0;
@@ -412,7 +412,7 @@ DLLFUNC CMD_FUNC(m_stats)
 		/* It was a short flag, so check oper only on long flags */
 		if (!parv[1][1])
 		{
-			if (!OperClass_evaluateACLPath("server:info",sptr,NULL,NULL,NULL) && stats_operonly_long(stat->longflag))
+			if (!ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL) && stats_operonly_long(stat->longflag))
 			{
 				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 				return 0;
@@ -421,7 +421,7 @@ DLLFUNC CMD_FUNC(m_stats)
 		/* It was a long flag, so check oper only on short flags */
 		else
 		{
-			if (!OperClass_evaluateACLPath("server:info",sptr,NULL,NULL,NULL) && stats_operonly_short(stat->flag))
+			if (!ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL) && stats_operonly_short(stat->flag))
 			{
 				sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);	
 				return 0;
@@ -642,7 +642,7 @@ int stats_port(aClient *sptr, char *para)
 	{
 		if (!(listener->options & LISTENER_BOUND))
 	  		continue;
-		if ((listener->options & LISTENER_SERVERSONLY) && !OperClass_evaluateACLPath("server:info",sptr,NULL,NULL,NULL))
+		if ((listener->options & LISTENER_SERVERSONLY) && !ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL))
 			continue;
 	  	sendto_one(sptr, ":%s NOTICE %s :*** Listener on %s:%i, clients %i. is %s %s",
 	  		me.name, sptr->name,
@@ -843,7 +843,7 @@ int stats_mem(aClient *sptr, char *para)
 	     rm = 0,		/* res memory used */
 	     totcl = 0, totch = 0, totww = 0, tot = 0;
 
-	if (!OperClass_evaluateACLPath("server:info",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
@@ -1147,7 +1147,7 @@ int stats_set(aClient *sptr, char *para)
 {
 	char *uhallow;
 
-	if (!OperClass_evaluateACLPath("server:info",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
@@ -1411,7 +1411,7 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 	int remote = 0;
 	int wilds = 0;
 	int doall = 0;
-	int showports = OperClass_evaluateACLPath("server:info",sptr,NULL,NULL,NULL);
+	int showports = ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL);
 	int i;
 	aClient *acptr;
 	/*
@@ -1459,7 +1459,7 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 		ircsnprintf(pbuf, sizeof(pbuf), "%ld :%ld", (long)acptr->cputime,
 		      (long)(acptr->user && MyConnect(acptr)) ? TStime() - acptr->last : 0);
 #endif
-		if (OperClass_evaluateACLPath("server:info",sptr,NULL,NULL,NULL))
+		if (ValidatePermissionsForPath("server:info",sptr,NULL,NULL,NULL))
 		{
 			sendto_one(sptr, Lformat, me.name,
 				RPL_STATSLINKINFO, sptr->name, 
@@ -1478,7 +1478,7 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 #else
 				pbuf);
 #endif
-			if (!IsServer(acptr) && !IsMe(acptr) && OperClass_evaluateACLPath("privacy",acptr,NULL,NULL,NULL) && sptr != acptr)
+			if (!IsServer(acptr) && !IsMe(acptr) && ValidatePermissionsForPath("privacy",acptr,NULL,NULL,NULL) && sptr != acptr)
 				sendto_one(acptr,
 					":%s NOTICE %s :*** %s did a /stats L on you! IP may have been shown",
 					me.name, acptr->name, sptr->name);

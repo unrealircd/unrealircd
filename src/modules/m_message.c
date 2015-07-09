@@ -431,7 +431,7 @@ DLLFUNC int m_message(aClient *cptr, aClient *sptr, int parc, char *parv[], int 
 		   ** Armin, 8Jun90 (gruner@informatik.tu-muenchen.de)
 		 */
 		if ((*nick == '$' || *nick == '#') && 
-		    OperClass_evaluateACLPath("notice:global",sptr,NULL,NULL,NULL))
+		    ValidatePermissionsForPath("notice:global",sptr,NULL,NULL,NULL))
 		{
 			sendto_match_butone(IsServer(cptr) ? cptr : NULL,
 			    sptr, nick + 1,
@@ -616,7 +616,7 @@ ConfigItem_deny_dcc *fl;
 char *end, realfile[BUFSIZE];
 int size_string, ret;
 
-	if ((*text != 1) || OperClass_evaluateACLPath("immune:dcc",sptr,targetcli,NULL,NULL) || (targetcli && IsOper(targetcli)))
+	if ((*text != 1) || ValidatePermissionsForPath("immune:dcc",sptr,targetcli,NULL,NULL) || (targetcli && IsOper(targetcli)))
 		return 1;
 
 	ctcp = &text[1];
@@ -701,7 +701,7 @@ ConfigItem_deny_dcc *fl;
 char *end, realfile[BUFSIZE];
 int size_string;
 
-	if ((*text != 1) || OperClass_evaluateACLPath("immune:dcc",from,to,NULL,NULL)|| IsOper(to))
+	if ((*text != 1) || ValidatePermissionsForPath("immune:dcc",from,to,NULL,NULL)|| IsOper(to))
 		return 1;
 
 	ctcp = &text[1];

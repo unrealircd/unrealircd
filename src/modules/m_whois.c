@@ -217,7 +217,7 @@ DLLFUNC int  m_whois(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				if (ret == EX_DENY)
 					showchannel = 0;
 				
-				if (!showchannel && (OperClass_evaluateACLPath("override:see:whois",sptr,NULL,chptr,NULL)))
+				if (!showchannel && (ValidatePermissionsForPath("override:see:whois",sptr,NULL,chptr,NULL)))
 				{
 					showchannel = 1; /* OperOverride */
 					operoverride = 1;

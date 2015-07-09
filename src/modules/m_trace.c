@@ -96,9 +96,9 @@ DLLFUNC CMD_FUNC(m_trace)
 	else
 		tname = me.name;
 
-	if (!OperClass_evaluateACLPath("trace:global",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("trace:global",sptr,NULL,NULL,NULL))
 	{
-		if (OperClass_evaluateACLPath("trace:local",sptr,NULL,NULL,NULL))
+		if (ValidatePermissionsForPath("trace:local",sptr,NULL,NULL,NULL))
 		{
 			/* local opers may not /TRACE remote servers! */
 			if (strcasecmp(tname, me.name))
@@ -145,7 +145,7 @@ DLLFUNC CMD_FUNC(m_trace)
 				link_u[acptr->from->fd]++;
 #else
 			if (IsPerson(acptr) &&
-			    (!IsInvisible(acptr) || OperClass_evaluateACLPath("trace:invisible-users",sptr,acptr,NULL,NULL)))
+			    (!IsInvisible(acptr) || ValidatePermissionsForPath("trace:invisible-users",sptr,acptr,NULL,NULL)))
 				link_u[acptr->from->fd]++;
 #endif
 			else if (IsServer(acptr))
@@ -160,7 +160,7 @@ DLLFUNC CMD_FUNC(m_trace)
 		char *name;
 		char *class;
 
-		if (!OperClass_evaluateACLPath("trace:invisible-users",sptr,acptr,NULL,NULL) && (acptr != sptr))
+		if (!ValidatePermissionsForPath("trace:invisible-users",sptr,acptr,NULL,NULL) && (acptr != sptr))
 			continue;
 		if (!doall && wilds && match(tname, acptr->name))
 			continue;
@@ -191,10 +191,10 @@ DLLFUNC CMD_FUNC(m_trace)
 			  /* Only opers see users if there is a wildcard
 			   * but anyone can see all the opers.
 			   */
-			  if (OperClass_evaluateACLPath("trace:invisible-users",sptr,acptr,NULL,NULL) ||
-			      (!IsInvisible(acptr) && OperClass_evaluateACLPath("trace",sptr,acptr,NULL,NULL)))
+			  if (ValidatePermissionsForPath("trace:invisible-users",sptr,acptr,NULL,NULL) ||
+			      (!IsInvisible(acptr) && ValidatePermissionsForPath("trace",sptr,acptr,NULL,NULL)))
 			  {
-				  if (OperClass_evaluateACLPath("trace",sptr,acptr,NULL,NULL) || OperClass_evaluateACLPath("trace:invisible-users",sptr,acptr,NULL,NULL))
+				  if (ValidatePermissionsForPath("trace",sptr,acptr,NULL,NULL) || ValidatePermissionsForPath("trace:invisible-users",sptr,acptr,NULL,NULL))
 					  sendto_one(sptr,
 					      rpl_str(RPL_TRACEOPERATOR),
 					      me.name,
@@ -254,7 +254,7 @@ DLLFUNC CMD_FUNC(m_trace)
 	 * Add these lines to summarize the above which can get rather long
 	 * and messy when done remotely - Avalon
 	 */
-	if (!OperClass_evaluateACLPath("trace",sptr,acptr,NULL,NULL) || !cnt)
+	if (!ValidatePermissionsForPath("trace",sptr,acptr,NULL,NULL) || !cnt)
 	{
 		if (cnt)
 			return 0;

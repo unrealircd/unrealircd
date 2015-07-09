@@ -139,7 +139,7 @@ long flags = 0; /* cache: membership flags */
 		if (parc > 2 || SecretChannel(chptr))
 		{
 			if (!ismember && !IsServer(sptr)
-			    && !OperClass_evaluateACLPath("override:see:list:secret",sptr,NULL,chptr,NULL) && !IsULine(sptr))
+			    && !ValidatePermissionsForPath("override:see:list:secret",sptr,NULL,chptr,NULL) && !IsULine(sptr))
 			{
 				sendto_one(sptr, err_str(ERR_NOTONCHANNEL),
 				    me.name, parv[0], name);
@@ -166,7 +166,7 @@ long flags = 0; /* cache: membership flags */
 			}
 
 			/* If you're not a member, and you can't view outside channel, deny */
-			if ((!ismember && i == HOOK_DENY) || (is_banned(sptr,chptr,BANCHK_JOIN) && !OperClass_evaluateACLPath("channel:view",sptr,NULL,chptr,NULL)))
+			if ((!ismember && i == HOOK_DENY) || (is_banned(sptr,chptr,BANCHK_JOIN) && !ValidatePermissionsForPath("channel:view",sptr,NULL,chptr,NULL)))
 			{
 				sendto_one(sptr, err_str(ERR_NOTONCHANNEL), me.name, parv[0], name);
 				return 0;
@@ -231,7 +231,7 @@ long flags = 0; /* cache: membership flags */
 			}
 		}
 		else if (((chptr->mode.mode & MODE_TOPICLIMIT) == 0 ||
-		    (is_chan_op(sptr, chptr)) || OperClass_evaluateACLPath("channel:topic",sptr,NULL,chptr,NULL) 
+		    (is_chan_op(sptr, chptr)) || ValidatePermissionsForPath("channel:topic",sptr,NULL,chptr,NULL) 
 		    || is_halfop(sptr, chptr)) && topic)
 		{
 			/* setting a topic */
@@ -241,7 +241,7 @@ long flags = 0; /* cache: membership flags */
 					is_chan_op(sptr, chptr))
 				{
 #ifndef NO_OPEROVERRIDE
-					if (!OperClass_evaluateACLPath("override:topic",sptr,NULL,chptr,NULL))
+					if (!ValidatePermissionsForPath("override:topic",sptr,NULL,chptr,NULL))
 					{
 #endif
 					sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
@@ -258,7 +258,7 @@ long flags = 0; /* cache: membership flags */
 			{
 				char buf[512];
 				
-				if (OperClass_evaluateACLPath("override:topic",sptr,NULL,chptr,NULL))
+				if (ValidatePermissionsForPath("override:topic",sptr,NULL,chptr,NULL))
 				{
 					topicoverride(sptr, chptr, topic);
 				} else {
@@ -271,7 +271,7 @@ long flags = 0; /* cache: membership flags */
 			{
 				char buf[512];
 				
-				if (OperClass_evaluateACLPath("override:topic",sptr,NULL,chptr,NULL))
+				if (ValidatePermissionsForPath("override:topic",sptr,NULL,chptr,NULL))
 				{
 					topicoverride(sptr, chptr, topic);
 				} else {

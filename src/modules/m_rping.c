@@ -99,13 +99,13 @@ DLLFUNC int  m_rping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 
-	if (!IsServer(sptr) && !OperClass_evaluateACLPath("server:rping",sptr,NULL,NULL,NULL))
+	if (!IsServer(sptr) && !ValidatePermissionsForPath("server:rping",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
 	
-	if (parc < (OperClass_evaluateACLPath("server:rping",sptr,NULL,NULL,NULL) ? (MyConnect(sptr) ? 2 : 3) : 6))
+	if (parc < (ValidatePermissionsForPath("server:rping",sptr,NULL,NULL,NULL) ? (MyConnect(sptr) ? 2 : 3) : 6))
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS), me.name, parv[0],
 		    "RPING");
@@ -127,7 +127,7 @@ DLLFUNC int  m_rping(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			parv[parc++] = "<No client start time>";
 	}
 
-	if (OperClass_evaluateACLPath("server:rping",sptr,NULL,NULL,NULL))
+	if (ValidatePermissionsForPath("server:rping",sptr,NULL,NULL,NULL))
 	{
 		if (hunt_server(cptr, sptr, ":%s RPING %s %s :%s", 2, parc, parv) != HUNTED_ISME)
 			return 0;

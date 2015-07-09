@@ -105,7 +105,7 @@ DLLFUNC CMD_FUNC(m_sapart)
         }
 
 	/* See if we can operate on this vicim/this command */
-	if (!IsULine(sptr) && !OperClass_evaluateACLPath("sapart",sptr,acptr,NULL,NULL))
+	if (!IsULine(sptr) && !ValidatePermissionsForPath("sapart",sptr,acptr,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
@@ -127,7 +127,7 @@ DLLFUNC CMD_FUNC(m_sapart)
 			}
 
 			/* Validate oper can do this on chan/victim */
-			if (!IsULine(sptr) && !OperClass_evaluateACLPath("sapart",sptr,acptr,chptr,NULL))
+			if (!IsULine(sptr) && !ValidatePermissionsForPath("sapart",sptr,acptr,chptr,NULL))
         		{
                 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 				continue;

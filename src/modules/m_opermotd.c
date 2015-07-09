@@ -80,7 +80,7 @@ DLLFUNC CMD_FUNC(m_opermotd)
 	ConfigItem_tld *tld;
 	char userhost[HOSTLEN + USERLEN + 6];
 
-	if (!OperClass_evaluateACLPath("server:opermotd",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:opermotd",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;

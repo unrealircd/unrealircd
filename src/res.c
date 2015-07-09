@@ -754,7 +754,7 @@ DNSCache *c;
 DNSReq *r;
 char *param;
 
-	if (!OperClass_evaluateACLPath("server:dns",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:dns",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;

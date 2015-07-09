@@ -231,7 +231,7 @@ unsigned char OperClass_evaluateACLEntry(OperClassACLEntry* entry, OperClassACLP
 	return eval;	
 }
 
-OperPermission OperClass_evaluateACLPathEx(OperClassACL* acl, OperClassACLPath* path, OperClassCheckParams* params)
+OperPermission ValidatePermissionsForPathEx(OperClassACL* acl, OperClassACLPath* path, OperClassCheckParams* params)
 {
         /** Evaluate into ACL struct as deep as possible **/
 	OperClassACLPath *basePath = path;
@@ -294,7 +294,7 @@ OperPermission OperClass_evaluateACLPathEx(OperClassACL* acl, OperClassACLPath* 
         return OPER_DENY;
 }
 
-OperPermission OperClass_evaluateACLPath(char* path, aClient *sptr, aClient *victim, aChannel *channel, void* extra)
+OperPermission ValidatePermissionsForPath(char* path, aClient *sptr, aClient *victim, aChannel *channel, void* extra)
 {
 	ConfigItem_oper *ce_oper;
         ConfigItem_operclass *ce_operClass;
@@ -335,7 +335,7 @@ OperPermission OperClass_evaluateACLPath(char* path, aClient *sptr, aClient *vic
         		params->channel = channel;
         		params->extra = extra;
 			
-                        perm = OperClass_evaluateACLPathEx(acl, operPath, params);
+                        perm = ValidatePermissionsForPathEx(acl, operPath, params);
 			OperClass_freePath(operPath);
 			MyFree(params);
 			return perm;

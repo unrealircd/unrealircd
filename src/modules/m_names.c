@@ -123,7 +123,7 @@ DLLFUNC CMD_FUNC(m_names)
 
 	chptr = find_channel(para, (aChannel *)NULL);
 
-	if (!chptr || (!ShowChannel(sptr, chptr) && !OperClass_evaluateACLPath("override:see:names:secret",sptr,NULL,chptr,NULL)))
+	if (!chptr || (!ShowChannel(sptr, chptr) && !ValidatePermissionsForPath("override:see:names:secret",sptr,NULL,chptr,NULL)))
 	{
 		sendto_one(sptr, rpl_str(RPL_ENDOFNAMES), me.name,
 		    parv[0], para);
@@ -157,7 +157,7 @@ DLLFUNC CMD_FUNC(m_names)
 	for (cm = chptr->members; cm; cm = cm->next)
 	{
 		acptr = cm->cptr;
-		if (IsInvisible(acptr) && !member && !OperClass_evaluateACLPath("override:see:names:invisible",sptr,acptr,chptr,NULL))
+		if (IsInvisible(acptr) && !member && !ValidatePermissionsForPath("override:see:names:invisible",sptr,acptr,chptr,NULL))
 			continue;
 
 		for (h = Hooks[HOOKTYPE_VISIBLE_IN_CHANNEL]; h; h = h->next)

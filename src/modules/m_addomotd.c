@@ -86,7 +86,7 @@ DLLFUNC CMD_FUNC(m_addomotd)
 	if (!MyConnect(sptr))
 		return 0;
 
-	if (!OperClass_evaluateACLPath("server:addomotd",sptr,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:addomotd",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;

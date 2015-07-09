@@ -88,7 +88,7 @@ DLLFUNC CMD_FUNC(m_locops)
 		    me.name, parv[0], "LOCOPS");
 		return 0;
 	}
-	if (MyClient(sptr) && !OperClass_evaluateACLPath("chat:locops",sptr,NULL,NULL,NULL))
+	if (MyClient(sptr) && !ValidatePermissionsForPath("chat:locops",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;

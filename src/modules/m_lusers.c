@@ -82,7 +82,7 @@ char flatmap;
 	if (hunt_server(cptr, sptr, ":%s LUSERS :%s", 1, parc, parv) != HUNTED_ISME)
 		return 0;
 
-	flatmap = (FLAT_MAP && !OperClass_evaluateACLPath("server:info:lusers",sptr,NULL,NULL,NULL)) ? 1 : 0;
+	flatmap = (FLAT_MAP && !ValidatePermissionsForPath("server:info:lusers",sptr,NULL,NULL,NULL)) ? 1 : 0;
 
 	/* Just to correct results ---Stskeeps */
 	if (IRCstats.clients > IRCstats.global_max)
