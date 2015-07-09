@@ -701,9 +701,6 @@ src/modules/m_globops.dll: src/modules/m_globops.c $(INCLUDES)
 src/modules/m_locops.dll: src/modules/m_locops.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/m_locops.c $(MODLFLAGS)
 
-src/modules/m_chatops.dll: src/modules/m_chatops.c $(INCLUDES)
-        $(CC) $(MODCFLAGS) src/modules/m_chatops.c $(MODLFLAGS)
-
 src/modules/m_trace.dll: src/modules/m_trace.c $(INCLUDES)
         $(CC) $(MODCFLAGS) src/modules/m_trace.c $(MODLFLAGS)
 

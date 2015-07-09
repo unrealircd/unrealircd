@@ -47,7 +47,7 @@ R_MODULES= \
 	 m_invite.so m_list.so m_time.so m_svskill.so m_sjoin.so \
 	 m_pass.so m_userhost.so m_ison.so m_silence.so m_knock.so \
 	 m_umode2.so m_squit.so m_protoctl.so m_addline.so m_addomotd.so \
-	 m_wallops.so m_admin.so m_globops.so m_locops.so m_chatops.so \
+	 m_wallops.so m_admin.so m_globops.so m_locops.so \
 	 m_trace.so m_netinfo.so m_links.so m_help.so m_rules.so \
 	 m_close.so m_map.so m_eos.so m_server.so m_stats.so \
 	 m_svsfline.so m_dccdeny.so m_undccdeny.so m_whowas.so \
@@ -339,10 +339,6 @@ m_globops.so: m_globops.c $(INCLUDES)
 m_locops.so: m_locops.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
 		-o m_locops.so m_locops.c
-
-m_chatops.so: m_chatops.c $(INCLUDES)
-	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
-		-o m_chatops.so m_chatops.c
 
 m_trace.so: m_trace.c $(INCLUDES)
 	$(CC) $(CFLAGS) $(MODULEFLAGS) -DDYNAMIC_LINKING \
