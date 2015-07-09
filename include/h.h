@@ -290,6 +290,7 @@ extern void sendto_ops_butme(aClient *, char *, ...) __attribute__((format(print
 extern void sendto_prefix_one(aClient *, aClient *, const char *, ...) __attribute__((format(printf,3,4)));
 extern void sendto_opers(char *, ...) __attribute__((format(printf,1,2)));
 extern void sendto_umode(int, char *, ...) __attribute__((format(printf,2,3)));
+extern void sendto_umode_global(int, char *, ...) __attribute__((format(printf,2,3)));
 extern void sendto_umode_raw(int, char *, ...) __attribute__((format(printf,2,3)));
 extern void sendto_snomask(int snomask, char *pattern, ...) __attribute__((format(printf,2,3)));
 extern void sendto_snomask_global(int snomask, char *pattern, ...) __attribute__((format(printf,2,3)));
