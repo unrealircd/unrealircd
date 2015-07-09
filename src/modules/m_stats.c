@@ -1441,7 +1441,7 @@ int stats_linkinfoint(aClient *sptr, char *para, int all)
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
 		if (IsInvisible(acptr) && (doall || wilds) &&
-			!(MyConnect(sptr) && IsOper(sptr)) &&
+			!ValidatePermissionsForPath("stats:viewinvisible",sptr,NULL,NULL,NULL) &&
 			!IsOper(acptr) && (acptr != sptr))
 			continue;
 		if (remote && doall && !IsServer(acptr) && !IsMe(acptr))
