@@ -616,7 +616,7 @@ ConfigItem_deny_dcc *fl;
 char *end, realfile[BUFSIZE];
 int size_string, ret;
 
-	if ((*text != 1) || ValidatePermissionsForPath("immune:dcc",sptr,targetcli,NULL,NULL) || (targetcli && IsOper(targetcli)))
+	if ((*text != 1) || ValidatePermissionsForPath("immune:dcc",sptr,targetcli,NULL,NULL) || (targetcli && ValidatePermissionsForPath("self:getbaddcc",targetcli,NULL,NULL,NULL)))
 		return 1;
 
 	ctcp = &text[1];
@@ -701,7 +701,7 @@ ConfigItem_deny_dcc *fl;
 char *end, realfile[BUFSIZE];
 int size_string;
 
-	if ((*text != 1) || ValidatePermissionsForPath("immune:dcc",from,to,NULL,NULL)|| IsOper(to))
+	if ((*text != 1) || ValidatePermissionsForPath("immune:dcc",from,to,NULL,NULL)|| ValidatePermissionsForPath("self:getbaddcc",to,NULL,NULL,NULL))
 		return 1;
 
 	ctcp = &text[1];
