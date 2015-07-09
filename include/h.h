@@ -257,8 +257,6 @@ extern void terminate(), write_pidfile();
 extern void *MyMallocEx(size_t size);
 extern int advanced_check(char *userhost, int ipstat);
 extern int send_queued(aClient *);
-/* i know this is naughty but :P --stskeeps */
-extern void sendto_locfailops(char *pattern, ...) __attribute__((format(printf,1,2)));
 extern void sendto_connectnotice(char *nick, anUser *user, aClient *sptr, int disconnect, char *comment);
 extern void sendto_serv_butone_nickcmd(aClient *one, aClient *sptr, char *nick, int hopcount,
 long lastnick, char *username, char *realhost, char *server, char *svid, char *info, char *umodes,
@@ -290,8 +288,6 @@ extern void sendto_ops(char *, ...) __attribute__((format(printf,1,2)));
 extern void sendto_ops_butone(aClient *, aClient *, char *, ...) __attribute__((format(printf,3,4)));
 extern void sendto_ops_butme(aClient *, char *, ...) __attribute__((format(printf,2,3)));
 extern void sendto_prefix_one(aClient *, aClient *, const char *, ...) __attribute__((format(printf,3,4)));
-extern void sendto_failops_whoare_opers(char *, ...) __attribute__((format(printf,1,2)));
-extern void sendto_failops(char *, ...) __attribute__((format(printf,1,2)));
 extern void sendto_opers(char *, ...) __attribute__((format(printf,1,2)));
 extern void sendto_umode(int, char *, ...) __attribute__((format(printf,2,3)));
 extern void sendto_umode_raw(int, char *, ...) __attribute__((format(printf,2,3)));
@@ -395,7 +391,6 @@ extern time_t atime(char *xtime);
 extern MODVAR long UMODE_INVISIBLE; /*  0x0001	 makes user invisible */
 extern MODVAR long UMODE_OPER;      /*  0x0002	 Operator */
 extern MODVAR long UMODE_WALLOP;    /*  0x0004	 send wallops to them */
-extern MODVAR long UMODE_FAILOP;    /*  0x0008	 Shows some global messages */
 extern MODVAR long UMODE_REGNICK;   /*  0x0020	 Nick set by services as registered */
 extern MODVAR long UMODE_SERVNOTICE;/* 0x0100	 server notices such as kill */
 extern MODVAR long UMODE_HIDE;	     /* 0x8000	 Hide from Nukes */

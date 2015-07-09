@@ -197,7 +197,7 @@ errlink:
 		sendto_one(cptr,
 		    "ERROR :Link denied (No link block found named '%s' or link::incoming::mask did not match your IP %s) %s",
 		    servername, GetIP(cptr), inpath);
-		/* And send the "verbose" error msg only to local failops */
+		/* And send the "verbose" error msg only to locally connected ircops */
 		sendto_umode(UMODE_OPER, "Link denied for %s(%s@%s) (%s) %s",
 		    servername, cptr->username, cptr->sockhost, xerrmsg, inpath);
 		return exit_client(cptr, sptr, &me,

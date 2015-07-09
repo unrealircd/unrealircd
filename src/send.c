@@ -67,7 +67,7 @@ MODVAR int  sendanyways = 0;
 **	generate ExitClient from the main loop.
 **
 **	notice will be the quit message. notice will also be
-**	sent to failops in case 'to' is a server.
+**	sent to locally connected IRCOps in case 'to' is a server.
 */
 int dead_link(aClient *to, char *notice)
 {
