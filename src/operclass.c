@@ -302,6 +302,9 @@ OperPermission ValidatePermissionsForPath(char* path, aClient *sptr, aClient *vi
         OperClassACLPath *operPath;
         OperClassACL *acl;
 
+	if (!sptr)
+		return OPER_DENY;
+
 	// Trust U:Line or remote users
 	if (IsULine(sptr) || !MyClient(sptr))
 		return OPER_ALLOW;
