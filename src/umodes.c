@@ -114,7 +114,7 @@ void	umode_init(void)
 	UmodeAdd(NULL, 'z', UMODE_GLOBAL, 0, umode_allow_none, &UMODE_SECURE);
 	UmodeAdd(NULL, 'd', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_DEAF);
 	UmodeAdd(NULL, 'H', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_HIDEOPER);
-	UmodeAdd(NULL, 't', UMODE_GLOBAL, 0, umode_allow_none, &UMODE_SETHOST);
+	UmodeAdd(NULL, 't', UMODE_GLOBAL, 0, umode_allow_unset, &UMODE_SETHOST);
 	UmodeAdd(NULL, 'I', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_HIDLE);
 	SnomaskAdd(NULL, 'k', 0, umode_allow_all, &SNO_KILLS);
 	SnomaskAdd(NULL, 'c', 1, umode_allow_opers, &SNO_CLIENT);
@@ -350,6 +350,13 @@ void SnomaskDel(Snomask *sno)
 int umode_allow_all(aClient *sptr, int what)
 {
 	return 1;
+}
+
+int umode_allow_unset(aClient *sptr, int what)
+{
+	if (what == MODE_DEL)
+		return 1;
+	return 0;
 }
 
 int umode_allow_none(aClient *sptr, int what)

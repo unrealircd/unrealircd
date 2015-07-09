@@ -325,6 +325,7 @@ extern void umode_init(void);
 #define UMODE_GLOBAL 1
 #define UMODE_LOCAL 0
 extern int umode_allow_all(aClient *sptr, int what);
+extern int umode_allow_unset(aClient *sptr, int what);
 extern int umode_allow_opers(aClient *sptr, int what);
 extern int umode_allow_none(aClient *sptr, int what);
 extern int  umode_delete(char ch, long val);

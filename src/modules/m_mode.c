@@ -1678,11 +1678,6 @@ DLLFUNC CMD_FUNC(_m_umode)
 		  case '\t':
 			  break;
 		  case 'r':
-		  case 't':
-			  if (MyClient(sptr))
-				  break;
-			  /* since we now use chatops define in unrealircd.conf, we have
-			   * to disallow it here */
 		  case 's':
 			  if (what == MODE_DEL) {
 				if (parc >= 4 && sptr->user->snomask) {
@@ -1719,6 +1714,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 			  if (MyClient(sptr) && (what == MODE_ADD)) /* Someone setting himself +o? Deny it. */
 			    break;
 			  goto def;
+		  case 't':
 		  case 'x':
 			  switch (UHOST_ALLOWED)
 			  {
@@ -1727,8 +1723,10 @@ DLLFUNC CMD_FUNC(_m_umode)
 				case UHALLOW_NEVER:
 					if (MyClient(sptr))
 					{
-						if (!modex_err) {
-							sendnotice(sptr, "*** Setting %cx is disabled", what == MODE_ADD ? '+' : '-');
+						if (!modex_err)
+						{
+							sendnotice(sptr, "*** Setting %c%c is disabled",
+								what == MODE_ADD ? '+' : '-', *m);
 							modex_err = 1;
 						}
 						break;
@@ -1737,8 +1735,10 @@ DLLFUNC CMD_FUNC(_m_umode)
 				case UHALLOW_NOCHANS:
 					if (MyClient(sptr) && sptr->user->joined)
 					{
-						if (!modex_err) {
-							sendnotice(sptr, "*** Setting %cx can not be done while you are on channels", what == MODE_ADD ? '+' : '-');
+						if (!modex_err)
+						{
+							sendnotice(sptr, "*** Setting %c%c can not be done while you are on channels",
+								what == MODE_ADD ? '+' : '-', *m);
 							modex_err = 1;
 						}
 						break;
@@ -1792,17 +1792,21 @@ DLLFUNC CMD_FUNC(_m_umode)
 		}
 	}
 
-	/* If user was +x and does MODE -x then set -t as well */
+	/* -x translates to -xt (if applicable) */
 	if ((setflags & UMODE_HIDE) && !IsHidden(sptr))
 		sptr->umodes &= ~UMODE_SETHOST;
-
-	if (IsHidden(sptr) && !(setflags & UMODE_HIDE))
+	
+	/* Vhost unset = unset some other data as well */
+	if ((setflags & UMODE_SETHOST) && !IsSetHost(sptr))
 	{
-		if (sptr->user->virthost)
-		{
-			MyFree(sptr->user->virthost);
-			sptr->user->virthost = NULL;
-		}
+		swhois_delete(sptr, "vhost", "*", &me, NULL);
+	}
+
+	/* +x or -t+x */
+	if ((IsHidden(sptr) && !(setflags & UMODE_HIDE)) ||
+	    ((setflags & UMODE_SETHOST) && !IsSetHost(sptr) && IsHidden(sptr)))
+	{
+		safefree(sptr->user->virthost);
 		sptr->user->virthost = strdup(sptr->user->cloakedhost);
 		if (!dontspread)
 			sendto_server(cptr, PROTO_VHP, 0, ":%s SETHOST :%s",
@@ -1821,6 +1825,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 			sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, sptr->user->virthost);
 	}
 
+	/* -x */
 	if (!IsHidden(sptr) && (setflags & UMODE_HIDE))
 	{
 		if (UHOST_ALLOWED == UHALLOW_REJOIN)
@@ -1833,15 +1838,11 @@ DLLFUNC CMD_FUNC(_m_umode)
 			if (MyClient(sptr))
 				sptr->since += 7; /* Add fake lag */
 		}
-		if (sptr->user->virthost)
-		{
-			MyFree(sptr->user->virthost);
-			sptr->user->virthost = NULL;
-		}
 		/* (Re)create the cloaked virthost, because it will be used
 		 * for ban-checking... free+recreate here because it could have
 		 * been a vhost for example. -- Syzop
 		 */
+		safefree(sptr->user->virthost);
 		sptr->user->virthost = strdup(sptr->user->cloakedhost);
 		if (MyClient(sptr))
 			sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, sptr->user->realhost);
