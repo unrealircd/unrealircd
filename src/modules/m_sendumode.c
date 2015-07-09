@@ -83,8 +83,10 @@ MOD_UNLOAD(m_sendumode)
 **      parv[2] = message text
 ** Pretty handy proc.. 
 ** Servers can use this to f.x:
-**   :server.unreal.net SENDUMODE F :Client connecting at server server.unreal.net port 4141 usw..
-** or for sending msgs to locops.. :P
+**   :server.unreal.net SENDUMODE o :Client connecting at server server.unreal.net port 4141 usw..
+**
+** Silly half-snomask support ripped out in 2015. Very confusing, and broken.
+** We have SENDSNO for snomask sending since 2004. -- Syzop
 */
 DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
@@ -92,7 +94,6 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	char *p;
 	int i;
 	long umode_s = 0;
-	long snomask = 0;
 
 	aClient* acptr;
 
@@ -112,12 +113,10 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 
 	sendto_server(IsServer(cptr) ? cptr : NULL, 0, 0,
-	    ":%s SMO %s :%s", parv[0], parv[1], message);
+	    ":%s SENDUMODE %s :%s", parv[0], parv[1], message);
 
 	for (p = parv[1]; *p; p++)
 	{
-		umode_s = 0;
-		
 		for(i = 0; i <= Usermode_highest; i++)
 		{
 			if (!Usermode_Table[i].flag)
@@ -128,36 +127,12 @@ DLLFUNC int m_sendumode(aClient *cptr, aClient *sptr, int parc, char *parv[])
 				break;
 			}
 		}
-		if (i <= Usermode_highest)
-			continue;
-
-		for(i = 0; i <= Snomask_highest; i++)
-		{
-			if (Snomask_Table[i].flag == *p)
-			{
-				snomask |= Snomask_Table[i].mode;
-				break;
-			}
-		}
-	}
-
-	if (parc > 3)
-	    for(p = parv[2]; *p; p++)
-	{
-		for (i = 0; i <= Snomask_highest; i++)
-		{
-			if (Snomask_Table[i].flag == *p)
-			{
-				snomask |= Snomask_Table[i].mode;
-				break;
-			}
-		}
 	}
 
 	list_for_each_entry(acptr, &oper_list, special_node)
 	{
-	    if((acptr->user->snomask & snomask) || (acptr->umodes & umode_s))
-		sendto_one(acptr, ":%s NOTICE %s :%s", me.name, acptr->name, message);
+	    if (acptr->umodes & umode_s)
+			sendto_one(acptr, ":%s NOTICE %s :%s", sptr->name, acptr->name, message);
 	}
 
 	return 0;
