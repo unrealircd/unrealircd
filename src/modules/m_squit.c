@@ -155,7 +155,7 @@ CMD_FUNC(m_squit)
 	/*
 	   **  Notify all opers, if my local link is remotely squitted
 	 */
-	if (MyConnect(acptr) && !IsOper(cptr))
+	if (MyConnect(acptr) && !MyClient(cptr))
 	{
 		sendto_umode_global(UMODE_OPER, "Received SQUIT %s from %s (%s)",
 		    acptr->name, get_client_name(sptr, FALSE), comment);
