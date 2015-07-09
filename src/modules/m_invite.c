@@ -202,9 +202,9 @@ DLLFUNC CMD_FUNC(m_invite)
                 }
         }
 
-		if (MyClient(sptr) && SPAMFILTER_VIRUSCHANDENY && SPAMFILTER_VIRUSCHAN &&
+		if (SPAMFILTER_VIRUSCHANDENY && SPAMFILTER_VIRUSCHAN &&
 		    !strcasecmp(chptr->chname, SPAMFILTER_VIRUSCHAN) &&
-		    !is_chan_op(sptr, chptr) && !IsOper(sptr) && !IsULine(sptr))
+		    !is_chan_op(sptr, chptr) && !ValidatePermissionsForPath("immune:viruscheck",sptr,NULL,NULL,NULL))
 		{
 			sendto_one(sptr, err_str(ERR_CHANOPRIVSNEEDED),
 				me.name, parv[0], chptr->chname);
@@ -290,7 +290,7 @@ DLLFUNC CMD_FUNC(m_invite)
 		    && (is_chan_op(sptr, chptr)
 		    || IsULine(sptr)
 #ifndef NO_OPEROVERRIDE
-		    || IsOper(sptr)
+		    || ValidatePermissionsForPath("override:channel:invite",sptr,NULL,chptr,NULL)
 #endif
 		    )) {
 		        if (over == 1)
