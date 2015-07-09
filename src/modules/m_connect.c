@@ -86,7 +86,7 @@ DLLFUNC CMD_FUNC(m_connect)
 	aClient *acptr;
 
 
-	if (!IsServer(sptr) && MyClient(sptr) && !ValidatePermissionsForPath("route:global",sptr,NULL,NULL,NULL) && parc > 3)
+	if (!IsServer(sptr) && MyConnect(sptr) && !ValidatePermissionsForPath("route:global",sptr,NULL,NULL,NULL) && parc > 3)
 	{			/* Only allow LocOps to make */
 		/* local CONNECTS --SRB      */
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
@@ -148,7 +148,7 @@ DLLFUNC CMD_FUNC(m_connect)
 	}
 
 	/* Notify all operators about remote connect requests */
-	if (!IsOper(cptr))
+	if (!MyClient(cptr))
 	{
 		sendto_server(&me, 0, 0,
 		    ":%s GLOBOPS :Remote CONNECT %s %s from %s",
