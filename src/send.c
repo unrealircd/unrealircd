@@ -823,6 +823,54 @@ void sendto_umode(int umodes, char *pattern, ...)
 }
 
 /*
+ * sendto_umode
+ *
+ * Send to specified umode *GLOBALLY* (on all servers)
+ */
+void sendto_umode_global(int umodes, char *pattern, ...)
+{
+	va_list vl;
+	aClient *cptr;
+	char nbuf[1024];
+	int i;
+	char modestr[128];
+	char *p;
+
+	/* Convert 'umodes' (int) to 'modestr' (string) */
+	*modestr = '\0';
+	p = modestr;
+	for(i = 0; i <= Usermode_highest; i++)
+	{
+		if (!Usermode_Table[i].flag)
+			continue;
+		if (umodes & Usermode_Table[i].mode)
+			*p++ = Usermode_Table[i].flag;
+	}
+	*p = '\0';
+
+	list_for_each_entry(cptr, &lclient_list, lclient_node)
+	{
+		if (IsPerson(cptr) && (cptr->umodes & umodes) == umodes)
+		{
+			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :",
+			    me.name, cptr->name);
+			(void)strlcat(nbuf, pattern, sizeof nbuf);
+
+			va_start(vl, pattern);
+			vsendto_one(cptr, nbuf, vl);
+			va_end(vl);
+		} else
+		if (IsServer(cptr) && *modestr)
+		{
+			snprintf(nbuf, sizeof(nbuf), ":%s SENDUMODE %s :%s", me.name, modestr, pattern);
+			va_start(vl, pattern);
+			vsendto_one(cptr, nbuf, vl);
+			va_end(vl);
+		}
+	}
+}
+
+/*
  * sendto_umode_raw
  *
  *  Send to specified umode , raw, not a notice
