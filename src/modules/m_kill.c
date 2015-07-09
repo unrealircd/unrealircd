@@ -52,7 +52,7 @@ ModuleHeader MOD_HEADER(m_kill)
 	"$Id$", /* Version */
 	"command /kill", /* Short description of module */
 	"3.2-b8-1",
-	NULL 
+	NULL
     };
 
 /* This is called on module init, before Server Ready */
@@ -73,7 +73,7 @@ MOD_LOAD(m_kill)
 /* Called when module is unloaded */
 MOD_UNLOAD(m_kill)
 {
-	return MOD_SUCCESS;	
+	return MOD_SUCCESS;
 }
 
 
@@ -92,7 +92,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	char *user, *path, *killer, *nick, *p, *s;
 	int  chasing = 0, kcount = 0;
 	Hook *h;
-	
+
 	if (parc < 2 || *parv[1] == '\0')
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
@@ -115,17 +115,14 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
-	if (IsOper(cptr))
+	if (BadPtr(path))
 	{
-		if (BadPtr(path))
-		{
-			sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
-			    me.name, parv[0], "KILL");
-			return 0;
-		}
-		if (strlen(path) > (size_t)TOPICLEN)
-			path[TOPICLEN] = '\0';
+		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
+		    me.name, parv[0], "KILL");
+		return 0;
 	}
+	if (strlen(path) > (size_t)TOPICLEN)
+		path[TOPICLEN] = '\0';
 
 	if (MyClient(sptr))
 		user = (char *)canonize(user);
@@ -217,9 +214,8 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 					   around, or it gets appended to itself. */
 				if (!BadPtr(path))
 				{
-					(void)ircsnprintf(buf, sizeof(buf), "%s%s (%s)",
-					    cptr->name,
-					    IsOper(sptr) ? "" : "(L)", path);
+					(void)ircsnprintf(buf, sizeof(buf), "%s (%s)",
+					    cptr->name, path);
 					path = buf;
 				}
 				else
@@ -245,7 +241,6 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		    IsHidden(acptr) ? auser->virthost : auser->realhost,
 		    parv[0], inpath, path);
 #if defined(USE_SYSLOG) && defined(SYSLOG_KILL)
-		if (IsOper(sptr))
 			syslog(LOG_DEBUG, "KILL From %s For %s Path %s!%s",
 			    parv[0], acptr->name, inpath, path);
 #endif
@@ -265,7 +260,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		   ** back.
 		   ** Suicide kills are NOT passed on --SRB
 		 */
-		if (!MyConnect(acptr) || !MyConnect(sptr) || !IsOper(sptr))
+		if (!MyConnect(acptr) || !MyConnect(sptr))
 		{
 			sendto_server(cptr, 0, 0, ":%s KILL %s :%s!%s",
 			    parv[0], acptr->name, inpath, path);
@@ -289,7 +284,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		   ** the unnecessary QUIT for this. (This flag should never be
 		   ** set in any other place)
 		 */
-		if (MyConnect(acptr) && MyConnect(sptr) && IsOper(sptr))
+		if (MyConnect(acptr) && MyConnect(sptr))
 
 			ircsnprintf(buf2, sizeof(buf2), "[%s] Local kill by %s (%s)",
 			    me.name, sptr->name,
