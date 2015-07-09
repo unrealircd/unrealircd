@@ -84,7 +84,7 @@ int dead_link(aClient *to, char *notice)
 	to->flags |= FLAGS_DEADSOCKET;
 	
 	if (!IsPerson(to) && !IsUnknown(to) && !(to->flags & FLAGS_CLOSING))
-		(void)sendto_failops_whoare_opers("Closing link: %s - %s",
+		sendto_umode(UMODE_OPER, "Closing link: %s - %s",
 			notice, get_client_name(to, FALSE));
 	Debug((DEBUG_ERROR, "dead_link: %s - %s", notice, get_client_name(to, FALSE)));
 	to->error_str = strdup(notice);
@@ -775,30 +775,6 @@ void sendto_ops(char *pattern, ...)
 }
 
 /*
- * sendto_failops
- *
- *      Send to *local* mode +g ops only.
- */
-void sendto_failops(char *pattern, ...)
-{
-	va_list vl;
-	aClient *cptr;
-	char nbuf[1024];
-
-	list_for_each_entry(cptr, &lclient_list, lclient_node)
-		if (!IsServer(cptr) && !IsMe(cptr) && SendFailops(cptr))
-		{
-			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** Global -- ",
-			    me.name, cptr->name);
-			(void)strlcat(nbuf, pattern, sizeof nbuf);
-
-			va_start(vl, pattern);
-			vsendto_one(cptr, nbuf, vl);
-			va_end(vl);
-		}
-}
-
-/*
  * sendto_umode
  *
  *  Send to specified umode
@@ -995,59 +971,6 @@ void sendto_snomask_normal_global(int snomask, char *pattern, ...)
 	sendto_server(&me, 0, 0, ":%s SENDSNO %s :%s", me.name, snobuf, nbuf);
 }
 
-
-/*
- * sendto_failops_whoare_opers
- *
- *      Send to *local* mode +g ops only who are also +o.
- */
-void sendto_failops_whoare_opers(char *pattern, ...)
-{
-	va_list vl;
-	aClient *cptr;
-	char nbuf[1024];
-
-	list_for_each_entry(cptr, &oper_list, special_node)
-	{
-		if (SendFailops(cptr))
-		{
-			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** Global -- ",
-			    me.name, cptr->name);
-			(void)strlcat(nbuf, pattern, sizeof nbuf);
-
-			va_start(vl, pattern);
-			vsendto_one(cptr, nbuf, vl);
-			va_end(vl);
-		}
-	}
-}
-
-/*
- * sendto_locfailops
- *
- *      Send to *local* mode +g ops only who are also +o.
- */
-void sendto_locfailops(char *pattern, ...)
-{
-	va_list vl;
-	aClient *cptr;
-	int  i;
-	char nbuf[1024];
-
-	list_for_each_entry(cptr, &oper_list, special_node)
-	{
-		if (SendFailops(cptr))
-		{
-			(void)ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :*** LocOps -- ",
-			    me.name, cptr->name);
-			(void)strlcat(nbuf, pattern, sizeof nbuf);
-
-			va_start(vl, pattern);
-			vsendto_one(cptr, nbuf, vl);
-			va_end(vl);
-		}
-	}
-}
 /*
  * sendto_opers
  *
