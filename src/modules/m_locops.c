@@ -93,6 +93,6 @@ DLLFUNC CMD_FUNC(m_locops)
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
-	sendto_locfailops("from %s: %s", parv[0], message);
+	sendto_umode(UMODE_OPER, "from %s: %s", parv[0], message);
 	return 0;
 }

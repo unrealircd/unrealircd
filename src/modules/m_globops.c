@@ -88,13 +88,24 @@ DLLFUNC CMD_FUNC(m_globops)
 		    me.name, parv[0], "GLOBOPS");
 		return 0;
 	}
+
 	if (MyClient(sptr) && !OperClass_evaluateACLPath("chat:globops",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, parv[0]);
 		return 0;
 	}
-	sendto_server(IsServer(cptr) ? cptr : NULL, 0, 0, ":%s GLOBOPS :%s",
-	    parv[0], message);
-	sendto_failops_whoare_opers("from %s: %s", parv[0], message);
+
+	if (MyClient(sptr))
+	{
+		/* Easy */
+		sendto_umode_global(UMODE_OPER, "from %s: %s", parv[0], message);
+	} else
+	{
+		/* Backward-compatible (3.2.x) */
+		sendto_umode(UMODE_OPER, "from %s: %s", parv[0], message);
+		sendto_server(cptr, 0, 0, ":%s SENDUMODE o :from %s: %s",
+		    sptr->name, message);
+	}
+
 	return 0;
 }
