@@ -57,7 +57,7 @@ ModuleHeader MOD_HEADER(m_chgname)
 	"$Id$", /* Version */
 	"command /chgname", /* Short description of module */
 	"3.2-b8-1",
-	NULL 
+	NULL
     };
 
 
@@ -80,11 +80,11 @@ MOD_LOAD(m_chgname)
 /* Called when module is unloaded */
 MOD_UNLOAD(m_chgname)
 {
-	return MOD_SUCCESS;	
+	return MOD_SUCCESS;
 }
 
 
-/* 
+/*
  * m_chgname - Tue May 23 13:06:35 BST 200 (almost a year after I made CHGIDENT) - Stskeeps
  * :prefix CHGNAME <nick> <new realname>
  * parv[0] - sender
@@ -97,7 +97,7 @@ DLLFUNC int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
 
-	if (MyClient(sptr) && !IsOper(sptr))
+	if (!ValidatePermissionsForPath("client:name",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 		    parv[0]);
@@ -130,7 +130,7 @@ DLLFUNC int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		/* set the realname first to make n:line checking work */
 		ircsnprintf(acptr->info, sizeof(acptr->info), "%s", parv[2]);
 		/* only check for n:lines if the person who's name is being changed is not an oper */
-		if (!IsOper(acptr) && Find_ban(NULL, acptr->info, CONF_BAN_REALNAME)) {
+		if (!ValidatePermissionsForPath("immune:realnameban",acptr,NULL,NULL,NULL) && Find_ban(NULL, acptr->info, CONF_BAN_REALNAME)) {
 			int xx;
 			xx =
 			   exit_client(cptr, sptr, &me,
@@ -145,7 +145,7 @@ DLLFUNC int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    GetHost(acptr), parv[2]);
 			/* Logging ability added by XeRXeS */
 			ircd_log(LOG_CHGCMDS,
-				"CHGNAME: %s changed the GECOS of %s (%s@%s) to be %s", 
+				"CHGNAME: %s changed the GECOS of %s (%s@%s) to be %s",
 				sptr->name, acptr->name, acptr->user->username,
 				GetHost(acptr), parv[2]);
 		}
@@ -163,4 +163,3 @@ DLLFUNC int m_chgname(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	}
 	return 0;
 }
-
