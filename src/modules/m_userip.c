@@ -118,7 +118,7 @@ DLLFUNC CMD_FUNC(m_userip)
 		{
 			if (!(ip = GetIP(acptr)))
 				ip = "<unknown>";
-			if (sptr != acptr && !IsOper(sptr) && IsHidden(acptr))
+			if (sptr != acptr && !ValidatePermissionsForPath("client:ip",sptr,acptr,NULL,NULL) && IsHidden(acptr))
 			{
 				make_virthost(acptr, GetIP(acptr), ipbuf, 0);
 				ip = ipbuf;
