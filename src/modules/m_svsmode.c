@@ -459,8 +459,7 @@ int  what, setflags;
 					/* User is no longer oper (after the goto below, anyway)...
 					 * so remove all oper-only modes and snomasks.
 					 */
-					remove_oper_modes(acptr);
-					remove_oper_snomasks(acptr);
+					remove_oper_privileges(acptr, 0);
 				}
 				goto setmodex;
 			case 'H':

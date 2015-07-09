@@ -1859,7 +1859,7 @@ DLLFUNC CMD_FUNC(_m_umode)
 	if ((setflags & UMODE_OPER) && !IsOper(sptr) && MyConnect(sptr))
 	{
 		list_del(&sptr->special_node);
-		remove_oper_snomasks(sptr);
+		remove_oper_privileges(sptr, 0);
 		RunHook2(HOOKTYPE_LOCAL_OPER, sptr, 0);
 	}
 

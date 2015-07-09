@@ -76,7 +76,6 @@ MOD_UNLOAD(m_svsnoop)
 int m_svsnoop(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 aClient *acptr;
-long oldumodes;
 
 	if (!(IsULine(sptr) && parc > 2))
 		return 0;
@@ -100,10 +99,7 @@ long oldumodes;
 					if (!list_empty(&acptr->special_node))
 						list_del(&acptr->special_node);
 
-					oldumodes = acptr->umodes;
-					remove_oper_modes(acptr);
-					remove_oper_snomasks(acptr);
-					send_umode_out(acptr, acptr, oldumodes);
+					remove_oper_privileges(acptr, 1);
 					RunHook2(HOOKTYPE_LOCAL_OPER, acptr, 0);
 				}
 			}
