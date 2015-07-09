@@ -97,15 +97,8 @@ DLLFUNC int m_setident(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	switch (permit)
 	{
 	  case 0:
-		  if (!ValidatePermissionsForPath("self:ident",sptr,NULL,NULL,NULL))
-		  {
-			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
-			      parv[0]);
-			  return 0;
-		  }
-		  break;
 	  case 1:
-		  if (!IsOper(sptr))
+		  if (!ValidatePermissionsForPath("self:ident",sptr,NULL,NULL,NULL))
 		  {
 			  sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name,
 			      parv[0]);
