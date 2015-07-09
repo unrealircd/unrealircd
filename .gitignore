@@ -14,6 +14,7 @@ src/modules/chanmodes/Makefile
 src/modules/extbans/Makefile
 src/modules/usermodes/Makefile
 src/modules/Makefile
+src/modules/third/Makefile
 /Makefile
 unrealircd
 include/setup.h
