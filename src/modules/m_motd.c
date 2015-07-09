@@ -88,14 +88,7 @@ DLLFUNC CMD_FUNC(m_motd)
 		return 0;
 	if (hunt_server(cptr, sptr, ":%s MOTD :%s", 1, parc, parv) != HUNTED_ISME)
 		return 0;
-#ifndef TLINE_Remote
-	if (!MyConnect(sptr))
-	{
-		themotd = &motd;
-		goto playmotd;
-	}
-#endif
-	strlcpy(userhost, make_user_host(cptr->user->username, cptr->user->realhost), sizeof(userhost));
+	strlcpy(userhost, make_user_host(sptr->user->username, sptr->user->realhost), sizeof(userhost));
 	ptr = Find_tld(sptr, userhost);
 
 	if (ptr)
