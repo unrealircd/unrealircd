@@ -129,6 +129,7 @@ extern int match_ipv6(struct IN_ADDR *addr, struct IN_ADDR *mask, int bits);
 #endif
 extern ConfigItem_ban  *Find_ban_ip(aClient *sptr);
 extern void add_ListItem(ListStruct *, ListStruct **);
+extern void add_ListItemPrio(ListStructPrio *, ListStructPrio **, int);
 extern ListStruct *del_ListItem(ListStruct *, ListStruct **);
 extern aClient *find_match_server(char *mask);
 extern MODVAR LoopStruct loop;

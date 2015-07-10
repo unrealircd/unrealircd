@@ -1244,42 +1244,8 @@ Hook *HookAddMain(Module *module, int hooktype, int priority, int (*func)(), voi
 		AddListItem(hookobj, module->objects);
 		module->errorcode = MODERR_NOERROR;
 	}
-
-	if (!Hooks[hooktype])
-	{
-		/* Nobody else using this hook. Easy. */
-		Hooks[hooktype] = p;
-	} else {
-		/* There are existing entries. Put our entry in the list, taking into account 'priority'. */
-		Hook *h, *last = NULL;
-		for (h = Hooks[hooktype]; h; h = h->next)
-		{
-			last = h;
-			if (h->priority >= priority)
-				break;
-		}
-		if (h)
-		{
-			if (h->prev)
-			{
-				/* We will insert ourselves just before this item */
-				p->prev = h->prev;
-				p->next = h;
-				h->prev->next = p;
-				h->prev = p;
-			} else {
-				/* We are the new head */
-				Hooks[hooktype] = p;
-				p->next = h;
-				h->prev = p;
-			}
-		} else
-		{
-			/* We are the last item */
-			last->next = p;
-			p->prev = last;
-		}
-	}
+	
+	AddListItemPrio(p, Hooks[hooktype], p->priority);
 
 	return p;
 }

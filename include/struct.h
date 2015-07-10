@@ -118,6 +118,7 @@ typedef struct _configitem_include ConfigItem_include;
 typedef struct _configitem_help ConfigItem_help;
 typedef struct _configitem_offchans ConfigItem_offchans;
 typedef struct liststruct ListStruct;
+typedef struct liststructprio ListStructPrio;
 
 #define CFG_TIME 0x0001
 #define CFG_SIZE 0x0002
@@ -1509,12 +1510,17 @@ struct DSlink {
 };
 #define AddListItem(item,list) add_ListItem((ListStruct *)item, (ListStruct **)&list)
 #define DelListItem(item,list) del_ListItem((ListStruct *)item, (ListStruct **)&list)
-/* Backwards compatibility */
-#define add_ConfigItem(item,list) add_ListItem((ListStruct *)item, (ListStruct **)&list)
-#define del_ConfigItem(item,list) del_ListItem((ListStruct *)item, (ListStruct **)&list)
+
+#define AddListItemPrio(item,list,prio) add_ListItemPrio((ListStructPrio *)item, (ListStructPrio **)&list, prio)
+#define DelListItemPrio(item,list,prio) del_ListItem((ListStruct *)item, (ListStruct **)&list)
 
 struct liststruct {
 	ListStruct *prev, *next;
+};
+
+struct liststructprio {
+	ListStructPrio *prev, *next;
+	int priority;
 };
 
 /* channel structure */

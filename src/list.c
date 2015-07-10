@@ -574,3 +574,49 @@ ListStruct *del_ListItem(ListStruct *item, ListStruct **list) {
 	}
 	return NULL;
 }
+
+/** Add item to list with a 'priority'.
+ * If there are multiple items with the same priority then it will be
+ * added as the last item within.
+ */
+void add_ListItemPrio(ListStructPrio *new, ListStructPrio **list, int priority)
+{
+	ListStructPrio *x, *last = NULL;
+	
+	if (!*list)
+	{
+		/* We are the only item. Easy. */
+		*list = new;
+		return;
+	}
+	
+	for (x = *list; x; x = x->next)
+	{
+		last = x;
+		if (x->priority >= priority)
+			break;
+	}
+
+	if (x)
+	{
+		if (x->prev)
+		{
+			/* We will insert ourselves just before this item */
+			new->prev = x->prev;
+			new->next = x;
+			x->prev->next = new;
+			x->prev = new;
+		} else {
+			/* We are the new head */
+			*list = new;
+			new->next = x;
+			x->prev = new;
+		}
+	} else
+	{
+		/* We are the last item */
+		last->next = new;
+		new->prev = last;
+	}
+}
+
