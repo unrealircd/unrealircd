@@ -85,7 +85,6 @@ MOD_UNLOAD(m_kill)
 DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 {
 	aClient *acptr;
-	anUser *auser;
 	char inpath[HOSTLEN * 2 + USERLEN + 5];
 	char *oinpath = get_client_name(cptr, FALSE);
 	char *user, *path, *killer, *nick, *p, *s;
@@ -104,22 +103,22 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 	strlcpy(inpath, oinpath, sizeof inpath);
 
-#ifndef ROXnet
 	if (IsServer(cptr) && (s = (char *)index(inpath, '.')) != NULL)
-		*s = '\0';	/* Truncate at first "." */
-#endif
+		*s = '\0';	/* Truncate at first "." -- hmm... why ? */
 
 	if (!IsServer(cptr) && !ValidatePermissionsForPath("kill:global",sptr,NULL,NULL,NULL) && !ValidatePermissionsForPath("kill:local",sptr,NULL,NULL,NULL))
 	{
 		sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 		return 0;
 	}
+
 	if (BadPtr(path))
 	{
 		sendto_one(sptr, err_str(ERR_NEEDMOREPARAMS),
 		    me.name, sptr->name, "KILL");
 		return 0;
 	}
+
 	if (strlen(path) > (size_t)TOPICLEN)
 		path[TOPICLEN] = '\0';
 
@@ -129,28 +128,25 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	for (p = NULL, nick = strtoken(&p, user, ","); nick;
 	    nick = strtoken(&p, NULL, ","))
 	{
+		acptr = find_person(nick, NULL);
 
-		chasing = 0;
-
-		if (!(acptr = find_client(nick, NULL)))
+		/* If a local user issued the /KILL then we will "chase" the user.
+		 * In other words: we'll check the history for recently changed nicks.
+		 * We don't do this for remote KILL requests as we have UID for that.
+		 */
+		if (!acptr && MyClient(sptr))
 		{
-			/*
-			   ** If the user has recently changed nick, we automaticly
-			   ** rewrite the KILL for this new nickname--this keeps
-			   ** servers in synch when nick change and kill collide
-			 */
-			if (!(acptr =
-			    get_history(nick, (long)KILLCHASETIMELIMIT)))
-			{
-				sendto_one(sptr, err_str(ERR_NOSUCHNICK),
-				    me.name, sptr->name, nick);
-				continue;
-			}
-			sendnotice(sptr,
-			    "*** KILL changed from %s to %s",
-			    nick, acptr->name);
-			chasing = 1;
+			acptr = get_history(nick, KILLCHASETIMELIMIT);
+			if (acptr)
+				sendnotice(sptr, "*** KILL changed from %s to %s", nick, acptr->name);
 		}
+
+		if (!acptr)
+		{
+			sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, sptr->name, nick);
+			continue;
+		}
+
 		if ((!MyConnect(acptr) && MyClient(cptr) && !ValidatePermissionsForPath("kill:global",sptr,acptr,NULL,NULL))
 		    || (MyConnect(acptr) && MyClient(cptr)
 		    && !ValidatePermissionsForPath("kill:local",sptr,acptr,NULL,NULL)))
@@ -158,18 +154,8 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			sendto_one(sptr, err_str(ERR_NOPRIVILEGES), me.name, sptr->name);
 			continue;
 		}
-		if (IsServer(acptr) || IsMe(acptr))
-		{
-			sendto_one(sptr, err_str(ERR_CANTKILLSERVER), me.name, sptr->name);
-			continue;
-		}
-		if (!IsPerson(acptr))
-		{
-			/* Nick exists but user is not registered yet: IOTW "doesn't exist". -- Syzop */
-			sendto_one(sptr, err_str(ERR_NOSUCHNICK), me.name, sptr->name, nick);
-			continue;
-		}
 
+		/* Hooks can plug-in here to reject a kill */
 		if (MyClient(sptr))
 		{
 			int ret = EX_ALLOW;
@@ -195,6 +181,7 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			    MAXKILLS);
 			break;
 		}
+
 		if (!IsServer(cptr))
 		{
 			/*
@@ -206,20 +193,12 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 			   **   ...!operhost!oper (comment)
 			 */
 			strlcpy(inpath, GetHost(cptr), sizeof inpath);
-			if (kcount < 2) {	/* Only check the path the first time
-					   around, or it gets appended to itself. */
-				if (!BadPtr(path))
-				{
-					(void)ircsnprintf(buf, sizeof(buf), "%s (%s)",
-					    cptr->name, path);
-					path = buf;
-				}
-				else
-					path = cptr->name;
+			if (kcount == 1)
+			{
+				ircsnprintf(buf, sizeof(buf), "%s (%s)", cptr->name, path);
+				path = buf;
 			}
 		}
-		else if (BadPtr(path))
-			path = "*no-path*";	/* Bogus server sending??? */
 		/*
 		   ** Notify all *local* opers about the KILL (this includes the one
 		   ** originating the kill, if from this server--the special numeric
@@ -229,64 +208,45 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		   **    have changed the target because of the nickname change.
 		 */
 
-		auser = acptr->user;
-
 		sendto_snomask_normal(SNO_KILLS,
 		    "*** Notice -- Received KILL message for %s!%s@%s from %s Path: %s!%s",
-		    acptr->name, auser->username,
-		    IsHidden(acptr) ? auser->virthost : auser->realhost,
+		    acptr->name, acptr->user->username,
+		    IsHidden(acptr) ? acptr->user->virthost : acptr->user->realhost,
 		    sptr->name, inpath, path);
-#if defined(USE_SYSLOG) && defined(SYSLOG_KILL)
-			syslog(LOG_DEBUG, "KILL From %s For %s Path %s!%s",
-			    sptr->name, acptr->name, inpath, path);
-#endif
-		/*
-		 * By otherguy
-		*/
-                ircd_log
-                    (LOG_KILL, "KILL (%s) by  %s(%s!%s)",
-                           make_nick_user_host
-                     (acptr->name, acptr->user->username, GetHost(acptr)),
-                            sptr->name,
-                            inpath,
-                            path);
-		/*
-		   ** And pass on the message to other servers. Note, that if KILL
-		   ** was changed, the message has to be sent to all links, also
-		   ** back.
-		   ** Suicide kills are NOT passed on --SRB
-		 */
-		if (!MyConnect(acptr) || !MyConnect(sptr))
-		{
-			sendto_server(cptr, 0, 0, ":%s KILL %s :%s!%s",
-			    sptr->name, acptr->name, inpath, path);
-			if (chasing && IsServer(cptr))
-				sendto_one(cptr, ":%s KILL %s :%s!%s",
-				    me.name, acptr->name, inpath, path);
-			acptr->flags |= FLAGS_KILLED;
-		}
 
-		/*
-		   ** Tell the victim she/he has been zapped, but *only* if
-		   ** the victim is on current server--no sense in sending the
-		   ** notification chasing the above kill, it won't get far
-		   ** anyway (as this user don't exist there any more either)
-		 */
+		ircd_log(LOG_KILL, "KILL (%s) by  %s(%s!%s)",
+			make_nick_user_host(acptr->name, acptr->user->username, GetHost(acptr)),
+			sptr->name, inpath, path);
+
+		/* Victim gets a little notification (s)he is about to die */
 		if (MyConnect(acptr))
+		{
 			sendto_prefix_one(acptr, sptr, ":%s KILL %s :%s!%s",
 			    sptr->name, acptr->name, inpath, path);
-		/*
-		   ** Set FLAGS_KILLED. This prevents exit_one_client from sending
-		   ** the unnecessary QUIT for this. (This flag should never be
-		   ** set in any other place)
-		 */
-		if (MyConnect(acptr) && MyConnect(sptr))
+		}
 
+		if (MyConnect(acptr) && MyConnect(sptr))
+		{
+			/* Local kill. This is handled as if it were a QUIT */
+			/* Prepare buffer for exit_client */
 			ircsnprintf(buf2, sizeof(buf2), "[%s] Local kill by %s (%s)",
 			    me.name, sptr->name,
 			    BadPtr(parv[2]) ? sptr->name : parv[2]);
+		}
 		else
 		{
+			/* Kill from one server to another (we may be src, victim or something in-between) */
+
+			/* Broadcast it to other SID and non-SID servers (may be a NOOP, obviously) */
+			sendto_server(cptr, PROTO_SID, 0, ":%s KILL %s :%s!%s",
+			    sptr->name, ID(acptr), inpath, path);
+			sendto_server(cptr, 0, PROTO_SID, ":%s KILL %s :%s!%s",
+			    sptr->name, acptr->name, inpath, path);
+
+			/* Don't send a QUIT for this */
+			acptr->flags |= FLAGS_KILLED;
+			
+			/* Prepare the buffer for exit_client */
 			if ((killer = index(path, ' ')))
 			{
 				while ((killer >= path) && *killer && *killer != '!')
@@ -303,8 +263,9 @@ DLLFUNC int  m_kill(aClient *cptr, aClient *sptr, int parc, char *parv[])
 
 		if (MyClient(sptr))
 			RunHook3(HOOKTYPE_LOCAL_KILL, sptr, acptr, parv[2]);
+
 		if (exit_client(cptr, acptr, sptr, buf2) == FLUSH_BUFFER)
-			return FLUSH_BUFFER;
+			return FLUSH_BUFFER; /* (return if we killed ourselves) */
 	}
 	return 0;
 }
