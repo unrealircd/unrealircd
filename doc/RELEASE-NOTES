@@ -91,12 +91,12 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
   a copy of that file, give it a different name, and include that one
   instead. Since the file is fully documented, you can just comment out
   or delete the loadmodule lines of things you don't want to load.
-* Oper permissions have changed completely: (A4)
+* Oper permissions have changed completely: (A4+)
   * All previous oper levels/ranks no longer exist (Netadmin, Admin, ..)
   * oper::flags has been removed. Instead you must specify an operclass
     in oper::operclass (for example, 'operclass netadmin').
   * In operclass block(s) you define the privileges. You can now control
-    exactly what an IRCOp can and cannot do. (This process is on-going)
+    exactly what an IRCOp can and cannot do.
     Have a look at operclass.default.conf which ships with UnrealIRCd,
     it contains a number of default operclass blocks suitable for the
     most common situations. See also the operclass block documentation:
@@ -142,6 +142,7 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * The IRCd can now better handle unknown channel modes which expect a
   parameter. This can be useful in a scenario where you are slowly
   upgrading all your servers.
+* If you want to unset a vhost but keep cloaked then use /MODE yournick -t
 
 ==[ CHANGED ]==
 * Numerics have been removed. Instead we now use SIDs (Server ID's) and
@@ -210,6 +211,11 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
   modes' such as +G, +S, +c, +s. Due to this change halfops can now
   set modes +beiklmntIMKNCR (was: +beikmntI). (A4)
 * If no link::hub or link::leaf is specified then assume hub "*". (A5)
+* SWHOIS (Special whois title) has been extended in a number of ways:
+  * We now "track" who or what set an swhois. This allows us to
+    remove the swhois received via oper/vhost on de-oper/de-vhost.
+  * You can now have multiple swhois lines
+  * Multiple oper::swhois items are supported (in vhost::swhois too)
 
 ==[ MODULE CODERS / DEVELOPERS ]==
 * A lot of technical documentation for module coders has been added
@@ -248,14 +254,27 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
 * ExtBan ~a (account) did not work with +I (A5)
 * On Windows we didn't create the data/ directory resulting in a
   "Unable to write tunefile" error in alpha4. (A5)
+* A number of minor (<1K total) memory leaks on /REHASH. (A5)
 
 ==[ REMOVED / DROPPED ]==
 * Numeric server IDs, see above. (A1)
 * PROTOCTL TOKEN and SJB64 are no longer implemented. (A1)
 * Ziplinks have been removed. (A1)
 * WebTV support. (A3)
-* User mode +h (helpop). This user mode only added a line in /WHOIS
-  saying the user "is available for help". You can use a vhost block
-  with a vhost::swhois as a replacement. Or oper::swhois. (A4)
 * Channel Mode +j was removed and replaced by the configuration setting
   set::anti-flood::join-flood (default: 3 per 90 seconds). (A5)
+* /CHATOPS: use /GLOBOPS instead which does the same
+  /ADCHAT & /NACHAT: gone as we don't have such oper levels anymore
+  Your opers should actually be in an #opers channel. If you also want
+  special classes of oper channels like #admins then use +iI ~O:*admin*
+* User modes:
+  * +N (Network Administrator): see 'Oper permissions' under NEW as for why
+  * +a (Services Administrator): same
+  * +A (Server Administrator: same
+  * +C (Co Administrator): same
+  * +O (Local IRC Operator): same
+  * +h (HelpOp): all this did was add a line "is available for help" in
+    WHOIS. You can use a vhost block with vhost::swhois as a replacement
+    or for opers just add an oper::swhois item.
+  * +g (failops): we already have snomasks and the +o usermode for this
+  * +v (receive infected DCC SEND rejection notices): moved to snomask +D
