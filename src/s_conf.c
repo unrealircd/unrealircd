@@ -1671,7 +1671,7 @@ int	init_conf(char *rootconf, int rehash)
 		if (rehash)
 		{
 			Hook *h;
-			old_pid_file = conf_files->pid_file;
+			safestrdup(old_pid_file, conf_files->pid_file);
 			unrealdns_delasyncconnects();
 			config_rehash();
 			Unload_all_loaded_modules();
@@ -1701,17 +1701,15 @@ int	init_conf(char *rootconf, int rehash)
 		}
 		charsys_finish();
 		applymeblock();
-		if(old_pid_file &&
-		   strcmp(old_pid_file, conf_files->pid_file))
-			{
-				sendto_ops("pidfile is being rewritten to %s, please delete %s",
-					   conf_files->pid_file,
-					   old_pid_file);
-				safefree(old_pid_file);
-
-				write_pidfile();
-			}
-		   }
+		if (old_pid_file && strcmp(old_pid_file, conf_files->pid_file))
+		{
+			sendto_ops("pidfile is being rewritten to %s, please delete %s",
+				   conf_files->pid_file,
+				   old_pid_file);
+			write_pidfile();
+		}
+		safefree(old_pid_file);
+	}
 	else
 	{
 		config_error("IRCd configuration failed to load");
@@ -2225,6 +2223,7 @@ void	config_rehash()
 	safefree(conf_files->svsmotd_file);
 	safefree(conf_files->botmotd_file);
 	safefree(conf_files->rules_file);
+	safefree(conf_files->pid_file);
 	safefree(conf_files->tune_file);
 	/*
 	   Don't free conf_files->pid_file here; the old value is used to determine if
