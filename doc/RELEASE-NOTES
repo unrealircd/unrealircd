@@ -217,6 +217,11 @@ listed on: https://www.unrealircd.org/docs/Upgrading_from_3.2.x
   write a module from scratch, the User & Channel Mode System, Commands,
   Command Overrides, Hooks, attaching custom-data to users/channels,
   and more. (A2+)
+* For commands: do not read from parv[0] anymore, doing so will lead
+  to a crash. Use sptr->name instead. This change is necessary as
+  the "name" in parv[0] could possibly point to a UID/SID rather than
+  a nick name. Thus, if you would send parv[0] to a non-UID or non-SID
+  capable server this would lead to serious issues (not found errors).
 * Added MOD_OPT_PERM_RELOADABLE which permits reloading (eg: upgrades)
   but disallows unloading of a module (A3)
 * There have been *a lot* of source code cleanups (ALL)
