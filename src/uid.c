@@ -25,52 +25,40 @@
 #include "fdlist.h"
 #include "proto.h"
 
-/*
- * TS6 UID generator based on Atheme protocol/base36uid.
- *
- * The changes are simple -- numerics are always 3 bytes, and id lengths
- * are always 9 bytes.
- */
-
-static char new_uid[IDLEN];
-
 void uid_init(void)
 {
-	int i;
-
-	memset(new_uid, 0, sizeof new_uid);
-
-	/* copy the SID */
-	memcpy(new_uid, me.id, 3);
-	memcpy(new_uid + 3, "AAAAA@", 6);
 }
 
-static void uid_increment(size_t i)
+char uid_int_to_char(int v)
 {
-	if (i != 3)    /* Not reached server SID portion yet? */
-	{
-		if (new_uid[i] == 'Z')
-			new_uid[i] = '0';
-		else if (new_uid[i] == '9')
-		{
-			new_uid[i] = 'A';
-			uid_increment(i - 1);
-		}
-		else
-			++new_uid[i];
-	}
+	if (v < 10)
+		return '0'+v;
 	else
-	{
-		if (new_uid[i] == 'Z')
-			memcpy(new_uid + 3, "AAAAA@", 6);
-		else
-			++new_uid[i];
-	}
+		return 'A'+v-10;
 }
 
 const char *uid_get(void)
 {
-	/* start at the last filled byte. */
-	uid_increment(IDLEN - 2);
-	return new_uid;
+	aClient *acptr;
+	static char uid[IDLEN];
+	static int uidcounter = 0;
+
+	uidcounter++;
+	if (uidcounter > 676)
+		uidcounter = 0;
+
+	do
+	{
+		snprintf(uid, sizeof(uid), "%s%c%c%c%c%c%c",
+			me.id,
+			uid_int_to_char(getrandom8() % 36),
+			uid_int_to_char(getrandom8() % 36),
+			uid_int_to_char(getrandom8() % 36),
+			uid_int_to_char(getrandom8() % 36),
+			uid_int_to_char(uidcounter / 36),
+			uid_int_to_char(uidcounter % 36));
+		acptr = find_client(uid, NULL);
+	} while (acptr);
+
+	return uid;
 }
