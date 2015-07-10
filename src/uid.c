@@ -44,7 +44,7 @@ const char *uid_get(void)
 	static int uidcounter = 0;
 
 	uidcounter++;
-	if (uidcounter > 676)
+	if (uidcounter == 36*36)
 		uidcounter = 0;
 
 	do
