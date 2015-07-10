@@ -1110,7 +1110,8 @@ struct _configitem_operclass {
 struct _configitem_oper {
 	ConfigItem *prev, *next;
 	ConfigFlag flag;
-	char *name, *swhois, *snomask;
+	char *name, *snomask;
+	SWhois *swhois;
 	anAuthStruct *auth;
 	char *operclass;
 	ConfigItem_class *class;

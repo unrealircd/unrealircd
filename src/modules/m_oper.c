@@ -225,7 +225,9 @@ DLLFUNC int  m_oper(aClient *cptr, aClient *sptr, int parc, char *parv[])
 	/* oper::swhois */
 	if (aconf->swhois)
 	{
-		swhois_add(sptr, "oper", -100, aconf->swhois, &me, NULL);
+		SWhois *s;
+		for (s = aconf->swhois; s; s = s->next)
+			swhois_add(sptr, "oper", -100, s->line, &me, NULL);
 	}
 
 	/* set oper user modes */

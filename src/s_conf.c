@@ -1917,7 +1917,7 @@ void	config_rehash()
 	int i;
 
 	USE_BAN_VERSION = 0;
-	/* clean out stuff that we don't use */
+
 	for (admin_ptr = conf_admin; admin_ptr; admin_ptr = (ConfigItem_admin *)next)
 	{
 		next = (ListStruct *)admin_ptr->next;
@@ -1925,19 +1925,27 @@ void	config_rehash()
 		DelListItem(admin_ptr, conf_admin);
 		MyFree(admin_ptr);
 	}
-	/* wipe the fckers out ..*/
+
 	for (oper_ptr = conf_oper; oper_ptr; oper_ptr = (ConfigItem_oper *)next)
 	{
 		ConfigItem_mask *oper_mask;
+		SWhois *s, *s_next;
 		next = (ListStruct *)oper_ptr->next;
 		ircfree(oper_ptr->name);
-		ircfree(oper_ptr->swhois);
 		ircfree(oper_ptr->snomask);
 		Auth_DeleteAuthStruct(oper_ptr->auth);
 		unreal_delete_masks(oper_ptr->mask);
 		DelListItem(oper_ptr, conf_oper);
+		for (s = oper_ptr->swhois; s; s = s_next)
+		{
+			s_next = s->next;
+			safefree(s->line);
+			safefree(s->setby);
+			MyFree(s);
+		}
 		MyFree(oper_ptr);
 	}
+
 	for (link_ptr = conf_link; link_ptr; link_ptr = (ConfigItem_link *) next)
 	{
 		next = (ListStruct *)link_ptr->next;
@@ -3624,7 +3632,24 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "swhois"))
 		{
-			ircstrdup(oper->swhois, cep->ce_vardata);
+			SWhois *s;
+			if (cep->ce_entries)
+			{
+				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+				{
+					s = MyMallocEx(sizeof(SWhois));
+					s->line = strdup(cepp->ce_varname);
+					s->setby = strdup("oper");
+					AddListItem(s, oper->swhois);
+				}
+			} else
+			if (cep->ce_vardata)
+			{
+				s = MyMallocEx(sizeof(SWhois));
+				s->line = strdup(cep->ce_vardata);
+				s->setby = strdup("oper");
+				AddListItem(s, oper->swhois);
+			}
 		}
 		else if (!strcmp(cep->ce_varname, "snomask"))
 		{
@@ -3736,13 +3761,6 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 			/* oper::swhois */
 			else if (!strcmp(cep->ce_varname, "swhois"))
 			{
-				if (has_swhois)
-				{
-					config_warn_duplicate(cep->ce_fileptr->cf_filename,
-						cep->ce_varlinenum, "oper::swhois");
-					continue;
-				}
-				has_swhois = 1;
 			}
 			/* oper::vhost */
 			else if (!strcmp(cep->ce_varname, "vhost"))
@@ -3866,6 +3884,10 @@ int	_test_oper(ConfigFile *conf, ConfigEntry *ce)
 				errors++;
 				need_34_upgrade = 1;
 				continue;
+			}
+			else if (!strcmp(cep->ce_varname, "swhois"))
+			{
+				/* ok */
 			}
 			else
 			{
