@@ -481,7 +481,7 @@ int blacklist_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 				} else
 				if (!strcmp(cepp->ce_varname, "name"))
 				{
-					ircstrdup(d->backend->dns->name, cepp->ce_vardata);
+					safestrdup(d->backend->dns->name, cepp->ce_vardata);
 				}
 			}
 		}
@@ -491,7 +491,7 @@ int blacklist_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		}
 		else if (!strcmp(cep->ce_varname, "reason"))
 		{
-			ircstrdup(d->reason, cep->ce_vardata);
+			safestrdup(d->reason, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "ban-time"))
 		{

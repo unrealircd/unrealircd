@@ -86,9 +86,9 @@ ConfigItem_badword *badword, *next;
 	for (badword = conf_badword_message; badword; badword = (ConfigItem_badword *) next)
 	{
 		next = badword->next;
-		ircfree(badword->word);
+		safefree(badword->word);
 		if (badword->replace)
-			ircfree(badword->replace);
+			safefree(badword->replace);
 		regfree(&badword->expr);
 		DelListItem(badword, conf_badword_message);
 		MyFree(badword);
@@ -243,7 +243,7 @@ DLLFUNC int censor_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		}
 		else if (!strcmp(cep->ce_varname, "replace"))
 		{
-			ircstrdup(ca->replace, cep->ce_vardata);
+			safestrdup(ca->replace, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "word"))
 			word = cep;
@@ -268,7 +268,7 @@ DLLFUNC int censor_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	if (regex)
 	{
 		ca->type = BADW_TYPE_REGEX;
-		ircstrdup(ca->word, word->ce_vardata);
+		safestrdup(ca->word, word->ce_vardata);
 		regcomp(&ca->expr, ca->word, regflags);
 	}
 	else

@@ -1296,22 +1296,22 @@ void update_read_settings(char *cfgfile)
 						if (!cepp->ce_vardata)
 							continue;
 						if (!strcmp(cepp->ce_varname, "local")) {
-							ircstrdup(upgrade.locop_host, cepp->ce_vardata);
+							safestrdup(upgrade.locop_host, cepp->ce_vardata);
 						}
 						else if (!strcmp(cepp->ce_varname, "global")) {
-							ircstrdup(upgrade.oper_host, cepp->ce_vardata);
+							safestrdup(upgrade.oper_host, cepp->ce_vardata);
 						}
 						else if (!strcmp(cepp->ce_varname, "coadmin")) {
-							ircstrdup(upgrade.coadmin_host, cepp->ce_vardata);
+							safestrdup(upgrade.coadmin_host, cepp->ce_vardata);
 						}
 						else if (!strcmp(cepp->ce_varname, "admin")) {
-							ircstrdup(upgrade.admin_host, cepp->ce_vardata);
+							safestrdup(upgrade.admin_host, cepp->ce_vardata);
 						}
 						else if (!strcmp(cepp->ce_varname, "servicesadmin")) {
-							ircstrdup(upgrade.sadmin_host, cepp->ce_vardata);
+							safestrdup(upgrade.sadmin_host, cepp->ce_vardata);
 						}
 						else if (!strcmp(cepp->ce_varname, "netadmin")) {
-							ircstrdup(upgrade.netadmin_host, cepp->ce_vardata);
+							safestrdup(upgrade.netadmin_host, cepp->ce_vardata);
 						}
 						else if (!strcmp(cepp->ce_varname, "host-on-oper-up")) {
 							upgrade.host_on_oper_up = config_checkval(cepp->ce_vardata,CFG_YESNO);

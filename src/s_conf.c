@@ -1405,35 +1405,35 @@ ConfigCommand *config_binary_search(char *cmd) {
 
 void	free_iConf(aConfiguration *i)
 {
-	ircfree(i->name_server);
-	ircfree(i->kline_address);
-	ircfree(i->gline_address);
-	ircfree(i->auto_join_chans);
-	ircfree(i->oper_auto_join_chans);
-	ircfree(i->oper_only_stats);
-	ircfree(i->channel_command_prefix);
-	ircfree(i->oper_snomask);
-	ircfree(i->user_snomask);
-	ircfree(i->egd_path);
-	ircfree(i->static_quit);
-	ircfree(i->x_server_cert_pem);
-	ircfree(i->x_server_key_pem);
-	ircfree(i->x_server_cipher_list);
-	ircfree(i->trusted_ca_file);
-	ircfree(i->restrict_usermodes);
-	ircfree(i->restrict_channelmodes);
-	ircfree(i->restrict_extendedbans);
-	ircfree(i->network.x_ircnetwork);
-	ircfree(i->network.x_ircnet005);
-	ircfree(i->network.x_defserv);
-	ircfree(i->network.x_services_name);
-	ircfree(i->network.x_hidden_host);
-	ircfree(i->network.x_prefix_quit);
-	ircfree(i->network.x_helpchan);
-	ircfree(i->network.x_stats_server);
-	ircfree(i->spamfilter_ban_reason);
-	ircfree(i->spamfilter_virus_help_channel);
-	ircfree(i->spamexcept_line);
+	safefree(i->name_server);
+	safefree(i->kline_address);
+	safefree(i->gline_address);
+	safefree(i->auto_join_chans);
+	safefree(i->oper_auto_join_chans);
+	safefree(i->oper_only_stats);
+	safefree(i->channel_command_prefix);
+	safefree(i->oper_snomask);
+	safefree(i->user_snomask);
+	safefree(i->egd_path);
+	safefree(i->static_quit);
+	safefree(i->x_server_cert_pem);
+	safefree(i->x_server_key_pem);
+	safefree(i->x_server_cipher_list);
+	safefree(i->trusted_ca_file);
+	safefree(i->restrict_usermodes);
+	safefree(i->restrict_channelmodes);
+	safefree(i->restrict_extendedbans);
+	safefree(i->network.x_ircnetwork);
+	safefree(i->network.x_ircnet005);
+	safefree(i->network.x_defserv);
+	safefree(i->network.x_services_name);
+	safefree(i->network.x_hidden_host);
+	safefree(i->network.x_prefix_quit);
+	safefree(i->network.x_helpchan);
+	safefree(i->network.x_stats_server);
+	safefree(i->spamfilter_ban_reason);
+	safefree(i->spamfilter_virus_help_channel);
+	safefree(i->spamexcept_line);
 }
 
 int	config_test();
@@ -1705,7 +1705,7 @@ int	init_conf(char *rootconf, int rehash)
 				sendto_ops("pidfile is being rewritten to %s, please delete %s",
 					   conf_files->pid_file,
 					   old_pid_file);
-				ircfree(old_pid_file);
+				safefree(old_pid_file);
 
 				write_pidfile();
 			}
@@ -1921,7 +1921,7 @@ void	config_rehash()
 	for (admin_ptr = conf_admin; admin_ptr; admin_ptr = (ConfigItem_admin *)next)
 	{
 		next = (ListStruct *)admin_ptr->next;
-		ircfree(admin_ptr->line);
+		safefree(admin_ptr->line);
 		DelListItem(admin_ptr, conf_admin);
 		MyFree(admin_ptr);
 	}
@@ -1931,8 +1931,8 @@ void	config_rehash()
 		ConfigItem_mask *oper_mask;
 		SWhois *s, *s_next;
 		next = (ListStruct *)oper_ptr->next;
-		ircfree(oper_ptr->name);
-		ircfree(oper_ptr->snomask);
+		safefree(oper_ptr->name);
+		safefree(oper_ptr->snomask);
 		Auth_DeleteAuthStruct(oper_ptr->auth);
 		unreal_delete_masks(oper_ptr->mask);
 		DelListItem(oper_ptr, conf_oper);
@@ -1977,15 +1977,15 @@ void	config_rehash()
 	{
 		next = (ListStruct *)uline_ptr->next;
 		/* We'll wipe it out when it has no clients */
-		ircfree(uline_ptr->servername);
+		safefree(uline_ptr->servername);
 		DelListItem(uline_ptr, conf_ulines);
 		MyFree(uline_ptr);
 	}
 	for (allow_ptr = conf_allow; allow_ptr; allow_ptr = (ConfigItem_allow *) next)
 	{
 		next = (ListStruct *)allow_ptr->next;
-		ircfree(allow_ptr->ip);
-		ircfree(allow_ptr->hostname);
+		safefree(allow_ptr->ip);
+		safefree(allow_ptr->hostname);
 		if (allow_ptr->netmask)
 			MyFree(allow_ptr->netmask);
 		Auth_DeleteAuthStruct(allow_ptr->auth);
@@ -1995,7 +1995,7 @@ void	config_rehash()
 	for (except_ptr = conf_except; except_ptr; except_ptr = (ConfigItem_except *) next)
 	{
 		next = (ListStruct *)except_ptr->next;
-		ircfree(except_ptr->mask);
+		safefree(except_ptr->mask);
 		if (except_ptr->netmask)
 			MyFree(except_ptr->netmask);
 		DelListItem(except_ptr, conf_except);
@@ -2006,8 +2006,8 @@ void	config_rehash()
 		next = (ListStruct *)ban_ptr->next;
 		if (ban_ptr->flag.type2 == CONF_BAN_TYPE_CONF || ban_ptr->flag.type2 == CONF_BAN_TYPE_TEMPORARY)
 		{
-			ircfree(ban_ptr->mask);
-			ircfree(ban_ptr->reason);
+			safefree(ban_ptr->mask);
+			safefree(ban_ptr->reason);
 			if (ban_ptr->netmask)
 				MyFree(ban_ptr->netmask);
 			DelListItem(ban_ptr, conf_ban);
@@ -2021,11 +2021,11 @@ void	config_rehash()
 	for (tld_ptr = conf_tld; tld_ptr; tld_ptr = (ConfigItem_tld *) next)
 	{
 		next = (ListStruct *)tld_ptr->next;
-		ircfree(tld_ptr->motd_file);
-		ircfree(tld_ptr->rules_file);
-		ircfree(tld_ptr->smotd_file);
-		ircfree(tld_ptr->opermotd_file);
-		ircfree(tld_ptr->botmotd_file);
+		safefree(tld_ptr->motd_file);
+		safefree(tld_ptr->rules_file);
+		safefree(tld_ptr->smotd_file);
+		safefree(tld_ptr->opermotd_file);
+		safefree(tld_ptr->botmotd_file);
 
 		free_motd(&tld_ptr->motd);
 		free_motd(&tld_ptr->rules);
@@ -2042,10 +2042,10 @@ void	config_rehash()
 
 		next = (ListStruct *)vhost_ptr->next;
 
-		ircfree(vhost_ptr->login);
+		safefree(vhost_ptr->login);
 		Auth_DeleteAuthStruct(vhost_ptr->auth);
-		ircfree(vhost_ptr->virthost);
-		ircfree(vhost_ptr->virtuser);
+		safefree(vhost_ptr->virthost);
+		safefree(vhost_ptr->virtuser);
 		unreal_delete_masks(vhost_ptr->mask);
 		DelListItem(vhost_ptr, conf_vhost);
 		MyFree(vhost_ptr);
@@ -2073,35 +2073,35 @@ void	config_rehash()
 		next = (ListStruct *)deny_dcc_ptr->next;
 		if (deny_dcc_ptr->flag.type2 == CONF_BAN_TYPE_CONF)
 		{
-			ircfree(deny_dcc_ptr->filename);
-			ircfree(deny_dcc_ptr->reason);
+			safefree(deny_dcc_ptr->filename);
+			safefree(deny_dcc_ptr->reason);
 			DelListItem(deny_dcc_ptr, conf_deny_dcc);
 			MyFree(deny_dcc_ptr);
 		}
 	}
 	for (deny_link_ptr = conf_deny_link; deny_link_ptr; deny_link_ptr = (ConfigItem_deny_link *) next) {
 		next = (ListStruct *)deny_link_ptr->next;
-		ircfree(deny_link_ptr->prettyrule);
-		ircfree(deny_link_ptr->mask);
+		safefree(deny_link_ptr->prettyrule);
+		safefree(deny_link_ptr->mask);
 		crule_free(&deny_link_ptr->rule);
 		DelListItem(deny_link_ptr, conf_deny_link);
 		MyFree(deny_link_ptr);
 	}
 	for (deny_version_ptr = conf_deny_version; deny_version_ptr; deny_version_ptr = (ConfigItem_deny_version *) next) {
 		next = (ListStruct *)deny_version_ptr->next;
-		ircfree(deny_version_ptr->mask);
-		ircfree(deny_version_ptr->version);
-		ircfree(deny_version_ptr->flags);
+		safefree(deny_version_ptr->mask);
+		safefree(deny_version_ptr->version);
+		safefree(deny_version_ptr->flags);
 		DelListItem(deny_version_ptr, conf_deny_version);
 		MyFree(deny_version_ptr);
 	}
 	for (deny_channel_ptr = conf_deny_channel; deny_channel_ptr; deny_channel_ptr = (ConfigItem_deny_channel *) next)
 	{
 		next = (ListStruct *)deny_channel_ptr->next;
-		ircfree(deny_channel_ptr->redirect);
-		ircfree(deny_channel_ptr->channel);
-		ircfree(deny_channel_ptr->reason);
-		ircfree(deny_channel_ptr->class);
+		safefree(deny_channel_ptr->redirect);
+		safefree(deny_channel_ptr->channel);
+		safefree(deny_channel_ptr->reason);
+		safefree(deny_channel_ptr->class);
 		DelListItem(deny_channel_ptr, conf_deny_channel);
 		MyFree(deny_channel_ptr);
 	}
@@ -2109,8 +2109,8 @@ void	config_rehash()
 	for (allow_channel_ptr = conf_allow_channel; allow_channel_ptr; allow_channel_ptr = (ConfigItem_allow_channel *) next)
 	{
 		next = (ListStruct *)allow_channel_ptr->next;
-		ircfree(allow_channel_ptr->channel);
-		ircfree(allow_channel_ptr->class);
+		safefree(allow_channel_ptr->channel);
+		safefree(allow_channel_ptr->class);
 		DelListItem(allow_channel_ptr, conf_allow_channel);
 		MyFree(allow_channel_ptr);
 	}
@@ -2119,7 +2119,7 @@ void	config_rehash()
 		next = (ListStruct *)allow_dcc_ptr->next;
 		if (allow_dcc_ptr->flag.type2 == CONF_BAN_TYPE_CONF)
 		{
-			ircfree(allow_dcc_ptr->filename);
+			safefree(allow_dcc_ptr->filename);
 			DelListItem(allow_dcc_ptr, conf_allow_dcc);
 			MyFree(allow_dcc_ptr);
 		}
@@ -2131,13 +2131,13 @@ void	config_rehash()
 		conf_drpass->restartauth = NULL;
 		Auth_DeleteAuthStruct(conf_drpass->dieauth);
 		conf_drpass->dieauth = NULL;
-		ircfree(conf_drpass);
+		safefree(conf_drpass);
 	}
 	for (log_ptr = conf_log; log_ptr; log_ptr = (ConfigItem_log *)next) {
 		next = (ListStruct *)log_ptr->next;
 		if (log_ptr->logfd != -1)
 			fd_close(log_ptr->logfd);
-		ircfree(log_ptr->file);
+		safefree(log_ptr->file);
 		DelListItem(log_ptr, conf_log);
 		MyFree(log_ptr);
 	}
@@ -2145,16 +2145,16 @@ void	config_rehash()
 		aCommand *cmptr = find_Command(alias_ptr->alias, 0, 0);
 		ConfigItem_alias_format *fmt;
 		next = (ListStruct *)alias_ptr->next;
-		ircfree(alias_ptr->nick);
+		safefree(alias_ptr->nick);
 		del_Command(alias_ptr->alias, cmptr->func);
-		ircfree(alias_ptr->alias);
+		safefree(alias_ptr->alias);
 		if (alias_ptr->format && (alias_ptr->type == ALIAS_COMMAND)) {
 			for (fmt = (ConfigItem_alias_format *) alias_ptr->format; fmt; fmt = (ConfigItem_alias_format *) next2)
 			{
 				next2 = (ListStruct *)fmt->next;
-				ircfree(fmt->format);
-				ircfree(fmt->nick);
-				ircfree(fmt->parameters);
+				safefree(fmt->format);
+				safefree(fmt->nick);
+				safefree(fmt->parameters);
 				unreal_delete_match(fmt->expr);
 				DelListItem(fmt, alias_ptr->format);
 				MyFree(fmt);
@@ -2166,11 +2166,11 @@ void	config_rehash()
 	for (help_ptr = conf_help; help_ptr; help_ptr = (ConfigItem_help *)next) {
 		aMotdLine *text;
 		next = (ListStruct *)help_ptr->next;
-		ircfree(help_ptr->command);
+		safefree(help_ptr->command);
 		while (help_ptr->text) {
 			text = help_ptr->text->next;
-			ircfree(help_ptr->text->line);
-			ircfree(help_ptr->text);
+			safefree(help_ptr->text->line);
+			safefree(help_ptr->text);
 			help_ptr->text = text;
 		}
 		DelListItem(help_ptr, conf_help);
@@ -2179,7 +2179,7 @@ void	config_rehash()
 	for (os_ptr = iConf.oper_only_stats_ext; os_ptr; os_ptr = (OperStat *)next)
 	{
 		next = (ListStruct *)os_ptr->next;
-		ircfree(os_ptr->flag);
+		safefree(os_ptr->flag);
 		MyFree(os_ptr);
 	}
 	iConf.oper_only_stats_ext = NULL;
@@ -2192,7 +2192,7 @@ void	config_rehash()
 	for (of_ptr = conf_offchans; of_ptr; of_ptr = (ConfigItem_offchans *)next)
 	{
 		next = (ListStruct *)of_ptr->next;
-		ircfree(of_ptr->topic);
+		safefree(of_ptr->topic);
 		MyFree(of_ptr);
 	}
 	conf_offchans = NULL;
@@ -2207,19 +2207,19 @@ void	config_rehash()
 	  reset conf_files -- should this be in its own function? no, because
 	  it's only used here
 	 */
-	ircfree(conf_files->motd_file);
-	ircfree(conf_files->smotd_file);
-	ircfree(conf_files->opermotd_file);
-	ircfree(conf_files->svsmotd_file);
-	ircfree(conf_files->botmotd_file);
-	ircfree(conf_files->rules_file);
-	ircfree(conf_files->tune_file);
+	safefree(conf_files->motd_file);
+	safefree(conf_files->smotd_file);
+	safefree(conf_files->opermotd_file);
+	safefree(conf_files->svsmotd_file);
+	safefree(conf_files->botmotd_file);
+	safefree(conf_files->rules_file);
+	safefree(conf_files->tune_file);
 	/*
 	   Don't free conf_files->pid_file here; the old value is used to determine if
 	   the pidfile location has changed and write_pidfile() needs to be called
 	   again.
 	*/
-	ircfree(conf_files);
+	safefree(conf_files);
 	conf_files = NULL;
 }
 
@@ -3054,7 +3054,7 @@ int	_conf_admin(ConfigFile *conf, ConfigEntry *ce)
 		ca = MyMallocEx(sizeof(ConfigItem_admin));
 		if (!conf_admin)
 			conf_admin_tail = ca;
-		ircstrdup(ca->line, cep->ce_varname);
+		safestrdup(ca->line, cep->ce_varname);
 		AddListItem(ca, conf_admin);
 	}
 	return 1;
@@ -3097,15 +3097,15 @@ int	_conf_me(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!strcmp(cep->ce_varname, "name"))
 		{
-			ircstrdup(conf_me->name, cep->ce_vardata);
+			safestrdup(conf_me->name, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "info"))
 		{
-			ircstrdup(conf_me->info, cep->ce_vardata);
+			safestrdup(conf_me->info, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "sid"))
 		{
-			ircstrdup(conf_me->sid, cep->ce_vardata);
+			safestrdup(conf_me->sid, cep->ce_vardata);
 		}
 	}
 	return 1;
@@ -3291,21 +3291,21 @@ int	_conf_files(ConfigFile *conf, ConfigEntry *ce)
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "motd"))
-			ircstrdup(conf_files->motd_file, cep->ce_vardata);
+			safestrdup(conf_files->motd_file, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "shortmotd"))
-			ircstrdup(conf_files->smotd_file, cep->ce_vardata);
+			safestrdup(conf_files->smotd_file, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "opermotd"))
-			ircstrdup(conf_files->opermotd_file, cep->ce_vardata);
+			safestrdup(conf_files->opermotd_file, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "svsmotd"))
-			ircstrdup(conf_files->svsmotd_file, cep->ce_vardata);
+			safestrdup(conf_files->svsmotd_file, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "botmotd"))
-			ircstrdup(conf_files->botmotd_file, cep->ce_vardata);
+			safestrdup(conf_files->botmotd_file, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "rules"))
-			ircstrdup(conf_files->rules_file, cep->ce_vardata);
+			safestrdup(conf_files->rules_file, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "tunefile"))
-			ircstrdup(conf_files->tune_file, cep->ce_vardata);
+			safestrdup(conf_files->tune_file, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "pidfile"))
-			ircstrdup(conf_files->pid_file, cep->ce_vardata);
+			safestrdup(conf_files->pid_file, cep->ce_vardata);
 	}
 	return 1;
 }
@@ -3653,7 +3653,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "snomask"))
 		{
-			ircstrdup(oper->snomask, cep->ce_vardata);
+			safestrdup(oper->snomask, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "modes"))
 		{
@@ -3673,7 +3673,7 @@ int	_conf_oper(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "vhost"))
 		{
-			ircstrdup(oper->vhost, cep->ce_vardata);
+			safestrdup(oper->vhost, cep->ce_vardata);
 		}
 	}
 	AddListItem(oper, conf_oper);
@@ -3940,7 +3940,7 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 	if (!(class = Find_class(ce->ce_vardata)))
 	{
 		class = MyMallocEx(sizeof(ConfigItem_class));
-		ircstrdup(class->name, ce->ce_vardata);
+		safestrdup(class->name, ce->ce_vardata);
 		isnew = 1;
 	}
 	else
@@ -3949,7 +3949,7 @@ int	_conf_class(ConfigFile *conf, ConfigEntry *ce)
 		class->flag.temporary = 0;
 		class->options = 0; /* RESET OPTIONS */
 	}
-	ircstrdup(class->name, ce->ce_vardata);
+	safestrdup(class->name, ce->ce_vardata);
 
 	class->connfreq = 60; /* default */
 
@@ -4237,7 +4237,7 @@ int	_conf_ulines(ConfigFile *conf, ConfigEntry *ce)
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		ca = MyMallocEx(sizeof(ConfigItem_ulines));
-		ircstrdup(ca->servername, cep->ce_varname);
+		safestrdup(ca->servername, cep->ce_varname);
 		AddListItem(ca, conf_ulines);
 	}
 	return 1;
@@ -5071,9 +5071,9 @@ int	_conf_allow_channel(ConfigFile *conf, ConfigEntry *ce)
 		{
 			/* This way, we permit multiple ::channel items in one allow block */
 			allow = MyMallocEx(sizeof(ConfigItem_allow_channel));
-			ircstrdup(allow->channel, cep->ce_vardata);
+			safestrdup(allow->channel, cep->ce_vardata);
 			if (class)
-				ircstrdup(allow->class, class);
+				safestrdup(allow->class, class);
 			AddListItem(allow, conf_allow_channel);
 		}
 	}
@@ -5134,7 +5134,7 @@ int	_conf_allow_dcc(ConfigFile *conf, ConfigEntry *ce)
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "filename"))
-			ircstrdup(allow->filename, cep->ce_vardata);
+			safestrdup(allow->filename, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "soft"))
 		{
 			int x = config_checkval(cep->ce_vardata,CFG_YESNO);
@@ -6088,7 +6088,7 @@ int     _conf_log(ConfigFile *conf, ConfigEntry *ce)
 
 	ca = MyMallocEx(sizeof(ConfigItem_log));
 	ca->logfd = -1;
-	ircstrdup(ca->file, ce->ce_vardata);
+	safestrdup(ca->file, ce->ce_vardata);
 
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
@@ -6248,9 +6248,9 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 			{
 				if (!strcmp(cepp->ce_varname, "bind-ip"))
-					ircstrdup(link->outgoing.bind_ip, cepp->ce_vardata);
+					safestrdup(link->outgoing.bind_ip, cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "hostname"))
-					ircstrdup(link->outgoing.hostname, cepp->ce_vardata);
+					safestrdup(link->outgoing.hostname, cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "port"))
 					link->outgoing.port = atoi(cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "options"))
@@ -6268,9 +6268,9 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "password"))
 			link->auth = Auth_ConvertConf2AuthStruct(cep);
 		else if (!strcmp(cep->ce_varname, "hub"))
-			ircstrdup(link->hub, cep->ce_vardata);
+			safestrdup(link->hub, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "leaf"))
-			ircstrdup(link->leaf, cep->ce_vardata);
+			safestrdup(link->leaf, cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "leaf-depth") || !strcmp(cep->ce_varname, "leafdepth"))
 			link->leaf_depth = atoi(cep->ce_vardata);
 		else if (!strcmp(cep->ce_varname, "class"))
@@ -6745,10 +6745,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "kline-address")) {
-			ircstrdup(tempiConf.kline_address, cep->ce_vardata);
+			safestrdup(tempiConf.kline_address, cep->ce_vardata);
 		}
 		if (!strcmp(cep->ce_varname, "gline-address")) {
-			ircstrdup(tempiConf.gline_address, cep->ce_vardata);
+			safestrdup(tempiConf.gline_address, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "modes-on-connect")) {
 			tempiConf.conn_modes = (long) set_usermode(cep->ce_vardata);
@@ -6760,19 +6760,19 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			set_channelmodes(cep->ce_vardata, &tempiConf.modes_on_join, 0);
 		}
 		else if (!strcmp(cep->ce_varname, "snomask-on-oper")) {
-			ircstrdup(tempiConf.oper_snomask, cep->ce_vardata);
+			safestrdup(tempiConf.oper_snomask, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "snomask-on-connect")) {
-			ircstrdup(tempiConf.user_snomask, cep->ce_vardata);
+			safestrdup(tempiConf.user_snomask, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "level-on-join")) {
 			tempiConf.level_on_join = channellevel_to_int(cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "static-quit")) {
-			ircstrdup(tempiConf.static_quit, cep->ce_vardata);
+			safestrdup(tempiConf.static_quit, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "static-part")) {
-			ircstrdup(tempiConf.static_part, cep->ce_vardata);
+			safestrdup(tempiConf.static_part, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "who-limit")) {
 			tempiConf.who_limit = atol(cep->ce_vardata);
@@ -6789,10 +6789,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				IsupportSetValue(IsupportFind("SILENCE"), cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "auto-join")) {
-			ircstrdup(tempiConf.auto_join_chans, cep->ce_vardata);
+			safestrdup(tempiConf.auto_join_chans, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "oper-auto-join")) {
-			ircstrdup(tempiConf.oper_auto_join_chans, cep->ce_vardata);
+			safestrdup(tempiConf.oper_auto_join_chans, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "check-target-nick-bans")) {
 			tempiConf.check_target_nick_bans = config_checkval(cep->ce_vardata, CFG_YESNO);
@@ -6821,7 +6821,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				charsys_add_language(cepp->ce_varname);
 		}
 		else if (!strcmp(cep->ce_varname, "channel-command-prefix")) {
-			ircstrdup(tempiConf.channel_command_prefix, cep->ce_vardata);
+			safestrdup(tempiConf.channel_command_prefix, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "restrict-usermodes")) {
 			int i;
@@ -6848,7 +6848,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 			tempiConf.restrict_channelmodes = p;
 		}
 		else if (!strcmp(cep->ce_varname, "restrict-extendedbans")) {
-			ircstrdup(tempiConf.restrict_extendedbans, cep->ce_vardata);
+			safestrdup(tempiConf.restrict_extendedbans, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "new-linking-protocol")) {
 			tempiConf.new_linking_protocol = atoi(cep->ce_vardata);
@@ -6859,14 +6859,14 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		else if (!strcmp(cep->ce_varname, "oper-only-stats")) {
 			if (!cep->ce_entries)
 			{
-				ircstrdup(tempiConf.oper_only_stats, cep->ce_vardata);
+				safestrdup(tempiConf.oper_only_stats, cep->ce_vardata);
 			}
 			else
 			{
 				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
 				{
 					OperStat *os = MyMallocEx(sizeof(OperStat));
-					ircstrdup(os->flag, cepp->ce_varname);
+					safestrdup(os->flag, cepp->ce_varname);
 					AddListItem(os, tempiConf.oper_only_stats_ext);
 				}
 			}
@@ -6886,46 +6886,46 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "network-name")) {
 			char *tmp;
-			ircstrdup(tempiConf.network.x_ircnetwork, cep->ce_vardata);
+			safestrdup(tempiConf.network.x_ircnetwork, cep->ce_vardata);
 			for (tmp = cep->ce_vardata; *cep->ce_vardata; cep->ce_vardata++) {
 				if (*cep->ce_vardata == ' ')
 					*cep->ce_vardata='-';
 			}
-			ircstrdup(tempiConf.network.x_ircnet005, tmp);
+			safestrdup(tempiConf.network.x_ircnet005, tmp);
 			if (loop.ircd_booted)
 				IsupportSetValue(IsupportFind("NETWORK"), tmp);
 			cep->ce_vardata = tmp;
 		}
 		else if (!strcmp(cep->ce_varname, "default-server")) {
-			ircstrdup(tempiConf.network.x_defserv, cep->ce_vardata);
+			safestrdup(tempiConf.network.x_defserv, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "services-server")) {
-			ircstrdup(tempiConf.network.x_services_name, cep->ce_vardata);
+			safestrdup(tempiConf.network.x_services_name, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "sasl-server")) {
-			ircstrdup(tempiConf.network.x_sasl_server, cep->ce_vardata);
+			safestrdup(tempiConf.network.x_sasl_server, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "stats-server")) {
-			ircstrdup(tempiConf.network.x_stats_server, cep->ce_vardata);
+			safestrdup(tempiConf.network.x_stats_server, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "help-channel")) {
-			ircstrdup(tempiConf.network.x_helpchan, cep->ce_vardata);
+			safestrdup(tempiConf.network.x_helpchan, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "hiddenhost-prefix")) {
-			ircstrdup(tempiConf.network.x_hidden_host, cep->ce_vardata);
+			safestrdup(tempiConf.network.x_hidden_host, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "prefix-quit")) {
 			if (*cep->ce_vardata == '0')
 			{
-				ircstrdup(tempiConf.network.x_prefix_quit, "");
+				safestrdup(tempiConf.network.x_prefix_quit, "");
 			}
 			else
-				ircstrdup(tempiConf.network.x_prefix_quit, cep->ce_vardata);
+				safestrdup(tempiConf.network.x_prefix_quit, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "link")) {
 			for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next) {
 				if (!strcmp(cepp->ce_varname, "bind-ip")) {
-					ircstrdup(tempiConf.link_bindip, cepp->ce_vardata);
+					safestrdup(tempiConf.link_bindip, cepp->ce_vardata);
 				}
 			}
 		}
@@ -6938,10 +6938,10 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 					tempiConf.host_retries = config_checkval(cepp->ce_vardata,CFG_TIME);
 				}
 				else if (!strcmp(cepp->ce_varname, "nameserver")) {
-					ircstrdup(tempiConf.name_server, cepp->ce_vardata);
+					safestrdup(tempiConf.name_server, cepp->ce_vardata);
 				}
 				else if (!strcmp(cepp->ce_varname, "bind-ip")) {
-					ircstrdup(tempiConf.dns_bindip, cepp->ce_vardata);
+					safestrdup(tempiConf.dns_bindip, cepp->ce_vardata);
 				}
 
 			}
@@ -7056,7 +7056,7 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				else if (!strcmp(cepp->ce_varname, "timeout"))
 					tempiConf.timesynch_timeout = config_checkval(cepp->ce_vardata,CFG_TIME);
 				else if (!strcmp(cepp->ce_varname, "server"))
-					ircstrdup(tempiConf.timesynch_server, cepp->ce_vardata);
+					safestrdup(tempiConf.timesynch_server, cepp->ce_vardata);
 			}
 		}
 		else if (!strcmp(cep->ce_varname, "spamfilter"))
@@ -7066,16 +7066,16 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				if (!strcmp(cepp->ce_varname, "ban-time"))
 					tempiConf.spamfilter_ban_time = config_checkval(cepp->ce_vardata,CFG_TIME);
 				else if (!strcmp(cepp->ce_varname, "ban-reason"))
-					ircstrdup(tempiConf.spamfilter_ban_reason, cepp->ce_vardata);
+					safestrdup(tempiConf.spamfilter_ban_reason, cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "virus-help-channel"))
-					ircstrdup(tempiConf.spamfilter_virus_help_channel, cepp->ce_vardata);
+					safestrdup(tempiConf.spamfilter_virus_help_channel, cepp->ce_vardata);
 				else if (!strcmp(cepp->ce_varname, "virus-help-channel-deny"))
 					tempiConf.spamfilter_vchan_deny = config_checkval(cepp->ce_vardata,CFG_YESNO);
 				else if (!strcmp(cepp->ce_varname, "except"))
 				{
 					char *name, *p;
 					SpamExcept *e;
-					ircstrdup(tempiConf.spamexcept_line, cepp->ce_vardata);
+					safestrdup(tempiConf.spamexcept_line, cepp->ce_vardata);
 					for (name = strtoken(&p, cepp->ce_vardata, ","); name; name = strtoken(&p, NULL, ","))
 					{
 						if (*name == ' ')
@@ -7133,23 +7133,23 @@ int	_conf_set(ConfigFile *conf, ConfigEntry *ce)
 				}
 				else if (!strcmp(cepp->ce_varname, "server-cipher-list"))
 				{
-					ircstrdup(tempiConf.x_server_cipher_list, cepp->ce_vardata);
+					safestrdup(tempiConf.x_server_cipher_list, cepp->ce_vardata);
 				}
 				else if (!strcmp(cepp->ce_varname, "dh"))
 				{
-					ircstrdup(tempiConf.x_dh_pem, cepp->ce_vardata);
+					safestrdup(tempiConf.x_dh_pem, cepp->ce_vardata);
 				}
 				else if (!strcmp(cepp->ce_varname, "certificate"))
 				{
-					ircstrdup(tempiConf.x_server_cert_pem, cepp->ce_vardata);
+					safestrdup(tempiConf.x_server_cert_pem, cepp->ce_vardata);
 				}
 				else if (!strcmp(cepp->ce_varname, "key"))
 				{
-					ircstrdup(tempiConf.x_server_key_pem, cepp->ce_vardata);
+					safestrdup(tempiConf.x_server_key_pem, cepp->ce_vardata);
 				}
 				else if (!strcmp(cepp->ce_varname, "trusted-ca-file"))
 				{
-					ircstrdup(tempiConf.trusted_ca_file, cepp->ce_vardata);
+					safestrdup(tempiConf.trusted_ca_file, cepp->ce_vardata);
 				}
 				else if (!strcmp(cepp->ce_varname, "renegotiate-bytes"))
 				{
@@ -8325,12 +8325,12 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 	if ((alias = Find_alias(ce->ce_vardata)))
 		DelListItem(alias, conf_alias);
 	alias = MyMallocEx(sizeof(ConfigItem_alias));
-	ircstrdup(alias->alias, ce->ce_vardata);
+	safestrdup(alias->alias, ce->ce_vardata);
 	for (cep = ce->ce_entries; cep; cep = cep->ce_next)
 	{
 		if (!strcmp(cep->ce_varname, "format")) {
 			format = MyMallocEx(sizeof(ConfigItem_alias_format));
-			ircstrdup(format->format, cep->ce_vardata);
+			safestrdup(format->format, cep->ce_vardata);
 			format->expr = unreal_create_match(MATCH_PCRE_REGEX, cep->ce_vardata, NULL);
 			if (!format->expr)
 				abort(); /* Impossible due to _test_alias earlier */
@@ -8338,10 +8338,10 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 				if (!strcmp(cepp->ce_varname, "nick") ||
 				    !strcmp(cepp->ce_varname, "target") ||
 				    !strcmp(cepp->ce_varname, "command")) {
-					ircstrdup(format->nick, cepp->ce_vardata);
+					safestrdup(format->nick, cepp->ce_vardata);
 				}
 				else if (!strcmp(cepp->ce_varname, "parameters")) {
-					ircstrdup(format->parameters, cepp->ce_vardata);
+					safestrdup(format->parameters, cepp->ce_vardata);
 				}
 				else if (!strcmp(cepp->ce_varname, "type")) {
 					if (!strcmp(cepp->ce_vardata, "services"))
@@ -8361,7 +8361,7 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 
 		else if (!strcmp(cep->ce_varname, "nick") || !strcmp(cep->ce_varname, "target"))
 		{
-			ircstrdup(alias->nick, cep->ce_vardata);
+			safestrdup(alias->nick, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "type")) {
 			if (!strcmp(cep->ce_vardata, "services"))
@@ -8379,7 +8379,7 @@ int	_conf_alias(ConfigFile *conf, ConfigEntry *ce)
 			alias->spamfilter = config_checkval(cep->ce_vardata, CFG_YESNO);
 	}
 	if (BadPtr(alias->nick) && alias->type != ALIAS_COMMAND) {
-		ircstrdup(alias->nick, alias->alias);
+		safestrdup(alias->nick, alias->alias);
 	}
 	add_CommandX(alias->alias, m_alias, 1, M_USER|M_ALIAS);
 	AddListItem(alias, conf_alias);
@@ -8617,11 +8617,11 @@ int	_conf_deny_dcc(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!strcmp(cep->ce_varname, "filename"))
 		{
-			ircstrdup(deny->filename, cep->ce_vardata);
+			safestrdup(deny->filename, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "reason"))
 		{
-			ircstrdup(deny->reason, cep->ce_vardata);
+			safestrdup(deny->reason, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "soft"))
 		{
@@ -8633,9 +8633,9 @@ int	_conf_deny_dcc(ConfigFile *conf, ConfigEntry *ce)
 	if (!deny->reason)
 	{
 		if (deny->flag.type == DCCDENY_HARD)
-			ircstrdup(deny->reason, "Possible infected virus file");
+			safestrdup(deny->reason, "Possible infected virus file");
 		else
-			ircstrdup(deny->reason, "Possible executable content");
+			safestrdup(deny->reason, "Possible executable content");
 	}
 	AddListItem(deny, conf_deny_dcc);
 	return 0;
@@ -8651,15 +8651,15 @@ int	_conf_deny_channel(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!strcmp(cep->ce_varname, "channel"))
 		{
-			ircstrdup(deny->channel, cep->ce_vardata);
+			safestrdup(deny->channel, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "redirect"))
 		{
-			ircstrdup(deny->redirect, cep->ce_vardata);
+			safestrdup(deny->redirect, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "reason"))
 		{
-			ircstrdup(deny->reason, cep->ce_vardata);
+			safestrdup(deny->reason, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "warn"))
 		{
@@ -8667,7 +8667,7 @@ int	_conf_deny_channel(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "class"))
 		{
-			ircstrdup(deny->class, cep->ce_vardata);
+			safestrdup(deny->class, cep->ce_vardata);
 		}
 	}
 	AddListItem(deny, conf_deny_channel);
@@ -8683,12 +8683,12 @@ int	_conf_deny_link(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!strcmp(cep->ce_varname, "mask"))
 		{
-			ircstrdup(deny->mask, cep->ce_vardata);
+			safestrdup(deny->mask, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "rule"))
 		{
 			deny->rule = (char *)crule_parse(cep->ce_vardata);
-			ircstrdup(deny->prettyrule, cep->ce_vardata);
+			safestrdup(deny->prettyrule, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "type")) {
 			if (!strcmp(cep->ce_vardata, "all"))
@@ -8711,15 +8711,15 @@ int	_conf_deny_version(ConfigFile *conf, ConfigEntry *ce)
 	{
 		if (!strcmp(cep->ce_varname, "mask"))
 		{
-			ircstrdup(deny->mask, cep->ce_vardata);
+			safestrdup(deny->mask, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "version"))
 		{
-			ircstrdup(deny->version, cep->ce_vardata);
+			safestrdup(deny->version, cep->ce_vardata);
 		}
 		else if (!strcmp(cep->ce_varname, "flags"))
 		{
-			ircstrdup(deny->flags, cep->ce_vardata);
+			safestrdup(deny->flags, cep->ce_vardata);
 		}
 	}
 	AddListItem(deny, conf_deny_version);
@@ -9209,14 +9209,14 @@ int	rehash_internal(aClient *cptr, aClient *sptr, int sig)
 
 void link_cleanup(ConfigItem_link *link_ptr)
 {
-	ircfree(link_ptr->servername);
-	ircfree(link_ptr->incoming.mask); // TODO: will become a list
+	safefree(link_ptr->servername);
+	safefree(link_ptr->incoming.mask); // TODO: will become a list
 	Auth_DeleteAuthStruct(link_ptr->auth);
-	ircfree(link_ptr->outgoing.bind_ip);
-	ircfree(link_ptr->outgoing.hostname);
-	ircfree(link_ptr->hub);
-	ircfree(link_ptr->leaf);
-	ircfree(link_ptr->ciphers);
+	safefree(link_ptr->outgoing.bind_ip);
+	safefree(link_ptr->outgoing.hostname);
+	safefree(link_ptr->hub);
+	safefree(link_ptr->leaf);
+	safefree(link_ptr->ciphers);
 }
 
 void delete_linkblock(ConfigItem_link *link_ptr)
@@ -9243,7 +9243,7 @@ void delete_classblock(ConfigItem_class *class_ptr)
 {
 	Debug((DEBUG_ERROR, "delete_classblock: deleting %s, clients=%d, xrefcount=%d",
 		class_ptr->name, class_ptr->clients, class_ptr->xrefcount));
-	ircfree(class_ptr->name);
+	safefree(class_ptr->name);
 	DelListItem(class_ptr, conf_class);
 	MyFree(class_ptr);
 }
@@ -9258,7 +9258,7 @@ void	listen_cleanup()
 		next = (ListStruct *)listen_ptr->next;
 		if (listen_ptr->flag.temporary && !listen_ptr->clients)
 		{
-			ircfree(listen_ptr->ip);
+			safefree(listen_ptr->ip);
 			DelListItem(listen_ptr, conf_listen);
 			MyFree(listen_ptr);
 			i++;

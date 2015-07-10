@@ -1071,9 +1071,9 @@ static void unreal_add_mask(ConfigItem_mask **head, ConfigEntry *ce)
 
 	/* Since we allow both mask "xyz"; and mask { abc; def; };... */
 	if (!strcmp(ce->ce_varname, "mask") && ce->ce_vardata)
-		ircstrdup(m->mask, ce->ce_vardata);
+		safestrdup(m->mask, ce->ce_vardata);
 	else
-		ircstrdup(m->mask, ce->ce_varname);
+		safestrdup(m->mask, ce->ce_varname);
 	
 	tmp.type = parse_netmask(m->mask, &tmp);
 	if (tmp.type != HM_HOST)
