@@ -1264,98 +1264,95 @@ aPendingNet *pendingnet = NULL;
 
 void add_pending_net(aClient *sptr, char *str)
 {
-aPendingNet *e = NULL;
-int num = 1;
-char *p, *name;
+	aPendingNet *net;
+	aPendingServer *srv;
+	int num = 1;
+	char *p, *name;
 
 	if (BadPtr(str) || !sptr)
 		return;
 
-	/* First, count them */
-	for (p = str; *p; p++)
-		if (*p == ',')
-			num++;
-	
 	/* Allocate */
-	e = MyMallocEx(sizeof(aPendingNet) + (sizeof(int) * num));
-	
-	e->numservers = num;
-	e->sptr = sptr;
+	net = MyMallocEx(sizeof(aPendingNet));
+	net->sptr = sptr;
 
 	/* Fill in */
-	num = 0;
 	for (name = strtoken(&p, str, ","); name; name = strtoken(&p, NULL, ","))
 	{
 		if (!*name)
 			continue;
-
-		/* skip any non-digit prefixes, if necessary. Possibly needed in the future. */
-		while (*name && !isdigit(*name))
-			name++; 
-
-		e->servers[num++] = atoi(name);
+		
+		srv = MyMallocEx(sizeof(aPendingServer));
+		strlcpy(srv->sid, name, sizeof(srv->sid));
+		AddListItem(srv, net->servers);
 	}
 	
-	AddListItem(e, pendingnet);
+	AddListItem(net, pendingnet);
 }
 
 void free_pending_net(aClient *sptr)
 {
-aPendingNet *e, *e_next;
-
-	for (e = pendingnet; e; e = e_next)
+	aPendingNet *net, *net_next;
+	aPendingServer *srv, *srv_next;
+	
+	for (net = pendingnet; net; net = net_next)
 	{
-		e_next = e->next;
-		if (e->sptr == sptr)
+		net_next = net->next;
+		if (net->sptr == sptr)
 		{
-			DelListItem(e, pendingnet);
-			MyFree(e);
+			for (srv = net->servers; srv; srv = srv_next)
+			{
+				srv_next = srv->next;
+				MyFree(srv);
+			}
+			DelListItem(net, pendingnet);
+			MyFree(net);
 			/* Don't break, there can be multiple objects */
 		}
 	}
 }
 
-aPendingNet *find_pending_net_by_numeric_butone(int numeric, aClient *exempt)
+aPendingNet *find_pending_net_by_sid_butone(char *sid, aClient *exempt)
 {
-aPendingNet *e;
-int i;
+	aPendingNet *net;
+	aPendingServer *srv;
 
-	if (numeric <= 0)
+	if (BadPtr(sid))
 		return NULL;
 
-	for (e = pendingnet; e; e = e->next)
+	for (net = pendingnet; net; net = net->next)
 	{
-		if (e->sptr == exempt)
+		if (net->sptr == exempt)
 			continue;
-		for (i = 0; i < e->numservers; i++)
-			if (e->servers[i] == numeric)
-				return e;
+		for (srv = net->servers; srv; srv = srv->next)
+			if (!strcmp(srv->sid, sid))
+				return net;
 	}
 	return NULL;
 }
 
-/** Search the pending connections list for any identical numerics */
-aClient *find_pending_net_duplicates(aClient *cptr, aClient **srv, int *numeric)
+/** Search the pending connections list for any identical sids */
+aClient *find_pending_net_duplicates(aClient *cptr, aClient **srv, char **sid)
 {
-aPendingNet *e, *other;
-int i;
+	aPendingNet *net, *other;
+	aPendingServer *s;
 
 	*srv = NULL;
-	*numeric = 0;
+	*sid = NULL;
 	
-	for (e = pendingnet; e; e = e->next)
+	for (net = pendingnet; net; net = net->next)
 	{
-		if (e->sptr != cptr)
+		if (net->sptr != cptr)
 			continue;
 		/* Ok, found myself */
-		for (i = 0; i < e->numservers; i++)
+		for (s = net->servers; s; s = s->next)
 		{
-			int curr_numeric = e->servers[i];
-			other = find_pending_net_by_numeric_butone(curr_numeric, cptr);
+			char *curr_sid = s->sid;
+			other = find_pending_net_by_sid_butone(curr_sid, cptr);
 			if (other)
 			{
-				*srv = e->sptr;
-				*numeric = curr_numeric;
+				*srv = net->sptr;
+				*sid = s->sid;
 				return other->sptr; /* Found another (pending) server with identical numeric */
 			}
 		}
@@ -1363,3 +1360,26 @@ int i;
 	
 	return NULL;
 }
+
+aClient *find_non_pending_net_duplicates(aClient *cptr)
+{
+	aPendingNet *net;
+	aPendingServer *s;
+	aClient *acptr;
+
+	for (net = pendingnet; net; net = net->next)
+	{
+		if (net->sptr != cptr)
+			continue;
+		/* Ok, found myself */
+		for (s = net->servers; s; s = s->next)
+		{
+			acptr = find_server(s->sid, NULL);
+			if (acptr)
+				return acptr; /* Found another (fully CONNECTED) server with identical numeric */
+		}
+	}
+	
+	return NULL;
+}
+

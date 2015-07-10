@@ -98,15 +98,26 @@ int m_server_synch(aClient *cptr, ConfigItem_link *conf);
  */
 void _send_protoctl_servers(aClient *sptr, int response)
 {
-Link *lp;
-char buf[512];
+	char buf[512];
+	aClient *acptr;
 
 	if (!NEW_LINKING_PROTOCOL)
 		return;
 
-	// TODO: reintroduce SERVERS=...
-	ircsnprintf(buf, sizeof(buf), "PROTOCTL EAUTH=%s",
-		me.name);
+	ircsnprintf(buf, sizeof(buf), "PROTOCTL EAUTH=%s,%d SERVERS=%s",
+		me.name, UnrealProtocol, response ? "*" : "");
+
+	list_for_each_entry(acptr, &global_server_list, client_node)
+	{
+		if (*acptr->id)
+			snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "%s,", acptr->id);
+		if (strlen(buf) > sizeof(buf)-12)
+			break; /* prevent overflow/cutoff if you have a network with more than 90 servers or something. */
+	}
+	
+	/* Remove final comma (if any) */
+	if (buf[strlen(buf)-1] == ',')
+		buf[strlen(buf)-1] = '\0';
 
 	sendto_one(sptr, "%s", buf);
 }

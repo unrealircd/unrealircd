@@ -316,6 +316,7 @@ CMD_FUNC(m_protoctl)
 		{
 			/* Early authorization: EAUTH=servername[,options] */
 			int ret;
+			int protocol = 0;
 			char *servername = s+6, *p;
 			ConfigItem_link *aconf = NULL;
 			
@@ -326,8 +327,15 @@ CMD_FUNC(m_protoctl)
 			{
 				if (*p == ',')
 				{
-					/* Upwards compatible, if we ever add any options through EAUTH=blah,options */
+					char *x;
+					
 					*p = '\0';
+					
+					/* upwards compatible */
+					x = strchr(p+1, ',');
+					if (x)
+						*x = '\0';
+					protocol = atoi(p+1);
 					break;
 				}
 				if (*p <= ' ' || *p > '~')
@@ -351,8 +359,52 @@ CMD_FUNC(m_protoctl)
 
 			SetEAuth(cptr);
 			make_server(cptr); /* allocate and set cptr->serv */
+			cptr->serv->features.protocol = protocol;
 			if (!IsHandshake(cptr) && aconf) /* Send PASS early... */
 				sendto_one(sptr, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
+		}
+		else if ((strncmp(s, "SERVERS=", 8) == 0) && NEW_LINKING_PROTOCOL)
+		{
+			aClient *acptr, *srv;
+			char *sid = NULL;
+			
+			if (!IsEAuth(cptr))
+				continue;
+				
+			if (cptr->serv->features.protocol < 2351)
+				continue; /* old SERVERS= version */
+			
+			/* Other side lets us know which servers are behind it.
+			 * SERVERS=<sid-of-server-1>[,<sid-of-server-2[,..etc..]]
+			 * Eg: SERVER=001,002,0AB,004,005
+			 */
+
+			add_pending_net(sptr, s+8);
+
+			acptr = find_non_pending_net_duplicates(sptr);
+			if (acptr)
+			{
+				sendto_one(sptr, "ERROR :Server with SID %s (%s) already exists",
+					acptr->id, acptr->name);
+				sendto_realops("Link %s cancelled, server with SID %s (%s) already exists",
+					get_client_name(acptr, TRUE), acptr->id, acptr->name);
+				return exit_client(sptr, sptr, sptr, "Server Exists (or non-unique me::sid)");
+			}
+			
+			acptr = find_pending_net_duplicates(sptr, &srv, &sid);
+			if (acptr)
+			{
+				sendto_one(sptr, "ERROR :Server with SID %s is being introduced by another server as well. "
+				                 "Just wait a moment for it to synchronize...", sid);
+				sendto_realops("Link %s cancelled, server would introduce server with SID %s, which "
+				               "server %s is also about to introduce. Just wait a moment for it to synchronize...",
+				               get_client_name(acptr, TRUE), sid, get_client_name(srv, TRUE));
+				return exit_client(sptr, sptr, sptr, "Server Exists (just wait a moment)");
+			}
+
+			/* Send our PROTOCTL SERVERS= back if this was NOT a response */
+			if (s[8] != '*')
+				send_protoctl_servers(sptr, 1);
 		}
 		else if ((strncmp(s, "TS=",3) == 0) && (IsServer(sptr) || IsEAuth(sptr)))
 		{

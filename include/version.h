@@ -56,7 +56,7 @@
  */
 #define UNREAL_VERSION_TIME         201411
 
-#define UnrealProtocol 		2350
+#define UnrealProtocol 		2351
 #define PATCH1  		macro_to_str(UNREAL_VERSION_GENERATION)
 #define PATCH2  		"." macro_to_str(UNREAL_VERSION_MAJOR)
 #define PATCH3  		""

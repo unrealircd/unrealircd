@@ -145,7 +145,6 @@ typedef struct _cmdoverride Cmdoverride;
 typedef struct SMember Member;
 typedef struct SMembership Membership;
 typedef struct SMembershipL MembershipL;
-typedef struct PendingNet aPendingNet;
 
 #ifdef NEED_U_INT32_T
 typedef unsigned int u_int32_t;	/* XXX Hope this works! */
@@ -706,6 +705,7 @@ struct Server {
 	} flags;
 	struct {
 		char *chanmodes[4];
+		int protocol;
 	} features;
 };
 
@@ -1719,11 +1719,17 @@ struct _parsemode {
 	char buf[512]; /* internal parse buffer */
 };
 
+typedef struct PendingServer aPendingServer;
+struct PendingServer {
+	aPendingServer *prev, *next;
+	char sid[IDLEN+1];
+};
+
+typedef struct PendingNet aPendingNet;
 struct PendingNet {
-        aPendingNet *prev, *next; /* Previous and next in list */
-        aClient *sptr; /**< Client to which these servers belong */
-        int numservers; /**< Amount of servers in list */
-        int servers[1]; /** The list of servers (array of integer server numerics) */
+	aPendingNet *prev, *next; /* Previous and next in list */
+	aClient *sptr; /**< Client to which these servers belong */
+	aPendingServer *servers; /**< The list of servers connected to the client */
 };
 
 void	init_throttling_hash();
