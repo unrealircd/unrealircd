@@ -5594,7 +5594,26 @@ int	_conf_vhost(ConfigFile *conf, ConfigEntry *ce)
 			unreal_add_masks(&vhost->mask, cep);
 		}
 		else if (!strcmp(cep->ce_varname, "swhois"))
-			vhost->swhois = strdup(cep->ce_vardata);
+		{
+			SWhois *s;
+			if (cep->ce_entries)
+			{
+				for (cepp = cep->ce_entries; cepp; cepp = cepp->ce_next)
+				{
+					s = MyMallocEx(sizeof(SWhois));
+					s->line = strdup(cepp->ce_varname);
+					s->setby = strdup("vhost");
+					AddListItem(s, vhost->swhois);
+				}
+			} else
+			if (cep->ce_vardata)
+			{
+				s = MyMallocEx(sizeof(SWhois));
+				s->line = strdup(cep->ce_vardata);
+				s->setby = strdup("vhost");
+				AddListItem(s, vhost->swhois);
+			}
+		}
 	}
 	AddListItem(vhost, conf_vhost);
 	return 1;
@@ -5717,13 +5736,7 @@ int	_test_vhost(ConfigFile *conf, ConfigEntry *ce)
 		}
 		else if (!strcmp(cep->ce_varname, "swhois"))
 		{
-			if (has_swhois)
-			{
-				config_warn_duplicate(cep->ce_fileptr->cf_filename,
-					cep->ce_varlinenum, "vhost::swhois");
-				continue;
-			}
-			has_swhois = 1;
+			/* multiple is ok */
 		}
 		else
 		{

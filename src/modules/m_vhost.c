@@ -168,8 +168,11 @@ int  m_vhost(aClient *cptr, aClient *sptr, int parc, char *parv[])
 		sendto_server(cptr, 0, 0, ":%s SETHOST %s", sptr->name, sptr->user->virthost);
 		sendto_one(sptr, ":%s MODE %s :+tx",
 		    sptr->name, sptr->name);
-		if (vhost->swhois) {
-			swhois_add(sptr, "vhost", 0, vhost->swhois, &me, NULL);
+		if (vhost->swhois)
+		{
+			SWhois *s;
+			for (s = vhost->swhois; s; s = s->next)
+				swhois_add(sptr, "vhost", -100, s->line, &me, NULL);
 		}
 		sendto_one(sptr, err_str(RPL_HOSTHIDDEN), me.name, sptr->name, vhost->virthost);
 		sendto_one(sptr,

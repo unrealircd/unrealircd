@@ -1165,7 +1165,8 @@ struct _configitem_vhost {
 	ConfigItem 	*prev, *next;
 	ConfigFlag 	flag;
 	ConfigItem_mask *mask;
-	char		*login, *virthost, *virtuser, *swhois;
+	char		*login, *virthost, *virtuser;
+	SWhois *swhois;
 	anAuthStruct	*auth;
 };
 
