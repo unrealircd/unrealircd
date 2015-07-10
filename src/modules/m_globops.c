@@ -98,13 +98,13 @@ DLLFUNC CMD_FUNC(m_globops)
 	if (MyClient(sptr))
 	{
 		/* Easy */
-		sendto_umode_global(UMODE_OPER, "from %s: %s", parv[0], message);
+		sendto_umode_global(UMODE_OPER, "from %s: %s", sptr->name, message);
 	} else
 	{
 		/* Backward-compatible (3.2.x) */
-		sendto_umode(UMODE_OPER, "from %s: %s", parv[0], message);
+		sendto_umode(UMODE_OPER, "from %s: %s", sptr->name, message);
 		sendto_server(cptr, 0, 0, ":%s SENDUMODE o :from %s: %s",
-		    sptr->name, message);
+		    sptr->name, sptr->name, message);
 	}
 
 	return 0;
